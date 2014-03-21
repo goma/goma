@@ -852,15 +852,6 @@ apply_integrated_bc(
 			      time_intermediate, bc->u_BC, bc->len_u_BC);
 	  break;
 
-        case REP_FORCE_SHU_BC:  /* Applies only to shell elements */
-	  rep_force_shell_n_dot_f_bc(func, d_func, x_dot, theta, delta_t,
-				     ip, ip_total, elem_side_bc->id_side, wt, xi, exo, 0);
-	  break;
-        case REP_FORCE_SHU_SIC_BC:  /* Applies only to shell elements */
-	  rep_force_shell_n_dot_f_bc(func, d_func, x_dot, theta, delta_t,
-				     ip, ip_total, elem_side_bc->id_side, wt, xi, exo, 1);
-	  break;
-
 
 	case ELEC_TRACTION_BC:
 	case ELEC_TRACTION_SOLID_BC:

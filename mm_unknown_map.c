@@ -1729,6 +1729,8 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = SHELL_CURVATURE;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_CURVATURE2;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = PRESSURE;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = POR_LIQ_PRES;
@@ -1864,8 +1866,6 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;	  
           v = SHELL_USER ;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v = SHELL_LUBP;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = ACOUS_PREAL;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = ACOUS_PIMAG;
@@ -1882,6 +1882,14 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = CUR_STRAIN;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+	  v = SHELL_NORMAL1;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_NORMAL2;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_NORMAL3;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
 	  break;
 
 	case R_MASS_SURF:
@@ -1938,8 +1946,6 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = PRESSURE;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v = SHELL_LUBP;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = ACOUS_PREAL;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = ACOUS_PIMAG;
@@ -2295,7 +2301,36 @@ set_interaction_masks(Exo_DB *exo)
 	  v = PRESSURE;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
           break;
+
+	case R_SHELL_CURVATURE2:
+          v = SHELL_CURVATURE2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+          v = MESH_DISPLACEMENT1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+
+          break;
+
 	  
 	case R_SHELL_ANGLE1:
           v = SHELL_ANGLE1;
@@ -2541,6 +2576,17 @@ set_interaction_masks(Exo_DB *exo)
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           break;
 
+        case R_SHELL_NORMAL3:
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+
 	case R_ACOUS_PREAL:
 	case R_ACOUS_PIMAG:
 	case R_ACOUS_REYN_STRESS:
@@ -2583,23 +2629,6 @@ set_interaction_masks(Exo_DB *exo)
           v = FILL;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  break;
-
-        case R_SHELL_LUBP:
-          v = SHELL_LUBP;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v = SHELL_BDYVELO;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v = MASS_FRACTION;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v = MESH_DISPLACEMENT1;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v = MESH_DISPLACEMENT2;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          v = MESH_DISPLACEMENT3;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-	  v = FILL;
-          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-          break;
 
 	case R_LUBP:
           v = LUBP;

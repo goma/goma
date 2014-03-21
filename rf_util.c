@@ -108,12 +108,17 @@ PROTO((double [],		/* sol_vec - full dof vector for this proc   */
 static void init_structural_shell_coord
 PROTO((double []));             /* u[] - solution vector */
 
-static void init_shell_normal_unknowns
+static void init_shell_normal_unknowns_old
 PROTO((double [] ,              /* u[] - solution vector */
        const Exo_DB *,		/* Exodus database */
        const int,		/* Shell node set ID */
        double , 		/* Focal point X-coordinate */
        double));		/* Focal point Y-coordinate */
+
+static void init_shell_normal_unknowns
+PROTO((double [] ,              /* u[] - solution vector */
+       const Exo_DB *)); 	/* Exodus database */
+
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -824,6 +829,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
  
     Err_norm      += ecp[SURF_CHARGE];
     Err_norm      += ecp[SHELL_CURVATURE];
+    Err_norm      += ecp[SHELL_CURVATURE2];
     Err_norm      += ecp[SHELL_TENSION];
     Err_norm      += ecp[SHELL_X];
     Err_norm      += ecp[SHELL_Y];
@@ -832,7 +838,6 @@ time_step_control(const double delta_t,  const double delta_t_old,
     Err_norm      += ecp[ACOUS_PIMAG];
     Err_norm      += ecp[ACOUS_REYN_STRESS];
     Err_norm      += ecp[SHELL_BDYVELO];
-    Err_norm      += ecp[SHELL_LUBP];
     Err_norm      += ecp[SHELL_TEMPERATURE];
     Err_norm      += ecp[SHELL_DELTAH];
     Err_norm      += ecp[SHELL_FILMP];
@@ -845,6 +850,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
  
     num_unknowns += ncp[SURF_CHARGE];
     num_unknowns += ncp[SHELL_CURVATURE];
+    num_unknowns += ncp[SHELL_CURVATURE2];
     num_unknowns += ncp[SHELL_TENSION];
     num_unknowns += ncp[SHELL_X];
     num_unknowns += ncp[SHELL_Y];
@@ -853,7 +859,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
     num_unknowns += ncp[ACOUS_PIMAG];
     num_unknowns += ncp[ACOUS_REYN_STRESS];
     num_unknowns += ncp[SHELL_BDYVELO];
-    num_unknowns += ncp[SHELL_LUBP];
+    num_unknowns += ncp[LUBP];
     num_unknowns += ncp[SHELL_TEMPERATURE];
     num_unknowns += ncp[SHELL_DELTAH];
     num_unknowns += ncp[SHELL_FILMP];
@@ -881,6 +887,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
     Err_norm      += ecp[SHELL_SAT_GASN];
     Err_norm      += ecp[SHELL_LUB_CURV];
     Err_norm      += ecp[SHELL_LUB_CURV_2];
+
     num_unknowns += ncp[LUBP];
     num_unknowns += ncp[LUBP_2];
     num_unknowns += ncp[SHELL_SAT_CLOSED];
@@ -948,7 +955,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
 
   e_V = ecp[VOLTAGE];
   e_qs = ecp[SURF_CHARGE];
-  e_shk = ecp[SHELL_CURVATURE];
+  e_shk = ecp[SHELL_CURVATURE] + ecp[SHELL_CURVATURE2];
   e_sht = ecp[SHELL_TENSION];
   e_shd = ecp[SHELL_X] + ecp[SHELL_Y];
   e_shu = ecp[SHELL_USER];
@@ -1379,7 +1386,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
     /* Shell normal vector unknowns requiring initialization */
     if ( upd->vp[SHELL_NORMAL1] > -1 && upd->vp[SHELL_NORMAL2] > -1 )
       {
-	init_shell_normal_unknowns(u, exo, 10, 0.0, 0.0);
+	init_shell_normal_unknowns(u, exo);
       }
     break;
 
@@ -1882,11 +1889,11 @@ void init_structural_shell_coord(double u[])
 
 } /* End of init_structural_shell_coord() */
 
-void init_shell_normal_unknowns(double u[], const Exo_DB *exo, 
-                                const int nsid, double xfocus, double yfocus)
+void init_shell_normal_unknowns_old(double u[], const Exo_DB *exo, 
+                                    const int nsid, double xfocus, double yfocus)
 /******************************************************************************
  *
- * init_shell_normal_unknowns(): Provides an APPROXIMATE initialization of the
+ * init_shell_normal_unknowns_old(): Provides an APPROXIMATE initialization of the
  *                               shell normal vector unknowns (X and Y
  *                               components, not yet 3D-compatible). This is 
  *                               necessary because if not provided, the
@@ -1958,6 +1965,91 @@ void init_shell_normal_unknowns(double u[], const Exo_DB *exo,
     }
   return;
 }
+
+void init_shell_normal_unknowns(double x[], const Exo_DB *exo)
+/******************************************************************************
+ *
+ * init_shell_normal_unknowns(): Provides an initialization of the
+ *                               shell normal vector unknowns. This is
+ *                               necessary because if not provided, the
+ *                               the accompanying curvature equation may
+ *                               degenerate to a false trivial solution.
+ *
+ *                               The unknowns are initialized by looping
+ *                               over all of elements containing shell
+ *                               normal, setup shop at every node,
+ *                               compute the normal vector, then copy it to
+ *                               solution vectors
+ *
+/ * Input
+* =====
+* u = Array of initial values for the indepenedent variables.
+* exo = Exodus database
+*
+* Return
+* ======
+* void
+*
+* Created:     Friday April 11 2014 tjiptowi@unm.edu
+*
+******************************************************************************/
+{
+  int e_start=0, e_end=0, ebn = 0, ielem = 0;
+  int ielem_type, ielem_dim, iconnect_ptr;
+  int ilnode, ignode, num_local_nodes;
+  int nxi, nyi, nzi;
+  int err;
+  dbl s, t, u, xi[DIM];
+
+
+  e_start = exo->eb_ptr[0];
+  e_end   = exo->eb_ptr[exo->num_elem_blocks];
+
+  /* Loop over all elements */
+  for (ielem = e_start, ebn = 0; ielem < e_end; ielem++)
+     {
+      ielem_type = Elem_Type(exo, ielem);
+      load_ei(ielem, exo, 0);
+      err = load_elem_dofptr(ielem, exo, x, x,
+                             x, x, x, 0);
+
+      ielem_dim       = elem_info(NDIM, ielem_type);
+      num_local_nodes = elem_info(NNODES, ielem_type);
+      iconnect_ptr    = Proc_Connect_Ptr[ielem];
+
+      /* Loop over nodes within the element */
+      for (ilnode = 0; ilnode < num_local_nodes; ilnode++)
+         {
+          /* Find s, t, u, coordinates of each node */
+          find_nodal_stu (ilnode, ielem_type, &s, &t, &u);
+          xi[0] = s;
+          xi[1] = t;
+          xi[2] = u;
+
+          setup_shop_at_point(ielem, xi, exo);
+
+          shell_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes,
+                                       ielem_dim, 1);
+
+          /* Get global node number */
+          ignode = Proc_Elem_Connect[iconnect_ptr + ilnode];
+          /* Get node number and indices into solution vector for normal dofs */
+          nxi = Index_Solution(ignode, SHELL_NORMAL1, 0, 0, -2);
+          nyi = Index_Solution(ignode, SHELL_NORMAL2, 0, 0, -2);
+
+          x[nxi] = fv->snormal[0];
+          x[nyi] = fv->snormal[1];
+
+          if (pd->Num_Dim == 3)
+            {
+             nzi = Index_Solution(ignode, SHELL_NORMAL3, 0, 0, -2);
+             x[nzi] = fv->snormal[2];
+            }
+         }
+     }
+  return;
+}
+
 
 static void
 read_initial_guess(double u[], const int np, double uAC[], const int nAC)

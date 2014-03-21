@@ -231,20 +231,6 @@ PROTO((double [DIM],             /* func */
        const Exo_DB *exo,        /* ExodusII database struct pointer */
        const double));           /* BC_data_float[0] */
 
-EXTERN void rep_force_shell_n_dot_f_bc
-PROTO((double [DIM],             /* func */
-       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
-       const double [MAX_PDIM],  /* x_dot */
-       const double,             /* theta or tt*/
-       const double,             /* delta_t or dt */
-       const int ,                      /* ip         */
-       const int ,                      /* ip_total         */
-       const int,                /* id_side for bulk BC's */
-       const double,             /* Gauss surface point weight */
-       double xi[DIM],           /* Local stu coords */
-       const Exo_DB *exo,        /* ExodusII database struct pointer */
-       const int ));		 /* strong integrated bc flag  */
-
 EXTERN void surface_user_shell_bc
 PROTO((double [MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE],  /* local_r */
        double [MAX_PROB_VAR+MAX_CONC][MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE][MDE],  /* local_j */
@@ -254,18 +240,6 @@ PROTO((double [MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE],  /* local_r */
        const double,             /* theta or tt*/
        const double,           /* delta_t or dt */
        const double *));           /* coords */
-
-EXTERN void surface_lubrication_shell_bc
-PROTO((double [MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE],  /* local_r */
-       double [MAX_PROB_VAR+MAX_CONC][MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE][MDE],  /* local_j */
-       const int,                /* bulk element matrl index */
-       const int *,              /* ei->dof for bulk element */
-       const double,           /* Gauss surface point weight */
-       const double,             /* theta or tt*/
-       const double,           /* delta_t or dt */
-       const double *,           /* coords */
-       int [MDE],         /* dof_map */
-       int [MAX_VARIABLE_TYPES][MDE]));   /* n_dofptr  */
 
 EXTERN void dPdz_function
 PROTO(( dbl ,
@@ -307,4 +281,18 @@ PROTO((double,                   /* Time */
 
 EXTERN int load_lsi_shell_second
 PROTO(( const double ));       /* width */
+
+EXTERN int assemble_shell_normal
+PROTO((double [DIM],             /* Local stu coords */
+       const Exo_DB *exo));	 /* ExodusII database struct pointer */
+
+
+EXTERN int assemble_shell_curvature
+PROTO((double [DIM],             /* Local stu coords */
+       const Exo_DB *exo));	 /* ExodusII database struct pointer */
+
+EXTERN int assemble_shell_mesh
+PROTO((double [DIM],             /* Local stu coords */
+       const Exo_DB *exo ));     /* ExodusII database struct pointer */
+
 #endif /* _MM_FILL_SHELL_H */

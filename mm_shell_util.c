@@ -2314,10 +2314,25 @@ lubrication_shell_initialize (
     
     shell_determinant_and_normal(ei->ielem, ei->iconnect_ptr, ei->num_local_nodes, 
 				 ei->ielem_dim, 1);
-    n_dof[MESH_DISPLACEMENT1] = 0;
-    n_dof[MESH_DISPLACEMENT2] = 0;
-    n_dof[MESH_DISPLACEMENT3] = 0;
-    
+    if (pd->e[R_MESH1])
+      {
+       /* Populate ndof array */
+       n_dof[MESH_DISPLACEMENT1] = ei->dof[MESH_DISPLACEMENT1];
+       n_dof[MESH_DISPLACEMENT2] = ei->dof[MESH_DISPLACEMENT2];
+       n_dof[MESH_DISPLACEMENT3] = ei->dof[MESH_DISPLACEMENT3];
+
+       /* Populate a trivial dof_map array */
+       for (i = 0; i < ei->dof[pd->ShapeVar]; i++)
+          {
+           dof_map[i] = i;
+          }
+      }
+    else
+      {
+       n_dof[MESH_DISPLACEMENT1] = 0;
+       n_dof[MESH_DISPLACEMENT2] = 0;
+       n_dof[MESH_DISPLACEMENT3] = 0;
+      }
     /* calc_surf_tangent (ei->ielem, ei->iconnect_ptr, ei->num_local_nodes, 
 		       ei->ielem_dim, ei->num_local_nodes, &temp);
     */
@@ -2598,6 +2613,17 @@ calculate_lub_q_v (
 	  H -= fv->snormal[i] * fv->d[i];
 	}
 	break;
+
+      case FSI_SHELL_ONLY:
+      if (pd->e[R_MESH1])
+        {
+         for ( i = 0; i < dim; i++)
+            {
+             H -= fv->snormal[i] * fv->d[i];
+            }
+	}
+	break;
+
       case FSI_REALSOLID_CONTINUUM:
 	for ( i = 0; i < dim; i++) {
 	  H -= fv->snormal[i] * fv->d_rs[i];
@@ -2625,6 +2651,23 @@ calculate_lub_q_v (
 	    }
 	  }
 	}
+	break;
+      case FSI_SHELL_ONLY:
+        if (pd->e[R_MESH1])
+          {
+           for ( i = 0; i < DIM; i++)
+              {
+               for ( j = 0; j < DIM; j++)
+                  {
+                   for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++)
+                      {
+                       jk = dof_map[k];
+                       D_H_DX[j][jk] -= fv->dsnormal_dx[i][j][jk] * fv->d[i];
+                       D_H_DX[j][jk] -= fv->snormal[i] * delta(i,j) * bf[MESH_DISPLACEMENT1]->phi[k];
+                      }
+                  }
+              }
+          }
 	break;
       case FSI_REALSOLID_CONTINUUM:
 	for ( i = 0; i < DIM; i++) {

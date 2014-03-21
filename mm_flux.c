@@ -7383,6 +7383,18 @@ load_fv_sens(void)
         }
     }
 
+  v = SHELL_CURVATURE2;
+  fv_sens->sh_K2 = 0.;
+  if ( pd->v[v] )
+    {
+      dofs  = ei->dof[v];
+      for ( i=0; i<dofs; i++)
+        {
+          fv_sens->sh_K2 += *esp_old->sh_K2[i] * bf[v]->phi[i];
+        }
+    }
+
+
   /*
    *  Structural shell tension
    */
@@ -7509,17 +7521,6 @@ load_fv_sens(void)
 	{
 	  fv_sens->sh_bv += *esp_old->sh_bv[i] * bf[v]->phi[i];
 	}
-    }
-
-  v = SHELL_LUBP;
-  fv_sens->sh_p = 0.;
-  if ( pd->v[v] )
-    {
-      dofs  = ei->dof[v];
-      for ( i=0; i<dofs; i++)
-      {
-        fv_sens->sh_p += *esp_old->sh_p[i] * bf[v]->phi[i];
-      }
     }
 
   v = LUBP;
@@ -8539,20 +8540,6 @@ load_fv_grads_sens(void)
 	}
     }
 	      
-  v = SHELL_LUBP;
-  if ( pd->v[v] )
-    {
-      dofs  = ei->dof[v];
-      for ( p=0; p<VIM; p++)
-      {
-        fv_sens->grad_sh_p[p] = 0.;
-        for ( i=0; i<dofs; i++)
-          {
-            fv_sens->grad_sh_p[p] += *esp_old->sh_p[i] * bf[v]->grad_phi[i] [p];
-          }
-      }
-    }
-
   
   /* MMH
    * curl(v)
