@@ -27600,9 +27600,9 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   else if(mp->HeatSourceModel == PHOTO_CURING )
     {
        double intensity, intensity_dt=0;
-       double k_prop, k_term, k_inh;
+       double k_prop, k_inh, free_rad;
        double *param,h,dhdC[MAX_CONC],dhdT;
-       int model_bit, init_spec = 0;
+       int model_bit, num_mon, O2_spec=-1, rad_spec=-1, init_spec = 0;
 
        param = mp->u_heat_source;
        model_bit = ((int)param[0]);
@@ -27611,36 +27611,81 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
        for(a=0; a<MAX_CONC; a++) dhdC[a]=0.;
 
 #if 1
-      intensity = mp->u_species_source[init_spec][1]*(fv->poynt[0]);
+       intensity = 0;
+       if(pd->e[R_LIGHT_INTP])
+          { intensity += fv->poynt[0];}
+       if(pd->e[R_LIGHT_INTM])
+          { intensity += fv->poynt[1];}
+       if(pd->e[R_LIGHT_INTD])
+          { intensity += fv->poynt[2];}
+       intensity *= mp->u_species_source[init_spec][1];
 #else
       intensity = mp->u_species_source[init_spec][1]*
                      (SQUARE(fv->apr)+SQUARE(fv->api));
 #endif
 
-      k_prop = mp->u_species_source[init_spec+2][1]*
-                exp(-mp->u_species_source[init_spec+2][2]*
-                (1./fv->T - 1./mp->u_species_source[init_spec+2][3]));
-
 /**  heat source from momomer heat of reaction     **/
+        num_mon = model_bit>>2;
 
-    if((model_bit & 1) && (model_bit & 2))
-      {
-      h = k_prop*fv->c[init_spec+2]*fv->c[init_spec+4] * param[1];
-      dhdC[init_spec+2] = k_prop*fv->c[init_spec+4] * param[1];
-      dhdC[init_spec+4] = k_prop*fv->c[init_spec+2] * param[1];
-      dhdT = k_prop*mp->u_species_source[init_spec+2][2]/SQUARE(fv->T)
-              *fv->c[init_spec+2]*fv->c[init_spec+4]*param[1];
-      }
-    else if(model_bit & 1)
-      {
-      }
-    else if(model_bit & 2)
-      {
-      }
-    else 
-      {
-      h = 0.;
-      }
+       if( (model_bit & 1)  && (model_bit & 2))
+            {
+            O2_spec = init_spec + num_mon +2;
+            rad_spec = O2_spec + 1;
+            free_rad = fv->c[rad_spec];
+            }
+       else if( model_bit & 1)
+            {
+            O2_spec = init_spec + num_mon +2;
+            k_inh = mp->u_species_source[O2_spec][1]*
+                    exp(-mp->u_species_source[O2_spec][2]*
+                    (1./fv->T - 1./mp->u_species_source[O2_spec][3]));
+            free_rad = sqrt(SQUARE(k_inh*fv->c[O2_spec])/4.+
+                mp->u_species_source[init_spec+1][2]*intensity*fv->c[init_spec])
+                - k_inh*fv->c[O2_spec]/2.;
+            }
+       else if( model_bit & 2)
+            {
+            rad_spec = init_spec + num_mon +2;
+            free_rad = fv->c[rad_spec];
+            }
+       else
+            {
+            free_rad = sqrt(SQUARE(mp->u_species_source[init_spec+1][2]*
+                       intensity*fv->c[init_spec]));
+            }
+
+      for(w=init_spec+2 ; w<init_spec+num_mon+2 ; w++)
+         {
+          k_prop = mp->u_species_source[w][1]*
+                exp(-mp->u_species_source[w][2]*
+                (1./fv->T - 1./mp->u_species_source[w][3]));
+          h += k_prop*fv->c[w]*free_rad*param[1];
+          dhdC[w] += k_prop*free_rad*param[1];
+          dhdT += k_prop*mp->u_species_source[w][2]/SQUARE(fv->T)
+                *fv->c[w]*free_rad*param[1];
+
+          if(model_bit & 2)
+               { dhdC[rad_spec] += k_prop*fv->c[w]*param[1]; }
+          else if(model_bit & 1)
+               { 
+                dhdC[O2_spec] += k_prop*fv->c[w]*param[1]*
+                      (SQUARE(k_inh/2.)*fv->c[O2_spec]/
+                       sqrt(SQUARE(k_inh*fv->c[O2_spec])/4.+
+                mp->u_species_source[init_spec+1][2]*intensity*fv->c[init_spec])
+                       -k_inh/2.);
+                dhdC[init_spec] += k_prop*fv->c[w]*param[1]*
+                       0.5*mp->u_species_source[init_spec+1][2]*intensity/
+                       sqrt(SQUARE(k_inh*fv->c[O2_spec])/4.+
+           mp->u_species_source[init_spec+1][2]*intensity*fv->c[init_spec]);
+
+               }
+          else 
+               { 
+                dhdC[init_spec] += k_prop*fv->c[w]*param[1]*
+                       0.5*sqrt(mp->u_species_source[init_spec+1][2]*intensity/
+                       fv->c[init_spec]);
+               }
+         }
 
 /**  add heat generation from light absorption  **/
 

@@ -31,7 +31,6 @@
  */
 #else /* HAVE_CONFIG_H */
 
-#define HAVE_FRONT 1
 #define HAVE_SPARSE 1
 #define HAVE_UMFPACK 1
 #define HAVE_AZTEC 1

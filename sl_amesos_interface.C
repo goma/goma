@@ -1,40 +1,13 @@
 /************************************************************************ *
- * Copyright (c) 2013 Sandia Corporation. All rights reserved.            *
- *                                                                        *
- * Under the terms of Contract DE-AC04-94AL85000, there is a              *
- * non-exclusive license for use of this work by or on behalf of the      *
- * U.S. Government.                                                       *
- *                                                                        *
- *                                NOTICE:				  * 
- * For five (5) years from 10/03/2013, the United States Government is 	  *
- * granted for itself and others acting on its behalf a paid-up,    	  *
- * nonexclusive, irrevocable worldwide license in this data to reproduce, *
- * prepare derivative works, and perform publicly and display publicly,   *
- * by or on behalf of the Government. There is provision for the possible *
- * extension of the term of this license. Subsequent to that period or    *
- * any extension granted, the United States Government is granted for     *
- * itself and others acting on its behalf a paid-up, nonexclusive,        *
- * irrevocable worldwide license in this data to reproduce, prepare       *
- * derivative works, distribute copies to the public, perform publicly    *
- * and display publicly, and to permit others to do so. The specific      *
- * term of the license can be identified by inquiry made to               *
- * Sandia Corporation or DOE.                                             *
- *	                                                                  *
- * NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES DEPARTMENT *
- * OF ENERGY, NOR SANDIA CORPORATION, NOR ANY OF THEIR EMPLOYEES, MAKES   *
- * ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY LEGAL RESPONSIBILITY  *
- * FOR THE ACCURACY, COMPLETENESS, OR USEFULNESS OF ANY INFORMATION,      *
- * APPARATUS, PRODUCT, OR PROCESS DISCLOSED, OR REPRESENTS THAT ITS USE   *
- * WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.                             *
- *
- * Any licensee of this software has the obligation and responsibility to *
- * abide by the applicable export control laws, regulations, and general  *
- * prohibitions relating to the export of technical data. Failure to 	  *
- * obtain an export control license or other authority from the Government*
- *  may result in criminal liability under U.S. laws.  	    	          *
- *	 	                                                          *
- *                             (End of Notice)                            *
-*					         			*
+* Goma - Multiphysics finite element software                             *
+* Sandia National Laboratories                                            *
+*                                                                         *
+* Copyright (c) 2014 Sandia Corporation.                                  *
+*                                                                         *
+* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
+* the U.S. Government retains certain rights in this software.            *
+*                                                                         *
+* This software is distributed under the GNU General Public License.	  *
 \************************************************************************/
 
 #ifndef _SL_AMESOS_INTERFACE_CC
@@ -52,6 +25,7 @@
 #define __cplusplus
 #endif
 
+#include "mpi.h"
 #include <stdio.h>
 #include <iostream>
 #include <ctime>
@@ -131,7 +105,7 @@ amesos_solve_msr( char *choice,
     else if ( Pkg_Choice == "SCALAPACK") 
       Pkg_Name = "Amesos_Scalapack";
     else {
-      cout << "Error: Unsupport Amesos solver package"<<endl ;
+      std::cout << "Error: Unsupport Amesos solver package"<<std::endl ;
       exit(-1);
     }
   }
@@ -146,8 +120,8 @@ amesos_solve_msr( char *choice,
   if (FirstRun) {
     A_Base = A_Factory.Create( Pkg_Name.c_str(), Problem );
     if( A_Base == 0 ) {	
-      cout << "Error in amesos_solve_msr" <<endl;
-      cout << "It is likely that the solver package: " << Pkg_Name << " has not been linked into the amesos library " << endl;
+      std::cout << "Error in amesos_solve_msr" <<std::endl;
+      std::cout << "It is likely that the solver package: " << Pkg_Name << " has not been linked into the amesos library " << std::endl;
       exit (-1 ) ;
     }
   }

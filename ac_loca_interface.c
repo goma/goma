@@ -1262,7 +1262,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
     }
 
   if((nn_post_data_sens+nn_post_fluxes_sens) > 0)
-		Dmatrix_death(x_sens_p,num_pvector,numProcUnknowns);
+		safer_free( (void**) &x_sens_p);
+/*		Dmatrix_death(x_sens_p,num_pvector,numProcUnknowns);*/
 
   sl_free(matrix_systems_mask, ams);
   for (i = 0; i < NUM_ALSS; i++)

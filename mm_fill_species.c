@@ -9948,7 +9948,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
        double intensity, intensity_dt=0;
        double k_prop, k_term, k_inh, free_rad;
        double *param,s,dsdC[MAX_CONC],dsdT;
-       int model_bit, init_spec = 0;
+       int model_bit, num_mon, O2_spec=-1, rad_spec=-1, init_spec = 0;
 
        param = mp->u_species_source[w];
        model_bit = ((int)param[0]);
@@ -9957,28 +9957,49 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
        for(a=0; a<MAX_CONC; a++) dsdC[a]=0.;  
 
 #if 1
-      intensity = mp->u_species_source[init_spec][1]*(fv->poynt[0]);
+       intensity = 0;
+       if(pd->e[R_LIGHT_INTP])
+          { intensity += fv->poynt[0];}
+       if(pd->e[R_LIGHT_INTM])
+          { intensity += fv->poynt[1];}
+       if(pd->e[R_LIGHT_INTD])
+          { intensity += fv->poynt[2];}
+       intensity *= mp->u_species_source[init_spec][1];
 #else
       intensity = mp->u_species_source[init_spec][1]*
                      (SQUARE(fv->apr)+SQUARE(fv->api));
 #endif
       /*  free radical concentration  */
+	num_mon = model_bit>>2;
        if( (model_bit & 1)  && (model_bit & 2))
             {
-            free_rad = fv->c[init_spec+4];
+	    O2_spec = init_spec + num_mon +2;
+	    rad_spec = O2_spec + 1;
+            free_rad = fv->c[rad_spec];
+            k_term = mp->u_species_source[rad_spec][1]*
+                     exp(-mp->u_species_source[rad_spec][2]*
+                     (1./fv->T - 1./mp->u_species_source[rad_spec][3]));
+            k_inh = mp->u_species_source[O2_spec][1]*
+                    exp(-mp->u_species_source[O2_spec][2]*
+                    (1./fv->T - 1./mp->u_species_source[O2_spec][3]));
             } 
        else if( model_bit & 1)
             {
-            k_inh = mp->u_species_source[init_spec+3][1]*
-                    exp(-mp->u_species_source[init_spec+3][2]*
-                    (1./fv->T - 1./mp->u_species_source[init_spec+3][3]));
-            free_rad = sqrt(SQUARE(k_inh*fv->c[init_spec+3])/4.+
+	    O2_spec = init_spec + num_mon +2;
+            k_inh = mp->u_species_source[O2_spec][1]*
+                    exp(-mp->u_species_source[O2_spec][2]*
+                    (1./fv->T - 1./mp->u_species_source[O2_spec][3]));
+            free_rad = sqrt(SQUARE(k_inh*fv->c[O2_spec])/4.+
                 mp->u_species_source[init_spec+1][2]*intensity*fv->c[init_spec])
-                - k_inh*fv->c[init_spec+3]/2.;
+                - k_inh*fv->c[O2_spec]/2.;
             }
        else if( model_bit & 2)
             {
-            free_rad = fv->c[init_spec+3];
+	    rad_spec = init_spec + num_mon +2;
+            k_term = mp->u_species_source[rad_spec][1]*
+                     exp(-mp->u_species_source[rad_spec][2]*
+                     (1./fv->T - 1./mp->u_species_source[rad_spec][3]));
+            free_rad = fv->c[rad_spec];
             }
        else
             {
@@ -9996,7 +10017,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
             s = param[2]*fv->c[init_spec]*intensity;
             dsdC[init_spec] = param[2]*intensity;
           }
-       else if(w == init_spec + 2)
+       else if(w > init_spec+1 && w <= init_spec+num_mon+1)
          {
             k_prop = param[1]*exp(-param[2]*(1./fv->T - 1./param[3]));
             s = -k_prop*fv->c[w]*free_rad;
@@ -10004,25 +10025,22 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
             dsdT = -fv->c[w]*free_rad*k_prop*param[2]/SQUARE(fv->T);
 	  if( (model_bit & 1)  && (model_bit & 2))
             {
-            dsdC[w+2] = -k_prop*fv->c[w];
+            dsdC[rad_spec] = -k_prop*fv->c[w];
             } 
           else if( model_bit & 1)
             {
-            k_inh = mp->u_species_source[init_spec+3][1]*
-                    exp(-mp->u_species_source[init_spec+3][2]*
-                    (1./fv->T - 1./mp->u_species_source[init_spec+3][3]));
-            dsdC[w+1] = -k_prop*fv->c[w]*(SQUARE(k_inh/2.)*fv->c[w+1]/
-                       sqrt(SQUARE(k_inh*fv->c[init_spec+3])/4.+
+            dsdC[O2_spec] = -k_prop*fv->c[w]*(SQUARE(k_inh/2.)*fv->c[O2_spec]/
+                       sqrt(SQUARE(k_inh*fv->c[O2_spec])/4.+
                 mp->u_species_source[init_spec+1][2]*intensity*fv->c[init_spec])
                        -k_inh/2.);
             dsdC[init_spec] = -k_prop*fv->c[w]*0.5*
                        (mp->u_species_source[init_spec+1][2]*intensity/
-                       sqrt(SQUARE(k_inh*fv->c[init_spec+3])/4.+
+                       sqrt(SQUARE(k_inh*fv->c[O2_spec])/4.+
                 mp->u_species_source[init_spec+1][2]*intensity*fv->c[init_spec]));
             }
           else if( model_bit & 2)
             {
-            dsdC[w+1] = -k_prop*fv->c[w];
+            dsdC[rad_spec] = -k_prop*fv->c[w];
             }
           else
             {
@@ -10031,57 +10049,51 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
                        sqrt(fv->c[init_spec])/2.);
             }
           }
-       else if(w == init_spec + 3 && ((model_bit & 2) || (model_bit & 1)))
+       else if(w == O2_spec && (model_bit & 1))
          {
-            k_inh = param[1]*exp(-param[2]*(1./fv->T - 1./param[3]));
             s = -k_inh*fv->c[w]*free_rad;
-	  if( (model_bit & 1)  && (model_bit & 2))
+            dsdT = -fv->c[w]*free_rad*k_inh*param[2]/SQUARE(fv->T);
+	  if( model_bit & 2)
             {
             dsdC[w] = -k_inh*free_rad;
-            dsdC[w+1] = -k_inh*fv->c[w];
-            dsdT = -fv->c[w]*free_rad*k_inh*param[2]/SQUARE(fv->T);
+            dsdC[rad_spec] = -k_inh*fv->c[w];
             } 
-          else if( model_bit & 1)
+          else 
             {
             dsdC[w] = -k_inh*free_rad-k_inh*fv->c[w]*(SQUARE(k_inh/2.)*fv->c[w]/
                        sqrt(SQUARE(k_inh*fv->c[w])/4.+
                 mp->u_species_source[init_spec+1][2]*intensity*fv->c[init_spec])
                        -k_inh/2.);
-            dsdC[init_spec] = -k_inh*fv->c[w]*0.5*
-                       (sqrt(mp->u_species_source[init_spec+1][2]*intensity
-                         /fv->c[init_spec]));
-            }
-          else if( model_bit & 2)
-            {
-            dsdC[w] = -k_inh*free_rad*2.;
-            }
-          else
-            {
-            s = 0.;
+            dsdC[init_spec] = -k_inh*fv->c[w]*0.5*intensity*
+                       mp->u_species_source[init_spec+1][2]/
+                       sqrt(SQUARE(k_inh*fv->c[O2_spec])/4.+
+           mp->u_species_source[init_spec+1][2]*intensity*fv->c[init_spec]);
             }
           }
-       else if(w == init_spec + 4)
+       else if(w == rad_spec && (model_bit & 2))
          {
-	  if( (model_bit & 1)  && (model_bit & 2))
+	  if( model_bit & 1 )
             {
-            k_term = param[1]*exp(-param[2]*(1./fv->T - 1./param[3]));
-            k_inh = mp->u_species_source[w-1][1]*
-                    exp(-mp->u_species_source[w-1][2]*
-                    (1./fv->T - 1./mp->u_species_source[w-1][3]));
 	    s = mp->u_species_source[init_spec+1][2]*fv->c[init_spec]*intensity
                   -k_term*SQUARE(fv->c[w])
-                  -k_inh*fv->c[w-1]*fv->c[w];
+                  -k_inh*fv->c[O2_spec]*fv->c[w];
             dsdC[init_spec] = mp->u_species_source[init_spec+1][2]*intensity;
-            dsdC[w-1] = -k_inh*fv->c[w];
-            dsdC[w] = -k_term*2*fv->c[w]-k_inh*fv->c[w-1];
+            dsdC[O2_spec] = -k_inh*fv->c[w];
+            dsdC[w] = -k_term*2*fv->c[w]-k_inh*fv->c[O2_spec];
             dsdT = - SQUARE(fv->c[w])*k_term*param[2]/SQUARE(fv->T)
-                           -fv->c[w-1]*fv->c[w]*k_inh*
-                            mp->u_species_source[w-1][2]/SQUARE(fv->T);
+                           -fv->c[O2_spec]*fv->c[w]*k_inh*
+                            mp->u_species_source[O2_spec][2]/SQUARE(fv->T);
             } 
-          else
+          else 
             {
-            s = 0.;
+            s = -k_term*SQUARE(fv->c[w]);
+            dsdC[rad_spec] = -k_term*free_rad*2.;
+            dsdT = - SQUARE(fv->c[w])*k_term*param[2]/SQUARE(fv->T);
             }
+          }
+        else
+          {
+            s = 0.;
           }
 
 	st->MassSource[w]= s;

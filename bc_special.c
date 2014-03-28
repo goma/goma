@@ -117,7 +117,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
   double *a = ams->val;
   int    *ija = ams->bindx;
   int w, i, I, ibc, k, j, id, icount, ss_index,i1,i2,i3;     /* counters */
-  double wall_velocity = 0.0, velo[MAX_PDIM], theta_max = 180.0;
+  double wall_velocity = 0.0, velo[MAX_PDIM], theta_max = 180.0, dewet = 1.0;
   double dwall_velo_dx[MAX_PDIM][MDE],dvelo_dx[MAX_PDIM][MAX_PDIM];
   int found_wall_velocity;
   /* HKM - worried that jflag shouldn't be initialized all the way up here */
@@ -801,7 +801,13 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 				  WH(-1,"Wall velocity not found : setting to zero\n");
 				}
 			      f = BC_Types[j].BC_Data_Float;
-			      if(BC_Types[j].BC_Name == VELO_THETA_SHIK_BC)theta_max = f[8];
+			      if(BC_Types[j].BC_Name == VELO_THETA_SHIK_BC)
+				{theta_max = f[8];}
+			      if(BC_Types[j].BC_Name == VELO_THETA_HOFFMAN_BC
+				|| BC_Types[j].BC_Name == VELO_THETA_COX_BC
+				|| BC_Types[j].BC_Name == VELO_THETA_TPL_BC
+				)
+				{dewet = f[8];}
 			      fapply_moving_CA_sinh(func, 
 						    d_func, 
 						    d_func_ss,
@@ -820,6 +826,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 						    time_value,
 						    wall_velocity,
 						    theta_max,
+						    dewet,
 						    BC_Types[j_bc_id].BC_Name,
 						    dwall_velo_dx);
 			    }	/* if VELO_THETA bc		*/

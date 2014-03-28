@@ -7138,6 +7138,7 @@ void fapply_moving_CA_sinh(
  const double time,		/* current time */
  const double wall_velocity,
  const double theta_max_degrees,
+ const double dewet_input,
  const int bc_type,	/*  bc identifier	*/
  double dwall_velo_dx[MAX_PDIM][MDE])
 {
@@ -7254,7 +7255,7 @@ void fapply_moving_CA_sinh(
 	{
 	case VELO_THETA_TPL_BC:
   		v_new = v0 * sinh((costhetaeq - costheta)*g); 
-		dewet = (v_new < 0) ? theta_max_degrees : 1.0;
+		dewet = (v_new < 0) ? dewet_input : 1.0;
 	 	v_new *= dewet;
 		break;
 	case VELO_THETA_HOFFMAN_BC:
@@ -7290,7 +7291,7 @@ void fapply_moving_CA_sinh(
                      }
 		g_dca = ca_no;
 		ca_no = g_dca - g_sca;
-		dewet = (ca_no < 0) ? theta_max_degrees : 1.0;
+		dewet = (ca_no < 0) ? dewet_input : 1.0;
 		v_new = dewet*ca_no*g/liq_visc;
 		break;
 	case VELO_THETA_COX_BC:
@@ -7334,7 +7335,7 @@ void fapply_moving_CA_sinh(
 			/* solve for wetting speed	*/
 		ca_no = g_integral/(log(reciprocal_slip) +
 				(q_inner/f_sca - q_outer/f_dca));
-		dewet = (ca_no < 0) ? theta_max_degrees : 1.0;
+		dewet = (ca_no < 0) ? dewet_input : 1.0;
 		v_new = dewet*ca_no*g/liq_visc;
 		break;
 	case VELO_THETA_SHIK_BC:

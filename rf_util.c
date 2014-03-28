@@ -691,7 +691,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
   if (eps < 0.0) {
     for (i = 0; i < MAX_VARIABLE_TYPES; i++) {
       if (max[i] > 0.0) {
-#if 1
+#if 0
 	ecp[i] =  ecp[i] / SQUARE(max[i]);
 #else
 	ecp[i] =  ecp[i] / (1.0 + SQUARE(max[i]));

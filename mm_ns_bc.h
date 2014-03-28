@@ -500,6 +500,7 @@ PROTO((double *,		/* func */
        const double ,		/* time - current time */
        const double ,		/* wall velocity */
        const double ,		/* theta_max */
+       const double ,		/* dewet parameter */
        const int ,		/* BC identifier */
        double [MAX_PDIM][MDE] ));		/* wall velo derivs	*/
 
