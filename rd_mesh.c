@@ -1678,15 +1678,10 @@ multiname(char *in_name,
 	  const int processor_name, 
 	  const int number_processors)
 {
-  char prefix[MAX_FNL];
-  char suffix[MAX_FNL];
-  char new_name[MAX_FNL];
   char proc_string[MAX_FNL];
   char err_msg[MAX_CHAR_IN_INPUT];
 
   int i;
-  int suffix_length;
-  int prefix_length;
 
   /*
    * Don't name something as "1of1" here.
@@ -1718,30 +1713,13 @@ multiname(char *in_name,
   
   for ( i=0; i<MAX_FNL; i++)
     {
-      prefix[i] = '\0';
-      suffix[i] = '\0';
-      new_name[i] = '\0';
       proc_string[i] = '\0';
     }
 
-  suffix_length = get_suffix(suffix, in_name);
-  prefix_length = get_prefix(prefix, in_name);
+  sprintf(proc_string, ".%d.%d", number_processors, processor_name);
 
-  sprintf(proc_string, "_%dof%d", processor_name+1, number_processors);
-
-  if ( prefix_length > 0 )
-    {
-      strcpy(new_name, prefix);
-    }
-
-  strcat(new_name, proc_string);
-
-  if ( suffix_length > 0 )
-    {
-      strcat(new_name, suffix);
-    }
+  strcat(in_name, proc_string);
   
-  strcpy(in_name, new_name);
   return;
 }
 
