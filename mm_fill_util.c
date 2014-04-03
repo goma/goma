@@ -1535,7 +1535,7 @@ calc_unseeded_edge_tangents_TET (struct Rotation_Vectors *tangent,
    * -------------------------------------------------*/
 
   /* calculate unit vector in parametric direction of local coord param_dir */
-  int param_dir_tet;
+  int param_dir_tet = 0;
   for (j = 0; j < num_nodes_on_edge; j++)
     {
       j_id    = (int) edge_elem_node_id[j];

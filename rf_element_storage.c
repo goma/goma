@@ -117,7 +117,8 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
 {
   int ielem_type, ip_total, i, numStorage;
   ELEMENT_STORAGE_STRUCT *s_ptr;
-  double *d_ptr, *base_ptr;
+  double *d_ptr;
+  double *base_ptr = NULL;
   /*
    * Check to make sure that we haven't already allocated storage
    */

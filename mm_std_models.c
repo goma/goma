@@ -3875,7 +3875,7 @@ suspension_balance(struct Species_Conservation_Terms *st,
   dbl *Y, (*grad_Y)[DIM], *dmu_dY, *d2mu_dY2, dmu_dT, d2mu_dT2;
   dbl d2mu_dgd_dY; /* cross derivative of viscosity wrt
 		      shear rate and concentration */
-  dbl f, maxpack, nexp, rzexp;
+  dbl f, maxpack, nexp, rzexp = 0;
   dbl df_dy, df_dmu;
   dbl M;  /* hindrance function */
   dbl dM_dy, dM_dmu;
@@ -4278,8 +4278,8 @@ particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress */
   dbl mu;  
   dbl Kn;  
   
-  dbl pp, d_pp_dy;
-  dbl y_norm, comp, comp1;
+  dbl pp = 0, d_pp_dy = 0;
+  dbl y_norm, comp = 0, comp1;
   
   dbl maxpack, nexp;
   
@@ -4603,7 +4603,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 
   dbl maxpack, maxpack2, nexp, Ks, Kn;
   dbl pp,  d_pp_dy, d_pp2_dy2;
-  dbl comp, comp1, comp2, y_norm;
+  dbl comp, comp1, comp2 = 0, y_norm;
   Y = fv->c;
   grad_Y = fv->grad_c;
   grad_gd = fv->grad_SH;

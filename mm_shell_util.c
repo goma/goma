@@ -3728,10 +3728,10 @@ double shell_saturation_pressure_curve(
   dbl sigma = mp->u_saturation[0];                  // Surface tension
   dbl theta = mp->u_saturation[1];                  // Contact angle
   dbl Patm = mp->PorousShellPatm ;                                 // Atmospheric pressure
-  dbl R = porous_shell_closed_radius_model();                                    // Pillar radius
+  //  dbl R = porous_shell_closed_radius_model();                                    // Pillar radius
   dbl Rmin = mp->u_saturation[2];                   // Minimum pore radius
   dbl Rmax = mp->u_saturation[3];                   // Maximum pore radius
-  dbl phi = mp->porosity;                                  // Porosity (open phase)
+  //  dbl phi = mp->porosity;                                  // Porosity (open phase)
 
   /* Define variables */
   dbl S;
@@ -3916,8 +3916,6 @@ calculate_lub_q_v_nonnewtonian (
   dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_ddH;
   dbl dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp;
   dbl gradP_tangent[DIM], gradP_normal[DIM], gradP_normal_init[DIM];
-  dbl dq_dshear_bot[DIM], dq_dgradP_mag[DIM];
-  dbl dv_avg_dshear_bot[DIM], dv_avg_dgradP_mag[DIM];
 
   dbl epsilon = 1.0e-5;
 

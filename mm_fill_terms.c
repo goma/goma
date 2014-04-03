@@ -2427,7 +2427,7 @@ assemble_momentum(dbl time,       /* current time */
   
   dbl mass_etm, advection_etm, diffusion_etm, source_etm, porous_brinkman_etm;
   
-  double *J ;
+  double *J = NULL;
   double *R ;
   
   /*
@@ -10567,7 +10567,7 @@ load_fv_mesh_derivs(int okToZero)
   int i, j;			/* index */
   int b;
   int p, q, r, s;		/* dimension index */
-  int vdofs;			/* degrees of freedom for var  in the elem */
+  int vdofs = 0;		/* degrees of freedom for var  in the elem */
   int mdofs;			/* degrees of freedom for mesh in the elem */
   int w;			/* concentration species */
   int status;
@@ -13719,7 +13719,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
     {
       int num, a;
       double width;
-      double rho1, rho2, tmp_rho;
+      double rho1, rho2 = 0, tmp_rho;
       struct Level_Set_Data *ls_save = ls;
 	
       num=pfd->num_phase_funcs;
@@ -27391,7 +27391,9 @@ heat_flux( double q[DIM],
   else if (cr->HeatFluxModel == CR_HF_USER)
     {
       double wrate, *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
+#ifdef SECOR_HEAT_FLUX
       double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
+#endif
 #if 0
         int npadex,npadey;
         double dnum,dden,*pn,*pd;
@@ -27599,8 +27601,8 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
     }
   else if(mp->HeatSourceModel == PHOTO_CURING )
     {
-       double intensity, intensity_dt=0;
-       double k_prop, k_inh, free_rad;
+       double intensity;
+       double k_prop, k_inh = 0, free_rad;
        double *param,h,dhdC[MAX_CONC],dhdT;
        int model_bit, num_mon, O2_spec=-1, rad_spec=-1, init_spec = 0;
 
@@ -29520,9 +29522,9 @@ assemble_acoustic(double time,	/* present time value */
 		  const int ac_var )
 {
   int eqn, var, peqn, pvar, dim, p, b, w, i, j, status;
-  int conj_var;			/* identity of conjugate variable  */
+  int conj_var = 0;			/* identity of conjugate variable  */
 
-  dbl P, P_conj, sign_conj;		/* acoustic pressure	*/
+  dbl P = 0, P_conj = 0, sign_conj = 0;		/* acoustic pressure	*/
   dbl q[DIM];				
   ACOUSTIC_FLUX_DEPENDENCE_STRUCT d_q_struct; 
   ACOUSTIC_FLUX_DEPENDENCE_STRUCT *d_q = &d_q_struct;
@@ -31055,10 +31057,10 @@ assemble_poynting(double time,	/* present time value */
 		  const int py_eqn,	/* eqn id and var id	*/
 		  const int py_var )
 {
-  int eqn, var, peqn, pvar, dim, p, b, w, i, j, status, light_eqn;
+  int eqn, var, peqn, pvar, dim, p, b, w, i, j, status, light_eqn = 0;
 
-  dbl P;		/* Light Intensity	*/
-  dbl grad_P, Psign;			/* grad intensity */
+  dbl P;		                /* Light Intensity	*/
+  dbl grad_P, Psign = 0;		/* grad intensity */
 
   dbl R;				/* Acoustic impedance. */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_R_struct; 
@@ -31072,13 +31074,9 @@ assemble_poynting(double time,	/* present time value */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_alpha_struct; 
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha = &d_alpha_struct;
 
-  dbl mass;		         	/* For terms and their derivatives */
-
-  dbl advection;			/* For terms and their derivatives */
-
-  dbl diffusion;
-  dbl diff_a, diff_b, diff_c, diff_d;
-  dbl source;
+  dbl diffusion = 0;
+  //  dbl diff_a;
+  dbl diff_b, diff_c, diff_d;
 
   /*
    * Galerkin weighting functions for i-th energy residuals
@@ -31101,7 +31099,6 @@ assemble_poynting(double time,	/* present time value */
   dbl det_J;
 
   dbl d_det_J_dmeshbj;			/* for specified (b,j) mesh dof */
-  dbl dgrad_phi_i_dmesh[DIM];		/* ditto.  */
   dbl wt;
 
   /*   static char yo[] = "assemble_acoustic";*/

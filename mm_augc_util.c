@@ -2349,7 +2349,6 @@ estimate_dAC_ALC(int iAC,
 
   double inventory;
   double LSvel_inventory;
-  int  mn;
 #ifdef PARALLEL
   double global_inventory=0.0;
   double global_LSvel_inventory=0.0;
@@ -2706,7 +2705,6 @@ std_lgr_cond ( int iAC,
 {
   double inventory;
   double lambda ; 
-  int  mn ;
   int i, jAC;
   double theta_scale = 1.0;
 #ifdef PARALLEL

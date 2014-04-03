@@ -6398,8 +6398,9 @@ surface_lubrication_shell_bc(double R[MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE]
 
   double qlub[DIM],dq_gradP[DIM][DIM],dq_dX[DIM][DIM],grad_P[DIM], Vt[DIM], Vb[DIM];
   double dq_dVb[DIM][DIM];
+#ifdef SECOR_HEAT_FLUX
   double dq_dVt[DIM][DIM];
-
+#endif
   model_id = (int) mp->u_shell_user_par[0];
   if( model_id == 1)
     {
@@ -6628,7 +6629,7 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 		     const Exo_DB *exo)  
 {
   int eqn, var, peqn, pvar, p, a, b, k, jk;
-  int i = -1, j, status, err;
+  int i = -1, j, status; //, err;
   int *n_dof = NULL;
   int dof_map[MDE];
   
@@ -7158,7 +7159,7 @@ assemble_shell_energy(double time,	/* present time value */
 
   dbl veloc, veloU[DIM], veloL[DIM];
   dbl  mu, rho, t_cond, Cp;  
-  dbl k_eff, k_turb, d_k_turb_dmu, d_k_eff_dh, mu_eff ;  /* sundry factors*/
+  dbl k_eff, k_turb, d_k_turb_dmu, d_k_eff_dh;  /* sundry factors*/
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
 
@@ -8865,7 +8866,7 @@ assemble_film_particles(  double time,	/* present time value */
   dbl grad_II_C[DIM];  /* Particles concentration gradient */
   dbl wt;
 
-  dbl H, C, C_dot; 
+  dbl H = 0, C, C_dot; 
   dbl H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_dp, dH_U_ddh;
   dbl dH_U_dX[DIM],dH_L_dX[DIM];
   dbl q_old[DIM], q[DIM], v_old[DIM], v[DIM];
@@ -10748,7 +10749,7 @@ assemble_porous_shell_open(
   dbl H =  porous_shell_closed_height_model();    // Pore height (vertical)
 
   // Load field variables - PRS NOTE: NEED cross BC for integrating the two (set-up-shop)
-  dbl P = fv->sh_p_open;                          // Porous pressure
+  //  dbl P = fv->sh_p_open;                          // Porous pressure
 
   struct Level_Set_Data *ls_old;
     
@@ -10764,7 +10765,7 @@ assemble_porous_shell_open(
       // PRS: just need to expand the nodal call on the mass term 
     }
 
-  dbl S, dSdP, dSdP_P;
+  dbl S, dSdP;
   S = mp->saturation;
   dSdP = mp->d_saturation[SHELL_PRESS_OPEN];
 
@@ -10845,7 +10846,7 @@ assemble_porous_shell_open(
   dbl E_SOUR_F[MDE] = {0.0};
   dbl E_SOUR_2, E_SOUR_P_2, E_SOUR_2_PLUB_2;
   dbl E_SOUR_2_PF[MDE] = {0.0};
-  dbl Rmin, sigma, theta, Pmin, Peff, Peff2;
+  dbl Pmin, Peff, Peff2;
 
   Pmin = mp->PorousShellInitPorePres; // PRS Note: ahh, this is the key lynch pin in the re-emergence
                                       // criteria.  This should not be const.  We have tofigure this out.
@@ -11007,7 +11008,7 @@ assemble_porous_shell_open(
 
   // Assemble residual contribution to the second lubrication equation
   eqn = R_LUBP_2;
-  if (af->Assemble_Residual & upd->ep[eqn] >= 0) {
+  if ((af->Assemble_Residual & upd->ep[eqn]) >= 0) {
     peqn = upd->ep[eqn];
     
     // Loop over DOF (i)
@@ -11280,7 +11281,7 @@ assemble_porous_shell_open(
   } // End of Jacobian assembly of R_LUBP
 
   eqn = R_LUBP_2;
-  if (af->Assemble_Jacobian & upd->ep[eqn] >= 0) {
+  if ((af->Assemble_Jacobian & upd->ep[eqn]) >= 0) {
     peqn = upd->ep[eqn];
     
     // Loop over DOF (i)
@@ -11450,8 +11451,6 @@ assemble_porous_shell_open_2(
   dbl H =  porous_shell_closed_height_model();    // Pore height (vertical)
 
   // Load field variables - PRS NOTE: NEED cross BC for integrating the two (set-up-shop)
-  dbl Plub = fv->lubp_2;                            // Lubrication pressure
-  dbl P = fv->sh_p_open_2;                          // Porous pressure
 
   struct Level_Set_Data *ls_old;
 
@@ -11474,7 +11473,7 @@ assemble_porous_shell_open_2(
       // PRS: just need to expand the nodal call on the mass term 
     }
 
-  dbl S, dSdP, dSdP_P;
+  dbl S, dSdP;
   S = mp->saturation;
   dSdP = mp->d_saturation[SHELL_PRESS_OPEN_2];
 
@@ -11552,7 +11551,7 @@ assemble_porous_shell_open_2(
   // Calculate SOURCE term
   dbl E_SOUR, E_SOUR_P, E_SOUR_PLUB;
   dbl E_SOUR_F[MDE] = {0.0};
-  dbl Rmin, sigma, theta, Pmin, Peff;
+  dbl Pmin, Peff;
 
   Pmin = mp->PorousShellInitPorePres; // PRS Note: ahh, this is the key lynch pin in the re-emergence
                                       // criteria.  This should not be const.  We have tofigure this out.

@@ -4620,7 +4620,7 @@ rd_ac_specs(FILE *ifp,
 
   int iAC;
   char *yo; 
-  int num_const,i;
+  int num_const = 0,i;
   int AC_rd_file;
   double augc_initial_value[10];
 

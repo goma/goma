@@ -574,7 +574,7 @@ build_elem_elem(Exo_DB *exo)
   int elem;
   int ename;
   int face;
-  int his_dim, her_dim;
+  //int his_dim, her_dim;
   int i, j;
   int index;
   int len_curr;

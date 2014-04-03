@@ -396,7 +396,8 @@ dbl fnc( x1, x2,  x3, p,  time)
 /* for PI use M_PIE Constant from std.h include file. */
 
   /* cylinder with axis parallel to z */
-  dbl f=0, cx = p[0], cy=p[1], r=p[2];
+  // dbl cx = p[0], cy=p[1], r=p[2];
+  dbl f=0;
 
 
   // f = (x1-cx)*(x1-cx) + ( x2 - cy)*(x2-cy) - r*r; 
@@ -906,7 +907,7 @@ p_liq_user_surf (double *func,
 
   
   return;
-} /* END of routine p_liq_user_surf    
+} /* END of routine p_liq_user_surf */
 
 /****************************************************************************/
 

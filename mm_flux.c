@@ -193,7 +193,7 @@ evaluate_flux(
 
   double vs[MAX_PDIM][MAX_PDIM];	/* viscous stress */
   double dsigma_dx[DIM][MDE];		/* surface tension terms */
-  double dsigmadT, dsigmadC[MAX_CONC];
+  double dsigmadT = 0, dsigmadC[MAX_CONC];
 
   double ves[MAX_PDIM][MAX_PDIM];	/* viscoelastic stress */
   int ve_mode;
@@ -206,8 +206,8 @@ evaluate_flux(
   double local_flux = 0.0;    /* these are actually the integrated contact and*/
   double local_flux_conv = 0.0;       /*  convective fluxes  */
   double local_area= 0.0;
-  double local_q;               /* these are the actual fluxes  */
-  double local_qconv;
+  double local_q = 0;               /* these are the actual fluxes  */
+  double local_qconv = 0;
 
   double param[3] = {0.,0.,0.};
 
@@ -913,7 +913,9 @@ evaluate_flux(
                         {
                         double delP=0.;
 			double wrate, *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
+#if defined SECOR_HEAT_FLUX
 			double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
+#endif
 
 			hpar = &mp->u_thermal_conductivity[0];
 			h = hpar[0] + hpar[4]*fv->x[0]
@@ -5607,34 +5609,16 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   dbl gamma[DIM][DIM];
   dbl gamma_sens[DIM][DIM];
   dbl mu = 0.0;
-  dbl gamma_dot = 0.0;
-  int elem_sign_org;
+
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
   dbl mu_sens;
 
   dbl q[DIM],dq_gradT[DIM][DIM],dq_dX[DIM][DIM];
-  dbl k=0;			        /* Thermal conductivity. */
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; /* Thermal conductivity dependence. */
-  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
 
   dbl Cp = 0.0;                               /* Heat capacity. */
   HEAT_CAPACITY_DEPENDENCE_STRUCT d_Cp_struct; /* Heat capacity dependence. */
   HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp = &d_Cp_struct;
-
-  dbl R_imped;                               /* Acoustic impedance */
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_R_struct; 
-  CONDUCTIVITY_DEPENDENCE_STRUCT *d_R = &d_R_struct;
-
-  dbl wnum, kR_inv;                               /* Acoustic wavenumber */
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_wnum_struct; 
-  CONDUCTIVITY_DEPENDENCE_STRUCT *d_wnum = &d_wnum_struct;
-
-  dbl dkdT[MDE];			/* Temperature derivative of electrical conductivity. */
-  dbl dkdV[MDE];			/* Potential derivative of electrical conductivity. */
-  dbl dkdC[MAX_CONC][MDE];		/* Concentration derivative of electrical conductivity. */
-  dbl dkdX[DIM][MDE];   	       	/* Spatial derivatives of electrical conductivity. */
-
 
   double rho=0; /*  density variables */
   dbl e_theta[DIM] = {0.,0.,1.};  /* torque w.r.t theta only*/
@@ -5717,23 +5701,12 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   int id_side;
   int id_local_elem_coord[MAX_NODES_PER_SIDE];
 
-/* Local variables for the CHARGED_SPECIES_FLUX and CURRENT_FICKIAN cases            */ 
-  double z[MAX_CONC];         /* species charge number                       */ 
-  double kapta[MAX_CONC];     /* species electrical conductivity             */
-  double d_kapta_dc[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC];      /* dk/dc  */
-  double d_kapta_dT[MAX_CONC];                                     /* dk/dT  */
-  double d_kapta_dx[MAX_CONC][DIM];                                /* dk/dx  */
-  double T = -1.0;                   /* electrolyte solution temperature            */
-  const double R = 8.314;     /* Universal gas constant in units of J/mole K */
-  const double FF = 96487.0;  /* Faraday's constant in units of C/equiv.     */
-  double FRT;                 /* product of FF/R/T                           */
-
 #ifndef PARALLEL
   static const char yo[] = "evaluate_flux_sens";
 #endif
 
 /*  variables for adaptive quadrature weight calculation   */
- double ls_F[9],ad_wt[9], xf[2];
+ double ls_F[9],ad_wt[9];
  int ierr = 0, wt_type;
  const int Jac_state = af->Assemble_Jacobian;
 
@@ -6386,7 +6359,9 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                 }  else if ( cr->HeatFluxModel == CR_HF_USER )
                 {
         double wrate, *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
+#if defined SECOR_HEAT_FLUX
         double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
+#endif
 
         hpar = &mp->u_thermal_conductivity[0];
         h = hpar[0] + hpar[4]*fv->x[0]

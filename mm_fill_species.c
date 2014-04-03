@@ -5981,7 +5981,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
      double P_diff_1_dT, P_diff_log_dT, P_diff_log_dw[MAX_CONC], P_diff_1_dw;
      double P_bulk=0.;
 
-     int i, j, jac, k, l, mn;
+     int i, j, jac, k, mn;
      int Num_S1, Num_S2;
      double flory1,flory2,flory3,flory;
      double df1_dc[MAX_CONC],df2_dc[MAX_CONC];
@@ -9945,11 +9945,12 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
       }
       else if(mp->SpeciesSourceModel[w] == PHOTO_CURING )
       {
-       double intensity, intensity_dt=0;
+       double intensity;
        double k_prop, k_term, k_inh, free_rad;
        double *param,s,dsdC[MAX_CONC],dsdT;
        int model_bit, num_mon, O2_spec=-1, rad_spec=-1, init_spec = 0;
-
+       k_term = 0;
+       k_inh = 0;
        param = mp->u_species_source[w];
        model_bit = ((int)param[0]);
        s = 0;       
