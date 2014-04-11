@@ -360,6 +360,7 @@ extern int nn_post_data_sens;
 extern int nn_error_metrics;
 extern int nn_particles;
 extern int nn_volume;
+extern int ppvi_type;
 
 extern int Num_Nodal_Post_Proc_Var;
 extern int Num_Elem_Post_Proc_Var;

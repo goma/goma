@@ -857,6 +857,10 @@
 #define AC_POSITION 11     // Positional constraint
 #define AC_FLUX_MAT 12
 
+/* Post Processing Volumetric Integration types - AMC Originally Aug 2013 */
+
+#define PPVI_VERBOSE    1  //  This corresponds to the original output type
+#define PPVI_CSV        2  //  This will output a properly labled csv file, useful for automated python interpretation
 
 /* table interpolation types */
 
