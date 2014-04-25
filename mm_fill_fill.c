@@ -5952,7 +5952,6 @@ assemble_phase_function ( double time_value,
       return(status);
     }
   
-  //   Fill_Wt_Fcn = 99; Who the hell checked this in? Cost me a few hours.  PRS 8/14/2012
 
   /*
    * Calculate lubrication velocity for direct integration
@@ -6291,11 +6290,11 @@ assemble_phase_function ( double time_value,
 			    {
 			    case FILL_WEIGHT_EXPLICIT:
 			     tmp = phi_j;
-				break;
-		    		case 99:
-				   tmp = phi_i * ( pf*d_n_gradT_dT[j] - phi_j);
-			   	   tmp *= wt*h3*det_J;
-					break;
+			     break;
+			     //case 99: PRS:Here for tracking melting fronts?
+			     // tmp = phi_i * ( pf*d_n_gradT_dT[j] - phi_j);
+			     // tmp *= wt*h3*det_J;
+			     // break;
 			    default:
 			      EH(-1, "That Fill Weight Function type not currently supported for phase function\n");
 			      break;
