@@ -229,7 +229,6 @@ setup_pd()
 		   (ce == R_PHASE4) ||
 		   (ce == R_PHASE5) ||
 		   (ce == R_ACOUS_REYN_STRESS) ||  
-                   (ce == R_SHELL_LUBP) ||
 		   (ce == R_POR_SINK_MASS))
 	    {
 	      if ( pd_glob[mn]->etm[ce][(LOG2_MASS)] != 0. )
@@ -290,6 +289,13 @@ setup_pd()
 		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
 		}
 	    }
+	  else if(ce == R_SHELL_CURVATURE2)
+	    {
+	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+		{
+		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+		}
+	    }
 	  else if(ce == R_SHELL_TENSION)
 	    {
 	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
@@ -333,6 +339,13 @@ setup_pd()
                 }
             }
           else if(ce == R_SHELL_NORMAL2)
+            {
+              if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+                {
+                  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+                }
+            }
+          else if(ce == R_SHELL_NORMAL3)
             {
               if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
                 {

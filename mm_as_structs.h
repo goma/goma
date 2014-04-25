@@ -489,9 +489,10 @@ struct Element_Variable_Pointers
 
   dbl *H[DIM];                               /* Level Set Curvature */
 
-  dbl *n[DIM][MDE];                          /* level set normal */
+  dbl *n[DIM][MDE];                          /* level set normal OR shell normal */
 
   dbl *sh_K[MDE];                               /* Shell curvature */
+  dbl *sh_K2[MDE];                              /* Shell second curvature */
   dbl *sh_tens[MDE];                         /* Shell tension */
   dbl *sh_x[MDE];                             /* Shell y coordinate */
   dbl *sh_y[MDE];                             /* Shell x coordinate */
@@ -509,7 +510,6 @@ struct Element_Variable_Pointers
   dbl *ars[MDE];				/* acoustic reynolds stress */
   dbl *sink_mass[MDE];				/* porous sink mass*/
   dbl *sh_bv[MDE];				/* acoustic boundary velocity */
-  dbl *sh_p[MDE];                             /* shell lub pressure */
   dbl *lubp[MDE];                             /* lub pressure */
   dbl *lubp_2[MDE];                           /* second lub pressure */
   dbl *sh_fp[MDE];                            /* lub pressure in thin film */
@@ -592,9 +592,10 @@ struct Element_Stiffness_Pointers
 
   dbl ***E_field;                    /* Electric field */
 
-  dbl ***n;                      /* n[DIM][MDE],  level set normal */
+  dbl ***n;                      /* n[DIM][MDE],  level set normal OR shell normal */
  
   dbl **sh_K;                    /* sh_K[MDE],   Shell curvature */
+  dbl **sh_K2;                   /* sh_K2[MDE],   Shell second curvature */
   dbl **sh_tens;                 /* sh_tens[MDE], Shell tensions */
   dbl **sh_x;                    /* sh_x[MDE],   Shell x coordinate */
   dbl **sh_y;                    /* sh_y[MDE], Shell y coordinate */
@@ -612,7 +613,6 @@ struct Element_Stiffness_Pointers
   dbl **ars;			 /* *ars[MDE], acoustic reynolds stress */
   dbl **sink_mass;               /* Porous sink mass */
   dbl **sh_bv;                    /* sh_bv[MDE], acoustic bdy velocity */
-  dbl **sh_p;                    /* sh_p[MDE], lub pressure */
   dbl **lubp;                    /* lubp[MDE], lub pressure */
   dbl **lubp_2;                   /* lubp_2[MDE], second lub pressure */
   dbl **sh_fp;                   /* sh_fp[MDE], lub pressure in the thin film */
@@ -1534,6 +1534,7 @@ struct Field_Variables
   dbl lm[DIM];                  /* Lagrange Multiplier vector variable */
 
   dbl sh_K;                     /* Shell region curvature */
+  dbl sh_K2;                    /* Shell region second curvature */
   dbl sh_tens;                  /* Shell region tension */
   dbl sh_x;                     /* Shell region x coordinate */
   dbl sh_y;                     /* Shell region y coordinate */
@@ -1593,6 +1594,7 @@ struct Field_Variables
   dbl grad_nn[DIM];		/* Gradient of bond evolution. */
   dbl grad_ext_v[DIM];          /* Extension velocity */
   dbl grad_sh_K[DIM];           /* Gradient of shell curvature */
+  dbl grad_sh_K2[DIM];          /* Gradient of shell second curvature */
   dbl grad_sh_tens[DIM];        /* Gradient of shell tension */
   dbl grad_pF[MAX_PHASE_FUNC][DIM];       /* Gradient of phase function */
   dbl grad_sh_J[DIM];           /* Gradient of shell surface diffusion flux */
@@ -1635,7 +1637,8 @@ struct Field_Variables
 
   dbl grad_E_field[DIM][DIM];   /* Electric field */
 
-  dbl grad_n[DIM][DIM];         /* Normal to level set function */
+  dbl grad_n[DIM][DIM];         /* Normal to level set function OR shell normal */
+  dbl d_n_dxi[DIM][DIM];        /* Derivative of normal w.r.t. isoparametric coordinates */
 
   dbl div_n;                    /* Divergence of LS normal field */
   dbl div_s_n;                   /* Surface divergence of LS normal field */
@@ -1857,6 +1860,7 @@ struct Diet_Field_Variables
   dbl ext_v;                    /* Extension velocity */
   dbl lm[DIM];
   dbl sh_K;                     /*shell element curvature */
+  dbl sh_K2;                    /*shell element second curvature */
   dbl sh_tens;                  /*shell element tension */
   dbl sh_x;                     /*shell element x coordinate */
   dbl sh_y;                     /*shell element y coordinate */
@@ -1871,7 +1875,6 @@ struct Diet_Field_Variables
   dbl sh_Kd;                    /* shell surface curvature */
   dbl apr, api, ars, sh_bv;			/* Acoustic pressure */
   dbl sink_mass;                /* porous sink mass */
-  dbl sh_p;                    /* lub approx. */
   dbl lubp;                    /* lub approx. */
   dbl lubp_2;                   /* lub 2 approx. */
   dbl grad_lubp[DIM];          /* lub pressure gradient approx */

@@ -1122,6 +1122,10 @@ assembly_alloc(Exo_DB *exo)
     esp->sh_K = (dbl **) alloc_ptr_1(MDE);
   }
 
+  if (Num_Var_In_Type[SHELL_CURVATURE2]) {
+    esp->sh_K2 = (dbl **) alloc_ptr_1(MDE);
+  }
+
   if (Num_Var_In_Type[SHELL_TENSION]) {
     esp->sh_tens = (dbl **) alloc_ptr_1(MDE);
   }
@@ -1210,9 +1214,6 @@ assembly_alloc(Exo_DB *exo)
   }
   if(Num_Var_In_Type[SHELL_BDYVELO]) {
     esp->sh_bv = (dbl **) alloc_ptr_1(MDE);
-  }
-  if(Num_Var_In_Type[SHELL_LUBP]) {
-    esp->sh_p = (dbl **) alloc_ptr_1(MDE);
   }
   if(Num_Var_In_Type[LUBP]) {
     esp->lubp = (dbl **) alloc_ptr_1(MDE);

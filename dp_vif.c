@@ -2238,7 +2238,47 @@ noahs_ark()
       ddd_add_member(n, elc_glob[i]->d_bend_stiffness,
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
 
+      ddd_add_member(n, &elc_glob[i]->exten_stiffness, 1, MPI_DOUBLE);
+      ddd_add_member(n, &elc_glob[i]->exten_stiffness_model, 1, MPI_INT);
+
+      ddd_add_member(n, &elc_glob[i]->len_u_exten_stiffness, 1, MPI_INT);
+
+      ddd_add_member(n, elc_glob[i]->d_exten_stiffness,
+		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
+
       ddd_add_member(n, &elc_glob[i]->poisson, 1, MPI_DOUBLE);
+      ddd_add_member(n, &elc_glob[i]->poisson_model, 1, MPI_INT);
+
+      ddd_add_member(n, &elc_glob[i]->len_u_poisson, 1, MPI_INT);
+
+      ddd_add_member(n, elc_glob[i]->d_poisson,
+		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
+
+      ddd_add_member(n, &elc_glob[i]->tension1, 1, MPI_DOUBLE);
+      ddd_add_member(n, &elc_glob[i]->tension1_model, 1, MPI_INT);
+
+      ddd_add_member(n, &elc_glob[i]->len_u_tension1, 1, MPI_INT);
+
+      ddd_add_member(n, elc_glob[i]->d_tension1,
+		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
+
+      ddd_add_member(n, &elc_glob[i]->tension2, 1, MPI_DOUBLE);
+      ddd_add_member(n, &elc_glob[i]->tension2_model, 1, MPI_INT);
+
+      ddd_add_member(n, &elc_glob[i]->len_u_tension2, 1, MPI_INT);
+
+      ddd_add_member(n, elc_glob[i]->d_tension2,
+		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
+
+
+      ddd_add_member(n, &elc_glob[i]->p_load, 1, MPI_DOUBLE);
+      ddd_add_member(n, &elc_glob[i]->p_load_model, 1, MPI_INT);
+
+      ddd_add_member(n, &elc_glob[i]->len_u_p_load, 1, MPI_INT);
+
+      ddd_add_member(n, elc_glob[i]->d_p_load,
+		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
+
       ddd_add_member(n, &elc_glob[i]->Strss_fr_sol_vol_frac, 1, MPI_DOUBLE);
 
       ddd_add_member(n, elc_glob[i]->v_mesh_sfs, DIM, MPI_DOUBLE);

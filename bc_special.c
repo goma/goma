@@ -1369,14 +1369,6 @@ apply_shell_grad_bc (
 					      m1, n_dof, wt, theta, delta_t, coord);
 			break;
 
-		      case SURFACE_LUBRICATION_BC:
-
-			eind = R_SHELL_LUBP;
-			evec = 1;
-			surface_lubrication_shell_bc(local_r, local_j,
-						     m1, n_dof, wt, theta, delta_t, coord,
-						     dof_map, n_dofptr);
-			break;
 
 		      default:
 			/* Do nothing */

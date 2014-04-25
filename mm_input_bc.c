@@ -453,8 +453,6 @@ rd_bc_specs(FILE *ifp,
         case LS_EIK_KINEMATIC_BC:
         case LS_EXTV_KINEMATIC_BC:
 	case LS_EXTV_KIN_LEAK_BC: 
-        case REP_FORCE_SHU_BC:
-        case REP_FORCE_SHU_SIC_BC:
         case SHELL_GRAD_FP_NOBC_BC:
         case SHELL_FLOW_DEVELOPED_BC:
         case SHELL_GRAD_FH_NOBC_BC:

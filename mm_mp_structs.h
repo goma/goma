@@ -1011,7 +1011,38 @@ struct Elastic_Constitutive
   dbl *u_bend_stiffness;
   dbl d_bend_stiffness[MAX_VARIABLE_TYPES + MAX_CONC];
 
+  dbl exten_stiffness;
+  int exten_stiffness_model;
+  int len_u_exten_stiffness;
+  dbl *u_exten_stiffness;
+  dbl d_exten_stiffness[MAX_VARIABLE_TYPES + MAX_CONC];
+
+
   dbl poisson;
+  int poisson_model;
+  int len_u_poisson;
+  dbl *u_poisson;
+  dbl d_poisson[MAX_VARIABLE_TYPES + MAX_CONC];
+
+  dbl tension1;
+  int tension1_model;
+  int len_u_tension1;
+  dbl *u_tension1;
+  dbl d_tension1[MAX_VARIABLE_TYPES + MAX_CONC];
+
+  dbl tension2;
+  int tension2_model;
+  int len_u_tension2;
+  dbl *u_tension2;
+  dbl d_tension2[MAX_VARIABLE_TYPES + MAX_CONC];
+
+  dbl p_load;
+  int p_load_model;
+  int len_u_p_load;
+  dbl *u_p_load;
+  dbl d_p_load[MAX_VARIABLE_TYPES + MAX_CONC];
+  
+
   dbl Strss_fr_sol_vol_frac;
 
   dbl v_mesh_sfs[DIM];
