@@ -7677,6 +7677,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       
       else if ( !strcmp(model_name, "FOAM") )
 	{
+	  if(MAX_CONC <= 8)EH(-1,"MAX_CONC must be greater than 8 for FOAM model");
 	  SpeciesSourceModel = FOAM;
 	  model_read = 1;
 	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
@@ -7708,6 +7709,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
       else if ( !strcmp(model_name, "BUTLER_VOLMER") )
         {
+	  if (MAX_CONC <= 4) EH(-1,"MAX_CONC must be greater than 4 for Butler_volumer");
           SpeciesSourceModel = BUTLER_VOLMER;
           model_read = 1;
           mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;

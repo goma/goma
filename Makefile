@@ -1,15 +1,25 @@
-#/************************************************************************ *
-#* Goma - Multiphysics finite element software                             *
-#* Sandia National Laboratories                                            *
-#*                                                                         *
-#* Copyright (c) 2014 Sandia Corporation.                                  *
-#*                                                                         *
-#* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-#* the U.S. Government retains certain rights in this software.            *
-#*                                                                         *
-#* This software is distributed under the GNU General Public License.      *
-#\************************************************************************/
- 
+# /************************************************************************\
+#  * copyright (c) 2012 Sandia Corporation.                               *
+#  *                                                                      *
+#  * Under the terms of Contract DE-AC04-94AL85000, there is a            *
+#  * non-exclusive license for use of this work by or on behalf of the    *
+#  * U.S. Government. Export of this program may require a license from   *
+#  * the United States Government.                                        *
+#  *                                                                      *
+#  * This software is the property of Sandia Corporation and discloses    *
+#  * material protectable under copyright laws of the United States.      *
+#  * Use, Duplication, or Disclosure is prohibited, unless allowed        *
+#  * subject to the terms of a separate license agreement.                *
+#  *                                                                      *
+#  * NEITHER THE UNITED STATES GOVERNMENT, NOR THE UNITED STATES          *
+#  * DEPARTMENT OF ENERGY, NOR SANDIA CORPORATION, NOR ANY OF THEIR       *
+#  * EMPLOYEES, MAKES ANY WARRANTY, EXPRESS OR IMPLIED, OR ASSUMES ANY    *
+#  * LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS,    *
+#  * OR USEFULNESS OF ANY INFORMATION, APPARATUS OR PROCESS DISCLOSED,    *
+#  * OR REPRESENTS THAT ITS USE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS.*
+#  *                                                                      *
+# \************************************************************************/
+#
 # Makefile for goma
 #
      MAKEFILE_NAME = Makefile
@@ -63,11 +73,11 @@
          GOMA_LIBS = /home/goma/production/$(ARCH)
 #
 # MPI_TOP is the base location of the mpi compilers and libs
-           MPI_TOP = /usr/bin/openmpi-1.6.3
+           MPI_TOP = /sierra/sntools/SDK/mpi/openmpi/1.4.5-gcc-4.4.4-RHEL6
 #
 # GCC_TOP is the corresponding location of the gcc compilers and libs that are
 # used by the MPI compilers
-           GCC_TOP = /usr
+           GCC_TOP = /sierra/Sntools/SDK/compilers/gcc/4.4.4-RHEL6
 #
 # For MPI, the libraries need to be explicitly set in the path:
            GCC_LIB = $(GCC_TOP)
@@ -193,8 +203,8 @@
 #    /usr/local/eng_sci/current
 #
 # For engsci LAN:
-#         SEAMS_DIR = /projects/seacas/linux_rhel6/current
-         SEAMS_DIR = $(GOMA_LIBS)/SEACAS-2012-09-10
+         SEAMS_DIR = /projects/seacas/linux_rhel6/current
+#         SEAMS_DIR = $(GOMA_LIBS)/SEACAS-2012-09-10
 #
 # Users External to Sandia (e.g., CRMPC ):
 #         SEAMS_DIR = $(GOMA_LIBS)/SEAMS
@@ -228,7 +238,7 @@
 #       --------------------
 #
 # Current path
-      TRILINOS_TOP = $(GOMA_LIBS)/trilinos-10.10.2-Built
+      TRILINOS_TOP = $(GOMA_LIBS)/trilinos-10.10.2-Source
 #
 # Multiple ARCH options are available - choose yours.
 #     TRILINOS_ARCH = LINUX_MPI
