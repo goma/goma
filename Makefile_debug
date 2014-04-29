@@ -32,10 +32,10 @@
 # 
 # This makefile is set for 880 LAN machines with Red Hat Enterprise 5 Linux:
               MACH = linux
-              ARCH = rhel6_serial
+              ARCH = rhel6_ompi
 #
 # If underscore_machine is needed for library differentiation:
-#             _MACH = _$(MACH)IMMUTABLE: Turn immutable to 0
+#             _MACH = _$(MACH)
 # Default: leave blank
              _MACH = 
 #
@@ -52,7 +52,7 @@
 #         PURE_PATH = /usr/local/bin
 #
 # Default: no purify
-              PURE = 
+              PURE =
 #
 ###############################################################################
 #
@@ -63,11 +63,11 @@
          GOMA_LIBS = /home/goma/production/$(ARCH)
 #
 # MPI_TOP is the base location of the mpi compilers and libs
-#           MPI_TOP = /usr/bin/openmpi-1.6.3
+           MPI_TOP = /usr/bin/openmpi-1.6.3
 #
 # GCC_TOP is the corresponding location of the gcc compilers and libs that are
 # used by the MPI compilers
-           GCC_TOP =/usr
+           GCC_TOP = /usr
 #
 # For MPI, the libraries need to be explicitly set in the path:
            GCC_LIB = $(GCC_TOP)
@@ -75,13 +75,13 @@
   LD_LIBRARY_PATH := $(GCC_LIB64):$(GCC_LIB):${LD_LIBRARY_PATH}
 #
 # MPI Compilers
-#                CC = $(MPI_TOP)/bin/mpicc
-#               CPP = $(MPI_TOP)/bin/mpiCC
-#                FC = $(MPI_TOP)/bin/mpif77
+                CC = $(MPI_TOP)/bin/mpicc
+               CPP = $(MPI_TOP)/bin/mpiCC
+                FC = $(MPI_TOP)/bin/mpif77
 # Serial Compilers
-               CC = $(GCC_TOP)/bin/gcc
-               CPP = $(GCC_TOP)/bin/g++
-               FC = $(GCC_TOP)/bin/gfortran
+#                CC = $(GCC_TOP)/bin/gcc
+#               CPP = $(GCC_TOP)/bin/g++
+#                FC = $(GCC_TOP)/bin/gfortran
 #
 ###############################################################################
 #
@@ -141,16 +141,17 @@
                      -DCOMPILER_64BIT \
                      -DENABLE_AMESOS \
                      -DTRILINOS \
-                     -DCHECK_FINITE\
                      -DNO_CHEBYSHEV_PLEASE \
                      -DMDE=12 \
-                     -DMAX_PROB_VAR=10 \
-                     -DMAX_EXTERNAL_FIELD=6 \
+                     -DMAX_PROB_VAR=9 \
+                     -DMAX_EXTERNAL_FIELD=4 \
                      -DMAX_CONC=2 \
                      -DCOUPLED_FILL \
+                     -DPARALLEL \
                      -DEIGEN_SERIAL
 #
 # Other defines:
+#                     -DCHECKFINITE
 #                     -DMAX_CONC=1 \
 #                     -DUSE_CGM \
 #                     -DEIGEN_SERIAL \
@@ -174,14 +175,14 @@
 #          Should work without any knowledge of MPI...
 #
 # NO MPI
-           MPI_INC = 
-           MPI_LIB = 
+#           MPI_INC = 
+#           MPI_LIB = 
 #
 # path to include/mpi.h
-#           MPI_INC = -I$(MPI_TOP)/include
+           MPI_INC = -I$(MPI_TOP)/include
 #
 # path to mpi libraries
-#           MPI_LIB = -L$(MPI_TOP)/lib  -lmpi  -lmpi_f77
+           MPI_LIB = -L$(MPI_TOP)/lib  -lmpi  -lmpi_f77
 #
 ###############################################################################
 #
@@ -228,7 +229,6 @@
 #
 # Current path
       TRILINOS_TOP = $(GOMA_LIBS)/trilinos-10.10.2-Built
-#      TRILINOS_TOP = /home/goma/production/rhel5_ompi/trilinos-10.2.2
 #
 # Multiple ARCH options are available - choose yours.
 #     TRILINOS_ARCH = LINUX_MPI
@@ -257,8 +257,7 @@
 #        ==================================================
 #
 #     TRILINOS_INC  = -I$(TRILINOS_TOP)/include  -I /home/hkmoffa/arch/linux64_gcc444/boost_1_44_0/include
-
-     TRILINOS_INC  = -I$(TRILINOS_TOP)/include 
+     TRILINOS_INC  = -I$(TRILINOS_TOP)/include
      TRILINOS_LIB  = -L$(TRILINOS_TOP)/lib  $(AZTEC_LIB) \
                       $(KOMPLEX_LIB)  $(AMESOS_LIB)
 #
@@ -417,8 +416,8 @@ CHEMKIN_LIBS       = #chm $(CPC_LIBS) $(CHEMKINIII_LIBS)
 #
 # Set flags appropriate for platform and purpose. 
 #
-           CCFLAGS = -g -gdwarf-2 
-#           CCFLAGS = -g
+#           CCFLAGS = -O3 -Wall
+           CCFLAGS = -g -gdwarf-2
 #           CCFLAGS = -g -Wall -Wmissing-prototypes
 #           CCFLAGS = -g -Wall -DDEBUG_IGNORE_ELEMENT_BLOCK_CAPABILITY
 #
@@ -581,7 +580,7 @@ RF_SRC= rf_allo.c\
         rd_exo.c\
         rd_mesh.c\
 	rd_pixel_image.c \
-	rd_pixel_image2.c\
+	rd_pixel_image2.c \
         rf_node.c\
         rf_node_vars.c\
         rf_pre_proc.c\
