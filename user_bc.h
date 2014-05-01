@@ -140,6 +140,12 @@ PROTO((double *,	          	/* func                                      */
        const double [],		/* u_bc - parameterize u velocity model      */
        const dbl ));		/* time  */       
 
+EXTERN void shell_p_open_user_surf 
+PROTO((double *func, 
+       double d_func[],
+       const double u_bc[],
+       const double time));
+
 EXTERN void fn_dot_T_user
 PROTO((double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */

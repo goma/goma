@@ -433,10 +433,12 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
    int setres;
    double dx = 0, dy = 0;
    int ii, jj;
-   double rmsd_error, pmax, pmin;
+   //double rmsd_error;
+   double pmax, pmin;
    minx = miny = 1e20;
    maxx = maxy = -1e20;
    setres = 0;
+   resolution[1] = 0;
    for (i = 0; i < txt_num_pts; i++)
      {
        if (i == 0) firstx = xyz_data[i][0];

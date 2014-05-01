@@ -149,7 +149,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   double wt, det_J;
 
   int nmiss;
-  double rmsd_error;
+  //  double rmsd_error;
   double time0;
 
   int first_time_field = TRUE; // Flag to check whether this is the first time mapping to the specified field 

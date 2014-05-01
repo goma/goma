@@ -265,9 +265,9 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   double *base_p_por=NULL;	 /* Base values for porosity updates */
   double *base_p_liq=NULL;	 /* Base values for porosity updates */
   int update_porosity=FALSE;	 /* Flag for external porosity updates */
-
+#ifdef HAVE_FRONT  
   int max_unk_elem, one, three;  /* variables used as mf_setup arguments      */
-
+#endif
   unsigned int  matrix_systems_mask;
   int did_renorm;                /* Flag indicating if we renormalized.       */
   int Renorm_Now = FALSE;        /* Flag forcing renormalization regardless of gradient */

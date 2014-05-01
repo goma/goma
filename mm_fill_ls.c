@@ -6546,7 +6546,7 @@ zero_lsi_derivs()
 int
 load_lsi(const double width)
 {
-  double F, alpha, *grad_F;
+  double F = 0, alpha, *grad_F = NULL;
   int a, b;
   int i, j, k;
   
@@ -6708,7 +6708,7 @@ load_lsi(const double width)
 int
 load_lsi_shell_second(const double width)
 {
-  double F, alpha, *grad_F;
+  double F = 0, alpha, *grad_F = NULL;
   int a, b;
   int i, j, k;
   
@@ -6860,7 +6860,7 @@ static void copy_distance_function( double *F,
 int
 load_lsi_derivs()
 {
-  double F, phi_j, grad_phi_j[DIM], *grad_F;
+  double F = 0, phi_j, grad_phi_j[DIM], *grad_F = NULL;
   double alpha = lsi->alpha;
   int a, b, j, var;
   
@@ -8544,7 +8544,7 @@ int
 find_tree_integration_pts( NTREE *tree, int num_gpts )
 {
   int i, elem_type;
-  double l1,l2,l3, s_m[DIM];
+  double l1 = 0, l2 = 0, l3 = 0, s_m[DIM];
   double s,t,u;
 
   compute_tree_size ( tree, &l1, &l2, &l3, s_m );
@@ -9121,7 +9121,7 @@ gather_surface_subgrid_integration_pts ( SGRID *grid, int id_side, double surfac
 		int elem_type, num_surf_pts;
 		int ip;
 		NTREE *tree = grid->tree;
-		double l1, l2, l3, s_m[DIM];
+		double l1 = 0, l2 = 0, l3 = 0, s_m[DIM];
 		double xi[DIM]={0.,0.,0.};
 		double ss,tt,uu;
 		

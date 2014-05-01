@@ -5919,7 +5919,7 @@ assemble_phase_function ( double time_value,
   int status = -1;
   int Fill_Wt_Fcn = tran->Fill_Weight_Fcn;
 
-  double det_J, h3, wt, phi_i, phi_j, wfcn, *grad_phi_j, *grad_phi_i;
+  double det_J, h3, wt, phi_i, phi_j, wfcn = 0, *grad_phi_j, *grad_phi_i;
   double d_wfcn_du;
   double pf, pf_dot,  *grad_pf ;
   double *v, *v_old;
@@ -5941,7 +5941,7 @@ assemble_phase_function ( double time_value,
   dbl supg_term, vcent[DIM], d_vcent_du[DIM][MDE][DIM], d_supg_term_du[MDE][DIM], d_supg_term_dx[MDE][DIM];
 
 
-  double rhs, mass=0.0, advection=0.0, tmp = 0.0, n_gradT, d_n_gradT_dF[MDE], d_n_gradT_dT[MDE];
+  double rhs = 0, mass=0.0, advection=0.0, tmp = 0.0, d_n_gradT_dT[MDE];
   double tau_gls,vmag_old;
   struct Level_Set_Data *ls_old;
 

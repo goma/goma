@@ -2215,7 +2215,7 @@ f_kinematic_displacement_bc(double func[DIM],
   double base_displacement_rs[DIM];
   double dns[DIM]={0,0,0};
   double origin[DIM] = {0,0,0};
-  double roll_rad, pt_rad;
+  double roll_rad = 0, pt_rad;
   double dir_angle[DIM],t,axis_pt[DIM];
   int base_displ_model = TRUE;
 /***************************** EXECUTION BEGINS *******************************/

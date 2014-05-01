@@ -494,7 +494,7 @@ fvelo_normal_bc(double func[DIM],
        const double penalty_gas=0.0, penalty_liq=1.;  
        const double gas_log=log(1./BIG_PENALTY), liq_log=0.;
        const int log_scale = 0;
-       double factor, Hfcn, d_Hfcn_dF, d_factor_dF,F_prime;
+       double factor = 0, Hfcn, d_Hfcn_dF, d_factor_dF = 0,F_prime;
        int visc_sens=mp->mp2nd->viscositymask[1]-mp->mp2nd->viscositymask[0];
        double dvisc_sens=(double)visc_sens;
 
@@ -663,13 +663,10 @@ fvelo_tangential_ls_bc(double func[DIM],
   int j, kdir, var, p;
   double phi_j, vcontact;
   double penalty=1.0, d_penalty_dF=0.0;
-  double dot_prod;
-  const double cos_leak = cos((180-leak_angle_degrees)*(M_PIE/180));
-  const double leak_width = sin((180-leak_angle_degrees)*(M_PIE/180))*sin(10*M_PIE/180);
   const double penalty_gas=0.0, penalty_liq=1.;  
   const double gas_log=log(1./BIG_PENALTY), liq_log=0.;
   const int log_scale = 0;
-  double factor, Hfcn, d_Hfcn_dF, d_factor_dF,F_prime;
+  double factor = 0, Hfcn, d_Hfcn_dF, d_factor_dF = 0,F_prime;
   int visc_sens=mp->mp2nd->viscositymask[1]-mp->mp2nd->viscositymask[0];
   double dvisc_sens=(double)visc_sens;
 
@@ -5843,7 +5840,7 @@ PSPG_consistency_bc (double *func,
   int meqn;
   int var1;
   int r, s, t;
-  int w, w0;
+  int w = 0, w0;
   int v_s[MAX_MODES][DIM][DIM];
   const int v_g[DIM][DIM] =
   { {  VELOCITY_GRADIENT11, VELOCITY_GRADIENT12, VELOCITY_GRADIENT13 },
@@ -12604,7 +12601,7 @@ qside_contact_resis(double func[DIM],
   int j_id;
   int var;
   double phi_j;
-  double sign_int;
+  double sign_int = 0;
   
 /***************************** EXECUTION BEGINS *******************************/
   
@@ -13338,12 +13335,11 @@ light_transmission(double func[DIM],
 /* Local variables */
   
   int j, b, w, dim;
-  int eqn, eqn_alt, var, pvar;
+  int eqn = 0, eqn_alt = 0, var, pvar;
 
-  double imped_inv = 0.0, light;
   /*
- *  *    Radiative transfer equation variables - connect to input file someday
- *   */
+   *    Radiative transfer equation variables - connect to input file someday
+   */
   double svect[3]={0.,-1,0.};
   double mucos=1.0;
   double mucos_tran, mu_crit;

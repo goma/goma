@@ -1726,7 +1726,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
   int    *ija = ams->bindx;     /* column pointer array into matrix "a" */
   static int    Factor_Flag;    /* For UMFPACK */
   int           matr_form;      /* 1: MSR FORMAT MATRIX FOR UMFPACK DRIVER */
-  int           error = 0, err = 0;
+  int           error = 0;
   int           why = 0;
   char          stringer[80];   /* holding format of num linear solve itns */
   dbl           s_start;        /* mark start of solve */
@@ -1901,7 +1901,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
            * it is the first call or not.
            */
 #ifdef HARWELL    
-          err = cmsr_ma28 (NumUnknowns, NZeros, a, ija, x, xr);
+          error = cmsr_ma28 (NumUnknowns, NZeros, a, ija, x, xr);
 #endif
 #ifndef HARWELL
           EH(-1, "That linear solver package is not implemented.");
@@ -1942,7 +1942,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
               U_norm     = 0.;
             }
 
-            err = mf_solve_lineqn(&mf_resolve, /* re_solve                 */
+            error = mf_solve_lineqn(&mf_resolve, /* re_solve                 */
                                     xr, /* rhs                               */
                                     1, /* nrhs                               */
                                     fss->ncod, /* nsetbc                      */

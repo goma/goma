@@ -278,7 +278,6 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   int ElasticConstitutiveEquation = -1;
   int PlasticConstitutiveEquation = -1;
   int MomentumSourceModel = -1;
-  int MeshSourceModel = -1;
   int HeatSourceModel = -1 ;
   int SpeciesSourceModel = -1;
   int SpeciesTimeIntegration;

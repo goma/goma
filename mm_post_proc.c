@@ -1056,7 +1056,9 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       {
 	double dq_gradT[DIM][DIM],dq_dX[DIM][DIM];
 	double wrate, *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
+#if defined SECOR_HEAT_FLUX
         double dq_dVb[DIM][DIM],dq_dVt[DIM][DIM];
+#endif
         hpar = &mp->u_thermal_conductivity[0];
         h = hpar[0] + hpar[4]*fv->x[0]
 	  + (hpar[1]-hpar[5]*fv->x[0])*(hpar[3]-fv->x[1])
@@ -1984,7 +1986,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     fv->wt = wt_old;
 
     /* Calculate velocities */
-    dbl S, dSdP, dSdP_P;
+    //    dbl dSdP, dSdP_P;
+    dbl S;
     dbl d_cap_pres[2], cap_pres;
     dbl Patm = mp->PorousShellPatm;
     d_cap_pres[0] = d_cap_pres[1] = 0.;
@@ -2014,7 +2017,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     fv->wt = wt_old;
 
     /* Calculate velocities */
-    dbl S, dSdP, dSdP_P;
+    //    dbl dSdP, dSdP_P;
+    dbl S;
     dbl d_cap_pres[2], cap_pres;
     dbl Patm = mp->PorousShellPatm;
     d_cap_pres[0] = d_cap_pres[1] = 0.;

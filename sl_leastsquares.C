@@ -95,8 +95,6 @@ trilinos_solve_ls(double *bf_mat_,
   static std::string Pkg_Name;
   static Epetra_CrsMatrix *A;
   static Epetra_LinearProblem Problem;
-  static Amesos_BaseSolver *A_Base;
-  static Amesos A_Factory;
   bool transA=true;
   bool notransA=false;
     
@@ -181,14 +179,12 @@ static void  bf_mat_to_Epetra ( double *bf_mat_,
   static int newmatrix = 1;
 
   int NumMyRows = txt_num_pts;
-  int NumExternal = 0; //does this need to change for parallel? 
   int NumMyCols = n_cols;
 
   (*A).PutScalar(0.0);
 
   Epetra_Map Map(NumMyRows, 0, comm); //Not a square matrix, though,as this supposes 
   int *MyGlobalElements = Map.MyGlobalElements ();
-  int NumMyElements = Map.NumMyElements();
 
   Epetra_Map DomainMap(NumMyCols, 0, comm); //Not a square matrix, though,as this supposes 
 

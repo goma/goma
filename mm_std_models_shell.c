@@ -498,7 +498,7 @@ height_function_model (double *H_U,
      
      // Calculate amount that the lower surface has shifted.
      int i;
-     double np, time_scale, tn, disp = 0.0;
+     double np = 0, time_scale = 0, tn, disp = 0.0;
      if ( mp->VeloLFunctionModel == SLIDER_POLY_TIME ) {
        np = mp->len_u_veloL_function_constants;
        time_scale = mp->u_veloL_function_constants[0];
@@ -1028,10 +1028,10 @@ disjoining_pressure_model (double H,                              /* Film thickn
  double grad_II_H[DIM];
  double angle;
  double grad_angle[DIM];
- double B;
- double dB_dangle;
- double f;
- double df_dH, d2f_dH2;
+ double B = 0;
+ double dB_dangle = 0;
+ double f = 0;
+ double df_dH = 0, d2f_dH2 = 0;
  double nexp;
  double mexp;
  double H_star;

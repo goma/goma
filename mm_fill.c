@@ -1757,13 +1757,11 @@ matrix_fill(
 	  CHECKFINITE("assemble_film");
 #endif
         }
-
-      else if( !(pde[R_SHELL_FILMP]) & pde[R_SHELL_FILMH] )
+      else if( (!(pde[R_SHELL_FILMP])) & pde[R_SHELL_FILMH] )
 	{
 	  EH( -1, "Both SHELL_FILMP and SHELL_FILMH must be activated !");
 	}
-
-      else if( pde[R_SHELL_FILMP] & !(pde[R_SHELL_FILMH]) )
+      else if( pde[R_SHELL_FILMP] & (!(pde[R_SHELL_FILMH])) )
 	{
 	  EH( -1, "Both SHELL_FILMP and SHELL_FILMH must be activated !");
 	}
@@ -1789,7 +1787,7 @@ matrix_fill(
 #endif
         }
 
-      else if( !(pde[R_SHELL_FILMP]) & pde[R_SHELL_FILMH] & pde[R_SHELL_PARTC] )
+      else if( (!(pde[R_SHELL_FILMP])) & pde[R_SHELL_FILMH] & pde[R_SHELL_PARTC] )
 	{
 	  EH( -1, " SHELL_PARTC requires SHELL_FILMP and SHELL_FILMH !");
 	}

@@ -105,7 +105,7 @@ static char *legal_notice[] = {
   "* the U.S. Government retains certain rights in this software.            * \n",
   "*                                                                         * \n",
   "* This software is distributed under the GNU General Public License.      * \n",
-  "\************************************************************************/  \n",
+  "\\************************************************************************/  \n",
   "\n",
   "PRS, PAS, RRR, KSC, RAC, TAB, DRN, PLH, DAL, IDG, ACK, ACS, RBS, RRL, MMH, SRS\n",
   "HKM, RAR, EDW, PKN, SAR, EMB, KT, DSB ...\n"

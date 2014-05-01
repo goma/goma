@@ -1045,7 +1045,7 @@ load_porous_properties(void)
      pmv_old->cap_pres = p_gas_star - fv_old->p_liq;
    }
  } else if (mp->PorousMediaType == POROUS_SHELL_UNSATURATED) {
-   dbl p_liq_open, p_liq_open_old;
+   dbl p_liq_open = 0, p_liq_open_old = 0;
    p_gas_star =  mp->u_porous_gas_constants[3];
    if (pd->v[SHELL_PRESS_OPEN]) 
      {
@@ -6268,7 +6268,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
     }
   else if (mp->SaturationModel == SHELL_TANH )
     {
-      dbl S, dSdP, dSdP_P;
+      dbl dSdP, dSdP_P;
       saturation = mp->saturation = shell_saturation_pressure_curve(-cap_pres, &dSdP, &dSdP_P);
       if (pd->v[SHELL_PRESS_OPEN])
 	{
