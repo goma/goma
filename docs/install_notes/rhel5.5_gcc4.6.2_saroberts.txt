@@ -1,0 +1,94 @@
+MACHINE:  redsky (SRN)
+OS:  Red Hat Enterprise Linux Server 5.5
+KERNEL:  2.6.18-108
+
+PATHS:
+* Root      = /projects/goma
+* Tools     = /projects/goma/tools
+* TPLs      = /projects/goma/lib/rhel5_gcc-4.6.2_openmpi-1.4.3
+* Goma      = /projects/goma/goma_OUO
+
+COMPILERS:
+* I've chosen to use the preinstalled (non-Sierra) compilers via modules.
+* module purge
+* module load compilers/gcc-4.6.2
+* module load mpi/openmpi-1.4.3_oobpr_gcc-4.6.2
+
+CMAKE:
+* Download latest version from the internet and unzip.
+* Run  ./bootstrap --prefix=/projects/goma/tools/cmake
+* Run make; make install
+
+BLAS:
+* Download from the internet.
+* Edit make.inc
+  - BLASLIB = libblas.a
+* Compile using defult makefile.
+
+LAPACK:
+* Download 3.2.2 from the internet.
+* Copy make.inc.example to make.inc.
+  - Edit BLASLIB = ...
+  - Remove PLAT from the generated libraries
+* Compile using default makefile.
+
+UMFPACK:
+* Go to the UMFPACK site on the internet and download:
+  - UMFPACK 5.5.2
+  - UFconfig 3.7.1
+  - AMD 2.2.4
+* Unzip all packages into the same directory.
+* Edit UFconfig/UFconfig.mk
+  - BLAS = -L/projects/goma/lib/rhel5_gcc-4.6.2_openmpi-1.4.3/BLAS  -lblas -L/apps/x86_64/compilers/gcc/gcc-4.6.2/lib64/ -lgfortran -lgfortranbegin
+  - LAPACK = -L/projects/goma/lib/rhel5_gcc-4.6.2_openmpi-1.4.3/lapack-3.2.2  -llapack
+  - UMFPACK_CONFIG = -DNCHOLMOD
+* Make UMFPACK
+* Copy UFconfig/UFconfig.h into UMFPACK/Include/.
+
+PARMETIS:
+* Download Parmetis 3.1.1 from the internet.
+* Compile using make.
+
+SUPERLU_DIST:
+* Download SuperLU_dist 2.5 from the internet.
+* Edit make.inc:
+  - PLAT		= 
+  - DSuperLUroot 	= /projects/goma/lib/rhel5_gcc-4.6.2_openmpi-1.4.3/SuperLU_DIST_2.5
+  - BLASDEF	     	= 
+  - BLASLIB	        = -L/projects/goma/lib/rhel5_gcc-4.6.2_openmpi-1.4.3/BLAS -lblas
+  - METISLIB    	= -L/projects/goma/lib/rhel5_gcc-4.6.2_openmpi-1.4.3/ParMetis-3.1.1 -lmetis
+  - PARMETISLIB   	= -L/projects/goma/lib/rhel5_gcc-4.6.2_openmpi-1.4.3/ParMetis-3.1.1 -lparmetis
+  - FLIBS	 	= 
+  - CC           	= mpicc
+  - CFLAGS          	= -O3 -DDEBUGlevel=0 -DPRNTlevel=0 -DPROFlevel=0 -D_LONGINT
+  - FORTRAN         	= mpif77
+  - F90FLAGS	    	= -O2
+  - LOADER	        = mpif77
+
+Y12M:
+* Get Y12M from current GOMA distribution and recompile.
+
+SEACAS:
+* Download SEACAS from SourceForge and unzip to SEACAS directory.
+* In Build_Instructions.txt, follow steps 2a and 2b to install netcdf and hdf5.
+* In Build_Instructions.txt, follow steps 3-6, editing files appropriately.
+
+ARPACK:
+* Download arpack and patch from the internet.
+* Extract both arpack and patch.
+* Edit ARmake.inc
+  - home = /projects/goma/lib/rhel5_gcc-4.6.2_openmpi-1.4.3/ARPACK
+  - PLAT = linux
+  - MAKE    = /usr/bin/make
+  - FC      = gfortran
+  - FFLAGS	= -O 
+* make lib
+
+TRILINOS:
+* Download version 10.12.2 from trilinos.sandia.gov
+* Copy Key-linux-mpi-cmake-script from /home/goma into the trilinos root directory.
+* Update various file locations throughout the script.
+* From within trilinos directory, make new directory BUILD and change into it.
+* Run 'sh ../Key-linux-mpi-cmake-script'
+* Run make
+
