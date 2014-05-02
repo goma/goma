@@ -87,11 +87,11 @@ user_post(dbl *param)		/* ptr to the user-defined parameter list */
   /* Local Variables */
   double post_value;
 
-  int a;
+  /* int a;
+     int i; */
 
-  dbl X[DIM], T, C[MAX_CONC], V[DIM], P; /* Convenient local variables */
+  /* dbl X[DIM], T, C[MAX_CONC], V[DIM], P; */ /* Convenient local variables */
 
-  int i;
 
   static int warning = 0;
 
@@ -114,11 +114,11 @@ user_post(dbl *param)		/* ptr to the user-defined parameter list */
  /***********Load up convenient local variables*************/
  /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;                                     /*Do not touch */
-  P = fv->P;                                     /*Do not touch */
-  for(a=0; a<DIM; a++) X[a] = fv->x[a];		 /*Do not touch */
-  for(a=0; a<DIM; a++) V[a] = fv->v[a];		 /*Do not touch */
-  for(i=0; i<pd->Num_Species; i++) C[i] = fv->c[i]; /*Do not touch */
+  /* T = fv->T; */                                    /*Do not touch */
+  /*  P = fv->P;  */                                   /*Do not touch */
+  /*  for(a=0; a<DIM; a++) X[a] = fv->x[a]; */		 /*Do not touch */
+  /*  for(a=0; a<DIM; a++) V[a] = fv->v[a]; */		 /*Do not touch */
+  /*  for(i=0; i<pd->Num_Species; i++) C[i] = fv->c[i]; */ /*Do not touch */
 
 /* All gradients of field variables are accesable through fv->?_grad[][]
  * and material properties are accesable through mp->?

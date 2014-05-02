@@ -906,7 +906,6 @@ define_dimension(const int unit,
 {
   int err;
   char err_msg[MAX_CHAR_ERR_MSG];
-  Spfrtn sr;
 
   /*
    * Dimensions with value zero are problematic, so filter them out.
@@ -921,14 +920,14 @@ define_dimension(const int unit,
   err  = nc_def_dim(unit, string, value, identifier);
   if ( err != NC_NOERR )
     {
-      sr = sprintf(err_msg, "nc_def_dim() on %s [<%d] id=%d", string, 
+      sprintf(err_msg, "nc_def_dim() on %s [<%d] id=%d", string, 
 		   value, *identifier);
       EH(-1, err_msg);
     }
 #endif
 #ifndef NO_NETCDF_2
   err  = ncdimdef(unit, string, value);
-  sr   = sprintf(err_msg, "ncdimdef() on %s [<%d] rtn %d", string, 
+  sprintf(err_msg, "ncdimdef() on %s [<%d] rtn %d", string, 
 		 value, err);
   EH(err, err_msg);
   *identifier = err;
@@ -965,7 +964,6 @@ define_variable(const int netcdf_unit,
   int err;
   int i;
   char err_msg[MAX_CHAR_ERR_MSG];
-  Spfrtn sr;
 
 #ifdef NO_NETCDF_2
   int dim[NC_MAX_VAR_DIMS];
@@ -986,7 +984,7 @@ define_variable(const int netcdf_unit,
 	{
 	  return;		/* Do not even create a variable. */
 	  /*
-	  sr = sprintf(err_msg, "Bad 1st netCDF dimension ID %d for %s\n",
+	  sprintf(err_msg, "Bad 1st netCDF dimension ID %d for %s\n",
 		       dimension_id_1, name_string);
 	  EH(-1, err_msg);
 	  */
@@ -1001,7 +999,7 @@ define_variable(const int netcdf_unit,
     {
       if ( dimension_id_2 < 0 )
 	{
-	  sr = sprintf(err_msg, "Bad 2nd netCDF dimension ID %d for %s\n",
+	  sprintf(err_msg, "Bad 2nd netCDF dimension ID %d for %s\n",
 		       dimension_id_1, name_string);
 	  EH(-1, err_msg);
 	}
@@ -1019,7 +1017,7 @@ define_variable(const int netcdf_unit,
 		      dim, identifier);
   if ( err != NC_NOERR )
     {
-      sr = sprintf(err_msg, "nc_def_var on %s (%d-D) id=%d", name_string, 
+      sprintf(err_msg, "nc_def_var on %s (%d-D) id=%d", name_string, 
 		   num_dimensions, *identifier);
       EH(-1, err_msg);
     }
@@ -1032,7 +1030,7 @@ define_variable(const int netcdf_unit,
 
   err    = ncvardef(netcdf_unit, name_string, netcdf_type, num_dimensions, 
 		    tim);
-  sr     = sprintf(err_msg, "ncvardef on %s (%d-D) id=%d", name_string, 
+  sprintf(err_msg, "ncvardef on %s (%d-D) id=%d", name_string, 
 		   num_dimensions, err);
   EH(err, err_msg);
   *identifier   = err;
@@ -1057,7 +1055,6 @@ put_variable(const int netcdf_unit,
   long start[NC_MAX_VAR_DIMS];
 #endif
   char err_msg[MAX_CHAR_ERR_MSG];
-  Spfrtn sr;
 
   /*
    * If a variable was really defined properly and doesn't have a valid
@@ -1076,7 +1073,7 @@ put_variable(const int netcdf_unit,
       err = nc_put_var_int(netcdf_unit, variable_identifier, variable_address);
       if ( err != NC_NOERR )
 	{
-	  sr = sprintf(err_msg, "nc_put_var_int() varid=%d", 
+	  sprintf(err_msg, "nc_put_var_int() varid=%d", 
 		       variable_identifier);
 	  EH(-1, err_msg);
 	}
@@ -1087,7 +1084,7 @@ put_variable(const int netcdf_unit,
 			    variable_address);
       if ( err != NC_NOERR )
 	{
-	  sr = sprintf(err_msg, "nc_put_var_text() varid=%d", 
+	  sprintf(err_msg, "nc_put_var_text() varid=%d", 
 		       variable_identifier);
 	  EH(-1, err_msg);
 	}
@@ -1098,7 +1095,7 @@ put_variable(const int netcdf_unit,
 			      variable_address);
       if ( err != NC_NOERR )
 	{
-	  sr = sprintf(err_msg, "nc_put_var_double() varid=%d", 
+	  sprintf(err_msg, "nc_put_var_double() varid=%d", 
 		       variable_identifier);
 	  EH(-1, err_msg);
 	}
@@ -1114,7 +1111,7 @@ put_variable(const int netcdf_unit,
   
   if ( num_dimensions < 0 || num_dimensions > 2 )
     {
-      sr = sprintf(err_msg, "Bad or too large dimension value %d", 
+      sprintf(err_msg, "Bad or too large dimension value %d", 
 		   num_dimensions);
       EH(-1, err_msg);
     }
@@ -1135,7 +1132,7 @@ put_variable(const int netcdf_unit,
 	   */
 	  return;
 	  /*
-	  sr = sprintf(err_msg, 
+	  sprintf(err_msg, 
 	  "Data type %s (%d dimensional) has dimension values = %d %d",
 		       string_type(netcdf_type), num_dimensions, 
 		       dimension_val_1, dimension_val_2);
@@ -1157,7 +1154,7 @@ put_variable(const int netcdf_unit,
 	   */
 	  return;
 	  /*
-	  sr = sprintf(err_msg, 
+	  sprintf(err_msg, 
 	  "Data type %s (%d dimensional) has dimension values = %d %d",
 		       string_type(netcdf_type), num_dimensions, 
 		       dimension_val_1, dimension_val_2);

@@ -63,10 +63,11 @@ user_surf_object (int *int_params, dbl *param, dbl *r )
   double distance = 0;
   static int warning = 0;
 
+  /*
   int num_params;
 
   num_params = int_params[0];
-
+  */
 
  /**********************************************************/
 

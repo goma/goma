@@ -293,11 +293,10 @@ reconcile_bc_to_matrl(void)
      *   -1 = Something went terribly amiss.
      ************************************************************************/
 {
-  int ibc, specID, eb_index, matID, num_species;
+  int ibc, eb_index, matID, num_species;
   static char *yo = "reconcile_bc_to_matrl: ";
   BOUNDARY_CONDITION_STRUCT *bc;
   MATRL_PROP_STRUCT *matrl_ptr;
-  struct BC_descriptions *bc_desc;
 
   for (ibc = 0; ibc < Num_BC; ibc++) {    
     /*
@@ -305,8 +304,6 @@ reconcile_bc_to_matrl(void)
      *  amount of indirect addressing
      */
     bc = BC_Types + ibc;
-    bc_desc = bc->desc;
-
 
     switch (bc->BC_Name) {
 
@@ -332,7 +329,6 @@ reconcile_bc_to_matrl(void)
 	  /*
 	   * Check the molecular weights
 	   */
-          specID = bc->BC_Data_Int[0];
           eb_index = bc->BC_Data_Int[1];
 	  matID = map_mat_index(eb_index);
           if (matID < 0) {
@@ -447,7 +443,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
      *    Actual value of the density.
      ***************************************************************************/
 {
-  int w, iTerm;
+  int w;
   int species, num_dep, matID, num_species;
   dbl F, vol=0, rho=0, rho_f, rho_s, pressureThermo, RGAS_CONST;
   double avgMolecWeight = 0.0, tmp;
@@ -461,7 +457,6 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
    */
   if (densityJac == NULL) doJac = FALSE;
   if (doJac) {
-    iTerm = 0;
     densityJac->Num_Terms = 0;
     if (upd->vp[TEMPERATURE] != -1) {
       num_dep = 1;

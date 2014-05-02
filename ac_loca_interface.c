@@ -276,22 +276,22 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   int eb_indx, ev_indx;
   int num_pvector=0;
   int n; /* ni; */
-  int *pnstep;
   int nstep;
   int nprint;
-  int good_mesh = TRUE;
   int i, err, error;
 /*  int inewton;  */
   int converged;
   int *step_reform = NULL;
-  int num_total_nodes, numProcUnknowns;
+  int numProcUnknowns;
   int *gindex = NULL;
   int gsize;
   int *p_gsize;
   int tev, tev_post;
   int tnv, tnv_post;
+#ifdef HAVE_FRONT
   int max_unk_elem, one, three; /* used only for HAVE_FRONT */
                                 /* but must be declared anyway */
+#endif
   unsigned int matrix_systems_mask;
   double *con_par_ptr;
   double lambda, delta_s;
@@ -314,7 +314,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
 
   /* Perform initialization (as in ac_conti.c) */
   p_gsize = &gsize;
-  pnstep = &nstep;
   nstep = 0;
   nprint = 0;
 
@@ -410,7 +409,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
    * Allocate space and manipulate for all the nodes that this processor
    * is aware of...
    */
-  num_total_nodes = dpi->num_universe_nodes;
 
   numProcUnknowns = NumUnknowns + NumExtUnknowns;
 
@@ -511,6 +509,13 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   /* Call prefront (or mf_setup) if necessary */
   if (Linear_Solver == FRONT)
     {
+
+#ifdef PARALLEL
+  if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");  
+  check_parallel_error("Front solver not allowed with nprocs>1");
+#endif
+          
+#ifdef HAVE_FRONT  
       /* Also got to define these because it wants pointers to these numbers */
       max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE;
 
@@ -523,12 +528,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
       if(vn_glob[0]->dg_J_model == FULL_DG) 
         max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
 
-#ifdef PARALLEL
-  if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");  
-  check_parallel_error("Front solver not allowed with nprocs>1");
-#endif
-          
-#ifdef HAVE_FRONT  
        err = mf_setup(&exo->num_elems, 
                      &NumUnknowns, 
                      &max_unk_elem, 
@@ -1098,7 +1097,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
     if (nEQM > 0)
       {
         DPRINTF(stderr, "\nINITIAL ELEMENT QUALITY CHECK---\n");
-        good_mesh = element_quality(exo, x, ams[0]->proc_config);
+        element_quality(exo, x, ams[0]->proc_config);
       }
 
   /* First, handle single pass for eigensolver (if LOCA_LSA_ONLY) */
@@ -1340,13 +1339,12 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
  */
 {
   struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
-  int  err, ni;
-  int good_mesh = TRUE;
+  int  err;
   int converged;
   int nits=0; /* num_modnewt_its=0;  */
   int i, iAC;
   int iCC = 0, iTC = 0, iUC = 0, nCC = 0;
-  double theta, err_dbl;
+  double theta;
   double evol_local=0.0;
 #ifdef PARALLEL
   double evol_global=0.0;
@@ -1478,7 +1476,6 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
       }                 /* End of "passdown.method != LOCA_LSA_ONLY" block */
   }			/* End of print block */
         
-  ni = 0;
     passdown.theta = tran->theta;
         
 #ifdef DEBUG
@@ -1633,50 +1630,50 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
           }
 
       /* Check element quality */
-      good_mesh = element_quality(passdown.exo, x, ams->proc_config);
+      element_quality(passdown.exo, x, ams->proc_config);
 
           /* INTEGRATE FLUXES, FORCES */
 
           for (i = 0; i < nn_post_fluxes; i++)
-            err_dbl = evaluate_flux (passdown.exo,
-				     passdown.dpi,
-                                     pp_fluxes[i]->ss_id,
-                                     pp_fluxes[i]->flux_type ,
-                                     pp_fluxes[i]->flux_type_name ,
-                                     pp_fluxes[i]->blk_id ,
-                                     pp_fluxes[i]->species_number,
-                                     pp_fluxes[i]->flux_filenm,
-                                     pp_fluxes[i]->profile_flag,
-                                     x,
-                                     passdown.xdot,
-                                     NULL,
-                                     delta_s,
-                                     lambda,
-                                     1);
+            evaluate_flux (passdown.exo,
+			   passdown.dpi,
+			   pp_fluxes[i]->ss_id,
+			   pp_fluxes[i]->flux_type ,
+			   pp_fluxes[i]->flux_type_name ,
+			   pp_fluxes[i]->blk_id ,
+			   pp_fluxes[i]->species_number,
+			   pp_fluxes[i]->flux_filenm,
+			   pp_fluxes[i]->profile_flag,
+			   x,
+			   passdown.xdot,
+			   NULL,
+			   delta_s,
+			   lambda,
+			   1);
 
           /* COMPUTE FLUX, FORCE SENSITIVITIES */
 
           for (i = 0; i < nn_post_fluxes_sens; i++)
-            err_dbl = evaluate_flux_sens (passdown.exo,
-					  passdown.dpi,
-                                          pp_fluxes_sens[i]->ss_id,
-                                          pp_fluxes_sens[i]->flux_type ,
-                                          pp_fluxes_sens[i]->flux_type_name ,
-                                          pp_fluxes_sens[i]->blk_id ,
-                                          pp_fluxes_sens[i]->species_number,
-                                          pp_fluxes_sens[i]->sens_type,
-                                          pp_fluxes_sens[i]->sens_id,
-                                          pp_fluxes_sens[i]->sens_flt,
-                                          pp_fluxes_sens[i]->sens_flt2,
-                                          pp_fluxes_sens[i]->vector_id,
-                                          pp_fluxes_sens[i]->flux_filenm,
-                                          pp_fluxes_sens[i]->profile_flag,
-                                          x,
-                                          passdown.xdot,
-                                          passdown.x_sens_p,
-                                          delta_s,
-                                          lambda,
-                                          1);
+            evaluate_flux_sens (passdown.exo,
+				passdown.dpi,
+				pp_fluxes_sens[i]->ss_id,
+				pp_fluxes_sens[i]->flux_type ,
+				pp_fluxes_sens[i]->flux_type_name ,
+				pp_fluxes_sens[i]->blk_id ,
+				pp_fluxes_sens[i]->species_number,
+				pp_fluxes_sens[i]->sens_type,
+				pp_fluxes_sens[i]->sens_id,
+				pp_fluxes_sens[i]->sens_flt,
+				pp_fluxes_sens[i]->sens_flt2,
+				pp_fluxes_sens[i]->vector_id,
+				pp_fluxes_sens[i]->flux_filenm,
+				pp_fluxes_sens[i]->profile_flag,
+				x,
+				passdown.xdot,
+				passdown.x_sens_p,
+				delta_s,
+				lambda,
+				1);
 
       }   /*  end of if converged block  */
 
@@ -2713,20 +2710,15 @@ void shifted_linear_solver_conwrap(double *x, double *y,
   int    *ija = ams->bindx;     /* column pointer array into matrix "a" */
   static int    Factor_Flag;    /* For UMFPACK */
   int           matr_form;      /* 1: MSR FORMAT MATRIX FOR UMFPACK DRIVER */
-  Spfrtn        spfrtn;
   dbl           lits;           /* number of linear solver iterations taken */
   char          stringer[80];   /* holding format of num linear solve itns */
-  dbl           s_start;        /* mark start of solve */
   int   linear_solver_blk;      /* count calls to AZ_solve() */
   int   linear_solver_itns;     /* count cumulative linearsolver iterations */
   int   num_linear_solve_blks;  /* one pass for now */
   int   matrix_solved = 0;      /* boolean */
-  int    error;
   int tmp_scale, tmp_conv;
   dbl tmp_tol;
   dbl *tmp_a;
-
-  s_start = ut();
 
 /* Allocate a separate system for stability if using UMFPACK */
   if (first_linear_solver_call)
@@ -2854,27 +2846,25 @@ void shifted_linear_solver_conwrap(double *x, double *y,
             }
               
           strcpy(stringer, "   ");
-          error = -1;
           switch ( (int)(ams->status[AZ_why]) )
             {
               case AZ_normal:
-                error = 0;
                 lits = ams->status[AZ_its];
                 if ( lits < 1000 )
                   {
-                    spfrtn = sprintf(stringer, "%3d", (int)lits);
+                    sprintf(stringer, "%3d", (int)lits);
                   }
                 else if ( lits < 10000 )
                   {
-                    spfrtn = sprintf(stringer, "%2dh", (int)(lits/1e2));
+                    sprintf(stringer, "%2dh", (int)(lits/1e2));
                   }
                 else if ( lits < 100000 )
                   {
-                    spfrtn = sprintf(stringer, "%2dk", (int)(lits/1e3));
+                    sprintf(stringer, "%2dk", (int)(lits/1e3));
                   }
                 else
                   {
-                    spfrtn = sprintf(stringer, "%3.0e", lits);
+                    sprintf(stringer, "%3.0e", lits);
                   }
                 break;
               case AZ_param:
@@ -3328,17 +3318,18 @@ void perturb_solution_conwrap(double *x, double *x_old,
  */
 {
   int i;
-  int ivar;
+  /* int ivar;
   VARIABLE_DESCRIPTION_STRUCT *vdi;
+  */
 
   fill_dvec_rand (x, numOwnedUnks);
 
   for (i=0; i<numOwnedUnks; i++) {
 
 /* Determine is this is a mesh displacement variable */
-    vdi = Index_Solution_Inv(i, NULL, NULL, NULL, NULL);
-    ivar = vdi->Variable_Type;
-
+ 
+/* vdi = Index_Solution_Inv(i, NULL, NULL, NULL, NULL);
+   ivar = vdi->Variable_Type; */
 /* If so, don't perturb it! */
 /* EDW: This function is being disabled for now. */
 /*  if (ivar >= 5 && ivar <= 7) x[i] = 0.0;

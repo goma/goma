@@ -283,7 +283,7 @@ matrix_fill(
 
   double *a = ams->val;
   int *ija = ams->bindx;
-  double delta_t, theta, time_value, h_elem_avg, U_norm;  /*see arg list */
+  double delta_t, theta, time_value, h_elem_avg;  /*see arg list */
   int ielem, num_total_nodes;
   
 #if 0
@@ -318,7 +318,8 @@ matrix_fill(
 
   double s, t, u;             /* Gaussian-quadrature point locations          */
   
-  int call_int, call_col, call_special, call_contact, call_shell_grad, call_sharp_int; 
+  int call_int, call_col, call_contact, call_shell_grad, call_sharp_int; 
+  /* int call_special; */
   /* flags for calling boundary
      condition routines */
   int call_rotate;
@@ -363,16 +364,12 @@ matrix_fill(
   int  bc_input_id;	      /* Input ID of the surf_int boundary condition  */
   int id_side;                /* side counter for discontinuous Galerkin method */
 
-  int local_node_list[MDE];
   /* List to keep track of nodes at which residual and
      Jacobian corrections have been made           */
   /* for mesh equations */
-  int local_node_list_ptr;   /* Pointer to position in local_node_list array  */
-  int local_node_list_mom[MDE];
   /* List to keep track of nodes at which residual and
      Jacobian corrections have been made           */
   /* for mesh equations */
-  int local_node_list_ptr_mom;   /* Pointer to position in local_node_list array  */
   int local_node_list_fs[MDE]; /* list to keep track of nodes at which solid contributions
 				  have been transfered to liquid (fluid-solid boundaries)*/
 
@@ -381,10 +378,8 @@ matrix_fill(
   int discontinuous_stress; /* flag that tells you if you are doing Discontinuous Galerkin 
 			       for the species equations */
   int ielem_type_mass = -1;	/* flag to give discontinuous interpolation type */
-  int ielem_type_stress; /* flag to give discontinuous interpolation type */
 
   int pspg_local = 0;
-  int pspg_global;
   
   bool owner = TRUE;
 
@@ -414,7 +409,7 @@ matrix_fill(
   ielem		  = *ptr_ielem;
   num_total_nodes = *ptr_num_total_nodes;
   h_elem_avg = pg_data.h_elem_avg	  = *ptr_h_elem_avg;
-  U_norm = pg_data.U_norm	  = *ptr_U_norm;
+  pg_data.U_norm	  = *ptr_U_norm;
 
   if (Debug_Flag > 1) {
     P0PRINTF("%s: begins\n", yo);
@@ -573,31 +568,21 @@ matrix_fill(
   
   if(pd->i[POLYMER_STRESS11]==I_P1)
     {
-      if (pd->Num_Dim == 2) ielem_type_stress = P1_QUAD;
-      if (pd->Num_Dim == 3) ielem_type_stress = P1_HEX;
       discontinuous_stress = 1;
     }
   else if(pd->i[POLYMER_STRESS11]==I_P0)
     {
-      if (pd->Num_Dim == 2) ielem_type_stress = P0_QUAD;
-      if (pd->Num_Dim == 3) ielem_type_stress = P0_HEX;
       discontinuous_stress = 1;
     }
   else if(pd->i[POLYMER_STRESS11]==I_PQ1)
     {
-      if (pd->Num_Dim == 2) ielem_type_stress = BILINEAR_QUAD;
       if (pd->Num_Dim == 3) EH(-1,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
     }
   else if(pd->i[POLYMER_STRESS11]==I_PQ2)
     {
-      if (pd->Num_Dim == 2) ielem_type_stress = BIQUAD_QUAD;
       if (pd->Num_Dim == 3) EH(-1,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
-    }
-  else
-    {
-      ielem_type_stress = ielem_type;
     }
 
   ielem_type      = ei->ielem_type;  /* element type */
@@ -713,13 +698,11 @@ matrix_fill(
     {
       if(PSPG == 1)
 	{
-	  pspg_global = 1;
 	  pspg_local = 0;
 	}
       /* This is the flag for the standard local PSPG */ 
       else if(PSPG == 2)
 	{
-	  pspg_global = 0;
 	  pspg_local = 1;
 	}
     }
@@ -2389,17 +2372,19 @@ matrix_fill(
 	   * conditions */
       /******************************************************************************/
       /* Determine which types of bc's apply on this side */
-      call_special = 0;
+      /*call_special = 0; */
       for (ibc = 0; 
 	   (bc_input_id = (int) elem_side_bc->BC_input_id[ibc]) != -1; 
 	   ibc++) {
 	bct = BC_Types[bc_input_id].desc->method;
-	if (bct == WEAK_SHIFT) call_special = 1; 
+	/*if (bct == WEAK_SHIFT) call_special = 1; */
       } /* end of loop over boundary condition number */
 	
       /* MMH notes: This next call was commented out when I updated
        * the BC's for LSA.  If someone wants to be able to do the
        * following call, with LSA, then they need to be careful.
+       *
+       * If uncommenting also uncomment other call_special references
        */
       /* if (call_special) shift_residuals_and_jacobians(ija, a, x, resid_vector, */
       /* 					      	first_elem_side_BC_array) */
@@ -2541,17 +2526,6 @@ matrix_fill(
        */
       elem_side_bc = first_elem_side_BC_array[ielem];
       
-      /*
-       * Initialize node lists to control rotation of bulk equations and to control
-       * shifting of residual and jacobian contributions 
-       */
-      local_node_list_ptr = -1;
-      local_node_list_ptr_mom = -1;
-      for (i = 0; i < num_local_nodes; i++) {
-	local_node_list[i] = -1;
-	local_node_list_mom[i] = -1;
-      }
-            
       /*****************************************************************************/
       do {  /* begining of do while construct */
 	/* which loops over the sides of this element that have boundary 
@@ -3002,7 +2976,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
   int ivar, ieqn, kt, kt1, w, w1;
   int peqn, pvar, iunks = -1, idof, ldof, dofs;
   int I, J, K, m, n, nunks = -1;
-  int gnn, ie, ke, kv, nvdof, mn;
+  int gnn, ie, ke, kv, nvdof;
   int je, ja, face, index, neighbor, ledof;
   int je_new;
   NODAL_VARS_STRUCT *nv;
@@ -3026,7 +3000,6 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
   fprintf(rrrr, "global element = %d\n", DPI_ptr->elem_index_global[ei->ielem]);
   fprintf(rrrr, "\nGlobal_NN Proc_NN  Equation    idof    Proc_SolnNum     ResidValue\n");
 #endif
-  mn = ei->mn;
 
   /* Load up estifm in case a frontal solver is being used */
   if (Linear_Solver == FRONT) {

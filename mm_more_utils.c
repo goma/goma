@@ -404,8 +404,8 @@ sum_total_stress(double sol_vec[],
    ********************************************************************/
 {
   int eb_index;
-  int mn, e_start, e_end, ielem, ielem_type, ip_total, num_local_nodes;
-  int ielem_dim, iconnect_ptr, var, ktype, i, I, index, ileft, Ileft;
+  int mn, e_start, e_end, ielem, ielem_type, num_local_nodes;
+  int iconnect_ptr, var, ktype, i, I, index, ileft, Ileft;
 
   int iright, Iright;
   int mode;
@@ -425,12 +425,10 @@ sum_total_stress(double sol_vec[],
       for( ielem = e_start; ielem < e_end; ielem++)
 	{
 	  ielem_type      = Elem_Type(exo, ielem); 
-	  ip_total        = elem_info(NQUAD, ielem_type);
-	                     /* number of quadrature points */
+
 	  num_local_nodes = elem_info(NNODES, ielem_type);
                              /* number of local  basis functions */
     
-	  ielem_dim       = elem_info(NDIM, ielem_type);
 	  iconnect_ptr    = Proc_Connect_Ptr[ielem];
 	                     /* find ptr to beginning of this element's */
      			     /* connectivity list */
@@ -698,8 +696,8 @@ extract_nodal_eb_vec(double sol_vec[], int var_no, int ktype, int matIndex,
    *                of nodes)
    *********************************************************************************/
 {
-  int mn, e_start, e_end, ielem, ielem_type, ip_total, num_local_nodes;
-  int ielem_dim, iconnect_ptr, i, I, index;
+  int mn, e_start, e_end, ielem, ielem_type, num_local_nodes;
+  int iconnect_ptr, i, I, index;
   int ileft, Ileft, iright, Iright, midside;
   int lastSpeciesSum, iDof, j;
   MATRL_PROP_STRUCT *matrl;
@@ -748,16 +746,6 @@ extract_nodal_eb_vec(double sol_vec[], int var_no, int ktype, int matIndex,
      *  
      */
     ielem_type      = Elem_Type(exo, ielem);
-
-    /*
-     *  Get the total number of quadrature points
-     */
-    ip_total        = elem_info(NQUAD, ielem_type); 
-
-    /*
-     *  Get the dimensionality of the elements in the element block
-     */
-    ielem_dim       = elem_info(NDIM, ielem_type);
 
     /*
      * Number of local nodes in the element
@@ -943,7 +931,7 @@ extract_elem_vec(const double sol_vec[],
 {
   int eb_index;
   int mn, e_start, e_end, ielem, ielem_type, num_local_nodes;
-  int ielem_dim, iconnect_ptr, var, ktype, i, I, index;
+  int iconnect_ptr, var, ktype, i, I, index;
   int found_quantity;
 
   for ( eb_index=0; eb_index < exo->num_elem_blocks; eb_index++ ) {
@@ -972,7 +960,6 @@ extract_elem_vec(const double sol_vec[],
 
       ielem_type      = Elem_Type(exo, ielem); /* func defd in el_geom.h */
       num_local_nodes = elem_info(NNODES, ielem_type);
-      ielem_dim       = elem_info(NDIM, ielem_type);
       iconnect_ptr    = Proc_Connect_Ptr[ielem]; /* find ptr to beginning */
       /* of this element's */
       /* connectivity list */

@@ -96,7 +96,9 @@ lu(const int N,
   int  error, type;
   int j, i, n, k, nzeros, ija_col;
   static spREAL **element, *b;
+#ifdef MATRIX_STATISTICS
   spREAL norm;
+#endif
 
 
   call++;
@@ -165,8 +167,9 @@ lu(const int N,
 
      } /* end of define and fill */
 
+#ifdef MATRIX_STATISTICS
      norm = spNorm(matrix);
-
+#endif
       if( first_time == TRUE && factor_flag == 1){
 
 /*         spFileMatrix(matrix,"matrix_file","channel",0,1,1); */

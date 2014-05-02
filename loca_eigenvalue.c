@@ -266,7 +266,7 @@ static int eig_driver(char which[], char bmat[], int iparam[], int mode,
 {
   int      j, kk, ldv, lworkl;
   int      nloc, nloc_max, nloc2, ido, flag;
-  int      count, nconv, ierr;
+  int      count, nconv=0, ierr;
   int      ipntr[14];
   int      dummy1, dummy2, dummy3, dummy4;
   double   *rhs_orig;

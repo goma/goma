@@ -127,7 +127,6 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   double        *hDelta_s0=NULL, *hDelta_s_min=NULL, *hDelta_s_max=NULL;
   double        delta_t;
   double	theta=0.0;
-  double        damp;
   double        eps;
   double        *lambda=NULL, *lambdaEnd=NULL;
   double	hunt_par, dhunt_par, hunt_par_old;	/* hunting continuation parameter */
@@ -149,7 +148,6 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   int		*p_gsize=NULL;
   double	*gvec=NULL;
   double        ***gvec_elem;
-  double	err_dbl;
   FILE          *file=NULL;
   double 	toler_org[3],damp_org;
   
@@ -161,8 +159,9 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 					   for post processing */
   int		tev_post;	/* total number of elem variables and kinds 
 					   for post processing */
-
+#ifdef HAVE_FRONT
   int max_unk_elem, one, three; /* variables used as mf_setup arguments*/
+#endif
 
   unsigned int
   matrix_systems_mask;
@@ -405,8 +404,6 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
   alqALC = 1;
 
-  damp = 1.0;
-
   delta_t = 0.0;
   tran->delta_t = 0.0;      /*for Newmark-Beta terms in Lagrangian Solid*/
 
@@ -476,6 +473,9 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   /* Call prefront (or mf_setup) if necessary */
   if (Linear_Solver == FRONT)
   {
+    if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");  
+	  
+#ifdef HAVE_FRONT  
     /* Also got to define these because it wants pointers to these numbers */
 	  
     max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE;
@@ -491,9 +491,6 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
     }
 
-    if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");  
-	  
-#ifdef HAVE_FRONT  
     err = mf_setup(&exo->num_elems, 
 		   &NumUnknowns, 
 		   &max_unk_elem, 
@@ -920,15 +917,15 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
 	for (i = 0; i < nn_post_fluxes; i++)
 	{
-	  err_dbl = evaluate_flux ( exo, dpi, 
-                                    pp_fluxes[i]->ss_id, 
-				    pp_fluxes[i]->flux_type ,
-                                    pp_fluxes[i]->flux_type_name ,
-				    pp_fluxes[i]->blk_id , 
-				    pp_fluxes[i]->species_number, 
-				    pp_fluxes[i]->flux_filenm,
-                                    pp_fluxes[i]->profile_flag,
- 				    x,xdot,NULL,delta_s[0],path1[0],1); 
+	  evaluate_flux ( exo, dpi, 
+			  pp_fluxes[i]->ss_id, 
+			  pp_fluxes[i]->flux_type ,
+			  pp_fluxes[i]->flux_type_name ,
+			  pp_fluxes[i]->blk_id , 
+			  pp_fluxes[i]->species_number, 
+			  pp_fluxes[i]->flux_filenm,
+			  pp_fluxes[i]->profile_flag,
+			  x,xdot,NULL,delta_s[0],path1[0],1); 
 	}
 
 
@@ -939,20 +936,20 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
 	for (i = 0; i < nn_post_fluxes_sens; i++)
 	{
-	  err_dbl = evaluate_flux_sens ( exo, dpi,
-                                         pp_fluxes_sens[i]->ss_id,
-					 pp_fluxes_sens[i]->flux_type ,
-                                         pp_fluxes_sens[i]->flux_type_name ,
-					 pp_fluxes_sens[i]->blk_id ,
-					 pp_fluxes_sens[i]->species_number,
-					 pp_fluxes_sens[i]->sens_type,
-					 pp_fluxes_sens[i]->sens_id,
-					 pp_fluxes_sens[i]->sens_flt,
-					 pp_fluxes_sens[i]->sens_flt2,
-					 pp_fluxes_sens[i]->vector_id,
-					 pp_fluxes_sens[i]->flux_filenm,
-                                         pp_fluxes_sens[i]->profile_flag,
- 					 x,xdot,x_sens_p,delta_s[0],path1[0],1);
+	  evaluate_flux_sens ( exo, dpi,
+			       pp_fluxes_sens[i]->ss_id,
+			       pp_fluxes_sens[i]->flux_type ,
+			       pp_fluxes_sens[i]->flux_type_name ,
+			       pp_fluxes_sens[i]->blk_id ,
+			       pp_fluxes_sens[i]->species_number,
+			       pp_fluxes_sens[i]->sens_type,
+			       pp_fluxes_sens[i]->sens_id,
+			       pp_fluxes_sens[i]->sens_flt,
+			       pp_fluxes_sens[i]->sens_flt2,
+			       pp_fluxes_sens[i]->vector_id,
+			       pp_fluxes_sens[i]->flux_filenm,
+			       pp_fluxes_sens[i]->profile_flag,
+			       x,xdot,x_sens_p,delta_s[0],path1[0],1);
 	}
  	/*
       	 * Compute global volumetric quantities

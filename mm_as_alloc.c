@@ -893,7 +893,6 @@ assembly_alloc(Exo_DB *exo)
   int mn;
   int vim, dim, wim;                 /* problem dimension */
   int num_species_eqn;                 /* active number of species eqn */
-  int num_phase_funcs;          /* number of active phase functions */
 
   /*
    * The problem description has already been set up. But we need to access
@@ -988,10 +987,6 @@ assembly_alloc(Exo_DB *exo)
    *  in any one domain
    */
   num_species_eqn = upd->Max_Num_Species_Eqn;
-
-  if( pfd != NULL ) num_phase_funcs = pfd->num_phase_funcs;
-  else num_phase_funcs = 0;
-
 
 #ifdef DEBUG
   fprintf(stderr, "%s allocating esp with dim=%d, vim=%d\n", yo, dim, vim);

@@ -131,10 +131,8 @@ apply_contact_bc (
   double s, t, u;	      	/* Gaussian quadrature point locations  */
   double xi[DIM];             /* Local element coordinates of Gauss point. */
   double x_dot[MAX_PDIM];
-  double x_rs_dot[MAX_PDIM];
   double wt, weight;
   double  res, jac;
-  double xsurf[MAX_PDIM];
   double func[DIM];
   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE];
  
@@ -247,28 +245,11 @@ apply_contact_bc (
 	    * (fv->x[icount] - fv_old->x[icount])/delta_t
 	    - 2. * theta  *  fv_dot->x[icount];
 	/* calculate surface position for wall repulsion/no penetration condition */
-	xsurf[icount] = fv->x0[icount];
       }
 
-      if(pd->e[SOLID_DISPLACEMENT1]) {
-	for(icount=0; icount<VIM; icount++)
-	    x_rs_dot[icount] = 0.;
-	for (icount = 0; icount < ielem_dim; icount++ )	{
-	  /* Notice how I use here fv->d_rs instead of fv->x_rs
-	   * (which doesn't exist) because
-	   * x_rs_dot = d(X_rs)/dt = d(Coor[][] + d_rs)/dt = d(d_rs)/dt
-	   */
-	  x_rs_dot[icount] = (1 + 2. * theta)
-	      * (fv->d_rs[icount] - fv_old->d_rs[icount])/delta_t
-	      - 2. * theta  *  fv_dot->d_rs[icount];
-	}
-      }
-	  
     }  else {
       for (icount=0; icount<ielem_dim; icount++ ) {
-	x_rs_dot[icount]=0.;
 	x_dot[icount] = 0.;
-	xsurf[icount] = fv->x0[icount];
       }
     }
     
@@ -926,7 +907,7 @@ jump_down_to_fluid ( const Exo_DB *exo, /* Ptr to Exodus database */
 {
   double coordinates[DIM];
   int velo_interp, fluid_mesh_elem_id;
-  int err, eb_index, e_start=0, e_end=0, ifound, j;
+  int eb_index, e_start=0, e_end=0, ifound, j;
   int sign;
 
 
@@ -979,7 +960,7 @@ jump_down_to_fluid ( const Exo_DB *exo, /* Ptr to Exodus database */
 /* PRS fix: this routine core-dumps if the regions don't
             overlap.  Need a graceful exit here */
   for(j=0; j<DIM; j++) xi_2[j] = 0.0;
-  err = invert_isoparametric_map(&fluid_mesh_elem_id, &coordinates[0],
+  invert_isoparametric_map(&fluid_mesh_elem_id, &coordinates[0],
                                   xi_2, exo, x, &velo_interp);
 
   /* noble hack here, this should be fixed eventually */
@@ -1086,7 +1067,7 @@ Lagrange_mult_equation(double func[DIM],
   int var, jvar;		/* Degree of freedom counter                 */
 
   int DeformingMesh;		/* Logical.                                  */
-  double A, dAdx[DIM][MDE],  phi_j;
+  double A, phi_j;
   double penalty = 1.0e+6;
   double jac=0.0;
 
@@ -1123,8 +1104,6 @@ Lagrange_mult_equation(double func[DIM],
 	      for (j=0; j<ei->dof[var]; j++)
 		{
                   phi_j = bf[var]->phi[j];
-		  dAdx[jvar][j] = 2.*(x_dot[jvar] - fluid_velocity[jvar])
-		    *(1. - 2.*tt)*phi_j/dt;
 
                   jac = penalty * (1. - 2.*tt)*phi_j/dt;
                   d_func[jvar][var][j] += jac;
@@ -1550,7 +1529,6 @@ assemble_embedded_bc (
   double res, jac;
   struct LS_Embedded_BC *bcref;
   BOUNDARY_CONDITION_STRUCT *bc;
-  struct BC_descriptions *bc_desc;
   /* New vars for overlap AC algorithm */
   int id_side, nu, iAC=0, ioffset = -1;
   int dof_l[DIM], dof_q[DIM], nunk[DIM][MDE];
@@ -1616,7 +1594,6 @@ assemble_embedded_bc (
   while (bcref)
     {
       bc = BC_Types + bcref->bc_input_id;
-      bc_desc = bc->desc;
 
       if ( xfem != NULL && bc->BC_ID != 0 && ls->Elem_Sign != bc->BC_ID )
         {
@@ -2054,10 +2031,9 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
 {
   struct LS_Embedded_BC *bcref;
   BOUNDARY_CONDITION_STRUCT *bc;
-  struct BC_descriptions *bc_desc;
 
   int a, i, j, idof_from, idof_to;
-  int is_neg, base_interp;
+  int is_neg;
   int eqn, var, peqn, pvar;
   int status = 0;
   int ln;
@@ -2088,7 +2064,6 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
   while (bcref)
     {
       bc = BC_Types + bcref->bc_input_id;
-      bc_desc = bc->desc;
         
       switch (bc->BC_Name) {
         case LS_U_BC:
@@ -2106,17 +2081,11 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
 		 pd->i[eqn] == I_Q1_GN ||
 	         pd->i[eqn] == I_Q2_GN ||
 		 pd->i[eqn] == I_Q1_XG ||
-	         pd->i[eqn] == I_Q2_XG )
+	         pd->i[eqn] == I_Q2_XG ||
+		 pd->i[eqn] == I_Q1_XV ||
+		 pd->i[eqn] == I_Q2_XV )
               {
                 break; /* nothing needs to be done here */
-              }
-	    else if ( pd->i[eqn] == I_Q1_XV )
-              {
-                base_interp = I_Q1;
-              }
-            else if ( pd->i[eqn] == I_Q2_XV )
-              {
-                base_interp = I_Q2;
               }
             else
               {
@@ -2166,21 +2135,12 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
             eqn = R_ENERGY;
             peqn = upd->ep[eqn];
 
-            if ( pd->i[eqn] == I_P0_G )
+            if ( pd->i[eqn] == I_P0_G ||
+		 pd->i[eqn] == I_P1_G ||
+		 pd->i[eqn] == I_Q1_G ||
+		 pd->i[eqn] == I_Q2_G )
               {
-                base_interp = I_P0;
-              }
-            else if ( pd->i[eqn] == I_P1_G )
-              {
-                base_interp = I_P1;
-              }
-            else if ( pd->i[eqn] == I_Q1_G )
-              {
-                base_interp = I_Q1;
-              }
-            else if ( pd->i[eqn] == I_Q2_G )
-              {
-                base_interp = I_Q2;
+		break;
               }
             else
               {
@@ -2235,21 +2195,12 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                 eqn = R_MOMENTUM1 + a;
                 peqn = upd->ep[eqn];
 
-                if ( pd->i[eqn] == I_P0_G )
+                if ( pd->i[eqn] == I_P0_G ||
+		     pd->i[eqn] == I_P1_G ||
+		     pd->i[eqn] == I_Q1_G ||
+		     pd->i[eqn] == I_Q2_G )
                   {
-                    base_interp = I_P0;
-                  }
-                else if ( pd->i[eqn] == I_P1_G )
-                  {
-                    base_interp = I_P1;
-                  }
-                else if ( pd->i[eqn] == I_Q1_G )
-                  {
-                    base_interp = I_Q1;
-                  }
-                else if ( pd->i[eqn] == I_Q2_G )
-                  {
-                    base_interp = I_Q2;
+		    break;
                   }
                 else
                   {
@@ -2306,21 +2257,12 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                 eqn = R_MOMENTUM1 + a;
                 peqn = upd->ep[eqn];
 
-                if ( pd->i[eqn] == I_P0_G )
+                if ( pd->i[eqn] == I_P0_G ||
+		     pd->i[eqn] == I_P1_G ||
+		     pd->i[eqn] == I_Q1_G ||
+		     pd->i[eqn] == I_Q2_G )
                   {
-                    base_interp = I_P0;
-                  }
-                else if ( pd->i[eqn] == I_P1_G )
-                  {
-                    base_interp = I_P1;
-                  }
-                else if ( pd->i[eqn] == I_Q1_G )
-                  {
-                    base_interp = I_Q1;
-                  }
-                else if ( pd->i[eqn] == I_Q2_G )
-                  {
-                    base_interp = I_Q2;
+		    break;
                   }
                 else
                   {
@@ -2682,7 +2624,6 @@ lookup_active_dof(int var,
   int node, index, noffset, nu;
   NODE_INFO_STRUCT *nn;
   NODAL_VARS_STRUCT *nv;
-  int Nu;
 
   /* Get unknown index */
   node = ei->dof_list[var][j];
@@ -2694,7 +2635,6 @@ lookup_active_dof(int var,
   nu = ei->gun_list[var][j];
 
   EH(nu, "Bad unknown index!");
-  Nu = nu;
 
   /*
    * If there is an active Dirichlet on this var at this node,

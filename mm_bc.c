@@ -166,7 +166,7 @@ find_and_set_Dirichlet(double x[],    /* solution vector at this processor */
 #endif /* DEBUG_BC */
   int apply_pressure_datum;	/* boolean */
   int i, ibc, ins, inode = -1, error_cond = FALSE;
-  int num_nodes, n, iconnect_ptr, ndof, datum_set, var, ie, local_elem;
+  int num_nodes, n, iconnect_ptr, datum_set, ie, local_elem;
   NODE_INFO_STRUCT *node;
   NODAL_VARS_STRUCT *nv;
   VARIABLE_DESCRIPTION_STRUCT *vd;
@@ -459,8 +459,6 @@ find_and_set_Dirichlet(double x[],    /* solution vector at this processor */
       inode = Proc_Elem_Connect[iconnect_ptr + n];
       node = Nodes[inode];
       nv = node->Nodal_Vars_Info;
-      ndof  = 0;	
-      var   = PRESSURE;
       if (Dolphin[inode][PRESSURE] > 0 && datum_set) {
 	datum_set = 0;
 	if (!node->DBC) {
@@ -1448,7 +1446,6 @@ set_up_Edge_BC (struct elem_edge_bc_struct *First_Elem_Edge_BC_Array[ ],
   int j;
   int ss_id1;
   int ss_id2;
-  int side;
   int kdex;
   int k2_start;
   char err_msg[MAX_CHAR_IN_INPUT];
@@ -1470,6 +1467,9 @@ set_up_Edge_BC (struct elem_edge_bc_struct *First_Elem_Edge_BC_Array[ ],
   int l, k, k_node;
   int node_list[MDE];
   int node_ctr = -1;
+#ifdef DEBUG
+  int side;
+#endif
 #ifdef PARALLEL
   int iss1g, iss2g;
 #endif
@@ -1578,8 +1578,8 @@ set_up_Edge_BC (struct elem_edge_bc_struct *First_Elem_Edge_BC_Array[ ],
 	      for ( i=0; i<exo->ss_num_sides[iss1]; i++)
 		{
 		  ielem = exo->ss_elem_list[exo->ss_elem_index[iss1]+i];
-		  side  = exo->ss_side_list[exo->ss_elem_index[iss1]+i];
 #ifdef DEBUG
+		  side  = exo->ss_side_list[exo->ss_elem_index[iss1]+i];
 		  fprintf(stderr, "Side/elem = %d, %d\n", ielem, side);
 #endif
 		  num_nodes_on_side = ( exo->ss_node_side_index[iss1][i+1] -
@@ -1812,7 +1812,7 @@ set_up_Embedded_BC ()
 {
   int 	                ibc;
   struct LS_Embedded_BC *bc;
-  int                   found_capillary=FALSE;
+  /* int                   found_capillary=FALSE; */
   int                   pf;
 
   /*****************************************************************************/
@@ -1851,7 +1851,7 @@ set_up_Embedded_BC ()
       
       bc->bc_input_id = ibc;
       
-      if ( BC_Types[ibc].BC_Name == LS_CAPILLARY_BC ) found_capillary = TRUE;
+      /* if ( BC_Types[ibc].BC_Name == LS_CAPILLARY_BC ) found_capillary = TRUE; */
 
     } else if (!strcmp(BC_Types[ibc].Set_Type, "PF")) {
       
@@ -1873,7 +1873,7 @@ set_up_Embedded_BC ()
       
       bc->bc_input_id = ibc;
       
-      if ( BC_Types[ibc].BC_Name == PF_CAPILLARY_BC ) found_capillary = TRUE;
+      /* if ( BC_Types[ibc].BC_Name == PF_CAPILLARY_BC ) found_capillary = TRUE; */
 
     }
   }  /* END for (ibc = 0; ibc < Num_BC; ibc++)			     */
@@ -2402,8 +2402,6 @@ find_id_side(const int ielem,			/* element index number */
   int i;
   double sum;
   
-  Spfrtn sr;
-    
   char err_msg[MAX_CHAR_ERR_MSG];  
 
   static char *yo = "find_id_side";

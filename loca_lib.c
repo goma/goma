@@ -1039,7 +1039,7 @@ static void print_cont_step1(int order, double step, double step_old,
   struct general_info_struct *cgi = &(con->general_info);
   struct private_info_struct *cpi = &(con->private_info);
 
-  const char *string;
+  const char *string = "";
 
   if (cgi->method == TURNING_POINT_CONTINUATION)
              string = "Zero-order Turning Point Continuation";

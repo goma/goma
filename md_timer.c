@@ -133,10 +133,8 @@ void
 get_date(char *string)
 {
   char date_format[80];
-  int i, err;
+  int i;
   char buffer[80];
-  size_t bufsize;
-  time_t s;
   time_t now;
 
   int month_number;
@@ -146,8 +144,7 @@ get_date(char *string)
   for ( i=0; i<80; i++ ) buffer[i] = '\0';
 
   strcpy(date_format, "%m/%d/%y");
-  bufsize = strlen(date_format) + 1; /* to hold the terminating null */
-  s       = time(&now);
+  time(&now);
 
   /*
    * Yes, I know that %y only returns two digits for the year and that's not
@@ -159,13 +156,13 @@ get_date(char *string)
    * a certified warning-free Y2K-complacent version.
    */
 
-  err          = strftime(buffer, 80, "%m", localtime(&now) );
+  strftime(buffer, 80, "%m", localtime(&now) );
   month_number = atoi(buffer);
 
-  err          = strftime(buffer, 80, "%d", localtime(&now) );
+  strftime(buffer, 80, "%d", localtime(&now) );
   day_of_month = atoi(buffer);
 
-  err          = strftime(buffer, 80, "%Y", localtime(&now) );
+  strftime(buffer, 80, "%Y", localtime(&now) );
   year_number  = atoi(buffer);
 
   sprintf(string, "%2d/%2d/%2d", month_number, day_of_month, year_number%100);
@@ -183,15 +180,13 @@ void
 get_time(char *string)
 {
   char time_format[80];
-  int err;
   size_t bufsize;
-  time_t s;
   time_t now;
   
   strcpy(time_format, "%H:%M:%S");
   bufsize = strlen(time_format) + 1;
-  s       = time(&now);
-  err     = strftime(string, bufsize, "%H:%M:%S", localtime(&now) );
+  time(&now);
+  strftime(string, bufsize, "%H:%M:%S", localtime(&now) );
   return;
 } /* end of get_time() */
 

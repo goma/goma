@@ -690,10 +690,15 @@ find_exit_wound(const int elem_id,
 		const int tolerance_level)
 {
   dbl xi_tmp[DIM], x_intersect[DIM], first_xi_tmp[DIM], second_xi_tmp[DIM] = {0.0, 0.0, 0.0};
-  dbl coeff[6], len;
+  dbl coeff[6];
+  /* dbl len; */
   int exit_id1, exit_id2, exit_id3, PBC_id;
   int bdry_crossed[3], num_crossed;
   int i;
+  /* initialize first_xi_tmp */
+  for (i = 0; i < DIM; i++) {
+    first_xi_tmp[i] = 0;
+  }
 
   if(stack_count == 100)
     dump1(EXIT, p, "Hit 100 recursive calls to find_exit_wound(), something must be wrong...");
@@ -787,7 +792,7 @@ find_exit_wound(const int elem_id,
 	  coeff[i] = x_start[i];
 	  coeff[i+3] = x_end[i] - x_start[i];
 	}
-      len = nnorm(3, &(coeff[3]));
+      /* len = nnorm(3, &(coeff[3])); */
 
       /* We know len > 0.0 b/c we crossed a boundary to get into this
        * routine; hence, we must have moved. */
@@ -1897,7 +1902,7 @@ get_boundary_xi_newton(const dbl * const coeff,
   dbl resid_initial = 0.0, resid_scale = 0.0;
   dbl pt[DIM], pt_xi[DIM];
   dbl tmp[DIM], tmp2[DIM];
-  int i, si, iter, index1, index2;
+  int i, si, iter, index1;
   struct Basis_Functions *map_bf;
 
   si = in_list(pd->IntegrationMap, 0, Num_Interpolations, Unique_Interpolations);
@@ -1905,12 +1910,10 @@ get_boundary_xi_newton(const dbl * const coeff,
   if(mdim == 2)
     {
       index1 = 1 - fixed_index;
-      index2 = -1;		/* not needed for 2D */
     }
   else
     {
       index1 = (fixed_index + 1) % 3;
-      index2 = (fixed_index + 2) % 3;
     }
 
   load_field_variables_at_xi(elem_id, xi_tmp);
@@ -2303,6 +2306,11 @@ create_element_particle_info_maps(void)
   char fp2name[80];
   FILE *fp, *fp2;
   /*  static void test_map_integrity(void); */
+
+  /* initialize indices */
+  for (i = 0; i < 4; i++) {
+    indices[i] = 0;
+  }
 #endif
 
   /* Assuming that you will not apply more than one PBC to a sideset! */
@@ -2688,7 +2696,7 @@ generate_source_particles(const dbl tt,	/* parameter to vary time integration */
 			  const dbl creation_time) /* time when particle was created. */
 {
   PBC_t *PBC;
-  particle_t p, *p_ptr;
+  particle_t p;
   int SS_id, elem_id, side_id, ip_id;
   int i, j, k, m, ip_total, num_nodes_on_side;
   int *local_ss_node_list, local_elem_node_id[MAX_NODES_PER_SIDE];
@@ -2780,7 +2788,7 @@ generate_source_particles(const dbl tt,	/* parameter to vary time integration */
 			    memcpy(p.v_old, p.v, DIM * sizeof(dbl));
 			  }
 			p.time = creation_time;
-			p_ptr = create_a_particle(&p, elem_id);
+			create_a_particle(&p, elem_id);
 		      }
 		    if(drand48() < (expected_particles - floor(expected_particles)))
 		      {
@@ -2796,7 +2804,7 @@ generate_source_particles(const dbl tt,	/* parameter to vary time integration */
 			    memcpy(p.v_old, p.v, DIM * sizeof(dbl));
 			  }
 			p.time = creation_time;
-			p_ptr = create_a_particle(&p, elem_id);
+			create_a_particle(&p, elem_id);
 		      }
 		  } /* for k ... static_exo->ss_num_sides[j] */
 	      } /* SS_id == static_exo->ss_id[j] */
@@ -3105,6 +3113,11 @@ select_random_side_location(const int elem_id,
   int i, j, indices[4];
   dbl r, r2, x_edge[2][DIM];
 
+  /* initialize indices */
+  for (i = 0; i < 4; i++) {
+    indices[i] = 0;
+  }
+
   load_element_node_coordinates(elem_id);
   
   if(mdim == 2)
@@ -3153,6 +3166,11 @@ get_side_area(const int elem_id,
 {
   int i, indices[4];
   dbl d1[DIM], d2[DIM], dcross[DIM], dnorm;
+
+  /* initialize indices */
+  for (i = 0; i < 4; i++) {
+    indices[i] = 0;
+  }
 
   load_element_node_coordinates(elem_id);
   if(mdim == 2)
@@ -3252,7 +3270,7 @@ get_element_xi_newton(const int elem_id,
 		      const dbl * const x,
 		      dbl * xi)
 {
-  dbl update[DIM], resid[DIM], resid_norm, initial_resid_norm, xi_norm;
+  dbl update[DIM], resid[DIM], resid_norm, xi_norm;
   dbl termination_residual;
   const dbl tol = 1.0e-12;
   int i, j, si, iter;
@@ -3266,7 +3284,6 @@ get_element_xi_newton(const int elem_id,
   for(i = 0; i < mdim; i++)
     resid[i] = fv->x[i] - x[i];
   resid_norm = nnorm(mdim, resid);
-  initial_resid_norm = resid_norm;
 
   xi_norm = nnorm(mdim, xi);
   termination_residual = MAX(tol, tol * xi_norm*xi_norm);
@@ -3597,7 +3614,8 @@ static dbl
 compute_particle_dt(particle_t * const p,
 		    const dbl max_dt)
 {
-  dbl dt, tmp_dt, particle_speed, fluid_speed, max_speed, min_side_length, mass, fluid_mass, volume;
+  dbl dt = 0, tmp_dt = 0, particle_speed, fluid_speed, max_speed, min_side_length, mass, volume;
+  /*  dbl fluid_mass; */
   dbl stokes_force_coeff, coulombic_force_coeff, gravity_force_coeff;
   dbl Re_p, Re_p_correction;
   dbl vel_diff, vel_rel[DIM];
@@ -3639,7 +3657,7 @@ compute_particle_dt(particle_t * const p,
       /* These need to match the same values used in move_particle(). */
       volume = 4.0/3.0 * M_PIE * Particle_Radius * Particle_Radius * Particle_Radius;
       mass = Particle_Density * volume;
-      fluid_mass = mp->density * volume;
+      /*      fluid_mass = mp->density * volume; */
       stokes_force_coeff = 6.0 * M_PIE * mp->viscosity * Particle_Radius;
       gravity_force_coeff = Particle_Model_Data[1];
 
@@ -3857,7 +3875,8 @@ move_particle(particle_t * const p,
   int newton_iterations, newton_iterations_2;
   dbl J[6][6], b[6], x_sol[6], b_norm, relax_factor, update_norm;
   dbl rcubed;
-  dbl volume, mass, fluid_mass;
+  dbl volume, mass;
+  /* dbl fluid_mass; */
   dbl weiner_angle, weiner_speed, beta;
   dbl Re_p, Re_p_correction, vel_diff;
   dbl stokes_force_coeff, coulombic_force_coeff, gravity_force_coeff;
@@ -4541,7 +4560,7 @@ move_particle(particle_t * const p,
 
     case INERTIAL_TRACER_IMPLICIT:
       /* These need to match the same values used in compute_particle_dt(). */
-      fluid_mass = 4.0/3.0 * M_PIE * mp->density * rcubed;
+      /* fluid_mass = 4.0/3.0 * M_PIE * mp->density * rcubed; */
       stokes_force_coeff = 6.0 * M_PIE * mp->viscosity * Particle_Radius;
       gravity_force_coeff = Particle_Model_Data[1];
 
@@ -5086,7 +5105,8 @@ advance_a_particle(particle_t * p,
 		   const int n)
 {
   dbl particle_dt, output_start_ust;
-  int newton_iterations, particle_iterations, original_owning_elem_id;
+  int newton_iterations, particle_iterations;
+  /*  int original_owning_elem_id; */
   int done;
   
   load_element_information(p->owning_elem_id);
@@ -5138,7 +5158,7 @@ advance_a_particle(particle_t * p,
       /* Find the particles that have moved out of their element.
        * Some of these have moved completely out of the computational
        * domain. */
-      original_owning_elem_id = p->owning_elem_id;
+      /* original_owning_elem_id = p->owning_elem_id; */
       if(fabs(p->xi[0]) >= 1.0 || fabs(p->xi[1]) >= 1.0 || fabs(p->xi[2]) >= 1.0)
 	{
 #ifdef SHOW_PARTICLE_MOVEMENT

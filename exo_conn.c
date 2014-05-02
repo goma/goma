@@ -598,7 +598,6 @@ build_elem_elem(Exo_DB *exo)
   int prev_set[MAX_EPN];	/* list of elements attached to previous node*/
   int curr_set[MAX_EPN];	/* list of elements attached to "this" node */
 
-  int interset[MAX_EPN];	/* values of hits between */
 
   int ip[MAX_EPN];		/* indeces of hits for prev_set[] */
   int ic[MAX_EPN];		/* indeces of hits for curr_set[] */
@@ -719,7 +718,6 @@ build_elem_elem(Exo_DB *exo)
 	       {
 		 prev_set[i] = -1;
 		 curr_set[i] = -1;
-		 interset[i] = -1;
 	       }
 	     len_prev  = 0;
 	     len_curr  = 0;
@@ -852,7 +850,6 @@ build_elem_elem(Exo_DB *exo)
 
 		 for ( i=0; i<MAX_EPN; i++)
 		   {
-		     interset[i] = -1;
 		     ip[i]       = -1;
 		     ic[i]       = -1;
 		   }
@@ -1118,7 +1115,6 @@ build_side_node_list(int elem,
   int element_type;
   int i;
   int nodes_this_side;
-  int num_sides;
   int shape;
   
   int local_nodeces[MAX_NODES_PER_SIDE];
@@ -1131,7 +1127,6 @@ build_side_node_list(int elem,
 
   element_type = Elem_Type(exo, elem);
   shape        = type2shape(element_type);
-  num_sides    = shape2sides(shape);
 
   /*
    * Count up the number of nodes and provide their local 0-based

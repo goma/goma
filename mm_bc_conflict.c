@@ -293,7 +293,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
   int ivar, jvar, var=-1;
   int count_BC, count_DC, count_rotate, count_weak, count_strong;
   int count_coll, count_special;
-  int ss_rot, bc_rot, dir_rot, i_rotate, two_ss_rot;
+  int ss_rot, dir_rot, i_rotate, two_ss_rot;
   int divert;			/* output diag of duplications to file */
   int bickel;			/* BC list temp variable */
   char bc_divert_fn[MAX_FNL];
@@ -1828,7 +1828,6 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 	  count_special = 0;
 	  ss_rot = -1;
 	  two_ss_rot = -1;
-	  bc_rot = -1;
 	  dir_rot = -1;
 	  for (jvar = 0; jvar < pd_glob[0]->Num_Dim; jvar++) {
 	    var = eqn + jvar;
@@ -1853,7 +1852,6 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 		    two_ss_rot = 1;
 		  }
 		  ss_rot = BC_Types[ibc].BC_ID;
-		  bc_rot = BC_Types[ibc].BC_Name;
 		  dir_rot = jvar;
 		  count_rotate++;
 		} else {
@@ -2015,16 +2013,15 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
   int i, ibc, iss, num_bc_nodes;
   int  ibc1, ibc2, inode, bct1, bct2, k, ins;
   int ***BC_Unk_List, **NS_list, eqn, idup, p, q, j, num_total_nodes, dups;
-  int num_rot_nodes, irc, eq = -1, bc_found, node_ok, iptr;
+  int num_rot_nodes, irc, eq = -1, node_ok, iptr;
+#ifndef PARALLEL
+  int bc_found;
+#endif
   int dim, bct, bcSS, bcSS1, eprint;
   int standard_BC, ndup, j_DC, j_PC, j_SI, j_CSWI;
   int save_this_bc[MAX_SS_PER_NODE];
   int ndup1[DIM], save_this_bc1[DIM][MAX_SS_PER_NODE];
-  int tilt_bct = -1;
-  int tilt_bcSS = -1;
-  int tilt_save = -1;
   int faceBC, vertexBC, edgeBC;
-  int val = 0;
   FILE *ofbc = NULL;		/* output file stream handle for BC info */
   char ofbc_fn[MAX_FNL];	/* output file name for BC info */
   int matIndex, offset, retn_matIndex;
@@ -2033,6 +2030,12 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
   NODE_INFO_STRUCT *node;
   NODAL_VARS_STRUCT *nv;
   VARIABLE_DESCRIPTION_STRUCT *vd, *vd_retn2;
+#ifndef PARALLEL
+  int tilt_bct = -1;
+  int tilt_bcSS = -1;
+  int tilt_save = -1;
+  int val = 0;
+#endif
 
   strcpy(ofbc_fn, BC_3D_INFO_FILENAME); /* def in rf_bc_const.h */
 
@@ -2543,11 +2546,15 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
 	    for (p=0; p<dim; p++) {
 	      bct  = ROT_Types[irc].BC_Type[p];
 	      bcSS = ROT_Types[irc].BC_SS[p];
+#ifndef PARALLEL
 	      bc_found = 0;
+#endif
 
 	      if (bct < 0) {
 		/* don't do anything this is a rotated piece */
+#ifndef PARALLEL
 		bc_found = 1;
+#endif
 	      } else {
 		/* find BC in dup list */
 
@@ -2574,10 +2581,12 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
 		     * not found...
 		     */
 
+#ifndef PARALLEL
 		    tilt_bct  = ( bct != bct1 );
 		    tilt_bcSS = ( bcSS != bcSS1 );
 		    tilt_save = ( save_this_bc1[q][j] != 0 );
 		    val       = save_this_bc1[q][j];
+#endif
 
 		    if ( bct == bct1 && 
 			 bcSS == bcSS1 && 
@@ -2586,7 +2595,9 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
 		       * Found the BC which is specified 
 		       * by ROT condition!! 
 		       */
+#ifndef PARALLEL
 		      bc_found = 1;
+#endif
 		      ROT_Types[irc].BC_desc[p] = 
 			  BC_Types[ibc1].desc;
 		      ROT_Types[irc].BC_id[p] = ibc1;

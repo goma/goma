@@ -353,12 +353,10 @@ modify_bf_mesh_derivs_for_LSA_3D_of_2D(void)
  *									*
  ************************************************************************/
 {
-  double N;
   int b, i, j, k, q;
   int mdof, vdof, var;
   struct Basis_Functions *bfv, *bfx;
 
-  N = (dbl)LSA_3D_of_2D_wave_number;
   bfx = bf[R_MESH1];
   mdof = ei->dof[R_MESH1];
   for (k=0; k<Num_Basis_Functions; k++)
@@ -420,7 +418,7 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
  ************************************************************************/
 {
   int m, p, q, r, b, j, v, w, dim;
-  int vdof, mdof;
+  int mdof;
   struct Basis_Functions *bfx;
 
 /* Bail out fast if there's nothing to do */
@@ -438,7 +436,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = TEMPERATURE;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -453,7 +450,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = VOLTAGE;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -468,7 +464,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = SURF_CHARGE;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -483,7 +478,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = SHELL_DIFF_FLUX;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
         {
           for (j=0; j<mdof; j++)
@@ -498,7 +492,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = ACOUS_PREAL;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -511,7 +504,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = ACOUS_PIMAG;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -524,7 +516,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = LIGHT_INTP;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -537,7 +528,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = LIGHT_INTM;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -550,7 +540,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = LIGHT_INTD;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -564,7 +553,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = ACOUS_REYN_STRESS;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -578,7 +566,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = SHELL_BDYVELO;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -592,7 +579,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = SHELL_LUBP;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
       {
         for (j=0; j<mdof; j++)
@@ -606,7 +592,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = LUBP;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
       {
         for (j=0; j<mdof; j++)
@@ -620,7 +605,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
  v = LUBP_2;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
       {
         for (j=0; j<mdof; j++)
@@ -634,7 +618,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = SHELL_TEMPERATURE;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
       {
         for (j=0; j<mdof; j++)
@@ -648,7 +631,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = SHELL_FILMP;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
       {
         for (j=0; j<mdof; j++)
@@ -662,7 +644,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = SHELL_FILMH;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
       {
         for (j=0; j<mdof; j++)
@@ -676,7 +657,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = SHELL_PARTC;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
       {
         for (j=0; j<mdof; j++)
@@ -692,7 +672,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = SHEAR_RATE;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -707,7 +686,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = FILL;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -722,7 +700,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = PRESSURE;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -737,7 +714,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = BOND_EVOLUTION;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -754,7 +730,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
     {
       if (pd->v[v])
 	{
-	  vdof = ei->dof[v];
 	  for (b=0; b<dim; b++)
 	    {
 	      for (j=0; j<mdof; j++)
@@ -771,7 +746,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = POR_LIQ_PRES;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -785,7 +759,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = POR_GAS_PRES;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -799,7 +772,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = POR_POROSITY;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -814,7 +786,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = VELOCITY1;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (q=0; q<VIM; q++)
 	{
 	  for (b=0; b<dim; b++)
@@ -832,7 +803,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = EXT_VELOCITY;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (b=0; b<dim; b++)
 	{
 	  for (j=0; j<mdof; j++)
@@ -847,7 +817,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = EFIELD1;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (q=0; q<VIM; q++)
 	{
 	  for (b=0; b<dim; b++)
@@ -865,7 +834,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = PVELOCITY1;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (q=0; q<VIM; q++)
 	{
 	  for (b=0; b<dim; b++)
@@ -883,7 +851,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = MESH_DISPLACEMENT1;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (q=0; q<VIM; q++)
 	{
 	  for (b=0; b<dim; b++)
@@ -901,7 +868,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = SOLID_DISPLACEMENT1;
   if (pd->v[v])
     {
-      vdof = ei->dof[v];
       for (q=0; q<VIM; q++)
 	{
 	  for (b=0; b<dim; b++)
@@ -919,7 +885,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = POLYMER_STRESS11;
   if ( pd->v[v] )
     {
-      vdof = ei->dof[v];
       for (m=0; m<vn->modes; m++)
         {
 	  for (q=0; q<VIM; q++)
@@ -943,7 +908,6 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   v = VELOCITY_GRADIENT11;
   if ( pd->v[v] )
     {
-      vdof = ei->dof[v];
       for (q=0; q<VIM; q++)
 	{
 	  for (r=0; r<VIM; r++)

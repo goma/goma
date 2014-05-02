@@ -98,9 +98,7 @@ apply_integrated_curve_bc(
      ************************************************************************/
 {
   int ip, w, i, I, k, j, id, icount, ss_index, type, mn, matID_apply;
-  int iapply = 0, param_dir;
-  int elem_block_index;
-  int elem_block_id;
+  int param_dir;
   int eqn, ieqn, var, pvar,p, q, index_eq, ldof_eqn;
   int err;         /* status variable for functions */
   int status = 0;
@@ -108,15 +106,13 @@ apply_integrated_curve_bc(
   
   double s;             /* Gaussian-quadrature point locations          */
   
-  double phi_j, phi_i;
+  double phi_i;
   double xi[DIM];             /* Local element coordinates of Gauss point. */
   double x_dot[MAX_PDIM];
   /****************************************************************************/
   double wt;                  /* Quadrature weights units - ergs/(sec*cm*K) = g*cm/(sec^3*K)     */
   
   double weight;
-  double rcoord;
-  double xsurf[MAX_PDIM];
   double dsigma_dx[DIM][MDE];
   double func[DIM];
   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE];
@@ -188,7 +184,7 @@ apply_integrated_curve_bc(
 				  elem_edge_bc->edge_elem_node_id, 
 				  param_dir);
     
-    rcoord = 0.;
+
     /*
      * Load up physical space gradients of field variables at this
      * Gauss point.
@@ -219,12 +215,10 @@ apply_integrated_curve_bc(
       for (icount = 0; icount < ielem_dim; icount++) {
 	x_dot[icount] = fv_dot->x[icount];
 	/* calculate surface position for wall repulsion/no penetration condition */
-	xsurf[icount] = fv->x0[icount];
       }
     } else {
       for(icount=0; icount<ielem_dim; icount++) {
 	x_dot[icount] = 0.;
-	xsurf[icount] = 0.;
       }
     }
     
@@ -239,18 +233,6 @@ apply_integrated_curve_bc(
 	    EH(-1,"Cannot match side set id with that in ss_to_blks array");
 	  }
 
-	/* Set flag to indicate if we're in the right material (only one) to apply*/
-	iapply = 0;
-
-	elem_block_index = find_elemblock_index(ielem, exo);
-
-	elem_block_id    = exo->eb_id[elem_block_index];
-
-	if ( elem_block_id == ss_to_blks[1][ss_index])
-	  {
-	    iapply = 1;
-	  }
-	
 
 	/* check to see if this bc is an integrated bc */
 
@@ -600,7 +582,6 @@ apply_integrated_curve_bc(
 				  pvar = upd->vp[var];
 				  for ( j=0; j<ei->dof[var]; j++)
 				    {
-				      phi_j = bf[var]->phi[j];
 				      lec->J[ieqn][pvar] [ldof_eqn][j] += weight * func[p] * 
 					fv->dedgedet_dx[q][j];
 				    }
@@ -618,8 +599,6 @@ apply_integrated_curve_bc(
 				  {
 				    for ( j=0; j<ei->dof[var]; j++)
 				      {
-					phi_j = bf[var]->phi[j];
-
 					lec->J[ieqn][pvar] [ldof_eqn][j] += weight * fv->edge_det
 					    * (d_func[p][var][j] + d_func_ss[p][var][j]);
 				      }
@@ -630,7 +609,6 @@ apply_integrated_curve_bc(
 				      {
 					for ( j=0; j<ei->dof[var]; j++)
 					  {
-					    phi_j = bf[var]->phi[j];
 					    lec->J[ieqn][MAX_PROB_VAR + w] [ldof_eqn][j] += 
 						weight * fv->edge_det * d_func[p][MAX_VARIABLE_TYPES + w][j];
 					  }

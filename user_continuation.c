@@ -269,7 +269,7 @@ update_user_TP_parameter(double lambda, double *x, double *xdot,
 
 {
 /* Actual function begins here (refer to previous example) */
-  static int first_tp = 1;
+  //static int first_tp = 1;
   // int first_cp = -1;
   // int n = 0;
   // int Type, BCID, DFID, MTID, MPID, MDID;
@@ -297,7 +297,7 @@ update_user_TP_parameter(double lambda, double *x, double *xdot,
 
 
 /* Done */
-  first_tp = 0;
+  //first_tp = 0;
   return;
 
 } /* END of routine update_user_TP_parameter */

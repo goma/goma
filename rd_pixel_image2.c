@@ -117,7 +117,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   double resolution[3];         // Array form of above (easier to pass to function)
   int pixinterp = 0;            // Flag indicating pixel interpolation (0 - none; 1 - bi/trilinear)
   double x0, y0, z0;            // Coordinates of origin for pixel/voxel file
-  double pixorigin[3];           // Array form of above
+  /*  double pixorigin[3];           // Array form of above */
 
   float exoversion;
   int exoout;
@@ -152,11 +152,9 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   //  double rmsd_error;
   double time0;
 
-  int first_time_field = TRUE; // Flag to check whether this is the first time mapping to the specified field 
+  /*  int first_time_field = TRUE; // Flag to check whether this is the first time mapping to the specified field */
 
   int my_N_ext; // Index of external field being mapped to. May not be what's passed to the function.
-
-  int lastpix = 0;  // Index of external field corresponding to last pixel field being mapped
 
   time0 = ust();
   my_N_ext = N_ext;
@@ -204,7 +202,6 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
     num_nod_vars = 0;
     for (i = 0; i < efv->Num_external_field; i++){
       if (efv->ipix[i] == 2){
-	lastpix = i;
 	dupflag = 0;
 	for (j = 0; j < num_nod_vars; j++){
 	  if (strcmp(nod_var_names_temp[j], efv->name[i]) == 0){
@@ -235,7 +232,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
     for (i = N_ext-1; i >= 0; i--){
       if (!strcmp(efv->name[i],efv->name[N_ext])){
 	my_N_ext = i;
-	first_time_field = FALSE;
+	/*	first_time_field = FALSE; */
 	break;
       }
     }
@@ -272,9 +269,10 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   resolution[1] = resy;
   resolution[2] = resz;
 
-  pixorigin[0] = x0;
-  pixorigin[1] = y0;
-  pixorigin[2] = z0;
+  /*  pixorigin[0] = x0;
+      pixorigin[1] = y0;
+      pixorigin[2] = z0;
+  */
 
   if (pixdim != pd->Num_Dim) {
     printf("WARNING: Pixel file dimensionality is %d, problem dim. is %d\n",pixdim,pd->Num_Dim);
@@ -568,7 +566,7 @@ extern double calc_error(double ***pixdata,
 
   double sparam, tparam;
   double nodecoor[MDE][DIM];
-  double pixcoords[2];
+  double pixcoords[3];
   double xi_data[3];
 
   double phi_i;
@@ -760,13 +758,14 @@ static double tri_interp(double xg, double yg, double zg,
 /**************************************************************
 Routine for trilinear interpolation will go here. Same idea as above, but for 3D
 
-*/
+
 
   double dx, dy, dz;
 
   dx = resolution[0];
   dy = resolution[1];
   dz = resolution[2];
+*/
   return 0;
 }  
 

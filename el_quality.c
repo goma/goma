@@ -210,7 +210,7 @@ element_quality(Exo_DB *exo, double *x, int *proc_config)
 static double jacobian_metric(Exo_DB *exo, double *x, int *proc_config)
 {
   int  dofs,  k;
-  int err, ielem, e_start, e_end, igp, ngp, store_shape;
+  int ielem, e_start, e_end, igp, ngp, store_shape;
   double gwt, Jw, Jw_sum, Jw_min, els, eq, eqavg;
   double eqsum = 0.0, eqmin = 999.9;
   double dj00, dj01, dj10, dj11, detJ;
@@ -253,7 +253,7 @@ static double jacobian_metric(Exo_DB *exo, double *x, int *proc_config)
           dj10 = 0.0;
           dj11 = 0.0;
           find_stu(igp, ei->ielem_type, &xi[0], &xi[1], &xi[2]);
-          err = load_basis_functions(xi, bfd);
+          load_basis_functions(xi, bfd);
           gwt = Gq_weight(igp, ei->ielem_type);
 
 	  /* Sum components of elemental Jacobian */
@@ -328,7 +328,8 @@ static double volume_metric(int *proc_config)
 
 static double angle_metric(Exo_DB *exo, double *x, int *proc_config)
 {
-  int i, ielem, e_start, e_end, e_sens, sense;
+  int i, ielem, e_start, e_end, sense;
+  /* int e_sens */
   int bad_elem = FALSE;
   int n, nn;
   double angle, delta, delta_sum, f, els;
@@ -369,7 +370,7 @@ static double angle_metric(Exo_DB *exo, double *x, int *proc_config)
 	  /* First local vertex: set numbering sense */
           if (i == 0)
             {
-              e_sens = sense;
+              /* e_sens = sense; */
             }
 
 	  /* Other vertices: check against reference sense */
@@ -415,7 +416,8 @@ static double angle_metric(Exo_DB *exo, double *x, int *proc_config)
  
 static double triangle_metric(Exo_DB *exo, double *x, int *proc_config)
 {
-  int i, ielem, e_start, e_end, e_sens, sense;
+  int i, ielem, e_start, e_end, sense;
+  /* e_sens */
   int v1, v2, v3;
   int bad_elem = FALSE;
   int isort[4], jsort[4];
@@ -458,7 +460,7 @@ static double triangle_metric(Exo_DB *exo, double *x, int *proc_config)
 	  /* For first subtriangle, record node numbering sense */
           if (v2 == 0)
             {
-              e_sens = sense;
+	      /* e_sens = sense; */
             }
 
 	  /* For others, check sense and update rank arrays */

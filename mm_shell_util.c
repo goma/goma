@@ -132,11 +132,10 @@ init_shell_element_blocks(const Exo_DB *exo)
   int sn_found, all_sn_found;
   int snodes[9];
   int *nbr_elem_ids;
-  int *sconn;
   int *bconn;
   int *friends_count;
   int num_found;
-  int foundOne, foundBl, bID, mnParent, numMnFound;
+  int bID, mnParent, numMnFound;
   int candidate, id;
   int *mnList = alloc_int_1(MAX_NUMBER_MATLS, -1);
   struct Shell_Block *sb;
@@ -222,7 +221,6 @@ init_shell_element_blocks(const Exo_DB *exo)
       sid    = sb->elemblock_id;
       snel   = exo->eb_num_elems[sindex];
       snpe   = exo->eb_num_nodes_per_elem[sindex];
-      sconn  = exo->eb_conn[sindex];
       if(snpe > 9)
 	EH(-1,"Blecch! Too many nodes in this shell element. Muy malo.\n");
       
@@ -387,7 +385,6 @@ init_shell_element_blocks(const Exo_DB *exo)
       sindex = sb->elemblock_index;
       sid    = sb->elemblock_id;
       snel   = exo->eb_num_elems[sindex];
-      sconn  = exo->eb_conn[sindex];
       
       DSPRINTF("     + Processing shell block %d\n",sid);
       
@@ -437,7 +434,6 @@ init_shell_element_blocks(const Exo_DB *exo)
       sindex = sb->elemblock_index;
       sid    = sb->elemblock_id;
       snel   = exo->eb_num_elems[sindex];
-      sconn  = exo->eb_conn[sindex];
       
       DSPRINTF("     + Processing shell block %d\n",sid);
       
@@ -496,14 +492,11 @@ init_shell_element_blocks(const Exo_DB *exo)
       sindex = sb->elemblock_index;
       sid    = sb->elemblock_id;
       snel   = exo->eb_num_elems[sindex];
-      sconn  = exo->eb_conn[sindex];
       numMnFound = 0;
       
       DSPRINTF("     + Processing shell block %d\n",sid);
-      foundOne = 0;
       for (bindex = 0; bindex < sb->num_nbr_blocks; ++bindex)
 	{
-          foundBl = 0;
 	  for (se = 0; se < snel; ++se)
 	    {
 	      elem = exo->eb_ptr[sindex] + se;
@@ -1352,7 +1345,7 @@ load_neighbor_var_data(int el1,    // Element number of the local element
 		       double xi[DIM],
 		       const Exo_DB *exo)
 {
-  double coord[DIM], xi2[DIM];
+  double xi2[DIM];
   int i, j, node;
   int dim1, dim2, ddim;
   int nodes_per_side;
@@ -1363,7 +1356,6 @@ load_neighbor_var_data(int el1,    // Element number of the local element
   /* Load coordinates from current element and initialize xi2 */
   for (i=0; i<DIM; i++)
     {
-      coord[i] = fv->x[i];
       xi2[i] = 0.0;
     }
 
@@ -1749,7 +1741,8 @@ shell_normal_div_s(dbl *div_s_nv, dbl d_div_s_nv_dnv[DIM][MDE],
   int eqn = R_SHELL_NORMAL1;
   int i, j, k, p, q, r, dofs, pdim, node, index;
   int b;
-  double phi_j, sJsum, sJdet;
+  double phi_j, sJsum;
+  //double sJdet;
   double grad_nv[DIM][DIM], d_grad_nv_dnv[DIM][DIM][DIM][MDE];
   double d_grad_nv_dmesh[DIM][DIM][DIM][MDE];
   double gradphi[MDE][DIM], sJ[DIM], sB[DIM], local_x[DIM][MDE];
@@ -1790,7 +1783,7 @@ shell_normal_div_s(dbl *div_s_nv, dbl d_div_s_nv_dnv[DIM][MDE],
         }
       sJsum += sJ[j] * sJ[j];
     }
-  sJdet = sqrt(sJsum);
+  //  sJdet = sqrt(sJsum);
 
   /* Inverse Jacobian */
   for (j = 0; j < pdim; j++)
@@ -1907,7 +1900,6 @@ shell_normal_div_s(dbl *div_s_nv, dbl d_div_s_nv_dnv[DIM][MDE],
     }
   */
 #endif
-  double tmp;
   *div_s_nv = 0.0;
   memset(&(d_div_s_nv_dnv[0][0]), 0, DIM*MDE*sizeof(double) );
   for (p = 0; p < VIM; p++)
@@ -1922,7 +1914,6 @@ shell_normal_div_s(dbl *div_s_nv, dbl d_div_s_nv_dnv[DIM][MDE],
               for (r = 0; r < pdim; r++)
                 {
                   d_div_s_nv_dmesh[r][j] += ((double)delta(p,q) - fv->n[q]*fv->n[p]) * d_grad_nv_dmesh[q][p][r][j];
-		  tmp = ((double)delta(p,q) - fv->n[q]*fv->n[p]) * d_grad_nv_dmesh[p][q][r][j];
                   d_div_s_nv_dnv[r][j] += ((double)delta(p,q) - fv->n[q]*fv->n[p]) * d_grad_nv_dnv[q][p][r][j];		
                 }
             }
@@ -1937,7 +1928,6 @@ shell_normal_div_s(dbl *div_s_nv, dbl d_div_s_nv_dnv[DIM][MDE],
             {
               phi_j = bf[eqn]->phi[j];
     	      d_div_s_nv_dnv[p][j] -=   fv->n[q] * phi_j * grad_nv[q][p];
-	      tmp = - fv->n[q] * phi_j * grad_nv[q][p];
             }
         }
     }
@@ -1950,7 +1940,6 @@ shell_normal_div_s(dbl *div_s_nv, dbl d_div_s_nv_dnv[DIM][MDE],
             {
               phi_j = bf[eqn]->phi[j];
     	      d_div_s_nv_dnv[q][j] -= fv->n[p] * phi_j * grad_nv[q][p];
-	      tmp = - fv->n[p] * phi_j * grad_nv[q][p];
             }
         }
     }
@@ -1999,7 +1988,7 @@ shell_determinant_and_normal(
   int 		i, inode, a, b, p, q;
   int		ShapeVar, ldof;
   int		DeformingMesh;
-  double        det, r_det, det_h01, r_det_h01, d_det_h01_x;
+  double        r_det, det_h01, r_det_h01, d_det_h01_x;
   double        phi_i;
   int siz;
   double        T[DIM-1][DIM], t[DIM-1][DIM];  /* t = J . T */
@@ -2022,7 +2011,7 @@ shell_determinant_and_normal(
 
   if ( ielem_surf_dim == 0 ) /* get out quickly */
     {
-      det = fv->sdet = 1.0;
+      fv->sdet = 1.0;
       fv->snormal[0] = 1.0;
       return;
     }
@@ -2266,7 +2255,6 @@ lubrication_shell_initialize (
  ******************************************************************************/
 {
   int a, b, i, j, k, p;
-  int err;
   int el1 = -1, el2 = -1, nf;
   int FSIModel = -1;
   int n_dofptr[MAX_VARIABLE_TYPES][MDE];
@@ -2327,14 +2315,14 @@ lubrication_shell_initialize (
   case FSI_MESH_ONEWAY:
   case FSI_REALSOLID_CONTINUUM:
     
-    err = load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, id_side, xi, exo);
+    load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, id_side, xi, exo);
 
     break;
     /*** CONTINUUM DEFORMED MESH ***/
   case FSI_MESH_UNDEF:
 
     // Load DOF count and repopulate fv structure from neighbor element
-    err = load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, id_side, xi, exo);
+    load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, id_side, xi, exo);
 
     // Calculate normal using the original configuration
     int ShapeVar = pd->ShapeVar;
@@ -2386,9 +2374,8 @@ lubrication_shell_initialize (
     fv->snormal[2] = r_det * nz;
 
     // Zero out sensitivities
-    int inode, ldof;
+    int ldof;
     for ( i = 0; i < ei->num_local_nodes; i++) {
-      inode = Proc_Elem_Connect[ei->iconnect_ptr + i];
       ldof = ei->ln_to_dof[ShapeVar][2];
       for ( a = 0; a < pdim; a++) {
 	fv->dsurfdet_dx[a][ldof] = 0.0;
@@ -2522,7 +2509,7 @@ calculate_lub_q_v (
   dbl q[DIM];
   dbl v_avg[DIM];
   dbl H;
-  dbl veloc, veloL[DIM], veloU[DIM];
+  dbl veloL[DIM], veloU[DIM];
   dbl mu, dmu_dc;
   dbl *dmu_df;
   dbl rho;
@@ -2573,7 +2560,7 @@ calculate_lub_q_v (
       rho = density(d_rho, time);
       
       /* Extract wall velocities */
-      veloc = velocity_function_model(veloU, veloL, time, dt);
+      velocity_function_model(veloU, veloL, time, dt);
       
       /* Extract wall heights */
       dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
@@ -3181,7 +3168,7 @@ calculate_lub_q_v (
       dmu_dc = mp->d_viscosity[SHELL_PARTC];
       
       /* Extract bottom wall velocity */
-      veloc = velocity_function_model(veloU, veloL, time, dt);
+      velocity_function_model(veloU, veloL, time, dt);
       
       
       /* Get slip coefficient */
@@ -3250,7 +3237,6 @@ calculate_lub_q_v (
       /***** CALCULATE DISJOINING PRESSURE GRADIENT AND SENSITIVITIES *****/
       
       /* Define variables */
-      double DisjPress;
       
       dbl GRAD_DISJ_PRESS[DIM];
       dbl D_GRAD_DISJ_PRESS_DH1[DIM][MDE], D_GRAD_DISJ_PRESS_DH2[DIM][MDE];
@@ -3259,7 +3245,7 @@ calculate_lub_q_v (
       memset(D_GRAD_DISJ_PRESS_DH2,    0.0, sizeof(double)*DIM*MDE);
       
       /* Evaluate disjoining pressure and its sensitivities */
-      DisjPress = disjoining_pressure_model(fv->sh_fh, fv->grad_sh_fh, 
+     disjoining_pressure_model(fv->sh_fh, fv->grad_sh_fh, 
 					    GRAD_DISJ_PRESS, D_GRAD_DISJ_PRESS_DH1, D_GRAD_DISJ_PRESS_DH2 ); 
       
       
@@ -3472,8 +3458,8 @@ calculate_lub_q_v_old (
   dbl q[DIM];
   dbl v_avg[DIM];
   dbl H;
-  dbl veloc, veloL[DIM], veloU[DIM];
-  dbl mu, mu_old;
+  dbl veloL[DIM], veloU[DIM];
+  dbl mu_old;
   dbl rho;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
@@ -3501,12 +3487,12 @@ calculate_lub_q_v_old (
      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
      /* Load viscosity and density */
-     mu = viscosity(gn, NULL, d_mu);
+     viscosity(gn, NULL, d_mu);
      mu_old = mp_old->viscosity;
      rho = density(d_rho, time_old);
 
      /* Extract wall velocities */
-     veloc = velocity_function_model(veloU, veloL, time_old, dt_old);
+     velocity_function_model(veloU, veloL, time_old, dt_old);
 
      /* Extract wall heights */
      dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
@@ -3593,11 +3579,11 @@ calculate_lub_q_v_old (
      /******* PRECALCULATE ALL NECESSARY COMPONENTS ***********/
 
      /* Load viscosity */
-     mu = viscosity(gn, NULL, d_mu);
+     viscosity(gn, NULL, d_mu);
      mu_old = mp_old->viscosity;
 
      /* Extract bottom wall velocity */
-     veloc = velocity_function_model(veloU, veloL, time_old, dt_old);
+     velocity_function_model(veloU, veloL, time_old, dt_old);
 
 
 
@@ -3641,7 +3627,6 @@ calculate_lub_q_v_old (
      /***** CALCULATE DISJOINING PRESSURE GRADIENT AND SENSITIVITIES *****/
 
      /* Define variables */
-     double DisjPress;
 
      dbl GRAD_DISJ_PRESS[DIM];
      dbl D_GRAD_DISJ_PRESS_DH1[DIM][MDE], D_GRAD_DISJ_PRESS_DH2[DIM][MDE];
@@ -3650,7 +3635,7 @@ calculate_lub_q_v_old (
      memset(D_GRAD_DISJ_PRESS_DH2,    0.0, sizeof(double)*DIM*MDE);
 
      /* Evaluate disjoining pressure and its sensitivities */
-     DisjPress = disjoining_pressure_model(fv_old->sh_fh, fv_old->grad_sh_fh, 
+     disjoining_pressure_model(fv_old->sh_fh, fv_old->grad_sh_fh, 
                                            GRAD_DISJ_PRESS, D_GRAD_DISJ_PRESS_DH1, D_GRAD_DISJ_PRESS_DH2 ); 
 
 
@@ -3910,7 +3895,7 @@ calculate_lub_q_v_nonnewtonian (
   dbl q[DIM];
   dbl v_avg[DIM];
   dbl grad_P[DIM], grad_II_P[DIM];
-  dbl veloc, veloL[DIM], veloU[DIM];
+  dbl veloL[DIM], veloU[DIM];
   dbl mu0, nexp;
   dbl shear_top, shear_bot, cross_shear, gradP_mag;
   dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_ddH;
@@ -3939,7 +3924,7 @@ calculate_lub_q_v_nonnewtonian (
 
 
   /* Extract top and bottom walls velocities */
-  veloc = velocity_function_model(veloU, veloL, time, dt);   
+  velocity_function_model(veloU, veloL, time, dt);   
 
 
   /*Find tangent vector of pressure gradient */

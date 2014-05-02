@@ -300,6 +300,10 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
   int species = -1;             /* Which "w" is the particle phase ... */
   status = 0;
 
+  /*initialize grad_phi_i */
+  for (i=0; i<DIM; i++) {
+    grad_phi_i[i] = 0;
+  }
 
   /*
    * Unpack variables from structures for local convenience...
@@ -1716,7 +1720,6 @@ assemble_mass_transport_path_dependence
    *        cases. It is non-unity and variable (with units) for
    *        for coeff_rho_nonunity TRUE cases.
    */
-  int coeff_rho_nonunity = FALSE;
   dbl coeff_rho;
   dbl rho;				/* Density. */
   dbl sumxm = 0.0, sumrm, epsilon = 0.0, small_c = 0.0, sumxdot, sumxdotm; 
@@ -1754,14 +1757,12 @@ assemble_mass_transport_path_dependence
   dbl wt_func;
 
   /* SUPG variables */
-  dbl h_elem=0, h_elem_inv=0;
+  dbl h_elem=0;
   dbl supg=0;
 
   /*
    * Interpolation functions for variables and some of their derivatives.
    */
-
-  dbl phi_j;
 
   dbl h3;			/* Product of all 3 scale factors used for */
 				/* volume integrals in this coordinate system*/
@@ -1847,15 +1848,6 @@ assemble_mass_transport_path_dependence
 	  h_elem += vcent[p]*vcent[p]*h[p];
 	}
       h_elem = sqrt(h_elem)/2.;
-      if(h_elem == 0.) 
-	{
-	  h_elem_inv=0.;
-	}
-      else
-	{
-	  h_elem_inv=1./h_elem;
-	}
-	
     }
   /* end Petrov-Galerkin addition */
 
@@ -1907,11 +1899,9 @@ assemble_mass_transport_path_dependence
 	   *     concentration. 
 	   */
 	  coeff_rho = 1.0;
-	  coeff_rho_nonunity = FALSE;
 	  if ((species_eqn_type == SPECIES_MASS_FRACTION) ||
 	      (species_eqn_type == SPECIES_MOLE_FRACTION)) {
 	    coeff_rho = rho;
-	    coeff_rho_nonunity = TRUE;
 	  }
 
           if (mp->SpeciesSourceModel[w]  == ELECTRODE_KINETICS ||
@@ -2118,10 +2108,7 @@ assemble_mass_transport_path_dependence
                   pvar = upd->vp[var];
                   for ( j=0; j<ei->dof[var]; j++ )
                     {
-                      phi_j = bf[var]->phi[j];
-
                       lec->J[MAX_PROB_VAR + w][pvar][ii][j] += lsi->d_H_dF[j] * residual * sign;
-
                     }
 		}   /* if active_dofs */
 	      
@@ -4280,38 +4267,8 @@ mass_flux_alloy_surf(double func[DIM],
   int j, j_id;
   int var, w1;
   double phi_j;
-  double T_m, Y_inf;
-  double mass_tran_coeff, d_mass_tran_coeff_dT;
-  double mass_flux[MAX_CONC];
-  double d_mass_flux[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC];
 
   /* Execution begins */
-
-  T_m = p[0];
-  Y_inf = p[1];
-  mass_tran_coeff = exp(p[2] + p[3]*(fv->T - T_m)
-			     + p[4]*pow((fv->T - T_m),2.0)
-			     + p[5]*pow((fv->T - T_m),3.0));
-  d_mass_tran_coeff_dT = mass_tran_coeff*
-                             ( p[3]
-			     + 2.*p[4]*(fv->T - T_m)
-			     + 3.*p[5]*pow((fv->T - T_m),2.0));
-
-  /* First load up mass_flux and d_mass_flux */
-
-  if (af->Assemble_Jacobian) {
-    /*
-     * Currently there is no sensitivity to temperature 
-     * or to other concentrations
-     */
-    for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++) {
-      d_mass_flux[wspec][MAX_VARIABLE_TYPES + w1] = 0.;
-    }
-    d_mass_flux[wspec][MAX_VARIABLE_TYPES + wspec] = mass_tran_coeff;
-    d_mass_flux[wspec][TEMPERATURE] = d_mass_tran_coeff_dT*
-                                       (fv->c[wspec] - Y_inf);
-  }
-  mass_flux[wspec] = mass_tran_coeff * (fv->c[wspec] - Y_inf);
 
   /* Now transfer into func, d_func */
   if (af->Assemble_Residual ) 
@@ -5982,7 +5939,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
      double P_bulk=0.;
 
      int i, j, jac, k, mn;
-     int Num_S1, Num_S2;
+     int Num_S1;
      double flory1,flory2,flory3,flory;
      double df1_dc[MAX_CONC],df2_dc[MAX_CONC];
      double df3_dc[MAX_CONC],df_dc[MAX_CONC];
@@ -6084,7 +6041,6 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
   /* Define some convenient/repetitive chunks to make eqns more compact */
 
       Num_S1 = pd->Num_Species_Eqn + 1;
-      Num_S2 = pd->Num_Species_Eqn - 1;
       
       memset(df_dc, 0,sizeof(double)*MAX_CONC);
       memset(truedf_dc, 0,sizeof(double)*MAX_CONC);
@@ -6362,7 +6318,6 @@ mtc_chilton_coburn(dbl *mtc,
      double diff_gas;			/* solvent diffusivity in gas    */
      double visc_gas;			/* gas viscosity (p.)    */
      double T_film;
-     double rho_dT,cp_dT,tc_dT,diff_dT, visc_dT;
      double temp1, temp2;
      int w;
 
@@ -6373,24 +6328,15 @@ mtc_chilton_coburn(dbl *mtc,
 /* gas density - ideal gas law */
  
 	rho_gas = mw_gas*P_total/(82.05*T_film);
- 	rho_dT = -rho_gas/T_film;
  
 /* gas heat capacity	*/
  	if(T_film < 200.)	
- 		{  cp_gas = 0.23901;  cp_dT=0.;	}
+ 		{  cp_gas = 0.23901; }
  	else
  		{
  		cp_gas = 0.00023901*(28958. 
  			+9390.*SQUARE((3012./T_film)/sinh(3012./T_film))
  			+7580.*SQUARE((1484./T_film)/cosh(1484./T_film))
- 			)/mw_gas;
- 		cp_dT = 0.00023901*( 
- 			9390.*SQUARE((3012./T_film)/sinh(3012./T_film))
- 				*(-2./(T_film*sinh(3012./T_film)))*
- 		(sinh(3012./T_film)-(3012./T_film)*cosh(3012./T_film))
- 			+7580.*SQUARE((1484./T_film)/cosh(1484./T_film))
- 				*(-2./(T_film*cosh(1484./T_film)))*
- 		(cosh(1484./T_film)-(1484./T_film)*sinh(1484./T_film))
  			)/mw_gas;
  		}
  
@@ -6398,23 +6344,14 @@ mtc_chilton_coburn(dbl *mtc,
  
  	tcond_gas = 0.0023901*0.00031417*pow(T_film,0.7786)/
  			(1.-0.7116/T_film+212.17/SQUARE(T_film));
- 	tc_dT = 0.0023901*0.00031417*
- 		(0.7786*pow(T_film,-0.2241)-pow(T_film,0.7786)
- 		*(-0.7116*log(T_film)-2.*212.17/(T_film*T_film*T_film))
- 		/(1.-0.7116/T_film+212.17/SQUARE(T_film)))/
- 		(1.-0.7116/T_film+212.17/SQUARE(T_film));
  
 /*  solvent diffusivity	*/
  
  	diff_gas = diff_gas_25* pow(T_film/298.15,1.5);
- 	diff_dT = diff_gas_25* 1.5*pow(T_film/298.15,0.5)/298.15;
  
 /*  gas viscosity*/
  
  	visc_gas = (1.425E-05*pow(T_film, 0.5039))/(1.0 + 108.3/T_film);
- 	visc_dT = (1.425E-05*pow(T_film, 0.5039))*(0.5039/T_film*
-			(1.0 + 108.3/T_film)-108.3*log(T_film))
-			/SQUARE(1.0+108.3/T_film);
  
 /*  mass transfer coefficient	*/
  
@@ -7123,7 +7060,7 @@ compute_leak_velocity(double *vnorm,
 {
   int i, j;
   int var;
-  int w, wspec, dim;
+  int w, wspec;
   int num_comp;
   double StoiCoef[MAX_CONC];
   double mass_tran_coeff,Y_c;
@@ -7145,8 +7082,6 @@ compute_leak_velocity(double *vnorm,
 
 /***************************** EXECUTION BEGINS *******************************/
 
-  dim   = pd->Num_Dim;
-  
   /* Need to calculate vnorm and it's derivatives here.
      this depends on whether YFLUX_BC or YFLUX_BV_BC or YFLUX_EQUIL_BC is chosen */
 
@@ -7748,7 +7683,7 @@ compute_leak_velocity_heat(double *vnorm,
   int var;
   int dim;
   double latent_heat_vap, local_q;
-  double vnormal, phi_j;
+  double vnormal;
   dbl k;                                /* Thermal conductivity. */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; /* Thermal conductivity dependence. */
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
@@ -7786,7 +7721,6 @@ compute_leak_velocity_heat(double *vnorm,
     if (pd->v[var])
       {
 	for (j=0; j<ei->dof[var]; j++) {
-	  phi_j = bf[var]->phi[j];
 	  for (a=0; a<VIM; a++)
 	    {
 	      d_vnorm->T[j] +=  k * fv->snormal[a] * bf[var]->grad_phi[j][a]/latent_heat_vap ;
@@ -7833,7 +7767,7 @@ compute_leak_energy(double *enorm,
 {
   int i, j;
   int var;
-  int w, wspec, dim;
+  int w, wspec;
   int num_comp;
   double StoiCoef[MAX_CONC];
   double mass_tran_coeff,Y_c;
@@ -7852,8 +7786,6 @@ compute_leak_energy(double *enorm,
 
 /***************************** EXECUTION BEGINS *******************************/
 
-  dim   = pd->Num_Dim;
-  
   /* Need to calculate vnorm and it's derivatives here.
      this depends on whether YFLUX_BC or YFLUX_BV_BC or YFLUX_EQUIL_BC is chosen */
 
@@ -8864,7 +8796,7 @@ lat_heat_bc(double func[],
 {
   int j_id;
   int var;
-  int w, dim;
+  int w;
   double enorm; /*Calculated normal energy flux */
   NORMAL_ENERGY_DEPENDENCE_STRUCT d_enorm_struct;
   NORMAL_ENERGY_DEPENDENCE_STRUCT *d_enorm = &d_enorm_struct;
@@ -8881,7 +8813,6 @@ lat_heat_bc(double func[],
   *  the input values on the latent_heat card directly, and is assumed to
   *  be that of a convective mass transfer model */
  
-  dim   = pd->Num_Dim;
   
   bc = BC_Types + bc_input_id;
   if ( bc->BC_Data_Int[1] == -1 ) fluxbc = NULL;
@@ -13161,7 +13092,7 @@ fickian_charged_gradient_bc(double func[],
       *
       *******************************************************************************/
 {  
-	int w, w1, a,q,j,var,err;
+        int w, w1, a,q,j,var;
 	double coeff_rho, avg_molec_weight;
 	double sign = -1.0;
 
@@ -13171,7 +13102,7 @@ fickian_charged_gradient_bc(double func[],
 
 	zero_structure(&st, sizeof(struct Species_Conservation_Terms), 1);
  	
-	err = fickian_charged_flux(&st,wspec);
+	fickian_charged_flux(&st,wspec);
 
 
  	/*

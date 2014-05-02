@@ -208,7 +208,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill)
   bool ImAChild, ImAParent;
 
   int n_eb_Parent, elem_Parent, n_mn_Parent, n_ielem_type_Parent;
-  int  n_elem_blk_index_Parent, n_elem_blk_id_Parent , n_ielem_dim_Parent;
   int iconnect_ptr_Parent;
   int  num_local_nodes_Parent;
   
@@ -1043,10 +1042,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill)
 	      /* Get the element type of the parent */
 	      n_ielem_type_Parent = Elem_Type(exo, elem_Parent);
 	      
-	      /* Get the element block index # of the parent */
-	      n_elem_blk_index_Parent = find_elemblock_index(elem_Parent, exo);
-	      n_elem_blk_id_Parent    = exo->eb_id[n_elem_blk_index_Parent];
-	      n_ielem_dim_Parent      = elem_info(NDIM, n_ielem_type_Parent);
 	      /*
 	       *   Store the pointer to the beginning of this element's
 	       *   connectivity list
@@ -1144,10 +1139,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill)
 	      /* Get the element type of the parent */
 	      n_ielem_type_Parent = Elem_Type(exo, elem_Parent);
 	      
-	      /* Get the element block index # of the parent */
-	      n_elem_blk_index_Parent = find_elemblock_index(elem_Parent, exo);
-	      n_elem_blk_id_Parent    = exo->eb_id[n_elem_blk_index_Parent];
-	      n_ielem_dim_Parent      = elem_info(NDIM, n_ielem_type_Parent);
 	      /*
 	       *   Store the pointer to the beginning of this element's
 	       *   connectivity list

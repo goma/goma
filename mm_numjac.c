@@ -149,7 +149,8 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
   int *ija = ams->bindx;
   double *aj_diag, *aj_off_diag, *scale;
   double *resid_vector_1, *x_1, resid_scale;
-  double resid_min, resid_max, resid_error, resid_scaled_error;
+  double resid_min, resid_max, resid_error;
+  /* double resid_scaled_error; */
   double dx, delta_min, delta_max;
   double delta_aj_percentage, roundoff, confidence, resid_diff;
   int *irow, *jcolumn, *nelem;
@@ -162,7 +163,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
   NODE_INFO_STRUCT *node;
   NODAL_VARS_STRUCT *nvs;
   VARIABLE_DESCRIPTION_STRUCT *vd;
-  int I, J, var_i, var_j, ibc, bc_input_id, eqn;
+  int I, var_i, var_j, ibc, bc_input_id, eqn;
   struct elem_side_bc_struct *elem_side_bc;
 	  double x_scale[MAX_VARIABLE_TYPES];
 	  int count[MAX_VARIABLE_TYPES];
@@ -694,7 +695,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 	      if ( resid_vector_1[i]<resid_min ) resid_error = resid_min - resid_vector_1[i];
 	      else resid_error = resid_vector_1[i] - resid_max;
 	      
-              resid_scaled_error = resid_error / resid_diff;
+              /* resid_scaled_error = resid_error / resid_diff; */
                                    
               /* The following is a measure of the percentage of the acceptance band that is
                * due to changes in the jacobian from the unperturbed to perturbed
@@ -784,7 +785,6 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
                               var_i = idv[i][0];
                               var_j = idv[j][0];
                               I = idv[i][2];
-                              J = idv[j][2];
                               
                               if (in_list( I, 0, elem_side_bc->num_nodes_on_side, elem_side_bc->local_node_id ))
                                 {

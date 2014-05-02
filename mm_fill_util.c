@@ -1783,10 +1783,11 @@ load_bf_grad(void)
       * Note: Axisymmetric convention (z,r,theta) are coordinates.
       ********************************************************************************/
 {
-  int i, k, a, b, p, dofs, v, vi, status, WIM, siz;
+  int i, k, a, b, p, dofs, v, vi, status, siz;
   struct Basis_Functions *bfv;
 
-  status = 0;
+#ifdef DO_NOT_UNROLL
+  int WIM;
 
   if ((pd->CoordinateSystem == CARTESIAN)|| 
       (pd->CoordinateSystem == CYLINDRICAL))
@@ -1797,6 +1798,9 @@ load_bf_grad(void)
     {
       WIM=VIM;
     }
+#endif
+
+  status = 0;
 
   /* zero array for initialization */
   /*  v_length = DIM*DIM*DIM*MDE;

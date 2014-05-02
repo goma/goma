@@ -424,10 +424,6 @@ static void SOLN_VALUES(int var_type, int sub_index, double soln[],
   int     ebi, i_eqn, num_nodes_mn = 0, g_solncomp_nodes, index, n, i;
   int     e_start, e_end, ielem, ielem_type, num_local_nodes, ndof = 0;
   int *i_been_there;
-  NODAL_VARS_STRUCT *nv;
-#ifdef PARALLEL
-  int retn;
-#endif
 
   int num_owned_nodes = DPI_ptr->num_internal_nodes +
                         DPI_ptr->num_boundary_nodes;
@@ -454,7 +450,6 @@ static void SOLN_VALUES(int var_type, int sub_index, double soln[],
 	  if (Nodes[i]->Type.Owned) {
 	    if (! i_been_there[i]) {
 	      i_been_there[i] = 1;
-	      nv = Nodes[i]->Nodal_Vars_Info;
 	
 	      /*
 	       * Find the max, min, and sum of the soln component on the
@@ -504,14 +499,14 @@ static void SOLN_VALUES(int var_type, int sub_index, double soln[],
 
   if (Num_Proc > 1) {
 #ifdef PARALLEL
-    retn = MPI_Allreduce(&s_max, g_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
-    retn = MPI_Allreduce(&s_min, g_min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+    MPI_Allreduce(&s_max, g_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+    MPI_Allreduce(&s_min, g_min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
     /*
      * Find the total number of nodes containing the soln component
      */
-    retn = MPI_Allreduce(&num_nodes_mn, &g_solncomp_nodes, 1, MPI_INT,
+    MPI_Allreduce(&num_nodes_mn, &g_solncomp_nodes, 1, MPI_INT,
 			 MPI_SUM, MPI_COMM_WORLD);
-    retn = MPI_Allreduce(&s_sum, &g_sum, 1, MPI_DOUBLE,
+    MPI_Allreduce(&s_sum, &g_sum, 1, MPI_DOUBLE,
 			 MPI_SUM, MPI_COMM_WORLD);
 #endif
   } else {

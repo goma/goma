@@ -118,7 +118,7 @@ apply_integrated_bc(
   double xi[DIM];             /* Local element coordinates of Gauss point. */
   double x_dot[MAX_PDIM];
   double x_rs_dot[MAX_PDIM];
-  double wt, weight, pr, pb;
+  double wt, weight, pb;
   double xsurf[MAX_PDIM];
   double dsigma_dx[DIM][MDE];
   double func[DIM];
@@ -131,7 +131,6 @@ apply_integrated_bc(
   static JACOBIAN_VAR_DESC_STRUCT jacCol;
   BOUNDARY_CONDITION_STRUCT *bc;
   MATRL_PROP_STRUCT *mp_2;
-  int mn1, mn2;
   struct BC_descriptions *bc_desc;
   VARIABLE_DESCRIPTION_STRUCT *vd;
   double surface_centroid[DIM]; 
@@ -299,8 +298,6 @@ apply_integrated_bc(
 	break;
       }
     }    
-    mn1 = mp->MatID;
-    mn2 = mp_2->MatID;
 
     /*
      * Load up porous media variables and properties, if needed 
@@ -940,11 +937,7 @@ apply_integrated_bc(
 	     * bc is CAP_REPULSE or CAP_RECOIL_PRESS
 	     * because then force is calculated
 	     * later */
-	    pr = BC_Types[bc_input_id].BC_Data_Float[2];
 	    pb = BC_Types[bc_input_id].BC_Data_Float[1];
-	    if (BC_Types[bc_input_id].BC_Name == CAP_REPULSE_BC ||
-	        BC_Types[bc_input_id].BC_Name == CAP_REPULSE_ROLL_BC ||
-		BC_Types[bc_input_id].BC_Name == CAP_RECOIL_PRESS_BC) pr = 0.;
 	    if (BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC)
                {
 	  apply_table_wic_bc(func, d_func, &BC_Types[bc_input_id], time_value);

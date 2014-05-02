@@ -1914,7 +1914,7 @@ void init_shell_normal_unknowns(double u[], const Exo_DB *exo,
 {
   int nxi, nyi, nn, inode;
   int has_normal = FALSE;
-  double dx, dy, dj, nx, ny, sx, sy, sumOld;
+  double dx, dy, dj, nx, ny, sumOld;
   nn = exo->num_nodes;
   /* Loop over shell nodes */
   for (inode = 0; inode < nn; inode++)
@@ -1938,8 +1938,6 @@ void init_shell_normal_unknowns(double u[], const Exo_DB *exo,
 	      /* Construct unit vector from the node pointing to the focal point */
 	      dx = Coor[0][inode] - xfocus;
 	      dy = Coor[1][inode] - yfocus;
-	      sx = SGN(dx);
-	      sy = SGN(dy);
 	      dj = sqrt(dx * dx + dy * dy);
 	      if (dj < 1.0E-12) 
 		{

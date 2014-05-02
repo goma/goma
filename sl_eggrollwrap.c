@@ -94,9 +94,9 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
     nev_want, nev_found, lead, 
     /*    read_form, soln_tech, push_mode, */
     push_mode, 
-    init_shft, cold_start, recycle;
+    init_shft, recycle;
   dbl
-    stol, fvector, ivector, msign, 
+    stol, ivector,
     dwork[20]; 
   dbl 
     *ev_e, *ev_i, *ev_r, *ev_x,  
@@ -121,14 +121,11 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
   nnz_j      = istuff[2];
   filter     = istuff[3];
   recycle    = istuff[4];
-  cold_start = istuff[5];
   nev_want   = istuff[6];
   init_shft  = istuff[7];
   max_itr    = istuff[8];
   push_mode  = istuff[9];
   stol       = dstuff[0];
-  fvector    = dstuff[1];
-  msign      = dstuff[2];
   ivector    = dstuff[3];
 
   printf(" Initializing variables and allocating space... ");

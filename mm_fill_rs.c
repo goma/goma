@@ -155,7 +155,6 @@ assemble_real_solid(double time_value,
   dbl mass, diffusion, advection=0, advect_a, advect_b, advect_c;
 
   dbl source;
-  dbl porous;
 
   dbl wt;
 
@@ -461,7 +460,6 @@ assemble_real_solid(double time_value,
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 		}
 
-	      porous = 0.;
 	      /* porous term removed for SOLID equation - the additional effects due
 		 to porosity are entered into the consitutive equation for stress */
 
@@ -2051,7 +2049,7 @@ get_convection_velocity_rs(double vconv[DIM], /*Calculated convection velocity *
    * Some local variables for convenience...
    */
   
-  int err, dim, p, q, b, var, i;
+  int dim, p, q, b, var, i;
   
   dim = pd->Num_Dim;
 
@@ -2115,7 +2113,7 @@ get_convection_velocity_rs(double vconv[DIM], /*Calculated convection velocity *
    else if (elc_rs->v_mesh_sfs_model == ROTATIONAL ||
 		elc_rs->v_mesh_sfs_model == ROTATIONAL_3D )
      {
-       err = V_mesh_sfs_model(elc_rs->u_v_mesh_sfs, elc_rs->v_mesh_sfs, 
+       V_mesh_sfs_model(elc_rs->u_v_mesh_sfs, elc_rs->v_mesh_sfs, 
 				elc_rs->v_mesh_sfs_model, -1);
      }
    
@@ -2382,11 +2380,11 @@ f_kinematic_displacement_rs_bc(double func[DIM],
   int j, kdir, var, p;
   double phi_j;
   double base_displacement[DIM];
-  double base_displacement_rs[DIM];
+  /*  double base_displacement_rs[DIM];*/
   int *n_dof = NULL;
 /***************************** EXECUTION BEGINS *******************************/
   for (p = 0; p<pd->Num_Dim; p++) base_displacement[p] = fv->initial_displacements[p];
-  for (p = 0; p<pd->Num_Dim; p++) base_displacement_rs[p] = fv->initial_displacements[p + DIM];
+  /*  for (p = 0; p<pd->Num_Dim; p++) base_displacement_rs[p] = fv->initial_displacements[p + DIM];*/
 
  /*
    * Prepare geometry

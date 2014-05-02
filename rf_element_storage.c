@@ -115,7 +115,7 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
       *
       *****************************************************************/
 {
-  int ielem_type, ip_total, i, numStorage;
+  int ip_total, i, numStorage;
   ELEMENT_STORAGE_STRUCT *s_ptr;
   double *d_ptr;
   double *base_ptr = NULL;
@@ -126,7 +126,6 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
     /*
      * Determine the number of quadrature points
      */
-    ielem_type      = eb_ptr->Elem_Type;
     ip_total        = eb_ptr->IP_total;
     s_ptr = alloc_struct_1(ELEMENT_STORAGE_STRUCT, 
 			   eb_ptr->Num_Elems_In_Block);
@@ -208,7 +207,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
       *
       *****************************************************************/
 {
-  int ielem_type, ip_total, i, j, ifound, ip;
+  int ip_total, i, j, ifound, ip;
   double sat_switch = 0.0, pc_switch = 0.0, Draining_curve, *ev_tmp;
   int error, num_dim, num_nodes;
   int num_elem, num_elem_blk, num_node_sets, num_side_sets, time_step;
@@ -226,8 +225,6 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
     
   if(mp_glob[mn]->SaturationModel == TANH_HYST)
     {
-  
-      ielem_type      = eb_ptr->Elem_Type;
       ip_total        = eb_ptr->IP_total;
       Draining_curve   = mp_glob[mn]->u_saturation[8];
       if (Guess_Flag ==4 || Guess_Flag == 5)

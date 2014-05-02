@@ -122,13 +122,12 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
   int           numProcUnknowns;
   int           const_delta_s, step_print;
-  double        path_print, i_print;
+  double        i_print;
   double	path,		/* Current value (should have solution here) */
                 path1;		/* New value (would like to get solution here) */
-  double	delta_s, delta_s_new, delta_s_old, delta_s_older, delta_s_oldest;
+  double	delta_s, delta_s_new, delta_s_old, delta_s_older;
   double        delta_t;
   double	theta=0.0;
-  double        damp;
   double        eps;
   double        lambda, lambdaEnd;
   double        timeValueRead = 0.0;
@@ -148,7 +147,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   int		*p_gsize=NULL;
   double	*gvec=NULL;
   double        ***gvec_elem=NULL;
-  double	err_dbl;
   FILE          *cl_aux=NULL, *file=NULL;
   
   struct Results_Description  *rd=NULL;
@@ -161,7 +159,9 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 				   for post processing */
   int           iUC;            /* User-defined continuation condition index */
 
+#ifdef HAVE_FRONT
   int max_unk_elem, one, three; /* variables used as mf_setup arguments*/
+#endif
 
   unsigned int matrix_systems_mask;
 
@@ -437,8 +437,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   else 
     const_delta_s = 0;
   
-  damp = 1.0;
-
   path = path1 = lambda;
 
   if (Debug_Flag && ProcID == 0)
@@ -460,6 +458,12 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   /* Call prefront (or mf_setup) if necessary */
   if (Linear_Solver == FRONT)
     {
+#ifdef PARALLEL
+  if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");  
+  check_parallel_error("Front solver not allowed with nprocs>1");
+#endif
+	  
+#ifdef HAVE_FRONT  
       /* Also got to define these because it wants pointers to these numbers */
       max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE;
 
@@ -471,13 +475,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	 that test needs to be in the input parser.  */
       if(vn_glob[0]->dg_J_model == FULL_DG) 
 	max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
-
-#ifdef PARALLEL
-  if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");  
-  check_parallel_error("Front solver not allowed with nprocs>1");
-#endif
-	  
-#ifdef HAVE_FRONT  
+      
        err = mf_setup(&exo->num_elems, 
 		     &NumUnknowns, 
 		     &max_unk_elem, 
@@ -640,7 +638,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   /* 
    * initialize the counters for when to print out data 
    */
-  path_print = path1;
   step_print = 1;
       
   matrix_systems_mask = 1;
@@ -950,34 +947,34 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	     * INTEGRATE FLUXES, FORCES
 	     */
 	    for (i = 0; i < nn_post_fluxes; i++)
-	      err_dbl = evaluate_flux (exo, dpi, 
-                                       pp_fluxes[i]->ss_id,
-				       pp_fluxes[i]->flux_type ,
-                                       pp_fluxes[i]->flux_type_name ,
-				       pp_fluxes[i]->blk_id ,
-				       pp_fluxes[i]->species_number,
-				       pp_fluxes[i]->flux_filenm,
-                                       pp_fluxes[i]->profile_flag,
-				       x,xdot,NULL, delta_s,path1,1);
+	      evaluate_flux (exo, dpi, 
+			     pp_fluxes[i]->ss_id,
+			     pp_fluxes[i]->flux_type ,
+			     pp_fluxes[i]->flux_type_name ,
+			     pp_fluxes[i]->blk_id ,
+			     pp_fluxes[i]->species_number,
+			     pp_fluxes[i]->flux_filenm,
+			     pp_fluxes[i]->profile_flag,
+			     x,xdot,NULL, delta_s,path1,1);
 
 	    /*
 	     * COMPUTE FLUX, FORCE SENSITIVITIES
 	     */
 	    for (i = 0; i < nn_post_fluxes_sens; i++)
-	      err_dbl = evaluate_flux_sens (exo, dpi,
-                                            pp_fluxes_sens[i]->ss_id,
-					    pp_fluxes_sens[i]->flux_type ,
-                                            pp_fluxes_sens[i]->flux_type_name ,
-					    pp_fluxes_sens[i]->blk_id ,
-					    pp_fluxes_sens[i]->species_number,
-					    pp_fluxes_sens[i]->sens_type,
-					    pp_fluxes_sens[i]->sens_id,
-					    pp_fluxes_sens[i]->sens_flt,
-					    pp_fluxes_sens[i]->sens_flt2,
-					    pp_fluxes_sens[i]->vector_id,
-					    pp_fluxes_sens[i]->flux_filenm,
-                                            pp_fluxes_sens[i]->profile_flag,
-					    x,xdot,x_sens_p,delta_s,path1,1);
+	      evaluate_flux_sens (exo, dpi,
+				  pp_fluxes_sens[i]->ss_id,
+				  pp_fluxes_sens[i]->flux_type ,
+				  pp_fluxes_sens[i]->flux_type_name ,
+				  pp_fluxes_sens[i]->blk_id ,
+				  pp_fluxes_sens[i]->species_number,
+				  pp_fluxes_sens[i]->sens_type,
+				  pp_fluxes_sens[i]->sens_id,
+				  pp_fluxes_sens[i]->sens_flt,
+				  pp_fluxes_sens[i]->sens_flt2,
+				  pp_fluxes_sens[i]->vector_id,
+				  pp_fluxes_sens[i]->flux_filenm,
+				  pp_fluxes_sens[i]->profile_flag,
+				  x,xdot,x_sens_p,delta_s,path1,1);
 
  	    /*
       	     * Compute global volumetric quantities
@@ -1194,7 +1191,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
       dcopy1(numProcUnknowns, x, x_old);
       dcopy1(numProcUnknowns, x_sens_temp, x_sens);
 
-      delta_s_oldest = delta_s_older;
       delta_s_older = delta_s_old;
       delta_s_old = delta_s;
       delta_s = delta_s_new;

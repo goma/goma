@@ -136,12 +136,12 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
 					* head in thermal buoyancy term */
 {
   int eqn, var;
-  int dim;
   int a, b, c;
 
   int w;
 
-  dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
+  dbl T, C[MAX_CONC]; /* Convenient local variables */
+
   dbl J[DIM], B[DIM];         /* Local versions for REAL j-field and b-field */
   dbl J_I[DIM], B_I[DIM];    /* Local versions for Imag j-field and b-field */
   dbl g[DIM];
@@ -150,15 +150,12 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
 
   /* Begin Execution */
 
-  dim   = pd->Num_Dim;
-
   /**********************************************************/
   
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
   T = fv->T;                                       
-  for(a=0; a<DIM; a++)X[a] = fv->x[a];		   
   for(i=0; i<pd->Num_Species_Eqn; i++) C[i] = fv->c[i];
 
   /* Next, if jxb is to be computed, load up J and B vectors */
@@ -475,7 +472,6 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
   int a, b, p;
   dbl phi_j;
   dbl advection_a;
-  dbl X[DIM];              /* Convenient local variables */
   dbl Efield[DIM];         /* Local versions for E-field    */
   dbl g[DIM];
   int j;
@@ -487,7 +483,6 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  for(a=0; a<DIM; a++)X[a] = fv->x[a];		   
   for(a=0; a<DIM; a++)Efield[a] = fv->E_field[a];		   
 
   /*components of whatever (charge density?) from input card */
@@ -594,9 +589,8 @@ gravity_vibrational_source (dbl f[DIM], /* Body force. */
 			    dbl time)
 {
   int eqn;
-  int dim, wim;
+  int dim;
   int a;
-  dbl X[DIM]; /* Convenient local variables */
   dbl g[DIM];
   dbl omega;  /* frequency of vibration  */
   dbl omega2; /* frequency of vibration squared */
@@ -608,12 +602,9 @@ gravity_vibrational_source (dbl f[DIM], /* Body force. */
   double rho = density(d_rho, time);
 
   dim   = pd->Num_Dim;
-  wim   = dim; 
   
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
-
-  for(a=0; a<DIM; a++)X[a] = fv->x[a];		   
 
   /*components of gravity vector from input card */
   for(a=0; a<DIM; a++)  g[a] = mp->momentum_source[a];
@@ -657,7 +648,6 @@ suspend_momentum_source(dbl f[DIM], /* Body force. */
 			MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df )
 {
   int eqn, var;
-  int dim;
   int a;
 
   int species;
@@ -684,7 +674,6 @@ suspend_momentum_source(dbl f[DIM], /* Body force. */
       return(status);
     }
 
-  dim   = pd->Num_Dim;
 
   /*  if(fv->c[species] > 0.)
     {
@@ -802,7 +791,6 @@ epoxy_dea_species_source( int species_no,    /* Current species number */
      
 {
   int eqn, var, var_offset;
-  int dim;
   
   dbl T;           /* temperature for rate constants */
   dbl A1, E1, A2, E2, A3;
@@ -812,8 +800,6 @@ epoxy_dea_species_source( int species_no,    /* Current species number */
   
   /* Begin Execution */
   
-  dim   = pd->Num_Dim;
-
   T = fv->T;
   /* extent of reaction, alpha */
   alpha = fv->c[species_no];
@@ -927,7 +913,6 @@ epoxy_species_source(int species_no,   /* Current species number */
 {
   /* Local Variables */
   int eqn, var, var_offset;
-  int dim;
   /*  int p, q, a, b, c;*/
   
   /*  int v,w;*/
@@ -943,7 +928,6 @@ epoxy_species_source(int species_no,   /* Current species number */
   
   /* Begin Execution */
   
-  dim   = pd->Num_Dim;
 
   T = fv->T;
   /* extent of reaction, alpha */
@@ -1031,7 +1015,6 @@ foam_epoxy_species_source(int species_no,   /* Current species number */
 /* tt, dt - time derivative parameters */  
 {
   int eqn, var;
-  int dim;
   /*  int p, q, a, b, c;*/
   double Press, rho, rho2, rho_v_inv, rho_v, d_rho_v_dT, d_rho_v_inv_dT;
   double rho_a_inv, d_rho_a_inv_dT; 
@@ -1039,7 +1022,7 @@ foam_epoxy_species_source(int species_no,   /* Current species number */
   double aT, bT, p_vap, vch, Cc, Ce, ff_c, ff_e, sigma;
   double Rc_1 = 0.0, Rc_2 = 0.0, Rc = 0.0, dRc_dc_v = 0.0, dRc_dc_a = 0.0, dRc_dc_l = 0.0, dRc_dT = 0.0; 
   double Re_1 = 0.0, Re_2 = 0.0, Re = 0.0, dRe_dc_v = 0.0, dRe_dc_a = 0.0, dRe_dc_l = 0.0, dRe_dT = 0.0;
-  double Rgas = 0.0, MW_f = 0.0, MW_a = 0.0, rho_epoxy = 0.0, rho_fluor = 0.0, T = 0.0, T_dot = 0.0;
+  double Rgas = 0.0, MW_f = 0.0, MW_a = 0.0, rho_epoxy = 0.0, rho_fluor = 0.0, T = 0.0;
   int species_l = -1, species_v = -1, species_a = -1;
 
   if (mp->DensityModel == DENSITY_FOAM_CONC)
@@ -1060,10 +1043,8 @@ foam_epoxy_species_source(int species_no,   /* Current species number */
   
   /* Begin Execution */
   
-  dim   = pd->Num_Dim;
 
   T = fv->T;
-  T_dot = fv_dot->T;
 
   Press = upd->Pressure_Datum;
   rho_v_inv = Rgas*T/(Press*MW_f);
@@ -1193,23 +1174,18 @@ epoxy_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 				 * explicit (tt = 1) to implicit (tt = 0) */
 		  double dt)	/* current time step size */
 {
-  int eqn, var, var_offset;
-  int dim;
+  int eqn, var;
   int j;
   int w;
   int species_no=-1;
 
   double h = 0.;
   
-  dbl T;           /* temperature for rate constants */
   /*  dbl A1, E1, A2, E2;*/
-  dbl alpha, alpha_old, alpha_dot;
+  dbl alpha_dot;
   dbl delta_h;
   
   /* Begin Execution */
-  
-  dim   = pd->Num_Dim;
-  T = fv->T;
   
   /* find equation that has extent of reaction */
   for (w = 0; w < pd->Num_Species_Eqn; w++) {
@@ -1219,8 +1195,6 @@ epoxy_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
       species_no = w;
     }
   }
-  alpha     = fv->c[species_no];
-  alpha_old = fv_old->c[species_no];
   if (pd->TimeIntegration != STEADY) {
     alpha_dot = fv_dot->c[species_no];
   } else {
@@ -1242,7 +1216,6 @@ epoxy_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 	  if(mp->SpeciesSourceModel[species_no] == EPOXY
 	     ||(mp->SpeciesSourceModel[species_no] == EPOXY_DEA ) )
 	    {
-	      var_offset = MAX_VARIABLE_TYPES + species_no;	
 	      for (j=0; j<ei->dof[var]; j++)
 		{
 		  d_h->C[species_no][j] +=
@@ -1474,25 +1447,22 @@ vary_rho_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 		  double dt)	/* current time step size */
 {
   int eqn, var;
-  int dim;
   int w, j;
   
   dbl T, Cp, sv_p;
   dbl sv[MAX_CONC], d_rho_dot_dc[MAX_CONC];
-  dbl rho_dot=0, rho;
+  dbl rho_dot=0;
   double h = 0.;
   
   /* Begin Execution */
   /* this is mass_concentration based
       7/99 ACS */
-  dim   = pd->Num_Dim;
   T = fv->T;
   Cp = mp->heat_capacity;
   
   if( mp->DensityModel == SOLVENT_POLYMER)
     {
       /* added ACSun 7/99 */
-      rho = 0.;
       rho_dot = 0.;
 
       for (w = 0; w < pd->Num_Species_Eqn; w++)
@@ -1567,12 +1537,11 @@ foam_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 				double tt,	/* parameter to vary time integration from explicit (tt = 1) to implicit (tt = 0) */
 				double dt)	/* current time step size */
 {
-	double rho, hT, Tb, a0, phi0; 
+	double hT, Tb, a0, phi0; 
 	double h;
 	
 	int j,var;
 	
-	rho = mp->u_heat_source[0];
 	hT = mp->u_heat_source[1];
 	Tb = mp->u_heat_source[2];
 	a0 = mp->u_heat_source[3];
@@ -1619,20 +1588,17 @@ double
 joule_heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time )
    
 {
-  int var, var_offset;
+  int var;
   int dim;
-  int a, b;
+  int a = 0, b;
 
   int w;
 
-  dbl X[DIM], T, V, C[MAX_CONC]; /* Convenient local variables */
   dbl k=1e12;                                /* electrical conductivity. */
   dbl dkdT[MDE];			/* Temperature derivative of electrical conductivity. */
   dbl dkdV[MDE];			/* Voltage derivative of electrical conductivity. */
-  dbl dkdC[MAX_CONC][MDE];		/* Concentration derivative of electrical conductivity. */
   dbl dkdX[DIM][MDE];   	       	/* Spatial derivatives of t.c. */
-  int i, j;
-  int err;
+  int j;
   double h = 0.;
   dbl scale = 1.0;
 
@@ -1640,7 +1606,7 @@ joule_heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time )
 
   if(mp->Elec_ConductivityModel == USER)
        {
-	 err = usr_electrical_conductivity(mp->u_electrical_conductivity, time);
+	 usr_electrical_conductivity(mp->u_electrical_conductivity, time);
 	 
 	 k   = mp->electrical_conductivity;
 	 
@@ -1674,11 +1640,6 @@ joule_heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time )
 	     for ( w=0; w<pd->Num_Species_Eqn; w++)
 	       {
 		 var = MASS_FRACTION;
-		 var_offset = MAX_VARIABLE_TYPES + w;
-		 for ( j=0; j<ei->dof[var]; j++)
-		   {
-		     dkdC[w][j] =mp->d_electrical_conductivity[var_offset]*bf[var]->phi[j];
-		   }
 	       }
 	   }
        }
@@ -1714,11 +1675,6 @@ joule_heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time )
 	     for ( w=0; w<pd->Num_Species_Eqn; w++)
 	       {
 		 var = MASS_FRACTION;
-		 var_offset = MAX_VARIABLE_TYPES + w;
-		 for ( j=0; j<ei->dof[var]; j++)
-		   {
-		     dkdC[w][j] = 0.;
-		   }
 	       }
 	   }
        }
@@ -1727,14 +1683,6 @@ joule_heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time )
 	 EH(-1,"Unimplemented electrical conductivity model");
        }
   
-  /***********Load up convenient local variables*************/
-  /*NB This ought to be done once for all fields at gauss pt*/
-  
-  T = fv->T;                                       
-  V = fv->V;                                       
-  for(a=0; a<DIM; a++)X[a] = fv->x[a];		   
-  for(i=0; i<pd->Num_Species_Eqn; i++) C[i] = fv->c[i];
-
   /* Load current density */
   dbl J[DIM];
   char err_msg[MAX_CHAR_IN_INPUT];
@@ -1851,11 +1799,8 @@ visc_diss_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 		      dbl *param) /* General multipliers */
 {
   int var;
-  int dim;
   int p, q, a, b;
-  int mdofs=0;
 
-  dbl X[DIM], T, V, C[MAX_CONC]; /* Convenient local variables */
   dbl gamma_dot[DIM][DIM];
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
@@ -1872,22 +1817,11 @@ visc_diss_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   int mode;
   int v_s[MAX_MODES][DIM][DIM];
 
-  int i, j;
-  int err;
+  int j;
   double h = 0.;
 
   /* Begin Execution */
 
-  dim   = pd->Num_Dim;
-  
-  /***********Load up convenient local variables*************/
-  /*NB This ought to be done once for all fields at gauss pt*/
-  
-  T = fv->T;                                       
-  V = fv->V;                                       
-  for(a=0; a<DIM; a++)X[a] = fv->x[a];		   
-  for(i=0; i<pd->Num_Species_Eqn; i++) C[i] = fv->c[i];
-  
   
   /**********************************************************/
   /* Source constant * viscosity* gammadot .. grad_v */
@@ -1929,7 +1863,7 @@ visc_diss_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   /* get mu and grad_mu */
 
   mu = viscosity(gn, gamma_dot, d_mu);
-  err = calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
   h +=  mu * gammadot*gammadot ;
 
@@ -1938,10 +1872,6 @@ visc_diss_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   /* Now do sensitivies */
 if(af->Assemble_Jacobian)
   {
- if ( pd->e[R_MESH1] )
-    {
-      mdofs = ei->dof[R_MESH1];
-    }
 
   var = TEMPERATURE;
   if ( d_h != NULL && pd->v[var] )
@@ -2053,8 +1983,7 @@ if(af->Assemble_Jacobian)
 double
 enthalpy_heat_capacity_model( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp )
 {
-  int eqn, var, var_offset;
-  int dim;
+  int var;
   int a, b;
   dbl latent_heat, T_liq, T_sol;
   dbl Cp;
@@ -2063,11 +1992,8 @@ enthalpy_heat_capacity_model( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp )
 
   dbl grad_H[DIM], d_grad_H_dT[DIM][MDE], norm_grad_H, norm_grad_T, Cp_base, T_ave;
   int i, j;
-  dbl X[DIM], T, V, C[MAX_CONC];        /* Convenient local variables */
 
   /* Begin Execution */
-
-  dim   = pd->Num_Dim;
 
   latent_heat = mp->latent_heat_fusion[0]; /*single component for now*/
                                            /* if this depends on conc'n */
@@ -2077,8 +2003,6 @@ enthalpy_heat_capacity_model( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp )
   Cp_base = mp->heat_capacity;
 
   /************Initialize everything for saftey**************/
-
-  eqn   = R_ENERGY;
 
   Cp = 0.;			
 
@@ -2108,7 +2032,6 @@ enthalpy_heat_capacity_model( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp )
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
 	  var = MASS_FRACTION;
-	  var_offset = MAX_VARIABLE_TYPES + w;
 	  for (j=0; j<ei->dof[var]; j++)
 	    {
 	      d_Cp->C[w][j] = 0.;
@@ -2129,11 +2052,7 @@ enthalpy_heat_capacity_model( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp )
     }
 
   
-  T = fv->T;                                       
-  V = fv->V;                                       
-  for(a=0; a<DIM; a++)X[a] = fv->x[a];		   
   for(a=0; a<DIM; a++)grad_H[a] = 0.;		   
-  for(i=0; i<pd->Num_Species_Eqn; i++) C[i] = fv->c[i];
   
   
   /**********************************************************/
@@ -2548,7 +2467,6 @@ int
 Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 			    double *param)  /* free volume params from mat file */
 {
-  int var;
   int w, fv_model_number;
 
   double T, C[MAX_CONC], dDdT;
@@ -2717,7 +2635,7 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
     {
       if (pd->v[TEMPERATURE] )
 	{
-	  var = TEMPERATURE;
+
 	  if (fv_model_number != 4)
 	    {
 	      dDdT = mp->diffusivity[0]*
@@ -2806,7 +2724,6 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 	    }
  
 
-	  var = MASS_FRACTION;
 	  switch(fv_model_number)
 	    {  
 	    case 0: 
@@ -3017,7 +2934,6 @@ Generalized_Diffusivity()
 int
 Generalized_FV_Diffusivity(int species_no)  /* current species number*/
 {
-  int var;
   int w, w1, mode;
   int w2=pd->Num_Species_Eqn;
 
@@ -3032,7 +2948,7 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
   double numerator[MAX_CONC], omega[MAX_CONC];
   double xsi[MAX_CONC][MAX_CONC];
   double vs[MAX_CONC],K1_gamma[MAX_CONC],
-    K2mTg[MAX_CONC],chi[MAX_CONC], Do[MAX_CONC],
+    K2mTg[MAX_CONC], Do[MAX_CONC],
     E_div_R[MAX_CONC], V0[MAX_CONC];
   double vsp, K1p_gamma, K2pmTg, V0p;
   double allmass = 0.;
@@ -3072,7 +2988,6 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
       vs[w]       = mp->u_diffusivity[w][0];
       K1_gamma[w] = mp->u_diffusivity[w][2];
       K2mTg[w]    = mp->u_diffusivity[w][4];
-      chi[w]      = mp->u_diffusivity[w][6];
       Do[w]       = mp->u_diffusivity[w][8];
       E_div_R[w]  = mp->u_diffusivity[w][9];
       V0[w]       = mp->u_diffusivity[w][10];
@@ -3143,8 +3058,6 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
     {
       if (pd->v[TEMPERATURE] )
 	{
-	  var = TEMPERATURE;
-
 	  mp->d_diffusivity[species_no][TEMPERATURE] = 
 	    mp->diffusivity[species_no]*
 	    d_Vfh_dT*numerator[species_no]/pow(V_fh_gamma,2.0);
@@ -3162,7 +3075,6 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
       if (pd->v[MASS_FRACTION] )
 	{
 
-	  var = MASS_FRACTION;
 	  for (w=0; w<pd->Num_Species_Eqn; w++)
 	    {
 	      d_Vfh_domega[w] = K1_gamma[w]*(K2mTg[w]+T) - K1p_gamma*(K2pmTg+T);
@@ -3246,10 +3158,10 @@ hydro_flux(struct Species_Conservation_Terms *st,
   dbl y_dot, adv, conv_flux;
   dbl hh_siz, h_elem;
 
-  dbl *Y, (*grad_Y)[DIM], *dmu_dY, *d2mu_dY2, dmu_dT, d2mu_dT2;
-  dbl d2mu_dgd_dY; /* cross derivative of viscosity wrt
+  dbl *Y, (*grad_Y)[DIM], *dmu_dY, *d2mu_dY2;
+  /*  dbl d2mu_dgd_dY; */ /* cross derivative of viscosity wrt
 		      shear rate and concentration */
-  dbl f, maxpack, nexp, Y_avg, f0, rzexp;
+  dbl f, maxpack, nexp, rzexp;
   dbl df_dy, df_dmu, df_dmu0=0;
 
   dbl (* d_grad_gd_dmesh)[DIM][MDE];
@@ -3319,9 +3231,7 @@ hydro_flux(struct Species_Conservation_Terms *st,
     
   dmu_dY = &(mp->d_viscosity[MAX_VARIABLE_TYPES]);
   d2mu_dY2 = &(mp->d2_viscosity[MAX_VARIABLE_TYPES]);
-  dmu_dT = mp->d_viscosity[TEMPERATURE];
-  d2mu_dT2 = mp->d2_viscosity[TEMPERATURE];
-  d2mu_dgd_dY = mp->d2_viscosity[MAX_VARIABLE_TYPES + MAX_CONC];
+  /*  d2mu_dgd_dY = mp->d2_viscosity[MAX_VARIABLE_TYPES + MAX_CONC]; */
   
   /* Compute gamma_dot[][], acceleration vector accel[], 
      and the norm of the velocity vector */
@@ -3330,9 +3240,7 @@ hydro_flux(struct Species_Conservation_Terms *st,
   
   memset(gamma_dot, 0, DIM*DIM*sizeof(dbl) );
 
-  f0  = 0.;
   rzexp = 0.;
-  Y_avg = 0.5;
   
   for( a=0; a<VIM; a++ )
     {
@@ -3479,15 +3387,11 @@ hydro_flux(struct Species_Conservation_Terms *st,
       if (mp->GravDiffType[w] == BISECTION)
 	{
 	  Dg  = mp->u_gdiffusivity[w][0]*del_rho;
-	  Y_avg = mp->u_gdiffusivity[w][1];
-	  f0    = mp->u_gdiffusivity[w][2];
 	}
       else if (mp->GravDiffType[w] == RZBISECTION)
 	{
 	  Dg  = mp->u_gdiffusivity[w][0]*del_rho;
           rzexp =  mp->u_gdiffusivity[w][1];
-	  Y_avg = mp->u_gdiffusivity[w][2];
-	  f0    = mp->u_gdiffusivity[w][3];
 	}
       else if (mp->GravDiffType[w] == RICHARDSON_ZAKI)
 	{
@@ -3863,7 +3767,6 @@ suspension_balance(struct Species_Conservation_Terms *st,
   int a, j, p, b, var;
   int status=1;
   int dim;
-  int err;
   dbl gamma_dot[DIM][DIM];
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
@@ -3872,10 +3775,9 @@ suspension_balance(struct Species_Conservation_Terms *st,
   dbl Dg;
   dbl Dd[DIM];
   dbl dDd_dy[DIM];
-  dbl *Y, (*grad_Y)[DIM], *dmu_dY, *d2mu_dY2, dmu_dT, d2mu_dT2;
-  dbl d2mu_dgd_dY; /* cross derivative of viscosity wrt
-		      shear rate and concentration */
-  dbl f, maxpack, nexp, rzexp = 0;
+  dbl *Y, (*grad_Y)[DIM];
+
+  dbl f, maxpack, rzexp = 0;
   dbl df_dy, df_dmu;
   dbl M;  /* hindrance function */
   dbl dM_dy, dM_dmu;
@@ -3890,8 +3792,6 @@ suspension_balance(struct Species_Conservation_Terms *st,
   dbl d_div_tau_p_dvd[DIM][DIM][MDE];          /* derivative wrt vorticity dir */
   dbl d_div_tau_p_dp[DIM][MDE];                /* derivative wrt pressure */
   
-  dbl (* grad_phi_e ) [DIM][DIM][DIM] = NULL;
-  
   dbl df_dmu0 = 0.0, dmu0_dcure = 0.0, dmu0_dT = 0.0;
   dbl del_rho = 0.0;
 
@@ -3901,12 +3801,6 @@ suspension_balance(struct Species_Conservation_Terms *st,
   grad_Y = fv->grad_c;
   
   dim = pd->Num_Dim;
-  
-  dmu_dY = &(mp->d_viscosity[MAX_VARIABLE_TYPES]);
-  d2mu_dY2 = &(mp->d2_viscosity[MAX_VARIABLE_TYPES]);
-  dmu_dT = mp->d_viscosity[TEMPERATURE];
-  d2mu_dT2 = mp->d2_viscosity[TEMPERATURE];
-  d2mu_dgd_dY = mp->d2_viscosity[MAX_VARIABLE_TYPES + MAX_CONC];
   
   /* Compute gamma_dot[][] */
   
@@ -3931,13 +3825,11 @@ suspension_balance(struct Species_Conservation_Terms *st,
     {
       maxpack = gn->maxpack;
       mu0 = gn->mu0; /* viscosity of pure fluid */
-      nexp = gn->nexp ;
     }
   else
     {
       maxpack = .68;
       mu0 = mu; /* viscosity of pure fluid */
-      nexp = 0.;
     }  
   
   
@@ -4021,7 +3913,7 @@ suspension_balance(struct Species_Conservation_Terms *st,
   memset( d_div_tau_p_dp, 0, sizeof(double) * DIM*MDE);
   
   /* This is the divergence of the particle stress  */
-  err = divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
+  divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
 				   d_div_tau_p_dv, d_div_tau_p_dmesh, d_div_tau_p_dvd,d_div_tau_p_dp, w);
 
   
@@ -4126,7 +4018,6 @@ suspension_balance(struct Species_Conservation_Terms *st,
       
       if(pd->v[var])
 	{
-	  grad_phi_e = bf[var]->grad_phi_e;
 	  for ( a=0; a<VIM; a++)   
 	    {
 	      for( p=0; p<VIM; p++ )
@@ -4148,7 +4039,6 @@ suspension_balance(struct Species_Conservation_Terms *st,
       
       if(pd->v[var])
 	{
-	  grad_phi_e = bf[var]->grad_phi_e;
 	  for ( a=0; a<VIM; a++)   
 	    {
 	      for( p=0; p<VIM; p++ )
@@ -4264,7 +4154,7 @@ particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress */
 {
   /*local variables */
   int a, b, p, q, var, j, dofs;
-  int status=1, err;
+  int status=1;
   int dim;
   dbl gammadot, gamma_dot[DIM][DIM];
   
@@ -4281,7 +4171,7 @@ particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress */
   dbl pp = 0, d_pp_dy = 0;
   dbl y_norm, comp = 0, comp1;
   
-  dbl maxpack, nexp;
+  dbl maxpack;
   
   /* Q tensor info */
   dbl qtensor[DIM][DIM];	/* I - 1/2 v^t v at a gauss point */
@@ -4306,7 +4196,7 @@ particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress */
     }
   
   /* This is the shear rate based on velocity */
-  err = calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
   
   
   /* get mu and grad_mu */
@@ -4320,13 +4210,11 @@ particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress */
     {
       maxpack = gn->maxpack;
       mu0 = gn->mu0; /* viscosity of pure fluid */
-      nexp = gn->nexp ;
     }
   else
     {
       maxpack = .68;
       mu0 = mu; /* viscosity of pure fluid */
-      nexp = 0.;
     }  
   
   y_norm = Y[w]/maxpack;
@@ -4601,7 +4489,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
   dbl (* grad_phi_e)[DIM][DIM][DIM]= NULL;
 
-  dbl maxpack, maxpack2, nexp, Ks, Kn;
+  dbl maxpack, maxpack2, Kn;
   dbl pp,  d_pp_dy, d_pp2_dy2;
   dbl comp, comp1, comp2 = 0, y_norm;
   Y = fv->c;
@@ -4762,13 +4650,11 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     {
       maxpack = gn->maxpack;
       mu0 = gn->mu0; /* viscosity of pure fluid */
-      nexp = gn->nexp ;
     }
   else
     {
       maxpack = .68;
       mu0 = mu; /* viscosity of pure fluid */
-      nexp = 0.;
     }  
   
   y_norm = Y[w]/maxpack;
@@ -5385,7 +5271,7 @@ int
 foam_species_source(double *param)
 {
   int eqn;
-  int j, var, dim;
+  int j;
   dbl foam, gas, s1; /*mass fractions of gas and solid_1 */
   dbl T;           /* temperature for rate constants */
   dbl A1, E1, A2, E2, expon1, expon2, sigma1, sigma2;
@@ -5402,7 +5288,6 @@ foam_species_source(double *param)
 
   /* Begin Execution */
   
-  dim   = pd->Num_Dim;
   T = fv->T;
 
   foam = fv->c[0];
@@ -5476,7 +5361,6 @@ foam_species_source(double *param)
   eqn = MASS_FRACTION;
   if ( pd->e[eqn] & T_SOURCE )
     {
-      var = MASS_FRACTION;
       mp->species_source[0] = -r1 ;
       mp->species_source[1] = (0.3*r1+0.943*r2);
       mp->species_source[2] = (0.7*r1-r2);
@@ -5727,12 +5611,18 @@ ion_reaction_source ( int species_no )   /* current species number */
  */
 
 {
+  int i;
   int eqn, var, j;
   int four, five;
   dbl k1, k2, k3, K1, K2, K3;
   dbl Q1 = 0.0, Q2 = 0.0, Q3 = 0.0;
   dbl dQ1dx2 = 0.0, dQ1dx3 = 0.0, dQ2dx5 = 0.0, dQ2dx1 = 0.0, dQ2dx2 = 0.0, dQ3dx4 = 0.0, dQ3dx0 = 0.0, dQ3dx3 = 0.0;
   dbl c, rho, M_mix, x[MAX_CONC] = {0};
+
+  /* initialize x[] */
+  for (i = 0; i < MAX_CONC; i++) {
+    x[i] = 0;
+  }
  
   /* Begin Execution */
  
@@ -6054,7 +5944,7 @@ assemble_bond_evolution(double time,	/* present time value */
   /*local variables */
   int eqn, var, peqn, pvar;
   int a, b, p, i, j;
-  int status=1, err;
+  int status=1;
   int dim;
 
   dbl nn;				/* number of bonds */
@@ -6111,6 +6001,10 @@ assemble_bond_evolution(double time,	/* present time value */
 				   wrt mesh */ 
   dbl offset = 0.00001;
 
+  for (i = 0; i < DIM; i++) {
+    grad_phi_i[i] = 0;
+  }
+
   /* Compute gamma_dot[][] */
   
   /* Compute gammadot, grad(gammadot), gamma_dot[][], d_gd_dG, and d_grad_gd_dG */
@@ -6143,7 +6037,7 @@ assemble_bond_evolution(double time,	/* present time value */
       }
     }
 
-  err = calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
   nn = fv->nn;
   if (pd->TimeIntegration != STEADY) 

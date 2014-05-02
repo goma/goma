@@ -404,7 +404,7 @@ shell_n_dot_gradp_bc(double func[DIM],
   int *n_dof = NULL;
   int dof_map[MDE];
   double grad_P[DIM];
-  double DisjPress, grad_DisjPress[DIM], dgrad_DisjPress_dH1[DIM][MDE], dgrad_DisjPress_dH2[DIM][MDE]; 
+  double grad_DisjPress[DIM], dgrad_DisjPress_dH1[DIM][MDE], dgrad_DisjPress_dH2[DIM][MDE]; 
   double phi_j;
   double grad_phi_j[DIM], grad_II_phi_j[DIM];
   double bound_normal[DIM];
@@ -431,7 +431,7 @@ shell_n_dot_gradp_bc(double func[DIM],
 
 /* Calculate disjoining pressure gradient and its sensitivities */
   
-   DisjPress = disjoining_pressure_model(fv->sh_fh, fv->grad_sh_fh, grad_DisjPress, dgrad_DisjPress_dH1, dgrad_DisjPress_dH2);
+   disjoining_pressure_model(fv->sh_fh, fv->grad_sh_fh, grad_DisjPress, dgrad_DisjPress_dH1, dgrad_DisjPress_dH2);
 
   if (af->Assemble_LSA_Mass_Matrix)
     {
@@ -545,11 +545,6 @@ shell_n_dot_gradh_bc(double func[DIM],
   double grad_phi_j[DIM], grad_II_phi_j[DIM];
   double grad_II_H[DIM];
   double bound_normal[DIM], shell_normal[DIM];
-  double sigma;
-
-  
-  sigma = mp->surface_tension;
-  
 
 /* Save the boundary normal vector */
 
@@ -679,21 +674,20 @@ shell_n_dot_pflux_bc(double func[DIM],
   int j, ii, jj, var;
   double phi_j;
   double grad_phi_j[DIM], grad_phi_j_corrected[DIM];
-  double veloc, veloU[DIM], veloL[DIM];
+  double veloU[DIM], veloL[DIM];
   double grad_C[DIM];
   double bound_normal[DIM], shell_normal[DIM];
-  double C, H;
+  double H;
   double mu, dmu_dc, diff_coeff, ddiff_dmu, ddiff_dc;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
 
-  C = fv->sh_pc;
   H = fv->sh_fh;
   mu = viscosity(gn, NULL, d_mu);
   diff_coeff = diffusion_coefficient_model(mu, &ddiff_dmu);
   dmu_dc = mp->d_viscosity[SHELL_PARTC];
   ddiff_dc = ddiff_dmu * dmu_dc;
-  veloc = velocity_function_model(veloU, veloL, time, dt);
+  velocity_function_model(veloU, veloL, time, dt);
 
 
 /* Save the boundary normal vector */
@@ -836,14 +830,12 @@ void
 {
   int j_id;
   int var = -1;
-  int dim;
   double phi_j;
 
   /* local contributions of boundary condition to residual and jacobian */
 
 /***************************** EXECUTION BEGINS *******************************/
-/*  initialize variables */
-    dim = pd->Num_Dim;
+
 
 /***************************** Confined Lubrication SIDE *******************************/
 
@@ -928,15 +920,11 @@ put_lub_flux_in_film(int id, /* local element node number for the
 						* boundaries)          */
 
 {
-    int j_id, dim, wim, var, pvar, q, id_doflubp, id_doffilmp;
+    int j_id, dim, var, pvar, q, id_doflubp, id_doffilmp;
     int peqn_lubp, peqn_filmp;
     int ieqn_lubp, ieqn_filmp;
 
-    NODE_INFO_STRUCT *node = Nodes[I];
-
     dim = pd->Num_Dim;
-    wim   = dim;
-
 
     /*
      * if you are in the film phase, return without doing anything

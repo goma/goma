@@ -645,9 +645,10 @@ velocity_function_model (double veloU[DIM],
      dbl n[DIM], v[DIM], t1[DIM], t2[DIM];
      dbl vel1, vel2, t1mag, t2mag;
      int i, j;
-     dbl H, H_U, H_L, dH_U_dtime, dH_L_dtime, dH_U_dp, dH_U_ddh;
+     /* dbl H; */
+     dbl H_U, H_L, dH_U_dtime, dH_L_dtime, dH_U_dp, dH_U_ddh;
      dbl dH_U_dX[DIM], dH_L_dX[DIM];
-     dbl thetax, thetay, thetaz;
+     dbl thetax, thetay;
      dbl n2[DIM] = {0.0};
      dbl R[DIM][DIM];
 
@@ -665,10 +666,12 @@ velocity_function_model (double veloU[DIM],
       * situations.  Regardless, if dH_U_dX is zero, this function will work
       * in any situation.  If you need dH_U_dX on a curved surface
       * we really need to think about what dH_U_dX really means. --SAR */
-     H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t); 
+
+     /* H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t); */
+
+     height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t); 
      thetax = atan(dH_U_dX[1]);
      thetay =-atan(dH_U_dX[0]);
-     thetaz = 0.0;
      R[0][0] = cos(thetay);
      R[0][1] = 0.0;
      R[0][2] = sin(thetay);
@@ -803,9 +806,10 @@ velocity_function_model (double veloU[DIM],
      dbl n[DIM], v[DIM], t1[DIM], t2[DIM];
      dbl vel1, vel2, t1mag, t2mag;
      int i, j;
-     dbl H, H_U, H_L, dH_U_dtime, dH_L_dtime, dH_U_dp, dH_U_ddh;
+     /* dbl H; */
+     dbl H_U, H_L, dH_U_dtime, dH_L_dtime, dH_U_dp, dH_U_ddh;
      dbl dH_U_dX[DIM], dH_L_dX[DIM];
-     dbl thetax, thetay, thetaz;
+     dbl thetax, thetay;
      dbl n2[DIM] = {0.0};
      dbl R[DIM][DIM];
 
@@ -823,10 +827,12 @@ velocity_function_model (double veloU[DIM],
       * situations.  Regardless, if dH_L_dX is zero, this function will work
       * in any situation.  If you need dH_L_dX on a curved surface
       * we really need to think about what dH_L_dX really means. --SAR */
-     H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t); 
+
+     /* H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t); */
+
+     height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t); 
      thetax = atan(dH_L_dX[1]);
      thetay =-atan(dH_L_dX[0]);
-     thetaz = 0.0;
      R[0][0] = cos(thetay);
      R[0][1] = 0.0;
      R[0][2] = sin(thetay);

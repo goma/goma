@@ -681,8 +681,6 @@ power_law_viscosity(struct Generalized_Newtonian *gn_local,
                     VISCOSITY_DEPENDENCE_STRUCT *d_mu )
 {
 
-  int err;
-  int dim;
   int a, b;
   int mdofs=0,vdofs;
 
@@ -701,7 +699,6 @@ power_law_viscosity(struct Generalized_Newtonian *gn_local,
   dbl offset;
   dbl mu = 0.;
 
-  dim  = ei->ielem_dim;
   vdofs = ei->dof[VELOCITY1];
 
   if ( pd->e[R_MESH1] )
@@ -710,7 +707,7 @@ power_law_viscosity(struct Generalized_Newtonian *gn_local,
     }
 
 
-  err = calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
   /* calculate power law viscosity
      mu = mu0 * (offset + gammadot)**(nexp-1))                 */
@@ -780,9 +777,6 @@ herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
 			   dbl gamma_dot[DIM][DIM], /* strain rate tensor */
 			   VISCOSITY_DEPENDENCE_STRUCT *d_mu)
 {
-
-  int err;
-  int dim;
   int a, b;
   int mdofs=0,vdofs;
 
@@ -802,7 +796,6 @@ herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
   dbl tau_y;
   dbl offset;
 
-  dim  = ei->ielem_dim;
   vdofs = ei->dof[VELOCITY1];
   
   if ( pd->e[R_MESH1] )
@@ -811,7 +804,7 @@ herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
     }
   
 
-  err = calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
   /* calculate power law viscosity
      power law constants - make this migrate to input deck asap
@@ -893,9 +886,7 @@ carreau_viscosity(struct Generalized_Newtonian *gn_local,
 		  VISCOSITY_DEPENDENCE_STRUCT *d_mu)
 {
 
-  int err;
-  int dim;
-  int a, b;
+    int a, b;
   int mdofs=0,vdofs;
 
 
@@ -916,7 +907,6 @@ carreau_viscosity(struct Generalized_Newtonian *gn_local,
   dbl aexp;
   dbl lambda;
 
-  dim  = ei->ielem_dim;
   vdofs = ei->dof[VELOCITY1];
   
   if ( pd->e[R_MESH1] )
@@ -924,7 +914,7 @@ carreau_viscosity(struct Generalized_Newtonian *gn_local,
       mdofs = ei->dof[R_MESH1];
     }
   
-  err = calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
   mu0 = gn_local->mu0;
   nexp = gn_local->nexp;
@@ -936,13 +926,13 @@ carreau_viscosity(struct Generalized_Newtonian *gn_local,
    {
      if(d_mu != NULL)
        {
-	 err = level_set_property(gn_local->u_mu0[0], gn_local->u_mu0[1], 
-				       gn_local->u_mu0[2], &mu0, d_mu->F);
+	 level_set_property(gn_local->u_mu0[0], gn_local->u_mu0[1], 
+			    gn_local->u_mu0[2], &mu0, d_mu->F);
        }
      else
        {
-	 err = level_set_property(gn_local->u_mu0[0], gn_local->u_mu0[1], 
-				       gn_local->u_mu0[2], &mu0, NULL);
+	 level_set_property(gn_local->u_mu0[0], gn_local->u_mu0[1], 
+			    gn_local->u_mu0[2], &mu0, NULL);
        }
    }
 
@@ -950,13 +940,13 @@ carreau_viscosity(struct Generalized_Newtonian *gn_local,
    {
      if(d_mu != NULL)
        {
-	 err = level_set_property(gn_local->u_nexp[0], gn_local->u_nexp[1], 
-				       gn_local->u_nexp[2], &nexp, d_mu->F);
+	 level_set_property(gn_local->u_nexp[0], gn_local->u_nexp[1], 
+			    gn_local->u_nexp[2], &nexp, d_mu->F);
        }
      else
        {
-	 err = level_set_property(gn_local->u_nexp[0], gn_local->u_nexp[1], 
-				       gn_local->u_nexp[2], &nexp, NULL);
+	 level_set_property(gn_local->u_nexp[0], gn_local->u_nexp[1], 
+			    gn_local->u_nexp[2], &nexp, NULL);
        }
    }
 
@@ -964,13 +954,13 @@ carreau_viscosity(struct Generalized_Newtonian *gn_local,
    {
      if(d_mu != NULL)
        {
-	 err = level_set_property(gn_local->u_muinf[0], gn_local->u_muinf[1], 
-				       gn_local->u_muinf[2], &muinf, d_mu->F);
+	 level_set_property(gn_local->u_muinf[0], gn_local->u_muinf[1], 
+			    gn_local->u_muinf[2], &muinf, d_mu->F);
        }
      else
        {
-	 err = level_set_property(gn_local->u_muinf[0], gn_local->u_muinf[1], 
-				       gn_local->u_muinf[2], &muinf, NULL);
+	 level_set_property(gn_local->u_muinf[0], gn_local->u_muinf[1], 
+			    gn_local->u_muinf[2], &muinf, NULL);
        }
    }
 
@@ -978,13 +968,13 @@ carreau_viscosity(struct Generalized_Newtonian *gn_local,
    {
      if(d_mu != NULL)
        {
-	 err = level_set_property(gn_local->u_aexp[0], gn_local->u_aexp[1], 
-				       gn_local->u_aexp[2], &aexp, d_mu->F);
+	 level_set_property(gn_local->u_aexp[0], gn_local->u_aexp[1], 
+			    gn_local->u_aexp[2], &aexp, d_mu->F);
        }
      else
        {
-	 err = level_set_property(gn_local->u_aexp[0], gn_local->u_aexp[1], 
-				       gn_local->u_aexp[2], &aexp, NULL);
+	 level_set_property(gn_local->u_aexp[0], gn_local->u_aexp[1], 
+			    gn_local->u_aexp[2], &aexp, NULL);
        }
    }
 	  
@@ -993,13 +983,13 @@ carreau_viscosity(struct Generalized_Newtonian *gn_local,
    {
      if(d_mu != NULL)
        {
-	 err = level_set_property(gn_local->u_lam[0], gn_local->u_lam[1], 
-				       gn_local->u_lam[2], &lambda, d_mu->F);
+	 level_set_property(gn_local->u_lam[0], gn_local->u_lam[1], 
+			    gn_local->u_lam[2], &lambda, d_mu->F);
        }
      else
        {
-	 err = level_set_property(gn_local->u_lam[0], gn_local->u_lam[1], 
-				       gn_local->u_lam[2], &lambda, NULL);
+	 level_set_property(gn_local->u_lam[0], gn_local->u_lam[1], 
+			    gn_local->u_lam[2], &lambda, NULL);
        }
    }  
 
@@ -1085,8 +1075,6 @@ bingham_viscosity(struct Generalized_Newtonian *gn_local,
 		  VISCOSITY_DEPENDENCE_STRUCT *d_mu)
 {
 
-  int err;
-  int dim;
   int a, b;
   int var;
   int mdofs=0,vdofs;
@@ -1119,7 +1107,7 @@ bingham_viscosity(struct Generalized_Newtonian *gn_local,
   dbl tmelt;
 #endif
 
-  err = calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
   mu0 = gn_local->mu0;
   nexp = gn_local->nexp;
@@ -1133,7 +1121,7 @@ bingham_viscosity(struct Generalized_Newtonian *gn_local,
  	}
    else if (gn_local->tau_yModel == USER )
  	{
- 	  err = usr_yield_stress(gn_local->u_tau_y, tran->time_value);
+ 	  usr_yield_stress(gn_local->u_tau_y, tran->time_value);
  	  tau_y = gn_local->tau_y;
  	}
    else
@@ -1151,7 +1139,6 @@ bingham_viscosity(struct Generalized_Newtonian *gn_local,
   tmelt = mp->melting_point_liquidus;
 #endif
 
-  dim  = ei->ielem_dim;
   vdofs = ei->dof[VELOCITY1];
   
   if ( pd->e[R_MESH1] )
@@ -1333,8 +1320,6 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
 		      VISCOSITY_DEPENDENCE_STRUCT *d_mu)
 {
 
-  int err;
-  int dim;
   int a, b;
   int var;
   int mdofs=0,vdofs;
@@ -1365,7 +1350,7 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   dbl wlfc2, wlf_denom;
   dbl temp;
 
-  err = calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
   mu0 = gn_local->mu0;
   nexp = gn_local->nexp;
@@ -1386,7 +1371,7 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
     }
   else if (gn_local->tau_yModel == USER )
     {
-      err = usr_yield_stress(gn_local->u_tau_y, tran->time_value);
+      usr_yield_stress(gn_local->u_tau_y, tran->time_value);
       tau_y = gn_local->tau_y;
     }
   else
@@ -1395,7 +1380,6 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
     }
   fexp = gn_local->fexp;
   
-  dim  = ei->ielem_dim;
   vdofs = ei->dof[VELOCITY1];
   
   if ( pd->e[R_MESH1] )
@@ -1535,8 +1519,6 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
 		  VISCOSITY_DEPENDENCE_STRUCT *d_mu)
 {
 
-  int err;
-  int dim;
   int a, b;
 
   int var;
@@ -1567,7 +1549,7 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   dbl wlfc2;
   dbl temp;
 
-  err = calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
   mu0 = gn_local->mu0;
   nexp = gn_local->nexp;
@@ -1586,13 +1568,13 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
    {
      if(d_mu != NULL)
        {
-	 err = level_set_property(gn_local->u_mu0[0], gn_local->u_mu0[1], 
-				       gn_local->u_mu0[2], &mu0, d_mu->F);
+	 level_set_property(gn_local->u_mu0[0], gn_local->u_mu0[1], 
+			    gn_local->u_mu0[2], &mu0, d_mu->F);
        }
      else
        {
-	 err = level_set_property(gn_local->u_mu0[0], gn_local->u_mu0[1], 
-				       gn_local->u_mu0[2], &mu0, NULL);
+	 level_set_property(gn_local->u_mu0[0], gn_local->u_mu0[1], 
+			    gn_local->u_mu0[2], &mu0, NULL);
        }
    }
 
@@ -1600,13 +1582,13 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
    {
      if(d_mu != NULL)
        {
-	 err = level_set_property(gn_local->u_nexp[0], gn_local->u_nexp[1], 
-				       gn_local->u_nexp[2], &nexp, d_mu->F);
+	 level_set_property(gn_local->u_nexp[0], gn_local->u_nexp[1], 
+			    gn_local->u_nexp[2], &nexp, d_mu->F);
        }
      else
        {
-	 err = level_set_property(gn_local->u_nexp[0], gn_local->u_nexp[1], 
-				       gn_local->u_nexp[2], &nexp, NULL);
+	 level_set_property(gn_local->u_nexp[0], gn_local->u_nexp[1], 
+			    gn_local->u_nexp[2], &nexp, NULL);
        }
    }
 
@@ -1614,13 +1596,13 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
    {
      if(d_mu != NULL)
        {
-	 err = level_set_property(gn_local->u_muinf[0], gn_local->u_muinf[1], 
-				       gn_local->u_muinf[2], &muinf, d_mu->F);
+	 level_set_property(gn_local->u_muinf[0], gn_local->u_muinf[1], 
+			    gn_local->u_muinf[2], &muinf, d_mu->F);
        }
      else
        {
-	 err = level_set_property(gn_local->u_muinf[0], gn_local->u_muinf[1], 
-				       gn_local->u_muinf[2], &muinf, NULL);
+	 level_set_property(gn_local->u_muinf[0], gn_local->u_muinf[1], 
+			    gn_local->u_muinf[2], &muinf, NULL);
        }
    }
 
@@ -1628,13 +1610,13 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
    {
      if(d_mu != NULL)
        {
-	 err = level_set_property(gn_local->u_aexp[0], gn_local->u_aexp[1], 
-				       gn_local->u_aexp[2], &aexp, d_mu->F);
+	 level_set_property(gn_local->u_aexp[0], gn_local->u_aexp[1], 
+			    gn_local->u_aexp[2], &aexp, d_mu->F);
        }
      else
        {
-	 err = level_set_property(gn_local->u_aexp[0], gn_local->u_aexp[1], 
-				       gn_local->u_aexp[2], &aexp, NULL);
+	 level_set_property(gn_local->u_aexp[0], gn_local->u_aexp[1], 
+			    gn_local->u_aexp[2], &aexp, NULL);
        }
    }
 	  
@@ -1642,13 +1624,13 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
    {
      if(d_mu != NULL)
        {
-	 err = level_set_property(gn_local->u_atexp[0], gn_local->u_atexp[1], 
-				       gn_local->u_atexp[2], &atexp, d_mu->F);
+	 level_set_property(gn_local->u_atexp[0], gn_local->u_atexp[1], 
+			    gn_local->u_atexp[2], &atexp, d_mu->F);
        }
      else
        {
-	 err = level_set_property(gn_local->u_atexp[0], gn_local->u_atexp[1], 
-				       gn_local->u_atexp[2], &atexp, NULL);
+	 level_set_property(gn_local->u_atexp[0], gn_local->u_atexp[1], 
+			    gn_local->u_atexp[2], &atexp, NULL);
        }
    }
 
@@ -1656,13 +1638,13 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
    {
      if(d_mu != NULL)
        {
-	 err = level_set_property(gn_local->u_wlfc2[0], gn_local->u_wlfc2[1], 
-				       gn_local->u_wlfc2[2], &wlfc2, d_mu->F);
+	 level_set_property(gn_local->u_wlfc2[0], gn_local->u_wlfc2[1], 
+			    gn_local->u_wlfc2[2], &wlfc2, d_mu->F);
        }
      else
        {
-	 err = level_set_property(gn_local->u_wlfc2[0], gn_local->u_wlfc2[1], 
-				       gn_local->u_wlfc2[2], &wlfc2, NULL);
+	 level_set_property(gn_local->u_wlfc2[0], gn_local->u_wlfc2[1], 
+			    gn_local->u_wlfc2[2], &wlfc2, NULL);
        }
    }
 
@@ -1670,17 +1652,16 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
    {
      if(d_mu != NULL)
        {
-	 err = level_set_property(gn_local->u_lam[0], gn_local->u_lam[1], 
-				       gn_local->u_lam[2], &lambda, d_mu->F);
+	 level_set_property(gn_local->u_lam[0], gn_local->u_lam[1], 
+			    gn_local->u_lam[2], &lambda, d_mu->F);
        }
      else
        {
-	 err = level_set_property(gn_local->u_lam[0], gn_local->u_lam[1], 
-				       gn_local->u_lam[2], &lambda, NULL);
+	 level_set_property(gn_local->u_lam[0], gn_local->u_lam[1], 
+			    gn_local->u_lam[2], &lambda, NULL);
        }
    }  
 
-  dim  = ei->ielem_dim;
   vdofs = ei->dof[VELOCITY1];
   
   if ( pd->e[R_MESH1] )
@@ -1986,7 +1967,6 @@ carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
 			     dbl gamma_dot[DIM][DIM], /* strain rate tensor  */
 			     VISCOSITY_DEPENDENCE_STRUCT *d_mu)
 {
-  int dim;
   int a, b;
   int var, var_offset;
   int w;
@@ -2018,11 +1998,9 @@ carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   int species;    /* species number for solid volume fraction tracking */
 
   int i, j;
-  int err;
+  
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
-  err = calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
-
-  dim  = ei->ielem_dim;
   vdofs = ei->dof[VELOCITY1];
   
   if ( pd->e[R_MESH1] )
@@ -2195,7 +2173,6 @@ powerlaw_suspension_viscosity(struct Generalized_Newtonian *gn_local,
 			      dbl gamma_dot[DIM][DIM], /* strain rate tensor */
 			      VISCOSITY_DEPENDENCE_STRUCT *d_mu)
 {
-  int dim;
   int a, b;
   int var, var_offset;
   int w;
@@ -2224,11 +2201,9 @@ powerlaw_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   int species;    /* species number for solid volume fraction tracking */
 
   int i, j;
-  int err;
 
-  err = calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
-  dim  = ei->ielem_dim;
   vdofs = ei->dof[VELOCITY1];
   
   if ( pd->e[R_MESH1] )
@@ -3106,8 +3081,6 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
 		  const int const_eqn)
 {
  
-  int err;
-  int dim;
   int a, b;
  
   int var;
@@ -3141,7 +3114,7 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
   dbl nonvol_conc = 0.0;
   dbl temp;
  
-  err = calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
  
   mu0 = gn_local->mu0;
   nexp = gn_local->nexp;
@@ -3154,7 +3127,6 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
   conc_exp = gn_local->fexp;
    
  
-  dim  = ei->ielem_dim;
   vdofs = ei->dof[VELOCITY1];
    
   if ( pd->e[R_MESH1] )

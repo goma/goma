@@ -119,7 +119,7 @@ gevp_arnoldi_rc(int nj,
   static dbl tm, 
     w1, w2, w4, w5, w6, wa, wb, 
     xm, beta, hnorm, r_sigma, i_sigma,
-    r_ev_a, i_ev_a, r_ev_b, i_ev_b, res_a, res_b, 
+    r_ev_a, i_ev_a, r_ev_b, i_ev_b,
     *q1, *q2, 
     **hh, **rr;
   static EV ev;
@@ -512,7 +512,6 @@ l31:
 	wb = sqrt(SQUARE(r_ev_a)+SQUARE(i_ev_a));
 	if(wa < IDG_EPS * wb) 
 	  wa = 0.0;
-	res_a = sqrt(fabs(wa-wb))*sqrt(wa+wb);
 
 	/* RC flag set to 32: get v2 = M*v1
 	 */
@@ -558,7 +557,6 @@ l33:
 	wb = sqrt(SQUARE(r_ev_b)+SQUARE(i_ev_b));
 	if (wa < IDG_EPS * wb) 
 	  wa = 0.0;
-	res_b = sqrt(fabs(wa-wb))*sqrt(wa+wb);
 	tm = SQUARE(r_ev_b)+SQUARE(i_ev_b);
 	rev[i] = (r_ev_a*r_ev_b+i_ev_a*i_ev_b)/tm;
 	iev[i] = (i_ev_a*r_ev_b-r_ev_a*i_ev_b)/tm;

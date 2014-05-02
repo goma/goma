@@ -99,7 +99,6 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
 
   /* variables for processing the image data */
   double minsepar, separ; // minimum separation, and separation to match data point to element center
-  int converge; //flag for find_xi() routine
 
   /* Least square fit variables and arrays */
   double *bf_mat, *f_rhs, *x_fit, *Atranspose_f_rhs;
@@ -119,7 +118,7 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
   /* Integers */
   int err, i, j, si;
   int elem_loc;
-  int ilnode, ignode, ielem, iblock, ielem_shape;  
+  int ilnode, ignode, ielem, ielem_shape;  
   int txt_num_pts;
   int icount;
 
@@ -291,8 +290,6 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
 	  ei->deforming_mesh = FALSE;
 	}
 
-      iblock = find_elemblock_index(ielem, exo);
-
       for ( ilnode = 0; ilnode < exo->eb_num_nodes_per_elem[ipix_blkid]; ilnode++)
          {
            // ignode = connectivity[ielem][ilnode] - 1;
@@ -303,7 +300,7 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
 	     }
          }
 
-      converge = find_xi(ielem, xyz_data[i], xi_data[i], ei->ielem_type, nodecoor, si, N_ext);
+      find_xi(ielem, xyz_data[i], xi_data[i], ei->ielem_type, nodecoor, si, N_ext);
       /* Now undo the mess if needed  */
       if(if_deform) ei->deforming_mesh = TRUE;
      }
@@ -425,8 +422,8 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
       'conversions' to accomodate the different pixel data structure the function expects
     */
    double resolution[3];
-   double pixorigin[3];
-   int pixsize[3], numpix;
+   /*   double pixorigin[3]; */
+   int pixsize[3];
    double ***pixdata;
    double minx, miny, maxx, maxy;
    double firstx = 0;
@@ -438,6 +435,7 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
    minx = miny = 1e20;
    maxx = maxy = -1e20;
    setres = 0;
+   resolution[0] = 0;
    resolution[1] = 0;
    for (i = 0; i < txt_num_pts; i++)
      {
@@ -452,13 +450,13 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
        }
      }   
    
-   pixorigin[0] = minx;
-   pixorigin[1] = miny;
-   pixorigin[2] = 0;
+   /*   pixorigin[0] = minx;
+	pixorigin[1] = miny;
+	pixorigin[2] = 0; 
+   */
    pixsize[0] = (int)((maxx-minx)/resolution[0]) + 1;
    pixsize[1] = (int)((maxy-miny)/resolution[1]) + 1;
    pixsize[2] = 1;
-   numpix = pixsize[0]*pixsize[1]*pixsize[2];
    pixdata = (double ***) malloc(pixsize[0]*pixsize[1]*pixsize[2] * sizeof(double **));
    for (i = 0; i < pixsize[0]; i++)
      {

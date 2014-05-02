@@ -211,6 +211,12 @@ assemble_potential(double time,	/* present time value */
    */
   int n_species = mp->Num_Species; 
 
+  /* initialize grad_phi_j, grad_phi_i */
+  for (j = 0; j < DIM; j++) {
+    grad_phi_i[j] = 0;
+    grad_phi_j[j] = 0;
+  }
+
   /*   static char yo[] = "assemble_current";*/
 
   status = 0;
@@ -2273,7 +2279,7 @@ int i, j, a, w;
 
   int i_elec_cond;                       /* index of external field elec. conductivity */
   int n, l, m, mn, kk; 
-  dbl sum1, sum2, sum3, err;
+  dbl sum1, sum2, sum3;
 
   dim = pd->Num_Dim;
   /*** Electrical Conductivity ****/
@@ -2704,8 +2710,8 @@ int i, j, a, w;
        */
       if (mp->VoltageFormulation == V_PERMITTIVITY)
         {
-	  err = level_set_property(mp->u_electrical_conductivity[0], mp->u_electrical_conductivity[1], 
-				   mp->u_electrical_conductivity[2], &k, NULL);
+	  level_set_property(mp->u_electrical_conductivity[0], mp->u_electrical_conductivity[1], 
+			     mp->u_electrical_conductivity[2], &k, NULL);
         }
       else
         {
