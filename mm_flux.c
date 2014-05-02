@@ -4284,9 +4284,14 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
   if (print_flag && ProcID == 0) {
     FILE  *jfp;
     if( (jfp=fopen(filenm,"a")) != NULL) {
-      fprintf(jfp,"Time/iteration = %e \n", time_value);
-      fprintf(jfp,"\t  (%s) Volume Integral for block %d species %d\n", 
-                                             quantity_str,blk_id, species_id);
+      if ( ppvi_type == PPVI_VERBOSE ) {
+	fprintf(jfp,"Time/iteration = %e \n", time_value);
+	fprintf(jfp,"\t  (%s) Volume Integral for block %d species %d\n", 
+		quantity_str,blk_id, species_id);
+      }
+      if ( ppvi_type == PPVI_CSV ) {
+	fprintf(jfp,"%e,", time_value);
+      }
       fflush(jfp);
       fclose(jfp);
     }
@@ -4574,12 +4579,15 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
     {
       FILE *jfp;
       
-      if( (jfp = fopen( filenm, "a")) != NULL )
-	{
+      if( (jfp = fopen( filenm, "a")) != NULL )	{
+	if (ppvi_type == PPVI_VERBOSE) {
 	  fprintf(jfp,"   volume= %10.7e \n", sum );
- 	  
 	}
-      fclose(jfp);
+	if (ppvi_type == PPVI_CSV) {
+	  fprintf(jfp,"%10.7e\n", sum );
+	}
+  	fclose(jfp);
+      }
     }
 
   // Kind of a hack to keep track of the porous liquid inventory for a time-dependent BC

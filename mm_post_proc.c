@@ -91,6 +91,7 @@ int nn_post_data_sens;          /* Dimension of the following structure */
 int nn_error_metrics;           /* Dimension of the following structure */
 int nn_particles;               /* Dimension of the following structure */
 int nn_volume;                  /* number of pp_volume_int structures */
+int ppvi_type;             /* Maybe there's a better way to do this, Seems like globals abound! AMC*/
 
 struct Post_Processing_Data        **pp_data;
 struct Post_Processing_Data_Sens   **pp_data_sens;
@@ -7334,6 +7335,7 @@ rd_post_process_specs(FILE *ifp,
 
   if( nn_volume)
     {
+      ppvi_type = PPVI_VERBOSE; // Default to default output behavior see "Volumetric Integration Output Format" for other possible behaviors
       sz = sizeof( struct Post_Processing_Volumetric *);
 
       pp_volume = ( struct Post_Processing_Volumetric ** ) array_alloc( 1, nn_volume, sz );
@@ -7427,6 +7429,38 @@ rd_post_process_specs(FILE *ifp,
 	} /* end of i < nn_volume */
       ECHO("\nEND OF VOLUME_INT\n", echo_file);
     } /*if iread */ 
+
+  iread = look_for_optional(ifp, "Volumetric Integration Output Format", input, '=');
+  if ( iread == 1 ) {
+    FILE *amcfp;
+    int i;
+    if ( fscanf(ifp, "%s", ts) != 1 )
+      {
+	EH(-1,"error reading Volume Integration Output Format card \n");
+      }
+    if ( !strcasecmp( ts, "Verbose" ) ) {
+      ppvi_type = PPVI_VERBOSE;
+    }
+    else if ( !strcasecmp( ts, "CSV" ) ) {
+      ppvi_type = PPVI_CSV;
+
+      /* in order to prepend output file with data type info */
+      char ts1[MAX_CHAR_IN_INPUT];
+      for( i=0; i< nn_volume; i++) {
+	amcfp=fopen( pp_volume[i]->volume_fname ,"a");
+	if( amcfp != NULL ) {
+	  strcpy( ts1, pp_volume[i]->volume_name) ;
+	  fprintf(amcfp,"Time, %s\n", &ts1);
+	  fflush(amcfp);
+	  fclose(amcfp);
+	}
+      }
+    }
+    else {
+      WH(-1, "The Volumetric Integration Output Format was not recognized");
+      ppvi_type = PPVI_VERBOSE;
+    }
+  }
 }
 /******************************************************************************/
 /******************************************************************************/
