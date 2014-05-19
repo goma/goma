@@ -120,7 +120,6 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
 		      Dpi *dpi)	  /* distributed processing information */
 {
 
-  int ic;
   int mn;
   int ibc, idf;
   struct Boundary_Condition *BC_Type;
@@ -223,7 +222,6 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
     if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT) {
 
       mn = map_mat_index(augc[iAC].MTID);
-      ic = augc[iAC].MDID;
 
       switch (augc[iAC].MPID) {
 
@@ -615,7 +613,6 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 		   Exo_DB *exo,	 /* ptr to the finite element mesh database */
 		   Dpi *dpi)	 /* distributed processing information */
 {
-  int ic;
   int mn;
   int ibc, idf;
   int iCC;
@@ -834,7 +831,6 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
     if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT ) {
 
       mn = map_mat_index(augc[iAC].MTID);
-      ic = augc[iAC].MDID;
 
       switch (augc[iAC].MPID) {
 
@@ -1817,7 +1813,7 @@ overlap_aug_cond ( int ija[],
  * cAC arrays as appropriate.
  */
 {
-  int err, ibf = -1, ibs = -1, ib, i, jAC, kdir;
+  int err, ibf = -1, ibs = -1, ib, i, jAC;
   int e_start, e_end, ielem, iside, jelem, jside;
   int solid_eb, fluid_eb, lm_eb;
   double h[DIM];
@@ -1911,7 +1907,6 @@ overlap_aug_cond ( int ija[],
             {
               ielem = augc[jAC].lm_elem;
               iside = augc[jAC].lm_side;
-              kdir  = augc[jAC].lm_dim;
               if (ielem != jelem || iside != jside)
                 {
 
@@ -1983,7 +1978,6 @@ overlap_aug_cond ( int ija[],
             {
               ielem = augc[jAC].lm_elem;
               iside = augc[jAC].lm_side;
-              kdir  = augc[jAC].lm_dim;
               if (ielem == -1 || ielem != jelem || iside != jside)
                 {
 
@@ -2704,7 +2698,6 @@ std_lgr_cond ( int iAC,
 		
 {
   double inventory;
-  double lambda ; 
   int i, jAC;
   double theta_scale = 1.0;
 #ifdef PARALLEL
@@ -2725,10 +2718,6 @@ std_lgr_cond ( int iAC,
    */
   load_extra_unknownsAC(iAC, x_AC, cx, mf_args->exo, mf_args->dpi);
 
-
-
-  lambda = x_AC[iAC];   
-  
   if( augc[iAC].Type == AC_LGRM )
     {
 	  
@@ -2921,7 +2910,7 @@ create_overlap_acs(Exo_DB *exo, int iAC)
   int old_nAC, new_ACs = -1, new_nAC;
   int ac_count, i, j, k, nqp, si = 0, ss = -1;
   int sb, fb, lb;
-  int e, s, qp;
+  int e, s;
   int found = FALSE;
   int dim = pd->Num_Dim;
   int sse_first[MAX_NGV];
@@ -3031,7 +3020,6 @@ create_overlap_acs(Exo_DB *exo, int iAC)
             {
               for (j=0; j<nqp; j++)
                 {
-                  qp = j;
                   for (k=0; k<pd->Num_Dim; k++)
                     {
                       augc[ac_count].Type = AC_OVERLAP;
@@ -3114,10 +3102,10 @@ assign_overlap_acs( double x[], Exo_DB *exo )
  */
 {
   int iAC, k;
-  int sb, fb, lb;
+  int fb, lb;
   int e;
   int e_start, e_end;
-  int ibs = -1, ibf = -1, ib;
+  int ibf = -1, ib;
   
   for (iAC=0; iAC<nAC; iAC++)
     {
@@ -3129,7 +3117,6 @@ assign_overlap_acs( double x[], Exo_DB *exo )
     } 
 
 /* Read inputs from existing overlap AC */
-  sb = augc[iAC].solid_eb + 1;
   fb = augc[iAC].fluid_eb + 1;
   lb = augc[iAC].lm_eb + 1;
 
@@ -3139,7 +3126,6 @@ assign_overlap_acs( double x[], Exo_DB *exo )
   /* Locate fluid and solid blocks in exo structure */
   for (ib = 0; ib < exo->num_elem_blocks; ib++)
     {
-      if (exo->eb_id[ib] == sb) ibs = ib;
       if (exo->eb_id[ib] == fb) ibf = ib;
     }
 
@@ -3411,7 +3397,6 @@ double getPositionAC(struct AC_Information *augc, double *cAC_iAC,
   double posNode[3];
   int i, ins, inode;
   NODE_INFO_STRUCT  *node_ptr;
-  NODAL_VARS_STRUCT *nv;
   double pos1D = 0.0;
 
   if (augc->COMPID != 0 && augc->COMPID != 1) {
@@ -3444,7 +3429,6 @@ double getPositionAC(struct AC_Information *augc, double *cAC_iAC,
   int node = -1;
   for (i = 0; i <  Num_Internal_Nodes + Num_Border_Nodes ; i++) {
     node_ptr = Nodes[i];
-    nv = node_ptr->Nodal_Vars_Info;
     if (globalNodeNum  == node_ptr->Global_Node_Num) {
       node = i;
       break;

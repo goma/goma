@@ -2509,7 +2509,7 @@ apply_table_bc( double *func,
    */
 
   int var, basis;
-  double slope, interp_val,x_table[1];
+  double slope, interp_val,x_table[2];
   double dfunc_dx[3];
 
   if(af->Assemble_LSA_Mass_Matrix)

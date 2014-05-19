@@ -5566,8 +5566,6 @@ load_plastic_properties(double d_plastic_mu_dc[MAX_CONC][MDE],
   /*local variables */
   int err = 0;
   double min;
-  double plastic_mu;
-  double yield;
   int b, j, var;
 
   if(evpl->plastic_mu_model == USER )
@@ -5575,11 +5573,6 @@ load_plastic_properties(double d_plastic_mu_dc[MAX_CONC][MDE],
 /*  Take care of this later
       err = usr_plastic_mu(evpl->u_plastic_mu); */
       EH(err,"bad user plastic_mu model");
-      plastic_mu = evpl->plastic_mu;
-    }
-  else if (evpl->plastic_mu_model == CONSTANT )
-    {
-      plastic_mu = evpl->plastic_mu;
     }
   else if (evpl->plastic_mu_model == LINEAR )
     {
@@ -5599,7 +5592,7 @@ load_plastic_properties(double d_plastic_mu_dc[MAX_CONC][MDE],
         {
           min= evpl->u_plastic_mu[1];
 	}   
-      plastic_mu = evpl->plastic_mu = min + (elc->Strss_fr_sol_vol_frac - fv->c[0])/elc->Strss_fr_sol_vol_frac *
+      evpl->plastic_mu = min + (elc->Strss_fr_sol_vol_frac - fv->c[0])/elc->Strss_fr_sol_vol_frac *
 		   fabs(evpl->u_plastic_mu[1] - evpl->u_plastic_mu[0]); 
       var=MASS_FRACTION;
       for (b=0; b<pd->Num_Species_Eqn; b++) 
@@ -5621,11 +5614,6 @@ load_plastic_properties(double d_plastic_mu_dc[MAX_CONC][MDE],
 /*   take care of this later 
       err = usr_plastic_mu(evpl->u_yield); */
       EH(err,"bad user yield model");
-      yield = evpl->yield;
-    }
-  else if (evpl->yield_model == CONSTANT )
-    {
-      yield = evpl->yield;
     }
   else if (evpl->yield_model == LINEAR )
     {
@@ -5645,7 +5633,7 @@ load_plastic_properties(double d_plastic_mu_dc[MAX_CONC][MDE],
         {
           min= evpl->u_yield[1];
 	} 
-      yield = evpl->yield = min + (elc->Strss_fr_sol_vol_frac - fv->c[0])/elc->Strss_fr_sol_vol_frac *
+      evpl->yield = min + (elc->Strss_fr_sol_vol_frac - fv->c[0])/elc->Strss_fr_sol_vol_frac *
 		   fabs(evpl->u_yield[1] - evpl->u_yield[0]); 
       var=MASS_FRACTION;
       for (b=0; b<pd->Num_Species_Eqn; b++) 

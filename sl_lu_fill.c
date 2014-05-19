@@ -100,7 +100,9 @@ luf (const int N,
   int  error, type;
   int j, i, n, k, nzeros, ija_col;
   static spREAL **element, *b;
+#ifdef MATRIX_STATISTICS
   spREAL norm;
+#endif
   static int call = 0;
 
   call++;
@@ -167,8 +169,9 @@ luf (const int N,
         if (n == 1) spClear(matrix);/* zero entries in graph */
 
      } /* end of define and fill */
-
+#ifdef MATRIX_STATISTICS
      norm = spNorm(matrix);
+#endif
 
       if( first_time_fill == TRUE && factor_flag == 1){
 

@@ -226,8 +226,9 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   double time_print, i_print;
   double theta = 0.0, time;
   static double time1 = 0.0;     /* Current time that the simulation is trying  to find the solution for */
-
+#ifdef LIBRARY_MODE
   static double delta_t_save = 0.0;
+#endif
   double delta_t, delta_t_new = 0.0;
   double delta_t_old, delta_t_older, delta_t_oldest = 0.0;
   double timeValueRead = 0.0;    /* time value read from an exodus input file 
@@ -280,8 +281,9 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   static int callnum = 1;	 /* solve_problem call counter */
   int last_call = TRUE;		 /* Indicates final rf_solve call */
+#ifdef LIBRARY_MODE
   int last_step = FALSE;	 /* Indicates final time step on this call */
-
+#endif
 
   static const char yo[]="solve_problem"; /* So my name is in a string.        */
 
@@ -1411,7 +1413,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
        * Calculate the absolute time for the current step, time1
        */
       time1 = time + delta_t;
+#ifdef LIBRARY_MODE
       delta_t_save = delta_t;
+#endif
       if (time1 > TimeMax) { 
 	DPRINTF(stderr, "\t\tLAST TIME STEP!\n"); 
 	time1 = TimeMax;
@@ -1419,11 +1423,14 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	tran->delta_t = delta_t;
 	tran->delta_t_avg = 0.25*(delta_t+delta_t_old+delta_t_older
 					+delta_t_oldest);
+#ifdef LIBRARY_MODE
         last_step = TRUE;
+#endif
       }
       tran->time_value = time1;
+#ifdef LIBRARY_MODE
       if (n == (MaxTimeSteps-1) ) last_step = TRUE;
-
+#endif
       /*
        * What is known at this exact point in the code:
        *
@@ -3233,7 +3240,6 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
   int ielem;
   int e_start, e_end;
   int *moved;
-  int e_type;
   /*  int num_local_nodes; */
   int gnn;
   int ln;
@@ -3311,7 +3317,6 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
   {
     load_elem_dofptr(ielem, exo, x, x_file, x, x, x, 1);
 
-    e_type =  ei->ielem_type;
     memset(d, 0, sizeof(double  )*DIM*MDE);
     memset(dofs, 0, sizeof(int)*DIM);
     

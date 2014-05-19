@@ -470,13 +470,12 @@ assemble_surface_charge(double time_value,  /* Time */
   double mass = 0.0;
   double diffusion = 0.0;
   double res[MDE], jac[MDE][MAX_PROB_VAR][MDE];
-  double coord[DIM], xi2[DIM]; 
   int *n_dof = NULL;
   /*  int eqn = R_SURF_CHARGE;*/
 
   /* Declare some neighbor structures */
   int el0 = ei->ielem;
-  int el1, el2, nf;
+  int nf;
 
   /* These are needed to get convection velocity and mesh derivatives */
 
@@ -514,14 +513,10 @@ assemble_surface_charge(double time_value,  /* Time */
   /* Load coordinates from current element and initialize xi2 */
   for (i=0; i<DIM; i++)
     {
-      coord[i] = fv->x[i];
-      xi2[i] = 0.0;
       xs[i] = 0.0;
     }
 
   /* Get neighbor element number(s). */
-  el1 = elem_friends[el0][0];
-  if (nf == 2) el2 = elem_friends[el0][1];
   if (nf > 2) EH(-1, "Not set up for more than two element friends!");
 
   /* Now return to original element (el0) on shell block to finish assembly */
@@ -842,7 +837,6 @@ assemble_shell_structure(double time_value,  /* Time */
   double d_phi_dxi[MDE], d_sh_K_dxi, d_sh_tens_dxi, d_sh_x_dxi, d_sh_y_dxi; 
   double diffusion;
   double res[MDE], jac[MDE][MAX_PROB_VAR][MDE];
-  double coord[DIM], xi2[DIM];
   int *n_dof = NULL;
   int eqn;
   double d_det_J_dmeshbj, det_J_sh;
@@ -869,7 +863,8 @@ assemble_shell_structure(double time_value,  /* Time */
 
   /* Declare some neighbor structures */
   int el0 = ei->ielem;
-  int el1, el2, nf;
+  /* int el1; */
+  int nf;
 
   /* These are needed to get convection velocity and mesh derivatives */
 
@@ -903,18 +898,9 @@ assemble_shell_structure(double time_value,  /* Time */
    */
   n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
 
-  /* Load coordinates from current element and initialize xi2 */
-  for (i=0; i<DIM; i++)
-    {
-      coord[i] = fv->x[i];
-      xi2[i] = 0.0;
-    }
-
   /* Get neighbor element number(s). */
   if(&elem_friends[el0][0] != NULL) /*Unwetted shells don't have friends*/
     {
-      el1 = elem_friends[el0][0];
-      if (nf == 2) el2 = elem_friends[el0][1];
       if (nf > 2) EH(-1, "Not set up for more than two element friends!");
     }
 
@@ -1224,17 +1210,13 @@ assemble_shell_tension(double time_value,  /* Time */
   double d_phi_dxi[MDE], d_sh_tens_dxi, d_sh_x_dxi, d_sh_y_dxi; 
   double diffusion;
   double res[MDE], jac[MDE][MAX_PROB_VAR][MDE];
-  double coord[DIM], xi2[DIM]; 
   int  dof_map[MDE];
   int *n_dof = NULL;
   int eqn;
-  double det_J_sh;
 
-  PROBLEM_DESCRIPTION_STRUCT *pd0;
   int node, index;
   // double Pi[DIM][DIM];
   //STRESS_DEPENDENCE_STRUCT d_Pi;
-  double TL;  /* tangentential loading */
   double dTL_dX[DIM][MDE];
   double dTL_dv[DIM][MDE];
   double dTL_dP[MDE];
@@ -1258,8 +1240,12 @@ assemble_shell_tension(double time_value,  /* Time */
 
 
   /* Declare some neighbor structures */
+#if 0
   int el0 = ei->ielem;
   int nf;
+  /* See if there are friends for this element (maximum 2) */
+  nf = num_elem_friends[el0];
+#endif
 
   /* These are needed to get convection velocity and mesh derivatives */
 
@@ -1271,11 +1257,6 @@ assemble_shell_tension(double time_value,  /* Time */
   double h3    = fv->h3;
 
   eqn = R_SHELL_TENSION;
-
-  pd0 = pd;  /*set prob description to current shell material */
-  
-  /* See if there are friends for this element (maximum 2) */
-  nf = num_elem_friends[el0];
 
   /* Initialize temporary arrays */
   memset(res, 0, sizeof(double)*MDE);
@@ -1295,18 +1276,11 @@ assemble_shell_tension(double time_value,  /* Time */
    */
   n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
 
-  /* Load coordinates from current element and initialize xi2 */
-  for (i=0; i<DIM; i++)
-    {
-      coord[i] = fv->x[i];
-      xi2[i] = 0.0;
-    }
-#if 0
+#if 0 /* if setting 1 uncomment el1 declaration */
   /* Get neighbor element number(s). */
   if(&elem_friends[el0][0] != NULL) /*Unwetted shells don't have friends*/
     {
       el1 = elem_friends[el0][0];
-      if (nf == 2) el2 = elem_friends[el0][1];
       if (nf > 2) EH(-1, "Not set up for more than two element friends!");
     }
 	
@@ -1353,13 +1327,10 @@ assemble_shell_tension(double time_value,  /* Time */
       }
     }
 
-  det_J_sh = sqrt(d_sh_x_dxi*d_sh_x_dxi + d_sh_y_dxi*d_sh_y_dxi);
-
 
 
   /* Compute tangent loading and appropriate sensitivities */
 
-  TL = 0.0;
   memset( dTL_dv, 0, sizeof(double)*DIM*MDE);
   memset( dTL_dX, 0, sizeof(double)*DIM*MDE);
   memset( dTL_dP, 0, sizeof(double)*MDE);
@@ -1487,7 +1458,6 @@ assemble_shell_coordinates(double time_value,  /* Time */
    * true, we do not apply the arclength equation*/
   int nf;
   int el0 = ei->ielem;
-  double det_J;
   double h3    = fv->h3;
 
   /* Some prelims to see if we are wetted or unwetted */
@@ -1519,7 +1489,6 @@ assemble_shell_coordinates(double time_value,  /* Time */
 
 
   eqn = R_MESH1;
-  det_J = bf[eqn]->detJ; /* Here on out we are assuming det_J=surfdet_J */
 
   pd0 = pd;  /*set prob description to current shell material */
   
@@ -1819,7 +1788,6 @@ assemble_shell_diffusion(double time_value,  /* Time */
   double diffusion;
   double Ds, Gs, Va;
   double res[MDE], jac[MDE][MAX_PROB_VAR][MDE];
-  double coord[DIM], xi2[DIM];
   int *n_dof = NULL;
   int n_dofptr[MAX_VARIABLE_TYPES][MDE];
   int eqn;
@@ -1847,7 +1815,7 @@ assemble_shell_diffusion(double time_value,  /* Time */
   /* Declare some neighbor structures */
   int el0 = ei->ielem;
   int el1 = -1;
-  int el2, nf;
+  int nf;
 
   /* These are needed to get convection velocity and mesh derivatives */
 
@@ -1881,18 +1849,10 @@ assemble_shell_diffusion(double time_value,  /* Time */
    */
   n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
 
-  /* Load coordinates from current element and initialize xi2 */
-  for (i=0; i<DIM; i++)
-    {
-      coord[i] = fv->x[i];
-      xi2[i] = 0.0;
-    }
-
   /* Get neighbor element number(s). */
   if (&elem_friends[el0][0] != NULL) /*Unwetted shells don't have friends*/
     {
       el1 = elem_friends[el0][0];
-      if (nf == 2) el2 = elem_friends[el0][1];
       if (nf > 2) EH(-1, "Not set up for more than two element friends!");
     }
 
@@ -2065,18 +2025,16 @@ assemble_shell_geometry(double time_value,  /* Time */
                         double xi[DIM],     /* Local stu coordinates */
                         const Exo_DB *exo)
 {
-  int err, i, j, jk, p, q, b, peqn, var, pvar;
+  int err, i, j, jk, p, b, peqn, var, pvar;
   double phi_i, phi_j;
 
   /* note the following definitions restrict this to 1D bar elements */
-  double d_phi_dxi[MDE];
   double diffusion;
   double div_s_nv, d_div_s_nv_dnv[DIM][MDE], d_div_s_nv_dmesh[DIM][MDE];
   double res[MDE], jac[MDE][MAX_PROB_VAR][MDE];
-  double coord[DIM], xi2[DIM];
   int *n_dof = NULL;
   int n_dofptr[MAX_VARIABLE_TYPES][MDE];
-  int eqn, dofs;
+  int eqn;
 
   /*
    * Find the variable whose basis functions are used to do element integrations of shape
@@ -2093,7 +2051,7 @@ assemble_shell_geometry(double time_value,  /* Time */
   /* Declare some neighbor structures */
   int el0 = ei->ielem;
   int el1 = -1;
-  int el2, nf;
+  int nf;
 #ifdef DEBUG_HKM
   struct Element_Indices *ei_ptr;
 #endif
@@ -2131,18 +2089,10 @@ assemble_shell_geometry(double time_value,  /* Time */
    */
   n_dof = (int *)array_alloc(1, MAX_VARIABLE_TYPES, sizeof(int));
 
-  /* Load coordinates from current element and initialize xi2 */
-  for (i=0; i<DIM; i++)
-    {
-      coord[i] = fv->x[i];
-      xi2[i] = 0.0;
-    }
-
   /* Get neighbor element number(s). */
   if(&elem_friends[el0][0] != NULL) /*Unwetted shells don't have friends*/
     {
       el1 = elem_friends[el0][0];
-      if (nf == 2) el2 = elem_friends[el0][1];
       if (nf > 2) EH(-1, "Not set up for more than two element friends!");
     }
 
@@ -2153,7 +2103,6 @@ assemble_shell_geometry(double time_value,  /* Time */
   /* Load normal vector surface divergence and sensitivities */
   err = shell_normal_div_s(p_div_s_nv, d_div_s_nv_dnv, d_div_s_nv_dmesh);
   eqn = R_SHELL_DIFF_CURVATURE;
-  dofs = ei->dof[eqn];
   bfn = bf[eqn];
 
   /*
@@ -2163,7 +2112,6 @@ assemble_shell_geometry(double time_value,  /* Time */
   for (i = 0; i < ei->dof[eqn]; i++)
     {
       phi_i = bf[eqn]->phi[i];
-      d_phi_dxi[i] = bf[eqn]->dphidxi[i][0];
     }
 
   // Curvature H = -0.5 (del_s dot n) -> so we add in a -0.5 fac
@@ -2257,7 +2205,6 @@ assemble_shell_geometry(double time_value,  /* Time */
                 {
                   /* J_sh_Kd_n: */
                   var = SHELL_NORMAL1 + p;
-                  q = 1 - p;
                   if (pd->v[var])
                     {
                       pvar = upd->vp[var];
@@ -2451,7 +2398,7 @@ shell_surface_charge_bc(double func[DIM],
   //int eqn = R_POTENTIAL;
   int j, p, var, pvar;
   int el1 = ei->ielem;
-  int el2, nf, err;
+  int el2, nf;
   int *n_dof = NULL;
   int n_dofptr[MAX_VARIABLE_TYPES][MDE], dof_map[MDE];
   double *n_esp;
@@ -2494,7 +2441,7 @@ shell_surface_charge_bc(double func[DIM],
    * For example, pressure in the neighbor element is accessed with fv->P.
    * This is done to simplify the job of writing shell equations.
    */
-  err = load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, id_side, xi, exo);
+  load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, id_side, xi, exo);
 
   /* Assemble the residual equation */
   /* Here, variables from the remote elements are used. */ 
@@ -2921,9 +2868,8 @@ apply_surface_viscosity(double cfunc[MDE][DIM],
 {
   int i, j = 0, jj, k, id, var, a, b, eqn, I, ldof, q;
   int jvar;			/* Degree of freedom counter                 */
-  int DeformingMesh;		/* Logical. */
   int el1 = ei->ielem;
-  int el2, nf, err;
+  int el2, nf;
   int *n_dof = NULL;
   int dof_map[MDE];
   int n_dofptr[MAX_VARIABLE_TYPES][MDE];
@@ -2994,8 +2940,7 @@ apply_surface_viscosity(double cfunc[MDE][DIM],
       wim = 3;
     }
   /***************************** EXECUTION BEGINS ******************************/
-  DeformingMesh = pd->e[R_MESH1]; /* Use to catch bad references to moving */
-				  /* mesh which isn't. */
+
   /* See if there is a friend for this element */
   nf = num_elem_friends[el1];
   if (nf == 0) return;
@@ -3025,8 +2970,8 @@ apply_surface_viscosity(double cfunc[MDE][DIM],
    * For example, pressure in the neighbor element is accessed with fv->P.
    * This is done to simplify the job of writing shell equations.
    */
-  err = load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, 
-                               elem_side_bc->id_side, xi, exo);
+  load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, 
+			 elem_side_bc->id_side, xi, exo);
 
   /* Assemble the residual equation */
   /* Here, variables from the remote elements are used. */ 
@@ -4404,7 +4349,6 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
   int dim = pd->Num_Dim;
   int eqn = R_N_DOT_CURL_V; 
   int dof_map[MDE];
-  double d_phi_dxi[MDE], d_phi_ds[MDE];
 #ifdef NEWMETHOD_SHELL_SURF_DIV_V
   double ndotv, tmp_i;
 #endif
@@ -4453,8 +4397,6 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
   double d_grad_n_dn[DIM][DIM][DIM][MDE];
   BASIS_FUNCTIONS_STRUCT *bfn;
   BASIS_FUNCTIONS_STRUCT *bfv;
-  struct Element_Indices *ei_ptr;
-
 
   if (CURL_V == -1) {
     EH(-1,"ERROR: inconsistency: need to set Vorticity Vector = yes in Post processing section");
@@ -4531,11 +4473,6 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
   memset(d_div_s_V_dv, 0, sizeof(double)*DIM*MDE);
   memset(d_div_s_n_dx, 0, sizeof(double)*DIM*MDE);
   memset(d_div_s_n_dn, 0, sizeof(double)*DIM*MDE);
-
-  for (i = 0; i < ei->dof[eqn]; i++) 
-    { 
-      d_phi_ds[i] = d_phi_dxi[i] / det_J; 
-    }
 
 
   // HKM -> Changed below from dim to VIM
@@ -5587,7 +5524,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	  for (b = 0; b < dim; b++)
 	    {
 	      var = MESH_DISPLACEMENT1 + b;
-	      ei_ptr = ((ei->owningElement_ei_ptr[var]) ? (ei->owningElement_ei_ptr[var]) : ei);
+
 	      if (n_dof[var] > 0)   /* NOTE: Cannot use pd->v here! */
 		{
 		  pvar = upd->vp[var];   
@@ -5670,7 +5607,7 @@ shell_diff_kinematic_bc(double func[DIM],
   double mass = 0.0;
   double diffusion = 0.0;
   int el1 = ei->ielem;
-  int el2, nf, err;
+  int el2, nf;
   int *n_dof = NULL;
   int n_dofptr[MAX_VARIABLE_TYPES][MDE];
   //BASIS_FUNCTIONS_STRUCT *bfsh = bf[SHELL_DIFF_FLUX];
@@ -5711,7 +5648,7 @@ shell_diff_kinematic_bc(double func[DIM],
    * For example, pressure in the neighbor element is accessed with fv->P.
    * This is done to simplify the job of writing shell equations.
    */
-  err = load_neighbor_var_data(el1, el2, n_dof, NULL, n_dofptr, id_side, xi, exo);
+  load_neighbor_var_data(el1, el2, n_dof, NULL, n_dofptr, id_side, xi, exo);
                                                                                 
   /* Assemble the residual equation */
   /* Here, variables from the remote elements are used. */
@@ -6232,7 +6169,7 @@ surface_user_shell_bc(double R[MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE],
 		      const double delta_t,
 		      const double *coord)
 {
-  int i, j, q, dofs, err, dim;
+  int i, j, q, dofs, err;
   int eqn, peqn, var, pvar;
   double boundary, em, det_J, phi_i, phi_j;
   double vconv[MAX_PDIM], vconv_old[MAX_PDIM];/*Calculated convection velocity*/
@@ -6270,7 +6207,6 @@ surface_user_shell_bc(double R[MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE],
   else if (F_ups < 0.5*ups_width)
     {heavi = 0.5*(1.+2.*F_ups/ups_width+sin(M_PIE*2.*F_ups/ups_width)/M_PIE);}
 
-  dim = pd->Num_Dim;
   /* Check for active SURFACE_CHARGE equation */
   eqn = R_SHELL_USER;
 
@@ -6379,33 +6315,29 @@ surface_lubrication_shell_bc(double R[MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE]
 			     int dof_map[MDE],
 			     int n_dofptr[MAX_VARIABLE_TYPES][MDE])
 {
-  int i, j, q, dofs, err, dim;
+  int i, j, q, dofs, err;
   int eqn, peqn, var, pvar;
   double boundary, em, det_J, phi_i, phi_j;
   double vconv[MAX_PDIM], vconv_old[MAX_PDIM];/*Calculated convection velocity*/
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
 
-  int el1 = ei->ielem;
-  int el2;
   double *n_esp;
   /*  variables for lubrication approximation	*/
-  double gap, shell_p, shell_pgrad, wrate;
-  int model_id, nset_ups, nset_dns, nsp, gnn_ups, gnn_dns;
+  double gap, shell_p, shell_pgrad;
+  int model_id;
   double flow_inlet, Vweb, roll_rad, x0, gap_nom, flow_target;
-  double Vwebx, dgap_dx[DIM], dVwebx_dx[DIM];
+  double Vwebx;
   double ups_xloc, dns_xloc, ups_width, dns_width, heavi, F_dns, F_ups;
 
-  double qlub[DIM],dq_gradP[DIM][DIM],dq_dX[DIM][DIM],grad_P[DIM], Vt[DIM], Vb[DIM];
+  double qlub[DIM],dq_gradP[DIM][DIM],dq_dX[DIM][DIM],grad_P[DIM];
   double dq_dVb[DIM][DIM];
 #ifdef SECOR_HEAT_FLUX
-  double dq_dVt[DIM][DIM];
+  double dq_dVt[DIM][DIM], Vt[DIM], Vb[DIM], dgap_dx[DIM];
 #endif
   model_id = (int) mp->u_shell_user_par[0];
   if( model_id == 1)
     {
-      nset_ups = (int) mp->u_shell_user_par[1];
-      nset_dns = (int) mp->u_shell_user_par[2];
       flow_inlet = mp->u_shell_user_par[3];
       Vweb = mp->u_shell_user_par[4];
       roll_rad = mp->u_shell_user_par[5];
@@ -6416,24 +6348,12 @@ surface_lubrication_shell_bc(double R[MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE]
       ups_width = mp->u_shell_user_par[10];
       dns_width = mp->u_shell_user_par[11];
 
-      nsp = match_nsid(nset_ups);
-      gnn_ups = Proc_NS_List[Proc_NS_Pointers[nsp]];
-      for (j = 0; j < Proc_NS_Count[nsp]; j++)
-	{ 
-	  gnn_ups = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-	}
-      nsp = match_nsid(nset_dns);
-      gnn_dns = Proc_NS_List[Proc_NS_Pointers[nsp]];
-      for (j = 0; j < Proc_NS_Count[nsp]; j++)
-	{ 
-	  gnn_dns = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-	}
       gap = gap_nom+roll_rad - sqrt(SQUARE(roll_rad)-SQUARE(coord[0]-x0)) - coord[1];
+#ifdef SECOR_HEAT_FLUX
       dgap_dx[0] = (coord[0]-x0)/sqrt(SQUARE(roll_rad)-SQUARE(coord[0]-x0));
       dgap_dx[1] = -1.;
+#endif
       Vwebx = Vweb*sqrt(SQUARE(roll_rad)-SQUARE(coord[0]-x0))/roll_rad;
-      dVwebx_dx[0] = (Vweb/roll_rad)*(x0-coord[0])/sqrt(SQUARE(roll_rad)-SQUARE(coord[0]-x0));
-      dVwebx_dx[1] = 0.0; 
       F_dns = dns_xloc - coord[0];
       if (fabs(F_dns) > 0.5*dns_width)
 	{ heavi = ( F_dns < 0 ) ? 0.0 :1.0;}
@@ -6448,7 +6368,6 @@ surface_lubrication_shell_bc(double R[MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE]
   else
     { EH(-1,"invalid lubrication model_id\n");}
 
-  dim = pd->Num_Dim;
   /* Check for active SURFACE_CHARGE equation */
   eqn = R_SHELL_LUBP;
 
@@ -6499,15 +6418,15 @@ surface_lubrication_shell_bc(double R[MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE]
 
   grad_P[0] = shell_pgrad;
   grad_P[1] = 0.;
-  Vt[0] = Vwebx;  Vt[1] = 0.;
-  Vb[0] = vconv[0]; Vb[1] = 0.;
 
 
 #if defined SECOR_HEAT_FLUX
-  wrate = usr_heat_flux(grad_P, qlub, dq_gradP, dq_dX, 0.0, 
+  Vt[0] = Vwebx;  Vt[1] = 0.;
+  Vb[0] = vconv[0]; Vb[1] = 0.;
+  usr_heat_flux(grad_P, qlub, dq_gradP, dq_dX, 0.0, 
 			gap, dgap_dx, Vb, Vt, dq_dVb, dq_dVt);
 #else
-  wrate = usr_heat_flux(grad_P, qlub, dq_gradP, dq_dX, 0.0);
+  usr_heat_flux(grad_P, qlub, dq_gradP, dq_dX, 0.0);
   printf("untested\n");
   exit(-1);
 #endif
@@ -6553,9 +6472,6 @@ surface_lubrication_shell_bc(double R[MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE]
               for (j=0; j<n_dof[var]; j++)
                 {
 		  /*  Find the right variable in the bulk context */
-		  for(el1=0 ; el1<n_dof[var] ; el1++)   {
-		    if(dof_map[j] == ei->dof_list[var][el1])el2=el1;
-		  }
 		  phi_j = bf[var]->dphidxi[j][0];  
 		  boundary = dq_gradP[0][0]*phi_j/(fv->stangent[0][0]);
 		  boundary *= (phi_i * wt * em);
@@ -6633,14 +6549,14 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
   int *n_dof = NULL;
   int dof_map[MDE];
   
-  dbl toggle_dh_dependence = 0.;
+  // dbl toggle_dh_dependence = 0.;
 
   dbl H, dH_dtime; 
   dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
   dbl dH_U_dX[DIM],dH_L_dX[DIM], dH_dtime_dmesh[DIM][MDE];
   dbl dH_dtime_drealsolid[DIM][MDE];
   dbl dH_U_dp, dH_U_ddh;
-  dbl veloc, veloU[DIM], veloL[DIM];
+  dbl veloU[DIM], veloL[DIM];
   dbl diffusion,  source;
 
   /*
@@ -6693,11 +6609,13 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
   /* Lubrication height from model */
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, dt); 
   dH_dtime = dH_U_dtime - dH_L_dtime;
+  /*
   if (pd->v[SHELL_DELTAH] && 
       (mp->HeightUFunctionModel == CONSTANT_SPEED_DEFORM ||
        mp->HeightUFunctionModel == CONSTANT_SPEED_MELT ||
        mp->HeightUFunctionModel == FLAT_GRAD_FLAT_MELT ||
        mp->HeightUFunctionModel == CIRCLE_MELT )) toggle_dh_dependence = 1.;
+  */
 
   /* Deform lubrication height for FSI interaction */
   switch ( mp->FSIModel ) {
@@ -6722,7 +6640,7 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
   }
 
   /* Lubrication wall velocity from model */
-  veloc = velocity_function_model(veloU, veloL, time, dt);
+  velocity_function_model(veloU, veloL, time, dt);
 
   /* Lubrication height - mesh sensitivity */
   memset(dH_dtime_dmesh, 0.0, sizeof(double)*DIM*MDE);
@@ -7141,9 +7059,7 @@ assemble_shell_energy(double time,	/* present time value */
   int i = -1, ii;
   int j, jj, status;
   
-  dbl toggle_dh_dependence = 0.;
-
-  dbl curv, H, dH_dtime;    /* Temperature derivative of viscosity */
+  dbl curv = 0, H, dH_dtime;    /* Temperature derivative of viscosity */
   dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
   dbl dH_U_dX[DIM],dH_L_dX[DIM], dH_dmesh[DIM][MDE], dH_dtime_dmesh[DIM][MDE];
   dbl dH_drealsolid[DIM][MDE], dH_dtime_drealsolid[DIM][MDE];
@@ -7157,7 +7073,7 @@ assemble_shell_energy(double time,	/* present time value */
   dbl q[DIM], dqdp[DIM], dqdp_1[DIM], dq_lub_dH[DIM], dqdmu[DIM], dqdF[DIM][MDE], dq_dmesh[DIM][DIM][MDE];
   dbl dq_drs[DIM][DIM][MDE];
 
-  dbl veloc, veloU[DIM], veloL[DIM];
+  dbl veloU[DIM], veloL[DIM];
   dbl  mu, rho, t_cond, Cp;  
   dbl k_eff, k_turb, d_k_turb_dmu, d_k_eff_dh;  /* sundry factors*/
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
@@ -7204,7 +7120,7 @@ assemble_shell_energy(double time,	/* present time value */
 
 /* SUPG variables */
   dbl h_elem=0, h_elem_inv=0, h_elem_deriv=0., h_elem_inv_deriv=0.;
-  dbl supg, d_wt_func;
+  dbl supg = 0, d_wt_func;
 
 
   /*
@@ -7283,8 +7199,6 @@ assemble_shell_energy(double time,	/* present time value */
   /* Lubrication height from model */
   H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, dt); 
   dH_dtime = dH_U_dtime - dH_L_dtime;
-  if (pd->v[SHELL_DELTAH] && 
-      mp->HeightUFunctionModel == CONSTANT_SPEED_DEFORM) toggle_dh_dependence = 1.;
 
   /* Deform lubrication height for FSI interaction */
   switch ( mp->FSIModel ) {
@@ -7308,7 +7222,7 @@ assemble_shell_energy(double time,	/* present time value */
   }
 
  /* Lubrication wall velocity from model */
-  veloc = velocity_function_model(veloU, veloL, time, dt);
+  velocity_function_model(veloU, veloL, time, dt);
 
   k_eff = t_cond;  /* default laminar case */
   k_turb = 12.;
@@ -8281,9 +8195,8 @@ assemble_film( double time,	/* present time value */
 
   dbl P, H, C, H_dot;
   dbl sigma; 
-  dbl mu, dmu_dc;
   dbl EvapRate, dEvapRate_dC, dEvapRate_dH;
-  dbl veloc, veloU[DIM], veloL[DIM];
+  dbl veloU[DIM], veloL[DIM];
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
 
@@ -8350,19 +8263,13 @@ assemble_film( double time,	/* present time value */
 
   if (pd->v[SHELL_PARTC])
    {
-     mu = viscosity(gn, NULL, d_mu);
-     dmu_dc = mp->d_viscosity[SHELL_PARTC];
-   }
-  else
-   {
-     mu = mp->viscosity;
-     dmu_dc = 0.0;
+     viscosity(gn, NULL, d_mu);
    }
 
    sigma = mp->surface_tension;
 
     
-  veloc = velocity_function_model(veloU, veloL, time, dt);
+  velocity_function_model(veloU, veloL, time, dt);
 
   EvapRate = film_evaporation_model(C, &dEvapRate_dC, H, &dEvapRate_dH);
  
@@ -8869,13 +8776,13 @@ assemble_film_particles(  double time,	/* present time value */
   dbl H = 0, C, C_dot; 
   dbl H_U, dH_U_dtime, H_L, dH_L_dtime, dH_U_dp, dH_U_ddh;
   dbl dH_U_dX[DIM],dH_L_dX[DIM];
-  dbl q_old[DIM], q[DIM], v_old[DIM], v[DIM];
+  dbl q_old[DIM], q[DIM], v[DIM];
   dbl dq_dp1[DIM][MDE], dq_dp2[DIM][MDE], dq_dh1[DIM][MDE], dq_dh2[DIM][MDE], dq_dc[DIM][MDE];
   dbl dv_dp1[DIM][MDE], dv_dp2[DIM][MDE], dv_dh1[DIM][MDE], dv_dh2[DIM][MDE], dv_dc[DIM][MDE];
   dbl mu, dmu_dc;
   dbl EvapRate, dEvapRate_dC, dEvapRate_dH;
   dbl diff_coeff, ddiff_dmu, ddiff_dc;
-  dbl veloc, veloU[DIM], veloL[DIM];
+  dbl veloU[DIM], veloL[DIM];
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
   dbl mass, advection, diffusion, source;
@@ -8978,7 +8885,7 @@ assemble_film_particles(  double time,	/* present time value */
    ddiff_dc = ddiff_dmu * dmu_dc;
 
     
-  veloc = velocity_function_model(veloU, veloL, time, dt);
+  velocity_function_model(veloU, veloL, time, dt);
   
   if ( pd->v[SHELL_FILMH] )
     { 
@@ -9013,7 +8920,6 @@ assemble_film_particles(  double time,	/* present time value */
        q[p] = LubAux->q[p];
        v[p] = LubAux->v_avg[p];
        q_old[p] = LubAux_old->q[p];
-       v_old[p] = LubAux_old->v_avg[p];
        for (j=0; j<ei->dof[SHELL_PARTC]; j++)
           {
            dq_dp1[p][j] = LubAux->dq_dp1[p][j];
@@ -9635,7 +9541,6 @@ void dPdz_function(
   /* Parameters */
   dbl Pgas, Pgas_S, Pgas_nbar, Pgas_S_nbar;
   dbl Pcap, Pcap_S;
-  dbl Plub_min;
 
   /* Load properties */
   dbl Patm = mp->PorousShellPatm;
@@ -9655,7 +9560,6 @@ void dPdz_function(
 
   /* Calculate minimum lubrication pressure */
   Pgas        = (P0)*nbar/(1-dS)-(Pref-Patm);
-  Plub_min    = -Pcap+Pgas;
   
   /* Calculate gas pressure */
   Pgas        = P0*nbar/(1-S) + (Pref-Patm);
@@ -10812,7 +10716,7 @@ assemble_porous_shell_open(
   }
 
   dbl E_MASS[MDE], E_MASS_P[MDE];
-  dbl Pnode, Snode, dSdPnode, dSdP_Pnode;
+  dbl Pnode, dSdPnode, dSdP_Pnode;
   dbl d_cap_pres[2], cap_pres;
   d_cap_pres[0] = d_cap_pres[1] = 0.;
   dbl Patm = mp->PorousShellPatm;
@@ -10822,7 +10726,8 @@ assemble_porous_shell_open(
     cap_pres = Patm - Pnode;
     //Snode = shell_saturation_pressure_curve(Pnode, &dSdPnode, &dSdP_Pnode);
    
-    Snode = load_saturation(phi, cap_pres, d_cap_pres);
+    /* CHECK FOR REMOVAL */
+    load_saturation(phi, cap_pres, d_cap_pres);
     dSdPnode = mp->d_saturation[SHELL_PRESS_OPEN];
     dSdP_Pnode = mp->d_d_saturation[SHELL_PRESS_OPEN][SHELL_PRESS_OPEN];
 
@@ -11519,7 +11424,7 @@ assemble_porous_shell_open_2(
   }
 
   dbl E_MASS[MDE], E_MASS_P[MDE];
-  dbl Pnode, Snode, dSdPnode, dSdP_Pnode;
+  dbl Pnode, dSdPnode, dSdP_Pnode;
   dbl d_cap_pres[2], cap_pres;
   d_cap_pres[0] = d_cap_pres[1] = 0.;
   dbl Patm = mp->PorousShellPatm;
@@ -11529,7 +11434,8 @@ assemble_porous_shell_open_2(
     cap_pres = Patm - Pnode;
     //Snode = shell_saturation_pressure_curve(Pnode, &dSdPnode, &dSdP_Pnode);
    
-    Snode = load_saturation(phi, cap_pres, d_cap_pres);
+    /* CHECK FOR REMOVAL */
+    load_saturation(phi, cap_pres, d_cap_pres);
     dSdPnode = mp->d_saturation[SHELL_PRESS_OPEN_2];
     dSdP_Pnode = mp->d_d_saturation[SHELL_PRESS_OPEN_2][SHELL_PRESS_OPEN_2];
 
@@ -11880,12 +11786,10 @@ shell_lubr_solid_struct_bc(double func[DIM],
 			   const Exo_DB *exo,
 			   const double scale)
 {
-  int  j, jvar, p, var, k;
+  int  j, jvar, p, var;
   int *n_dof = NULL;
-  PROBLEM_DESCRIPTION_STRUCT *pd0;
                                                                                 
   /* Unpack variables from structures for local convenience. */
-  pd0 = pd;
 
   /*
    * Prepare geometry
@@ -11919,7 +11823,6 @@ shell_lubr_solid_struct_bc(double func[DIM],
 		{
 		  for(p=0; p<pd->Num_Dim; p++)
 		    {
-		      k = dof_map[j];
 		      d_func[p][var][j] -=
 			scale*fv->dsnormal_dx[p][jvar][j]*fv->lubp;
 		    }
@@ -12645,10 +12548,8 @@ assemble_lubrication_power_law( double time,    /* present time value */
   dbl *grad_P, *grad_II_P;
   grad_P = (double *) malloc(DIM * sizeof(double));
   grad_II_P = (double *) malloc(DIM * sizeof(double));
-  dbl sigma;
   dbl mu, mu0, nexp;
-  dbl veloc, veloU[DIM], veloL[DIM];
-
+  dbl veloU[DIM], veloL[DIM];
 
   dbl advection, diffusion, source;
 
@@ -12732,10 +12633,8 @@ assemble_lubrication_power_law( double time,    /* present time value */
    mu = mu0;
    nexp = gn->nexp;
 
-   sigma = mp->surface_tension;
 
-
-  veloc = velocity_function_model(veloU, veloL, time, dt);
+  velocity_function_model(veloU, veloL, time, dt);
 
 
   /* Calculate flow rate */

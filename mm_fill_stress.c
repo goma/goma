@@ -112,8 +112,6 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
   int i, j, status;
 
   dbl v[DIM];			        /* Velocity field. */
-  dbl xx[DIM];	        		/* position field. */
-  dbl x_old;		        	/* old position field. */
   dbl x_dot[DIM];			/* current position field derivative wrt time. */
   dbl h3;		        	/* Volume element (scale factors). */
   dbl dh3dmesh_pj;	        	/* Sensitivity to (p,j) mesh dof. */
@@ -203,10 +201,6 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
   dbl alpha;     /* This is the Geisekus mobility parameter */
   dbl lambda=0;    /* polymer relaxation constant */
 
-  /*  shift function */
-  dbl at;
-  dbl wlf_denom;
-
   /* advective terms are precalculated */
   dbl v_dot_del_g[DIM][DIM];
   dbl x_dot_del_g[DIM][DIM];
@@ -273,8 +267,6 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
       /* note, these are zero for steady calculations */
       if (  pd->TimeIntegration != STEADY &&  pd->v[MESH_DISPLACEMENT1+a] )
 	{
-	  xx[a] = fv->x[a];
-	  x_old = fv_old->x[a];
 	  x_dot[a] = fv_dot->x[a];
 	}
       else
@@ -364,24 +356,6 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 
   (void) stress_eqn_pointer(v_s);
   (void) stress_eqn_pointer(R_s);
-
-      /*  shift factor  */
-      if(vn->shiftModel == CONSTANT)
-	{
-	  at = vn->shift[0];
-	}
-      else if(vn->shiftModel == MODIFIED_WLF)
-	{
-  	wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
-  	if(wlf_denom != 0.)
-        	{
-      		at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
-        	}
-  	else
-    		{ 
-      		at = 1.;
-    		} 
-	}
 
   /* Begin loop over modes */
   for ( mode=0; mode<vn->modes; mode++)
@@ -1378,8 +1352,6 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 
   int i, j, status, mode;
   dbl v[DIM];			        /* Velocity field. */
-  dbl xx[DIM];	        		/* position field. */
-  dbl x_old;		        	/* old position field. */
   dbl x_dot[DIM];			/* current position field derivative wrt time. */
   dbl h3;		        	/* Volume element (scale factors). */
   dbl dh3dmesh_pj;	        	/* Sensitivity to (p,j) mesh dof. */
@@ -1537,8 +1509,6 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       /* note, these are zero for steady calculations */
       if (  pd->TimeIntegration != STEADY &&  pd->v[MESH_DISPLACEMENT1+a] )
 	{
-	  xx[a] = fv->x[a];
-	  x_old = fv_old->x[a];
 	  x_dot[a] = fv_dot->x[a];
 	}
       else
@@ -2482,8 +2452,6 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 
   int i, j, mode;
   dbl v[DIM];			        /* Velocity field. */
-  dbl xx[DIM];	        		/* position field. */
-  dbl x_old;		        	/* old position field. */
   dbl x_dot[DIM];			/* current position field derivative wrt time. */
   dbl h3;		        	/* Volume element (scale factors). */
   dbl dh3dmesh_pj;	        	/* Sensitivity to (p,j) mesh dof. */
@@ -2499,7 +2467,6 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
   dbl advection;	
   dbl advection_a, advection_b, advection_c, advection_d;
   dbl source;
-  dbl source1;
   dbl source_a=0, source_b=0, source_c=0;
 
   /*
@@ -2626,8 +2593,6 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
       /* note, these are zero for steady calculations */
       if (  pd->TimeIntegration != STEADY &&  pd->v[MESH_DISPLACEMENT1+a] )
 	{
-	  xx[a] = fv->x[a];
-	  x_old = fv_old->x[a];
 	  x_dot[a] = fv_dot->x[a];
 	}
       else
@@ -2903,7 +2868,6 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				  phi_j = bf[var]->phi[j];
 				  
 				  source    = 0.;
-				  source1    = 0.;
 				  if ( pd->e[eqn] & T_SOURCE )
 				    {
 				      source -=  s[a][b] * (1.-H_ls)/(mup*mup)* d_mup->T[j];

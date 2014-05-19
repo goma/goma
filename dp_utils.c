@@ -320,13 +320,11 @@ void
 ddd_set_commit(DDD p)
 {
 #ifdef PARALLEL
-  int rtn;
-
-  rtn = MPI_Type_struct(p->num_members, p->block_count, p->address,
-			p->data_type, &p->new_type);
-  rtn = MPI_Type_commit(&p->new_type);
-  rtn = MPI_Type_extent(p->new_type, &p->extent);
-  rtn = MPI_Type_size(p->new_type, &p->size);
+  MPI_Type_struct(p->num_members, p->block_count, p->address,
+		  p->data_type, &p->new_type);
+  MPI_Type_commit(&p->new_type);
+  MPI_Type_extent(p->new_type, &p->extent);
+  MPI_Type_size(p->new_type, &p->size);
   /*  rtn = MPI_Type_count(p->new_type, &p->count); */
 #endif
 
@@ -339,27 +337,25 @@ ddd_set_commit(DDD p)
 char *
 type2string(MPI_Datatype type)
 {
-  Strcpy_rtn strcpy_rtn;
-
   if( type == MPI_INT )
     {
-      strcpy_rtn = strcpy(mpistringbuffer, "MPI_INT");
+      strcpy(mpistringbuffer, "MPI_INT");
     }
   else if( type == MPI_CHAR )
     {
-      strcpy_rtn = strcpy(mpistringbuffer, "MPI_CHAR");
+      strcpy(mpistringbuffer, "MPI_CHAR");
     }
   else if( type == MPI_FLOAT )
     {
-      strcpy_rtn = strcpy(mpistringbuffer, "MPI_FLOAT");
+      strcpy(mpistringbuffer, "MPI_FLOAT");
     }
   else if( type == MPI_DOUBLE )
     {
-      strcpy_rtn = strcpy(mpistringbuffer, "MPI_DOUBLE");
+      strcpy(mpistringbuffer, "MPI_DOUBLE");
     }
   else
     {
-      strcpy_rtn = strcpy(mpistringbuffer, "MPI_WHAT?");
+      strcpy(mpistringbuffer, "MPI_WHAT?");
     }
 
   return(mpistringbuffer);

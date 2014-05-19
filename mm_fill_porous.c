@@ -1351,9 +1351,9 @@ load_porous_properties_nodes(int lnn)
      *
      **********************************************************************/
 {
-  double p_gas_star, saturation;
+  double p_gas_star;
   const int i_pl = 0, i_pg = 1, i_pore = 2, i_pe = 3;
-  double d_cap_pres[4], cap_pres;
+  double d_cap_pres[4];
   int w;
 
 
@@ -1432,7 +1432,7 @@ load_porous_properties_nodes(int lnn)
       }
     } else if (mp->PorousMediaType == POROUS_TWO_PHASE) {
          p_gas_star = fv->p_gas;
-	 cap_pres = pmv->cap_pres = p_gas_star - fv->p_liq;
+	 pmv->cap_pres = p_gas_star - fv->p_liq;
 	 d_cap_pres[i_pl] = -1.;    
 	 d_cap_pres[i_pg] = 1.;
 	 d_cap_pres[i_pe] =  0.;
@@ -1489,7 +1489,7 @@ load_porous_properties_nodes(int lnn)
 		    Gauss-points better be equal to nodes per element, or there
 		    are no guarantees what will happen... */
 
-   saturation = load_saturation(mp->porosity, pmv->cap_pres, d_cap_pres);
+   load_saturation(mp->porosity, pmv->cap_pres, d_cap_pres);
   }
   /*
    *   Calculate bulk mass concentrations of all species.
@@ -1888,9 +1888,6 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
   double *grad_phi_i, dlamdPl, tmp = 0.0, *grad_phi_j;
   double phi_j, d_cap_pres[3];
   double tau = 0.0;
-
-  static int is_initialized = FALSE;
-
 
   /* Storage for call to get_convection_velocity()
    *  -> lagrangian motion of solid
@@ -2709,7 +2706,6 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
       }
     } /* end of SUPG */
   } /* end of if Jacobian */
-  is_initialized = TRUE;
   return 0;
 }
 /* end of get_porous_part_sat_terms */
@@ -3150,7 +3146,6 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
   int w, j, a, b, p, err, var;
   const int i_pl = 0, i_pore = 2, i_pe=3;
   double *phi_ptr;
-  double x_dot[DIM];
   double n_pow = 1./0.5;
 
   /*
@@ -3220,17 +3215,6 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
       err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
       EH(err, "Error in calculating effective convection velocity");
 
-      /* This gets the mesh velocity, which is also needed */
-      for (a = 0; a < DIM; a++) x_dot[a] = 0.0;
-      if (pd->TimeIntegration != STEADY) {
-	if (pd->v[MESH_DISPLACEMENT1]) {
-	  for (a = 0; a < DIM; a++) {
-	    x_dot[a] = fv_dot->x[a];
-	  }
-	}
-      }
-    
-  
       /*
        * CAPACITY TERM -
        *    -> no capacity term for the solid phase
@@ -4520,7 +4504,7 @@ load_permeability(void)
      *    pmv->d_d_r_pore[][]
      *************************************************************************/
 {
-  int i, j, err;
+  int i, j;
   double factor;
 
   if (mp->PermeabilityModel == CONSTANT || 
@@ -4580,7 +4564,7 @@ load_permeability(void)
     }
   else if (mp->PermeabilityModel == USER)
     {
-      err = usr_permeability (mp->u_permeability);
+      usr_permeability (mp->u_permeability);
     }
   else if (mp->PermeabilityModel == PSD_VOL  ||
 	   mp->PermeabilityModel == PSD_WEXP ||
@@ -5143,7 +5127,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
   double rad, d_sat_d_rad = 1e12, d_d_sat_d_rad = 1e12 , frac;
   /* new variables for table option */
   double interp_val, var1[3], varold[3], slope;
-  int var, iavoid;
+  int var;
   /* new variables for tanh option */
   double con_a, con_b, con_c, con_d, cap_pres_clip;
 
@@ -6197,7 +6181,6 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
   else if (mp->SaturationModel == TABLE)
     {
       struct  Data_Table *table_local; 
-      iavoid = 0;
       /* next section is essentially apply_table_mp */
       table_local = MP_Tables[mp->saturation_tableid];
       for (i = 0;i < table_local->columns - 1; i++) {
@@ -6323,7 +6306,7 @@ load_gas_conc(double porosity, double cap_pres, double d_cap_pres[2])
   double Pg_old = 0.0, rhosat_old = 0.0, Psat_old = 0.0, T_old = 0.0;
   double drhosat_dT_old = 0.0, dPsat_dT_old, d_dPsat_dT_old;
   double term_1 = 0.0, term_2 = 0.0, sum_1 = 0.0;
-  double term_1o, term_2o, sum_1o;
+  double term_1o, term_2o;
   const int i_pl = 0, i_pg = 1, i_pe = 3;
   int first_porous_var = POR_LAST - MAX_POROUS_NUM + 1;
 
@@ -6561,8 +6544,6 @@ load_gas_conc(double porosity, double cap_pres, double d_cap_pres[2])
                         pc_rhort_old/T_old;
               term_2o = drhosat_dT_old * 
                         pmv_old->gas_density_solvents[i_pl]/rhosat_old;
-              sum_1o  = -1.0/T_old + 
-                        (term_1o+term_2o)/pmv_old->gas_density_solvents[i_pl];
               pmv_old->d_gas_density_solvents[i_pl][POR_TEMP] = term_1o + term_2o;
               pmv_old->d_gas_density_solvents[i_pe][POR_LIQ_PRES] = 
                        pmv_old->enthalpy[1] * 
@@ -6762,10 +6743,10 @@ load_gas_conc_flat(double porosity, double cap_pres, double d_cap_pres[2])
       */
 {
   int w, w1, w2;
-  double m_rta, m_rtw, ma_mw, pc_rhort;
+  double m_rta, m_rtw, ma_mw;
   double m_rta_old = 0.0, m_rtw_old = 0.0;
-  double rho_l, rho_sat, Pg, Psat, T;
-  double rho_wg_sat, TC;
+  double rho_sat, Pg, Psat, T;
+  double TC;
   double drho_wgsat_dP, drho_wgsat_dT, d_drho_wgsat_dP[2],
          d_drho_wgsat_dT[2];
   double drhosat_dT = 0.0,  d_drhosat_dT = 0.0, dPsat_dT = 0.0, d_dPsat_dT = 0.0;
@@ -6806,12 +6787,6 @@ load_gas_conc_flat(double porosity, double cap_pres, double d_cap_pres[2])
      *  mp->u_porous_gas_constants[2] is the temperature
      *  mp->u_porous_gas_constants[3] is the ambient base pressure of gas phase
      */
-
-
-      /* Note - liquid density is a constant taken from the input file
-       *        and is ASSUMED CONSTANT 
-       */
-      rho_l =  mp->u_porous_vapor_pressure[i_pl][1];
 
       /* If solving the gas/energy equation, replace constants in the above model
        * with values consistent with current solution variables 
@@ -6864,7 +6839,7 @@ load_gas_conc_flat(double porosity, double cap_pres, double d_cap_pres[2])
 
       rho_sat = m_rtw*Psat;
       TC = T-273.15;
-      rho_wg_sat = rho_sat_water_vap_EOS(Psat, TC, &drho_wgsat_dP, &drho_wgsat_dT,
+      rho_sat_water_vap_EOS(Psat, TC, &drho_wgsat_dP, &drho_wgsat_dT,
                                          d_drho_wgsat_dP, d_drho_wgsat_dT);
      
       if (pd->e[R_POR_ENERGY])
@@ -6942,9 +6917,6 @@ load_gas_conc_flat(double porosity, double cap_pres, double d_cap_pres[2])
       
       if (pd->e[R_POR_ENERGY]) 
 	{
-
-          /*  Pc / (rho_l * R * T) */
-          pc_rhort = pmv->cap_pres / m_rtw / rho_l;
 
           /* Add energy terms to water eqn senstivities */
           pmv->d_gas_density_solvents[i_pl][POR_TEMP] =  drhosat_dT * mp->saturation;

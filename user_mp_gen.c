@@ -111,16 +111,20 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
 		    dbl *param,	/* ptr to the user-defined parameter list */
 		    dbl time)
 {
-  int eqn, var;
-  int err;
+  int var;
+  
   int dim;
   int a, b;
 
-  dbl X[DIM], T, C[MAX_CONC]; /* Convenient local variables */
-  dbl rho, Cp, K;             /* Convenient property names  */
-  dbl dCpdT[MDE];
+  /*  int eqn */
+  /*  int err; */
+  /*  dbl X[DIM], T, C[MAX_CONC]; */ /* Convenient local variables */
+  /*  dbl rho, Cp, K; */            /* Convenient property names  */
 
-  int i, j;
+  /*  dbl dCpdT[MDE];*/
+
+  /*  int i; */
+  int j;
 
   /* Begin Execution */
  /**********************************************************/
@@ -132,24 +136,26 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
  /**********************************************************/
 
   dim   = pd->Num_Dim;
-  eqn   = R_ENERGY;			
+  /*  eqn   = R_ENERGY;	*/
 
   /**********************************************************/
   
   /***Load up convenient local variables and properties******/
   /*NB This ought to be done once for all fields at gauss pt*/
-  
+
+  /*  
   T = fv->T;                                       
   for(a=0; a<DIM; a++)X[a] = fv->x[a];		   
   for(i=0; i<pd->Num_Species_Eqn; i++) C[i] = fv->c[i];
 
   rho  = mp->density;
   K   = mp->thermal_conductivity;
-
+  */
   /* Accounting here must be made of potentially variable heat capacity */
+  /*
   if (mp->HeatCapacityModel == CONSTANT)
     {  
-      Cp = mp->heat_capacity;  
+      Cp = mp->heat_capacity;
     } 
   else if (mp->HeatCapacityModel == USER) 
     {
@@ -162,7 +168,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
 	  dCpdT[j]= mp->d_heat_capacity[var]*bf[var]->phi[j];
 	}
     }
-
+  */
   /**********************************************************/
 
   /*
@@ -370,10 +376,10 @@ usr_viscosity_gen(dbl *mu,
 		  dbl d_mu_dC[MAX_CONC][MDE],
 		  dbl *param)	/* user-defined parameter list               */
 {
-  int err;
   int a, b;
 
-  int var, var_offset;
+  int var;
+  /* int var_offset; */
   int w;
 
   int mdofs=0,vdofs;
@@ -421,7 +427,7 @@ usr_viscosity_gen(dbl *mu,
       mdofs = ei->dof[R_MESH1];
     }
   
-  err = calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
   
   
   if(gammadot != 0.)
@@ -507,7 +513,7 @@ usr_viscosity_gen(dbl *mu,
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
 	  var = MASS_FRACTION;
-	  var_offset = MAX_VARIABLE_TYPES + w;
+	  /*	  var_offset = MAX_VARIABLE_TYPES + w; */
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
 	      d_mu_dC[w][j] = dmudC * bf[var]->phi[j];

@@ -1846,7 +1846,6 @@ fvelo_tangential_bc(double func[],
 			      contact lines                                */
   double xdcl[MAX_PDIM];   /* coordinates of dynamic contact lines         */
   dbl ead;			/* "exp( -distance_to_singularity / L_slip )" */
-  double disp;
   double vtang_user, vel_user[MAX_PDIM], vel_user_dx[MAX_PDIM][MAX_PDIM];
   
   /***************************** EXECUTION BEGINS *******************************/
@@ -1859,8 +1858,6 @@ fvelo_tangential_bc(double func[],
 
     /* calculate position of dynamic contact line from dcl_node               */
     for (icount = 0; icount < pd->Num_Dim; icount ++) {
-      disp = x[Index_Solution(dcl_node, MESH_DISPLACEMENT1+icount,
-			      0, 0, -1)];
       /*
        * Do the distance calculation based on undeformed geometry ...
        * this save us Jacobian entries in uncharted sections of the
@@ -2042,7 +2039,7 @@ fvelo_tangential_bc(double func[],
 	double velo_stream, d_phi_dxi[MDE];
 	double dx_dxi[DIM], sign;
 	int el1 = ei->ielem;
-	int el2, nf, err, i;
+	int el2, nf, i;
 	int *n_dof = NULL;
 	int node, index, dof_map[MDE];
 	int n_dofptr[MAX_VARIABLE_TYPES][MDE];
@@ -2053,7 +2050,7 @@ fvelo_tangential_bc(double func[],
 	el2 = elem_friends[el1][0];
 	if (nf != 1) WH(-1, "WARNING: Not set up for more than one element friend!");
 	n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
-	err = load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, id_side, xi, exo);
+	load_neighbor_var_data(el1, el2, n_dof, dof_map, n_dofptr, id_side, xi, exo);
     	for (kdir=0; kdir<n_dof[SHELL_BDYVELO]; kdir++)
       	  {
 	    d_phi_dxi[kdir]= bf[SHELL_BDYVELO]->dphidxi[kdir][0];
@@ -3118,7 +3115,7 @@ fvelo_slip_bc(double func[MAX_PDIM],
   double xdcl[MAX_PDIM];        /* coordinates of dynamic contact lines         */
   double disp;                  /* DCL point displacement */
   double betainv;		/* inverse of slip coefficient */
-  double dot_prod;
+  /* double dot_prod; */
   double d_betainv_dvslip_mag, d_betainv_dP;
   double d_betainv_dF[MDE];
   double sign;
@@ -3169,7 +3166,7 @@ fvelo_slip_bc(double func[MAX_PDIM],
 #ifdef COUPLED_FILL
       if ( af->Assemble_Jacobian ) load_lsi_derivs();
 #endif /* COUPLED_FILL */
-      dot_prod = fabs( dot_product( pd->Num_Dim, lsi->normal, fv->snormal) );
+      /* dot_prod = fabs( dot_product( pd->Num_Dim, lsi->normal, fv->snormal) ); */
     }
 
   if( type == VELO_SLIP_FILL_BC  || type == VELO_SLIP_ROT_FILL_BC )
@@ -3594,7 +3591,7 @@ fvelo_slip_level(double func[MAX_PDIM],
                  const double tt,
                  const double dt)
 {
-  int j, var, jvar, p, q, b, dim;
+  int j, var, jvar, p, q, b;
   double phi_j, vs[MAX_PDIM] ; 
   double beta, betainv;
   double d_beta_dF[MDE];
@@ -3610,8 +3607,6 @@ fvelo_slip_level(double func[MAX_PDIM],
     return;
 
   if (!af->Assemble_Jacobian) d_Pi = NULL; 
-
-  dim = pd->Num_Dim;
 
   load_lsi( width );
 #ifdef COUPLED_FILL
@@ -3860,7 +3855,7 @@ load_surface_tension (
              double dsigma_dx[][MDE] )             /* dimensions [DIM][MDE] */
 
 {
-  int err, a, b, p, j;
+  int a, b, p, j;
   double dil, fact;
       /* load surface tension */
       if (mp->SurfaceTensionModel == CONSTANT)
@@ -3869,11 +3864,11 @@ load_surface_tension (
 	}
       else if(mp->SurfaceTensionModel == USER )
 	{
-	  err = usr_surface_tension(mp->u_surface_tension);
+	  usr_surface_tension(mp->u_surface_tension);
 	}
       else if(mp->SurfaceTensionModel == DILATION)
 	{
-	  err = belly_flop(elc->lame_mu);
+	  belly_flop(elc->lame_mu);
           if( neg_elem_volume ) return;
 	  /* calculate the surface dilation  tt..F */
 	  dil = 1.;
@@ -4165,7 +4160,7 @@ sheet_tension ( double cfunc[MDE][DIM],
   int eqn,var;
   int p,q;
   int *n_dof = NULL;
-  int nf, el1, err, var_sh_tens = FALSE;
+  int nf, el1, var_sh_tens = FALSE;
   int n_dofptr[MAX_VARIABLE_TYPES][MDE], dof_map[MDE], T_dof[MDE];
   
   double dY_dxi, dX_dxi, dT_dxi, detJ;
@@ -4196,8 +4191,8 @@ sheet_tension ( double cfunc[MDE][DIM],
       var_sh_tens = TRUE;
       el1 = elem_friends[ei->ielem][0];
       n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
-      err = load_neighbor_var_data(ei->ielem, el1, n_dof, dof_map,
-                                   n_dofptr, id_side, xi, exo);
+      load_neighbor_var_data(ei->ielem, el1, n_dof, dof_map,
+			     n_dofptr, id_side, xi, exo);
       sheet_tension = fv->sh_tens;  /* Overwrite input with value at this GP */
     }
 
@@ -4520,9 +4515,6 @@ fn_dot_T(double cfunc[MDE][DIM],
   int j, i, id, var, a, eqn, I, ldof, w, dim;
   int p, q, jvar;		/* Degree of freedom counter                 */
 
-  int DeformingMesh;		/* Logical.                                  */
-
-  double dist;			/* distance from surface to wall             */
   double dist2;			/* squared distance from surface to wall     */
   double yplane;
 				/* coordinates of plane                      */
@@ -4535,12 +4527,10 @@ fn_dot_T(double cfunc[MDE][DIM],
   if(pr != 0.) {
     yplane = 0.039878;
     dist2= pow(yplane - fv->x[0], 2.0);
-    dist = yplane - fv->x[0];
   }
 /* if pr is 0. => we don't want free surface/wall repulsion and just
    ensure that dist and dist2 are nonzero so nothing bad happens */
   else {
-    dist = 1.;
     dist2 =1.;
   }
   
@@ -4549,8 +4539,6 @@ fn_dot_T(double cfunc[MDE][DIM],
   if (Linear_Stability == LSA_3D_OF_2D || Linear_Stability == LSA_3D_OF_2D_SAVE)
     dim = VIM;
 
-  DeformingMesh = pd->e[R_MESH1]; /* Use to catch bad references to moving */
-				  /* mesh which isn't. */
   eqn = VELOCITY1;
 
   if (af->Assemble_Jacobian)
@@ -4738,7 +4726,6 @@ apply_repulsion (double cfunc[MDE][DIM],
   
   int j, i, id, var, a, eqn, I, ldof;
   int jvar;			/* Degree of freedom counter                 */
-  int DeformingMesh;		/* Logical. */
 
   double d_dist[DIM];		/* distance from surface to wall             */
   double dist=0;		/* squared distance from surface to wall     */
@@ -4761,8 +4748,6 @@ apply_repulsion (double cfunc[MDE][DIM],
   d_dist[2] = SGN(factor)*cp/denom;
 
   
-  DeformingMesh = pd->e[R_MESH1]; /* Use to catch bad references to moving */
-				  /* mesh which isn't. */
   eqn = VELOCITY1;
 
   if (af->Assemble_Jacobian)
@@ -4854,14 +4839,12 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
     double t_veloc[2], dt_veloc_dx[2][MAX_PDIM][MAX_PDIM][MDE];
 
   int j, i, id, var, a, eqn, I, ldof;
-  int DeformingMesh;		/* Logical. */
+
 /***************************** EXECUTION BEGINS ******************************/
 /* if pr is 0. => we don't want free surface/wall repulsion and just
    ensure that dist and dist2 are nonzero so nothing bad happens */
   if (P_rep == 0) return;
 
-  DeformingMesh = pd->e[R_MESH1]; /* Use to catch bad references to moving */
-				  /* mesh which isn't. */
   eqn = VELOCITY1;
     if(af->Assemble_LSA_Mass_Matrix)
       return;
@@ -5625,7 +5608,7 @@ flow_n_dot_T_gradv(double func[DIM],
 *
 *****************************************************************************/
 {
-  int i, j, var, p, q, mdofs=0;
+  int i, j, var, p, q;
   int a, b;
   double press;
 
@@ -5636,9 +5619,6 @@ flow_n_dot_T_gradv(double func[DIM],
   dbl mu;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
-
-  dbl grad_phi_e_gam[MDE][DIM][DIM][DIM];
-  dbl d_gamma_dot_dmesh[DIM][DIM][DIM][MDE];
 
   if(af->Assemble_LSA_Mass_Matrix)
     return;
@@ -5665,58 +5645,6 @@ flow_n_dot_T_gradv(double func[DIM],
                 mu = viscosity(gn, gamma, d_mu);
      if (af->Assemble_Jacobian)
        {
-
-
- if ( pd->e[R_MESH1] )
-    {
-      mdofs = ei->dof[R_MESH1];
-    }
-
-  var = VELOCITY1;
-  for ( p=0; p<VIM; p++)
-    {
-      for ( q=0; q<VIM; q++)
-        {
-          for ( a=0; a<VIM; a++)
-            {
-              for ( i=0; i<ei->dof[var]; i++)
-                {
-                  grad_phi_e_gam[i][a] [p][q] =
-                    bf[var]->grad_phi_e[i][a] [p][q]
-                    + bf[var]->grad_phi_e[i][a] [q][p]  ;
-                }
-            }
-        }
-    }
-
-
-
-  /*
-   * d( gamma_dot )/dmesh
-   */
-
-  if ( pd->e[R_MESH1] )
-    {
-
-      for ( p=0; p<VIM; p++)
-        {
-          for ( q=0; q<VIM; q++)
-            {
-              for ( b=0; b<VIM; b++)
-                {
-                  for ( j=0; j<mdofs; j++)
-                    {
-
-                      d_gamma_dot_dmesh[p][q] [b][j] =
-                        fv->d_grad_v_dmesh[p][q] [b][j] +
-                        fv->d_grad_v_dmesh[q][p] [b][j] ;
-                    }
-                }
-
-            }
-        }
-
-    }
 
 
   var = TEMPERATURE;
@@ -5840,14 +5768,12 @@ PSPG_consistency_bc (double *func,
   int meqn;
   int var1;
   int r, s, t;
-  int w = 0, w0;
+  int w = 0;
   int v_s[MAX_MODES][DIM][DIM];
   const int v_g[DIM][DIM] =
   { {  VELOCITY_GRADIENT11, VELOCITY_GRADIENT12, VELOCITY_GRADIENT13 },
     {  VELOCITY_GRADIENT21, VELOCITY_GRADIENT22, VELOCITY_GRADIENT23 },
     {  VELOCITY_GRADIENT31, VELOCITY_GRADIENT32, VELOCITY_GRADIENT33 } };
-
-  int err;
 
   dbl mass;
   dbl source_a;
@@ -5862,7 +5788,7 @@ PSPG_consistency_bc (double *func,
   dbl div_s[DIM];
   dbl div_G[DIM];
 
-  dbl h_elem, h_elem_inv;
+  dbl h_elem;
   dbl rho;
   dbl Re;
   dbl tau_pspg = 0;
@@ -5887,7 +5813,7 @@ PSPG_consistency_bc (double *func,
   dbl d_div_tau_p_dmesh[DIM][DIM][MDE];        /* derivative wrt mesh */
   dbl d_div_tau_p_dvd[DIM][DIM][MDE];          /* derivative wrt vorticity dir */
   dbl d_div_tau_p_dp[DIM][MDE];                /* derivative wrt pressure dir */
-  err = stress_eqn_pointer(v_s);
+  stress_eqn_pointer(v_s);
   
   wim   = dim;
 
@@ -5903,10 +5829,6 @@ PSPG_consistency_bc (double *func,
   h_elem = sqrt(h_elem)/2.; */
 
   h_elem = h_elem_avg;
-  if ( pd->v[MESH_DISPLACEMENT1] )
-    {
-      h_elem_inv=1./(h_elem + 1.0e-10);
-    }      
   
   /* Calculate a simple arithmetic average viscosity and density
      in the element                                              */
@@ -5988,15 +5910,14 @@ PSPG_consistency_bc (double *func,
   memset( d_div_tau_p_dp, 0, sizeof(double) * DIM*MDE);
   if( cr->MassFluxModel == DM_SUSPENSION_BALANCE && PSPG)
     {
-      w0 = (int) mp->u_density[0]; /* This is the species number that is transported HYDRODYNAMICally  */
       /* This is the divergence of the particle stress  */
-  err = divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
+  divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
 				   d_div_tau_p_dv, d_div_tau_p_dmesh, d_div_tau_p_dvd, 
 				   d_div_tau_p_dp, w); 
     }
 
   /* get momentum source term */
-  err = momentum_source_term(f, df, time);
+  momentum_source_term(f, df, time);
   
   for ( a=0; a<dim; a++)
     {
@@ -8056,8 +7977,7 @@ apply_CA_FILL(
      
 {
   int j, var;
-  int a,b,p,q;                /* Degree of freedom counter                   */
-  double phi_j, grad_phi_j[DIM];
+  int a,b,p;                /* Degree of freedom counter                   */
   double cos_ca, sin_ca, sign;
   double nw[DIM], nf[DIM];
   double tmag;
@@ -8126,11 +8046,6 @@ apply_CA_FILL(
 	 for ( j=0; j < ei->dof[var]; j++)
 	   {
 	     /* Fetch the basis functions and derivatives. */
-	     phi_j = bf[var]->phi[j];
-	     for ( q=0; q < dim; q++ )
-	       {
-		 grad_phi_j[q] = bf[var]->grad_phi[j][q];
-	       }
 	     
 	     /* Compute the derivatives term-by-term; */
 	     d_func[p][var][j] = lsi->d_delta_dF[j] 
@@ -8353,7 +8268,6 @@ apply_sharp_ca(  double func[MAX_PDIM],
   int j, var;
   int p;                /* Degree of freedom counter                   */
   double cos_ca, sin_ca, sign;
-  double nw[DIM], nf[DIM];
   int    dim = pd->Num_Dim;
   double t[DIM], dot_prod;
 
@@ -8368,12 +8282,6 @@ apply_sharp_ca(  double func[MAX_PDIM],
   if ( af->Assemble_Jacobian ) load_lsi_derivs();
 #endif /* COUPLED_FILL */
    
-  /* Some shortcuts. */
-  for ( p=0; p < dim; p++)
-    {
-      nw[p] = fv->snormal[p]; /* Normal to the "wall" */
-      nf[p] = lsi->normal[p]; /* Normal to the level set (F=0) */
-    }
   cos_ca = cos( M_PIE*ca/180.0 );
   sin_ca = sin( M_PIE*ca/180.0 );
 
@@ -10006,7 +9914,7 @@ apply_blake_wetting_velocity_sic( double func[MAX_PDIM],
   double t[DIM], tmaginv, dp, sin2;
   double betainv;  /*penalty = pow(BIG_PENALTY*LITTLE_PENALTY, 0.5 );  */
   double nw[MAX_PDIM], nf[MAX_PDIM];
-  double wet_vector[MAX_PDIM], d_wet_vector_dF[MAX_PDIM][MDE];
+  double d_wet_vector_dF[MAX_PDIM][MDE];
   double d_wet_vector_dX[MAX_PDIM][MAX_PDIM][MDE];
   double d_wet_vector_dpj = 0.0, d_triangle_dF;
   double d_t_dFj[MAX_PDIM];
@@ -10110,7 +10018,6 @@ apply_blake_wetting_velocity_sic( double func[MAX_PDIM],
       /*  Should change surface_tension to come from mp->  */
       g = surf_tens * mp->surface_tension;
 
-      for(a=0;a<MAX_PDIM;a++) wet_vector[a]=0.0;
       memset( d_wet_vector_dF, 0, sizeof(double)*MAX_PDIM*MDE );
       memset( d_wet_vector_dX, 0, sizeof(double)*MAX_PDIM*MAX_PDIM*MDE );
       memset(d_t_dFj, 0, sizeof(double)*MAX_PDIM);
@@ -10715,7 +10622,7 @@ apply_wetting_tension
        }
      else
        {
-	 double  t[3], l[3], dot_prod=0.0 ;
+	 double  t[3], l[3];
 
 	 cross_really_simple_vectors( normal_ls, fv->snormal, l );
 
@@ -10725,8 +10632,6 @@ apply_wetting_tension
 
 	 normalize_really_simple_vector( t, pd->Num_Dim );
 	 
-	 dot_prod = dot_product( pd->Num_Dim, t, normal_ls);
-
 	 for (p=0; p<pd->Num_Dim; p++)
 	   {
 	     func[p] = delta_ls * wetting_tension  * t[p];
@@ -10836,7 +10741,7 @@ continuous_tangent_velocity(double func[DIM],
 			    double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 			    const int ielem_dim) /* dimension of element     */
 {
-    int j, kdir, dim, var, p;
+    int j, kdir, var, p;
     double phi_j;            /* Basis Function			      */
 
 
@@ -10844,7 +10749,6 @@ continuous_tangent_velocity(double func[DIM],
       return;
 
 /*  initialize variables */
-    dim = pd->Num_Dim;
 
     if (pd->Num_Dim == 2) 
       {
@@ -10901,7 +10805,7 @@ continuous_normal_velocity(double func[DIM],
 			   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 			   const int ielem_dim) /* dimension of element     */
 {
-    int j, kdir, dim, var, p;
+    int j, kdir, var, p;
     double phi_j;            /* Basis Function			      */
 
 
@@ -10909,8 +10813,6 @@ continuous_normal_velocity(double func[DIM],
       return;
 
 /*  initialize variables */
-    dim = pd->Num_Dim;
-
 
     if (pd->Num_Dim == 2) 
       {
@@ -10976,7 +10878,7 @@ discontinuous_velocity(
 				 * explicit (tt = 1) to implicit (tt = 0)    */
  const dbl dt)                  /* current value of the time step            */
 {
-    int idblock=0, j, kdir, dim, var, p, w;
+    int idblock=0, j, kdir, var, p, w;
     double phi_j;                    /* Basis Function			     */
     double conc_insoluble_species=0; /* concentration of insoluble species   *
 				      * like air                             */
@@ -10987,9 +10889,6 @@ discontinuous_velocity(
     double vnormal=0;
 
 /*  initialize variables */
-    dim = pd->Num_Dim;
-
-
 
     /* Calculate the residual contribution	*/
     if(mode == EVAPORATION) idblock = eb_mat_gas;
@@ -11548,7 +11447,6 @@ qnobc_surf(double func[DIM],
   
 /* Local variables */
   
-  int dim;
   int j,b,w,p;
   int var;
 
@@ -11562,7 +11460,6 @@ qnobc_surf(double func[DIM],
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
-  dim = pd->Num_Dim;
 
   heat_flux( q, d_q, time );
 
@@ -12185,11 +12082,11 @@ calculate_laser_flux ( const double p[],
 ********************************************************************************/  
 {
   int ispot,ispot_total,sw_trv_spt,onnegx,ns_id1,idx1,use_pth,node_1;
-  double q_laserpow,absorp,absorp_base,sw_vn,t_cutoff,t_tapper,qlaser0;
+  double q_laserpow,sw_vn,t_cutoff,t_tapper,qlaser0;
   double e_concen,radius_r,t_deltpk,t_deltst,sw_th_exp,laser_x,laser_y;
   double laser_z,laser_x_dir,laser_y_dir,laser_z_dir,t_spot,spot_space;
   double trav_rad,t_travrad0,beam_u,beam_v,beam_w,base_qlaser,initial_pos1;
-  double delta_pos1, actual_pos1 = 0.0,T_melt,T_boil,T_ref, theta, t_0, rispot = 0.0,R_eff = 0.0;
+  double delta_pos1, actual_pos1 = 0.0, t_0, rispot = 0.0,R_eff = 0.0;
   double x0c,x1c,x2c,center_x = 0.0,center_y = 0.0,center_z = 0.0,radial_pos,beam_vx,beam_vy,beam_vz;
   double traveldist,darc,ddx,ddy,qlaser,dldx,dldy,dldz;
   
@@ -12197,7 +12094,6 @@ calculate_laser_flux ( const double p[],
 
   q_laserpow  = p[0];
   base_qlaser = p[1];
-  absorp_base = p[2];
   sw_vn       = p[3];
   t_cutoff    = p[4];
   t_tapper    = p[5];
@@ -12264,12 +12160,6 @@ calculate_laser_flux ( const double p[],
       actual_pos1    = (initial_pos1 + delta_pos1);
     }
 
-  absorp = absorp_base;
-  T_melt  = mp->melting_point_liquidus;
-  T_boil  = mp->melting_point_solidus;  /* T_boil stored as T_solidus in mat-file */
-  T_ref   = mp->reference[TEMPERATURE];
-  theta   = fv->T-T_boil;
-       
   /* --------------------------------------------------------------------*/
   /* set laser flux to appropriate power  */           
   
@@ -12676,15 +12566,12 @@ qrad_surf_repulse(double func[DIM],
     double coord[3], axis_pt[3], rad_dir[3], t, R;
     double force = 0.0, d_force = 0.0;
   int j;
-  int DeformingMesh;		/* Logical. */
   
 /***************************** EXECUTION BEGINS *******************************/
   
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
-  DeformingMesh = pd->e[R_MESH1]; /* Use to catch bad references to moving */
-				  /* mesh which isn't. */
 /*  initialize variables */
     dim = pd->Num_Dim;
 
@@ -12823,12 +12710,10 @@ shear_to_shell ( double cfunc[MDE][DIM],
   int eqn,var;
   int p,q;
   int *n_dof = NULL;
-  int nf, el1, err, var_sh_tens = FALSE;
+  int nf, el1;
   int n_dofptr[MAX_VARIABLE_TYPES][MDE], dof_map[MDE];
   
   double dY_dxi, dX_dxi, detJ;
-
-  double surf_sign=0.0;
 
   double Pi[DIM][DIM];
   STRESS_DEPENDENCE_STRUCT d_Pi;
@@ -12855,10 +12740,9 @@ shear_to_shell ( double cfunc[MDE][DIM],
   /* If so, set up assembly to include variable shell tension */
   if (nf == 1 && upd->vp[SHELL_TENSION])
     {
-      var_sh_tens = TRUE;
       el1 = elem_friends[ei->ielem][0];
       n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
-      err = load_neighbor_var_data(ei->ielem, el1, n_dof, dof_map,
+      load_neighbor_var_data(ei->ielem, el1, n_dof, dof_map,
                                    n_dofptr, id_side, xi, exo);
     }
 
@@ -12870,8 +12754,6 @@ shear_to_shell ( double cfunc[MDE][DIM],
   memset( Pi, 0, DIM*DIM*sizeof(double )) ;
   memset ( &d_Pi, 0, sizeof( STRESS_DEPENDENCE_STRUCT ) );
   
-
- surf_sign = -1.0;
 
 #if 0
   for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) 
@@ -13335,7 +13217,7 @@ light_transmission(double func[DIM],
 /* Local variables */
   
   int j, b, w, dim;
-  int eqn = 0, eqn_alt = 0, var, pvar;
+  int eqn = 0, eqn_alt = 0, var;
 
   /*
    *    Radiative transfer equation variables - connect to input file someday
@@ -13344,7 +13226,6 @@ light_transmission(double func[DIM],
   double mucos=1.0;
   double mucos_tran, mu_crit;
   double Grefl, Rrefl, Xrefl, Yrefl;
-  double alpha;				/* Acoustic Absorption */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_alpha_struct; 
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha = &d_alpha_struct;
   double refindex, refratio, direction;			/* Refractive Index */
@@ -13358,7 +13239,7 @@ light_transmission(double func[DIM],
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
-  alpha = light_absorption( d_alpha, time );
+  light_absorption( d_alpha, time );
   refindex = refractive_index( d_n, time );
 
   direction = svect[0]*fv->snormal[0]+svect[1]*fv->snormal[1]+svect[2]*fv->snormal[2];
@@ -13445,7 +13326,6 @@ fprintf(stderr,"refl n nbdy X Y mu mut dir %g %g %g %g %g %g %g\n",refindex,bdy_
 	  var = TEMPERATURE;
 	  if ( pd->v[var] )
 	    {
-	      pvar = upd->vp[var];
 	      for ( j=0; j<ei->dof[var]; j++)
 		{
 		  d_func[0][var][j] =  d_n->T[j]*
@@ -13457,7 +13337,6 @@ fprintf(stderr,"refl n nbdy X Y mu mut dir %g %g %g %g %g %g %g\n",refindex,bdy_
 	      var = MESH_DISPLACEMENT1+b;
 	      if ( pd->v[var] )
 		{
-		  pvar = upd->vp[var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
 		  d_func[0][var][j] =  d_n->X[b][j]*

@@ -1185,8 +1185,6 @@ add_qa_stamp(Exo_DB *exo)
   int k;
   int n;
 
-  Strcpy_rtn strcpy_rtn;
-
   /*  char *new[MAX_QA][4];*/
 
   QA_Record *Q;
@@ -1227,7 +1225,7 @@ add_qa_stamp(Exo_DB *exo)
     {
       for ( j=0; j<4; j++)
 	{
-	  strcpy_rtn = strcpy(Q[i][j], exo->qa_record[i][j]);
+	  strcpy(Q[i][j], exo->qa_record[i][j]);
 	}
     }
 
@@ -1247,8 +1245,8 @@ add_qa_stamp(Exo_DB *exo)
    * Concoct a new record.
    */
 
-  strcpy_rtn = strcpy(Q[n][0], "GOMA");
-  strcpy_rtn = strcpy(Q[n][1], VERSION); /* def'd in std.h for now */
+  strcpy(Q[n][0], "GOMA");
+  strcpy(Q[n][1], VERSION); /* def'd in std.h for now */
   get_date(Q[n][2]);
   get_time(Q[n][3]);
 
@@ -1289,11 +1287,9 @@ add_qa_stamp(Exo_DB *exo)
 void
 add_info_stamp(Exo_DB *exo)
 {
-  int err;
   int i;
   int k;
   int n;
-  char *tmp;
   char **a;
   char buf[MAX_LINE_LENGTH+1];
   time_t now, then;
@@ -1301,7 +1297,6 @@ add_info_stamp(Exo_DB *exo)
   struct passwd *pwe;
 #endif
   struct utsname utsname;
-  Strcpy_rtn strcpy_rtn;
   INFO_Record *I;
 
   n = exo->num_info;
@@ -1335,7 +1330,7 @@ add_info_stamp(Exo_DB *exo)
 
   for ( i=0; i<n; i++)
     {
-      strcpy_rtn = strcpy(I[i], exo->info[i]);
+      strcpy(I[i], exo->info[i]);
     }
 
   /*
@@ -1354,7 +1349,7 @@ add_info_stamp(Exo_DB *exo)
    * Fill in the new records with information about this run.
    */
 
-  strcpy_rtn = strcpy(I[n], "____");
+  strcpy(I[n], "____");
 
   /*
    * -9 -- the command line issued for this simulation
@@ -1390,15 +1385,15 @@ add_info_stamp(Exo_DB *exo)
 	}
     }
 
-  strcpy_rtn = strcpy(I[n+1], buf);
+  strcpy(I[n+1], buf);
 
   /*
    * -8 -- the date and time of the simulation
    */
 
   now = time(&then);
-  err = strftime(buf, MAX_LINE_LENGTH, "%C", localtime(&now));
-  strcpy_rtn = strcpy(I[n+2], buf);
+  strftime(buf, MAX_LINE_LENGTH, "%C", localtime(&now));
+  strcpy(I[n+2], buf);
 
   /*
    * -7 -- current working directory
@@ -1406,14 +1401,14 @@ add_info_stamp(Exo_DB *exo)
 
   if ( ProcID < 8 )		/* too much I/O overhead for many procs */
     {
-      tmp = getcwd(buf, MAX_LINE_LENGTH+1);
+      getcwd(buf, MAX_LINE_LENGTH+1);
     }
   else
     {
-      strcpy_rtn = strcpy(buf, ".");
+      strcpy(buf, ".");
     }
 
-  strcpy_rtn = strcpy(I[n+3], buf);
+  strcpy(I[n+3], buf);
 
   /*
    * -6 -- the name of the user
@@ -1423,24 +1418,24 @@ add_info_stamp(Exo_DB *exo)
 
 #ifdef NO_LEAKY_GETPWUID
   pwe = getpwuid(getuid());
-  strcpy_rtn = strcpy(buf, pwe->pw_name);
+  strcpy(buf, pwe->pw_name);
 #endif
 
-  strcpy_rtn = strcpy(I[n+4], buf);
+  strcpy(I[n+4], buf);
 
   /*
    * -5 through -1 -- the POSIX system information
    */
 
-  err = uname(&utsname);
+  uname(&utsname);
   
   /* Lets be on the safe side put one char less than MAX_LINE_LENGTH into the info buffers */
 
-  strcpy_rtn = strncpy(I[n+5], utsname.sysname, MAX_LINE_LENGTH-1);
-  strcpy_rtn = strncpy(I[n+6], utsname.nodename, MAX_LINE_LENGTH-1);
-  strcpy_rtn = strncpy(I[n+7], utsname.release, MAX_LINE_LENGTH-1);
-  strcpy_rtn = strncpy(I[n+8], utsname.version, MAX_LINE_LENGTH-1);
-  strcpy_rtn = strncpy(I[n+9], utsname.machine, MAX_LINE_LENGTH-1);
+  strncpy(I[n+5], utsname.sysname, MAX_LINE_LENGTH-1);
+  strncpy(I[n+6], utsname.nodename, MAX_LINE_LENGTH-1);
+  strncpy(I[n+7], utsname.release, MAX_LINE_LENGTH-1);
+  strncpy(I[n+8], utsname.version, MAX_LINE_LENGTH-1);
+  strncpy(I[n+9], utsname.machine, MAX_LINE_LENGTH-1);
 
   /*
    * Free the old beast and assign the new one.

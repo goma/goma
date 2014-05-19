@@ -523,7 +523,7 @@ assemble_new_qtensor(dbl *el_length) /* 2 x approximate element length scales */
   int i, j, p, k1;
   int ielem_type, ip_total, ip;
   dbl dp;
-  dbl delta[DIM], xi[DIM], delta_xi[DIM], new_xi[DIM];
+  dbl delta[DIM], xi[DIM], delta_xi[DIM];
   dbl local_q[DIM][DIM], local_q2[DIM][DIM];
   dbl d_qtensor[DIM][DIM][DIM];
 
@@ -581,10 +581,6 @@ assemble_new_qtensor(dbl *el_length) /* 2 x approximate element length scales */
             {
               delta[p] = dp * ( (k1 == 0) ? 1.0 : -1.0);
               map_direction(delta_xi, delta);
-              for (i = 0; i < DIM; i++)
-                {
-                  new_xi[i] = xi[i] + delta_xi[i];
-                }
 
               /* Perform assembly sequence up to load_fv_grads at this point */
               err = load_basis_functions(xi, bfd);
@@ -647,7 +643,7 @@ get_local_qtensor(double q[DIM][DIM])
   dbl E[DIM][DIM], Erot[DIM][DIM];
   dbl mag_E, mag_Erot, rho_k;
   dbl theta, cc, ss;
-  dbl stt, stc, sct, scc;
+  dbl stt, stc, scc;
   dbl ev[DIM], v_comp[DIM], v_vort[DIM], v_tens[DIM];
 
 
@@ -722,7 +718,6 @@ get_local_qtensor(double q[DIM][DIM])
    */
   scc = 0.5 * (rho_k + (1.0 - rho_k) * mp->Qtensor_Extension_P);
   stc = -mp->Qtensor_Nct;
-  sct = stc;
   stt = scc;
 
   /* Transform qtensor into Cartesian coordinates (2D case only) */
@@ -1282,13 +1277,8 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
 
   dbl c_term, mu_term;
 
-  dbl dDc_dy = 0.;
-  dbl dDmu_dy = 0.;
-
   dbl phi_j;
   dbl *grad_phi_j;
-
-  dbl Y_avg, f0, rzexp;
 
   dbl div_gdYVQVt[DIM]; /* div(gammadot * Y * (V Q Vt)) */
   dbl VQVt_grad_mu[DIM]; /* (V Q V^t) . grad(mu) */
@@ -1372,7 +1362,6 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
       if (mp->GamDiffType[w] == LINEAR) 
 	{
 	  Dc  = mp->u_gadiffusivity[w][0] * 1.4 * Y[w];
-	  dDc_dy = mp->u_gadiffusivity[w][0] * 1.4;
 	}
       else if (mp->GamDiffType[w] == LEVEL_SET ) 
 	{
@@ -1396,7 +1385,6 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
       if (mp->MuDiffType[w] == LINEAR) 
 	{
 	  Dmu  = mp->u_mdiffusivity[w][0] * 1.4 * Y[w];
-	  dDmu_dy = mp->u_mdiffusivity[w][0] * 1.4;
 	}
       else if (mp->MuDiffType[w] == LEVEL_SET ) 
 	{
@@ -1419,20 +1407,14 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
       if (mp->GravDiffType[w] == BISECTION)
 	{
 	  Dg  = mp->u_gdiffusivity[w][0]*del_rho;
-	  Y_avg = mp->u_gdiffusivity[w][1];
-	  f0    = mp->u_gdiffusivity[w][2];
 	}
       else if(mp->GravDiffType[w] == RZBISECTION)
 	{
 	  Dg  = mp->u_gdiffusivity[w][0]*del_rho;
-          rzexp =  mp->u_gdiffusivity[w][1];
-	  Y_avg = mp->u_gdiffusivity[w][2];
-	  f0    = mp->u_gdiffusivity[w][3];
 	}
       else if(mp->GravDiffType[w] == RICHARDSON_ZAKI)
 	{
 	  Dg  = mp->u_gdiffusivity[w][0]*del_rho;
-          rzexp =  mp->u_gdiffusivity[w][1];
 	}
       else if (mp->GravDiffType[w] == LEVEL_SET ) 
 	{
@@ -1641,12 +1623,9 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
 
   dbl c_term, mu_term, d_term;
 
-  dbl dDc_dy = 0.;
-  dbl dDmu_dy = 0.;
-
   dbl phi_j = 0.0;
 
-  dbl maxpack = 0.0, Y_avg, f0, rzexp;  /*  ERROR !!! maxpack is never set before use !!!! */
+  dbl maxpack = 0.0;  /*  ERROR !!! maxpack is never set before use !!!! */
 
   dbl div_gdYVQVt[DIM]; /* div(gammadot * Y * (V Q Vt)) */
   dbl VQVt_grad_mu[DIM]; /* (V Q V^t) . grad(mu) */
@@ -1735,7 +1714,6 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
       if (mp->GamDiffType[w] == LINEAR) 
 	{
 	  Dc  = mp->u_gadiffusivity[w][0] * 1.4 * Y[w];
-	  dDc_dy = mp->u_gadiffusivity[w][0] * 1.4;
 	}
       else if (mp->GamDiffType[w] == LEVEL_SET ) 
 	{
@@ -1759,7 +1737,6 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
       if (mp->MuDiffType[w] == LINEAR) 
 	{
 	  Dmu  = mp->u_mdiffusivity[w][0] * 1.4 * Y[w];
-	  dDmu_dy = mp->u_mdiffusivity[w][0] * 1.4;
 	}
       else if (mp->MuDiffType[w] == LEVEL_SET ) 
 	{
@@ -1782,20 +1759,14 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
       if (mp->GravDiffType[w] == BISECTION)
 	{
 	  Dg  = mp->u_gdiffusivity[w][0]*del_rho;
-	  Y_avg = mp->u_gdiffusivity[w][1];
-	  f0    = mp->u_gdiffusivity[w][2];
 	}
       else if(mp->GravDiffType[w] == RZBISECTION)
 	{
 	  Dg  = mp->u_gdiffusivity[w][0]*del_rho;
-          rzexp =  mp->u_gdiffusivity[w][1];
-	  Y_avg = mp->u_gdiffusivity[w][2];
-	  f0    = mp->u_gdiffusivity[w][3];
 	}
       else if(mp->GravDiffType[w] == RICHARDSON_ZAKI)
 	{
 	  Dg  = mp->u_gdiffusivity[w][0]*del_rho;
-          rzexp =  mp->u_gdiffusivity[w][1];
 	}
       else if (mp->GravDiffType[w] == LEVEL_SET ) 
 	{
@@ -2203,7 +2174,7 @@ compute_principle_directions(dbl *v_flow,
 			     dbl *v_vort,
 			     int print)
 {
-  dbl vf_norm, vv_norm;
+  dbl vf_norm;
   int i,j,k;
   dbl t1;
 
@@ -2254,7 +2225,7 @@ compute_principle_directions(dbl *v_flow,
     }
 #endif
 
-  vv_norm = normalize_really_simple_vector(v_vort, VIM);
+  normalize_really_simple_vector(v_vort, VIM);
 
   for(i = 0; i < VIM; i++)
     for(j = 0; j < VIM; j++)
@@ -2296,7 +2267,7 @@ find_eigenvector(dbl AA[3][3],
 		 int print)
 {
   int i, p[3];
-  dbl A[3][3], m12, m13, m23, norm;
+  dbl A[3][3], m12, m13, m23;
   dbl a11, a12, a13, a22, a23;
   dbl x, y, z;
 
@@ -2565,7 +2536,7 @@ find_eigenvector(dbl AA[3][3],
   v[0] = x;
   v[1] = y;
   v[2] = z;
-  norm = normalize_really_simple_vector(v, 3);
+  normalize_really_simple_vector(v, 3);
 
 #ifdef DEBUG_QTENSOR
   if(print)
@@ -2761,7 +2732,7 @@ diagonalize_symmetric_tensor(dbl T[DIM][DIM],
   dbl A[3][3];
   dbl a0, a2, a1;
   dbl q, r, d, m, theta, z1, z2, z3;
-  dbl tmp1, vfnorm, vvnorm;
+  dbl tmp1, vfnorm;
 
   memset(v0, 0, DIM * sizeof(dbl));
   memset(v1, 0, DIM * sizeof(dbl));
@@ -2955,7 +2926,7 @@ diagonalize_symmetric_tensor(dbl T[DIM][DIM],
 	    printf( "Setting v2[%d] = %g\n", i, v2[i]);
 	  */
 	}
-      vvnorm = normalize_really_simple_vector(v2, DIM);
+      normalize_really_simple_vector(v2, DIM);
       for(i = 0; i < DIM; i++)
 	for(j = 0; j < DIM; j++)
 	  for(k = 0; k < DIM; k++)
@@ -2998,7 +2969,7 @@ diagonalize_rate_of_deformation_tensor(dbl T[3][3],
   dbl A[3][3];
   dbl a0, a1, a2;		/* a2 is ignored b/c tr(T) = 0 */
   dbl q, r, d, m, theta, costheta, sintheta, z1, z2, z3;
-  dbl tmp1, vfnorm, vvnorm;
+  dbl tmp1, vfnorm;
 
   memset(v0, 0, DIM * sizeof(dbl));
   memset(v1, 0, DIM * sizeof(dbl));
@@ -3187,7 +3158,7 @@ diagonalize_rate_of_deformation_tensor(dbl T[3][3],
 	    printf( "Setting v2[%d] = %g\n", i, v2[i]);
 	  */
 	}
-      vvnorm = normalize_really_simple_vector(v2, DIM);
+      normalize_really_simple_vector(v2, DIM);
       for(i = 0; i < DIM; i++)
 	for(j = 0; j < DIM; j++)
 	  for(k = 0; k < DIM; k++)
@@ -3334,11 +3305,11 @@ please_work(dbl T[3][3],	/* Rate of deformation tensor */
 	    int print)		/* print toggle */
 {
   int i;
-  dbl v0[3], v2[3], evalues[3], flownorm;
+  dbl v0[3], v2[3], evalues[3];
 
   for(i = 0; i < DIM; i++)
     v_flow[i] = fv->v[i];
-  flownorm = normalize_really_simple_vector(v_flow, DIM);
+  normalize_really_simple_vector(v_flow, DIM);
 
   /* v1 will be the eigenvector with smallest |eigenvalue| since the
    * tensor is symmetric.

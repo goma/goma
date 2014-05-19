@@ -280,14 +280,11 @@ dil_viscosity(GEN_NEWT_STRUCT *gn_local,
        * 1.0E-4.
        */
       double volF = mp->volumeFractionGas;
-      int volFCropped = 0;
       if (mp->volumeFractionGas < 1.0E-4) {
 	volF = 1.0E-4;
-	volFCropped = 1;
       } else if (mp->volumeFractionGas < 1.0) {
 	volF = mp->volumeFractionGas;
       } else {
-	volFCropped = 1;
 	volF = 1.0;
       }
      

@@ -640,12 +640,12 @@ rd_file_specs(FILE *ifp,
 #ifdef DEBUG
   static const char yo[] = "rd_file_specs";
 #endif
-  int iread, foundMappingFile;
+  int foundMappingFile;
   char echo_string[MAX_CHAR_IN_INPUT]="\0";
   char *echo_file = Echo_Input_File;
   
  
-  iread = look_for_optional(ifp,"FEM File Specifications",input,'=');
+  look_for_optional(ifp,"FEM File Specifications",input,'=');
 
   ECHO("\n***FEM File Specifications***\n", echo_file);
   
@@ -5597,19 +5597,15 @@ void
 rd_solver_specs(FILE *ifp,
 		char *input )
 {
-  char *yo, *c;
+  char *c;
   char echo_string[MAX_CHAR_IN_INPUT]="\0";
   char *echo_file = Echo_Input_File;
 
   char def_form[MAX_CHAR_IN_INPUT]= " (%s = %s) %s";
 
   int iread, k, i;
-  int Iterative, Direct;
   int is_Solver_Serial = TRUE;
   
-  yo = "rd_solver_specs";
-
-
   /*
    * Caution! This routine is gradually evolving to a dumb reader. Checking
    * for consistent and meaningful input is now done mostly in
@@ -5625,8 +5621,6 @@ rd_solver_specs(FILE *ifp,
    *		will throw us out.
    *
    */
-  Direct              = TRUE;
-  Iterative           = !Direct;
 
   strcpy(Matrix_Solver,			"lu"); /* Kundert's - not y12m ! */
   strcpy(Matrix_Format,			"msr"); 
@@ -6575,13 +6569,11 @@ rd_eigen_specs(FILE *ifp,
 		 char *input)
 {
   int i;
-  char *yo;
   int iread;
   char copy_of_input[MAX_CHAR_IN_INPUT];
   char echo_string[MAX_CHAR_IN_INPUT]="\0";
   char *echo_file = Echo_Input_File;
   /*  */
-  yo = "rd_eigen_specs";
 
 /* READ IN EIGENSOLVER SPECIFICATIONS */
   
@@ -7490,7 +7482,7 @@ rd_matl_blk_specs(FILE *ifp,
 		  char *input)
 {
   char err_msg[MAX_CHAR_IN_INPUT];
-  int	err, mn, iread, i;
+  int	err, mn, i;
   FILE *imp;
   char MatFile[MAX_FNL];	/* Raw material database file. */
   char TmpMatFile[MAX_FNL];	/* Temporary copy of mat db after APREPRO. */
@@ -7507,7 +7499,7 @@ rd_matl_blk_specs(FILE *ifp,
    */
 
   Use_DG = FALSE;
-  iread = look_for_optional(ifp, "Problem Description", input, '=');
+  look_for_optional(ifp, "Problem Description", input, '=');
   ECHO("\nProblem Description =\n", echo_input_file);
 
   look_for(ifp, "Number of Materials", input, '=');
@@ -10074,7 +10066,7 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
   char  line[132];
   char  *arguments[MAX_NUMBER_PARAMS];
 
-  int num_const, np, i, species_no, got_it;
+  int num_const, i, species_no, got_it;
 
   species_no = 0;		/* set species number to zero as default
 				   so it works for non-species properties*/
@@ -10212,7 +10204,7 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
 	    User_count[species_no] = num_const;
 
 	    /* parse parameters into little strings */ 
-  	    np = tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);
+  	    tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);
 	    
 	    for(i=0; i< num_const; i++)
 	      {
@@ -10257,7 +10249,7 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
 	    User_constants[species_no] = (dbl *)array_alloc(1, num_const, sizeof(dbl));
 	    
 	    /* parse parameters into little strings */ 
-	    np = tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);
+	    tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);
 	    
 
 	    for(i=0; i< num_const; i++)
@@ -10366,7 +10358,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
   int DumModel;			/* dummy int for story input model */
   char  line[132];
   char  *arguments[MAX_NUMBER_PARAMS];
-  int num_const=0, np, i, species_no, got_it;
+  int num_const=0, i, species_no, got_it;
   struct  Data_Table *table_local;
 
   species_no = 0;		/* set species number to zero as default
@@ -10487,7 +10479,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 	    User_count[species_no] = num_const;
 
 	    /* parse parameters into little strings */ 
-	    np = tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);	    
+	    tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);	    
 	    
 	    for(i=0; i< num_const; i++)
 	      {
@@ -10532,7 +10524,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 	    User_constants[species_no] = (dbl *)array_alloc(1, num_const, sizeof(dbl));
 	    
 	    /* parse parameters into little strings */ 
-	    np = tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);
+	    tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);
 	    
 	    for(i=0; i< num_const; i++)
 	      {
@@ -10623,7 +10615,7 @@ look_for_modal_prop(FILE *imp,	/* ptr to input stream (in)*/
   int DumModel;			              /* dummy int for story input model */
   char  line[132];
   char  *arguments[MAX_NUMBER_PARAMS];
-  int num_const, np, i, got_it;
+  int num_const, i, got_it;
   char	model_name[MAX_CS_KEYWORD_LENGTH];
 
   
@@ -10660,7 +10652,7 @@ look_for_modal_prop(FILE *imp,	/* ptr to input stream (in)*/
 	      }
 
 	    /* parse parameters into little strings */ 
-	    np = tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);	    
+	    tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);	    
 	    
 	    for(i=0; i< num_const; i++)
 	      {
@@ -10719,7 +10711,7 @@ read_constants(FILE *imp,	     /* pointer to file */
   static char yo[] = "read_species";
   char  line[255];
   char  *arguments[MAX_NUMBER_PARAMS];
-  int np, num_const, i;
+  int num_const, i;
   int wspec=-1;
   
   if (species_no >= 0) wspec = species_no;
@@ -10742,7 +10734,7 @@ read_constants(FILE *imp,	     /* pointer to file */
       if ((num_const = count_parameters(line)) > 0) {
 	User_constants[wspec] = alloc_dbl_1(num_const, 0.0);
 	
-        np = tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);	
+        tokenize_by_whsp(line, arguments, MAX_NUMBER_PARAMS);	
 	for(i = 0; i < num_const; i++) {
 	  User_constants[wspec][i] = atof(arguments[i]);
 	}
@@ -10788,15 +10780,10 @@ set_mp_to_unity(const int mn)
 #endif
   int	i;
   int p;
-  int status;
   int v;
   int w;
   struct Elastic_Constitutive *e;
   MATRL_PROP_STRUCT  *m = mp_glob[mn];
-
-
-  status = 0;
-
 
   /*
    * First load up the simplest constitutive relations for all fluxes...
@@ -14288,7 +14275,7 @@ static void read_MAT_line(FILE *ifp, int mn, char *input)
      *     
      ************************************************************************/
 {
-  int ln, numTok, i;
+  int numTok, i;
   TOKEN_STRUCT tok;
   char *yo = "read_MAT_line";
   char echo_string[MAX_CHAR_IN_INPUT]="\0";
@@ -14303,7 +14290,7 @@ static void read_MAT_line(FILE *ifp, int mn, char *input)
    *  Store the remainder of the line in the character buffer, then tokenize
    *  it.
    */
-  ln = read_line(ifp, input, FALSE);
+  read_line(ifp, input, FALSE);
   numTok = fillTokStruct(&tok, input);
 
   /*

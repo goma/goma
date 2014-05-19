@@ -70,7 +70,6 @@ display_parameterC(double lambda, /* PARAMETER VALUE */
 		   Exo_DB *exo,	 /* ptr to the finite element mesh database */
 		   Dpi *dpi)	 /* distributed processing information */
 {
-  int ic;
   int mn;
   int ibc, idf;
   
@@ -98,7 +97,6 @@ display_parameterC(double lambda, /* PARAMETER VALUE */
   if (cont->upType == 2) {
 
     mn = cont->upMTID;
-    ic = cont->upMDID;
 
     printf("\n New MT[%4d] MP[%4d] = %10.6e\n", mn+1, cont->upMPID, lambda);
  

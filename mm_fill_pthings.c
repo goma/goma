@@ -160,11 +160,10 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 						 explicit (tt = 1) to implicit (tt = 0) */
 			dbl dt)               /* current time step size */
 {
-  int err, dim, wim, p, q, a, b, eqn, var, ii, peqn, pvar, w, ledof;
+  int dim, wim, p, q, a, b, eqn, var, ii, peqn, pvar, w, ledof;
   int i, j, m, status;
   struct Basis_Functions *bfm;
 
-  dbl T;				/* Temperature. */
   dbl pv[DIM];			        /* Velocity field. */
   dbl pv_dot[DIM];		         	/* time derivative of velocity field. */
   dbl x_dot[DIM];			/* current position field derivative wrt time. */
@@ -175,16 +174,8 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
   dbl grad_pv[DIM][DIM];	        /* Gradient of pv. */
   dbl gamma[DIM][DIM];                  /* shrearrate tensor based on velocity */
 
-  dbl muk[DIM][DIM];			/* mu/kappa where kappa is the */
-					/* permeability of the porous media */
-
   dbl Pi[DIM][DIM];		/* Total stress tensor (multiplied by coeff). */
   dbl Pi_raw[DIM][DIM];		/* Rate of strain tensor (no coeff). */
-
-  dbl s[DIM][DIM];                      /* polymer stress tensor */
-  dbl gamma_cont[DIM][DIM];             /* shearrate tensor based on continuous gradient of velocity */
-
-  dbl P;				/* Pressure. */
 
   dbl rho;				/* Density. */
   
@@ -273,7 +264,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
   
 /* set porous-flow parameters depending on which zone we are in. KSC on 5/10/95 */ 
-  dbl evss_f;      /* flag to add in the continuous velocity 
+  /* dbl evss_f; */     /* flag to add in the continuous velocity 
 		      gradient tensor for Fortin's formulation */
 
   /* MMH
@@ -281,8 +272,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
    * at the particle momentum model.
    */
   int species=-1;		/* Species number of particle phase */
-  double rho_f,rho_p=1e12;	/* Fluid and solid densities */
-  double delta_rho;		/* rhof-rhos */
+  double rho_p=1e12;	/* Fluid and solid densities */
   double p_vol_frac=1e12;	/* Particle volume fraction (phi) */
   double mul1;			/* Used for the strain tensor */
   double EpEp[DIM][DIM];	/* For tensor . tensor */
@@ -366,9 +356,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
     {
       /* This is the species number of the particle phase. */
       species = (int) mp->u_density[0]; 
-      rho_f = mp->u_density[1];
       rho_p = mp->u_density[2];
-      delta_rho = rho_p-rho_f;
       p_vol_frac = fv->c[species];
       if(p_vol_frac<0.0 || p_vol_frac>1.0)
 	{
@@ -397,10 +385,6 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
       vis = mp->FlowingLiquid_viscosity;
       sc  = mp->Inertia_coefficient;
       
-      for ( a=0; a<dim; a++)
-	{
-	  muk[a][a] = (vis/per);   
-	}
     } 
   else 
     {
@@ -410,14 +394,13 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
       sc  = 0.;
     }
 
-  err = pmomentum_source_term(f, dfdT, dfdX, dfdC, dfdv);
+  pmomentum_source_term(f, dfdT, dfdX, dfdC, dfdv);
 
   eqn   = R_PMOMENTUM1;
 		
   /*
    * Field variables...
    */
-  T = fv->T;
   for (a = 0; a < wim; a++) {
     pv[a] = fv->pv[a];
     if (pd->TimeIntegration != STEADY &&
@@ -441,8 +424,6 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
     } 
   speed = sqrt(speed);
 
-  P = fv->P;
-
   /*
    * In Cartesian coordinates, this velocity gradient tensor will
    * have components that are...
@@ -458,18 +439,11 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	{
 	  grad_pv[a][b] = fv->grad_pv[a][b];
 	  
-	  if ( pd->v[POLYMER_STRESS11] )
-	    {
-	      s[a][b] = fv->S[0][a][b];
-	    }
-	  else
-	    {
-	      s[a][b] = 0.;
-	    }
 	}
     }
 
 
+  /*
   if ( pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F) )
     {
       evss_f = 1.;
@@ -478,30 +452,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
     {
       evss_f = 0.;
     }
-
-  if ( evss_f )
-    {
-      for ( a=0; a<VIM; a++)
-	{
-	  for ( b=0; b<VIM; b++)
-	    {
-	      gamma_cont[a][b] = fv->G[a][b] + fv->G[b][a] ;
-	    }
-	}
-    }
-  else
-    {
-      for ( a=0; a<VIM; a++)
-	{
-	  for ( b=0; b<VIM; b++)
-	    {
-	       gamma_cont[a][b] = 0.;
-	     }
-	}
-    }
-
-	     
-
+  */
 /* load up shearrate tensor based on velocity */
   for ( a=0; a<VIM; a++)
     {

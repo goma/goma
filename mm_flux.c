@@ -260,6 +260,9 @@ evaluate_flux(
  int ierr = 0, wt_type;
  const int Jac_state = af->Assemble_Jacobian;
 
+  for (a=0; a < DIM; a++) {
+    base_normal[a] = 0;
+  }
   memset( Torque, 0, sizeof(double)*3 );
 
   /* load eqn and variable number in tensor form */
@@ -912,10 +915,9 @@ evaluate_flux(
                       }  else if ( cr->HeatFluxModel == CR_HF_USER )
                         {
                         double delP=0.;
-			double wrate, *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
 #if defined SECOR_HEAT_FLUX
+			double *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
 			double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
-#endif
 
 			hpar = &mp->u_thermal_conductivity[0];
 			h = hpar[0] + hpar[4]*fv->x[0]
@@ -931,11 +933,10 @@ evaluate_flux(
 			Vt[0] = mp->u_heat_capacity[2];
 			Vt[1] = mp->u_heat_capacity[3];
 
-#if defined SECOR_HEAT_FLUX
-			wrate = usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value, h, dh_dX, Vb, Vt
+			usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value, h, dh_dX, Vb, Vt
                              ,dq_dVb, dq_dVt);
 #else
-			wrate = usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value);
+			usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value);
 			printf("untested\n");
 			exit(-1);
 #endif
@@ -4186,7 +4187,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 			 const int print_flag)     /*  flag for printing results,1=print*/
 {
   int i,j;
-  int eb,e_start,e_end, elem, mn;
+  int eb,e_start,e_end, elem;
 
   int err=0;
   int ip, ip_total;
@@ -4297,7 +4298,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
     }
   }
 
-  mn = map_mat_index(blk_id);
+  map_mat_index(blk_id);
   if( ( eb = in_list(blk_id, 0, exo->num_elem_blocks, exo->eb_id) ) != -1 )
     {
 
@@ -4762,7 +4763,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
    case I_JOULE:
       {
-	int q, err;
+	int q;
 
         double k;
 
@@ -4770,7 +4771,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
         if(mp->Elec_ConductivityModel == USER)
 	  {
-	    err = usr_electrical_conductivity(mp->u_electrical_conductivity, time);
+	    usr_electrical_conductivity(mp->u_electrical_conductivity, time);
 	 
 	    k   = mp->electrical_conductivity;
 	  }
@@ -5360,7 +5361,7 @@ evaluate_global_flux (const Exo_DB *exo,
 		      const int print_flag )
 {
   int j;
-  int eb,e_start,e_end, elem, mn;
+  int eb,e_start,e_end, elem;
 
 
   int err=0;
@@ -5376,7 +5377,7 @@ evaluate_global_flux (const Exo_DB *exo,
 #endif
 
 
-  mn = map_mat_index(blk_id);
+  map_mat_index(blk_id);
   if( ( eb = in_list(blk_id, 0, exo->num_elem_blocks, exo->eb_id) ) != -1 )
     {
 
@@ -5659,7 +5660,6 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   double efield_sqr;				/* efield magnitude squared  */
   double es_sens[MAX_PDIM][MAX_PDIM], efield_sens[MAX_PDIM];/* electric stress */
   double efield_sqr_sens;		/* efield magnitude squared  */
-  dbl perm = 0.0;		        /* electrical permittivity */
 
   double dsigma_dx[DIM][MDE];		/* surface tension terms */
   double dsigmadT, dsigmadC[MAX_CONC], sigma_sens;
@@ -6300,7 +6300,6 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                                                 - 0.5*efield_sqr_sens*delta(a,b);
  				}
  			    }
- 		      perm   = mp->permittivity;
      			 }
  		/*
    		 * load surface tension for variable models
@@ -6366,10 +6365,10 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                   }
                 }  else if ( cr->HeatFluxModel == CR_HF_USER )
                 {
-        double wrate, *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
+
 #if defined SECOR_HEAT_FLUX
+        double *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
         double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
-#endif
 
         hpar = &mp->u_thermal_conductivity[0];
         h = hpar[0] + hpar[4]*fv->x[0]
@@ -6385,12 +6384,10 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
         Vt[0] = mp->u_heat_capacity[2];
         Vt[1] = mp->u_heat_capacity[3];
 
-
-#if defined SECOR_HEAT_FLUX
-      wrate = usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value, h, dh_dX, Vb,Vt,
+      usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value, h, dh_dX, Vb,Vt,
                              dq_dVb, dq_dVt);
 #else
-      wrate = usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value);
+      usr_heat_flux(fv->grad_T, q, dq_gradT, dq_dX, time_value);
       printf("untested\n");
       exit(-1);
 #endif
@@ -7270,7 +7267,7 @@ load_fv_sens(void)
 				/* these are the 2.5 dimensional problems.*/
   int dofs;			/* degrees of freedom for a var in the elem */
   int w;			/* concentration species counter */
-  int mode, temp;
+  int mode;
 
   int status;
 
@@ -7286,7 +7283,7 @@ load_fv_sens(void)
   status = 0;
 
   /* load eqn and variable number in tensor form */
-  temp = stress_eqn_pointer(v_s);
+  stress_eqn_pointer(v_s);
 
   dim = ei->ielem_dim;
 
@@ -8802,7 +8799,9 @@ int side_diff, side_ct;
 int return_val = 1;
 double ecrd[12][MAX_PDIM];
 
+#ifndef NO_CHEBYSHEV_PLEASE
 int chev_order=3;
+#endif
 double gauss_wt1D[3]={5/9.,8/9.,5/9.};
 double gauss_wt2D[9]={25/81.,40/81.,25/81.,40/81.,64/81.,40/81.,25/81.,
  			40/81.,25/81.};
@@ -8868,8 +8867,10 @@ double int_angle[8], xloc;
  
 if( elem_type != BIQUAD_QUAD)
  	{EH(-1,"adaptive integration for 2D quads only!");}
- 
+
+#ifndef NO_CHEBYSHEV_PLEASE 
 chev_order = ls->Adaptive_Order;
+#endif
  
 if( sharp_interface)
    {

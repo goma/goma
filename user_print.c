@@ -78,7 +78,7 @@ usr_print ( double *t,	            /* time value */
             double **post_proc_vect,
 	    int    var)               /* variable of post_proc_vect */
 {
-  static int status = 0;
+  /*  static int status = 0; */
   int retn = 0;
 
   /*
@@ -186,7 +186,7 @@ usr_print ( double *t,	            /* time value */
 
   /*  return(status); */
 
-  status = 2;
+  /*  status = 2; */
   return(retn);			/*  Phil's usual default behavior */
 
 } /* END of routine usr_print */

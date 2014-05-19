@@ -632,20 +632,16 @@ apply_ls_inlet_bc ( double afill[],
 
   int i;
   int ie;
-  int I,ln;
-  int dim;
+  int I;
 
   double r[DIM];
   double distance;
 
   struct LS_Surf *closest;
 
-  dim = pd->Num_Dim;
-
   for( i=0 ; i<elem_side_bc->num_nodes_on_side; i++ )
     {
       I = elem_side_bc->local_node_id[i];
-      ln = elem_side_bc->local_elem_node_id[i];
 
       retrieve_node_coordinates( I,x,r, NULL );
 
@@ -718,7 +714,7 @@ apply_strong_fill_ca_bc (
   int nvdofi, nvdofj, ki, kj;
   dbl grad_F[DIM];			/* gradient of Fill. */
 
-  double phi_j, phi_i;
+  double phi_i;
   dbl rhs;
   double s, t, u;		/* Gaussian quadrature point locations  */
   double xi[DIM];             /* Local element coordinates of Gauss point. */
@@ -734,6 +730,11 @@ apply_strong_fill_ca_bc (
   
   eqn = FILL;
   dim =  pd->Num_Dim;
+
+  /* initialize grad_F */
+  for (a = 0; a < DIM; a++) {
+    grad_F[a] = 0;
+  }
 
   /* Surface integration over element */
       for (ip = 0; ip < ip_total; ip++) 
@@ -856,7 +857,6 @@ apply_strong_fill_ca_bc (
 			      for ( kj=0; kj<nvdofj; kj++)
 				{
 				  jdof = ei->ln_to_first_dof[eqn][j] + kj;
-				  phi_j = bf[eqn]->phi[jdof];
 				  
 				  je = node_to_fill[J] + kj;
 				  ja     = (ie == je) ? ie : in_list(je, ijaf[ie], ijaf[ie+1], ijaf);
@@ -1512,7 +1512,6 @@ assemble_level_project(double afill[],	/* Jacobian matrix for fill equation  */
    */
 
   int eqn;
-  int dim;
 
   int i, j;
   int status;
@@ -1553,8 +1552,6 @@ assemble_level_project(double afill[],	/* Jacobian matrix for fill equation  */
   /*
    * Unpack variables from structures for local convenience...
    */
-
-  dim   = pd->Num_Dim;
 
   eqn   = R_FILL;
 
@@ -2437,7 +2434,7 @@ create_surfs_from_ss ( int ss_id,
   /* first make list of surfaces from specified node sets */
   int i, n, iss;
   int num_nodes_on_side, ielem, side, ielem_type;
-  int nodes_per_side, num_local_nodes, ielem_dim;
+  int nodes_per_side, ielem_dim;
   int iconnect_ptr;
   int local_elem_node_id[MAX_NODES_PER_SIDE];
   int I, inflection, ln, lnn[2];
@@ -2476,9 +2473,7 @@ create_surfs_from_ss ( int ss_id,
       ielem_type      = Elem_Type(exo, ielem);
       get_side_info(ielem_type, side, &nodes_per_side, local_elem_node_id);
       iconnect_ptr = exo->elem_ptr[ielem];
-      num_local_nodes = elem_info(NNODES, ielem_type);
       ielem_dim = elem_info(NDIM, ielem_type);
-
  
       for ( n=0; n<num_nodes_on_side-1; n++ )
         {
@@ -5204,8 +5199,6 @@ ls_var_initialization ( double *u, Exo_DB *exo, Dpi *dpi, Comm_Ex *cx )
 	  int ielem_type, num_nodes, index;
 	  int i,j, var, nunks, ie;
 	  NODAL_VARS_STRUCT *nv;
-	  double ls_value;
-	  
 
 	  e_start = exo->eb_ptr[ebi];
 	  e_end   = exo->eb_ptr[ebi+1];
@@ -5220,7 +5213,7 @@ ls_var_initialization ( double *u, Exo_DB *exo, Dpi *dpi, Comm_Ex *cx )
 
 	      for ( n=0; n<num_nodes; n++ ) /* local nodes */
 		{
-		  ls_value = scalar_value_at_local_node ( ielem, ielem_type, n, LS, 0, u, exo );
+		  scalar_value_at_local_node ( ielem, ielem_type, n, LS, 0, u, exo );
 		  
 		  i = Proc_Elem_Connect[index++];
 		  nv = Nodes[i]->Nodal_Vars_Info;
@@ -6015,7 +6008,7 @@ xfem_correct( int num_total_nodes,
   NODE_INFO_STRUCT *node;
   NODAL_VARS_STRUCT *nv;
   VARIABLE_DESCRIPTION_STRUCT *vd;
-  int I, ie, idof, lvdesc, var_type, matID;
+  int I, ie, idof, lvdesc, var_type;
   int interp;
   int ioffset;
   
@@ -6027,7 +6020,6 @@ xfem_correct( int num_total_nodes,
       for (lvdesc = 0; lvdesc < nv->Num_Var_Desc; lvdesc++)
         {
           vd = nv->Var_Desc_List[lvdesc];
-          matID = vd->MatID;
           if ( MatID == -1 ) MatID = 0;
           var_type = vd->Variable_Type;
 
@@ -6222,7 +6214,7 @@ xfem_predict( int num_total_nodes,
   NODE_INFO_STRUCT *node;
   NODAL_VARS_STRUCT *nv;
   VARIABLE_DESCRIPTION_STRUCT *vd;
-  int I, ie, lvdesc, var_type, matID;
+  int I, ie, lvdesc, var_type;
   int interp;
   double c1, c2, c3 = 0.0;
   int ioffset;
@@ -6248,7 +6240,6 @@ xfem_predict( int num_total_nodes,
       for (lvdesc = 0; lvdesc < nv->Num_Var_Desc; lvdesc++)
         {
           vd = nv->Var_Desc_List[lvdesc];
-          matID = vd->MatID;
           if ( MatID == -1 ) MatID = 0;
           var_type = vd->Variable_Type;
 
@@ -6868,6 +6859,11 @@ load_lsi_derivs()
   zero_lsi_derivs();
 
   copy_distance_function( &F, &grad_F );
+
+  /* Initialize grad_phi_j */
+  for (a = 0; a < DIM; a++) {
+    grad_phi_j[a] = 0;
+  }
 
   /*
    * If we're here, the pd->var[ls->var] is true...
@@ -7635,8 +7631,6 @@ divide_search_grid ( SGRID *parent,
       for( index=0; index<num_subgrids ; index++)
 
 	{
-	  int num_verts;
-
 	  parent->subgrids[index] = ( SGRID *) smalloc( sizeof(SGRID) );
 
 	  /* Inherit so of the structure member values from the parent */
@@ -7649,8 +7643,6 @@ divide_search_grid ( SGRID *parent,
 	  parent->subgrids[index]->subgrids  = NULL;
 	  parent->subgrids[index]->tree = parent->tree->subtrees[index];
 	  
-	  num_verts = parent->subgrids[index]->num_verts;
-
 
 	  find_grid_LS_value ( parent->subgrids[index] );
 
@@ -8152,7 +8144,7 @@ gather_subtree_coords ( NTREE * tree,
 {
 
   int i,a;
-  double s,t,u;
+  double s=0,t=0,u=0;
 
   if( tree == NULL ) return;
 
@@ -8493,7 +8485,6 @@ build_integration_grid ( SGRID *parent,
       for( index=0; index<num_subgrids ; index++)
 
 	{
-	  int num_verts;
 
 	  parent->subgrids[index] = ( SGRID *) array_alloc(1,1, sizeof(SGRID) );
 	  parent->subgrids[index]->ei   =  parent->ei;
@@ -8504,9 +8495,6 @@ build_integration_grid ( SGRID *parent,
 	  parent->subgrids[index]->subgrids  = NULL;
 	  parent->subgrids[index]->tree = parent->tree->subtrees[index];
 	  
-	  num_verts = parent->subgrids[index]->num_verts;
-
-
 	  find_grid_LS_value ( parent->subgrids[index] );
 
 	  /*
@@ -9381,13 +9369,7 @@ assemble_extension_velocity (dbl hsquared[DIM],
 
   int i, j;
   
-  dbl F;				/* Fill. */
-  dbl F_old;				/* Fill at last time step. */
-
-
   dbl *grad_F;			/* gradient of Fill. */
-  dbl gfmag_inv;                /* reciprocal of magnitude of fill gradient vector */
-
 
   dbl S = 0.0;                          /* sign of distance function (-1 or +1 ) */
 
@@ -9406,7 +9388,6 @@ assemble_extension_velocity (dbl hsquared[DIM],
    * Interpolation functions for variables and some of their derivatives.
    */
 
-  dbl phi_j;
   dbl *grad_phi_i, *grad_phi_j;
   dbl h3;			/* Volume element (scale factors). */
   dbl det_J;
@@ -9457,18 +9438,12 @@ assemble_extension_velocity (dbl hsquared[DIM],
   load_lsi( 0. );
   load_lsi_derivs();
 
-  gfmag_inv = 1./lsi->gfmag;
-  
   if(pfd == NULL)
 	{
-  	F    = fv->F;
-        F_old    = fv_old->F;
         grad_F = fv->grad_F;
 	}
   else
 	{
-  	F    = fv->pF[ls->var-PHASE1];
-        F_old    = fv_old->pF[ls->var-PHASE1];
         grad_F = fv->grad_pF[ls->var-PHASE1];
 	}
 
@@ -9612,7 +9587,6 @@ assemble_extension_velocity (dbl hsquared[DIM],
 	      pvar = upd->vp[var];
 	      for ( j=0; j<ei->dof[var]; j++)
 		{
-		  phi_j = bf[var]->phi[j];
                   grad_phi_j = bf[var]->grad_phi[j];
 		  
 		  advection = 0.;
@@ -9652,7 +9626,6 @@ assemble_extension_velocity (dbl hsquared[DIM],
 	      pvar = upd->vp[var];
 	      for ( j=0; j<ei->dof[var]; j++)
 		{
-		  phi_j = bf[var]->phi[j];
                   grad_phi_j = bf[var]->grad_phi[j];
 		  
 		  d_wt_func = 0.;
@@ -9707,8 +9680,6 @@ assemble_extension_velocity (dbl hsquared[DIM],
 		  pvar = upd->vp[var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
-		      phi_j = bf[var]->phi[j];
-		      
 		      d_det_J_dmesh_pj = bf[eqn]->d_det_J_dm[p][j];
 		      
 		      dh3dmesh_pj = fv->dh3dq[p] * bf[var]->phi[j];
@@ -11055,6 +11026,12 @@ build_integ_element( Integ_Elem * e, double isoval, int ielem_type,
             double xi0[DIM], xi1[DIM], xi2[DIM];
             int side_ids[3];
 	    double f_temp;
+	    int ii;
+
+	    /* initialize index[] */
+	    for (ii = 0; ii < 6; ii++) {
+	      index[ii] = 0;
+	    }
               
             /* determine what we are going to do with this element (set job) */
                           
@@ -11849,15 +11826,14 @@ clear_xfem_contribution( int N )
 void
 compute_xfem_contribution( int N )
 {
-  int eqn, peqn, i, ie, ledof;
-  int xfem_active, extended_dof, base_interp, base_dof;
+  int eqn, i, ie, ledof;
+  int xfem_active, extended_dof = 0, base_interp, base_dof;
   double dV;
   
   for (eqn = V_FIRST; eqn < V_LAST;  eqn++)
     {
       if ( pd->e[eqn] && eqn != R_FILL && eqn != R_EXT_VELOCITY )
         {
-          peqn = upd->ep[eqn];
           dV = bf[eqn]->detJ * fv->wt * fv->h3;
           for (i = 0; i < ei->dof[eqn]; i++ )
             {
@@ -11976,7 +11952,7 @@ void
 resolve_ls_adc_old ( struct Boundary_Condition *LS_ADC, Exo_DB *exo, double *x, double delta_t, int *adc_event, int time_step )
 {
 	int ssid = LS_ADC->BC_ID, ss_elem_index ;
-	int num_nodes_on_side, nodes_per_side, local_elem_node_id[MAX_NODES_PER_SIDE], ielem_type;
+	int nodes_per_side, local_elem_node_id[MAX_NODES_PER_SIDE], ielem_type;
 	int i, iss, ielem, side;
 	double switch_value = 0.0; 
 
@@ -12002,9 +11978,6 @@ resolve_ls_adc_old ( struct Boundary_Condition *LS_ADC, Exo_DB *exo, double *x, 
 		ielem = exo->ss_elem_list[ss_elem_index+i];
 		
 		side  = exo->ss_side_list[ss_elem_index+i];
-		
-		num_nodes_on_side = ( exo->ss_node_side_index[iss][i+1] -
-							  exo->ss_node_side_index[iss][i] );
 		
 		ielem_type      = Elem_Type(exo, ielem);
 		get_side_info(ielem_type, side, &nodes_per_side, local_elem_node_id);
@@ -12161,7 +12134,7 @@ apply_adc_to_ss( Exo_DB *exo, double *x,  int iss, double switch_value )
 
 {
 	int i,  ielem, side, ss_elem_index;
-	int num_nodes_on_side, nodes_per_side, local_elem_node_id[MAX_NODES_PER_SIDE], ielem_type;
+	int nodes_per_side, local_elem_node_id[MAX_NODES_PER_SIDE], ielem_type;
 	double start_sign = 123.0;
 	int *apply_to_side;
 	
@@ -12183,9 +12156,6 @@ apply_adc_to_ss( Exo_DB *exo, double *x,  int iss, double switch_value )
 		ielem = exo->ss_elem_list[ss_elem_index+i];
 		
 		side  = exo->ss_side_list[ss_elem_index+i];
-		
-		num_nodes_on_side = ( exo->ss_node_side_index[iss][i+1] -
-							  exo->ss_node_side_index[iss][i] );
 		
 		ielem_type      = Elem_Type(exo, ielem);
 		get_side_info(ielem_type, side, &nodes_per_side, local_elem_node_id);
@@ -12452,7 +12422,7 @@ closest_other_surf(  struct LS_Surf_List *Surf_list,
 
 	double min_distance = 1.e+30;
 	struct LS_Surf *that_surf;
-	struct LS_Surf *closest_other;
+	struct LS_Surf *closest_other = NULL;
 	struct LS_Surf_Point_Data *dd = ( struct LS_Surf_Point_Data * ) this_surf->data;
 
 	

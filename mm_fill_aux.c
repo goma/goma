@@ -1324,7 +1324,7 @@ surface_determinant_and_normal(
   int 		i, id, inode, a, b, p, q;
   int		ShapeVar, ldof;
   int		DeformingMesh;
-  double        det, r_det, det_h01, r_det_h01, d_det_h01_x;
+  double        r_det, det_h01, r_det_h01, d_det_h01_x;
   double        phi_i;
   int siz;
   double        T[DIM-1][DIM], t[DIM-1][DIM];  /* t = J . T */
@@ -1354,7 +1354,6 @@ surface_determinant_and_normal(
       /*
        *  This code should be considered to be untested. It worked for one case.
        */
-      det = fv->sdet = 1.0;
       // ok we fill up snormal
       shell_determinant_and_normal(ei->ielem, ei->iconnect_ptr, ei->num_local_nodes,
 				   ei->ielem_dim, 1);

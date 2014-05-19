@@ -164,7 +164,6 @@ assemble_fill(double tt,
   int eqn, var, peqn, pvar, dim, status;
   int i, j, a, b, c;
   
-  dbl F;				/* Fill function. */
   dbl F_dot;				/* Fill derivative wrt time. */
   dbl *grad_F;  			/* Fill gradient. */
 
@@ -238,7 +237,6 @@ assemble_fill(double tt,
 
   if(eqn == R_FILL)
 	{
-  	F = fv->F;
   	if (pd->TimeIntegration != STEADY)
     		{ F_dot = fv_dot->F; }
   	else
@@ -247,7 +245,6 @@ assemble_fill(double tt,
 	}
   else
 	{
-	F = fv->pF[ls->var-PHASE1];
   	if (pd->TimeIntegration != STEADY)
     		{ F_dot = fv_dot->pF[ls->var-PHASE1]; }
   	else
@@ -1155,7 +1152,6 @@ assemble_fill_ext_v(double tt,
   int eqn, var, peqn, pvar, dim, status;
   int i, j, a, b;
   
-  dbl F;				/* Fill function. */
   dbl F_dot;				/* Fill derivative wrt time. */
   dbl *grad_F;  			/* Fill gradient. */
 
@@ -1198,7 +1194,7 @@ assemble_fill_ext_v(double tt,
   int dofs;
   dbl ext_v, ext_v_old, ext_v_mag, ext_v_avg;
   dbl d_tau_ext_v[MDE];
-  dbl gfmag_inv, gfmag_old;
+  dbl gfmag_old;
 
   /* terms for shock capturing term */
   dbl d_visc_dF[MDE];
@@ -1238,7 +1234,6 @@ assemble_fill_ext_v(double tt,
 
   if(pfd == NULL)
 	{
-  	F = fv->F;
   	if (pd->TimeIntegration != STEADY)
     		{ F_dot = fv_dot->F; }
   	else
@@ -1247,7 +1242,7 @@ assemble_fill_ext_v(double tt,
 	}
   else
 	{
-	F = fv->pF[ls->var-PHASE1];
+
   	if (pd->TimeIntegration != STEADY)
     		{ F_dot = fv_dot->pF[ls->var-PHASE1]; }
   	else
@@ -1276,8 +1271,6 @@ assemble_fill_ext_v(double tt,
 
   load_lsi( 0. );
   load_lsi_derivs();
-
-  gfmag_inv = 1./lsi->gfmag;
 
   dofs     = ei->dof[EXT_VELOCITY];
 
@@ -1880,7 +1873,6 @@ assemble_fill_gradf(double tt,
   int eqn, var, peqn, pvar, dim, status;
   int i, j, a, b;
   
-  dbl F;				/* Fill function. */
   dbl *grad_F;  			/* Fill gradient. */
   dbl phi_i;                    /* i-th basis function for the FILL equation. */
 
@@ -1900,7 +1892,6 @@ assemble_fill_gradf(double tt,
   dbl gradphi_gradphi[MDE][MDE];/* gradphi.gradphi */
   dbl d_gradF_dmesh_gradF;      /* d_dgradF_dmesh.gradF */
   dbl S;                        /* sign(F) */
-  dbl dtinv;                    /* = 1 / dt */
   int Fill_Weight_Fcn;          /* Fill weight function. */
 
   /* Terms needed for GLS stabilization */
@@ -1932,9 +1923,6 @@ assemble_fill_gradf(double tt,
   wt		  = fv->wt;                       /* Gauss point weight. */
   h3		  = fv->h3;                       /* Differential volume element. */
   det_J		  = bf[eqn]->detJ;                /* Really, ought to be mesh eqn. */
-  dtinv           = 1.0 / dt;                     /* Ah, 1 / dt. */
-
-  F = fv->F;
 
   h_elem = 0.;
   for ( a=0; a<dim; a++) h_elem += hsquared[a];
@@ -4462,7 +4450,7 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 {
 /*    TAB certifies that this function conforms to the exo/patran side numbering convention 11/9/98. */
 
-  int ip, ip1, i, j, I, J, dim;     /* counters */
+  int ip, ip1, i, j, I, J;     /* counters */
   int a, idof, jdof, ie, je, ja;    /* more counters */
   int nodes_per_side;
   int local_elem_node_id[MAX_NODES_PER_SIDE];
@@ -4498,7 +4486,6 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
   ip_total = elem_info(NQUAD_SURF, ielem_type);
   
   eqn = FILL;
-  dim =  pd->Num_Dim;
 
   /* Use one point surface quadrature integration 
      to get the sign of v*n */
@@ -5537,7 +5524,6 @@ neighbor_species(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
   int inode[MAX_NODES_PER_SIDE];
   int ip, ip_total;
   int p, dim;     /* counters */
-  int ktype;
   int nvdof;
   int status = 0;
   int v;
@@ -5616,9 +5602,6 @@ neighbor_species(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 				ielem_shape, pd->i[v], i);
 	}
 
-
-      
-      ktype = 0;
       iconnect_ptr    = Proc_Connect_Ptr[neighbor_elem]; /* find pointer to beginning */
       for ( i=0; i< ei->dof[v]; i++)
 	{
@@ -5921,7 +5904,7 @@ assemble_phase_function ( double time_value,
 
   double det_J, h3, wt, phi_i, phi_j, wfcn = 0, *grad_phi_j, *grad_phi_i;
   double d_wfcn_du;
-  double pf, pf_dot,  *grad_pf ;
+  double pf_dot,  *grad_pf ;
   double *v, *v_old;
   dbl *xx;                              /* Nodal coordinates. */
   dbl *x_old;                           /* Old xx[]. */
@@ -5941,7 +5924,8 @@ assemble_phase_function ( double time_value,
   dbl supg_term, vcent[DIM], d_vcent_du[DIM][MDE][DIM], d_supg_term_du[MDE][DIM], d_supg_term_dx[MDE][DIM];
 
 
-  double rhs = 0, mass=0.0, advection=0.0, tmp = 0.0, d_n_gradT_dT[MDE];
+  double rhs = 0, mass=0.0, advection=0.0, tmp = 0.0;
+  /* double pf, d_n_gradT_dT[MDE]; */
   double tau_gls,vmag_old;
   struct Level_Set_Data *ls_old;
 
@@ -6114,7 +6098,7 @@ assemble_phase_function ( double time_value,
       eqn = R_PHASE1 + a;
       peqn = upd->ep[eqn];
 	  
-      pf = fv->pF[a];
+      /* pf = fv->pF[a]; */
       pf_dot = fv_dot->pF[a];
       grad_pf = fv->grad_pF[a];
       ls_old = ls;

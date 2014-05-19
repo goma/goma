@@ -105,11 +105,13 @@ print_msr_matrix(int n, int *ija, double *a, double *x)
      *************************************************************************/
 {
   static int num_call = 0;
-  int i, row, col, nnz;
+  int i, row, col;
   char filename[80];
   FILE *of;
 #ifdef PARALLEL
+#if 0
   char col_kind, row_kind;
+#endif
   int global_row, global_col;
 #endif  
 
@@ -118,8 +120,6 @@ print_msr_matrix(int n, int *ija, double *a, double *x)
   }
   sprintf(filename, "A%d_of_%d.%d", ProcID+1, Num_Proc, num_call);
   of = fopen(filename, "w");
-
-  nnz = ija[n];
 
   /*   fprintf(of, "# row col value \n");*/
   /* a[local_row, local_col] = A[global_row, global_col]\n"); */
@@ -134,6 +134,10 @@ print_msr_matrix(int n, int *ija, double *a, double *x)
 #endif
 #ifdef PARALLEL
     global_row = row;
+  
+    fprintf(of, "%d %d %23.16e %23.16e\n", global_row, global_row,
+	    a[row], x[row]);
+#if 0
     if (row < num_internal_dofs ) {
       row_kind = 'I';
     } else if (row < num_internal_dofs + num_boundary_dofs) {
@@ -141,9 +145,6 @@ print_msr_matrix(int n, int *ija, double *a, double *x)
     } else {
       row_kind = 'E';
     }
-    fprintf(of, "%d %d %23.16e %23.16e\n", global_row, global_row,
-	    a[row], x[row]);
-#if 0
     fprintf(of, "a[%d,%d] = %23.16e\t(A[%d,%d]) (%c,%c)\n", row, row, 
 	    a[row],
 	    global_row, global_row, row_kind, row_kind);
@@ -160,6 +161,9 @@ print_msr_matrix(int n, int *ija, double *a, double *x)
 #ifdef PARALLEL
       global_row = row;
       global_col = col;
+
+      fprintf(of, "%d %d %23.16e\n", global_row, global_col, a[i]);
+#if 0
       if (row < num_internal_dofs ) {
 	row_kind = 'I';
       } else if ( row < num_internal_dofs + num_boundary_dofs ) {
@@ -174,8 +178,6 @@ print_msr_matrix(int n, int *ija, double *a, double *x)
       } else {
 	col_kind = 'E';
       }
-      fprintf(of, "%d %d %23.16e\n", global_row, global_col, a[i]);
-#if 0
       fprintf(of, "a[%d,%d] = %23.16e (A[%d,%d]) (%c,%c)\n", row, col, a[i],
 	      global_row, global_col, row_kind, col_kind);
 #endif

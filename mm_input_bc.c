@@ -172,7 +172,7 @@ rd_bc_specs(FILE *ifp,
   int overlap_bc = FALSE;
   int   iread;
   int   NO_SPECIES = -1;
-  int k, bc_found, eq_found, eqn, irc, p;
+  int k, eq_found, eqn, irc, p;
   dbl sx, sy, sz;
 
   struct Rotation_Specs *rot;
@@ -3518,9 +3518,6 @@ rd_bc_specs(FILE *ifp,
 
 	  strcpy(condition_string[p], ts);
 
-	/* compare string to valid BC names */
-	  bc_found = 0;
-
 	/* compare string to valid rotation vectors */
 	  if (!strcmp(ts, "NONE") || !strcmp(ts, "NA") || !strcmp(ts, "NO")) 
 	    {
@@ -3531,7 +3528,6 @@ rd_bc_specs(FILE *ifp,
 	       * Case: a = a	 self replacement ain't even worth the effort
 	       */
 	      strcpy(instruction_string[p], coordinate_string[p]);
-	      bc_found = 1;
 	    } 
 	  else if (!strcmp(ts, "N"))
 	    {
@@ -3540,7 +3536,6 @@ rd_bc_specs(FILE *ifp,
 	      rot->ROTATE = 1;
 	      rot->BC_SS[p] = -1;
 	      strcpy(instruction_string[p], "n");
-	      bc_found = 1;
 	    } 
 	  else if (!strcmp(ts, "N2")) 
 	    {
@@ -3549,7 +3544,6 @@ rd_bc_specs(FILE *ifp,
 	      rot->ROTATE = 1;
 	      rot->BC_SS[p] = -1;
 	      strcpy(instruction_string[p], "n2");
-	      bc_found = 1;
 	    } 
 	  else if (!strcmp(ts, "N3")) 
 	    {
@@ -3558,7 +3552,6 @@ rd_bc_specs(FILE *ifp,
 	      rot->ROTATE = 1;
 	      rot->BC_SS[p] = -1;
 	      strcpy(instruction_string[p], "n3");
-	      bc_found = 1;
 	    } 
 	  else if (!strcmp(ts, "T")) 
 	    {
@@ -3567,7 +3560,6 @@ rd_bc_specs(FILE *ifp,
 	      rot->ROTATE = 1;
 	      rot->BC_SS[p] = -1;
 	      strcpy(instruction_string[p], "t");
-	      bc_found = 1;
 	    } 
 	  else if (!strcmp(ts, "T1")) 
 	    {
@@ -3576,7 +3568,6 @@ rd_bc_specs(FILE *ifp,
 	      rot->ROTATE = 1;
 	      rot->BC_SS[p] = -1;
 	      strcpy(instruction_string[p], "t1");
-	      bc_found = 1;
 	    } 
 	  else if (!strcmp(ts, "T2")) 
 	    {
@@ -3585,7 +3576,6 @@ rd_bc_specs(FILE *ifp,
 	      rot->ROTATE = 1;
 	      rot->BC_SS[p] = -1;
 	      strcpy(instruction_string[p], "t2");
-	      bc_found = 1;
 	    } 
 	  else if (!strcmp(ts, "B")) 
 	    {
@@ -3594,7 +3584,6 @@ rd_bc_specs(FILE *ifp,
 	      rot->ROTATE = 1;
 	      rot->BC_SS[p] = -1;
 	      strcpy(instruction_string[p], "b");
-	      bc_found = 1;
 	    } 
 	  else if (!strcmp(ts, "S")) 
 	    {
@@ -3603,7 +3592,6 @@ rd_bc_specs(FILE *ifp,
 	      rot->ROTATE = 1;
 	      rot->BC_SS[p] = -1;
 	      strcpy(instruction_string[p], "s");
-	      bc_found = 1;
 	    } 
 	  else if (!strcmp(ts, "X")) 
 	    {
@@ -3612,7 +3600,6 @@ rd_bc_specs(FILE *ifp,
 	      rot->ROTATE = 1;
 	      rot->BC_SS[p] = -1;
 	      strcpy(instruction_string[p], "ex");
-	      bc_found = 1;
 	    } 
 	  else if (!strcmp(ts, "Y")) 
 	    {
@@ -3621,7 +3608,6 @@ rd_bc_specs(FILE *ifp,
 	      rot->ROTATE = 1;
 	      rot->BC_SS[p] = -1;
 	      strcpy(instruction_string[p], "ey");
-	      bc_found = 1;
 	    } 
 	  else if (!strcmp(ts, "Z")) 
 	    {
@@ -3630,7 +3616,6 @@ rd_bc_specs(FILE *ifp,
 	      rot->ROTATE = 1;
 	      rot->BC_SS[p] = -1;
 	      strcpy(instruction_string[p], "ez");
-	      bc_found = 1;
 	    }
 	  else if (!strcmp(ts, "GD")) 
 	    {
@@ -3638,7 +3623,6 @@ rd_bc_specs(FILE *ifp,
 	      rot->BC_desc[p] = NULL;
 	      rot->BC_SS[p] = -1;
 	      strcpy(instruction_string[p], "GD");
-	      bc_found = 1;
 	    } 
 	  else 
 	    {
@@ -3650,8 +3634,6 @@ rd_bc_specs(FILE *ifp,
 		      rot->BC_Type[p]       = BC_Desc[k].BC_Name;
 		      rot->BC_desc[p]       = &BC_Desc[k];
 		      rot->BC_desc_index[p] = k;
-		      bc_found = 1;
-		      
 		    }
 		}
 

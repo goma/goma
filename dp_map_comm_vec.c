@@ -698,8 +698,8 @@ output_comm_stats(Dpi *dpi, Comm_Ex *cx)
   int gmax_neighbor, gmax_neighbor_proc;
   double avg_mesg = 0.0, gavg_mesg, gavg_neighbor;
   int gmin_neighbor, gmin_neighbor_proc;
-  int gmax_mesg, gmax_mesg_proc;
-  int gmin_mesg, gmin_mesg_proc;
+  int gmax_mesg_proc;
+  int gmin_mesg_proc;
   
   gmax_neighbor = gmaxloc_int(dpi->num_neighbors, ProcID,
 			      &gmax_neighbor_proc);
@@ -713,8 +713,8 @@ output_comm_stats(Dpi *dpi, Comm_Ex *cx)
     avg_mesg += cx[p].num_dofs_send;
   }
 
-  gmax_mesg = gmaxloc_int(max_mesg, ProcID, &gmax_mesg_proc);
-  gmin_mesg = gminloc_int(min_mesg, ProcID, &gmin_mesg_proc);
+  gmaxloc_int(max_mesg, ProcID, &gmax_mesg_proc);
+  gminloc_int(min_mesg, ProcID, &gmin_mesg_proc);
   if (dpi->num_neighbors > 0) {
     avg_mesg /= dpi->num_neighbors;
   }

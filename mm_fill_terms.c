@@ -1263,7 +1263,6 @@ assemble_energy(double time,	/* present time value */
 
   dbl rho;				/* Density (no variations allowed
 					   here, for now) */
-  dbl k;				/* Thermal conductivity. */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; /* Thermal conductivity dependence. */
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
 
@@ -1346,6 +1345,11 @@ assemble_energy(double time,	/* present time value */
 	  of the vertices for Q1. It comes from
 	  the routine "element_velocity." */
 
+  /* initialize grad_phi_j */
+  for (i = 0; i < DIM; i++) {
+    grad_phi_j[i] = 0;
+  }
+
   /*   static char yo[] = "assemble_energy";*/
 
   status = 0;
@@ -1419,7 +1423,8 @@ assemble_energy(double time,	/* present time value */
 
   rho = density(d_rho, time);
 
-  k = conductivity( d_k, time );
+  /* CHECK FOR REMOVAL */
+  conductivity( d_k, time );
 
   Cp = heat_capacity( d_Cp, time );
 
@@ -6349,7 +6354,6 @@ assemble_LSvelocity( bool owner, int ielem )
   int status=0;
   int iAC=0;
   int vj;
-  int LSV_mode;
 
   dbl det_J;
   dbl h3;			/* Volume element (scale factors). */
@@ -6363,7 +6367,6 @@ assemble_LSvelocity( bool owner, int ielem )
 
   dbl alpha;                    /* Level set length scale */
   dbl H;                        /* Level set heaviside function  */
-  dbl sign;                     /* Level set phase */
 
   /*
    * Unpack variables from structures for local convenience...
@@ -6375,7 +6378,6 @@ assemble_LSvelocity( bool owner, int ielem )
 
   iAC = pd->LSVelocityIntegral;
  
-  LSV_mode = augc[iAC].DIR;
   alpha = ls -> Length_Scale;
 
 
@@ -6400,12 +6402,6 @@ assemble_LSvelocity( bool owner, int ielem )
       vel_dim = ( augc[iAC].DIR == I_POS_VX ? 0 :
 		( augc[iAC].DIR == I_POS_VY ? 1 :
 	        ( augc[iAC].DIR == I_POS_VZ ? 2 : -1 ) ) );
-      sign = +1.0;
-    }
-  else
-    {
-      /* OK, the negative phase was selected. */
-      sign = -1.0;
     }
 
   if ( vel_dim == -1 )
@@ -13622,11 +13618,10 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
       *    Actual value of the density
       ***************************************************************************/
 {
-  int dim;
   int w, j, var, var_offset, matrl_species_var_type,
     dropped_last_species_eqn;
   int species, err;
-  dbl F, vol=0, rho=0, rho_f, rho_s, pressureThermo, RGAS_CONST;
+  dbl vol=0, rho=0, rho_f, rho_s, pressureThermo, RGAS_CONST;
   dbl avgMolecWeight=0, tmp;
   double *phi_ptr;
 
@@ -13656,11 +13651,6 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
   if (d_rho != NULL) {
     zeroStructures(d_rho, 1);
   }
-  
-  /*
-   * Get the dimensionality of the current element
-   */
-  dim  = ei->ielem_dim;
   
   /*
    *   Branch according to the density model from the material properties
@@ -13695,7 +13685,6 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
       }
     
   } else if (mp->DensityModel == FILL ) {
-    F = fv->F;                     
       
     rho = mp->u_density[0];
 
@@ -13795,7 +13784,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
   else if (mp->DensityModel == DENSITY_FOAM_CONC)
     {
       double Rgas, MW_f, MW_a, rho_epoxy, rho_fluor, T, Press;
-      dbl rho, rho_v_inv,d_rho_v_inv_dT, rho_a_inv, d_rho_a_inv_dT, drho_T, drho_c_v,
+      dbl rho_v_inv,d_rho_v_inv_dT, rho_a_inv, d_rho_a_inv_dT, drho_T, drho_c_v,
 	drho_c_a, drho_c_l;
       int species_l, species_v, species_a;
 
@@ -13815,9 +13804,6 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
       rho_a_inv = Rgas*T/(Press*MW_a);
       d_rho_a_inv_dT = Rgas/(Press*MW_a);
 	
-      rho = rho_epoxy+ fv->c[species_v]*(1.-rho_epoxy*rho_v_inv) 
-	             + fv->c[species_a]*(1.-rho_epoxy*rho_a_inv)
-	             + fv->c[species_l]*(1.-rho_epoxy/rho_fluor);
       drho_c_v =1.-rho_epoxy*rho_v_inv;
       drho_c_a =1.-rho_epoxy*rho_a_inv;
       drho_c_l =1.-rho_epoxy/rho_fluor;
@@ -14349,7 +14335,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 
 {
   int dim = pd->Num_Dim;
-  int var, i, j, a, w, var_offset, err;
+  int var, i, j, a, w, var_offset;
   double k, Tref, tmp;
   struct Level_Set_Data *ls_old;
 
@@ -14368,7 +14354,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
   if(mp->ConductivityModel == USER )
     {
 
-      err = usr_thermal_conductivity(mp->u_thermal_conductivity,time);
+      usr_thermal_conductivity(mp->u_thermal_conductivity,time);
 
       k   = mp->thermal_conductivity;
 
@@ -14460,11 +14446,11 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
     }
   else if(mp->ConductivityModel == LEVEL_SET )
     {
-      err = ls_transport_property( mp->u_thermal_conductivity[0], 
-				   mp->u_thermal_conductivity[1], 
-				   mp->u_thermal_conductivity[2], 
-				   &mp->thermal_conductivity,
-				   &mp->d_thermal_conductivity[FILL] );
+      ls_transport_property( mp->u_thermal_conductivity[0], 
+			     mp->u_thermal_conductivity[1], 
+			     mp->u_thermal_conductivity[2], 
+			     &mp->thermal_conductivity,
+			     &mp->d_thermal_conductivity[FILL] );
 
       k = mp->thermal_conductivity;
 
@@ -14555,7 +14541,7 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
 
 {
   int dim = pd->Num_Dim;
-  int var, i, j, a, w, var_offset, err;
+  int var, i, j, a, w, var_offset;
   double Cp, T_offset;
   struct Level_Set_Data *ls_old;
 
@@ -14575,7 +14561,7 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
 
   if(mp->HeatCapacityModel == USER )
     {
-      err = usr_heat_capacity(mp->u_heat_capacity,time);
+      usr_heat_capacity(mp->u_heat_capacity,time);
       Cp = mp->heat_capacity;
 
       var = TEMPERATURE;
@@ -14653,11 +14639,11 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
     }
   else if (mp->HeatCapacityModel == LEVEL_SET )
     {
-      err = ls_transport_property( mp->u_heat_capacity[0], 
-				   mp->u_heat_capacity[1], 
-				   mp->u_heat_capacity[2], 
-				   &mp->heat_capacity,
-				   &mp->d_heat_capacity[FILL] );
+      ls_transport_property( mp->u_heat_capacity[0], 
+			     mp->u_heat_capacity[1], 
+			     mp->u_heat_capacity[2], 
+			     &mp->heat_capacity,
+			     &mp->d_heat_capacity[FILL] );
 
       Cp = mp->heat_capacity;
 
@@ -14889,7 +14875,7 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
 
 {
   int dim = pd->Num_Dim;
-  int var, i, j, a, w, var_offset, err;
+  int var, i, j, a, w, var_offset;
   double R;
   struct Level_Set_Data *ls_old;
   R =0.;
@@ -14907,7 +14893,7 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
 
 	EH(-1,"user acoustic impedance code not ready yet");
 	/*
-      err = usr_acoustic_impedance(mp->u_acoustic_impedance,time);
+	  usr_acoustic_impedance(mp->u_acoustic_impedance,time);
 	*/
 
       R   = mp->acoustic_impedance;
@@ -14980,11 +14966,11 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
     }
   else if(mp->Acoustic_ImpedanceModel == LEVEL_SET )
     {
-      err = ls_transport_property( mp->u_acoustic_impedance[0], 
-				   mp->u_acoustic_impedance[1], 
-				   mp->u_acoustic_impedance[2], 
-				   &mp->acoustic_impedance,
-				   &mp->d_acoustic_impedance[FILL] );
+      ls_transport_property( mp->u_acoustic_impedance[0], 
+			     mp->u_acoustic_impedance[1], 
+			     mp->u_acoustic_impedance[2], 
+			     &mp->acoustic_impedance,
+			     &mp->d_acoustic_impedance[FILL] );
 
       R = mp->acoustic_impedance;
 
@@ -15040,7 +15026,7 @@ double
 wave_number( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 	      dbl time )
 {
-  int var, j, err, i;
+  int var, j, i;
   double k;
   struct Level_Set_Data *ls_old;
 
@@ -15089,11 +15075,11 @@ wave_number( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
     }
   else if(mp->wave_numberModel == LEVEL_SET )
     {
-      err = ls_transport_property( mp->u_wave_number[0], 
-				   mp->u_wave_number[1], 
-				   mp->u_wave_number[2], 
-				   &mp->wave_number,
-				   &mp->d_wave_number[FILL] );
+      ls_transport_property( mp->u_wave_number[0], 
+			     mp->u_wave_number[1], 
+			     mp->u_wave_number[2], 
+			     &mp->wave_number,
+			     &mp->d_wave_number[FILL] );
 
       k = mp->wave_number;
 
@@ -15173,7 +15159,7 @@ acoustic_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
 
 {
   int dim = pd->Num_Dim;
-  int var, i, j, a, w, var_offset, err;
+  int var, i, j, a, w, var_offset;
   double alpha;
   struct Level_Set_Data *ls_old;
   alpha =0.;
@@ -15270,11 +15256,11 @@ acoustic_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
     }
   else if(mp->Acoustic_AbsorptionModel == LEVEL_SET )
     {
-      err = ls_transport_property( mp->u_acoustic_absorption[0], 
-				   mp->u_acoustic_absorption[1], 
-				   mp->u_acoustic_absorption[2], 
-				   &mp->acoustic_absorption,
-				   &mp->d_acoustic_absorption[FILL] );
+      ls_transport_property( mp->u_acoustic_absorption[0], 
+			     mp->u_acoustic_absorption[1], 
+			     mp->u_acoustic_absorption[2], 
+			     &mp->acoustic_absorption,
+			     &mp->d_acoustic_absorption[FILL] );
 
       alpha = mp->acoustic_absorption;
 
@@ -15356,7 +15342,7 @@ light_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
 
 {
   int dim = pd->Num_Dim;
-  int var, i, j, a, w, var_offset, err;
+  int var, i, j, a, w, var_offset;
   double alpha;
   struct Level_Set_Data *ls_old;
   alpha =0.;
@@ -15453,11 +15439,11 @@ light_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
     }
   else if(mp->Light_AbsorptionModel == LEVEL_SET )
     {
-      err = ls_transport_property( mp->u_light_absorption[0], 
-				   mp->u_light_absorption[1], 
-				   mp->u_light_absorption[2], 
-				   &mp->light_absorption,
-				   &mp->d_light_absorption[FILL] );
+      ls_transport_property( mp->u_light_absorption[0], 
+			     mp->u_light_absorption[1], 
+			     mp->u_light_absorption[2], 
+			     &mp->light_absorption,
+			     &mp->d_light_absorption[FILL] );
 
       alpha = mp->light_absorption;
 
@@ -15540,7 +15526,7 @@ refractive_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_n,
 
 {
   int dim = pd->Num_Dim;
-  int var, i, j, a, w, var_offset, err;
+  int var, i, j, a, w, var_offset;
   double n;
   struct Level_Set_Data *ls_old;
   n =0.;
@@ -15637,11 +15623,11 @@ refractive_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_n,
     }
   else if(mp->Refractive_IndexModel == LEVEL_SET )
     {
-      err = ls_transport_property( mp->u_refractive_index[0], 
-				   mp->u_refractive_index[1], 
-				   mp->u_refractive_index[2], 
-				   &mp->refractive_index,
-				   &mp->d_refractive_index[FILL] );
+      ls_transport_property( mp->u_refractive_index[0], 
+			     mp->u_refractive_index[1], 
+			     mp->u_refractive_index[2], 
+			     &mp->refractive_index,
+			     &mp->d_refractive_index[FILL] );
 
       n = mp->refractive_index;
 
@@ -16628,7 +16614,7 @@ quad_isomap_invert( const double x1,
         static double xi[3] = {0.5,0.5,0.5};
         static int nell=0;
         int itp[27];
-        int nell_xi[3],ne_xi[3],nedel[3];
+        int nell_xi[3],ne_xi[3];
         double dxi[3],eps,pvalue, pc, pe, pg;
         double epstol=1.0e-4;
   	double loc_tol=0.0001;
@@ -16636,14 +16622,17 @@ quad_isomap_invert( const double x1,
 	int elem_nodes;
         double bfi,bfj,dfi,dfj,bfl,dfl;
 
+	/* Initialize dxi */
+	dxi[0] = 0;
+	dxi[1] = 0;
+	dxi[2] = 0;
+
  	elem_nodes = pow(elem_order+1,dim);
  	switch (dim)
  		{
  		case 2:
          		ne_xi[0]=(ngrid1-1)/elem_order;
          		ne_xi[1]=(ngrid2-1)/elem_order;
-         		nedel[0] = ne_xi[1];
-         		nedel[1] = 1;
          		nell_xi[0] = nell/ne_xi[1];
          		nell_xi[1] = nell%ne_xi[1];
  			break;
@@ -16651,9 +16640,6 @@ quad_isomap_invert( const double x1,
          		ne_xi[0]=(ngrid1-1)/elem_order;
          		ne_xi[1]=(ngrid2-1)/elem_order;
          		ne_xi[2]=(ngrid3-1)/elem_order;
-         		nedel[0] = 1;
-         		nedel[1] = ne_xi[0];
-         		nedel[2] = ne_xi[0]*ne_xi[1];
          		nell_xi[2] = nell/(ne_xi[0]*ne_xi[1]);
          		nell_xi[0] = nell%ne_xi[0];
          		nell_xi[1] = (nell-nell_xi[2]*ne_xi[0]*ne_xi[1])
@@ -17166,7 +17152,7 @@ scalar_fv_fill_adjmatrl(double **base, int lvdesc, int num_dofs,
      *     
      **************************************************************************/
 {
-  int ln, idof, lvdof, lvdof_active;
+  int ln, idof, lvdof;
   double *phi_ptr = bf[var_type]->phi, sum = 0.0;
   for (idof = 0; idof < num_dofs; idof++) {
     /*
@@ -17179,13 +17165,7 @@ scalar_fv_fill_adjmatrl(double **base, int lvdesc, int num_dofs,
      *  Find the local node number of this degree of freedom
      */
     ln = ei->dof_list[var_type][lvdof];
-    /*
-     *  Find the local variable type degree of freedom 
-     *  active in this element for this local node. This
-     *  degree of freedom belongs to this material, and thus
-     *  has a nonzero basis function associated with it.
-     */
-    lvdof_active = ei->ln_to_dof[var_type][ln];
+
     /*
      *  Add it to the sum to get the value of the variable.
      */
@@ -17709,7 +17689,6 @@ double REFVolumeSource (double time,
 {
   int a,b,j,w, w1, dim = pd->Num_Dim, var;
   double x_dot[DIM] = {0.,0.,0.};
-  double T_dot = 0.0;
   double source =0.;
   double phi_j;
   double rho = 0.;
@@ -17733,10 +17712,6 @@ double REFVolumeSource (double time,
 
   if (pd->TimeIntegration != STEADY ) 
     {
-    if (pd->v[TEMPERATURE]) 
-      {
-	T_dot = fv_dot->T;
-      }
     if (pd->v[MESH_DISPLACEMENT1])
       {
 	for (a = 0; a < dim; a++)
@@ -18034,7 +18009,6 @@ assemble_PPPS_generalized(Exo_DB *exo)
       * that have significant aspect ratios.   Viz. they most solve an eigenproblem at the element level to do so.  
       */
 {
-  double phi_j;
   int var, pvar, ip, i, j, a, b, m, n, k;
   double xi[DIM];
    /* Variables for vicosity and derivative */
@@ -18049,7 +18023,6 @@ assemble_PPPS_generalized(Exo_DB *exo)
   int INFO, ipass, npass;
   double wt, det_J, h3, d_vol, sum;  
   
-  double P_avg = 0.;
   double vol = 0.;
   double xi_dV = 0.;
   double wm_dV = 0.;
@@ -18093,7 +18066,6 @@ assemble_PPPS_generalized(Exo_DB *exo)
       memset( d_visc_e_dx, 0, sizeof(double)*DIM*MDE);
       memset( R_new, 0, sizeof(double)*MDE);
       memset( R_old, 0, sizeof(double)*MDE);
-      P_avg = 0.;
       //phi_avg[MDE];
       vol = 0.;
       xi_dV = 0.;
@@ -18365,7 +18337,6 @@ assemble_PPPS_generalized(Exo_DB *exo)
 	  pvar = upd->vp[var];
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
-	      phi_j = bf[var]->phi[j];
 	      lec->J[peqn][pvar][i][j] += Ce[i][j];
 	    }
 	}
@@ -18446,13 +18417,9 @@ apply_distributed_sources ( int elem, double width,
   int ipass, num_elem_passes = 1;
   double ls_F[MDE], ad_wt[10];    /* adaptive integration weights  */
   int i;
-  struct Level_Set_Data * ls_save=NULL;
-  
-  
 
   if( pd->e[R_PHASE1] && !pd->e[R_FILL] ) 
 	{
-	  ls_save = ls;	
 	  ls = pfd->ls[0];
 	}
     
@@ -18680,12 +18647,6 @@ apply_distributed_sources ( int elem, double width,
   /* leave the place as tidy as it was before you came */
   ls->Elem_Sign = 0;
   
-  if( pd->e[R_PHASE1] && !pd->e[R_FILL] ) 
-  {
-	  ls_save = ls;	
-  }
-  
-  
   return ( 2 );
 
 }
@@ -18703,7 +18664,7 @@ assemble_pf_capillary (double *pf_surf_tens )
   struct Basis_Functions *bfm;
   dbl (* grad_phi_i_e_a ) [DIM] = NULL;
 
-  double wt, det_J, h3, phi_i, phi_j;
+  double wt, det_J, h3;
 
   double csf[DIM][DIM];
   double d_csf_dF[DIM][DIM][MDE];
@@ -18771,8 +18732,6 @@ assemble_pf_capillary (double *pf_surf_tens )
 
 		  ii = ei->lvdof_to_row_lvdof[eqn][i];
 
-		  phi_i = bfm->phi[i];
-		  
 		  source = 0.;
 		  
 		  grad_phi_i_e_a = bfm->grad_phi_e[i][a];
@@ -18819,7 +18778,6 @@ assemble_pf_capillary (double *pf_surf_tens )
 
 		  ii = ei->lvdof_to_row_lvdof[eqn][i];
 
-		  phi_i = bfm->phi[i];
 
 		  grad_phi_i_e_a = bfm->grad_phi_e[i][a];
 
@@ -18833,8 +18791,6 @@ assemble_pf_capillary (double *pf_surf_tens )
 		      
 		      for( j=0; j<ei->dof[var]; j++)
 			{
-			  phi_j = bf[var]->phi[j];
-			  
 			  source = 0.;
 
 			  for ( p=0; p<VIM; p++)
@@ -18875,7 +18831,7 @@ assemble_csf_tensor ( void )
 	struct Basis_Functions *bfm;
 	dbl (* grad_phi_i_e_a ) [DIM] = NULL;
 	
-	double wt, det_J, h3, phi_i, phi_j, d_area;
+	double wt, det_J, h3, phi_j, d_area;
 	
 	double csf[DIM][DIM];
 	double d_csf_dF[DIM][DIM][MDE];
@@ -18936,7 +18892,6 @@ assemble_csf_tensor ( void )
 					
 					ii = ei->lvdof_to_row_lvdof[eqn][i];
 					
-					phi_i = bfm->phi[i];
 					grad_phi_i_e_a = bfm->grad_phi_e[i][a];
 					
 					source = 0.;
@@ -18992,7 +18947,6 @@ assemble_csf_tensor ( void )
 					
 					ii = ei->lvdof_to_row_lvdof[eqn][i];
 					
-					phi_i = bfm->phi[i];
 					grad_phi_i_e_a = bfm->grad_phi_e[i][a];
 					
 					source = 0.;
@@ -19055,8 +19009,6 @@ assemble_csf_tensor ( void )
 				{
 					
 					ii = ei->lvdof_to_row_lvdof[eqn][i];
-					
-					phi_i = bfm->phi[i];
 					
 					grad_phi_i_e_a = bfm->grad_phi_e[i][a];
 					
@@ -22519,7 +22471,6 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
   int dim, wim;
 
   struct Basis_Functions *bfm;
-  double *grad_phi_i;
   double wt, det_J, h3, phi_i, phi_j;
   double vnorm;
   double sign = 1.;
@@ -22719,7 +22670,6 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
                ii = ei->lvdof_to_row_lvdof[eqn][i];
 
                phi_i = bfm->phi[i];
-               grad_phi_i = bfm->grad_phi[i];
 	       
 #if 0
 	       mass = lsi->delta * 2. * (-fv_old->F);
@@ -22776,7 +22726,6 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
                ii = ei->lvdof_to_row_lvdof[eqn][i];
 
                phi_i = bfm->phi[i];
-               grad_phi_i = bfm->grad_phi[i];
 
 #if 0
 	       mass = lsi->delta * 2. * (-fv_old->F);
@@ -22842,7 +22791,6 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
               ii = ei->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
-              grad_phi_i = bfm->grad_phi[i];
 
               /*
                * J_ls_v
@@ -24781,7 +24729,7 @@ assemble_extension_velocity_path_dependence(void)
   int dim, wim;
 
   struct Basis_Functions *bfm;
-  double wt, det_J, h3, phi_i, phi_j;
+  double wt, det_J, h3, phi_i;
 
   double source = 0.;
   double resid;
@@ -24862,7 +24810,6 @@ assemble_extension_velocity_path_dependence(void)
 
                   for( j=0; j<ei->dof[var]; j++)
                     {
-                      phi_j = bf[var]->phi[j];
 
                       source = resid * (2. * lsi->d_H_dF[j]) * phi_i;
                       source *= det_J * wt * h3;
@@ -24885,7 +24832,7 @@ assemble_fill_path_dependence ( void )
   int dim, wim;
 
   struct Basis_Functions *bfm;
-  double wt, det_J, h3, phi_i, phi_j;
+  double wt, det_J, h3, phi_i;
 
   double source = 0.;
 
@@ -24947,8 +24894,6 @@ assemble_fill_path_dependence ( void )
 
                   for( j=0; j<ei->dof[var]; j++)
                     {
-                      phi_j = bf[var]->phi[j];
-
                       switch ( tran->Fill_Weight_Fcn ) {
                       case FILL_WEIGHT_G:
                       case FILL_WEIGHT_GLS:
@@ -24987,7 +24932,6 @@ assemble_energy_path_dependence(
 
   dbl q[DIM];				/* Heat flux vector. */
   dbl rho;				/* Density */
-  dbl k;				/* Thermal conductivity. */
   dbl Cp;				/* Heat capacity. */
   dbl h;				/* Heat source. */
 
@@ -25012,15 +24956,13 @@ assemble_energy_path_dependence(
   dbl wt_func;
 
 /* SUPG variables */
-  dbl h_elem=0, h_elem_inv=0;
+  dbl h_elem=0;
   dbl supg;
   const dbl *vcent, *hsquared;
 
   /*
    * Interpolation functions for variables and some of their derivatives.
    */
-
-  dbl phi_j;
 
   dbl h3;			/* Volume element (scale factors). */
   dbl det_J;
@@ -25083,15 +25025,6 @@ assemble_energy_path_dependence(
 	  h_elem += vcent[p] * vcent[p] * hsquared[p];
 	}
       h_elem = sqrt(h_elem)/2.;
-      if(h_elem == 0.)
-	{
-	  h_elem_inv=0.;
-	}
-      else
-	{
-	  h_elem_inv=1./h_elem;
-	}
-
     }
 /* end Petrov-Galerkin addition */
 
@@ -25106,7 +25039,8 @@ assemble_energy_path_dependence(
 
   rho = density(NULL, time);
 
-  k = conductivity( NULL, time );
+  /* CHECK FOR REMOVAL */
+  conductivity( NULL, time );
 
   Cp = heat_capacity( NULL, time );
 
@@ -25217,8 +25151,6 @@ assemble_energy_path_dependence(
           pvar = upd->vp[var];
           for ( j=0; j<ei->dof[var]; j++ )
             {
-              phi_j = bf[var]->phi[j];
-
 	      lec->J[peqn][pvar][i][j] += lsi->d_H_dF[j] * energy_residual * sign;
             }
 	}
@@ -25271,8 +25203,6 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
    * Interpolation functions for variables and some of their derivatives.
    */
 
-  dbl phi_j;
-
   dbl Pi[DIM][DIM];
 
   dbl wt;
@@ -25292,7 +25222,6 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
   dbl sc;          /* inertial coefficient */
   dbl speed;       /* magnitude of the velocity vector */
 
-  int v_g[DIM][DIM];
   int v_s[MAX_MODES][DIM][DIM];
 
   int sign;
@@ -25369,16 +25298,6 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
   if( pd->v[POLYMER_STRESS11] )
   {
   (void)stress_eqn_pointer(v_s);
-
-  v_g[0][0] = VELOCITY_GRADIENT11;
-  v_g[0][1] = VELOCITY_GRADIENT12;
-  v_g[1][0] = VELOCITY_GRADIENT21;
-  v_g[1][1] = VELOCITY_GRADIENT22;
-  v_g[0][2] = VELOCITY_GRADIENT13;
-  v_g[1][2] = VELOCITY_GRADIENT23;
-  v_g[2][0] = VELOCITY_GRADIENT31;
-  v_g[2][1] = VELOCITY_GRADIENT32;
-  v_g[2][2] = VELOCITY_GRADIENT33;
   }
 
   /* Set up variables for particle/fluid momentum coupling.
@@ -25675,7 +25594,6 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 				  pvar = upd->vp[var];
 				  for ( j=0; j<ei->dof[var]; j++ )
 				  {
-					  phi_j = bf[var]->phi[j];
 					  
 					  lec->J[peqn][pvar][ii][j] += lsi->d_H_dF[j] * momentum_residual * sign;
 				  }
@@ -25733,7 +25651,6 @@ assemble_continuity_path_dependence (dbl time_value,
 	 */
 	
 	dbl phi_i;
-	dbl phi_j;
 	
 	dbl ( *grad_phi )[DIM];               /* weight-function for PSPG term */
 	
@@ -26190,7 +26107,6 @@ assemble_continuity_path_dependence (dbl time_value,
 			j=0;	
 			while ( j < dofs ) 
 			{
-				phi_j = bf[var]->phi[j];
 				
 				lec->J[peqn][pvar][i][j] += lsi->d_H_dF[j] * continuity * sign;
 			
@@ -26218,7 +26134,7 @@ assemble_LM_source ( double *xi,
   int dim, wim;
   int pass;
   int ac_lm = Do_Overlap;
-  int id_side, nu, iAC=0, ioffset = 0, iconnect_ptr;
+  int id_side, nu, iAC=0, ioffset = 0;
   int dof_l[DIM];
   double phi_l[DIM][MDE];
   int ielem = ei->ielem;
@@ -26272,7 +26188,6 @@ assemble_LM_source ( double *xi,
       id_side = cp->elem_side;
       ioffset = first_overlap_ac(cp->elem, id_side);
       if (ioffset == -1) EH(-1,"Bad AC index");
-      iconnect_ptr = exo->elem_ptr[cp->elem];
 
       setup_shop_at_point( cp->elem, cp->xi, exo );
 
@@ -27390,8 +27305,8 @@ heat_flux( double q[DIM],
     }
   else if (cr->HeatFluxModel == CR_HF_USER)
     {
-      double wrate, *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
 #ifdef SECOR_HEAT_FLUX
+      double *hpar, h, dh_dX[DIM], Vb[DIM],Vt[DIM];
       double dq_dVb[DIM][DIM], dq_dVt[DIM][DIM];
 #endif
 #if 0
@@ -27401,7 +27316,7 @@ heat_flux( double q[DIM],
 #endif
 
 /*     gap functions - product of pade functions */
-
+#ifdef SECOR_HEAT_FLUX
         hpar = &mp->u_thermal_conductivity[0];
         h = hpar[0] + hpar[4]*fv->x[0]
                 + (hpar[1]-hpar[5]*fv->x[0])*(hpar[3]-fv->x[1])
@@ -27409,6 +27324,7 @@ heat_flux( double q[DIM],
 
         dh_dX[0] = hpar[4] - hpar[5]*(hpar[3]-fv->x[1]);
         dh_dX[1] = hpar[5]*fv->x[0]-hpar[1] - hpar[2]*(hpar[3]-fv->x[1]);
+#endif
 #if 0
         npadex = ((int)mp->u_thermal_conductivity[0]);
         pn = &mp->u_thermal_conductivity[1];
@@ -27446,17 +27362,17 @@ heat_flux( double q[DIM],
         h = hx*hy;
 #endif
 
+#ifdef SECOR_HEAT_FLUX
 /*     velocities of bottom and top surfaces   */
         Vb[0] = mp->u_heat_capacity[0];
         Vb[1] = mp->u_heat_capacity[1];
         Vt[0] = mp->u_heat_capacity[2];
         Vt[1] = mp->u_heat_capacity[3];
 
-#if defined SECOR_HEAT_FLUX
-      wrate = usr_heat_flux(grad_T, q, dq_gradT, dq_dX, time, h, dh_dX, Vb, Vt,
+      usr_heat_flux(grad_T, q, dq_gradT, dq_dX, time, h, dh_dX, Vb, Vt,
                              dq_dVb, dq_dVt);
 #else
-      wrate = usr_heat_flux(grad_T, q, dq_gradT, dq_dX, time);
+      usr_heat_flux(grad_T, q, dq_gradT, dq_dX, time);
 #endif
 
       var = TEMPERATURE;
@@ -27513,7 +27429,6 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   dbl ai0, ai0_anode, ai0_cathode;   /* exchange current density; KSC: 2/17/99 */
   int mn;
 
-  int err;
   struct Level_Set_Data *ls_old = ls;
 
   /*
@@ -27540,7 +27455,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 
   if(mp->HeatSourceModel == USER )
     {
-      err = usr_heat_source(mp->u_heat_source,time);
+      usr_heat_source(mp->u_heat_source,time);
       h = mp->heat_source;
 
       var = TEMPERATURE;
@@ -27806,11 +27721,11 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
           dbl dhdv[DIM][MDE];
           dbl dhdC[MAX_CONC][MDE];
           dbl dhdVolt[MDE];
-          err = usr_heat_source_gen(&h, dhdT, dhdX, dhdv, dhdC, dhdVolt, mp->u_heat_source, time);
+          usr_heat_source_gen(&h, dhdT, dhdX, dhdv, dhdC, dhdVolt, mp->u_heat_source, time);
         }
       else
         {
-          err = usr_heat_source_gen(&h, d_h->T, d_h->X, d_h->v, d_h->C, d_h->V, mp->u_heat_source, time);
+          usr_heat_source_gen(&h, d_h->T, d_h->X, d_h->v, d_h->C, d_h->V, mp->u_heat_source, time);
         }
     }
   else
@@ -27963,8 +27878,6 @@ calc_pspg( dbl pspg[DIM],
   int var;
   int w, j;
 
-  int status, err;
-
   int pspg_global;
   int pspg_local;
 
@@ -28045,8 +27958,6 @@ calc_pspg( dbl pspg[DIM],
   
   static int is_initialized=FALSE;
 
-  status = 0;
-
   dim   = pd->Num_Dim;
   wim   = dim;
   if(pd->CoordinateSystem == SWIRLING ||
@@ -28093,7 +28004,7 @@ calc_pspg( dbl pspg[DIM],
 
   if( pd->v[POLYMER_STRESS11] )
   {	
-	err = stress_eqn_pointer(v_s);
+	stress_eqn_pointer(v_s);
 
 	v_g[0][0] = VELOCITY_GRADIENT11;
 	v_g[0][1] = VELOCITY_GRADIENT12;
@@ -28122,7 +28033,7 @@ calc_pspg( dbl pspg[DIM],
     {
       w0 = gn->sus_species_no;
       /* This is the divergence of the particle stress  */
-      /* err = divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
+      /* divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
 	 d_div_tau_p_dv, d_div_tau_p_dX, w0); */
     }
 
@@ -28380,11 +28291,11 @@ calc_pspg( dbl pspg[DIM],
 	}
       else if (mp->FlowingLiquidViscosityModel == MOLTEN_GLASS)
 	{
-	  err = molten_glass_viscosity(&(mp->FlowingLiquid_viscosity), dvis_dT, mp->u_FlowingLiquid_viscosity);
+	  molten_glass_viscosity(&(mp->FlowingLiquid_viscosity), dvis_dT, mp->u_FlowingLiquid_viscosity);
 	}
       else if (mp->FlowingLiquidViscosityModel == USER)
 	{
-	  err = usr_FlowingLiquidViscosity(mp->u_FlowingLiquid_viscosity);
+	  usr_FlowingLiquidViscosity(mp->u_FlowingLiquid_viscosity);
 	  var = TEMPERATURE;
 
 	  for ( j=0; j<ei->dof[var]; j++)
@@ -28417,7 +28328,7 @@ calc_pspg( dbl pspg[DIM],
   speed = sqrt(speed);
 
   /* get momentum source term */
-  err = momentum_source_term(f, df, time_value);
+  momentum_source_term(f, df, time_value);
 
   if(pd->e[R_PMOMENTUM1])
     {
@@ -28826,7 +28737,8 @@ assemble_ls_latent_heat_source ( double iso_therm,
   double vnorm;
   NORMAL_VELOCITY_DEPENDENCE_STRUCT d_vnorm_struct;
   NORMAL_VELOCITY_DEPENDENCE_STRUCT *d_vnorm = &d_vnorm_struct;
-  struct Boundary_Condition *fluxbc;
+
+  /* struct Boundary_Condition *fluxbc; */
   
   eqn = R_ENERGY;
   if ( ! pd->e[eqn] )
@@ -28847,9 +28759,10 @@ assemble_ls_latent_heat_source ( double iso_therm,
   if (pd->CoordinateSystem == SWIRLING ||
       pd->CoordinateSystem == PROJECTED_CARTESIAN)
     wim = wim+1;
-   
+
+  /*
   fluxbc = BC_Types + bc_input_id;
-/*  compute_leak_velocity_heat(&vnorm, d_vnorm, tt, dt, NULL, fluxbc);  */
+  compute_leak_velocity_heat(&vnorm, d_vnorm, tt, dt, NULL, fluxbc);  */
 
   vnorm = fv->ext_v;
   flux = latent_heat*vnorm;
@@ -29562,7 +29475,6 @@ assemble_acoustic(double time,	/* present time value */
    */
 
   dbl phi_j;
-  dbl grad_phi_j[DIM];
 
   dbl h3;			/* Volume element (scale factors). */
   dbl dh3dmesh_bj;		/* Sensitivity to (b,j) mesh dof. */
@@ -29572,6 +29484,11 @@ assemble_acoustic(double time,	/* present time value */
   dbl d_det_J_dmeshbj;			/* for specified (b,j) mesh dof */
   dbl dgrad_phi_i_dmesh[DIM];		/* ditto.  */
   dbl wt;
+
+  /* initialize grad_phi_i */
+  for (i = 0; i < DIM; i++) {
+    grad_phi_i[i] = 0;
+  }
 
   /*   static char yo[] = "assemble_acoustic";*/
   status = 0;
@@ -29724,11 +29641,6 @@ assemble_acoustic(double time,	/* present time value */
 		{
 		  phi_j = bf[var]->phi[j];
 
-		  for ( p=0; p<VIM; p++)
-		    {
-		      grad_phi_j[p] = bf[var]->grad_phi[j][p];
-		    }
-
 		  mass = 0.;
 
 		  advection = 0.;
@@ -29767,11 +29679,6 @@ assemble_acoustic(double time,	/* present time value */
 		{
 		  phi_j = bf[var]->phi[j];
 
-		  for ( p=0; p<VIM; p++)
-		    {
-		      grad_phi_j[p] = bf[var]->grad_phi[j][p];
-		    }
-
 		  advection = 0.;
 		  if ( pd->e[eqn] & T_ADVECTION )
 		    {
@@ -29792,11 +29699,6 @@ assemble_acoustic(double time,	/* present time value */
 	      for ( j=0; j<ei->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
-
-		  for ( p=0; p<VIM; p++)
-		    {
-		      grad_phi_j[p] = bf[var]->grad_phi[j][p];
-		    }
 
 		  mass = 0.;
 
@@ -30038,7 +29940,6 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
    */
 
   dbl phi_i;
-  dbl grad_phi_i[DIM];
 
   /*
    * Interpolation functions for variables and some of their derivatives.
@@ -30172,11 +30073,6 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 	   * Set up some preliminaries that are needed for the (a,i)
 	   * equation for bunches of (b,j) column variables...
 	   */
-
-	  for ( p=0; p<VIM; p++)
-	    {
-	      grad_phi_i[p] = bf[eqn]->grad_phi[i][p];
-	    }
 
 	  /*
 	   * J_e_ars
@@ -30857,7 +30753,6 @@ visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 {
   /* Local Variables */
   int var;
-  int dim;
 
   int w, j;
   double omega, visc_first, visc_second, R_gas;
@@ -30887,8 +30782,6 @@ visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 
   /* Begin Execution */
 
-  dim   = pd->Num_Dim;
-  
   /**********************************************************/
   /* Source constant * viscosity* gammadot .. grad_v */
 
@@ -31062,11 +30955,9 @@ assemble_poynting(double time,	/* present time value */
   dbl P;		                /* Light Intensity	*/
   dbl grad_P, Psign = 0;		/* grad intensity */
 
-  dbl R;				/* Acoustic impedance. */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_R_struct; 
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_R = &d_R_struct;
 
-  dbl k;				/* Acoustic wave number. */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; 
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
 
@@ -31084,7 +30975,6 @@ assemble_poynting(double time,	/* present time value */
    */
 
   dbl phi_i;
-  dbl grad_phi_i[DIM];
 
   /*
    * Interpolation functions for variables and some of their derivatives.
@@ -31134,9 +31024,11 @@ assemble_poynting(double time,	/* present time value */
    * with temperature, spatial coordinates, and species concentration.
    */
 
-  R = acoustic_impedance( d_R, time );
+  /* CHECK FOR REMOVAL */
+  acoustic_impedance( d_R, time );
 
-  k = wave_number( d_k, time );
+  /* CHECK FOR REMOVAL */
+  wave_number( d_k, time );
 
   alpha = light_absorption( d_alpha, time );
 
@@ -31231,11 +31123,6 @@ assemble_poynting(double time,	/* present time value */
 	   * Set up some preliminaries that are needed for the (a,i)
 	   * equation for bunches of (b,j) column variables...
 	   */
-
-	  for ( p=0; p<VIM; p++)
-	    {
-	      grad_phi_i[p] = bf[eqn]->grad_phi[i][p];
-	    }
 
 	  /*
 	   * J_e_ap

@@ -93,11 +93,12 @@ dbl velo_vary_fnc( velo_condition, x1, x2, x3, p, time)
 {
   /*  dbl v_max, gap, u, midpt, channel; */
   double f = 0.0;
-  double a1,a2;
+  /*  double a1,a2;
 
   a1 = p[0];
   a2 = p[1];
-  
+  */
+
   /*  radius = sqrt( x1*x1 + x2*x2 ); 
       
       if( velo_condition == UVARY_BC) 
@@ -113,7 +114,7 @@ dbl velo_vary_fnc( velo_condition, x1, x2, x3, p, time)
   
   if( velo_condition == UVARY_BC)
     {
-      if(time<900.)
+      /* if(time<900.)
 	{
 	  a1 = 0.002;
 	} 
@@ -137,6 +138,7 @@ dbl velo_vary_fnc( velo_condition, x1, x2, x3, p, time)
 	{
 	  a1 = 0.;
 	}
+      */
       f = -2.0*x2;
 
       /*  f = -a2*x2/radius; */
@@ -217,7 +219,8 @@ dbl dvelo_vary_fnc_d1( velo_condition, x1, x2, x3, p, time)
      const dbl time;
 {
   dbl f = 0.0;
-  dbl radius, drdx1,a2;
+  dbl a2;
+  /* dbl radius, drdx1; */
 
 
   /* Cylindrical swirling flow 
@@ -227,8 +230,8 @@ dbl dvelo_vary_fnc_d1( velo_condition, x1, x2, x3, p, time)
 
   a2 = p[1];
 
-  radius = sqrt( x1*x1 + x2*x2 );
-  drdx1  = x1/radius;
+  /* radius = sqrt( x1*x1 + x2*x2 );
+  drdx1  = x1/radius; */
 
   if( velo_condition == VVARY_BC)
     {
@@ -272,7 +275,8 @@ dbl dvelo_vary_fnc_d2( velo_condition, x1, x2, x3, p, time)
 /* for PI use M_PIE Constant from std.h include file. */
 
   dbl f=0.0;
-  dbl radius, drdx2, a1, a2;
+  dbl a2;
+  /* dbl a1, radius, drdx2; */
 
 
   /* Cylindrical swirling flow 
@@ -280,8 +284,8 @@ dbl dvelo_vary_fnc_d2( velo_condition, x1, x2, x3, p, time)
    * Velocity: a2
    */
 
-  radius = sqrt( x1*x1 + x2*x2 );
-  drdx2  = x2/radius;
+  /* radius = sqrt( x1*x1 + x2*x2 );
+     drdx2  = x2/radius; */
   
   a2 = p[1];
   
@@ -292,7 +296,7 @@ dbl dvelo_vary_fnc_d2( velo_condition, x1, x2, x3, p, time)
     }
   else if ( velo_condition == UVARY_BC )
     {
-      if(time<900.)
+      /* if(time<900.)
 	{
 	  a1 = 0.002;
 	} 
@@ -316,6 +320,7 @@ dbl dvelo_vary_fnc_d2( velo_condition, x1, x2, x3, p, time)
 	{
 	  a1 = 0.;
 	}
+      */
       f = -2.0;
 
       /*   f = ( 1. - x2*drdx2/radius)/radius; */
@@ -1487,7 +1492,7 @@ volt_user_surf (double func[DIM],
   int j, j_id, w1, var;
   double phi_j;
   double PHI;
-  double i, i0, ai0a, Ha, cH2, cH2ref, aa, ac, T, U0a;
+  double i, i0, ai0a, Ha, cH2, cH2ref, aa, ac, T;
   double cratio;
 
 /***************************** EXECUTION BEGINS *******************************/
@@ -1501,7 +1506,6 @@ volt_user_surf (double func[DIM],
     aa = p[4];
     ac = p[5];
     T = p[6];
-    U0a = p[7];
 
     RTF = R*T/F;
     cH2 = fv->c[0];

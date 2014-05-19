@@ -1391,7 +1391,7 @@ apply_shell_grad_bc (
                         {
                           pe = upd->ep[eqn];
                           idof = ei->dof[eqn];
-                          for (i=0; i<ei->dof[eqn]; i++)
+                          for (i=0; i < idof; i++)
                             {
                               ib = gnn_map[i];
 
@@ -1403,7 +1403,7 @@ apply_shell_grad_bc (
                                 {
                                   pv = upd->vp[var];
                                   jdof = n_dof[var];
-                                  for (j=0; j<n_dof[var]; j++)
+                                  for (j=0; j < jdof; j++)
                                     {
                                       lec->J[pe][pv][ib][j] +=
 					local_j[pe][pv][i][j];
