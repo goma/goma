@@ -107,7 +107,7 @@ evaluate_flux(
 			  {
   int j;			/* local index loop counter                 */
   int i;			/* Index for the local node number - row    */
-  int ip, a, b, c, p, w = -1;
+  int ip = 0, a, b, c, p, w = -1;
   int mn;
   int var;
   int *n_dof=NULL;
@@ -8787,14 +8787,14 @@ int i,j;
  		*/
  
 int F_type = 0;	/*	type of interface crossing  */
-int interpolation=2,nint;
+int interpolation=2,nint = 0;
 int sharp_interface=1;
 int same_sign;
 double f0, f1;
 double xf[2];
 double xf2D[6][2];
 int nint2D[6];
-int is2D, side_id[8];
+int is2D = 0, side_id[8];
 int side_diff, side_ct;
 int return_val = 1;
 double ecrd[12][MAX_PDIM];
