@@ -4423,7 +4423,7 @@ sheet_tension ( double cfunc[MDE][DIM],
 	      
 	      var = PRESSURE;
 	    
-	      if(pd->v[var] );
+	      if(pd->v[var] )
 	        {
 		  for( j=0; j<ei->dof[var]; j++)
 		    {
@@ -12891,7 +12891,7 @@ detJ = 1.0;
 	      
 	      var = PRESSURE;
 	    
-	      if(pd->v[var] );
+	      if(pd->v[var] )
 	        {
 		  for( j=0; j<ei->dof[var]; j++)
 		    {
