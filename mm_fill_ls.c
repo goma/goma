@@ -8794,8 +8794,10 @@ current_elem_overlaps_interface( double width )
 
   int element_status = FALSE;
 
-  int i, min_node;
-
+  int i;
+#if 0
+  int min_node;
+#endif
   double absolute_minimum = DBL_MAX;
   double absolute_maximum = 0.;
  
@@ -8835,7 +8837,9 @@ current_elem_overlaps_interface( double width )
       if ( fabs( value ) < absolute_minimum )
 	{
 	  absolute_minimum =  fabs( value );
+#if 0
 	  min_node = i;
+#endif
 	}
       if ( fabs( value ) > absolute_maximum )
 	{
@@ -8863,7 +8867,7 @@ current_elem_overlaps_interface( double width )
        * interface band.  This case must be detected and the element must be labelled
        * false.
        */
-#if 0
+#if 0 /* change other #if's to 1 containing min_node if using */
       double xi[DIM], det, distance_scale, band_width;
       int err;
       
@@ -8940,7 +8944,9 @@ elem_overlaps_interface( int elem,
 
   int element_status = FALSE;
 
+#if 0
   int  min_node;
+#endif
 
   double absolute_minimum = DBL_MAX;
   double absolute_maximum = 0.;
@@ -8977,7 +8983,9 @@ elem_overlaps_interface( int elem,
       if ( fabs( value ) < absolute_minimum )
 	{
 	  absolute_minimum =  fabs( value );
+#if 0
 	  min_node = i;
+#endif
 	}
       if ( fabs( value ) > absolute_maximum )
 	{
@@ -8999,7 +9007,7 @@ elem_overlaps_interface( int elem,
     }
   else
     {
-#if 0
+#if 0 /* Change other #if's containing min_node if using */
       /* This is the sticky case.  The high or low contour is in the element 
        * but is possible that it is just entering or leaving the element.  In which case
        * there is potential that no integration points will fall within the 

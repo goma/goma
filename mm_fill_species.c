@@ -6314,7 +6314,9 @@ mtc_chilton_coburn(dbl *mtc,
      double pr_gas=0.71;		/* Prandtl Number		 */
      double rho_gas;			/* gas density	(g/cc)		 */
      double cp_gas;			/* heat capacity (cal/g/deg K)   */
+#if 0
      double tcond_gas;			/* thermal cond (cal/s g deg K)  */
+#endif
      double diff_gas;			/* solvent diffusivity in gas    */
      double visc_gas;			/* gas viscosity (p.)    */
      double T_film;
@@ -6342,8 +6344,10 @@ mtc_chilton_coburn(dbl *mtc,
  
 /* thermal conductivity - gas  */
  
+#if 0
  	tcond_gas = 0.0023901*0.00031417*pow(T_film,0.7786)/
  			(1.-0.7116/T_film+212.17/SQUARE(T_film));
+#endif
  
 /*  solvent diffusivity	*/
  
@@ -6355,7 +6359,7 @@ mtc_chilton_coburn(dbl *mtc,
  
 /*  mass transfer coefficient	*/
  
-#if 1
+#if 1  /* if changing to 0 change other #if's to 1 containing tcond_gas */
 /*	mass transfer coefficient based on Pr no. = constant
 		- favored method by Pete Price		*/
 	temp1 = pow(pr_gas*rho_gas*diff_gas/visc_gas,0.67);
