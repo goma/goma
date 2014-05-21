@@ -27431,6 +27431,11 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 
   struct Level_Set_Data *ls_old = ls;
 
+  if (MAX_CONC < 3) {
+    EH(-1, "heat_source expects MAX_CONC >= 3");
+    return 0;
+  }
+
   /*
    * Unpack variables from structures for local convenience...
    */

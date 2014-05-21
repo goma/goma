@@ -2818,6 +2818,11 @@ mass_flux_surf_NI (dbl mass_flux[MAX_CONC],
   DENSITY_DEPENDENCE_STRUCT d_rho_struct;  /* density dependence */
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
+  if (MAX_CONC < 5) {
+    EH(-1, "mass_flux_surf_NI expects MAX_CONC >= 5");
+    return;
+  }
+
   four = 4;
 
   if (flag == 0)
@@ -5949,6 +5954,11 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
      double bottom, prod2, sum_C;
      double chi[MAX_CONC][MAX_CONC]; /* chi is the binary interaction parameter*/
      double mw_last=0; /* Molecular weight of non-condensable and conversion factor */
+     
+     if (MAX_CONC < 3) {
+       EH(-1, "mass_flux_equil_mtc expects MAX_CONC >= 3");
+       return;
+     }
 
 /***************************** EXECUTION BEGINS *******************************/
 
@@ -8545,6 +8555,11 @@ vnorm_bc_electrodeposition (double func[],
   DENSITY_DEPENDENCE_STRUCT d_rho_struct;  /* density dependence */
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
+  if (MAX_CONC < 7) {
+    EH(-1, "vnorm_bc_electrodeposition expects MAX_CONC >= 7");
+    return;
+  }
+
   /* local contributions of boundary condition to residual and jacobian */
  
 /***************************** EXECUTION BEGINS *******************************/
@@ -10671,6 +10686,11 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
   dbl T0, EE, alpha;  /* KSC on 9/24/04 */
+
+  if (MAX_CONC < 3) {
+    EH(-1, "Stefan_Maxwell_Diff_flux expects MAX_CONC >= 3");
+    return -1;
+  }
 
   var = MASS_FRACTION;
   n_species = pd->Num_Species_Eqn + 1; 

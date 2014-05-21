@@ -5285,6 +5285,10 @@ foam_species_source(double *param)
   dbl rpar[] = {0.,0.}, ext[]={0.,0.}, drpar[] = {0.,0.};
   dbl dr1_df, dr1_dg, dr1_ds1, dr2_df, dr2_dg, dr2_ds1;
 
+  if (MAX_CONC < 3) {
+    EH(-1, "foam_species_source expects MAX_CONC >= 3");
+    return -1;
+  }
 
   /* Begin Execution */
   
@@ -5430,6 +5434,11 @@ electrode_species_source(int species_no,   /* Current species number */
   dbl sum;
   dbl x0p, T0, ai00, util0, ER;
   dbl util1, util2, util3;
+  
+  if (MAX_CONC < 3) {
+    EH(-1,"electrode_species_source expects MAX_CONC >= 3");
+    return -1;
+  }
 
   /* Begin Execution */
   
@@ -5611,7 +5620,6 @@ ion_reaction_source ( int species_no )   /* current species number */
  */
 
 {
-  int i;
   int eqn, var, j;
   int four, five;
   dbl k1, k2, k3, K1, K2, K3;
@@ -5619,9 +5627,9 @@ ion_reaction_source ( int species_no )   /* current species number */
   dbl dQ1dx2 = 0.0, dQ1dx3 = 0.0, dQ2dx5 = 0.0, dQ2dx1 = 0.0, dQ2dx2 = 0.0, dQ3dx4 = 0.0, dQ3dx0 = 0.0, dQ3dx3 = 0.0;
   dbl c, rho, M_mix, x[MAX_CONC] = {0};
 
-  /* initialize x[] */
-  for (i = 0; i < MAX_CONC; i++) {
-    x[i] = 0;
+  if (MAX_CONC < 6) {
+    EH(-1, "ion_reaction_source expects MAX_CONC to be >= 6");
+    return -1;
   }
  
   /* Begin Execution */
