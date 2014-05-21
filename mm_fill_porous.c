@@ -8589,18 +8589,20 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 
 	  if ( cr->PorousFluxModel == DARCY_FICKIAN)
 	    {
-	      for ( a=0; a<WIM; a++)
-		{
-		  for ( j=0; j<ei->dof[var]; j++) {
-		    /*for now we know it only liquid phase depends on sink_mass */
+              for (w = 0; w < MAX_PMV; w++) {
+                for ( a=0; a<WIM; a++)
+                  {
+                    for ( j=0; j<ei->dof[var]; j++) {
+                      /*for now we know it only liquid phase depends on sink_mass */
 
-		    t3 = pmv->d_liq_darcy_velocity_dSM[a][j] *
-		      pmv->liq_Xvol_solvents[w] * mp->density;
-		
-		    pmv->d_rel_mass_flux_dSM[i_pl][a][j] += t3;
-		    
-		  } /* for (j=0 ... */
-		} /* for (a=0 ... */
+                      t3 = pmv->d_liq_darcy_velocity_dSM[a][j] *
+                        pmv->liq_Xvol_solvents[w] * mp->density;
+
+                      pmv->d_rel_mass_flux_dSM[i_pl][a][j] += t3;
+
+                    } /* for (j=0 ... */
+                  } /* for (a=0 ... */
+              } /* for (w = 0 ... */
 	    } /* PorousFluxModel */
 	}
   
