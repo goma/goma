@@ -257,7 +257,7 @@
 #        ==================================================
 #
 #     TRILINOS_INC  = -I$(TRILINOS_TOP)/include  -I /home/hkmoffa/arch/linux64_gcc444/boost_1_44_0/include
-     TRILINOS_INC  = -I$(TRILINOS_TOP)/include
+     TRILINOS_INC  = -isystem $(TRILINOS_TOP)/include
      TRILINOS_LIB  = -L$(TRILINOS_TOP)/lib  $(AZTEC_LIB) \
                       $(KOMPLEX_LIB)  $(AMESOS_LIB)
 #
@@ -423,7 +423,7 @@ CHEMKIN_LIBS       = #chm $(CPC_LIBS) $(CHEMKINIII_LIBS)
 #
 #------------------------------------------------------------------------------
 #
-            FFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
+            FFLAGS = -O3 $(DEFINES) $(INCLUDES)
 #            FFLAGS = -64 -O2 $(DEFINES) $(INCLUDES)
 #
             CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
