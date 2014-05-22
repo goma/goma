@@ -5465,7 +5465,7 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 					    * fv->dsnormal_dx[p][b][j];
 					}
 
-				      advection += fv->dsurfdet_dx[p][j] * vdotn;
+				      advection += fv->dsurfdet_dx[b][j] * vdotn;
 
 				      advection *= phi_i * wt * (fv->c[w] - c_n[w]);
 				      
