@@ -6131,7 +6131,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
                         dv_dw[i][j] = -y_mass[i]*sv[i]
 		              *(sv[j]-sv[pd->Num_Species_Eqn])/SQUARE(bottom); 
                        }
-		    dv_dw[i][i] += sv[j]/bottom; 
+		    dv_dw[i][i] += sv[i]/bottom; 
                    }
 		}
 	else if(mp->Species_Var_Type == SPECIES_MOLE_FRACTION)
@@ -6145,7 +6145,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
                         dv_dw[i][j] = -y_mass[i]*vol[i]
 		              *(vol[j]-vol[pd->Num_Species_Eqn])/SQUARE(bottom); 
                        }
-		    dv_dw[i][i] += vol[j]/bottom; 
+		    dv_dw[i][i] += vol[i]/bottom; 
 		   }
 		}
 	else
