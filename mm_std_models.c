@@ -1315,11 +1315,11 @@ butler_volmer_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl *a)
            phi_j = bf[var]->phi[j];
            for (w = 0; w < pd->Num_Species_Eqn; w++ )
              {
-               d_h->C[MAX_VARIABLE_TYPES +  w][j] = 0.0;  /* no dependency other than wspec */
+               d_h->C[w][j] = 0.0;  /* no dependency other than wspec */
 
              }
 
-           d_h->C[MAX_VARIABLE_TYPES + wspec][j] = dhdc*phi_j;
+           d_h->C[wspec][j] = dhdc*phi_j;
 
           }
       }
