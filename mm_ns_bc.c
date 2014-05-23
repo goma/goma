@@ -12723,10 +12723,6 @@ shear_to_shell ( double cfunc[MDE][DIM],
   double dTL_dX[DIM][MDE];
   double dTL_dv[DIM][MDE];
   double dTL_dP[MDE];
-#if 0
-  int i_basis;
-  double dY_dxi, dX_dxi;
-#endif
 
   /* Determine if sh_tens is active on neighboring shell block */
   if( num_shell_blocks != 0 ) 
@@ -12756,59 +12752,7 @@ shear_to_shell ( double cfunc[MDE][DIM],
   memset( Pi, 0, DIM*DIM*sizeof(double )) ;
   memset ( &d_Pi, 0, sizeof( STRESS_DEPENDENCE_STRUCT ) );
   
-
-#if 0 /* set declaration of dX_dxi, dY_dxi, i_basis to 1 */
-  i_basis = 1 - id_side%2;
-  dX_dxi = 0.0;
-  dY_dxi = 0.0;
-
-  for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) 
-    {
-      id = (int) elem_side_bc->local_elem_node_id[i];
-      I = Proc_Elem_Connect[iconnect_ptr + id];
-      ldof  = ei->ln_to_first_dof[pd->ShapeVar][id];
-
-      /* Grab nodal sh_tens values if needed */
-
-	if( ldof >= 0 )
-	{
-	  dX_dxi += ( Coor[0][I]  )* bf[pd->ShapeVar]->dphidxi[ldof][i_basis];
-	  dY_dxi += ( Coor[1][I]  )* bf[pd->ShapeVar]->dphidxi[ldof][i_basis];
-	  
-	  if( pd->v[MESH_DISPLACEMENT1] ) {
-		dX_dxi += (  *esp->d[0][ldof] )* bf[pd->ShapeVar]->dphidxi[ldof][i_basis];
-		dY_dxi += (  *esp->d[1][ldof] )* bf[pd->ShapeVar]->dphidxi[ldof][i_basis];
-	  }
-
-	}
-    }
-	
-
-
-  sign = dX_dxi < 0.0 ? -1.0 : 1.0 ;  /* This is the sign of dS_dxi */
-
-
-  detJ = sign*sqrt( dX_dxi * dX_dxi + dY_dxi*dY_dxi );
-
-
-memset(ddetJ_dmesh, 0, sizeof(double)*MDE*DIM );
-  
-  for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) 
-    {
-      id = (int) elem_side_bc->local_elem_node_id[i];
-      ldofmesh  = ei->ln_to_first_dof[R_MESH1][id];
-      
-      if( ldofmesh >= 0 )
-	{
-	  ddetJ_dmesh[ldofmesh][0] = dX_dxi* bf[R_MESH1]->dphidxi[ldofmesh][i_basis]/detJ;
-	  ddetJ_dmesh[ldofmesh][1] = dY_dxi* bf[R_MESH1]->dphidxi[ldofmesh][i_basis]/detJ;
-
-	}
-    }
-*/
-#endif
-
-detJ = 1.0;
+  detJ = 1.0;
 
   fluid_stress( Pi, &d_Pi );
 
