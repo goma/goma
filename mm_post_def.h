@@ -393,7 +393,6 @@ extern int Num_Var_Units;
 extern int CAPILLARY_PRESSURE;	/* capillary pressure in a porous media */
 extern int CONC_CONT;	        /* concentration at vertex & midside nodes*/
 extern int CONDUCTION_VECTORS;	/* conduction flux vectors*/
-extern int CROSS_STREAM_SHEAR;	/* cross-stream shear rate*/
 
 extern int CURL_V;		/* Steve Kempka's favorite quantity */
 extern int DARCY_VELOCITY_GAS;	/* Darcy velocity vectors for gas phase 

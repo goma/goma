@@ -128,7 +128,6 @@ int Num_Elem_Post_Proc_Var = 0;
 int CAPILLARY_PRESSURE = -1;	/* capillary pressure in a porous media */
 int CONC_CONT = -1;		/* concentration at vertex & midside nodes*/
 int CONDUCTION_VECTORS = -1;   	/* conduction flux vectors*/
-int CROSS_STREAM_SHEAR = -1;   	/* cross-stream shear rate*/
 int CURL_V = -1;		/* Steve Kempka's favorite quantity */
 int DARCY_VELOCITY_GAS = -1;	/* Darcy velocity vectors for gas phase 
 				 * flow in a partially saturated porous
@@ -624,23 +623,6 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     }
     local_post[STREAM_NORMAL_STRESS] = Ttt;
     local_lumped[STREAM_NORMAL_STRESS] = 1.;
-  }
-
-  if (CROSS_STREAM_SHEAR != -1 && pd->e[R_MOMENTUM1]) {
-    Dnn = 0.;
-    speed = 0.;
-    for ( a=0; a<dim; a++)
-      {
-	speed += fv->v[a] * fv->v[a];
-	for ( b=0; b<dim; b++)
-	  {
-	    
-	    Dnn += fv->v[1 - a] * fv->v[1 - b] * (fv->grad_v[a][b] + fv->grad_v[b][a]);
-	  }
-      }
-
-    local_post[CROSS_STREAM_SHEAR] = Dnn / sqrt(speed);
-    local_lumped[CROSS_STREAM_SHEAR] = 1.;
   }
 
   if (DIV_VELOCITY != -1 && pd->e[PRESSURE]) {
@@ -6079,7 +6061,6 @@ rd_post_process_specs(FILE *ifp,
 
   iread = look_for_post_proc(ifp, "Stream Function", &STREAM);
   iread = look_for_post_proc(ifp, "Streamwise normal stress", &STREAM_NORMAL_STRESS);
-  iread = look_for_post_proc(ifp, "Cross-stream shear rate", &CROSS_STREAM_SHEAR);
   iread = look_for_post_proc(ifp, "Mean shear rate", &MEAN_SHEAR);
   iread = look_for_post_proc(ifp, "Pressure contours", &PRESSURE_CONT);
   iread = look_for_post_proc(ifp, "Shell div_s_v contours", &SH_DIV_S_V_CONT);
@@ -7786,29 +7767,6 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
   else
     {
       STREAM_NORMAL_STRESS = -1;
-    }
-
-   if (CROSS_STREAM_SHEAR != -1 && Num_Var_In_Type[R_MOMENTUM1])
-     {
-       if (Num_Dim == 3) {
-	 WH(-1,"cross-stream-shear not set up in 3D");
-	 CROSS_STREAM_SHEAR = -1;
-       } else {
-	 set_nv_tkud(rd, index, 0, 0, -2, "CSS","[1]",
-		     "Cross-Stream shear rate", FALSE);
-	 index++;
-         if (CROSS_STREAM_SHEAR == 2)
-           {
-             Export_XP_ID[index_post_export] = index_post;
-             index_post_export++;
-           }
-	 CROSS_STREAM_SHEAR = index_post;
-	 index_post++;
-       }
-    }
-  else
-    {
-      CROSS_STREAM_SHEAR = -1;
     }
 
    if (DIV_VELOCITY != -1 && Num_Var_In_Type[PRESSURE])

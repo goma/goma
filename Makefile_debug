@@ -257,7 +257,7 @@
 #        ==================================================
 #
 #     TRILINOS_INC  = -I$(TRILINOS_TOP)/include  -I /home/hkmoffa/arch/linux64_gcc444/boost_1_44_0/include
-     TRILINOS_INC  = -I$(TRILINOS_TOP)/include
+     TRILINOS_INC  = -isystem $(TRILINOS_TOP)/include
      TRILINOS_LIB  = -L$(TRILINOS_TOP)/lib  $(AZTEC_LIB) \
                       $(KOMPLEX_LIB)  $(AMESOS_LIB)
 #

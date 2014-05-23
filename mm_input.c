@@ -13936,7 +13936,7 @@ scan_table_columns( int k,
 	int Num_Pnts = table->tablelength;
 	int err_stat = 0;
 	
-	err_msg = '\0';
+	err_msg = "";
 	
 	if( table->columns == 2)
 	{

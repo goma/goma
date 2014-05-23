@@ -2163,7 +2163,7 @@ setup_Elem_BC(struct elem_side_bc_struct **elem_side_bc,
       *********************************************************************/
 {
   int 		i;
-  int 		id_local_elem_coord[MAX_NODES_PER_SIDE];
+  int 		id_local_elem_coord[num_nodes_on_side];
   struct elem_side_bc_struct *side = *elem_side_bc;
   char err_msg[MAX_CHAR_IN_INPUT];
   /* Check to see if we are on a new side of the element that doesn't have

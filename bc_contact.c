@@ -946,7 +946,7 @@ jump_down_to_fluid ( const Exo_DB *exo, /* Ptr to Exodus database */
 /* Find basis functions associated with velocity variables */
   for(j=0; j< Num_Basis_Functions; j++)
     {
-      if (pd_glob[ei->mn]->i[VELOCITY1] == bfd[j]->interpolation);
+      if (pd_glob[ei->mn]->i[VELOCITY1] == bfd[j]->interpolation)
         {
           velo_interp = j;
         }

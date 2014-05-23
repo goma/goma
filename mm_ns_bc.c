@@ -3107,7 +3107,7 @@ fvelo_slip_bc(double func[MAX_PDIM],
 {
   int a, j, var, jvar, p, dim;
   double phi_j, vs[MAX_PDIM];
-  double slip_dir[MAX_PDIM], vslip[MAX_PDIM], vslip_mag, vrel[MAX_PDIM], vrel_dotn;
+  double slip_dir[MAX_PDIM], vslip[MAX_PDIM], vrel[MAX_PDIM], vrel_dotn;
   double X_0[3], omega;
   
   int icount;
@@ -3122,6 +3122,10 @@ fvelo_slip_bc(double func[MAX_PDIM],
   int tang_slip_only;
   double *phi_j_vector;
   double mass;
+#define PRESSURE_DEPENDENT_SLIP 0
+#if PRESSURE_DEPENDENT_SLIP
+  double vslip_mag;
+#endif
 
 #define TANGENT_SLIP_ONLY 0
 #if TANGENT_SLIP_ONLY
@@ -3243,10 +3247,10 @@ fvelo_slip_bc(double func[MAX_PDIM],
     {
       slip_dir[p] = vslip[p];
     }
-  vslip_mag = normalize_really_simple_vector( slip_dir , pd->Num_Dim );
   
-#define PRESSURE_DEPENDENT_SLIP 0
 #if PRESSURE_DEPENDENT_SLIP
+  vslip_mag = normalize_really_simple_vector( slip_dir , pd->Num_Dim );
+
   if(fv->P <= 0.)
     {
       betainv		   = 0.;
@@ -4423,7 +4427,7 @@ sheet_tension ( double cfunc[MDE][DIM],
 	      
 	      var = PRESSURE;
 	    
-	      if(pd->v[var] );
+	      if(pd->v[var] )
 	        {
 		  for( j=0; j<ei->dof[var]; j++)
 		    {
@@ -12706,21 +12710,23 @@ shear_to_shell ( double cfunc[MDE][DIM],
 		const Exo_DB *exo)
 
 {
-  int b, i,j, id, ldof, i_basis;
+  int b, i,j, id, ldof;
   int eqn,var;
   int p,q;
   int *n_dof = NULL;
   int nf, el1;
   int n_dofptr[MAX_VARIABLE_TYPES][MDE], dof_map[MDE];
-  
-  double dY_dxi, dX_dxi, detJ;
-
+  double detJ;
   double Pi[DIM][DIM];
   STRESS_DEPENDENCE_STRUCT d_Pi;
   double TL;  /* shear stress loading */
   double dTL_dX[DIM][MDE];
   double dTL_dv[DIM][MDE];
   double dTL_dP[MDE];
+#if 0
+  int i_basis;
+  double dY_dxi, dX_dxi;
+#endif
 
   /* Determine if sh_tens is active on neighboring shell block */
   if( num_shell_blocks != 0 ) 
@@ -12746,16 +12752,16 @@ shear_to_shell ( double cfunc[MDE][DIM],
                                    n_dofptr, id_side, xi, exo);
     }
 
-  i_basis = 1 - id_side%2;
   
-  dX_dxi = 0.0;
-  dY_dxi = 0.0;
-
   memset( Pi, 0, DIM*DIM*sizeof(double )) ;
   memset ( &d_Pi, 0, sizeof( STRESS_DEPENDENCE_STRUCT ) );
   
 
-#if 0
+#if 0 /* set declaration of dX_dxi, dY_dxi, i_basis to 1 */
+  i_basis = 1 - id_side%2;
+  dX_dxi = 0.0;
+  dY_dxi = 0.0;
+
   for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) 
     {
       id = (int) elem_side_bc->local_elem_node_id[i];
@@ -12891,7 +12897,7 @@ detJ = 1.0;
 	      
 	      var = PRESSURE;
 	    
-	      if(pd->v[var] );
+	      if(pd->v[var] )
 	        {
 		  for( j=0; j<ei->dof[var]; j++)
 		    {

@@ -1184,7 +1184,10 @@ assemble_fill_ext_v(double tt,
   dbl v_dot_Dphi[MDE];          /* v.grad(phi) */
   dbl v_dot_DF;                 /* v.grad(F) */
   dbl v_dot_n;                  /* v.n */
-  dbl v_old_dot_DF, v_dot_n_old, v_old_dot_DF_old;
+  dbl v_old_dot_DF, v_dot_n_old;
+#if 0
+  dbl v_old_dot_DF_old;
+#endif
   dbl dtinv;                    /* = 1 / dt */
   int Fill_Weight_Fcn;          /* Fill weight function. */
 
@@ -1320,7 +1323,9 @@ assemble_fill_ext_v(double tt,
       v_dot_n_old  = v_rel_n_old;
       v_dot_DF     = v_rel_n * lsi->gfmag;      /* v.n.grad(F)_mag */
       v_old_dot_DF  = v_rel_n_old * lsi->gfmag;
+#if 0
       v_old_dot_DF_old  = v_rel_n_old * gfmag_old;
+#endif
     }
   else
     {
@@ -1335,8 +1340,9 @@ assemble_fill_ext_v(double tt,
       v_dot_n_old  = v_rel_n_old;
       v_dot_DF     = v_rel_n * lsi->gfmag;      /* v.n.grad(F)_mag */
       v_old_dot_DF  = v_rel_n_old * lsi->gfmag;
+#if 0
       v_old_dot_DF_old  = v_rel_n_old * gfmag_old;
-
+#endif
     }
 
   var = FILL;
@@ -1485,7 +1491,7 @@ assemble_fill_ext_v(double tt,
 	      source = 0.;
 	      
 	      break;
-#if 0
+#if 0 /* change other #if's containing v_old_dot_DF_old to 1 if using */
 	    case FILL_WEIGHT_EXPLICIT:
 
 	      mass = F_dot * phi_i;

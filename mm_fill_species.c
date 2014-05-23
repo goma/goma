@@ -2818,6 +2818,11 @@ mass_flux_surf_NI (dbl mass_flux[MAX_CONC],
   DENSITY_DEPENDENCE_STRUCT d_rho_struct;  /* density dependence */
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
+  if (MAX_CONC < 5) {
+    EH(-1, "mass_flux_surf_NI expects MAX_CONC >= 5");
+    return;
+  }
+
   four = 4;
 
   if (flag == 0)
@@ -5949,6 +5954,11 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
      double bottom, prod2, sum_C;
      double chi[MAX_CONC][MAX_CONC]; /* chi is the binary interaction parameter*/
      double mw_last=0; /* Molecular weight of non-condensable and conversion factor */
+     
+     if (MAX_CONC < 3) {
+       EH(-1, "mass_flux_equil_mtc expects MAX_CONC >= 3");
+       return;
+     }
 
 /***************************** EXECUTION BEGINS *******************************/
 
@@ -6314,7 +6324,9 @@ mtc_chilton_coburn(dbl *mtc,
      double pr_gas=0.71;		/* Prandtl Number		 */
      double rho_gas;			/* gas density	(g/cc)		 */
      double cp_gas;			/* heat capacity (cal/g/deg K)   */
+#if 0
      double tcond_gas;			/* thermal cond (cal/s g deg K)  */
+#endif
      double diff_gas;			/* solvent diffusivity in gas    */
      double visc_gas;			/* gas viscosity (p.)    */
      double T_film;
@@ -6342,8 +6354,10 @@ mtc_chilton_coburn(dbl *mtc,
  
 /* thermal conductivity - gas  */
  
+#if 0
  	tcond_gas = 0.0023901*0.00031417*pow(T_film,0.7786)/
  			(1.-0.7116/T_film+212.17/SQUARE(T_film));
+#endif
  
 /*  solvent diffusivity	*/
  
@@ -6355,7 +6369,7 @@ mtc_chilton_coburn(dbl *mtc,
  
 /*  mass transfer coefficient	*/
  
-#if 1
+#if 1  /* if changing to 0 change other #if's to 1 containing tcond_gas */
 /*	mass transfer coefficient based on Pr no. = constant
 		- favored method by Pete Price		*/
 	temp1 = pow(pr_gas*rho_gas*diff_gas/visc_gas,0.67);
@@ -8541,6 +8555,11 @@ vnorm_bc_electrodeposition (double func[],
   DENSITY_DEPENDENCE_STRUCT d_rho_struct;  /* density dependence */
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
+  if (MAX_CONC < 7) {
+    EH(-1, "vnorm_bc_electrodeposition expects MAX_CONC >= 7");
+    return;
+  }
+
   /* local contributions of boundary condition to residual and jacobian */
  
 /***************************** EXECUTION BEGINS *******************************/
@@ -10667,6 +10686,11 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
   dbl T0, EE, alpha;  /* KSC on 9/24/04 */
+
+  if (MAX_CONC < 3) {
+    EH(-1, "Stefan_Maxwell_Diff_flux expects MAX_CONC >= 3");
+    return -1;
+  }
 
   var = MASS_FRACTION;
   n_species = pd->Num_Species_Eqn + 1; 

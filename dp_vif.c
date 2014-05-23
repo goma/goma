@@ -2339,7 +2339,6 @@ noahs_ark()
   ddd_add_member(n, &CAPILLARY_PRESSURE, 1, MPI_INT);
   ddd_add_member(n, &CONC_CONT, 1, MPI_INT);
   ddd_add_member(n, &CONDUCTION_VECTORS, 1, MPI_INT);
-  ddd_add_member(n, &CROSS_STREAM_SHEAR, 1, MPI_INT);
   ddd_add_member(n, &CURL_V, 1, MPI_INT);
   ddd_add_member(n, &DARCY_VELOCITY_GAS, 1, MPI_INT);
   ddd_add_member(n, &DARCY_VELOCITY_LIQ, 1, MPI_INT);
