@@ -8795,9 +8795,6 @@ current_elem_overlaps_interface( double width )
   int element_status = FALSE;
 
   int i;
-#if 0
-  int min_node;
-#endif
   double absolute_minimum = DBL_MAX;
   double absolute_maximum = 0.;
  
@@ -8837,9 +8834,6 @@ current_elem_overlaps_interface( double width )
       if ( fabs( value ) < absolute_minimum )
 	{
 	  absolute_minimum =  fabs( value );
-#if 0
-	  min_node = i;
-#endif
 	}
       if ( fabs( value ) > absolute_maximum )
 	{
@@ -8867,36 +8861,6 @@ current_elem_overlaps_interface( double width )
        * interface band.  This case must be detected and the element must be labelled
        * false.
        */
-#if 0 /* change other #if's to 1 containing min_node if using */
-      double xi[DIM], det, distance_scale, band_width;
-      int err;
-      
-      find_nodal_stu( min_node, ei->ielem_type, xi, xi+1, xi+2 );
-
-      err = load_basis_functions(xi, bfd);
-      EH( err, "problem from load_basis_functions");
-      
-      err = beer_belly();
-      EH( err, "beer_belly");
-
-      det = bf[LS]->detJ;
-
-      distance_scale = 2.0*pow( det , 1.0/ ( (double) pd->Num_Dim ) );
-
-      band_width = distance_scale*0.5*( 1.0/(pow( 2.0, (double) ls->Integration_Depth ) ) );
-      
-
-      if ( absolute_minimum + band_width >= width/2.0 )
-	{
-	  element_status = FALSE;
-
-/* 	  fprintf(stderr, "Status check for element : %d  is FALSE \n", ei->ielem +1 ); */
-	}
-      else if ( absolute_minimum + band_width < width/2.0 )
-	{
-	  element_status = TRUE;
-	}
-#endif
 #if 0
       double distance_scale, band_width;
       
