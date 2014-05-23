@@ -416,18 +416,22 @@ CHEMKIN_LIBS       = #chm $(CPC_LIBS) $(CHEMKINIII_LIBS)
 #
 # Set flags appropriate for platform and purpose. 
 #
-           CCFLAGS = -O3 -Wall
+# Warning flags for C/C++ compilers
+        CWARNFLAGS = -Wall
+
+# CCFLAGS are for all compilers
+           CCFLAGS = -O3
 #           CCFLAGS = -g
 #           CCFLAGS = -g -Wall -Wmissing-prototypes
 #           CCFLAGS = -g -Wall -DDEBUG_IGNORE_ELEMENT_BLOCK_CAPABILITY
 #
 #------------------------------------------------------------------------------
 #
-            FFLAGS = -O3 $(DEFINES) $(INCLUDES)
+            FFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
 #            FFLAGS = -64 -O2 $(DEFINES) $(INCLUDES)
 #
-            CFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES)
-          CPPFLAGS = $(CCFLAGS) $(DEFINES) $(INCLUDES) -Wno-deprecated
+            CFLAGS = $(CCFLAGS) $(CWARNFLAGS) $(DEFINES) $(INCLUDES)
+          CPPFLAGS = $(CCFLAGS) $(CWARNFLAGS) $(DEFINES) $(INCLUDES) -Wno-deprecated
 #
 # If you're using the old non-C++ linker, then this is probably OK:
           LD_FLAGS = $(CCFLAGS)
