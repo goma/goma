@@ -6324,9 +6324,6 @@ mtc_chilton_coburn(dbl *mtc,
      double pr_gas=0.71;		/* Prandtl Number		 */
      double rho_gas;			/* gas density	(g/cc)		 */
      double cp_gas;			/* heat capacity (cal/g/deg K)   */
-#if 0
-     double tcond_gas;			/* thermal cond (cal/s g deg K)  */
-#endif
      double diff_gas;			/* solvent diffusivity in gas    */
      double visc_gas;			/* gas viscosity (p.)    */
      double T_film;
@@ -6352,13 +6349,6 @@ mtc_chilton_coburn(dbl *mtc,
  			)/mw_gas;
  		}
  
-/* thermal conductivity - gas  */
- 
-#if 0
- 	tcond_gas = 0.0023901*0.00031417*pow(T_film,0.7786)/
- 			(1.-0.7116/T_film+212.17/SQUARE(T_film));
-#endif
- 
 /*  solvent diffusivity	*/
  
  	diff_gas = diff_gas_25* pow(T_film/298.15,1.5);
@@ -6369,17 +6359,10 @@ mtc_chilton_coburn(dbl *mtc,
  
 /*  mass transfer coefficient	*/
  
-#if 1  /* if changing to 0 change other #if's to 1 containing tcond_gas */
 /*	mass transfer coefficient based on Pr no. = constant
 		- favored method by Pete Price		*/
 	temp1 = pow(pr_gas*rho_gas*diff_gas/visc_gas,0.67);
 	temp2 = rho_gas*cp_gas*82.05*T_film;
-#else
-/*	mass transfer coefficient based on all properties
-		- this version is the actual one in the Chilton-Coburn paper  */
-	temp1 = pow(rho_gas*cp_gas*diff_gas/tcond_gas,0.67);
-	temp2 = rho_gas*cp_gas*82.05*T_film;
-#endif
  	*mtc = htc*mp->molecular_weight[wspec]*temp1/temp2;
  	*mtc = *mtc/mp->density;
  
