@@ -5917,6 +5917,11 @@ correct_stream_fcn(int *kount,	/* a counter for element connectivity ??     */
   int status = 0;
   double s, stream_fcn[9];
 
+  if (ei->num_sides > 4) {
+    EH(-1, "correct_stream_fcn not available in 3D");
+    return -1;
+  }
+
   /* initialize other vectors */
   for (i = 0; i < 4; i++) nsideq[i] = i;   
   for (i = 4; i < 7; i++) nsideq[i] = i - 4;
