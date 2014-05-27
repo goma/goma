@@ -713,7 +713,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
        */
       if (TimeIntegration != STEADY)
 	{
-	  if (0 && tran->init_time < 0.0)  
+	  if (tran->init_time < 0.0)  
 	    {
 	      tran->init_time = timeValueRead;
 	      DPRINTF(stdout, "\n Initial Simulation Time Has been set to %g\n", timeValueRead);
