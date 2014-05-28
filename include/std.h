@@ -49,9 +49,8 @@
 
 #endif /* HAVE_CONFIG_H */
 
-/* Autoconf will define VERSION; otherwise, do it manually. */
 #ifndef VERSION
-#define VERSION "5.6.0"
+#define VERSION "6.0.0"
 #endif
 
 /*****************************************************************************/
@@ -511,7 +510,7 @@ extern int neg_elem_volume_global;
  * (Eric Benner 8/6/09)
  */ 
 #ifndef VERSION
-#define VERSION "5.6.0"
+#define VERSION "6.0.0"
 #endif
 
 #endif
