@@ -314,11 +314,23 @@ int gn_alloc(void)
   sz = sizeof(struct Generalized_Newtonian *);
   gn_glob = (struct Generalized_Newtonian **) array_alloc(1, MAX_NUMBER_MATLS, sz);
 
+  if ( gn_glob == NULL)
+    {
+      status = -1;
+      EH( status, "Problem getting memory for Generalized_Newtonian");
+    }
+
   sz = sizeof(struct Generalized_Newtonian);
 
   for(mn = 0; mn < MAX_NUMBER_MATLS; mn++)
     {
       gn_glob[mn] = (struct Generalized_Newtonian *) array_alloc(1, 1, sz);
+
+      if (gn_glob[mn] == NULL) {
+        status = -1;
+        EH( status, "Problem getting memory for Generalized_Newtonian material");
+      }
+      memset(gn_glob[mn], 0, sz);
 
     }
   
@@ -326,12 +338,6 @@ int gn_alloc(void)
     {
       DPRINTF(stdout, "%s: Generalized_Newtonian @ %p has %d bytes", 
 	      yo, gn, sz);
-    }
-
-  if ( gn_glob == NULL)
-    {
-      status = -1;
-      EH( status, "Problem getting memory for Generalized_Newtonian");
     }
 
   return(status);
