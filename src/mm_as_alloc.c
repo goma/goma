@@ -196,6 +196,8 @@ efv_alloc()
       EH( status, "Problem getting memory for External_Field_Variables");
     }
 
+  memset(efv,0,sz);
+
   return(status);
 }
 
@@ -1892,6 +1894,26 @@ init_Elastic_Constitutive(struct Elastic_Constitutive *e)
   for ( i=0; i<MAX_VARIABLE_TYPES + MAX_CONC; i++)
     {
       e->d_lame_lambda[i] = (double)0;
+    }
+
+  e->lame_TempShift          = 0;
+  e->lameTempShiftModel      = 0;
+  e->len_u_lame_TempShift    = 0;
+  e->u_lame_TempShift        = NULL;
+  for ( i=0; i<MAX_VARIABLE_TYPES + MAX_CONC; i++)
+    {
+      e->d_lame_TempShift[i] = 0;
+    }
+  e->lame_TempShift_tableid  = 0;
+
+  e->bend_stiffness          = 0;
+  e->bend_stiffness_model    = 0;
+  e->len_u_bend_stiffness    = 0;
+  e->u_bend_stiffness        = NULL;
+  
+  for ( i=0; i<MAX_VARIABLE_TYPES + MAX_CONC; i++)
+    {
+      e->d_bend_stiffness[i] = 0;
     }
 
   e->poisson              = (double)0;

@@ -551,7 +551,7 @@ rd_dpi(Dpi *d,
   len = d->len_elem_var_tab_global;
   if ( len > 0 )
     {
-      d->elem_var_tab_global = alloc_int_1(len, INT_NOINIT);
+      d->elem_var_tab_global = alloc_int_1(len, 0);
     }
 
   if (d->num_global_node_descriptions > 0)

@@ -723,7 +723,11 @@ bc_internal_boundary(Exo_DB *exo)
     bc_ptr->Internal_Boundary = FALSE;
     if (!strcmp(bc_ptr->Set_Type, "SS")) {
       ss_index = bc_ptr->Set_Index;
-      bc_ptr->Internal_Boundary = SS_Internal_Boundary[ss_index];
+      if (ss_index >= 0) {
+        bc_ptr->Internal_Boundary = SS_Internal_Boundary[ss_index];
+      } else {
+        bc_ptr->Internal_Boundary = -1;
+      }
     }
   }
 }

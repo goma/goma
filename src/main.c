@@ -201,7 +201,7 @@ main(int argc, char **argv)
   int j;
 
   char	**ptmp;
-  static const char *yo="main";
+  char *yo;
 
   struct Command_line_command **clc=NULL; /* point to command line structure */
   int           nclc = 0;		/* number of command line commands */

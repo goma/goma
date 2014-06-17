@@ -454,7 +454,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	  x->coord_names = (char **)smalloc( x->num_dim * spc);
 	  for ( i=0; i<x->num_dim; i++ )
 	    {
-	      x->coord_names[i] = (char *) smalloc(MAX_STR_LENGTH * sc);
+	      x->coord_names[i] = (char *) calloc(MAX_STR_LENGTH+1, sc);
 	    }
 	  status = ex_get_coord_names(x->exoid, x->coord_names);
 	  EH(status, "ex_get_coord_names");

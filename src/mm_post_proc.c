@@ -5925,6 +5925,7 @@ correct_stream_fcn(int *kount,	/* a counter for element connectivity ??     */
   /* initialize other vectors */
   for (i = 0; i < 4; i++) nsideq[i] = i;   
   for (i = 4; i < 7; i++) nsideq[i] = i - 4;
+  for (i = 0; i < 9; i++) stream_fcn[i] = 0;
 
   /*
    *  Now correct for mass balance by looping over all the sides

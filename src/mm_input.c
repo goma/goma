@@ -3459,7 +3459,7 @@ rd_track_specs(FILE *ifp,
             {
 
               cpcc = (struct Continuation_Conditions *)
-                      array_alloc(1, nCC, sizeof(struct Continuation_Conditions));
+                calloc(nCC, sizeof(struct Continuation_Conditions));
 
               if ( Debug_Flag && ProcID == 0 )
                 {

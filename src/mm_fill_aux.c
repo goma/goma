@@ -981,6 +981,13 @@ h_elem_siz(dbl hsquared[DIM], dbl hh[DIM][DIM],
   int elem_shape = type2shape(elem_type);
   int DeformingMeshShell = 0;
 
+  /* initialize xnode */
+  for (i = 0; i < DIM; i++) {
+    for (j = 0; j < MDE; j++) {
+      xnode[i][j] = 0;
+    }
+  }
+
   /*
    * Find the local coodinates of the nodes in the current element
    * -> Can this be pushed to a more generic place ?

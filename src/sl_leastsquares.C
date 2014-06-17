@@ -221,7 +221,7 @@ static void  bf_mat_to_Epetra ( double *bf_mat_,
 
   delete [] Values;
   delete [] Indices;
-
+  delete [] NumNz;
   return;
 
 }

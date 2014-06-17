@@ -1299,7 +1299,9 @@ find_exit_wound(const int elem_id,
 #ifdef SHOW_PARTICLE_MOVEMENT
 	  fprintf(stderr, "%d\n", p->owning_elem_id);
 #endif
-	  memcpy(p->x, x_end, DIM * sizeof(dbl));
+          if (p->x != x_end) {
+            memcpy(p->x, x_end, DIM * sizeof(dbl));
+          }
 	  memcpy(p->xi, xi_tmp, DIM * sizeof(dbl));
 	}
     }

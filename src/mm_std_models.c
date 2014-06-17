@@ -3137,7 +3137,7 @@ hydro_flux(struct Species_Conservation_Terms *st,
 	   double dt,	/* current time step size */
 	   const double hsquared[DIM])
 {
-  int a, j, l, p, b, var;
+  int a, i, j, l, p, b, var;
   int status=1;
   int dim;
   dbl gammadot, *grad_gd, gamma_dot[DIM][DIM];
@@ -3176,6 +3176,14 @@ hydro_flux(struct Species_Conservation_Terms *st,
   dbl dmu0_dT = 0.;
 
   dbl rel_mu_denom;
+
+  /* Initialize arrays */
+  for (i=0; i < DIM; i++) {
+    Dd[i] = 0;
+    dDd_dy[i] = 0;
+    dDd_dgrady[i] = 0;
+    dDd_dv[i] = 0;
+  }
 
   /* Jump out if we really want to do the Q-tensor diffusive flux.
    * If/when things get more complicated, it might be worth making
