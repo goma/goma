@@ -110,6 +110,14 @@ SL_UMF ( int system_id,
 
   int i, j, k, umf_option = 0;
   int hit_diag, err;
+
+  for (i = 0; i < UMFPACK_CONTROL; i++) {
+    Control[i] = 0;
+  }
+
+  for (i = 0; i < UMFPACK_INFO; i++) {
+    Info[i] = 0;
+  }
           
 #ifdef DEBUG_SL_UMF
   fprintf(stderr, "SL_UMF: system_id = %d, *first = %d, *fact_optn = %d\n",
