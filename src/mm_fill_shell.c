@@ -875,6 +875,11 @@ assemble_shell_structure(double time_value,  /* Time */
   /* Unpack variables from structures for local convenience. */
   double h3    = fv->h3;
 
+  /* Initialize d_phi_dxi */
+  for (i = 0; i < MDE; i++) {
+    d_phi_dxi[i] = 0;
+  }
+
   eqn = R_SHELL_CURVATURE;
 
   pd0 = pd;  /*set prob description to current shell material */

@@ -1078,7 +1078,7 @@ int phase_transition_alg(double *x, double *delta_x,
 
   double *a, *b, *c, *d, *x2, g, dg_dtp, dt_p;
   double *x_tmp, *x2_tmp, dgac, dgbd, eps;
-  double tmp, gnum_unks, x2_update, param_update;
+  double tmp=0, gnum_unks, x2_update, param_update;
   int i;
   extern double free_energy_diff_conwrap(double *, double *);
 

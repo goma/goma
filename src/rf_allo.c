@@ -1109,6 +1109,7 @@ realloc_void_struct_1_FL(void *vec_ptr, const size_t structsize,
   }
   bytenum = nval1 * structsize;
   array = safe_malloc(bytenum, filename, line);
+  memset(array, 0, bytenum);
   if (array != NULL) {
     if (old_length > 0) {
       bytenum = structsize * old_length;

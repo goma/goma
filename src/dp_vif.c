@@ -249,7 +249,7 @@ raven_landing()
       for ( i=0; i<num_new_BC_Desc; i++)
 	{
 	  new_BC_Desc[i] = (struct BC_descriptions *) 
-			    array_alloc(1, 1, sizeof(struct BC_descriptions));
+			    calloc(1, sizeof(struct BC_descriptions));
 	}
 
     }
@@ -287,7 +287,7 @@ raven_landing()
   if ( Num_ROT > 0 )
     {
       ROT_Types = (struct Rotation_Specs *) 
-	array_alloc(1, Num_ROT, sizeof(struct Rotation_Specs));
+	calloc(Num_ROT, sizeof(struct Rotation_Specs));
     }
 
   /*
@@ -494,10 +494,10 @@ raven_landing()
   if( Use_Level_Set)
     {
       ls = (struct Level_Set_Data *) 
-	    array_alloc(1, 1, sizeof( struct Level_Set_Data ) );
+        calloc(1, sizeof( struct Level_Set_Data ) );
       ls->embedded_bc = NULL;
       ls->init_surf_list = NULL;
-      lsi = (struct Level_Set_Interface *) array_alloc(1, 1, sizeof( struct Level_Set_Interface ) );
+      lsi = (struct Level_Set_Interface *) calloc(1, sizeof( struct Level_Set_Interface ) );
       zero_lsi();
       zero_lsi_derivs();
 

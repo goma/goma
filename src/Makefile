@@ -171,10 +171,10 @@ SEACAS_LIB = -L$(SEACAS_TOP)/lib  $(EXODUSII_LIB)  $(NETCDF_LIB) \
 # --------
 
 # Trilinos install directory (include, lib)
-TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-10.10.2-Built
+TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-11.8.1-Built
 
 # KOMPLEX library (not included by default)
-KOMPLEX_LIB =
+KOMPLEX_LIB ?=
 
 # AZTEC library
 # Aztecoo is required.
@@ -182,12 +182,16 @@ AZTEC_LIB =  -laztecoo -lifpack
 
 # AMESOS library
 
-AMESOS_LIB = -lamesos -lepetraext -lepetra -lteuchos 
+AMESOS_LIB = -lamesos -lepetraext -lepetra 
+
+# TEUCHOS library
+
+TEUCHOS_LIB = -lteuchoscomm -lteuchoscore -lteuchosnumerics -lteuchosparameterlist -lteuchosremainder
 
 # Trilinos includes and libraries
 TRILINOS_INC = -isystem $(TRILINOS_TOP)/include
 TRILINOS_LIB = -L$(TRILINOS_TOP)/lib  $(AZTEC_LIB) \
-                 $(KOMPLEX_LIB)  $(AMESOS_LIB)
+                 $(KOMPLEX_LIB)  $(AMESOS_LIB) $(TEUCHOS_LIB)
 
 # ARPACK
 # ------
@@ -195,7 +199,7 @@ TRILINOS_LIB = -L$(TRILINOS_TOP)/lib  $(AZTEC_LIB) \
 # To use ARPACK, either EIGEN_SERIAL or EIGEN_PARALLEL must be defined above.
 # Default is to link to ARPACK
 
-ARPACK_TOP = $(GOMA_LIBS)/ARPACK
+ARPACK_TOP ?= $(GOMA_LIBS)/ARPACK
 
 # EIGEN_SERIAL: arpack only
 
@@ -203,10 +207,13 @@ ARPACK_LIB = -L$(ARPACK_TOP)/lib -larpack$(_MACH)
 
 # BLAS and LAPACK LIBRARIES
 # -------------------------
+LAPACK_TOP ?= $(GOMA_LIBS)/lapack-3.2.1
 
-LAPACK_LIB = -L$(GOMA_LIBS)/lapack-3.2.1 -llapack$(_MACH)
+LAPACK_LIB = -L$(LAPACK_TOP) -llapack$(_MACH)
 
-BLAS_LIB = -L$(GOMA_LIBS)/BLAS -lblas$(_MACH)
+BLAS_TOP ?= $(GOMA_LIBS)/BLAS
+
+BLAS_LIB = -L$(BLAS_TOP) -lblas$(_MACH)
 
 
 # FRONTAL SOLVER LIBRARY
@@ -216,14 +223,16 @@ BLAS_LIB = -L$(GOMA_LIBS)/BLAS -lblas$(_MACH)
 # it no longer functions properly under 64-bit builds and should not 
 # be utilized as a solver.
 
-FRONT_LIB = -L$(GOMA_LIBS)/front/lib  -lmpfront$(_MACH) \
+FRONT_LIB ?= -L$(GOMA_LIBS)/front/lib  -lmpfront$(_MACH) \
               -lparlib$(_MACH)
 
 
 # SPARSE LIBRARY
 # --------------
 
-SPARSE_LIB = -L$(GOMA_LIBS)/sparse/lib  -lsparse$(_MACH)
+SPARSE_TOP ?= $(GOMA_LIBS)/sparse
+
+SPARSE_LIB = -L$(SPARSE_TOP)/lib  -lsparse$(_MACH)
 
 # Sparse includes are located in the goma directory
 SPARSE_INC =
@@ -231,7 +240,7 @@ SPARSE_INC =
 # UMFPACK SOLVER LIBRARY
 # ----------------------
 
-UMFPACK_TOP = $(GOMA_LIBS)/UMFPACK-5.4
+UMFPACK_TOP ?= $(GOMA_LIBS)/UMFPACK-5.4
 
 UMFPACK_INC = -isystem $(UMFPACK_TOP)/Include
 
@@ -241,22 +250,26 @@ UMFPACK_LIB = -L$(UMFPACK_TOP)/Lib  -lumfpack$(_MACH)  -lamd$(_MACH)
 # OTHER SOLVER LIBRARIES
 # ----------------------
 
-Y12M_LIB = -L$(GOMA_LIBS)/y12m  -ly12m$(_MACH)
+Y12M_TOP ?= $(GOMA_LIBS)/y12m
+Y12M_LIB  = -L$(Y12M_TOP) -ly12m$(_MACH)
 
-PARMETIS_LIB = -L$(GOMA_LIBS)/ParMetis-3.1.1  -lparmetis$(_MACH) \
-                 -lmetis$(_MACH)
+PARMETIS_TOP ?= $(GOMA_LIBS)/ParMetis-3.1.1
 
-SUPERLU_LIB = -L$(GOMA_LIBS)/SuperLU_DIST_2.3/lib  -lsuperludist$(_MACH) 
+PARMETIS_LIB  = -L$(PARMETIS_TOP)  -lparmetis$(_MACH) \
+                -lmetis$(_MACH)
+
+SUPERLU_TOP ?= $(GOMA_LIBS)/SuperLU_DIST_2.3
+SUPERLU_LIB = -L$(SUPERLU_TOP)/lib  -lsuperludist$(_MACH) 
 
 # FORTRAN LIBRARIES
 # -----------------
 
-FORTRAN_LIB = -lc  -lgcc  -lstdc++  -lgfortran
+FORTRAN_LIB ?= -lc  -lgcc  -lstdc++  -lgfortran
 
 # SYSTEM LIBRARIES
 # ----------------
 
-SYS_LIB = -lm  -lz
+SYS_LIB ?= -lm  -lz
 
 # INCLUDES
 # --------
@@ -698,7 +711,7 @@ DEBUG_TARGET = gomad
 # ================
 # will install files in $PREFIX/include/goma, $PREFIX/lib, $PREFIX/bin
 
-PREFIX ?= 
+PREFIX ?= /usr/local
 
 PREFIX_BIN = $(PREFIX)/bin
 PREFIX_LIB = $(PREFIX)/lib

@@ -314,7 +314,7 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
   */
 
   f_rhs = (double *) malloc(txt_num_pts * sizeof(double));
-  x_fit = (double *) malloc(exo->eb_num_nodes_per_elem[ipix_blkid] * exo->eb_num_elems[ipix_blkid] * sizeof(double));
+  x_fit = (double *) calloc(exo->eb_num_nodes_per_elem[ipix_blkid] * exo->eb_num_elems[ipix_blkid], sizeof(double));
   Atranspose_f_rhs = (double *) malloc(exo->eb_num_nodes_per_elem[ipix_blkid] * exo->eb_num_elems[ipix_blkid] * sizeof(double));
   bf_mat = (double *) malloc(txt_num_pts * exo->eb_num_nodes_per_elem[ipix_blkid]  * sizeof(double));
   i_map = (int *)malloc(txt_num_pts * exo->eb_num_nodes_per_elem[ipix_blkid] * sizeof(int));
