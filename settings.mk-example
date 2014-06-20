@@ -36,7 +36,7 @@ FC = $(MPI_TOP)/bin/mpif77
 
 # GCC_TOP is the corresponding location of the gcc compilers and libs that are
 # used by the MPI compilers
-GCC_TOP = /opt/rh/devtoolset-2/root/usr
+GCC_TOP = /usr
 
 # DEBUG_FLAGS overrides CCFLAGS when building `debug` target
 # DEBUG_FLAGS	= -g -gdwarf-2
@@ -56,7 +56,7 @@ SEACAS_TOP = $(GOMA_LIBS)/SEACAS-2013-12-03
 
 # Trilinos install directory (include, lib)
 
-TRILINOS_TOP = $(GOMA_LIBS)/trilinos-10.10.2-Built
+TRILINOS_TOP = $(GOMA_LIBS)/trilinos-11.8.1-Built
 
 # Install location
 # will install files in $PREFIX/include/goma, $PREFIX/lib, $PREFIX/bin
