@@ -35,6 +35,8 @@ char	Exo_LB_File[MAX_FNL]="\0"; /* EXODUS II load balance info for mesh */
 
 char	ExoFileOut[MAX_FNL]="\0";  /* output EXODUS II database w/ results */
 
+char	ExoFileOutMono[MAX_FNL]="\0";  /* output EXODUS II database without per proc identifier */
+
 char	ExoAuxFile[MAX_FNL]="\0";  /* auxiliary EXODUS II database for initguess */
 
 int     ExoTimePlane = INT_MAX;    /* Time plane # or continuation # of soln to use as an initguess */
