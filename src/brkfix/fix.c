@@ -233,7 +233,7 @@ main (int argc, char *argv[], char *envp[])
   int err;
   int i;
   int num_procs=1;		/* from which to build the monolith */
-  int p, pmax, num_node_var_max=0;
+  int p, pmax=0, num_node_var_max=0;
   int status  = 0;		/* in case anything goes wrong */
   int t;
 

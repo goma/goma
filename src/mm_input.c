@@ -11115,6 +11115,8 @@ usage(const int exit_flag)
   fprintf(stdout, 
 	  "\t-a [aargs], -aprepro [aargs]    Input thru APREPRO [w/ aargs].\n");
   fprintf(stdout, 
+	  "\t-brk FILE                       Read Brk file from FILE\n");
+  fprintf(stdout, 
 	  "\t-restart FILE, -rest FILE       Read initial guess from FILE.\n");
   fprintf(stdout, 
 	  "\t-d INT,     -debug INT          Set debug flag to INT.\n");

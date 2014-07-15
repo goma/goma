@@ -479,7 +479,7 @@ find_element_friends( Exo_DB *exo,
 
   /* Generate list of elements touching this element
      and how many nodes are in common */
-  int nip, ni, eip, ei, dup;
+  int nip, ni, eip, ei = 0, dup;
   int num_neigh = 0;
   int neigh_elem_id[50];
   int neigh_elem_ct[50];

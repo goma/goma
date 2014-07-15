@@ -51,7 +51,7 @@ check_for_brkfile(char* brkfile_name) {
 
 void
 write_brk_file(char* brkfile_name, Exo_DB *exo) {
-  int i, j, row, col, eb, eq;
+  int i, row, col, eb, eq;
   FILE* brkfile;
 
   brkfile = fopen(brkfile_name, "w");

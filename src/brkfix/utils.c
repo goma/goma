@@ -683,7 +683,7 @@ get_filename_num_procs(const char *basename)
   }
 
   sprintf(string_system_command, 
-          "ls -1t %s.exoII.*.1 | head -1 | sed -e 's/^.*\.exoII\.//' -e 's/\.1//'  > %s",
+          "ls -1t %s.exoII.*.1 | head -1 | sed -e 's/^.*\\.exoII\\.//' -e 's/\\.1//'  > %s",
 	  basename, fixXXXXXX );
 
   if ( -1 == system(string_system_command) )

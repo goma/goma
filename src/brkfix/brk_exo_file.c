@@ -177,7 +177,6 @@ int ***Lucky;
 static int show_help			= FALSE;
 static int add_decomp_plot_vars		= FALSE;
 static int be_quiet			= FALSE;
-static int be_verbose			= FALSE;
 static int preprocess_input_file	= TRUE;
 static int rescale_edge_weights		= FALSE;
 static int rescale_vertex_weights	= TRUE;
@@ -359,7 +358,6 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   int *boundary_nodes;
   int internal_dofweight, boundary_dofweight, external_dofweight;
 
-  int c;			/* hold each option flag */
   int *ccs_contribute;		/* contribution to communication */
   int count;
 
@@ -594,8 +592,6 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
   char  out_coord_file_name[FILENAME_MAX_ACK]; /* coordinate file name */
   
-  char  out_extra_file_name[FILENAME_MAX_ACK]; /* external field variables */
-
   char  out_graph_file_name[FILENAME_MAX_ACK]; /* graph file name */
 
   char  out_augplot_file_name[FILENAME_MAX_ACK]; /* decomposition plot file name */

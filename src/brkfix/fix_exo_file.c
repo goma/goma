@@ -29,7 +29,7 @@
 #endif
 
 #include <stdio.h>
-
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -44,21 +44,19 @@
 
 #include <string.h>
 
+#include "map_names.h"
 #include "std.h"		/* useful general stuff */
 #include "eh.h"			/* error handling */
 #include "aalloc.h"		/* multi-dim array allocation */
 #include "exo_struct.h"		/* some definitions for EXODUS II */
-#include "map_names.h"
+
 #include "dpi.h"		/* distributed processing information */
 #include "nodesc.h"		/* node descriptions */
 #include "rd_dpi.h"
 
 #include "fix.h"
 
-static int show_help			= FALSE;
 static int be_quiet			= TRUE;
-static int be_verbose			= FALSE;
-static int num_procs_specified          = FALSE;
 
 char *program_name;		/* name this program was run with */
 
@@ -144,14 +142,6 @@ PROTO((char *,			/* in_name - generic global name "pref.suf" */
        int,			/* integer processor_name */
        int));			/* number_processors - total */
 
-static void strip_suffix	/* rd_mesh.c */
-PROTO((char *,			/* result - "a" */
-       char *));		/* in -- input string "a.b" */
-
-static void get_suffix		/* rd_mesh.c */
-PROTO((char *,			/* result -- "b" */
-       char *));		/* in -- extract the tail of "a.b" -> "b" */
-
 extern void build_big_bones
 PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
        Dpi    *,		/* distributed processing info from polylith */
@@ -191,51 +181,15 @@ PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
  * Prototypes of functions defined in this file.
  */
 
-static void usage
-PROTO((const int));		/* status */
-
 static void setup_exo_res_desc	/* fix.c */
 PROTO((Exo_DB *));		/* exo - ptr to database */
 
-static void 
-usage(const int status)
-{
-  if (status != 0)
-    {
-      fprintf(stderr, ("Try `%s -h' for help.\n"),
-	       program_name);
-    }
-  else
-    {
-      fprintf(stdout, 
-	      "Usage: %s [OPTIONS] basename\n", 
-	      program_name);
-      fprintf(stdout, "\n");
-      fprintf(stdout, "Reconstruct a monolithic EXODUS II file from\n");
-      fprintf(stdout, "multiple polylithic EXODUS II files of the form\n");
-      fprintf(stdout, "basename_1ofn.exoII, ..., basename_nofn.exoII.\n");
-      fprintf(stdout, "\n");
-      fprintf(stdout, "OPTIONS:\n");
-      fprintf(stdout, "\t-h        show options summary (this message)\n");
-      fprintf(stdout, "\t-n P      explicitly assemble from P pieces\n");
-      fprintf(stdout, "\t          (default deduces P from basename and files in cwd)\n");
-      fprintf(stdout, "\n");
-      fprintf(stdout, "\t-o file   name for reconstructed monolith\n");
-      fprintf(stdout, "\t          (default is basename.exoII)\n");
-      fprintf(stdout, "\t-v        print code version\n");
-      fprintf(stdout, "\n");
-    }
-  exit(status);
-}
 
 int
 fix_exo_file(int num_procs, char* exo_mono_name)
 {
-  int c;			/* hold each option flag */
-  int err;
   int i;
-  int p, pmax, num_node_var_max=0;
-  int status  = 0;		/* in case anything goes wrong */
+  int p, pmax = 0, num_node_var_max=0;
   int t;
 
   Exo_DB *mono;			/* monolith mesh */
@@ -700,91 +654,6 @@ multiname(char *in_name,
   sprintf(in_name, "%s.%d.%d", in_name, number_processors, processor_name);
   return;
 }
-
-/*
- * strip_suffix() -- chop off trailing characters and the period in a string
- *
- * Description:
- *	The input string is examined from back to front until a period is
- * found or the beginning of the string is reached. A new string is allocated
- * and filled with everything but the suffix. Thus "a.b" -> "a"
- *
- * Created: 1997/07/09 16:10 MDT pasacki@sandia.gov
- */
-
-static void
-strip_suffix(char *result, 
-	     char *in)
-{
-  int i,j;
-  int e;
-
-  e = strlen(in);
-
-  if ( e < 1 ) exit(-1);
-
-  /*
-   * Starting from the end of the string, look back until we find a
-   * period "." character.
-   */
-
-  i = e;
-
-  while ( i>0 && *(in+i) != '.' ) i--;
-
-  for ( j=0; j<i; j++)
-    {
-      result[j] = *(in+j);
-    }
-  result[i] = '\0';
-
-  /*
-   * No suffix found? Then the whole string is the basename.
-   */
-
-  if ( i == 0 )
-    {
-      strcpy(result, in);
-    }
-
-  return;
-}
-
-/*
- * get_suffix() -- extract the tail substring of a string past the last period
- *
- * Created: 1997/07/09 16:14 MDT pasacki@sandia.gov
- */
-
-static void
-get_suffix(char *result, 
-	   char *in)
-{
-  int i;
-  int b;
-  int e;
-
-  e = strlen(in);
-
-  b = e;
-
-  while ( b>0 && *(in+b) != '.' ) b--;
-
-  if ( b == 0 )
-    {
-      *result = '\0';
-    }
-  else
-    {
-      for ( i=b; i<e; i++)
-	{
-	  result[i-b] = in[i+1];
-	}
-    }
-
-  return;
-}
-
 
 /* setup_exo_res_desc() -- allocate, set arrays to rd/wr all results, 1 time
  *

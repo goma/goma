@@ -1173,12 +1173,8 @@ mononame(char *in,
 
   char in_sans_suffix[FILENAME_MAX_ACK];
   char suffix[FILENAME_MAX_ACK];
-  char err_msg[1024];
 
   char *p;
-  char *q;
-
-  Spfrtn sr=0;
 
   /*
    * Initialize...
