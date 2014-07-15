@@ -218,6 +218,11 @@ BLAS_TOP ?= $(GOMA_LIBS)/BLAS
 
 BLAS_LIB = -L$(BLAS_TOP) -lblas$(_MACH)
 
+SCALAPACK_TOP ?= $(GOMA_LIBS)/scalapack-2.0.2
+
+SCALAPACK_LIB ?= -L$(SCALAPACK_TOP) -lscalapack
+
+SCALAPACK_INC ?= $(SCALAPACK_TOP)/SRC
 
 # FRONTAL SOLVER LIBRARY
 # ----------------------
@@ -264,6 +269,10 @@ PARMETIS_LIB  = -L$(PARMETIS_TOP)  -lparmetis$(_MACH) \
 SUPERLU_TOP ?= $(GOMA_LIBS)/SuperLU_DIST_2.3
 SUPERLU_LIB = -L$(SUPERLU_TOP)/lib  -lsuperludist$(_MACH) 
 
+MUMPS_TOP ?= $(GOMA_LIBS)/MUMPS_4.10.0
+
+MUMPS_LIB ?= -L$(MUMPS_TOP)/lib -ldmumps -lmumps_common -lpord
+
 # FORTRAN LIBRARIES
 # -----------------
 
@@ -281,6 +290,7 @@ GOMA_INC = -I$(INCLUDE_DIR)
 
 INCLUDES = $(GOMA_INC) $(SPARSE_INC) $(TRILINOS_INC) \
            $(MPI_INC) $(SEACAS_INC) $(UMFPACK_INC)
+
 
 
 # Compiler settings
@@ -317,12 +327,14 @@ LIBS = $(FRONT_LIB) \
        $(TRILINOS_LIB) \
        $(Y12M_LIB) \
        $(SUPERLU_LIB) \
+       $(MUMPS_LIB) \
        $(PARMETIS_LIB) \
        $(LAPACK_LIB) \
        $(ARPACK_LIB) \
        $(HARWELL_LIB) \
        $(UMFPACK_LIB) \
        $(BLAS_LIB) \
+       $(SCALAPACK_LIB) \
        $(SEACAS_LIB) 
 
 END_LIBS = $(MPI_LIB) \
