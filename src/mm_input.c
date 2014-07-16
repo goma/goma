@@ -10884,12 +10884,14 @@ set_mp_to_unity(const int mn)
       mp_glob[mn]->porous_latent_heat_fusion[w] = 1.;
       mp_glob[mn]->PorousVaporPressureModel[w] = CONSTANT;
       mp_glob[mn]->porous_vapor_pressure[w] = 1.;
-      for ( v=0; v<MAX_PMV + MAX_CONC + MAX_VARIABLE_TYPES; v++)
-	{
-	  mp_glob[mn]->d_porous_diffusivity[w][v] = 0.;
-	  mp_glob[mn]->d_porous_vapor_pressure[w][v] = 0.;
-	}
     }
+
+  for ( w=0; w < MAX_PMV; w++) {
+    for ( v = 0; v < MAX_CONC + MAX_VARIABLE_TYPES; v++) {
+      mp_glob[mn]->d_porous_diffusivity[w][v] = 0.;
+      mp_glob[mn]->d_porous_vapor_pressure[w][v] = 0.;
+    }
+  }
 
   mp_glob[mn]->Spwt_func = 0.;
   mp_glob[mn]->Spwt_funcModel=GALERKIN;
