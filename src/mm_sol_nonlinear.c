@@ -154,6 +154,12 @@ PROTO((double ,			/* lambda - parameter                        */
 int neg_elem_volume        = FALSE;
 int neg_elem_volume_global = FALSE;
 
+int neg_lub_height        = FALSE;
+int neg_lub_height_global = FALSE;
+
+int zero_detJ        = FALSE;
+int zero_detJ_global = FALSE;
+
 /*
    
    GOMA NON-LINEAR EQUATION SOLVER
