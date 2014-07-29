@@ -823,6 +823,10 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 	    }
 	  }
 
+          /* Exchange dof before matrix fill so parallel information
+             is properly communicated */
+          exchange_dof(cx,dpi, x);
+
 	  if (Linear_Solver == FRONT)
 	    {
 	      zero	  = 0;
