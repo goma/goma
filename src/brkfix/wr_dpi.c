@@ -147,13 +147,13 @@ wr_dpi(Dpi *d,
        char *filename,
        int verbosity)
 {
-  int err;
-  int status;
-  int u;			/* short hand for unit... */
+  int err = 0;
+  int status = 0;
+  int u = 0;			/* short hand for unit... */
 
   struct Shadow_Identifiers si;
 
-  status = 0;
+  memset(&si, 0, sizeof(struct Shadow_Identifiers));
 
   /*
    * From the C interface guide the basic calling sequence is given
