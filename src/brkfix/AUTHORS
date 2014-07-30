@@ -1,0 +1,17 @@
+Authors of the brk/fix utilities for decomposition and recomposition of goma
+finite element problems.
+
+2.0 - upgraded to do a unique element decomposition for VOF and
+      discontinuous Galerkin simulations with GOMA.
+
+	Added some minor cosmetic memory alloc/dealloc checking etc.
+	No more aalloc, just smalloc.
+
+1.0 - bare bones static full nodal based dof decomposition only
+
+ * Phil Sackinger, Sandia National Labs, <pasacki@sandia.gov>
+
+	"I owe a debt to Sam Subia and Adonis Kassinos for stress
+	 testing this utility and finding bugs. Hopefully, the way those bugs
+	 have been fixed make this a better tool."
+

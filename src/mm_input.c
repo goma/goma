@@ -641,6 +641,8 @@ rd_file_specs(FILE *ifp,
   static const char yo[] = "rd_file_specs";
 #endif
   int foundMappingFile;
+  int foundBrkFile;
+  
   char echo_string[MAX_CHAR_IN_INPUT]="\0";
   char *echo_file = Echo_Input_File;
   
@@ -666,7 +668,7 @@ rd_file_specs(FILE *ifp,
   (void) read_string(ifp,input,'\n');
   strip(input);
   strcpy(ExoFileOut,input);
-
+  strcpy(ExoFileOutMono, input);
   SPF(echo_string,eoformat, "Output EXODUS II file", ExoFileOut); ECHO(echo_string, echo_file);
   
   look_for(ifp,"GUESS file",input,'=');
@@ -690,6 +692,19 @@ rd_file_specs(FILE *ifp,
   }
 
   SPF(echo_string,eoformat, "SOLN file", Soln_OutFile); ECHO(echo_string, echo_file);
+
+  /* Find BRK file */
+
+  foundBrkFile = look_for_optional(ifp,"Brk file",input,'=');
+
+  if ( foundBrkFile == 1 && Brk_Flag != 1 ) {
+    Brk_Flag = 1;
+    read_string(ifp,input,'\n');
+    strip(input);
+    strcpy(Brk_File,input);
+
+    SPF(echo_string, eoformat, "Brk file", Brk_File); ECHO(echo_string, echo_file);
+  }
 
   /*
    *   look_for Optional Domain mapping file, the usage of the default
@@ -816,7 +831,8 @@ rd_genl_specs(FILE *ifp,
   
 #ifdef MATRIX_DUMP
   (void) look_for_optional_int(ifp, "Number of Jacobian File Dumps",
-			       &Number_Jac_Dump, 0);
+			       &Number_Jac_Dump, 0
+);
 
   SPF(echo_string,"%s = %d","Number of Jacobian File Dumps", Number_Jac_Dump); ECHO(echo_string, echo_file);
 #endif
@@ -1472,6 +1488,18 @@ rd_timeint_specs(FILE *ifp,
       {
 		SPF(echo_string,"%s = %d","Printing Frequency",tran->print_freq); ECHO(echo_string, echo_file);
       }
+
+    /* Look for fix frequency */
+    iread = look_for_optional(ifp,"Fix Frequency",input,'=');
+    if (iread == 1) {
+      tran->fix_freq = read_int(ifp, "Fix Frequency");
+      if (tran->fix_freq < 0) {
+        EH(-1, "Expected Fix Frequency > 0");
+      }
+      SPF(echo_string, "%s = %d", "Fix Frequency", tran->fix_freq); ECHO(echo_string, echo_file);
+    } else {
+      tran->fix_freq = 0;
+    }
 
     tran->resolved_delta_t_min = 0.;
     iread = look_for_optional(ifp,"Minimum Resolved Time Step",input,'=');
@@ -11087,6 +11115,8 @@ usage(const int exit_flag)
   fprintf(stdout, 
 	  "\t-a [aargs], -aprepro [aargs]    Input thru APREPRO [w/ aargs].\n");
   fprintf(stdout, 
+	  "\t-brk FILE                       Read Brk file from FILE\n");
+  fprintf(stdout, 
 	  "\t-restart FILE, -rest FILE       Read initial guess from FILE.\n");
   fprintf(stdout, 
 	  "\t-d INT,     -debug INT          Set debug flag to INT.\n");
@@ -11634,9 +11664,10 @@ translate_command_line( int argc,
 		}	
 		else if( strcmp( argv[istr],"-brk") == 0 )
 		{
+                  Brk_Flag = 1;
 		  (*nclc)++;
-	      istr++;
-	      clc[*nclc]->type = NOECHO;
+                  istr++;
+                  clc[*nclc]->type = NOECHO;
 		  strcpy_rtn = strcpy(clc[*nclc]->string, argv[istr]);
 		  strcpy_rtn = strcpy( Brk_File, clc[*nclc]->string);
 		  istr++;
@@ -11766,6 +11797,7 @@ apply_command_line(struct Command_line_command **clc,
 		 a, "Output EXODUS II file", ExoFileOut,
 		 b, "Output EXODUS II file", clc[i]->string); 
 	 strcpy_rtn = strcpy(ExoFileOut, clc[i]->string);
+         strcpy_rtn = strcpy(ExoFileOutMono, clc[i]->string);
        }
        else if (clc[i]->type == DEBUG_OPTION) {
 	 fprintf(stdout, "%s%40s= %d\n%s%40s= %d\n",

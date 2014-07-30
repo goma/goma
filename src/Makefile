@@ -157,6 +157,8 @@ SEACAS_TOP ?= $(GOMA_LIBS)/SEACAS-2012-09-10
 
 EXODUSII_LIB = -lexoIIv2c
 
+CHACO_LIB = -lchaco
+
 # NetCDF library (SEACAS version)
 
 NETCDF_LIB = -L$(SEACAS_TOP)/lib  -lnetcdf  -lhdf5_hl  -lhdf5
@@ -331,6 +333,12 @@ LIB_DEP = $(FRONT_DEP)
 
 # Source files for goma
 # =====================
+
+# _____ Brk and Fix ___________________________________________________________
+
+BF_SRC = brk_utils.c
+
+BF_INC = brk_utils.h
 
 # _____ Element routines "el_" prefix _________________________________________
 
@@ -669,10 +677,10 @@ USER_INC= user_ac.h\
 # _____ Full macros ___________________________________________________________
 
 GOMA_SRC = $(BC_SRC) $(EL_SRC) $(RF_SRC) $(MAIN_SRC) $(SL_SRC) $(MD_SRC) $(MM_SRC)\
-           $(DP_SRC) $(AC_SRC) $(LOCA_SRC) $(GM_SRC)
+           $(DP_SRC) $(AC_SRC) $(LOCA_SRC) $(GM_SRC) $(BF_SRC)
 
 GOMA_INCS = $(EL_INC) $(MAIN_INC) $(RF_INC) $(SL_INC) $(MD_INC) $(DP_INC) $(BC_INC)\
-           $(MM_INC) $(USER_INC) $(AC_INC) $(LOCA_INC) $(GM_INC)
+           $(MM_INC) $(USER_INC) $(AC_INC) $(LOCA_INC) $(GM_INC) $(BF_INC)
 
 GOMA_INCS := ${addprefix $(INCLUDE_DIR)/, $(GOMA_INCS)}
 
@@ -686,6 +694,7 @@ USER_OBJ := ${USER_OBJ:.C=.o}
 
 RELEASE_OBJ_DIR = $(OBJ_DIR)/release
 DEBUG_OBJ_DIR = $(OBJ_DIR)/debug
+BRKFIX_OBJ_DIR = $(OBJ_DIR)/brkfix
 
 GOMA_RELEASE_OBJS := ${addprefix $(RELEASE_OBJ_DIR)/,$(GOMA_OBJ)}
 USER_RELEASE_OBJS := ${addprefix $(RELEASE_OBJ_DIR)/,$(USER_OBJ)}
@@ -704,6 +713,7 @@ DEBUG_OBJS = $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS)
 # ==========================================
 GOMA_LIB = libgoma.a
 GOMA_USER_LIB = libgomau.a
+BRKFIX_LIB = ./brkfix/libbrkfix.a
 TARGET = goma
 DEBUG_TARGET = gomad
 
@@ -731,10 +741,10 @@ $(DEBUG_OBJS) = $(GOMA_INCS) $(MAKEFILE_NAME) $(USER_SETTINGS_FILE)
 all: $(BIN_DIR)/$(TARGET)
 
 # bin/goma executable
-$(BIN_DIR)/$(TARGET): $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIB_DEP)
+$(BIN_DIR)/$(TARGET): $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIB_DEP) $(BRKFIX_LIB)
 	mkdir -p $(BIN_DIR); \
 	$(RM) $@; \
-	$(LD) $(LD_FLAGS) -o $@ $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIBS) $(END_LIBS)
+	$(LD) $(LD_FLAGS) -o $@ $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(BRKFIX_LIB) $(LIBS) $(END_LIBS)
 
 # goma library
 $(LIB_DIR)/$(GOMA_LIB): $(GOMA_RELEASE_OBJS)
@@ -748,6 +758,16 @@ $(LIB_DIR)/$(GOMA_USER_LIB): $(USER_RELEASE_OBJS)
 	$(AR) $(ARFLAGS) $@ $?; \
 	$(RANLIB) $@ 
 
+
+
+$(BRKFIX_LIB): brkfix
+
+
+brkfix:
+	cd ./brkfix && $(MAKE) library AR=$(AR) RANLIB=$(RANLIB) ACCESS=$(SEACAS_TOP) INCLUDE_DIR=$(INCLUDE_DIR) BRKFIX_OBJ_DIR=$(BRKFIX_OBJ_DIR)
+
+.PHONY: brkfix
+
 # Debug targets
 # -------------
 
@@ -757,10 +777,10 @@ debug:
 	$(MAKE) CCFLAGS="$(DEBUG_FLAGS)" $(BIN_DIR)/$(DEBUG_TARGET)
 
 # bin/gomad executable
-$(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIB_DEP)
+$(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(BRKFIX_LIB) $(LIB_DEP)
 	mkdir -p $(BIN_DIR); \
 	$(RM) $@; \
-	$(LD) $(LD_FLAGS) -o $@ $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIBS) $(END_LIBS)
+	$(LD) $(LD_FLAGS) -o $@ $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(BRKFIX_LIB) $(LIBS) $(END_LIBS)
 
 # Object pattern rules
 # --------------------
@@ -831,9 +851,11 @@ install: $(BIN_DIR)/$(TARGET) $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB)
 .PHONY: clean
 
 clean:
-	$(RM) $(DEBUG_OBJ_DIR)/*.o $(RELEASE_OBJ_DIR)/*.o $(LIB_DIR)/*.a
+	$(RM) $(DEBUG_OBJ_DIR)/*.o $(RELEASE_OBJ_DIR)/*.o $(BRKFIX_OBJ_DIR)/*.o $(LIB_DIR)/*.a; \
+	cd brkfix && $(MAKE) clean
 
 .PHONY: realclean
 
 realclean: clean
-	$(RM) $(BIN_DIR)/$(TARGET) $(BIN_DIR)/$(DEBUG_TARGET)
+	$(RM) $(BIN_DIR)/$(TARGET) $(BIN_DIR)/$(DEBUG_TARGET); \
+	cd brkfix && $(MAKE) realclean
