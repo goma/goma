@@ -14,6 +14,8 @@
 
 OBJ_DIR := ${addprefix ../, $(BRKFIX_OBJ_DIR)}
 
+BRKFIX_LIB_DIR := ${addprefix ../, $(LIB_DIR)}
+
 RM = rm -f
 
 CC = gcc
@@ -56,7 +58,7 @@ OBJS = brk.o brk_exo_file.o fix_exo_file.o bbb.o rd_exo.o wr_exo.o rd_in.o wr_gr
 FOBJS := ${addprefix $(OBJ_DIR)/, $(FOBJS)}
 OBJS := ${addprefix $(OBJ_DIR)/, $(OBJS)}
 
-LIBRARY = libbrkfix.a
+LIBRARY = $(BRKFIX_LIB_DIR)/libbrkfix.a
 
 all: brk fix $(LIBRARY)
 
@@ -84,4 +86,4 @@ clean:
 	-rm -f *.o *~ tmp* core junk* *.BAK *%
 
 realclean:
-	-rm -f *.fem *.pcon *.psplot *.o *~ tmp* junk* *.BAK *%
+	-rm -f *.fem *.pcon *.psplot *.o *~ tmp* junk* *.BAK *% $(LIBRARY)

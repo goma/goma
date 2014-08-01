@@ -198,7 +198,6 @@ fix_exo_file(int num_procs, char* exo_mono_name)
   Dpi *dpin;			/* polylith dpi in */
 
   char  monolith_file_name  [FILENAME_MAX_ACK]; /* original mesh */
-  char  polylith_basename   [FILENAME_MAX_ACK]; /* broken results */
 
   char  polylith_name       [FILENAME_MAX_ACK]; /* "basename_1of2.exoII" */
 
@@ -214,7 +213,6 @@ fix_exo_file(int num_procs, char* exo_mono_name)
   for ( i=0; i<FILENAME_MAX_ACK; i++)
     {
       monolith_file_name[i] = '\0';
-      polylith_basename[i] = '\0';
       polylith_name[i] = '\0';
     }
 
@@ -295,8 +293,8 @@ fix_exo_file(int num_procs, char* exo_mono_name)
        */
 
 #ifdef DEBUG  
-      fprintf(stderr, "Fix: attempting to build a %d piece %s from %s pieces\n",
-	      num_procs, monolith_file_name, polylith_basename);
+      fprintf(stderr, "Fix: attempting to build a %d piece %s\n",
+	      num_procs, monolith_file_name);
 #endif
 
       /*

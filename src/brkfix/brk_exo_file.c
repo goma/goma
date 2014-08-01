@@ -652,7 +652,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
   tmp = strcpy(out_augplot_file_name, "brk.exoII");
 
-  if ( err != 1 || num_pieces < 1 )
+  if ( num_pieces < 1 )
     {
       EH(-1, 
          "For number of pieces, specify one positive nonzero integer.");
