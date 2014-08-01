@@ -673,12 +673,9 @@ build_global_attr(Exo_DB *p,	/* EXODUS info from representative polylith */
   int e;
   int ebi;
   int ebi_global;
-  int elem_global;		/* 1 ... num_elems in global problem */
-  int elem_global_this_block;	/* since beginning of this block */
   int l;
   int nattr;			/* num element block attributes this block */
   int na;			/* attribute index locally */
-  int na_global;		/* number attribute index globally  */
 
   /*
    * A few checks to throw out nonsense...
@@ -728,10 +725,6 @@ build_global_attr(Exo_DB *p,	/* EXODUS info from representative polylith */
 	   * global perspective.
 	   */
 
-	  elem_global            = d->elem_index_global[e];
-	  elem_global_this_block = elem_global - m->eb_ptr[ebi_global];
-
-	  na_global              = nattr * elem_global_this_block;
 	  na                     = nattr * e;
 	  for ( l=0; l<nattr; l++)
 	    {
@@ -1170,10 +1163,7 @@ mononame(char *in,
 	 char *out)
 {
   int i;
-
   char in_sans_suffix[FILENAME_MAX_ACK];
-  char suffix[FILENAME_MAX_ACK];
-
   char *p;
 
   /*
@@ -1183,7 +1173,6 @@ mononame(char *in,
   for ( i=0; i<FILENAME_MAX_ACK; i++)
     {
       in_sans_suffix[i] = '\0';
-      suffix[i]         = '\0';
     }
 
   /*

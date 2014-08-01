@@ -1105,7 +1105,6 @@ getdid(int netcdf_unit,			/* should already be open	(in) */
 {
   int err;
   char err_msg[MAX_CHAR_ERR_MSG];  
-  Spfrtn sr=0;
 
 #ifdef DEBUG
   fprintf(stderr, "getdid(unit=%d, \"%s\", %d, 0x%x\n", netcdf_unit,
@@ -1121,7 +1120,7 @@ getdid(int netcdf_unit,			/* should already be open	(in) */
    */
   if ( err != NC_NOERR && hard_error_interpretation )
     {
-      sr = sprintf(err_msg, "nc_inq_dimid() on %s id=%d", 
+      sprintf(err_msg, "nc_inq_dimid() on %s id=%d", 
 		   string_name, 
 		   *dimension_identifier_address);
       EH(-1, err_msg);
@@ -1132,9 +1131,8 @@ getdid(int netcdf_unit,			/* should already be open	(in) */
   err  = ncdimid(netcdf_unit, string_name);
   if ( err == -1 && hard_error_interpretation )
     {
-      sr   = sprintf(err_msg, "ncdimid() on %s rtn %d", string_name, err);
+      sprintf(err_msg, "ncdimid() on %s rtn %d", string_name, err);
       EH(err, err_msg);
-      EH(sr, err_msg);
     }
   *dimension_identifier_address = err;
 #endif  
@@ -1173,15 +1171,13 @@ getvid(int netcdf_unit,		         /* open netCDF unit identifier (in) */
 {
   int err;
   char err_msg[MAX_CHAR_ERR_MSG];  
-  Spfrtn sr=0;
-
 
 #ifdef NETCDF_3
   *variable_identifier_address = -1;
   err  = nc_inq_varid(netcdf_unit, string_name, variable_identifier_address);
   if ( err != NC_NOERR && hard_error_interpretation )
     {
-      sr = sprintf(err_msg, "nc_inq_varid() on %s id=%d", 
+      sprintf(err_msg, "nc_inq_varid() on %s id=%d", 
 		   string_name, 
 		   *variable_identifier_address);
       EH(-1, err_msg);
@@ -1192,9 +1188,8 @@ getvid(int netcdf_unit,		         /* open netCDF unit identifier (in) */
   err  = ncvarid(netcdf_unit, string_name);
   if ( err == -1 && hard_error_interpretation )
     {
-      sr   = sprintf(err_msg, "ncvarid() on %s rtn %d", string_name, err);
+      sprintf(err_msg, "ncvarid() on %s rtn %d", string_name, err);
       EH(err, err_msg);
-      EH(sr, err_msg);
     }
   *variable_identifier_address = err;
 #endif  
@@ -1225,7 +1220,6 @@ getdim(int netcdf_unit,
 {
   int err;
   char err_msg[MAX_CHAR_ERR_MSG];  
-  Spfrtn sr=0;
 #ifdef NETCDF_3
   size_t swhere;
 #endif
@@ -1250,7 +1244,7 @@ getdim(int netcdf_unit,
       err  = nc_inq_dimlen(netcdf_unit, dimension_id, &swhere);
       if ( err != NC_NOERR )
 	{
-	  sr = sprintf(err_msg, "nc_inq_dimlen() on did=%d", dimension_id);
+	  sprintf(err_msg, "nc_inq_dimlen() on did=%d", dimension_id);
 	  EH(-1, err_msg);
 	}
       *where = (int) swhere;
@@ -1258,11 +1252,10 @@ getdim(int netcdf_unit,
 
 #ifdef NETCDF_2
       err  = ncdiminq(netcdf_unit, dimension_id, junk, &swhere);
-      sr   = sprintf(err_msg, "ncdiminq() on did %d rtns %d", dimension_id, 
+      sprintf(err_msg, "ncdiminq() on did %d rtns %d", dimension_id, 
 		     err);
       *where = (int) swhere;
       EH(err, err_msg);
-      EH(sr, err_msg);
 #endif  
     }
   return;
