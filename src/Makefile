@@ -713,7 +713,7 @@ DEBUG_OBJS = $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS)
 # ==========================================
 GOMA_LIB = libgoma.a
 GOMA_USER_LIB = libgomau.a
-BRKFIX_LIB = ./brkfix/libbrkfix.a
+BRKFIX_LIB = libbrkfix.a
 TARGET = goma
 DEBUG_TARGET = gomad
 
@@ -741,10 +741,10 @@ $(DEBUG_OBJS) = $(GOMA_INCS) $(MAKEFILE_NAME) $(USER_SETTINGS_FILE)
 all: $(BIN_DIR)/$(TARGET)
 
 # bin/goma executable
-$(BIN_DIR)/$(TARGET): $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIB_DEP) $(BRKFIX_LIB)
+$(BIN_DIR)/$(TARGET): $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIB_DEP) $(LIB_DIR)/$(BRKFIX_LIB)
 	mkdir -p $(BIN_DIR); \
 	$(RM) $@; \
-	$(LD) $(LD_FLAGS) -o $@ $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(BRKFIX_LIB) $(LIBS) $(END_LIBS)
+	$(LD) $(LD_FLAGS) -o $@ $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIB_DIR)/$(BRKFIX_LIB) $(LIBS) $(END_LIBS)
 
 # goma library
 $(LIB_DIR)/$(GOMA_LIB): $(GOMA_RELEASE_OBJS)
@@ -760,7 +760,7 @@ $(LIB_DIR)/$(GOMA_USER_LIB): $(USER_RELEASE_OBJS)
 
 
 
-$(BRKFIX_LIB): brkfix
+$(LIB_DIR)/$(BRKFIX_LIB): brkfix
 
 
 brkfix:
@@ -777,10 +777,10 @@ debug:
 	$(MAKE) CCFLAGS="$(DEBUG_FLAGS)" $(BIN_DIR)/$(DEBUG_TARGET)
 
 # bin/gomad executable
-$(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(BRKFIX_LIB) $(LIB_DEP)
+$(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIB_DIR)/$(BRKFIX_LIB) $(LIB_DEP)
 	mkdir -p $(BIN_DIR); \
 	$(RM) $@; \
-	$(LD) $(LD_FLAGS) -o $@ $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(BRKFIX_LIB) $(LIBS) $(END_LIBS)
+	$(LD) $(LD_FLAGS) -o $@ $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIB_DIR)/$(BRKFIX_LIB) $(LIBS) $(END_LIBS)
 
 # Object pattern rules
 # --------------------
