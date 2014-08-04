@@ -8,7 +8,9 @@ Additions to goma with brk fix parallel integration
 
 ## Problem Description File
 
-### General Specifications
+### File Specifications
+
+    -- After SOLN file
 
 #### Brk file
 
@@ -32,6 +34,10 @@ Following is a sample card:
     Brk file = in.brk
 ```
 
+### Time Integration Specifications
+
+    -- After Printing Frequency
+
 #### Fix Frequency
 
 ```
@@ -43,6 +49,8 @@ Fix Frequency = <integer>
 This optional card specifies the frequency at which goma should fix, or combine, the parallel pieces of the Output Exodus II file.
 
 Without this card goma will only fix after the problem is solved.
+
+Fixing only occurs if goma brk the exodus files (`-brk` or `Brk file`)
 
 `<integer>` | The timestep interval at which to fix the Output Exodus II file, must be positive.
 
