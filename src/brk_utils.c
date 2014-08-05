@@ -159,17 +159,24 @@ void
 call_brk()
 {
   int i;
-  if (Guess_Flag == 4) {
-    brk_exo_file(Num_Proc, Brk_File, Init_GuessFile);
+
+  if( strcmp( ExoAuxFile, "" ) != 0 ) {
+    if (Debug_Flag) {
+      DPRINTF(stdout, "Brking exodus file %s\n", ExoAuxFile);
+    }
+    brk_exo_file(Num_Proc, Brk_File, ExoAuxFile);
   }
 
   if( efv->Num_external_field != 0 ) {
     for( i=0; i<efv->Num_external_field; i++ ) {
+      if (Debug_Flag) {
+        DPRINTF(stdout, "Brking exodus file %s\n", efv->file_nm[i]);
+      }
       brk_exo_file(Num_Proc, Brk_File, efv->file_nm[i]);
     }
   }
   if (Debug_Flag) {
-    DPRINTF(stdout, "Brking exodus file\n");
+    DPRINTF(stdout, "Brking exodus file %s\n", ExoFile);
   }
   brk_exo_file(Num_Proc, Brk_File, ExoFile);
 }
