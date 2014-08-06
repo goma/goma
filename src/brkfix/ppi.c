@@ -27,24 +27,16 @@
  */
 
 #define _PPI_C
-
-#include <config.h>
-
 #include <stdio.h>
-
-#ifdef STDC_HEADERS
 #include <stdlib.h>
-#endif
-
 #include <string.h>
 
-#include "map_names.h"
-#include "std.h"
-#include "eh.h"
-#include "ppi.h"
+#include "brkfix/brkfix.h"
+#include "mm_eh.h"
+#include "brkfix/ppi.h"
 
 void
-pre_process(char *fn)
+brk_pre_process(char *fn)
 {
 
   FILE *infile;

@@ -32,10 +32,6 @@
 
 #define _BBB_C
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdio.h>
 
 #include <sys/types.h>
@@ -45,19 +41,16 @@
 #include <fcntl.h>
 #endif
 
-#ifdef STDC_HEADERS
 #include <stdlib.h>
-#endif
-
 #include <string.h>
 
-#include "std.h"		/* useful general stuff */
-#include "eh.h"			/* error handling */
-#include "aalloc.h"		/* multi-dim array allocation */
+#include "brkfix/brkfix.h"		/* useful general stuff */
+#include "mm_eh.h"			/* error handling */
+#include "rf_allo.h"		/* multi-dim array allocation */
 #include "exo_struct.h"		/* some definitions for EXODUS II */
 #include "dpi.h"		/* distributed processing information */
-#include "nodesc.h"		/* node descriptions */
-#include "bbb.h"
+#include "brkfix/nodesc.h"		/* node descriptions */
+#include "brkfix/bbb.h"
 
 static const int sc  = sizeof(char);
 static const int si  = sizeof(int);
@@ -403,78 +396,75 @@ build_big_bones(Exo_DB *p,	/* EXODUS info from representative polylith */
    * Properties of node sets...
    */
 
-  if ( m->ns_num_props > 1 ) 
-    {
+  if ( m->ns_num_props > 1 ) {
 
-      m->ns_prop_name = (char **) smalloc(m->ns_num_props* spc);
-      for ( i=0; i<m->ns_num_props; i++)
-	{
-	  m->ns_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH* sc);
-	  strcpy(m->ns_prop_name[i], p->ns_prop_name[i]);
-	}
-	  
-      m->ns_prop = (int **) smalloc(m->ns_num_props* spi);
-      for ( i=0; i<m->ns_num_props; i++)
-	{
-	  m->ns_prop[i] = (int *)smalloc(m->num_node_sets* si);
-	  for ( j=0; j<m->num_node_sets; j++)
-	    {
-	      m->ns_prop[i][j] = d->ns_prop_global[i][j];
-	    }
-	}
+    m->ns_prop_name = (char **) smalloc(m->ns_num_props* spc);
+    for ( i=0; i<m->ns_num_props; i++) {
+      m->ns_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH* sc);
+      strcpy(m->ns_prop_name[i], p->ns_prop_name[i]);
     }
+	  
+    m->ns_prop = (int **) smalloc(m->ns_num_props* spi);
+    for ( i=0; i<m->ns_num_props; i++) {
+      m->ns_prop[i] = (int *)smalloc(m->num_node_sets* si);
+      for ( j=0; j<m->num_node_sets; j++) {
+        m->ns_prop[i][j] = d->ns_prop_global[i][j];
+      }
+    }
+  } else {
+    m->ns_prop_name = NULL;
+    m->ns_prop = NULL;
+  }
     
 
   /*
    * Properties of side sets...
    */
 
-  if ( m->ss_num_props > 1 ) 
-    {
+  if ( m->ss_num_props > 1 ) {
 
-      m->ss_prop_name = (char **) smalloc(m->ss_num_props* spc);
-      for ( i=0; i<m->ss_num_props; i++)
-	{
-	  m->ss_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH* sc);
-	  strcpy(m->ss_prop_name[i], p->ss_prop_name[i]);
-	}
-      
-      m->ss_prop = (int **) smalloc(m->ss_num_props* spi);
-      for ( i=0; i<m->ss_num_props; i++)
-	{
-	  m->ss_prop[i] = (int *)smalloc(m->num_side_sets* si);
-	  for ( j=0; j<m->num_side_sets; j++)
-	    {
-	      m->ss_prop[i][j] = d->ss_prop_global[i][j];
-	    }
-	}
+    m->ss_prop_name = (char **) smalloc(m->ss_num_props* spc);
+    for ( i=0; i<m->ss_num_props; i++) {
+      m->ss_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH* sc);
+      strcpy(m->ss_prop_name[i], p->ss_prop_name[i]);
     }
+      
+    m->ss_prop = (int **) smalloc(m->ss_num_props* spi);
+    for ( i=0; i<m->ss_num_props; i++) {
+      m->ss_prop[i] = (int *)smalloc(m->num_side_sets* si);
+      for ( j=0; j<m->num_side_sets; j++) {
+        m->ss_prop[i][j] = d->ss_prop_global[i][j];
+      }
+    }
+  } else {
+    m->ss_prop_name = NULL;
+    m->ss_prop = NULL;
+  }
 
 
   /*
    * Properties of element blocks...
    */
   
-  if ( m->eb_num_props > 1 ) 
-    {
+  if ( m->eb_num_props > 1 ) {
       
-      m->eb_prop_name = (char **) smalloc(m->eb_num_props* spc);
-      for ( i=0; i<m->eb_num_props; i++)
-	{
-	  m->eb_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH* sc);
-	  strcpy(m->eb_prop_name[i], p->eb_prop_name[i]);
-	}
-      
-      m->eb_prop = (int **) smalloc(m->eb_num_props* spi);
-      for ( i=0; i<m->eb_num_props; i++)
-	{
-	  m->eb_prop[i] = (int *)smalloc(m->num_elem_blocks* si);
-	  for ( j=0; j<m->num_elem_blocks; j++)
-	    {
-	      m->eb_prop[i][j] = d->eb_prop_global[i][j];
-	    }
-	}
+    m->eb_prop_name = (char **) smalloc(m->eb_num_props* spc);
+    for ( i=0; i<m->eb_num_props; i++) {
+      m->eb_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH* sc);
+      strcpy(m->eb_prop_name[i], p->eb_prop_name[i]);
     }
+      
+    m->eb_prop = (int **) smalloc(m->eb_num_props* spi);
+    for ( i=0; i<m->eb_num_props; i++) {
+      m->eb_prop[i] = (int *)smalloc(m->num_elem_blocks* si);
+      for ( j=0; j<m->num_elem_blocks; j++) {
+        m->eb_prop[i][j] = d->eb_prop_global[i][j];
+      }
+    }
+  } else {
+    m->eb_prop_name = NULL;
+    m->eb_prop = NULL;
+  }
       
   /*
    * Results data...how many of each kind.

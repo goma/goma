@@ -17,21 +17,18 @@
 
 #define _EMUCK_C
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdio.h>
 
-#include "map_names.h"
-#include "std.h"
-#include "eh.h"
-#include "aalloc.h"
+#include "goma.h"
+
+#include "brkfix/brkfix.h"
+#include "mm_eh.h"
+#include "rf_allo.h"
 #include "exo_struct.h"
 #include "exo_conn.h"
-#include "utils.h"
+#include "brkfix/utils.h"
 #include "dpi.h"
-#include "emuck.h"
+#include "brkfix/emuck.h"
 
 /* assign_elem_ownership() - assign set proc based on nodal decomp
  *
@@ -427,7 +424,7 @@ build_elem_elem_xtra(Exo_DB *exo) /* monolith FE db w/ connectivity     (in) */
 	      lo = exo->elem_elem_pntr[neighbor];
 	      hi = exo->elem_elem_pntr[neighbor+1];
 
-	      where = in_list(e, exo->elem_elem_list + lo, hi-lo);
+	      where = in_list(e, 0, hi-lo, exo->elem_elem_list + lo);
 
 	      EH(where, "Didn't find my recipricol element!");
 
@@ -453,7 +450,7 @@ build_elem_elem_xtra(Exo_DB *exo) /* monolith FE db w/ connectivity     (in) */
 		  EH(-1, "Difft number of nodes on facing elems!?!");
 		}
 
-	      twist = in_list(snl_this[0], snl_other, n2);
+	      twist = in_list(snl_this[0], 0, n2, snl_other);
 
 	      EH(twist, "Low node not found in facing neighbor!");
 

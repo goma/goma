@@ -37,30 +37,24 @@
 #include <fcntl.h>
 #endif
 
-#ifdef STDC_HEADERS
 #include <stdlib.h>
-#endif
 #include <unistd.h>
-
 #include <string.h>
 
-#include "map_names.h"
-#include "std.h"		/* useful general stuff */
-#include "eh.h"			/* error handling */
-#include "aalloc.h"		/* multi-dim array allocation */
-#include "exo_struct.h"		/* some definitions for EXODUS II */
+#include "goma.h"
 
+#include "brkfix/brkfix.h"		/* useful general stuff */
+#include "mm_eh.h"			/* error handling */
+#include "rf_allo.h"		/* multi-dim array allocation */
+#include "exo_struct.h"		/* some definitions for EXODUS II */
+#include "brkfix/bbb.h"
 #include "dpi.h"		/* distributed processing information */
-#include "nodesc.h"		/* node descriptions */
+#include "brkfix/nodesc.h"		/* node descriptions */
 #include "rd_dpi.h"
 
-#include "fix.h"
-
-static int be_quiet			= TRUE;
+#include "brkfix/fix.h"
 
 char *program_name;		/* name this program was run with */
-
-static char program_version[] = BRK_VERSION;
 
 static const char program_description[] = "GOMA distributed problem recomposition tool";
 
@@ -74,108 +68,6 @@ int *nl;			/* node list */
 int *el;			/* element list */
 
 int *ebl;			/* element block list */
-
-extern int rd_exo		/* def in "rd_exo.c" */
-PROTO((Exo_DB *,		/* structure defined in exo_struct.h */
-       char *,			/* filename of exo2 file */
-       int,			/* verbosity flag */
-       int));			/* task */
-
-extern void init_exo_struct	/* "rd_exo.c" */
-PROTO((Exo_DB *));		/* ptr to whole database in memory */
-
-extern int free_exo		/* "rd_exo.c" */
-PROTO((Exo_DB *));		/* pointer to EXODUS II FE db structure */
-
-extern void alloc_exo_nv
-PROTO((Exo_DB *));
-
-extern void alloc_exo_gv
-PROTO((Exo_DB *, int ));
-
-extern void alloc_exo_ev
-PROTO((Exo_DB *, int ));
-
-extern int wr_mesh_exo		/* wr_exo.c */
-PROTO((Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
-       char *,			/* filename - where to write */
-       int));			/* verbosity - talk while writing */
-
-extern void wr_resetup_exo	/* wr_exo.c */
-PROTO((Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
-       char *,			/* filename - where to write */
-       int ));			/* verbosity - 0 for quiet, more to talk */
-
-extern void wr_result_exo	/* wr_exo.c */
-PROTO((Exo_DB *,		/* exo */
-       char *,			/* filename - where to write */
-       int ));			/* verbosity - 0 for quiet, more to talk */
-
-extern void zero_base		/* utils.c */
-PROTO((Exo_DB *));		/* E - pointer to an EXODUS II database */
-
-extern void one_base		/* utils.c */
-PROTO((Exo_DB *));		/* x = pointer to an EXODUS II FE database */
-
-extern int get_filename_num_procs /* utils.c */
-PROTO((const char *));		/* basename - of polylithic files */
-
-extern int rd_dpi		/* rd_dpi.c */
-PROTO((Dpi *,			/* fantastic structure defd in "dpi.h" */
-       char *,			/* fn - filename */
-       int ));			/* verbosity - how much to talk */
-
-extern int wr_dpi		/* wr_dpi.c */
-PROTO((Dpi *,			/* fantastic structure defd in "dpi.h" */
-       char *,			/* filename */
-       int ));			/* verbosity - how much to talk */
-
-extern void free_dpi		/* rd_dpi.c */
-PROTO((Dpi *));			/* fantastic structure defd in "dpi.h" */
-
-extern void free_dpi_uni	/* rd_dpi.c */
-PROTO((Dpi *));			/* fantastic structure defd in "dpi.h" */
-
-
-static void multiname		/* rd_mesh.c */
-PROTO((char *,			/* in_name - generic global name "pref.suf" */
-       int,			/* integer processor_name */
-       int));			/* number_processors - total */
-
-extern void build_big_bones
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
-       Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
-
-extern void build_global_conn	/* bbb.c */
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
-       Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
-
-extern void build_global_attr	/* bbb.c */
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
-       Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
-
-extern void build_global_coords	/* bbb.c */
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
-       Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
-
-extern void build_global_ns	/* bbb.c */
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
-       Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
-
-extern void build_global_ss	/* bbb.c */
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
-       Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
-
-extern void build_global_res	/* bbb.c */
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
-       Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
 
 /*
  * Prototypes of functions defined in this file.
@@ -223,12 +115,6 @@ fix_exo_file(int num_procs, char* exo_mono_name)
       sr = sprintf(err_msg, "Bad number of processors specified: %d.",
 		   num_procs);
       EH(-1, err_msg);
-    }
-
-  if ( ! be_quiet )
-    {
-      fprintf(stdout, "%s %s - %s\n%s\n", program_name, program_version, 
-	      program_description, copyright);
     }
 
   /*
@@ -349,6 +235,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 
 
   mono = (Exo_DB *) smalloc(sizeof(Exo_DB));
+  memset(mono, 0, sizeof(Exo_DB));
 
   init_exo_struct(mono);
 
@@ -592,67 +479,6 @@ fix_exo_file(int num_procs, char* exo_mono_name)
   return(0);
 }
 
-/* multiname() -- translate filename string to distributed processing version
- *
- * 
- * Description:
- *
- * Many data file names will be unique to a given processor. Construct that
- * name for this processor. The names will be translate like this
- *
- * Old name: "basename.suffix"
- *
- * New name: "basename_13of437.suffix"
- *
- * Note: The input string is assumed to have sufficient space allocated to
- *       contain the revised name.
- *
- *	 Processors, while named beginning at zero, are incremented so that
- *       the string reads 1ofn, 2ofn, ...., nofn and NOT
- *	 0ofn, 1ofn, ..., n-1ofn.
- *
- *
- * Created: 1997/07/09 13:18 MDT pasacki@sandia.gov
- *
- * Revised:
- */
-
-static void
-multiname(char *in_name, 
-	  int processor_name, 
-	  int number_processors)
-{
-  char err_msg[1024];
-
-  Spfrtn sr=0;
-
-  if ( number_processors == 1 ) return;
-
-  if ( processor_name < 0 ) 
-    {
-      sr = sprintf(err_msg, "processor_name = %d ( less than zero).", 
-		   processor_name);
-      EH(-1, err_msg);
-      EH(sr, err_msg);
-    }
-  else if ( processor_name > number_processors - 1 )
-    {
-      sr = sprintf(err_msg, "processor_name = %d ( too high ).", 
-		   processor_name);
-      EH(-1, err_msg);
-    }
-
-  if ( number_processors < 1 )
-    {
-      sr = sprintf(err_msg, "number_processors = %d ( less than one ).", 
-		   number_processors);
-      EH(-1, err_msg);
-    }
-
-  sprintf(in_name, "%s.%d.%d", in_name, number_processors, processor_name);
-  return;
-}
-
 /* setup_exo_res_desc() -- allocate, set arrays to rd/wr all results, 1 time
  *
  * Allocate and setup arrays for reading and writing EXODUS II results
@@ -675,8 +501,6 @@ multiname(char *in_name,
 static void 
 setup_exo_res_desc(Exo_DB *exo)
 {
-  int i;
-
   if ( ! ( exo->state & EXODB_STATE_RES0 ) )
     {
       EH(-1, "Setup to read bulk results requires preliminary info.");
@@ -715,34 +539,18 @@ setup_exo_res_desc(Exo_DB *exo)
 	    }
 
 	  exo->num_nv_time_indeces = 1;
-	  exo->nv_time_indeces     = (int *) 
-	    smalloc(exo->num_nv_time_indeces*sizeof(int));
-
-	  for ( i=0; i<exo->num_nv_time_indeces; i++)
-	    {
-	      exo->nv_time_indeces[i] = -1; /* Initialize to undefined. */
-	    }
-	  
 	  exo->num_nv_indeces      = exo->num_node_vars;
-	  exo->nv_indeces          = (int *) smalloc(exo->num_nv_indeces*
-						     sizeof(int));
-
 	  /*
 	   * Flag indicates we've allocated this memory...
 	   */
 	  
 	  exo->state |= EXODB_STATE_NDIA;
       
-	  for ( i=0; i<exo->num_nv_indeces; i++)
-	    {
-	      exo->nv_indeces[i]   = i+1; /* 1-based naming sop to FORTRAN */
-	    }
-
 	  if ( exo->num_nv_time_indeces > 0 &&
 	       exo->num_nv_indeces      > 0 &&
 	       exo->num_nodes           > 0 )
 	    {
-	      alloc_exo_nv(exo);
+	      alloc_exo_nv(exo, exo->num_nv_time_indeces, exo->num_nv_indeces);
 	    }
 	}
     }

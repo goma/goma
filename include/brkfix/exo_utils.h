@@ -34,17 +34,10 @@ PROTO((Exo_DB *));		/* E - ptr to EXODUS II FE db                */
 EXTERN void one_base
 PROTO((Exo_DB *));		/* E - ptr to EXODUS II FE db                */
 
-EXTERN Element_shape get_element_shape
-PROTO((const Exo_DB *,		/* exo                                       */
-       const int ));		/* element                                   */
-
 #if 0
 EXTERN Element_shape type2shape
 PROTO((const Element_type ));
 #endif
-
-EXTERN int shape2sides
-PROTO((const Element_shape ));
 
 EXTERN int find_element_block
 PROTO(( Exo_DB *,   // Exodus database

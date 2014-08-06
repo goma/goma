@@ -30,19 +30,17 @@
 
 #include <stdio.h>
 #include <string.h>
-
-#ifdef STDC_HEADERS
 #include <stdlib.h>
-#endif
 
-#include "map_names.h"
-#include "std.h"
-#include "aalloc.h"
-#include "eh.h"
+#include "goma.h"
+
+#include "brkfix/brkfix.h"
+#include "rf_allo.h"
+#include "mm_eh.h"
 #include "exo_struct.h"
-#include "brkfix_types.h"
-#include "rd_in.h"
-#include "utils.h"
+#include "brkfix/brkfix_types.h"
+#include "brkfix/rd_in.h"
+#include "brkfix/utils.h"
 
 const char delimiters[]=" 	\n"; /* whitespace delimiters (space, tab) */
 
@@ -391,7 +389,7 @@ rd_input(char *in_file_name,	/* name of the input file */
        * the EXODUS II db information...
        */
 
-      eb_index = in_list(ebid, mono->eb_id, mono->num_elem_blocks);
+      eb_index = in_list(ebid, 0, mono->num_elem_blocks, mono->eb_id);
       EH(eb_index, "Did not find specified element block ID in monolith.");
 
       if ( npe != mono->eb_num_nodes_per_elem[eb_index] )

@@ -27,11 +27,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "map_names.h"
-#include "std.h"
-#include "eh.h"
+#include "brkfix/brkfix.h"
+#include "mm_eh.h"
 #include "exo_struct.h"
-#include "wr_coords.h"
+#include "brkfix/wr_coords.h"
 
 void
 write_coords(char *fn,		/* filename for coordinates */

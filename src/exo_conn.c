@@ -132,13 +132,6 @@ Spfrtn sr;
 static int get_num_faces	/* exo_conn.c */
 PROTO((char *));		/* elem_type */
 
-static int build_side_node_list
-PROTO((int ,			/* elem - the element number */
-       int ,			/* face - the face number */
-       int ,			/* eb_index - element block index*/
-       Exo_DB *,		/* exo - ptr to whole mesh structure FE db*/
-       int *));			/* snl - node list for this side (out) */
-
 #if FALSE /* ................just for demo and debugging...................*/
 static void demo_elem_node_conn
 PROTO((Exo_DB *));		/* exo - pntr to EXODUS II FE database */
@@ -695,7 +688,7 @@ build_elem_elem(Exo_DB *exo)
 	      * the element lives in...
 	      */
 
-	     num_nodes = build_side_node_list(elem, face, ebi, exo, snl);
+	     num_nodes = build_side_node_list(elem, face, exo, snl);
 #ifdef DEBUG
 	     fprintf(stderr, "Elem %d, face %d has %d nodes: ", elem, face,
 		     num_nodes);
@@ -1105,10 +1098,9 @@ build_elem_elem(Exo_DB *exo)
 
 
 
-static int
+int
 build_side_node_list(int elem,
 		     int face,
-		     int eb_index,
 		     Exo_DB *exo,
 		     int *snl)
 {
@@ -1636,3 +1628,166 @@ demo_elem_elem_conn(Exo_DB *exo)
 }
 #endif
 
+/*
+ * Build the node -> node connectivity given the elem -> node connectivity
+ * and the node -> elem connectivity.
+ *
+ * Created: 1999/01/27 08:38 MST pasacki@sandia.gov
+ *
+ * Revised:
+ */
+
+void
+brk_build_node_node(Exo_DB *exo)
+{
+  int curr_list_size;
+  int dude;
+  int e;
+  int elem;
+  int end;
+  int i;
+  int length;
+  int max;
+  int n;
+  int node;
+  int npe;
+  int start;
+  int this_node;
+  int total_list_size;
+  
+  int *list;
+  /*
+   * Don't even attempt to do this without adequate preparation.
+   */
+
+  if ( ! exo->node_elem_conn_exists )
+    {
+      EH(-1, "node_elem conn must exist before node_node can be built.");
+    }
+
+  if ( ! exo->elem_node_conn_exists )
+    {
+      EH(-1, "elem_node conn must exist before node_node can be built.");
+    }
+
+
+  /*
+   * Intial memory allocation. The length of the node list will be less than
+   * this number by probably about a factor of 2. We will realloc more
+   * precisely later. Repeating - this is an overestimate.
+   */
+
+  length = 0;
+
+  max    = -1;
+
+  for ( node=0; node<exo->num_nodes; node++)
+    {
+      this_node = 0;
+      for ( e=exo->node_elem_pntr[node]; e<exo->node_elem_pntr[node+1]; e++)
+	{
+	  elem       = exo->node_elem_list[e];
+	  npe        = exo->elem_node_pntr[elem+1] - exo->elem_node_pntr[elem];
+	  length    += npe;
+	  this_node += npe;
+	}
+      if ( this_node > max )
+	{
+	  max = this_node;
+	}
+    }
+
+  exo->node_node_conn_exists = TRUE;
+  exo->node_node_pntr        = (int *) smalloc((exo->num_nodes+1)*sizeof(int));
+  exo->node_node_list        = (int *) smalloc(length*sizeof(int));
+
+  /*
+   * To build unique lists of nodes we'll need some little buffer arrays, too.
+   */
+
+  list = (int *) smalloc(max*sizeof(int));
+
+  /*
+   * Loop through each node and build a list of all the nodes to which it
+   * is connected. Flatten the list by extracting duplicate entries. Finally,
+   * sort it and attach it to the global list.
+   */
+
+  exo->node_node_pntr[0] = 0;
+
+  total_list_size = 0;
+
+  for ( node=0; node<exo->num_nodes; node++)
+    {
+
+      /* Clear out any old garbage... */
+
+      for ( i=0; i<max; i++)
+	{
+	  list[i] = -1;
+	}
+
+      curr_list_size = 0;
+
+      for ( e=exo->node_elem_pntr[node]; e<exo->node_elem_pntr[node+1]; e++)
+	{
+	  elem = exo->node_elem_list[e];
+
+	  start = exo->elem_node_pntr[elem];
+	  end   = exo->elem_node_pntr[elem+1];
+	  for ( n=start; n<end; n++)
+	    {
+	      dude = exo->elem_node_list[n];
+
+	      /*
+	       * If this dude is not in the list, then add it and make the list
+	       * suitably larger.
+	       */
+
+	      if ( -1 == in_list(dude, 0, curr_list_size, list) )
+		{
+		  list[curr_list_size] = dude;
+		  curr_list_size++;
+		}
+	    }
+	}
+
+      /*
+       * Sort the list before appending to the big concatenated list...
+       */
+
+      isort(curr_list_size, list);
+
+      /*
+       * No, we're assuming we're never in danger of overrunning the buffer
+       * since we were so profligate at the beginning...
+       */
+
+      for ( i=0; i<curr_list_size; i++, total_list_size++)
+	{
+	  exo->node_node_list[total_list_size] = list[i];
+	}
+
+      exo->node_node_pntr[node+1] = total_list_size;
+    }
+
+  exo->node_node_list = (int *) realloc(exo->node_node_list,
+					total_list_size*sizeof(int));
+
+#ifdef DEBUG
+  fprintf(stderr, "Printing node-node connectivities...\n");
+  for ( node=0; node<exo->num_nodes; node++)
+    {
+      fprintf(stderr, "Node (%d): ", node+1); /* f77 RuLZ, C++ sUx ! */
+      for ( n=exo->node_node_pntr[node]; n<exo->node_node_pntr[node+1]; n++)
+	{
+	  fprintf(stderr, "(%d) ", exo->node_node_list[n] + 1);
+	}
+      fprintf(stderr, "\n");
+    }
+#endif
+
+  safe_free(list);
+
+  return;
+}
