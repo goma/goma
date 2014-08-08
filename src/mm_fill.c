@@ -3669,109 +3669,11 @@ zero_lec(void)
       * zero_lec()
       *
       *  This routine zeroes the local element stiffness vector and Jacobian.
-      *  It uses the same algorithm as the fill routine to minimize the 
-      *  the amount of zeroing. This is necessary since the local element 
-      *  Jacobian is so large. The first time through the routine, it zeroes
-      *  all entries. Note, a possible check for this algorithm would be to
-      *  check all entries. All entries should be zero after this routine.
       **************************************************************************/
 {
-  static int firstTime = TRUE;
-  int e, v, i, pe, pv, var, j, dofs, ke, kv;
-  struct Element_Indices *ei_ptr;
-  int ielem = ei->ielem;
-  if (firstTime) {
-    firstTime = FALSE;
-    var = (MAX_PROB_EQN+MAX_CONC)*MDE;
-    memset(lec->R, 0, sizeof(double)*var);  
-    var = var*var;
-    memset(lec->J, 0, sizeof(double)*var); 
-    var = 4*(MDE)*(MAX_PROB_VAR + MAX_CONC)*(MDE);
-    memset(lec->J_stress_neighbor, 0, sizeof(double)*var);
-    return;
-  } else {
-    for (e = V_FIRST; e < V_LAST; e++) {
-      pe = upd->ep[e];
-      if (pe != -1) {
-	if (e == R_MASS) {
-	  for (ke = 0; ke < upd->Max_Num_Species_Eqn; ke++) {
-	    pe = MAX_PROB_VAR + ke;
-	    dofs = ei->dof[e];
-	    for (i = 0; i < dofs; i++) {
-	      lec->R[MAX_PROB_VAR + ke][i] = 0.0;
-	      if (af->Assemble_Jacobian) {
-		for (v = V_FIRST; v < V_LAST; v++) {
-		  pv = upd->vp[v];
-		  if (pv != -1) {
-		    ei_ptr = ei;
-		    if (ei->owningElementForColVar[v] != ielem) {
-		      if (ei->owningElementForColVar[v] != -1) {
-			ei_ptr = ei->owningElement_ei_ptr[v];
-			if (ei_ptr == 0) {
-			  printf("ei_ptr == 0\n");
-			  exit(-1);
-			}
-		      }
-	     
-		    }				  
-		    if (v == MASS_FRACTION) {
-		      for (kv = 0; kv < upd->Max_Num_Species_Eqn; kv++) {
-			pv = MAX_PROB_VAR + kv;
-			for (j = 0; j < ei_ptr->dof[v]; j++) {
-			  lec->J[pe][pv][i][j] = 0.0;
-			}
-		      }
-		    } else {
-		      for (j = 0; j < ei_ptr->dof[v]; j++) {
-			lec->J[pe][pv][i][j] = 0.0;
-		      }
-		    }
-		  }
-		}
-	      }
-	    }
-	  }
-	} else {
-	  pe = upd->ep[e];
-	  dofs = ei->dof[e];
-	  for (i = 0; i < dofs; i++) {
-	    lec->R[pe][i] = 0.0;
-	    if (af->Assemble_Jacobian) {
-	      for (v = V_FIRST; v < V_LAST; v++) {
-		pv = upd->vp[v];
-		if (pv != -1) {
-		  ei_ptr = ei;
-		  if (ei->owningElementForColVar[v] != ielem) {
-		    if (ei->owningElementForColVar[v] != -1) {
-		      ei_ptr = ei->owningElement_ei_ptr[v];
-		      if (ei_ptr == 0) {
-			printf("ei_ptr == 0\n");
-			exit(-1);
-		      }
-		    }
-		  }
-		  if (v == MASS_FRACTION) {
-		    for (kv = 0; kv < upd->Max_Num_Species_Eqn; kv++) {
-		      pv = MAX_PROB_VAR + kv;
-		      
-		      for (j = 0; j < ei_ptr->dof[v]; j++) {			  
-			lec->J[pe][pv][i][j] = 0.0;
-		      }
-		    }
-		  } else {
-		    memset(lec->J[pe][pv][i], 0, sizeof(double)*ei_ptr->dof[v]);
-		    /*for (j = 0; j < ei->dof[v]; j++) {	      
-		      lec->J[pe][pv][i][j] = 0.0;
-		      }*/
-		  }
-		}
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
+  memset(lec->R, 0, sizeof(lec->R));  
+  memset(lec->J, 0, sizeof(lec->J)); 
+  memset(lec->J_stress_neighbor, 0, sizeof(lec->J_stress_neighbor));
 }
 /****************************************************************************/
 
