@@ -32,10 +32,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "map_names.h"
-#include "std.h"
-#include "eh.h"
-#include "wr_graph_file.h"
+#include "brkfix/brkfix.h"
+#include "mm_eh.h"
+#include "brkfix/wr_graph_file.h"
 
 void 
 wr_graph_file(char *out_graph_file_name,	/* gfn - graph file name */

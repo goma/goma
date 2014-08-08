@@ -32,6 +32,12 @@ PROTO((Exo_DB *,
        const int ,
        const int ));
 
+int 
+brk_rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
+           char *fn,
+           int verbosity,
+           int task);
+
 EXTERN int free_exo
 PROTO((Exo_DB *));		/* pointer to EXODUS II FE db structure */
 

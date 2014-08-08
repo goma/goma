@@ -20,27 +20,22 @@
 
 #define _UTILS_C
 
-#include <config.h>
-
 #include <stdio.h>
-
-#ifdef STDC_HEADERS
 #include <stdlib.h>
-#endif
 
-#include "map_names.h"
-#include "std.h"
-#include "aalloc.h"
-#include "eh.h"
+#include "goma.h"
+
+#include "brkfix/brkfix.h"
+#include "rf_allo.h"
+#include "mm_eh.h"
 #include "exo_struct.h"
-#include "exo_utils.h"
-#include "utils.h"
+#include "brkfix/exo_utils.h"
+#include "brkfix/utils.h"
 #include "string.h"
 /*
  * Function declarations of static functions defined here.
  */
 
-static int intcompare PROTO((const void *, const void *));
 static int proc_ident PROTO((const void *, const void *));
 
 /*
@@ -118,7 +113,7 @@ count_node_node_interactions(int num_nodes,
 	       * If this variable node is not in our list, then add it.
 	       */
 
-	      where = in_list(var_node, neighbors, next_free_spot);
+	      where = in_list(var_node, 0, next_free_spot, neighbors);
 
 	      if ( where == -1 )
 		{
@@ -144,32 +139,6 @@ count_node_node_interactions(int num_nodes,
   free(neighbors);
 
   return(length);
-}
-
-
-
-/*
- * in_list() -- return location of 1st appearance of given integer in 
- *              integer list; otherwise return -1
- *
- * Created: 1997/03/19 10:33 MST pasacki@sandia.gov
- */
-
-int 
-in_list(int val,		/* what integer value to seek */
-	int *start,		/* where to begin looking */
-	int length)		/* how many to consider from the start */
-
-{
-  int i;
-  for ( i=0; i<length; i++, start++)
-    {
-      if ( *start == val )
-	{
-	  return(i);
-	}
-    }
-  return(-1);
 }
 
 /*
@@ -272,112 +241,6 @@ findex_mono(int val,	/* what integer value to seek */
   return(-1);
 }
 
-
-
-
-/*
- * fence_post() -- return the index in an integer array where the 
- *                 provided integer value is bounded between fenceposts as
- *
- *			array[index] <= val < array[index+1]
- *
- *		   
- * Assumptions:
- *		[1] The array is monotonically increasing with index.
- *
- *		[2] If val < array[0], then -1 is returned.
- *
- *		[3] If val >= array[length-1], then -1 is returned.
- *
- * (This routine was created to quickly find that element block to which a
- *  given element belongs. 
- *
- * Created: 1997/04/03 07:28 MST pasacki@sandia.gov
- *
- * Revised: 1997/04/21 08:43 MDT pasacki@sandia.gov
- */
-
-int
-fence_post(int val,		/* the integer we seek */
-	   int *array,
-	   int length)
-{
-  int i;
-  int index;
-  int first_val, last_val;
-  int found;
-  
-  double frac;
-
-  first_val = array[0];
-
-  last_val = array[length-1];
-
-  if ( first_val == last_val ) return(-1);
-
-  if ( val < first_val )  return(-1);
-
-  if ( val >= last_val )  return(-1);
-
-  if ( val == first_val ) return(0);
-
-  /*
-   * Verify monotonicity. Turn off for efficiency later.
-   */
-
-  for ( i=1; i<length; i++)
-    {
-      if ( array[i-1] > array[i] )
-	{
-	  sr = sprintf(err_msg, "Non monotone map where a[%d]=%d is > a[%d]=%d",
-		       i-1, array[i-1], i, array[i]);
-	  EH(-1, err_msg);
-	}
-    }
-
-  /*
-   * Linear approximation to first guess.
-   */
-
-  frac = ((double)(val - first_val))/((double)(last_val - first_val));
-
-  index = (int)( (double)length * frac);
-
-  index = MIN(index, length-2);
-
-  /*
-   * From this starting point, look up or down accordingly.
-   */
-
-  found = FALSE;
-
-  while ( ! found )
-    {
-      if ( array[index+1] <= val ) 
-	{
-	  index++;
-	}
-      else if ( array[index] > val )
-	{
-	  index--;
-	}
-      else
-	{
-	  found = TRUE;
-	}
-    }
-
-#ifdef DEBUG
-  fprintf(stdout, "fencepost: val= %d in (a[%d]=%d, a[%d]=%d)\n",
-	  val, index, array[index], index+1, array[index+1]);
-#endif
-  return(index);
-}
-
-
-
-
-
 /*
  * gcf() -- return the greatest common factor of 2 integers
  *
@@ -444,8 +307,9 @@ get_node_index( int global_node,
 	   */
 
 	  n = in_list(global_node,  
-		      node_list+num_internal_nodes + num_boundary_nodes, 
-		      num_external_nodes);
+		      0, 
+		      num_external_nodes,
+                      node_list+num_internal_nodes + num_boundary_nodes);
 	  /*
 	  n = findex_mono(global_node, ( node_list+num_internal_nodes +
 					 num_boundary_nodes ), 
@@ -618,39 +482,6 @@ proc_ident(const void *arg1,
     }
 }
 
-void
-isort(const int length,
-      int *array)
-{
-  if ( length < 0 )
-    {
-      EH(-1, "Negative length array to sort.");
-    }
-
-  if ( length == 0 )
-    {
-      return;
-    }
-
-  qsort((void *)array, length, sizeof(int), intcompare);
-
-  return;
-}
-
-static int
-intcompare(const void *arg1,
-	   const void *arg2)
-{
-  int *i1 = (int *)arg1;
-  int *i2 = (int *)arg2;
-
-  if ( *i1 < *i2 ) return -1;
-  if ( *i1 > *i2 ) return  1;
-  return 0;
-}
-
-
-
 /* get_filename_num_procs -- determine the number of processors from filenames
  *
  * When reconstituting a monolith from many pieces, the individual pieces
@@ -787,15 +618,3 @@ is_shell_type(char *elem_type) {
     return 0;
   }
 }
-
-/* is_shell_element()
- * Finds element number in Exodus database and then
- * runs is_shell_type
- */
-int 
-is_shell_element(Exo_DB *exo, int e) {
-  int eb = find_element_block(exo,e);
-  return is_shell_type(exo->eb_elem_type[eb]);
-}
-
-

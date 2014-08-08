@@ -68,34 +68,24 @@
 
 #define _SAM_PEREA_C
 
-#include <config.h>
-
 #include <stdio.h>
 
-#ifdef STDC_HEADERS
 #include <stdlib.h>
-#endif
 
-#include "map_names.h"
-#include "std.h"
-#include "eh.h"
-#include "aalloc.h"
+#include "goma.h"
+
+#include "brkfix/brkfix.h"
+#include "mm_eh.h"
+#include "rf_allo.h"
 #include "exo_struct.h"
-#include "nodesc.h"
-#include "brkfix_types.h"
-#include "sam_perea.h"
-
-extern int in_list		/* utils.c */
-PROTO((int ,			/* val    - what integer value to seek */
-       int *,			/* start  - where to begin looking */
-       int ));			/* length - how far to search from start */
+#include "brkfix/nodesc.h"
+#include "brkfix/brkfix_types.h"
+#include "brkfix/sam_perea.h"
 
 extern int fence_post		/* utils.c */
 PROTO((int ,			/* val    - integer whose category we seek */
        int *,			/* array  - where to look  */
        int ));			/* length - how far to search in array */
-
-
 
 void
 assess_weights(Exo_DB *x, 
@@ -519,7 +509,7 @@ assess_weights(Exo_DB *x,
 		{
 		  evid   = mult[eb_index][ieb]->eqnvar_id;
 
-		  where  = in_list(evid, nn_eids, end->num_basic_eqnvars);
+		  where  = in_list(evid, 0, end->num_basic_eqnvars, nn_eids);
 
 		  /*
 		   * If this evid is not at this particular node, OK.
@@ -528,7 +518,7 @@ assess_weights(Exo_DB *x,
 
 		  map_e_index[ieb] = where;
 
-		  where  = in_list(evid, nn_vids, vnd->num_basic_eqnvars);
+		  where  = in_list(evid, 0, vnd->num_basic_eqnvars, nn_vids);
 
 		  map_v_index[ieb] = where;
 		}

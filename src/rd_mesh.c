@@ -170,6 +170,7 @@ read_mesh_exoII(Exo_DB *exo,
   error = rd_exo(exo, ExoFile, 0, ( EXODB_ACTION_RD_INIT+
 				    EXODB_ACTION_RD_MESH+
 				    EXODB_ACTION_RD_RES0 ) );
+  check_parallel_error("Error in reading exodus file");
   /*
    *    if an error was encountered return to
    *  main continuing with a systematic shutdown

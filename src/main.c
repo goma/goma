@@ -518,6 +518,7 @@ main(int argc, char **argv)
   if (Num_Proc > 1 && ProcID == 0 && Brk_Flag == 1) {
     call_brk();
   }
+  check_parallel_error("Error in brking exodus files");
   MPI_Barrier(MPI_COMM_WORLD);
 
   /*

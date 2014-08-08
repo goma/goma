@@ -33,7 +33,7 @@ const char filter[]="sed -e 's/#.*$//' -e '/^[ 	]*$/d' -e 's/[ 	]*$//'";
 #define TEMP_PREFIX	"tmp."
 #endif
 
-EXTERN void pre_process
+EXTERN void brk_pre_process
 PROTO((char *));		/* input filename */
 
 #endif /* _PPI_H */

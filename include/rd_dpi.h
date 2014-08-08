@@ -62,4 +62,8 @@ PROTO((Dpi *));			/* fantastic structure defd in "dpi.h" */
 EXTERN void init_dpi_struct	/* rd_dpi.c */
 PROTO((Dpi *));			/* fantastic structure defd in "dpi.h" */
 
+void 
+exo_dpi_clone(Exo_DB *exo, 
+	      Dpi *dpi);
+
 #endif /* _RD_DPI_H */

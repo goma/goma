@@ -1452,3 +1452,216 @@ add_info_stamp(Exo_DB *exo)
   return;
 }
 /***********************************************************************/
+/* wr_resetup_exo() -- open/write/close EXODUS II db for results names
+ *
+ * Created: 1998/01/26 14:06 MST pasacki@sandia.gov
+ *
+ * Revised: 
+ */
+
+void 
+wr_resetup_exo(Exo_DB *exo,
+	       char *filename,
+	       int verbosity)
+{
+  int error;
+  int i;
+  int status;
+
+  /*
+   * This file must already exist.
+   */
+
+  exo->cmode = EX_WRITE;
+
+#ifdef DEBUG
+  fprintf(stderr, "%s: begins\n", yo);
+#endif
+
+  exo->io_wordsize   = 0;	/* i.e., query */
+  exo->comp_wordsize = sizeof(dbl);
+  exo->exoid         = ex_open(filename, exo->cmode, &exo->comp_wordsize, 
+			       &exo->io_wordsize, &exo->version);
+
+#ifdef DEBUG
+  fprintf(stderr, "\t\tfilename    = \"%s\"\n", filename);
+  fprintf(stderr, "\t\tcomp_ws     = %d\n", exo->comp_wordsize);
+  fprintf(stderr, "\t\tio_wordsize = %d\n", exo->io_wordsize);
+#endif
+
+  /*
+   * Results setup...
+   */
+
+  if ( exo->num_glob_vars > 0 )
+    {
+      status = ex_put_var_param(exo->exoid, "g", exo->num_glob_vars);
+      EH(status, "ex_put_var_param(g)");
+      status = ex_put_var_names(exo->exoid, "g", exo->num_glob_vars,
+				exo->glob_var_names);
+      EH(status, "ex_put_var_names(g)");
+    }
+
+  if ( exo->num_elem_vars > 0 )
+    {
+      status = ex_put_var_param(exo->exoid, "e", exo->num_elem_vars);
+      EH(status, "ex_put_var_param(e)");
+      status = ex_put_var_names(exo->exoid, "e", 
+				exo->num_elem_vars,
+				exo->elem_var_names);
+      EH(status, "ex_put_var_names(e)");
+      status = ex_put_elem_var_tab(exo->exoid, 
+				   exo->num_elem_blocks,
+				   exo->num_elem_vars, 
+				   exo->elem_var_tab);
+      EH(status, "ex_put_elem_var_tab");
+    }
+
+  if ( exo->num_node_vars > 0 )
+    {
+      status = ex_put_var_param(exo->exoid, "n", exo->num_node_vars);
+      EH(status, "ex_put_var_param(n)");
+      status = ex_put_var_names(exo->exoid, "n", 
+				exo->num_node_vars,
+				exo->node_var_names);
+      EH(status, "ex_put_var_names(n)");
+    }
+
+  if ( exo->num_times > 0 )
+    {
+      for ( i=0; i<exo->num_times; i++)
+	{
+	  status = ex_put_time(exo->exoid, i+1, &(exo->time_vals[i]));
+	  EH(status, "ex_put_times");
+	}
+    }
+
+  error      = ex_close(exo->exoid);
+  if ( error != 0 ) exit(2);
+  return;
+}
+
+
+void 
+wr_result_exo(Exo_DB *exo,
+	      char *filename,
+	      int verbosity)
+{
+  int i;
+  int index;
+  int j;
+  int k;
+  int status;
+  int time_index;
+  char err_msg[MAX_CHAR_IN_INPUT];
+  /*
+   * This file should already exist.
+   */
+
+  exo->cmode = EX_WRITE;
+
+#ifdef DEBUG
+  fprintf(stderr, "%s: begins\n", yo);
+#endif
+
+  exo->io_wordsize   = 0;	/* i.e., query */
+  exo->comp_wordsize = sizeof(dbl);
+  exo->exoid         = ex_open(filename, 
+			       exo->cmode, 
+			       &exo->comp_wordsize, 
+			       &exo->io_wordsize, 
+			       &exo->version);
+
+#ifdef DEBUG
+  fprintf(stderr, "\t\tfilename    = \"%s\"\n", filename);
+  fprintf(stderr, "\t\tcomp_ws     = %d\n", exo->comp_wordsize);
+  fprintf(stderr, "\t\tio_wordsize = %d\n", exo->io_wordsize);
+#endif
+
+  /*
+   * Element variable truth table and values at ONE TIME ONLY.
+   */
+
+  if ( exo->num_elem_vars > 0 )
+    {
+
+#ifdef DEBUG
+      fprintf(stderr, "\t\tneb         = %d\n", exo->num_elem_blocks);
+      fprintf(stderr, "\t\tnev         = %d\n", exo->num_elem_vars);
+      fprintf(stderr, "\t\tevt:        =   \n");
+      for ( i=0; i<exo->num_elem_blocks; i++)
+	{
+	  for ( j=0; j<exo->num_elem_vars; j++)
+	    {
+	      fprintf(stderr, "block index %d, elem var index %d is %d\n",
+		      i, j, exo->elem_var_tab[i*(exo->num_elem_vars)+j]);
+	    }
+	}
+#endif
+
+      /*
+       * This has already been done.
+       *
+
+      status = ex_put_elem_var_tab(exo->exoid, 
+				   exo->num_elem_blocks,
+				   exo->num_elem_vars, 
+				   exo->elem_var_tab);
+      EH(status, "ex_put_elem_var_tab");
+      */
+
+      for ( i=0; i<exo->num_ev_time_indeces; i++)
+	{
+	  time_index = exo->ev_time_indeces[i];
+	  
+	  for ( j=0; j<exo->num_elem_blocks; j++)
+	    {
+	      for ( k=0; k<exo->num_elem_vars; k++)
+		{
+		  index = j * exo->num_elem_vars + k;
+		  
+		  if ( exo->elem_var_tab[index] != 0 )
+		    {
+		      status = ex_put_elem_var(exo->exoid, time_index, k+1,
+					       exo->eb_id[j], 
+					       exo->eb_num_elems[j],
+					       &(exo->ev[i][index][0]));
+		      if ( status < 0 )
+			{
+			  sprintf(err_msg, 
+                                  "ex_put_elem_var() bad rtn: time %d, elemvar %d, EB ID %d",
+                                  time_index, k+1, exo->eb_id[j]);
+			  EH(-1, err_msg);
+			}
+		    }
+		}
+	    }
+	}
+    }
+
+  /*
+   * Put nodal variable values at last time step...
+   */
+
+  if ( exo->num_node_vars > 0 )
+    {
+      for ( i=0; i<exo->num_nv_time_indeces; i++)
+	{
+	  time_index = exo->nv_time_indeces[i];
+
+	  for ( j = 0; j < exo->num_nv_indeces; j++)
+	    {
+	      status = ex_put_nodal_var(exo->exoid, time_index, 
+					exo->nv_indeces[j],
+					exo->num_nodes, 
+					&(exo->nv[i][j][0]));
+	      EH(status, "ex_put_nodal_var");
+	    }
+	}
+    }
+
+  status = ex_close(exo->exoid);
+  EH(status, "ex_close()");
+  
+  return;
+}

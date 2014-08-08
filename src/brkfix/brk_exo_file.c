@@ -109,27 +109,28 @@
 
 #include <string.h>
 
-#include "map_names.h"
-#include "std.h"		/* useful general stuff */
-#include "eh.h"			/* error handling */
-#include "aalloc.h"		/* multi-dim array allocation */
+#include "goma.h"
+
+#include "brkfix/brkfix.h"		/* useful general stuff */
+#include "mm_eh.h"			/* error handling */
+#include "rf_allo.h"		/* multi-dim array allocation */
 #include "exo_struct.h"		/* some definitions for EXODUS II */
 #include "dpi.h"		/* distributed processing information */
-#include "nodesc.h"		/* node descriptions */
-#include "brkfix_types.h"
-#include "wr_graph_file.h"
-#include "rd_in.h"
-#include "wr_coords.h"
-#include "ppi.h"
-#include "mk_dm.h"
-#include "sam_perea.h"
-#include "utils.h"
-#include "exo_utils.h"
+#include "brkfix/nodesc.h"		/* node descriptions */
+#include "brkfix/brkfix_types.h"
+#include "brkfix/wr_graph_file.h"
+#include "brkfix/rd_in.h"
+#include "brkfix/wr_coords.h"
+#include "brkfix/ppi.h"
+#include "brkfix/mk_dm.h"
+#include "brkfix/sam_perea.h"
+#include "brkfix/utils.h"
+#include "brkfix/exo_utils.h"
 #include "exo_conn.h"
-#include "emuck.h"
+#include "brkfix/emuck.h"
 #include "rd_dpi.h"
 #include "rd_exo.h"
-#include "brk.h"
+#include "brkfix/brk.h"
 
 /*
  * The general dependency matrix exists for each element block.
@@ -174,9 +175,7 @@ int	***evd;
 
 int ***Lucky;
 
-static int show_help			= FALSE;
 static int add_decomp_plot_vars		= FALSE;
-static int be_quiet			= FALSE;
 static int preprocess_input_file	= TRUE;
 static int rescale_edge_weights		= FALSE;
 static int rescale_vertex_weights	= TRUE;
@@ -193,8 +192,6 @@ static int total_boundary_dofweight = 0;
 static int total_external_dofweight = 0;
 
 char *program_name;		/* name this program was run with */
-
-static char program_version[] = BRK_VERSION;
 
 const char program_description[] = "GOMA distributed problem decomposition tool";
 
@@ -309,42 +306,6 @@ PROTO((Dpi *,			/* fantastic structure defd in "dpi.h" */
 static int integer_compare	/* used internally by qsort() brk.c */
 PROTO((const void *, 
        const void *));
-
-
-static void 
-usage(const int status)
-{
-  if (status != 0)
-    {
-      fprintf(stderr, ("Try `%s -h' for help.\n"),
-	       program_name);
-    }
-  else
-    {
-      fprintf(stdout, "Usage: %s [OPTIONS] -n p infile exofile\n", 
-	      program_name);
-      fprintf(stdout, "\n");
-      fprintf(stdout, "Convert an EXODUS II finite element mesh and a GOMA multiphysics problem\n");
-      fprintf(stdout, "description into an edge and vertex weighted graph, decompose the graph\n");
-      fprintf(stdout, "using Chaco or Metis, and build little augmented EXODUS II files for\n");
-      fprintf(stdout, "subsequent parallel processing simulations with GOMA.\n");
-      fprintf(stdout, "\n");
-      fprintf(stdout, "OPTIONS:\n");
-      fprintf(stdout, "\t-1        format graph file 1 neighbor per line\n");
-      fprintf(stdout, "\t-a file   created monolith w/ added decomp. plot vars\n");
-      fprintf(stdout, "\t-c file   write nodal coordinates to specified file\n");
-      /* fprintf(stdout, "\t-e file   break this external file, too\n"); */
-      fprintf(stdout, "\t-g file   write graph to specified file\n");
-      fprintf(stdout, "\t-h        summarize OPTIONS (i.e., this message)\n");
-      fprintf(stdout, "\t-n P      break into P pieces\n");
-      fprintf(stdout, "\t-p        do not run preprocessor on input file\n");
-      /* fprintf(stdout, "\t-q        quiet mode\n"); */
-      /* fprintf(stdout, "\t-s        re scale vertex and edge weights\n"); */
-      fprintf(stdout, "\t-v        print version \n");
-      fprintf(stdout, "\n");
-    }
-  exit(-1);
-}
 
 int 
 brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
@@ -552,7 +513,6 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   int start_nd;			/* start of nodes in the ns_nodelist */
   int start_el;			/* start of elements in the ss_elemlist */
   int start_df;			/* start of distfacts in the ns_distfactlist */
-  int status  = 0;		/* in case anything goes wrong */
   int sum_ccs;
   int sum_nat;
   int sum_nnz;
@@ -706,17 +666,6 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       EH(-1, err_msg);
     }
 
-  if ( show_help )
-    {
-      usage(status);
-    }
-  
-  if ( ! be_quiet )
-    {
-      fprintf(stdout, "%s %s - %s\n%s\n", program_name, program_version, 
-	      program_description, copyright);
-    }
-
   /*
    * Filter the input file into a temporary file whose name replaces the 
    * original.
@@ -724,7 +673,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
   if ( preprocess_input_file )
     {
-      pre_process(in_file_name);
+      brk_pre_process(in_file_name);
     }
 
 #ifdef DEBUG
@@ -743,6 +692,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
    */
 
   mono = (Exo_DB *) smalloc(sizeof(Exo_DB));
+  memset(mono, 0, sizeof(Exo_DB));
   init_exo_struct(mono);
 
   /*
@@ -753,7 +703,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
    * and set.
    */
 
-  status = rd_exo(mono, in_exodus_file_name, 0, (EXODB_ACTION_RD_INIT +
+  rd_exo(mono, in_exodus_file_name, 0, (EXODB_ACTION_RD_INIT +
 						 EXODB_ACTION_RD_MESH +
 						 EXODB_ACTION_RD_RES0));
 		  
@@ -773,6 +723,18 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
    */
 
   zero_base(mono);
+
+  setup_old_exo(mono);
+
+
+  /*
+   *  Allocate and set up the element block to Material ID mapping array,
+   *  Matilda. Also, set up an equivalent entry in the Element Block
+   *  structure.
+   */
+  Matilda = alloc_int_1(mono->num_elem_blocks, 0);
+  setup_matilda(mono, Matilda);
+
 
   /*
    * The physical space coordinates of the finite element nodes corresponding
@@ -831,7 +793,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   build_elem_node(mono);
   build_node_elem(mono);
   build_elem_elem(mono);
-  build_node_node(mono);
+  brk_build_node_node(mono);
 
   ep = mono->elem_node_pntr;
   nl = mono->elem_node_list;
@@ -1590,6 +1552,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
    */
 
   E                        = (Exo_DB *) smalloc(sizeof(Exo_DB));
+  memset(E, 0, sizeof(Exo_DB));
   
   D                        = (Dpi *) smalloc(sizeof(Dpi));
 
@@ -1614,16 +1577,6 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       init_exo_struct(E);
 
       init_dpi_struct(D);
-
-      init_dpi_version(D);
-
-      /*
-       * Just grab the BRK_VERSION string that was defined in config.h for the
-       * brkfix distribution for now. When defining and writing Dpi we
-       * call the shots.
-       */
-
-      strcpy(D->dpi_version_string, BRK_VERSION);
 
       D->num_global_node_descriptions = num_kinds_nodes;
   
@@ -1758,7 +1711,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 		   * know that it is not s. Therefore the "+1" below.
 		   */
 		  
-		  where = in_list(s, sm+psm[n], nsets);
+		  where = in_list(s, 0, nsets, sm+psm[n]);
 		  
 		  if (  where != -1 ) 
 		    {
@@ -1835,7 +1788,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 		   * know that it is not s. Therefore the "+1" below.
 		   */
 		  
-		  where = in_list(s, sm+psm[n], nsets);
+		  where = in_list(s, 0, nsets, sm+psm[n]);
 		  
 		  if (  where != -1 ) 
 		    {
@@ -2216,7 +2169,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 		  elem+1, eb_index, eb_id);
 #endif
 
-	  where    = in_list(eb_id, proc_eb_id, proc_neb);
+	  where    = in_list(eb_id, 0, proc_neb, proc_eb_id);
 
 	  if ( where == -1 )
 	    {
@@ -2357,7 +2310,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
 	  eb_id         = mono->eb_id[glob_eb_index];
 
-	  proc_eb_index = in_list(eb_id, proc_eb_id, proc_neb);
+	  proc_eb_index = in_list(eb_id, 0, proc_neb, proc_eb_id);
 
 	  /* proc_eb_elem_count[proc_eb_index]++; */
 
@@ -3068,7 +3021,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 		      elem+1, side, j);
 #endif
 
-	      local_elem = in_list(elem, proc_elems, proc_ne);
+	      local_elem = in_list(elem, 0, proc_ne, proc_elems);
 
 	      if ( local_elem > -1 )
 		{
@@ -3310,6 +3263,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       E->num_nodes       = num_universe_nodes;
 
       E->num_elems       = proc_ne;
+      
+      E->elem_eb = NULL;
 
       E->num_elem_blocks = proc_neb;
 
@@ -3432,7 +3387,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	{
 	  E->eb_id[ieb]                 = proc_eb_id[ieb];
 
-	  eb_index = in_list(E->eb_id[ieb], mono->eb_id, mono->num_elem_blocks);
+	  eb_index = in_list(E->eb_id[ieb], 0, mono->num_elem_blocks, mono->eb_id);
 
 	  strcpy(E->eb_elem_type[ieb], mono->eb_elem_type[eb_index]);
 
@@ -3467,7 +3422,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       for ( ieb=0; ieb<proc_neb; ieb++)
 	{
-	  eb_index = in_list(E->eb_id[ieb], mono->eb_id, mono->num_elem_blocks);
+	  eb_index = in_list(E->eb_id[ieb], 0, mono->num_elem_blocks, mono->eb_id);
 
 	  begin  = proc_eb_ptr[ieb];
 
@@ -3537,66 +3492,63 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       if ( E->ns_num_props > 1 && 
 	   E->num_node_sets > 0 &&
-	   strcmp(mono->ns_prop_name[0], mono->ns_prop_name[1]) != 0 )
-	{
-	  E->ns_prop_name  = (char **) smalloc(E->ns_num_props*SZPCHR);
+	   strcmp(mono->ns_prop_name[0], mono->ns_prop_name[1]) != 0 ) {
+        E->ns_prop_name  = (char **) smalloc(E->ns_num_props*SZPCHR);
 
-	  for ( i=0; i<E->ns_num_props; i++)
-	    {
-	      E->ns_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH*SZ_CHR);
-	      tmp = strcpy(E->ns_prop_name[i], mono->ns_prop_name[i]);
-	    }
+        for ( i=0; i<E->ns_num_props; i++) {
+          E->ns_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH*SZ_CHR);
+          tmp = strcpy(E->ns_prop_name[i], mono->ns_prop_name[i]);
+        }
 
-	  E->ns_prop = (int **) smalloc(E->ns_num_props*SZPINT);
+        E->ns_prop = (int **) smalloc(E->ns_num_props*SZPINT);
 
-	  for ( i=0; i<E->ns_num_props; i++)
-	    {
-	      E->ns_prop[i] = (int *)smalloc(E->num_node_sets*SZ_INT);
-	    }
+        for ( i=0; i<E->ns_num_props; i++) {
+          E->ns_prop[i] = (int *)smalloc(E->num_node_sets*SZ_INT);
+        }
 
-	  for ( ins=0; ins<E->num_node_sets; ins++)
-	    {
-	      g_ns_index = in_list(E->ns_id[ins], mono->ns_id, 
-				   mono->num_node_sets);
+        for ( ins=0; ins<E->num_node_sets; ins++) {
+          g_ns_index = in_list(E->ns_id[ins], 0, 
+                               mono->num_node_sets, mono->ns_id);
 
-	      for ( p=0; p<E->ns_num_props; p++)
-		{
-		  E->ns_prop[p][ins] = mono->ns_prop[p][g_ns_index];
-		}
-	    }
-	}
+          for ( p=0; p<E->ns_num_props; p++) {
+            E->ns_prop[p][ins] = mono->ns_prop[p][g_ns_index];
+          }
+        }
+      } else {
+        E->ns_prop_name = NULL;
+        E->ns_prop = NULL;
+      }
 
       E->ss_num_props = mono->ss_num_props;
 
       if ( E->ss_num_props > 1 && 
 	   E->num_side_sets > 0 &&
-	   strcmp(mono->ss_prop_name[0], mono->ss_prop_name[1]) != 0 )
-	{
-	  E->ss_prop_name = (char **) smalloc(E->ss_num_props*SZPCHR);
+	   strcmp(mono->ss_prop_name[0], mono->ss_prop_name[1]) != 0 ) {
+        E->ss_prop_name = (char **) smalloc(E->ss_num_props*SZPCHR);
 
-	  for ( i=0; i<E->ss_num_props; i++)
-	    {
-	      E->ss_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH*SZ_CHR);
-	      tmp = strcpy(E->ss_prop_name[i], mono->ss_prop_name[i]);
-	    }
+        for ( i=0; i<E->ss_num_props; i++) {
+          E->ss_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH*SZ_CHR);
+          tmp = strcpy(E->ss_prop_name[i], mono->ss_prop_name[i]);
+        }
 	  
-	  E->ss_prop = (int **) smalloc(E->ss_num_props*SZPINT);
+        E->ss_prop = (int **) smalloc(E->ss_num_props*SZPINT);
 
-	  for ( i=0; i<E->ss_num_props; i++)
-	    {
-	      E->ss_prop[i] = (int *)smalloc(E->num_side_sets*SZ_INT);
-	    }
+        for ( i=0; i<E->ss_num_props; i++) {
+          E->ss_prop[i] = (int *)smalloc(E->num_side_sets*SZ_INT);
+        }
 	  
-	  for ( iss=0; iss<E->num_side_sets; iss++)
-	    {
-	      g_ss_index = in_list(E->ss_id[iss], mono->ss_id,
-				   mono->num_side_sets);
-	      for ( p=0; p<E->ss_num_props; p++)
-		{
-		  E->ss_prop[p][iss] = mono->ss_prop[p][g_ss_index];
-		}
-	    }
-	}
+        for ( iss=0; iss<E->num_side_sets; iss++) {
+          g_ss_index = in_list(E->ss_id[iss], 0,
+                               mono->num_side_sets, mono->ss_id);
+          for ( p=0; p<E->ss_num_props; p++) {
+            E->ss_prop[p][iss] = mono->ss_prop[p][g_ss_index];
+          }
+        }
+      } else {
+        E->ss_prop_name = NULL;
+        E->ss_prop = NULL;
+      }
+
 
       /*
        * The number of properties in for EXODUS II entities is very
@@ -3610,35 +3562,42 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       if ( E->eb_num_props > 1 && 
 	   E->num_elem_blocks > 0 &&
-	   strcmp(mono->eb_prop_name[0], mono->eb_prop_name[1]) != 0 )
-	{
-	  E->eb_prop_name = (char **) smalloc(E->eb_num_props*SZPCHR);
+	   strcmp(mono->eb_prop_name[0], mono->eb_prop_name[1]) != 0 ) {
+        E->eb_prop_name = (char **) smalloc(E->eb_num_props*SZPCHR);
 
-	  for ( i=0; i<E->eb_num_props; i++)
-	    {
-	      E->eb_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH*SZ_CHR);
-	      tmp = strcpy(E->eb_prop_name[i], mono->eb_prop_name[i]); 
-	    }
+        for ( i=0; i<E->eb_num_props; i++) {
+          E->eb_prop_name[i] = (char *) smalloc(MAX_STR_LENGTH*SZ_CHR);
+          tmp = strcpy(E->eb_prop_name[i], mono->eb_prop_name[i]); 
+        }
 
-	  E->eb_prop = (int **) smalloc(E->eb_num_props*SZPINT);
-	  for ( i=0; i<E->eb_num_props; i++)
-	    {
-	      E->eb_prop[i] = (int *)smalloc(E->num_elem_blocks*SZ_INT);
-	    }
+        E->eb_prop = (int **) smalloc(E->eb_num_props*SZPINT);
+        for ( i=0; i<E->eb_num_props; i++) {
+          E->eb_prop[i] = (int *)smalloc(E->num_elem_blocks*SZ_INT);
+        }
 
-	  for ( ieb=0; ieb<E->num_elem_blocks; ieb++)
-	    {
-	      g_eb_index = in_list(E->eb_id[ieb], mono->eb_id, 
-				   mono->num_elem_blocks);
+        for ( ieb=0; ieb<E->num_elem_blocks; ieb++) {
+          g_eb_index = in_list(E->eb_id[ieb], 0, 
+                               mono->num_elem_blocks, mono->eb_id);
 
-	      for ( p=0; p<E->eb_num_props; p++)
-		{
-		  E->eb_prop[p][ieb] = mono->eb_prop[p][g_eb_index];
-		}
+          for ( p=0; p<E->eb_num_props; p++) {
+            E->eb_prop[p][ieb] = mono->eb_prop[p][g_eb_index];
+          }
 	      
-	    }
+        }
 
-	}
+      } else {
+        E->eb_prop_name = NULL;
+        E->eb_prop = NULL;
+      }
+
+
+      E->eb_elem_itype     = (int *) smalloc(E->num_elem_blocks * sizeof(int));
+
+      for ( i=0; i<E->num_elem_blocks; i++) {
+        E->eb_elem_itype[i] = get_type(E->eb_elem_type[i], 
+                                       E->eb_num_nodes_per_elem[i],
+                                       E->eb_num_attr[i]);
+      }
 
       /*
        * Build up auxiliary connectivity information for the little EXODUS II
@@ -3648,7 +3607,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
         build_elem_node(E);
 	build_node_elem(E);
 	build_elem_elem(E);
-	build_node_node(E);
+	brk_build_node_node(E);
 
       /*
        * Write the EXODUS II finite element MESH database information for this
@@ -3742,23 +3701,6 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	  D->ptr_set_membership[i]           = proc_psm[i];
 	}
       
-
-      D->global_node_dof0        = (int *) smalloc(num_universe_nodes*SZ_INT);
-
-      for ( n=0; n<num_universe_nodes; n++)
-	{
-	  node = proc_nodes[n];
-	  D->global_node_dof0[n]  = node_dof0[node];
-	}
-
-      D->global_node_kind         = (int *) smalloc(num_universe_nodes*SZ_INT);
-
-      for ( n=0; n<num_universe_nodes; n++)
-	{
-	  node = proc_nodes[n];
-	  D->global_node_kind[n]  = node_kind[node];
-	}
-
       D->elem_index_global = (int *) smalloc(proc_ne*SZ_INT);
       for ( i=0; i<proc_ne; i++)
 	{
@@ -3801,7 +3743,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	  D->eb_index_global = (int *) smalloc(D->num_elem_blocks*SZ_INT);
 	  for ( i=0; i<D->num_elem_blocks; i++)
 	    {
-	      D->eb_index_global[i] = in_list(proc_eb_id[i], mono->eb_id, neb);
+	      D->eb_index_global[i] = in_list(proc_eb_id[i], 0, neb, mono->eb_id);
 	    }
 	}
 
@@ -3812,7 +3754,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	  D->ns_index_global = (int *) smalloc(D->num_node_sets*SZ_INT);
 	  for ( i=0; i<D->num_node_sets; i++)
 	    {
-	      D->ns_index_global[i] = in_list(proc_ns_id[i], mono->ns_id, nns);
+	      D->ns_index_global[i] = in_list(proc_ns_id[i], 0, nns, mono->ns_id);
 	    }
 	}
 	  
@@ -3823,7 +3765,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	  D->ss_index_global = (int *) smalloc(D->num_side_sets*SZ_INT);
 	  for ( i=0; i<D->num_side_sets; i++)
 	    {
-	      D->ss_index_global[i] = in_list(proc_ss_id[i], mono->ss_id, nss);
+	      D->ss_index_global[i] = in_list(proc_ss_id[i], 0, nss, mono->ss_id);
 	    }
 	}
 
@@ -4221,8 +4163,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
 	  for ( ieb=0; ieb<E->num_elem_blocks; ieb++)
 	    {
-	      g_eb_index = in_list(E->eb_id[ieb], mono->eb_id, 
-				   mono->num_elem_blocks);
+	      g_eb_index = in_list(E->eb_id[ieb], 0, 
+				   mono->num_elem_blocks, mono->eb_id);
 	      EH(g_eb_index, "Problem finding corresponding global eb index.");
 	      for ( i=0; i<nev; i++)
 		{
@@ -4270,21 +4212,9 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       if ( E->num_node_vars > 0 )
 	{
-	  E->num_nv_indeces      = E->num_node_vars;
-	  E->nv_indeces          = (int *) smalloc(E->num_nv_indeces*
-						   sizeof(int));
-	  /*
-	   * Even though there may be more than one time plane, we'll just
-	   * walk through one at a time.
-	   */
-
-	  E->num_nv_time_indeces = 1;
-	  E->nv_time_indeces     = (int *) smalloc(E->num_nv_time_indeces*
-						   sizeof(int));
-	  
 	  E->state              |= EXODB_STATE_NDIA;
 
-	  alloc_exo_nv(E);
+	  alloc_exo_nv(E, 1, E->num_node_vars);
 
 	  /*
 	   * This sweep through all the monolith's nodal results for each
@@ -4306,18 +4236,11 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
 
 	  if ( ! ( mono->state & EXODB_STATE_NDIA ) )
-	    {
-	      mono->num_nv_indeces      = mono->num_node_vars;
-	      mono->nv_indeces          = (int *) smalloc(mono->num_nv_indeces*
-						      sizeof(int));
-	      mono->num_nv_time_indeces = 1;
-	      mono->nv_time_indeces     = (int *) smalloc(mono->num_nv_time_indeces
-						      * sizeof(int));
+          {
 	      mono->state              |= EXODB_STATE_NDIA;
+          }
 
-	    }
-
-	  alloc_exo_nv(mono);
+	  alloc_exo_nv(mono, 1, mono->num_node_vars);
 
 	  for ( i=0; i<mono->num_node_vars; i++)      
 	    {
@@ -4334,8 +4257,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	      mono->nv_time_indeces[0]  = t+1;
 	      E->nv_time_indeces[0]     = t+1;
 
-	      status = rd_exo(mono, in_exodus_file_name, 0, 
-			      EXODB_ACTION_RD_RESN);
+	      rd_exo(mono, in_exodus_file_name, 0, 
+                     EXODB_ACTION_RD_RESN);
 
 	      /*
 	       * Pick out pieces for this set/proc...
@@ -4367,8 +4290,6 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	
       if ( E->num_elem_vars > 0 )  /* Save me baby Jesus ! Imma try to clone the nv section and hope for the best */
 	{
-	  E->num_ev_indeces = E->num_elem_vars;
-	  E->ev_indeces     = (int *) smalloc( E->num_ev_indeces * sizeof( int ) );
 	  E->num_ev_time_indeces = 1;
 
 	  /*
@@ -4384,8 +4305,6 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
 	  if ( ! ( mono->state & EXODB_STATE_ELIA ) )
 	    {
-	      mono->num_ev_indeces      = mono->num_elem_vars;
-	      mono->ev_indeces          = (int *) smalloc(mono->num_ev_indeces*sizeof(int));
 	      mono->num_ev_time_indeces = 1;
 	      mono->state              |= EXODB_STATE_ELIA;
 
@@ -4398,14 +4317,6 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	      EH(-1, "Inconsistent element variable count?");
 	    }
 
-
-	  for ( i=0; i<mono->num_elem_vars; i++)      
-	    {
-	      mono->ev_indeces[i]   = i+1;
-	      E->ev_indeces[i]      = i+1;
-	    }
-
-
 	  for ( t=0; t<E->num_times; t++ )
 	    {
 	      /*
@@ -4415,7 +4326,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	      mono->ev_time_indeces[0]  = t+1;
 	      E->ev_time_indeces[0]     = t+1;
 
-	      status = rd_exo(mono, in_exodus_file_name, 0, EXODB_ACTION_RD_RESE);
+	      rd_exo(mono, in_exodus_file_name, 0, EXODB_ACTION_RD_RESE);
 
 	      /*
 	       * Pick out pieces for this set/proc...
@@ -4423,7 +4334,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
 	      for ( ieb=0; ieb<E->num_elem_blocks; ieb++)
 		{
-		  eb_index = in_list(E->eb_id[ieb], mono->eb_id, mono->num_elem_blocks);
+		  eb_index = in_list(E->eb_id[ieb], 0, mono->num_elem_blocks, mono->eb_id);
 		  
 		  gbeg = ebl[eb_index];
 
@@ -4532,8 +4443,6 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
        *
        *		proc_node_dof0[local_node_number]
        *		global_node_name[local_node_number]
-       *		global_node_dof0[local_node_number]
-       *		global_node_kinds[]
        *		proc_node_kinds[]
        *
        * Obtain a map of the
@@ -4634,12 +4543,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       free_exo_nv(mono);
 
-      mono->num_nv_time_indeces = 1;
-      mono->num_nv_indeces      = nnv + 7;
-
-      alloc_init_exo_nv_indeces(mono);
-
-      alloc_exo_nv(mono);
+      alloc_exo_nv(mono, 1, nnv + 7);
 
       /*
        * Temporary retrograde values while we read in the existing nodal
@@ -4648,7 +4552,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       mono->num_nv_indeces = nnv; 
 
-      status = rd_exo(mono, in_exodus_file_name, 0, EXODB_ACTION_RD_RESN);
+      rd_exo(mono, in_exodus_file_name, 0, EXODB_ACTION_RD_RESN);
 
       mono->num_nv_indeces = len; 
       mono->num_node_vars  = len;

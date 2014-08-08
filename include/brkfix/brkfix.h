@@ -34,51 +34,9 @@
  * Needed for node-node comparisons of element faces in exo_conn.c
  */
 
-#ifndef MAX_EPN
-#define MAX_EPN			(50)
-#endif
-
-
 #ifndef MAX_NODES_PER_SIDE
 #define MAX_NODES_PER_SIDE     (9)
 #endif
-
-/*
- * Element types for GOMA. These mongrels include some indications of
- * interpolation as well as basic element shape.
- */
-
-typedef enum
-{
-  BILINEAR_QUAD,
-  C_BILINEAR_QUAD, 
-  S_BIQUAD_QUAD, 
-  BIQUAD_QUAD, 
-  P1_QUAD, 
-  P0_QUAD, 
-  TRILINEAR_HEX, 
-  C_TRILINEAR_HEX, 
-  S_TRIQUAD_HEX, 
-  TRIQUAD_HEX,
-  P1_HEX,
-  P0_HEX,
-  BILINEAR_SHELL,
-  BQUAD_SHELL,
-  UNDEFINED_ELEMENT_TYPE
-} Element_type;
-
-typedef enum
-{
-  LINE_SEGMENT,
-  TRIANGLE,
-  QUADRILATERAL,
-  SHELL,
-  TETRAHEDRON,
-  PRISM,
-  HEXAHEDRON,
-  PYRAMID,
-  UNDEFINED_ELEMENT_SHAPE
-} Element_shape;
 
 /*
  * Not what you might think! This is the maximum number of processors
@@ -117,7 +75,6 @@ typedef enum
  */
 
 #define UNDEFINED_SET_NAME -1
-#define UNDEFINED_EQNVARID -55555
 
 #define UNASSIGNED	-55555
 
@@ -239,7 +196,7 @@ typedef float flt;
  */
 
 #define BULL(value, list, listlen) \
-{ int _tmp; _tmp = in_list((value), (list), (listlen)); if ( _tmp == -1 ) { (list)[(listlen)] = (value); (listlen)++;}}
+{ int _tmp; _tmp = in_list((value), 0, (listlen), (list)); if ( _tmp == -1 ) { (list)[(listlen)] = (value); (listlen)++;}}
 
 /*
  * Boolean conveniences -- is or is not in ordered list.
@@ -250,7 +207,7 @@ typedef float flt;
  *                      in an integer array of length listlen.
  */
 
-#define IUL(val, list, len) (in_list(val, list, len) != -1)
+#define IUL(val, list, len) (in_list((val), 0, (len), (list)) != -1)
 
 /* 
  * In Ordered List   -- return TRUE or FALSE if integer value *appears*

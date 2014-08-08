@@ -40,12 +40,6 @@ PROTO((int ,			/* num_nodes */
        int *,			/* elem_ptr */
        int *));			/* node_list */
 
-EXTERN int in_list		/* utils.c */
-PROTO((int ,			/* val    - what integer value to seek */
-       int *,			/* start  - where to begin looking */
-       int ));			/* length - how far to search from start */
-
-
 EXTERN int fence_post		/* utils.c */
 PROTO((int ,			/* val    - integer whose category we seek */
        int *,			/* array  - where to look  */
@@ -104,9 +98,5 @@ PROTO((const int *,		/* array                                (in) */
 
 EXTERN int is_shell_type 
 PROTO((char *elem_type));       // String that is the element type from exo
-
-EXTERN int is_shell_element
-PROTO((Exo_DB *,                // Exodus database
-       int e));                 // Element number from database
 
 #endif /* _UTILS_H */

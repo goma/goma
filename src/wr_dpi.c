@@ -400,16 +400,6 @@ wr_dpi(Dpi *d,
 		  d->num_global_node_descriptions, d->len_node_description,
 		  &si.global_node_description);
 
-  define_variable(u, VAR_GLOBAL_NODE_DOF0, NC_INT, 1, 
-		  si.num_universe_nodes, -1,
-		  d->num_universe_nodes, -1,
-		  &si.global_node_dof0);
-
-  define_variable(u, VAR_GLOBAL_NODE_KIND, NC_INT, 1, 
-		  si.num_universe_nodes, -1,
-		  d->num_universe_nodes, -1,
-		  &si.global_node_kind);
-
   define_variable(u, VAR_MY_NAME, NC_INT, 0, 
 		  -1, -1,
 		  -1, -1,
@@ -687,30 +677,6 @@ wr_dpi(Dpi *d,
 	       d->num_global_node_descriptions,	d->len_node_description, 
 	       si.global_node_description,&(d->global_node_description[0][0]));
   
-  {
-    /*
-     * section to generate information that is no longer passed through
-     * goma.
-     */
-    int i;
-    NODAL_VARS_STRUCT *nv;
-    int *global_node_dof0 = alloc_int_1(d->num_universe_nodes, INT_NOINIT);
-    int *global_node_kind = alloc_int_1(d->num_universe_nodes, INT_NOINIT);
-    for (i = 0; i < d->num_universe_nodes; i++) {
-      nv = Nodes[i]->Nodal_Vars_Info;
-      global_node_dof0[i] = Nodes[i]->First_Unknown;
-      global_node_kind[i] = nv->list_index;
-    }
-    put_variable(u, NC_INT, 1, 
-		 d->num_universe_nodes,	-1, 
-		 si.global_node_dof0, global_node_dof0);
-    put_variable(u, NC_INT, 1, 
-		 d->num_universe_nodes,	-1, 
-		 si.global_node_kind, global_node_kind);
-    safer_free((void **) &global_node_dof0);
-    safer_free((void **) &global_node_kind);
-  }
-
   put_variable(u, NC_INT, 0, 
 	       -1,	-1, 
 	       si.my_name,		&(d->my_name));

@@ -39,39 +39,18 @@
 
 #define _MK_DM_C
 
-#include <config.h>
-
 #include <stdio.h>
 
-#ifdef STDC_HEADERS
 #include <stdlib.h>
-#endif
-
-#include "map_names.h"
-#include "std.h"
-#include "aalloc.h"
-#include "eh.h"
+#include "goma.h"
+#include "dpi.h"
+#include "brkfix/brkfix.h"
+#include "rf_allo.h"
+#include "mm_eh.h"
 #include "exo_struct.h"
-#include "brkfix_types.h"
-#include "nodesc.h"
-#include "mk_dm.h"
-
-/*
- * Function prototypes for functions defined in other files...
- */
-
-extern int in_list		/* utils.c */
-PROTO((int ,			/* val    - what integer value to seek */
-       int *,			/* start  - where to begin looking */
-       int ));			/* length - how far to search from start */
-
-
-extern int fence_post		/* utils.c */
-PROTO((int ,			/* val    - integer whose category we seek */
-       int *,			/* array  - where to look  */
-       int ));			/* length - how far to search in array */
-
-
+#include "brkfix/brkfix_types.h"
+#include "brkfix/nodesc.h"
+#include "brkfix/mk_dm.h"
 
 /*
  * Function prototypes for functions defined in this file...
@@ -272,7 +251,7 @@ make_goma_dofmap(Exo_DB *x,
 		   */
 		  
 		  evid = mult[eb_index][j]->eqnvar_id;
-		  where = in_list(evid, ev_ids, MAX_EQNVARS);
+		  where = in_list(evid, 0, MAX_EQNVARS, ev_ids);
 		}
 	      else
 		{
@@ -370,8 +349,8 @@ make_goma_dofmap(Exo_DB *x,
 	  if ( pnd[d]->num_basic_eqnvars == num_abevs )	/* maybe... */
 	    {
 	      look=0;
-	      while ( ( pnd[d]->eqnvar_ids[look] == ev_ids[look] ) &&
-		      ( look < num_abevs ) )
+	      while ( ( look < num_abevs) &&
+                      ( pnd[d]->eqnvar_ids[look] == ev_ids[look] ) )
 		{
 		  look++;
 		}
