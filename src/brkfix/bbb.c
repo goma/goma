@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "goma.h"
 #include "brkfix/brkfix.h"		/* useful general stuff */
 #include "mm_eh.h"			/* error handling */
 #include "rf_allo.h"		/* multi-dim array allocation */
