@@ -15,8 +15,8 @@
  * Created: 1997/04/12 10:19 MDT pasacki@sandia.gov
  */
 
-#ifndef _STD_H
-#define _STD_H
+#ifndef _BRKFIX_STD_H
+#define _BRKFIX_STD_H
 
 #ifndef FILENAME_MAX_ACK
 #define FILENAME_MAX_ACK		1024
@@ -126,31 +126,11 @@
  * #endif
  */
 
-#ifdef SPRINTF_RETURNS_INT
-typedef int	Spfrtn;
-#endif
-
-#ifndef SPRINTF_RETURNS_INT	/* Probably a ptr to char, then, eh? */
-typedef char   *Spfrtn;
-#endif
-
 /*
  * strcpy() returns different types on different machines...
  */
 
 #define STRCPY_RTN_IS_STRING
-
-#ifdef STRCPY_RTN_IS_STRING
-typedef char *Strcpy_rtn;
-#endif
-#ifdef STRCPY_RTN_IS_INT
-typedef int  Strcpy_rtn;
-#endif
-
-#ifndef _DBL_TYPEDEF
-#define _DBL_TYPEDEF
-typedef double dbl;
-#endif
 
 #ifndef _FLT_TYPEDEF
 #define _FLT_TYPEDEF

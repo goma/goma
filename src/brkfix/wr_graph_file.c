@@ -32,6 +32,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "goma.h"
+
 #include "brkfix/brkfix.h"
 #include "mm_eh.h"
 #include "brkfix/wr_graph_file.h"
