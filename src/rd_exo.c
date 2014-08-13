@@ -159,7 +159,6 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
   x->node_map_exists       = FALSE;
   x->elem_map_exists       = FALSE;
-  x->ss_node_list_exists   = FALSE;
 
   if( Linear_Solver == FRONT ) 
      {
