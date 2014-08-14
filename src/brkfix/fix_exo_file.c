@@ -111,12 +111,16 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 
   tmp = strcpy(monolith_file_name, exo_mono_name);
 
-  if ( num_procs < 1 )
-    {
-      sr = sprintf(err_msg, "Bad number of processors specified: %d.",
-		   num_procs);
-      EH(-1, err_msg);
-    }
+  if ( num_procs < 1 ) {
+    sr = sprintf(err_msg, "Bad number of processors specified: %d.",
+                 num_procs);
+    EH(-1, err_msg);
+  } else if (num_procs == 1) {
+    sprintf(err_msg, "fix_exo_file(), %s, called with %d processors", exo_mono_name, num_procs);
+    WH(-1, err_msg);
+    return -1;
+  }
+
 
   /*
    * Turn off annoying error reporting from within the EXODUS II API...
