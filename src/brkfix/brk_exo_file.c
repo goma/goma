@@ -600,6 +600,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   dbl eigtol;
   long seed;
 
+  ELEM_BLK_STRUCT *element_blocks_save = Element_Blocks;
+
 #endif /* CHACO */
 
   tmp = strcpy(in_file_name, Brk_File);
@@ -4812,6 +4814,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
     free(ss_to_blks[i]);
   }
 
+  free_element_blocks(mono);
+
   free_exo(mono);
   free(mono);
 
@@ -4889,6 +4893,9 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   fprintf(stdout, "-done.\n");
 
   if ( tmp == NULL || sr < 0 ) exit(2);
+
+  /* restore Element_Blocks */
+  Element_Blocks = element_blocks_save;
 
   return(0);
 } /* end of main */

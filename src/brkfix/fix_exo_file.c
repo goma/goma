@@ -98,6 +98,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 
   Spfrtn sr=0;
 
+  ELEM_BLK_STRUCT *element_blocks_save = Element_Blocks;
   /*
    * Defaults
    */
@@ -206,6 +207,8 @@ fix_exo_file(int num_procs, char* exo_mono_name)
       free_dpi(dpin);
       free(dpin);
 
+      free_element_blocks(poly);
+
       free_exo(poly);
       free(poly);
    
@@ -249,6 +252,8 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 
   free_dpi(dpin);
   free(dpin);
+
+  free_element_blocks(poly);
 
   free_exo(poly);
   free(poly);
@@ -299,6 +304,8 @@ fix_exo_file(int num_procs, char* exo_mono_name)
        */
 
       build_global_ss(poly, dpin, mono);
+
+      free_element_blocks(poly);
 
       free_exo(poly);
       free(poly);
@@ -451,6 +458,9 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 
 	  free_dpi(dpin);
 	  free(dpin);
+
+          free_element_blocks(poly);
+
           free_exo_gv(poly);
           free_exo_nv(poly);
           free_exo_ev(poly);
@@ -480,6 +490,10 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 
   if ( tmp == NULL ) exit(2);
   if ( sr < 0 ) exit(2);
+
+  /* Restore Element_Blocks */
+
+  Element_Blocks = element_blocks_save;
 
   return(0);
 }

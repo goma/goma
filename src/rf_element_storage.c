@@ -430,7 +430,7 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 /************************************************************************/
 
 void
-free_element_blocks(void)
+free_element_blocks(Exo_DB *exo)
 
      /*****************************************************************
       *
@@ -441,7 +441,7 @@ free_element_blocks(void)
       *  underlying storage
       *****************************************************************/
 {
-  free_element_storage();
+  free_element_storage(exo);
   safer_free((void **) &Element_Blocks);      
 }
 /************************************************************************/
@@ -449,7 +449,7 @@ free_element_blocks(void)
 /************************************************************************/
 
 void
-free_element_storage(void)
+free_element_storage(Exo_DB *exo)
 
      /*****************************************************************
       *
@@ -462,7 +462,7 @@ free_element_storage(void)
 {
   int eb_index;
   ELEM_BLK_STRUCT *eb_ptr;
-  for (eb_index = 0; eb_index < EXO_ptr->num_elem_blocks; eb_index++) {
+  for (eb_index = 0; eb_index < exo->num_elem_blocks; eb_index++) {
     eb_ptr = Element_Blocks + eb_index;
     if (eb_ptr) {
       free_elemStorage(eb_ptr);
