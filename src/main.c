@@ -888,7 +888,7 @@ main(int argc, char **argv)
   /*
    * free the element block / element based structures
    */
-  free_element_blocks();
+  free_element_blocks(EXO_ptr);
 
   /*
    * free nodal based structures

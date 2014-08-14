@@ -279,7 +279,7 @@ build_big_bones(Exo_DB *p,	/* EXODUS info from representative polylith */
 		}
 	    }
 
-	  len = MAX(1, m->eb_num_attr[i] * m->eb_num_elems[i]);
+	  len = m->eb_num_attr[i] * m->eb_num_elems[i];
 	  if ( len > 0 )
 	    {
 	      m->eb_attr[i] = (dbl *) smalloc(len * sd);

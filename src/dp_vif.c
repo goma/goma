@@ -394,19 +394,6 @@ raven_landing()
 */
 
   /*
-   * Element quality/distortion measures.
-   */
-  if ( nEQM > 0 )
-    {
-      eqm = (struct Element_Quality_Metrics *) 
-       array_alloc(1, nEQM, sizeof(struct Element_Quality_Metrics));
-    }
-  else
-    {
-      eqm = NULL;
-    }
-
-  /*
    * Augmenting condition preliminaries...
    */
 

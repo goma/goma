@@ -600,6 +600,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   dbl eigtol;
   long seed;
 
+  ELEM_BLK_STRUCT *element_blocks_save = Element_Blocks;
+
 #endif /* CHACO */
 
   tmp = strcpy(in_file_name, Brk_File);
@@ -4453,8 +4455,11 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
        * Also, write primary responsible set/proc for each global node.
        *
        */
-
+      free(E->eb_elem_itype);
       free_exo(E);
+
+      free(D->global_node_description[0]);
+      free(D->eb_elem_type_global[0]);
       free_dpi(D);
 
     } /* set loop */
@@ -4795,6 +4800,22 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       free_exo_ev(mono);
     }
 
+  free(Proc_SS_Node_Count);
+  free(Proc_SS_Node_Pointers);
+  free(SS_Internal_Boundary);
+  free(mono->eb_elem_itype);
+
+  free(Coor);
+  Coor = NULL;
+  free(Matilda);
+  Matilda = NULL;
+
+  for ( i=0; i<MAX_MAT_PER_SS+1; i++) {
+    free(ss_to_blks[i]);
+  }
+
+  free_element_blocks(mono);
+
   free_exo(mono);
   free(mono);
 
@@ -4872,6 +4893,9 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   fprintf(stdout, "-done.\n");
 
   if ( tmp == NULL || sr < 0 ) exit(2);
+
+  /* restore Element_Blocks */
+  Element_Blocks = element_blocks_save;
 
   return(0);
 } /* end of main */
