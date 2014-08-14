@@ -1490,15 +1490,19 @@ rd_timeint_specs(FILE *ifp,
       }
 
     /* Look for fix frequency */
-    iread = look_for_optional(ifp,"Fix Frequency",input,'=');
-    if (iread == 1) {
-      tran->fix_freq = read_int(ifp, "Fix Frequency");
-      if (tran->fix_freq < 0) {
-        EH(-1, "Expected Fix Frequency > 0");
+    /* set default frequency to 0 */
+    tran->fix_freq = 0;
+
+    /* only look for fix frequency in parallel */
+    if (Num_Proc > 1) {
+      iread = look_for_optional(ifp,"Fix Frequency",input,'=');
+      if (iread == 1) {
+        tran->fix_freq = read_int(ifp, "Fix Frequency");
+        if (tran->fix_freq < 0) {
+          EH(-1, "Expected Fix Frequency > 0");
+        }
+        SPF(echo_string, "%s = %d", "Fix Frequency", tran->fix_freq); ECHO(echo_string, echo_file);
       }
-      SPF(echo_string, "%s = %d", "Fix Frequency", tran->fix_freq); ECHO(echo_string, echo_file);
-    } else {
-      tran->fix_freq = 0;
     }
 
     tran->resolved_delta_t_min = 0.;
