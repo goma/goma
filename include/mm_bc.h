@@ -109,4 +109,6 @@ extern int find_bc_unk_offset(struct Boundary_Condition *, int,
 
 extern int search_bc_dup_list(const int, int *);
 extern void set_up_BC_connectivity(void);
+
+int exchange_bc_info(void);
 #endif /* _MM_BC_H */
