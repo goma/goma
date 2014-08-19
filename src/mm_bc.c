@@ -1262,6 +1262,9 @@ set_up_Surf_BC(struct elem_side_bc_struct *First_Elem_Side_BC_Array[ ],
       if (poinbc != 0 && poinbc != -1) {    /*the -1 case is another new
 					      velo_tangent retaining case, 
 					      prs 8/98 */
+        /* Set to Flag for node not found */
+        inode = -2;
+
 	for (ins = 0; ins < exo->num_node_sets; ins++) {
 	  if (exo->ns_id[ins] == poinbc) {
 	    for (i = 0; i < exo->ns_num_nodes[ins]; i++) {
@@ -2866,6 +2869,44 @@ set_up_BC_connectivity(void)
       break;
     }
   }
+}
+
+/*************************************************************************/
+/*************************************************************************/
+/*************************************************************************/
+
+/**
+ * Exchange needed boundary condition information that is only
+ * present on one processor but needed on all or some of the other
+ * processors.
+ *
+ * Runs in serial as well so calculations that are shared can be moved
+ * to this exchange
+ *
+ * Called from setup_problem(), only called before solve
+ * Returns 0 if success
+ *
+ * Return -1 if error
+ */
+int exchange_bc_info(void)
+{
+  int ibc;
+  int error = 0;
+
+  /* loop over boundary conditions */
+  for (ibc = 0; ibc < Num_BC; ibc++) {
+    /* check if BC needs special exchange information */
+    switch (BC_Types[ibc].BC_Name) {
+    case VELO_SLIP_BC:
+      exchange_fvelo_slip_bc_info(ibc);
+      break;
+    default:
+      break;
+    }
+
+  } /* end loop over BC_Types */
+
+  return error;
 }
 /************************************************************************/
 /*			END of mm_bc.c			                */
