@@ -2472,15 +2472,15 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
         /* Fix output if current time step matches frequency */
         if (step_fix != 0 && nt == step_fix) {
 #ifdef PARALLEL
-          /* Barrier if print and fix are happening on same timestep */
-          if (i_print) {
-            MPI_Barrier(MPI_COMM_WORLD);
-          }
+          /* Barrier because fix needs both files to be finished printing 
+             and fix always occurs on the same timestep as printing */
+          MPI_Barrier(MPI_COMM_WORLD);
 #endif
           if (ProcID == 0 && Brk_Flag == 1) {
             fix_output();
           }
-          step_fix += tran->fix_freq;
+          /* Fix step is relative to print step */
+          step_fix += tran->fix_freq*tran->print_freq;
         }
 	/* 
 	 * Adjust the time step if the new time will be larger than the
