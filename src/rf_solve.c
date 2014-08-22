@@ -296,7 +296,10 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   fprintf(stderr, "P_%d solve_problem() begins...\n",ProcID);
 #endif /* DEBUG */
 
-  step_fix = tran->fix_freq;
+  /* Set step_fix only if parallel run and only if fix freq is enabled*/
+  if (Num_Proc > 1 && tran->fix_freq > 0) {
+    step_fix = 1; /* Always fix on the first timestep to match print frequency */
+  }
 
   tran->time_value = time1;
 
