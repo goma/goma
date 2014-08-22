@@ -10,7 +10,7 @@ Additions to goma with brk fix parallel integration
 
 ### File Specifications
 
-    -- After SOLN file
+    -- After SOLN file in input file
 
 #### Brk file
 
@@ -36,7 +36,7 @@ Following is a sample card:
 
 ### Time Integration Specifications
 
-    -- After Printing Frequency
+    -- After Printing Frequency in input file
 
 #### Fix Frequency
 
@@ -46,32 +46,24 @@ Fix Frequency = <integer>
 
 ##### Description/Usage
 
-This optional card specifies the frequency at which goma should fix, or combine, the parallel pieces of the Output Exodus II file.
+This optional card specifies the frequency at which goma should fix, or combine, the parallel pieces of the Output Exodus II file. This frequency is relative to the `Printing Frequency` so if Fix Frequency is set to 10 it will fix the output exodus file on the 10th print.
 
 Without this card goma will only fix after the problem is solved.
 
 Fixing only occurs if goma brk the exodus files (`-brk` or `Brk file`)
 
-`<integer>` | The timestep interval at which to fix the Output Exodus II file, must be positive.
+`<integer>` | Number of prints needed to fix (0 is disabled)
 
 #### Examples
 
 Following are sample cards:
 
 ```
-    # Fix every timestep
+    # Fix every print
     Fix Frequency = 1
 ```
 
 ```
-    # Fix every 5 timesteps
+    # Fix every 5 prints
     Fix Frequency = 5
 ```
-
-## Technical notes
-
-Currently uses brkfix as a library with a hacky map_names.h which changes function names to not conflict with goma function names.
-
-This was how brkfix was integrated previously in rd_mesh and then brk would be called with a populated *argv and argc to mimic the main executable call.
-
-I've modified the brk.c and fix.c to fit a little better into the current goma structure (still pretty ugly) with the `fix_exo_file.c` and `brk_exo_file.c`
