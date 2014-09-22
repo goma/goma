@@ -16,7 +16,7 @@ function usage() {
     echo "               -jN  N : Number of make jobs to run"
 }
 
-MAKE_JOBS=0
+MAKE_JOBS=1
 
 while getopts ":j:h" opt; do
     case $opt in
@@ -623,3 +623,4 @@ $GOMA_LIB/trilinos-11.8.1-Source
 make -j$MAKE_JOBS
 
 make install
+
