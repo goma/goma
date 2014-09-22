@@ -546,6 +546,8 @@ export MPI_BASE_DIR=$GOMA_LIB/openmpi-1.6.4
 # Have to set this to get TRY_RUN(...) commands to work
 export LD_LIBRARY_PATH=$MPI_BASE_DIR/lib:$LD_LIBRARY_PATH
 
+export PATH=$GOMA_LIB/cmake-2.8.12.2/bin:$PATH
+
 MPI_LIBS="-LMPI_BASE_DIR/lib -lmpi_f90 -lmpi_f77 -lmpi"
 # Install directory
 TRILINOS_INSTALL=$GOMA_LIB/trilinos-11.8.1-Built
