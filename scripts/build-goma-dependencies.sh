@@ -249,19 +249,16 @@ read -d '' ARMAKE_PATCH << "EOF"
 < PLAT = SUN4
 ---
 > PLAT = x86_64
-104c104
+104,105c104,105
 < FC      = f77
+< FFLAGS	= -O -cg89
 ---
 > FC      = gfortran
+> FFLAGS	= -O
 115c115
 < MAKE    = /bin/make
 ---
 > MAKE    = /usr/bin/make
-#130c130
-#< #RANLIB  = touch
-#---
-#>
- 
 EOF
 ARMAKE_PATCH=${ARMAKE_PATCH/__GOMA_LIB5__/$GOMA_LIB}
 
