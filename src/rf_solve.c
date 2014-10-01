@@ -38,7 +38,7 @@ static char rcsid[] = "$Id: rf_solve.c,v 5.21 2010-03-17 22:23:54 hkmoffa Exp $"
 #include "rf_node_const.h"
 #include "usr_print.h"
 #include "sl_amesos_interface.h"
-
+#include "brk_utils.h"
 
 #define _RF_SOLVE_C
 #include "goma.h"
@@ -220,6 +220,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   int    i, num_total_nodes;
   int    numProcUnknowns;
   int    const_delta_t, const_delta_ts, step_print;
+  int    step_fix = 0;           /* What step to fix the problem on */
   int    good_mesh = TRUE;
   int    w;                      /* counter for looping external variables */
   static int nprint = 0;
@@ -294,6 +295,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 #ifdef DEBUG
   fprintf(stderr, "P_%d solve_problem() begins...\n",ProcID);
 #endif /* DEBUG */
+
+  /* Set step_fix only if parallel run and only if fix freq is enabled*/
+  if (Num_Proc > 1 && tran->fix_freq > 0) {
+    step_fix = 1; /* Always fix on the first timestep to match print frequency */
+  }
 
   tran->time_value = time1;
 
@@ -2463,6 +2469,19 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	} /* if(i_print) */
 	evpl_glob[0]->update_flag = 1; 
 
+        /* Fix output if current time step matches frequency */
+        if (step_fix != 0 && nt == step_fix) {
+#ifdef PARALLEL
+          /* Barrier because fix needs both files to be finished printing 
+             and fix always occurs on the same timestep as printing */
+          MPI_Barrier(MPI_COMM_WORLD);
+#endif
+          if (ProcID == 0 && Brk_Flag == 1) {
+            fix_output();
+          }
+          /* Fix step is relative to print step */
+          step_fix += tran->fix_freq*tran->print_freq;
+        }
 	/* 
 	 * Adjust the time step if the new time will be larger than the
 	 * next printing time.

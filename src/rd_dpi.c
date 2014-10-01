@@ -391,10 +391,6 @@ rd_dpi(Dpi *d,
 	 &si.elem_var_tab_global);
   getvid(u, VAR_GLOBAL_NODE_DESCRIPTION,   TRUE,
 	 &si.global_node_description);
-  getvid(u, VAR_GLOBAL_NODE_DOF0,          TRUE,
-	 &si.global_node_dof0);
-  getvid(u, VAR_GLOBAL_NODE_KIND,          TRUE,
-	 &si.global_node_kind);
   getvid(u, VAR_MY_NAME,                   TRUE,
 	 &si.my_name);
   getvid(u, VAR_NEIGHBOR,                  FALSE,
@@ -1515,3 +1511,68 @@ init_dpi_struct(Dpi *d)
 }
 /************************************************************************/
 /************************************************************************/
+
+/* exo_dpi_clone -- transfer needed global monolith data to child piece
+ *
+ *
+ * Notes: Avert aliasing problems by allocating full-fledged arrays for dpi
+ *        that won't disappear if the monolith does.
+ * 
+ * Created: 1999/08/24 11:44 MDT pasacki@sandia.gov
+ */
+
+void 
+exo_dpi_clone(Exo_DB *exo, 
+	      Dpi *dpi)
+{
+  int len;
+
+  dpi->num_nodes_global         = exo->num_nodes;
+  dpi->num_elems_global         = exo->num_elems;
+  dpi->num_elem_blocks_global   = exo->num_elem_blocks;
+  dpi->num_node_sets_global     = exo->num_node_sets;
+  dpi->num_side_sets_global     = exo->num_side_sets;
+
+  /*
+   * Allocate and fill arrays for element blocks...
+   */
+
+  len = dpi->num_elem_blocks_global * sizeof(int);
+
+  dpi->eb_id_global             = smalloc(len);
+  memcpy(dpi->eb_id_global, exo->eb_id, len);
+
+  dpi->eb_num_elems_global      = smalloc(len);
+  memcpy(dpi->eb_num_elems_global, exo->eb_num_elems, len);
+
+  /*
+   * Allocate and fill arrays for node sets...
+   */
+
+  len = dpi->num_node_sets_global * sizeof(int);
+
+  dpi->ns_id_global             = smalloc(len);
+  memcpy(dpi->ns_id_global, exo->ns_id, len);
+
+  dpi->ns_num_nodes_global      = smalloc(len);
+  memcpy(dpi->ns_num_nodes_global, exo->ns_num_nodes, len);
+
+  dpi->ns_num_distfacts_global  = smalloc(len);
+  memcpy(dpi->ns_num_distfacts_global, exo->ns_num_distfacts, len);
+
+  /*
+   * Allocate and fill arrays for side sets...
+   */
+  len = dpi->num_side_sets_global * sizeof(int);
+  
+  dpi->ss_id_global             = smalloc(len);
+  memcpy(dpi->ss_id_global, exo->ss_id, len);
+
+  dpi->ss_num_sides_global      = smalloc(len);
+  memcpy(dpi->ss_num_sides_global, exo->ss_num_sides, len);
+
+  dpi->ss_num_distfacts_global  = smalloc(len);
+  memcpy(dpi->ss_num_distfacts_global, exo->ss_num_distfacts, len);
+
+  return;
+}

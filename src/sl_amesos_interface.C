@@ -104,6 +104,8 @@ amesos_solve_msr( char *choice,
       Pkg_Name = "Amesos_Superludist";
     else if ( Pkg_Choice == "SCALAPACK") 
       Pkg_Name = "Amesos_Scalapack";
+    else if ( Pkg_Choice == "MUMPS") 
+      Pkg_Name = "Amesos_Mumps";
     else {
       std::cout << "Error: Unsupport Amesos solver package"<<std::endl ;
       exit(-1);

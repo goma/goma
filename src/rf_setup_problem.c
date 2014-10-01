@@ -285,6 +285,9 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    */
   init_shell_element_blocks(exo);
 
+  /* Communicate non-shared but needed BC information */
+  exchange_bc_info();
+
   return 0;
 }
 /************************************************************************/

@@ -29,6 +29,8 @@
 #endif
 extern void handle_ieee(void );
 
+
+
 #include "el_geom.h"
 #include "rf_allo.h"
 #include "rf_solver.h"
@@ -70,6 +72,7 @@ extern void handle_ieee(void );
 #include "dp_utils.h"
 #include "dp_types.h"
 
+#include "brk_utils.h"
 
 #define _MAIN_C
 #include "goma.h"
@@ -505,6 +508,19 @@ main(int argc, char **argv)
   create_cgm_geometry();
 #endif
 
+  /* Check to see if BRK File option exists and if so check if file exits */
+  if (Brk_Flag == 1) {
+    check_for_brkfile(Brk_File);
+  }
+  check_parallel_error("Error encountered in check for brkfile");
+
+  /* Now break the exodus files */
+  if (Num_Proc > 1 && ProcID == 0 && Brk_Flag == 1) {
+    call_brk();
+  }
+  check_parallel_error("Error in brking exodus files");
+  MPI_Barrier(MPI_COMM_WORLD);
+
   /*
    * For parallel execution, assume the following variables will be changed
    * to reflect the multiple file aspect of the problem.
@@ -715,6 +731,20 @@ main(int argc, char **argv)
    * check for parallel errors before continuing
    */
   check_parallel_error("Error encountered in problem setup");
+
+  /***********************************************************************/
+  /***********************************************************************/
+  /***********************************************************************/
+  /*
+   *               CREATE BRK_FILE IF ONE DOES NOT EXIST
+   *
+   * If no Brk_File exists but the option was configured in the input or
+   * optional command we create one now and exit from goma.
+   */
+  if ( Brk_Flag == 2 ) {
+    write_brk_file(Brk_File, EXO_ptr);
+    exit(0);
+  }
   
   /***********************************************************************/
   /***********************************************************************/
@@ -836,6 +866,10 @@ main(int argc, char **argv)
       }
     break;
   }
+
+  if (ProcID == 0 && Brk_Flag == 1 && Num_Proc > 1) {
+    fix_output();
+  }
   
   /***********************************************************************/
   /***********************************************************************/
@@ -854,7 +888,7 @@ main(int argc, char **argv)
   /*
    * free the element block / element based structures
    */
-  free_element_blocks();
+  free_element_blocks(EXO_ptr);
 
   /*
    * free nodal based structures

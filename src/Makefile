@@ -20,6 +20,7 @@ BIN_DIR = ../bin
 OBJ_DIR = ../build
 LIB_DIR = ../lib
 INCLUDE_DIR = ../include
+BRKFIX_DIR = brkfix
 USER_SETTINGS_FILE = ../settings.mk
 
 # _MACH is used if libraries were compiled with machine specific suffixes
@@ -157,6 +158,8 @@ SEACAS_TOP ?= $(GOMA_LIBS)/SEACAS-2012-09-10
 
 EXODUSII_LIB = -lexoIIv2c
 
+CHACO_LIB = -lchaco
+
 # NetCDF library (SEACAS version)
 
 NETCDF_LIB = -L$(SEACAS_TOP)/lib  -lnetcdf  -lhdf5_hl  -lhdf5
@@ -216,6 +219,11 @@ BLAS_TOP ?= $(GOMA_LIBS)/BLAS
 
 BLAS_LIB = -L$(BLAS_TOP) -lblas$(_MACH)
 
+SCALAPACK_TOP ?= $(GOMA_LIBS)/scalapack-2.0.2
+
+SCALAPACK_LIB ?= -L$(SCALAPACK_TOP) -lscalapack
+
+SCALAPACK_INC ?= $(SCALAPACK_TOP)/SRC
 
 # FRONTAL SOLVER LIBRARY
 # ----------------------
@@ -262,6 +270,10 @@ PARMETIS_LIB  = -L$(PARMETIS_TOP)  -lparmetis$(_MACH) \
 SUPERLU_TOP ?= $(GOMA_LIBS)/SuperLU_DIST_2.3
 SUPERLU_LIB = -L$(SUPERLU_TOP)/lib  -lsuperludist$(_MACH) 
 
+MUMPS_TOP ?= $(GOMA_LIBS)/MUMPS_4.10.0
+
+MUMPS_LIB ?= -L$(MUMPS_TOP)/lib -ldmumps -lmumps_common -lpord
+
 # FORTRAN LIBRARIES
 # -----------------
 
@@ -279,6 +291,7 @@ GOMA_INC = -I$(INCLUDE_DIR)
 
 INCLUDES = $(GOMA_INC) $(SPARSE_INC) $(TRILINOS_INC) \
            $(MPI_INC) $(SEACAS_INC) $(UMFPACK_INC)
+
 
 
 # Compiler settings
@@ -315,12 +328,14 @@ LIBS = $(FRONT_LIB) \
        $(TRILINOS_LIB) \
        $(Y12M_LIB) \
        $(SUPERLU_LIB) \
+       $(MUMPS_LIB) \
        $(PARMETIS_LIB) \
        $(LAPACK_LIB) \
        $(ARPACK_LIB) \
        $(HARWELL_LIB) \
        $(UMFPACK_LIB) \
        $(BLAS_LIB) \
+       $(SCALAPACK_LIB) \
        $(SEACAS_LIB) 
 
 END_LIBS = $(MPI_LIB) \
@@ -332,6 +347,19 @@ LIB_DEP = $(FRONT_DEP)
 
 # Source files for goma
 # =====================
+
+# _____ Brk and Fix ___________________________________________________________
+
+BFU_SRC = brk_utils.c 
+
+BFU_INC = brk_utils.h
+
+BF_SRC = brk_exo_file.c fix_exo_file.c ppi.c wr_coords.c rd_in.c \
+	 mk_dm.c sam_perea.c utils.c wr_graph_file.c emuck.c bbb.c
+
+BF_SRC := ${addprefix $(BRKFIX_DIR)/, $(BF_SRC)}
+
+BF_INC = 
 
 # _____ Element routines "el_" prefix _________________________________________
 
@@ -670,10 +698,12 @@ USER_INC= user_ac.h\
 # _____ Full macros ___________________________________________________________
 
 GOMA_SRC = $(BC_SRC) $(EL_SRC) $(RF_SRC) $(MAIN_SRC) $(SL_SRC) $(MD_SRC) $(MM_SRC)\
-           $(DP_SRC) $(AC_SRC) $(LOCA_SRC) $(GM_SRC)
+           $(DP_SRC) $(AC_SRC) $(LOCA_SRC) $(GM_SRC) $(BFU_SRC)
+
+BRKFIX_SRC = $(BF_SRC)
 
 GOMA_INCS = $(EL_INC) $(MAIN_INC) $(RF_INC) $(SL_INC) $(MD_INC) $(DP_INC) $(BC_INC)\
-           $(MM_INC) $(USER_INC) $(AC_INC) $(LOCA_INC) $(GM_INC)
+           $(MM_INC) $(USER_INC) $(AC_INC) $(LOCA_INC) $(GM_INC) $(BF_INC)
 
 GOMA_INCS := ${addprefix $(INCLUDE_DIR)/, $(GOMA_INCS)}
 
@@ -685,14 +715,24 @@ USER_OBJ := ${USER_SRC:.c=.o}
 USER_OBJ := ${USER_OBJ:.F=.o}
 USER_OBJ := ${USER_OBJ:.C=.o}
 
+BRKFIX_OBJ :=  ${BRKFIX_SRC:.c=.o}
+BRKFIX_OBJ :=  ${BRKFIX_OBJ:.F=.o}
+BRKFIX_OBJ :=  ${BRKFIX_OBJ:.C=.o}
+
+FIX_OBJ :=  ${FIX_SRC:.c=.o}
+FIX_OBJ :=  ${FIX_OBJ:.F=.o}
+FIX_OBJ :=  ${FIX_OBJ:.C=.o}
+
 RELEASE_OBJ_DIR = $(OBJ_DIR)/release
 DEBUG_OBJ_DIR = $(OBJ_DIR)/debug
 
 GOMA_RELEASE_OBJS := ${addprefix $(RELEASE_OBJ_DIR)/,$(GOMA_OBJ)}
+BRKFIX_RELEASE_OBJS := ${addprefix $(RELEASE_OBJ_DIR)/,$(BRKFIX_OBJ)}
 USER_RELEASE_OBJS := ${addprefix $(RELEASE_OBJ_DIR)/,$(USER_OBJ)}
 
 GOMA_DEBUG_OBJS := ${addprefix $(DEBUG_OBJ_DIR)/,$(GOMA_OBJ)}
 USER_DEBUG_OBJS := ${addprefix $(DEBUG_OBJ_DIR)/,$(USER_OBJ)}
+BRKFIX_DEBUG_OBJS := ${addprefix $(DEBUG_OBJ_DIR)/,$(BRKFIX_OBJ)}
 
 # combined sources
 SRCS  = $(GOMA_SRC) $(USER_SRC)
@@ -738,7 +778,7 @@ $(BIN_DIR)/$(TARGET): $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIB_D
 	$(LD) $(LD_FLAGS) -o $@ $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIBS) $(END_LIBS)
 
 # goma library
-$(LIB_DIR)/$(GOMA_LIB): $(GOMA_RELEASE_OBJS)
+$(LIB_DIR)/$(GOMA_LIB): $(GOMA_RELEASE_OBJS) $(BRKFIX_RELEASE_OBJS)
 	mkdir -p $(LIB_DIR); \
 	$(AR) $(ARFLAGS) $@ $?; \
 	$(RANLIB) $@ 
@@ -758,10 +798,10 @@ debug:
 	$(MAKE) CCFLAGS="$(DEBUG_FLAGS)" $(BIN_DIR)/$(DEBUG_TARGET)
 
 # bin/gomad executable
-$(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIB_DEP)
+$(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(BRKFIX_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIB_DEP)
 	mkdir -p $(BIN_DIR); \
 	$(RM) $@; \
-	$(LD) $(LD_FLAGS) -o $@ $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIBS) $(END_LIBS)
+	$(LD) $(LD_FLAGS) -o $@ $(GOMA_DEBUG_OBJS) $(BRKFIX_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIBS) $(END_LIBS)
 
 # Object pattern rules
 # --------------------
@@ -771,7 +811,7 @@ $(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIB_DEP)
 # release objects
 
 $(RELEASE_OBJ_DIR)/%.o: %.c
-	@mkdir -p $(RELEASE_OBJ_DIR)
+	@mkdir -p $(RELEASE_OBJ_DIR)/$(BRKFIX_DIR)
 	$(CC) -c $(CFLAGS) -o $@ $^
 
 $(RELEASE_OBJ_DIR)/%.o: %.F
@@ -784,7 +824,7 @@ $(RELEASE_OBJ_DIR)/%.o: %.C
 
 # debug objects
 $(DEBUG_OBJ_DIR)/%.o: %.c
-	@mkdir -p $(DEBUG_OBJ_DIR)
+	@mkdir -p $(DEBUG_OBJ_DIR)/$(BRKFIX_DIR)
 	$(CC) -c $(CFLAGS) -o $@ $^
 
 $(DEBUG_OBJ_DIR)/%.o: %.F
@@ -794,6 +834,8 @@ $(DEBUG_OBJ_DIR)/%.o: %.F
 $(DEBUG_OBJ_DIR)/%.o: %.C
 	@mkdir -p $(DEBUG_OBJ_DIR)
 	$(CXX) -c $(CXXFLAGS) -o $@ $^
+
+
 
 # Installation target
 # -------------------
@@ -825,16 +867,16 @@ install: $(BIN_DIR)/$(TARGET) $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB)
 	done
 
 
-
 # Cleanup targets
 # --------------
 
 .PHONY: clean
 
 clean:
-	$(RM) $(DEBUG_OBJ_DIR)/*.o $(RELEASE_OBJ_DIR)/*.o $(LIB_DIR)/*.a
+	$(RM) $(DEBUG_OBJ_DIR)/*.o $(RELEASE_OBJ_DIR)/*.o  $(LIB_DIR)/*.a \
+	$(DEBUG_OBJ_DIR)/$(BRKFIX_DIR)/*.o $(RELEASE_OBJ_DIR)/$(BRKFIX_DIR)/*.o
 
 .PHONY: realclean
 
 realclean: clean
-	$(RM) $(BIN_DIR)/$(TARGET) $(BIN_DIR)/$(DEBUG_TARGET)
+	$(RM) $(BIN_DIR)/$(TARGET) $(BIN_DIR)/$(DEBUG_TARGET);

@@ -400,6 +400,8 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
       af->Assemble_Jacobian = TRUE;
 #endif
       neg_elem_volume = FALSE;
+      neg_lub_height = FALSE;
+      zero_detJ = FALSE;
 
       my_node_num = idv[j][2];
 
@@ -511,6 +513,8 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 		    &elem_list[i], &num_total_nodes,
 		    h_elem_avg, U_norm, NULL, zeroCA);
 	if( neg_elem_volume ) break;
+	if( neg_lub_height ) break;
+	if( zero_detJ ) break;
       }
 
       if ( xfem != NULL )
@@ -526,10 +530,29 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
       MPI_Allreduce(&neg_elem_volume, &neg_elem_volume_global, 1,
                      MPI_INT, MPI_LOR, MPI_COMM_WORLD);
       neg_elem_volume = neg_elem_volume_global;
+
+      neg_lub_height_global = FALSE;
+      MPI_Allreduce(&neg_lub_height, &neg_lub_height_global, 1,
+                     MPI_INT, MPI_LOR, MPI_COMM_WORLD);
+      neg_lub_height = neg_lub_height_global;
+
+      zero_detJ_global = FALSE;
+      MPI_Allreduce(&zero_detJ, &zero_detJ_global, 1,
+                     MPI_INT, MPI_LOR, MPI_COMM_WORLD);
+      zero_detJ = zero_detJ_global;
 #endif
+
       if (neg_elem_volume) {
 	DPRINTF(stderr, "neg_elem_volume triggered \n");
 	exit(-1);
+      }
+      if (neg_lub_height) {
+        DPRINTF(stderr, "neg_lub_height triggered \n");
+        exit(-1);
+      }
+      if (zero_detJ) {
+        DPRINTF(stderr, "zero_detJ triggered \n");
+        exit(-1);
       }
 
 #ifdef DEBUG_NUMJAC      

@@ -20,8 +20,8 @@
 extern void setup_element_storage(void);
 extern void init_element_storage(ELEM_BLK_STRUCT *);
 extern void set_init_Element_Storage(ELEM_BLK_STRUCT *, int);
-extern void free_element_blocks(void);
-extern void free_element_storage(void);
+extern void free_element_blocks(Exo_DB *exo);
+extern void free_element_storage(Exo_DB *exo);
 extern void free_elemStorage(ELEM_BLK_STRUCT *);
 extern double get_nodalSat_tnm1_FromES(int);
 extern double get_Sat_tnm1_FromES(int);

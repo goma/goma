@@ -184,7 +184,12 @@ init_shell_element_blocks(const Exo_DB *exo)
 
 
   /* No shells? Do nothing */
-  if (num_shell_blocks == 0) return;
+  if (num_shell_blocks == 0) {
+    safe_free(mnList);
+    safe_free(eb_Used);
+    safe_free(eb_ProcessingOrder);
+    return;
+  }
   
   /* Allocate some space for the list of Shell_Block structures. */
   /* Also do some basic initialization. */

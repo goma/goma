@@ -166,54 +166,11 @@ read_mesh_exoII(Exo_DB *exo,
   int max;
   int *arr;
 
-  /*
-   * This won't harm serial case.
-   */
-
-#ifdef PARALLEL	
-#ifdef HAVE_BRK
-	if( Num_Proc > 1 )
-	{
-		if( ProcID == 0 && strlen(Brk_File) != 0 ) 
-		{
-			int argc=5;
-			char argv[5][15];
-			char *nargv[5] ;
-			printf("Starting brk");
-			
-			strcpy(&(argv[0][0]), "brk");
-			strcpy(&(argv[1][0]), "-n");
-			sprintf(&(argv[2][0]), "%d", Num_Proc);
-			  /*sprintf(&(argv[2][0]), "%d", 2);*/
-			strcpy(&(argv[3][0]), Brk_File );
-			strcpy(&(argv[4][0]), ExoFile );
-			
-			
-			nargv[0] = argv[0];
-			nargv[1] = argv[1];
-			nargv[2] = argv[2];
-			nargv[3] = argv[3];
-			nargv[4] = argv[4];
-
-			 
-			_brk_( argc, nargv, NULL );
-	  
-			printf(".....done\n");
-		}
-	  if(ProcID ==0) printf("Proc 0 point C\n");
-	  if(ProcID ==1) printf("Proc 1 point C\n");
-		
-		MPI_Barrier( MPI_COMM_WORLD);
-	}
-#endif
-#endif
-
-
-
   multiname(ExoFile, ProcID, Num_Proc);
   error = rd_exo(exo, ExoFile, 0, ( EXODB_ACTION_RD_INIT+
 				    EXODB_ACTION_RD_MESH+
 				    EXODB_ACTION_RD_RES0 ) );
+  check_parallel_error("Error in reading exodus file");
   /*
    *    if an error was encountered return to
    *  main continuing with a systematic shutdown
