@@ -204,6 +204,17 @@ PROTO((double [DIM],	        /*  func                                     */
        const dbl ));		/* time  */
 
 
+EXTERN void yflux_disc_rxn_bc   /* mm_fill_species.c                         */
+PROTO((double [],		/* func                                      */
+       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+       int ,			/* wspec                                     */
+       int ,			/* i_mat_a                                   */
+       int ,			/* i_mat_b                                   */
+       double ,			/* kf, forward rate constant                 */
+       double ,			/* kr, forward rate constant                 */
+       double ,			/* dt, current value of the time step        */
+       double ));		/* tt, parameter to vary time integration    */
+
 EXTERN void raoults_law         /* mm_fill_species.c                         */
 PROTO((double [],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */

@@ -2483,6 +2483,7 @@ rd_bc_specs(FILE *ifp,
 	   * and two float 
 	   */
 	case POROUS_GAS_BC:
+	case YFLUX_DISC_RXN_BC:
 	  if (fscanf(ifp, "%d %d %d %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Int[0],
 		      &BC_Types[ibc].BC_Data_Int[1],

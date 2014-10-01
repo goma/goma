@@ -370,6 +370,7 @@ apply_integrated_bc(
        */
       if (bc->BC_Name == VL_EQUIL_PRXN_BC ||
 	  bc->BC_Name == IS_EQUIL_PRXN_BC ||
+	  bc->BC_Name == YFLUX_DISC_RXN_BC ||
 	  bc->BC_Name == SDC_STEFANFLOW_BC ) {
 	new_way = TRUE;
       } else {
@@ -1134,6 +1135,14 @@ apply_integrated_bc(
 		      bc->BC_Data_Float[0], bc->BC_Data_Float[1],
 		      bc->BC_Data_Float[2], bc->BC_Data_Float[3],
 		      bc->BC_Data_Float[4]);
+	  break;
+
+	case YFLUX_DISC_RXN_BC:
+
+	  yflux_disc_rxn_bc(func, d_func, bc->BC_Data_Int[0],
+			    bc->BC_Data_Int[1], bc->BC_Data_Int[2],
+			    bc->BC_Data_Float[0], bc->BC_Data_Float[1], delta_t, theta) ;
+
 	  break;
 
 	case VL_EQUIL_PRXN_BC:

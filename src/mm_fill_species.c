@@ -4155,6 +4155,219 @@ mass_flux_surf_bc(double func[],
 
 /****************************************************************************/
 
+void 
+yflux_disc_rxn_bc(double func[],
+		  double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+		  int wspec_a,	/* species number of this boundary condition */
+		  int mat_a,	/* material block for side 1, reactant */
+		  int mat_b,	/* material block for side 2, product  */
+		  double kf,    /* forward rate constant      */
+		  double kr,    /* reverse rate constant      */
+		  dbl dt,	/* current value of the time step            */
+		  dbl tt)	/* parameter to vary time integration        */
+
+     /*******************************************************************************
+      *
+      *  Function which calculates the surface integral for convective
+      *  mass transfer and adds in the interfacial reaction: kf*cf-kr*cr.
+      *  This routine must be used with discontinuous concentration.
+      *
+      *  ----------------------------------------------------------------------------
+      *
+      *  Functions called:
+      *  mass_flux_surf_mtc  -- calculates mass flux for one component
+      *
+      *  ----------------------------------------------------------------------------
+      *
+      *******************************************************************************/
+{  
+  int j, j_id, w1, dim, kdir, var, jvar, wspec_b, wspec;
+  double phi_j;
+  double Y_w; /* local concentration of current species */
+
+  double vconv[MAX_PDIM]; /*Calculated convection velocity */
+  double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
+  CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
+  CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
+
+  /* MATRL_PROP_STRUCT *mp_a = 0, *mp_b = 0; */
+
+  int err=0;
+
+  wspec= wspec_b = wspec_a; /* will this work? */
+
+  /***************************** EXECUTION BEGINS ****************************/
+
+  /* call routine to calculate surface flux of this component and it's
+   * sensitivity to all variable types
+   */
+
+  /* need to pass down this struct ... ? */
+
+  /* ebIndex_a = ebID_to_ebIndex(mat_a); */
+  /* ebIndex_b = ebID_to_ebIndex(mat_b); */
+  /* mp_a = mp_glob[Matilda[ebIndex_a]]; */
+  /* mp_b = mp_glob[Matilda[ebIndex_b]]; */
+  
+  /* how do we get these concentrations */
+
+  /* if (Current_EB_ptr->Elem_Blk_Id == mat_a) */
+  /*     { */
+  /* 	src_rxn = kf*Y_w-kr*Y_otherside; */
+  /*     } */
+  /* else */
+  /*     { */
+  /* 	src_rxn = kf*Y_otherside -kr*Y_w; */
+  /*     } */
+
+
+
+  /* interface_rxn(mp->mass_flux, mp->d_mass_flux, fv->T,fv->c, wspec, kf, kr); */
+
+  dim   = pd->Num_Dim;
+  Y_w = fv->c[wspec_a];
+
+  /* get the convection velocity (it's different for arbitrary and
+     lagrangian meshes) */
+
+  /* get deformation gradient, etc. if lagrangian mesh with inertia */
+  if ((pd->MeshMotion == LAGRANGIAN ||
+       pd->MeshMotion == DYNAMIC_LAGRANGIAN) && pd->MeshInertia == 1) {
+      err = belly_flop(elc->lame_mu);
+      EH(err, "error in belly flop");
+      if( neg_elem_volume ) return;
+    }
+
+/*  if (mp->PorousMediaType == CONTINUOUS) */
+
+    err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
+  EH(err, "Error in calculating effective convection velocity");
+
+  /*
+   *  Calculate the Residual contribution for this boundary condition
+   */
+  if (af->Assemble_Residual) {
+    *func -= mp->mass_flux[wspec];
+    for (kdir = 0; kdir < dim; kdir++) {
+      *func += Y_w * vconv[kdir] * fv->snormal[kdir];
+    }
+  }
+  
+  if (af->Assemble_Jacobian ) 
+    {
+      /* sum the contributions to the global stiffness matrix  for Species*/
+      
+      /*
+       * J_s_c
+       */
+      var=MASS_FRACTION;
+      for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+	phi_j = bf[var]->phi[j_id];
+	
+	for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++ )
+	  {
+	    d_func[0][MAX_VARIABLE_TYPES + w1][j_id] -= 
+	      mp->d_mass_flux[wspec][MAX_VARIABLE_TYPES + w1] 
+		* phi_j;
+	  }
+	
+	for (kdir=0; kdir<dim; kdir++) 
+	  {
+	    d_func[0][MAX_VARIABLE_TYPES + wspec][j_id] += 
+	      phi_j*vconv[kdir] * fv->snormal[kdir];
+
+	      for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++ )
+		{
+		  d_func[0][MAX_VARIABLE_TYPES + w1][j_id] += 
+		    Y_w*d_vconv->C[kdir][w1][j_id] * fv->snormal[kdir];
+		}
+	  }
+      }
+      
+      /*
+       * J_s_T
+       */
+      var=TEMPERATURE;
+      if (pd->v[var]){
+	for (j = 0; j < ei->dof[var]; j++) {
+	  j_id = j;
+	  phi_j = bf[var]->phi[j_id];
+	  
+	  d_func[0][var][j_id] -= mp->d_mass_flux[wspec][TEMPERATURE] 
+	    * phi_j;
+	  
+	  for(kdir=0; kdir<dim; kdir++) 
+	    {
+	      d_func[0][var][j_id]  += 
+		Y_w*d_vconv->T[kdir][j_id] * fv->snormal[kdir];
+	    }
+	}
+      }
+
+      /*
+       * J_s_V
+       */
+      var=VOLTAGE;
+      if (pd->v[var]){
+	for (j = 0; j < ei->dof[var]; j++) {
+	  j_id = j;
+	  phi_j = bf[var]->phi[j_id];
+	  
+	  d_func[0][var][j_id] -= mp->d_mass_flux[wspec][VOLTAGE] 
+	    * phi_j; 
+	  
+	  for(kdir=0; kdir<dim; kdir++) 
+	    {
+	      d_func[0][var][j_id]  += 
+		Y_w*d_vconv->T[kdir][j_id] * fv->snormal[kdir];
+	    }
+	}
+      }
+      
+      /*
+       * J_s_d
+       */
+      for (jvar = 0; jvar < dim; jvar++) 
+	{
+	  var=MESH_DISPLACEMENT1+jvar;
+	  if (pd->v[var])
+	    {
+	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+		{
+		  /*     d( )/dx        */
+		  /* additional terms due to convective flux */
+		  
+		  phi_j = bf[var]->phi[j_id];
+		  for(kdir=0; kdir<dim; kdir++) 
+		    {
+		      d_func[0][var][j_id] += 
+			Y_w*vconv[kdir]*fv->dsnormal_dx[kdir][jvar][j_id] +
+			Y_w*d_vconv->X[kdir][jvar][j_id]*fv->snormal[kdir];
+		    }
+		}
+	    }
+	}
+      
+      for(jvar=0; jvar<dim; jvar++) 
+	{
+	  var = VELOCITY1 + jvar;
+	  if (pd->v[var])
+	    {
+	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+		{
+		  phi_j = bf[var]->phi[j_id];
+		  d_func[0][var][j_id] += 
+		    Y_w*d_vconv->v[jvar][jvar][j_id]*fv->snormal[jvar];
+		}
+	    }
+	}
+      
+    } /* End of if Assemble_Jacobian */
+  
+} /* END of routine yflux_disc         */
+
+/****************************************************************************/
+
 void
 mass_flux_surf_user_bc(double func[DIM],
                        double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],

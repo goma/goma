@@ -308,6 +308,10 @@ match_interface_source_string(char *istring)
 	   !strcasecmp(istring, "vl_equil_prxn_bc")) {
     match = VL_EQUIL_PRXN_BC;
   }
+  else if (!strcasecmp(istring, "YFLUX_DISC_RXN_BC") ||
+	   !strcasecmp(istring, "yflux_disc_rxn_bc")) {
+    match = YFLUX_DISC_RXN_BC;
+  }
   else if (!strcasecmp(istring, "SURFDOMAINCHEMKIN_SURFRXN") ||
 	   !strcasecmp(istring, "SDC_SURFRXN_BC")) {
     match = SDC_SURFRXN_BC;
