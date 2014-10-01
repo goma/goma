@@ -832,6 +832,7 @@ bc_matrl_index(Exo_DB *exo)
 	  * are in the second and third integer slots
 	  */
      case VL_EQUIL_BC:
+     case YFLUX_DISC_RXN_BC:
      case DISCONTINUOUS_VELO_BC:	 
 	 bc_ptr->BC_matrl_index_1 = map_mat_index(bc_ptr->BC_Data_Int[1]);
 	 bc_ptr->BC_matrl_index_2 = map_mat_index(bc_ptr->BC_Data_Int[2]);
@@ -1200,6 +1201,7 @@ determine_dvi_index(void)
 	break;
 
     case VL_EQUIL_PRXN_BC:
+    case YFLUX_DISC_RXN_BC:
     case SDC_SURFRXN_BC:
         if (! bc_ptr->Internal_Boundary) {
           fprintf(stderr,
