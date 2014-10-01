@@ -2635,6 +2635,8 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	      exit(-1);
 	    }
 
+	  ECHO(es,echo_file);
+
 	  for(mm=0;mm<vn_glob[mn]->modes;mm++)
 	    {
 	      ve_glob[mn][mm]->eps = modal_data[mm];

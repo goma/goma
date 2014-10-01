@@ -394,19 +394,6 @@ raven_landing()
 */
 
   /*
-   * Element quality/distortion measures.
-   */
-  if ( nEQM > 0 )
-    {
-      eqm = (struct Element_Quality_Metrics *) 
-       array_alloc(1, nEQM, sizeof(struct Element_Quality_Metrics));
-    }
-  else
-    {
-      eqm = NULL;
-    }
-
-  /*
    * Augmenting condition preliminaries...
    */
 
@@ -724,7 +711,7 @@ noahs_ark()
   printf("P_%d building Noahs_Ark [E] element %d\n",
 	  ProcID, n->num_members);
 #endif
-
+  ddd_add_member(n, &tran->fix_freq, 1, MPI_INT);
   ddd_add_member(n, &tran->print_freq, 1, MPI_INT);
   ddd_add_member(n, &tran->print_delt, 1, MPI_DOUBLE);
   ddd_add_member(n, &tran->print_delt2_time, 1, MPI_DOUBLE);

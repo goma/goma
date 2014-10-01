@@ -154,6 +154,12 @@ PROTO((double ,			/* lambda - parameter                        */
 int neg_elem_volume        = FALSE;
 int neg_elem_volume_global = FALSE;
 
+int neg_lub_height        = FALSE;
+int neg_lub_height_global = FALSE;
+
+int zero_detJ        = FALSE;
+int zero_detJ_global = FALSE;
+
 /*
    
    GOMA NON-LINEAR EQUATION SOLVER
@@ -822,6 +828,10 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 	      augc[iAC].lsvol = 0.;
 	    }
 	  }
+
+          /* Exchange dof before matrix fill so parallel information
+             is properly communicated */
+          exchange_dof(cx,dpi, x);
 
 	  if (Linear_Solver == FRONT)
 	    {

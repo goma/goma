@@ -79,4 +79,15 @@ PROTO((Exo_DB *));		/* exo                                       */
 EXTERN void add_info_stamp
 PROTO((Exo_DB *));		/* exo                                       */
 
+extern void wr_resetup_exo	/* wr_exo.c */
+PROTO((Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
+       char *,			/* filename - where to write */
+       int ));			/* verbosity - 0 for quiet, more to talk */
+
+extern void wr_result_exo	/* wr_exo.c */
+PROTO((Exo_DB *,		/* exo */
+       char *,			/* filename - where to write */
+       int ));			/* verbosity - 0 for quiet, more to talk */
+
+
 #endif /* _WR_EXO_H */

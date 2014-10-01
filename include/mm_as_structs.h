@@ -995,6 +995,7 @@ struct Transient_Information
 		                            theta = .5 => Crack-Nicholson  */
   dbl eps;          /* time step error  */
   int use_var_norm[MAX_VARIABLE_TYPES]; /* Booleans used for time step truncation error control */
+  int fix_freq;
   int print_freq;
   double print_delt;
   double print_delt2_time;

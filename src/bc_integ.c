@@ -693,12 +693,8 @@ apply_integrated_bc(
  	case VELO_SLIP_ROT_FILL_BC:
 	  fvelo_slip_bc(func, d_func, x, 
 			(int) bc->BC_Name,
-			bc->BC_Data_Float[0],
-			bc->BC_Data_Float[1], 
-			bc->BC_Data_Float[2], 
-			bc->BC_Data_Float[3],
+			bc->BC_Data_Float,
 			(int) bc->BC_Data_Int[0],
-			bc->BC_Data_Float[4],
 			xsurf, theta, delta_t);
 	  break;  
 

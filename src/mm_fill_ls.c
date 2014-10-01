@@ -8111,7 +8111,7 @@ divide_shape_fcn_tree ( NTREE *parent,
 	  parent->subtrees[index]->subtrees = NULL;
 
 	  parent->subtrees[index]->xi  = ( double (*)[DIM] ) smalloc( num_verts*sizeof(double)*DIM) ;
-	  parent->subtrees[index]->phi = ( double (*)[MDE] ) smalloc( parent->num_fcns*sizeof(double)*MDE) ;
+	  parent->subtrees[index]->phi = ( double (*)[MDE] ) smalloc( num_verts*sizeof(double)*MDE) ;
 
 
 

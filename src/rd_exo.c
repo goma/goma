@@ -159,7 +159,6 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
   x->node_map_exists       = FALSE;
   x->elem_map_exists       = FALSE;
-  x->ss_node_list_exists   = FALSE;
 
   if( Linear_Solver == FRONT ) 
      {
@@ -228,11 +227,11 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
    */
 
   if( x->exoid >= 0 ) err = 0;
-  parallel_err = gmin_int(err);
+  parallel_err = err;
   if ( parallel_err )
     {
-      DPRINTF(stderr,
-       "\nExodus file read error, mesh files may not exist.\n");
+      fprintf(stderr,
+              "\nProc %d: Exodus file read error, mesh files may not exist.\n", ProcID);
       return(-1);
     }
 #endif
@@ -1370,7 +1369,9 @@ free_exo(Exo_DB *x)		/* pointer to EXODUS II FE db structure */
    * Node sets...
    */
 
-  if ( x->ns_num_props > 0 ) 
+  if ( x->ns_num_props > 0 &&
+       x->ns_prop_name != NULL && 
+       x->ns_prop != NULL ) 
     {
       for ( i=0; i<x->ns_num_props; i++)
 	{
@@ -1385,7 +1386,9 @@ free_exo(Exo_DB *x)		/* pointer to EXODUS II FE db structure */
    * Side sets...
    */
 
-  if ( x->ss_num_props > 0 ) 
+  if ( x->ss_num_props > 0 &&
+       x->ss_prop_name != NULL &&
+       x->ss_prop != NULL ) 
     {
       for ( i=0; i<x->ss_num_props; i++)
 	{
@@ -1400,7 +1403,9 @@ free_exo(Exo_DB *x)		/* pointer to EXODUS II FE db structure */
    * Element blocks...
    */
 
-  if ( x->eb_num_props > 0 ) 
+  if ( x->eb_num_props > 0 &&
+       x->eb_prop_name != NULL && 
+       x->eb_prop != NULL ) 
     {
       for ( i=0; i<x->eb_num_props; i++)
 	{
@@ -2186,10 +2191,10 @@ alloc_exo_nv(Exo_DB *x,
 
   x->nv = (dbl ***) smalloc(x->num_nv_time_indeces*sizeof(dbl **));
 
-  for ( i=0; i<x->num_nv_indeces; i++)
+  for ( i=0; i<x->num_nv_time_indeces; i++)
     {
-      x->nv[i] = (dbl **) smalloc(x->num_nv_time_indeces*sizeof(dbl *));
-      for ( j=0; j<x->num_nv_time_indeces; j++)
+      x->nv[i] = (dbl **) smalloc(x->num_nv_indeces*sizeof(dbl *));
+      for ( j=0; j<x->num_nv_indeces; j++)
 	{
 	  x->nv[i][j] = (dbl *) smalloc(x->num_nodes*sizeof(dbl));
 	}
@@ -2198,5 +2203,3 @@ alloc_exo_nv(Exo_DB *x,
   x->state |= EXODB_STATE_NDVA;
   return;
 }
-
-

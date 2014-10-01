@@ -191,22 +191,20 @@ PROTO((double [],		/* func                                      */
 				 * method from BE(0) to CN(1/2) to FE(1)     */
        const dbl ));		/* dt - current value of the time step size  */
 
-EXTERN void fvelo_slip_bc	/* mm_ns_bc.c                                */
-PROTO((double [MAX_PDIM],	/* func                                      */
-       double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-       double [],               /* solution vector x */
-       const int ,		/* type - whether rotational or not          */
-       double ,			/* beta - Navier slip coefficient input deck */
-       const double ,		/* vsx                                       */
-       const double ,		/* vsy                                       */
-       const double ,		/* vsz - velocity components of solid surface
-				 * in which slip condition is applied        */
-       const int ,		/* DCL node id          */
-       const double ,		/* slip extent */
-       const double [MAX_PDIM], /*gauss point coordinates   **/
-       const double ,           /* tt - parameter to vary time integration
-                                 * method from BE(0) to CN(1/2) to FE(1)     */
-       const double ));         /* dt - current value of the time step size  */
+void
+fvelo_slip_bc(double func[MAX_PDIM],
+	      double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+	      double x[],
+	      const int type,    /* whether rotational or not */
+              double bc_float[MAX_BC_FLOAT_DATA],
+	      const int dcl_node,/*   node id for DCL  */
+	      const double xsurf[MAX_PDIM], /* coordinates of surface Gauss  *
+					     * point, i.e. current position  */
+	      const double tt,   /* parameter in time stepping alg           */
+	      const double dt);   /* current time step value                  */
+
+int
+exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */);
 
 
 EXTERN void fvelo_slip_level

@@ -3081,13 +3081,8 @@ fvelo_slip_bc(double func[MAX_PDIM],
 	      double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 	      double x[],
 	      const int type,    /* whether rotational or not */
-	      double beta,       /* Navier slip coefficient from input deck */
-	      const double vsx,
-	      const double vsy,
-	      const double vsz,	 /* velocity components of solid surface on 
-				  * which slip condition is applied          */
+              double bc_float[MAX_BC_FLOAT_DATA],
 	      const int dcl_node,/*   node id for DCL  */
-	      double alpha,      /* extent of slip  */
 	      const double xsurf[MAX_PDIM], /* coordinates of surface Gauss  *
 					     * point, i.e. current position  */
 	      const double tt,   /* parameter in time stepping alg           */
@@ -3109,6 +3104,13 @@ fvelo_slip_bc(double func[MAX_PDIM],
       *            Revised: 6/1/95 RAC
       ************************************************************************/
 {
+  double beta = bc_float[0];   /* Navier slip coefficient from input deck */
+  /* velocity components of solid surface on
+   * which slip condition is applied */
+  double vsx = bc_float[1];
+  double vsy = bc_float[2];
+  double vsz = bc_float[3];
+  double alpha = bc_float[4];
   int a, j, var, jvar, p, dim;
   double phi_j, vs[MAX_PDIM];
   double slip_dir[MAX_PDIM], vslip[MAX_PDIM], vrel[MAX_PDIM], vrel_dotn;
@@ -3116,8 +3118,6 @@ fvelo_slip_bc(double func[MAX_PDIM],
   
   int icount;
   double dist;                  /* distance btw current position and dynamic CL */
-  double xdcl[MAX_PDIM];        /* coordinates of dynamic contact lines         */
-  double disp;                  /* DCL point displacement */
   double betainv;		/* inverse of slip coefficient */
   /* double dot_prod; */
   double d_betainv_dvslip_mag, d_betainv_dP;
@@ -3290,15 +3290,13 @@ fvelo_slip_bc(double func[MAX_PDIM],
    *                     COMPUTE SLIP PARAMETER
    *
    * This section is for position dependent slip. Calculate position
-   * of dynamic contact line from dcl_node do the distance calculation
+   * of dynamic contact line from reference node do the distance calculation
    * based on undeformed geometry... This saves us Jacobian entries in
    * uncharted sections of the A matrix
    *
-   *      xdcl[icount] = (Coor[icount][dcl_node]);
-   *
    * Calculate distance from dcl to current Gauss point.  Turn this
    * off if we don't have position depend slip.  alpha will be zero,
-   * so dist and xdcl can be anything as long as they are
+   * so dist can be anything as long as it is
    * defined. Protect exponentially decaying slip from underflow far
    * away from the singularity.
    *
@@ -3315,18 +3313,14 @@ fvelo_slip_bc(double func[MAX_PDIM],
         }
       else
         {
-          /* find displacement of reference node */
-          for (icount = 0; icount < pd->Num_Dim; icount ++) {
-	    disp	 = x[Index_Solution(dcl_node, MESH_DISPLACEMENT1+icount, 0, 0, -1)];
-	    xdcl[icount] = (Coor[icount][dcl_node] + disp);
-	  }
-            
+          /* Coord position in bc_float, from BC_Data_Float */
+          int float_offset = 5;
           dist = 0.;
           for(icount=0; icount < pd->Num_Dim; icount ++)
             {
-              /**UNDEFORMED*dist += (xsurf[icount]-Coor[icount][dcl_node])*(xsurf[icount]-Coor[icount][dcl_node]); */
-              /**DEFORMED*dist += (fv->x[icount]-xdcl[icount])*(fv->x[icount]-xdcl[icount]); */
-              dist += (xsurf[icount]-Coor[icount][dcl_node])*(xsurf[icount]-Coor[icount][dcl_node]);
+              /* Uses undeformed node position */
+              dist += (xsurf[icount]-bc_float[icount + float_offset]) *
+                (xsurf[icount]-bc_float[icount + float_offset]);
             }
           dist = sqrt(dist);
         }
@@ -3334,7 +3328,6 @@ fvelo_slip_bc(double func[MAX_PDIM],
   else 
     {
       dist    = 1.0;
-      xdcl[0] = xdcl[1] = xdcl[2] = 0.0;
     }
   
   /* for exponentially decaying slip, max out betainv when equivalent to 
@@ -3578,6 +3571,72 @@ fvelo_slip_bc(double func[MAX_PDIM],
   return;
 
 } /* END of routine fvelo_slip_bc  */
+
+/**
+ * Exchanges coordinates for the reference node needed for calculation
+ * in fvelo_slip_bc()
+ *
+ * Returns 0 if success
+ * Returns -1 if error
+ */
+int
+exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */)
+{
+  int i;
+#ifdef PARALLEL
+  int mpi_error;
+#endif
+  /* if velo slip has */
+  int velo_slip_root = 0;
+  /* Offset for where to place coordinates in BC_Data_Float */
+  int float_offset = 5;
+  double node_coord[pd->Num_Dim]; /* temporary buffer for node coordinates */
+
+  /* Skip this if calculation is not needed */
+  if (BC_Types[ibc].BC_Data_Int[0] == -1 || BC_Types[ibc].BC_Data_Int[0] == 0) {
+    return 0;
+  }
+
+  /* find which processor has the right data */
+  if (BC_Types[ibc].BC_Data_Int[0] != -2) {
+    velo_slip_root = ProcID;
+  }
+
+#ifdef PARALLEL
+  mpi_error = MPI_Allreduce(MPI_IN_PLACE, &velo_slip_root, 1,
+                            MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+  if (mpi_error != MPI_SUCCESS) {
+    EH(-1, "Error in MPI Allreduce");
+    return -1;
+  }
+#endif /* #ifdef PARALLEL */
+
+  if (ProcID == velo_slip_root) {
+    int node = BC_Types[ibc].BC_Data_Int[0];
+    /* find coordinate position of reference node */
+    for (i = 0; i < pd->Num_Dim; i++) {
+      node_coord[i] = Coor[i][node];
+    }
+  }
+
+#ifdef PARALLEL
+  /* Communicate the new values in BC_Data_Float */
+  mpi_error = MPI_Bcast(&node_coord, pd->Num_Dim, MPI_DOUBLE,
+                        velo_slip_root, MPI_COMM_WORLD);
+
+  if (mpi_error != MPI_SUCCESS) {
+    EH(-1, "Error in MPI Allreduce");
+    return -1;
+  }
+#endif
+
+  /* set BC_Data_Float values */
+  for (i = 0; i < pd->Num_Dim; i++) {
+    BC_Types[ibc].BC_Data_Float[float_offset + i] = node_coord[i];
+  }
+  return 0;
+}
+
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
@@ -11451,12 +11510,8 @@ q_velo_slip_bc(double func[MAX_PDIM],
   /* use fvelo_slip to evaluate slip and derivatives */
   fvelo_slip_bc(slip_stress, d_slip_stress, x, 
                 (int) BC_Types[ibc].BC_Name,
-                BC_Types[ibc].BC_Data_Float[0],
-                BC_Types[ibc].BC_Data_Float[1], 
-                BC_Types[ibc].BC_Data_Float[2], 
-                BC_Types[ibc].BC_Data_Float[3],
+                BC_Types[ibc].BC_Data_Float,
                 (int) BC_Types[ibc].BC_Data_Int[0],
-                BC_Types[ibc].BC_Data_Float[4],
                 xsurf, tt, dt);
                 
   if (af->Assemble_Jacobian) 

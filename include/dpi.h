@@ -111,8 +111,6 @@
 #define VAR_ELEM_ELEM_TWST_GLOBAL		"elem_elem_twst_global"
 #define VAR_ELEM_ELEM_PROC_GLOBAL		"elem_elem_proc_global"
 #define VAR_GLOBAL_NODE_DESCRIPTION		"global_node_description"
-#define VAR_GLOBAL_NODE_DOF0			"global_node_dof0"
-#define VAR_GLOBAL_NODE_KIND			"global_node_kind"
 #define VAR_MY_NAME				"my_name"
 #define VAR_NEIGHBOR				"neighbor"
 #define VAR_NODE_INDEX_GLOBAL			"node_index_global"
@@ -403,8 +401,6 @@ struct Shadow_Identifiers
   int elem_elem_twst_global;
   int elem_elem_proc_global;
   int global_node_description;
-  int global_node_dof0;
-  int global_node_kind;
   int my_name;
   int neighbor;
   int node_index_global;
@@ -476,15 +472,6 @@ struct Shadow_Identifiers
  *				of this variable is typically equal to the
  *				number of element blocks traversed by this
  *				set/proc.
- *
- * len_global_node_dof0		Integer describes the length of the
- *				global_node_dof0[] array. This should be the
- *				number of nodes traversed by this processor,
- *				internal, boundary and external.
- *
- * len_global_node_kind		Integer is the length of the global_node_kind[]
- *				array. Its value should be the number of nodes
- *				known to this processor: (int+bnd+ext).
  *
  * len_node_description		Integer is the length of a node description.
  *				For the current node description structure, the

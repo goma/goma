@@ -172,9 +172,12 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
    *    Then allocate memory here for common data elements
    */
   neg_elem_volume = FALSE;
+  neg_lub_height = FALSE;
+  zero_detJ = FALSE;
+
   e_start = exo->eb_ptr[0];
   e_end   = exo->eb_ptr[exo->num_elem_blocks];
-  for (ielem = e_start, ebn = 0; ielem < e_end && !neg_elem_volume; ielem++) {
+  for (ielem = e_start, ebn = 0; ielem < e_end && !neg_elem_volume && !neg_lub_height && !zero_detJ; ielem++) {
 
     /*First we must calculate the material-referenced element
      *number so as to be compatible with the ElemStorage struct
@@ -197,6 +200,17 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
       log_msg("Negative elem det J in element (%d)", ielem+1);
       if ( ls != NULL && ls->SubElemIntegration ) subelement_mesh_output(x, exo);
     }
+
+    if (neg_lub_height)
+      {
+       log_msg("Negative lubrication height in element (%d)", ielem+1);
+      }
+
+    if (zero_detJ)
+      {
+       log_msg("Zero determinant of Jacobian of transformation (%d)", ielem+1);
+      }
+
   }
 
   /*
@@ -205,13 +219,22 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
   global_qp_storage_destroy();
   
   /*
-   * Now coordinate the processors so that they all know about a negative
-   * volume in an element
+   * Now coordinate the processors so that they all know about a negative or zero
+   * volume in an element and negative lubrication height
    */
 #ifdef PARALLEL
   MPI_Allreduce(&neg_elem_volume, &neg_elem_volume_global, 1,
 		MPI_INT, MPI_MAX, MPI_COMM_WORLD);
   neg_elem_volume = neg_elem_volume_global;
+
+  MPI_Allreduce(&neg_lub_height, &neg_lub_height_global, 1,
+                MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+  neg_lub_height = neg_lub_height_global;
+
+  MPI_Allreduce(&zero_detJ, &zero_detJ_global, 1,
+                MPI_INT, MPI_MAX, MPI_COMM_WORLD);
+  zero_detJ = zero_detJ_global;
+
 #endif
 
   /*
@@ -231,6 +254,9 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
 #endif
   
   if (neg_elem_volume) return -1;
+  if (neg_lub_height) return -1;
+  if (zero_detJ) return -1;
+
   return 0;
 }
 /*****************************************************************************/
@@ -992,6 +1018,7 @@ matrix_fill(
 	  err = beer_belly();
 	  EH( err, "beer_belly");
 	  if( neg_elem_volume ) return;
+          if( zero_detJ ) return;
       
 	  /*
 	   * Load up field variable values at this Gauss point, but not
@@ -1293,6 +1320,7 @@ matrix_fill(
       err = beer_belly();
       EH(err, "beer_belly");
       if (neg_elem_volume) return;
+      if( zero_detJ ) return;
       
       /*
        * Load up field variable values at this Gauss point, but not
@@ -1662,6 +1690,7 @@ matrix_fill(
 #ifdef CHECK_FINITE
           CHECKFINITE("assemble_lubrication");
 #endif
+          if (neg_lub_height) return;
         }
 
       if( pde[R_LUBP_2] )
@@ -1671,6 +1700,7 @@ matrix_fill(
 #ifdef CHECK_FINITE
           CHECKFINITE("assemble_lubrication");
 #endif
+          if (neg_lub_height) return;
         }
 
       if( pde[R_MAX_STRAIN] )
@@ -3639,109 +3669,11 @@ zero_lec(void)
       * zero_lec()
       *
       *  This routine zeroes the local element stiffness vector and Jacobian.
-      *  It uses the same algorithm as the fill routine to minimize the 
-      *  the amount of zeroing. This is necessary since the local element 
-      *  Jacobian is so large. The first time through the routine, it zeroes
-      *  all entries. Note, a possible check for this algorithm would be to
-      *  check all entries. All entries should be zero after this routine.
       **************************************************************************/
 {
-  static int firstTime = TRUE;
-  int e, v, i, pe, pv, var, j, dofs, ke, kv;
-  struct Element_Indices *ei_ptr;
-  int ielem = ei->ielem;
-  if (firstTime) {
-    firstTime = FALSE;
-    var = (MAX_PROB_EQN+MAX_CONC)*MDE;
-    memset(lec->R, 0, sizeof(double)*var);  
-    var = var*var;
-    memset(lec->J, 0, sizeof(double)*var); 
-    var = 4*(MDE)*(MAX_PROB_VAR + MAX_CONC)*(MDE);
-    memset(lec->J_stress_neighbor, 0, sizeof(double)*var);
-    return;
-  } else {
-    for (e = V_FIRST; e < V_LAST; e++) {
-      pe = upd->ep[e];
-      if (pe != -1) {
-	if (e == R_MASS) {
-	  for (ke = 0; ke < upd->Max_Num_Species_Eqn; ke++) {
-	    pe = MAX_PROB_VAR + ke;
-	    dofs = ei->dof[e];
-	    for (i = 0; i < dofs; i++) {
-	      lec->R[MAX_PROB_VAR + ke][i] = 0.0;
-	      if (af->Assemble_Jacobian) {
-		for (v = V_FIRST; v < V_LAST; v++) {
-		  pv = upd->vp[v];
-		  if (pv != -1) {
-		    ei_ptr = ei;
-		    if (ei->owningElementForColVar[v] != ielem) {
-		      if (ei->owningElementForColVar[v] != -1) {
-			ei_ptr = ei->owningElement_ei_ptr[v];
-			if (ei_ptr == 0) {
-			  printf("ei_ptr == 0\n");
-			  exit(-1);
-			}
-		      }
-	     
-		    }				  
-		    if (v == MASS_FRACTION) {
-		      for (kv = 0; kv < upd->Max_Num_Species_Eqn; kv++) {
-			pv = MAX_PROB_VAR + kv;
-			for (j = 0; j < ei_ptr->dof[v]; j++) {
-			  lec->J[pe][pv][i][j] = 0.0;
-			}
-		      }
-		    } else {
-		      for (j = 0; j < ei_ptr->dof[v]; j++) {
-			lec->J[pe][pv][i][j] = 0.0;
-		      }
-		    }
-		  }
-		}
-	      }
-	    }
-	  }
-	} else {
-	  pe = upd->ep[e];
-	  dofs = ei->dof[e];
-	  for (i = 0; i < dofs; i++) {
-	    lec->R[pe][i] = 0.0;
-	    if (af->Assemble_Jacobian) {
-	      for (v = V_FIRST; v < V_LAST; v++) {
-		pv = upd->vp[v];
-		if (pv != -1) {
-		  ei_ptr = ei;
-		  if (ei->owningElementForColVar[v] != ielem) {
-		    if (ei->owningElementForColVar[v] != -1) {
-		      ei_ptr = ei->owningElement_ei_ptr[v];
-		      if (ei_ptr == 0) {
-			printf("ei_ptr == 0\n");
-			exit(-1);
-		      }
-		    }
-		  }
-		  if (v == MASS_FRACTION) {
-		    for (kv = 0; kv < upd->Max_Num_Species_Eqn; kv++) {
-		      pv = MAX_PROB_VAR + kv;
-		      
-		      for (j = 0; j < ei_ptr->dof[v]; j++) {			  
-			lec->J[pe][pv][i][j] = 0.0;
-		      }
-		    }
-		  } else {
-		    memset(lec->J[pe][pv][i], 0, sizeof(double)*ei_ptr->dof[v]);
-		    /*for (j = 0; j < ei->dof[v]; j++) {	      
-		      lec->J[pe][pv][i][j] = 0.0;
-		      }*/
-		  }
-		}
-	      }
-	    }
-	  }
-	}
-      }
-    }
-  }
+  memset(lec->R, 0, sizeof(lec->R));  
+  memset(lec->J, 0, sizeof(lec->J)); 
+  memset(lec->J_stress_neighbor, 0, sizeof(lec->J_stress_neighbor));
 }
 /****************************************************************************/
 
