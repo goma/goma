@@ -649,7 +649,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
 /* Set bit TRUE in next line to scale displacements with coordinates
  * instead of displacements to avoid large displacement error when
  * there is near zero displacement - i.e., better timestep control */
-        if(0 && (eqn == MESH_DISPLACEMENT1 || eqn == MESH_DISPLACEMENT2 
+        if(1 && (eqn == MESH_DISPLACEMENT1 || eqn == MESH_DISPLACEMENT2 
                    || eqn == MESH_DISPLACEMENT3))
             {
         if (fabs(Coor[eqn-MESH_DISPLACEMENT1][inode]) > max[eqn]) max[eqn] = fabs(Coor[eqn-MESH_DISPLACEMENT1][inode]);
@@ -691,7 +691,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
   if (eps < 0.0) {
     for (i = 0; i < MAX_VARIABLE_TYPES; i++) {
       if (max[i] > 0.0) {
-#if 1
+#if 0
 	ecp[i] =  ecp[i] / SQUARE(max[i]);
 #else
 	ecp[i] =  ecp[i] / (1.0 + SQUARE(max[i]));

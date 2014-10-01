@@ -277,7 +277,7 @@ evaluate_flux(
         if( (jfp=fopen(filenm,"a")) != NULL)
                 {
       fprintf(jfp,"Time/iteration = %e \n", time_value);
-      fprintf(jfp," %s  Side_Set  %d Block  %d \n", qtity_str,side_set_id,blk_id);
+      fprintf(jfp," %s  Side_Set  %d Block  %d Species %d\n", qtity_str,side_set_id,blk_id,species_id);
                 if(profile_flag)
                    {
                     fprintf(jfp," x  y  z  flux  flux_conv");
@@ -5726,13 +5726,14 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   af->Assemble_Jacobian = TRUE;
 
   /* first right time stamp or run stamp to separate the sets */
+fprintf(stderr,"sens %d %s\n",sens_type,filenm);
 
         if (print_flag && ProcID == 0) {
         FILE  *jfp;
         if(  (filenm != NULL) && ( (jfp=fopen(filenm,"a")) != NULL))
                 {
       fprintf(jfp,"Time/iteration = %e \n", time_value);
-      fprintf(jfp," %s  Side_Set  %d Block  %d \n", qtity_str,side_set_id,mat_id);
+      fprintf(jfp," %s  Side_Set  %d Block  %d Species %d\n", qtity_str,side_set_id,mat_id,species_id);
       fprintf(jfp,"  %d  %d %d %d %d\n", sens_type, sens_id, sens_flt, sens_flt2,vector_id);
             if(sens_type == 1)
               {

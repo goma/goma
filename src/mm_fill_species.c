@@ -3899,6 +3899,30 @@ kinematic_species_bc(double func[DIM],
 {
   int j, kdir, var, p;
   double phi_j;
+  double mass_c, mass_dc;
+
+  if(mp->Species_Var_Type == SPECIES_DENSITY)
+	{
+         mass_c = fv->c[wspec];
+         mass_dc = 1.0;
+	}
+  else if(mp->Species_Var_Type == SPECIES_CONCENTRATION)
+	{
+         mass_c = fv->c[wspec];
+         mass_dc = 1.0;
+	}
+  else if(mp->Species_Var_Type == SPECIES_MASS_FRACTION)
+	{
+         mass_c = mp->density*fv->c[wspec];
+         mass_dc = mp->density;
+	}
+/*  else if(mp->Species_Var_Type == SPECIES_MOLE_FRACTION)
+	{
+         mass_c = mp->molecular_weight[wspec]*fv->c[wspec];
+         mass_dc = mp->density;
+	}*/
+  else
+	{ EH(-1,"That species formulation not done in kinematic_species\n"); }
 
   if (af->Assemble_LSA_Mass_Matrix) {
     for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
@@ -3907,7 +3931,7 @@ kinematic_species_bc(double func[DIM],
 	  if (pd->v[var]) {
 	    for (j = 0; j < ei->dof[var]; j++) {
 	      phi_j = bf[var]->phi[j];
-	      d_func[0][var][j] -= (mp->density * fv->c[wspec] *
+	      d_func[0][var][j] -= (mass_c *
 				    phi_j * fv->snormal[kdir]);
 	    }
 	  }
@@ -3923,11 +3947,11 @@ kinematic_species_bc(double func[DIM],
 	if (pd->v[var]) {
 	  for (j = 0; j < ei->dof[var]; j++) {
 	    phi_j = bf[var]->phi[j];
-	    d_func[0][var][j] += (mp->density * fv->c[wspec] *
+	    d_func[0][var][j] += (mass_c *
 				  (fv->v[kdir] - x_dot[kdir]) *
 				  fv->dsnormal_dx[kdir][p][j]);
 	    if (TimeIntegration != 0 && p == kdir) {
-	      d_func[0][var][j] += (mp->density*fv->c[wspec] *
+              d_func[0][var][j] += (mass_c *
 				    ( -(1.+2.*tt)* phi_j/dt) *
 				    fv->snormal[kdir] * delta(p, kdir));
 	    }
@@ -3939,7 +3963,7 @@ kinematic_species_bc(double func[DIM],
       if (pd->v[var]) {
 	for (j = 0; j < ei->dof[var]; j++) {
 	  phi_j = bf[var]->phi[j];
-	  d_func[0][var][j] += (mp->density * fv->c[wspec] *
+          d_func[0][var][j] += (mass_c *
 	                        phi_j * fv->snormal[kdir]);
 	}
       }
@@ -3948,9 +3972,8 @@ kinematic_species_bc(double func[DIM],
       if (pd->v[var]) {
 	for (j = 0; j < ei->dof[var]; j++)	{
 	  phi_j = bf[var]->phi[j];
-	  d_func[0][MAX_VARIABLE_TYPES+wspec][j] += (mp->density * phi_j *
-						     (fv->v[kdir] - x_dot[kdir]) *
-						     fv->snormal[kdir]);
+	  d_func[0][MAX_VARIABLE_TYPES+wspec][j] += (mass_dc * phi_j *
+		     (fv->v[kdir] - x_dot[kdir]) * fv->snormal[kdir]);
 	}
       }
     }
@@ -3959,8 +3982,7 @@ kinematic_species_bc(double func[DIM],
   /* Calculate the residual contribution	*/
   *func = -vnormal;
   for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
-    *func += mp->density * fv->c[wspec] *
-	(fv->v[kdir] - x_dot[kdir]) * fv->snormal[kdir];
+    *func += mass_c * (fv->v[kdir] - x_dot[kdir]) * fv->snormal[kdir];
   }
 } /* END of routine kinematic_species_bc  */
 /*****************************************************************************/
@@ -6065,6 +6087,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 	 {
 	   if(mp->specific_volume[i] < 0.)
 	     {
+fprintf(stderr,"SV %d %d %g\n",i,Num_S1,mp->specific_volume[i]);
 	       EH(-1, "Specific volume not specified in the material file.");
 	     }
 	   else
@@ -6118,7 +6141,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 	           {
 	            C[i] = y_mass[i]*sv[i];
 	            sum_C += C[i];
-		    dv_dw[i][i]= sv[j];
+		    dv_dw[i][i]= sv[i];
 	           }
 		}
 	 else if(mp->Species_Var_Type == SPECIES_CONCENTRATION)
@@ -6329,6 +6352,7 @@ mtc_chilton_coburn(dbl *mtc,
      double T_film;
      double temp1, temp2;
      int w;
+     double convF, convF_dc[MAX_CONC],convF_dT;
 
 /*  Assuming temperature is in degrees K  */
  
@@ -6357,6 +6381,30 @@ mtc_chilton_coburn(dbl *mtc,
  
  	visc_gas = (1.425E-05*pow(T_film, 0.5039))/(1.0 + 108.3/T_film);
  
+/*	Factor for converting back to volume fraction basis  */
+        memset(convF_dc,0,sizeof(dbl)*MAX_CONC);
+        convF = 1.0;   convF_dT = 0.0;
+        switch(mp->Species_Var_Type)   {
+          case SPECIES_MASS_FRACTION:
+              break;
+          case SPECIES_CONCENTRATION:
+              convF = 0.0;
+              for( w=0 ; w<pd->Num_Species_Eqn ; w++)
+		{  
+                    convF += fv->c[w]*(1.0-mp->molecular_weight[w]/mp->molecular_weight[pd->Num_Species_Eqn]);
+                    convF_dc[w] += (1.0-mp->molecular_weight[w]/mp->molecular_weight[pd->Num_Species_Eqn]);
+                }
+               convF += 1.0/mp->molecular_weight[pd->Num_Species_Eqn];
+              break;
+          case SPECIES_DENSITY:
+          default:
+              convF = mp->density;
+              for( w=0 ; w<pd->Num_Species_Eqn ; w++)
+		{  convF_dc[w] = mp->d_density[MAX_VARIABLE_TYPES+w];}
+              convF_dT = mp->d_density[TEMPERATURE];
+              break;
+           }
+
 /*  mass transfer coefficient	*/
  
 /*	mass transfer coefficient based on Pr no. = constant
@@ -6364,19 +6412,16 @@ mtc_chilton_coburn(dbl *mtc,
 	temp1 = pow(pr_gas*rho_gas*diff_gas/visc_gas,0.67);
 	temp2 = rho_gas*cp_gas*82.05*T_film;
  	*mtc = htc*mp->molecular_weight[wspec]*temp1/temp2;
- 	*mtc = *mtc/mp->density;
+ 	*mtc = *mtc/convF;
  
 /*  Due to sensitivity problems only compute explicit temperature derivs  */
  	d_mtc[TEMPERATURE] = -0.5*htc*mp->molecular_weight[wspec]*
 		(temp1/temp2/T_film);
- 	d_mtc[TEMPERATURE] = d_mtc[TEMPERATURE]/mp->density;
-
-	d_mtc[TEMPERATURE] = (mp->density*(d_mtc[TEMPERATURE]) - 
-		*mtc*mp->d_density[TEMPERATURE])/mp->density;
+ 	d_mtc[TEMPERATURE] = d_mtc[TEMPERATURE]/convF;
+	d_mtc[TEMPERATURE] += - (*mtc)*convF_dT/convF;
 	for( w=0 ; w<pd->Num_Species_Eqn ; w++)
 		{
-		d_mtc[MAX_VARIABLE_TYPES+w] = 
-			-(*mtc)*mp->d_density[MAX_VARIABLE_TYPES+w]/mp->density;
+		d_mtc[MAX_VARIABLE_TYPES+w] = -(*mtc)*convF_dc[w]/convF;
 		}
  	return;
 }  /*  end of mtc_chilton_coburn  */
@@ -6492,76 +6537,96 @@ act_coeff(dbl lngamma[MAX_CONC], dbl dlngamma_dC[MAX_CONC][MAX_CONC],
       memset(d2f3_dc2, 0,sizeof(double)*MAX_CONC*MAX_CONC*MAX_CONC);
       memset(d2f_dc2, 0,sizeof(double)*MAX_CONC*MAX_CONC*MAX_CONC);
   
-
+/* Seems this error checking should be done at input file reading time...*/
        for (i = 0; i<Num_S1; i++) 
 	 {
 	   if(mp->specific_volume[i] < 0.)
-	     {
-	       EH(-1, "Specific volume not specified in the material file.");
-	     }
+	     { EH(-1, "Specific volume not specified in the material file."); }
 	   else
-	     {
-	       sv[i] = mp->specific_volume[i];
-	     }
+	     { sv[i] = mp->specific_volume[i]; }
+
 	   if(mp->molar_volume[i] < 0.)
-	     {
-	       EH(-1, "Molar volume not specified in the material file");
-	     }
+	     { EH(-1, "Molar volume not specified in the material file"); }
 	   else
-	     {
-	       vol[i] = mp->molar_volume[i];
-	     }
+	     { vol[i] = mp->molar_volume[i]; }
+
 	   for(k=0;k<Num_S1;k++)
 	     {
 	     if(mp->flory_param[i][k] < 0.)
-	       {
-		 EH(-1, "Flory-Huggins binary parameters not specified in the material file");
-	       }
+	       { EH(-1, "Flory-Huggins binary parameters not specified in the material file"); }
 	     else
-	       {
-		 chi[i][k] = mp->flory_param[i][k];
-	       }
+	       { chi[i][k] = mp->flory_param[i][k]; }
 	     }
 	 }
 
        bottom = 0.;
        sum_C = 0.;
-       for (i = 0; i<pd->Num_Species_Eqn; i++) 
-	 {	   
-	   bottom += y_mass[i]*(sv[i]-sv[pd->Num_Species_Eqn]);
-	 }
-       bottom += sv[pd->Num_Species_Eqn];
+/*  denominators for fraction-based formulations */
+	if(mp->Species_Var_Type == SPECIES_MASS_FRACTION)
+	{
+         for (i = 0; i<pd->Num_Species_Eqn; i++) 
+	    {	   
+	     bottom += y_mass[i]*(sv[i]-sv[pd->Num_Species_Eqn]);
+	    }
+         bottom += sv[pd->Num_Species_Eqn];
+	}
+	if(mp->Species_Var_Type == SPECIES_MOLE_FRACTION)
+	{
+         for (i = 0; i<pd->Num_Species_Eqn; i++) 
+	    {	   
+	     bottom += y_mass[i]*(vol[i]-vol[pd->Num_Species_Eqn]);
+	    }
+         bottom += vol[pd->Num_Species_Eqn];
+	}
 	   
-       for(i=0;i<pd->Num_Species_Eqn;i++)
-	 {
-	   /* change from mass fraction based to mass concentration
-	      based formulation ACSun 7/99 */
-	   /*	   C[i] = y_mass[i]*sv[i]/bottom; */
-
-	   C[i] = y_mass[i]*sv[i];
-	   sum_C += C[i];
-	   
-	   for(j=0;j<pd->Num_Species_Eqn;j++)
-	     {
-	       if (j==i)
-		 {
-		   /* change from mass fraction based to mass concentration
-		      based formulation ACSun 7/99 */
-		   /* dv_dw[i][j] = sv[j]/bottom 
-		      -y_mass[i]*sv[i]*(sv[j]-sv[pd->Num_Spec])/(bottom*bottom); */
-		   dv_dw[i][j]= sv[j];
-		 }
-	       else
-		 {
-		   /* change from mass fraction based to mass concentration
-		      based formulation ACSun 7/99 */
-		   /*		   dv_dw[i][j] = -y_mass[i]*sv[i]
-		    *(sv[j]-sv[pd->Num_Spec])/(bottom*bottom); */
-		   dv_dw[i][j] = 0;
-		 }
-	     }
-	 }
-       
+	if(mp->Species_Var_Type == SPECIES_DENSITY)
+		{
+                 for(i=0;i<pd->Num_Species_Eqn;i++)
+	           {
+	            C[i] = y_mass[i]*sv[i];
+	            sum_C += C[i];
+		    dv_dw[i][i]= sv[i];
+	           }
+		}
+	 else if(mp->Species_Var_Type == SPECIES_CONCENTRATION)
+		{
+                 for(i=0;i<pd->Num_Species_Eqn;i++)
+	           {
+	            C[i] = y_mass[i]*vol[i];
+	            sum_C += C[i];
+	            dv_dw[i][i]= vol[i];
+	           }
+		}
+	else if(mp->Species_Var_Type == SPECIES_MASS_FRACTION)
+		{
+                 for(i=0;i<pd->Num_Species_Eqn;i++)
+	           {
+	            C[i] = y_mass[i]*sv[i]/bottom;
+	            sum_C += C[i];
+	            for(j=0;j<pd->Num_Species_Eqn;j++)
+	               {
+                        dv_dw[i][j] = -y_mass[i]*sv[i]
+		              *(sv[j]-sv[pd->Num_Species_Eqn])/SQUARE(bottom); 
+                       }
+		    dv_dw[i][i] += sv[i]/bottom; 
+                   }
+		}
+	else if(mp->Species_Var_Type == SPECIES_MOLE_FRACTION)
+		{
+                 for(i=0;i<pd->Num_Species_Eqn;i++)
+	           {
+	            C[i] = y_mass[i]*vol[i]/bottom;
+	            sum_C += C[i];
+	            for(j=0;j<pd->Num_Species_Eqn;j++)
+	               {
+                        dv_dw[i][j] = -y_mass[i]*vol[i]
+		              *(vol[j]-vol[pd->Num_Species_Eqn])/SQUARE(bottom); 
+                       }
+		    dv_dw[i][i] += vol[i]/bottom; 
+		   }
+		}
+	else
+		{ EH(-1,"That species formulation not done in mtc_flory\n"); }
        for(k=0;k<pd->Num_Species_Eqn; k++)
 	 {
 	   flory1[wspec] += vol[wspec]*(delta(k,wspec)-C[k])/vol[k]
@@ -7162,10 +7227,23 @@ compute_leak_velocity(double *vnorm,
  				fluxbc->BC_Data_Float[0],
  				fluxbc->BC_Data_Float[4]);
  		}
-	      mtc = mtc*mp->specific_volume[wspec];
-	      d_mtc[TEMPERATURE] *= mp->specific_volume[wspec];
-    	      for (w=0; w<pd->Num_Species_Eqn; w++) 
+              switch(mp->Species_Var_Type)   {
+                   case SPECIES_MASS_FRACTION:
+                     break;
+                   case SPECIES_CONCENTRATION:
+	             mtc = mtc*mp->molar_volume[wspec];
+	             d_mtc[TEMPERATURE] *= mp->molar_volume[wspec];
+    	             for (w=0; w<pd->Num_Species_Eqn; w++) 
+	      		d_mtc[MAX_VARIABLE_TYPES+w] *= mp->molar_volume[wspec];
+                     break;
+                   case SPECIES_DENSITY:
+                   default:
+	             mtc = mtc*mp->specific_volume[wspec];
+	             d_mtc[TEMPERATURE] *= mp->specific_volume[wspec];
+    	             for (w=0; w<pd->Num_Species_Eqn; w++) 
 	      		d_mtc[MAX_VARIABLE_TYPES+w] *= mp->specific_volume[wspec];
+                     break;
+                    }
 		  
 	      /* Nonideal VP Calculations based on either ANTOINE or RIEDEL models */
 	      

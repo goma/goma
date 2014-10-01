@@ -24,6 +24,11 @@
 #ifndef _H_RF_FEM
 
 #include "rf_fem_const.h"	/* In case you have not already done so. */
+/*   max number of Interface Sources */
+#ifndef MAX_INTERFACE
+#define MAX_INTERFACE  5
+#endif
+
 
 /* Geometric Parameters  */ 
 
@@ -66,6 +71,8 @@ int VIM;
 
 int Num_BC;		/* number of boundary conditions which are defined  */
 
+int Num_Interface_Srcs;	/* number *_D interfaces*/
+int IntSrc_BCID[MAX_INTERFACE];
 /* Rotation information */
 int Num_ROT;		/* number of rotations which are defined  */
 

@@ -2359,6 +2359,9 @@ Diffusivity (void)
     case FREE_VOL:   
       err = Free_Vol_Theory_Diffusivity(w, mp->u_diffusivity[w]);    
       break;
+    case GENERALIZED_FREE_VOL:
+      err = Generalized_FV_Diffusivity(w);
+      break;
 
     case TABLE:
       {
@@ -2394,6 +2397,7 @@ Diffusivity (void)
 				  &mp->diffusivity[w],
 				  &mp->d_diffusivity[w][FILL] );
       break;
+
     default:
       break;
     }
@@ -2451,6 +2455,7 @@ Diffusivity (void)
  *              mp->d_diffusivity[w][w1]
  *
  * NOTE: The diffusivity according to this theory does not approach to
+ * NOTE: The diffusivity according to this theory does not approach to
  * self-diffusivity (of solvent component) as the mixture approaches pure solvent.
  * One can make a correction by making sure that pow((1 - vol_frac_1),2)*(1.-2.*chi*vol_frac_1)
  * does not go to zero as vol_frac_1 -> 1.  For example, use a cutoff
@@ -2497,6 +2502,9 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
   double  dA_dc[MAX_CONC]   ; /* friction factor model derivative of A wrt w1 */
 
   double term1,term2, term3,term4 ; /* intermediate parameters */
+  PROPERTYJAC_STRUCT *densityJac = NULL;
+  propertyJac_realloc(&densityJac, mp->Num_Species+1);
+
 
   /* load up convenient quantities */
   V_1s = param[0];
@@ -2539,32 +2547,120 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
       if( mp->specific_volume[1] == -1.0 ) mp->specific_volume[1] = V_20;
     }
 
-  /* corrected for mass-concentration based formulation 
-     uncomment the following three lines and take out the
-     next three if you wish to change it back to mass_fraction
-     A.C. Sun */
-  /*  for(i=0; i<pd->Num_Spec; i++) C[i] = fv->c[i];
-      C[1] = 1. - C[0];
-      vol_frac_1 = C[0]*V_10/(C[0]*V_10 + C[1]*V_20); */
-
+  /*  initialization  */
+  C[0] = fv->c[0];
+  C[1] = 1.0 - C[0];
+  vol_frac_2 = 1.0;
   /*  multi-component kludge	*/
   c0 = 0.0;
   vol_frac_1 = 0.0;
-  density_tot = 1./mp->specific_volume[pd->Num_Species_Eqn];
-  for(w=0 ; w<pd->Num_Species_Eqn; w++)
-    {
-      if(mp->FreeVolSolvent[w]) 
-	{  
-	  c0 += fv->c[w];  
-	  vol_frac_1 += fv->c[w]*mp->specific_volume[w];  
-	}
-      density_tot += fv->c[w]*(1.-mp->specific_volume[w]/mp->specific_volume[pd->Num_Species_Eqn]);
-    }
+  memset(d_vol_frac_1_dc,0,sizeof(dbl)*MAX_CONC);
+  memset(dC0dc,0,sizeof(dbl)*MAX_CONC);
+  density_tot = calc_density(mp, TRUE, densityJac, 0.0);
+/*  density_tot = 1./mp->specific_volume[pd->Num_Species_Eqn]; */
+  switch(mp->Species_Var_Type)   {
+     case SPECIES_DENSITY:
+        for(w=0 ; w<pd->Num_Species_Eqn; w++)
+           {
+           if(mp->FreeVolSolvent[w]) 
+	     {  
+	      c0 += fv->c[w];  
+	      vol_frac_1 += fv->c[w]*mp->specific_volume[w];  
+             }
+	   }
+          C[0] =  c0/density_tot;   /* w1 - the solvent mass fraction */
+          C[1] = 1. - C[0];  		/* w2 - the polymer mass fraction */
+          vol_frac_2 = 1.0 - vol_frac_1 ;
+         if(af->Assemble_Jacobian)
+          {
+        for(w=0 ; w<pd->Num_Species_Eqn; w++)
+           {
+           if(mp->FreeVolSolvent[w]) 
+	     {  
+              d_vol_frac_1_dc[w] = mp->specific_volume[w];
+              dC0dc[w] = (density_tot - c0*mp->d_density[MAX_VARIABLE_TYPES+w])
+                          /SQUARE(density_tot);
+             }
+             else
+             {
+              d_vol_frac_1_dc[w] = 0.0;
+              dC0dc[w] = -c0*mp->d_density[MAX_VARIABLE_TYPES+w]
+                          /SQUARE(density_tot);
+             }
+           }
+          }
+          break;
 
-  C[0] =  c0/density_tot;   /* w1 - the solvent mass fraction */
-  C[1] = 1. - C[0];  		/* w2 - the polymer mass fraction */
-  /*  vol_frac_1 = v0;	*/
-  vol_frac_2 = 1.0 - vol_frac_1 ;
+      case SPECIES_MASS_FRACTION:
+        for(w=0 ; w<pd->Num_Species_Eqn; w++)
+           {
+           if(mp->FreeVolSolvent[w]) 
+	     {  
+	      c0 += fv->c[w];  
+	      vol_frac_1 += fv->c[w]*mp->specific_volume[w];  
+             }
+	   }
+          C[0] =  c0;   /* w1 - the solvent mass fraction */
+          C[1] = 1. - C[0];  		/* w2 - the polymer mass fraction */
+          vol_frac_1 *= density_tot;
+          vol_frac_2 = 1.0 - vol_frac_1 ;
+         if(af->Assemble_Jacobian)
+          {
+        for(w=0 ; w<pd->Num_Species_Eqn; w++)
+           {
+           if(mp->FreeVolSolvent[w]) 
+	     {  
+              d_vol_frac_1_dc[w] = mp->specific_volume[w]*
+                    (density_tot+fv->c[w]*mp->d_density[MAX_VARIABLE_TYPES+w]);
+              dC0dc[w] = 1.0;
+             }
+             else
+             {
+              d_vol_frac_1_dc[w] = mp->specific_volume[w]*
+                    fv->c[w]*mp->d_density[MAX_VARIABLE_TYPES+w];
+              dC0dc[w] = 0.0;
+             }
+           }
+          }
+          break;
+
+     case SPECIES_CONCENTRATION:
+        for(w=0 ; w<pd->Num_Species_Eqn; w++)
+           {
+           if(mp->FreeVolSolvent[w]) 
+	     {  
+	      c0 += fv->c[w]*mp->molecular_weight[w];  
+	      vol_frac_1 += fv->c[w]*mp->specific_volume[w]*mp->molecular_weight[w];  
+             }
+	   }
+          C[0] =  c0/density_tot;   /* w1 - the solvent mass fraction */
+          C[1] = 1. - C[0];  		/* w2 - the polymer mass fraction */
+          vol_frac_2 = 1.0 - vol_frac_1 ;
+         if(af->Assemble_Jacobian)
+          {
+        for(w=0 ; w<pd->Num_Species_Eqn; w++)
+           {
+           if(mp->FreeVolSolvent[w]) 
+	     {  
+              d_vol_frac_1_dc[w] = mp->specific_volume[w]*mp->molecular_weight[w];
+              dC0dc[w] = (density_tot*mp->molecular_weight[w] - 
+                     c0*mp->d_density[MAX_VARIABLE_TYPES+w])/SQUARE(density_tot);
+             }
+             else
+             {
+              d_vol_frac_1_dc[w] = 0.0;
+              dC0dc[w] = -c0*mp->d_density[MAX_VARIABLE_TYPES+w]
+                          /SQUARE(density_tot);
+             }
+           }
+          }
+          break;
+
+          case SPECIES_MOLE_FRACTION:
+          default:
+             EH(-1,"Undefined Species formulation in FREE_VOL_DIFFUSIVITY\n");
+          break;
+    }
 
   V_fh_gamma = K11_gamma*C[0]*(K21mTg1 + T) + K12_gamma*C[1]*(K22mTg2 + T);
 
@@ -2670,27 +2766,12 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 	  d_vol_frac_1_dC[0] = ((C[0]*V_10 + C[1]*V_20)*V_10 - C[0]*V_10*(V_10-V_20))
 	    /pow((C[0]*V_10 + C[1]*V_20),2.0);
        
-	  d_V_fh_gamma_dC[0] = K11_gamma*(K21mTg1 + T) - K12_gamma*(K22mTg2 + T);
-       
-	  dexponen_dC[0] = (-(V_fh_gamma*(V_1s-x_si*V_2s) 
-			      - (C[0]*V_1s+C[1]*V_2s*x_si)*d_V_fh_gamma_dC[0]) 
-			    /pow(V_fh_gamma,2.0)); 
 #endif
 	  exponen = exp(-(C[0]*V_1s + C[1]*x_si*V_2s)/V_fh_gamma);
   
 
 	  for(w=0 ; w<pd->Num_Species_Eqn; w++)
 	    {
-	      if(mp->FreeVolSolvent[w])
-		{
-		  d_vol_frac_1_dc[w] = mp->specific_volume[w];
-		  dC0dc[w] = (1. - C[0]*(1.-mp->specific_volume[w]/mp->specific_volume[pd->Num_Species_Eqn]))/density_tot;
-		}
-	      else
-		{
-		  d_vol_frac_1_dc[w] = 0.0;
-		  dC0dc[w] = -C[0]*(1.-mp->specific_volume[w]/mp->specific_volume[pd->Num_Species_Eqn])/density_tot;
-		}
 			
 			
 	      d_V_fh_gamma_dc[w] = dC0dc[w]*
@@ -2702,12 +2783,7 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 		{
 		  d_D1_dc[w] = D_o * exponen * dexponen_dc[w];
 		  dQ_dc[w]= d_vol_frac_1_dc[w] * ( 4.0*chi*vol_frac_1 - 2.0*chi  
-						   +(V_10*MW_1)/(V_20*MW_2*beta)- 1.0);
-#if 0
-		  d_D1_dw1 = D_o * exponen * dexponen_dC[0];  
-		  dQ_dw1= d_vol_frac_1_dC[0] 
-		    * ( (4.0*chi*vol_frac_1 ) -(2.0*chi) +((V_10* MW_1)/(V_20* MW_2))- 1.0); 
-#endif
+			   +(V_10*MW_1)/(V_20*MW_2*beta)- 1.0);
 		}
 				 
 	      if (fv_model_number  == 4)
@@ -2729,14 +2805,6 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 	    case 0: 
 	      for(w = 0; w<pd->Num_Species_Eqn; w++)
 		{
-#if 0
-		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] = 
-		    -D_o*2.*(1.- vol_frac_1)*d_vol_frac_1_dC[0]*(1.-2.*chi*vol_frac_1)*exponen
-		    +D_o*pow(1.-vol_frac_1,2.0)*(-2.*chi)*d_vol_frac_1_dC[0]*exponen
-		    +D_o*pow(1.-vol_frac_1,2.0)*(1.-2.*chi*vol_frac_1)*exponen*dexponen_dC[0];
-		  /*                     mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] *= dC0dc[w];  */
-#else
-	
 		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] = 
 		    2.*(1.- vol_frac_1)*d_vol_frac_1_dc[w]*
 		    (1.-2.*chi*vol_frac_1)*exponen
@@ -2745,103 +2813,49 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 		    +pow(1.-vol_frac_1,2.0)*(1.-2.*chi*vol_frac_1)*
 		    exponen*dexponen_dc[w];
 		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] *= D_o;
-#endif
 		}
 	      break;
   
 	    case 1: 
-#if 0
-	      delta_V10_V20  = V_10 - V_20  ;
-	      denominator_term = (C[0] * delta_V10_V20 ) + V_20 ; 
-	      denominator_term = pow(denominator_term, 2.0) ;
-	      d_vol_frac_2_w2_d_w1 = (-1.0 * V_20 * delta_V10_V20)/( denominator_term );
-#endif
 
 	      for(w = 0; w<pd->Num_Species_Eqn; w++)
 		{
-#if 0
-		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] =
-		    ( d_vol_frac_2_w2_d_w1 * Q_thermo  * D1 )
-		    + ( (vol_frac_2/C[1]) * dQ_dw1* D1 )
-		    + ( (vol_frac_2/C[1]) * dQ_dw1* D1 )
-		    + ( (vol_frac_2/C[1]) * Q_thermo  *  
-			D_o * exponen * dexponen_dC[w] );  
-		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] *= dC-dc[w];
-#else
 		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] =
 		    (-d_vol_frac_1_dc[w]*Q_thermo*D1 + vol_frac_2*dQ_dc[w]*D1
 		     + vol_frac_2*Q_thermo*d_D1_dc[w])/C[1]
 		    - (vol_frac_2*Q_thermo*D1)*(-dC0dc[w])/SQUARE(C[1]);
-#endif
 		}
 	      break;
   
 	    case 2: 
 	      for(w = 0; w<pd->Num_Species_Eqn; w++)
 		{
-#if 0
-		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] = 
-		    D_o * exponen * dexponen_dC[w]*dC0dc[w];           
-#else
 		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] = 
 		    d_D1_dc[w];           
-#endif
 		}
 	      break;
   
 	    case 3: 
 	      for(w = 0; w<pd->Num_Species_Eqn; w++)
 		{
-#if 0
-		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] = 
-		    ( dQ_dw1*dC0dc[w] * D1 ) + (  Q_thermo  *  d_D1_dc[w] );        
-#else
 		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] = 
 		    dQ_dc[w]*D1  + Q_thermo*d_D1_dc[w];    
-#endif
 		}
 	      break;
   
 	    case 4: 
-#if 0
-	      a1_friction = V_1s * (1.0 - (1.0/x_si) );
-	      b_friction = V_2s * (1.0 -  x_si ) ;
-	      aa_friction = (a1_friction +  b_friction)/ V_fh_gamma ;
-	      a1_friction = V_1s * ( (1.0/x_si) - 1.0 ) * C[0];
-	      b_friction = V_2s * (1.0 -  x_si ) * C[1] ;
-	      bb_friction = (a1_friction +  b_friction)
-		* ( d_V_fh_gamma_dC[0]/ pow(V_fh_gamma,2.0) );
-                         
-	      d_D2_D1_dw1 = (D2/D1) * ( aa_friction - bb_friction );
-	      aa2_friction =      d_vol_frac_1_dC[0]
-		* ( (D2 * V_20 * MW_2)/(D1 * V_10 * MW_1) - 1.0) ;
-	      bb2_friction = ( vol_frac_1 * V_20 * MW_2 * d_D2_D1_dw1 )/ (V_10 * MW_1 ); 
-  
-	      dA_dw1 =   aa2_friction  -  bb2_friction ;    
-#endif
-
   
 	      for(w = 0; w<pd->Num_Species_Eqn; w++)
 		{
-#if 0
-		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] =
-		    ( dA_dw1 * Q_thermo * D1)
-		    + ( dQ_dw1* A_friction * D1 )
-		    + (A_friction * Q_thermo * d_D1_dw1 );
-		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] *= dC0dc[w];
-
-#else
 		  mp->d_diffusivity[species_no][MAX_VARIABLE_TYPES + w] = 
 		    dA_dc[w]*Q_thermo*D1 + dQ_dc[w]*A_friction*D1 
 		    + A_friction*Q_thermo*d_D1_dc[w]; 
-#endif
-                                        
-                  
 		}
 	      break;
 	    }
 	}
     }
+  propertyJac_destroy(&densityJac);
   return (0);
   
 }
@@ -2937,7 +2951,7 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
   int w, w1, mode;
   int w2=pd->Num_Species_Eqn;
 
-  dbl    activity[MAX_CONC], dcoeff[MAX_CONC][MAX_CONC],
+  double    activity[MAX_CONC], dcoeff[MAX_CONC][MAX_CONC],
          d2coeff[MAX_CONC][MAX_CONC][MAX_CONC];
 
   double T;
@@ -2949,13 +2963,14 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
   double xsi[MAX_CONC][MAX_CONC];
   double vs[MAX_CONC],K1_gamma[MAX_CONC],
     K2mTg[MAX_CONC], Do[MAX_CONC],
-    E_div_R[MAX_CONC], V0[MAX_CONC];
-  double vsp, K1p_gamma, K2pmTg, V0p;
-  double allmass = 0.;
+    E_div_R[MAX_CONC];
+  double vsp, K1p_gamma, K2pmTg;
   double allomega = 0.;
   double V_fh_gamma = 0.;
   double d_Vfh_dT = 0.;
-  double d_tmp = 0.;
+  double density_tot, rho[MAX_CONC], drho_dc[MAX_CONC];
+  PROPERTYJAC_STRUCT *densityJac = NULL;
+  propertyJac_realloc(&densityJac, mp->Num_Species+1);
 
 
   /* Begin Execution */
@@ -2980,7 +2995,6 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
   vsp       = mp->u_diffusivity[0][1];
   K1p_gamma = mp->u_diffusivity[0][3];
   K2pmTg    = mp->u_diffusivity[0][5];
-  V0p       = mp->u_diffusivity[0][11];
 
   /* load up solvent FV parameters */
   for (w=0; w<pd->Num_Species_Eqn; w++)
@@ -2990,7 +3004,6 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
       K2mTg[w]    = mp->u_diffusivity[w][4];
       Do[w]       = mp->u_diffusivity[w][8];
       E_div_R[w]  = mp->u_diffusivity[w][9];
-      V0[w]       = mp->u_diffusivity[w][10];
     }
 
   T = fv->T;
@@ -3014,16 +3027,42 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
      differentiated via HKM's modifications .
      Convert density to weight fractions */
 
-  for (w=0; w<pd->Num_Species_Eqn; w++)
-    {
-      allmass += fv->c[w]*(1.-V0[w]/V0p);
-      Do[w] *= exp(-E_div_R[w]/T);
-    }
-  allmass += 1/V0p;
+  memset(rho,0,sizeof(dbl)*MAX_CONC);
+  memset(drho_dc,0,sizeof(dbl)*MAX_CONC);
+  switch(mp->Species_Var_Type)   {
+     case SPECIES_DENSITY:
+        for(w=0 ; w<pd->Num_Species_Eqn; w++)
+           { 
+             rho[w] = fv->c[w]; 
+             drho_dc[w] = 1.0; 
+           }
+         break;
+      case SPECIES_MASS_FRACTION:
+        for(w=0 ; w<pd->Num_Species_Eqn; w++)
+           { 
+             rho[w] = fv->c[w]*mp->specific_volume[w]; 
+             drho_dc[w] = mp->specific_volume[w]; 
+           }
+         break;
+      case SPECIES_CONCENTRATION:
+        for(w=0 ; w<pd->Num_Species_Eqn; w++)
+           { 
+             rho[w] = fv->c[w]*mp->molar_volume[w]; 
+             drho_dc[w] = mp->molar_volume[w]; 
+           }
+         break;
+      case SPECIES_MOLE_FRACTION:
+      case SPECIES_VOL_FRACTION:
+      default:
+         EH(-1,"Undefined Species formulation in Generalized_FV_Diffusivity\n");
+         break;
+      }
 
+  density_tot = calc_density(mp, TRUE, densityJac, 0.0);
   for (w=0; w<pd->Num_Species_Eqn; w++)
     {
-      omega[w] =  fv->c[w]/allmass;
+      Do[w] *= exp(-E_div_R[w]/T);
+      omega[w] =  rho[w]/density_tot;
       allomega += omega[w];
     }
   omega[w2] = 1. - allomega;
@@ -3080,12 +3119,11 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
 	      d_Vfh_domega[w] = K1_gamma[w]*(K2mTg[w]+T) - K1p_gamma*(K2pmTg+T);
 	      d_num_domega[species_no][w] = vs[w]*xsi[species_no][w]
 		-vsp*xsi[species_no][w2];
-	      d_omega_dc[species_no][w] = - (1.- V0[w]/V0p)* fv->c[species_no]
-		/pow(allmass,2.0);
-	      if (w != species_no) d_tmp += fv->c[w]*(1.-V0[w]/V0p)+1./V0p;
+	      d_omega_dc[species_no][w] = -rho[species_no]
+                      *mp->d_density[MAX_VARIABLE_TYPES+w]/SQUARE(density_tot);
 
 	    }
-	  d_omega_dc[species_no][species_no] = d_tmp/allmass;
+	  d_omega_dc[species_no][species_no] += drho_dc[species_no]/density_tot; 
 
 	  for(w = 0; w<pd->Num_Species_Eqn; w++)
 	    {
