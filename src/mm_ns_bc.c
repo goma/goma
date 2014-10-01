@@ -791,7 +791,8 @@ double
 sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *func_jac,
                 BOUNDARY_CONDITION_STRUCT *bc, int ip, 
 		ELEM_SIDE_BC_STRUCT *elem_side_bc,
-                const double x_dot[MAX_PDIM], const dbl time, const dbl tt, const dbl dt)
+                const double x_dot[MAX_PDIM], const dbl time, const dbl tt, 
+                const dbl dt, const int intf_id)
 
      /***********************************************************************
       *
@@ -894,7 +895,7 @@ sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *func_jac,
     EH(-1,"ERROR");
   }
   if (*is_hdl == NULL) {
-    *is_hdl = alloc_struct_1(INTERFACE_SOURCE_STRUCT, 1);
+    *is_hdl = alloc_struct_1(INTERFACE_SOURCE_STRUCT, Num_Interface_Srcs);
   }
   is = *is_hdl;
 
@@ -904,39 +905,42 @@ sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *func_jac,
    * interfacial source term vector
    */
   pos_mp = 0;
-  vd = is->Var_List[0];
+  vd = is[intf_id].Var_List[0];
   if (vd->MatID != mp->MatID) {
     if (vd->MatID != mp2->MatID) {
       EH(-1,"unclear materials -> Matid = -1?");
     }
     k = mp2->Num_Species;
-    vd = is->Var_List[k];
+    vd = is[intf_id].Var_List[k];
     if (vd->MatID != mp->MatID) {
       EH(-1,"unclear interfacial source term ordering");
     }
     pos_mp = mp2->Num_Species;
   }
 
-  if (! is->Processed) {
-    is->Processed = TRUE;
+  for(wspec=0 ; wspec < mp_a->Num_Species ; wspec++)
+  {
+  if (! is[intf_id].Processed[wspec]) {
+    is[intf_id].Processed[wspec] = TRUE;
+    bc_rxn = BC_Types + bc->BC_Data_Int[2]+wspec;
     /*
      * Fill up the Var_Value[] list. Possibly change the type
      * of the species unknown vector at the same time.
      */
-    is_masstemp_fillin(is, mp_a, mp_b, SPECIES_CONCENTRATION, time);
+    is_masstemp_fillin(is, mp_a, mp_b, SPECIES_CONCENTRATION, time, intf_id);
 
     /*
      * Now, call the source routine and possibly do the
      * jacobian. The source term is defined as the
      * 
      */
-    is->Do_Jac = af->Assemble_Jacobian;
+    is[intf_id].Do_Jac = af->Assemble_Jacobian;
     switch (bc->BC_Data_Int[1]) {
     case VL_EQUIL_PRXN_BC:
-      source_vle_prxn(is, bc_rxn, mp_a, mp_b, have_T);
+      source_vle_prxn(is, bc_rxn, mp_a, mp_b, have_T, intf_id);
       break;
     case IS_EQUIL_PRXN_BC:
-      source_is_equil_prxn(is, bc_rxn, mp_a, mp_b, have_T);	
+      source_is_equil_prxn(is, bc_rxn, mp_a, mp_b, have_T,intf_id);	
       break;
     default:
       EH(-1,"ERROR");
@@ -951,40 +955,40 @@ sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *func_jac,
     if (upd->Species_Var_Type == SPECIES_UNDEFINED_FORM) {
       speciesVT = SPECIES_MASS_FRACTION;
     }
-    if (speciesVT != is->SpeciesVT) {
-      is_change1_speciesVT(is, wspec, 0, mp_a, speciesVT, time);
+    if (speciesVT != is[intf_id].SpeciesVT) {
+      is_change1_speciesVT(is, wspec, 0, mp_a, speciesVT, time, intf_id);
       is_change1_speciesVT(is, wspec, mp_a->Num_Species, mp_b,
-			   speciesVT, time);
+			   speciesVT, time, intf_id);
       is_change1_speciesVT(is, mp_a->Num_Species + wspec,
-			   0, mp_a, speciesVT, time);
+			   0, mp_a, speciesVT, time, intf_id);
       is_change1_speciesVT(is, mp_a->Num_Species + wspec,
 			   mp_a->Num_Species, mp_b,
-			   speciesVT, time);
-      convert_species_var(speciesVT, mp_a, is->SpeciesVT, 
-			  is->Var_Value, time);
-      convert_species_var(speciesVT, mp_b, is->SpeciesVT, 
-			  is->Var_Value + mp_a->Num_Species, time);
-      is->SpeciesVT = speciesVT;
+			   speciesVT, time, intf_id);
+      convert_species_var(speciesVT, mp_a, is[intf_id].SpeciesVT, 
+			  is[intf_id].Var_Value, time);
+      convert_species_var(speciesVT, mp_b, is[intf_id].SpeciesVT, 
+			  is[intf_id].Var_Value + mp_a->Num_Species, time);
+      is[intf_id].SpeciesVT = speciesVT;
       /*
        * Possibly Convert the format of what's held constant
        * during the partial derivatives wrt species variable
        * to one in which the sum of the mass fractions are
        * constant is a constraint
        */
-      is_change1_lastspecies(is, wspec, 0, mp_a);
-      is_change1_lastspecies(is, wspec, mp_a->Num_Species, mp_b);
-      is_change1_lastspecies(is, mp_a->Num_Species + wspec, 0, mp_a);
+      is_change1_lastspecies(is, wspec, 0, mp_a, intf_id);
+      is_change1_lastspecies(is, wspec, mp_a->Num_Species, mp_b, intf_id);
+      is_change1_lastspecies(is, mp_a->Num_Species + wspec, 0, mp_a, intf_id);
       is_change1_lastspecies(is, mp_a->Num_Species + wspec,
-			     mp_a->Num_Species, mp_b);
+			     mp_a->Num_Species, mp_b, intf_id);
     }
   }
 
   /*
    * Add in the source terms
    */
-  Sk =  is->SourceTerm + pos_mp;
-  for (k = 0; k < mp->Num_Species; k++) {
-    func_value += mw[k] * Sk[k];
+  Sk =  is[intf_id].SourceTerm+pos_mp;
+/*  for (k = 0; k < mp->Num_Species; k++) {    */
+    func_value += mw[wspec] * Sk[wspec];
   }
 
   if (af->Assemble_Jacobian) {
@@ -998,7 +1002,7 @@ sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *func_jac,
      * Make sure funcjac is big enough to accept all of the terms below
      * -> one time reallocs are better than multiple reallocs
      */
-    jacobianVD_realloc(&func_jac, is->Num_Terms + pd->Num_Dim,
+    jacobianVD_realloc(&func_jac, is[intf_id].Num_Terms + pd->Num_Dim,
                        pd->Num_Dim * ei->dof[MESH_DISPLACEMENT1]);
 
     /*
@@ -1006,11 +1010,11 @@ sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *func_jac,
      * state variables for both the current material and the
      * material on the other side of the interface.
      */
-    for (index_is = 0; index_is < is->Num_Terms; index_is++) {
+    for (index_is = 0; index_is < is[intf_id].Num_Terms; index_is++) {
       /*
        * Look up what variable description this dependence is for
        */
-      vd = is->Var_List[index_is];
+      vd = is[intf_id].Var_List[index_is];
       /*
        * Use this vd structure to find the lvdesc index for
        * the corresponding variable description
@@ -1019,7 +1023,7 @@ sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *func_jac,
       if (lvdesc >= 0) {
         for (k = 0, tmp = 0.0; k < mp->Num_Species; k++) {
           pos = pos_mp + k;
-          tmp  += mw[k] * is->JacMatrix[pos][index_is];
+          tmp  += mw[k] * is[intf_id].JacMatrix[pos][index_is];
         }
         /*
          * Transfer the pertinent information to the
@@ -7088,8 +7092,12 @@ void fapply_moving_CA_sinh(
 
 /*  Hoffman correlation variables	*/
   double ca_no, g_sca = 0.0, g_dca = 0.0, A_sca = 0.0, A_dca = 0.0;
+  double g_deriv;
   int iter, iter_max=20;
   double eps_tol=1.0e-12;
+  double hoff_C=0.003838336, hoff_N=2.7944, hoff_F=0.7093681;
+  double hoff_M=1.144796, hoff_R;
+  double hoff_D=5.0*M_PIE/180.0;
   double liq_visc = 0.0, gamma[DIM][DIM];
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
@@ -7118,7 +7126,9 @@ void fapply_moving_CA_sinh(
   double drhs_ddpj, drhs_den_ddpj, drhs_num_ddpj, dveloc0_ddpj;
   double theta_max = 0.0, costhetamax = 0.0, sinthetamax = 0.0, dewet = 0.0;
   const double shik_max_factor = 1.01;
-  const double wall_sign = (TimeIntegration == STEADY) ? 1 : -1;  
+/*const double wall_sign = (TimeIntegration == STEADY) ? 1 : -1;  */
+/* disabling this sign change for now - doesn't seem necessary*/
+  const double wall_sign = (TimeIntegration == STEADY) ? 1 : 1;  
 
 
   /*
@@ -7151,7 +7161,9 @@ void fapply_moving_CA_sinh(
 	case VELO_THETA_HOFFMAN_BC:
   	theta_max = M_PIE*theta_max_degrees/180.;
 	costhetamax = cos(theta_max);
-        costheta=MAX(costheta,costhetamax);
+        hoff_R=pow(hoff_F,hoff_N)*pow(1.-hoff_F,hoff_M)*pow(theta_max,hoff_N+hoff_M);
+	theta = acos(costheta);
+	thetaeq = equilibrium_contact_angle * (M_PIE/180);
 	break;
 	}
 
@@ -7181,6 +7193,7 @@ void fapply_moving_CA_sinh(
 	 	v_new *= dewet;
 		break;
 	case VELO_THETA_HOFFMAN_BC:
+#if 0
 		ca_no = 1.0E+06; iter = 0; eps=10.*eps_tol;
 		while (iter <= iter_max && fabs(eps) > eps_tol)
 			{
@@ -7212,6 +7225,30 @@ void fapply_moving_CA_sinh(
                       fprintf(stderr,"Hoffman not converged ... %d %g\n",iter,eps);
                      }
 		g_dca = ca_no;
+#else
+                if(thetaeq < hoff_F*theta_max)
+                     {
+                      g_sca = hoff_C*pow(thetaeq,hoff_N);
+                     }
+                else
+                     {
+                      g_sca = hoff_C*hoff_R/pow(theta_max-thetaeq,hoff_M);
+                     }
+                if(theta < hoff_F*theta_max)
+                     {
+                      g_dca = hoff_C*pow(theta,hoff_N);
+                     }
+                else if(theta < theta_max-hoff_D)
+                     {
+                      g_dca = hoff_C*hoff_R/pow(theta_max-theta,hoff_M);
+                     }
+                else 
+                     {
+                      g_dca = hoff_C*hoff_R/pow(hoff_D,hoff_M)
+                            *(1.0+hoff_M/hoff_D*(theta-theta_max+hoff_D));
+                     }
+       		if(!finite(g_dca)) { g_dca = SGN(g_dca)*BIG_PENALTY; }
+#endif
 		ca_no = g_dca - g_sca;
 		dewet = (ca_no < 0) ? dewet_input : 1.0;
 		v_new = dewet*ca_no*g/liq_visc;
@@ -7337,9 +7374,13 @@ printf("angle vnew %g %g\n", acos(costheta)*180/M_PIE, v_new);
 	   sstangent[1] * fsnormal[1] +
 	   sstangent[2] * fsnormal[2] ) > 0 ? 1 : -1;
 
+/*  sign = 1.0;*/
+
 #if 0
-  log_dbg("t = (%g, %g, %g)", sstangent[0], sstangent[1], sstangent[2]);
-  log_dbg("sgn(t.n_fs)     = %g", sign);
+  fprintf(stderr,"\n sn = (%g, %g, %g)\n", ssnormal[0], ssnormal[1], ssnormal[2]);
+  fprintf(stderr,"fn = (%g, %g, %g)\n", fsnormal[0], fsnormal[1], fsnormal[2]);
+  fprintf(stderr,"t = (%g, %g, %g)\n", sstangent[0], sstangent[1], sstangent[2]);
+  fprintf(stderr,"sgn(t.n_fs)     = %g\n", sign);
 #endif
 
   v_mesh = sign * ( wall_sign*wall_velocity + sstangent[0]*x_dot[0] +
@@ -7347,7 +7388,6 @@ printf("angle vnew %g %g\n", acos(costheta)*180/M_PIE, v_new);
 	/*	+ sstangent[2] * x_dot[2] );	*/
   v_mesh_dt = sign * ( sstangent[0]*fv_dot->v[0] +
 		    sstangent[1]*fv_dot->v[1] );
-
 #if 0
   log_dbg("v_mesh = %g", v_mesh);
 #endif
@@ -7358,16 +7398,18 @@ printf("angle vnew %g %g\n", acos(costheta)*180/M_PIE, v_new);
    *          v - t.dxdt = 0
    */
 
-#if 0
-fprintf(stderr,"\ncos sin CA#  %g %g %g \n",costheta, sintheta, ca_no);
+#if 1
+fprintf(stderr,"\nwall_v x_dot  %g %g %g \n",wall_sign*wall_velocity,x_dot[0],x_dot[1]);
+fprintf(stderr,"cos sin CA#  %g %g %g \n",costheta, sintheta, ca_no);
 fprintf(stderr,"v_wetting v_mesh DCA  %g %g %g %g\n",v,v_mesh, v_mesh_dt,acos(costheta)*180/M_PIE);
 fprintf(stderr,"dewet sign  %g %g %g\n",dewet, sign, wall_sign);
+fprintf(stderr,"velocity  %g %g %g\n",v,v_mesh,v_mesh_dt);
 #endif
 
   if ( pd->Num_Dim != 1) 
     {
       *func = (v - v_mesh);
-	if(TimeIntegration == TRANSIENT)
+	if(0 && TimeIntegration == TRANSIENT)
 		{ *func += t_relax*v_mesh_dt;}  
       *func *= BIG_PENALTY;
     }
@@ -7438,11 +7480,32 @@ fprintf(stderr,"dewet sign  %g %g %g\n",dewet, sign, wall_sign);
 					 * g * (-dnnddpj) * factor;
 				break;
 			case VELO_THETA_HOFFMAN_BC:
+#if 0
 	      			dv_ddpj = factor*dewet*g/liq_visc * 
 					(1.+1.31*pow(g_dca,0.99))/
 				(1.-1.31*0.99*A_dca/pow(g_dca,0.01))*
 				pow(A_dca,0.294)*(-4.)*dnnddpj/ (0.706*2*5.16
 					*(3.-costheta)*(1.+costheta));
+#else
+                                dv_ddpj = factor*dewet*g/liq_visc;
+                                if(theta < hoff_F*theta_max)
+                                     {
+                        g_deriv = hoff_C*hoff_N*pow(theta,hoff_N-1.)
+                                      /(-sintheta)*(dnnddpj);
+                                     }
+                                else if(theta < theta_max-hoff_D)
+                                     {
+                        g_deriv = hoff_C*hoff_R*hoff_M
+                           /pow(theta_max-theta,hoff_M+1.)/(-sintheta)*(dnnddpj);
+                                     }
+                                else 
+                                     {
+                        g_deriv = hoff_C*hoff_R*hoff_M/pow(hoff_D,hoff_M+1.0)
+                           /(-sintheta)*dnnddpj;
+                                     }
+       			if(!finite(g_deriv)) { g_deriv = SGN(g_deriv)*BIG_PENALTY; }
+                        	dv_ddpj *= g_deriv;
+#endif
 				dv_ddpj += factor*dewet*(g_dca-g_sca)*g
 					*(-d_mu->X[p][j]/SQUARE(liq_visc));
 				break;
@@ -7507,7 +7570,7 @@ fprintf(stderr,"dewet sign  %g %g %g\n",dewet, sign, wall_sign);
 				break;
 			}
 		d_func[0][var][j] += BIG_PENALTY * dv_ddpj;
-   		  if ( TimeIntegration != 0 )
+   		  if ( 0 && TimeIntegration != 0 )
  		  	{
 		d_func[0][var][j] += BIG_PENALTY*t_relax*sign * 
                            (sstangent[p]*(1.+2.*tt)*bf[var]->phi[j]/dt );
@@ -13310,4 +13373,57 @@ fprintf(stderr,"refl n nbdy X Y mu mut dir %g %g %g %g %g %g %g\n",refindex,bdy_
   return;
 } /* END of routine acoustic_plane_transmission                             */
 /****************************************************************************/
+/*****************************************************************************/
+void 
+qside_light_jump(double func[DIM],
+		    double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+	            double time,
+	            const int bc_type, 
+		    int ID_mat_1, /* block ID material 1   */
+		    int ID_mat_2 /* block ID material 2   */
+		    ) 
+/******************************************************************************
+*
+*  Function which applies thermal contact resistance at a side set interface 
+*  Author: P. R. Schunk (3/1/2013)
+*
+******************************************************************************/
+     
+{
+  
+/* Local variables */
+  
+  int j_id;
+  int var;
+  double phi_j,R_inv;
+  double sign_int = 0;
+  
+/***************************** EXECUTION BEGINS *******************************/
+  
+  if(af->Assemble_LSA_Mass_Matrix)
+    return;
+  if (Current_EB_ptr->Elem_Blk_Id == ID_mat_1)
+    {
+      sign_int=-1.0;
+    }
+  else if (Current_EB_ptr->Elem_Blk_Id == ID_mat_2)
+    {
+      sign_int=1.0;
+    }
+  else
+    {
+      EH(-1,"T_CONTACT_RESIS has incorrect material ids");
+    }
+
+  if (af->Assemble_Jacobian) {
+    
+ /* sum the contributions to the global stiffness matrix */
+  
+    var=TEMPERATURE;
+    for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+      phi_j = bf[var]->phi[j_id];
+      d_func[0][var][j_id] += sign_int*R_inv * phi_j;
+    }
+  }
+}
 /****************************************************************************/

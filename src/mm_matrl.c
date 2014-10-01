@@ -820,7 +820,45 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 	    }
 	  }
 	break;
+      case SPECIES_CONCENTRATION:
+	for (w = 0; w < matrl->Num_Species; w++) 
+	  {
+	    rho += (1. - matrl->specific_volume[w]/sv_p) 
+                         *fv->c[w]*matrl->molecular_weight[w];
+	  }
+	rho +=1./sv_p;
+	
+	if (doJac) 
+	  {
+	    for (w = 0; w < matrl->Num_Species_Eqn; w++) {
+	      drho_dc = matrl->molecular_weight[w]*(1. - 
+                           matrl->specific_volume[w]/sv_p);
+	      matrl->d_density[MAX_VARIABLE_TYPES+w] = drho_dc;
+	      propertyJac_addEnd(densityJac, MASS_FRACTION, matID, w,
+			       drho_dc, rho);
+	    }
+	  }
+	break;
+      case SPECIES_MOLE_FRACTION:
+	for (w = 0; w < matrl->Num_Species; w++) 
+	  {
+	    sum_sv += ( matrl->molar_volume[w] -sv_p) 
+	           *stateVector[ SPECIES_UNK_0 + w];
+	  }
+	sum_sv += sv_p;
+	rho = 1./sum_sv;
+	
+	if (doJac) 
+	  {
+	    for (w = 0; w < matrl->Num_Species_Eqn; w++) {
+	      drho_dc = -(matrl->molar_volume[w] - sv_p)*rho*rho ;
+	      propertyJac_addEnd(densityJac, MASS_FRACTION, matID, w,
+			       drho_dc, rho);
+	    }
+	  }
+	break;
       default:
+	WH(-1,"SOLVENT_POLYMER defaulting to MASS_FRACTION\n");
 	for (w = 0; w < matrl->Num_Species; w++) 
 	  {
 	    sum_sv += ( matrl->specific_volume[w] -sv_p) 

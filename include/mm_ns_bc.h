@@ -70,7 +70,8 @@ PROTO((JACOBIAN_VAR_DESC_STRUCT *,    /*  *func_jac        */
        const double [MAX_PDIM],       /*  x_dot[MAX_PDIM]  */
        const double,                  /*  time               */
        const double,                  /*  tt               */
-       const double ));               /*  dt               */
+       const double,               /*  dt               */
+       const int ));               /*  interface_id               */
 
 EXTERN double sdc_stefan_volume_flow
 PROTO((JACOBIAN_VAR_DESC_STRUCT *,    /*  *func_jac        */
@@ -686,6 +687,15 @@ PROTO((double [DIM],              /* func */
        const int ,                /* value id_block_1  */
        const int ,                /* value id_block_2  */
        const double ));           /* value Rinv  */
+
+EXTERN void qside_light_jump
+PROTO((double [DIM],              /* func */
+       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /*   d_func   */
+       const double,	/* Time                                      */
+       const int,	/* bc_type */     
+       const int ,                /* value id_block_1  */
+       const int                 /* value id_block_2  */
+        ));           /* value Rinv  */
 
 EXTERN void qside_ls
 PROTO((double [DIM],              /* func */

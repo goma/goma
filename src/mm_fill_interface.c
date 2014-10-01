@@ -52,7 +52,8 @@ double
 raoults_law_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
 		 BOUNDARY_CONDITION_STRUCT *bc, int ip, 
 		 ELEM_SIDE_BC_STRUCT *elem_side_bc,
-		 double x_dot[MAX_PDIM], const double time, const double tt, const double dt)
+		 double x_dot[MAX_PDIM], const double time, const double tt,
+                 const double dt, const int intf_id)
 
     /**********************************************************************
      *
@@ -122,21 +123,21 @@ raoults_law_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
   /*
    * Process the Source term 
    */
-  if (! is->Processed) {
-    is->Processed = TRUE;
+  if (! is[intf_id].Processed[wspec]) {
+    is[intf_id].Processed[wspec] = TRUE;
     /*
      * Fill up the Var_Value[] list. Possibly change the type
      * of the species unknown vector at the same time.
      */
-    is_masstemp_fillin(is, mp_gas, mp_liq, SPECIES_CONCENTRATION, time);
+    is_masstemp_fillin(is, mp_gas, mp_liq, SPECIES_CONCENTRATION, time, intf_id);
 
     /*
      * Now, call the source routine and possibly do the
      * jacobian. The source term is defined as the
      * 
      */
-    is->Do_Jac = af->Assemble_Jacobian;
-    source_vle_prxn(is, bc, mp_gas, mp_liq, have_T);
+    is[intf_id].Do_Jac = af->Assemble_Jacobian;
+    source_vle_prxn(is, bc, mp_gas, mp_liq, have_T, intf_id);
     /*
      * We now need to possibly change the species variable type
      * for the source term and the dependent variable for the
@@ -146,32 +147,32 @@ raoults_law_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
     if (upd->Species_Var_Type == SPECIES_UNDEFINED_FORM) {
       speciesVT = SPECIES_MASS_FRACTION;
     }
-    if (speciesVT != is->SpeciesVT) {
-      is_change1_speciesVT(is, wspec, 0, mp_gas, speciesVT, time);
+    if (speciesVT != is[intf_id].SpeciesVT) {
+      is_change1_speciesVT(is, wspec, 0, mp_gas, speciesVT, time, intf_id);
       is_change1_speciesVT(is, wspec, mp_gas->Num_Species, mp_liq,
-			   speciesVT, time);
+			   speciesVT, time,intf_id);
       is_change1_speciesVT(is, mp_gas->Num_Species + wspec,
-			   0, mp_gas, speciesVT, time);
+			   0, mp_gas, speciesVT, time, intf_id);
       is_change1_speciesVT(is, mp_gas->Num_Species + wspec,
 			   mp_gas->Num_Species, mp_liq,
-			   speciesVT, time);
-      convert_species_var(speciesVT, mp_gas, is->SpeciesVT, 
-			  is->Var_Value, time);
-      convert_species_var(speciesVT, mp_liq, is->SpeciesVT, 
-			  is->Var_Value + mp_gas->Num_Species, time);
-      is->SpeciesVT = speciesVT;
+			   speciesVT, time, intf_id);
+      convert_species_var(speciesVT, mp_gas, is[intf_id].SpeciesVT, 
+			  is[intf_id].Var_Value, time);
+      convert_species_var(speciesVT, mp_liq, is[intf_id].SpeciesVT, 
+			  is[intf_id].Var_Value + mp_gas->Num_Species, time);
+      is[intf_id].SpeciesVT = speciesVT;
       /*
        * Possibly Convert the format of what's held constant
        * during the partial derivatives wrt species variable
        * to one in which the sum of the mass fractions are
        * constant is a constraint
        */
-      is_change1_lastspecies(is, wspec, 0, mp_gas);
-      is_change1_lastspecies(is, wspec, mp_gas->Num_Species, mp_liq);
+      is_change1_lastspecies(is, wspec, 0, mp_gas, intf_id);
+      is_change1_lastspecies(is, wspec, mp_gas->Num_Species, mp_liq, intf_id);
       is_change1_lastspecies(is, mp_gas->Num_Species + wspec,
-			     0, mp_gas);
+			     0, mp_gas, intf_id);
       is_change1_lastspecies(is, mp_gas->Num_Species + wspec,
-			     mp_gas->Num_Species, mp_liq);
+			     mp_gas->Num_Species, mp_liq, intf_id);
     }
   }
 
@@ -202,10 +203,10 @@ raoults_law_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
   
   if (liquidSide) {
     pos = wspec + mp_gas->Num_Species;
-    func_value += is->SourceTerm[pos] * mp_liq->molecular_weight[wspec];
+    func_value += is[intf_id].SourceTerm[pos] * mp_liq->molecular_weight[wspec];
   } else {
     pos = wspec;
-    func_value += is->SourceTerm[pos] * mp_gas->molecular_weight[wspec];
+    func_value += is[intf_id].SourceTerm[pos] * mp_gas->molecular_weight[wspec];
   }
 
   /*
@@ -227,19 +228,19 @@ raoults_law_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
      * Add in the extra jacobian entry from the mass fraction
      * dependence
      */
-    vd = is->Var_List[pos];
+    vd = is[intf_id].Var_List[pos];
     index_lvdesc = ei->VDindex_to_Lvdesc[vd->List_Index];
     jacobianVD_addEntry(func_jac, index_lvdesc, massflux);
 
     /*
      * Make sure funcjac is big enough to accept all of the terms below
      */
-    jacobianVD_realloc(&func_jac, is->Num_Terms, 0);
-    for (index_is = 0; index_is < is->Num_Terms; index_is++) {
+    jacobianVD_realloc(&func_jac, is[intf_id].Num_Terms, 0);
+    for (index_is = 0; index_is < is[intf_id].Num_Terms; index_is++) {
       /*
        * Look up what variable description this dependence is for
        */
-      vd = is->Var_List[index_is];
+      vd = is[intf_id].Var_List[index_is];
       /*
 	* Use this vd structure to find the lvdesc index for
 	* the corresponding variable description
@@ -252,18 +253,18 @@ raoults_law_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
 	*/
       index_lvdesc = ei->VDindex_to_Lvdesc[vd->List_Index];
       if (index_lvdesc >= 0 &&
-	  DOUBLE_NONZERO(is->JacMatrix[pos][index_is])) {
+	  DOUBLE_NONZERO(is[intf_id].JacMatrix[pos][index_is])) {
 	/*
 	* Transfer the pertinent information to the
 	*  Jacobian_Var_Desc structure
 	*/
 	if (liquidSide) {
 	  jacobianVD_addEntry(func_jac, index_lvdesc, 
-			      is->JacMatrix[pos][index_is] * 
+			      is[intf_id].JacMatrix[pos][index_is] * 
 			      mp_liq->molecular_weight[wspec]);
 	} else {
 	  jacobianVD_addEntry(func_jac, index_lvdesc,
-			      is->JacMatrix[pos][index_is] * 
+			      is[intf_id].JacMatrix[pos][index_is] * 
 			      mp_gas->molecular_weight[wspec]);
 	}
       }
@@ -278,7 +279,7 @@ raoults_law_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
 void 
 source_vle_prxn(INTERFACE_SOURCE_STRUCT *is, BOUNDARY_CONDITION_STRUCT *bc,
 		MATRL_PROP_STRUCT *mp_gas, MATRL_PROP_STRUCT *mp_liq, 
-		int have_T)
+		int have_T, const int intf_id)
 
     /**********************************************************************
     *
@@ -324,13 +325,13 @@ source_vle_prxn(INTERFACE_SOURCE_STRUCT *is, BOUNDARY_CONDITION_STRUCT *bc,
 {
   int k, wspec, wspec_liq, pos, index_T = 0;
   double C_l_mix, k_f, T;
-  double psat_w, dpsatdT_w, *vv = is->Var_Value, K_equil;
+  double psat_w, dpsatdT_w, *vv = is[intf_id].Var_Value, K_equil;
   double **Jac;
 
   /*
    * Zero the calculable fields in the interface structure
    */
-  interface_source_zero(is);
+  interface_source_zero(&is[intf_id]);
 
   /*
    * Species number that the boundary condition is being applied on
@@ -352,7 +353,7 @@ source_vle_prxn(INTERFACE_SOURCE_STRUCT *is, BOUNDARY_CONDITION_STRUCT *bc,
   /*
    * Find the concentration in the liquid phase, C_l_mix
    */
-  if (is->SpeciesVT != SPECIES_CONCENTRATION) {
+  if (is[intf_id].SpeciesVT != SPECIES_CONCENTRATION) {
     EH(-1, "unimplemented complication");
   }
   C_l_mix = 0.0;
@@ -379,7 +380,7 @@ source_vle_prxn(INTERFACE_SOURCE_STRUCT *is, BOUNDARY_CONDITION_STRUCT *bc,
    *  species concentrations, C_k, and that they have units
    *  of mol cm-3.
    */
-  is->SpeciesVT = SPECIES_CONCENTRATION;
+  is[intf_id].SpeciesVT = SPECIES_CONCENTRATION;
 
   /*
    * Pseudo reaction rate constant (cm sec-1)
@@ -387,11 +388,11 @@ source_vle_prxn(INTERFACE_SOURCE_STRUCT *is, BOUNDARY_CONDITION_STRUCT *bc,
   k_f = bc->BC_Data_Float[0];
   K_equil = psat_w / (RGAS_CONST * T * C_l_mix);
 
-  is->SourceTerm[wspec] = k_f * (K_equil * vv[wspec_liq] - vv[wspec]);
-  is->SourceTerm[wspec_liq] = -  is->SourceTerm[wspec];
+  is[intf_id].SourceTerm[wspec] = k_f * (K_equil * vv[wspec_liq] - vv[wspec]);
+  is[intf_id].SourceTerm[wspec_liq] = -  is[intf_id].SourceTerm[wspec];
 
-  if (is->Do_Jac) {
-    Jac = is->JacMatrix;
+  if (is[intf_id].Do_Jac) {
+    Jac = is[intf_id].JacMatrix;
     Jac[wspec][wspec] = - k_f;
     for (k = 0, pos = mp_gas->Num_Species; k < mp_liq->Num_Species;
 	 k++, pos++) {
@@ -403,11 +404,11 @@ source_vle_prxn(INTERFACE_SOURCE_STRUCT *is, BOUNDARY_CONDITION_STRUCT *bc,
 	  (k_f * vv[wspec_liq] * 
 	   (dpsatdT_w / (RGAS_CONST * T * C_l_mix) - K_equil/T));
     }
-    for (k = 0; k < is->Num_Terms; k++) {
+    for (k = 0; k < is[intf_id].Num_Terms; k++) {
       Jac[wspec_liq][k] = - Jac[wspec][k];
     }
   }
-  is->Processed = TRUE;
+  is[intf_id].Processed[wspec] = TRUE;
 }
 /**************************************************************************/
 /**************************************************************************/
@@ -417,7 +418,8 @@ double
 is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
 	      BOUNDARY_CONDITION_STRUCT *bc, int ip, 
 	      ELEM_SIDE_BC_STRUCT *elem_side_bc,
-	      double x_dot[MAX_PDIM], const double time, const double tt, const double dt)
+	      double x_dot[MAX_PDIM], const double time,
+              const double tt, const double dt, const int intf_id)
 
     /**********************************************************************
      *
@@ -504,13 +506,13 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
   /*
    * Process the Source term if it hasn't been already
    */
-  if (! is->Processed) {
-    is->Processed = TRUE;
+  if (! is[intf_id].Processed[wspec_a]) {
+    is[intf_id].Processed[wspec_a] = TRUE;
     /*
      * Fill up the Var_Value[] list. Possibly change the type
      * of the species unknown vector at the same time.
      */
-    is_masstemp_fillin(is, mp_a, mp_b, SPECIES_CONCENTRATION, time);
+    is_masstemp_fillin(is, mp_a, mp_b, SPECIES_CONCENTRATION, time, intf_id);
 
     /*
      * Now, call the source routine and possibly do the
@@ -518,8 +520,8 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
      * units of mol cm-2 sec-1. The dependent variable is
      * the species concentration.
      */
-    is->Do_Jac = af->Assemble_Jacobian;
-    source_is_equil_prxn(is, bc, mp_a, mp_b, have_T);
+    is[intf_id].Do_Jac = af->Assemble_Jacobian;
+    source_is_equil_prxn(is, bc, mp_a, mp_b, have_T,intf_id);
 
     /*
      * We now need to possibly change the species variable type
@@ -533,31 +535,31 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
 
     wspec_b = mp_a->Num_Species + wspec_a;
 
-    if (speciesVT != is->SpeciesVT) {
+    if (speciesVT != is[intf_id].SpeciesVT) {
       /*
        * Change the gas and liquid source term derivative wrt Ck to a
        * derivitive wrt the dependent variable form of the species
        * equations for a and b phases (4 in all).
        */
-      is_change1_speciesVT(is, wspec_a, 0, mp_a, speciesVT, time);
+      is_change1_speciesVT(is, wspec_a, 0, mp_a, speciesVT, time, intf_id);
       is_change1_speciesVT(is, wspec_a, mp_a->Num_Species, mp_b,
-			   speciesVT, time);
-      is_change1_speciesVT(is, wspec_b, 0, mp_a, speciesVT, time);
+			   speciesVT, time, intf_id);
+      is_change1_speciesVT(is, wspec_b, 0, mp_a, speciesVT, time, intf_id);
       is_change1_speciesVT(is, wspec_b, mp_a->Num_Species, mp_b,
-			   speciesVT, time);
+			   speciesVT, time, intf_id);
       /*
        * Convert the storred values of the dependent variables
        * in the is structure to their proper forms.
        */
-      convert_species_var(speciesVT, mp_a, is->SpeciesVT, 
-			  is->Var_Value, time);
-      convert_species_var(speciesVT, mp_b, is->SpeciesVT, 
-			  is->Var_Value + mp_a->Num_Species, time);
+      convert_species_var(speciesVT, mp_a, is[intf_id].SpeciesVT, 
+			  is[intf_id].Var_Value, time);
+      convert_species_var(speciesVT, mp_b, is[intf_id].SpeciesVT, 
+			  is[intf_id].Var_Value + mp_a->Num_Species, time);
       /*
        * Ok update SpeciesVT -> we have finished changing the
        * species variable type in the is structure
        */
-      is->SpeciesVT = speciesVT;
+      is[intf_id].SpeciesVT = speciesVT;
       /*
        * Convert the format of what's held constant
        * during the partial derivatives wrt species variable
@@ -565,10 +567,10 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
        * constant) constraint replaces the (last species is
        * constant) constraint.
        */
-      is_change1_lastspecies(is, wspec_a, 0, mp_a);
-      is_change1_lastspecies(is, wspec_a, mp_a->Num_Species, mp_b);
-      is_change1_lastspecies(is, wspec_b, 0, mp_a);
-      is_change1_lastspecies(is, wspec_b, mp_a->Num_Species, mp_b);
+      is_change1_lastspecies(is, wspec_a, 0, mp_a,intf_id);
+      is_change1_lastspecies(is, wspec_a, mp_a->Num_Species, mp_b, intf_id);
+      is_change1_lastspecies(is, wspec_b, 0, mp_a, intf_id);
+      is_change1_lastspecies(is, wspec_b, mp_a->Num_Species, mp_b, intf_id);
     }
   }
 
@@ -603,10 +605,10 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
   
   if (a_Side) {
     pos = wspec_a;
-    func_value += is->SourceTerm[pos];
+    func_value += is[intf_id].SourceTerm[pos];
   } else {
     pos = wspec_a + mp_a->Num_Species;
-    func_value += is->SourceTerm[pos];
+    func_value += is[intf_id].SourceTerm[pos];
   }
 
   /*
@@ -628,19 +630,19 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
      * Add in the extra jacobian entry from the concentration
      * dependence
      */
-    vd = is->Var_List[pos];
+    vd = is[intf_id].Var_List[pos];
     index_lvdesc = ei->VDindex_to_Lvdesc[vd->List_Index];
     jacobianVD_addEntry(func_jac, index_lvdesc, volflux);
 
     /*
      * Make sure funcjac is big enough to accept all of the terms below
      */
-    jacobianVD_realloc(&func_jac, is->Num_Terms, 0);
-    for (index_is = 0; index_is < is->Num_Terms; index_is++) {
+    jacobianVD_realloc(&func_jac, is[intf_id].Num_Terms, 0);
+    for (index_is = 0; index_is < is[intf_id].Num_Terms; index_is++) {
       /*
        * Look up what variable description this dependence is for
        */
-      vd = is->Var_List[index_is];
+      vd = is[intf_id].Var_List[index_is];
       /*
 	* Use this vd structure to find the lvdesc index for
 	* the corresponding variable description
@@ -653,13 +655,13 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
 	*/
       index_lvdesc = ei->VDindex_to_Lvdesc[vd->List_Index];
       if (index_lvdesc >= 0 &&
-	  DOUBLE_NONZERO(is->JacMatrix[pos][index_is])) {
+	  DOUBLE_NONZERO(is[intf_id].JacMatrix[pos][index_is])) {
 	/*
 	 * Transfer the pertinent information to the
 	 *  Jacobian_Var_Desc structure
 	 */
 	jacobianVD_addEntry(func_jac, index_lvdesc, 
-			    is->JacMatrix[pos][index_is]);
+			    is[intf_id].JacMatrix[pos][index_is]);
       }
     }
   }
@@ -673,7 +675,7 @@ void
 source_is_equil_prxn(INTERFACE_SOURCE_STRUCT *is, 
 		     BOUNDARY_CONDITION_STRUCT *bc, 
 		     MATRL_PROP_STRUCT *mp_a, MATRL_PROP_STRUCT *mp_b, 
-		     int have_T)
+		     int have_T, const int intf_id)
 
     /**********************************************************************
     *
@@ -718,13 +720,13 @@ source_is_equil_prxn(INTERFACE_SOURCE_STRUCT *is,
 {
   int k, wspec_a, wspec_b, kspec, pos, index_T = -1;
   double C_a_mix, C_b_mix, k_f, T, deltaG, Kc_equil;
-  double  *vv = is->Var_Value, tmp;
+  double  *vv = is[intf_id].Var_Value, tmp;
   double **Jac;
 
   /*
    * Zero the calculable fields in the interface structure
    */
-  interface_source_zero(is);
+  interface_source_zero(&is[intf_id]);
 
   /*
    * Species number that the boundary condition is being applied on
@@ -744,7 +746,7 @@ source_is_equil_prxn(INTERFACE_SOURCE_STRUCT *is,
   /*
    * Find the concentration in the b phase, C_b_mix
    */
-  if (is->SpeciesVT != SPECIES_CONCENTRATION) {
+  if (is[intf_id].SpeciesVT != SPECIES_CONCENTRATION) {
     EH(-1, "unimplemented complication");
   }
   C_b_mix = 0.0;
@@ -771,7 +773,7 @@ source_is_equil_prxn(INTERFACE_SOURCE_STRUCT *is,
    *  species concentrations, C_k, and that they have units
    *  of mol cm-3.
    */
-  is->SpeciesVT = SPECIES_CONCENTRATION;
+  is[intf_id].SpeciesVT = SPECIES_CONCENTRATION;
 
   /*
    * Calculate the Gibbs free energy change for the reaction
@@ -795,11 +797,11 @@ source_is_equil_prxn(INTERFACE_SOURCE_STRUCT *is,
    * Finally, calculate the source term
    */
   tmp = k_f * vv[wspec_b] / Kc_equil;
-  is->SourceTerm[wspec_b] = k_f * (vv[wspec_a] - vv[wspec_b] / Kc_equil);
-  is->SourceTerm[wspec_a] = - is->SourceTerm[wspec_b];
+  is[intf_id].SourceTerm[wspec_b] = k_f * (vv[wspec_a] - vv[wspec_b] / Kc_equil);
+  is[intf_id].SourceTerm[wspec_a] = - is[intf_id].SourceTerm[wspec_b];
 
-  if (is->Do_Jac) {
-    Jac = is->JacMatrix;
+  if (is[intf_id].Do_Jac) {
+    Jac = is[intf_id].JacMatrix;
 
     Jac[wspec_b][wspec_a] = k_f;
     Jac[wspec_b][wspec_b] = - k_f / Kc_equil;
@@ -814,11 +816,11 @@ source_is_equil_prxn(INTERFACE_SOURCE_STRUCT *is,
       Jac[wspec_b][index_T] = 
 	  tmp / Kc_equil * deltaG / (RGAS_CALS * T * T);
     }
-    for (k = 0; k < is->Num_Terms; k++) {
+    for (k = 0; k < is[intf_id].Num_Terms; k++) {
       Jac[wspec_a][k] = - Jac[wspec_b][k];
     }
   }
-  is->Processed = TRUE;
+  	is[intf_id].Processed[kspec] = TRUE;
 }
 /**************************************************************************/
 /**************************************************************************/
@@ -838,25 +840,27 @@ is_masstemp_create(MATRL_PROP_STRUCT *mp_1, MATRL_PROP_STRUCT *mp_2,
     *
     **********************************************************************/
 {
-  int num_terms, have_T, k, pos;
+  int num_terms, have_T, k, pos, i;
   INTERFACE_SOURCE_STRUCT *is;
   VARIABLE_DESCRIPTION_STRUCT *vd;
   num_terms = mp_1->Num_Species + mp_2->Num_Species;
   have_T = (upd->vp[TEMPERATURE] != -1);
   if (have_T) num_terms++;
   is = interface_source_alloc(num_terms, 0, do_Jac);
+  for(i=0 ; i<Num_Interface_Srcs ; i++)    {
   for (k = 0; k < mp_1->Num_Species; k++) {
     vd = find_or_create_vd(MASS_FRACTION, 1, mp_1->MatID, k);
-    is->Var_List[k] = vd;
+    is[i].Var_List[k] = vd;
   }
   for (k = 0, pos = mp_1->Num_Species; k < mp_2->Num_Species;
        k++, pos++) {
     vd = find_or_create_vd(MASS_FRACTION, 1, mp_2->MatID, k);
-    is->Var_List[pos] = vd;
+    is[i].Var_List[pos] = vd;
   }
   if (have_T) {
     vd = find_or_create_vd(TEMPERATURE, 1, -1, 0);
-    is->Var_List[num_terms-1] = vd;
+    is[i].Var_List[num_terms-1] = vd;
+  }
   }
   return is;
 }
@@ -867,7 +871,7 @@ is_masstemp_create(MATRL_PROP_STRUCT *mp_1, MATRL_PROP_STRUCT *mp_2,
 void 
 is_masstemp_fillin(INTERFACE_SOURCE_STRUCT *is,
 		   MATRL_PROP_STRUCT *mp_1, MATRL_PROP_STRUCT *mp_2,
-		   int speciesVT_desired, const double time)
+		   int speciesVT_desired, const double time, const int intf_id)
     /**********************************************************************
     *
     * is_masstemp_fillin():
@@ -881,7 +885,7 @@ is_masstemp_fillin(INTERFACE_SOURCE_STRUCT *is,
     **********************************************************************/
 {
   int num_terms, k;
-  double *d_ptr, *is_ptr = is->Var_Value;
+  double *d_ptr, *is_ptr = is[intf_id].Var_Value;
 
   /*
    * Fill in the species concentrations for the first problem
@@ -896,14 +900,14 @@ is_masstemp_fillin(INTERFACE_SOURCE_STRUCT *is,
   if (speciesVT_desired !=  mp_1->StateVector_speciesVT) {
     (void) convert_species_var(speciesVT_desired, mp_1,
 			       mp_1->StateVector_speciesVT,
-			       is->Var_Value, time);
+			       is[intf_id].Var_Value, time);
   }
 
   /* 
    * Fill in the species concentrations for the second material
    */
   d_ptr = mp_2->StateVector + SPECIES_UNK_0;
-  is_ptr = is->Var_Value +  mp_1->Num_Species;
+  is_ptr = is[intf_id].Var_Value +  mp_1->Num_Species;
   for (k = 0; k < mp_2->Num_Species; k++) {
     *(is_ptr++) = d_ptr[k];
   }
@@ -913,13 +917,13 @@ is_masstemp_fillin(INTERFACE_SOURCE_STRUCT *is,
   if (speciesVT_desired !=  mp_2->StateVector_speciesVT) {
     (void) convert_species_var(speciesVT_desired, mp_2,
 			       mp_2->StateVector_speciesVT,
-			       is->Var_Value + mp_1->Num_Species, time);
+			       is[intf_id].Var_Value + mp_1->Num_Species, time);
   }
   /*
    *  Fill in the temperature if it is part of the problem
    */
   num_terms =  mp_1->Num_Species +  mp_2->Num_Species;
-  if (is->Num_Terms > num_terms) {
+  if (is[intf_id].Num_Terms > num_terms) {
     *is_ptr = mp_1->StateVector[TEMPERATURE];
   }
 
@@ -927,7 +931,7 @@ is_masstemp_fillin(INTERFACE_SOURCE_STRUCT *is,
    * Store the type of species vector in the interface source 
    * structure
    */
-  is->SpeciesVT = speciesVT_desired;
+  is[intf_id].SpeciesVT = speciesVT_desired;
 }
 /**************************************************************************/
 /**************************************************************************/

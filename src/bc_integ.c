@@ -134,6 +134,7 @@ apply_integrated_bc(
   struct BC_descriptions *bc_desc;
   VARIABLE_DESCRIPTION_STRUCT *vd;
   double surface_centroid[DIM]; 
+  int interface_id = -1;
 
   tran->time_value = time_intermediate;
 
@@ -370,12 +371,23 @@ apply_integrated_bc(
        */
       if (bc->BC_Name == VL_EQUIL_PRXN_BC ||
 	  bc->BC_Name == IS_EQUIL_PRXN_BC ||
-	  bc->BC_Name == SDC_STEFANFLOW_BC ) {
-	new_way = TRUE;
+	  bc->BC_Name == SDC_STEFANFLOW_BC ||
+	  bc->BC_Name == SDC_KIN_SF_BC ) {
+	  new_way = TRUE;
+	  for (icount = 0; icount < Num_Interface_Srcs; icount++)  {
+                if(bc->BC_ID == IntSrc_BCID[icount])    {
+                     interface_id = icount;
+                     }
+                }
+          if (is) 
+            {
+	     for (icount = 0; icount < mp->Num_Species; icount++)  {
+                    is[interface_id].Processed[icount] = FALSE;
+                    }
+	    }
       } else {
         new_way = FALSE;
       }
-      if (is) is->Processed = FALSE;
       iapply = 0;
       skip_other_side = FALSE;
       if (ei->elem_blk_id == ss_to_blks[1][ss_index]) {
@@ -1139,13 +1151,13 @@ apply_integrated_bc(
 	case VL_EQUIL_PRXN_BC:
 	  new_way = TRUE;
 	  func[0] = raoults_law_prxn(&jacCol, bc, ip, elem_side_bc, 
-				     x_dot, time_value, theta, delta_t);
+		  x_dot, time_value, theta, delta_t,interface_id);
 	  break;
 
 	case IS_EQUIL_PRXN_BC:
 	  new_way = TRUE;
 	  func[0] = is_equil_prxn(&jacCol, bc, ip, elem_side_bc,
-				  x_dot, time_value, theta, delta_t);
+          	  x_dot, time_value, theta, delta_t,interface_id);
 	  break;
 
         case SDC_STEFANFLOW_BC:
@@ -1161,7 +1173,7 @@ apply_integrated_bc(
 	  }
 	  if (iapply) {
 	    func[0] = sdc_stefan_flow(&jacCol, bc, ip, elem_side_bc,
-				      x_dot, time_value, theta, delta_t);
+		      x_dot, time_value, theta, delta_t,interface_id);
 	  } else {
 	    skip_other_side = TRUE;
 	  }
@@ -1180,7 +1192,7 @@ apply_integrated_bc(
 	  }
 	  if (iapply) {
 	    func[0] = sdc_stefan_flow(&jacCol, bc, ip, elem_side_bc,
-				      x_dot, time_value, theta, delta_t);
+	             x_dot, time_value, theta, delta_t, interface_id);
 	  } else {
 	    skip_other_side = TRUE;
 	  }
@@ -1575,6 +1587,13 @@ apply_integrated_bc(
                       bc->BC_Data_Float[1], bc->BC_Data_Float[2],
                       bc->BC_Data_Int[0]);
 	    break;
+	case LIGHTP_JUMP_BC:
+	case LIGHTM_JUMP_BC:
+	case LIGHTD_JUMP_BC:
+	  qside_light_jump(func, d_func, time_intermediate,(int)bc->BC_Name,
+			    bc->BC_Data_Int[0],
+			    bc->BC_Data_Int[1]);
+	 break;
 	case APR_NOBC_BC:
 	case API_NOBC_BC:
 	  acoustic_nobc_surf (func, d_func, time_intermediate, (int)bc->BC_Name);
@@ -2014,6 +2033,7 @@ apply_integrated_bc(
 		       bc->BC_Name == VL_EQUIL_BC ||
 		       bc->BC_Name == VL_POLY_BC ||
 		       bc->BC_Name == SDC_STEFANFLOW_BC ||
+		       bc->BC_Name == SDC_KIN_SF_BC ||
 		       bc->BC_Name == T_CONTACT_RESIS_2_BC)) {
 		    ldof_eqn += 1;
 		  }

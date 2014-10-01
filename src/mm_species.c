@@ -27,6 +27,9 @@
  *    Yk_from_Xk                          void
  *    Xk_from_Yk                          void
  *    Ck_from_Xk                          void
+ *    Xk_from_Ck                          void
+ *    Ck_from_Dk                          void
+ *    Dk_from_Ck                          void
  *    convert_species_var                 void
  ************************************************************************** **/
 
@@ -477,6 +480,56 @@ void Ck_from_Yk(const int num_species, double *Ck, double *Yk,
 }
 /*****************************************************************************/
 /*****************************************************************************/
+
+void Dk_from_Ck(const int num_species, double *Dk, double *Ck, 
+		MATRL_PROP_STRUCT *matrl)
+
+    /************************************************************************
+     *
+     * Dk_from_Ck:
+     *
+     *   This small utility function calculates the species density
+     *   vector from the species concentration vector.
+     ************************************************************************/
+{
+  int i;
+  double *mw = matrl->molecular_weight;
+  for (i = 0; i < num_species; i++) Dk[i] = mw[i] * Ck[i];
+}
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+
+void Ck_from_Dk(const int num_species, double *Ck, double *Dk,
+		MATRL_PROP_STRUCT *matrl)
+
+    /************************************************************************
+     *
+     * Ck_from_Dk:
+     *
+     *   This small utility function calculates the species concentration
+     *   vector from the species density vector.
+     *
+     *   Properties, such as the temperature and the thermodynamic pressure,
+     *   are assumed to be already loaded into the State Vector Field in the 
+     *   materials property structure. These properties are passed down
+     *   to the calc_density, which calculates the density of the material.
+     ************************************************************************/
+{
+  int i;
+  double *mw = matrl->molecular_weight;
+  double *sv = matrl->StateVector;
+  if (sv + SPECIES_UNK_0 != Dk) {
+    for (i = 0; i < num_species; i++) {
+      sv[SPECIES_UNK_0 + i] = Dk[i];
+    }
+    matrl->StateVector_speciesVT = SPECIES_DENSITY;
+  }
+  for (i = 0; i < num_species; i++) {
+    Ck[i] = Dk[i] / mw[i];
+  }
+}
+/*****************************************************************************/
 /*****************************************************************************/
 
 int convert_species_var(int species_Var_Type, 
@@ -564,6 +617,21 @@ int convert_species_var(int species_Var_Type,
 	Ck_from_Xk(num_species, frac_vec, frac_vec, mp_local, time);
 	break;
     case SPECIES_CONCENTRATION:
+	break;
+    case SPECIES_DENSITY:
+	Ck_from_Dk(num_species, frac_vec, frac_vec, mp_local);
+	break;
+    default:
+	retn = -1;
+	printf("Case not covered\n");
+	break;
+    }
+  } else if (species_Var_Type == SPECIES_DENSITY) {
+   switch (frac_vec_speciesVT) {
+    case SPECIES_CONCENTRATION:
+	Dk_from_Ck(num_species, frac_vec, frac_vec, mp_local);
+	break;
+    case SPECIES_DENSITY:
 	break;
     default:
 	retn = -1;

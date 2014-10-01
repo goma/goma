@@ -505,6 +505,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			   the normal of the solid. We need to negate the normal and its
 			   derivatives to get what we really want! */
 	
+/*			BC_Types[bc_input_id].BC_Name == GD_PARAB_BC ||*/
 			for(p=0;p<ielem_dim;p++)
 			  {
 			    ssnormal[jcnt][p]=-fv->snormal[p];
@@ -803,6 +804,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			      f = BC_Types[j].BC_Data_Float;
 			      if(BC_Types[j].BC_Name == VELO_THETA_SHIK_BC)
 				{theta_max = f[8];}
+			      if(BC_Types[j].BC_Name == VELO_THETA_HOFFMAN_BC)
+				{theta_max = f[9];}
 			      if(BC_Types[j].BC_Name == VELO_THETA_HOFFMAN_BC
 				|| BC_Types[j].BC_Name == VELO_THETA_COX_BC
 				|| BC_Types[j].BC_Name == VELO_THETA_TPL_BC

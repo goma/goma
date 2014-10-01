@@ -27541,6 +27541,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
        if(pd->e[R_LIGHT_INTD])
           { intensity += fv->poynt[2];}
        intensity *= mp->u_species_source[init_spec][1];
+       intensity = MAX(intensity,0.0);
 #else
       intensity = mp->u_species_source[init_spec][1]*
                      (SQUARE(fv->apr)+SQUARE(fv->api));
@@ -27581,21 +27582,24 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
           k_prop = mp->u_species_source[w][1]*
                 exp(-mp->u_species_source[w][2]*
                 (1./fv->T - 1./mp->u_species_source[w][3]));
-          h += k_prop*fv->c[w]*free_rad*param[1];
-          dhdC[w] += k_prop*free_rad*param[1];
+          h += k_prop*fv->c[w]*free_rad*param[1]*mp->molecular_weight[w];
+          dhdC[w] += k_prop*free_rad*param[1]*mp->molecular_weight[w];
           dhdT += k_prop*mp->u_species_source[w][2]/SQUARE(fv->T)
-                *fv->c[w]*free_rad*param[1];
+                *fv->c[w]*free_rad*param[1]*mp->molecular_weight[w];
 
           if(model_bit & 2)
-               { dhdC[rad_spec] += k_prop*fv->c[w]*param[1]; }
+               { 
+                dhdC[rad_spec] += k_prop*fv->c[w]*param[1]*mp->molecular_weight[w];
+               }
           else if(model_bit & 1)
                { 
                 dhdC[O2_spec] += k_prop*fv->c[w]*param[1]*
-                      (SQUARE(k_inh/2.)*fv->c[O2_spec]/
+                      mp->molecular_weight[w]*(SQUARE(k_inh/2.)*fv->c[O2_spec]/
                        sqrt(SQUARE(k_inh*fv->c[O2_spec])/4.+
                 mp->u_species_source[init_spec+1][2]*intensity*fv->c[init_spec])
                        -k_inh/2.);
                 dhdC[init_spec] += k_prop*fv->c[w]*param[1]*
+                       mp->molecular_weight[w]*
                        0.5*mp->u_species_source[init_spec+1][2]*intensity/
                        sqrt(SQUARE(k_inh*fv->c[O2_spec])/4.+
            mp->u_species_source[init_spec+1][2]*intensity*fv->c[init_spec]);
@@ -27604,6 +27608,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
           else 
                { 
                 dhdC[init_spec] += k_prop*fv->c[w]*param[1]*
+                       mp->molecular_weight[w]*
                        0.5*sqrt(mp->u_species_source[init_spec+1][2]*intensity/
                        fv->c[init_spec]);
                }
