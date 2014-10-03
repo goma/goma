@@ -69,6 +69,7 @@
 #define FORCE_X_NEG		374
 #define FORCE_Y_NEG		375
 #define FORCE_Z_NEG		376
+#define SPECIES_FLUX_REVOLUTION	398
 
 #define I_VOLUME        0
 #define I_DISSIP        1
@@ -162,7 +163,8 @@ struct Post_Processing_Flux_Names pp_flux_names[44] =  {
         { "FORCE_Z_POS",            FORCE_Z_POS },
         { "FORCE_X_NEG",            FORCE_X_NEG },
         { "FORCE_Y_NEG",            FORCE_Y_NEG },
-        { "FORCE_Z_NEG",            FORCE_Z_NEG }
+        { "FORCE_Z_NEG",            FORCE_Z_NEG },
+        { "SPECIES_FLUX_REVOLUTION",       SPECIES_FLUX_REVOLUTION }
 };
 
 int Num_Flux_Names = sizeof(pp_flux_names) / 
