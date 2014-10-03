@@ -285,6 +285,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 #ifdef LIBRARY_MODE
   int last_step = FALSE;	 /* Indicates final time step on this call */
 #endif
+#ifdef RELAX_ON_TRANSIENT_PLEASE
+  int relax_bit = TRUE;	 /* Enables relaxation after a transient convergence failure*/
+#else
+  int relax_bit = FALSE;	
+#endif
 
   static const char yo[]="solve_problem"; /* So my name is in a string.        */
 
@@ -2223,7 +2228,8 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       dcopy1(numProcUnknowns, x, x_pred);
       if ( nAC > 0 ) dcopy1( nAC, x_AC, x_AC_pred );
 
-#if 1    /* Set TRUE to disable relaxation on timesteps after the first*/
+#ifdef RESET_TRANSIENT_RELAXATION_PLEASE  
+  /* Set TRUE to disable relaxation on timesteps after the first*/
       /* For transient, reset the Newton damping factors after a
        *   successful time step
        */
@@ -2807,7 +2813,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       else /* not converged or unsuccessful time step */
       {
 /* Set bit TRUE in next line to enable retries for failed first timestep*/
-        if(1 && nt == 0 && n < 15) {
+        if(relax_bit && nt == 0 && n < 15) {
         DPRINTF(stderr,"\nHmm... could not converge on first step\n Let's try some more iterations\n");
              if(inewton == -1)        {
                        damp_factor1 *= 0.5;

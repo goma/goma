@@ -2359,6 +2359,7 @@ Diffusivity (void)
     case FREE_VOL:   
       err = Free_Vol_Theory_Diffusivity(w, mp->u_diffusivity[w]);    
       break;
+
     case GENERALIZED_FREE_VOL:
       err = Generalized_FV_Diffusivity(w);
       break;
@@ -2397,7 +2398,6 @@ Diffusivity (void)
 				  &mp->diffusivity[w],
 				  &mp->d_diffusivity[w][FILL] );
       break;
-
     default:
       break;
     }
@@ -2454,7 +2454,6 @@ Diffusivity (void)
  *     output:  mp->diffusivity[w]
  *              mp->d_diffusivity[w][w1]
  *
- * NOTE: The diffusivity according to this theory does not approach to
  * NOTE: The diffusivity according to this theory does not approach to
  * self-diffusivity (of solvent component) as the mixture approaches pure solvent.
  * One can make a correction by making sure that pow((1 - vol_frac_1),2)*(1.-2.*chi*vol_frac_1)
@@ -2591,6 +2590,7 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
           }
           break;
 
+      case SPECIES_UNDEFINED_FORM:
       case SPECIES_MASS_FRACTION:
         for(w=0 ; w<pd->Num_Species_Eqn; w++)
            {
@@ -2600,9 +2600,8 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
 	      vol_frac_1 += fv->c[w]*mp->specific_volume[w];  
              }
 	   }
-          C[0] =  c0;   /* w1 - the solvent mass fraction */
+          C[0] =  c0/density_tot;   /* w1 - the solvent mass fraction */
           C[1] = 1. - C[0];  		/* w2 - the polymer mass fraction */
-          vol_frac_1 *= density_tot;
           vol_frac_2 = 1.0 - vol_frac_1 ;
          if(af->Assemble_Jacobian)
           {
@@ -3037,6 +3036,7 @@ Generalized_FV_Diffusivity(int species_no)  /* current species number*/
              drho_dc[w] = 1.0; 
            }
          break;
+      case SPECIES_UNDEFINED_FORM:
       case SPECIES_MASS_FRACTION:
         for(w=0 ; w<pd->Num_Species_Eqn; w++)
            { 
@@ -6631,4 +6631,3 @@ cal_current_density (double x[],           /* global nodal solution vector  */
 } /* END of routine cal_current_density */
 /*****************************************************************************/
 #endif
-
