@@ -922,7 +922,7 @@ sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *func_jac,
   {
   if (! is[intf_id].Processed[wspec]) {
     is[intf_id].Processed[wspec] = TRUE;
-    bc_rxn = BC_Types + bc->BC_Data_Int[2]+wspec;
+  /*  bc_rxn = BC_Types + bc->BC_Data_Int[2]+wspec; */
     /*
      * Fill up the Var_Value[] list. Possibly change the type
      * of the species unknown vector at the same time.
@@ -987,7 +987,6 @@ sdc_stefan_flow(JACOBIAN_VAR_DESC_STRUCT *func_jac,
    * Add in the source terms
    */
   Sk =  is[intf_id].SourceTerm+pos_mp;
-/*  for (k = 0; k < mp->Num_Species; k++) {    */
     func_value += mw[wspec] * Sk[wspec];
   }
 
@@ -7150,13 +7149,11 @@ void fapply_moving_CA_sinh(
   double v_mesh, v_mesh_dt;
 
 /*  Hoffman correlation variables	*/
-  double ca_no, g_sca = 0.0, g_dca = 0.0, A_sca = 0.0, A_dca = 0.0;
+  double ca_no, g_sca = 0.0, g_dca = 0.0;
   double g_deriv;
-  int iter, iter_max=20;
-  double eps_tol=1.0e-12;
   double hoff_C=0.003838336, hoff_N=2.7944, hoff_F=0.7093681;
-  double hoff_M=1.144796, hoff_R;
-  double hoff_D=5.0*M_PIE/180.0;
+  double hoff_M=1.144796, hoff_R=8.458397749;
+  double hoff_D=velocity_pre_exponential*M_PIE/180.0;
   double liq_visc = 0.0, gamma[DIM][DIM];
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
@@ -7185,9 +7182,9 @@ void fapply_moving_CA_sinh(
   double drhs_ddpj, drhs_den_ddpj, drhs_num_ddpj, dveloc0_ddpj;
   double theta_max = 0.0, costhetamax = 0.0, sinthetamax = 0.0, dewet = 0.0;
   const double shik_max_factor = 1.01;
-/*const double wall_sign = (TimeIntegration == STEADY) ? 1 : -1;  */
-/* disabling this sign change for now - doesn't seem necessary*/
-  const double wall_sign = (TimeIntegration == STEADY) ? 1 : 1;  
+  const double wall_sign = (TimeIntegration == STEADY) ? 1 : -1;  
+/* disabling this sign change for now - doesn't seem necessary
+  const double wall_sign = (TimeIntegration == STEADY) ? 1 : 1;  */
 
 
   /*
@@ -7252,39 +7249,6 @@ void fapply_moving_CA_sinh(
 	 	v_new *= dewet;
 		break;
 	case VELO_THETA_HOFFMAN_BC:
-#if 0
-		ca_no = 1.0E+06; iter = 0; eps=10.*eps_tol;
-		while (iter <= iter_max && fabs(eps) > eps_tol)
-			{
-			g_sca = log((3.-costhetaeq)/(1.+costhetaeq))/(2.*5.16);
-			A_sca = pow(g_sca,1./0.706);
-			eps = -(ca_no - 1.31*pow(ca_no,0.99)*A_sca-A_sca)/
-					(1.-1.31*0.99*A_sca/pow(ca_no,0.01));
-			ca_no += eps;
-			iter++;
-			}
-		if(fabs(eps) > eps_tol)EH(-1,"Hoffman iteration not converged");
-		g_sca = ca_no;
-		ca_no = 1.0E+06; iter = 0; eps=10.*eps_tol;
-		while (iter <= iter_max && fabs(eps) > eps_tol)
-			{
-			g_dca = log((3.-costheta)/(1.+costheta))/(2.*5.16);
-			A_dca = pow(g_dca,1./0.706);
-			eps = -(ca_no - 1.31*pow(ca_no,0.99)*A_dca-A_dca)/
-					(1.-1.31*0.99*A_dca/pow(ca_no,0.01));
-			ca_no += eps;
-			if(!finite(ca_no))
-			    {
-				ca_no = eps = DBL_MAX/10.;
-			    }
-			iter++;
-			}
-		if(fabs(eps) > eps_tol)
-                     {
-                      fprintf(stderr,"Hoffman not converged ... %d %g\n",iter,eps);
-                     }
-		g_dca = ca_no;
-#else
                 if(thetaeq < hoff_F*theta_max)
                      {
                       g_sca = hoff_C*pow(thetaeq,hoff_N);
@@ -7307,7 +7271,6 @@ void fapply_moving_CA_sinh(
                             *(1.0+hoff_M/hoff_D*(theta-theta_max+hoff_D));
                      }
        		if(!finite(g_dca)) { g_dca = SGN(g_dca)*BIG_PENALTY; }
-#endif
 		ca_no = g_dca - g_sca;
 		dewet = (ca_no < 0) ? dewet_input : 1.0;
 		v_new = dewet*ca_no*g/liq_visc;
@@ -7369,13 +7332,6 @@ void fapply_moving_CA_sinh(
 		EH(-1,"bad DCA bc name\n");
 	}
 
-#if 0
-printf("angle vnew %g %g\n", acos(costheta)*180/M_PIE, v_new);
-#endif
-#if 0
-  log_dbg("v_new     = %g", v_new);
-#endif
-
   /*
    * If time dependent, possibly relax any abrupt changes...
    */
@@ -7401,10 +7357,6 @@ printf("angle vnew %g %g\n", acos(costheta)*180/M_PIE, v_new);
     {
       v = v_new;
     }
-
-#if 0
-  log_dbg("v      = %g", v);
-#endif
 
   /*
    * Velocity is considered positive when the free surface moves tangentially
@@ -7433,23 +7385,11 @@ printf("angle vnew %g %g\n", acos(costheta)*180/M_PIE, v_new);
 	   sstangent[1] * fsnormal[1] +
 	   sstangent[2] * fsnormal[2] ) > 0 ? 1 : -1;
 
-/*  sign = 1.0;*/
-
-#if 0
-  fprintf(stderr,"\n sn = (%g, %g, %g)\n", ssnormal[0], ssnormal[1], ssnormal[2]);
-  fprintf(stderr,"fn = (%g, %g, %g)\n", fsnormal[0], fsnormal[1], fsnormal[2]);
-  fprintf(stderr,"t = (%g, %g, %g)\n", sstangent[0], sstangent[1], sstangent[2]);
-  fprintf(stderr,"sgn(t.n_fs)     = %g\n", sign);
-#endif
-
   v_mesh = sign * ( wall_sign*wall_velocity + sstangent[0]*x_dot[0] +
 		    sstangent[1]*x_dot[1] );
 	/*	+ sstangent[2] * x_dot[2] );	*/
   v_mesh_dt = sign * ( sstangent[0]*fv_dot->v[0] +
 		    sstangent[1]*fv_dot->v[1] );
-#if 0
-  log_dbg("v_mesh = %g", v_mesh);
-#endif
 
   /*
    * Residual equation 
@@ -7457,7 +7397,7 @@ printf("angle vnew %g %g\n", acos(costheta)*180/M_PIE, v_new);
    *          v - t.dxdt = 0
    */
 
-#if 1
+#if 0
 fprintf(stderr,"\nwall_v x_dot  %g %g %g \n",wall_sign*wall_velocity,x_dot[0],x_dot[1]);
 fprintf(stderr,"cos sin CA#  %g %g %g \n",costheta, sintheta, ca_no);
 fprintf(stderr,"v_wetting v_mesh DCA  %g %g %g %g\n",v,v_mesh, v_mesh_dt,acos(costheta)*180/M_PIE);
@@ -7468,7 +7408,7 @@ fprintf(stderr,"velocity  %g %g %g\n",v,v_mesh,v_mesh_dt);
   if ( pd->Num_Dim != 1) 
     {
       *func = (v - v_mesh);
-	if(0 && TimeIntegration == TRANSIENT)
+	if(TimeIntegration == TRANSIENT)
 		{ *func += t_relax*v_mesh_dt;}  
       *func *= BIG_PENALTY;
     }
@@ -7528,7 +7468,7 @@ fprintf(stderr,"velocity  %g %g %g\n",v,v_mesh,v_mesh_dt);
 	   	  	}
 			else
 			{
-/*		  	dvmesh_ddpj += sign * ( dsstangent_qpj * wall_velocity );*/
+		  	dvmesh_ddpj += sign * ( dsstangent_qpj * wall_velocity );
 			}
 	   	}
 	     dvmesh_ddpj += sign * wall_sign*dwall_velo_dx[p][j]; 
@@ -7539,13 +7479,6 @@ fprintf(stderr,"velocity  %g %g %g\n",v,v_mesh,v_mesh_dt);
 					 * g * (-dnnddpj) * factor;
 				break;
 			case VELO_THETA_HOFFMAN_BC:
-#if 0
-	      			dv_ddpj = factor*dewet*g/liq_visc * 
-					(1.+1.31*pow(g_dca,0.99))/
-				(1.-1.31*0.99*A_dca/pow(g_dca,0.01))*
-				pow(A_dca,0.294)*(-4.)*dnnddpj/ (0.706*2*5.16
-					*(3.-costheta)*(1.+costheta));
-#else
                                 dv_ddpj = factor*dewet*g/liq_visc;
                                 if(theta < hoff_F*theta_max)
                                      {
@@ -7564,7 +7497,6 @@ fprintf(stderr,"velocity  %g %g %g\n",v,v_mesh,v_mesh_dt);
                                      }
        			if(!finite(g_deriv)) { g_deriv = SGN(g_deriv)*BIG_PENALTY; }
                         	dv_ddpj *= g_deriv;
-#endif
 				dv_ddpj += factor*dewet*(g_dca-g_sca)*g
 					*(-d_mu->X[p][j]/SQUARE(liq_visc));
 				break;

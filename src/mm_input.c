@@ -5398,6 +5398,15 @@ rd_ac_specs(FILE *ifp,
  		  EH(-1,"Error in reading ACOUSTIC_FLUX augmenting condition");
  		}
  	    }
+	  else if ( strcmp( input, "SPECIES_FLUX_REVOLUTION" ) == 0 )
+	    {
+	      augc[iAC].MFID = SPECIES_FLUX_REVOLUTION ;
+
+	      if( fscanf(ifp,"%d %d %lf", &augc[iAC].SSID, &augc[iAC].COMPID,&augc[iAC].CONSTV) != 3 )
+		{
+		  EH(-1,"Error in reading SPECIES_FLUX_REVOLUTION augmenting condition");
+		}
+	    }
  	  else
 	    {
 	      EH(-1, "That flux-type augmenting condition has yet to be implemented");
@@ -5408,6 +5417,7 @@ rd_ac_specs(FILE *ifp,
 	    case CHARGED_SPECIES_FLUX:
 	    case CURRENT:
 	    case SPECIES_FLUX:
+	    case SPECIES_FLUX_REVOLUTION:
 	      SPF(endofstring(echo_string)," %d %d %.4g",  augc[iAC].SSID, augc[iAC].COMPID, augc[iAC].CONSTV );
 	      break;
 	    case CURRENT_FICKIAN:
