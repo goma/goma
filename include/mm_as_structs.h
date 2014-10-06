@@ -755,6 +755,8 @@ struct Action_Flags
  */
 
 struct Uniform_Problem_Description {
+  int   Total_Num_Matrices;  /* Total number of problem graphs to be solved */
+
   int   Total_Num_EQ;  /* This is used in conjunction with the ep[] array.
 			* The number of nonzero entries in this array will
 			* equal the number of non neg 1 entries in the ep[]

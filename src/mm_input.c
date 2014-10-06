@@ -802,6 +802,7 @@ rd_genl_specs(FILE *ifp,
   iread = look_for_optional(ifp,"General Specifications", input, '=');
 
   ECHO("\n***General Specifications***\n", echo_file);
+
     
   iread = look_for_optional(ifp,"Output Level",input,'=');
   if (iread == 1) {
@@ -5705,6 +5706,23 @@ rd_solver_specs(FILE *ifp,
   iread=look_for_optional(ifp,"Solver Specifications",input,'=');
 
   ECHO("\n***Solver Specifications***\n", echo_file);
+
+
+  iread = look_for_optional(ifp,"Number of Matrices",input,'=');
+  if (iread == 1) 
+    {
+     upd->Total_Num_Matrices = read_int(ifp, "Number of Matrices");
+     if (upd->Total_Num_Matrices < 1) 
+       {
+        EH(-1, "Number of Matrices should be greater or equal to 1");
+       }
+     SPF(echo_string, "%s = %d", "Number of Matrices", upd->Total_Num_Matrices); ECHO(echo_string, echo_file);
+    }
+  else 
+    {
+     upd->Total_Num_Matrices = 1;
+    }
+
 
   strcpy(search_string, "Solution Algorithm");
 
