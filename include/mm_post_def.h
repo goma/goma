@@ -119,7 +119,7 @@ typedef struct Post_Processing_Flux_Names FLUX_NAME_STRUCT;
 extern FLUX_NAME_STRUCT pp_flux_names[];
 extern int Num_Flux_Names;
 
-struct Post_Processing_Flux_Names pp_flux_names[44] =  {
+struct Post_Processing_Flux_Names pp_flux_names[45] =  {
         { "FORCE_NORMAL",       FORCE_NORMAL },
         { "FORCE_TANGENT1",     FORCE_TANGENT1 },
         { "FORCE_TANGENT2",     FORCE_TANGENT2 },

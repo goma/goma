@@ -13382,7 +13382,7 @@ qside_light_jump(double func[DIM],
   
   int j_id;
   int var;
-  double phi_j,R_inv;
+  double phi_j,R_inv = 0;
   double sign_int = 0;
   
 /***************************** EXECUTION BEGINS *******************************/
