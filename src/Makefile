@@ -30,16 +30,16 @@ _MACH =
 
 # Useful for standard goma libary install location
 
-ARCH = rhel5_ompi
+ARCH = rhel6_ompi
 
 # Goma library path, by default we assume all major non-standard libraries are under
 # the goma library path
 
-GOMA_LIBS = /usr/local/sandia/$(ARCH)
+GOMA_LIBS = /home/goma/production/$(ARCH)
 
 # MPI install location, used for include, lib, and bin directories
 
-MPI_TOP = /usr/lib64/openmpi
+MPI_TOP = /usr/bin/openmpi-1.6.3
 
 # GCC_TOP is the corresponding location of the gcc compilers and libs that are
 # used by the MPI compilers
@@ -112,7 +112,7 @@ DEFINES ?= -Dlinux \
            -DMDE=27 \
            -DMAX_PROB_VAR=15 \
            -DMAX_EXTERNAL_FIELD=4 \
-           -DMAX_CONC=6 \
+           -DMAX_CONC=4 \
            -DCOUPLED_FILL \
            -DPARALLEL \
            -DEIGEN_SERIAL
@@ -152,7 +152,7 @@ LD_LIBRARY_PATH := $(GCC_LIB64):$(GCC_LIB):${LD_LIBRARY_PATH}
 # ------
 
 # SEACAS install directory (include, lib)
-SEACAS_TOP ?= /usr/local/sandia/SEAMS_new
+SEACAS_TOP ?= $(GOMA_LIBS)/SEACAS-2012-09-10
 
 # ExodusII library
 
@@ -165,7 +165,7 @@ CHACO_LIB = -lchaco
 NETCDF_LIB = -L$(SEACAS_TOP)/lib  -lnetcdf  -lhdf5_hl  -lhdf5
 
 # SEACAS includes and libraries
-SEACAS_INC = -isystem $(SEACAS_TOP)/inc
+SEACAS_INC = -isystem $(SEACAS_TOP)/include
 
 SEACAS_LIB = -L$(SEACAS_TOP)/lib  $(EXODUSII_LIB)  $(NETCDF_LIB) \
                $(CHACO_LIB)
@@ -174,7 +174,7 @@ SEACAS_LIB = -L$(SEACAS_TOP)/lib  $(EXODUSII_LIB)  $(NETCDF_LIB) \
 # --------
 
 # Trilinos install directory (include, lib)
-TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-10.2.2/LINUX_MPI
+TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-11.8.1-Built
 
 # KOMPLEX library (not included by default)
 KOMPLEX_LIB ?=
@@ -185,13 +185,11 @@ AZTEC_LIB =  -laztecoo -lifpack
 
 # AMESOS library
 
-#AMESOS_LIB = -lamesos -lepetraext -lepetra 
-AMESOS_LIB = -lamesos -lepetraext -lepetra -lteuchos 
+AMESOS_LIB = -lamesos -lepetraext -lepetra 
 
 # TEUCHOS library
 
-#TEUCHOS_LIB = -lteuchoscomm -lteuchoscore -lteuchosnumerics -lteuchosparameterlist -lteuchosremainder
-TEUCHOS_LIB = 
+TEUCHOS_LIB = -lteuchoscomm -lteuchoscore -lteuchosnumerics -lteuchosparameterlist -lteuchosremainder
 
 # Trilinos includes and libraries
 TRILINOS_INC = -isystem $(TRILINOS_TOP)/include
@@ -216,10 +214,9 @@ LAPACK_TOP ?= $(GOMA_LIBS)/lapack-3.2.1
 
 LAPACK_LIB = -L$(LAPACK_TOP) -llapack$(_MACH)
 
-BLAS_TOP ?= /usr/lib64/atlas
+BLAS_TOP ?= $(GOMA_LIBS)/BLAS
 
-#BLAS_LIB = -L$(BLAS_TOP) -lblas$(_MACH)
-BLAS_LIB = -L$(BLAS_TOP) -lptcblas -lptf77blas -latlas
+BLAS_LIB = -L$(BLAS_TOP) -lblas$(_MACH)
 
 SCALAPACK_TOP ?= $(GOMA_LIBS)/scalapack-2.0.2
 

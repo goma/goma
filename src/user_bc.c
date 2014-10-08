@@ -80,14 +80,9 @@ static char rcsid[] =
  */
 
 /*****************************************************************************/
-/*       Functions for user_defined velocity profiles                        */
+/*       Functions for solid boundary description                            */
 /*****************************************************************************/
-/*
- *	user velocity model selection
- *
- *	1  - Parabolic velocity profile (1  coord1  coord2  flow)
- *	2  - 
- */
+
 dbl velo_vary_fnc( velo_condition, x1, x2, x3, p, time)
      const int velo_condition;
      const dbl x1;
@@ -96,294 +91,123 @@ dbl velo_vary_fnc( velo_condition, x1, x2, x3, p, time)
      const dbl p[];
      const dbl time;
 {
-  double f;
-  int model_id;
-	  model_id = ((int)p[0]);
+  /*  dbl v_max, gap, u, midpt, channel; */
+  double f = 0.0;
+  /*  double a1,a2;
 
-if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
+  a1 = p[0];
+  a2 = p[1];
+  */
 
+  /*  radius = sqrt( x1*x1 + x2*x2 ); 
+      
+      if( velo_condition == UVARY_BC) 
+      { 
+      f = -a2*x2/radius; 
+      } 
+      else if ( velo_condition == VVARY_BC ) 
+      { 
+      
+      f = a1*x1/radius; 
+      }  */
+  
+  
   if( velo_condition == UVARY_BC)
     {
-	if(model_id == 1)
+      /* if(time<900.)
 	{
-/*    parabolic velocity profile
- *      p[1] = coordinate1
- *      p[2] = coordinate2
- *      p[3] = flow in positive coordinate direction
- */
-double coord1, coord2, qflow, gap;
-	coord1 = p[1];
-	coord2 = p[2];
-	qflow = p[3];
-	gap = fabs(coord2-coord1);
-	if(gap != 0.0)	{
-		f = 6.*qflow*(x2-coord1)*(coord2-x2)/(gap*gap*gap);
-		}	else	{
-		f=0.0;
-		}
+	  a1 = 0.002;
+	} 
+      else if(time>=900.&&time<1800.)
+	{
+	  a1 = 0.02;
+	} 
+      else if(time>=1800.&&time<2700.)
+	{
+	  a1 = 0.2;
 	}
-	else if(model_id == 2)
+      else if(time>=2700.&&time<3600.)
 	{
-/*    parabolic velocity profile
- *      p[1] = coordinate1
- *      p[2] = coordinate2
- *      p[3] = flow in positive coordinate direction
- *	p[4] = velocity1
- *	p[5] = velocity2
- */
-double coord1, coord2, qflow, gap, veloc1, veloc2;
-	coord1 =  p[1];
-	coord2 = p[2];
-	qflow = p[3];
-	veloc1 = p[4];
-	veloc2 = p[5];
-
-	gap = fabs(coord2-coord1);
-	if(gap != 0.0)	{
-		f = (6.*qflow-3.*gap*(veloc1+veloc2))
-				*(x2-coord1)*(coord2-x2)/(gap*gap*gap)
-				+ (veloc1*(coord2-x2)+veloc2*(x2-coord1))/gap;
-		}	else	{
-		f=0.5*(veloc1+veloc2);
-		}
+	  a1 = 0.02;
 	}
-	else if(model_id == 3)
+      else if(time>=3600.&&time<4500.)
 	{
-/*    upstream profile of forward roll coating nip
- *      p[1] = web_speed_lower
- *      p[2] = roll_radius_lower
- *      p[3] = web_speed_upper
- *	p[4] = roll_radius_upper
- *	p[5] = roll_separation
- *	p[6] = flowrate
- */
-double coord1, coord2, qflow, gap, veloc1, veloc2;
-	coord1 =  -p[2]+sqrt(SQUARE(p[2])-SQUARE(x1));
-	coord2 = p[5]+p[4]-sqrt(SQUARE(p[4])-SQUARE(x1));
-	qflow = p[6];
-	veloc1 = p[1]*sqrt(1.0-SQUARE(x1/p[2]));
-	veloc2 = p[3]*sqrt(1.0-SQUARE(x1/p[4]));
-
-	gap = fabs(coord2-coord1);
-	if(gap != 0.0)	{
-		f = (6.*qflow-3.*gap*(veloc1+veloc2))
-				*(x2-coord1)*(coord2-x2)/(gap*gap*gap)
-				+ (veloc1*(coord2-x2)+veloc2*(x2-coord1))/gap;
-		}	else	{
-		f=0.5*(veloc1+veloc2);
-		}
+	  a1 = 0.002;
 	}
-	/* micro-flexo-printing bottom surface - omega, roll_rad, gap */
-	else
-	if (model_id == 15) {
-	    
-	  double omega, roll_rad, gap, t_offset, time1, yc;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  t_offset = p[4];
-
-	  time1 = time + t_offset;
-	  yc = gap + 2.*roll_rad*(1.-sin(omega*time1));
-	  f = -omega*(x2 - yc);
-		if(nAC > 0)	{
-			f += augc[0].tmp2*cos(omega*time1);
-			}
-	  }
-	/* micro-printing (axi-symmetric)	*/
-	else 
-	if (model_id == 19)
+      else if(time>=4500.)
 	{
-	  dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta, tdc_delay;
-	  double omega, roll_rad, gap, width, t_offset, time1, yc;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
-	  t_offset = p[5];
-	  rad=p[6];
-	  theta2=p[7];
-	  tdc_delay=p[8];
-
-	  time1 = time + t_offset;
-	  if (time <= 0.0)	
-		{ f = 2.*roll_rad*(-omega*cos(omega*time1));}
-	  else if(time <= tdc_delay)
-		{ f = 0.0;}
-	  else 
-		{ time1 -= tdc_delay;
-		 f = 2.*roll_rad*(-omega*cos(omega*time1));
-		}
-	}   /*  end of micro-printing (axi-symmetric) */
-	/* micro-flexo-printing bottom surface - general */
-	else
-	if (model_id == 22) {
-	    
-	  double omega_l, omega_u, roll_rad_l, roll_rad_u, t_offset, gap;
-	  double time1, angle_l, angle_u, yc;
-	  omega_l = p[1];
-	  omega_u = p[2];
-	  roll_rad_l = p[3];
-	  roll_rad_u = p[4];
-	  t_offset = p[5];
-	  gap = p[6];
-
-	  time1 = time + t_offset;
-	  angle_l = omega_l*time1;
-	  angle_u = omega_u*time1 + 0.5*M_PIE*(1.-omega_u/omega_l);
-	  yc = gap + roll_rad_l*(1.-sin(angle_l)) + roll_rad_u*(1.-sin(angle_u));
-	  f = -omega_u*(x2 - yc);
-		if(nAC > 0)	{
-		     f += augc[0].tmp2*cos(angle_u) - augc[0].tmp1*omega_u*sin(angle_u);
-		     }
-	  }
-	else
-	{
-	EH(-1,"invalid model_id in velo_user_bc");
+	  a1 = 0.;
 	}
+      */
+      f = -2.0*x2;
+
+      /*  f = -a2*x2/radius; */
     }
   else if ( velo_condition == VVARY_BC )
     {
-    	if(model_id == 1)
-	{
-/*    parabolic velocity profile
- *      p[1] = coordinate1
- *      p[2] = coordinate2
- *      p[3] = flow in positive coordinate direction
- */
-double coord1, coord2, qflow,gap;
-	coord1 = p[1];
-	coord2 = p[2];
-	qflow = p[3];
-	gap = fabs(coord2-coord1);
-	if(gap != 0.0)	{
-		f = 6.*qflow*(x1-coord1)*(coord2-x1)/(gap*gap*gap);
-		}	else	{
-		f=0.0;
-		}
-	}
-	else if(model_id == 2)
-	{
-/*    parabolic velocity profile
- *      p[1] = coordinate1
- *      p[2] = coordinate2
- *      p[3] = flow in positive coordinate direction
- *	p[4] = velocity1
- *	p[5] = velocity2
- */
-double coord1, coord2, qflow, gap, veloc1, veloc2;
-	coord1 = p[1];
-	coord2 = p[2];
-	qflow = p[3];
-	veloc1 = p[4];
-	veloc2 = p[5];
-	gap = fabs(coord2-coord1);
-	if(gap != 0.0)	{
-		f = (6.*qflow-3.*gap*(veloc1+veloc2))
-				*(x1-coord1)*(coord2-x1)/(gap*gap*gap)
-				+ (veloc1*(coord2-x1)+veloc2*(x1-coord1))/gap;
-		}	else	{
-		f=0.5*(veloc1+veloc2);
-		}
-	}
-	else if(model_id == 3)
-	{
-/*    upstream profile of forward roll coating nip
- *      p[1] = web_speed_lower
- *      p[2] = roll_radius_lower
- *      p[3] = web_speed_upper
- *	p[4] = roll_radius_upper
- *	p[5] = roll_separation
- *	p[6] = flowrate
- */
-double coord1, coord2, qflow, gap, veloc1, veloc2;
-	coord1 =  -p[2]+sqrt(SQUARE(p[2])-SQUARE(x1));
-	coord2 = p[5]+p[4]-sqrt(SQUARE(p[4])-SQUARE(x1));
-	qflow = p[6];
-	veloc1 = -p[1]*x1/p[2];
-	veloc2 = p[3]*x1/p[4];
-
-	gap = fabs(coord2-coord1);
-	if(gap != 0.0)	{
-		f = (veloc1*(coord2-x2)+veloc2*(x2-coord1))/gap;
-		}	else	{
-		f=0.5*(veloc1+veloc2);
-		}
-	}
-	/* micro-flexo-printing bottom surface - omega, roll_rad, gap */
-	else
-	if (model_id == 15) {
-	    
-	  double omega, roll_rad, gap, t_offset, time1, ycdot;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  t_offset = p[4];
-
-	  time1 = time + t_offset;
-	  ycdot = -2.*omega*roll_rad*cos(omega*time1);
-	  f = ycdot + omega*x1;
-/* addition component due to feature compression	*/
-		if(nAC > 0)	{
-			f += augc[0].tmp2*sin(omega*time1);
-			}
-	}
-	/* micro-printing (axi-symmetric)	*/
-	else 
-	if (model_id == 19)
-	{
-	  dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta, tdc_delay;
-	  double omega, roll_rad, gap, width, t_offset, time1, yc;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
-	  t_offset = p[5];
-	  rad=p[6];
-	  theta2=p[7];
-	  tdc_delay=p[8];
-	  f = 0.0;
-	}   /*  end of micro-printing (axi-symmetric) */
-	/* micro-flexo-printing bottom surface - general */
-	else
-	if (model_id == 22) {
-	    
-	  double omega_l, omega_u, roll_rad_l, roll_rad_u, t_offset;
-	  double time1, ycdot, angle_l, angle_u, xc;
-	  omega_l = p[1];
-	  omega_u = p[2];
-	  roll_rad_l = p[3];
-	  roll_rad_u = p[4];
-	  t_offset = p[5];
-
-	  time1 = time + t_offset;
-	  angle_l = omega_l*time1;
-	  angle_u = omega_u*time1 + 0.5*M_PIE*(1.-omega_u/omega_l);
-	  xc = -roll_rad_u*cos(angle_u) + roll_rad_l*cos(angle_l);
-	  ycdot = -(omega_l*roll_rad_l*cos(angle_l) + 
-			omega_u*roll_rad_u*cos(angle_u));
-	  f = ycdot + omega_u*(x1 - xc);
-/* addition component due to feature compression	*/
-		if(nAC > 0)	{
-		    f += augc[0].tmp2*sin(angle_u) + augc[0].tmp1*omega_u*cos(angle_u);
-		    }
-	}
-	else
-	{
-	EH(-1,"invalid model_id in velo_user_bc");
-	}
+      
+      f = 2.*x1;
+      
     }
-  else if ( velo_condition == WVARY_BC )
-    {
-    f=0.;
-    }
+  
+
 
   return(f);
 
 /*  return((dbl)0);	*/	/* Here's a good default behavior! */
 
+  /* Example code fragments:
+   *
+   * channel Poisuelle flow in negative y-direction
+   * with p[0]=(flowrate/width) and p[1]=h/2
+   *
+   *  if ( velo_condition == UVARY_BC )
+   *    {
+   *       f = (0.1 - 0.3*(x2/p[0])*(x2/p[0]))*p[1]; 
+   *
+   *     for fountain flow: KSC on 8/1/94 
+   *
+   *  f = (1.0-(x2/p[0]))*p[1];  KSC on 8/17/94  for blade coating
+   *
+   *
+   * For Couette Poisuelle flow across a gap p[0] thick 
+   * with fractional flowrate Q=p[1] V p[0] (Couette if p[1]=0.5)
+   * and  v=0 at y=p[0] and v=1 at y=0 
+   * (change y/p[0] to 1-y/p[0] to invert this) RAC 10/17/94
+   *
+   * f=1.0 + (6.0*p[1]-4.0)*((x2 - 2)/p[0])
+   *       + (3.0-6.0*p[1])*((x2 - 2)/p[0])*((x2 - 2)/p[0]);
+   *
+   * printf("in UVARY, x2=, p[0]=, p[1]=, f=%13.5f %13.5f %13.5f %13.5\n",  
+   *	  x2,  p[0],  p[1],  f);
+   *
+   *    f = + 1.5*(1. - SQUARE(x2) ) -1.;
+   *     f = 0.2 - 0.4 * SQUARE(x2);     
+   *     f = 0.1 - 0.3 * SQUARE(x2);      
+   *    f = +1.5*(1. - SQUARE(x2) );
+   *
+   * Inlet of the backward facing step:
+   *      u(y) = 0    at y=step
+   *             v_in at y=(step+channel)/2
+   *	       0    at y= channel
+   *   
+   *	v_max   = p[0];
+   *	gap     = p[1];
+   *	channel = 1;
+   *	midpt   = channel - gap/2.;
+   *	u       = v_max - (SQUARE(x2-midpt))/(v_max*(SQUARE(gap/2.)));
+   *	f       = u;
+   *      }
+   *  else if (velo_condition == VVARY_BC)
+   *    { 
+   *      f = -p[1] * (1 - (x1/p[0]) * (x1/p[0]));
+   *    }
+   *  else if (velo_condition == WVARY_BC)
+   *    {
+   *      f = 0.;
+   *    }
+   *  return (f);
+   */
 }
 /*****************************************************************************/
 dbl dvelo_vary_fnc_d1( velo_condition, x1, x2, x3, p, time)
@@ -394,143 +218,35 @@ dbl dvelo_vary_fnc_d1( velo_condition, x1, x2, x3, p, time)
      const dbl p[];
      const dbl time;
 {
-  dbl f;
-  int model_id;
-  model_id = ((int)p[0]);
+  dbl f = 0.0;
+  dbl a2;
+  /* dbl radius, drdx1; */
 
-if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
 
-  if( velo_condition == UVARY_BC)
-     {
-	if(model_id == 1)
-	{
-	f = 0.;
-	}
-	else
-	if(model_id == 2)
-	{
-	f = 0.;
-	}
-	else if(model_id == 3)
-	{
-double coord1, coord2, qflow, gap, veloc1, veloc2;
-double coord1dx, coord2dx, gapdx, veloc1dx, veloc2dx;
-double tmp1, tmp2, tmp3;
-	coord1 =  -p[2]+sqrt(SQUARE(p[2])-SQUARE(x1));
-	coord2 = p[5]+p[4]-sqrt(SQUARE(p[4])-SQUARE(x1));
-	qflow = p[6];
-	veloc1 = p[1]*sqrt(1.0-SQUARE(x1/p[2]));
-	veloc2 = p[3]*sqrt(1.0-SQUARE(x1/p[4]));
-	coord1dx=-x1/sqrt(SQUARE(p[2])-SQUARE(x1));
-	coord2dx=x1/sqrt(SQUARE(p[4])-SQUARE(x1));
-	gapdx = coord2dx - coord1dx;
-	veloc1dx = -p[1]*x1/sqrt(1.0-SQUARE(x1/p[2]));
-	veloc2dx = -p[3]*x1/sqrt(1.0-SQUARE(x1/p[4]));
-	gap = fabs(coord2-coord1);
-	tmp1 = 2.*qflow - gap*(veloc1+veloc2);
-	tmp2 = 3.*qflow - gap*(veloc1+veloc2);
-	tmp3 = veloc1*(coord2-x2)+veloc2*(x2-coord1);
+  /* Cylindrical swirling flow 
+   * Radius: a1
+   * Velocity: a2
+   */
 
-	if(gap != 0.0)	{
-		f = (x2-coord1)*(coord2-x2)*(-6.*gapdx*tmp2/SQUARE(gap*gap)
-			-3.*(veloc1dx+veloc2dx)/SQUARE(gap)) 
-		+3.*tmp1*(coord2dx*(x2-coord1)-coord1dx*(coord2-x2))/(gap*gap*gap)
-			-gapdx*tmp3/SQUARE(gap)+ (veloc1*coord2dx-veloc2*coord1dx
-			+(coord2-x2)*veloc1dx+(x2-coord1)*veloc2dx)/gap;
-		}	else	{
-		f=0.5*(veloc1dx+veloc2dx);
-		}
-	}
-	else
-	{
-	  f = 0;
-	}
-     }
-  else if ( velo_condition == VVARY_BC )
-     {
-        if(model_id == 1)
-        {
-double coord1, coord2, qflow, gap;
-	coord1 = p[1];
-	coord2 = p[2];
-	qflow = p[3];
-	gap = fabs(coord2-coord1);
-	if(gap != 0.0)	{
-		f = 6.*qflow*(coord1+coord2 - 2.*x1)/(gap*gap*gap);
-		}	else	{
-		f=0.0;
-		}
-	}
-	else
-        if(model_id == 2)
-        {
-double coord1, coord2, qflow, gap, veloc1, veloc2;
-	coord1 = p[1];
-	coord2 = p[2];
-	qflow = p[3];
-	veloc1 = p[4];
-	veloc2 = p[5];
-	gap = fabs(coord2-coord1);
-	if(gap != 0.0)	{
-		f = (6.*qflow-3.*gap*(veloc1+veloc2))
-			*(coord1+coord2 - 2.*x1)/(gap*gap*gap)
-			+ (veloc2-veloc1)/gap;
-		}	else	{
-		f=0.0;
-		}
-	}
-	else if(model_id == 3)
-	{
-double coord1, coord2, qflow, gap, veloc1, veloc2;
-double coord1dx, coord2dx, gapdx, veloc1dx, veloc2dx, tmp3;
-	coord1 =  -p[2]+sqrt(SQUARE(p[2])-SQUARE(x1));
-	coord2 = p[5]+p[4]-sqrt(SQUARE(p[4])-SQUARE(x1));
-	qflow = p[6];
-	veloc1 = -p[1]*x1/p[2];
-	veloc2 = p[3]*x1/p[4];
-	coord1dx=-x1/sqrt(SQUARE(p[2])-SQUARE(x1));
-	coord2dx=x1/sqrt(SQUARE(p[4])-SQUARE(x1));
-	gapdx = coord2dx - coord1dx;
-	veloc1dx = -p[1]/p[2];
-	veloc2dx = p[3]/p[4];
-	tmp3 = veloc1*(coord2-x2)+veloc2*(x2-coord1);
+  a2 = p[1];
 
-	gap = fabs(coord2-coord1);
-	if(gap != 0.0)	{
-		f = -gapdx*tmp3/SQUARE(gap) + 
-			(veloc1*coord2dx - veloc2*coord1dx + 
-			(coord2-x2)*veloc1dx + (x2-coord1)*veloc2dx)/gap;
-		f = (veloc1*(coord2-x2)+veloc2*(x2-coord1))/gap;
-		}	else	{
-		f=0.5*(veloc1dx+veloc2dx);
-		}
-	}
-	/* micro-flexo-printing bottom surface - omega, roll_rad, gap */
-	else
-	if (model_id == 15) {
-	    
-	  double omega;
-	  omega = p[1];
+  /* radius = sqrt( x1*x1 + x2*x2 );
+  drdx1  = x1/radius; */
 
-	  f = omega;
-	  }
-	/* micro-flexo-printing bottom surface - general */
-	else
-	if (model_id == 22) {
-	    
-	  double omega_u;
-	  omega_u = p[2];
-
-	  f = omega_u;
-	  }
-	else
-	{
-	 f = 0.;
-	}
-      }
-  else
+  if( velo_condition == VVARY_BC)
+    {
+     /*  f = a2*(1.0 - x1*drdx1/radius)/radius; */
+      f =2.0;
+    }
+  else if ( velo_condition == UVARY_BC )
     {
       f = 0.;
+   /*   f = -a2*x2*drdx1/radius/radius; */
+    }
+  else if ( velo_condition == WVARY_BC )
+    {
+      a2 = p[0];
+      f = a2*sin(x2);
     }
 
 
@@ -558,118 +274,89 @@ dbl dvelo_vary_fnc_d2( velo_condition, x1, x2, x3, p, time)
 {
 /* for PI use M_PIE Constant from std.h include file. */
 
-  dbl f;
-  int model_id;
-  model_id = ((int)p[0]);
+  dbl f=0.0;
+  dbl a2;
+  /* dbl a1, radius, drdx2; */
 
-if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
 
-  if( velo_condition == UVARY_BC)
-	{
-		if(model_id == 1)
-		{
-double coord1, coord2, qflow, gap;
-		coord1 = p[1];
-		coord2 = p[2];
-		qflow = p[3];
-		gap = fabs(coord2-coord1);
-		if(gap != 0.0)	{
-			f = 6.*qflow*(coord1+coord2-2.*x2)/(gap*gap*gap);
-			}	else	{
-			f=0.0;
-			}
-		}
- 		else
-		if(model_id == 2)
-		{
-double coord1, coord2, qflow, gap, veloc1, veloc2;
-		coord1 = p[1];
-		coord2 = p[2];
-		qflow = p[3];
-		veloc1 = p[4];
-		veloc2 = p[5];
-		gap = fabs(coord2-coord1);
-		if(gap != 0.0)	{
-			f = (6.*qflow-3.*gap*(veloc1+veloc2))
-				*(coord1+coord2-2.*x2)/(gap*gap*gap)
-				+ (veloc2-veloc1)/gap;
-			}	else	{
-			f=0.0;
-			}
-		}
-		else if(model_id == 3)
-		{
-double coord1, coord2, qflow, gap, veloc1, veloc2;
-	coord1 =  -p[2]+sqrt(SQUARE(p[2])-SQUARE(x1));
-	coord2 = p[5]+p[4]-sqrt(SQUARE(p[4])-SQUARE(x1));
-	qflow = p[6];
-	veloc1 = p[1]*sqrt(1.0-SQUARE(x1/p[2]));
-	veloc2 = p[3]*sqrt(1.0-SQUARE(x1/p[4]));
+  /* Cylindrical swirling flow 
+   * Radius: a1
+   * Velocity: a2
+   */
 
-	gap = fabs(coord2-coord1);
-	if(gap != 0.0)	{
-		f = (6.*qflow-3.*gap*(veloc1+veloc2))
-				*(coord1+coord2-2.*x2)/(gap*gap*gap)
-				+ (veloc2-veloc1)/gap;
-		}	else	{
-		f=0.5*(veloc1+veloc2);
-		}
-	}
-	/* micro-flexo-printing bottom surface - omega, roll_rad, gap */
- 		else
- 		if (model_id == 15) {
- 	    
- 	  	double omega;
- 	  	omega = p[1];
- 
- 	  	f = -omega;
- 	  	}
-	/* micro-flexo-printing bottom surface - general */
- 		else
- 		if (model_id == 22) {
- 	    
- 	  	double omega_u;
- 	  	omega_u = p[2];
- 
- 	  	f = -omega_u;
- 	  	}
-		else
-	 	{
-	  	f = 0.;
-	 	}
-	 }
-  else if ( velo_condition == VVARY_BC )
-	 {
-		if(model_id == 3)
-		{
-		double coord1, coord2, qflow, gap, veloc1, veloc2;
-		coord1 =  -p[2]+sqrt(SQUARE(p[2])-SQUARE(x1));
-		coord2 = p[5]+p[4]-sqrt(SQUARE(p[4])-SQUARE(x1));
-		qflow = p[6];
-		veloc1 = -p[1]*x1/p[2];
-		veloc2 = p[3]*x1/p[4];
-
-		gap = fabs(coord2-coord1);
-			if(gap != 0.0)	{
-				f = (veloc2-veloc1)/gap;
-				}	else	{
-				f=0.0;
-				}
-		}
-		else
-	 	{
-	  	f = 0.;
-	 	}
-	}
-  else
+  /* radius = sqrt( x1*x1 + x2*x2 );
+     drdx2  = x2/radius; */
+  
+  a2 = p[1];
+  
+  if( velo_condition == VVARY_BC)
     {
-      f = 0.;
+/*       f = -a2*x1*drdx2/radius/radius; */
+      f= 0.;
+    }
+  else if ( velo_condition == UVARY_BC )
+    {
+      /* if(time<900.)
+	{
+	  a1 = 0.002;
+	} 
+      else if(time>=900.&&time<1800.)
+	{
+	  a1 = 0.02;
+	} 
+      else if(time>=1800.&&time<2700.)
+	{
+	  a1 = 0.2;
+	}
+      else if(time>=2700.&&time<3600.)
+	{
+	  a1 = 0.02;
+	}
+      else if(time>=3600.&&time<4500.)
+	{
+	  a1 = 0.002;
+	}
+      else if(time>=4500.)
+	{
+	  a1 = 0.;
+	}
+      */
+      f = -2.0;
+
+      /*   f = ( 1. - x2*drdx2/radius)/radius; */
+    }
+  else if ( velo_condition == WVARY_BC ) 
+    {
+      a2 = p[0];
+      f = a2*x1*cos(x2);
     }
   
 
   return(f);
 /*  return((dbl)0);	*/	/* Here's a good default behavior! */
 
+  /* Example code fragments:
+   *
+   *  if(velo_condition == UVARY_BC) {
+   *  f = -0.3*2.0*(x2/p[0])*(1.0/p[0])*p[1];   for fountain flow: KSC on 8/1/94 
+   *  f = (-1.0/p[0])*p[1];  for blade coating: KSC on 8/17/94 
+   *
+   * For Couette Poisuelle flow across a gap p[0] thick 
+   *       with fractional flowrate Q=p[1] V p[0] (Couette if p[1]=0.5)
+   *       and  v=1 at y=p[0] and v=1 at y=1 
+   *       (change y/p[0] to 1-y/p[0] to invert this) RAC 10/17/94
+   *	f=(6.0*p[1]-4.0)/p[0]+2.*(3.0-6.0*p[1])/p[0]*((x2-2)/p[0]);
+   *
+   *   f = -2.*0.4* x2; 
+   *    f = -2.*0.3* x2; 
+   *    f = -1.5*2.*x2; 
+   *  } else if (velo_condition == VVARY_BC) { 
+   *    f = 0.; 
+   *  } else if (velo_condition == WVARY_BC) {
+   *    f = 0;
+   *  }
+   *  return f;
+   */
 }
 
 /*****************************************************************************/
@@ -683,8 +370,6 @@ dbl dvelo_vary_fnc_d3( velo_condition, x1, x2, x3, p, time)
 {
 /* for PI use M_PIE Constant from std.h include file. */
   dbl f;
-
-if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
 
   f = 0.;               /* enter your function here */
 
@@ -706,34 +391,6 @@ if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
 /*****************************************************************************/
 /*       Functions for solid boundary description                            */
 /*****************************************************************************/
-/*
- *	user geometry model selection
- *
- *	1  - Gaussian bump on a roll
- *	2  - micro -replicated, gravure roll surface
- *	3  - radiused die lip corner in quadrant I&II
- *      4  - fitted function (must supply pade coefficients)
- *      5  - cell with hyperbolic tan functions
- *      6  - tapered surface for 3D manifold cavities
- *      7  - curve-driven cylindrical surface
- *      8  - single V cell 
- *      9  - Doug's bump
- *      10 - normal line to radiused die lip
- *      11 - 2 radiused die lip corners in quadrant I & II 
- *      12 - circular arc of changing radius
- *      13 - radiused die corner in combination with radiused die
- *      14 - needle collar with tanh function and planes
- *      15 - micro-flexo-printing bottom plane
- *      16 - micro-flexo-printing side plane
- *      17 - 2 radiused corners plus micro-flexo-printing motion
- *      18 - microprinting w/ force and torque
- *      19 - microprinting - axisymmetric
- *      20 - microprinting bottom roll surface
- *      21 - microprinting normal to bottom roll surface
- *      22 - microprinting - general roll, speed
- *      25 - fluid bearing die lip
- *      26 - syringe with curved lip
- */
 dbl fnc( x1, x2,  x3, p,  time)
      const dbl x1;
      const dbl x2;
@@ -742,1337 +399,17 @@ dbl fnc( x1, x2,  x3, p,  time)
      const dbl time;
 {
 /* for PI use M_PIE Constant from std.h include file. */
-	dbl f;
-	int model_id;
-	model_id = ((int)p[0]);
 
-if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
+  /* cylinder with axis parallel to z */
+  // dbl cx = p[0], cy=p[1], r=p[2];
+  dbl f=0;
 
-	/*   Gaussian bump on a roll surface
-	 *      p[1] = rad = roll radius
-	 *      p[2] = bump amplitude
-	 *      p[3] = initial location of bump - radians
-	 *      p[4] = width of bump
-	 *      p[5] = web speed
-  	 *	p[6] = xcenter
- 	 *      p[7] = ycenter
-	 */
-	if (model_id == 1)
-	{
-	dbl rad,ampl,th0,wid,web_sp,arc_position,delta_rad;
-        rad=p[1];
-        ampl=p[2];
-        web_sp=p[5];
-        th0=p[3]+(web_sp/rad)*time;
-        wid=p[4];
-	arc_position = rad*(atan2(x2-p[7],x1-p[6])-th0)/wid;
-	delta_rad = ampl*exp(-arc_position*arc_position);
 
-        f=SQUARE(x1-p[6]) + SQUARE(x2-p[7]) - SQUARE(rad+delta_rad);
+  // f = (x1-cx)*(x1-cx) + ( x2 - cy)*(x2-cy) - r*r; 
+  // f = p[0] + p[1] *(x1 - p[2])/p[3] + p[4]*sin(p[5]*x1) - x2; 
 
-	}   /*  end of Gaussian bump if block */
 
-	/*   cube corner and gravure geometries
-	 *      - specific to flat geometries for right now
-	 *      p[1] = cube_dep = depth of cube corner
-	 *      p[2] = cube_lng = length across top of cube corner
-	 *      p[3] = flat = length of flat between cubes
-	 *      p[4] = radius = radius of corner fillet
-	 *      p[5] = xveloc = web speed
-	 *      p[6] = zangle = angle of groove in z-direction
-	 *      p[7] = xoffset = starting offset in x-direction
-	 *      p[8] = yoffset = starting point in y-direction
-	 *	p[9] = xcenter = x-coord of roll center
-	 *	p[10] = ycenter = y-coord of roll center
-	 *
-	 *      other variables:
-	 *      xp = xprime between (0,cube_lng+flat)
-	 *      hypot = length of hypotenuse of cube triangle
-	 *      deltax = x offset for fillet
-	 *      deltay = y offset for fillet
-	 *      slope = slope of cube walls
-	 *	roll_rad = roll radius
-	 *	arc_pos = arc_length position on roll from TDC
-	 *	ysurf = deviation from smooth surface
-	 */
-	else 
-	if (model_id == 2)
-	{
-	dbl xp, hypot, deltax, deltay, slope;
-	dbl cube_dep, cube_lng, flat, radius, xveloc, zangle, xoffset, yoffset;
-	dbl xcenter, ycenter, roll_rad, arc_pos,ysurf;
-
-        cube_dep = p[1];
-        cube_lng = p[2];
-        flat = p[3];
-        radius = p[4];
-        xveloc = p[5];
-        zangle = p[6];
-        xoffset = p[7];
-        yoffset = p[8];
-	xcenter = p[9];
-	ycenter = p[10];
-
-        hypot=sqrt(cube_dep*cube_dep + 0.25*cube_lng*cube_lng);
-        deltax = radius * cube_dep / hypot;
-        deltay = radius *hypot / (0.5*cube_lng);
-        slope = 2.*cube_dep/cube_lng;
-	roll_rad = abs(yoffset - ycenter);
-	arc_pos = roll_rad * (0.5*M_PIE - acos((x1-xcenter)
-		/sqrt(SQUARE(x1-xcenter)+SQUARE(x2-ycenter))));
-
-
-        xp = fmod(arc_pos-xveloc*time-zangle*x3-xoffset,cube_lng+flat);
-        if(xp < 0.0){xp = cube_lng+flat+xp;}
-
-	if(xp >= 0.0 && xp <= deltax)
-        {
-        ysurf =  -deltay + sqrt(radius*radius - xp*xp);
-        }
-
-        else if(xp >= deltax && xp <= (0.5*cube_lng-deltax))
-        {
-        ysurf =  -slope*xp;
-        }
-
-        else if(xp >= (0.5*cube_lng-deltax) && xp <= (0.5*cube_lng+deltax))
-        {
-        ysurf = -cube_dep + deltay -
-        sqrt(radius*radius - (xp-0.5*cube_lng)*(xp-0.5*cube_lng));
-        }
-
-        else if(xp >= (0.5*cube_lng +deltax) && xp <= (cube_lng-deltax))
-        {
-        ysurf = -2*cube_dep + slope*xp;
-        }
-
-        else if(xp >= (cube_lng-deltax) && xp <= cube_lng)
-        {
-        ysurf = -deltay + sqrt(radius*radius
-                - (xp - cube_lng)*(xp - cube_lng));
-        }
-
-        else if(xp >= cube_lng && xp <= (cube_lng+flat))
-        {
-        ysurf = radius - deltay;
-        }
-        else
-
-        {
-      	EH(-1,"invalid argument in gravure user_bc");
-        }
-
-	f = SQUARE(x1-xcenter) + SQUARE(x2-ycenter) - SQUARE(roll_rad+ysurf);
-
-	}	/**  end of gravure if block  */
-
-	/*   radiused lip corner
-	 *      p[1] = xpt - xcoord of die tip
-	 *      p[2] = ypt - ycoord of die tip
-	 *      p[3] = angle (radians) of side 1 (in CCW direction)
-	 *      p[4] = angle (radians) of side 2 (in CCW direction)
-	 *      p[5] = radius of corner
-	 *	xcen = x-coord of radius center
-	 *	ycen = y-coord of radius center
-	 *	alpha = subtended half angle
-	 */
-	else 
-	if (model_id == 3)
-	{
-	  dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta;
-	  xpt=p[1];
-	  ypt=p[2];
-	  theta1=p[3];
-	  theta2=p[4];
-	  rad=p[5];
-	  
-	  alpha = 0.5*(theta2-theta1);
-	  xcen = xpt + (rad/sin(alpha))*cos(theta1+alpha);
-	  ycen = ypt + (rad/sin(alpha))*sin(theta1+alpha);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;  
-	  
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
-	    {
-	      f = (x2-ypt)*cos(theta1) - (x1-xpt)*sin(theta1);
-	    }
-	  else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
-	    {
-	      f = (x2-ypt)*cos(theta2) - (x1-xpt)*sin(theta2);
-	    }
-	  else
-	    {
-	      f = SQUARE(x1-xcen)+SQUARE(x2-ycen)-SQUARE(rad);
-	    }
-      
-	}   /*  end of radiused lip corner */
-  
-	/*
-	   FITTED CURVE
-	   SPECIFIED BY PADE COEFFICIENTS
-	   
-                                  2       3               N-1
-                  p1 + p2 x + p3 x  + p4 x  + . . . + pN x
-     f(x) = ------------------------------------------------------
-                                  2         3                  N-2
-            pN+1 + pN+2 x + pN+3 x  + pN+4 x  + . . . + p2N-1 x
-     
-	    HAVE TO PROVIDE COEFFICIENTS
-
-	    p[0] = model_id
-	    p[1] = N 
-	    p[2] = 21: Y AS A FUNCTION OF X
-                   31: Z AS A FUNCTION OF X
-                   12: X AS A FUNCTION OF Y
-                   32: Z AS A FUNCTION OF Y
-                   13: X AS A FUNCTION OF Z
-                   23: Y AS A FUNCTION OF Z
-	    p[3] = coefficients
-
-	    */
-	else
-	if (model_id == 4) {
-	    
-	  dbl w1, w2, dnum, dden; 
-	  const dbl *pn, *pd;
-	  int i, n, xyz;
-	  
-	  n      = abs(((int)p[1]));
-	  xyz = ((int)p[2]);
-	  
-	  
-	  pn = &p[3];
-	  pd = &p[n+3];
-	  
-	switch (xyz)
-		{
-		case 21:
-			w1=x1; w2=x2;break;
-		case 31:
-			w1=x1; w2=x3; break;
-		case 12:
-			w1=x2; w2=x1; break;
-		case 32:
-			w1=x2; w2=x3; break;
-		case 13:
-			w1=x3; w2=x1; break;
-		case 23:
-			w1=x3; w2=x2; break;
-		default:
-      EH(-1,"invalid xyz in Pade function user_bc");
-
-		}
-
-	  /*
-	     
-	  EVALUATE FUNCTION
-	     
-	  */
-	  
-	  dnum = pn[n-1];
-	  dden = pd[n-2];
-	  for (i=n-2;i>=0;i--)
-	    { dnum = pn[i]+w1*dnum; }
-	  for (i=n-3;i>=0;i--)
-	    { dden = pd[i]+w1*dden; }
-	  
-	  f = dnum/dden-w2; } /* END OF FITTED CURVE */
-
-	/*
-	   CELL 
-	   USES HYPERBOLIC TAN FUNCTIONS
-	   
-	   f(x) = y-(-d*0.5*(tanh(m*(x-s))+1.0)+d*0.5*tanh(m*(x-t))-1.0)+d)
-	        = y-d*0.5*(-tanh(m*(x-s))+tanh(m*(x-t)))
-
-	   HAVE TO PROVIDE COEFFICIENTS
-
-	   p[0] = model_id
-	   p[1] = d 
-	   p[2] = m
-	   p[3] = s
-	   p[4] = width
-	   p[5] = speed (transient analysis)
-	   p[6] = coordinate direction (1 or 2)
-
-	    */
-	else
-	if (model_id == 5) {
-	    
-	  dbl d, m, s, t, w1, w2;
-          double coord, fcn;
-          int dir;
-	  
-	  d = p[1];
-	  m = p[2];
-	  s = p[3]+p[5]*time;
-	  t = s+p[4];
-	  dir = ((int)p[6]);
-
-	  if(dir == 1)	
-		{coord = x1;fcn = x2;}
-	  else
-		{coord = x2; fcn = x1;}
-
-	  w1 = tanh(m*(coord-s));
-	  w2 = tanh(m*(coord-t));
-
-	  f = fcn-d*0.5*(-w1+w2); 
-
-	   } /* END OF CELL */
-
-	    /*
-		tapered surface for 3D manifolds
-		driven by a Pade curve
-
-	    p[0] = model_id
-	    p[1] = theta, angle in xy-plane (degrees) 
-	    p[2] = N, pade order
-	    p[3 ... 2N+1] = pade coefficients
-
-	    */
-	else
-	if (model_id == 6) {
-	    
-	  dbl x, dnum, dden, pade, th; 
-	  const dbl *pn, *pd;
-	  int i, n;
-	  
-	  th     = M_PIE * p[1]/180.;
-	  n      = abs(((int)p[2]));
-	  pn = &p[3];
-	  pd = &p[n+3];
-	  x = x3;
-	  
-	  /*
-	  EVALUATE FUNCTION
-	  */
-	  
-	  dnum = pn[n-1];
-	  dden = pd[n-2];
-	  for (i=n-2;i>=0;i--)
-	    { dnum = pn[i]+x*dnum; }
-	  for (i=n-3;i>=0;i--)
-	    { dden = pd[i]+x*dden; }
-	  
-	  pade = dnum/dden;
-	  
-	  f = x2*cos(th) +sin(th)*(pade-x1);
-
-	  } /* END OF tapered surface */
-
-	/*   3D radiused lip corner
-	 *      p[1] = angle (radians) of side 1 (in CCW direction)
-	 *      p[2] = angle (radians) of side 2 (in CCW direction)
-	 *      p[3] = radius of corner
-	 *      p[4] = Nx, pade order for x0(z)
-	 *      p[5 ... 2N+3] = pade coefficients
-	 *      p[2Nx+4] = Ny, pade order for y0(z)
-	 *      p[2Nx+5 ... 2Nx+2Ny+3] = pade coefficients
-	 *	xcen = x-coord of radius center
-	 *	ycen = y-coord of radius center
-	 *	alpha = subtended half angle
-	 */
-	else
-	if (model_id == 7)	{
-
-	  dbl theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta;
-	  dbl x, dnum, dden, padex, padey;
-	  const dbl *pnx, *pdx, *pny, *pdy;
-	  int i,nx, ny;
-	  theta1=p[1];
-	  theta2=p[2];
-	  rad=p[3];
-	  nx      = abs(((int)p[4]));
-	  pnx = &p[5];
-	  pdx = &p[nx+5];
-	  ny      = abs(((int)p[nx+6]));
-	  pny = &p[nx+7];
-	  pdy = &p[nx+7+ny];
-	  x = x3;
-	  
-	  /*
-	  EVALUATE FUNCTION
-	  */
-	  
-	  dnum = pnx[nx-1];
-	  dden = pdx[nx-2];
-	  for (i=nx-2;i>=0;i--)
-	    { dnum = pnx[i]+x*dnum; }
-	  for (i=nx-3;i>=0;i--)
-	    { dden = pdx[i]+x*dden; }
-	  
-	  padex = dnum/dden;
-
-	  dnum = pny[ny-1];
-	  dden = pdy[ny-2];
-	  for (i=ny-2;i>=0;i--)
-	    { dnum = pny[i]+x*dnum; }
-	  for (i=ny-3;i>=0;i--)
-	    { dden = pdy[i]+x*dden; }
-	  
-	  padey = dnum/dden;
-
-	  alpha = 0.5*(theta2-theta1);
-	  xcen = padex + (rad/sin(alpha))*cos(theta1+alpha);
-	  ycen = padey + (rad/sin(alpha))*sin(theta1+alpha);
-
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;  
-	  
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
-	    {
-	      f = (x2-padey)*cos(theta1) - (x1-padex)*sin(theta1);
-	    }
-	  else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
-	    {
-	      f = (x2-padey)*cos(theta2) - (x1-padex)*sin(theta2);
-	    }
-	  else
-	    {
-	      f = SQUARE(x1-xcen)+SQUARE(x2-ycen)-SQUARE(rad);
-	    }
-      
-	  }
-
-	    /*
-		SINGLE V CELL
-
-	    p[0] = model_id = 8
-	    p[1] = x01
-	    p[2] = y01 
-	    p[3] = H
-	    p[4] = L
-	    p[5] = A
-	    p[6] = R
-	    p[7] = G
-
-	    */
-	else
-	if (model_id == 8)	{
-
-	  dbl 
-	    x01, x02, x03, x04, x05, x06, x07, x08, x09, 
-	    y01, y02, y03, y04, y05, y06, y07, y08, y09, 
-	    RcA, RsA, tA, xR, xC, xL, yR, yC, yL, 
-	    H, L, A, R, G;
-
-	x01 = p[1];
-	y01 = p[2];
-	H   = p[3];
-	L   = p[4];
-	A   = p[5];
-	R   = p[6];
-	G   = p[7];
-
-	RcA = R*cos(A);
-	RsA = R*sin(A);
-	tA  = tan(A);
-
-	y02 = y01+R-RsA;
-	x02 = x01-RcA;
-
-	y03 = y02;
-	x03 = x01+RcA;
-	y04 = y01+H-R+RsA;
-	x04 = x02-(y04-y02)*tA;
-	y05 = y04;
-	x05 = x03+(y05-y03)*tA;
-	x06 = x04-RcA;
-	x07 = x05+RcA;
-	x08 = x06-L;
-	x09 = x07+L;
-
-	y06 = y01+H;
-	y07 = y01+H;
-	y08 = y01+H;
-	y09 = y01+H;
-
-	xC = x01;
-	yC = y01+R;
-
-	xR = x05+RcA;
-	yR = y05-RsA;
-
-	xL = x04-RcA;
-	yL = y04-RsA;
-
-	  /*
-	  EVALUATE FUNCTION
-	  */
-	  
-	if (x2 <= x06)
-	  {
-	    f = x1-H-y01;
-	  }
-	else
-	if ((x2 <= x04) && (x2 > x06))
-	  {
-	    f = (x2-xL)*(x2-xL)+(x1-yL)*(x1-yL)-R*R;
-	  }
-	else
-	if ((x2 <= x02) && (x2 > x04))
-	  {
-	    f = (x04-x02)*(x1-y02)-(y04-y02)*(x2-x02);
-	  }
-	else
-	if ((x2 <= x03) && (x2 > x02))
-	  {
-	    f = (x2-xC)*(x2-xC)+(x1-yC)*(x1-yC)-R*R;
-	  }
-	else
-	if ((x2 <= x05) && (x2 > x03))
-	  {
-	    f = (x05-x03)*(x1-y03)-(y05-y03)*(x2-x03);
-	  }
-	else
-	if ((x2 <= x07) && (x2 > x05))
-	  {
-	    f = (x2-xR)*(x2-xR)+(x1-yR)*(x1-yR)-R*R;
-	  }
-	else
-	if (x2 > x07)
-	  {
-	    f = x1-H-y01;
-	  } }
-        else
-        if (model_id == 9)
-        {
-        dbl x0,y0,ampl,speed,width,xpt;
-          x0=p[1];
-          y0=p[2];
-          ampl=p[3];
-          speed=p[4];
-          width=p[5];
-          xpt = x0+speed*time;
-  
-         f=x2 - (y0+ampl*exp(-SQUARE((x1-xpt)/width)));
-  
-        }   /*  end of Doug's Gaussian bump if block */
-	/*   normal line to radiused lip corner
-	 *      p[1] = xpt - xcoord of die tip
-	 *      p[2] = ypt - ycoord of die tip
-	 *      p[3] = angle (radians) of side 1 (in CCW direction)
-	 *      p[4] = angle (radians) of side 2 (in CCW direction)
-	 *      p[4] = radius of corner
-	 *	xcen = x-coord of radius center
-	 *	ycen = y-coord of radius center
-	 *	alpha = subtended half angle
-	 */
-	else 
-	if (model_id == 10)
-	{
-	  dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta;
-	  xpt=p[1];
-	  ypt=p[2];
-	  theta1=p[3];
-	  theta2=p[4];
-	  rad=p[5];
-	  
-	  alpha = 0.5*(theta2-theta1);
-	  xcen = xpt + (rad/sin(alpha))*cos(theta1+alpha);
-	  ycen = ypt + (rad/sin(alpha))*sin(theta1+alpha);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;  
-	  
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
-	    {
-	      f = (x2-ypt)*sin(theta1) + (x1-xpt)*cos(theta1);
-	    }
-	  else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
-	    {
-	      f = (x2-ypt)*sin(theta2) + (x1-xpt)*cos(theta2);
-	    }
-	  else
-	    {
-	      f = (x2-ypt)*cos(theta) - (x1-xpt)*sin(theta);
-	    }
-      
-	}   /*  end of normal line to radiused lip corner */
-  
-
-	/*   two radiused lip corners
-	 *      p[1] = xpt - xcoord of die tip 1
-	 *      p[2] = ypt - ycoord of die tip 1
-	 *      p[3] = angle (radians) of side 1 (in CCW direction)
-	 *      p[4] = radius of corner 1
-	 *      p[4] = xpt - xcoord of die tip 2
-	 *      p[5] = ypt - ycoord of die tip 2
-	 *      p[6] = angle (radians) of side 2 (in CCW direction)
-	 *      p[7] = radius of corner 2
-	 *	xcen = x-coord of radius center
-	 *	ycen = y-coord of radius center
-	 *	alpha = subtended half angle
-	 */
-	else 
-	if (model_id == 11)
-	{
-	  dbl xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
-	  dbl xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
-	  dbl theta1m, theta2m, th1, th2, th2t;
-	  xpt1=p[1];
-	  ypt1=p[2];
-	  theta1=p[3];
-	  rad1=p[4];
-	  xpt2=p[5];
-	  ypt2=p[6];
-	  theta2=p[7];
-	  rad2=p[8];
-	  
-	/*  slope of middle line		*/
-
-	  theta1m = atan2(ypt2-ypt1,xpt2-xpt1);
-	  theta1m = theta1m > theta1 ? theta1m : theta1m + 2*M_PIE;  
-	  theta2m = atan2(ypt1-ypt2,xpt1-xpt2);
-	  alpha1 = 0.5*(theta1m-theta1);
-	  alpha2 = 0.5*(theta2-theta2m);
-
-	  xcen1 = xpt1 + (rad1/sin(alpha1))*cos(theta1+alpha1);
-	  ycen1 = ypt1 + (rad1/sin(alpha1))*sin(theta1+alpha1);
-	  xcen2 = xpt2 + (rad2/sin(alpha2))*cos(theta2m+alpha2);
-	  ycen2 = ypt2 + (rad2/sin(alpha2))*sin(theta2m+alpha2);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  th1 = atan2(x2-ycen1,x1-xcen1);
-	  th2 = atan2(x2-ycen2,x1-xcen2);
-	  th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;  
-
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= th1 && th1 <= theta1)
-	    {
-	      f = (x2-ypt1)*cos(theta1) - (x1-xpt1)*sin(theta1);
-	    }
-	  else if ( theta2 <= th2t && (th2t - 0.5*M_PIE) <= theta2)
-	    {
-	      f = (x2-ypt2)*cos(theta2) - (x1-xpt2)*sin(theta2);
-	    }
-	  else if ( theta2m <= (th1+0.5*M_PIE) && th1 <= (theta1-0.5*M_PIE))
-	    {
-	      f = SQUARE(x1-xcen1)+SQUARE(x2-ycen1)-SQUARE(rad1);
-	    }
-	  else if ( (theta2m-0.5*M_PIE) <= th2 && (th1+0.5*M_PIE) <= theta2m)
-	    {
-	      f = (x2-ypt1)*cos(theta1m) - (x1-xpt1)*sin(theta1m);
-	    }
-	  else
-	    {
-	      f = SQUARE(x1-xcen2)+SQUARE(x2-ycen2)-SQUARE(rad2);
-	    }
-      
-	}   /*  end of 2 radiused lip corners */
-	else 
-	if (model_id == 12)
-	{
-	  dbl xcen1 , ycen1, rad_init, alpha, radius;
-	  xcen1=p[1];
-	  ycen1=p[2];
-	  rad_init=p[3];
-	  alpha=p[4];
-	  radius = rad_init + alpha*time;
-	      f = SQUARE(x1-xcen1)+SQUARE(x2-ycen1)-SQUARE(radius);
-	}
-	else 
-	if (model_id == 13)
-	{
-	  dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta, xcirc, ycirc, dierad;
-	  int iside;
-	  xpt=p[1];
-	  ypt=p[2];
-	  theta1=p[3];
-	  theta2=p[4];
-	  rad=p[5];
-	  dierad=p[6];
-	  iside = ((int)p[7]);
-	  
-	  /**  find center of die face  **/
-
-	if( iside == 1)
-	  {
-	  xcirc = xpt + dierad*sin(theta1);
-	  ycirc = ypt - dierad*cos(theta1);
-	  }	else	{
-	  xcirc = xpt - dierad*sin(theta2);
-	  ycirc = ypt + dierad*cos(theta2);
-	  }
-
-	  /**  find center of corner radius  **/
-
-	if( iside == 1)
-	  	{
-		alpha = theta2 - asin((rad-dierad*cos(theta2-theta1))/(rad+dierad));
-	  	}	else	{
-		alpha = theta1 + asin((rad-dierad*cos(theta2-theta1))/(rad+dierad));
-	  	}
-		xcen = xcirc + (rad+dierad)*cos(alpha);
-		ycen = ycirc + (rad+dierad)*sin(alpha);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > alpha-M_PIE ? theta : theta + 2*M_PIE;  
-	  
-	  /**  use different f depending on theta  **/
-	  
-	if( iside == 1)
-	  {
-	  if( (alpha-M_PIE) <= theta && theta <= theta1)
-	    {
-	      f = SQUARE(x1-xcirc)+SQUARE(x2-ycirc)-SQUARE(dierad);
-	    }
-	  else if ( theta2 <= theta && (theta - 0.5*M_PIE) <= theta2)
-	    {
-	      f = (x2-ypt)*cos(theta2) - (x1-xpt)*sin(theta2);
-	    }
-	  else
-	    {
-	      f = SQUARE(x1-xcen)+SQUARE(x2-ycen)-SQUARE(rad);
-	    }
-	  }	else	
-	  {
-	  if( theta2 <= theta && theta <= (alpha+M_PIE))
-	    {
-	      f = SQUARE(x1-xcirc)+SQUARE(x2-ycirc)-SQUARE(dierad);
-	    }
-	  else if ( (theta1-0.5*M_PIE) <= theta && theta <= theta1)
-	    {
-	      f = (x2-ypt)*cos(theta1) - (x1-xpt)*sin(theta1);
-	    }
-	  else
-	    {
-	      f = SQUARE(x1-xcen)+SQUARE(x2-ycen)-SQUARE(rad);
-	    }
-	  }
-      
-	}   /*  end of radiused lip corner */
-	/*
-	   Needle collar based on a tanh modified plane equation:
-
-		Ax + By +Cz + D + E(tanh(beta*(x-x0))+1)/2 = 0
-	   USES HYPERBOLIC TAN FUNCTIONS
-	    */
-	else
-	if (model_id == 14) {
-	    
-	  double A, B, C, D, E, beta, x0;
-	  
-	  A = p[1];
-	  B = p[2];
-	  C = p[3];
-	  D = p[4];
-	  E = p[5];
-	  beta = p[6];
-	  x0 = p[7];
-
-	  f = A*x1 + B*x2 + C*x3 + D + E*(tanh(beta*(x1-x0))+1)/2.;
-	  }
-	/* micro-flexo-printing bottom surface - omega, roll_rad, gap */
-	else
-	if (model_id == 15) {
-	    
-	  double omega, roll_rad, gap, t_offset, time1;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  t_offset = p[4];
-
-	  time1 = time + t_offset;
-	  f = sin(2.*omega*time1)*x1 - cos(2.*omega*time1)*
-			(x2-gap-2.*roll_rad*(1.-sin(omega*time1)));
-	  }
-	/* micro-flexo-printing vertical surface - omega, roll_rad, gap, width */
-	else
-	if (model_id == 16) {
-	    
-	  double omega, roll_rad, gap, width, t_offset, time1;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
-	  t_offset = p[5];
-
-	  time1 = time + t_offset;
-
-	  f = - cos(2.*omega*time1)*x1 - sin(2.*omega*time1)*
-			(x2-gap-2.*roll_rad*(1.-sin(omega*time1))) - 0.5*width;
-	  }
-	/*   two radiused lip corners plus micro-flexo-printing
-	 *      p[1] = omega - roll angular velocity
-	 *      p[2] = roll radius
-	 *      p[3] = roll gap
-	 *      p[4] = width of feature
-	 *      p[5] = time offset (PI/2*omega)
-	 *      p[6] = radius of corner 1
-	 *      p[7] = radius of corner 2
-	 *	xcen = x-coord of radius center
-	 *	ycen = y-coord of radius center
-	 *	alpha = subtended half angle
-	 */
-	else 
-	if (model_id == 17)
-	{
-	  dbl xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
-	  dbl xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
-	  dbl theta1m, theta2m, th1, th2, th2t;
-	  double omega, roll_rad, gap, width, t_offset, time1, yc;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
-	  t_offset = p[5];
-
-	  time1 = time + t_offset;
-	  yc = gap + 2.*roll_rad*(1.-sin(omega*time1));
-	  xpt1= -0.5*width*cos(2.*omega*time1);
-	  ypt1= yc - 0.5*width*sin(2.*omega*time1);
-	  theta1= omega*time1;
-	  rad1=p[6];
-	  xpt2= 0.5*width*cos(2.*omega*time1);
-	  ypt2= yc + 0.5*width*sin(2.*omega*time1);
-	  theta2= omega*time1;
-	  rad2=p[7];
-/*printf("position %g %g %g %g %g %g\n",time,time1,xpt1,ypt1,xpt2,ypt2);*/
-	  
-	/*  slope of middle line		*/
-
-	  theta1m = atan2(ypt2-ypt1,xpt2-xpt1);
-	  theta1m = theta1m > theta1 ? theta1m : theta1m + 2*M_PIE;  
-	  theta2m = atan2(ypt1-ypt2,xpt1-xpt2);
-	  alpha1 = 0.5*(theta1m-theta1);
-	  alpha2 = 0.5*(theta2-theta2m);
-
-	  xcen1 = xpt1 + (rad1/sin(alpha1))*cos(theta1+alpha1);
-	  ycen1 = ypt1 + (rad1/sin(alpha1))*sin(theta1+alpha1);
-	  xcen2 = xpt2 + (rad2/sin(alpha2))*cos(theta2m+alpha2);
-	  ycen2 = ypt2 + (rad2/sin(alpha2))*sin(theta2m+alpha2);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  th1 = atan2(x2-ycen1,x1-xcen1);
-	  th2 = atan2(x2-ycen2,x1-xcen2);
-	  th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;  
-
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= th1 && th1 <= theta1)
-	    {
-	      f = (x2-ypt1)*cos(theta1) - (x1-xpt1)*sin(theta1);
-	    }
-	  else if ( theta2 <= th2t && (th2t - 0.5*M_PIE) <= theta2)
-	    {
-	      f = (x2-ypt2)*cos(theta2) - (x1-xpt2)*sin(theta2);
-	    }
-	  else if ( theta2m <= (th1+0.5*M_PIE) && th1 <= (theta1-0.5*M_PIE))
-	    {
-	      f = SQUARE(x1-xcen1)+SQUARE(x2-ycen1)-SQUARE(rad1);
-	    }
-	  else if ( (theta2m-0.5*M_PIE) <= th2 && (th1+0.5*M_PIE) <= theta2m)
-	    {
-	      f = (x2-ypt1)*cos(theta1m) - (x1-xpt1)*sin(theta1m);
-	    }
-	  else
-	    {
-	      f = SQUARE(x1-xcen2)+SQUARE(x2-ycen2)-SQUARE(rad2);
-	    }
-      
-	}   /*  end of micro-printing (original) */
-	/*   two radiused lip corners plus micro-flexo-printing
-	 *     with accounting for displacement and twist
-	 *      p[1] = omega - roll angular velocity
-	 *      p[2] = roll radius
-	 *      p[3] = roll gap
-	 *      p[4] = width of feature
-	 *      p[5] = time offset (PI/2*omega)
-	 *      p[6] = radius of corner 1
-	 *      p[7] = radius of corner 2
-	 *      p[8] = vertical displacement
-	 *      p[9] = added twist
-	 *	xcen = x-coord of radius center
-	 *	ycen = y-coord of radius center
-	 *	alpha = subtended half angle
-	 */
-	else 
-	if (model_id == 18)
-	{
-	  dbl xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
-	  dbl xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
-	  dbl theta1m, theta2m, th1, th2, th2t;
-	  double omega, roll_rad, gap, width, t_offset, time1, yc, xc;
-	  double y_displ, twist, angle, l_arm;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
-	  t_offset = p[5];
-	  rad1=p[6];
-	  rad2=p[7];
-	  y_displ=p[8];
-	  twist=p[9];
-	  l_arm=p[10];
-
-	  time1 = time + t_offset;
-	  angle = omega*time1;
-	  yc = gap + 2.*roll_rad*(1.-sin(angle));
-/*  account for displacement	*/
-	  yc += y_displ*sin(angle);
-	  xc = y_displ*cos(angle);
-/*  account for twist	*/
-	  yc += l_arm*(sin(angle)-sin(angle+twist));
-	  xc += l_arm*(cos(angle)-cos(angle+twist));
-	  angle += twist;
-	  xpt1= xc + 0.5*width*sin(angle);
-	  ypt1= yc - 0.5*width*cos(angle);
-	  theta1= angle;
-	  xpt2= xc - 0.5*width*sin(angle);
-	  ypt2= yc + 0.5*width*cos(angle);
-	  theta2= angle;
-	  
-	/*  slope of middle line		*/
-
-	  theta1m = atan2(ypt2-ypt1,xpt2-xpt1);
-	  theta1m = theta1m > theta1 ? theta1m : theta1m + 2*M_PIE;  
-	  theta2m = atan2(ypt1-ypt2,xpt1-xpt2);
-	  alpha1 = 0.5*(theta1m-theta1);
-	  alpha2 = 0.5*(theta2-theta2m);
-
-	  xcen1 = xpt1 + (rad1/sin(alpha1))*cos(theta1+alpha1);
-	  ycen1 = ypt1 + (rad1/sin(alpha1))*sin(theta1+alpha1);
-	  xcen2 = xpt2 + (rad2/sin(alpha2))*cos(theta2m+alpha2);
-	  ycen2 = ypt2 + (rad2/sin(alpha2))*sin(theta2m+alpha2);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  th1 = atan2(x2-ycen1,x1-xcen1);
-	  th2 = atan2(x2-ycen2,x1-xcen2);
-	  th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;  
-
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= th1 && th1 <= theta1)
-	    {
-	      f = (x2-ypt1)*cos(theta1) - (x1-xpt1)*sin(theta1);
-	    }
-	  else if ( theta2 <= th2t && (th2t - 0.5*M_PIE) <= theta2)
-	    {
-	      f = (x2-ypt2)*cos(theta2) - (x1-xpt2)*sin(theta2);
-	    }
-	  else if ( theta2m <= (th1+0.5*M_PIE) && th1 <= (theta1-0.5*M_PIE))
-	    {
-	      f = SQUARE(x1-xcen1)+SQUARE(x2-ycen1)-SQUARE(rad1);
-	    }
-	  else if ( (theta2m-0.5*M_PIE) <= th2 && (th1+0.5*M_PIE) <= theta2m)
-	    {
-	      f = (x2-ypt1)*cos(theta1m) - (x1-xpt1)*sin(theta1m);
-	    }
-	  else
-	    {
-	      f = SQUARE(x1-xcen2)+SQUARE(x2-ycen2)-SQUARE(rad2);
-	    }
-      
-	}   /*  end of micro-printing (twist) */
-	/*   micro-flexo-printing - axi-symmetric - one radius
-	 *      p[1] = omega - roll angular velocity
-	 *      p[2] = roll radius
-	 *      p[3] = roll gap
-	 *      p[4] = width of feature
-	 *      p[5] = time offset (PI/2*omega)
-	 *      p[6] = radius of corner 1
-	 *      p[7] = radius of corner 2
-	 *	xcen = x-coord of radius center
-	 *	ycen = y-coord of radius center
-	 *	alpha = subtended half angle
-	 */
-	else 
-	if (model_id == 19)
-	{
-	  dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta, tdc_delay;
-	  double omega, roll_rad, gap, width, t_offset, time1, yc;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
-	  t_offset = p[5];
-	  rad=p[6];
-	  theta2=p[7];
-	  tdc_delay=p[8];
-
-	  time1 = time + t_offset;
-	  if (time <= 0.0)	
-		{ yc = gap + 2.*roll_rad*(1.-sin(omega*time1));}
-	  else if(time <= tdc_delay)
-		{ yc = gap ;}
-	  else 
-		{ time1 -= tdc_delay;
-		 yc = gap + 2.*roll_rad*(1.-sin(omega*time1));
-		}
-	  xpt=yc;
-	  ypt=0.5*width;
-	  theta1= -0.5*M_PIE;
-	  
-	  alpha = 0.5*(theta2-theta1);
-	  xcen = xpt + (rad/sin(alpha))*cos(theta1+alpha);
-	  ycen = ypt + (rad/sin(alpha))*sin(theta1+alpha);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;  
-	  
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
-	    {
-	      f = (x2-ypt)*cos(theta1) - (x1-xpt)*sin(theta1);
-	    }
-	  else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
-	    {
-	      f = (x2-ypt)*cos(theta2) - (x1-xpt)*sin(theta2);
-	    }
-	  else
-	    {
-	      f = SQUARE(x1-xcen)+SQUARE(x2-ycen)-SQUARE(rad);
-	    }
-      
-	}   /*  end of micro-printing (axi-symmetric) */
-	/*   micro-flexo-printing bottom roll surface
-	 *      p[1] = omega - roll angular velocity
-	 *      p[2] = roll radius
-	 *      p[3] = time offset (PI/2*omega)
-	 */
-	else 
-	if (model_id == 20)
-	{
-	  double omega, roll_rad, t_offset, coat_th, time1;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  t_offset = p[3];
-	  coat_th = p[4];
-
-	  time1 = time + t_offset;
-	  f = x1*(x1-2.*roll_rad*cos(omega*time1)) +
-		x2*(x2+2.*roll_rad*sin(omega*time1))
-		- coat_th*(coat_th+2.*roll_rad);
-	}
-	/*   micro-flexo-printing  normal to bottom roll surface
-	 *      p[1] = omega - roll angular velocity
-	 *      p[2] = roll radius
-	 *      p[3] = time offset (PI/2*omega)
-	 *      p[4] = x- offset 
-	 */
-	else 
-	if (model_id == 21)
-	{
-	  double omega, roll_rad, t_offset, time1, x_offset;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  t_offset = p[3];
-	  x_offset = p[4];
-
-	  time1 = time + t_offset;
-	  f = (x1-roll_rad*cos(omega*time1))
-			*sin(omega*time1+x_offset/roll_rad)
-		+ (x2+roll_rad*sin(omega*time1))
-			*cos(omega*time1+x_offset/roll_rad);
-	}
-	/*   two radiused lip corners plus micro-flexo-printing
-	 *     with accounting for displacement and twist
-	 *	general wrt rolls, speeds, angles
-	 *      p[1] = omega_lower - roll angular velocity
-	 *      p[2] = omega_upper - roll angular velocity
-	 *      p[3] = lower roll radius
-	 *      p[4] = upper roll radius
-	 *      p[5] = roll gap
-	 *      p[6] = width of feature
-	 *      p[7] = time offset (PI/2*omega)
-	 *      p[8] = radius of corner 1
-	 *      p[9] = radius of corner 2
-	 *      p[10] = angle of sides
-	 *      p[11] = vertical displacement
-	 *      p[12] = added twist
-	 *      p[13] = length of lever arm
-	 *	xcen = x-coord of radius center
-	 *	ycen = y-coord of radius center
-	 *	alpha = subtended half angle
-	 */
-	else 
-	if (model_id == 22)
-	{
-	  dbl xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
-	  dbl xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
-	  dbl theta1m, theta2m, th1, th2, th2t;
-	  double omega_l, omega_u, roll_rad_l, roll_rad_u, gap, width;
-	  double t_offset, time1, yc, xc, alpha;
-	  double y_displ, twist, angle_l, angle_u, l_arm;
-	  omega_l = p[1];
-	  omega_u = p[2];
-	  roll_rad_l = p[3];
-	  roll_rad_u = p[4];
-	  gap = p[5];
-	  width = p[6];
-	  t_offset = p[7];
-	  rad1=p[8];
-	  rad2=p[9];
-	  alpha=p[10];
-	  y_displ=p[11];
-	  twist=p[12];
-	  l_arm=p[13];
-
-	  time1 = time + t_offset;
-	  angle_l = omega_l*time1;
-	  angle_u = omega_u*time1 + 0.5*M_PIE*(1.-omega_u/omega_l);
-	  yc = gap + roll_rad_l*(1.-sin(angle_l)) + roll_rad_u*(1.-sin(angle_u));
-	  xc = -roll_rad_u*cos(angle_u) + roll_rad_l*cos(angle_l);
-/*  account for displacement	*/
-	  yc += y_displ*sin(angle_u);
-	  xc += y_displ*cos(angle_u);
-/*  account for twist	*/
-	  yc += l_arm*(sin(angle_u)-sin(angle_u+twist));
-	  xc += l_arm*(cos(angle_u)-cos(angle_u+twist));
-	  angle_u += twist;
-	  xpt1= xc + 0.5*width*sin(angle_u);
-	  ypt1= yc - 0.5*width*cos(angle_u);
-	  theta1= angle_u - alpha;
-	  xpt2= xc - 0.5*width*sin(angle_u);
-	  ypt2= yc + 0.5*width*cos(angle_u);
-	  theta2= angle_u + alpha;
-	  
-	/*  slope of middle line		*/
-
-	  theta1m = atan2(ypt2-ypt1,xpt2-xpt1);
-	  theta1m = theta1m > theta1 ? theta1m : theta1m + 2*M_PIE;  
-	  theta2m = atan2(ypt1-ypt2,xpt1-xpt2);
-	  alpha1 = 0.5*(theta1m-theta1);
-	  alpha2 = 0.5*(theta2-theta2m);
-
-	  xcen1 = xpt1 + (rad1/sin(alpha1))*cos(theta1+alpha1);
-	  ycen1 = ypt1 + (rad1/sin(alpha1))*sin(theta1+alpha1);
-	  xcen2 = xpt2 + (rad2/sin(alpha2))*cos(theta2m+alpha2);
-	  ycen2 = ypt2 + (rad2/sin(alpha2))*sin(theta2m+alpha2);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  th1 = atan2(x2-ycen1,x1-xcen1);
-	  th2 = atan2(x2-ycen2,x1-xcen2);
-	  th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;  
-
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= th1 && th1 <= theta1)
-	    {
-	      f = (x2-ypt1)*cos(theta1) - (x1-xpt1)*sin(theta1);
-	    }
-	  else if ( theta2 <= th2t && (th2t - 0.5*M_PIE) <= theta2)
-	    {
-	      f = (x2-ypt2)*cos(theta2) - (x1-xpt2)*sin(theta2);
-	    }
-	  else if ( theta2m <= (th1+0.5*M_PIE) && th1 <= (theta1-0.5*M_PIE))
-	    {
-	      f = SQUARE(x1-xcen1)+SQUARE(x2-ycen1)-SQUARE(rad1);
-	    }
-	  else if ( (theta2m-0.5*M_PIE) <= th2 && (th1+0.5*M_PIE) <= theta2m)
-	    {
-	      f = (x2-ypt1)*cos(theta1m) - (x1-xpt1)*sin(theta1m);
-	    }
-	  else
-	    {
-	      f = SQUARE(x1-xcen2)+SQUARE(x2-ycen2)-SQUARE(rad2);
-	    }
-	}   /*  end of micro-printing (general) */
-	/*   fluid bearing die lip by Slah Jendoubi
-         *      BC = GEOM SS 111 14 {x6} {y6} {x5} {y5} {x29} {y29} {lip_rad_u} 
-         *      BC = GEOM SS 111 14 {xx1} {yy1} {xx2} {yy2} {xcen} {ycen} {lip_rad_u} 
-	 *      p[1] = x6 - xcoord of (the point on the flat surface)
-	 *      p[2] = y6 - ycoord of (the point on the flat surface)
-	 *      p[3] = x5 - xcoord of (intersection of flat and radiused surfaces)
-	 *      p[4] = y5 - ycoord of (intersection of flat and radiused surfaces)
-	 *	p[5] = xcen = x-coord of radius center
-	 *	p[6] = ycen = y-coord of radius center
-	 *      p[7] = rad = radius of corner
-	 *	theta*= angle
-	 *	alpha  = angle
-         *
-         *
-         *                                           * 1
-         *                                           |
-         *                                           |
-         *                                           |
-         *                                           |
-         *                                           |straight line
-         *                                           |
-         *              *(xc,yc)                     |
-         *               \                           |
-         *                 \       *(xcnew,ycnew)    |
-         *                   \                       |
-         *                     \                     |
-         *                       \rad                |
-         *                         \                 |
-         *                           \               * 2
-         *                             \           /
-         *                               \       /
-         *                                 \  /
-         *                                 /circular Arc
-         *                              /
-         *                           /
-         *                       /
-         *                   / 
-         *                 * 3
-         *
-         *
-         *
-	 */
-	else
-	if (model_id == 25)
-	{
-	  dbl xx1, yy1, xx2, yy2, xx3, yy3, xcen , ycen, rad, alpha, theta, theta1;
-	  dbl xcen_new,ycen_new;
-	  xx1=p[1];
-	  yy1=p[2];
-	  xx2=p[3];
-	  yy2=p[4];
-	  xx3=p[5];
-	  yy3=p[6];
- 	  xcen=p[7];
- 	  ycen=p[8];
- 	  rad=p[9];
-	  
-	  /**   compute angle of point on curve from (xcen_new,ycen_new) **/
-	  
-	  xcen_new = (xx1+xx3)/2;
-	  ycen_new = (yy1+yy3)/2.;
-	  theta  = atan2(x2-ycen_new,x1-xcen_new);
-	  theta1 = atan2(yy2-ycen_new,xx2-xcen_new);
-	  alpha  = atan2(yy1-yy2,xx1-xx2);
-
-          /**  use different f depending on theta  **/
-
-          if( theta <= theta1)
-            {
-              f = SQUARE(x1-xcen)+SQUARE(x2-ycen)-SQUARE(rad);
-            }
-          else
-            {
-              f = (x2-yy2)*cos(alpha ) - (x1-xx2)*sin(alpha );
-            }
-              /*printf("theta %lf theta1 %lf DT %lf x %lf y %lf f %lf \n\n", theta,theta1,theta-theta1,x1,x2,f);*/
-
-        }   /*  end of fluid bearing die */
-	/*    syringe with curved lip  by Slah Jendoubi
-	 *      p[1] = x1 - xcoord of point 1
-	 *      p[2] = y1 - ycoord of point 1
-	 *      p[3] = x2 - xcoord of point 2
-	 *      p[4] = y2 - ycoord of point 2
-	 *      p[5] = x3 - xcoord of point 3
-	 *      p[6] = y3 - ycoord of point 3
-	 *      p[7] = x4 - xcoord of point 4
-	 *      p[8] = y4 - ycoord of point 4
-	 *      rad  = radius of lip 
-	 *	theta = angle (reference angle)
-         *
-         *
-         *
-         *                        y=c
-         *               3------------------------4
-         *               /
-         *             /
-         *           /
-         *          /
-         *         /
-         *        /circular Arc
-         *        |
-         *        |         *(xc,yc)
-         *        |
-         *        \
-         *         \
-         *          \ 
-         *           \ 
-         *             \ 
-         *               \ 
-         *               2------------------------1
-         *                        y=c
-         *
-         *
-         */
-        else
-	if (model_id == 26)
-        {
-          dbl xx1, yy1, xx2, yy2, xx3, yy3, xx4, yy4, xcen , ycen, rad, theta;
-          xx1=p[1];
-          yy1=p[2];
-          xx2=p[3];
-          yy2=p[4];
-          xx3=p[5];
-          yy3=p[6];
-          xx4=p[7];
-          yy4=p[8];
-
-          /**   compute angle of point on curve from (xcen,ycen) **/
-
-          xcen = (xx2+xx3)/2;
-          ycen = (yy2+yy3)/2.;
-          rad = sqrt(SQUARE(yy2-yy3)+SQUARE(xx2-xx3))/2;
-          theta = atan2(x2-ycen,x1-xcen);
-
-          /**  use different f depending on theta  **/
-
-          if(-M_PIE/2 <= theta && theta <= 0)
-            {
-              f = (x2-yy2);
-            }
-          else if(-M_PIE <= theta && theta <= -M_PIE/2)
-            {
-              f = SQUARE(x1-xcen)+SQUARE(x2-ycen)-SQUARE(rad);
-            }
-          else if(M_PIE/2 <= theta && theta <= M_PIE)
-            {
-              f = SQUARE(x1-xcen)+SQUARE(x2-ycen)-SQUARE(rad);
-            }
-          else if(0 <= theta && theta <= M_PIE/2)
-            {
-              f = x2-yy3;
-            }
-
-        }   /*  end of syringe with curved lip  */
-           /*  falling circle  */
-	else 
-	if (model_id == 30)
-	{
-	  dbl xcen1 , ycen1, xvelo, yvelo, radius;
-          dbl xcenter, ycenter;
-	  xcen1=p[1];
-	  ycen1=p[2];
-	  radius=p[3];
-	  xvelo=p[4];
-	  yvelo=p[5];
-	  xcenter = xcen1 + xvelo*time;
-	  ycenter = ycen1 + yvelo*time;
-	      f = SQUARE(x1-xcenter)+SQUARE(x2-ycenter)-SQUARE(radius);
-	}
-  else
-    {
-      EH(-1,"invalid model_id in user_bc");
-    }
-
-        return(f);
+  return(f);		/* Here's a good default behavior! */
 
 }
 /*****************************************************************************/
@@ -2084,1066 +421,24 @@ dbl dfncd1(x1, x2,  x3, p, time)
      const dbl time;
 {
 /* for PI use M_PIE Constant from std.h include file. */
-	int model_id;
-	dbl dfdx1;
+  dbl f=0;
 
-	model_id = ((int)p[0]);
 
-if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
 
-	if(model_id == 1)
-	{
-	dbl rad,ampl,th0,wid,web_sp,arc_position,delta_rad;
-        rad=p[1];
-        ampl=p[2];
-        web_sp=p[5];
-        th0=p[3]+(web_sp/rad)*time;
-        wid=p[4];
-	arc_position = rad*(atan2(x2-p[7],x1-p[6])-th0)/wid;
-	delta_rad = ampl*exp(-arc_position*arc_position);
-        dfdx1=2.*(x1-p[6])-2.*(rad+delta_rad)*delta_rad*(-2.)
-              *arc_position*(rad/wid)*
-			(-(x2-p[7])/(SQUARE(x1-p[6])+SQUARE(x2-p[7])));
-	}  /*  end of Gaussian bump if block */
-	else if(model_id == 2)
-	{
-	dbl xp, hypot, deltax, deltay, slope;
-	dbl cube_dep, cube_lng, flat, radius, xveloc, zangle, xoffset, yoffset;
-	dbl xcenter, ycenter, roll_rad, arc_pos,ysurf,ysurfds,dsdx;
+  // f = 2.0*(x1 - p[0] ); /* cylinder with axis pararell to z */
+  //f=p[1]/p[3] + p[4]*p[5]*sin(p[5]*x1);
 
-        cube_dep = p[1];
-        cube_lng = p[2];
-        flat = p[3];
-        radius = p[4];
-        xveloc = p[5];
-        zangle = p[6];
-        xoffset = p[7];
-        yoffset = p[8];
-	xcenter = p[9];
-	ycenter = p[10];
+  return(f);		/* Here's a good default behavior! */
 
-        hypot=sqrt(cube_dep*cube_dep + 0.25*cube_lng*cube_lng);
-        deltax = radius * cube_dep / hypot;
-        deltay = radius *hypot / (0.5*cube_lng);
-        slope = 2.*cube_dep/cube_lng;
-	roll_rad = abs(yoffset - ycenter);
-	arc_pos = roll_rad * (0.5*M_PIE - acos((x1-xcenter)
-		/sqrt(SQUARE(x1-xcenter)+SQUARE(x2-ycenter))));
-	dsdx=roll_rad*((x2-ycenter)/(SQUARE(x1-xcenter)+SQUARE(x2-ycenter)));
+  /* Example code fragments:
+   *
+   *  dfdx1 = 1.0;
+   *  return(dfdx1);
+   *  f = -1;   2d fiber  
+   *  f = 2.*x1;   circle 
+   *  return f; 
+   */
 
-        xp = fmod(arc_pos-xveloc*time-zangle*x3-xoffset,cube_lng+flat);
-        if(xp < 0.0){xp = cube_lng+flat+xp;}
-
-	if(xp >= 0.0 && xp <= deltax)
-        {
-        ysurf =  -deltay + sqrt(radius*radius - xp*xp);
-        ysurfds =  -xp/sqrt(radius*radius - xp*xp);
-        }
-
-        else if(xp >= deltax && xp <= (0.5*cube_lng-deltax))
-        {
-        ysurf =  -slope*xp;
-        ysurfds =  -slope;
-        }
-
-        else if(xp >= (0.5*cube_lng-deltax) && xp <= (0.5*cube_lng+deltax))
-        {
-        ysurf = -cube_dep + deltay -
-        sqrt(radius*radius - (xp-0.5*cube_lng)*(xp-0.5*cube_lng));
-        ysurfds = (xp-0.5*cube_lng)/
-                sqrt(radius*radius - (xp-0.5*cube_lng)*(xp-0.5*cube_lng));
-        }
-
-        else if(xp >= (0.5*cube_lng +deltax) && xp <= (cube_lng-deltax))
-        {
-        ysurf = -2*cube_dep + slope*xp;
-        ysurfds =  slope;
-        }
-
-	else if(xp >= (cube_lng-deltax) && xp <= cube_lng)
-        {
-        ysurf = -deltay + sqrt(radius*radius
-                - (xp - cube_lng)*(xp - cube_lng));
-        ysurfds = -(xp-cube_lng)/sqrt(radius*radius
-                - (xp - cube_lng)*(xp - cube_lng));
-        }
-
-        else if(xp >= cube_lng && xp <= (cube_lng+flat))
-        {
-        ysurf = radius - deltay;
-        ysurfds = 0.0;
-        }
-        else
-
-        {
-      	EH(-1,"invalid argument in gravure user_bc");
-        }
-
-	dfdx1 = 2.*(x1-xcenter) - 2.*(roll_rad+ysurf)*ysurfds*dsdx;
-	}
-	else if(model_id == 3)
-	{
-	dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	dbl theta;
-        xpt=p[1];
-        ypt=p[2];
-        theta1=p[3];
-        theta2=p[4];
-        rad=p[5];
-
-	alpha = 0.5*(theta2-theta1);
-	xcen = xpt + (rad/sin(alpha))*cos(theta1+alpha);
-	ycen = ypt + (rad/sin(alpha))*sin(theta1+alpha);
-
-	/**   compute angle of point on curve from arc center **/
-
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;  
-
-	/**  use different f depending on theta  **/
-
-	if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
-		{
-	dfdx1 =  -sin(theta1);
-		}
-	else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
-		{
-	dfdx1 = -sin(theta2);
-		}
-	else
-		{
-	dfdx1 = 2.*(x1-xcen);
-		}
-
-
-	}   /*  end of radiused lip corner */
-
-	else
-	if (model_id == 4) {
-
-	  dbl w1, dnum, dden, dnumdx, ddendx; 
-	  const dbl *pn, *pd;
-	  int i, n, xyz;
-	  
-	  n = abs(((int)p[1]));
-	  xyz = ((int)p[2]);
-	  
-	  
-	  pn = &p[3];
-	  pd = &p[n+3];
-	  
-	  
-	  switch (xyz)
-		  {
-		  case 21:
-		  case 31:
-			  w1=x1; 
-	  dnum = pn[n-1];
-	  dden = pd[n-2];
-	  dnumdx = (n-1.)*pn[n-1];
-	  ddendx = (n-2.)*pd[n-2];
-	  for (i=n-2;i>=0;i--)
-	    { dnum = pn[i]+w1*dnum; }
-	  for (i=n-3;i>=0;i--)
-	    { dden = pd[i]+w1*dden;
-	      dnumdx = (i+1.)*pn[i+1]+w1*dnumdx;}
-	  for (i=n-4;i>=0;i--)
-	    { ddendx = (i+1.)*pd[i+1]+w1*ddendx; }
-	  
-	  dfdx1 = (dden*dnumdx - dnum*ddendx)/(dden*dden);
-			  break;
-	  
-		  case 12:
-		  case 13:
-			  dfdx1 = -1.; break;
-		  case 32:
-		  case 23:
-			  dfdx1 = 0.; break;
-		  default:
-		EH(-1,"invalid xyz in Pade function user_bc");
-
-		}
-
-	  } /* END OF FITTED CURVE */
-
-	/*
-	   CELL 
-	   USES HYPERBOLIC TAN FUNCTIONS
-	   
-	   f(x) = y-(-d*0.5*(tanh(m*(x-s))+1.0)+d*0.5*tanh(m*(x-t))-1.0)+d)
-
-	   HAVE TO PROVIDE COEFFICIENTS
-
-	   p[0] = model_id
-	   p[1] = d 
-	   p[2] = m
-	   p[3] = s
-	   p[4] = width
-	   p[5] = speed (transient analysis)
-	   p[6] = coordinate direction (1 or 2)
-
-	    */
-	else
-	if (model_id == 5) {
-	    
-	  dbl d, m, s, t, 
-	      w1, w2;
-          double coord;
-          int dir;
-	  
-	  d = p[1];
-	  m = p[2];
-	  s = p[3]+p[5]*time;
-	  t = s+p[4];
-	  dir = ((int)p[6]);
-	  if(dir == 1)	
-		{
-		coord = x1;
-	  	w1 = cosh(m*(coord-s))*cosh(m*(coord-s));
-	  	w2 = cosh(m*(coord-t))*cosh(m*(coord-t));
-	        dfdx1 = d*m*0.5*(1.0/w1-1.0/w2); 
-		}
-	  else
-		{dfdx1 = 1.0;}
-	  } /* END OF CELL */
-
-	    /*
-		tapered surface for 3D manifolds
-		driven by a Pade curve
-
-	    p[0] = model_id
-	    p[1] = theta, angle in xy-plane (degrees) 
-	    p[2] = N, pade order
-	    p[3 ... 2N+1] = pade coefficients
-
-	    */
-	else
-	if (model_id == 6) {
-	    
-	  dbl x, th; 
-	  const dbl *pn, *pd;
-	  int n;
-	  
-	  th     = M_PIE * p[1]/180.;
-	  n      = abs(((int)p[2]));
-	  pn = &p[3];
-	  pd = &p[n+3];
-	  x = x3;
-	  
-	  /*
-	  EVALUATE FUNCTION
-	  */
-	  
-	  dfdx1 = -sin(th);
-
-	  } /* END OF tapered surface */
-
-	else
-	if (model_id == 7)	{
-
-	  dbl theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta;
-	  dbl x, dnum, dden, padex, padey;
-	  const dbl *pnx, *pdx, *pny, *pdy;
-	  int i,nx, ny;
-	  theta1=p[1];
-	  theta2=p[2];
-	  rad=p[3];
-	  nx      = abs(((int)p[4]));
-	  pnx = &p[5];
-	  pdx = &p[nx+5];
-	  ny      = abs(((int)p[nx+6]));
-	  pny = &p[nx+7];
-	  pdy = &p[nx+7+ny];
-	  x = x3;
-
-	  /*
-	  EVALUATE FUNCTION
-	  */
-	  
-	  dnum = pnx[nx-1];
-	  dden = pdx[nx-2];
-	  for (i=nx-2;i>=0;i--)
-	    { dnum = pnx[i]+x*dnum; }
-	  for (i=nx-3;i>=0;i--)
-	    { dden = pdx[i]+x*dden; }
-	  
-	  padex = dnum/dden;
-
-	  dnum = pny[ny-1];
-	  dden = pdy[ny-2];
-	  for (i=ny-2;i>=0;i--)
-	    { dnum = pny[i]+x*dnum; }
-	  for (i=ny-3;i>=0;i--)
-	    { dden = pdy[i]+x*dden; }
-	  
-	  padey = dnum/dden;
-
-	alpha = 0.5*(theta2-theta1);
-	xcen = padex + (rad/sin(alpha))*cos(theta1+alpha);
-	ycen = padey + (rad/sin(alpha))*sin(theta1+alpha);
-
-	/**   compute angle of point on curve from arc center **/
-
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;  
-
-	/**  use different f depending on theta  **/
-
-	if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
-		{
-	dfdx1 =  -sin(theta1);
-		}
-	else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
-		{
-	dfdx1 = -sin(theta2);
-		}
-	else
-		{
-	dfdx1 = 2.*(x1-xcen);
-		}
-	  }
-
-	    /*
-		SINGLE V CELL
-
-	    p[0] = model_id = 8
-	    p[1] = x01
-	    p[2] = y01 
-	    p[3] = H
-	    p[4] = L
-	    p[5] = A
-	    p[6] = R
-	    p[7] = G
-
-	    */
-	else
-	if (model_id == 8)	{
-
-	  dbl 
-	    x01, x02, x03, x04, x05, x06, x07, x08, x09, 
-	    y01, y02, y03, y04, y05, y06, y07, y08, y09, 
-	    RcA, RsA, tA, xR, xC, xL, yR, yC, yL, 
-	    H, L, A, R, G;
-
-	x01 = p[1];
-	y01 = p[2];
-	H   = p[3];
-	L   = p[4];
-	A   = p[5];
-	R   = p[6];
-	G   = p[7];
-
-	RcA = R*cos(A);
-	RsA = R*sin(A);
-	tA  = tan(A);
-
-	y02 = y01+R-RsA;
-	x02 = x01-RcA;
-
-	y03 = y02;
-	x03 = x01+RcA;
-	y04 = y01+H-R+RsA;
-	x04 = x02-(y04-y02)*tA;
-	y05 = y04;
-	x05 = x03+(y05-y03)*tA;
-	x06 = x04-RcA;
-	x07 = x05+RcA;
-	x08 = x06-L;
-	x09 = x07+L;
-
-	y06 = y01+H;
-	y07 = y01+H;
-	y08 = y01+H;
-	y09 = y01+H;
-
-	xC = x01;
-	yC = y01+R;
-
-	xR = x05+RcA;
-	yR = y05-RsA;
-
-	xL = x04-RcA;
-	yL = y04-RsA;
-
-	  /*
-	  EVALUATE FUNCTION
-	  */
-	  
-	if (x2 <= x06)
-	  {
-	    dfdx1 = 1.0;
-	  }
-	else
-	if ((x2 <= x04) && (x2 > x06))
-	  {
-	    dfdx1 = 2.0*(x1-yL);
-	  }
-	else
-	if ((x2 <= x02) && (x2 > x04))
-	  {
-	    dfdx1 = (x04-x02);
-	  }
-	else
-	if ((x2 <= x03) && (x2 > x02))
-	  {
-	    dfdx1 = 2.0*(x1-yC);
-	  }
-	else
-	if ((x2 <= x05) && (x2 > x03))
-	  {
-	    dfdx1 = (x05-x03);
-	  }
-	else
-	if ((x2 <= x07) && (x2 > x05))
-	  {
-	    dfdx1 = 2.0*(x1-yR);
-	  }
-	else
-	if (x2 > x07)
-	  {
-	    dfdx1 = 1.0;
-	  } }
-	else
-        if (model_id == 9)
-        {
-        dbl x0,y0,ampl,speed,width,xpt;
-          x0=p[1];
-          y0=p[2];
-          ampl=p[3];
-          speed=p[4];
-          width=p[5];
-          xpt = x0+speed*time;
-  
-         dfdx1= - ampl*(-2.*(x1-xpt)/SQUARE(width))*exp(-SQUARE((x1-xpt)/width));
-  
-        }   /*  end of Doug's Gaussian bump if block */
-	else if(model_id == 10)
-	{
-	dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	dbl theta;
-        xpt=p[1];
-        ypt=p[2];
-        theta1=p[3];
-        theta2=p[4];
-        rad=p[5];
-
-	alpha = 0.5*(theta2-theta1);
-	xcen = xpt + (rad/sin(alpha))*cos(theta1+alpha);
-	ycen = ypt + (rad/sin(alpha))*sin(theta1+alpha);
-
-	/**   compute angle of point on curve from arc center **/
-
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;  
-
-	/**  use different f depending on theta  **/
-
-	if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
-		{
-	dfdx1 =  cos(theta1);
-		}
-	else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
-		{
-	dfdx1 = cos(theta2);
-		}
-	else
-		{
-	dfdx1 = -sin(theta);
-		}
-
-	}   /*  end of normal line to radiused lip corner */
-
-	else 
-	if (model_id == 11)
-	{
-	  dbl xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
-	  dbl xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
-	  dbl theta1m, theta2m, th1, th2, th2t;
-	  xpt1=p[1];
-	  ypt1=p[2];
-	  theta1=p[3];
-	  rad1=p[4];
-	  xpt2=p[5];
-	  ypt2=p[6];
-	  theta2=p[7];
-	  rad2=p[8];
-	  
-	/*  slope of middle line		*/
-
-	  theta1m = atan2(ypt2-ypt1,xpt2-xpt1);
-	  theta1m = theta1m > theta1 ? theta1m : theta1m + 2*M_PIE;  
-	  theta2m = atan2(ypt1-ypt2,xpt1-xpt2);
-	  alpha1 = 0.5*(theta1m-theta1);
-	  alpha2 = 0.5*(theta2-theta2m);
-
-	  xcen1 = xpt1 + (rad1/sin(alpha1))*cos(theta1+alpha1);
-	  ycen1 = ypt1 + (rad1/sin(alpha1))*sin(theta1+alpha1);
-	  xcen2 = xpt2 + (rad2/sin(alpha2))*cos(theta2m+alpha2);
-	  ycen2 = ypt2 + (rad2/sin(alpha2))*sin(theta2m+alpha2);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  th1 = atan2(x2-ycen1,x1-xcen1);
-	  th2 = atan2(x2-ycen2,x1-xcen2);
-	  th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;  
-
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= th1 && th1 <= theta1)
-	    {
-	      dfdx1 =  -sin(theta1);
-	    }
-	  else if ( theta2 <= th2t && (th2t - 0.5*M_PIE) <= theta2)
-	    {
-	      dfdx1 = -sin(theta2);
-	    }
-	  else if ( theta2m <= (th1+0.5*M_PIE) && th1 <= (theta1-0.5*M_PIE))
-	    {
-	      dfdx1 = 2.*(x1-xcen1);
-	    }
-	  else if ( (theta2m-0.5*M_PIE) <= th2 && (th1+0.5*M_PIE) <= theta2m)
-	    {
-	      dfdx1 = -sin(theta1m);
-	    }
-	  else
-	    {
-	      dfdx1 = 2.*(x1-xcen2);
-	    }
-      
-	}   /*  end of 2 radiused lip corners */
-	else 
-	if (model_id == 12)
-	{
-	  dbl xcen1 , ycen1, rad_init, alpha;
-	  xcen1=p[1];
-	  ycen1=p[2];
-	  rad_init=p[3];
-	  alpha=p[4];
-		dfdx1 = 2.*(x1-xcen1);
-	}
-	else 
-	if (model_id == 13)
-	{
-	  dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta, xcirc, ycirc, dierad;
-	  int iside;
-	  xpt=p[1];
-	  ypt=p[2];
-	  theta1=p[3];
-	  theta2=p[4];
-	  rad=p[5];
-	  dierad=p[6];
-	  iside = ((int)p[7]);
-	  
-	  /**  find center of die face  **/
-
-	if( iside == 1)
-	  {
-	  xcirc = xpt + dierad*sin(theta1);
-	  ycirc = ypt - dierad*cos(theta1);
-	  }	else	{
-	  xcirc = xpt - dierad*sin(theta2);
-	  ycirc = ypt + dierad*cos(theta2);
-	  }
-
-	  /**  find center of corner radius  **/
-
-	if( iside == 1)
-	  	{
-		alpha = theta2 - asin((rad-dierad*cos(theta2-theta1))/(rad+dierad));
-	  	}	else	{
-		alpha = theta1 + asin((rad-dierad*cos(theta2-theta1))/(rad+dierad));
-	  	}
-		xcen = xcirc + (rad+dierad)*cos(alpha);
-		ycen = ycirc + (rad+dierad)*sin(alpha);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > alpha-M_PIE ? theta : theta + 2*M_PIE;  
-	  
-	  /**  use different f depending on theta  **/
-	  
-	if( iside == 1)
-	  {
-	  if( (alpha-M_PIE) <= theta && theta <= theta1)
-	    {
-	      dfdx1 = 2.*(x1-xcirc);
-	    }
-	  else if ( theta2 <= theta && (theta - 0.5*M_PIE) <= theta2)
-	    {
-	      dfdx1 =  -sin(theta2);
-	    }
-	  else
-	    {
-	      dfdx1 = 2.*(x1-xcen);
-	    }
-	  }	else	
-	  {
-	  if( theta2 <= theta && theta <= (alpha+M_PIE))
-	    {
-	      dfdx1 = 2.*(x1-xcirc);
-	    }
-	  else if ( (theta1-0.5*M_PIE) <= theta && theta <= theta1)
-	    {
-	      dfdx1 = -sin(theta1);
-	    }
-	  else
-	    {
-	      dfdx1 = 2.*(x1-xcen);
-	    }
-	  }
-      
-	}   /*  end of radiused lip corner */
-	/*
-	   Needle collar based on a tanh modified plane equation:
-
-		Ax + By +Cz + D + E(tanh(beta*(x-x0))+1)/2 = 0
-	   USES HYPERBOLIC TAN FUNCTIONS
-	    */
-	else
-	if (model_id == 14) {
-	    
-	  double A, B, C, D, E, beta, x0;
-	  
-	  A = p[1];
-	  B = p[2];
-	  C = p[3];
-	  D = p[4];
-	  E = p[5];
-	  beta = p[6];
-	  x0 = p[7];
-
-	  dfdx1 = A + E*0.5*beta/SQUARE(cosh(beta*(x1-x0)));
-	  }
-	/* micro-flexo-printing bottom surface - omega, roll_rad, gap */
-	else
-	if (model_id == 15) {
-	    
-	  double omega, roll_rad, gap, t_offset, time1;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  t_offset = p[4];
-
-	  time1 = time + t_offset;
-
-	  dfdx1 = sin(2.*omega*time1);
-	  }
-	/* micro-flexo-printing vertical surface - omega, roll_rad, gap, width */
-	else
-	if (model_id == 16) {
-	    
-	  double omega, roll_rad, gap, width, t_offset, time1;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
-	  t_offset = p[5];
-
-	  time1 = time + t_offset;
-
-	  dfdx1 = - cos(2.*omega*time1);
-	  }
-	else 
-	if (model_id == 17)
-	{
-	  dbl xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
-	  dbl xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
-	  dbl theta1m, theta2m, th1, th2, th2t;
-	  double omega, roll_rad, gap, width, t_offset, time1, yc;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
-	  t_offset = p[5];
-
-	  time1 = time + t_offset;
-	  yc = gap + 2.*roll_rad*(1.-sin(omega*time1));
-	  xpt1= -0.5*width*cos(2.*omega*time1);
-	  ypt1= yc - 0.5*width*sin(2.*omega*time1);
-	  theta1= omega*time1;
-	  rad1=p[6];
-	  xpt2= 0.5*width*cos(2.*omega*time1);
-	  ypt2= yc + 0.5*width*sin(2.*omega*time1);
-	  theta2= omega*time1;
-	  rad2=p[7];
-	  
-	/*  slope of middle line		*/
-
-	  theta1m = atan2(ypt2-ypt1,xpt2-xpt1);
-	  theta1m = theta1m > theta1 ? theta1m : theta1m + 2*M_PIE;  
-	  theta2m = atan2(ypt1-ypt2,xpt1-xpt2);
-	  alpha1 = 0.5*(theta1m-theta1);
-	  alpha2 = 0.5*(theta2-theta2m);
-
-	  xcen1 = xpt1 + (rad1/sin(alpha1))*cos(theta1+alpha1);
-	  ycen1 = ypt1 + (rad1/sin(alpha1))*sin(theta1+alpha1);
-	  xcen2 = xpt2 + (rad2/sin(alpha2))*cos(theta2m+alpha2);
-	  ycen2 = ypt2 + (rad2/sin(alpha2))*sin(theta2m+alpha2);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  th1 = atan2(x2-ycen1,x1-xcen1);
-	  th2 = atan2(x2-ycen2,x1-xcen2);
-	  th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;  
-
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= th1 && th1 <= theta1)
-	    {
-	      dfdx1 =  -sin(theta1);
-	    }
-	  else if ( theta2 <= th2t && (th2t - 0.5*M_PIE) <= theta2)
-	    {
-	      dfdx1 = -sin(theta2);
-	    }
-	  else if ( theta2m <= (th1+0.5*M_PIE) && th1 <= (theta1-0.5*M_PIE))
-	    {
-	      dfdx1 = 2.*(x1-xcen1);
-	    }
-	  else if ( (theta2m-0.5*M_PIE) <= th2 && (th1+0.5*M_PIE) <= theta2m)
-	    {
-	      dfdx1 = -sin(theta1m);
-	    }
-	  else
-	    {
-	      dfdx1 = 2.*(x1-xcen2);
-	    }
-      
-	}   /*  end of microprinting (original) */
-	else 
-	if (model_id == 18)
-	{
-	  dbl xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
-	  dbl xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
-	  dbl theta1m, theta2m, th1, th2, th2t;
-	  double omega, roll_rad, gap, width, t_offset, time1, yc, xc;
-	  double y_displ, twist, angle, l_arm;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
-	  t_offset = p[5];
-	  rad1=p[6];
-	  rad2=p[7];
-	  y_displ=p[8];
-	  twist=p[9];
-	  l_arm=p[10];
-
-	  time1 = time + t_offset;
-	  angle = omega*time1;
-	  yc = gap + 2.*roll_rad*(1.-sin(angle));
-/*  account for displacement	*/
-	  yc += y_displ*sin(angle);
-	  xc = y_displ*cos(angle);
-/*  account for twist	*/
-	  yc += l_arm*(sin(angle)-sin(angle+twist));
-	  xc += l_arm*(cos(angle)-cos(angle+twist));
-	  angle += twist;
-	  xpt1= xc + 0.5*width*sin(angle);
-	  ypt1= yc - 0.5*width*cos(angle);
-	  theta1= angle;
-	  xpt2= xc - 0.5*width*sin(angle);
-	  ypt2= yc + 0.5*width*cos(angle);
-	  theta2= angle;
-	  
-	/*  slope of middle line		*/
-
-	  theta1m = atan2(ypt2-ypt1,xpt2-xpt1);
-	  theta1m = theta1m > theta1 ? theta1m : theta1m + 2*M_PIE;  
-	  theta2m = atan2(ypt1-ypt2,xpt1-xpt2);
-	  alpha1 = 0.5*(theta1m-theta1);
-	  alpha2 = 0.5*(theta2-theta2m);
-
-	  xcen1 = xpt1 + (rad1/sin(alpha1))*cos(theta1+alpha1);
-	  ycen1 = ypt1 + (rad1/sin(alpha1))*sin(theta1+alpha1);
-	  xcen2 = xpt2 + (rad2/sin(alpha2))*cos(theta2m+alpha2);
-	  ycen2 = ypt2 + (rad2/sin(alpha2))*sin(theta2m+alpha2);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  th1 = atan2(x2-ycen1,x1-xcen1);
-	  th2 = atan2(x2-ycen2,x1-xcen2);
-	  th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;  
-
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= th1 && th1 <= theta1)
-	    {
-	      dfdx1 = - sin(theta1);
-	    }
-	  else if ( theta2 <= th2t && (th2t - 0.5*M_PIE) <= theta2)
-	    {
-	      dfdx1 = - sin(theta2);
-	    }
-	  else if ( theta2m <= (th1+0.5*M_PIE) && th1 <= (theta1-0.5*M_PIE))
-	    {
-	      dfdx1 = 2.*(x1-xcen1);
-	    }
-	  else if ( (theta2m-0.5*M_PIE) <= th2 && (th1+0.5*M_PIE) <= theta2m)
-	    {
-	      dfdx1 = - sin(theta1m);
-	    }
-	  else
-	    {
-	      dfdx1 = 2.*(x1-xcen2);
-	    }
-      
-	}   /*  end of micro-printing (twist) */
-	else 
-	if (model_id == 19)
-	{
-	  dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta, tdc_delay;
-	  double omega, roll_rad, gap, width, t_offset, time1, yc;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
-	  t_offset = p[5];
-	  rad=p[6];
-	  theta2=p[7];
-	  tdc_delay=p[8];
-
-	  time1 = time + t_offset;
-	  if (time <= 0.0)	
-		{ yc = gap + 2.*roll_rad*(1.-sin(omega*time1));}
-	  else if(time <= tdc_delay)
-		{ yc = gap ;}
-	  else 
-		{ time1 -= tdc_delay;
-		 yc = gap + 2.*roll_rad*(1.-sin(omega*time1));
-		}
-	  xpt=yc;
-	  ypt=0.5*width;
-	  theta1= -0.5*M_PIE;
-	  
-	  alpha = 0.5*(theta2-theta1);
-	  xcen = xpt + (rad/sin(alpha))*cos(theta1+alpha);
-	  ycen = ypt + (rad/sin(alpha))*sin(theta1+alpha);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;  
-	  
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
-	    {
-	      dfdx1 =  - sin(theta1);
-	    }
-	  else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
-	    {
-	      dfdx1 = - sin(theta2);
-	    }
-	  else
-	    {
-	      dfdx1 = 2.*(x1-xcen);
-	    }
-      
-	}   /*  end of micro-printing (axi-symmetric) */
-	else 
-	if (model_id == 20)
-	{
-	  double omega, roll_rad, t_offset, coat_th, time1;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  t_offset = p[3];
-	  coat_th = p[4];
-
-	  time1 = time + t_offset;
-	  dfdx1 = (x1-2.*roll_rad*cos(omega*time1)) + x1;
-	}
-	else 
-	if (model_id == 21)
-	{
-	  double omega, roll_rad, t_offset, time1, x_offset;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  t_offset = p[3];
-	  x_offset = p[4];
-
-	  time1 = time + t_offset;
-	  dfdx1 = sin(omega*time1+x_offset/roll_rad);
-	}
-	else 
-	if (model_id == 22)
-	{
-	  dbl xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
-	  dbl xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
-	  dbl theta1m, theta2m, th1, th2, th2t;
-	  double omega_l, omega_u, roll_rad_l, roll_rad_u, gap, width;
-	  double t_offset, time1, yc, xc, alpha;
-	  double y_displ, twist, angle_l, angle_u, l_arm;
-	  omega_l = p[1];
-	  omega_u = p[2];
-	  roll_rad_l = p[3];
-	  roll_rad_u = p[4];
-	  gap = p[5];
-	  width = p[6];
-	  t_offset = p[7];
-	  rad1=p[8];
-	  rad2=p[9];
-	  alpha=p[10];
-	  y_displ=p[11];
-	  twist=p[12];
-	  l_arm=p[13];
-
-	  time1 = time + t_offset;
-	  angle_l = omega_l*time1;
-	  angle_u = omega_u*time1 + 0.5*M_PIE*(1.-omega_u/omega_l);
-	  yc = gap + roll_rad_l*(1.-sin(angle_l)) + roll_rad_u*(1.-sin(angle_u));
-	  xc = -roll_rad_u*cos(angle_u) + roll_rad_l*cos(angle_l);
-/*  account for displacement	*/
-	  yc += y_displ*sin(angle_u);
-	  xc += y_displ*cos(angle_u);
-/*  account for twist	*/
-	  yc += l_arm*(sin(angle_u)-sin(angle_u+twist));
-	  xc += l_arm*(cos(angle_u)-cos(angle_u+twist));
-	  angle_u += twist;
-	  xpt1= xc + 0.5*width*sin(angle_u);
-	  ypt1= yc - 0.5*width*cos(angle_u);
-	  theta1= angle_u - alpha;
-	  xpt2= xc - 0.5*width*sin(angle_u);
-	  ypt2= yc + 0.5*width*cos(angle_u);
-	  theta2= angle_u + alpha;
-	  
-	/*  slope of middle line		*/
-
-	  theta1m = atan2(ypt2-ypt1,xpt2-xpt1);
-	  theta1m = theta1m > theta1 ? theta1m : theta1m + 2*M_PIE;  
-	  theta2m = atan2(ypt1-ypt2,xpt1-xpt2);
-	  alpha1 = 0.5*(theta1m-theta1);
-	  alpha2 = 0.5*(theta2-theta2m);
-
-	  xcen1 = xpt1 + (rad1/sin(alpha1))*cos(theta1+alpha1);
-	  ycen1 = ypt1 + (rad1/sin(alpha1))*sin(theta1+alpha1);
-	  xcen2 = xpt2 + (rad2/sin(alpha2))*cos(theta2m+alpha2);
-	  ycen2 = ypt2 + (rad2/sin(alpha2))*sin(theta2m+alpha2);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  th1 = atan2(x2-ycen1,x1-xcen1);
-	  th2 = atan2(x2-ycen2,x1-xcen2);
-	  th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;  
-
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= th1 && th1 <= theta1)
-	    {
-	      dfdx1 = - sin(theta1);
-	    }
-	  else if ( theta2 <= th2t && (th2t - 0.5*M_PIE) <= theta2)
-	    {
-	      dfdx1 = - sin(theta2);
-	    }
-	  else if ( theta2m <= (th1+0.5*M_PIE) && th1 <= (theta1-0.5*M_PIE))
-	    {
-	      dfdx1 = 2.*(x1-xcen1);
-	    }
-	  else if ( (theta2m-0.5*M_PIE) <= th2 && (th1+0.5*M_PIE) <= theta2m)
-	    {
-	      dfdx1 = - sin(theta1m);
-	    }
-	  else
-	    {
-	      dfdx1 = 2.*(x1-xcen2);
-	    }
-      
-	}   /*  end of micro-printing (general) */
-        else if(model_id == 25)
-        {
-          dbl xx1, yy1, xx2, yy2, xx3, yy3, xcen , ycen, rad, alpha, theta, theta1;
-          dbl xcen_new,ycen_new;
-          xx1=p[1];
-          yy1=p[2];
-          xx2=p[3];
-          yy2=p[4];
-          xx3=p[5];
-          yy3=p[6];
-          xcen=p[7];
-          ycen=p[8];
-          rad=p[9];
-
-          /**   compute angle of point on curve from (xcen_new,ycen_new) **/
-
-          xcen_new = (xx1+xx3)/2;
-          ycen_new = (yy1+yy3)/2.;
-          theta  = atan2(x2-ycen_new,x1-xcen_new);
-          theta1 = atan2(yy2-ycen_new,xx2-xcen_new);
-          alpha  = atan2(yy1-yy2,xx1-xx2);
-
-          /**  use different f depending on theta  **/
-
-          if( theta <= theta1)
-            {
-              dfdx1 = 2.*(x1-xcen);
-            }
-          else
-            {
-              dfdx1 = -sin(alpha );
-            }
-
-        }   /*  end of fluid bearing die */
-        else
-        if (model_id == 26)
-        {
-          dbl xx1, yy1, xx2, yy2, xx3, yy3, xx4, yy4, xcen , ycen, rad, theta;
-          xx1=p[1];
-          yy1=p[2];
-          xx2=p[3];
-          yy2=p[4];
-          xx3=p[5];
-          yy3=p[6];
-          xx4=p[7];
-          yy4=p[8];
-
-          /**   compute angle of point on curve from (xcen,ycen) **/
-
-          xcen = (xx2+xx3)/2;
-          ycen = (yy2+yy3)/2.;
-          rad = sqrt(SQUARE(yy2-yy3)+SQUARE(xx2-xx3))/2;
-          theta = atan2(x2-ycen,x1-xcen);
-
-          /**  use different f depending on theta  **/
-
-          if(-M_PIE/2 <= theta && theta <= 0)
-            {
-              dfdx1 = 0;
-            }
-          else if(-M_PIE <= theta && theta <= -M_PIE/2)
-            {
-              dfdx1 = 2*(x1-xcen);
-            }
-          else if(M_PIE/2 <= theta && theta <= M_PIE)
-            {
-              dfdx1 = 2*(x1-xcen);
-            }
-          else if(0 <= theta && theta <= M_PIE/2)
-            {
-              dfdx1 = 0;
-            }
-
-        }   /*  end of syringe with curved lip  */
-           /*  falling circle  */
-	else 
-	if (model_id == 30)
-	{
-	  dbl xcen1 , xvelo;
-          dbl xcenter;
-	  xcen1=p[1];
-	  xvelo=p[4];
-	  xcenter = xcen1 + xvelo*time;
-	      dfdx1 = 2.*(x1-xcenter);
-	}
-        else
-	{
-      	EH(-1,"invalid model_id in user_bc");
-	}
-        return(dfdx1);
 }
 /*****************************************************************************/
 dbl dfncd2(x1, x2,  x3, p, time)
@@ -3154,1072 +449,24 @@ dbl dfncd2(x1, x2,  x3, p, time)
      const dbl time;
 {
 /* for PI use M_PIE Constant from std.h include file. */
-	int model_id;
-	dbl dfdx2;
+  dbl f=0;			/* dfdx2; */
 
-	model_id = ((int)p[0]);
+  /* f = p[1];           time translating plane */
 
-if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
-
-	if(model_id == 1)
-	{
-	dbl rad,ampl,th0,wid,web_sp, arc_position, delta_rad;
-        rad=p[1];
-        ampl=p[2];
-        web_sp=p[5];
-        th0=p[3]+(web_sp/rad)*time;
-        wid=p[4];
-	arc_position = rad*(atan2(x2-p[7],x1-p[6])-th0)/wid;
-	delta_rad = ampl*exp(-arc_position*arc_position);
-
-	dfdx2=2.*(x2-p[7])-2.*(rad+delta_rad)*delta_rad*(-2.)
-	  *arc_position*(rad/wid)*((x1-p[6])/(SQUARE(x1-p[6])+SQUARE(x2-p[7])));
-	}  /*  end of Gaussian bump if block */
-	else 
-	if(model_id == 2)
-	{
-	dbl xp, hypot, deltax, deltay, slope;
-	dbl cube_dep, cube_lng, flat, radius, xveloc, zangle, xoffset, yoffset;
-	dbl xcenter, ycenter, roll_rad, arc_pos,ysurf,ysurfds,dsdx;
-
-        cube_dep = p[1];
-        cube_lng = p[2];
-        flat = p[3];
-        radius = p[4];
-        xveloc = p[5];
-        zangle = p[6];
-        xoffset = p[7];
-        yoffset = p[8];
-	xcenter = p[9];
-	ycenter = p[10];
-
-        hypot=sqrt(cube_dep*cube_dep + 0.25*cube_lng*cube_lng);
-        deltax = radius * cube_dep / hypot;
-        deltay = radius *hypot / (0.5*cube_lng);
-        slope = 2.*cube_dep/cube_lng;
-	roll_rad = abs(yoffset - ycenter);
-	arc_pos = roll_rad * (0.5*M_PIE - acos((x1-xcenter)
-		/sqrt(SQUARE(x1-xcenter)+SQUARE(x2-ycenter))));
-	dsdx=roll_rad*((xcenter-x1)/(SQUARE(x1-xcenter)+SQUARE(x2-ycenter)));
-
-        xp = fmod(arc_pos-xveloc*time-zangle*x3-xoffset,cube_lng+flat);
-        if(xp < 0.0){xp = cube_lng+flat+xp;}
-
-       if(xp >= 0.0 && xp <= deltax)
-        {
-        ysurf =  -deltay + sqrt(radius*radius - xp*xp);
-        ysurfds =  -xp/sqrt(radius*radius - xp*xp);
-        }
-
-        else if(xp >= deltax && xp <= (0.5*cube_lng-deltax))
-        {
-        ysurf =  -slope*xp;
-        ysurfds =  -slope;
-        }
-
-        else if(xp >= (0.5*cube_lng-deltax) && xp <= (0.5*cube_lng+deltax))
-        {
-        ysurf = -cube_dep + deltay -
-        sqrt(radius*radius - (xp-0.5*cube_lng)*(xp-0.5*cube_lng));
-        ysurfds = (xp-0.5*cube_lng)/
-                sqrt(radius*radius - (xp-0.5*cube_lng)*(xp-0.5*cube_lng));
-        }
-
-        else if(xp >= (0.5*cube_lng +deltax) && xp <= (cube_lng-deltax))
-        {
-        ysurf = -2*cube_dep + slope*xp;
-        ysurfds =  slope;
-        }
-
-	else if(xp >= (cube_lng-deltax) && xp <= cube_lng)
-        {
-        ysurf = -deltay + sqrt(radius*radius
-                - (xp - cube_lng)*(xp - cube_lng));
-        ysurfds = -(xp-cube_lng)/sqrt(radius*radius
-                - (xp - cube_lng)*(xp - cube_lng));
-        }
-
-        else if(xp >= cube_lng && xp <= (cube_lng+flat))
-        {
-        ysurf = radius - deltay;
-        ysurfds = 0.0;
-        }
-        else
-
-        {
-      	EH(-1,"invalid argument in gravure user_bc");
-        }
-
-	dfdx2 = 2.*(x2-ycenter) - 2.*(roll_rad+ysurf)*ysurfds*dsdx;
-
-	}  /*   end of gravure if block */
-	else if(model_id == 3)
-	{
-	dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	dbl theta;
-	xpt=p[1];
-	ypt=p[2];
-	theta1=p[3];
-	theta2=p[4];
-	rad=p[5];
-	
-	alpha = 0.5*(theta2-theta1);
-	xcen = xpt + (rad/sin(alpha))*cos(theta1+alpha);
-	ycen = ypt + (rad/sin(alpha))*sin(theta1+alpha);
-	
-	/**   compute angle of point on curve from arc center **/
-	
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;  
-	
-	/**  use different f depending on theta  **/
-	
-	if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
-	  {
-	    dfdx2 = cos(theta1);
-	  }
-	else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
-	  {
-	    dfdx2 = cos(theta2);
-	  }
-	else
-	  {
-	    dfdx2 = 2.*(x2-ycen);
-	  }
-      
-      }   /*  end of radiused lip corner */
-
-	else
-	if (model_id == 4) {
-
-	  dbl w1, dnum, dden, dnumdx, ddendx; 
-	  const dbl *pn, *pd;
-	  int i, n, xyz;
-	  
-	  n = abs(((int)p[1]));
-	  xyz = ((int)p[2]);
-	  
-	  
-	  pn = &p[3];
-	  pd = &p[n+3];
-	  
-	  
-	  switch (xyz)
-		  {
-		  case 12:
-		  case 32:
-			  w1=x2; 
-	  dnum = pn[n-1];
-	  dden = pd[n-2];
-	  dnumdx = (n-1.)*pn[n-1];
-	  ddendx = (n-2.)*pd[n-2];
-	  for (i=n-2;i>=0;i--)
-	    { dnum = pn[i]+w1*dnum; }
-	  for (i=n-3;i>=0;i--)
-	    { dden = pd[i]+w1*dden;
-	      dnumdx = (i+1.)*pn[i+1]+w1*dnumdx;}
-	  for (i=n-4;i>=0;i--)
-	    { ddendx = (i+1.)*pd[i+1]+w1*ddendx; }
-	  
-	  dfdx2 = (dden*dnumdx - dnum*ddendx)/(dden*dden);
-			  break;
-	  
-		  case 21:
-		  case 23:
-			  dfdx2 = -1.; break;
-		  case 31:
-		  case 13:
-			  dfdx2 = 0.; break;
-		  default:
-		EH(-1,"invalid xyz in Pade function user_bc");
-
-		}
-	   } /* END OF FITTED CURVE */
-
-	/*
-	   CELL 
-	   USES HYPERBOLIC TAN FUNCTIONS
-	   
-	   f(x) = y-(-d*0.5*(tanh(m*(x-s))+1.0)+d*0.5*tanh(m*(x-t))-1.0)+d)
-
-	   HAVE TO PROVIDE COEFFICIENTS
-
-	   p[0] = model_id
-	   p[1] = d 
-	   p[2] = m
-	   p[3] = s
-	   p[4] = width
-	   p[5] = speed (transient analysis)
-	   p[6] = coordinate direction (1 or 2)
-
-	    */
-	else
-	if (model_id == 5) {
-	    
-	  double d, m, s, t;
-          double coord, w1, w2;
-          int dir;
-	  
-	  d = p[1];
-	  m = p[2];
-	  s = p[3]+p[5]*time;
-	  t = s+p[4];
-	  dir = ((int)p[6]);
-	  if(dir == 1)	
-		{dfdx2 = 1.0;}
-	  else
-		{
-		coord = x2;
-	  	w1 = cosh(m*(coord-s))*cosh(m*(coord-s));
-	  	w2 = cosh(m*(coord-t))*cosh(m*(coord-t));
-	        dfdx2 = d*m*0.5*(1.0/w1-1.0/w2); 
-		}
-	  } /* END OF CELL */
-	    /*
-		tapered surface for 3D manifolds
-		driven by a Pade curve
-
-	    p[0] = model_id
-	    p[1] = theta, angle in xy-plane (degrees) 
-	    p[2] = N, pade order
-	    p[3 ... 2N+1] = pade coefficients
-
-	    */
-	else
-	if (model_id == 6) {
-	    
-	  dbl x, th; 
-	  const dbl *pn, *pd;
-	  int n;
-	  
-	  th     = M_PIE * p[1]/180.;
-	  n      = abs(((int)p[2]));
-	  pn = &p[3];
-	  pd = &p[n+3];
-	  x = x3;
-	  
-	  /*
-	  EVALUATE FUNCTION
-	  */
-	  
-/*	  dnum = pn[n-1];
-	  dden = pd[n-2];
-	  for (i=n-2;i>=0;i--)
-	    { dnum = pn[i]+x*dnum; }
-	  for (i=n-3;i>=0;i--)
-	    { dden = pd[i]+x*dden; }
-	  
-	  pade = dnum/dden;
-*/	  
-	  dfdx2 = cos(th);
-
-	  } /* END OF tapered surface */
-
-	else
-	if (model_id == 7)	{
-
-	  dbl theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta;
-	  dbl x, dnum, dden, padex, padey;
-	  const dbl *pnx, *pdx, *pny, *pdy;
-	  int i,nx, ny;
-	  theta1=p[1];
-	  theta2=p[2];
-	  rad=p[3];
-	  nx      = abs(((int)p[4]));
-	  pnx = &p[5];
-	  pdx = &p[nx+5];
-	  ny      = abs(((int)p[nx+6]));
-	  pny = &p[nx+7];
-	  pdy = &p[nx+7+ny];
-	  x = x3;
-
-	  /*
-	  EVALUATE FUNCTION
-	  */
-	  
-	  dnum = pnx[nx-1];
-	  dden = pdx[nx-2];
-	  for (i=nx-2;i>=0;i--)
-	    { dnum = pnx[i]+x*dnum; }
-	  for (i=nx-3;i>=0;i--)
-	    { dden = pdx[i]+x*dden; }
-	  
-	  padex = dnum/dden;
-
-	  dnum = pny[ny-1];
-	  dden = pdy[ny-2];
-	  for (i=ny-2;i>=0;i--)
-	    { dnum = pny[i]+x*dnum; }
-	  for (i=ny-3;i>=0;i--)
-	    { dden = pdy[i]+x*dden; }
-	  
-	  padey = dnum/dden;
-
-	alpha = 0.5*(theta2-theta1);
-	xcen = padex + (rad/sin(alpha))*cos(theta1+alpha);
-	ycen = padey + (rad/sin(alpha))*sin(theta1+alpha);
-
-	/**   compute angle of point on curve from arc center **/
-
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;  
-
-	/**  use different f depending on theta  **/
-
-	if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
-		{
-	dfdx2 =  cos(theta1);
-		}
-	else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
-		{
-	dfdx2 = cos(theta2);
-		}
-	else
-		{
-	dfdx2 = 2.*(x2-ycen);
-		}
-	  }
-
-
-	    /*
-		SINGLE V CELL
-
-	    p[0] = model_id = 8
-	    p[1] = x01
-	    p[2] = y01 
-	    p[3] = H
-	    p[4] = L
-	    p[5] = A
-	    p[6] = R
-	    p[7] = G
-
-	    */
-	else
-	if (model_id == 8)	{
-
-	  dbl 
-	    x01, x02, x03, x04, x05, x06, x07, x08, x09, 
-	    y01, y02, y03, y04, y05, y06, y07, y08, y09, 
-	    RcA, RsA, tA, xR, xC, xL, yR, yC, yL, 
-	    H, L, A, R, G;
-
-	x01 = p[1];
-	y01 = p[2];
-	H   = p[3];
-	L   = p[4];
-	A   = p[5];
-	R   = p[6];
-	G   = p[7];
-
-	RcA = R*cos(A);
-	RsA = R*sin(A);
-	tA  = tan(A);
-
-	y02 = y01+R-RsA;
-	x02 = x01-RcA;
-
-	y03 = y02;
-	x03 = x01+RcA;
-	y04 = y01+H-R+RsA;
-	x04 = x02-(y04-y02)*tA;
-	y05 = y04;
-	x05 = x03+(y05-y03)*tA;
-	x06 = x04-RcA;
-	x07 = x05+RcA;
-	x08 = x06-L;
-	x09 = x07+L;
-
-	y06 = y01+H;
-	y07 = y01+H;
-	y08 = y01+H;
-	y09 = y01+H;
-
-	xC = x01;
-	yC = y01+R;
-
-	xR = x05+RcA;
-	yR = y05-RsA;
-
-	xL = x04-RcA;
-	yL = y04-RsA;
-
-	  /*
-	  EVALUATE FUNCTION
-	  */
-	  
-	if (x2 <= x06)
-	  {
-	    dfdx2 = 0.0;
-	  }
-	else
-	if ((x2 <= x04) && (x2 > x06))
-	  {
-	    dfdx2 = 2.0*(x2-xL);
-	  }
-	else
-	if ((x2 <= x02) && (x2 > x04))
-	  {
-	    dfdx2 = -(y04-y02);
-	  }
-	else
-	if ((x2 <= x03) && (x2 > x02))
-	  {
-	    dfdx2 = 2.0*(x2-xC);
-	  }
-	else
-	if ((x2 <= x05) && (x2 > x03))
-	  {
-	    dfdx2 = -(y05-y03);
-	  }
-	else
-	if ((x2 <= x07) && (x2 > x05))
-	  {
-	    dfdx2 = 2.0*(x2-xR);
-	  }
-	else
-	if (x2 > x07)
-	  {
-	    dfdx2 = 0.0;
-	  } }
-	else
-        if (model_id == 9)
-        {
-        dbl x0,y0,ampl,speed,width,xpt;
-          x0=p[1];
-          y0=p[2];
-          ampl=p[3];
-          speed=p[4];
-          width=p[5];
-          xpt = x0+speed*time;
+  //f = 2.0*(x2 - p[1]);  /* cylinder with axis pararell to z */
   
-         dfdx2=1.;
-  
-        }   /*  end of Doug's Gaussian bump if block */
-	else if(model_id == 10)
-	{
-	dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	dbl theta;
-	xpt=p[1];
-	ypt=p[2];
-	theta1=p[3];
-	theta2=p[4];
-	rad=p[5];
-	
-	alpha = 0.5*(theta2-theta1);
-	xcen = xpt + (rad/sin(alpha))*cos(theta1+alpha);
-	ycen = ypt + (rad/sin(alpha))*sin(theta1+alpha);
-	
-	/**   compute angle of point on curve from arc center **/
-	
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;  
-	
-	/**  use different f depending on theta  **/
-	
-	if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
-	  {
-	    dfdx2 = sin(theta1);
-	  }
-	else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
-	  {
-	    dfdx2 = sin(theta2);
-	  }
-	else
-	  {
-	    dfdx2 = cos(theta);
-	  }
-      
-      }   /*  end of radiused lip corner */
+  return(f);		/* Here's a good default behavior! */
 
-	else 
-	if (model_id == 11)
-	{
-	  dbl xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
-	  dbl xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
-	  dbl theta1m, theta2m, th1, th2, th2t;
-	  xpt1=p[1];
-	  ypt1=p[2];
-	  theta1=p[3];
-	  rad1=p[4];
-	  xpt2=p[5];
-	  ypt2=p[6];
-	  theta2=p[7];
-	  rad2=p[8];
-	  
-	/*  slope of middle line		*/
+  /* Example code fragments:
+   *
+   *  dfdx2 = 2*x2;
+   *  return(dfdx2);
+   *
+   *  f = 1./13 -sin(M_PIE*x2)/24. -M_PIE*x2*cos(M_PIE*x2)/24;   2d fiber 
+   *  f =  2.*x2;   circle 
+   *  return f; 
+   */
 
-	  theta1m = atan2(ypt2-ypt1,xpt2-xpt1);
-	  theta1m = theta1m > theta1 ? theta1m : theta1m + 2*M_PIE;  
-	  theta2m = atan2(ypt1-ypt2,xpt1-xpt2);
-	  alpha1 = 0.5*(theta1m-theta1);
-	  alpha2 = 0.5*(theta2-theta2m);
-
-	  xcen1 = xpt1 + (rad1/sin(alpha1))*cos(theta1+alpha1);
-	  ycen1 = ypt1 + (rad1/sin(alpha1))*sin(theta1+alpha1);
-	  xcen2 = xpt2 + (rad2/sin(alpha2))*cos(theta2m+alpha2);
-	  ycen2 = ypt2 + (rad2/sin(alpha2))*sin(theta2m+alpha2);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  th1 = atan2(x2-ycen1,x1-xcen1);
-	  th2 = atan2(x2-ycen2,x1-xcen2);
-	  th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;  
-
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= th1 && th1 <= theta1)
-	    {
-	      dfdx2 = cos(theta1);
-	    }
-	  else if ( theta2 <= th2t && (th2t - 0.5*M_PIE) <= theta2)
-	    {
-	      dfdx2 = cos(theta2);
-	    }
-	  else if ( theta2m <= (th1+0.5*M_PIE) && th1 <= (theta1-0.5*M_PIE))
-	    {
-	      dfdx2 = 2.*(x2-ycen1);
-	    }
-	  else if ( (theta2m-0.5*M_PIE) <= th2 && (th1+0.5*M_PIE) <= theta2m)
-	    {
-	      dfdx2 = cos(theta1m);
-	    }
-	  else
-	    {
-	      dfdx2 = 2.*(x2-ycen2);
-	    }
-      
-	}   /*  end of 2 radiused lip corners */
-	else 
-	if (model_id == 12)
-	{
-	  dbl xcen1 , ycen1;
-	  xcen1=p[1];
-	  ycen1=p[2];
-		dfdx2 = 2.*(x2-ycen1);
-	}
-	else 
-	if (model_id == 13)
-	{
-	  dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta, xcirc, ycirc, dierad;
-	  int iside;
-	  xpt=p[1];
-	  ypt=p[2];
-	  theta1=p[3];
-	  theta2=p[4];
-	  rad=p[5];
-	  dierad=p[6];
-	  iside = ((int)p[7]);
-	  
-	  /**  find center of die face  **/
-
-	if( iside == 1)
-	  {
-	  xcirc = xpt + dierad*sin(theta1);
-	  ycirc = ypt - dierad*cos(theta1);
-	  }	else	{
-	  xcirc = xpt - dierad*sin(theta2);
-	  ycirc = ypt + dierad*cos(theta2);
-	  }
-
-	  /**  find center of corner radius  **/
-
-	if( iside == 1)
-	  	{
-		alpha = theta2 - asin((rad-dierad*cos(theta2-theta1))/(rad+dierad));
-	  	}	else	{
-		alpha = theta1 + asin((rad-dierad*cos(theta2-theta1))/(rad+dierad));
-	  	}
-		xcen = xcirc + (rad+dierad)*cos(alpha);
-		ycen = ycirc + (rad+dierad)*sin(alpha);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > alpha-M_PIE ? theta : theta + 2*M_PIE;  
-	  
-	  /**  use different f depending on theta  **/
-	  
-	if( iside == 1)
-	  {
-	  if( (alpha-M_PIE) <= theta && theta <= theta1)
-	    {
-	      dfdx2 = 2.*(x2-ycirc);
-	    }
-	  else if ( theta2 <= theta && (theta - 0.5*M_PIE) <= theta2)
-	    {
-	      dfdx2 = cos(theta2);
-	    }
-	  else
-	    {
-	      dfdx2 = 2.*(x2-ycen);
-	    }
-	  }	else	
-	  {
-	  if( theta2 <= theta && theta <= (alpha+M_PIE))
-	    {
-	      dfdx2 = 2.*(x2-ycirc);
-	    }
-	  else if ( (theta1-0.5*M_PIE) <= theta && theta <= theta1)
-	    {
-	      dfdx2 = cos(theta1);
-	    }
-	  else
-	    {
-	      dfdx2 = 2.*(x2-ycen);
-	    }
-	  }
-      
-	}   /*  end of radiused lip corner */
-	/*
-	   Needle collar based on a tanh modified plane equation:
-
-		Ax + By +Cz + D + E(tanh(beta*(x-x0))+1)/2 = 0
-	   USES HYPERBOLIC TAN FUNCTIONS
-	    */
-	else
-	if (model_id == 14) {
-	    
-	  double A, B, C, D, E, beta, x0;
-	  
-	  A = p[1];
-	  B = p[2];
-	  C = p[3];
-	  D = p[4];
-	  E = p[5];
-	  beta = p[6];
-	  x0 = p[7];
-
-	  dfdx2 = B;
-	  }
-	/* micro-flexo-printing bottom surface - omega, roll_rad, gap */
-	else
-	if (model_id == 15) {
-	    
-	  double omega, roll_rad, gap, t_offset, time1;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  t_offset = p[4];
-
-	  time1 = time + t_offset;
-	  dfdx2 =  - cos(2.*omega*time1);
-	  }
-	/* micro-flexo-printing vertical surface - omega, roll_rad, gap, width */
-	else
-	if (model_id == 16) {
-	    
-	  double omega, roll_rad, gap, width, t_offset, time1;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
- 	  t_offset = p[5];
-
-	  time1 = time + t_offset;
-	  dfdx2 = - sin(2.*omega*time1);
-	  }
-	else 
-	if (model_id == 17)
-	{
-	  dbl xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
-	  dbl xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
-	  dbl theta1m, theta2m, th1, th2, th2t;
-	  double omega, roll_rad, gap, width, t_offset, time1, yc;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
-	  t_offset = p[5];
-
-	  time1 = time + t_offset;
-	  yc = gap + 2.*roll_rad*(1.-sin(omega*time1));
-	  xpt1= -0.5*width*cos(2.*omega*time1);
-	  ypt1= yc - 0.5*width*sin(2.*omega*time1);
-	  theta1= omega*time1;
-	  rad1=p[6];
-	  xpt2= 0.5*width*cos(2.*omega*time1);
-	  ypt2= yc + 0.5*width*sin(2.*omega*time1);
-	  theta2= omega*time1;
-	  rad2=p[7];
-	  
-	/*  slope of middle line		*/
-
-	  theta1m = atan2(ypt2-ypt1,xpt2-xpt1);
-	  theta1m = theta1m > theta1 ? theta1m : theta1m + 2*M_PIE;  
-	  theta2m = atan2(ypt1-ypt2,xpt1-xpt2);
-	  alpha1 = 0.5*(theta1m-theta1);
-	  alpha2 = 0.5*(theta2-theta2m);
-
-	  xcen1 = xpt1 + (rad1/sin(alpha1))*cos(theta1+alpha1);
-	  ycen1 = ypt1 + (rad1/sin(alpha1))*sin(theta1+alpha1);
-	  xcen2 = xpt2 + (rad2/sin(alpha2))*cos(theta2m+alpha2);
-	  ycen2 = ypt2 + (rad2/sin(alpha2))*sin(theta2m+alpha2);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  th1 = atan2(x2-ycen1,x1-xcen1);
-	  th2 = atan2(x2-ycen2,x1-xcen2);
-	  th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;  
-
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= th1 && th1 <= theta1)
-	    {
-	      dfdx2 = cos(theta1);
-	    }
-	  else if ( theta2 <= th2t && (th2t - 0.5*M_PIE) <= theta2)
-	    {
-	      dfdx2 = cos(theta2);
-	    }
-	  else if ( theta2m <= (th1+0.5*M_PIE) && th1 <= (theta1-0.5*M_PIE))
-	    {
-	      dfdx2 = 2.*(x2-ycen1);
-	    }
-	  else if ( (theta2m-0.5*M_PIE) <= th2 && (th1+0.5*M_PIE) <= theta2m)
-	    {
-	      dfdx2 = cos(theta1m);
-	    }
-	  else
-	    {
-	      dfdx2 = 2.*(x2-ycen2);
-	    }
-      
-	}   /*  end of microprinting (original) */
-	else 
-	if (model_id == 18)
-	{
-	  dbl xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
-	  dbl xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
-	  dbl theta1m, theta2m, th1, th2, th2t;
-	  double omega, roll_rad, gap, width, t_offset, time1, yc, xc;
-	  double y_displ, twist, angle, l_arm;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
-	  t_offset = p[5];
-	  rad1=p[6];
-	  rad2=p[7];
-	  y_displ=p[8];
-	  twist=p[9];
-	  l_arm=p[10];
-
-	  time1 = time + t_offset;
-	  angle = omega*time1;
-	  yc = gap + 2.*roll_rad*(1.-sin(angle));
-/*  account for displacement	*/
-	  yc += y_displ*sin(angle);
-	  xc = y_displ*cos(angle);
-/*  account for twist	*/
-	  yc += l_arm*(sin(angle)-sin(angle+twist));
-	  xc += l_arm*(cos(angle)-cos(angle+twist));
-	  angle += twist;
-	  xpt1= xc + 0.5*width*sin(angle);
-	  ypt1= yc - 0.5*width*cos(angle);
-	  theta1= angle;
-	  xpt2= xc - 0.5*width*sin(angle);
-	  ypt2= yc + 0.5*width*cos(angle);
-	  theta2= angle;
-	  
-	/*  slope of middle line		*/
-
-	  theta1m = atan2(ypt2-ypt1,xpt2-xpt1);
-	  theta1m = theta1m > theta1 ? theta1m : theta1m + 2*M_PIE;  
-	  theta2m = atan2(ypt1-ypt2,xpt1-xpt2);
-	  alpha1 = 0.5*(theta1m-theta1);
-	  alpha2 = 0.5*(theta2-theta2m);
-
-	  xcen1 = xpt1 + (rad1/sin(alpha1))*cos(theta1+alpha1);
-	  ycen1 = ypt1 + (rad1/sin(alpha1))*sin(theta1+alpha1);
-	  xcen2 = xpt2 + (rad2/sin(alpha2))*cos(theta2m+alpha2);
-	  ycen2 = ypt2 + (rad2/sin(alpha2))*sin(theta2m+alpha2);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  th1 = atan2(x2-ycen1,x1-xcen1);
-	  th2 = atan2(x2-ycen2,x1-xcen2);
-	  th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;  
-
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= th1 && th1 <= theta1)
-	    {
-	      dfdx2 = cos(theta1);
-	    }
-	  else if ( theta2 <= th2t && (th2t - 0.5*M_PIE) <= theta2)
-	    {
-	      dfdx2 = cos(theta2);
-	    }
-	  else if ( theta2m <= (th1+0.5*M_PIE) && th1 <= (theta1-0.5*M_PIE))
-	    {
-	      dfdx2 = 2.*(x2-ycen1);
-	    }
-	  else if ( (theta2m-0.5*M_PIE) <= th2 && (th1+0.5*M_PIE) <= theta2m)
-	    {
-	      dfdx2 = cos(theta1m);
-	    }
-	  else
-	    {
-	      dfdx2 = 2.*(x2-ycen2);
-	    }
-      
-	}   /*  end of micro-printing (twist) */
-	else 
-	if (model_id == 19)
-	{
-	  dbl xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta, tdc_delay;
-	  double omega, roll_rad, gap, width, t_offset, time1, yc;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  gap = p[3];
-	  width = p[4];
-	  t_offset = p[5];
-	  rad=p[6];
-	  theta2=p[7];
-	  tdc_delay=p[8];
-
-	  time1 = time + t_offset;
-	  if (time <= 0.0)	
-		{ yc = gap + 2.*roll_rad*(1.-sin(omega*time1));}
-	  else if(time <= tdc_delay)
-		{ yc = gap ;}
-	  else 
-		{ time1 -= tdc_delay;
-		 yc = gap + 2.*roll_rad*(1.-sin(omega*time1));
-		}
-	  xpt=yc;
-	  ypt=0.5*width;
-	  theta1= -0.5*M_PIE;
-	  
-	  alpha = 0.5*(theta2-theta1);
-	  xcen = xpt + (rad/sin(alpha))*cos(theta1+alpha);
-	  ycen = ypt + (rad/sin(alpha))*sin(theta1+alpha);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;  
-	  
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
-	    {
-	      dfdx2 = cos(theta1);
-	    }
-	  else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
-	    {
-	      dfdx2 = cos(theta2);
-	    }
-	  else
-	    {
-	      dfdx2 = 2.*(x2-ycen);
-	    }
-      
-	}   /*  end of micro-printing (axi-symmetric) */
-	else 
-	if (model_id == 20)
-	{
-	  double omega, roll_rad, t_offset, coat_th, time1;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  t_offset = p[3];
-	  coat_th = p[4];
-
-	  time1 = time + t_offset;
-	  dfdx2 = x2 + (x2+2.*roll_rad*sin(omega*time1));
-	}
-	else 
-	if (model_id == 21)
-	{
-	  double omega, roll_rad, t_offset, time1, x_offset;
-	  omega = p[1];
-	  roll_rad = p[2];
-	  t_offset = p[3];
-	  x_offset = p[4];
-
-	  time1 = time + t_offset;
-	  dfdx2 = cos(omega*time1+x_offset/roll_rad);
-	}
-	else 
-	if (model_id == 22)
-	{
-	  dbl xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
-	  dbl xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
-	  dbl theta1m, theta2m, th1, th2, th2t;
-	  double omega_l, omega_u, roll_rad_l, roll_rad_u, gap, width;
-	  double t_offset, time1, yc, xc, alpha;
-	  double y_displ, twist, angle_l, angle_u, l_arm;
-	  omega_l = p[1];
-	  omega_u = p[2];
-	  roll_rad_l = p[3];
-	  roll_rad_u = p[4];
-	  gap = p[5];
-	  width = p[6];
-	  t_offset = p[7];
-	  rad1=p[8];
-	  rad2=p[9];
-	  alpha=p[10];
-	  y_displ=p[11];
-	  twist=p[12];
-	  l_arm=p[13];
-
-	  time1 = time + t_offset;
-	  angle_l = omega_l*time1;
-	  angle_u = omega_u*time1 + 0.5*M_PIE*(1.-omega_u/omega_l);
-	  yc = gap + roll_rad_l*(1.-sin(angle_l)) + roll_rad_u*(1.-sin(angle_u));
-	  xc = -roll_rad_u*cos(angle_u) + roll_rad_l*cos(angle_l);
-/*  account for displacement	*/
-	  yc += y_displ*sin(angle_u);
-	  xc += y_displ*cos(angle_u);
-/*  account for twist	*/
-	  yc += l_arm*(sin(angle_u)-sin(angle_u+twist));
-	  xc += l_arm*(cos(angle_u)-cos(angle_u+twist));
-	  angle_u += twist;
-	  xpt1= xc + 0.5*width*sin(angle_u);
-	  ypt1= yc - 0.5*width*cos(angle_u);
-	  theta1= angle_u - alpha;
-	  xpt2= xc - 0.5*width*sin(angle_u);
-	  ypt2= yc + 0.5*width*cos(angle_u);
-	  theta2= angle_u + alpha;
-	  
-	/*  slope of middle line		*/
-
-	  theta1m = atan2(ypt2-ypt1,xpt2-xpt1);
-	  theta1m = theta1m > theta1 ? theta1m : theta1m + 2*M_PIE;  
-	  theta2m = atan2(ypt1-ypt2,xpt1-xpt2);
-	  alpha1 = 0.5*(theta1m-theta1);
-	  alpha2 = 0.5*(theta2-theta2m);
-
-	  xcen1 = xpt1 + (rad1/sin(alpha1))*cos(theta1+alpha1);
-	  ycen1 = ypt1 + (rad1/sin(alpha1))*sin(theta1+alpha1);
-	  xcen2 = xpt2 + (rad2/sin(alpha2))*cos(theta2m+alpha2);
-	  ycen2 = ypt2 + (rad2/sin(alpha2))*sin(theta2m+alpha2);
-	  
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  th1 = atan2(x2-ycen1,x1-xcen1);
-	  th2 = atan2(x2-ycen2,x1-xcen2);
-	  th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;  
-
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= th1 && th1 <= theta1)
-	    {
-	      dfdx2 = cos(theta1);
-	    }
-	  else if ( theta2 <= th2t && (th2t - 0.5*M_PIE) <= theta2)
-	    {
-	      dfdx2 = cos(theta2);
-	    }
-	  else if ( theta2m <= (th1+0.5*M_PIE) && th1 <= (theta1-0.5*M_PIE))
-	    {
-	      dfdx2 = 2.*(x2-ycen1);
-	    }
-	  else if ( (theta2m-0.5*M_PIE) <= th2 && (th1+0.5*M_PIE) <= theta2m)
-	    {
-	      dfdx2 = cos(theta1m);
-	    }
-	  else
-	    {
-	      dfdx2 = 2.*(x2-ycen2);
-	    }
-      
-	}   /*  end of micro-printing (twist) */
-        else if(model_id == 25)
-        {
-          dbl xx1, yy1, xx2, yy2, xx3, yy3, xcen , ycen, rad, alpha, theta, theta1;
-          dbl xcen_new,ycen_new;
-          xx1=p[1];
-          yy1=p[2];
-          xx2=p[3];
-          yy2=p[4];
-          xx3=p[5];
-          yy3=p[6];
-          xcen=p[7];
-          ycen=p[8];
-          rad=p[9];
-
-          /**   compute angle of point on curve from (xcen_new,ycen_new) **/
-
-          xcen_new = (xx1+xx3)/2;
-          ycen_new = (yy1+yy3)/2.;
-          theta  = atan2(x2-ycen_new,x1-xcen_new);
-          theta1 = atan2(yy2-ycen_new,xx2-xcen_new);
-          alpha  = atan2(yy1-yy2,xx1-xx2);
-
-          /**  use different f depending on theta  **/
-
-          if( theta <= theta1)
-            {
-              dfdx2 = 2.*(x2-ycen);
-            }
-          else
-            {
-              dfdx2 = cos(alpha );
-            }
-
-        }   /*  end of fluid bearing die */
-
-        else
-        if (model_id == 26)
-        {
-          dbl xx1, yy1, xx2, yy2, xx3, yy3, xx4, yy4, xcen , ycen, rad, theta;
-          xx1=p[1];
-          yy1=p[2];
-          xx2=p[3];
-          yy2=p[4];
-          xx3=p[5];
-          yy3=p[6];
-          xx4=p[7];
-          yy4=p[8];
-
-          /**   compute angle of point on curve from (xcen,ycen) **/
-
-          xcen = (xx2+xx3)/2;
-          ycen = (yy2+yy3)/2.;
-          rad = sqrt(SQUARE(yy2-yy3)+SQUARE(xx2-xx3))/2;
-          theta = atan2(x2-ycen,x1-xcen);
-
-          /**  use different f depending on theta  **/
-
-          if(-M_PIE/2 <= theta && theta <= 0)
-            {
-              dfdx2 = 1;
-            }
-          else if(-M_PIE <= theta && theta <= -M_PIE/2)
-            {
-              dfdx2 = 2*(x2-ycen);
-            }
-          else if(M_PIE/2 <= theta && theta <= M_PIE)
-            {
-              dfdx2 = 2*(x2-ycen);
-            }
-          else if(0 <= theta && theta <= M_PIE/2)
-            {
-              dfdx2 = 1;
-            }
-
-        }   /*  end of syringe with curved lip  */
-           /*  falling circle  */
-	else 
-	if (model_id == 30)
-	{
-	  dbl ycen1, yvelo;
-          dbl ycenter;
-	  ycen1=p[2];
-	  yvelo=p[5];
-	  ycenter = ycen1 + yvelo*time;
-	      dfdx2 = 2.*(x2-ycenter);
-	}
-        else
-	  {
-	    EH(-1,"invalid model_id in user_bc");
-	  }
-        return(dfdx2);
-	
 }
 /*****************************************************************************/
 dbl dfncd3(x1, x2,  x3, p, time)
@@ -4230,287 +477,22 @@ dbl dfncd3(x1, x2,  x3, p, time)
      const dbl time;
 {
 /* for PI use M_PIE Constant from std.h include file. */
-	int model_id;
-	dbl dfdx3;
+  dbl f=0;
 
-if(af->Assemble_LSA_Mass_Matrix)  return 0 ;
+  /*  f = p[2];        time translating plane */
 
-	model_id = ((int)p[0]);
+  f = 0.0;  /* expanding sphere */
 
-	if (model_id == 2)
-	{
-	dbl xp, hypot, deltax, deltay, slope;
-	dbl cube_dep, cube_lng, flat, radius, xveloc, zangle, xoffset, yoffset;
-	dbl xcenter, ycenter, roll_rad, arc_pos,ysurf,ysurfds,dsdx;
+  return(f);		/* Here's a good default behavior! */
 
-	cube_dep = p[1];
-        cube_lng = p[2];
-        flat = p[3];
-        radius = p[4];
-        xveloc = p[5];
-        zangle = p[6];
-        xoffset = p[7];
-        yoffset = p[8];
-	xcenter = p[9];
-	ycenter = p[10];
+  /* Example code fragments:
+   *
+   * 
+   *  f = -(1-x3*x3/200)/50.;
+   *  f = 0.;
+   *  return f;
+   */
 
-        hypot=sqrt(cube_dep*cube_dep + 0.25*cube_lng*cube_lng);
-        deltax = radius * cube_dep / hypot;
-        deltay = radius *hypot / (0.5*cube_lng);
-        slope = 2.*cube_dep/cube_lng;
-	roll_rad = abs(yoffset - ycenter);
-	arc_pos = roll_rad * (0.5*M_PIE - acos((x1-xcenter)
-		/sqrt(SQUARE(x1-xcenter)+SQUARE(x2-ycenter))));
-	dsdx=-zangle;
-
-        xp = fmod(arc_pos-xveloc*time-zangle*x3-xoffset,cube_lng+flat);
-        if(xp < 0.0){xp = cube_lng+flat+xp;}
-
-        if(xp >= 0.0 && xp <= deltax)
-        {
-        ysurf =  -deltay + sqrt(radius*radius - xp*xp);
-        ysurfds =  -xp/sqrt(radius*radius - xp*xp);
-        }
-
-        else if(xp >= deltax && xp <= (0.5*cube_lng-deltax))
-        {
-        ysurf =  -slope*xp;
-        ysurfds =  -slope;
-        }
-
-        else if(xp >= (0.5*cube_lng-deltax) && xp <= (0.5*cube_lng+deltax))
-        {
-        ysurf = -cube_dep + deltay -
-        sqrt(radius*radius - (xp-0.5*cube_lng)*(xp-0.5*cube_lng));
-        ysurfds = (xp-0.5*cube_lng)/
-                sqrt(radius*radius - (xp-0.5*cube_lng)*(xp-0.5*cube_lng));
-        }
-
-        else if(xp >= (0.5*cube_lng +deltax) && xp <= (cube_lng-deltax))
-        {
-        ysurf = -2*cube_dep + slope*xp;
-        ysurfds =  slope;
-        }
-
-        else if(xp >= (cube_lng-deltax) && xp <= cube_lng)
-        {
-        ysurf = -deltay + sqrt(radius*radius
-                - (xp - cube_lng)*(xp - cube_lng));
-        ysurfds = -(xp-cube_lng)/sqrt(radius*radius
-                - (xp - cube_lng)*(xp - cube_lng));
-        }
-
-        else if(xp >= cube_lng && xp <= (cube_lng+flat))
-        {
-        ysurf = radius - deltay;
-        ysurfds = 0.0;
-        }
-        else
-
-        {
-      	EH(-1,"invalid argument in gravure user_bc");
-        }
-	dfdx3 = -2.*(roll_rad+ysurf)*ysurfds*dsdx;
-
-	}  /*  end of gravure if block  */
-	else
-	if (model_id == 4)	{
-
-	  dbl w1, dnum, dden, dnumdx, ddendx; 
-	  const dbl *pn, *pd;
-	  int i, n, xyz;
-	  
-	  n = abs(((int)p[1]));
-	  xyz = ((int)p[2]);
-	  
-	  
-	  pn = &p[3];
-	  pd = &p[n+3];
-	  
-	  
-	  switch (xyz)
-		  {
-		  case 13:
-		  case 23:
-			  w1=x3; 
-	  dnum = pn[n-1];
-	  dden = pd[n-2];
-	  dnumdx = (n-1.)*pn[n-1];
-	  ddendx = (n-2.)*pd[n-2];
-	  for (i=n-2;i>=0;i--)
-	    { dnum = pn[i]+w1*dnum; }
-	  for (i=n-3;i>=0;i--)
-	    { dden = pd[i]+w1*dden;
-	      dnumdx = (i+1.)*pn[i+1]+w1*dnumdx;}
-	  for (i=n-4;i>=0;i--)
-	    { ddendx = (i+1.)*pd[i+1]+w1*ddendx; }
-	  
-	  dfdx3 = (dden*dnumdx - dnum*ddendx)/(dden*dden);
-			  break;
-	  
-		  case 31:
-		  case 32:
-			  dfdx3 = -1.; break;
-		  case 21:
-		  case 12:
-			  dfdx3 = 0.; break;
-		  default:
-		EH(-1,"invalid xyz in Pade function user_bc");
-
-		}
-	   }
-	    /*
-		tapered surface for 3D manifolds
-		driven by a Pade curve
-
-	    p[0] = model_id
-	    p[1] = theta, angle in xy-plane (degrees) 
-	    p[2] = N, pade order
-	    p[3 ... 2N+1] = pade coefficients
-
-	    */
-	else
-	if (model_id == 6) {
-	    
-	  dbl x, dnum, dden, padedx, th; 
-	  dbl dnumdx, ddendx;
-	  const dbl *pn, *pd;
-	  int i, n;
-	  
-	  th     = M_PIE * p[1]/180.;
-	  n      = abs(((int)p[2]));
-	  pn = &p[3];
-	  pd = &p[n+3];
-	  x = x3;
-	  
-	  /*
-	  EVALUATE FUNCTION
-	  */
-	  
-	  dnum = pn[n-1];
-	  dden = pd[n-2];
-	  dnumdx = (n-1.)*pn[n-1];
-	  ddendx = (n-2.)*pd[n-2];
-	  for (i=n-2;i>=0;i--)
-	    { dnum = pn[i]+x*dnum; }
-	  for (i=n-3;i>=0;i--)
-	    { dden = pd[i]+x*dden;
-	      dnumdx = (i+1.)*pn[i+1]+x*dnumdx;}
-	  for (i=n-4;i>=0;i--)
-	    { ddendx = (i+1.)*pd[i+1]+x*ddendx; }
-	  
-	  padedx = (dden*dnumdx - dnum*ddendx)/(dden*dden);
-	  
-	  dfdx3 = sin(th)*padedx;
-
-	  } /* END OF tapered surface */
-
-	else
-	if (model_id == 7)	{
-
-	  dbl theta1, theta2, rad, xcen , ycen, alpha;
-	  dbl theta;
-	  dbl x, dnum, dden, padex, padey;
-	  dbl dnumdx, ddendx, padexdz, padeydz;
-	  const dbl *pnx, *pdx, *pny, *pdy;
-	  int i,nx, ny;
-	  theta1=p[1];
-	  theta2=p[2];
-	  rad=p[3];
-	  nx      = abs(((int)p[4]));
-	  pnx = &p[5];
-	  pdx = &p[nx+5];
-	  ny      = abs(((int)p[nx+6]));
-	  pny = &p[nx+7];
-	  pdy = &p[nx+7+ny];
-	  x = x3;
-
-	  /*
-	  EVALUATE FUNCTION
-	  */
-	  
-	  dnum = pnx[nx-1];
-	  dden = pdx[nx-2];
-	  dnumdx = (nx-1.)*pnx[nx-1];
-	  ddendx = (nx-2.)*pdx[nx-2];
-	  for (i=nx-2;i>=0;i--)
-	    { dnum = pnx[i]+x*dnum; }
-	  for (i=nx-3;i>=0;i--)
-	    { dden = pdx[i]+x*dden;
-	      dnumdx = (i+1.)*pnx[i+1]+x*dnumdx;}
-	  for (i=nx-4;i>=0;i--)
-	    { ddendx = (i+1.)*pdx[i+1]+x*ddendx; }
-	  
-	  padex = dnum/dden;
-	  padexdz = (dden*dnumdx - dnum*ddendx)/(dden*dden);
-
-	  dnum = pny[ny-1];
-	  dden = pdy[ny-2];
-	  dnumdx = (ny-1.)*pny[ny-1];
-	  ddendx = (ny-2.)*pdx[ny-2];
-	  for (i=ny-2;i>=0;i--)
-	    { dnum = pny[i]+x*dnum; }
-	  for (i=ny-3;i>=0;i--)
-	    { dden = pdy[i]+x*dden;
-	      dnumdx = (i+1.)*pny[i+1]+x*dnumdx;}
-	  for (i=ny-4;i>=0;i--)
-	    { ddendx = (i+1.)*pdy[i+1]+x*ddendx; }
-	  
-	  padey = dnum/dden;
-	  padeydz = (dden*dnumdx - dnum*ddendx)/(dden*dden);
-
-	  alpha = 0.5*(theta2-theta1);
-	  xcen = padex + (rad/sin(alpha))*cos(theta1+alpha);
-	  ycen = padey + (rad/sin(alpha))*sin(theta1+alpha);
-
-	  /**   compute angle of point on curve from arc center **/
-	  
-	  theta = atan2(x2-ycen,x1-xcen);
-	  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;  
-	  
-	  /**  use different f depending on theta  **/
-	  
-	  if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
-	    {
-	      dfdx3 = -padeydz*cos(theta1) + padexdz*sin(theta1);
-	    }
-	  else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
-	    {
-	      dfdx3 = -padeydz*cos(theta2) + padexdz*sin(theta2);
-	    }
-	  else
-	    {
-	      dfdx3 = 2.*(x1-padex)*(-padexdz)+2.*(x2-padey)*(-padeydz);
-	    }
-      
-	  }
-
-	/*
-	   Needle collar based on a tanh modified plane equation:
-
-		Ax + By +Cz + D + E(tanh(beta*(x-x0))+1)/2 = 0
-	   USES HYPERBOLIC TAN FUNCTIONS
-	    */
-	else
-	if (model_id == 14) {
-	    
-	  double A, B, C, D, E, beta, x0;
-	  
-	  A = p[1];
-	  B = p[2];
-	  C = p[3];
-	  D = p[4];
-	  E = p[5];
-	  beta = p[6];
-	  x0 = p[7];
-
-	  dfdx3 = C;
-	  }
-        else
-	{
-	  dfdx3 = 0.;
-	}
-        return(dfdx3);
 }
 
 /****************************************************************************/
@@ -4520,7 +502,7 @@ quser_surf (func, d_func, p, time)
      double func[DIM];
      double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE];
      double p[];  /* parameters to parameterize heat transfer model*/
-     dbl time;
+     const dbl time;
 /******************************************************************************
 *
 *  Function which calculates the surface integral for user-defined heat 
@@ -4528,69 +510,20 @@ quser_surf (func, d_func, p, time)
 *
 ******************************************************************************/
 {
-  
-/* Local variables */
-  
+  /*
   int j_id;
   int var;
   double phi_j;
-  double heat_tran_coeff, d_heat_xfer_coeff_dT;
-  double epsilon, sigma, T_inf;
- 
-  double ht_neg, ht_pos, x_transition, transition_width;
-  int coord_dir;
-  
+  double heat_xfer_coeff, d_heat_xfer_coeff_dT;
+  */  
 
   /* Comment this out FIRST!!!!! */
-/*  EH(-1,"No Q_USER model implemented");  */
-/**************************** EXECUTION BEGINS *******************************/
-  
+  EH(-1,"No Q_USER model implemented");
+
 
   /* Add your function and sensitivities here */
 
-  ht_neg = p[0];
-  T_inf = p[1];
-  epsilon = p[2];
-  sigma = p[3];
-  ht_pos = p[4];
-  x_transition = p[5];
-  transition_width = p[6];
-  coord_dir = ((int) p[7]);
- 
-  if( fv->x[coord_dir] <= (x_transition-transition_width) )
- 	{
- 	heat_tran_coeff = ht_neg;
- 	}
- 	else if (fv->x[coord_dir] >= (x_transition + transition_width) )
- 	{
- 	heat_tran_coeff = ht_pos;
- 	}
- 	else 
- 	{
- 	heat_tran_coeff = 0.5*(ht_pos+ht_neg)  + 0.5*(ht_pos-ht_neg)*
- 		sin(M_PIE*(fv->x[coord_dir]-x_transition)/(2*transition_width));
- 	}
- 
-  if(af->Assemble_LSA_Mass_Matrix)
-    return;
- 
-  if (af->Assemble_Jacobian) {
 
- /* sum the contributions to the global stiffness matrix */
- 
-    var=TEMPERATURE;
-    for (j_id = 0; j_id < ei->dof[var]; j_id++) {
-       phi_j = bf[var]->phi[j_id];
-       d_func[0][var][j_id] -= heat_tran_coeff * phi_j;
-       d_func[0][var][j_id] -= 4.*epsilon*sigma * pow(fv->T,3.0) * phi_j;
-     }
-  }
- 
-/* Calculate the residual contribution                                       */
-   
-  func[0] = heat_tran_coeff * (T_inf - fv->T) + 
-            epsilon*sigma * (pow(T_inf,4.0) - pow(fv->T,4.0));
-   
   return;
 } /* END of routine quser_surf                                              */
 /****************************************************************************/
@@ -4716,11 +649,11 @@ uuser_surf (func, d_func, u_bc, time)
 *
 ******************************************************************************/
 {
-/* Local variables */
-  
+  /* 
   int j, j_id;
   int var;
   double phi_j;
+  */ 
   
 /* Comment this out FIRST!!!!! */
    EH(-1,"No U_USER model implemented"); 
@@ -4779,10 +712,11 @@ vuser_surf (func, d_func, u_bc, time)
 *
 ******************************************************************************/
 {
-/* Local variables */
+  /*
   int j_id;
   int var;
   double phi_j;
+  */
   
 /* Comment this out FIRST!!!!! */
    EH(-1,"No V_USER  model implemented"); 
@@ -4809,11 +743,11 @@ wuser_surf (func, d_func, u_bc, time)
 *
 ******************************************************************************/
 {
-/* Local variables */
+  /*
   int j_id;
   int var;
   double phi_j;
-/**************************** EXECUTION BEGINS *******************************/
+  */
   
 /* Comment this out FIRST!!!!! */
    EH(-1,"No W_USER  model implemented"); 
@@ -4978,7 +912,7 @@ p_liq_user_surf (double *func,
 
   
   return;
-} /* END of routine p_liq_user_surf    
+} /* END of routine p_liq_user_surf */
 
 /****************************************************************************/
 
@@ -5069,11 +1003,6 @@ mass_flux_user_surf(dbl mass_flux[MAX_CONC],
 ******************************************************************************/
      
 {
-  /* Local variables you might want */
-  int j_id;
-  int var;
-  double phi_j;
-  double Y_w; /* local concentration of current species */
 
 /* Comment this out FIRST!!!!! */
    EH(-1,"No YFLUX_USER model implemented"); 
@@ -5090,8 +1019,27 @@ mass_flux_user_surf(dbl mass_flux[MAX_CONC],
   /* 	d_mass_flux[wspec][MAX_VARIABLE_TYPES + wspec] = p[0] ; */
   /*     } */
     
-  
-
+  /* Another example:  time depending sink concentration */
+  /* Comment this out FIRST!!!!! */
+  /* EH(-1,"No user YFLUX_USER  model implemented"); */
+  /*  p[1] = end of ramp time (beginning starts at 0)
+      p[2] = starting humidity
+      p[3] - ending humidity */
+  /*   if(time <= p[1]) */
+  /*     { */
+  /*       y_inf = p[2] - (time)*(p[2]-p[3])/p[1]; */
+  /*     } */
+  /*   else */
+  /*     { */
+  /*       y_inf=p[3]; */
+  /*     } */
+  /*        Y_w = fv->c[wspec]; */
+  /*        mass_flux[wspec]=p[0]*(Y_w - y_inf); */
+  /*        if (af->Assemble_Jacobian ) */
+  /*        { */
+  /*          var=MASS_FRACTION; */
+  /*          d_mass_flux[wspec][MAX_VARIABLE_TYPES + wspec] = p[0] ; */
+  /*        } */
 
   return;
 } /* END of routine mass_flux_user_surf                                      */
@@ -5111,53 +1059,23 @@ fn_dot_T_user (func, d_func, u_bc, time)
 ******************************************************************************/
      
 {
-  
-/* Local variables */
-  
-  int j, j_id, i, idy, var, a, eqn, I, ldof, w;
-  int p, q, jvar;                      /* Degree of freedom counter                    */
-  int v;                      /* variable counter                             */
-  int DeformingMesh;		/* Logical. */
-  double press, d_press;
-  double pb;			/* baseline of applied pressure */
-  double pa;			/* amplitude of pressure variation */
-  double wavelength;		/* wavelength of pressure  */
-  double coat_th, gap, web_sp,visc, t_offset, pgrad;
+  /*  int j, j_id, i, id, var, a, eqn, I, ldof, w; */
+  /*  int p, q, jvar;                   Degree of freedom counter            */
+  /*  int v;                            variable counter                     */
+  /*  int DeformingMesh;		Logical. */
+  /*  double press, d_press;*/
+  /*  double pb;			baseline of applied pressure */
+  /*  double pa;			amplitude of pressure variation */
+  /*  double wavelength;		wavelength of pressure  */
 
-/* Comment this out FIRST!!!!! 
+/* Comment this out FIRST!!!!! */
    EH(-1,"No PRESSURE_USER model implemented"); 
-*/
+
 /* Add your function and sensitivities here */
 
-/*  return;		 Here's a good default behavior! */
 
-  /*
-   * Example:
-   *
-   *  DeformingMesh = pd->e[R_MESH1];     Catch bad references to moving 
-   *				          mesh which isn't.
-   *  eqn = VELOCITY1;
-   *
-   * pb = u_bc[0];
-   * pa = u_bc[1];
-   * wavelength = u_bc[2];
-   */
-	coat_th = u_bc[0];
-	gap = u_bc[1];
-	web_sp = u_bc[2];
-	visc = u_bc[3];
-	t_offset = u_bc[4];
-	pgrad = (6*visc*web_sp/SQUARE(gap))*(1.-2.*coat_th/gap);
-	if(time < t_offset || fv->F < 0)
-	   {press = 0.0;}
-	else
-	   {press = pgrad*web_sp*(time-t_offset);}
-   for (a=0; a<ei->ielem_dim; a++)
-   	{  
-   	  func[a] -= press * fv->snormal[a]; 
-   	}
+  return;		/* Here's a good default behavior! */
 
-	return;
   /*
    * Example:
    *
@@ -5229,19 +1147,20 @@ void flow_n_dot_T_user (func, d_func, u_BC, time)
 ******************************************************************************/
      
 {
-  
-/* Local variables */
-  
+  /*
   int j, j_id, i, id, var, a, eqn, I, ldof, w;
-  int p, q, jvar;                      /* Degree of freedom counter          */
-  int v;                      /* variable counter                            */
-  int DeformingMesh;		/* Logical. */
+  int p, q, jvar;                      
+  int v;
+  int DeformingMesh;
   double press, d_press;
+  */
 
 /* Comment this out FIRST!!!!! */
    EH(-1,"No FLOW_PRESSURE_USER model implemented"); 
 
 /* Add your function and sensitivities here */
+
+
   return;		/* Here's a good default behavior! */
 
   /*
@@ -5294,7 +1213,7 @@ var_CA_user(double Ca_local,
   static_CA = a[0]*M_PIE/180.0;
   cT = a[1];
 
-  cos_CA = cos( static_CA) + cT * Ca_local;
+  cos_CA = cos( static_CA) - cT * Ca_local;
 
   *d_cos_CA_Ca_local = cT;
 
@@ -5351,17 +1270,13 @@ user_gibbs_criterion(const double fsnormal[MAX_PDIM], /* Vector of free surface
 ******************************************************************************/
      
 {
-  
-/* Local variables */
-  
-  int j, j_id, var,a,  q;
+  int a;
   dbl actual_angle, dot_prod, pos;
-  dbl contact_angle, x_pos, y_pos, z_pos;
+  dbl contact_angle;
   dbl circ_center_x, circ_center_y, circ_center_z, r_circ;
   dbl sign_orig ;
-  dbl aa, bb, cc, dd;
   
-/***************************** EXECUTION BEGINS *******************************/
+/***************************** EXECUTION BEGINS ******************************/
 
   
   if(imodel == CIRCLE)
@@ -5429,8 +1344,8 @@ else
   /* evaluate gibbs criterion here */
   if (actual_angle >= (contact_angle+1.e-3))
     {
-      printf("Unpinning node actual angle = %lf at pos %lf %lf %lf\n",actual_angle,fv->x[0], 
-                   fv->x[1], fv->x[2]);
+      printf("Unpinning node actual angle = %f at pos %f %f %f\n",
+	     actual_angle,fv->x[0], fv->x[1], fv->x[2]);
 
       *ipin = 0;
       return(1);
@@ -5455,138 +1370,100 @@ else
 } /* End of routine user_gibbs_criterion                                    */ 
 /****************************************************************************/
 
-
-void
-force_user_surf (func, d_func, p, time)
-     double func[DIM];
-     double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE];
-     double p[];  /* parameters to parameterize heat transfer model*/
-     dbl time;
 /******************************************************************************
 *
 *  Function which calculates the surface integral for user-defined force.
 *
 ******************************************************************************/
+
+void 
+force_user_surf(double func[DIM],
+		double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+		double p[],
+		dbl time)
 {
-
-/* Local variables */
-
+  /*
   int j, j_id;
   int var;
   double phi_j;
   double heat_xfer_coeff, d_heat_xfer_coeff_dT;
+  */
+  
+/* Comment this out FIRST!!!!! */
+ EH(-1,"No FORCE_USER model implemented. Check-routine. You may be commented out!");
 
-  double z,poly[16],csi[16],dblj;
-  int N;
+/**************************** EXECUTION BEGINS *******************************/
+  func[0] = 0.;
+/* Add your function and sensitivities here */
 
-/****************** EXECUTION BEGINS added by slah jendoubi on 12/28/2006*****/
-  double efield[DIM], efield_sqr, es[DIM][DIM], local_q, perm;
-  int a, b, dir;
-  dir = ((int)p[0]);
-  perm = p[1];
-  func[0] = 0; func[1] = 0.; func[2]=0;
-
-                /*
-                 * computing the electric stress tensor upfront.
-                 */ 
-                        /*memset( es, 0, sizeof(dbl)*DIM*DIM);
-                      if(pd->e[R_MESH1] || pd->e[R_MESH2])
-                         {
-                         }*/
-                          efield_sqr = 0.0;
-                          for ( a=0; a<VIM; a++)
-                            {
-                                  efield[a] = - fv->grad_V[a];
-                                  efield_sqr += efield[a]*efield[a];
-                            }
-
-                          for ( a=0; a<VIM; a++)
-                            {
-                              for ( b=0; b<VIM; b++)
-                                {
-                                  es[a][b] = efield[a]*efield[b] - 0.5*efield_sqr*delta(a,b);
-                                }
-                            }
-
-                          local_q=0;
-
-                          for ( a=0; a<VIM; a++)
-                            {
-                             local_q += (-perm*es[0][a]*fv->snormal[a]);
-                            }
-                      func[0] = local_q;
-                          local_q=0;
-                          for ( a=0; a<VIM; a++)
-                            {
-                                   local_q += (-perm*es[1][a]*fv->snormal[a]);
-                            }
-                      func[1] = local_q;
-                      /*func[0] = dir;
-                      func[1] = 0;
-                      if(fv->x[1] > 1 ) {func[0] = 0;}*/
-              /*printf("x1 x2 efield[0] forceX forceY %lf %lf %lf %e %e \n",fv->x[0], fv->x[1], efield[0], func[0], func[1]);*/
-
-/*  This looks like a variant of Legendre polynomials		*/
-/*  func[1] = 0.; func[2] = 0.;
-  N = ((int)p[1]);
-  z = fv->x[0]/p[0];
-  poly[0] = 1.0;
-  poly[1] = z;
-  for( j=2 ; j<2+N ; j++)	{
-	dblj = ((double)j);
-	poly[j] = ((2.*dblj-1.0)*z*poly[j-1] - (dblj-1.0)*poly[j-2])/dblj;
- 	}
-  for( j=0 ; j<N ; j++)	{
-	csi[j] = poly[j+2] - poly[j];
-	}
-  for(j=0 ; j<N ; j++)	{
-	func[1] += p[j+2]*csi[j];
-	}
+/*  if(pd->Num_Dim == 3)
+  {
+     func[1] = p[0]*sin(2.*M_PI*p[1]*time - M_PI/2.)/2. + p[0]/2.;
+     func[2] = p[0]*sin(2.*M_PI*p[1]*time - M_PI/2.)/2./700. + p[0]/2./700.;
+     func[0]=0;
+     } 
 */
- 
-/* func[1] = p[0]*sqrt(1.0-SQUARE(fv->x[0]/p[1]));  */
+/*
+  if(pd->Num_Dim == 2)
+  {
+     func[0] = p[0]*sin(2.*M_PI*p[1]*time - M_PI/2.)/2. + p[0]/2.;
+     func[1] = func[2] = 0.;
+  }
+*/
+/*  if (time < p[1])
+    {
+      func[1] = p[0];
+    }
+  else if (time > p[1] && time < p[2])
+    {
+      func[1] = 0.;
+    }
+  else
+    {
+      func[1]=p[0];
+    }
+*/
 
 /**********************Example Here for electrostatic/spring force **********/
 /*  if(time < p[0])
-        func[0] =  +p[1]/(p[4] - fv->x[0]) - p[2]*(fv->x[0] - p[3]);
+	func[0] =  +p[1]/(p[4] - fv->x[0]) - p[2]*(fv->x[0] - p[3]);
   else if (time > p[0])
-        func[0] =  -p[2]*(fv->x[0] - p[3]);
+	func[0] =  -p[2]*(fv->x[0] - p[3]);
   else
-        EH(-1," ran out of bounds in time baby");
+	EH(-1," ran out of bounds in time baby");
 
-
-  if (af->Assemble_Jacobian)
+  if (af->Assemble_Jacobian) 
     {
       if(time < p[0])
-        {
-          var = MESH_DISPLACEMENT1;
-          if (pd->v[var])
-            {
-              for ( j=0; j<ei->dof[var]; j++)
-                {
-                  phi_j = bf[var]->phi[j];
-                  d_func[0][var][j] +=  -p[1]*(-phi_j)/SQUARE(p[4] - fv->x[0])
-                                        -p[2]*phi_j;
-                }
-            }
-        }
+	{
+	  var = MESH_DISPLACEMENT1;
+	  if (pd->v[var])
+	    {
+	      for ( j=0; j<ei->dof[var]; j++)
+		{
+		  phi_j = bf[var]->phi[j];
+		  d_func[0][var][j] +=  -p[1]*(-phi_j)/SQUARE(p[4] - fv->x[0])
+		                        -p[2]*phi_j;
+		}
+	    }
+	}
       else if (time > p[0])
-        {
-          var = MESH_DISPLACEMENT1;
-          if (pd->v[var])
-            {
-              for ( j=0; j<ei->dof[var]; j++)
-                {
-                  phi_j = bf[var]->phi[j];
-                  d_func[0][var][j] +=  -p[2]*phi_j;
-                }
-            }
+	{
+	  var = MESH_DISPLACEMENT1;
+	  if (pd->v[var])
+	    {
+	      for ( j=0; j<ei->dof[var]; j++)
+		{
+		  phi_j = bf[var]->phi[j];
+		  d_func[0][var][j] +=  -p[2]*phi_j;
+		}
+	    }
 
-        }
+	}
       else
-        EH(-1," ran out of bounds in time baby");
+	EH(-1," ran out of bounds in time baby");
     }
-*/
+*/  
 
   return;
 } /* END of routine force_user_surf                                          */
@@ -5615,7 +1492,7 @@ volt_user_surf (double func[DIM],
   int j, j_id, w1, var;
   double phi_j;
   double PHI;
-  double i, i0, ai0a, Ha, cH2, cH2ref, aa, ac, T, U0a;
+  double i, i0, ai0a, Ha, cH2, cH2ref, aa, ac, T;
   double cratio;
 
 /***************************** EXECUTION BEGINS *******************************/
@@ -5629,7 +1506,6 @@ volt_user_surf (double func[DIM],
     aa = p[4];
     ac = p[5];
     T = p[6];
-    U0a = p[7];
 
     RTF = R*T/F;
     cH2 = fv->c[0];
@@ -5703,122 +1579,16 @@ current_user_surf (double func[DIM],
 {
 /* Local variables */
   
-
-double wire_voltage, constant_A, Volt_s, n_power, constant_B;
-double X[3], X_0[3], R, angle_sq;
-double origin[3],dir_angle[3], costheta;
-double axis_pt[3],rad_dir[3], t;
-
-double dt_dx[3], dax_dx[3][3], dR_dx[3], drad_dx[3][3]; /* mesh displ. deriv  */
-
-int var, j_id, w1, b, q;
-double phi_j, tmp;
-
   
 /***************************** EXECUTION BEGINS *******************************/
 
-/***********  Electrostatic Pinning Wire ******/
-wire_voltage = p[0];
-constant_A = p[7];
-Volt_s = p[8];
-n_power = p[9];
-constant_B = p[10];
-
-/**  Use ROTATIONAL_3D snippet for pinning wire geometry	**/
-/*  origin and direction of rotation axis       */
-origin[0] = p[1];  origin[1] = p[2]; origin[2] = p[3];
-dir_angle[0] = p[4];  dir_angle[1] = p[5]; dir_angle[2] = p[6];
-
-/*  find intersection of axis with normal plane - i.e., locate point on
-        axis that intersects plane normal to axis that contains local point. */
-
-angle_sq = SQUARE(dir_angle[0]) + SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]);
-t = (dir_angle[0]*(fv->x[0]-origin[0]) + dir_angle[1]*(fv->x[1]-origin[1])
-        + dir_angle[2]*(fv->x[2]-origin[2]))/angle_sq;
-axis_pt[0] = origin[0]+dir_angle[0]*t;
-axis_pt[1] = origin[1]+dir_angle[1]*t;
-axis_pt[2] = origin[2]+dir_angle[2]*t;
-
-/*  compute radius and radial direction */
-
-R = sqrt( SQUARE(fv->x[0]-axis_pt[0]) + SQUARE(fv->x[1]-axis_pt[1]) +
-                SQUARE(fv->x[2]-axis_pt[2]) );
-rad_dir[0] = (fv->x[0]-axis_pt[0])/R;
-rad_dir[1] = (fv->x[1]-axis_pt[1])/R;
-rad_dir[2] = (fv->x[2]-axis_pt[2])/R;
-costheta = -(fv->snormal[0]*rad_dir[0] + fv->snormal[1]*rad_dir[1] 
-		+ fv->snormal[2]*rad_dir[2]);
-
-
-    *func = (constant_A*(wire_voltage - fv->V - Volt_s) + constant_B)
-			*pow(costheta,n_power);
-
-  /* J_s_c --- sensitivity wrt species concentrations */
-  var=MASS_FRACTION;
-  if (pd->v[var])
-  {
-  for (j_id = 0; j_id < ei->dof[var]; j_id++)
-    {
-      phi_j = bf[var]->phi[j_id];
-      for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++ )
-        {
-          d_func[0][MAX_VARIABLE_TYPES + w1][j_id] = 0.0;
-        }
-     }
-  }
-
-  /* J_s_V --- sensitivity wrt electrolyte potential */
-  var=VOLTAGE;
-  if (pd->v[var])
-    {
-      for (j_id = 0; j_id < ei->dof[var]; j_id++)
-        {
-          phi_j = bf[var]->phi[j_id];
-
-          d_func[0][var][j_id] =  (constant_A*( -phi_j))*pow(costheta,n_power);
-
-        }
-    }
-
-  if (pd->v[MESH_DISPLACEMENT1] )
-    {
-	for(b=0 ; b<3 ; b++)	{ dt_dx[b] = dir_angle[b]/angle_sq;}
-	for(q=0 ; q<3 ; q++)	{
-		for(b=0 ; b<3 ; b++)	
-			{ dax_dx[q][b] = dir_angle[q]*dt_dx[b];}
-		}
-	memset( dR_dx, 0, sizeof(double)*3);
-	for(q=0 ; q<3 ; q++)	{
-		for(b=0 ; b<3 ; b++)	
-			{ dR_dx[q] += (fv->x[b]-axis_pt[b])*(delta(b,q)-dax_dx[b][q]);}
-		}
-	for(q=0 ; q<3 ; q++)	{
-		for(b=0 ; b<3 ; b++)	
-			{ drad_dx[q][b] = (R*(delta(b,q)-dax_dx[q][b]) - 
-				(fv->x[q] - axis_pt[q])*dR_dx[b])/SQUARE(R);}
-		}
-    	tmp = constant_A*(wire_voltage - fv->V - Volt_s) + constant_B;
-       for ( b=0; b<VIM; b++)
-         {
-           var = MESH_DISPLACEMENT1+b;
-                for (j_id=0; j_id<ei->dof[var]; j_id++)
-                    {
-          		phi_j = bf[var]->phi[j_id];
-                         for (q=0; q<VIM; q++)
-                            {
-          d_func[0][var][j_id] += tmp*n_power*pow(costheta,n_power-1.)*
-		(-(fv->snormal[q]*drad_dx[q][b]*phi_j + 
-			fv->dsnormal_dx[q][b][j_id]*rad_dir[q]));
-                             }
-                    }
-         }
-    }
+/***********Very Simple Example for VAR Model with J(r) on Melt Pool ******/
+  /* *func=p[0]*exp(-3.0*pow(fv->x[1]/p[1],2));  */
 
  
   return;
 } /* END of routine current_user_surf */
-/*****************************************************************************/
 
 /*****************************************************************************/
 /* END of file user_bc.c */
-/******************************************************************************/
+/*****************************************************************************/
