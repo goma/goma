@@ -105,6 +105,7 @@
 #define I_SURF_TEMP     31
 #define I_JOULE         32
 #define I_LUB_LOAD      33
+#define I_VOLUME_PLANE  34 
 
 
 #ifdef _MM_POST_PROC_C
@@ -215,7 +216,8 @@ VOL_NAME_STRUCT pp_vol_names[] =
   { "ELECTRIC_LOAD_X",   I_ELOADX },
   { "ELECTRIC_LOAD_Y",   I_ELOADY },
   { "ELECTRIC_LOAD_Z",   I_ELOADZ },
-  { "SURFACE_TEMPERATURE",   I_SURF_TEMP }
+  { "SURFACE_TEMPERATURE",   I_SURF_TEMP },
+  { "VOLUME_PLANE",          I_VOLUME_PLANE }
 };
 
 int Num_Vol_Names = sizeof( pp_vol_names )/ sizeof( VOL_NAME_STRUCT );

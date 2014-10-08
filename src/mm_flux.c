@@ -1804,7 +1804,7 @@ evaluate_flux(
 			      local_flux += weight * det * local_q;
                               local_flux_conv += weight *det*local_qconv;
 			      for( b=0 ; b<dim ; b++)
-                                 {Torque[b] += local_Torque[b];}
+                                 {Torque[b] += local_Torque[b]*weight*det;}
 		      break;
 
 		    case N_DOT_X:
@@ -4164,6 +4164,8 @@ evaluate_flux(
               fprintf(jfp," flux=  %e %e  area= %e  ", local_flux,local_flux_conv,local_area);
 	        if(quantity==SURF_DISSIP)
 	           {
+		    for( b=0 ; b<dim ; b++)
+                       {Torque[b] /= local_flux_conv;}
       fprintf(jfp," moments=  %e %e %e  ", Torque[0],Torque[1],Torque[2]);
                    }
 	      fprintf(jfp, "\n\n"); 
