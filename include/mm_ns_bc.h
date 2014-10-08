@@ -261,9 +261,6 @@ PROTO((double [MDE][DIM],	/* cfunc                                     */
        const int ,		/* id_side - ID of the side of the element   */
        const double ,		/* sigma - surface tension                   */
        const double ,		/* pb - applied pressure                     */
-       const double ,		/* pr - coefficient for repulsion force to 
-				 * ensure no penetration of the solid boundary
-				 * by the free surface                       */
        struct elem_side_bc_struct *, /* elem_side_bc                         */
        const int ,		/* iconnect_ptr                              */
        double [DIM][MDE]));	/* dsigma_dx                               */

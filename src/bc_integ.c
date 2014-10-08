@@ -954,7 +954,7 @@ apply_integrated_bc(
 
 	    fn_dot_T(cfunc, d_cfunc, elem_side_bc->id_side,
 		     bc->BC_Data_Float[0], pb,
-		     0., elem_side_bc, iconnect_ptr, dsigma_dx);
+		     elem_side_bc, iconnect_ptr, dsigma_dx);
 
 	    if (bc->BC_Name == CAP_REPULSE_BC) {
 	      apply_repulsion(cfunc, d_cfunc, bc->BC_Data_Float[2],

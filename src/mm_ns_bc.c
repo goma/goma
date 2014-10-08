@@ -4557,9 +4557,6 @@ fn_dot_T(double cfunc[MDE][DIM],
 	 const int id_side,	/* ID of the side of the element             */
 	 const double sigma,	/* surface tension                           */
 	 const double pb,	/* applied pressure                          */
-	 const double pr,	/* coefficient for repulsion force to ensure
-				 * no penetration of the solid boundary by the
-				 * free surface                              */
 	 struct elem_side_bc_struct *elem_side_bc,
 	 const int iconnect_ptr,
 	 double dsigma_dx[DIM][MDE])
@@ -4571,8 +4568,6 @@ fn_dot_T(double cfunc[MDE][DIM],
 *        2H*sigma*n + pb + pr/(dist)**2 = n.T
 *  This vector condition is to be added on component wise to the momentum equations.
 *  pb is the applied pressure as in a vacuum or a forcing function
-*  pr/dist**2 is the force applied to repulse the free surface from the solid boundaries
-*  dist is defined as the distance between the free surface and the solid wall.
 *
 *******************************************************************************/
      
@@ -4580,26 +4575,9 @@ fn_dot_T(double cfunc[MDE][DIM],
 /*    TAB certifies that this function conforms to the exo/patran side numbering convention 11/10/98. */
   int j, i, id, var, a, eqn, I, ldof, w, dim;
   int p, q, jvar;		/* Degree of freedom counter                 */
-
-  double dist2;			/* squared distance from surface to wall     */
-  double yplane;
-				/* coordinates of plane                      */
-  double repexp = 2.;		/* exponent of disance in repulsion term     */
 /***************************** EXECUTION BEGINS ******************************/
   /* Based on current element id_side, choose the correct curvature sign */
 
-
-/* calculate distance from free surface to solid surface for repulsion calculations */
-  if(pr != 0.) {
-    yplane = 0.039878;
-    dist2= pow(yplane - fv->x[0], 2.0);
-  }
-/* if pr is 0. => we don't want free surface/wall repulsion and just
-   ensure that dist and dist2 are nonzero so nothing bad happens */
-  else {
-    dist2 =1.;
-  }
-  
 /* EDW: For 3D of 2D LSA; all three components are needed */
   dim = ei->ielem_dim;
   if (Linear_Stability == LSA_3D_OF_2D || Linear_Stability == LSA_3D_OF_2D_SAVE)
@@ -4630,7 +4608,7 @@ fn_dot_T(double cfunc[MDE][DIM],
 		    {
 		      for (a=0; a<dim; a++)
 			{
-                          d_cfunc[ldof][a][var][j] -= ((pb + pr/pow(dist2,repexp)) * fv->dsnormal_dx[a][jvar][j] )
+                          d_cfunc[ldof][a][var][j] -= (pb * fv->dsnormal_dx[a][jvar][j] )
                                             * bf[VELOCITY1+a]->phi[ldof];  
 			  for (p=0; p<VIM; p++)
 			    {
@@ -4738,7 +4716,7 @@ fn_dot_T(double cfunc[MDE][DIM],
 	      
 	      for (a=0; a<dim; a++)
 		{  
-		  cfunc[ldof][a] -= (pb + pr/pow(dist2, repexp)) * fv->snormal[a] * bf[VELOCITY1+a]->phi[ldof]; 
+		  cfunc[ldof][a] -= pb * fv->snormal[a] * bf[VELOCITY1+a]->phi[ldof]; 
 		  for (p=0; p<VIM; p++)
 		    { 
 		      cfunc[ldof][a] -= sigma * mp->surface_tension * bf[VELOCITY1+a]->grad_phi_e[ldof][a] [p][p];  
@@ -7150,10 +7128,16 @@ void fapply_moving_CA_sinh(
 
 /*  Hoffman correlation variables	*/
   double ca_no, g_sca = 0.0, g_dca = 0.0;
+#ifdef NEW_HOFFMAN_FCN_PLEASE
   double g_deriv;
   double hoff_C=0.003838336, hoff_N=2.7944, hoff_F=0.7093681;
   double hoff_M=1.144796, hoff_R=8.458397749;
   double hoff_D=velocity_pre_exponential*M_PIE/180.0;
+#else
+  double A_sca = 0.0, A_dca = 0.0;
+  int iter, iter_max=20;
+  double eps_tol=1.0e-12;
+#endif
   double liq_visc = 0.0, gamma[DIM][DIM];
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
@@ -7217,9 +7201,13 @@ void fapply_moving_CA_sinh(
 	case VELO_THETA_HOFFMAN_BC:
   	theta_max = M_PIE*theta_max_degrees/180.;
 	costhetamax = cos(theta_max);
+#ifdef NEW_HOFFMAN_FCN_PLEASE
         hoff_R=pow(hoff_F,hoff_N)*pow(1.-hoff_F,hoff_M)*pow(theta_max,hoff_N+hoff_M);
 	theta = acos(costheta);
 	thetaeq = equilibrium_contact_angle * (M_PIE/180);
+#else
+        costheta=MAX(costheta,costhetamax);
+#endif
 	break;
 	}
 
@@ -7249,6 +7237,7 @@ void fapply_moving_CA_sinh(
 	 	v_new *= dewet;
 		break;
 	case VELO_THETA_HOFFMAN_BC:
+#ifdef NEW_HOFFMAN_FCN_PLEASE
                 if(thetaeq < hoff_F*theta_max)
                      {
                       g_sca = hoff_C*pow(thetaeq,hoff_N);
@@ -7271,6 +7260,37 @@ void fapply_moving_CA_sinh(
                             *(1.0+hoff_M/hoff_D*(theta-theta_max+hoff_D));
                      }
        		if(!finite(g_dca)) { g_dca = SGN(g_dca)*BIG_PENALTY; }
+#else
+		ca_no = 1.0E+06; iter = 0; eps=10.*eps_tol;
+		while (iter <= iter_max && fabs(eps) > eps_tol)
+			{
+			g_sca = log((3.-costhetaeq)/(1.+costhetaeq))/(2.*5.16);
+			A_sca = pow(g_sca,1./0.706);
+			eps = -(ca_no - 1.31*pow(ca_no,0.99)*A_sca-A_sca)/
+					(1.-1.31*0.99*A_sca/pow(ca_no,0.01));
+			ca_no += eps;
+			iter++;
+			}
+		if(fabs(eps) > eps_tol)EH(-1,"Hoffman iteration not converged");
+		g_sca = ca_no;
+		ca_no = 1.0E+06; iter = 0; eps=10.*eps_tol;
+		while (iter <= iter_max && fabs(eps) > eps_tol)
+			{
+			g_dca = log((3.-costheta)/(1.+costheta))/(2.*5.16);
+			A_dca = pow(g_dca,1./0.706);
+			eps = -(ca_no - 1.31*pow(ca_no,0.99)*A_dca-A_dca)/
+					(1.-1.31*0.99*A_dca/pow(ca_no,0.01));
+			ca_no += eps;
+			if(!finite(ca_no))
+			    {
+				ca_no = eps = DBL_MAX/10.;
+			    }
+			iter++;
+			}
+		if(fabs(eps) > eps_tol)
+                    fprintf(stderr,"Hoffman not converged ... %d %g\n",iter,eps);
+		g_dca = ca_no;
+#endif
 		ca_no = g_dca - g_sca;
 		dewet = (ca_no < 0) ? dewet_input : 1.0;
 		v_new = dewet*ca_no*g/liq_visc;
@@ -7479,6 +7499,7 @@ fprintf(stderr,"velocity  %g %g %g\n",v,v_mesh,v_mesh_dt);
 					 * g * (-dnnddpj) * factor;
 				break;
 			case VELO_THETA_HOFFMAN_BC:
+#ifdef NEW_HOFFMAN_FCN_PLEASE
                                 dv_ddpj = factor*dewet*g/liq_visc;
                                 if(theta < hoff_F*theta_max)
                                      {
@@ -7497,6 +7518,13 @@ fprintf(stderr,"velocity  %g %g %g\n",v,v_mesh,v_mesh_dt);
                                      }
        			if(!finite(g_deriv)) { g_deriv = SGN(g_deriv)*BIG_PENALTY; }
                         	dv_ddpj *= g_deriv;
+#else
+	      			dv_ddpj = factor*dewet*g/liq_visc * 
+					(1.+1.31*pow(g_dca,0.99))/
+				(1.-1.31*0.99*A_dca/pow(g_dca,0.01))*
+				pow(A_dca,0.294)*(-4.)*dnnddpj/ (0.706*2*5.16
+					*(3.-costheta)*(1.+costheta));
+#endif
 				dv_ddpj += factor*dewet*(g_dca-g_sca)*g
 					*(-d_mu->X[p][j]/SQUARE(liq_visc));
 				break;
@@ -7561,7 +7589,7 @@ fprintf(stderr,"velocity  %g %g %g\n",v,v_mesh,v_mesh_dt);
 				break;
 			}
 		d_func[0][var][j] += BIG_PENALTY * dv_ddpj;
-   		  if ( 0 && TimeIntegration != 0 )
+   		  if ( TimeIntegration != 0 )
  		  	{
 		d_func[0][var][j] += BIG_PENALTY*t_relax*sign * 
                            (sstangent[p]*(1.+2.*tt)*bf[var]->phi[j]/dt );
