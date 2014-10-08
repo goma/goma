@@ -4164,7 +4164,7 @@ evaluate_flux(
               fprintf(jfp," flux=  %e %e  area= %e  ", local_flux,local_flux_conv,local_area);
 	        if(quantity==SURF_DISSIP)
 	           {
-		    for( b=0 ; b<dim ; b++)
+		    for( b=0 ; b<3; b++)
                        {Torque[b] /= local_flux_conv;}
       fprintf(jfp," moments=  %e %e %e  ", Torque[0],Torque[1],Torque[2]);
                    }
