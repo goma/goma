@@ -65,8 +65,6 @@
 
 int
 apply_contact_bc (
-          int    ija[],         /* Vector of integer pointers into the vector a */
-          double a[],           /* Jacobian */
           double x[],           /* Solution vector for the current processor    */
           double resid_vector[],/* Residual vector for the current processor    */
           const double delta_t, /* current time step size                       */

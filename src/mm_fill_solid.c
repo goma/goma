@@ -2145,8 +2145,6 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 				    * is being sought                        */
 			   int I, /* Global node number                      */
 			   int ielem_dim, /* physical dimension of the elem  */
-			   int ija[], /* column pointer array                */
-			   double a[], /* nonzero array entries              */
 			   double resid_vector[], /* Residual vector         */
 			   int i_mat_solid, /* elem block id's of solid       */
 			   int i_mat_fluid, /* elem block id's of liquid      */
@@ -2490,8 +2488,6 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 					* contribution is being sought       */
 			   int I, /* Global node number                      */
 			   int ielem_dim, /* physical dimension of the elem  */
-			   int ija[], /* column pointer array                */
-			   double a[], /* nonzero array entries              */
 			   double resid_vector[], /* Residual vector         */
 			   int i_mat_solid, /* elem block id's of solid       */
 			   int i_mat_fluid, /* elem block id's of liquid      */

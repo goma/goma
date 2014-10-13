@@ -40,6 +40,9 @@ static char rcsid[] = "$Id: rf_solve.c,v 5.21 2010-03-17 22:23:54 hkmoffa Exp $"
 #include "sl_amesos_interface.h"
 #include "brk_utils.h"
 
+#include "sl_epetra_interface.h"
+#include "sl_epetra_util.h"
+
 #define _RF_SOLVE_C
 #include "goma.h"
 #include "el_quality.h"
@@ -597,16 +600,22 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   /* Allocate sparse matrix */
 
-  if( strcmp( Matrix_Format, "msr" ) == 0) {
+  if (strcmp(Matrix_Format, "epetra") == 0) {
+    err = check_compatible_solver();
+    EH(err, "Incompatible matrix solver for epetra, epetra supports amesos and aztecoo solvers.");
+    check_parallel_error("Matrix format / Solver incompatibility");
+    ams[JAC]->RowMatrix = EpetraCreateRowMatrix(num_internal_dofs + num_boundary_dofs);
+    EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
+  } else if (strcmp(Matrix_Format, "msr") == 0) {
     log_msg("alloc_MSR_sparse_arrays...");
     alloc_MSR_sparse_arrays(&ija, &a, &a_old, 0, node_to_fill, exo, dpi);
     /*
      * An attic to store external dofs column names is needed when
      * running in parallel.
-     */    
-    alloc_extern_ija_buffer(num_universe_dofs, 
-			    num_internal_dofs+num_boundary_dofs, 
-			    ija, &ija_attic);
+     */
+    alloc_extern_ija_buffer(num_universe_dofs,
+                            num_internal_dofs + num_boundary_dofs,
+                            ija, &ija_attic);
     /*
      * Any necessary one time initialization of the linear
      * solver package (Aztec).
@@ -615,57 +624,50 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     ams[JAC]->val     = a;
     ams[JAC]->belfry  = ija_attic;
     ams[JAC]->val_old = a_old;
-	  
+
     /*
      * These point to nowhere since we're using MSR instead of VBR
      * format.
      */
-      
+
     ams[JAC]->indx  = NULL;
     ams[JAC]->bpntr = NULL;
     ams[JAC]->rpntr = NULL;
     ams[JAC]->cpntr = NULL;
 
-    ams[JAC]->npn      = dpi->num_internal_nodes + dpi->num_boundary_nodes;
-    ams[JAC]->npn_plus = dpi->num_internal_nodes +
-	dpi->num_boundary_nodes + dpi->num_external_nodes;
+    ams[JAC]->npn = dpi->num_internal_nodes + dpi->num_boundary_nodes;
+    ams[JAC]->npn_plus = dpi->num_internal_nodes + dpi->num_boundary_nodes
+        + dpi->num_external_nodes;
 
-    ams[JAC]->npu      = num_internal_dofs+num_boundary_dofs;
+    ams[JAC]->npu = num_internal_dofs + num_boundary_dofs;
     ams[JAC]->npu_plus = num_universe_dofs;
 
-    ams[JAC]->nnz = ija[num_internal_dofs+num_boundary_dofs] - 1;
+    ams[JAC]->nnz = ija[num_internal_dofs + num_boundary_dofs] - 1;
     ams[JAC]->nnz_plus = ija[num_universe_dofs];
 
-    ams[JAC]->EpetraMat = NULL;
+    ams[JAC]->RowMatrix = NULL;
 
-  }
-  else if(  strcmp( Matrix_Format, "vbr" ) == 0)
-  {
+  } else if (strcmp(Matrix_Format, "vbr") == 0) {
     log_msg("alloc_VBR_sparse_arrays...");
-    alloc_VBR_sparse_arrays (ams[JAC],
-			     exo,
-			     dpi);
+    alloc_VBR_sparse_arrays(ams[JAC], exo, dpi);
     ija_attic = NULL;
-    ams[JAC]->belfry  = ija_attic;
+    ams[JAC]->belfry = ija_attic;
 
     a = ams[JAC]->val;
-    if( !save_old_A ) a_old = ams[JAC]->val_old = NULL;
-  }
-  else if( strcmp(Matrix_Format, "front") == 0 )
-    {
-      /* Don't allocate any sparse matrix space when using front */
-      ams[JAC]->bindx   = NULL;
-      ams[JAC]->val     = NULL;
-      ams[JAC]->belfry  = NULL;
-      ams[JAC]->val_old = NULL;
-      ams[JAC]->indx  = NULL;
-      ams[JAC]->bpntr = NULL;
-      ams[JAC]->rpntr = NULL;
-      ams[JAC]->cpntr = NULL;
-    }
-  else
-  {
-    EH(-1,"Attempted to allocate unknown sparse matrix format");
+    if (!save_old_A)
+      a_old = ams[JAC]->val_old = NULL;
+  } else if (strcmp(Matrix_Format, "front") == 0) {
+    /* Don't allocate any sparse matrix space when using front */
+    ams[JAC]->bindx   = NULL;
+    ams[JAC]->val     = NULL;
+    ams[JAC]->belfry  = NULL;
+    ams[JAC]->val_old = NULL;
+    ams[JAC]->indx  = NULL;
+    ams[JAC]->bpntr = NULL;
+    ams[JAC]->rpntr = NULL;
+    ams[JAC]->cpntr = NULL;
+  } else {
+    EH(-1, "Attempted to allocate unknown sparse matrix format");
   }
 	  
   /* 
@@ -790,18 +792,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
      * bundled inside. At the other end, extract "ija" and "a" as
      * appropriate, but the other items are there now, too.
      */
-
-    /*
-     * if we are using AMESOS we need to allocated and construct a C++ sparse Epetra_CrsMatrix object
-     * based upon the msr matrix.
-     *
-     * The next call returns a void * to this object 
-     */
-#ifdef ENABLE_AMESOS
-    if ( Linear_Solver == AMESOS )
-        ams[JAC]->EpetraMat = (void *) construct_Epetra_CrsMatrix( ams[JAC] ); 
-#endif
-       
 
 #ifdef PARALLEL
 
@@ -1356,12 +1346,6 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
      * Do this only once if in library mode.
      */
     if (callnum == 1) sl_init(matrix_systems_mask, ams, exo, dpi, cx);	
-
-#ifdef ENABLE_AMESOS
-    /* Set up Epetra Matrix if we are going to link to Amesos */
-    if ( Linear_Solver == AMESOS )
-      ams[JAC]->EpetraMat = (void *) construct_Epetra_CrsMatrix( ams[JAC] ); 
-#endif
       
     /*
      * make sure the Aztec was properly initialized
@@ -3020,35 +3004,43 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
   }
 #endif /* not COUPLED_FILL */
 
-  if (last_call)
+  if (last_call) {
+    if (strcmp(Matrix_Format, "epetra") == 0)
     {
-      sl_free(matrix_systems_mask, ams);
-  
-      for(i = 0; i < NUM_ALSS; i++)
-        {
-          safer_free((void **) &(ams[i]));
-        }
-
-      safer_free((void **) &gvec);
-
-      i = 0;
-      for (eb_indx = 0; eb_indx < exo->num_elem_blocks; eb_indx++)
-        {
-          for (ev_indx = 0; ev_indx < rd->nev; ev_indx++)
-            {
-              if (exo->elem_var_tab[i++] == 1)
-                {
-	          safer_free((void **) &(gvec_elem[eb_indx][ev_indx]));
-                }    
-            }
-          safer_free((void **) &(gvec_elem[eb_indx]));
-        }
-
-      safer_free((void **) &gvec_elem);
-      safer_free((void **) &rd); 
-      safer_free((void **) &Local_Offset);
-      safer_free((void **) &Dolphin);
+      EpetraDeleteRowMatrix(ams[JAC]->RowMatrix);
+      if (ams[JAC]->GlobalIDs != NULL)
+      {
+        free(ams[JAC]->GlobalIDs);
+      }
     }
+
+    sl_free(matrix_systems_mask, ams);
+
+    for(i = 0; i < NUM_ALSS; i++)
+      {
+        safer_free((void **) &(ams[i]));
+      }
+
+    safer_free((void **) &gvec);
+
+    i = 0;
+    for (eb_indx = 0; eb_indx < exo->num_elem_blocks; eb_indx++)
+      {
+        for (ev_indx = 0; ev_indx < rd->nev; ev_indx++)
+          {
+            if (exo->elem_var_tab[i++] == 1)
+              {
+                safer_free((void **) &(gvec_elem[eb_indx][ev_indx]));
+              }
+          }
+        safer_free((void **) &(gvec_elem[eb_indx]));
+      }
+
+    safer_free((void **) &gvec_elem);
+    safer_free((void **) &rd);
+    safer_free((void **) &Local_Offset);
+    safer_free((void **) &Dolphin);
+  }
 
 if( ls != NULL )
 {

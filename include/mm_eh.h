@@ -32,6 +32,11 @@
 
 #include <stdarg.h>		/* for var args... */
 
+/* Needed to use mm_eh without std.h */
+#ifndef MAX_CHAR_ERR_MSG
+  #define MAX_CHAR_ERR_MSG 1024
+#endif
+
 /*
  *  This variable is included as a utility to writing informative
  *  strings before error exiting.

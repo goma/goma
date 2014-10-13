@@ -1010,7 +1010,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			if (af->Assemble_Jacobian) {
 			
 			  /* now add in sensitivity of BC function */
-			
+
 			  for (var=0; var < MAX_VARIABLE_TYPES; var++)
 			    {
 			      if (ei->dof[var] && (BC_Types[j_bc_id].desc->sens[var] || 1 ) && jflag != -1)
@@ -1026,6 +1026,10 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					 Linear_Solver != FRONT && 
 					 CA_id[jflag] == j_bc_id)
 					{
+				          if (strcmp(Matrix_Format, "msr") != 0) {
+				            EH(-1, "Unexpected matrix format in apply_bc_special, use msr");
+				          }
+
 					  load_ei(CA_fselem[jflag], exo, 0);
 
 					  /* For nonlocal element information,
@@ -1061,6 +1065,11 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					  Linear_Solver != FRONT && 
 					  CA_id[jflag] == j_bc_id)
 					{
+                                          if (strcmp(Matrix_Format, "msr") != 0) {
+                                            EH(-1,
+                                                "Unexpected matrix format in apply_bc_special, use msr");
+                                          }
+
 					  load_ei(CA_sselem[jflag], exo, 0);
 
 					  /* For nonlocal element information, we do a
@@ -1129,10 +1138,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 } /* END of apply_special_bc  */
 
 int
-apply_shell_grad_bc (
-		     int    ija[],         /* Vector of integer ptrs into the vector a  */
-		     double a[],           /* Jacobian */
-		     double x[],           /* Solution vector for the current processor */
+apply_shell_grad_bc (double x[],           /* Solution vector for the current processor */
 		     double resid_vector[],/* Residual vector for the current processor */
 		     const double delta_t, /* current time step size */
 		     const double theta,   /* parameter (0 to 1) to vary time integration

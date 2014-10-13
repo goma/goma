@@ -63,6 +63,10 @@
 
 #include "bc_dirich.h"
 #include "mm_qp_storage.h"
+
+#include "sl_epetra_interface.h"
+#include "sl_epetra_util.h"
+
 #define _MM_FILL_C
 #include "goma.h"
 
@@ -243,7 +247,7 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
    */
    
   if ( xfem != NULL )
-    check_xfem_contribution( ams->npu, ams->bindx, ams->val, resid_vector, x, exo );
+    check_xfem_contribution( ams->npu, ams, resid_vector, x, exo );
     
 #if DEBUG_LS_INTEGRATION
   if ( ls != NULL )
@@ -307,8 +311,6 @@ matrix_fill(
   extern int MMH_ip;
   extern int PRS_mat_ielem;
 
-  double *a = ams->val;
-  int *ija = ams->bindx;
   double delta_t, theta, time_value, h_elem_avg;  /*see arg list */
   int ielem, num_total_nodes;
   
@@ -2207,7 +2209,7 @@ matrix_fill(
 		  
 	  id_side = face + 1;
 		  
-	  err = assemble_surface_species(exo, a, delta_t, theta, 
+	  err = assemble_surface_species(exo, x, delta_t, theta,
 					 ielem_type, ielem_type_mass, id_side, 
 					 neighbor, ielem, num_local_nodes);
 	  EH( err, "assemble_surface_species"); 
@@ -2284,7 +2286,7 @@ matrix_fill(
 	}
 	  
       if (call_int) {
-	err = apply_integrated_bc(ija, a, x, resid_vector, delta_t, theta,
+	err = apply_integrated_bc(x, resid_vector, delta_t, theta,
 				  pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
 				  ielem, ielem_type, num_local_nodes, ielem_dim,
 				  iconnect_ptr, elem_side_bc, num_total_nodes,
@@ -2297,7 +2299,7 @@ matrix_fill(
       }
         
       if (call_shell_grad) {
-        err = apply_shell_grad_bc(ija, a, x, resid_vector, delta_t, theta,
+        err = apply_shell_grad_bc(x, resid_vector, delta_t, theta,
                                   pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
                                   ielem, ielem_type, num_local_nodes, ielem_dim,
 				  iconnect_ptr, elem_side_bc, num_total_nodes,
@@ -2358,7 +2360,7 @@ matrix_fill(
        *        only do the weak integrated conditions here
        */
       if (call_int) { 
-	err = apply_integrated_curve_bc(ams, x, resid_vector, delta_t, 
+	err = apply_integrated_curve_bc(x, resid_vector, delta_t,
 					theta, ielem, 
 					ielem_type, num_local_nodes, 
 					ielem_dim, iconnect_ptr, 
@@ -2461,7 +2463,7 @@ matrix_fill(
 	if  ( Use_2D_Rotation_Vectors == TRUE )
 	  rotate_eqns_at_node_2D( iconnect_ptr, ielem_dim, num_local_nodes, ams);
 	else if( first_elem_side_BC_array[ielem] != NULL ) {
-	  err = apply_rotated_bc(ija, a, resid_vector, first_elem_side_BC_array,
+	  err = apply_rotated_bc(resid_vector, first_elem_side_BC_array,
 				 ielem, ielem_type, num_local_nodes, 
 				 ielem_dim, iconnect_ptr, num_total_nodes,
 				 exo);
@@ -2593,7 +2595,7 @@ matrix_fill(
 	 */
 	if (call_col) 
 	  {
-	    err = apply_point_colloc_bc(ija, a, resid_vector, delta_t, theta,
+	    err = apply_point_colloc_bc(resid_vector, delta_t, theta,
 					ielem, ip_total,
 					ielem_type, num_local_nodes, ielem_dim,
 					iconnect_ptr, elem_side_bc, num_total_nodes, 
@@ -2611,7 +2613,7 @@ matrix_fill(
 	 */
 	if (call_int) 
 	  {
-	    err = apply_integrated_bc(ija, a, x, resid_vector, delta_t, theta,
+	    err = apply_integrated_bc(x, resid_vector, delta_t, theta,
 				      pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
 				      ielem, ielem_type, num_local_nodes, 
 				      ielem_dim, iconnect_ptr, elem_side_bc, 
@@ -2675,7 +2677,7 @@ matrix_fill(
 		EH(-1,"YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
 	      }
 
-	    err = apply_contact_bc (ija, a, x, resid_vector, delta_t, theta,
+	    err = apply_contact_bc (x, resid_vector, delta_t, theta,
 				    pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
 				    first_elem_side_BC_array,
 				    ielem, ielem_type, num_local_nodes, 
@@ -2727,7 +2729,7 @@ matrix_fill(
        * - only do the strong integrated conditions here
        */
       if (call_int) {
-	err = apply_integrated_curve_bc(ams, x, resid_vector, delta_t, theta, 
+	err = apply_integrated_curve_bc(x, resid_vector, delta_t, theta,
 					ielem, ielem_type, num_local_nodes, 
 					ielem_dim,  iconnect_ptr, elem_edge_bc, 
 					num_total_nodes, STRONG_INT_EDGE, exo); 
@@ -2743,7 +2745,7 @@ matrix_fill(
        * nodal points
        */
       if (call_col) {
-	err = apply_point_colloc_edge_bc(ams, x, x_old, x_older,  xdot, xdot_old,
+	err = apply_point_colloc_edge_bc(x, x_old, x_older,  xdot, xdot_old,
 					 resid_vector, delta_t, theta, 
 					 ielem, ip_total, ielem_type, 
 					 num_local_nodes, ielem_dim,
@@ -3031,8 +3033,9 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
   fprintf(rrrr, "\nGlobal_NN Proc_NN  Equation    idof    Proc_SolnNum     ResidValue\n");
 #endif
 
-  /* Load up estifm in case a frontal solver is being used */
-  if (Linear_Solver == FRONT) {
+  if (strcmp(Matrix_Format, "epetra") == 0) {
+    EpetraLoadLec(exo, ielem, ams, x, resid_vector);
+  } else if (Linear_Solver == FRONT) {   /* Load up estifm in case a frontal solver is being used */
     if (af->Assemble_Jacobian) {
       memset(estifm, 0, sizeof(double)*fss->ncn[ielem]*fss->ncn[ielem]);
       ivar = 0; 
@@ -3302,7 +3305,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			      EH(je, "Bad var index.");
 			      ja = (ie == je) ?
 				ie : in_list(je, ija[ie], ija[ie+1], ija);
-			      EH(ja, "Could not find vbl in sparse matrix.");  
+			      EH(ja, "Could not find vbl in sparse matrix.");
 			      a[ja] += lec->J[pe][pv][i][j];
 #ifdef DEBUG_LEC
 			      {
@@ -3419,6 +3422,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			    ja = (ie == je) ? ie : in_list(je, ija[ie], ija[ie+1], ija);
 			    EH(ja, "Could not find vbl in sparse matrix.");  
 			    a[ja] += lec->J[pe][pv][i][j];
+
 #ifdef DEBUG_LEC
 			    {
 			      if (fabs(lec->J[pe][pv][i][j]) > DBL_SMALL || Print_Zeroes) 

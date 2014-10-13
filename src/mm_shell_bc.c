@@ -907,8 +907,6 @@ put_lub_flux_in_film(int id, /* local element node number for the
 			      * is being sought                        */
 		     int I, /* Global node number                      */
 		     int ielem_dim, /* physical dimension of the elem  */
-		     int ija[], /* column pointer array                */
-		     double a[], /* nonzero array entries              */
 		     double resid_vector[], /* Residual vector         */
 		     int i_mat_lubp,  /* elem block id's of confined film */
 		     int i_mat_filmp, /* elem block id's of free film     */

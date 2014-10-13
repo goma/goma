@@ -75,14 +75,14 @@ enum Particle_Model_t { NO_PARTICLE_MODEL,
 
 enum Particle_Output_Format_t { FLAT_TEXT, TECPLOT };
 
-enum PBC_t { PBC_OUTFLOW, PBC_SOURCE, PBC_TARGET, PBC_FREESTREAM_SOURCE, PBC_IMPERMEABLE };
+enum PBC { PBC_OUTFLOW, PBC_SOURCE, PBC_TARGET, PBC_FREESTREAM_SOURCE, PBC_IMPERMEABLE };
 
 enum Particle_State_t { ACTIVE, DEAD, PROC_TRANSFER, TERMINATION_MARKER, GHOST };
 
 enum Particle_Domain_t { UNRESTRICTED, BRICK, ACIS_OBJECT };
 
 typedef struct {
-  enum PBC_t type;
+  enum PBC type;
   int SS_id;
   dbl real_data[MAX_PBC_REAL_VALUES];
   int int_data[MAX_PBC_INT_VALUES];

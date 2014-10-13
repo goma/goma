@@ -36,6 +36,9 @@ static char rcsid[] = "$Id: sl_matrix_util.c,v 5.2 2007-12-07 17:14:37 hkmoffa E
 #include "mm_eh.h"
 #include "sl_util_structs.h"
 
+#include "sl_epetra_interface.h"
+#include "sl_epetra_util.h"
+
 #define _SL_MATRIX_UTIL_C
 #include "goma.h"
 
@@ -465,31 +468,27 @@ row_sum_scaling_scale ( struct Aztec_Linear_Solver_System *ams,
 			double b[],
 			double scale[])
 {
-  if( strcmp( Matrix_Format, "msr" ) == 0)
-    {
-      row_sum_scale_MSR( ams->npu,
-			 ams->val,
-			 ams->bindx,
-			 b,
-			 scale);
-		     
-    }
-  else if (  strcmp( Matrix_Format, "vbr" ) == 0 )
-    {
-      row_sum_scale_VBR( ams->npn,
-			 ams->val,
-			 ams->bpntr,
-			 ams->bindx,
-			 ams->indx,
-			 ams->rpntr,
-			 ams->cpntr,
-			 b,
-			 scale);
-    } 
-  else
-    {
-      EH(-1, "Unknown sparse matrix format");
-    }
+  if (strcmp(Matrix_Format, "msr") == 0) {
+    row_sum_scale_MSR(ams->npu,
+                      ams->val,
+                      ams->bindx,
+                      b,
+                      scale);
+  } else if (strcmp(Matrix_Format, "vbr") == 0) {
+    row_sum_scale_VBR(ams->npn,
+                      ams->val,
+                      ams->bpntr,
+                      ams->bindx,
+                      ams->indx,
+                      ams->rpntr,
+                      ams->cpntr,
+                      b,
+                      scale);
+  } else if (strcmp(Matrix_Format, "epetra") == 0) {
+    row_sum_scale_epetra(ams, b, scale);
+  } else {
+    EH(-1, "Unknown sparse matrix format");
+  }
 }
 
   /* end of row_sum_scaling */
@@ -709,6 +708,13 @@ row_sum_scale_VBR ( int     N,
 	}
     }
 } /* END of routine row_sum_scale_VBR */
+
+void
+row_sum_scale_epetra(struct Aztec_Linear_Solver_System *ams, double *b, double *scale)
+{
+  EpetraRowSumScale(ams, b, scale);
+}
+
 /******************************************************************************//******************************************************************************//******************************************************************************/
 /*
  * This routine scales a matrix using a previously-calculated
@@ -885,6 +891,32 @@ vector_scaling(const int N,
   }
 }
 
+/**
+ * Check to see if the linear solver is compatible with
+ * the matrix format
+ *
+ * Currently only checks epetra matrix format
+ *
+ * @return 0 if compatible, -1 if not
+ */
+int
+check_compatible_solver()
+{
+  if (strcmp(Matrix_Format, "epetra") == 0)
+  {
+    switch (Linear_Solver)
+    {
+      case AZTECOO:
+        return 0;
+      case AMESOS:
+        return 0;
+      default:
+        return -1;
+    }
+  }
+
+  return -1;
+}
 
 
 /* unused routine, but keep for reference reading... */

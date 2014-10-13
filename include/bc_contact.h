@@ -27,9 +27,7 @@
 #endif
 
 EXTERN int apply_contact_bc
-PROTO((int [],			/* ija - integer pointers into the vector a */
-       double [],		/* a - non-zero entries, coefficient matrix */
-       double [],               /* Solution vector for the current processor */
+PROTO((double [],               /* Solution vector for the current processor */
        double [],		/* resid_vector */
        const double ,		/* delta_t - current time step size */
        const double ,		/* theta - parameter to vary time integration:

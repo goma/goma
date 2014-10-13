@@ -71,6 +71,9 @@
 #define _MM_FILL_LS_C
 #include "goma.h"
 
+#include "sl_epetra_interface.h"
+#include "sl_epetra_util.h"
+
 /*
 static int interface_on_side 
 PROTO(( double isoval,      
@@ -11857,8 +11860,7 @@ compute_xfem_contribution( int N )
 
 void
 check_xfem_contribution( int N,
-                         int ija[],
-                         double a[],
+                         struct Aztec_Linear_Solver_System *ams,
                          double resid[],
                          double x[],
 			 Exo_DB * exo )
@@ -11870,52 +11872,81 @@ check_xfem_contribution( int N,
   int j, k;
   int j_last,ija_row;
   int eqn;
+  int *ija = ams->bindx;
+  double *a = ams->val;
   
-  for (irow = 0; irow < N; irow++)
-    {
-      eqn = idv[irow][0];
-      if ( eqn == R_MASS || eqn == R_ENERGY )
-        eps = eps_diffusive;
-      else
-        eps = eps_standard;
-      if ( fabs(xfem->active_vol[irow]) < eps * xfem->tot_vol[irow] )
-        {
-          j_last = ija[irow+1] - ija[irow];
-          ija_row = ija[irow];
+  if (strcmp(Matrix_Format, "msr") == 0) {
+    for (irow = 0; irow < N; irow++)
+      {
+        eqn = idv[irow][0];
+        if ( eqn == R_MASS || eqn == R_ENERGY )
+          eps = eps_diffusive;
+        else
+          eps = eps_standard;
+        if ( fabs(xfem->active_vol[irow]) < eps * xfem->tot_vol[irow] )
+          {
+            j_last = ija[irow+1] - ija[irow];
+            ija_row = ija[irow];
 
-#if 0
-          /* set value to predicted one */
-	  a[irow] = 1.;
-	  resid[irow] = x[irow]-x_pred_static[irow];
-#endif
-#if 0
-          /* set value to zero */
-	  a[irow] = 1.;
-	  resid[irow] = x[irow];
-#endif
-#if 0
-          /* set residual to zero */
-	  a[irow] = 1.;
-	  resid[irow] = 0.;
-#endif
-#if 1
-          /* set time derivative to zero */
-	  a[irow] = 1.;
-	  resid[irow] = x[irow]-x_old_static[irow];
-#endif
-	  
-	  for( j = 0; j < j_last; j++){
-	    k = ija_row + j;
-            a[k] = 0.;	
+  #if 0
+            /* set value to predicted one */
+            a[irow] = 1.;
+            resid[irow] = x[irow]-x_pred_static[irow];
+  #endif
+  #if 0
+            /* set value to zero */
+            a[irow] = 1.;
+            resid[irow] = x[irow];
+  #endif
+  #if 0
+            /* set residual to zero */
+            a[irow] = 1.;
+            resid[irow] = 0.;
+  #endif
+  #if 1
+            /* set time derivative to zero */
+            a[irow] = 1.;
+            resid[irow] = x[irow]-x_old_static[irow];
+  #endif
+
+            for( j = 0; j < j_last; j++){
+              k = ija_row + j;
+              a[k] = 0.;
+            }
+
+            if ( FALSE && xfem->active_vol[irow] != 0. ) /* debugging */
+              {
+                DPRINTF(stderr,"kill partial equation, row=%d, n = %d, active/tot=%g\n",
+                      irow, idv[irow][2]+1, fabs(xfem->active_vol[irow])/xfem->tot_vol[irow]);
+              }
           }
+      }
+  } else if (strcmp(Matrix_Format, "epetra") == 0) {
+    for (irow = 0; irow < N; irow++) {
+      eqn = idv[irow][0];
+      if (eqn == R_MASS || eqn == R_ENERGY) {
+        eps = eps_diffusive;
+      } else {
+        eps = eps_standard;
+      }
+      if (fabs(xfem->active_vol[irow]) < eps * xfem->tot_vol[irow]) {
 
-	  if ( FALSE && xfem->active_vol[irow] != 0. ) /* debugging */
-	    {
-	      DPRINTF(stderr,"kill partial equation, row=%d, n = %d, active/tot=%g\n",
-                    irow, idv[irow][2]+1, fabs(xfem->active_vol[irow])/xfem->tot_vol[irow]);
-	    }
+        EpetraSetDiagonalOnly(ams, ams->GlobalIDs[irow]);
+        resid[irow] = x[irow] - x_old_static[irow];
+
+        if ( FALSE && xfem->active_vol[irow] != 0.) /* debugging */
+        {
+          DPRINTF(stderr,
+              "kill partial equation, row=%d, n = %d, active/tot=%g\n", irow,
+              idv[irow][2] + 1,
+              fabs(xfem->active_vol[irow]) / xfem->tot_vol[irow]);
         }
+      }
     }
+  } else {
+    EH(-1, "Unsupported matrix format in check_xfem_contribution");
+  }
+
   return;
 }
 

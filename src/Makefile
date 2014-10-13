@@ -502,7 +502,10 @@ SL_SRC= sl_lu.c\
         sl_eggroll04.c\
         sl_eggroll05.c\
         sl_amesos_interface.C\
-        sl_leastsquares.C
+        sl_leastsquares.C \
+        sl_epetra_interface.cpp \
+        sl_epetra_util.cpp \
+        sl_aztecoo_interface.cpp
 
 SL_INC= spConfig.h\
         spDefs.h\
@@ -516,7 +519,11 @@ SL_INC= spConfig.h\
         sl_umf.h\
         sl_util.h\
         sl_util_structs.h \
-        sl_rcm.h
+        sl_rcm.h \
+        sl_epetra_interface.h \
+        sl_epetra_util.h \
+        sl_aztecoo_interface.h
+        
 
 
 # _____	Machine dependent routines "md_" prefix _______________________________
@@ -709,6 +716,7 @@ GOMA_INCS := ${addprefix $(INCLUDE_DIR)/, $(GOMA_INCS)}
 GOMA_OBJ := ${GOMA_SRC:.c=.o}
 GOMA_OBJ := ${GOMA_OBJ:.F=.o}
 GOMA_OBJ := ${GOMA_OBJ:.C=.o}
+GOMA_OBJ := ${GOMA_OBJ:.cpp=.o}
 
 USER_OBJ := ${USER_SRC:.c=.o}
 USER_OBJ := ${USER_OBJ:.F=.o}
@@ -820,6 +828,10 @@ $(RELEASE_OBJ_DIR)/%.o: %.F
 $(RELEASE_OBJ_DIR)/%.o: %.C
 	@mkdir -p $(RELEASE_OBJ_DIR)
 	$(CXX) -c $(CXXFLAGS) -o $@ $^
+	
+$(RELEASE_OBJ_DIR)/%.o: %.cpp
+	@mkdir -p $(RELEASE_OBJ_DIR)
+	$(CXX) -c $(CXXFLAGS) -o $@ $^
 
 # debug objects
 $(DEBUG_OBJ_DIR)/%.o: %.c
@@ -832,6 +844,10 @@ $(DEBUG_OBJ_DIR)/%.o: %.F
 
 $(DEBUG_OBJ_DIR)/%.o: %.C
 	@mkdir -p $(DEBUG_OBJ_DIR)
+	$(CXX) -c $(CXXFLAGS) -o $@ $^
+	
+$(DEBUG_OBJ_DIR)/%.o: %.cpp
+	@mkdir -p $(RELEASE_OBJ_DIR)
 	$(CXX) -c $(CXXFLAGS) -o $@ $^
 
 

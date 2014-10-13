@@ -27,9 +27,7 @@
 #endif
 
 EXTERN int apply_integrated_bc
-PROTO((int [],			/* ija - column indeces of matrix nonzeroes  */
-       double [],		/* a - non-zero matrix entries               */
-       double [],		/* x - Soln vector                           */
+PROTO((double [],		/* x - Soln vector                           */
        double [],		/* resid_vector -                            */
        const double ,		/* delta_t - current time step size          */
        const double ,		/* theta - parameter (0 to 1) to vary time 
