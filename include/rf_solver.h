@@ -80,7 +80,9 @@ String_line Matrix_Relative_Threshold; /* Trilinos 2 */
 
 String_line Matrix_Absolute_Threshold; /* Trilinos 2 */
 
-String_line Amesos_Package; 
+String_line Amesos_Package;
+
+String_line AztecOO_Solver;
 
 /*
  * A new Aztec 2.0 option. There are more and difft options and our

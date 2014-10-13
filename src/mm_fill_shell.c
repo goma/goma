@@ -3710,8 +3710,6 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 			  int id_shell, /* local shell element node number corresponding to id */
 			  int I, /* Global node number                      */
 			  int ielem_dim, /* physical dimension of the elem  */
-			  int ija[], /* column pointer array                */
-			  double a[], /* nonzero array entries              */
 			  double resid_vector[], /* Residual vector         */
 			  int local_node_list_fs[], /* MDE list to keep track
 						     * of nodes at which 

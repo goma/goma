@@ -29,8 +29,7 @@
 
 
 EXTERN int apply_integrated_curve_bc
-PROTO((struct Aztec_Linear_Solver_System *,
-       double [],		/* x - soln vector for the current processor */
+PROTO((double [],		/* x - soln vector for the current processor */
        double [],		/* resid_vector - for the current processor  */
        const double ,		/* delta_t - current time step size          */
        const double ,		/* theta - parameter to vary time integration 
@@ -49,8 +48,7 @@ PROTO((struct Aztec_Linear_Solver_System *,
        const Exo_DB *));	/* exo - ptr to FE database                  */
 
 EXTERN int apply_point_colloc_edge_bc
-PROTO((struct Aztec_Linear_Solver_System *,	
-       double [],		/* x - Soln vector                           */
+PROTO((double [],		/* x - Soln vector                           */
        double [],		/* x_old - Soln vector, previous timestep    */
        double [],		/* x_older - Soln vector, previous2 timestep */
        double [],		/* xdot - current solution                   */

@@ -37,6 +37,8 @@
 #define MPI			/* otherwise az_aztec.h trounces MPI_Request */
 #endif
 #endif
+
+#include "sl_epetra_interface.h"
 #include "az_aztec.h"
 
 #ifdef COUPLED_FILL
@@ -117,7 +119,8 @@ struct Aztec_Linear_Solver_System
   int     Number_Jac_Dump;
 #endif
 
-  void    *EpetraMat;       /* this is a void pointer to an C++ Epetra Matrix object */
+  C_Epetra_RowMatrix_t *RowMatrix; /* This is a Epetra_RowMatrix object */
+  int *GlobalIDs;                  /* Pointer to global ids of DOFs (only available with epetra) */
 };
 
 /* See paper by Hood (1976, J. Numer. Meth Engr.) for details of this

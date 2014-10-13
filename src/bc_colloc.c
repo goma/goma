@@ -45,8 +45,6 @@
 
 int
 apply_point_colloc_bc (
-     int ija[],               /* Vector of integer pointers into the vector a  */
-     double a[],              /* Jacobian Matrix */
      double resid_vector[],   /* Residual vector for the current processor     */
      double delta_t,          /* current time step size                        */
      double theta,            /* parameter to vary time integration:
@@ -424,7 +422,7 @@ apply_point_colloc_bc (
 	      break;
 
 	    case LUBP_SH_FP_FLUX_BC:
-	      put_lub_flux_in_film(id, I, ielem_dim, ija, a, resid_vector, 
+	      put_lub_flux_in_film(id, I, ielem_dim, resid_vector,
 				   (int) BC_Types[bc_input_id].BC_Data_Int[0],
 				   (int) BC_Types[bc_input_id].BC_Data_Int[1],
 				   local_node_list_fs);
@@ -434,7 +432,7 @@ apply_point_colloc_bc (
 	    case FLUID_SOLID_BC:
 	    case SOLID_FLUID_BC:
 		put_liquid_stress_in_solid(id, I, 
-					   ielem_dim, ija, a , resid_vector,
+					   ielem_dim, resid_vector,
 					   (int) BC_Types[bc_input_id].BC_Data_Int[0],
 					   (int) BC_Types[bc_input_id].BC_Data_Int[1],
 					   local_node_list_fs,
@@ -445,7 +443,7 @@ apply_point_colloc_bc (
 
 	    case SOLID_FLUID_RS_BC:
 		put_liquid_stress_in_solid_ALE(id, I, 
-					       ielem_dim, ija, a , resid_vector,
+					       ielem_dim, resid_vector,
 					       (int) BC_Types[bc_input_id].BC_Data_Int[0],
 					       (int) BC_Types[bc_input_id].BC_Data_Int[1],
 					       local_node_list_fs,
@@ -462,7 +460,7 @@ apply_point_colloc_bc (
 
 	      /*Note that we send in i, with id, as this is the shell-element counterpart local num */
 	      put_fluid_stress_on_shell(id, i , I, 
-					ielem_dim, ija, a , resid_vector,
+					ielem_dim, resid_vector,
 					local_node_list_fs,
 					BC_Types[bc_input_id].BC_Data_Float[0]);
 	      func = 0.; /* this boundary condition rearranges values already in res and jac,

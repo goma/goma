@@ -102,8 +102,6 @@ PROTO((int ,			/* id - local element node number for the
        int ,			/* I - Global node number                    */
        int ,			/* ielem_dim - physical dimension of element,
 				 * ie., 1, 2, 3                              */
-       int [],			/* ija - column pointer array                */
-       double [],		/* a - nonzero array                         */
        double [],		/* resid_vector - Residual vector NO DUH!    */
        int ,			/* i_mat_solid - mat block id's of solid     */
        int ,			/* i_mat_fluid - mat block id's of liquid    */
@@ -120,8 +118,6 @@ PROTO((int ,			/* id - local element node number for the
        int ,			/* I - Global node number                    */
        int ,			/* ielem_dim - physical dimension of element,
 				 * ie., 1, 2, 3                              */
-       int [],			/* ija - column pointer array                */
-       double [],		/* a - nonzero array                         */
        double [],		/* resid_vector - Residual vector NO DUH!    */
        int ,			/* i_mat_solid - mat block id's of solid     */
        int ,			/* i_mat_fluid - mat block id's of liquid    */
@@ -140,8 +136,6 @@ PROTO((int ,			/* id - local element node number for the
        int ,			/* I - Global node number                    */
        int ,			/* ielem_dim - physical dimension of element,
 				 * ie., 1, 2, 3                              */
-       int [],			/* ija - column pointer array                */
-       double [],		/* a - nonzero array                         */
        double [],		/* resid_vector - Residual vector NO DUH!    */
        int [],			/* local_node_list_fs - MDE list to keep track
 				 * of nodes at which liquid contributions have

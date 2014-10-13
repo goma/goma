@@ -35,6 +35,11 @@ amesos_solve_msr ( char *,
 		   double *,
 		   double *,
 		   int );
+EXTERN int
+amesos_solve_epetra( char *choice,
+                     struct Aztec_Linear_Solver_System *ams,
+                  double *x_,
+                  double *resid_vector);
 
 EXTERN void
 trilinos_solve_ls (double *,
@@ -54,5 +59,7 @@ construct_Epetra_CrsMatrix ( struct Aztec_Linear_Solver_System * );
 
 EXTERN void *
 construct_Epetra_CrsMatrix_ls ( int, int, int );
+
+
 
 #endif

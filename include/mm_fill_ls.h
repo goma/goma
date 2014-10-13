@@ -701,12 +701,10 @@ PROTO(( int ));
 
 EXTERN void check_xfem_contribution
 PROTO(( int,
-        int [],
-        double [],
+        struct Aztec_Linear_Solver_System *,
         double [],
         double [],
 	Exo_DB * ));
-
 
 EXTERN void resolve_ls_adc_old 
 PROTO (( struct Boundary_Condition *,

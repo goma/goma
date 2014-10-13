@@ -4921,6 +4921,8 @@ drand_standard_normal(void)
   static int have_spare = 0;
   static dbl x_save = 0.0;
   dbl pt[2], pt_norm, factor;
+  pt[0] = 0;
+  pt[1] = 0;
 
   if(have_spare)
     {

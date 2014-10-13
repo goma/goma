@@ -221,4 +221,7 @@ extern void determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *);
 extern void determine_ProjectionVar(PROBLEM_DESCRIPTION_STRUCT *);
 extern void set_solid_inertia(void);
 
+extern int fill_variable_vector(int inode, int ivec_varType[], int ivec_matID[]);
+
+
 #endif /* _MM_FILL_UTIL_H */
