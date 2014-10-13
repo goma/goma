@@ -86,6 +86,9 @@ PROTO(( int ,
 	double *,
 	double *));
 
+void
+row_sum_scale_epetra(struct Aztec_Linear_Solver_System *ams, double *b, double *scale);
+
 EXTERN void matrix_scaling 
 PROTO(( struct Aztec_Linear_Solver_System *,
         double *,
@@ -100,6 +103,9 @@ EXTERN void vector_scaling
 PROTO((const int ,		/* N */
        double [],		/* b */
        double []));		/* scale */
+
+int
+check_compatible_solver();
 
 /*
  * Prototypes from sl_matrix_dump.c

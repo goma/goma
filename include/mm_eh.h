@@ -32,6 +32,9 @@
 
 #include <stdarg.h>		/* for var args... */
 
+
+#define MAX_CHAR_ERR_MSG 1024
+
 /*
  *  This variable is included as a utility to writing informative
  *  strings before error exiting.

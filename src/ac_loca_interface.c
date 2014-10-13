@@ -593,8 +593,11 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
     }
   con_par_ptr = &lambda;
 
+  if (strcmp( Matrix_Format, "epetra") == 0) {
+    EH(-1, "Error epetra Matrix format not currently supported with loca interface");
+  }
   /* Allocate sparse matrix (MSR format) */
-  if( strcmp( Matrix_Format, "msr" ) == 0)
+  else if( strcmp( Matrix_Format, "msr" ) == 0)
     {
       log_msg("alloc_MSR_sparse_arrays...");
       alloc_MSR_sparse_arrays(&ija, 

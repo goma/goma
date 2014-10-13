@@ -53,7 +53,8 @@
 #define	UMFPACK2F	6	/* Davis' multifrontal factorization package 
 				   Force full analysis/factorization every time */
 #define	FRONT   	7	/* Hood's Frontal Solver */
-#define AMESOS      8   /* Heroux & Co. parallel direct solver package */
+#define AMESOS          8       /* Heroux & Co. parallel direct solver package */
+#define AZTECOO         9
 
 /*
  * FORTRAN BLAS functions. Inside C, use "DCOPY" and the preprocessor to

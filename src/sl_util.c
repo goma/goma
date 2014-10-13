@@ -762,6 +762,23 @@ set_aztec_options_params ( int options[],
       Linear_Solver = AMESOS;
       options[AZ_solver] = -1;
   }
+  else if ( strcmp(Matrix_Solver, "aztecoo") == 0 )
+  {
+    Linear_Solver = AZTECOO;
+    if (strcmp(AztecOO_Solver, "cg") == 0) {
+      options[AZ_solver] = AZ_cg;
+    } else if (strcmp(AztecOO_Solver, "gmres") == 0) {
+      options[AZ_solver] = AZ_gmres;
+    } else if (strcmp(AztecOO_Solver, "cgs") == 0) {
+      options[AZ_solver] = AZ_cgs;
+    } else if (strcmp(AztecOO_Solver, "tfqmr") == 0) {
+      options[AZ_solver] = AZ_tfqmr;
+    } else if (strcmp(AztecOO_Solver, "bicgstab") == 0) {
+      options[AZ_solver] = AZ_bicgstab;
+    } else if (strcmp(AztecOO_Solver, "y12m") == 0) {
+      options[AZ_solver] = AZ_lu;
+    }
+  }
   else
     {
       fprintf(stderr, 

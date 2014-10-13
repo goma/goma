@@ -5770,16 +5770,16 @@ rd_solver_specs(FILE *ifp,
 	}
     }
   else
-  if (  strcmp(Matrix_Solver, "amesos") == 0 )
-    {
+  if (strcmp(Matrix_Solver, "amesos") == 0) {
     Linear_Solver = AMESOS;
     is_Solver_Serial = FALSE;
+  } else if (strcmp(Matrix_Solver, "aztecoo") == 0) {
+    Linear_Solver = AZTECOO;
+    is_Solver_Serial = FALSE;
+  } else {
+    Linear_Solver = AZTEC;
+    is_Solver_Serial = FALSE;
   }
-  else
-    {
-      Linear_Solver = AZTEC;
-      is_Solver_Serial = FALSE;
-    }
   
 
   if ( strcmp(Matrix_Solver, "front") != 0 )
@@ -5850,6 +5850,21 @@ rd_solver_specs(FILE *ifp,
 	SPF(echo_string,"%s = %d","UMF_XDIM",UMFPACK_XDIM ); ECHO(echo_string,echo_file);
     }
 
+  strcpy(search_string, "AztecOO Solver");
+  iread = look_for_optional(ifp, search_string, input, '=');
+  if (iread == 1) {
+    read_string(ifp, input, '\n');
+    strip(input);
+    stringup(input);
+    strcpy(AztecOO_Solver, input);
+    SPF(echo_string, eoformat, search_string, input);
+    ECHO(echo_string, echo_file);
+  } else {
+    // Set gmres as the default AztecOO Solver
+    SPF(echo_string, def_form, search_string, "gmres", default_string);
+    strcpy(AztecOO_Solver, "gmres");
+    ECHO(echo_string, echo_file);
+  }
 
   strcpy(search_string, "Preconditioner");
 

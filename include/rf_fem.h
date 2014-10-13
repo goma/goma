@@ -153,7 +153,6 @@ double  eps;            /* Time step error                                   */
 int  print_freq;
 double print_delt;
 double print_delt2_time, print_delt2;
-double init_time;
 
 /* Parameters for continuation */
 int     Continuation;
