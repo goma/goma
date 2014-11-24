@@ -27,3 +27,6 @@ default: all
 .DEFAULT:
 	cd src && ${MAKE} $@
 
+tags:
+	find . -name "*.[ch]" -exec etags -a '{}' \;
+
