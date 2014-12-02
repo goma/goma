@@ -491,6 +491,7 @@ rd_bc_specs(FILE *ifp,
 	case CAP_ENDFORCE_SCALAR_BC:
 	case SURFTANG_SCALAR_EDGE_BC:
         case FLOW_PRESSURE_BC:
+	case FLOW_PRESSURE_VAR_BC:
         case FLOW_STRESSNOBC_BC:
         case FLOW_GRADV_BC:
 	case FILL_INLET_BC:

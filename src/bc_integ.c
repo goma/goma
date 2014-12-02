@@ -1024,6 +1024,12 @@ apply_integrated_bc(
 			     bc->BC_Data_Float[3]);
 	  break;
 
+	case FLOW_PRESSURE_VAR_BC:
+	  flow_n_dot_T_var_density(func, d_func,
+			     bc->BC_Data_Float[0],
+			     time_value);
+	  break;
+
 	case FLOW_STRESSNOBC_BC:
 	  flow_n_dot_T_nobc(func, d_func,
 			    bc->BC_Data_Float[0],
