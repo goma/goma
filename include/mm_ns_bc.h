@@ -312,6 +312,12 @@ PROTO((double [DIM],		/* func                                      */
        const double ,		/* c for pressure variation                  */
        const double ));		/* d - pressure variation                    */
 
+EXTERN void flow_n_dot_T_var_density
+PROTO((double [DIM],            /* func                                      */
+       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],/* d_func            */
+       const double,            /* a - reference pressure                  */
+       const double));          /* time - current time                       */
+
 #if 0
 /* deprecated March 2002 by TAB */
 EXTERN void hydrostatic_n_dot_T
