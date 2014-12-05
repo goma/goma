@@ -111,7 +111,7 @@ static char *legal_notice[] = {
   "\\************************************************************************/  \n",
   "\n",
   "PRS, PAS, RRR, KSC, RAC, TAB, DRN, PLH, DAL, IDG, ACK, ACS, RBS, RRL, MMH, SRS\n",
-  "HKM, RAR, EDW, PKN, SAR, EMB, KT, DSB ...\n"
+  "HKM, RAR, EDW, PKN, SAR, EMB, KT, DSB, DSH ...\n"
   "\n",
   LAST_LEGAL_STRING
 };
