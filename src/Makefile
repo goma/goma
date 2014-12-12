@@ -189,12 +189,7 @@ AMESOS_LIB ?= -lamesos -lepetraext -lepetra
 
 # TEUCHOS library
 
-<<<<<<< HEAD
-#TEUCHOS_LIB = -lteuchoscomm -lteuchoscore -lteuchosnumerics -lteuchosparameterlist -lteuchosremainder
-#TEUCHOS_LIB = -lteuchoscomm
-=======
 TEUCHOS_LIB ?= -lteuchoscomm -lteuchoscore -lteuchosnumerics -lteuchosparameterlist -lteuchosremainder
->>>>>>> 7b7c86ac0fedfd89cf88b5a64c854fde7139c011
 
 # Trilinos includes and libraries
 TRILINOS_INC ?= -isystem $(TRILINOS_TOP)/include

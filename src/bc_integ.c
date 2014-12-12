@@ -371,11 +371,7 @@ apply_integrated_bc(
        */
       if (bc->BC_Name == VL_EQUIL_PRXN_BC ||
 	  bc->BC_Name == IS_EQUIL_PRXN_BC ||
-<<<<<<< HEAD
 	  bc->BC_Name == YFLUX_DISC_RXN_BC ||
-	  bc->BC_Name == SDC_STEFANFLOW_BC ) {
-	new_way = TRUE;
-=======
 	  bc->BC_Name == SDC_STEFANFLOW_BC ||
 	  bc->BC_Name == SDC_KIN_SF_BC ) {
 	  new_way = TRUE;
@@ -390,7 +386,6 @@ apply_integrated_bc(
                     is[interface_id].Processed[icount] = FALSE;
                     }
 	    }
->>>>>>> 7b7c86ac0fedfd89cf88b5a64c854fde7139c011
       } else {
         new_way = FALSE;
       }
