@@ -577,6 +577,11 @@ time_step_control(const double delta_t,  const double delta_t_old,
   int ncp_buf[MAX_VARIABLE_TYPES];    /* accumulated over all procs */
   double max_buf[MAX_VARIABLE_TYPES]; /* accumulated over all procs */
 #endif
+#ifdef DM_COORD_SCALE_PLEASE
+  int bit_DM_scale = TRUE;
+#else
+  int bit_DM_scale = FALSE;
+#endif
 
   static const char yo[] = "time_step_control";
 
@@ -649,7 +654,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
 /* Set bit TRUE in next line to scale displacements with coordinates
  * instead of displacements to avoid large displacement error when
  * there is near zero displacement - i.e., better timestep control */
-        if(0 && (eqn == MESH_DISPLACEMENT1 || eqn == MESH_DISPLACEMENT2 
+        if(bit_DM_scale && (eqn == MESH_DISPLACEMENT1 || eqn == MESH_DISPLACEMENT2 
                    || eqn == MESH_DISPLACEMENT3))
             {
         if (fabs(Coor[eqn-MESH_DISPLACEMENT1][inode]) > max[eqn]) max[eqn] = fabs(Coor[eqn-MESH_DISPLACEMENT1][inode]);
@@ -691,10 +696,10 @@ time_step_control(const double delta_t,  const double delta_t_old,
   if (eps < 0.0) {
     for (i = 0; i < MAX_VARIABLE_TYPES; i++) {
       if (max[i] > 0.0) {
-#if 1
-	ecp[i] =  ecp[i] / SQUARE(max[i]);
-#else
+#ifdef VAR_UPDATE_UNITY_SCALE
 	ecp[i] =  ecp[i] / (1.0 + SQUARE(max[i]));
+#else
+	ecp[i] =  ecp[i] / SQUARE(max[i]);
 #endif
       }
     }

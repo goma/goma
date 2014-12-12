@@ -138,10 +138,10 @@ DEFINES ?= -Dlinux \
 # MPI
 # -----------
 # MPI includes
-MPI_INC = -isystem $(MPI_TOP)/include
+MPI_INC ?= -isystem $(MPI_TOP)/include
 
 # MPI libraries
-MPI_LIB = -L$(MPI_TOP)/lib  -lmpi  -lmpi_f77
+MPI_LIB ?= -L$(MPI_TOP)/lib  -lmpi  -lmpi_f77
 
 # For MPI, the libraries need to be explicitly set in the path:
 GCC_LIB = $(GCC_TOP)/lib
@@ -156,18 +156,18 @@ SEACAS_TOP ?= $(GOMA_LIBS)/SEACAS-2012-09-10
 
 # ExodusII library
 
-EXODUSII_LIB = -lexoIIv2c
+EXODUSII_LIB ?= -lexoIIv2c
 
-CHACO_LIB = -lchaco
+CHACO_LIB ?= -lchaco
 
 # NetCDF library (SEACAS version)
 
-NETCDF_LIB = -L$(SEACAS_TOP)/lib  -lnetcdf  -lhdf5_hl  -lhdf5
+NETCDF_LIB ?= -L$(SEACAS_TOP)/lib  -lnetcdf  -lhdf5_hl  -lhdf5
 
 # SEACAS includes and libraries
-SEACAS_INC = -isystem $(SEACAS_TOP)/include
+SEACAS_INC ?= -isystem $(SEACAS_TOP)/include
 
-SEACAS_LIB = -L$(SEACAS_TOP)/lib  $(EXODUSII_LIB)  $(NETCDF_LIB) \
+SEACAS_LIB ?= -L$(SEACAS_TOP)/lib  $(EXODUSII_LIB)  $(NETCDF_LIB) \
                $(CHACO_LIB)
 
 # TRILINOS
@@ -181,20 +181,24 @@ KOMPLEX_LIB ?=
 
 # AZTEC library
 # Aztecoo is required.
-AZTEC_LIB =  -laztecoo -lifpack 
+AZTEC_LIB ?=  -laztecoo -lifpack 
 
 # AMESOS library
 
-AMESOS_LIB = -lamesos -lepetraext -lepetra 
+AMESOS_LIB ?= -lamesos -lepetraext -lepetra 
 
 # TEUCHOS library
 
+<<<<<<< HEAD
 #TEUCHOS_LIB = -lteuchoscomm -lteuchoscore -lteuchosnumerics -lteuchosparameterlist -lteuchosremainder
 #TEUCHOS_LIB = -lteuchoscomm
+=======
+TEUCHOS_LIB ?= -lteuchoscomm -lteuchoscore -lteuchosnumerics -lteuchosparameterlist -lteuchosremainder
+>>>>>>> 7b7c86ac0fedfd89cf88b5a64c854fde7139c011
 
 # Trilinos includes and libraries
-TRILINOS_INC = -isystem $(TRILINOS_TOP)/include
-TRILINOS_LIB = -L$(TRILINOS_TOP)/lib  $(AZTEC_LIB) \
+TRILINOS_INC ?= -isystem $(TRILINOS_TOP)/include
+TRILINOS_LIB ?= -L$(TRILINOS_TOP)/lib  $(AZTEC_LIB) \
                  $(KOMPLEX_LIB)  $(AMESOS_LIB) $(TEUCHOS_LIB)
 
 # ARPACK
@@ -207,17 +211,17 @@ ARPACK_TOP ?= $(GOMA_LIBS)/ARPACK
 
 # EIGEN_SERIAL: arpack only
 
-ARPACK_LIB = -L$(ARPACK_TOP)/lib -larpack$(_MACH)
+ARPACK_LIB ?= -L$(ARPACK_TOP)/lib -larpack$(_MACH)
 
 # BLAS and LAPACK LIBRARIES
 # -------------------------
 LAPACK_TOP ?= $(GOMA_LIBS)/lapack-3.2.1
 
-LAPACK_LIB = -L$(LAPACK_TOP) -llapack$(_MACH)
+LAPACK_LIB ?= -L$(LAPACK_TOP) -llapack$(_MACH)
 
 BLAS_TOP ?= $(GOMA_LIBS)/BLAS
 
-BLAS_LIB = -L$(BLAS_TOP) -lblas$(_MACH)
+BLAS_LIB ?= -L$(BLAS_TOP) -lblas$(_MACH)
 
 SCALAPACK_TOP ?= $(GOMA_LIBS)/scalapack-2.0.2
 
@@ -241,34 +245,34 @@ FRONT_LIB ?= -L$(GOMA_LIBS)/front/lib  -lmpfront$(_MACH) \
 
 SPARSE_TOP ?= $(GOMA_LIBS)/sparse
 
-SPARSE_LIB = -L$(SPARSE_TOP)/lib  -lsparse$(_MACH)
+SPARSE_LIB ?= -L$(SPARSE_TOP)/lib  -lsparse$(_MACH)
 
 # Sparse includes are located in the goma directory
-SPARSE_INC =
+SPARSE_INC ?=
 
 # UMFPACK SOLVER LIBRARY
 # ----------------------
 
 UMFPACK_TOP ?= $(GOMA_LIBS)/UMFPACK-5.4
 
-UMFPACK_INC = -isystem $(UMFPACK_TOP)/Include
+UMFPACK_INC ?= -isystem $(UMFPACK_TOP)/Include
 
-UMFPACK_LIB = -L$(UMFPACK_TOP)/Lib  -lumfpack$(_MACH)  -lamd$(_MACH)
+UMFPACK_LIB ?= -L$(UMFPACK_TOP)/Lib  -lumfpack$(_MACH)  -lamd$(_MACH)
 
 
 # OTHER SOLVER LIBRARIES
 # ----------------------
 
 Y12M_TOP ?= $(GOMA_LIBS)/y12m
-Y12M_LIB  = -L$(Y12M_TOP) -ly12m$(_MACH)
+Y12M_LIB  ?= -L$(Y12M_TOP) -ly12m$(_MACH)
 
 PARMETIS_TOP ?= $(GOMA_LIBS)/ParMetis-3.1.1
 
-PARMETIS_LIB  = -L$(PARMETIS_TOP)  -lparmetis$(_MACH) \
+PARMETIS_LIB  ?= -L$(PARMETIS_TOP)  -lparmetis$(_MACH) \
                 -lmetis$(_MACH)
 
 SUPERLU_TOP ?= $(GOMA_LIBS)/SuperLU_DIST_2.3
-SUPERLU_LIB = -L$(SUPERLU_TOP)/lib  -lsuperludist$(_MACH) 
+SUPERLU_LIB ?= -L$(SUPERLU_TOP)/lib  -lsuperludist$(_MACH) 
 
 MUMPS_TOP ?= $(GOMA_LIBS)/MUMPS_4.10.0
 

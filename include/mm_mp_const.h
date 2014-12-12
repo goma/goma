@@ -59,7 +59,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  SUSPEND        9
 #define  FILL_SRC       10
 #define  VARIABLE_DENSITY 11    /* Drying of Polymeric Film */
-#define  LEVEL_SET      12      /* density varies smoothly from - to + level set */
+#define  LEVEL_SET      1212      /* density varies smoothly from - to + level set */
 #define  EHD_POLARIZATION 13    /* EHD Polarization force */
 #define  LS_QUADRATIC    14      /* variation on LEVEL_SET viscosity model */
 #define  ACOUSTIC    15      /* Acoustic energy density coupled to NS */
@@ -125,7 +125,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
  *       3 USER_GEN
  */
 #define DENSITY_FILL          29   /* same designation as FILL in rf_fem_const.h */
-#define DENSITY_LEVEL_SET     12   /* same designation as LEVEL_SET source model */
+#define DENSITY_LEVEL_SET     1212   /* same designation as LEVEL_SET source model */
 #define DENSITY_IDEAL_GAS     5    /* Ideal gas law. */
 #define DENSITY_SUSPENSION    6    /* same designation as SUSPENSION IN mm_mp_const.h */
 #define DENSITY_FOAM          7

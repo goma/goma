@@ -92,7 +92,7 @@ struct Interface_Source {
 			      * (pointer type and length is specific to the
 			      *  model type);
 			      */
-    int Processed;        /* This is true if the interfacial source term
+    int *Processed;        /* This is true if the interfacial source term
 			   * has been calculated for the current nonlinear
 			   * calculation at the current time step
 			   * It is false if not.
@@ -101,6 +101,7 @@ struct Interface_Source {
 			   * zeroed, and calculated along with the 
 			   * source term
 			   */
+    int BC_ID;		  /* sideset ID that identifies the interface*/
 };
 typedef struct Interface_Source INTERFACE_SOURCE_STRUCT;
 
@@ -121,9 +122,9 @@ extern void interface_source_destroy(INTERFACE_SOURCE_STRUCT **);
 extern void interface_source_zero(INTERFACE_SOURCE_STRUCT *is);
 extern void is_change1_speciesVT(INTERFACE_SOURCE_STRUCT *, const int, 
 				 const int, MATRL_PROP_STRUCT *, 
-				 const int, const double);
+				 const int, const double, const int);
 extern void is_change1_lastspecies(INTERFACE_SOURCE_STRUCT *, const int, 
-				  const int, MATRL_PROP_STRUCT *);
+				  const int, MATRL_PROP_STRUCT *, const int);
 extern int match_interface_source_string(char *);
 
 /*
@@ -135,20 +136,21 @@ is_masstemp_create(MATRL_PROP_STRUCT *, MATRL_PROP_STRUCT *, int);
 extern double 
 raoults_law_prxn(JACOBIAN_VAR_DESC_STRUCT *, BOUNDARY_CONDITION_STRUCT *,
 		 int, ELEM_SIDE_BC_STRUCT *, double [MAX_PDIM],
-		 const double, const double, const double);
+		 const double, const double, const double, const int);
 extern void
 source_vle_prxn(INTERFACE_SOURCE_STRUCT *, BOUNDARY_CONDITION_STRUCT *,
-		MATRL_PROP_STRUCT *, MATRL_PROP_STRUCT *,  int);
+		MATRL_PROP_STRUCT *, MATRL_PROP_STRUCT *,  int, const int);
 
 extern void 
 source_is_equil_prxn(INTERFACE_SOURCE_STRUCT *, BOUNDARY_CONDITION_STRUCT *, 
-		     MATRL_PROP_STRUCT *, MATRL_PROP_STRUCT *,  int);
+		     MATRL_PROP_STRUCT *, MATRL_PROP_STRUCT *,  int, const int);
 extern double
 is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *,
 	      BOUNDARY_CONDITION_STRUCT *, int, ELEM_SIDE_BC_STRUCT *,
-	      double [MAX_PDIM], const double, const double, const double);
+	      double [MAX_PDIM], const double, const double, const double,
+              const int);
 
 extern void 
 is_masstemp_fillin(INTERFACE_SOURCE_STRUCT *, MATRL_PROP_STRUCT *,
-		   MATRL_PROP_STRUCT *, int, double);
+		   MATRL_PROP_STRUCT *, int, double, const int);
 #endif

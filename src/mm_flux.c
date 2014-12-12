@@ -277,7 +277,7 @@ evaluate_flux(
         if( (jfp=fopen(filenm,"a")) != NULL)
                 {
       fprintf(jfp,"Time/iteration = %e \n", time_value);
-      fprintf(jfp," %s  Side_Set  %d Block  %d \n", qtity_str,side_set_id,blk_id);
+      fprintf(jfp," %s  Side_Set  %d Block  %d Species %d\n", qtity_str,side_set_id,blk_id,species_id);
                 if(profile_flag)
                    {
                     fprintf(jfp," x  y  z  flux  flux_conv");
@@ -555,44 +555,6 @@ evaluate_flux(
 /*	get density  */
 
 	    rho = density( NULL, time_value );
-
-	    /*		  if (mp->DensityModel == CONSTANT )
-		    {
-		      rho   = mp->density;
-		    }
-		  else if(mp->DensityModel == USER )
-		    {
-		      err = usr_density(mp->u_density);
-		      rho   = mp->density;
-		    }
-		  else if (mp->DensityModel == FILL )
-		    {
-		      F = fv->F;
-		      rho = mp->u_density[0];
-		      if(fv->F < 0.1)
-			{
-			  rho = mp->u_density[1];
-			}
-		    }
-		  else if (mp->DensityModel == SUSPENSION )
-		    {
-		      species = (int) mp->u_density[0];
-		      rho_f = mp->u_density[1];
-		      rho_s = mp->u_density[2];
-		      
-		      vol = fv->c[species];
-		      if(vol < 0.)
-			{
-			  vol = 0.;
-			}
-		      
-		      rho = rho_f + (rho_s - rho_f)*vol;
-		    }
-		  else
-		    {
-		      EH(-1,"Unrecognized density model");
-		    }
-	    */
 
 /**   get solid stresses  **/
 
@@ -1145,6 +1107,22 @@ evaluate_flux(
                                   fv->snormal[a]*fv->grad_c[species_id][a] );
                           local_qconv += ( fv->snormal[a]*(fv->v[a]-x_dot[a])*fv->c[species_id] );
                         }
+                          local_flux +=  weight*det*local_q;
+                          local_flux_conv += weight*det*local_qconv;
+		      break;
+
+		    case SPECIES_FLUX_REVOLUTION:
+
+		      Diffusivity();
+
+                      for(a=0; a<VIM; a++)
+                        {
+                          local_q += ( -mp->diffusivity[species_id]*
+                                  fv->snormal[a]*fv->grad_c[species_id][a] );
+                          local_qconv += ( fv->snormal[a]*(fv->v[a]-x_dot[a])*fv->c[species_id] );
+                        }
+                      local_q *=  0.5 * fv->x[1] * fabs(fv->snormal[1]) ;
+                      local_qconv *=  0.5 * fv->x[1] * fabs(fv->snormal[1]) ;
                           local_flux +=  weight*det*local_q;
                           local_flux_conv += weight*det*local_qconv;
 		      break;
@@ -1780,7 +1758,53 @@ evaluate_flux(
 					 -fv->snormal[a]*fv->snormal[b] ) );
 			    }
 			}
+                      for (a = 0; a < Num_BC; a++) {
+                         if( BC_Types[a].BC_Name == CAP_REPULSE_ROLL_BC )
+                            {
+		              double roll_rad, origin[3],dir_angle[3];
+		              double hscale, repexp;
+                              double factor,t,coord[3],axis_pt[3],R,kernel,dist;
+
+	                      roll_rad = BC_Types[a].BC_Data_Float[1];
+			      origin[0] =  BC_Types[a].BC_Data_Float[2];
+			      origin[1] =  BC_Types[a].BC_Data_Float[3];
+			      origin[2] =  BC_Types[a].BC_Data_Float[4];
+			      dir_angle[0] =  BC_Types[a].BC_Data_Float[5];
+			      dir_angle[1] =  BC_Types[a].BC_Data_Float[6];
+			      dir_angle[2] =  BC_Types[a].BC_Data_Float[7];
+	                      hscale = BC_Types[a].BC_Data_Float[8];
+	                      repexp = BC_Types[a].BC_Data_Float[9];
+/*  initialize variables */
+
+			  for( b=0 ; b<dim ; b++)
+			    {  coord[b] = fv->x[b];  }
+/*  find intersection of axis with normal plane - i.e., locate point on
+ *          axis that intersects plane normal to axis that contains local point. */
+    factor = SQUARE(dir_angle[0]) + SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]);
+    t = (dir_angle[0]*(coord[0]-origin[0]) + dir_angle[1]*(coord[1]-origin[1])
+        + dir_angle[2]*(coord[2]-origin[2]))/factor;
+    axis_pt[0] = origin[0]+dir_angle[0]*t;
+    axis_pt[1] = origin[1]+dir_angle[1]*t;
+    axis_pt[2] = origin[2]+dir_angle[2]*t;
+
+/*  compute radius and radial direction */
+
+    R = sqrt( SQUARE(coord[0]-axis_pt[0]) + SQUARE(coord[1]-axis_pt[1]) +
+                SQUARE(coord[2]-axis_pt[2]) );
+    dist = R - roll_rad;
+
+/*  repulsion function  */
+           kernel = 1.0/pow(dist/hscale, repexp); 
+                              local_qconv = kernel;
+			      for( b=0 ; b<dim ; b++)
+                                 {local_Torque[b] = fv->x[b]*kernel;}
+                            }
+                         }
+
 			      local_flux += weight * det * local_q;
+                              local_flux_conv += weight *det*local_qconv;
+			      for( b=0 ; b<dim ; b++)
+                                 {Torque[b] += local_Torque[b]*weight*det;}
 		      break;
 
 		    case N_DOT_X:
@@ -4137,8 +4161,14 @@ evaluate_flux(
 	    }
 	  else
 	    { 
-              fprintf(jfp," flux=  %e %e  area= %e  \n", local_flux,local_flux_conv,local_area);
-	      fprintf(jfp, "\n"); 
+              fprintf(jfp," flux=  %e %e  area= %e  ", local_flux,local_flux_conv,local_area);
+	        if(quantity==SURF_DISSIP)
+	           {
+		    for( b=0 ; b<3; b++)
+                       {Torque[b] /= local_flux_conv;}
+      fprintf(jfp," moments=  %e %e %e  ", Torque[0],Torque[1],Torque[2]);
+                   }
+	      fprintf(jfp, "\n\n"); 
 	      fflush(jfp);	
 	    }
 	  fclose(jfp);
@@ -5726,13 +5756,14 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   af->Assemble_Jacobian = TRUE;
 
   /* first right time stamp or run stamp to separate the sets */
+fprintf(stderr,"sens %d %s\n",sens_type,filenm);
 
         if (print_flag && ProcID == 0) {
         FILE  *jfp;
         if(  (filenm != NULL) && ( (jfp=fopen(filenm,"a")) != NULL))
                 {
       fprintf(jfp,"Time/iteration = %e \n", time_value);
-      fprintf(jfp," %s  Side_Set  %d Block  %d \n", qtity_str,side_set_id,mat_id);
+      fprintf(jfp," %s  Side_Set  %d Block  %d Species %d\n", qtity_str,side_set_id,mat_id,species_id);
       fprintf(jfp,"  %d  %d %d %d %d\n", sens_type, sens_id, sens_flt, sens_flt2,vector_id);
             if(sens_type == 1)
               {

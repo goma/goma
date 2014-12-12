@@ -70,7 +70,8 @@ PROTO((JACOBIAN_VAR_DESC_STRUCT *,    /*  *func_jac        */
        const double [MAX_PDIM],       /*  x_dot[MAX_PDIM]  */
        const double,                  /*  time               */
        const double,                  /*  tt               */
-       const double ));               /*  dt               */
+       const double,               /*  dt               */
+       const int ));               /*  interface_id               */
 
 EXTERN double sdc_stefan_volume_flow
 PROTO((JACOBIAN_VAR_DESC_STRUCT *,    /*  *func_jac        */
@@ -260,9 +261,6 @@ PROTO((double [MDE][DIM],	/* cfunc                                     */
        const int ,		/* id_side - ID of the side of the element   */
        const double ,		/* sigma - surface tension                   */
        const double ,		/* pb - applied pressure                     */
-       const double ,		/* pr - coefficient for repulsion force to 
-				 * ensure no penetration of the solid boundary
-				 * by the free surface                       */
        struct elem_side_bc_struct *, /* elem_side_bc                         */
        const int ,		/* iconnect_ptr                              */
        double [DIM][MDE]));	/* dsigma_dx                               */
@@ -313,6 +311,12 @@ PROTO((double [DIM],		/* func                                      */
        const double ,		/* b for pressure variation                  */
        const double ,		/* c for pressure variation                  */
        const double ));		/* d - pressure variation                    */
+
+EXTERN void flow_n_dot_T_var_density
+PROTO((double [DIM],            /* func                                      */
+       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],/* d_func            */
+       const double,            /* a - reference pressure                  */
+       const double));          /* time - current time                       */
 
 #if 0
 /* deprecated March 2002 by TAB */
@@ -684,6 +688,15 @@ PROTO((double [DIM],              /* func */
        const int ,                /* value id_block_1  */
        const int ,                /* value id_block_2  */
        const double ));           /* value Rinv  */
+
+EXTERN void qside_light_jump
+PROTO((double [DIM],              /* func */
+       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /*   d_func   */
+       const double,	/* Time                                      */
+       const int,	/* bc_type */     
+       const int ,                /* value id_block_1  */
+       const int                 /* value id_block_2  */
+        ));           /* value Rinv  */
 
 EXTERN void qside_ls
 PROTO((double [DIM],              /* func */

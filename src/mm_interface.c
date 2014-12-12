@@ -22,6 +22,8 @@
 #include "std.h"
 #include "rf_allo.h"
 #include "rf_vars_const.h"
+#include "rf_fem_const.h"
+#include "rf_fem.h"
 #include "mm_mp_const.h"
 #include "mm_as_structs.h"
 #include "mm_mp_structs.h"
@@ -50,22 +52,27 @@ interface_source_alloc(int num_terms, int is_type, int do_Jac)
     *   structure.
     *********************************************************************/
 {
+  int i;
   INTERFACE_SOURCE_STRUCT *is;
-  is = alloc_struct_1(INTERFACE_SOURCE_STRUCT, 1);
-  is->Num_Terms = num_terms;
-  is->SpeciesVT = SPECIES_UNDEFINED_FORM;
-  is->IS_Type = is_type;
-  is->Var_List = (VARIABLE_DESCRIPTION_STRUCT **) alloc_ptr_1(num_terms);
-  is->idof = alloc_int_1(num_terms, 0);
-  is->Var_Value = alloc_dbl_1(num_terms, 0.0);
-  is->SourceTerm = alloc_dbl_1(num_terms, 0.0);
-  is->JacMatrix = alloc_dbl_2(num_terms, num_terms, 0.0);
-  is->Do_Jac = do_Jac;
+  is = alloc_struct_1(INTERFACE_SOURCE_STRUCT, Num_Interface_Srcs);
+  for(i=0; i<Num_Interface_Srcs ; i++)    {
+    is[i].Num_Terms = num_terms;
+    is[i].SpeciesVT = SPECIES_UNDEFINED_FORM;
+    is[i].IS_Type = is_type;
+    is[i].Var_List = (VARIABLE_DESCRIPTION_STRUCT **) alloc_ptr_1(num_terms);
+    is[i].idof = alloc_int_1(num_terms, 0);
+    is[i].Var_Value = alloc_dbl_1(num_terms, 0.0);
+    is[i].SourceTerm = alloc_dbl_1(num_terms, 0.0);
+    is[i].Processed = alloc_int_1(MAX_CONC, FALSE);
+    is[i].JacMatrix = alloc_dbl_2(num_terms, num_terms, 0.0);
+    is[i].Do_Jac = do_Jac;
+    }
   /*
    * Possibly branch depending upon is_type
    */
   return is;
 }
+
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -81,28 +88,31 @@ interface_source_free(INTERFACE_SOURCE_STRUCT *is)
     *  with an Interface_Source structure.
     ********************************************************************/
 {
+  int i;
   /*
    *  Free underlying memory assocated with the state of the surface,
    *  If there is any. IS_Type tells us what to do.
    */
-  if (is->StateInterface) {
+ for(i=0 ; i<Num_Interface_Srcs ; i++)    {
+  if (is[i].StateInterface) {
 
   }
-  if (is->StateInterfaceOld) {
+  if (is[i].StateInterfaceOld) {
 
   }
   /*
    * Free memory allocated directly in the structure
    */
-  safer_free((void **) &(is->Var_List));
-  safer_free((void **) &(is->idof));
-  safer_free((void **) &(is->Var_Value));
-  safer_free((void **) &(is->SourceTerm));
-  safer_free((void **) &(is->JacMatrix));
-  is->Num_Terms = 0;
-  is->IS_Type = 0;
-  is->Processed = FALSE;
-  is->SpeciesVT = SPECIES_UNDEFINED_FORM;
+  safer_free((void **) &(is[i].Var_List));
+  safer_free((void **) &(is[i].idof));
+  safer_free((void **) &(is[i].Var_Value));
+  safer_free((void **) &(is[i].SourceTerm));
+  safer_free((void **) &(is[i].JacMatrix));
+  safer_free((void **) &(is[i].Processed));
+  is[i].Num_Terms = 0;
+  is[i].IS_Type = 0;
+  is[i].SpeciesVT = SPECIES_UNDEFINED_FORM;
+ }
 }
 /************************************************************************/
 /************************************************************************/
@@ -142,11 +152,11 @@ interface_source_zero(INTERFACE_SOURCE_STRUCT *is)
     *********************************************************************/
 {
   (void) memset((void *) is->SourceTerm, 0, sizeof(double) * is->Num_Terms);
+  (void) memset((void *) is->Processed, FALSE, sizeof(int) * MAX_CONC);
   if (is->Do_Jac) {
     (void) memset((void *) is->JacMatrix[0], 0,
 		  sizeof(double) * is->Num_Terms * is->Num_Terms);
   }
-  is->Processed = FALSE;
 }
 /************************************************************************/
 /************************************************************************/
@@ -155,7 +165,7 @@ interface_source_zero(INTERFACE_SOURCE_STRUCT *is)
 void 
 is_change1_speciesVT(INTERFACE_SOURCE_STRUCT *is, const int is_species_entry, 
                      const int is_species_start, MATRL_PROP_STRUCT *mp_local, 
-		     const int speciesVT, const double time)
+		     const int speciesVT, const double time, const int intf_id)
 
 
    /********************************************************************
@@ -173,7 +183,7 @@ is_change1_speciesVT(INTERFACE_SOURCE_STRUCT *is, const int is_species_entry,
 {
   double *d_ptr;
   if (speciesVT == SPECIES_MASS_FRACTION) {
-    switch (is->SpeciesVT) {
+    switch (is[intf_id].SpeciesVT) {
     case SPECIES_MOLE_FRACTION:
 	/*
 	 * Need to change the source term units as well
@@ -183,9 +193,9 @@ is_change1_speciesVT(INTERFACE_SOURCE_STRUCT *is, const int is_species_entry,
     case SPECIES_MASS_FRACTION:
 	break;
     case SPECIES_CONCENTRATION:
-        if (is->Do_Jac) {
-	  d_ptr = &(is->JacMatrix[is_species_entry][is_species_start]);
-	  deriv1_Ck_to_Yk(d_ptr, mp_local, is->Var_Value + is_species_start, time);
+        if (is[intf_id].Do_Jac) {
+	  d_ptr = &(is[intf_id].JacMatrix[is_species_entry][is_species_start]);
+	  deriv1_Ck_to_Yk(d_ptr, mp_local, is[intf_id].Var_Value + is_species_start, time);
 	}
 	break;
     default:
@@ -193,7 +203,7 @@ is_change1_speciesVT(INTERFACE_SOURCE_STRUCT *is, const int is_species_entry,
 	break;
     }
   } else if (speciesVT == SPECIES_MOLE_FRACTION) {
-   switch (is->SpeciesVT) {
+   switch (is[intf_id].SpeciesVT) {
     case SPECIES_MASS_FRACTION:	
         /*
 	 * Need to change the source term units as well
@@ -210,7 +220,7 @@ is_change1_speciesVT(INTERFACE_SOURCE_STRUCT *is, const int is_species_entry,
 	break;
     }
   } else if (speciesVT == SPECIES_CONCENTRATION) {
-   switch (is->SpeciesVT) {
+   switch (is[intf_id].SpeciesVT) {
     case SPECIES_MASS_FRACTION:
 	/*
 	 * Need to change the source term units as well
@@ -237,7 +247,7 @@ void
 is_change1_lastspecies(INTERFACE_SOURCE_STRUCT *is,
 		       const int is_species_entry, 
 		       const int is_species_start,
-		       MATRL_PROP_STRUCT *mp_local)
+		       MATRL_PROP_STRUCT *mp_local, const int intf_id)
 
    /********************************************************************
     *
@@ -260,14 +270,14 @@ is_change1_lastspecies(INTERFACE_SOURCE_STRUCT *is,
   int i, nsm1;
   double *d_ptr, tmp;
   
-  switch (is->SpeciesVT) {
+  switch (is[intf_id].SpeciesVT) {
   case SPECIES_MOLE_FRACTION:
   case SPECIES_MASS_FRACTION:
   case SPECIES_CONCENTRATION:
   case SPECIES_DENSITY:
       if (mp_local->Num_Species_Eqn < mp_local->Num_Species) {
-	if (is->Do_Jac) {
-	  d_ptr = &(is->JacMatrix[is_species_entry][is_species_start]);
+	if (is[intf_id].Do_Jac) {
+	  d_ptr = &(is[intf_id].JacMatrix[is_species_entry][is_species_start]);
 	  nsm1 = mp_local->Num_Species - 1;
 	  tmp = d_ptr[nsm1];
 	  if (DOUBLE_NONZERO(tmp)) {

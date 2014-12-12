@@ -223,6 +223,8 @@ rd_bc_specs(FILE *ifp,
   
   SPF(echo_string,"%s = %d", "Number of BC", Num_BC); ECHO(echo_string, echo_file);
       
+/* initialize number of interface sources*/
+  Num_Interface_Srcs = 0;
   for (ibc = 0; ibc < Num_BC; ibc++)
     {
 
@@ -489,6 +491,7 @@ rd_bc_specs(FILE *ifp,
 	case CAP_ENDFORCE_SCALAR_BC:
 	case SURFTANG_SCALAR_EDGE_BC:
         case FLOW_PRESSURE_BC:
+	case FLOW_PRESSURE_VAR_BC:
         case FLOW_STRESSNOBC_BC:
         case FLOW_GRADV_BC:
 	case FILL_INLET_BC:
@@ -1446,7 +1449,13 @@ rd_bc_specs(FILE *ifp,
           /*   outside slip coeff, gas_factor,  contact_friction   */
 	  if ( fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[9]) != 1)
 	    {
+	      if ( !strcmp(BC_Types[ibc].desc->name1,"VELO_THETA_HOFFMAN"))
+                  {
+/* Max DCA for Hoffman condition  */
+		      BC_Types[ibc].BC_Data_Float[9] = 180.0;
+                  } else  { 
 		      BC_Types[ibc].BC_Data_Float[9] = 1.0/sqrt(LITTLE_PENALTY*BIG_PENALTY);
+                  }
 	    }
           else
             SPF(endofstring(echo_string)," %lf", BC_Types[ibc].BC_Data_Float[9]);
@@ -2242,6 +2251,9 @@ rd_bc_specs(FILE *ifp,
         case LUBP_SH_FP_FLUX_BC:
         case T_CONTACT_RESIS_BC:
         case T_CONTACT_RESIS_2_BC:
+        case LIGHTP_JUMP_BC:
+        case LIGHTM_JUMP_BC:
+        case LIGHTD_JUMP_BC:
 
 	  if ( fscanf(ifp, "%d %d", &BC_Types[ibc].BC_Data_Int[0],
 		      &BC_Types[ibc].BC_Data_Int[1]) != 2)
@@ -2473,6 +2485,12 @@ rd_bc_specs(FILE *ifp,
 	    if (BC_Types[ibc].BC_Name == IS_EQUIL_PRXN_BC) {
 	      assign_global_species_var_type(SPECIES_CONCENTRATION, FALSE);
 	    }
+	    if (BC_Types[ibc].species_eq == 0 && 
+                 (BC_Types[ibc].BC_Name == IS_EQUIL_PRXN_BC ||
+                  BC_Types[ibc].BC_Name == VL_EQUIL_PRXN_BC)) {
+                 IntSrc_BCID[Num_Interface_Srcs] = BC_Types[ibc].BC_ID;
+                 Num_Interface_Srcs++;
+            }
 
 	    for(i=0;i<3;i++) SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[i]);
 	    SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[0]);
