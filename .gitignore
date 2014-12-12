@@ -2,6 +2,7 @@
 /build/
 /lib/
 /settings.mk
+/.settings/
 *~
 *.a
 *.o

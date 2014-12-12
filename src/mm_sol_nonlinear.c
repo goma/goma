@@ -45,7 +45,11 @@ static char rcsid[] =
 
 #include "mm_qp_storage.h"
 
+#include "sl_util_structs.h"
+
 #include "sl_amesos_interface.h"
+
+#include "sl_aztecoo_interface.h"
 
 #define _MM_SOL_NONLINEAR_C
 #include "goma.h"
@@ -664,7 +668,12 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
     {
       init_vec_value(resid_vector, 0.0, numProcUnknowns);
       init_vec_value(delta_x, 0.0, numProcUnknowns);
-      init_vec_value(a, 0.0, ams->nnz);
+      /* Zero matrix values */
+      if (strcmp(Matrix_Format, "epetra") == 0) {
+        putScalarEpetraRowMatrix(ams->RowMatrix, 0.0);
+      } else {
+        init_vec_value(a, 0.0, ams->nnz);
+      }
       get_time(ctod);
 
       /*
@@ -1439,15 +1448,28 @@ EH(-1,"version not compiled with frontal solver");
 	   */
 	  break;	
           	  
-	  case AMESOS:
-		  
-	    if( strcmp( Matrix_Format,"msr" ) == 0  ) {	
-	      amesos_solve_msr( Amesos_Package, ams, delta_x, resid_vector, 1 );	
-	    } else {
-	      EH(-1," Sorry, only MSR matrix formats are currently supported with the Amesos solver suite\n");
-	    }
-	    strcpy(stringer, " 1 ");
-	    break;		  
+      case AMESOS:
+
+        if( strcmp( Matrix_Format,"msr" ) == 0 ) {
+          amesos_solve_msr( Amesos_Package, ams, delta_x, resid_vector, 1 );
+        } else if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
+          amesos_solve_epetra(Amesos_Package, ams, delta_x, resid_vector);
+        } else {
+          EH(-1," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
+        }
+        strcpy(stringer, " 1 ");
+        break;
+
+      case AZTECOO:
+        if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
+          aztecoo_solve_epetra(ams, delta_x, resid_vector);
+          why = (int) ams->status[AZ_why];
+          aztec_stringer(why, ams->status[AZ_its], &stringer[0]);
+          matrix_solved = (ams->status[AZ_why] == AZ_normal);
+        } else {
+          EH(-1, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
+        }
+        break;
 
       case MA28:
 	  /*

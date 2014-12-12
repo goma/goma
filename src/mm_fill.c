@@ -63,6 +63,10 @@
 
 #include "bc_dirich.h"
 #include "mm_qp_storage.h"
+
+#include "sl_epetra_interface.h"
+#include "sl_epetra_util.h"
+
 #define _MM_FILL_C
 #include "goma.h"
 
@@ -3031,8 +3035,9 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
   fprintf(rrrr, "\nGlobal_NN Proc_NN  Equation    idof    Proc_SolnNum     ResidValue\n");
 #endif
 
-  /* Load up estifm in case a frontal solver is being used */
-  if (Linear_Solver == FRONT) {
+  if (strcmp(Matrix_Format, "epetra") == 0) {
+    epetra_load_lec(exo, ielem, ams, x, resid_vector);
+  } else if (Linear_Solver == FRONT) {   /* Load up estifm in case a frontal solver is being used */
     if (af->Assemble_Jacobian) {
       memset(estifm, 0, sizeof(double)*fss->ncn[ielem]*fss->ncn[ielem]);
       ivar = 0; 
@@ -3302,7 +3307,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			      EH(je, "Bad var index.");
 			      ja = (ie == je) ?
 				ie : in_list(je, ija[ie], ija[ie+1], ija);
-			      EH(ja, "Could not find vbl in sparse matrix.");  
+			      EH(ja, "Could not find vbl in sparse matrix.");
 			      a[ja] += lec->J[pe][pv][i][j];
 #ifdef DEBUG_LEC
 			      {
@@ -3419,6 +3424,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			    ja = (ie == je) ? ie : in_list(je, ija[ie], ija[ie+1], ija);
 			    EH(ja, "Could not find vbl in sparse matrix.");  
 			    a[ja] += lec->J[pe][pv][i][j];
+
 #ifdef DEBUG_LEC
 			    {
 			      if (fabs(lec->J[pe][pv][i][j]) > DBL_SMALL || Print_Zeroes) 
