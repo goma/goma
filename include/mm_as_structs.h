@@ -2876,6 +2876,14 @@ struct pspg_dependence
 };
 typedef struct pspg_dependence PSPG_DEPENDENCE_STRUCT;
 
+/* struct for d_cont_gls */
+struct cont_gls_dependence
+{
+  double v[DIM][MDE];      /* velocity dependence */
+  double X[DIM][MDE];      /* mesh dependence */
+};
+typedef struct cont_gls_dependence CONT_GLS_DEPENDENCE_STRUCT;
+
 
 struct Petrov_Galerkin_Data {
   double h[DIM];

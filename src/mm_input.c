@@ -6447,6 +6447,37 @@ rd_solver_specs(FILE *ifp,
       ECHO("(Pressure Stabilization Scaling = 0.0) (default)", echo_file);
     }
 
+  iread = look_for_optional(ifp, "Continuity Stabilization", input, '=');
+  if (iread == 1)
+    {
+      (void) read_string(ifp, input, '\n');
+      strip(input);
+      if (strcmp(input,"no") == 0)
+	{
+	  Cont_GLS = 0;
+	}
+      else if(strcmp(input,"yes") == 0)
+	{
+	  Cont_GLS = 1;
+	}
+
+      else if(strcmp(input,"local")==0)
+	{
+          Cont_GLS = 2;
+	}
+       
+      else
+	{
+	  EH( -1, "invalid choice: Continuity Stabilization yes, local, or no");
+	}
+      SPF(echo_string, eoformat, "Continuity Stabilization", input); ECHO(echo_string,echo_file);	  
+	
+    }
+  else
+    {
+      Cont_GLS = 0;
+      ECHO("(Continuity Stabilization = None) (default)", echo_file);
+    }
 
   /*IGBRK*/
   iread = look_for_optional(ifp, "Linear Stability", input, '=');

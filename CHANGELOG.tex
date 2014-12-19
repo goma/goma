@@ -192,6 +192,11 @@ Developer: D. Hariprasad, December 2014
 Description: Specifies pressure as P = P_0 + rho*g*x where rho is a vairable density and the user specifies P_0.
 Example:  BC = FLOW_PRESSURE_VAR NS 1 0
 
+Capability: Galerkin least-squares continuity stabilization 
+Developer: D. Hariprasad, February 2015
+Description: Adds a Galerkin least-squares stabilization term using the residual of the continuity equation for incompressible or steady-state compressible flows.  This should help with high Reynolds number flow.  Similar to the Pressure Stabilization already implemented in Goma.  See Franca and Hughes 1988 for an abstract discussion of the method or Forster, Wall, and Ramm 2010 for a Navier-Stokes based discussion of the method.  The choice of a local or global stability parameter is left to the user.
+Example: Continuity Stabilization = local
+
 
 PRS ADDED TO MANUAL (12/11/2012) as noted:
 

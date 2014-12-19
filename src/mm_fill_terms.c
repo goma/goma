@@ -156,6 +156,7 @@ extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
 *  heat_source                 double
 *  ls_modulate_heatsource 
 *  calc_pspg
+*  calc_cont_gls
 *  assemble_ls_latent_heat_source
 *  assemble_acoustic		int 
 *  assemble_acoustic_reynolds_stress int
@@ -2452,6 +2453,12 @@ assemble_momentum(dbl time,       /* current time */
 					   of the vertices for Q1. It comes from
 					   the routine "element_velocity." */
 
+  //Continuity stabilization
+  dbl continuity_stabilization;
+  dbl cont_gls;
+  CONT_GLS_DEPENDENCE_STRUCT d_cont_gls_struct;
+  CONT_GLS_DEPENDENCE_STRUCT *d_cont_gls = &d_cont_gls_struct;
+
   int *n_dof = NULL;
   int dof_map[MDE];
   
@@ -2711,6 +2718,12 @@ assemble_momentum(dbl time,       /* current time */
 
   (void) momentum_source_term(f, df, time);
 
+  //Call continuity stabilization if desired
+  if(Cont_GLS)
+    {
+      calc_cont_gls(&cont_gls, d_cont_gls, time, pg_data);
+    }
+
   /*
    * Residuals_________________________________________________________________
    */
@@ -2906,6 +2919,16 @@ assemble_momentum(dbl time,       /* current time */
 		     * source term. */
 		    source = element_particle_info[ei->ielem].source_term[i];
 		}
+	      
+	      //Continuity residual
+	      continuity_stabilization = 0.0;
+              if (Cont_GLS)
+		{
+		  for (p=0; p<VIM; p++){
+		    continuity_stabilization += grad_phi_i_e_a[p][p];
+		    }
+                  continuity_stabilization *= cont_gls *d_area;
+	        }
 
 	      /*
 	       * Add contributions to this residual (globally into Resid, and 
@@ -2913,7 +2936,7 @@ assemble_momentum(dbl time,       /* current time */
 	       */
 		  
 	      /*lec->R[peqn][ii] += mass + advection + porous + diffusion + source;*/
-	      R[ii] += mass + advection + porous + diffusion + source;
+              R[ii] += mass + advection + porous + diffusion + source + continuity_stabilization;
 
 #ifdef DEBUG_MOMENTUM_RES
 	      printf("R_m[%d][%d] += %10f %10f %10f %10f %10f\n",
@@ -3474,8 +3497,20 @@ assemble_momentum(dbl time,       /* current time */
 			    {
 			      source    = phi_i * df->v[a][b][j] * d_area;
 			      source   *= source_etm;
-			    }		
-			  J[j] +=  mass + advection + porous + diffusion + source;
+			    }
+
+			  continuity_stabilization = 0.0;
+			  if (Cont_GLS)
+			    {
+			      for (p=0; p<VIM; p++)
+				{
+				  continuity_stabilization += grad_phi_i_e_a[p][p];
+				}
+			      continuity_stabilization *= d_cont_gls->v[b][j] *d_area;
+			    }
+
+
+			  J[j] +=  mass + advection + porous + diffusion + source + continuity_stabilization;
 
 			  /*lec->J[peqn][pvar][ii][j] +=  mass + advection + porous + diffusion + source; */
 			}
@@ -3633,7 +3668,9 @@ assemble_momentum(dbl time,       /* current time */
 				}
 				porous *= phi_i * wt;
 
+
 				J[jk] += porous;
+    
 			      }
 			    }
 
@@ -3827,6 +3864,7 @@ assemble_momentum(dbl time,       /* current time */
 			      source    = phi_i * df->C[a][w][j] * det_J * h3 *wt;
 			      source   *= pd->etm[eqn][(LOG2_SOURCE)];
 			    }
+		  
 
 			  lec->J[peqn][MAX_PROB_VAR + w][ii][j] +=
 			    mass + advection + porous + diffusion + source;
@@ -3898,8 +3936,8 @@ assemble_momentum(dbl time,       /* current time */
 			      a,i,j,mass,advection,porous,diffusion);
 #endif /* DEBUG_MOMENTUM_JAC */
 				   
-		    J[j] += diffusion ;
 		    /*lec->J[peqn][pvar][ii][j] += diffusion ;  */
+		    J[j] += diffusion;
 		  }
 	      }
 
@@ -4259,7 +4297,20 @@ assemble_momentum(dbl time,       /* current time */
 				advection *= (1.0 - p_vol_frac);
 			      }
 
-			    J[j] += mass + advection + porous + diffusion + source;
+			    continuity_stabilization = 0.0;
+			    if (Cont_GLS)
+			      {
+				for(p=0; p<VIM; p++)
+				  {
+				    continuity_stabilization += d_grad_phi_i_e_a_dmesh[p][p][b][j] *cont_gls *d_area;
+				    continuity_stabilization += grad_phi_i_e_a[p][p] *d_cont_gls->X[b][j] *d_area;
+				    continuity_stabilization += grad_phi_i_e_a[p][p] *cont_gls *
+				      (d_det_J_dmesh_bj *h3 + det_J *dh3dmesh_bj) *wt;
+				  }
+				
+			      }
+
+			    J[j] += mass + advection + porous + diffusion + source + continuity_stabilization;
 			  }
 
 			/* Special Case for shell lubrication velocities with bounding continuum.  Note j-loop is over bulk element */			
@@ -18917,7 +18968,7 @@ apply_distributed_sources ( int elem, double width,
 	        }
               if( pd->e[R_MOMENTUM1] )
                 {
-                  err = assemble_momentum_path_dependence(time, theta, dt, pg_data->h_elem_avg);
+                  err = assemble_momentum_path_dependence(time, theta, dt, pg_data);
                   EH( err, "assemble_momentum_path_dependence");
                 }
               if( pd->e[R_PRESSURE] )
@@ -25458,11 +25509,10 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 				  dbl tt,	  /* parameter to vary time integration from
                                                      explicit (tt = 1) to implicit (tt = 0) */
 				  dbl dt,	  /* current time step size */
-				  dbl h_elem_avg) /* average global element size for PSPG,
-						     taken constant wrt to Jacobian        */
+				  const PG_DATA *pg_data)
 {
   int dim, wim;
-  int i, j, a;
+  int i, j, a, p;
   int ledof, eqn, var, ii, peqn, pvar;
   int status;
   struct Basis_Functions *bfm;
@@ -25553,6 +25603,11 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
   dbl porous_brinkman_etm;
   dbl source_etm;
 
+  dbl h_elem_avg;
+
+  /*Continuity stabilization*/
+  dbl cont_gls, continuity_stabilization;
+
 
   status = 0;
 
@@ -25627,6 +25682,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
    * Material property constants, etc. Any variations for this
    * Gauss point were evaluated in load_material_properties().
    */
+  h_elem_avg = pg_data->h_elem_avg;
 
   /*** Density ***/
 
@@ -25723,6 +25779,12 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
   fluid_stress( Pi, NULL );
 
   (void) momentum_source_term(f, NULL, time);
+
+  //Call continuity stabilization if desired
+  if(Cont_GLS)
+    {
+      calc_cont_gls(&cont_gls, NULL, time, pg_data);
+    }
 
   if ( af->Assemble_Jacobian )
   {
@@ -25880,10 +25942,20 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 						  * source term. */
 						  source = element_particle_info[ei->ielem].source_term[i];
 				  }
+
+				  //Continuity residual
+				  continuity_stabilization = 0.0;
+				  if (Cont_GLS)
+				    {
+				      for (p=0; p<VIM; p++){
+					continuity_stabilization += grad_phi_i_e_a[p][p];
+				      }
+				      continuity_stabilization *= cont_gls *d_area;
+				    }
 				  
 				  
 				  momentum_residual =
-					  mass + advection + porous + diffusion + source;
+					  mass + advection + porous + diffusion + source + continuity_stabilization;
 				  
 				  var = FILL;
 				  pvar = upd->vp[var];
@@ -26590,11 +26662,11 @@ assemble_LM_source ( double *xi,
  *  This includes the diagonal pressure contribution
  *
  *  Pi = stress tensor
- *  d_Pi = dependence of the stress tensor on the independent variables.
+ *  d_Pi = dependence of the stress tensor on the independent variables
  */
 void
 fluid_stress( double Pi[DIM][DIM],
-              STRESS_DEPENDENCE_STRUCT *d_Pi )
+              STRESS_DEPENDENCE_STRUCT *d_Pi)
 {
 
   /*
@@ -26665,6 +26737,7 @@ fluid_stress( double Pi[DIM][DIM],
   dbl (* grad_phi_e ) [DIM][DIM][DIM] = NULL;
 
   int eqn = R_MOMENTUM1;
+
  
   dim   = pd->Num_Dim;
   wim   = dim;
@@ -26692,6 +26765,7 @@ fluid_stress( double Pi[DIM][DIM],
    */
 
   P = fv->P;
+
   
   /* if d_Pi == NULL, then the dependencies aren't needed,
      so we won't need the viscosity dependencies, either
@@ -27031,6 +27105,7 @@ fluid_stress( double Pi[DIM][DIM],
           Pi[a][b]  = -P * (double)delta(a,b)
 	    + mu * gamma[a][b] - tau_p[a][b];
         }
+
       // Add in the diagonal contribution
       if (!kappaWipesMu) {
 	Pi[a][a] -= (mu / 3.0 - 0.5 * kappa) * gamma[a][a];
@@ -29018,6 +29093,219 @@ calc_pspg( dbl pspg[DIM],
   }
 is_initialized = TRUE; 
 return 0;
+}
+
+
+int
+calc_cont_gls( dbl *cont_gls,
+                CONT_GLS_DEPENDENCE_STRUCT *d_cont_gls,
+		dbl time_value,                          /*Current time value, needed for density */
+ 	        const PG_DATA *pg_data)                  /*Petrov-Galerkin data, needed for tau_cont   */
+{
+  dbl div_v = fv->div_v;
+  dbl tau_cont, d_tau_dmesh[DIM][MDE], d_tau_dv[DIM][MDE];
+  dbl advection_etm, advection, Re, div_phi_j_e_b, div_v_dmesh;
+  int eqn; 
+  int var, dim, wim, b, j, p;
+  int advection_on=0;
+  static int is_initialized = FALSE;
+
+  //Density terms
+  dbl rho;
+  DENSITY_DEPENDENCE_STRUCT d_rho_struct;
+  DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+
+  //Petrov-Galerkin values
+  dbl h_elem = 0, U, hh_siz, vv;
+  const dbl h_elem_avg = pg_data->h_elem_avg;
+  const dbl *hsquared = pg_data->hsquared; 
+  const dbl U_norm = pg_data->U_norm;
+  const dbl *v_avg = pg_data->v_avg;
+  const dbl mu_avg = pg_data->mu_avg;
+  
+  //Initialize and Define
+  dim = pd->Num_Dim;
+  wim=dim;
+  if(pd->CoordinateSystem == SWIRLING ||
+     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+    wim = wim+1;
+
+  tau_cont = 0;
+  *cont_gls = 0.0;
+  eqn = R_PRESSURE;
+  advection_on = pd->e[eqn] & T_ADVECTION;
+  advection_etm = pd->etm[eqn][(LOG2_ADVECTION)];
+
+  if (d_cont_gls==NULL)
+    {
+      d_rho = NULL;
+    }
+  else if(!is_initialized)
+    {
+      memset(d_cont_gls->v, 0, sizeof(double)*DIM*MDE);
+      memset(d_cont_gls->X, 0, sizeof(double)*DIM*MDE);
+    }
+
+  /* Calculate stabilization parameter tau_cont
+   * From Wall:
+   * tau_cont = h_elem*u_norm*max{Re,1}/2;
+   * The Reynolds number, Re, is defined as in calc_pspg
+   */
+  if(Cont_GLS==1)
+    {
+      h_elem = h_elem_avg;
+      U = U_norm;
+    }
+  else
+    {
+      hh_siz = 0.;
+      vv = 0.;
+      for(p=0; p<dim; p++)
+	{
+	  hh_siz += hsquared[p]/((double)dim);
+	  vv += v_avg[p]*v_avg[p];
+	}
+      h_elem = sqrt(hh_siz);
+      U = sqrt(vv);
+    }
+  
+  tau_cont = U *h_elem /2.0;
+
+  //We need density for the Reynolds number
+  rho = density(d_rho, time_value);
+  Re = rho *U *h_elem /(2.0 *mu_avg);
+  if (Re > 1.0)
+    {
+      tau_cont *= Re;
+    }
+  
+  //d_tau terms for Jacobian
+  if(d_cont_gls != NULL && pd->v[VELOCITY1])
+    {
+      for(b=0; b<dim; b++)
+	{
+	  var = VELOCITY1+b;
+	  if(pd->v[var])
+	    {
+	      for(j=0; j<ei->dof[var]; j++)
+		{
+		  if(Cont_GLS==1 || U==0)
+		    {
+		      d_tau_dv[b][j] = 0.;
+		    }
+		  else if(Re > 1.0)
+		    {
+		      d_tau_dv[b][j] = rho/mu_avg *h_elem *h_elem *v_avg[b] *pg_data->dv_dnode[b][j];
+		    }
+		  else
+		    {
+		      d_tau_dv[b][j] = h_elem/(2*U) *v_avg[b] *pg_data->dv_dnode[b][j];
+		    }
+		}
+	    }
+	}
+    }
+
+  if(d_cont_gls != NULL && pd->v[MESH_DISPLACEMENT1])
+    {
+      for(b=0; b<dim; b++)
+	{
+	  var = MESH_DISPLACEMENT1+b;
+	  if(pd->v[var])
+	    {
+	      for(j=0; j<ei->dof[var]; j++)
+		{
+		  if(Cont_GLS==1 || h_elem==0)
+		    {
+		      d_tau_dmesh[b][j] = 0.;
+		    }
+		  else if(Re > 1.0)
+		    {
+		      d_tau_dmesh[b][j] = rho/mu_avg *U *U *pg_data->hh[b][b] *pg_data->dh_dxnode[b][j];
+		    }
+		  else
+		    {
+		      d_tau_dmesh[b][j] = U/(2*h_elem) *pg_data->hh[b][b] *pg_data->dh_dxnode[b][j];
+		    }
+		}
+	    }
+	}
+    }
+
+  
+  /*
+   * Calculate residual 
+   * This term refers to the standard del dot v . 
+   */
+  advection = 0.0;
+  if (advection_on)
+    {
+      if (pd->v[VELOCITY1])
+	{
+	  advection = div_v;
+	  advection *= advection_etm;
+	}
+    }
+
+  /*Multiply tau_cont by residual resulting in cont_gls
+   *This eventually then gets combined with the stabilization functional
+   *in assemble_momentum to form the GLS stabilization for continuity
+   */
+  *cont_gls = tau_cont *advection;
+
+
+  //Determine Jacobian terms
+
+  //J_v
+  for (b=0; b<wim; b++)
+    {
+      var = VELOCITY1+b;
+      if (pd->v[var] && d_cont_gls!=NULL)
+	{	  
+	for (j=0; j<ei->dof[var]; j++)
+	  {				  
+	    advection  = 0.;			  
+	    if (advection_on)
+	      {
+		div_phi_j_e_b = 0.;
+		for (p=0; p<VIM; p++)
+		  {
+		    div_phi_j_e_b += bf[var]->grad_phi_e[j][b] [p][p];
+		  }
+		advection = div_phi_j_e_b *advection_etm;
+	      }
+	    d_cont_gls->v[b][j] = tau_cont *advection + d_tau_dv[b][j] *div_v *advection_etm;
+	  }
+	}
+    }
+
+
+  //J_d 
+  for (b=0; b<dim; b++)
+    {
+      var = MESH_DISPLACEMENT1+b;
+      if (pd->v[var])
+	{
+	  for (j=0; j<ei->dof[var]; j++)
+	    {
+	      advection = 0.0;
+	      if (advection_on)
+		{
+		  if (pd->v[VELOCITY1] && d_cont_gls!=NULL)
+		    {
+		      div_v_dmesh = fv->d_div_v_dmesh[b][j];
+		      advection += div_v_dmesh;
+		    }
+		}
+	      advection *= advection_etm;
+	      d_cont_gls->X[b][j] = tau_cont *advection + d_tau_dmesh[b][j] *div_v *advection_etm;
+	    }
+	}
+    }
+
+
+  is_initialized = TRUE;
+  return 0;
 }
 
 

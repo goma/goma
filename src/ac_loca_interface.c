@@ -1923,8 +1923,8 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
           iscale = 1;   /* This routine handles resolves only! */
           scaling_max = 1.0;
 
-          /* get global element size and velocity norm if needed for PSPG */
-          if(PSPG && Num_Var_In_Type[PRESSURE])
+          /* get global element size and velocity norm if needed for PSPG or Cont_GLS */
+          if((PSPG && Num_Var_In_Type[PRESSURE]) || (Cont_GLS && Num_Var_In_Type[VELOCITY1]))
             {
               h_elem_avg = global_h_elem_siz(x,
 					     passdown.x_old,
@@ -2199,8 +2199,8 @@ void matrix_residual_fill_conwrap(double *x, double *rhs, int matflag)
        save_flag = FALSE;
     }
 
-/* Get global element size and velocity norm if needed for PSPG */
-  if(PSPG && Num_Var_In_Type[PRESSURE])
+/* Get global element size and velocity norm if needed for PSPG or Cont_GLS */
+  if((PSPG && Num_Var_In_Type[PRESSURE]) || (Cont_GLS && Num_Var_In_Type[VELOCITY1]))
     {
       h_elem_avg = global_h_elem_siz(x,
 				     passdown.x_old,
@@ -2337,8 +2337,8 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
           etm_save[mn][i][j] = pd_glob[mn]->etm[i][j];
       }
 
-/* Get global element size and velocity norm if needed for PSPG */
-  if(PSPG && Num_Var_In_Type[PRESSURE])
+/* Get global element size and velocity norm if needed for PSPG or Cont_GLS */
+  if((PSPG && Num_Var_In_Type[PRESSURE]) || (Cont_GLS && Num_Var_In_Type[VELOCITY1]))
     {
       h_elem_avg = global_h_elem_siz(x,
                                      passdown.x_old,

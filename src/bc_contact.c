@@ -1464,7 +1464,7 @@ apply_embedded_bc (
 		    }
 		  if( pd->e[R_MOMENTUM1] && !ls->AdaptIntegration )
 		    {
-		      err = assemble_momentum_path_dependence(time_value, theta, dt, pg_data->h_elem_avg);
+		      err = assemble_momentum_path_dependence(time_value, theta, dt, pg_data);
 		      EH( err, "assemble_momentum_path_dependence");
 		    }
 		  if( pd->e[R_PRESSURE] && !ls->AdaptIntegration )
