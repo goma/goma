@@ -138,10 +138,10 @@ DEFINES ?= -Dlinux \
 # MPI
 # -----------
 # MPI includes
-MPI_INC ?= -isystem $(MPI_TOP)/include
+GOMA_MPI_INC ?= -isystem $(MPI_TOP)/include
 
 # MPI libraries
-MPI_LIB ?= -L$(MPI_TOP)/lib  -lmpi  -lmpi_f77
+GOMA_MPI_LIB ?= -L$(MPI_TOP)/lib  -lmpi  -lmpi_f77
 
 # For MPI, the libraries need to be explicitly set in the path:
 GCC_LIB = $(GCC_TOP)/lib
@@ -289,7 +289,7 @@ SYS_LIB ?= -lm  -lz
 GOMA_INC = -I$(INCLUDE_DIR)
 
 INCLUDES = $(GOMA_INC) $(SPARSE_INC) $(TRILINOS_INC) \
-           $(MPI_INC) $(SEACAS_INC) $(UMFPACK_INC)
+           $(GOMA_MPI_INC) $(SEACAS_INC) $(UMFPACK_INC)
 
 
 
@@ -337,7 +337,7 @@ LIBS = $(FRONT_LIB) \
        $(SCALAPACK_LIB) \
        $(SEACAS_LIB) 
 
-END_LIBS = $(MPI_LIB) \
+END_LIBS = $(GOMA_MPI_LIB) \
            $(FORTRAN_LIB) \
            $(SYS_LIB)
 
