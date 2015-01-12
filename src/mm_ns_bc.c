@@ -4888,7 +4888,7 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
 /***************************** EXECUTION BEGINS ******************************/
 /* if pr is 0. => we don't want free surface/wall repulsion and just
    ensure that dist and dist2 are nonzero so nothing bad happens */
-  if (P_rep == 0) return;
+  if (P_rep == 0 && betainv == 0) return;
 
   eqn = VELOCITY1;
     if(af->Assemble_LSA_Mass_Matrix)
@@ -5083,6 +5083,447 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
 
 } /* END of routine apply_repulsion                                          */
 /*****************************************************************************/
+
+void 
+apply_repulsion_user (double cfunc[MDE][DIM],
+		 double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+		 const double sigma, /* surface tension  */
+		 const double roll_rad, /* roll radius */
+	         const double origin[3],	/* roll axis origin (x,y,z) */
+	         const double dir_angle[3],	/* axis direction angles */
+		 const double hscale, /* repulsion length scale */
+	         const double repexp,	/* repulsive force exponent */
+	         const double P_rep,	/* repulsion coefficient */
+		 const double betainv, /* inverse slip coefficient  */
+		 const double omega, /* roll rotation rate  */
+		 struct elem_side_bc_struct *elem_side_bc,
+		 const int iconnect_ptr)
+  
+/******************************************************************************
+*
+*  Function which calculates the surface repulsion from a rotating roll
+*  with a slip velocity condition
+*
+******************************************************************************/
+     
+{
+  
+/* Local variables */
+  
+    int dim, jvar;			/* Degree of freedom counter */
+
+    double d_dist[DIM];                /* distance derivatives  */  
+    double dist=1e12;		/* squared distance from surface to wall     */
+    double force = 0.0, d_force = 0.0, inv_slip = 0.0, d_inv_slip = 0.0;
+    double t_veloc[2], dt_veloc_dx[2][MAX_PDIM][MAX_PDIM][MDE];
+
+  int j, i, id, var, a, eqn, I, ldof;
+    double time=0.;
+
+/***************************** EXECUTION BEGINS ******************************/
+/* if pr is 0. => we don't want free surface/wall repulsion and just
+   ensure that dist and dist2 are nonzero so nothing bad happens */
+  if (P_rep == 0 && betainv == 0) return;
+
+  eqn = VELOCITY1;
+    if(af->Assemble_LSA_Mass_Matrix)
+      return;
+
+/*  initialize variables */
+    dim = pd->Num_Dim;
+
+/* calculate distance from free surface to solid surface for repulsion calculations 
+
+      coord[0] = fv->x[0];
+      coord[1] = fv->x[1];
+      if( dim == 3)
+	{ coord[2] = fv->x[2];}
+      else
+	{ coord[2] = 0.0;}*/
+
+    dist = fnc(fv->x[0], fv->x[1], fv->x[2], BC_Types[2].u_BC, time);
+    d_dist[0] = dfncd1(fv->x[0], fv->x[1], fv->x[2], BC_Types[2].u_BC,  time);
+    d_dist[1] = dfncd2(fv->x[0], fv->x[1], fv->x[2], BC_Types[2].u_BC, time);
+
+    if (dim == 3) d_dist[2] = dfncd3(fv->x[0], fv->x[1], fv->x[2], BC_Types[2].u_BC, time);
+    
+/*  repulsion function  */
+           force = -P_rep/pow(dist/hscale, repexp); 
+           d_force = P_rep*repexp/pow(dist/hscale, repexp+1)/hscale;
+/*  slip velocity function function  */
+           inv_slip = -betainv/pow(dist/hscale, repexp); 
+           d_inv_slip = betainv*repexp/pow(dist/hscale, repexp+1)/hscale;
+      t_veloc[0] = t_veloc[1] = 0.;
+      for (a=0; a<ei->ielem_dim; a++)
+	{  
+         t_veloc[0] += fv->stangent[0][a]*(fv->v[a]);
+	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
+	    {
+	      var = MESH_DISPLACEMENT1 + jvar;
+	      if (pd->v[var]) 
+		{
+		  for ( j=0; j<ei->dof[var]; j++)
+                     {
+         dt_veloc_dx[0][a][jvar][j] = fv->dstangent_dx[0][a][jvar][j]*(fv->v[a]);
+                     }
+                }
+             }
+	}  
+      if( dim == 3)
+      {
+      for (a=0; a<ei->ielem_dim; a++)
+	{  
+         t_veloc[1] += fv->stangent[1][a]*(fv->v[a]);
+	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
+	    {
+	      var = MESH_DISPLACEMENT1 + jvar;
+	      if (pd->v[var]) 
+		{
+		  for ( j=0; j<ei->dof[var]; j++)
+                     {
+         dt_veloc_dx[1][a][jvar][j] = fv->dstangent_dx[1][a][jvar][j]*(fv->v[a]);
+                     }
+                }
+             }
+	}  
+      }
+
+  if (af->Assemble_Jacobian)
+    {
+      for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++)  {
+	id = (int) elem_side_bc->local_elem_node_id[i];
+	I = Proc_Elem_Connect[iconnect_ptr + id];
+	ldof  = ei->ln_to_dof[eqn][id];
+	if (Dolphin[I][VELOCITY1] > 0 ) {
+	  
+	  /* 
+	   *  Evaluate sensitivity to displacements d()/dx 
+	   */
+	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
+	    {
+	      var = MESH_DISPLACEMENT1 + jvar;
+	      if (pd->v[var]) 
+		{
+		  for ( j=0; j<ei->dof[var]; j++)
+		    {
+		      for (a=0; a<ei->ielem_dim; a++)
+			{
+			  
+			  d_cfunc[ldof][a][var][j] += (force * fv->dsnormal_dx[a][jvar][j] 
+						     + d_force * fv->snormal[a]
+						     * d_dist[jvar] * bf[var]->phi[j]
+						     )
+			    * bf[eqn]->phi[ldof]; 
+			  d_cfunc[ldof][a][var][j] +=
+                                (t_veloc[0]*inv_slip * fv->dstangent_dx[0][a][jvar][j] 
+				          + t_veloc[0]*d_inv_slip * fv->stangent[0][a]
+						     * d_dist[jvar] * bf[var]->phi[j]
+			+ inv_slip*fv->stangent[0][a]*dt_veloc_dx[0][a][jvar][j]) 
+			    * bf[eqn]->phi[ldof]; 
+			  if( dim == 3) d_cfunc[ldof][a][var][j] +=
+                                (t_veloc[1]*inv_slip * fv->dstangent_dx[1][a][jvar][j] 
+				     + t_veloc[1]*d_inv_slip * fv->stangent[1][a]
+						     * d_dist[jvar] * bf[var]->phi[j]
+			+ inv_slip*fv->stangent[1][a]*dt_veloc_dx[1][a][jvar][j]) 
+			    * bf[eqn]->phi[ldof]; 
+			  
+			}
+		    }
+		}
+	    }
+	  /* 
+	   *  Evaluate sensitivity to velocities
+	   */
+	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
+	    {
+	      var = VELOCITY1 + jvar;
+	      if (pd->v[var]) 
+		{
+		  for ( j=0; j<ei->dof[var]; j++)
+		    {
+		      for (a=0; a<ei->ielem_dim; a++)
+			{
+			  
+			  d_cfunc[ldof][a][var][j] += 
+                                   fv->stangent[0][jvar]*bf[var]->phi[j]*
+                                   inv_slip * fv->stangent[0][a]*bf[eqn]->phi[ldof]; 
+
+			  if( dim == 3) d_cfunc[ldof][a][var][j] += 
+                                   fv->stangent[1][jvar]*bf[var]->phi[j]*
+                                   inv_slip * fv->stangent[1][a]*bf[eqn]->phi[ldof]; 
+			  
+			}
+		    }
+		}
+	    }
+	}
+      }
+    }
+  
+  eqn = VELOCITY1;
+  for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++)  {
+    id = (int) elem_side_bc->local_elem_node_id[i];
+    I = Proc_Elem_Connect[iconnect_ptr + id];
+    ldof  = ei->ln_to_dof[eqn][id];
+    if (Dolphin[I][VELOCITY1] > 0 ) {
+      
+      for (a=0; a<ei->ielem_dim; a++)
+	{  
+	  cfunc[ldof][a] += force * fv->snormal[a] * bf[eqn]->phi[ldof]; 
+	  cfunc[ldof][a] += inv_slip * fv->stangent[0][a]*t_veloc[0]*bf[eqn]->phi[ldof]; 
+	}
+      if( dim == 3)
+      {
+      for (a=0; a<ei->ielem_dim; a++)
+	{  
+	  cfunc[ldof][a] += inv_slip * fv->stangent[1][a]*t_veloc[1]*bf[eqn]->phi[ldof]; 
+	}
+      }
+    }
+    
+  } /* end of for (i = 0; i < (int) elem_side_bc->num_nodes_on_side */
+
+} /* END of routine apply_repulsion_user                                          */
+/*****************************************************************************/
+
+void 
+apply_repulsion_table (double cfunc[MDE][DIM],
+		 double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                 double x[],   /* solution vector*/
+		 const double hscale, /* repulsion length scale */
+	         const double repexp,	/* repulsive force exponent */
+	         const double P_rep,	/* repulsion coefficient */
+		 const double betainv, /* inverse slip coefficient  */
+		 const double exp_scale, /* DCL exculsion zone scale  */
+	         const double v_wall[3],	/* surface velocity */
+                 const int dcl_node,		/* DCL NS id  */
+		 struct elem_side_bc_struct *elem_side_bc,
+		 const int iconnect_ptr)
+  
+/******************************************************************************
+*
+*  Function which calculates the surface repulsion from a rotating roll
+*  with a slip velocity condition
+*
+******************************************************************************/
+     
+{
+  
+/* Local variables */
+  
+    int dim, jvar;			/* Degree of freedom counter */
+
+    double d_dist[DIM],d_tfcn[DIM];                /* distance derivatives  */  
+    double dist;		/* squared distance from surface to wall     */
+    double coord[3]={0,0,0};
+    double force = 0.0, d_force = 0.0, inv_slip = 0.0, d_inv_slip = 0.0;
+    double t_veloc[2], dt_veloc_dx[2][MAX_PDIM][MAX_PDIM][MDE];
+
+    int j, i, id, var, a, eqn, I, ldof;
+    double point[3]={0,0,0},dcl_dist,slope, mod_factor=1.;
+    int nsp,k,bc_table_id=-1;
+    BOUNDARY_CONDITION_STRUCT *bc_tab;
+
+/***************************** EXECUTION BEGINS ******************************/
+/* if pr is 0. => we don't want free surface/wall repulsion and just
+   ensure that dist and dist2 are nonzero so nothing bad happens */
+  if (P_rep == 0 && betainv == 0) return;
+
+  eqn = VELOCITY1;
+    if(af->Assemble_LSA_Mass_Matrix)
+      return;
+
+/*  initialize variables */
+    dim = pd->Num_Dim;
+
+/* calculate distance from free surface to solid surface for repulsion calculations */
+
+      coord[0] = fv->x[0];
+      coord[1] = fv->x[1];
+      if( dim == 3)
+	{ coord[2] = fv->x[2];}
+      else
+	{ coord[2] = 0.0;}
+
+      for (a = 0; a < Num_BC; a++) {
+           if( BC_Types[a].BC_Name == GD_TABLE_BC )
+                { bc_table_id = a; }
+           }
+      if(bc_table_id == -1)
+          {EH(-1,"GD_TABLE id not found for CAP_REPULSE_TABLE\n");}
+      bc_tab = BC_Types + bc_table_id;
+      dist = table_distance_search(bc_tab->table, coord, 
+                                                         &slope, d_tfcn);
+      if(bc_tab->table->t_index[0] == MESH_POSITION1)
+           {
+            d_dist[0] = (coord[0]-bc_tab->table->slope[1])/dist;
+            d_dist[1] = (coord[1]-bc_tab->table->slope[2])/dist;
+           }  else  {
+            d_dist[0] = (coord[0]-bc_tab->table->slope[2])/dist;
+            d_dist[1] = (coord[1]-bc_tab->table->slope[1])/dist;
+           }
+      d_dist[2] = 0.;
+      if(dcl_node != -1)
+          {
+          nsp = match_nsid(dcl_node);
+          k = Proc_NS_List[Proc_NS_Pointers[nsp]];
+          for (j = 0; j < Proc_NS_Count[nsp]; j++)
+             {
+               k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
+               i = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1);
+               EH(i, "Could not resolve index_solution.");
+               for(a=0 ; a<dim ; a++)
+                  {
+                   point[a] = Coor[a][k] + x[i+a];
+                  }
+             }
+           dcl_dist = sqrt(SQUARE(coord[0]-point[0])
+                          +SQUARE(coord[1]-point[1])
+                          +SQUARE(coord[2]-point[2]));
+           }  else	{
+           dcl_dist = 0.;
+           WH(-1,"No DCL node for CAP_REPULSE_TABLE....\n");
+           }
+/*  modifying function for DCL  */
+           mod_factor = 1. - exp(-dcl_dist/exp_scale);
+/*  repulsion function  */
+           force = -P_rep*mod_factor/pow(dist/hscale, repexp); 
+           d_force = P_rep*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
+/*  slip velocity function function  */
+           inv_slip = -betainv*mod_factor/pow(dist/hscale, repexp); 
+           d_inv_slip = betainv*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
+
+      t_veloc[0] = t_veloc[1] = 0.;
+      for (a=0; a<ei->ielem_dim; a++)
+	{  
+         t_veloc[0] += fv->stangent[0][a]*(fv->v[a]-v_wall[a]);
+	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
+	    {
+	      var = MESH_DISPLACEMENT1 + jvar;
+	      if (pd->v[var]) 
+		{
+		  for ( j=0; j<ei->dof[var]; j++)
+                     {
+         dt_veloc_dx[0][a][jvar][j] = fv->dstangent_dx[0][a][jvar][j]*(fv->v[a]-v_wall[a]);
+                     }
+                }
+             }
+	}  
+      if( dim == 3)
+      {
+      for (a=0; a<ei->ielem_dim; a++)
+	{  
+         t_veloc[1] += fv->stangent[1][a]*(fv->v[a]-v_wall[a]);
+	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
+	    {
+	      var = MESH_DISPLACEMENT1 + jvar;
+	      if (pd->v[var]) 
+		{
+		  for ( j=0; j<ei->dof[var]; j++)
+                     {
+         dt_veloc_dx[1][a][jvar][j] = fv->dstangent_dx[1][a][jvar][j]*(fv->v[a]-v_wall[a]);
+                     }
+                }
+             }
+	}  
+      }
+
+  if (af->Assemble_Jacobian)
+    {
+      for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++)  {
+	id = (int) elem_side_bc->local_elem_node_id[i];
+	I = Proc_Elem_Connect[iconnect_ptr + id];
+	ldof  = ei->ln_to_dof[eqn][id];
+	if (Dolphin[I][VELOCITY1] > 0 ) {
+	  
+	  /* 
+	   *  Evaluate sensitivity to displacements d()/dx 
+	   */
+	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
+	    {
+	      var = MESH_DISPLACEMENT1 + jvar;
+	      if (pd->v[var]) 
+		{
+		  for ( j=0; j<ei->dof[var]; j++)
+		    {
+		      for (a=0; a<ei->ielem_dim; a++)
+			{
+			  
+			  d_cfunc[ldof][a][var][j] += (force * fv->dsnormal_dx[a][jvar][j] 
+						     + d_force * fv->snormal[a]
+						     * d_dist[jvar] * bf[var]->phi[j]
+						     )
+			    * bf[eqn]->phi[ldof]; 
+			  d_cfunc[ldof][a][var][j] +=
+                                (t_veloc[0]*inv_slip * fv->dstangent_dx[0][a][jvar][j] 
+				          + t_veloc[0]*d_inv_slip * fv->stangent[0][a]
+						     * d_dist[jvar] * bf[var]->phi[j]
+			+ inv_slip*fv->stangent[0][a]*dt_veloc_dx[0][a][jvar][j]) 
+			    * bf[eqn]->phi[ldof]; 
+			  if( dim == 3) d_cfunc[ldof][a][var][j] +=
+                                (t_veloc[1]*inv_slip * fv->dstangent_dx[1][a][jvar][j] 
+				     + t_veloc[1]*d_inv_slip * fv->stangent[1][a]
+						     * d_dist[jvar] * bf[var]->phi[j]
+			+ inv_slip*fv->stangent[1][a]*dt_veloc_dx[1][a][jvar][j]) 
+			    * bf[eqn]->phi[ldof]; 
+			  
+			}
+		    }
+		}
+	    }
+	  /* 
+	   *  Evaluate sensitivity to velocities
+	   */
+	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
+	    {
+	      var = VELOCITY1 + jvar;
+	      if (pd->v[var]) 
+		{
+		  for ( j=0; j<ei->dof[var]; j++)
+		    {
+		      for (a=0; a<ei->ielem_dim; a++)
+			{
+			  
+			  d_cfunc[ldof][a][var][j] += 
+                                   fv->stangent[0][jvar]*bf[var]->phi[j]*
+                                   inv_slip * fv->stangent[0][a]*bf[eqn]->phi[ldof]; 
+
+			  if( dim == 3) d_cfunc[ldof][a][var][j] += 
+                                   fv->stangent[1][jvar]*bf[var]->phi[j]*
+                                   inv_slip * fv->stangent[1][a]*bf[eqn]->phi[ldof]; 
+			  
+			}
+		    }
+		}
+	    }
+	}
+      }
+    }
+  
+  eqn = VELOCITY1;
+  for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++)  {
+    id = (int) elem_side_bc->local_elem_node_id[i];
+    I = Proc_Elem_Connect[iconnect_ptr + id];
+    ldof  = ei->ln_to_dof[eqn][id];
+    if (Dolphin[I][VELOCITY1] > 0 ) {
+      
+      for (a=0; a<ei->ielem_dim; a++)
+	{  
+	  cfunc[ldof][a] += force * fv->snormal[a] * bf[eqn]->phi[ldof]; 
+	  cfunc[ldof][a] += inv_slip * fv->stangent[0][a]*t_veloc[0]*bf[eqn]->phi[ldof]; 
+	}
+      if( dim == 3)
+      {
+      for (a=0; a<ei->ielem_dim; a++)
+	{  
+	  cfunc[ldof][a] += inv_slip * fv->stangent[1][a]*t_veloc[1]*bf[eqn]->phi[ldof]; 
+	}
+      }
+    }
+    
+  } /* end of for (i = 0; i < (int) elem_side_bc->num_nodes_on_side */
+
+} /* END of routine apply_repulsion_user                                          */
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
@@ -7254,9 +7695,9 @@ void fapply_moving_CA_sinh(
   double drhs_ddpj, drhs_den_ddpj, drhs_num_ddpj, dveloc0_ddpj;
   double theta_max = 0.0, costhetamax = 0.0, sinthetamax = 0.0, dewet = 0.0;
   const double shik_max_factor = 1.01;
-  const double wall_sign = (TimeIntegration == STEADY) ? 1 : -1;  
-/* disabling this sign change for now - doesn't seem necessary
-  const double wall_sign = (TimeIntegration == STEADY) ? 1 : 1;  */
+/*  const double wall_sign = (TimeIntegration == STEADY) ? 1 : -1;  */
+/* disabling this sign change for now - doesn't seem necessary*/
+  const double wall_sign = (TimeIntegration == STEADY) ? 1 : 1;  
 
 
   /*

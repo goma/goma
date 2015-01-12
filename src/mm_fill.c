@@ -321,8 +321,7 @@ matrix_fill(
   static int CA_id[MAX_CA];            /*  array of CA conditions */
   static int CA_fselem[MAX_CA];        /*  array of CA free surface elements  */
   static int CA_sselem[MAX_CA];        /*  array of CA solid surface elements */
-  static int Num_CAs;
-  int Num_CAs_done;
+  static int CA_proc[MAX_CA];          /*  Processor which has each CA */
 
   int mn;                     /* material block counter */
   int err;		      /* temp variable to hold diagnostic flags.      */
@@ -442,7 +441,6 @@ matrix_fill(
   }
   
 
-  
   /******************************************************************************/
   /*                                BLOCK 1                                     */
   /*          LOOP OVER THE ELEMENTS DEFINED ON THE CURRENT PROCESSOR           */
@@ -491,7 +489,11 @@ matrix_fill(
   if ((zeroCA == 1) || ((Linear_Solver != FRONT && ielem == exo->eb_ptr[0]) ||
 			(Linear_Solver == FRONT && ielem == exo->elem_order_map[0]-1)))
     {
-      Num_CAs = 0;
+      int nsp, nspk, count=-1;
+      memset( CA_fselem, -1, sizeof(int)*MAX_CA);
+      memset( CA_sselem, -1, sizeof(int)*MAX_CA);
+      memset( CA_id, -1, sizeof(int)*MAX_CA);
+      memset( CA_proc, -1, sizeof(int)*MAX_CA);
       for (j = 0;j < Num_BC;j++)
 	{
 	  switch (BC_Types[j].BC_Name)
@@ -502,15 +504,15 @@ matrix_fill(
 	    case VELO_THETA_TPL_BC:
 	    case VELO_THETA_COX_BC:
 	    case VELO_THETA_SHIK_BC:
-	      Num_CAs++;
+                 nsp = match_nsid(BC_Types[j].BC_ID);
+                 nspk = Proc_NS_List[Proc_NS_Pointers[nsp]];
+                 if(nsp != -1 && Nodes[nspk]->Proc == ProcID)
+                     {
+                       count++;
+                       CA_proc[count] = ProcID;
+                     }
 	      break;
 	    }
-	}
-      for (j = 0; j < MAX_CA; j++)
-	{
-	  CA_fselem[j] = -1;
-	  CA_sselem[j] = -1;
-	  CA_id[j]     = -1;
 	}
 
       /*
@@ -2967,13 +2969,14 @@ matrix_fill(
       || (Linear_Solver == FRONT && ielem == exo->elem_order_map[exo->num_elem_blocks]-1))
     {
       if (zeroCA == 0) {
-	Num_CAs_done = 0;
+        int count = 0, Num_CAs_done = 0;
 	for (j = 0;j < MAX_CA;j++)
 	  {
 	    if (CA_id[j] == -2) Num_CAs_done++;
+	    if (CA_proc[j] == ProcID) count++;
 	  }
 	
-	if (Num_CAs != Num_CAs_done)
+	if (count != Num_CAs_done)
 	  {
 	    WH(-1,"Not all contact angle conditions were applied!\n");
 	  }

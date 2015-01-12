@@ -929,6 +929,8 @@ apply_integrated_bc(
 	case CAPILLARY_BC:
 	case CAP_REPULSE_BC:
 	case CAP_REPULSE_ROLL_BC:
+	case CAP_REPULSE_USER_BC:
+	case CAP_REPULSE_TABLE_BC:
 	case CAP_RECOIL_PRESS_BC:
 	case CAPILLARY_SHEAR_VISC_BC:
 	case CAPILLARY_TABLE_BC:
@@ -974,6 +976,28 @@ apply_integrated_bc(
                                bc->BC_Data_Float[10], 
                                bc->BC_Data_Float[11], 
                                bc->BC_Data_Float[12], 
+			      elem_side_bc, iconnect_ptr);
+	    }
+	    if (bc->BC_Name == CAP_REPULSE_USER_BC) {
+	      apply_repulsion_user(cfunc, d_cfunc, bc->BC_Data_Float[0], 
+                               bc->BC_Data_Float[1], 
+			       &(bc->BC_Data_Float[2]),
+			       &(bc->BC_Data_Float[5]),
+                               bc->BC_Data_Float[8], 
+                               bc->BC_Data_Float[9], 
+                               bc->BC_Data_Float[10], 
+                               bc->BC_Data_Float[11], 
+                               bc->BC_Data_Float[12], 
+			      elem_side_bc, iconnect_ptr);
+	    }
+	    if (bc->BC_Name == CAP_REPULSE_TABLE_BC) {
+	      apply_repulsion_table(cfunc, d_cfunc, x, bc->BC_Data_Float[0], 
+                               bc->BC_Data_Float[1], 
+                               bc->BC_Data_Float[2], 
+                               bc->BC_Data_Float[3], 
+                               bc->BC_Data_Float[4], 
+			       &(bc->BC_Data_Float[5]),
+                               bc->BC_Data_Int[2],
 			      elem_side_bc, iconnect_ptr);
 	    }
 	    if (BC_Types[bc_input_id].BC_Name == CAP_RECOIL_PRESS_BC)
@@ -1907,6 +1931,8 @@ apply_integrated_bc(
 	  if ((BC_Types[bc_input_id].BC_Name == CAPILLARY_BC || 
 	       BC_Types[bc_input_id].BC_Name == CAP_REPULSE_BC ||
 	       BC_Types[bc_input_id].BC_Name == CAP_REPULSE_ROLL_BC ||
+	       BC_Types[bc_input_id].BC_Name == CAP_REPULSE_USER_BC ||
+	       BC_Types[bc_input_id].BC_Name == CAP_REPULSE_TABLE_BC ||
 	       BC_Types[bc_input_id].BC_Name == CAP_RECOIL_PRESS_BC ||
 	       BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC ||
 	       BC_Types[bc_input_id].BC_Name == ELEC_TRACTION_BC ||
@@ -1982,6 +2008,8 @@ apply_integrated_bc(
                   BC_Types[bc_input_id].BC_Name != YFLUX_USER_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_ROLL_BC &&
+		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_USER_BC &&
+		  BC_Types[bc_input_id].BC_Name != CAP_REPULSE_TABLE_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAP_RECOIL_PRESS_BC &&
 		  BC_Types[bc_input_id].BC_Name != CAPILLARY_TABLE_BC &&
 		  BC_Types[bc_input_id].BC_Name != TENSION_SHEET_BC &&

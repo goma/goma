@@ -2123,6 +2123,8 @@ find_bc_unk_offset(struct Boundary_Condition *bc, int curr_mat,
 	     bc_name == CAPILLARY_BC ||
 	     bc_name == CAP_REPULSE_BC ||
 	     bc_name == CAP_REPULSE_ROLL_BC ||
+	     bc_name == CAP_REPULSE_USER_BC ||
+	     bc_name == CAP_REPULSE_TABLE_BC ||
 	     bc_name == CAPILLARY_TABLE_BC ||
 	     bc_name == CAP_RECOIL_PRESS_BC) {
       matIndex = MIN(bc->BC_matrl_index_1, bc->BC_matrl_index_2);

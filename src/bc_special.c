@@ -250,6 +250,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 	      BC_Types[bc_input_id].BC_Name == ELEC_TRACTION_BC ||
 	      BC_Types[bc_input_id].BC_Name == CAP_REPULSE_BC ||
 	      BC_Types[bc_input_id].BC_Name == CAP_REPULSE_ROLL_BC ||
+	      BC_Types[bc_input_id].BC_Name == CAP_REPULSE_USER_BC ||
+	      BC_Types[bc_input_id].BC_Name == CAP_REPULSE_TABLE_BC ||
 	      BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC ||
 	      BC_Types[bc_input_id].BC_Name == CAP_RECOIL_PRESS_BC  ) && (bc_application == SPECIAL)) )
 	{
@@ -850,6 +852,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 		(BC_Types[bc_input_id].BC_Name == CAPILLARY_BC ||
 		 BC_Types[bc_input_id].BC_Name == CAP_REPULSE_BC ||
 		 BC_Types[bc_input_id].BC_Name == CAP_REPULSE_ROLL_BC ||
+		 BC_Types[bc_input_id].BC_Name == CAP_REPULSE_USER_BC ||
+		 BC_Types[bc_input_id].BC_Name == CAP_REPULSE_TABLE_BC ||
 		 BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC ||
 		 BC_Types[bc_input_id].BC_Name == CAP_RECOIL_PRESS_BC )) {
 	      j_bc_id = -1;
@@ -885,6 +889,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 		(BC_Types[bc_input_id].BC_Name == CAPILLARY_BC ||
 		 BC_Types[bc_input_id].BC_Name == CAP_REPULSE_BC ||
 		 BC_Types[bc_input_id].BC_Name == CAP_REPULSE_ROLL_BC ||
+		 BC_Types[bc_input_id].BC_Name == CAP_REPULSE_USER_BC ||
+		 BC_Types[bc_input_id].BC_Name == CAP_REPULSE_TABLE_BC ||
 		 BC_Types[bc_input_id].BC_Name == CAPILLARY_TABLE_BC ||
 		 BC_Types[bc_input_id].BC_Name == CAP_RECOIL_PRESS_BC)) {
 	      j_bc_id = -1;

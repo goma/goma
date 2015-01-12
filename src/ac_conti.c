@@ -987,6 +987,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
                                 pp_volume[i]->species_no,
                                 pp_volume[i]->volume_fname,
                                 pp_volume[i]->params,
+                                pp_volume[i]->num_params,
                                 NULL,  x, xdot, delta_s,
                                 path1, 1);
      		}

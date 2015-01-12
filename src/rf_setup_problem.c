@@ -1128,6 +1128,8 @@ determine_dvi_index(void)
     case CAPILLARY_BC:
     case CAPILLARY_TABLE_BC:
     case CAP_REPULSE_ROLL_BC:
+    case CAP_REPULSE_USER_BC:
+    case CAP_REPULSE_TABLE_BC:
     case CAPILLARY_SHEAR_VISC_BC:
     case LATENT_HEAT_BC:
     case YFLUX_USER_BC:

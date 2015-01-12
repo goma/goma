@@ -150,6 +150,12 @@ PROTO((struct Data_Table *,   /* table               */
        double *,              /* slope                 */
        double []));           /* gradient array         */
 
+EXTERN double table_distance_search
+PROTO((struct Data_Table *,   /* table               */
+       double [],                     /* x            */
+       double *,              /* slope                 */
+       double []));           /* gradient array         */
+
 EXTERN double interpolate_table_sat
 PROTO((struct Data_Table *,	/* table                                     */
        double [3]));	      	/* slope                                     */
