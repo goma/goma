@@ -10024,8 +10024,8 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
             }
        else
             {
-            free_rad = sqrt(SQUARE(mp->u_species_source[init_spec+1][2]*
-                       intensity*fv->c[init_spec]));
+            free_rad = sqrt(mp->u_species_source[init_spec+1][2]*
+                       intensity*fv->c[init_spec]);
             }
 
        if(w == init_spec) 
@@ -10066,8 +10066,8 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
           else
             {
             dsdC[init_spec] = -k_prop*fv->c[w]*
-                       (sqrt(mp->u_species_source[init_spec+1][2]*intensity)/
-                       sqrt(fv->c[init_spec])/2.);
+                       (sqrt(mp->u_species_source[init_spec+1][2]*intensity/
+                       fv->c[init_spec])/2.);
             }
           }
        else if(w == O2_spec && (model_bit & 1))
@@ -10107,7 +10107,9 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
             } 
           else 
             {
-            s = -k_term*SQUARE(fv->c[w]);
+	    s = mp->u_species_source[init_spec+1][2]*fv->c[init_spec]*intensity
+                  -k_term*SQUARE(fv->c[w]);
+            dsdC[init_spec] = mp->u_species_source[init_spec+1][2]*intensity;
             dsdC[rad_spec] = -k_term*free_rad*2.;
             dsdT = - SQUARE(fv->c[w])*k_term*param[2]/SQUARE(fv->T);
             }

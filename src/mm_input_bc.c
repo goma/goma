@@ -1411,6 +1411,7 @@ rd_bc_specs(FILE *ifp,
 	case BLAKE_DIRICH_ROLL_BC:
 	case HOFFMAN_DIRICH_ROLL_BC:
 	case COX_DIRICH_ROLL_BC:
+	case CAP_REPULSE_TABLE_BC:
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],   
 		      &BC_Types[ibc].BC_Data_Float[1],   
@@ -1471,112 +1472,6 @@ rd_bc_specs(FILE *ifp,
           else
             SPF(endofstring(echo_string)," %lf", BC_Types[ibc].BC_Data_Float[11]);
 
-#if 0 
-	      if ( !strcmp(BC_Types[ibc].desc->name1,"VELO_THETA_TPL") ||
-	           !strcmp(BC_Types[ibc].desc->name1,"VELO_THETA_HOFFMAN") ||
-	           !strcmp(BC_Types[ibc].desc->name1,"VELO_THETA_COX") ||
-	           !strcmp(BC_Types[ibc].desc->name1,"WETTING_SPEED_BLAKE") ||
-	           !strcmp(BC_Types[ibc].desc->name1,"WETTING_SPEED_HOFFMAN") ||
-	           !strcmp(BC_Types[ibc].desc->name1,"WETTING_SPEED_COX")
-		   )
-		{ /*sanity*/
-		  /*
-		   * Check some parameters for sanity.
-		   *
-		   */
-
-		  /*
-		   * Equilibrium contact angles shall be between 1 and 179 degrees. If you can't
-		   * fit within that range you have no business here.
-		   */
-
-		  if ( BC_Types[ibc].BC_Data_Float[0] < 1. ||
-		       BC_Types[ibc].BC_Data_Float[0] > 179. )
-		    {
-		      sr = sprintf(err_msg, "BC %s angle %g not in (1,179)",
-				   BC_Types[ibc].desc->name1, 
-				   BC_Types[ibc].BC_Data_Float[0]);
-		      EH(-1, err_msg);
-		    }
-
-		  /*
-		   * Normal vector magnitudes ought to be pretty close to 1.
-		   */
-
-		  if ( fabs( BC_Types[ibc].BC_Data_Float[1]*
-			     BC_Types[ibc].BC_Data_Float[1] +
-			     BC_Types[ibc].BC_Data_Float[2]*
-			     BC_Types[ibc].BC_Data_Float[2] +
-			     BC_Types[ibc].BC_Data_Float[3]*
-			     BC_Types[ibc].BC_Data_Float[3] - 1 ) > 1e-3)
-		    {
-		      sr = sprintf(err_msg, "BC %s ss normal (%g,%g,%g) not unit.",
-				   BC_Types[ibc].desc->name1, 
-				   BC_Types[ibc].BC_Data_Float[1],
-				   BC_Types[ibc].BC_Data_Float[2],
-				   BC_Types[ibc].BC_Data_Float[3]);
-		      WH(-1,"Will use variable wall normal for VELO_THETA_TPL" );
-		    }
-		
-		  /*
-		   * Other parameters in our Blake model should be positive...
-		   */
-
-		  if ( BC_Types[ibc].BC_Data_Float[4] < 0 )
-		    {
-		      sr = sprintf(err_msg, "BC %s preexponential %g negative.",
-				   BC_Types[ibc].desc->name1, 
-				   BC_Types[ibc].BC_Data_Float[4]);
-		      EH(-1, err_msg);
-		    }
-
-		  if ( BC_Types[ibc].BC_Data_Float[5] < 0 )
-		    {
-		      sr = sprintf(err_msg, 
-				   "BC %s thermally-scaled surface energy %g negative.",
-				   BC_Types[ibc].desc->name1, 
-				   BC_Types[ibc].BC_Data_Float[5]);
-		      EH(-1, err_msg);
-		    }
-
-		  /*
-		   * t_relax = 0 is OK; means just do it with no relaxation...
-		   */
-
-		  if ( BC_Types[ibc].BC_Data_Float[6] < 0 )
-		    {
-		      sr = sprintf(err_msg, "BC %s relaxation time %g negative.",
-				   BC_Types[ibc].desc->name1, 
-				   BC_Types[ibc].BC_Data_Float[6]);
-		      EH(-1, err_msg);
-		    }
-		  if ( BC_Types[ibc].BC_Data_Float[7] < 0 )
-		    {
-		      sr = sprintf(err_msg, "BC %s old tpl velocity %g negative.",
-				   BC_Types[ibc].desc->name1, 
-				   BC_Types[ibc].BC_Data_Float[7]);
-		      EH(-1, err_msg);
-		    }
-		}
-
-	      if ( !strcmp(BC_Types[ibc].desc->name1,"VAR_CA_EDGE"))	  
-		{
-		  /*
-		   * Normalize substrate normal vector 
-		   */
-		  dbl *norm = &BC_Types[ibc].BC_Data_Float[5];
-		  dbl mag = sqrt(SQUARE(norm[0])+SQUARE(norm[1])+SQUARE(norm[2]));
-		  if (mag == 0.0) {
-		    sprintf(err_msg,
-			    "%s: ERROR for BC %s, zero length normal vector\n",
-			    yo, BC_Types[ibc].desc->name1);
-		    EH(-1, err_msg);
-		  } else {
-		    norm[0] /= mag; norm[1] /= mag; norm[2] /= mag;
-		  }
-		}
-	    
-#endif
 	    }
 		
 	  BC_Types[ibc].BC_Data_Int[3] = ( BC_Types[ibc].BC_Name == BLAKE_DIRICH_ROLL_BC ||
@@ -1673,6 +1568,7 @@ rd_bc_specs(FILE *ifp,
 	  break;
 
 	case CAP_REPULSE_ROLL_BC:
+	case CAP_REPULSE_USER_BC:
 
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],

@@ -293,6 +293,36 @@ PROTO((double cfunc[MDE][DIM],
        struct elem_side_bc_struct *, /* elem_side_bc */
        const int ));		/* iconnect_ptr */
 
+EXTERN void apply_repulsion_user
+PROTO((double cfunc[MDE][DIM],
+       double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+       const double ,		/* surface tensionf  */
+       const double ,		/* roll radius      */
+       const double [3],		/* axis origin      */
+       const double [3],		/* direction angles      */
+       const double ,		/* repulsion length scale      */
+       const double ,		/* repulsion exponent     */
+       const double ,		/* repulsion coefficient     */
+       const double ,		/* inverse slip coefficient    */
+       const double ,		/* omega - roll rotation rate    */
+       struct elem_side_bc_struct *, /* elem_side_bc */
+       const int ));		/* iconnect_ptr */
+
+EXTERN void apply_repulsion_table
+PROTO((double cfunc[MDE][DIM],
+       double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+       double [],		/* Solution vector */
+       const double ,		/* repulsion length scale      */
+       const double ,		/* repulsion exponent     */
+       const double ,		/* repulsion coefficient     */
+       const double ,		/* inverse slip coefficient    */
+       const double ,		/* exclusion scale    */
+       const double [3],		/* wall velocity      */
+       const int ,		/* DCL node id    */
+       struct elem_side_bc_struct *, /* elem_side_bc */
+       const int ));		/* iconnect_ptr */
+
+
 EXTERN void apply_vapor_recoil
 PROTO((double cfunc[MDE][DIM],
        double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],

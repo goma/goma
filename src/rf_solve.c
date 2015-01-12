@@ -240,6 +240,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   double time2 = 0.0;
   double damp_factor_org[2]={damp_factor1,damp_factor2};
+  double toler_org[3]={custom_tol1,custom_tol2,custom_tol3};
 
   /*
    * Other local variables...
@@ -1093,6 +1094,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 				   pp_volume[i]->species_no,
 				   pp_volume[i]->volume_fname,
 				   pp_volume[i]->params,
+				   pp_volume[i]->num_params,
 				   NULL,  x, xdot, delta_t,
 				   time1, 1);
 	}
@@ -2241,6 +2243,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
               {
                damp_factor2 = damp_factor_org[1];
                damp_factor1 = damp_factor_org[0];
+               custom_tol1 = toler_org[0];
+               custom_tol2 = toler_org[1];
+               custom_tol3 = toler_org[2];
               }
       }
 #endif
@@ -2301,20 +2306,23 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
           failed_recently_countdown--;
 	} else if (delta_t_new > Delta_t_max) {
 	  delta_t_new = Delta_t_max;
-        } else if ( !success_dt && delta_t_new < tran->resolved_delta_t_min ) {
-          if ( delta_t > tran->resolved_delta_t_min ) {
+/*        } else if ( !success_dt && delta_t_new < tran->resolved_delta_t_min ) {*/
+        } else if ( delta_t_new < tran->resolved_delta_t_min ) {
+/*          if ( delta_t > tran->resolved_delta_t_min ) {  */
             /* fool algorithm into using delta_t = tran->resolved_delta_t_min */
-            delta_t = tran->resolved_delta_t_min;
-            delta_t /= tran->time_step_decelerator;
+            delta_t_new = tran->resolved_delta_t_min;
+	    success_dt  = TRUE;
+	DPRINTF(stderr,"\n\tminimum resolved step limit!\n");
+       /*     if(!success_dt)delta_t /= tran->time_step_decelerator;
 	    tran->delta_t  = delta_t;
 	    tran->delta_t_avg = 0.25*(delta_t+delta_t_old+delta_t_older
-					+delta_t_oldest);
-          } else {
-            /* accept any converged solution with
-               delta_t <= tran->resolved_delta_t_min */
+					+delta_t_oldest);  */
+/*          } else {
+             accept any converged solution with
+               delta_t <= tran->resolved_delta_t_min 
             success_dt = TRUE;
             delta_t_new = delta_t;
-          }
+          }  */
         }
         
         if ( ls != NULL && tran->Courant_Limit != 0. ) {
@@ -2787,6 +2795,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
  				     pp_volume[i]->species_no,
  				     pp_volume[i]->volume_fname,
  				     pp_volume[i]->params,
+ 				     pp_volume[i]->num_params,
  				     NULL, x, xdot, delta_t, time, 1);
  	  }
 
@@ -2814,18 +2823,56 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       {
 /* Set bit TRUE in next line to enable retries for failed first timestep*/
         if(relax_bit && nt == 0 && n < 15) {
-        DPRINTF(stderr,"\nHmm... could not converge on first step\n Let's try some more iterations\n");
              if(inewton == -1)        {
-                       damp_factor1 *= 0.5;
+ 	DPRINTF(stderr,"\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
+                  if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
+                     (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
+                     (damp_factor3 <= 1. && damp_factor3 >= 0.))
+                      {
+                         custom_tol1 *= 0.01;
+                         custom_tol2 *= 0.01;
+                         custom_tol3 *= 0.01;
+                         DPRINTF(stderr,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
+                      }
+                   else
+                      {
+                         damp_factor1 *= 0.5;
+                         DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
+                      }
                   }   else  {
-                       damp_factor1 *= 2.0;
-                     damp_factor1 = MIN(damp_factor1,1.0);
-                     dcopy1(numProcUnknowns, x,x_old);
-                       if (nAC > 0) {
-                                 dcopy1(nAC, x_AC,       x_AC_old);
-                                 }
-                  }
-        DPRINTF(stderr,"\tdamping factor %g \n",damp_factor1);
+        DPRINTF(stderr,"\nHmm... could not converge on first step\n Let's try some more iterations\n");
+                    dcopy1(numProcUnknowns, x,x_old);
+                    if (nAC > 0) { dcopy1(nAC, x_AC,       x_AC_old); }
+                    if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
+                       (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
+                       (damp_factor3 <= 1. && damp_factor3 >= 0.))
+                       {
+                          custom_tol1 *= 100.;
+                          custom_tol2 *= 100.;
+                          custom_tol3 *= 100.;
+                          DPRINTF(stderr,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
+                       }
+                    else
+                       {
+                          damp_factor1 *= 2.0;
+                          damp_factor1 = MIN(damp_factor1,1.0);
+                          DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
+                       }
+                   }
+           } else if(delta_t < tran->resolved_delta_t_min/tran->time_step_decelerator)
+                   {
+	DPRINTF(stderr,"\n\tminimum resolved step limit!\n");
+	delta_t_oldest = delta_t_older;
+	delta_t_older  = delta_t_old;
+	delta_t_old    = delta_t;
+        tran->delta_t_old = delta_t_old;
+        tran->time_value_old = time;
+	delta_t = tran->resolved_delta_t_min;
+	tran->delta_t  = delta_t;
+	tran->delta_t_avg = 0.25*(delta_t+delta_t_old+delta_t_older
+					+delta_t_oldest);
+	time1 = time + delta_t;
+        tran->time_value = time1;   
            } else  {
 	DPRINTF(stderr,"\n\tlast time step failed, dt *= %g for next try!\n",
 		tran->time_step_decelerator);

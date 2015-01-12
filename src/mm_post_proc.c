@@ -1445,10 +1445,29 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   } /* end of LIGHT_INTENSITY */
 
   if (NON_VOLFRAC != -1 && pd->e[R_MASS]  ) {
+      double density_tot=0.;
       local_post[NON_VOLFRAC] = 1.0;
+      density_tot = calc_density(mp, FALSE, NULL, 0.0);
+      switch(mp->Species_Var_Type)   {
+      case SPECIES_CONCENTRATION:
 	for (j=0 ; j < pd->Num_Species_Eqn ; j++)	{
       		local_post[NON_VOLFRAC] -= fv->c[j]*mp->molar_volume[j];
 		}
+        break;
+      case SPECIES_DENSITY:
+	for (j=0 ; j < pd->Num_Species_Eqn ; j++)	{
+      		local_post[NON_VOLFRAC] -= fv->c[j]*mp->specific_volume[j];
+		}
+        break;
+      case SPECIES_MASS_FRACTION:
+      case SPECIES_UNDEFINED_FORM:
+	for (j=0 ; j < pd->Num_Species_Eqn ; j++)	{
+      		local_post[NON_VOLFRAC] -= density_tot*fv->c[j]*mp->specific_volume[j];
+		}
+        break;
+      default:
+        WH(-1,"Undefined Species Type in NON_VOLFRAC\n");
+      }
       local_lumped[NON_VOLFRAC] = 1.0;
   } /* end of NON_VOLFRAC*/
 
@@ -7358,8 +7377,8 @@ rd_post_process_specs(FILE *ifp,
 
 	  if ( nargs == 0 )
 	    {
-	      EH(-1,"Found zero arguments for the Flux Sens file name");
-	    }
+              EH(-1,"Found zero arguments for the Flux Sens file name");
+            }
 
 	  strcpy(pp_volume[i]->volume_fname, second_string);
 

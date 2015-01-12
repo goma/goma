@@ -5398,6 +5398,14 @@ rd_ac_specs(FILE *ifp,
  		  EH(-1,"Error in reading ACOUSTIC_FLUX augmenting condition");
  		}
  	    }
+ 	  else if ( strcmp( input, "REPULSIVE_FORCE" ) == 0 )
+ 	    {
+ 	      augc[iAC].MFID = REPULSIVE_FORCE ;
+ 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
+ 		{
+ 		  EH(-1,"Error in reading REPULSIVE_FORCE augmenting condition");
+ 		}
+ 	    }
 	  else if ( strcmp( input, "SPECIES_FLUX_REVOLUTION" ) == 0 )
 	    {
 	      augc[iAC].MFID = SPECIES_FLUX_REVOLUTION ;

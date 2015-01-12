@@ -1692,6 +1692,7 @@ gradient_norm_err( double *x,
 				      0,
 				      NULL,
 				      &params,
+				      1,
 				      NULL,
 				      x,
 				      x,
@@ -1708,6 +1709,7 @@ gradient_norm_err( double *x,
 				      0,
 				      NULL,
 				      &params,
+				      1,
 				      NULL,
 				      x,
 				      x,
@@ -3642,6 +3644,7 @@ find_LS_mass ( const Exo_DB *exo,
 {
   double M = 0.0;
   int eb, blk_id;
+  int num_params = params == NULL ? 0 : 1;
 
   if ( dC != NULL)
     {
@@ -3664,6 +3667,7 @@ find_LS_mass ( const Exo_DB *exo,
 				      0,
 				      NULL,
 				      params,
+				      num_params,
 				      dC,
 				      x,
 				      x,
@@ -3749,6 +3753,7 @@ find_LS_vel(const Exo_DB *exo,
 {
   double Vel, Vol;
   int eb, blk_id, mn, phase;
+  int num_params = params == NULL ? 0 : 1;
 
   if ( chosen_vel == I_NEG_VX || chosen_vel == I_NEG_VY || chosen_vel == I_NEG_VZ )
     phase = I_NEG_FILL;
@@ -3772,6 +3777,7 @@ find_LS_vel(const Exo_DB *exo,
 					  0,
 					  NULL,
 					  params,
+                                          num_params,
 					  NULL,
 					  x,
 					  x,
@@ -3786,6 +3792,7 @@ find_LS_vel(const Exo_DB *exo,
 					  0,
 					  NULL,
 					  params,
+                                          num_params,
 					  NULL,
 					  x,
 					  x,

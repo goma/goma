@@ -469,11 +469,26 @@ ns_data_print(pp_Data * p,
           }
         else if ( strncasecmp(qtity_str, "nonvolatile", 11 ) == 0 )
           {
+            double density_tot=0.;
             ordinate = 1.0;
+            density_tot = calc_density(mp_glob[mat_num], FALSE, NULL, 0.0);
 	    for(wspec = 0 ; wspec < pd->Num_Species_Eqn ; wspec++)
 		{
             	id_var = Index_Solution(node, MASS_FRACTION, wspec, 0, mat_num);
+            switch(mp_glob[mat_num]->Species_Var_Type)   {
+               case SPECIES_CONCENTRATION:
             	ordinate -= x[id_var]*mp_glob[mat_num]->molar_volume[wspec];
+               break;
+               case SPECIES_DENSITY:
+            	ordinate -= x[id_var]*mp_glob[mat_num]->specific_volume[wspec];
+               break;
+               case SPECIES_MASS_FRACTION:
+               case SPECIES_UNDEFINED_FORM:
+            	ordinate -= density_tot*x[id_var]*mp_glob[mat_num]->specific_volume[wspec];
+               break;
+               default:
+                    WH(-1,"Undefined Species Type in nonvolatile\n");
+               }
 		}
             iprint = 1;
           }
