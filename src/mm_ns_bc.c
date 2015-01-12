@@ -99,6 +99,7 @@ static char rcsid[] =
 *  apply_repulsion                      void
 *  apply_vapor_recoil                   void
 *  flow_n_dot_T_hydro                   void
+*  flow_n_dot_T_var_density             void
 *  hydrostatic_n_dot_T                  void
 *  flow_n_dot_T_nobc                    void
 *  flow_n_dot_T_gradv                   void
@@ -5753,6 +5754,93 @@ flow_n_dot_T_hydro(double func[DIM],
     func[p] = -press * fv->snormal[p];
   }
 } /* END of routine flow_n_dot_T_hydro                                       */
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+
+
+void
+flow_n_dot_T_var_density(double func[DIM],
+		   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+		   const double a,      /* 1 param describing reference pressure*/
+		       double time)     /* Time is required for density and momentum_source_term*/
+    
+    /************************************************************************
+     *
+     * flow_n_dot_T_var_density()
+     *
+     *  Function which calculates the contribution to a the normal stress
+     *  from a specified pressure along an interface.
+     *  The specified pressure is: 
+     *                   P = P_0 + rho*g*x
+     *  where the user specifies P_0, rho is density, and g is taken from
+     *  momentum_source_term.
+     *     Specifically, this function returns :
+     *
+     *                   func[p] = - Pressure * Surface_Normal_dot_dir[p]
+     *
+     *  The Jacobian dependence of func[p] wrt to the mesh displacement, temp,
+     *  and concentration unknowns are returned in d_func[p][var_type][j].
+     ************************************************************************/
+{
+  int j, var, p, jvar, k, w;
+  double press, rho, f[DIM], f_dot_x;
+  DENSITY_DEPENDENCE_STRUCT d_rho_struct;
+  DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+  MOMENTUM_SOURCE_DEPENDENCE_STRUCT df_struct;  /* Body force dependence */
+  MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df = &df_struct;
+
+  rho = density(d_rho, time);                    //Density
+  (void) momentum_source_term(f, df, time);      //Momentum source term for gravity vector
+
+
+  if (af->Assemble_LSA_Mass_Matrix)
+      return;
+
+  if (af->Assemble_Jacobian) {
+    press = rho*(f[0]*fv->x[0] + f[1]*fv->x[1] + f[2]*fv->x[2]) + a;
+    for (jvar = 0; jvar < ei->ielem_dim; jvar++) {
+      var = MESH_DISPLACEMENT1 + jvar;                                             //Jacobian wrt mesh displacement
+      if (pd->v[var]) {
+	for (j = 0; j < ei->dof[var]; j++) {
+	  for (p = 0; p < pd->Num_Dim; p++) {
+            d_func[p][var][j] -= rho*f[jvar]*bf[var]->phi[j]*fv->snormal[p];       //dx term
+	    for (k = 0; k < pd->Num_Dim; k++){
+	      d_func[p][var][j] -= rho*df->X[k][jvar][j]*fv->x[k]*fv->snormal[p];  //df term, should be zero if f=gravity
+	    }
+	    d_func[p][var][j] -= press * fv->dsnormal_dx[p][jvar][j];              //dn term
+	  }
+	}
+      }
+    }
+
+    f_dot_x = f[0]*fv->x[0] + f[1]*fv->x[1] + f[2]*fv->x[2];
+
+    var = TEMPERATURE;                                                             //Jacobian wrt TEMPERATURE
+    for (j = 0; j < ei->dof[var]; j++){
+      for (p = 0; p < pd->Num_Dim; p++){
+	d_func[p][var][j] -= d_rho->T[j] *f_dot_x*fv->snormal[p];
+      }
+    }
+
+    var = MASS_FRACTION;                                                           //Jacobian wrt concentration
+    for (j = 0; j < ei->dof[var]; j++){
+      for (p = 0; p < pd->Num_Dim; p++){
+	for (w=0; w<pd->Num_Species; w++){
+	  d_func[p][MAX_VARIABLE_TYPES+w][j] -= d_rho->C[w][j] *f_dot_x*fv->snormal[p];
+	}
+      }
+    }
+  }
+
+  /*
+   * Calculate the pressure at current gauss point
+   */ 
+  press = rho *(f[0]*fv->x[0] + f[1]*fv->x[1] + f[2]*fv->x[2]) + a;
+  for (p = 0; p < pd->Num_Dim; p++) {
+    func[p] = -press * fv->snormal[p];
+  }
+} /* END of routine flow_n_dot_T_var_density                                       */
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
@@ -13851,7 +13939,7 @@ qside_light_jump(double func[DIM],
   
   int j_id;
   int var;
-  double phi_j,R_inv;
+  double phi_j,R_inv = 0;
   double sign_int = 0;
   
 /***************************** EXECUTION BEGINS *******************************/
