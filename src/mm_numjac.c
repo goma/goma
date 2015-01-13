@@ -518,7 +518,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
       }
 
       if ( xfem != NULL )
-        check_xfem_contribution( ams->npu, ams->bindx, ams->val, resid_vector_1, x_1, exo );
+        check_xfem_contribution( ams->npu, ams, resid_vector_1, x_1, exo );
     
       /*
        * Free memory allocated above

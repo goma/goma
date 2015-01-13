@@ -70,7 +70,6 @@
 
 int
 apply_integrated_curve_bc(
- struct Aztec_Linear_Solver_System *ams, 
  double x[],			/* Solution vector for the current processor */
  double resid_vector[],		/* Residual vector for the current processor */
  const double delta_t,		/* current time step size                    */
@@ -634,7 +633,6 @@ apply_integrated_curve_bc(
 
 int
 apply_point_colloc_edge_bc (
-     struct Aztec_Linear_Solver_System *ams,    
      double x[],              /* Solution vector for the current processor    */
      double x_old[],          /* Solution vector at the previous timeon current proc */
      double x_older[],        /* Solution vector for the previous, provious time on current proc*/

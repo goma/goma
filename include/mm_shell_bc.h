@@ -81,8 +81,6 @@ PROTO((int ,			/* id - local element node number for the
        int ,			/* I - Global node number                    */
        int ,			/* ielem_dim - physical dimension of element,
 				 * ie., 1, 2, 3                              */
-       int [],			/* ija - column pointer array                */
-       double [],		/* a - nonzero array                         */
        double [],		/* resid_vector - Residual vector NO DUH!    */
        int ,			/* i_mat_lubp     */
        int ,			/* i_mat_filmp    */

@@ -51,6 +51,7 @@
 #include "Epetra_CrsMatrix.h"
 #include "Epetra_LinearProblem.h"
 #include "Amesos.h"
+#include "Amesos_ConfigDefs.h"
 
 #include "sl_util_structs.h"
 
@@ -142,6 +143,95 @@ amesos_solve_msr( char *choice,
   /* Cleanup problem */
   FirstRun = 0;
 }
+
+/**
+ * Solve linear system using amesos using epetra  (C interface)
+ * A x = b
+ * @param choice Amesos solver choice
+ * @param ams ams containing Row Matrix for A
+ * @param x_ array of values for solution to be put in (containing initial guess)
+ * @param resid_vector array representing residual vector (b)
+ * @return 0 on success
+ */
+int amesos_solve_epetra( char *choice,
+                     struct Aztec_Linear_Solver_System *ams,
+                  double *x_,
+                  double *resid_vector) {
+
+  /* Initialize MPI communications */
+#ifdef EPETRA_MPI
+  Epetra_MpiComm comm(MPI_COMM_WORLD);
+#else
+  Epetra_SerialComm comm;
+#endif
+  Epetra_RowMatrix *A = ams->RowMatrix;
+  static Epetra_LinearProblem Problem;
+  static Amesos_BaseSolver *Solver;
+  static Amesos A_Factory;
+  std::string Pkg_Name;
+  static bool firstSolve = true;
+
+  const Epetra_Map &map = (*A).RowMatrixRowMap();
+
+  Epetra_Vector x(Copy, map, x_);
+  Epetra_Vector b(Copy, map, resid_vector);
+
+  std::string Pkg_Choice  = choice;
+
+  if (Pkg_Choice == "UMF")
+    Pkg_Name = "Amesos_Umfpack";
+  else if (Pkg_Choice == "KLU")
+    Pkg_Name = "Amesos_Klu";
+  else if (Pkg_Choice == "LAPACK")
+    Pkg_Name = "Amesos_Lapack";
+  else if (Pkg_Choice == "SUPERLU")
+    Pkg_Name = "Amesos_Superludist";
+  else if (Pkg_Choice == "SUPERLU_PARALLEL")
+    Pkg_Name = "Amesos_Superludist";
+  else if (Pkg_Choice == "SCALAPACK")
+    Pkg_Name = "Amesos_Scalapack";
+  else if (Pkg_Choice == "MUMPS")
+    Pkg_Name = "Amesos_Mumps";
+  else {
+    std::cout << "Error: Unsupport Amesos solver package" << std::endl;
+    exit(-1);
+  }
+
+  /* Assemble linear problem */
+  Problem.SetOperator(A);
+  Problem.SetLHS(&x);
+  Problem.SetRHS(&b);
+
+  AMESOS_CHK_ERR(Problem.CheckInput())
+
+  /* Create Amesos base package */
+  if (firstSolve) {
+
+    Solver = A_Factory.Create(Pkg_Name.c_str(), Problem);
+    if (Solver == 0) {
+      std::cout << "Error in amesos_solve_epetra" << std::endl;
+      std::cout << "It is likely that the solver package: " << Pkg_Name
+          << " has not been linked into the amesos library " << std::endl;
+      exit(-1);
+    }
+
+    /* Solve problem */
+    Solver->SymbolicFactorization();
+  }
+  Solver->NumericFactorization();
+  Solver->Solve();
+
+  /* Convert solution vector */
+  int NumMyRows = map.NumMyElements();
+  for(int i=0; i< NumMyRows; i++) {
+    x_[i] = x[i];
+  }
+
+  /* Success! */
+  firstSolve = false;
+  return 0;
+}
+
 
 static void GomaMsr2EpetraCsr ( struct Aztec_Linear_Solver_System *ams,
 				Epetra_CrsMatrix *A )

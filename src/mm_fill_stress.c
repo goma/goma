@@ -4899,9 +4899,7 @@ load_neighbor_pointers( Exo_DB *exo,
 	}
       }
     }
-  }
-
-  if (strcmp( Matrix_Format, "vbr") == 0) {
+  } else if (strcmp( Matrix_Format, "vbr") == 0) {
     rpntr = ams->rpntr;
     bpntr = ams->bpntr;
     bindx = ams->bindx;
@@ -4938,6 +4936,8 @@ load_neighbor_pointers( Exo_DB *exo,
 	}
       }
     }
+  } else if (strcmp( Matrix_Format, "epetra") == 0) {
+    EH(-1, "load_neighbor_pointers unsupported by epetra");
   }
 }
 /***************************************************************************/

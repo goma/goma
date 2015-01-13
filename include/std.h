@@ -34,8 +34,13 @@
 #define HAVE_SPARSE 1
 #define HAVE_UMFPACK 1
 #define HAVE_AZTEC 1
-#define HAVE_BLAS 1
-#define HAVE_LAPACK 1
+/* Trilinos now seems to define these */
+#ifndef HAVE_BLAS
+  #define HAVE_BLAS 1
+#endif
+#ifndef HAVE_LAPACK
+  #define HAVE_LAPACK 1
+#endif
 #define HAVE_Y12M 1
 
 #ifdef EIGEN_SERIAL
@@ -439,8 +444,9 @@ typedef	double	dbl;
 /*
  * A boolean type named bool
  */
-
+#ifndef __cplusplus
 typedef unsigned int bool;
+#endif
 
 enum datatype 
 {

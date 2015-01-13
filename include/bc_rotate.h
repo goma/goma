@@ -26,9 +26,7 @@
 #endif
 
 EXTERN int apply_rotated_bc
-PROTO((int [],			/* ija - column indeces for nonzero a entries*/
-       double [],		/* a - non-zero matrix entries               */
-       double [],		/* resid_vector                              */
+PROTO((double [],		/* resid_vector                              */
        struct elem_side_bc_struct *[], /* first_elem_side_BC_array
 					* An array of pointers to the first 
 					* surface integral defined for each 

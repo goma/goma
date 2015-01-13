@@ -69,10 +69,7 @@
 #include "goma.h"
 
 int
-apply_integrated_bc(
-		    int    ija[],         /* Vector of integer pointers into the vector a */
-		    double a[],           /* Jacobian */
-		    double x[],           /* Solution vector for the current processor    */
+apply_integrated_bc(double x[],           /* Solution vector for the current processor    */
 		    double resid_vector[],/* Residual vector for the current processor    */
 		    const double delta_t, /* current time step size                       */
 		    const double theta,	/* parameter (0 to 1) to vary time integration

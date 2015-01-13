@@ -61,6 +61,7 @@ int dup_blks_list[MAX_MAT_PER_SS+1];
 #define _BC_ROTATE_C
 #include "goma.h"
 
+#include "sl_epetra_interface.h"
 
 
 /*********** R O U T I N E S   I N   T H I S   F I L E *************************
@@ -76,8 +77,6 @@ int dup_blks_list[MAX_MAT_PER_SS+1];
 /*ARGSUSED*/
 int
 apply_rotated_bc (
-     int ija[],               /* Vector of integer pointers into the vector a      */
-     double a[],              /* Vector of non-zero entries in the coefficient matrix */
      double resid_vector[],   /* Residual vector for the current processor         */
      struct elem_side_bc_struct *first_elem_side_BC_array[],
                               /* An array of pointers to the first surface integral defined
@@ -867,7 +866,43 @@ rotate_mesh_eqn (
 		}
 	      }
 	    }  
-	  } else {
+	  } else if (strcmp(Matrix_Format, "epetra") == 0) {
+            /*
+             * Find the global equation number
+             */
+            if ((index_eqn = Index_Solution(I, eqn, 0, 0, -2)) == -1) {
+              EH(-1, "Cant find eqn index");
+            }
+            /*
+             * Loop over the nodes that determine the value of the
+             * current rotation vector, J is the global node number
+             */
+            for (j = 0; j < rot->d_vector_n; j++ )  {
+              double sum_val;
+              int global_row;
+              int global_col;
+
+              J = rot->d_vector_J[j];
+              if (Dolphin[I][MESH_DISPLACEMENT1] > 0  &&
+                  Dolphin[J][MESH_DISPLACEMENT1] > 0 ) {
+                /*
+                 * find entry in global matrix - note that the sensitivities of the
+                 * rotation vector may be in a different element than the current
+                 * element
+                 */
+                if ((index_var = Index_Solution(J, var, 0, 0, -2)) != -1) {
+                  sum_val = 0;
+                  for (ldir = 0; ldir < dim; ldir++) {
+                    sum_val +=
+                        rot->d_vector_dx[ldir][b][j] * lec->R[peqn_mesh[ldir]][id];
+                  }
+                  global_row = ams->GlobalIDs[index_eqn];
+                  global_col = ams->GlobalIDs[index_var];
+                  EpetraSumIntoGlobalRowMatrix(ams->RowMatrix, global_row, 1, &sum_val, &global_col);
+                }
+              }
+            }
+          } else {
 	    /* FRONTAL SOLVER SECTION:
 	     *
 	     * This loop adds only a portion of the rotation vector sensitivities 
@@ -1181,6 +1216,44 @@ rotate_momentum_eqn (
 		    }
 			  
 		}
+	      else if (strcmp(Matrix_Format, "epetra") == 0) {
+	        // Direct translation from MSR
+                for (j = 0; j < rotation[I][eq][kdir]->d_vector_n; j++) {
+                  double sum_val;
+                  int global_row;
+                  int global_col;
+                  int ktype, ndof, index_eqn, index_var;
+                  J = rotation[I][eq][kdir]->d_vector_J[j];
+                  if (Dolphin[I][R_MOMENTUM1] > 0
+                      && Dolphin[J][MESH_DISPLACEMENT1] > 0) {
+                    /* find entry in global matrix - note that the sensitivities of the
+                     * rotation vector may be in a different element than the current
+                     * element */
+                    ktype = 0;
+                    ndof = 0;
+                    if ((index_eqn = Index_Solution(I, eqn, ktype, ndof, -2))
+                        == -1) {
+                      EH(-1, "Cant find eqn index");
+                    }
+                    if ((index_var = Index_Solution(J, var, ktype, ndof, -2))
+                        == -1) {
+                      EH(-1, "Cant find var index");
+                    }
+
+                    /* !!!!!!!!!!!!!!!!! Warning !!!!!!!!!!!!!!!!! */
+                    /* I need to fix this direct injection into a, but it isn't clear how. */
+                    sum_val = 0;
+
+                    for (ldir = 0; ldir < dim; ldir++) {
+                      sum_val += rotation[I][eq][kdir]->d_vector_dx[ldir][b][j]
+                          * lec->R[upd->ep[R_MESH1 + ldir]][id];
+                    }
+                    global_row = ams->GlobalIDs[index_eqn];
+                    global_col = ams->GlobalIDs[index_var];
+                    EpetraSumIntoGlobalRowMatrix(ams->RowMatrix, global_row, 1, &sum_val, &global_col);
+                  } /* end of Baby_dolphin */
+                }
+	      }
 	      else
 		{
 		  /* 

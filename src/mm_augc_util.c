@@ -1933,9 +1933,7 @@ overlap_aug_cond ( int ija[],
                     }
 
     /* Now fill in all gAC, bAC, and cAC terms for this side */
-                  err = apply_contact_bc ( ija,
-					   a,
-					   x,
+                  err = apply_contact_bc ( x,
 					   mf_args->resid,
 					   *mf_args->delta_t,
 					   *mf_args->theta_,
@@ -2062,9 +2060,7 @@ overlap_aug_cond ( int ija[],
 
                 if (call_contact)
                   {
-                    err = apply_contact_bc ( ija,
-                                               a,
-                                               x,
+                    err = apply_contact_bc (   x,
                                                mf_args->resid,
                                               *mf_args->delta_t,
                                               *mf_args->theta_,
