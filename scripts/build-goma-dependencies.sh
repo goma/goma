@@ -2,6 +2,10 @@
 #
 # Goma dependency build script
 #
+# 2014, July: Created by Cory Miner based off of notes by Scott Roberts
+# 2014: Weston Ortiz modified to include blacs, scalapack and mumps support in trilinos
+# 2015, February: Andrew Cochrane modified to handle recent changes to SEACAS-latest and hdf5, also added some logic to help with troubleshooting
+
 # This script tries to build all of the libraries needed for goma
 # in the specified directories.
 #
@@ -75,7 +79,7 @@ ARCHIVE_NAMES=("AMD-2.2.4.tar.gz" \
 "patch.tar.gz" \
 "blas.tgz" \
 "cmake-2.8.12.2.tar.gz" \
-"hdf5-1.8.13.tar.gz" \
+"hdf5-1.8.14.tar.gz" \
 "lapack-3.2.1.tgz" \
 "netcdf-4.3.2.tar.gz" \
 "openmpi-1.6.4.tar.gz" \
@@ -95,7 +99,7 @@ ARCHIVE_MD5SUMS=("31943ff81859eb42d695d8a34d5b4201" \
 "14830d758f195f272b8594a493501fa2" \
 "5e99e975f7a1e3ea6abcad7c6e7e42e6" \
 "17c6513483d23590cbce6957ec6d1e66" \
-"c03426e9e77d7766944654280b467289" \
+"a482686e733514a51cde12d6fe5c5d95" \
 "a3202a4f9e2f15ffd05d15dab4ac7857" \
 "2fd2365e1fe9685368cd6ab0ada532a0" \
 "70aa9b6271d904c6b337ca326e6613d1" \
@@ -115,12 +119,12 @@ ARCHIVE_URLS=("http://www.cise.ufl.edu/research/sparse/amd/AMD-2.2.4.tar.gz" \
 "http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
 "http://www.netlib.org/blas/blas.tgz" \
 "http://www.cmake.org/files/v2.8/cmake-2.8.12.2.tar.gz" \
-"http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.13.tar.gz" \
+"http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.14.tar.gz" \
 "http://www.netlib.org/lapack/lapack-3.2.1.tgz" \
 "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.2.tar.gz" \
 "http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.4.tar.gz" \
 "http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/OLD/ParMetis-3.1.1.tar.gz" \
-"http://sourceforge.net/projects/seacas/files/latest/download" \
+"http://downloads.sourceforge.net/project/seacas/2013-12-03.tar.gz" \
 "http://sourceforge.net/projects/sparse/files/sparse/sparse1.4b/sparse1.4b.tar.gz/download" \
 "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_2.3.tar.gz" \
 "http://www.cise.ufl.edu/research/sparse/umfpack/UMFPACK-5.4.0.tar.gz" \
@@ -201,7 +205,7 @@ read -d '' MUMPS_PATCH << "EOF"
 < SCALAP  = /local/SCALAPACK/libscalapack.a /local/BLACS/LIB/blacs_MPI-LINUX-0.a   /local/BLACS/LIB/blacsF77init_MPI-LINUX-0.a  /local/BLACS/LIB/blacs_MPI-LINUX-0.a
 ---
 > RANLIB = ranlib
-> SCALAP  = $(GOMA_LIB)/scalapack-2.0.2/libscalapack.a $(GOMA_LIB)/BLACS/LIB/libblacs.a $(GOMA_LIB)/BLACS/LIB/libblacsCinit.a $(GOMA_LIB)/BLACS/LIB/libblacsF77init.a
+> SCALAP  = $(GOMA_LIB)/scalapack-2.0.2/libscalapack.a 
 76,78c78,80
 < INCPAR = -I/usr/local/mpich/include
 < # LIBPAR = $(SCALAP)  -L/usr/local/lib/ -llammpio -llamf77mpi -lmpi -llam -lutil -ldl -lpthread
@@ -402,135 +406,239 @@ done
 cd ../
 
 #Seacas
+if [ -d SEACAS-2013-12-03 ]
+then
+    echo "SEACAS directory already renamed"
+else
 mv 2013-12-03 SEACAS-2013-12-03
-mv hdf5-1.8.13 hdf5-source
-mv hdf5-source SEACAS-2013-12-03/TPL/hdf5/
-mv netcdf-4.3.2 SEACAS-2013-12-03/TPL/netcdf/
+fi
 
+if [ -d SEACAS-2013-12-03/TPL/hdf5/hdf5-source ]
+then
+    echo "hdf5 directory already placed in SEACAS/TPL"
+else
+mv hdf5-1.8.14 hdf5-source
+mv hdf5-source SEACAS-2013-12-03/TPL/hdf5/
+fi
+
+if [ -d SEACAS-2013-12-03/TPL/netcdf/netcdf-4.3.2 ]
+then
+    echo "netcdf directory already placed in SEACAS/TPL"
+else
+mv netcdf-4.3.2 SEACAS-2013-12-03/TPL/netcdf/
+fi
+
+#continue_check
 #UMFPACK
+if [ -d UMFPACK-5.4/AMD ]
+then
+    echo "UMFPACK directory structure already created"
+else
 mkdir UMFPACK-5.4
 mv UMFPACK UMFPACK-5.4
 mv UFconfig UMFPACK-5.4
 mv AMD UMFPACK-5.4
+fi
 
+#continue_check
 # make
 # make cmake
-cd cmake-2.8.12.2
-./bootstrap --prefix=$GOMA_LIB/cmake-2.8.12.2
-make -j$MAKE_JOBS
-make install
-cd ../
+export CXX=g++
+cd $GOMA_LIB/cmake-2.8.12.2
+if [ -f bin/cmake ]
+then
+    echo "cmake is already built"
+else
+    ./bootstrap --prefix=$GOMA_LIB/cmake-2.8.12.2
+    make -j$MAKE_JOBS
+    make install
+fi
 
+
+continue_check
 #make openmpi
-cd openmpi-1.6.4
-./configure --prefix=$GOMA_LIB/openmpi-1.6.4
-make -j$MAKE_JOBS
-make install
-cd ../
+cd $GOMA_LIB/openmpi-1.6.4
+if [ -f bin/ompi_info ]
+then
+    echo "openmpi is already built"
+else
+    ./configure --prefix=$GOMA_LIB/openmpi-1.6.4
+    make -j$MAKE_JOBS
+    make install
+fi
 
+#continue_check
 #make Seacas
-cd SEACAS-2013-12-03/TPL/netcdf/netcdf-4.3.2/include
-echo "$NETCDF_PATCH" > netcdf.patch
-patch netcdf.h < netcdf.patch
-cd ../../
-echo "$IMAKE_PATCH" > Imake.patch
-patch Imakefile < Imake.patch
-cd ../../
-export ACCESS=$GOMA_LIB/SEACAS-2013-12-03
-cd ACCESS/itools/config/cf
-echo "$SITE_PATCH" > site.patch
-patch site.def < site.patch
-echo "$SEACAS_LINUX_PATCH" > linux.patch
-patch linux.cf < linux.patch
-cd ../../../../
-ACCESS/scripts/buildSEACAS -auto
-cd ../
 
+cd $GOMA_LIB/SEACAS-2013-12-03
+if [ -f bin/aprepro ]
+then
+    echo "SEACAS already built"
+else
+    cd TPL/netcdf/netcdf-4.3.2/include
+    echo "$NETCDF_PATCH" > netcdf.patch
+    patch --ignore-whitespace netcdf.h < netcdf.patch
+    cd ../../
+    echo "$IMAKE_PATCH" > Imake.patch
+    patch Imakefile < Imake.patch
+    cd ../../
+    export ACCESS=$GOMA_LIB/SEACAS-2013-12-03
+    cd ACCESS/itools/config/cf
+    echo "$SITE_PATCH" > site.patch
+    patch site.def < site.patch
+    echo "$SEACAS_LINUX_PATCH" > linux.patch
+    patch linux.cf < linux.patch
+    cd ../../../../
+    ACCESS/scripts/buildSEACAS -auto
+fi
+
+#continue_check
  #make BLAS
-cd BLAS
-make -j$MAKE_JOBS
-cp blas_LINUX.a libblas.a
-cd ../
+cd $GOMA_LIB/BLAS
+if [ -f libblas.a ]
+then
+    echo "BLAS already built"
+else
+    make -j$MAKE_JOBS
+    cp blas_LINUX.a libblas.a
+fi
 
+#continue_check
 #make parMetis
-cd ParMetis-3.1.1
-make -j$MAKE_JOBS
-cd ../  
+cd $GOMA_LIB/ParMetis-3.1.1
+if [ -f libparmetis.a ]
+then
+    echo "ParMetis already Built"
+else
+    make -j$MAKE_JOBS
+fi
 
+#continue_check
 #make ARPACK
-cd ARPACK
-echo "$ARMAKE_PATCH" > ARmake.patch
-patch ARmake.inc < ARmake.patch
-make all
-mkdir lib
-cp libarpack_x86_64.a lib/libarpack.a
-cd ..
+cd $GOMA_LIB/ARPACK
+if [ -f libarpack_x86_64.a ]
+then
+    echo "ARPACK already built"
+else
+    echo "$ARMAKE_PATCH" > ARmake.patch
+    patch ARmake.inc < ARmake.patch
+    make all
+    mkdir lib
+    cp libarpack_x86_64.a lib/libarpack.a
+fi
 
+#continue_check
 #make SuperLU
-cd SuperLU_DIST_2.3
-make PLAT= DSuperLUroot=$GOMA_LIB/SuperLU_DIST_2.3 BLASLIB="$GOMA_LIB/BLAS/blas_LINUX.a" METISLIB="-L$GOMA_LIB/ParMetis-3.1.1 -lmetis" PARMETISLIB="-L$GOMA_LIB/ParMetis-3.1.1 -lparmetis" ARCHFLAGS=-rc RANLIB=echo CC=mpicc CFLAGS=-D_SP NOOPTS= FORTRAN=gfortran FFLAGS="-O3 -Q" LOADER=mpicxx LOADOPTS=-lgfortran CDEFS="-DAdd_"
-cd lib/
-cp libsuperlu_dist_2.3.a libsuperludist.a
-cd ../../
+cd $GOMA_LIB/SuperLU_DIST_2.3
+if [ -f lib/libsuperludist.a ]
+then
+    echo "SuperLU_DIST already built"
+else
+    make PLAT= DSuperLUroot=$GOMA_LIB/SuperLU_DIST_2.3 BLASLIB="$GOMA_LIB/BLAS/blas_LINUX.a" METISLIB="-L$GOMA_LIB/ParMetis-3.1.1 -lmetis" PARMETISLIB="-L$GOMA_LIB/ParMetis-3.1.1 -lparmetis" ARCHFLAGS=-rc RANLIB=echo CC=mpicc CFLAGS=-D_SP NOOPTS= FORTRAN=gfortran FFLAGS="-O3 -Q" LOADER=mpicxx LOADOPTS=-lgfortran CDEFS="-DAdd_"
+    cd lib/
+    cp libsuperlu_dist_2.3.a libsuperludist.a
+    cd ..
+fi
 
+#continue_check
 #make lapack
-cd lapack-3.2.1
-mv make.inc.example make.inc
-echo "$LAPACK_PATCH" > make.patch
-patch make.inc < make.patch
-make -j$MAKE_JOBS
-cp lapack_LINUX.a liblapack.a
-cd ..
+cd $GOMA_LIB/lapack-3.2.1
+if [ -f liblapack.a ]
+then
+    echo "LAPACK already built"
+else
+    mv make.inc.example make.inc
+    echo "$LAPACK_PATCH" > make.patch
+    patch make.inc < make.patch
+    make -j$MAKE_JOBS
+    cp lapack_LINUX.a liblapack.a
+fi
 
+#continue_check
 #make sparse
-cd sparse/src
-make -j$MAKE_JOBS
-cd ../lib/
-cp sparse.a libsparse.a
- cd ../../
+cd $GOMA_LIB/sparse
+if [ -f lib/libsparse.a ]
+then 
+    echo "Sparse already built"
+else
+    cd src
+    make -j$MAKE_JOBS
+    cd ../lib/
+    cp sparse.a libsparse.a
+    cd ..
+fi
 
+#continue_check
 #make UMFPACK
-cd UMFPACK-5.4/UFconfig
-echo "$UFCONFIG_PATCH" > UFconfig.patch
-patch UFconfig.mk < UFconfig.patch
-cd ../UMFPACK
-make -j$MAKE_JOBS
-cd ../
-mkdir -p Include
-mkdir -p Lib
-cp UMFPACK/Include/* Include
-cp UMFPACK/Lib/* Lib
-cp AMD/Include/amd.h Include
-cp AMD/Include/amd_internal.h Include
-cp AMD/Lib/libamd.a Lib
-cp UFconfig/UFconfig.h Include
-cd ../
+cd $GOMA_LIB/UMFPACK-5.4
+if [ -f Lib/libamd.a ]
+then
+    echo "UMFPACK already built"
+else
+    cd UFconfig
+    echo "$UFCONFIG_PATCH" > UFconfig.patch
+    patch UFconfig.mk < UFconfig.patch
+    cd ../UMFPACK
+    make -j$MAKE_JOBS
+    cd ../
+    mkdir -p Include
+    mkdir -p Lib
+    cp UMFPACK/Include/* Include
+    cp UMFPACK/Lib/* Lib
+    cp AMD/Include/amd.h Include
+    cp AMD/Include/amd_internal.h Include
+    cp AMD/Lib/libamd.a Lib
+    cp UFconfig/UFconfig.h Include
+fi
 
+#continue_check
 #make y12m
-mv y12m-1.0 y12m
-cd y12m
-make FC=gfortran
-cd ..
+cd $GOMA_LIB/
+if [ -d $GOMA_LIB/y12m ]
+then 
+    echo "y12m directory already renamed"
+else
+mv $GOMA_LIB/y12m-1.0 $GOMA_LIB/y12m
+fi
 
+cd $GOMA_LIB/y12m
+if [ -f liby12m.a ]
+then
+    echo "y12m already built"
+else
+    make FC=gfortran
+fi
+
+#continue_check
 # make scalapack
-cd scalapack-2.0.2
-cp SLmake.inc.example SLmake.inc
-echo "$SCALAPACK_PATCH" > scalapack.patch
-patch SLmake.inc < scalapack.patch
-make # scalapack only compiles with 1 make job
-cd ..
+cd $GOMA_LIB/scalapack-2.0.2
+if [ -f libscalapack.a ]
+then
+    echo "scalapack already built"
+else
+    cp SLmake.inc.example SLmake.inc
+    echo "$SCALAPACK_PATCH" > scalapack.patch
+    patch SLmake.inc < scalapack.patch
+    make # scalapack only compiles with 1 make job
+fi
 
+#continue_check
 # make mumps
-cd MUMPS_4.10.0
-cp Make.inc/Makefile.gfortran.PAR Makefile.inc
-echo "$MUMPS_PATCH" > mumps.patch
-patch Makefile.inc < mumps.patch
-make -j$MAKE_JOBS
-cd ..
+cd $GOMA_LIB/MUMPS_4.10.0
+if [ -f lib/libdmumps.a ]
+then
+    echo "MUMPS already built"
+else
+    cp Make.inc/Makefile.gfortran.PAR Makefile.inc
+    echo "$MUMPS_PATCH" > mumps.patch
+    patch Makefile.inc < mumps.patch
+    make -j$MAKE_JOBS
+fi
 
+#continue_check
 #make trilinos
-mkdir trilinos-11.8.1-Temp
-cd trilinos-11.8.1-Temp
+mkdir $GOMA_LIB/trilinos-11.8.1-Temp
+cd $GOMA_LIB/trilinos-11.8.1-Temp
 
 rm -f CMakeCache.txt
 
@@ -616,8 +724,8 @@ cmake \
 -D Amesos_ENABLE_MUMPS:BOOL=ON \
 $EXTRA_ARGS \
 $GOMA_LIB/trilinos-11.8.1-Source
-
+#continue_check
 make -j$MAKE_JOBS
-
+continue_check
 make install
 
