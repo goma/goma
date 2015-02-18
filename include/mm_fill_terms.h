@@ -70,13 +70,19 @@ PROTO((    dbl [DIM],
 	   dbl ,		/* current time step size                    */
 	   const PG_DATA * ));
 
+EXTERN int calc_cont_gls		/* mm_fill_terms.c                           */
+PROTO((    dbl *,
+	   CONT_GLS_DEPENDENCE_STRUCT *,
+	   dbl ,                /* current time                              */
+	   const PG_DATA * ));
+
 EXTERN int assemble_momentum_path_dependence
 PROTO(( double ,                /* time */
 	double ,                /* tt, parameter to vary time integration from
                                  * explicit (tt = 1) to implicit (tt = 0)    */
         double ,                /* dt, current time step size                */
-        double ));              /* h_elem_avg,  average global element size  *
-                                 * for PSPG, taken constant wrt to Jacobian  */
+	const PG_DATA * ));     /* PG data needed for continuity stabilization */
+
 EXTERN int assemble_continuity_path_dependence
 PROTO((dbl,                     /* time_value */
        dbl ,			/* tt - to vary time integration from 
@@ -449,13 +455,6 @@ PROTO((double ,			/* time - present time value                 */
 				 * implicit (tt = 0)                         */
        double ,
        const PG_DATA *));	/* dvc_dnode                                 */
-
-EXTERN int assemble_momentum_path_dependence
-PROTO((dbl ,                    /* time - present time value                 */ 
-       dbl ,			/* tt - parm to vary time integration from 
-				 * explicit (tt = 1) to implicit (tt = 0)    */
-       dbl ,			/* dt - current time step size               */
-       dbl ));                  /* h_elem_avg - average global element size  */
 
 EXTERN int assemble_continuity_path_dependence 
 PROTO((dbl ,

@@ -835,6 +835,7 @@ noahs_ark()
   ddd_add_member(n, &PSPG, 1, MPI_INT);
   ddd_add_member(n, &PSPP, 1, MPI_INT);
   ddd_add_member(n, &PS_scaling, 1, MPI_DOUBLE);
+  ddd_add_member(n, &Cont_GLS, 1, MPI_INT);
   ddd_add_member(n, &Filter_Species, 1, MPI_INT);
   ddd_add_member(n, &Include_Visc_Sens, 1, MPI_INT);
   ddd_add_member(n, &Visc_Sens_Copy, 1, MPI_INT);

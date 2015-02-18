@@ -745,8 +745,8 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 	  }
 
 	
-      /* get global element size and velocity norm if needed for PSPG */
-      if(PSPG && Num_Var_In_Type[PRESSURE])
+      /* get global element size and velocity norm if needed for PSPG or Cont_GLS */
+	  if((PSPG && Num_Var_In_Type[PRESSURE]) || (Cont_GLS && Num_Var_In_Type[VELOCITY1]))
 	  {
           h_elem_avg = global_h_elem_siz(x, x_old, xdot, resid_vector, exo, dpi);
 		  U_norm     = global_velocity_norm(x, exo, dpi);
