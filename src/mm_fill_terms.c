@@ -2927,7 +2927,7 @@ assemble_momentum(dbl time,       /* current time */
 		  for (p=0; p<VIM; p++){
 		    continuity_stabilization += grad_phi_i_e_a[p][p];
 		    }
-                  continuity_stabilization *= cont_gls *d_area;
+                  continuity_stabilization *= cont_gls*d_area;
 	        }
 
 	      /*
@@ -3506,7 +3506,7 @@ assemble_momentum(dbl time,       /* current time */
 				{
 				  continuity_stabilization += grad_phi_i_e_a[p][p];
 				}
-			      continuity_stabilization *= d_cont_gls->v[b][j] *d_area;
+			      continuity_stabilization *= d_cont_gls->v[b][j]*d_area;
 			    }
 
 
@@ -4302,10 +4302,10 @@ assemble_momentum(dbl time,       /* current time */
 			      {
 				for(p=0; p<VIM; p++)
 				  {
-				    continuity_stabilization += d_grad_phi_i_e_a_dmesh[p][p][b][j] *cont_gls *d_area;
-				    continuity_stabilization += grad_phi_i_e_a[p][p] *d_cont_gls->X[b][j] *d_area;
-				    continuity_stabilization += grad_phi_i_e_a[p][p] *cont_gls *
-				      (d_det_J_dmesh_bj *h3 + det_J *dh3dmesh_bj) *wt;
+				    continuity_stabilization += d_grad_phi_i_e_a_dmesh[p][p][b][j] * cont_gls*d_area;
+				    continuity_stabilization += grad_phi_i_e_a[p][p] * d_cont_gls->X[b][j]*d_area;
+				    continuity_stabilization += grad_phi_i_e_a[p][p]*cont_gls *
+				                                (d_det_J_dmesh_bj *h3 + det_J *dh3dmesh_bj)*wt;
 				  }
 				
 			      }
@@ -25950,7 +25950,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 				      for (p=0; p<VIM; p++){
 					continuity_stabilization += grad_phi_i_e_a[p][p];
 				      }
-				      continuity_stabilization *= cont_gls *d_area;
+				      continuity_stabilization *= cont_gls*d_area;
 				    }
 				  
 				  
@@ -28308,7 +28308,7 @@ calc_pspg( dbl pspg[DIM],
   /* variables for Brinkman porous flow */
   dbl por=0, por2=0, per=0, vis=0, dvis_dT[MDE], sc=0, speed=0;
 
-  dbl h_elem=0, h_elem_inv=0;
+  dbl h_elem=0;
   dbl Re;
   dbl tau_pspg=0.;
   dbl tau_pspg1=0.;
@@ -28397,14 +28397,7 @@ calc_pspg( dbl pspg[DIM],
 	v_g[2][2] = VELOCITY_GRADIENT33;
   }
 
-/*  if( TRUE || !is_initialized ) { 
-    memset( div_tau_p, 0, sizeof(double) * DIM);
-	memset( d_div_tau_p_dgd, 0, sizeof(double) * DIM*DIM*DIM*MDE);
-	memset( d_div_tau_p_dy, 0, sizeof(double) * DIM*MAX_CONC*MDE);
-	memset( d_div_tau_p_dv, 0, sizeof(double) * DIM*DIM*MDE);
-	memset( d_div_tau_p_dX, 0, sizeof(double) * DIM*DIM*MDE);
-} */
-	  /* initialize dependencies */
+  /* initialize dependencies */
   memset( d_tau_pspg_dv, 0, sizeof(double) * DIM*MDE);
   memset( d_tau_pspg_dX, 0, sizeof(double) * DIM*MDE);
   
@@ -28432,28 +28425,19 @@ calc_pspg( dbl pspg[DIM],
     }
 
 
-  /* use global average for element size */
-
+  // Global average for pspg_global's element size
   h_elem = h_elem_avg;
-  /* The 1/h_elem was FPE'ing.  It is only used below for moving mesh
-   * problems.
-   */
-  if ( pd->v[MESH_DISPLACEMENT1] )
-    {
-      if ( h_elem != 0. )
-        h_elem_inv=1./h_elem;
-      else
-        h_elem_inv = 0.;
-    }
 
   /*** Density ***/
   rho = density(d_rho, time_value);
 
-  /* Now calculate the element Reynolds number based on a global
-  norm of the velocity */
-
   if(pspg_global)
     {
+      
+      /* Now calculate the element Reynolds number based on a global
+       * norm of the velocity and determine tau_pspg discretely from Re 
+       * The global version has no Jacobian dependencies
+       */
       Re = rho * U_norm * h_elem / (2.0 * mu_avg);
 
       if (Re <= 3.0)
@@ -28464,39 +28448,6 @@ calc_pspg( dbl pspg[DIM],
 	{
 	  tau_pspg = PS_scaling * h_elem / (2.0 * rho * U_norm);
 	}
-      /* set up mesh derivative for tau_pspg, if necessary */
-      /* this is only necessary for local pspg terms, so it is
-	 essentially commented out */
-
-      if ( pd->v[MESH_DISPLACEMENT1]&& pspg_local )
-	{
-	  for ( b=0; b<dim; b++)
-	    {
-	      var = MESH_DISPLACEMENT1+b;
-	      if ( d_pspg != NULL && pd->v[var] )
-		{
-		  for ( j=0; j<ei->dof[var]; j++)
-		    {
-		      d_tau_pspg_dX[b][j] = 0.;
-		      for( w=0; w<dim; w++ )
-			{
-			  if(Re <= 3.0)
-			    {
-			      d_tau_pspg_dX[b][j] += PS_scaling *
-				pg_data->hh[w][b]*pg_data->dh_dxnode[w][j]
-                                  / (24.0 * mu_avg);
-			    }
-			  else
-			    {
-			      d_tau_pspg_dX[b][j] += PS_scaling *
-				 pg_data->hh[w][b]*pg_data->dh_dxnode[w][j]*h_elem_inv
-                                    / (8.0 * rho * U_norm);
-			    }
-			}
-		    }
-		}
-	    }
-	}
     }
   else if (pspg_local)
     {
@@ -28505,37 +28456,25 @@ calc_pspg( dbl pspg[DIM],
 	{
 	  hh_siz += hsquared[p];
 	}
-      /* This is the average value of h**2 in the element */
-
+      // Average value of h**2 in the element
       hh_siz = hh_siz/ ((double )dim);
 
-      /* This is the average value of v**2 in the element */
+      // Average value of v**2 in the element 
       vv_speed = 0.0;
       for ( a=0; a<wim; a++)
 	{
 	  vv_speed += v_avg[a]*v_avg[a];
 	}
-
-      tau_pspg1 = (vv_speed/hh_siz
-		   +pow(3.*mu_avg/(rho_avg*hh_siz), 2.));
+      
+      // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
+      tau_pspg1 = rho_avg*rho_avg*vv_speed/hh_siz + (9.0*mu_avg*mu_avg)/(hh_siz*hh_siz);
       if (  pd->TimeIntegration != STEADY)
 	{
-	  tau_pspg1 += 4./(dt*dt);
+	  tau_pspg1 += 4.0/(dt*dt);
 	}
-      tau_pspg = PS_scaling/(rho_avg*sqrt(tau_pspg1));
+      tau_pspg = PS_scaling/sqrt(tau_pspg1);
 
-
-      Re = rho * sqrt(vv_speed) * sqrt(hh_siz) / (2.0 * mu_avg);
-
-      if (Re <= 3.0)
-	{
-	  tau_pspg = PS_scaling * hh_siz / (12.0 * mu_avg);
-	}
-      else if (Re > 3.0)
-	{
-	  tau_pspg = PS_scaling * sqrt(hh_siz) / (2.0 * rho * sqrt(vv_speed));
-	}
-
+      // tau_pspg derivatives wrt v from vv_speed
       if ( d_pspg != NULL && pd->v[VELOCITY1] )
 	{
 	  for ( b=0; b<dim; b++)
@@ -28545,13 +28484,14 @@ calc_pspg( dbl pspg[DIM],
 		{
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
-		      d_tau_pspg_dv[b][j]=-tau_pspg/tau_pspg1*
-					  v_avg[b]*pg_data->dv_dnode[b][j]/hh_siz;
+		      d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1; 
+		      d_tau_pspg_dv[b][j] *= rho_avg*rho_avg/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
 		    }
 		}
 	    }
 	}
 
+      // tau_pspg derivatives wrt mesh from hh_siz
       if ( d_pspg != NULL && pd->v[MESH_DISPLACEMENT1] )
 	{
 	  for ( b=0; b<dim; b++)
@@ -28560,14 +28500,11 @@ calc_pspg( dbl pspg[DIM],
 	      if ( pd->v[var] )
 		{
 		  for ( j=0; j<ei->dof[var]; j++)
-		    {
-		      d_tau_pspg_dX[b][j] = 0.;
-		      for( w=0; w<dim; w++ )
-			{
-			  d_tau_pspg_dX[b][j]+=tau_pspg/(tau_pspg1*hh_siz*hh_siz)
-					       *(vv_speed+2.0*pow(3.*mu_avg/rho_avg, 2.)/hh_siz)
-		       *pg_data->hh[w][b]*pg_data->dh_dxnode[w][j]*delta(w,b);
-			}
+		    {			
+		      d_tau_pspg_dX[b][j] = tau_pspg/tau_pspg1;
+		      d_tau_pspg_dX[b][j] *= (rho_avg*rho_avg*vv_speed + 18.0*mu_avg*mu_avg/hh_siz) / (hh_siz*hh_siz);
+		      d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
+		      
 		    }
 		}
 	    }
@@ -29158,8 +29095,8 @@ calc_cont_gls( dbl *cont_gls,
     }
   else
     {
-      hh_siz = 0.;
-      vv = 0.;
+      hh_siz = 0.0;
+      vv = 0.0;
       for(p=0; p<dim; p++)
 	{
 	  hh_siz += hsquared[p]/((double)dim);
@@ -29169,11 +29106,11 @@ calc_cont_gls( dbl *cont_gls,
       U = sqrt(vv);
     }
   
-  tau_cont = U *h_elem /2.0;
+  tau_cont = U*h_elem /2.0;
 
   //We need density for the Reynolds number
   rho = density(d_rho, time_value);
-  Re = rho *U *h_elem /(2.0 *mu_avg);
+  Re = rho*U*h_elem / (2.0*mu_avg);
   if (Re > 1.0)
     {
       tau_cont *= Re;
@@ -29191,15 +29128,15 @@ calc_cont_gls( dbl *cont_gls,
 		{
 		  if(Cont_GLS==1 || U==0)
 		    {
-		      d_tau_dv[b][j] = 0.;
+		      d_tau_dv[b][j] = 0.0;
 		    }
 		  else if(Re > 1.0)
-		    {
-		      d_tau_dv[b][j] = rho/mu_avg *h_elem *h_elem *v_avg[b] *pg_data->dv_dnode[b][j];
+		    {		      
+		      d_tau_dv[b][j] = rho/(2.0*mu_avg) * h_elem*h_elem * v_avg[b]*pg_data->dv_dnode[b][j];			
 		    }
 		  else
-		    {
-		      d_tau_dv[b][j] = h_elem/(2*U) *v_avg[b] *pg_data->dv_dnode[b][j];
+		    {		     		
+		      d_tau_dv[b][j] = h_elem/(2.0*U) * v_avg[b]*pg_data->dv_dnode[b][j];			
 		    }
 		}
 	    }
@@ -29217,15 +29154,15 @@ calc_cont_gls( dbl *cont_gls,
 		{
 		  if(Cont_GLS==1 || h_elem==0)
 		    {
-		      d_tau_dmesh[b][j] = 0.;
+		      d_tau_dmesh[b][j] = 0.0;
 		    }
 		  else if(Re > 1.0)
-		    {
-		      d_tau_dmesh[b][j] = rho/mu_avg *U *U *pg_data->hh[b][b] *pg_data->dh_dxnode[b][j];
+		    {	      	
+		      d_tau_dmesh[b][j] = rho/(2.0*mu_avg) * U*U * pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);		
 		    }
 		  else
 		    {
-		      d_tau_dmesh[b][j] = U/(2*h_elem) *pg_data->hh[b][b] *pg_data->dh_dxnode[b][j];
+		      d_tau_dmesh[b][j] = U/(2.0*h_elem) * pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
 		    }
 		}
 	    }
@@ -29251,7 +29188,7 @@ calc_cont_gls( dbl *cont_gls,
    *This eventually then gets combined with the stabilization functional
    *in assemble_momentum to form the GLS stabilization for continuity
    */
-  *cont_gls = tau_cont *advection;
+  *cont_gls = tau_cont*advection;
 
 
   //Determine Jacobian terms
@@ -29272,9 +29209,9 @@ calc_cont_gls( dbl *cont_gls,
 		  {
 		    div_phi_j_e_b += bf[var]->grad_phi_e[j][b] [p][p];
 		  }
-		advection = div_phi_j_e_b *advection_etm;
+		advection = div_phi_j_e_b*advection_etm;
 	      }
-	    d_cont_gls->v[b][j] = tau_cont *advection + d_tau_dv[b][j] *div_v *advection_etm;
+	    d_cont_gls->v[b][j] = tau_cont*advection + d_tau_dv[b][j]*div_v*advection_etm;
 	  }
 	}
     }
@@ -29298,7 +29235,7 @@ calc_cont_gls( dbl *cont_gls,
 		    }
 		}
 	      advection *= advection_etm;
-	      d_cont_gls->X[b][j] = tau_cont *advection + d_tau_dmesh[b][j] *div_v *advection_etm;
+	      d_cont_gls->X[b][j] = tau_cont*advection + d_tau_dmesh[b][j]*div_v*advection_etm;
 	    }
 	}
     }

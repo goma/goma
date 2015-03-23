@@ -737,7 +737,7 @@ matrix_fill(
 	}
     }
 
-  if ((PSPG || Cont_GLS) && pde[R_PRESSURE] && pde[R_MOMENTUM1]) {
+  if (PSPG && pde[R_PRESSURE] && pde[R_MOMENTUM1]) {
     xi[0] = 0.0;
     xi[1] = 0.0;
     xi[2] = 0.0;  
@@ -751,6 +751,23 @@ matrix_fill(
 	element_velocity(pg_data.v_avg, pg_data.dv_dnode, exo);
       }
   }
+
+  if(Cont_GLS && pde[R_PRESSURE] && pde[R_MOMENTUM1]) 
+    {
+    xi[0] = 0.0;
+    xi[1] = 0.0;
+    xi[2] = 0.0;  
+    (void) load_basis_functions(xi, bfd);
+    pg_data.mu_avg = element_viscosity();
+    pg_data.rho_avg = density(NULL, time_value);
+
+    if(Cont_GLS==2)
+      {
+	h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
+	element_velocity(pg_data.v_avg, pg_data.dv_dnode, exo);
+      }
+    }
+
   if(pde[FILL] || pde[PHASE1])      /* UMR fix for non-FILL problems */
     {
       if(ls != NULL)
