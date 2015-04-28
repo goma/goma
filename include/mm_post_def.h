@@ -109,6 +109,7 @@
 #define I_VOLUME_PLANE  34 
 #define I_POS_VOLPLANE  35 
 #define I_NEG_VOLPLANE  36 
+#define I_SPECIES_SOURCE  37
 
 
 #ifdef _MM_POST_PROC_C
@@ -223,7 +224,8 @@ VOL_NAME_STRUCT pp_vol_names[] =
   { "SURFACE_TEMPERATURE",   I_SURF_TEMP },
   { "VOL_PLANE",          I_VOLUME_PLANE },
   { "POS_PLANE_FILL",   I_POS_VOLPLANE},
-  { "NEG_PLANE_FILL",   I_NEG_VOLPLANE}
+  { "NEG_PLANE_FILL",   I_NEG_VOLPLANE},
+  { "SPECIES_SOURCE",    I_SPECIES_SOURCE}
 };
 
 int Num_Vol_Names = sizeof( pp_vol_names )/ sizeof( VOL_NAME_STRUCT );
@@ -533,7 +535,7 @@ extern int PP_LAME_MU;         /* Lame MU coefficient for solid/mesh */
 extern int PP_LAME_LAMBDA;     /* Lame LAMBDA coefficient for solid/mesh */
 extern int VON_MISES_STRAIN;
 extern int VON_MISES_STRESS;
-extern int NON_VOLFRAC;		/*Nonvolatile species Volume Fraction */
+extern int UNTRACKED_SPEC;		/*Untracked Species Concentration */
 
 
 /*

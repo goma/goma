@@ -420,6 +420,13 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     if ( rd->ngv > MAX_NGV ) 
       EH(-1, "Augmenting condition values overflowing MAX_NGV.  Change and rerun .");
 
+  if (callnum == 1)
+    {
+    Spec_source_inventory = Dmatrix_birth(upd->Num_Mat,upd->Max_Num_Species_Eqn+1);
+    Spec_source_lumped_mass = alloc_dbl_1(exo->num_nodes, 0.0);
+    }
+
+
   if ( nAC > 0   )
   {
     char name[7];
@@ -1090,6 +1097,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 				   NULL,  x, xdot, delta_t,
 				   time1, 1);
 	}
+
     }	/* if converged */
     
 
@@ -2438,6 +2446,21 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      if (augc[iAC].Type == AC_USERBC) 
 		{
 		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
+                  if( (int)augc[iAC].DataFlt[1] == 6)
+			{
+		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 0, BC_Types[augc[iAC].DFID].BC_Data_Float[0]);
+		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 2, BC_Types[augc[iAC].DFID].BC_Data_Float[2]);
+		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 3, BC_Types[augc[iAC].DFID].BC_Data_Float[3]);
+                  augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
+		  DPRINTF(stderr, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
+
+			}
+                  if( (int)augc[iAC].DataFlt[1] == 61)
+			{
+                  augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
+		  DPRINTF(stderr, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
+
+			}
 		}
 	      else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT)
 		{
@@ -2683,7 +2706,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 			       pp_fluxes[i]->species_number, 
 			       pp_fluxes[i]->flux_filenm,
 			       pp_fluxes[i]->profile_flag,
-			       x, xdot, NULL, delta_t, time, 1); 
+			       x, xdot, NULL, delta_t_old, time, 1); 
 	}
 
 	/* Compute flux, force sensitivities
@@ -2702,7 +2725,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 				    pp_fluxes_sens[i]->vector_id,
 				    pp_fluxes_sens[i]->flux_filenm,
 				    pp_fluxes_sens[i]->profile_flag,
-				    x,xdot,x_sens_p,delta_t,time,1);
+				    x,xdot,x_sens_p,delta_t_old,time,1);
 	}
 #if 1
 	/* This section is a kludge to determine minimum and maximum
@@ -2774,6 +2797,17 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
  	  }	/*search  */
 	}	/*  nn_volume	*/
 #endif
+        for (i = 0; i < exo->num_nodes; i++) {
+            if (efv->ev  && nt > 1) {
+                     int ef;
+       if (fabs(Spec_source_lumped_mass[i]) > DBL_SMALL) {
+                     for (ef = 0; ef < efv->Num_external_field; ef++) {
+                     efv->ext_fld_ndl_val[ef][i] *= Spec_source_lumped_mass[i];
+                           }
+                     }
+                }
+             }
+          memset(Spec_source_lumped_mass, 0.0, sizeof(double)*exo->num_nodes);
  	  for (i = 0; i < nn_volume; i++) {
  	    evaluate_volume_integral(exo, dpi, pp_volume[i]->volume_type,
  				     pp_volume[i]->volume_name,
@@ -2782,9 +2816,23 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
  				     pp_volume[i]->volume_fname,
  				     pp_volume[i]->params,
  				     pp_volume[i]->num_params,
- 				     NULL, x, xdot, delta_t, time, 1);
+ 				     NULL, x, xdot, delta_t_old, time, 1);
  	  }
 
+#if 1
+        for (i = 0; i < exo->num_nodes; i++) {
+  if (efv->ev  && nt > 1 ) {
+    int ef;
+    for (ef = 0; ef < efv->Num_external_field; ef++) {
+       if (fabs(Spec_source_lumped_mass[i]) > DBL_SMALL) {
+         efv->ext_fld_ndl_val[ef][i] /= Spec_source_lumped_mass[i];
+       } else {
+         efv->ext_fld_ndl_val[ef][i] = 0.0;
+       }
+    }
+  }
+          }
+#endif
 
 	if (time1 >= (ROUND_TO_ONE * TimeMax))  {
 	  DPRINTF(stderr,"\t\tout of time!\n");
@@ -2932,6 +2980,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
   
  free_and_clear:
 
+
 /* If exporting variables to another code, save them now! */
 #ifdef LIBRARY_MODE
   callnum++;
@@ -3014,6 +3063,8 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
     free(fss->mask);
   }
 
+  Dmatrix_death(Spec_source_inventory,upd->Num_Mat,upd->Max_Num_Species_Eqn+1);
+  safer_free( (void **) &Spec_source_lumped_mass);
   if ((nn_post_data_sens + nn_post_fluxes_sens) > 0) {
     safer_free((void **) &x_sens);
     Dmatrix_death(x_sens_p,num_pvector,numProcUnknowns);

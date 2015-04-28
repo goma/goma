@@ -2018,7 +2018,7 @@ EH(-1,"version not compiled with frontal solver");
            if(damp_factor2 == -1.) damp_factor = damp_factor1; 
 	   if( !Visc_Sens_Copy )
 		{
-		if(2*inewton < Max_Newton_Steps)
+		if(Visc_Sens_Factor*inewton < Max_Newton_Steps)
 			{ Include_Visc_Sens = FALSE; }
 	   	else
 			{

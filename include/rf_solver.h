@@ -156,7 +156,7 @@ int Cont_GLS;          /* 1 means continuity stabilization is used */
 int Filter_Species, filter_species_material_number;
 double c_min, c_max;
 
-int Include_Visc_Sens, Visc_Sens_Copy;
+int Include_Visc_Sens, Visc_Sens_Copy, Visc_Sens_Factor;
 				 /* 1 means to include the sensitivities of the 
 				viscosity functions in the jacobian matrix.  
 				0 indicates that these sensitivities are not to 

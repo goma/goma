@@ -101,7 +101,9 @@ int     Anneal_Mesh;            /* flag specifying creation of a special exodus
 				 * deformed coordinates (i.e. new displacements
 				 * are set to zero and mesh is deemed stress-free */
 
-double Porous_liq_inventory;    /*global variable for finite-insult boundary 					condition */
+double Porous_liq_inventory; /*global variable for finite-insult boundary condition*/
+double **Spec_source_inventory; /*global variable for cumulative reacted source */
+double *Spec_source_lumped_mass; /*global variable for species lumped mass */
 
 const char anneal_file[] = ANNEAL_FILE_NAME;
 

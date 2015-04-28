@@ -964,36 +964,36 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	    }
 
 	    if (bc->BC_Name == CAP_REPULSE_ROLL_BC) {
-	      apply_repulsion_roll(cfunc, d_cfunc, bc->BC_Data_Float[0], 
-                               bc->BC_Data_Float[1], 
-			       &(bc->BC_Data_Float[2]),
-			       &(bc->BC_Data_Float[5]),
-                               bc->BC_Data_Float[8], 
+	      apply_repulsion_roll(cfunc, d_cfunc, 
+                               bc->BC_Data_Float[2], 
+			       &(bc->BC_Data_Float[3]),
+			       &(bc->BC_Data_Float[6]),
                                bc->BC_Data_Float[9], 
                                bc->BC_Data_Float[10], 
                                bc->BC_Data_Float[11], 
                                bc->BC_Data_Float[12], 
+                               bc->BC_Data_Float[13], 
 			      elem_side_bc, iconnect_ptr);
 	    }
 	    if (bc->BC_Name == CAP_REPULSE_USER_BC) {
-	      apply_repulsion_user(cfunc, d_cfunc, bc->BC_Data_Float[0], 
-                               bc->BC_Data_Float[1], 
-			       &(bc->BC_Data_Float[2]),
-			       &(bc->BC_Data_Float[5]),
-                               bc->BC_Data_Float[8], 
+	      apply_repulsion_user(cfunc, d_cfunc, 
+                               bc->BC_Data_Float[2], 
+			       &(bc->BC_Data_Float[3]),
+			       &(bc->BC_Data_Float[6]),
                                bc->BC_Data_Float[9], 
                                bc->BC_Data_Float[10], 
                                bc->BC_Data_Float[11], 
                                bc->BC_Data_Float[12], 
+                               bc->BC_Data_Float[13], 
 			      elem_side_bc, iconnect_ptr);
 	    }
 	    if (bc->BC_Name == CAP_REPULSE_TABLE_BC) {
-	      apply_repulsion_table(cfunc, d_cfunc, x, bc->BC_Data_Float[0], 
-                               bc->BC_Data_Float[1], 
-                               bc->BC_Data_Float[2], 
+	      apply_repulsion_table(cfunc, d_cfunc, x, bc->BC_Data_Float[2], 
                                bc->BC_Data_Float[3], 
                                bc->BC_Data_Float[4], 
-			       &(bc->BC_Data_Float[5]),
+                               bc->BC_Data_Float[5], 
+                               bc->BC_Data_Float[6], 
+			       &(bc->BC_Data_Float[7]),
                                bc->BC_Data_Int[2],
 			      elem_side_bc, iconnect_ptr);
 	    }

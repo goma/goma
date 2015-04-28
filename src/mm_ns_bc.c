@@ -4851,7 +4851,6 @@ apply_repulsion (double cfunc[MDE][DIM],
 void 
 apply_repulsion_roll (double cfunc[MDE][DIM],
 		 double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-		 const double sigma, /* surface tension  */
 		 const double roll_rad, /* roll radius */
 	         const double origin[3],	/* roll axis origin (x,y,z) */
 	         const double dir_angle[3],	/* axis direction angles */
@@ -5087,7 +5086,6 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
 void 
 apply_repulsion_user (double cfunc[MDE][DIM],
 		 double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-		 const double sigma, /* surface tension  */
 		 const double roll_rad, /* roll radius */
 	         const double origin[3],	/* roll axis origin (x,y,z) */
 	         const double dir_angle[3],	/* axis direction angles */
@@ -5293,7 +5291,7 @@ apply_repulsion_table (double cfunc[MDE][DIM],
 		 const double hscale, /* repulsion length scale */
 	         const double repexp,	/* repulsive force exponent */
 	         const double P_rep,	/* repulsion coefficient */
-		 const double betainv, /* inverse slip coefficient  */
+		 const double gas_visc, /* gas phase viscosity  */
 		 const double exp_scale, /* DCL exculsion zone scale  */
 	         const double v_wall[3],	/* surface velocity */
                  const int dcl_node,		/* DCL NS id  */
@@ -5317,7 +5315,8 @@ apply_repulsion_table (double cfunc[MDE][DIM],
     double dist;		/* squared distance from surface to wall     */
     double coord[3]={0,0,0};
     double force = 0.0, d_force = 0.0, inv_slip = 0.0, d_inv_slip = 0.0;
-    double t_veloc[2], dt_veloc_dx[2][MAX_PDIM][MAX_PDIM][MDE];
+    double t_veloc[2]={0,0}, dt_veloc_dx[2][MAX_PDIM][MAX_PDIM][MDE];
+    double n_veloc=0, dn_veloc_dx[MAX_PDIM][MAX_PDIM][MDE];
 
     int j, i, id, var, a, eqn, I, ldof;
     double point[3]={0,0,0},dcl_dist,slope, mod_factor=1.;
@@ -5327,7 +5326,7 @@ apply_repulsion_table (double cfunc[MDE][DIM],
 /***************************** EXECUTION BEGINS ******************************/
 /* if pr is 0. => we don't want free surface/wall repulsion and just
    ensure that dist and dist2 are nonzero so nothing bad happens */
-  if (P_rep == 0 && betainv == 0) return;
+  if (P_rep == 0 && gas_visc == 0) return;
 
   eqn = VELOCITY1;
     if(af->Assemble_LSA_Mass_Matrix)
@@ -5352,8 +5351,7 @@ apply_repulsion_table (double cfunc[MDE][DIM],
       if(bc_table_id == -1)
           {EH(-1,"GD_TABLE id not found for CAP_REPULSE_TABLE\n");}
       bc_tab = BC_Types + bc_table_id;
-      dist = table_distance_search(bc_tab->table, coord, 
-                                                         &slope, d_tfcn);
+      dist = table_distance_search(bc_tab->table, coord, &slope, d_tfcn);
       if(bc_tab->table->t_index[0] == MESH_POSITION1)
            {
             d_dist[0] = (coord[0]-bc_tab->table->slope[1])/dist;
@@ -5390,13 +5388,14 @@ apply_repulsion_table (double cfunc[MDE][DIM],
            force = -P_rep*mod_factor/pow(dist/hscale, repexp); 
            d_force = P_rep*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
 /*  slip velocity function function  */
-           inv_slip = -betainv*mod_factor/pow(dist/hscale, repexp); 
-           d_inv_slip = betainv*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
+           inv_slip = -gas_visc*mod_factor/pow(dist/hscale, repexp); 
+           d_inv_slip = gas_visc*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
 
-      t_veloc[0] = t_veloc[1] = 0.;
+      n_veloc = 1.0;
       for (a=0; a<ei->ielem_dim; a++)
 	{  
          t_veloc[0] += fv->stangent[0][a]*(fv->v[a]-v_wall[a]);
+/*         n_veloc += fv->snormal[a]*(fv->v[a]-v_wall[a]);*/
 	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
 	    {
 	      var = MESH_DISPLACEMENT1 + jvar;
@@ -5405,6 +5404,8 @@ apply_repulsion_table (double cfunc[MDE][DIM],
 		  for ( j=0; j<ei->dof[var]; j++)
                      {
          dt_veloc_dx[0][a][jvar][j] = fv->dstangent_dx[0][a][jvar][j]*(fv->v[a]-v_wall[a]);
+/*         dn_veloc_dx[a][jvar][j] = fv->dsnormal_dx[a][jvar][j]*(fv->v[a]-v_wall[a]);*/
+         dn_veloc_dx[a][jvar][j] = 0.;
                      }
                 }
              }
@@ -5449,24 +5450,23 @@ apply_repulsion_table (double cfunc[MDE][DIM],
 		      for (a=0; a<ei->ielem_dim; a++)
 			{
 			  
-			  d_cfunc[ldof][a][var][j] += (force * fv->dsnormal_dx[a][jvar][j] 
-						     + d_force * fv->snormal[a]
-						     * d_dist[jvar] * bf[var]->phi[j]
-						     )
-			    * bf[eqn]->phi[ldof]; 
+			  d_cfunc[ldof][a][var][j] += 
+                                (n_veloc*force * fv->dsnormal_dx[a][jvar][j] 
+	                        +(n_veloc*d_force+force*dn_veloc_dx[a][jvar][j])
+                                *fv->snormal[a]*d_dist[jvar]*bf[var]->phi[j])
+			        * bf[eqn]->phi[ldof]; 
 			  d_cfunc[ldof][a][var][j] +=
-                                (t_veloc[0]*inv_slip * fv->dstangent_dx[0][a][jvar][j] 
-				          + t_veloc[0]*d_inv_slip * fv->stangent[0][a]
-						     * d_dist[jvar] * bf[var]->phi[j]
-			+ inv_slip*fv->stangent[0][a]*dt_veloc_dx[0][a][jvar][j]) 
-			    * bf[eqn]->phi[ldof]; 
+                         (t_veloc[0]*inv_slip * fv->dstangent_dx[0][a][jvar][j] 
+			        + t_veloc[0]*d_inv_slip * fv->stangent[0][a]
+			        * d_dist[jvar] * bf[var]->phi[j]
+			+inv_slip*fv->stangent[0][a]*dt_veloc_dx[0][a][jvar][j])
+			        * bf[eqn]->phi[ldof]; 
 			  if( dim == 3) d_cfunc[ldof][a][var][j] +=
-                                (t_veloc[1]*inv_slip * fv->dstangent_dx[1][a][jvar][j] 
-				     + t_veloc[1]*d_inv_slip * fv->stangent[1][a]
-						     * d_dist[jvar] * bf[var]->phi[j]
-			+ inv_slip*fv->stangent[1][a]*dt_veloc_dx[1][a][jvar][j]) 
-			    * bf[eqn]->phi[ldof]; 
-			  
+                          (t_veloc[1]*inv_slip * fv->dstangent_dx[1][a][jvar][j]
+				+ t_veloc[1]*d_inv_slip * fv->stangent[1][a]
+				* d_dist[jvar] * bf[var]->phi[j]
+			+inv_slip*fv->stangent[1][a]*dt_veloc_dx[1][a][jvar][j])
+			        * bf[eqn]->phi[ldof]; 
 			}
 		    }
 		}
@@ -5485,12 +5485,15 @@ apply_repulsion_table (double cfunc[MDE][DIM],
 			{
 			  
 			  d_cfunc[ldof][a][var][j] += 
+                                   fv->snormal[jvar]*bf[var]->phi[j]*
+                                   force*fv->snormal[a]*bf[eqn]->phi[ldof]; 
+			  d_cfunc[ldof][a][var][j] += 
                                    fv->stangent[0][jvar]*bf[var]->phi[j]*
-                                   inv_slip * fv->stangent[0][a]*bf[eqn]->phi[ldof]; 
+                              inv_slip * fv->stangent[0][a]*bf[eqn]->phi[ldof]; 
 
 			  if( dim == 3) d_cfunc[ldof][a][var][j] += 
                                    fv->stangent[1][jvar]*bf[var]->phi[j]*
-                                   inv_slip * fv->stangent[1][a]*bf[eqn]->phi[ldof]; 
+                              inv_slip * fv->stangent[1][a]*bf[eqn]->phi[ldof]; 
 			  
 			}
 		    }
@@ -5509,7 +5512,7 @@ apply_repulsion_table (double cfunc[MDE][DIM],
       
       for (a=0; a<ei->ielem_dim; a++)
 	{  
-	  cfunc[ldof][a] += force * fv->snormal[a] * bf[eqn]->phi[ldof]; 
+	  cfunc[ldof][a] += force * n_veloc*fv->snormal[a] * bf[eqn]->phi[ldof]; 
 	  cfunc[ldof][a] += inv_slip * fv->stangent[0][a]*t_veloc[0]*bf[eqn]->phi[ldof]; 
 	}
       if( dim == 3)
@@ -7659,8 +7662,8 @@ void fapply_moving_CA_sinh(
   double ca_no, g_sca = 0.0, g_dca = 0.0;
 #ifdef NEW_HOFFMAN_FCN_PLEASE
   double g_deriv;
-  double hoff_C=0.003838336, hoff_N=2.7944, hoff_F=0.7093681;
-  double hoff_M=1.144796, hoff_R=8.458397749;
+  double hoff_C=0.012874005, hoff_N=2.80906762, hoff_F=0.7093681;
+  double hoff_M=1.253351327, hoff_R=9.614608063;
   double hoff_D=velocity_pre_exponential*M_PIE/180.0;
 #else
   double A_sca = 0.0, A_dca = 0.0;
@@ -7733,6 +7736,7 @@ void fapply_moving_CA_sinh(
 #ifdef NEW_HOFFMAN_FCN_PLEASE
         hoff_R=pow(hoff_F,hoff_N)*pow(1.-hoff_F,hoff_M)*pow(theta_max,hoff_N+hoff_M);
 	theta = acos(costheta);
+	sintheta = sin(theta);
 	thetaeq = equilibrium_contact_angle * (M_PIE/180);
 #else
         costheta=MAX(costheta,costhetamax);
@@ -7933,6 +7937,8 @@ void fapply_moving_CA_sinh(
   sign = ( sstangent[0] * fsnormal[0] +
 	   sstangent[1] * fsnormal[1] +
 	   sstangent[2] * fsnormal[2] ) > 0 ? 1 : -1;
+
+ /*sign = 1.0;*/
 
   v_mesh = sign * ( wall_sign*wall_velocity + sstangent[0]*x_dot[0] +
 		    sstangent[1]*x_dot[1] );
@@ -13779,7 +13785,7 @@ light_transmission(double func[DIM],
   /*
    *    Radiative transfer equation variables - connect to input file someday
    */
-  double svect[3]={0.,-1,0.};
+  double svect[3]={0.7071,-0.7071,0.};
   double mucos=1.0;
   double mucos_tran, mu_crit;
   double Grefl, Rrefl, Xrefl, Yrefl;

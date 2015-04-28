@@ -129,6 +129,7 @@ noahs_raven()
   ddd_add_member(n, &Num_Interpolations, 1, MPI_INT);
   ddd_add_member(n, &CoordinateSystem, 1, MPI_INT);
   ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
+  ddd_add_member(n, &num_AC_Tables, 1, MPI_INT);
   ddd_add_member(n, &num_BC_Tables, 1, MPI_INT);
   ddd_add_member(n, &num_MP_Tables, 1, MPI_INT);
   ddd_add_member(n, &num_ext_Tables, 1, MPI_INT);
@@ -253,6 +254,15 @@ raven_landing()
 	}
 
     }
+  /*
+   * Create landing pads for TABLE_AC Data_Table structures
+   */
+
+  for ( i=0; i< num_AC_Tables; i++) 
+    {
+      AC_Tables[i] = smalloc ( sizeof ( struct Data_Table )  ) ;
+    }
+
   /*
    * Create landing pads for TABLE_BC Data_Table structures
    */
@@ -839,6 +849,7 @@ noahs_ark()
   ddd_add_member(n, &Filter_Species, 1, MPI_INT);
   ddd_add_member(n, &Include_Visc_Sens, 1, MPI_INT);
   ddd_add_member(n, &Visc_Sens_Copy, 1, MPI_INT);
+  ddd_add_member(n, &Visc_Sens_Factor, 1, MPI_INT);
   ddd_add_member(n, &c_min, 1, MPI_DOUBLE);
   ddd_add_member(n, &c_max, 1, MPI_DOUBLE);
 
@@ -966,6 +977,21 @@ noahs_ark()
    * names for ordinates and abscissas to other processors.
    * The table data itself will be allocated in "ark_landing"
    */
+
+  for ( i=0; i < num_AC_Tables; i++ )
+    {
+      ddd_add_member(n,   AC_Tables[i]->t_name[0], 132, MPI_CHAR);
+      ddd_add_member(n,   AC_Tables[i]->t_name[1], 132, MPI_CHAR);
+      ddd_add_member(n,   AC_Tables[i]->t_index, 2, MPI_INT);
+      ddd_add_member(n, &(AC_Tables[i]->columns), 1, MPI_INT);
+      ddd_add_member(n, &(AC_Tables[i]->interp_method), 1, MPI_INT);
+      ddd_add_member(n, &(AC_Tables[i]->tablelength), 1, MPI_INT);
+      ddd_add_member(n, &(AC_Tables[i]->f_index), 1, MPI_INT);
+      ddd_add_member(n, &(AC_Tables[i]->species_eq), 1, MPI_INT);
+      ddd_add_member(n, &(AC_Tables[i]->ngrid), 1, MPI_INT);
+      ddd_add_member(n, &(AC_Tables[i]->yscale), 1, MPI_DOUBLE);
+      ddd_add_member(n, &(AC_Tables[i]->Emin), 1, MPI_DOUBLE);
+    }
 
   for ( i=0; i < num_BC_Tables; i++ )
     {
@@ -2454,7 +2480,7 @@ noahs_ark()
   ddd_add_member(n, &PP_LAME_LAMBDA, 1, MPI_INT);
   ddd_add_member(n, &VON_MISES_STRAIN, 1, MPI_INT);
   ddd_add_member(n, &VON_MISES_STRESS, 1, MPI_INT);
-  ddd_add_member(n, &NON_VOLFRAC, 1, MPI_INT);
+  ddd_add_member(n, &UNTRACKED_SPEC, 1, MPI_INT);
 
   if ( len_u_post_proc > 0 )
     {
@@ -2539,6 +2565,7 @@ noahs_ark()
 	  ddd_add_member(n, &(pp_volume[i]->species_no), 1, MPI_INT );
 	  ddd_add_member(n, &(pp_volume[i]->blk_id), 1, MPI_INT );
 	  ddd_add_member(n,   pp_volume[i]->volume_fname, MAX_FNL, MPI_CHAR );
+	  ddd_add_member(n, &(pp_volume[i]->num_params), 1, MPI_INT );
 	}
     }
 			 
@@ -3070,6 +3097,11 @@ ark_landing()
                augc[i].DataFlt );
     }
 
+  for ( i=0; i < nn_volume; i++ )
+    {
+       dalloc( pp_volume[i]->num_params, pp_volume[i]->params );
+    }
+
 #ifdef DEBUG
   printf("P%d: Finished ark_landing\n", ProcID); fflush(stdout);
 #endif      
@@ -3484,6 +3516,12 @@ noahs_dove()
     {
       crdv( augc[i].len_AC,
             augc[i].DataFlt );
+    }
+  /*   Post-processing parameters    */
+
+  for( i=0; i< nn_volume; i++)
+    {
+     crdv( pp_volume[i]->num_params, pp_volume[i]->params);
     }
   
   ddd_set_commit(n);

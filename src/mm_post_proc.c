@@ -254,7 +254,7 @@ int PP_LAME_MU = -1;
 int PP_LAME_LAMBDA = -1;
 int VON_MISES_STRESS = -1;
 int VON_MISES_STRAIN = -1;
-int NON_VOLFRAC = -1;
+int UNTRACKED_SPEC = -1;
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -562,6 +562,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   memset( dTT_dmax_strain, 0, sizeof(double)*DIM*DIM*MDE);
   memset( dTT_dcur_strain, 0, sizeof(double)*DIM*DIM*MDE);
   memset(FVP, 0, sizeof(double)*DIM*DIM);
+
+  zero_structure(&s_terms, sizeof(struct Species_Conservation_Terms), 1);
 
   /* load eqn and variable number in tensor form */
   err = stress_eqn_pointer(v_s);
@@ -1444,32 +1446,36 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_lumped[LIGHT_INTENSITY] = 1.0;
   } /* end of LIGHT_INTENSITY */
 
-  if (NON_VOLFRAC != -1 && pd->e[R_MASS]  ) {
+  if (UNTRACKED_SPEC != -1 && pd->e[R_MASS]  ) {
       double density_tot=0.;
-      local_post[NON_VOLFRAC] = 1.0;
-      density_tot = calc_density(mp, FALSE, NULL, 0.0);
       switch(mp->Species_Var_Type)   {
       case SPECIES_CONCENTRATION:
+        density_tot = calc_density(mp, FALSE, NULL, 0.0);
+        local_post[UNTRACKED_SPEC] = density_tot;
 	for (j=0 ; j < pd->Num_Species_Eqn ; j++)	{
-      		local_post[NON_VOLFRAC] -= fv->c[j]*mp->molar_volume[j];
+      		local_post[UNTRACKED_SPEC] -= fv->c[j]*mp->molecular_weight[j];
 		}
+      	local_post[UNTRACKED_SPEC] /= mp->molecular_weight[pd->Num_Species_Eqn];
         break;
       case SPECIES_DENSITY:
+        density_tot = calc_density(mp, FALSE, NULL, 0.0);
+        local_post[UNTRACKED_SPEC] = density_tot;
 	for (j=0 ; j < pd->Num_Species_Eqn ; j++)	{
-      		local_post[NON_VOLFRAC] -= fv->c[j]*mp->specific_volume[j];
+      		local_post[UNTRACKED_SPEC] -= fv->c[j];
 		}
         break;
       case SPECIES_MASS_FRACTION:
       case SPECIES_UNDEFINED_FORM:
+        local_post[UNTRACKED_SPEC] = 1.0;
 	for (j=0 ; j < pd->Num_Species_Eqn ; j++)	{
-      		local_post[NON_VOLFRAC] -= density_tot*fv->c[j]*mp->specific_volume[j];
+      		local_post[UNTRACKED_SPEC] -= fv->c[j];
 		}
         break;
       default:
-        WH(-1,"Undefined Species Type in NON_VOLFRAC\n");
+        WH(-1,"Undefined Species Type in UNTRACKED_SPEC\n");
       }
-      local_lumped[NON_VOLFRAC] = 1.0;
-  } /* end of NON_VOLFRAC*/
+      local_lumped[UNTRACKED_SPEC] = 1.0;
+  } /* end of UNTRACKED_SPEC*/
 
 
 /*  EXTERNAL tables	*/
@@ -2088,6 +2094,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   if (USER_POST != -1) {
       /* calculate a user-specified post-processing variable */
       
+      err = get_continuous_species_terms(&s_terms, time, theta, delta_t, hs);
+
       local_post[USER_POST] = user_post(u_post_proc);
       local_lumped[USER_POST] = 1.;
   }
@@ -6171,8 +6179,8 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Lame LAMBDA", &PP_LAME_LAMBDA);
   iread = look_for_post_proc(ifp, "Von Mises Strain", &VON_MISES_STRAIN);
   iread = look_for_post_proc(ifp, "Von Mises Stress", &VON_MISES_STRESS);
-  iread = look_for_post_proc(ifp, "Nonvolatile Species Volume Fraction", 
-                             &NON_VOLFRAC);
+  iread = look_for_post_proc(ifp, "Untracked Species", 
+                             &UNTRACKED_SPEC);
   iread = look_for_post_proc(ifp, "Porous Saturation", 
 			     &POROUS_SATURATION);
   iread = look_for_post_proc(ifp, "Total density of solvents in porous media",
@@ -7307,7 +7315,6 @@ rd_post_process_specs(FILE *ifp,
    */
   iread = look_for_optional(ifp, "Post Processing Volumetric Integration", input, '=');
 
-
   if(iread == 1)
     {
       nn_volume = count_list(ifp, "VOLUME_INT", input, '=', "END OF VOLUME_INT");
@@ -7354,6 +7361,7 @@ rd_post_process_specs(FILE *ifp,
 	  SPF(echo_string,"%s = %s", "VOLUME_INT", pp_volume[i]->volume_name);
 
 
+
 	  if( fscanf(ifp,"%d %d", &(pp_volume[i]->blk_id), &(pp_volume[i]->species_no) ) != 2 )
 	    {
 	      fprintf(stderr,"%s:\tError reading blk_id or species number for volume integral\n",yo);
@@ -7377,7 +7385,7 @@ rd_post_process_specs(FILE *ifp,
 
 	  if ( nargs == 0 )
 	    {
-              EH(-1,"Found zero arguments for the Flux Sens file name");
+              EH(-1,"Found zero arguments for the Volumetric Integration file name");
             }
 
 	  strcpy(pp_volume[i]->volume_fname, second_string);
@@ -9112,22 +9120,22 @@ index_post, index_post_export);
       LIGHT_INTENSITY = -1;
     }
 
-  if (NON_VOLFRAC != -1  && Num_Var_In_Type[R_MASS] )
+  if (UNTRACKED_SPEC != -1  && Num_Var_In_Type[R_MASS] )
     {
-      set_nv_tkud(rd, index, 0, 0, -2, "NON_VF","[1]", "Nonvolatile Volume Fraction",
+      set_nv_tkud(rd, index, 0, 0, -2, "UNT_SPEC","[1]", "Untracked Species",
 		  FALSE);
       index++;
-      if (NON_VOLFRAC == 2)
+      if (UNTRACKED_SPEC == 2)
         {
           Export_XP_ID[index_post_export] = index_post;
           index_post_export++;
         }
-      NON_VOLFRAC = index_post;
+      UNTRACKED_SPEC = index_post;
       index_post++;
     }
   else
     {
-      NON_VOLFRAC = -1;
+      UNTRACKED_SPEC = -1;
     }
 
   if (PRINCIPAL_STRESS != -1  && Num_Var_In_Type[R_MESH1])

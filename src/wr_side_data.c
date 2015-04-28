@@ -467,29 +467,47 @@ ns_data_print(pp_Data * p,
             ordinate += x[id_var];
             iprint = 1;
           }
-        else if ( strncasecmp(qtity_str, "nonvolatile", 11 ) == 0 )
+        else if ( strncasecmp(qtity_str, "external_field", 14 ) == 0 )
+          {
+            id_var = Index_Solution(node, MASS_FRACTION, species_id, 0, mat_num);
+            ordinate = efv->ext_fld_ndl_val[species_id][node];
+            iprint = 1;
+          }
+        else if ( strncasecmp(qtity_str, "untracked", 11 ) == 0 )
           {
             double density_tot=0.;
-            ordinate = 1.0;
-            density_tot = calc_density(mp_glob[mat_num], FALSE, NULL, 0.0);
-	    for(wspec = 0 ; wspec < pd->Num_Species_Eqn ; wspec++)
-		{
-            	id_var = Index_Solution(node, MASS_FRACTION, wspec, 0, mat_num);
             switch(mp_glob[mat_num]->Species_Var_Type)   {
                case SPECIES_CONCENTRATION:
-            	ordinate -= x[id_var]*mp_glob[mat_num]->molar_volume[wspec];
+                    density_tot = calc_density(mp_glob[mat_num], FALSE, NULL, 0.0);
+                    ordinate = density_tot;
+	            for(wspec = 0 ; wspec < pd->Num_Species_Eqn ; wspec++)
+		        {
+            	          id_var = Index_Solution(node, MASS_FRACTION, wspec, 0, mat_num);
+            	          ordinate -= x[id_var]*mp_glob[mat_num]->molecular_weight[wspec];
+		        }
+            	     ordinate /= mp_glob[mat_num]->molecular_weight[pd->Num_Species_Eqn];
                break;
                case SPECIES_DENSITY:
-            	ordinate -= x[id_var]*mp_glob[mat_num]->specific_volume[wspec];
+                    density_tot = calc_density(mp_glob[mat_num], FALSE, NULL, 0.0);
+                    ordinate = density_tot;
+	            for(wspec = 0 ; wspec < pd->Num_Species_Eqn ; wspec++)
+		        {
+            	          id_var = Index_Solution(node, MASS_FRACTION, wspec, 0, mat_num);
+            	          ordinate -= x[id_var];
+		        }
                break;
                case SPECIES_MASS_FRACTION:
                case SPECIES_UNDEFINED_FORM:
-            	ordinate -= density_tot*x[id_var]*mp_glob[mat_num]->specific_volume[wspec];
+                    ordinate = 1.0;
+	            for(wspec = 0 ; wspec < pd->Num_Species_Eqn ; wspec++)
+		        {
+            	          id_var = Index_Solution(node, MASS_FRACTION, wspec, 0, mat_num);
+            	          ordinate -= x[id_var];
+		        }
                break;
                default:
-                    WH(-1,"Undefined Species Type in nonvolatile\n");
+                    WH(-1,"Undefined Species Type in untracked species\n");
                }
-		}
             iprint = 1;
           }
 	else

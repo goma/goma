@@ -1412,7 +1412,6 @@ rd_bc_specs(FILE *ifp,
 	case BLAKE_DIRICH_ROLL_BC:
 	case HOFFMAN_DIRICH_ROLL_BC:
 	case COX_DIRICH_ROLL_BC:
-	case CAP_REPULSE_TABLE_BC:
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],   
 		      &BC_Types[ibc].BC_Data_Float[1],   
@@ -1548,6 +1547,7 @@ rd_bc_specs(FILE *ifp,
 	case MOVING_CA_BC:
 	case REP_FORCE_ROLL_BC:
 	case REP_FORCE_ROLL_RS_BC:
+	case CAP_REPULSE_TABLE_BC:
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],
 		      &BC_Types[ibc].BC_Data_Float[1],
@@ -1566,12 +1566,19 @@ rd_bc_specs(FILE *ifp,
 	    }
 	  for(i=0;i<10;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
           
+  	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1)
+    		{
+      		 BC_Types[ibc].BC_Data_Int[2] = -1;
+    		}
+	  else
+		SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[2]);
+
 	  break;
 
 	case CAP_REPULSE_ROLL_BC:
 	case CAP_REPULSE_USER_BC:
 
-	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", 
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],
 		      &BC_Types[ibc].BC_Data_Float[1],
 		      &BC_Types[ibc].BC_Data_Float[2],
@@ -1584,9 +1591,10 @@ rd_bc_specs(FILE *ifp,
 		      &BC_Types[ibc].BC_Data_Float[9],
 		      &BC_Types[ibc].BC_Data_Float[10],
 		      &BC_Types[ibc].BC_Data_Float[11],
-		      &BC_Types[ibc].BC_Data_Float[12]) != 13)
+		      &BC_Types[ibc].BC_Data_Float[12],
+		      &BC_Types[ibc].BC_Data_Float[13]) != 14)
 	    {
-	      sr = sprintf(err_msg, "%s: Expected 13 flts for %s.",
+	      sr = sprintf(err_msg, "%s: Expected 14 flts for %s.",
 			   yo, BC_Types[ibc].desc->name1);
 	      EH(-1, err_msg);
 	    }

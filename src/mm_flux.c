@@ -856,7 +856,8 @@ evaluate_flux(
 
                       local_q +=  0.5 * fv->x[1] * fabs(fv->snormal[1]) ;
                       local_flux += weight*det* local_q ;
-                      local_flux_conv = 0.0;
+		      local_flux_conv = 0.0;
+/*                      local_flux_conv += weight*det*mp->surface_tension ;*/
 
                       break;
 
@@ -1107,6 +1108,7 @@ evaluate_flux(
                                   fv->snormal[a]*fv->grad_c[species_id][a] );
                           local_qconv += ( fv->snormal[a]*(fv->v[a]-x_dot[a])*fv->c[species_id] );
                         }
+                          local_qconv = 0;
                           local_flux +=  weight*det*local_q;
                           local_flux_conv += weight*det*local_qconv;
 		      break;
@@ -3052,7 +3054,8 @@ evaluate_flux(
 					(fv->v[a]-x_dot[a]) *
 					bf[var]->phi[j] * delta(w,species_id);
 				  }
-				  J_AC[c] += d_term + d_term1;
+				  /*J_AC[c] += d_term + d_term1;*/
+				  J_AC[c] += d_term;
 				}
 			      }
 			    }
@@ -3507,10 +3510,10 @@ evaluate_flux(
                                 {
                                   for (j=0; j<ei->dof[var]; j++)
                                     {
-                                      J_AC[ ei->gun_list[var][j]  ] += weight*
-                                        (fv->x[1]*(fv->snormal[0]*fv->dsurfdet_dx[p][j]
-                                                + det*fv->dsnormal_dx[0][p][j])
-                                        + det*fv->snormal[0]*bf[var]->phi[j]*delta(p,1));
+                                      J_AC[ ei->gun_list[var][j]  ] += 0.5*weight*
+                     SGN(fv->snormal[1])*(fv->x[1]*(fv->snormal[1]*fv->dsurfdet_dx[p][j]
+                                                   + det*fv->dsnormal_dx[1][p][j])
+                         + det*fv->snormal[1]*bf[var]->phi[j]*delta(p,1));
                                     }
                                 }
                             }
@@ -4319,7 +4322,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
   int eb,e_start,e_end, elem;
 
   int err=0;
-  int ip, ip_total;
+  int mn, ip, ip_total;
   double sum = 0.0;
   extern int PRS_mat_ielem;
   extern int MMH_ip; 
@@ -4433,7 +4436,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
     }
   }
 
-  map_mat_index(blk_id);
+  mn = map_mat_index(blk_id);
   if( ( eb = in_list(blk_id, 0, exo->num_elem_blocks, exo->eb_id) ) != -1 )
     {
 
@@ -4713,6 +4716,11 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
   
   if ( ls != NULL ) ls->on_sharp_surf = FALSE;
 
+  if (quantity == I_SPECIES_SOURCE)
+      { 
+      Spec_source_inventory[mn][species_id] += 0.5*sum*(delta_t+tran->delta_t);
+      }
+
 
   if( print_flag && ProcID == 0 )
     {
@@ -4720,7 +4728,10 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
       
       if( (jfp = fopen( filenm, "a")) != NULL )	{
 	if (ppvi_type == PPVI_VERBOSE) {
-	  fprintf(jfp,"   volume= %10.7e \n", sum );
+           if(quantity == I_SPECIES_SOURCE)
+	      {fprintf(jfp,"   volume= %10.7e \n", Spec_source_inventory[mn][species_id] );}
+              else
+	      {fprintf(jfp,"   volume= %10.7e \n", sum );}
 	}
 	if (ppvi_type == PPVI_CSV) {
 	  fprintf(jfp,"%10.7e\n", sum );
@@ -5006,19 +5017,44 @@ compute_volume_integrand(const int quantity, const int elem,
 
     case I_SPECIES_MASS:
       {
- 	double dens_factor, rho;
- 	    rho = density( NULL, time );
+ 	double dens_factor, density_tot, untracked_spec=0;
+        density_tot = calc_density(mp, FALSE, NULL, 0.0);
    		switch ( mp->Species_Var_Type )
      			{
  			case SPECIES_DENSITY:
  				{ dens_factor=1.; break;	}
  			case SPECIES_UNDEFINED_FORM:
  			case SPECIES_MASS_FRACTION:
- 				{ dens_factor=rho; break;	}
+ 				{ dens_factor=density_tot; break;	}
  			default:
  				{ dens_factor=1.; break;	}
  			}
- 	*sum += weight*det*( dens_factor*fv->c[species_no] ) ;
+      if( species_no < pd->Num_Species_Eqn)
+        { *sum += weight*det*( dens_factor*fv->c[species_no] ) ; }
+      else  {
+      switch(mp->Species_Var_Type)   {
+      case SPECIES_CONCENTRATION:
+        untracked_spec = density_tot;
+        for (j=0 ; j < pd->Num_Species_Eqn ; j++)       {
+                untracked_spec -= fv->c[j]*mp->molecular_weight[j];
+                }
+        untracked_spec /= mp->molecular_weight[pd->Num_Species_Eqn];
+        break;
+      case SPECIES_DENSITY:
+        untracked_spec = density_tot;
+        for (j=0 ; j < pd->Num_Species_Eqn ; j++)       {
+                untracked_spec -= fv->c[j];
+                }
+        break;
+      case SPECIES_MASS_FRACTION:
+      case SPECIES_UNDEFINED_FORM:
+        untracked_spec = 1.0;
+        for (j=0 ; j < pd->Num_Species_Eqn ; j++)       {
+                untracked_spec -= fv->c[j];
+                }
+        }
+        *sum += weight*det*( dens_factor*untracked_spec ) ; 
+      }
 
 	if( J_AC != NULL )
 	  {
@@ -5057,6 +5093,77 @@ compute_volume_integrand(const int quantity, const int elem,
       }
       break;
 
+    case I_SPECIES_SOURCE:
+      {
+        struct Species_Conservation_Terms s_terms; 
+        int w1,i,ie,ldof,eqn=MASS_FRACTION;
+        zero_structure(&s_terms, sizeof(struct Species_Conservation_Terms), 1);
+        get_continuous_species_terms(&s_terms, time, tran->theta, delta_t, NULL);
+        if(time > tran->init_time+delta_t)
+ 	   {*sum += weight*det*(-s_terms.MassSource[species_no]) ;}
+#if 1  
+  if (efv->ev) {
+        if( efv->i[species_no] != I_TABLE)
+          {       
+           for (i = 0; i < ei->num_local_nodes; i++) {
+                ie = Proc_Elem_Connect[ei->iconnect_ptr + i];
+		ldof=ei->ln_to_dof[eqn][i];
+                if(ldof >= 0 )
+                   {
+        if(time <= tran->init_time+delta_t)
+ 	   {*sum += weight*det*efv->ext_fld_ndl_val[species_no][ie] ;}
+                  efv->ext_fld_ndl_val[species_no][ie] += 
+                  bf[eqn]->phi[ldof]*weight*det*
+                       0.5*(delta_t+tran->delta_t)
+                              *(-s_terms.MassSource[species_no]);
+                     if(species_no == 0)	{
+                          Spec_source_lumped_mass[ie] += 
+                               bf[eqn]->phi[ldof]*weight*det;
+                                }
+                   }
+                } 
+          }
+  }
+#endif
+
+	if( J_AC != NULL )
+	  {
+	    for( a=0; a<dim ; a++)
+	      {
+		var = MESH_DISPLACEMENT1 + a;
+
+		if( pd->v[var] )
+		  {
+		    for( j=0 ; j<ei->dof[var]; j++)
+		      {
+	    
+			J_AC[ ei->gun_list[var][j] ] += weight*  ( h3 * bf[pd->ShapeVar]->d_det_J_dm[a][j] +
+ 			fv->dh3dq[a]*bf[var]->phi[j] * det_J )*s_terms.MassSource[species_no];
+		      }
+		  }
+	      }
+
+	    var = MASS_FRACTION;
+	    if (pd->v[var]) {
+	    for ( w1=0; w1<pd->Num_Species_Eqn; w1++)  {
+	      for (j = 0; j < ei->dof[var]; j++) {
+		/*
+		 * Find the material index for the current
+		 * local variable degree of freedom
+		 * (can't just query gun_list for MASS_FRACTION
+		 *  unknowns -> have to do a lookup)
+		 */		
+		gnn = ei->gnn_list[var][j];
+		ledof = ei->lvdof_to_ledof[var][j];
+		matIndex = ei->matID_ledof[ledof];
+		c = Index_Solution(gnn, var, species_no, 0, matIndex);
+ 		J_AC[c] += weight * det * s_terms.d_MassSource_dc[species_no][w1][j];
+	      }
+	     }
+	    }
+	  }
+      }
+      break;
     case I_MOMX:
     case I_MOMY:
     case I_MOMZ:
