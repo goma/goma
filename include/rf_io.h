@@ -108,6 +108,8 @@ extern int Anneal_Mesh;         /* Flag specifying creation of a special exodus
 				 * are set to zero and mesh is deemed stress-free */
 
 extern double Porous_liq_inventory; /*global variable for finite-insult boundary 					condition */
+extern double **Spec_source_inventory; 
+extern double *Spec_source_lumped_mass; 
 extern const char anneal_file[];
 
 extern char front_scratch_directory[MAX_FNL]; /* def'd in main.c */

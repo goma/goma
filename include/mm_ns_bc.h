@@ -281,7 +281,6 @@ PROTO((double cfunc[MDE][DIM],
 EXTERN void apply_repulsion_roll
 PROTO((double cfunc[MDE][DIM],
        double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-       const double ,		/* surface tensionf  */
        const double ,		/* roll radius      */
        const double [3],		/* axis origin      */
        const double [3],		/* direction angles      */
@@ -296,7 +295,6 @@ PROTO((double cfunc[MDE][DIM],
 EXTERN void apply_repulsion_user
 PROTO((double cfunc[MDE][DIM],
        double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-       const double ,		/* surface tensionf  */
        const double ,		/* roll radius      */
        const double [3],		/* axis origin      */
        const double [3],		/* direction angles      */

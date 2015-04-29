@@ -31531,7 +31531,7 @@ assemble_poynting(double time,	/* present time value */
   /*
  *    Radiative transfer equation variables - connect to input file someday
  */
-  double svect[3]={0.,-1,0.};
+  double svect[3]={0.,-1.,0.};
   double mucos=1.0;
 
   /*

@@ -638,7 +638,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 
-		  /*
+                   /*
 		   *  Sum up all of the individual contributions and store it
 		   *  in the local element residual vector.
 		   */
@@ -6572,6 +6572,12 @@ mtc_chilton_coburn(dbl *mtc,
 /*  Assuming temperature is in degrees K  */
  
 	T_film = 0.5*(fv->T + T_gas);	
+/*if(T_gas < 0 || T_gas > 1000)
+	{
+	fprintf(stderr,"chilton-coburn %g\n",T_gas);
+	T_film = fv->T;	
+	}
+*/
  
 /* gas density - ideal gas law */
  
@@ -10178,31 +10184,35 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
       }
       else if(mp->SpeciesSourceModel[w] == PHOTO_CURING )
       {
-       double intensity;
-       double k_prop, k_term, k_inh, free_rad;
+       double intensity=0;
+       double k_prop=0, k_term=0, k_inh=0, free_rad;
        double *param,s,dsdC[MAX_CONC],dsdT;
        int model_bit, num_mon, O2_spec=-1, rad_spec=-1, init_spec = 0;
-       k_term = 0;
-       k_inh = 0;
+
        param = mp->u_species_source[w];
        model_bit = ((int)param[0]);
        s = 0;       
        dsdT = 0;   
        for(a=0; a<MAX_CONC; a++) dsdC[a]=0.;  
 
-#if 1
-       intensity = 0;
        if(pd->e[R_LIGHT_INTP])
-          { intensity += fv->poynt[0];}
-       if(pd->e[R_LIGHT_INTM])
+         {
+         intensity = fv->poynt[0];
+         if(pd->e[R_LIGHT_INTM])
           { intensity += fv->poynt[1];}
-       if(pd->e[R_LIGHT_INTD])
+         if(pd->e[R_LIGHT_INTD])
           { intensity += fv->poynt[2];}
-       intensity *= mp->u_species_source[init_spec][1];
-#else
-      intensity = mp->u_species_source[init_spec][1]*
+         intensity *= mp->u_species_source[init_spec][1];
+         intensity = MAX(intensity,0.0);
+         }   
+       else if(pd->e[R_ACOUS_PREAL])
+         {
+         intensity = mp->u_species_source[init_spec][1]*
                      (SQUARE(fv->apr)+SQUARE(fv->api));
-#endif
+         } 
+       else
+        { WH(-1,"No Intensity field found in PHOTO_CURING\n"); }
+
       /*  free radical concentration  */
 	num_mon = model_bit>>2;
        if( (model_bit & 1)  && (model_bit & 2))

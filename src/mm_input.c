@@ -6525,17 +6525,20 @@ rd_solver_specs(FILE *ifp,
     {
     (void) read_string(ifp, input, '\n');
     strip(input);
-    if ( strcmp(input,"no") == 0 )
+    if ( strncmp(input,"no",2) == 0 )
       {
         Include_Visc_Sens = TRUE;
       }
-    else if ( strcmp(input,"yes") == 0 )
+    else if ( strncmp(input,"yes",3) == 0 )
       {
+	char temp_string[80];
         Include_Visc_Sens = FALSE;
+        if (sscanf(input, "%s %d", temp_string, &Visc_Sens_Factor) != 2)
+	    {  Visc_Sens_Factor = 2; }
       }
     else
       {
-        EH( -1, "invalid choice for Disable Viscosity Sensitivities:must be yesor no");
+        EH( -1, "invalid choice for Disable Viscosity Sensitivities:must be yes or no");
       }
       SPF(echo_string,eoformat,"Disable Viscosity Sensitivities", input); ECHO(echo_string,echo_file);
     }
