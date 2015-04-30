@@ -2157,7 +2157,6 @@ rd_bc_specs(FILE *ifp,
         case T_CONTACT_RESIS_2_BC:
         case LIGHTP_JUMP_BC:
         case LIGHTM_JUMP_BC:
-        case LIGHTD_JUMP_BC:
 
 	  if ( fscanf(ifp, "%d %d", &BC_Types[ibc].BC_Data_Int[0],
 		      &BC_Types[ibc].BC_Data_Int[1]) != 2)

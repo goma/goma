@@ -6572,12 +6572,14 @@ mtc_chilton_coburn(dbl *mtc,
 /*  Assuming temperature is in degrees K  */
  
 	T_film = 0.5*(fv->T + T_gas);	
-/*if(T_gas < 0 || T_gas > 1000)
+#if 0
+if(T_gas < 0 || T_gas > 1000)
 	{
 	fprintf(stderr,"chilton-coburn %g\n",T_gas);
 	T_film = fv->T;	
 	}
-*/
+#endif
+
  
 /* gas density - ideal gas law */
  

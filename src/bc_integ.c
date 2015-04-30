@@ -1621,7 +1621,6 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	    break;
 	case LIGHTP_JUMP_BC:
 	case LIGHTM_JUMP_BC:
-	case LIGHTD_JUMP_BC:
 	  qside_light_jump(func, d_func, time_intermediate,(int)bc->BC_Name,
 			    bc->BC_Data_Int[0],
 			    bc->BC_Data_Int[1]);

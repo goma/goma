@@ -5315,8 +5315,10 @@ apply_repulsion_table (double cfunc[MDE][DIM],
     double dist;		/* squared distance from surface to wall     */
     double coord[3]={0,0,0};
     double force = 0.0, d_force = 0.0, inv_slip = 0.0, d_inv_slip = 0.0;
+    double sheara = 0., d_sheara = 0., shearb = 0., d_shearb = 0.;
     double t_veloc[2]={0,0}, dt_veloc_dx[2][MAX_PDIM][MAX_PDIM][MDE];
     double n_veloc=0, dn_veloc_dx[MAX_PDIM][MAX_PDIM][MDE];
+    double dsheara_dx[MAX_PDIM][MAX_PDIM][MDE],dshearb_dx[MAX_PDIM][MAX_PDIM][MDE];
 
     int j, i, id, var, a, eqn, I, ldof;
     double point[3]={0,0,0},dcl_dist,slope, mod_factor=1.;
@@ -5388,14 +5390,15 @@ apply_repulsion_table (double cfunc[MDE][DIM],
            force = -P_rep*mod_factor/pow(dist/hscale, repexp); 
            d_force = P_rep*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
 /*  slip velocity function function  */
-           inv_slip = -gas_visc*mod_factor/pow(dist/hscale, repexp); 
-           d_inv_slip = gas_visc*mod_factor*repexp/pow(dist/hscale, repexp+1)/hscale;
+           inv_slip = -gas_visc*mod_factor/dist; 
+           d_inv_slip = gas_visc*mod_factor/SQUARE(dist);
 
-      n_veloc = 1.0;
       for (a=0; a<ei->ielem_dim; a++)
 	{  
          t_veloc[0] += fv->stangent[0][a]*(fv->v[a]-v_wall[a]);
-/*         n_veloc += fv->snormal[a]*(fv->v[a]-v_wall[a]);*/
+         n_veloc += fv->snormal[a]*(fv->v[a]-v_wall[a]);
+	 sheara += 0.5*dist*d_force*d_dist[a]*fv->stangent[0][a];
+	 d_sheara += 0.5*fv->stangent[0][a]*(d_force*d_dist[a]-d_force*(repexp+1.)*SQUARE(hscale));
 	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
 	    {
 	      var = MESH_DISPLACEMENT1 + jvar;
@@ -5404,8 +5407,9 @@ apply_repulsion_table (double cfunc[MDE][DIM],
 		  for ( j=0; j<ei->dof[var]; j++)
                      {
          dt_veloc_dx[0][a][jvar][j] = fv->dstangent_dx[0][a][jvar][j]*(fv->v[a]-v_wall[a]);
-/*         dn_veloc_dx[a][jvar][j] = fv->dsnormal_dx[a][jvar][j]*(fv->v[a]-v_wall[a]);*/
+         dn_veloc_dx[a][jvar][j] = fv->dsnormal_dx[a][jvar][j]*(fv->v[a]-v_wall[a]);
          dn_veloc_dx[a][jvar][j] = 0.;
+         dsheara_dx[a][jvar][j] = 0.5*dist*d_force*d_dist[a]*fv->dstangent_dx[0][a][jvar][j];
                      }
                 }
              }
@@ -5415,6 +5419,8 @@ apply_repulsion_table (double cfunc[MDE][DIM],
       for (a=0; a<ei->ielem_dim; a++)
 	{  
          t_veloc[1] += fv->stangent[1][a]*(fv->v[a]-v_wall[a]);
+	 shearb += 0.5*dist*d_force*d_dist[a]*fv->stangent[1][a];
+	 d_shearb += 0.5*fv->stangent[1][a]*(d_force*d_dist[a]-d_force*(repexp+1.)*SQUARE(hscale));
 	  for (jvar=0; jvar<ei->ielem_dim; jvar++)
 	    {
 	      var = MESH_DISPLACEMENT1 + jvar;
@@ -5423,6 +5429,7 @@ apply_repulsion_table (double cfunc[MDE][DIM],
 		  for ( j=0; j<ei->dof[var]; j++)
                      {
          dt_veloc_dx[1][a][jvar][j] = fv->dstangent_dx[1][a][jvar][j]*(fv->v[a]-v_wall[a]);
+         dshearb_dx[a][jvar][j] = 0.5*dist*d_force*d_dist[a]*fv->dstangent_dx[1][a][jvar][j];
                      }
                 }
              }
@@ -5456,16 +5463,18 @@ apply_repulsion_table (double cfunc[MDE][DIM],
                                 *fv->snormal[a]*d_dist[jvar]*bf[var]->phi[j])
 			        * bf[eqn]->phi[ldof]; 
 			  d_cfunc[ldof][a][var][j] +=
-                         (t_veloc[0]*inv_slip * fv->dstangent_dx[0][a][jvar][j] 
-			        + t_veloc[0]*d_inv_slip * fv->stangent[0][a]
+                         ((t_veloc[0]*inv_slip+sheara) * fv->dstangent_dx[0][a][jvar][j] 
+			        + (t_veloc[0]*d_inv_slip+d_sheara) * fv->stangent[0][a]
 			        * d_dist[jvar] * bf[var]->phi[j]
-			+inv_slip*fv->stangent[0][a]*dt_veloc_dx[0][a][jvar][j])
+			+fv->stangent[0][a]*(inv_slip*dt_veloc_dx[0][a][jvar][j]
+                              +dsheara_dx[a][jvar][j]))
 			        * bf[eqn]->phi[ldof]; 
 			  if( dim == 3) d_cfunc[ldof][a][var][j] +=
-                          (t_veloc[1]*inv_slip * fv->dstangent_dx[1][a][jvar][j]
-				+ t_veloc[1]*d_inv_slip * fv->stangent[1][a]
+                          ((t_veloc[1]*inv_slip+shearb) * fv->dstangent_dx[1][a][jvar][j]
+				+ (t_veloc[1]*d_inv_slip+d_shearb) * fv->stangent[1][a]
 				* d_dist[jvar] * bf[var]->phi[j]
-			+inv_slip*fv->stangent[1][a]*dt_veloc_dx[1][a][jvar][j])
+			+fv->stangent[1][a]*(inv_slip*dt_veloc_dx[1][a][jvar][j]
+                              +dshearb_dx[a][jvar][j]))
 			        * bf[eqn]->phi[ldof]; 
 			}
 		    }
@@ -5513,20 +5522,20 @@ apply_repulsion_table (double cfunc[MDE][DIM],
       for (a=0; a<ei->ielem_dim; a++)
 	{  
 	  cfunc[ldof][a] += force * n_veloc*fv->snormal[a] * bf[eqn]->phi[ldof]; 
-	  cfunc[ldof][a] += inv_slip * fv->stangent[0][a]*t_veloc[0]*bf[eqn]->phi[ldof]; 
+	  cfunc[ldof][a] += (inv_slip*t_veloc[0] + sheara ) * fv->stangent[0][a]*bf[eqn]->phi[ldof]; 
 	}
       if( dim == 3)
       {
       for (a=0; a<ei->ielem_dim; a++)
 	{  
-	  cfunc[ldof][a] += inv_slip * fv->stangent[1][a]*t_veloc[1]*bf[eqn]->phi[ldof]; 
+	  cfunc[ldof][a] += (inv_slip*t_veloc[1] + shearb) * fv->stangent[1][a]*bf[eqn]->phi[ldof]; 
 	}
       }
     }
     
   } /* end of for (i = 0; i < (int) elem_side_bc->num_nodes_on_side */
 
-} /* END of routine apply_repulsion_user                                          */
+} /* END of routine apply_repulsion_table  */
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
@@ -13785,7 +13794,7 @@ light_transmission(double func[DIM],
   /*
    *    Radiative transfer equation variables - connect to input file someday
    */
-  double svect[3]={0.7071,-0.7071,0.};
+  double svect[3]={0.,-1.,0.};
   double mucos=1.0;
   double mucos_tran, mu_crit;
   double Grefl, Rrefl, Xrefl, Yrefl;
@@ -13934,8 +13943,8 @@ qside_light_jump(double func[DIM],
 		    ) 
 /******************************************************************************
 *
-*  Function which applies thermal contact resistance at a side set interface 
-*  Author: P. R. Schunk (3/1/2013)
+*  Function which applies light intensity jump at a side set interface 
+*  Author: Robert Secor (4/29/2015)
 *
 ******************************************************************************/
      
@@ -13943,10 +13952,26 @@ qside_light_jump(double func[DIM],
   
 /* Local variables */
   
-  int j_id;
-  int var;
-  double phi_j,R_inv = 0;
-  double sign_int = 0;
+  int sign_int = 0;
+  int j, b, w, dim;
+  int eqn = 0, eqn_alt = 0, var;
+
+  /*
+   *    Radiative transfer equation variables - connect to input file someday
+   */
+  double svect[3]={0.,-1.,0.};
+  double mucos=1.0;
+  double mucos_tran, mu_crit;
+  double Grefl, Rrefl, Xrefl, Yrefl;
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_alpha_struct; 
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha = &d_alpha_struct;
+  double refindex, refratio, direction;			/* Refractive Index */
+  double other_refindex;			/* Refractive Index */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_n_struct; 
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_n = &d_n_struct;
+
+  double mucos_tran_dn, Grefl_dn, Rrefl_dn, Xrefl_dn, Yrefl_dn;
+  MATRL_PROP_STRUCT *mp_2;
   
 /***************************** EXECUTION BEGINS *******************************/
   
@@ -13954,26 +13979,153 @@ qside_light_jump(double func[DIM],
     return;
   if (Current_EB_ptr->Elem_Blk_Id == ID_mat_1)
     {
-      sign_int=-1.0;
+      sign_int=-1;
     }
   else if (Current_EB_ptr->Elem_Blk_Id == ID_mat_2)
     {
-      sign_int=1.0;
+      sign_int=1;
     }
   else
     {
-      EH(-1,"T_CONTACT_RESIS has incorrect material ids");
+      EH(-1,"LIGHT_JUMP has incorrect material ids");
     }
 
-  if (af->Assemble_Jacobian) {
-    
- /* sum the contributions to the global stiffness matrix */
+  light_absorption( d_alpha, time );
+  refindex = refractive_index( d_n, time );
+/*other mp */
+  if(sign_int == -1)
+       { mp_2 = mp_glob[ID_mat_2];}
+  else
+       { mp_2 = mp_glob[ID_mat_1];}
+  if (mp_2 != mp) {
+        load_matrl_statevector(mp_2);
+	load_properties(mp_2, time);
+        }
+  other_refindex = refractive_index( d_n, time );
+/*reset material*/
+  load_matrl_statevector(mp);
+  load_properties(mp, time);
+
+  direction = svect[0]*fv->snormal[0]+svect[1]*fv->snormal[1]+svect[2]*fv->snormal[2];
+  refratio = other_refindex/refindex;
+  if(refratio >= 1.0)
+	{ mu_crit = sqrt(1.0-1.0/SQUARE(refratio));}
+  else
+	{ mu_crit = 0.0;}
+
+  if(direction < 0.0)
+	{
+         mucos_tran=sqrt(1.0-SQUARE(other_refindex/refindex)*(1.0-SQUARE(mucos)));
+         mucos_tran_dn= SQUARE(other_refindex)/CUBE(refindex)*(1.0-SQUARE(mucos))/mucos_tran;
+        }
+  else
+	{
+         mucos_tran=sqrt(1.0-SQUARE(refindex/other_refindex)*(1.0-SQUARE(mucos)));
+         mucos_tran_dn= -refindex/SQUARE(other_refindex)*(1.0-SQUARE(mucos))/mucos_tran;
+        }
+  Grefl = 0.5*(SQUARE((refindex*mucos-other_refindex*mucos_tran)/
+                       (refindex*mucos+other_refindex*mucos_tran))
+             +SQUARE((other_refindex*mucos-refindex*mucos_tran)/
+                       (other_refindex*mucos+refindex*mucos_tran)));
+  Grefl_dn = 2*other_refindex*mucos*
+         ((mucos_tran-refindex*mucos_tran_dn)*(refindex*mucos-other_refindex*mucos_tran)
+           /CUBE(refindex*mucos+other_refindex*mucos_tran)
+        -(mucos_tran+refindex*mucos_tran_dn)*(other_refindex*mucos-refindex*mucos_tran)
+           /CUBE(other_refindex*mucos+refindex*mucos_tran));
+  if(mucos >= mu_crit)	
+	{
+          Rrefl = Grefl;
+          Rrefl_dn = Grefl_dn;
+        }
+  else
+	{
+         Rrefl = 1.0;
+         Rrefl_dn = 0.;
+        }
+  if(other_refindex <= refindex)
+	{ 
+          Xrefl = Grefl;
+          Xrefl_dn = Grefl_dn;
+        }
+  else
+	{
+          Xrefl = Rrefl;
+          Xrefl_dn = Rrefl_dn;
+        }
+
+  Yrefl = SQUARE(other_refindex/refindex)*(1.0-Xrefl);
+  Yrefl_dn = SQUARE(other_refindex/refindex)*(-Xrefl_dn-2*(1.0-Xrefl)/refindex);
+
+
+/* Calculate the residual contribution					     */
   
-    var=TEMPERATURE;
-    for (j_id = 0; j_id < ei->dof[var]; j_id++) {
-      phi_j = bf[var]->phi[j_id];
-      d_func[0][var][j_id] += sign_int*R_inv * phi_j;
+  if(bc_type == LIGHTP_JUMP_BC)
+  	{ eqn = LIGHT_INTP;  eqn_alt = LIGHT_INTM;
+	  if(sign_int == -1)
+		{ *func += fv->poynt[0] - Xrefl*fv->poynt[1]; }
+	  else
+		{ *func -= Yrefl*fv->poynt[0]; }
+	}
+  else if(bc_type == LIGHTM_JUMP_BC)
+  	{ eqn = LIGHT_INTM; eqn_alt = LIGHT_INTP;
+	  if(sign_int == -1)
+		{ *func += fv->poynt[1] - Xrefl*fv->poynt[0]; }
+	  else
+		{ *func -= Yrefl*fv->poynt[1]; }
+	  }
+  else
+	{EH(-1,"invalid light transmission bc\n");}
+
+  if (af->Assemble_Jacobian)
+    {
+      	if ( pd->v[eqn] )
+	{
+	  for( j=0; j<ei->dof[eqn]; j++)
+	    {
+		  d_func[0][eqn][j] =  bf[eqn]->phi[j];
+	    }
+	}
+      	if ( pd->v[eqn_alt] )
+	{
+	  for( j=0; j<ei->dof[eqn_alt]; j++)
+	    {
+		  d_func[0][eqn_alt][j] =  -Xrefl*bf[eqn_alt]->phi[j];
+	    }
+	}
+	  var = TEMPERATURE;
+	  if ( pd->v[var] )
+	    {
+	      for ( j=0; j<ei->dof[var]; j++)
+		{
+		  d_func[0][var][j] =  d_n->T[j]*
+			(-Xrefl_dn*fv->poynt[LIGHT_INTM-eqn] - Yrefl_dn);
+                }
+            }
+	  for ( b=0; b<dim; b++)
+	    {
+	      var = MESH_DISPLACEMENT1+b;
+	      if ( pd->v[var] )
+		{
+		  for ( j=0; j<ei->dof[var]; j++)
+		    {
+		  d_func[0][var][j] =  d_n->X[b][j]*
+			(-Xrefl_dn*fv->poynt[LIGHT_INTM-eqn] - Yrefl_dn);
+                    }
+                 }
+              }
+	  var = MASS_FRACTION;
+	  if ( pd->e[eqn] && pd->v[var] )
+	    {
+	      for ( w=0; w<pd->Num_Species_Eqn; w++)
+		{
+		  for ( j=0; j<ei->dof[var]; j++)
+		    {
+		  d_func[0][MAX_PROB_VAR+w][j] =  d_n->C[w][j]*
+			(-Xrefl_dn*fv->poynt[LIGHT_INTM-eqn] - Yrefl_dn);
+                    }
+                }
+             }
     }
-  }
+
 }
 /****************************************************************************/

@@ -572,7 +572,6 @@
 #define LIGHTD_TRANS_BC   9700000
 #define LIGHTP_JUMP_BC   9510000
 #define LIGHTM_JUMP_BC   9610000
-#define LIGHTD_JUMP_BC   9710000
 
 /* species unknown variables */
 
