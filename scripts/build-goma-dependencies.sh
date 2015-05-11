@@ -79,7 +79,7 @@ ARCHIVE_NAMES=("AMD-2.2.4.tar.gz" \
 "patch.tar.gz" \
 "blas.tgz" \
 "cmake-2.8.12.2.tar.gz" \
-"hdf5-1.8.14.tar.gz" \
+"hdf5-1.8.12.tar.gz" \
 "lapack-3.2.1.tgz" \
 "netcdf-4.3.2.tar.gz" \
 "openmpi-1.6.4.tar.gz" \
@@ -99,7 +99,7 @@ ARCHIVE_MD5SUMS=("31943ff81859eb42d695d8a34d5b4201" \
 "14830d758f195f272b8594a493501fa2" \
 "5e99e975f7a1e3ea6abcad7c6e7e42e6" \
 "17c6513483d23590cbce6957ec6d1e66" \
-"a482686e733514a51cde12d6fe5c5d95" \
+"d804802feb99b87fc668a90e6fa34411" \
 "a3202a4f9e2f15ffd05d15dab4ac7857" \
 "2fd2365e1fe9685368cd6ab0ada532a0" \
 "70aa9b6271d904c6b337ca326e6613d1" \
@@ -119,9 +119,9 @@ ARCHIVE_URLS=("http://www.cise.ufl.edu/research/sparse/amd/AMD-2.2.4.tar.gz" \
 "http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
 "http://www.netlib.org/blas/blas.tgz" \
 "http://www.cmake.org/files/v2.8/cmake-2.8.12.2.tar.gz" \
-"http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.14.tar.gz" \
+"http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.12/src/hdf5-1.8.12.tar.gz" \
 "http://www.netlib.org/lapack/lapack-3.2.1.tgz" \
-"ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.2.tar.gz" \
+"ftp://ftp.unidata.ucar.edu/pub/netcdf/old/netcdf-4.3.2.tar.gz" \
 "http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.4.tar.gz" \
 "http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/OLD/ParMetis-3.1.1.tar.gz" \
 "http://downloads.sourceforge.net/project/seacas/2013-12-03.tar.gz" \
@@ -417,7 +417,7 @@ if [ -d SEACAS-2013-12-03/TPL/hdf5/hdf5-source ]
 then
     echo "hdf5 directory already placed in SEACAS/TPL"
 else
-mv hdf5-1.8.14 hdf5-source
+mv hdf5-1.8.12 hdf5-source
 mv hdf5-source SEACAS-2013-12-03/TPL/hdf5/
 fi
 
@@ -455,7 +455,7 @@ else
 fi
 
 
-continue_check
+#continue_check
 #make openmpi
 cd $GOMA_LIB/openmpi-1.6.4
 if [ -f bin/ompi_info ]
@@ -477,17 +477,17 @@ then
 else
     cd TPL/netcdf/netcdf-4.3.2/include
     echo "$NETCDF_PATCH" > netcdf.patch
-    patch --ignore-whitespace netcdf.h < netcdf.patch
+    patch -f --ignore-whitespace netcdf.h < netcdf.patch
     cd ../../
     echo "$IMAKE_PATCH" > Imake.patch
-    patch Imakefile < Imake.patch
+    patch -f Imakefile < Imake.patch
     cd ../../
     export ACCESS=$GOMA_LIB/SEACAS-2013-12-03
     cd ACCESS/itools/config/cf
     echo "$SITE_PATCH" > site.patch
-    patch site.def < site.patch
+    patch -f site.def < site.patch
     echo "$SEACAS_LINUX_PATCH" > linux.patch
-    patch linux.cf < linux.patch
+    patch -f linux.cf < linux.patch
     cd ../../../../
     ACCESS/scripts/buildSEACAS -auto
 fi
