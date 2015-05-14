@@ -2612,6 +2612,7 @@ calculate_lub_q_v (
 	  for ( j = 0; j < DIM; j++) {
 	    for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++) {
 	      jk = dof_map[k];
+	      D_H_DX[j][jk] += delta(i,j)*(dH_U_dX[i]-dH_L_dX[i])*bf[MESH_DISPLACEMENT1]->phi[k];
 	      D_H_DX[j][jk] -= fv->dsnormal_dx[i][j][jk] * fv->d[i];
 	      D_H_DX[j][jk] -= fv->snormal[i] * delta(i,j) * bf[MESH_DISPLACEMENT1]->phi[k];
 	    }
