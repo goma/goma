@@ -176,25 +176,13 @@ SEACAS_LIB ?= -L$(SEACAS_TOP)/lib  $(EXODUSII_LIB)  $(NETCDF_LIB) \
 # Trilinos install directory (include, lib)
 TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-11.8.1-Built
 
-# KOMPLEX library (not included by default)
-KOMPLEX_LIB ?=
 
-# AZTEC library
-# Aztecoo is required.
-AZTEC_LIB ?=  -laztecoo -lifpack 
-
-# AMESOS library
-
-AMESOS_LIB ?= -lamesos -lepetraext -lepetra 
-
-# TEUCHOS library
-
-TEUCHOS_LIB ?= -lteuchoscomm -lteuchoscore -lteuchosnumerics -lteuchosparameterlist -lteuchosremainder
+include $(TRILINOS_TOP)/include/Makefile.export.Trilinos
 
 # Trilinos includes and libraries
-TRILINOS_INC ?= -isystem $(TRILINOS_TOP)/include
-TRILINOS_LIB ?= -L$(TRILINOS_TOP)/lib  $(AZTEC_LIB) \
-                 $(KOMPLEX_LIB)  $(AMESOS_LIB) $(TEUCHOS_LIB)
+TRILINOS_INC ?= $(subst -I, -isystem, $(Trilinos_INCLUDE_DIRS) $(Trilinos_TPL_INCLUDE_DIRS))
+TRILINOS_LIB ?= $(Trilinos_LIBRARY_DIRS) $(Trilinos_TPL_LIBRARY_DIRS) \
+		$(Trilinos_LIBRARIES) $(Trilinos_TPL_LIBRARIES)
 
 # ARPACK
 # ------
@@ -315,7 +303,8 @@ FFLAGS = $(CCFLAGS) $(F_WARN_FLAGS) $(DEFINES) $(INCLUDES)
 CFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(INCLUDES)
 
 # C++ compiler flags
-CXXFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(INCLUDES) -Wno-deprecated
+CXXSTD ?= 
+CXXFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(INCLUDES) -Wno-deprecated $(CXXSTD)
 
 # linker flags
 LD_FLAGS = $(CCFLAGS)
