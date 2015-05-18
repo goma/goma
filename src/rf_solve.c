@@ -791,7 +791,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     matrix_systems_mask = 1;
       
     log_msg("sl_init()...");
-    sl_init(matrix_systems_mask, ams, exo, dpi, cx, pg->imtrx);
+    sl_init(matrix_systems_mask, ams, exo, dpi, cx);
     if( nAC > 0  || 
 	nn_post_fluxes_sens > 0 ||
 	nn_post_data_sens > 0 ) ams[JAC]->options[AZ_keep_info] = 1;
@@ -1356,7 +1356,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
      * appropriate, but the other items are there now, too.
      * Do this only once if in library mode.
      */
-    if (callnum == 1) sl_init(matrix_systems_mask, ams, exo, dpi, cx, pg->imtrx);	
+    if (callnum == 1) sl_init(matrix_systems_mask, ams, exo, dpi, cx);	
 
     /*
      * make sure the Aztec was properly initialized

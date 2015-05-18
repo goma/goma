@@ -80,7 +80,10 @@
 #include "sl_util_structs.h"
 #include "dp_types.h"
 
-static int First_Call=TRUE;
+#include "mm_as_structs.h"
+#include "mm_as.h"
+
+static int Num_Calls = 0;
 
 /*
  * Initialize one or more Aztec matrix systems. 
@@ -115,8 +118,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 	struct Aztec_Linear_Solver_System *ams[],
 	Exo_DB *exo,
 	Dpi *dpi,
-	Comm_Ex cx[],
-        int imtrx )
+	Comm_Ex cx[])
 {
 /* LOCAL VARIABLES */
   int i;
@@ -132,6 +134,7 @@ sl_init(unsigned int option_mask,		/* option flag */
   FILE *out;
 #endif /* DEBUG */
   struct Aztec_Linear_Solver_System *A;
+  int imtrx = pg->imtrx;
 
 
   Do_Jacobian      = ( option_mask & 1 );
@@ -149,9 +152,9 @@ sl_init(unsigned int option_mask,		/* option flag */
   out = fopen(logfile, "a");
 #endif /* DEBUG */
 
-  if ( ! First_Call )
+  if ( Num_Calls >= upd->Total_Num_Matrices )
     {
-      EH(-1, "Exactly one call to sl_init() is appropriate.");
+      EH(-1, "Calls should match the number of matrices");
     }
   else
     {
@@ -162,7 +165,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 	  DPRINTF(stderr, "Initializing Aztec for the Jacobian.\n");
 #endif /* DEBUG */
 
-	  A = ams[JAC];					/* Whoa, mule! */
+	  A = ams[imtrx];					/* Whoa, mule! */
 
 	  /* 
 	   * Manual version of AZ_processor_info(). Should work for both
@@ -232,7 +235,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 	      A->data_org[AZ_N_external]  = 0;
 	      A->data_org[AZ_N_neigh]     = 0;
 	      A->data_org[AZ_total_send]  = 0;
-	      A->data_org[AZ_name]        = 1+JAC;	       /* Whoa, mule! */
+	      A->data_org[AZ_name]        = 1+imtrx;	       /* Whoa, mule! */
 	      A->data_org[AZ_neighbors]   = 0;
 	      A->data_org[AZ_rec_length]  = 0;
 	      A->data_org[AZ_send_length] = 0;
@@ -326,7 +329,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 #endif /* DEBUG */
 	      A->data_org[AZ_N_neigh]     = dpi->num_neighbors;
 	      A->data_org[AZ_total_send]  = ptr_dof_send[dpi->num_neighbors];
-	      A->data_org[AZ_name]        = 1+JAC;	       /* Whoa, mule! */
+	      A->data_org[AZ_name]        = 1+imtrx;	       /* Whoa, mule! */
 
 	      /*
 	       * The names of my neighbor processors and how much to send
@@ -598,7 +601,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 	}
 #endif /* not COUPLED_FILL */      
     }
-  First_Call = FALSE;
+  Num_Calls++;
 #ifdef DEBUG
   fclose(out);
 #endif /* DEBUG */

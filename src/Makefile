@@ -361,6 +361,7 @@ RF_SRC= rf_allo.c\
         rf_setup_problem.c\
         rf_shape.c\
         rf_solve.c\
+	rf_solve_segregated.c\
         rf_util.c\
         rf_vars.c\
         wr_dpi.c\

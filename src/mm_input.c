@@ -8295,8 +8295,8 @@ rd_eq_specs(FILE *ifp,
   if (numMtrxLines == -1) 
     {
      numMtrxLines = count_list(ifp, "MATRIX", input, '=', "END OF MATRICES");   
-     pd_ptr->Num_Matrices = numMtrxLines;
     }
+  pd_ptr->Num_Matrices = numMtrxLines;
   
   SPF(echo_string,"%s = %d", "Number of Matrices", pd_ptr->Num_Matrices); ECHO(echo_string,echo_file);
 

@@ -658,7 +658,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   matrix_systems_mask = 1;
       
   log_msg("sl_init()...");
-  sl_init(matrix_systems_mask, ams, exo, dpi, cx, pg->imtrx);
+  sl_init(matrix_systems_mask, ams, exo, dpi, cx);
 
 #ifdef PARALLEL
   /*

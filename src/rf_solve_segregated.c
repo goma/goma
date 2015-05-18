@@ -334,47 +334,47 @@ solve_problem_segregated(Exo_DB *exo,	 /* ptr to the finite element mesh databas
      log_msg("alloc_MSR_sparse_arrays...");
      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
         {
-         alloc_MSR_sparse_arrays(&(ija[imtrx]), &(a[imtrx]), &(a_old[imtrx]), 0, node_to_fill, exo, dpi);
+	  pg->imtrx = imtrx;
+	  alloc_MSR_sparse_arrays(&(ija[imtrx]), &(a[imtrx]), &(a_old[imtrx]), 0, node_to_fill, exo, dpi);
 
-         /*
-          * An attic to store external dofs column names is needed when
-          * running in parallel.
-          */
+	  /*
+	   * An attic to store external dofs column names is needed when
+	   * running in parallel.
+	   */
 
-         alloc_extern_ija_buffer(num_universe_dofs[imtrx],
-                                 num_internal_dofs[imtrx] + num_boundary_dofs[imtrx],                            
-                                 ija[imtrx], &(ija_attic[imtrx]));
+	  alloc_extern_ija_buffer(num_universe_dofs[imtrx],
+				  num_internal_dofs[imtrx] + num_boundary_dofs[imtrx],                            
+				  ija[imtrx], &(ija_attic[imtrx]));
 
-         /*
-          * Any necessary one time initialization of the linear
-          * solver package (Aztec).
-          */
-         ams[imtrx]->bindx   = ija[imtrx];
-         ams[imtrx]->val     = a[imtrx];
-         ams[imtrx]->belfry  = ija_attic[imtrx];
-         ams[imtrx]->val_old = a_old[imtrx];
+	  /*
+	   * Any necessary one time initialization of the linear
+	   * solver package (Aztec).
+	   */
+	  ams[imtrx]->bindx   = ija[imtrx];
+	  ams[imtrx]->val     = a[imtrx];
+	  ams[imtrx]->belfry  = ija_attic[imtrx];
+	  ams[imtrx]->val_old = a_old[imtrx];
 
-         /*
-          * These point to nowhere since we're using MSR instead of VBR
-          * format.
-          */
+	  /*
+	   * These point to nowhere since we're using MSR instead of VBR
+	   * format.
+	   */
 
-         ams[imtrx]->indx  = NULL;
-         ams[imtrx]->bpntr = NULL;
-         ams[imtrx]->rpntr = NULL;
-         ams[imtrx]->cpntr = NULL;
+	  ams[imtrx]->indx  = NULL;
+	  ams[imtrx]->bpntr = NULL;
+	  ams[imtrx]->rpntr = NULL;
+	  ams[imtrx]->cpntr = NULL;
 
-         ams[imtrx]->npn      = dpi->num_internal_nodes + dpi->num_boundary_nodes;
-         ams[imtrx]->npn_plus = dpi->num_internal_nodes +
-                                dpi->num_boundary_nodes + dpi->num_external_nodes;
+	  ams[imtrx]->npn      = dpi->num_internal_nodes + dpi->num_boundary_nodes;
+	  ams[imtrx]->npn_plus = dpi->num_internal_nodes +
+	    dpi->num_boundary_nodes + dpi->num_external_nodes;
 
-         ams[imtrx]->npu      = num_internal_dofs[imtrx] + num_boundary_dofs[imtrx];
-         ams[imtrx]->npu_plus = num_universe_dofs[imtrx];
+	  ams[imtrx]->npu      = num_internal_dofs[imtrx] + num_boundary_dofs[imtrx];
+	  ams[imtrx]->npu_plus = num_universe_dofs[imtrx];
 
-         ams[imtrx]->nnz = ija[imtrx][num_internal_dofs[imtrx] + num_boundary_dofs[imtrx]] - 1;
-         ams[imtrx]->nnz_plus = ija[imtrx][num_universe_dofs[imtrx]];
+	  ams[imtrx]->nnz = ija[imtrx][num_internal_dofs[imtrx] + num_boundary_dofs[imtrx]] - 1;
+	  ams[imtrx]->nnz_plus = ija[imtrx][num_universe_dofs[imtrx]];
 
-         ams[imtrx]->EpetraMat = NULL;
         } 
     }
 
@@ -436,27 +436,14 @@ solve_problem_segregated(Exo_DB *exo,	 /* ptr to the finite element mesh databas
 
      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
         {
-
          pg->imtrx = imtrx;
 
          find_and_set_Dirichlet(x[imtrx], xdot[imtrx], exo, dpi);
-
+	 
          matrix_systems_mask = 1;
 
          log_msg("sl_init()...");
-         sl_init(matrix_systems_mask, ams, exo, dpi, cx, imtrx);
-
-         /*
-          * if we are using AMESOS we need to allocated and construct a C++ sparse Epetra_CrsMatrix object
-          * based upon the msr matrix.
-          *
-          * The next call returns a void * to this object
-          */
-#ifdef ENABLE_AMESOS
-         if ( Linear_Solver == AMESOS )
-             ams[imtrx]->EpetraMat = (void *) construct_Epetra_CrsMatrix( ams[imtrx] );
-#endif
-
+	 sl_init(matrix_systems_mask, ams, exo, dpi, cx);
 
 #ifdef PARALLEL
          /*

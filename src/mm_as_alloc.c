@@ -1729,7 +1729,7 @@ bf_mp_init(struct Problem_Description *pd)
 	    }
 	  if (bf[v] == NULL)
 	    {
-	      EH( -1, "Could not find a match for variable.");
+	      //	      EH( -1, "Could not find a match for variable.");
 	    }
 	}
     }

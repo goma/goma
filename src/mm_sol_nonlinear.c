@@ -262,6 +262,8 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
                             void *con_ptr)   /* Identifies if called from LOCA */
 {
 
+  static int prev_matrix = 0;
+
   double *a   = ams->val;	/* nonzero values of a CMSR matrix */
   int    *ija = ams->bindx;	/* column pointer array into matrix "a"*/
 
@@ -472,6 +474,11 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
   dbl abs_row_sum, row_sum;
   VARIABLE_DESCRIPTION_STRUCT *vd_eqn, *vd_var;
 #endif /* DEBUG_MMH */
+
+  if (pg->imtrx != prev_matrix) {
+    first_linear_solver_call = TRUE;
+    prev_matrix = pg->imtrx;
+  }
 
   /*
    * Begin executable statements...
@@ -1303,7 +1310,7 @@ EH(-1,"version not compiled with frontal solver");
 	    Factor_Flag = 0;
 	  }
 	  matr_form = 1;
-
+	  
 	  UMF_system_id = SL_UMF(UMF_system_id,
 				 &first_linear_solver_call,
 				 &Factor_Flag, &matr_form,

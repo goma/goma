@@ -509,7 +509,6 @@ coordinate_discontinuous_variables(Exo_DB *exo,	Dpi *dpi)
              {
               ivec[k] = curr_pd->v[imtrx][k];
              }
-         }
       ReduceBcast_BOR(ivec, V_LAST);
 #ifdef DEBUG_HKM
       print_sync_start(TRUE);
@@ -523,8 +522,6 @@ coordinate_discontinuous_variables(Exo_DB *exo,	Dpi *dpi)
          }
       print_sync_end(TRUE);
 #endif
-      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
-         {
           for (k = 0; k < V_LAST; k++) 
              {
               curr_pd->v[imtrx][k] = ivec[k];
