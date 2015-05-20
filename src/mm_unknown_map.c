@@ -4202,7 +4202,7 @@ variable_type_nodalInterp(int var)
   if (Num_Var_In_Type[pg->imtrx][var]) {
     for (i = 0; i < upd->Num_Mat; i++)  {
       pd_local = pd_glob[i];
-      i_type = pd_local->i[0][var];
+      i_type = pd_local->i[pg->imtrx][var];
       if (i_type == I_Q1       ||
 	  i_type == I_Q2       ||
           i_type == I_Q1_G     ||

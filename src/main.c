@@ -74,6 +74,8 @@ extern void handle_ieee(void );
 
 #include "brk_utils.h"
 
+#include "rf_solve_segregated.h"
+
 #define _MAIN_C
 #include "goma.h"
 

@@ -63,7 +63,8 @@ amesos_solve_msr( char *choice,
 		  struct Aztec_Linear_Solver_System *ams,
 		  double *x_, 
 		  double *b_,
-		  int NewMatrix ) {
+		  int NewMatrix,
+		  int imtrx) {
 
   /* Initialize MPI communications */
 #ifdef EPETRA_MPI
@@ -72,6 +73,8 @@ amesos_solve_msr( char *choice,
   Epetra_SerialComm comm;
 #endif
 
+  static int prev_matrix = 0;
+
   /* Define internal variables */
   static int FirstRun = 1;
   static std::string Pkg_Name;
@@ -79,6 +82,14 @@ amesos_solve_msr( char *choice,
   static Epetra_LinearProblem Problem;
   static Amesos_BaseSolver *A_Base;
   static Amesos A_Factory;
+
+  if (prev_matrix != imtrx) {
+    if (!FirstRun) {
+      delete A;
+      delete A_Base;
+    }
+    FirstRun = 1;
+  }
     
   /* Convert to Epetra format */
   if (NewMatrix) {
@@ -154,9 +165,10 @@ amesos_solve_msr( char *choice,
  * @return 0 on success
  */
 int amesos_solve_epetra( char *choice,
-                     struct Aztec_Linear_Solver_System *ams,
-                  double *x_,
-                  double *resid_vector) {
+			 struct Aztec_Linear_Solver_System *ams,
+			 double *x_,
+			 double *resid_vector,
+			 int imtrx ) {
 
   /* Initialize MPI communications */
 #ifdef EPETRA_MPI
@@ -164,12 +176,20 @@ int amesos_solve_epetra( char *choice,
 #else
   Epetra_SerialComm comm;
 #endif
+  static int prev_matrix = 0;
   Epetra_RowMatrix *A = ams->RowMatrix;
   static Epetra_LinearProblem Problem;
   static Amesos_BaseSolver *Solver;
   static Amesos A_Factory;
   std::string Pkg_Name;
   static bool firstSolve = true;
+
+  if (prev_matrix != imtrx) {
+    if (!firstSolve) {
+      delete Solver;
+    }
+    firstSolve = true;
+  }
 
   const Epetra_Map &map = (*A).RowMatrixRowMap();
 

@@ -93,6 +93,7 @@ lu(const int N,
    const int factor_flag)
 {
   static char *matrix;
+  static int prev_matrix = 0;
   int  error, type;
   int j, i, n, k, nzeros, ija_col;
   static spREAL **element, *b;
@@ -100,6 +101,13 @@ lu(const int N,
   spREAL norm;
 #endif
 
+  if (pg->imtrx != prev_matrix) {
+    if (first_time == FALSE) {
+      spDestroy(matrix);
+    }
+    first_time = TRUE;
+    prev_matrix = pg->imtrx;
+  }
 
   call++;
 
@@ -174,7 +182,7 @@ lu(const int N,
 
 /*         spFileMatrix(matrix,"matrix_file","channel",0,1,1); */
 	error = spOrderAndFactor(matrix, b, (spREAL)-1, (spREAL)0, (int)1);
-	first_time = FALSE;
+		first_time = FALSE;
 
        } else {
 

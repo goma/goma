@@ -194,8 +194,8 @@ void EpetraCreateGomaProblemGraph(struct Aztec_Linear_Solver_System *ams, Exo_DB
             eb1 = exo->elem_eb[exo->centroid_list[inode]];
 
             if (vn_glob[Matilda[eb1]]->dg_J_model == FULL_DG) {
-              i1 = pd_glob[Matilda[eb1]]->i[0][rowVarType];
-              i2 = pd_glob[Matilda[eb1]]->i[0][colVarType];
+              i1 = pd_glob[Matilda[eb1]]->i[pg->imtrx][rowVarType];
+              i2 = pd_glob[Matilda[eb1]]->i[pg->imtrx][colVarType];
 
               if ((rowVarType == colVarType)
                   && (i1 == I_P0 || i1 == I_P1 || i1 == I_PQ1 || i1 == I_PQ2)
@@ -275,7 +275,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
   std::vector<double> Values;
 
   for (e = V_FIRST; e < V_LAST; e++) {
-    pe = upd->ep[0][e];
+    pe = upd->ep[pg->imtrx][e];
     if (pe != -1) {
       if (e == R_MASS) {
         for (ke = 0; ke < upd->Max_Num_Species_Eqn; ke++) {
@@ -299,7 +299,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
 
               if (af->Assemble_Jacobian) {
                 for (v = V_FIRST; v < V_LAST; v++) {
-                  pv = upd->vp[0][v];
+                  pv = upd->vp[pg->imtrx][v];
                   if (pv != -1 && (Inter_Mask[pg->imtrx][e][v])) {
                     ei_ptr = ei;
                     if (ei->owningElementForColVar[v] != ielem) {
@@ -326,7 +326,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
                         }
                       }
                     } else {
-                      pv = upd->vp[0][v];
+                      pv = upd->vp[pg->imtrx][v];
                       kv = 0;
                       for (j = 0; j < ei_ptr->dof[v]; j++) {
                         ledof = ei_ptr->lvdof_to_ledof[v][j];
@@ -356,7 +356,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
           }
         }
       } else {
-        pe = upd->ep[0][e];
+        pe = upd->ep[pg->imtrx][e];
         dofs = ei->dof[e];
         for (i = 0; i < dofs; i++) {
           /*
@@ -372,7 +372,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
 
             if (af->Assemble_Jacobian) {
               for (v = V_FIRST; v < V_LAST; v++) {
-                pv = upd->vp[0][v];
+                pv = upd->vp[pg->imtrx][v];
                 if (pv != -1 && (Inter_Mask[pg->imtrx][e][v])) {
                   if (v == MASS_FRACTION) {
 

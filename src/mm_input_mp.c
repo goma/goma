@@ -304,7 +304,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   int have_shell_sat_open;
   int have_shell_sat_open2;
   int have_shear_rate;
-  int have_vort_dir;
+  /* int have_vort_dir; */
   int have_lubp;
   int have_lubp2;
   int have_shell_filmp;
@@ -5375,7 +5375,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
  /* Check for existance of shear rate and vorticity variable in any matrix*/
 
   have_shear_rate = 0;
-  have_vort_dir = 0;
+  //*have_vort_dir = 0;*/
 
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
      {
@@ -5383,10 +5383,10 @@ ECHO("\n----Acoustic Properties\n", echo_file);
         {
          have_shear_rate = 1;
         }
-      if (pd_glob[mn]->e[imtrx][R_VORT_DIR1])
+      /*if (pd_glob[mn]->e[imtrx][R_VORT_DIR1])
         {
          have_vort_dir = 1;
-        }
+        }*/
      }
 
   

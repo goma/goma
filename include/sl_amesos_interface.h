@@ -34,12 +34,14 @@ amesos_solve_msr ( char *,
 		   struct Aztec_Linear_Solver_System *,
 		   double *,
 		   double *,
+		   int ,
 		   int );
 EXTERN int
 amesos_solve_epetra( char *choice,
                      struct Aztec_Linear_Solver_System *ams,
-                  double *x_,
-                  double *resid_vector);
+		     double *x_,
+		     double *resid_vector,
+		     int imtrx );
 
 EXTERN void
 trilinos_solve_ls (double *,
