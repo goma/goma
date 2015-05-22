@@ -18388,8 +18388,6 @@ assemble_PPPS_generalized(Exo_DB *exo)
   double scaling_over_visc_e, my_multiplier=1.0;
   double R_new[MDE], R_old[MDE];  /*old and new resid vect pieces for the pressure equation */
 
-
-  
   asdv(&A, ei->ielem_dim * ei->ielem_dim);
 
   npass = 1;
@@ -18616,6 +18614,7 @@ assemble_PPPS_generalized(Exo_DB *exo)
 	  We[i][i] = S[i][i]*(2.-S[i][i])/De_hat[i][i];
 	}
       
+      memset(WeEe,0,sizeof(double) * (DIM+1) * MDE);
       for(i=0; i < ei->ielem_dim+1; i++)
 	{
 	  for(j=0; j < ei->dof[eqn] ; j++)
