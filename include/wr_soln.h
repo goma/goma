@@ -45,6 +45,30 @@ write_solution
 	Exo_DB * , 		    /* ptr to mesh */
 	Dpi    * );		    /* ptr to mesh */
 
+extern void
+write_solution_segregated(char output_file[], /* name EXODUS II file */
+    double **resid_vector, /* Residual vector */
+    double **x, /* soln vector */
+    double **x_old, /* soln vector at previous time step */
+    double **xdot, /* dx/dt */
+    double **xdot_old,/* dx/dt at previous time step */
+    int *tev, /* total elem variables
+     (normal) */
+    int *tev_post, /* additional post process
+     elem vars */
+    double *gv, /* global variable values */
+    struct Results_Description **rd, /* for post process vars
+     (rf_io_structs.h) */
+    double **gvec,
+    double ****gvec_elem, /* array vars [eb_index][ev_index][elem] */
+    int *nprint, /* counter for time step number*/
+    dbl delta_t, /* time step size */
+    dbl theta, /* time integration parameter */
+    dbl time_value, /* current time value */
+    dbl *x_pp, /* post proc vars for export */
+    Exo_DB *exo,
+    Dpi *dpi);
+
 #endif
 /*******************************************************************************/
 /*  END of file wr_soln.h  */

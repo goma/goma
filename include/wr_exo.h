@@ -39,11 +39,24 @@ PROTO((struct Results_Description *, /* rd - describe nodal variables        */
        double *** ));		/* gvec_elem array, it gets sized & malloc'd *
 				 * in wr_exo.c                               */
 
+EXTERN void wr_result_prelim_exo_segregated /* wr_exo.c                                 */
+PROTO((struct Results_Description **, /* rd - describe nodal variables        */
+       Exo_DB *,                /* exo - whole mesh                          */
+       char *,                  /* filename - where to write                 */
+       double **** ));           /* gvec_elem array, it gets sized & malloc'd *
+                                 * in wr_exo.c                               */
+
 EXTERN void create_truth_table /* wr_exo.c */
 PROTO((struct Results_Description *, /* rd - describe nodal variables        */
        Exo_DB *,                     /* filename - where to write            */
        double ***gvec_elem ));	     /* array holding elem values - final    * 
 				      * dim gets malloc'd here               */
+
+EXTERN void create_truth_table_segregated /* wr_exo.c */
+PROTO((struct Results_Description **, /* rd - describe nodal variables        */
+       Exo_DB *,                     /* filename - where to write            */
+       double ****gvec_elem ));       /* array holding elem values - final    *
+                                      * dim gets malloc'd here               */
 
 EXTERN void wr_nodal_result_exo	/* wr_exo.c                                  */
 PROTO((Exo_DB *,		/* exo - ptr to whole mesh                   */

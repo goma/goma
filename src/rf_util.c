@@ -2193,7 +2193,6 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
       *******************************************************************/
 {
   int i, error, vdex,  num_dim, num_nodes, mn, icount;
-  int imtrx;
   int num_elem, num_elem_blk, num_node_sets, num_side_sets, time_step;
   float	version;		/* version number of EXODUS II */
   int	exoid;			/* ID of the open EXODUS II file */
@@ -2276,66 +2275,63 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
 
   if (action_flag == 0) 
     {
-     for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
-        {
-         for (var = V_FIRST; var < V_LAST; var++) 
-            {
-             icount = 0;
-             if (Num_Var_In_Type[imtrx][var]) 
-               {
-	        if (var == MASS_FRACTION) 
-                  {
-	           for (mn = -1; mn < upd->Num_Mat; mn++) 
-                      {
-	               if (mn == -1) 
-                         {
+      for (var = V_FIRST; var < V_LAST; var++) 
+	{
+	  icount = 0;
+	  if (Num_Var_In_Type[pg->imtrx][var]) 
+	    {
+	      if (var == MASS_FRACTION) 
+		{
+		  for (mn = -1; mn < upd->Num_Mat; mn++) 
+		    {
+		      if (mn == -1) 
+			{
 	                  for (i = upd->Num_Mat-1; i >= 0; i--) 
-                             {
+			    {
 		              if (mp_glob[i]->Num_Species == upd->Max_Num_Species) 
                                 {
-		                 matrl = mp_glob[i];
+				  matrl = mp_glob[i];
 		                }
-	                     }
-	                 } 
-                       else 
-                         {
+			    }
+			} 
+		      else 
+			{
 	                  matrl = mp_glob[mn];
-	                 }
-	               for (w = 0; w < matrl->Num_Species_Eqn; w++) 
-                          {
-	                   error = rd_exoII_nv(u, var, mn, matrl, var_names, 
-				               num_nodes, num_vars,
-				               exoid, time_step, w);
-	                   if (!error) icount++;
-	                  }
-	              }
-	          } 
-                else 
-                  {
-	           for (mn = -1; mn < upd->Num_Mat; mn++) 
-                      {
-	               if (mn == -1) 
-                         {
+			}
+		      for (w = 0; w < matrl->Num_Species_Eqn; w++) 
+			{
+			  error = rd_exoII_nv(u, var, mn, matrl, var_names, 
+					      num_nodes, num_vars,
+					      exoid, time_step, w);
+			  if (!error) icount++;
+			}
+		    }
+		} 
+	      else 
+		{
+		  for (mn = -1; mn < upd->Num_Mat; mn++) 
+		    {
+		      if (mn == -1) 
+			{
 	                  for (i = upd->Num_Mat - 1; i >= 0; i--) 
-                             {
-		              if (pd_glob[i]->i[imtrx][var]) 
+			    {
+		              if (pd_glob[i]->i[pg->imtrx][var]) 
                                 {
-		                 matrl = mp_glob[i];
+				  matrl = mp_glob[i];
 		                }
-	                     }
-	                 } 
-                       else 
-                         {
+			    }
+			} 
+		      else 
+			{
 	                  matrl = mp_glob[mn];
-	                 }
-	               error = rd_exoII_nv(u, var, mn, matrl, var_names, num_nodes,
-				           num_vars, exoid, time_step, 0);
-	               if (!error) icount++;
-	              }
-	          }
-               }
-            }
-        }
+			}
+		      error = rd_exoII_nv(u, var, mn, matrl, var_names, num_nodes,
+					  num_vars, exoid, time_step, 0);
+		      if (!error) icount++;
+		    }
+		}
+	    }
+	}
     }
   
   if (action_flag == 1) {

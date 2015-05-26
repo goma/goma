@@ -336,7 +336,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
 	  if (tnv_post > 0) {
 	    post_process_nodal(&evect[i][0], NULL, x_old, xdot, xdot_old,
 			       resid_vector, 1, &time_value, delta_t, 0.0,
-                               NULL, exo, dpi, rd, ExoFileOut);
+                               NULL, exo, dpi, rd, ExoFileOut, 0);
 	  }
 	  zero_base(exo);
 	  printf(" recorded.\n");

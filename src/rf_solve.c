@@ -80,7 +80,7 @@ int w;
  * Declarations of static functions defined in this file.
  */
 
-static void predict_solution
+void predict_solution
 PROTO((int ,			/* N */
        double ,			/* delta_t */
        double ,			/* delta_t_old */
@@ -3163,8 +3163,7 @@ free_shape_fcn_tree( Subgrid_Tree );
 /**************************************************************************/
 /**************************************************************************/
 
-static void
-
+void
 predict_solution(int N, double delta_t, double delta_t_old,
 		 double delta_t_older, double theta_arg, double x[],
 		 double x_old[], double x_older[], double x_oldest[],

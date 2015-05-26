@@ -2320,7 +2320,7 @@ EH(-1,"version not compiled with frontal solver");
 	if (rd->TotalNVPostOutput > 0) {
 	  post_process_nodal(x, x_sens_p, x_old, xdot, xdot_old, 
 			     resid_vector, *nprint+1, &time_value,
-			     delta_t, theta, NULL, exo, dpi, rd, ExoFileOut);
+			     delta_t, theta, NULL, exo, dpi, rd, ExoFileOut, 0);
 	}
 	/* Write out time derivatives if requested */
 	if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {

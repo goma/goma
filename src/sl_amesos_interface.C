@@ -79,16 +79,16 @@ amesos_solve_msr( char *choice,
   static int FirstRun = 1;
   static std::string Pkg_Name;
   static Epetra_CrsMatrix *A;
-  static Epetra_LinearProblem Problem;
+  Epetra_LinearProblem Problem;
   static Amesos_BaseSolver *A_Base;
   static Amesos A_Factory;
 
   if (prev_matrix != imtrx) {
     if (!FirstRun) {
       delete A;
-      delete A_Base;
     }
     FirstRun = 1;
+    prev_matrix = imtrx;
   }
     
   /* Convert to Epetra format */
@@ -125,24 +125,23 @@ amesos_solve_msr( char *choice,
   }
 
   /* Assemble linear problem */
-  if (NewMatrix) Problem.SetOperator(A);
+  Problem.SetOperator(A);
   Problem.SetLHS(&x);
   Problem.SetRHS(&b);
   Problem.CheckInput();
 
   /* Create Amesos base package */
-  if (FirstRun) {
-    A_Base = A_Factory.Create( Pkg_Name.c_str(), Problem );
-    if( A_Base == 0 ) {	
-      std::cout << "Error in amesos_solve_msr" <<std::endl;
-      std::cout << "It is likely that the solver package: " << Pkg_Name << " has not been linked into the amesos library " << std::endl;
-      exit (-1 ) ;
-    }
+
+  A_Base = A_Factory.Create( Pkg_Name.c_str(), Problem );
+  if( A_Base == 0 ) {
+    std::cout << "Error in amesos_solve_msr" <<std::endl;
+    std::cout << "It is likely that the solver package: " << Pkg_Name << " has not been linked into the amesos library " << std::endl;
+    exit (-1 ) ;
   }
 
   /* Solve problem */
-  if (FirstRun) A_Base->SymbolicFactorization();
-  if (NewMatrix) A_Base->NumericFactorization();	
+  A_Base->SymbolicFactorization();
+  A_Base->NumericFactorization();
   A_Base->Solve();
 
   /* Convert solution vector */
@@ -153,6 +152,7 @@ amesos_solve_msr( char *choice,
   
   /* Cleanup problem */
   FirstRun = 0;
+  delete A_Base;
 }
 
 /**

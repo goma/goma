@@ -53,7 +53,8 @@ PROTO((double [],               /* x                                         */
        Exo_DB *,                /* exo - ptr to fem db                       */
        Dpi *,                   /* dpi - ptr to distrib inf                  */
        RESULTS_DESCRIPTION_STRUCT *,  /* exodus description of variables   */
-       char [] ));  /* exodus filename   */
+       char [],  /* exodus filename   */
+       int )); /* matrix offset */
 
 EXTERN void post_process_elem   /* mm_post_proc.c                            */
 PROTO((double [],               /* x - soln vector                           */

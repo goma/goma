@@ -390,6 +390,7 @@ RF_INC= rf_allo.h\
         rf_pre_proc.h\
         rf_shape.h\
         rf_solve.h\
+	rf_solve_segregated.h\
         rf_solver.h\
         rf_solver_const.h\
         rf_util.h\
@@ -543,6 +544,7 @@ MM_SRC= mm_as_alloc.c\
         mm_qtensor_model.c\
         mm_shell_util.c\
         mm_sol_nonlinear.c\
+	mm_solve_linear_segregated.c\
         mm_species.c\
         mm_std_models.c \
         mm_std_models_shell.c\

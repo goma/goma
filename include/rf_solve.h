@@ -71,6 +71,12 @@ EXTERN int free_problem
 PROTO((Exo_DB *,		/* exo - ptr to finite element mesh database */
        Dpi *));			/* dpi - ptr to distributed processing info */
 
+void
+predict_solution(int N, double delta_t, double delta_t_old,
+		 double delta_t_older, double theta_arg, double x[],
+		 double x_old[], double x_older[], double x_oldest[],
+		 double xdot[], double xdot_old[], double xdot_older[]);
+
 extern int coordinate_discontinuous_variables(Exo_DB *,	Dpi *);
 extern void determine_dvi_index(void);
 extern void reconcile_bc_to_matrl(void);
