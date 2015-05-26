@@ -1094,6 +1094,56 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es,echo_file);
 
+  /* Extensional stiffness of structural shells */
+  model_read = look_for_mat_prop(imp, "Shell extensional stiffness",
+                                 &(elc_glob[mn]->exten_stiffness_model),
+                                 &(elc_glob[mn]->exten_stiffness),
+                                 &(elc_glob[mn]->u_exten_stiffness),
+                                 &(elc_glob[mn]->len_u_exten_stiffness),
+                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+  /* Model must be CONSTANT for now! */
+  if (model_read == 1 && strcmp(model_name, "CONSTANT") != 0)
+    {
+      sr = sprintf(err_msg,
+                   "Material %s - unrecognized model for %s \"%s\" ???\n",
+                   pd_glob[mn]->MaterialName, "Extensional bending stiffness", model_name);
+      EH(model_read, err_msg);
+    }
+  else if (model_read == -1)
+    {
+      /* Default to CONSTANT(1) */
+      elc_glob[mn]->exten_stiffness_model = CONSTANT;
+      elc_glob[mn]->exten_stiffness = 1.0;
+    }
+
+  ECHO(es,echo_file);
+
+  /* Poisson ratio of structural shells */
+  model_read = look_for_mat_prop(imp, "Shell Poisson ratio",
+                                 &(elc_glob[mn]->poisson_model),
+                                 &(elc_glob[mn]->poisson),
+                                 &(elc_glob[mn]->u_poisson),
+                                 &(elc_glob[mn]->len_u_poisson),
+                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+  /* Model must be CONSTANT for now! */
+  if (model_read == 1 && strcmp(model_name, "CONSTANT") != 0)
+    {
+      sr = sprintf(err_msg,
+                   "Material %s - unrecognized model for %s \"%s\" ???\n",
+                   pd_glob[mn]->MaterialName, "Shell Poisson ratio", model_name);
+      EH(model_read, err_msg);
+    }
+  else if (model_read == -1)
+    {
+      /* Default to CONSTANT(1) */
+      elc_glob[mn]->poisson_model = CONSTANT;
+      elc_glob[mn]->poisson = 0.5;
+    }
+
+  ECHO(es,echo_file);
+
   model_read = look_for_mat_prop(imp, "Stress Free Solvent Vol Frac", 
 				 &(LameLambdaModel), 
 				 &(elc_glob[mn]->Strss_fr_sol_vol_frac), 
@@ -8989,7 +9039,8 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
   if ( pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
        pd_glob[mn]->e[R_SHELL_FILMP] ||
-       pd_glob[mn]->e[R_SHELL_SAT_OPEN] || pd_glob[mn]->e[R_SHELL_SAT_OPEN_2]) {
+       pd_glob[mn]->e[R_SHELL_SAT_OPEN] || pd_glob[mn]->e[R_SHELL_SAT_OPEN_2] ||
+       (pd_glob[mn]->e[R_SHELL_NORMAL1] && pd_glob[mn]->e[R_SHELL_NORMAL2] && pd_glob[mn]->e[R_SHELL_NORMAL3]) ) {
 
     model_read = look_for_mat_prop(imp, "FSI Deformation Model",
 				   &(mat_ptr->FSIModel),
@@ -9020,6 +9071,12 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
     } else if ( !strcmp(model_name, "FSI_REALSOLID_CONTINUUM") ) {
       mat_ptr->FSIModel = FSI_REALSOLID_CONTINUUM;
+
+    } else if ( !strcmp(model_name, "FSI_SHELL_ONLY_MESH") ) {
+      mat_ptr->FSIModel = FSI_SHELL_ONLY_MESH;
+
+    } else if ( !strcmp(model_name, "FSI_SHELL_ONLY_UNDEF") ) {
+      mat_ptr->FSIModel = FSI_SHELL_ONLY_UNDEF;
 
     } else {
       EH(model_read, "This FSI Deformation Model is not valid!");

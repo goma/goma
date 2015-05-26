@@ -519,6 +519,7 @@ rd_bc_specs(FILE *ifp,
  	case FRICTION_RS_BC:
 	case SHEAR_TO_SHELL_BC:
         case GRAD_LUB_PRESS_BC:
+        case LUB_STATIC_BC:
         case SHELL_GRAD_FP_BC:
         case SHELL_GRAD_FH_BC:
         case SHELL_GRAD_PC_BC:
@@ -799,6 +800,8 @@ rd_bc_specs(FILE *ifp,
 	case SLOPE_BC: 
 	case VELO_TANGENT_EDGE_BC:
 	case VELO_TANGENT_EDGE_INT_BC:
+        case SH_S11_WEAK_BC:
+        case SH_S22_WEAK_BC:
 
 	  if (fscanf(ifp, "%lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],

@@ -35,6 +35,14 @@ PROTO((double func[DIM],
        double xi[DIM],        /* Local stu coords */
        const Exo_DB *exo));   /* ExodusII database struct pointer */
        
+EXTERN void lub_static_pressure
+PROTO((double func[DIM],
+       double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+       const double P_atm,    /* imposed atmospheric pressure */
+       const double time,     /* current time */
+       const double dt,       /* current time step size */
+       double xi[DIM],        /* Local stu coords */
+       const Exo_DB *exo));   /* ExodusII database struct pointer */
 
 EXTERN void shell_n_dot_flow_bc_film
 PROTO((double func[DIM],
@@ -66,6 +74,14 @@ PROTO((double func[DIM],
        const double flux,     /* imposed particles flux */
        const double time,     /* current time */
        const double dt));     /* current time step size */       
+
+EXTERN void apply_shell_traction_bc
+PROTO((double func[DIM],
+       double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+       const int BC_name,    /* BC name identifier */
+       const double tx,      /* traction in x-direction */
+       const double ty,      /* traction in y-direction */
+       const double tz));    /* traction in z-direction */
 
 EXTERN void match_lubrication_film_pressure
 PROTO((double func[DIM],

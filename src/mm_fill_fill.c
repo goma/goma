@@ -163,9 +163,11 @@ assemble_fill(double tt,
  ******************************************************************************/
   int eqn, var, peqn, pvar, dim, status;
   int i, j, a, b, c;
-  
+
   dbl F_dot;				/* Fill derivative wrt time. */
   dbl *grad_F;  			/* Fill gradient. */
+  dbl grad_II_F[DIM];                   /* Fill surface gradient */
+  dbl d_grad_II_F_dmesh[DIM][DIM][MDE];
 
   dbl *v;                               /* Local velocity. */
   dbl *v_old;                           /* Old v[]. */
@@ -184,9 +186,12 @@ assemble_fill(double tt,
 
   dbl phi_i;                            /* i-th basis function for the FILL equation. */
   dbl *grad_phi_i;                  /* Gradient of phi_i. */
+  dbl grad_II_phi_i[DIM];
+  dbl d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
 
   dbl phi_j;                    /* j-th basis function of a field variable. */
   dbl *grad_phi_j;              /* Gradient of phi_j. */
+  dbl grad_II_phi_j[DIM];
   dbl h3;                       /* Volume element (scale factors). */
   dbl det_J;                    /* Determinant of the Jacoabian of transformation. */
   dbl wt;                       /* Gauss point weight. */
@@ -208,7 +213,7 @@ assemble_fill(double tt,
   dbl d_supg_term_du[MDE][DIM];      /* deriv. of supg_term w.r.t. nodal velocities. */
   dbl d_supg_term_dx[MDE][DIM];      /* deriv. of supg_term w.r.t. mesh coords.      */
   dbl d_vrel_d_x_rs[DIM][DIM][MDE];  /* deriv of solid rel velo w.r.t. real-solid displ */
-  
+
   double vmag_old, tau_gls;
   double h_elem;
 
@@ -250,9 +255,9 @@ assemble_fill(double tt,
   	else
     		{ F_dot = 0.0; }
   	grad_F = fv->grad_pF[ls->var-PHASE1];
-        Fill_Weight_Fcn = FILL_WEIGHT_EXPLICIT;    
+        Fill_Weight_Fcn = FILL_WEIGHT_EXPLICIT;
 	}
-    
+
   h_elem = 0.;
   for ( a=0; a<dim; a++) h_elem += hsquared[a];
   /* This is the size of the element */
@@ -264,7 +269,7 @@ assemble_fill(double tt,
    * possibly cause problems for is the CYLINDRICAL one.  In
    * CYLINDRICAL coordinates, VIM = 3, but there are not always 3
    * components to vectors (b/c the theta-velocity is assumed to be
-   * zero).  It passed the test suite, though. 
+   * zero).  It passed the test suite, though.
    */
 
   /*
@@ -272,9 +277,9 @@ assemble_fill(double tt,
    */
   int lubon = 0;
   if ( pd->e[R_LUBP] ) {
-    // if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G  ||
-    //     tran->Fill_Weight_Fcn == FILL_WEIGHT_TG ) {
- if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G  ) {
+     if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G  ||
+         tran->Fill_Weight_Fcn == FILL_WEIGHT_TG ) {
+// if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G  ) {
       lubon = 1;
  } else {
       WH(-1,"\n Multiphase lubrication should be run with Galerkin weighting to \n take advantage of direct velocity calculations.  \n Talk to SAR.");
@@ -291,13 +296,15 @@ assemble_fill(double tt,
 
     /* Calculate velocity */
     calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
+    calculate_lub_q_v_old (R_LUBP, tran->time_value_old, tran->delta_t_old, xi, exo );
 
     /* Set up weights */
     wt    = fv->wt;
     h3    = fv->h3;
     det_J = fv->sdet;
 
-  }
+    Inn(grad_F, grad_II_F);
+ }
  if ( pd->e[R_LUBP_2] ) {
 
    EH(-1," if you have a fill equation turned on in the R_LUBP_2 phase, you are in the wrong place");
@@ -307,12 +314,14 @@ assemble_fill(double tt,
 
     /* Calculate velocity */
     calculate_lub_q_v(R_LUBP_2, time, dt, xi, exo);
+    calculate_lub_q_v_old (R_LUBP_2, tran->time_value_old, tran->delta_t_old, xi, exo );
 
     /* Set up weights */
     wt    = fv->wt;
     h3    = fv->h3;
     det_J = fv->sdet;
 
+    Inn(grad_F, grad_II_F);
   }
 
 
@@ -320,9 +329,9 @@ assemble_fill(double tt,
   /* Use pointers unless we need to do algebra. */
   if (lubon) {
     v     = LubAux->v_avg;
-    v_old = LubAux->v_avg;
+    v_old = LubAux_old->v_avg;
     xx    = fv->x;
-    x_old = fv_old->x;    
+    x_old = fv_old->x;
   } else {
     v     = fv->v;
     v_old = fv_old->v;
@@ -345,8 +354,16 @@ assemble_fill(double tt,
 	  if (lubon) x_dot[a] = (1+2*tt)/dt * (xx[a] - x_old[a]);
 	  v_rel[a]     = v[a] - x_dot[a];
 	  v_rel_old[a] = v_old[a] - x_dot_old[a];
-	  v_dot_DF    += v_rel[a] * grad_F[a];       /* v.grad(F) */
+          if (lubon)
+            {
+	     v_dot_DF    += v_rel[a] * grad_II_F[a];       /* v.gradII(F) */
+            }
+          else
+            {
+	     v_dot_DF    += v_rel[a] * grad_F[a];       /* v.grad(F) */
+            }
 	}
+      if (lubon) ShellRotate(grad_F, fv->d_grad_F_dmesh, grad_II_F, d_grad_II_F_dmesh, n_dof[MESH_DISPLACEMENT1]);
     }
   else if  (pd->TimeIntegration != STEADY &&
 	    pd->etm[R_SOLID1][(LOG2_MASS)] &&
@@ -371,22 +388,36 @@ assemble_fill(double tt,
 	}
       for ( a=0; a < VIM; a++ )
 	{
-	  v_dot_DF    += v_rel[a] * grad_F[a];       /* v.grad(F) */
+          if (lubon)
+            {
+	     v_dot_DF    += v_rel[a] * grad_II_F[a];       /* v.gradII(F) */
+            }
+          else
+            {
+	     v_dot_DF    += v_rel[a] * grad_F[a];       /* v.grad(F) */
+            }
 	}
-	
+
     }
   else
     {
       x_dot_old = zero;
       for ( a=0; a < VIM; a++ )
 	{
-	  x_dot[a]     = 0.0;
+          x_dot[a]     = 0.0;
 	  v_rel[a]     = v[a];
 	  v_rel_old[a] = v_old[a];
-	  v_dot_DF    += v_rel[a] * grad_F[a];       /* v.grad(F) */
+          if (lubon)
+            {
+	     v_dot_DF    += v_rel[a] * grad_II_F[a];       /* v.gradII(F) */
+            }
+          else
+            {
+	     v_dot_DF    += v_rel[a] * grad_F[a];       /* v.grad(F) */
+            }
 	}
     }
-  
+
   /* Get the SUPG stuff, if necessary. */
   if ( Fill_Weight_Fcn == FILL_WEIGHT_SUPG )
     {
@@ -403,19 +434,32 @@ assemble_fill(double tt,
   /* Compute and save v.grad(phi) and vcent.grad(phi). */
   memset(v_dot_Dphi, 0, sizeof(double)*MDE);
 
-    
+
   for ( i=0; i < ei->dof[eqn]; i++ )
     {
       /* So: grad_phi_i[a] == bf[var]->grad_phi[i][a] */
       grad_phi_i = bf[eqn]->grad_phi[i];
-      for ( a=0; a < VIM; a++ )
-	{
-	  v_dot_Dphi[i]	+= v_rel[a] * grad_phi_i[a];
-	  if ( Fill_Weight_Fcn == FILL_WEIGHT_SUPG )
-	    vc_dot_Dphi[i] += vcent[a] * grad_phi_i[a];
-	}
+
+      if (lubon)
+        {
+         Inn(grad_phi_i, grad_II_phi_i);
+
+         for ( a=0; a < VIM; a++ )
+	    {
+             v_dot_Dphi[i] += v_rel[a] * grad_II_phi_i[a];
+            }
+        }
+      else
+        {
+         for ( a=0; a < VIM; a++ )
+	    {
+	     v_dot_Dphi[i] += v_rel[a] * grad_phi_i[a];
+            }
+	 if ( Fill_Weight_Fcn == FILL_WEIGHT_SUPG )
+	     vc_dot_Dphi[i] += vcent[a] * grad_phi_i[a];
+        }
     }
-  
+
   vmag_old = 0.;
   for ( a=0; a<dim; a++)
     {
@@ -423,7 +467,7 @@ assemble_fill(double tt,
     }
   vmag_old = sqrt( vmag_old );
   tau_gls = 1./sqrt((2./dt)*(2./dt) + (2.*vmag_old/h_elem)*(2.*vmag_old/h_elem));
-		
+
   /**********************************************************************
    **********************************************************************
    ** Residuals
@@ -433,12 +477,12 @@ assemble_fill(double tt,
   if ( af->Assemble_Residual )
     {
       peqn = upd->ep[eqn];
-      if(ls == NULL) var  = FILL;  
-      	else var  = ls->var;  
+      if(ls == NULL) var  = FILL;
+      	else var  = ls->var;
       for( i=0; i < ei->dof[eqn]; i++ )
 	{
 	  phi_i = bf[eqn]->phi[i];
-	  
+
 	  /************************************************************
 	   * Assemble according to the weight function selected.
 	   ************************************************************/
@@ -446,48 +490,58 @@ assemble_fill(double tt,
 	    {
 	    case FILL_WEIGHT_TG:  /* Taylor-Galerkin */
 
-	       mass = F_dot  * phi_i ;   
+	       mass = F_dot  * phi_i ;
 
 	       advection = 0.;
-	       for (a = 0; a < dim; a++)
-		{
-		  advection += phi_i * 0.5 * (v_rel[a] + v_rel_old[a]) * grad_F[a];
 
-		}
+               if (lubon)
+                 {
+	          for (a = 0; a < dim; a++)
+		     {
+		      advection += phi_i * 0.5 * (v_rel[a] + v_rel_old[a]) * grad_II_F[a];
+		     }
+                 }
+               else
+                 {
+	          for (a = 0; a < dim; a++)
+		     {
+		      advection += phi_i * 0.5 * (v_rel[a] + v_rel_old[a]) * grad_F[a];
+		     }
+                 }
 	       advection += v_dot_Dphi[i] * v_dot_DF * dt * 0.5;
-	     
+
 
 	      break;
-#if 0   
+#if 0
 	    case FILL_WEIGHT_EXPLICIT:
 
-	       mass = F_dot  * phi_i ;   
+	       mass = F_dot  * phi_i ;
 
 	       advection = 0.;
 	       for (a = 0; a < dim; a++) advection += phi_i * v_rel_old[a] * fv_old->grad_F[a];
 
 	      break;
 #endif
-#if 0   
+#if 0
 	    case FILL_WEIGHT_EXPLICIT:
 
 	       wfcn = phi_i;
                for (a = 0; a < dim; a++) wfcn += tau_gls * fv_old->v[a] * bf[eqn]->grad_phi[i][a];
-               
-               mass = F_dot  * wfcn ;   
+
+               mass = F_dot  * wfcn ;
 
 	       advection = 0.;
 	       for (a = 0; a < dim; a++) advection += wfcn * v_rel_old[a] * fv_old->grad_F[a];
 
 	      break;
 #endif
-#if 1   
+#if 1
 	    case FILL_WEIGHT_EXPLICIT:
 
 	       wfcn = phi_i;
                for (a = 0; a < dim; a++) wfcn += tau_gls * fv_old->v[a] * bf[eqn]->grad_phi[i][a];
-               
-               mass = F_dot  * wfcn ;   
+
+               mass = F_dot  * wfcn ;
 
 	       advection = 0.;
 	       for (a = 0; a < dim; a++) advection += wfcn * v_rel_old[a] * fv->grad_F[a];
@@ -526,7 +580,7 @@ assemble_fill(double tt,
 	  rmp[i] = mass + advection;
 
 	  lec->R[peqn][i] += (mass + advection) * wt * det_J * h3;
-	  
+
 	}
     }
 
@@ -541,11 +595,18 @@ assemble_fill(double tt,
       peqn = upd->ep[eqn];
       for ( i=0; i < ei->dof[eqn]; i++ )
 	{
-	  
+
 	  phi_i = bf[eqn]->phi[i];
 
 	  /* So: grad_phi_i[a] == bf[var]->grad_phi[i][a] */
 	  grad_phi_i = bf[eqn]->grad_phi[i];
+
+          if (lubon)
+            {
+             ShellBF(eqn, i, &phi_i, grad_phi_i, grad_II_phi_i,
+                     d_grad_II_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
+            }
+
 
 	  /*
 	   * Set up some preliminaries that are needed for the (a,i)
@@ -563,11 +624,11 @@ assemble_fill(double tt,
 	  if ( Fill_Weight_Fcn == FILL_WEIGHT_SUPG )
 	    {
 	      wfcn = 0.;
-	      
+
 	      /* vcent "dot" grad_phi */
 	      for(a=0; a<dim; a++)
 		wfcn += vcent[a] * bf[eqn]->grad_phi[i][a];
-	      
+
 	      wfcn *= supg_term;
 	      wfcn += bf[eqn]->phi[i];
 	    }
@@ -575,43 +636,53 @@ assemble_fill(double tt,
 	    {
 	      wfcn = bf[eqn]->phi[i];
 	    }
-	  
+
 	  /*************************************************************
 	   *
 	   * Derivatives of fill equation w.r.t. to FILL variable
 	   *
 	   *************************************************************/
 
-          if(ls == NULL) var  = FILL;  
-      	        else var  = ls->var;  
+          if(ls == NULL) var  = FILL;
+      	        else var  = ls->var;
 	  if ( pd->v[var] )
 	    {
 	      pvar = upd->vp[var];
-	      for( j=0; j < ei->dof[var]; j++) 
+	      for( j=0; j < ei->dof[var]; j++)
 		{
 		  phi_j = bf[eqn]->phi[j];
 
 		  /* So: grad_phi_j[a] == bf[var]->grad_phi[j][a] */
 		  grad_phi_j = bf[eqn]->grad_phi[j];
-		  
+
+                  if (lubon)
+                  Inn(grad_phi_j, grad_II_phi_j);
+
 		  /*
 		   * Use the selected weight function
 		   */
 		  switch(Fill_Weight_Fcn)
 		    {
 		    case FILL_WEIGHT_TG:  /* Taylor-Galerkin */
-		      
+
 		      mass = phi_i * phi_j * (1. + 2. * tt) * dtinv;
 		      advection = 0.;
 		      for ( a=0; a < VIM; a++)
 			{
-			  advection += 0.5 * (v_rel[a] + v_rel_old[a]) * grad_phi_j[a] * phi_i;
+                          if (lubon)
+                            {
+			     advection += 0.5 * (v_rel[a] + v_rel_old[a]) * grad_II_phi_j[a] * phi_i;
+                            }
+                          else
+                            {
+			     advection += 0.5 * (v_rel[a] + v_rel_old[a]) * grad_phi_j[a] * phi_i;
+                            }
 			}
 		      advection += v_dot_Dphi[j] * v_dot_Dphi[i] * dt * 0.5;
 		      break;
 #if 0
                     case FILL_WEIGHT_EXPLICIT:
-		      
+
 		      mass = phi_i * phi_j * (1. + 2. * tt) * dtinv;
 		      advection = 0.;
 		      break;
@@ -620,7 +691,7 @@ assemble_fill(double tt,
                     case FILL_WEIGHT_EXPLICIT:
 		      wfcn = phi_i;
                       for (a = 0; a < dim; a++) wfcn += tau_gls * fv_old->v[a] * bf[eqn]->grad_phi[i][a];
-                      
+
 		      mass = wfcn * phi_j * (1. + 2. * tt) * dtinv;
 		      advection = 0.;
 		      break;
@@ -629,7 +700,7 @@ assemble_fill(double tt,
                     case FILL_WEIGHT_EXPLICIT:
 		      wfcn = phi_i;
                       for (a = 0; a < dim; a++) wfcn += tau_gls * fv_old->v[a] * bf[eqn]->grad_phi[i][a];
-                      
+
 		      mass = wfcn * phi_j * (1. + 2. * tt) * dtinv;
 		      advection = 0.;
                       for (a = 0; a < dim; a++) advection += wfcn * v_rel_old[a] * bf[eqn]->grad_phi[j][a];
@@ -641,7 +712,7 @@ assemble_fill(double tt,
                       mass = ( phi_j * (1. + 2.*tt) * dtinv ) * wfcn;
 		      advection = v_dot_Dphi[j] * wfcn;
 		      if (lubon) {
-			for (a = 0; a < dim; a++) advection += LubAux->dv_avg_df[a][j] * grad_F[a] * wfcn;
+			for (a = 0; a < dim; a++) advection += LubAux->dv_avg_df[a][j] * grad_II_F[a] * wfcn;
 		      }
 
 		      break;
@@ -651,16 +722,16 @@ assemble_fill(double tt,
 		      EH(-1,"Unknown Fill_Weight_Fcn");
 
 		    } /* switch(Fill_Weight_Fcn) */
-		    
+
 		  mass *= pd->etm[eqn][(LOG2_MASS)];
 	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;		  
+		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
 
 		} /* for: FILL DoFs */
 
 	    } /* if: FILL exisits */
-	  
+
 	  /*************************************************************
 	   *
 	   * Derivatives of fill equation w.r.t. to VELOCITY variables
@@ -671,13 +742,13 @@ assemble_fill(double tt,
 	      var = VELOCITY1 + b;
 	      if ( pd->v[var] )
 		{
-		  
+
 		  pvar = upd->vp[var];
 		  for ( j=0; j < ei->dof[var]; j++ )
 		    {
-		      
-		      phi_j = bf[var]->phi[j];	      
-		      
+
+		      phi_j = bf[var]->phi[j];
+
 		      switch(Fill_Weight_Fcn)
 			{
 			case FILL_WEIGHT_TG:  /* Taylor Galerkin */
@@ -687,9 +758,10 @@ assemble_fill(double tt,
 			  advection += v_dot_Dphi[i] * grad_F[b];
 			  advection *= phi_j * dt * 0.5;
 			  advection += 0.5 * phi_j * phi_i * grad_F[b];
+			  if (lubon) advection = 0.0;
 
 			  break;
-                          
+
                         case FILL_WEIGHT_EXPLICIT:
 
 			  mass = 0.;
@@ -704,7 +776,7 @@ assemble_fill(double tt,
 			  if (lubon) advection = 0.0;
 
 			  break;
-			  
+
 			case FILL_WEIGHT_SUPG:  /* Streamline Upwind Petrov Galerkin (SUPG) */
 
 			  d_wfcn_du = d_supg_term_du[j][b] * vc_dot_Dphi[i];
@@ -724,7 +796,7 @@ assemble_fill(double tt,
 			  EH(-1,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
-			
+
 		      mass *= pd->etm[eqn][(LOG2_MASS)];
 	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
@@ -736,11 +808,11 @@ assemble_fill(double tt,
 	      var = EXT_VELOCITY;
 	      if ( pd->v[var] )
 		{
-		  
+
 		  pvar = upd->vp[var];
 		  for ( j=0; j < ei->dof[var]; j++ )
 		    {
-		      phi_j = bf[var]->phi[j];	      
+		      phi_j = bf[var]->phi[j];
 		      switch(Fill_Weight_Fcn)
 			{
 			case FILL_WEIGHT_TG:  /* Taylor Galerkin */
@@ -760,7 +832,7 @@ assemble_fill(double tt,
 			advection += phi_j * phi_i;
 
 			  break;
-			  
+
 			case FILL_WEIGHT_SUPG:  /* Streamline Upwind Petrov Galerkin (SUPG) */
 
 			  d_wfcn_du = d_supg_term_du[j][b] * vc_dot_Dphi[i];
@@ -780,7 +852,7 @@ assemble_fill(double tt,
 			  EH(-1,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
-			
+
 		      mass *= pd->etm[eqn][(LOG2_MASS)];
 	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
@@ -788,7 +860,7 @@ assemble_fill(double tt,
 
 		    }
 		}
-	  
+
 	  /*************************************************************
 	   *
 	   * Derivatives of fill equation w.r.t. to MESH_DISPLACEMENT variables
@@ -799,7 +871,7 @@ assemble_fill(double tt,
 	      var = MESH_DISPLACEMENT1 + b;
 	      if ( pd->v[var] )
 		{
-		  
+
 		  if ( lubon ) {
 
 		    pvar = upd->vp[var];
@@ -807,17 +879,50 @@ assemble_fill(double tt,
 		      c = dof_map[j];
 		      phi_j = bf[var]->phi[j];
 
-		      mass = 0.;
-		      mass *= pd->etm[eqn][(LOG2_MASS)];
-		      
-		      advection = 0.0;
-		      for ( a=0; a < dim; a++ ) {
-			advection += LubAux->dv_avg_dx[a][b][j] * grad_F[a] * phi_i;
-			advection -= (1+2*tt)/dt * phi_j * delta(a,b) * grad_F[a] * phi_i;
-			advection += v_rel[a] * fv->d_grad_F_dmesh[a][b][j] * phi_i;
-		      }
-	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		      switch(Fill_Weight_Fcn)
+			{
 
+			case FILL_WEIGHT_TG:  /* Taylor Galerkin */
+
+			  mass = 0.;
+		          mass *= pd->etm[eqn][(LOG2_MASS)];
+
+		          advection = 0.0;
+		          for ( a=0; a < dim; a++ ) {
+                            advection += 0.5 * LubAux->dv_avg_dx[a][b][j] * grad_II_F[a] * phi_i;
+			    advection -= 0.5 * (1+2*tt)/dt * phi_j * delta(a,b) * grad_II_F[a] * phi_i;
+                            advection += 0.5 * (v_rel[a] + v_rel_old[a]) * d_grad_II_F_dmesh[a][b][j] * phi_i;
+
+                            advection += LubAux->dv_avg_dx[a][b][j] * grad_II_phi_i[a] * v_dot_DF * dt * 0.5;
+                            advection -= (1+2*tt)/dt * phi_j * delta(a,b) * grad_II_phi_i[a] * v_dot_DF * dt * 0.5;
+                            advection += v_rel[a] * d_grad_II_phi_i_dmesh[a][b][j] * v_dot_DF * dt * 0.5;
+
+                            advection += v_dot_Dphi[i] * LubAux->dv_avg_dx[a][b][j] * grad_II_F[a] * dt * 0.5;
+                            advection -= v_dot_Dphi[i] * (1+2*tt)/dt * phi_j * delta(a,b) * grad_II_F[a] * dt * 0.5;
+                            advection += v_dot_Dphi[i] * v_rel[a] * d_grad_II_F_dmesh[a][b][j] * dt * 0.5;
+
+		          }
+	                  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+
+
+			case FILL_WEIGHT_G:  /* Plain ol' Galerkin */
+
+			  mass = 0.;
+		          mass *= pd->etm[eqn][(LOG2_MASS)];
+
+		          advection = 0.0;
+		          for ( a=0; a < dim; a++ ) {
+//			    advection += LubAux->dv_avg_dx[a][b][j] * grad_F[a] * phi_i;
+//			    advection -= (1+2*tt)/dt * phi_j * delta(a,b) * grad_F[a] * phi_i;
+//			    advection += v_rel[a] * fv->d_grad_F_dmesh[a][b][j] * phi_i;
+
+			    advection += LubAux->dv_avg_dx[a][b][j] * grad_II_F[a] * phi_i;
+			    advection -= (1+2*tt)/dt * phi_j * delta(a,b) * grad_II_F[a] * phi_i;
+			    advection += v_rel[a] * d_grad_II_F_dmesh[a][b][j] * phi_i;
+		          }
+	                  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+                          break;
+                        }
 		      lec->J[peqn][pvar][i][c] += (mass + advection) * wt * h3 * fv->sdet;
 		      lec->J[peqn][pvar][i][c] += rmp[i] * wt * h3 * fv->dsurfdet_dx[b][c];
 		    } /* j loop */
@@ -827,31 +932,31 @@ assemble_fill(double tt,
 		  pvar = upd->vp[var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
-		      
-		      phi_j = bf[var]->phi[j];	      
-		      
+
+		      phi_j = bf[var]->phi[j];
+
 		      /* So: grad_phi_j[a] == bf[var]->grad_phi[j][a] */
 		      grad_phi_j = bf[var]->grad_phi[j];
 
 		      switch(Fill_Weight_Fcn)
 			{
 			case FILL_WEIGHT_TG:  /* Taylor Galerkin */
-			  
+
 			  mass = 0.;
 			  advection  = -0.5 * phi_j * (1.+2.*tt) * dtinv * phi_i * grad_F[b];
 			  advection += -0.5 * dt * phi_j * grad_phi_j[b] * v_dot_DF;
-			  
+
 			  break;
-                          
+
                         case FILL_WEIGHT_EXPLICIT:
-			  
+
 			  mass = 0.;
 			  advection = 0.;
-			  
+
 			  break;
 
 			case FILL_WEIGHT_G:  /* Plain ol' Galerkin */
-			  
+
 			  mass = 0.;
 			  advection = -phi_j * (1. + 2.*tt) * dtinv * grad_F[b];
 
@@ -876,7 +981,7 @@ assemble_fill(double tt,
 			  EH(-1,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
-			
+
 		      mass *= pd->etm[eqn][(LOG2_MASS)];
 	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
@@ -899,6 +1004,38 @@ assemble_fill(double tt,
 
 	  /*************************************************************
 	   *
+	   * Derivatives of fill equation w.r.t. to SHELL NORMAL variables
+	   *
+	   *************************************************************/
+	  for ( b=0; b < VIM; b++ )
+	    {
+	      var = SHELL_NORMAL1 + b;
+	      if ( pd->v[var] )
+		{
+		  
+		  if ( lubon ) {
+
+		    pvar = upd->vp[var];
+		    for ( j=0; j<ei->dof[var]; j++) {
+		      
+		      advection = 0.0;
+		      for ( a=0; a < dim; a++ ) {
+			advection += LubAux->dv_avg_dnormal[a][b][j] * grad_F[a] * phi_i;
+		      }
+	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+
+		      lec->J[peqn][pvar][i][j] += advection * wt * h3 * fv->sdet;
+		    } /* j loop */
+
+		  } 
+
+		} /* if: SHELL NORMAL exists? */
+
+	    } /* for 'b': SHELL NORMAL components */
+
+
+	  /*************************************************************
+	   *
 	   * Derivatives of fill equation w.r.t. to REAL_SOLID displacements
 	   * for Eulerian solid mechanics
 	   *
@@ -912,8 +1049,8 @@ assemble_fill(double tt,
 		  var = SOLID_DISPLACEMENT1 + b;
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
-		      phi_j = bf[var]->phi[j];	   
-   
+		      phi_j = bf[var]->phi[j];
+
 		      d_vrel_d_x_rs[a][b][j] += phi_j * (1. + 2.*tt) * dtinv *delta(a,b) ;
 
 		      grad_phi_j = bf[var]->grad_phi[j];
@@ -934,45 +1071,45 @@ assemble_fill(double tt,
 	      var = SOLID_DISPLACEMENT1 + b;
 	      if ( pd->v[var] )
 		{
-		  
+
 		  pvar = upd->vp[var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
-		      
-		      phi_j = bf[var]->phi[j];	      
-		      
+
+		      phi_j = bf[var]->phi[j];
+
 		      /* So: grad_phi_j[a] == bf[var]->grad_phi[j][a] */
 		      grad_phi_j = bf[var]->grad_phi[j];
 
 		      switch(Fill_Weight_Fcn)
 			{
 			case FILL_WEIGHT_TG:  /* Taylor Galerkin */
-			  
-			  for(a=0; a < VIM; a++)	
-			    {		    
+
+			  for(a=0; a < VIM; a++)
+			    {
 			      advection += phi_i*0.5*d_vrel_d_x_rs[a][b][j]*grad_F[a];
 			    }
-			  
+
 			  for(a=0; a < VIM; a++)
 			    {
 			      advection += (v_dot_Dphi[i] * d_vrel_d_x_rs[a][b][j] * grad_F[a]
 				            + d_vrel_d_x_rs[a][b][j] * grad_phi_i[a] * v_dot_DF)*dt*0.5;
 			    }
-			  
-			  
+
+
 			  break;
-                          
+
                         case FILL_WEIGHT_EXPLICIT:
-			  
+
 			  advection = 0.;
-			  
+
 			  break;
 
 			case FILL_WEIGHT_G:  /* Plain ol' Galerkin */
 
 			  advection  = phi_j * (1. + 2.*tt) * dtinv * grad_F[b]*phi_i;
-			  for(a=0; a < VIM; a++)	
-			    {		    
+			  for(a=0; a < VIM; a++)
+			    {
 			      EH(-1,"This is easy.  Need to copy essentials from TG case above");
 			    }
 
@@ -989,7 +1126,7 @@ assemble_fill(double tt,
 			  EH(-1,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
-		      
+
 		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
 		      lec->J[peqn][pvar][i][j] += advection * wt * det_J * h3;
@@ -1014,25 +1151,47 @@ assemble_fill(double tt,
 	  if ( pd->v[var] && lubon )
 	    {
 	      pvar = upd->vp[var];
-	      for( j=0; j < ei->dof[var]; j++) 
+	      for( j=0; j < ei->dof[var]; j++)
 		{
 		  phi_j = bf[eqn]->phi[j];
 		  grad_phi_j = bf[eqn]->grad_phi[j];
-		  
-		  dbl grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
-		  ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
-		  
+
+		  Inn(grad_phi_j, grad_II_phi_j);
+
 		  mass = 0.0;
 		  advection = 0.0;
-		  for (a = 0; a < dim; a++) {
-		    advection += LubAux->dv_avg_dp1[a][j] * grad_F[a] * wfcn * grad_II_phi_j[a];
-		    advection += LubAux->dv_avg_dp2[a][j] * grad_F[a] * wfcn * phi_j;
-		  }
-		    
+
+	          switch(Fill_Weight_Fcn)
+                    {
+
+	             case FILL_WEIGHT_TG:  /* Taylor-Galerkin */
+		       for (a = 0; a < dim; a++) {
+		         advection += 0.5 * LubAux->dv_avg_dp1[a][j] * grad_II_F[a] * phi_i * grad_II_phi_j[a];
+		         advection += 0.5 * LubAux->dv_avg_dp2[a][j] * grad_II_F[a] * phi_i * phi_j;
+
+		         advection += 0.5 * LubAux->dv_avg_dp1[a][j] * grad_II_phi_i[a] * grad_II_phi_j[a] * v_dot_DF * dt;
+		         advection += 0.5 * LubAux->dv_avg_dp2[a][j] * grad_II_phi_i[a] * phi_j * v_dot_DF * dt;
+
+		         advection += 0.5 * LubAux->dv_avg_dp1[a][j] * grad_II_F[a] * grad_II_phi_j[a] * v_dot_Dphi[i] * dt;
+		         advection += 0.5 * LubAux->dv_avg_dp2[a][j] * grad_II_F[a] * phi_j * v_dot_Dphi[i] * dt;
+		      }
+
+                       break;
+
+	             case FILL_WEIGHT_G:  /* Plain ol' Galerkin */
+		       for (a = 0; a < dim; a++) {
+		         advection += LubAux->dv_avg_dp1[a][j] * grad_II_F[a] * wfcn * grad_II_phi_j[a];
+		         advection += LubAux->dv_avg_dp2[a][j] * grad_II_F[a] * wfcn * phi_j;
+		      }
+
+                       break;
+
+                    }
+
 		  mass *= pd->etm[eqn][(LOG2_MASS)];
 	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;		  
+		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
 
 		} /* for: LUBP DoFs */
 
@@ -1052,16 +1211,34 @@ assemble_fill(double tt,
 		{
 		  phi_j = bf[eqn]->phi[j];
 		  grad_phi_j = bf[eqn]->grad_phi[j];
-		  
+
 		  mass = 0.0;
 		  advection = 0.0;
-		  for (a = 0; a < dim; a++)
-		    advection += LubAux->dv_avg_dk[a][j] * grad_F[a] * phi_i * phi_j;
-		    
+
+	          switch(Fill_Weight_Fcn)
+                    {
+
+	             case FILL_WEIGHT_TG:  /* Taylor-Galerkin */
+		       for (a = 0; a < dim; a++) {
+
+                         advection += 0.5 * LubAux->dv_avg_dk[a][j] * grad_II_F[a] * phi_i * phi_j;
+                         advection += 0.5 * LubAux->dv_avg_dk[a][j] * grad_II_phi_i[a] * phi_j * v_dot_DF * dt;
+                         advection += 0.5 * LubAux->dv_avg_dk[a][j] * grad_II_F[a] * phi_j * v_dot_Dphi[i] * dt;
+		      }
+
+                       break;
+
+	             case FILL_WEIGHT_G:  /* Plain ol' Galerkin */
+		       for (a = 0; a < dim; a++)
+		           advection += LubAux->dv_avg_dk[a][j] * grad_II_F[a] * phi_i * phi_j;
+
+                       break;
+                    }
+
 		  mass *= pd->etm[eqn][(LOG2_MASS)];
 	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;		  
+		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
 
 		} /* for: SHELL_LUB_CURV DoFs */
 
@@ -1078,32 +1255,24 @@ assemble_fill(double tt,
 	  if ( pd->v[var] && lubon )
 	    {
 	      pvar = upd->vp[var];
-	      for( j=0; j < ei->dof[var]; j++) 
+	      for( j=0; j < ei->dof[var]; j++)
 		{
 		  phi_j = bf[eqn]->phi[j];
 		  grad_phi_j = bf[eqn]->grad_phi[j];
-		  
+
 		  mass = 0.0;
 		  advection = 0.0;
 		  for (a = 0; a < dim; a++)
 		    advection += LubAux->dv_avg_ddh[a][j] * grad_F[a] * phi_i * phi_j;
-		    
+
 		  mass *= pd->etm[eqn][(LOG2_MASS)];
 	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;		  
+		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
 
 		} /* for: SHELL_DELTAH DoFs */
 
 	    } /* if: SHELL_DELTAH exisits */
-
-
-
-
-
-
-
-
 
 	} /* for 'i': FILL DoFs */
 
@@ -5891,8 +6060,10 @@ assemble_phase_function ( double time_value,
   int Fill_Wt_Fcn = tran->Fill_Weight_Fcn;
 
   double det_J, h3, wt, phi_i, phi_j, wfcn = 0, *grad_phi_j, *grad_phi_i;
+  double grad_II_phi_i[DIM], grad_II_phi_j[DIM];
   double d_wfcn_du;
-  double pf_dot,  *grad_pf ;
+  double pf_dot,  *grad_pf;
+  double grad_II_pf[DIM];
   double *v, *v_old;
   dbl *xx;                              /* Nodal coordinates. */
   dbl *x_old;                           /* Old xx[]. */
@@ -5931,9 +6102,9 @@ assemble_phase_function ( double time_value,
    */
   int lubon = 0;
   if ( pd->e[R_LUBP_2] ) {
-    // if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G ||
-    //	 tran->Fill_Weight_Fcn == FILL_WEIGHT_TG) {
-    if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G ) {
+     if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G ||
+    	 tran->Fill_Weight_Fcn == FILL_WEIGHT_TG) {
+   // if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G ) {
       lubon = 1;
     } else {
       WH(-1,"\n Multiphase lubrication should be run with Galerkin weighting to \n take advantage of direct velocity calculations.  \n Talk to SAR.");
@@ -5953,8 +6124,8 @@ assemble_phase_function ( double time_value,
   det_J = bf[eqn]->detJ;		/* Really, ought to be mesh eqn. */
 
   h3 = fv->h3;			/* Differential volume element (scales). */
-  
-  dtinv           = 1.0 / dt;         
+
+  dtinv           = 1.0 / dt;
 
   int *n_dof = NULL;
   int dof_map[MDE];
@@ -5966,6 +6137,7 @@ assemble_phase_function ( double time_value,
 
     /* Calculate velocity */
     calculate_lub_q_v(R_LUBP_2, time_value, dt, xi, exo);
+    calculate_lub_q_v_old (R_LUBP_2, tran->time_value_old, tran->delta_t_old, xi, exo );
 
     /* Set up weights */
     wt    = fv->wt;
@@ -5974,14 +6146,15 @@ assemble_phase_function ( double time_value,
 
   }
 
-  grad_pf = fv->grad_pF[0]; 
+  grad_pf = fv->grad_pF[0];
+  if (lubon) Inn(grad_pf, grad_II_pf);
 
   /* Use pointers unless we need to do algebra. */
   if (lubon) {
     v     = LubAux->v_avg;
-    v_old = LubAux->v_avg;
+    v_old = LubAux_old->v_avg;
     xx    = fv->x;
-    x_old = fv_old->x;    
+    x_old = fv_old->x;
   } else {
     v     = fv->v;
     v_old = fv_old->v;
@@ -5999,7 +6172,14 @@ assemble_phase_function ( double time_value,
 	  if (lubon) x_dot[a] = (1+2*tt)/dt * (xx[a] - x_old[a]);
 	  v_rel[a]     = v[a] - x_dot[a];
 	  v_rel_old[a] = v_old[a] - x_dot_old[a];
-	  v_dot_DF    += v_rel[a] * grad_pf[a];       /* v.grad(pF) */
+          if (lubon)
+            {
+	     v_dot_DF    += v_rel[a] * grad_II_pf[a];       /* v.gradII(pF) */
+            }
+          else
+            {
+	     v_dot_DF    += v_rel[a] * grad_pf[a];       /* v.grad(pF) */
+            }
 	}
     }
   else if  (pd->TimeIntegration != STEADY &&
@@ -6025,9 +6205,16 @@ assemble_phase_function ( double time_value,
 	}
       for ( a=0; a < VIM; a++ )
 	{
-	  v_dot_DF    += v_rel[a] * grad_pf[a];       /* v.grad(pF) */
+          if (lubon)
+            {
+	     v_dot_DF    += v_rel[a] * grad_II_pf[a];       /* v.gradII(pF) */
+            }
+          else
+            {
+	     v_dot_DF    += v_rel[a] * grad_pf[a];       /* v.grad(pF) */
+            }
 	}
-	
+
     }
   else
     {
@@ -6037,7 +6224,14 @@ assemble_phase_function ( double time_value,
 	  x_dot[a]     = 0.0;
 	  v_rel[a]     = v[a];
 	  v_rel_old[a] = v_old[a];
-	  v_dot_DF    += v_rel[a] * grad_pf[a];       /* v.grad(pF) */
+          if (lubon)
+            {
+	     v_dot_DF    += v_rel[a] * grad_II_pf[a];       /* v.gradII(pF) */
+            }
+          else
+            {
+	     v_dot_DF    += v_rel[a] * grad_pf[a];       /* v.grad(pF) */
+            }
 	}
     }
 
@@ -6056,13 +6250,24 @@ assemble_phase_function ( double time_value,
   for ( i=0; i<ei->dof[eqn]; i++)
     {
       grad_phi_i = bf[eqn]->grad_phi[i];
-      for( a=0; a<VIM; a++)
-	  {
-		  v_dot_Dphi[i] += v_rel[a] * grad_phi_i[a];
-		  
-		  if ( Fill_Wt_Fcn == FILL_WEIGHT_SUPG )
-			  vc_dot_Dphi[i] += vcent[a] * grad_phi_i[a];
-	  }
+
+      if (lubon)
+        {
+         for( a=0; a<VIM; a++)
+	    {
+             v_dot_Dphi[i] += v_rel[a] * grad_II_phi_i[a];
+            }
+        }
+      else
+        {
+         for( a=0; a<VIM; a++)
+	    {
+             v_dot_Dphi[i] += v_rel[a] * grad_phi_i[a];
+
+	     if ( Fill_Wt_Fcn == FILL_WEIGHT_SUPG )
+		vc_dot_Dphi[i] += vcent[a] * grad_phi_i[a];
+	    }
+        }
   }
 
   vmag_old = 0.;
@@ -6085,10 +6290,11 @@ assemble_phase_function ( double time_value,
 
       eqn = R_PHASE1 + a;
       peqn = upd->ep[eqn];
-	  
+
       /* pf = fv->pF[a]; */
       pf_dot = fv_dot->pF[a];
       grad_pf = fv->grad_pF[a];
+      if (lubon) Inn(grad_pf, grad_II_pf);
       ls_old = ls;
       ls = pfd->ls[a];
       load_lsi( 0.0 );
@@ -6096,7 +6302,14 @@ assemble_phase_function ( double time_value,
 
       for( p=0, v_dot_grad_pf = 0.0;  p<wim; p++)
 	{
-	  v_dot_grad_pf += v_rel[p]*grad_pf[p];
+          if (lubon)
+            {
+	     v_dot_grad_pf += v_rel[p]*grad_II_pf[p];
+            }
+          else
+            {
+	     v_dot_grad_pf += v_rel[p]*grad_pf[p];
+            }
 	}
 
       if ( af->Assemble_Residual )
@@ -6117,7 +6330,14 @@ assemble_phase_function ( double time_value,
 
 		      for( p=0; p<dim; p++)
 			{
-			  rhs += phi_i*0.5*( v_rel[p] + v_rel_old[p] )*grad_pf[p];
+                          if (lubon)
+                            {
+			     rhs += phi_i*0.5*( v_rel[p] + v_rel_old[p] )*grad_II_pf[p];
+                            }
+                          else
+                            {
+			     rhs += phi_i*0.5*( v_rel[p] + v_rel_old[p] )*grad_pf[p];
+                            }
 			}
 
 		      rhs += v_dot_Dphi[i] * v_dot_grad_pf * dt * 0.5;
@@ -6137,7 +6357,7 @@ assemble_phase_function ( double time_value,
 		    case FILL_WEIGHT_EXPLICIT: /* Vanilla Galerkin weight on advection equation */
 	       wfcn = phi_i;
                for (p = 0; p < dim; p++) wfcn += tau_gls * v_rel_old[p] * bf[eqn]->grad_phi[i][p];
-               
+
 		      rhs = ( pf_dot + v_dot_grad_pf ) * wfcn;
 		      break;
 
@@ -6145,13 +6365,13 @@ assemble_phase_function ( double time_value,
 		      EH(-1, "That Fill Weight Function type not currently supported for phase function\n");
 		      break;
 		    }
-		  
+
 		  lec->R[peqn][i] += rhs*wt*det_J*h3;
 
 		}
 	    }
 	}
-    
+
       /*
        * Jacobian terms...
        */
@@ -6159,7 +6379,7 @@ assemble_phase_function ( double time_value,
       if ( af->Assemble_Jacobian )
 	{
 
-	  
+
 	  for (i = 0; i < ei->dof[eqn]; i++)
 	    {
 	      ledof = ei->lvdof_to_ledof[eqn][i];
@@ -6174,7 +6394,7 @@ assemble_phase_function ( double time_value,
 	      else if ( Fill_Wt_Fcn == FILL_WEIGHT_SUPG )
 		{
 		  wfcn = 0.0;
-		  
+
 		  for( p=0; p< dim ; p++ )
 		    {
 		      wfcn += vcent[p] * grad_phi_i[p];
@@ -6191,24 +6411,34 @@ assemble_phase_function ( double time_value,
 		  /* J_pf_pf */
 
 		  var = PHASE1 + a;
-		      
+
 		  if ( pd->v[var] )
 		    {
 		      pvar = upd->vp[var];
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
-			  
+
 			  phi_j = bf[var]->phi[j];
 			  grad_phi_j = bf[var]->grad_phi[j];
+
+                          if(lubon) Inn(grad_phi_j, grad_II_phi_j);
 
 			  switch( Fill_Wt_Fcn )
 			    {
 			    case FILL_WEIGHT_TG:
 			      tmp = phi_i * phi_j * ( 1. + 2.0*tt) / dt;
-			      
+
 			      for( p=0; p<VIM; p++ )
 				{
-				  tmp += 0.5 * (v_rel[p] + v_rel_old[p] ) *grad_phi_j[p] * phi_i;
+                                  if (lubon)
+                                    {
+                                     tmp += 0.5 * LubAux->dv_avg_df[p][j] * grad_II_pf[p] * phi_i;
+				     tmp += 0.5 * (v_rel[p] + v_rel_old[p] ) *grad_II_phi_j[p] * phi_i;
+                                    }
+                                  else
+                                    {
+				     tmp += 0.5 * (v_rel[p] + v_rel_old[p] ) *grad_phi_j[p] * phi_i;
+                                    }
 				}
 
 			      tmp += v_dot_Dphi[j] * v_dot_Dphi[i] * dt * 0.5;
@@ -6227,10 +6457,10 @@ assemble_phase_function ( double time_value,
 
 				break;
 			    case FILL_WEIGHT_SUPG:
-			      
+
 			      tmp = ( phi_j*(1 + 2.0*tt)/dt + v_dot_Dphi[j] )*wt*h3*det_J*wfcn;
 
-			      
+
 			      break;
 			    case FILL_WEIGHT_EXPLICIT: /* Vanilla Galerkin weight on advection equation */
 			     tmp = phi_j;
@@ -6248,13 +6478,13 @@ assemble_phase_function ( double time_value,
 		  /* T */
 
 		  var = TEMPERATURE;
-		      
+
 		  if ( pd->v[var] )
 		    {
 		      pvar = upd->vp[var];
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
-			  
+
 			  phi_j = bf[var]->phi[j];
 			  grad_phi_j = bf[var]->grad_phi[j];
 
@@ -6276,22 +6506,22 @@ assemble_phase_function ( double time_value,
 
 			} /* for ( j = 0 ... */
 		    } /* if ( pd->v[var] ) */
-		  
+
 		  /*
 		   *   J_pf_v 
 		   */
-		   
+
 		  for( b=0; b<VIM; b++)
 		    {
 		      var = VELOCITY1 +b;
-		      
+
 		      if( pd->v[var] )
 			{
 			  pvar = upd->vp[var];
 
 			  for ( j=0; j < ei->dof[var]; j++ )
 			    {
-			      phi_j = bf[var]->phi[j];	      
+			      phi_j = bf[var]->phi[j];
 
 			      switch(Fill_Wt_Fcn)
 				{
@@ -6325,7 +6555,7 @@ assemble_phase_function ( double time_value,
 				default:
 				  break;
 				}
-				  
+
 			      lec->J[peqn][pvar][i][j] += tmp*wt*det_J*h3;
 			    }
 			}
@@ -6345,25 +6575,52 @@ assemble_phase_function ( double time_value,
 			{
 			  phi_j = bf[eqn]->phi[j];
 			  grad_phi_j = bf[eqn]->grad_phi[j];
-		  
+
 			  dbl grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
 			  ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
-		  
+
 			  mass = 0.0;
 			  advection = 0.0;
-			  for (p = 0; p < dim; p++) {
-			    advection += LubAux->dv_avg_dp1[p][j] * grad_pf[p] * wfcn * grad_II_phi_j[p];
-			    advection += LubAux->dv_avg_dp2[p][j] * grad_pf[p] * wfcn * phi_j;
-			  }
-			  
+
+                          switch(Fill_Wt_Fcn)
+                           {
+
+			    case FILL_WEIGHT_TG:
+			      for (p = 0; p < dim; p++) {
+                                advection += 0.5 * LubAux->dv_avg_dp1[p][j] * grad_II_pf[p] * grad_II_phi_j[p] * phi_i;
+                                advection += 0.5 * LubAux->dv_avg_dp2[p][j] * grad_II_pf[p] * phi_j * phi_i;
+
+                                advection += 0.5 * LubAux->dv_avg_dp1[p][j] * grad_II_phi_i[p] * grad_II_phi_j[p]
+                                                 * v_dot_grad_pf * dt * 0.5;
+                                advection += 0.5 * LubAux->dv_avg_dp1[p][j] * grad_II_phi_i[p] * phi_j
+                                                 * v_dot_grad_pf * dt * 0.5;
+
+                                advection += 0.5 * LubAux->dv_avg_dp1[p][j] * grad_II_pf[p] * grad_II_phi_j[p]
+                                                 * v_dot_Dphi[i] * dt * 0.5;
+                                advection += 0.5 * LubAux->dv_avg_dp1[p][j] * grad_II_pf[p] * phi_j
+                                                 * v_dot_Dphi[i] * dt * 0.5;
+
+                              }
+
+                              break;
+
+			    case FILL_WEIGHT_G:
+			      for (p = 0; p < dim; p++) {
+			        advection += LubAux->dv_avg_dp1[p][j] * grad_II_pf[p] * wfcn * grad_II_phi_j[p];
+			        advection += LubAux->dv_avg_dp2[p][j] * grad_II_pf[p] * wfcn * phi_j;
+			      }
+
+			      break;
+                           }
+
 			  mass *= pd->etm[eqn][(LOG2_MASS)];
 			  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-			  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;		  
+			  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
 
 			} /* for: LUBP DoFs */
 
-		    } /* if: LUBP_2 exisits */
+		    } /* if: LUBP_2 exists */
 
 	  /*************************************************************
 	   *
@@ -6378,22 +6635,40 @@ assemble_phase_function ( double time_value,
 	      for( j=0; j < ei->dof[var]; j++) 
 		{
 		  phi_j = bf[eqn]->phi[j];
-		  grad_phi_j = bf[eqn]->grad_phi[j];
-		  
+
 		  mass = 0.0;
 		  advection = 0.0;
-		  for (a = 0; a < dim; a++)
-		    advection += LubAux->dv_avg_dk[a][j] * grad_pf[a] * phi_i * phi_j;
-		    
+
+                  switch( Fill_Wt_Fcn )
+                    {
+
+                     case FILL_WEIGHT_TG:
+		       for (p = 0; p < dim; p++) {
+                         advection += 0.5 * LubAux->dv_avg_dk[p][j] * grad_II_pf[p] * phi_i * phi_j;
+                         advection += 0.5 * LubAux->dv_avg_dk[p][j] * grad_II_phi_i[p] * phi_j 
+                                          * v_dot_grad_pf * dt * 0.5;
+                         advection += 0.5 * LubAux->dv_avg_dk[p][j] * grad_II_pf[p] * phi_j  
+                                          * v_dot_Dphi[i] * dt * 0.5; 
+                       }
+
+                       break;
+
+                     case FILL_WEIGHT_G:
+		       for (p = 0; p < dim; p++)
+		         advection += LubAux->dv_avg_dk[p][j] * grad_II_pf[p] * phi_i * phi_j;
+
+                       break;
+                    }
+
 		  mass *= pd->etm[eqn][(LOG2_MASS)];
 	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 
-		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;		  
+		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
 
 		} /* for: SHELL_LUB_CURV DoFs */
 
 	    } /* if: SHELL_LUB_CURV exisits */
-		       
+
 		} /* if( active...) */
 	    } /* for(i : */
 	} /* af->Jacobian */

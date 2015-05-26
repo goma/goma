@@ -2321,7 +2321,18 @@ noahs_ark()
       ddd_add_member(n, elc_glob[i]->d_bend_stiffness,
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
 
+      ddd_add_member(n, &elc_glob[i]->exten_stiffness, 1, MPI_DOUBLE);
+      ddd_add_member(n, &elc_glob[i]->exten_stiffness_model, 1, MPI_INT);
+      ddd_add_member(n, &elc_glob[i]->len_u_exten_stiffness, 1, MPI_INT);
+      ddd_add_member(n, elc_glob[i]->d_exten_stiffness,
+                     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
+
       ddd_add_member(n, &elc_glob[i]->poisson, 1, MPI_DOUBLE);
+      ddd_add_member(n, &elc_glob[i]->poisson_model, 1, MPI_INT);
+      ddd_add_member(n, &elc_glob[i]->len_u_poisson, 1, MPI_INT);
+      ddd_add_member(n, elc_glob[i]->d_poisson,
+                     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
+
       ddd_add_member(n, &elc_glob[i]->Strss_fr_sol_vol_frac, 1, MPI_DOUBLE);
 
       ddd_add_member(n, elc_glob[i]->v_mesh_sfs, DIM, MPI_DOUBLE);
@@ -2476,6 +2487,8 @@ noahs_ark()
   ddd_add_member(n, &DISJ_PRESS, 1, MPI_INT);
   ddd_add_member(n, &SH_SAT_OPEN, 1, MPI_INT);
   ddd_add_member(n, &SH_SAT_OPEN_2, 1, MPI_INT);
+  ddd_add_member(n, &SH_STRESS_TENSOR, 1, MPI_INT);
+  ddd_add_member(n, &SH_TANG, 1, MPI_INT);
   ddd_add_member(n, &PP_LAME_MU, 1, MPI_INT);
   ddd_add_member(n, &PP_LAME_LAMBDA, 1, MPI_INT);
   ddd_add_member(n, &VON_MISES_STRAIN, 1, MPI_INT);

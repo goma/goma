@@ -250,6 +250,8 @@ int LUB_VELO_FIELD = -1;
 int DISJ_PRESS = -1;
 int SH_SAT_OPEN = -1;
 int SH_SAT_OPEN_2 = -1;
+int SH_STRESS_TENSOR = -1;
+int SH_TANG = -1;
 int PP_LAME_MU = -1;
 int PP_LAME_LAMBDA = -1;
 int VON_MISES_STRESS = -1;
@@ -1788,10 +1790,27 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     switch ( mp->FSIModel ) {
     case FSI_MESH_CONTINUUM:
     case FSI_MESH_UNDEF:
+    case FSI_SHELL_ONLY_UNDEF:      
       for(a=0;a<dim; a++)
 	{
 	  local_post[LUB_HEIGHT] -= fv->snormal[a] * fv->d[a];
 	}
+      break;
+    case FSI_SHELL_ONLY_MESH:
+      if ( (pd->e[R_SHELL_NORMAL1]) && (pd->e[R_SHELL_NORMAL2]) && (pd->e[R_SHELL_NORMAL3]) )
+        {
+         for(a=0;a<dim; a++)
+            {
+             local_post[LUB_HEIGHT] -= fv->n[a] * fv->d[a];
+            }
+        }
+      else
+        {
+         for(a=0;a<dim; a++)
+            {
+             local_post[LUB_HEIGHT] -= fv->snormal[a] * fv->d[a];
+            }
+        }
       break;
     case FSI_REALSOLID_CONTINUUM:
       for(a=0;a<dim; a++)
@@ -1832,10 +1851,27 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     switch ( mp->FSIModel ) {
     case FSI_MESH_CONTINUUM:
     case FSI_MESH_UNDEF:
+    case FSI_SHELL_ONLY_UNDEF:      
       for(a=0;a<dim; a++)
 	{
 	  local_post[LUB_HEIGHT_2] -= fv->snormal[a] * fv->d[a];
 	}
+      break;
+    case FSI_SHELL_ONLY_MESH:
+      if ( (pd->e[R_SHELL_NORMAL1]) && (pd->e[R_SHELL_NORMAL2]) && (pd->e[R_SHELL_NORMAL3]) )
+        {
+         for(a=0;a<dim; a++)
+            {
+             local_post[LUB_HEIGHT] -= fv->n[a] * fv->d[a];
+            }
+        }
+      else
+        {
+         for(a=0;a<dim; a++)
+            {
+             local_post[LUB_HEIGHT] -= fv->snormal[a] * fv->d[a];
+            }
+        }
       break;
     case FSI_REALSOLID_CONTINUUM:
       for(a=0;a<dim; a++)
@@ -2042,6 +2078,56 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     safe_free((void *) n_dof);
 
   } /* end of SH_SAT_OPEN_2 */
+
+  if ( (SH_STRESS_TENSOR != -1) && pd->e[R_SHELL_NORMAL1]
+      && pd->e[R_SHELL_NORMAL2] && pd->e[R_SHELL_NORMAL3] && pd->e[R_MESH1]  ) {
+
+     dbl TT[DIM][DIM];
+     dbl dTT_dx[DIM][DIM][DIM][MDE];
+     dbl dTT_dnormal[DIM][DIM][DIM][MDE];
+
+     memset(TT,  0.0, sizeof(double)*DIM*DIM);
+     memset(dTT_dx,  0.0, sizeof(double)*DIM*DIM*DIM*MDE);
+     memset(dTT_dnormal,  0.0, sizeof(double)*DIM*DIM*DIM*MDE);
+
+     shell_stress_tensor(TT, dTT_dx, dTT_dnormal);
+
+    /* Post stresses */
+    local_post[SH_STRESS_TENSOR] = TT[0][0];
+    local_lumped[SH_STRESS_TENSOR] = 1.0;
+    local_post[SH_STRESS_TENSOR+1] = TT[1][1];
+    local_lumped[SH_STRESS_TENSOR+1] = 1.0;
+    local_post[SH_STRESS_TENSOR+2] = TT[0][1];
+    local_lumped[SH_STRESS_TENSOR+2] = 1.0;
+
+  }
+
+  if ( (SH_TANG != -1) && pd->e[R_SHELL_NORMAL1] && pd->e[R_SHELL_NORMAL2]
+      && pd->e[R_SHELL_NORMAL3] && pd->e[R_MESH1] ) {
+
+     dbl t0[DIM];
+     dbl t1[DIM];
+
+     shell_tangents(t0, t1, NULL, NULL);
+
+//     shell_tangents_seeded(t0, t1, NULL, NULL);
+
+    /* Post tangents and curvatures */
+
+    local_post[SH_TANG] = t0[0];
+    local_lumped[SH_TANG] = 1.0;
+    local_post[SH_TANG + 1] = t0[1];
+    local_lumped[SH_TANG + 1] = 1.0;
+    local_post[SH_TANG + 2] = t0[2];
+    local_lumped[SH_TANG + 2] = 1.0;
+
+    local_post[SH_TANG + 3] = t1[0];
+    local_lumped[SH_TANG + 3] = 1.0;
+    local_post[SH_TANG + 4] = t1[1];
+    local_lumped[SH_TANG + 4] = 1.0;
+    local_post[SH_TANG + 5] = t1[2];
+    local_lumped[SH_TANG + 5] = 1.0;
+  }
 
   if (VON_MISES_STRAIN != -1 && pd->e[R_MESH1]) {
 
@@ -6175,6 +6261,8 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Lubrication Velocity Field", &LUB_VELO_FIELD);
   iread = look_for_post_proc(ifp, "Disjoining Pressure", &DISJ_PRESS);
   iread = look_for_post_proc(ifp, "Porous Shell Open Saturation", &SH_SAT_OPEN);
+  iread = look_for_post_proc(ifp, "Shell Stress Tensor", &SH_STRESS_TENSOR);
+  iread = look_for_post_proc(ifp, "Shell Tangents", &SH_TANG);
   iread = look_for_post_proc(ifp, "Lame MU", &PP_LAME_MU);
   iread = look_for_post_proc(ifp, "Lame LAMBDA", &PP_LAME_LAMBDA);
   iread = look_for_post_proc(ifp, "Von Mises Strain", &VON_MISES_STRAIN);
@@ -9376,6 +9464,83 @@ index_post, index_post_export);
   else
     {
       SH_SAT_OPEN_2 = -1;
+    }
+
+  if (SH_STRESS_TENSOR != -1  && (Num_Var_In_Type[R_SHELL_NORMAL1] && Num_Var_In_Type[R_SHELL_NORMAL2]
+                              &&  Num_Var_In_Type[R_SHELL_NORMAL3] && Num_Var_In_Type[R_MESH1]) )
+    {
+      if (SH_STRESS_TENSOR == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      SH_STRESS_TENSOR = index_post;
+      sprintf(nm, "SH_S11");
+      sprintf(ds, "Shell stress tensor component 11");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+      sprintf(nm, "SH_S22");
+      sprintf(ds, "Shell stress tensor component 22");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+      sprintf(nm, "SH_S12");
+      sprintf(ds, "Shell stress tensor component 12");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+  else
+    {
+      SH_STRESS_TENSOR = -1;
+    }
+
+  if (SH_TANG != -1  && (Num_Var_In_Type[R_SHELL_NORMAL1] && Num_Var_In_Type[R_SHELL_NORMAL2]
+                     &&  Num_Var_In_Type[R_SHELL_NORMAL3] && Num_Var_In_Type[R_MESH1]) )
+    {
+      if (SH_TANG == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      SH_TANG = index_post;
+
+      sprintf(nm, "SH_T1X");
+      sprintf(ds, "Shell tangent 1 x - component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+      sprintf(nm, "SH_T1Y");
+      sprintf(ds, "Shell tangent 1 y - component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+      sprintf(nm, "SH_T1Z");
+      sprintf(ds, "Shell tangent 1 z - component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+
+      sprintf(nm, "SH_T2X");
+      sprintf(ds, "Shell tangent 2 x - component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+      sprintf(nm, "SH_T2Y");
+      sprintf(ds, "Shell tangent 2 y - component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+      sprintf(nm, "SH_T2Z");
+      sprintf(ds, "Shell tangent 2 z - component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+
+    }
+
+  else
+    {
+      SH_TANG = -1;
     }
 
 
