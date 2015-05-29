@@ -645,12 +645,12 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill)
 	       * have not included a special case for discontinuous
 	       * galerkin interpolations, here, yet.
 	       */
-	      if (pd_ptr->i[0][v] == I_P0 || pd_ptr->i[0][v] == I_P1 ||
-		  pd_ptr->i[0][v] == I_P0_G || pd_ptr->i[0][v] == I_P1_G ||
-		  pd_ptr->i[0][v] == I_P0_GP || pd_ptr->i[0][v] == I_P1_GP ||
-		  pd_ptr->i[0][v] == I_P0_GN || pd_ptr->i[0][v] == I_P1_GN ||
-		  pd_ptr->i[0][v] == I_P0_XV || pd_ptr->i[0][v] == I_P1_XV ||
-		  pd_ptr->i[0][v] == I_P1_XG) 
+	      if (pd_ptr->i[pg->imtrx][v] == I_P0 || pd_ptr->i[pg->imtrx][v] == I_P1 ||
+		  pd_ptr->i[pg->imtrx][v] == I_P0_G || pd_ptr->i[pg->imtrx][v] == I_P1_G ||
+		  pd_ptr->i[pg->imtrx][v] == I_P0_GP || pd_ptr->i[pg->imtrx][v] == I_P1_GP ||
+		  pd_ptr->i[pg->imtrx][v] == I_P0_GN || pd_ptr->i[pg->imtrx][v] == I_P1_GN ||
+		  pd_ptr->i[pg->imtrx][v] == I_P0_XV || pd_ptr->i[pg->imtrx][v] == I_P1_XV ||
+		  pd_ptr->i[pg->imtrx][v] == I_P1_XG)
 		{
 		  nunks = enunks;
 		}

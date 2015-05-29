@@ -1915,11 +1915,14 @@ struct Diet_Field_Variables
   dbl poynt[DIM];			/* Poynting Vector */
 
   /*  
-   * Grads of scalars... concentration is the only one we need in the
-   * old form for VOF/Taylor-Galerkin stuff.
+   * Gradients... concentration is the only one we use in the
+   * old form for VOF/Taylor-Galerkin stuff
    */
   dbl grad_c[MAX_CONC][DIM];	/* Gradient of concentration(s). */
   dbl grad_F[DIM];	        /* Gradient of Fill variable. */
+  dbl div_v;                    // Divergence of velocity
+  dbl grad_v[DIM][DIM];         // Gradient of velocity
+  dbl grad_P[DIM];              // Gradient of pressure
   dbl grad_p_liq[DIM];	        /* Gradient of porous liq-phase pressure variable. */
   dbl grad_p_gas[DIM];	        /* Gradient of porous gas-phase pressure variable. */
   dbl grad_porosity[DIM];       /* Gradient of porous  porosity variable. */

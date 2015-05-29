@@ -522,6 +522,7 @@ MM_SRC= mm_as_alloc.c\
         mm_fill_stress.c\
         mm_fill_common.c\
         mm_fill_terms.c\
+	mm_fill_terms_segregated.c\
         mm_fill_util.c\
         mm_flux.c\
         mm_input.c\

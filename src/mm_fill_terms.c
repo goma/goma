@@ -2306,12 +2306,12 @@ assemble_momentum(dbl time,       /* current time */
 #ifdef DEBUG_MOMENTUM_JAC
   int adx;
 #endif
-
+  
   int dim;
   //! wim is the length of the velocity vector
   int wim;
   int i, j, jk, p, q, a, b, c;
-
+  
   int ledof, eqn, var, ii, peqn, pvar, w;
   
   int *pde = pd->e[pg->imtrx];
@@ -8957,10 +8957,23 @@ load_fv_grads(void)
 	}
 #else
       grad_scalar_fv_fill( esp->P, bf[v]->grad_phi, dofs, fv->grad_P);
+      //if(transient_run && segregated)
+      if(transient_run)
+	{
+	  grad_scalar_fv_fill ( esp_old->P,  bf[v]->grad_phi, dofs, fv_old->grad_P);
+	}
 #endif
 	  
     } else if ( zero_unused_grads &&  upd->vp[pg->imtrx][PRESSURE] == -1 ) {
-      for (p=0; p<VIM; p++) fv->grad_P[p] = 0.0;
+      for (p=0; p<VIM; p++)
+	{ 
+	  fv->grad_P[p] = 0.0;
+	  //if(transient_run && segregated)
+	  if(transient_run)
+	    {
+	      fv_old->grad_P[p] = 0.0;
+	    }
+	}
     }
   
   /*
@@ -9293,7 +9306,10 @@ load_fv_grads(void)
 		{
 		  for (i = 0; i < dofs; i++)
 		    {
-		      fv->grad_v[p][q] += (*esp->v[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];	      
+		      fv->grad_v[p][q] += (*esp->v[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];
+
+		      //if(segregated)
+		      fv_old->grad_v[p][q] += *esp_old->v[r][i]*bf[v]->grad_phi_e[i][r][p][q];
 		    }
 		}
 	    }
@@ -9309,6 +9325,9 @@ load_fv_grads(void)
 	  for (q = 0; q < VIM; q++)
 	    {
 	      fv->grad_v[p][q] = 0.0; 
+
+	      //if(segregated)
+	      fv_old->grad_v[p][q] = 0.0;
 	    }
 	}
     }
@@ -9562,15 +9581,19 @@ load_fv_grads(void)
   
   if (pd->v[pg->imtrx][VELOCITY1])
     {
-      fv->div_v = fv->grad_v[0][0] + fv->grad_v[1][1];
-      if (VIM == 3)
+      fv->div_v = 0;
+      fv_old->div_v = 0;
+      for(a=0; a<VIM; a++)
 	{
-	  fv->div_v += fv->grad_v[2][2];
+	  fv->div_v += fv->grad_v[a][a];
+	  //if(segregated)
+	  fv_old->div_v += fv_old->grad_v[a][a];
 	}
     } 
   else if (zero_unused_grads && upd->vp[pg->imtrx][VELOCITY1] == -1)
     {
       fv->div_v = 0.0;
+      fv_old->div_v = 0.0;
     }
   
   

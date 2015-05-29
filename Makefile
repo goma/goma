@@ -29,4 +29,5 @@ default: all
 
 tags:
 	find . -name "*.[ch]" -exec etags -a '{}' \;
-
+	find . -name "*.cpp" -exec etags -a '{}' \;
+	find . -name "*.C" -exec etags -a '{}' \;
