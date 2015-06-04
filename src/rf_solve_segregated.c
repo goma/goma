@@ -36,6 +36,120 @@
 #include "el_quality.h"
 
 #define ROUND_TO_ONE 0.9999999
+
+void find_element_dofs(Exo_DB *exo)
+{
+  int e_start;
+  int e_end;
+  int ielem;
+  int elem_type;
+  int num_nodes;
+  int iconnect_ptr;
+  int elem_blk_index;
+  int v;
+  int i;
+  int mn;
+  NODAL_VARS_STRUCT *nv;
+  VARIABLE_DESCRIPTION_STRUCT *vd;
+  NODE_INFO_STRUCT *ni;
+
+  e_start = exo->eb_ptr[0];
+  e_end = exo->eb_ptr[exo->num_elem_blocks];
+
+  /* eek this is really big, should reduce space by only using active variables */
+  pg->element_dof_info = malloc(sizeof(struct ElementDOFInfo **) * upd->Total_Num_Matrices);
+  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    pg->element_dof_info[pg->imtrx] = malloc(sizeof(struct ElementDOFInfo *) * (e_end - e_start));
+    for (i = 0; i < (e_end - e_start); i++) {
+      pg->element_dof_info[pg->imtrx][i] = malloc(sizeof(struct ElementDOFInfo) * (V_LAST - V_FIRST));
+
+      for (v = 0; v < (V_LAST - V_FIRST); v++) {
+        if (Num_Var_In_Type[pg->imtrx][v]) {
+          pg->element_dof_info[pg->imtrx][i][v].gnn = malloc(sizeof(int) * MDE);
+          pg->element_dof_info[pg->imtrx][i][v].iNdof = malloc(sizeof(int) * MDE);
+        }
+      }
+    }
+  }
+
+
+  /* This logic attempts to mimic load_ei in order to grab element dofs for indexing
+   * into solution vectors as the segregated solver needs to grab values for other
+   * matrices solutions
+   */
+
+  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    i = 0;
+    for (i = 0; i < (e_end - e_start); i++) {
+      ielem = e_start + i;
+      elem_type = Elem_Type(exo, ielem);
+      num_nodes = elem_info(NNODES, elem_type);
+      iconnect_ptr = Proc_Connect_Ptr[ielem];
+      elem_blk_index = find_elemblock_index(ielem, exo);
+      mn = Matilda[elem_blk_index];
+      int node;
+      int global_node;
+      int nodal_unknowns;
+      int elem_unknowns;
+      for (v = V_FIRST; v < V_LAST; v++) {
+        int dof = 0;
+        int prev_dof;
+
+        if (Num_Var_In_Type[pg->imtrx][v]) {
+          int lvdof = 0;
+          for (node = 0; node < num_nodes; node++) {
+            global_node = Proc_Elem_Connect[iconnect_ptr + node];
+            ni = Nodes[global_node];
+            nv = ni->Nodal_Vars_Info[pg->imtrx];
+            nodal_unknowns = get_nv_ndofs_modMF(nv, v);
+            elem_unknowns = nodal_unknowns;
+
+            if (nodal_unknowns) {
+              elem_unknowns = dof_lnode_var_type(node, elem_type, global_node,
+                  v, pd_glob[mn], pg->imtrx);
+            }
+
+            if (pd_glob[mn]->i[pg->imtrx][v] == I_P0 || pd_glob[mn]->i[pg->imtrx][v] == I_P1
+                || pd_glob[mn]->i[pg->imtrx][v] == I_P0_G
+                || pd_glob[mn]->i[pg->imtrx][v] == I_P1_G
+                || pd_glob[mn]->i[pg->imtrx][v] == I_P0_GP
+                || pd_glob[mn]->i[pg->imtrx][v] == I_P1_GP
+                || pd_glob[mn]->i[pg->imtrx][v] == I_P0_GN
+                || pd_glob[mn]->i[pg->imtrx][v] == I_P1_GN
+                || pd_glob[mn]->i[pg->imtrx][v] == I_P0_XV
+                || pd_glob[mn]->i[pg->imtrx][v] == I_P1_XV
+                || pd_glob[mn]->i[pg->imtrx][v] == I_P1_XG) {
+              nodal_unknowns = elem_unknowns;
+
+            }
+
+
+
+            if (nodal_unknowns > 0) {
+              dof += nodal_unknowns;
+              int ivarDes;
+              int index;
+              int i = 0;
+              for (ivarDes = 0; ivarDes < (int) nv->Num_Var_Desc_Per_Type[v];
+                  ivarDes++) {
+                index = (int) nv->Var_Type_Index[v][ivarDes];
+                vd = nv->Var_Desc_List[index];
+                int indof;
+                for (indof = 0; indof < vd->Ndof; indof++) {
+                  pg->element_dof_info[pg->imtrx][ielem][v].gnn[lvdof] = global_node;
+                  pg->element_dof_info[pg->imtrx][ielem][v].iNdof[lvdof] = i;
+                  lvdof++;
+                  i++;
+                }
+              }
+            }
+          }
+        }
+        pg->element_dof_info[pg->imtrx][ielem][v].dof = dof;
+      }
+    }
+  }
+}
 /*************************************************************************************
  *  solve_problem_segregated
  *
@@ -153,6 +267,13 @@ dbl *te_out) /* te_out - return actual end time */
   if (Num_Proc > 1 && tran->fix_freq > 0) {
     step_fix = 1; /* Always fix on the first timestep to match print frequency */
   }
+  pg->matrices = malloc(sizeof(struct Matrix_Data) * upd->Total_Num_Matrices);
+
+  /*
+   *            BEGIN EXECUTION
+   */
+
+  int is_steady_state = (TimeIntegration == STEADY) ? TRUE : FALSE;
 
   /*
    *  Malloc the space for the results description structure and set all
@@ -320,6 +441,20 @@ dbl *te_out) /* te_out - return actual end time */
         numProcUnknowns[pg->imtrx] + numProcUnknowns[pg->imtrx], 0.0);
   }
 
+  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    pg->matrices[pg->imtrx].ams = ams[pg->imtrx];
+    pg->matrices[pg->imtrx].x = x[pg->imtrx];
+    pg->matrices[pg->imtrx].x_old = x_old[pg->imtrx];
+    pg->matrices[pg->imtrx].x_older = x_older[pg->imtrx];
+    pg->matrices[pg->imtrx].xdot = xdot[pg->imtrx];
+    pg->matrices[pg->imtrx].xdot_old = xdot_old[pg->imtrx];
+    pg->matrices[pg->imtrx].x_update = x_update[pg->imtrx];
+    pg->matrices[pg->imtrx].scale = scale[pg->imtrx];
+    pg->matrices[pg->imtrx].resid_vector = resid_vector[pg->imtrx];
+  }
+
+  find_element_dofs(exo);
+
   /* Allocate sparse matrix */
 
   ija = malloc(upd->Total_Num_Matrices * sizeof(int *));
@@ -421,19 +556,15 @@ dbl *te_out) /* te_out - return actual end time */
       check_parallel_error("Solver initialization problems");
 #endif /* PARALLEL */
 
-      err = solve_linear_segregated(ams[pg->imtrx], x[pg->imtrx], delta_t,
-          theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
-          xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
-          scale[pg->imtrx], &converged, &nprint, gv, time1, exo, dpi, cx, 0,
-          &time_step_reform);
-      /*      err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t,
+
+       err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t,
        theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
        xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
        scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx],
        tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
        gvec_elem, time1, exo, dpi, cx, 0, &time_step_reform, is_steady_state,
        NULL, NULL, time1, NULL,
-       NULL, NULL, NULL); */
+       NULL, NULL, NULL);
 
     }
 
@@ -719,12 +850,14 @@ dbl *te_out) /* te_out - return actual end time */
          *  set the flag to false.
 
          */
+
+        printf("\n===================== SOLVING MATRIX %d ===========================\n\n", pg->imtrx);
         err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t,
                theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
                xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
                scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx],
                tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
-               gvec_elem, time1, exo, dpi, cx, 0, &time_step_reform, 0,
+               gvec_elem[pg->imtrx], time1, exo, dpi, cx, 0, &time_step_reform, 0,
                NULL, NULL, time1, NULL,
                NULL, NULL, NULL);
         /*

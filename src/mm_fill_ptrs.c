@@ -1225,6 +1225,30 @@ double *x_dbl_dot_static;
 double *x_dbl_dot_old_static;
 
 static void
+load_varType_Interpolation_ptrs_current(const int varType, double **esp_ptr)
+
+     /***********************************************************************
+      *
+      * load_varType_Interpolation_ptrs_current:
+      *
+      * Only load 1 value from the current x
+      *
+      *  Utility routine to fill up pointers to solution variables.
+      *  (Might think about unrolling the loop in this routine in the
+      *   future).
+      ************************************************************************/
+{
+  int i, ie, dofs, ledof;
+  int *lvdof_to_ledof_tmp = ei->lvdof_to_ledof[varType];
+  dofs = ei->dof[varType];
+  for (i = 0; i < dofs; i++) {
+    ledof = lvdof_to_ledof_tmp[i];
+    ie = ei->ieqn_ledof[ledof];
+    esp_ptr[i]     = x_static     + ie;
+  }
+}
+
+static void
 load_varType_Interpolation_ptrs(const int varType, double **esp_ptr,
 				double **esp_old_ptr, double **esp_dot_ptr)
 
@@ -1620,6 +1644,26 @@ load_elem_dofptr(const int ielem,
     }
   }
 
+  eqn = R_AUX_MOMENTUM1;
+  if (upd->ep[pg->imtrx][eqn] >= 0) {
+    load_varType_Interpolation_ptrs_current(eqn, esp->v_star[0]);
+  }
+
+  eqn = R_AUX_MOMENTUM2;
+  if (upd->ep[pg->imtrx][eqn] >= 0) {
+    load_varType_Interpolation_ptrs_current(eqn, esp->v_star[1]);
+  }
+
+  eqn = R_AUX_MOMENTUM3;
+  if (upd->ep[pg->imtrx][eqn] >= 0) {
+    load_varType_Interpolation_ptrs_current(eqn, esp->v_star[2]);
+    /* R_MOMENTUM3 has a special case for CYLINDRICAL coords that isn't present here
+     * probably needs to be looked at
+     *
+     * Looks like it sets v to zero.
+     */
+  }
+
   eqn = R_EXT_VELOCITY;
   if (upd->ep[pg->imtrx][eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->ext_v, esp_old->ext_v,
@@ -1685,6 +1729,11 @@ load_elem_dofptr(const int ielem,
   eqn = R_PRESSURE;
   if (upd->ep[pg->imtrx][eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->P, esp_old->P, esp_dot->P);
+  }
+
+  eqn = R_PRESSURE_POISSON;
+  if (upd->ep[pg->imtrx][eqn] >= 0) {
+    load_varType_Interpolation_ptrs_current(eqn, esp->P_star);
   }
 
   eqn = R_LAGR_MULT1;

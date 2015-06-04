@@ -35,6 +35,8 @@
 #include "rf_bc_const.h"
 #include "rf_vars_const.h"
 #include "mm_elem_block_structs.h"
+#include "mm_segregated_structs.h"
+
 
 #ifndef MNROT
 #define MNROT    30		/* maximum number of rotation vector 
@@ -456,6 +458,7 @@ struct Element_Variable_Pointers
 
   dbl *T[MDE];					/* temperature */
   dbl *v[DIM][MDE];				/* velocity */
+  dbl *v_star[DIM][MDE];                        /* velocity* segregated */
   dbl *d[DIM][MDE];				/* mesh displacement */
   dbl *d_rs[DIM][MDE];				/* real solid displacement */
   dbl *c[MAX_CONC][MDE];     	                /* concentration     */
@@ -560,10 +563,12 @@ struct Element_Stiffness_Pointers
 
   dbl **T;			 /* *T[MDE], temperature */
   dbl ***v;		      	 /* *v[DIM][MDE], velocity */
+  dbl ***v_star;                    /* *v_star[DIM][MDE], velocity* segregated */
   dbl ***d;		 	 /* *d[DIM][MDE], mesh displacement */
   dbl ***d_rs;		         /* *d_rs[DIM][MDE], real solid displacement */
   dbl ***c;	                 /* *c[MAX_CONC][MDE], concentration  */
   dbl **P;		         /* *P[MDE], pressure */
+  dbl **P_star;
   dbl *****S;	                 /* *S[MAX_MODES][DIM][DIM][MDE], polymeric
 				    stress tensor */
   dbl ****G;	                 /* *G[DIM][DIM][MDE], velocity gradient
@@ -821,9 +826,17 @@ struct Uniform_Problem_Description {
   dbl   Process_Temperature;            /* Temperature for thermal property data */
                                        /*   for isothermal problems */
   int   XFEM;                     /* Flag indicating that XFEM is in use */
+  int SegregatedSolve;            /* Flag indicating segregated solve should be used */
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/
+
+
+struct ElementDOFInfo {
+  int dof;
+  int *gnn;
+  int *iNdof;
+};
 
 /*
  * Problem_Graph Structure:
@@ -834,6 +847,15 @@ typedef struct Uniform_Problem_Description UPD_STRUCT;
 struct Problem_Graph
 {
   int   imtrx;                   /* Current active matrix index */
+
+  /* Temporarily make some things global */
+  struct Matrix_Data *matrices;
+
+  struct ElementDOFInfo ***element_dof_info; /* [Num Matrices][Num Elements][Variables] lookup array of element dofs */
+
+  struct SplitB_Coupled_Field_Variables sbcfv;
+  struct SplitB_Element_Stiffness_Pointers sbesp;
+
 };
 typedef struct Problem_Graph PROBLEM_GRAPH_STRUCT;
 /*____________________________________________________________________________*/
@@ -1481,6 +1503,7 @@ typedef struct Basis_Functions BASIS_FUNCTIONS_STRUCT;
 
 /*____________________________________________________________________________*/
 
+
 /*
  * These are field variables at the Gauss points of interest. They get loaded
  * up prior to each volume integration loop in each element. They might also
@@ -1518,6 +1541,7 @@ struct Field_Variables
 
   dbl T;			/* Temperature. */
   dbl v[DIM];			/* Velocity. */
+  dbl v_star[DIM];              /* AUX Velocity, segregated */
   dbl pv[DIM];			/* Particle velocity. */
   dbl d[DIM];			/* Mesh displacement. */
   dbl x_first[DIM];             /* Initial mesh displacement on startup */
@@ -1526,6 +1550,7 @@ struct Field_Variables
   dbl d_rs_first[DIM];          /* Initial solid displacement on startup */
   dbl c[MAX_CONC];		/* Concentration(s). */
   dbl P;			/* Pressure. */
+  dbl P_star;
   dbl S[MAX_MODES][DIM][DIM];   /* Polymer Stress, for each mode */
   dbl G[DIM][DIM];              /* Velocity Gradient */
   dbl F;			/* Fill */
@@ -1596,6 +1621,7 @@ struct Field_Variables
 
   dbl grad_T[DIM];		/* Gradient of temperature. */
   dbl grad_P[DIM];		/* Gradient of pressure. */
+  dbl grad_P_star[DIM];            /* Gradient of pressure. */
   dbl grad_c[MAX_CONC][DIM];	/* Gradient of concentration(s). */
   dbl grad_F[DIM];		/* Gradient of fill. */
   dbl grad_H[DIM];		/* Gradient of curvature. */
@@ -1632,6 +1658,7 @@ struct Field_Variables
   
   dbl div_v;			/* Divergence of velocity. */
   dbl grad_v[DIM][DIM];		/* Gradient of velocity.  d (v_i) / d (x_j) */
+  dbl grad_v_star[DIM][DIM];    /* Velocity* segregated */
   dbl curl_v[DIM];		/* Curl of velocity, aka vorticity. */
 
   dbl div_pv;			/* Divergence of particle velocity. */

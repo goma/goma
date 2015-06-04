@@ -746,6 +746,13 @@ time_step_control(const double delta_t,  const double delta_t_old,
     num_unknowns += ncp[PVELOCITY1];
     num_unknowns += ncp[PVELOCITY2];
     num_unknowns += ncp[PVELOCITY3];
+
+    Err_norm      += ecp[AUX_VELOCITY1];
+    Err_norm      += ecp[AUX_VELOCITY2];
+    Err_norm      += ecp[AUX_VELOCITY3];
+    num_unknowns += ncp[AUX_VELOCITY1];
+    num_unknowns += ncp[AUX_VELOCITY2];
+    num_unknowns += ncp[AUX_VELOCITY3];
   }
 
   if (use_var_norm[2]) {
@@ -774,6 +781,8 @@ time_step_control(const double delta_t,  const double delta_t_old,
 				 * incompressible flow... */
     Err_norm      += ecp[PRESSURE];
     num_unknowns += ncp[PRESSURE];
+    Err_norm      += ecp[AUX_PRESSURE];
+    num_unknowns += ncp[AUX_PRESSURE];
   }
 
   if (use_var_norm[5]) {	/* Polymer extra stress contribution */

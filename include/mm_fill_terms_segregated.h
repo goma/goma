@@ -27,6 +27,15 @@
 #define EXTERN extern
 #endif
 
+EXTERN void
+load_splitb_esp(int ielem, Exo_DB *exo);
+
+EXTERN void
+load_splitb_fv(int ielem);
+
+EXTERN void
+load_splitb_fv_grads(int ielem);
+
 EXTERN int assemble_aux_u
 (double,   // Current time
  double);  // Current time step

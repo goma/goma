@@ -42,7 +42,7 @@
 #include "mm_eh.h"
 #include "mm_std_models.h"
 #include "mm_std_models_shell.h"
-
+#include "mm_segregated_structs.h"
 
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
@@ -56,6 +56,203 @@
 #include "mm_fill_terms.h"
 #include "mm_fill_util.h"
 
+
+void
+load_splitb_esp(int ielem, Exo_DB *exo)
+{
+  int imtrx;
+  int eqn;
+  int ie;
+  int gnn;
+  int dofs;
+  int i;
+  int d;
+  int iNdof;
+
+  /* Loop over all matrices and always fill values */
+  /* Assuming that these equations are only active in 1 matrix */
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    eqn = R_AUX_MOMENTUM1;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      for (d = 0; d < VIM; d++) {
+        eqn = R_AUX_MOMENTUM1 + d;
+        dofs = pg->element_dof_info[pg->imtrx][ielem][eqn].dof;
+        for (i = 0; i < dofs; i++) {
+          gnn = pg->element_dof_info[pg->imtrx][ielem][eqn].gnn[i];
+          iNdof = pg->element_dof_info[pg->imtrx][ielem][eqn].iNdof[i];
+          ie = Index_Solution(gnn, eqn, 0, iNdof, -1, imtrx);
+          (pg->sbesp).v_star[d][i] = pg->matrices[imtrx].x[ie];
+        }
+      }
+    }
+
+    eqn = R_PRESSURE_POISSON;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      dofs = pg->element_dof_info[pg->imtrx][ielem][eqn].dof;
+      for (i = 0; i < dofs; i++) {
+        gnn = pg->element_dof_info[pg->imtrx][ielem][eqn].gnn[i];
+        iNdof = pg->element_dof_info[pg->imtrx][ielem][eqn].iNdof[i];
+        ie = Index_Solution(gnn, eqn, 0, iNdof, -1, imtrx);
+        (pg->sbesp).P_star[i] = pg->matrices[imtrx].x[ie];
+      }
+    }
+
+    eqn = R_MOMENTUM1;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      for (d = 0; d < VIM; d++) {
+        eqn = R_MOMENTUM1 + d;
+        dofs = pg->element_dof_info[pg->imtrx][ielem][eqn].dof;
+        for (i = 0; i < dofs; i++) {
+          gnn = pg->element_dof_info[pg->imtrx][ielem][eqn].gnn[i];
+          iNdof = pg->element_dof_info[pg->imtrx][ielem][eqn].iNdof[i];
+          ie = Index_Solution(gnn, eqn, 0, iNdof, -1, imtrx);
+          (pg->sbesp).v_old[d][i] = pg->matrices[imtrx].x_old[ie];
+        }
+      }
+    }
+
+    eqn = R_PRESSURE;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      dofs = pg->element_dof_info[pg->imtrx][ielem][eqn].dof;
+      for (i = 0; i < dofs; i++) {
+        gnn = pg->element_dof_info[pg->imtrx][ielem][eqn].gnn[i];
+        iNdof = pg->element_dof_info[pg->imtrx][ielem][eqn].iNdof[i];
+        ie = Index_Solution(gnn, eqn, 0, iNdof, -1, imtrx);
+        (pg->sbesp).P_old[i] = pg->matrices[imtrx].x_old[ie];
+      }
+    }
+  }
+}
+
+void
+load_splitb_fv(int ielem)
+{
+  int v;
+  int d;
+  int i;
+  int imtrx;
+  BASIS_FUNCTIONS_STRUCT *bf_ptr;
+  int *pdv;
+
+  /* This needs to be changed, but for now assume all element vars have the same basis function */
+  for (v = V_FIRST; v < V_LAST; v++) {
+    if (Num_Var_In_Type[pg->imtrx][v]) {
+      bf_ptr = bf[v];
+    }
+  }
+
+  /* Similar to esp, load values from all matrices */
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    pdv = pd->v[imtrx];
+    if (pdv[AUX_VELOCITY1]) {
+      for (d = 0; d < VIM; d++) {
+        v = AUX_VELOCITY1 + d;
+        (pg->sbcfv).v_star[d] = 0;
+        for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+          (pg->sbcfv).v_star[d] += (pg->sbesp).v_star[d][i] * bf_ptr->phi[i];
+        }
+      }
+    }
+
+    if (pdv[AUX_PRESSURE]) {
+      v = AUX_PRESSURE;
+      (pg->sbcfv).P_star = 0;
+      for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+        (pg->sbcfv).P_star = (pg->sbesp).P_star[i] * bf_ptr->phi[i];
+      }
+    }
+
+    if (pdv[VELOCITY1]) {
+      for (d = 0; d < VIM; d++) {
+        v = VELOCITY1 + d;
+        (pg->sbcfv).v_old[d] = 0;
+        for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+          (pg->sbcfv).v_old[d] += (pg->sbesp).v_old[d][i] * bf_ptr->phi[i];
+        }
+      }
+    }
+
+    if (pdv[PRESSURE]) {
+      v = PRESSURE;
+      (pg->sbcfv).P_old = 0;
+      for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+        (pg->sbcfv).P_old = (pg->sbesp).P_old[i] * bf_ptr->phi[i];
+      }
+    }
+  }
+}
+
+void load_splitb_fv_grads(int ielem)
+{
+  int v;
+  int p;
+  int d;
+  int i;
+  int r;
+  int imtrx;
+  BASIS_FUNCTIONS_STRUCT *bf_ptr;
+  int *pdv;
+
+  /* This needs to be changed, but for now assume all element vars have the same basis function */
+  for (v = V_FIRST; v < V_LAST; v++) {
+    if (Num_Var_In_Type[pg->imtrx][v]) {
+      bf_ptr = bf[v];
+    }
+  }
+
+  /* Similar to esp, load values from all matrices */
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    pdv = pd->v[imtrx];
+
+    if (pdv[VELOCITY1]) {
+      for (p = 0; p < VIM; p++) {
+        v = VELOCITY1 + p;
+        for (d = 0; d < VIM; d++) {
+          (pg->sbcfv).grad_v_old[p][d] = 0;
+          for (r = 0; r < VIM; r++) {
+            for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+              (pg->sbcfv).grad_v_old[p][d] += (pg->sbesp).v_old[r][i] * bf_ptr->grad_phi_e[i][r][p][d];
+            }
+          }
+        }
+      }
+    }
+
+    if (pdv[AUX_PRESSURE]) {
+      v = AUX_PRESSURE;
+      for (d = 0; d < VIM; d++) {
+        (pg->sbcfv).grad_P_star[d] = 0;
+        for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+          (pg->sbcfv).grad_P_star[d] = (pg->sbesp).P_star[i]
+              * bf_ptr->grad_phi[i][d];
+        }
+      }
+    }
+
+    if (pdv[AUX_VELOCITY1]) {
+      for (p = 0; p < VIM; p++) {
+        v = AUX_VELOCITY1 + p;
+        for (d = 0; d < VIM; d++) {
+          (pg->sbcfv).grad_v_star[p][d] = 0;
+          for (r = 0; r < VIM; r++) {
+            for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+              (pg->sbcfv).grad_v_star[p][d] += (pg->sbesp).v_star[r][i] * bf_ptr->grad_phi_e[i][r][p][d];
+            }
+          }
+        }
+      }
+    }
+
+    /* div(v_star) */
+
+    if (pdv[AUX_VELOCITY1]) {
+      (pg->sbcfv).div_v_star = 0;
+      for (d = 0; d < VIM; d++) {
+        (pg->sbcfv).div_v_star += (pg->sbcfv).grad_v_star[d][d];
+      }
+    }
+  }
+}
 /* 
  *This function assembles the first step of the CBS, split-B, quasi-implicit
  * method.  Here, we solve for an auxiliary velocity from some form of the 
@@ -102,8 +299,8 @@ assemble_aux_u(dbl time,   // Current time
   
   
   // Set equation index
-  eqn = R_MOMENTUM1;
-  //eqn = R_AUX_MOMENTUM1;
+  //eqn = R_MOMENTUM1;
+  eqn = R_AUX_MOMENTUM1;
   
   // Leave if we are unwanted
   if(!pd->e[pg->imtrx][eqn])
@@ -124,15 +321,15 @@ assemble_aux_u(dbl time,   // Current time
   h3 = fv->h3;
   
   //v_star = fv->v_star;
-  v_star = fv->v;
-  v_old = fv_old->v;
-  P_old = fv_old->P;
+  v_star = fv->v_star;
+  v_old = (pg->sbcfv).v_old;
+  P_old = (pg->sbcfv).P_old;
 
   for(a=0; a<VIM; a++)
     {
-      //grad_v_star[a] = fv->grad_v_star[a];
-      grad_v_star[a] = fv->grad_v[a];
-      grad_v_old[a] = fv_old->grad_v[a];
+      grad_v_star[a] = fv->grad_v_star[a];
+      //grad_v_star[a] = fv->grad_v[a];
+      grad_v_old[a] = (pg->sbcfv).grad_v_old[a];
     }
 
   for(a=0; a<VIM; a++)
@@ -155,8 +352,8 @@ assemble_aux_u(dbl time,   // Current time
     {
       for(a=0; a<wim; a++)
 	{
-	  //eqn = R_AUX_MOMENTUM1 + a;
-	  eqn  = R_MOMENTUM1 + a;
+	  eqn = R_AUX_MOMENTUM1 + a;
+	  //eqn  = R_MOMENTUM1 + a;
 	  bfm  = bf[eqn];
 	  phi_i_vector = bfm->phi;
 
@@ -187,7 +384,7 @@ assemble_aux_u(dbl time,   // Current time
 		  mass = 0.0;
 		  if(pde[eqn] & T_MASS)
 		    {
-		      mass += rho/dt*(v_star-v_old);
+		      mass += rho/dt*(v_star[a]-v_old[a]);
 		      mass *= phi_i*h3*wt*det_J;
 		      mass *= mass_etm;
 		    }
@@ -245,8 +442,8 @@ assemble_aux_u(dbl time,   // Current time
     {
       for(a=0; a<wim; a++)
 	{
-	  //eqn = R_AUX_MOMENTUM1 + a;
-	  eqn  = R_MOMENTUM1 + a;
+	  eqn = R_AUX_MOMENTUM1 + a;
+	  //eqn  = R_MOMENTUM1 + a;
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm  = bf[eqn];	 
 	  
@@ -270,8 +467,8 @@ assemble_aux_u(dbl time,   // Current time
 		  // J_v_star
 		  for(b=0; b<wim; b++)
 		    {
-		      //var = AUX_VELOCITY1 + b;
-		      var = VELOCITY1 + b;
+		      var = AUX_VELOCITY1 + b;
+		      //var = VELOCITY1 + b;
 		      if(pdv[var])
 			{
 			  pvar = upd->vp[pg->imtrx][var];			  
@@ -298,10 +495,10 @@ assemble_aux_u(dbl time,   // Current time
 				      for(q=0; q<VIM; q++)
 					{
 					  diffusion_a = 0.0;
-					  //diffusion_a += bf[AUX_VELOCITY1+p]->grad_phi_e[j][b][q][p];
-					  //diffusion_a += bf[AUX_VELOCITY1+q]->grad_phi_e[j][b][p][q];					  
-					  diffusion_a += bf[VELOCITY1+p]->grad_phi_e[j][b][q][p];
-					  diffusion_a += bf[VELOCITY1+q]->grad_phi_e[j][b][p][q];
+					  diffusion_a += bf[AUX_VELOCITY1+p]->grad_phi_e[j][b][q][p];
+					  diffusion_a += bf[AUX_VELOCITY1+q]->grad_phi_e[j][b][p][q];
+					  //diffusion_a += bf[VELOCITY1+p]->grad_phi_e[j][b][q][p];
+					  //diffusion_a += bf[VELOCITY1+q]->grad_phi_e[j][b][p][q];
 
 					  diffusion += mu_star/2.0*diffusion_a*grad_phi_i_e_a[p][q];
 					  //diffusion += d_mu->v[b][j]*gamma_star[p][q]*grad_phi_i_e_a[p][q];
@@ -369,8 +566,7 @@ assemble_press_poisson(dbl time,  // Current time
   dbl diffusion_etm, mass_etm;
   
   // Set equation index
-  //eqn = R_PRESSURE_POISSON;
-  eqn = R_PRESSURE;
+  eqn = R_PRESSURE_POISSON;
   peqn = upd->ep[pg->imtrx][eqn];
 
   // Leave if we are unwanted
@@ -395,8 +591,8 @@ assemble_press_poisson(dbl time,  // Current time
 
   //div_v_star = fv->div_v_star;
   //grad_P_star = fv->grad_P_star;
-  div_v_star = fv->div_v;
-  grad_P_star = fv->grad_P;
+  div_v_star = (pg->sbcfv).div_v_star;
+  grad_P_star = fv->grad_P_star;
 
   rho = density(NULL, time);
 
@@ -445,7 +641,7 @@ assemble_press_poisson(dbl time,  // Current time
 
 	  // J_P_star
 	  //var = AUX_PRESSURE
-	  var = PRESSURE;
+	  var = AUX_PRESSURE;
 	  if(pdv[var])
 	    {
 	      pvar = upd->vp[pg->imtrx][var];	      
@@ -536,10 +732,10 @@ int assemble_press_proj(dbl time,  // Current time
   h3 = fv->h3;
 
   //v_star = fv->v_star;
-  v_star = fv_old->v;
+  v_star = (pg->sbcfv).v_star;
   v = fv->v;
   //grad_P_star = fv->grad_P_star
-  grad_P_star = fv->grad_P;
+  grad_P_star = (pg->sbcfv).grad_P_star;
 
   rho = density(NULL, time);
 
@@ -572,7 +768,7 @@ int assemble_press_proj(dbl time,  // Current time
 		  mass = 0.0;
 		  if(pde[eqn] & T_MASS)
 		    {
-		      mass += v - v_star;
+		      mass += v[a] - v_star[a];
 		      mass *= phi_i*h3*wt*det_J;
 		      mass *= mass_etm;
 		    }	      
@@ -597,7 +793,6 @@ int assemble_press_proj(dbl time,  // Current time
     {      
       for(a=0; a<wim; a++)
 	{
-	  //eqn = R_AUX_MOMENTUM1 + a;
 	  eqn  = R_MOMENTUM1 + a;
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm  = bf[eqn];	 
@@ -714,16 +909,16 @@ assemble_press_update(void)
 
   //div_v_star = fv->div_v_star;
   //grad_v_star = fv->grad_v_star;
-  div_v_star = fv_old->div_v;
+  div_v_star = (pg->sbcfv).div_v_star;
   P = fv->P;
   //P_star = fv->P_star;
-  P_star = fv->P;
+  P_star = (pg->sbcfv).P_star;
   P_old = fv_old->P;
 
   for(a=0; a<VIM; a++)
     {
       //grad_v_star[a] = fv->grad_v_star[a];
-      grad_v_star[a] = fv_old->grad_v[a];
+      grad_v_star[a] = (pg->sbcfv).grad_v_star[a];
     }
   
   for(a=0; a<VIM; a++)
@@ -736,8 +931,8 @@ assemble_press_update(void)
 
   mu_star = viscosity(gn, gamma_star, NULL);
 
-  mass_etm = pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
-  diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+  mass_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+  diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
   // Residual
   if(af->Assemble_Residual)
@@ -748,7 +943,7 @@ assemble_press_update(void)
 	  
 	  // Pressure contribution
 	  mass = 0.0;
-	  if(pde[eqn] & T_MASS)
+	  if(pde[eqn] & T_SOURCE)
 	    {
 	      mass += P - P_star - P_old;
 	      mass *= phi_i*h3*wt*det_J;
@@ -757,7 +952,7 @@ assemble_press_update(void)
 
 	  // Incompressibility contribution
 	  diffusion = 0.0;
-	  if(pde[eqn] & T_DIFFUSION)
+	  if(pde[eqn] & T_ADVECTION)
 	    {
 	      diffusion += mu_star/2.0*div_v_star;
 	      diffusion *= h3*wt*det_J;
@@ -787,7 +982,7 @@ assemble_press_update(void)
 		  phi_j = bf[var]->phi[j];
 		
 		  mass = 0.0;
-		  if(pde[eqn] & T_MASS)
+		  if(pde[eqn] & T_SOURCE)
 		    { 
 		      mass += phi_i*phi_j;		      
 		      mass *= h3*wt*det_J;

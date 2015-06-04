@@ -436,6 +436,11 @@
 #define LIGHT_INTP            180 /*  Light Intensity - Plus direction propagation-RBS*/
 #define LIGHT_INTM            181 /*  Light Intensity - Minus direction propagation-RBS*/
 #define LIGHT_INTD            182 /*  Light Intensity - Scattering Dispersion-RBS*/
+#define AUX_VELOCITY1         183 /* aka "U1" */
+#define AUX_VELOCITY2         184 /* aka "U2" */
+#define AUX_VELOCITY3         185 /* aka "U3" */
+#define AUX_PRESSURE          186
+
 /*
  * define a variable to hold an external field which will be 
  * held fixed in the problem but parametered by the basis functions
@@ -791,7 +796,11 @@
 #define R_LIGHT_INTP            180 /*  Light Intensity - Plus direction propagation*/
 #define R_LIGHT_INTM            181 /*  Light Intensity - Minus direction propagation*/
 #define R_LIGHT_INTD            182 /*  Light Intensity - Scattering Dispersion*/
-#define V_LAST		        183
+#define R_AUX_MOMENTUM1         183
+#define R_AUX_MOMENTUM2         184
+#define R_AUX_MOMENTUM3         185
+#define R_PRESSURE_POISSON      186
+#define V_LAST		        187
 
 
 /* MMH

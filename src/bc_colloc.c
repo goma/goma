@@ -2174,6 +2174,26 @@ load_variable (double *x_var,        /* variable value */
       var = PRESSURE;
       *d_x_var = (1. + 2. * tt) / dt;
       break;
+    case AUX_VELOCITY1:
+      *x_var = fv->v_star[0];
+      var = AUX_VELOCITY1;
+      *d_x_var = 1.;
+      break;
+    case AUX_VELOCITY2:
+      *x_var = fv->v_star[1];
+      var = AUX_VELOCITY2;
+      *d_x_var = 1.;
+      break;
+    case AUX_VELOCITY3:
+      *x_var = fv->v_star[2];
+      var = AUX_VELOCITY3;
+      *d_x_var = 1.;
+      break;
+    case AUX_PRESSURE:
+      *x_var = fv->P_star;
+      var = AUX_PRESSURE;
+      *d_x_var = 1;
+      break;
     default:
       EH(-1, "Illegal option in load_variable");
     } /* end of switch on jvar */

@@ -51,6 +51,7 @@
 #include "mm_mp_const.h"
 
 #include "mm_eh.h"
+#include "mm_fill_terms_segregated.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_stress.h"
 #include "mm_fill_shell.h"
@@ -545,6 +546,10 @@ matrix_fill(
   err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 
 			 resid_vector, 0);
   EH(err, "load_elem_dofptr");
+
+  if (upd->SegregatedSolve) {
+    load_splitb_esp(ielem, exo);
+  }
 
   err = bf_mp_init(pd);
   mn = ei->mn;
@@ -1051,6 +1056,10 @@ matrix_fill(
 
 	  err = load_fv();
 	  EH( err, "load_fv");
+
+	  if (upd->SegregatedSolve) {
+	    load_splitb_fv(ielem);
+	  }
        
 	  /*
 	   * Here, load in the final part of the necessary basis function
@@ -1083,6 +1092,10 @@ matrix_fill(
 	  err = load_fv_grads();
 	  EH( err, "load_fv_grads");	  
             
+	  if (upd->SegregatedSolve) {
+	    load_splitb_fv_grads(ielem);
+	  }
+
 	  if ( pde[R_MESH1] )
 	    {
 	      err = load_fv_mesh_derivs(1);
@@ -1953,11 +1966,19 @@ matrix_fill(
 
       if( pde[R_MOMENTUM1] )
 	{
-          err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
-          EH( err, "assemble_momentum");
+          if (upd->SegregatedSolve) {
+            err = assemble_press_proj(time_value, delta_t);
+            EH( err, "assemble_press_proj");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_momentum");
+            CHECKFINITE("assemble_press_proj");
 #endif
+          } else {
+            err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
+            EH( err, "assemble_momentum");
+#ifdef CHECK_FINITE
+	    CHECKFINITE("assemble_momentum");
+#endif
+          }
 	}
 
       if( pde[R_PMOMENTUM1] )
@@ -1968,6 +1989,19 @@ matrix_fill(
 	  CHECKFINITE("assemble_pmomentum");
 #endif
 	}
+
+      if( pde[R_AUX_MOMENTUM1] )
+        {
+          if (upd->SegregatedSolve) {
+            err = assemble_aux_u(time_value, delta_t);
+            EH( err, "assemble_aux_u");
+#ifdef CHECK_FINITE
+            CHECKFINITE("assemble_aux_u");
+#endif
+          } else {
+            EH( -1, "assemble_aux_u meant to be used with segregated solver.");
+          }
+        }
 
       if( pde[R_FILL] )
 	{
@@ -2015,14 +2049,35 @@ matrix_fill(
 
       if( pde[R_PRESSURE] )
 	{
-	  err = assemble_continuity(time_value, theta, delta_t, &pg_data);
-	  EH( err, "assemble_continuity");
+          if (upd->SegregatedSolve) {
+            err = assemble_press_update();
+            EH( err, "assemble_press_update");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_continuity");
+            CHECKFINITE("assemble_press_update");
 #endif
-          if( neg_elem_volume ) return;
+          } else {
+            err = assemble_continuity(time_value, theta, delta_t, &pg_data);
+            EH( err, "assemble_continuity");
+#ifdef CHECK_FINITE
+            CHECKFINITE("assemble_continuity");
+#endif
+            if( neg_elem_volume ) return;
+          }
 	}
       
+      if( pde[R_PRESSURE_POISSON] )
+        {
+          if (upd->SegregatedSolve) {
+            err = assemble_press_poisson(time_value, delta_t);
+            EH( err, "assemble_press_poisson");
+#ifdef CHECK_FINITE
+            CHECKFINITE("assemble_press_poisson");
+#endif
+          } else {
+            EH(-1, "assemble_press_poisson meant to be used with segregated solver.");
+          }
+        }
+
       if(pde[R_VORT_DIR1]) /* Then R_VORT_DIR2 and R_VORT_DIR3 should be on*/
 	{
 	  err = assemble_vorticity_direction();

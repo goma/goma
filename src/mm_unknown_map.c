@@ -3819,7 +3819,20 @@ set_interaction_masks(Exo_DB *exo)
           v = LS;
 	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
 	  break;
-
+	case R_AUX_MOMENTUM1:
+        case R_AUX_MOMENTUM2:
+        case R_AUX_MOMENTUM3:
+          v = AUX_VELOCITY1;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+          v = AUX_VELOCITY2;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+          v = AUX_VELOCITY3;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+          break;
+        case R_PRESSURE_POISSON:
+          v = AUX_PRESSURE;
+          if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+          break;
 	case R_SPECIES_UNK_0:
 	case R_SPECIES_UNK_1:
 	case R_SPECIES_UNK_2:

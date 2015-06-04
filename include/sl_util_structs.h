@@ -61,6 +61,18 @@
 #define NUM_ALSS			2
 #endif /* COUPLED_FILL */
 
+struct Matrix_Data {
+  struct Aztec_Linear_Solver_System *ams;
+  double *x;                 /* Solution vector */
+  double *x_old;             /* Solution vector , previous last time step */
+  double *x_older;           /* Solution vector , previous prev time step */
+  double *xdot;                      /* xdot of current solution                  */
+  double *xdot_old;          /* xdot_old of current solution              */
+  double *x_update;             /* last update vector */
+  double *resid_vector;              /* Residual vector */
+  double *scale;
+};
+
 struct Aztec_Linear_Solver_System
 {
   int proc_config[AZ_PROC_SIZE];
