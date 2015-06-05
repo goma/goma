@@ -390,6 +390,10 @@
 
 #define PV_BC     50
 
+#define U_STAR_BC     989991
+#define V_STAR_BC     989992
+#define W_STAR_BC     989993
+
 #define W_BC     100
 
 #define WVARY_BC 300
@@ -972,6 +976,7 @@
 #define SH_P_OPEN_USER_BC 777000021
 #define LUB_PRESS_2_BC  777000022
 #define SHELL_OPEN_PRESS_2_BC 777000023
+
 
 
 

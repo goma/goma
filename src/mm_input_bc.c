@@ -601,7 +601,10 @@ rd_bc_specs(FILE *ifp,
 	case T_BC: 
 	case U_BC: 
 	case V_BC: 
-	case W_BC: 
+	case W_BC:
+	case U_STAR_BC:
+	case V_STAR_BC:
+	case W_STAR_BC:
 	case PU_BC:
 	case PV_BC:
 	case PW_BC:
