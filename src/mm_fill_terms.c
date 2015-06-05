@@ -8022,6 +8022,17 @@ load_fv(void)
       stateVector[v] = fv->P + upd->Pressure_Datum;
     } 
 
+  if (pdv[AUX_PRESSURE])
+    {
+    v = AUX_PRESSURE;
+    fv->P_star = 0.0;
+    dofs = ei->dof[v];
+    for(i = 0; i < dofs; i++)
+      {
+        fv->P_star += *esp->P_star[i] * bf[v]->phi[i];
+      }
+    }
+
   /*
    *  Set the state vector pressure datum to include an additional
    *  uniform pressure datum. 
@@ -8243,6 +8254,23 @@ load_fv(void)
 	    }
 	}
       stateVector[VELOCITY1+p] = fv->v[p];
+    }
+
+  /*
+   * Default: all velocities are zero...
+   */
+  for ( p=0; p<velodim; p++)
+    {
+      v = AUX_VELOCITY1 + p;
+      if ( pdv[v] )
+        {
+          dofs     = ei->dof[v];
+          fv->v_star[p]     = 0.;
+          for ( i=0; i<dofs; i++)
+            {
+              fv->v_star[p] += *esp->v_star[p][i] * bf[v]->phi[i];
+            }
+        }
     }
 
   /* 
@@ -8976,6 +9004,21 @@ load_fv_grads(void)
 	}
     }
   
+  if ( pd->v[pg->imtrx][AUX_PRESSURE] )
+    {
+      v = AUX_PRESSURE;
+      dofs  = ei->dof[v];
+      for ( p=0; p<VIM; p++)
+        {
+          fv->grad_P_star[p] = 0.0;
+
+          for ( i=0; i<dofs; i++)
+            {
+              fv->grad_P_star[p] += *esp->P_star[i] * bf[v]->grad_phi[i][p];
+            }
+        }
+    }
+
   /*
    * grad(nn)
    */

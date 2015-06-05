@@ -76,10 +76,10 @@ load_splitb_esp(int ielem, Exo_DB *exo)
     if (upd->ep[imtrx][eqn] >= 0) {
       for (d = 0; d < VIM; d++) {
         eqn = R_AUX_MOMENTUM1 + d;
-        dofs = pg->element_dof_info[pg->imtrx][ielem][eqn].dof;
+        dofs = pg->element_dof_info[imtrx][ielem][eqn].dof;
         for (i = 0; i < dofs; i++) {
-          gnn = pg->element_dof_info[pg->imtrx][ielem][eqn].gnn[i];
-          iNdof = pg->element_dof_info[pg->imtrx][ielem][eqn].iNdof[i];
+          gnn = pg->element_dof_info[imtrx][ielem][eqn].gnn[i];
+          iNdof = pg->element_dof_info[imtrx][ielem][eqn].iNdof[i];
           ie = Index_Solution(gnn, eqn, 0, iNdof, -1, imtrx);
           (pg->sbesp).v_star[d][i] = pg->matrices[imtrx].x[ie];
         }
@@ -88,10 +88,10 @@ load_splitb_esp(int ielem, Exo_DB *exo)
 
     eqn = R_PRESSURE_POISSON;
     if (upd->ep[imtrx][eqn] >= 0) {
-      dofs = pg->element_dof_info[pg->imtrx][ielem][eqn].dof;
+      dofs = pg->element_dof_info[imtrx][ielem][eqn].dof;
       for (i = 0; i < dofs; i++) {
-        gnn = pg->element_dof_info[pg->imtrx][ielem][eqn].gnn[i];
-        iNdof = pg->element_dof_info[pg->imtrx][ielem][eqn].iNdof[i];
+        gnn = pg->element_dof_info[imtrx][ielem][eqn].gnn[i];
+        iNdof = pg->element_dof_info[imtrx][ielem][eqn].iNdof[i];
         ie = Index_Solution(gnn, eqn, 0, iNdof, -1, imtrx);
         (pg->sbesp).P_star[i] = pg->matrices[imtrx].x[ie];
       }
@@ -101,10 +101,10 @@ load_splitb_esp(int ielem, Exo_DB *exo)
     if (upd->ep[imtrx][eqn] >= 0) {
       for (d = 0; d < VIM; d++) {
         eqn = R_MOMENTUM1 + d;
-        dofs = pg->element_dof_info[pg->imtrx][ielem][eqn].dof;
+        dofs = pg->element_dof_info[imtrx][ielem][eqn].dof;
         for (i = 0; i < dofs; i++) {
-          gnn = pg->element_dof_info[pg->imtrx][ielem][eqn].gnn[i];
-          iNdof = pg->element_dof_info[pg->imtrx][ielem][eqn].iNdof[i];
+          gnn = pg->element_dof_info[imtrx][ielem][eqn].gnn[i];
+          iNdof = pg->element_dof_info[imtrx][ielem][eqn].iNdof[i];
           ie = Index_Solution(gnn, eqn, 0, iNdof, -1, imtrx);
           (pg->sbesp).v_old[d][i] = pg->matrices[imtrx].x_old[ie];
         }
@@ -113,10 +113,10 @@ load_splitb_esp(int ielem, Exo_DB *exo)
 
     eqn = R_PRESSURE;
     if (upd->ep[imtrx][eqn] >= 0) {
-      dofs = pg->element_dof_info[pg->imtrx][ielem][eqn].dof;
+      dofs = pg->element_dof_info[imtrx][ielem][eqn].dof;
       for (i = 0; i < dofs; i++) {
-        gnn = pg->element_dof_info[pg->imtrx][ielem][eqn].gnn[i];
-        iNdof = pg->element_dof_info[pg->imtrx][ielem][eqn].iNdof[i];
+        gnn = pg->element_dof_info[imtrx][ielem][eqn].gnn[i];
+        iNdof = pg->element_dof_info[imtrx][ielem][eqn].iNdof[i];
         ie = Index_Solution(gnn, eqn, 0, iNdof, -1, imtrx);
         (pg->sbesp).P_old[i] = pg->matrices[imtrx].x_old[ie];
       }
@@ -144,11 +144,12 @@ load_splitb_fv(int ielem)
   /* Similar to esp, load values from all matrices */
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
     pdv = pd->v[imtrx];
+
     if (pdv[AUX_VELOCITY1]) {
       for (d = 0; d < VIM; d++) {
         v = AUX_VELOCITY1 + d;
         (pg->sbcfv).v_star[d] = 0;
-        for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+        for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
           (pg->sbcfv).v_star[d] += (pg->sbesp).v_star[d][i] * bf_ptr->phi[i];
         }
       }
@@ -157,7 +158,7 @@ load_splitb_fv(int ielem)
     if (pdv[AUX_PRESSURE]) {
       v = AUX_PRESSURE;
       (pg->sbcfv).P_star = 0;
-      for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+      for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
         (pg->sbcfv).P_star = (pg->sbesp).P_star[i] * bf_ptr->phi[i];
       }
     }
@@ -166,7 +167,7 @@ load_splitb_fv(int ielem)
       for (d = 0; d < VIM; d++) {
         v = VELOCITY1 + d;
         (pg->sbcfv).v_old[d] = 0;
-        for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+        for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
           (pg->sbcfv).v_old[d] += (pg->sbesp).v_old[d][i] * bf_ptr->phi[i];
         }
       }
@@ -175,7 +176,7 @@ load_splitb_fv(int ielem)
     if (pdv[PRESSURE]) {
       v = PRESSURE;
       (pg->sbcfv).P_old = 0;
-      for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+      for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
         (pg->sbcfv).P_old = (pg->sbesp).P_old[i] * bf_ptr->phi[i];
       }
     }
@@ -210,7 +211,7 @@ void load_splitb_fv_grads(int ielem)
         for (d = 0; d < VIM; d++) {
           (pg->sbcfv).grad_v_old[p][d] = 0;
           for (r = 0; r < VIM; r++) {
-            for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+            for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
               (pg->sbcfv).grad_v_old[p][d] += (pg->sbesp).v_old[r][i] * bf_ptr->grad_phi_e[i][r][p][d];
             }
           }
@@ -222,7 +223,7 @@ void load_splitb_fv_grads(int ielem)
       v = AUX_PRESSURE;
       for (d = 0; d < VIM; d++) {
         (pg->sbcfv).grad_P_star[d] = 0;
-        for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+        for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
           (pg->sbcfv).grad_P_star[d] = (pg->sbesp).P_star[i]
               * bf_ptr->grad_phi[i][d];
         }
@@ -235,7 +236,7 @@ void load_splitb_fv_grads(int ielem)
         for (d = 0; d < VIM; d++) {
           (pg->sbcfv).grad_v_star[p][d] = 0;
           for (r = 0; r < VIM; r++) {
-            for (i = 0; i < pg->element_dof_info[pg->imtrx][ielem][v].dof; i++) {
+            for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
               (pg->sbcfv).grad_v_star[p][d] += (pg->sbesp).v_star[r][i] * bf_ptr->grad_phi_e[i][r][p][d];
             }
           }

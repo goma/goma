@@ -1057,10 +1057,6 @@ matrix_fill(
 	  err = load_fv();
 	  EH( err, "load_fv");
 
-	  if (upd->SegregatedSolve) {
-	    load_splitb_fv(ielem);
-	  }
-       
 	  /*
 	   * Here, load in the final part of the necessary basis function
 	   * information derivatives in the physical space coordinates.
@@ -1092,9 +1088,6 @@ matrix_fill(
 	  err = load_fv_grads();
 	  EH( err, "load_fv_grads");	  
             
-	  if (upd->SegregatedSolve) {
-	    load_splitb_fv_grads(ielem);
-	  }
 
 	  if ( pde[R_MESH1] )
 	    {
@@ -1365,6 +1358,11 @@ matrix_fill(
        */
       err = load_fv();
       EH( err, "load_fv");
+
+      if (upd->SegregatedSolve) {
+        load_splitb_fv(ielem);
+      }
+
        
       /*
        * Here, load in the final part of the necessary basis function
@@ -1395,7 +1393,11 @@ matrix_fill(
        * Gauss point.
        */
       err = load_fv_grads();
-      EH( err, "load_fv_grads");	  
+      EH( err, "load_fv_grads");
+
+      if (upd->SegregatedSolve) {
+        load_splitb_fv_grads(ielem);
+      }
             
       if ( pde[R_MESH1] ||  pd->v[pg->imtrx][R_MESH1])
 	{
