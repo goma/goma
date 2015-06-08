@@ -903,6 +903,7 @@ dbl *te_out) /* te_out - return actual end time */
        * and retry.
        */
       if (converged) {
+        int num_success = 0;
         /* Assume we want the minimum delta_t_new */
         delta_t_new = 1e20;
         for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
@@ -911,10 +912,19 @@ dbl *te_out) /* te_out - return actual end time */
               x[pg->imtrx], x_pred[pg->imtrx], x_old[pg->imtrx], NULL, NULL, eps,
               &success_dt, tran->use_var_norm);
 
+          num_success += success_dt ? 1 : 0;
+
           if (mat_dt_new < delta_t_new) {
             delta_t_new = mat_dt_new;
           }
         }
+
+
+
+        if (num_success != upd->Total_Num_Matrices) {
+          success_dt = 0;
+        }
+
         if (const_delta_t) {
           success_dt = TRUE;
           delta_t_new = delta_t;

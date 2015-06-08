@@ -598,6 +598,7 @@ rd_bc_specs(FILE *ifp,
 	case DY_NOTHING_BC: 
 	case DZ_NOTHING_BC: 
 	case P_BC:
+	case P_STAR_BC:
 	case T_BC: 
 	case U_BC: 
 	case V_BC: 

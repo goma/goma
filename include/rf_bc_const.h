@@ -542,6 +542,7 @@
 
 #define P_BC 100000
 #define PSPG_BC 100001
+#define P_STAR_BC 989994
 
 /* thermal constants */
 

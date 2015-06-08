@@ -611,7 +611,7 @@ assemble_press_poisson(dbl time,  // Current time
 	  mass = 0.0;
 	  if(pde[eqn] & T_MASS)
 	    {
-	      mass += rho/dt*div_v_star;
+	      mass += rho*div_v_star;
 	      mass *= phi_i*h3*wt*det_J;
 	      mass *= mass_etm;
 	    }
@@ -628,7 +628,7 @@ assemble_press_poisson(dbl time,  // Current time
 	      diffusion *= diffusion_etm;
 	    }
 
-	  R[i] += mass + diffusion;
+	  R[i] += mass + diffusion*dt;
 	  
 	} // for i<dof[eqn]
     }     // if residual
@@ -659,7 +659,7 @@ assemble_press_poisson(dbl time,  // Current time
 		      diffusion *= h3*wt*det_J;
 		      diffusion *= diffusion_etm;
 		    }		  		      		    
-		  J[j] += diffusion;
+		  J[j] += diffusion*dt;
 		}
 	    }	  	
   
