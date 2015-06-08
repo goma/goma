@@ -803,10 +803,15 @@ dbl *te_out) /* te_out - return actual end time */
          * And its derivatives at the old time, time.
          */
 
-        predict_solution(numProcUnknowns[pg->imtrx], delta_t, delta_t_old,
-            delta_t_older, theta, x[pg->imtrx], x_old[pg->imtrx],
-            x_older[pg->imtrx], x_oldest[pg->imtrx], xdot[pg->imtrx],
-            xdot_old[pg->imtrx], xdot_older[pg->imtrx]);
+        if (pg->imtrx == 0) {
+          predict_solution_u_star(numProcUnknowns[pg->imtrx], delta_t, delta_t_old,
+              delta_t_older, theta, x, x_old, x_older, x_oldest);
+        } else {
+          predict_solution(numProcUnknowns[pg->imtrx], delta_t, delta_t_old,
+              delta_t_older, theta, x[pg->imtrx], x_old[pg->imtrx],
+              x_older[pg->imtrx], x_oldest[pg->imtrx], xdot[pg->imtrx],
+              xdot_old[pg->imtrx], xdot_older[pg->imtrx]);
+        }
 
         /*
          * Now, that we have a predicted solution for the current
@@ -1143,4 +1148,23 @@ dbl *te_out) /* te_out - return actual end time */
     } /* end of time step loop */
   } /* end of if steady else transient */
   free_and_clear: return;
+}
+
+
+
+void 
+predict_solution_u_star(int N, dbl delta_t, dbl delta_t_old, dbl delta_t_older,
+			dbl theta_arg, dbl **x, dbl **x_old, dbl **x_older, 
+			dbl **x_oldest)
+{
+  int i;
+  dbl c1, c2;
+
+  c1 = delta_t * (1.0 + theta_arg * delta_t / delta_t_old);
+  c2 = theta_arg * (delta_t * delta_t) / (delta_t_old);
+  for(i=0; i<N; i++) 
+    {
+      x[0][i] = x_old[2][i] + c1*(x_old[0][i]-x_older[2][i])/delta_t_old - c2*(x_older[0][i]-x_oldest[2][i])/delta_t_older;
+    }
+  
 }
