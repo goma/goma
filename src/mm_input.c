@@ -1507,6 +1507,18 @@ rd_timeint_specs(FILE *ifp,
       }
     }
 
+    tran->march_to_steady_state = 0;
+
+    iread = look_for_optional(ifp,"Steady State Tolerance",input,'=');
+    if (iread == 1) {
+      tran->march_to_steady_state = 1;
+      tran->steady_state_tolerance = read_dbl(ifp, "Steady State Tolerance");
+      if (tran->steady_state_tolerance < 0) {
+        EH(-1, "Expected Steady State Tolerance >= 0");
+      }
+      SPF(echo_string, "%s = %d", "Steady State Tolerance", tran->steady_state_tolerance); ECHO(echo_string, echo_file);
+    }
+
     tran->resolved_delta_t_min = 0.;
     iread = look_for_optional(ifp,"Minimum Resolved Time Step",input,'=');
     if (iread == 1) {

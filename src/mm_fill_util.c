@@ -1734,7 +1734,7 @@ simple_normalize_vector(struct Rotation_Vectors *vector,
 /********************************************************************************/
 
 int 
-load_bf_grad(void)
+load_bf_grad()
 
      /********************************************************************************
       *
@@ -1825,10 +1825,14 @@ load_bf_grad(void)
        */
       for (vi = 0, v = -1; v == -1 && vi<MAX_VARIABLE_TYPES; vi++)
 	{
-	  if ( pd->i[0][vi] == bfd[b]->interpolation )
-	    {
-	      v = vi;
-	    }
+          int imtrx;
+          for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+            if ( pd->i[imtrx][vi] == bfd[b]->interpolation )
+              {
+                v = vi;
+                dofs = pg->element_dof_info[imtrx][ei->ielem][vi].dof;
+              }
+          }
 	}
 
       /*
@@ -1837,8 +1841,7 @@ load_bf_grad(void)
        *  OR if element shape doesn't match the current element block.
        */
       if (v != -1 && bfd[b]->element_shape == ei->ielem_shape) {
-	dofs = ei->dof[v];
-	bfv = bf[v];
+        bfv = bf[v];
 
 
 	/* initialize variables */
@@ -2805,6 +2808,8 @@ load_basis_functions(const double xi[],             /*  [DIM]               */
      */
 
     v = bf_ptr->Var_Type_MatID[mn];
+
+    if (!pd->v[pg->imtrx][v]) continue;
 
     /*
      * don't calculate basis function if interpolation doesn't

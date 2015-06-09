@@ -1331,7 +1331,12 @@ matrix_fill(
        * of local element coordinates.
        */
 
+      if (upd->SegregatedSolve) {
+        load_segregated_basis_functions(xi, bfd);
+      }
+
       err = load_basis_functions(xi, bfd);
+
       EH( err, "problem from load_basis_functions");
 
       /*

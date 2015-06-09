@@ -1034,6 +1034,8 @@ struct Transient_Information
   int use_var_norm[MAX_VARIABLE_TYPES]; /* Booleans used for time step truncation error control */
   int fix_freq;
   int print_freq;
+  int march_to_steady_state; /* boolean if problem should be marched to steady state */
+  double steady_state_tolerance; /* Tolerance for march to steady state */
   double print_delt;
   double print_delt2_time;
   double print_delt2;

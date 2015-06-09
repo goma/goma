@@ -100,7 +100,7 @@ PROTO((struct Rotation_Vectors *, /* vector                                  */
        const int ));		/* dim                                       */
 
 EXTERN int load_bf_grad
-PROTO((void));
+PROTO(());
 
 EXTERN int load_bf_mesh_derivs
 PROTO((void));

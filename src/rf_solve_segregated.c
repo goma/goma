@@ -37,6 +37,19 @@
 
 #define ROUND_TO_ONE 0.9999999
 
+
+double vector_distance(int size, double *vec1, double *vec2) {
+  double distance = 0;
+  double x;
+  int i;
+  for (i = 0; i < size; i++) {
+    x = (vec1[i] - vec2[i]);
+    distance += x*x;
+  }
+  return sqrt(distance);
+}
+
+
 void find_element_dofs(Exo_DB *exo)
 {
   int e_start;
@@ -253,6 +266,7 @@ dbl *te_out) /* te_out - return actual end time */
   int relax_bit = FALSE;
 #endif
 
+  tran->solid_inertia = 0;
   static int callnum = 1; /* solve_problem_segregated call counter */
 
   static const char yo[] = "solve_problem_segregated"; /* So my name is in a string.        */
@@ -894,7 +908,8 @@ dbl *te_out) /* te_out - return actual end time */
         af->Sat_hyst_reevaluate = TRUE; /*see load_saturation */
 
       /* Check element quality */
-      good_mesh = element_quality(exo, x[pg->imtrx], ams[0]->proc_config);
+      /*good_mesh = element_quality(exo, x[pg->imtrx], ams[0]->proc_config); */
+      good_mesh = 1;
 
       /*
        * Check the time step truncation error.
@@ -912,9 +927,12 @@ dbl *te_out) /* te_out - return actual end time */
               x[pg->imtrx], x_pred[pg->imtrx], x_old[pg->imtrx], NULL, NULL, eps,
               &success_dt, tran->use_var_norm);
 
-          num_success += success_dt ? 1 : 0;
+          if (pg->imtrx == 1 || pg->imtrx == 3) {
+            success_dt = 1;
+          }
 
-          if (mat_dt_new < delta_t_new) {
+          num_success += success_dt ? 1 : 0;
+          if (pg->imtrx == 0) {
             delta_t_new = mat_dt_new;
           }
         }
@@ -1022,6 +1040,23 @@ dbl *te_out) /* te_out - return actual end time */
                 EH(-1, "error with time-step printing control");
               }
             }
+          }
+        }
+
+        /* Check if steady state has been reached */
+        if (tran->march_to_steady_state && n > 0) {
+          /* for now check last two matrices */
+          int steady_state_reached = TRUE;
+
+          for (i = 2; i < 4; i++) {
+            double distance = vector_distance(NumUnknowns[i], x[i], x_old[i]);
+            if (distance > tran->steady_state_tolerance) {
+              steady_state_reached = FALSE;
+            }
+          }
+
+          if (steady_state_reached) {
+            goto free_and_clear;
           }
         }
 
@@ -1159,8 +1194,6 @@ dbl *te_out) /* te_out - return actual end time */
   } /* end of if steady else transient */
   free_and_clear: return;
 }
-
-
 
 void 
 predict_solution_u_star(int N, dbl delta_t, dbl delta_t_old, dbl delta_t_older,

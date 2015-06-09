@@ -131,53 +131,51 @@ load_splitb_fv(int ielem)
   int d;
   int i;
   int imtrx;
-  BASIS_FUNCTIONS_STRUCT *bf_ptr;
   int *pdv;
-
-  /* This needs to be changed, but for now assume all element vars have the same basis function */
-  for (v = V_FIRST; v < V_LAST; v++) {
-    if (Num_Var_In_Type[pg->imtrx][v]) {
-      bf_ptr = bf[v];
-    }
-  }
+  int var;
 
   /* Similar to esp, load values from all matrices */
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
     pdv = pd->v[imtrx];
 
-    if (pdv[AUX_VELOCITY1]) {
+    var = AUX_VELOCITY1;
+    if (pdv[var]) {
       for (d = 0; d < VIM; d++) {
         v = AUX_VELOCITY1 + d;
         (pg->sbcfv).v_star[d] = 0;
         for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
-          (pg->sbcfv).v_star[d] += (pg->sbesp).v_star[d][i] * bf_ptr->phi[i];
+          (pg->sbcfv).v_star[d] += (pg->sbesp).v_star[d][i] * bf[var]->phi[i];
         }
       }
     }
 
+    var = AUX_PRESSURE;
     if (pdv[AUX_PRESSURE]) {
       v = AUX_PRESSURE;
       (pg->sbcfv).P_star = 0;
       for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
-        (pg->sbcfv).P_star = (pg->sbesp).P_star[i] * bf_ptr->phi[i];
+        (pg->sbcfv).P_star = (pg->sbesp).P_star[i] * bf[var]->phi[i];
       }
     }
+
+    var = VELOCITY1;
 
     if (pdv[VELOCITY1]) {
       for (d = 0; d < VIM; d++) {
         v = VELOCITY1 + d;
         (pg->sbcfv).v_old[d] = 0;
         for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
-          (pg->sbcfv).v_old[d] += (pg->sbesp).v_old[d][i] * bf_ptr->phi[i];
+          (pg->sbcfv).v_old[d] += (pg->sbesp).v_old[d][i] * bf[var]->phi[i];
         }
       }
     }
 
+    var = PRESSURE;
     if (pdv[PRESSURE]) {
       v = PRESSURE;
       (pg->sbcfv).P_old = 0;
       for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
-        (pg->sbcfv).P_old = (pg->sbesp).P_old[i] * bf_ptr->phi[i];
+        (pg->sbcfv).P_old = (pg->sbesp).P_old[i] * bf[var]->phi[i];
       }
     }
   }
@@ -185,59 +183,54 @@ load_splitb_fv(int ielem)
 
 void load_splitb_fv_grads(int ielem)
 {
-  int v;
   int p;
   int d;
   int i;
   int r;
   int imtrx;
-  BASIS_FUNCTIONS_STRUCT *bf_ptr;
   int *pdv;
-
-  /* This needs to be changed, but for now assume all element vars have the same basis function */
-  for (v = V_FIRST; v < V_LAST; v++) {
-    if (Num_Var_In_Type[pg->imtrx][v]) {
-      bf_ptr = bf[v];
-    }
-  }
+  int var;
 
   /* Similar to esp, load values from all matrices */
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
     pdv = pd->v[imtrx];
 
-    if (pdv[VELOCITY1]) {
+    var = VELOCITY1;
+    if (pdv[var]) {
       for (p = 0; p < VIM; p++) {
-        v = VELOCITY1 + p;
+        var = VELOCITY1 + p;
         for (d = 0; d < VIM; d++) {
           (pg->sbcfv).grad_v_old[p][d] = 0;
           for (r = 0; r < VIM; r++) {
-            for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
-              (pg->sbcfv).grad_v_old[p][d] += (pg->sbesp).v_old[r][i] * bf_ptr->grad_phi_e[i][r][p][d];
+            for (i = 0; i < pg->element_dof_info[imtrx][ielem][var].dof; i++) {
+              (pg->sbcfv).grad_v_old[p][d] += (pg->sbesp).v_old[r][i] *  bf[var]->grad_phi_e[i][r][p][d];
             }
           }
         }
       }
     }
 
-    if (pdv[AUX_PRESSURE]) {
-      v = AUX_PRESSURE;
+    var = AUX_PRESSURE;
+    if (pdv[var]) {
+      var = AUX_PRESSURE;
       for (d = 0; d < VIM; d++) {
         (pg->sbcfv).grad_P_star[d] = 0;
-        for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
+        for (i = 0; i < pg->element_dof_info[imtrx][ielem][var].dof; i++) {
           (pg->sbcfv).grad_P_star[d] = (pg->sbesp).P_star[i]
-              * bf_ptr->grad_phi[i][d];
+              *  bf[var]->grad_phi[i][d];
         }
       }
     }
 
-    if (pdv[AUX_VELOCITY1]) {
+    var = AUX_VELOCITY1;
+    if (pdv[var]) {
       for (p = 0; p < VIM; p++) {
-        v = AUX_VELOCITY1 + p;
+        var = AUX_VELOCITY1 + p;
         for (d = 0; d < VIM; d++) {
           (pg->sbcfv).grad_v_star[p][d] = 0;
           for (r = 0; r < VIM; r++) {
-            for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
-              (pg->sbcfv).grad_v_star[p][d] += (pg->sbesp).v_star[r][i] * bf_ptr->grad_phi_e[i][r][p][d];
+            for (i = 0; i < pg->element_dof_info[imtrx][ielem][var].dof; i++) {
+              (pg->sbcfv).grad_v_star[p][d] += (pg->sbesp).v_star[r][i] *  bf[var]->grad_phi_e[i][r][p][d];
             }
           }
         }
@@ -254,6 +247,107 @@ void load_splitb_fv_grads(int ielem)
     }
   }
 }
+
+void set_bf(const double xi[], BASIS_FUNCTIONS_STRUCT *bf_ptr,
+    int type, int dof)
+{
+  int ln;
+
+  const double s     = xi[0];
+  const double t     = xi[1];
+  const double u     = xi[2];
+
+/* Assume 2D */
+  switch (type) {
+  case I_Q1:
+    for (ln = 0; ln < dof; ln++) {
+      bf_ptr->phi[ln] = shape(s, t, u, BILINEAR_QUAD, PSI, ln);
+      bf_ptr->dphidxi[ln][0] = shape(s, t, u, BILINEAR_QUAD, DPSI_S, ln);
+      bf_ptr->dphidxi[ln][1] = shape(s, t, u, BILINEAR_QUAD, DPSI_T, ln);
+    }
+    break;
+  case I_Q2:
+    for (ln = 0; ln < dof; ln++) {
+
+      bf_ptr->phi[ln] = shape(s, t, u, BIQUAD_QUAD, PSI, ln);
+      bf_ptr->dphidxi[ln][0] = shape(s, t, u, BIQUAD_QUAD, DPSI_S, ln);
+      bf_ptr->dphidxi[ln][1] = shape(s, t, u, BIQUAD_QUAD, DPSI_T, ln);
+    }
+    break;
+  }
+}
+
+int
+load_segregated_basis_functions(const double xi[],             /*  [DIM]               */
+                     struct Basis_Functions **bfa) /* ptr to basis function *
+                                                    * array of interest     */
+
+     /************************************************************************
+      *
+      * load_basis_functions():
+      *
+      *    Calculates the values of all the basis functions active in the
+      * current element. It also calculates the derivatives of the basis
+      * functions wrt local element coordinates.
+      *
+      ************************************************************************/
+{
+  int b, i;
+  int shape;
+
+  for (b = 0; b < Num_Basis_Functions; b++) {
+    shape = QUADRILATERAL;
+
+    if (pd->i[0][AUX_VELOCITY1] == bfd[b]->interpolation
+        && shape == bfd[b]->element_shape) {
+      bf[AUX_VELOCITY1] = bfd[b];
+      set_bf(xi, bfd[b], I_Q2, 9);
+    }
+
+    if (pd->i[0][AUX_VELOCITY2] == bfd[b]->interpolation
+        && shape == bfd[b]->element_shape) {
+      bf[AUX_VELOCITY2] = bfd[b];
+      set_bf(xi, bfd[b], I_Q2, 9);
+    }
+    if (pd->i[0][AUX_VELOCITY3] == bfd[b]->interpolation
+        && shape == bfd[b]->element_shape) {
+      bf[AUX_VELOCITY3] = bfd[b];
+      set_bf(xi, bfd[b], I_Q2, 9);
+    }
+
+    if (pd->i[1][AUX_PRESSURE] == bfd[b]->interpolation
+        && shape == bfd[b]->element_shape) {
+      bf[AUX_PRESSURE] = bfd[b];
+      set_bf(xi, bfd[b], I_Q1, 4);
+    }
+
+    if (pd->i[2][VELOCITY1] == bfd[b]->interpolation
+        && shape == bfd[b]->element_shape) {
+      bf[VELOCITY1] = bfd[b];
+      set_bf(xi, bfd[b], I_Q2, 9);
+    }
+
+    if (pd->i[2][VELOCITY2] == bfd[b]->interpolation
+        && shape == bfd[b]->element_shape) {
+      bf[VELOCITY1] = bfd[b];
+      set_bf(xi, bfd[b], I_Q2, 9);
+    }
+
+    if (pd->i[2][VELOCITY3] == bfd[b]->interpolation
+        && shape == bfd[b]->element_shape) {
+      bf[VELOCITY1] = bfd[b];
+      set_bf(xi, bfd[b], I_Q2, 9);
+    }
+
+    if (pd->i[3][PRESSURE] == bfd[b]->interpolation
+        && shape == bfd[b]->element_shape) {
+      bf[PRESSURE] = bfd[b];
+      set_bf(xi, bfd[b], I_Q1, 4);
+    }
+  }
+  return (0);
+} /* END of routine load_basis_functions */
+
 /* 
  *This function assembles the first step of the CBS, split-B, quasi-implicit
  * method.  Here, we solve for an auxiliary velocity from some form of the 
