@@ -9375,6 +9375,24 @@ load_fv_grads(void)
 	}
     }
 
+  if (pd->v[pg->imtrx][AUX_VELOCITY1])
+    {
+      dofs  = ei->dof[AUX_VELOCITY1];
+      v = AUX_VELOCITY1;  
+      grad_vector_fv_fill(esp->v_star, bf[v]->grad_phi_e, dofs, fv->grad_v_star);
+    } 
+  else if (zero_unused_grads && upd->vp[pg->imtrx][AUX_VELOCITY1] == -1) 
+    {
+      for (p = 0; p < VIM; p++)
+	{
+	  for (q = 0; q < VIM; q++)
+	    {
+	      fv->grad_v_star[p][q] = 0.0; 
+
+            }
+	}
+    }
+
 
   /*
    * grad(pv), particle velocity gradients.
@@ -9638,7 +9656,6 @@ load_fv_grads(void)
       fv->div_v = 0.0;
       fv_old->div_v = 0.0;
     }
-  
   
   /*
    * div(pv)
