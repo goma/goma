@@ -644,7 +644,7 @@ dbl *te_out) /* te_out - return actual end time */
        *          the evaluation of xdot[] at t = 0+. This algorithm
        *          perhaps could be introduced here.
        */
-      find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
+	find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
 
       /*
        * Before propagating x_n back into the historical records in

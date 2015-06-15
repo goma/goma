@@ -2057,7 +2057,7 @@ matrix_fill(
       if( pde[R_PRESSURE] )
 	{
           if (upd->SegregatedSolve) {
-            err = assemble_press_update();
+            err = assemble_press_update(time_value, delta_t);
             EH( err, "assemble_press_update");
 #ifdef CHECK_FINITE
             CHECKFINITE("assemble_press_update");

@@ -6320,6 +6320,99 @@ if(iflag != -1)
 
 } /* END of routine flow_n_dot_T_gradv                                      */
 /*****************************************************************************/
+
+/*
+ * This boundary condition adds the boundary terms for the auxiliary velocity
+ * equation in the CBS split-b algorithm
+ */
+void
+flow_n_dot_T_segregated(double func[DIM],
+			double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE])
+{
+  int dim, wim, var;
+  int a, b, j, p, q;
+  int *pdv = pd->v[pg->imtrx];
+
+  // Viscosity
+  dbl mu_star, mu_old;
+
+  // Relevant field variable quantities
+  dbl *grad_v_star[DIM], *grad_v_old[DIM], P_old;
+  dbl gamma_star[DIM][DIM], gamma_old[DIM][DIM];
+  dbl diffusion_a = 0.0;
+
+
+  // Fill field variables and parameters
+  dim = pd->Num_Dim;
+  wim = dim;
+  if(pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN)
+    {
+      wim = wim+1;
+    }
+
+  P_old = (pg->sbcfv).P_old;
+  for(a=0; a<VIM; a++)
+    {
+      grad_v_star[a] = fv->grad_v_star[a];
+      grad_v_old[a] = (pg->sbcfv).grad_v_old[a];
+    }
+
+  for(a=0; a<VIM; a++)
+    {
+      for(b=0; b<VIM; b++)
+	{
+	  gamma_star[a][b] = grad_v_star[a][b] + grad_v_star[b][a];
+	  gamma_old[a][b] = grad_v_old[a][b] + grad_v_old[b][a];
+	}
+    }
+  
+  mu_old = viscosity(gn, gamma_old, NULL);
+  mu_star = viscosity(gn, gamma_star, NULL);
+
+  // Fill boundary terms dot n, this is the quasi-implicit stress term
+  for(p=0; p<VIM; p++)
+    {     		    
+      for(q=0; q<VIM; q++) 
+	{	  
+	  func[p] -= mu_star/2.0*gamma_star[q][p]*fv->snormal[q];
+	  func[p] -= mu_old/2.0*gamma_old[q][p]*fv->snormal[q];	  
+	  if(p==q)
+	    {
+	      func[p] += P_old*fv->snormal[q];
+	    }	    
+	}		      
+    }
+  
+  // J_v_star
+  if(pdv[AUX_VELOCITY1])
+    {
+      for(b=0; b<wim; b++)
+        {
+	  var = AUX_VELOCITY1+b;
+	  for(j=0; j<ei->dof[var]; j++)
+	    {
+	      for(p=0; p<VIM; p++)
+		{
+		  for(q=0; q<VIM; q++)
+		    {
+		      diffusion_a = 0.0;
+		      diffusion_a += bf[AUX_VELOCITY1+p]->grad_phi_e[j][b][q][p];
+		      diffusion_a += bf[AUX_VELOCITY1+q]->grad_phi_e[j][b][p][q];
+		      
+		      d_func[p][var][j] -= mu_star/2.0*diffusion_a*fv->snormal[q];
+		      //diffusion += d_mu->v[b][j]*gamma_star[p][q]*fv->snormal[q];
+		    }
+		}
+	    }
+        }
+    }
+  
+} // flow_n_dot_T_segregated
+
+
+
+
+
 void
 PSPG_consistency_bc (double *func,
 		     double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],

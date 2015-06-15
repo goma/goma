@@ -51,4 +51,5 @@ EXTERN int assemble_press_proj
  double);  // Current time step
 
 EXTERN int assemble_press_update
-(void);
+(double,   // Current time
+ double);  // Current time step

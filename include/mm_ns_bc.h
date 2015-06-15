@@ -365,6 +365,10 @@ PROTO((double [DIM],		/* func                                      */
        const double ,		/* pdatum - pressure datum from input card   */
        const int ));		/* iflag - -1 to use pdatum, otherwise use P */
 
+EXTERN void flow_n_dot_T_segregated
+(double [DIM],		                            // func
+ double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE]); // d_func
+
 EXTERN void PSPG_consistency_bc
 PROTO((double *,		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */

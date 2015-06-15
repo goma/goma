@@ -627,7 +627,7 @@ assemble_aux_u(dbl time,   // Current time
 /*
  * This function assembles the pressure-poisson equation for the CBS, split-B, quasi-implicit method
  * Here, we solve for an intermediate/correction pressure P_star
- * It is assumed grad(P_star) = 0 on the boundary which allows for the boundary conditions
+ * It is assumed [grad(P_star)-v_star] dot n = 0 on the boundary which allows for the boundary conditions
  * from the auxiliary velocity step to translate directly through the algorithm
  */
 int
@@ -643,7 +643,7 @@ assemble_press_poisson(dbl time,  // Current time
   dbl rho;
   
   // Relevant field variable quantities
-  dbl div_v_star, *grad_P_star;
+  dbl *v_star, div_v_star, *grad_P_star;
 
   // Residual contributions
   dbl diffusion, mass;
@@ -687,6 +687,7 @@ assemble_press_poisson(dbl time,  // Current time
   //div_v_star = fv->div_v_star;
   //grad_P_star = fv->grad_P_star;
   div_v_star = (pg->sbcfv).div_v_star;
+  v_star = (pg->sbcfv).v_star;
   grad_P_star = fv->grad_P_star;
 
   rho = density(NULL, time);
@@ -705,8 +706,11 @@ assemble_press_poisson(dbl time,  // Current time
 	  mass = 0.0;
 	  if(pde[eqn] & T_MASS)
 	    {
-	      mass += rho*div_v_star;
-	      mass *= phi_i*h3*wt*det_J;
+	      for(a=0; a<wim; a++)
+		{
+		  mass -= v_star[a]*grad_phi[i][a];
+		}
+	      mass *= rho/dt*h3*wt*det_J;
 	      mass *= mass_etm;
 	    }
 
@@ -718,11 +722,11 @@ assemble_press_poisson(dbl time,  // Current time
 		{
 		  diffusion += grad_P_star[a]*grad_phi[i][a];
 		}
-	      diffusion *= h3*wt*det_J;
+	      diffusion *= h3*wt*det_J/2.0;
 	      diffusion *= diffusion_etm;
 	    }
 
-	  R[i] += mass + diffusion*dt;
+	  R[i] += mass + diffusion;
 	  
 	} // for i<dof[eqn]
     }     // if residual
@@ -750,10 +754,10 @@ assemble_press_poisson(dbl time,  // Current time
 			{
 			  diffusion += grad_phi[i][a]*bf[var]->grad_phi[j][a];
 			}		      
-		      diffusion *= h3*wt*det_J;
+		      diffusion *= h3*wt*det_J/2.0;
 		      diffusion *= diffusion_etm;
 		    }		  		      		    
-		  J[j] += diffusion*dt;
+		  J[j] += diffusion;
 		}
 	    }	  	
   
@@ -784,7 +788,7 @@ int assemble_press_proj(dbl time,  // Current time
   dbl rho;
 
   // Relevant field variable quantities
-  dbl *v_star, *v, *grad_P_star;
+  dbl *v_star, *v, P_star, *grad_P_star;
 
   // Residual contributions
   dbl diffusion, mass;
@@ -799,6 +803,7 @@ int assemble_press_proj(dbl time,  // Current time
   struct Basis_Functions *bfm;
   dbl phi_i, *phi_i_vector;
   dbl phi_j, *phi_j_vector;
+  dbl (*grad_phi_i_e_a)[DIM]=NULL;
   
   // Equation term multipliers
   dbl diffusion_etm, mass_etm;
@@ -830,6 +835,7 @@ int assemble_press_proj(dbl time,  // Current time
   v_star = (pg->sbcfv).v_star;
   v = fv->v;
   //grad_P_star = fv->grad_P_star
+  P_star = (pg->sbcfv).P_star;
   grad_P_star = (pg->sbcfv).grad_P_star;
 
   rho = density(NULL, time);
@@ -858,6 +864,7 @@ int assemble_press_proj(dbl time,  // Current time
 	      	{
 		  ii = ei->lvdof_to_row_lvdof[eqn][i];		  
 		  phi_i = phi_i_vector[i];
+		  grad_phi_i_e_a = bfm->grad_phi_e[i][a];
 		  
 		  // Velocity contribution
 		  mass = 0.0;
@@ -871,9 +878,13 @@ int assemble_press_proj(dbl time,  // Current time
 		  // Pressure contribution
 		  diffusion = 0.0;
 		  if(pde[eqn] & T_DIFFUSION)
-		    {		    
-		      diffusion += dt/rho*grad_P_star[a];
-		      diffusion *= phi_i*h3*wt*det_J;
+		    {
+		      //for(b=0; b<VIM; b++)
+		      //{
+		      //  diffusion -= P_star*grad_phi_i_e_a[b][b];
+		      //}
+		      diffusion += grad_P_star[a]*phi_i;
+		      diffusion *= dt/(2.0*rho)*h3*wt*det_J;
 		      diffusion *= diffusion_etm;
 		    }
 		  
@@ -949,18 +960,19 @@ int assemble_press_proj(dbl time,  // Current time
  * incompressibility
  */
 int
-assemble_press_update(void)
+assemble_press_update(dbl time,  // Current time
+		      dbl dt)    // Current time step
 {
   // Some indices
   int a, b, i, j, dim, wim, eqn, peqn, var, pvar, status=0;
   int *pde = pd->e[pg->imtrx];
   int *pdv = pd->v[pg->imtrx];
 
-  // Viscosity
-  dbl mu_star;
+  // Viscosity and density
+  dbl mu_star, rho;
   
   // Relevant field variable quantities
-  dbl div_v_star, P, P_star, P_old;
+  dbl div_v_star, P, P_star, P_old, *grad_P_old;
   dbl *grad_v_star[DIM], gamma_star[DIM][DIM];
 
   // Residual contributions
@@ -973,7 +985,7 @@ assemble_press_update(void)
   dbl h3, wt, det_J;
   
   // Basis functions
-  dbl phi_i, phi_j;
+  dbl phi_i, phi_j, (*grad_phi)[DIM];
   
   // Equation term multipliers
   dbl diffusion_etm, mass_etm;
@@ -1001,6 +1013,7 @@ assemble_press_update(void)
   wt = fv->wt;
   det_J = bf[eqn]->detJ;	       
   h3 = fv->h3;
+  grad_phi = bf[eqn]->grad_phi;
 
   //div_v_star = fv->div_v_star;
   //grad_v_star = fv->grad_v_star;
@@ -1009,6 +1022,7 @@ assemble_press_update(void)
   //P_star = fv->P_star;
   P_star = (pg->sbcfv).P_star;
   P_old = fv_old->P;
+  grad_P_old = fv_old->grad_P;
 
   for(a=0; a<VIM; a++)
     {
@@ -1025,6 +1039,7 @@ assemble_press_update(void)
     }
 
   mu_star = viscosity(gn, gamma_star, NULL);
+  rho = density(NULL, time);
 
   mass_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
   diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
@@ -1047,12 +1062,17 @@ assemble_press_update(void)
 
 	  // Incompressibility contribution
 	  diffusion = 0.0;
-	  if(pde[eqn] & T_ADVECTION)
+	  /*if(pde[eqn] & T_ADVECTION)
 	    {
-	      diffusion += mu_star/2.0*div_v_star;
+	      diffusion += mu_star/2.0*div_v_star*phi_i;
+	      for(a=0; a<wim; a++)
+		{
+		  //diffusion -= mu_star*dt*grad_P_old[a]*grad_phi[i][a];
+		}
 	      diffusion *= h3*wt*det_J;
 	      diffusion *= diffusion_etm;
 	    }
+	  */
 
 	  R[i] += mass + diffusion;	  
 	} // for i<dof[eqn]

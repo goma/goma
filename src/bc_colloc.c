@@ -2284,6 +2284,7 @@ bc_eqn_index(int id,               /* local node number                 */
   if (kdir != 0) {
     if      (ieqn == R_MESH1)     ieqn += kdir;
     else if (ieqn == R_MOMENTUM1) ieqn += kdir;
+    else if (ieqn == R_AUX_MOMENTUM1) ieqn +=kdir;
     else if (ieqn == R_SOLID1)    ieqn += kdir;
     else if (ieqn == R_LAGR_MULT1)ieqn += kdir;
     else EH(-1,"Can't have a rotated vector BC!");

@@ -1063,6 +1063,10 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			     bc->BC_Data_Int[0]);
 	  break;
 
+	case SEGREGATED_STRESS_BC:
+	  flow_n_dot_T_segregated(func, d_func);
+	  break;
+
 
 
         case GRAD_LUB_PRESS_BC:
