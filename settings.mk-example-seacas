@@ -1,0 +1,109 @@
+# USER_SETTINGS_FILE
+# ##################
+#
+# This is an example settings file which can be used instead of modifying
+# the src/Makefile directly
+#
+# Copy this file to settings.mk in the top level goma directory
+#
+# The values defined in this file (both commented and uncommented) will
+# override the values in the src/Makefile
+
+# _MACH is used if libraries were compiled with machine specific suffixes
+# (libblas_linux)
+
+# _MACH = linux
+
+# Useful for standard goma libary install location
+
+ARCH = rhel6_ompi
+
+# Goma library path, by default we assume all major non-standard libraries are under
+# the goma library path
+
+GOMA_LIBS = /home/wortiz/libraries/gcc_4.8.2
+
+# Compiler Settings
+# =================
+
+# MPI install location, used for include, lib, and bin directories
+
+MPI_TOP = $(GOMA_LIBS)/openmpi-1.6.4
+
+CC = $(MPI_TOP)/bin/mpicc
+CXX = $(MPI_TOP)/bin/mpicxx
+FC = $(MPI_TOP)/bin/mpif77
+
+# GCC_TOP is the corresponding location of the gcc compilers and libs that are
+# used by the MPI compilers
+GCC_TOP = /usr
+
+# DEBUG_FLAGS overrides CCFLAGS when building `debug` target
+# DEBUG_FLAGS	= -g -gdwarf-2
+
+# All compiler options
+# CCFLAGS	= -O3
+
+# C/C++ warning flags
+# C_WARN_FLAGS	= -Wall
+
+# Fortran warning flags
+# F_WARN_FLAGS	=
+
+# SEACAS install directory (include, lib)
+
+SEACAS_TOP = $(GOMA_LIBS)/SEACAS-2013-12-03
+
+# ExodusII library
+
+EXODUSII_LIB = -lexoIIv2c
+
+CHACO_LIB = -lchaco
+
+# NetCDF library (SEACAS version)
+
+NETCDF_LIB = -L$(SEACAS_TOP)/lib  -lnetcdf  -lhdf5_hl  -lhdf5
+
+# SEACAS includes and libraries
+SEACAS_INC = -isystem $(SEACAS_TOP)/include
+
+SEACAS_LIB = -L$(SEACAS_TOP)/lib  $(EXODUSII_LIB)  $(NETCDF_LIB) \
+               $(CHACO_LIB)
+
+# Trilinos install directory (include, lib)
+
+TRILINOS_TOP = $(GOMA_LIBS)/trilinos-11.8.1-Built
+
+# Install location
+# will install files in $PREFIX/include/goma, $PREFIX/lib, $PREFIX/bin
+
+PREFIX = /home/goma/build
+
+# Below are the default defines, change defines as necessary
+
+# DEFINES =  -Dlinux \
+#            -DCOMPILER_64BIT \
+#            -DENABLE_AMESOS \
+#            -DTRILINOS \
+#            -DCHECK_FINITE\
+#            -DNO_CHEBYSHEV_PLEASE \
+#            -DMDE=27 \
+#            -DMAX_PROB_VAR=15 \
+#            -DMAX_EXTERNAL_FIELD=4 \
+#            -DMAX_CONC=4 \
+#            -DCOUPLED_FILL \
+#            -DPARALLEL \
+#            -DEIGEN_SERIAL
+
+# TOOLING used for install, cleaning, and library creation
+# install
+# INSTALL	= cp
+# INSTFLAGS	= 
+
+# clean
+# RM		= rm -f
+
+# archiver
+# AR		= ar
+# ARFLAGS	= srv
+# RANLIB	= touch
