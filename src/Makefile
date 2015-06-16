@@ -148,34 +148,13 @@ GCC_LIB = $(GCC_TOP)/lib
 GCC_LIB64 = $(GCC_TOP)/lib64
 LD_LIBRARY_PATH := $(GCC_LIB64):$(GCC_LIB):${LD_LIBRARY_PATH}
 
-# SEACAS
-# ------
-
-# SEACAS install directory (include, lib)
-SEACAS_TOP ?= $(GOMA_LIBS)/SEACAS-2012-09-10
-
-# ExodusII library
-
-EXODUSII_LIB ?= -lexoIIv2c
-
-CHACO_LIB ?= -lchaco
-
-# NetCDF library (SEACAS version)
-
-NETCDF_LIB ?= -L$(SEACAS_TOP)/lib  -lnetcdf  -lhdf5_hl  -lhdf5
-
-# SEACAS includes and libraries
-SEACAS_INC ?= -isystem $(SEACAS_TOP)/include
-
-SEACAS_LIB ?= -L$(SEACAS_TOP)/lib  $(EXODUSII_LIB)  $(NETCDF_LIB) \
-               $(CHACO_LIB)
-
 # TRILINOS
 # --------
-
 # Trilinos install directory (include, lib)
-TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-11.8.1-Built
+# If built with build-goma-dependencies.sh, includes flags for SEACAS, UMFpack, and all other necessary
+# libraries and includes otherwise not listed below.
 
+TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-11.8.1-Built
 
 include $(TRILINOS_TOP)/include/Makefile.export.Trilinos
 
@@ -196,30 +175,14 @@ ARPACK_TOP ?= $(GOMA_LIBS)/ARPACK
 
 ARPACK_LIB ?= -L$(ARPACK_TOP)/lib -larpack$(_MACH)
 
-# BLAS and LAPACK LIBRARIES
-# -------------------------
-LAPACK_TOP ?= $(GOMA_LIBS)/lapack-3.2.1
-
-LAPACK_LIB ?= -L$(LAPACK_TOP) -llapack$(_MACH)
-
-BLAS_TOP ?= $(GOMA_LIBS)/BLAS
-
-BLAS_LIB ?= -L$(BLAS_TOP) -lblas$(_MACH)
-
-SCALAPACK_TOP ?= $(GOMA_LIBS)/scalapack-2.0.2
-
-SCALAPACK_LIB ?= -L$(SCALAPACK_TOP) -lscalapack
-
-SCALAPACK_INC ?= $(SCALAPACK_TOP)/SRC
-
 # FRONTAL SOLVER LIBRARY
 # ----------------------
 #
-# The default is to include the frontal solver in compile.  However,
-# it no longer functions properly under 64-bit builds and should not 
+# The default is not to include the frontal solver in compile. 
+# It no longer functions properly under 64-bit builds and should not 
 # be utilized as a solver.
 
-FRONT_LIB ?= -L$(GOMA_LIBS)/front/lib  -lmpfront$(_MACH) \
+#FRONT_LIB ?= -L$(GOMA_LIBS)/front/lib  -lmpfront$(_MACH) \
               -lparlib$(_MACH)
 
 
@@ -232,34 +195,6 @@ SPARSE_LIB ?= -L$(SPARSE_TOP)/lib  -lsparse$(_MACH)
 
 # Sparse includes are located in the goma directory
 SPARSE_INC ?=
-
-# UMFPACK SOLVER LIBRARY
-# ----------------------
-
-UMFPACK_TOP ?= $(GOMA_LIBS)/UMFPACK-5.4
-
-UMFPACK_INC ?= -isystem $(UMFPACK_TOP)/Include
-
-UMFPACK_LIB ?= -L$(UMFPACK_TOP)/Lib  -lumfpack$(_MACH)  -lamd$(_MACH)
-
-
-# OTHER SOLVER LIBRARIES
-# ----------------------
-
-Y12M_TOP ?= $(GOMA_LIBS)/y12m
-Y12M_LIB  ?= -L$(Y12M_TOP) -ly12m$(_MACH)
-
-PARMETIS_TOP ?= $(GOMA_LIBS)/ParMetis-3.1.1
-
-PARMETIS_LIB  ?= -L$(PARMETIS_TOP)  -lparmetis$(_MACH) \
-                -lmetis$(_MACH)
-
-SUPERLU_TOP ?= $(GOMA_LIBS)/SuperLU_DIST_2.3
-SUPERLU_LIB ?= -L$(SUPERLU_TOP)/lib  -lsuperludist$(_MACH) 
-
-MUMPS_TOP ?= $(GOMA_LIBS)/MUMPS_4.10.0
-
-MUMPS_LIB ?= -L$(MUMPS_TOP)/lib -ldmumps -lmumps_common -lpord
 
 # FORTRAN LIBRARIES
 # -----------------
@@ -307,7 +242,7 @@ CXXSTD ?=
 CXXFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(INCLUDES) -Wno-deprecated $(CXXSTD)
 
 # linker flags
-LD_FLAGS = $(CCFLAGS)
+LD_FLAGS = $(CCFLAGS) $(Trilinos_EXTRA_LD_FLAGS)
 
 # LIBRARIES
 # ---------
@@ -512,7 +447,6 @@ SL_INC= spConfig.h\
         sl_epetra_interface.h \
         sl_epetra_util.h \
         sl_aztecoo_interface.h
-        
 
 
 # _____	Machine dependent routines "md_" prefix _______________________________
@@ -771,7 +705,7 @@ all: $(BIN_DIR)/$(TARGET)
 $(BIN_DIR)/$(TARGET): $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIB_DEP)
 	mkdir -p $(BIN_DIR); \
 	$(RM) $@; \
-	$(LD) $(LD_FLAGS) -o $@ $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIBS) $(END_LIBS)
+	$(LD) $(LD_FLAGS) -o $@ $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIBS) $(END_LIBS) $(LD_FLAGS)
 
 # goma library
 $(LIB_DIR)/$(GOMA_LIB): $(GOMA_RELEASE_OBJS) $(BRKFIX_RELEASE_OBJS)
@@ -797,7 +731,7 @@ debug:
 $(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(BRKFIX_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIB_DEP)
 	mkdir -p $(BIN_DIR); \
 	$(RM) $@; \
-	$(LD) $(LD_FLAGS) -o $@ $(GOMA_DEBUG_OBJS) $(BRKFIX_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIBS) $(END_LIBS)
+	$(LD) $(LD_FLAGS) -o $@ $(GOMA_DEBUG_OBJS) $(BRKFIX_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIBS) $(END_LIBS) $(LD_FLAGS)
 
 # Object pattern rules
 # --------------------
@@ -817,7 +751,7 @@ $(RELEASE_OBJ_DIR)/%.o: %.F
 $(RELEASE_OBJ_DIR)/%.o: %.C
 	@mkdir -p $(RELEASE_OBJ_DIR)
 	$(CXX) -c $(CXXFLAGS) -o $@ $^
-	
+
 $(RELEASE_OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(RELEASE_OBJ_DIR)
 	$(CXX) -c $(CXXFLAGS) -o $@ $^
@@ -834,7 +768,7 @@ $(DEBUG_OBJ_DIR)/%.o: %.F
 $(DEBUG_OBJ_DIR)/%.o: %.C
 	@mkdir -p $(DEBUG_OBJ_DIR)
 	$(CXX) -c $(CXXFLAGS) -o $@ $^
-	
+
 $(DEBUG_OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(RELEASE_OBJ_DIR)
 	$(CXX) -c $(CXXFLAGS) -o $@ $^

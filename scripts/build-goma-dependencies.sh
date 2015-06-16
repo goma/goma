@@ -5,6 +5,7 @@
 # 2014, July: Created by Cory Miner based off of notes by Scott Roberts
 # 2014: Weston Ortiz modified to include blacs, scalapack and mumps support in trilinos
 # 2015, February: Andrew Cochrane modified to handle recent changes to SEACAS-latest and hdf5, also added some logic to help with troubleshooting
+# 2015, June: Andrew and Weston handled switch to SuiteSparse and the SEACAS that is shipped with Trilinos
 
 # This script tries to build all of the libraries needed for goma
 # in the specified directories.
@@ -43,6 +44,7 @@ if [ -z "$1" ]
 fi
 
 GOMA_LIB=$1
+export GOMA_LIB
 
 OWNER=$USER
 
@@ -74,65 +76,59 @@ export OWNER
 export OPENMPI_TOP
 export MAKE_JOBS
 
-ARCHIVE_NAMES=("AMD-2.2.4.tar.gz" \
-"arpack96.tar.gz" \
+ARCHIVE_NAMES=("arpack96.tar.gz" \
 "patch.tar.gz" \
 "blas.tgz" \
 "cmake-2.8.12.2.tar.gz" \
-"hdf5-1.8.12.tar.gz" \
+"hdf5-1.8.15.tar.gz" \
 "lapack-3.2.1.tgz" \
-"netcdf-4.3.2.tar.gz" \
+"netcdf-4.3.3.1.tar.gz" \
 "openmpi-1.6.4.tar.gz" \
 "ParMetis-3.1.1.tar.gz" \
-"Seacas2013-12-03.tar.gz" \
 "sparse.tar.gz" 
 "superlu_dist_2.3.tar.gz" \
-"UMFPACK-5.4.0.tar.gz" \
-"UFconfig-3.7.1.tar.gz" \
 "y12m-1.0.tar.gz" \
 "trilinos-11.8.1-Source.tar.gz" \
 "scalapack-2.0.2.tgz" \
-"MUMPS_4.10.0.tar.gz")
+"MUMPS_4.10.0.tar.gz" \
+"SuiteSparse-4.4.4.tar.gz" \
+"matio-1.5.2.tar.gz")
 
-ARCHIVE_MD5SUMS=("31943ff81859eb42d695d8a34d5b4201" \
-"fffaa970198b285676f4156cebc8626e" \
+ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "14830d758f195f272b8594a493501fa2" \
 "5e99e975f7a1e3ea6abcad7c6e7e42e6" \
 "17c6513483d23590cbce6957ec6d1e66" \
-"d804802feb99b87fc668a90e6fa34411" \
+"03cccb5b33dbe975fdcd8ae9dc021f24" \
 "a3202a4f9e2f15ffd05d15dab4ac7857" \
-"2fd2365e1fe9685368cd6ab0ada532a0" \
+"5c9dad3705a3408d27f696e5b31fb88c" \
 "70aa9b6271d904c6b337ca326e6613d1" \
 "57318dbaddff2c3d1ef820cff0bf87b0" \
-"d7051624547de02ace05b2988c9df865" \
 "1566d914d1035ac17b73fe9bc0eed02a" \
 "8cf8cb964bb25ff6981f994b7e794f29" \
-"4455192ff4bf0fd75796d08c0ed614a6" \
-"145b8126b7ee957d1ea6b401be0bf798" \
 "eed01310baca61f22fb8a88a837d2ae3" \
 "3c9465b6d63d824e9dc0365ca73c3370" \
 "2f75e600a2ba155ed9ce974a1c4b536f" \
-"959e9981b606cd574f713b8422ef0d9f")
+"959e9981b606cd574f713b8422ef0d9f" \
+"e0af74476935c9ff6d971df8bb6b82fc" \
+"85b007b99916c63791f28398f6a4c6f1")
 
-ARCHIVE_URLS=("http://www.cise.ufl.edu/research/sparse/amd/AMD-2.2.4.tar.gz" \
-"http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
+ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
 "http://www.netlib.org/blas/blas.tgz" \
 "http://www.cmake.org/files/v2.8/cmake-2.8.12.2.tar.gz" \
-"http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.12/src/hdf5-1.8.12.tar.gz" \
+"http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.15/src/hdf5-1.8.15.tar.gz" \
 "http://www.netlib.org/lapack/lapack-3.2.1.tgz" \
-"ftp://ftp.unidata.ucar.edu/pub/netcdf/old/netcdf-4.3.2.tar.gz" \
+"ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.1.tar.gz" \
 "http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.4.tar.gz" \
 "http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/OLD/ParMetis-3.1.1.tar.gz" \
-"http://downloads.sourceforge.net/project/seacas/2013-12-03.tar.gz" \
 "http://sourceforge.net/projects/sparse/files/sparse/sparse1.4b/sparse1.4b.tar.gz/download" \
 "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_2.3.tar.gz" \
-"http://www.cise.ufl.edu/research/sparse/umfpack/UMFPACK-5.4.0.tar.gz" \
-"http://www.cise.ufl.edu/research/sparse/UFconfig/UFconfig-3.7.1.tar.gz" \
 "http://sisyphus.ru/cgi-bin/srpm.pl/Branch5/y12m/getsource/0" \
 "http://trilinos.sandia.gov/download/files/trilinos-11.8.1-Source.tar.gz" \
 "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz" \
-"http://mumps.enseeiht.fr/MUMPS_4.10.0.tar.gz")
+"http://mumps.enseeiht.fr/MUMPS_4.10.0.tar.gz" \
+"http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.4.4.tar.gz" \
+"http://downloads.sourceforge.net/project/matio/matio/1.5.2/matio-1.5.2.tar.gz")
 
 SEACAS_LINUX_PATCH="14c14
 < /* #define GCC4GFORTRAN 1 */
@@ -221,27 +217,19 @@ read -d '' MUMPS_PATCH << "EOF"
 EOF
 MUMPS_PATCH=${MUMPS_PATCH/__GOMA_LIB__/$GOMA_LIB}
 
-read -d '' IMAKE_PATCH << "EOF"
-13c13
-< V_NUM = netcdf-4.2.1.1
----
-> V_NUM = netcdf-4.3.2
-EOF
-
-
 read -d '' NETCDF_PATCH << "EOF"
-228c228
-< #define NC_MAX_DIMS   1024    
+229c229
+< #define NC_MAX_DIMS	1024
 ---
-> #define NC_MAX_DIMS   65536   
-230c230
-< #define NC_MAX_VARS   8192    
+> #define NC_MAX_DIMS	65536
+231c231
+< #define NC_MAX_VARS	8192
 ---
-> #define NC_MAX_VARS   524288  
-232c232
-< #define NC_MAX_VAR_DIMS   1024 /**< max per variable dimensions */
+> #define NC_MAX_VARS	524288
+233c233
+< #define NC_MAX_VAR_DIMS	1024 /**< max per variable dimensions */
 ---
-> #define NC_MAX_VAR_DIMS   8 /**< max per variable dimensions */
+> #define NC_MAX_VAR_DIMS	8 /**< max per variable dimensions */
 EOF
 
 read -d '' ARMAKE_PATCH << "EOF"
@@ -266,32 +254,56 @@ read -d '' ARMAKE_PATCH << "EOF"
 EOF
 ARMAKE_PATCH=${ARMAKE_PATCH/__GOMA_LIB5__/$GOMA_LIB}
 
-read -d '' UFCONFIG_PATCH << "EOF"
-61c61,64
-< ARCHIVE = $(AR) $(ARFLAGS)
----
-> AR = ar cr
-> ARFLAGS = cr
-> ARCHIVE = ar cr
+# read -d '' UFCONFIG_PATCH << "EOF"
+# 61c61,64
+# < ARCHIVE = $(AR) $(ARFLAGS)
+# ---
+# > AR = ar cr
+# > ARFLAGS = cr
+# > ARCHIVE = ar cr
+# > 
+# 111,113c114,115
+# < BLAS = -lblas -lgfortran
+# < LAPACK = -llapack
+# < 
+# ---
+# > BLAS = __GOMA_LIB4__/BLAS/blas_LINUX.a -lgfortran
+# > LAPACK = __GOMA_LIB4__/lapack-3.2.1/lapack_LINUX.a
+# 173c175
+# < UMFPACK_CONFIG =
+# ---
+# > UMFPACK_CONFIG = -DNCHOLMOD
+# 214c216
+# < CHOLMOD_CONFIG =
+# ---
+# > CHOLMOD_CONFIG = 
+
+# EOF
+# UFCONFIG_PATCH=${UFCONFIG_PATCH/__GOMA_LIB4__/$GOMA_LIB}
+
+read -d '' SUITESPARSE_CONFIG_PATCH << "EOF"
+100a101,102
+> GOMA_LIB = __GOMA_LIB__
 > 
-111,113c114,115
-< BLAS = -lblas -lgfortran
-< LAPACK = -llapack
-< 
+123c125
+<   LAPACK = -llapack
 ---
-> BLAS = __GOMA_LIB4__/BLAS/blas_LINUX.a -lgfortran
-> LAPACK = __GOMA_LIB4__/lapack-3.2.1/lapack_LINUX.a
-173c175
+> #  LAPACK = -llapack
+134c136
+<   BLAS = -lopenblas
+---
+> #  BLAS = -lopenblas
+149a152,154
+> BLAS = -L$(GOMA_LIB)/BLAS -lblas -lgfortran
+> LAPACK = -L$(GOMA_LIB)/lapack-3.2.1 -llapack -lgfortran
+> 
+234c239
 < UMFPACK_CONFIG =
 ---
 > UMFPACK_CONFIG = -DNCHOLMOD
-214c216
-< CHOLMOD_CONFIG =
----
-> CHOLMOD_CONFIG = 
 
 EOF
-UFCONFIG_PATCH=${UFCONFIG_PATCH/__GOMA_LIB4__/$GOMA_LIB}
+SUITESPARSE_CONFIG_PATCH=${SUITESPARSE_CONFIG_PATCH/__GOMA_LIB__/$GOMA_LIB}
 
 
 read -d '' LAPACK_PATCH << "EOF"
@@ -384,8 +396,8 @@ cd tars
 #downloads
 count=0
 for i in ${ARCHIVE_NAMES[@]}; do
-    echo "Check for $i"
-
+    echo "Check for $i at ${ARCHIVE_URLS[count]}"
+    
     if ! [ -f $i ]
     then
         wget ${ARCHIVE_URLS[count]} -O $i
@@ -401,44 +413,45 @@ for i in ${ARCHIVE_NAMES[@]}; do
     fi
     cd tars
 done
-
+#continue_check
 #move
-cd ../
 
-#Seacas
-if [ -d SEACAS-2013-12-03 ]
-then
-    echo "SEACAS directory already renamed"
-else
-mv 2013-12-03 SEACAS-2013-12-03
-fi
+# #Seacas
+# if [ -d SEACAS-2013-12-03 ]
+# then
+#     echo "SEACAS directory already renamed"
+# else
+# mv 2013-12-03 SEACAS-2013-12-03
+# fi
 
-if [ -d SEACAS-2013-12-03/TPL/hdf5/hdf5-source ]
-then
-    echo "hdf5 directory already placed in SEACAS/TPL"
-else
-mv hdf5-1.8.12 hdf5-source
-mv hdf5-source SEACAS-2013-12-03/TPL/hdf5/
-fi
+# if [ -d SEACAS-2013-12-03/TPL/hdf5/hdf5-source ]
+# then
+#     echo "hdf5 directory already placed in SEACAS/TPL"
+# else
+# mv hdf5-1.8.12 hdf5-source
+# mv hdf5-source SEACAS-2013-12-03/TPL/hdf5/
+# fi
 
-if [ -d SEACAS-2013-12-03/TPL/netcdf/netcdf-4.3.2 ]
-then
-    echo "netcdf directory already placed in SEACAS/TPL"
-else
-mv netcdf-4.3.2 SEACAS-2013-12-03/TPL/netcdf/
-fi
+# if [ -d SEACAS-2013-12-03/TPL/netcdf/netcdf-4.3.2 ]
+# then
+#     echo "netcdf directory already placed in SEACAS/TPL"
+# else
+# mv netcdf-4.3.2 SEACAS-2013-12-03/TPL/netcdf/
+# fi
+
+
 
 #continue_check
 #UMFPACK
-if [ -d UMFPACK-5.4/AMD ]
-then
-    echo "UMFPACK directory structure already created"
-else
-mkdir UMFPACK-5.4
-mv UMFPACK UMFPACK-5.4
-mv UFconfig UMFPACK-5.4
-mv AMD UMFPACK-5.4
-fi
+# if [ -d UMFPACK-5.4/AMD ]
+# then
+#     echo "UMFPACK directory structure already created"
+# else
+# mkdir UMFPACK-5.4
+# mv UMFPACK UMFPACK-5.4
+# mv UFconfig UMFPACK-5.4
+# mv AMD UMFPACK-5.4
+# fi
 
 #continue_check
 # make
@@ -466,31 +479,93 @@ else
     make -j$MAKE_JOBS
     make install
 fi
+cd ..
+
+#hdf5
+if [ -d hdf5-1.8.15/lib ]
+then
+    echo "hdf5 already built"
+else
+    mv hdf5-1.8.15 tmpdir
+    mkdir hdf5-1.8.15
+    mv tmpdir hdf5-1.8.15/src
+    cd hdf5-1.8.15/src
+    ./configure --enable-shared=off --prefix=$GOMA_LIB/hdf5-1.8.15
+    make -j$MAKE_JOBS
+    make install
+    cd ../..
+fi
+
+#matio
+if [ -d matio-1.5.2/lib ]
+then
+    echo "matio already built"
+else
+    mv matio-1.5.2 tmpdir
+    mkdir matio-1.5.2
+    mv tmpdir matio-1.5.2/src
+    cd matio-1.5.2/src
+    ./configure --with-hdf5=$GOMA_LIB/hdf5-1.8.15 --prefix=$GOMA_LIB/matio-1.5.2 --enable-shared=off
+    make -j$MAKE_JOBS
+    make install
+    cd ../..
+fi
+
+#netcdf
+if [ -d netcdf-4.3.2/lib ]
+then
+    echo "netcdf already built"
+else
+    mv netcdf-4.3.3.1 tmpdir
+    mkdir netcdf-4.3.3.1
+    mv tmpdir netcdf-4.3.3.1/src
+    cd $GOMA_LIB/netcdf-4.3.3.1/src
+    cd include
+    echo "$NETCDF_PATCH" > netcdf.patch
+    patch -f --ignore-whitespace netcdf.h < netcdf.patch
+    cd ..
+    export CPPFLAGS=-I$GOMA_LIB/hdf5-1.8.15/include
+    export LDFLAGS=-L$GOMA_LIB/hdf5-1.8.15/lib 
+    echo $CPPFLAGS
+    echo $LDFLAGS
+    ./configure --prefix=$GOMA_LIB/netcdf-4.3.3.1 --enable-shared=off --disable-dap
+    make -j$MAKE_JOBS
+    make install
+    cd ../..
+fi
+
+    # CXXFLAGS=-I$GOMA_LIB/hdf5-1.8.12/hdf5/include \
+    # FFFLAGS=-I$GOMA_LIB/hdf5-1.8.12/hdf5/include \
+    # FCFLAGS=-I$GOMA_LIB/hdf5-1.8.12/hdf5/include \
+    # FC=$GOMA_LIB/openmpi-1.6.4/bin/mpif90 \
+    # CXX=$GOMA_LIB/openmpi-1.6.4/bin/mpicxx \
+    # CC=$GOMA_LIB/openmpi-1.6.4/bin/mpicc \
+
 
 #continue_check
 #make Seacas
 
-cd $GOMA_LIB/SEACAS-2013-12-03
-if [ -f bin/aprepro ]
-then
-    echo "SEACAS already built"
-else
-    cd TPL/netcdf/netcdf-4.3.2/include
-    echo "$NETCDF_PATCH" > netcdf.patch
-    patch -f --ignore-whitespace netcdf.h < netcdf.patch
-    cd ../../
-    echo "$IMAKE_PATCH" > Imake.patch
-    patch -f Imakefile < Imake.patch
-    cd ../../
-    export ACCESS=$GOMA_LIB/SEACAS-2013-12-03
-    cd ACCESS/itools/config/cf
-    echo "$SITE_PATCH" > site.patch
-    patch -f site.def < site.patch
-    echo "$SEACAS_LINUX_PATCH" > linux.patch
-    patch -f linux.cf < linux.patch
-    cd ../../../../
-    ACCESS/scripts/buildSEACAS -auto
-fi
+# cd $GOMA_LIB/SEACAS-2013-12-03
+# if [ -f bin/aprepro ]
+# then
+#     echo "SEACAS already built"
+# else
+#     cd TPL/netcdf/netcdf-4.3.2/include
+#     echo "$NETCDF_PATCH" > netcdf.patch
+#     patch -f --ignore-whitespace netcdf.h < netcdf.patch
+#     cd ../../
+#     echo "$IMAKE_PATCH" > Imake.patch
+#     patch -f Imakefile < Imake.patch
+#     cd ../../
+#     export ACCESS=$GOMA_LIB/SEACAS-2013-12-03
+#     cd ACCESS/itools/config/cf
+#     echo "$SITE_PATCH" > site.patch
+#     patch -f site.def < site.patch
+#     echo "$SEACAS_LINUX_PATCH" > linux.patch
+#     patch -f linux.cf < linux.patch
+#     cd ../../../../
+#     ACCESS/scripts/buildSEACAS -auto
+# fi
 
 #continue_check
  #make BLAS
@@ -570,26 +645,47 @@ fi
 
 #continue_check
 #make UMFPACK
-cd $GOMA_LIB/UMFPACK-5.4
-if [ -f Lib/libamd.a ]
+# cd $GOMA_LIB/UMFPACK-5.4
+# if [ -f Lib/libamd.a ]
+# then
+#     echo "UMFPACK already built"
+# else
+#     cd UFconfig
+#     echo "$UFCONFIG_PATCH" > UFconfig.patch
+#     patch UFconfig.mk < UFconfig.patch
+#     cd ../UMFPACK
+#     make -j$MAKE_JOBS
+#     cd ../
+#     mkdir -p Include
+#     mkdir -p Lib
+#     cp UMFPACK/Include/* Include
+#     cp UMFPACK/Lib/* Lib
+#     cp AMD/Include/amd.h Include
+#     cp AMD/Include/amd_internal.h Include
+#     cp AMD/Lib/libamd.a Lib
+#     cp UFconfig/UFconfig.h Include
+# fi
+
+
+#make SuiteSparse
+cd $GOMA_LIB/SuiteSparse
+if [ -f UMFPACK/Lib/libumfpack.a ]
 then
-    echo "UMFPACK already built"
+    echo "SuiteSparse is already built"
 else
-    cd UFconfig
-    echo "$UFCONFIG_PATCH" > UFconfig.patch
-    patch UFconfig.mk < UFconfig.patch
-    cd ../UMFPACK
-    make -j$MAKE_JOBS
-    cd ../
-    mkdir -p Include
-    mkdir -p Lib
-    cp UMFPACK/Include/* Include
-    cp UMFPACK/Lib/* Lib
-    cp AMD/Include/amd.h Include
-    cp AMD/Include/amd_internal.h Include
-    cp AMD/Lib/libamd.a Lib
-    cp UFconfig/UFconfig.h Include
+    cd SuiteSparse_config
+    echo `pwd`
+    echo "$SUITESPARSE_CONFIG_PATCH" > SuiteSparse_config.patch
+    patch SuiteSparse_config.mk < SuiteSparse_config.patch
+    cd ..
+    make
+    cd UMFPACK/Include
+    ln -s ../../SuiteSparse_config/SuiteSparse_config.h UFconfig.h
+    ln -s ../../SuiteSparse_config/SuiteSparse_config.h SuiteSparse_config.h
+
 fi
+cd ../../..
+
 
 #continue_check
 #make y12m
@@ -637,6 +733,7 @@ fi
 
 #continue_check
 #make trilinos
+rm -rf $GOMA_LIB/trilinos-11.8.1-Temp
 mkdir $GOMA_LIB/trilinos-11.8.1-Temp
 cd $GOMA_LIB/trilinos-11.8.1-Temp
 
@@ -654,8 +751,11 @@ export LD_LIBRARY_PATH=$MPI_BASE_DIR/lib:$LD_LIBRARY_PATH
 export PATH=$GOMA_LIB/cmake-2.8.12.2/bin:$PATH
 
 MPI_LIBS="-LMPI_BASE_DIR/lib -lmpi_f90 -lmpi_f77 -lmpi"
+SEACAS_LIBS="-L${GOMA_LIB}/hdf5-1.8.15/lib -lhdf5_hl -lhdf5 -lz -lm"
 # Install directory
 TRILINOS_INSTALL=$GOMA_LIB/trilinos-11.8.1-Built
+#continue_check
+
 
 cmake \
 -D CMAKE_AR=/usr/bin/ar \
@@ -666,13 +766,25 @@ cmake \
 -D CMAKE_Fortran_COMPILER:FILEPATH=$MPI_BASE_DIR/bin/mpif90 \
 -D CMAKE_VERBOSE_MAKEFILE:BOOL=TRUE \
 -D Trilinos_ENABLE_Triutils:BOOL=ON \
+-D Trilinos_ENABLE_SEACAS:BOOL=ON \
 -D Trilinos_ENABLE_Amesos:BOOL=ON \
 -D Trilinos_ENABLE_Epetra:BOOL=ON \
+-D Trilinos_ENABLE_Xpetra:BOOL=OFF \
 -D Trilinos_ENABLE_Ifpack:BOOL=ON \
 -D Trilinos_ENABLE_Teuchos:BOOL=ON \
 -D Trilinos_ENABLE_AztecOO:BOOL=ON \
+-D Trilinos_ENABLE_KokkosClassic:BOOL=OFF \
+-D Trilinos_ENABLE_STK:BOOL=OFF \
+-D Trilinos_ENABLE_Amesos2:BOOL=OFF \
+-D Trilinos_ENABLE_Zoltan2:BOOL=OFF \
 -D Trilinos_ENABLE_TESTS:BOOL=ON \
 -D Trilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON \
+-D Trilinos_ENABLE_SECONDARY_STABLE_CODE:BOOL=ON \
+      -D Netcdf_LIBRARY_DIRS:PATH="$GOMA_LIB/netcdf-4.3.3.1/lib" \
+      -D TPL_ENABLE_Netcdf:BOOL=ON \
+      -D TPL_Netcdf_INCLUDE_DIRS:PATH="$GOMA_LIB/netcdf-4.3.3.1/include" \
+      -D Matio_LIBRARY_DIRS:PATH=$GOMA_LIB/matio-1.5.2/lib \
+      -D Matio_INCLUDE_DIRS:PATH=$GOMA_LIB/matio-1.5.2/include \
 -D TPL_ENABLE_MPI:BOOL=ON \
   -D MPI_COMPILER:FILEPATH=$MPI_BASE_DIR/bin/mpiCC \
   -D MPI_EXECUTABLE:FILEPATH=$MPI_BASE_DIR/bin/mpirun \
@@ -687,15 +799,15 @@ cmake \
 -D BLAS_LIBRARY_DIRS=$GOMA_LIB/BLAS \
 -D BLAS_LIBRARY_NAMES="blas" \
 -D CMAKE_INSTALL_PREFIX:PATH=$TRILINOS_INSTALL \
--D Trilinos_EXTRA_LINK_FLAGS:STRING="$FORTRAN_LIBS;$MPI_LIBS" \
+-D Trilinos_EXTRA_LINK_FLAGS:STRING="$FORTRAN_LIBS $SEACAS_LIBS $MPI_LIBS" \
 -D TPL_ENABLE_UMFPACK:BOOL=ON \
-  -D UMFPACK_LIBRARY_NAMES:STRING="umfpack;amd" \
-  -D UMFPACK_LIBRARY_DIRS:PATH=$GOMA_LIB/UMFPACK-5.4/Lib \
-  -D UMFPACK_INCLUDE_DIRS:PATH=$GOMA_LIB/UMFPACK-5.4/Include \
+  -D UMFPACK_LIBRARY_NAMES:STRING="umfpack;amd;suitesparseconfig" \
+  -D UMFPACK_LIBRARY_DIRS:PATH="$GOMA_LIB/SuiteSparse/UMFPACK/Lib;$GOMA_LIB/SuiteSparse/AMD/Lib;$GOMA_LIB/SuiteSparse/SuiteSparse_config" \
+  -D UMFPACK_INCLUDE_DIRS:PATH="$GOMA_LIB/SuiteSparse/UMFPACK/Include;$GOMA_LIB/SuiteSparse/AMD/Include;$GOMA_LIB/SuiteSparse/SuiteSparse_config" \
 -D TPL_ENABLE_AMD:BOOL=ON \
-  -D AMD_LIBRARY_NAMES:STRING="amd" \
-  -D AMD_LIBRARY_DIRS:PATH=$GOMA_LIB/UMFPACK-5.4/Lib \
-  -D AMD_INCLUDE_DIRS:PATH=$GOMA_LIB/UMFPACK-5.4/Include \
+  -D AMD_LIBRARY_NAMES:STRING="amd;suitesparseconfig" \
+  -D AMD_LIBRARY_DIRS:PATH="$GOMA_LIB/SuiteSparse/AMD/Lib;$GOMA_LIB/SuiteSparse/SuiteSparse_config" \
+  -D AMD_INCLUDE_DIRS:PATH="$GOMA_LIB/SuiteSparse/AMD/Include;$GOMA_LIB/SuiteSparse/SuiteSparse_config" \
 -D TPL_ENABLE_SuperLUDist:BOOL=ON \
   -D SuperLUDist_LIBRARY_NAMES:STRING="superludist" \
   -D SuperLUDist_LIBRARY_DIRS:PATH=$GOMA_LIB/SuperLU_DIST_2.3/lib \
@@ -724,6 +836,9 @@ cmake \
 -D Amesos_ENABLE_MUMPS:BOOL=ON \
 $EXTRA_ARGS \
 $GOMA_LIB/trilinos-11.8.1-Source
+
+
+
 #continue_check
 make -j$MAKE_JOBS
 continue_check
