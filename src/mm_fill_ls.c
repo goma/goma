@@ -771,8 +771,8 @@ apply_strong_fill_ca_bc (
 	  err =  get_side_info(ielem_type, elem_side_bc->id_side, &nodes_per_side, local_elem_node_id);
 	  EH( err, "get_side_info");
 	  
-	  surface_determinant_and_normal (ielem, ei->iconnect_ptr, num_local_nodes, 
-					  ei->ielem_dim - 1,  
+	  surface_determinant_and_normal (ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, 
+					  ei[pg->imtrx]->ielem_dim - 1,  
 					  elem_side_bc->id_side,
 					  nodes_per_side,
 					  local_elem_node_id );
@@ -813,9 +813,9 @@ apply_strong_fill_ca_bc (
 	      if ( af->Assemble_Residual )
 		{
 		  rhs = 0.;
-		  for ( i=0; i<ei->num_local_nodes; i++)
+		  for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 		    {
-		      I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+		      I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
 		      
 		      /* check for multiple dofs */
 		      nvdofi = Dolphin[pg->imtrx][I][eqn];
@@ -829,7 +829,7 @@ apply_strong_fill_ca_bc (
 			      rhs += grad_F[a]*fv->snormal[a];
                             }
                           
-                          idof = ei->ln_to_first_dof[eqn][i] + ki;
+                          idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
 			  /* also convert from node number to dof number */
 			  phi_i = bf[eqn]->phi[idof];
 			      
@@ -841,25 +841,25 @@ apply_strong_fill_ca_bc (
 	      
 	      if ( af->Assemble_Jacobian )
 		{
-		  for ( i=0; i<ei->num_local_nodes; i++)
+		  for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 		    {
-		      I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
+		      I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i]; 
 		      nvdofi = Dolphin[pg->imtrx][I][eqn];
 		      
 		      for ( ki=0; ki<nvdofi; ki++)
 			{
 			  ie = node_to_fill[I] + ki;
-			  idof = ei->ln_to_first_dof[eqn][i] + ki; 
+			  idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki; 
 			  phi_i = bf[eqn]->phi[idof];
 			  
 			  /* derivatives of fill equation wrt to fill variable */	  
-			  for( j=0; j< ei->num_local_nodes; j++) 
+			  for( j=0; j< ei[pg->imtrx]->num_local_nodes; j++) 
 			    {
-			      J = Proc_Elem_Connect[ei->iconnect_ptr + j]; 
+			      J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j]; 
 			      nvdofj = Dolphin[pg->imtrx][J][eqn];
 			      for ( kj=0; kj<nvdofj; kj++)
 				{
-				  jdof = ei->ln_to_first_dof[eqn][j] + kj;
+				  jdof = ei[pg->imtrx]->ln_to_first_dof[eqn][j] + kj;
 				  
 				  je = node_to_fill[J] + kj;
 				  ja     = (ie == je) ? ie : in_list(je, ijaf[ie], ijaf[ie+1], ijaf);
@@ -1358,7 +1358,7 @@ assemble_level_correct(double afill[],	/* Jacobian matrix for fill equation  */
 	{
 	  w[a] = S * grad_F[a]/grad_F_mag;
 	  
-	  for ( j = 0 ; j < ei->dof[eqn]; j++)
+	  for ( j = 0 ; j < ei[pg->imtrx]->dof[eqn]; j++)
 	    {
 	      P1 = vec_dot( dim, bf[eqn]->grad_phi[j], grad_F );
 	      
@@ -1380,7 +1380,7 @@ assemble_level_correct(double afill[],	/* Jacobian matrix for fill equation  */
 	{
 	  w[a] = S*fv->v[a]/vel_mag;
 	  
-	  for ( j = 0 ; j < ei->dof[eqn]; j++)
+	  for ( j = 0 ; j < ei[pg->imtrx]->dof[eqn]; j++)
 	    {
 	      d_w_dF[a][j] = 0.0;
 	    }
@@ -1396,9 +1396,9 @@ assemble_level_correct(double afill[],	/* Jacobian matrix for fill equation  */
  */
   if ( af->Assemble_Residual )
     {
-      for ( i=0; i<ei->num_local_nodes; i++)
+      for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 	{
-	  I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
+	  I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i]; 
 	  /* check for multiple dofs */
 	  nvdofi = Dolphin[pg->imtrx][I][eqn];
 	
@@ -1407,7 +1407,7 @@ assemble_level_correct(double afill[],	/* Jacobian matrix for fill equation  */
 
 		  /* check to make sure that unknowns are defined at this node,
 		     otherwise don't add anything to this node */
-	      idof = ei->ln_to_first_dof[eqn][i] + ki;
+	      idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
 
 		  /* also convert from node number to dof number */
 	      phi_i = bf[eqn]->phi[idof];
@@ -1441,16 +1441,16 @@ assemble_level_correct(double afill[],	/* Jacobian matrix for fill equation  */
 
   if ( af->Assemble_Jacobian )
     {
-      for ( i=0; i<ei->num_local_nodes; i++)
+      for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 	{
-	  I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
+	  I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i]; 
 
 	  nvdofi = Dolphin[pg->imtrx][I][eqn];
 	  for ( ki=0; ki<nvdofi; ki++)
 	    {
 
 	      ie = node_to_fill[I] + ki;
-	      idof = ei->ln_to_first_dof[eqn][i] + ki;
+	      idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
 
 	      phi_i = bf[eqn]->phi[idof];
 
@@ -1466,15 +1466,15 @@ assemble_level_correct(double afill[],	/* Jacobian matrix for fill equation  */
 		  
 	      
 	      /* derivatives of fill equation wrt to fill variable */	  
-	      for( j=0; j< ei->num_local_nodes; j++) 
+	      for( j=0; j< ei[pg->imtrx]->num_local_nodes; j++) 
 		{
-		  J = Proc_Elem_Connect[ei->iconnect_ptr + j]; 
+		  J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j]; 
 		  nvdofj = Dolphin[pg->imtrx][J][eqn];
 		  for ( kj=0; kj<nvdofj; kj++)
 
 		    {
 		      
-		      jdof = ei->ln_to_first_dof[eqn][j] + kj;
+		      jdof = ei[pg->imtrx]->ln_to_first_dof[eqn][j] + kj;
 		      phi_j = bf[eqn]->phi[jdof];
 		      
 		      je = node_to_fill[J] + kj;
@@ -1585,9 +1585,9 @@ assemble_level_project(double afill[],	/* Jacobian matrix for fill equation  */
  */
   if ( af->Assemble_Residual )
     {
-      for ( i=0; i<ei->num_local_nodes; i++)
+      for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 	{
-	  I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
+	  I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i]; 
 	  /* check for multiple dofs */
 	  nvdofi = Dolphin[pg->imtrx][I][eqn];
 	
@@ -1596,7 +1596,7 @@ assemble_level_project(double afill[],	/* Jacobian matrix for fill equation  */
 
 		  /* check to make sure that unknowns are defined at this node,
 		     otherwise don't add anything to this node */
-	      idof = ei->ln_to_first_dof[eqn][i] + ki;
+	      idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
 
 		  /* also convert from node number to dof number */
 	      phi_i = bf[eqn]->phi[idof];
@@ -1609,27 +1609,27 @@ assemble_level_project(double afill[],	/* Jacobian matrix for fill equation  */
 
   if ( af->Assemble_Jacobian )
     {
-      for ( i=0; i<ei->num_local_nodes; i++)
+      for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 	{
-	  I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
+	  I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i]; 
 
 	  nvdofi = Dolphin[pg->imtrx][I][eqn];
 	  for ( ki=0; ki<nvdofi; ki++)
 	    {
 	      ie = node_to_fill[I] + ki;
-	      idof = ei->ln_to_first_dof[eqn][i] + ki;
+	      idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
 	      phi_i = bf[eqn]->phi[idof];
 	      
 	      /* derivatives of fill equation wrt to fill variable */	  
-	      for( j=0; j< ei->num_local_nodes; j++) 
+	      for( j=0; j< ei[pg->imtrx]->num_local_nodes; j++) 
 		{
-		  J = Proc_Elem_Connect[ei->iconnect_ptr + j]; 
+		  J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j]; 
 		  nvdofj = Dolphin[pg->imtrx][J][eqn];
 		  for ( kj=0; kj<nvdofj; kj++)
 
 		    {
 		      
-		      jdof = ei->ln_to_first_dof[eqn][j] + kj;
+		      jdof = ei[pg->imtrx]->ln_to_first_dof[eqn][j] + kj;
 		      phi_j = bf[eqn]->phi[jdof];
 		      
 		      je = node_to_fill[J] + kj;
@@ -2551,13 +2551,13 @@ stash_node_displacements( double **d, int num_total_nodes, double *x, Exo_DB *ex
 	{
 		load_elem_dofptr(ielem, exo, x, x , x, x, x, 1);
 		
-		for(ln = 0; ln < ei->num_local_nodes; ln++)
+		for(ln = 0; ln < ei[pg->imtrx]->num_local_nodes; ln++)
 		{
 			double xi[3] = {0.0, 0.0, 0.0};
 			
 			gnn = exo->elem_node_list[ exo->elem_node_pntr[ielem] + ln ] ;
 			
-			find_nodal_stu(ln, ei->ielem_type, xi, xi+1, xi+2) ;
+			find_nodal_stu(ln, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2) ;
 			
 			if( moved[gnn] != 1 )
 			{
@@ -2570,13 +2570,13 @@ stash_node_displacements( double **d, int num_total_nodes, double *x, Exo_DB *ex
 					if( pd->v[pg->imtrx][var] )
 					{
 						
-						for(i = 0; i < ei->dof[var]; i++)
+						for(i = 0; i < ei[pg->imtrx]->dof[var]; i++)
 						{
 							phi[i] = newshape(xi, 
-											  ei->ielem_type, 
+											  ei[pg->imtrx]->ielem_type, 
 											  PSI, 
-											  ei->dof_list[var][i], 
-											  ei->ielem_shape,
+											  ei[pg->imtrx]->dof_list[var][i], 
+											  ei[pg->imtrx]->ielem_shape,
 											  pd->i[pg->imtrx][var],
 											  i);
 
@@ -2727,7 +2727,7 @@ create_surfs_from_iso (int isovar,
   for ( ebi=0; ebi<exo->num_elem_blocks; ebi++)
     {
 
-      ei->elem_blk_id	  = exo->eb_id[ebi];
+      ei[pg->imtrx]->elem_blk_id	  = exo->eb_id[ebi];
             
       pd  = pd_glob[Matilda[ebi]];
       mp  = mp_glob[Matilda[ebi]];
@@ -3301,15 +3301,15 @@ current_elem_on_isosurface ( int isovar,
 
   if (!(pd->v[pg->imtrx][isovar])) return (FALSE);
 
-  esp = x_static + ei->ieqn_ledof[ei->lvdof_to_ledof[isovar][0]];
+  esp = x_static + ei[pg->imtrx]->ieqn_ledof[ei[pg->imtrx]->lvdof_to_ledof[isovar][0]];
   f[0] = *esp - isoval;
   
   /* if there is a zero crossing, somebody must have a different
    * sign than node 0
    */
-  for (i = 1; i < ei->dof[isovar]; i++)
+  for (i = 1; i < ei[pg->imtrx]->dof[isovar]; i++)
     {
-      esp = x_static + ei->ieqn_ledof[ei->lvdof_to_ledof[isovar][i]];
+      esp = x_static + ei[pg->imtrx]->ieqn_ledof[ei[pg->imtrx]->lvdof_to_ledof[isovar][i]];
       f[i] = *esp - isoval;
 
       if (sign_change( f[i], f[0] ))
@@ -3327,7 +3327,7 @@ current_elem_on_isosurface ( int isovar,
     case I_Q1:
       return FALSE;
     case I_Q2:
-      switch ( ei->ielem_shape ) {
+      switch ( ei[pg->imtrx]->ielem_shape ) {
 	case QUADRILATERAL:
 	  {
 	    int iside;
@@ -3335,11 +3335,11 @@ current_elem_on_isosurface ( int isovar,
 	    int lnn[3];
 	    for ( iside=0; iside<4; iside++ )
               {
-                get_side_info( ei->ielem_type, iside+1, &nodes_per_side, lnn );
+                get_side_info( ei[pg->imtrx]->ielem_type, iside+1, &nodes_per_side, lnn );
 		if ( fabs(f[lnn[2]]) < 0.25*fabs(f[lnn[0]]+f[lnn[1]]) - 0.5*sqrt(f[lnn[0]]*f[lnn[1]]) )
 		  {
 #if 0
-		    DPRINTF(stderr,"Yikes! Zero crossing in current_elem_on_isosurface for ielem=%d with all nodes on one side!!!\n",ei->ielem);
+		    DPRINTF(stderr,"Yikes! Zero crossing in current_elem_on_isosurface for ielem=%d with all nodes on one side!!!\n",ei[pg->imtrx]->ielem);
 #endif		    
 		    return TRUE;
 		  }
@@ -3410,7 +3410,7 @@ significant_current_element_crossing ()
 
   if (!(pd->v[pg->imtrx][ls->var])) return (FALSE);
 
-  for ( i=0 ; i< ei->dof[ls->var]; i++)
+  for ( i=0 ; i< ei[pg->imtrx]->dof[ls->var]; i++)
     {
 	  switch (ls->var )
 	  {
@@ -4138,7 +4138,7 @@ find_intersections( struct LS_Surf_List *list,
   int     inflection;
   struct LS_Surf *surf;
   
-  switch ( ei->ielem_shape ) {
+  switch ( ei[pg->imtrx]->ielem_shape ) {
   
     case QUADRILATERAL:
     case SHELL:
@@ -4156,11 +4156,11 @@ find_intersections( struct LS_Surf_List *list,
  
                 i = links[link][0];
                 j = links[link][1];
-                I = Proc_Elem_Connect[ei->iconnect_ptr + i];
-                J = Proc_Elem_Connect[ei->iconnect_ptr + j];
+                I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+                J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
  
-                find_nodal_stu (i, ei->ielem_type, xi, xi+1, xi+2);
-                find_nodal_stu (j, ei->ielem_type, yi, yi+1, yi+2);
+                find_nodal_stu (i, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
+                find_nodal_stu (j, ei[pg->imtrx]->ielem_type, yi, yi+1, yi+2);
 
                 if( find_link_intersection ( xi, yi, isovar, isoval, NULL ) == TRUE )
                   {
@@ -4170,7 +4170,7 @@ find_intersections( struct LS_Surf_List *list,
                          point_on_ca_boundary( I, exo ) &&
                          point_on_ca_boundary( J, exo ) ) inflection = TRUE;
                     map_local_coordinates( xi, x );
-                    surf = create_surf_point ( x, ei->ielem, xi, inflection );
+                    surf = create_surf_point ( x, ei[pg->imtrx]->ielem, xi, inflection );
                     if ( unique_surf( list, surf ) )
                       {
                         append_surf( list, surf );
@@ -4202,11 +4202,11 @@ find_intersections( struct LS_Surf_List *list,
  
                 i = links[link][0];
                 j = links[link][1];
-                I = Proc_Elem_Connect[ei->iconnect_ptr + i];
-                J = Proc_Elem_Connect[ei->iconnect_ptr + j];
+                I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+                J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
  
-                find_nodal_stu (i, ei->ielem_type, xi, xi+1, xi+2);
-                find_nodal_stu (j, ei->ielem_type, yi, yi+1, yi+2);
+                find_nodal_stu (i, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
+                find_nodal_stu (j, ei[pg->imtrx]->ielem_type, yi, yi+1, yi+2);
 
                 if( find_link_intersection ( xi, yi, isovar, isoval, NULL ) == TRUE )
                   {
@@ -4216,7 +4216,7 @@ find_intersections( struct LS_Surf_List *list,
                          point_on_ca_boundary( I, exo ) &&
                          point_on_ca_boundary( J, exo ) ) inflection = TRUE;
                     map_local_coordinates( xi, x );
-                    surf = create_surf_point ( x, ei->ielem, xi, inflection );
+                    surf = create_surf_point ( x, ei[pg->imtrx]->ielem, xi, inflection );
                     if ( unique_surf( list, surf ) )
                       {
                         append_surf( list, surf );
@@ -4263,11 +4263,11 @@ find_intersections( struct LS_Surf_List *list,
  
                 i = links[link][0];
                 j = links[link][1];
-                I = Proc_Elem_Connect[ei->iconnect_ptr + i];
-                J = Proc_Elem_Connect[ei->iconnect_ptr + j];
+                I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+                J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
  
-                find_nodal_stu (i, ei->ielem_type, xi, xi+1, xi+2);
-                find_nodal_stu (j, ei->ielem_type, yi, yi+1, yi+2);
+                find_nodal_stu (i, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
+                find_nodal_stu (j, ei[pg->imtrx]->ielem_type, yi, yi+1, yi+2);
 
                 if( find_link_intersection ( xi, yi, isovar, isoval, NULL ) == TRUE )
                   {
@@ -4277,7 +4277,7 @@ find_intersections( struct LS_Surf_List *list,
                          point_on_ca_boundary( I, exo ) &&
                          point_on_ca_boundary( J, exo ) ) inflection = TRUE;
                     map_local_coordinates( xi, x );
-                    surf = create_surf_point ( x, ei->ielem, xi, inflection );
+                    surf = create_surf_point ( x, ei[pg->imtrx]->ielem, xi, inflection );
                     if ( unique_surf( list, surf ) )
                       {
                         append_surf( list, surf );
@@ -4322,11 +4322,11 @@ find_intersections( struct LS_Surf_List *list,
  
                 i = links[link][0];
                 j = links[link][1];
-                I = Proc_Elem_Connect[ei->iconnect_ptr + i];
-                J = Proc_Elem_Connect[ei->iconnect_ptr + j];
+                I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+                J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
  
-                find_nodal_stu (i, ei->ielem_type, xi, xi+1, xi+2);
-                find_nodal_stu (j, ei->ielem_type, yi, yi+1, yi+2);
+                find_nodal_stu (i, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
+                find_nodal_stu (j, ei[pg->imtrx]->ielem_type, yi, yi+1, yi+2);
 
                 if( find_link_intersection ( xi, yi, isovar, isoval, NULL ) == TRUE )
                   {
@@ -4336,7 +4336,7 @@ find_intersections( struct LS_Surf_List *list,
                          point_on_ca_boundary( I, exo ) &&
                          point_on_ca_boundary( J, exo ) ) inflection = TRUE;
                     map_local_coordinates( xi, x );
-                    surf = create_surf_point ( x, ei->ielem, xi, inflection );
+                    surf = create_surf_point ( x, ei[pg->imtrx]->ielem, xi, inflection );
                     if ( unique_surf( list, surf ) )
                       {
                         append_surf( list, surf );
@@ -4370,11 +4370,11 @@ find_intersections( struct LS_Surf_List *list,
 	    
 	    i = links[link][0];
 	    j = links[link][1];
-	    I = Proc_Elem_Connect[ei->iconnect_ptr + i];
-	    J = Proc_Elem_Connect[ei->iconnect_ptr + j];
+	    I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+	    J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
 	    
-	    find_nodal_stu (i, ei->ielem_type, xi, xi+1, xi+2);
-	    find_nodal_stu (j, ei->ielem_type, yi, yi+1, yi+2);
+	    find_nodal_stu (i, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
+	    find_nodal_stu (j, ei[pg->imtrx]->ielem_type, yi, yi+1, yi+2);
 	    
 	    if( find_link_intersection ( xi, yi, isovar, isoval, NULL ) == TRUE )
 	      {
@@ -4384,7 +4384,7 @@ find_intersections( struct LS_Surf_List *list,
 		     point_on_ca_boundary( I, exo ) &&
 		     point_on_ca_boundary( J, exo ) ) inflection = TRUE;
 		map_local_coordinates( xi, x );
-		surf = create_surf_point ( x, ei->ielem, xi, inflection );
+		surf = create_surf_point ( x, ei[pg->imtrx]->ielem, xi, inflection );
 		if ( unique_surf( list, surf ) )
 		  {
 		    append_surf( list, surf );
@@ -4418,7 +4418,7 @@ find_facets( struct LS_Surf_List *list,
 	     Exo_DB *exo )
 {
 
-  switch ( ei->ielem_shape ) {
+  switch ( ei[pg->imtrx]->ielem_shape ) {
   
     case QUADRILATERAL:
     case SHELL: 
@@ -4493,13 +4493,13 @@ find_quad_facets( struct LS_Surf_List *list,
     {
       i = quad[edge];
       j = quad[(edge+1)%4];
-      I = Proc_Elem_Connect[ei->iconnect_ptr + i];
-      J = Proc_Elem_Connect[ei->iconnect_ptr + j];
+      I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+      J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
       
-      esp = x_static + ei->ieqn_ledof[ei->lvdof_to_ledof[isovar][i]];
+      esp = x_static + ei[pg->imtrx]->ieqn_ledof[ei[pg->imtrx]->lvdof_to_ledof[isovar][i]];
       val_I = *esp - isoval;
       
-      esp = x_static + ei->ieqn_ledof[ei->lvdof_to_ledof[isovar][j]];
+      esp = x_static + ei[pg->imtrx]->ieqn_ledof[ei[pg->imtrx]->lvdof_to_ledof[isovar][j]];
       val_J = *esp - isoval;
       
       /* keep track of average value for resolving ambiguous configuration */
@@ -4526,8 +4526,8 @@ find_quad_facets( struct LS_Surf_List *list,
 	    }
 	    
 	  /* locate crossing */
-          find_nodal_stu (i, ei->ielem_type, xi, xi+1, xi+2);
-          find_nodal_stu (j, ei->ielem_type, yi, yi+1, yi+2);
+          find_nodal_stu (i, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
+          find_nodal_stu (j, ei[pg->imtrx]->ielem_type, yi, yi+1, yi+2);
           if ( !find_link_intersection ( xi, yi, isovar, isoval, NULL ) )
             {
 	      EH(-1, "Shouldn't be here.");
@@ -4540,7 +4540,7 @@ find_quad_facets( struct LS_Surf_List *list,
                point_on_ca_boundary( J, exo ) ) inflection = TRUE;
                
 	  map_local_coordinates( xi, x );
-          vertex[vert_count] = create_surf_point ( x, ei->ielem, xi, inflection );
+          vertex[vert_count] = create_surf_point ( x, ei[pg->imtrx]->ielem, xi, inflection );
           
 	  vert_count++;
 	}
@@ -4560,11 +4560,11 @@ find_quad_facets( struct LS_Surf_List *list,
       {
         if (edge_sign[0] > edge_sign[1])
 	  {
-            surf = create_surf_facet_line( vertex[0], vertex[1], ei->ielem, -1 );
+            surf = create_surf_facet_line( vertex[0], vertex[1], ei[pg->imtrx]->ielem, -1 );
 	  }
 	else
           {
-	    surf = create_surf_facet_line( vertex[1], vertex[0], ei->ielem, -1 );
+	    surf = create_surf_facet_line( vertex[1], vertex[0], ei[pg->imtrx]->ielem, -1 );
           }
         append_surf( list, surf );
       }
@@ -4581,21 +4581,21 @@ find_quad_facets( struct LS_Surf_List *list,
 	  {
 	    if (edge_sign[0] > edge_sign[1])
 	      {
-	        surf = create_surf_facet_line( vertex[0], vertex[1], ei->ielem, -1 );
+	        surf = create_surf_facet_line( vertex[0], vertex[1], ei[pg->imtrx]->ielem, -1 );
 	      }
 	    else
 	      {
-	        surf = create_surf_facet_line( vertex[1], vertex[0], ei->ielem, -1 );
+	        surf = create_surf_facet_line( vertex[1], vertex[0], ei[pg->imtrx]->ielem, -1 );
 	      }
             append_surf( list, surf );
             
 	    if (edge_sign[2] > edge_sign[3])
 	      {
-		surf = create_surf_facet_line( vertex[2], vertex[3], ei->ielem, -1 );
+		surf = create_surf_facet_line( vertex[2], vertex[3], ei[pg->imtrx]->ielem, -1 );
 	      }
 	    else
 	      {
-		surf = create_surf_facet_line( vertex[3], vertex[2], ei->ielem, -1 );
+		surf = create_surf_facet_line( vertex[3], vertex[2], ei[pg->imtrx]->ielem, -1 );
 	      }
             append_surf( list, surf );
 	  }
@@ -4603,21 +4603,21 @@ find_quad_facets( struct LS_Surf_List *list,
 	  {
 	    if (edge_sign[1] > edge_sign[2])
 	      {
-		surf = create_surf_facet_line( vertex[1], vertex[2], ei->ielem, -1 );
+		surf = create_surf_facet_line( vertex[1], vertex[2], ei[pg->imtrx]->ielem, -1 );
 	      }
 	    else
 	      {
-		surf = create_surf_facet_line( vertex[2], vertex[1], ei->ielem, -1 );
+		surf = create_surf_facet_line( vertex[2], vertex[1], ei[pg->imtrx]->ielem, -1 );
 	      }
             append_surf( list, surf );
             
 	    if (edge_sign[3] > edge_sign[0])
 	      {
-		surf = create_surf_facet_line( vertex[3], vertex[0], ei->ielem, -1 );
+		surf = create_surf_facet_line( vertex[3], vertex[0], ei[pg->imtrx]->ielem, -1 );
 	      }
 	    else
 	      {
-	        surf = create_surf_facet_line( vertex[0], vertex[3], ei->ielem, -1 );
+	        surf = create_surf_facet_line( vertex[0], vertex[3], ei[pg->imtrx]->ielem, -1 );
 	      }
             append_surf( list, surf );
 	  }
@@ -4804,10 +4804,10 @@ compute_link_level_set (double *xi,
     {
       load_basis_functions( ri, bfd );
 
-      for( i=0, *F=-isoval, *dF=0.0; i< ei->dof[isovar]; i++)
+      for( i=0, *F=-isoval, *dF=0.0; i< ei[pg->imtrx]->dof[isovar]; i++)
         {
 
-          esp = x_static + ei->ieqn_ledof[ei->lvdof_to_ledof[isovar][i]];
+          esp = x_static + ei[pg->imtrx]->ieqn_ledof[ei[pg->imtrx]->lvdof_to_ledof[isovar][i]];
 
           *F += *esp*bf[isovar]->phi[i];
 
@@ -4823,17 +4823,17 @@ compute_link_level_set (double *xi,
       double pi[3]={0.0, 0.0, 0.0};
       int a,b, i;
       double J[DIM][DIM];
-      int dim = ei->ielem_dim;
+      int dim = ei[pg->imtrx]->ielem_dim;
 
       subelement_J( subelement, yi, J, TRUE );
       map_subelement_stu( pi, subelement, ri );
       
       load_basis_functions( pi, bfd );
 
-      for( i=0, *F=-isoval, *dF=0.0; i< ei->dof[isovar]; i++)
+      for( i=0, *F=-isoval, *dF=0.0; i< ei[pg->imtrx]->dof[isovar]; i++)
         {
 
-          esp = x_static + ei->ieqn_ledof[ei->lvdof_to_ledof[isovar][i]];
+          esp = x_static + ei[pg->imtrx]->ieqn_ledof[ei[pg->imtrx]->lvdof_to_ledof[isovar][i]];
 
           *F += *esp*bf[isovar]->phi[i];
 
@@ -5306,13 +5306,13 @@ scalar_value_at_local_node ( int ielem,
     {
     case FILL:
       if ( pd->v[pg->imtrx][var] )
-	scalar_fv_fill ( esp->F, esp_dot->F, esp_old->F, bf[var]->phi, ei->dof[var],
+	scalar_fv_fill ( esp->F, esp_dot->F, esp_old->F, bf[var]->phi, ei[pg->imtrx]->dof[var],
 			 &fv->F, &scr1, &scr2 );
       val = fv->F;
       break;
     case TEMPERATURE:
       if ( pd->v[pg->imtrx][var] )
-	scalar_fv_fill ( esp->T, esp_dot->T, esp_old->T, bf[var]->phi, ei->dof[var],
+	scalar_fv_fill ( esp->T, esp_dot->T, esp_old->T, bf[var]->phi, ei[pg->imtrx]->dof[var],
 			 &fv->T, &scr1, &scr2 );
       val =fv->T;
       break;
@@ -5354,7 +5354,7 @@ iso_contour_on_side( double isoval,
 		
 		for ( i = 1; i < nodes_per_side; i++ )
 		{
-			int lvdof = ei->ln_to_dof[ls->var][local_elem_node_id[i]];
+			int lvdof = ei[pg->imtrx]->ln_to_dof[ls->var][local_elem_node_id[i]];
 			
 			if( lvdof != -1)
 			{
@@ -5436,7 +5436,7 @@ interface_on_side( double isoval,
 
       id = local_elem_node_id[i];
 
-      if(  (ldof_eqn = ei->ln_to_first_dof[ls->var][id]) != -1 )
+      if(  (ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[ls->var][id]) != -1 )
 	{
 	  all_negative = ( *(esp->F[ldof_eqn]) - isoval <= 0.0 ) && all_negative;
 	  all_positive = ( *(esp->F[ldof_eqn]) - isoval > 0.0 ) && all_positive;
@@ -5461,7 +5461,7 @@ find_LS_value_on_side( int ielem_type,
 
   load_basis_functions( xi, bfd );
 
-  for(i=0, value=0.0; i<ei->dof[ls->var]; i++ )
+  for(i=0, value=0.0; i<ei[pg->imtrx]->dof[ls->var]; i++ )
     {
       value += *(esp->F[i])*bf[ls->var]->phi[i];
     }
@@ -5658,7 +5658,7 @@ level_set_property(const double p0,
   if ( ls->Elem_Sign != 0 && do_deriv )
     {
       var = ls->var;
-      for ( j=0; j < ei->dof[var]; j++ )
+      for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
         {
           d_pp_dF[j] = 0.;
         }
@@ -5672,7 +5672,7 @@ level_set_property(const double p0,
 
   /* Calculate the deriviatives of the material property w.r.t. FILL. */
   var = ls->var;
-  for ( j=0; j < ei->dof[var]; j++ )
+  for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
     {
       /* Calculate the Jacobian terms. */
       d_pp_dF[j] = (p1 - p0) * lsi->d_H_dF[j];
@@ -5692,7 +5692,7 @@ level_set_property(const double p0,
   for ( b=0; b < VIM; b++ )
     {
       var = MESH_DISPLACEMENT1 + b;
-      for ( j=0; j < ei->dof[var]; j++)
+      for ( j=0; j < ei[pg->imtrx]->dof[var]; j++)
 	{
 	  d_pp_dmesh[b][j] = (p1 - p0) * lsi->d_H_dmesh[b][j];
 	}
@@ -5801,9 +5801,9 @@ load_xfem_for_elem( double x[],
   int eqn;
   
   /* only evaluate element quantities if new element */
-  if ( ei->ielem != xfem->ielem || Debug_Flag < 0 )
+  if ( ei[pg->imtrx]->ielem != xfem->ielem || Debug_Flag < 0 )
     {
-      xfem->ielem = ei->ielem;
+      xfem->ielem = ei[pg->imtrx]->ielem;
       xfem->elem_state = current_elem_xfem_state( xfem->node_var_state, &xfem->elem_var_state, x, exo );
       /* fill in bogus values to avoid pathological cases */
       xfem->xi[0] = -2; xfem->xi[1] = -2; xfem->xi[2] = -2;
@@ -5840,13 +5840,13 @@ load_xfem_for_elem( double x[],
         {
           if ( pd->e[pg->imtrx][eqn] )
 	    {
-	      for (i = 0; i < ei->dof[eqn]; i++) 
+	      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	        {
-	          ledof = ei->lvdof_to_ledof[eqn][i];
+	          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 		  
-                  xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+                  xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                                   &xfem_active, &extended_dof, &base_interp, &base_dof );
-		  if ( extended_dof && !xfem_active ) ei->active_interp_ledof[ledof] = FALSE;
+		  if ( extended_dof && !xfem_active ) ei[pg->imtrx]->active_interp_ledof[ledof] = FALSE;
 		}
 	    }
 	}
@@ -5865,7 +5865,7 @@ load_xfem_for_stu( const double xi[] )
   /* here, we evaluate these functions */
 
   /* make sure xfem has been set up for element */
-  if ( ei->ielem != xfem->ielem )
+  if ( ei[pg->imtrx]->ielem != xfem->ielem )
     {
       EH(-1,"Must call load_xfem_for_elem before calling load_xfem_for_stu.\n");
     }
@@ -5879,7 +5879,7 @@ load_xfem_for_stu( const double xi[] )
           
           xfem->xi[0] = xi[0]; xfem->xi[1] = xi[1]; xfem->xi[2] = xi[2];
 
-          dof_ls = ei->dof[ls->var];
+          dof_ls = ei[pg->imtrx]->dof[ls->var];
 
           if ( pd->i[pg->imtrx][ls->var] == I_Q1 ) 
 	    {
@@ -5974,7 +5974,7 @@ load_xfem_for_stu( const double xi[] )
               }
 
               /* 2-D or 3-D */
-              if (ei->ielem_dim > 1) {
+              if (ei[pg->imtrx]->ielem_dim > 1) {
                 for (i = 0; i < dof_ls; i++) {
                   if ( xfem->near || xfem->have_XG || *esp->F[i] >= 0. ) {
                     dphi = shape(xi[0], xi[1], xi[2], F_elem_type, DPSI_T, i);
@@ -5988,7 +5988,7 @@ load_xfem_for_stu( const double xi[] )
               }
 
               /* 3-D only */
-              if (ei->ielem_dim > 2) {
+              if (ei[pg->imtrx]->ielem_dim > 2) {
                 for (i = 0; i < dof_ls; i++) {
                   if ( xfem->near || xfem->have_XG || *esp->F[i] >= 0. ) {
                     dphi = shape(xi[0], xi[1], xi[2], F_elem_type, DPSI_U, i);
@@ -6433,7 +6433,7 @@ xfem_var_diff( int var,
   /* initialize */
   *vdiff = 0.;
   gradvdiff[0] = 0.; gradvdiff[1] = 0.; gradvdiff[2] = 0.;
-  for ( i = 0; i < ei->dof[var]; i++ ) phidiff[i] = 0.;
+  for ( i = 0; i < ei[pg->imtrx]->dof[var]; i++ ) phidiff[i] = 0.;
 
   switch ( interp ) {
     case I_P0_XV:
@@ -6441,13 +6441,13 @@ xfem_var_diff( int var,
     case I_Q2_XV:
       {
         int sign = -ls->Elem_Sign;
-        for ( i = 0; i < ei->dof[var]; i++ )
+        for ( i = 0; i < ei[pg->imtrx]->dof[var]; i++ )
           {
-            xfem_dof_state( i, interp, ei->ielem_shape,
+            xfem_dof_state( i, interp, ei[pg->imtrx]->ielem_shape,
                             &xfem_active, &extended_dof, &base_interp, &base_dof );
             if ( extended_dof )
               {
-                esp = x_static + ei->ieqn_ledof[ei->lvdof_to_ledof[var][i]];
+                esp = x_static + ei[pg->imtrx]->ieqn_ledof[ei[pg->imtrx]->lvdof_to_ledof[var][i]];
 
                 *vdiff += bfv->phi[2*base_dof] * *esp * sign;
                 phidiff[i] = bfv->phi[2*base_dof] * sign;
@@ -6616,7 +6616,7 @@ load_lsi(const double width)
       
       if(pd->v[pg->imtrx][LUBP] || pd->v[pg->imtrx][SHELL_SAT_CLOSED] || pd->v[pg->imtrx][SHELL_PRESS_OPEN ] || pd->v[pg->imtrx][SHELL_SAT_GASN] ) 
 	{
-	  for ( i = 0; i < ei->dof[eqn]; i++ ) {
+	  for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i++ ) {
 	    Fi = *esp->F[i];
 	    if ( fabs(Fi) > lsi->alpha ) {
 	      Hni = ( Fi < 0.0 ) ? 0.0 : 1.0;
@@ -6629,7 +6629,7 @@ load_lsi(const double width)
 	    lsi->d_Hn_dF[i] += d_Hni_dF * bf[eqn]->phi[i];
 	    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
 	      for ( b = 0; b < DIM; b++ ) {
-		for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++ ) {
+		for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
 		  lsi->d_Hn_dmesh[b][k] += Hni * bf[eqn]->phi[i] * bf[MESH_DISPLACEMENT1]->phi[k];
 		}
 	      }
@@ -6639,7 +6639,7 @@ load_lsi(const double width)
 	      lsi->d_gradHn_dF[j][i] += d_Hni_dF * bf[eqn]->grad_phi[i][j];
 	      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
 		for ( b = 0; b < DIM; b++ ) {
-		  for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++ ) {
+		  for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
 		    lsi->d_gradHn_dmesh[j][b][k] += Hni * bf[eqn]->d_grad_phi_dmesh[i][j][b][k];
 		  }
 		}
@@ -6650,7 +6650,7 @@ load_lsi(const double width)
       else if (pd->v[pg->imtrx][LUBP_2] || pd->v[pg->imtrx][SHELL_PRESS_OPEN_2]) 
 	{
 	  eqn = R_PHASE1;
-	  for ( i = 0; i < ei->dof[eqn]; i++ ) {
+	  for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i++ ) {
 	    Fi = *esp->pF[0][i];
 	    if ( fabs(Fi) > lsi->alpha ) {
 	      Hni = ( Fi < 0.0 ) ? 0.0 : 1.0;
@@ -6663,7 +6663,7 @@ load_lsi(const double width)
 	    lsi->d_Hn_dF[i] += d_Hni_dF * bf[eqn]->phi[i];
 	    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
 	      for ( b = 0; b < DIM; b++ ) {
-		for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++ ) {
+		for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
 		  lsi->d_Hn_dmesh[b][k] += Hni * bf[eqn]->phi[i] * bf[MESH_DISPLACEMENT1]->phi[k];
 		}
 	      }
@@ -6673,7 +6673,7 @@ load_lsi(const double width)
 	      lsi->d_gradHn_dF[j][i] += d_Hni_dF * bf[eqn]->grad_phi[i][j];
 	      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
 		for ( b = 0; b < DIM; b++ ) {
-		  for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++ ) {
+		  for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
 		    lsi->d_gradHn_dmesh[j][b][k] += Hni * bf[eqn]->d_grad_phi_dmesh[i][j][b][k];
 		  }
 		}
@@ -6774,7 +6774,7 @@ load_lsi_shell_second(const double width)
   if (upd->vp[pg->imtrx][LUBP_2] >= 0 || upd->vp[pg->imtrx][SHELL_PRESS_OPEN_2] >= 0) 
     {
       eqn = R_PHASE1;
-      for ( i = 0; i < ei->dof[eqn]; i++ ) {
+      for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i++ ) {
 	Fi = *esp->pF[0][i];
 	if ( fabs(Fi) > lsi->alpha ) {
 	  Hni = ( Fi < 0.0 ) ? 0.0 : 1.0;
@@ -6787,7 +6787,7 @@ load_lsi_shell_second(const double width)
 	lsi->d_Hn_dF[i] += d_Hni_dF * bf[eqn]->phi[i];
 	if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
 	  for ( b = 0; b < DIM; b++ ) {
-	    for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++ ) {
+	    for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
 	      lsi->d_Hn_dmesh[b][k] += Hni * bf[eqn]->phi[i] * bf[MESH_DISPLACEMENT1]->phi[k];
 	    }
 	  }
@@ -6797,7 +6797,7 @@ load_lsi_shell_second(const double width)
 	  lsi->d_gradHn_dF[j][i] += d_Hni_dF * bf[eqn]->grad_phi[i][j];
 	  if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
 	    for ( b = 0; b < DIM; b++ ) {
-	      for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++ ) {
+	      for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
 		lsi->d_gradHn_dmesh[j][b][k] += Hni * bf[eqn]->d_grad_phi_dmesh[i][j][b][k];
 	      }
 	    }
@@ -6884,7 +6884,7 @@ load_lsi_derivs()
    * Derivatives w.r.t. distance function variable
    */
   var = ls->var;
-  for ( j=0; j < ei->dof[var]; j++ )
+  for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
     {
       /* Fetch the basis functions. */
       phi_j = bf[var]->phi[j];
@@ -6922,7 +6922,7 @@ load_lsi_derivs()
       for ( b=0; b < VIM; b++)
 	  {
           var = MESH_DISPLACEMENT1 + b;
-          for ( j=0; j < ei->dof[var] ; j++ )
+          for ( j=0; j < ei[pg->imtrx]->dof[var] ; j++ )
 		  {
               /* Fetch the basis functions. */
               phi_j = bf[var]->phi[j];
@@ -6957,7 +6957,7 @@ load_lsi_derivs()
     /* DRN: this is required to get path dependence terms right */
     var = FILL;
     if ( ls->on_sharp_surf  ) {
-      for ( j=0; j < ei->dof[var]; j++ )
+      for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
         {
           /* Fetch the basis functions. */
           phi_j = bf[var]->phi[j];
@@ -6977,7 +6977,7 @@ load_lsi_derivs()
    * Derivatives w.r.t. FILL for non-zero alpha
    */    
   var = ls->var;
-  for ( j=0; j < ei->dof[var]; j++ )
+  for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
     {
       /* Fetch the basis functions. */
       phi_j = bf[var]->phi[j];
@@ -7000,7 +7000,7 @@ load_lsi_derivs()
       for ( b=0; b < VIM; b++)
         {
           var = MESH_DISPLACEMENT1 + b;
-          for ( j=0; j < ei->dof[var] ; j++ )
+          for ( j=0; j < ei[pg->imtrx]->dof[var] ; j++ )
             {
 
               /* In the current implementation, H does not depend on grad_F
@@ -7040,9 +7040,9 @@ load_lsi_adjmatr( const double width )
   int lvdesc, lvdof, var_type, num_dofs ;
 
   lvdesc=0;
-  while( (var_type = ei->Lvdesc_to_Var_Type[lvdesc] ) != FILL ) lvdesc++;
+  while( (var_type = ei[pg->imtrx]->Lvdesc_to_Var_Type[lvdesc] ) != FILL ) lvdesc++;
   
-  num_dofs = ei->Lvdesc_Numdof[lvdesc];
+  num_dofs = ei[pg->imtrx]->Lvdesc_Numdof[lvdesc];
 
   fv->F = scalar_fv_fill_adjmatrl( esp->F, lvdesc, num_dofs, var_type );
 	  
@@ -7083,9 +7083,9 @@ load_lsi_adjmatr( const double width )
       for(j=0; j<num_dofs; j++ )
 	{
 	  
-	  lvdof = ei->Lvdesc_to_lvdof[lvdesc][j];
+	  lvdof = ei[pg->imtrx]->Lvdesc_to_lvdof[lvdesc][j];
 	  
-	  ln = ei->dof_list[var_type][lvdof];
+	  ln = ei[pg->imtrx]->dof_list[var_type][lvdof];
 	  
 	  phi_j = bf[var_type]->phi[ln];
 
@@ -7155,7 +7155,7 @@ current_elem_xfem_state ( int node_var_state[],
   /* turn everything off by default */
   
   *elem_var_state = 0;
-  for (i = 0; i < ei->num_local_nodes; i++ )
+  for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++ )
     {
       node_var_state[i] = 0;
     }   
@@ -7167,7 +7167,7 @@ current_elem_xfem_state ( int node_var_state[],
 	  /* element vars are active */
 	  *elem_var_state = 1;
 	  /* nodal vars are active */
-	  for (i = 0; i < ei->num_local_nodes; i++ )
+	  for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++ )
 	    {
 	      node_var_state[i] = 1;
 	    }
@@ -7177,10 +7177,10 @@ current_elem_xfem_state ( int node_var_state[],
 	  /* element vars are *NOT* active */
 	  *elem_var_state = 0;
 	  /* nodal vars still might be active */
-	  for (i = 0; i < ei->num_local_nodes; i++ )
+	  for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++ )
 	    {
 	      /* check all neighboring elements to see if any span the interface */
-	      I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+	      I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
 	      for(j = exo->node_elem_pntr[I]; j < exo->node_elem_pntr[I+1]  && !node_var_state[i]; j++)
 		{
 		  e = exo->node_elem_list[j];
@@ -7200,7 +7200,7 @@ current_elem_xfem_state ( int node_var_state[],
 	  /* element vars are active */
 	  *elem_var_state = 1;
 	  /* nodal vars are active */
-	  for (i = 0; i < ei->num_local_nodes; i++ )
+	  for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++ )
 	    {
 	      node_var_state[i] = 1;
 	    }
@@ -7211,10 +7211,10 @@ current_elem_xfem_state ( int node_var_state[],
 	  *elem_var_state = 0;
 	  /* nodal vars still might be active */
 
-	  for (i = 0; i < ei->num_local_nodes; i++ )
+	  for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++ )
 	    {
 	      /* check all neighboring elements */
-	      I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+	      I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
 	      for(j = exo->node_elem_pntr[I]; j < exo->node_elem_pntr[I+1]  && !node_var_state[i]; j++)
 		{
 		  e = exo->node_elem_list[j];
@@ -7227,7 +7227,7 @@ current_elem_xfem_state ( int node_var_state[],
 	}
     }
     
-  for ( i = 0; i < ei->num_local_nodes; i++ )
+  for ( i = 0; i < ei[pg->imtrx]->num_local_nodes; i++ )
     {
       if ( *elem_var_state == 1 || node_var_state[i] == 1 ) elem_state = 1;
       if ( elem_state == 0 && node_var_state[i] == 2 ) elem_state = 2;
@@ -7555,9 +7555,9 @@ create_search_grid ( NTREE *ntree )
 
   new_grid = ( SGRID * ) smalloc( sizeof(SGRID) );
 
-  new_grid->ei = ei;
+  new_grid->ei = ei[pg->imtrx];
   /* new_grid->dim = pd->Num_Dim; PRS */
-  new_grid->dim = ei->ielem_dim; 
+  new_grid->dim = ei[pg->imtrx]->ielem_dim; 
   new_grid->level = 0;
   new_grid->num_verts = ( new_grid->dim == 2 ) ? 4 : 8;
   new_grid->tree = ntree;
@@ -7573,7 +7573,7 @@ create_search_grid ( NTREE *ntree )
 
       for( j=0; j<4; j++)
 	{
-	  find_nodal_stu( j , ei->ielem_type, new_grid->tree->xi[j], new_grid->tree->xi[j] + 1, new_grid->tree->xi[j]+2);
+	  find_nodal_stu( j , ei[pg->imtrx]->ielem_type, new_grid->tree->xi[j], new_grid->tree->xi[j] + 1, new_grid->tree->xi[j]+2);
 	  new_grid->LS_value[j] = *(esp->F[j]);
 	}
 
@@ -7586,7 +7586,7 @@ create_search_grid ( NTREE *ntree )
 
       for( j=0; j<8; j++)
 	{
-	  find_nodal_stu( j , ei->ielem_type, new_grid->tree->xi[j], new_grid->tree->xi[j] + 1, new_grid->tree->xi[j]+2 );
+	  find_nodal_stu( j , ei[pg->imtrx]->ielem_type, new_grid->tree->xi[j], new_grid->tree->xi[j] + 1, new_grid->tree->xi[j]+2 );
 	  new_grid->LS_value[j] = *(esp->F[j]);
 	}
 
@@ -7719,16 +7719,16 @@ void
 map_local_coordinates( double *xi, double *x )
 {
   int a,j;
-  int dim = ei->ielem_dim;
+  int dim = ei[pg->imtrx]->ielem_dim;
   int ShapeVar = pd->ShapeVar;
   int DeformingMesh = pd->e[pg->imtrx][R_MESH1];
-  int mdof = ei->dof[ShapeVar];
+  int mdof = ei[pg->imtrx]->dof[ShapeVar];
   int ln, I;
-  int iconnect = Proc_Connect_Ptr[ ei->ielem ];
+  int iconnect = Proc_Connect_Ptr[ ei[pg->imtrx]->ielem ];
   double phi_j;
 
 
-  if(ei->ielem_shape == SHELL || ei->ielem_shape == TRISHELL)
+  if(ei[pg->imtrx]->ielem_shape == SHELL || ei[pg->imtrx]->ielem_shape == TRISHELL)
     {
       dim = pd->Num_Dim;
     }
@@ -7741,12 +7741,12 @@ map_local_coordinates( double *xi, double *x )
 	{
 	  for( j=0; j<mdof; j++)
 	    {
-	      ln = ei->dof_list[ShapeVar][j];
+	      ln = ei[pg->imtrx]->dof_list[ShapeVar][j];
 
 	      I = Proc_Elem_Connect[ iconnect + ln ];
 
-	      phi_j = newshape( xi, ei->ielem_type, PSI, ln,
-                                ei->ielem_shape, pd->i[pg->imtrx][ShapeVar], j );
+	      phi_j = newshape( xi, ei[pg->imtrx]->ielem_type, PSI, ln,
+                                ei[pg->imtrx]->ielem_shape, pd->i[pg->imtrx][ShapeVar], j );
 
 	      x[a] += Coor[a][I] * phi_j;
 
@@ -7756,12 +7756,12 @@ map_local_coordinates( double *xi, double *x )
 	{
 	  for( j=0; j<mdof; j++)
 	    {
-	      ln = ei->dof_list[ShapeVar][j];
+	      ln = ei[pg->imtrx]->dof_list[ShapeVar][j];
 
 	      I = Proc_Elem_Connect[ iconnect + ln ];
 
-	      phi_j = newshape( xi, ei->ielem_type, PSI, ln,
-                                ei->ielem_shape, pd->i[pg->imtrx][ShapeVar], j );
+	      phi_j = newshape( xi, ei[pg->imtrx]->ielem_type, PSI, ln,
+                                ei[pg->imtrx]->ielem_shape, pd->i[pg->imtrx][ShapeVar], j );
 
 	      x[a] += ( Coor[a][I] + *esp->d[a][j] ) * phi_j;
 	    }
@@ -7901,7 +7901,7 @@ find_grid_intersections ( SGRID *grid, struct LS_Surf_List *list )
 		  {
 
                     map_local_coordinates( xi, x );
-		    surf = create_surf_point( x, ei->ielem, xi, FALSE );
+		    surf = create_surf_point( x, ei[pg->imtrx]->ielem, xi, FALSE );
 
 		    if ( unique_surf( list, surf ) )
 		      {
@@ -7933,7 +7933,7 @@ find_grid_intersections ( SGRID *grid, struct LS_Surf_List *list )
 		if ( find_link_intersection ( xi, yi, ls->var, 0.0, NULL ) == TRUE )
 		  {
                     map_local_coordinates( xi, x );
-		    surf = create_surf_point( x, ei->ielem, xi, FALSE );
+		    surf = create_surf_point( x, ei[pg->imtrx]->ielem, xi, FALSE );
 		    
 		    append_surf( list, surf );
 		  }
@@ -7995,11 +7995,11 @@ create_shape_fcn_tree ( int max_level )
   tree = ( NTREE *) smalloc( sizeof( NTREE) );
 
   /* tree->dim = pd->Num_Dim;*/
-  tree->dim = ei->ielem_dim;
+  tree->dim = ei[pg->imtrx]->ielem_dim;
   tree->level = 0;
   tree->num_verts = ( tree->dim == 2 ) ? 4 : 8;
   tree->bf = bf[ls->var];
-  tree->num_fcns = ei->dof[ls->var];
+  tree->num_fcns = ei[pg->imtrx]->dof[ls->var];
   tree->num_subtrees = 0;
   tree->subtrees = NULL;
 
@@ -8012,7 +8012,7 @@ create_shape_fcn_tree ( int max_level )
 
       for( j=0; j<4; j++)
 	{
-	  find_nodal_stu( j , ei->ielem_type, tree->xi[j], tree->xi[j] + 1, tree->xi[j]+2);
+	  find_nodal_stu( j , ei[pg->imtrx]->ielem_type, tree->xi[j], tree->xi[j] + 1, tree->xi[j]+2);
 	}
 
       tree->s = ( double (*) [DIM] ) smalloc ( sizeof(double)*9*DIM );
@@ -8027,7 +8027,7 @@ create_shape_fcn_tree ( int max_level )
 
       for( j=0; j<8; j++)
 	{
-	  find_nodal_stu( j , ei->ielem_type, tree->xi[j], tree->xi[j] + 1, tree->xi[j]+2);
+	  find_nodal_stu( j , ei[pg->imtrx]->ielem_type, tree->xi[j], tree->xi[j] + 1, tree->xi[j]+2);
 	}
 
       tree->s = ( double (*) [DIM] ) smalloc ( sizeof(double)*8*DIM );
@@ -8058,11 +8058,11 @@ compute_shape_fcn_values ( NTREE *tree )
 
       /* load_basis_functions */
       jdof = 0;
-      for (j = 0; j < ei->dof[ls->var]; j++) {
-        ledof = ei->lvdof_to_ledof[ls->var][j];
-        if (ei->active_interp_ledof[ledof]) {
-          tree->phi[i][j] = newshape(ri, ei->ielem_type, PSI,
-                           ei->dof_list[ls->var][j], ei->ielem_shape,
+      for (j = 0; j < ei[pg->imtrx]->dof[ls->var]; j++) {
+        ledof = ei[pg->imtrx]->lvdof_to_ledof[ls->var][j];
+        if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
+          tree->phi[i][j] = newshape(ri, ei[pg->imtrx]->ielem_type, PSI,
+                           ei[pg->imtrx]->dof_list[ls->var][j], ei[pg->imtrx]->ielem_shape,
                            pd->i[pg->imtrx][ls->var], jdof);
           jdof++;
         } else {
@@ -8720,7 +8720,7 @@ print_subgrid_integration_pts ( double (*s)[DIM], double *wt, int num_gpts )
   int nx = 2;
   int ny = 2;
   double answer;
-  int ip_total = elem_info(NQUAD, ei->ielem_type);
+  int ip_total = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
   double xi[3];
   double orig_sum = 0.;
   double orig_test = 0.;
@@ -8748,8 +8748,8 @@ print_subgrid_integration_pts ( double (*s)[DIM], double *wt, int num_gpts )
 #if DEBUG_SUB_INTEGRATION   
   for (i = 0; i < ip_total; i++)
     {
-      find_stu(i, ei->ielem_type, xi, xi+1, xi+2); /* find quadrature point */
-      orig_wt = Gq_weight (i, ei->ielem_type); /* find quadrature weights for */
+      find_stu(i, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2); /* find quadrature point */
+      orig_wt = Gq_weight (i, ei[pg->imtrx]->ielem_type); /* find quadrature weights for */
       map_local_coordinates( xi, x );
       
       orig_test += (pow(x[0],nx) * pow(x[1],ny))*orig_wt;
@@ -8816,7 +8816,7 @@ current_elem_overlaps_interface( double width )
       return on_isosurface;
     }
   
-  for( i=0 ; i < ei->dof[ls->var] ; i++ )
+  for( i=0 ; i < ei[pg->imtrx]->dof[ls->var] ; i++ )
     {
 	  switch (ls->var )
 	  {
@@ -8882,7 +8882,7 @@ current_elem_overlaps_interface( double width )
 	{
 	  element_status = FALSE;
 
-/* 	  fprintf(stderr, "Status check for element : %d  is FALSE \n", ei->ielem +1 ); */
+/* 	  fprintf(stderr, "Status check for element : %d  is FALSE \n", ei[pg->imtrx]->ielem +1 ); */
 	}
       else
 	{
@@ -9012,7 +9012,7 @@ elem_overlaps_interface( int elem,
 	{
 	  element_status = FALSE;
 
-/* 	  fprintf(stderr, "Status check for element : %d  is FALSE \n", ei->ielem +1 ); */
+/* 	  fprintf(stderr, "Status check for element : %d  is FALSE \n", ei[pg->imtrx]->ielem +1 ); */
 
 	}
       else if ( absolute_minimum + band_width < width/2.0 )
@@ -9228,24 +9228,24 @@ assemble_boundary_extension_velocity ( double x[],
   if ( ls->elem_overlap_state  ) return;
 
   /* check to see if this element has external faces */
-  if (( num_exterior_faces = get_exterior_faces( ei->ielem, exterior_faces, exo, dpi ) ) == 0 ) return;
+  if (( num_exterior_faces = get_exterior_faces( ei[pg->imtrx]->ielem, exterior_faces, exo, dpi ) ) == 0 ) return;
 
   /* check each exterior face for inward facing characteristics */
-  for (i = 0; i < ei->dof[eqn]; i++ ) node_to_set[i] = FALSE;
+  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++ ) node_to_set[i] = FALSE;
   for( j=0 ; j < num_exterior_faces; j++ )
     {
       id_side = exterior_faces[j] + 1;
 
-      get_side_info ( ei->ielem_type, id_side, &nodes_per_side, local_elem_node_id );
+      get_side_info ( ei[pg->imtrx]->ielem_type, id_side, &nodes_per_side, local_elem_node_id );
 
       /* loop over nodes on side */
       for (n=0; n<nodes_per_side; n++)
         {
           /* check if characteristic points inward here */
           i = local_elem_node_id[n];
-          find_nodal_stu ( i, ei->ielem_type, xi, xi+1, xi+2 );
+          find_nodal_stu ( i, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2 );
 
-          setup_shop_at_point( ei->ielem, xi, exo );
+          setup_shop_at_point( ei[pg->imtrx]->ielem, xi, exo );
           load_lsi( ls->Length_Scale );
 		if(pfd == NULL)
 			{F_value = fv->F;}
@@ -9253,9 +9253,9 @@ assemble_boundary_extension_velocity ( double x[],
 			{F_value = fv->pF[ls->var-PHASE1];}
           F[i] = F_value;
 
-          surface_determinant_and_normal (ei->ielem, ei->iconnect_ptr,
-                                          ei->num_local_nodes,
-                                          ei->ielem_dim - 1,
+          surface_determinant_and_normal (ei[pg->imtrx]->ielem, ei[pg->imtrx]->iconnect_ptr,
+                                          ei[pg->imtrx]->num_local_nodes,
+                                          ei[pg->imtrx]->ielem_dim - 1,
                                           id_side,
                                           nodes_per_side,
                                           local_elem_node_id );
@@ -9278,11 +9278,11 @@ assemble_boundary_extension_velocity ( double x[],
   if ( have_nodes_to_set )
     {
 
-      if (debug_here) printf("Current elem #%d has external nodes to constrain.\n",ei->ielem+1);
+      if (debug_here) printf("Current elem #%d has external nodes to constrain.\n",ei[pg->imtrx]->ielem+1);
       
       /* find closest node on exterior face */
       closest_F = 1.e30;
-      for ( i=0; i<ei->dof[eqn]; i++ )
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++ )
         {
           if ( node_to_set[i] )
             {
@@ -9294,24 +9294,24 @@ assemble_boundary_extension_velocity ( double x[],
             }
         }
 
-      for (i = 0; i < ei->dof[eqn]; i++ )
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++ )
         {
           if ( node_to_set[i] && i != closest_node )
             {
               if ( debug_here )
                 {
-                  int I = ei->gnn_list[eqn][i];
+                  int I = ei[pg->imtrx]->gnn_list[eqn][i];
                   printf(" will setup node #%d with boundary upwind in current elem #%d\n",
-                         I+1,ei->ielem+1);
+                         I+1,ei[pg->imtrx]->ielem+1);
                   printf(" (closest node in this element is #%d)\n",
-                         ei->gnn_list[eqn][closest_node]+1);
+                         ei[pg->imtrx]->gnn_list[eqn][closest_node]+1);
                 }
 
-              val_ptr = x + ei->ieqn_ledof[ei->lvdof_to_ledof[eqn][i]];
+              val_ptr = x + ei[pg->imtrx]->ieqn_ledof[ei[pg->imtrx]->lvdof_to_ledof[eqn][i]];
 
               lec->R[peqn][i] += BIG_PENALTY * *val_ptr;
 
-              val_ptr = x + ei->ieqn_ledof[ei->lvdof_to_ledof[eqn][closest_node]];
+              val_ptr = x + ei[pg->imtrx]->ieqn_ledof[ei[pg->imtrx]->lvdof_to_ledof[eqn][closest_node]];
 
               lec->R[peqn][i] -= BIG_PENALTY * *val_ptr;
 
@@ -9454,7 +9454,7 @@ assemble_extension_velocity (dbl hsquared[DIM],
   resid = 0.;
   for ( a=0; a<VIM; a++) resid += grad_F[a] * grad_ext_v[a];
 #endif
-  for( i=0; i < ei->dof[eqn]; i++ )
+  for( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
     {
       gradF_gradphi[i] = 0.;
       grad_phi_i = bf[eqn]->grad_phi[i];
@@ -9467,7 +9467,7 @@ assemble_extension_velocity (dbl hsquared[DIM],
   resid = 0.;
   for ( a=0; a<VIM; a++) resid += lsi->normal[a] * grad_ext_v[a];
 #endif
-  for( i=0; i < ei->dof[eqn]; i++ )
+  for( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
     {
       n_dot_gradphi[i] = 0.;
       grad_phi_i = bf[eqn]->grad_phi[i];
@@ -9479,7 +9479,7 @@ assemble_extension_velocity (dbl hsquared[DIM],
   
   tau = 0.5 * h_elem;
     
-  for( i=0; i < ei->dof[eqn]; i++ )
+  for( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
     {
       grad_phi_i = bf[eqn]->grad_phi[i];
       
@@ -9491,11 +9491,11 @@ assemble_extension_velocity (dbl hsquared[DIM],
     }
  
   var = EXT_VELOCITY;
-  for( i=0; i < ei->dof[eqn]; i++ )
+  for( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
     {
       grad_phi_i = bf[eqn]->grad_phi[i];
       
-      for( j=0; j < ei->dof[var]; j++) 
+      for( j=0; j < ei[pg->imtrx]->dof[var]; j++) 
 	{
 	  grad_phi_j = bf[var]->grad_phi[j];
 
@@ -9517,7 +9517,7 @@ assemble_extension_velocity (dbl hsquared[DIM],
        * based on the number of degrees of freedom...
        */
 	  
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	  
 
@@ -9550,7 +9550,7 @@ assemble_extension_velocity (dbl hsquared[DIM],
     {
       peqn = upd->ep[pg->imtrx][eqn];
       
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 #if GRADF_GRADEXTV
 	  wt_func = S * bf[eqn]->phi[i] + tau * gradF_gradphi[i]; /* Petrov-Galerkin */
@@ -9567,7 +9567,7 @@ assemble_extension_velocity (dbl hsquared[DIM],
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
                   grad_phi_j = bf[var]->grad_phi[j];
 		  
@@ -9606,7 +9606,7 @@ assemble_extension_velocity (dbl hsquared[DIM],
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
                   grad_phi_j = bf[var]->grad_phi[j];
 		  
@@ -9660,7 +9660,7 @@ assemble_extension_velocity (dbl hsquared[DIM],
 	      if ( pd->v[pg->imtrx][var] )
 		{
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_det_J_dmesh_pj = bf[eqn]->d_det_J_dm[p][j];
 		      
@@ -10129,7 +10129,7 @@ fail_courant_condition(void)
 
   max_F = *F_old[0];
   min_F = *F_old[0];
-  for ( i = 0; i < ei->dof[FILL]; i++ )
+  for ( i = 0; i < ei[pg->imtrx]->dof[FILL]; i++ )
     {
       if ( *F_old[i] > max_F ) max_F = *F_old[i];
       if ( *F_old[i] < min_F ) min_F = *F_old[i];
@@ -10138,7 +10138,7 @@ fail_courant_condition(void)
     }
   if ( max_dF > 10.*(max_F - min_F) )
     {
-      fprintf(stderr,"Courant condition failed in elem=%d\n",ei->ielem+1);
+      fprintf(stderr,"Courant condition failed in elem=%d\n",ei[pg->imtrx]->ielem+1);
       return TRUE;
     }
 
@@ -10200,7 +10200,7 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
               
 		  if ( pd->v[pg->imtrx][EXT_VELOCITY] )
 		    {
-		      for ( i=0; i< ei->dof[EXT_VELOCITY]; i++ )
+		      for ( i=0; i< ei[pg->imtrx]->dof[EXT_VELOCITY]; i++ )
 			{
 			  if ( *esp->ext_v[i] != 0. )
 			    {
@@ -10211,12 +10211,12 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
 		    }
 		  if ( pd->v[pg->imtrx][VELOCITY1] && tran->Fill_Equation != FILL_EQN_EXT_V )
 		    {
-		      for ( i=0; i< ei->dof[VELOCITY1]; i++ )
+		      for ( i=0; i< ei[pg->imtrx]->dof[VELOCITY1]; i++ )
 			{
 			  if ( is_xfem_interp( pd->i[pg->imtrx][VELOCITY1] ) )
 			    {
 			      int xfem_active, extended_dof, base_interp, base_dof;
-			      xfem_dof_state( i, pd->i[pg->imtrx][VELOCITY1], ei->ielem_shape,
+			      xfem_dof_state( i, pd->i[pg->imtrx][VELOCITY1], ei[pg->imtrx]->ielem_shape,
 					      &xfem_active, &extended_dof, &base_interp, &base_dof );
 			      if ( extended_dof ) continue;
 			    }
@@ -10304,9 +10304,9 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
 	      h_elem_siz(hsquared, hhv, dhv_dxnode, pd->e[pg->imtrx][R_MESH1]);
               
               h_elem = 0.;
-              for ( a=0; a<ei->ielem_dim; a++) h_elem += hsquared[a];
+              for ( a=0; a<ei[pg->imtrx]->ielem_dim; a++) h_elem += hsquared[a];
               /* This is the size of the element */
-              h_elem = sqrt(h_elem/ ((double )ei->ielem_dim));
+              h_elem = sqrt(h_elem/ ((double )ei[pg->imtrx]->ielem_dim));
 	      
 	      if ( ls->Integration_Depth > 0 )
 	        {
@@ -10319,7 +10319,7 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
 		}
               else
 	        {
-		  ip_total = elem_info(NQUAD, ei->ielem_type);
+		  ip_total = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
 		}
 		    
               if ( is_xfem_interp( pd->i[pg->imtrx][VELOCITY1] ) )
@@ -10353,11 +10353,11 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
                       else
 	                {
 		          xi = &(xi_array[0]);
-		          find_stu(ip, ei->ielem_type, xi, xi+1, xi+2); /* find quadrature point */
-                          wt = Gq_weight (ip, ei->ielem_type); /* find quadrature weights for */
+		          find_stu(ip, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2); /* find quadrature point */
+                          wt = Gq_weight (ip, ei[pg->imtrx]->ielem_type); /* find quadrature weights for */
 		        }
 		    
-		      setup_shop_at_point( ei->ielem, xi, exo );
+		      setup_shop_at_point( ei[pg->imtrx]->ielem, xi, exo );
 		      load_lsi( ls->Length_Scale );
 		  
 		      fv->wt = wt * lsi->delta;
@@ -10515,12 +10515,12 @@ gather_subelement_facets( struct LS_Surf_List *list, Integ_Elem * e )
               if (nodes_per_side == 2)
                 {
                   map_local_coordinates( e->xi[lnn[0]], x );
-                  vertex[0] = create_surf_point ( x, ei->ielem, e->xi[lnn[0]], FALSE );
+                  vertex[0] = create_surf_point ( x, ei[pg->imtrx]->ielem, e->xi[lnn[0]], FALSE );
 
                   map_local_coordinates( e->xi[lnn[1]], x );
-                  vertex[1] = create_surf_point ( x, ei->ielem, e->xi[lnn[1]], FALSE );
+                  vertex[1] = create_surf_point ( x, ei[pg->imtrx]->ielem, e->xi[lnn[1]], FALSE );
 
-                  surf = create_surf_facet_line( vertex[0], vertex[1], ei->ielem, -1 );
+                  surf = create_surf_facet_line( vertex[0], vertex[1], ei[pg->imtrx]->ielem, -1 );
                   append_surf( list, surf );
                 }
               else
@@ -10545,7 +10545,7 @@ gather_subelement_facets( struct LS_Surf_List *list, Integ_Elem * e )
 
                       map_subelement_stu( xi, e, yi );
                       map_local_coordinates( xi, x );
-                      vertex[0] = create_surf_point ( x, ei->ielem, xi, FALSE );
+                      vertex[0] = create_surf_point ( x, ei[pg->imtrx]->ielem, xi, FALSE );
                       if (fabs(x[2]) > 1.e-6) {
                         printf("bad1\n");
                       }
@@ -10556,12 +10556,12 @@ gather_subelement_facets( struct LS_Surf_List *list, Integ_Elem * e )
 
                       map_subelement_stu( xi, e, yi );
                       map_local_coordinates( xi, x );
-                      vertex[1] = create_surf_point ( x, ei->ielem, xi, FALSE );
+                      vertex[1] = create_surf_point ( x, ei[pg->imtrx]->ielem, xi, FALSE );
                       if (fabs(x[2]) > 1.e-6) {
                         printf("bad2\n");
                       }
 
-                      surf = create_surf_facet_line( vertex[0], vertex[1], ei->ielem, -1 );
+                      surf = create_surf_facet_line( vertex[0], vertex[1], ei[pg->imtrx]->ielem, -1 );
                       append_surf( list, surf );
                     }
                 }
@@ -10580,14 +10580,14 @@ create_integ_elements( double isoval )
 
   e = ( Integ_Elem *) smalloc( sizeof( Integ_Elem ) );
 
-  xi = ( double (*) [DIM] ) smalloc ( sizeof(double)*ei->num_local_nodes*DIM );
+  xi = ( double (*) [DIM] ) smalloc ( sizeof(double)*ei[pg->imtrx]->num_local_nodes*DIM );
 
-  for ( i = 0; i < ei->num_local_nodes; i++ )
+  for ( i = 0; i < ei[pg->imtrx]->num_local_nodes; i++ )
     {
-      find_nodal_stu ( i, ei->ielem_type, &xi[i][0], &xi[i][1], &xi[i][2] );
+      find_nodal_stu ( i, ei[pg->imtrx]->ielem_type, &xi[i][0], &xi[i][1], &xi[i][2] );
     }
    
-  build_integ_element(  e, isoval, ei->ielem_type, xi, side_ids, FALSE );
+  build_integ_element(  e, isoval, ei[pg->imtrx]->ielem_type, xi, side_ids, FALSE );
 
   safe_free( xi );
     
@@ -10780,7 +10780,7 @@ build_integ_element( Integ_Elem * e, double isoval, int ielem_type,
   int tri_type;
   double sum_f;
 
-  if ( xfem != NULL && xfem->have_XG && ei->ielem_type == BIQUAD_QUAD )
+  if ( xfem != NULL && xfem->have_XG && ei[pg->imtrx]->ielem_type == BIQUAD_QUAD )
     tri_type = QUAD6_TRI;
   else
     tri_type = QUAD_TRI;
@@ -11046,7 +11046,7 @@ build_integ_element( Integ_Elem * e, double isoval, int ielem_type,
 	      int have_crossing = FALSE;
 	      int two_crossings = FALSE;
 #if 0
-              fprintf(stderr,"Parent ielem+1 = %d\n",ei->ielem+1);
+              fprintf(stderr,"Parent ielem+1 = %d\n",ei[pg->imtrx]->ielem+1);
               for ( i=0; i<e->num_local_nodes; i++ ) {
                 fprintf(stderr,"  Node #%d: xi=(%g,%g), F=%g\n",
                         i, xi[i][0], xi[i][1], f[i]);
@@ -11171,7 +11171,7 @@ build_integ_element( Integ_Elem * e, double isoval, int ielem_type,
                     fprintf(stderr,"Failed to decompose QUAD_TRI into subelements.\n");
                     for ( i=0; i<e->num_local_nodes; i++ ) {
                       fprintf(stderr,"Element #%d: Node #%d: xi=(%g,%g), F=%g\n",
-                             ei->ielem, i, xi[index[i]][0], xi[index[i]][1], f[index[i]]);
+                             ei[pg->imtrx]->ielem, i, xi[index[i]][0], xi[index[i]][1], f[index[i]]);
                     }
                     for ( i=0; i<e->num_sides; i++ ) {
                       fprintf(stderr,"side_crossing[%d] = %d\n", i, side_crossing[i]);
@@ -11420,7 +11420,7 @@ subelement_J( Integ_Elem * e,
 {
   int a,b, i;
   double dphidyi[MDE][DIM];
-  int dim = ei->ielem_dim;
+  int dim = ei[pg->imtrx]->ielem_dim;
 
   switch (dim) {
   case 1:
@@ -11483,7 +11483,7 @@ subelement_detJ( Integ_Elem * e,
 		 int subelement_map )
 {
   double J[DIM][DIM], detJ = 0.0;
-  int dim = ei->ielem_dim;
+  int dim = ei[pg->imtrx]->ielem_dim;
   int elem_shape;
 
   subelement_J( e, yi, J, subelement_map );
@@ -11519,7 +11519,7 @@ subelement_detJ( Integ_Elem * e,
           break;
       }
   
-      elem_shape = type2shape( ei->ielem_type );
+      elem_shape = type2shape( ei[pg->imtrx]->ielem_type );
       switch ( elem_shape ) {
       case TRIANGLE:
           detJ /= 1.;
@@ -11541,7 +11541,7 @@ subelement_surfdet( Integ_Elem * e,
 {
   double J[DIM][DIM];
   double xi[DIM];
-  int dim = ei->ielem_dim;
+  int dim = ei[pg->imtrx]->ielem_dim;
   int ielem_shape;
   int nodes_per_side;
   int local_elem_node_id[MAX_NODES_PER_SIDE];
@@ -11609,18 +11609,18 @@ subelement_surfdet( Integ_Elem * e,
      else in the lines between the lie below and the line where the
      correct shape is restored.
    */
-  ielem_shape = ei->ielem_shape; /* store the truth so we can restore it later */
-  ei->ielem_shape = type2shape( e->ielem_type ); /* lying to ei */
+  ielem_shape = ei[pg->imtrx]->ielem_shape; /* store the truth so we can restore it later */
+  ei[pg->imtrx]->ielem_shape = type2shape( e->ielem_type ); /* lying to ei */
 
   get_side_info(e->ielem_type, side, &nodes_per_side, local_elem_node_id);
-  surface_determinant_and_normal (-1, ei->iconnect_ptr, e->num_local_nodes,
-                                  ei->ielem_dim - 1,
+  surface_determinant_and_normal (-1, ei[pg->imtrx]->iconnect_ptr, e->num_local_nodes,
+                                  ei[pg->imtrx]->ielem_dim - 1,
                                   side,
                                   nodes_per_side,
                                   local_elem_node_id );
 
   /* the lies must end */
-  ei->ielem_shape = ielem_shape; /* fixing ei */
+  ei[pg->imtrx]->ielem_shape = ielem_shape; /* fixing ei */
 
  return (fv->sdet);
 
@@ -11767,7 +11767,7 @@ gather_subelement_integration_pts( Integ_Elem * e,
                       if ( fabs(detJ) > 0.01 ) neg_elem_volume = TRUE;
 #define DEBUG_DRN 0
 #if DEBUG_DRN
-		      printf("for elem=%d, subelement detJ = %g\n",ei->ielem,detJ);
+		      printf("for elem=%d, subelement detJ = %g\n",ei[pg->imtrx]->ielem,detJ);
 #endif
                       detJ = 0.;
                     }
@@ -11817,23 +11817,23 @@ compute_xfem_contribution( int N )
       if ( pd->e[pg->imtrx][eqn] && eqn != R_FILL && eqn != R_EXT_VELOCITY )
         {
           dV = bf[eqn]->detJ * fv->wt * fv->h3;
-          for (i = 0; i < ei->dof[eqn]; i++ )
+          for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++ )
             {
-              xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+              xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      /*fprintf(stderr,"compute_xfem_contribution: eqn=%d, i=%d, base_dof=%d, extended_dof=%d\n",eqn,i,base_dof,extended_dof);*/
               if (extended_dof)
                 {
-		  ledof = ei->lvdof_to_ledof[eqn][i];
+		  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 			  
-		  if( ei->owned_ledof[ledof] )
+		  if( ei[pg->imtrx]->owned_ledof[ledof] )
 		    {
 		      if (eqn == MASS_FRACTION)
 		        {
 		          int ke;
                           for (ke = 0; ke < upd->Max_Num_Species_Eqn; ke++)
 		            {
-			      ie = ei->ieqn_ledof[ledof] + ke;
+			      ie = ei[pg->imtrx]->ieqn_ledof[ledof] + ke;
 			      
 			      if ( ie < 0 || ie >= N )
 			        {
@@ -11847,7 +11847,7 @@ compute_xfem_contribution( int N )
 			}
 		      else
 		        {
-		          ie = ei->ieqn_ledof[ledof];
+		          ie = ei[pg->imtrx]->ieqn_ledof[ledof];
 		  
 		          if ( ie < 0 || ie >= N )
 			    {
@@ -12039,7 +12039,7 @@ determine_adc_probability ( struct Boundary_Condition *ls_adc, int ielem, Exo_DB
 	
 	if( P == 0.0 ) return (P);
 	
-	ip_total = elem_info(NQUAD_SURF, ei->ielem_type);
+	ip_total = elem_info(NQUAD_SURF, ei[pg->imtrx]->ielem_type);
 	
 	average_snormal[0] = 0.0;
 	average_snormal[1] = 0.0;
@@ -12048,8 +12048,8 @@ determine_adc_probability ( struct Boundary_Condition *ls_adc, int ielem, Exo_DB
 	for(ip=0, surf_area=0.0 ; ip<ip_total ; ip++)
 	{
 		double s, t, u;
-		find_surf_st (ip, ei->ielem_type, side, ei->ielem_dim, xi, &s, &t, &u);
-		fv->wt = Gq_surf_weight ( ip, ei->ielem_type );
+		find_surf_st (ip, ei[pg->imtrx]->ielem_type, side, ei[pg->imtrx]->ielem_dim, xi, &s, &t, &u);
+		fv->wt = Gq_surf_weight ( ip, ei[pg->imtrx]->ielem_type );
 		
 		load_basis_functions( xi, bfd );
 		
@@ -12062,9 +12062,9 @@ determine_adc_probability ( struct Boundary_Condition *ls_adc, int ielem, Exo_DB
 		load_fv_grads ();
 		
 		surface_determinant_and_normal(ielem, 
-									   ei->iconnect_ptr, 
-									   ei->num_local_nodes, 
-									   ei->ielem_dim - 1,  
+									   ei[pg->imtrx]->iconnect_ptr, 
+									   ei[pg->imtrx]->num_local_nodes, 
+									   ei[pg->imtrx]->ielem_dim - 1,  
 									   side,
 									   nodes_per_side,
 									   local_elem_node_id );
@@ -12076,7 +12076,7 @@ determine_adc_probability ( struct Boundary_Condition *ls_adc, int ielem, Exo_DB
 		
 			
 	
-	ip_total = elem_info(NQUAD, ei->ielem_type);
+	ip_total = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
 
 	for(ip =0, avg_cos=0.0, area=0.0 ; 
 		ip<ip_total; 
@@ -12084,9 +12084,9 @@ determine_adc_probability ( struct Boundary_Condition *ls_adc, int ielem, Exo_DB
 	{
 		double sum; 
 	
-		find_stu (ip, ei->ielem_type, &xi[0], &xi[1], &xi[2]);
+		find_stu (ip, ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]);
 		
-		fv->wt = Gq_weight (ip, ei->ielem_type);
+		fv->wt = Gq_weight (ip, ei[pg->imtrx]->ielem_type);
 		
 		load_basis_functions( xi, bfd );
 				 
@@ -12209,11 +12209,11 @@ apply_adc_to_elem( Exo_DB *exo,
 		struct LS_Surf *s;
 		
 		ln = local_elem_node_id[i];
-		I = ei->gnn_list[LS][ln];
+		I = ei[pg->imtrx]->gnn_list[LS][ln];
 		
 		r[0] = Coor[0][I]; r[1] = Coor[1][I]; if( pd->Num_Dim == 3 ) r[2] = Coor[2][I];
 		
-		s = create_surf_point ( r, ei->ielem, r, FALSE );
+		s = create_surf_point ( r, ei[pg->imtrx]->ielem, r, FALSE );
 		
 		if ( unique_surf( list, s ) )
 		{
@@ -12238,16 +12238,16 @@ apply_adc_to_elem( Exo_DB *exo,
 		}
 	}
 	
-	for( i=0 ; i<ei->num_local_nodes; i++)
+	for( i=0 ; i<ei[pg->imtrx]->num_local_nodes; i++)
 	{
 		struct LS_Surf *s;
 		if( in_list( i, 0, nodes_per_side, local_elem_node_id ) == -1)
 		{
-			I = ei->gnn_list[LS][i];
+			I = ei[pg->imtrx]->gnn_list[LS][i];
 			r[0] = Coor[0][I]; r[1] = Coor[1][I]; if( pd->Num_Dim == 3 ) r[2] = Coor[2][I];
 			
 			s = closest_surf( list, x, exo, r );
-			if( ei->ln_to_first_dof[LS][i] != -1 ){
+			if( ei[pg->imtrx]->ln_to_first_dof[LS][i] != -1 ){
 			  *esp->F[i] = (-start_sign)*fabs(s->closest_point->distance );
 			}
 		}
@@ -12281,7 +12281,7 @@ determine_nearest_distance ( Exo_DB *exo,
 		double dist;
 		
 		ln = local_elem_node_id[i];
-		I = ei->gnn_list[LS][ln];
+		I = ei[pg->imtrx]->gnn_list[LS][ln];
 		
 		r[0] = Coor[0][I]; r[1] = Coor[1][I]; if( pd->Num_Dim == 3 )r[2] = Coor[2][I];
 		

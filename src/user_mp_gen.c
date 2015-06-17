@@ -163,7 +163,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
       Cp = mp->heat_capacity;
       var = TEMPERATURE;
 
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dCpdT[j]= mp->d_heat_capacity[var]*bf[var]->phi[j];
 	}
@@ -200,7 +200,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
       var = MASS_FRACTION;
       for(a = 0; a<DIM; a++)
 	{
-	  for (j=0; j<ei->dof[var]; j++)
+	  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      dhdC[0][j] += 0.;
 	    }
@@ -210,7 +210,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
   if (pd->v[pg->imtrx][TEMPERATURE] )
     {
       var = TEMPERATURE;
-      for (j=0; j<ei->dof[var]; j++)
+      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  /*
 	   * Example: (contd)
@@ -238,7 +238,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
 	  for ( b=0; b<dim; b++)
 	    {
 	      var = MESH_DISPLACEMENT1+b;
-	      for (j=0; j<ei->dof[var]; j++)
+	      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  /*
 		   * Example: (contd)
@@ -288,7 +288,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
      *	    var = MASS_FRACTION;
      *	    for(a = 0; a<DIM; a++)
      *	      {
-     *		for (j=0; j<ei->dof[var]; j++)
+     *		for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
      *		  {
      *		    dhdC[0][j] += mp->diffusivity[0]* 
      *		      2.* fv->grad_c[0][a] * bf[var]->grad_phi[j][a];
@@ -303,7 +303,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
      *		for ( b=0; b<dim; b++)
      *		  {
      *		    var = MESH_DISPLACEMENT1+b;
-     *		    for (j=0; j<ei->dof[var]; j++)
+     *		    for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
      *		      {
      *			dhdX[a][j] +=  mp->diffusivity[0]*2.* fv->grad_c[0][a] * 
      *			fv->d_grad_c_dmesh[a][0][b][j];
@@ -420,11 +420,11 @@ usr_viscosity_gen(dbl *mu,
   lambda = param[3];
   aexp = param[4];
   
-  vdofs = ei->dof[VELOCITY1];
+  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
   
   if ( pd->e[pg->imtrx][R_MESH1] )
     {
-      mdofs = ei->dof[R_MESH1];
+      mdofs = ei[pg->imtrx]->dof[R_MESH1];
     }
   
   calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
@@ -495,7 +495,7 @@ usr_viscosity_gen(dbl *mu,
     {
       dmudT = 0.; /* change this line for your function */
       
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  d_mu_dT[j]= dmudT * bf[var]->phi[j];
 	}
@@ -514,7 +514,7 @@ usr_viscosity_gen(dbl *mu,
 	{
 	  var = MASS_FRACTION;
 	  /*	  var_offset = MAX_VARIABLE_TYPES + w; */
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_mu_dC[w][j] = dmudC * bf[var]->phi[j];
 	    }

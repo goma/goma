@@ -231,17 +231,17 @@ static double jacobian_metric(Exo_DB *exo, double *x, int *proc_config)
 
       /* Set up ei pointers and get node coordinates */
       bd = ( (pd->e[pg->imtrx][R_MESH1]) ? bf[R_MESH1] : bf[pd->ShapeVar] );
-      load_ei(ielem, exo, 0);
-      ngp = elem_info(NQUAD, ei->ielem_type);
-      dofs = ei->dof[pd->ShapeVar];
+      load_ei(ielem, exo, 0, pg->imtrx);
+      ngp = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
+      dofs = ei[pg->imtrx]->dof[pd->ShapeVar];
       load_vertex_xy(exo, ielem, dofs, x, xy);
       store_shape = bd->element_shape;
 
       /* Loop over Gauss quadrature points */
-      if(ei->ielem_dim == 2 ) 
+      if(ei[pg->imtrx]->ielem_dim == 2 ) 
         {
-          if(bd->element_shape != ei->ielem_shape)
-               {bd->element_shape = ei->ielem_shape;}
+          if(bd->element_shape != ei[pg->imtrx]->ielem_shape)
+               {bd->element_shape = ei[pg->imtrx]->ielem_shape;}
       Jw_sum = 0.0;
       Jw_min = 99999.9;
       for (igp = 0; igp < ngp; igp++)
@@ -252,9 +252,9 @@ static double jacobian_metric(Exo_DB *exo, double *x, int *proc_config)
           dj01 = 0.0;
           dj10 = 0.0;
           dj11 = 0.0;
-          find_stu(igp, ei->ielem_type, &xi[0], &xi[1], &xi[2]);
+          find_stu(igp, ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]);
           load_basis_functions(xi, bfd);
-          gwt = Gq_weight(igp, ei->ielem_type);
+          gwt = Gq_weight(igp, ei[pg->imtrx]->ielem_type);
 
 	  /* Sum components of elemental Jacobian */
           for (k=0; k<dofs; k++)
@@ -538,23 +538,23 @@ static void load_vertex_xy(Exo_DB *exo, int ielem,
   int node, i, k, index, nd;
   int DM = FALSE;
 
-  load_ei(ielem, exo, 0);
-  DM = (pd_glob[ei->mn]->e[pg->imtrx][R_MESH1]);
+  load_ei(ielem, exo, 0, pg->imtrx);
+  DM = (pd_glob[ei[pg->imtrx]->mn]->e[pg->imtrx][R_MESH1]);
   for (i=0; i<pd->Num_Dim; i++)
     {
       for (k=0; k<dofs; k++)
         {
           if (DM)
             {
-              node = ei->dof_list[R_MESH1+i][k];
+              node = ei[pg->imtrx]->dof_list[R_MESH1+i][k];
               index = Proc_Elem_Connect[Proc_Connect_Ptr[ielem]+node];
-              nd = Index_Solution(index, MESH_DISPLACEMENT1+i, 0, 0, ei->mn, pg->imtrx);
+              nd = Index_Solution(index, MESH_DISPLACEMENT1+i, 0, 0, ei[pg->imtrx]->mn, pg->imtrx);
               EH(nd, "Bad displacement unknown index!");
               xy[i][k] = Coor[i][index] + x[nd];
             }
           else
             {
-              node = ei->dof_list[pd->ShapeVar][k];
+              node = ei[pg->imtrx]->dof_list[pd->ShapeVar][k];
               index = Proc_Elem_Connect[Proc_Connect_Ptr[ielem]+node];
               xy[i][k] = Coor[i][index];
             }

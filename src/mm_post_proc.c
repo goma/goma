@@ -587,7 +587,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   dim   = pd_glob[0]->Num_Dim;
 
-  if (pd->v[pg->imtrx][R_MESH1] && ei->ielem_dim >= dim) {
+  if (pd->v[pg->imtrx][R_MESH1] && ei[pg->imtrx]->ielem_dim >= dim) {
     err = belly_flop(elc->lame_mu);
     EH(err, "error in belly flop");
     if (err == 2) exit(-1);
@@ -2151,13 +2151,13 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
    * (aka Hughes et al.) the mass lumping operation undertaken
    * below is deemed to be sufficient.
    */
-  for (i = 0; i < ei->num_local_nodes; i++) {
-    I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
+  for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
+    I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i]; 
     /*
      *  check to make sure that unknowns are defined at this node,
      *  otherwise don't add anything to this node
      */
-    ldof = ei->ln_to_dof[eqn][i];
+    ldof = ei[pg->imtrx]->ln_to_dof[eqn][i];
     if (ldof >= 0) {
       phi_i = bf[eqn]->phi[ldof];
       for (var = 0; var < rd->TotalNVPostOutput; var++) {
@@ -2165,9 +2165,9 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	lumped_mass[var][I]    += local_lumped[var] * phi_i * wt * det_J;
 #ifdef DEBUG_HKM
 	Dnn = 1.0;
-	for (j = 0; j < ei->num_local_nodes; j++) {
-	  if (ei->ln_to_dof[eqn][j] >= 0) {
-	    phi_j = bf[eqn]->phi[ei->ln_to_dof[eqn][j]];
+	for (j = 0; j < ei[pg->imtrx]->num_local_nodes; j++) {
+	  if (ei[pg->imtrx]->ln_to_dof[eqn][j] >= 0) {
+	    phi_j = bf[eqn]->phi[ei[pg->imtrx]->ln_to_dof[eqn][j]];
 	    Dnn -= phi_j;
 	  }
 	}
@@ -2200,8 +2200,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
         ileft = i - 4;
         iright = i - 3;
         if (iright == 4) iright = 0;
-	ldof = ei->ln_to_dof[eqn][ileft];
-	ldof_right = ei->ln_to_dof[eqn][iright];
+	ldof = ei[pg->imtrx]->ln_to_dof[eqn][ileft];
+	ldof_right = ei[pg->imtrx]->ln_to_dof[eqn][iright];
 	phi_i = bf[eqn]->phi[ldof];
 	phi_j = bf[eqn]->phi[ldof_right];
 	for (var = 0; var < rd->TotalNVPostOutput; var++) {
@@ -2213,7 +2213,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       }
       if (i == 8 && ielem_type == BIQUAD_QUAD) {
 	for (ileft = 0; ileft < 4; ileft++) {
-	  ldof = ei->ln_to_dof[eqn][ileft];
+	  ldof = ei[pg->imtrx]->ln_to_dof[eqn][ileft];
 	  phi_i = bf[eqn]->phi[ldof];
 	  for (var = 0; var < rd->TotalNVPostOutput; var++) {
 	    post_proc_vect[var][I] += local_post[var]   * phi_i * wt * det_J;
@@ -2658,19 +2658,19 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	   EH(err, "load_elem_dofptr");
 	   err = bf_mp_init(pd);
 	   EH(err, "bf_mp_init");
-	   ielem_type      = ei->ielem_type;
+	   ielem_type      = ei[pg->imtrx]->ielem_type;
 	   ip_total        = elem_info(NQUAD, ielem_type); /* number of
 							    * quadrature pts */
 	      
-	   num_local_nodes = ei->num_local_nodes; /* number of 
+	   num_local_nodes = ei[pg->imtrx]->num_local_nodes; /* number of 
 							     * local basis 
 							     * functions */
 	      
-	   ielem_dim       = ei->ielem_dim; /* physical 
+	   ielem_dim       = ei[pg->imtrx]->ielem_dim; /* physical 
 							   * dimension of this
 							   * element */
 	      
-	   iconnect_ptr    = ei->iconnect_ptr;	/* pointer to 
+	   iconnect_ptr    = ei[pg->imtrx]->iconnect_ptr;	/* pointer to 
 							 * beginning of this 
 							 * element's
 							 * connectivity list */
@@ -2859,14 +2859,14 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 				      xdot_old, resid_vector, 0);      
 	       err = bf_mp_init(pd);     
 	       EH(err, "load_elem_dofptr");
-	       iconnect_ptr    = ei->iconnect_ptr;
-	       ielem_type      = ei->ielem_type;
+	       iconnect_ptr    = ei[pg->imtrx]->iconnect_ptr;
+	       ielem_type      = ei[pg->imtrx]->ielem_type;
 	       ip_total        = elem_info(NQUAD_SURF, ielem_type);
-	       num_local_nodes = ei->num_local_nodes;
-	       ielem_dim       = ei->ielem_dim;
+	       num_local_nodes = ei[pg->imtrx]->num_local_nodes;
+	       ielem_dim       = ei[pg->imtrx]->ielem_dim;
 	       dim             = ielem_dim;
 
-	       id_side = find_id_side(ei->ielem, num_nodes_on_side,
+	       id_side = find_id_side(ei[pg->imtrx]->ielem, num_nodes_on_side,
 				      &exo->ss_node_list[iss][num_nodes_on_side*i],
 				      id_local_elem_coord, exo);
 	       /*
@@ -2882,7 +2882,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 		   /* Find the local element node number for the current node */
 		   id = id_local_elem_coord[k];
 
-		   I = exo->node_list[ei->iconnect_ptr + id]; 
+		   I = exo->node_list[ei[pg->imtrx]->iconnect_ptr + id]; 
 		   find_nodal_stu(id, ielem_type, &xi[0], &xi[1], &xi[2]);
 
 		   err = load_basis_functions( xi, bfd);
@@ -2901,7 +2901,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 		   err = load_bf_mesh_derivs(); 
 		   EH( err, "load_bf_mesh_derivs");
 	    
-		   surface_determinant_and_normal (ei->ielem, iconnect_ptr, 
+		   surface_determinant_and_normal (ei[pg->imtrx]->ielem, iconnect_ptr, 
 						   num_local_nodes, 
 						   ielem_dim - 1,  
 						   id_side,
@@ -2913,7 +2913,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 		    */
 
 		   if (ielem_dim !=3) {
-		     calc_surf_tangent(ei->ielem, iconnect_ptr, 
+		     calc_surf_tangent(ei[pg->imtrx]->ielem, iconnect_ptr, 
 				       num_local_nodes, ielem_dim-1,
 				       num_nodes_on_side,
 				       id_local_elem_coord);
@@ -2945,7 +2945,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 			   EH(-1,"Cannot match side SSID to ss_to_blks[].");
 			 }
 
-		       if( exo->eb_id[find_elemblock_index(ei->ielem, exo)] == 
+		       if( exo->eb_id[find_elemblock_index(ei[pg->imtrx]->ielem, exo)] == 
 			   ss_to_blks[1][ss_index] )
 			 {
 			   iapply = 1;
@@ -2973,7 +2973,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 		   eqn = pd->ProjectionVar;
 
 		   /* also convert from node number to dof number */
-		   ldof = ei->ln_to_dof[eqn][id];
+		   ldof = ei[pg->imtrx]->ln_to_dof[eqn][id];
 		   if (ldof < 0) {
                      EH(-1,"post_process_nodal: bad surface projection");
 		   }
@@ -2987,7 +2987,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 			*/
 		       jd = id_local_elem_coord[j];
 		       /* also convert from node number to dof number */
-		       phi_j = bf[eqn]->phi[ei->ln_to_dof[eqn][jd]];
+		       phi_j = bf[eqn]->phi[ei[pg->imtrx]->ln_to_dof[eqn][jd]];
 		       lumped_mass[var][I] += (local_lumped[var] * fv->sdet
 					       * phi_i * phi_j * fv->h3 );
 		     }
@@ -3091,13 +3091,13 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	    
 	       EH(err, "load_elem_dofptr");
 
-	       iconnect_ptr    = ei->iconnect_ptr;
+	       iconnect_ptr    = ei[pg->imtrx]->iconnect_ptr;
       
-	       ielem_type      = ei->ielem_type;
+	       ielem_type      = ei[pg->imtrx]->ielem_type;
 	       ip_total        = elem_info(NQUAD_SURF, ielem_type);
-	       num_local_nodes = ei->num_local_nodes;
+	       num_local_nodes = ei[pg->imtrx]->num_local_nodes;
       
-	       ielem_dim       = ei->ielem_dim;
+	       ielem_dim       = ei[pg->imtrx]->ielem_dim;
 
 	       dim             = ielem_dim;
 
@@ -3114,22 +3114,22 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	
 	       /* get convection velocity at the nodal points */
 	
-	       if (STREAM != -1  &&  Num_Var_In_Type[pg->imtrx][VELOCITY1] && ei->ielem_dim == 2)
+	       if (STREAM != -1  &&  Num_Var_In_Type[pg->imtrx][VELOCITY1] && ei[pg->imtrx]->ielem_dim == 2)
 		 {
 		   /* Go for it -- Calculate the stream function at the nodes 
 		    * of this element 
 		    */
 
-		   /*	if (ei->ielem_dim == 2 && ei->num_local_nodes == 9) { */
+		   /*	if (ei[pg->imtrx]->ielem_dim == 2 && ei[pg->imtrx]->num_local_nodes == 9) { */
 
-		   if (ei->ielem_dim == 2) 
+		   if (ei[pg->imtrx]->ielem_dim == 2) 
 		     {
 		       if (pd->e[pg->imtrx][R_MOMENTUM1]) 
 			 {
-			   for ( i=0; i<ei->ielem_dim; i++)
+			   for ( i=0; i<ei[pg->imtrx]->ielem_dim; i++)
 			     {
 			       var = VELOCITY1+i;
-			       for ( j=0; j<ei->dof[var]; j++)
+			       for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				 {
 				   vel[i][j] = *esp->v[i][j];
 				 }
@@ -3165,18 +3165,18 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 			*  of this element 
 			*/
 		    
-		       if (ei->ielem_dim == 2) 
+		       if (ei[pg->imtrx]->ielem_dim == 2) 
 			 {
-			   for ( i=0; i<ei->ielem_dim; i++)
+			   for ( i=0; i<ei[pg->imtrx]->ielem_dim; i++)
 			     {
 			       var = MASS_FRACTION;
-			       for ( j=0; j<ei->dof[var]; j++)
+			       for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				 {
 				   I = Proc_Elem_Connect[ Proc_Connect_Ptr[iel] 
 							+ j ];
 				   /* add in contribution from diffusion */
 				   vel[i][j] = post_proc_vect[DIFFUSION_VECTORS 
-							     + w * ei->ielem_dim
+							     + w * ei[pg->imtrx]->ielem_dim
 							     + i][I];
 				   if ( (check == 1) && 
 					Num_Var_In_Type[pg->imtrx][VELOCITY1] )
@@ -3224,12 +3224,12 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	       if (ENERGY_FLUXLINES != -1  && Num_Var_In_Type[pg->imtrx][R_ENERGY])  
 		 {
 		   /* Go for it -- Calculate the stream function at the nodes of this element */
-		   if (ei->ielem_dim == 2) 
+		   if (ei[pg->imtrx]->ielem_dim == 2) 
 		     {
-		       for ( i=0; i<ei->ielem_dim; i++)
+		       for ( i=0; i<ei[pg->imtrx]->ielem_dim; i++)
 			 {
 			   var = TEMPERATURE;
-			   for ( j=0; j<ei->dof[var]; j++)
+			   for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			     {
 			       I = Proc_Elem_Connect[ Proc_Connect_Ptr[iel] + j ];
 			       vel[i][j] = post_proc_vect[CONDUCTION_VECTORS + i][I];
@@ -3284,7 +3284,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
      }
 
      /* Compute value at midside nodes if these exist */
-     if ( ei->num_local_nodes == 9)
+     if ( ei[pg->imtrx]->num_local_nodes == 9)
        {
 	 err = midsid(post_proc_vect[STREAM], exo);
        }
@@ -3304,7 +3304,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
       
       /* Then compute value at midside nodes */
       
-      if ( ei->num_local_nodes == 9)
+      if ( ei[pg->imtrx]->num_local_nodes == 9)
        {
 	 err = midsid(post_proc_vect[FLUXLINES + w], exo);
        }
@@ -3324,7 +3324,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
      /* Then compute value at midside nodes */
 
-     if ( ei->num_local_nodes == 9)
+     if ( ei[pg->imtrx]->num_local_nodes == 9)
        {
 	 err = midsid(post_proc_vect[ENERGY_FLUXLINES], exo);
        }
@@ -3336,7 +3336,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
    if (NS_RESIDUALS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
      for (I = 0; I < num_universe_nodes; I++){
-       for (j = 0; j < ei->ielem_dim; j++) {
+       for (j = 0; j < ei[pg->imtrx]->ielem_dim; j++) {
 	 ii = Index_Solution(I, R_MOMENTUM1 + j, 0, 0, -2, pg->imtrx);
 	 if (ii != -1) {
 	   post_proc_vect[NS_RESIDUALS + j][I] = resid_vector[ii];
@@ -3347,7 +3347,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
    if (NS_RESIDUALS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
      for (I = 0; I < num_universe_nodes; I++){
-       for (j = 0; j < ei->ielem_dim; j++) {
+       for (j = 0; j < ei[pg->imtrx]->ielem_dim; j++) {
 	 ii = Index_Solution(I, R_MOMENTUM1 + j, 0, 0, -2, pg->imtrx);
 	 if (ii != -1) {
 	   post_proc_vect[NS_RESIDUALS + j][I] = resid_vector[ii];
@@ -3358,7 +3358,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
    if (MM_RESIDUALS != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1]) {
      for (I = 0; I < num_universe_nodes; I++){
-       for (j=0; j < ei->ielem_dim; j++) {
+       for (j=0; j < ei[pg->imtrx]->ielem_dim; j++) {
 	 ii = Index_Solution(I, R_MESH1 + j, 0, 0, -2, pg->imtrx);
 	 if (ii != -1) {
 	   post_proc_vect[MM_RESIDUALS + j][I]=resid_vector[ii];
@@ -3505,7 +3505,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
   /* find basis functions associated with velocity variables */
 
   for (j = 0; j < Num_Basis_Functions; j++) {
-    if (pd_glob[ei->mn]->i[pg->imtrx][VELOCITY1] == bfd[j]->interpolation) {
+    if (pd_glob[ei[pg->imtrx]->mn]->i[pg->imtrx][VELOCITY1] == bfd[j]->interpolation) {
       velo_interp = j;
     }
   }
@@ -4371,13 +4371,13 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
 	err = bf_mp_init(pd);
 	EH(err, "bf_mp_init");
 
-	mat_num = ei->mn;
+	mat_num = ei[pg->imtrx]->mn;
 
-	i_elem_type      = ei->ielem_type;     /* element type */
+	i_elem_type      = ei[pg->imtrx]->ielem_type;     /* element type */
 	i_elem_gp        = elem_info( NQUAD, 
 				      i_elem_type); /* number of
 						       quadrature points */
-	i_elem_dim       = ei->ielem_dim; /* element dimension
+	i_elem_dim       = ei[pg->imtrx]->ielem_dim; /* element dimension
 						       (of course!) */
 
 	err = fill_lhs_lspatch ( i_node_coords,
@@ -4520,7 +4520,7 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
 #ifdef DBG_1
     fprintf( stdout,
 	     "\n  node    t11       t12       t13       t21       t22       t23       t31      t32      t33\n" ); 
-    if (ei->ielem_dim > 2) {
+    if (ei[pg->imtrx]->ielem_dim > 2) {
       fprintf( stdout,
 	       "  %2d   %6.4lf   %6.4lf   %6.4lf   %6.4lf   %6.4lf   %6.4lf   %6.4lf   %6.4lf   %6.4lf\n",
 	       i_node + 1,
@@ -4659,11 +4659,11 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
 
       /* Extract the info for this elem of the patch */
 
-      mat_num = ei->mn;
-      i_elem_type      = ei->ielem_type;      /* element type */
+      mat_num = ei[pg->imtrx]->mn;
+      i_elem_type      = ei[pg->imtrx]->ielem_type;      /* element type */
       i_elem_gp        = elem_info( NQUAD, 
 				    i_elem_type); /* number of quadrature points */
-      i_elem_dim       = ei->ielem_dim; /* element dimension
+      i_elem_dim       = ei[pg->imtrx]->ielem_dim; /* element dimension
 						     (of course!) */
 
       i_eb_indx           = exo->elem_eb[i_elem];
@@ -4699,16 +4699,16 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
 	max_y = 0;
 	max_z = 0;
 
-	for ( j = 0; j < ei->num_local_nodes; j++ ) {
+	for ( j = 0; j < ei[pg->imtrx]->num_local_nodes; j++ ) {
 	  /* also convert from node number to dof number */
-	  global_node_num = Proc_Elem_Connect[ei->iconnect_ptr + j];
+	  global_node_num = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
 	  max_x += exo->x_coord[global_node_num];
 	  max_y += exo->y_coord[global_node_num];
 	  if (exo->num_dim > 2 ) max_z += exo->z_coord[global_node_num];
 	}
-	max_x /= ei->num_local_nodes;
-	max_y /= ei->num_local_nodes;
-	if (exo->num_dim > 2 ) max_z /= ei->num_local_nodes;
+	max_x /= ei[pg->imtrx]->num_local_nodes;
+	max_y /= ei[pg->imtrx]->num_local_nodes;
+	if (exo->num_dim > 2 ) max_z /= ei[pg->imtrx]->num_local_nodes;
       }
 
     } /* End of treating worthy elems with valid_elem_mask values */
@@ -4899,7 +4899,7 @@ abs_error_at_elem ( int i_elem,
   double mup;
 
   i_elem_gp            = elem_info( NQUAD, 
-				    ei->ielem_type); /* number of
+				    ei[pg->imtrx]->ielem_type); /* number of
 						        quadrature points */
   eqn = R_MOMENTUM1; /* We depend on this eqn for the velocity based error measure */
 
@@ -4933,12 +4933,12 @@ abs_error_at_elem ( int i_elem,
   /* Now loop over all the gauss points for this elem */
   for ( i = 0; i < i_elem_gp; i++ ) {
     find_stu ( i,
-	       ei->ielem_type,
+	       ei[pg->imtrx]->ielem_type,
 	       &xi[0], 
 	       &xi[1], 
 	       &xi[2] ); /* find quadrature point */
 
-    fv->wt = Gq_weight(i, ei->ielem_type); /* find quadrature weights for
+    fv->wt = Gq_weight(i, ei[pg->imtrx]->ielem_type); /* find quadrature weights for
 					      current ip */
     wt = fv->wt;
 
@@ -5008,12 +5008,12 @@ abs_error_at_elem ( int i_elem,
 /*     sumx = 0.; */
 /*     sumy = 0.; */
 /*     sumz = 0.; */
-/*     for (j = 0; j < ei->num_local_nodes; j++ ) { */
-/*       phi_i = bf[eqn]->phi[ei->ln_to_dof[eqn][j]]; */
-/*       local_i = Proc_Elem_Connect[ei->iconnect_ptr + j]; */
+/*     for (j = 0; j < ei[pg->imtrx]->num_local_nodes; j++ ) { */
+/*       phi_i = bf[eqn]->phi[ei[pg->imtrx]->ln_to_dof[eqn][j]]; */
+/*       local_i = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j]; */
 /*       sumx += phi_i*Coor[0][local_i]; */
 /*       sumy += phi_i*Coor[1][local_i]; */
-/*       if (ei->ielem_dim > 2) { */
+/*       if (ei[pg->imtrx]->ielem_dim > 2) { */
 /* 	sumz += phi_i*Coor[2][local_i];	 */
 /*       } */
 /*     } */
@@ -5046,10 +5046,10 @@ abs_error_at_elem ( int i_elem,
 	/* Calculate this symetrically (that's how its being stored) */
 	if ( b >= a ) {
 	  sum_tau = 0.;
-	  for ( j = 0; j < ei->num_local_nodes; j++ ) {
+	  for ( j = 0; j < ei[pg->imtrx]->num_local_nodes; j++ ) {
 	    /* also convert from node number to dof number */
-	    phi_i = bf[eqn]->phi[ei->ln_to_dof[eqn][j]];
-	    global_node_num = Proc_Elem_Connect[ei->iconnect_ptr + j];
+	    phi_i = bf[eqn]->phi[ei[pg->imtrx]->ln_to_dof[eqn][j]];
+	    global_node_num = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
 	    sum_tau += phi_i*tau_nodal_lsp[a][b][global_node_num];
 	  }
 	  tau_gp_lsp[a][b][i] = sum_tau;
@@ -5199,11 +5199,11 @@ abs_error_at_elem ( int i_elem,
 #ifdef DBG_1
   fprintf( stdout,
 	   "\n==> ZZ velocity err for element %d = %8.6lf <==\n",
-	   ei->ielem + 1,
+	   ei[pg->imtrx]->ielem + 1,
 	   gvec_elem[i_elem] ); 
   fprintf( stdout,
 	   "    Velocity norm for element %d = %8.6lf <==\n",
-	   ei->ielem + 1,
+	   ei[pg->imtrx]->ielem + 1,
 	   *velocity_norm );    
 #endif
 #endif
@@ -5265,7 +5265,7 @@ fill_lhs_lspatch(double * i_node_coords,
   double mup;
 
   i_elem_gp            = elem_info( NQUAD, 
-				    ei->ielem_type); /* number of
+				    ei[pg->imtrx]->ielem_type); /* number of
 							quadrature points */
   eqn = R_MOMENTUM1; /* We depend on this eqn for the velocity based error measure */
 
@@ -5280,13 +5280,13 @@ fill_lhs_lspatch(double * i_node_coords,
 
   for (i = 0; i < i_elem_gp; i++) {
     find_stu ( i,
-	       ei->ielem_type,
+	       ei[pg->imtrx]->ielem_type,
 	       &xi[0], 
 	       &xi[1], 
 	       &xi[2] ); /* find quadrature point */
 
     wt_gp_loc[i] = Gq_weight (i,
-			      ei->ielem_type); /* find quadrature weights for
+			      ei[pg->imtrx]->ielem_type); /* find quadrature weights for
 						  current ip */
     fv->wt = wt_gp_loc[i];
 
@@ -5362,7 +5362,7 @@ fill_lhs_lspatch(double * i_node_coords,
       fprintf( stdout,
 	       "\n   gp     t11      t12      t13      t21      t22      t23      t31      t32      t33      mu\n" );
     }
-    if (ei->ielem_dim > 2) {
+    if (ei[pg->imtrx]->ielem_dim > 2) {
       fprintf( stdout,
 	       "  %2d   %6.4lf   %6.4lf   %6.4lf   %6.4lf   %6.4lf   %6.4lf   %6.4lf   %6.4lf   %6.4lf   %6.4lf\n",
 	       i + 1,
@@ -5394,19 +5394,19 @@ fill_lhs_lspatch(double * i_node_coords,
     sumx = 0.;
     sumy = 0.;
     sumz = 0.;
-    for (j = 0; j < ei->num_local_nodes; j++ ) {
+    for (j = 0; j < ei[pg->imtrx]->num_local_nodes; j++ ) {
       /* also convert from node number to dof number */
-      phi_i = bf[eqn]->phi[ei->ln_to_dof[eqn][j]];
-      local_i = Proc_Elem_Connect[ei->iconnect_ptr + j];
+      phi_i = bf[eqn]->phi[ei[pg->imtrx]->ln_to_dof[eqn][j]];
+      local_i = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
       sumx += phi_i*Coor[0][local_i];
       sumy += phi_i*Coor[1][local_i];
-      if (ei->ielem_dim > 2) {
+      if (ei[pg->imtrx]->ielem_dim > 2) {
 	sumz += phi_i*Coor[2][local_i];	
       }
     }
     xgp_loc[i] = sumx - i_node_coords[0];
     ygp_loc[i] = sumy - i_node_coords[1];
-    if (ei->ielem_dim > 2) {
+    if (ei[pg->imtrx]->ielem_dim > 2) {
       zgp_loc[i] = sumz - i_node_coords[2];
     }
     det_gp_loc[i] = bf[eqn]->detJ;
@@ -5734,19 +5734,19 @@ calc_stream_fcn(double x[],				/* soln vector */
   *  d[][] are not defined
   */
  if (DeformingMesh) {
-   for (i = 0; i < ei->num_local_nodes; i++) {
-     I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+   for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
+     I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
      if (Index_Solution(I, MESH_DISPLACEMENT1, 0, 0, -2, pg->imtrx) != -1) {
-       xx[i] = Coor[0][I] + *esp->d[0][ei->ln_to_dof[R_MESH1][i]] ;
-       yy[i] = Coor[1][I] + *esp->d[1][ei->ln_to_dof[R_MESH2][i]]; 
+       xx[i] = Coor[0][I] + *esp->d[0][ei[pg->imtrx]->ln_to_dof[R_MESH1][i]] ;
+       yy[i] = Coor[1][I] + *esp->d[1][ei[pg->imtrx]->ln_to_dof[R_MESH2][i]]; 
      } else {  /* elements are subparametric */
        if (i < 8) {
 	 /* make node lie halfway between adjacent nodes */
 	 ileft = i - 4;
-	 Ileft = Proc_Elem_Connect[ei->iconnect_ptr + ileft];
+	 Ileft = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + ileft];
 	 iright = i - 3;
 	 if (iright == 4) iright = 0;
-	 Iright = Proc_Elem_Connect[ei->iconnect_ptr + iright];
+	 Iright = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + iright];
 	 xx[i] = Coor[0][I] +
 	     0.5 * (
 		 x[Index_Solution(Ileft, MESH_DISPLACEMENT1, 0, 0, -2, pg->imtrx)]
@@ -5759,11 +5759,11 @@ calc_stream_fcn(double x[],				/* soln vector */
 				    0, 0, -2, pg->imtrx)]);
        } else {
 	 /* put centroid in center */
-	 I = Proc_Elem_Connect[ei->iconnect_ptr + 8];
+	 I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 8];
 	 xx[i] = Coor[0][I];
 	 yy[i] = Coor[1][I]; 
 	 for (ileft=0; ileft<4; ileft++) {
-	   Ileft = Proc_Elem_Connect[ei->iconnect_ptr + ileft];
+	   Ileft = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + ileft];
 	   xx[i] += 
 	       0.25 * x[Index_Solution(Ileft, MESH_DISPLACEMENT1,
 				       0, 0, -2, pg->imtrx)];
@@ -5775,8 +5775,8 @@ calc_stream_fcn(double x[],				/* soln vector */
      }
    }
  } else {
-   for (i = 0; i < ei->num_local_nodes; i++) {
-     I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+   for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
+     I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
      xx[i] = Coor[0][I];
      yy[i] = Coor[1][I]; 
    }
@@ -5786,11 +5786,11 @@ calc_stream_fcn(double x[],				/* soln vector */
    if (pd_glob[0]->i[pg->imtrx][R_MOMENTUM1] == I_Q1) {
      WH(-1, "Stream function with Q1 mapping may not be accurate ");
 
-     for (i = 0; i < ei->num_sides; i++) {
+     for (i = 0; i < ei[pg->imtrx]->num_sides; i++) {
        i1 = i;
        i2 = i+1;
-       i3 = i + ei->num_sides;
-       if ( i == ei->num_sides -1) i2 =0;
+       i3 = i + ei[pg->imtrx]->num_sides;
+       if ( i == ei[pg->imtrx]->num_sides -1) i2 =0;
        xdiff = (xx[i2] - xx[i1])/2.;
        ydiff = (yy[i2] - yy[i1])/2.;
        del_stream_fcn[i] = 
@@ -5798,11 +5798,11 @@ calc_stream_fcn(double x[],				/* soln vector */
            -(fact2[0]*(vel[1][i1]) + fact2[1]*(vel[1][i3]) + fact2[0]*(vel[1][i2]))*xdiff;
      }  
    } else {
-     for(i = 0; i < ei->num_sides; i++) {
+     for(i = 0; i < ei[pg->imtrx]->num_sides; i++) {
        i1 = i;
        i2 = i+1;
-       i3 = i + ei->num_sides;
-       if ( i == ei->num_sides -1) i2 =0;
+       i3 = i + ei[pg->imtrx]->num_sides;
+       if ( i == ei[pg->imtrx]->num_sides -1) i2 =0;
        wx1 = xx[i1]*fact1[0][0] + xx[i3]*fact1[1][0] +  xx[i2]*fact1[2][0];
        wx2 = xx[i1]*fact1[0][1] + xx[i3]*fact1[1][1] +  xx[i2]*fact1[2][1];
        wx3 = xx[i1]*fact1[0][2] + xx[i3]*fact1[1][2] +  xx[i2]*fact1[2][2];
@@ -5820,11 +5820,11 @@ calc_stream_fcn(double x[],				/* soln vector */
 
    if (pd_glob[0]->i[pg->imtrx][R_MOMENTUM1] == I_Q1) {
      WH(-1, "Stream function with Q1 may not be accurate ");
-     for (i = 0; i < ei->num_sides; i++) {
+     for (i = 0; i < ei[pg->imtrx]->num_sides; i++) {
        i1 = i;
        i2 = i+1;
-       i3 = i + ei->num_sides;
-       if ( i == ei->num_sides -1) i2 =0;
+       i3 = i + ei[pg->imtrx]->num_sides;
+       if ( i == ei[pg->imtrx]->num_sides -1) i2 =0;
        xdiff = (xx[i2] - xx[i1])/2.;
        ydiff = (yy[i2] - yy[i1])/2.;
        del_stream_fcn[i] = 
@@ -5832,11 +5832,11 @@ calc_stream_fcn(double x[],				/* soln vector */
            -(fact2[0]*(vel[1][i1]) + fact2[1]*(vel[1][i3]) + fact2[0]*(vel[1][i2]))*xdiff;
      }
    } else {
-     for (i = 0; i < ei->num_sides; i++) {
+     for (i = 0; i < ei[pg->imtrx]->num_sides; i++) {
        i1 = i;
        i2 = i+1;
-       i3 = i + ei->num_sides;
-       if (i == ei->num_sides -1) i2 =0;
+       i3 = i + ei[pg->imtrx]->num_sides;
+       if (i == ei[pg->imtrx]->num_sides -1) i2 =0;
        for (j = 0; j < 3; j++) {
 	 dsx[j]=0.;
 	 dsy[j]=0.;
@@ -5889,14 +5889,14 @@ midsid(double stream_fcn_vect[],              /* Soln vector for current proc */
 
    for (ielem = 0; ielem < Num_Internal_Elems; ielem++) {
 
-       ei->iconnect_ptr    = exo->elem_ptr[ielem]; 
+       ei[pg->imtrx]->iconnect_ptr    = exo->elem_ptr[ielem]; 
 
-       ei->ielem_shape     = type2shape(ei->ielem_type);
-       ei->num_sides       = shape2sides(ei->ielem_shape);
+       ei[pg->imtrx]->ielem_shape     = type2shape(ei[pg->imtrx]->ielem_type);
+       ei[pg->imtrx]->num_sides       = shape2sides(ei[pg->imtrx]->ielem_shape);
 
 
-       for (i = 0; i < ei->num_sides; i++) {
-          I = exo->node_list[ei->iconnect_ptr + i];
+       for (i = 0; i < ei[pg->imtrx]->num_sides; i++) {
+          I = exo->node_list[ei[pg->imtrx]->iconnect_ptr + i];
           stream_fcn[i] = stream_fcn_vect[I];
        }
 /*     
@@ -5908,10 +5908,10 @@ midsid(double stream_fcn_vect[],              /* Soln vector for current proc */
        stream_fcn[7]=0.5*(stream_fcn[3]+stream_fcn[0]);
        stream_fcn[8]=0.25*(stream_fcn[0]+stream_fcn[1]+stream_fcn[2]+stream_fcn[3]);
 
-       ii = ei->num_sides;
-       iii = ei->num_sides + ei->num_sides + 1;
+       ii = ei[pg->imtrx]->num_sides;
+       iii = ei[pg->imtrx]->num_sides + ei[pg->imtrx]->num_sides + 1;
        for (i = ii; i < iii; i++) {
-         I =  exo->node_list[ei->iconnect_ptr + i];
+         I =  exo->node_list[ei[pg->imtrx]->iconnect_ptr + i];
          stream_fcn_vect[I] = stream_fcn[i];
        }
    }
@@ -5945,7 +5945,7 @@ correct_stream_fcn(int *kount,	/* a counter for element connectivity ??     */
   int status = 0;
   double s, stream_fcn[9];
 
-  if (ei->num_sides > 4) {
+  if (ei[pg->imtrx]->num_sides > 4) {
     EH(-1, "correct_stream_fcn not available in 3D");
     return -1;
   }
@@ -5962,22 +5962,22 @@ correct_stream_fcn(int *kount,	/* a counter for element connectivity ??     */
    *  fix it up, so that it is.
    */
   s = 0.;
-  for (i = 0; i < ei->num_sides; i++) {
+  for (i = 0; i < ei[pg->imtrx]->num_sides; i++) {
     s +=  del_stream_fcn[i];
   }
-  s = s/ei->num_sides;
-  for (i = 0; i < ei->num_sides; i++) { 
+  s = s/ei[pg->imtrx]->num_sides;
+  for (i = 0; i < ei[pg->imtrx]->num_sides; i++) { 
     del_stream_fcn[i] -= s;
   }
 
   /* Calculate the stream function at the nodal points */
   if (iel == 0) {
     stream_fcn[0] = 0.;
-    for ( i = 0; i < ei->num_sides - 1; i++) {
+    for ( i = 0; i < ei[pg->imtrx]->num_sides - 1; i++) {
       stream_fcn[i+1] = stream_fcn[i] + del_stream_fcn[i];
     }
-    for (i = 0; i < ei->num_sides; i++) { 
-      I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
+    for (i = 0; i < ei[pg->imtrx]->num_sides; i++) { 
+      I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i]; 
       stream_fcn_vect[I] += stream_fcn[i];
       listnd[I] += 1;
     }
@@ -5989,8 +5989,8 @@ correct_stream_fcn(int *kount,	/* a counter for element connectivity ??     */
     /* locate connecting node with known value of stream_fcn */
      
     nprvel = iel -1;
-    for (i = 0; i < ei->num_sides; i++) { 
-      I = Proc_Elem_Connect[ei->iconnect_ptr + i];  
+    for (i = 0; i < ei[pg->imtrx]->num_sides; i++) { 
+      I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];  
       nstart = i;
       for (nel = 0; nel < nprvel + 1; nel++) {
 	kel = nprvel - nel;
@@ -6000,7 +6000,7 @@ correct_stream_fcn(int *kount,	/* a counter for element connectivity ??     */
 	/* restriction here is that all previous elements
 	   must be of the same type */
 
-	for ( j = 0; j < ei->num_sides; j++) {
+	for ( j = 0; j < ei[pg->imtrx]->num_sides; j++) {
 	  J = Proc_Elem_Connect[Proc_Connect_Ptr[nnel] + j]; 
 	  if (J == I && listnd[I] > 0) goto found;
 	}
@@ -6010,7 +6010,7 @@ correct_stream_fcn(int *kount,	/* a counter for element connectivity ??     */
   found:
     /* Connecting node located, calculate stream function for current element */
     stream_fcn[nstart] = stream_fcn_vect[J]/listnd[J];    
-    for (ii = 0; ii < ei->num_sides - 1; ii++) { 
+    for (ii = 0; ii < ei[pg->imtrx]->num_sides - 1; ii++) { 
       iii = nsideq[nstart + ii];
       iiii= nsideq[nstart + ii +1];
       stream_fcn[iiii] = stream_fcn[iii]+del_stream_fcn[iii];
@@ -6018,8 +6018,8 @@ correct_stream_fcn(int *kount,	/* a counter for element connectivity ??     */
    
     /* add to global vector */
       
-    for (ii = 0; ii < ei->num_sides; ii++) { 
-      I = Proc_Elem_Connect[ ei->iconnect_ptr + ii];
+    for (ii = 0; ii < ei[pg->imtrx]->num_sides; ii++) { 
+      I = Proc_Elem_Connect[ ei[pg->imtrx]->iconnect_ptr + ii];
       stream_fcn_vect[I] += stream_fcn[ii];
       listnd[I]         += 1; 
     }

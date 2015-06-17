@@ -166,7 +166,7 @@ shell_n_dot_flow_bc_confined(double func[DIM],
       var = LUBP;
       if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             for (ii = 0; ii < pd->Num_Dim; ii++)
               {
@@ -286,7 +286,7 @@ shell_n_dot_flow_bc_film(double func[DIM],
       var = SHELL_FILMP;
       if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             for (ii = 0; ii < pd->Num_Dim; ii++)
               {
@@ -306,7 +306,7 @@ shell_n_dot_flow_bc_film(double func[DIM],
       var = SHELL_FILMH;
       if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             phi_j = bf[var]->phi[j];
 
@@ -330,7 +330,7 @@ shell_n_dot_flow_bc_film(double func[DIM],
       var = SHELL_PARTC;
       if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             phi_j = bf[var]->phi[j];
                        	              
@@ -444,7 +444,7 @@ shell_n_dot_gradp_bc(double func[DIM],
       var = SHELL_FILMP;
       if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             for (ii = 0; ii < pd->Num_Dim; ii++)
               {
@@ -464,7 +464,7 @@ shell_n_dot_gradp_bc(double func[DIM],
       var = SHELL_FILMH;
       if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             phi_j = bf[var]->phi[j];
 
@@ -557,8 +557,8 @@ shell_n_dot_gradh_bc(double func[DIM],
 
 /* Get the vector normal to the shell plane */
 
-   shell_determinant_and_normal(ei->ielem, ei->iconnect_ptr, ei->num_local_nodes,
-                                ei->ielem_dim, 1);
+   shell_determinant_and_normal(ei[pg->imtrx]->ielem, ei[pg->imtrx]->iconnect_ptr, ei[pg->imtrx]->num_local_nodes,
+                                ei[pg->imtrx]->ielem_dim, 1);
 
   for(ii = 0; ii < VIM; ii++)
     {
@@ -588,7 +588,7 @@ shell_n_dot_gradh_bc(double func[DIM],
       var = SHELL_FILMH;
       if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {	              
             for (ii=0; ii<VIM; ii++)
               {
@@ -698,8 +698,8 @@ shell_n_dot_pflux_bc(double func[DIM],
       bound_normal[ii] = fv->snormal[ii];
     }
 
-  shell_determinant_and_normal(ei->ielem, ei->iconnect_ptr, ei->num_local_nodes,
-                               ei->ielem_dim, 1);
+  shell_determinant_and_normal(ei[pg->imtrx]->ielem, ei[pg->imtrx]->iconnect_ptr, ei[pg->imtrx]->num_local_nodes,
+                               ei[pg->imtrx]->ielem_dim, 1);
 
   for(ii = 0; ii < VIM; ii++)
     {
@@ -730,7 +730,7 @@ shell_n_dot_pflux_bc(double func[DIM],
       var = SHELL_FILMH;
       if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             phi_j = bf[var]->phi[j];
      
@@ -752,7 +752,7 @@ shell_n_dot_pflux_bc(double func[DIM],
       var = SHELL_PARTC;
       if (pd->v[pg->imtrx][var])
       {
-        for ( j=0; j<ei->dof[var]; j++)
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             phi_j = bf[var]->phi[j];
 
@@ -850,7 +850,7 @@ void
       if (af->Assemble_Jacobian) {
 
 	var = LUBP;
-	for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	  {
 	    if (pd->v[pg->imtrx][var])
 	      {
@@ -874,7 +874,7 @@ void
       if (af->Assemble_Jacobian) {
 
 	var = SHELL_FILMP;
-	for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	  {
 	    if (pd->v[pg->imtrx][var])
 	      {
@@ -931,8 +931,8 @@ put_lub_flux_in_film(int id, /* local element node number for the
     if (!pd->e[pg->imtrx][R_LUBP]) return;   
 
     
-    id_doflubp = ei->ln_to_dof[R_LUBP][id];
-    id_doffilmp = ei->ln_to_dof[R_SHELL_FILMP][id];
+    id_doflubp = ei[pg->imtrx]->ln_to_dof[R_LUBP][id];
+    id_doffilmp = ei[pg->imtrx]->ln_to_dof[R_SHELL_FILMP][id];
 
     if (Current_EB_ptr->Elem_Blk_Id != i_mat_lubp)
       { 
@@ -970,8 +970,8 @@ put_lub_flux_in_film(int id, /* local element node number for the
     if (af->Assemble_Residual) {
 	  ieqn_lubp = R_LUBP;
 	  ieqn_filmp = R_SHELL_FILMP;
-	  id_doflubp = ei->ln_to_dof[ieqn_lubp][id];
-	  id_doffilmp = ei->ln_to_dof[ieqn_filmp][id];
+	  id_doflubp = ei[pg->imtrx]->ln_to_dof[ieqn_lubp][id];
+	  id_doffilmp = ei[pg->imtrx]->ln_to_dof[ieqn_filmp][id];
 	  lec->R[upd->ep[pg->imtrx][ieqn_filmp]][id_doffilmp] =
 	       -lec->R[upd->ep[pg->imtrx][ieqn_lubp]][id_doflubp];
     }
@@ -986,8 +986,8 @@ put_lub_flux_in_film(int id, /* local element node number for the
 	peqn_lubp = upd->ep[pg->imtrx][ieqn_lubp];
 	ieqn_filmp = R_SHELL_FILMP;
 	peqn_filmp = upd->ep[pg->imtrx][ieqn_filmp];
-	id_doflubp = ei->ln_to_dof[ieqn_lubp][id];
-	id_doffilmp = ei->ln_to_dof[ieqn_filmp][id];
+	id_doflubp = ei[pg->imtrx]->ln_to_dof[ieqn_lubp][id];
+	id_doffilmp = ei[pg->imtrx]->ln_to_dof[ieqn_filmp][id];
 
 	/* Add contributions due to all nodal sensitivities in filmp element */
 
@@ -1000,7 +1000,7 @@ put_lub_flux_in_film(int id, /* local element node number for the
 	    if ( pd->v[pg->imtrx][var] )
 	      {
 		pvar = upd->vp[pg->imtrx][var];
-		for ( j_id=0; j_id<ei->dof[var]; j_id++)
+		for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		  {
 		    lec->J[peqn_filmp][pvar][id_doffilmp][j_id] =
 		      -lec->J[peqn_lubp][pvar][id_doflubp][j_id];
@@ -1015,7 +1015,7 @@ put_lub_flux_in_film(int id, /* local element node number for the
 	if ( pd->v[pg->imtrx][var] )
 	  {
 	    pvar = upd->vp[pg->imtrx][var];
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {			
 		lec->J[peqn_filmp][pvar][id_doffilmp][j_id] =
 		  -lec->J[peqn_lubp][pvar][id_doflubp][j_id];

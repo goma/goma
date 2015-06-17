@@ -3181,9 +3181,9 @@ interp_ev_to_nodes(const Exo_DB *exo, dbl *ev_tmp, int iev)
         {
           el = exo->node_elem_list[j];
 
-	  ei->ielem = el;
-	  ei->ielem_type = Elem_Type(exo, el);
-	  ei->num_local_nodes = elem_info(NNODES, ei->ielem_type);
+	  ei[pg->imtrx]->ielem = el;
+	  ei[pg->imtrx]->ielem_type = Elem_Type(exo, el);
+	  ei[pg->imtrx]->num_local_nodes = elem_info(NNODES, ei[pg->imtrx]->ielem_type);
 
 	  h_elem_siz ( hsquared, hh, dhh, FALSE );
 

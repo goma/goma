@@ -88,8 +88,8 @@ put_dirichlet_in_matrix(double x[], const int num_total_nodes)
    */
   if (Debug_Flag < 0) return 0;
 
-  for (i = 0; i < ei->num_local_nodes; i++) {
-    I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+  for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
+    I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
     node = Nodes[I];
     if (node->DBC && I < num_total_nodes) {
       nv = node->Nodal_Vars_Info[pg->imtrx];
@@ -108,10 +108,10 @@ put_dirichlet_in_matrix(double x[], const int num_total_nodes)
 	     * in the local element stiffness matrix lvdof
 	     * ordering.
 	     */
-	    ldof_eqn = ei->ln_to_first_dof[var_type][i];
+	    ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[var_type][i];
 	    for (j = 0, found = FALSE; j < Dolphin[pg->imtrx][I][var_type]; j++) {
-	      ledof = ei->lvdof_to_ledof[var_type][ldof_eqn];
-	      matID_dof = ei->matID_ledof[ledof];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[var_type][ldof_eqn];
+	      matID_dof = ei[pg->imtrx]->matID_ledof[ledof];
 	      if (matID == matID_dof || matID == -1) {
 		found = TRUE;
 		break;

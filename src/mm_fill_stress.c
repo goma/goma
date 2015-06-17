@@ -439,7 +439,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 		       * based on the number of degrees of freedom...
 		       */
 		      
-		      for ( i=0; i<ei->dof[eqn]; i++)
+		      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 			{
 			  wt_func = bf[eqn]->phi[i];
 			  /* add Petrov-Galerkin terms as necessary */
@@ -545,7 +545,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 		      eqn = R_s[mode][a][b];
 		      peqn = upd->ep[pg->imtrx][eqn];
 		      
-		      for ( i=0; i<ei->dof[eqn]; i++)
+		      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 			{
 			  
 			  wt_func = bf[eqn]->phi[i];
@@ -572,7 +572,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			  if ( pd->v[pg->imtrx][var] )
 			    {
 			      pvar = upd->vp[pg->imtrx][var];
-			      for ( j=0; j<ei->dof[var]; j++)
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
@@ -639,7 +639,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			      if ( pd->v[pg->imtrx][var] )
 				{
 				  pvar = upd->vp[pg->imtrx][var];
-				  for ( j=0; j<ei->dof[var]; j++)
+				  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];
 				      d_mup_dv_pj  = d_mup->v[p][j];
@@ -771,7 +771,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			  if ( pd->v[pg->imtrx][var] )
 			    {
 			      pvar = MAX_PROB_VAR + w;
-			      for ( j=0; j<ei->dof[var]; j++)
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
@@ -847,7 +847,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			  if ( pd->v[pg->imtrx][var] )
 			    {
 			      pvar = upd->vp[pg->imtrx][var];
-			      for ( j=0; j<ei->dof[var]; j++)
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
@@ -913,7 +913,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			      if ( pd->v[pg->imtrx][var] )
 				{
 				  pvar = upd->vp[pg->imtrx][var];
-				  for ( j=0; j<ei->dof[var]; j++)
+				  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];
 				      d_det_J_dmesh_pj = bf[eqn]->d_det_J_dm[p][j];
@@ -1133,7 +1133,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				  if ( pd->v[pg->imtrx][var] )
 				    {
 				      pvar = upd->vp[pg->imtrx][var];
-				      for ( j=0; j<ei->dof[var]; j++)
+				      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					{
 					  phi_j = bf[var]->phi[j];
 					  mass = 0.;
@@ -1235,7 +1235,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				  if ( pd->v[pg->imtrx][var] )
 				    {
 				      pvar = upd->vp[pg->imtrx][var];
-				      for ( j=0; j<ei->dof[var]; j++)
+				      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					{
 					  phi_j = bf[var]->phi[j];
 					  mass = 0.;
@@ -1588,7 +1588,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       if(vn->shiftModel == CONSTANT)
 	{
 	  at = vn->shift[0];
-	  for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
+	  for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
 		{
 		d_at_dT[j]=0.;
 		}
@@ -1599,7 +1599,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   	if(wlf_denom != 0.)
         	{
       		at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
-	  	for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
+	  	for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
 			{
 			d_at_dT[j]= -at*vn->shift[0]*vn->shift[1]
 				/(wlf_denom*wlf_denom)*bf[TEMPERATURE]->phi[j];
@@ -1609,7 +1609,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
     		{ 
       		at = 1.;
     		} 
-	  	for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
+	  	for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
 			{
 			d_at_dT[j]=0.;
 			}
@@ -1710,7 +1710,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 		       * based on the number of degrees of freedom...
 		       */
 		      
-		      for ( i=0; i<ei->dof[eqn]; i++)
+		      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 			{
 			  wt_func = bf[eqn]->phi[i];
 			  /* add Petrov-Galerkin terms as necessary */
@@ -1820,7 +1820,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			      
 		      if(alpha != 0.) R_source  +=  alpha * lambda*( s_dot_s[a][b]/mup);
 		      
-		      for ( i=0; i<ei->dof[eqn]; i++)
+		      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 			{
 			  
 			  wt_func = bf[eqn]->phi[i];
@@ -1847,7 +1847,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  if ( pd->v[pg->imtrx][var] )
 			    {
 			      pvar = upd->vp[pg->imtrx][var];
-			      for ( j=0; j<ei->dof[var]; j++)
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
@@ -1909,7 +1909,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			      if ( pd->v[pg->imtrx][var] )
 				{
 				  pvar = upd->vp[pg->imtrx][var];
-				  for ( j=0; j<ei->dof[var]; j++)
+				  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];
 				      d_mup_dv_pj  = d_mup->v[p][j];
@@ -2025,7 +2025,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  var = MASS_FRACTION;
 			  if ( pd->v[pg->imtrx][var] )
 			    {
-			      for ( j=0; j<ei->dof[var]; j++)
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
@@ -2067,7 +2067,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  if ( pd->v[pg->imtrx][var] )
 			    {
 			      pvar = upd->vp[pg->imtrx][var];
-			      for ( j=0; j<ei->dof[var]; j++)
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
@@ -2100,7 +2100,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			      if ( pd->v[pg->imtrx][var] )
 				{
 				  pvar = upd->vp[pg->imtrx][var];
-				  for ( j=0; j<ei->dof[var]; j++)
+				  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];
 				      d_det_J_dmesh_pj = bf[eqn]->d_det_J_dm[p][j];
@@ -2276,7 +2276,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				  if ( pd->v[pg->imtrx][var] )
 				    {
 				      pvar = upd->vp[pg->imtrx][var];
-				      for ( j=0; j<ei->dof[var]; j++)
+				      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					{
 					  phi_j = bf[var]->phi[j];
 					  advection   = 0.;
@@ -2338,7 +2338,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				  if ( pd->v[pg->imtrx][var] )
 				    {
 				      pvar = upd->vp[pg->imtrx][var];
-				      for ( j=0; j<ei->dof[var]; j++)
+				      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					{
 					  phi_j = bf[var]->phi[j];
 					  mass = 0.;
@@ -2739,7 +2739,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 		       * based on the number of degrees of freedom...
 		       */
 		      
-		      for ( i=0; i<ei->dof[eqn]; i++)
+		      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 			{
 			  wt_func = bf[eqn]->phi[i];
 			  /* add Petrov-Galerkin terms as necessary */
@@ -2836,7 +2836,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 		     
 		      R_source =   s[a][b] * (1.-H_ls) / mup -  ( g[a][b] +  gt[a][b] );
 			      
-		      for ( i=0; i<ei->dof[eqn]; i++)
+		      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 			{
 			  
 			  wt_func = bf[eqn]->phi[i];
@@ -2863,7 +2863,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			  if ( pd->v[pg->imtrx][var] )
 			    {
 			      pvar = upd->vp[pg->imtrx][var];
-			      for ( j=0; j<ei->dof[var]; j++)
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
@@ -2889,7 +2889,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			      if ( pd->v[pg->imtrx][var] )
 				{
 				  pvar = upd->vp[pg->imtrx][var];
-				  for ( j=0; j<ei->dof[var]; j++)
+				  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];
 				      d_mup_dv_pj  = d_mup->v[p][j];
@@ -2984,7 +2984,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			  var = MASS_FRACTION;
 			  if ( pd->v[pg->imtrx][var] )
 			    {
-			      for ( j=0; j<ei->dof[var]; j++)
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
@@ -3019,7 +3019,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			  if ( pd->v[pg->imtrx][var] )
 			    {
 			      pvar = upd->vp[pg->imtrx][var];
-			      for ( j=0; j<ei->dof[var]; j++)
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
@@ -3045,7 +3045,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			      if ( pd->v[pg->imtrx][var] )
 				{
 				  pvar = upd->vp[pg->imtrx][var];
-				  for ( j=0; j<ei->dof[var]; j++)
+				  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];
 				      d_det_J_dmesh_pj = bf[eqn]->d_det_J_dm[p][j];
@@ -3201,7 +3201,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				  if ( pd->v[pg->imtrx][var] )
 				    {
 				      pvar = upd->vp[pg->imtrx][var];
-				      for ( j=0; j<ei->dof[var]; j++)
+				      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					{
 					  phi_j = bf[var]->phi[j];
 					  advection   = 0.;
@@ -3245,7 +3245,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				  if ( pd->v[pg->imtrx][var] )
 				    {
 				      pvar = upd->vp[pg->imtrx][var];
-				      for ( j=0; j<ei->dof[var]; j++)
+				      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					{
 					  phi_j = bf[var]->phi[j];
 					  mass = 0.;
@@ -3476,7 +3476,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 	       * based on the number of degrees of freedom...
 	       */
 	      
-	      for ( i=0; i<ei->dof[eqn]; i++)
+	      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 		{
 		  
 		  wt_func = bf[eqn]->phi[i];   /* add Petrov-Galerkin terms as necessary */
@@ -3523,7 +3523,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 	      eqn = R_g[a][b];
 	      peqn = upd->ep[pg->imtrx][eqn];
 	      
-	      for ( i=0; i<ei->dof[eqn]; i++)
+	      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 		{
 		  wt_func = bf[eqn]->phi[i];   /* add Petrov-Galerkin terms as necessary */
   
@@ -3536,7 +3536,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 		      if ( pd->v[pg->imtrx][var] )
 			{
 			  pvar = upd->vp[pg->imtrx][var];
-			  for ( j=0; j<ei->dof[var]; j++)
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 			      
@@ -3567,7 +3567,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 		      if ( pd->v[pg->imtrx][var] )
 			{
 			  pvar = upd->vp[pg->imtrx][var];
-			  for ( j=0; j<ei->dof[var]; j++)
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 			      
@@ -3635,7 +3635,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 			  if ( pd->v[pg->imtrx][var] )
 			    {
 			      pvar = upd->vp[pg->imtrx][var];
-			      for ( j=0; j<ei->dof[var]; j++)
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
@@ -3762,9 +3762,9 @@ load_modal_pointers(int ve_mode, /* mode number */
 	    {
 	      for ( b=0; b<VIM; b++)
 		{
-		  for ( q=0; q<ei->ielem_dim; q++)
+		  for ( q=0; q<ei[pg->imtrx]->ielem_dim; q++)
 		    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  d_grad_s_dm[p][a][b][q][j] = fv->d_grad_S_dmesh[ve_mode][p][a][b][q][j];
 			}
@@ -4104,8 +4104,8 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
       err =  get_side_info(ielem_type, id_side, &nodes_per_side, local_elem_node_id);
       EH( err, "get_side_info");
       
-      surface_determinant_and_normal (ielem, ei->iconnect_ptr, num_local_nodes, 
-				      ei->ielem_dim - 1,  
+      surface_determinant_and_normal (ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, 
+				      ei[pg->imtrx]->ielem_dim - 1,  
 				      id_side,
 				      nodes_per_side,
 				      local_elem_node_id );
@@ -4194,8 +4194,8 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 	  err =  get_side_info(ielem_type, id_side, &nodes_per_side, local_elem_node_id);
 	  EH( err, "get_side_info");
 	  
-	  surface_determinant_and_normal (ielem, ei->iconnect_ptr, num_local_nodes, 
-					  ei->ielem_dim - 1,  
+	  surface_determinant_and_normal (ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, 
+					  ei[pg->imtrx]->ielem_dim - 1,  
 					  id_side,
 					  nodes_per_side,
 					  local_elem_node_id );
@@ -4269,7 +4269,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 				    {
 				      peqn = upd->ep[pg->imtrx][eqn];
 				      
-				      for ( i=0; i<ei->dof[eqn]; i++)
+				      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 					{
 					  phi_i = bf[eqn]->phi[i];
 
@@ -4299,7 +4299,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 				    {
 				      peqn = upd->ep[pg->imtrx][eqn];
 				      
-				      for ( i=0; i<ei->dof[eqn]; i++)
+				      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 					{
 					  phi_i = bf[eqn]->phi[i];
 					  
@@ -4308,7 +4308,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 					   */
 					  var = eqn;
 					  pvar = upd->vp[pg->imtrx][var];
-					  for ( j=0; j<ei->dof[var]; j++)
+					  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					    {
 					      phi_j = bf[var]->phi[j];
 					      
@@ -4353,7 +4353,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 					      if ( pd->v[pg->imtrx][var] )
 						{
 						  pvar = upd->vp[pg->imtrx][var];
-						  for ( j=0; j<ei->dof[var]; j++)
+						  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 						    {
 						      phi_j = bf[var]->phi[j];
 						      
@@ -4379,7 +4379,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 					      if ( pd->v[pg->imtrx][var] )
 						{
 						  pvar = upd->vp[pg->imtrx][var];
-						  for ( j=0; j<ei->dof[var]; j++)
+						  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 						    {
 						      phi_j = bf[var]->phi[j];
 						      
@@ -4528,17 +4528,17 @@ neighbor_stress(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
       find_surf_st(ip, ielem_type, id_side, pd->Num_Dim, xi, &s, &t, &u);
       
       /* 
-       *  we are cheating here and hoping that the "ei->dof[v]" for
+       *  we are cheating here and hoping that the "ei[pg->imtrx]->dof[v]" for
        *  the current element will work on the neighbor element that
        *  we are trying to get information for 
        */
       v = POLYMER_STRESS11;
      
       /* first load phi for the fill function */      
-      for (i = 0; i < ei->dof[v]; i++)  
+      for (i = 0; i < ei[pg->imtrx]->dof[v]; i++)  
 	{
 	  phi[i] = newshape(xi, ielem_type, PSI, 
-			    ei->dof_list[v][i], 
+			    ei[pg->imtrx]->dof_list[v][i], 
 			    ielem_shape, pd->i[pg->imtrx][v], i);
 
 	  phi_v[ip][i] = phi[i];
@@ -4546,21 +4546,21 @@ neighbor_stress(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 
       v = pd->ShapeVar;
       /* 
-       *  we are cheating here and hoping that the "ei->dof[v]" for
+       *  we are cheating here and hoping that the "ei[pg->imtrx]->dof[v]" for
        *  the current element will work on the neighbor element that
        *  we are trying to get information for 
        */
       
       iconnect_ptr    = Proc_Connect_Ptr[neighbor_elem]; /* find pointer to beginning */
-      for (i = 0; i < ei->dof[v]; i++)  
+      for (i = 0; i < ei[pg->imtrx]->dof[v]; i++)  
 	{
 	  phi_map[i] = newshape(xi, ielem_type, PSI, 
-				ei->dof_list[v][i], 
+				ei[pg->imtrx]->dof_list[v][i], 
 				ielem_shape, pd->i[pg->imtrx][v], i);
 	}
 
       iconnect_ptr    = Proc_Connect_Ptr[neighbor_elem]; /* find pointer to beginning */
-      for ( i=0; i< ei->dof[v]; i++)
+      for ( i=0; i< ei[pg->imtrx]->dof[v]; i++)
 	{
 	  gnn = Proc_Elem_Connect[iconnect_ptr + i];
 	  
@@ -4580,9 +4580,9 @@ neighbor_stress(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 		  gnn = Proc_Elem_Connect[iconnect_ptr + i];
 		  nvdof = Dolphin[pg->imtrx][gnn][v];
 		  for (j = 0; j < nvdof; j++) {
-		    ledof = ei->lvdof_to_ledof[v][j];
+		    ledof = ei[pg->imtrx]->lvdof_to_ledof[v][j];
 		    ie = Index_Solution(gnn, v, 0, j,
-					ei->matID_ledof[ledof], pg->imtrx);
+					ei[pg->imtrx]->matID_ledof[ledof], pg->imtrx);
 		    EH(ie, "Could not find vbl in sparse matrix.");
 		    if ( vn->dg_J_model == EXPLICIT_DG ||
 			 vn->dg_J_model == SEGREGATED) {
@@ -4716,14 +4716,14 @@ neighbor_stress_table(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 
       
       iconnect_ptr    = Proc_Connect_Ptr[current_elem]; /* find pointer to beginning */
-      for (i = 0; i < ei->dof[v]; i++)  
+      for (i = 0; i < ei[pg->imtrx]->dof[v]; i++)  
 	{
 	  phi_map[i] = newshape(xi, ielem_type, PSI, 
-				ei->dof_list[v][i], 
+				ei[pg->imtrx]->dof_list[v][i], 
 				ielem_shape, pd->i[pg->imtrx][v], i);
 	}
 
-      for ( i=0; i< ei->dof[v]; i++)
+      for ( i=0; i< ei[pg->imtrx]->dof[v]; i++)
 	{
 	  gnn = Proc_Elem_Connect[iconnect_ptr + i];
 
@@ -4875,8 +4875,8 @@ load_neighbor_pointers( Exo_DB *exo,
 	if (meqn1 <= meqn2)  {
 	  eqn = R_s[mode][meqn1][meqn2];
 	  if (pd->e[pg->imtrx][eqn]) {
-	    for (i = 0; i < ei->dof[eqn]; i++) {
-	      ie = ei->gun_list[eqn][i];
+	    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+	      ie = ei[pg->imtrx]->gun_list[eqn][i];
 	      EH(ie, "Bad eqn index.");
 	      mvar1 = meqn1;
 	      mvar2 = meqn2;
@@ -4910,9 +4910,9 @@ load_neighbor_pointers( Exo_DB *exo,
 	if (meqn1 <= meqn2) {
 	  eqn = R_s[mode][meqn1][meqn2];
 	  if (pd->e[pg->imtrx][eqn]) {
-	    for (i = 0; i < ei->dof[eqn]; i++) {
-	      ie = ei->gun_list[eqn][i];
-	      I  = ei->gnn_list[eqn][i];
+	    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+	      ie = ei[pg->imtrx]->gun_list[eqn][i];
+	      I  = ei[pg->imtrx]->gnn_list[eqn][i];
 	      row_dofs = rpntr[I+1] - rpntr[I];
 	      blk_row = Local_Offset[pg->imtrx][I][eqn];
 	      EH(ie, "Bad eqn index.");
@@ -4968,7 +4968,7 @@ segregate_stress_update ( double x_update[] )
   R_s[2][2] = POLYMER_STRESS33;
 
 
-  for(ln=0; ln<ei->num_local_nodes; ln++)
+  for(ln=0; ln<ei[pg->imtrx]->num_local_nodes; ln++)
     {
       for( a=0; a<DIM; a++)
 	{
@@ -4978,11 +4978,11 @@ segregate_stress_update ( double x_update[] )
 		{
 		  eqn = R_s[a][b];
 		  
-		  if( pd->e[pg->imtrx][eqn] && ( ldof_eqn = ei->ln_to_first_dof[eqn][ln] != -1 ) )
+		  if( pd->e[pg->imtrx][eqn] && ( ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][ln] != -1 ) )
 		    {
 		      ieqn = upd->ep[pg->imtrx][eqn];
 
-		      while ( ldof_eqn <= ei->ln_to_dof[eqn][ln] )
+		      while ( ldof_eqn <= ei[pg->imtrx]->ln_to_dof[eqn][ln] )
 			{
 			  for( p=0; p<DIM; p++ )
 			    {
@@ -4994,11 +4994,11 @@ segregate_stress_update ( double x_update[] )
 
 				      lump = 0.0;
 
-				      if( pd->v[pg->imtrx][var] && (ldof_var = ei->ln_to_first_dof[var][ln] != -1 ) )
+				      if( pd->v[pg->imtrx][var] && (ldof_var = ei[pg->imtrx]->ln_to_first_dof[var][ln] != -1 ) )
 					{
 					  pvar = upd->vp[pg->imtrx][var];
 
-					  while ( ldof_var <= ei->ln_to_dof[var][ln] )
+					  while ( ldof_var <= ei[pg->imtrx]->ln_to_dof[var][ln] )
 					    {
 					      lump += lec->J[ieqn][pvar][ldof_eqn][ldof_var];
 					      ldof_var++;
@@ -5007,7 +5007,7 @@ segregate_stress_update ( double x_update[] )
 				    }
 				}
 			    }
-			  x_update[ ei->gun_list[eqn][ldof_eqn] ] = lec->R[ieqn][ldof_eqn]/lump;
+			  x_update[ ei[pg->imtrx]->gun_list[eqn][ldof_eqn] ] = lec->R[ieqn][ldof_eqn]/lump;
 			  ldof_eqn++;
 			}
 		    }
@@ -5087,7 +5087,7 @@ numerical_viscosity(dbl s[DIM][DIM],                       /* total stress */
 	    {
 	      var = v_s[mode][a][b];
 	      
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
  		  d_mun_dS[mode][a][b][j] = eps2/(sqrt(1.+ eps2*s_dbl_dot_s)*sqrt(1.+eps2*g_dbl_dot_g))
  		    *s[a][b]*bf[var]->phi[j];
@@ -5102,7 +5102,7 @@ numerical_viscosity(dbl s[DIM][DIM],                       /* total stress */
 	{
 	  var = v_g[a][b];
 	  
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_mun_dG[a][b][j] = -eps*(sqrt(1.+ eps2*s_dbl_dot_s))/pow((1.+eps2*g_dbl_dot_g),1.5)
   		*gamma_cont[a][b]*bf[var]->phi[j];

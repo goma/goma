@@ -1098,11 +1098,11 @@ get_new_coord(double *new_coord[DIM],
 
       load_elem_dofptr(ielem, exo, x, x, x, x, x, 1);
 
-      for(ln = 0; ln < ei->num_local_nodes; ln++)
+      for(ln = 0; ln < ei[pg->imtrx]->num_local_nodes; ln++)
 	{
 	  double xi[3] = {0.0, 0.0, 0.0};
 	  
-	  find_nodal_stu(ln, ei->ielem_type, xi, xi+1, xi+2);
+	  find_nodal_stu(ln, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
 
 	  gnn = exo->elem_node_list[ exo->elem_node_pntr[ielem] + ln ] ;
 
@@ -1114,20 +1114,20 @@ get_new_coord(double *new_coord[DIM],
 		{
 		  var = MESH_DISPLACEMENT1 + p;
 		  
-		  for(i = 0; i < ei->dof[var]; i++)
+		  for(i = 0; i < ei[pg->imtrx]->dof[var]; i++)
 		    {
 		      phi[i] = newshape(xi, 
-					ei->ielem_type, 
+					ei[pg->imtrx]->ielem_type, 
 					PSI, 
-					ei->dof_list[var][i], 
-					ei->ielem_shape,
+					ei[pg->imtrx]->dof_list[var][i], 
+					ei[pg->imtrx]->ielem_shape,
 					pd->i[pg->imtrx][var],
 					i);
 		    }
 
 		  if( pd->v[pg->imtrx][var] )
 		    {
-		      for(j = 0; j < ei->dof[var]; j++)
+		      for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 			{
 			  displacement[p] += *esp->d[p][j] * phi[j];
 			}

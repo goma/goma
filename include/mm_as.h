@@ -22,7 +22,7 @@
 #ifndef _MM_AS_H
 #define _MM_AS_H
 
-extern struct Element_Indices			*ei;
+extern struct Element_Indices			**ei;
 extern struct Element_Indices		       **eiRelated;
 extern struct Element_Stiffness_Pointers	*esp;
 extern struct Element_Quality_Metrics           *eqm;

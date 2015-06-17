@@ -1595,7 +1595,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		  
 		  if( first_elem != -1 )
 		    {
-                    load_ei(first_elem , exo, 0);
+                      load_ei(first_elem , exo, 0, pg->imtrx);
 
 		      Subgrid_Tree = create_shape_fcn_tree ( ls->Integration_Depth );
 		      DPRINTF(stdout,"\n\tSubgrid Integration of level set interface active.\n");
@@ -3293,7 +3293,7 @@ predict_solution_newmark(int N, double delta_t,
 	mat_index= (curr_mat_list->List)[imat];
 	if(pd_glob[mat_index]->MeshMotion == DYNAMIC_LAGRANGIAN) 
 	  {
-	    for (a = 0; a < ei->ielem_dim; a++)
+	    for (a = 0; a < ei[pg->imtrx]->ielem_dim; a++)
 	      {
 		j = Index_Solution(i, R_MESH1 + a, 0, 0 , -1, pg->imtrx);
 		x[j] = x_old[j] + c1 * xdot_old[j]
@@ -3445,12 +3445,12 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
     memset(d, 0, sizeof(double  )*DIM*MDE);
     memset(dofs, 0, sizeof(int)*DIM);
     
-    for(ln = 0; ln < ei->num_local_nodes; ln++)
+    for(ln = 0; ln < ei[pg->imtrx]->num_local_nodes; ln++)
     {
       double factor=1.0;
       double xi[3] = {0.0, 0.0, 0.0};
 	  
-      find_nodal_stu(ln, ei->ielem_type, xi, xi+1, xi+2);
+      find_nodal_stu(ln, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
 
       gnn = exo->elem_node_list[ exo->elem_node_pntr[ielem] + ln ] ;
 
@@ -3462,20 +3462,20 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
 	{
 	  var = MESH_DISPLACEMENT1 + p;
 		  
-	  for(i = 0; i < ei->dof[var]; i++)
+	  for(i = 0; i < ei[pg->imtrx]->dof[var]; i++)
 	  {
 	    phi[i] = newshape(xi, 
-			      ei->ielem_type, 
+			      ei[pg->imtrx]->ielem_type, 
 			      PSI, 
-			      ei->dof_list[var][i], 
-			      ei->ielem_shape,
+			      ei[pg->imtrx]->dof_list[var][i], 
+			      ei[pg->imtrx]->ielem_shape,
 			      pd->i[pg->imtrx][var],
 			      i);
 	  }
 
 	  if( pd->v[pg->imtrx][var] )
 	  {
-	    for(j = 0; j < ei->dof[var]; j++)
+	    for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      displacement[p] += *esp->d[p][j] * phi[j];
 	      *esp_old->d[p][j] = 0.0;

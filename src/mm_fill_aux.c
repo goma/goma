@@ -145,7 +145,7 @@ int load_coordinate_scales(const int c, struct Field_Variables *f)
   static int i_warning1 = 0;
 
 #ifdef DEBUG_HKM
-  if (ei->ielem == 165) {
+  if (ei[pg->imtrx]->ielem == 165) {
    // printf("we are here\n");
   }
 #endif
@@ -512,7 +512,7 @@ int load_coordinate_scales(const int c, struct Field_Variables *f)
    */
 
 	
-  if( pd->v[pg->imtrx][POLYMER_STRESS11] || ei->deforming_mesh )   /* these are the only two cases where d_grad_e_dq is used */
+  if( pd->v[pg->imtrx][POLYMER_STRESS11] || ei[pg->imtrx]->deforming_mesh )   /* these are the only two cases where d_grad_e_dq is used */
     {
       siz = sizeof(double) * DIM * DIM * DIM * DIM;
       memset(f->d_grad_e_dq, 0, siz);
@@ -777,11 +777,11 @@ dbl element_viscosity(void)
   fv->T = mp->reference[TEMPERATURE];
   for (i = 0; i < pd->Num_Species_Eqn; i++) 
       fv->c[i]=mp->reference_concn[i];
-  for (i = 0; i < ei->dof[MASS_FRACTION]; i++)
+  for (i = 0; i < ei[pg->imtrx]->dof[MASS_FRACTION]; i++)
     bf[MASS_FRACTION]->phi[i]=0.0;  
 
   /* initialize grad_phi_e for shear-thinning models */  
-  for ( i=0; i<ei->dof[VELOCITY1]; i++)
+  for ( i=0; i<ei[pg->imtrx]->dof[VELOCITY1]; i++)
     {
       for ( p=0; p<VIM; p++)
 	{
@@ -834,7 +834,7 @@ element_velocity(dbl v_avg[DIM], dbl dv_dnode[DIM][MDE],
 	  for (p = 0; p < dim; p++)
 	    {
 
-	      dofs     = ei->dof[VELOCITY1];
+	      dofs     = ei[pg->imtrx]->dof[VELOCITY1];
 	      ddofs = dofs;  
 
 	      for (i = 0; i < dofs; i++)
@@ -847,11 +847,11 @@ element_velocity(dbl v_avg[DIM], dbl dv_dnode[DIM][MDE],
       else
 	{
 	  /* use the velocity of the stress-free-state */
-	  dofs     = ei->dof[MESH_DISPLACEMENT1];
+	  dofs     = ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];
 	  ddofs = dofs;  
 	  for (i=0; i<dofs; i++) 
 	    {
-	      I = exo->node_list[ei->iconnect_ptr + i];
+	      I = exo->node_list[ei[pg->imtrx]->iconnect_ptr + i];
 
 	      if ((cr->MeshMotion == LAGRANGIAN ||
 		   cr->MeshMotion == DYNAMIC_LAGRANGIAN))
@@ -888,7 +888,7 @@ element_velocity(dbl v_avg[DIM], dbl dv_dnode[DIM][MDE],
     {    
       if ( cr->MeshMotion == ARBITRARY)
 	{
-	  dofs     = ei->dof[VELOCITY1];
+	  dofs     = ei[pg->imtrx]->dof[VELOCITY1];
 	  centroid_node = dofs-1;
 
 	  for( p=0; p<dim; p++)
@@ -899,10 +899,10 @@ element_velocity(dbl v_avg[DIM], dbl dv_dnode[DIM][MDE],
 	}
       else
 	{
-	  dofs     = ei->dof[MESH_DISPLACEMENT1];
+	  dofs     = ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];
 	  centroid_node = dofs-1;
 
-	  I = exo->node_list[ei->iconnect_ptr + centroid_node];
+	  I = exo->node_list[ei[pg->imtrx]->iconnect_ptr + centroid_node];
 	  if ((cr->MeshMotion == LAGRANGIAN ||
 	       cr->MeshMotion == DYNAMIC_LAGRANGIAN))
 	    {
@@ -977,7 +977,7 @@ h_elem_siz(dbl hsquared[DIM], dbl hh[DIM][DIM],
   dbl xnode[DIM][MDE];
   dbl p1[DIM], p2[DIM], p3[DIM], p4[DIM], p5[DIM], p6[DIM];
   dim =  pd->Num_Dim;
-  int elem_type = ei->ielem_type;
+  int elem_type = ei[pg->imtrx]->ielem_type;
   int elem_shape = type2shape(elem_type);
   int DeformingMeshShell = 0;
 
@@ -996,17 +996,17 @@ h_elem_siz(dbl hsquared[DIM], dbl hh[DIM][DIM],
   if (mp->FSIModel == FSI_MESH_CONTINUUM ||
       mp->FSIModel == FSI_REALSOLID_CONTINUUM) DeformingMeshShell = 1;
 
-  j = Proc_Connect_Ptr[ei->ielem];
+  j = Proc_Connect_Ptr[ei[pg->imtrx]->ielem];
   for (p = 0; p < dim; p++) {
     if (DeformingMesh || DeformingMeshShell) {
       var = MESH_DISPLACEMENT1 + p;
-      for (i = 0; i < ei->num_local_nodes; i++) {
-	idof = ei->ln_to_dof[var][i];
+      for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
+	idof = ei[pg->imtrx]->ln_to_dof[var][i];
 	index = Proc_Elem_Connect[j + i];
 	if(idof != -1) xnode[p][i]= Coor[p][index] + *esp->d[p][idof];
       }
     } else {
-      for (i = 0; i < ei->num_local_nodes; i++) {
+      for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
 	index = Proc_Elem_Connect[j  + i];
 	xnode[p][i]= Coor[p][index];
       }
@@ -1258,9 +1258,9 @@ global_h_elem_siz(dbl x[], dbl x_old[], dbl xdot[], dbl resid_vector[],
   for (e = 0; e < exo->num_elems; e++) {
     (void) load_elem_dofptr(e, exo , x, x_old, xdot, xdot, 
 			    resid_vector, 1);
-    if(ei->ielem_dim != 1) h_elem_siz(hsquared, hhv, dhv_dxnode, 0);
+    if(ei[pg->imtrx]->ielem_dim != 1) h_elem_siz(hsquared, hhv, dhv_dxnode, 0);
     h_elem = 0.;
-    for (p = 0; p < ei->ielem_dim; p++) {
+    for (p = 0; p < ei[pg->imtrx]->ielem_dim; p++) {
       h_elem += hsquared[p];
     }
     h_elem = sqrt(h_elem/dim); 
@@ -1362,8 +1362,8 @@ surface_determinant_and_normal(
        *  This code should be considered to be untested. It worked for one case.
        */
       // ok we fill up snormal
-      shell_determinant_and_normal(ei->ielem, ei->iconnect_ptr, ei->num_local_nodes,
-				   ei->ielem_dim, 1);
+      shell_determinant_and_normal(ei[pg->imtrx]->ielem, ei[pg->imtrx]->iconnect_ptr, ei[pg->imtrx]->num_local_nodes,
+				   ei[pg->imtrx]->ielem_dim, 1);
       if (id_side == 1) {
 	signID = -1.0;
       } else {
@@ -1381,10 +1381,10 @@ surface_determinant_and_normal(
       fv->snormal[0] = - signID *  fv->snormal[1]; 
       fv->snormal[1] =   signID *  tmp; 
 
-      for (i = 0; i < ei->num_local_nodes; i++)
+      for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++)
 	{
 	  inode = Proc_Elem_Connect[iconnect_ptr + i];
-	  ldof = ei->ln_to_dof[ShapeVar][i];
+	  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][i];
 	  if (ldof >= 0)
 	    {
 	      if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1] > 0 )
@@ -1405,7 +1405,7 @@ surface_determinant_and_normal(
   /* define space of surface */  
   switch (ielem_surf_dim) {
   case 1:
-    switch (ei->ielem_shape) {
+    switch (ei[pg->imtrx]->ielem_shape) {
     case TRIANGLE:
     case TRISHELL:
       if ( id_side == 1 )
@@ -1457,7 +1457,7 @@ surface_determinant_and_normal(
     break;
 
   case 2:
-    switch (ei->ielem_shape) {
+    switch (ei[pg->imtrx]->ielem_shape) {
     case HEXAHEDRON:
       /*
        * In trying to figure out how these T matrices work, I think that
@@ -1543,10 +1543,10 @@ surface_determinant_and_normal(
   /* transform from element to physical coords */
   for (p = 0; p < ielem_surf_dim; p++)
     {
-      for (a = 0; a < ei->ielem_dim; a++)
+      for (a = 0; a < ei[pg->imtrx]->ielem_dim; a++)
         {
           t[p][a] = 0.;
-          for (b = 0; b < ei->ielem_dim; b++)
+          for (b = 0; b < ei[pg->imtrx]->ielem_dim; b++)
             {
               t[p][a] += map_bf->J[b][a] * T[p][b] * fv->h[b];
             }
@@ -1557,21 +1557,21 @@ surface_determinant_and_normal(
     {
       for (p = 0; p < ielem_surf_dim; p++)
         {
-          for (a = 0; a < ei->ielem_dim; a++)
+          for (a = 0; a < ei[pg->imtrx]->ielem_dim; a++)
             {
               for (i = 0; i < num_nodes_on_side; i++)
                 {
                   id   = local_elem_node_id[i];
                   inode = Proc_Elem_Connect[iconnect_ptr + id];
-                  ldof = ei->ln_to_dof[ShapeVar][id];
+                  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
                   if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1] > 0)
                     {
                       phi_i = map_bf->phi[ldof];
 
-                      for (q = 0; q < ei->ielem_dim; q++)
+                      for (q = 0; q < ei[pg->imtrx]->ielem_dim; q++)
                         {
                           dt_x[p][a][q][ldof] = 0.0;
-                          for (b = 0; b < ei->ielem_dim; b++)
+                          for (b = 0; b < ei[pg->imtrx]->ielem_dim; b++)
                             {
                               dt_x[p][a][q][ldof] += T[p][b] * (map_bf->dJ[b][a][q][ldof] * fv->h[b] +
                                                                 map_bf->J[b][a] * phi_i * fv->hq[b][q]);
@@ -1606,15 +1606,15 @@ surface_determinant_and_normal(
             {
               id   = (int) local_elem_node_id[i];
               inode = Proc_Elem_Connect[iconnect_ptr + id];
-              ldof = ei->ln_to_dof[ShapeVar][id];
+              ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
               if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1] > 0 )
                 {
                   phi_i = map_bf->phi[ldof];
  
-                  for (a = 0; a < ei->ielem_dim; a++)
+                  for (a = 0; a < ei[pg->imtrx]->ielem_dim; a++)
                     {
                       d_det_h01_x = 0.;
-                      for ( b = 0; b < ei->ielem_dim; b++)
+                      for ( b = 0; b < ei[pg->imtrx]->ielem_dim; b++)
                         {
                           d_det_h01_x += r_det_h01 * t[0][b] * dt_x[0][b][a][ldof];
                         }
@@ -1660,12 +1660,12 @@ surface_determinant_and_normal(
             {
               id   = (int) local_elem_node_id[i];
               inode = Proc_Elem_Connect[iconnect_ptr + id];
-              ldof = ei->ln_to_dof[ShapeVar][id];
+              ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
               if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1] > 0 )
                 {
                   phi_i = map_bf->phi[ldof];
 
-                  for (a = 0; a < ei->ielem_dim; a++)
+                  for (a = 0; a < ei[pg->imtrx]->ielem_dim; a++)
                     {
                       d_nx_x = t[0][1] * dt_x[1][2][a][ldof] + dt_x[0][1][a][ldof] * t[1][2] -
                                t[0][2] * dt_x[1][1][a][ldof] - dt_x[0][2][a][ldof] * t[1][1];
@@ -1785,7 +1785,7 @@ edge_determinant_and_vectors(
 	  {
 	    id   = (int) edge_elem_node_id[i];
 	    inode = Proc_Elem_Connect[iconnect_ptr + id];
-	    ldof = ei->ln_to_dof[ShapeVar][id];
+	    ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
 	    if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1] > 0 )
 	      {		  
 		phi_i = bf[ShapeVar]->phi[ldof];
@@ -1865,7 +1865,7 @@ edge_determinant_and_vectors(
 	{
 	  id   = (int) edge_elem_node_id[i];
 	  inode = Proc_Elem_Connect[iconnect_ptr + id];
-	  ldof = ei->ln_to_dof[ShapeVar][id];
+	  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
 	  for (p=0; p<dim; p++) {
 	      if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1 + p] > 0 )
 		{	
@@ -1891,7 +1891,7 @@ edge_determinant_and_vectors(
       {
 	id    = (int) edge_elem_node_id[i];
 	inode = Proc_Elem_Connect[iconnect_ptr + id];
-	ldof  = ei->ln_to_dof[ShapeVar][id];
+	ldof  = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
 	if ( DeformingMesh )
 	  {
 	    if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1] > 0)
@@ -2106,7 +2106,7 @@ edge_determinant_and_vectors(
 	{
 	  id   = (int) edge_elem_node_id[i];
 	  inode = Proc_Elem_Connect[iconnect_ptr + id];
-	  ldof = ei->ln_to_dof[ShapeVar][id];
+	  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
 	      if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1] > 0 )
 		{		  
 		  phi_i = bf[ShapeVar]->phi[ldof];
@@ -2242,7 +2242,7 @@ edge_determinant_and_vectors(
 	{
 	  id   = (int) edge_elem_node_id[i];
 	  inode = Proc_Elem_Connect[iconnect_ptr + id];
-	  ldof = ei->ln_to_dof[ShapeVar][id];
+	  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
 	  for (p=0; p<dim; p++) {
 	  if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1 + p] > 0 )
 	    {	
@@ -2338,7 +2338,7 @@ calc_CL_normal ( double snormal[DIM],
 	{
 	  id   =  edge_elem_node_id[i];
 	  Inode = exo->node_list[iconnect_ptr + id];
-	  ldof = ei->ln_to_dof[pd->ShapeVar][id];
+	  ldof = ei[pg->imtrx]->ln_to_dof[pd->ShapeVar][id];
 	    
 	  for (p=0; p<dim; p++) 
 	    {
@@ -2440,22 +2440,22 @@ get_supg_stuff(dbl *supg_term,
    * Find the local coodinates of the nodes in the current element
    * -> Can this be pushed to a more generic place ?
    */
-  j = Proc_Connect_Ptr[ei->ielem];
+  j = Proc_Connect_Ptr[ei[pg->imtrx]->ielem];
   for (p = 0; p < dim; p++)
     {
       if (DeformingMesh)
 	{
 	  var = MESH_DISPLACEMENT1 + p;
-	  for (i = 0; i < ei->num_local_nodes; i++)
+	  for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++)
 	    {
-	      idof = ei->ln_to_dof[var][i];
+	      idof = ei[pg->imtrx]->ln_to_dof[var][i];
 	      index = Proc_Elem_Connect[j + i];
 	      xnode[p][i]= Coor[p][index] + *esp->d[p][idof];
 	    }
 	}
       else
 	{
-	  for (i = 0; i < ei->num_local_nodes; i++)
+	  for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++)
 	    {
 	      index = Proc_Elem_Connect[j  + i];
 	      xnode[p][i]= Coor[p][index];
@@ -2482,7 +2482,7 @@ get_supg_stuff(dbl *supg_term,
       j = VELOCITY1 + p;
       if ( pd->v[pg->imtrx][j] )
 	{
-	  dofs = ei->dof[j]; 
+	  dofs = ei[pg->imtrx]->dof[j]; 
 	  for(i=0; i<dofs; i++) v[p][i] = *esp->v[p][i];
 	}
       else
@@ -2509,7 +2509,7 @@ get_supg_stuff(dbl *supg_term,
   memset(v_coeff, 0, sizeof(double)*MDE);
   if ( pd->v[pg->imtrx][VELOCITY1] )
     {
-      foo = 1.0 / ei->dof[VELOCITY1];
+      foo = 1.0 / ei[pg->imtrx]->dof[VELOCITY1];
       for ( i=0; i < dofs; i++ )
 	{
 	  v_coeff[i] = foo;
@@ -2588,7 +2588,7 @@ get_supg_stuff(dbl *supg_term,
       j = VELOCITY1 + p;
       if ( pd->v[pg->imtrx][j] )
 	{
-	  for(i=0; i<ei->dof[j]; i++)
+	  for(i=0; i<ei[pg->imtrx]->dof[j]; i++)
 	    {
 	      vcent[p] = v_coeff[i] * v[p][i];
 	    }
@@ -2605,7 +2605,7 @@ get_supg_stuff(dbl *supg_term,
     { 
     for( i=0; i < dim; i++ )
       {
-	for ( j=0; j < ei->num_local_nodes; j++ )
+	for ( j=0; j < ei[pg->imtrx]->num_local_nodes; j++ )
 	  {
 	    d_vect[p][i] += x_coeff[p][j] * xnode[i][j];
 	  }
@@ -2685,7 +2685,7 @@ get_supg_stuff(dbl *supg_term,
       for ( i=0; i < dim; i++ )
 	{                  
 	  /* k: x_k is the position vector of the kth node */
-	  for ( k=0; k < ei->num_local_nodes; k++ )
+	  for ( k=0; k < ei[pg->imtrx]->num_local_nodes; k++ )
 	    {  
 	      /* q: x_(k)q is the q-th component of x_k */
 	      for ( q=0; q < dim; q++ )
@@ -2704,7 +2704,7 @@ get_supg_stuff(dbl *supg_term,
   for ( i=0; i < dim; i++ )
     {                  
       /* k: v_k is the velocity vector at the kth node */
-      for ( k=0; k < ei->num_local_nodes; k++ )
+      for ( k=0; k < ei[pg->imtrx]->num_local_nodes; k++ )
 	{  
 	  /* q: v_(k)q is the q-th component of v_k */
 	  for ( q=0; q < dim; q++ )
@@ -2724,7 +2724,7 @@ get_supg_stuff(dbl *supg_term,
   memset(d_vcent_du,0,sizeof(double)*DIM*MDE*DIM);
   for ( i=0; i < dim; i++ )
     {
-      for ( k=0; k < ei->num_local_nodes; k++ )
+      for ( k=0; k < ei[pg->imtrx]->num_local_nodes; k++ )
 	{
 	  d_vcent_du[i][k][i] = v_coeff[k];
 	}
@@ -2737,7 +2737,7 @@ get_supg_stuff(dbl *supg_term,
   if ( vmag2 > small_number )
     {
       foo = 1.0 / vmag2;
-      for ( k=0; k < ei->num_local_nodes; k++ )
+      for ( k=0; k < ei[pg->imtrx]->num_local_nodes; k++ )
 	{
 	  for ( q=0; q < dim; q++ )
 	    {
@@ -2759,7 +2759,7 @@ get_supg_stuff(dbl *supg_term,
   if ( DeformingMesh && vmag2 > small_number )
     {
       foo = 1.0 / (vmag * vmag);
-      for ( k=0; k < ei->num_local_nodes; k++ )
+      for ( k=0; k < ei[pg->imtrx]->num_local_nodes; k++ )
 	{
 	  for ( q=0; q < dim; q++ )
 	    {

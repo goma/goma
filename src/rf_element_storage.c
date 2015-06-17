@@ -61,6 +61,7 @@ setup_element_storage(void)
 {
   int eb_index, do_malloc, mn;
   ELEM_BLK_STRUCT *eb_ptr; 
+  pg->imtrx = 0; // TODO: UCK
   for (eb_index = 0; eb_index < EXO_ptr->num_elem_blocks; eb_index++) {
     do_malloc = FALSE;
     mn = Matilda[eb_index];
@@ -119,6 +120,11 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
   ELEMENT_STORAGE_STRUCT *s_ptr;
   double *d_ptr;
   double *base_ptr = NULL;
+
+  if (upd->Total_Num_Matrices > 1) {
+    EH(-1, "Element storage not setup to work with multiple matrices.");
+  }
+
   /*
    * Check to make sure that we haven't already allocated storage
    */
@@ -510,7 +516,7 @@ get_nodalSat_tnm1_FromES(int lnn)
       *        values of  Current_EB_ptr and ei being correct!
       *****************************************************************/
 {
-  int ielem = ei->ielem;
+  int ielem = ei[pg->imtrx]->ielem;
   int ip_total = Current_EB_ptr->IP_total;
   ELEMENT_STORAGE_STRUCT *es = Current_EB_ptr->ElemStorage + ielem;
   return (es->Sat_QP_tn[ip_total + lnn]);
@@ -531,7 +537,7 @@ get_Sat_tnm1_FromES(int ip)
       *
       *****************************************************************/
 {
-  int ielem = ei->ielem;
+  int ielem = ei[pg->imtrx]->ielem;
   ELEMENT_STORAGE_STRUCT *es = Current_EB_ptr->ElemStorage + ielem;
   return (es->Sat_QP_tn[ip]);
 }
@@ -551,7 +557,7 @@ put_nodalSat_tn_IntoES(int lnn, double sat)
       *
       *****************************************************************/
 {
-  int ielem = ei->ielem;
+  int ielem = ei[pg->imtrx]->ielem;
   int ip_total = Current_EB_ptr->IP_total;
   ELEMENT_STORAGE_STRUCT *es = Current_EB_ptr->ElemStorage + ielem;
   es->Sat_QP_tn[ip_total + lnn] = sat;
@@ -573,7 +579,7 @@ put_Sat_tn_IntoES(int ip, double sat)
       *
       *****************************************************************/
 {
-  int ielem = ei->ielem;
+  int ielem = ei[pg->imtrx]->ielem;
   ELEMENT_STORAGE_STRUCT *es = Current_EB_ptr->ElemStorage + ielem;
   es->Sat_QP_tn[ip] = sat;
 }

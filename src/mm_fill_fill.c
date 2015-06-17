@@ -404,7 +404,7 @@ assemble_fill(double tt,
   memset(v_dot_Dphi, 0, sizeof(double)*MDE);
 
     
-  for ( i=0; i < ei->dof[eqn]; i++ )
+  for ( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
     {
       /* So: grad_phi_i[a] == bf[var]->grad_phi[i][a] */
       grad_phi_i = bf[eqn]->grad_phi[i];
@@ -435,7 +435,7 @@ assemble_fill(double tt,
       peqn = upd->ep[pg->imtrx][eqn];
       if(ls == NULL) var  = FILL;  
       	else var  = ls->var;  
-      for( i=0; i < ei->dof[eqn]; i++ )
+      for( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
 	{
 	  phi_i = bf[eqn]->phi[i];
 	  
@@ -539,7 +539,7 @@ assemble_fill(double tt,
   if ( af->Assemble_Jacobian )
     {
       peqn = upd->ep[pg->imtrx][eqn];
-      for ( i=0; i < ei->dof[eqn]; i++ )
+      for ( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
 	{
 	  
 	  phi_i = bf[eqn]->phi[i];
@@ -587,7 +587,7 @@ assemble_fill(double tt,
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for( j=0; j < ei->dof[var]; j++) 
+	      for( j=0; j < ei[pg->imtrx]->dof[var]; j++) 
 		{
 		  phi_j = bf[eqn]->phi[j];
 
@@ -673,7 +673,7 @@ assemble_fill(double tt,
 		{
 		  
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j < ei->dof[var]; j++ )
+		  for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
 		    {
 		      
 		      phi_j = bf[var]->phi[j];	      
@@ -738,7 +738,7 @@ assemble_fill(double tt,
 		{
 		  
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j < ei->dof[var]; j++ )
+		  for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
 		    {
 		      phi_j = bf[var]->phi[j];	      
 		      switch(Fill_Weight_Fcn)
@@ -803,7 +803,7 @@ assemble_fill(double tt,
 		  if ( lubon ) {
 
 		    pvar = upd->vp[pg->imtrx][var];
-		    for ( j=0; j<ei->dof[var]; j++) {
+		    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 		      c = dof_map[j];
 		      phi_j = bf[var]->phi[j];
 
@@ -825,7 +825,7 @@ assemble_fill(double tt,
 		  } else {
 
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      
 		      phi_j = bf[var]->phi[j];	      
@@ -910,7 +910,7 @@ assemble_fill(double tt,
 	      for(b=0; b < VIM; b++)
 		{
 		  var = SOLID_DISPLACEMENT1 + b;
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];	   
    
@@ -936,7 +936,7 @@ assemble_fill(double tt,
 		{
 		  
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      
 		      phi_j = bf[var]->phi[j];	      
@@ -1014,7 +1014,7 @@ assemble_fill(double tt,
 	  if ( pd->v[pg->imtrx][var] && lubon )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for( j=0; j < ei->dof[var]; j++) 
+	      for( j=0; j < ei[pg->imtrx]->dof[var]; j++) 
 		{
 		  phi_j = bf[eqn]->phi[j];
 		  grad_phi_j = bf[eqn]->grad_phi[j];
@@ -1048,7 +1048,7 @@ assemble_fill(double tt,
 	  if ( pd->v[pg->imtrx][var] && lubon )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for( j=0; j < ei->dof[var]; j++) 
+	      for( j=0; j < ei[pg->imtrx]->dof[var]; j++) 
 		{
 		  phi_j = bf[eqn]->phi[j];
 		  grad_phi_j = bf[eqn]->grad_phi[j];
@@ -1078,7 +1078,7 @@ assemble_fill(double tt,
 	  if ( pd->v[pg->imtrx][var] && lubon )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for( j=0; j < ei->dof[var]; j++) 
+	      for( j=0; j < ei[pg->imtrx]->dof[var]; j++) 
 		{
 		  phi_j = bf[eqn]->phi[j];
 		  grad_phi_j = bf[eqn]->grad_phi[j];
@@ -1272,7 +1272,7 @@ assemble_fill_ext_v(double tt,
   load_lsi( 0. );
   load_lsi_derivs();
 
-  dofs     = ei->dof[EXT_VELOCITY];
+  dofs     = ei[pg->imtrx]->dof[EXT_VELOCITY];
 
   /* extension velocity magnitude for stabilization term */  
   ext_v_avg = 0.;
@@ -1338,7 +1338,7 @@ assemble_fill_ext_v(double tt,
 
   var = FILL;
   eqn = R_FILL;
-  for( i=0; i < ei->dof[eqn]; i++ )
+  for( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
     {
       gradF_gradphi[i] = 0.;
       grad_phi_i = bf[var]->grad_phi[i];
@@ -1348,10 +1348,10 @@ assemble_fill_ext_v(double tt,
 	}
     }
  
-  for( i=0; i < ei->dof[eqn]; i++ )
+  for( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
     {
       grad_phi_i = bf[var]->grad_phi[i];
-      for( j=0; j < ei->dof[var]; j++) 
+      for( j=0; j < ei[pg->imtrx]->dof[var]; j++) 
 	{
 	  grad_phi_j = bf[var]->grad_phi[j];
 
@@ -1383,7 +1383,7 @@ assemble_fill_ext_v(double tt,
       visc = h_elem * visc_coeff * num / den;
 
       var = EXT_VELOCITY;
-      for ( j=0; j < ei->dof[var]; j++ )
+      for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
         {
           phi_j = bf[var]->phi[j];
           d_visc_dext_v[j] = h_elem * visc_coeff / den * phi_j *
@@ -1392,7 +1392,7 @@ assemble_fill_ext_v(double tt,
         }
         
       var = FILL;
-      for ( j=0; j < ei->dof[var]; j++ )
+      for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
         {
           phi_j = bf[var]->phi[j];
           d_visc_dF[j] = h_elem * visc_coeff / den *
@@ -1414,9 +1414,9 @@ assemble_fill_ext_v(double tt,
     {
       n_dot_dF = lsi->d_gfmag_dF;
       var = FILL;
-      for ( i=0; i < ei->dof[var]; i++ )
+      for ( i=0; i < ei[pg->imtrx]->dof[var]; i++ )
 	{
-          for ( j=0; j < ei->dof[var]; j++ )
+          for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
 	    {
               d_n_dot_dF_dF[i][j] = 0.;
               for ( a=0; a<dim; a++)
@@ -1426,7 +1426,7 @@ assemble_fill_ext_v(double tt,
         }
     }
     
-  for ( i=0; i < ei->dof[eqn]; i++ )
+  for ( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
     {
       /* So: grad_phi_i[a] == bf[var]->grad_phi[i][a] */
       grad_phi_i = bf[eqn]->grad_phi[i];
@@ -1447,7 +1447,7 @@ assemble_fill_ext_v(double tt,
   if ( af->Assemble_Residual )
     {
       peqn = upd->ep[pg->imtrx][eqn];
-      for( i=0; i < ei->dof[eqn]; i++ )
+      for( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
 	{
 	  phi_i = bf[eqn]->phi[i];
 	  grad_phi_i = bf[eqn]->grad_phi[i];
@@ -1545,7 +1545,7 @@ assemble_fill_ext_v(double tt,
   if ( af->Assemble_Jacobian )
     {
       peqn = upd->ep[pg->imtrx][eqn];
-      for ( i=0; i < ei->dof[eqn]; i++ )
+      for ( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
 	{
 	  
 	  phi_i = bf[eqn]->phi[i];
@@ -1576,7 +1576,7 @@ assemble_fill_ext_v(double tt,
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for( j=0; j < ei->dof[var]; j++) 
+	      for( j=0; j < ei[pg->imtrx]->dof[var]; j++) 
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -1685,7 +1685,7 @@ assemble_fill_ext_v(double tt,
 	    {
 	      
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j < ei->dof[var]; j++ )
+	      for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
 		{
 		  
 		  phi_j = bf[var]->phi[j];	      
@@ -1771,7 +1771,7 @@ assemble_fill_ext_v(double tt,
 		{
 		  
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      
 		      phi_j = bf[var]->phi[j];	      
@@ -1932,7 +1932,7 @@ assemble_fill_gradf(double tt,
     }
 
   eqn	 = R_FILL;
-  for( i=0; i < ei->dof[eqn]; i++ )
+  for( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
     {
       gradF_gradphi[i] = 0.;
       grad_phi_i = bf[eqn]->grad_phi[i];
@@ -1943,10 +1943,10 @@ assemble_fill_gradf(double tt,
     }
 
   var    = FILL;
-  for( i=0; i < ei->dof[eqn]; i++ )
+  for( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
     {
       grad_phi_i = bf[eqn]->grad_phi[i];
-      for( j=0; j < ei->dof[var]; j++) 
+      for( j=0; j < ei[pg->imtrx]->dof[var]; j++) 
 	{
 	  grad_phi_j = bf[var]->grad_phi[j];
 
@@ -1973,7 +1973,7 @@ assemble_fill_gradf(double tt,
     visc = h_elem * visc_coeff * ( lsi->gfmag - 1. );
     
   var = FILL;
-  for ( j=0; j < ei->dof[var]; j++ )
+  for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
     {
       if ( ( lsi->gfmag - 1. ) > 0.25 )
         d_visc_dF[j] = 0.;
@@ -1990,7 +1990,7 @@ assemble_fill_gradf(double tt,
   visc = h_elem * visc_coeff;
   
   var = FILL;
-  for ( j=0; j < ei->dof[var]; j++ )
+  for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
     {
       d_visc_dF[j] = 0.;
     }
@@ -2001,7 +2001,7 @@ assemble_fill_gradf(double tt,
   visc = h_elem * visc_coeff * ( 1. - lsi->gfmaginv );
     
   var = FILL;
-  for ( j=0; j < ei->dof[var]; j++ )
+  for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
     {
       d_visc_dF[j] = -h_elem * visc_coeff * lsi->d_gfmaginv_dF[j];
     }
@@ -2015,7 +2015,7 @@ assemble_fill_gradf(double tt,
     visc = h_elem * visc_coeff * ( 1. - lsi->gfmaginv );
     
   var = FILL;
-  for ( j=0; j < ei->dof[var]; j++ )
+  for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
     {
       if ( lsi->gfmag < 1. )
         d_visc_dF[j] = 0.;
@@ -2037,7 +2037,7 @@ assemble_fill_gradf(double tt,
   if ( af->Assemble_Residual )
     {
       peqn = upd->ep[pg->imtrx][eqn];
-      for( i=0; i < ei->dof[eqn]; i++ )
+      for( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
 	{
 	  phi_i = bf[eqn]->phi[i];
 	  grad_phi_i = bf[eqn]->grad_phi[i];
@@ -2088,7 +2088,7 @@ assemble_fill_gradf(double tt,
   if ( af->Assemble_Jacobian )
     {
       peqn = upd->ep[pg->imtrx][eqn];
-      for ( i=0; i < ei->dof[eqn]; i++ )
+      for ( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
 	{
 	  
 	  phi_i = bf[eqn]->phi[i];
@@ -2110,7 +2110,7 @@ assemble_fill_gradf(double tt,
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for( j=0; j < ei->dof[var]; j++) 
+	      for( j=0; j < ei[pg->imtrx]->dof[var]; j++) 
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -2160,7 +2160,7 @@ assemble_fill_gradf(double tt,
 		{
 		  
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_gradF_dmesh_gradF = 0.;
 		      for ( a=0; a < VIM; a++ )
@@ -2405,9 +2405,9 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
    */
   if ( af->Assemble_Residual )
     {
-      for ( i=0; i<ei->num_local_nodes; i++)
+      for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 	{
-	  I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+	  I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
 	  node = Nodes[I];
 	  nv = node->Nodal_Vars_Info[pg->imtrx];
 	  /* check for multiple dofs */
@@ -2429,7 +2429,7 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
   
 		  /* check to make sure that unknowns are defined at this node,
 		   * otherwise don't add anything to this node */
- 		  idof = ei->ln_to_first_dof[eqn][i] + ki;
+ 		  idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
 
 		  /* also convert from node number to dof number */
 		  phi_i = bf[eqn]->phi[idof];
@@ -2501,9 +2501,9 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
 
   if ( af->Assemble_Jacobian )
     {
-      for ( i=0; i<ei->num_local_nodes; i++)
+      for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 	  {
-		  I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
+		  I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i]; 
 		  
 		  node = Nodes[I];
 		  nv = node->Nodal_Vars_Info[pg->imtrx];
@@ -2512,7 +2512,7 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
 		  for (ki = 0; ki < nvdofi; ki++)
 		  {
 			  ie = node_to_fill[I] + ki;
-			  idof = ei->ln_to_first_dof[eqn][i] + ki;
+			  idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
 			  phi_i = bf[eqn]->phi[idof];
 			  
 			  /* The weight function for SUPG */
@@ -2534,15 +2534,15 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
 			  }
 			  
 			  /* derivatives of fill equation wrt to fill variable */	  
-			  for( j=0; j< ei->num_local_nodes; j++) 
+			  for( j=0; j< ei[pg->imtrx]->num_local_nodes; j++) 
 			  {
-				  J = Proc_Elem_Connect[ei->iconnect_ptr + j]; 
+				  J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j]; 
 				  nvdofj = Dolphin[pg->imtrx][J][eqn];
 				  for ( kj=0; kj<nvdofj; kj++)
 					  
 				  {
 					  
-					  jdof = ei->ln_to_first_dof[eqn][j] + kj;
+					  jdof = ei[pg->imtrx]->ln_to_first_dof[eqn][j] + kj;
 					  phi_j = bf[eqn]->phi[jdof];
 					  
 					  je = node_to_fill[J] + kj;
@@ -2775,7 +2775,7 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
 
   gfmag_inv = 1./lsi->gfmag;
   
-  dofs     = ei->dof[EXT_VELOCITY];
+  dofs     = ei[pg->imtrx]->dof[EXT_VELOCITY];
 
   /* extension velocity magnitude for stabilization term */
   ext_v_avg = 0.;
@@ -2825,7 +2825,7 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
 
   /* Compute and save v.grad(phi) and vcent.grad(phi). */
   memset(gradF_dot_Dphi, 0, sizeof(double)*MDE);
-  for ( i=0; i < ei->dof[eqn]; i++ )
+  for ( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
     {
       /* So: grad_phi_i[a] == bf[var]->grad_phi[i][a] */
       grad_phi_i = bf[eqn]->grad_phi[i];
@@ -2840,9 +2840,9 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
    */
   if ( af->Assemble_Residual )
     {
-      for ( i=0; i<ei->num_local_nodes; i++)
+      for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 	{
-	  I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+	  I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
 	  node = Nodes[I];
 	  nv = node->Nodal_Vars_Info[pg->imtrx];
 	  /* check for multiple dofs */
@@ -2862,7 +2862,7 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
 		{
 		  /* check to make sure that unknowns are defined at this node,
 		   * otherwise don't add anything to this node */
- 		  idof = ei->ln_to_first_dof[eqn][i] + ki;
+ 		  idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
 
 		  /* also convert from node number to dof number */
 		  phi_i = bf[eqn]->phi[idof];
@@ -2892,9 +2892,9 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
 
   if ( af->Assemble_Jacobian )
     {
-      for ( i=0; i<ei->num_local_nodes; i++)
+      for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 	{
-	  I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
+	  I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i]; 
 
 	  node = Nodes[I];
 	  nv = node->Nodal_Vars_Info[pg->imtrx];
@@ -2903,7 +2903,7 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
 	  for (ki = 0; ki < nvdofi; ki++)
 	    {
 	      ie = node_to_fill[I] + ki;
-	      idof = ei->ln_to_first_dof[eqn][i] + ki;
+	      idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
 	      phi_i = bf[eqn]->phi[idof];
 	      /* So: grad_phi_j[a] == bf[var]->grad_phi[j][a] */
 	      grad_phi_i = bf[eqn]->grad_phi[idof];
@@ -2918,15 +2918,15 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
 		}
 	      
 	      /* derivatives of fill equation wrt to fill variable */	  
-	      for( j=0; j< ei->num_local_nodes; j++) 
+	      for( j=0; j< ei[pg->imtrx]->num_local_nodes; j++) 
 		{
-		  J = Proc_Elem_Connect[ei->iconnect_ptr + j]; 
+		  J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j]; 
 		  nvdofj = Dolphin[pg->imtrx][J][eqn];
 		  for ( kj=0; kj<nvdofj; kj++)
 
 		    {
 		      
-		      jdof = ei->ln_to_first_dof[eqn][j] + kj;
+		      jdof = ei[pg->imtrx]->ln_to_first_dof[eqn][j] + kj;
 		      phi_j = bf[eqn]->phi[jdof];
 		      /* So: grad_phi_j[a] == bf[var]->grad_phi[j][a] */
 		      grad_phi_j = bf[eqn]->grad_phi[jdof];
@@ -3125,7 +3125,7 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
 
   gfmag_inv = 1./lsi->gfmag;
   
-  dofs     = ei->dof[EXT_VELOCITY];
+  dofs     = ei[pg->imtrx]->dof[EXT_VELOCITY];
 
   /* extension velocity magnitude for stabilization term */
   ext_v_avg = 0.;
@@ -3175,7 +3175,7 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
 
   /* Compute and save v.grad(phi) and vcent.grad(phi). */
   memset(gradF_dot_Dphi, 0, sizeof(double)*MDE);
-  for ( i=0; i < ei->dof[eqn]; i++ )
+  for ( i=0; i < ei[pg->imtrx]->dof[eqn]; i++ )
     {
       /* So: grad_phi_i[a] == bf[var]->grad_phi[i][a] */
       grad_phi_i = bf[eqn]->grad_phi[i];
@@ -3190,9 +3190,9 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
    */
   if ( af->Assemble_Residual )
     {
-      for ( i=0; i<ei->num_local_nodes; i++)
+      for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 	{
-	  I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+	  I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
 	  node = Nodes[I];
 	  nv = node->Nodal_Vars_Info[pg->imtrx];
 	  /* check for multiple dofs */
@@ -3212,7 +3212,7 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
 		{
 		  /* check to make sure that unknowns are defined at this node,
 		   * otherwise don't add anything to this node */
- 		  idof = ei->ln_to_first_dof[eqn][i] + ki;
+ 		  idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
 
 		  /* also convert from node number to dof number */
 		  phi_i = bf[eqn]->phi[idof];
@@ -3242,9 +3242,9 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
 
   if ( af->Assemble_Jacobian )
     {
-      for ( i=0; i<ei->num_local_nodes; i++)
+      for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 	{
-	  I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
+	  I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i]; 
 
 	  node = Nodes[I];
 	  nv = node->Nodal_Vars_Info[pg->imtrx];
@@ -3253,7 +3253,7 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
 	  for (ki = 0; ki < nvdofi; ki++)
 	    {
 	      ie = node_to_fill[I] + ki;
-	      idof = ei->ln_to_first_dof[eqn][i] + ki;
+	      idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
 	      phi_i = bf[eqn]->phi[idof];
 	      /* So: grad_phi_j[a] == bf[var]->grad_phi[j][a] */
 	      grad_phi_i = bf[eqn]->grad_phi[idof];
@@ -3268,15 +3268,15 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
 		}
 	      
 	      /* derivatives of fill equation wrt to fill variable */	  
-	      for( j=0; j< ei->num_local_nodes; j++) 
+	      for( j=0; j< ei[pg->imtrx]->num_local_nodes; j++) 
 		{
-		  J = Proc_Elem_Connect[ei->iconnect_ptr + j]; 
+		  J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j]; 
 		  nvdofj = Dolphin[pg->imtrx][J][eqn];
 		  for ( kj=0; kj<nvdofj; kj++)
 
 		    {
 		      
-		      jdof = ei->ln_to_first_dof[eqn][j] + kj;
+		      jdof = ei[pg->imtrx]->ln_to_first_dof[eqn][j] + kj;
 		      phi_j = bf[eqn]->phi[jdof];
 		      /* So: grad_phi_j[a] == bf[var]->grad_phi[j][a] */
 		      grad_phi_j = bf[eqn]->grad_phi[jdof];
@@ -3939,7 +3939,7 @@ assemble_fill_fake( double tt, double dt)
    */
   var  = ls->var;
   pvar = upd->vp[pg->imtrx][var];
-  for (i = 0; i < ei->dof[eqn]; i++) {
+  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
     lec->R[peqn][i] = 0.;
     /*
      *    J_f_F 
@@ -4036,7 +4036,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
    */
   num_total_nodes = dpi->num_universe_nodes;
 
-  ei->elem_blk_id         = -1234; /* Hardwired to ridiculous, for now. -pas */
+  ei[pg->imtrx]->elem_blk_id         = -1234; /* Hardwired to ridiculous, for now. -pas */
 
 /******************************************************************************/
 /*                                BLOCK 1                                     */
@@ -4054,7 +4054,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 
   for ( ebi=0; ebi<exo->num_elem_blocks; ebi++)
     {
-      ei->elem_blk_id	  = exo->eb_id[ebi];
+      ei[pg->imtrx]->elem_blk_id	  = exo->eb_id[ebi];
       mn                  = Matilda[ebi];
       
       /* 
@@ -4165,14 +4165,14 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 	      EH(err, "bf_mp_init");
 
 
-	      ielem_type      = ei->ielem_type;  /* element type */
+	      ielem_type      = ei[pg->imtrx]->ielem_type;  /* element type */
 	      ip_total        = elem_info(NQUAD, ielem_type); /* number of  quadrature points */
 	      
-	      num_local_nodes = ei->num_local_nodes; /* number of local  basis functions */
+	      num_local_nodes = ei[pg->imtrx]->num_local_nodes; /* number of local  basis functions */
 	      
-	      ielem_dim      = ei->ielem_dim; /* physical dimension  of this element */
+	      ielem_dim      = ei[pg->imtrx]->ielem_dim; /* physical dimension  of this element */
 	      
-	      iconnect_ptr    = ei->iconnect_ptr; /* find pointer to beginning */
+	      iconnect_ptr    = ei[pg->imtrx]->iconnect_ptr; /* find pointer to beginning */
 	      /* of this element's */
 	      /* connectivity list */
 
@@ -4317,7 +4317,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 		  int index, face;
 		  double F_inlet = 0.0;
 
-		  for (face = 0; face < ei->num_sides; face++)
+		  for (face = 0; face < ei[pg->imtrx]->num_sides; face++)
 		    {
 		      index = exo->elem_elem_pntr[ielem] + face;
 		      neighbor = exo->elem_elem_list[index];
@@ -4523,8 +4523,8 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 	  
       EH( err, "get_side_info");
       
-      surface_determinant_and_normal (ielem, ei->iconnect_ptr, num_local_nodes, 
-				      ei->ielem_dim - 1,  
+      surface_determinant_and_normal (ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, 
+				      ei[pg->imtrx]->ielem_dim - 1,  
 				      id_side,
 				      nodes_per_side,
 				      local_elem_node_id );
@@ -4604,8 +4604,8 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 	  err =  get_side_info(ielem_type, id_side, &nodes_per_side, local_elem_node_id);
 	  EH( err, "get_side_info");
 	  
-	  surface_determinant_and_normal (ielem, ei->iconnect_ptr, num_local_nodes, 
-					  ei->ielem_dim - 1,  
+	  surface_determinant_and_normal (ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, 
+					  ei[pg->imtrx]->ielem_dim - 1,  
 					  id_side,
 					  nodes_per_side,
 					  local_elem_node_id );
@@ -4644,9 +4644,9 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 	      if ( af->Assemble_Residual )
 		{
 		  rhs = 0.;
-		  for ( i=0; i<ei->num_local_nodes; i++)
+		  for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 		    {
-		      I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+		      I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
 		      node = Nodes[I];
 		      nv = node->Nodal_Vars_Info[pg->imtrx];
 		      nvdofi = get_nv_ndofs(nv, eqn);
@@ -4664,7 +4664,7 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 			    {
 			      /* check to make sure that unknowns are defined at this node,
 				 otherwise don't add anything to this node */
-			      idof = ei->ln_to_first_dof[eqn][i] + ki;
+			      idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki;
 			      /* also convert from node number to dof number */
 			      phi_i = bf[eqn]->phi[idof];
 			      
@@ -4679,9 +4679,9 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 	      
 	      if ( af->Assemble_Jacobian )
 		{
-		  for ( i=0; i<ei->num_local_nodes; i++)
+		  for ( i=0; i<ei[pg->imtrx]->num_local_nodes; i++)
 		    {
-		      I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
+		      I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i]; 
 		      node = Nodes[I];
 		      nv = node->Nodal_Vars_Info[pg->imtrx];
 		      nvdofi = get_nv_ndofs(nv, eqn);
@@ -4690,17 +4690,17 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 		      for ( ki=0; ki<nvdofi; ki++)
 			{
 			  ie = node_to_fill[I] + ki;
-			  idof = ei->ln_to_first_dof[eqn][i] + ki; 
+			  idof = ei[pg->imtrx]->ln_to_first_dof[eqn][i] + ki; 
 			  phi_i = bf[eqn]->phi[idof];
 			  
 			  /* derivatives of fill equation wrt to fill variable */	  
-			  for( j=0; j< ei->num_local_nodes; j++) 
+			  for( j=0; j< ei[pg->imtrx]->num_local_nodes; j++) 
 			    {
-			      J = Proc_Elem_Connect[ei->iconnect_ptr + j]; 
+			      J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j]; 
 			      nvdofj = Dolphin[pg->imtrx][J][eqn];
 			      for ( kj=0; kj<nvdofj; kj++)
 				{
-				  jdof = ei->ln_to_first_dof[eqn][j] + kj;
+				  jdof = ei[pg->imtrx]->ln_to_first_dof[eqn][j] + kj;
 				  phi_j = bf[eqn]->phi[jdof];
 				  
 				  je = node_to_fill[J] + kj;
@@ -4814,16 +4814,16 @@ neighbor_fill(Exo_DB *exo,
       find_surf_st (ip, ielem_type, id_side, pd->Num_Dim, xi, &s, &t, &u);
       
       /* 
-       *  we are cheating here and hoping that the "ei->dof[v]" for
+       *  we are cheating here and hoping that the "ei[pg->imtrx]->dof[v]" for
        *  the current element will work on the neighbor element that
        *  we are trying to get information for 
        */
       v = FILL;
       /* first load phi for the fill function */      
-      for (i = 0; i < ei->dof[v]; i++)  
+      for (i = 0; i < ei[pg->imtrx]->dof[v]; i++)  
 	{
 	  phi[i] = newshape(xi, ielem_type, PSI, 
-			    ei->dof_list[v][i], 
+			    ei[pg->imtrx]->dof_list[v][i], 
 			    ielem_shape, pd->i[pg->imtrx][v], i);
 	}
 
@@ -4836,10 +4836,10 @@ neighbor_fill(Exo_DB *exo,
 
       v = pd->ShapeVar;  /* ShapeVar is the variable index where we find the element mapping interpolation */
 
-      for ( i=0; i < ei->dof[v] ; i++)
+      for ( i=0; i < ei[pg->imtrx]->dof[v] ; i++)
 	{
 	  phi_map[i] = newshape(xi, ielem_type, PSI, 
-				ei->dof_list[v][i], 
+				ei[pg->imtrx]->dof_list[v][i], 
 				ielem_shape, pd->i[pg->imtrx][v], i);
 
 	  gnn = Proc_Elem_Connect[iconnect_ptr + i];
@@ -5253,8 +5253,8 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 	  
       EH( err, "get_side_info");
       
-      surface_determinant_and_normal (ielem, ei->iconnect_ptr, num_local_nodes, 
-				      ei->ielem_dim - 1,  
+      surface_determinant_and_normal (ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, 
+				      ei[pg->imtrx]->ielem_dim - 1,  
 				      id_side,
 				      nodes_per_side,
 				      local_elem_node_id );
@@ -5329,8 +5329,8 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 	  err =  get_side_info(ielem_type, id_side, &nodes_per_side, local_elem_node_id);
 	  EH( err, "get_side_info");
 	  
-	  surface_determinant_and_normal (ielem, ei->iconnect_ptr, num_local_nodes, 
-					  ei->ielem_dim - 1,  
+	  surface_determinant_and_normal (ielem, ei[pg->imtrx]->iconnect_ptr, num_local_nodes, 
+					  ei[pg->imtrx]->ielem_dim - 1,  
 					  id_side,
 					  nodes_per_side,
 					  local_elem_node_id );
@@ -5373,7 +5373,7 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 		  for ( w=0; w<pd->Num_Species_Eqn; w++)
 		    {
 		      rhs = 0.;
-		      for ( i=0; i<ei->dof[eqn]; i++)
+		      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 			{
 			  phi_i = bf[eqn]->phi[i];		      
 			  
@@ -5390,13 +5390,13 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 		  for ( w=0; w<pd->Num_Species_Eqn; w++)
 		    {
 		     
-		      for ( i=0; i<ei->dof[eqn]; i++)
+		      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 			{
 			  phi_i = bf[eqn]->phi[i];	
 			  
 			  var = MASS_FRACTION;
 			  /* derivatives of conc equation wrt to conc variable */	  
-			  for( j=0; j<ei->dof[var]; j++) 
+			  for( j=0; j<ei[pg->imtrx]->dof[var]; j++) 
 			    {
 			      phi_j = bf[var]->phi[j];	
 			      advection = wt * fv->sdet * vdotn  * phi_j * phi_i;
@@ -5419,7 +5419,7 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 			      if ( pd->v[pg->imtrx][var] )
 				{	      
 				  pvar = upd->vp[pg->imtrx][var];
-				  for ( j=0; j<ei->dof[var]; j++)
+				  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];	
 				      
@@ -5442,7 +5442,7 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 			      if ( pd->v[pg->imtrx][var] )
 				{
 				  pvar = upd->vp[pg->imtrx][var];
-				  for ( j=0; j<ei->dof[var]; j++)
+				  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];	      
 				      
@@ -5560,38 +5560,38 @@ neighbor_species(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
       find_surf_st (ip, ielem_type, id_side, pd->Num_Dim, xi, &s, &t, &u);
       
       /* 
-       *  we are cheating here and hoping that the "ei->dof[v]" for
+       *  we are cheating here and hoping that the "ei[pg->imtrx]->dof[v]" for
        *  the current element will work on the neighbor element that
        *  we are trying to get information for 
        */
       v = MASS_FRACTION;
      
       /* first load phi for the fill function */      
-      for (i = 0; i < ei->dof[v]; i++)  
+      for (i = 0; i < ei[pg->imtrx]->dof[v]; i++)  
 	{
 	  phi[i] = newshape(xi, ielem_type, PSI, 
-			    ei->dof_list[v][i], 
+			    ei[pg->imtrx]->dof_list[v][i], 
 			    ielem_shape, pd->i[pg->imtrx][v], i);
 	}
 
       v = pd->ShapeVar;
       /* 
-       *  we are cheating here and hoping that the "ei->dof[v]" for
+       *  we are cheating here and hoping that the "ei[pg->imtrx]->dof[v]" for
        *  the current element will work on the neighbor element that
        *  we are trying to get information for 
        */
       
       iconnect_ptr    = Proc_Connect_Ptr[neighbor_elem]; /* find pointer to beginning */
 
-      for (i = 0; i < ei->dof[v]; i++)  
+      for (i = 0; i < ei[pg->imtrx]->dof[v]; i++)  
 	{
 	  phi_map[i] = newshape(xi, ielem_type, PSI, 
-				ei->dof_list[v][i], 
+				ei[pg->imtrx]->dof_list[v][i], 
 				ielem_shape, pd->i[pg->imtrx][v], i);
 	}
 
       iconnect_ptr    = Proc_Connect_Ptr[neighbor_elem]; /* find pointer to beginning */
-      for ( i=0; i< ei->dof[v]; i++)
+      for ( i=0; i< ei[pg->imtrx]->dof[v]; i++)
 	{
 	  gnn = Proc_Elem_Connect[iconnect_ptr + i];
 
@@ -5726,7 +5726,7 @@ boundary_curvature( double func[DIM],
 
 	      if( pd->v[pg->imtrx][var])
 		  {
-			  for( j=0 ; j<ei->dof[var] ; j++ )
+			  for( j=0 ; j<ei[pg->imtrx]->dof[var] ; j++ )
 			  {
 				  for( p=0 ; p<dim; p++)
 				  {
@@ -5748,7 +5748,7 @@ boundary_curvature( double func[DIM],
 	      for( a = 0; a<dim; a++ )
 		{
 		  
-		  for ( j = 0 ; j<ei->dof[LS]; j++)
+		  for ( j = 0 ; j<ei[pg->imtrx]->dof[LS]; j++)
 		    {
 		      d_n_dF[a][j] = 0.0;
 			  
@@ -5763,7 +5763,7 @@ boundary_curvature( double func[DIM],
 		    }
 		}
 
-	      for( j=0 ; j<ei->dof[var]; j++)
+	      for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  for( p=0 ; p<dim; p++)
 		    {
@@ -5820,7 +5820,7 @@ curvature_momentum_source ( double f[DIM],
       if ( pd->v[pg->imtrx][var] )
 	{
 	  
-	  for( j = 0 ; j<ei->dof[var] ; j++)
+	  for( j = 0 ; j<ei[pg->imtrx]->dof[var] ; j++)
 	    {
 	      for( a=0 ; a<dim ; a++)
 		{
@@ -5839,7 +5839,7 @@ curvature_momentum_source ( double f[DIM],
 
   if(  pd->v[pg->imtrx][var] )
     {
-      for( j=0 ; j<ei->dof[var] ; j++ )
+      for( j=0 ; j<ei[pg->imtrx]->dof[var] ; j++ )
 	{
 	  for( a=0; a<dim ; a++ )
 	    {
@@ -5855,7 +5855,7 @@ curvature_momentum_source ( double f[DIM],
 
   if( pd->v[pg->imtrx][var] )
     {
-      for( j=0 ; j<ei->dof[var] ; j++ )
+      for( j=0 ; j<ei[pg->imtrx]->dof[var] ; j++ )
 	{
 	  
 	  for( a=0; a<dim; a++ )
@@ -6053,7 +6053,7 @@ assemble_phase_function ( double time_value,
     }
 
   memset( v_dot_Dphi, 0, sizeof(double)*MDE);
-  for ( i=0; i<ei->dof[eqn]; i++)
+  for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
     {
       grad_phi_i = bf[eqn]->grad_phi[i];
       for( a=0; a<VIM; a++)
@@ -6102,13 +6102,13 @@ assemble_phase_function ( double time_value,
       if ( af->Assemble_Residual )
 	{
 
-	  for (i = 0; i < ei->dof[eqn]; i++)
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	    {
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
 	      phi_i = bf[eqn]->phi[i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 		  switch( Fill_Wt_Fcn )
 		    {
@@ -6160,9 +6160,9 @@ assemble_phase_function ( double time_value,
 	{
 
 	  
-	  for (i = 0; i < ei->dof[eqn]; i++)
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	    {
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
 	      phi_i = bf[eqn]->phi[i];
 	      grad_phi_i = bf[eqn]->grad_phi[i];
@@ -6185,7 +6185,7 @@ assemble_phase_function ( double time_value,
 		}
 
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 
 		  /* J_pf_pf */
@@ -6195,7 +6195,7 @@ assemble_phase_function ( double time_value,
 		  if ( pd->v[pg->imtrx][var] )
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  
 			  phi_j = bf[var]->phi[j];
@@ -6252,7 +6252,7 @@ assemble_phase_function ( double time_value,
 		  if ( pd->v[pg->imtrx][var] )
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  
 			  phi_j = bf[var]->phi[j];
@@ -6289,7 +6289,7 @@ assemble_phase_function ( double time_value,
 			{
 			  pvar = upd->vp[pg->imtrx][var];
 
-			  for ( j=0; j < ei->dof[var]; j++ )
+			  for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
 			    {
 			      phi_j = bf[var]->phi[j];	      
 
@@ -6341,7 +6341,7 @@ assemble_phase_function ( double time_value,
 		  if (pd->v[pg->imtrx][var] && lubon )
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
-		      for( j=0; j < ei->dof[var]; j++) 
+		      for( j=0; j < ei[pg->imtrx]->dof[var]; j++) 
 			{
 			  phi_j = bf[eqn]->phi[j];
 			  grad_phi_j = bf[eqn]->grad_phi[j];
@@ -6375,7 +6375,7 @@ assemble_phase_function ( double time_value,
 	  if ( pd->v[pg->imtrx][var] && lubon )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for( j=0; j < ei->dof[var]; j++) 
+	      for( j=0; j < ei[pg->imtrx]->dof[var]; j++) 
 		{
 		  phi_j = bf[eqn]->phi[j];
 		  grad_phi_j = bf[eqn]->grad_phi[j];
@@ -6471,7 +6471,7 @@ assemble_pf_constraint( double delta_t,
 		
 		if(pd->v[pg->imtrx][var] )
 		{
-			for( j=0; j<ei->dof[var] ; j++ )
+			for( j=0; j<ei[pg->imtrx]->dof[var] ; j++ )
 			{
 				phi_j = bf[var]->phi[j];
 				
@@ -6480,10 +6480,10 @@ assemble_pf_constraint( double delta_t,
 				
 				lec->R[pvar][j] += lambda*d_pf_lm[i][j];
 				
-				ledof = ei->lvdof_to_ledof[var][j];
-				if( ei->owned_ledof[ledof] )
+				ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+				if( ei[pg->imtrx]->owned_ledof[ledof] )
 				{
-					ie = ei->ieqn_ledof[ledof];
+					ie = ei[pg->imtrx]->ieqn_ledof[ledof];
 					ptr_d_pf_lm[ie] += d_pf_lm[i][j];
 					ptr_d_lm_pf[ie] += d_lm_pf[i][j];
 				}

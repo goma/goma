@@ -268,7 +268,9 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
   /*
    *  Malloc structures of size Num_Var_Info_Records
    */
-  ei->VDindex_to_Lvdesc = alloc_int_1(Num_Var_Info_Records, -1);
+  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    ei[pg->imtrx]->VDindex_to_Lvdesc = alloc_int_1(Num_Var_Info_Records, -1);
+  }
   for (i = 0; i < MAX_ELEMENT_INDICES_RELATED; i++) {
     eiRelated[i]->VDindex_to_Lvdesc = alloc_int_1(Num_Var_Info_Records, -1);
   }

@@ -485,7 +485,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	        {
 	          for ( a=0; a<wim; a++)
 	    	    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		        {
 		          d_mu_dpv[a][j] =  d_mup_dpv[a][j] +  d_mu_dpv[a][j];  
 		        }
@@ -495,7 +495,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	  var = TEMPERATURE; 
 	  if (pd->v[pg->imtrx][var] )
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_mu_dT[j] = d_mu_dT[j] + d_mup_dT[j];
 		}
@@ -503,7 +503,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	  var = PRESSURE; 
 	  if (pd->v[pg->imtrx][var] )
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_mu_dp[j] = d_mu_dp[j] + d_mup_dp[j];
 		}
@@ -514,7 +514,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	        {
 	          for ( a=0; a<dim; a++)
 		    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		        {
 		          d_mu_dmesh[a][j] = d_mup_dmesh[a][j] + d_mu_dmesh[a][j];
 		        }
@@ -524,7 +524,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	      var = TEMPERATURE; 
 	      if (pd->v[pg->imtrx][var] )
 	        {
-	          for ( j=0; j<ei->dof[var]; j++)
+	          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_mu_dT[j] = d_mu_dT[j] + d_mup_dT[j];
 		    }
@@ -532,7 +532,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	      var = PRESSURE; 
 	      if (pd->v[pg->imtrx][var] )
 	        {
-	          for ( j=0; j<ei->dof[var]; j++)
+	          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_mu_dp[j] = d_mu_dp[j] + d_mup_dp[j];
 		    }
@@ -543,7 +543,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	        {
 	          for ( w=0; w<pd->Num_Spec; w++)
 		    {	
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		        {
 		          d_mu_dC[w][j] = d_mup_dC[w][j]+d_mu_dC[w][j];
 		        }
@@ -586,7 +586,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
       
       coeff = mul1*mul2;
 
-      for( j=0; j<ei->dof[MASS_FRACTION]; j++ )
+      for( j=0; j<ei[pg->imtrx]->dof[MASS_FRACTION]; j++ )
 	{
 	  d_coeff_d_C[species][j] = mul2 * rho * gammadot*gammadot *
 	    particle_radius*particle_radius * p_vol_frac*p_vol_frac *
@@ -629,7 +629,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
       for( p=0; p<VIM; p++)
 	for( q=0; q<VIM; q++)
 	  for( b=0; b<wim; b++)
-	    for( j=0; j<ei->dof[PVELOCITY1]; j++)
+	    for( j=0; j<ei[pg->imtrx]->dof[PVELOCITY1]; j++)
 	      d_gamma_dvbj[p][q][b][j] =
 		grad_phi_e[j][b][p][q] +
 		grad_phi_e[j][b][q][p];
@@ -639,7 +639,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	  hold2 += gamma[p][q]*d_gamma_dvbj[q][p][b][j] +
 	    d_gamma_dvbj[p][q][b][j]*gamma[q][p];
       for( b=0; b<wim; b++)
-	for( j=0; j<ei->dof[PVELOCITY1]; j++)
+	for( j=0; j<ei[pg->imtrx]->dof[PVELOCITY1]; j++)
 	  {
 	    d_gamma_doubledot_dvbj[b][j] = 0.0;
 	    for( p=0; p<VIM; p++ )
@@ -655,7 +655,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	    {
 	      for ( b=0; b<wim; b++)
 		{
-		  for ( j=0; j<ei->dof[PVELOCITY1]; j++ )
+		  for ( j=0; j<ei[pg->imtrx]->dof[PVELOCITY1]; j++ )
 		    {
 		      /* MMH Ugh! */
 		      hold1 = 0.0;
@@ -688,7 +688,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	    {
 	      for ( b=0; b<dim; b++)
 		{
-		  for ( j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++)
 		    {
 		      d_Pi_mesh[p][q][b][j] = coeff * 
 			(  fv->d_grad_pv_dmesh[p][q] [b][j]
@@ -706,7 +706,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	{
 	  for ( q=0; q<VIM; q++)
 	    {
-	      for ( j=0; j<ei->dof[MASS_FRACTION]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[MASS_FRACTION]; j++)
 		{
 		  for ( w=0; w<pd->Num_Species_Eqn; w++)
 		    { 
@@ -740,18 +740,18 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	   * In the element, there will be contributions to this many equations
 	   * based on the number of degrees of freedom...
 	   */
-	  for (i = 0; i < ei->dof[eqn]; i++) {
-	    ledof = ei->lvdof_to_ledof[eqn][i];
-	    if (ei->active_interp_ledof[ledof]) {
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+	    ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+	    if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
 	      /*
 	       *  Here is where we figure out whether the row is to placed in
 	       *  the normal spot (e.g., ii = i), or whether a boundary condition
 	       *  require that the volumetric contribution be stuck in another
 	       *  ldof pertaining to the same variable type.
 	       */
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	
-		  node_number = ei->gnn_list[PVELOCITY1][i];
+		  node_number = ei[pg->imtrx]->gnn_list[PVELOCITY1][i];
 		  node_number++;
 		  node_number=-100;
 		  
@@ -849,7 +849,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		    mass + advection + porous + diffusion + source;
 		  
 		} /* end of if (active_dof) */
-	    } /* end of for i=0,ei->dof statement */
+	    } /* end of for i=0,ei[pg->imtrx]->dof statement */
 	}
     }
   
@@ -865,16 +865,16 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 	  
-	  for (i = 0; i < ei->dof[eqn]; i++) {
-	    ledof = ei->lvdof_to_ledof[eqn][i];
-	    if (ei->active_interp_ledof[ledof]) {
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+	    ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+	    if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
 	      /*
 	       *  Here is where we figure out whether the row is to placed in
 	       *  the normal spot (e.g., ii = i), or whether a boundary condition
 	       *  require that the volumetric contribution be stuck in another
 	       *  ldof pertaining to the same variable type.
 	       */
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];	  
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];	  
 		  
 		  phi_i = bfm->phi[i];
 		  
@@ -894,7 +894,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		  if ( pd->v[pg->imtrx][var] )
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];	      
 			  
@@ -988,7 +988,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		      if ( pd->v[pg->imtrx][var] )
 			{
 			  pvar = upd->vp[pg->imtrx][var];
-			  for ( j=0; j<ei->dof[var]; j++)
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 			      
@@ -1085,13 +1085,13 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		  var = MASS_FRACTION;
 		  if ( pd->v[pg->imtrx][var] )
 		    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
-			  node_number = ei->gnn_list[PVELOCITY1][i];
+			  node_number = ei[pg->imtrx]->gnn_list[PVELOCITY1][i];
 			  node_number++;
 			  node_number=-100;
 			  
-			  wrt_node_number = ei->gnn_list[MASS_FRACTION][j];
+			  wrt_node_number = ei[pg->imtrx]->gnn_list[MASS_FRACTION][j];
 			  wrt_node_number++;
 			  
 			  phi_j = bf[var]->phi[j];
@@ -1198,7 +1198,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		    {
 		    pvar = upd->vp[pg->imtrx][var];
 		    
-		    for ( j=0; j<ei->dof[var]; j++)
+		    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		    
 		    begin MMH commented-out section; dal clarify for AIX ***
@@ -1253,7 +1253,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		     {
 		     pvar = upd->vp[pg->imtrx][var];
 		     
-		     for ( j=0; j<ei->dof[var]; j++)
+		     for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		     {
 		     
 		     phi_j = bf[var]->phi[j];
@@ -1313,7 +1313,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		    {
 		    pvar = upd->vp[pg->imtrx][var];
 		    
-		    for ( j=0; j<ei->dof[var]; j++)
+		    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		    
 		    phi_j = bf[var]->phi[j];
@@ -1355,7 +1355,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		      if ( pd->v[pg->imtrx][var] )
 			{
 			  pvar = upd->vp[pg->imtrx][var];
-			  for ( j=0; j<ei->dof[var]; j++)
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 			      
@@ -1543,7 +1543,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 		    }
 		}
 	    }  /* end of if(active_dof) */
-	    }  /* end_of for(i=0,ei->dof[eqn])*/ 
+	    }  /* end_of for(i=0,ei[pg->imtrx]->dof[eqn])*/ 
 	}
     }
 
@@ -1850,7 +1850,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 	      var = MESH_DISPLACEMENT1+b;
 	      if ( pd->v[pg->imtrx][var] )
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_tau_pspg_dm[b][j] = 0.;
 		      for( w=0; w<dim; w++ )
@@ -1975,7 +1975,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 	}
       for ( a=0; a<VIM; a++)
 	{
-	  for ( i=0; i<ei->dof[eqn]; i++)
+	  for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 	      grad_phi[i][a] = bf[eqn]->grad_phi[i][a];
 	    }
@@ -2008,7 +2008,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 
      for ( a=0; a<VIM; a++)
        {
-	 for ( i=0; i<ei->dof[eqn]; i++)
+	 for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	   {
 	     grad_phi[i][a] = bf[eqn]->grad_phi[i][a];
 	   }
@@ -2018,7 +2018,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 
   if ( af->Assemble_Residual )
     {
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	  phi_i      = bf[eqn]->phi[i];
 	  
@@ -2133,7 +2133,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
   
   if ( af->Assemble_Jacobian )
     {
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	  phi_i = bf[eqn]->phi[i];
 
@@ -2146,7 +2146,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 	      if ( pd->v[pg->imtrx][var] )
 		{
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];	      
 
@@ -2259,7 +2259,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 	  var = TEMPERATURE;
 	  if ( PSPG && pd->v[pg->imtrx][var] )
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 
@@ -2330,7 +2330,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      h_flux = 0.;
 
@@ -2356,7 +2356,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
 
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -2426,7 +2426,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		      var = pv_s[p][q];
 		      if ( pd->v[pg->imtrx][var] )
 			{
-			  for ( j=0; j<ei->dof[var]; j++)
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 			      
@@ -2477,7 +2477,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		      var = pv_g[p][q];
 		      if ( pd->v[pg->imtrx][var] )
 			{
-			  for ( j=0; j<ei->dof[var]; j++)
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 			      
@@ -2529,7 +2529,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  h_flux = 0.0;
 	
@@ -2561,7 +2561,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		      /* derivative of |J| with extra term for axisymmetry e.g. 
@@ -2749,7 +2749,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -2785,7 +2785,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
 
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 		  
@@ -2867,7 +2867,7 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
 	    {
 	      if ( mp->MomentumSourceModel == SUSPENSION )
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		  

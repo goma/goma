@@ -831,13 +831,6 @@ struct Uniform_Problem_Description {
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/
 
-
-struct ElementDOFInfo {
-  int dof;
-  int *gnn;
-  int *iNdof;
-};
-
 /*
  * Problem_Graph Structure:
  *
@@ -850,8 +843,6 @@ struct Problem_Graph
 
   /* Temporarily make some things global */
   struct Matrix_Data *matrices;
-
-  struct ElementDOFInfo ***element_dof_info; /* [Num Matrices][Num Elements][Variables] lookup array of element dofs */
 
   struct SplitB_Coupled_Field_Variables sbcfv;
   struct SplitB_Element_Stiffness_Pointers sbesp;

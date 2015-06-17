@@ -118,7 +118,7 @@ apply_point_colloc_bc (
   /*   - INITIALIZATION THAT IS DEPENDENT ON THE LOCAL ELEMENT NODE NUMBER   */
   /***************************************************************************/
 #ifdef DEBUG_HKM
-  if (ei->ielem == 1032) {
+  if (ei[pg->imtrx]->ielem == 1032) {
   //  printf("we are here - 1032\n");
   }
 #endif
@@ -229,7 +229,7 @@ apply_point_colloc_bc (
 	   * (i.e. no other overriding Dirichlet conditions,
 	   * And find the global unknown number for applying this condition
 	   */
-	  index_eq = bc_eqn_index(id, I, bc_input_id, ei->mn,
+	  index_eq = bc_eqn_index(id, I, bc_input_id, ei[pg->imtrx]->mn,
 				  0, &eqn, &matID_apply, &vd);
 	  if (index_eq >= 0) {
 
@@ -520,7 +520,7 @@ apply_point_colloc_bc (
 	      fgamma1_deriv_bc(kfunc, d_kfunc, BC_Types[bc_input_id].BC_Data_Float[0]);
 	      func = kfunc[0];
 	      doFullJac = 1;
-	      el1 = ei->ielem;
+	      el1 = ei[pg->imtrx]->ielem;
 	      nf = num_elem_friends[el1];
 	      if (nf == 0) {
 		EH(-1, "no friends");
@@ -536,7 +536,7 @@ apply_point_colloc_bc (
 	      fgamma2_deriv_bc(kfunc, d_kfunc, BC_Types[bc_input_id].BC_Data_Float[0]);
 	      func = kfunc[0];
 	      doFullJac = 1;
-	      el1 = ei->ielem;
+	      el1 = ei[pg->imtrx]->ielem;
 	      nf = num_elem_friends[el1];
 	      if (nf == 0) {
 		EH(-1, "no friends");
@@ -571,7 +571,7 @@ apply_point_colloc_bc (
 	     * Collocated boundary conditions are always applied on the first 
 	     * dof at a node. They are not discontinuous variables friendly
 	     */
-	    ldof_eqn = ei->ln_to_first_dof[eqn][id];
+	    ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][id];
 
 
 	    if (eqn == R_MASS) {
@@ -613,7 +613,7 @@ apply_point_colloc_bc (
 		       */
 		      if (Dolphin[pg->imtrx][I][var] > 0) {				  
 			if (! doFullJac) {
-			  ldof_var = ei->ln_to_first_dof[var][id];
+			  ldof_var = ei[pg->imtrx]->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {  
 			    lec->J[ieqn][pvar][ldof_eqn][ldof_var] += penalty * d_func[var];
 			    lec->J[ieqn][pvar][ldof_eqn][ldof_var] *= f_time;
@@ -622,14 +622,14 @@ apply_point_colloc_bc (
 			  
 			  if (doMeshMapping && 
 			      (var == MESH_DISPLACEMENT1 || var == MESH_DISPLACEMENT2 || var == MESH_DISPLACEMENT3)) {
-			    for (j = 0; j < ei->dof[var]; j++) 
+			    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 			      {
 				jk = dof_map[j];
 				lec->J[ieqn][pvar][ldof_eqn][jk] += penalty * d_kfunc[0][var][j];
 				lec->J[ieqn][pvar][ldof_eqn][jk] *= f_time;
 			      }
 			  } else {
-			    for (j = 0; j < ei->dof[var]; j++) 
+			    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 			      {
 				lec->J[ieqn][pvar][ldof_eqn][j] += penalty * d_kfunc[0][var][j];
 				lec->J[ieqn][pvar][ldof_eqn][j] *= f_time;
@@ -641,7 +641,7 @@ apply_point_colloc_bc (
 			 *   if variable is not defined at this node, loop
 			 *   over all dof for this variable in this element
 			 */
-			for (j = 0; j < ei->dof[var]; j++) {
+			for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 			  phi_j = bf[var]->phi[j];
 			  lec->J[ieqn][pvar] [ldof_eqn][j] += penalty * d_func[var] * phi_j;
 			  lec->J[ieqn][pvar] [ldof_eqn][j] *= f_time;
@@ -651,7 +651,7 @@ apply_point_colloc_bc (
 		      for (w = 0; w < pd->Num_Species_Eqn; w++) {
 			pvar = MAX_PROB_VAR + w;
 			if (Dolphin[pg->imtrx][I][var] > 0) {
-			  ldof_var = ei->ln_to_first_dof[var][id];
+			  ldof_var = ei[pg->imtrx]->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {
 			    lec->J[ieqn][pvar] [ldof_eqn][ldof_var] += penalty * d_func[MAX_VARIABLE_TYPES + w];
 			    lec->J[ieqn][pvar] [ldof_eqn][ldof_var] *= f_time;
@@ -660,7 +660,7 @@ apply_point_colloc_bc (
 			/* if variable is not defined at this node,
 			 * loop over all dof in this element */
 			else {
-			  for (j = 0; j < ei->dof[var]; j++) {
+			  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 			    phi_j = bf[var]->phi[j];
 			    lec->J[ieqn][pvar] [ldof_eqn][j] += penalty	* d_func[MAX_VARIABLE_TYPES + w] * phi_j;
 			    lec->J[ieqn][pvar] [ldof_eqn][j] *= f_time;
@@ -1021,7 +1021,7 @@ fmesh_constraint(double *func,
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
-  if(ei->ielem == 45 || ei->ielem == 38)
+  if(ei[pg->imtrx]->ielem == 45 || ei[pg->imtrx]->ielem == 38)
     print_stuff = 1;
   print_stuff = 0;
 

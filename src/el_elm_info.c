@@ -704,7 +704,7 @@ node_info(const int  n,
    * This was such a useful exercise that we will save this info...
    */
 
-  ei->ielem_shape = Element_Shape;
+  ei[pg->imtrx]->ielem_shape = Element_Shape;
 
   /*
    * If the variable has no interpolation then it means

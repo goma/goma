@@ -230,9 +230,9 @@ setup_front(Exo_DB *exo)
 	  {
 	    kc = 0;
 	    nbn = elem_info(NNODES,Elem_Type(exo,i));
-	    ei->ielem_type = Elem_Type(exo, i);
-	    ei->ielem_shape  = type2shape(ei->ielem_type);
-	    ei->num_sides    = shape2sides(ei->ielem_shape);
+	    ei[pg->imtrx]->ielem_type = Elem_Type(exo, i);
+	    ei[pg->imtrx]->ielem_shape  = type2shape(ei[pg->imtrx]->ielem_type);
+	    ei[pg->imtrx]->num_sides    = shape2sides(ei[pg->imtrx]->ielem_shape);
 	    iconnect_ptr = exo->elem_ptr[i];
 	    
 	    /*unlike above, we deal with the centroid in each element only */
@@ -242,7 +242,7 @@ setup_front(Exo_DB *exo)
 	    k = fss->nopp[m];
 
 
-	    for (face = 0; face < ei->num_sides; face ++)
+	    for (face = 0; face < ei[pg->imtrx]->num_sides; face ++)
 	      {
 		/*load the neighbor pointer */
 		index = exo->elem_elem_pntr[i] + face;

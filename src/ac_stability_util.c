@@ -168,7 +168,7 @@ modify_basis_and_weight_functions_for_LSA_3D_of_2D()
      !af->Assemble_LSA_Mass_Matrix)
     return;
 
-  mn = ei->mn;
+  mn = ei[pg->imtrx]->mn;
   N = LSA_3D_of_2D_wave_number;
   
   if(LSA_3D_of_2D_pass == 1)
@@ -196,9 +196,9 @@ modify_basis_and_weight_functions_for_LSA_3D_of_2D()
     sine_value = 0.0;
 
   /*
-  if(ei->ielem == 0)
+  if(ei[pg->imtrx]->ielem == 0)
     printf("pass = %d, ielem = %d, cv = %3.1g, sv = %3.1g, N = %g\n",
-	   LSA_3D_of_2D_pass, ei->ielem, cosine_value, sine_value, N);
+	   LSA_3D_of_2D_pass, ei[pg->imtrx]->ielem, cosine_value, sine_value, N);
   */
 
   for(bf_index = 0; bf_index < Num_Basis_Functions; bf_index++)
@@ -215,7 +215,7 @@ modify_basis_and_weight_functions_for_LSA_3D_of_2D()
 	  if(bf_ptr->interpolation != I_Q2_LSA &&
 	     bf_ptr->interpolation != I_Q2_D_LSA)
 	    {
-	      for(i = 0; i < ei->dof[var]; i++)
+	      for(i = 0; i < ei[pg->imtrx]->dof[var]; i++)
 		{
 		  orig_phi = bf_ptr->phi[i];
 		  bf_ptr->phi[i] *= cosine_value;
@@ -236,7 +236,7 @@ modify_basis_and_weight_functions_for_LSA_3D_of_2D()
 		  if(pd_glob[mn]->e[pg->imtrx][R_MESH1])
 		    {
 		      for(b = 0; b < 2; b++)
-			for(j = 0; j < ei->dof[R_MESH1]; j++)
+			for(j = 0; j < ei[pg->imtrx]->dof[R_MESH1]; j++)
 			  {
 			    bf_ptr->d_grad_phi_dmesh[i][0][b][j] *=
 			      cosine_value;
@@ -272,7 +272,7 @@ modify_basis_and_weight_functions_for_LSA_3D_of_2D()
 	   * appropriately. */
 	  else
 	    {
-	      for(i = 0; i < ei->dof[var]; i++)
+	      for(i = 0; i < ei[pg->imtrx]->dof[var]; i++)
 		{
 		  orig_phi = bf_ptr->phi[i];
 		  bf_ptr->phi[i] *= sine_value;
@@ -291,7 +291,7 @@ modify_basis_and_weight_functions_for_LSA_3D_of_2D()
 		   * though! */
 		  if(pd_glob[mn]->e[pg->imtrx][R_MESH1])
 		    for(b = 0; b < 2; b++)
-		      for(j = 0; j < ei->dof[R_MESH1]; j++)
+		      for(j = 0; j < ei[pg->imtrx]->dof[R_MESH1]; j++)
 			{
 			  bf_ptr->d_grad_phi_dmesh[i][0][b][j] *=
 			    sine_value;
@@ -358,17 +358,17 @@ modify_bf_mesh_derivs_for_LSA_3D_of_2D(void)
   struct Basis_Functions *bfv, *bfx;
 
   bfx = bf[R_MESH1];
-  mdof = ei->dof[R_MESH1];
+  mdof = ei[pg->imtrx]->dof[R_MESH1];
   for (k=0; k<Num_Basis_Functions; k++)
     {
       bfv = bf[k];
-      var = bfv->Var_Type_MatID[ei->mn];
+      var = bfv->Var_Type_MatID[ei[pg->imtrx]->mn];
       if (var != -1)
 	{
-	  vdof = ei->dof[var];
+	  vdof = ei[pg->imtrx]->dof[var];
 	  for (i=0; i<vdof; i++)
 	    {
-	      for (b=0; b<ei->ielem_dim; b++)
+	      for (b=0; b<ei[pg->imtrx]->ielem_dim; b++)
 		{
 		  for (j=0; j<mdof; j++)
 		    {
@@ -425,9 +425,9 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
   if ( !(pd->e[pg->imtrx][R_MESH1]) ) return;
 
 /* Initialize values which will be constant */
-  dim = ei->ielem_dim;
+  dim = ei[pg->imtrx]->ielem_dim;
   p = 2;
-  mdof = ei->dof[R_MESH1];
+  mdof = ei[pg->imtrx]->dof[R_MESH1];
   bfx = bf[R_MESH1];
 
 /* Modify each gradient in sequence */
@@ -951,7 +951,7 @@ modify_normal_vector_for_LSA_3D_of_2D(void)
 
   if (LSA_3D_of_2D_pass == 0 || !(pd->e[pg->imtrx][R_MESH1]) ) return;
 
-  for (j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++)
+  for (j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++)
     {
       for (q=0; q<2; q++)
         {

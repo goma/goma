@@ -463,7 +463,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
       for (i = exo->node_elem_pntr[my_node_num]; 
 	   i < exo->node_elem_pntr[my_node_num+1]; i++) {
 	my_elem_num = exo->node_elem_list[i];
-	load_ei(my_elem_num, exo, 0);
+	load_ei(my_elem_num, exo, 0, pg->imtrx);
 	for (k = exo->elem_node_pntr[my_elem_num]; 
 	     k < exo->elem_node_pntr[my_elem_num+1]; k++) {
 	  node_num = exo->elem_node_list[k];
@@ -504,7 +504,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
       for (i = 0; i < num_elems; i++) {
 	zeroCA = -1;
 	if (i == 0) zeroCA = 1; 
-	load_ei(elem_list[i], exo, 0);
+	load_ei(elem_list[i], exo, 0, pg->imtrx);
 	matrix_fill(ams, x_1, resid_vector_1, 
 		    x_old, x_older,  xdot, xdot_old, x_update,
 		    &delta_t, &theta, 
@@ -791,7 +791,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
                    k < exo->node_elem_pntr[my_node_num+1]; k++)
                 {
                   my_elem_num = exo->node_elem_list[k];
-                  load_ei(my_elem_num, exo, 0);
+                  load_ei(my_elem_num, exo, 0, pg->imtrx);
                   
                   if (first_elem_side_BC_array[my_elem_num] != NULL)
                     {

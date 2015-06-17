@@ -288,26 +288,26 @@ apply_rotated_bc (
 	I = Proc_Elem_Connect[iconnect_ptr + id];
 	
 	if (rot_mesh[i] &&
-	    ei->ln_to_dof[MESH_DISPLACEMENT1][id] != -1) {
-	  rotate_res_jac_mesh(ei->ln_to_dof[MESH_DISPLACEMENT1][id],
+	    ei[pg->imtrx]->ln_to_dof[MESH_DISPLACEMENT1][id] != -1) {
+	  rotate_res_jac_mesh(ei[pg->imtrx]->ln_to_dof[MESH_DISPLACEMENT1][id],
 			      I, iconnect_ptr,
 			      num_local_nodes, ielem_dim-1,
 			      fv->snormal, fv->dsnormal_dx, 
 			      fv->stangent, fv->dstangent_dx, sign_rot_mesh[i]);
 	}
-	if (rot_mom[i] && ei->ln_to_dof[VELOCITY1][id] != -1 && 
+	if (rot_mom[i] && ei[pg->imtrx]->ln_to_dof[VELOCITY1][id] != -1 && 
 	    pd->i[0][VELOCITY1] != I_Q2_D &&
             pd->i[0][VELOCITY1] != I_Q1_D)	  { 
-		rotate_res_jac_mom(ei->ln_to_dof[VELOCITY1][id], 
+		rotate_res_jac_mom(ei[pg->imtrx]->ln_to_dof[VELOCITY1][id], 
 			     I, iconnect_ptr, num_local_nodes, ielem_dim-1,
 			     fv->snormal, fv->dsnormal_dx, fv->stangent,
 			     fv->dstangent_dx, sign_rot_mom[i]); 
 	  }
-	else if (rot_mom[i] && ei->ln_to_dof[VELOCITY1][id] != -1)
+	else if (rot_mom[i] && ei[pg->imtrx]->ln_to_dof[VELOCITY1][id] != -1)
 	  {
 	    if (((Current_EB_ptr->Elem_Blk_Id + 1) % 2) == 0)
 	      {
-		rotate_res_jac_mom(ei->ln_to_dof[VELOCITY1][id] - 1, 
+		rotate_res_jac_mom(ei[pg->imtrx]->ln_to_dof[VELOCITY1][id] - 1, 
 				   I, iconnect_ptr,
 				   num_local_nodes, ielem_dim-1,
 				   fv->snormal, fv->dsnormal_dx, fv->stangent, fv->dstangent_dx, 
@@ -315,7 +315,7 @@ apply_rotated_bc (
 	      }
 	    else
 	      {
-		rotate_res_jac_mom(ei->ln_to_dof[VELOCITY1][id] - 1, 
+		rotate_res_jac_mom(ei[pg->imtrx]->ln_to_dof[VELOCITY1][id] - 1, 
 				   I, iconnect_ptr,
 				   num_local_nodes, ielem_dim-1,
 				   fv->snormal, fv->dsnormal_dx, fv->stangent, fv->dstangent_dx, 
@@ -392,10 +392,10 @@ rotate_res_jac_mesh (
       
     case 1:
       svector[0][0] = snormal[0];
-      for ( id=0; id<ei->dof[ShapeVar]; id++ ) 
+      for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ ) 
         {
 	  Id = Proc_Elem_Connect[iconnect_ptr + id];
-	  ldof = ei->ln_to_dof[ShapeVar][id];
+	  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
 	  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 	    { 
 	      dsvector_dx[0][0][0][ldof] = dsnormal_dx[0][0][ldof];
@@ -410,10 +410,10 @@ rotate_res_jac_mesh (
 	  svector[1][kdir] = sign * stangent[0][kdir];
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      for ( id=0; id<ei->dof[ShapeVar]; id++ ) 
+	      for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ ) 
 		{
 		  Id = Proc_Elem_Connect[iconnect_ptr + id];
-		  ldof = ei->ln_to_dof[ShapeVar][id];
+		  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
 		  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0  && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 		    { 
 		      dsvector_dx[0][kdir][ldir][ldof] = dsnormal_dx[kdir][ldir][ldof];
@@ -432,10 +432,10 @@ rotate_res_jac_mesh (
 	  svector[2][kdir] = sign * stangent[1][kdir];
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      for ( id=0; id<ei->dof[ShapeVar]; id++ ) 
+	      for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ ) 
 		{
 		  Id = Proc_Elem_Connect[iconnect_ptr + id];
-		  ldof = ei->ln_to_dof[ShapeVar][id];
+		  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
 		  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0  && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 		    { 
 		      
@@ -493,7 +493,7 @@ rotate_res_jac_mesh (
 	      var=R_MESH1+j;
 	      pvar = upd->vp[pg->imtrx][var];
 
-	      for ( n=0; n< ei->dof[var]; n++ ) 
+	      for ( n=0; n< ei[pg->imtrx]->dof[var]; n++ ) 
 		{
 		  
 		  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
@@ -503,10 +503,10 @@ rotate_res_jac_mesh (
 		    }
 		}
 	      
-	       for ( id=0; id<ei->dof[ShapeVar]; id++ ) 
+	       for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ ) 
 		{
 		  Id = Proc_Elem_Connect[iconnect_ptr + id];
-		  ldof = ei->ln_to_dof[ShapeVar][id];
+		  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
 		  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0  && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 		    { 
 		      
@@ -530,7 +530,7 @@ rotate_res_jac_mesh (
 	      var=R_MESH1+j;
 	      pvar = upd->vp[pg->imtrx][var];
 	      
-	      for ( n=0; n< ei->dof[var]; n++ ) 
+	      for ( n=0; n< ei[pg->imtrx]->dof[var]; n++ ) 
 		{
 		  
 		  lec->J[upd->ep[pg->imtrx][R_MESH1 + kdir]][pvar][irow_index][n]
@@ -544,7 +544,7 @@ rotate_res_jac_mesh (
       var = PRESSURE;
       if (pd->v[pg->imtrx][var]){
 	pvar = upd->vp[pg->imtrx][var];
-	for ( n=0; n<ei->dof[var]; n++) {
+	for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 	  
 	  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 	    {
@@ -574,7 +574,7 @@ rotate_res_jac_mesh (
       var = TEMPERATURE;
       if (pd->v[pg->imtrx][var]){
 	pvar = upd->vp[pg->imtrx][var];
-	for ( n=0; n<ei->dof[var]; n++) {
+	for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 	  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 	    {
 	      rotated_jacobian_scalar[kdir][n] = 0.;
@@ -606,7 +606,7 @@ rotate_res_jac_mesh (
 	  var = VELOCITY1 + jvar;
 	  if (pd->v[pg->imtrx][var]){
 	    pvar = upd->vp[pg->imtrx][var];
-	    for ( n=0; n<ei->dof[var]; n++) {
+	    for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 	      
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
@@ -641,7 +641,7 @@ rotate_res_jac_mesh (
       if (pd->v[pg->imtrx][var]){
 	for (w=0; w<pd->Num_Species_Eqn; w++)
 	  {
-	    for ( n=0; n<ei->dof[var]; n++) {
+	    for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 	      
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
@@ -909,9 +909,9 @@ rotate_mesh_eqn (
 	     * but does not have any direct injection 
 	     */
 	    doSpecialInjection = TRUE;
-	    for (w = 0; w < ei->dof[var]; w++) {
+	    for (w = 0; w < ei[pg->imtrx]->dof[var]; w++) {
 	      rotated_jacobian_vector[kdir][b][w] = 0.0;
-	      J = ei->gnn_list[var][w];
+	      J = ei[pg->imtrx]->gnn_list[var][w];
 	      j = in_list(J, 0, rot->d_vector_n, rot->d_vector_J);
 	      if (j != -1) {  
 		for (ldir = 0; ldir < dim; ldir++) {
@@ -938,7 +938,7 @@ rotate_mesh_eqn (
 	    pv = MAX_PROB_VAR + kv;
 	    switch (dim) {
 	    case 2:
-		for (n = 0; n < ei->dof[v]; n++) {
+		for (n = 0; n < ei[pg->imtrx]->dof[v]; n++) {
 		  rotated_jacobian_scalar[0][n] = 
 		      rot_n->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
 		      rot_n->vector[1] * lec->J[peqn_mesh[1]][pv][id][n];
@@ -948,7 +948,7 @@ rotate_mesh_eqn (
 		}	    
 		break;
 	    case 3:
-		for (n = 0; n < ei->dof[v]; n++) {
+		for (n = 0; n < ei[pg->imtrx]->dof[v]; n++) {
 		  rotated_jacobian_scalar[0][n] = 
 		      rot_n->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
 		      rot_n->vector[1] * lec->J[peqn_mesh[1]][pv][id][n] +
@@ -970,7 +970,7 @@ rotate_mesh_eqn (
 	    for (kdir = 0; kdir < dim; kdir++) {
 	      if (rotation[I][eq][kdir]->ok) {
 		peqn = peqn_mesh[kdir];
-		for (n = 0; n < ei->dof[v]; n++) {	      
+		for (n = 0; n < ei[pg->imtrx]->dof[v]; n++) {	      
 		  lec->J[peqn][pv][id][n] = rotated_jacobian_scalar[kdir][n];
 		}
 	      }
@@ -979,7 +979,7 @@ rotate_mesh_eqn (
 	} else if ( v >= MESH_DISPLACEMENT1 && v <= MESH_DISPLACEMENT3 ) {
 	  switch (dim) {
 	  case 2:
-	      for (n = 0; n < ei->dof[v]; n++) {
+	      for (n = 0; n < ei[pg->imtrx]->dof[v]; n++) {
 		rotated_jacobian_scalar[0][n] = 
 		    rot_n->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
 		    rot_n->vector[1] * lec->J[peqn_mesh[1]][pv][id][n];
@@ -989,7 +989,7 @@ rotate_mesh_eqn (
 	      }	    
 	      break;
 	  case 3:
-	      for (n = 0; n < ei->dof[v]; n++) {
+	      for (n = 0; n < ei[pg->imtrx]->dof[v]; n++) {
 		rotated_jacobian_scalar[0][n] = 
 		    rot_n->vector[0] * lec->J[peqn_mesh[0]][pv][id][n] +
 		    rot_n->vector[1] * lec->J[peqn_mesh[1]][pv][id][n] +
@@ -1011,7 +1011,7 @@ rotate_mesh_eqn (
 	  for (kdir = 0; kdir < dim; kdir++) {
 	    if (rotation[I][eq][kdir]->ok) {
 	      peqn = peqn_mesh[kdir];
-	      for (n = 0; n < ei->dof[v]; n++) {	      
+	      for (n = 0; n < ei[pg->imtrx]->dof[v]; n++) {	      
 		lec->J[peqn][pv][id][n] = rotated_jacobian_scalar[kdir][n];
 	      }
 	    }
@@ -1032,7 +1032,7 @@ rotate_mesh_eqn (
 	  for (j = 0; j < dim; j++) {
 	    var = R_MESH1 + j;
 	    pvar = upd->vp[pg->imtrx][var];
-	    for (n = 0; n < ei->dof[var]; n++ ) {
+	    for (n = 0; n < ei[pg->imtrx]->dof[var]; n++ ) {
 	      lec->J[peqn][pvar][id][n] += rotated_jacobian_vector[kdir][j][n];
 	    }
 	  }
@@ -1134,7 +1134,7 @@ rotate_momentum_eqn (
 	      var=MESH_DISPLACEMENT1+b;
 	      pvar = upd->vp[pg->imtrx][var];
 	      
-	      for ( j=0; j< ei->dof[var]; j++ ) 
+	      for ( j=0; j< ei[pg->imtrx]->dof[var]; j++ ) 
 		{
 		  
 		  for (ldir = 0; ldir < dim; ldir++)
@@ -1261,9 +1261,9 @@ rotate_momentum_eqn (
 		   * but does not have any direct injection 
 		   */
 		  
-		  for( w=0; w< ei->dof[var];w++)
+		  for( w=0; w< ei[pg->imtrx]->dof[var];w++)
 		    {
-		      J = ei->gnn_list[var][w];
+		      J = ei[pg->imtrx]->gnn_list[var][w];
 		      
 		      if( ( j = in_list(  J,0, rotation[I][eq][kdir]->d_vector_n, rotation[I][eq][kdir]->d_vector_J ) ) != -1 )
 			{
@@ -1289,7 +1289,7 @@ rotate_momentum_eqn (
 	      {
 		var= MESH_DISPLACEMENT1+j;
 		pvar = upd->vp[pg->imtrx][var];
-		for ( n=0; n< ei->dof[var]; n++ ) 
+		for ( n=0; n< ei[pg->imtrx]->dof[var]; n++ ) 
 		  {
 		    lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + kdir]][pvar][id][n]
 		      = rotated_jacobian_vector[kdir][j][n];
@@ -1303,7 +1303,7 @@ rotate_momentum_eqn (
       var = PRESSURE;
       if (pd->v[pg->imtrx][var]){
 	pvar = upd->vp[pg->imtrx][var];
-	for ( n=0; n<ei->dof[var]; n++) {
+	for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 
 	  rotated_jacobian_scalar[0][n] = 0.;
 	  rotated_jacobian_scalar[1][n] = 0.;
@@ -1327,7 +1327,7 @@ rotate_momentum_eqn (
 	  {
 	    if (rotation[I][eq][kdir]->ok) {
 	      /* loop over sensitivities */
-	      for ( n=0; n< ei->dof[var]; n++ ) 
+	      for ( n=0; n< ei[pg->imtrx]->dof[var]; n++ ) 
 		{
 		  
 		  lec->J[upd->ep[pg->imtrx][R_MOMENTUM1+ kdir]][pvar][id][n]
@@ -1342,7 +1342,7 @@ rotate_momentum_eqn (
       var = TEMPERATURE;
       if (pd->v[pg->imtrx][var]){
 	pvar = upd->vp[pg->imtrx][var];
-	for ( n=0; n<ei->dof[var]; n++) {
+	for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 	  	  
 	  rotated_jacobian_scalar[0][n] = 0.;
 	  rotated_jacobian_scalar[1][n] = 0.;
@@ -1368,7 +1368,7 @@ rotate_momentum_eqn (
 	  {
 	    if (rotation[I][eq][kdir]->ok) {
 	      /* loop over sensitivities */
-	      for ( n=0; n< ei->dof[var]; n++ ) 
+	      for ( n=0; n< ei[pg->imtrx]->dof[var]; n++ ) 
 		{
 		  
 		  lec->J[upd->ep[pg->imtrx][R_MOMENTUM1+ kdir]][pvar][id][n]
@@ -1385,7 +1385,7 @@ rotate_momentum_eqn (
       var = LS;
       if (pd->v[pg->imtrx][var]){
 	pvar = upd->vp[pg->imtrx][var];
-	for ( n=0; n<ei->dof[var]; n++) {
+	for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 	  
 	  rotated_jacobian_scalar[0][n] = 0.;
 	  rotated_jacobian_scalar[1][n] = 0.;
@@ -1412,7 +1412,7 @@ rotate_momentum_eqn (
 	  {
 	    if (rotation[I][eq][kdir]->ok) {
 	      /* loop over sensitivities */
-	      for ( n=0; n< ei->dof[var]; n++ ) 
+	      for ( n=0; n< ei[pg->imtrx]->dof[var]; n++ ) 
 		{
 		  
 		  lec->J[upd->ep[pg->imtrx][R_MOMENTUM1+ kdir]][pvar][id][n]
@@ -1432,7 +1432,7 @@ rotate_momentum_eqn (
 	  var = VELOCITY1 + jvar;
 	  if (pd->v[pg->imtrx][var]){
 	    pvar = upd->vp[pg->imtrx][var];
-	    for ( n=0; n<ei->dof[var]; n++) {
+	    for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 	      
 	      for (kdir = 0; kdir < dim; kdir++)
 		{
@@ -1464,7 +1464,7 @@ rotate_momentum_eqn (
 	      {
 		var= R_MOMENTUM1+j;
 		pvar = upd->vp[pg->imtrx][var];
-		for ( n=0; n< ei->dof[var]; n++ ) 
+		for ( n=0; n< ei[pg->imtrx]->dof[var]; n++ ) 
 		  {
 		    lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + kdir]][pvar][id][n]
 		      = rotated_jacobian_vector[kdir][j][n];
@@ -1479,7 +1479,7 @@ rotate_momentum_eqn (
       if (pd->v[pg->imtrx][var]){
 	for (w=0; w<pd->Num_Species_Eqn; w++)
 	  {
-	    for ( n=0; n<ei->dof[var]; n++) {
+	    for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 	      
 	      for (kdir = 0; kdir < dim; kdir++)
 		{
@@ -1512,7 +1512,7 @@ rotate_momentum_eqn (
 		  
 		  pvar = MAX_PROB_VAR + w;
 		  
-		  for ( n=0; n< ei->dof[var]; n++ ) 
+		  for ( n=0; n< ei[pg->imtrx]->dof[var]; n++ ) 
 		    {
 		      
 		      lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + kdir]][pvar][id][n]
@@ -1612,10 +1612,10 @@ rotate_res_jac_mom (
       
     case 1:
       svector[0][0] = snormal[0];
-      for ( id=0; id<ei->dof[ShapeVar]; id++ ) 
+      for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ ) 
         {
 	  Id = Proc_Elem_Connect[iconnect_ptr + id];
-	  ldof = ei->ln_to_dof[ShapeVar][id];
+	  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
 	  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 	    { 
 	      dsvector_dx[0][0][0][ldof] = dsnormal_dx[0][0][ldof];
@@ -1630,10 +1630,10 @@ rotate_res_jac_mom (
           svector[1][kdir] = sign * stangent[0][kdir];
           for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      for ( id=0; id<ei->dof[ShapeVar]; id++ ) 
+	      for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ ) 
 		{
 		  Id = Proc_Elem_Connect[iconnect_ptr + id];
-		  ldof = ei->ln_to_dof[ShapeVar][id];
+		  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
 		  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 		    { 
 		      dsvector_dx[0][kdir][ldir][ldof] = dsnormal_dx[kdir][ldir][ldof];
@@ -1652,10 +1652,10 @@ rotate_res_jac_mom (
           svector[2][kdir] = sign * stangent[1][kdir];
           for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      for ( id=0; id<ei->dof[ShapeVar]; id++ ) 
+	      for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ ) 
 		{
 		  Id = Proc_Elem_Connect[iconnect_ptr + id];
-		  ldof = ei->ln_to_dof[ShapeVar][id];
+		  ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
 		  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 		    { 
 		      
@@ -1710,7 +1710,7 @@ rotate_res_jac_mom (
 	      if (pd->v[pg->imtrx][var])
 		{
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( n=0; n< ei->dof[var]; n++ ) 
+		  for ( n=0; n< ei[pg->imtrx]->dof[var]; n++ ) 
 		    {
 		      
 		      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
@@ -1721,10 +1721,10 @@ rotate_res_jac_mom (
 			}
 		    }
 		  
-		  for ( id=0; id<ei->dof[ShapeVar]; id++ ) 
+		  for ( id=0; id<ei[pg->imtrx]->dof[ShapeVar]; id++ ) 
 		    {
 		      Id = Proc_Elem_Connect[iconnect_ptr + id];
-		      ldof = ei->ln_to_dof[ShapeVar][id];
+		      ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
 		      if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0  )
 			{ 
 			  
@@ -1750,7 +1750,7 @@ rotate_res_jac_mom (
 	      var=R_MESH1+j;
 	      pvar = upd->vp[pg->imtrx][var];
 	      
-	      for ( n=0; n< ei->dof[var]; n++ ) 
+	      for ( n=0; n< ei[pg->imtrx]->dof[var]; n++ ) 
 		{
 		  lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + kdir]][pvar][irow_index][n]
 		    = rotated_jacobian_vector[kdir][j][n];
@@ -1763,7 +1763,7 @@ rotate_res_jac_mom (
       var = PRESSURE;
       if (pd->v[pg->imtrx][var]){
 	pvar = upd->vp[pg->imtrx][var];
-	for ( n=0; n<ei->dof[var]; n++) {
+	for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 	  
 	  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 	    {
@@ -1792,7 +1792,7 @@ rotate_res_jac_mom (
       var = TEMPERATURE;
       if (pd->v[pg->imtrx][var]){
 	pvar = upd->vp[pg->imtrx][var];
-	for ( n=0; n<ei->dof[var]; n++) {
+	for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 	  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 	    {
 	      rotated_jacobian_scalar[kdir][n] = 0.;
@@ -1821,7 +1821,7 @@ rotate_res_jac_mom (
       var = FILL;
       if (pd->v[pg->imtrx][var]){
 	pvar = upd->vp[pg->imtrx][var];
-	for ( n=0; n<ei->dof[var]; n++) {
+	for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 	  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 	    {
 	      rotated_jacobian_scalar[kdir][n] = 0.;
@@ -1852,7 +1852,7 @@ rotate_res_jac_mom (
 	  var = VELOCITY1 + jvar;
 	  if (pd->v[pg->imtrx][var]){
 	    pvar = upd->vp[pg->imtrx][var];
-	    for ( n=0; n<ei->dof[var]; n++) {
+	    for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 	      
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
@@ -1884,7 +1884,7 @@ rotate_res_jac_mom (
       if (pd->v[pg->imtrx][var]){
 	for (w=0; w<pd->Num_Species_Eqn; w++)
 	  {
-	    for ( n=0; n<ei->dof[var]; n++) {
+	    for ( n=0; n<ei[pg->imtrx]->dof[var]; n++) {
 	      
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
@@ -2059,33 +2059,33 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
           }
 	err = bf_mp_init(pd);
 
-	iconnect_ptr = ei->iconnect_ptr;
-	ielem_type   = ei->ielem_type;
-	num_local_nodes = ei->num_local_nodes;
-	ielem_dim       = ei->ielem_dim;
+	iconnect_ptr = ei[pg->imtrx]->iconnect_ptr;
+	ielem_type   = ei[pg->imtrx]->ielem_type;
+	num_local_nodes = ei[pg->imtrx]->num_local_nodes;
+	ielem_dim       = ei[pg->imtrx]->ielem_dim;
 	dim             = ielem_dim;
 
 
 	/* find SIDE info for primary side */
 	num_nodes_on_side = count_nodes_on_SS(ROT_Types[irc].ss_id[0], -1, -1, 
-					      ei->iconnect_ptr, ielem, 
+					      ei[pg->imtrx]->iconnect_ptr, ielem, 
 					      num_local_nodes,
 					      local_side_node_list, 
 					      side_elem_node_id);
 
-	id_side = find_id_side (ei->ielem, num_nodes_on_side, 
+	id_side = find_id_side (ei[pg->imtrx]->ielem, num_nodes_on_side, 
 				local_side_node_list, side_elem_node_id, exo);
 	/* Calculates the ID side correctly for tets */
 	int current_id; 
 
 	current_id = in_list(ROT_Types[irc].ss_id[0], 0, exo->num_side_sets, exo->ss_id);
-	if ( ei->ielem_type == TRILINEAR_TET ) id_side = find_id_side_SS(ei->ielem, current_id, exo);
+	if ( ei[pg->imtrx]->ielem_type == TRILINEAR_TET ) id_side = find_id_side_SS(ei[pg->imtrx]->ielem, current_id, exo);
 
 	/* find EDGE info for primary edge */
 	if (ROT_Types[irc].type == CURVE || ROT_Types[irc].type == VERTEX) {
 	  num_nodes_on_edge = count_nodes_on_SS(ROT_Types[irc].ss_id[0], ROT_Types[irc].ss_id[1],
 						-1, 
-						ei->iconnect_ptr, ielem, num_local_nodes,
+						ei[pg->imtrx]->iconnect_ptr, ielem, num_local_nodes,
 						local_edge_node_list, edge_elem_node_id);
 
 	  if ( num_nodes_on_edge > 0 )
@@ -2095,7 +2095,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 				     local_edge_node_list, edge_elem_node_id, 
 				     &param_dir, exo);
 
-	      if ( ei->ielem_type == TRILINEAR_TET ) id_edge = find_id_edge_TET(ielem, num_nodes_on_edge, 
+	      if ( ei[pg->imtrx]->ielem_type == TRILINEAR_TET ) id_edge = find_id_edge_TET(ielem, num_nodes_on_edge, 
 				     local_edge_node_list, edge_elem_node_id, 
 				     &param_dir, exo);
 	    }
@@ -2119,7 +2119,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 	  num_ROT_nodes = 1;
 	  /* determine id of vertex node */
 	  v_id = 0;
-	  while(Proc_Elem_Connect[ei->iconnect_ptr + v_id] != ROT_Types[irc].node) v_id++;
+	  while(Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + v_id] != ROT_Types[irc].node) v_id++;
 	  elem_node_id = &(v_id);
 	  
 	}
@@ -2128,7 +2128,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 	  for ( k=0; k<num_ROT_nodes; k++) {
 	    /* Find the local element node number for the current node */
 	    id = elem_node_id[k];
-	    I = Proc_Elem_Connect[ei->iconnect_ptr + id];
+	    I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + id];
 
 	    if (ROT_list[I] != NULL && ROT_list[I][eq] == irc) {
 
@@ -2155,7 +2155,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 		if (normal != NULL) {
 		  /* calculate the determinant of the surface jacobian  and the normal to 
 		   * the surface all at one time */
-		    surface_determinant_and_normal (ei->ielem, iconnect_ptr, num_local_nodes, 
+		    surface_determinant_and_normal (ei[pg->imtrx]->ielem, iconnect_ptr, num_local_nodes, 
 						    ielem_dim - 1, id_side, num_nodes_on_side,
 						    side_elem_node_id);
 
@@ -2167,7 +2167,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 		      for ( j=0; j<num_nodes_on_side; j++) {
 			/* Find the local element node number for the current node */
 			j_id = side_elem_node_id[j];
-			J = Proc_Elem_Connect[ei->iconnect_ptr + j_id];
+			J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j_id];
 			normal->d_vector_J[j] = J;
 			for (q=0; q<dim; q++) {
 			  normal->d_vector_dx[p][q][j] = fv->dsnormal_dx[p][q][j_id];
@@ -2232,10 +2232,10 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 		/* Find LINE_TANGENT along EDGE */
 		if (line_tangent != NULL || binormal != NULL) {
 		  
-		  if ( ei->ielem_type == TRILINEAR_TET )
+		  if ( ei[pg->imtrx]->ielem_type == TRILINEAR_TET )
 		    {
 		     calc_unseeded_edge_tangents_TET (line_tangent, 
-					       ei->iconnect_ptr, dim,  
+					       ei[pg->imtrx]->iconnect_ptr, dim,  
 					       id_side, 
 					       id_edge, num_nodes_on_edge, 
 					       edge_elem_node_id,
@@ -2244,7 +2244,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 		  else
 		    {
 		      calc_unseeded_edge_tangents (line_tangent, 
-					       ei->iconnect_ptr, dim,  
+					       ei[pg->imtrx]->iconnect_ptr, dim,  
 					       id_side, 
 					       id_edge, num_nodes_on_edge, 
 					       edge_elem_node_id,
@@ -2472,7 +2472,7 @@ calculate_2D_rotation_vectors (Exo_DB *exo,		/* the mesh */
 							
 			  id_side = find_id_side( elem, num_nodes_on_side, gnn_side_list, local_node_side_list, exo) ;
 
-			  if ( ei->ielem_type == TRILINEAR_TET ) id_side = find_id_side_SS(ei->ielem, iss, exo);
+			  if ( ei[pg->imtrx]->ielem_type == TRILINEAR_TET ) id_side = find_id_side_SS(ei[pg->imtrx]->ielem, iss, exo);
 			  /*find_surf_center_st (Elem_Type(exo, elem) , id_side, pd->Num_Dim, xi, &s, &t);	*/						
 							
 			  num_local_nodes = elem_info(NNODES, Elem_Type(exo, elem) );
@@ -2494,10 +2494,10 @@ calculate_2D_rotation_vectors (Exo_DB *exo,		/* the mesh */
 			  err = load_coordinate_scales(pd->CoordinateSystem, fv);
 			  EH(err, "load_coordinate_scales(fv)");
 							
-			  surface_determinant_and_normal( elem, iconnect_ptr, num_local_nodes, ei->ielem_dim - 1, id_side, 
+			  surface_determinant_and_normal( elem, iconnect_ptr, num_local_nodes, ei[pg->imtrx]->ielem_dim - 1, id_side, 
 							  num_nodes_on_side, local_node_side_list );
 							
-			  calc_surf_tangent( elem, iconnect_ptr, num_local_nodes, ei->ielem_dim-1,
+			  calc_surf_tangent( elem, iconnect_ptr, num_local_nodes, ei[pg->imtrx]->ielem_dim-1,
 					     num_nodes_on_side,local_node_side_list);
 						
 			  if( rotation[inode][jvar] == NULL ) 
@@ -3294,13 +3294,13 @@ rotate_eqns_at_node_2D( int iconn,
       I = Proc_Elem_Connect[iconn+i];
 		
       if(rotation[I][VECT_EQ_MOM] != NULL && pd->e[pg->imtrx][R_MOMENTUM1] ) {
-	id_mom = ei->ln_to_first_dof[VELOCITY1][i];
+	id_mom = ei[pg->imtrx]->ln_to_first_dof[VELOCITY1][i];
 			
 	if(id_mom > -1 ) rotate_momentum_eqn(id_mom,  I, iconn, dim ,ams);
       }
 
       if(rotation[I][VECT_EQ_MESH] != NULL && pd->e[pg->imtrx][R_MESH1] ) {
-	id_mesh = ei->ln_to_first_dof[MESH_DISPLACEMENT1][i];
+	id_mesh = ei[pg->imtrx]->ln_to_first_dof[MESH_DISPLACEMENT1][i];
 			
 	if(id_mesh > -1 ) rotate_mesh_eqn(id_mesh,  I, iconn, dim ,ams);
       }

@@ -328,7 +328,7 @@ assemble_mesh (double time,
    *      is equal to the problem dimension, but ielem_dim is one less than the
    *      problem dimension.
    */
-  if (! pd->e[pg->imtrx][eqn] || (ei->ielem_dim < pd->Num_Dim))
+  if (! pd->e[pg->imtrx][eqn] || (ei[pg->imtrx]->ielem_dim < pd->Num_Dim))
     {
       return(status);
     }
@@ -484,7 +484,7 @@ assemble_mesh (double time,
 	  source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
 
-	  for ( i=0; i<ei->dof[eqn]; i++)
+	  for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 	      phi_i = bfm->phi[i];
 
@@ -492,7 +492,7 @@ assemble_mesh (double time,
 	      
 	      mass = 0.;
 	      if ( transient_run &&
-		   pd_glob[ei->mn]->MeshMotion == DYNAMIC_LAGRANGIAN)
+		   pd_glob[ei[pg->imtrx]->mn]->MeshMotion == DYNAMIC_LAGRANGIAN)
 		{
 		  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 		    {
@@ -590,7 +590,7 @@ assemble_mesh (double time,
 	  source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
 
-	  for ( i=0; i<ei->dof[eqn]; i++)
+	  for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 	      phi_i = bfm->phi[i];
 	      grad_phi_i_e_a = bfm->grad_phi_e[i][a] ;
@@ -612,7 +612,7 @@ assemble_mesh (double time,
 		      pvar = upd->vp[pg->imtrx][var];
 			  _J = lec->J[peqn][pvar][i];
 
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];
 			  
@@ -623,7 +623,7 @@ assemble_mesh (double time,
 			  mass = 0.;
 
 			  if ( transient_run &&
-			       pd_glob[ei->mn]->MeshMotion == DYNAMIC_LAGRANGIAN )
+			       pd_glob[ei[pg->imtrx]->mn]->MeshMotion == DYNAMIC_LAGRANGIAN )
 			    {
 			      if ( mass_on )
 				{
@@ -771,7 +771,7 @@ assemble_mesh (double time,
 		      pvar = upd->vp[pg->imtrx][var];
 			  _J = lec->J[peqn][pvar][i];
 
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  diffusion = 0.;
 			  phi_j = bf[var]->phi[j];
@@ -797,7 +797,7 @@ assemble_mesh (double time,
 	      if (pd->v[pg->imtrx][var])
 		{
 
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      for ( w=0; w<pd->Num_Species_Eqn; w++)
 			{
@@ -878,7 +878,7 @@ assemble_mesh (double time,
 		  pvar = upd->vp[pg->imtrx][var];
 		  _J = lec->J[peqn][pvar][i];
 		  
-			for ( j=0; j<ei->dof[var]; j++)
+			for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      advection = 0.;
 		      /* For Lagrangian Mesh with advection, add in the 
@@ -950,7 +950,7 @@ assemble_mesh (double time,
 	      var = POR_GAS_PRES;
 	      pvar = upd->vp[pg->imtrx][var];
 		  
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      advection = 0.;
 		      /* For Lagrangian Mesh with advection, add in the 
@@ -1018,7 +1018,7 @@ assemble_mesh (double time,
 		{
 	      var = POR_POROSITY;
 	      pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      diffusion = 0.;
 		      if ((cr->MeshMotion == LAGRANGIAN ||
@@ -1051,7 +1051,7 @@ assemble_mesh (double time,
 		{
 		  var = POR_SINK_MASS;
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      diffusion = 0.;
 		      if ((cr->MeshMotion == LAGRANGIAN ||
@@ -1088,7 +1088,7 @@ assemble_mesh (double time,
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
  			  diffusion = 0.;
  			  phi_j = bf[var]->phi[j];
@@ -1159,7 +1159,7 @@ assemble_mesh (double time,
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 
  			  diffusion = 0.0;
@@ -1188,7 +1188,7 @@ assemble_mesh (double time,
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 
  			  diffusion = 0.0;
@@ -1464,7 +1464,7 @@ assemble_energy(double time,	/* present time value */
       eqn = R_ENERGY;
       peqn = upd->ep[pg->imtrx][eqn];
       var = TEMPERATURE;
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	  
 #if 1
@@ -1472,7 +1472,7 @@ assemble_energy(double time,	/* present time value */
 	  if ( xfem != NULL )
             {
 	      int xfem_active, extended_dof, base_interp, base_dof;
-	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      if ( extended_dof && !xfem_active ) continue;
             }
@@ -1557,14 +1557,14 @@ assemble_energy(double time,	/* present time value */
     {
       eqn   = R_ENERGY;
       peqn = upd->ep[pg->imtrx][eqn];
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 #if 1
           /* this is an optimization for xfem */
 	  if ( xfem != NULL )
             {
 	      int xfem_active, extended_dof, base_interp, base_dof;
-	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      if ( extended_dof && !xfem_active ) continue;
             }
@@ -1598,7 +1598,7 @@ assemble_energy(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -1672,7 +1672,7 @@ assemble_energy(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -1708,7 +1708,7 @@ assemble_energy(double time,	/* present time value */
 	      if ( pd->v[pg->imtrx][var] )
 		{
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -1777,7 +1777,7 @@ assemble_energy(double time,	/* present time value */
 	      if ( pd->v[pg->imtrx][var] )
 		{
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -1856,7 +1856,7 @@ assemble_energy(double time,	/* present time value */
 	      if ( pd->v[pg->imtrx][var] )
 		{
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -2059,7 +2059,7 @@ assemble_energy(double time,	/* present time value */
 	    {
 	      for ( w=0; w<pd->Num_Species_Eqn; w++)
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -2122,7 +2122,7 @@ assemble_energy(double time,	/* present time value */
 	  var = FILL;
 	  if ( pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var] )
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 		  
@@ -2190,7 +2190,7 @@ assemble_energy(double time,	/* present time value */
 	  	      if ( pd->v[pg->imtrx][var] )
 	    		{
 	      		pvar = upd->vp[pg->imtrx][var];
-	      		for ( j=0; j<ei->dof[var]; j++)
+	      		for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			  {
 		  	   source = 0.;
 		  	   if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
@@ -2214,7 +2214,7 @@ assemble_energy(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  mass = 0.;
 		  advection = 0.;
@@ -2235,7 +2235,7 @@ assemble_energy(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  mass = 0.;
 		  advection = 0.;
@@ -2633,7 +2633,7 @@ assemble_momentum(dbl time,       /* current time */
 	  (void) usr_FlowingLiquidViscosity(mp->u_FlowingLiquid_viscosity);
 	  var = TEMPERATURE;
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      dvis_dT[j]= mp->d_FlowingLiquid_viscosity[var]*bf[var]->phi[j];
 	    }
@@ -2763,16 +2763,16 @@ assemble_momentum(dbl time,       /* current time */
 	  checkFinite(phi_i_vector[0]);
 #endif
 
-	  for (i = 0; i < ei->dof[eqn]; i++) {
-	    ledof = ei->lvdof_to_ledof[eqn][i];
-	    if (ei->active_interp_ledof[ledof]) {
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+	    ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+	    if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
 	      /*
 	       *  Here is where we figure out whether the row is to placed in
 	       *  the normal spot (e.g., ii = i), or whether a boundary condition
 	       *  require that the volumetric contribution be stuck in another
 	       *  ldof pertaining to the same variable type.
 	       */
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  
 	      phi_i = phi_i_vector[i];
@@ -2783,7 +2783,7 @@ assemble_momentum(dbl time,       /* current time */
 	      if ( xfem != NULL )
                 {
 		  int xfem_active, extended_dof, base_interp, base_dof;
-		  xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+		  xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                                   &xfem_active, &extended_dof, &base_interp, &base_dof );
 		  if ( extended_dof && !xfem_active ) continue;
 		}
@@ -2917,7 +2917,7 @@ assemble_momentum(dbl time,       /* current time */
 		  if(a == pd->Num_Dim - 1)
 		    /* These data values should hold the entire
 		     * source term. */
-		    source = element_particle_info[ei->ielem].source_term[i];
+		    source = element_particle_info[ei[pg->imtrx]->ielem].source_term[i];
 		}
 	      
 	      //Continuity residual
@@ -2944,7 +2944,7 @@ assemble_momentum(dbl time,       /* current time */
 #endif /* DEBUG_MOMENTUM_RES */
 		  
 	    }  /*end if (active_dofs) */
-	  } /* end of for (i=0,ei->dofs...) */
+	  } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
 	}
     }
 
@@ -2977,18 +2977,18 @@ assemble_momentum(dbl time,       /* current time */
 	  checkFinite(phi_i_vector[0]);
 #endif
 	  
-	  for (i = 0; i < ei->dof[eqn]; i++) {		  
-	    ii = ei->lvdof_to_row_lvdof[eqn][i];
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {		  
+	    ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
-	    ledof = ei->lvdof_to_ledof[eqn][i];
-	    if (ei->active_interp_ledof[ledof]) {
+	    ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+	    if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
 	      /*
 	       *  Here is where we figure out whether the row is to placed in
 	       *  the normal spot (e.g., ii = i), or whether a boundary condition
 	       *  require that the volumetric contribution be stuck in another
 	       *  ldof pertaining to the same variable type.
 	       */
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 		  
 	      phi_i = phi_i_vector[i];
 		  
@@ -3000,7 +3000,7 @@ assemble_momentum(dbl time,       /* current time */
 	      if ( xfem != NULL )
 		{
 		  int xfem_active, extended_dof, base_interp, base_dof;
-		  xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+		  xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
 				  &xfem_active, &extended_dof, &base_interp, &base_dof );
 		  if ( extended_dof && !xfem_active ) continue;
 		}
@@ -3008,7 +3008,7 @@ assemble_momentum(dbl time,       /* current time */
 	      d_grad_phi_i_e_a_dmesh = bfm->d_grad_phi_e_dmesh[i][a];
 		  
 #ifdef DEBUG_MOMENTUM_JAC		  
-	      if(ei->ielem == 0)
+	      if(ei[pg->imtrx]->ielem == 0)
 		{
 		  printf("\nASSEMBLE_MOMENTUM, a = %d, dof = %d\n", a, i);
 		  printf("\tphi_i = %g\n", phi_i);
@@ -3037,7 +3037,7 @@ assemble_momentum(dbl time,       /* current time */
 		  phi_j_vector = bf[var]->phi;
 		  J = lec->J[peqn][pvar][ii];
 		      
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = phi_j_vector[j];	      
 			  
@@ -3157,7 +3157,7 @@ assemble_momentum(dbl time,       /* current time */
 		{
 		  var = BOND_EVOLUTION;
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];	      
 			  
@@ -3196,7 +3196,7 @@ assemble_momentum(dbl time,       /* current time */
 			  
 		  phi_j_vector = bf[var]->phi;
 			  
-		  for ( j=0; j < ei->dof[var]; j++)
+		  for ( j=0; j < ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = phi_j_vector[j];	      
 
@@ -3343,7 +3343,7 @@ assemble_momentum(dbl time,       /* current time */
 			  
 		      phi_j_vector = bf[var]->phi;
 			  
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			      
 			  phi_j = phi_j_vector[j];
@@ -3527,7 +3527,7 @@ assemble_momentum(dbl time,       /* current time */
 		    if ( pdv[var] )
 		      {
 			pvar = upd->vp[pg->imtrx][var];
-			for ( j=0; j<ei->dof[var]; j++)
+			for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			  {
 						  
 			    phi_j = bf[var]->phi[j];
@@ -3566,7 +3566,7 @@ assemble_momentum(dbl time,       /* current time */
 		    if ( pdv[var] )
 		      {
 			pvar = upd->vp[pg->imtrx][var];
-			for ( j=0; j<ei->dof[var]; j++)
+			for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			  {
 						  
 			    phi_j = bf[var]->phi[j];
@@ -3593,7 +3593,7 @@ assemble_momentum(dbl time,       /* current time */
 		if ( pdv[var] )
 		  {
 		    pvar = upd->vp[pg->imtrx][var];
-		    for ( j=0; j<ei->dof[var]; j++)
+		    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		      {
 						  
 			porous    = 0.;
@@ -3628,7 +3628,7 @@ assemble_momentum(dbl time,       /* current time */
 		  {
                    
 		    pvar = upd->vp[pg->imtrx][var];
-		    for ( j=0; j<ei->dof[var]; j++)
+		    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		      {
 						  
 			phi_j = bf[var]->phi[j];
@@ -3657,7 +3657,7 @@ assemble_momentum(dbl time,       /* current time */
 			if ( pdv[var] )
 			  {	    
 			    if ( mp->FSIModel == FSI_REALSOLID_CONTINUUM ) {
-			      for ( j = 0; j < ei->dof[SOLID_DISPLACEMENT1]; j++ ) {
+			      for ( j = 0; j < ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1]; j++ ) {
 				jk=dof_map[j];
 			    
 				phi_j = bf[var]->phi[j];
@@ -3687,7 +3687,7 @@ assemble_momentum(dbl time,       /* current time */
 		  {
                    
 		    pvar = upd->vp[pg->imtrx][var];
-		    for ( j=0; j<ei->dof[var]; j++)
+		    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		      {
 						  
 			phi_j = bf[var]->phi[j];
@@ -3714,7 +3714,7 @@ assemble_momentum(dbl time,       /* current time */
 		if ( pdv[var] )
 		  {
 		    pvar = upd->vp[pg->imtrx][var];
-		    for ( j=0; j<ei->dof[var]; j++)
+		    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		      {
 						  
 			porous    = 0.;
@@ -3746,7 +3746,7 @@ assemble_momentum(dbl time,       /* current time */
 		if ( pdv[var] )
 		  {
 		    pvar = upd->vp[pg->imtrx][var];
-		    for ( j=0; j<ei->dof[var]; j++)
+		    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		      {
 			porous    = 0.;
 			if ( porous_brinkman_on)
@@ -3776,7 +3776,7 @@ assemble_momentum(dbl time,       /* current time */
 	      if ( pdv[MASS_FRACTION] )
 		{
 		  var = MASS_FRACTION;
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -3882,7 +3882,7 @@ assemble_momentum(dbl time,       /* current time */
 			   
 		J = lec->J[peqn][pvar][ii];
 			   
-		for ( j=0; j<ei->dof[var]; j++)
+		for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		  {
 
 		    /*  phi_j = bf[var]->phi[j]; */
@@ -3902,7 +3902,7 @@ assemble_momentum(dbl time,       /* current time */
 				diffusion -=  grad_phi_i_e_a[p][q] * d_Pi->P[q][p][j];
 							   
 #ifdef DEBUG_MOMENTUM_JAC
-				if(ei->ielem == 0)
+				if(ei[pg->imtrx]->ielem == 0)
 				  printf("P diffusion, %d, %d  -= %g %g\n",
 					 p, q,
 					 grad_phi_i_e_a[p][q], d_Pi->P[j][q][p]);
@@ -3930,7 +3930,7 @@ assemble_momentum(dbl time,       /* current time */
 				   
 				   
 #ifdef DEBUG_MOMENTUM_JAC
-		    if(ei->ielem == 0)
+		    if(ei[pg->imtrx]->ielem == 0)
 		      fprintf(stdout,
 			      "\tJ_m_P[%d][%d][%d] += %10f %10f %10f %10f\n",
 			      a,i,j,mass,advection,porous,diffusion);
@@ -3958,7 +3958,7 @@ assemble_momentum(dbl time,       /* current time */
 							  
 				pvar = upd->vp[pg->imtrx][var];
 							  
-				for ( j=0; j<ei->dof[var]; j++)
+				for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 								  
 				  {
 				    phi_j = bf[var]->phi[j];
@@ -4005,7 +4005,7 @@ assemble_momentum(dbl time,       /* current time */
 						  
 			      pvar = upd->vp[pg->imtrx][var];
 						  
-			      for ( j=0; j<ei->dof[var]; j++)
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 							  
 				{
 				  phi_j = bf[var]->phi[j];
@@ -4046,7 +4046,7 @@ assemble_momentum(dbl time,       /* current time */
 					  
 			J = lec->J[peqn][pvar][ii];
 					  
-			for ( j=0; j<ei->dof[var]; j++)
+			for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			  {
 			    phi_j = bf[var]->phi[j];
 						  
@@ -4316,7 +4316,7 @@ assemble_momentum(dbl time,       /* current time */
 			/* Special Case for shell lubrication velocities with bounding continuum.  Note j-loop is over bulk element */			
 			if ( mp->FSIModel == FSI_MESH_CONTINUUM || 
 			     mp->FSIModel == FSI_REALSOLID_CONTINUUM) {
-			  for ( j = 0; j < ei->dof[MESH_DISPLACEMENT1]; j++ ) {
+			  for ( j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++ ) {
 			    jk=dof_map[j];
 			    
 			    phi_j = bf[var]->phi[j];
@@ -4338,7 +4338,7 @@ assemble_momentum(dbl time,       /* current time */
 		  }
 	      }
 	    } /* end of if(active_dofs) */
-	  } /* end of for(i=ei->dof*/ 
+	  } /* end of for(i=ei[pg->imtrx]->dof*/ 
 	}
     }
   safe_free((void *) n_dof);
@@ -4639,7 +4639,7 @@ assemble_continuity(dbl time_value,   /* current time */
 
   if (af->Assemble_Residual)
     {
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	 
 #if 1
@@ -4649,7 +4649,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	    {
 	      int xfem_active, extended_dof, base_interp, base_dof;
 			  
-	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
 			      &xfem_active, &extended_dof, &base_interp, &base_dof );
 			  
 	      if ( extended_dof && !xfem_active ) continue;
@@ -4678,7 +4678,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		  var = MASS_FRACTION;
 		  for (w = 0; w < pd->Num_Species-1; w++)
 		    {
-		      for (j = 0; j < ei->dof[var]; j++)
+		      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 			{
 			  if ( bf[var]->phi[j] > 0.0 ) break;
 			}
@@ -4735,7 +4735,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		  var = MASS_FRACTION;
 		  for (w=0; w<pd->Num_Species-1; w++)
 		    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  if ( bf[var]->phi[j] > 0.0 ) break;
 			}
@@ -4921,14 +4921,14 @@ assemble_continuity(dbl time_value,   /* current time */
 
   if (af->Assemble_Jacobian)
     {
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{ 
 #if 1
           /* this is an optimization for xfem */
 	  if ( xfem != NULL )
             {
               int xfem_active, extended_dof, base_interp, base_dof;
-	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
               if ( extended_dof && !xfem_active ) continue;
             }
@@ -4948,7 +4948,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			  
 		  J = lec->J[peqn][pvar][i];
 			  
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];	      
 				  
@@ -4983,7 +4983,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			      sum = 0.;
 			      for (jj=0; jj<pd->Num_Species-1; jj++)
 				{
-				  for ( q=0; q<ei->dof[MASS_FRACTION]; q++)
+				  for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
 				    {
 				      if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
 				    }
@@ -5061,7 +5061,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	  var = TEMPERATURE;
 	  if ( PSPG && pd->v[pg->imtrx][var] )
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 
@@ -5090,7 +5090,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	    {
 	      if( foam_volume_source_on )
 		{
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 		      
@@ -5105,7 +5105,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      h_flux = 0.;
 
@@ -5134,7 +5134,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	      
 	      J = lec->J[peqn][pvar][i];
 	      
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{			
 		  source = 0.0;
 		  
@@ -5162,7 +5162,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	      
 	      J = lec->J[peqn][pvar][i];
 	      
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 		  
@@ -5223,7 +5223,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			  pvar = upd->vp[pg->imtrx][var];
 			  if ( pd->v[pg->imtrx][var] )
 			    {
-			      for ( j=0; j<ei->dof[var]; j++)
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				{
 				  pressure_stabilization = 0.;
 				  
@@ -5261,7 +5261,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		      var = v_g[p][q];
 		      if ( pd->v[pg->imtrx][var] )
 			{
-			  for ( j=0; j<ei->dof[var]; j++)
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      pressure_stabilization = 0.;
 				  
@@ -5299,7 +5299,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  h_flux = 0.0;
 			  for ( a=0; a<dim ; a++)
@@ -5329,7 +5329,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 		  J = lec->J[peqn][pvar][i];
-		  for (j = 0; j < ei->dof[var]; j++)
+		  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		      /* derivative of |J| with extra term for axisymmetry e.g. 
@@ -5344,7 +5344,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			    {
 			      for (w=0; w<pd->Num_Species-1; w++)
 				{
-				  for ( q=0; q<ei->dof[MASS_FRACTION]; q++)
+				  for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
 				    {
 				      if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
 				    }
@@ -5385,7 +5385,7 @@ assemble_continuity(dbl time_value,   /* current time */
 				  sum_b = 0.;
 				  for (w=0; w<pd->Num_Species-1; w++)
 				    {
-				      for ( q=0; q<ei->dof[MASS_FRACTION]; q++)
+				      for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
 					{
 					  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
 					}
@@ -5500,7 +5500,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -5536,7 +5536,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
 
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 		  
@@ -5615,7 +5615,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			  sum = 0.;
 			  for (jj=0; jj<pd->Num_Species-1; jj++)
 			    {
-			      for ( q=0; q<ei->dof[MASS_FRACTION]; q++)
+			      for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
 				{
 				  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
 				}
@@ -5633,7 +5633,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			  sum = 0.;
 			  for (jj=0; jj<pd->Num_Species-1; jj++)
 			    {
-			      for ( q=0; q<ei->dof[MASS_FRACTION]; q++)
+			      for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
 				{
 				  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
 				}
@@ -5677,7 +5677,7 @@ assemble_continuity(dbl time_value,   /* current time */
 	    {
 	      if ( mp->MomentumSourceModel == SUSPENSION )
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		  
@@ -5840,7 +5840,7 @@ assemble_volume(bool owner)
       var = MESH_DISPLACEMENT1 + b;
       if (pd->v[pg->imtrx][var])
 	{
-	  for (j = 0; j < ei->dof[var]; j++)
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      eqn =  R_MESH1+b;
 
@@ -5858,7 +5858,7 @@ assemble_volume(bool owner)
 
 	      /*grab Index_Solution for location of x. see mm_fill_ptrs.c */
 
-	      vj = ei->gun_list[var][j];
+	      vj = ei[pg->imtrx]->gun_list[var][j];
 
 	      augc[iAC].d_evol_dx[vj] += wt*(func*d_detJh3_dmeshbj
 					     + d_func_dmeshbj*det_J*h3);
@@ -5872,15 +5872,15 @@ assemble_volume(bool owner)
       eqn = R_MASS;
       if (pd->v[pg->imtrx][var])
 	{
-	  for (j = 0; j < ei->dof[var]; j++) 
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 	    {
 	      phi_j = bf[var]->phi[j];
 	      ktype = spec_id;
-	      gnn   = ei->gnn_list[eqn][j];
-	      nvdof = ei->Baby_Dolphin[eqn][j];
-	      ledof =  ei->lvdof_to_ledof[eqn][j];
+	      gnn   = ei[pg->imtrx]->gnn_list[eqn][j];
+	      nvdof = ei[pg->imtrx]->Baby_Dolphin[eqn][j];
+	      ledof =  ei[pg->imtrx]->lvdof_to_ledof[eqn][j];
 	      vj    = Index_Solution(gnn, eqn, ktype , nvdof,
-				     ei->matID_ledof[ledof], pg->imtrx);
+				     ei[pg->imtrx]->matID_ledof[ledof], pg->imtrx);
 	      augc[iAC].d_evol_dx[vj] += phi_j * det_J * wt * h3;
 	    }
 	}
@@ -5891,15 +5891,15 @@ assemble_volume(bool owner)
       eqn = R_MOMENTUM1;
       if (pd->v[pg->imtrx][var])
 	{
-	  for (j = 0; j < ei->dof[var]; j++) 
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 	    {
 	      phi_j = bf[var]->phi[j];
 	      ktype = 0;
-	      gnn   = ei->gnn_list[eqn][j];
-	      nvdof = ei->Baby_Dolphin[eqn][j];
-	      ledof =  ei->lvdof_to_ledof[eqn][j];
+	      gnn   = ei[pg->imtrx]->gnn_list[eqn][j];
+	      nvdof = ei[pg->imtrx]->Baby_Dolphin[eqn][j];
+	      ledof =  ei[pg->imtrx]->lvdof_to_ledof[eqn][j];
 	      vj    = Index_Solution(gnn, eqn, ktype , nvdof,
-				     ei->matID_ledof[ledof], pg->imtrx);
+				     ei[pg->imtrx]->matID_ledof[ledof], pg->imtrx);
 	      augc[iAC].d_evol_dx[vj] += phi_j * det_J * wt * h3;
 		}
 	    }
@@ -5996,7 +5996,7 @@ assemble_curvature ( ) /*  time step size      */
     {
       if ( pd->e[pg->imtrx][eqn] )
 	{
-	  for( i=0; i<ei->dof[eqn]; i++)
+	  for( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 	      
 	      wt_func = bf[eqn]->phi[i];
@@ -6042,7 +6042,7 @@ assemble_curvature ( ) /*  time step size      */
       
       if( pd->e[pg->imtrx][eqn] )
 	{
-	  for( i=0; i<ei->dof[eqn]; i++ )
+	  for( i=0; i<ei[pg->imtrx]->dof[eqn]; i++ )
 	    {
 	      wt_func = bf[eqn]->phi[i];
 
@@ -6056,7 +6056,7 @@ assemble_curvature ( ) /*  time step size      */
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 		    
-		  for( j=0; j<ei->dof[var]; j++ )
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 		    {
 		      source = 0.0;
 
@@ -6085,7 +6085,7 @@ assemble_curvature ( ) /*  time step size      */
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 
-		      for( j=0; j<ei->dof[var]; j++ )
+		      for( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 			{
 			  source = 0.0;
 
@@ -6142,7 +6142,7 @@ assemble_curvature ( ) /*  time step size      */
 
 		  pvar = upd->vp[pg->imtrx][var];
 
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      
 		      if( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
@@ -6256,7 +6256,7 @@ assemble_div_normals (  ) /*  time step size      */
     {
       if ( pd->e[pg->imtrx][eqn] )
 	{
-	  for( i=0; i<ei->dof[eqn]; i++)
+	  for( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 	      wt_func = bf[eqn]->phi[i];
 	      
@@ -6295,7 +6295,7 @@ assemble_div_normals (  ) /*  time step size      */
     {
       if( pd->e[pg->imtrx][eqn] )
 	{
-	  for( i=0; i<ei->dof[eqn]; i++ )
+	  for( i=0; i<ei[pg->imtrx]->dof[eqn]; i++ )
 	    {
 	      wt_func = bf[eqn]->phi[i];
 
@@ -6309,7 +6309,7 @@ assemble_div_normals (  ) /*  time step size      */
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 		    
-		  for( j=0; j<ei->dof[var]; j++ )
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 		    {
 		      source = 0.0;
 
@@ -6342,7 +6342,7 @@ assemble_div_normals (  ) /*  time step size      */
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 		      
-		      for( j=0; j<ei->dof[var]; j++ )
+		      for( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 			{
 			  diffusion = 0.0;
 
@@ -6480,9 +6480,9 @@ assemble_LSvelocity( bool owner, int ielem )
       var = vel_dim;
       if ( pd->v[pg->imtrx][var] )
 	{
-	  for( j=0; j<ei->dof[var]; j++)
+	  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
-	      vj = ei->gun_list[var][j];
+	      vj = ei[pg->imtrx]->gun_list[var][j];
 
 	      augc[iAC].d_lsvel_dx[ vj ] += wt * det_J * h3 * H * bf[var]->phi[j];
 	      augc[iAC].d_lsvol_dx[ vj ] += 0.0;
@@ -6498,7 +6498,7 @@ assemble_LSvelocity( bool owner, int ielem )
       var = MESH_DISPLACEMENT1 + b;
        if ( pd->v[pg->imtrx][var] )
 	{
-	  for( j=0; j<ei->dof[var]; j++)
+	  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      
 	      eqn =  R_MESH1+b;
@@ -6518,7 +6518,7 @@ assemble_LSvelocity( bool owner, int ielem )
 
 	      /*grab Index_Solution for location of x. see mm_fill_ptrs.c */
 
-	      vj = ei->gun_list[var][j];
+	      vj = ei[pg->imtrx]->gun_list[var][j];
 
 	      augc[iAC].d_lsvel_dx[ vj ] += wt * fv->v[vel_dim] *(H*d_detJh3_dmeshbj
 								 + d_H_dmeshbj*det_J*h3);
@@ -6533,14 +6533,14 @@ assemble_LSvelocity( bool owner, int ielem )
   var = FILL;
   if ( pd->v[pg->imtrx][var] )
     {
-      for( j=0; j<ei->dof[var]; j++)
+      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  
 	  d_H_dFj = lsi->d_H_dF[j];
 
 	  /*grab Index_Solution for location of x. see mm_fill_ptrs.c */
 	  
-	  vj = ei->gun_list[var][j];
+	  vj = ei[pg->imtrx]->gun_list[var][j];
 
 	  augc[iAC].d_lsvel_dx[ vj ] += wt * fv->v[vel_dim]* d_H_dFj*det_J*h3;
 	  augc[iAC].d_lsvol_dx[ vj ] += wt * d_H_dFj*det_J*h3;
@@ -6664,10 +6664,10 @@ assemble_normals( )
 	  
 	  if ( pd->e[pg->imtrx][eqn] )
 	    {
-	      for( i=0; i<ei->dof[eqn]; i++)
+	      for( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  wt_func = bfm->phi[i];
 
@@ -6717,12 +6717,12 @@ assemble_normals( )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm  = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
-	      ledof = ei->lvdof_to_ledof[eqn][i];
-	      if (ei->active_interp_ledof[ledof]) 
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{		
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 		  
 		  phi_i = bfm->phi[i];
 
@@ -6737,7 +6737,7 @@ assemble_normals( )
 
 		      if( eqn == var )
 			{
-			  for( j=0; j<ei->dof[var]; j++ )
+			  for( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 			    {
 			      phi_j = bf[var]->phi[j];
 			      
@@ -6762,7 +6762,7 @@ assemble_normals( )
 		  var = LS;
 		  pvar = upd->vp[pg->imtrx][var];
 
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -6792,7 +6792,7 @@ assemble_normals( )
 		      var = R_MESH1 + b;
 		      pvar = upd->vp[pg->imtrx][var];
 
-		      for( j=0; j<ei->dof[var]; j++)
+		      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  advection = 0.0;
 
@@ -6900,7 +6900,7 @@ assemble_ls_momentum_source(void)
 
   /* Calculate the derivatives. */
   var = FILL;
-  for ( j=0 ; j < ei->dof[var] ; j++ )
+  for ( j=0 ; j < ei[pg->imtrx]->dof[var] ; j++ )
     {
       for ( p=0 ; p < VIM ; p++ )
 	{
@@ -6928,10 +6928,10 @@ assemble_ls_momentum_source(void)
 	  
 	  if ( pd->e[pg->imtrx][eqn] )
 	    {
-	      for( i=0; i<ei->dof[eqn]; i++)
+	      for( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 		  grad_phi_i_e_a = bfm->grad_phi_e[i][a];
@@ -6970,12 +6970,12 @@ assemble_ls_momentum_source(void)
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm  = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
-	      ledof = ei->lvdof_to_ledof[eqn][i];
-	      if (ei->active_interp_ledof[ledof]) 
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{		
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 		  
 		  phi_i = bfm->phi[i];
 		  grad_phi_i_e_a = bfm->grad_phi_e[i][a];
@@ -6986,7 +6986,7 @@ assemble_ls_momentum_source(void)
                   var = eqn;
 		  pvar = upd->vp[pg->imtrx][var];
 		  
-		  for( j=0; j<ei->dof[var]; j++ )
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 		    {
 		      phi_j = bf[var]->phi[j];
 			      
@@ -7007,7 +7007,7 @@ assemble_ls_momentum_source(void)
 		  var = LS;
 		  pvar = upd->vp[pg->imtrx][var];
 
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -7085,15 +7085,15 @@ apply_ls_momentum_source(void)
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof])
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof])
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 		  
@@ -7106,7 +7106,7 @@ apply_ls_momentum_source(void)
                   var = LS ;
 		  pvar = upd->vp[pg->imtrx][var];
 		      
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		      lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -7131,15 +7131,15 @@ apply_ls_momentum_source(void)
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof])
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof])
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 		  
@@ -7166,15 +7166,15 @@ apply_ls_momentum_source(void)
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof])
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof])
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -7186,7 +7186,7 @@ apply_ls_momentum_source(void)
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 		      
-		      for( j=0; j<ei->dof[var]; j++)
+		      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];
 			  
@@ -7204,7 +7204,7 @@ apply_ls_momentum_source(void)
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 		      
-		      for( j=0; j<ei->dof[var]; j++)
+		      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];
 			  
@@ -7431,7 +7431,7 @@ load_fv(void)
   
   if (pdv[TEMPERATURE]) {
     v = TEMPERATURE;
-    scalar_fv_fill(esp->T, esp_dot->T, esp_old->T, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->T, esp_dot->T, esp_old->T, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->T), &(fv_dot->T), &(fv_old->T));
     stateVector[TEMPERATURE] = fv->T;
   } /*else if (upd->vp[pg->imtrx][v] == -1) {
@@ -7447,7 +7447,7 @@ load_fv(void)
   
   if (pdv[FILL]) {
     v = FILL;
-    scalar_fv_fill(esp->F, esp_dot->F, esp_old->F, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->F, esp_dot->F, esp_old->F, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->F), &(fv_dot->F), &(fv_old->F));
     stateVector[v] = fv->F;
   } /*else if (upd->vp[pg->imtrx][v] == -1) {
@@ -7461,7 +7461,7 @@ load_fv(void)
   
   if (pdv[BOND_EVOLUTION]) {
     v = BOND_EVOLUTION;
-    scalar_fv_fill(esp->nn, esp_dot->nn, esp_old->nn, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->nn, esp_dot->nn, esp_old->nn, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->nn), &(fv_dot->nn), &(fv_old->nn));
     stateVector[v] = fv->nn;
   } /*else if (upd->vp[pg->imtrx][v] == -1)  {
@@ -7475,7 +7475,7 @@ load_fv(void)
   
   if ( pdv[VOLTAGE] ) {
     v = VOLTAGE;
-    scalar_fv_fill(esp->V, esp_dot->V, esp_old->V, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->V, esp_dot->V, esp_old->V, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->V), &(fv_dot->V), &(fv_old->V));
     stateVector[VOLTAGE] = fv->V;
   } /*else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7488,7 +7488,7 @@ load_fv(void)
   
   if ( pdv[SURF_CHARGE] ) {
     v = SURF_CHARGE;
-    scalar_fv_fill(esp->qs, esp_dot->qs, esp_old->qs, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->qs, esp_dot->qs, esp_old->qs, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->qs), &(fv_dot->qs), &(fv_old->qs));
     stateVector[SURF_CHARGE] = fv->qs;
   } /*else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7501,7 +7501,7 @@ load_fv(void)
   
   if ( pdv[SHELL_CURVATURE] ) {
     v = SHELL_CURVATURE;
-    scalar_fv_fill(esp->sh_K, esp_dot->sh_K, esp_old->sh_K, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_K, esp_dot->sh_K, esp_old->sh_K, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_K), &(fv_dot->sh_K), &(fv_old->sh_K));
     stateVector[SHELL_CURVATURE] = fv->sh_K;
   } /*else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7514,7 +7514,7 @@ load_fv(void)
   
   if ( pdv[SHELL_TENSION] ) {
     v = SHELL_TENSION;
-    scalar_fv_fill(esp->sh_tens, esp_dot->sh_tens, esp_old->sh_tens, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_tens, esp_dot->sh_tens, esp_old->sh_tens, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_tens), &(fv_dot->sh_tens), &(fv_old->sh_tens));
     stateVector[SHELL_TENSION] = fv->sh_tens;
   } /*else if ( updvp[v] == -1 ) {
@@ -7526,7 +7526,7 @@ load_fv(void)
   
   if ( pdv[SHELL_X] ) {
     v = SHELL_X      ;
-    scalar_fv_fill(esp->sh_x, esp_dot->sh_x, esp_old->sh_x, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_x, esp_dot->sh_x, esp_old->sh_x, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_x), &(fv_dot->sh_x), &(fv_old->sh_x));
     stateVector[SHELL_X] = fv->sh_x;
   } /*else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7539,7 +7539,7 @@ load_fv(void)
   
   if ( pdv[SHELL_Y] ) {
     v = SHELL_Y      ;
-    scalar_fv_fill(esp->sh_y, esp_dot->sh_y, esp_old->sh_y, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_y, esp_dot->sh_y, esp_old->sh_y, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_y), &(fv_dot->sh_y), &(fv_old->sh_y));
     stateVector[SHELL_Y] = fv->sh_y;
   } /* else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7552,7 +7552,7 @@ load_fv(void)
   
   if ( pdv[SHELL_USER] ) {
     v = SHELL_USER   ;
-    scalar_fv_fill(esp->sh_u, esp_dot->sh_u, esp_old->sh_u, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_u, esp_dot->sh_u, esp_old->sh_u, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_u), &(fv_dot->sh_u), &(fv_old->sh_u));
     stateVector[SHELL_USER] = fv->sh_u;
   } /* else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7569,7 +7569,7 @@ load_fv(void)
     {
       v = SHEAR_RATE;
       fv->SH = 0.0;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( i=0; i<dofs; i++)
 	{
 	  fv->SH += *esp->SH[i] * bf[v]->phi[i];
@@ -7588,7 +7588,7 @@ load_fv(void)
       v = ENORM;
       fv->Enorm = 0.0;
       fv_old->Enorm = 0.0;
-      dofs = ei->dof[v];
+      dofs = ei[pg->imtrx]->dof[v];
       for(i = 0; i < dofs; i++)
 	{
 	  fv->Enorm += *esp->Enorm[i] * bf[v]->phi[i];
@@ -7609,7 +7609,7 @@ load_fv(void)
   if ( pdv[CURVATURE] )
     {
       v = CURVATURE;
-      scalar_fv_fill(esp->H, esp_dot->H, esp_old->H, bf[v]->phi, ei->dof[v],
+      scalar_fv_fill(esp->H, esp_dot->H, esp_old->H, bf[v]->phi, ei[pg->imtrx]->dof[v],
 		     &(fv->H), &(fv_dot->H), &(fv_old->H));
 
     }
@@ -7627,7 +7627,7 @@ load_fv(void)
   if ( pdv[NORMAL1] )
     {
       v = NORMAL1;
-      scalar_fv_fill(esp->n[0], esp_dot->n[0], esp_old->n[0], bf[v]->phi, ei->dof[v],
+      scalar_fv_fill(esp->n[0], esp_dot->n[0], esp_old->n[0], bf[v]->phi, ei[pg->imtrx]->dof[v],
 		     &(fv->n[0]), &(fv_dot->n[0]), &(fv_old->n[0]));
 
     }
@@ -7640,7 +7640,7 @@ load_fv(void)
   if ( pdv[NORMAL2] )
     {
       v = NORMAL2;
-      scalar_fv_fill(esp->n[1], esp_dot->n[1], esp_old->n[1], bf[v]->phi, ei->dof[v],
+      scalar_fv_fill(esp->n[1], esp_dot->n[1], esp_old->n[1], bf[v]->phi, ei[pg->imtrx]->dof[v],
 		     &(fv->n[1]), &(fv_dot->n[1]), &(fv_old->n[1]));
 
     }
@@ -7654,7 +7654,7 @@ load_fv(void)
   if ( pdv[NORMAL3] )
     {
       v = NORMAL3;
-      scalar_fv_fill(esp->n[2], esp_dot->n[2], esp_old->n[2], bf[v]->phi, ei->dof[v],
+      scalar_fv_fill(esp->n[2], esp_dot->n[2], esp_old->n[2], bf[v]->phi, ei[pg->imtrx]->dof[v],
 		     &(fv->n[2]), &(fv_dot->n[2]), &(fv_old->n[2]));
 
     }
@@ -7672,7 +7672,7 @@ load_fv(void)
     {
       v = SHELL_ANGLE1;
       fv->sh_ang[0] = 0.;
-      for (i = 0; i < ei->dof[v]; i++) {
+      for (i = 0; i < ei[pg->imtrx]->dof[v]; i++) {
         if ( ( *esp->sh_ang[0][i] - *esp->sh_ang[0][0] ) > M_PIE ) 
           fv->sh_ang[0] += bf[v]->phi[i] * ( *esp->sh_ang[0][i] - 2.*M_PIE );
         else if ( ( *esp->sh_ang[0][i] - *esp->sh_ang[0][0] ) < -M_PIE ) 
@@ -7693,7 +7693,7 @@ load_fv(void)
     {
       v = SHELL_ANGLE2;
       fv->sh_ang[1] = 0.;
-      for (i = 0; i < ei->dof[v]; i++) {
+      for (i = 0; i < ei[pg->imtrx]->dof[v]; i++) {
         if ( ( *esp->sh_ang[1][i] - *esp->sh_ang[1][0] ) > M_PIE ) 
 	  fv->sh_ang[1] += bf[v]->phi[i] * ( *esp->sh_ang[1][i] - 2.*M_PIE );
         else if ( ( *esp->sh_ang[1][i] - *esp->sh_ang[1][0] ) < -M_PIE ) 
@@ -7715,7 +7715,7 @@ load_fv(void)
   
   if (pdv[SHELL_SURF_DIV_V]) {
     v = SHELL_SURF_DIV_V     ;
-    scalar_fv_fill(esp->div_s_v, esp_dot->div_s_v, esp_old->div_s_v, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->div_s_v, esp_dot->div_s_v, esp_old->div_s_v, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->div_s_v), &(fv_dot->div_s_v), &(fv_old->div_s_v));
     stateVector[SHELL_SURF_DIV_V] = fv->div_s_v;
   } /*else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7725,7 +7725,7 @@ load_fv(void)
   
   if ( pdv[SHELL_SURF_CURV] ) {
     v = SHELL_SURF_CURV    ;
-    scalar_fv_fill(esp->curv, esp_dot->curv, esp_old->curv, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->curv, esp_dot->curv, esp_old->curv, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->curv), &(fv_dot->curv), &(fv_old->curv));
     stateVector[SHELL_SURF_CURV] = fv->curv;
   } /*else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7735,7 +7735,7 @@ load_fv(void)
 
   if ( pdv[N_DOT_CURL_V] ) {
     v = N_DOT_CURL_V    ;
-    scalar_fv_fill(esp->n_dot_curl_s_v, esp_dot->n_dot_curl_s_v, esp_old->n_dot_curl_s_v, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->n_dot_curl_s_v, esp_dot->n_dot_curl_s_v, esp_old->n_dot_curl_s_v, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->n_dot_curl_s_v), &(fv_dot->n_dot_curl_s_v), &(fv_old->n_dot_curl_s_v));
     stateVector[N_DOT_CURL_V] = fv->n_dot_curl_s_v;
   } /*else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7745,7 +7745,7 @@ load_fv(void)
 
   if ( pdv[GRAD_S_V_DOT_N1] ) {
     v = GRAD_S_V_DOT_N1    ;
-    scalar_fv_fill(esp->grad_v_dot_n[0], esp_dot->grad_v_dot_n[0], esp_old->grad_v_dot_n[0], bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->grad_v_dot_n[0], esp_dot->grad_v_dot_n[0], esp_old->grad_v_dot_n[0], bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->grad_v_dot_n[0]), &(fv_dot->grad_v_dot_n[0]), &(fv_old->grad_v_dot_n[0]));
     stateVector[GRAD_S_V_DOT_N1] = fv->grad_v_dot_n[0];
   }/* else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7755,7 +7755,7 @@ load_fv(void)
 
   if ( pdv[GRAD_S_V_DOT_N2] ) {
     v = GRAD_S_V_DOT_N2    ;
-    scalar_fv_fill(esp->grad_v_dot_n[1], esp_dot->grad_v_dot_n[1], esp_old->grad_v_dot_n[1], bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->grad_v_dot_n[1], esp_dot->grad_v_dot_n[1], esp_old->grad_v_dot_n[1], bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->grad_v_dot_n[1]), &(fv_dot->grad_v_dot_n[1]), &(fv_old->grad_v_dot_n[1]));
     stateVector[GRAD_S_V_DOT_N2] = fv->grad_v_dot_n[1];
   }/* else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7766,7 +7766,7 @@ load_fv(void)
   
   if ( pdv[GRAD_S_V_DOT_N3] ) {
     v = GRAD_S_V_DOT_N3    ;
-    scalar_fv_fill(esp->grad_v_dot_n[2], esp_dot->grad_v_dot_n[2], esp_old->grad_v_dot_n[2], bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->grad_v_dot_n[2], esp_dot->grad_v_dot_n[2], esp_old->grad_v_dot_n[2], bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->grad_v_dot_n[2]), &(fv_dot->grad_v_dot_n[2]), &(fv_old->grad_v_dot_n[2]));
     stateVector[GRAD_S_V_DOT_N3] = fv->grad_v_dot_n[2];
   } /*else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7776,7 +7776,7 @@ load_fv(void)
 
   if ( pdv[SHELL_DIFF_FLUX] ) {
     v = SHELL_DIFF_FLUX  ;
-    scalar_fv_fill(esp->sh_J, esp_dot->sh_J, esp_old->sh_J, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_J, esp_dot->sh_J, esp_old->sh_J, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_J), &(fv_dot->sh_J), &(fv_old->sh_J));
     stateVector[SHELL_DIFF_FLUX] = fv->sh_J;
   } /*else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7786,7 +7786,7 @@ load_fv(void)
 
   if ( pdv[SHELL_DIFF_CURVATURE] ) {
     v = SHELL_DIFF_CURVATURE;
-    scalar_fv_fill(esp->sh_Kd, esp_dot->sh_Kd, esp_old->sh_Kd, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_Kd, esp_dot->sh_Kd, esp_old->sh_Kd, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_Kd), &(fv_dot->sh_Kd), &(fv_old->sh_Kd));
     stateVector[SHELL_DIFF_CURVATURE] = fv->sh_Kd;
   }/* else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7796,7 +7796,7 @@ load_fv(void)
 
   if ( pdv[SHELL_NORMAL1] ) {
     v = SHELL_NORMAL1    ;
-    scalar_fv_fill(esp->n[0], esp_dot->n[0], esp_old->n[0], bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->n[0], esp_dot->n[0], esp_old->n[0], bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->n[0]), &(fv_dot->n[0]), &(fv_old->n[0]));
     stateVector[SHELL_NORMAL1] = fv->n[0];
   } /*else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7806,7 +7806,7 @@ load_fv(void)
 
   if ( pdv[SHELL_NORMAL2] ) {
     v = SHELL_NORMAL2    ;
-    scalar_fv_fill(esp->n[1], esp_dot->n[1], esp_old->n[1], bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->n[1], esp_dot->n[1], esp_old->n[1], bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->n[1]), &(fv_dot->n[1]), &(fv_old->n[1]));
     stateVector[SHELL_NORMAL2] = fv->n[1];
   } /*else if ( upd->vp[pg->imtrx][v] == -1 ) {
@@ -7819,7 +7819,7 @@ load_fv(void)
 
   if (pdv[ACOUS_PREAL]) {
     v = ACOUS_PREAL;
-    scalar_fv_fill(esp->apr, esp_dot->apr, esp_old->apr, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->apr, esp_dot->apr, esp_old->apr, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->apr), &(fv_dot->apr), &(fv_old->apr));
     stateVector[ACOUS_PREAL] = fv->apr;
   } /*else if (upd->vp[pg->imtrx][v] == -1) {
@@ -7830,7 +7830,7 @@ load_fv(void)
 
   if (pdv[ACOUS_PIMAG]) {
     v = ACOUS_PIMAG;
-    scalar_fv_fill(esp->api, esp_dot->api, esp_old->api, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->api, esp_dot->api, esp_old->api, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->api), &(fv_dot->api), &(fv_old->api));
     stateVector[ACOUS_PIMAG] = fv->api;
   } /*else if (upd->vp[pg->imtrx][v] == -1) {
@@ -7841,7 +7841,7 @@ load_fv(void)
 
   if (pdv[ACOUS_REYN_STRESS]) {
     v = ACOUS_REYN_STRESS;
-    scalar_fv_fill(esp->ars, esp_dot->ars, esp_old->ars, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->ars, esp_dot->ars, esp_old->ars, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->ars), &(fv_dot->ars), &(fv_old->ars));
     stateVector[ACOUS_REYN_STRESS] = fv->ars;
   } /*else if (upd->vp[pg->imtrx][v] == -1) {
@@ -7851,49 +7851,49 @@ load_fv(void)
 
   if (pdv[SHELL_BDYVELO]) {
     v = SHELL_BDYVELO;
-    scalar_fv_fill(esp->sh_bv, esp_dot->sh_bv, esp_old->sh_bv, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_bv, esp_dot->sh_bv, esp_old->sh_bv, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_bv), &(fv_dot->sh_bv), &(fv_old->sh_bv));
     stateVector[SHELL_BDYVELO] = fv->sh_bv;
   } /*else if (upd->vp[pg->imtrx][v] == -1) { */
 
   if (pdv[SHELL_LUBP]) {
     v = SHELL_LUBP;
-    scalar_fv_fill(esp->sh_p, esp_dot->sh_p, esp_old->sh_p, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_p, esp_dot->sh_p, esp_old->sh_p, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_p), &(fv_dot->sh_p), &(fv_old->sh_p));
     stateVector[SHELL_LUBP] = fv->sh_p;
   } 
 
   if (pdv[LUBP]) {
     v = LUBP;
-    scalar_fv_fill(esp->lubp, esp_dot->lubp, esp_old->lubp, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->lubp, esp_dot->lubp, esp_old->lubp, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->lubp), &(fv_dot->lubp), &(fv_old->lubp));
     stateVector[LUBP] = fv->lubp;
   } 
 
   if (pdv[LUBP_2]) {
     v = LUBP_2;
-    scalar_fv_fill(esp->lubp_2, esp_dot->lubp_2, esp_old->lubp_2, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->lubp_2, esp_dot->lubp_2, esp_old->lubp_2, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->lubp_2), &(fv_dot->lubp_2), &(fv_old->lubp_2));
     stateVector[LUBP_2] = fv->lubp_2;
   } 
 
  if (pdv[SHELL_FILMP]) {
     v = SHELL_FILMP;
-    scalar_fv_fill(esp->sh_fp, esp_dot->sh_fp, esp_old->sh_fp, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_fp, esp_dot->sh_fp, esp_old->sh_fp, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_fp), &(fv_dot->sh_fp), &(fv_old->sh_fp));
     stateVector[SHELL_FILMP] = fv->sh_fp;
   } 
 
   if (pdv[SHELL_FILMH]) {
     v = SHELL_FILMH;
-    scalar_fv_fill(esp->sh_fh, esp_dot->sh_fh, esp_old->sh_fh, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_fh, esp_dot->sh_fh, esp_old->sh_fh, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_fh), &(fv_dot->sh_fh), &(fv_old->sh_fh));
     stateVector[SHELL_FILMH] = fv->sh_fh;
   } 
   
   if (pdv[SHELL_PARTC]) {
     v = SHELL_PARTC;
-    scalar_fv_fill(esp->sh_pc, esp_dot->sh_pc, esp_old->sh_pc, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_pc, esp_dot->sh_pc, esp_old->sh_pc, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_pc), &(fv_dot->sh_pc), &(fv_old->sh_pc));
     stateVector[SHELL_PARTC] = fv->sh_pc;
   } 
@@ -7901,97 +7901,97 @@ load_fv(void)
 
   if (pdv[SHELL_SAT_CLOSED]) {
     v = SHELL_SAT_CLOSED;
-    scalar_fv_fill(esp->sh_sat_closed, esp_dot->sh_sat_closed, esp_old->sh_sat_closed, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_sat_closed, esp_dot->sh_sat_closed, esp_old->sh_sat_closed, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_sat_closed), &(fv_dot->sh_sat_closed), &(fv_old->sh_sat_closed));
     stateVector[SHELL_SAT_CLOSED] = fv->sh_sat_closed;
   } 
   if (pdv[SHELL_PRESS_OPEN]) {
     v = SHELL_PRESS_OPEN;
-    scalar_fv_fill(esp->sh_p_open, esp_dot->sh_p_open, esp_old->sh_p_open, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_p_open, esp_dot->sh_p_open, esp_old->sh_p_open, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_p_open), &(fv_dot->sh_p_open), &(fv_old->sh_p_open));
     stateVector[SHELL_PRESS_OPEN] = fv->sh_p_open;
   } 
   if (pdv[SHELL_PRESS_OPEN_2]) {
     v = SHELL_PRESS_OPEN_2;
-    scalar_fv_fill(esp->sh_p_open_2, esp_dot->sh_p_open_2, esp_old->sh_p_open_2, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_p_open_2, esp_dot->sh_p_open_2, esp_old->sh_p_open_2, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_p_open_2), &(fv_dot->sh_p_open_2), &(fv_old->sh_p_open_2));
     stateVector[SHELL_PRESS_OPEN_2] = fv->sh_p_open_2;
   } 
   if (pdv[SHELL_TEMPERATURE]) {
     v = SHELL_TEMPERATURE;
-    scalar_fv_fill(esp->sh_t, esp_dot->sh_t, esp_old->sh_t, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_t, esp_dot->sh_t, esp_old->sh_t, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_t), &(fv_dot->sh_t), &(fv_old->sh_t));
     stateVector[SHELL_TEMPERATURE] = fv->sh_t;
   } 
   if (pdv[SHELL_DELTAH]) {
     v = SHELL_DELTAH;
-    scalar_fv_fill(esp->sh_dh, esp_dot->sh_dh, esp_old->sh_dh, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_dh, esp_dot->sh_dh, esp_old->sh_dh, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_dh), &(fv_dot->sh_dh), &(fv_old->sh_dh));
     stateVector[SHELL_DELTAH] = fv->sh_dh;
   } 
   if (pdv[SHELL_LUB_CURV]) {
     v = SHELL_LUB_CURV;
-    scalar_fv_fill(esp->sh_l_curv, esp_dot->sh_l_curv, esp_old->sh_l_curv, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_l_curv, esp_dot->sh_l_curv, esp_old->sh_l_curv, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_l_curv), &(fv_dot->sh_l_curv), &(fv_old->sh_l_curv));
     stateVector[SHELL_LUB_CURV] = fv->sh_l_curv;
   } 
   if (pdv[SHELL_LUB_CURV_2]) {
     v = SHELL_LUB_CURV_2;
-    scalar_fv_fill(esp->sh_l_curv_2, esp_dot->sh_l_curv_2, esp_old->sh_l_curv_2, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_l_curv_2, esp_dot->sh_l_curv_2, esp_old->sh_l_curv_2, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_l_curv_2), &(fv_dot->sh_l_curv_2), &(fv_old->sh_l_curv_2));
     stateVector[SHELL_LUB_CURV] = fv->sh_l_curv;
   } 
   if (pdv[SHELL_SAT_GASN]) {
     v = SHELL_SAT_GASN;
-    scalar_fv_fill(esp->sh_sat_gasn, esp_dot->sh_sat_gasn, esp_old->sh_sat_gasn, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_sat_gasn, esp_dot->sh_sat_gasn, esp_old->sh_sat_gasn, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_sat_gasn), &(fv_dot->sh_sat_gasn), &(fv_old->sh_sat_gasn));
     stateVector[SHELL_SAT_GASN] = fv->sh_sat_gasn;
   } 
   if (pdv[SHELL_SHEAR_TOP]) {
     v = SHELL_SHEAR_TOP;
-    scalar_fv_fill(esp->sh_shear_top, esp_dot->sh_shear_top, esp_old->sh_shear_top, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_shear_top, esp_dot->sh_shear_top, esp_old->sh_shear_top, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_shear_top), &(fv_dot->sh_shear_top), &(fv_old->sh_shear_top));
     stateVector[SHELL_SHEAR_TOP] = fv->sh_shear_top;
   }
   if (pdv[SHELL_SHEAR_BOT]) {
     v = SHELL_SHEAR_BOT;
-    scalar_fv_fill(esp->sh_shear_bot, esp_dot->sh_shear_bot, esp_old->sh_shear_bot, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_shear_bot, esp_dot->sh_shear_bot, esp_old->sh_shear_bot, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_shear_bot), &(fv_dot->sh_shear_bot), &(fv_old->sh_shear_bot));
     stateVector[SHELL_SHEAR_BOT] = fv->sh_shear_bot;
   }
   if (pdv[SHELL_CROSS_SHEAR]) {
     v = SHELL_CROSS_SHEAR;
-    scalar_fv_fill(esp->sh_cross_shear, esp_dot->sh_cross_shear, esp_old->sh_cross_shear, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sh_cross_shear, esp_dot->sh_cross_shear, esp_old->sh_cross_shear, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sh_cross_shear), &(fv_dot->sh_cross_shear), &(fv_old->sh_cross_shear));
     stateVector[SHELL_CROSS_SHEAR] = fv->sh_cross_shear;
   }
   if (pdv[MAX_STRAIN]) {
     v = MAX_STRAIN;
-    scalar_fv_fill(esp->max_strain, esp_dot->max_strain, esp_old->max_strain, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->max_strain, esp_dot->max_strain, esp_old->max_strain, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->max_strain), &(fv_dot->max_strain), &(fv_old->max_strain));
     stateVector[MAX_STRAIN] = fv->max_strain;
   }
   if (pdv[CUR_STRAIN]) {
     v = CUR_STRAIN;
-    scalar_fv_fill(esp->cur_strain, esp_dot->cur_strain, esp_old->cur_strain, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->cur_strain, esp_dot->cur_strain, esp_old->cur_strain, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->cur_strain), &(fv_dot->cur_strain), &(fv_old->cur_strain));
     stateVector[CUR_STRAIN] = fv->cur_strain;
   }
   if ( pdv[LIGHT_INTP] ) {
     v = LIGHT_INTP    ;
-    scalar_fv_fill(esp->poynt[0], esp_dot->poynt[0], esp_old->poynt[0], bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->poynt[0], esp_dot->poynt[0], esp_old->poynt[0], bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->poynt[0]), &(fv_dot->poynt[0]), &(fv_old->poynt[0]));
     stateVector[LIGHT_INTP] = fv->poynt[0];
   } 
   if ( pdv[LIGHT_INTM] ) {
     v = LIGHT_INTM    ;
-    scalar_fv_fill(esp->poynt[1], esp_dot->poynt[1], esp_old->poynt[1], bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->poynt[1], esp_dot->poynt[1], esp_old->poynt[1], bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->poynt[1]), &(fv_dot->poynt[1]), &(fv_old->poynt[1]));
     stateVector[LIGHT_INTM] = fv->poynt[1];
   } 
   if ( pdv[LIGHT_INTD] ) {
     v = LIGHT_INTD    ;
-    scalar_fv_fill(esp->poynt[2], esp_dot->poynt[2], esp_old->poynt[2], bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->poynt[2], esp_dot->poynt[2], esp_old->poynt[2], bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->poynt[2]), &(fv_dot->poynt[2]), &(fv_old->poynt[2]));
     stateVector[LIGHT_INTD] = fv->poynt[2];
   } 
@@ -8001,7 +8001,7 @@ load_fv(void)
   
   if (pdv[POR_SINK_MASS]) {
     v = POR_SINK_MASS;
-    scalar_fv_fill(esp->sink_mass, esp_dot->sink_mass, esp_old->sink_mass, bf[v]->phi, ei->dof[v],
+    scalar_fv_fill(esp->sink_mass, esp_dot->sink_mass, esp_old->sink_mass, bf[v]->phi, ei[pg->imtrx]->dof[v],
                    &(fv->sink_mass), &(fv_dot->sink_mass), &(fv_old->sink_mass));
     stateVector[POR_SINK_MASS] = fv->sink_mass;
   } /*else if (upd->vp[pg->imtrx][v] == -1) {
@@ -8017,7 +8017,7 @@ load_fv(void)
   if (pdv[PRESSURE]) 
     {
       v = PRESSURE;
-      scalar_fv_fill(esp->P, esp_dot->P, esp_old->P, bf[v]->phi, ei->dof[v],
+      scalar_fv_fill(esp->P, esp_dot->P, esp_old->P, bf[v]->phi, ei[pg->imtrx]->dof[v],
 		     &(fv->P), &(fv_dot->P), &(fv_old->P));
       stateVector[v] = fv->P + upd->Pressure_Datum;
     } 
@@ -8026,7 +8026,7 @@ load_fv(void)
     {
     v = AUX_PRESSURE;
     fv->P_star = 0.0;
-    dofs = ei->dof[v];
+    dofs = ei[pg->imtrx]->dof[v];
     for(i = 0; i < dofs; i++)
       {
         fv->P_star += *esp->P_star[i] * bf[v]->phi[i];
@@ -8052,7 +8052,7 @@ load_fv(void)
 
 
 #ifdef DEBUG_HKM
-  if (ei->ielem == 165) {
+  if (ei[pg->imtrx]->ielem == 165) {
     //printf("load_fv: we are here\n");
   }
 #endif
@@ -8082,22 +8082,22 @@ load_fv(void)
        * If this is a shell element, mesh displacements may not be
        * defined on this element block even if the mesh is deforming.
        * In this case, displacements are defined on a neighbor block
-       * and ei->deforming_mesh will be TRUE, so that the true
+       * and ei[pg->imtrx]->deforming_mesh will be TRUE, so that the true
        * displaced coordinates can be loaded here.
        */
-      if (ei->deforming_mesh)
+      if (ei[pg->imtrx]->deforming_mesh)
 	{
           /*
            * ShapeVar will always be mesh displacement where it is defined.
            * Otherwise (e.g. for shell elements), it will be set correctly.
            */
 	  bfv = bf[pd->ShapeVar];
-	  dofs     = ei->dof[v];
+	  dofs     = ei[pg->imtrx]->dof[v];
 	  
 	  for (i = 0; i < dofs; i++)
 	    {
-	      node = ei->dof_list[R_MESH1][i];
-	      index = Proc_Elem_Connect[Proc_Connect_Ptr[ei->ielem] +node];
+	      node = ei[pg->imtrx]->dof_list[R_MESH1][i];
+	      index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[pg->imtrx]->ielem] +node];
 	      fv->d[p] += *esp->d[p][i] * bfv->phi[i];
 	      fv->x[p] +=  ( Coor[p][index] + *esp->d[p][i] ) * bfv->phi[i];
 	      fv->x0[p] +=  Coor[p][index] * bfv->phi[i];
@@ -8143,7 +8143,7 @@ load_fv(void)
       else if (upd->vp[pg->imtrx][v] == -1)
 	{
 	  v            = pd->ShapeVar;
-	  dofs         = ei->dof[v];
+	  dofs         = ei[pg->imtrx]->dof[v];
 
 	  fv->d[p]     = 0.0;
 	  fv_old->d[p] = 0.0;
@@ -8153,8 +8153,8 @@ load_fv(void)
 	  fv->x[p]     = 0.;
 	  for (i = 0; i < dofs; i++)
 	    {
-	      node = ei->dof_list[v][i];
-	      index = Proc_Elem_Connect[Proc_Connect_Ptr[ei->ielem] +node];
+	      node = ei[pg->imtrx]->dof_list[v][i];
+	      index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[pg->imtrx]->ielem] +node];
 	      fv->x[p] +=  ( Coor[p][index] ) * bf[v]->phi[i];
 	    }
 	  fv_old->x[p] = fv->x[p]; /* Fixed grid stays fixed thru time. */
@@ -8181,12 +8181,12 @@ load_fv(void)
 	  
       if ( pdv[v] )
 	{
-	  dofs     = ei->dof[v];
+	  dofs     = ei[pg->imtrx]->dof[v];
 
 	  for (i = 0; i < dofs; i++)
 	    {
-	      node = ei->dof_list[R_SOLID1][i];
-	      index = Proc_Elem_Connect[Proc_Connect_Ptr[ei->ielem] +node];
+	      node = ei[pg->imtrx]->dof_list[R_SOLID1][i];
+	      index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[pg->imtrx]->ielem] +node];
 	      fv->d_rs[p] += *esp->d_rs[p][i] * bf[v]->phi[i];
  
 	      if (pd->TimeIntegration != STEADY)
@@ -8239,7 +8239,7 @@ load_fv(void)
       v = VELOCITY1 + p;
       if ( pdv[v] )
 	{
-	  dofs     = ei->dof[v];
+	  dofs     = ei[pg->imtrx]->dof[v];
           fv->v[p]     = 0.;
           fv_old->v[p] = 0.;
           fv_dot->v[p] = 0.;
@@ -8264,7 +8264,7 @@ load_fv(void)
       v = AUX_VELOCITY1 + p;
       if ( pdv[v] )
         {
-          dofs     = ei->dof[v];
+          dofs     = ei[pg->imtrx]->dof[v];
           fv->v_star[p]     = 0.;
           for ( i=0; i<dofs; i++)
             {
@@ -8298,7 +8298,7 @@ load_fv(void)
 	{
 	  fv->pv[p] = 0.0; fv_old->pv[p]=0.0;fv_dot->pv[p]=0.0;
 		  
-	  dofs     = ei->dof[v];
+	  dofs     = ei[pg->imtrx]->dof[v];
 	  for ( i=0; i<dofs; i++)
 	    {
 	      fv->pv[p] += *esp->pv[p][i] * bf[v]->phi[i];
@@ -8318,7 +8318,7 @@ load_fv(void)
   if ( pdv[EXT_VELOCITY] )
     {
       scalar_fv_fill(esp->ext_v, esp_dot->ext_v, esp_old->ext_v, bf[v]->phi, 
-		     ei->dof[v], &(fv->ext_v), &(fv_dot->ext_v), &(fv_old->ext_v));
+		     ei[pg->imtrx]->dof[v], &(fv->ext_v), &(fv_dot->ext_v), &(fv_old->ext_v));
       stateVector[EXT_VELOCITY] = fv->ext_v;
     }
 
@@ -8335,7 +8335,7 @@ load_fv(void)
 	{
 	  fv->E_field[p]     = 0.;
 
-	  dofs     = ei->dof[v];
+	  dofs     = ei[pg->imtrx]->dof[v];
 	  for ( i=0; i<dofs; i++)
 	    {
 	      fv->E_field[p] += *esp->E_field[p][i] * bf[v]->phi[i];
@@ -8350,7 +8350,7 @@ load_fv(void)
       v = PHASE1 + p;
       if ( pdv[v] )
 	{
-	  scalar_fv_fill(esp->pF[p], esp_dot->pF[p], esp_old->pF[p], bf[v]->phi, ei->dof[v],
+	  scalar_fv_fill(esp->pF[p], esp_dot->pF[p], esp_old->pF[p], bf[v]->phi, ei[pg->imtrx]->dof[v],
 			 &(fv->pF[p]), &(fv_dot->pF[p]), &(fv_old->pF[p]));
 	}
     }
@@ -8388,7 +8388,7 @@ load_fv(void)
 		  v = v_s[mode][p][q];
 		  if ( pdv[v] )
 		    {
-		      dofs     = ei->dof[v];
+		      dofs     = ei[pg->imtrx]->dof[v];
 		      for ( i=0; i<dofs; i++)
 			{
 			  fv->S[mode][p][q] += *esp->S[mode][p][q][i] * bf[v]->phi[i];
@@ -8421,7 +8421,7 @@ load_fv(void)
 	  if ( pdv[v] )
 	    {
 	      fv->G[p][q] = fv_old->G[p][q] = fv_dot->G[p][q] = 0.0;
-	      dofs     = ei->dof[v];
+	      dofs     = ei[pg->imtrx]->dof[v];
 	      for ( i=0; i<dofs; i++)
 		{
 		  fv->G[p][q] += *esp->G[p][q][i] * bf[v]->phi[i];
@@ -8455,7 +8455,7 @@ load_fv(void)
 	fv->c[N] = fv_old->c[N] = fv_dot->c[N] = 0.;
 	for (w = 0; w < pd->Num_Species_Eqn; w++) {
 	  scalar_fv_fill(esp->c[w], esp_dot->c[w], esp_old->c[w], 
-			 bf[v]->phi, ei->dof[v],
+			 bf[v]->phi, ei[pg->imtrx]->dof[v],
 			 &(fv->c[w]), &(fv_dot->c[w]), &(fv_old->c[w]));
 	  fv->c[N]     -= fv->c[w];
 	  fv_old->c[N] -= fv_old->c[w];
@@ -8528,7 +8528,7 @@ load_fv(void)
       } else {
 	for (w = 0; w < pd->Num_Species_Eqn; w++) {
 	  scalar_fv_fill(esp->c[w], esp_dot->c[w], esp_old->c[w], 
-			 bf[v]->phi, ei->dof[v],
+			 bf[v]->phi, ei[pg->imtrx]->dof[v],
 			 &(fv->c[w]), &(fv_dot->c[w]), &(fv_old->c[w]));
 	  stateVector[SPECIES_UNK_0+w] = fv->c[w];
 	}
@@ -8568,7 +8568,7 @@ load_fv(void)
       fv_old->p_liq = 0.;
       fv_dot->p_liq = 0.;
       fv_dot_old->p_liq = 0.0;
-      dofs     = ei->dof[v];
+      dofs     = ei[pg->imtrx]->dof[v];
       for (i = 0; i < dofs; i++) {
 	fv->p_liq += *esp->p_liq[i] * bf[v]->phi[i];
 	if (pd->TimeIntegration != STEADY) {
@@ -8597,7 +8597,7 @@ load_fv(void)
       fv_old->p_gas = 0.;
       fv_dot->p_gas = 0.;
       fv_dot_old->p_gas = 0.0;
-      dofs     = ei->dof[v];
+      dofs     = ei[pg->imtrx]->dof[v];
       for (i = 0; i < dofs; i++) {
 	fv->p_gas += *esp->p_gas[i] * bf[v]->phi[i];
 	if (pd->TimeIntegration != STEADY) {
@@ -8626,7 +8626,7 @@ load_fv(void)
       fv_dot->porosity = 0.;
       fv_dot_old->porosity = 0.0;
 	  
-      dofs     = ei->dof[v];
+      dofs     = ei[pg->imtrx]->dof[v];
       for (i = 0; i < dofs; i++) {
 	fv->porosity += *esp->porosity[i] * bf[v]->phi[i];
 	if (pd->TimeIntegration != STEADY) {
@@ -8647,7 +8647,7 @@ load_fv(void)
       fv_dot->T = 0.;
       fv_dot_old->T = 0.0;
 	  
-      dofs     = ei->dof[v];
+      dofs     = ei[pg->imtrx]->dof[v];
       for (i = 0; i < dofs; i++) {
 	fv->T += *esp->T[i] * bf[v]->phi[i];
 	if (pd->TimeIntegration != STEADY) {
@@ -8670,7 +8670,7 @@ load_fv(void)
 
       if(pdv[v])
 	{
-	  dofs = ei->dof[v];
+	  dofs = ei[pg->imtrx]->dof[v];
 	  fv->vd[p] = 0.0;
 	  for(i = 0; i < dofs; i++)
 	    fv->vd[p] += *esp->vd[p][i] * bf[v]->phi[i];
@@ -8694,7 +8694,7 @@ load_fv(void)
 	  fv->lm[p] = 0.0;
           fv_old->lm[p] = 0.0;
 
-	  dofs = ei->dof[v];
+	  dofs = ei[pg->imtrx]->dof[v];
 	  for(i = 0; i < dofs; i++)
 	    {
 	      fv->lm[p] += *esp->lm[p][i] * bf[v]->phi[i];
@@ -8715,7 +8715,7 @@ load_fv(void)
     {
       v = VORT_LAMBDA;
       fv->vlambda = 0.0;
-      dofs = ei->dof[v];
+      dofs = ei[pg->imtrx]->dof[v];
       for(i = 0; i < dofs; i++)
 	fv->vlambda += *esp->vlambda[i] * bf[v]->phi[i];
     }
@@ -8729,7 +8729,7 @@ load_fv(void)
       v = EXTERNAL;
       for ( w=0; w<efv->Num_external_field; w++)
 	{
-	  dofs     = ei->dof_ext[w];
+	  dofs     = ei[pg->imtrx]->dof_ext[w];
 	  fv->external_field[w] = 0.;
 	  fv_old->external_field[w] = 0.;
 	  fv_dot->external_field[w] = 0.;
@@ -8843,7 +8843,7 @@ load_fv(void)
       for ( w=0; w<dim; w++)
 	{
 	  v = MESH_DISPLACEMENT1 + w;
-	  dofs     = ei->dof[v];
+	  dofs     = ei[pg->imtrx]->dof[v];
 	  fv->initial_displacements[w] = 0.;
 	  for ( i=0; i<dofs; i++)
 	    {
@@ -8851,7 +8851,7 @@ load_fv(void)
 
 	    }
 	  v = SOLID_DISPLACEMENT1 + w;
-	  dofs     = ei->dof[v];
+	  dofs     = ei[pg->imtrx]->dof[v];
 	  fv->initial_displacements[w+DIM] = 0.;
 	  for ( i=0; i<dofs; i++)
 	    {
@@ -8951,7 +8951,7 @@ load_fv_grads(void)
     {
       v = TEMPERATURE;
       for (p = 0; p < VIM; p++) fv->grad_T[p] = 0.0;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for (p = 0; p < VIM; p++)
 	{
 	  for (i = 0; i < dofs; i++)
@@ -8972,7 +8972,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][PRESSURE] )
     {
       v = PRESSURE;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NO_UNROLL
       for ( p=0; p<VIM; p++)
 	{
@@ -9007,7 +9007,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][AUX_PRESSURE] )
     {
       v = AUX_PRESSURE;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
         {
           fv->grad_P_star[p] = 0.0;
@@ -9026,7 +9026,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][BOND_EVOLUTION] )
     {
       v = BOND_EVOLUTION;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_nn[p] = 0.;
@@ -9044,7 +9044,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][FILL] )
   {
 	  v = FILL;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NO_UNROLL
       for ( p=0; p<VIM; p++)
 	  {
@@ -9089,7 +9089,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][CURVATURE] )
     {
       v = CURVATURE;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_H[p] = 0.0;
@@ -9113,7 +9113,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][VOLTAGE] )
   {
 	  v = VOLTAGE;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	  {
 		  fv->grad_V[p] = 0.0;
@@ -9133,7 +9133,7 @@ load_fv_grads(void)
   if (pd->v[pg->imtrx][ENORM])
     {
       v = ENORM;
-      dofs = ei->dof[v];
+      dofs = ei[pg->imtrx]->dof[v];
       for (p = 0; p < VIM; p++)
 	{
 	  fv->grad_Enorm[p] = 0.0;
@@ -9150,7 +9150,7 @@ load_fv_grads(void)
   if (pd->v[pg->imtrx][SURF_CHARGE])
     {
       v = SURF_CHARGE;
-      dofs = ei->dof[v];
+      dofs = ei[pg->imtrx]->dof[v];
       for (p = 0; p < VIM; p++)
 	{
 	  fv->grad_qs[p] = 0.0;
@@ -9181,7 +9181,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][SHEAR_RATE] )
   {
 	  v = SHEAR_RATE;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	  {
 		  fv->grad_SH[p] = 0.0;
@@ -9202,7 +9202,7 @@ load_fv_grads(void)
   if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] && !ShellElementParentElementCoverageForVariable[MESH_DISPLACEMENT1])
     {
       v = MESH_DISPLACEMENT1;
-      dofs = ei->dof[v];
+      dofs = ei[pg->imtrx]->dof[v];
       for (p = 0; p < VIM; p++)
 	{
 	  for (q = 0; q < VIM; q++)
@@ -9244,7 +9244,7 @@ load_fv_grads(void)
 	      v = MESH_DISPLACEMENT1 + p;
 	      if ( pd->v[pg->imtrx][v])
 		{
-		  dofs     = ei->dof[v];
+		  dofs     = ei[pg->imtrx]->dof[v];
 		  fv->grad_d_dot[p][q] = 0.;
 		  for (r = 0; r < dim; r++)
 		    {
@@ -9272,7 +9272,7 @@ load_fv_grads(void)
 			  
 	      if ( pd->v[pg->imtrx][v] )
 		{
-		  dofs     = ei->dof[v];
+		  dofs     = ei[pg->imtrx]->dof[v];
 		  fv->grad_d_rs[p][q] = 0.0;
 		  for ( r = 0; r < dim; r++)
 		    {
@@ -9337,7 +9337,7 @@ load_fv_grads(void)
    */
   if (pd->v[pg->imtrx][VELOCITY1])
     {
-      dofs  = ei->dof[VELOCITY1];
+      dofs  = ei[pg->imtrx]->dof[VELOCITY1];
       v = VELOCITY1;  
 #ifdef DO_NO_UNROLL	  
       for (p = 0; p < VIM; p++)
@@ -9377,7 +9377,7 @@ load_fv_grads(void)
 
   if (pd->v[pg->imtrx][AUX_VELOCITY1])
     {
-      dofs  = ei->dof[AUX_VELOCITY1];
+      dofs  = ei[pg->imtrx]->dof[AUX_VELOCITY1];
       v = AUX_VELOCITY1;  
       grad_vector_fv_fill(esp->v_star, bf[v]->grad_phi_e, dofs, fv->grad_v_star);
     } 
@@ -9399,7 +9399,7 @@ load_fv_grads(void)
    */
   if (pd->v[pg->imtrx][PVELOCITY1])
     {
-      dofs = ei->dof[PVELOCITY1];
+      dofs = ei[pg->imtrx]->dof[PVELOCITY1];
       v = PVELOCITY1;
 
       for ( p=0; p<VIM; p++)
@@ -9434,7 +9434,7 @@ load_fv_grads(void)
 
   if( pd->v[pg->imtrx][EXT_VELOCITY] )
   {
-	  dofs = ei->dof[EXT_VELOCITY];
+	  dofs = ei[pg->imtrx]->dof[EXT_VELOCITY];
 	  v = EXT_VELOCITY;
 	  
 	  for ( p=0; p<VIM; p++)
@@ -9460,7 +9460,7 @@ load_fv_grads(void)
     {
       if (pd->v[pg->imtrx][NORMAL1]) v = NORMAL1;
       if (pd->v[pg->imtrx][SHELL_NORMAL1]) v = SHELL_NORMAL1;
-      dofs = ei->dof[v];
+      dofs = ei[pg->imtrx]->dof[v];
       for (p = 0; p < VIM; p++)
 	{
 	  for (q = 0; q < VIM; q++)
@@ -9550,7 +9550,7 @@ load_fv_grads(void)
    */  
   if (pd->v[pg->imtrx][EFIELD1])
     {
-      dofs = ei->dof[EFIELD1];
+      dofs = ei[pg->imtrx]->dof[EFIELD1];
       v = EFIELD1;
 	  
       for (p = 0; p <VIM; p++)
@@ -9586,7 +9586,7 @@ load_fv_grads(void)
       for (r = 0; r < pfd->num_phase_funcs; r++ )
 	{
 	  v = PHASE1 + r;
-	  dofs = ei->dof[v];
+	  dofs = ei[pg->imtrx]->dof[v];
 		  
 	  for (p = 0; p < VIM; p++)
 	    {
@@ -9608,7 +9608,7 @@ load_fv_grads(void)
   if (CURL_V != -1 && !InShellElementWithParentElementCoverage)
     {
       v = VELOCITY1;
-      dofs = ei->dof[VELOCITY1];
+      dofs = ei[pg->imtrx]->dof[VELOCITY1];
       bfn = bf[v];
      
       if (pd->v[pg->imtrx][v] || upd->vp[pg->imtrx][v] != -1)
@@ -9684,7 +9684,7 @@ load_fv_grads(void)
 	  for ( w=0; w<pd->Num_Species_Eqn; w++)
 	  {
 		  v = MASS_FRACTION;
-		  dofs     = ei->dof[v];
+		  dofs     = ei[pg->imtrx]->dof[v];
 		  for ( p=0; p<VIM; p++ )
 		  {
 			  fv->grad_c[w][p] = 0.;
@@ -9723,7 +9723,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][POR_LIQ_PRES] )
   {
 	  v = POR_LIQ_PRES;
-      dofs     = ei->dof[v];
+      dofs     = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++ )
 	  {
 		  fv->grad_p_liq[p] = 0.0;
@@ -9755,7 +9755,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][POR_GAS_PRES] )
   {
 	    v = POR_GAS_PRES;
-      dofs     = ei->dof[v];
+      dofs     = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++ )
 	  {
 		  fv->grad_p_gas[p] = 0.0;
@@ -9784,7 +9784,7 @@ load_fv_grads(void)
   if (pd->v[pg->imtrx][POR_POROSITY])
     {
       v = POR_POROSITY;
-      dofs = ei->dof[v];  
+      dofs = ei[pg->imtrx]->dof[v];  
       for (p = 0; p < VIM; p++)
 	{
 	  fv->grad_porosity[p] = 0.0;
@@ -9813,7 +9813,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][POR_TEMP] )
     {
       v = POR_TEMP;
-      dofs     = ei->dof[v];
+      dofs     = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++ )
 	{
 	  fv->grad_T[p] = 0.;
@@ -9840,7 +9840,7 @@ load_fv_grads(void)
   if (pd->v[pg->imtrx][POLYMER_STRESS11])
     {  
       v = POLYMER_STRESS11;
-      dofs = ei->dof[v];
+      dofs = ei[pg->imtrx]->dof[v];
       for ( mode=0; mode<vn->modes; mode++)
 	{
 	  for ( p=0; p<VIM; p++)
@@ -9942,7 +9942,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][VELOCITY_GRADIENT11] )
   {  
 	  v = VELOCITY_GRADIENT11;
-      dofs = ei->dof[v];
+      dofs = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	  {
 		  for ( q=0; q<VIM; q++)
@@ -10063,7 +10063,7 @@ load_fv_grads(void)
   if (pd->v[pg->imtrx][VORT_DIR1])
     {
       v = VORT_DIR1;;
-      dofs = ei->dof[v];
+      dofs = ei[pg->imtrx]->dof[v];
 		
       for (p = 0; p < DIM; p++)
 	{
@@ -10115,7 +10115,7 @@ load_fv_grads(void)
     {
       v = N_DOT_CURL_V;
       bfn = bf[v];
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for (p = 0; p < VIM; p++)
 	{
 	  fv->grad_n_dot_curl_s_v[p] = 0.0;
@@ -10139,7 +10139,7 @@ load_fv_grads(void)
     {
       v = SHELL_SURF_DIV_V;
       bfn = bf[v];
-      dofs = ei->dof[v];
+      dofs = ei[pg->imtrx]->dof[v];
       for (p = 0; p < VIM; p++)
 	{
 	  fv->grad_div_s_v[p] = 0.0;
@@ -10163,7 +10163,7 @@ load_fv_grads(void)
     {
       v = SHELL_SURF_CURV;
       bfn = bf[v];
-      dofs = ei->dof[v];
+      dofs = ei[pg->imtrx]->dof[v];
       for (p = 0; p < VIM; p++)
 	{
 	  fv->grad_curv[p] = 0.0;
@@ -10189,7 +10189,7 @@ load_fv_grads(void)
 	{
 	  v = GRAD_S_V_DOT_N1 + r;
 	  bfn = bf[v];
-	  dofs = ei->dof[v];
+	  dofs = ei[pg->imtrx]->dof[v];
 	  for (p = 0; p < VIM; p++)
 	    {
 	      fv->serialgrad_grad_s_v_dot_n[r][p] = 0.0;
@@ -10219,7 +10219,7 @@ load_fv_grads(void)
   if (pd->v[pg->imtrx][SHELL_DIFF_FLUX])
     {
       v = SHELL_DIFF_FLUX;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for (p = 0; p < VIM; p++)
 	{
 	  fv->grad_sh_J[p] = 0.0;
@@ -10245,7 +10245,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][ACOUS_PREAL] )
     {
       v = ACOUS_PREAL;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       
       for ( p=0; p<VIM; p++)
 	{
@@ -10265,7 +10265,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][ACOUS_PIMAG] )
     {
       v = ACOUS_PIMAG;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_api[p] = 0.0;
@@ -10284,7 +10284,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][ACOUS_REYN_STRESS] )
     {
       v = ACOUS_REYN_STRESS;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_ars[p] = 0.0;
@@ -10300,7 +10300,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][SHELL_BDYVELO] )
     {
       v = SHELL_BDYVELO;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_sh_bv[p] = 0.0;
@@ -10316,7 +10316,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][SHELL_LUBP] )
     {
       v = SHELL_LUBP;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_sh_p[p] = 0.0;
@@ -10332,7 +10332,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][LUBP] )
     {
       v = LUBP;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_lubp[p] = 0.0;
@@ -10351,7 +10351,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][LUBP_2])
     {
       v = LUBP_2;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_lubp_2[p] = 0.0;
@@ -10370,7 +10370,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][SHELL_LUB_CURV] )
     {
       v = SHELL_LUB_CURV;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_sh_l_curv[p] = 0.0;
@@ -10386,7 +10386,7 @@ load_fv_grads(void)
    if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = SHELL_LUB_CURV_2;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_sh_l_curv_2[p] = 0.0;
@@ -10402,7 +10402,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][SHELL_PRESS_OPEN] )
     {
       v = SHELL_PRESS_OPEN;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_sh_p_open[p] = 0.0;
@@ -10421,7 +10421,7 @@ load_fv_grads(void)
    if ( pd->v[pg->imtrx][SHELL_PRESS_OPEN_2] )
      {
        v = SHELL_PRESS_OPEN_2;
-       dofs  = ei->dof[v];
+       dofs  = ei[pg->imtrx]->dof[v];
        for ( p=0; p<VIM; p++)
 	 {
 	   fv->grad_sh_p_open_2[p] = 0.0;
@@ -10441,7 +10441,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][SHELL_FILMP] )
     {
       v = SHELL_FILMP;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_sh_fp[p] = 0.0;
@@ -10459,7 +10459,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][SHELL_FILMH] )
     {
       v = SHELL_FILMH;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_sh_fh[p] = 0.0;
@@ -10477,7 +10477,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][SHELL_PARTC] )
     {
       v = SHELL_PARTC;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_sh_pc[p] = 0.0;
@@ -10493,7 +10493,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][SHELL_TEMPERATURE] )
     {
       v = SHELL_TEMPERATURE;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_sh_t[p] = 0.0;
@@ -10509,7 +10509,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][LIGHT_INTP] )
     {
       v = LIGHT_INTP;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_poynt[0][p] = 0.0;
@@ -10525,7 +10525,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][LIGHT_INTM] )
     {
       v = LIGHT_INTM;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_poynt[1][p] = 0.0;
@@ -10542,7 +10542,7 @@ load_fv_grads(void)
   if ( pd->v[pg->imtrx][LIGHT_INTD] )
     {
       v = LIGHT_INTD;
-      dofs  = ei->dof[v];
+      dofs  = ei[pg->imtrx]->dof[v];
       for ( p=0; p<VIM; p++)
 	{
 	  fv->grad_poynt[2][p] = 0.0;
@@ -10563,7 +10563,7 @@ load_fv_grads(void)
      v = EXTERNAL;
      for ( w=0; w<efv->Num_external_field; w++)
        {
-	 dofs     = ei->dof_ext[w];
+	 dofs     = ei[pg->imtrx]->dof_ext[w];
 	 if( efv->i[w] != I_TABLE )
 	   {
 	     if (strcmp(efv->name[w], "F1") == 0 && !pd->v[pg->imtrx][PHASE1])
@@ -10724,7 +10724,7 @@ load_fv_mesh_derivs(int okToZero)
   VIMis3 = (VIM == 3) ? TRUE : FALSE ;
 
 #ifdef DEBUG_HKM
-  if ((pd->v[pg->imtrx][SHELL_NORMAL1] == 0) && ei->dof[SHELL_NORMAL1] > 0) {
+  if ((pd->v[pg->imtrx][SHELL_NORMAL1] == 0) && ei[pg->imtrx]->dof[SHELL_NORMAL1] > 0) {
     doExtra = 1;
   }
 #endif
@@ -10733,7 +10733,7 @@ load_fv_mesh_derivs(int okToZero)
    * If this is not a deforming mesh problem, then
    * leave now.
    */
-  if (!ei->deforming_mesh)
+  if (!ei[pg->imtrx]->deforming_mesh)
     {
       return(status);
     }
@@ -10756,7 +10756,7 @@ load_fv_mesh_derivs(int okToZero)
     }
 
 
-  mdofs = ei->dof[R_MESH1];
+  mdofs = ei[pg->imtrx]->dof[R_MESH1];
 
   bfm = bf[R_MESH1];
   
@@ -10771,7 +10771,7 @@ load_fv_mesh_derivs(int okToZero)
     {
       v = TEMPERATURE;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_T_dmesh[0][0][0]),0, siz);
@@ -10843,7 +10843,7 @@ load_fv_mesh_derivs(int okToZero)
     {
       v = VOLTAGE;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_V_dmesh[0][0][0]),0, siz);
@@ -10910,7 +10910,7 @@ load_fv_mesh_derivs(int okToZero)
     {
       v = ACOUS_PREAL;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_apr_dmesh[0][0][0]),0, siz);
@@ -10979,7 +10979,7 @@ load_fv_mesh_derivs(int okToZero)
     {
       v = ACOUS_PIMAG;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_api_dmesh[0][0][0]),0, siz);
@@ -11049,7 +11049,7 @@ load_fv_mesh_derivs(int okToZero)
     {
       v = ACOUS_REYN_STRESS;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_ars_dmesh[0][0][0]),0, siz);
@@ -11116,7 +11116,7 @@ load_fv_mesh_derivs(int okToZero)
     {
       v = SHELL_BDYVELO;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_sh_bv_dmesh[0][0][0]),0, siz);
@@ -11184,7 +11184,7 @@ load_fv_mesh_derivs(int okToZero)
     {
       v = LUBP;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_lubp_dmesh[0][0][0]),0, siz);
@@ -11251,7 +11251,7 @@ if ( pd->v[pg->imtrx][LUBP_2] )
     {
       v = LUBP_2;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_lubp_2_dmesh[0][0][0]),0, siz);
@@ -11319,7 +11319,7 @@ if ( pd->v[pg->imtrx][LUBP_2] )
       v = SHELL_PRESS_OPEN;
       bfv = bf[v];
 #ifdef DO_NOT_UNROLL
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_sh_p_open_dmesh[0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
@@ -11386,7 +11386,7 @@ if ( pd->v[pg->imtrx][LUBP_2] )
       v = SHELL_PRESS_OPEN_2;
       bfv = bf[v];
 #ifdef DO_NOT_UNROLL
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_sh_p_open_2_dmesh[0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
@@ -11453,7 +11453,7 @@ if ( pd->v[pg->imtrx][SHELL_FILMP] )
     {
       v = SHELL_FILMP;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_sh_fp_dmesh[0][0][0]),0, siz);
@@ -11520,7 +11520,7 @@ if ( pd->v[pg->imtrx][SHELL_FILMP] )
     {
       v = SHELL_FILMH;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_sh_fh_dmesh[0][0][0]),0, siz);
@@ -11588,7 +11588,7 @@ if ( pd->v[pg->imtrx][SHELL_FILMP] )
     {
       v = SHELL_PARTC;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_sh_pc_dmesh[0][0][0]),0, siz);
@@ -11655,7 +11655,7 @@ if ( pd->v[pg->imtrx][SHELL_TEMPERATURE] )
     {
       v = SHELL_TEMPERATURE;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_sh_t_dmesh[0][0][0]),0, siz);
@@ -11722,7 +11722,7 @@ if ( pd->v[pg->imtrx][LIGHT_INTP] )
     {
       v = LIGHT_INTP;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[0][0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
@@ -11749,7 +11749,7 @@ if ( pd->v[pg->imtrx][LIGHT_INTM] )
     {
       v = LIGHT_INTM;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[1][0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
@@ -11776,7 +11776,7 @@ if ( pd->v[pg->imtrx][LIGHT_INTD] )
     {
       v = LIGHT_INTD;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[2][0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
@@ -11804,7 +11804,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV] )
       v = SHELL_LUB_CURV;
       bfv = bf[v];
 #ifdef DO_NOT_UNROLL
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_sh_l_curv_dmesh[0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
@@ -11871,7 +11871,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
       v = SHELL_LUB_CURV_2;
       bfv = bf[v];
 #ifdef DO_NOT_UNROLL
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_sh_l_curv_2_dmesh[0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
@@ -11942,7 +11942,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = SURF_CHARGE;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_qs_dmesh[0][0][0]),0, siz);
@@ -12005,12 +12005,12 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
    */
 
   /* This is needed for bulk assembly of shell diffusion KBC */
-  if (ei->dof[SHELL_DIFF_FLUX] > 0)
+  if (ei[pg->imtrx]->dof[SHELL_DIFF_FLUX] > 0)
     {
       v = SHELL_DIFF_FLUX;
       bfv = bf[v];
 #ifdef DO_NOT_UNROLL
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_sh_J_dmesh[0][0][0]),0, siz);
       for (p = 0; p < dimNonSym; p++)
@@ -12074,7 +12074,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = SHEAR_RATE;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(fv->d_grad_SH_dmesh,0, siz);
@@ -12141,7 +12141,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
   if (pd->v[pg->imtrx][FILL])
     {
       v = FILL;
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NO_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(fv->d_grad_F_dmesh,0, siz);
@@ -12214,7 +12214,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = PRESSURE;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NO_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(fv->d_grad_P_dmesh,0, siz);
@@ -12284,7 +12284,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = BOND_EVOLUTION;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(fv->d_grad_nn_dmesh,0, siz);
@@ -12345,7 +12345,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {	  
       v = MASS_FRACTION;
       bfv = bf[v];
-      vdofs     = ei->dof[v];
+      vdofs     = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MAX_CONC*MDE;
       memset(fv->d_grad_c_dmesh, 0, siz);
@@ -12420,7 +12420,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = POR_LIQ_PRES;
       bfv = bf[v];
-      vdofs     = ei->dof[v];
+      vdofs     = ei[pg->imtrx]->dof[v];
 #ifdef DO_NO_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(fv->d_grad_p_liq_dmesh,0, siz);
@@ -12494,7 +12494,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = POR_GAS_PRES;
       bfv = bf[v];
-      vdofs     = ei->dof[v];
+      vdofs     = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(fv->d_grad_p_gas_dmesh,0, siz);
@@ -12561,7 +12561,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = POR_POROSITY;
       bfv = bf[v];
-      vdofs     = ei->dof[v];
+      vdofs     = ei[pg->imtrx]->dof[v];
 #ifdef DO_NOT_UNROLL	  
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(fv->d_grad_porosity_dmesh,0, siz);
@@ -12630,7 +12630,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = VELOCITY1;
       bfv = bf[v];
-      vdofs = ei->dof[v];
+      vdofs = ei[pg->imtrx]->dof[v];
       
 #ifdef DO_NO_UNROLL
       siz = sizeof(double)*DIM*VIM*DIM*MDE;
@@ -12743,7 +12743,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = PVELOCITY1;
       bfv = bf[v];
-      vdofs     = ei->dof[v];
+      vdofs     = ei[pg->imtrx]->dof[v];
       siz = sizeof(double)*DIM*DIM*DIM*MDE;
       memset(fv->d_grad_pv_dmesh, 0, siz);	  
 	  
@@ -12780,7 +12780,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = EXT_VELOCITY;
       bfv = bf[v];
-      vdofs     = ei->dof[v];
+      vdofs     = ei[pg->imtrx]->dof[v];
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(fv->d_grad_ext_v_dmesh, 0, siz);
 	  
@@ -12823,12 +12823,12 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
       if (pd->v[pg->imtrx][NORMAL1]) v = NORMAL1;
       if (pd->v[pg->imtrx][SHELL_NORMAL1]) v = SHELL_NORMAL1;
 #ifdef DEBUG_HKM
-      if (ei->ielem == 165) {
+      if (ei[pg->imtrx]->ielem == 165) {
 	//printf("we are here 165\n");
       }
 #endif	  
       bfv = bf[v];
-      vdofs     = ei->dof[v];
+      vdofs     = ei[pg->imtrx]->dof[v];
       siz = sizeof(double)*DIM*DIM*DIM*MDE;
       memset(fv->d_grad_n_dmesh, 0, siz);
       siz = sizeof(double)*DIM*MDE;
@@ -12884,7 +12884,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = EFIELD1;
       bfv = bf[v];
-      vdofs     = ei->dof[v];
+      vdofs     = ei[pg->imtrx]->dof[v];
 	  
       siz = sizeof(double)*DIM*DIM*DIM*MDE;
       memset(fv->d_grad_E_field_dmesh,0, siz);
@@ -12932,7 +12932,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = MESH_DISPLACEMENT1;
       bfv = bf[v];
-      vdofs     = ei->dof[v];
+      vdofs     = ei[pg->imtrx]->dof[v];
 	  
 #ifdef DO_NO_UNROLL
       siz = sizeof(double)*DIM*MDE;
@@ -13214,7 +13214,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = SOLID_DISPLACEMENT1;
       bfv = bf[v];
-      vdofs     = ei->dof[v];
+      vdofs     = ei[pg->imtrx]->dof[v];
       siz = sizeof(double)*DIM*DIM*DIM*MDE;
       memset(fv->d_grad_d_rs_dmesh,0,siz);
       siz = sizeof(double)*DIM*MDE;
@@ -13273,7 +13273,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
   if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
     {
       v = POLYMER_STRESS11;
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
       bfv = bf[v];
       siz = sizeof(double)*MAX_MODES*DIM*DIM*DIM*DIM*MDE;
       memset(fv->d_grad_S_dmesh,0,siz);
@@ -13371,7 +13371,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = VELOCITY_GRADIENT11;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 	  
       siz = sizeof(double)*DIM*DIM*DIM*DIM*MDE;
       memset(fv->d_grad_G_dmesh,0,siz);
@@ -13497,7 +13497,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = VORT_DIR1;
       bfv = bf[v];
-      vdofs = ei->dof[v];
+      vdofs = ei[pg->imtrx]->dof[v];
 	  
       siz = sizeof(double)*DIM*DIM*DIM*MDE;
       memset(fv->d_grad_vd_dmesh,0, siz);
@@ -13553,7 +13553,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = N_DOT_CURL_V;
       bfv = bf[v];
-      vdofs     = ei->dof[v];	  
+      vdofs     = ei[pg->imtrx]->dof[v];	  
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(fv->d_grad_n_dot_curl_s_v_dmesh,0, siz);
       for (p = 0; p < VIM; p++ )
@@ -13584,7 +13584,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = SHELL_SURF_DIV_V;
       bfv = bf[v];
-      vdofs     = ei->dof[v];	  
+      vdofs     = ei[pg->imtrx]->dof[v];	  
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(fv->d_grad_div_s_v_dmesh,0, siz);
       for (p = 0; p < VIM; p++ )
@@ -13615,7 +13615,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = SHELL_SURF_CURV;
       bfv = bf[v];
-      vdofs = ei->dof[v];	  
+      vdofs = ei[pg->imtrx]->dof[v];	  
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(fv->d_grad_curv_dmesh,0, siz);
       for (p = 0; p < VIM; p++ )
@@ -13648,7 +13648,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
 	{
 	  v = GRAD_S_V_DOT_N1 + r;
 	  bfv = bf[v];
-	  vdofs = ei->dof[v];	  
+	  vdofs = ei[pg->imtrx]->dof[v];	  
 	  siz = sizeof(double)*DIM*DIM*DIM*MDE;
 	  memset(fv->d_serialgrad_grad_s_v_dot_n_dmesh,0, siz);
 	  for (p = 0; p < VIM; p++ )
@@ -13680,7 +13680,7 @@ if ( pd->v[pg->imtrx][SHELL_LUB_CURV_2] )
     {
       v = SHELL_DIFF_FLUX;
       bfv = bf[v];
-      vdofs  = ei->dof[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
 	  
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_sh_J_dmesh[0][0][0]),0, siz);
@@ -13799,7 +13799,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
     if ( d_rho != NULL )
       {
 	var = TEMPERATURE;
-	for ( j=0; j<ei->dof[var]; j++)
+	for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	  {
 	    d_rho->T[j]= mp->d_density[var]*bf[var]->phi[j];
 	  }
@@ -13810,7 +13810,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	      {
 		var = MASS_FRACTION;
 		var_offset = MAX_VARIABLE_TYPES + w;
-		for ( j=0; j<ei->dof[var]; j++)
+		for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		  {
 		    d_rho->C[w][j] =mp->d_density[var_offset]*bf[var]->phi[j];
 		  }
@@ -13895,7 +13895,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	  if (pd->v[pg->imtrx][var] )
 	    {
 	      if((vol > 0.)&& (vol < x0) )
-		for ( j=0; j<ei->dof[var]; j++)
+		for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		  {
 		    d_rho->C[species][j] = rho*rho*(Rgas*T/(Press*MW)-1./rho_fluor)*bf[var]->phi[j];
 		  }
@@ -13907,7 +13907,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	{
 	  if (pd->v[pg->imtrx][var] )
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_rho->T[j] = -rho*rho*((x0-vol)*Rgas/(Press*MW))*bf[var]->phi[j];
 		}
@@ -13950,7 +13950,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	{
 	  if (pd->v[pg->imtrx][var] )
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_rho->C[species_v][j] = drho_c_v * bf[var]->phi[j];
 		  d_rho->C[species_a][j] = drho_c_a * bf[var]->phi[j];
@@ -13963,7 +13963,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	    {
 	      if (pd->v[pg->imtrx][var] )
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_rho->T[j] = drho_T*bf[var]->phi[j];
 		    }
@@ -14019,7 +14019,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	{
 	  if (pd->v[pg->imtrx][var])
 	    {
-	      for (j = 0; j < ei->dof[var]; j++)
+	      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_rho->T[j] = drhoDT * bf[var]->phi[j];
 		}
@@ -14043,7 +14043,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
       {
 	if (pd->v[pg->imtrx][var] )
 	  {
-	    for ( j=0; j<ei->dof[var]; j++)
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	      {
 		d_rho->C[species][j] = (rho_s - rho_f)*bf[var]->phi[j];
 	      }
@@ -14072,7 +14072,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
       {
       if (pd->v[pg->imtrx][var] )
       {
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
       {
       d_rho->C[species][j] = (rho_s - rho_f)*bf[var]->phi[j];
       }
@@ -14086,7 +14086,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
     if (pd->v[pg->imtrx][MASS_FRACTION] && d_rho != NULL)
       {
 	var = MASS_FRACTION;
-	for ( j=0; j<ei->dof[var]; j++)
+	for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	  {
 	    d_rho->C[0][j] = -mp->u_density[1]*2.0*bf[var]->phi[j];
 	  }
@@ -14141,7 +14141,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
     if ( d_rho != NULL && pd->v[pg->imtrx][TEMPERATURE] ) {
       phi_ptr =  bf[MASS_FRACTION]->phi;
       tmp = -rho / fv->T;
-      for (j = 0; j < ei->dof[TEMPERATURE]; j++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
 	d_rho->T[j] = tmp * phi_ptr[j];
       }
     }
@@ -14157,14 +14157,14 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	    tmp = - rho * avgMolecWeight *
 	      (1.0/(mp->molecular_weight[w]) -
 	       1.0/(mp->molecular_weight[mp->Num_Species_Eqn]));
-	    for (j = 0; j < ei->dof[MASS_FRACTION]; j++) { 
+	    for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) { 
 	      d_rho->C[w][j] = tmp * phi_ptr[j];
 	    }
 	  }
 	} else {
 	  for (w = 0; w < mp->Num_Species_Eqn; w++) {
 	    tmp = - rho * avgMolecWeight / (mp->molecular_weight[w]);
-	    for (j = 0; j < ei->dof[MASS_FRACTION]; j++) { 
+	    for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) { 
 	      d_rho->C[w][j] = tmp * phi_ptr[j];
 	    }
 	  }
@@ -14175,14 +14175,14 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	  for (w = 0; w < mp->Num_Species_Eqn; w++) {
 	    tmp = rho / avgMolecWeight *
 	      (mp->molecular_weight[w] - mp->molecular_weight[mp->Num_Species_Eqn]);
-	    for (j = 0; j < ei->dof[MASS_FRACTION]; j++) { 
+	    for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) { 
 	      d_rho->C[w][j] = tmp * phi_ptr[j];
 	    }
 	  }
 	} else {
 	  for (w = 0; w < mp->Num_Species_Eqn; w++) {
 	    tmp = rho / avgMolecWeight * mp->molecular_weight[w];
-	    for (j = 0; j < ei->dof[MASS_FRACTION]; j++) { 
+	    for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) { 
 	      d_rho->C[w][j] = tmp * phi_ptr[j];
 	    }
 	  }
@@ -14192,14 +14192,14 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	if (dropped_last_species_eqn) {
 	  for (w = 0; w < mp->Num_Species_Eqn; w++) {
 	    tmp =  mp->molecular_weight[w] -  mp->molecular_weight[mp->Num_Species_Eqn];
-	    for (j = 0; j < ei->dof[MASS_FRACTION]; j++) { 
+	    for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) { 
 	      d_rho->C[w][j] = tmp * phi_ptr[j];
 	    }
 	  }
 	} else {
 	  for (w = 0; w < mp->Num_Species_Eqn; w++) {
 	    tmp =  mp->molecular_weight[w];
-	    for (j = 0; j < ei->dof[MASS_FRACTION]; j++) { 
+	    for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) { 
 	      d_rho->C[w][j] = tmp * phi_ptr[j];
 	    }
 	  }
@@ -14239,7 +14239,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
       var = MASS_FRACTION;
       if (d_rho != NULL && pd->v[pg->imtrx][var]) {
 	phi_ptr =  bf[var]->phi;
-	for (j=0; j<ei->dof[var]; j++)
+	for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	  {
 	    for (w = 0; w < pd->Num_Species_Eqn; w++)
 	      {
@@ -14251,7 +14251,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
       var = TEMPERATURE;
       if (d_rho != NULL && pd->v[pg->imtrx][var]) {
 	phi_ptr =  bf[var]->phi;
-	for (j=0; j<ei->dof[var]; j++)
+	for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	  {
 	    d_rho->T[j] = 0.;
 	    for (w = 0; w < pd->Num_Species_Eqn; w++)
@@ -14285,7 +14285,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 
 	if (d_rho != NULL && pd->v[pg->imtrx][MASS_FRACTION]) {
 	  phi_ptr =  bf[MASS_FRACTION]->phi;
-	  for (j=0; j<ei->dof[var]; j++)
+	  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      for (w = 0; w < pd->Num_Species_Eqn; w++)
 		{
@@ -14304,7 +14304,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 
 	if (d_rho != NULL && pd->v[pg->imtrx][MASS_FRACTION]) {
 	  phi_ptr =  bf[MASS_FRACTION]->phi;
-	  for (j=0; j<ei->dof[var]; j++)
+	  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      for (w = 0; w < pd->Num_Species_Eqn; w++)
 		{
@@ -14323,7 +14323,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
       
 	if (d_rho != NULL && pd->v[pg->imtrx][MASS_FRACTION]) {
 	  phi_ptr =  bf[MASS_FRACTION]->phi;
-	  for (j=0; j<ei->dof[var]; j++)
+	  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      for (w = 0; w < pd->Num_Species_Eqn; w++)
 		{
@@ -14351,7 +14351,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
     if (d_rho) {
       phi_ptr = bf[MASS_FRACTION]->phi;
       for (w = 0; w < pd->Num_Species_Eqn; w++) {
-	for (j = 0; j < ei->dof[MASS_FRACTION]; j++) {
+	for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
 	  d_rho->C[w][j] = mp->molecular_weight[w] * phi_ptr[j];
 	}
       }
@@ -14419,7 +14419,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	    {
 	      for (w = 0; w < pd->Num_Species_Eqn; w++)
 	        {
-	          for (j = 0; j < ei->dof[MASS_FRACTION]; j++)
+	          for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++)
 		    {
 		      d_rho->C[w][j] *= factor;
 		    }
@@ -14428,7 +14428,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 		  
           if ( pd->v[pg->imtrx][TEMPERATURE] )
 	    {
-	      for (j = 0; j < ei->dof[TEMPERATURE]; j++)
+	      for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++)
 	        {
 	          d_rho->T[j] *= factor;
 	        }
@@ -14496,7 +14496,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
       if( pd->v[pg->imtrx][TEMPERATURE] && d_k != NULL )
 	{
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_k->T[j]= mp->d_thermal_conductivity[var]*bf[var]->phi[j];
 	    }
@@ -14507,7 +14507,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_k->X[a][j] =mp->d_thermal_conductivity[var]*bf[var]->phi[j];
 		}
@@ -14520,7 +14520,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_k->C[w][j] =mp->d_thermal_conductivity[var_offset]*bf[var]->phi[j];
 		}
@@ -14543,7 +14543,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
       var = TEMPERATURE;
       if( pd->v[pg->imtrx][var] && d_k != NULL )
 	{
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_k->T[j] = (mp->u_thermal_conductivity[1] + 
 		tmp*(2.*mp->u_thermal_conductivity[2] + 
@@ -14567,7 +14567,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 	      switch (var)
 	        {
 	        case TEMPERATURE:
-	          for ( j=0; j<ei->dof[var]; j++)
+	          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_k->T[j]= table_local->slope[i]*bf[var]->phi[j];
 		    }
@@ -14592,7 +14592,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
       if( pd->v[pg->imtrx][var] && d_k != NULL )
 	{
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_k->F[j] = mp->d_thermal_conductivity[var]*bf[var]->phi[j];
 	    }
@@ -14701,7 +14701,7 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
       var = TEMPERATURE;
       if ( d_Cp != NULL && pd->e[pg->imtrx][var] )
         {
-          for ( j=0; j<ei->dof[var]; j++)
+          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
             {
               d_Cp->T[j]= mp->d_heat_capacity[var]*bf[var]->phi[j];
             }
@@ -14712,7 +14712,7 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_Cp->X[a][j] =mp->d_heat_capacity[var]*bf[var]->phi[j];
 		}
@@ -14723,7 +14723,7 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
 	{
 	  var = FILL;
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_Cp->F[j] =mp->d_heat_capacity[var]*bf[var]->phi[j];
 	    }
@@ -14735,7 +14735,7 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_Cp->C[w][j] =mp->d_heat_capacity[var_offset]*bf[var]->phi[j];
 		}
@@ -14758,7 +14758,7 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
       var = TEMPERATURE;
       if ( d_Cp != NULL && pd->v[pg->imtrx][var] )
 	{
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_Cp->T[j] = ( mp->u_heat_capacity[1] +
 			2.*(fv->T+T_offset)*mp->u_heat_capacity[2]
@@ -14785,7 +14785,7 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
       if ( d_Cp != NULL && pd->v[pg->imtrx][var] )
 	{
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_Cp->F[j] = mp->d_heat_capacity[var]*bf[var]->phi[j];
 	    }
@@ -14808,7 +14808,7 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
 	      switch (var)
 	        {
 	        case TEMPERATURE:
-	          for ( j=0; j<ei->dof[var]; j++)
+	          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_Cp->T[j]= table_local->slope[i]*bf[var]->phi[j];
 		    }
@@ -14875,7 +14875,7 @@ ls_modulate_thermalconductivity ( double k1,
 
   if ( pd->v[pg->imtrx][var=TEMPERATURE ] )
     {
-      for(i=0; i<ei->dof[var]; i++)
+      for(i=0; i<ei[pg->imtrx]->dof[var]; i++)
 	{
 	  d_k->T[i] *= factor;
 	}
@@ -14885,7 +14885,7 @@ ls_modulate_thermalconductivity ( double k1,
     {
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
-	  for( i=0; i<ei->dof[var]; i++) 
+	  for( i=0; i<ei[pg->imtrx]->dof[var]; i++) 
 	    {
 	      d_k->C[w][i] *= factor;
 	    }
@@ -14896,7 +14896,7 @@ ls_modulate_thermalconductivity ( double k1,
     {
       for( a=0; a<pd->Num_Dim; a++ )
 	{
-	  for( i=0; i<ei->dof[var]; i++ )
+	  for( i=0; i<ei[pg->imtrx]->dof[var]; i++ )
 	    {
 	      d_k->X [a][i] *= factor;
 	    }
@@ -14927,7 +14927,7 @@ ls_modulate_heatcapacity ( double Cp1,
 
   if ( pd->v[pg->imtrx][var=TEMPERATURE ] )
     {
-      for(i=0; i<ei->dof[var]; i++)
+      for(i=0; i<ei[pg->imtrx]->dof[var]; i++)
 	{
 	  d_Cp->T[i] *= factor;
 	}
@@ -14937,7 +14937,7 @@ ls_modulate_heatcapacity ( double Cp1,
     {
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
-	  for( i=0; i<ei->dof[var]; i++) 
+	  for( i=0; i<ei[pg->imtrx]->dof[var]; i++) 
 	    {
 	      d_Cp->C[w][i] *= factor;
 	    }
@@ -14948,7 +14948,7 @@ ls_modulate_heatcapacity ( double Cp1,
     {
       for( a=0; a<pd->Num_Dim; a++ )
 	{
-	  for( i=0; i<ei->dof[var]; i++ )
+	  for( i=0; i<ei[pg->imtrx]->dof[var]; i++ )
 	    {
 	      d_Cp->v[a][i] *= factor;
 	    }
@@ -14959,7 +14959,7 @@ ls_modulate_heatcapacity ( double Cp1,
     {
       for( a=0; a<pd->Num_Dim; a++ )
 	{
-	  for( i=0; i<ei->dof[var]; i++ )
+	  for( i=0; i<ei[pg->imtrx]->dof[var]; i++ )
 	    {
 	      d_Cp->X [a][i] *= factor;
 	    }
@@ -14968,7 +14968,7 @@ ls_modulate_heatcapacity ( double Cp1,
 
   if( pd->v[pg->imtrx][var=VOLTAGE] )
     {
-      for( i=0; i<ei->dof[var]; i++ )
+      for( i=0; i<ei[pg->imtrx]->dof[var]; i++ )
 	{
 	  d_Cp->V[i] *= factor;
 	}
@@ -15036,7 +15036,7 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
       if( pd->v[pg->imtrx][TEMPERATURE] && d_R != NULL )
 	{
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_R->T[j]= mp->d_acoustic_impedance[var]*bf[var]->phi[j];
 	    }
@@ -15047,7 +15047,7 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_R->X[a][j] =mp->d_acoustic_impedance[var]*bf[var]->phi[j];
 		}
@@ -15060,7 +15060,7 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_R->C[w][j] =mp->d_acoustic_impedance[var_offset]*bf[var]->phi[j];
 		}
@@ -15087,7 +15087,7 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
 	      switch (var)
 	        {
 	        case TEMPERATURE:
-	          for ( j=0; j<ei->dof[var]; j++)
+	          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_R->T[j]= table_local->slope[i]*bf[var]->phi[j];
 		    }
@@ -15112,7 +15112,7 @@ acoustic_impedance( CONDUCTIVITY_DEPENDENCE_STRUCT *d_R,
       if( pd->v[pg->imtrx][var] && d_R != NULL )
 	{
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_R->F[j] = mp->d_acoustic_impedance[var]*bf[var]->phi[j];
 	    }
@@ -15196,7 +15196,7 @@ wave_number( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 	      switch (var)
 	        {
 	        case TEMPERATURE:
-	          for ( j=0; j<ei->dof[var]; j++)
+	          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_k->T[j]= table_local->slope[i]*bf[var]->phi[j];
 		    }
@@ -15221,7 +15221,7 @@ wave_number( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
       if( pd->v[pg->imtrx][var] && d_k != NULL )
 	{
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_k->F[j] = mp->d_wave_number[var]*bf[var]->phi[j];
 	    }
@@ -15326,7 +15326,7 @@ acoustic_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
       if( pd->v[pg->imtrx][TEMPERATURE] && d_alpha != NULL )
 	{
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_alpha->T[j]= mp->d_acoustic_absorption[var]*bf[var]->phi[j];
 	    }
@@ -15337,7 +15337,7 @@ acoustic_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_alpha->X[a][j] =mp->d_acoustic_absorption[var]*bf[var]->phi[j];
 		}
@@ -15350,7 +15350,7 @@ acoustic_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_alpha->C[w][j] =mp->d_acoustic_absorption[var_offset]*bf[var]->phi[j];
 		}
@@ -15377,7 +15377,7 @@ acoustic_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
 	      switch (var)
 	        {
 	        case TEMPERATURE:
-	          for ( j=0; j<ei->dof[var]; j++)
+	          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_alpha->T[j]= table_local->slope[i]*bf[var]->phi[j];
 		    }
@@ -15402,7 +15402,7 @@ acoustic_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
       if( pd->v[pg->imtrx][var] && d_alpha != NULL )
 	{
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_alpha->F[j] = mp->d_acoustic_absorption[var]*bf[var]->phi[j];
 	    }
@@ -15509,7 +15509,7 @@ light_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
       if( pd->v[pg->imtrx][TEMPERATURE] && d_alpha != NULL )
 	{
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_alpha->T[j]= mp->d_light_absorption[var]*bf[var]->phi[j];
 	    }
@@ -15520,7 +15520,7 @@ light_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_alpha->X[a][j] =mp->d_light_absorption[var]*bf[var]->phi[j];
 		}
@@ -15533,7 +15533,7 @@ light_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w +1;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_alpha->C[w][j] =mp->d_light_absorption[var_offset]*bf[var]->phi[j];
 		}
@@ -15560,7 +15560,7 @@ light_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
 	      switch (var)
 	        {
 	        case TEMPERATURE:
-	          for ( j=0; j<ei->dof[var]; j++)
+	          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_alpha->T[j]= table_local->slope[i]*bf[var]->phi[j];
 		    }
@@ -15585,7 +15585,7 @@ light_absorption( CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha,
       if( pd->v[pg->imtrx][var] && d_alpha != NULL )
 	{
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_alpha->F[j] = mp->d_light_absorption[var]*bf[var]->phi[j];
 	    }
@@ -15693,7 +15693,7 @@ refractive_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_n,
       if( pd->v[pg->imtrx][TEMPERATURE] && d_n != NULL )
 	{
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_n->T[j]= mp->d_refractive_index[var]*bf[var]->phi[j];
 	    }
@@ -15704,7 +15704,7 @@ refractive_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_n,
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_n->X[a][j] =mp->d_refractive_index[var]*bf[var]->phi[j];
 		}
@@ -15717,7 +15717,7 @@ refractive_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_n,
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_n->C[w][j] =mp->d_refractive_index[var_offset]*bf[var]->phi[j];
 		}
@@ -15744,7 +15744,7 @@ refractive_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_n,
 	      switch (var)
 	        {
 	        case TEMPERATURE:
-	          for ( j=0; j<ei->dof[var]; j++)
+	          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_n->T[j]= table_local->slope[i]*bf[var]->phi[j];
 		    }
@@ -15769,7 +15769,7 @@ refractive_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_n,
       if( pd->v[pg->imtrx][var] && d_n != NULL )
 	{
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_n->F[j] = mp->d_refractive_index[var]*bf[var]->phi[j];
 	    }
@@ -15877,7 +15877,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
               if ( df != NULL && pd->v[pg->imtrx][var] )
                 {
 	          phi = bf[var]->phi;
-                  for (j=0; j<ei->dof[var]; j++)
+                  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      df->T[a][j] = mp->d_momentum_source[a][var] * phi[j];
 		    }
@@ -15887,7 +15887,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 		{
 		  var = FILL;
 		  phi = bf[var]->phi;
-		  for ( j=0; j < ei->dof[var]; j++ )
+		  for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
 		    {
 		      df->F[a][j] = mp->d_momentum_source[a][var] * phi[j];
 		    }
@@ -15899,7 +15899,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 		    {
 		      var = MESH_DISPLACEMENT1+b;
 		      phi = bf[var]->phi;
-		      for (j=0; j<ei->dof[var]; j++)
+		      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  df->X[a][b][j] = mp->d_momentum_source[a][var] * phi[j];
 			}
@@ -15913,7 +15913,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 		      var = MASS_FRACTION;
 		      var_offset = MAX_VARIABLE_TYPES + w;
 		      phi = bf[var]->phi;
-		      for (j=0; j<ei->dof[var]; j++)
+		      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  df->C[a][w][j] = mp->d_momentum_source[a][var_offset] * phi[j];
 			}
@@ -15926,7 +15926,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 		    {
 		      var = VELOCITY1 + b;;
 		      phi = bf[var]->phi;
-      		      for (j=0; j<ei->dof[var]; j++)
+      		      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  df->v[a][b][j] = mp->d_momentum_source[a][var] * phi[j];
 			}
@@ -15965,7 +15965,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 		  for ( w=0; w<pd->Num_Species_Eqn; w++)
 		    {
 		      var = MASS_FRACTION;
-		      for (j=0; j<ei->dof[var]; j++)
+		      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  df->C[a][w][j] = d_rho->C[w][j]*mp->momentum_source[a];
 			}
@@ -15992,7 +15992,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 		  for (w = 0; w < pd->Num_Species_Eqn; w++)
 		    {
 		      var = MASS_FRACTION;
-		      for (j = 0; j < ei->dof[var]; j++)
+		      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 			{
 			  df->C[a][w][j] = d_rho->C[w][j]*mp->momentum_source[a];
 			}
@@ -16001,7 +16001,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 	      if ( df != NULL && pd->v[pg->imtrx][TEMPERATURE] )
 		{
 		  var = TEMPERATURE;
-		  for (j=0; j<ei->dof[var]; j++)
+		  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      df->T[a][j] = d_rho->T[j]*mp->momentum_source[a];
 		    }
@@ -16010,7 +16010,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 		{
 		  var = FILL;
 		  phi = bf[var]->phi;
-		  for (j=0; j<ei->dof[var]; j++)
+		  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      df->F[a][j] = d_rho->F[j]*mp->momentum_source[a];
 		    }
@@ -16070,7 +16070,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 #ifdef COUPLED_FILL
           if ( df != NULL)
             {
-	      for ( j=0; j < ei->dof[FILL]; j++)
+	      for ( j=0; j < ei[pg->imtrx]->dof[FILL]; j++)
 	        df->F[a][j] = mp->momentum_source[a] * d_rho->F[j];
             }
 #endif /* COUPLED_FILL */
@@ -16090,7 +16090,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 		{
 			for( b=0 ; b < pfd->num_phase_funcs; b++)
 			{
-				for( j=0; j < ei->dof[PHASE1]; j++)
+				for( j=0; j < ei[pg->imtrx]->dof[PHASE1]; j++)
 				{
 					df->pf[a][b][j] =  mp->momentum_source[a] * d_rho->pf[b][j];
 				}
@@ -16114,7 +16114,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
  			{
  			var = ACOUS_REYN_STRESS;
     			phi = bf[var]->phi;
-    			for (j=0; j<ei->dof[var]; j++)
+    			for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
  				{
  		  		df->ars[a][j] = mp->u_momentum_source[0]*bf[var]->grad_phi[j][a];
  				}
@@ -16199,7 +16199,7 @@ ls_modulate_momentumsource ( double f1[DIM],
 
 	  if( pd->v[pg->imtrx][var=TEMPERATURE] )
 	    {
-	      for ( i=0; i<ei->dof[var]; i++)
+	      for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
 		{
 		  df->T[a][i] *=factor;
 		}
@@ -16209,7 +16209,7 @@ ls_modulate_momentumsource ( double f1[DIM],
 	    {
 	      for( b=0; b<dim; b++ )
 		{
-		  for( i=0 ; i<ei->dof[var+b]; i++)
+		  for( i=0 ; i<ei[pg->imtrx]->dof[var+b]; i++)
 		    {
 		      df->X[a][b][i] *= factor;
 		    }
@@ -16220,7 +16220,7 @@ ls_modulate_momentumsource ( double f1[DIM],
 	    {
 	      for( b=0; b<dim; b++ )
 		{
-		  for( i=0 ; i<ei->dof[var]; i++)
+		  for( i=0 ; i<ei[pg->imtrx]->dof[var]; i++)
 		    {
 		      df->v[a][b][i] *= factor;
 		    }
@@ -16231,7 +16231,7 @@ ls_modulate_momentumsource ( double f1[DIM],
 	    {
 	      for( b=0; b<pd->Num_Species; b++ )
 		{
-		  for( i=0 ; i<ei->dof[var]; i++)
+		  for( i=0 ; i<ei[pg->imtrx]->dof[var]; i++)
 		    {
 		      df->C[a][b][i] *= factor;
 		    }
@@ -16242,7 +16242,7 @@ ls_modulate_momentumsource ( double f1[DIM],
 	    {
 	      for( b=0; b<dim; b++ )
 		{
-		  for( i=0 ; i<ei->dof[var+b]; i++)
+		  for( i=0 ; i<ei[pg->imtrx]->dof[var+b]; i++)
 		    {
 		      df->E[a][b][i] *= factor;
 		    }
@@ -16921,7 +16921,7 @@ continuous_surface_tension(double st, double csf[DIM][DIM],
   load_lsi_derivs();
 
   /* Calculate the derivatives. */
-  for ( j=0 ; j < ei->dof[var] ; j++ )
+  for ( j=0 ; j < ei[pg->imtrx]->dof[var] ; j++ )
   {
 #ifdef DO_NO_UNROLL
       for ( a=0 ; a < VIM ; a++ )
@@ -16999,7 +16999,7 @@ continuous_surface_tension(double st, double csf[DIM][DIM],
 			  {
 				  var = MESH_DISPLACEMENT1 + c;
 				  
-				  for( j=0; j<ei->dof[var]; j++)
+				  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				  {
 					d_csf_dX[a][b][c][j] = st* lsi->delta * ( - lsi->d_normal_dmesh[a][c][j]*lsi->normal[b]
 															   -lsi->normal[a]*lsi->d_normal_dmesh[b][c][j] );
@@ -17544,18 +17544,18 @@ scalar_fv_fill_altmatrl(double **base, int lvdesc, int num_dofs,
      *  that actually belongs to another material than the one
      *  we are currently in.
      */
-    lvdof = ei->Lvdesc_to_lvdof[lvdesc][idof];
+    lvdof = ei[pg->imtrx]->Lvdesc_to_lvdof[lvdesc][idof];
     /*
      *  Find the local node number of this degree of freedom
      */
-    ln = ei->dof_list[var_type][lvdof];
+    ln = ei[pg->imtrx]->dof_list[var_type][lvdof];
     /*
      *  Find the local variable type degree of freedom 
      *  active in this element for this local node. This
      *  degree of freedom belongs to this material, and thus
      *  has a nonzero basis function associated with it.
      */
-    lvdof_active = ei->ln_to_dof[var_type][ln];
+    lvdof_active = ei[pg->imtrx]->ln_to_dof[var_type][ln];
     /*
      *  Add it to the sum to get the value of the variable.
      */
@@ -17589,11 +17589,11 @@ scalar_fv_fill_adjmatrl(double **base, int lvdesc, int num_dofs,
      *  that actually belongs to another material than the one
      *  we are currently in.
      */
-    lvdof = ei->Lvdesc_to_lvdof[lvdesc][idof];
+    lvdof = ei[pg->imtrx]->Lvdesc_to_lvdof[lvdesc][idof];
     /*
      *  Find the local node number of this degree of freedom
      */
-    ln = ei->dof_list[var_type][lvdof];
+    ln = ei[pg->imtrx]->dof_list[var_type][lvdof];
 
     /*
      *  Add it to the sum to get the value of the variable.
@@ -17646,14 +17646,14 @@ load_matrl_statevector(MATRL_PROP_STRUCT *mp_local)
     sv[SPECIES_UNK_0 + k] = sv_mp[SPECIES_UNK_0 + k];
   }
 
-  for (lvdesc = 0; lvdesc < ei->Num_Lvdesc; lvdesc++) {
-    if (ei->Lvdesc_to_MatID[lvdesc] == matID) {
+  for (lvdesc = 0; lvdesc < ei[pg->imtrx]->Num_Lvdesc; lvdesc++) {
+    if (ei[pg->imtrx]->Lvdesc_to_MatID[lvdesc] == matID) {
 
-      var_type = ei->Lvdesc_to_Var_Type[lvdesc];
-      num_dofs = ei->Lvdesc_Numdof[lvdesc];
+      var_type = ei[pg->imtrx]->Lvdesc_to_Var_Type[lvdesc];
+      num_dofs = ei[pg->imtrx]->Lvdesc_Numdof[lvdesc];
      
       if (var_type == MASS_FRACTION) {
-        vd = ei->Lvdesc_vd_ptr[lvdesc];
+        vd = ei[pg->imtrx]->Lvdesc_vd_ptr[lvdesc];
         k = vd->Subvar_Index;
         sv[SPECIES_UNK_0 + k] = scalar_fv_fill_altmatrl(esp->c[k], lvdesc, 
 							num_dofs, var_type);
@@ -17808,7 +17808,7 @@ double FoamVolumeSource(double time,
 	  var = TEMPERATURE;
 	  if (pd->v[pg->imtrx][var])
 	    {
-	      for( j=0; j<ei->dof[var]; j++)
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  source_a = bf[var]->phi[j] * (1 + 2. * tt)/ dt;
 		  for( a=0; a<dim; a++)
@@ -17828,7 +17828,7 @@ double FoamVolumeSource(double time,
 	      for( a=0; a<dim; a++)
 		{
 		  var = VELOCITY1+a;
-		  for( j=0; pd->v[pg->imtrx][var] && j<ei->dof[var]; j++)
+		  for( j=0; pd->v[pg->imtrx][var] && j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      dFVS_dv[a][j] = -rho*(deriv_x* bf[var]->phi[j]*fv->grad_c[species][a]
 					    + deriv_T* bf[var]->phi[j]*fv->grad_T[a]);
@@ -17839,7 +17839,7 @@ double FoamVolumeSource(double time,
 	  var = MASS_FRACTION;
 	  if (pd->v[pg->imtrx][var])
 	    {
-	      for( j=0; j<ei->dof[var]; j++)
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  source_a = bf[var]->phi[j] * (1 + 2. * tt)/ dt;
 		  for( a=0; a<dim; a++)
@@ -17922,7 +17922,7 @@ double FoamVolumeSource(double time,
 	  var = TEMPERATURE;
 	  if(pd->v[pg->imtrx][var] )
 	    {
-	      for( j=0; j<ei->dof[var]; j++)
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  source_a = bf[var]->phi[j] * (1 + 2. * tt)/ dt;
 		  for( a=0; a<dim; a++)
@@ -17943,7 +17943,7 @@ double FoamVolumeSource(double time,
 	      for( a=0; a<dim; a++)
 		{
 		  var = VELOCITY1+a;
-		  for( j=0; pd->v[pg->imtrx][var] && j<ei->dof[var]; j++)
+		  for( j=0; pd->v[pg->imtrx][var] && j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      dFVS_dv[a][j] = + bf[var]->phi[j]*(    drho_c_v * fv->grad_c[species_v][a]
 							   + drho_c_a * fv->grad_c[species_a][a]
@@ -17956,7 +17956,7 @@ double FoamVolumeSource(double time,
 	  var = MASS_FRACTION;
 	  if(pd->v[pg->imtrx][var])
 	    {
-	      for( j=0; j<ei->dof[var]; j++)
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  source_a = bf[var]->phi[j] * (1 + 2. * tt)/ dt;
 		  for( a=0; a<dim; a++)
@@ -18039,7 +18039,7 @@ double FoamVolumeSource(double time,
       var = TEMPERATURE;
       if (pd->v[pg->imtrx][var])
 	{
-	  for (j = 0; j < ei->dof[var]; j++)
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      dFVS_dT[j] = d_source_dT * bf[var]->phi[j];
 	    }
@@ -18064,7 +18064,7 @@ double FoamVolumeSource(double time,
       
       var = TEMPERATURE;
       
-      for( j=0; pd->v[pg->imtrx][var] && j<ei->dof[var]; j++)
+      for( j=0; pd->v[pg->imtrx][var] && j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dFVS_dT[j] *= factor;
 	}
@@ -18075,7 +18075,7 @@ double FoamVolumeSource(double time,
 	  for( a=0; a<dim; a++)
 	    {
 	      var = VELOCITY1+a;
-	      for( j=0; pd->v[pg->imtrx][var] && j<ei->dof[var]; j++)
+	      for( j=0; pd->v[pg->imtrx][var] && j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dFVS_dv[a][j] *= factor;
 		}
@@ -18095,7 +18095,7 @@ double FoamVolumeSource(double time,
 		 (double) mp->mp2nd->densitymask[1],
 		 dFVS_dC[w],
 		 &factor );*/
-	      for( j=0;  j<ei->dof[var]; j++)
+	      for( j=0;  j<ei[pg->imtrx]->dof[var]; j++)
 		{
  
 		  dFVS_dC[w][j] *= factor;
@@ -18181,7 +18181,7 @@ double REFVolumeSource (double time,
     {
       var = VELOCITY1;
 
-      for( j=0; pd->v[pg->imtrx][var] && j<ei->dof[var]; j++)
+      for( j=0; pd->v[pg->imtrx][var] && j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  phi_j = bf[var]->phi[j];
 
@@ -18197,7 +18197,7 @@ double REFVolumeSource (double time,
 
       var = TEMPERATURE;
   
-      for( j=0; pd->v[pg->imtrx][var] && j<ei->dof[var]; j++)
+      for( j=0; pd->v[pg->imtrx][var] && j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dFVS_dT[j] = 0.;
 	  phi_j = bf[var]->phi[j];
@@ -18214,7 +18214,7 @@ double REFVolumeSource (double time,
 	{
 	  var = MESH_DISPLACEMENT1 + b;
 
-	  for( j=0; pd->v[pg->imtrx][var] && j<ei->dof[var]; j++)
+	  for( j=0; pd->v[pg->imtrx][var] && j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      dFVS_dx[b][j] = 0.0;
 	      phi_j = bf[var]->phi[j];
@@ -18236,7 +18236,7 @@ double REFVolumeSource (double time,
 
       for(w=0 ; w<pd->Num_Species_Eqn; w++)
 	{
-	  for( j=0; pd->v[pg->imtrx][var] && j <ei->dof[var]; j++ )
+	  for( j=0; pd->v[pg->imtrx][var] && j <ei[pg->imtrx]->dof[var]; j++ )
 	    {
 	      dFVS_dC[w][j] = 0.0;
 	      phi_j = bf[var]->phi[j];
@@ -18285,7 +18285,7 @@ assemble_projection_stabilization(Exo_DB *exo)
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
   
-  int ip_total = elem_info(NQUAD, ei->ielem_type);
+  int ip_total = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
   int eqn = R_PRESSURE;
   int peqn = upd->ep[pg->imtrx][eqn];
   double wt, det_J, h3, d_vol;
@@ -18319,17 +18319,17 @@ assemble_projection_stabilization(Exo_DB *exo)
       double vol = 0.;
 	  double ls_scale_factor = 1.0;  /* this is to turn off PSPP near the interface */
       
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
         {
           phi_avg[i] = 0.;
         }
         
       for (ip = 0; ip < ip_total; ip++)
         {
-          find_stu(ip, ei->ielem_type, &xi[0], &xi[1], &xi[2]); /* find quadrature point */
-          wt = Gq_weight (ip, ei->ielem_type); /* find quadrature weights for */
+          find_stu(ip, ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]); /* find quadrature point */
+          wt = Gq_weight (ip, ei[pg->imtrx]->ielem_type); /* find quadrature weights for */
 
-          setup_shop_at_point( ei->ielem, xi, exo );
+          setup_shop_at_point( ei[pg->imtrx]->ielem, xi, exo );
           fv->wt = wt;
           h3 = fv->h3;
           det_J = bf[eqn]->detJ;
@@ -18337,7 +18337,7 @@ assemble_projection_stabilization(Exo_DB *exo)
           
           P_avg += fv->P * d_vol;
 
-          for ( i=0; i<ei->dof[eqn]; i++)
+          for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
             {
               phi_i = bf[eqn]->phi[i];
               phi_avg[i] += phi_i * d_vol;
@@ -18347,17 +18347,17 @@ assemble_projection_stabilization(Exo_DB *exo)
         
       double inv_vol = 1./vol;
       P_avg *= inv_vol;
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
         {
           phi_avg[i] *= inv_vol;
         }
         
       for (ip = 0; ip < ip_total; ip++)
         {
-          find_stu(ip, ei->ielem_type, &xi[0], &xi[1], &xi[2]); /* find quadrature point */
-          wt = Gq_weight (ip, ei->ielem_type); /* find quadrature weights for */
+          find_stu(ip, ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]); /* find quadrature point */
+          wt = Gq_weight (ip, ei[pg->imtrx]->ielem_type); /* find quadrature weights for */
 
-          setup_shop_at_point( ei->ielem, xi, exo );
+          setup_shop_at_point( ei[pg->imtrx]->ielem, xi, exo );
           fv->wt = wt;
           h3 = fv->h3;
           det_J = bf[eqn]->detJ;
@@ -18383,7 +18383,7 @@ assemble_projection_stabilization(Exo_DB *exo)
           
           if ( af->Assemble_Residual )
             {
-              for ( i=0; i<ei->dof[eqn]; i++)
+              for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
                 {
                   phi_i = bf[eqn]->phi[i];
                   lec->R[peqn][i] += ls_scale_factor*PS_scaling*(fv->P - P_avg) * (phi_i - phi_avg[i]) / mu * d_vol;
@@ -18392,13 +18392,13 @@ assemble_projection_stabilization(Exo_DB *exo)
           if ( af->Assemble_Jacobian )
             {
 
-              for ( i=0; i<ei->dof[eqn]; i++)
+              for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
                 {
                   phi_i = bf[eqn]->phi[i];
                   
                   var = PRESSURE;
                   pvar = upd->vp[pg->imtrx][var];
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
                       lec->J[peqn][pvar][i][j] += ls_scale_factor*PS_scaling*(phi_j - phi_avg[j]) * (phi_i - phi_avg[i]) / mu * d_vol;
@@ -18408,7 +18408,7 @@ assemble_projection_stabilization(Exo_DB *exo)
 			if (pd->v[pg->imtrx][var = LS]) 
 		       {
 			 pvar = upd->vp[pg->imtrx][var];
-			 for ( j=0; j<ei->dof[var]; j++)
+			 for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			 {
 			   phi_j = bf[var]->phi[j];
 
@@ -18446,7 +18446,7 @@ assemble_PPPS_generalized(Exo_DB *exo)
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
   
-  int ip_total = elem_info(NQUAD, ei->ielem_type);
+  int ip_total = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
   int eqn = R_PRESSURE;
   int peqn = upd->ep[pg->imtrx][eqn];
   int INFO, ipass, npass;
@@ -18471,7 +18471,7 @@ assemble_PPPS_generalized(Exo_DB *exo)
   double scaling_over_visc_e, my_multiplier=1.0;
   double R_new[MDE], R_old[MDE];  /*old and new resid vect pieces for the pressure equation */
 
-  asdv(&A, ei->ielem_dim * ei->ielem_dim);
+  asdv(&A, ei[pg->imtrx]->ielem_dim * ei[pg->imtrx]->ielem_dim);
 
   npass = 1;
 
@@ -18503,11 +18503,11 @@ assemble_PPPS_generalized(Exo_DB *exo)
       for (ip = 0; ip < ip_total; ip++)
 	{
 
-	  find_stu(ip, ei->ielem_type, &xi[0], &xi[1], &xi[2]); /* find quadrature point */
+	  find_stu(ip, ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]); /* find quadrature point */
 
-	  wt = Gq_weight (ip, ei->ielem_type); /* find quadrature weights for */
+	  wt = Gq_weight (ip, ei[pg->imtrx]->ielem_type); /* find quadrature weights for */
 
-	  setup_shop_at_point( ei->ielem, xi, exo );
+	  setup_shop_at_point( ei[pg->imtrx]->ielem, xi, exo );
 
 	  fv->wt = wt;
 	  h3 = fv->h3;
@@ -18530,26 +18530,26 @@ assemble_PPPS_generalized(Exo_DB *exo)
       
 
 
-	  for (i=0; i < ei->ielem_dim; i++)
+	  for (i=0; i < ei[pg->imtrx]->ielem_dim; i++)
 	    {
 	      xi_dV = fv->x[i] * d_vol; 
 	      x_bar[i] += xi_dV;
-	      for(j=0; j < ei->ielem_dim; j++)
+	      for(j=0; j < ei[pg->imtrx]->ielem_dim; j++)
 		{
 		  Vij[i][j] += fv->x[j] * xi_dV;	      
 		}
-	      for(m=0; m < ei->dof[eqn]; m++)
+	      for(m=0; m < ei[pg->imtrx]->dof[eqn]; m++)
 		{
 		  eim[i][m] += bf[eqn]->phi[m] * xi_dV;
 		}
 	    }
     
 
-	  for(m=0; m < ei->dof[eqn]; m++)
+	  for(m=0; m < ei[pg->imtrx]->dof[eqn]; m++)
 	    {
 	      wm_dV = bf[eqn]->phi[m] * d_vol;
 	      em[m] += wm_dV;
-	      for(n=0; n < ei->dof[eqn]; n++)
+	      for(n=0; n < ei[pg->imtrx]->dof[eqn]; n++)
 		{
 		  Me[m][n] += bf[eqn]->phi[n] * wm_dV;
 		}
@@ -18562,11 +18562,11 @@ assemble_PPPS_generalized(Exo_DB *exo)
 	      var = VELOCITY1;
 	      if(pd->v[pg->imtrx][var])
 		{
-		  for (a = 0; a < ei->ielem_dim; a++)
+		  for (a = 0; a < ei[pg->imtrx]->ielem_dim; a++)
 		    {
 		      var = VELOCITY1 + a;
 		      
-		      for(j = 0; j < ei->dof[var]; j++)
+		      for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 			{
 			  d_visc_e_dv[a][j] += d_vol*(*d_mu->v[a]);
 			}
@@ -18587,11 +18587,11 @@ assemble_PPPS_generalized(Exo_DB *exo)
 	  var = VELOCITY1;
 	  if(pd->v[pg->imtrx][var])
 	    {
-	      for (a = 0; a < ei->ielem_dim; a++)
+	      for (a = 0; a < ei[pg->imtrx]->ielem_dim; a++)
 		{
 		  var = VELOCITY1 + a;
 		      
-		  for(j = 0; j < ei->dof[var]; j++)
+		  for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_visc_e_dv[a][j] /= vol;
 		    }
@@ -18599,26 +18599,26 @@ assemble_PPPS_generalized(Exo_DB *exo)
 	    }    
 	} 
       
-      for(i=0; i < ei->ielem_dim; i++)
+      for(i=0; i < ei[pg->imtrx]->ielem_dim; i++)
 	{
 	  x_bar[i] /= vol;
 	}
       
-      for(i=0; i < ei->ielem_dim; i++)
+      for(i=0; i < ei[pg->imtrx]->ielem_dim; i++)
 	{
-	  for(m=0; m < ei->dof[eqn]; m++)
+	  for(m=0; m < ei[pg->imtrx]->dof[eqn]; m++)
 	    {
 	      eim_tilde[i][m] = eim[i][m] - x_bar[i] * em[m];
 	    }
-	  for(j = 0; j < ei->ielem_dim; j++)
+	  for(j = 0; j < ei[pg->imtrx]->ielem_dim; j++)
 	    {
 	      Vij_tilde[i][j] = Vij[i][j] - vol * x_bar[i] * x_bar[j];
 	    }
 	}
-      for(m=0; m < ei->dof[eqn]; m++)
+      for(m=0; m < ei[pg->imtrx]->dof[eqn]; m++)
 	{
 	  Ee_tilde[0][m] = em[m]; /* First row of Ee_tilde is special */
-	  for (i=0; i < ei->ielem_dim; i++)
+	  for (i=0; i < ei[pg->imtrx]->ielem_dim; i++)
 	    {
 	      Ee_tilde[i+1][m] = eim_tilde[i][m];
 	    }
@@ -18626,26 +18626,26 @@ assemble_PPPS_generalized(Exo_DB *exo)
       
       /* Next we need to solve the eigen problem */
       
-      for(i=0; i < ei->ielem_dim; i++)
+      for(i=0; i < ei[pg->imtrx]->ielem_dim; i++)
 	{
 	  W[i] = 0;
-	  for(j=0 ; j < ei->ielem_dim; j++)
+	  for(j=0 ; j < ei[pg->imtrx]->ielem_dim; j++)
 	    {
-	      A[j*ei->ielem_dim + i] = Vij_tilde[i][j];
+	      A[j*ei[pg->imtrx]->ielem_dim + i] = Vij_tilde[i][j];
 	    }
 	}
       
-      dsyev_("V", "U", &(ei->ielem_dim), A, &(ei->ielem_dim), W, WORK, &LWORK, &INFO, 1, 1); 
+      dsyev_("V", "U", &(ei[pg->imtrx]->ielem_dim), A, &(ei[pg->imtrx]->ielem_dim), W, WORK, &LWORK, &INFO, 1, 1); 
       
       if (INFO > 0) EH(-1, "dsyev falied to converge");
       if (INFO < 0) EH(-1, "an argument of dsyev had an illegal value");
       
-      for(j = 0; j < ei->ielem_dim; j++)
+      for(j = 0; j < ei[pg->imtrx]->ielem_dim; j++)
 	{
 	  eval[j] = W[j];
-	  for( i=0; i<ei->ielem_dim; i++)
+	  for( i=0; i<ei[pg->imtrx]->ielem_dim; i++)
 	    {
-	      evec[j][i] = A[j*ei->ielem_dim + i];
+	      evec[j][i] = A[j*ei[pg->imtrx]->ielem_dim + i];
 	    }
 	}
       
@@ -18653,20 +18653,20 @@ assemble_PPPS_generalized(Exo_DB *exo)
       
       memset(De_hat, 0, sizeof(double)*(DIM+1)*(DIM+1));
       De_hat[0][0] = 1.;
-      for(i=0; i < ei->ielem_dim; i++)
+      for(i=0; i < ei[pg->imtrx]->ielem_dim; i++)
 	{
-	  for(j=0; j < ei->ielem_dim; j++)
+	  for(j=0; j < ei[pg->imtrx]->ielem_dim; j++)
 	    {
 	      De_hat[i+1][j+1] = evec[i][j];
 	    }
 	}
       
-      for(i=0; i < ei->ielem_dim+1; i++)
+      for(i=0; i < ei[pg->imtrx]->ielem_dim+1; i++)
 	{
-	  for(j=0; j < ei->dof[eqn] ; j++)
+	  for(j=0; j < ei[pg->imtrx]->dof[eqn] ; j++)
 	    {
 	      sum = 0.;
-	      for(k=0; k < ei->ielem_dim + 1; k++)
+	      for(k=0; k < ei[pg->imtrx]->ielem_dim + 1; k++)
 		{
 		  sum += De_hat[i][k] * Ee_tilde[k][j];
 		}
@@ -18678,32 +18678,32 @@ assemble_PPPS_generalized(Exo_DB *exo)
       /* Compute the real De_hat */
       memset(De_hat, 0, sizeof(double)*(DIM+1)*(DIM+1));
       De_hat[0][0] = vol;
-      for(i=0; i<ei->ielem_dim; i++)
+      for(i=0; i<ei[pg->imtrx]->ielem_dim; i++)
 	{
 	  De_hat[i+1][i+1] = eval[i];
 	}
       
       memset(S     , 0, sizeof(double)*(DIM+1)*(DIM+1));
       S[0][0] = 1.;
-      for(i=1; i<ei->ielem_dim; i++)
+      for(i=1; i<ei[pg->imtrx]->ielem_dim; i++)
 	{
 	  S[i+1][i+1] = 1.0 - sqrt(eval[0]/eval[i]);
 	}
       
       memset(We    , 0, sizeof(double)*(DIM+1)*(DIM+1));
       We[0][0] = 1./vol;
-      for(i=1; i< ei->ielem_dim+1; i++)
+      for(i=1; i< ei[pg->imtrx]->ielem_dim+1; i++)
 	{
 	  We[i][i] = S[i][i]*(2.-S[i][i])/De_hat[i][i];
 	}
       
       memset(WeEe,0,sizeof(double) * (DIM+1) * MDE);
-      for(i=0; i < ei->ielem_dim+1; i++)
+      for(i=0; i < ei[pg->imtrx]->ielem_dim+1; i++)
 	{
-	  for(j=0; j < ei->dof[eqn] ; j++)
+	  for(j=0; j < ei[pg->imtrx]->dof[eqn] ; j++)
 	    {
 	      sum = 0.;
-	      for(k=0; k < ei->ielem_dim + 1; k++)
+	      for(k=0; k < ei[pg->imtrx]->ielem_dim + 1; k++)
 		{
 		  sum += We[i][k]* Ee_hat  [k][j];
 		}
@@ -18713,12 +18713,12 @@ assemble_PPPS_generalized(Exo_DB *exo)
       
       
       scaling_over_visc_e = my_multiplier * PS_scaling / visc_e;
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  for(j=0; j < ei->dof[eqn]; j++)
+	  for(j=0; j < ei[pg->imtrx]->dof[eqn]; j++)
 	    {
 	      EeT_We_Ee = 0.;
-	      for(k=0; k < ei->ielem_dim +1; k++)
+	      for(k=0; k < ei[pg->imtrx]->ielem_dim +1; k++)
 		{
 		  EeT_We_Ee += Ee_hat[k][i] * WeEe[k][j];
 		}
@@ -18727,9 +18727,9 @@ assemble_PPPS_generalized(Exo_DB *exo)
 	}
       
       /* Now compute and add stabilizing term to residual equation for continuity*/
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  for(j=0; j < ei->dof[eqn]; j++)
+	  for(j=0; j < ei[pg->imtrx]->dof[eqn]; j++)
 	    {
 	      lec->R[peqn][i] += Ce[i][j]* (*esp->P[j]);
 	    }
@@ -18737,9 +18737,9 @@ assemble_PPPS_generalized(Exo_DB *exo)
 
       if(pd->v[pg->imtrx][MESH_DISPLACEMENT1] && af->Assemble_Jacobian)
 	{
-	  for (i = 0; i < ei->dof[eqn]; i++)
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	    {
-	      for(j=0; j < ei->dof[eqn]; j++)
+	      for(j=0; j < ei[pg->imtrx]->dof[eqn]; j++)
 		{
 		  if(ipass == 0)
 		    {
@@ -18759,11 +18759,11 @@ assemble_PPPS_generalized(Exo_DB *exo)
   
   if ( af->Assemble_Jacobian )
     {
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	  var = PRESSURE;
 	  pvar = upd->vp[pg->imtrx][var];
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      lec->J[peqn][pvar][i][j] += Ce[i][j];
 	    }
@@ -18773,14 +18773,14 @@ assemble_PPPS_generalized(Exo_DB *exo)
 	  
       if (pd->v[pg->imtrx][var]) 
 	{
-	  for (a = 0; a < ei->ielem_dim; a++)
+	  for (a = 0; a < ei[pg->imtrx]->ielem_dim; a++)
 	    {
 	      var += a;
 	      /* first the pieces for viscosity */
-	      for ( i=0; i<ei->dof[eqn]; i++)
+	      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 		{
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      /* lec->J[peqn][pvar][i][j] += numerical piece; */
 		      EH(-1,"need to finish off numerical jacobian for PPSP mesh displ");
@@ -18791,17 +18791,17 @@ assemble_PPPS_generalized(Exo_DB *exo)
       var = VELOCITY1;
       /* need this piece too for d(visc_e)/dv */
       
-      for (a = 0; a < ei->ielem_dim; a++)
+      for (a = 0; a < ei[pg->imtrx]->ielem_dim; a++)
 	{
 	  var += a;
 	  pvar = upd->vp[pg->imtrx][var];
-	  for ( i=0; i<ei->dof[eqn]; i++)
+	  for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 		  
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  EeT_We_Ee = 0.;
-		  for(k=0; k < ei->ielem_dim +1; k++)
+		  for(k=0; k < ei[pg->imtrx]->ielem_dim +1; k++)
 		    {
 		      EeT_We_Ee += Ee_hat[k][i] * WeEe[k][j];
 		    }
@@ -18839,7 +18839,7 @@ apply_distributed_sources ( int elem, double width,
                             double **cAC )
 {
 
-  int ip, ip_total, ielem_type = ei->ielem_type, err;
+  int ip, ip_total, ielem_type = ei[pg->imtrx]->ielem_type, err;
   struct LS_Embedded_BC *bcref;
   double xi[DIM];
   int ipass, num_elem_passes = 1;
@@ -18870,8 +18870,8 @@ apply_distributed_sources ( int elem, double width,
     }
   if( ls->AdaptIntegration)
     {
-	for(i=0 ; i<ei->num_local_nodes ; i++)	{ls_F[i]=*esp->F[i];}
-	i = adaptive_weight( ad_wt, ip_total, ei->ielem_dim, ls_F, ls->Length_Scale,
+	for(i=0 ; i<ei[pg->imtrx]->num_local_nodes ; i++)	{ls_F[i]=*esp->F[i];}
+	i = adaptive_weight( ad_wt, ip_total, ei[pg->imtrx]->ielem_dim, ls_F, ls->Length_Scale,
 				3, ielem_type);
 	WH(i, "problem with adaptive weight routine");
     }
@@ -19150,15 +19150,15 @@ assemble_pf_capillary (double *pf_surf_tens )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  source = 0.;
 		  
@@ -19196,15 +19196,15 @@ assemble_pf_capillary (double *pf_surf_tens )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 
 		  grad_phi_i_e_a = bfm->grad_phi_e[i][a];
@@ -19217,7 +19217,7 @@ assemble_pf_capillary (double *pf_surf_tens )
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 		      
-		      for( j=0; j<ei->dof[var]; j++)
+		      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  source = 0.;
 
@@ -19310,15 +19310,15 @@ assemble_csf_tensor ( void )
 			peqn = upd->ep[pg->imtrx][eqn];
 			bfm = bf[eqn];
 			
-			for (i = 0; i < ei->dof[eqn]; i++) 
+			for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 			{
 				
-				ledof = ei->lvdof_to_ledof[eqn][i];
+				ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 				
-				if (ei->active_interp_ledof[ledof]) 
+				if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 				{
 					
-					ii = ei->lvdof_to_row_lvdof[eqn][i];
+					ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 					
 					grad_phi_i_e_a = bfm->grad_phi_e[i][a];
 					
@@ -19340,7 +19340,7 @@ assemble_csf_tensor ( void )
 					var = LS ;
 					pvar = upd->vp[pg->imtrx][var];
 					
-					for (j = 0; j < ei->dof[var]; j++)
+					for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 					  {
 					    phi_j = bf[var]->phi[j];
 					    lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -19365,15 +19365,15 @@ assemble_csf_tensor ( void )
 			peqn = upd->ep[pg->imtrx][eqn];
 			bfm = bf[eqn];
 			
-			for (i = 0; i < ei->dof[eqn]; i++) 
+			for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 			{
 				
-				ledof = ei->lvdof_to_ledof[eqn][i];
+				ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 				
-				if (ei->active_interp_ledof[ledof])
+				if (ei[pg->imtrx]->active_interp_ledof[ledof])
 				{
 					
-					ii = ei->lvdof_to_row_lvdof[eqn][i];
+					ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 					
 					grad_phi_i_e_a = bfm->grad_phi_e[i][a];
 					
@@ -19428,15 +19428,15 @@ assemble_csf_tensor ( void )
 			bfm = bf[eqn];
 			source_etm = pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
 			
-			for (i = 0; i < ei->dof[eqn]; i++) 
+			for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 			{
 				
-				ledof = ei->lvdof_to_ledof[eqn][i];
+				ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 				
-				if (ei->active_interp_ledof[ledof])
+				if (ei[pg->imtrx]->active_interp_ledof[ledof])
 				{
 					
-					ii = ei->lvdof_to_row_lvdof[eqn][i];
+					ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 					
 					grad_phi_i_e_a = bfm->grad_phi_e[i][a];
 					
@@ -19449,7 +19449,7 @@ assemble_csf_tensor ( void )
 					{
 						pvar = upd->vp[pg->imtrx][var];
 						
-						for( j=0; j<ei->dof[var]; j++)
+						for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 						{
 							phi_j = bf[var]->phi[j];
 							
@@ -19496,7 +19496,7 @@ assemble_csf_tensor ( void )
 							var = MESH_DISPLACEMENT1 + b;
 							pvar = upd->vp[pg->imtrx][var];
 							
-							for( j=0; j<ei->dof[var]; j++)
+							for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 							{
 								phi_j = bf[var]->phi[j];
 								
@@ -19594,15 +19594,15 @@ assemble_div_n_source ( )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -19616,7 +19616,7 @@ assemble_div_n_source ( )
                   var = LS ;
 	          pvar = upd->vp[pg->imtrx][var];
 		      
-	          for( j=0; j<ei->dof[var]; j++)
+	          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
 	              lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -19640,15 +19640,15 @@ assemble_div_n_source ( )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -19678,15 +19678,15 @@ assemble_div_n_source ( )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -19702,7 +19702,7 @@ assemble_div_n_source ( )
 
 			  pvar = upd->vp[pg->imtrx][var];
 
-			  for( j=0; j<ei->dof[var]; j++)
+			  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {
 		      
 			      source = fv->div_n * bf[var]->phi[j]* delta(a,b);
@@ -19730,7 +19730,7 @@ assemble_div_n_source ( )
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 
-		      for( j=0; j<ei->dof[var]; j++)
+		      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  source = 0.0;
 
@@ -19757,7 +19757,7 @@ assemble_div_n_source ( )
 			  var = MESH_DISPLACEMENT1 + b;
 			  pvar = upd->vp[pg->imtrx][var];
 			  
-			  for(j=0; j<ei->dof[var]; j++)
+			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      source = -mp->surface_tension*fv->div_n*fv->n[a]*lsi->delta;
 			      
@@ -19828,15 +19828,15 @@ assemble_div_s_n_source ( )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -19850,7 +19850,7 @@ assemble_div_s_n_source ( )
                   var = LS ;
 	          pvar = upd->vp[pg->imtrx][var];
 		      
-	          for( j=0; j<ei->dof[var]; j++)
+	          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
 	              lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -19874,15 +19874,15 @@ assemble_div_s_n_source ( )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -19912,15 +19912,15 @@ assemble_div_s_n_source ( )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -19936,7 +19936,7 @@ assemble_div_s_n_source ( )
 
 			  pvar = upd->vp[pg->imtrx][var];
 
-			  for( j=0; j<ei->dof[var]; j++)
+			  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      source1 = 0.0;
 			      for(p=0; p<VIM;p++)
@@ -19975,7 +19975,7 @@ assemble_div_s_n_source ( )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           source = 0.0;
 
@@ -20053,14 +20053,14 @@ assemble_curvature_with_normals_source ( )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 		  
@@ -20090,15 +20090,15 @@ assemble_curvature_with_normals_source ( )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -20112,7 +20112,7 @@ assemble_curvature_with_normals_source ( )
 		      pvar = upd->vp[pg->imtrx][var];
 
 
-		      for( j=0;  j<ei->dof[var]; j++)
+		      for( j=0;  j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];
 			  
@@ -20135,7 +20135,7 @@ assemble_curvature_with_normals_source ( )
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 
-		      for( j=0; j<ei->dof[var]; j++)
+		      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];
 
@@ -20156,7 +20156,7 @@ assemble_curvature_with_normals_source ( )
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 		      
-		      for( j=0; j<ei->dof[var]; j++)
+		      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  source = mp->surface_tension*fv->H*fv->n[a]*lsi->d_delta_dF[j];
 			  source *= phi_i*wt*det_J*h3;
@@ -20179,7 +20179,7 @@ assemble_curvature_with_normals_source ( )
 			  var = MESH_DISPLACEMENT1 + b;
 			  pvar = upd->vp[pg->imtrx][var];
 
-			  for(j=0; j<ei->dof[var]; j++)
+			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      source = mp->surface_tension*fv->H*fv->n[a]*lsi->delta;
 			      
@@ -20260,14 +20260,14 @@ assemble_curvature_source ( )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 		  
@@ -20284,7 +20284,7 @@ assemble_curvature_source ( )
                   var = LS ;
 	          pvar = upd->vp[pg->imtrx][var];
 		      
-	          for( j=0; j<ei->dof[var]; j++)
+	          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
 	              lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -20309,15 +20309,15 @@ assemble_curvature_source ( )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 		  
@@ -20348,15 +20348,15 @@ assemble_curvature_source ( )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++) 
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) 
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof]) 
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -20369,7 +20369,7 @@ assemble_curvature_source ( )
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 		      
-		      for( j=0; j<ei->dof[var]; j++)
+		      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{			  
 			  source = phi_i*dfdF[a][j];
 
@@ -20389,7 +20389,7 @@ assemble_curvature_source ( )
 		    {
 		      pvar = upd->vp[pg->imtrx][var];
 		      
-		      for( j=0; j<ei->dof[var]; j++)
+		      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];			  
 			  source = phi_i*dfdH[a][j];
@@ -20412,7 +20412,7 @@ assemble_curvature_source ( )
 			{
 			  pvar = upd->vp[pg->imtrx][var];
 			  
-			  for( j=0; j<ei->dof[var]; j++)
+			  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];			  
 			      source = phi_i*dfdX[a][b][j];
@@ -20465,13 +20465,13 @@ assemble_q_source(double flux )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-               ii = ei->lvdof_to_row_lvdof[eqn][i];
+               ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
                phi_i = bfm->phi[i];
 
@@ -20485,7 +20485,7 @@ assemble_q_source(double flux )
               var = LS ;
 	      pvar = upd->vp[pg->imtrx][var];
 		      
-	      for( j=0; j<ei->dof[var]; j++)
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	        {
 	          phi_j = bf[var]->phi[j];
 	          lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -20504,13 +20504,13 @@ assemble_q_source(double flux )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-               ii = ei->lvdof_to_row_lvdof[eqn][i];
+               ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
                phi_i = bfm->phi[i];
 
@@ -20532,13 +20532,13 @@ assemble_q_source(double flux )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 
@@ -20553,7 +20553,7 @@ assemble_q_source(double flux )
                 {
                   pvar = upd->vp[pg->imtrx][var];
 
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       source = phi_i * flux * lsi->d_delta_dF[j];
 
@@ -20639,15 +20639,15 @@ assemble_t_source ( double T, double time )
 
   heat_flux( q, d_q, time );
 
-  for (i = 0; i < ei->dof[eqn]; i++)
+  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
     {
-      ledof = ei->lvdof_to_ledof[eqn][i];
+      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-      if (ei->active_interp_ledof[ledof])
+      if (ei[pg->imtrx]->active_interp_ledof[ledof])
         {
-	  xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+	  xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                           &xfem_active, &extended_dof, &base_interp, &base_dof );
-	  incomplete = dof_incomplete( base_dof, ei->ielem_type, base_interp, ei->ielem_shape);
+	  incomplete = dof_incomplete( base_dof, ei[pg->imtrx]->ielem_type, base_interp, ei[pg->imtrx]->ielem_shape);
 	  F_i = dof_distance( eqn, i );
 	  other_side = sign_change( F_i, (double) ls->Elem_Sign );
 	      
@@ -20705,13 +20705,13 @@ assemble_t_source ( double T, double time )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 	      
@@ -20728,7 +20728,7 @@ assemble_t_source ( double T, double time )
                   var = LS ;
 	          pvar = upd->vp[pg->imtrx][var];
 		      
-	          for( j=0; j<ei->dof[var]; j++)
+	          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
 	              lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -20745,7 +20745,7 @@ assemble_t_source ( double T, double time )
                   var = LS ;
 	          pvar = upd->vp[pg->imtrx][var];
 		      
-	          for( j=0; j<ei->dof[var]; j++)
+	          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
 	              lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -20765,13 +20765,13 @@ assemble_t_source ( double T, double time )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 	      
@@ -20807,15 +20807,15 @@ assemble_t_source ( double T, double time )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
 
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
 
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 
@@ -20830,7 +20830,7 @@ assemble_t_source ( double T, double time )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -20853,7 +20853,7 @@ assemble_t_source ( double T, double time )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -20884,7 +20884,7 @@ assemble_t_source ( double T, double time )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -20958,13 +20958,13 @@ assemble_qlaser_source(const double p[], double time )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -20981,7 +20981,7 @@ assemble_qlaser_source(const double p[], double time )
               var = LS ;
 	      pvar = upd->vp[pg->imtrx][var];
 		      
-	      for( j=0; j<ei->dof[var]; j++)
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	        {
 	          phi_j = bf[var]->phi[j];
 	          lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -21000,13 +21000,13 @@ assemble_qlaser_source(const double p[], double time )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -21028,13 +21028,13 @@ assemble_qlaser_source(const double p[], double time )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -21047,7 +21047,7 @@ assemble_qlaser_source(const double p[], double time )
                   {
                     pvar = upd->vp[pg->imtrx][var];
 		    
-                    for( j=0; j<ei->dof[var]; j++)
+                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                       {
                         phi_j = bf[var]->phi[j];
 			
@@ -21069,7 +21069,7 @@ assemble_qlaser_source(const double p[], double time )
                   {
                     pvar = upd->vp[pg->imtrx][var];
 
-                    for( j=0; j<ei->dof[var]; j++)
+                    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                       {
                         source = phi_i * flux * lsi->d_delta_dF[j];
 			    
@@ -21127,13 +21127,13 @@ assemble_qvapor_source ( const double p[])
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -21150,7 +21150,7 @@ assemble_qvapor_source ( const double p[])
               var = LS ;
 	      pvar = upd->vp[pg->imtrx][var];
 		      
-	      for( j=0; j<ei->dof[var]; j++)
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	        {
 	          phi_j = bf[var]->phi[j];
 	          lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -21169,13 +21169,13 @@ assemble_qvapor_source ( const double p[])
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -21197,13 +21197,13 @@ assemble_qvapor_source ( const double p[])
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -21216,7 +21216,7 @@ assemble_qvapor_source ( const double p[])
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 		  
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		      
@@ -21238,7 +21238,7 @@ assemble_qvapor_source ( const double p[])
 	        {
 	          pvar = upd->vp[pg->imtrx][var];
 		      
-	          for( j=0; j<ei->dof[var]; j++)
+	          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      source = phi_i * flux * lsi->d_delta_dF[j];
 			  
@@ -21293,13 +21293,13 @@ assemble_qrad_source ( double htc, double Tref, double emiss, double sigma)
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -21316,7 +21316,7 @@ assemble_qrad_source ( double htc, double Tref, double emiss, double sigma)
               var = LS ;
 	      pvar = upd->vp[pg->imtrx][var];
 		      
-	      for( j=0; j<ei->dof[var]; j++)
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	        {
 	          phi_j = bf[var]->phi[j];
 	          lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -21335,13 +21335,13 @@ assemble_qrad_source ( double htc, double Tref, double emiss, double sigma)
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -21363,13 +21363,13 @@ assemble_qrad_source ( double htc, double Tref, double emiss, double sigma)
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -21382,7 +21382,7 @@ assemble_qrad_source ( double htc, double Tref, double emiss, double sigma)
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 		  
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		      
@@ -21404,7 +21404,7 @@ assemble_qrad_source ( double htc, double Tref, double emiss, double sigma)
 	        {
 	          pvar = upd->vp[pg->imtrx][var];
 		      
-	          for( j=0; j<ei->dof[var]; j++)
+	          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	            {
 		      source = phi_i * flux * lsi->d_delta_dF[j];
 			  
@@ -21499,18 +21499,18 @@ assemble_cont_t_source ( double *xi )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-               xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+               xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                                &xfem_active, &extended_dof, &base_interp, &base_dof );
 
               if ( extended_dof )
                 {
-                   ii = ei->lvdof_to_row_lvdof[eqn][i];
+                   ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
                    phi_i = bfm->phi[i];
 
                    source = phi_i * lsi->delta * T_diff;
@@ -21535,20 +21535,20 @@ assemble_cont_t_source ( double *xi )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
 
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
 
-              xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+              xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 
               if ( extended_dof )
                 {
-                  ii = ei->lvdof_to_row_lvdof[eqn][i];
+                  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
                   phi_i = bfm->phi[i];
 
                   /*
@@ -21560,7 +21560,7 @@ assemble_cont_t_source ( double *xi )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -21584,7 +21584,7 @@ assemble_cont_t_source ( double *xi )
                         {
                           pvar = upd->vp[pg->imtrx][var];
 
-                          for( j=0; j<ei->dof[var]; j++)
+                          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                             {
                               phi_j = bf[var]->phi[j];
 
@@ -21619,7 +21619,7 @@ assemble_cont_t_source ( double *xi )
                         {
                           pvar = upd->vp[pg->imtrx][var];
 
-                          for( j=0; j<ei->dof[var]; j++)
+                          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                             {
                               source = phi_i * T_diff;
                               source *= lsi->d_delta_dF[j];
@@ -21709,13 +21709,13 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
       peqn = MAX_PROB_VAR+wspec;
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -21732,7 +21732,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
               var = LS ;
 	      pvar = upd->vp[pg->imtrx][var];
 		      
-	      for( j=0; j<ei->dof[var]; j++)
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	        {
 	          phi_j = bf[var]->phi[j];
 	          lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -21751,13 +21751,13 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
       peqn = MAX_PROB_VAR+wspec;
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -21779,13 +21779,13 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
       peqn = MAX_PROB_VAR+wspec;
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -21798,7 +21798,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 		  
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
                       
@@ -21823,7 +21823,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 		  
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
                       
@@ -21846,7 +21846,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
 	      
 	      if ( pd->v[pg->imtrx][var] )
 		{
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
                       
@@ -21879,7 +21879,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
 	          if ( pd->v[pg->imtrx][var] )
 		    {
                       pvar = upd->vp[pg->imtrx][var];
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		        {
 		          phi_j = bf[var]->phi[j];
                           
@@ -21905,7 +21905,7 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 		  
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
                       
@@ -22022,18 +22022,18 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
           peqn = upd->ep[pg->imtrx][eqn];
           bfm = bf[eqn];
 
-          for (i = 0; i < ei->dof[eqn]; i++)
+          for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
             {
-              ledof = ei->lvdof_to_ledof[eqn][i];
+              ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-              if (ei->active_interp_ledof[ledof])
+              if (ei[pg->imtrx]->active_interp_ledof[ledof])
                 {
-                  xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+                  xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                                   &xfem_active, &extended_dof, &base_interp, &base_dof );
 
                   if ( extended_dof )
                     {
-                      ii = ei->lvdof_to_row_lvdof[eqn][i];
+                      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
                       phi_i = bfm->phi[i];
 
                       source = phi_i * lsi->delta * v_diff[a];
@@ -22055,18 +22055,18 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
           peqn = upd->ep[pg->imtrx][eqn];
           bfm = bf[eqn];
 
-          for (i = 0; i < ei->dof[eqn]; i++)
+          for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
             {
-              ledof = ei->lvdof_to_ledof[eqn][i];
+              ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-              if (ei->active_interp_ledof[ledof])
+              if (ei[pg->imtrx]->active_interp_ledof[ledof])
                 {
-                  xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+                  xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                                   &xfem_active, &extended_dof, &base_interp, &base_dof );
 
                   if ( extended_dof )
                     {
-                      ii = ei->lvdof_to_row_lvdof[eqn][i];
+                      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
                       phi_i = bfm->phi[i];
 
                       /*
@@ -22078,7 +22078,7 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
                         {
                           pvar = upd->vp[pg->imtrx][var];
 
-                          for( j=0; j<ei->dof[var]; j++)
+                          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                             {
                               source = phi_i * lsi->delta * phi_diff[a][j];
 
@@ -22101,7 +22101,7 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
                             {
                               pvar = upd->vp[pg->imtrx][var];
 
-                              for( j=0; j<ei->dof[var]; j++)
+                              for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                                 {
                                   phi_j = bf[var]->phi[j];
 
@@ -22136,7 +22136,7 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
                             {
                               pvar = upd->vp[pg->imtrx][var];
 
-                              for( j=0; j<ei->dof[var]; j++)
+                              for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                                 {
                                   source = phi_i * v_diff[a];
                                   source *= lsi->d_delta_dF[j];
@@ -22244,7 +22244,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
           var = VELOCITY1 + a;
           if ( pd->v[pg->imtrx][var] )
             {
-              for( j=0; j<ei->dof[var]; j++)
+              for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
 	          phi_j = bf[var]->phi[j];
 		  d_vnorm->v[a][j] = lsi->normal[a] * phi_j;
@@ -22255,7 +22255,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
       var = FILL;
       if ( pd->v[pg->imtrx][var] )
         {
-          for( j=0; j<ei->dof[var]; j++)
+          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
             {
 	      d_vnorm->F[j] = 0.;
               for ( a=0; a < wim; a++ ) 
@@ -22295,7 +22295,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
               var = VELOCITY1 + a;
               if ( pd->v[pg->imtrx][var] )
                 {
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
                       d_vnorm->v[a][j] = sign * lsi->normal[a] * phi_j;
@@ -22306,7 +22306,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
           var = FILL;
           if ( pd->v[pg->imtrx][var] )
             {
-              for( j=0; j<ei->dof[var]; j++)
+              for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_vnorm->F[j] = 0.;
                   for ( a=0; a < wim; a++ ) 
@@ -22339,7 +22339,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
 	var = TEMPERATURE;
         if ( pd->v[pg->imtrx][var] )
         {
-        for( j=0; j<ei->dof[var]; j++)
+        for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             d_vnorm->T[j] += bc->BC_Data_Float[1]*bf[var]->phi[j];
             for ( a=0; a < dim; a++ ) 
@@ -22351,7 +22351,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
         var = ls->var;
         if ( pd->v[pg->imtrx][var] )
         {
-        for( j=0; j<ei->dof[var]; j++)
+        for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             for ( a=0; a < dim; a++ ) 
                {
@@ -22380,7 +22380,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
               var = VELOCITY1 + a;
               if ( pd->v[pg->imtrx][var] )
                 {
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
                       d_vnorm->v[a][j] = lsi->normal[a] * phi_j;
@@ -22391,7 +22391,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
           var = ls->var;
           if ( pd->v[pg->imtrx][var] )
             {
-              for( j=0; j<ei->dof[var]; j++)
+              for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_vnorm->F[j] = 0.;
                   for ( a=0; a < wim; a++ ) 
@@ -22423,13 +22423,13 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-               ii = ei->lvdof_to_row_lvdof[eqn][i];
+               ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
                phi_i = bfm->phi[i];
 
@@ -22451,7 +22451,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
               var = ls->var ;
               pvar = upd->vp[pg->imtrx][var];
 		      
-	      for( j=0; j<ei->dof[var]; j++)
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 		  lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -22470,13 +22470,13 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-               ii = ei->lvdof_to_row_lvdof[eqn][i];
+               ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
                phi_i = bfm->phi[i];
 	       
@@ -22506,15 +22506,15 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
 
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
 
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 
@@ -22527,7 +22527,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
                 {
                   pvar = upd->vp[pg->imtrx][var];
 
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
 
@@ -22559,7 +22559,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -22591,7 +22591,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
                 {
                   pvar = upd->vp[pg->imtrx][var];
 
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
 		      
@@ -22625,7 +22625,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
                 {
                   pvar = upd->vp[pg->imtrx][var];
 
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
 		      
@@ -22653,7 +22653,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
                 {
                   pvar = upd->vp[pg->imtrx][var];
 
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
 		      
@@ -22679,7 +22679,7 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
               var = MASS_FRACTION;
               if ( pd->v[pg->imtrx][var] )
                 {
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       for ( w=0; w<pd->Num_Species_Eqn; w++)
 			{
@@ -22741,16 +22741,16 @@ assemble_interface_extension_velocity_sic ( int ext_vel_sign )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
 	  F_i = dof_distance( eqn, i );
 	  
-          if (ei->active_interp_ledof[ledof] &&
+          if (ei[pg->imtrx]->active_interp_ledof[ledof] &&
               !sign_change( F_i, (double) ext_vel_sign ) )
             {
-               ii = ei->lvdof_to_row_lvdof[eqn][i];
+               ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
                phi_i = bfm->phi[i];
 
@@ -22780,17 +22780,17 @@ assemble_interface_extension_velocity_sic ( int ext_vel_sign )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
 
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
           F_i = dof_distance( eqn, i );
-          if (ei->active_interp_ledof[ledof] &&
+          if (ei[pg->imtrx]->active_interp_ledof[ledof] &&
               !sign_change( F_i, (double) ext_vel_sign ) )
             {
 
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 
@@ -22803,7 +22803,7 @@ assemble_interface_extension_velocity_sic ( int ext_vel_sign )
                 {
                   pvar = upd->vp[pg->imtrx][var];
 
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
 
@@ -22829,7 +22829,7 @@ assemble_interface_extension_velocity_sic ( int ext_vel_sign )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -22854,7 +22854,7 @@ assemble_interface_extension_velocity_sic ( int ext_vel_sign )
                 {
                   pvar = upd->vp[pg->imtrx][var];
 
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
 
@@ -22978,7 +22978,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
           var = VELOCITY1 + a;
           if ( pd->v[pg->imtrx][var] )
             {
-              for( j=0; j<ei->dof[var]; j++)
+              for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
 	          phi_j = bf[var]->phi[j];
 		  d_vnorm->v[a][j] = lsi->normal[a] * phi_j;
@@ -22988,7 +22988,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
       var = FILL;
       if ( pd->v[pg->imtrx][var] )
         {
-          for( j=0; j<ei->dof[var]; j++)
+          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
             {
 	      d_vnorm->F[j] = 0.;
               for ( a=0; a < wim; a++ ) 
@@ -23003,7 +23003,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
       var = FILL;
       if ( pd->v[pg->imtrx][var] )
         {
-          for( j=0; j<ei->dof[var]; j++)
+          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
             {
 	      d_vnorm->F[j] = 0.;
               for ( a=0; a < wim; a++ ) 
@@ -23044,7 +23044,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
               var = VELOCITY1 + a;
               if ( pd->v[pg->imtrx][var] )
                 {
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
                       d_vnorm->v[a][j] = sign * lsi->normal[a] * phi_j;
@@ -23055,7 +23055,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
           var = FILL;
           if ( pd->v[pg->imtrx][var] )
             {
-              for( j=0; j<ei->dof[var]; j++)
+              for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_vnorm->F[j] = 0.;
                   for ( a=0; a < wim; a++ ) 
@@ -23088,14 +23088,14 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
 
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if ( ei->active_interp_ledof[ledof] )
+          if ( ei[pg->imtrx]->active_interp_ledof[ledof] )
             {
-               ii = ei->lvdof_to_row_lvdof[eqn][i];
+               ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
                phi_i = bfm->phi[i];
 	       
@@ -23125,7 +23125,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
                var = LS ;
                pvar = upd->vp[pg->imtrx][var];
 		      
-               for( j=0; j<ei->dof[var]; j++)
+               for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                  {
                    phi_j = bf[var]->phi[j];
                    lec->J[peqn][pvar][ii][j] += (mass + advection + source) * phi_j;
@@ -23144,14 +23144,14 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
 
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if ( ei->active_interp_ledof[ledof] )
+          if ( ei[pg->imtrx]->active_interp_ledof[ledof] )
             {
-               ii = ei->lvdof_to_row_lvdof[eqn][i];
+               ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
                phi_i = bfm->phi[i];
 
@@ -23208,15 +23208,15 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
 
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if ( ei->active_interp_ledof[ledof] )
+          if ( ei[pg->imtrx]->active_interp_ledof[ledof] )
             {
 
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 
@@ -23231,7 +23231,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -23259,7 +23259,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
                 {
                   pvar = upd->vp[pg->imtrx][var];
 
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
 		      
@@ -23286,7 +23286,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
                 {
                   pvar = upd->vp[pg->imtrx][var];
 
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
 		      
@@ -23311,7 +23311,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
               var = MASS_FRACTION;
               if ( pd->v[pg->imtrx][var] )
                 {
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       for ( w=0; w<pd->Num_Species_Eqn; w++)
                         {
@@ -23342,7 +23342,7 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
                 {
                   pvar = upd->vp[pg->imtrx][var];
 
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
 
@@ -23455,7 +23455,7 @@ assemble_p_source ( double pressure, const int bcflag )
                   if ( pd->v[pg->imtrx][var] )
                     {
                       pvar = upd->vp[pg->imtrx][var];
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
       			    for( a=0; a<wim; a++ )
 				{
@@ -23487,7 +23487,7 @@ assemble_p_source ( double pressure, const int bcflag )
       	    { 
               for (q=0; q<pd->Num_Dim; q++)
               	 { 
-                    for (j=0; j<ei->dof[var]; j++)
+                    for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
                       { 
                       d_force[p][var][j] -= pressure*lsi->normal[q]*d_Pi->T[p][q][j];
                       }
@@ -23502,7 +23502,7 @@ assemble_p_source ( double pressure, const int bcflag )
             {
               for (q=0; q<pd->Num_Dim; q++)
                 { 
-                  for (j=0; j<ei->dof[var]; j++)
+                  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_force[p][var][j] -= pressure*lsi->normal[q]*d_Pi->nn[p][q][j];
                     }
@@ -23517,7 +23517,7 @@ assemble_p_source ( double pressure, const int bcflag )
             {
               for (q=0; q<pd->Num_Dim; q++)
                 {
-                  for (j=0; j<ei->dof[var]; j++)
+                  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_force[p][var][j] -= pressure*(lsi->normal[q]*d_Pi->F[p][q][j]
 				+  lsi->d_normal_dF[p][j]*Pi[p][q]);
@@ -23534,7 +23534,7 @@ assemble_p_source ( double pressure, const int bcflag )
                 {
                   for ( w=0; w<pd->Num_Species_Eqn; w++)
                     {
-                      for (j=0; j<ei->dof[var]; j++)
+                      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           d_force[p][MAX_VARIABLE_TYPES + w][j] -= pressure*lsi->normal[q]*d_Pi->C[p][q][w][j];
                         }
@@ -23549,7 +23549,7 @@ assemble_p_source ( double pressure, const int bcflag )
                 {
                   for (q=0; q<pd->Num_Dim; q++)
                     {
-                      for (j=0; j<ei->dof[var]; j++)
+                      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           d_force[p][var][j] -= pressure*lsi->normal[q]*d_Pi->P[p][q][j];
                         }
@@ -23565,7 +23565,7 @@ assemble_p_source ( double pressure, const int bcflag )
                   for ( b=0; b<VIM; b++)
                     {
                       var = VELOCITY1+b;
-                      for (j=0; j<ei->dof[var]; j++)
+                      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           d_force[p][var][j] -= pressure*lsi->normal[q]*d_Pi->v[p][q][b][j];
                         }
@@ -23582,7 +23582,7 @@ assemble_p_source ( double pressure, const int bcflag )
                   for ( b=0; b<VIM; b++)
                     {
                       var = VORT_DIR1+b;
-                      for (j=0; j<ei->dof[var]; j++)
+                      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           d_force[p][var][j] -= pressure*lsi->normal[q]*d_Pi->vd[p][q][b][j];
                         }
@@ -23599,7 +23599,7 @@ assemble_p_source ( double pressure, const int bcflag )
                   for ( b=0; b<VIM; b++)
                     {
                       var = MESH_DISPLACEMENT1+b;
-                      for (j=0; j<ei->dof[var]; j++)
+                      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           d_force[p][var][j] -= pressure*lsi->normal[q]*d_Pi->X[p][q][b][j];
                         }
@@ -23637,7 +23637,7 @@ assemble_p_source ( double pressure, const int bcflag )
       err = mesh_stress_tensor(TT, dTT_dx, dTT_dp, dTT_dc,
 			       dTT_dp_liq, dTT_dp_gas, dTT_dporosity, dTT_dsink_mass, dTT_dmax_strain, dTT_dcur_strain,
 			       dTT_dT,  elc->lame_mu, elc->lame_lambda,
-			       tran->delta_t, ei->ielem, 0, 1);
+			       tran->delta_t, ei[pg->imtrx]->ielem, 0, 1);
        /* For LINEAR ELASTICITY */
          if (cr->MeshFluxModel == LINEAR)
             {
@@ -23684,7 +23684,7 @@ assemble_p_source ( double pressure, const int bcflag )
             var = MESH_DISPLACEMENT1 + b;
             if (pd->v[pg->imtrx][var])
               {
-                for (j = 0; j < ei->dof[var]; j++)
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                   {
                     for(p=0; p<dim; p++)
                         {
@@ -23703,7 +23703,7 @@ assemble_p_source ( double pressure, const int bcflag )
 		  var = PRESSURE;
             if (pd->v[pg->imtrx][var])
               {
-                for (j = 0; j < ei->dof[var]; j++)
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                   {
                     for(p=0; p<dim; p++)
                         {
@@ -23724,7 +23724,7 @@ assemble_p_source ( double pressure, const int bcflag )
                 {
                   for ( w=0; w<pd->Num_Species_Eqn; w++)
                     {
-                      for (j=0; j<ei->dof[var]; j++)
+                      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
       d_force[p][MAX_VARIABLE_TYPES + w][j] -= pressure*lsi->normal[q]*dTT_dc[p][q][w][j];
                         }
@@ -23739,7 +23739,7 @@ assemble_p_source ( double pressure, const int bcflag )
 		  var = POR_LIQ_PRES;
             if (pd->v[pg->imtrx][var])
               {
-                for (j = 0; j < ei->dof[var]; j++)
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                   {
                     for(p=0; p<dim; p++)
                         {
@@ -23758,7 +23758,7 @@ assemble_p_source ( double pressure, const int bcflag )
 	      var = POR_GAS_PRES;
             if (pd->v[pg->imtrx][var])
               {
-                for (j = 0; j < ei->dof[var]; j++)
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                   {
                     for(p=0; p<dim; p++)
                         {
@@ -23773,7 +23773,7 @@ assemble_p_source ( double pressure, const int bcflag )
 	      var = POR_POROSITY;
             if (pd->v[pg->imtrx][var])
               {
-                for (j = 0; j < ei->dof[var]; j++)
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                   {
                     for(p=0; p<dim; p++)
                         {
@@ -23788,7 +23788,7 @@ assemble_p_source ( double pressure, const int bcflag )
                   var = POR_SINK_MASS;
             if (pd->v[pg->imtrx][var])
               {
-                for (j = 0; j < ei->dof[var]; j++)
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                   {
                     for(p=0; p<dim; p++)
                         {
@@ -23805,7 +23805,7 @@ assemble_p_source ( double pressure, const int bcflag )
 		  var = TEMPERATURE;
             if (pd->v[pg->imtrx][var])
               {
-                for (j = 0; j < ei->dof[var]; j++)
+                for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                   {
                     for(p=0; p<dim; p++)
                         {
@@ -23824,7 +23824,7 @@ assemble_p_source ( double pressure, const int bcflag )
 		  var = MAX_STRAIN;
 		  if (pd->v[pg->imtrx][var])
 		    {
-		      for (j = 0; j < ei->dof[var]; j++)
+		      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 			{
 			  for(p=0; p<dim; p++)
 			    {
@@ -23844,7 +23844,7 @@ assemble_p_source ( double pressure, const int bcflag )
             {
               for (q=0; q<pd->Num_Dim; q++)
                 {
-                  for (j=0; j<ei->dof[var]; j++)
+                  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_force[p][var][j] -= pressure*
 				(lsi->d_normal_dF[p][j]*TT[p][q]);
@@ -23874,15 +23874,15 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++)
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof])
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof])
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -23896,7 +23896,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
                   var = ls->var ;
 		  pvar = upd->vp[pg->imtrx][var];
 		      
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		      lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -23919,12 +23919,12 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++)
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	    {
-	      ledof = ei->lvdof_to_ledof[eqn][i];
-	      if (ei->active_interp_ledof[ledof])
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof])
 		{
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 		  phi_i = bfm->phi[i];
 		  source = phi_i * force[a] * lsi->delta * elem_sign;
 		  source *= det_J * wt * h3;
@@ -23943,13 +23943,13 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-          for (i = 0; i < ei->dof[eqn]; i++)
+          for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
             {
-              ledof = ei->lvdof_to_ledof[eqn][i];
+              ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-              if (ei->active_interp_ledof[ledof])
+              if (ei[pg->imtrx]->active_interp_ledof[ledof])
                 {
-                  ii = ei->lvdof_to_row_lvdof[eqn][i];
+                  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
                   phi_i = bfm->phi[i];
 
 #ifdef COUPLED_FILL
@@ -23961,7 +23961,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for (j = 0; j < ei->dof[var]; j++)
+                      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -23988,7 +23988,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			{
 			  pvar = upd->vp[pg->imtrx][var];
 
-			  for (j = 0; j < ei->dof[var]; j++)
+			  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 
@@ -24007,7 +24007,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			{
 			  pvar = upd->vp[pg->imtrx][var];
 
-			  for (j = 0; j < ei->dof[var]; j++)
+			  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 
@@ -24026,7 +24026,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			{
 			  pvar = upd->vp[pg->imtrx][var];
 
-			  for(j = 0; j < ei->dof[var]; j++)
+			  for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 
@@ -24046,7 +24046,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			  for ( w=0; w<pd->Num_Species_Eqn; w++)
 			    {
 			      pvar = MAX_PROB_VAR + w;
-			      for (j = 0; j < ei->dof[var]; j++)
+			      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 
@@ -24066,7 +24066,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			{
 			  pvar = upd->vp[pg->imtrx][var];
 
-			  for (j = 0; j < ei->dof[var]; j++)
+			  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 
@@ -24085,7 +24085,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			{
 			  pvar = upd->vp[pg->imtrx][var];
 
-			  for (j = 0; j < ei->dof[var]; j++)
+			  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 
@@ -24104,7 +24104,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			{
 			  pvar = upd->vp[pg->imtrx][var];
 
-			  for (j = 0; j < ei->dof[var]; j++)
+			  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 
@@ -24123,7 +24123,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			{
 			  pvar = upd->vp[pg->imtrx][var];
 
-			  for (j = 0; j < ei->dof[var]; j++)
+			  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 
@@ -24145,7 +24145,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			    {
 			      pvar = upd->vp[pg->imtrx][var];
 
-			      for(j = 0; j < ei->dof[var]; j++)
+			      for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 
@@ -24167,7 +24167,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			    {
 			      pvar = upd->vp[pg->imtrx][var];
 
-			      for (j = 0; j < ei->dof[var]; j++)
+			      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 
@@ -24190,7 +24190,7 @@ fprintf(stderr,"pf %g %g %g %d %g %g\n",fv->x[0],fv->x[1], lsi->delta, elem_sign
 			    {
 			      pvar = upd->vp[pg->imtrx][var];
 
-			      for (j = 0; j < ei->dof[var]; j++)
+			      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 
@@ -24316,15 +24316,15 @@ assemble_precoil_source (const double p[])
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++)
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof])
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof])
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -24338,7 +24338,7 @@ assemble_precoil_source (const double p[])
                   var = LS ;
 		  pvar = upd->vp[pg->imtrx][var];
 		      
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		      lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -24361,15 +24361,15 @@ assemble_precoil_source (const double p[])
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++)
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof])
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof])
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -24392,13 +24392,13 @@ assemble_precoil_source (const double p[])
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-          for (i = 0; i < ei->dof[eqn]; i++)
+          for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
             {
-              ledof = ei->lvdof_to_ledof[eqn][i];
+              ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-              if (ei->active_interp_ledof[ledof])
+              if (ei[pg->imtrx]->active_interp_ledof[ledof])
                 {
-                  ii = ei->lvdof_to_row_lvdof[eqn][i];
+                  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
                   phi_i = bfm->phi[i];
 
@@ -24411,7 +24411,7 @@ assemble_precoil_source (const double p[])
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -24434,7 +24434,7 @@ assemble_precoil_source (const double p[])
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -24532,17 +24532,17 @@ assemble_uvw_source ( int eqn, double val )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 
-              xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+              xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      F_i = dof_distance( eqn, i );
 
@@ -24577,17 +24577,17 @@ assemble_uvw_source ( int eqn, double val )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 
-              xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+              xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      F_i = dof_distance( eqn, i );
 
@@ -24604,7 +24604,7 @@ assemble_uvw_source ( int eqn, double val )
                         {
                           pvar = upd->vp[pg->imtrx][var];
 
-                          for( j=0; j<ei->dof[var]; j++)
+                          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                             {
                               phi_j = bf[var]->phi[j];
 
@@ -24627,7 +24627,7 @@ assemble_uvw_source ( int eqn, double val )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -24650,7 +24650,7 @@ assemble_uvw_source ( int eqn, double val )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -24680,7 +24680,7 @@ assemble_uvw_source ( int eqn, double val )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -24702,7 +24702,7 @@ assemble_uvw_source ( int eqn, double val )
 	      	      /* path dependence integral */
                       if ( ls->on_sharp_surf && !ls->AdaptIntegration)
                 	{
-                	  for( j=0; j<ei->dof[var]; j++)
+                	  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 	    {
                 	      phi_j = bf[var]->phi[j];
 
@@ -24730,7 +24730,7 @@ assemble_uvw_source ( int eqn, double val )
                       else
                 	{
                 	  /* diffuse interface version of path dependence integral */
-                	  for( j=0; j<ei->dof[var]; j++)
+                	  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 	    {
                 	      source = phi_i * ( fv->v[a] - val );
                 	      source *= lsi->d_delta_dF[j];
@@ -24819,7 +24819,7 @@ assemble_uvw_source ( int eqn, double val )
   if ( pd->i[pg->imtrx][eqn] == I_Q1_XG ||
        pd->i[pg->imtrx][eqn] == I_Q2_XG )
     {
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
 	  apply_NOBC[i] = FALSE;
           apply_SIC[i] = TRUE;
@@ -24831,15 +24831,15 @@ assemble_uvw_source ( int eqn, double val )
       fluid_stress( Pi, d_Pi );
   
       /* determine if NOBC or SIC or both are to be applied */
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
-	      incomplete = dof_incomplete( base_dof, ei->ielem_type, base_interp, ei->ielem_shape);
+	      incomplete = dof_incomplete( base_dof, ei[pg->imtrx]->ielem_type, base_interp, ei[pg->imtrx]->ielem_shape);
 	      F_i = dof_distance( eqn, i );
 	      other_side = sign_change( F_i, (double) ls->Elem_Sign );
 	      
@@ -24883,13 +24883,13 @@ assemble_uvw_source ( int eqn, double val )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 
@@ -24906,7 +24906,7 @@ assemble_uvw_source ( int eqn, double val )
                   var = LS ;
 	          pvar = upd->vp[pg->imtrx][var];
 		      
-	          for( j=0; j<ei->dof[var]; j++)
+	          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
 	              lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -24923,7 +24923,7 @@ assemble_uvw_source ( int eqn, double val )
                   var = LS ;
 	          pvar = upd->vp[pg->imtrx][var];
 		      
-	          for( j=0; j<ei->dof[var]; j++)
+	          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	            {
 	              phi_j = bf[var]->phi[j];
 	              lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -24943,13 +24943,13 @@ assemble_uvw_source ( int eqn, double val )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 
@@ -24984,17 +24984,17 @@ assemble_uvw_source ( int eqn, double val )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if (ei->active_interp_ledof[ledof])
+          if (ei[pg->imtrx]->active_interp_ledof[ledof])
             {
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 
-              xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+              xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      F_i = dof_distance( eqn, i );
 
@@ -25011,7 +25011,7 @@ assemble_uvw_source ( int eqn, double val )
                         {
                           pvar = upd->vp[pg->imtrx][var];
 
-                          for( j=0; j<ei->dof[var]; j++)
+                          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                             {
                               phi_j = bf[var]->phi[j];
 
@@ -25036,7 +25036,7 @@ assemble_uvw_source ( int eqn, double val )
                         {
                           pvar = upd->vp[pg->imtrx][var];
 
-                          for( j=0; j<ei->dof[var]; j++)
+                          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                             {
                               phi_j = bf[var]->phi[j];
 
@@ -25059,7 +25059,7 @@ assemble_uvw_source ( int eqn, double val )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -25082,7 +25082,7 @@ assemble_uvw_source ( int eqn, double val )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -25112,7 +25112,7 @@ assemble_uvw_source ( int eqn, double val )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -25131,7 +25131,7 @@ assemble_uvw_source ( int eqn, double val )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 	      	      
-		      for( j=0; j<ei->dof[var]; j++)
+		      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		        {
 		          source = phi_i * ( fv->v[a] - val );
 		          source *= lsi->d_delta_dF[j];
@@ -25213,15 +25213,15 @@ assemble_extension_velocity_path_dependence(void)
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
 
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if ( ei->active_interp_ledof[ledof] )
+          if ( ei[pg->imtrx]->active_interp_ledof[ledof] )
             {
 
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 
@@ -25236,7 +25236,7 @@ assemble_extension_velocity_path_dependence(void)
                 {
                   pvar = upd->vp[pg->imtrx][var];
 
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
 
                       source = resid * (2. * lsi->d_H_dF[j]) * phi_i;
@@ -25297,15 +25297,15 @@ assemble_fill_path_dependence ( void )
       peqn = upd->ep[pg->imtrx][eqn];
       bfm = bf[eqn];
 
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
 
-          ledof = ei->lvdof_to_ledof[eqn][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-          if ( ei->active_interp_ledof[ledof] )
+          if ( ei[pg->imtrx]->active_interp_ledof[ledof] )
             {
 
-              ii = ei->lvdof_to_row_lvdof[eqn][i];
+              ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
               phi_i = bfm->phi[i];
 
@@ -25320,7 +25320,7 @@ assemble_fill_path_dependence ( void )
                 {
                   pvar = upd->vp[pg->imtrx][var];
 
-                  for( j=0; j<ei->dof[var]; j++)
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       switch ( tran->Fill_Weight_Fcn ) {
                       case FILL_WEIGHT_G:
@@ -25507,7 +25507,7 @@ assemble_energy_path_dependence(
       eqn = R_ENERGY;
       peqn = upd->ep[pg->imtrx][eqn];
       var = TEMPERATURE;
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	  phi_i = bf[eqn]->phi[i];
 
@@ -25577,7 +25577,7 @@ assemble_energy_path_dependence(
 	  
 	  var = FILL;
           pvar = upd->vp[pg->imtrx][var];
-          for ( j=0; j<ei->dof[var]; j++ )
+          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
             {
 	      lec->J[peqn][pvar][i][j] += lsi->d_H_dF[j] * energy_residual * sign;
             }
@@ -25788,7 +25788,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 	  (void) usr_FlowingLiquidViscosity(mp->u_FlowingLiquid_viscosity);
 	  var = TEMPERATURE;
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      dvis_dT[j]= mp->d_FlowingLiquid_viscosity[var]*bf[var]->phi[j];
 	    }
@@ -25895,16 +25895,16 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 		   * based on the number of degrees of freedom...
 		   */
 		  
-		  for (i = 0; i < ei->dof[eqn]; i++) {
-			  ledof = ei->lvdof_to_ledof[eqn][i];
-			  if (ei->active_interp_ledof[ledof]) {
+		  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+			  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+			  if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
 				  /*
 				   *  Here is where we figure out whether the row is to placed in
 				   *  the normal spot (e.g., ii = i), or whether a boundary condition
 				   *  require that the volumetric contribution be stuck in another
 				   *  ldof pertaining to the same variable type.
 				   */
-				  ii = ei->lvdof_to_row_lvdof[eqn][i];
+				  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 				  
 				  phi_i = bfm->phi[i];
 				  
@@ -26022,7 +26022,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 					  if(a == pd->Num_Dim - 1)
 						  /* These data values should hold the entire
 						  * source term. */
-						  source = element_particle_info[ei->ielem].source_term[i];
+						  source = element_particle_info[ei[pg->imtrx]->ielem].source_term[i];
 				  }
 
 				  //Continuity residual
@@ -26041,14 +26041,14 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 				  
 				  var = FILL;
 				  pvar = upd->vp[pg->imtrx][var];
-				  for ( j=0; j<ei->dof[var]; j++ )
+				  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 				  {
 					  
 					  lec->J[peqn][pvar][ii][j] += lsi->d_H_dF[j] * momentum_residual * sign;
 				  }
 				  
 			  }  /*end if (active_dofs) */
-		  } /* end of for (i=0,ei->dofs...) */
+		  } /* end of for (i=0,ei[pg->imtrx]->dofs...) */
 	  }
   }
 return(status);
@@ -26267,7 +26267,7 @@ assemble_continuity_path_dependence (dbl time_value,
 	
 	if ( af->Assemble_Jacobian )
 	  {
-		for ( i=0; i<ei->dof[eqn]; i++)
+		for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
         {
 			phi_i      = bf[eqn]->phi[i];
 			
@@ -26307,7 +26307,7 @@ assemble_continuity_path_dependence (dbl time_value,
 					var = MASS_FRACTION;
 					for (w=0; w<pd->Num_Species-1; w++)
 					{
-						for ( j=0; j<ei->dof[var]; j++)
+						for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 						{
 							if ( bf[var]->phi[j] > 0.0 ) break;
 						}
@@ -26363,7 +26363,7 @@ assemble_continuity_path_dependence (dbl time_value,
 					var = MASS_FRACTION;
 					for (w=0; w<pd->Num_Species-1; w++)
 					{
-						for ( j=0; j<ei->dof[var]; j++)
+						for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 						{
 							if ( bf[var]->phi[j] > 0.0 ) break;
 						}
@@ -26552,7 +26552,7 @@ assemble_continuity_path_dependence (dbl time_value,
 			
 			var = FILL;
 			pvar = upd->vp[pg->imtrx][var];
-			dofs = ei->dof[var];
+			dofs = ei[pg->imtrx]->dof[var];
 			j=0;	
 			while ( j < dofs ) 
 			{
@@ -26586,7 +26586,7 @@ assemble_LM_source ( double *xi,
   int id_side, nu, iAC=0, ioffset = 0;
   int dof_l[DIM];
   double phi_l[DIM][MDE];
-  int ielem = ei->ielem;
+  int ielem = ei[pg->imtrx]->ielem;
   int iconn_ptr = exo->elem_ptr[ielem];
   double lagrange_mult[3] = {0.0, 0.0, 0.0};
 
@@ -26621,7 +26621,7 @@ assemble_LM_source ( double *xi,
 
   pass = ( (Do_Overlap && oAC >= 0) ? 2 : 1);
   
-  ielem = ei->ielem;
+  ielem = ei[pg->imtrx]->ielem;
   if ( ( ls->Evolution == LS_EVOLVE_SLAVE ) && ( ls->init_surf_list->start->type == LS_SURF_SS ) )
     {
       struct LS_Surf *ss_surf;
@@ -26640,7 +26640,7 @@ assemble_LM_source ( double *xi,
 
       setup_shop_at_point( cp->elem, cp->xi, exo );
 
-      for (a=0; a<ei->ielem_dim; a++)
+      for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
         {
           if (ac_lm)
             {
@@ -26657,7 +26657,7 @@ assemble_LM_source ( double *xi,
               v = LAGR_MULT1 + a;
               if (pd->v[pg->imtrx][v] && !ac_lm)
                 {
-                  dof_l[a] = ei->dof[v];
+                  dof_l[a] = ei[pg->imtrx]->dof[v];
                   for (j = 0; j < dof_l[a]; j++)
                     {
                       phi_l[a][j] = bf[v]->phi[j];
@@ -26687,15 +26687,15 @@ assemble_LM_source ( double *xi,
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++)
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof])
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof])
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -26973,7 +26973,7 @@ fluid_stress( double Pi[DIM][DIM],
 	{
 	  for ( a=0; a<wim; a++)
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_mu->v[a][j] = mu_num * d_mus->v[a][j];
 		}
@@ -26985,7 +26985,7 @@ fluid_stress( double Pi[DIM][DIM],
 	{
 	  for ( a=0; a<dim; a++)
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_mu->X[a][j] = mu_num * d_mus->X[a][j];
 		}
@@ -26995,7 +26995,7 @@ fluid_stress( double Pi[DIM][DIM],
       var = TEMPERATURE;
       if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
 	{
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_mu->T[j] = mu_num * d_mus->T[j];
 	    }
@@ -27004,7 +27004,7 @@ fluid_stress( double Pi[DIM][DIM],
       var = BOND_EVOLUTION;
       if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
 	{
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_mu->nn[j] = mu_num * d_mus->nn[j];
 	    }
@@ -27014,7 +27014,7 @@ fluid_stress( double Pi[DIM][DIM],
       var = FILL;
       if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
 	{
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_mu->F[j] = mu_num * d_mus->F[j];
 	    }
@@ -27024,7 +27024,7 @@ fluid_stress( double Pi[DIM][DIM],
       var = PRESSURE;
       if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
 	{
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_mu->P[j] = mu_num * d_mus->P[j];
 	    }
@@ -27035,7 +27035,7 @@ fluid_stress( double Pi[DIM][DIM],
 	{
 	  for ( w=0; w<pd->Num_Species_Eqn; w++)
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_mu->C[w][j] = mu_num * d_mus->C[w][j];
 		}
@@ -27048,7 +27048,7 @@ fluid_stress( double Pi[DIM][DIM],
 	  if(vn->shiftModel == CONSTANT)
 	    {
 	      at = vn->shift[0];
-	      for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
+	      for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
 		{
 		  d_at_dT[j]=0.;
 		}
@@ -27059,7 +27059,7 @@ fluid_stress( double Pi[DIM][DIM],
 	      if(wlf_denom != 0.)
 		{
 		  at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
-		  for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
+		  for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
 		    {
 		      d_at_dT[j]= -at*vn->shift[0]*vn->shift[1]
 			/(wlf_denom*wlf_denom)*bf[TEMPERATURE]->phi[j];
@@ -27069,7 +27069,7 @@ fluid_stress( double Pi[DIM][DIM],
 		{
 		  at = 1.;
 		}
-	      for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
+	      for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
 		{
 		  d_at_dT[j]=0.;
 		}
@@ -27093,7 +27093,7 @@ fluid_stress( double Pi[DIM][DIM],
             {
               for ( a=0; a<wim; a++)
                 {
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_mu->v[a][j] += mu_num * at * d_mup->v[a][j];
                     }
@@ -27105,7 +27105,7 @@ fluid_stress( double Pi[DIM][DIM],
             {
               for ( a=0; a<dim; a++)
                 {
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_mu->X[a][j] += mu_num * at * d_mup->X[a][j];
                     }
@@ -27115,7 +27115,7 @@ fluid_stress( double Pi[DIM][DIM],
           var = TEMPERATURE;
           if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_mu->T[j] += mu_num * (at * d_mup->T[j] + mup * d_at_dT[j]);
                 }
@@ -27124,7 +27124,7 @@ fluid_stress( double Pi[DIM][DIM],
           var = BOND_EVOLUTION;
           if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_mu->nn[j] += mu_num * at * d_mup->nn[j];
                 }
@@ -27134,7 +27134,7 @@ fluid_stress( double Pi[DIM][DIM],
           var = FILL;
           if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_mu->F[j] += mu_num * at * d_mup->F[j];
                 }
@@ -27144,7 +27144,7 @@ fluid_stress( double Pi[DIM][DIM],
           var = PRESSURE;
           if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_mu->P[j] += mu_num * at * d_mup->P[j];
                 }
@@ -27155,7 +27155,7 @@ fluid_stress( double Pi[DIM][DIM],
             {
               for ( w=0; w<pd->Num_Species_Eqn; w++)
                 {
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_mu->C[w][j] += mu_num * at * d_mup->C[w][j];
                     }
@@ -27216,7 +27216,7 @@ fluid_stress( double Pi[DIM][DIM],
         {
           for ( q=0; q<VIM; q++)
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_Pi->T[p][q][j] = d_mu->T[j] * gamma[p][q];
                 }
@@ -27224,7 +27224,7 @@ fluid_stress( double Pi[DIM][DIM],
         }
       if (!kappaWipesMu) {
 	for (p = 0; p < VIM; p++) {
-	  for (j = 0; j < ei->dof[var]; j++) {
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	    d_Pi->T[p][p][j] -= (d_mu->T[j]/3.0 - 0.5 * d_dilMu->T[j]) * gamma[p][p];
 	  }
 	}
@@ -27235,7 +27235,7 @@ fluid_stress( double Pi[DIM][DIM],
             {
               for ( q=0; q<VIM; q++)
                 {
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_Pi->T[p][q][j] -= evss_f * ( d_mu->T[j] - d_mus->T[j] )* gamma_cont[p][q];
                     }
@@ -27251,7 +27251,7 @@ fluid_stress( double Pi[DIM][DIM],
         {
           for ( q=0; q<VIM; q++)
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_Pi->nn[p][q][j] = d_mu->nn[j] * gamma[p][q];
                 }
@@ -27259,7 +27259,7 @@ fluid_stress( double Pi[DIM][DIM],
         }
       if (!kappaWipesMu) {
 	for (p = 0; p < VIM; p++) {
-	  for (j = 0; j < ei->dof[var]; j++) {
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	    d_Pi->nn[p][p][j] -= (d_mu->nn[j]/3.0 - 0.5 * d_dilMu->nn[j]) * gamma[p][p];
 	  }
 	}
@@ -27270,7 +27270,7 @@ fluid_stress( double Pi[DIM][DIM],
             {
               for ( q=0; q<VIM; q++)
                 {
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_Pi->nn[p][q][j] -= evss_f * ( d_mu->nn[j] - d_mus->nn[j] )* gamma_cont[p][q];
                     }
@@ -27287,7 +27287,7 @@ fluid_stress( double Pi[DIM][DIM],
         {
           for ( q=0; q<VIM; q++)
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_Pi->F[p][q][j] = d_mu->F[j] * gamma[p][q];
                 }
@@ -27295,7 +27295,7 @@ fluid_stress( double Pi[DIM][DIM],
         }
       if (!kappaWipesMu) {
 	for (p = 0; p < VIM; p++) {
-	  for (j = 0; j < ei->dof[var]; j++) {
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	    d_Pi->F[p][p][j] -= (d_mu->F[j] / 3.0 - 0.5 * d_dilMu->F[j]) * gamma[p][p];
 	  }
 	}
@@ -27306,7 +27306,7 @@ fluid_stress( double Pi[DIM][DIM],
             {
               for ( q=0; q<VIM; q++)
                 {
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_Pi->F[p][q][j] -= evss_f * ( d_mu->F[j] - d_mus->F[j] ) * gamma_cont[p][q];
                     }
@@ -27326,7 +27326,7 @@ fluid_stress( double Pi[DIM][DIM],
 	      for( a=0; a<pfd->num_phase_funcs; a++)
 		{
 		  var = PHASE1 + a;
-		  for( j=0 ; j<ei->dof[var] ; j++)
+		  for( j=0 ; j<ei[pg->imtrx]->dof[var] ; j++)
 		    {
 		      d_Pi->pf[p][q][a][j] = d_mu->pf[a][j]*gamma[p][q];
 		    }
@@ -27337,7 +27337,7 @@ fluid_stress( double Pi[DIM][DIM],
 	for (p = 0; p < VIM; p++) {
 	  for (a = 0; a < pfd->num_phase_funcs; a++) {
 	    var = PHASE1 + a;
-	    for (j = 0; j < ei->dof[var]; j++) {
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	      d_Pi->pf[p][p][a][j] -= (d_mu->pf[a][j]/3.0 - 0.5 * d_dilMu->pf[a][j]) * gamma[p][p];
 	    }
 	  }
@@ -27352,7 +27352,7 @@ fluid_stress( double Pi[DIM][DIM],
 		  for( a=0; a<pfd->num_phase_funcs; a++)
 		    {
 		      var = PHASE1 + a;
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  d_Pi->pf[p][q][a][j] -= evss_f * ( d_mu->pf[a][j] - d_mus->pf[a][j] ) * gamma_cont[p][q];
 			}
@@ -27380,7 +27380,7 @@ fluid_stress( double Pi[DIM][DIM],
               {
                 for ( b=0; b<wim; b++)
                   {
-                    for ( j=0; j<ei->dof[VELOCITY1]; j++)
+                    for ( j=0; j<ei[pg->imtrx]->dof[VELOCITY1]; j++)
                       {
                         /* grad_phi_e cannot be the same for all
                          * velocities for 3d stab of 2d flow!!
@@ -27396,7 +27396,7 @@ fluid_stress( double Pi[DIM][DIM],
               }
 	    if (!kappaWipesMu) {
 	      for (b = 0; b < wim; b++) {
-		for (j = 0; j < ei->dof[VELOCITY1]; j++) {
+		for (j = 0; j < ei[pg->imtrx]->dof[VELOCITY1]; j++) {
 		  d_Pi->v[p][p][b][j] -=
 		    ((2.0 * mu / 3.0 - kappa) * (bf[VELOCITY1+p]->grad_phi_e[j][b][p][p]) +
 		     (d_mu->v[b][j] / 3.0 - 0.5 * d_dilMu->v[b][j]) * gamma[p][p]);
@@ -27418,7 +27418,7 @@ fluid_stress( double Pi[DIM][DIM],
 	    {
 	      for ( b=0; b<wim; b++)
 		{
-		  for ( j=0; j<ei->dof[VELOCITY1]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[VELOCITY1]; j++)
 		    {
 		      d_Pi->v[p][q][b][j] =
 			mu * (grad_phi_e[j][b][p][q] + grad_phi_e[j][b][q][p])
@@ -27429,7 +27429,7 @@ fluid_stress( double Pi[DIM][DIM],
 	    }
 	  if (!kappaWipesMu) {
 	    for (b = 0; b < wim; b++) {
-	      for (j = 0; j < ei->dof[VELOCITY1]; j++) {
+	      for (j = 0; j < ei[pg->imtrx]->dof[VELOCITY1]; j++) {
 		d_Pi->v[p][p][b][j] -=
 		  ((2.0 * mu / 3.0 - kappa) * (grad_phi_e[j][b][p][p]) +
 		   (d_mu->v[b][j] / 3.0 - 0.5 * d_dilMu->v[b][j]) * gamma[p][p]);
@@ -27447,7 +27447,7 @@ fluid_stress( double Pi[DIM][DIM],
                 {
                   for ( b=0; b<wim; b++)
                     {
-                      for ( j=0; j<ei->dof[var]; j++)
+                      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           d_Pi->v[p][q][b][j] -= evss_f * ( d_mu->v[b][j] - d_mus->v[b][j] ) * gamma_cont[p][q];
                         }
@@ -27466,7 +27466,7 @@ fluid_stress( double Pi[DIM][DIM],
             {
               for ( b=0; b<dim; b++)
                 {
-                  for ( j=0; j<ei->dof[VORT_DIR1]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[VORT_DIR1]; j++)
                     {
                       d_Pi->vd[p][q][b][j] = - d_tau_p_dvd[p][q][b][j];
                     }
@@ -27484,7 +27484,7 @@ fluid_stress( double Pi[DIM][DIM],
             {
               for ( b=0; b<dim; b++)
                 {
-                  for ( j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++)
                     {
                       d_Pi->X[p][q][b][j] =
 			mu * ( fv->d_grad_v_dmesh[p][q] [b][j]
@@ -27495,7 +27495,7 @@ fluid_stress( double Pi[DIM][DIM],
             }
 	  if (!kappaWipesMu) {   
 	    for (b = 0; b < dim; b++) {
-	      for (j = 0; j<ei->dof[MESH_DISPLACEMENT1]; j++) {
+	      for (j = 0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
 		d_Pi->X[p][p][b][j] -=
 		  ((2.0 * mu /3.0 - kappa) * (fv->d_grad_v_dmesh[p][p][b][j]) +
 		   (d_mu->X[b][j] / 3.0 - 0.5 * d_dilMu->X[b][j]) * gamma[p][p]);
@@ -27512,7 +27512,7 @@ fluid_stress( double Pi[DIM][DIM],
                 {
                   for ( b=0; b<dim; b++)
                     {
-                      for ( j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++)
+                      for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++)
                         {
                           d_Pi->X[p][q][b][j] -=
 			    evss_f * (d_mu->X [b][j] - d_mus->X [b][j]) * gamma_cont[p][q];
@@ -27536,7 +27536,7 @@ fluid_stress( double Pi[DIM][DIM],
                       for ( c=0; c<VIM; c++)
                         {
                           var = v_s[mode][b][c];
-                          for ( j=0; j<ei->dof[var]; j++)
+                          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                             {
                               d_Pi->S[p][q][mode][b][c][j] =
 				((double)delta(b,p) * (double)delta(c,q)) * bf[var]->phi[j]
@@ -27561,7 +27561,7 @@ fluid_stress( double Pi[DIM][DIM],
                   for ( c=0; c<VIM; c++)
                     {
                       var = v_g[b][c];
-                      for ( j=0; j<ei->dof[var]; j++)
+                      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           d_Pi->g[p][q][b][c][j] =
 			    mu_over_mu_num * d_mun_dG[b][c][j] *
@@ -27586,7 +27586,7 @@ fluid_stress( double Pi[DIM][DIM],
             {
               for (w = 0; w < pd->Num_Species_Eqn; w++)
                 {
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_Pi->C[p][q][w][j] = d_mu->C[w][j] * gamma[p][q]
 			- d_tau_p_dy[p][q][w][j];
@@ -27595,7 +27595,7 @@ fluid_stress( double Pi[DIM][DIM],
             }
 	  if (!kappaWipesMu) {   
 	    for (w = 0; w < pd->Num_Species_Eqn; w++) {
-	      for (j = 0; j < ei->dof[var]; j++) {
+	      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 		d_Pi->C[p][p][w][j] -= (d_mu->C[w][j] /3.0 - 0.5 * d_dilMu->C[w][j]) * gamma[p][p];
 	      }
 	    }
@@ -27611,7 +27611,7 @@ fluid_stress( double Pi[DIM][DIM],
                 {
                   for ( w=0; w<pd->Num_Species_Eqn; w++)
                     {
-                      for ( j=0; j<ei->dof[var]; j++)
+                      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           d_Pi->C[p][q][w][j] -=
                             evss_f * ( d_mu->C[w][j] - d_mus->C[w][j] ) * gamma_cont[p][q];
@@ -27629,14 +27629,14 @@ fluid_stress( double Pi[DIM][DIM],
         {
           for ( q=0; q<VIM; q++)
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_Pi->P[p][q][j] =  - (double)delta(p,q) * bf[var]->phi[j]
 		    + d_mu->P[j] * gamma[p][q] - d_tau_p_dp[p][q][j];
                 }
             }
 	  if (!kappaWipesMu) {
-	    for (j = 0; j < ei->dof[var]; j++) {
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	      d_Pi->P[p][p][j] -= (d_mu->P[j] /3.0 - 0.5 * d_dilMu->P[j]) * gamma[p][p];
 	    }
 	  }  
@@ -27648,7 +27648,7 @@ fluid_stress( double Pi[DIM][DIM],
             {
               for ( q=0; q<VIM; q++)
                 {
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_Pi->P[p][q][j] -= evss_f * ( d_mu->P[j] - d_mus->P[j] )* gamma_cont[p][q];
                     }
@@ -27703,7 +27703,7 @@ heat_flux( double q[DIM],
         {
           for ( p=0; p<VIM; p++)
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_q->T[p][j] = - k * bf[var]->grad_phi[j][p]
 		    - d_k->T[j] * grad_T[p];
@@ -27718,7 +27718,7 @@ heat_flux( double q[DIM],
             {
               for ( p=0; p<VIM; p++)
                 {
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_q->C[p][w][j] =  - d_k->C[w][j] * grad_T[p];
                     }
@@ -27731,7 +27731,7 @@ heat_flux( double q[DIM],
         {
           for ( p=0; p<VIM; p++)
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_q->F[p][j] =  - d_k->F[j] * grad_T[p];
                 }
@@ -27745,7 +27745,7 @@ heat_flux( double q[DIM],
 	      for (b=0; b<wim; b++)
                 {
                   var = MESH_DISPLACEMENT1+b;
-                  for (j = 0; j < ei->dof[var]; j++)
+                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_q->X[p][b][j] =
                         -k * fv->d_grad_T_dmesh[p] [b][j]
@@ -27832,7 +27832,7 @@ heat_flux( double q[DIM],
         {
           for ( p=0; p<VIM; p++)
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_q->T[p][j] = 0.0;
                   for ( a=0; a<VIM; a++)
@@ -27918,7 +27918,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
       var = TEMPERATURE;
       if ( d_h != NULL && pd->e[pg->imtrx][var] )
         {
-          for ( j=0; j<ei->dof[var]; j++)
+          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
             {
               d_h->T[j]= mp->d_heat_source[var]*bf[var]->phi[j];
             }
@@ -27927,7 +27927,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
       var = VOLTAGE;
       if ( d_h != NULL && pd->e[pg->imtrx][var] )
         {
-          for ( j=0; j<ei->dof[var]; j++)
+          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
             {
               d_h->V[j]= mp->d_heat_source[var]*bf[var]->phi[j];
             }
@@ -27938,7 +27938,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 	  for ( a=0; a<wim; a++)
 	    {
 	      var = VELOCITY1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_h->v[a][j] =mp->d_heat_source[var]*bf[var]->phi[j];
 		}
@@ -27950,7 +27950,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 	  for ( a=0; a<wim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_h->X[a][j] =mp->d_heat_source[var]*bf[var]->phi[j];
 		}
@@ -27963,7 +27963,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_h->C[w][j] =mp->d_heat_source[var_offset]*bf[var]->phi[j];
 		}
@@ -28074,7 +28074,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
       var = TEMPERATURE;
       if ( d_h != NULL && pd->e[pg->imtrx][var] )
         {
-          for ( j=0; j<ei->dof[var]; j++)
+          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
             {
               d_h->T[j]= dhdT*bf[var]->phi[j];
             }
@@ -28086,7 +28086,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_h->C[w][j] =dhdC[w]*bf[var]->phi[j];
 		}
@@ -28111,7 +28111,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 
       ai0_anode = mp->u_reaction_rate[0];
       ai0_cathode = mp->u_reaction_rate[2];
-      mn = ei->mn;
+      mn = ei[pg->imtrx]->mn;
 
       if(mn == 0)             /* KSC: 2/17/99 */
         {
@@ -28129,7 +28129,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
       var = TEMPERATURE;
       if ( d_h != NULL && pd->e[pg->imtrx][var] )
         {
-          for ( j=0; j<ei->dof[var]; j++)
+          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
             {
               d_h->T[j]= -F*mp->charge_number[w]*(ai0/R/TT)*bf[var]->phi[j];
             }
@@ -28138,7 +28138,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
       var = VOLTAGE;
       if ( d_h != NULL && pd->e[pg->imtrx][var] )
         {
-          for ( j=0; j<ei->dof[var]; j++)
+          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
             {
               d_h->V[j]= -F*mp->charge_number[w]*(-ai0/R/TT)*bf[var]->phi[j];
             }
@@ -28263,7 +28263,7 @@ ls_modulate_heatsource(double *f,
 		
       if( pd->v[pg->imtrx][var=TEMPERATURE] )
 	{
-	  for ( i=0; i<ei->dof[var]; i++)
+	  for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
 	    {
 	      df->T[i] *=factor;
 	    }
@@ -28273,7 +28273,7 @@ ls_modulate_heatsource(double *f,
 	{
 	  for( b=0; b<dim; b++ )
 	    {
-	      for( i=0 ; i<ei->dof[var+b]; i++)
+	      for( i=0 ; i<ei[pg->imtrx]->dof[var+b]; i++)
 		{
 		  df->X[b][i] *= factor;
 		}
@@ -28284,7 +28284,7 @@ ls_modulate_heatsource(double *f,
 	{
 	  for( b=0; b<dim; b++ )
 	    {
-	      for( i=0 ; i<ei->dof[var]; i++)
+	      for( i=0 ; i<ei[pg->imtrx]->dof[var]; i++)
 		{
 		  df->v[b][i] *= factor;
 		}
@@ -28295,7 +28295,7 @@ ls_modulate_heatsource(double *f,
 	{
 	  for( b=0; b<pd->Num_Species; b++ )
 	    {
-	      for( i=0 ; i<ei->dof[var]; i++)
+	      for( i=0 ; i<ei[pg->imtrx]->dof[var]; i++)
 		{
 		  df->C[b][i] *= factor;
 		}
@@ -28304,7 +28304,7 @@ ls_modulate_heatsource(double *f,
 		
       if(  pd->v[pg->imtrx][var=VOLTAGE] )
 	{
-	  for ( i=0; i<ei->dof[var]; i++)
+	  for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
             {
 	      df->V[i] *= factor;
             }
@@ -28564,7 +28564,7 @@ calc_pspg( dbl pspg[DIM],
 	      var = VELOCITY1+b;
 	      if ( pd->v[pg->imtrx][var] )
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1; 
 		      d_tau_pspg_dv[b][j] *= rho_avg*rho_avg/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
@@ -28581,7 +28581,7 @@ calc_pspg( dbl pspg[DIM],
 	      var = MESH_DISPLACEMENT1+b;
 	      if ( pd->v[pg->imtrx][var] )
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {			
 		      d_tau_pspg_dX[b][j] = tau_pspg/tau_pspg1;
 		      d_tau_pspg_dX[b][j] *= (rho_avg*rho_avg*vv_speed + 18.0*mu_avg*mu_avg/hh_siz) / (hh_siz*hh_siz);
@@ -28697,7 +28697,7 @@ calc_pspg( dbl pspg[DIM],
 	  usr_FlowingLiquidViscosity(mp->u_FlowingLiquid_viscosity);
 	  var = TEMPERATURE;
 
-	  for ( j=0; j<ei->dof[var]; j++)
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      dvis_dT[j]= mp->d_FlowingLiquid_viscosity[var]*bf[var]->phi[j];
 	    }
@@ -28793,7 +28793,7 @@ calc_pspg( dbl pspg[DIM],
 		  for ( b=0; b<wim; b++ )
 		  {
               var = VELOCITY1 + b;
-			  for ( j=0; j<ei->dof[var]; j++ )
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 			  {
 				  phi_j = bf[var]->phi[j];
 				  
@@ -28852,7 +28852,7 @@ calc_pspg( dbl pspg[DIM],
 		  for ( b=0; b<wim; b++ )
 		  {
 			  var = MESH_DISPLACEMENT1 + b;
-			  for ( j=0; j<ei->dof[var]; j++ )
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 			  {
 				  phi_j = bf[var]->phi[j];
 				  
@@ -28900,7 +28900,7 @@ calc_pspg( dbl pspg[DIM],
 	  {
 		  double d_rho_t_dT;
 		  
-		  for ( j=0; j<ei->dof[var]; j++ )
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 		  {
 			  phi_j = bf[var]->phi[j];
 			  
@@ -28953,7 +28953,7 @@ calc_pspg( dbl pspg[DIM],
       var = PRESSURE;
       if ( d_pspg != NULL && pd->v[pg->imtrx][var] )
 	  {
-		  for ( j=0; j<ei->dof[var]; j++ )
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 		  {
 			  diffusion = 0.;
 			  if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
@@ -28975,7 +28975,7 @@ calc_pspg( dbl pspg[DIM],
 		  
 		  for (w=0; w<pd->Num_Species_Eqn; w++)
 		  {
-			  for ( j=0; j<ei->dof[var]; j++ )
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 			  {
 				  phi_j = bf[var]->phi[j];
 				  
@@ -29038,7 +29038,7 @@ calc_pspg( dbl pspg[DIM],
 				  for ( c=0; c<VIM; c++)
 				  {
 					  var = v_s[mode][b][c];
-					  for ( j=0; j<ei->dof[var]; j++ )
+					  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 					  {
 						  phi_j = bf[var]->phi[j];
 						  
@@ -29078,7 +29078,7 @@ calc_pspg( dbl pspg[DIM],
 			  for ( c=0; c<VIM; c++)
 			  {
 				  var = v_g[b][c];
-				  for ( j=0; j<ei->dof[var]; j++ )
+				  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
 				  {
 					  phi_j = bf[var]->phi[j];
 					  
@@ -29206,7 +29206,7 @@ calc_cont_gls( dbl *cont_gls,
 	  var = VELOCITY1+b;
 	  if(pd->v[var])
 	    {
-	      for(j=0; j<ei->dof[var]; j++)
+	      for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  if(Cont_GLS==1 || U==0)
 		    {
@@ -29232,7 +29232,7 @@ calc_cont_gls( dbl *cont_gls,
 	  var = MESH_DISPLACEMENT1+b;
 	  if(pd->v[var])
 	    {
-	      for(j=0; j<ei->dof[var]; j++)
+	      for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  if(Cont_GLS==1 || h_elem==0)
 		    {
@@ -29281,7 +29281,7 @@ calc_cont_gls( dbl *cont_gls,
       var = VELOCITY1+b;
       if (pd->v[var] && d_cont_gls!=NULL)
 	{	  
-	for (j=0; j<ei->dof[var]; j++)
+	for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	  {				  
 	    advection  = 0.;			  
 	    if (advection_on)
@@ -29305,7 +29305,7 @@ calc_cont_gls( dbl *cont_gls,
       var = MESH_DISPLACEMENT1+b;
       if (pd->v[var])
 	{
-	  for (j=0; j<ei->dof[var]; j++)
+	  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      advection = 0.0;
 	      if (advection_on)
@@ -29398,13 +29398,13 @@ assemble_ls_latent_heat_source ( double iso_therm,
       peqn = TEMPERATURE;
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -29421,7 +29421,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
               var = LS ;
 	      pvar = upd->vp[pg->imtrx][var];
 		      
-	      for( j=0; j<ei->dof[var]; j++)
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	        {
 	          phi_j = bf[var]->phi[j];
 	          lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -29440,13 +29440,13 @@ assemble_ls_latent_heat_source ( double iso_therm,
       peqn = TEMPERATURE;
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -29468,13 +29468,13 @@ assemble_ls_latent_heat_source ( double iso_therm,
       peqn = TEMPERATURE;
       bfm = bf[eqn];
       
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	{
-	  ledof = ei->lvdof_to_ledof[eqn][i];
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	  
-	  if (ei->active_interp_ledof[ledof])
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof])
 	    {
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 	      
 	      phi_i = bfm->phi[i];
 	      
@@ -29487,7 +29487,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 		  
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
                       
@@ -29511,7 +29511,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 		  
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
                       
@@ -29533,7 +29533,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
 	      
 	      if ( pd->v[pg->imtrx][var] )
 		{
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
                       
@@ -29564,7 +29564,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
 	          if ( pd->v[pg->imtrx][var] )
 		    {
                       pvar = upd->vp[pg->imtrx][var];
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		        {
 		          phi_j = bf[var]->phi[j];
                           
@@ -29590,7 +29590,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
 		{
 		  pvar = upd->vp[pg->imtrx][var];
 		  
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
                       
@@ -29678,7 +29678,7 @@ assemble_max_strain ()
     peqn = upd->ep[pg->imtrx][eqn];
     
     // Loop over DOF (i)
-    for ( i = 0; i < ei->dof[eqn]; i++) {
+    for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
       
       // Load basis functions
       phi_i = bf[eqn]->phi[i];
@@ -29719,7 +29719,7 @@ assemble_max_strain ()
     peqn = upd->ep[pg->imtrx][eqn];
     
     // Loop over DOF (i)
-    for ( i = 0; i < ei->dof[eqn]; i++) {
+    for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
       
       // Load basis functions
       phi_i = bf[eqn]->phi[i];
@@ -29730,7 +29730,7 @@ assemble_max_strain ()
   	pvar = upd->vp[pg->imtrx][var];
 
   	// Loop over DOF (j)
-  	for ( j = 0; j < ei->dof[var]; j++) {
+  	for ( j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 
 	  // Load basis functions
 	  phi_j = bf[eqn]->phi[j];
@@ -29763,7 +29763,7 @@ assemble_max_strain ()
 	  pvar = upd->vp[pg->imtrx][var];
 	  
 	  // Loop over DOF (j)
-	  for ( j = 0; j < ei->dof[var]; j++) {
+	  for ( j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	    
 	    // Load basis functions
 	    phi_j = bf[eqn]->phi[j];
@@ -29878,7 +29878,7 @@ assemble_cur_strain ()
     peqn = upd->ep[pg->imtrx][eqn];
     
     // Loop over DOF (i)
-    for ( i = 0; i < ei->dof[eqn]; i++) {
+    for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
       
       // Load basis functions
       phi_i = bf[eqn]->phi[i];
@@ -29915,7 +29915,7 @@ assemble_cur_strain ()
     peqn = upd->ep[pg->imtrx][eqn];
     
     // Loop over DOF (i)
-    for ( i = 0; i < ei->dof[eqn]; i++) {
+    for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
       
       // Load basis functions
       phi_i = bf[eqn]->phi[i];
@@ -29926,7 +29926,7 @@ assemble_cur_strain ()
   	pvar = upd->vp[pg->imtrx][var];
 
   	// Loop over DOF (j)
-  	for ( j = 0; j < ei->dof[var]; j++) {
+  	for ( j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 
 	  // Load basis functions
 	  phi_j = bf[eqn]->phi[j];
@@ -29959,7 +29959,7 @@ assemble_cur_strain ()
 	  pvar = upd->vp[pg->imtrx][var];
 	  
 	  // Loop over DOF (j)
-	  for ( j = 0; j < ei->dof[var]; j++) {
+	  for ( j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	    
 	    // Load basis functions
 	    phi_j = bf[eqn]->phi[j];
@@ -30152,7 +30152,7 @@ assemble_acoustic(double time,	/* present time value */
       eqn = ac_eqn;
       peqn = upd->ep[pg->imtrx][eqn];
       var = ac_var;
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	  
 #if 1
@@ -30160,7 +30160,7 @@ assemble_acoustic(double time,	/* present time value */
 	  if ( xfem != NULL )
             {
 	      int xfem_active, extended_dof, base_interp, base_dof;
-	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      if ( extended_dof && !xfem_active ) continue;
             }
@@ -30218,14 +30218,14 @@ assemble_acoustic(double time,	/* present time value */
     {
       eqn   = ac_eqn;
       peqn = upd->ep[pg->imtrx][eqn];
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 #if 1
           /* this is an optimization for xfem */
 	  if ( xfem != NULL )
             {
 	      int xfem_active, extended_dof, base_interp, base_dof;
-	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      if ( extended_dof && !xfem_active ) continue;
             }
@@ -30249,7 +30249,7 @@ assemble_acoustic(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -30287,7 +30287,7 @@ assemble_acoustic(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -30308,7 +30308,7 @@ assemble_acoustic(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -30356,7 +30356,7 @@ assemble_acoustic(double time,	/* present time value */
 	      if ( pd->v[pg->imtrx][var] )
 		{
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -30447,7 +30447,7 @@ assemble_acoustic(double time,	/* present time value */
 	    {
 	      for ( w=0; w<pd->Num_Species_Eqn; w++)
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -30613,7 +30613,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
   if ( af->Assemble_Residual )
     {
       peqn = upd->ep[pg->imtrx][eqn];
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	  
 #if 1
@@ -30621,7 +30621,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 	  if ( xfem != NULL )
             {
 	      int xfem_active, extended_dof, base_interp, base_dof;
-	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      if ( extended_dof && !xfem_active ) continue;
             }
@@ -30667,14 +30667,14 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
   if ( af->Assemble_Jacobian )
     {
       peqn = upd->ep[pg->imtrx][eqn];
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 #if 1
           /* this is an optimization for xfem */
 	  if ( xfem != NULL )
             {
 	      int xfem_active, extended_dof, base_interp, base_dof;
-	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      if ( extended_dof && !xfem_active ) continue;
             }
@@ -30693,7 +30693,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -30719,7 +30719,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -30761,7 +30761,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -30801,7 +30801,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -30845,7 +30845,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 	      if ( pd->v[pg->imtrx][var] )
 		{
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -30901,7 +30901,7 @@ assemble_acoustic_reynolds_stress(double time,	/* present time value */
 	    {
 	      for ( w=0; w<pd->Num_Species_Eqn; w++)
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -31021,7 +31021,7 @@ acoustic_flux( double q[DIM],
         {
           for ( p=0; p<VIM; p++)
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_q->P[p][j] = kR_inv * bf[var]->grad_phi[j][p];
                 }
@@ -31033,7 +31033,7 @@ acoustic_flux( double q[DIM],
         {
           for ( p=0; p<VIM; p++)
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_q->T[p][j] = -kR_inv*kR_inv*(k*d_R->T[j]+R*d_k->T[j]) * grad_P[p];
                 }
@@ -31047,7 +31047,7 @@ acoustic_flux( double q[DIM],
             {
               for ( p=0; p<VIM; p++)
                 {
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       d_q->C[p][w][j] = -kR_inv*kR_inv*(k*d_R->C[w][j]+R*d_k->C[w][j]) * grad_P[p];
                     }
@@ -31060,7 +31060,7 @@ acoustic_flux( double q[DIM],
         {
           for ( p=0; p<VIM; p++)
             {
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                   d_q->F[p][j] = -kR_inv*kR_inv*(k*d_R->F[j]+R*d_k->F[j]) * grad_P[p];
                 }
@@ -31074,7 +31074,7 @@ acoustic_flux( double q[DIM],
 	      for ( b=0; b<wim; b++)
                 {
                   var = MESH_DISPLACEMENT1+b;
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
 			if(eqn == R_ACOUS_PREAL)
 			{
@@ -31166,15 +31166,15 @@ assemble_ars_source ( double ars_jump, double grad_jump )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++)
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof])
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof])
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -31188,7 +31188,7 @@ assemble_ars_source ( double ars_jump, double grad_jump )
                   var = LS ;
 		  pvar = upd->vp[pg->imtrx][var];
 		      
-		  for( j=0; j<ei->dof[var]; j++)
+		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		      lec->J[peqn][pvar][ii][j] += source * phi_j;
@@ -31211,15 +31211,15 @@ assemble_ars_source ( double ars_jump, double grad_jump )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-	  for (i = 0; i < ei->dof[eqn]; i++)
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-	      if (ei->active_interp_ledof[ledof])
+	      if (ei[pg->imtrx]->active_interp_ledof[ledof])
 		{
 
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bfm->phi[i];
 
@@ -31242,13 +31242,13 @@ assemble_ars_source ( double ars_jump, double grad_jump )
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  bfm = bf[eqn];
 
-          for (i = 0; i < ei->dof[eqn]; i++)
+          for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
             {
-              ledof = ei->lvdof_to_ledof[eqn][i];
+              ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 
-              if (ei->active_interp_ledof[ledof])
+              if (ei[pg->imtrx]->active_interp_ledof[ledof])
                 {
-                  ii = ei->lvdof_to_row_lvdof[eqn][i];
+                  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
                   phi_i = bfm->phi[i];
 
@@ -31262,7 +31262,7 @@ assemble_ars_source ( double ars_jump, double grad_jump )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
 
@@ -31286,7 +31286,7 @@ assemble_ars_source ( double ars_jump, double grad_jump )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
                           source = 2*fv->apr*phi_j*temp;
@@ -31312,7 +31312,7 @@ assemble_ars_source ( double ars_jump, double grad_jump )
                     {
                       pvar = upd->vp[pg->imtrx][var];
 
-                      for( j=0; j<ei->dof[var]; j++)
+                      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
                           phi_j = bf[var]->phi[j];
                           source = 2*fv->api*phi_j*temp;
@@ -31428,11 +31428,11 @@ visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
       memset( d_visc_cmb->X, 0, sizeof(double)*DIM*MDE);
       memset( d_visc_cmb->C, 0, sizeof(double)*MAX_CONC*MDE);
       memset( d_visc_cmb->F, 0, sizeof(double)*MDE);
-  for (j=0; j<ei->dof[TEMPERATURE]; j++)
+  for (j=0; j<ei[pg->imtrx]->dof[TEMPERATURE]; j++)
 	    { d_visc_cmb->T[j] = d_mu->T[j]; }
-  for (j=0; j<ei->dof[FILL]; j++)
+  for (j=0; j<ei[pg->imtrx]->dof[FILL]; j++)
 	    { d_visc_cmb->F[j] = d_mu->F[j]; }
-  for (j=0; j<ei->dof[MASS_FRACTION]; j++)
+  for (j=0; j<ei[pg->imtrx]->dof[MASS_FRACTION]; j++)
       {
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	    { d_visc_cmb->C[w][j] = d_mu->C[w][j]; }
@@ -31474,7 +31474,7 @@ if(af->Assemble_Jacobian)
   var = TEMPERATURE;
   if ( d_h != NULL && pd->v[pg->imtrx][var] )
     {
-	  for (j=0; j<ei->dof[var]; j++)
+	  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_h->T[j] += 0.5*param[0]*ap_square*visc_cmb*
 			(temp1*4.*alpha*d_alpha->T[j]/SQUARE(omega) 
@@ -31488,7 +31488,7 @@ if(af->Assemble_Jacobian)
     {
       for ( w=0; w<pd->Num_Species_Eqn; w++)
          {
-	  for (j=0; j<ei->dof[var]; j++)
+	  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	     d_h->C[w][j] += 0.5*param[0]*ap_square*visc_cmb*
 			(temp1*4.*alpha*d_alpha->C[w][j]/SQUARE(omega) 
@@ -31500,7 +31500,7 @@ if(af->Assemble_Jacobian)
   var = FILL;
   if ( d_h != NULL && pd->v[pg->imtrx][var] )
     {
-	  for (j=0; j<ei->dof[var]; j++)
+	  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_h->F[j] += 0.5*param[0]*ap_square*
 			(temp1*visc_cmb*4.*alpha*d_alpha->F[j]/SQUARE(omega) 
@@ -31512,7 +31512,7 @@ if(af->Assemble_Jacobian)
   var = ACOUS_PREAL;
   if ( d_h != NULL && pd->v[pg->imtrx][var] )
     {
-	  for (j=0; j<ei->dof[var]; j++)
+	  for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_h->P[j] += 0.5*param[0]*temp1*visc_cmb*temp3*2.*bf[var]->phi[j]; 
 	    }
@@ -31679,7 +31679,7 @@ assemble_poynting(double time,	/* present time value */
       eqn = py_eqn;
       peqn = upd->ep[pg->imtrx][eqn];
       var = py_var;
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	  
 #if 1
@@ -31687,7 +31687,7 @@ assemble_poynting(double time,	/* present time value */
 	  if ( xfem != NULL )
             {
 	      int xfem_active, extended_dof, base_interp, base_dof;
-	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      if ( extended_dof && !xfem_active ) continue;
             }
@@ -31717,14 +31717,14 @@ assemble_poynting(double time,	/* present time value */
     {
       eqn   = py_eqn;
       peqn = upd->ep[pg->imtrx][eqn];
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 #if 1
           /* this is an optimization for xfem */
 	  if ( xfem != NULL )
             {
 	      int xfem_active, extended_dof, base_interp, base_dof;
-	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei->ielem_shape,
+	      xfem_dof_state( i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      if ( extended_dof && !xfem_active ) continue;
             }
@@ -31743,7 +31743,7 @@ assemble_poynting(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -31775,7 +31775,7 @@ assemble_poynting(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 
@@ -31805,7 +31805,7 @@ assemble_poynting(double time,	/* present time value */
 	      if ( pd->v[pg->imtrx][var] )
 		{
 		  pvar = upd->vp[pg->imtrx][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 
@@ -31857,7 +31857,7 @@ assemble_poynting(double time,	/* present time value */
 	    {
 	      for ( w=0; w<pd->Num_Species_Eqn; w++)
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 

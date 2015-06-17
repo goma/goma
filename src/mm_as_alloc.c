@@ -69,7 +69,7 @@ PROTO((Exo_DB *));
 UPD_STRUCT                               *upd = NULL;
 PROBLEM_DESCRIPTION_STRUCT              **pd_glob = NULL, *pd = NULL;
 PROBLEM_GRAPH_STRUCT                     *pg = NULL;
-struct Element_Indices                   *ei = NULL;
+struct Element_Indices                   **ei = NULL;
 struct Element_Indices                  **eiRelated = {NULL};
 struct Element_Stiffness_Pointers        *esp = NULL;
 struct Element_Quality_Metrics           *eqm = NULL;
@@ -937,8 +937,12 @@ assembly_alloc(Exo_DB *exo)
    * Element_Indices___________________________________________________________
    */
   
-  ei = alloc_struct_1(struct Element_Indices, 1);
-  Element_Indices_alloc(ei);
+  ei = malloc(sizeof(struct Element_Indices *) * upd->Total_Num_Matrices);
+  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    ei[pg->imtrx] = alloc_struct_1(struct Element_Indices, 1);
+    Element_Indices_alloc(ei[pg->imtrx]);
+  }
+  pg->imtrx = 0;
 
   eiRelated = (struct Element_Indices **)  alloc_ptr_1(MAX_ELEMENT_INDICES_RELATED);
   for (mn = 0; mn < MAX_ELEMENT_INDICES_RELATED; mn++) {
@@ -1684,7 +1688,7 @@ bf_mp_init(struct Problem_Description *pd)
 #endif
 
    /* This is needed to check for matching element shapes */
-   shape = ei->ielem_shape;
+   shape = ei[pg->imtrx]->ielem_shape;
 
   /*
    * For now, assume variable interpolations 
@@ -1701,47 +1705,38 @@ bf_mp_init(struct Problem_Description *pd)
        *  to need an idea for the interpolation even if its wrong in order
        *  for internal-boundary problems to work correctly.
        */
-#ifdef DEBUG_HKM
-      if (ei->ielem == 165 && v == 5) {
-        if (pd->v[pg->imtrx][v] > 0 && pd->v[pg->imtrx][v] != 1) {
-	  //	  printf("bf_mp_init: we are at elem 165, v = 5, v[v] = 4\n");
-          t = 0;
-	}
-      }
-       if (pd->v[pg->imtrx][v])
-      //if (pd->v[pg->imtrx][v] == 1) 
-	{
-#else
-      if (pd->v[pg->imtrx][v]) 
-	{
-#endif
-	
-	  /*
-	   * If so, then check to see which prototype basis function of
-	   * bfd[] is its match...
-           * Check both interpolation AND element shape!
-	   */
-	  bf[v] = NULL;
-	  for (t = 0; t < Num_Basis_Functions; t++)
-	    {
+      int imtrx;
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+        if (pd->v[imtrx][v]) 
+          {
+            /*
+             * If so, then check to see which prototype basis function of
+             * bfd[] is its match...
+             * Check both interpolation AND element shape!
+             */
+            bf[v] = NULL;
+            for (t = 0; t < Num_Basis_Functions; t++)
+              {
 #ifdef DEBUG
-	      fprintf(stderr, "bfd is at %p\n", bfd);
-	      fprintf(stderr, "bfd[0] is at %p\n", bfd[0]);
-	      fprintf(stderr, "checking t = %d\n", t);
+                fprintf(stderr, "bfd is at %p\n", bfd);
+                fprintf(stderr, "bfd[0] is at %p\n", bfd[0]);
+                fprintf(stderr, "checking t = %d\n", t);
 #endif
-	      if ((pd->i[pg->imtrx][v] == bfd[t]->interpolation)
-                   && (shape == bfd[t]->element_shape))
-		{
-		  bf[v] = bfd[t];
-		}
-	    }
-	  if (bf[v] == NULL)
-	    {
-	      EH( -1, "Could not find a match for variable.");
-	    }
-	}
-    }
 
+
+                if ((pd->i[imtrx][v] == bfd[t]->interpolation)
+                    && (shape == bfd[t]->element_shape))
+                  {
+                    bf[v] = bfd[t];
+                  }
+              }
+            if (bf[v] == NULL)
+              {
+                EH( -1, "Could not find a match for variable.");
+              }
+          }
+      }
+    }
   /*
    * Repeat the same proceedure for external fixed field interpolations 
    */

@@ -186,7 +186,7 @@ invert_isoparametric_map(  int *current_ielem,  /* initial element of search */
   double rot[MAX_PDIM][MAX_PDIM];	/*  isopar. coord rotation tensor */
 
   
-  dim    = ei->ielem_dim;
+  dim    = ei[pg->imtrx]->ielem_dim;
 
   if (xv == x_static) /* be the least disruptive possible */
     {
@@ -332,7 +332,7 @@ invert_isoparametric_map(  int *current_ielem,  /* initial element of search */
                 if(exo->elem_elem_list[b] == old_ielem)newface = a;
                 }
 
-        load_ei(*current_ielem, exo, 0);
+        load_ei(*current_ielem, exo, 0, pg->imtrx);
 
         if (xv == x_static) /* be the least disruptive possible */
           {
@@ -346,12 +346,12 @@ invert_isoparametric_map(  int *current_ielem,  /* initial element of search */
 
 
 /**  shouldn't have to change elem dimensions
-  dim    = ei->ielem_dim;
+  dim    = ei[pg->imtrx]->ielem_dim;
 
   for(b=0; b< Num_Basis_Functions; b++)
     {
       vi = VELOCITY1;
-      if(pd_glob[ei->mn]->i[vi] == bfd[b]->interpolation);
+      if(pd_glob[ei[pg->imtrx]->mn]->i[vi] == bfd[b]->interpolation);
          {
            velo_interp = b;
          }

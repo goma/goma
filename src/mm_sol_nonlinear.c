@@ -2120,7 +2120,7 @@ EH(-1,"version not compiled with frontal solver");
 		    mat_index= (curr_mat_list->List)[imat];
 		    if(pd_glob[mat_index]->MeshMotion == DYNAMIC_LAGRANGIAN) 
 		      {
-			for (b = 0; b < ei->ielem_dim; b++)
+			for (b = 0; b < ei[pg->imtrx]->ielem_dim; b++)
 			  {
 			    j = Index_Solution(i, R_MESH1 + b, 0, 0 , -1, pg->imtrx);
 			    xdot[j] = (x[j]-x_old[j]) * (gamma/beta) / delta_t

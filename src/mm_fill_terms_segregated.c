@@ -76,11 +76,10 @@ load_splitb_esp(int ielem, Exo_DB *exo)
     if (upd->ep[imtrx][eqn] >= 0) {
       for (d = 0; d < VIM; d++) {
         eqn = R_AUX_MOMENTUM1 + d;
-        dofs = pg->element_dof_info[imtrx][ielem][eqn].dof;
+        dofs = ei[imtrx]->dof[eqn];
         for (i = 0; i < dofs; i++) {
-          gnn = pg->element_dof_info[imtrx][ielem][eqn].gnn[i];
-          iNdof = pg->element_dof_info[imtrx][ielem][eqn].iNdof[i];
-          ie = Index_Solution(gnn, eqn, 0, iNdof, -1, imtrx);
+          int ledof = ei[imtrx]->lvdof_to_ledof[eqn][i];
+          ie = ei[imtrx]->ieqn_ledof[ledof];
           (pg->sbesp).v_star[d][i] = pg->matrices[imtrx].x[ie];
         }
       }
@@ -88,11 +87,10 @@ load_splitb_esp(int ielem, Exo_DB *exo)
 
     eqn = R_PRESSURE_POISSON;
     if (upd->ep[imtrx][eqn] >= 0) {
-      dofs = pg->element_dof_info[imtrx][ielem][eqn].dof;
+      dofs = ei[imtrx]->dof[eqn];
       for (i = 0; i < dofs; i++) {
-        gnn = pg->element_dof_info[imtrx][ielem][eqn].gnn[i];
-        iNdof = pg->element_dof_info[imtrx][ielem][eqn].iNdof[i];
-        ie = Index_Solution(gnn, eqn, 0, iNdof, -1, imtrx);
+        int ledof = ei[imtrx]->lvdof_to_ledof[eqn][i];
+        ie = ei[imtrx]->ieqn_ledof[ledof];
         (pg->sbesp).P_star[i] = pg->matrices[imtrx].x[ie];
       }
     }
@@ -101,11 +99,10 @@ load_splitb_esp(int ielem, Exo_DB *exo)
     if (upd->ep[imtrx][eqn] >= 0) {
       for (d = 0; d < VIM; d++) {
         eqn = R_MOMENTUM1 + d;
-        dofs = pg->element_dof_info[imtrx][ielem][eqn].dof;
+        dofs = ei[imtrx]->dof[eqn];
         for (i = 0; i < dofs; i++) {
-          gnn = pg->element_dof_info[imtrx][ielem][eqn].gnn[i];
-          iNdof = pg->element_dof_info[imtrx][ielem][eqn].iNdof[i];
-          ie = Index_Solution(gnn, eqn, 0, iNdof, -1, imtrx);
+          int ledof = ei[imtrx]->lvdof_to_ledof[eqn][i];
+          ie = ei[imtrx]->ieqn_ledof[ledof];
           (pg->sbesp).v_old[d][i] = pg->matrices[imtrx].x_old[ie];
         }
       }
@@ -113,11 +110,11 @@ load_splitb_esp(int ielem, Exo_DB *exo)
 
     eqn = R_PRESSURE;
     if (upd->ep[imtrx][eqn] >= 0) {
-      dofs = pg->element_dof_info[imtrx][ielem][eqn].dof;
+      dofs = ei[imtrx]->dof[eqn];
       for (i = 0; i < dofs; i++) {
-        gnn = pg->element_dof_info[imtrx][ielem][eqn].gnn[i];
-        iNdof = pg->element_dof_info[imtrx][ielem][eqn].iNdof[i];
-        ie = Index_Solution(gnn, eqn, 0, iNdof, -1, imtrx);
+        int ledof = ei[imtrx]->lvdof_to_ledof[eqn][i];
+        ie = ei[imtrx]->ieqn_ledof[ledof];
+
         (pg->sbesp).P_old[i] = pg->matrices[imtrx].x_old[ie];
       }
     }
@@ -143,7 +140,7 @@ load_splitb_fv(int ielem)
       for (d = 0; d < VIM; d++) {
         v = AUX_VELOCITY1 + d;
         (pg->sbcfv).v_star[d] = 0;
-        for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
+        for (i = 0; i < ei[imtrx]->dof[v]; i++) {
           (pg->sbcfv).v_star[d] += (pg->sbesp).v_star[d][i] * bf[var]->phi[i];
         }
       }
@@ -153,7 +150,7 @@ load_splitb_fv(int ielem)
     if (pdv[AUX_PRESSURE]) {
       v = AUX_PRESSURE;
       (pg->sbcfv).P_star = 0;
-      for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
+      for (i = 0; i < ei[imtrx]->dof[v]; i++) {
         (pg->sbcfv).P_star = (pg->sbesp).P_star[i] * bf[var]->phi[i];
       }
     }
@@ -164,7 +161,7 @@ load_splitb_fv(int ielem)
       for (d = 0; d < VIM; d++) {
         v = VELOCITY1 + d;
         (pg->sbcfv).v_old[d] = 0;
-        for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
+        for (i = 0; i < ei[imtrx]->dof[v]; i++) {
           (pg->sbcfv).v_old[d] += (pg->sbesp).v_old[d][i] * bf[var]->phi[i];
         }
       }
@@ -174,7 +171,7 @@ load_splitb_fv(int ielem)
     if (pdv[PRESSURE]) {
       v = PRESSURE;
       (pg->sbcfv).P_old = 0;
-      for (i = 0; i < pg->element_dof_info[imtrx][ielem][v].dof; i++) {
+      for (i = 0; i < ei[imtrx]->dof[v]; i++) {
         (pg->sbcfv).P_old = (pg->sbesp).P_old[i] * bf[var]->phi[i];
       }
     }
@@ -202,7 +199,7 @@ void load_splitb_fv_grads(int ielem)
         for (d = 0; d < VIM; d++) {
           (pg->sbcfv).grad_v_old[p][d] = 0;
           for (r = 0; r < VIM; r++) {
-            for (i = 0; i < pg->element_dof_info[imtrx][ielem][var].dof; i++) {
+            for (i = 0; i < ei[imtrx]->dof[var]; i++) {
               (pg->sbcfv).grad_v_old[p][d] += (pg->sbesp).v_old[r][i] *  bf[var]->grad_phi_e[i][r][p][d];
             }
           }
@@ -215,7 +212,7 @@ void load_splitb_fv_grads(int ielem)
       var = AUX_PRESSURE;
       for (d = 0; d < VIM; d++) {
         (pg->sbcfv).grad_P_star[d] = 0;
-        for (i = 0; i < pg->element_dof_info[imtrx][ielem][var].dof; i++) {
+        for (i = 0; i < ei[imtrx]->dof[var]; i++) {
           (pg->sbcfv).grad_P_star[d] = (pg->sbesp).P_star[i]
               *  bf[var]->grad_phi[i][d];
         }
@@ -229,7 +226,7 @@ void load_splitb_fv_grads(int ielem)
         for (d = 0; d < VIM; d++) {
           (pg->sbcfv).grad_v_star[p][d] = 0;
           for (r = 0; r < VIM; r++) {
-            for (i = 0; i < pg->element_dof_info[imtrx][ielem][var].dof; i++) {
+            for (i = 0; i < ei[imtrx]->dof[var]; i++) {
               (pg->sbcfv).grad_v_star[p][d] += (pg->sbesp).v_star[r][i] *  bf[var]->grad_phi_e[i][r][p][d];
             }
           }
@@ -247,108 +244,7 @@ void load_splitb_fv_grads(int ielem)
     }
   }
 }
-
-void set_bf(const double xi[], BASIS_FUNCTIONS_STRUCT *bf_ptr,
-    int type, int dof)
-{
-  int ln;
-
-  const double s     = xi[0];
-  const double t     = xi[1];
-  const double u     = xi[2];
-
-/* Assume 2D */
-  switch (type) {
-  case I_Q1:
-    for (ln = 0; ln < dof; ln++) {
-      bf_ptr->phi[ln] = shape(s, t, u, BILINEAR_QUAD, PSI, ln);
-      bf_ptr->dphidxi[ln][0] = shape(s, t, u, BILINEAR_QUAD, DPSI_S, ln);
-      bf_ptr->dphidxi[ln][1] = shape(s, t, u, BILINEAR_QUAD, DPSI_T, ln);
-    }
-    break;
-  case I_Q2:
-    for (ln = 0; ln < dof; ln++) {
-
-      bf_ptr->phi[ln] = shape(s, t, u, BIQUAD_QUAD, PSI, ln);
-      bf_ptr->dphidxi[ln][0] = shape(s, t, u, BIQUAD_QUAD, DPSI_S, ln);
-      bf_ptr->dphidxi[ln][1] = shape(s, t, u, BIQUAD_QUAD, DPSI_T, ln);
-    }
-    break;
-  }
-}
-
-int
-load_segregated_basis_functions(const double xi[],             /*  [DIM]               */
-                     struct Basis_Functions **bfa) /* ptr to basis function *
-                                                    * array of interest     */
-
-     /************************************************************************
-      *
-      * load_basis_functions():
-      *
-      *    Calculates the values of all the basis functions active in the
-      * current element. It also calculates the derivatives of the basis
-      * functions wrt local element coordinates.
-      *
-      ************************************************************************/
-{
-  int b, i;
-  int shape;
-
-  for (b = 0; b < Num_Basis_Functions; b++) {
-    shape = QUADRILATERAL;
-
-    if (pd->i[0][AUX_VELOCITY1] == bfd[b]->interpolation
-        && shape == bfd[b]->element_shape) {
-      bf[AUX_VELOCITY1] = bfd[b];
-      set_bf(xi, bfd[b], I_Q2, 9);
-    }
-
-    if (pd->i[0][AUX_VELOCITY2] == bfd[b]->interpolation
-        && shape == bfd[b]->element_shape) {
-      bf[AUX_VELOCITY2] = bfd[b];
-      set_bf(xi, bfd[b], I_Q2, 9);
-    }
-    if (pd->i[0][AUX_VELOCITY3] == bfd[b]->interpolation
-        && shape == bfd[b]->element_shape) {
-      bf[AUX_VELOCITY3] = bfd[b];
-      set_bf(xi, bfd[b], I_Q2, 9);
-    }
-
-    if (pd->i[1][AUX_PRESSURE] == bfd[b]->interpolation
-        && shape == bfd[b]->element_shape) {
-      bf[AUX_PRESSURE] = bfd[b];
-      set_bf(xi, bfd[b], I_Q1, 4);
-    }
-
-    if (pd->i[2][VELOCITY1] == bfd[b]->interpolation
-        && shape == bfd[b]->element_shape) {
-      bf[VELOCITY1] = bfd[b];
-      set_bf(xi, bfd[b], I_Q2, 9);
-    }
-
-    if (pd->i[2][VELOCITY2] == bfd[b]->interpolation
-        && shape == bfd[b]->element_shape) {
-      bf[VELOCITY1] = bfd[b];
-      set_bf(xi, bfd[b], I_Q2, 9);
-    }
-
-    if (pd->i[2][VELOCITY3] == bfd[b]->interpolation
-        && shape == bfd[b]->element_shape) {
-      bf[VELOCITY1] = bfd[b];
-      set_bf(xi, bfd[b], I_Q2, 9);
-    }
-
-    if (pd->i[3][PRESSURE] == bfd[b]->interpolation
-        && shape == bfd[b]->element_shape) {
-      bf[PRESSURE] = bfd[b];
-      set_bf(xi, bfd[b], I_Q1, 4);
-    }
-  }
-  return (0);
-} /* END of routine load_basis_functions */
-
-/* 
+/*
  *This function assembles the first step of the CBS, split-B, quasi-implicit
  * method.  Here, we solve for an auxiliary velocity from some form of the 
  * momentum equation.  Due to the time discretization, the only non-linear term
@@ -460,12 +356,12 @@ assemble_aux_u(dbl time,   // Current time
 	  diffusion_etm = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 	  source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
-	  for(i=0; i<ei->dof[eqn]; i++) 
+	  for(i=0; i<ei[pg->imtrx]->dof[eqn]; i++) 
 	    {	    
-	      ledof = ei->lvdof_to_ledof[eqn][i];
-	      if(ei->active_interp_ledof[ledof]) 
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+	      if(ei[pg->imtrx]->active_interp_ledof[ledof]) 
 	      	{
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 		  
 		  phi_i = phi_i_vector[i];
 		  grad_phi_i_e_a = bfm->grad_phi_e[i][a];
@@ -548,14 +444,14 @@ assemble_aux_u(dbl time,   // Current time
 	  
 	  phi_i_vector = bfm->phi;
 	  
-	  for(i=0; i<ei->dof[eqn]; i++) 
+	  for(i=0; i<ei[pg->imtrx]->dof[eqn]; i++) 
 	    {		  
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];	      
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];	      
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	      
-	      if(ei->active_interp_ledof[ledof]) 
+	      if(ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];		  
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];		  
 		  phi_i = phi_i_vector[i];		  
 		  grad_phi_i_e_a = bfm->grad_phi_e[i][a];	
 		  
@@ -570,7 +466,7 @@ assemble_aux_u(dbl time,   // Current time
 			  J = lec->J[peqn][pvar][ii];			  
 			  phi_j_vector = bf[var]->phi;
 			  
-			  for(j=0; j<ei->dof[var]; j++)
+			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {			      
 			      phi_j = phi_j_vector[j];			      
 			      
@@ -698,7 +594,7 @@ assemble_press_poisson(dbl time,  // Current time
   // Residual
   if(af->Assemble_Residual)
     {
-      for(i=0; i<ei->dof[eqn]; i++)
+      for(i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	  phi_i = bf[eqn]->phi[i];
 	  
@@ -734,7 +630,7 @@ assemble_press_poisson(dbl time,  // Current time
   // Jacobian
   if(af->Assemble_Jacobian)
     {
-      for(i=0; i<ei->dof[eqn]; i++)
+      for(i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{ 
 	  phi_i = bf[eqn]->phi[i];
 
@@ -745,7 +641,7 @@ assemble_press_poisson(dbl time,  // Current time
 	    {
 	      pvar = upd->vp[pg->imtrx][var];	      
 	      J = lec->J[peqn][pvar][i];	      
-	      for(j=0; j<ei->dof[var]; j++)
+	      for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{		  
 		  diffusion = 0.0;
 		  if(pde[eqn] & T_DIFFUSION)
@@ -857,12 +753,12 @@ int assemble_press_proj(dbl time,  // Current time
 	  R = lec->R[peqn];
 	  phi_i_vector = bfm->phi;
 
-	  for(i=0; i<ei->dof[eqn]; i++) 
+	  for(i=0; i<ei[pg->imtrx]->dof[eqn]; i++) 
 	    {	    
-	       ledof = ei->lvdof_to_ledof[eqn][i];
-	      if(ei->active_interp_ledof[ledof]) 
+	       ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+	      if(ei[pg->imtrx]->active_interp_ledof[ledof]) 
 	      	{
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];		  
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];		  
 		  phi_i = phi_i_vector[i];
 		  grad_phi_i_e_a = bfm->grad_phi_e[i][a];
 		  
@@ -907,14 +803,14 @@ int assemble_press_proj(dbl time,  // Current time
 	  
 	  phi_i_vector = bfm->phi;
 	  
-	  for(i=0; i<ei->dof[eqn]; i++) 
+	  for(i=0; i<ei[pg->imtrx]->dof[eqn]; i++) 
 	    {		  
-	      ii = ei->lvdof_to_row_lvdof[eqn][i];	      
-	      ledof = ei->lvdof_to_ledof[eqn][i];
+	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];	      
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
 	      
-	      if(ei->active_interp_ledof[ledof]) 
+	      if(ei[pg->imtrx]->active_interp_ledof[ledof]) 
 		{
-		  ii = ei->lvdof_to_row_lvdof[eqn][i];		  
+		  ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];		  
 		  phi_i = phi_i_vector[i];	
 		  
 		  // J_v
@@ -927,7 +823,7 @@ int assemble_press_proj(dbl time,  // Current time
 			  J = lec->J[peqn][pvar][ii];			  
 			  phi_j_vector = bf[var]->phi;
 			  
-			  for(j=0; j<ei->dof[var]; j++)
+			  for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    {			      
 			      phi_j = phi_j_vector[j];
 			      
@@ -1047,7 +943,7 @@ assemble_press_update(dbl time,  // Current time
   // Residual
   if(af->Assemble_Residual)
     {
-      for(i=0; i<ei->dof[eqn]; i++)
+      for(i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	  phi_i = bf[eqn]->phi[i];
 	  
@@ -1082,7 +978,7 @@ assemble_press_update(dbl time,  // Current time
   // Jacobian
   if(af->Assemble_Jacobian)
     {
-      for(i=0; i<ei->dof[eqn]; i++)
+      for(i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{ 
 	  phi_i = bf[eqn]->phi[i];
 
@@ -1092,7 +988,7 @@ assemble_press_update(dbl time,  // Current time
 	    {
 	      pvar = upd->vp[pg->imtrx][var];	      
 	      J = lec->J[peqn][pvar][i];	      
-	      for(j=0; j<ei->dof[var]; j++)
+	      for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 		

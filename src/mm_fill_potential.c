@@ -256,13 +256,13 @@ assemble_potential(double time,	/* present time value */
       h = mp->current_source;
 
       var = TEMPERATURE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dhdT[j]= mp->d_current_source[var]*bf[var]->phi[j];
 	}
 
       var = VOLTAGE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dhdV[j]= mp->d_current_source[var]*bf[var]->phi[j];
 	}
@@ -272,7 +272,7 @@ assemble_potential(double time,	/* present time value */
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = VELOCITY1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdv[a][j] =mp->d_current_source[var]*bf[var]->phi[j];
 		}
@@ -284,7 +284,7 @@ assemble_potential(double time,	/* present time value */
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdX[a][j] =mp->d_current_source[var]*bf[var]->phi[j];
 		}
@@ -297,7 +297,7 @@ assemble_potential(double time,	/* present time value */
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdC[w][j] =mp->d_current_source[var_offset]*bf[var]->phi[j];
 		}
@@ -346,13 +346,13 @@ assemble_potential(double time,	/* present time value */
           sumzdrv += mp->charge_number[w1]*mp->d_species_source[VOLTAGE];
          }
       var = TEMPERATURE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
          {
           /* dhdT[j] = sumzdrt*bf[var]->phi[j]; */
           dhdT[j] = F*sumzdrt*bf[var]->phi[j]; /* KSC: 7-29-04 */
          }
       var = VOLTAGE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
          {
           /* dhdV[j] = sumzdrv*bf[var]->phi[j]; */
           dhdV[j] = F*sumzdrv*bf[var]->phi[j]; /* KSC: 7-29-04 */
@@ -364,7 +364,7 @@ assemble_potential(double time,	/* present time value */
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = VELOCITY1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdv[a][j] = 0.0;
 		}
@@ -376,7 +376,7 @@ assemble_potential(double time,	/* present time value */
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdX[a][j] = 0.0;
 		}
@@ -398,7 +398,7 @@ assemble_potential(double time,	/* present time value */
 	          electrode_species_source(w1, time, dt);
 	          sumzdrc += mp->charge_number[w1]*mp->d_species_source[var_offset];
 	         }
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	         {
 	          /* dhdC[w][j] = sumzdrc*bf[var]->phi[j]; */
                   dhdC[w][j] = F*sumzdrc*bf[var]->phi[j];  /* KSC: 7-29-04 */
@@ -415,13 +415,13 @@ assemble_potential(double time,	/* present time value */
       h    = mp->current_source;
 
       var = TEMPERATURE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dhdT[j]= 0.0;
 	}
 
       var = VOLTAGE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dhdV[j]= 0.0;
 	}
@@ -432,7 +432,7 @@ assemble_potential(double time,	/* present time value */
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = VELOCITY1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdv[a][j] = 0.0;
 		}
@@ -444,7 +444,7 @@ assemble_potential(double time,	/* present time value */
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdX[a][j] = 0.0;
 		}
@@ -457,7 +457,7 @@ assemble_potential(double time,	/* present time value */
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdC[w][j] = 0.0;
 		}
@@ -475,13 +475,13 @@ assemble_potential(double time,	/* present time value */
       h = butler_volmer_source(mp->u_current_source, 1, dh);
 
       var = TEMPERATURE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
         {
          dhdT[j]= dh[0]*bf[var]->phi[j];
         }
 
       var = VOLTAGE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
         {
          dhdV[j]= dh[1]*bf[var]->phi[j];
         }
@@ -491,7 +491,7 @@ assemble_potential(double time,	/* present time value */
           for ( w=0; w<pd->Num_Species_Eqn; w++)
             {
               var = MASS_FRACTION;
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                 {
                  dhdC[w][j] = 0.0;
                 }
@@ -510,13 +510,13 @@ assemble_potential(double time,	/* present time value */
       h *= F;
 
       var = TEMPERATURE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dhdT[j]= 0.0;
 	}
 
       var = VOLTAGE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dhdV[j]= 0.0;
 	}
@@ -526,7 +526,7 @@ assemble_potential(double time,	/* present time value */
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = VELOCITY1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdv[a][j] = 0.0;
 		}
@@ -538,7 +538,7 @@ assemble_potential(double time,	/* present time value */
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdX[a][j] = 0.0;
 		}
@@ -551,7 +551,7 @@ assemble_potential(double time,	/* present time value */
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdC[w][j] = 0.0;
 		}
@@ -568,13 +568,13 @@ assemble_potential(double time,	/* present time value */
       h *= F;
 
       var = TEMPERATURE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dhdT[j]= 0.0;
 	}
 
       var = VOLTAGE;
-      for (j = 0; j < ei->dof[var]; j++)
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dhdV[j]= 0.0;
 	}
@@ -585,7 +585,7 @@ assemble_potential(double time,	/* present time value */
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = VELOCITY1 + a;
-	      for (j = 0; j < ei->dof[var]; j++)
+	      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdv[a][j] = 0.0;
 		}
@@ -597,7 +597,7 @@ assemble_potential(double time,	/* present time value */
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdX[a][j] = 0.0;
 		}
@@ -610,7 +610,7 @@ assemble_potential(double time,	/* present time value */
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 	          dhdC[w][j] = F*mp->charge_number[w]*bf[var]->phi[j];
 		}
@@ -629,13 +629,13 @@ assemble_potential(double time,	/* present time value */
       h /= (lambda_d*lambda_d);
 
       var = TEMPERATURE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dhdT[j]= 0.0;
 	}
 
       var = VOLTAGE;
-      for (j = 0; j < ei->dof[var]; j++)
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dhdV[j]= -bf[var]->phi[j]/(lambda_d*lambda_d);
 	}
@@ -646,7 +646,7 @@ assemble_potential(double time,	/* present time value */
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = VELOCITY1 + a;
-	      for (j = 0; j < ei->dof[var]; j++)
+	      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdv[a][j] = 0.0;
 		}
@@ -658,7 +658,7 @@ assemble_potential(double time,	/* present time value */
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dhdX[a][j] = 0.0;
 		}
@@ -671,7 +671,7 @@ assemble_potential(double time,	/* present time value */
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 	          dhdC[w][j] = 0.0;
 		}
@@ -744,7 +744,7 @@ assemble_potential(double time,	/* present time value */
                 {
                  var = MASS_FRACTION;
                  var_offset = MAX_VARIABLE_TYPES + w;
-                 for ( j=0; j<ei->dof[var]; j++)
+                 for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                      for ( a=0; a<dim; a++)
                         {
@@ -819,7 +819,7 @@ assemble_potential(double time,	/* present time value */
                 {
                  var = MASS_FRACTION;
                  var_offset = MAX_VARIABLE_TYPES + w;
-                 for ( j=0; j<ei->dof[var]; j++)
+                 for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                      for ( a=0; a<dim; a++)
                         {
@@ -860,7 +860,7 @@ assemble_potential(double time,	/* present time value */
              for ( w=0; w<pd->Num_Species_Eqn; w++)
                 {
                  var = MASS_FRACTION;
-                 for ( j=0; j<ei->dof[var]; j++)
+                 for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                      for ( a=0; a<dim; a++)
                         {
@@ -882,7 +882,7 @@ assemble_potential(double time,	/* present time value */
       eqn = R_POTENTIAL;
       peqn = upd->ep[pg->imtrx][eqn];
 
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 	  phi_i = bf[eqn]->phi[i];
 	  for (p = 0; p < dim; p++) 
@@ -936,7 +936,7 @@ assemble_potential(double time,	/* present time value */
       eqn   = R_POTENTIAL;
       peqn = upd->ep[pg->imtrx][eqn];
 
-      for ( i=0; i<ei->dof[eqn]; i++)
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	{
 
 	  phi_i = bf[eqn]->phi[i];
@@ -959,7 +959,7 @@ assemble_potential(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[0][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  for ( p=0; p<dim; p++)
 		    {
@@ -1003,7 +1003,7 @@ assemble_potential(double time,	/* present time value */
 	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      pvar = upd->vp[0][var];
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  for ( p=0; p<dim; p++)
 		    {
@@ -1043,7 +1043,7 @@ assemble_potential(double time,	/* present time value */
 	      if ( pd->v[pg->imtrx][var] )
 		{
 		  pvar = upd->vp[0][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
                       source = 0.0;
 		      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
@@ -1068,7 +1068,7 @@ assemble_potential(double time,	/* present time value */
 	      if ( pd->v[pg->imtrx][var] )
 		{
 		  pvar = upd->vp[0][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      dh3dmesh_bj = fv->dh3dq[b] * bf[var]->phi[j];
 
@@ -1191,7 +1191,7 @@ assemble_potential(double time,	/* present time value */
 	    {
 	      for ( w=0; w<pd->Num_Species_Eqn; w++)
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      for ( p=0; p<dim; p++)
 		        {
@@ -1288,7 +1288,7 @@ surface_charge_surf(double *func,
   var = MASS_FRACTION;
   if (pd->v[pg->imtrx][var])
     {
-      for( j=0 ; j<ei->dof[var]; j++)
+      for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
 	{
           for (i=0; i<pd->Num_Species; i++)
             {
@@ -1429,7 +1429,7 @@ current_BV_surf(double func[DIM],
 
   /* J_s_c --- sensitivity wrt species concentrations */  
   var=MASS_FRACTION;
-  for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) 
     {
       phi_j = bf[var]->phi[j_id];
 	
@@ -1456,7 +1456,7 @@ current_BV_surf(double func[DIM],
   var=TEMPERATURE;
   if (pd->v[pg->imtrx][var])
     {
-      for (j = 0; j < ei->dof[var]; j++)   
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)   
         {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -1475,7 +1475,7 @@ current_BV_surf(double func[DIM],
   var=VOLTAGE;
   if (pd->v[pg->imtrx][var])
     {
-      for (j = 0; j < ei->dof[var]; j++) 
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
         {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -1496,7 +1496,7 @@ current_BV_surf(double func[DIM],
       var=MESH_DISPLACEMENT1+jvar;
       if (pd->v[pg->imtrx][var])
         {
-          for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+          for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) 
             {
 	      phi_j = bf[var]->phi[j_id];
 	      for(kdir=0; kdir<dim; kdir++) 
@@ -1514,7 +1514,7 @@ current_BV_surf(double func[DIM],
       var = VELOCITY1 + jvar;
       if (pd->v[pg->imtrx][var])
         {
-          for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+          for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) 
              {
 	       phi_j = bf[var]->phi[j_id];
 	       d_func[0][var][j_id] += 
@@ -1586,7 +1586,7 @@ current_ORR_surf(
 
   /* J_s_c --- sensitivity wrt species concentrations */
   var=MASS_FRACTION;
-  for (j_id = 0; j_id < ei->dof[var]; j_id++)
+  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++)
     {
       phi_j = bf[var]->phi[j_id];
 
@@ -1602,7 +1602,7 @@ current_ORR_surf(
   var=TEMPERATURE;
   if (pd->v[pg->imtrx][var])
     {
-      for (j = 0; j < ei->dof[var]; j++)
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
         {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -1615,7 +1615,7 @@ current_ORR_surf(
   var=VOLTAGE;
   if (pd->v[pg->imtrx][var])
     {
-      for (j = 0; j < ei->dof[var]; j++)
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
         {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -1687,7 +1687,7 @@ current_HOR_surf(
 
   /* J_s_c --- sensitivity wrt species concentrations */
   var=MASS_FRACTION;
-  for (j_id = 0; j_id < ei->dof[var]; j_id++)
+  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++)
     {
       phi_j = bf[var]->phi[j_id];
 
@@ -1703,7 +1703,7 @@ current_HOR_surf(
   var=TEMPERATURE;
   if (pd->v[pg->imtrx][var])
     {
-      for (j = 0; j < ei->dof[var]; j++)
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
         {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -1716,7 +1716,7 @@ current_HOR_surf(
   var=VOLTAGE;
   if (pd->v[pg->imtrx][var])
     {
-      for (j = 0; j < ei->dof[var]; j++)
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
         {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -1766,7 +1766,7 @@ assemble_Enorm()
   /* Get d(Enormsq)/d(V_k). */
   /* Kludge to avoid singularity.  Should be updated after 1st iteration with real values. */
   if(Enorm > 0.0)
-    for(k = 0; k < ei->dof[VOLTAGE]; k++)
+    for(k = 0; k < ei[pg->imtrx]->dof[VOLTAGE]; k++)
       {
 	for(j = 0; j < dim; j++)
 	  d_Enorm_d_V[k] += fv->grad_Enorm[j] * bf[VOLTAGE]->grad_phi[k][j];
@@ -1775,7 +1775,7 @@ assemble_Enorm()
   
   if(af->Assemble_Residual)
     {
-      for(i = 0; i < ei->dof[R_ENORM]; i++)
+      for(i = 0; i < ei[pg->imtrx]->dof[R_ENORM]; i++)
 	{
 	  wt_func = bf[R_ENORM]->phi[i];
 
@@ -1803,12 +1803,12 @@ assemble_Enorm()
 
   if(af->Assemble_Jacobian)
     {
-      for(i = 0; i < ei->dof[R_ENORM]; i++)
+      for(i = 0; i < ei[pg->imtrx]->dof[R_ENORM]; i++)
 	{
 	  wt_func = bf[R_ENORM]->phi[i];
 
 	  /* J_Enorm_V */
-	  for(k = 0; k < ei->dof[VOLTAGE]; k++)
+	  for(k = 0; k < ei[pg->imtrx]->dof[VOLTAGE]; k++)
 	    {
 	      /* Only the advection term for _V. */
 	      advection = 0.0;
@@ -1822,7 +1822,7 @@ assemble_Enorm()
 	    } /* for k = 0 ... dof[VOLTAGE] */
 
 	  /* J_Enorm_Enorm */
-	  for(k = 0; k < ei->dof[ENORM]; k++)
+	  for(k = 0; k < ei[pg->imtrx]->dof[ENORM]; k++)
 	    {
 	      /* Only the source term for _Enorm. */
 	      source = 0.0;
@@ -1957,7 +1957,7 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
 	   * based on the number of degrees of freedom...
 	   */
 	  
-	  for ( i=0; i<ei->dof[eqn]; i++)
+	  for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 	      
 	      wt_func = bf[eqn]->phi[i];   /* add Petrov-Galerkin terms as necessary */
@@ -2001,7 +2001,7 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
 	  eqn = R_EFIELD1 + a;
 	  peqn = upd->ep[pg->imtrx][eqn];
 	  
-	  for ( i=0; i<ei->dof[eqn]; i++)
+	  for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 	      wt_func = bf[eqn]->phi[i];   /* add Petrov-Galerkin terms as necessary */	
 	      
@@ -2012,7 +2012,7 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
 	      if ( pd->v[pg->imtrx][var] )
 		{
 		  pvar = upd->vp[0][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		      
@@ -2041,7 +2041,7 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
 		  if ( pd->v[pg->imtrx][var] )
 		    {
 		      pvar = upd->vp[0][var];
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];
 			  
@@ -2105,7 +2105,7 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
 	      if ( pd->v[pg->imtrx][var] )
 		{
 		  pvar = upd->vp[0][var];
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		      
@@ -2186,7 +2186,7 @@ apply_potential_grad_bc( double func[],
    var = VOLTAGE;
    if (pd->v[pg->imtrx][var] )
      {
-    	for(j=0; j<ei->dof[var]; j++)
+    	for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
            {
             for ( p=0; p<VIM; p++)
               {
@@ -2200,7 +2200,7 @@ apply_potential_grad_bc( double func[],
   var = TEMPERATURE;
   if (pd->v[pg->imtrx][var] )
     {
-      for (j=0; j<ei->dof[var]; j++)
+      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
         {
            for ( p=0; p<VIM; p++)
              {
@@ -2215,7 +2215,7 @@ apply_potential_grad_bc( double func[],
        for ( b=0; b<VIM; b++)
          {
            var = MESH_DISPLACEMENT1+b;
-                for (j=0; j<ei->dof[var]; j++)
+                for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                          for (q=0; q<VIM; q++)
                             {
@@ -2290,13 +2290,13 @@ int i, j, a, w;
       k   = mp->electrical_conductivity;
 
       var = TEMPERATURE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dkdT[j]= mp->d_electrical_conductivity[var]*bf[var]->phi[j];
 	}
 
       var = VOLTAGE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dkdV[j]= mp->d_electrical_conductivity[var]*bf[var]->phi[j];
 	}
@@ -2306,7 +2306,7 @@ int i, j, a, w;
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dkdX[a][j] =mp->d_electrical_conductivity[var]*bf[var]->phi[j];
 		}
@@ -2319,7 +2319,7 @@ int i, j, a, w;
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dkdC[w][j] =mp->d_electrical_conductivity[var_offset]*bf[var]->phi[j];
 		}
@@ -2399,13 +2399,13 @@ int i, j, a, w;
          k = sumk;   /* This is the electrical conductivity value in the PHI2 equation; KSC: 10/98  */ 
 
          var = TEMPERATURE;
-         for ( j=0; j<ei->dof[var]; j++)
+         for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	   {
 	     dkdT[j]= 0.0;
 	   }
 
          var = VOLTAGE;
-         for ( j=0; j<ei->dof[var]; j++)
+         for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	   {
 	     dkdV[j]= 0.0;
 	   }
@@ -2415,7 +2415,7 @@ int i, j, a, w;
 	     for ( a=0; a<dim; a++)
 	       {
 	         var = MESH_DISPLACEMENT1 + a;
-	         for ( j=0; j<ei->dof[var]; j++)
+	         for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		   {
 		     dkdX[a][j] = 0.0;
 		   }
@@ -2432,7 +2432,7 @@ int i, j, a, w;
 	       {
 	         var = MASS_FRACTION;
 	         var_offset = MAX_VARIABLE_TYPES + w;
-	         for ( j=0; j<ei->dof[var]; j++)
+	         for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		   {
 		     dkdC[w][j] = 0.0;
 		     sum1 = 0.0;
@@ -2516,13 +2516,13 @@ int i, j, a, w;
          k = F*FRT*sumk;      
 
          var = TEMPERATURE;
-         for ( j=0; j<ei->dof[var]; j++)
+         for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	   {
 	     dkdT[j]= -bf[var]->phi[j]*k/T;
 	   }
 
          var = VOLTAGE;
-         for ( j=0; j<ei->dof[var]; j++)
+         for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	   {
 	     dkdV[j]= 0.0;
 	   }
@@ -2532,7 +2532,7 @@ int i, j, a, w;
 	     for ( a=0; a<dim; a++)
 	       {
 	         var = MESH_DISPLACEMENT1 + a;
-	         for ( j=0; j<ei->dof[var]; j++)
+	         for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		   {
 		     dkdX[a][j] = 0.0;
 		   }
@@ -2545,7 +2545,7 @@ int i, j, a, w;
 	       {
 	         var = MASS_FRACTION;
 	         var_offset = MAX_VARIABLE_TYPES + w;
-	         for ( j=0; j<ei->dof[var]; j++)
+	         for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		   {
 		     dkdC[w][j] = F*FRT*z[w]*z[w]*D[w]*bf[var]->phi[j];  
 		   }
@@ -2555,7 +2555,7 @@ int i, j, a, w;
 
   else if (cr->MassFluxModel == FICKIAN_CHARGED_X) /* RSL 9/18/00 */
      {
-      mn = ei->mn;
+      mn = ei[pg->imtrx]->mn;
 
       if (pd_glob[mn]->e[pg->imtrx][R_ENERGY])  /* if the energy equation is being solved */
          {
@@ -2604,13 +2604,13 @@ int i, j, a, w;
       k = FRT*c*sumk;    
 
       var = TEMPERATURE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
          {
           dkdT[j]= -bf[var]->phi[j]*k/T;
          }
 
       var = VOLTAGE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
          {
           dkdV[j]= 0.0;
          }
@@ -2620,7 +2620,7 @@ int i, j, a, w;
           for ( a=0; a<dim; a++)
              {
               var = MESH_DISPLACEMENT1 + a;
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                  {
                   dkdX[a][j] = 0.0;
                  }
@@ -2636,7 +2636,7 @@ int i, j, a, w;
              {
               var = MASS_FRACTION;
               var_offset = MAX_VARIABLE_TYPES + w;
-              for ( j=0; j<ei->dof[var]; j++)
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                  {
                   dkdC[w][j] =  FRT*c*bf[var]->phi[j]*z[w]*z[w]*D[w] +
                                 k*(d_rho->C[w][j]/rho -
@@ -2666,13 +2666,13 @@ int i, j, a, w;
         }
 
       var = TEMPERATURE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dkdT[j]= 0.;
 	}
 
       var = VOLTAGE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dkdV[j]= 0.0;
 	}
@@ -2681,7 +2681,7 @@ int i, j, a, w;
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dkdX[a][j] =0.0;
 		}
@@ -2693,7 +2693,7 @@ int i, j, a, w;
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dkdC[w][j] = 0.0;
 		}
@@ -2719,13 +2719,13 @@ int i, j, a, w;
         }
 
       var = TEMPERATURE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dkdT[j]= 0.;
 	}
 
       var = VOLTAGE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dkdV[j]= 0.0;
 	}
@@ -2734,7 +2734,7 @@ int i, j, a, w;
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dkdX[a][j] =0.0;
 		}
@@ -2746,7 +2746,7 @@ int i, j, a, w;
 	    {
 	      var = MASS_FRACTION;
 	      var_offset = MAX_VARIABLE_TYPES + w;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dkdC[w][j] = 0.0;
 		}
@@ -2764,13 +2764,13 @@ int i, j, a, w;
       //Maybe all sensitivies should be set to 0 by default, and changed
       //only as needed?
       var = TEMPERATURE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dkdT[j]= 0.;
 	}
 
       var = VOLTAGE;
-      for ( j=0; j<ei->dof[var]; j++)
+      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	{
 	  dkdV[j]= 0.0;
 	}
@@ -2779,7 +2779,7 @@ int i, j, a, w;
 	  for ( a=0; a<dim; a++)
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  dkdX[a][j] =0.0;
 		}

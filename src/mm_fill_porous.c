@@ -261,9 +261,9 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 	 *  step doesn't depend upon the porous media equation number, so
 	 *  we might think about exchanging the order of the loops!
 	 */
-	for (i = 0; i < ei->dof[eqn]; i++) {
-	  ledof = ei->lvdof_to_ledof[eqn][i];
-	  if (ei->active_interp_ledof[ledof]) {
+	for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
 	    /*
 	     *  Here is where we figure out whether the row is to placed in
 	     *  the normal spot (e.g., ii = i), or whether a boundary condition
@@ -386,9 +386,9 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
       eqn = R_POR_LIQ_PRES + w;
       peqn = upd->ep[pg->imtrx][eqn];
       if (pd->e[pg->imtrx][eqn]) {
-	for (i = 0; i < ei->dof[eqn]; i++) {
-	  ledof = ei->lvdof_to_ledof[eqn][i];
-	  if (ei->active_interp_ledof[ledof]) {
+	for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+	  ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+	  if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
 	    ii = i;
 	    
 	    /*
@@ -428,7 +428,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 		/*
 		 * Loop over column degrees of freedom
 		 */
-		for (j = 0; j < ei->dof[var]; j++) {
+		for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 		  phi_j = bf[var]->phi[j];
 				  
 		  mass = 0.0;
@@ -560,7 +560,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 	      var = MESH_DISPLACEMENT1 + b;
 	      if (pd->v[pg->imtrx][var]) {
 		pvar = upd->vp[pg->imtrx][var];
-		for (j = 0; j < ei->dof[var]; j++) {
+		for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 		  phi_j = bf[var]->phi[j];
 		  d_det_J_dmeshbj = bf[var]->d_det_J_dm[b][j];
 				  
@@ -663,7 +663,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 	    var = TEMPERATURE;
 	    if (pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var] && !pd->e[pg->imtrx][R_POR_ENERGY]) {
 	      pvar = upd->vp[pg->imtrx][var];
-	      for (j = 0; j < ei->dof[var]; j++) {
+	      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 		phi_j = bf[var]->phi[j];
 			      
 		advection = 0.0;
@@ -706,7 +706,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 	      pvar = upd->vp[pg->imtrx][var];
 	      if(T_SOURCE)
 		{
-		  for (j = 0; j < ei->dof[var]; j++) {
+		  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 		    source = pm_terms.d_MassSource_dSM[w][j] * det_J * h3 * wt * phi_i;
 		    source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
 		    lec->J[peqn][pvar][ii][j] += source ;
@@ -716,7 +716,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 	      
 	      if (T_ADVECTION) {
 
-		for (j = 0; j < ei->dof[var]; j++) {
+		for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 		  advection = 0.0;
 		  for (p = 0; p < VIM; p++) {
 		    advection += pm_terms.d_conv_flux_dSM[w][p][j];
@@ -730,7 +730,7 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 
 	      if (T_DIFFUSION) {
 
-		for (j = 0; j < ei->dof[var]; j++) {
+		for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 		  diffusion = 0.0;
 		  for (p = 0; p < VIM; p++) {
 		    diffusion += pm_terms.d_diff_flux_dSM[w][p][j];
@@ -1675,10 +1675,10 @@ load_nodal_porous_properties(double tt, double dt)
   const int i_pl = 0, i_pg = 1, i_pe=3;
 
   eqn = POR_LIQ_PRES;
-  i_lvdesc = ei->Lvdesc_First_Var_Type[eqn];
-  lvdesc_to_lnn =  ei->Lvdesc_to_Lnn[i_lvdesc];
-  lvdesc_to_idof = ei->Lvdesc_to_lvdof[i_lvdesc];
-  for (lvd = 0; lvd < ei->Lvdesc_Numdof[i_lvdesc]; lvd++) {
+  i_lvdesc = ei[pg->imtrx]->Lvdesc_First_Var_Type[eqn];
+  lvdesc_to_lnn =  ei[pg->imtrx]->Lvdesc_to_Lnn[i_lvdesc];
+  lvdesc_to_idof = ei[pg->imtrx]->Lvdesc_to_lvdof[i_lvdesc];
+  for (lvd = 0; lvd < ei[pg->imtrx]->Lvdesc_Numdof[i_lvdesc]; lvd++) {
     idof = lvdesc_to_idof[lvd];
     p_liq     = *(esp->p_liq[idof]);
     p_liq_old = *(esp_old->p_liq[idof]);
@@ -1712,7 +1712,7 @@ load_nodal_porous_properties(double tt, double dt)
      * Find the correct local element coordinates, xi[], at the 
      * the current local node number, lnn.
      */
-    find_nodal_stu(lnn, ei->ielem_type, xi, xi+1, xi+2);
+    find_nodal_stu(lnn, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
 
     /*
      * Load up basis function information for each basis function
@@ -2169,7 +2169,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
    */
   if (mp->Porous_wt_funcModel == SUPG) {
     eqn = POR_LIQ_PRES;
-    for (i = 0; i < ei->dof[eqn]; i++) {
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 
       grad_phi_i = bf[eqn]->grad_phi[i];
 
@@ -2199,7 +2199,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
      */      
     var = POR_LIQ_PRES;
      
-    for ( j=0; j<ei->dof[var]; j++) {
+    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
       for ( w=0; w<MAX_PMV; w++) {
 	for ( w1=0; w1<MAX_PMV; w1++) {
 	  pmt->d_Inventory_solvent_dot_dpmv[w][w1] [j]= 0.;
@@ -2209,7 +2209,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
     
 
     if (pd->TimeIntegration != STEADY) {
-      for (j = 0; j < ei->dof[var]; j++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	for (w1 = 0; w1 < MAX_PMV; w1++) {
 	  pmt->d_Inventory_solvent_dot_dpmv[i_pl][w1] [j] = 
 	      (1 + 2. * tt) * pmv->d_bulk_density[i_pl][POR_LIQ_PRES + w1] 
@@ -2237,7 +2237,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
         
     for ( w=0; w<MAX_PMV; w++) {
       for ( a=0; a<VIM; a++) {
-	for ( j=0; j<ei->dof[var]; j++) {
+	for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	  for ( w1=0; w1<MAX_PMV; w1++)  {
 	    pmt->d_diff_flux_dpmv[w][a] [w1][j] = 0.;
 	  }
@@ -2252,7 +2252,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
     if (cr->PorousFluxModel == DARCY_FICKIAN ||
 	cr->PorousFluxModel == POWERLAW_DARCY_FICKIAN) {
       for (a = 0; a < VIM; a++)  {
-	for (j = 0; j < ei->dof[var]; j++) {
+	for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	  for (w1 = 0; w1 < MAX_PMV; w1++) {
 	    pmt->d_diff_flux_dpmv[i_pl][a] [w1][j] =
 	       pmv->d_rel_mass_flux_dpmv[i_pl][a] [w1][j];
@@ -2284,7 +2284,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
       var = MESH_DISPLACEMENT1 + b;
       if ( pd->v[pg->imtrx][var] )  {
 	
-	for ( j=0; j<ei->dof[var]; j++) {
+	for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	  for (a=0; a < VIM; a++) {
 	    for ( w=0; w<MAX_PMV; w++) {
 	      pmt->d_diff_flux_dmesh[w][a] [b][j] = 0.0;
@@ -2320,7 +2320,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
       if (cr->PorousFluxModel == DARCY_FICKIAN ||
 	  cr->PorousFluxModel == POWERLAW_DARCY_FICKIAN) {
 	for ( a=0; a<VIM; a++) {
-	  for ( j=0; j<ei->dof[var]; j++) {
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	    pmt->d_diff_flux_dT[i_pl][a] [j] =  0.;
 	    pmt->d_diff_flux_dT[i_pg][a] [j] =  0.;
 	  }
@@ -2328,7 +2328,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
       }
       /* NOTE - the gas concentrations, etc should also be functions of temperature */
       for ( a=0; a<VIM; a++) {
-	for ( j=0; j<ei->dof[var]; j++) {
+	for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	  pmt->d_diff_flux_dT[i_pl][a] [j] =  -pmv->d_rel_mass_flux_dT[i_pl][a] [j];
 	  pmt->d_diff_flux_dT[i_pg][a] [j] =  -pmv->d_rel_mass_flux_dT[i_pg][a] [j];
 	}
@@ -2342,7 +2342,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
     if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
       for ( a=0; a<VIM; a++) {
 	var = POR_LIQ_PRES;
-	for ( j=0; j<ei->dof[var]; j++) {
+	for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	  pmt->d_conv_flux_dpmv[i_pl][a] [i_pl][j] = fv->grad_d_dot[a][a]*
 	            pmv->d_bulk_density[i_pl][POR_LIQ_PRES]*bf[var]->phi[j];
 		 
@@ -2358,7 +2358,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 	}
 	var = POR_GAS_PRES;
 	if (pd->e[pg->imtrx][var]) {
-	  for ( j=0; j<ei->dof[var]; j++) {
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	    pmt->d_conv_flux_dpmv[i_pl][a] [i_pg][j] = fv->grad_d_dot[a][a]*
 	            pmv->d_bulk_density[i_pl][POR_GAS_PRES]*bf[var]->phi[j];
 		     
@@ -2373,7 +2373,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 	     
 	var = POR_POROSITY;
 	if (pd->e[pg->imtrx][var]) {
-	  for ( j=0; j<ei->dof[var]; j++) {
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	    pmt->d_conv_flux_dpmv[i_pl][a] [i_pore][j] = fv->grad_d_dot[a][a]*
 	            pmv->d_bulk_density[i_pl][POR_POROSITY]*bf[var]->phi[j];
 		     
@@ -2391,7 +2391,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 
 	var = POR_TEMP;
 	if (pd->e[pg->imtrx][var]) {
-	  for ( j=0; j<ei->dof[var]; j++) {
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	    pmt->d_conv_flux_dpmv[i_pl][a] [i_pe][j] = fv->grad_d_dot[a][a]*
 	            pmv->d_bulk_density[i_pl][POR_TEMP]*bf[var]->phi[j];
 		     
@@ -2408,7 +2408,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
     for (b=0; b < pd->Num_Dim; b++) {
       var = MESH_DISPLACEMENT1 + b;
       if (pd->v[pg->imtrx][var]) {
-	for (j = 0; j < ei->dof[var]; j++) {
+	for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	  for (a = 0; a < VIM; a++) {
 	    for (w = 0; w < MAX_PMV; w++) {
 	      pmt->d_conv_flux_dmesh[w][a] [b][j] = 0.0;
@@ -2434,7 +2434,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 	var = POR_POROSITY;
 	if(pd->e[pg->imtrx][R_POR_SINK_MASS])
 	  {
-	    for (j = 0; j < ei->dof[var]; j++) 
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 	      {
 		 pmt->d_conv_flux_dpmv[i_pore][0] [i_pore][j] = 
 		  -(mp->u_porous_sink_constants[3]/mp->u_porous_sink_constants[4]
@@ -2445,7 +2445,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 	  }
 	else
 	  {
-	    for (j = 0; j < ei->dof[var]; j++) 
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 	      {
 		pmt->d_conv_flux_dpmv[i_pore][0] [i_pore][j] = -(1. - mp->u_porosity[0]) 
 		/ (1. - fv->porosity) / (1. - fv->porosity) * bf[var]->phi[j];
@@ -2455,7 +2455,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 	var = POR_SINK_MASS;
 	if(pd->v[pg->imtrx][var])
 	  {
-	    for(j=0; j<ei->dof[var]; j++)
+	    for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	      {
 		pmt->d_conv_flux_dSM[i_pore][0][j] = 
 		  -(mp->u_porous_sink_constants[2]/mp->u_porous_sink_constants[5]
@@ -2466,7 +2466,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 	for (b=0; b < pd->Num_Dim; b++) {
 	  var = MESH_DISPLACEMENT1 + b;
 	  if (pd->v[pg->imtrx][var]) {
-	    for ( j=0; j<ei->dof[var]; j++) {
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	      /* Need to calculate the dilation of the medium and relate
 	       * it to the porosity 
 	       * this is really a Kludge for the porosity equation 
@@ -2486,7 +2486,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 	var = POR_SINK_MASS;
 	if(pd->v[pg->imtrx][var])
 	  {
-	    for ( j=0; j<ei->dof[var]; j++)
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	      {
 		pmt->d_MassSource_dSM[i_pl][j] = tau*
 	                         mp->u_porous_sink_constants[2]*
@@ -2501,7 +2501,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 	    var = R_MESH1 + b;
 	    if(pd->v[pg->imtrx][var])
 	      {
-		for ( j=0; j<ei->dof[var]; j++)
+		for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		  {
 		    pmt->d_MassSource_dmesh[i_pl][b][j] = fv->d_volume_change_dx[b][j] *
 		                                              tau*
@@ -2531,7 +2531,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 	var = POR_LIQ_PRES;
 	if(pd->v[pg->imtrx][var])
 	  {
-	    for ( j=0; j<ei->dof[var]; j++)
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	      {
 		pmt->d_MassSource_dpmv[i_pl][i_pl][j] = 0.0;
 		for(a=0; a < VIM; a++)
@@ -2546,7 +2546,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 	var = POR_POROSITY;
 	if(pd->v[pg->imtrx][var])
 	  {
-	    for ( j=0; j<ei->dof[var]; j++)
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	      {
 		pmt->d_MassSource_dpmv[i_pl][i_pore][j] = 0.0;
 		for(a=0; a < VIM; a++)
@@ -2570,7 +2570,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
       /*
        * Install the base state first
        */
-      for (j = 0; j < ei->dof[var]; j++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	switch (dim) {
 	case 2:
 	    pmv->d_U_supg_hnorm_dmde[0][j] = pmv->U_supg_hnorm[0];
@@ -2590,7 +2590,7 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
       /*
        * loop over the columns
        */
-      for (j = 0; j < ei->dof[var]; j++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	phi_j =  bf[var]->phi[j];
 	grad_phi_j = bf[var]->grad_phi[j];
 
@@ -2684,18 +2684,18 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
       /*
        * Complete the current calculation
        */
-      for (i = 0; i < ei->dof[var]; i++) {
+      for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
 	grad_phi_i = bf[var]->grad_phi[i];
 	switch (dim) {
 	case 2:
-	    for (j = 0; j < ei->dof[var]; j++) {	  
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {	  
 	      pmt->d_pi_supg_dpmv[i][i_pl][j] =
 		  pmv->d_U_supg_hnorm_dmde[0][j] * grad_phi_i[0] + 
 		  pmv->d_U_supg_hnorm_dmde[1][j] * grad_phi_i[1];
 	    }
 	    break;
 	case 3:
-	    for (j = 0; j < ei->dof[var]; j++) {	  
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {	  
 	      pmt->d_pi_supg_dpmv[i][i_pl][j] =
 		  pmv->d_U_supg_hnorm_dmde[0][j] * grad_phi_i[0] + 
 		  pmv->d_U_supg_hnorm_dmde[1][j] * grad_phi_i[1] +
@@ -2850,7 +2850,7 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
    */
   if (mp->Porous_wt_funcModel == SUPG) {
     eqn = POR_LIQ_PRES;
-    for (i = 0; i < ei->dof[eqn]; i++) {
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
       grad_phi_i = bf[eqn]->grad_phi[i];
       for (a = 0; a < dim; a++) {
 	pmt->pi_supg[i] += pmv->U_supg_hnorm[a] * grad_phi_i[a];
@@ -2875,7 +2875,7 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
      * sensitivity of CAPACITY TERM - concentration (volume fraction)
      */      
     var = POR_LIQ_PRES;
-    for ( j=0; j<ei->dof[var]; j++) {
+    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
       for ( w=0; w<MAX_PMV; w++) {
 	for ( w1=0; w1<MAX_PMV; w1++) {
 	  pmt->d_Inventory_solvent_dot_dpmv[w][w1] [j]= 0.;
@@ -2883,7 +2883,7 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
       }
     }
     if (pd->TimeIntegration != STEADY) {
-      for (j = 0; j < ei->dof[var]; j++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	  pmt->d_Inventory_solvent_dot_dpmv[i_pl][i_pl] [j] += pmv->bulk_density[i_pl] *
 	    mp->porous_compressibility * (1. + 2.*tt) *bf[var]->phi[j]/dt 
 	  + pmv->d_bulk_density[i_pl][POR_LIQ_PRES] * bf[var]->phi[j] *
@@ -2910,7 +2910,7 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
     var = POR_LIQ_PRES;
     for ( w=0; w<MAX_PMV; w++) {
       for ( a=0; a<VIM; a++) {
-	for ( j=0; j<ei->dof[var]; j++) {
+	for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	  for ( w1=0; w1<MAX_PMV; w1++)  {
 	    pmt->d_diff_flux_dpmv[w][a] [w1][j] = 0.;
 	  }
@@ -2920,7 +2920,7 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
     if (cr->PorousFluxModel == DARCY_FICKIAN || 
 	cr->PorousFluxModel == POWERLAW_DARCY_FICKIAN) {
       for (a = 0; a < VIM; a++)  {
-	for (j = 0; j < ei->dof[var]; j++) {
+	for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	  for (w1 = 0; w1 < MAX_PMV; w1++) {
 	    pmt->d_diff_flux_dpmv[i_pl][a] [w1][j] +=
 		pmv->d_rel_mass_flux_dpmv[i_pl][a] [w1][j] +
@@ -2941,7 +2941,7 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
       if (cr->PorousFluxModel == DARCY_FICKIAN ||
 	  cr->PorousFluxModel == POWERLAW_DARCY_FICKIAN) {
 	for ( a=0; a<VIM; a++) {
-	  for ( j=0; j<ei->dof[var]; j++) {
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	    pmt->d_diff_flux_dT[i_pl][a] [j] =  0.;
 	    pmt->d_diff_flux_dT[i_pg][a] [j] =  0.;
 	  }
@@ -2949,7 +2949,7 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
       }
       /* NOTE - the gas concentrations, etc should also be functions of temperature */
       for ( a=0; a<VIM; a++) {
-	for ( j=0; j<ei->dof[var]; j++) {
+	for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	  pmt->d_diff_flux_dT[i_pl][a] [j] -=  pmv->d_rel_mass_flux_dT[i_pl][a] [j];
 	  pmt->d_diff_flux_dT[i_pg][a] [j] -=  pmv->d_rel_mass_flux_dT[i_pg][a] [j];
 	}
@@ -2976,7 +2976,7 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
       /*
        * Install the base state first
        */
-      for (j = 0; j < ei->dof[var]; j++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	switch (dim) {
 	case 2:
 	    pmv->d_U_supg_hnorm_dmde[0][j] = pmv->U_supg_hnorm[0];
@@ -2996,7 +2996,7 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
       /*
        * loop over the columns
        */
-      for (j = 0; j < ei->dof[var]; j++) {
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	phi_j =  bf[var]->phi[j];
 	grad_phi_j = bf[var]->grad_phi[j];
 
@@ -3090,18 +3090,18 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
       /*
        * Complete the current calculation
        */
-      for (i = 0; i < ei->dof[var]; i++) {
+      for (i = 0; i < ei[pg->imtrx]->dof[var]; i++) {
 	grad_phi_i = bf[var]->grad_phi[i];
 	switch (dim) {
 	case 2:
-	    for (j = 0; j < ei->dof[var]; j++) {	  
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {	  
 	      pmt->d_pi_supg_dpmv[i][i_pl][j] =
 		  pmv->d_U_supg_hnorm_dmde[0][j] * grad_phi_i[0] + 
 		  pmv->d_U_supg_hnorm_dmde[1][j] * grad_phi_i[1];
 	    }
 	    break;
 	case 3:
-	    for (j = 0; j < ei->dof[var]; j++) {	  
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {	  
 	      pmt->d_pi_supg_dpmv[i][i_pl][j] =
 		  pmv->d_U_supg_hnorm_dmde[0][j] * grad_phi_i[0] + 
 		  pmv->d_U_supg_hnorm_dmde[1][j] * grad_phi_i[1] +
@@ -3411,7 +3411,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	* dependence of liq darcy flux on the liquid pressure gradient
 	*/
        var = POR_LIQ_PRES;
-       for (j = 0; j < ei->dof[var]; j++) {
+       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	 phi_ptr = bf[var]->phi;
  
 	 pmt->d_Inventory_solvent_dot_dpmv[i_pl][i_pl][j]  = 
@@ -3428,7 +3428,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
    var = POR_POROSITY;
    if (pd->TimeIntegration != STEADY && pd->v[pg->imtrx][POR_POROSITY]) {
      phi_ptr = bf[var]->phi;
-     for (j = 0; j < ei->dof[var]; j++) {
+     for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
        pmt->d_Inventory_solvent_dot_dpmv[i_pl][i_pore][j] 
          = (1 + 2. * tt) * phi_ptr[j] * mp->density / dt;
      } 
@@ -3444,7 +3444,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
       var = POR_POROSITY;
       phi_ptr = bf[var]->phi;
       for (a = 0; a < VIM; a++) {
-	for (j = 0; j < ei->dof[var]; j++) {
+	for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	  pmt->d_diff_flux_dpmv[i_pl][a][i_pore][j] = 
 	      mp->density * vconv[a]
 	    * mp->d_porosity[POR_POROSITY] * phi_ptr[j];
@@ -3467,7 +3467,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	  /*
 	   * Dependence of the permeability on the porosity
 	   */
-	  for (j = 0; j < ei->dof[var]; j++) 
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 	    {
 	      pmt->d_diff_flux_dpmv[i_pl][a][i_pore][j] += 
 		mp->density * pmv->liq_darcy_velocity[a] *
@@ -3482,7 +3482,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	  if(cr->PorousFluxModel == DARCY_FICKIAN)
 	    {
 	      var = POR_LIQ_PRES;
-	      for (j = 0; j < ei->dof[var]; j++) {
+	      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 		pmt->d_diff_flux_dpmv[i_pl][a][i_pl][j] -= 
 		  mp->density * mp->permeability / mp->viscosity * 
 		  bf[var]->grad_phi[j][a]; 
@@ -3491,7 +3491,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	  else if (cr->PorousFluxModel == POWERLAW_DARCY_FICKIAN)
 	    {
 	      var = POR_LIQ_PRES;
-	      for (j = 0; j < ei->dof[var]; j++) {
+	      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 		pmt->d_diff_flux_dpmv[i_pl][a][i_pl][j] -= 
 		  mp->density * mp->permeability / mp->viscosity * 
 		  n_pow*pow(fv->grad_p_liq[a], n_pow-1)*bf[var]->grad_phi[j][a]; 
@@ -3504,7 +3504,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	var = POR_SINK_MASS;
 	if(pd->v[pg->imtrx][var])
 	  {
-	    for (j = 0; j < ei->dof[var]; j++) {
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	      pmt->d_diff_flux_dSM[i_pl][a][j] += 	
 		mp->density * pmv->liq_darcy_velocity[a] *
 		mp->d_permeability[POR_SINK_MASS] / 
@@ -3527,7 +3527,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
       var = POR_LIQ_PRES;
       for (a = 0; a < VIM; a++) {
 	for (b = 0; b < VIM; b++) {
-	  for (j = 0; j < ei->dof[var]; j++) {
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	    /*
 	     * dependence of liq darcy flux on the liquid pressure gradient
 	     */
@@ -3542,7 +3542,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	var = POR_POROSITY;
 	for (a = 0; a < VIM; a++) {
 	  for (b = 0; b < VIM; b++) {
-	    for (j = 0; j < ei->dof[var]; j++) {
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	      /*
 	       * dependence of liq darcy flux on the liquid pressure gradient
 	       */
@@ -3559,7 +3559,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
       var = MESH_DISPLACEMENT1 + b;
       phi_ptr = bf[var]->phi;
       if (pd->v[pg->imtrx][var]) {
-	for (j = 0; j < ei->dof[var]; j++) {
+	for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	  for (a = 0; a < VIM; a++) {
 	    /*
 	     * Dependence of vconv on mesh position
@@ -3610,7 +3610,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	if(pd->e[pg->imtrx][R_POR_SINK_MASS])
 	  {
 
-	    for (j = 0; j < ei->dof[var]; j++) 
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 	      {
 		pmt->d_conv_flux_dpmv[i_pore][0] [i_pore][j] -= 
 			  (mp->u_porous_sink_constants[3]/mp->u_porous_sink_constants[4]
@@ -3622,7 +3622,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	  }
 	else
 	  {
-	    for (j = 0; j < ei->dof[var]; j++) 
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 	      {
 		pmt->d_conv_flux_dpmv[i_pore][0] [i_pore][j] -= (1. - mp->u_porosity[0]) 
 		/ (1. - fv->porosity) / (1. - fv->porosity) * bf[var]->phi[j];
@@ -3634,7 +3634,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
     if(pd->v[pg->imtrx][var])
       {
 
-	for(j=0; j<ei->dof[var]; j++)
+	for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
       
 	  {
 	    pmt->d_conv_flux_dSM[i_pore][0][j] -= 
@@ -3652,7 +3652,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
       {
 	for(a = 0; a < VIM; a++)
 	  {      
-	    for (j = 0; j < ei->dof[var]; j++) 
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) 
 	      {
 	      pmt->d_conv_flux_dpmv[i_pl][a] [i_pore][j] +=
 		mp->density * fv->grad_d_dot[a][a] * bf[var]->phi[j];
@@ -3670,7 +3670,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	var = MESH_DISPLACEMENT1 + b;
 	phi_ptr = bf[var]->phi;
 	if (pd->v[pg->imtrx][var]) {
-	  for (j = 0; j < ei->dof[var]; j++) {
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	    for (a = 0; a < VIM; a++)  {
 	      /*
 	       * Dependence of rho*porosity*div_d_dot on the mesh position and
@@ -3692,7 +3692,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	var = MESH_DISPLACEMENT1 + b;
 	phi_ptr = bf[var]->phi;
 	if (pd->v[pg->imtrx][var]) {
-	  for (j = 0; j < ei->dof[var]; j++) {
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	    /* 
 	     * Dependence of dilation on the mesh positions
 	     */
@@ -3712,7 +3712,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	var = POR_SINK_MASS;
 	if(pd->v[pg->imtrx][var])
 	  {
-	    for ( j=0; j<ei->dof[var]; j++)
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	      {
 		pmt->d_MassSource_dSM[i_pl][j] += mp->u_porous_sink_constants[0]*
 	                         mp->u_porous_sink_constants[2]*
@@ -3727,7 +3727,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	    var = R_MESH1 + b;
 	    if(pd->v[pg->imtrx][var])
 	      {
-		for ( j=0; j<ei->dof[var]; j++)
+		for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		  {
 		    pmt->d_MassSource_dmesh[i_pl][b][j] += fv->d_volume_change_dx[b][j] *
 		                                              mp->u_porous_sink_constants[0]*
@@ -3759,7 +3759,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	var = POR_LIQ_PRES;
 	if(pd->v[pg->imtrx][var])
 	  {
-	    for ( j=0; j<ei->dof[var]; j++)
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	      {
 		for(a=0; a < VIM; a++)
 		  {
@@ -3773,7 +3773,7 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
 	var = POR_POROSITY;
 	if(pd->v[pg->imtrx][var])
 	  {
-	    for ( j=0; j<ei->dof[var]; j++)
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	      {
 		for(a=0; a < VIM; a++)
 		  {
@@ -3864,7 +3864,7 @@ porous_mass_flux_surf_bc(double func[DIM],
        * J_pmv_pmv
        */
       var=POR_LIQ_PRES;
-      for (j_id = 0; j_id < ei->dof[var]; j_id++)
+      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++)
 	{
 	  phi_j = bf[var]->phi[j_id];
 
@@ -3895,7 +3895,7 @@ porous_mass_flux_surf_bc(double func[DIM],
       var=TEMPERATURE;
       if (pd->v[pg->imtrx][var])
 	{
-	  for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+	  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) 
 	    {
 	      phi_j = bf[var]->phi[j_id];
 	      
@@ -3920,7 +3920,7 @@ porous_mass_flux_surf_bc(double func[DIM],
 	  var=MESH_DISPLACEMENT1 + a;
 	  if (pd->v[pg->imtrx][var])
 	    {
-	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+	      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) 
 		{
 		  phi_j = bf[var]->phi[j_id];
 		  
@@ -4007,7 +4007,7 @@ porous_convection_bc (double func[DIM],
       var=POR_LIQ_PRES;
       if (mp->PorousMediaType == POROUS_SATURATED) {
 	if (i_pore != -1) {
-	  for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+	  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
 	    phi_j = bf[var]->phi[j_id];
 	  
 		for (p=0; p<dim; p++)
@@ -4019,7 +4019,7 @@ porous_convection_bc (double func[DIM],
 	  }
 	}
       } else {
-	for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+	for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
 	  phi_j = bf[var]->phi[j_id];
 
           /* WARNING: bulk_density goes from first_porous_var to last_porous_var */
@@ -4044,7 +4044,7 @@ porous_convection_bc (double func[DIM],
       if (pd->v[pg->imtrx][var])
 	{
 	  if (mp->PorousMediaType != POROUS_SATURATED) {
-	    for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+	    for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) 
 	      {
 		phi_j = bf[var]->phi[j_id];
 		
@@ -4069,7 +4069,7 @@ porous_convection_bc (double func[DIM],
 	  if (pd->v[pg->imtrx][var])
 	    {
 	      if (mp->PorousMediaType == POROUS_SATURATED) {
-		for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+		for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) 
 		  {
 		    phi_j = bf[var]->phi[j_id];
 		    
@@ -4082,7 +4082,7 @@ porous_convection_bc (double func[DIM],
 		      }
 		  }
 	      } else {
-		for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+		for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) 
 		  {
 		    phi_j = bf[var]->phi[j_id];
 		    
@@ -4150,7 +4150,7 @@ porous_normal_velocity_bc (double func[],
 	/* sum the contributions to the global stiffness matrix */
 	
 	var = TEMPERATURE;
-	for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	  {
 	    if (pd->v[pg->imtrx][var])
 	      {
@@ -4166,7 +4166,7 @@ porous_normal_velocity_bc (double func[],
 	  }
 	    
 	    var = POR_LIQ_PRES;
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {
 		if (pd->v[pg->imtrx][var])
 		  {
@@ -4187,7 +4187,7 @@ porous_normal_velocity_bc (double func[],
 	    for (jvar=0; jvar<dim; jvar++) 
 	      {
 		var = MESH_DISPLACEMENT1 + jvar;
-		for ( j_id=0; j_id<ei->dof[var]; j_id++)
+		for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		  {
 		    if (pd->v[pg->imtrx][var])
 		      {
@@ -4228,7 +4228,7 @@ porous_normal_velocity_bc (double func[],
 	for(jvar=0; jvar<dim; jvar++) 
 	  {
 	    var = VELOCITY1 + jvar;
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {
 		if (pd->v[pg->imtrx][var])
 		  {
@@ -4241,7 +4241,7 @@ porous_normal_velocity_bc (double func[],
 	for(jvar=0; jvar<dim; jvar++) 
 	  {
 	    var = MESH_DISPLACEMENT1 + jvar;
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {
 		if (pd->v[pg->imtrx][var])
 		  {
@@ -4307,7 +4307,7 @@ put_gas_flux_in_pores (double func[],
 	
 	/* sum the contributions to the global stiffness matrix */
 	var = POR_LIQ_PRES;
-	for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	  {
 	    if (pd->v[pg->imtrx][var])
 	      {
@@ -4326,7 +4326,7 @@ put_gas_flux_in_pores (double func[],
 	for(jvar=0; jvar<dim; jvar++) 
 	  {
 	    var = MESH_DISPLACEMENT1 + jvar;
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {
 		if (pd->v[pg->imtrx][var])
 		  {
@@ -4367,7 +4367,7 @@ put_gas_flux_in_pores (double func[],
 	for(jvar=0; jvar<dim; jvar++) 
 	  {
 	    var = MESH_DISPLACEMENT1 + jvar;
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {
 		if (pd->v[pg->imtrx][var])
 		  {
@@ -4382,7 +4382,7 @@ put_gas_flux_in_pores (double func[],
 	  }
 
 	var = TEMPERATURE;
-	for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	  {
 	    if (pd->v[pg->imtrx][var])
 	      {
@@ -4444,7 +4444,7 @@ porous_vapor_equil_bc(double func[],
     if (af->Assemble_Jacobian) {
 	
       var = POR_LIQ_PRES;
-      for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
 	if (pd->v[pg->imtrx][var]) {
 	  phi_j = bf[var]->phi[j_id];
 	  for (w = 0; w < pd->Num_Porous_Eqn; w++)  {
@@ -4468,7 +4468,7 @@ porous_vapor_equil_bc(double func[],
 
     if (af->Assemble_Jacobian) {
       var = TEMPERATURE;
-      for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
 	if (pd->v[pg->imtrx][var]) {
 	  phi_j = bf[var]->phi[j_id];
 	  d_func[0][var][j_id] -= phi_j;
@@ -4904,7 +4904,7 @@ load_permeability_tensor(void)
 		      for(dd = 0; dd < VIM; dd++)
 			{	
 			  var = MESH_DISPLACEMENT1 + dd;
-			  for ( j=0; j<ei->dof[var]; j++)
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			    { 
 			      d_a1_dot_F_dx[cc][dd][j] += a[0][aa]*fv->d_deform_grad_dx[bb][cc][dd][j]*delta(aa,bb);
 			      d_a2_dot_F_dx[cc][dd][j] += a[1][aa]*fv->d_deform_grad_dx[bb][cc][dd][j]*delta(aa,bb);
@@ -4935,7 +4935,7 @@ load_permeability_tensor(void)
 		  for(dd = 0; dd < VIM; dd++)
 		    {	
 		      var = MESH_DISPLACEMENT1 + dd;
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{ 
 			  mp->d_perm_tensor_dx[aa][bb][dd][j] = 
 				 d_a1_dot_F_dx[aa][dd][j]*a1_dot_F[bb]*K11 + 
@@ -5930,14 +5930,14 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
     /*Load up con_a and con_b from element storage array */
     
  
-    if(Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0) 
+    if(Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0) 
       {
 	alpha_drain = mp->u_saturation[7];
 	beta_drain  = mp->u_saturation[6];
 	s_min       = mp->u_saturation[4];
 	
-	sat_switch = Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].Sat_QP_tn[ip];
-	pc_switch = Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].p_cap_QP[ip];
+	sat_switch = Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].Sat_QP_tn[ip];
+	pc_switch = Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].p_cap_QP[ip];
 
 
 	if (pc_switch <= 0.0) {
@@ -5960,7 +5960,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	if( saturation < 0.0 ) 
 	  {
 	    fprintf(stderr, "Warning: Negative saturation detected on draining curve.\n");
-	    fprintf(stderr, "Proc: %d,  Element: %d, IP: %d, Saturation: %6.4g \n", ProcID, ei->ielem+1, ip, saturation );
+	    fprintf(stderr, "Proc: %d,  Element: %d, IP: %d, Saturation: %6.4g \n", ProcID, ei[pg->imtrx]->ielem+1, ip, saturation );
 	  }
       }
     else /*on wetting curve */
@@ -5969,8 +5969,8 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	beta_wet  = mp->u_saturation[2];
 	s_max    = mp->u_saturation[0];
 	
-	sat_switch = Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].Sat_QP_tn[ip];
-	pc_switch = Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].p_cap_QP[ip];
+	sat_switch = Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].Sat_QP_tn[ip];
+	pc_switch = Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].p_cap_QP[ip];
 
 
 	if (pc_switch <= 0.0) {
@@ -5993,7 +5993,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	if( saturation < 0.0 ) 
 	  {
 	    fprintf(stderr, "Warning: Negative saturation detected on draining curve.\n");
-	    fprintf(stderr, "Proc: %d,  Element: %d, IP: %d, Saturation: %6.4g \n", ProcID, ei->ielem+1, ip, saturation );
+	    fprintf(stderr, "Proc: %d,  Element: %d, IP: %d, Saturation: %6.4g \n", ProcID, ei[pg->imtrx]->ielem+1, ip, saturation );
 	  }
       }
     
@@ -6005,7 +6005,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
      *
      */
     
-    if(Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
+    if(Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
       {
 	mp->d_saturation[POR_LIQ_PRES] = -con_b*alpha_drain/cap_pres_clip/cap_pres_clip*
 	  (1-pow(tanh(beta_drain-alpha_drain/cap_pres_clip),2.0));
@@ -6024,7 +6024,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 
     if (pd->e[pg->imtrx][R_SHELL_SAT_OPEN])
       {
-	if(Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
+	if(Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
 	  {
 	    mp->d_saturation[SHELL_PRESS_OPEN] = -con_b*alpha_drain/cap_pres_clip/cap_pres_clip*
 	      (1-pow(tanh(beta_drain-alpha_drain/cap_pres_clip),2.0));	   
@@ -6038,7 +6038,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 
     if (pd->e[pg->imtrx][R_SHELL_SAT_OPEN_2])
       {
-	if(Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
+	if(Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
 	  {
 	    mp->d_saturation[SHELL_PRESS_OPEN_2] = -con_b*alpha_drain/cap_pres_clip/cap_pres_clip*
 	      (1-pow(tanh(beta_drain-alpha_drain/cap_pres_clip),2.0));
@@ -6057,7 +6057,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
        */
       /*n.g. this negative sign here is in question. Check out
 	as I think it should be positive due to double derivative..*/
-      if(Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
+      if(Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
 	{
 	  mp->d_d_saturation[POR_LIQ_PRES][POR_LIQ_PRES] = 
 	    (2.0*con_b*alpha_drain*alpha_drain/pow(cap_pres_clip,4.0)*
@@ -6086,7 +6086,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 
     if (pd->e[pg->imtrx][R_SHELL_SAT_OPEN])
 	{
-	  if(Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
+	  if(Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
 	    {
 	      mp->d_d_saturation[SHELL_PRESS_OPEN][SHELL_PRESS_OPEN] = 
 		(2.0*con_b*alpha_drain*alpha_drain/pow(cap_pres_clip,4.0)*
@@ -6108,7 +6108,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 
       if (pd->e[pg->imtrx][R_SHELL_SAT_OPEN_2])
 	{
-	  if(Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
+	  if(Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
 	    {
 	      mp->d_d_saturation[SHELL_PRESS_OPEN_2][SHELL_PRESS_OPEN_2] = 
 		(2.0*con_b*alpha_drain*alpha_drain/pow(cap_pres_clip,4.0)*
@@ -6140,7 +6140,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	cap_pres_clip=pmv_old->cap_pres;
       }
       
-      if(Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
+      if(Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].sat_curve_type[ip] == 1.0)
 	{
 	  mp_old->saturation =con_a+con_b*tanh(beta_drain-alpha_drain/cap_pres_clip);
 	  mp_old->d_saturation[POR_LIQ_PRES] = con_b*alpha_drain/cap_pres_clip/cap_pres_clip*
@@ -8473,7 +8473,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 		          pmv->d_Ywg[i_pore] * fv->grad_porosity[a] +
                           pmv->d_Ywg[i_pe]   * fv->grad_T[a];
 
-	    for ( j=0; j<ei->dof[var]; j++) {
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	      for (w2=0; w2<MAX_PMV; w2++) {
 		   d_grad_Ywg[a][w2][j] = pmv->d_Ywg[w2] * bf[var]->grad_phi[j][a] +
 		                 bf[var]->phi[j] * ( 
@@ -8513,7 +8513,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 	  for ( a=0; a<WIM; a++)
 
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  for ( w1=0; w1<MAX_PMV; w1++)
 		    {
@@ -8537,7 +8537,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 			var = POR_LIQ_PRES + w1;
 			if(pd->v[pg->imtrx][var])
 			  {
-			   for ( j=0; j<ei->dof[var]; j++) 
+			   for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) 
 			      {
 
 				t1 = bf[var]->phi[j] * 
@@ -8578,7 +8578,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 	{
 	  for ( a=0; a<WIM; a++)
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  for ( w1=0; w1<MAX_PMV; w1++)
 		    {
@@ -8592,7 +8592,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
               for (w = 0; w < MAX_PMV; w++) {
                 for ( a=0; a<WIM; a++)
                   {
-                    for ( j=0; j<ei->dof[var]; j++) {
+                    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
                       /*for now we know it only liquid phase depends on sink_mass */
 
                       t3 = pmv->d_liq_darcy_velocity_dSM[a][j] *
@@ -8622,7 +8622,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 
              for ( a=0; a<WIM; a++)
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
                           difflux_term =  -bf[var]->phi[j] * (
                                 (mp->porous_diffusivity[w] * pmv->d_rhog[i_pl] +
@@ -8704,7 +8704,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 			    }
 
 
-		    } /* j<ei->dof[var] */
+		    } /* j<ei[pg->imtrx]->dof[var] */
 		} /* a<VIM */
 	}/* DARCY_FICKIAN */
 
@@ -8715,7 +8715,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 	var = POR_TEMP;
 	for ( a=0; a<WIM; a++)
 	  {
-	    for ( j=0; j<ei->dof[var]; j++)
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	      {
 		pmv->d_rel_mass_flux_dpmv[i_pe][a] [i_pe][j] +=   
 		       -mp->thermal_conductivity * bf[var]->grad_phi[j][a] -
@@ -8731,7 +8731,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 	  var = MESH_DISPLACEMENT1 + b;
 	  if ( pd->v[pg->imtrx][var] )
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  for (a=0; a < WIM; a++)
 		    {
@@ -8816,7 +8816,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 			  }
 			} /* DARCY_FICKIAN */
 		    } /* a<WIM */
-		} /* j<ei->dof[var] */
+		} /* j<ei[pg->imtrx]->dof[var] */
 	    } /*if ( pd->v[pg->imtrx][var] ) */ 
 	} /*  b<pd->Num_Dim */
       
@@ -8830,7 +8830,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 		if (w != i_pore) {  /* no diffusion term for solid phase */
 		  for ( a=0; a<WIM; a++)
 		    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  pmv->d_rel_mass_flux_dT[w][a] [j] =  0.;
 			  pmv->d_rel_mass_flux_dT[w][a] [j] -=  
@@ -8860,7 +8860,7 @@ calc_grad_Ywg (int var, double *grad_Ywg)
   double d_drho_gas_dPg[2], d_drho_gas_dT[2];
   double rho_wg_sat, drho_wgsat_dT, d_drho_wgsat_dT;
 
-  dofs  = ei->dof[var];
+  dofs  = ei[pg->imtrx]->dof[var];
   for ( p=0; p<VIM; p++) {
     grad_Ywg[p] = 0.;
     for ( i=0; i<dofs; i++) {
@@ -8955,7 +8955,7 @@ calc_darcy_velocity()
 	mp->PermeabilityModel != KC_TENSOR) {
       for (a = 0; a < WIM; a++) {
 	var= POR_LIQ_PRES;
-	for (j = 0; j < ei->dof[var]; j++) {
+	for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	  for (w1 = 0; w1 < MAX_PMV; w1++) {
 
 	    pmv->d_liq_darcy_velocity[a][w1][j] -= 
@@ -8990,7 +8990,7 @@ calc_darcy_velocity()
 	var = POR_SINK_MASS;
 	if(pd->e[pg->imtrx][R_POR_SINK_MASS])
 	  {
-	    for (j = 0; j < ei->dof[var]; j++) {
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 
 	      pmv->d_liq_darcy_velocity_dSM[a][j] -= 
 		bf[var]->phi[j] *
@@ -9003,7 +9003,7 @@ calc_darcy_velocity()
 
       var= POR_LIQ_PRES;
       for ( a=0; a<WIM; a++) {
-	for ( j=0; j<ei->dof[var]; j++) {
+	for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 	  for ( w1=0; w1<MAX_PMV; w1++) {
 
 	    for ( b=0; b<WIM; b++) {
@@ -9044,7 +9044,7 @@ calc_darcy_velocity()
 	{
 	  for ( a=0; a<WIM; a++) {
 	    for ( b=0; b<WIM; b++) {
-	      for ( j=0; j<ei->dof[var]; j++) {
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 		pmv->d_liq_darcy_velocity[a][i_pore][j] -= bf[var]->phi[j] * 
 		  mp->d_perm_tensor[a][b][POR_POROSITY] * 
 		  mp->rel_liq_perm * fv->grad_p_liq[b];
@@ -9059,7 +9059,7 @@ calc_darcy_velocity()
 	{
 	  for ( a=0; a<WIM; a++) {
 	    for ( b=0; b<WIM; b++) {
-	      for (j = 0; j < ei->dof[var]; j++) {
+	      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 
 		pmv->d_liq_darcy_velocity_dSM[a][j] -= 
 		  bf[var]->phi[j] *
@@ -9337,7 +9337,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 	{
 	  for ( a=0; a<VIM; a++)
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  for ( w1=0; w1<MAX_PMV; w1++)
 		    {
@@ -9353,7 +9353,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 
 	      for ( a=0; a<VIM; a++)
 		{
-		  for ( j=0; j<ei->dof[var]; j++) {
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 		    for ( w1=0; w1<MAX_PMV; w1++)
 		      {
 			pmv->d_rel_mass_flux_dpmv[w][a] [w1][j] += bf[var]->phi[j] * 
@@ -9371,7 +9371,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 		  mp->PermeabilityModel != SM_TENSOR &&
 		  mp->PermeabilityModel != KC_TENSOR) {
 		for (a = 0; a < VIM; a++) {
-		  for (j = 0; j < ei->dof[var]; j++) {
+		  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 		    for (w1 = 0; w1 < MAX_PMV; w1++) {
 		      pmv->d_rel_mass_flux_dpmv[w][a] [w1][j] -= 
 			  bf[var]->phi[j] * pmv->liq_Xvol_solvents[w] * mp->density * 
@@ -9403,7 +9403,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 	      } else { /* Permeability is a tensor, and it is constant */
 		for ( a=0; a<VIM; a++) {
 		  for ( b=0; b<VIM; b++) {
-		    for ( j=0; j<ei->dof[var]; j++) {
+		    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 		      for ( w1=0; w1<MAX_PMV; w1++) {
 			pmv->d_rel_mass_flux_dpmv[w][a] [w1][j] -= bf[var]->phi[j] * 
 			  (mp->perm_tensor[a][b] * mp->d_rel_liq_perm[POR_LIQ_PRES + w1] 
@@ -9452,7 +9452,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 
 	      for ( a=0; a<VIM; a++)
 		{
-		  for ( j=0; j<ei->dof[var]; j++) {
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 		    for ( w1=0; w1<MAX_PMV; w1++)
 		      {
 			pmv->d_rel_mass_flux_dpmv[w][a] [w1][j] += bf[var]->phi[j] * 
@@ -9467,7 +9467,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 		  mp->PermeabilityModel != SM_TENSOR &&
 		  mp->PermeabilityModel != KC_TENSOR ) {
 		for (a = 0; a < VIM; a++) {
-		  for (j = 0; j < ei->dof[var]; j++) {
+		  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 		    for (w1 = 0; w1 < MAX_PMV; w1++) {
 		      pmv->d_rel_mass_flux_dpmv[w][a] [w1][j] -= 
 			  bf[var]->phi[j] * pmv->liq_Xvol_solvents[w] * mp->density * 
@@ -9501,7 +9501,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 	      } else { /* Permeability is a tensor, and it is constant */
 		for ( a=0; a<VIM; a++) {
 		  for ( b=0; b<VIM; b++) {
-		    for ( j=0; j<ei->dof[var]; j++) {
+		    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 		      for ( w1=0; w1<MAX_PMV; w1++) {
 			pmv->d_rel_mass_flux_dpmv[w][a] [w1][j] -= bf[var]->phi[j] * 
 			  (mp->perm_tensor[a][b] * mp->d_rel_liq_perm[POR_LIQ_PRES + w1] 
@@ -9554,7 +9554,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 	    if (w != i_pore) {  /* no diffusion term for solid phase */
 	      for ( a=0; a<VIM; a++)
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      difflux_term =   
 			pmv->d_gas_density_solvents[w][POR_LIQ_PRES] * 
@@ -9627,7 +9627,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
                               }
                          }
 
-		    } /* j<ei->dof[var] */
+		    } /* j<ei[pg->imtrx]->dof[var] */
 		}  /* a<VIM */
 	    } /* w!=i_pore */
 	  } /* w<MAX_PMV */
@@ -9641,7 +9641,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 	    if (w != i_pore) {  /* no diffusion term for solid phase */
 	      for ( a=0; a<VIM; a++)
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      pmv->d_rel_mass_flux_dpmv[w][a] [i_pl][j] -=   
 			pmv->d_gas_density_solvents[w][POR_LIQ_PRES] * 
@@ -9700,7 +9700,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 	  var = MESH_DISPLACEMENT1 + b;
 	  if ( pd->v[pg->imtrx][var] )
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  for (a=0; a < VIM; a++)
 		    {
@@ -9837,7 +9837,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 			  }
 			} /* DARCY_FICKIAN */
 		    } /* a<VIM */
-		} /* j<ei->dof[var] */
+		} /* j<ei[pg->imtrx]->dof[var] */
 	    } /*if ( pd->v[pg->imtrx][var] ) */ 
 	} /*  b<pd->Num_Dim */
       
@@ -9852,7 +9852,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 		if (w != i_pore) {  /* no diffusion term for solid phase */
 		  for ( a=0; a<VIM; a++)
 		    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  pmv->d_rel_mass_flux_dT[w][a] [j] =  0.;
 			  pmv->d_rel_mass_flux_dT[w][a] [j] -=  
@@ -10128,7 +10128,7 @@ sat_darcy_continuous_bc(double func[],
        */
       var=POR_POROSITY;
       if (pd->v[pg->imtrx][var]) {
-	for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+	for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
 	  phi_j = bf[var]->phi[j_id];
 	  for (p = 0; p < dim; p++) {
 	    d_func[0][POR_POROSITY][j_id] += 
@@ -10142,7 +10142,7 @@ sat_darcy_continuous_bc(double func[],
 	}
       }
       var=POR_LIQ_PRES;
-      for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
 	if (mp->PermeabilityModel != K_TENSOR &&
 	    mp->PermeabilityModel != ORTHOTROPIC &&
 	    mp->PermeabilityModel != SM_TENSOR &&
@@ -10171,7 +10171,7 @@ sat_darcy_continuous_bc(double func[],
       }
 
       var=POR_POROSITY;
-      for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
 	if (mp->PermeabilityModel != K_TENSOR &&
 	    mp->PermeabilityModel != ORTHOTROPIC &&
 	    mp->PermeabilityModel != SM_TENSOR &&
@@ -10199,7 +10199,7 @@ sat_darcy_continuous_bc(double func[],
       for (a = 0; a < dim; a++) {
 	var = MESH_DISPLACEMENT1 + a;
 	if (pd->v[pg->imtrx][var]) {
-	  for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+	  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
 		      
 	    for (p = 0; p < dim; p++) {
 	      d_func[0][var][j_id] +=
@@ -10297,7 +10297,7 @@ sat_darcy_continuous_bc(double func[],
       for (jvar = 0; jvar < dim; jvar++) {
 	var = VELOCITY1 + jvar;
 	if (pd->v[pg->imtrx][var]) {
-	  for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+	  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
 	    phi_j = bf[var]->phi[j_id];
 	    d_func[0][var][j_id] += fv->snormal[jvar] * rho_liq * phi_j;
 	  }
@@ -10307,7 +10307,7 @@ sat_darcy_continuous_bc(double func[],
       var = LS;
       if(pd->v[pg->imtrx][var])
 	{
-	  for(j_id=0;j_id<ei->dof[var];j_id++)
+	  for(j_id=0;j_id<ei[pg->imtrx]->dof[var];j_id++)
 	    {
 	      for(a=0; a<dim;a++)
 		{
@@ -10319,7 +10319,7 @@ sat_darcy_continuous_bc(double func[],
       for (jvar = 0; jvar < dim; jvar++) {
 	var = MESH_DISPLACEMENT1 + jvar;
 	if (pd->v[pg->imtrx][var]) {
-	  for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+	  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
 	    for (a = 0; a < dim; a++) {
 	      d_func[0][var][j_id] += 
 		  fv->dsnormal_dx[a][jvar][j_id] * rho_liq* 
@@ -10334,7 +10334,7 @@ sat_darcy_continuous_bc(double func[],
 	  for (jvar = 0; jvar < dim; jvar++) {
 	    var = MESH_DISPLACEMENT1 + jvar;
 	    if (pd->v[pg->imtrx][var]) {
-	      for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+	      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
 		phi_j = bf[var]->phi[j_id];
 		for (a = 0; a < dim; a++) {
 		  d_func[0][var][j_id] -= fv->snormal[a] * rho_liq * 
@@ -10391,7 +10391,7 @@ por_liq_flux_fill ( double *func,
 		  var=POR_LIQ_PRES;
 		  if (pd->v[pg->imtrx][var]) 
 		  { 
-			for( j=0; j<ei->dof[var]; j++ ) {
+			for( j=0; j<ei[pg->imtrx]->dof[var]; j++ ) {
 			  d_func[0][var][j] = -perm* ( 1.0 - H ) * bf[var]->phi[j];
 			  d_func[0][var][j] -= tau*( 1.0 + 2.0*tt)*(bf[var]->phi[j]/dt);
 
@@ -10399,7 +10399,7 @@ por_liq_flux_fill ( double *func,
 		  }      
 		  
 		var = LS;
-		for( j=0; j<ei->dof[var]; j++)
+		for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      d_func[0][var][j] = perm * lsi->d_H_dF[j]*( fv->p_liq - pc1 );
 	    }
@@ -10421,13 +10421,13 @@ por_liq_flux_fill ( double *func,
 	*func = -perm * (1.0 - H) * ( -fv->P);
 	
 	var = LS;
-	for( j=0; j<ei->dof[var]; j++)
+	for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	  {
 	    d_func[0][var][j] = perm * lsi->d_H_dF[j]*( fv->P );
 	  }
 
 	var = PRESSURE;
-	for( j=0; j<ei->dof[var]; j++)
+	for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	  {
 	    d_func[0][var][j] = -perm * (1.0 - H) * ( bf[var]->phi[j] );
 	  }
@@ -10675,36 +10675,36 @@ evaluate_sat_hyst_criterion(int ip,
      */
 
     if(liq_inv_dot > 0.0 && 
-       Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] == 0.0)
+       Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] == 0.0)
       {
 	/* We were on a wetting curve, and will remain so */
       }
     else if (liq_inv_dot <= 0.0 && 
-	     Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] == 1.0)
+	     Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] == 1.0)
       {
 	/* We were on a drying/draining curve, and will remain so */
       }
     else if (liq_inv_dot > 0.0 && 
-	     Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] == 1.0)
+	     Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] == 1.0)
       {
 	/* We were on a drying/draining curve but now may potentially switch to a wetting curve */
 	if(fabs(liq_inv_dot) > mp->u_saturation[9] && 
 	   mp->saturation <= 0.9999 )
 	  {
-	    Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] = 0.0;
-	    Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].Sat_QP_tn[ip] = mp->saturation;
-	    Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].p_cap_QP[ip] = cap_press;
+	    Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] = 0.0;
+	    Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[ielem].Sat_QP_tn[ip] = mp->saturation;
+	    Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[ielem].p_cap_QP[ip] = cap_press;
 	  }
       }
     else if (liq_inv_dot <= 0.0 && 
-	     Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] == 0.0)
+	     Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] == 0.0)
       {
 	/* We were on a wetting curve but now may potentially switch to a drying curve */
 	if(fabs(liq_inv_dot) > mp->u_saturation[9])
 	  {
-	    Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] = 1.0;
-	    Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].Sat_QP_tn[ip] = mp->saturation;
-	    Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].p_cap_QP[ip] = cap_press;
+	    Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] = 1.0;
+	    Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[ielem].Sat_QP_tn[ip] = mp->saturation;
+	    Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[ielem].p_cap_QP[ip] = cap_press;
 	  }
       }
   }

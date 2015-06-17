@@ -283,7 +283,7 @@ ns_data_print(pp_Data * p,
 	      {elem_ct = 1;}
 	    else
 	      {WH(-1,"block id doesn't match first element");}
-	    for (face=0 ; face<ei->num_sides ; face++)
+	    for (face=0 ; face<ei[pg->imtrx]->num_sides ; face++)
 	      {
 		ielem = exo->elem_elem_list[exo->elem_elem_pntr[elem_list[0]]+face];
 		if (ielem != -1)
@@ -329,7 +329,7 @@ ns_data_print(pp_Data * p,
 		 * With the side names, we can find the normal vector.
 		 * Again, assume the sides live on the same element.
 		 */
-		load_ei(elem_list[ielem], exo, 0);
+		load_ei(elem_list[ielem], exo, 0, pg->imtrx);
 
 		/*
 		 * We abuse the argument list under the conditions that
@@ -351,7 +351,7 @@ ns_data_print(pp_Data * p,
 		 * What are the local coordinates of the nodes in a quadrilateral?
 		 */
 
-		find_nodal_stu(local_node[ielem], ei->ielem_type, xi, xi+1, xi+2);
+		find_nodal_stu(local_node[ielem], ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
 
 		err = load_basis_functions(xi, bfd);
 
@@ -376,13 +376,13 @@ ns_data_print(pp_Data * p,
 
 		/* First, one side... */
 
-		get_side_info(ei->ielem_type, local_side[0]+1, &num_nodes_on_side, 
+		get_side_info(ei[pg->imtrx]->ielem_type, local_side[0]+1, &num_nodes_on_side, 
 			      side_nodes);
 
 		surface_determinant_and_normal(elem_list[ielem], 
 					       exo->elem_node_pntr[elem_list[ielem]],
-					       ei->num_local_nodes,  
-					       ei->ielem_dim-1, 
+					       ei[pg->imtrx]->num_local_nodes,  
+					       ei[pg->imtrx]->ielem_dim-1, 
 					       local_side[0]+1, 
 					       num_nodes_on_side,
 					       side_nodes);
@@ -392,13 +392,13 @@ ns_data_print(pp_Data * p,
 
 		/* Second, the adjacent side of the quad... */
 
-		get_side_info(ei->ielem_type, local_side[1]+1, &num_nodes_on_side, 
+		get_side_info(ei[pg->imtrx]->ielem_type, local_side[1]+1, &num_nodes_on_side, 
 			      side_nodes);
 
 		surface_determinant_and_normal(elem_list[ielem], 
 					       exo->elem_node_pntr[elem_list[ielem]],
-					       ei->num_local_nodes,  
-					       ei->ielem_dim-1, 
+					       ei[pg->imtrx]->num_local_nodes,  
+					       ei[pg->imtrx]->ielem_dim-1, 
 					       local_side[1]+1, 
 					       num_nodes_on_side,
 					       side_nodes);

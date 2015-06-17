@@ -174,7 +174,7 @@ assemble_qtensor(dbl *el_length) /* 2 x approximate element length scales */
 
   print = 0;
   /*
-  if(ei->ielem == 15) print = 1;
+  if(ei[pg->imtrx]->ielem == 15) print = 1;
   */
 
   for(i = 0; i < DIM; i++) {
@@ -185,7 +185,7 @@ assemble_qtensor(dbl *el_length) /* 2 x approximate element length scales */
 
 /*   if(pd->e[pg->imtrx][R_MESH1]) EH(-1, "assemble_qtensor is not deformable mesh friendly."); */
 
-  ielem_type = ei->ielem_type;	/* element type */
+  ielem_type = ei[pg->imtrx]->ielem_type;	/* element type */
   ip_total = elem_info(NQUAD, ielem_type); /* number of quadrature points */
   for(ip = 0; ip < ip_total; ip++)
     {
@@ -363,7 +363,7 @@ assemble_qtensor_vort(dbl *el_length) /* 2 x approximate element length scales *
   }
 
 
-  ielem_type = ei->ielem_type;	/* element type */
+  ielem_type = ei[pg->imtrx]->ielem_type;	/* element type */
   ip_total = elem_info(NQUAD, ielem_type); /* number of quadrature points */
   for(ip = 0; ip < ip_total; ip++)
     {
@@ -538,7 +538,7 @@ assemble_new_qtensor(dbl *el_length) /* 2 x approximate element length scales */
   /* Do some initializations */
   memset(qtensor, 0, MDE*DIM*DIM*sizeof(double));
   memset(div_qtensor, 0, MDE*DIM*sizeof(double));
-  ielem_type = ei->ielem_type;	/* element type */
+  ielem_type = ei[pg->imtrx]->ielem_type;	/* element type */
   ip_total = elem_info(NQUAD, ielem_type); /* number of quadrature points */
 
   /* Loop over Gauss points */
@@ -838,7 +838,7 @@ assemble_vorticity_direction()
 	{
 	  eqn = R_VORT_DIR1 + a;
 	  peqn = upd->ep[pg->imtrx][eqn];
-	  for(i = 0; i < ei->dof[eqn]; i++)
+	  for(i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 	      wt_func = bf[eqn]->phi[i];  
 
@@ -880,12 +880,12 @@ assemble_vorticity_direction()
 	{
 	  eqn = R_VORT_DIR1 + a;
 	  peqn = upd->ep[pg->imtrx][eqn];
-	  for ( i=0; i<ei->dof[eqn]; i++)
+	  for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 	      wt_func = bf[eqn]->phi[i];
 	      var = VORT_DIR1 + a;
 	      pvar = upd->vp[pg->imtrx][var];
-	      for( j=0; j<ei->dof[var]; j++)
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 	
@@ -907,7 +907,7 @@ assemble_vorticity_direction()
       var = VELOCITY1;
       for(a = 0; a < VIM; a++)
 	{
-	  for( j=0; j<ei->dof[var]; j++)
+	  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      vv[a][j]=*esp->v[a][j];
 	    }
@@ -916,7 +916,7 @@ assemble_vorticity_direction()
 	{
 	  var = VELOCITY1 + b;
 	  pvar = upd->vp[pg->imtrx][var];
-	  for( j=0; j<ei->dof[var]; j++)
+	  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      phi_j = bf[var]->phi[j];
 	      
@@ -937,7 +937,7 @@ assemble_vorticity_direction()
 		    {
 		      for ( r=0; r<VIM; r++)
 			{
-			  for ( k=0; k<ei->dof[var]; k++)
+			  for ( k=0; k<ei[pg->imtrx]->dof[var]; k++)
 			    {
 			      grad_v[p][q] +=
 				vv[r][k] * bf[var]->grad_phi_e[k][r] [p][q];
@@ -967,7 +967,7 @@ assemble_vorticity_direction()
 		  eqn = R_VORT_DIR1 + a;
 		  peqn = upd->ep[pg->imtrx][eqn];
 		  
-		  for ( i=0; i<ei->dof[eqn]; i++)
+		  for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 		    {
 		      wt_func = bf[eqn]->phi[i];
 		      R_new[a][i] = (-vort_dir_pert[a]*pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)]+
@@ -987,12 +987,12 @@ assemble_vorticity_direction()
       var = MESH_DISPLACEMENT1;
       
       if (pd->v[pg->imtrx][var]&& 0) {
-	dofs = ei->dof[var];
+	dofs = ei[pg->imtrx]->dof[var];
 	memset(dd, 0, sizeof(double)*DIM*MDE);
 	for( j=0; j<dofs; j++)
 	  {
-	    node  = ei->dof_list[R_MESH1][j];
-	    index = Proc_Elem_Connect[ Proc_Connect_Ptr[ei->ielem] + node ];
+	    node  = ei[pg->imtrx]->dof_list[R_MESH1][j];
+	    index = Proc_Elem_Connect[ Proc_Connect_Ptr[ei[pg->imtrx]->ielem] + node ];
 	    for(a = 0; a < dim; a++)
 	      {
 		dd[a][j]=*esp->d[a][j];
@@ -1003,7 +1003,7 @@ assemble_vorticity_direction()
 	  {
 	    var = MESH_DISPLACEMENT1 + b;
 	    pvar = upd->vp[pg->imtrx][var];
-	    for( j=0; j<ei->dof[var]; j++)
+	    for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	      {
 		if(*esp->d[b][j] != 0.)
 		  {
@@ -1181,7 +1181,7 @@ assemble_vorticity_direction()
 		      {
 			for ( r=0; r<VIM; r++)
 			  {
-			    for ( k=0; k<ei->dof[var]; k++)
+			    for ( k=0; k<ei[pg->imtrx]->dof[var]; k++)
 			      {
 				grad_v[p][q] +=
 				  *esp->v[r][k] * grad_phi_e[k][r] [p][q];
@@ -1211,7 +1211,7 @@ assemble_vorticity_direction()
 		    eqn = R_VORT_DIR1 + a;
 		    peqn = upd->ep[pg->imtrx][eqn];
 		    
-		    for ( i=0; i<ei->dof[eqn]; i++)
+		    for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 		      {
 			wt_func = bf[eqn]->phi[i];
 			R_new[a][i] = (-vort_dir_pert[a]*pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)]+
@@ -1506,7 +1506,7 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
       var = MASS_FRACTION;
       memset(st->d_diff_flux_dc, 0, MAX_CONC*DIM*MAX_CONC*MDE*sizeof(dbl));
       for(a = 0; a < DIM; a++)
-	for(j = 0; j < ei->dof[var]; j++)
+	for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	  {
 	    c_term = 0.0;
 	    mu_term = 0.0;
@@ -1549,7 +1549,7 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
       var = SHEAR_RATE;
       memset(st->d_diff_flux_dSH[w], 0, DIM*MDE*sizeof(dbl));
       for(a = 0; a < DIM; a++)
-	for(j = 0; j < ei->dof[var]; j++)
+	for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	  {
 	    c_term = 0.0;
 	    mu_term = 0.0;
@@ -1935,7 +1935,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
       
       for(b = 0; b < DIM; b++)
 	{
-	  for(j = 0; j < ei->dof[var]; j++)
+	  for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      for(a = 0; a < DIM; a++)
 		{
@@ -1946,7 +1946,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
 	}
 
       for(a = 0; a < DIM; a++)
-	for(j = 0; j < ei->dof[var]; j++)
+	for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	  {
 	    c_term = 0.0;
 	    mu_term = 0.0;
@@ -1980,7 +1980,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
       memset(grad_phi_Q, 0, DIM *MDE* sizeof(dbl));
       for(b = 0; b < VIM; b++)
 	{
-	  for(j = 0; j < ei->dof[var]; j++)
+	  for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      for(a= 0; a < VIM; a++)
 		{
@@ -1990,7 +1990,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
 	}
       for(a = 0; a < VIM; a++)
 	{
-	  for(j = 0; j < ei->dof[var]; j++)
+	  for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      c_term = 0.0;
 	      mu_term = 0.0;
@@ -2017,7 +2017,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
 	    {
 	      for(b = 0; b < DIM; b++)
 		{
-		  for(j = 0; j < ei->dof[var]; j++)
+		  for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      d_qtensor_dvd[p][q][b][j]=-0.5*phi_j*
 			(fv->vd[q]*delta(p,b)+fv->vd[p]*delta(q,b));
@@ -2032,7 +2032,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
 	{
 	  for(b = 0; b < DIM; b++)
 	    {
-	      for(j = 0; j < ei->dof[var]; j++)
+	      for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 		{
 		  div_phi_j_e_b = 0.;
 		  for ( p=0; p<VIM; p++)
@@ -2058,7 +2058,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
       memset(d_VQVt_grad_Y_dvd,  0, DIM*DIM*MDE*sizeof(dbl));
       for(b = 0; b < DIM; b++)
 	{
-	  for(j = 0; j < ei->dof[var]; j++)
+	  for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      for(a = 0; a < DIM; a++)
 		{
@@ -2078,7 +2078,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
       memset(d_div_gdYVQVt_dvd, 0, DIM*DIM*MDE*sizeof(dbl));
       for(b = 0; b < DIM; b++)
 	{
-	  for(j = 0; j < ei->dof[var]; j++)
+	  for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      for(a = 0; a < DIM; a++)
 		{
@@ -2094,7 +2094,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
 	{
 	  for(b = 0; b < DIM; b++)
 	    {
-	      for(j = 0; j < ei->dof[var]; j++)
+	      for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 		{
 		  
 		  c_term = -Dc * Y[w] * d_div_gdYVQVt_dvd[a][b][j];
@@ -3280,7 +3280,7 @@ void compute_VQVt_directly(dbl T[3][3],
       }
   diagonalize_symmetric_tensor(VQVt, v0, v1, v2, lambda, print);
 #ifdef DEBUG_QTENSOR
-  if(print && ei->ielem == 0)
+  if(print && ei[pg->imtrx]->ielem == 0)
     {
       printf( "Evalues = %g (flow), %g (norm), %g (vort)\n", 
 	      lambda[0], lambda[1], lambda[2]);
@@ -3373,7 +3373,7 @@ bias_eigenvector_to(dbl *v, dbl *target)
     return retval;
   if(fabs(dot_prod) < BAD_MAGIC_VECTOR_RELATIVE_TOLERANCE)
     {
-/*       printf("WARNING: Ni bu hao!  You make bad tensor magic! (dot_prod = %g, ei = %d)\n", dot_prod, ei->ielem); */
+/*       printf("WARNING: Ni bu hao!  You make bad tensor magic! (dot_prod = %g, ei = %d)\n", dot_prod, ei[pg->imtrx]->ielem); */
       retval = 0;
     }
   if(dot_prod < 0.0)

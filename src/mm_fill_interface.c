@@ -229,7 +229,7 @@ raoults_law_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
      * dependence
      */
     vd = is[intf_id].Var_List[pos];
-    index_lvdesc = ei->VDindex_to_Lvdesc[vd->List_Index];
+    index_lvdesc = ei[pg->imtrx]->VDindex_to_Lvdesc[vd->List_Index];
     jacobianVD_addEntry(func_jac, index_lvdesc, massflux);
 
     /*
@@ -251,7 +251,7 @@ raoults_law_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
 	*         We may need it anyway for postprocessing.
 	* 
 	*/
-      index_lvdesc = ei->VDindex_to_Lvdesc[vd->List_Index];
+      index_lvdesc = ei[pg->imtrx]->VDindex_to_Lvdesc[vd->List_Index];
       if (index_lvdesc >= 0 &&
 	  DOUBLE_NONZERO(is[intf_id].JacMatrix[pos][index_is])) {
 	/*
@@ -631,7 +631,7 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
      * dependence
      */
     vd = is[intf_id].Var_List[pos];
-    index_lvdesc = ei->VDindex_to_Lvdesc[vd->List_Index];
+    index_lvdesc = ei[pg->imtrx]->VDindex_to_Lvdesc[vd->List_Index];
     jacobianVD_addEntry(func_jac, index_lvdesc, volflux);
 
     /*
@@ -653,7 +653,7 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
 	*         We may need it anyway for postprocessing.
 	* 
 	*/
-      index_lvdesc = ei->VDindex_to_Lvdesc[vd->List_Index];
+      index_lvdesc = ei[pg->imtrx]->VDindex_to_Lvdesc[vd->List_Index];
       if (index_lvdesc >= 0 &&
 	  DOUBLE_NONZERO(is[intf_id].JacMatrix[pos][index_is])) {
 	/*

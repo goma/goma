@@ -626,7 +626,7 @@ yuser_surf(double *func,
 /* */
 /*  if (pd->v[pg->imtrx][var]) */
 /*    { */
-/*      for( j=0 ; j<ei->dof[var]; j++) */
+/*      for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++) */
 /*	{ */
 /*	  d_func[0][MAX_VARIABLE_TYPES + species][j] = bf[var]->phi[j]; */
 /* 	}  */
@@ -666,7 +666,7 @@ uuser_surf (func, d_func, u_bc, time)
       var = VELOCITY1; 
       if (pd->v[pg->imtrx][var])
         { 
-          for( j=0 ; j<ei->dof[var]; j++)
+          for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
             { 
               d_func[0][VELOCITY1][j] = bf[var]->phi[j];
             }  
@@ -682,7 +682,7 @@ uuser_surf (func, d_func, u_bc, time)
       var = VELOCITY1; 
       if (pd->v[pg->imtrx][var])
         { 
-          for( j=0 ; j<ei->dof[var]; j++)
+          for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
             { 
               d_func[0][VELOCITY1][j] = bf[var]->phi[j];
             }  
@@ -1092,14 +1092,14 @@ fn_dot_T_user (func, d_func, u_bc, time)
    * 
    *  Evaluate sensitivity to displacements d()/dx 
    *
-   *      for (jvar=0; jvar<ei->ielem_dim; jvar++)
+   *      for (jvar=0; jvar<ei[pg->imtrx]->ielem_dim; jvar++)
    *	{
    *	  var = MESH_DISPLACEMENT1 + jvar;
    *	  if (pd->v[pg->imtrx][var]) 
    *	    {
-   *	      for ( j=0; j<ei->dof[var]; j++)
+   *	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
    *		{
-   *		  for (a=0; a<ei->ielem_dim; a++)
+   *		  for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
    *		    {
    *		      
    * d_press = -pa * 2 * M_PIE / wavelength 
@@ -1123,7 +1123,7 @@ fn_dot_T_user (func, d_func, u_bc, time)
    *      press = pb + pa * cos(fv->x[0] * 2 * M_PIE / wavelength);
    * pressure only a function of x 
    *
-   *      for (a=0; a<ei->ielem_dim; a++)
+   *      for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
    *	{  
    *
    *	  func[a] -= press * fv->snormal[a]; 
@@ -1168,14 +1168,14 @@ void flow_n_dot_T_user (func, d_func, u_BC, time)
    *
    *  if (af->Assemble_Jacobian)
    *    {
-   *      for (jvar=0; jvar<ei->ielem_dim; jvar++)
+   *      for (jvar=0; jvar<ei[pg->imtrx]->ielem_dim; jvar++)
    *	{
    *	  var = MESH_DISPLACEMENT1 + jvar;
    *	  if (pd->v[pg->imtrx][var]) 
    *	    {
-   *	      for ( j=0; j<ei->dof[var]; j++)
+   *	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
    *		{
-   *		  for (a=0; a<ei->ielem_dim; a++)
+   *		  for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
    *		    {
    *		      
    * d_press = -u_BC[0] * 2 * M_PIE / u_BC[2] 
@@ -1191,7 +1191,7 @@ void flow_n_dot_T_user (func, d_func, u_BC, time)
    *    }
    *      press = u_BC[1] + u_BC[0] * cos(fv->x[0] * 2 * M_PIE / u_BC[2]);
    *
-   *      for (a=0; a<ei->ielem_dim; a++)
+   *      for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
    *	{  
    *	  *func -= press; 
    *	}
@@ -1439,7 +1439,7 @@ force_user_surf(double func[DIM],
 	  var = MESH_DISPLACEMENT1;
 	  if (pd->v[pg->imtrx][var])
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 		  d_func[0][var][j] +=  -p[1]*(-phi_j)/SQUARE(p[4] - fv->x[0])
@@ -1452,7 +1452,7 @@ force_user_surf(double func[DIM],
 	  var = MESH_DISPLACEMENT1;
 	  if (pd->v[pg->imtrx][var])
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 		  d_func[0][var][j] +=  -p[2]*phi_j;
@@ -1518,7 +1518,7 @@ volt_user_surf (double func[DIM],
 
   /* J_s_c --- sensitivity wrt species concentrations */
   var=MASS_FRACTION;
-  for (j_id = 0; j_id < ei->dof[var]; j_id++)
+  for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++)
     {
       phi_j = bf[var]->phi[j_id];
 
@@ -1535,7 +1535,7 @@ volt_user_surf (double func[DIM],
   var=TEMPERATURE;
   if (pd->v[pg->imtrx][var])
     {
-      for (j = 0; j < ei->dof[var]; j++)
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
         {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -1549,7 +1549,7 @@ volt_user_surf (double func[DIM],
   var=VOLTAGE;
   if (pd->v[pg->imtrx][var])
     {
-      for (j = 0; j < ei->dof[var]; j++)
+      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
         {
           j_id = j;
           phi_j = bf[var]->phi[j_id];

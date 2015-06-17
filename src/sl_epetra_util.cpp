@@ -280,7 +280,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
       if (e == R_MASS) {
         for (ke = 0; ke < upd->Max_Num_Species_Eqn; ke++) {
           pe = MAX_PROB_VAR + ke;
-          dofs = ei->dof[e];
+          dofs = ei[pg->imtrx]->dof[e];
           for (i = 0; i < dofs; i++) {
             /*
              * Check to see whether this dof is on a
@@ -288,23 +288,23 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
              * there is no need to fill in the processor
              * residual and Jacobian row for this variable.
              */
-            ledof = ei->lvdof_to_ledof[e][i];
-            if (ei->owned_ledof[ledof]) {
-              gnn = ei->gnn_list[e][i];
-              nvdof = ei->Baby_Dolphin[e][i];
-              je_new = ei->ieqn_ledof[ledof] + ke;
+            ledof = ei[pg->imtrx]->lvdof_to_ledof[e][i];
+            if (ei[pg->imtrx]->owned_ledof[ledof]) {
+              gnn = ei[pg->imtrx]->gnn_list[e][i];
+              nvdof = ei[pg->imtrx]->Baby_Dolphin[e][i];
+              je_new = ei[pg->imtrx]->ieqn_ledof[ledof] + ke;
               row_index = Index_Solution(gnn, e, ke, nvdof,
-					 ei->matID_ledof[ledof], pg->imtrx);
+					 ei[pg->imtrx]->matID_ledof[ledof], pg->imtrx);
               resid_vector[row_index] += lec->R[MAX_PROB_VAR + ke][i];
 
               if (af->Assemble_Jacobian) {
                 for (v = V_FIRST; v < V_LAST; v++) {
                   pv = upd->vp[pg->imtrx][v];
                   if (pv != -1 && (Inter_Mask[pg->imtrx][e][v])) {
-                    ei_ptr = ei;
-                    if (ei->owningElementForColVar[v] != ielem) {
-                      if (ei->owningElementForColVar[v] != -1) {
-                        ei_ptr = ei->owningElement_ei_ptr[v];
+                    ei_ptr = ei[pg->imtrx];
+                    if (ei[pg->imtrx]->owningElementForColVar[v] != ielem) {
+                      if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
+                        ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
                         if (ei_ptr == 0) {
                           printf("ei_ptr == 0\n");
                           exit(-1);
@@ -357,7 +357,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
         }
       } else {
         pe = upd->ep[pg->imtrx][e];
-        dofs = ei->dof[e];
+        dofs = ei[pg->imtrx]->dof[e];
         for (i = 0; i < dofs; i++) {
           /*
            * Check to see whether this dof is on a
@@ -365,9 +365,9 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
            * there is no need to fill in the processor
            * residual and Jacobian row for this variable.
            */
-          ledof = ei->lvdof_to_ledof[e][i];
-          if (ei->owned_ledof[ledof]) {
-            row_index = ei->gun_list[e][i];
+          ledof = ei[pg->imtrx]->lvdof_to_ledof[e][i];
+          if (ei[pg->imtrx]->owned_ledof[ledof]) {
+            row_index = ei[pg->imtrx]->gun_list[e][i];
             resid_vector[row_index] += lec->R[pe][i];
 
             if (af->Assemble_Jacobian) {
@@ -376,10 +376,10 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
                 if (pv != -1 && (Inter_Mask[pg->imtrx][e][v])) {
                   if (v == MASS_FRACTION) {
 
-                    ei_ptr = ei;
-                    if (ei->owningElementForColVar[v] != ielem) {
-                      if (ei->owningElementForColVar[v] != -1) {
-                        ei_ptr = ei->owningElement_ei_ptr[v];
+                    ei_ptr = ei[pg->imtrx];
+                    if (ei[pg->imtrx]->owningElementForColVar[v] != ielem) {
+                      if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
+                        ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
                         if (ei_ptr == 0) {
                           EH(-1, "ei_ptr == 0\n");
                           exit(-1);
@@ -402,7 +402,7 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
                            *        dofs, je_new will be wrong here. je
                            *        is correct.
                            */
-                          if (Nodes[ei->gnn_list[v][j]]->Mat_List.Length < 2) {
+                          if (Nodes[ei[pg->imtrx]->gnn_list[v][j]]->Mat_List.Length < 2) {
                           }
                         }
                         EH(col_index, "Bad var index.");
@@ -413,10 +413,10 @@ void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *am
                   } else {
                     kv = 0;
                     // NEW IMPLEMENTATION
-                    ei_ptr = ei;
-                    if (ei->owningElementForColVar[v] != ielem) {
-                      if (ei->owningElementForColVar[v] != -1) {
-                        ei_ptr = ei->owningElement_ei_ptr[v];
+                    ei_ptr = ei[pg->imtrx];
+                    if (ei[pg->imtrx]->owningElementForColVar[v] != ielem) {
+                      if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
+                        ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
                         if (ei_ptr == 0) {
                           EH(-1, "ei slave pointer is null");
                           exit(-1);

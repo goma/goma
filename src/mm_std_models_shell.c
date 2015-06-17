@@ -1155,7 +1155,7 @@ disjoining_pressure_model (double H,                              /* Film thickn
 
  for (i = 0; i < DIM; i++)
     {
-     for (j = 0; j < ei->dof[SHELL_FILMH]; j++)
+     for (j = 0; j < ei[pg->imtrx]->dof[SHELL_FILMH]; j++)
         {
          dgrad_DisjPress_dH1[i][j] =  B * df_dH;
         }
@@ -1163,7 +1163,7 @@ disjoining_pressure_model (double H,                              /* Film thickn
 
  for (i = 0; i < DIM; i++)
     {
-     for (j = 0; j < ei->dof[SHELL_FILMH]; j++)
+     for (j = 0; j < ei[pg->imtrx]->dof[SHELL_FILMH]; j++)
         {
          dgrad_DisjPress_dH2[i][j] =   dB_dangle * df_dH * grad_angle[i]
                                       + B * d2f_dH2 * grad_II_H[i] ;

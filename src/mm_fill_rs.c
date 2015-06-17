@@ -318,7 +318,7 @@ assemble_real_solid(double time_value,
 	      for(b=0; b < VIM; b++)
 		{
 		  var = SOLID_DISPLACEMENT1 + b;
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];	   
    
@@ -393,7 +393,7 @@ assemble_real_solid(double time_value,
 	  eqn = R_SOLID1 + a;
 	  peqn = upd->ep[pg->imtrx][eqn];
 
-	  for ( i=0; i<ei->dof[eqn]; i++)
+	  for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 	      phi_i = bf[eqn]->phi[i];
 	      
@@ -479,7 +479,7 @@ assemble_real_solid(double time_value,
 	  eqn = R_SOLID1+a;
 	  peqn = upd->ep[pg->imtrx][eqn];
 
-	  for ( i=0; i<ei->dof[eqn]; i++)
+	  for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 	      phi_i = bf[eqn]->phi[i];
 	      /*
@@ -503,7 +503,7 @@ assemble_real_solid(double time_value,
 		  pvar = upd->vp[pg->imtrx][var];
 		  if ( pd->v[pg->imtrx][var] )
 		    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];
 
@@ -642,7 +642,7 @@ assemble_real_solid(double time_value,
 		  pvar = upd->vp[pg->imtrx][var];
 		  if ( pd->v[pg->imtrx][var] )
 		    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];
 
@@ -741,7 +741,7 @@ assemble_real_solid(double time_value,
 		  pvar = upd->vp[pg->imtrx][var];
 		  if (pd->v[pg->imtrx][var])
 		    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  diffusion = 0.;
 			  phi_j = bf[var]->phi[j];
@@ -769,7 +769,7 @@ assemble_real_solid(double time_value,
 	      var = MASS_FRACTION;
 	      if (pd->v[pg->imtrx][var])
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      for ( w=0; w<pd->Num_Species_Eqn; w++)
 			{
@@ -813,7 +813,7 @@ assemble_real_solid(double time_value,
 	      pvar = upd->vp[pg->imtrx][var];
 	      if (pd->v[pg->imtrx][var])
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      /* add inertia of moving mesh */
 		      advection = 0.;
@@ -854,7 +854,7 @@ assemble_real_solid(double time_value,
 	      pvar = upd->vp[pg->imtrx][var];
 	      if (pd->v[pg->imtrx][var])
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      /* add inertia of moving mesh */
 		      advection = 0.;
@@ -895,7 +895,7 @@ assemble_real_solid(double time_value,
 	      pvar = upd->vp[pg->imtrx][var];
 	      if (pd->v[pg->imtrx][var])
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      /* add inertia of moving mesh */
 		      advection = 0.;
@@ -939,7 +939,7 @@ assemble_real_solid(double time_value,
                    if (pd->v[pg->imtrx][var])
                      {
                        pvar = upd->vp[pg->imtrx][var];
-                       for ( j=0; j<ei->dof[var]; j++)
+                       for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                          {
                            diffusion = 0.;
                            phi_j = bf[var]->phi[j];
@@ -998,7 +998,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
   dbl d_thermexp_dx[MAX_VARIABLE_TYPES+MAX_CONC];
   dbl d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC];
   
-  dim = ei->ielem_dim;
+  dim = ei[pg->imtrx]->ielem_dim;
 
  /* 
    * Calculate the lame coefficients if they are not constant. Note, some of the
@@ -1051,7 +1051,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 		  v = MESH_DISPLACEMENT1 + b;
 		  if ( pd->v[pg->imtrx][v] )
 		    {
-		      dofs     = ei->dof[v];
+		      dofs     = ei[pg->imtrx]->dof[v];
 		      for ( j=0; j<dofs; j++)
 			{
 			  dTT_dx[p][q][b][j] =
@@ -1071,7 +1071,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 		  v = SOLID_DISPLACEMENT1 + b;
 		  if ( pd->v[pg->imtrx][v] )
 		    {
-		      dofs     = ei->dof[v];
+		      dofs     = ei[pg->imtrx]->dof[v];
 		      for ( j=0; j<dofs; j++)
 			{
 			  dTT_drs[p][q][b][j] =
@@ -1093,7 +1093,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 	      v = TEMPERATURE;
 	      if ( pd->v[pg->imtrx][v] )
 		{
-		  dofs     = ei->dof[v];
+		  dofs     = ei[pg->imtrx]->dof[v];
 
 		  for (j=0; j<dofs; j++)
 		     {
@@ -1111,7 +1111,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 	      v = MAX_STRAIN;
 	      if ( pd->v[pg->imtrx][v] )
 		{
-		  dofs     = ei->dof[v];
+		  dofs     = ei[pg->imtrx]->dof[v];
 		  
 		  if(elc->lame_mu_model == TABLE)
 		    {
@@ -1197,7 +1197,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 		{
 		  for ( q=0; q<dim; q++)
 		    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  /* didn't add this sensitivity in before - add it now */
 			  dTT_dp[p][q][j] = 
@@ -1214,7 +1214,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 	    {
 	      for ( a=0; a<dim; a++)
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      dTT_dp[a][a][j] -= bf[var]->phi[j]; 
 		    }
@@ -1238,7 +1238,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 		{
 		  for ( b=0; b<dim; b++)
 		    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  /* didn't add this in before - add it in now */
 			  dTT_dc[a][b][w][j] += bf[var]->phi[j] 
@@ -1269,7 +1269,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 	      
 	      for ( p=0; p<dim; p++)
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      if (mp->CapStress == COMPRESSIBLE) {
 			dTT_dp_liq[p][p][j] -= bf[var]->phi[j] *
@@ -1405,8 +1405,8 @@ belly_flop_rs(dbl mu)		/* elastic modulus - (for plane stress case) */
   
   status = 0;
   
-  dim = ei->ielem_dim;
-  mdof = ei->dof[SOLID_DISPLACEMENT1];
+  dim = ei[pg->imtrx]->ielem_dim;
+  mdof = ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1];
   /*******************************************************************************/
   /* load up the displacement gradient and it's sensitivities                    */
   /*******************************************************************************/
@@ -1474,11 +1474,11 @@ belly_flop_rs(dbl mu)		/* elastic modulus - (for plane stress case) */
 	  {
 	    for ( b=0; b<dim; b++)
 	      {
-		for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+		for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 		  {
 		    d_grad_d_rs[p][q][b][j] = fv->d_grad_d_rs_dmesh[p][q][b][j];
 		  }
-		for ( j=0; j<ei->dof[SOLID_DISPLACEMENT1+b]; j++)
+		for ( j=0; j<ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1+b]; j++)
 		  {
 		    d_grad_d_rs_rs[p][q][b][j] = bf[R_SOLID1]->grad_phi[j][p]*delta(q,b);  	
 		    
@@ -1518,11 +1518,11 @@ if (cr->RealSolidFluxModel == LINEAR)
 	    {
 	      for ( b=0; b<dim; b++)
 		{
-		  for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 		    {
 		      fv->d_deform_grad_rs_dx[p][q][b][j] = d_grad_d_rs[p][q][b][j];
 		    }
-		  for ( j=0; j<ei->dof[SOLID_DISPLACEMENT1+b]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1+b]; j++)
 		    {
 		      fv->d_deform_grad_rs_drs[p][q][b][j] = d_grad_d_rs_rs[p][q][b][j];
 		    }
@@ -1569,7 +1569,7 @@ if (cr->RealSolidFluxModel == LINEAR)
 		{
 		  for ( q=0; q<dim; q++)
 		    {
-		      for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 			{
 			  /* Remember, this is the deformation gradient 
 			   * of the material and it uses, as shown
@@ -1579,7 +1579,7 @@ if (cr->RealSolidFluxModel == LINEAR)
 			              grad_d_rs[p][q]*fv->d_deform_grad_dx[q][a][b][j] +
 			              d_grad_d_rs[p][q][b][j]*fv->deform_grad[q][a];
 			}
-		      for ( j=0; j<ei->dof[SOLID_DISPLACEMENT1+b]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1+b]; j++)
 			{
 			  d_deform_grad_drs[p][a][b][j] +=  
 			    d_grad_d_rs_rs[p][q][b][j]*fv->deform_grad[q][a];
@@ -1599,10 +1599,10 @@ if (cr->RealSolidFluxModel == LINEAR)
 
     invert_tensor(deform_grad, invdeform_grad, dim,
 		  d_deform_grad_dx, d_invdeform_grad_dx, 
-		  ei->dof[SOLID_DISPLACEMENT1], af->Assemble_Jacobian);
+		  ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1], af->Assemble_Jacobian);
     invert_tensor(deform_grad, invdeform_grad, dim,
 		  d_deform_grad_drs, d_invdeform_grad_drs, 
-		  ei->dof[SOLID_DISPLACEMENT1], af->Assemble_Jacobian);
+		  ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1], af->Assemble_Jacobian);
 
     /*Also, so we have them, load up the fv structure global variable of the 
      *material deform_grad
@@ -1618,11 +1618,11 @@ if (cr->RealSolidFluxModel == LINEAR)
 		{
 		  for ( b=0; b<dim; b++)
 		    {
-		      for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 			{
 			  fv->d_deform_grad_rs_dx[p][a][b][j] =  d_deform_grad_dx[p][a][b][j];
 			}
-		      for ( j=0; j<ei->dof[SOLID_DISPLACEMENT1+b]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1+b]; j++)
 			{
 			  fv->d_deform_grad_rs_drs[p][a][b][j] = d_deform_grad_drs[p][a][b][j];
 			}
@@ -1674,7 +1674,7 @@ if (cr->RealSolidFluxModel == LINEAR)
 	      {
 		for ( b=0; b<dim; b++)
 		  {
-		    for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+		    for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 		      {
 			d_cauchy_green_dx[p][q][b][j] += 0.5 * 
 			  ( d_deform_grad_dx[p][a][b][j] * deform_grad[q][a] 
@@ -1693,7 +1693,7 @@ if (cr->RealSolidFluxModel == LINEAR)
 	      {
 		for ( b=0; b<dim; b++)
 		  {
-		    for ( j=0; j<ei->dof[SOLID_DISPLACEMENT1+b]; j++)
+		    for ( j=0; j<ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1+b]; j++)
 		      {
 			d_cauchy_green_drs[p][q][b][j] += 0.5 * 
 			  ( d_deform_grad_drs[p][a][b][j] * deform_grad[q][a] 
@@ -1732,12 +1732,12 @@ if (cr->RealSolidFluxModel == LINEAR)
 	  {
 	    for ( b=0; b<dim; b++)
 	      {
-		for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+		for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 		  {
 		    fv->d_volume_change_dx[b][j] += d_cauchy_green_dx[p][p] [b][j];		    
 		    fv->d_volume_strain_dx[b][j] += d_cauchy_green_dx[p][p] [b][j];		    
 		  }
-		for ( j=0; j<ei->dof[SOLID_DISPLACEMENT1+b]; j++)
+		for ( j=0; j<ei[pg->imtrx]->dof[SOLID_DISPLACEMENT1+b]; j++)
 		  {
 		    fv->d_volume_change_drs[b][j] += d_cauchy_green_drs[p][p] [b][j];		    
 		    fv->d_volume_strain_drs[b][j] += d_cauchy_green_drs[p][p] [b][j];		    
@@ -2147,7 +2147,7 @@ get_convection_velocity_rs(double vconv[DIM], /*Calculated convection velocity *
 		   var = MESH_DISPLACEMENT1 + b;
 		   if (pd->v[pg->imtrx][var])
 		     {
-		       for ( i=0; i<ei->dof[var]; i++)
+		       for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
 			 {
 			   for (p=0; p < dim; p++)
 			     {
@@ -2163,7 +2163,7 @@ get_convection_velocity_rs(double vconv[DIM], /*Calculated convection velocity *
                    var = SOLID_DISPLACEMENT1 + b;
                    if (pd->v[pg->imtrx][var])
                      {
-                       for ( i=0; i<ei->dof[var]; i++)
+                       for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
                          {
                            for (p=0; p < dim; p++)
                              {
@@ -2316,7 +2316,7 @@ if(base_displ_model)
 		  var = MESH_DISPLACEMENT1 + p;
 		  if (pd->v[pg->imtrx][var])
 		    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];
 			  d_func[0][var][j] +=  ((fv->d[kdir] - base_displacement[kdir]) - 
@@ -2331,7 +2331,7 @@ if(base_displ_model)
 	      var = SOLID_DISPLACEMENT1 + kdir;
 	      if (pd->v[pg->imtrx][var])
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		      d_func[0][var][j] -= phi_j * fv->snormal[kdir];
@@ -2411,7 +2411,7 @@ f_kinematic_displacement_rs_bc(double func[DIM],
 		  var = MESH_DISPLACEMENT1 + p;
 		  if (pd->v[pg->imtrx][var])
 		    {
-		      for ( j=0; j<ei->dof[var]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];
 			  // d_func[0][var][j] +=  (fv->d_rs[kdir] -base_displacement_rs[kdir]) 
@@ -2432,7 +2432,7 @@ f_kinematic_displacement_rs_bc(double func[DIM],
 	      var = SOLID_DISPLACEMENT1 + kdir;
 	      if (pd->v[pg->imtrx][var])
 		{
-		  for ( j=0; j<ei->dof[var]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
 		        phi_j = bf[var]->phi[j];
 	//		d_func[0][var][j] -= phi_j * fv->snormal[kdir];
@@ -2444,7 +2444,7 @@ f_kinematic_displacement_rs_bc(double func[DIM],
 	  if ( upd->vp[pg->imtrx][var] != -1 ) {
 	
 	    /*** Loop over DOFs (j) ***/
-	    for ( j=0; j<ei->dof[var]; j++) {
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
 
 	      /* Load basis functions (j) */
 	      phi_j = bf[var]->phi[j];

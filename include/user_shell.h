@@ -18,7 +18,7 @@
 
   if (af->Assemble_Residual)
     {
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
           phi_i = bf[eqn]->phi[i];
 
@@ -37,14 +37,14 @@
   /* Include Jacobian contributions from shell variables */
   if (af->Assemble_Jacobian)
     {
-      for (i = 0; i < ei->dof[eqn]; i++)
+      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
         {
           phi_i = bf[eqn]->phi[i];
 
           /* J_qs_qs:  Shell sensitivity */
           var = SHELL_USER;
           pvar = upd->vp[0][var];
-          for (j = 0; j < ei->dof[var]; j++)
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
             {
               phi_j = bf[var]->phi[j];
               phi_t = phi_j;
@@ -67,7 +67,7 @@
           /* J_qs_qs:  Shell sensitivity */
           var = SURF_CHARGE;
           pvar = upd->vp[0][var];
-          for (j = 0; j < ei->dof[var]; j++)
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
             {
               phi_j = bf[var]->phi[j];
               phi_t = phi_j;

@@ -101,8 +101,8 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 
   status = 0;
 
-  dim = ei->ielem_dim;
-  mdof = ei->dof[MESH_DISPLACEMENT1];
+  dim = ei[pg->imtrx]->ielem_dim;
+  mdof = ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];
   /*******************************************************************************/
   /* load up the displacement gradient and it's sensitivities or calculate it in 
    * psuedo-cartesian coordinates if using arbitrary mesh */
@@ -149,7 +149,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	      v = MESH_DISPLACEMENT1 + p;
 	      if ( pd->v[pg->imtrx][v] )
 		{
-		  dofs     = ei->dof[v];
+		  dofs     = ei[pg->imtrx]->dof[v];
 		  for ( i=0; i<dofs; i++)
 		    {
 		      grad_d[p][q] += 
@@ -171,13 +171,13 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	    v = MESH_DISPLACEMENT1 + b;
 	    if ( pd->v[pg->imtrx][v] )
 	      {
-		for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+		for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 		  {
 		    for ( p=0; p<dim; p++)
 		      {
 			d_grad_d[p][b][b][j] += bf[v]->d_phi[j][p];
 		      }
-		    for ( i=0; i<ei->dof[v]; i++)
+		    for ( i=0; i<ei[pg->imtrx]->dof[v]; i++)
 		      {
 			for ( p=0; p<dim; p++)
 			  {
@@ -197,7 +197,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	    if ( pd->v[pg->imtrx][v] )
 	      {
 			bfv = bf[v];
-		for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+		for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 		  {
 			d_grad_d[0][b][b][j] = bfv->d_phi[j][0];
 			d_grad_d[1][b][b][j] = bfv->d_phi[j][1];
@@ -205,7 +205,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			if ( dim == 3 )
 			 d_grad_d[2][b][b][j] = bfv->d_phi[j][2];
 
-		    for ( i=0; i<ei->dof[v]; i++)
+		    for ( i=0; i<ei[pg->imtrx]->dof[v]; i++)
 			{
 				d_grad_d[0][0][b][j] += *esp->d[0][i] * bfv->d_d_phi_dmesh[i][0][b][j];
 				d_grad_d[1][1][b][j] += *esp->d[1][i] * bfv->d_d_phi_dmesh[i][1][b][j];
@@ -245,7 +245,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	      {
 		for ( b=0; b<dim; b++)
 		  {
-		    for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+		    for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 		      {
 			d_grad_d[p][q][b][j] = fv->d_grad_d_dmesh[p][q][b][j];			
 		      }
@@ -298,7 +298,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	  {
 	    for ( b=0; b<dim; b++)
 	      {
-		for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+		for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 		  {
 		    d_cauchy_green_dx[p][q][b][j] = 0.5 * 
 		      (d_grad_d[p][q][b][j] + d_grad_d[q][p][b][j]);
@@ -309,7 +309,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		{
 		  for ( b=0; b<dim; b++)
 		    {
-		      for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+		      for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 			{
 			  /* dot product between displacement gradient and 
 			   * it's transpose - note that there are two ways to 
@@ -329,7 +329,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 #else
 	  for ( b=0; b<dim; b++)
 	  {
-		  for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 		  {
 			  /*d_cauchy_green_dx[p][q][b][j] = 0.5 *  (d_grad_d[p][q][b][j] + d_grad_d[q][p][b][j]);*/
 
@@ -353,7 +353,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		  {
 			  for ( b=0; b<dim; b++)
 			  {
-				  for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+				  for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 				  {
 					  /*d_cauchy_green_dx[p][q][b][j] -= 0.5 * ( d_grad_d[p][a][b][j] * grad_d[q][a] + grad_d[p][a] * d_grad_d[q][a][b][j] ); */
 					  
@@ -408,7 +408,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		  {
 		    for ( b=0; b<dim; b++)
 		      {
-			for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+			for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 			  {
 			    fv->d_deform_grad_dx[p][q][b][j] = d_grad_d[p][q][b][j];
 			  }
@@ -435,7 +435,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		  {
 		    for ( b=0; b<dim; b++)
 		      {
-			for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+			for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 			  {
 			    d_invdeform_grad_dx[p][q][b][j] = - d_grad_d[p][q][b][j];
 			  }
@@ -445,7 +445,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	  }
 	  invert_tensor(invdeform_grad, fv->deform_grad, VIM,
 			d_invdeform_grad_dx, fv->d_deform_grad_dx, 
-			ei->dof[MESH_DISPLACEMENT1], af->Assemble_Jacobian);
+			ei[pg->imtrx]->dof[MESH_DISPLACEMENT1], af->Assemble_Jacobian);
 	}
     }
 
@@ -478,7 +478,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 
 	    for ( b=0; b<dim; b++)
 	      {
-		for ( j=0; j<ei->dof[MESH_DISPLACEMENT1+b]; j++)
+		for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
 		  {
 		  	fv->d_volume_change_dx[b][j] = d_cauchy_green_dx[0][0] [b][j];		    
 			fv->d_volume_strain_dx[b][j] = d_cauchy_green_dx[0][0] [b][j];		    
@@ -551,11 +551,11 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
                   fprintf(stderr,
                      "P_%d: Deformation Gradient %f %f in elem [%d]\n",
                       ProcID, deform_grad[i][0],
-                      deform_grad[i][1], ei->ielem );
+                      deform_grad[i][1], ei[pg->imtrx]->ielem );
 #else
                   fprintf(stderr,
                      "Deformation Gradient %f %f in elem [%d] %g %g\n",
-                      deform_grad[i][0], deform_grad[i][1], ei->ielem,fv->x[0],fv->x[1] );
+                      deform_grad[i][0], deform_grad[i][1], ei[pg->imtrx]->ielem,fv->x[0],fv->x[1] );
 #endif
                  }
               neg_elem_volume = TRUE;
@@ -627,7 +627,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 /* 			     / pow((1. - fv->P / mu ), 3./4.) ; */
 /* 			} */
 /* 		    }      */
-/* 		  mdofp = ei->dof[R_PRESSURE]; */
+/* 		  mdofp = ei[pg->imtrx]->dof[R_PRESSURE]; */
 /* 		      for (k=0; k<mdofp; k++) */
 /* 			{ */
 /* 			  fv->d_volume_change_dp[k] =  3./4./mu * bf[PRESSURE]->phi[k] */
@@ -674,12 +674,12 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
                   fprintf(stderr,
                      "P_%d: Deformation Gradient %f %f %f in elem [%d]\n",
                       ProcID, deform_grad[i][0], deform_grad[i][1],
-                      deform_grad[i][2], ei->ielem );
+                      deform_grad[i][2], ei[pg->imtrx]->ielem );
 #else
                   fprintf(stderr,
                      "Deformation Gradient %f %f %f in elem [%d]\n",
                       deform_grad[i][0], deform_grad[i][1],
-                      deform_grad[i][2], ei->ielem );
+                      deform_grad[i][2], ei[pg->imtrx]->ielem );
 #endif
                  }
                  neg_elem_volume = TRUE;
@@ -1105,7 +1105,7 @@ slope_n_dot_n0_bc(double func[DIM],
 	var = MESH_DISPLACEMENT1 + jvar;
 	if (pd->v[pg->imtrx][var])
 	  {
-	    for (j_id = 0; j_id < ei->dof[var]; j_id++)
+	    for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++)
 	      {
 		for(kdir=0; kdir<dim; kdir++)
 		  {
@@ -1225,7 +1225,7 @@ if(pd->e[pg->imtrx][R_MESH1] && cr->MeshMotion != ARBITRARY)
 
   err = mesh_stress_tensor(TT, dTT_dx, dTT_dp, dTT_dc, dTT_dp_liq,
                            dTT_dp_gas, dTT_dporosity, dTT_dsink_mass, dTT_dT, dTT_dmax_strain, dTT_dcur_strain,
-                           elc->lame_mu, elc->lame_lambda, delta_t, ei->ielem,
+                           elc->lame_mu, elc->lame_lambda, delta_t, ei[pg->imtrx]->ielem,
 			   ip, ip_total);
   if ( cr->MeshMotion == LAGRANGIAN ||
        cr->MeshMotion == DYNAMIC_LAGRANGIAN)
@@ -1310,7 +1310,7 @@ if(pd->e[pg->imtrx][R_SOLID1] && cr->MeshMotion != ARBITRARY)
               for(b=0; b < VIM; b++)
                 {
                   var = SOLID_DISPLACEMENT1 + b;
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
                       d_vconv->rs[a][b][j] += phi_j * (1.+2.*theta)*delta_t*delta(a,b) ;
@@ -1363,7 +1363,7 @@ if(pd->e[pg->imtrx][R_SOLID1] && cr->MeshMotion != ARBITRARY)
 	    var = MESH_DISPLACEMENT1 + jvar;
 	    if (pd->v[pg->imtrx][var])
 	      {
-		for (j_id = 0; j_id < ei->dof[var]; j_id++)
+		for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++)
 		  {
 		    for(a=0; a<dim; a++)
 	  		{
@@ -1584,9 +1584,9 @@ rep_force_n_dot_f_bc(double func[DIM],
 	  var = MESH_DISPLACEMENT1 + jvar;
 	  if (pd->v[pg->imtrx][var]) 
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
-		  for (a=0; a<ei->ielem_dim; a++)
+		  for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
 		    {
 			  
 		     d_func[a][var][j] += force*fv->dsnormal_dx[a][jvar][j]  
@@ -1608,7 +1608,7 @@ rep_force_n_dot_f_bc(double func[DIM],
 	}
     }
 
-  for (a=0; a<ei->ielem_dim; a++)
+  for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
     {  
       func[a] += force * fv->snormal[a]; 
       func[a] += force * fv->stangent[0][a]*friction; 
@@ -1719,9 +1719,9 @@ rep_force_roll_n_dot_f_bc(double func[DIM],
 	  var = MESH_DISPLACEMENT1 + jvar;
 	  if (pd->v[pg->imtrx][var]) 
 	    {
-	      for ( j=0; j<ei->dof[var]; j++)
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
-		  for (a=0; a<ei->ielem_dim; a++)
+		  for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
 		    {
 			  
 		     d_func[a][var][j] += force*fv->dsnormal_dx[a][jvar][j]  
@@ -1744,7 +1744,7 @@ rep_force_roll_n_dot_f_bc(double func[DIM],
     }
 /*fprintf(stderr," force %g %g %g\n",coord[0],force,friction);*/
 
-  for (a=0; a<ei->ielem_dim; a++)
+  for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
     {  
       func[a] += force * fv->snormal[a]; 
       func[a] += force * fv->stangent[0][a]*friction; 
@@ -1796,7 +1796,7 @@ norm_force_n_dot_f_bc(double func[DIM],
 	    var = MESH_DISPLACEMENT1 + jvar;
 	    if (pd->v[pg->imtrx][var])
 	      {
-		for (j_id = 0; j_id < ei->dof[var]; j_id++)
+		for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++)
 		  {
 		    
 		    d_func[kdir][var][j_id] += (
@@ -1889,7 +1889,7 @@ friction_n_dot_f_bc(double func[DIM],
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
-  if(blk_id != -1 && blk_id != ei->elem_blk_id)
+  if(blk_id != -1 && blk_id != ei[pg->imtrx]->elem_blk_id)
 	return;
 
   /*  initialize variables */
@@ -1918,7 +1918,7 @@ if(pd->e[pg->imtrx][R_MESH1] && cr->MeshMotion != ARBITRARY)
 
   err = mesh_stress_tensor(TT, dTT_dx, dTT_dp, dTT_dc, dTT_dp_liq,
                            dTT_dp_gas, dTT_dporosity, dTT_dsink_mass, dTT_dT, dTT_dmax_strain, dTT_dcur_strain,
-                           elc->lame_mu, elc->lame_lambda, delta_t, ei->ielem,
+                           elc->lame_mu, elc->lame_lambda, delta_t, ei[pg->imtrx]->ielem,
 			   ip, ip_total);
   if ( cr->MeshMotion == LAGRANGIAN ||
        cr->MeshMotion == DYNAMIC_LAGRANGIAN)
@@ -2003,7 +2003,7 @@ if(pd->e[pg->imtrx][R_SOLID1] && cr->MeshMotion != ARBITRARY)
               for(b=0; b < VIM; b++)
                 {
                   var = SOLID_DISPLACEMENT1 + b;
-                  for ( j=0; j<ei->dof[var]; j++)
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
                       d_vconv->rs[a][b][j] += phi_j * (1.+2.*theta)*delta_t*delta(a,b) ;
@@ -2090,7 +2090,7 @@ if(pd->e[pg->imtrx][R_SOLID1] && cr->MeshMotion != ARBITRARY)
 	    var = MESH_DISPLACEMENT1 + jvar;
 	    if (pd->v[pg->imtrx][var])
 	      {
-		for (j_id = 0; j_id < ei->dof[var]; j_id++)
+		for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++)
 		  {
 		    
 		    d_nforce = 0;
@@ -2191,8 +2191,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
     if (!pd->e[pg->imtrx][R_MOMENTUM1]) return;
 
     
-    id_dofmom = ei->ln_to_dof[R_MOMENTUM1][id];
-    id_dofmesh = ei->ln_to_dof[R_MESH1][id];
+    id_dofmom = ei[pg->imtrx]->ln_to_dof[R_MOMENTUM1][id];
+    id_dofmesh = ei[pg->imtrx]->ln_to_dof[R_MESH1][id];
 
     if (Current_EB_ptr->Elem_Blk_Id != i_mat_fluid)
       { 
@@ -2233,8 +2233,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 	if (! xfixed[p]) {
 	  ieqn_mom = R_MOMENTUM1 + p;
 	  ieqn_solid = R_MESH1 + p;
-	  id_dofmom = ei->ln_to_dof[ieqn_mom][id];
-	  id_dofmesh = ei->ln_to_dof[ieqn_solid][id];
+	  id_dofmom = ei[pg->imtrx]->ln_to_dof[ieqn_mom][id];
+	  id_dofmesh = ei[pg->imtrx]->ln_to_dof[ieqn_solid][id];
 	  lec->R[upd->ep[pg->imtrx][ieqn_solid]][id_dofmesh] =
 	      scale * lec->R[upd->ep[pg->imtrx][ieqn_mom]][id_dofmom];
 	}
@@ -2260,8 +2260,8 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		peqn_mom = upd->ep[pg->imtrx][ieqn_mom];
 		ieqn_solid = R_MESH1 + p;
 		peqn_solid = upd->ep[pg->imtrx][ieqn_solid];
-		id_dofmom = ei->ln_to_dof[ieqn_mom][id];
-		id_dofmesh = ei->ln_to_dof[ieqn_solid][id];
+		id_dofmom = ei[pg->imtrx]->ln_to_dof[ieqn_mom][id];
+		id_dofmesh = ei[pg->imtrx]->ln_to_dof[ieqn_solid][id];
 
 		/* Add contributions due to all nodal sensitivities in solid element */
 
@@ -2274,7 +2274,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		    if ( pd->v[pg->imtrx][var] )
 		      {
 			pvar = upd->vp[pg->imtrx][var];
-			for ( j_id=0; j_id<ei->dof[var]; j_id++)
+			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
 			    lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
 				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
@@ -2289,7 +2289,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		if ( pd->v[pg->imtrx][var] )
 		  {
 		    pvar = upd->vp[pg->imtrx][var];
-		    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+		    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		      {			
 			lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
 			    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
@@ -2304,7 +2304,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		if ( pd->v[pg->imtrx][var] )
 		  {
 		    pvar = upd->vp[pg->imtrx][var];
-		    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+		    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		      {
 			lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
 			    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
@@ -2320,7 +2320,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		    for ( w=0; w<pd->Num_Species_Eqn; w++)
 		      {
 			pvar = MAX_PROB_VAR + w;
-			for ( j_id=0; j_id<ei->dof[var]; j_id++)
+			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
 			    if (fabs(lec->J[peqn_solid][pvar][id_dofmesh][j_id]) > 1.e-8)
 			      {
@@ -2338,7 +2338,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
                     pvar = upd->vp[pg->imtrx][var];
 		    if ( pd->v[pg->imtrx][var] )
 		      {
-			for ( j_id=0; j_id<ei->dof[var]; j_id++)
+			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
 			    if (fabs(lec->J[peqn_solid][pvar][id_dofmesh][j_id]) > 1.e-8)
 			      {
@@ -2354,7 +2354,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
                     pvar = upd->vp[pg->imtrx][var];
 		    if ( pd->v[pg->imtrx][var] )
 		      {
-			for ( j_id=0; j_id<ei->dof[var]; j_id++)
+			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
 			    if (fabs(lec->J[peqn_solid][pvar][id_dofmesh][j_id]) > 1.e-8)
 			      {
@@ -2370,7 +2370,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
                     pvar = upd->vp[pg->imtrx][var];
 		    if ( pd->v[pg->imtrx][var] )
 		      {
-			for ( j_id=0; j_id<ei->dof[var]; j_id++)
+			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
 			    if (fabs(lec->J[peqn_solid][pvar][id_dofmesh][j_id]) > 1.e-8)
 			      {
@@ -2389,7 +2389,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 		    if ( pd->v[pg->imtrx][var] )
 		      {
 			pvar = upd->vp[pg->imtrx][var];
-			for ( j_id=0; j_id<ei->dof[var]; j_id++)
+			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
 			    lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
 				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
@@ -2414,7 +2414,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 				if ( pd->v[pg->imtrx][var] )
 				  {
 				    pvar = upd->vp[pg->imtrx][var];
-				    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+				    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 				      {
 					lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
 					  scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
@@ -2448,7 +2448,7 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
 			    if ( pd->v[pg->imtrx][var] )
 			      {
 				pvar = upd->vp[pg->imtrx][var];
-				for ( j_id=0; j_id<ei->dof[var]; j_id++)
+				for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 				  {
 				    lec->J[peqn_solid][pvar][id_dofmesh][j_id] =
 				      scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
@@ -2519,8 +2519,8 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
       xfixed[0] = xfixed[1] = xfixed[2] = 0;
     } 
 
-    id_dofmom = ei->ln_to_dof[R_MOMENTUM1][id];
-    id_dofsol = ei->ln_to_dof[R_SOLID1][id];
+    id_dofmom = ei[pg->imtrx]->ln_to_dof[R_MOMENTUM1][id];
+    id_dofsol = ei[pg->imtrx]->ln_to_dof[R_SOLID1][id];
     /* 
      * if you are in the solid phase, return without doing anything.
      * In the solid phase, there are no fluid momentum equations
@@ -2590,7 +2590,7 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
                     pvar = upd->vp[pg->imtrx][var];
 		    if ( pd->v[pg->imtrx][var] )
 		      {
-			for ( j_id=0; j_id<ei->dof[var]; j_id++)
+			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
 			    lec->J[peqn_solid][pvar][id_dofsol][j_id] +=
 				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
@@ -2607,7 +2607,7 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		    pvar = upd->vp[pg->imtrx][var];
 		    if ( pd->v[pg->imtrx][var] )
 		      {
-			for ( j_id=0; j_id<ei->dof[var]; j_id++)
+			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
 			    lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
 				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
@@ -2623,7 +2623,7 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		pvar = upd->vp[pg->imtrx][var];
 		if ( pd->v[pg->imtrx][var] )
 		  {
-		    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+		    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		      {			
 			lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
 			    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
@@ -2638,7 +2638,7 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		pvar = upd->vp[pg->imtrx][var];
 		if ( pd->v[pg->imtrx][var] )
 		  {
-		    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+		    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		      {
 			lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
 			    scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
@@ -2654,7 +2654,7 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		    for ( w=0; w<pd->Num_Species_Eqn; w++)
 		      {
 		        pvar = upd->vp[pg->imtrx][var] + w;
-			for ( j_id=0; j_id<ei->dof[var]; j_id++)
+			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
 			    lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
                                 scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
@@ -2673,7 +2673,7 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		    pvar = upd->vp[pg->imtrx][var];
 		    if ( pd->v[pg->imtrx][var] )
 		      {
-			for ( j_id=0; j_id<ei->dof[var]; j_id++)
+			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
 			    lec->J[peqn_solid][pvar][id_dofsol][j_id] +=
 				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
@@ -2690,7 +2690,7 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		    if ( pd->v[pg->imtrx][var] )
 		      {
 			pvar = upd->vp[pg->imtrx][var];
-			for ( j_id=0; j_id<ei->dof[var]; j_id++)
+			for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 			  {
 			    lec->J[peqn_solid][pvar][id_dofsol][j_id] += 
 				scale*lec->J[peqn_mom][pvar][id_dofmom][j_id];
@@ -2780,7 +2780,7 @@ penetration(double func[],
 	    /* sum the contributions to the global stiffness matrix */
 	    
 	    var = TEMPERATURE;
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {
 		if (pd->v[pg->imtrx][var])
 		  {
@@ -2794,7 +2794,7 @@ penetration(double func[],
 	      }
 	    
 	    var = MASS_FRACTION;
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {
 		if (pd->v[pg->imtrx][var])
 		  {
@@ -2813,7 +2813,7 @@ penetration(double func[],
 	    for(jvar=0; jvar<dim; jvar++) 
 	      {
 		var = MESH_DISPLACEMENT1 + jvar;
-		for ( j_id=0; j_id<ei->dof[var]; j_id++)
+		for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		  {
 		    if (pd->v[pg->imtrx][var])
 		      {
@@ -2831,7 +2831,7 @@ penetration(double func[],
 	    for(jvar=0; jvar<dim; jvar++) 
 	      {
 		var = VELOCITY1 + jvar;
-		for ( j_id=0; j_id<ei->dof[var]; j_id++)
+		for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		  {
 		    if (pd->v[pg->imtrx][var])
 		      {
@@ -2870,7 +2870,7 @@ penetration(double func[],
 	for(jvar=0; jvar<dim; jvar++) 
 	  {
 	    var = MESH_DISPLACEMENT1 + jvar;
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {
 		if (pd->v[pg->imtrx][var])
 		  {
@@ -2887,7 +2887,7 @@ penetration(double func[],
 	for(jvar=0; jvar<dim; jvar++) 
 	  {
 	    var = VELOCITY1 + jvar;
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {
 		if (pd->v[pg->imtrx][var])
 		  {
@@ -2967,7 +2967,7 @@ no_slip(double func[],
 		  else
 		    EH(-1, "Bad pd->MeshMotion");
 		  if (pd->v[pg->imtrx][var])
-		    for ( j=0; j<ei->dof[var]; j++)
+		    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		      {
 			phi_j = bf[var]->phi[j];
 			d_func[jvar][var][j] -= phi_j;
@@ -3022,7 +3022,7 @@ no_slip(double func[],
 	    /* sum the contributions to the global stiffness matrix */
 
 	    var = TEMPERATURE;
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {
 		if (pd->v[pg->imtrx][var])
 		  {
@@ -3036,7 +3036,7 @@ no_slip(double func[],
 	      }
 
 	    var = MASS_FRACTION;
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {
 		if (pd->v[pg->imtrx][var])
 		  {
@@ -3055,7 +3055,7 @@ no_slip(double func[],
 	    for(jvar=0; jvar<dim; jvar++)
 	      {
 		var = MESH_DISPLACEMENT1 + jvar;
-		for ( j_id=0; j_id<ei->dof[var]; j_id++)
+		for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		  {
 		    if (pd->v[pg->imtrx][var])
 		      {
@@ -3074,7 +3074,7 @@ no_slip(double func[],
 		for(jvar=0; jvar<dim; jvar++)
 		  {
 		    var = SOLID_DISPLACEMENT1 + jvar;
-		    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+		    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		      {
 			if (pd->v[pg->imtrx][var])
 			  {
@@ -3092,7 +3092,7 @@ no_slip(double func[],
 	    for(jvar=0; jvar<dim; jvar++)
 	      {
 		var = VELOCITY1 + jvar;
-		for ( j_id=0; j_id<ei->dof[var]; j_id++)
+		for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 		  {
 		    if (pd->v[pg->imtrx][var])
 		      {
@@ -3115,7 +3115,7 @@ no_slip(double func[],
 		  }
 		if (pd->v[pg->imtrx][var])
 		  {
-		    for ( j=0; j<ei->dof[var]; j++)
+		    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		      {
 			phi_j = bf[var]->phi[j];
 			if(TimeIntegration != 0)
@@ -3157,7 +3157,7 @@ no_slip(double func[],
 	for(jvar=0; jvar<dim; jvar++)
 	  {
 	    var = VELOCITY1 + jvar;
-	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
+	    for ( j_id=0; j_id<ei[pg->imtrx]->dof[var]; j_id++)
 	      {
 		if (pd->v[pg->imtrx][var])
 		  {
@@ -3214,7 +3214,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
   dbl d_thermexp_dx[MAX_VARIABLE_TYPES+MAX_CONC];
   dbl d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC];
 
-  dim = ei->ielem_dim;
+  dim = ei[pg->imtrx]->ielem_dim;
   mat_ielem = PRS_mat_ielem;
 
   
@@ -3253,7 +3253,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
       if(elc->thermal_expansion_model == SHRINKAGE)
 	{
 	  if((fv->external_field[0] >= 1.63 && fv->external_field[0] <= 1.7) ||
-	     Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].solidified[ip])
+	     Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].solidified[ip])
 	    {
 	      for ( p=0; p<VIM; p++)
 		{
@@ -3262,7 +3262,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 		      TT[p][q] -=  (2.* mu + 3.*lambda) * (-0.04) * delta(p,q);
 		    }
 		}
-	      Element_Blocks[ei->elem_blk_index].ElemStorage[mat_ielem].solidified[ip] = 1.0;
+	      Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].solidified[ip] = 1.0;
 	    }
 	}
  
@@ -3322,7 +3322,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 		   v = MESH_DISPLACEMENT1 + b;
 		   if ( pd->v[pg->imtrx][v] )
 		     {
-		       dofs     = ei->dof[v];
+		       dofs     = ei[pg->imtrx]->dof[v];
 		       for ( j=0; j<dofs; j++)
 			 {
 			   dTT_dx[p][q][b][j] =
@@ -3365,7 +3365,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	       v = TEMPERATURE;
 	       if ( pd->v[pg->imtrx][v] )
 		 {
-		   dofs     = ei->dof[v];
+		   dofs     = ei[pg->imtrx]->dof[v];
 
 		   for (j=0; j<dofs; j++)
 		     {
@@ -3403,7 +3403,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	       v = MAX_STRAIN;
 	       if ( pd->v[pg->imtrx][v] )
 		 {
-		   dofs     = ei->dof[v];
+		   dofs     = ei[pg->imtrx]->dof[v];
 
 		   if(elc->lame_mu_model == TABLE)
 		     {
@@ -3418,7 +3418,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	       v = CUR_STRAIN;
 	       if ( pd->v[pg->imtrx][v] )
 		 {
-		   dofs     = ei->dof[v];
+		   dofs     = ei[pg->imtrx]->dof[v];
 
 		   if(elc->lame_mu_model == TABLE)
 		     {
@@ -3433,7 +3433,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
  	       v = MASS_FRACTION;
  	       if ( pd->v[pg->imtrx][v] )
  		 {
- 		   dofs     = ei->dof[v];
+ 		   dofs     = ei[pg->imtrx]->dof[v];
  		   for ( j=0; j<dofs; j++)
  		     {
 		       for (w=0; w<pd->Num_Species_Eqn; w++) 
@@ -3498,7 +3498,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 			  v = MESH_DISPLACEMENT1 + b;
 			  if ( pd->v[pg->imtrx][v] )
 			    {
-			      dofs     = ei->dof[v];
+			      dofs     = ei[pg->imtrx]->dof[v];
 			      for ( j=0; j<dofs; j++)
 				{
 				  dTT_dx[p][q][b][j] +=
@@ -3623,7 +3623,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 		   {
 		     for ( q=0; q<VIM; q++)
 		       {
-			 for ( j=0; j<ei->dof[var]; j++)
+			 for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			   {
 			     /* didn't add this sensitivity in before - add it now */
 			     dTT_dp[p][q][j] = 
@@ -3640,7 +3640,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	       {
 		 for ( a=0; a<VIM; a++)
 		   {
-		     for ( j=0; j<ei->dof[var]; j++)
+		     for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		       {
 			 dTT_dp[a][a][j] -= bf[var]->phi[j]; 
 		       }
@@ -3664,7 +3664,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 		   {
 		     for ( b=0; b<VIM; b++)
 		       {
-			 for ( j=0; j<ei->dof[var]; j++)
+			 for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			   {
 			     /* didn't add this in before - add it in now */
 			     dTT_dc[a][b][w][j] += bf[var]->phi[j] 
@@ -3685,7 +3685,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	     {
 	       for ( b=0; b<VIM; b++)
 		 {
-		   for ( j=0; j<ei->dof[var]; j++)
+		   for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		     {
 		       /* didn't add this in before - add it in now */
 		       dTT_dporosity[a][b][j] += bf[var]->phi[j] 
@@ -3703,7 +3703,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	   {
 		 for ( p=0; p<VIM; p++)
 		   {
-		     for ( j=0; j<ei->dof[var]; j++)
+		     for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		       {
 			 if (mp->CapStress == COMPRESSIBLE) 
 			   {
@@ -3813,7 +3813,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	   {
 	     for ( p=0; p<VIM; p++)
 	       {
-		 for ( j=0; j<ei->dof[var]; j++)
+		 for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		   {
 		     /* dTT_dsink_mass[p][p][j] -= factor*2*mu*bf[var]->phi[j]*mp->u_porous_sink_constants[5]/mp->density; */
 		     dTT_dsink_mass[p][p][j] -= factor*2*mu*bf[var]->phi[j] *
@@ -3826,7 +3826,7 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	       {
 		 for ( p=0; p<VIM; p++)
 		   {
-		     for ( j=0; j<ei->dof[var]; j++)
+		     for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		       {
 		 
 			 dTT_dporosity[p][p][j] -= factor*2*mu*bf[var]->phi[j] *
@@ -3902,7 +3902,7 @@ get_evp_stress_tensor(double TT[DIM][DIM],
  double d_thermexp_dx[MAX_VARIABLE_TYPES+MAX_CONC];
  double d_speciesexp_dx[MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC];
 
- dim = ei->ielem_dim;
+ dim = ei[pg->imtrx]->ielem_dim;
  if(dim > 2) EH(-1,"EVP models only implemented for plane strain case just now");
 
  /******************************************************/
@@ -4035,7 +4035,7 @@ information */
 		 v1 = MESH_DISPLACEMENT1 + b;
 		 if ( pd->v[pg->imtrx][v1] )
 		   {
-		     dofs1    = ei->dof[v1];
+		     dofs1    = ei[pg->imtrx]->dof[v1];
 		     for ( m=0; m<dofs1; m++)
 		       {
 			 evpl->dTT_dx_glob[ielem][ip][p][q][b][m] = 0.;
@@ -4099,7 +4099,7 @@ information */
                      v1 = MESH_DISPLACEMENT1 + b;
                      if ( pd->v[pg->imtrx][v1] )
                        {
-                         dofs1    = ei->dof[v1];
+                         dofs1    = ei[pg->imtrx]->dof[v1];
                          for ( m=0; m<dofs1; m++)
                            {
 		 	     evpl->dTT_dx_old_glob[i][j][p][q][b][m] = evpl->dTT_dx_glob[i][j][p][q][b][m];
@@ -4109,7 +4109,7 @@ information */
                  var = MASS_FRACTION;
 	         for (b=0; b<pd->Num_Species_Eqn; b++) 
 	           {
-	             for ( m=0; m<ei->dof[var]; m++)
+	             for ( m=0; m<ei[pg->imtrx]->dof[var]; m++)
 	               {
 		         evpl->dTT_dc_old_glob[i][j][p][q][b][m] = evpl->dTT_dc_glob[i][j][p][q][b][m];
 	               }
@@ -4165,7 +4165,7 @@ information */
                  v1 = MESH_DISPLACEMENT1 + b;
                  if ( pd->v[pg->imtrx][v1] )
                    {
-                     dofs1    = ei->dof[v1];
+                     dofs1    = ei[pg->imtrx]->dof[v1];
                      for ( m=0; m<dofs1; m++)
                        {
 		         dTT_dx[p][q][b][m] = evpl->dTT_dx_glob[ielem][ip][p][q][b][m];
@@ -4175,7 +4175,7 @@ information */
              var = MASS_FRACTION;
 	     for (b=0; b<pd->Num_Species_Eqn; b++) 
 	       {
-	         for ( m=0; m<ei->dof[var]; m++)
+	         for ( m=0; m<ei[pg->imtrx]->dof[var]; m++)
 	           {
 		     dTT_dc[p][q][b][m] = evpl->dTT_dc_glob[ielem][ip][p][q][b][m];
 	           }
@@ -4189,7 +4189,7 @@ information */
                  v1 = MESH_DISPLACEMENT1 + b;
                  if ( pd->v[pg->imtrx][v1] )
                    {
-                     dofs1    = ei->dof[v1];
+                     dofs1    = ei[pg->imtrx]->dof[v1];
                      for ( m=0; m<dofs1; m++)
                        {
 		         dTT_dx[p][q][b][m] = evpl->dTT_dx_old_glob[ielem][ip][p][q][b][m];
@@ -4199,7 +4199,7 @@ information */
              var = MASS_FRACTION;
 	     for (b=0; b<pd->Num_Species_Eqn; b++) 
 	       {
-	         for ( m=0; m<ei->dof[var]; m++)
+	         for ( m=0; m<ei[pg->imtrx]->dof[var]; m++)
 	           {
 		     dTT_dc[p][q][b][m] = evpl->dTT_dc_old_glob[ielem][ip][p][q][b][m];
 	           }
@@ -4287,7 +4287,7 @@ information */
 	            v = MESH_DISPLACEMENT1 + b;
 	            if ( pd->v[pg->imtrx][v] )
 		      {
-		        dofs     = ei->dof[v];
+		        dofs     = ei[pg->imtrx]->dof[v];
 		        for ( j=0; j<dofs; j++)
 		          {
 			    dF_dx[p][q][b][j] = 0.0;
@@ -4309,7 +4309,7 @@ information */
           v = MESH_DISPLACEMENT1 + b;
           if ( pd->v[pg->imtrx][v] )
 	    {
-	      dofs     = ei->dof[v];
+	      dofs     = ei[pg->imtrx]->dof[v];
 	      for ( j=0; j<dofs; j++)
 	        {
                   dF_dx[0][2][b][j] = 0.;
@@ -4332,7 +4332,7 @@ information */
 	              v = MESH_DISPLACEMENT1 + b;
 	              if ( pd->v[pg->imtrx][v] )
 		        {
-		          dofs     = ei->dof[v];
+		          dofs     = ei[pg->imtrx]->dof[v];
 		          for ( j=0; j<dofs; j++)
 			    {
 			      dF_vp_inv_dx[p][q][b][j] = 0.;
@@ -4355,7 +4355,7 @@ information */
                 {
 	          for (b=0; b<pd->Num_Species_Eqn; b++) 
 	            {
-	              for ( j=0; j<ei->dof[var]; j++)
+	              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		        {
 			  dF_vp_inv_dc[p][q][b][j] = 0.;
 	      		  for ( m=0; m<VIM; m++)
@@ -4380,7 +4380,7 @@ information */
 	          v = MESH_DISPLACEMENT1 + b;
 	          if ( pd->v[pg->imtrx][v] )
 		    {
-		      dofs     = ei->dof[v];
+		      dofs     = ei[pg->imtrx]->dof[v];
 		      for ( j=0; j<dofs; j++)
 			{
 		          if (F_vp_flag == 1)
@@ -4411,7 +4411,7 @@ information */
                 {
 	          for (b=0; b<pd->Num_Species_Eqn; b++) 
 	            {
-	              for ( j=0; j<ei->dof[var]; j++)
+	              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	                {
 			  dF_e_dc[p][q][b][j]=0.;
 	      		  for ( m=0; m<VIM; m++)
@@ -4433,7 +4433,7 @@ information */
 	           v = MESH_DISPLACEMENT1 + b;
 	           if ( pd->v[pg->imtrx][v] )
 		     {
-		       dofs     = ei->dof[v];
+		       dofs     = ei[pg->imtrx]->dof[v];
 		       for ( j=0; j<dofs; j++)
 		         {
 			   dE_e_dx[p][q][b][j] = 0.0;
@@ -4455,7 +4455,7 @@ information */
                 {
 	           for (b=0; b<pd->Num_Species_Eqn; b++) 
 	             {
-	               for ( j=0; j<ei->dof[var]; j++)
+	               for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	                 {
 		           dE_e_dc[p][q][b][j] = 0.0;
                            for (i=0; i<VIM; i++)
@@ -4476,7 +4476,7 @@ information */
 	           v = MESH_DISPLACEMENT1 + b;
 	           if ( pd->v[pg->imtrx][v] )
 		     {
-		       dofs     = ei->dof[v];
+		       dofs     = ei[pg->imtrx]->dof[v];
 		       for ( j=0; j<dofs; j++)
 		         {
                            dTT_dx[p][q][b][j] = 2.0 * elc->lame_mu * dE_e_dx[p][q][b][j] + 2.0 * d_mu_dx[b][j] * E_e[p][q]; 
@@ -4492,7 +4492,7 @@ information */
              {
 	       for (b=0; b<pd->Num_Species_Eqn; b++) 
 	         {
-	           for ( j=0; j<ei->dof[var]; j++)
+	           for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	             {
 		       if (F_vp_flag ==1)
 			 {
@@ -4526,7 +4526,7 @@ information */
 	       v = MESH_DISPLACEMENT1 + b;
 	       if ( pd->v[pg->imtrx][v] )
 	         {
-		   dofs     = ei->dof[v];
+		   dofs     = ei[pg->imtrx]->dof[v];
 		   for ( j=0; j<dofs; j++)
 		     {
                        evpl->dTT_dx_glob[ielem][ip][p][q][b][j] = dTT_dx[p][q][b][j]; 
@@ -4536,7 +4536,7 @@ information */
            var = MASS_FRACTION;
 	   for (b=0; b<pd->Num_Species_Eqn; b++) 
 	     {
-	       for ( m=0; m<ei->dof[var]; m++)
+	       for ( m=0; m<ei[pg->imtrx]->dof[var]; m++)
 	         {
                    evpl->dTT_dc_glob[ielem][ip][p][q][b][j] = dTT_dc[p][q][b][j]; 
 	         }
@@ -4592,7 +4592,7 @@ get_F_vp(double F_vp[DIM][DIM],
 
   F_vp_flag = 0;
 
-  dim = ei->ielem_dim;
+  dim = ei[pg->imtrx]->ielem_dim;
 
   TTddC = 0.;
   for ( p=0; p<VIM; p++)
@@ -4702,7 +4702,7 @@ get_F_vp(double F_vp[DIM][DIM],
 	      v = MESH_DISPLACEMENT1 + b;
 	      if ( pd->v[pg->imtrx][v] )
 	        {
-	          dofs     = ei->dof[v];
+	          dofs     = ei[pg->imtrx]->dof[v];
 	          for ( j=0; j<dofs; j++)
 	            {
 	              dT2_dTT_dx[0][0][b][j] = 2./3. * (2. * dTT_dx[0][0][b][j] 
@@ -4728,7 +4728,7 @@ get_F_vp(double F_vp[DIM][DIM],
 	   {
 	     for (b=0; b<pd->Num_Species_Eqn; b++) 
 	       {
-	         for ( j=0; j<ei->dof[var]; j++)
+	         for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		   {
 	             dT2_dTT_dc[0][0][b][j] = 2./3. * (2. * dTT_dc[0][0][b][j] 
 				       		- dTT_dc[1][1][b][j] 
@@ -4764,7 +4764,7 @@ get_F_vp(double F_vp[DIM][DIM],
 	      v = MESH_DISPLACEMENT1 + b;
 	      if ( pd->v[pg->imtrx][v] )
 	        {
-	          dofs     = ei->dof[v];
+	          dofs     = ei[pg->imtrx]->dof[v];
 	          for ( j=0; j<dofs; j++)
 	            {
 		      d_phi_dx[b][j] = 0.5/phe * 
@@ -4783,7 +4783,7 @@ get_F_vp(double F_vp[DIM][DIM],
 	     {
 	       for (b=0; b<pd->Num_Species_Eqn; b++) 
 	         {
-	           for ( j=0; j<ei->dof[var]; j++)
+	           for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		     {
 		       d_phi_dc[b][j] = 0.5/phe * 
 			((2.*TT[0][0]-TT[1][1]-TT[2][2]) * dTT_dc[0][0][b][j] +
@@ -4802,7 +4802,7 @@ get_F_vp(double F_vp[DIM][DIM],
 	      v = MESH_DISPLACEMENT1 + b;
 	      if ( pd->v[pg->imtrx][v] )
 	        {
-	          dofs     = ei->dof[v];
+	          dofs     = ei[pg->imtrx]->dof[v];
 	          for ( j=0; j<dofs; j++)
 	            {
 		      d_norm2_dx[b][j] = -3. * pow(phe,-3.) * d_phi_dx[b][j]*
@@ -4826,7 +4826,7 @@ get_F_vp(double F_vp[DIM][DIM],
 	     {
 	       for (b=0; b<pd->Num_Species_Eqn; b++) 
 	         {
-	           for ( j=0; j<ei->dof[var]; j++)
+	           for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		     {
 		       d_norm2_dc[b][j] = -3. * pow(phe,-3.) * d_phi_dc[b][j]*
 		       (TT[0][0]*TT[0][0] + TT[1][1]*TT[1][1] + TT[2][2]*TT[2][2]
@@ -4854,7 +4854,7 @@ get_F_vp(double F_vp[DIM][DIM],
 	              v = MESH_DISPLACEMENT1 + b;
 	              if ( pd->v[pg->imtrx][v] )
 	                {
-		          dofs     = ei->dof[v];
+		          dofs     = ei[pg->imtrx]->dof[v];
 		          for ( j=0; j<dofs; j++)
 		            {
 			      d_phi_dTT_dx[p][q][b][j] = -0.75*pow(phe,-2.) * d_phi_dx[b][j] * dT2_dTT[p][q] +
@@ -4873,7 +4873,7 @@ get_F_vp(double F_vp[DIM][DIM],
                     {
 	              for (b=0; b<pd->Num_Species_Eqn; b++) 
 	                {
-	                  for ( j=0; j<ei->dof[var]; j++)
+	                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		            {
 			      d_phi_dTT_dc[p][q][b][j] = -0.75*pow(phe,-2.) * d_phi_dc[b][j] * dT2_dTT[p][q] +
 			      0.75/phe * dT2_dTT_dc[p][q][b][j];
@@ -4892,7 +4892,7 @@ get_F_vp(double F_vp[DIM][DIM],
 	              v = MESH_DISPLACEMENT1 + b;
 	              if ( pd->v[pg->imtrx][v] )
 	                {
-		          dofs     = ei->dof[v];
+		          dofs     = ei[pg->imtrx]->dof[v];
 		          for ( j=0; j<dofs; j++)
 		            {
 			      d_phi_dTT_norm_dx[p][q][b][j] = (d_phi_dTT_dx[p][q][b][j] * norm - d_phi_dTT[p][q] * 0.5 * d_norm2_dx[b][j]/norm)/pow(norm,2.);  
@@ -4910,7 +4910,7 @@ get_F_vp(double F_vp[DIM][DIM],
                     {
 	              for (b=0; b<pd->Num_Species_Eqn; b++) 
 	                {
-	                  for ( j=0; j<ei->dof[var]; j++)
+	                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		            {
 			      d_phi_dTT_norm_dc[p][q][b][j] = (d_phi_dTT_dc[p][q][b][j] * norm - d_phi_dTT[p][q] * 0.5 * d_norm2_dc[b][j]/norm)/pow(norm,2.);  
 		            }
@@ -4928,7 +4928,7 @@ get_F_vp(double F_vp[DIM][DIM],
 	              v = MESH_DISPLACEMENT1 + b;
 	              if ( pd->v[pg->imtrx][v] )
 	                {
-		          dofs     = ei->dof[v];
+		          dofs     = ei[pg->imtrx]->dof[v];
 		          for ( j=0; j<dofs; j++)
 		            {
                               dF_vp_dx[p][q][b][j] = delta_t *  
@@ -4948,7 +4948,7 @@ get_F_vp(double F_vp[DIM][DIM],
                     {
 	              for (b=0; b<pd->Num_Species_Eqn; b++) 
 	                {
-	                  for ( j=0; j<ei->dof[var]; j++)
+	                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		            {
                               dF_vp_dc[p][q][b][j] = delta_t *  
 		              (-1.*pow(evpl->plastic_mu, -2.)* 
@@ -4974,7 +4974,7 @@ get_F_vp(double F_vp[DIM][DIM],
 	              v = MESH_DISPLACEMENT1 + b;
 	              if ( pd->v[pg->imtrx][v] )
 	                {
-		          dofs     = ei->dof[v];
+		          dofs     = ei[pg->imtrx]->dof[v];
 		          for ( j=0; j<dofs; j++)
 		            {
                               dF_vp_dx[p][q][b][j] = 0.; 
@@ -4992,7 +4992,7 @@ get_F_vp(double F_vp[DIM][DIM],
                     {
 	              for (b=0; b<pd->Num_Species_Eqn; b++) 
 	                {
-	                  for ( j=0; j<ei->dof[var]; j++)
+	                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		            {
                               dF_vp_dc[p][q][b][j] = 0.;  
 		            }
@@ -5046,7 +5046,7 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
 
   double dist, iie, value;
 
-  dim = ei->ielem_dim;
+  dim = ei[pg->imtrx]->ielem_dim;
 
   if(elc_ptr->lame_mu_model == USER )
     {
@@ -5144,7 +5144,7 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
 		  v = MESH_DISPLACEMENT1 + q;
 		  if ( pd->v[pg->imtrx][v] )
 		    {
-		      dofs     = ei->dof[v];
+		      dofs     = ei[pg->imtrx]->dof[v];
 		      for ( j=0; j<dofs; j++)
 			{
 			  d_mu_dx[q][j] += iie * elc_ptr->u_mu[1]*(2. * fv->strain[a][b] * fv->d_strain_dx[a][b][q][j] 
@@ -5194,7 +5194,7 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
 	  v = MESH_DISPLACEMENT1 + q;
 	  if ( pd->v[pg->imtrx][v] )
 	    {
-	      dofs     = ei->dof[v];
+	      dofs     = ei[pg->imtrx]->dof[v];
 	      for ( j=0; j<dofs; j++)
 		{
                   if (*mu < 1.e-12)
@@ -5493,7 +5493,7 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
       // For FAUX_PLASTIC model, we need to incorporate mesh sensitivities
       if ( elc_ptr->lame_mu_model == TABLE ) {
 	for ( i = 0; i < DIM; i++) {
-	  for ( j = 0; j < ei->dof[MESH_DISPLACEMENT1]; j++) {
+	  for ( j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
 	    d_lambda_dx[i][j] = d_mu_dx[i][j] * 2*nu/(1.0-2*nu);
 	  }
 	}
@@ -5593,7 +5593,7 @@ load_plastic_properties(double d_plastic_mu_dc[MAX_CONC][MDE],
       var=MASS_FRACTION;
       for (b=0; b<pd->Num_Species_Eqn; b++) 
         {
-          for ( j=0; j<ei->dof[var]; j++)
+          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
             {
 	  d_plastic_mu_dc[b][j] = -fv->c[b]/elc->Strss_fr_sol_vol_frac *
 		   fabs(evpl->u_plastic_mu[1] - evpl->u_plastic_mu[0]);
@@ -5634,7 +5634,7 @@ load_plastic_properties(double d_plastic_mu_dc[MAX_CONC][MDE],
       var=MASS_FRACTION;
       for (b=0; b<pd->Num_Species_Eqn; b++) 
         {
-          for ( j=0; j<ei->dof[var]; j++)
+          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
             {
 	  d_yield_dc[b][j] = - fv->c[b]/elc->Strss_fr_sol_vol_frac *
 		   fabs(evpl->u_yield[1] - evpl->u_yield[0]);
@@ -5685,15 +5685,15 @@ int check_for_neg_elem_volume( int eb,
       err = load_elem_dofptr(e, exo, x, x_old, xdot, xdot_old,
                              resid_vector, 0);
 
-      ip_total = elem_info(NQUAD, ei->ielem_type);
+      ip_total = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
 
       /* Loop over all the Volume Quadrature integration points */
 
       for (ip = 0; ip < ip_total; ip++)
         {
 
-          find_stu(ip, ei->ielem_type, xi, xi+1, xi+2); /* find quadrature point */
-          fv->wt = Gq_weight (ip, ei->ielem_type); /* find quadrature weights for */
+          find_stu(ip, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2); /* find quadrature point */
+          fv->wt = Gq_weight (ip, ei[pg->imtrx]->ielem_type); /* find quadrature weights for */
 
           err = load_basis_functions(xi, bfd);
           EH( err, "problem from load_basis_functions");

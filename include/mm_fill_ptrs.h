@@ -42,7 +42,8 @@ extern double *x_pred_static;
 EXTERN int load_ei              /* mm_fill_ptrs.c                            */
 PROTO((const int ,		/* element index                             */
        const Exo_DB *,	        /* exo data base                             */
-       struct Element_Indices *)); /* Pointer to the structure to be filled
+       struct Element_Indices *,
+       int)); /* Pointer to the structure to be filled
 	                         * up. If 0, this is the globa ei and we are
 				 * in master mode. If 1, this is a related ei
 				 * and we are in slave mode                  */
