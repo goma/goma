@@ -151,7 +151,7 @@ load_splitb_fv(int ielem)
       v = AUX_PRESSURE;
       (pg->sbcfv).P_star = 0;
       for (i = 0; i < ei[imtrx]->dof[v]; i++) {
-        (pg->sbcfv).P_star = (pg->sbesp).P_star[i] * bf[var]->phi[i];
+        (pg->sbcfv).P_star += (pg->sbesp).P_star[i] * bf[var]->phi[i];
       }
     }
 
@@ -172,7 +172,7 @@ load_splitb_fv(int ielem)
       v = PRESSURE;
       (pg->sbcfv).P_old = 0;
       for (i = 0; i < ei[imtrx]->dof[v]; i++) {
-        (pg->sbcfv).P_old = (pg->sbesp).P_old[i] * bf[var]->phi[i];
+        (pg->sbcfv).P_old += (pg->sbesp).P_old[i] * bf[var]->phi[i];
       }
     }
   }
@@ -213,7 +213,7 @@ void load_splitb_fv_grads(int ielem)
       for (d = 0; d < VIM; d++) {
         (pg->sbcfv).grad_P_star[d] = 0;
         for (i = 0; i < ei[imtrx]->dof[var]; i++) {
-          (pg->sbcfv).grad_P_star[d] = (pg->sbesp).P_star[i]
+          (pg->sbcfv).grad_P_star[d] += (pg->sbesp).P_star[i]
               *  bf[var]->grad_phi[i][d];
         }
       }
@@ -622,7 +622,7 @@ assemble_press_poisson(dbl time,  // Current time
 		{
 		  diffusion += grad_P_star[a]*grad_phi[i][a];
 		}
-	      diffusion *= h3*wt*det_J/2.0;
+	      diffusion *= h3*wt*det_J;
 	      diffusion *= diffusion_etm;
 	    }
 
@@ -654,7 +654,7 @@ assemble_press_poisson(dbl time,  // Current time
 			{
 			  diffusion += grad_phi[i][a]*bf[var]->grad_phi[j][a];
 			}		      
-		      diffusion *= h3*wt*det_J/2.0;
+		      diffusion *= h3*wt*det_J;
 		      diffusion *= diffusion_etm;
 		    }		  		      		    
 		  J[j] += diffusion;
@@ -837,7 +837,7 @@ int assemble_press_proj(dbl time,  // Current time
 			      if((pde[eqn] & T_MASS) && (a == b))
 				{
 				  mass += phi_i*phi_j;
-				  mass *= h3*wt*det_J;
+				  mass *= rho/dt*h3*wt*det_J;
 				  mass *= mass_etm;
 				}
 			      J[j] += mass;
@@ -957,7 +957,7 @@ assemble_press_update(dbl time,  // Current time
 	  mass = 0.0;
 	  if(pde[eqn] & T_SOURCE)
 	    {
-	      mass += P - P_star;
+	      mass += P - P_star - P_old;
 	      mass *= phi_i*h3*wt*det_J;
 	      mass *= mass_etm;
 	    }
@@ -966,7 +966,7 @@ assemble_press_update(dbl time,  // Current time
 	  diffusion = 0.0;
 	  if(pde[eqn] & T_ADVECTION)
 	    {
-	      //diffusion += mu_star/2.0*div_v_star*phi_i;
+	      diffusion += mu_star/2.0*div_v_star*phi_i;
 	      /*	      
 	      for(a=0; a<wim; a++)
 		{

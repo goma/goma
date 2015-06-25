@@ -1268,7 +1268,7 @@ struct Equation_Names Var_Name[] =  {
     { "AUX_VELOCITY1",          "VAX",  AUX_VELOCITY1 } ,    /* 183 */
     { "AUX_VELOCITY2",          "VAY",  AUX_VELOCITY2 } ,
     { "AUX_VELOCITY3",          "VAZ",  AUX_VELOCITY3 } ,
-    { "AUX_VELOCITY1",          "PA",  AUX_PRESSURE } ,
+    { "AUX_PRESSURE",          "PA",  AUX_PRESSURE } ,
 
 
     { "MESH_POSITION1", "X",  MESH_POSITION1 } ,
@@ -1779,7 +1779,7 @@ struct Equation_Names Var_Units[] =
   { "Velocity, x component",           "[1]",     AUX_VELOCITY1 } ,
   { "Velocity, y component",           "[1]",     AUX_VELOCITY2 } ,
   { "Velocity, z component",           "[1]",     AUX_VELOCITY3 } ,
-
+  { "Pressure poisson segregated",                        "[1]",     AUX_PRESSURE } ,
 };
 
 int Num_Var_Units = sizeof(Var_Units) / sizeof(struct Equation_Names);  
