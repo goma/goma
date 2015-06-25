@@ -1067,7 +1067,9 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  flow_n_dot_T_segregated(func, d_func);
 	  break;
 
-
+	case PRESS_POISSON_BC:
+	  press_poisson_segregated(func, d_func, time_value, delta_t);
+	  break;
 
         case GRAD_LUB_PRESS_BC:
 	  shell_n_dot_flow_bc_confined(func, d_func,

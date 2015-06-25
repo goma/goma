@@ -426,6 +426,10 @@ dbl *te_out) /* te_out - return actual end time */
     init_vec(x[pg->imtrx], cx, exo, dpi, NULL, 0, &timeValueRead[pg->imtrx]);
   }
 
+  dcopy1(numProcUnknowns[2],x[2],x[0]);
+  //dcopy1(numProcUnknowns[3],x[3],x[1]);
+  
+
   /***************************************************************************
    *            STEADY STATE SOLUTION PROCEDURE
    ***************************************************************************/
@@ -939,6 +943,7 @@ dbl *te_out) /* te_out - return actual end time */
           }
 
           if (steady_state_reached) {
+	    printf("\n Steady state reached \n");
             goto free_and_clear;
           }
         }

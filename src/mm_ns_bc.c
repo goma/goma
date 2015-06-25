@@ -103,6 +103,8 @@ static char rcsid[] =
 *  hydrostatic_n_dot_T                  void
 *  flow_n_dot_T_nobc                    void
 *  flow_n_dot_T_gradv                   void
+*  flow_n_dot_T_segregated              void
+*  press_poisson_segregated             void
 *  PSPG_consistency_bc                  void
 *  fapply_CA                            void
 *  fapply_var_CA                        void
@@ -6329,6 +6331,7 @@ void
 flow_n_dot_T_segregated(double func[DIM],
 			double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE])
 {
+  // Some indices
   int dim, wim, var;
   int a, b, j, p, q;
   int *pdv = pd->v[pg->imtrx];
@@ -6410,7 +6413,62 @@ flow_n_dot_T_segregated(double func[DIM],
 } // flow_n_dot_T_segregated
 
 
+/*
+ * This boundary condition adds the boundary terms for the pressure poisson
+ * equation in the CBS split-b algorithm
+ */
+void
+press_poisson_segregated(double *func,
+			 double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+			 double time,
+			 double dt)
+{
+  // Some indices
+  int dim, wim, var;
+  int a, j;
+  int *pdv = pd->v[pg->imtrx];
 
+  //Density
+  dbl rho;
+  
+  // Relevant field variable quantities
+  dbl *v_star, div_v_star, *grad_P_star;
+
+  // Fill field variables and parameters
+  dim   = pd->Num_Dim;
+  wim   = dim;
+  if(pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN)
+    {
+      wim = wim+1;
+    }
+
+  div_v_star = (pg->sbcfv).div_v_star;
+  v_star = (pg->sbcfv).v_star;
+  grad_P_star = fv->grad_P_star;
+
+  rho = density(NULL, time);
+
+  for(a=0; a<wim; a++)
+    {
+      //*func -= grad_P_star[a]*fv->snormal[a];
+      *func += rho/dt*v_star[a]*fv->snormal[a];
+    }
+
+  // J_P_star
+  var = AUX_PRESSURE;
+  if(pdv[var])
+    {	      
+      for(j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	{		  	    
+	  for(a=0; a<wim; a++)
+	    {
+	      //d_func[0][var][j] -= bf[var]->grad_phi[j][a]*fv->snormal[a];
+	      d_func[0][var][j] -= 0.0;
+	    }
+	}	  	      
+    }
+
+} // press_poisson_segregated
 
 
 void

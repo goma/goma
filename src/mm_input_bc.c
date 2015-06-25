@@ -494,6 +494,7 @@ rd_bc_specs(FILE *ifp,
 	case FLOW_PRESSURE_VAR_BC:
         case FLOW_STRESSNOBC_BC:
 	case SEGREGATED_STRESS_BC:
+	case PRESS_POISSON_BC:
         case FLOW_GRADV_BC:
 	case FILL_INLET_BC:
         case FILL_CA_BC:

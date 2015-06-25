@@ -417,7 +417,7 @@ assemble_aux_u(dbl time,   // Current time
 		  source = 0.0;
 		  if(pde[eqn] & T_SOURCE)
 		    {
-		      source += f[a];
+		      source -= f[a];
 		      source *= phi_i*h3*wt*det_J;
 		      source *= source_etm;
 		    }
@@ -502,7 +502,7 @@ assemble_aux_u(dbl time,   // Current time
 			      source = 0.0;
 			      if(pde[eqn] & T_SOURCE)
 				{
-				  source += df->v[a][b][j];
+				  source -= df->v[a][b][j];
 				  source *= phi_i*h3*wt*det_J;
 				  source *= source_etm;
 				}			      
@@ -539,7 +539,7 @@ assemble_press_poisson(dbl time,  // Current time
   dbl rho;
   
   // Relevant field variable quantities
-  dbl *v_star, div_v_star, *grad_P_star;
+  dbl *v_star, div_v_star, *grad_P_star, *grad_P_old;
 
   // Residual contributions
   dbl diffusion, mass;
@@ -585,6 +585,7 @@ assemble_press_poisson(dbl time,  // Current time
   div_v_star = (pg->sbcfv).div_v_star;
   v_star = (pg->sbcfv).v_star;
   grad_P_star = fv->grad_P_star;
+  grad_P_old = fv_old->grad_P;
 
   rho = density(NULL, time);
 
@@ -602,10 +603,13 @@ assemble_press_poisson(dbl time,  // Current time
 	  mass = 0.0;
 	  if(pde[eqn] & T_MASS)
 	    {
+	      
 	      for(a=0; a<wim; a++)
 		{
 		  mass -= v_star[a]*grad_phi[i][a];
 		}
+	      
+	      //mass += div_v_star*phi_i;
 	      mass *= rho/dt*h3*wt*det_J;
 	      mass *= mass_etm;
 	    }
@@ -684,7 +688,7 @@ int assemble_press_proj(dbl time,  // Current time
   dbl rho;
 
   // Relevant field variable quantities
-  dbl *v_star, *v, P_star, *grad_P_star;
+  dbl *v_star, *v, P_star, *grad_P_star, *grad_P_old;
 
   // Residual contributions
   dbl diffusion, mass;
@@ -733,6 +737,7 @@ int assemble_press_proj(dbl time,  // Current time
   //grad_P_star = fv->grad_P_star
   P_star = (pg->sbcfv).P_star;
   grad_P_star = (pg->sbcfv).grad_P_star;
+  grad_P_old = fv_old->grad_P;
 
   rho = density(NULL, time);
 
@@ -767,7 +772,7 @@ int assemble_press_proj(dbl time,  // Current time
 		  if(pde[eqn] & T_MASS)
 		    {
 		      mass += v[a] - v_star[a];
-		      mass *= phi_i*h3*wt*det_J;
+		      mass *= rho/dt*phi_i*h3*wt*det_J;
 		      mass *= mass_etm;
 		    }	      
 		  
@@ -779,8 +784,9 @@ int assemble_press_proj(dbl time,  // Current time
 		      //{
 		      //  diffusion -= P_star*grad_phi_i_e_a[b][b];
 		      //}
+
 		      diffusion += grad_P_star[a]*phi_i;
-		      diffusion *= dt/(2.0*rho)*h3*wt*det_J;
+		      diffusion *= h3*wt*det_J;
 		      diffusion *= diffusion_etm;
 		    }
 		  
@@ -961,10 +967,12 @@ assemble_press_update(dbl time,  // Current time
 	  /*if(pde[eqn] & T_ADVECTION)
 	    {
 	      diffusion += mu_star/2.0*div_v_star*phi_i;
+	      /*	      
 	      for(a=0; a<wim; a++)
 		{
-		  //diffusion -= mu_star*dt*grad_P_old[a]*grad_phi[i][a];
+		  diffusion -= mu_star*dt*grad_P_old[a]*grad_phi[i][a];
 		}
+	      */
 	      diffusion *= h3*wt*det_J;
 	      diffusion *= diffusion_etm;
 	    }
@@ -1002,7 +1010,7 @@ assemble_press_update(dbl time,  // Current time
 		  J[j] += mass;
 		}
 	    }	  	
-  
+	  
 	} // for i<dof[eqn] 
     }     // if jacobian
 

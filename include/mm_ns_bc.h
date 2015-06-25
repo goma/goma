@@ -369,6 +369,12 @@ EXTERN void flow_n_dot_T_segregated
 (double [DIM],		                            // func
  double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE]); // d_func
 
+EXTERN void press_poisson_segregated
+(double * ,                                        // func 
+ double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], // d_func
+ double ,                                          // current time
+ double);                                          // time step
+
 EXTERN void PSPG_consistency_bc
 PROTO((double *,		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
