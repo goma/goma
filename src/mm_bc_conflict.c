@@ -461,12 +461,15 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 	       * boundary condition
 	       */
 	      for (p = 0; p < BC_Types[ibc].desc->vector; p++) {
-		offset = find_bc_unk_offset(BC_Types + ibc, matIndex, inode, p,
-					    &retn_matIndex, &vd_retn1);
-		if (offset >= 0) {
-		  add_to_node_unk_bc_list(BC_Unk_List[inode][offset], ibc);
-		  used_BC = 1;
-		}
+                for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+                  offset = find_bc_unk_offset(BC_Types + ibc, matIndex, inode, p,
+                                              &retn_matIndex, &vd_retn1);
+                  if (offset >= 0) {
+                    add_to_node_unk_bc_list(BC_Unk_List[inode][offset], ibc);
+                    used_BC = 1;
+                  }
+                }
+                pg->imtrx = 0;
 	      }
 
 	      /*FIRST REAL SPECIAL CASE */

@@ -2014,22 +2014,12 @@ find_bc_unk_offset(struct Boundary_Condition *bc, int curr_mat,
    *  ieqn variable type. In any case, we set matIndex and
    *  pd_curr appropriately duing this section.
    */
-#ifdef DEBUG_HKM
-  if (curr_mat == -1) {
-    EH(-1,"ERROR");
-  }
-#endif
   if (curr_mat == -2) {
     for (imat = 0; imat <  node->Mat_List.Length; imat++) {
       matIndex = node->Mat_List.List[imat];
       pd_curr = pd_glob[matIndex];
-      if (pd_curr->e[ieqn]) break;
+      if (pd_curr->e[pg->imtrx][ieqn]) break;
     }
-#ifdef DEBUG_HKM
-    if (!pd_curr->e[ieqn]) {
-      EH(-1,"Impossible situation\n");
-    }
-#endif
   } else {
     matIndex = curr_mat;
     pd_curr = pd_glob[matIndex];
@@ -2052,7 +2042,7 @@ find_bc_unk_offset(struct Boundary_Condition *bc, int curr_mat,
    * the corresponding equation, in this case velocity, 
    * exists on both sides of the boundary.
    */
-  if (!pd_curr->e[ieqn]) {
+  if (!pd_curr->e[pg->imtrx][ieqn]) {
     /*
      *  Return here if we are on part of the interface contained
      *  in a material that doesn't have a valid volumetric
