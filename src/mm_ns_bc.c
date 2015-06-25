@@ -6373,17 +6373,20 @@ flow_n_dot_T_segregated(double func[DIM],
   mu_star = viscosity(gn, gamma_star, NULL);
 
   // Fill boundary terms dot n, this is the quasi-implicit stress term
-  for(p=0; p<VIM; p++)
-    {     		    
-      for(q=0; q<VIM; q++) 
-	{	  
-	  func[p] -= mu_star/2.0*gamma_star[q][p]*fv->snormal[q];
-	  func[p] -= mu_old/2.0*gamma_old[q][p]*fv->snormal[q];	  
-	  if(p==q)
-	    {
-	      func[p] += P_old*fv->snormal[q];
-	    }	    
-	}		      
+  if(pdv[AUX_VELOCITY1])
+    {
+      for(p=0; p<VIM; p++)
+	{     		    
+	  for(q=0; q<VIM; q++) 
+	    {	  
+	      func[p] -= mu_star/2.0*gamma_star[q][p]*fv->snormal[q];
+	      func[p] -= mu_old/2.0*gamma_old[q][p]*fv->snormal[q];	  
+	      if(p==q)
+		{
+		  func[p] += P_old*fv->snormal[q];
+		}	    
+	    }		      
+	}
     }
   
   // J_v_star
@@ -6441,21 +6444,23 @@ press_poisson_segregated(double *func,
     {
       wim = wim+1;
     }
+  var = AUX_PRESSURE;
 
   div_v_star = (pg->sbcfv).div_v_star;
   v_star = (pg->sbcfv).v_star;
   grad_P_star = fv->grad_P_star;
 
   rho = density(NULL, time);
-
-  for(a=0; a<wim; a++)
+  if(pdv[var])
     {
-      //*func -= grad_P_star[a]*fv->snormal[a];
-      *func += rho/dt*v_star[a]*fv->snormal[a];
+      for(a=0; a<wim; a++)
+	{
+	  //*func -= grad_P_star[a]*fv->snormal[a];
+	  *func += rho/dt*v_star[a]*fv->snormal[a];
+	}
     }
 
   // J_P_star
-  var = AUX_PRESSURE;
   if(pdv[var])
     {	      
       for(j=0; j<ei[pg->imtrx]->dof[var]; j++)

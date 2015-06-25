@@ -957,16 +957,16 @@ assemble_press_update(dbl time,  // Current time
 	  mass = 0.0;
 	  if(pde[eqn] & T_SOURCE)
 	    {
-	      mass += P - P_star - P_old;
+	      mass += P - P_star;
 	      mass *= phi_i*h3*wt*det_J;
 	      mass *= mass_etm;
 	    }
 
 	  // Incompressibility contribution
 	  diffusion = 0.0;
-	  /*if(pde[eqn] & T_ADVECTION)
+	  if(pde[eqn] & T_ADVECTION)
 	    {
-	      diffusion += mu_star/2.0*div_v_star*phi_i;
+	      //diffusion += mu_star/2.0*div_v_star*phi_i;
 	      /*	      
 	      for(a=0; a<wim; a++)
 		{
@@ -975,8 +975,7 @@ assemble_press_update(dbl time,  // Current time
 	      */
 	      diffusion *= h3*wt*det_J;
 	      diffusion *= diffusion_etm;
-	    }
-	  */
+	    }	  
 
 	  R[i] += mass + diffusion;	  
 	} // for i<dof[eqn]
