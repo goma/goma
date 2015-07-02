@@ -704,7 +704,7 @@ dbl *te_out) /* te_out - return actual end time */
          * And its derivatives at the old time, time.
          */
 
-        if (pg->imtrx == 0) {
+        if (upd->SegregatedSolve && pg->imtrx == 0) {
           predict_solution_u_star(numProcUnknowns[pg->imtrx], delta_t, delta_t_old,
               delta_t_older, theta, x, x_old, x_older, x_oldest);
         } else {
@@ -814,13 +814,17 @@ dbl *te_out) /* te_out - return actual end time */
               x[pg->imtrx], x_pred[pg->imtrx], x_old[pg->imtrx], NULL, NULL, eps,
               &success_dt, tran->use_var_norm);
 
-          if (pg->imtrx == 1 || pg->imtrx == 3) {
+          if (upd->SegregatedSolve && (pg->imtrx == 1 || pg->imtrx == 3)) {
             success_dt = 1;
           }
 
           num_success += success_dt ? 1 : 0;
-          if (pg->imtrx == 0) {
-            delta_t_new = mat_dt_new;
+          if (upd->SegregatedSolve) {
+            if (pg->imtrx == 0) {
+              delta_t_new = mat_dt_new;
+            }
+          } else {
+            delta_t_new = MIN(mat_dt_new, delta_t_new);
           }
         }
 
