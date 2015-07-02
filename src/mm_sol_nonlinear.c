@@ -847,7 +847,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 
           /* Exchange dof before matrix fill so parallel information
              is properly communicated */
-          exchange_dof(cx,dpi, x);
+          exchange_dof(cx,dpi, x, pg->imtrx);
 
 	  if (Linear_Solver == FRONT)
 	    {
@@ -2067,12 +2067,12 @@ EH(-1,"version not compiled with frontal solver");
       for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
 	x[i] -= damp_factor * var_damp[idv[pg->imtrx][i][0]] * delta_x[i];
       }
-      exchange_dof(cx, dpi, x);
+      exchange_dof(cx, dpi, x, pg->imtrx);
       if (pd->TimeIntegration != STEADY) {
 	for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
 	  xdot[i] -= damp_factor * var_damp[idv[pg->imtrx][i][0]] * delta_x[i] * (1.0 + 2 * theta) / delta_t;
 	}
-	exchange_dof(cx, dpi, xdot);	
+	exchange_dof(cx, dpi, xdot, pg->imtrx);	
      /* Check and correct for negative values of thickness and concentration 
         in shell film profile equation */
 
@@ -2134,16 +2134,16 @@ EH(-1,"version not compiled with frontal solver");
 		      }
 		  }
 	      }
-	    exchange_dof(cx, dpi, xdot);
-	    exchange_dof(cx, dpi, tran->xdbl_dot);
+	    exchange_dof(cx, dpi, xdot, pg->imtrx);
+	    exchange_dof(cx, dpi, tran->xdbl_dot, pg->imtrx);
 	  }
           
 	/* Now go back and correct all those dofs that use XFEM */
 	if(xfem != NULL)
 	  {
             xfem_correct( num_total_nodes, x, xdot, x_old, xdot_old, delta_x, theta, delta_t );
-	    exchange_dof(cx, dpi, x);
-	    exchange_dof(cx, dpi, xdot);
+	    exchange_dof(cx, dpi, x, pg->imtrx);
+	    exchange_dof(cx, dpi, xdot, pg->imtrx);
 	  }
       }
 
@@ -2153,8 +2153,8 @@ EH(-1,"version not compiled with frontal solver");
         {
           surf_based_initialization(x, delta_x, xdot, exo, num_total_nodes,
                                     ls->init_surf_list, time_value, theta, delta_t);
-          exchange_dof(cx, dpi, x);
-          exchange_dof(cx, dpi, xdot);
+          exchange_dof(cx, dpi, x, pg->imtrx);
+          exchange_dof(cx, dpi, xdot, pg->imtrx);
         }
       if (pfd != NULL)
 	{
@@ -2165,8 +2165,8 @@ EH(-1,"version not compiled with frontal solver");
             {
               surf_based_initialization(x, delta_x, xdot, exo, num_total_nodes,
                                         ls->init_surf_list, time_value, theta, delta_t);
-              exchange_dof(cx, dpi, x);
-              exchange_dof(cx, dpi, xdot);
+              exchange_dof(cx, dpi, x, pg->imtrx);
+              exchange_dof(cx, dpi, xdot, pg->imtrx);
             }
           ls = ls_old;
         }
@@ -3400,7 +3400,7 @@ soln_sens ( double lambda,  /*  parameter */
 				  * system space, since it does its own
 				  * matrix_fill's. */
 
-  exchange_dof(cx, dpi, x);
+  exchange_dof(cx, dpi, x, pg->imtrx);
 
   /*
    *
@@ -3768,7 +3768,7 @@ soln_sens ( double lambda,  /*  parameter */
 
   vchange_sign(numProcUnknowns, &x_sens[0]);
 
-  exchange_dof(cx, dpi, x_sens);
+  exchange_dof(cx, dpi, x_sens, pg->imtrx);
 
   a_end = ut();
 

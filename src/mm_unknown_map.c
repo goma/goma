@@ -686,7 +686,7 @@ print_vars_at_nodes(void)
 /****************************************************************************/
 
 void
-setup_external_nodal_vars(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
+setup_external_nodal_vars(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
 
     /************************************************************************
      *
@@ -735,70 +735,65 @@ setup_external_nodal_vars(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
 			             ptr_node_recv[dpi->num_neighbors] * MaxVarPerNode);
         }
 
-     for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
-        {
-         for (i = 0; i < ptr_node_send[dpi->num_neighbors]; i++) 
-            {
-             node_num = list_node_send[i]; 
-             nvp[imtrx] = nvp_send[imtrx] + i*MaxVarPerNode;
-             pack_nv(nvp[imtrx], Nodes[node_num]->Nodal_Vars_Info[imtrx]);
-            }
-        }
-    }
-
   np_base =  (COMM_NP_STRUCT **) alloc_ptr_1(upd->Total_Num_Matrices);
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
      {
       np_base[imtrx] = alloc_struct_1(COMM_NP_STRUCT, dpi->num_neighbors);
      }
-  
+
+
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
-     {
+    {
+      for (i = 0; i < ptr_node_send[dpi->num_neighbors]; i++) 
+        {
+          node_num = list_node_send[i]; 
+          nvp[imtrx] = nvp_send[imtrx] + i*MaxVarPerNode;
+          pack_nv(nvp[imtrx], Nodes[node_num]->Nodal_Vars_Info[imtrx]);
+        }
+
+
       np_ptr = np_base[imtrx];
       for (p = 0; p < dpi->num_neighbors; p++) 
-         {
-          np_ptr->neighbor_ProcID = cx[p].neighbor_name;
+        {
+          np_ptr->neighbor_ProcID = cx[imtrx][p].neighbor_name;
           np_ptr->send_message_buf =
-	  (void *) (nvp_send[imtrx] + ptr_node_send[p] * MaxVarPerNode);
+            (void *) (nvp_send[imtrx] + ptr_node_send[p] * MaxVarPerNode);
           np_ptr->send_message_length =
-	  sizeof(struct nv_packed) * cx[p].num_nodes_send * MaxVarPerNode;
+            sizeof(struct nv_packed) * cx[imtrx][p].num_nodes_send * MaxVarPerNode;
           np_ptr->recv_message_buf =
-	  (void *) (nvp_recv[imtrx] + ptr_node_recv[p] * MaxVarPerNode);
+            (void *) (nvp_recv[imtrx] + ptr_node_recv[p] * MaxVarPerNode);
           np_ptr->recv_message_length =
-	  sizeof(struct nv_packed) * cx[p].num_nodes_recv * MaxVarPerNode;
+            sizeof(struct nv_packed) * cx[imtrx][p].num_nodes_recv * MaxVarPerNode;
           np_ptr++;
-         }     
+        }     
       exchange_neighbor_proc_info(dpi->num_neighbors, np_base[imtrx]);
-     }
   
 #ifdef DEBUG_HKM
-  printf("P_%d at barrier after exchange in setup_external_nodal_vars\n",
-	  ProcID); fflush(stdout);
+      printf("P_%d at barrier after exchange in setup_external_nodal_vars\n",
+             ProcID); fflush(stdout);
 #ifdef PARALLEL
-  MPI_Barrier(MPI_COMM_WORLD);
+      MPI_Barrier(MPI_COMM_WORLD);
 #endif
 #endif
 
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
-     {
       for (i = 0; i < dpi->num_external_nodes; i++) 
-         {
+        {
           node_num = dpi->num_internal_nodes + dpi->num_boundary_nodes + i; 
           nvp[imtrx] = nvp_recv[imtrx] + i*MaxVarPerNode;
 
-         /*
-          * Unpack the nodal variable structure into a new structure
-          */
+          /*
+           * Unpack the nodal variable structure into a new structure
+           */
           nv = unpack_nv(nvp[imtrx], imtrx);
     
-         /*
-          * Decide whether this nodal variable structure is new.
-          * Destroy it if it isn't. If it unique, it gets added to
-          * a list of unique nodal variable structures.
-          */
+          /*
+           * Decide whether this nodal variable structure is new.
+           * Destroy it if it isn't. If it unique, it gets added to
+           * a list of unique nodal variable structures.
+           */
           if (MatchAdd_Node_Vars_List(nv, &nv_match)) 
             {
-             nodal_vars_destroy(&nv);
+              nodal_vars_destroy(&nv);
             }
     
           /*
@@ -817,22 +812,22 @@ setup_external_nodal_vars(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
            *  for external nodes into Dolphin[][]
            */
           for (var_type = V_FIRST; var_type < V_LAST; var_type++) 
-             {
+            {
               p = get_nv_ndofs_modMF(nv_match, var_type);
               if (p > 0) 
                 {
-                 Dolphin[imtrx][node_num][var_type] = p;
+                  Dolphin[imtrx][node_num][var_type] = p;
                 }
-             }
-         }
-     }
+            }
+        }
+    }
   /*
    *  Free memory allocated in this routine
    */
   safer_free((void **) &np_base);
   safer_free((void **) &nvp_send);
   safer_free((void **) &nvp_recv);
-
+    }
   /*
    *  When in debug mode, print out a complete listing of variables at
    *  every node

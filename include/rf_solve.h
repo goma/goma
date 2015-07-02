@@ -28,7 +28,7 @@
 /*
  * Declarations for top-level structures
  */
-extern Comm_Ex *cx;
+extern Comm_Ex **cx;
 
 /*
  * rf_solve.c prototypes

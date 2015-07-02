@@ -1129,16 +1129,18 @@ noahs_ark()
 
   for (i = 0; i < upd->Num_Mat; i++)
     {
+      int imtrx;
+      ddd_add_member(n, &pd_glob[i]->Num_EQ, MAX_NUM_MATRICES, MPI_INT);
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+        ddd_add_member(n, pd_glob[i]->e[imtrx], MAX_EQNS, MPI_INT);
+        ddd_add_member(n, pd_glob[i]->v[imtrx], MAX_EQNS, MPI_INT);
+        ddd_add_member(n, pd_glob[i]->w[imtrx], MAX_EQNS, MPI_INT);
+        ddd_add_member(n, pd_glob[i]->i[imtrx], MAX_EQNS, MPI_INT);
+        ddd_add_member(n, pd_glob[i]->m[imtrx], MAX_EQNS, MPI_INT);
 
-      ddd_add_member(n, &pd_glob[i]->Num_EQ, 1, MPI_INT);
-
-      ddd_add_member(n, pd_glob[i]->e, MAX_NUM_MATRICES * MAX_EQNS, MPI_INT);
-      ddd_add_member(n, pd_glob[i]->v, MAX_NUM_MATRICES * MAX_EQNS, MPI_INT);
-      ddd_add_member(n, pd_glob[i]->w, MAX_NUM_MATRICES * MAX_EQNS, MPI_INT);
-      ddd_add_member(n, pd_glob[i]->i, MAX_NUM_MATRICES * MAX_EQNS, MPI_INT);
-      ddd_add_member(n, pd_glob[i]->m, MAX_NUM_MATRICES * MAX_EQNS, MPI_INT);
-      ddd_add_member(n, &pd_glob[i]->etm[0][0][0], MAX_NUM_MATRICES * MAX_EQNS*MAX_TERM_TYPES, 
+        ddd_add_member(n, &pd_glob[i]->etm[imtrx][0][0], MAX_EQNS*MAX_TERM_TYPES, 
 		     MPI_DOUBLE);
+      }
       /*  pd_glob[i]->CoordinateSystem  is already assigned */
       ddd_add_member(n, &pd_glob[i]->MeshMotion, 1, MPI_INT);
       ddd_add_member(n, &pd_glob[i]->MeshInertia, 1, MPI_INT);

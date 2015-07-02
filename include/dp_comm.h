@@ -28,7 +28,8 @@
 EXTERN void exchange_dof
 PROTO((Comm_Ex *,		/* cx - ptr to communications exchange info */
        Dpi *,			/* dpi - distributed processing info */
-       double *));		/* x - local processor dof-based vector */
+       double *,/* x - local processor dof-based vector */
+       int));		
 
 
 EXTERN void exchange_node

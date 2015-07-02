@@ -729,7 +729,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   /* Set initial guess from an input exodus file or other method on the first call only */
   if (callnum == 1) 
     {
-      init_vec(x, cx, exo, dpi, x_AC, nAC, &timeValueRead);
+      init_vec(x, cx[0], exo, dpi, x_AC, nAC, &timeValueRead);
 
       /*
        *  Determine if we should use this time as the initial time in the simulation
@@ -791,7 +791,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     matrix_systems_mask = 1;
       
     log_msg("sl_init()...");
-    sl_init(matrix_systems_mask, ams, exo, dpi, cx);
+    sl_init(matrix_systems_mask, ams, exo, dpi, cx[0]);
     if( nAC > 0  || 
 	nn_post_fluxes_sens > 0 ||
 	nn_post_data_sens > 0 ) ams[JAC]->options[AZ_keep_info] = 1;
@@ -869,7 +869,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 				  resid_vector, x_update, scale,  
 				  &converged, &nprint, tev, tev_post, gv,
 				  rd, gindex, p_gsize, gvec, gvec_elem, 
-				  time1, exo, dpi, cx, 0, 
+				  time1, exo, dpi, cx[0], 0, 
 				  &time_step_reform, is_steady_state,
  				  x_AC, x_AC_dot, time1, resid_vector_sens,
 				  x_sens, x_sens_p, NULL);
@@ -1237,7 +1237,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
      * they can be. That is, ask the processors that are supposed to
      * know...
      */
-    exchange_dof(cx, dpi, x);
+    exchange_dof(cx[0], dpi, x, 0);
 
     /*
      * Now copy the initial solution, x[], into the history solutions
@@ -1356,7 +1356,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
      * appropriate, but the other items are there now, too.
      * Do this only once if in library mode.
      */
-    if (callnum == 1) sl_init(matrix_systems_mask, ams, exo, dpi, cx);	
+    if (callnum == 1) sl_init(matrix_systems_mask, ams, exo, dpi, cx[0]);	
 
     /*
      * make sure the Aztec was properly initialized
@@ -1474,7 +1474,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	for (w=0; w<efv->Num_external_field; w++) {
 	  if (strcmp(efv->field_type[w], "transient") == 0)
 	    {
-	      err = rd_trans_vectors_from_exoII(x_old, efv->file_nm[w], w, n, &timeValueReadTrans, cx, dpi);
+	      err = rd_trans_vectors_from_exoII(x_old, efv->file_nm[w], w, n, &timeValueReadTrans, cx[0], dpi);
 	      if (err != 0) {
 		DPRINTF(stderr,
 			"%s: err from rd_trans_vectors_from_exoII\n",yo);
@@ -1626,7 +1626,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      err = integrate_explicit_eqn(ams[FIL], rf, xf, xf_old, xfdot, 
 					   xfdot_old, x, x_old, x_oldest,
 					   step_size, theta, &time2, 
-					   PROJECT, node_to_fill, exo, dpi, cx);
+					   PROJECT, node_to_fill, exo, dpi, cx[0]);
 #endif /* COUPLED_FILL */
 
 	      break;
@@ -1707,7 +1707,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      WH(-1,"Level Set Initialization method not found \n");
 	  } /* end of switch( eqntype )  */
 
-	exchange_dof(cx, dpi, x);
+          exchange_dof(cx[0], dpi, x, 0);
 
 	if (converged) 
 	{
@@ -1717,7 +1717,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	  case HUYGENS_C :
             Renorm_Now =  ( ls->Force_Initial_Renorm || (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0) );
 
-	    did_renorm = huygens_renormalization(x, num_total_nodes, exo, cx, dpi,  
+	    did_renorm = huygens_renormalization(x, num_total_nodes, exo, cx[0], dpi,  
 						 num_fill_unknowns, numProcUnknowns,  
 						 time1, Renorm_Now );
 	    
@@ -1745,12 +1745,12 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      int    num_steps = 15;
 	      
 	      put_fill_vector(num_total_nodes, x_old, xf, node_to_fill);
-	      exchange_dof(cx, dpi, x_old);
+	      exchange_dof(cx[0], dpi, x_old, 0);
 	      put_fill_vector(num_total_nodes, x_oldest, xf, node_to_fill);
-	      exchange_dof(cx, dpi, x_oldest);
+	      exchange_dof(cx[0], dpi, x_oldest, 0);
 	      correct_level_set(ams[FIL], xf, rf, x, x_old, x_oldest, node_to_fill,
 				num_total_nodes, num_fill_unknowns, step_size,
-				theta, num_steps, CORRECT, exo, dpi, cx);
+				theta, num_steps, CORRECT, exo, dpi, cx[0]);
 	    }
 #endif /* COUPLED_FILL */
 	    break;	
@@ -1765,7 +1765,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	   * level set function.  For example, species  concentration and temperature.
 	   */
 	  if( ls->Num_Var_Init > 0 ) 
-	    ls_var_initialization ( x, exo, dpi, cx );
+	    ls_var_initialization ( x, exo, dpi, cx[0] );
 
 	  /* 	  DPRINTF(stderr, "Done with ls_var_initialization.\n"); */
 
@@ -1821,9 +1821,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	dcopy1(numProcUnknowns, x, x_older);
 	dcopy1(numProcUnknowns, x, x_oldest);
 
-	exchange_dof(cx, dpi, x);
-	exchange_dof(cx, dpi, x_old);
-	exchange_dof(cx, dpi, x_oldest);
+	exchange_dof(cx[0], dpi, x, 0);
+	exchange_dof(cx[0], dpi, x_old, 0);
+	exchange_dof(cx[0], dpi, x_oldest, 0);
 
 	}
 
@@ -1916,9 +1916,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	  dcopy1(numProcUnknowns, x, x_old);
 	  dcopy1(numProcUnknowns, x, x_older);
 	  dcopy1(numProcUnknowns, x, x_oldest);
-	  exchange_dof(cx, dpi, x);
-	  exchange_dof(cx, dpi, x_old);
-	  exchange_dof(cx, dpi, x_oldest);
+	  exchange_dof(cx[0], dpi, x, 0);
+	  exchange_dof(cx[0], dpi, x_old, 0);
+	  exchange_dof(cx[0], dpi, x_oldest, 0);
 
 	} /* end of phase function initialization */
 
@@ -2030,7 +2030,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      err = integrate_explicit_eqn(ams[FIL], rf, xf, xf_old, xfdot,
 					   xfdot_old, tmp_x, tmp_x_old, tmp_xdot,
 					   delta_t_exp, _theta, &time2, ADVECT,
-					   node_to_fill,  exo, dpi, cx);
+					   node_to_fill,  exo, dpi, cx[0]);
 
 	      log_msg("fill subcycle step %d, time = %g", n_exp, time2);
 	    }
@@ -2040,7 +2040,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		      n_exp, time2);
 
 	      semi_lagrange_step( num_total_nodes, numProcUnknowns, num_fill_unknowns, x, xf, xf_old,
-				  xfdot, xfdot_old, node_to_fill, delta_t_exp, theta, exo, dpi, cx) ;
+				  xfdot, xfdot_old, node_to_fill, delta_t_exp, theta, exo, dpi, cx[0]) ;
 
 	      log_msg("semi_lagrange step %d, time = %g", n_exp, time2);
 	    }
@@ -2052,11 +2052,11 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	   * and their derivatives
 	   */
 	  put_fill_vector(num_total_nodes, tmp_x, xf, node_to_fill);
-	  exchange_dof(cx, dpi, tmp_x);
+	  exchange_dof(cx[0], dpi, tmp_x, 0);
 	  put_fill_vector(num_total_nodes, tmp_x_old, xf, node_to_fill);
-	  exchange_dof(cx, dpi, tmp_x_old);
+	  exchange_dof(cx[0], dpi, tmp_x_old, 0);
 	  put_fill_vector(num_total_nodes, tmp_xdot, xfdot, node_to_fill);
-	  exchange_dof(cx, dpi, tmp_xdot);
+	  exchange_dof(cx[0], dpi, tmp_xdot, 0);
 
 	  dcopy1(num_fill_unknowns, xf, xf_old);
 
@@ -2104,7 +2104,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       if(tran->solid_inertia)
 	{
 	  predict_solution_newmark(num_total_nodes, delta_t, x, x_old, xdot, xdot_old);
-	  exchange_dof(cx, dpi, tran->xdbl_dot);
+	  exchange_dof(cx[0], dpi, tran->xdbl_dot, 0);
 	}
 
 #ifdef LASER_RAYTRACE
@@ -2154,8 +2154,8 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
        * time, x[], exchange the degrees of freedom to update the
        * ghost node information.
        */
-      exchange_dof(cx, dpi, x);
-      exchange_dof(cx, dpi, xdot);
+      exchange_dof(cx[0], dpi, x, 0);
+      exchange_dof(cx[0], dpi, xdot, 0);
         
 #ifdef DEBUG
       if (nt == 0) {
@@ -2171,7 +2171,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 	for(iAC = 0; iAC < nAC; iAC++)
 	  {
-	    update_parameterAC(iAC, x, xdot, x_AC, cx, exo, dpi);
+	    update_parameterAC(iAC, x, xdot, x_AC, cx[0], exo, dpi);
  	    augc[iAC].tmp2 = x_AC_dot[iAC];
  	    augc[iAC].tmp3 = x_AC_old[iAC];
 	  }
@@ -2212,9 +2212,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
        *            be exchanged as well.
        */
 
-      exchange_dof(cx, dpi, x);
-      exchange_dof(cx, dpi, xdot);
-      if(tran->solid_inertia)  exchange_dof(cx, dpi, tran->xdbl_dot);
+      exchange_dof(cx[0], dpi, x, 0);
+      exchange_dof(cx[0], dpi, xdot, 0);
+      if(tran->solid_inertia)  exchange_dof(cx[0], dpi, tran->xdbl_dot, 0);
 
       /*
        * Save the predicted solution for the time step
@@ -2252,7 +2252,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 				    x_older, xdot, xdot_old, resid_vector,  
 				    x_update, scale, &converged, &nprint,
 				    tev, tev_post, gv, rd, gindex, p_gsize, 
-				    gvec, gvec_elem, time1, exo, dpi, cx, 
+				    gvec, gvec_elem, time1, exo, dpi, cx[0], 
 				    n, &time_step_reform, is_steady_state,
  				    x_AC, x_AC_dot, time1, resid_vector_sens,
 				    x_sens, x_sens_p, NULL);
@@ -2273,8 +2273,8 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
        *        then xdot needs to be exchanged as well.
        */
 
-      exchange_dof(cx, dpi, x);
-      exchange_dof(cx, dpi, xdot);
+      exchange_dof(cx[0], dpi, x, 0);
+      exchange_dof(cx[0], dpi, xdot, 0);
 
       if (converged) af->Sat_hyst_reevaluate = TRUE;  /*see load_saturation */
 
@@ -2570,7 +2570,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 #ifdef PARALLEL
 		    if (ls_adc_event) 
 		      {
-			exchange_dof( cx, dpi, x );
+			exchange_dof( cx[0], dpi, x , 0);
 		      }
 #endif
                   if ( ls_adc_event && tran->Restart_Time_Integ_After_Renorm )
@@ -2601,10 +2601,10 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 					|| ls_adc_event == TRUE;
 				
 				did_renorm = huygens_renormalization(x, num_total_nodes,
-					 exo, cx, dpi, num_fill_unknowns, numProcUnknowns,
+					 exo, cx[0], dpi, num_fill_unknowns, numProcUnknowns,
 					  time2, Renorm_Now);
 				if ( did_renorm )
-					{ exchange_dof(cx, dpi, x);	}
+                                  { exchange_dof(cx[0], dpi, x, 0);	}
 				if ( did_renorm && tran->Restart_Time_Integ_After_Renorm )
 				{
 					/* like a restart */
@@ -2648,10 +2648,10 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 				   ls->Renorm_Countdown == 0 );
 				
 		    did_renorm = huygens_renormalization(x, num_total_nodes, exo,
-							 cx, dpi, num_fill_unknowns, numProcUnknowns,
+							 cx[0], dpi, num_fill_unknowns, numProcUnknowns,
 							 time2, Renorm_Now);
 		    if ( did_renorm )
-		      { exchange_dof(cx, dpi, x); }
+		      { exchange_dof(cx[0], dpi, x, 0); }
 		    if ( did_renorm && tran->Restart_Time_Integ_After_Renorm )
 		      {
 			/* like a restart */
@@ -2951,9 +2951,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	if (Explicit_Fill && nt) {
 	  /* restore original values for failed time step */
 	  put_fill_vector(num_total_nodes, x, xf_save, node_to_fill);
-	  exchange_dof(cx, dpi, x);
+	  exchange_dof(cx[0], dpi, x);
 	  put_fill_vector(num_total_nodes, x_old, xf_save, node_to_fill);
-	  exchange_dof(cx, dpi, x_old);
+	  exchange_dof(cx[0], dpi, x_old);
 	}
 #endif /* not COUPLED_FILL */
       }

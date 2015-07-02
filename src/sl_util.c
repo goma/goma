@@ -270,7 +270,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 	       *
 	       */
 
-	      length = AZ_COMM_SIZE + ptr_dof_send[dpi->num_neighbors];
+	      length = AZ_COMM_SIZE + ptr_dof_send[imtrx][dpi->num_neighbors];
 
 	      A->data_org = (int *) smalloc(length*sizeof(int));
 
@@ -328,7 +328,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 	      */
 #endif /* DEBUG */
 	      A->data_org[AZ_N_neigh]     = dpi->num_neighbors;
-	      A->data_org[AZ_total_send]  = ptr_dof_send[dpi->num_neighbors];
+	      A->data_org[AZ_total_send]  = ptr_dof_send[imtrx][dpi->num_neighbors];
 	      A->data_org[AZ_name]        = 1+imtrx;	       /* Whoa, mule! */
 
 	      /*
@@ -354,9 +354,9 @@ sl_init(unsigned int option_mask,		/* option flag */
 	       * are indeces into the x[] vector with local meaning.
 	       */
 
-	      for ( i=0; i<ptr_dof_send[dpi->num_neighbors]; i++)
+	      for ( i=0; i<ptr_dof_send[imtrx][dpi->num_neighbors]; i++)
 		{
-		  A->data_org[AZ_send_list + i] = list_dof_send[i];
+		  A->data_org[AZ_send_list + i] = list_dof_send[imtrx][i];
 		}
 
 #ifdef DEBUG

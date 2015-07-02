@@ -626,7 +626,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
   find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-  exchange_dof(cx, dpi, x);
+  exchange_dof(cx, dpi, x, pg->imtrx);
 
   dcopy1(numProcUnknowns,x,x_old);
   dcopy1(numProcUnknowns,x_old,x_older);
@@ -740,7 +740,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
       find_and_set_Dirichlet (x, xdot, exo, dpi); 
 
-      exchange_dof(cx, dpi, x);
+      exchange_dof(cx, dpi, x, pg->imtrx);
 
       if (ProcID == 0)
 	{
@@ -1107,7 +1107,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	     */
 	    find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-            exchange_dof(cx, dpi, x);
+            exchange_dof(cx, dpi, x, pg->imtrx);
 
 	    /*    Should be doing first order prediction on ACs
 	     *    but for now, just reset the AC variables

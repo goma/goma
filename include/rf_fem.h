@@ -279,8 +279,8 @@ extern int *ptr_fill_node_recv;
 /*
  * This characterizes what it is that I have that others want from me.
  */
-extern int *ptr_dof_send;
-extern int *list_dof_send;
+extern int **ptr_dof_send;
+extern int **list_dof_send;
 extern int *ptr_node_send;
 extern int *list_node_send;
 extern int *ptr_fill_node_send;

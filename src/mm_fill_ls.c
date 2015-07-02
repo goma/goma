@@ -392,7 +392,7 @@ semi_lagrange_step( const int num_total_nodes,
   double local_bTb, local_bTR, local_RTR ;
   double global_bTb=0.0, global_bTR=0.0, global_RTR=0.0;
 
-  exchange_dof( cx, dpi, x );
+  exchange_dof( cx, dpi, x , pg->imtrx);
 
 #endif
 
@@ -581,7 +581,7 @@ semi_lagrange_step( const int num_total_nodes,
 	  delta_norm = global_delta_norm;
 	}
 
-      exchange_dof( cx, dpi, x );
+      exchange_dof( cx, dpi, x , pg->imtrx);
 #endif
 	  
       
@@ -1104,9 +1104,9 @@ correct_level_set ( struct Aztec_Linear_Solver_System *ams,
 	      double last_norm = ave_level_grad_err ;
 	      
 	      put_fill_vector(num_total_nodes, x, xf, node_to_fill);
-              exchange_dof(cx, dpi, x );
+              exchange_dof(cx, dpi, x , pg->imtrx);
 	      put_fill_vector(num_total_nodes, x_old, xf, node_to_fill);
-              exchange_dof(cx, dpi, x_old );
+              exchange_dof(cx, dpi, x_old , pg->imtrx);
 	      
 	      ave_level_grad_err = gradient_norm_err( x, exo, dpi, width*h);
 
@@ -1123,9 +1123,9 @@ correct_level_set ( struct Aztec_Linear_Solver_System *ams,
 	      step = 0;
 	      get_fill_vector(num_total_nodes, x_oldest, xf, node_to_fill);
 	      put_fill_vector(num_total_nodes, x, xf, node_to_fill);
-              exchange_dof(cx, dpi, x);
+              exchange_dof(cx, dpi, x, pg->imtrx);
 	      put_fill_vector(num_total_nodes, x_old, xf, node_to_fill);
-              exchange_dof(cx, dpi, x_old);
+              exchange_dof(cx, dpi, x_old, pg->imtrx);
 	      memset(xf_old, 0, sizeof(double)*num_fill_unknowns);
 
 	      DPRINTF(stderr, "\t\t  Resetting correcting step size to %10.3e\n",
@@ -1142,9 +1142,9 @@ correct_level_set ( struct Aztec_Linear_Solver_System *ams,
 	{
 	  get_fill_vector(num_total_nodes, x_oldest, xf, node_to_fill);
 	  put_fill_vector(num_total_nodes, x, xf, node_to_fill);
-          exchange_dof(cx, dpi, x );
+          exchange_dof(cx, dpi, x , pg->imtrx);
 	  put_fill_vector(num_total_nodes, x_old, xf, node_to_fill);	  
-          exchange_dof(cx, dpi, x_old );
+          exchange_dof(cx, dpi, x_old , pg->imtrx);
 
 	  DPRINTF(stderr,"\n\t\t  Correcting step fails. No correction applied this time step \n");
 
@@ -3604,7 +3604,7 @@ Hrenorm_constrain( Exo_DB *exo,
 	  x[ ie_map[k] ] = F[k];
 	}
 #ifdef PARALLEL
-       exchange_dof ( cx, dpi, x ); 
+      exchange_dof ( cx, dpi, x, pg->imtrx ); 
 #endif
 
       lamda += d_lamda;
@@ -5263,7 +5263,7 @@ ls_var_initialization ( double *u, Exo_DB *exo, Dpi *dpi, Comm_Ex *cx )
 
  safer_free((void **) &block_order);
 
- exchange_dof(cx, dpi, u);
+ exchange_dof(cx, dpi, u, pg->imtrx);
    
 
 

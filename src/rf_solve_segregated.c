@@ -423,10 +423,10 @@ dbl *te_out) /* te_out - return actual end time */
 
   /* Read initial values from exodus file */
   for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-    init_vec(x[pg->imtrx], cx, exo, dpi, NULL, 0, &timeValueRead[pg->imtrx]);
+    init_vec(x[pg->imtrx], cx[pg->imtrx], exo, dpi, NULL, 0, &timeValueRead[pg->imtrx]);
   }
 
-  dcopy1(numProcUnknowns[2],x[2],x[0]);
+  //dcopy1(numProcUnknowns[2],x[2],x[0]);
   //dcopy1(numProcUnknowns[3],x[3],x[1]);
   
 
@@ -448,7 +448,7 @@ dbl *te_out) /* te_out - return actual end time */
       matrix_systems_mask = 1;
 
       log_msg("sl_init()...")
-;      sl_init(matrix_systems_mask, ams, exo, dpi, cx);
+;      sl_init(matrix_systems_mask, ams, exo, dpi, cx[pg->imtrx]);
 
 #ifdef PARALLEL
       /*
@@ -463,7 +463,7 @@ dbl *te_out) /* te_out - return actual end time */
        xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
        scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx],
        tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
-       gvec_elem, time1, exo, dpi, cx, 0, &time_step_reform, is_steady_state,
+       gvec_elem, time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, is_steady_state,
        NULL, NULL, time1, NULL,
        NULL, NULL, NULL);
 
@@ -539,7 +539,7 @@ dbl *te_out) /* te_out - return actual end time */
        * they can be. That is, ask the processors that are supposed to
        * know...
        */
-      exchange_dof(cx, dpi, x[pg->imtrx]);
+        exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
 
       /*
        * Now copy the initial solution, x[], into the history solutions
@@ -567,7 +567,7 @@ dbl *te_out) /* te_out - return actual end time */
      */
     if (callnum == 1)
       for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-        sl_init(matrix_systems_mask, ams, exo, dpi, cx);
+        sl_init(matrix_systems_mask, ams, exo, dpi, cx[pg->imtrx]);
       }
 
     /*
@@ -640,7 +640,7 @@ dbl *te_out) /* te_out - return actual end time */
           for (w = 0; w < efv->Num_external_field; w++) {
             if (strcmp(efv->field_type[w], "transient") == 0) {
               err = rd_trans_vectors_from_exoII(x_old[pg->imtrx], efv->file_nm[w],
-                  w, n, &timeValueReadTrans, cx, dpi);
+                  w, n, &timeValueReadTrans, cx[pg->imtrx], dpi);
               if (err != 0) {
                 DPRINTF(stderr, "%s: err from rd_trans_vectors_from_exoII\n", yo);
               }
@@ -719,8 +719,8 @@ dbl *te_out) /* te_out - return actual end time */
          * time, x[], exchange the degrees of freedom to update the
          * ghost node information.
          */
-        exchange_dof(cx, dpi, x[pg->imtrx]);
-        exchange_dof(cx, dpi, xdot[pg->imtrx]);
+        exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
+        exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
 
         /*
          *  Set dirichlet conditions in some places. Note, I believe
@@ -740,8 +740,8 @@ dbl *te_out) /* te_out - return actual end time */
          *            be exchanged as well.
          */
 
-        exchange_dof(cx, dpi, x[pg->imtrx]);
-        exchange_dof(cx, dpi, xdot[pg->imtrx]);
+        exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
+        exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
 
         /*
          * Save the predicted solution for the time step
@@ -763,7 +763,7 @@ dbl *te_out) /* te_out - return actual end time */
                xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
                scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx],
                tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
-               gvec_elem[pg->imtrx], time1, exo, dpi, cx, 0, &time_step_reform, 0,
+               gvec_elem[pg->imtrx], time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, 0,
                NULL, NULL, time1, NULL,
                NULL, NULL, NULL);
         /*
@@ -785,8 +785,8 @@ dbl *te_out) /* te_out - return actual end time */
          *        then xdot needs to be exchanged as well.
          */
 
-        exchange_dof(cx, dpi, x[pg->imtrx]);
-        exchange_dof(cx, dpi, xdot[pg->imtrx]);
+        exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
+        exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
 
         if (!converged) break;
       }

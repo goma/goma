@@ -160,7 +160,7 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * Exchange my idea of what materials I have at each node with
    * my surrounding processors. Make sure we are all in sync
    */
-  setup_external_nodal_matrls(exo, dpi, cx);
+  setup_external_nodal_matrls(exo, dpi, cx[0]);
 
   /*
    * Exchange my idea of what degrees of freedom I have with my

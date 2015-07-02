@@ -710,7 +710,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   /* set boundary conditions on the initial conditions */
   nullify_dirichlet_bcs();
   find_and_set_Dirichlet(x, xdot, exo, dpi);
-  exchange_dof(cx, dpi, x);
+  exchange_dof(cx, dpi, x, pg->imtrx);
 
   /* 
    * Set passdown structure -- variables needed in the argument
@@ -1357,7 +1357,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 /* set up boundary conditions */
   nullify_dirichlet_bcs();
   find_and_set_Dirichlet (x, passdown.xdot, passdown.exo, passdown.dpi);
-  exchange_dof(passdown.cx, passdown.dpi, x);
+  exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
 
 /* show continuation type */
   if (ProcID == 0) {
@@ -2249,7 +2249,7 @@ void matrix_residual_fill_conwrap(double *x, double *rhs, int matflag)
 /* Remaining cases: perform requested fill */
   else {
 
-    exchange_dof(passdown.cx, passdown.dpi, x);
+    exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
 
     (void) matrix_fill_full(ams,
 			    x,
@@ -2318,7 +2318,7 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
   else passes = 1;
 
 /* Resolve difference between x and x_old to get correct mass matrix terms */
-  exchange_dof(passdown.cx, passdown.dpi, x);
+  exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
   dcopy1(NumUnknowns[pg->imtrx], passdown.x, passdown.x_old);
   dcopy1(NumUnknowns[pg->imtrx], passdown.x, passdown.x_older);
 
@@ -2382,7 +2382,7 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
   af->Assemble_LSA_Jacobian_Matrix = TRUE;
   af->Assemble_LSA_Mass_Matrix = FALSE;
 
-  exchange_dof(passdown.cx, passdown.dpi, x);
+  exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
 
   (void) matrix_fill_full(ams,
                           x,
@@ -2553,7 +2553,7 @@ void matvec_mult_conwrap(double *x, double *y)
   int          N, nzeros;
 
   /* exchange boundary info */
-  exchange_dof(passdown.cx, passdown.dpi, x);
+  exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
 
 /* First, handle MSR matrices */ 
   if( strcmp( Matrix_Format, "msr" ) == 0)
@@ -2622,7 +2622,7 @@ void mass_matvec_mult_conwrap(double *x, double *y)
   int          N,  nzeros;
 
   /* exchange boundary info */
-  exchange_dof(passdown.cx, passdown.dpi, x);
+  exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
 
 /* First, handle MSR matrices */ 
   if( strcmp( Matrix_Format, "msr" ) == 0)
@@ -3344,7 +3344,7 @@ void perturb_solution_conwrap(double *x, double *x_old,
 
   for (i=0; i<numOwnedUnks; i++) x[i] = x_old[i] + 1.0e-5 * x[i] / scale_vec[i];
 
-  exchange_dof(passdown.cx, passdown.dpi, x);
+  exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
 
 }
 /*****************************************************************************/

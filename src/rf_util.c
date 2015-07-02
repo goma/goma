@@ -1845,7 +1845,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
   /*
    *  Exchange the degrees of freedom with neighboring processors
    */
-  exchange_dof(cx, dpi, u);
+  exchange_dof(cx, dpi, u, pg->imtrx);
    
   return;
 } /* END of routine init_vec **************************************************/

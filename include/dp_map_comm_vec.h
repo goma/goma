@@ -28,19 +28,19 @@
 extern void exchange_neighbor_proc_info(int, COMM_NP_STRUCT *);
 
 extern void
-setup_nodal_comm_map(Exo_DB *, Dpi *, Comm_Ex *);
+setup_nodal_comm_map(Exo_DB *, Dpi *, Comm_Ex **);
 
 EXTERN void setup_dof_comm_map
 PROTO((Exo_DB *,		/* exo - ptr to FE database */
        Dpi *,			/* dpi - ptr to distrib proc db */
-       Comm_Ex *cx));		/* array of structures, one for ea neighbor */
+       Comm_Ex **cx));		/* array of structures, one for ea neighbor */
 
 EXTERN void setup_fill_comm_map
 PROTO((Exo_DB *,		/* exo - ptr to FE database */
        Dpi *,			/* dpi - ptr to distrib proc db */
        Comm_Ex *cx));		/* array of structures, one for ea neighbor */
 
-extern void output_comm_stats(Dpi *, Comm_Ex *);
+extern void output_comm_stats(Dpi *, Comm_Ex **);
 
 
 #endif /* _DP_MAP_COMM_VEC_H */

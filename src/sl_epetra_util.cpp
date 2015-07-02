@@ -105,7 +105,7 @@ void EpetraCreateGomaProblemGraph(struct Aztec_Linear_Solver_System *ams, Exo_DB
   // copy global id's and convert to double for boundary exchange
   for( int i=0; i<NumMyRows; i++) dblColGIDs[i] = (double) MyGlobalElements[i];
 
-  exchange_dof(cx, dpi, dblColGIDs);
+  exchange_dof(cx[pg->imtrx], dpi, dblColGIDs, pg->imtrx);
 
   // convert back to int with known global id's from all processors
   for (int j = 0; j < NumMyCols; j++) {

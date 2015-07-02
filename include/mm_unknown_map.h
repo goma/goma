@@ -28,7 +28,7 @@ PROTO((Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
 EXTERN void setup_external_nodal_vars
 PROTO((Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
        Dpi *,                   /* dpi - ptr to parallel info                */
-       Comm_Ex *));
+       Comm_Ex **));
 
 EXTERN int find_MaxUnknownNode
 PROTO((void));

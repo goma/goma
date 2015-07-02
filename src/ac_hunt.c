@@ -639,7 +639,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
   find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-  exchange_dof(cx, dpi, x);
+  exchange_dof(cx, dpi, x, pg->imtrx);
 
   dcopy1(numProcUnknowns,x,x_old);
   dcopy1(numProcUnknowns,x_old,x_older);
@@ -751,7 +751,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	  
     find_and_set_Dirichlet (x, xdot, exo, dpi); 
 
-    exchange_dof(cx, dpi, x);
+    exchange_dof(cx, dpi, x, pg->imtrx);
 
     if(ProcID ==0) {
       DPRINTF(stderr, "\n\t----------------------------------");
@@ -1070,7 +1070,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
          */
         find_and_set_Dirichlet(x, xdot, exo, dpi);
 	
-        exchange_dof(cx, dpi, x);
+        exchange_dof(cx, dpi, x, pg->imtrx);
 
 	if (nAC > 0)
           {
@@ -1115,7 +1115,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
           */
          find_and_set_Dirichlet(x, xdot, exo, dpi);
  	
-         exchange_dof(cx, dpi, x);
+         exchange_dof(cx, dpi, x, pg->imtrx);
  
  
  	if (nAC > 0)

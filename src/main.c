@@ -147,7 +147,7 @@ DDD Noahs_Raven;		/* Stage 1 - preliminary sizing information */
 DDD Noahs_Ark;			/* Stage 2 - big boatload - main body*/
 DDD Noahs_Dove;			/* Stage 3 - doubly dynamic sized stuff */
 
-Comm_Ex *cx = NULL;		/* communications info for ea neighbor proc */
+Comm_Ex **cx = NULL;		/* communications info for ea neighbor proc */
 
 double time_goma_started;	/* Save it here... */
 
@@ -705,12 +705,17 @@ main(int argc, char **argv)
 #ifdef DEBUG
   fprintf(stderr, "P_%d: Parallel cx allocation\n", ProcID);
 #endif
+    cx = malloc(sizeof(Comm_Ex *) * upd->Total_Num_Matrices);
   if (DPI_ptr->num_neighbors > 0) {
-    cx = alloc_struct_1(Comm_Ex, DPI_ptr->num_neighbors);
-    Request = alloc_struct_1(MPI_Request, 
-			     Num_Requests * DPI_ptr->num_neighbors);
-    Status = alloc_struct_1(MPI_Status, 
-			    Num_Requests * DPI_ptr->num_neighbors);
+
+    int imtrx;
+    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+      cx[imtrx] = alloc_struct_1(Comm_Ex, DPI_ptr->num_neighbors);
+      Request = alloc_struct_1(MPI_Request, 
+                               Num_Requests * DPI_ptr->num_neighbors);
+      Status = alloc_struct_1(MPI_Status, 
+                              Num_Requests * DPI_ptr->num_neighbors);
+    }
   }
 #endif
 
@@ -849,22 +854,22 @@ main(int argc, char **argv)
   case ALC_ZEROTH:
   case ALC_FIRST:
     log_msg("Solving continuation problem");
-    continue_problem(cx, EXO_ptr, DPI_ptr);
+    continue_problem(cx[0], EXO_ptr, DPI_ptr);
     break;
   case HUN_ZEROTH:
   case HUN_FIRST:
     log_msg("Solving hunt problem");
-    hunt_problem(cx, EXO_ptr, DPI_ptr);
+    hunt_problem(cx[0], EXO_ptr, DPI_ptr);
     break;
   case LOCA:
     log_msg("Solving continuation problem with LOCA");
-    error = do_loca(cx, EXO_ptr, DPI_ptr);
+    error = do_loca(cx[0], EXO_ptr, DPI_ptr);
     break;
   default:
     log_msg("Solving problem");
     if (loca_in->Cont_Alg == LOCA_LSA_ONLY)
       {
-        error = do_loca(cx, EXO_ptr, DPI_ptr);
+        error = do_loca(cx[0], EXO_ptr, DPI_ptr);
       }
     else
       {

@@ -545,7 +545,6 @@ MM_SRC= mm_as_alloc.c\
         mm_qtensor_model.c\
         mm_shell_util.c\
         mm_sol_nonlinear.c\
-	mm_solve_linear_segregated.c\
         mm_species.c\
         mm_std_models.c \
         mm_std_models_shell.c\

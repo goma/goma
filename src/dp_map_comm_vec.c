@@ -92,8 +92,8 @@ int external_fill_unknowns = 0;
 
 int *ptr_node_recv = NULL;
 int *ptr_fill_node_recv = NULL;
-int *ptr_dof_send = NULL;
-int *list_dof_send = NULL;
+int **ptr_dof_send = NULL;
+int **list_dof_send = NULL;
 int *ptr_node_send = NULL;
 int *list_node_send = NULL;
 int *ptr_fill_node_send = NULL;
@@ -111,7 +111,7 @@ build_fill_node_recv_indeces(int *, Exo_DB *, Dpi *);
 /*********************************************************************************/
 
 void
-setup_nodal_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
+setup_nodal_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
 
     /****************************************************************************
      *
@@ -128,7 +128,7 @@ setup_nodal_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
   int *list_gnode_recv = NULL;
   static char yo[] = "setup_nodal_comm_map ERROR:";
   COMM_NP_STRUCT *np_base=NULL, *np_ptr;
-
+  int imtrx;
   /*
    * Fill in the global vectors ptr_node_recv[] and
    * list_node_recv[]
@@ -140,16 +140,18 @@ setup_nodal_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
    *    p is the index of the neighboring processor, 
    *    neighbor[p] is its processor number
    */
-  for (p = 0; p < dpi->num_neighbors; p++) {
-    /*
-     *  Processor number of the neighboring processor
-     *  (0 to Nproc-1)
-     */
-    cx[p].neighbor_name      = dpi->neighbor[p];
-    /*
-     * num_nodes_recv: The number of nodes to receive from this processor
-     */
-    cx[p].num_nodes_recv     = (ptr_node_recv[p+1] - ptr_node_recv[p]);
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    for (p = 0; p < dpi->num_neighbors; p++) {
+      /*
+       *  Processor number of the neighboring processor
+       *  (0 to Nproc-1)
+       */
+      cx[imtrx][p].neighbor_name      = dpi->neighbor[p];
+      /*
+       * num_nodes_recv: The number of nodes to receive from this processor
+       */
+      cx[imtrx][p].num_nodes_recv     = (ptr_node_recv[p+1] - ptr_node_recv[p]);
+    }
   }
 
   /*
@@ -162,22 +164,23 @@ setup_nodal_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
   }
 #endif
 
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
   /*
    * Tell each of my neighbors how many nodes that I want from them.
    * Receive from my neighbors how many of my owned nodes I have
    * to send information to them, cx[p].num_nodes_send.
    */
-  np_ptr = np_base;
-  for (p = 0; p < dpi->num_neighbors; p++) {
-    np_ptr->neighbor_ProcID = cx[p].neighbor_name;
-    np_ptr->send_message_buf = (void *) &(cx[p].num_nodes_recv);
-    np_ptr->send_message_length = sizeof(int);
-    np_ptr->recv_message_buf = (void *) &(cx[p].num_nodes_send);
-    np_ptr->recv_message_length = sizeof(int);
-    np_ptr++;
+    np_ptr = np_base;
+    for (p = 0; p < dpi->num_neighbors; p++) {
+      np_ptr->neighbor_ProcID = cx[0][p].neighbor_name;
+      np_ptr->send_message_buf = (void *) &(cx[imtrx][p].num_nodes_recv);
+      np_ptr->send_message_length = sizeof(int);
+      np_ptr->recv_message_buf = (void *) &(cx[imtrx][p].num_nodes_send);
+      np_ptr->recv_message_length = sizeof(int);
+      np_ptr++;
+    }
+    exchange_neighbor_proc_info(dpi->num_neighbors, np_base);
   }
-  exchange_neighbor_proc_info(dpi->num_neighbors, np_base);
-
   /*
    *  Create space for storage of the node numbers that I must
    *  send to other processors, int list_node_send[].
@@ -187,20 +190,19 @@ setup_nodal_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
    */
   ptr_node_send = alloc_int_1(dpi->num_neighbors + 1, 0);
   for (p = 0; p < dpi->num_neighbors; p++) {
-    ptr_node_send[p+1] = ptr_node_send[p] + cx[p].num_nodes_send;
+    ptr_node_send[p+1] = ptr_node_send[p] + cx[0][p].num_nodes_send;
   }
   if (ptr_node_send[dpi->num_neighbors] > 0) {
     list_node_send =  alloc_int_1(ptr_node_send[dpi->num_neighbors],
-				  -1);
+                                  -1);
   }
-  
   /*
    * Fill in the address of the location in list_node_send for each
    * processor's send information into the Comm_ex structure,
    * cx[p].local_nodeces_send
    */
   for (p = 0; p < dpi->num_neighbors; p++) {
-    cx[p].local_nodeces_send = list_node_send + ptr_node_send[p];
+    cx[0][p].local_nodeces_send = list_node_send + ptr_node_send[p];
   }
 
   /*
@@ -229,9 +231,9 @@ setup_nodal_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
   for (p = 0; p < dpi->num_neighbors; p++) {
     np_ptr->send_message_buf = (void *)
 	                       (list_gnode_recv + ptr_node_recv[p]);
-    np_ptr->send_message_length = sizeof(int) * cx[p].num_nodes_recv;
-    np_ptr->recv_message_buf = (void *) cx[p].local_nodeces_send;
-    np_ptr->recv_message_length = sizeof(int) * cx[p].num_nodes_send;
+    np_ptr->send_message_length = sizeof(int) * cx[0][p].num_nodes_recv;
+    np_ptr->recv_message_buf = (void *) cx[0][p].local_nodeces_send;
+    np_ptr->recv_message_length = sizeof(int) * cx[0][p].num_nodes_send;
     np_ptr++;
   }
   exchange_neighbor_proc_info(dpi->num_neighbors, np_base);
@@ -350,7 +352,7 @@ exchange_neighbor_proc_info(int num_neighbors, COMM_NP_STRUCT *np_ptr)
 /*********************************************************************************/
 
 void
-setup_dof_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
+setup_dof_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex **cx)
 
     /*****************************************************************************
      *
@@ -368,10 +370,11 @@ setup_dof_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
    * Gather the frequency profile of requested dofs for each external
    * processor. Look through every external node.
    */
-  for (p = 0; p < dpi->num_neighbors; p++) {
-    cx[p].num_dofs_recv = 0;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    for (p = 0; p < dpi->num_neighbors; p++) {
+      cx[imtrx][p].num_dofs_recv = 0;
+    }
   }
-  
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
      {
       for (i = 0; i < dpi->num_external_nodes; i++) 
@@ -382,7 +385,7 @@ setup_dof_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
           owner = dpi->set_membership[where];
           index_owner = in_list(owner, 0, dpi->num_neighbors, dpi->neighbor);
           dofs_i_want = Nodes[local_node_number]->Nodal_Vars_Info[imtrx]->Num_Unknowns;
-          cx[index_owner].num_dofs_recv += dofs_i_want;
+          cx[imtrx][index_owner].num_dofs_recv += dofs_i_want;
          }
      }
 
@@ -393,14 +396,14 @@ setup_dof_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
    */
   for (p = 0; p < dpi->num_neighbors; p++) 
      {
-      cx[p].num_dofs_send = 0;
       for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
          {
-          for (i = ptr_node_send[p]; i < ptr_node_send[p+1]; i++) 
+           cx[imtrx][p].num_dofs_send = 0;
+           for (i = ptr_node_send[p]; i < ptr_node_send[p+1]; i++) 
              {
-              local_node_number = list_node_send[i];
-              cx[p].num_dofs_send +=
-	      Nodes[local_node_number]->Nodal_Vars_Info[imtrx]->Num_Unknowns;
+               local_node_number = list_node_send[i];
+               cx[imtrx][p].num_dofs_send +=
+                 Nodes[local_node_number]->Nodal_Vars_Info[imtrx]->Num_Unknowns;
              }
          }
      }
@@ -411,9 +414,12 @@ setup_dof_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
    *
    *    ptr_dof_send[] gets allocated here, and is never freed.
    */
-  ptr_dof_send = alloc_int_1(dpi->num_neighbors + 1, 0);
-  for (p = 0; p < dpi->num_neighbors; p++) {
-    ptr_dof_send[p+1]  = ptr_dof_send[p]  + cx[p].num_dofs_send;
+  ptr_dof_send = malloc(sizeof(int *) * upd->Total_Num_Matrices);
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    ptr_dof_send[imtrx] = alloc_int_1(dpi->num_neighbors + 1, 0);
+    for (p = 0; p < dpi->num_neighbors; p++) {
+      ptr_dof_send[imtrx][p+1]  = ptr_dof_send[imtrx][p]  + cx[imtrx][p].num_dofs_send;
+    }
   }
 
   /*
@@ -425,19 +431,23 @@ setup_dof_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
    *
    *     list_dof_send[] is allocated here, and is never freed.
    */
-  if (ptr_dof_send[dpi->num_neighbors] > 0) {
-    list_dof_send = alloc_int_1(ptr_dof_send[dpi->num_neighbors], -1);
+  list_dof_send = malloc(sizeof(int *) * upd->Total_Num_Matrices);
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    if (ptr_dof_send[imtrx][dpi->num_neighbors] > 0) {
+      list_dof_send[imtrx] = alloc_int_1(ptr_dof_send[imtrx][dpi->num_neighbors], -1);
+    }
   }
-  index = 0;
+
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
      {
+       index = 0;
       for (i = 0; i < ptr_node_send[dpi->num_neighbors]; i++) 
          {
           local_node_number = list_node_send[i];
           base = Nodes[local_node_number]->First_Unknown[imtrx];
           for (p = 0; p < Nodes[local_node_number]->Nodal_Vars_Info[imtrx]->Num_Unknowns; p++) 
              {
-              list_dof_send[index] = base + p;
+              list_dof_send[imtrx][index] = base + p;
               index++;
              }
          }
@@ -708,7 +718,7 @@ build_fill_node_recv_indeces(int *fill_node_list, Exo_DB *exo, Dpi *dpi)
 /***********************************************************************/
 
 void
-output_comm_stats(Dpi *dpi, Comm_Ex *cx)
+output_comm_stats(Dpi *dpi, Comm_Ex **cx)
 
     /*******************************************************************
      *
@@ -724,17 +734,20 @@ output_comm_stats(Dpi *dpi, Comm_Ex *cx)
   int gmin_neighbor, gmin_neighbor_proc;
   int gmax_mesg_proc;
   int gmin_mesg_proc;
+  int imtrx;
   
   gmax_neighbor = gmaxloc_int(dpi->num_neighbors, ProcID,
 			      &gmax_neighbor_proc);
   gmin_neighbor = gminloc_int(dpi->num_neighbors, ProcID,
 			      &gmin_neighbor_proc);
   gavg_neighbor = gavg_double((double) dpi->num_neighbors);
-  
-  for (p = 0; p < dpi->num_neighbors; p++) {
-    max_mesg = MAX(max_mesg, cx[p].num_dofs_send);
-    min_mesg = MIN(min_mesg, cx[p].num_dofs_send);
-    avg_mesg += cx[p].num_dofs_send;
+
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    for (p = 0; p < dpi->num_neighbors; p++) {
+      max_mesg = MAX(max_mesg, cx[imtrx][p].num_dofs_send);
+      min_mesg = MIN(min_mesg, cx[imtrx][p].num_dofs_send);
+      avg_mesg += cx[imtrx][p].num_dofs_send;
+    }
   }
 
   gmaxloc_int(max_mesg, ProcID, &gmax_mesg_proc);
