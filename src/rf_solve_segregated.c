@@ -40,12 +40,20 @@
 
 double vector_distance(int size, double *vec1, double *vec2) {
   double distance = 0;
+#ifdef PARALLEL
+  double global_distance = 0;
+#endif
   double x;
   int i;
   for (i = 0; i < size; i++) {
     x = (vec1[i] - vec2[i]);
     distance += x*x;
   }
+#ifdef PARALLEL
+  MPI_Allreduce(&distance, &global_distance, 1, MPI_DOUBLE, MPI_SUM, 
+		MPI_COMM_WORLD);
+  distance = global_distance;
+#endif /* PARALLEL */
   return sqrt(distance);
 }
 /*************************************************************************************
@@ -96,6 +104,7 @@ dbl *te_out) /* te_out - return actual end time */
   double **resid_vector = NULL; /* residual                          */
   double **resid_vector_sens = NULL; /* residual sensitivity              */
   double **scale = NULL; /* scale vector for modified newton  */
+  double **delta_x = NULL;
 
   int *node_to_fill = NULL;
 
@@ -321,6 +330,7 @@ dbl *te_out) /* te_out - return actual end time */
     xdot_old = malloc(upd->Total_Num_Matrices * sizeof(double *));
     xdot_older = malloc(upd->Total_Num_Matrices * sizeof(double *));
     x_pred = malloc(upd->Total_Num_Matrices * sizeof(double *));
+    delta_x = malloc(upd->Total_Num_Matrices * sizeof(double *));
 
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
       x[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
@@ -331,6 +341,7 @@ dbl *te_out) /* te_out - return actual end time */
       xdot_old[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
       xdot_older[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
       x_pred[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
+      delta_x[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
     }
   }
 
@@ -757,7 +768,9 @@ dbl *te_out) /* te_out - return actual end time */
 
          */
 
+        if (ProcID == 0) {
         printf("\n===================== SOLVING MATRIX %d ===========================\n\n", pg->imtrx);
+        }
         err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t,
                theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
                xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
@@ -938,12 +951,18 @@ dbl *te_out) /* te_out - return actual end time */
         if (tran->march_to_steady_state && n > 0) {
           /* for now check last two matrices */
           int steady_state_reached = TRUE;
+          double max_distance = 0;
 
           for (i = 2; i < 4; i++) {
             double distance = vector_distance(NumUnknowns[i], x[i], x_old[i]);
             if (distance > tran->steady_state_tolerance) {
               steady_state_reached = FALSE;
             }
+            if (distance > max_distance) max_distance = distance;
+          }
+
+          if (ProcID == 0) {
+            printf("\nMaximum Delta x %g\n", max_distance);
           }
 
           if (steady_state_reached) {

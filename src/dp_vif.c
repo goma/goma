@@ -732,7 +732,8 @@ noahs_ark()
   ddd_add_member(n, &tran->resolved_delta_t_min, 1, MPI_DOUBLE);
   ddd_add_member(n, &tran->Courant_Limit, 1, MPI_DOUBLE);
   ddd_add_member(n, &tran->Restart_Time_Integ_After_Renorm, 1, MPI_INT);
-
+  ddd_add_member(n, &tran->steady_state_tolerance, 1, MPI_DOUBLE);
+  ddd_add_member(n, &tran->march_to_steady_state, 1, MPI_INT);
 
   /*
    * Solver stuff
