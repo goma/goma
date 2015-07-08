@@ -1666,6 +1666,14 @@ load_elem_dofptr(const int ielem,
      *
      * Looks like it sets v to zero.
      */
+  }else if((pd_glob[0] ->CoordinateSystem == CYLINDRICAL) &&
+	  upd->ep[pg->imtrx][R_AUX_MOMENTUM1] >= 0) {
+    dofs = ei[pg->imtrx]->dof[R_AUX_MOMENTUM1];
+    for (i = 0; i < dofs; i++) {
+      esp->v[2][i]       = p0;
+      esp_old->v[2][i]   = p0;
+      esp_dot->v[2][i]   = p0;
+    }
   }
 
   eqn = R_EXT_VELOCITY;

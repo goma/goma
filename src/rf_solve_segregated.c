@@ -953,10 +953,11 @@ dbl *te_out) /* te_out - return actual end time */
           int steady_state_reached = TRUE;
           double max_distance = 0;
 
-          for (i = 2; i < 4; i++) {
+          for (i = 0; i < upd->Total_Num_Matrices; i++) {
             double distance = vector_distance(NumUnknowns[i], x[i], x_old[i]);
             if (distance > tran->steady_state_tolerance) {
               steady_state_reached = FALSE;
+
             }
             if (distance > max_distance) max_distance = distance;
           }
@@ -966,7 +967,9 @@ dbl *te_out) /* te_out - return actual end time */
           }
 
           if (steady_state_reached) {
-	    printf("\n Steady state reached \n");
+            if (ProcID == 0) {
+              printf("\n Steady state reached \n");
+            }
             goto free_and_clear;
           }
         }
