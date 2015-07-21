@@ -758,12 +758,14 @@ time_step_control(const double delta_t,  const double delta_t_old,
     Err_norm      += ecp[POR_GAS_PRES];
     Err_norm      += ecp[POR_POROSITY];
     Err_norm      += ecp[POR_SATURATION];
+    Err_norm      += ecp[POR_SINK_MASS];
 
     num_unknowns += ncp[MASS_FRACTION];
     num_unknowns += ncp[POR_LIQ_PRES];
     num_unknowns += ncp[POR_GAS_PRES];
     num_unknowns += ncp[POR_POROSITY];
     num_unknowns += ncp[POR_SATURATION];
+    num_unknowns += ncp[POR_SINK_MASS];
   }
 
   if (use_var_norm[4]) {	/* Pressure, even though there is no dP/dt
@@ -940,7 +942,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
   e_v = ecp[VELOCITY1] + ecp[VELOCITY2] + ecp[VELOCITY3];
   e_T = ecp[TEMPERATURE];
   e_y = (ecp[MASS_FRACTION] + ecp[POR_LIQ_PRES] + ecp[POR_GAS_PRES] +
-	 ecp[POR_POROSITY]  + ecp[POR_SATURATION]);
+	 ecp[POR_POROSITY]  + ecp[POR_SATURATION] + ecp[POR_SINK_MASS] );
   e_P = ecp[PRESSURE];
   e_S = (ecp[POLYMER_STRESS11] + ecp[POLYMER_STRESS12] +
 	 ecp[POLYMER_STRESS22] + ecp[POLYMER_STRESS13] +
@@ -1000,7 +1002,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stderr, ", %7.1e", e_v); }
         if(ncp[TEMPERATURE]){ DPRINTF(stderr, ", %7.1e", e_T); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES] 
-		|| ncp[POR_POROSITY] || ncp[POR_SATURATION])
+		|| ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS])
  		{ DPRINTF(stderr, ", %7.1e", e_y); }
         if(ncp[PRESSURE]){ DPRINTF(stderr, ", %7.1e", e_P); }
         if(ncp[POLYMER_STRESS11]){ DPRINTF(stderr, ", %7.1e", e_S); }
@@ -1025,7 +1027,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stderr, ", %7.1e", e_v); }
         if(ncp[TEMPERATURE]){ DPRINTF(stderr, ", %7.1e", e_T); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES] 
-		|| ncp[POR_POROSITY] || ncp[POR_SATURATION])
+		|| ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS])
  		{ DPRINTF(stderr, ", %7.1e", e_y); }
         if(ncp[PRESSURE]){ DPRINTF(stderr, ", %7.1e", e_P); }
         if(ncp[POLYMER_STRESS11]){ DPRINTF(stderr, ", %7.1e", e_S); }
@@ -1049,7 +1051,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stderr, ", %7.1e", e_v); }
         if(ncp[TEMPERATURE]){ DPRINTF(stderr, ", %7.1e", e_T); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES]
- 		 || ncp[POR_POROSITY] || ncp[POR_SATURATION])
+ 		 || ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS])
  		{ DPRINTF(stderr, ", %7.1e", e_y); }
         if(ncp[PRESSURE]){ DPRINTF(stderr, ", %7.1e", e_P); }
         if(ncp[POLYMER_STRESS11]){ DPRINTF(stderr, ", %7.1e", e_S); }
@@ -1074,7 +1076,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
  		{ DPRINTF(stderr, ",   %1d v  ", use_var_norm[1]); }
         if(ncp[TEMPERATURE]){ DPRINTF(stderr, ",   %1d T  ", use_var_norm[2]); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES] ||
- 	    ncp[POR_POROSITY] || ncp[POR_SATURATION])
+ 	    ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS] )
  		{ DPRINTF(stderr, ",   %1d y  ", use_var_norm[3]); }
         if(ncp[PRESSURE]){ DPRINTF(stderr, ",   %1d P  ", use_var_norm[4]); }
         if(ncp[POLYMER_STRESS11]){DPRINTF(stderr,",   %1d S  ",use_var_norm[5]); }

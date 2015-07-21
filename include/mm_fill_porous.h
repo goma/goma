@@ -407,4 +407,7 @@ PROTO(( double *,
 	double ,
 	int      ));
 
+double por_mass_source_model
+PROTO(( double d_MassSource[MAX_VARIABLE_TYPES + MAX_CONC][MDE] ));
+
 #endif /* _MM_FILL_POROUS_H */

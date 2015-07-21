@@ -9580,7 +9580,7 @@ rd_eq_specs(FILE *ifp,
     case R_PHASE5:
     case R_ACOUS_REYN_STRESS:
     case R_SHELL_LUBP:
-	case R_POR_SINK_MASS:
+    case R_POR_SINK_MASS:
 
 	if ( fscanf(ifp, "%lf %lf %lf", 
 		    &(pd_ptr->etm[ce][(LOG2_MASS)]),

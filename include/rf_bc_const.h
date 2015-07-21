@@ -626,6 +626,7 @@
 #define POR_LIQ_FLUX_FILL_BC 25900500
 #define POROUS_TEMP_BC  26000000
 #define P_LIQ_USER_BC   26000001
+#define POROUS_SINK_BC   26000003
 
 /* real solid displacement */
 #define DX_RS_BC     40000001
