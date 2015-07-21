@@ -715,7 +715,7 @@ setup_old_exo(Exo_DB *e)
      if ((hi-lo) < 1) {
        EH(-1, "Bad side node index listing!");
      }
-     isort((hi-lo), snl_std);
+     integer_sort((hi-lo), snl_std);
 
      /*
       * Now look at the 2nd through last elem/sides nodegroups for any match,
@@ -743,7 +743,7 @@ setup_old_exo(Exo_DB *e)
 		   side, lo, side+1, hi);
 	   EH(-1, err_msg);
 	 }
-	 isort((hi-lo), snl_cmp);
+	 integer_sort((hi-lo), snl_cmp);
 	 equal_vectors = TRUE;
 	 for (l = 0; l < (hi-lo); l++) {
 	   equal_vectors &= (snl_cmp[l] == snl_std[l]);
@@ -1938,7 +1938,7 @@ Elem_Type(const Exo_DB *exo,
 /************************************************************************/
 /************************************************************************/
 /*
- * isort() -- sort a list of integers
+ * integer_sort() -- sort a list of integers
  *
  *
  * This makes use of the qsort "quick sort" that is part of the standard C
@@ -1959,7 +1959,7 @@ integer_compare(const void *arg1, const void *arg2)
 }
 
 void 
-isort(int length, int *array)
+integer_sort(int length, int *array)
 {
   if (length < 1) {
       EH(-1, "Negative or zero length array to sort?");

@@ -109,7 +109,7 @@ EXTERN int Elem_Type		/* rd_mesh.c */
 PROTO((const Exo_DB *exo,	/* the mesh */
        const int ));		/* element - the element number on this proc */
 
-EXTERN void isort		/* rd_mesh.c */
+EXTERN void integer_sort		/* rd_mesh.c */
 PROTO((int ,			/* length - of the integer vector */
        int *));			/* array - the vector to be sorted */
 
