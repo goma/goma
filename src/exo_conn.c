@@ -395,7 +395,7 @@ build_node_node(Exo_DB *exo)
        * Sort the list before appending to the big concatenated list...
        */
 
-      isort(curr_list_size, list);
+      integer_sort(curr_list_size, list);
 
       /*
        * No, we're assuming we're never in danger of overrunning the buffer
@@ -1756,7 +1756,7 @@ brk_build_node_node(Exo_DB *exo)
        * Sort the list before appending to the big concatenated list...
        */
 
-      isort(curr_list_size, list);
+      integer_sort(curr_list_size, list);
 
       /*
        * No, we're assuming we're never in danger of overrunning the buffer
