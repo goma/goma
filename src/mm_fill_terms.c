@@ -29959,7 +29959,7 @@ fluid_stress( double Pi[DIM][DIM],
   int do_dilational_visc = 0;
   int dim, wim;
 
-  int a, b, p, q, j, w, c, var;
+  int a, b, p, q, j, w, c, var, imtrx;
 
   dbl (* grad_phi_e ) [DIM][DIM][DIM] = NULL;
 
@@ -30017,16 +30017,19 @@ fluid_stress( double Pi[DIM][DIM],
   for ( a=0; a<VIM; a++ ) {
     grad_v[a] = fv->grad_v[a];
   }
-  if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
+  for(imtrx = 0; imtrx<upd->Total_Num_Matrices; imtrx++) 
     {
-      memset( s, 0, sizeof(dbl)*DIM*DIM);
-      for ( a=0; a<VIM; a++)
+      if ( pd->v[imtrx][POLYMER_STRESS11] )
 	{
-	  for ( b=0; b<VIM; b++)
+	  memset(s, 0, sizeof(dbl)*DIM*DIM);
+	  for(a=0; a<VIM; a++)
 	    {
-	      for ( mode=0; mode<vn->modes; mode++)
+	      for(b=0; b<VIM; b++)
 		{
-		  s[a][b] += fv->S[mode][a][b];
+		  for(mode=0; mode<vn->modes; mode++)
+		    {
+		      s[a][b] += fv->S[mode][a][b];
+		    }
 		}
 	    }
 	}
@@ -30046,15 +30049,15 @@ fluid_stress( double Pi[DIM][DIM],
       particle_stress(tau_p, d_tau_p_dv, d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
     }
 
-  if ( pd->v[pg->imtrx][POLYMER_STRESS11] && (vn->evssModel == EVSS_F) )
+  evss_f = 0.0;
+  for(imtrx = 0; imtrx<upd->Total_Num_Matrices; imtrx++) 
     {
-      evss_f = 1.;
+      if(pd->v[imtrx][POLYMER_STRESS11] && (vn->evssModel == EVSS_F))
+	{
+	  evss_f = 1.0;
+	}
     }
-  else
-    {
-      evss_f = 0.;
-    }
-
+  
   if ( evss_f )
     {
       for ( a=0; a<VIM; a++)
@@ -30082,233 +30085,230 @@ fluid_stress( double Pi[DIM][DIM],
     // use previously calculated div_v.
   }
 
-  if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
+
+  mu = viscosity(gn, gamma, d_mu);
+  for(imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      mus = viscosity(gn, gamma, d_mus);
-    }
-  else
-    {
-      mu = viscosity(gn, gamma, d_mu);
-    }
-
-  if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-    {
-      /* initialize the derivative wrt to stress and velocity gradient */
-
-      memset( d_mun_dS, 0, sizeof(double) * MAX_MODES*DIM*DIM*MDE);
-      memset( d_mun_dG, 0, sizeof(double) * DIM*DIM*MDE);
-
-      /* This is the adaptive viscosity from Sun et al., 1999.
-       * The term multiplies the continuous and discontinuous
-       * shear-rate, so it should cancel out and not affect the
-       * solution, other than increasing the stability of the
-       * algorithm in areas of high shear and stress.
-       */
-
-      mu_num = numerical_viscosity(s, gamma_cont, d_mun_dS, d_mun_dG);
-
-      mu_over_mu_num = mus;
-      mu = mu_num * mus;
-
-      /* first add the solvent viscosity to the total viscosity
-       * including all the derivatives.
-       */
-      var = VELOCITY1;
-      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+      if(pd->v[imtrx][POLYMER_STRESS11])
 	{
-	  for ( a=0; a<wim; a++)
+	  mus = viscosity(gn, gamma, d_mus);
+
+	  /* initialize the derivative wrt to stress and velocity gradient */
+	  
+	  memset( d_mun_dS, 0, sizeof(double) * MAX_MODES*DIM*DIM*MDE);
+	  memset( d_mun_dG, 0, sizeof(double) * DIM*DIM*MDE);
+	  
+	  /* This is the adaptive viscosity from Sun et al., 1999.
+	   * The term multiplies the continuous and discontinuous
+	   * shear-rate, so it should cancel out and not affect the
+	   * solution, other than increasing the stability of the
+	   * algorithm in areas of high shear and stress.
+	   */
+	  
+	  mu_num = numerical_viscosity(s, gamma_cont, d_mun_dS, d_mun_dG);
+	  
+	  mu_over_mu_num = mus;
+	  mu = mu_num * mus;
+	  
+	  /* first add the solvent viscosity to the total viscosity
+	   * including all the derivatives.
+	   */
+	  var = VELOCITY1;
+	  if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
 	    {
-	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	      for ( a=0; a<wim; a++)
 		{
-		  d_mu->v[a][j] = mu_num * d_mus->v[a][j];
-		}
-	    }
-	}
-
-      var = MESH_DISPLACEMENT1;
-      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
-	{
-	  for ( a=0; a<dim; a++)
-	    {
-	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-		{
-		  d_mu->X[a][j] = mu_num * d_mus->X[a][j];
-		}
-	    }
-	}
-
-      var = TEMPERATURE;
-      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
-	{
-	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-	    {
-	      d_mu->T[j] = mu_num * d_mus->T[j];
-	    }
-	}
-
-      var = BOND_EVOLUTION;
-      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
-	{
-	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-	    {
-	      d_mu->nn[j] = mu_num * d_mus->nn[j];
-	    }
-	}
-
-#ifdef COUPLED_FILL
-      var = FILL;
-      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
-	{
-	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-	    {
-	      d_mu->F[j] = mu_num * d_mus->F[j];
-	    }
-	}
-#endif /* COUPLED_FILL */
-
-      var = PRESSURE;
-      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
-	{
-	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-	    {
-	      d_mu->P[j] = mu_num * d_mus->P[j];
-	    }
-	}
-
-      var = MASS_FRACTION;
-      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
-	{
-	  for ( w=0; w<pd->Num_Species_Eqn; w++)
-	    {
-	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-		{
-		  d_mu->C[w][j] = mu_num * d_mus->C[w][j];
-		}
-	    }
-	}
-
-      /*  shift factor  */
-      if( pd->e[pg->imtrx][TEMPERATURE])
-	{
-	  if(vn->shiftModel == CONSTANT)
-	    {
-	      at = vn->shift[0];
-	      for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
-		{
-		  d_at_dT[j]=0.;
-		}
-	    }
-	  else if(vn->shiftModel == MODIFIED_WLF)
-	    {
-	      wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
-	      if(wlf_denom != 0.)
-		{
-		  at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
-		  for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
-		      d_at_dT[j]= -at*vn->shift[0]*vn->shift[1]
-			/(wlf_denom*wlf_denom)*bf[TEMPERATURE]->phi[j];
+		      d_mu->v[a][j] = mu_num * d_mus->v[a][j];
 		    }
 		}
-	      else
+	    }
+	  
+	  var = MESH_DISPLACEMENT1;
+	  if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+	    {
+	      for ( a=0; a<dim; a++)
 		{
-		  at = 1.;
-		}
-	      for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
-		{
-		  d_at_dT[j]=0.;
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		    {
+		      d_mu->X[a][j] = mu_num * d_mus->X[a][j];
+		    }
 		}
 	    }
-	}
-      else
-	{
-	  at = 1.;
-	}
-
-      for ( mode=0; mode<vn->modes; mode++)
-        {
-          /* get polymer viscosity */
-          mup = viscosity(ve[mode]->gn, gamma, d_mup);
-
-          mu_over_mu_num += at * mup;
-          mu += mu_num * at * mup;
-
-          var = VELOCITY1;
-          if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
-            {
-              for ( a=0; a<wim; a++)
-                {
-                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      d_mu->v[a][j] += mu_num * at * d_mup->v[a][j];
-                    }
-                }
-            }
-
-          var = MESH_DISPLACEMENT1;
-          if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
-            {
-              for ( a=0; a<dim; a++)
-                {
-                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      d_mu->X[a][j] += mu_num * at * d_mup->X[a][j];
-                    }
-                }
-            }
-
-          var = TEMPERATURE;
-          if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
-            {
-              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                {
-                  d_mu->T[j] += mu_num * (at * d_mup->T[j] + mup * d_at_dT[j]);
-                }
-            }
-
-          var = BOND_EVOLUTION;
-          if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
-            {
-              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                {
-                  d_mu->nn[j] += mu_num * at * d_mup->nn[j];
-                }
-            }
+	  
+	  var = TEMPERATURE;
+	  if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+	    {
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  d_mu->T[j] = mu_num * d_mus->T[j];
+		}
+	    }
+	  
+	  var = BOND_EVOLUTION;
+	  if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+	    {
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  d_mu->nn[j] = mu_num * d_mus->nn[j];
+		}
+	    }
 
 #ifdef COUPLED_FILL
-          var = FILL;
-          if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
-            {
-              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                {
-                  d_mu->F[j] += mu_num * at * d_mup->F[j];
-                }
-            }
+	  var = FILL;
+	  if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+	    {
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  d_mu->F[j] = mu_num * d_mus->F[j];
+		}
+	    }
 #endif /* COUPLED_FILL */
 
-          var = PRESSURE;
-          if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
-            {
-              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                {
-                  d_mu->P[j] += mu_num * at * d_mup->P[j];
-                }
-            }
-
-          var = MASS_FRACTION;
-          if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
-            {
-              for ( w=0; w<pd->Num_Species_Eqn; w++)
-                {
-                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      d_mu->C[w][j] += mu_num * at * d_mup->C[w][j];
-                    }
-                }
-            }
-        }
-    }
-
+	  var = PRESSURE;
+	  if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+	    {
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  d_mu->P[j] = mu_num * d_mus->P[j];
+		}
+	    }
+	  
+	  var = MASS_FRACTION;
+	  if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+	    {
+	      for ( w=0; w<pd->Num_Species_Eqn; w++)
+		{
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		    {
+		      d_mu->C[w][j] = mu_num * d_mus->C[w][j];
+		    }
+		}
+	    }
+	  
+	  /*  shift factor  */
+	  if( pd->e[pg->imtrx][TEMPERATURE])
+	    {
+	      if(vn->shiftModel == CONSTANT)
+		{
+		  at = vn->shift[0];
+		  for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
+		    {
+		      d_at_dT[j]=0.;
+		    }
+		}
+	      else if(vn->shiftModel == MODIFIED_WLF)
+		{
+		  wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
+		  if(wlf_denom != 0.)
+		    {
+		      at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
+		      for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
+			{
+			  d_at_dT[j]= -at*vn->shift[0]*vn->shift[1]
+			    /(wlf_denom*wlf_denom)*bf[TEMPERATURE]->phi[j];
+			}
+		    }
+		  else
+		    {
+		      at = 1.;
+		    }
+		  for( j=0 ; j<ei[pg->imtrx]->dof[TEMPERATURE] ; j++)
+		    {
+		      d_at_dT[j]=0.;
+		    }
+		}
+	    }
+	  else
+	    {
+	      at = 1.;
+	    }
+	  
+	  for ( mode=0; mode<vn->modes; mode++)
+	    {
+	      /* get polymer viscosity */
+	      mup = viscosity(ve[mode]->gn, gamma, d_mup);
+	      
+	      mu_over_mu_num += at * mup;
+	      mu += mu_num * at * mup;
+	      
+	      var = VELOCITY1;
+	      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+		{
+		  for ( a=0; a<wim; a++)
+		    {
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			{
+			  d_mu->v[a][j] += mu_num * at * d_mup->v[a][j];
+			}
+		    }
+		}
+	      
+	      var = MESH_DISPLACEMENT1;
+	      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+		{
+		  for ( a=0; a<dim; a++)
+		    {
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			{
+			  d_mu->X[a][j] += mu_num * at * d_mup->X[a][j];
+			}
+		    }
+		}
+	      
+	      var = TEMPERATURE;
+	      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+		{
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		    {
+		      d_mu->T[j] += mu_num * (at * d_mup->T[j] + mup * d_at_dT[j]);
+		    }
+		}
+	      
+	      var = BOND_EVOLUTION;
+	      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+		{
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		    {
+		      d_mu->nn[j] += mu_num * at * d_mup->nn[j];
+		    }
+		}
+	      
+#ifdef COUPLED_FILL
+	      var = FILL;
+	      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+		{
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		    {
+		      d_mu->F[j] += mu_num * at * d_mup->F[j];
+		    }
+		}
+#endif /* COUPLED_FILL */
+	      
+	      var = PRESSURE;
+	      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+		{
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		    {
+		      d_mu->P[j] += mu_num * at * d_mup->P[j];
+		    }
+		}
+	      
+	      var = MASS_FRACTION;
+	      if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
+		{
+		  for ( w=0; w<pd->Num_Species_Eqn; w++)
+		    {
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			{
+			  d_mu->C[w][j] += mu_num * at * d_mup->C[w][j];
+			}
+		    }
+		}
+	    }// for mode
+	}    // if POLYMER_STRESS
+    }        // for imtrx
   /*
    * Calculate the dilational viscosity, if necessary
    */
@@ -31482,7 +31482,7 @@ calc_pspg( dbl pspg[DIM],
 
   int dim, wim;
   int p, a, b, c;
-  int var;
+  int var, imtrx, imtrx2;
   int w, j;
 
   int pspg_global;
@@ -31779,14 +31779,17 @@ calc_pspg( dbl pspg[DIM],
 	}
     }
 
-  for ( p=0; p<wim; p++) div_s[p] = 0.;
-  if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
+  for(p=0; p<wim; p++) div_s[p] = 0.;
+  for(imtrx = 0; imtrx<upd->Total_Num_Matrices; imtrx++) 
     {
-      for ( p=0; p<wim; p++)
+      if(pd->v[imtrx][POLYMER_STRESS11])
 	{
-	  for ( mode=0; mode<vn->modes; mode++)
+	  for(p=0; p<wim; p++)
 	    {
-	      div_s[p] += fv->div_S[mode][p];
+	      for(mode=0; mode<vn->modes; mode++)
+		{
+		  div_s[p] += fv->div_S[mode][p];
+		}
 	    }
 	}
     }
@@ -31806,18 +31809,21 @@ calc_pspg( dbl pspg[DIM],
       || cr->MassFluxModel == HYDRODYNAMIC_QTENSOR)
     particle_stress(tau_p,d_tau_p_dv,d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
 
-  if ( pd->v[pg->imtrx][VELOCITY_GRADIENT11] &&  pd->v[pg->imtrx][POLYMER_STRESS11])
+  for(p=0; p<wim; p++) div_G[p] = 0.0;
+  for(imtrx = 0; imtrx<upd->Total_Num_Matrices; imtrx++) 
     {
-      for ( p=0; p<wim; p++)
+      if(pd->v[imtrx][VELOCITY_GRADIENT11])
 	{
-	  div_G[p] = fv->div_G[p];
-	}
-    }
-  else
-    {
-      for ( p=0; p<wim; p++)
-	{
-	  div_G[p] = 0.;
+	  for(imtrx2 = 0; imtrx2<upd->Total_Num_Matrices; imtrx2++) 
+	    {
+	      if(pd->v[imtrx2][POLYMER_STRESS11])
+		{
+		  for(p=0; p<wim; p++)
+		    {
+		      div_G[p] = fv->div_G[p];
+		    }
+		}
+	    }
 	}
     }
 
