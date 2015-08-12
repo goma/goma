@@ -892,6 +892,10 @@ struct Problem_Description
 				                     *        across the material interface.
                                                      * -- see mm_as_const.h for more info
 				                     */
+  int	mi[MAX_VARIABLE_TYPES];                      /* Matrix index for a given variable
+                                                      * -1 -> Not present in any matrix
+                                                      * >= 0 -> index into global matrix number
+                                                      */
   int	w[MAX_NUM_MATRICES][MAX_EQNS];              /* Weight function for equations */
   int	i[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES];    /* Interpolation type for each unknown 
                                                      * in the current element block */
