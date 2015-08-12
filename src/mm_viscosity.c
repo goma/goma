@@ -685,7 +685,7 @@ power_law_viscosity(struct Generalized_Newtonian *gn_local,
 {
 
   int a, b;
-  int mdofs=0,vdofs;
+  int mdofs=0,vdofs=0;
 
   int i, j, imtrx;
 
@@ -895,7 +895,7 @@ carreau_viscosity(struct Generalized_Newtonian *gn_local,
 {
 
     int a, b;
-  int mdofs=0,vdofs;
+  int mdofs=0,vdofs=0;
 
 
   int i, j, imtrx;
@@ -1088,7 +1088,7 @@ bingham_viscosity(struct Generalized_Newtonian *gn_local,
 
   int a, b;
   int var;
-  int mdofs=0,vdofs;
+  int mdofs=0,vdofs=0;
   int i, j, imtrx;
 
   dbl gammadot;	                /* strain rate invariant */ 
@@ -1340,7 +1340,7 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
 
   int a, b;
   int var;
-  int mdofs=0,vdofs;
+  int mdofs=0,vdofs=0;
   int i, j, imtrx;
 
   dbl gammadot;	                /* strain rate invariant */ 

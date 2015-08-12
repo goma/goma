@@ -1128,6 +1128,9 @@ noahs_ark()
   ddd_add_member(n, &upd->Acoustic_Frequency, 1, MPI_DOUBLE);            
   ddd_add_member(n, &upd->Light_Cosmu, 1, MPI_DOUBLE);            
 
+  ddd_add_member(n, pg->time_step_control_disabled, MAX_NUM_MATRICES, MPI_INT);
+
+
   for (i = 0; i < upd->Num_Mat; i++)
     {
       int imtrx;

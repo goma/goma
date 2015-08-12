@@ -825,9 +825,14 @@ dbl *te_out) /* te_out - return actual end time */
         delta_t_new = 1e20;
         for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
           double mat_dt_new;
-          mat_dt_new = time_step_control(delta_t, delta_t_old, const_delta_t,
-              x[pg->imtrx], x_pred[pg->imtrx], x_old[pg->imtrx], NULL, NULL, eps,
-              &success_dt, tran->use_var_norm);
+          
+          if (pg->time_step_control_disabled[pg->imtrx]) {
+              success_dt = 1;
+          } else {
+            mat_dt_new = time_step_control(delta_t, delta_t_old, const_delta_t,
+                                           x[pg->imtrx], x_pred[pg->imtrx], x_old[pg->imtrx], NULL, NULL, eps,
+                                           &success_dt, tran->use_var_norm);
+          }
 
           if (upd->SegregatedSolve && (pg->imtrx == 1 || pg->imtrx == 3)) {
             success_dt = 1;

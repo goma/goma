@@ -844,6 +844,7 @@ struct Problem_Graph
   /* Temporarily make some things global */
   struct Matrix_Data *matrices;
 
+  int time_step_control_disabled[MAX_NUM_MATRICES];
   struct SplitB_Coupled_Field_Variables sbcfv;
   struct SplitB_Element_Stiffness_Pointers sbesp;
 

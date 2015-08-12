@@ -156,6 +156,11 @@ pd_alloc(void)
 
   pg = alloc_struct_1(struct Problem_Graph, 1);
 
+  int imtrx;
+  for (imtrx = 0; imtrx < MAX_NUM_MATRICES; imtrx++) {
+    pg->time_step_control_disabled[imtrx] = 0;
+  }
+
   if (Debug_Flag) {
     DPRINTF(stdout, "%s: Problem_Description @ %p has %ld bytes", 
 	    yo, pd_glob, (long int)sizeof(struct Problem_Description));

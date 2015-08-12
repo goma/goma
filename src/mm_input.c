@@ -1516,7 +1516,7 @@ rd_timeint_specs(FILE *ifp,
       if (tran->steady_state_tolerance < 0) {
         EH(-1, "Expected Steady State Tolerance >= 0");
       }
-      SPF(echo_string, "%s = %d", "Steady State Tolerance", tran->steady_state_tolerance); ECHO(echo_string, echo_file);
+      SPF(echo_string, "%s = %g", "Steady State Tolerance", tran->steady_state_tolerance); ECHO(echo_string, echo_file);
     }
 
     tran->resolved_delta_t_min = 0.;
@@ -8347,9 +8347,19 @@ rd_eq_specs(FILE *ifp,
          }
 
        fscanf(ifp,"%d",&mtrx_index1);
+       mtrx_index0 = mtrx_index1 - 1;
+
+       if ( look_for_next_string( ifp, "Disable time step control", input, '=') ) 
+         {
+           read_string(ifp, input, '\n');
+           strip(input);
+           if (strcmp(input, "yes") == 0) {
+             pg->time_step_control_disabled[mtrx_index0] = TRUE;
+           }
+         }
       }
 
-    mtrx_index0 = mtrx_index1 - 1;
+
     pd_ptr->Matrix_Activity[mtrx_index0] = 1;
   
   /*
