@@ -445,44 +445,46 @@ dbl *te_out) /* te_out - return actual end time */
    *            STEADY STATE SOLUTION PROCEDURE
    ***************************************************************************/
   if (TimeIntegration == STEADY) {
+    EH(-1, "Steady state not supported in segregated solver, use march to steady state");
 
-    theta = 0.0; /* for steady problems. theta def in rf_fem.h */
-    delta_t = 0.0;
+/*     theta = 0.0; /\* for steady problems. theta def in rf_fem.h *\/ */
+/*     delta_t = 0.0; */
 
-    /* Right now, we are solving segregated problems in numerical order fashion
-     * Matrix 0, then 1, then so on. In the future we could change that.
-     */
-    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+/*     /\* Right now, we are solving segregated problems in numerical order fashion */
+/*      * Matrix 0, then 1, then so on. In the future we could change that. */
+/*      *\/ */
+/*     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) { */
 
-      find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
+/*       find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi); */
 
-      matrix_systems_mask = 1;
+/*       matrix_systems_mask = 1; */
 
-      log_msg("sl_init()...")
-;      sl_init(matrix_systems_mask, ams, exo, dpi, cx[pg->imtrx]);
+/*       log_msg("sl_init()...") */
+/* ;      sl_init(matrix_systems_mask, ams, exo, dpi, cx[pg->imtrx]); */
 
-#ifdef PARALLEL
-      /*
-       * Make sure the solver was properly initialized on all processors.
-       */
-      check_parallel_error("Solver initialization problems");
-#endif /* PARALLEL */
+/* #ifdef PARALLEL */
+/*       /\* */
+/*        * Make sure the solver was properly initialized on all processors. */
+/*        *\/ */
+/*       check_parallel_error("Solver initialization problems"); */
+/* #endif /\* PARALLEL *\/ */
 
 
-       err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t,
-       theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
-       xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
-       scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx],
-       tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
-       gvec_elem, time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, is_steady_state,
-       NULL, NULL, time1, NULL,
-       NULL, NULL, NULL);
+/*        err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t, */
+/*        theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx], */
+/*        xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx], */
+/*        scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx], */
+/*        tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx], */
+/*        gvec_elem, time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, is_steady_state, */
+/*        NULL, NULL, time1, NULL, */
+/*        NULL, NULL, NULL); */
 
-    }
+/*     } */
 
-    write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot,
-        xdot_old, tev, tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t,
-        theta, time1, NULL, exo, dpi);
+/*     write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot, */
+/*         xdot_old, tev, tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t, */
+/*         theta, time1, NULL, exo, dpi); */
+
   }
   /********************************************************************************
    *                            Transient solution process 
