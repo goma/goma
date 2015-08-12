@@ -120,7 +120,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
 
   int vdofs;
 
-  int i, j;
+  int i, j, imtrx;
 
   int species;			/* Species number of particle phase. */
   dbl p_vol_frac;		/* local particle volume fraction. */
@@ -372,20 +372,20 @@ viscosity(struct Generalized_Newtonian *gn_local,
   /* this section is for all non-Newtonian models */
   else if (gn_local->ConstitutiveEquation == SUSPENSION)
     {
-      if ( pd->v[pg->imtrx][SHELL_PARTC] )
-        {
-	  err = suspension_viscosity(gn_local->sus_species_no, gn_local->mu0,
-				     gn_local->maxpack, gn_local->nexp, fv->sh_pc);
-	  EH(err, "suspension_viscosity");
-	  mu = mp->viscosity;
-        }
-      else
+      err = suspension_viscosity(gn_local->sus_species_no, gn_local->mu0,
+				 gn_local->maxpack, gn_local->nexp, fv->c[gn_local->sus_species_no]);
+      
+      EH(err, "suspension_viscosity");
+      mu = mp->viscosity;
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 	{
-	  err = suspension_viscosity(gn_local->sus_species_no, gn_local->mu0,
-				     gn_local->maxpack, gn_local->nexp, fv->c[gn_local->sus_species_no]);
-	
-	  EH(err, "suspension_viscosity");
-	  mu = mp->viscosity;
+	  if ( pd->v[imtrx][SHELL_PARTC] )
+	    {
+	      err = suspension_viscosity(gn_local->sus_species_no, gn_local->mu0,
+					 gn_local->maxpack, gn_local->nexp, fv->sh_pc);
+	      EH(err, "suspension_viscosity");
+	      mu = mp->viscosity;
+	    }
 	}
       
       if ( d_mu != NULL && pd->v[pg->imtrx][MASS_FRACTION] )
@@ -653,16 +653,19 @@ viscosity(struct Generalized_Newtonian *gn_local,
     )
     {
       /* kludge for solidification tracking with phase function 0 */
-      if (pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY])
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 	{
-	  ls_old = ls;
-	  ls = pfd->ls[0];
-	  err = ls_modulate_viscosity(&mu, mp->mp2nd->viscosity_phase[0],
-				      ls->Length_Scale,
-				      (double) mp->mp2nd->viscositymask[0],
-                                      (double) mp->mp2nd->viscositymask[1],
-                                      d_mu, mp->mp2nd->ViscosityModel );
-	  ls = ls_old;
+	  if (pfd != NULL && pd->e[imtrx][R_EXT_VELOCITY])
+	    {
+	      ls_old = ls;
+	      ls = pfd->ls[0];
+	      err = ls_modulate_viscosity(&mu, mp->mp2nd->viscosity_phase[0],
+					  ls->Length_Scale,
+					  (double) mp->mp2nd->viscositymask[0],
+					  (double) mp->mp2nd->viscositymask[1],
+					  d_mu, mp->mp2nd->ViscosityModel );
+	      ls = ls_old;
+	    }
 	}
       err= ls_modulate_viscosity(&mu, mp->mp2nd->viscosity, ls->Length_Scale,
 				 (double) mp->mp2nd->viscositymask[0],
@@ -684,7 +687,7 @@ power_law_viscosity(struct Generalized_Newtonian *gn_local,
   int a, b;
   int mdofs=0,vdofs;
 
-  int i, j;
+  int i, j, imtrx;
 
   dbl gammadot;	                /* strain rate invariant */
 
@@ -698,13 +701,16 @@ power_law_viscosity(struct Generalized_Newtonian *gn_local,
   dbl nexp;
   dbl offset;
   dbl mu = 0.;
-
-  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
-
-  if ( pd->e[pg->imtrx][R_MESH1] )
-    {
-      mdofs = ei[pg->imtrx]->dof[R_MESH1];
-    }
+  
+    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+      {
+	vdofs = ei[imtrx]->dof[VELOCITY1];
+	
+	if ( pd->e[imtrx][R_MESH1] )
+	  {
+	    mdofs = ei[imtrx]->dof[R_MESH1];
+	  }
+      }
 
 
   calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
@@ -780,7 +786,7 @@ herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
   int a, b;
   int mdofs=0,vdofs;
 
-  int i, j;
+  int i, j, imtrx;
 
   dbl gammadot;	                /* strain rate invariant */ 
 
@@ -796,13 +802,15 @@ herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
   dbl tau_y;
   dbl offset;
 
-  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
-  
-  if ( pd->e[pg->imtrx][R_MESH1] )
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      mdofs = ei[pg->imtrx]->dof[R_MESH1];
+      vdofs = ei[imtrx]->dof[VELOCITY1];
+      
+      if ( pd->e[imtrx][R_MESH1] )
+	{
+	  mdofs = ei[imtrx]->dof[R_MESH1];
+	}
     }
-  
 
   calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
@@ -890,7 +898,7 @@ carreau_viscosity(struct Generalized_Newtonian *gn_local,
   int mdofs=0,vdofs;
 
 
-  int i, j;
+  int i, j, imtrx;
 
   dbl gammadot;	                /* strain rate invariant */ 
 
@@ -907,11 +915,14 @@ carreau_viscosity(struct Generalized_Newtonian *gn_local,
   dbl aexp;
   dbl lambda;
 
-  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
-  
-  if ( pd->e[pg->imtrx][R_MESH1] )
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      mdofs = ei[pg->imtrx]->dof[R_MESH1];
+      vdofs = ei[imtrx]->dof[VELOCITY1];
+      
+      if ( pd->e[imtrx][R_MESH1] )
+	{
+	  mdofs = ei[imtrx]->dof[R_MESH1];
+	}
     }
   
   calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
@@ -1078,7 +1089,7 @@ bingham_viscosity(struct Generalized_Newtonian *gn_local,
   int a, b;
   int var;
   int mdofs=0,vdofs;
-  int i, j;
+  int i, j, imtrx;
 
   dbl gammadot;	                /* strain rate invariant */ 
 
@@ -1130,51 +1141,58 @@ bingham_viscosity(struct Generalized_Newtonian *gn_local,
  	}
   fexp = gn_local->fexp;
 
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
-       {temp = fv->T;}
-  else
-       {temp = upd->Process_Temperature;}
+  temp = upd->Process_Temperature;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if ( pd->e[imtrx][TEMPERATURE] )
+	{
+	  temp = fv->T;
+	}
+    }
 
 #if MELTING_BINGHAM
   tmelt = mp->melting_point_liquidus;
 #endif
 
-  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
-  
-  if ( pd->e[pg->imtrx][R_MESH1] )
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
     {
-      mdofs = ei[pg->imtrx]->dof[R_MESH1];
+      vdofs = ei[imtrx]->dof[VELOCITY1];
+      
+      if ( pd->e[imtrx][R_MESH1] )
+	{
+	  mdofs = ei[imtrx]->dof[R_MESH1];
+	}
     }
 
+  at_shift = 1.0;
+  d_at_s = 0.0;
   var = TEMPERATURE;
-  if ( pd->e[pg->imtrx][var] && (temp != 0.) &&  (mp->reference[TEMPERATURE] != 0.))
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
     {
+      if ( pd->e[imtrx][var] && (temp != 0.) &&  (mp->reference[TEMPERATURE] != 0.))
+	{
 #if MELTING_BINGHAM
-      /* melting version */
-      if(temp <= tmelt)
-        {
-          at_shift = exp(-atexp*(mp->reference[TEMPERATURE]-temp)/
-                 (tmelt-temp)/(mp->reference[TEMPERATURE]-tmelt));
-	  if(!finite(at_shift)) { at_shift = DBL_MAX; }
-                 
-          d_at_s = - at_shift*atexp /(tmelt-temp)/(tmelt-temp);
-        }
-      else
-        {
-          at_shift = 1.;
-          d_at_s = 0.;
-        }
+	  /* melting version */
+	  if(temp <= tmelt)
+	    {
+	      at_shift = exp(-atexp*(mp->reference[TEMPERATURE]-temp)/
+			     (tmelt-temp)/(mp->reference[TEMPERATURE]-tmelt));
+	      if(!finite(at_shift)) { at_shift = DBL_MAX; }
+	      
+	      d_at_s = - at_shift*atexp /(tmelt-temp)/(tmelt-temp);
+	    }
+	  else
+	    {
+	      at_shift = 1.;
+	      d_at_s = 0.;
+	    }
 #else
-      /* normal, non-melting version */
-      at_shift = exp(atexp * (1./temp - 1./mp->reference[TEMPERATURE]));
-      if(!finite(at_shift)) { at_shift = DBL_MAX; }
-      d_at_s = -at_shift *atexp /(temp*temp) ;
+	  /* normal, non-melting version */
+	  at_shift = exp(atexp * (1./temp - 1./mp->reference[TEMPERATURE]));
+	  if(!finite(at_shift)) { at_shift = DBL_MAX; }
+	  d_at_s = -at_shift *atexp /(temp*temp) ;
 #endif
-    }
-  else
-    {
-      at_shift = 1.;
-      d_at_s = 0. ;
+	}
     }
   
   if((at_shift * lambda * gammadot) != 0.)
@@ -1323,7 +1341,7 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   int a, b;
   int var;
   int mdofs=0,vdofs;
-  int i, j;
+  int i, j, imtrx;
 
   dbl gammadot;	                /* strain rate invariant */ 
 
@@ -1360,10 +1378,14 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   lambda = gn_local->lam;
   wlfc2 = gn_local->wlfc2;
 
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
-       {temp = fv->T;}
-  else
-       {temp = upd->Process_Temperature;}
+  temp = upd->Process_Temperature;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if ( pd->e[imtrx][TEMPERATURE] )
+	{
+	  temp = fv->T;
+	}
+    }
 
   if( gn_local->tau_yModel == CONSTANT )
     {
@@ -1380,11 +1402,14 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
     }
   fexp = gn_local->fexp;
   
-  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
-  
-  if ( pd->e[pg->imtrx][R_MESH1] )
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
     {
-      mdofs = ei[pg->imtrx]->dof[R_MESH1];
+      vdofs = ei[imtrx]->dof[VELOCITY1];
+      
+      if ( pd->e[imtrx][R_MESH1] )
+	{
+	  mdofs = ei[imtrx]->dof[R_MESH1];
+	}
     }
 
   var = TEMPERATURE;
@@ -1524,7 +1549,7 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   int var;
   int mdofs=0,vdofs;
 
-  int i, j;
+  int i, j, imtrx;
 
   dbl gammadot;	                /* strain rate invariant */ 
 
@@ -1559,10 +1584,14 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   wlfc2 = gn_local->wlfc2;
   lambda = gn_local->lam;
 
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
-       {temp = fv->T;}
-  else
-       {temp = upd->Process_Temperature;}
+  temp = upd->Process_Temperature;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if ( pd->e[imtrx][TEMPERATURE] )
+	{
+	  temp = fv->T;
+	}
+    }
 
  if(gn_local->mu0Model == LEVEL_SET)
    {
@@ -1662,12 +1691,15 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
        }
    }  
 
-  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
-  
-  if ( pd->e[pg->imtrx][R_MESH1] )
-    {
-      mdofs = ei[pg->imtrx]->dof[R_MESH1];
-    }
+ for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+   {
+     vdofs = ei[imtrx]->dof[VELOCITY1];
+     
+     if ( pd->e[imtrx][R_MESH1] )
+       {
+	 mdofs = ei[imtrx]->dof[R_MESH1];
+       }
+   }
 
   at_shift = 1.;
       wlf_denom = wlfc2 + temp - mp->reference[TEMPERATURE];
@@ -1861,7 +1893,7 @@ suspension_viscosity(int species, /* species for solid volume fraction track */
 		     dbl C )   /* Concentration  */
 {
   int a;
-  int w;
+  int w, imtrx;
 
   dbl mu;   /* viscosity */
 
@@ -1912,27 +1944,25 @@ suspension_viscosity(int species, /* species for solid volume fraction track */
       mp->viscosity = mu;
       mp_old->viscosity = mu_old;
 
-      if (pd->v[pg->imtrx][SHELL_PARTC]  )
-         {
-
-           /* dmu/dc */
-           mp->d_viscosity[SHELL_PARTC] = -mu*nexp/( maxpack - C) ;
-
-           /* d2mu/dc2 .... */
-           mp->d2_viscosity[SHELL_PARTC] = mu0*nexp*(nexp-1.0)*pow( 1.0 
-                                           - C/maxpack,nexp-2. )/maxpack/maxpack;
-         }
-
-      else
-         {
-
-           /* dmu/dc */
-           mp->d_viscosity[MAX_VARIABLE_TYPES+species] = -mu*nexp/( maxpack - C) ;
-
-          /* d2mu/dc2 .... */
-           mp->d2_viscosity[MAX_VARIABLE_TYPES+species]= mu0*nexp*(nexp-1.0)*pow( 1.0 
-                                                         - C/maxpack,nexp-2. )/maxpack/maxpack;
-         }
+      /* dmu/dc */
+      mp->d_viscosity[MAX_VARIABLE_TYPES+species] = -mu*nexp/( maxpack - C) ;
+      
+      /* d2mu/dc2 .... */
+      mp->d2_viscosity[MAX_VARIABLE_TYPES+species]= mu0*nexp*(nexp-1.0)*pow( 1.0 
+						    - C/maxpack,nexp-2. )/maxpack/maxpack;
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+	{
+	  if (pd->v[imtrx][SHELL_PARTC]  )
+	    {
+	      
+	      /* dmu/dc */
+	      mp->d_viscosity[SHELL_PARTC] = -mu*nexp/( maxpack - C) ;
+	      
+	      /* d2mu/dc2 .... */
+	      mp->d2_viscosity[SHELL_PARTC] = mu0*nexp*(nexp-1.0)*pow( 1.0 
+					      - C/maxpack,nexp-2. )/maxpack/maxpack;
+	    }
+	}
  
     }
   else if ( C <= 0. )
@@ -1969,7 +1999,7 @@ carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
 {
   int a, b;
   int var, var_offset;
-  int w;
+  int w, imtrx;
 
   int mdofs=0,vdofs;
 
@@ -2001,11 +2031,14 @@ carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   
   calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
-  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
-  
-  if ( pd->e[pg->imtrx][R_MESH1] )
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
     {
-      mdofs = ei[pg->imtrx]->dof[R_MESH1];
+      vdofs = ei[imtrx]->dof[VELOCITY1];
+      
+      if ( pd->e[imtrx][R_MESH1] )
+	{
+	  mdofs = ei[imtrx]->dof[R_MESH1];
+	}
     }
 
   /* initialize everything */
@@ -2175,7 +2208,7 @@ powerlaw_suspension_viscosity(struct Generalized_Newtonian *gn_local,
 {
   int a, b;
   int var, var_offset;
-  int w;
+  int w, imtrx;
   int mdofs=0,vdofs;
 
   dbl C[MAX_CONC];		/* Convenient local variables */
@@ -2204,11 +2237,14 @@ powerlaw_suspension_viscosity(struct Generalized_Newtonian *gn_local,
 
   calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
-  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
-  
-  if ( pd->e[pg->imtrx][R_MESH1] )
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
     {
-      mdofs = ei[pg->imtrx]->dof[R_MESH1];
+      vdofs = ei[imtrx]->dof[VELOCITY1];
+      
+      if ( pd->e[imtrx][R_MESH1] )
+	{
+	  mdofs = ei[imtrx]->dof[R_MESH1];
+	}
     }
 
   /* initialize everything */
@@ -2386,7 +2422,7 @@ epoxy_viscosity(int species,    /* species number for cure equation */
   dbl deriv;  /* stuff for the first derivative */
   dbl d_deriv; 
   dbl T;      /* Convenient local variables */
-  int var;
+  int var, imtrx;
   int status = 1;
   
   alpha = fv->c[species]; /* extent of reaction */
@@ -2403,10 +2439,14 @@ epoxy_viscosity(int species,    /* species number for cure equation */
     }
     
   
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
-       {T = fv->T;}
-  else
-       {T = upd->Process_Temperature;}
+  T = upd->Process_Temperature;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if ( pd->e[imtrx][TEMPERATURE] )
+	{
+	  T = fv->T;
+	}
+    }
 
   if(T <= 0.)
     {
@@ -2421,39 +2461,38 @@ epoxy_viscosity(int species,    /* species number for cure equation */
   
   /* dmu_dT */
   var = TEMPERATURE;
-  if(pd->v[pg->imtrx][var])
+  mp->d_viscosity[var] = -mu * Aexp/(T*T) ;
+  mp->d2_viscosity[var] 	= -mu* SQUARE( Aexp/(T*T))
+    +2.* mu * Aexp/(T*T*T);
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      if( T <= 0.)
+      if(pd->v[imtrx][var])
 	{
-	  mp->d_viscosity[var] 	= 0.; 
-	  mp->d2_viscosity[var] = 0.; 
-	}
-      else
-	{
-	  mp->d_viscosity[var] = -mu * Aexp/(T*T) ;
-	  mp->d2_viscosity[var] 	= -mu* SQUARE( Aexp/(T*T))
-	    +2.* mu * Aexp/(T*T*T);
+	  if( T <= 0.)
+	    {
+	      mp->d_viscosity[var] 	= 0.; 
+	      mp->d2_viscosity[var] = 0.; 
+	    }
 	}
     }
   
   /* dmu/dc */
   var  = MASS_FRACTION;
-  if(pd->v[pg->imtrx][var])
+  mp->d_viscosity[MAX_VARIABLE_TYPES+species] = 0.;
+  mp->d2_viscosity[MAX_VARIABLE_TYPES+species] = 0.;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      if(alpha < alpha_g)
+      if(pd->v[imtrx][var])
 	{
-	  deriv = exponent/(alpha_g - alpha) + B*log(ratio);
-	  d_deriv = 2.*B/(alpha_g - alpha) + exponent/SQUARE(alpha_g - alpha);
-	  mp->d_viscosity[MAX_VARIABLE_TYPES+species] = mu * deriv;
-	  mp->d2_viscosity[MAX_VARIABLE_TYPES+species] =  mu * deriv * deriv
-	    + mu * d_deriv;
+	  if(alpha < alpha_g)
+	    {
+	      deriv = exponent/(alpha_g - alpha) + B*log(ratio);
+	      d_deriv = 2.*B/(alpha_g - alpha) + exponent/SQUARE(alpha_g - alpha);
+	      mp->d_viscosity[MAX_VARIABLE_TYPES+species] = mu * deriv;
+	      mp->d2_viscosity[MAX_VARIABLE_TYPES+species] =  mu * deriv * deriv
+		+ mu * d_deriv;
+	    }	
 	}
-      else
-	{
-	  mp->d_viscosity[MAX_VARIABLE_TYPES+species] = 0.;
-	  mp->d2_viscosity[MAX_VARIABLE_TYPES+species] = 0.;
-	}
-	
     }
 
   return(status);
@@ -2475,7 +2514,7 @@ sylgard_viscosity(int species,    /* species number for cure equation */
   dbl deriv;  /* stuff for the first derivative */
   dbl d_deriv; 
   dbl T;      /* Convenient local variables */
-  int var;
+  int var, imtrx;
   int status = 1;
   
   alpha = fv->c[species]; /* extent of reaction */
@@ -2498,10 +2537,14 @@ sylgard_viscosity(int species,    /* species number for cure equation */
     }
     
   
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
-       {T = fv->T;}
-  else
-       {T = upd->Process_Temperature;}
+  T = upd->Process_Temperature;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if ( pd->e[imtrx][TEMPERATURE] )
+	{
+	  T = fv->T;
+	}
+    }
 
   if(T <= 0.)
     {
@@ -2516,39 +2559,38 @@ sylgard_viscosity(int species,    /* species number for cure equation */
   
   /* dmu_dT */
   var = TEMPERATURE;
-  if(pd->v[pg->imtrx][var])
-    {
-      if( T <= 0.)
-	{
-	  mp->d_viscosity[var] 	= 0.; 
-	  mp->d2_viscosity[var] = 0.; 
-	}
-      else
-	{
-	  mp->d_viscosity[var] = -mu * Aexp/(T*T) ;
-	  mp->d2_viscosity[var] 	= -mu* SQUARE( Aexp/(T*T))
+  mp->d_viscosity[var] = -mu * Aexp/(T*T) ;
+  mp->d2_viscosity[var] 	= -mu* SQUARE( Aexp/(T*T))
 	    +2.* mu * Aexp/(T*T*T);
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if(pd->v[imtrx][var])
+	{
+	  if( T <= 0.)
+	    {
+	      mp->d_viscosity[var] 	= 0.; 
+	      mp->d2_viscosity[var] = 0.; 
+	    }
 	}
     }
   
   /* dmu/dc */
   var  = MASS_FRACTION;
-  if(pd->v[pg->imtrx][var])
+  mp->d_viscosity[MAX_VARIABLE_TYPES+species] = 0.;
+  mp->d2_viscosity[MAX_VARIABLE_TYPES+species] = 0.;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      if(alpha < alpha_g && alpha > 0.)
+      if(pd->v[imtrx][var])
 	{
-	  deriv = exponent/(alpha_g - alpha);
-	  d_deriv = exponent/SQUARE(alpha_g - alpha);
-	  mp->d_viscosity[MAX_VARIABLE_TYPES+species] = mu * deriv;
-	  mp->d2_viscosity[MAX_VARIABLE_TYPES+species] =  mu * deriv * deriv
-	    + mu * d_deriv;
+	  if(alpha < alpha_g && alpha > 0.)
+	    {
+	      deriv = exponent/(alpha_g - alpha);
+	      d_deriv = exponent/SQUARE(alpha_g - alpha);
+	      mp->d_viscosity[MAX_VARIABLE_TYPES+species] = mu * deriv;
+	      mp->d2_viscosity[MAX_VARIABLE_TYPES+species] =  mu * deriv * deriv
+		+ mu * d_deriv;
+	    }
 	}
-      else
-	{
-	  mp->d_viscosity[MAX_VARIABLE_TYPES+species] = 0.;
-	  mp->d2_viscosity[MAX_VARIABLE_TYPES+species] = 0.;
-	}
-	
     }
 
   return(status);
@@ -2609,7 +2651,7 @@ filled_epoxy_viscosity(int species_sus,	/* species num, solid volume fraction*/
   dbl deriv, d_deriv, deriv_t;
   dbl uu, duu_dT=0, d2uu_dT2, deriv2_t2 ;
   dbl c1, c2, T_g, ln_10;
-  int var;
+  int var, imtrx;
   int status = 1;
   static int gelled=FALSE;
 
@@ -2647,10 +2689,14 @@ filled_epoxy_viscosity(int species_sus,	/* species num, solid volume fraction*/
       exit(-1);
     }
                                        
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
-       {T = fv->T;}
-  else
-       {T = upd->Process_Temperature;}
+  T = upd->Process_Temperature;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if ( pd->e[imtrx][TEMPERATURE] )
+	{
+	  T = fv->T;
+	}
+    }
 
   c1 = Atexp;
   c2 = B;
@@ -2791,7 +2837,7 @@ foam_epoxy_viscosity(int species_fluor, int species_cur, dbl mu0,
   dbl exponent;
   dbl alpha, alpha2, alpha_g2;
   dbl deriv;
-  int j;
+  int j, imtrx;
   int status = 1;
   dbl cVolFrac = 0.0;
 
@@ -2821,12 +2867,15 @@ foam_epoxy_viscosity(int species_fluor, int species_cur, dbl mu0,
       ratio = 100000;
       exponent = 4./.3;
     }
-
-  if (pd->e[pg->imtrx][TEMPERATURE]) {
-    T = fv->T;
-  } else {
-    T = upd->Process_Temperature;
-  }
+  
+  T = upd->Process_Temperature;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if ( pd->e[imtrx][TEMPERATURE] )
+	{
+	  T = fv->T;
+	}
+    }
 
   // Calculate the pure liquid-phase viscosity
   muL = mu0 * pow ( ratio, exponent )* exp(Aexp/T);
@@ -2914,18 +2963,26 @@ thermal_viscosity(dbl mu0,	/* reference temperature fluid viscosity */
   dbl mu;   /* viscosity */
 
   dbl T; /* Convenient local variables */
-  int status = 1;
-
-  if (! pd->v[pg->imtrx][TEMPERATURE] )
-    {
-      return(0);
-    }
+  int status = 0, imtrx;
 
                                        
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
-       {T = fv->T;}
-  else
-       {T = upd->Process_Temperature;}
+  T = upd->Process_Temperature;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if ( pd->e[imtrx][TEMPERATURE] )
+	{
+	  T = fv->T;
+	}
+      if ( pd->v[imtrx][TEMPERATURE] )
+	{
+	  status = 1;
+	}
+    }
+
+  if(status==0)
+    {
+      return(status);
+    }
 
   if( T <= 0.3)
     {
@@ -2983,11 +3040,19 @@ cure_viscosity(int species,	/* species num, solid volume fraction        */
   dbl exponent;
   dbl ratio;
   dbl deriv;  /* stuff for the first derivative */
-  int status = 1;
+  int status = 0, imtrx;
 
-  if (! pd->v[pg->imtrx][MASS_FRACTION] )
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      return(0);
+      if (pd->v[imtrx][MASS_FRACTION] )
+	{
+	  status = 1;
+	}
+    }
+
+  if(status==0)
+    {
+      return(status);
     }
 
   alpha = fv->c[species]; /* extent of reaction */
@@ -3048,11 +3113,19 @@ int bond_viscosity(dbl mu0,         /* reference zero shear rate fluid viscosity
   dbl mu;   /* viscosity */
 
   dbl nn; /* Convenient local variables */
-  int status = 1;
+  int status = 0, imtrx;
 
-  if (! pd->v[pg->imtrx][BOND_EVOLUTION] )
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      return(0);
+      if (pd->v[imtrx][BOND_EVOLUTION] )
+	{
+	  status = 1;
+	}
+    }
+
+  if(status==0)
+    {
+      return(status);
     }
 
                                        
@@ -3086,7 +3159,7 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
   int var;
   int mdofs=0,vdofs;
  
-  int i, j, w;
+  int i, j, w, imtrx;
  
   dbl gammadot;	                /* strain rate invariant */ 
  
@@ -3126,20 +3199,26 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
   ref_conc = gn_local->maxpack;
   conc_exp = gn_local->fexp;
    
- 
-  vdofs = ei[pg->imtrx]->dof[VELOCITY1];
-   
-  if ( pd->e[pg->imtrx][R_MESH1] )
-     {
-       mdofs = ei[pg->imtrx]->dof[R_MESH1];
-     }
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+    {
+      vdofs = ei[pg->imtrx]->dof[VELOCITY1];
+      
+      if ( pd->e[pg->imtrx][R_MESH1] )
+	{
+	  mdofs = ei[pg->imtrx]->dof[R_MESH1];
+	}
+    }
  
  /*  temperature shift factor  */
  
-  if ( pd->e[pg->imtrx][TEMPERATURE] )
-       {temp = fv->T;}
-  else
-       {temp = upd->Process_Temperature;}
+  temp = upd->Process_Temperature;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if ( pd->e[imtrx][TEMPERATURE] )
+	{
+	  temp = fv->T;
+	}
+    }
 
    wlf_denom = wlfc2 + temp - mp->reference[TEMPERATURE];
    if(wlf_denom != 0.)

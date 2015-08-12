@@ -109,7 +109,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
   int eqn, var;
   int peqn, pvar;
 
-  int i, j, status;
+  int i, j, status, imtrx;
 
   dbl v[DIM];			        /* Velocity field. */
   dbl x_dot[DIM];			/* current position field derivative wrt time. */
@@ -265,13 +265,13 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
       v[a] = fv->v[a];
 
       /* note, these are zero for steady calculations */
-      if (  pd->TimeIntegration != STEADY &&  pd->v[pg->imtrx][MESH_DISPLACEMENT1+a] )
+      x_dot[a] = 0.0;
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 	{
-	  x_dot[a] = fv_dot->x[a];
-	}
-      else
-	{
-	  x_dot[a] = 0.;
+	  if (  pd->TimeIntegration != STEADY &&  pd->v[imtrx][MESH_DISPLACEMENT1+a] )
+	    {
+	      x_dot[a] = fv_dot->x[a];
+	    }
 	}
     }
 
@@ -1350,7 +1350,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   int eqn, var;
   int peqn, pvar;
 
-  int i, j, status, mode;
+  int i, j, status, mode, imtrx;
   dbl v[DIM];			        /* Velocity field. */
   dbl x_dot[DIM];			/* current position field derivative wrt time. */
   dbl h3;		        	/* Volume element (scale factors). */
@@ -1507,13 +1507,13 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       v[a] = fv->v[a];
 
       /* note, these are zero for steady calculations */
-      if (  pd->TimeIntegration != STEADY &&  pd->v[pg->imtrx][MESH_DISPLACEMENT1+a] )
+      x_dot[a] = 0.0;
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 	{
-	  x_dot[a] = fv_dot->x[a];
-	}
-      else
-	{
-	  x_dot[a] = 0.;
+	  if (  pd->TimeIntegration != STEADY &&  pd->v[imtrx][MESH_DISPLACEMENT1+a] )
+	    {
+	      x_dot[a] = fv_dot->x[a];
+	    }
 	}
     }
 

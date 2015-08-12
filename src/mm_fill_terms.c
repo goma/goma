@@ -207,7 +207,7 @@ assemble_mesh (double time,
 {
   int eqn, peqn, var, pvar;
   const int dim   = pd->Num_Dim;
-  int p, q, a, b;
+  int p, q, a, b, imtrx;
 
   int w;
 
@@ -410,20 +410,22 @@ assemble_mesh (double time,
   else /* No inertia in an Arbitrary Mesh */
     {
       memset( vconv, 0, sizeof(double)*MAX_PDIM );
-      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
-	memset(d_vconv->X, 0, DIM*DIM*MDE*sizeof(dbl));
-
-
-      if (pd->v[pg->imtrx][VELOCITY1] || pd->v[pg->imtrx][POR_LIQ_PRES])
-	memset(d_vconv->v, 0, DIM*DIM*MDE*sizeof(dbl));
-
-      if (pd->v[pg->imtrx][MASS_FRACTION] || pd->v[pg->imtrx][POR_LIQ_PRES])
-	memset(d_vconv->C, 0, DIM*MAX_CONC*MDE*sizeof(dbl));
-
-
-      if (pd->v[pg->imtrx][TEMPERATURE])
-	memset(d_vconv->T, 0, DIM*MDE*sizeof(dbl) );
-
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+	{
+	  if (pd->v[imtrx][MESH_DISPLACEMENT1])
+	    memset(d_vconv->X, 0, DIM*DIM*MDE*sizeof(dbl));
+	  
+	  
+	  if (pd->v[imtrx][VELOCITY1] || pd->v[imtrx][POR_LIQ_PRES])
+	    memset(d_vconv->v, 0, DIM*DIM*MDE*sizeof(dbl));
+	  
+	  if (pd->v[imtrx][MASS_FRACTION] || pd->v[imtrx][POR_LIQ_PRES])
+	    memset(d_vconv->C, 0, DIM*MAX_CONC*MDE*sizeof(dbl));
+	  
+	  
+	  if (pd->v[pg->imtrx][TEMPERATURE])
+	    memset(d_vconv->T, 0, DIM*MDE*sizeof(dbl) );
+	}
     }
   for ( a=0; a<dim; a++)
     {
@@ -2312,7 +2314,7 @@ assemble_momentum(dbl time,       /* current time */
   int wim;
   int i, j, jk, p, q, a, b, c;
   
-  int ledof, eqn, var, ii, peqn, pvar, w;
+  int ledof, eqn, var, ii, peqn, pvar, w, imtrx;
   
   int *pde = pd->e[pg->imtrx];
   int *pdv = pd->v[pg->imtrx];
@@ -2526,48 +2528,54 @@ assemble_momentum(dbl time,       /* current time */
     }
   /* end Petrov-Galerkin addition */
   
-  if( pd->v[pg->imtrx][POLYMER_STRESS11] )
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      (void)stress_eqn_pointer(v_s);
-
-      v_g[0][0] = VELOCITY_GRADIENT11;
-      v_g[0][1] = VELOCITY_GRADIENT12;
-      v_g[1][0] = VELOCITY_GRADIENT21;
-      v_g[1][1] = VELOCITY_GRADIENT22;
-      v_g[0][2] = VELOCITY_GRADIENT13;
-      v_g[1][2] = VELOCITY_GRADIENT23;
-      v_g[2][0] = VELOCITY_GRADIENT31;
-      v_g[2][1] = VELOCITY_GRADIENT32;
-      v_g[2][2] = VELOCITY_GRADIENT33;
+      if( pd->v[imtrx][POLYMER_STRESS11] )
+	{
+	  (void)stress_eqn_pointer(v_s);
+	  
+	  v_g[0][0] = VELOCITY_GRADIENT11;
+	  v_g[0][1] = VELOCITY_GRADIENT12;
+	  v_g[1][0] = VELOCITY_GRADIENT21;
+	  v_g[1][1] = VELOCITY_GRADIENT22;
+	  v_g[0][2] = VELOCITY_GRADIENT13;
+	  v_g[1][2] = VELOCITY_GRADIENT23;
+	  v_g[2][0] = VELOCITY_GRADIENT31;
+	  v_g[2][1] = VELOCITY_GRADIENT32;
+	  v_g[2][2] = VELOCITY_GRADIENT33;
+	}
     }
 
   /* Set up variables for particle/fluid momentum coupling.
    */
-  if(pd->e[pg->imtrx][R_PMOMENTUM1])
+  particle_momentum_on = 0;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      particle_momentum_on = 1;
-      /* This is the species number of the particle phase. */
-      species = (int) mp->u_density[0];
-      p_vol_frac = fv->c[species];
-      ompvf = 1.0 - p_vol_frac;
-      /* Uncomment this to check for when the particle volume fraction
-       * becomes non-physical.  Beware, however, that the intermediate
-       * solutions may, indeed, become negative while converging to a
-       * physical solution.
-       if(p_vol_frac<0.0 || p_vol_frac>1.0)
-       {
-       if(fabs(p_vol_frac)<1e-14)
-       p_vol_frac=0.0;
-       else
-       {
-       printf("assemble_momentum: p_vol_frac=%g, exiting\n",p_vol_frac);
-       exit(0);
-       }
-       }
-      */
+      if(pd->e[imtrx][R_PMOMENTUM1])
+	{
+	  particle_momentum_on = 1;
+	  /* This is the species number of the particle phase. */
+	  species = (int) mp->u_density[0];
+	  p_vol_frac = fv->c[species];
+	  ompvf = 1.0 - p_vol_frac;
+	  /* Uncomment this to check for when the particle volume fraction
+	   * becomes non-physical.  Beware, however, that the intermediate
+	   * solutions may, indeed, become negative while converging to a
+	   * physical solution.
+	   if(p_vol_frac<0.0 || p_vol_frac>1.0)
+	   {
+	   if(fabs(p_vol_frac)<1e-14)
+	   p_vol_frac=0.0;
+	   else
+	   {
+	   printf("assemble_momentum: p_vol_frac=%g, exiting\n",p_vol_frac);
+	   exit(0);
+	   }
+	   }
+	  */
+	}
     }
-  else
-    particle_momentum_on = 0;
+
 
   /*
    * Material property constants, etc. Any variations for this
@@ -4379,7 +4387,7 @@ assemble_continuity(dbl time_value,   /* current time */
   int p, q, a, b;
 
   int eqn, var;
-  int peqn, pvar;
+  int peqn, pvar, imtrx;
   int w;
 
   int i, j;
@@ -4498,19 +4506,22 @@ assemble_continuity(dbl time_value,   /* current time */
      pd->CoordinateSystem == PROJECTED_CARTESIAN)
     wim = wim+1;
   
-  if (pd->v[pg->imtrx][POLYMER_STRESS11])
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      err = stress_eqn_pointer(v_s);
+      if (pd->v[imtrx][POLYMER_STRESS11])
+	{
+	  err = stress_eqn_pointer(v_s);
 	  
-      v_g[0][0] = VELOCITY_GRADIENT11;
-      v_g[0][1] = VELOCITY_GRADIENT12;
-      v_g[1][0] = VELOCITY_GRADIENT21;
-      v_g[1][1] = VELOCITY_GRADIENT22;
-      v_g[0][2] = VELOCITY_GRADIENT13;
-      v_g[1][2] = VELOCITY_GRADIENT23;
-      v_g[2][0] = VELOCITY_GRADIENT31;
-      v_g[2][1] = VELOCITY_GRADIENT32;
-      v_g[2][2] = VELOCITY_GRADIENT33; 
+	  v_g[0][0] = VELOCITY_GRADIENT11;
+	  v_g[0][1] = VELOCITY_GRADIENT12;
+	  v_g[1][0] = VELOCITY_GRADIENT21;
+	  v_g[1][1] = VELOCITY_GRADIENT22;
+	  v_g[0][2] = VELOCITY_GRADIENT13;
+	  v_g[1][2] = VELOCITY_GRADIENT23;
+	  v_g[2][0] = VELOCITY_GRADIENT31;
+	  v_g[2][1] = VELOCITY_GRADIENT32;
+	  v_g[2][2] = VELOCITY_GRADIENT33; 
+	}
     }
   
   wt = fv->wt;
@@ -16899,7 +16910,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 {
   int w, j, var, var_offset, matrl_species_var_type,
     dropped_last_species_eqn;
-  int species, err;
+  int species, err, imtrx;
   dbl vol=0, rho=0, rho_f, rho_s, pressureThermo, RGAS_CONST;
   dbl avgMolecWeight=0, tmp;
   double *phi_ptr;
@@ -17516,18 +17527,21 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
       if ( d_rho == NULL )
 	{
 	  /* kludge for solidification tracking with phase function 0 */
-	  if(pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY])
+	  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 	    {
-	      ls_old = ls;
-	      ls = pfd->ls[0];
-	      rho = ls_modulate_property( rho,
-					  mp->mp2nd->density_phase[0],
-					  ls->Length_Scale,
-					  (double) mp->mp2nd->densitymask[0],
-					  (double) mp->mp2nd->densitymask[1],
-					  NULL,
-					  &factor );
-	      ls = ls_old;
+	      if(pfd != NULL && pd->e[imtrx][R_EXT_VELOCITY])
+		{
+		  ls_old = ls;
+		  ls = pfd->ls[0];
+		  rho = ls_modulate_property( rho,
+					      mp->mp2nd->density_phase[0],
+					      ls->Length_Scale,
+					      (double) mp->mp2nd->densitymask[0],
+					      (double) mp->mp2nd->densitymask[1],
+					      NULL,
+					      &factor );
+		  ls = ls_old;
+		}
 	    }
           rho = ls_modulate_property( rho,
 				      mp->mp2nd->density,
@@ -29972,20 +29986,23 @@ fluid_stress( double Pi[DIM][DIM],
       pd->CoordinateSystem == PROJECTED_CARTESIAN)
     wim = wim+1;
 
-  if( pd->v[pg->imtrx][POLYMER_STRESS11] )
-    {
-      (void) stress_eqn_pointer(v_s);
-
-      v_g[0][0] = VELOCITY_GRADIENT11;
-      v_g[0][1] = VELOCITY_GRADIENT12;
-      v_g[1][0] = VELOCITY_GRADIENT21;
-      v_g[1][1] = VELOCITY_GRADIENT22;
-      v_g[0][2] = VELOCITY_GRADIENT13;
-      v_g[1][2] = VELOCITY_GRADIENT23;
-      v_g[2][0] = VELOCITY_GRADIENT31;
-      v_g[2][1] = VELOCITY_GRADIENT32;
-      v_g[2][2] = VELOCITY_GRADIENT33;
-    }
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+      {
+	if( pd->v[imtrx][POLYMER_STRESS11] )
+	  {
+	    (void) stress_eqn_pointer(v_s);
+	    
+	    v_g[0][0] = VELOCITY_GRADIENT11;
+	    v_g[0][1] = VELOCITY_GRADIENT12;
+	    v_g[1][0] = VELOCITY_GRADIENT21;
+	    v_g[1][1] = VELOCITY_GRADIENT22;
+	    v_g[0][2] = VELOCITY_GRADIENT13;
+	    v_g[1][2] = VELOCITY_GRADIENT23;
+	    v_g[2][0] = VELOCITY_GRADIENT31;
+	    v_g[2][1] = VELOCITY_GRADIENT32;
+	    v_g[2][2] = VELOCITY_GRADIENT33;
+	  }
+      }
 
   /*
    * Field variables...
@@ -30087,7 +30104,7 @@ fluid_stress( double Pi[DIM][DIM],
 
 
   mu = viscosity(gn, gamma, d_mu);
-  for(imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
       if(pd->v[imtrx][POLYMER_STRESS11])
 	{
@@ -30309,6 +30326,7 @@ fluid_stress( double Pi[DIM][DIM],
 	    }// for mode
 	}    // if POLYMER_STRESS
     }        // for imtrx
+
   /*
    * Calculate the dilational viscosity, if necessary
    */
@@ -30339,16 +30357,18 @@ fluid_stress( double Pi[DIM][DIM],
       }
     }
 
-  if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
+  for(imtrx = 0; imtrx<upd->Total_Num_Matrices; imtrx++) 
     {
-      for ( a=0; a<VIM; a++)
-        {
-          for ( b=0; b<VIM; b++)
-            {
-              Pi[a][b]  += - evss_f * (mu - mus) * gamma_cont[a][b]
-		+ s[a][b];
-            }
-        }
+      if(pd->v[imtrx][POLYMER_STRESS11])
+	{
+	  for(a=0; a<VIM; a++)
+	    {
+	      for(b=0; b<VIM; b++)
+		{
+		  Pi[a][b] += -evss_f*(mu - mus)*gamma_cont[a][b] + s[a][b];
+		}
+	    }
+	}
     }
 
   /*
@@ -30374,19 +30394,22 @@ fluid_stress( double Pi[DIM][DIM],
 	  }
 	}
       }
-      if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      d_Pi->T[p][q][j] -= evss_f * ( d_mu->T[j] - d_mus->T[j] )* gamma_cont[p][q];
-                    }
-                }
+      for(imtrx=0; imtrx<upd->Total_Num_Matrices; imtrx++) 
+	{
+	  if(pd->v[imtrx][POLYMER_STRESS11])
+	    {
+	      for ( p=0; p<VIM; p++)
+		{
+		  for ( q=0; q<VIM; q++)
+		    {
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			{
+			  d_Pi->T[p][q][j] -= evss_f * ( d_mu->T[j] - d_mus->T[j] )* gamma_cont[p][q];
+			}
+		    }
+		}
 	    }
-        }
+	}
     }
 
   var = BOND_EVOLUTION;
@@ -30409,19 +30432,22 @@ fluid_stress( double Pi[DIM][DIM],
 	  }
 	}
       }
-      if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      d_Pi->nn[p][q][j] -= evss_f * ( d_mu->nn[j] - d_mus->nn[j] )* gamma_cont[p][q];
-                    }
-                }
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+	{
+	  if ( pd->v[imtrx][POLYMER_STRESS11] )
+	    {
+	      for ( p=0; p<VIM; p++)
+		{
+		  for ( q=0; q<VIM; q++)
+		    {
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			{
+			  d_Pi->nn[p][q][j] -= evss_f * ( d_mu->nn[j] - d_mus->nn[j] )* gamma_cont[p][q];
+			}
+		    }
+		}
 	    }
-        }
+	}
     }
 
 #ifdef COUPLED_FILL
@@ -30445,19 +30471,22 @@ fluid_stress( double Pi[DIM][DIM],
 	  }
 	}
       }
-      if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      d_Pi->F[p][q][j] -= evss_f * ( d_mu->F[j] - d_mus->F[j] ) * gamma_cont[p][q];
-                    }
-                }
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+	{
+	  if ( pd->v[imtrx][POLYMER_STRESS11] )
+	    {
+	      for ( p=0; p<VIM; p++)
+		{
+		  for ( q=0; q<VIM; q++)
+		    {
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			{
+			  d_Pi->F[p][q][j] -= evss_f * ( d_mu->F[j] - d_mus->F[j] ) * gamma_cont[p][q];
+			}
+		    }
+		}
 	    }
-        }
+	}
     }
 #endif /* COUPLED_FILL */
 
@@ -30488,24 +30517,26 @@ fluid_stress( double Pi[DIM][DIM],
 	  }
 	}
       }
-      if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-		  for( a=0; a<pfd->num_phase_funcs; a++)
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+	{
+	  if ( pd->v[imtrx][POLYMER_STRESS11] )
+	    {
+	      for ( p=0; p<VIM; p++)
+		{
+		  for ( q=0; q<VIM; q++)
 		    {
-		      var = PHASE1 + a;
-		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		      for( a=0; a<pfd->num_phase_funcs; a++)
 			{
-			  d_Pi->pf[p][q][a][j] -= evss_f * ( d_mu->pf[a][j] - d_mus->pf[a][j] ) * gamma_cont[p][q];
+			  var = PHASE1 + a;
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			    {
+			      d_Pi->pf[p][q][a][j] -= evss_f * ( d_mu->pf[a][j] - d_mus->pf[a][j] ) * gamma_cont[p][q];
+			    }
 			}
 		    }
-                }
+		}
 	    }
-        }
-
+	}
     }
 
 
@@ -30583,23 +30614,25 @@ fluid_stress( double Pi[DIM][DIM],
 	  }
 	}
       }
-
-      if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( b=0; b<wim; b++)
-                    {
-                      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                        {
-                          d_Pi->v[p][q][b][j] -= evss_f * ( d_mu->v[b][j] - d_mus->v[b][j] ) * gamma_cont[p][q];
-                        }
-                    }
-                }
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+	{
+	  if ( pd->v[imtrx][POLYMER_STRESS11] )
+	    {
+	      for ( p=0; p<VIM; p++)
+		{
+		  for ( q=0; q<VIM; q++)
+		    {
+		      for ( b=0; b<wim; b++)
+			{
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			    {
+			      d_Pi->v[p][q][b][j] -= evss_f * ( d_mu->v[b][j] - d_mus->v[b][j] ) * gamma_cont[p][q];
+			    }
+			}
+		    }
+		}
 	    }
-        }
+	}
     }
 
   // Vorticity direction dependence for qtensor
@@ -30648,24 +30681,26 @@ fluid_stress( double Pi[DIM][DIM],
 	    }    
 	  }
 	}
-      
-      if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( b=0; b<dim; b++)
-                    {
-                      for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++)
-                        {
-                          d_Pi->X[p][q][b][j] -=
-			    evss_f * (d_mu->X [b][j] - d_mus->X [b][j]) * gamma_cont[p][q];
-                        }
-                    }
-                }
-            }
-        }
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+	{
+	  if ( pd->v[imtrx][POLYMER_STRESS11] )
+	    {
+	      for ( p=0; p<VIM; p++)
+		{
+		  for ( q=0; q<VIM; q++)
+		    {
+		      for ( b=0; b<dim; b++)
+			{
+			  for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++)
+			    {
+			      d_Pi->X[p][q][b][j] -=
+				evss_f * (d_mu->X [b][j] - d_mus->X [b][j]) * gamma_cont[p][q];
+			    }
+			}
+		    }
+		}
+	    }
+	}
     }
 
   if ( d_Pi != NULL && pd->v[pg->imtrx][POLYMER_STRESS11] )
@@ -30747,24 +30782,26 @@ fluid_stress( double Pi[DIM][DIM],
 	  }    
 	}
         
-
-      if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( w=0; w<pd->Num_Species_Eqn; w++)
-                    {
-                      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                        {
-                          d_Pi->C[p][q][w][j] -=
-                            evss_f * ( d_mu->C[w][j] - d_mus->C[w][j] ) * gamma_cont[p][q];
-                        }
-                    }
-                }
-            }
-        }
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+	{
+	  if ( pd->v[imtrx][POLYMER_STRESS11] )
+	    {
+	      for ( p=0; p<VIM; p++)
+		{
+		  for ( q=0; q<VIM; q++)
+		    {
+		      for ( w=0; w<pd->Num_Species_Eqn; w++)
+			{
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			    {
+			      d_Pi->C[p][q][w][j] -=
+				evss_f * ( d_mu->C[w][j] - d_mus->C[w][j] ) * gamma_cont[p][q];
+			    }
+			}
+		    }
+		}
+	    }
+	}
     }
 
   var = PRESSURE;
@@ -30786,20 +30823,22 @@ fluid_stress( double Pi[DIM][DIM],
 	    }
 	  }  
         }
-
-      if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-        {
-          for ( p=0; p<VIM; p++)
-            {
-              for ( q=0; q<VIM; q++)
-                {
-                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      d_Pi->P[p][q][j] -= evss_f * ( d_mu->P[j] - d_mus->P[j] )* gamma_cont[p][q];
-                    }
-                }
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+	{
+	  if ( pd->v[imtrx][POLYMER_STRESS11] )
+	    {
+	      for ( p=0; p<VIM; p++)
+		{
+		  for ( q=0; q<VIM; q++)
+		    {
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			{
+			  d_Pi->P[p][q][j] -= evss_f * ( d_mu->P[j] - d_mus->P[j] )* gamma_cont[p][q];
+			}
+		    }
+		}
 	    }
-        }
+	}
     }
 }
 
@@ -31609,20 +31648,23 @@ calc_pspg( dbl pspg[DIM],
       return 0;
     }
 
-  if( pd->v[pg->imtrx][POLYMER_STRESS11] )
-  {	
-	stress_eqn_pointer(v_s);
-
-	v_g[0][0] = VELOCITY_GRADIENT11;
-	v_g[0][1] = VELOCITY_GRADIENT12;
-	v_g[1][0] = VELOCITY_GRADIENT21;
-	v_g[1][1] = VELOCITY_GRADIENT22;
-	v_g[0][2] = VELOCITY_GRADIENT13;
-	v_g[1][2] = VELOCITY_GRADIENT23;
-	v_g[2][0] = VELOCITY_GRADIENT31;
-	v_g[2][1] = VELOCITY_GRADIENT32;
-	v_g[2][2] = VELOCITY_GRADIENT33;
-  }
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if( pd->v[imtrx][POLYMER_STRESS11] )
+	{	
+	  stress_eqn_pointer(v_s);
+	  
+	  v_g[0][0] = VELOCITY_GRADIENT11;
+	  v_g[0][1] = VELOCITY_GRADIENT12;
+	  v_g[1][0] = VELOCITY_GRADIENT21;
+	  v_g[1][1] = VELOCITY_GRADIENT22;
+	  v_g[0][2] = VELOCITY_GRADIENT13;
+	  v_g[1][2] = VELOCITY_GRADIENT23;
+	  v_g[2][0] = VELOCITY_GRADIENT31;
+	  v_g[2][1] = VELOCITY_GRADIENT32;
+	  v_g[2][2] = VELOCITY_GRADIENT33;
+	}
+    }
 
   /* initialize dependencies */
   memset( d_tau_pspg_dv, 0, sizeof(double) * DIM*MDE);
@@ -31637,20 +31679,18 @@ calc_pspg( dbl pspg[DIM],
 	 d_div_tau_p_dv, d_div_tau_p_dX, w0); */
     }
 
-
-  if(pd->e[pg->imtrx][R_PMOMENTUM1])
+  particle_momentum_on = 0;
+  species = -1;
+  ompvf = 1.0;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      particle_momentum_on = 1;
-      species = (int) mp->u_density[0];
-      ompvf = 1.0 - fv->c[species];
+      if(pd->e[imtrx][R_PMOMENTUM1])
+	{
+	  particle_momentum_on = 1;
+	  species = (int) mp->u_density[0];
+	  ompvf = 1.0 - fv->c[species];
+	}
     }
-  else
-    {
-      particle_momentum_on = 0;
-      species = -1;
-      ompvf = 1.0;
-    }
-
 
   // Global average for pspg_global's element size
   h_elem = h_elem_avg;
@@ -31760,15 +31800,14 @@ calc_pspg( dbl pspg[DIM],
 
   for ( a=0; a<wim; a++)
     {
-      if (  pd->TimeIntegration != STEADY &&  pd->v[pg->imtrx][MESH_DISPLACEMENT1+a] )
+      x_dot[a] = 0.0;
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 	{
-	  x_dot[a] = fv_dot->x[a];
+	  if (  pd->TimeIntegration != STEADY &&  pd->v[imtrx][MESH_DISPLACEMENT1+a] )
+	    {
+	      x_dot[a] = fv_dot->x[a];
+	    }
 	}
-      else
-	{
-	  x_dot[a] = 0.;
-	}
-
       if (  pd->TimeIntegration != STEADY )
 	{
 	  v_dot[a] = fv_dot->v[a];
