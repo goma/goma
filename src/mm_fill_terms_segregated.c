@@ -256,15 +256,18 @@ assemble_aux_u(dbl time,   // Current time
 {
   int dim, wim, eqn, peqn, var, pvar, ledof, status=0;
   int a, b, i, ii, j, p, q;
+  int mode, imtrx;
   int *pde = pd->e[pg->imtrx];
   int *pdv = pd->v[pg->imtrx];
 
   // Density and viscosity
-  dbl rho, mu_star, mu_old;
+  dbl rho, mu, mu_s, mu_p, mu_num, evss_f;
+
 
   // Relevant field variable quantities
   dbl *v_star, *v_old, *grad_v_star[DIM], *grad_v_old[DIM], P_old;
-  dbl gamma_star[DIM][DIM], gamma_old[DIM][DIM];
+  dbl gamma_star[DIM][DIM], gamma_old[DIM][DIM], gamma_cont[DIM][DIM];
+  dbl s[DIM][DIM];  
 
   // Body force
   dbl f[DIM];
@@ -286,7 +289,7 @@ assemble_aux_u(dbl time,   // Current time
   dbl phi_j, *phi_j_vector;
   
   // Equation term multipliers
-  dbl advection_etm, diffusion_etm, mass_etm, source_etm;
+  dbl advection_etm, diffusion_etm, mass_etm, source_etm, stress_on;
   
   
   // Set equation index
@@ -317,6 +320,7 @@ assemble_aux_u(dbl time,   // Current time
   //v_old = (pg->sbcfv).v_old;
   //P_old = (pg->sbcfv).P_old;
   P_old = fv_old->P;
+  
 
   for(a=0; a<VIM; a++)
     {
@@ -335,9 +339,68 @@ assemble_aux_u(dbl time,   // Current time
 	}
     }
 
+  evss_f = 0.0;
+  for(imtrx = 0; imtrx<upd->Total_Num_Matrices; imtrx++) 
+    {
+      if(pd->v[imtrx][POLYMER_STRESS11] && (vn->evssModel == EVSS_F))
+	{
+	  evss_f = 1.0;
+	}
+    }
+  
+  if ( evss_f )
+    {
+      for ( a=0; a<VIM; a++)
+	{
+	  for ( b=0; b<VIM; b++)
+	    {
+	      gamma_cont[a][b] = fv_old->G[a][b] + fv_old->G[b][a] ;
+	    }
+	}
+    }
+  else
+    {
+      memset(gamma_cont, 0, sizeof(double)*DIM*DIM);
+    }
+  
+  for(imtrx = 0; imtrx<upd->Total_Num_Matrices; imtrx++) 
+    {
+      if ( pd->v[imtrx][POLYMER_STRESS11] )
+	{
+	  stress_on = 1;
+	  memset(s, 0, sizeof(dbl)*DIM*DIM);
+	  for(a=0; a<VIM; a++)
+	    {
+	      for(b=0; b<VIM; b++)
+		{
+		  for(mode=0; mode<vn->modes; mode++)
+		    {
+		      s[a][b] += fv_old->S[mode][a][b];
+		    }
+		}
+	    }
+	}
+    }
+  
+
+  mu = viscosity(gn, gamma, NULL);
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if(pd->v[imtrx][POLYMER_STRESS11])
+	{
+	  mu_s = viscosity(gn, gamma, NULL);	  	  
+	  mu_num = numerical_viscosity(s, gamma_cont, NULL, NULL);
+	  
+	  mu = mu_s*mu_num;
+	  for ( mode=0; mode<vn->modes; mode++)
+	    {
+	      mu_p = viscosity(ve[mode]->gn, gamma, NULL);	      
+	      mu += mu_p*mu_num;
+	    }
+	}
+    }
+
   rho = density(NULL, time);
-  mu_old = viscosity(gn, gamma_old, NULL);
-  mu_star = viscosity(gn, gamma_star, NULL);
   (void) momentum_source_term(f, df, time);
 
 
@@ -403,13 +466,22 @@ assemble_aux_u(dbl time,   // Current time
 			{
 			  for(q=0; q<VIM; q++) 
 			    {
-			      diffusion += mu_star/2.0*gamma_star[q][p]*grad_phi_i_e_a[p][q];
-			      diffusion += mu_old/2.0*gamma_old[q][p]*grad_phi_i_e_a[p][q];
+			      diffusion += mu/2.0*gamma_star[q][p]*grad_phi_i_e_a[p][q];
+			      diffusion += mu/2.0*gamma_old[q][p]*grad_phi_i_e_a[p][q];
 			      
 			      if(p==q)
 				{
 				  diffusion -= P_old*grad_phi_i_e_a[p][q];
 				}
+
+			      if(stress_on)
+				{
+				  diffusion += s[q][p]*grad_phi_i_e_a[p][q];
+				  if(evss_f)
+				    {
+				      diffusion -= evss_f*(mu-mu_s)*gamma_cont[q][p]*grad_phi_i_e_a[p][q];
+				    }
+				}			     
 			    }
 			}		      
 		      diffusion *= h3*wt*det_J;
@@ -494,7 +566,7 @@ assemble_aux_u(dbl time,   // Current time
 					  //diffusion_a += bf[VELOCITY1+p]->grad_phi_e[j][b][q][p];
 					  //diffusion_a += bf[VELOCITY1+q]->grad_phi_e[j][b][p][q];
 
-					  diffusion += mu_star/2.0*diffusion_a*grad_phi_i_e_a[p][q];
+					  diffusion += mu/2.0*diffusion_a*grad_phi_i_e_a[p][q];
 					  //diffusion += d_mu->v[b][j]*gamma_star[p][q]*grad_phi_i_e_a[p][q];
 					}
 				    }
