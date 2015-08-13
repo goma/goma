@@ -2372,17 +2372,15 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
           int steady_state_reached = TRUE;
           double max_distance = 0;
 
-          for (i = 0; i < upd->Total_Num_Matrices; i++) {
-            double distance = vector_distance(NumUnknowns[i], x[i], x_old[i]);
-            if (distance > tran->steady_state_tolerance) {
-              steady_state_reached = FALSE;
-
-            }
-            if (distance > max_distance) max_distance = distance;
+          double distance = vector_distance(NumUnknowns[0], x, x_old);
+          if (distance > tran->steady_state_tolerance) {
+            steady_state_reached = FALSE;
           }
+          max_distance = distance;
+
 
           if (ProcID == 0) {
-            printf("\nMaximum Delta x %g\n", max_distance);
+            printf("\nDelta x %g\n", max_distance);
           }
 
           if (steady_state_reached) {
