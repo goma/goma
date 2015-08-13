@@ -2366,6 +2366,34 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	  }
 	}
 
+        /* Check if steady state has been reached */
+        if (tran->march_to_steady_state && n > 0) {
+          /* for now check last two matrices */
+          int steady_state_reached = TRUE;
+          double max_distance = 0;
+
+          for (i = 0; i < upd->Total_Num_Matrices; i++) {
+            double distance = vector_distance(NumUnknowns[i], x[i], x_old[i]);
+            if (distance > tran->steady_state_tolerance) {
+              steady_state_reached = FALSE;
+
+            }
+            if (distance > max_distance) max_distance = distance;
+          }
+
+          if (ProcID == 0) {
+            printf("\nMaximum Delta x %g\n", max_distance);
+          }
+
+          if (steady_state_reached) {
+            if (ProcID == 0) {
+              printf("\n Steady state reached \n");
+            }
+            goto free_and_clear;
+          }
+        }
+
+
 	if (time1 >= (ROUND_TO_ONE * TimeMax)) i_print = 1;
 
 	/* Dump out user specified information to separate file.
