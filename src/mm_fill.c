@@ -488,8 +488,8 @@ matrix_fill(
    *
    */
 
-  if ((zeroCA == 1) || ((Linear_Solver != FRONT && ielem == exo->eb_ptr[0]) ||
-			(Linear_Solver == FRONT && ielem == exo->elem_order_map[0]-1)))
+  if (Proc_NS_List_Length > 0 && ((zeroCA == 1) || ((Linear_Solver != FRONT && ielem == exo->eb_ptr[0]) ||
+                                                    (Linear_Solver == FRONT && ielem == exo->elem_order_map[0]-1))))
     {
       int nsp, nspk, count=-1;
       memset( CA_fselem, -1, sizeof(int)*MAX_CA);
