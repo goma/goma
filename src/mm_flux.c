@@ -109,6 +109,7 @@ evaluate_flux(
   int i;			/* Index for the local node number - row    */
   int ip = 0, a, b, c, p, w = -1;
   int mn;
+  int imtrx;
   int var;
   int *n_dof=NULL;
   int dof_map[MDE];
@@ -337,6 +338,10 @@ evaluate_flux(
 	   * routine should not write onto "x"...
 	   */
 
+          err = load_elem_dofptr_all(elem_list[i], exo);
+          EH(err, "load_elem_dofptr_all");
+
+
 	  err = load_elem_dofptr( elem_list[i], 
 				  (Exo_DB*) exo,
 				  (dbl *) x,
@@ -501,6 +506,10 @@ evaluate_flux(
 			  /* precalculate variables at  current integration pt.*/
 			  err = load_fv();
 			  EH( err, "load_fv");
+
+                          err = load_fv_all();
+                          EH( err, "load_fv_all");
+
 			  
 			  err = load_bf_grad();
 			  EH( err, "load_bf_grad");
@@ -518,6 +527,9 @@ evaluate_flux(
 			   */
 			  err = load_fv_grads();
 			  EH( err, "load_fv_grads");
+
+                          err = load_fv_grads_all();
+
 			  
 			  err = load_fv_mesh_derivs(1);
 			  EH( err, "load_fv_mesh_derivs");
@@ -694,19 +706,21 @@ evaluate_flux(
 		 *  assume only EVSS_F formulation for now
 		 */
   			memset( ves, 0, sizeof(dbl)*DIM*DIM);
-  			if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
-    			  {
-			    for ( a=0; a<VIM; a++)
-        	              {
-			        for ( b=0; b<VIM; b++)
-            			   {
-			             for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
-                		       {
-                  			ves[a][b] += fv->S[ve_mode][a][b];
+                        for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+                          if ( pd->v[imtrx][POLYMER_STRESS11] )
+                            {
+                              for ( a=0; a<VIM; a++)
+                                {
+                                  for ( b=0; b<VIM; b++)
+                                    {
+                                      for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                                        {
+                                          ves[a][b] += fv->S[ve_mode][a][b];
                 			}
-            			   }
-        		      }
-    			   }
+                                    }
+                                }
+                            }
+                        }
 
 		/*
 		 * OK, let's simplify things by computing the viscous
@@ -1967,6 +1981,10 @@ evaluate_flux(
  	      
  			err = load_fv();
  			EH( err, "load_fv");
+
+                        err = load_fv_all();
+                        EH( err, "load_fv_all");
+
  
 			err = load_bf_grad();
 			EH( err, "load_bf_grad");
@@ -1984,6 +2002,9 @@ evaluate_flux(
 	  */
 	 		err = load_fv_grads();
 	 		EH( err, "load_fv_grads");
+
+                        err = load_fv_grads_all();
+
 			  
 	 		err = load_fv_mesh_derivs(1);
 	 		EH( err, "load_fv_mesh_derivs");
@@ -2145,25 +2166,27 @@ evaluate_flux(
 			  for( b=0 ; b < dim ; b++)
 			    {
 			      var = VELOCITY1 + b ;
+                              int imtrx;
+                              for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+                                if( pd->v[imtrx][var] )
+                                  {
+                                    for(j=0 ; j < ei[imtrx]->dof[var]; j++)
+                                      {
+                                        d_term = 0;
 
-			      if( pd->v[pg->imtrx][var] )
-				{
-				  for(j=0 ; j < ei[pg->imtrx]->dof[var]; j++)
-				    {
-				      d_term = 0;
-
-				      for( a=0; a < dim ; a++) 
-					{
-					  d_term += weight * det * fv->snormal[a] *
-					    ( mu * ( bf[var]->grad_phi_e[j][b][dir][a] +
-						     bf[var]->grad_phi_e[j][b][a][dir] ) + 
-					      d_mu->v[b][j] * ( gamma[dir][a] )  +
-					      -rho * ( bf[var]->phi[j]*delta(dir,b) * fv->v[a] +
-						       bf[var]->phi[j]*delta(a,b) *( fv->v[dir] - x_dot[dir] ) ) );
-					}
-				      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
-				    }
-				}
+                                        for( a=0; a < dim ; a++) 
+                                          {
+                                            d_term += weight * det * fv->snormal[a] *
+                                              ( mu * ( bf[var]->grad_phi_e[j][b][dir][a] +
+                                                       bf[var]->grad_phi_e[j][b][a][dir] ) + 
+                                                d_mu->v[b][j] * ( gamma[dir][a] )  +
+                                                -rho * ( bf[var]->phi[j]*delta(dir,b) * fv->v[a] +
+                                                         bf[var]->phi[j]*delta(a,b) *( fv->v[dir] - x_dot[dir] ) ) );
+                                          }
+                                        J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += d_term;
+                                      }
+                                  }
+                              }
 			    }
 
 			  var = PRESSURE ;
@@ -3913,6 +3936,9 @@ evaluate_flux(
                      (mn == map_mat_index(blk_id) && 
                       dpi->elem_owner[corner_elem] == ProcID)) {
 
+                   err = load_elem_dofptr_all(corner_elem, exo);
+                   EH(err, "load_elem_dofptr_all");
+
 	  	   err = load_elem_dofptr( corner_elem, 
 				  (Exo_DB*) exo,
 				  (dbl *) x,
@@ -3947,6 +3973,7 @@ evaluate_flux(
             	   EH( err, "beer_belly");
 
             	   err = load_fv();
+                   err = load_fv_all();
             	   EH( err, "load_fv");
 
             	   err = load_bf_grad();
@@ -3964,6 +3991,9 @@ evaluate_flux(
                                            id_local_elem_coord);
 	 	   err = load_fv_grads();
 	 	   EH( err, "load_fv_grads");
+
+
+	 	   err = load_fv_grads_all();
 			  
 	 	   err = load_fv_mesh_derivs(1);
 	 	   EH( err, "load_fv_mesh_derivs");
@@ -4457,6 +4487,9 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 	  /*needed for saturation hyst. func. */
 	  PRS_mat_ielem = ei[pg->imtrx]->ielem - exo->eb_ptr[find_elemblock_index(ei[pg->imtrx]->ielem, exo)]; 
 
+            err = load_elem_dofptr_all(elem, exo);
+            EH(err, "load_elem_dofptr_all");
+
           err = load_elem_dofptr(elem, (Exo_DB*) exo,
 			         (dbl *) x, (dbl *) x, (dbl *) xdot,
 				 (dbl *) xdot, (dbl *) x, 0);
@@ -4601,6 +4634,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
  	      
  	     	err = load_fv();
  	     	EH( err, "load_fv");
+                load_fv_all();
  
  		fprintf(jfp,"%d %d %g %g %g\n",elem,i,fv->x[0],fv->x[1],fv->x[2]);
  		}
@@ -4648,6 +4682,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 	      
 	     err = load_fv();
 	     EH( err, "load_fv");
+             load_fv_all();
 
 	     err = load_bf_grad();
 	     EH( err, "load_bf_grad");
@@ -4659,6 +4694,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 	      }
 
 	     err = load_fv_grads();
+             load_fv_grads_all();
 	     EH( err, "load_fv_grads");	  
       
 	     if ( pd->e[pg->imtrx][R_MESH1] )
@@ -5740,6 +5776,9 @@ evaluate_global_flux (const Exo_DB *exo,
 	  if (( num_exterior_faces = get_exterior_faces( elem, exterior_faces, exo, dpi ) ) > 0 ) /* and if it has exterior */
 	    {
 
+            err = load_elem_dofptr_all(elem, exo);
+            EH(err, "load_elem_dofptr_all");
+
 	      err = load_elem_dofptr(elem, (Exo_DB*) exo,
 				     (dbl *) x, (dbl *) x, (dbl *) x,
 				     (dbl *) x, (dbl *) x, 0);
@@ -5771,6 +5810,7 @@ evaluate_global_flux (const Exo_DB *exo,
 		      /* precalculate variables at  current integration pt.*/
 		      err = load_fv();
 		      EH( err, "load_fv");
+                      load_fv_all();
 		  
 		      err = load_bf_grad();
 		      EH( err, "load_bf_grad");
@@ -5789,6 +5829,7 @@ evaluate_global_flux (const Exo_DB *exo,
 		       */
 
 		      err = load_fv_grads();
+                      load_fv_grads_all();
 		      EH( err, "load_fv_grads");
 
 		      compute_surface_integrand( quantity, elem, species_id, 
@@ -6141,6 +6182,8 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	   * Yes, "x" gets recycled like garbage. Fortunately, this 
 	   * routine should not write onto "x"...
 	   */
+            err = load_elem_dofptr_all(elem_list[i], exo);
+            EH(err, "load_elem_dofptr_all");
 
 	  err = load_elem_dofptr(elem_list[i], (Exo_DB*) exo,
 				 (dbl *) x, (dbl *) &x_sens_p[vector_id][0],
@@ -6303,6 +6346,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	      /* precalculate variables at  current integration pt.*/
 	      err = load_fv();
 	      EH( err, "load_fv");
+              load_fv_all();
 
 	      err = load_fv_sens();
 	      EH( err, "load_fv_sens");
@@ -6321,6 +6365,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	     * Gauss point.
 	     */
 	    err = load_fv_grads();
+            load_fv_grads_all();
 	    EH( err, "load_fv_grads");
 
 	    err = load_fv_grads_sens();
@@ -7327,6 +7372,9 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                      (mn == map_mat_index(mat_id) && 
                       dpi->elem_owner[corner_elem] == ProcID)) {
 
+            err = load_elem_dofptr_all(corner_elem, exo);
+            EH(err, "load_elem_dofptr_all");
+
 	  	   err = load_elem_dofptr( corner_elem, 
 				  (Exo_DB*) exo,
 				  (dbl *) x,
@@ -7362,6 +7410,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 
             	   err = load_fv();
             	   EH( err, "load_fv");
+                   load_fv_all();
 
                    err = load_fv_sens();
                    EH( err, "load_fv_sens");
@@ -7380,6 +7429,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                                            num_nodes_on_side,
                                            id_local_elem_coord);
 	 	   err = load_fv_grads();
+                   load_fv_grads_all();
 	 	   EH( err, "load_fv_grads");
 			  
                    err = load_fv_grads_sens();

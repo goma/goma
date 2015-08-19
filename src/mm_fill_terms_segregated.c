@@ -289,7 +289,7 @@ assemble_aux_u(dbl time,   // Current time
   dbl phi_j, *phi_j_vector;
   
   // Equation term multipliers
-  dbl advection_etm, diffusion_etm, mass_etm, source_etm, stress_on;
+  dbl advection_etm, diffusion_etm, mass_etm, source_etm, stress_on=0;
   
   
   // Set equation index
