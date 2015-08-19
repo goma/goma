@@ -466,12 +466,12 @@ assemble_aux_u(dbl time,   // Current time
 			{
 			  for(q=0; q<VIM; q++) 
 			    {
-			      diffusion += mu/2.0*gamma_star[q][p]*grad_phi_i_e_a[p][q];
-			      diffusion += mu/2.0*gamma_old[q][p]*grad_phi_i_e_a[p][q];
+			      diffusion += mu*gamma_star[q][p]*grad_phi_i_e_a[p][q];
+			      //diffusion += mu/2.0*gamma_old[q][p]*grad_phi_i_e_a[p][q];
 			      
 			      if(p==q)
 				{
-				  diffusion -= P_old*grad_phi_i_e_a[p][q];
+				  //diffusion -= P_old*grad_phi_i_e_a[p][q];
 				}
 
 			      if(stress_on)
@@ -566,7 +566,7 @@ assemble_aux_u(dbl time,   // Current time
 					  //diffusion_a += bf[VELOCITY1+p]->grad_phi_e[j][b][q][p];
 					  //diffusion_a += bf[VELOCITY1+q]->grad_phi_e[j][b][p][q];
 
-					  diffusion += mu/2.0*diffusion_a*grad_phi_i_e_a[p][q];
+					  diffusion += mu*diffusion_a*grad_phi_i_e_a[p][q];
 					  //diffusion += d_mu->v[b][j]*gamma_star[p][q]*grad_phi_i_e_a[p][q];
 					}
 				    }
@@ -696,7 +696,8 @@ assemble_press_poisson(dbl time,  // Current time
 	    {
 	      for(a=0; a<wim; a++)
 		{
-		  diffusion += grad_P_star[a]*grad_phi[i][a];
+		  diffusion += (grad_P_star[a]+grad_P_old[a])*grad_phi[i][a];
+		  //diffusion += grad_P_star[a]*grad_phi[i][a];
 		}
 	      diffusion *= h3*wt*det_J;
 	      diffusion *= diffusion_etm;
@@ -862,7 +863,8 @@ int assemble_press_proj(dbl time,  // Current time
 		      //  diffusion -= P_star*grad_phi_i_e_a[b][b];
 		      //}
 
-		      diffusion += grad_P_star[a]*phi_i;
+		      diffusion += (grad_P_star[a]+grad_P_old[a])*phi_i;
+		      //diffusion += grad_P_star[a]*phi_i;
 		      diffusion *= h3*wt*det_J;
 		      diffusion *= diffusion_etm;
 		    }
@@ -1035,6 +1037,7 @@ assemble_press_update(dbl time,  // Current time
 	  if(pde[eqn] & T_SOURCE)
 	    {
 	      mass += P - P_star - P_old;
+	      //mass += P - P_star;
 	      mass *= phi_i*h3*wt*det_J;
 	      mass *= mass_etm;
 	    }
@@ -1043,7 +1046,7 @@ assemble_press_update(dbl time,  // Current time
 	  diffusion = 0.0;
 	  if(pde[eqn] & T_ADVECTION)
 	    {
-	      diffusion += mu_star/2.0*div_v_star*phi_i;
+	      diffusion += mu_star*div_v_star*phi_i;
 	      /*	      
 	      for(a=0; a<wim; a++)
 		{
