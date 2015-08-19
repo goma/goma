@@ -88,7 +88,7 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 "sparse.tar.gz" 
 "superlu_dist_2.3.tar.gz" \
 "y12m-1.0.tar.gz" \
-"trilinos-12.0.1-Source.tar.bz2" \
+"trilinos-12.2.1-Source.tar.bz2" \
 "scalapack-2.0.2.tgz" \
 "MUMPS_4.10.0.tar.gz" \
 "SuiteSparse-4.4.4.tar.gz" \
@@ -106,7 +106,7 @@ ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "1566d914d1035ac17b73fe9bc0eed02a" \
 "8cf8cb964bb25ff6981f994b7e794f29" \
 "eed01310baca61f22fb8a88a837d2ae3" \
-"19efcadf25c80b834f7c910ccfcca290" \
+"760f14cbce482b4b9a41d1c18297b531" \
 "2f75e600a2ba155ed9ce974a1c4b536f" \
 "959e9981b606cd574f713b8422ef0d9f" \
 "e0af74476935c9ff6d971df8bb6b82fc" \
@@ -124,7 +124,7 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://sourceforge.net/projects/sparse/files/sparse/sparse1.4b/sparse1.4b.tar.gz/download" \
 "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_2.3.tar.gz" \
 "http://sisyphus.ru/cgi-bin/srpm.pl/Branch5/y12m/getsource/0" \
-"http://trilinos.csbsju.edu/download/files/trilinos-12.0.1-Source.tar.bz2" \
+"http://trilinos.csbsju.edu/download/files/trilinos-12.2.1-Source.tar.bz2" \
 "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz" \
 "http://mumps.enseeiht.fr/MUMPS_4.10.0.tar.gz" \
 "http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.4.4.tar.gz" \
@@ -733,9 +733,9 @@ fi
 
 #continue_check
 #make trilinos
-rm -rf $GOMA_LIB/trilinos-12.0.1-Temp
-mkdir $GOMA_LIB/trilinos-12.0.1-Temp
-cd $GOMA_LIB/trilinos-12.0.1-Temp
+rm -rf $GOMA_LIB/trilinos-12.2.1-Temp
+mkdir $GOMA_LIB/trilinos-12.2.1-Temp
+cd $GOMA_LIB/trilinos-12.2.1-Temp
 
 rm -f CMakeCache.txt
 
@@ -753,7 +753,7 @@ export PATH=$GOMA_LIB/cmake-2.8.12.2/bin:$PATH
 MPI_LIBS="-LMPI_BASE_DIR/lib -lmpi_f90 -lmpi_f77 -lmpi"
 SEACAS_LIBS="-L${GOMA_LIB}/hdf5-1.8.15/lib -lhdf5_hl -lhdf5 -lz -lm"
 # Install directory
-TRILINOS_INSTALL=$GOMA_LIB/trilinos-12.0.1-Built
+TRILINOS_INSTALL=$GOMA_LIB/trilinos-12.2.1-Built
 #continue_check
 
 
@@ -836,7 +836,7 @@ cmake \
 -D Amesos_ENABLE_UMFPACK:BOOL=ON \
 -D Amesos_ENABLE_MUMPS:BOOL=ON \
 $EXTRA_ARGS \
-$GOMA_LIB/trilinos-12.0.1-Source
+$GOMA_LIB/trilinos-12.2.1-Source
 
 
 
