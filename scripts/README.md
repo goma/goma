@@ -20,6 +20,7 @@ Dependencies for these scripts are:
 * gcc
 * g++
 * gfortran
+* m4
 * zlib library
 * libX11 library             
 
@@ -71,10 +72,11 @@ Description
 	    - gcc
 	    - gcc-g++
 	    - gcc-gfortran
+	    - m4
 	    - zlib
 	    - libX11
 
-	A command such as 'yum install gcc-c++ gcc-gfortran
+	A command such as 'yum install gcc-c++ gcc-gfortran m4
 	zlib-static libX11-devel' would ensure these packages are
 	available on an enterprise linux distribution (e.g. CentOS,
 	Redhat, Fedora, etc.).
