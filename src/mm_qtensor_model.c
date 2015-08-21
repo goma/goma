@@ -1601,7 +1601,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
 		    int w)                      /* species number */
 {
   int a, b, i, j, var;
-  int p, q;
+  int p, q, imtrx, vort_dir_on=0;
   int status=1;
   dbl gammadot, *grad_gammadot, gamma_dot[DIM][DIM];
 
@@ -1647,8 +1647,17 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
   dbl d_VQVt_grad_Y_dvd[DIM][DIM][MDE];
 
   dbl d_div_gdYVQVt_dvd[DIM][DIM][MDE];
+  
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if(pd->e[imtrx][VORT_DIR1])
+	{
+	  vort_dir_on = 1;
+	}
+    }
 
-  if(!pd->e[pg->imtrx][VORT_DIR1])
+
+  if(!vort_dir_on)
     {
       EH(-1, "Cannot use this QTENSOR model without the VORT_DIR{1,2,3} equations/variables active!");
       exit(-1);

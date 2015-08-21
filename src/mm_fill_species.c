@@ -9332,7 +9332,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 			double dt,
 			double tt)
 {
-  int dim, p, q, b, var, i, w, w1;
+  int dim, p, q, b, var, i, w, w1, imtrx, mesh_inertia_and_disp_on=0;
   double volsolid, volsolid_old;
   
   dim = pd->Num_Dim;
@@ -9359,10 +9359,13 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
       vconv[p] = fv->v[p];
       if (pd->TimeIntegration != STEADY) {
 	vconv_old[p] = fv_old->v[p];
-	if (pd->v[pg->imtrx][R_MESH1]) { 
-	  vconv[p]     -= fv_dot->x[p];
-	  vconv_old[p] -= fv_dot_old->x[p];
-	}
+	for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+	  {
+	    if (pd->v[imtrx][R_MESH1]) { 
+	      vconv[p]     -= fv_dot->x[p];
+	      vconv_old[p] -= fv_dot_old->x[p];
+	    }
+	  }
       } else {
         vconv_old[p] = 0.;
       }
@@ -9419,160 +9422,162 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 
        /* calculate (sum diffusion flux)/solid volume frac. and it's derivatives 
 	*  v_solvent_flux  */
-
-       if (pd->v[pg->imtrx][MASS_FRACTION])   
-	 /* if no solvents - then no convective velocity */
+       for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 	 {
-	   /* calculate volume fraction of solids and total diffusion flux */
-        switch (mp->Species_Var_Type)
-                {
-                case SPECIES_DENSITY:
-	                volsolid = 1.;
-	                volsolid_old = 1.;
-                        for(w=0 ; w<pd->Num_Species_Eqn ; w++)
-	                   {
-	                    volsolid -= fv->c[w]*mp->specific_volume[w];
-	                    if ( pd->TimeIntegration != STEADY )
-		             volsolid_old -= fv_old->c[w]*mp->specific_volume[w];
-	                   }
-                        break;
-                case SPECIES_CONCENTRATION:
-	                volsolid = 1.;
-	                volsolid_old = 1.;
-                        for(w=0 ; w<pd->Num_Species_Eqn ; w++)
-	                   {
-	                    volsolid -= fv->c[w]*mp->molar_volume[w];
-	                    if ( pd->TimeIntegration != STEADY )
-		             volsolid_old -= fv_old->c[w]*mp->molar_volume[w];
-	                   }
-                        break;
-                default:
-	                volsolid = 1.;
-	                volsolid_old = 1.;
-                        for(w=0 ; w<pd->Num_Species_Eqn ; w++)
-	                   {
-	                    volsolid -= fv->c[w];
-	                    if ( pd->TimeIntegration != STEADY )
-		                     volsolid_old -= fv_old->c[w];
-	                   }
-                        break;
-                }
-   if( volsolid <= 0)
-        {
-        fprintf(stderr,"nonvolatile fraction %g %g \n",volsolid,fv->c[0]);
-        WH(-1,"negative nonvolatile volume fraction");
-        }
+	   if (pd->v[imtrx][MASS_FRACTION])   
+	     /* if no solvents - then no convective velocity */
+	     {
+	       /* calculate volume fraction of solids and total diffusion flux */
+	       switch (mp->Species_Var_Type)
+		 {
+		 case SPECIES_DENSITY:
+		   volsolid = 1.;
+		   volsolid_old = 1.;
+		   for(w=0 ; w<pd->Num_Species_Eqn ; w++)
+		     {
+		       volsolid -= fv->c[w]*mp->specific_volume[w];
+		       if ( pd->TimeIntegration != STEADY )
+			 volsolid_old -= fv_old->c[w]*mp->specific_volume[w];
+		     }
+		   break;
+		 case SPECIES_CONCENTRATION:
+		   volsolid = 1.;
+		   volsolid_old = 1.;
+		   for(w=0 ; w<pd->Num_Species_Eqn ; w++)
+		     {
+		       volsolid -= fv->c[w]*mp->molar_volume[w];
+		       if ( pd->TimeIntegration != STEADY )
+			 volsolid_old -= fv_old->c[w]*mp->molar_volume[w];
+		     }
+		   break;
+		 default:
+		   volsolid = 1.;
+		   volsolid_old = 1.;
+		   for(w=0 ; w<pd->Num_Species_Eqn ; w++)
+		     {
+		       volsolid -= fv->c[w];
+		       if ( pd->TimeIntegration != STEADY )
+			 volsolid_old -= fv_old->c[w];
+		     }
+		   break;
+		 }
+	       if( volsolid <= 0)
+		 {
+		   fprintf(stderr,"nonvolatile fraction %g %g \n",volsolid,fv->c[0]);
+		   WH(-1,"negative nonvolatile volume fraction");
+		 }
 
-      for (p = 0; p < VIM; p++) {
-	vconv[p] = 0.;
-	vconv_old[p] = 0.;
-	if ( cr->MassFluxModel == FICKIAN  ||
-	     cr->MassFluxModel == STEFAN_MAXWELL  ||
-	     cr->MassFluxModel == STEFAN_MAXWELL_CHARGED  ||
-	     cr->MassFluxModel == STEFAN_MAXWELL_VOLUME ) /* Last modified; KSC: 9/98  and  RSL 6/29/00  */
-	{
-	  if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
-	  /* Get diffusivity and derivatives */
+	       for (p = 0; p < VIM; p++) {
+		 vconv[p] = 0.;
+		 vconv_old[p] = 0.;
+		 if ( cr->MassFluxModel == FICKIAN  ||
+		      cr->MassFluxModel == STEFAN_MAXWELL  ||
+		      cr->MassFluxModel == STEFAN_MAXWELL_CHARGED  ||
+		      cr->MassFluxModel == STEFAN_MAXWELL_VOLUME ) /* Last modified; KSC: 9/98  and  RSL 6/29/00  */
+		   {
+		     if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+		     /* Get diffusivity and derivatives */
 
-	  for (w=0; w<pd->Num_Species_Eqn; w++)
-	  {
-	    vconv[p] -= mp->diffusivity[w] * fv->grad_c[w][p];
-	    if ( pd->TimeIntegration != STEADY )
-		vconv_old[p] -= mp->diffusivity[w] * fv_old->grad_c[w][p];
-	  }
-	}
-	else if ( cr->MassFluxModel == GENERALIZED_FICKIAN)
-	{
-	  /* diffusion induced convection */
-	  if ( Generalized_Diffusivity() )  EH( -1, "Error in Diffusivity.");
-	  for (w=0; w<pd->Num_Species_Eqn; w++)
-	  {
-	    for (w1=0; w1<pd->Num_Species_Eqn; w1++)
-	    {
-	      vconv[p] -= mp->diffusivity_gen_fick[w][w1]
-		  * fv->grad_c[w1][p];
-	    }
-	    if ( pd->TimeIntegration != STEADY ) {
-	      for (w1=0; w1<pd->Num_Species_Eqn; w1++)
-	      {
-		vconv_old[p] -= mp->diffusivity_gen_fick[w][w1]
-		    * fv_old->grad_c[w1][p];
-	      }
-	    }
-	  }
-	}
-	else  if ( cr->MassFluxModel == DARCY )
-	{ /* diffusion induced convection is zero */
-	}
-	else
-	{
-	  EH( -1, "Unimplemented mass flux constitutive relation.");
-	}
-      }
+		     for (w=0; w<pd->Num_Species_Eqn; w++)
+		       {
+			 vconv[p] -= mp->diffusivity[w] * fv->grad_c[w][p];
+			 if ( pd->TimeIntegration != STEADY )
+			   vconv_old[p] -= mp->diffusivity[w] * fv_old->grad_c[w][p];
+		       }
+		   }
+		 else if ( cr->MassFluxModel == GENERALIZED_FICKIAN)
+		   {
+		     /* diffusion induced convection */
+		     if ( Generalized_Diffusivity() )  EH( -1, "Error in Diffusivity.");
+		     for (w=0; w<pd->Num_Species_Eqn; w++)
+		       {
+			 for (w1=0; w1<pd->Num_Species_Eqn; w1++)
+			   {
+			     vconv[p] -= mp->diffusivity_gen_fick[w][w1]
+			       * fv->grad_c[w1][p];
+			   }
+			 if ( pd->TimeIntegration != STEADY ) {
+			   for (w1=0; w1<pd->Num_Species_Eqn; w1++)
+			     {
+			       vconv_old[p] -= mp->diffusivity_gen_fick[w][w1]
+				 * fv_old->grad_c[w1][p];
+			     }
+			 }
+		       }
+		   }
+		 else  if ( cr->MassFluxModel == DARCY )
+		   { /* diffusion induced convection is zero */
+		   }
+		 else
+		   {
+		     EH( -1, "Unimplemented mass flux constitutive relation.");
+		   }
+	       }
 	   
-      for (p=0; p<VIM; p++)
-      {
-	vconv[p] /= volsolid;
-	if ( pd->TimeIntegration != STEADY )
-	    vconv_old[p] /= volsolid_old;
-      }
-      if ( af->Assemble_Jacobian && d_vconv != NULL )
-      {
-	for (p=0; p<dim; p++)
-	{
-	  var = MESH_DISPLACEMENT1;
-	  if (pd->v[pg->imtrx][var])
-	  {
-	    for (q=0; q<dim; q++)
-	    {
-	      for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
-	      {
-		if ( cr->MassFluxModel == FICKIAN )
-		{
-		  if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+	       for (p=0; p<VIM; p++)
+		 {
+		   vconv[p] /= volsolid;
+		   if ( pd->TimeIntegration != STEADY )
+		     vconv_old[p] /= volsolid_old;
+		 }
+	       if ( af->Assemble_Jacobian && d_vconv != NULL )
+		 {
+		   for (p=0; p<dim; p++)
+		     {
+		       var = MESH_DISPLACEMENT1;
+		       if (pd->v[pg->imtrx][var])
+			 {
+			   for (q=0; q<dim; q++)
+			     {
+			       for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
+				 {
+				   if ( cr->MassFluxModel == FICKIAN )
+				     {
+				       if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
 				      
-		  for (w=0; w<pd->Num_Species_Eqn; w++)
-		  {
-		    d_vconv->X[p][q][i] -= mp->diffusivity[w] *
-			fv->d_grad_c_dmesh[p][w] [q][i] / volsolid;
-		  }
-		}
-	      }
-	    }
-	  }
+				       for (w=0; w<pd->Num_Species_Eqn; w++)
+					 {
+					   d_vconv->X[p][q][i] -= mp->diffusivity[w] *
+					     fv->d_grad_c_dmesh[p][w] [q][i] / volsolid;
+					 }
+				     }
+				 }
+			     }
+			 }
 	  
-	  var = MASS_FRACTION;
-	  if (pd->v[pg->imtrx][var])
-	  {
-	    if ( cr->MassFluxModel == FICKIAN ||
-		 cr->MassFluxModel == STEFAN_MAXWELL ||
-		 cr->MassFluxModel == STEFAN_MAXWELL_CHARGED ||
-		 cr->MassFluxModel == STEFAN_MAXWELL_VOLUME )
-	    {
-	      if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+		       var = MASS_FRACTION;
+		       if (pd->v[pg->imtrx][var])
+			 {
+			   if ( cr->MassFluxModel == FICKIAN ||
+				cr->MassFluxModel == STEFAN_MAXWELL ||
+				cr->MassFluxModel == STEFAN_MAXWELL_CHARGED ||
+				cr->MassFluxModel == STEFAN_MAXWELL_VOLUME )
+			     {
+			       if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
 
-	      for (w=0; w<pd->Num_Species_Eqn; w++)
-	      {
-		for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
-		{
-		  d_vconv->C[p][w][i] -=
-		      mp->diffusivity[w] * bf[var]->grad_phi[i][p]
-		      / volsolid;
-		  for (w1=0; w1<pd->Num_Species_Eqn; w1++)
-		  {
-		    d_vconv->C[p][w][i] -= (
-			mp->d_diffusivity[w][MAX_VARIABLE_TYPES + w1] 
-			* fv->grad_c[w][p] 
-			+ mp->diffusivity[w] *fv->grad_c[w][p] / volsolid )
-			* bf[var]->phi[i] / volsolid;
-		  }
-		}
-	      }
-	    }
-	  }
-	} /* end of loop over vconv directions */
-      } /* end of if Assemble Jacobian */
-    } /* end of if MASS_FRACTION */
+			       for (w=0; w<pd->Num_Species_Eqn; w++)
+				 {
+				   for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
+				     {
+				       d_vconv->C[p][w][i] -=
+					 mp->diffusivity[w] * bf[var]->grad_phi[i][p]
+					 / volsolid;
+				       for (w1=0; w1<pd->Num_Species_Eqn; w1++)
+					 {
+					   d_vconv->C[p][w][i] -= (
+								   mp->d_diffusivity[w][MAX_VARIABLE_TYPES + w1] 
+								   * fv->grad_c[w][p] 
+								   + mp->diffusivity[w] *fv->grad_c[w][p] / volsolid )
+					     * bf[var]->phi[i] / volsolid;
+					 }
+				     }
+				 }
+			     }
+			 }
+		     } /* end of loop over vconv directions */
+		 } /* end of if Assemble Jacobian */
+	     } /* end of if MASS_FRACTION */
+	 } // for imtrx
        
        /*
 	* Add in convection due to motion of Stress Free State - Pseudo Lagrangian Convection 
@@ -9602,7 +9607,14 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 	    * Velocity of solid in lab coordinates is the velocity of the stress free state
 	    * dotted into the deformation gradient tensor
 	    */
-	   if (! pd->v[pg->imtrx][MESH_DISPLACEMENT1])
+	   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+	     {
+	       if(pd->v[imtrx][MESH_DISPLACEMENT1])
+		 {
+		   mesh_inertia_and_disp_on = 1;
+		 }
+	     }
+	   if (!mesh_inertia_and_disp_on)
 	     {
 	       for (p=0; p < dim; p++)
 		 {
@@ -9702,7 +9714,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
   int taylor_galerkin[MAX_CONC];
   int explicit[MAX_CONC]; /* move to input deck asap */
 
-  int species;			/* Species number for the particle phase. */
+  int species, imtrx, imtrx2;			/* Species number for the particle phase. */
   int wim   = pd->Num_Dim;    /* wim is the number of velocity unknowns */
   if(pd->CoordinateSystem == SWIRLING ||
      pd->CoordinateSystem == PROJECTED_CARTESIAN)
@@ -9897,30 +9909,36 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	      c_old=1./2.;
 	    }
 	  eqn = R_MASS;
-	  if(explicit[w])
+	  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 	    {
-	      for ( j=0; j<ei[pg->imtrx]->dof[eqn]; j++)
+	      if(pd->e[imtrx][eqn])
 		{
-		  st->taylor_flux_wt[j] = 0.;
-		  for ( a=0; a<VIM; a++)
+		  if(explicit[w])
 		    {
-		      st->taylor_flux_wt[j]+= conv_old[a] * bf[eqn]->grad_phi[j] [a] ;
+		      for ( j=0; j<ei[imtrx]->dof[eqn]; j++)
+			{
+			  st->taylor_flux_wt[j] = 0.;
+			  for ( a=0; a<VIM; a++)
+			    {
+			      st->taylor_flux_wt[j]+= conv_old[a] * bf[eqn]->grad_phi[j] [a] ;
+			    }
+			}
+		    }
+		  else
+		    {
+		      for ( j=0; j<ei[imtrx]->dof[eqn]; j++)
+			{
+			  st->taylor_flux_wt[j] = 0.;
+			  for ( a=0; a<VIM; a++)
+			    {
+			      st->taylor_flux_wt[j]+= conv[a] * bf[eqn]->grad_phi[j] [a] ;
+			    }
+			}
 		    }
 		}
-	    }
-	  else
-	    {
-	      for ( j=0; j<ei[pg->imtrx]->dof[eqn]; j++)
-		{
-		  st->taylor_flux_wt[j] = 0.;
-		  for ( a=0; a<VIM; a++)
-		    {
-		      st->taylor_flux_wt[j]+= conv[a] * bf[eqn]->grad_phi[j] [a] ;
-		    }
-		}
-	    }
-	}
-    }
+	    } // for imtrx
+	} // if taylor_galerkin
+    }  // for Num_Species
 
   /*
    *  Loop over each species equation, entering the source term
@@ -10082,7 +10100,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 
     /* this is called in the interior nodes */
 
-	err = foam_species_source( mp->u_species_source[0]);
+    err = foam_species_source( mp->u_species_source[0]);
 
     for ( w=0; w<pd->Num_Species_Eqn; w++)  {
 	st->MassSource[w]= mp->species_source[w];
@@ -10197,23 +10215,29 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
        dsdT = 0;   
        for(a=0; a<MAX_CONC; a++) dsdC[a]=0.;  
 
-       if(pd->e[pg->imtrx][R_LIGHT_INTP])
-         {
-         intensity = fv->poynt[0];
-         if(pd->e[pg->imtrx][R_LIGHT_INTM])
-          { intensity += fv->poynt[1];}
-         if(pd->e[pg->imtrx][R_LIGHT_INTD])
-          { intensity += fv->poynt[2];}
-         intensity *= mp->u_species_source[init_spec][1];
-         intensity = MAX(intensity,0.0);
-         }   
-       else if(pd->e[R_ACOUS_PREAL])
-         {
-         intensity = mp->u_species_source[init_spec][1]*
-                     (SQUARE(fv->apr)+SQUARE(fv->api));
-         } 
-       else
-        { WH(-1,"No Intensity field found in PHOTO_CURING\n"); }
+       for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+	 {
+	   if(pd->e[imtrx][R_LIGHT_INTP])
+	     {
+	       intensity = fv->poynt[0];
+	       for (imtrx2 = 0; imtrx2 < upd->Total_Num_Matrices; imtrx2++) 
+		 {
+		   if(pd->e[imtrx2][R_LIGHT_INTM])
+		     { intensity += fv->poynt[1];}
+		   if(pd->e[imtrx2][R_LIGHT_INTD])
+		     { intensity += fv->poynt[2];}
+		 }
+	       intensity *= mp->u_species_source[init_spec][1];
+	       intensity = MAX(intensity,0.0);
+	     }   
+	   else if(pd->e[imtrx][R_ACOUS_PREAL])
+	     {
+	       intensity = mp->u_species_source[init_spec][1]*
+		 (SQUARE(fv->apr)+SQUARE(fv->api));
+	     } 
+	   else
+	     { WH(-1,"No Intensity field found in PHOTO_CURING\n"); }
+	 }
 
       /*  free radical concentration  */
 	num_mon = model_bit>>2;
@@ -10936,7 +10960,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
 			  double dt )
 {
   int w1, a, j, k, l, q, var;
-  int w, wi, wj;
+  int w, wi, wj, imtrx;
   int status = 0;
   dbl dB[MAX_CONC*DIM];           /* dB/dx vector where x is mole fraction   */
   dbl dA[MAX_CONC*DIM][MAX_CONC*DIM]; /* dA/dx matrix                        */
@@ -11027,58 +11051,63 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
 
   volume_flag = (pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_VOLUME); /* RSL 8/24/00 */
 
-  if(pd_glob[mn]->e[pg->imtrx][R_ENERGY])  /* if the energy-transport equation is active, get temperature from fv */ 
-    {
-      T = fv->T;   
-      if(pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_CHARGED)
-        {
-          if(mp->SolutionTemperatureModel == CONSTANT)
-            {
-              T = mp->solution_temperature;
-            }
-          else if(mp->SolutionTemperatureModel == THERMAL_BATTERY)
-            {              /* need to get T from electrolyte_temperature() for the case of thermal battery */
-              electrolyte_temperature(time, dt, 0);  /* calculate electrolyte temperature at present time */
-              T = mp->electrolyte_temperature;
-            }
-          else
-            {
-              EH(-1, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
-            }
-        }
-      if(T == 0.0) T = 298.0;  /* set the solution temperature to the 298 K if it is zero - safety feature */
 
-    }
-  else                          /* when the energy-transport equation is NOT being solved */ 
+  /* when the energy-transport equation is NOT being solved */ 
+  if(pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL)
     { 
-      if(pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL)
-        { 
-          if(mp->SolutionTemperatureModel == CONSTANT)
-            { 
-              T = mp->solution_temperature;
-            }
-          else
-            {
-              EH(-1, "User needs to define non-CONSTANT solution temperature model in GOMA");
-            }
-        }
-      else if(pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_CHARGED || volume_flag)  /*  RSL 8/24/00  */
-        {
-          if(mp->SolutionTemperatureModel == CONSTANT)    
-            {              
-              T = mp->solution_temperature;
-            }
-          else if(mp->SolutionTemperatureModel == THERMAL_BATTERY)    
-            {              /* need to get T from electrolyte_temperature() for the case of thermal battery */
-              electrolyte_temperature(time, dt, 0);  /* calculate electrolyte temperature at present time */
-              T = mp->electrolyte_temperature;
-            }
-          else
-            {
-              EH(-1, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation"); 
-            } 
-        }
-      if(T == 0.0) T = 298.0;  /* set the solution temperature to the 298 K if it is zero - safety feature */  
+      if(mp->SolutionTemperatureModel == CONSTANT)
+	{ 
+	  T = mp->solution_temperature;
+	}
+      else
+	{
+	  EH(-1, "User needs to define non-CONSTANT solution temperature model in GOMA");
+	}
+    }
+  else if(pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_CHARGED || volume_flag)  /*  RSL 8/24/00  */
+    {
+      if(mp->SolutionTemperatureModel == CONSTANT)    
+	{              
+	  T = mp->solution_temperature;
+	}
+      else if(mp->SolutionTemperatureModel == THERMAL_BATTERY)    
+	{              /* need to get T from electrolyte_temperature() for the case of thermal battery */
+	  electrolyte_temperature(time, dt, 0);  /* calculate electrolyte temperature at present time */
+	  T = mp->electrolyte_temperature;
+	}
+      else
+	{
+	  EH(-1, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation"); 
+	} 
+    }
+  if(T == 0.0) T = 298.0;  /* set the solution temperature to the 298 K if it is zero - safety feature */
+
+
+  /* if the energy-transport equation is active, get temperature from fv */ 
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if(pd_glob[mn]->e[imtrx][R_ENERGY])  
+	{
+	  T = fv->T;   
+	  if(pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_CHARGED)
+	    {
+	      if(mp->SolutionTemperatureModel == CONSTANT)
+		{
+		  T = mp->solution_temperature;
+		}
+	      else if(mp->SolutionTemperatureModel == THERMAL_BATTERY)
+		{              /* need to get T from electrolyte_temperature() for the case of thermal battery */
+		  electrolyte_temperature(time, dt, 0);  /* calculate electrolyte temperature at present time */
+		  T = mp->electrolyte_temperature;
+		}
+	      else
+		{
+		  EH(-1, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
+		}
+	    }
+	  if(T == 0.0) T = 298.0;  /* set the solution temperature to the 298 K if it is zero - safety feature */
+	  
+	}
     }
 
 
@@ -12947,7 +12976,7 @@ get_particle_convection_velocity(double pvconv[DIM],
    */
   
   int dim, p, q, b, var, i, w, w1;
-  int species;			/* MMH species number for particle phase. */
+  int species, imtrx, mesh_inertia_and_disp_on=0;			/* MMH species number for particle phase. */
   double volsolid, volsolid_old;
   
   dim = pd->Num_Dim;
@@ -12997,10 +13026,13 @@ get_particle_convection_velocity(double pvconv[DIM],
 	   if ( pd->TimeIntegration != STEADY )
 	     {
 	       pvconv_old[p] = fv_old->pv[p];
-	       if (pd->v[pg->imtrx][R_MESH1]) {
-		 pvconv[p] -= fv_dot->x[p];
-		 pvconv_old[p] -= fv_dot_old->x[p];
-	       }
+	       for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+		 {
+		   if (pd->v[imtrx][R_MESH1]) {
+		     pvconv[p] -= fv_dot->x[p];
+		     pvconv_old[p] -= fv_dot_old->x[p];
+		   }
+		 }
 	     }
 	 }
        
@@ -13058,131 +13090,134 @@ get_particle_convection_velocity(double pvconv[DIM],
        /* calculate (sum diffusion flux)/solid volume frac. and it's derivatives 
 	*  v_solvent_flux  */
 /*       if (pd->v[pg->imtrx][MASS_FRACTION] && mp->PorousMediaType == CONTINUOUS)   */
-       if (pd->v[pg->imtrx][MASS_FRACTION] )  
-	 /* if no solvents - then no convective velocity */
+       for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 	 {
-	   /* calculate volume fraction of solids and total diffusion flux */
-	   volsolid = 1.;
-	   volsolid_old = 1.;
-	   for (w=0; w<pd->Num_Species_Eqn; w++)
+	   if (pd->v[imtrx][MASS_FRACTION] )  
+	     /* if no solvents - then no convective velocity */
 	     {
-/* MMH */
-	       if(w != species)
+	       /* calculate volume fraction of solids and total diffusion flux */
+	       volsolid = 1.;
+	       volsolid_old = 1.;
+	       for (w=0; w<pd->Num_Species_Eqn; w++)
 		 {
-		   volsolid -= fv->c[w];
-		   if ( pd->TimeIntegration != STEADY )
-		     volsolid_old -= fv_old->c[w];
-		 }
-	     }
-	   
-	   for (p=0; p<VIM; p++)
-	     {
-	       pvconv[p] = 0.;
-	       pvconv_old[p] = 0.;
-	       if ( cr->MassFluxModel == FICKIAN )
-		 {
-		   if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
-		     /* Get diffusivity and derivatives */
-
-/* MMH I don't think this matters for particle phase, there is no diffusion.
- * diffusivity[species] should be zero
- */
-		   for (w=0; w<pd->Num_Species_Eqn; w++)
+		   /* MMH */
+		   if(w != species)
 		     {
-		       pvconv[p] -= mp->diffusivity[w] * fv->grad_c[w][p];
+		       volsolid -= fv->c[w];
 		       if ( pd->TimeIntegration != STEADY )
-			 pvconv_old[p] -= mp->diffusivity[w] * fv_old->grad_c[w][p];
+			 volsolid_old -= fv_old->c[w];
 		     }
 		 }
-	       else  if ( cr->MassFluxModel == DARCY )
-		 { /* diffusion induced convection is zero */
-		 }
-	       else
-		 {
-		   EH( -1, "Unimplemented mass flux constitutive relation.");
-		 }
-	     }
 	   
-	   for (p=0; p<VIM; p++)
-	     {
-	       pvconv[p] /= volsolid;
-	       if ( pd->TimeIntegration != STEADY )
-		 pvconv_old[p] /= volsolid_old;
-	     }
-	   if ( af->Assemble_Jacobian )
-	     {
-	       for (p=0; p<dim; p++)
+	       for (p=0; p<VIM; p++)
 		 {
-		   var = MESH_DISPLACEMENT1;
-		   if (pd->v[pg->imtrx][var])
+		   pvconv[p] = 0.;
+		   pvconv_old[p] = 0.;
+		   if ( cr->MassFluxModel == FICKIAN )
 		     {
-		       for (q=0; q<dim; q++)
+		       if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+		       /* Get diffusivity and derivatives */
+
+		       /* MMH I don't think this matters for particle phase, there is no diffusion.
+			* diffusivity[species] should be zero
+			*/
+		       for (w=0; w<pd->Num_Species_Eqn; w++)
 			 {
-			   for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
+			   pvconv[p] -= mp->diffusivity[w] * fv->grad_c[w][p];
+			   if ( pd->TimeIntegration != STEADY )
+			     pvconv_old[p] -= mp->diffusivity[w] * fv_old->grad_c[w][p];
+			 }
+		     }
+		   else  if ( cr->MassFluxModel == DARCY )
+		     { /* diffusion induced convection is zero */
+		     }
+		   else
+		     {
+		       EH( -1, "Unimplemented mass flux constitutive relation.");
+		     }
+		 }
+	   
+	       for (p=0; p<VIM; p++)
+		 {
+		   pvconv[p] /= volsolid;
+		   if ( pd->TimeIntegration != STEADY )
+		     pvconv_old[p] /= volsolid_old;
+		 }
+	       if ( af->Assemble_Jacobian )
+		 {
+		   for (p=0; p<dim; p++)
+		     {
+		       var = MESH_DISPLACEMENT1;
+		       if (pd->v[pg->imtrx][var])
+			 {
+			   for (q=0; q<dim; q++)
 			     {
-			       if ( cr->MassFluxModel == FICKIAN )
+			       for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
 				 {
-				   if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
-				      
-				   for (w=0; w<pd->Num_Species_Eqn; w++)
+				   if ( cr->MassFluxModel == FICKIAN )
 				     {
-				       d_pvconv->X[p][q][i] -= mp->diffusivity[w] *
-					 fv->d_grad_c_dmesh[p][w] [q][i] / volsolid;
+				       if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+				      
+				       for (w=0; w<pd->Num_Species_Eqn; w++)
+					 {
+					   d_pvconv->X[p][q][i] -= mp->diffusivity[w] *
+					     fv->d_grad_c_dmesh[p][w] [q][i] / volsolid;
+					 }
 				     }
 				 }
 			     }
 			 }
-		     }
 		   
-		   /* Temperature dependence of diffusivity not yet implemented  */
-		   /*
-		   var = TEMPERATURE;
-		   if (pd->v[pg->imtrx][var])
-		     {
-		       for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
+		       /* Temperature dependence of diffusivity not yet implemented  */
+		       /*
+			 var = TEMPERATURE;
+			 if (pd->v[pg->imtrx][var])
+			 {
+			 for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
+			 {
+			 if ( cr->MassFluxModel == FICKIAN )
+			 {
+			 if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+			 for (w=0; w<pd->Num_Species_Eqn; w++)
+			 {
+			 d_pvconv->T[p][i] -= mp->d_diffusivity[w][var][0] * bf[var]->phi[i] *
+			 fv->grad_c[w][p] / volsolid;
+			 }
+			 }
+			 }
+			 }
+		       */
+		   
+		       var = MASS_FRACTION;
+		       if (pd->v[pg->imtrx][var])
 			 {
 			   if ( cr->MassFluxModel == FICKIAN )
 			     {
 			       if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
+
 			       for (w=0; w<pd->Num_Species_Eqn; w++)
 				 {
-				   d_pvconv->T[p][i] -= mp->d_diffusivity[w][var][0] * bf[var]->phi[i] *
-				     fv->grad_c[w][p] / volsolid;
-				 }
-			     }
-			 }
-		     }
-		   */
-		   
-		   var = MASS_FRACTION;
-		   if (pd->v[pg->imtrx][var])
-		     {
-		       if ( cr->MassFluxModel == FICKIAN )
-			 {
-			   if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
-
-			   for (w=0; w<pd->Num_Species_Eqn; w++)
-			     {
-			       for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
-				 {
-				   d_pvconv->C[p][w][i] -=
-				     mp->diffusivity[w] * bf[var]->grad_phi[i][p]
-				       / volsolid;
-				   for (w1=0; w1<pd->Num_Species_Eqn; w1++)
+				   for ( i=0; i<ei[pg->imtrx]->dof[var]; i++)
 				     {
-				       d_pvconv->C[p][w][i] -= (
-							      mp->d_diffusivity[w][MAX_VARIABLE_TYPES + w1] 
-							      * fv->grad_c[w][p] 
-							      + mp->diffusivity[w] *fv->grad_c[w][p] / volsolid )
-					 * bf[var]->phi[i] / volsolid;
+				       d_pvconv->C[p][w][i] -=
+					 mp->diffusivity[w] * bf[var]->grad_phi[i][p]
+					 / volsolid;
+				       for (w1=0; w1<pd->Num_Species_Eqn; w1++)
+					 {
+					   d_pvconv->C[p][w][i] -= (
+								    mp->d_diffusivity[w][MAX_VARIABLE_TYPES + w1] 
+								    * fv->grad_c[w][p] 
+								    + mp->diffusivity[w] *fv->grad_c[w][p] / volsolid )
+					     * bf[var]->phi[i] / volsolid;
+					 }
 				     }
 				 }
 			     }
 			 }
-		     }
-		 } /* end of loop over pvconv directions */
-	     } /* end of if Assemble Jacobian */
-	 } /* end of if MASS_FRACTION */
+		     } /* end of loop over pvconv directions */
+		 } /* end of if Assemble Jacobian */
+	     } /* end of if MASS_FRACTION */
+	 }    // for imtrx
        
         /*    d_node_position/dt */
        if (pd->TimeIntegration != STEADY && 
@@ -13241,7 +13276,16 @@ get_particle_convection_velocity(double pvconv[DIM],
 	    * Velocity of solid in lab coordinates is the velocity of the stress free state
 	    * dotted into the deformation gradient tensor
 	    */
-	   if (! pd->v[pg->imtrx][MESH_DISPLACEMENT1])
+
+	   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+	     {
+	       if(pd->v[imtrx][MESH_DISPLACEMENT1])
+		 {
+		   mesh_inertia_and_disp_on = 1;
+		 }
+	     }
+
+	   if (!mesh_inertia_and_disp_on)
 	     {
 	       for (p=0; p < dim; p++)
 		 {
@@ -13291,7 +13335,7 @@ int
 ls_modulate_speciessource(int w,
 			  struct Species_Conservation_Terms *st)
 {
-  int i, b = -1, var;
+  int i, b = -1, var, imtrx;
   int dim = pd->Num_Dim;
   double factor;
   double pm_minus, pm_plus, width, f1, f2;
@@ -13302,27 +13346,30 @@ ls_modulate_speciessource(int w,
       !(pd->e[pg->imtrx][R_MASS] & T_SOURCE) ) return(0);
 	  
 /* kludge for solidification tracking with phase function 0 */
- if(pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY])
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if(pfd != NULL && pd->e[imtrx][R_EXT_VELOCITY])
 	{
-	ls_old = ls;
-	ls = pfd->ls[0];
- 	width = ls->Length_Scale;
- 	pm_minus = mp->mp2nd->speciessourcemask[0][w];	  
- 	pm_plus =  mp->mp2nd->speciessourcemask[1][w];	  
- 
- 	f1 = st->MassSource[w];
- 	f2 = mp->mp2nd->speciessource_phase[0][w];
- 
- 	if(f2 == 0.0 ) f2 = DBL_SMALL;
- 	st->MassSource[w] = ls_modulate_property(  f1,
-					f2,
-					width,
-					pm_minus,
-					pm_plus,
-					st->d_MassSource_dF[w],
-					&factor);
-	ls = ls_old;
+	  ls_old = ls;
+	  ls = pfd->ls[0];
+	  width = ls->Length_Scale;
+	  pm_minus = mp->mp2nd->speciessourcemask[0][w];	  
+	  pm_plus =  mp->mp2nd->speciessourcemask[1][w];	  
+	  
+	  f1 = st->MassSource[w];
+	  f2 = mp->mp2nd->speciessource_phase[0][w];
+	  
+	  if(f2 == 0.0 ) f2 = DBL_SMALL;
+	  st->MassSource[w] = ls_modulate_property(  f1,
+						     f2,
+						     width,
+						     pm_minus,
+						     pm_plus,
+						     st->d_MassSource_dF[w],
+						     &factor);
+	  ls = ls_old;
 	}
+    }
  width = ls->Length_Scale;
  pm_minus = mp->mp2nd->speciessourcemask[0][w];	  
  pm_plus =  mp->mp2nd->speciessourcemask[1][w];	  

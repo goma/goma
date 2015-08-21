@@ -790,7 +790,7 @@ epoxy_dea_species_source( int species_no,    /* Current species number */
                            double *param)     /* pointer to user-defined parameter list */
      
 {
-  int eqn, var, var_offset;
+  int eqn, var, var_offset, imtrx;
   
   dbl T;           /* temperature for rate constants */
   dbl A1, E1, A2, E2, A3;
@@ -852,46 +852,49 @@ epoxy_dea_species_source( int species_no,    /* Current species number */
   
   /* Species piece */
   eqn = MASS_FRACTION;
-  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      mp->species_source[species_no] = (k1+k2*alpha_m)*alpha_n;
-      
-      /* Jacobian entries for source term */
-      var = MASS_FRACTION;
-      if (pd->v[pg->imtrx][var] )
+      if ( pd->e[imtrx][eqn] & T_SOURCE )
 	{
-	  var_offset = MAX_VARIABLE_TYPES + species_no;
-	  mp->d_species_source[var_offset] = 
-	    (m*k2*alpha_m1)*alpha_n 
-	    - (k1+k2*alpha_m)*n*alpha_n1;
-	}
-
-      var = TEMPERATURE;
-      if (pd->v[pg->imtrx][var] )
-	{
-	  if (T <= 0.)
+	  mp->species_source[species_no] = (k1+k2*alpha_m)*alpha_n;
+	  
+	  /* Jacobian entries for source term */
+	  var = MASS_FRACTION;
+	  if (pd->v[pg->imtrx][var] )
 	    {
-	      mp->d_species_source[var] = 0.;
+	      var_offset = MAX_VARIABLE_TYPES + species_no;
+	      mp->d_species_source[var_offset] = 
+		(m*k2*alpha_m1)*alpha_n 
+		- (k1+k2*alpha_m)*n*alpha_n1;
 	    }
-          else if (T > 338.15 && T < 363.15 )
+	  
+	  var = TEMPERATURE;
+	  if (pd->v[pg->imtrx][var] )
 	    {
-	    if (alpha > 0)
-	     {
-	      mp->d_species_source[var] =
-		(k1*E1/(T*T)+(A2*(5.*pow((T-273.15),-6.0)
-                  -540.*pow((T-273.15),-7.0)))*
-                 (alpha_m*log(alpha_m)+alpha_m))*alpha_n;
-	      }
-            else
-	      {
-	      mp->d_species_source[var] =
-		  (k1*E1+k2*alpha_m)*alpha_n/(T*T);
-	      }
-	    }
-	  else
-	    {
-	      mp->d_species_source[var] = 
-		(k1*E1+k2*E2*alpha_m)*alpha_n/(T*T);
+	      if (T <= 0.)
+		{
+		  mp->d_species_source[var] = 0.;
+		}
+	      else if (T > 338.15 && T < 363.15 )
+		{
+		  if (alpha > 0)
+		    {
+		      mp->d_species_source[var] =
+			(k1*E1/(T*T)+(A2*(5.*pow((T-273.15),-6.0)
+					  -540.*pow((T-273.15),-7.0)))*
+			 (alpha_m*log(alpha_m)+alpha_m))*alpha_n;
+		    }
+		  else
+		    {
+		      mp->d_species_source[var] =
+			(k1*E1+k2*alpha_m)*alpha_n/(T*T);
+		    }
+		}
+	      else
+		{
+		  mp->d_species_source[var] = 
+		    (k1*E1+k2*E2*alpha_m)*alpha_n/(T*T);
+		}
 	    }
 	}
     }
@@ -912,7 +915,7 @@ epoxy_species_source(int species_no,   /* Current species number */
      
 {
   /* Local Variables */
-  int eqn, var, var_offset;
+  int eqn, var, var_offset, imtrx;
   /*  int p, q, a, b, c;*/
   
   /*  int v,w;*/
@@ -963,25 +966,28 @@ epoxy_species_source(int species_no,   /* Current species number */
   
   /* Species piece */
   eqn = MASS_FRACTION;
-  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      mp->species_source[species_no] = (k1+k2*alpha_m)*alpha_n;
-      
-      /* Jacobian entries for source term */
-      var = MASS_FRACTION;
-      if (pd->v[pg->imtrx][var] )
+      if ( pd->e[imtrx][eqn] & T_SOURCE )
 	{
-	  var_offset = MAX_VARIABLE_TYPES + species_no;
-	  mp->d_species_source[var_offset] = 
-	    (m*k2*alpha_m1)*alpha_n 
-	    - (k1+k2*alpha_m)*n*alpha_n1;
-	}
-
-      var = TEMPERATURE;
-      if (pd->v[pg->imtrx][var] )
-	{
-	  mp->d_species_source[var] = 
-	    (k1*E1+k2*E2*alpha_m)*alpha_n/(T*T);
+	  mp->species_source[species_no] = (k1+k2*alpha_m)*alpha_n;
+	  
+	  /* Jacobian entries for source term */
+	  var = MASS_FRACTION;
+	  if (pd->v[pg->imtrx][var] )
+	    {
+	      var_offset = MAX_VARIABLE_TYPES + species_no;
+	      mp->d_species_source[var_offset] = 
+		(m*k2*alpha_m1)*alpha_n 
+		- (k1+k2*alpha_m)*n*alpha_n1;
+	    }
+	  
+	  var = TEMPERATURE;
+	  if (pd->v[pg->imtrx][var] )
+	    {
+	      mp->d_species_source[var] = 
+		(k1*E1+k2*E2*alpha_m)*alpha_n/(T*T);
+	    }
 	}
     }
 return 0;
@@ -1014,7 +1020,7 @@ foam_epoxy_species_source(int species_no,   /* Current species number */
 /* param - pointer to user-defined parameter list */ 
 /* tt, dt - time derivative parameters */  
 {
-  int eqn, var;
+  int eqn, var, imtrx;
   /*  int p, q, a, b, c;*/
   double Press, rho, rho2, rho_v_inv, rho_v, d_rho_v_dT, d_rho_v_inv_dT;
   double rho_a_inv, d_rho_a_inv_dT; 
@@ -1140,23 +1146,26 @@ foam_epoxy_species_source(int species_no,   /* Current species number */
   
   /* Species piece */
   eqn = MASS_FRACTION;
-  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      mp->species_source[species_no] = Rc - Re;
-      
-      /* Jacobian entries for source term */
-      var = MASS_FRACTION;
-      if (pd->v[pg->imtrx][var])
+      if ( pd->e[imtrx][eqn] & T_SOURCE )
 	{
-	  mp->d_species_source[MAX_VARIABLE_TYPES + species_v] = dRc_dc_v - dRe_dc_v;
-	  mp->d_species_source[MAX_VARIABLE_TYPES + species_a] = dRc_dc_a - dRe_dc_a;
-	  mp->d_species_source[MAX_VARIABLE_TYPES + species_l] = dRc_dc_l - dRe_dc_l;
-	}
-      
-      var = TEMPERATURE;
-      if (pd->v[pg->imtrx][var])
-	{
-	  mp->d_species_source[var] = dRc_dT - dRe_dT;
+	  mp->species_source[species_no] = Rc - Re;
+	  
+	  /* Jacobian entries for source term */
+	  var = MASS_FRACTION;
+	  if (pd->v[pg->imtrx][var])
+	    {
+	      mp->d_species_source[MAX_VARIABLE_TYPES + species_v] = dRc_dc_v - dRe_dc_v;
+	      mp->d_species_source[MAX_VARIABLE_TYPES + species_a] = dRc_dc_a - dRe_dc_a;
+	      mp->d_species_source[MAX_VARIABLE_TYPES + species_l] = dRc_dc_l - dRe_dc_l;
+	    }
+	  
+	  var = TEMPERATURE;
+	  if (pd->v[pg->imtrx][var])
+	    {
+	      mp->d_species_source[var] = dRc_dT - dRe_dT;
+	    }
 	}
     }
   return 0;
@@ -5316,7 +5325,7 @@ solidification_permeability(dbl h_elem_avg, /* average element size */
 int
 foam_species_source(double *param)
 {
-  int eqn;
+  int eqn, imtrx;
   int j;
   dbl foam, gas, s1; /*mass fractions of gas and solid_1 */
   dbl T;           /* temperature for rate constants */
@@ -5409,29 +5418,32 @@ foam_species_source(double *param)
   
   /* Species piece , this is num_species+1 Jacobian */
   eqn = MASS_FRACTION;
-  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      mp->species_source[0] = -r1 ;
-      mp->species_source[1] = (0.3*r1+0.943*r2);
-      mp->species_source[2] = (0.7*r1-r2);
-      
-      /* Jacobian entries for source term */
-
-      mp->Jac_Species_Source[0] = -dr1_df ;
-      mp->Jac_Species_Source[1] = -dr1_dg ;
-      mp->Jac_Species_Source[2] = -dr1_ds1 ; 
-
-      mp->Jac_Species_Source[3] = 0.3*dr1_df+0.943*dr2_df ;
-      mp->Jac_Species_Source[4] = 0.3*dr1_dg+0.943*dr2_dg ; 
-      mp->Jac_Species_Source[5] = 0.3*dr1_ds1+0.943*dr2_ds1 ; 
-
-      mp->Jac_Species_Source[6] = 0.7*dr1_df-dr2_df;
-      mp->Jac_Species_Source[7] = 0.7*dr1_dg-dr2_dg ;
-      mp->Jac_Species_Source[8] = 0.7*dr1_ds1-dr2_ds1 ;
-
-      mp->d_species_source[MAX_VARIABLE_TYPES+0] = -dr1_dT ;
-      mp->d_species_source[MAX_VARIABLE_TYPES+1] = (0.3*dr1_dT + 0.943*dr2_dT);
-      mp->d_species_source[MAX_VARIABLE_TYPES+2] = (0.7*dr1_dT - dr2_dT);
+      if ( pd->e[imtrx][eqn] & T_SOURCE )
+	{
+	  mp->species_source[0] = -r1 ;
+	  mp->species_source[1] = (0.3*r1+0.943*r2);
+	  mp->species_source[2] = (0.7*r1-r2);
+	  
+	  /* Jacobian entries for source term */
+	  
+	  mp->Jac_Species_Source[0] = -dr1_df ;
+	  mp->Jac_Species_Source[1] = -dr1_dg ;
+	  mp->Jac_Species_Source[2] = -dr1_ds1 ; 
+	  
+	  mp->Jac_Species_Source[3] = 0.3*dr1_df+0.943*dr2_df ;
+	  mp->Jac_Species_Source[4] = 0.3*dr1_dg+0.943*dr2_dg ; 
+	  mp->Jac_Species_Source[5] = 0.3*dr1_ds1+0.943*dr2_ds1 ; 
+	  
+	  mp->Jac_Species_Source[6] = 0.7*dr1_df-dr2_df;
+	  mp->Jac_Species_Source[7] = 0.7*dr1_dg-dr2_dg ;
+	  mp->Jac_Species_Source[8] = 0.7*dr1_ds1-dr2_ds1 ;
+	  
+	  mp->d_species_source[MAX_VARIABLE_TYPES+0] = -dr1_dT ;
+	  mp->d_species_source[MAX_VARIABLE_TYPES+1] = (0.3*dr1_dT + 0.943*dr2_dT);
+	  mp->d_species_source[MAX_VARIABLE_TYPES+2] = (0.7*dr1_dT - dr2_dT);
+	}
     }
   return 0;
 }
@@ -5666,7 +5678,7 @@ ion_reaction_source ( int species_no )   /* current species number */
  */
 
 {
-  int eqn, var, j;
+  int eqn, var, j, imtrx;
   int four, five;
   dbl k1, k2, k3, K1, K2, K3;
   dbl Q1 = 0.0, Q2 = 0.0, Q3 = 0.0;
@@ -5723,152 +5735,155 @@ ion_reaction_source ( int species_no )   /* current species number */
      }
 
   eqn = MASS_FRACTION;
-  if (pd->e[pg->imtrx][eqn] & T_SOURCE)
-     {
-      switch (species_no)
-         {
-          case 0:
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if (pd->e[imtrx][eqn] & T_SOURCE)
+	{
+	  switch (species_no)
+	    {
+	    case 0:
               mp->species_source[species_no] = Q3;
-
+	      
               var = TEMPERATURE;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[var] = 0.;
-                 }
-
+		}
+	      
               var = MASS_FRACTION;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[MAX_VARIABLE_TYPES + 0] = dQ3dx0;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 1] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 2] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 3] = dQ3dx3;
                   mp->d_species_source[MAX_VARIABLE_TYPES + four] = dQ3dx4;
                   mp->d_species_source[MAX_VARIABLE_TYPES + five] = 0.;
-                 }
-             break;
-          case 1:
+		}
+	      break;
+	    case 1:
               mp->species_source[species_no] = Q2;
-
+	      
               var = TEMPERATURE;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[var] = 0.;
-                 }
-
+		}
+	      
               var = MASS_FRACTION;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[MAX_VARIABLE_TYPES + 0] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 1] = dQ2dx1;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 2] = dQ2dx2;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 3] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + four] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + five] = dQ2dx5;
-                 }
-             break;
-          case 2:
+		}
+	      break;
+	    case 2:
               mp->species_source[species_no] = Q1 + Q2;
-
+	      
               var = TEMPERATURE;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[var] = 0.;
-                 }
-
+		}
+	      
               var = MASS_FRACTION;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[MAX_VARIABLE_TYPES + 0] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 1] = dQ2dx1;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 2] = dQ1dx2 + dQ2dx2;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 3] = dQ1dx3;
                   mp->d_species_source[MAX_VARIABLE_TYPES + four] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + five] = dQ2dx5;
-                 }
-             break;
-          case 3:
+		}
+	      break;
+	    case 3:
               mp->species_source[species_no] = Q1 + Q3;
 
               var = TEMPERATURE;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[var] = 0.;
-                 }
+		}
 
               var = MASS_FRACTION;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[MAX_VARIABLE_TYPES + 0] = dQ3dx0;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 1] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 2] = dQ1dx2;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 3] = dQ1dx3 + dQ3dx3;
                   mp->d_species_source[MAX_VARIABLE_TYPES + four] = dQ3dx4;
                   mp->d_species_source[MAX_VARIABLE_TYPES + five] = 0.;
-                 }
-             break;
-          case 4:
+		}
+	      break;
+	    case 4:
               mp->species_source[species_no] = -Q3;
 
               var = TEMPERATURE;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[var] = 0.;
-                 }
+		}
 
               var = MASS_FRACTION;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[MAX_VARIABLE_TYPES + 0] = -dQ3dx0;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 1] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 2] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 3] = -dQ3dx3;
                   mp->d_species_source[MAX_VARIABLE_TYPES + four] = -dQ3dx4;
                   mp->d_species_source[MAX_VARIABLE_TYPES + five] = 0.;
-                 }
-             break;
-          case 5:
+		}
+	      break;
+	    case 5:
               mp->species_source[species_no] = -Q2;
 
               var = TEMPERATURE;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[var] = 0.;
-                 }
+		}
 
               var = MASS_FRACTION;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[MAX_VARIABLE_TYPES + 0] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 1] = -dQ2dx1;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 2] = -dQ2dx2;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 3] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + four] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + five] = -dQ2dx5;
-                 }
-             break;
-          case 6:
+		}
+	      break;
+	    case 6:
               mp->species_source[species_no] = 0.;
 
               var = TEMPERATURE;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[var] = 0.;
-                 }
+		}
 
               var = MASS_FRACTION;
               if (pd->v[pg->imtrx][var])
-                 {
+		{
                   mp->d_species_source[MAX_VARIABLE_TYPES + 0] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 1] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 2] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + 3] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + four] = 0.;
                   mp->d_species_source[MAX_VARIABLE_TYPES + five] = 0.;
-                 }
-             break;
-         }
-     }
+		}
+	      break;
+	    }
+	}
+    }   // for imtrx
   return 0;
 }
 /*****************************************************************************/

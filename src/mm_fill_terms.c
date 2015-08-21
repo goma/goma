@@ -2431,7 +2431,7 @@ assemble_momentum(dbl time,       /* current time */
   int source_on =0;
   int diffusion_on =0;
   int porous_brinkman_on =0; 
-  int mesh_disp_on = pd->v[pg->imtrx][MESH_DISPLACEMENT1];
+  int mesh_disp_on = 0;
   
   dbl mass_etm, advection_etm, diffusion_etm, source_etm, porous_brinkman_etm;
   
@@ -2477,11 +2477,6 @@ assemble_momentum(dbl time,       /* current time */
   /*
    * Bail out fast if there's nothing to do...
    */
-#ifdef DEBUG_HKM
-  bfm  = bf[R_MOMENTUM1];
-  phi_i_vector = bfm->phi;
-  checkFinite(phi_i_vector[0]);
-#endif
   if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
@@ -2680,11 +2675,18 @@ assemble_momentum(dbl time,       /* current time */
   /*
    * Field variables...
    */
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+    {
+      if(pd->v[imtrx][MESH_DISPLACEMENT1])
+	{
+	  mesh_disp_on = 1;
+	}
+    }
 
+  x_dot = zero;
   if (  transient_run &&  mesh_disp_on )
     x_dot = fv_dot->x;
-  else
-    x_dot = zero;
+
   if ( transient_run )
     v_dot = fv_dot->v;
   else
@@ -2713,11 +2715,6 @@ assemble_momentum(dbl time,       /* current time */
   if( VIM == 3 ) grad_v[2] = fv->grad_v[2];
 #endif
   
-#ifdef DEBUG_HKM
-  bfm  = bf[R_MOMENTUM1];
-  phi_i_vector = bfm->phi;
-  checkFinite(phi_i_vector[0]);
-#endif
 
   /*
    * Calculate the momentum stress tensor at the current gauss point
@@ -2767,9 +2764,6 @@ assemble_momentum(dbl time,       /* current time */
 	  
 	  R = lec->R[peqn];
 	  phi_i_vector = bfm->phi;
-#ifdef DEBUG_HKM
-	  checkFinite(phi_i_vector[0]);
-#endif
 
 	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 	    ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
@@ -2981,9 +2975,6 @@ assemble_momentum(dbl time,       /* current time */
 	  source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 	  
 	  phi_i_vector = bfm->phi;
-#ifdef DEBUG_HKM
-	  checkFinite(phi_i_vector[0]);
-#endif
 	  
 	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {		  
 	    ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
@@ -4387,7 +4378,7 @@ assemble_continuity(dbl time_value,   /* current time */
   int p, q, a, b;
 
   int eqn, var;
-  int peqn, pvar, imtrx;
+  int peqn, pvar, imtrx, imtrx2;
   int w;
 
   int i, j;
@@ -4477,6 +4468,7 @@ assemble_continuity(dbl time_value,   /* current time */
   int lagrangian_mesh_motion=0, total_ale_on=0;
   int hydromassflux_on=0, suspensionsource_on=0;
   int foam_volume_source_on = 0;
+  int total_ale_and_velo_on = 0;
   
   dbl advection_etm,  source_etm;
   
@@ -4542,34 +4534,50 @@ assemble_continuity(dbl time_value,   /* current time */
   total_ale_on = (cr->MeshMotion == TOTAL_ALE); 
   hydromassflux_on = (cr->MassFluxModel == HYDRODYNAMIC);
   suspensionsource_on = (mp->MomentumSourceModel == SUSPENSION );
-  
-  if ( lagrangian_mesh_motion && pde[R_MESH1])
-    {
-      err = belly_flop(elc->lame_mu);
-      EH(err, "error in belly flop");
-      if (err == 2) return(err);
-    }
-  
 
-  if (( total_ale_on && !pdv[VELOCITY1]) && pde[R_SOLID1])
+
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      err = belly_flop_rs(elc_rs->lame_mu);
-      EH(err, "error in belly flop for real solid");
-      if (err == 2) return(err);
+      if ( lagrangian_mesh_motion && pd->e[imtrx][R_MESH1])
+	{
+	  err = belly_flop(elc->lame_mu);
+	  EH(err, "error in belly flop");
+	  if (err == 2) return(err);
+	}
+    }  
+  
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)     
+    {
+      if(total_ale_on && pd->v[imtrx][VELOCITY1])
+	{
+	  total_ale_and_velo_on = 1;
+	}
     }
 
-  if(pd->e[pg->imtrx][R_PMOMENTUM1])
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      particle_momentum_on = 1;
-      species = (int) mp->u_density[0];
-      ompvf = 1.0 - fv->c[species];
+      if(!total_ale_and_velo_on && pd->e[imtrx][R_SOLID1])
+	{
+	  err = belly_flop_rs(elc_rs->lame_mu);
+	  EH(err, "error in belly flop for real solid");
+	  if (err == 2) return(err);	  
+	}
     }
-  else
+
+
+  particle_momentum_on = 0;
+  species = -1;
+  ompvf = 1.0;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      particle_momentum_on = 0;
-      species = -1;
-      ompvf = 1.0;
+      if(pd->e[imtrx][R_PMOMENTUM1])
+	{
+	  particle_momentum_on = 1;
+	  species = (int) mp->u_density[0];
+	  ompvf = 1.0 - fv->c[species];
+	}
     }
+
 
   if(PSPG)
     {
@@ -4579,8 +4587,7 @@ assemble_continuity(dbl time_value,   /* current time */
     }
 
 
-  if ((lagrangian_mesh_motion ||(total_ale_on && !pd->v[pg->imtrx][VELOCITY1]))
-      && (mp->PorousMediaType == CONTINUOUS))
+  if ((lagrangian_mesh_motion ||!total_ale_and_velo_on) && (mp->PorousMediaType == CONTINUOUS))
     {
       initial_volsolvent = elc->Strss_fr_sol_vol_frac;
       volsolvent = 0.;
@@ -4689,11 +4696,15 @@ assemble_continuity(dbl time_value,   /* current time */
 		  var = MASS_FRACTION;
 		  for (w = 0; w < pd->Num_Species-1; w++)
 		    {
-		      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+		      derivative = 0.0;
+		      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 			{
-			  if ( bf[var]->phi[j] > 0.0 ) break;
+			  for (j = 0; j < ei[imtrx]->dof[var]; j++)
+			    {
+			      if ( bf[var]->phi[j] > 0.0 ) break;
+			    }			
+			  derivative = d_rho->C[w][j]/bf[var]->phi[j];
 			}
-		      derivative = d_rho->C[w][j]/bf[var]->phi[j];
 		      mass += derivative * s_terms.Y_dot[w];
 		    }
 		  mass *= epsilon/rho;
@@ -4712,45 +4723,53 @@ assemble_continuity(dbl time_value,   /* current time */
 	  advection = 0.0;
 	  if (advection_on)
 	    {
-	      if (pdv[VELOCITY1]) /* then must be solving fluid mechanics in this material */
+	      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 		{
-
-		  /*
-		   * Standard incompressibility constraint means we have
-		   * a solenoidal velocity field
-		   */
-
-		  advection = div_v;
-
-		  /* We get a more complicated advection term because the
-		   * particle phase is not incompressible.
-		   */
-		  if (particle_momentum_on) advection *= ompvf;
-
-		  advection *= phi_i * d_area;
-		  advection *= advection_etm;
+		  if (pd->v[imtrx][VELOCITY1]) /* then must be solving fluid mechanics in this material */
+		    {
+		      
+		      /*
+		       * Standard incompressibility constraint means we have
+		       * a solenoidal velocity field
+		       */
+		      
+		      advection = div_v;
+		      
+		      /* We get a more complicated advection term because the
+		       * particle phase is not incompressible.
+		       */
+		      if (particle_momentum_on) advection *= ompvf;
+		      
+		      advection *= phi_i * d_area;
+		      advection *= advection_etm;
+		    }
+		  else if (lagrangian_mesh_motion || total_ale_on)
+		    /* use divergence of displacement for linear elasticity */
+		    {
+		      advection = fv->volume_change;
+		      
+		      if( particle_momentum_on ) advection *= ompvf;
+		      
+		      advection *= phi_i * h3 * det_J * wt;
+		      advection *= advection_etm;
+		    }
 		}
-	      else if (lagrangian_mesh_motion || total_ale_on)
-		/* use divergence of displacement for linear elasticity */
-		{
-		  advection = fv->volume_change;
 
-		  if( particle_momentum_on ) advection *= ompvf;
-
-		  advection *= phi_i * h3 * det_J * wt;
-		  advection *= advection_etm;
-		}
 	      if (electrode_kinetics_on || ion_reactions_on)
 		{
 		  advection = div_v;
 		  var = MASS_FRACTION;
 		  for (w=0; w<pd->Num_Species-1; w++)
 		    {
-		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		      derivative = 0.0;
+		      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 			{
-			  if ( bf[var]->phi[j] > 0.0 ) break;
+			  for ( j=0; j<ei[imtrx]->dof[var]; j++)
+			    {
+			      if ( bf[var]->phi[j] > 0.0 ) break;
+			    }			
+			  derivative = d_rho->C[w][j]/bf[var]->phi[j];
 			}
-		      derivative = d_rho->C[w][j]/bf[var]->phi[j];
 		      sum = 0.;
 		      for (p=0; p<dim; p++)
 			{
@@ -4767,93 +4786,96 @@ assemble_continuity(dbl time_value,   /* current time */
 	  sourceBase = 0.0;
 	  if (source_on)
 	    {
-	      if (pdv[VELOCITY1])
+	      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 		{
-		  /* DRN (07/13/05):
-		     This was previously:
-		     source     =  P;
-		     But this messes with level set problems that have a density source
-		     over part of the domain and constant in other regions.  If someone was
-		     counting on this behavior as a form of a penalty method to give a non-zero
-		     diagonal entry, we should implement a new density model that accomplishes this.
-		     I really don't know what you want for DENSITY_IDEAL_GAS, though?!?
-		      
-		     source     =  0.;
-		     }*/
-		  if ( mp->DensityModel == DENSITY_FOAM || 
-		       mp->DensityModel == DENSITY_FOAM_CONC || 
-		       mp->DensityModel == DENSITY_FOAM_TIME ||
-		       mp->DensityModel == DENSITY_FOAM_TIME_TEMP)
+		  if (pd->v[imtrx][VELOCITY1])
 		    {
-		      /* These density models locally permit a time and spatially varying
-			 density.  Consequently, the Lagrangian derivative of the density
-			 terms in the continuity equation are not zero and are
-			 included here as a source term
-		      */
-		      source = FoamVolumeSource(time_value, dt, tt, dFVS_dv, dFVS_dT,
-						dFVS_dx, dFVS_dC, dFVS_dF);
-		      sourceBase = source;
-		      foam_volume_source_on = 1;
-		    }
-		  else if ( mp->DensityModel == REACTIVE_FOAM )
-		    {
-		      /* These density models locally permit a time and spatially varying
-			 density.  Consequently, the Lagrangian derivative of the density
-			 terms in the continuity equation are not zero and are
-			 included here as a source term
-		      */
-		      source = REFVolumeSource( time_value,
-						dt,
-						tt,
-						dFVS_dv,
-						dFVS_dT,
-						dFVS_dx,
-						dFVS_dC );
-		      sourceBase  = source;
-		      foam_volume_source_on =  1;
-		    }
-			  
-		  /*
-		    else if
-		    ( mp->DensityModel == SUSPENSION ||
-		    mp->DensityModel == SUSPENSION_PM )
-		    {
-		  */
-		  /* Although the suspension density models meet the definition of
-		     a locally variable density model, the Lagrangian derivative
-		     of their densities can be represented as a divergence of
-		     mass flux.  This term must be integrated by parts and so is
-		     included separately later on and is not include as part of the "source"
-		     terms 
-		     source = 0.0;
-		     }  */
-				
-
-		  /* To include, or not to include, that is the question
-		   * when considering the particle momentum coupled eq.'s...
-		   */
-
-		  /* We get this source term because the fluid phase is not
-		   * incompressible.
-		   */
-		  if (particle_momentum_on)
-		    {
-		      source = 0.0;
- 		      for(a = 0; a < wim; a++ )
+		      /* DRN (07/13/05):
+			 This was previously:
+			 source     =  P;
+			 But this messes with level set problems that have a density source
+			 over part of the domain and constant in other regions.  If someone was
+			 counting on this behavior as a form of a penalty method to give a non-zero
+			 diagonal entry, we should implement a new density model that accomplishes this.
+			 I really don't know what you want for DENSITY_IDEAL_GAS, though?!?
+			 
+			 source     =  0.;
+			 }*/
+		      if ( mp->DensityModel == DENSITY_FOAM || 
+			   mp->DensityModel == DENSITY_FOAM_CONC || 
+			   mp->DensityModel == DENSITY_FOAM_TIME ||
+			   mp->DensityModel == DENSITY_FOAM_TIME_TEMP)
 			{
-			  /* Cannot use s_terms.conv_flux[a] here because that
-			   * is defined in terms of the particle phase
-			   * velocities.
-			   */
-			  source -= fv->grad_c[species][a] * v[a];
+			  /* These density models locally permit a time and spatially varying
+			     density.  Consequently, the Lagrangian derivative of the density
+			     terms in the continuity equation are not zero and are
+			     included here as a source term
+			  */
+			  source = FoamVolumeSource(time_value, dt, tt, dFVS_dv, dFVS_dT,
+						    dFVS_dx, dFVS_dC, dFVS_dF);
+			  sourceBase = source;
+			  foam_volume_source_on = 1;
 			}
-		      sourceBase = source;
+		      else if ( mp->DensityModel == REACTIVE_FOAM )
+			{
+			  /* These density models locally permit a time and spatially varying
+			     density.  Consequently, the Lagrangian derivative of the density
+			     terms in the continuity equation are not zero and are
+			     included here as a source term
+			  */
+			  source = REFVolumeSource( time_value,
+						    dt,
+						    tt,
+						    dFVS_dv,
+						    dFVS_dT,
+						    dFVS_dx,
+						    dFVS_dC );
+			  sourceBase  = source;
+			  foam_volume_source_on =  1;
+			}
+		      
+		      /*
+			else if
+			( mp->DensityModel == SUSPENSION ||
+			mp->DensityModel == SUSPENSION_PM )
+			{
+		      */
+		      /* Although the suspension density models meet the definition of
+			 a locally variable density model, the Lagrangian derivative
+			 of their densities can be represented as a divergence of
+			 mass flux.  This term must be integrated by parts and so is
+			 included separately later on and is not include as part of the "source"
+			 terms 
+			 source = 0.0;
+			 }  */
+		      
+		      
+		      /* To include, or not to include, that is the question
+		       * when considering the particle momentum coupled eq.'s...
+		       */
+		      
+		      /* We get this source term because the fluid phase is not
+		       * incompressible.
+		       */
+		      if (particle_momentum_on)
+			{
+			  source = 0.0;
+			  for(a = 0; a < wim; a++ )
+			    {
+			      /* Cannot use s_terms.conv_flux[a] here because that
+			       * is defined in terms of the particle phase
+			       * velocities.
+			       */
+			      source -= fv->grad_c[species][a] * v[a];
+			    }
+			  sourceBase = source;
+			}
+		      source *= phi_i * d_area;
+		      source *= source_etm;
 		    }
-		  source *= phi_i * d_area;
-		  source *= source_etm;
 		}
 
-	      if ((lagrangian_mesh_motion || (total_ale_on && !pd->v[pg->imtrx][VELOCITY1]) ))
+	      if ((lagrangian_mesh_motion || !total_ale_and_velo_on))
 		/* add swelling as a source of volume */
 		{
 		  if ( mp->PorousMediaType == CONTINUOUS )
@@ -4888,9 +4910,12 @@ assemble_continuity(dbl time_value,   /* current time */
 	      for ( a=0; a<wim; a++)
 		{
 		  meqn = R_MOMENTUM1+a;
-		  if( pd->e[pg->imtrx][meqn])
+		  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 		    {
-		      pressure_stabilization += grad_phi[i][a] * pspg[a];
+		      if( pd->e[imtrx][meqn])
+			{
+			  pressure_stabilization += grad_phi[i][a] * pspg[a];
+			}
 		    }
 		}
 	      pressure_stabilization *= d_area;
@@ -4994,11 +5019,15 @@ assemble_continuity(dbl time_value,   /* current time */
 			      sum = 0.;
 			      for (jj=0; jj<pd->Num_Species-1; jj++)
 				{
-				  for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
+				  derivative = 0.0;
+				  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 				    {
-				      if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
+				      for ( q=0; q<ei[imtrx]->dof[MASS_FRACTION]; q++)
+					{
+					  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
+					}
+				      derivative = d_rho->C[jj][q]/bf[MASS_FRACTION]->phi[q];
 				    }
-				  derivative = d_rho->C[jj][q]/bf[MASS_FRACTION]->phi[q];
 				  sum += derivative * s_terms.d_conv_flux_dv[jj][b][b][j];
 				}
 			      div_phi_j_e_b += sum/rho;
@@ -5044,9 +5073,12 @@ assemble_continuity(dbl time_value,   /* current time */
 			  for ( a=0; a<wim; a++)
 			    {
 			      meqn = R_MOMENTUM1+a;
-			      if( pd->e[pg->imtrx][meqn])
+			      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 				{
-				  pressure_stabilization += grad_phi[i][a] * d_pspg->v[a][b][j];
+				  if( pd->e[imtrx][meqn])
+				    {
+				      pressure_stabilization += grad_phi[i][a] * d_pspg->v[a][b][j];
+				    }
 				}
 			    }
 			  pressure_stabilization *= d_area;
@@ -5086,9 +5118,12 @@ assemble_continuity(dbl time_value,   /* current time */
 		  for ( a=0; a<wim; a++)
 		    {
 		      meqn = R_MOMENTUM1+a;
-		      if( pd->e[pg->imtrx][meqn])
+		      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 			{
-			  pressure_stabilization += grad_phi[i][a] * d_pspg->T[a][j];
+			  if( pd->e[imtrx][meqn])
+			    {
+			      pressure_stabilization += grad_phi[i][a] * d_pspg->T[a][j];
+			    }
 			}
 		    }
 		  pressure_stabilization *= d_area;
@@ -5179,8 +5214,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		  
 		  advection  = 0.;
 		  
-		  if (advection_on && (lagrangian_mesh_motion ||
-				       (total_ale_on && !pd->v[pg->imtrx][VELOCITY1])))
+		  if (advection_on && (lagrangian_mesh_motion || !total_ale_and_velo_on))
 		    {
                       /*Need to compute this for total ALE.  Not done yet */
 		      advection = fv->d_volume_change_dp[j];
@@ -5201,9 +5235,12 @@ assemble_continuity(dbl time_value,   /* current time */
 		      for ( a=0; a<wim; a++)
 			{
 			  meqn = R_MOMENTUM1 + a;
-			  if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
-			    { 
-			      pressure_stabilization += grad_phi[i][a] * d_pspg->P[a][j];
+			  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+			    {
+			      if ( pd->e[imtrx][meqn] & T_DIFFUSION )
+				{ 
+				  pressure_stabilization += grad_phi[i][a] * d_pspg->P[a][j];
+				}
 			    }
 			}
 		      pressure_stabilization *= d_area;
@@ -5241,9 +5278,12 @@ assemble_continuity(dbl time_value,   /* current time */
 				  for ( a=0; a<wim; a++)
 				    {
 				      meqn = R_MOMENTUM1+a;
-				      if( pd->e[pg->imtrx][meqn])
+				      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 					{
-					  pressure_stabilization += grad_phi[i][a] * d_pspg->S[a][mode][p][q][j];
+					  if( pd->e[imtrx][meqn])
+					    {
+					      pressure_stabilization += grad_phi[i][a] * d_pspg->S[a][mode][p][q][j];
+					    }
 					}
 				    }
 				  
@@ -5279,9 +5319,12 @@ assemble_continuity(dbl time_value,   /* current time */
 			      for ( a=0; a<wim; a++)
 				{
 				  meqn = R_MOMENTUM1+a;
-				  if( pd->e[pg->imtrx][meqn])
+				  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 				    {
-				      pressure_stabilization += grad_phi[i][a] * d_pspg->g[a][p][q][j];
+				      if( pd->e[imtrx][meqn])
+					{
+					  pressure_stabilization += grad_phi[i][a] * d_pspg->g[a][p][q][j];
+					}
 				    }
 				}
 			      pressure_stabilization *=  h3 * det_J * wt;
@@ -5355,11 +5398,15 @@ assemble_continuity(dbl time_value,   /* current time */
 			    {
 			      for (w=0; w<pd->Num_Species-1; w++)
 				{
-				  for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
+				  derivative = 0.0;
+				  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 				    {
-				      if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
+				      for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
+					{
+					  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
+					}
+				      derivative = d_rho->C[w][q]/bf[MASS_FRACTION]->phi[q];
 				    }
-				  derivative = d_rho->C[w][q]/bf[MASS_FRACTION]->phi[q];
 				  mass += derivative * s_terms.Y_dot[w];
 				}
 			      mass *= epsilon/rho;
@@ -5370,63 +5417,70 @@ assemble_continuity(dbl time_value,   /* current time */
 		      advection  = 0.0;
 		      if (advection_on)
 			{
-			  if (pdv[VELOCITY1])
+			  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 			    {
-			      h_flux = 0.0;
-			      if((hydromassflux_on) && ( suspensionsource_on ) )
+			      if (pd->v[imtrx][VELOCITY1])
 				{
-				  for( p=0; p<dim; p++)
+				  h_flux = 0.0;
+				  if((hydromassflux_on) && ( suspensionsource_on ) )
 				    {
-				      h_flux += grad_phi[i][p]*s_terms.diff_flux[w0][p]
-					* d_h3detJ_dmesh_bj + grad_phi[i][p]* s_terms.d_diff_flux_dmesh[w0][p][b][j] 
-					* det_J * h3 + bf[eqn]->d_grad_phi_dmesh[i][p] [b][j] * s_terms.diff_flux[w0][p] * det_J * h3;
+				      for( p=0; p<dim; p++)
+					{
+					  h_flux += grad_phi[i][p]*s_terms.diff_flux[w0][p]
+					    * d_h3detJ_dmesh_bj + grad_phi[i][p]* s_terms.d_diff_flux_dmesh[w0][p][b][j] 
+					    * det_J * h3 + bf[eqn]->d_grad_phi_dmesh[i][p] [b][j] * s_terms.diff_flux[w0][p] * det_J * h3;
+					}
+				      h_flux *= ( rhos - rhof )/rhof * wt * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];	
+				      
 				    }
-				  h_flux *= ( rhos - rhof )/rhof * wt * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];	
-	      			  
-				}
-
-			      div_v_dmesh = fv->d_div_v_dmesh[b][j];
-		      
-			      
-			      advection+= div_v_dmesh * det_J * h3 + div_v * ( d_h3detJ_dmesh_bj );
 				  
-			      if (electrode_kinetics_on || ion_reactions_on ) /*  RSL  9/28/01  */
-				{
-				  sum_a = 0.;
-				  sum_b = 0.;
-				  for (w=0; w<pd->Num_Species-1; w++)
+				  div_v_dmesh = fv->d_div_v_dmesh[b][j];
+				  
+				  
+				  advection+= div_v_dmesh * det_J * h3 + div_v * ( d_h3detJ_dmesh_bj );
+				  
+				  if (electrode_kinetics_on || ion_reactions_on ) /*  RSL  9/28/01  */
 				    {
-				      for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
+				      sum_a = 0.;
+				      sum_b = 0.;
+				      for (w=0; w<pd->Num_Species-1; w++)
 					{
-					  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
+					  derivative = 0.0;
+					  for (imtrx2 = 0; imtrx2 < upd->Total_Num_Matrices; imtrx2++) 
+					    {
+					      for ( q=0; q<ei[imtrx2]->dof[MASS_FRACTION]; q++)
+						{
+						  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
+						}
+					      derivative = d_rho->C[w][q]/bf[MASS_FRACTION]->phi[q];
+					    }
+					  sum1 = 0.;
+					  sum2 = 0.;
+					  for (p=0; p<dim; p++)
+					    {
+					      sum1 += s_terms.conv_flux[w][p];
+					      sum2 += s_terms.d_conv_flux_dmesh[w][p][b][j];
+					    }
+					  sum_a += derivative * sum1;
+					  sum_b += derivative * sum2;
 					}
-				      derivative = d_rho->C[w][q]/bf[MASS_FRACTION]->phi[q];
-				      sum1 = 0.;
-				      sum2 = 0.;
-				      for (p=0; p<dim; p++)
-					{
-					  sum1 += s_terms.conv_flux[w][p];
-					  sum2 += s_terms.d_conv_flux_dmesh[w][p][b][j];
-					}
-				      sum_a += derivative * sum1;
-				      sum_b += derivative * sum2;
+				      sum_a /= rho;
+				      sum_b /= rho;
+				      advection += sum_b * det_J * h3 + sum_a * d_h3detJ_dmesh_bj;
 				    }
-				  sum_a /= rho;
-				  sum_b /= rho;
-				  advection += sum_b * det_J * h3 + sum_a * d_h3detJ_dmesh_bj;
+				  
+				  advection*= phi_i * wt;
+				} 
+			      else if (lagrangian_mesh_motion || !total_ale_and_velo_on)
+				{
+				  advection += fv->volume_change 
+				    * ( d_h3detJ_dmesh_bj ); 
+				  
+				  advection += fv->d_volume_change_dx[b][j] * 
+				    h3 * det_J; 
+				  
+				  advection *= phi_i * wt;
 				}
-					  
-			      advection*= phi_i * wt;
-			    } 
-			  else if (lagrangian_mesh_motion || ( total_ale_on && !pd->v[pg->imtrx][VELOCITY1]) )
-			    {
-			      advection += fv->volume_change 
-				* ( d_h3detJ_dmesh_bj ); 
-					  
-			      advection += fv->d_volume_change_dx[b][j] * 
-				h3 * det_J; 
-					  
-			      advection *= phi_i * wt;
 			    }
 			  
 			  advection *= advection_etm;
@@ -5449,7 +5503,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			      source *= phi_i * source_etm;
 			    }
 			}
-		      if ( lagrangian_mesh_motion || (total_ale_on  && !pdv[VELOCITY1])  )
+		      if ( lagrangian_mesh_motion || !total_ale_and_velo_on)
 			{
 			  /* add swelling as a source of volume */
 			  if ( mp->PorousMediaType == CONTINUOUS )
@@ -5485,11 +5539,14 @@ assemble_continuity(dbl time_value,   /* current time */
 			  for ( a=0; a<wim; a++)
 			    {
 			      meqn = R_MOMENTUM1+a;
-			      if( pd->e[pg->imtrx][meqn])
+			      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 				{
-				  pressure_stabilization += grad_phi[i][a] * d_pspg->X[a][b][j] * h3 * det_J * wt
-				    + grad_phi[i][a] * pspg[a] *  wt * d_h3detJ_dmesh_bj
-				    + bf[eqn]->d_grad_phi_dmesh[i][a][b][j] * pspg[a] * wt  * h3 * det_J;
+				  if( pd->e[imtrx][meqn])
+				    {
+				      pressure_stabilization += grad_phi[i][a] * d_pspg->X[a][b][j] * h3 * det_J * wt
+					+ grad_phi[i][a] * pspg[a] *  wt * d_h3detJ_dmesh_bj
+					+ bf[eqn]->d_grad_phi_dmesh[i][a][b][j] * pspg[a] * wt  * h3 * det_J;
+				    }
 				}
 			    }
 			}
@@ -5519,7 +5576,7 @@ assemble_continuity(dbl time_value,   /* current time */
 
 		      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 			{
-			  if (cr->MeshMotion == TOTAL_ALE && !pd->v[pg->imtrx][VELOCITY1])
+			  if (!total_ale_and_velo_on)
 			    {
 			      advection += fv->d_volume_change_drs[b][j] * 
 				h3 * det_J; 
@@ -5585,10 +5642,13 @@ assemble_continuity(dbl time_value,   /* current time */
 			  for ( a=0; a<wim; a++)
 			    {
 			      meqn = R_MOMENTUM1 + a;
-			      if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
-				{
-				  pressure_stabilization += grad_phi[i][a] * d_pspg->C[a][w][j];
-				}
+			        for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+				  {
+				    if ( pd->e[imtrx][meqn] & T_DIFFUSION )
+				      {
+					pressure_stabilization += grad_phi[i][a] * d_pspg->C[a][w][j];
+				      }
+				  }
 			    }
 			  pressure_stabilization *= h3 * det_J * wt;
 			}
@@ -5626,11 +5686,15 @@ assemble_continuity(dbl time_value,   /* current time */
 			  sum = 0.;
 			  for (jj=0; jj<pd->Num_Species-1; jj++)
 			    {
-			      for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
+			      derivative = 0.0;
+			      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 				{
-				  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
+				  for ( q=0; q<ei[imtrx]->dof[MASS_FRACTION]; q++)
+				    {
+				      if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
+				    }
+				  derivative = d_rho->C[jj][q]/bf[MASS_FRACTION]->phi[q];
 				}
-			      derivative = d_rho->C[jj][q]/bf[MASS_FRACTION]->phi[q];
 			      sum += derivative * (s_terms.d_Y_dot_dc[jj][w][j] -
 						   d_rho->C[w][j]*s_terms.Y_dot[jj]/rho);
 			    }
@@ -5644,11 +5708,15 @@ assemble_continuity(dbl time_value,   /* current time */
 			  sum = 0.;
 			  for (jj=0; jj<pd->Num_Species-1; jj++)
 			    {
-			      for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
+			      derivative = 0.0;
+			      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
 				{
-				  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
+				  for ( q=0; q<ei[imtrx]->dof[MASS_FRACTION]; q++)
+				    {
+				      if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
+				    }
+				  derivative = d_rho->C[jj][q]/bf[MASS_FRACTION]->phi[q];
 				}
-			      derivative = d_rho->C[jj][q]/bf[MASS_FRACTION]->phi[q];
 			      sum1 = 0.;
 			      sum2 = 0.;
 			      for ( p=0; p<VIM; p++)
