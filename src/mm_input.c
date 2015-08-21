@@ -1358,6 +1358,9 @@ rd_timeint_specs(FILE *ifp,
      structure as a global variable for poroelastic probs */
   tran->theta = 0.0;
 
+  /* set default frequency to 0 */
+  tran->fix_freq = 0;
+
   if(pd_glob[0]->TimeIntegration != STEADY) {
 
     look_for(ifp,"delta_t",input,'=');
@@ -1490,8 +1493,6 @@ rd_timeint_specs(FILE *ifp,
       }
 
     /* Look for fix frequency */
-    /* set default frequency to 0 */
-    tran->fix_freq = 0;
 
     /* only look for fix frequency in parallel */
     if (Num_Proc > 1) {

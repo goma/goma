@@ -429,7 +429,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   if ( nAC > 0   )
   {
-    char name[7];
+    char name[10];
 
     for( i = 0 ; i < nAC ; i++ )
       {
@@ -2446,6 +2446,8 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      if (augc[iAC].Type == AC_USERBC) 
 		{
 		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
+/* temporary printing */
+#if 0
                   if( (int)augc[iAC].DataFlt[1] == 6)
 			{
 		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 0, BC_Types[augc[iAC].DFID].BC_Data_Float[0]);
@@ -2461,6 +2463,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		  DPRINTF(stderr, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
 
 			}
+#endif
 		}
 	      else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT)
 		{
