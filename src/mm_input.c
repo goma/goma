@@ -5830,6 +5830,9 @@ rd_solver_specs(FILE *ifp,
   } else if (strcmp(Matrix_Solver, "aztecoo") == 0) {
     Linear_Solver = AZTECOO;
     is_Solver_Serial = FALSE;
+  } else if (strcmp(Matrix_Solver, "stratimikos") == 0) {
+    Linear_Solver = STRATIMIKOS;
+    is_Solver_Serial = FALSE;
   } else {
     Linear_Solver = AZTEC;
     is_Solver_Serial = FALSE;
@@ -5917,6 +5920,21 @@ rd_solver_specs(FILE *ifp,
     // Set gmres as the default AztecOO Solver
     SPF(echo_string, def_form, search_string, "gmres", default_string);
     strcpy(AztecOO_Solver, "gmres");
+    ECHO(echo_string, echo_file);
+  }
+
+  strcpy(search_string, "Stratimikos File");
+  iread = look_for_optional(ifp, search_string, input, '=');
+  if (iread == 1) {
+    read_string(ifp, input, '\n');
+    strip(input);
+    strcpy(Stratimikos_File, input);
+    SPF(echo_string, eoformat, search_string, input);
+    ECHO(echo_string, echo_file);
+  } else {
+    // Set stratimikos.xml as defualt stratimikos file
+    SPF(echo_string, def_form, search_string, "stratimikos.xml", default_string);
+    strcpy(Stratimikos_File, "stratimikos.xml");
     ECHO(echo_string, echo_file);
   }
 
@@ -8358,7 +8376,17 @@ rd_eq_specs(FILE *ifp,
            }
          }
       }
-
+    int iread;
+    strcpy(search_string, "Stratimikos File");
+    iread = look_forward_optional(ifp, search_string, input, '=');
+    if (iread == 1) {
+      read_string(ifp, input, '\n');
+      strip(input);
+      strcpy(Stratimikos_File[imtrx], input);
+    } else {
+      // Set stratimikos.xml as defualt stratimikos file
+      strcpy(Stratimikos_File[imtrx], "stratimikos.xml");
+    }
 
     pd_ptr->Matrix_Activity[mtrx_index0] = 1;
   

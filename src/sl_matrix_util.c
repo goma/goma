@@ -910,6 +910,8 @@ check_compatible_solver()
         return 0;
       case AMESOS:
         return 0;
+      case STRATIMIKOS:
+        return 0;
       default:
         return -1;
     }

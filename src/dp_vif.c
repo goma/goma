@@ -775,6 +775,7 @@ noahs_ark()
   ddd_add_member(n, Matrix_Relative_Threshold, MAX_CHAR_IN_INPUT, MPI_CHAR);
   ddd_add_member(n, Matrix_Absolute_Threshold, MAX_CHAR_IN_INPUT, MPI_CHAR);
   ddd_add_member(n, Amesos_Package, MAX_CHAR_IN_INPUT, MPI_CHAR);
+  ddd_add_member(n, Stratimikos_File, MAX_CHAR_IN_INPUT*MAX_NUM_MATRICES, MPI_CHAR);
 
   ddd_add_member(n, &Linear_Solver, 1, MPI_INT);
 

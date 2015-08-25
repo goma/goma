@@ -431,7 +431,8 @@ SL_SRC= sl_lu.c\
         sl_leastsquares.C \
         sl_epetra_interface.cpp \
         sl_epetra_util.cpp \
-        sl_aztecoo_interface.cpp
+        sl_aztecoo_interface.cpp \
+        sl_stratimikos_interface.cpp
 
 SL_INC= spConfig.h\
         spDefs.h\

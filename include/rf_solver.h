@@ -18,6 +18,7 @@
 #ifndef _RF_SOLVER_H
 #define _RF_SOLVER_H
 
+#include "rf_fem_const.h" /* MAX_NUM_MATRICES */
 #include "rf_io_const.h"	/* for definition of MAX_CHAR_IN_INPUT */
 #include "rf_solver_const.h"	/* for kinds of direct solvers */
 
@@ -83,6 +84,8 @@ String_line Matrix_Absolute_Threshold; /* Trilinos 2 */
 String_line Amesos_Package;
 
 String_line AztecOO_Solver;
+
+String_line Stratimikos_File[MAX_NUM_MATRICES];
 
 /*
  * A new Aztec 2.0 option. There are more and difft options and our

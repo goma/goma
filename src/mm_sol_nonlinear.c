@@ -1478,6 +1478,21 @@ EH(-1,"version not compiled with frontal solver");
         }
         break;
 
+      case STRATIMIKOS:
+        if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
+          int iterations;
+          int err = stratimikos_solve(ams, delta_x, resid_vector, &iterations, Stratimikos_File[pg->imtrx]);
+          if (err)
+          {
+          EH(err, "Error in stratimikos solve");
+          check_parallel_error("Error in solve - stratimikos");
+          }
+          aztec_stringer(AZ_normal, iterations, &stringer[0]);
+        } else {
+          EH(-1, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
+        }
+        break;
+
       case MA28:
 	  /*
 	   * sl_ma28 keeps internal static variables to determine whether
