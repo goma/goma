@@ -4468,7 +4468,7 @@ assemble_continuity(dbl time_value,   /* current time */
   int lagrangian_mesh_motion=0, total_ale_on=0;
   int hydromassflux_on=0, suspensionsource_on=0;
   int foam_volume_source_on = 0;
-  int total_ale_and_velo_on = 0;
+  int total_ale_and_velo_off = 0;
   
   dbl advection_etm,  source_etm;
   
@@ -4548,15 +4548,15 @@ assemble_continuity(dbl time_value,   /* current time */
   
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)     
     {
-      if(total_ale_on && pd->v[imtrx][VELOCITY1])
+      if(total_ale_on && !pd->v[imtrx][VELOCITY1])
 	{
-	  total_ale_and_velo_on = 1;
+	  total_ale_and_velo_off = 1;
 	}
     }
 
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
     {
-      if(!total_ale_and_velo_on && pd->e[imtrx][R_SOLID1])
+      if(total_ale_and_velo_off && pd->e[imtrx][R_SOLID1])
 	{
 	  err = belly_flop_rs(elc_rs->lame_mu);
 	  EH(err, "error in belly flop for real solid");
@@ -4587,7 +4587,7 @@ assemble_continuity(dbl time_value,   /* current time */
     }
 
 
-  if ((lagrangian_mesh_motion ||!total_ale_and_velo_on) && (mp->PorousMediaType == CONTINUOUS))
+  if ((lagrangian_mesh_motion ||total_ale_and_velo_off) && (mp->PorousMediaType == CONTINUOUS))
     {
       initial_volsolvent = elc->Strss_fr_sol_vol_frac;
       volsolvent = 0.;
@@ -4875,7 +4875,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		    }
 		}
 
-	      if ((lagrangian_mesh_motion || !total_ale_and_velo_on))
+	      if ((lagrangian_mesh_motion || total_ale_and_velo_off))
 		/* add swelling as a source of volume */
 		{
 		  if ( mp->PorousMediaType == CONTINUOUS )
@@ -5214,7 +5214,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		  
 		  advection  = 0.;
 		  
-		  if (advection_on && (lagrangian_mesh_motion || !total_ale_and_velo_on))
+		  if (advection_on && (lagrangian_mesh_motion || total_ale_and_velo_off))
 		    {
                       /*Need to compute this for total ALE.  Not done yet */
 		      advection = fv->d_volume_change_dp[j];
@@ -5471,7 +5471,7 @@ assemble_continuity(dbl time_value,   /* current time */
 				  
 				  advection*= phi_i * wt;
 				} 
-			      else if (lagrangian_mesh_motion || !total_ale_and_velo_on)
+			      else if (lagrangian_mesh_motion || total_ale_and_velo_off)
 				{
 				  advection += fv->volume_change 
 				    * ( d_h3detJ_dmesh_bj ); 
@@ -5503,7 +5503,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			      source *= phi_i * source_etm;
 			    }
 			}
-		      if ( lagrangian_mesh_motion || !total_ale_and_velo_on)
+		      if ( lagrangian_mesh_motion || total_ale_and_velo_off)
 			{
 			  /* add swelling as a source of volume */
 			  if ( mp->PorousMediaType == CONTINUOUS )
@@ -5576,7 +5576,7 @@ assemble_continuity(dbl time_value,   /* current time */
 
 		      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 			{
-			  if (!total_ale_and_velo_on)
+			  if (total_ale_and_velo_off)
 			    {
 			      advection += fv->d_volume_change_drs[b][j] * 
 				h3 * det_J; 
