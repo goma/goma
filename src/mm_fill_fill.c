@@ -2417,8 +2417,8 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
 	  for (ki = 0; ki < nvdofi; ki++)	
 	    {
 	      /* set rhs to zero for Dirichlet boundary conditions */
-	      if (node->DBC &&
-		  (node->DBC[offseti + ki] != -1) &&
+	      if (node->DBC[pg->imtrx] &&
+		  (node->DBC[pg->imtrx][offseti + ki] != -1) &&
 		  Debug_Flag >= 0)
 		{
 		  rf[node_to_fill[I] + ki] = 0.0;
@@ -2550,8 +2550,8 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
 					  EH(ja, "Could not find vbl in sparse matrix.");
 					  
 					  /* set diagonal to one for Dirichlet boundary conditions */
-					  if (node->DBC && 
-						  ((int) node->DBC[offseti + ki] != -1) &&
+					  if (node->DBC[pg->imtrx] && 
+						  ((int) node->DBC[pg->imtrx][offseti + ki] != -1) &&
 						  Debug_Flag >= 0)
 					  {
 						  afill[ja] = delta(i,j); 
@@ -2852,8 +2852,8 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
 	  for (ki = 0; ki < nvdofi; ki++)	
 	    {
 	      /* set rhs to zero for Dirichlet boundary conditions */
-	      if (node->DBC &&
-		  (node->DBC[offseti + ki] != -1) &&
+	      if (node->DBC[pg->imtrx] &&
+		  (node->DBC[pg->imtrx][offseti + ki] != -1) &&
 		  Debug_Flag >= 0)
 		{
 		  rf[node_to_fill[I] + ki] = 0.0;
@@ -2937,8 +2937,8 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
 		      EH(ja, "Could not find vbl in sparse matrix.");
 		      
 		      /* set diagonal to one for Dirichlet boundary conditions */
-		      if (node->DBC && 
-			  ((int) node->DBC[offseti + ki] != -1) &&
+		      if (node->DBC[pg->imtrx] && 
+			  ((int) node->DBC[pg->imtrx][offseti + ki] != -1) &&
 			  Debug_Flag >= 0)
 			{
 			  afill[ja] = delta(i,j); 
@@ -3202,8 +3202,8 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
 	  for (ki = 0; ki < nvdofi; ki++)	
 	    {
 	      /* set rhs to zero for Dirichlet boundary conditions */
-	      if (node->DBC &&
-		  (node->DBC[offseti + ki] != -1) &&
+	      if (node->DBC[pg->imtrx] &&
+		  (node->DBC[pg->imtrx][offseti + ki] != -1) &&
 		  Debug_Flag >= 0)
 		{
 		  rf[node_to_fill[I] + ki] = 0.0;
@@ -3287,8 +3287,8 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
 		      EH(ja, "Could not find vbl in sparse matrix.");
 		      
 		      /* set diagonal to one for Dirichlet boundary conditions */
-		      if (node->DBC && 
-			  ((int) node->DBC[offseti + ki] != -1) &&
+		      if (node->DBC[pg->imtrx] && 
+			  ((int) node->DBC[pg->imtrx][offseti + ki] != -1) &&
 			  Debug_Flag >= 0)
 			{
 			  afill[ja] = delta(i,j); 
@@ -4654,8 +4654,8 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 		      for ( ki=0; ki<nvdofi; ki++)
 			{
 			  /* set rhs to zero for Dirichlet boundary conditions */
-			  if (node->DBC &&
-			      (node->DBC[offseti + ki] != -1) &&
+			  if (node->DBC[pg->imtrx] &&
+			      (node->DBC[pg->imtrx][offseti + ki] != -1) &&
 			      Debug_Flag >= 0)
 			    {
 			      rf[node_to_fill[I]+ki] = 0;
@@ -4708,8 +4708,8 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 				  EH(ja, "Could not find vbl in sparse matrix.");
 				  
 				  /* set diagonal to one for Dirichlet boundary conditions */
-				  if(node->DBC &&
-				     (node->DBC[offseti + ki] != -1) &&
+				  if(node->DBC[pg->imtrx] &&
+				     (node->DBC[pg->imtrx][offseti + ki] != -1) &&
 				     Debug_Flag >= 0)
 				    {
 				      afill[ja] = delta(i,j); 

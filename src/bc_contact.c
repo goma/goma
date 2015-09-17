@@ -2641,7 +2641,7 @@ lookup_active_dof(int var,
   nn = Nodes[index];
   nv = nn->Nodal_Vars_Info[pg->imtrx];
   noffset = get_nodal_unknown_offset(nv, var, -2, 0, NULL);
-  if (nn->DBC != NULL)
+  if (nn->DBC[pg->imtrx] != NULL)
     {
       /* dirichlet bc's only apply to natural dofs for xfem */
       if (pd->i[pg->imtrx][var] == I_P0_G ||
@@ -2664,11 +2664,11 @@ lookup_active_dof(int var,
 	  pd->i[pg->imtrx][var] == I_Q1_XG ||
 	  pd->i[pg->imtrx][var] == I_Q2_XG )
         {
-          if (j%2 == 0 && nn->DBC[noffset] >= 0) nu = -2;
+          if (j%2 == 0 && nn->DBC[pg->imtrx][noffset] >= 0) nu = -2;
         }
       else
         {
-          if (nn->DBC[noffset] >= 0) nu = -2;
+          if (nn->DBC[pg->imtrx][noffset] >= 0) nu = -2;
         }
     }
   

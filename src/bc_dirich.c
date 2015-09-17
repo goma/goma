@@ -91,14 +91,14 @@ put_dirichlet_in_matrix(double x[], const int num_total_nodes)
   for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) {
     I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
     node = Nodes[I];
-    if (node->DBC && I < num_total_nodes) {
+    if (node->DBC[pg->imtrx] && I < num_total_nodes) {
       nv = node->Nodal_Vars_Info[pg->imtrx];
       offset = 0;
       for (lvdesc = 0; lvdesc < nv->Num_Var_Desc; lvdesc++) {
 	vd = nv->Var_Desc_List[lvdesc];
 	for (idof = 0; idof < vd->Ndof; idof++) { 
-	  if (node->DBC[offset] != -1) {
-	    ibc = node->DBC[offset];
+	  if (node->DBC[pg->imtrx][offset] != -1) {
+	    ibc = node->DBC[pg->imtrx][offset];
 	    var_type = vd->Variable_Type;
 	    matID = vd->MatID;
 	    /*

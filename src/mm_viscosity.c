@@ -118,7 +118,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
   int var, var_offset;
   int v,w, w1;
 
-  int vdofs;
+  int vdofs = 0;
 
   int i, j, imtrx;
 
@@ -784,7 +784,7 @@ herschel_buckley_viscosity(struct Generalized_Newtonian *gn_local,
 			   VISCOSITY_DEPENDENCE_STRUCT *d_mu)
 {
   int a, b;
-  int mdofs=0,vdofs;
+  int mdofs=0,vdofs=0;
 
   int i, j, imtrx;
 
@@ -1547,7 +1547,7 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
   int a, b;
 
   int var;
-  int mdofs=0,vdofs;
+  int mdofs=0,vdofs=0;
 
   int i, j, imtrx;
 
@@ -2001,7 +2001,7 @@ carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   int var, var_offset;
   int w, imtrx;
 
-  int mdofs=0,vdofs;
+  int mdofs=0,vdofs=0;
 
   dbl C[MAX_CONC]; /* Convenient local variables */
   dbl mu = 0.;
@@ -2209,7 +2209,7 @@ powerlaw_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   int a, b;
   int var, var_offset;
   int w, imtrx;
-  int mdofs=0,vdofs;
+  int mdofs=0,vdofs=0;
 
   dbl C[MAX_CONC];		/* Convenient local variables */
   dbl mu = 0.;
@@ -3157,7 +3157,7 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
   int a, b;
  
   int var;
-  int mdofs=0,vdofs;
+  int mdofs=0,vdofs=0;
  
   int i, j, w, imtrx;
  

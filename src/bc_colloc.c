@@ -2313,81 +2313,83 @@ bc_eqn_index(int id,               /* local node number                 */
    *        results of this search (or just the need to do the
    *        search).
    */
-  bc_node = in_list(I, 0, BC_dup_ptr+1, BC_dup_nodes);
-  if (bc_node != -1) {
-    /* 
-     * current node is in the BC_duplication list.
-     * The current boundary condition may have been deleted.
-     * If the current boundary condition is a rotated boundary
-     * condition, it may have been moved to another coordinate
-     * direction.
-     */
-    i_calc = -1;
-    if (ieqn <= LAST_REAL_EQ) {
-      i_calc = search_bc_dup_list(bc_input_id, 
-				  BC_dup_list[bc_node][node_offset]);
-
-    } else if ((ieqn >= R_MESH_NORMAL) && (ieqn <= R_MESH_TANG2)) {
-      /*
-       * If it's a rotated boundary condition, the boundary
-       * condition could have been moved to another coordinate
-       * within check_for_bc_conflicts2D(). Therefore, we need
-       * to check all coordinate directions for the presence of the
-       * current boundary condition.
+  if (BC_dup_ptr != NULL) {
+    bc_node = in_list(I, 0, BC_dup_ptr[pg->imtrx]+1, BC_dup_nodes[pg->imtrx]);
+    if (bc_node != -1) {
+      /* 
+       * current node is in the BC_duplication list.
+       * The current boundary condition may have been deleted.
+       * If the current boundary condition is a rotated boundary
+       * condition, it may have been moved to another coordinate
+       * direction.
        */
-      for (jeqn = R_MESH1; jeqn <= R_MESH3; jeqn++) {
-	offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
-	if (offset_j >= 0) {
-	  i_calc = search_bc_dup_list(bc_input_id, 
-				      BC_dup_list[bc_node][offset_j]);
-	  if (i_calc != -1) {
-	    node_offset = offset_j;
-	    ieqn = jeqn;
-	    vd = vd2;
-	    break;
-	  }
-	}
+      i_calc = -1;
+      if (ieqn <= LAST_REAL_EQ) {
+        i_calc = search_bc_dup_list(bc_input_id, 
+                                    BC_dup_list[pg->imtrx][bc_node][node_offset]);
+
+      } else if ((ieqn >= R_MESH_NORMAL) && (ieqn <= R_MESH_TANG2)) {
+        /*
+         * If it's a rotated boundary condition, the boundary
+         * condition could have been moved to another coordinate
+         * within check_for_bc_conflicts2D(). Therefore, we need
+         * to check all coordinate directions for the presence of the
+         * current boundary condition.
+         */
+        for (jeqn = R_MESH1; jeqn <= R_MESH3; jeqn++) {
+          offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
+          if (offset_j >= 0) {
+            i_calc = search_bc_dup_list(bc_input_id, 
+                                        BC_dup_list[pg->imtrx][bc_node][offset_j]);
+            if (i_calc != -1) {
+              node_offset = offset_j;
+              ieqn = jeqn;
+              vd = vd2;
+              break;
+            }
+          }
+        }
+
+      } else if ((ieqn >= R_MOM_NORMAL) && (ieqn <= R_MOM_TANG2)) {
+        for (jeqn = R_MOMENTUM1; jeqn <= R_MOMENTUM3; jeqn++) {
+          offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
+          if (offset_j >= 0) {
+            i_calc = search_bc_dup_list(bc_input_id, 
+                                        BC_dup_list[pg->imtrx][bc_node][offset_j]);
+            if (i_calc != -1) {
+              node_offset = offset_j;
+              ieqn = jeqn;
+              vd = vd2;
+              break;
+            }
+          }
+        }
+      } else if ((ieqn >= R_SOLID_NORMAL) && (ieqn <= R_SOLID_TANG2)) {
+        for (jeqn = R_SOLID1; jeqn <= R_SOLID3; jeqn++) {
+          offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
+          if (offset_j >= 0) {
+            i_calc = search_bc_dup_list(bc_input_id, 
+                                        BC_dup_list[pg->imtrx][bc_node][offset_j]);
+            if (i_calc != -1) {
+              node_offset = offset_j;
+              ieqn = jeqn;
+              vd = vd2;
+              break;
+            }
+          }
+        }
+      } else {
+        EH(-1,"Equation not in list ");
       }
 
-    } else if ((ieqn >= R_MOM_NORMAL) && (ieqn <= R_MOM_TANG2)) {
-      for (jeqn = R_MOMENTUM1; jeqn <= R_MOMENTUM3; jeqn++) {
-	offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
-	if (offset_j >= 0) {
-	  i_calc = search_bc_dup_list(bc_input_id, 
-				      BC_dup_list[bc_node][offset_j]);
-	  if (i_calc != -1) {
-	    node_offset = offset_j;
-	    ieqn = jeqn;
-	    vd = vd2;
-	    break;
-	  }
-	}
+      /*
+       * The current boundary condition has been deleted from application
+       * at the current node due to a conflict with another boundary
+       * condition. Return a -1.
+       */
+      if (i_calc == -1) {
+        return -1;
       }
-    } else if ((ieqn >= R_SOLID_NORMAL) && (ieqn <= R_SOLID_TANG2)) {
-      for (jeqn = R_SOLID1; jeqn <= R_SOLID3; jeqn++) {
-	offset_j = get_nodal_unknown_offset(nv, jeqn, matID, 0, &vd2);
-	if (offset_j >= 0) {
-	  i_calc = search_bc_dup_list(bc_input_id, 
-				      BC_dup_list[bc_node][offset_j]);
-	  if (i_calc != -1) {
-	    node_offset = offset_j;
-	    ieqn = jeqn;
-	    vd = vd2;
-	    break;
-	  }
-	}
-      }
-    } else {
-      EH(-1,"Equation not in list ");
-    }
-
-    /*
-     * The current boundary condition has been deleted from application
-     * at the current node due to a conflict with another boundary
-     * condition. Return a -1.
-     */
-    if (i_calc == -1) {
-      return -1;
     }
   }
   /*
@@ -2412,8 +2414,8 @@ bc_eqn_index(int id,               /* local node number                 */
    * If the regular unknown equation is replaced by a Dirichlet 
    * condition at this node, return -1
    */
-  if (node->DBC) {
-    if (((int) node->DBC[node_offset]) != -1) {
+  if (node->DBC[pg->imtrx]) {
+    if (((int) node->DBC[pg->imtrx][node_offset]) != -1) {
       return -1;
     }
   } 

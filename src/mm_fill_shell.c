@@ -3729,12 +3729,12 @@ put_fluid_stress_on_shell(int id, /* local element node number for the
 
   dim = pd->Num_Dim;
 
-  if (node->DBC) {
+  if (node->DBC[pg->imtrx]) {
      
     offset = get_nodal_unknown_offset(nv, R_SHELL_CURVATURE, -2, 0, NULL);
-    curvature_fixed = (offset >= 0) && (node->DBC[offset] != -1);
+    curvature_fixed = (offset >= 0) && (node->DBC[pg->imtrx][offset] != -1);
     offset = get_nodal_unknown_offset(nv, R_SHELL_TENSION, -2, 0, NULL);
-    tension_fixed   = (offset >= 0) && (node->DBC[offset] != -1);	
+    tension_fixed   = (offset >= 0) && (node->DBC[pg->imtrx][offset] != -1);	
   } else {
     curvature_fixed = tension_fixed = 0;
   }
@@ -4007,10 +4007,10 @@ put_shear_stress_on_shell(int id, /* local element node number for the
 
   dim = pd->Num_Dim;
 
-  if (node->DBC) {
+  if (node->DBC[pg->imtrx]) {
      
     offset = get_nodal_unknown_offset(nv, R_SHELL_TENSION, -2, 0, NULL);
-    tension_fixed   = (offset >= 0) && (node->DBC[offset] != -1);	
+    tension_fixed   = (offset >= 0) && (node->DBC[pg->imtrx][offset] != -1);	
   } else {
     tension_fixed = 0;
   }

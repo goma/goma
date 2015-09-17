@@ -199,7 +199,7 @@ struct Node_Info {
      *  of the unknowns at the interface.
      *  Length = Number of unknowns at this node
      */
-    short int *DBC;
+    short int **DBC;
 };
 typedef struct Node_Info NODE_INFO_STRUCT;
 

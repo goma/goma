@@ -2171,14 +2171,14 @@ put_liquid_stress_in_solid(int id, /* local element node number for the
     wim   = dim;
     if(pd->CoordinateSystem == SWIRLING) wim = wim+1;
 
-    if (node->DBC) {
+    if (node->DBC[pg->imtrx]) {
      
       offset = get_nodal_unknown_offset(nv, R_MESH1, -2, 0, NULL);
-      xfixed[0] = (offset >= 0) && (node->DBC[offset] != -1);
+      xfixed[0] = (offset >= 0) && (node->DBC[pg->imtrx][offset] != -1);
       offset = get_nodal_unknown_offset(nv, R_MESH2, -2, 0, NULL);
-      xfixed[1] = (offset >= 0) && (node->DBC[offset] != -1);	
+      xfixed[1] = (offset >= 0) && (node->DBC[pg->imtrx][offset] != -1);	
       offset = get_nodal_unknown_offset(nv, R_MESH3, -2, 0, NULL);
-      xfixed[2] = (offset >= 0) && (node->DBC[offset] != -1);
+      xfixed[2] = (offset >= 0) && (node->DBC[pg->imtrx][offset] != -1);
     } else {
       xfixed[0] = xfixed[1] = xfixed[2] = 0;
     }
@@ -2508,13 +2508,13 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 
     dim = pd->Num_Dim;
 
-    if (node->DBC) {
+    if (node->DBC[pg->imtrx]) {
       offset = get_nodal_unknown_offset(nv, R_SOLID1, -2, 0, NULL);
-      xfixed[0] = (offset >= 0) && (node->DBC[offset] != -1);
+      xfixed[0] = (offset >= 0) && (node->DBC[pg->imtrx][offset] != -1);
       offset = get_nodal_unknown_offset(nv, R_SOLID2, -2, 0, NULL);
-      xfixed[1] = (offset >= 0) && (node->DBC[offset] != -1);	
+      xfixed[1] = (offset >= 0) && (node->DBC[pg->imtrx][offset] != -1);	
       offset = get_nodal_unknown_offset(nv, R_SOLID3, -2, 0, NULL);
-      xfixed[2] = (offset >= 0) && (node->DBC[offset] != -1);
+      xfixed[2] = (offset >= 0) && (node->DBC[pg->imtrx][offset] != -1);
     } else {
       xfixed[0] = xfixed[1] = xfixed[2] = 0;
     } 

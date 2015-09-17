@@ -461,12 +461,12 @@ find_and_set_Dirichlet(double x[],    /* solution vector at this processor */
       nv = node->Nodal_Vars_Info[pg->imtrx];
       if (Dolphin[pg->imtrx][inode][PRESSURE] > 0 && datum_set) {
 	datum_set = 0;
-	if (!node->DBC) {
-	  node->DBC = alloc_short_1(nv->Num_Unknowns, -1);
+	if (!node->DBC[pg->imtrx]) {
+	  node->DBC[pg->imtrx] = alloc_short_1(nv->Num_Unknowns, -1);
 	}
 	offset = get_nodal_unknown_offset(nv, PRESSURE, mn, 0, &vd);
 
-	node->DBC[offset] = 0;
+	node->DBC[pg->imtrx][offset] = 0;
 	ie = Index_Solution(inode, PRESSURE, 0, 0, mn, pg->imtrx);
 	x[ie]  = pressure_datum_value;
 	xdot[ie]  = 0.0; 
@@ -527,10 +527,10 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
     if (eqn != R_MASS) {
       offset = get_nodal_unknown_offset(nv, eqn, matID, 0, &vd);
       if (offset >= 0) {
-	if (node->DBC == NULL) {
-	  node->DBC = alloc_short_1(nv->Num_Unknowns, -1);
+	if (node->DBC[pg->imtrx] == NULL) {
+	  node->DBC[pg->imtrx] = alloc_short_1(nv->Num_Unknowns, -1);
 	}
-	node->DBC[offset] = (short int) ibc;
+	node->DBC[pg->imtrx][offset] = (short int) ibc;
 	ieqn = node->First_Unknown[pg->imtrx] + offset;
         /*
          *  If BC_relax is set to default, set the boundary
@@ -595,10 +595,10 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
       if (offset < 0) {
 	WH(-1, "Y BC applied to material without species equation");
       } else {
-	if (node->DBC == NULL) {
-	  node->DBC = alloc_short_1(nv->Num_Unknowns, -1);
+	if (node->DBC[pg->imtrx] == NULL) {
+	  node->DBC[pg->imtrx] = alloc_short_1(nv->Num_Unknowns, -1);
 	}
-	node->DBC[offset] = (short int) ibc;
+	node->DBC[pg->imtrx][offset] = (short int) ibc;
 	ieqn = node->First_Unknown[pg->imtrx] + offset;	   
         /*
          *  If BC_relax is set to default, set the boundary
@@ -721,10 +721,10 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
       if (eqn != R_MASS) {
 	offset = get_nodal_unknown_offset(nv, eqn, matID, 0, &vd);
 	if (offset >= 0) {
-	  if (node->DBC == NULL) {
-	    node->DBC = alloc_short_1(nv->Num_Unknowns, -1);
+	  if (node->DBC[pg->imtrx] == NULL) {
+	    node->DBC[pg->imtrx] = alloc_short_1(nv->Num_Unknowns, -1);
 	  }
-	  node->DBC[offset] = (short int) ibc;
+	  node->DBC[pg->imtrx][offset] = (short int) ibc;
 	}
       } else {
 	/*
@@ -739,10 +739,10 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
 	if (offset < 0) {
 	  WH(-1, "Y BC applied to material without species equation");
 	} else {
-	  if (node->DBC == NULL) {
-	    node->DBC = alloc_short_1(nv->Num_Unknowns, -1);
+	  if (node->DBC[pg->imtrx] == NULL) {
+	    node->DBC[pg->imtrx] = alloc_short_1(nv->Num_Unknowns, -1);
 	  }
-	  node->DBC[offset] = (short int) ibc;
+	  node->DBC[pg->imtrx][offset] = (short int) ibc;
 	}
       }
     }

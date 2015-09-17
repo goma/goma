@@ -226,6 +226,12 @@ init_nodes (Exo_DB *exo, Dpi *dpi)
       Nodes[i]->Type.External = FALSE;    
       Nodes[i]->Proc = ProcID;
       Nodes[i]->Nodal_Vars_Info = (NODAL_VARS_STRUCT **) alloc_ptr_1(upd->Total_Num_Matrices);
+      Nodes[i]->DBC = malloc(sizeof(short int *) * upd->Total_Num_Matrices);
+
+      for (k = 0; k < upd->Total_Num_Matrices; k++) {
+        Nodes[i]->DBC[k] = NULL;
+      }
+
       if (i < Num_Internal_Nodes) 
         {
          Nodes[i]->Type.Internal = TRUE;
@@ -299,12 +305,15 @@ free_nodes (void)
      * it was malloced in the first place.
      ********************************************************************/
 {
-  int i;
+  int i,k;
   NODE_INFO_STRUCT *node_ptr;
   for (i = 0; i < Num_Node; i++) {
     node_ptr = Nodes[i];
     free_umi_list(&(node_ptr->Mat_List));
-    safer_free((void **) &(node_ptr->DBC));
+    for (k = 0; k < upd->Total_Num_Matrices; k++) {
+      safer_free((void **) &(node_ptr->DBC[k]));
+    }
+    free(node_ptr->DBC);
   }
   /*
    *  free_umi_list(&(node_ptr->Element_List));
@@ -729,10 +738,10 @@ nullify_dirichlet_bcs(void)
   total_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
   for (i = 0; i < total_nodes; i++) {
     node = Nodes[i];
-    if (node->DBC) {
+    if (node->DBC[pg->imtrx]) {
       nv = node->Nodal_Vars_Info[pg->imtrx];
       for (v = 0; v < nv->Num_Unknowns; v++) {
-	node->DBC[v] = -1;
+	node->DBC[pg->imtrx][v] = -1;
       }
     }
   }

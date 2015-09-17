@@ -2751,7 +2751,7 @@ std_lgr_cond ( int iAC,
 				  
 		var = vd->Variable_Type;
 				  
-		if (Nodes[inode]->DBC ) isDBC = Nodes[inode]->DBC[i_offset];
+		if (Nodes[inode]->DBC[pg->imtrx] ) isDBC = Nodes[inode]->DBC[pg->imtrx][i_offset];
 				  
 				  
 		if ( ( var >= VELOCITY1 && var <= VELOCITY3 ) &&      /* this stuff only gets added to velocity dofs */
