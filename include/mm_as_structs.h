@@ -1010,6 +1010,7 @@ struct Transient_Information
  /* 
   * Contains constants used for transient analysis 
   */
+  int MaxSteadyStateSteps;
   int MaxTimeSteps;
 #ifndef COUPLED_FILL
   int exp_subcycle;     /* subcycling frequency for Fill equation */

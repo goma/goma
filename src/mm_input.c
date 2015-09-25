@@ -1507,17 +1507,6 @@ rd_timeint_specs(FILE *ifp,
       }
     }
 
-    tran->march_to_steady_state = 0;
-
-    iread = look_for_optional(ifp,"Steady State Tolerance",input,'=');
-    if (iread == 1) {
-      tran->march_to_steady_state = 1;
-      tran->steady_state_tolerance = read_dbl(ifp, "Steady State Tolerance");
-      if (tran->steady_state_tolerance < 0) {
-        EH(-1, "Expected Steady State Tolerance >= 0");
-      }
-      SPF(echo_string, "%s = %g", "Steady State Tolerance", tran->steady_state_tolerance); ECHO(echo_string, echo_file);
-    }
 
     tran->resolved_delta_t_min = 0.;
     iread = look_for_optional(ifp,"Minimum Resolved Time Step",input,'=');
@@ -1692,6 +1681,52 @@ rd_timeint_specs(FILE *ifp,
 	SPF(echo_string,eoformat,"Fill Equation",input);ECHO(echo_string, echo_file);
       }
   } /*   if(pd_glob[0]->TimeIntegration != STEADY) */
+
+  tran->march_to_steady_state = 0;
+
+  iread = look_for_optional(ifp,"March to Steady State",input,'=');
+  if (iread == 1) {
+    (void) read_string(ifp,input,'\n');
+    strip(input);
+    if ( strcmp(input,"no") == 0 ) {
+      tran->march_to_steady_state = 0;
+    }
+    else if ( strcmp(input,"yes") == 0 ) {
+      tran->march_to_steady_state = 1;
+      TimeIntegration = TRANSIENT;
+    }
+    else {
+
+      EH( -1, "Bad specification for March to Steady State");
+    }
+
+    SPF(echo_string, "%s = %s", "March to Steady State", input); ECHO(echo_string, echo_file);
+  }
+
+  iread = look_for_optional(ifp,"Steady State Tolerance",input,'=');
+  if (iread == 1) {
+    tran->march_to_steady_state = 1;
+    tran->steady_state_tolerance = read_dbl(ifp, "Steady State Tolerance");
+    if (tran->steady_state_tolerance < 0) {
+      EH(-1, "Expected Steady State Tolerance >= 0");
+    }
+    SPF(echo_string, "%s = %g", "Steady State Tolerance", tran->steady_state_tolerance); ECHO(echo_string, echo_file);
+  }
+
+  tran->MaxSteadyStateSteps = 2;
+  
+  iread = look_for_optional(ifp,"Maximum steady state steps",input,'=');
+  if (iread == 1) {
+    strip(input);
+    tran->MaxSteadyStateSteps = read_int(ifp, "Maximum steady state steps");
+    if (tran->MaxSteadyStateSteps < 2) {
+      EH( -1, "error reading max steady state steps expected value > 1");
+    }
+    SPF(echo_string,"%s = %d", "Maximum steady state steps", tran->MaxSteadyStateSteps); ECHO(echo_string, echo_file);
+  }
+
+
+  
 
 }    
 /* rd_timeint_specs -- read input file for time integration specifications */

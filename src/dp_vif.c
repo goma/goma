@@ -697,6 +697,7 @@ noahs_ark()
 
 
   ddd_add_member(n, &tran->MaxTimeSteps, 1, MPI_INT);
+  ddd_add_member(n, &tran->MaxSteadyStateSteps, 1, MPI_INT);
 #ifndef COUPLED_FILL
   ddd_add_member(n, &tran->exp_subcycle, 1, MPI_INT);
 #endif /* not COUPLED_FILL */

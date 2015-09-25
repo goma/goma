@@ -37,6 +37,24 @@
 
 #define ROUND_TO_ONE 0.9999999
 
+double vector_distance_squared(int size, double *vec1, double *vec2) {
+  double distance_sq = 0;
+#ifdef PARALLEL
+  double global_distance = 0;
+#endif
+  double x;
+  int i;
+  for (i = 0; i < size; i++) {
+    x = (vec1[i] - vec2[i]);
+    distance_sq += x*x;
+  }
+#ifdef PARALLEL
+  MPI_Allreduce(&distance_sq, &global_distance, 1, MPI_DOUBLE, MPI_SUM, 
+		MPI_COMM_WORLD);
+  distance_sq = global_distance;
+#endif /* PARALLEL */
+  return distance_sq;
+}
 
 double vector_distance(int size, double *vec1, double *vec2) {
   double distance = 0;
@@ -148,7 +166,7 @@ dbl *te_out) /* te_out - return actual end time */
   int *tev_post; /* total number of elem variables and kinds
    for post processing                       */
 
-  unsigned int matrix_systems_mask;
+  unsigned int matrix_systems_mask = 1;
 
   int i;
   int inewton;
@@ -445,45 +463,125 @@ dbl *te_out) /* te_out - return actual end time */
    *            STEADY STATE SOLUTION PROCEDURE
    ***************************************************************************/
   if (TimeIntegration == STEADY) {
-    EH(-1, "Steady state not supported in segregated solver, use march to steady state");
+   
+    theta = 0.0; /* for steady problems. theta def in rf_fem.h */
+    delta_t = 0.0;
 
-/*     theta = 0.0; /\* for steady problems. theta def in rf_fem.h *\/ */
-/*     delta_t = 0.0; */
+    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+     
+        /*
+         * set boundary conditions on the initial conditions to the
+         * transient calculation.
+         *  NOTE -> At this point, xdot[] is set to zero. Therefore,
+         *          there may be serious errors in the specification
+         *          of the boundary condition at this point. Some
+         *          ODE solvers actually solve an initial problem for
+         *          the evaluation of xdot[] at t = 0+. This algorithm
+         *          perhaps could be introduced here.
+         */
+        nullify_dirichlet_bcs();
+        find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
 
-/*     /\* Right now, we are solving segregated problems in numerical order fashion */
-/*      * Matrix 0, then 1, then so on. In the future we could change that. */
-/*      *\/ */
-/*     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) { */
+        /*
+         * Before propagating x_n back into the historical records in
+         * x_n-1, x_n-2 and x_n-3, make sure external dofs are the best
+         * they can be. That is, ask the processors that are supposed to
+         * know...
+         */
+        exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
 
-/*       find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi); */
+        /*
+         * Now copy the initial solution, x[], into the history solutions
+         * x_old[], etc. Note, xdot[] = xdot_old[] = 0 at this point,
+         * which is in agreement with the specification of the history
+         * solutions.
+         */
+        dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_old[pg->imtrx]);
+        dcopy1(numProcUnknowns[pg->imtrx], x_old[pg->imtrx], x_older[pg->imtrx]);
+        dcopy1(numProcUnknowns[pg->imtrx], x_older[pg->imtrx], x_oldest[pg->imtrx]);
+    }
+    /* Outer loop for number of steady state steps */
+    matrix_systems_mask = 1;
+    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+      sl_init(matrix_systems_mask, ams, exo, dpi, cx[pg->imtrx]);
+    }
 
-/*       matrix_systems_mask = 1; */
+    /*
+     * make sure the Aztec was properly initialized
+     */
+    check_parallel_error("Solver initialization problems");
 
-/*       log_msg("sl_init()...") */
-/* ;      sl_init(matrix_systems_mask, ams, exo, dpi, cx[pg->imtrx]); */
+    for (n = 0; n < tran->MaxSteadyStateSteps; n++) {
 
-/* #ifdef PARALLEL */
-/*       /\* */
-/*        * Make sure the solver was properly initialized on all processors. */
-/*        *\/ */
-/*       check_parallel_error("Solver initialization problems"); */
-/* #endif /\* PARALLEL *\/ */
+      for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+        dcopy1(numProcUnknowns[pg->imtrx], x_older[pg->imtrx],
+               x_oldest[pg->imtrx]);
+        dcopy1(numProcUnknowns[pg->imtrx], x_old[pg->imtrx],
+               x_older[pg->imtrx]);
+        dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_old[pg->imtrx]);
+      }
+
+      for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+
+        nullify_dirichlet_bcs();
+
+        find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
 
 
-/*        err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t, */
-/*        theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx], */
-/*        xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx], */
-/*        scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx], */
-/*        tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx], */
-/*        gvec_elem, time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, is_steady_state, */
-/*        NULL, NULL, time1, NULL, */
-/*        NULL, NULL, NULL); */
 
-/*     } */
+        if (ProcID == 0) {
+          printf("\n===================== SOLVING MATRIX %d Step %d ===========================\n\n", pg->imtrx, n);
+        }
 
-/*     write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot, */
-/*         xdot_old, tev, tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t, */
-/*         theta, time1, NULL, exo, dpi); */
+        err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t,
+                                      theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
+                                      xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
+                                      scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx],
+                                      tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
+                                      gvec_elem, time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, is_steady_state,
+                                      NULL, NULL, time1, NULL,
+                                      NULL, NULL, NULL);
+
+        if (err == -1)
+          converged = FALSE;
+
+        if (!converged) break;
+      }
+
+      if (converged) {
+        int steady_state_reached = TRUE;
+        double distance = 0;
+
+        for (i = 0; i < upd->Total_Num_Matrices; i++) {
+          distance += vector_distance_squared(NumUnknowns[i], x[i], x_old[i]);
+        }
+
+        distance = sqrt(distance);
+
+        if (ProcID == 0) {
+          printf("\nL_2 x changes %g\n", distance);
+        }
+
+        if (distance < tran->steady_state_tolerance) {
+
+          write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot,
+                                    xdot_old, tev, tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t,
+                                    theta, time1, NULL, exo, dpi);
+
+          if (ProcID == 0) {
+            printf("\n Steady state reached \n");
+          }
+          goto free_and_clear;
+        }
+      } else {
+        break;
+      }
+
+    }
+    if (ProcID == 0) {
+      printf("Failed to solve steady state.");
+    }
+    goto free_and_clear;
 
   }
   /********************************************************************************
