@@ -564,6 +564,20 @@ dbl *te_out) /* te_out - return actual end time */
 
         if (distance < tran->steady_state_tolerance) {
 
+          pg->imtrx = 0;
+          for (i = 0; i < nn_post_fluxes; i++) {
+            (void) evaluate_flux(exo, dpi, 
+                                 pp_fluxes[i]->ss_id, 
+                                 pp_fluxes[i]->flux_type ,
+                                 pp_fluxes[i]->flux_type_name ,
+                                 pp_fluxes[i]->blk_id , 
+                                 pp_fluxes[i]->species_number, 
+                                 pp_fluxes[i]->flux_filenm,
+                                 pp_fluxes[i]->profile_flag,
+                                 x[pg->imtrx], xdot[pg->imtrx], NULL, delta_t_old, time, 1); 
+          }
+
+
           write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot,
                                     xdot_old, tev, tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t,
                                     theta, time1, NULL, exo, dpi);
