@@ -8101,16 +8101,6 @@ load_fv(void)
       stateVector[v] = fv->P + upd->Pressure_Datum;
     } 
 
-  if (pdv[AUX_PRESSURE])
-    {
-    v = AUX_PRESSURE;
-    fv->P_star = 0.0;
-    dofs = ei[pg->imtrx]->dof[v];
-    for(i = 0; i < dofs; i++)
-      {
-        fv->P_star += *esp->P_star[i] * bf[v]->phi[i];
-      }
-    }
 
   /*
    *  Set the state vector pressure datum to include an additional
@@ -8335,22 +8325,6 @@ load_fv(void)
       stateVector[VELOCITY1+p] = fv->v[p];
     }
 
-  /*
-   * Default: all velocities are zero...
-   */
-  for ( p=0; p<velodim; p++)
-    {
-      v = AUX_VELOCITY1 + p;
-      if ( pdv[v] )
-        {
-          dofs     = ei[pg->imtrx]->dof[v];
-          fv->v_star[p]     = 0.;
-          for ( i=0; i<dofs; i++)
-            {
-              fv->v_star[p] += *esp->v_star[p][i] * bf[v]->phi[i];
-            }
-        }
-    }
 
   /* 
    * Particle velocity (vector)...
@@ -9653,17 +9627,6 @@ load_fv_all(void)
         stateVector[v] = fv->P + upd->Pressure_Datum;
       } 
 
-    if (pdv[AUX_PRESSURE])
-      {
-        v = AUX_PRESSURE;
-        fv->P_star = 0.0;
-        dofs = ei[imtrx]->dof[v];
-        for(i = 0; i < dofs; i++)
-          {
-            fv->P_star += *esp->P_star[i] * bf[v]->phi[i];
-          }
-      }
-
     /*
      *  Set the state vector pressure datum to include an additional
      *  uniform pressure datum. 
@@ -9887,22 +9850,6 @@ load_fv_all(void)
         stateVector[VELOCITY1+p] = fv->v[p];
       }
 
-    /*
-     * Default: all velocities are zero...
-     */
-    for ( p=0; p<velodim; p++)
-      {
-        v = AUX_VELOCITY1 + p;
-        if ( pdv[v] )
-          {
-            dofs     = ei[imtrx]->dof[v];
-            fv->v_star[p]     = 0.;
-            for ( i=0; i<dofs; i++)
-              {
-                fv->v_star[p] += *esp->v_star[p][i] * bf[v]->phi[i];
-              }
-          }
-      }
 
     /* 
      * Particle velocity (vector)...
@@ -10490,20 +10437,6 @@ load_fv_grads(void)
 	}
     }
   
-  if ( pd->v[pg->imtrx][AUX_PRESSURE] )
-    {
-      v = AUX_PRESSURE;
-      dofs  = ei[pg->imtrx]->dof[v];
-      for ( p=0; p<VIM; p++)
-        {
-          fv->grad_P_star[p] = 0.0;
-
-          for ( i=0; i<dofs; i++)
-            {
-              fv->grad_P_star[p] += *esp->P_star[i] * bf[v]->grad_phi[i][p];
-            }
-        }
-    }
 
   /*
    * grad(nn)
@@ -10861,37 +10794,6 @@ load_fv_grads(void)
 	}
     }
 
-  if (pd->v[pg->imtrx][AUX_VELOCITY1])
-    {
-      dofs  = ei[pg->imtrx]->dof[AUX_VELOCITY1];
-      v = AUX_VELOCITY1;  
-      grad_vector_fv_fill(esp->v_star, bf[v]->grad_phi_e, dofs, fv->grad_v_star);
-    } 
-  else if (zero_unused_grads && upd->vp[pg->imtrx][AUX_VELOCITY1] == -1) 
-    {
-      for (p = 0; p < VIM; p++)
-	{
-	  for (q = 0; q < VIM; q++)
-	    {
-	      fv->grad_v_star[p][q] = 0.0; 
-
-            }
-	}
-    }
-
-  /*
-   * div(v_star)
-   */
-  
-  if (pd->v[pg->imtrx][AUX_VELOCITY1])
-    {
-      fv->div_v_star = 0.0;
-
-      for(a=0; a<VIM; a++)
-	{
-	  fv->div_v_star += fv->grad_v_star[a][a];
-	}
-    } 
 
   /*
    * grad(pv), particle velocity gradients.
@@ -12231,20 +12133,6 @@ load_fv_grads_all(void)
 	}
     }
   
-    if ( pd->v[imtrx][AUX_PRESSURE] )
-      {
-        v = AUX_PRESSURE;
-        dofs  = ei[imtrx]->dof[v];
-        for ( p=0; p<VIM; p++)
-          {
-            fv->grad_P_star[p] = 0.0;
-
-            for ( i=0; i<dofs; i++)
-              {
-                fv->grad_P_star[p] += *esp->P_star[i] * bf[v]->grad_phi[i][p];
-              }
-          }
-      }
 
     /*
      * grad(nn)
@@ -12616,38 +12504,6 @@ load_fv_grads_all(void)
           }
       }
 
-    if (pd->v[imtrx][AUX_VELOCITY1])
-      {
-        dofs  = ei[imtrx]->dof[AUX_VELOCITY1];
-        v = AUX_VELOCITY1;  
-        grad_vector_fv_fill(esp->v_star, bf[v]->grad_phi_e, dofs, fv->grad_v_star);
-      } 
-    else if (zero_unused_grads && upd->vp[imtrx][AUX_VELOCITY1] == -1) 
-      {
-        for (p = 0; p < VIM; p++)
-          {
-            for (q = 0; q < VIM; q++)
-              {
-                fv->grad_v_star[p][q] = 0.0; 
-
-              }
-          }
-      }
-
-
-    /*
-     * div(v_star)
-     */
-  
-    if (pd->v[imtrx][AUX_VELOCITY1])
-      {
-        fv->div_v_star = 0.0;
-
-        for(a=0; a<VIM; a++)
-          {
-            fv->div_v_star += fv->grad_v_star[a][a];
-          }
-      } 
 
     /*
      * grad(pv), particle velocity gradients.

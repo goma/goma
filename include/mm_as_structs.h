@@ -35,8 +35,6 @@
 #include "rf_bc_const.h"
 #include "rf_vars_const.h"
 #include "mm_elem_block_structs.h"
-#include "mm_segregated_structs.h"
-
 
 #ifndef MNROT
 #define MNROT    30		/* maximum number of rotation vector 
@@ -845,9 +843,6 @@ struct Problem_Graph
   struct Matrix_Data *matrices;
 
   int time_step_control_disabled[MAX_NUM_MATRICES];
-  struct SplitB_Coupled_Field_Variables sbcfv;
-  struct SplitB_Element_Stiffness_Pointers sbesp;
-
 };
 typedef struct Problem_Graph PROBLEM_GRAPH_STRUCT;
 /*____________________________________________________________________________*/

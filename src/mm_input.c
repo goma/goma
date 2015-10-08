@@ -8867,14 +8867,6 @@ rd_eq_specs(FILE *ifp,
 	}
 	ce = set_eqn(R_SPECIES_UNK_0 + j, mtrx_index0, pd_ptr);
       }
-    } else if (!strcasecmp(ts, "aux_momentum1")) {
-      ce = set_eqn(R_AUX_MOMENTUM1, mtrx_index0, pd_ptr);
-    } else if (!strcasecmp(ts, "aux_momentum2")) {
-      ce = set_eqn(R_AUX_MOMENTUM2, mtrx_index0, pd_ptr);
-    } else if (!strcasecmp(ts, "aux_momentum3")) {
-      ce = set_eqn(R_AUX_MOMENTUM3, mtrx_index0, pd_ptr);
-    } else if (!strcasecmp(ts, "aux_pressure")) {
-      ce = set_eqn(R_PRESSURE_POISSON, mtrx_index0, pd_ptr);
     } else {
       fprintf(stderr, "%s:\tEQ %s not recognized.\n", yo, ts);
       exit(-1);
@@ -9361,14 +9353,6 @@ rd_eq_specs(FILE *ifp,
 
     } else if (!strcasecmp(ts, "ENORM")) {
       cv = set_var(ENORM, mtrx_index0, pd_ptr);
-    } else if (!strcasecmp(ts, "U_STAR1")) {
-      cv = set_var(AUX_VELOCITY1, mtrx_index0, pd_ptr);
-    } else if (!strcasecmp(ts, "U_STAR2")) {
-      cv = set_var(AUX_VELOCITY2, mtrx_index0, pd_ptr);
-    } else if (!strcasecmp(ts, "U_STAR3")) {
-      cv = set_var(AUX_VELOCITY3, mtrx_index0, pd_ptr);
-    } else if (!strcasecmp(ts, "P_STAR")) {
-      cv = set_var(AUX_PRESSURE, mtrx_index0, pd_ptr);
     } else if (!strncasecmp(ts, "Sp", 2)) {
       if (!strcasecmp(ts, "Sp")) {
 	cv = SPECIES_UNK_0;
@@ -9762,22 +9746,6 @@ rd_eq_specs(FILE *ifp,
       SPF( endofstring(echo_string),"\t %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
 	   pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]);    
       break;
-    case R_PRESSURE_POISSON:
-      if ( fscanf(ifp, "%lf %lf",
-                  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
-                  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]))
-           != 2 )
-        {
-          sr = sprintf(err_msg,
-                       "Provide 2 equation term multipliers (mass,diff) on %s in %s",
-                       EQ_Name[ce].name1, pd_ptr->MaterialName);
-          EH(-1, err_msg);
-        }
-
-      SPF( endofstring(echo_string),"\t %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
-           pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]);
-      break;
-      
       /* 
        * Three terms.... 
        */
@@ -9882,9 +9850,6 @@ rd_eq_specs(FILE *ifp,
       /* 
        * Four terms.... 
        */
-    case R_AUX_MOMENTUM1:
-    case R_AUX_MOMENTUM2:
-    case R_AUX_MOMENTUM3:
     case R_BOND_EVOLUTION:
       if ( fscanf(ifp, "%lf %lf %lf  %lf", 
 		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),

@@ -148,7 +148,6 @@ struct BC_descriptions  BC_Desc[] =
   { "MESH_CONSTRAINT",  "MESH_CONSTRAINT_BC",  COLLOCATE_SURF, MESH_CONSTRAINT_BC,  R_MESH_NORMAL, SCALAR, R_MESH1, {0, 0, 0, 0, 0, 1, 1, 1, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB },
 
   { "P", "P_BC", DIRICHLET, P_BC, R_PRESSURE, SCALAR, NO_ROT, {0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
-  { "P_STAR", "P_STAR_BC", DIRICHLET, P_STAR_BC, R_PRESSURE_POISSON, SCALAR, NO_ROT, {0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
 
   { "PSPG", "PSPG_BC", WEAK_INT_SURF, PSPG_BC, R_PRESSURE, SCALAR, NO_ROT, {1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "FILL_INLET", "FILL_INLET_BC", SPECIAL, FILL_INLET_BC, R_FILL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
@@ -388,9 +387,6 @@ SINGLE_PHASE, DVI_SINGLE_PHASE_DB},
   { "U", "U_BC", DIRICHLET, U_BC, R_MOMENTUM1, SCALAR, NO_ROT, {1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "V", "V_BC", DIRICHLET, V_BC, R_MOMENTUM2, SCALAR, NO_ROT, {0, 1, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "W", "W_BC", DIRICHLET, W_BC, R_MOMENTUM3, SCALAR, NO_ROT, {0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
-  { "U_STAR", "U_STAR_BC", DIRICHLET, U_BC, R_AUX_MOMENTUM1, SCALAR, NO_ROT, {1, 0, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
-  { "V_STAR", "V_STAR_BC", DIRICHLET, V_BC, R_AUX_MOMENTUM2, SCALAR, NO_ROT, {0, 1, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
-  { "W_STAR", "W_STAR_BC", DIRICHLET, W_BC, R_AUX_MOMENTUM3, SCALAR, NO_ROT, {0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
 
   { "EXT_V", "EXT_V_BC", DIRICHLET, EXT_V_BC, R_EXT_VELOCITY, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0, 0, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "LM1", "LM1_BC", DIRICHLET, LM1_BC, R_LAGR_MULT1, SCALAR, NO_ROT, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
@@ -539,10 +535,6 @@ SINGLE_PHASE, DVI_SINGLE_PHASE_DB},
       NO_ROT, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   {  "FLOW_STRESSNOBC",  "FLOW_STRESSNOBC_BC",  WEAK_INT_SURF, FLOW_STRESSNOBC_BC,  R_MOMENTUM1, VECTOR, 
       NO_ROT, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
-  {  "SEGREGATED_STRESS",  "SEGREGATED_STRESS_BC",  WEAK_INT_SURF, SEGREGATED_STRESS_BC,  R_AUX_MOMENTUM1, VECTOR, 
-     NO_ROT, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
-  {  "PRESS_POISSON",  "PRESS_POISSON_BC",  WEAK_INT_SURF, PRESS_POISSON_BC,  R_PRESSURE_POISSON, SCALAR, 
-     NO_ROT, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   {  "FLOW_GRADV",  "FLOW_GRADV_BC",  WEAK_INT_SURF, FLOW_GRADV_BC,  R_MOMENTUM1, VECTOR, 
       NO_ROT, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   {  "HYDROSTATIC_SYMM", "HYDROSTATIC_SYMM_BC", WEAK_INT_SURF, HYDROSTATIC_SYMM_BC, R_MOMENTUM1, VECTOR , 
@@ -990,10 +982,6 @@ struct Equation_Names EQ_Name[] = {
     { "R_LIGHT_INTP", "LIGHT_INTP", R_LIGHT_INTP},
     { "R_LIGHT_INTM", "LIGHT_INTM", R_LIGHT_INTM},
     { "R_LIGHT_INTD", "LIGHT_INTD", R_LIGHT_INTD},  /*   182  */
-    { "R_AUX_MOMENTUM1", "VAX", R_AUX_MOMENTUM1 } ,      /* 183 */
-    { "R_AUX_MOMENTUM2", "VAY", R_AUX_MOMENTUM2 } ,
-    { "R_AUX_MOMENTUM3", "VAZ", R_AUX_MOMENTUM3 } ,
-    { "R_PRESSURE_POISSON", "PA", R_PRESSURE_POISSON },
 
     /*
      *  Note -> these entries must remain until we get rid
@@ -1265,12 +1253,6 @@ struct Equation_Names Var_Name[] =  {
     { "LIGHT_INTM", "INTM", LIGHT_INTM},
     { "LIGHT_INTD", "INTD", LIGHT_INTD},                     /* 182 */
 
-    { "AUX_VELOCITY1",          "VAX",  AUX_VELOCITY1 } ,    /* 183 */
-    { "AUX_VELOCITY2",          "VAY",  AUX_VELOCITY2 } ,
-    { "AUX_VELOCITY3",          "VAZ",  AUX_VELOCITY3 } ,
-    { "AUX_PRESSURE",          "PA",  AUX_PRESSURE } ,
-
-
     { "MESH_POSITION1", "X",  MESH_POSITION1 } ,
     { "MESH_POSITION2", "Y",  MESH_POSITION2 } ,	/* 188 */
     { "MESH_POSITION3", "Z",  MESH_POSITION3 } ,
@@ -1509,10 +1491,6 @@ struct Equation_Names Exo_Var_Names[] =
   { "Plus Propagating Intensity", "INTP", LIGHT_INTP },
   { "Minus Propagating Intensity", "INTM", LIGHT_INTM },
   { "Dispersive Scattering Intensity", "INTD", LIGHT_INTD },
-  { "Velocity, x component",           "VAX",     AUX_VELOCITY1 } ,
-  { "Velocity, y component",           "VAY",     AUX_VELOCITY2 } ,
-  { "Velocity, z component",           "VAZ",     AUX_VELOCITY3 } ,
-  { "Pressure poisson segregated",     "PA",     AUX_PRESSURE } ,
 };
 
 int Num_Exo_Var_Names = sizeof(Exo_Var_Names) / sizeof(struct Equation_Names);  
@@ -1776,10 +1754,6 @@ struct Equation_Names Var_Units[] =
   { "Plus Intensity", "[1]", LIGHT_INTP},
   { "Minus Intensity", "[1]", LIGHT_INTM},
   { "Dispersive Intensity", "[1]", LIGHT_INTD},
-  { "Velocity, x component",           "[1]",     AUX_VELOCITY1 } ,
-  { "Velocity, y component",           "[1]",     AUX_VELOCITY2 } ,
-  { "Velocity, z component",           "[1]",     AUX_VELOCITY3 } ,
-  { "Pressure poisson segregated",                        "[1]",     AUX_PRESSURE } ,
 };
 
 int Num_Var_Units = sizeof(Var_Units) / sizeof(struct Equation_Names);  

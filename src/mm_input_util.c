@@ -496,10 +496,6 @@ variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input, "LIGHT_INTP"))                  var = LIGHT_INTP;
   else if (!strcmp(input, "LIGHT_INTM"))                  var = LIGHT_INTM;
   else if (!strcmp(input, "LIGHT_INTD"))                  var = LIGHT_INTD;
-  else if (!strcmp(input, "AUX_VELOCITY1"))               var = AUX_VELOCITY1;
-  else if (!strcmp(input, "AUX_VELOCITY2"))               var = AUX_VELOCITY2;
-  else if (!strcmp(input, "AUX_VELOCITY3"))               var = AUX_VELOCITY3;
-  else if (!strcmp(input, "AUX_PRESSURE"))                  var = AUX_PRESSURE;
   /*
    * Kluge to break up large if block. Problems with HP compiler!
    */  
