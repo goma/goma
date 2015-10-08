@@ -458,8 +458,8 @@ find_and_set_Dirichlet(double x[],    /* solution vector at this processor */
     for (n = 0; n < num_nodes; n++) {
       inode = Proc_Elem_Connect[iconnect_ptr + n];
       node = Nodes[inode];
-      nv = node->Nodal_Vars_Info;
-      if (Dolphin[inode][PRESSURE] > 0 && datum_set) {
+      nv = node->Nodal_Vars_Info[pg->imtrx];
+      if (Dolphin[pg->imtrx][inode][PRESSURE] > 0 && datum_set) {
 	datum_set = 0;
 	if (!node->DBC) {
 	  node->DBC = alloc_short_1(nv->Num_Unknowns, -1);
@@ -467,7 +467,7 @@ find_and_set_Dirichlet(double x[],    /* solution vector at this processor */
 	offset = get_nodal_unknown_offset(nv, PRESSURE, mn, 0, &vd);
 
 	node->DBC[offset] = 0;
-	ie = Index_Solution(inode, PRESSURE, 0, 0, mn);
+	ie = Index_Solution(inode, PRESSURE, 0, 0, mn, pg->imtrx);
 	x[ie]  = pressure_datum_value;
 	xdot[ie]  = 0.0; 
 	log_msg("Setting pressure datum");
@@ -510,7 +510,7 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
   int eqn, w, ieqn, offset;
   int ndof=0;
   NODE_INFO_STRUCT *node = Nodes[inode];
-  NODAL_VARS_STRUCT *nv = node->Nodal_Vars_Info;
+  NODAL_VARS_STRUCT *nv = node->Nodal_Vars_Info[pg->imtrx];
   VARIABLE_DESCRIPTION_STRUCT *vd;
   /*
    * Fill in the correct bit field in Variable_Mask depending
@@ -531,7 +531,7 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
 	  node->DBC = alloc_short_1(nv->Num_Unknowns, -1);
 	}
 	node->DBC[offset] = (short int) ibc;
-	ieqn = node->First_Unknown + offset;
+	ieqn = node->First_Unknown[pg->imtrx] + offset;
         /*
          *  If BC_relax is set to default, set the boundary
          *  condition here without including it in the residual.
@@ -599,7 +599,7 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
 	  node->DBC = alloc_short_1(nv->Num_Unknowns, -1);
 	}
 	node->DBC[offset] = (short int) ibc;
-	ieqn = node->First_Unknown + offset;	   
+	ieqn = node->First_Unknown[pg->imtrx] + offset;	   
         /*
          *  If BC_relax is set to default, set the boundary
          *  condition here without including it in the residual
@@ -688,13 +688,13 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
      * Encode original position for reference, using the last available chunks
      * of the bc input float data
      */
-    ieqn = Index_Solution(inode, MESH_DISPLACEMENT1, 0, ndof, matID);
+    ieqn = Index_Solution(inode, MESH_DISPLACEMENT1, 0, ndof, matID, pg->imtrx);
     boundary_condition->BC_Data_Float[7] =
       boundary_condition->BC_Data_Float[4] - (Coor[0][inode]);
     if (boundary_condition->BC_Data_Int[0]) {
       xdot[ieqn] = 0.;
     }
-    ieqn = Index_Solution(inode, MESH_DISPLACEMENT2, 0, ndof, matID);
+    ieqn = Index_Solution(inode, MESH_DISPLACEMENT2, 0, ndof, matID, pg->imtrx);
     boundary_condition->BC_Data_Float[8] =
       boundary_condition->BC_Data_Float[5] - (Coor[1][inode]);
     if (boundary_condition->BC_Data_Int[0]) {
@@ -702,7 +702,7 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
     }
     boundary_condition->BC_Data_Float[9] = 0.;
     if (pd_glob[0]->Num_Dim == 3) {
-      ieqn = Index_Solution(inode, MESH_DISPLACEMENT3, 0, ndof, matID);
+      ieqn = Index_Solution(inode, MESH_DISPLACEMENT3, 0, ndof, matID, pg->imtrx);
       boundary_condition->BC_Data_Float[9] =
 	boundary_condition->BC_Data_Float[6] - (Coor[2][inode]);
       if (boundary_condition->BC_Data_Int[0]) {
@@ -1964,7 +1964,7 @@ find_bc_unk_offset(struct Boundary_Condition *bc, int curr_mat,
   struct BC_descriptions *bc_desc = bc->desc;
   int ieqn = bc_desc->equation + p;
   NODE_INFO_STRUCT *node = Nodes[inode];
-  NODAL_VARS_STRUCT *nv = node->Nodal_Vars_Info;
+  NODAL_VARS_STRUCT *nv = node->Nodal_Vars_Info[pg->imtrx];
   PROBLEM_DESCRIPTION_STRUCT *pd_curr = 0;
   int bc_name = bc_desc->BC_Name;
   /*

@@ -41,6 +41,8 @@ extern UPD_STRUCT                               *upd;
  */
 extern PROBLEM_DESCRIPTION_STRUCT              **pd_glob, *pd;
 
+extern PROBLEM_GRAPH_STRUCT                     *pg;
+
 extern struct Action_Flags			*af;
 extern BASIS_FUNCTIONS_STRUCT			**bf;
 extern BASIS_FUNCTIONS_STRUCT			**bfd;

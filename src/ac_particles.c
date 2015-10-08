@@ -252,7 +252,7 @@ initialize_particles(const Exo_DB * exo,
   /* Get mesh dimension */
   mdim = static_exo->num_dim;
 
-  if(pd_glob[0]->e[R_MESH1])
+  if(pd_glob[0]->e[pg->imtrx][R_MESH1])
     EH(-1, "Cannot couple particles and deformable mesh, yet.");
   if(mdim == 2)
     {
@@ -3025,7 +3025,7 @@ load_element_information(const int elem_id)
 
   velo_interp = -1;
   for(i = 0; i < Num_Basis_Functions; i++)
-    if(pd_glob[ei->mn]->i[VELOCITY1] == bfd[i]->interpolation) velo_interp = i;
+    if(pd_glob[ei->mn]->i[pg->imtrx][VELOCITY1] == bfd[i]->interpolation) velo_interp = i;
   if(velo_interp == -1)
     EH(-1, "Could not find velocity interpolation function.");
 
@@ -3050,7 +3050,7 @@ load_element_node_coordinates(const int elem_id)
   i = Proc_Connect_Ptr[elem_id];
   for(j = 0; j < mdim; j++)
     {
-      if(pd->e[R_MESH1])
+      if(pd->e[pg->imtrx][R_MESH1])
 	{
 	  var = MESH_DISPLACEMENT1 + j;
 	  for(k = 0; k < nodes_per_element; k++)
@@ -3237,9 +3237,9 @@ load_field_variables_at_xi(const int elem_id,
   if(TimeIntegration == STEADY)
     {
       /* The fv_old structures don't even get filled if we're a STEADY run. */
-      if(pd->v[VELOCITY1])
+      if(pd->v[pg->imtrx][VELOCITY1])
 	memcpy(fv_old->v, fv->v, DIM * sizeof(dbl));
-      if(pd->v[ENORM])
+      if(pd->v[pg->imtrx][ENORM])
 	fv_old->Enorm = fv->Enorm;
     }
 
@@ -5066,7 +5066,7 @@ fill_my_fv_old()
 {
   int i, j, dofs;
   
-  if(pd->v[VOLTAGE])
+  if(pd->v[pg->imtrx][VOLTAGE])
     {
       dofs  = ei->dof[VOLTAGE];
       for(i = 0; i < VIM; i++)
@@ -5077,7 +5077,7 @@ fill_my_fv_old()
 	}
     }
 
-  if(pd->v[ENORM])
+  if(pd->v[pg->imtrx][ENORM])
     {
       dofs  = ei->dof[ENORM];
       for(i = 0; i < VIM; i++)

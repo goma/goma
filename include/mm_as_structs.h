@@ -757,34 +757,32 @@ struct Action_Flags
 struct Uniform_Problem_Description {
   int   Total_Num_Matrices;  /* Total number of problem graphs to be solved */
 
-  int   Total_Num_EQ;  /* This is used in conjunction with the ep[] array.
-			* The number of nonzero entries in this array will
-			* equal the number of non neg 1 entries in the ep[]
-			* array.
-			*/
-  int   Total_Num_Var; /* This is used in conjunction with the vp[] array.
-			* The number of nonzero entries in this array will
-			* equal the number of non neg 1 entries in the vp[]
-			* array.
-			*/
+  int   Total_Num_EQ[MAX_NUM_MATRICES];  /* This is used in conjunction with the ep[] array.
+			                  * The number of nonzero entries in this array will
+			                  * equal the number of non neg 1 entries in the ep[][]
+			                  * array.
+			                  */
+  int   Total_Num_Var[MAX_NUM_MATRICES]; /* This is used in conjunction with the vp[] array.
+			                  * The number of nonzero entries in this array will
+			                  * equal the number of non neg 1 entries in the vp[][]
+			                  * array.
+			                  */
   int   CoordinateSystem;
   int   Num_Dim;
-  int   vp[MAX_VARIABLE_TYPES + MAX_CONC];
-                  /* Mapping from the actual variable type index 
-		   * to a uniform problem variable 
-		   * index valid for all materials. If a variable type is 
-		   * active anywhere in the domain, then its corresponding 
-		   * entry in this array will be nonzero and contain a unique 
-		   * index.
-		   */
-  int   ep[MAX_EQNS + MAX_CONC];
-                  /* Mapping from the actual equation variable type index
-		   * to a uniform problem equation 
-		   * index valid for all materials. If a variable type is 
-		   * active anywhere in the domain, then its corresponding
-		   * entry in this array will be nonzero and contain a unique 
-		   * index.
-		   */
+  int   vp[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES + MAX_CONC]; /* Mapping from the actual variable type index 
+		                                              * to a uniform problem variable 
+		                                              * index valid for all materials. If a variable type is 
+		                                              * active anywhere in the domain, then its corresponding 
+		                                              * entry in this array will be nonzero and contain a unique 
+		                                              * index.
+		                                              */
+  int   ep[MAX_NUM_MATRICES][MAX_EQNS + MAX_CONC];           /* Mapping from the actual equation variable type index
+		                                              * to a uniform problem equation 
+		                                              * index valid for all materials. If a variable type is 
+		                                              * active anywhere in the domain, then its corresponding
+		                                              * entry in this array will be nonzero and contain a unique 
+		                                              * index.
+		                                              */
   int   Max_Num_Species;        /* The maximum number of species in any one
 	           		   volumetric materials domain in the problem */
   int   Max_Num_Species_Eqn;    /* The maximum number of species equations
@@ -828,6 +826,19 @@ typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/
 
 /*
+ * Problem_Graph Structure:
+ *
+ * Problem graph related structure containing information needed for segregated solver  
+ *
+ */
+struct Problem_Graph
+{
+  int   imtrx;                   /* Current active matrix index */
+};
+typedef struct Problem_Graph PROBLEM_GRAPH_STRUCT;
+/*____________________________________________________________________________*/
+
+/*
  * Problem_Description Structure:
  *
  * Values of equation and variable activity for the problem in the current
@@ -836,41 +847,43 @@ typedef struct Uniform_Problem_Description UPD_STRUCT;
 
 struct Problem_Description
 {
-  int	Num_EQ;			/* number of active equations */
-  int	e[MAX_EQNS];		/* This is a vector containing  the
-                                 * active equation terms for each equation.
-				 * within  the current element block.
-				 * Each bit in the integer refers to a
-				 * different term that is either on or off
-				 * in corresponding equation - see mm_as_const.h.
-                                 * The index is over the equation number referenced
-                                 * rf_fem_const.h   */
-  int	v[MAX_VARIABLE_TYPES];	/* Variable activity bit field
-				 * Bit - Purpose
-				 *   0 -> Variable isn't active nor is its value
-				 *        even defined in the problem
-                                 *   1 -> This variable occurs in the
-				 *        solution vector. It is solved for.
-                                 *   2 -> variable is a constant in this
-				 *        material
-				 *   4 -> Variable is not part of the solution
-                                 *        variable for this element for this material,
-				 *        but it does vary across the
-                                 *        domain. Value is calculated via interp
-                                 *        from nodal values 
-                                 *   8 -> This variable is unique to this material
-                                 *        It will not be contiguous across
-                                 *        material boundaries.  At
-				 *        interfaces between materials, the value
-				 *        of the variable will have a discontinuity
-				 *        across the material interface.
-                                 * -- see mm_as_const.h for more info
-				 */
-  int	w[MAX_EQNS];		/* Weight function for equations */
-  int	i[MAX_VARIABLE_TYPES];  /* Interpolation type for each unknown in the
-				 * current element block */
-  int	m[MAX_EQNS];		/* Mapping from input file to real names. */
-  dbl	etm[MAX_EQNS][MAX_TERM_TYPES]; /* equation term multipliers */
+  int   Num_Matrices;           /* Number of matrices in each element block */
+  int   Matrix_Activity[MAX_NUM_MATRICES];
+                                /* Matrix activity field in each element block
+                                 *  0  -> Matrix is off 
+                                 *  1  -> Matrix is on 
+                                 */  
+  int	Num_EQ[MAX_NUM_MATRICES];         /* number of active equations */
+  int	e[MAX_NUM_MATRICES][MAX_EQNS];    /* This is a vector containing  the
+                                           * active equation terms for each equation.
+				           * within  the current element block.
+				           * Each bit in the integer refers to a
+				           * different term that is either on or off
+				           * in corresponding equation - see mm_as_const.h.
+                                           * The index is over the equation number referenced
+                                           * rf_fem_const.h   */
+  int	v[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES];    /* Variable activity bit field
+				                     * Bit - Purpose
+				                     *   0 -> Variable isn't active nor is its value even defined in the problem
+                                                     *   1 -> This variable occurs in the solution vector. 
+                                                     *        It is solved for.
+                                                     *   2 -> Variable is a constant in this material.
+				                     *   4 -> Variable is not part of the solution variable 
+                                                     *        for this element for this material,
+				                     *        but it does vary across the domain. 
+                                                     *        Value is calculated via interp from nodal values 
+                                                     *   8 -> This variable is unique to this material. 
+                                                     *        It will not be contiguous across material boundaries.
+				                     *        At interfaces between materials, 
+                                                     *        the value of the variable will have a discontinuity
+				                     *        across the material interface.
+                                                     * -- see mm_as_const.h for more info
+				                     */
+  int	w[MAX_NUM_MATRICES][MAX_EQNS];              /* Weight function for equations */
+  int	i[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES];    /* Interpolation type for each unknown 
+                                                     * in the current element block */
+  int	m[MAX_NUM_MATRICES][MAX_EQNS];		    /* Mapping from input file to real names. */
+  dbl	etm[MAX_NUM_MATRICES][MAX_EQNS][MAX_TERM_TYPES];  /* equation term multipliers */
   int	CoordinateSystem;	/* Cartesian, cylindrical, etc. */
   int	MeshMotion;	        /* Arbitrary or lagrangian or total ALE*/
   int   MeshInertia;            /* addional inertia due to convection
@@ -914,7 +927,7 @@ typedef struct Problem_Description PROBLEM_DESCRIPTION_STRUCT;
  *  structure
  *
  */
-#define VARIABLE_IN_THE_EB_SOLN_VECTOR(PDS, var) ((PDS)->v[(var)] & 1)
+#define VARIABLE_IN_THE_EB_SOLN_VECTOR(PDS, imtrx, var) ((PDS)->v[imtrx][(var)] & 1)
 
 /* 
  * External_Field_Variables Modified and overloaded this structure for use 

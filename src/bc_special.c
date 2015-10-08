@@ -581,14 +581,14 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
                                   /* fix contact point where it sits right now */
 				  for (p = 0; p < ielem_dim; p++) {
 				    k = Index_Solution(I, MESH_DISPLACEMENT1+p,
-						       0, 0, -1);
+						       0, 0, -1, pg->imtrx);
 				    if (!af->Assemble_LSA_Mass_Matrix) {
 				      if (af->Assemble_Jacobian) {
 					d_func[p][MESH_DISPLACEMENT1+p][id] = 1.;    
 					ldof_eqn = ei->ln_to_first_dof[MESH_DISPLACEMENT1+p][id];
 					lec->R[MESH_DISPLACEMENT1 + p][ldof_eqn] = 0.; 
 					ldof_eqn = ei->ln_to_first_dof[MESH_DISPLACEMENT1+p][id];
-                                        eqn = upd->ep[MESH_DISPLACEMENT1 + p];
+                                        eqn = upd->ep[pg->imtrx][MESH_DISPLACEMENT1 + p];
 					zero_lec_row(lec->J,eqn	,ldof_eqn);
 					lec->J[eqn][eqn][ldof_eqn][ldof_eqn] 
 					  = DIRICHLET_PENALTY; 
@@ -1001,7 +1001,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			if (eqn == R_MASS) {
 			  ieqn = MAX_PROB_EQN + BC_Types[bc_input_id].species_eq;
 			} else {
-			  ieqn = upd->ep[eqn];
+			  ieqn = upd->ep[pg->imtrx][eqn];
 			}
 			ldof_eqn = ei->ln_to_first_dof[eqn][id];
 			lec->R[ieqn][ldof_eqn] += weight * func[p];
@@ -1020,7 +1020,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			  for (var=0; var < MAX_VARIABLE_TYPES; var++)
 			    {
 			      if (ei->dof[var] && (BC_Types[j_bc_id].desc->sens[var] || 1 ) && jflag != -1)
-				/*			    if (pd->v[var] && (BC_Types[j_bc_id].desc->sens[var] || 1 ) && jflag != -1) TAB 01-08-07 */
+				/*			    if (pd->v[pg->imtrx][var] && (BC_Types[j_bc_id].desc->sens[var] || 1 ) && jflag != -1) TAB 01-08-07 */
 				{
 				  if (var != MASS_FRACTION)
 				    {
@@ -1056,7 +1056,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					{
 					  for ( j=0; j<ei->dof[var]; j++)
 					    {
-					      pvar = upd->vp[var];
+					      pvar = upd->vp[pg->imtrx][var];
 					      ldof_eqn = ei->ln_to_first_dof[eqn][id];
 					      lec->J[ieqn][pvar] [ldof_eqn][j] +=
 						weight * d_func[p][var][j];
@@ -1095,7 +1095,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					{
 					  for ( j=0; j<ei->dof[var]; j++)
 					    {
-					      pvar = upd->vp[var];
+					      pvar = upd->vp[pg->imtrx][var];
 					      ldof_eqn = ei->ln_to_first_dof[eqn][id];
 					      lec->J[ieqn][pvar] [ldof_eqn][j] +=
 						weight * d_func_ss[p][var][j]; 
@@ -1114,7 +1114,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					{
 					  for ( j=0; j<ei->dof[var]; j++)
 					    {
-					      //pvar = upd->vp[MAX_PROB_VAR + w];
+					      //pvar = upd->vp[pg->imtrx][MAX_PROB_VAR + w];
 					      ldof_eqn = ei->ln_to_first_dof[eqn][id];
 					      lec->J[ieqn][MAX_PROB_VAR + w] [ldof_eqn][j] +=
 						weight * d_func[p][MAX_PROB_VAR + w][j];
@@ -1404,7 +1404,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
                       /* Loop over applicable shell equations */
                       for (eqn = eind; eqn < (eind+evec); eqn++)
                         {
-                          pe = upd->ep[eqn];
+                          pe = upd->ep[pg->imtrx][eqn];
                           idof = ei->dof[eqn];
                           for (i=0; i < idof; i++)
                             {
@@ -1416,7 +1416,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
                               /* Loop through and transfer sensitivities */
                               for (var=0; var<MAX_VARIABLE_TYPES; var++)
                                 {
-                                  pv = upd->vp[var];
+                                  pv = upd->vp[pg->imtrx][var];
                                   jdof = n_dof[var];
                                   for (j=0; j < jdof; j++)
                                     {
@@ -1734,7 +1734,7 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 			wt *= BIG_PENALTY;
 			      
 		      if (eqn == R_MASS) ieqn = MAX_PROB_EQN + bc->species_eq; 
-		      else ieqn = upd->ep[eqn];
+		      else ieqn = upd->ep[pg->imtrx][eqn];
 		      
 		      /* primary piece of path dependence from finite difference */
 		      if ( CalcPathDeps )
@@ -1742,7 +1742,7 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 			  if ( af->Assemble_Jacobian ) 
 			    {
 			      int var = LS;
-			      int pvar = upd->vp[var];
+			      int pvar = upd->vp[pg->imtrx][var];
 			      if ( pvar != -1 )
 			        {
 			          for ( j=0; j<ei->dof[var]; j++)
@@ -1762,7 +1762,7 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 				  
 			      for( var = 0 ; var < MAX_VARIABLE_TYPES; var++)
 				{
-				  if ( (pvar = upd->vp[var]) != -1 )
+				  if ( (pvar = upd->vp[pg->imtrx][var]) != -1 )
 				    {
 				      if ( var != MASS_FRACTION )
 					{
@@ -1787,7 +1787,7 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 				}
 			      /* last piece of path dependence */
 			      var = LS;
-			      pvar = upd->vp[var];
+			      pvar = upd->vp[pg->imtrx][var];
 			      if ( pvar != -1 && !ls->Ignore_F_deps )
 			        {
 			          for ( j=0; j<ei->dof[var]; j++)

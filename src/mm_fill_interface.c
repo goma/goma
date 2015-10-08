@@ -106,7 +106,7 @@ raoults_law_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
   mp_liq = mp_glob[Matilda[ebIndex_liq]];
   mp_gas = mp_glob[Matilda[ebIndex_gas]];
   num_terms = mp_liq->Num_Species + mp_gas->Num_Species;
-  have_T = (upd->vp[TEMPERATURE] != -1);
+  have_T = (upd->vp[pg->imtrx][TEMPERATURE] != -1);
   if (have_T) num_terms++;
 
   /*
@@ -481,7 +481,7 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
   mp_a = mp_glob[Matilda[ebIndex_a]];
   mp_b = mp_glob[Matilda[ebIndex_b]];
   num_terms = mp_a->Num_Species + mp_b->Num_Species;
-  have_T = (upd->vp[TEMPERATURE] != -1);
+  have_T = (upd->vp[pg->imtrx][TEMPERATURE] != -1);
   if (have_T) num_terms++;
 
   /*
@@ -844,21 +844,21 @@ is_masstemp_create(MATRL_PROP_STRUCT *mp_1, MATRL_PROP_STRUCT *mp_2,
   INTERFACE_SOURCE_STRUCT *is;
   VARIABLE_DESCRIPTION_STRUCT *vd;
   num_terms = mp_1->Num_Species + mp_2->Num_Species;
-  have_T = (upd->vp[TEMPERATURE] != -1);
+  have_T = (upd->vp[pg->imtrx][TEMPERATURE] != -1);
   if (have_T) num_terms++;
   is = interface_source_alloc(num_terms, 0, do_Jac);
   for(i=0 ; i<Num_Interface_Srcs ; i++)    {
   for (k = 0; k < mp_1->Num_Species; k++) {
-    vd = find_or_create_vd(MASS_FRACTION, 1, mp_1->MatID, k);
+    vd = find_or_create_vd(MASS_FRACTION, 1, mp_1->MatID, k, pg->imtrx);
     is[i].Var_List[k] = vd;
   }
   for (k = 0, pos = mp_1->Num_Species; k < mp_2->Num_Species;
        k++, pos++) {
-    vd = find_or_create_vd(MASS_FRACTION, 1, mp_2->MatID, k);
+    vd = find_or_create_vd(MASS_FRACTION, 1, mp_2->MatID, k, pg->imtrx);
     is[i].Var_List[pos] = vd;
   }
   if (have_T) {
-    vd = find_or_create_vd(TEMPERATURE, 1, -1, 0);
+    vd = find_or_create_vd(TEMPERATURE, 1, -1, 0, pg->imtrx);
     is[i].Var_List[num_terms-1] = vd;
   }
   }

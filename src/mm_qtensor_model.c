@@ -183,7 +183,7 @@ assemble_qtensor(dbl *el_length) /* 2 x approximate element length scales */
      delta_xi[i] = 0.0;
   }
 
-/*   if(pd->e[R_MESH1]) EH(-1, "assemble_qtensor is not deformable mesh friendly."); */
+/*   if(pd->e[pg->imtrx][R_MESH1]) EH(-1, "assemble_qtensor is not deformable mesh friendly."); */
 
   ielem_type = ei->ielem_type;	/* element type */
   ip_total = elem_info(NQUAD, ielem_type); /* number of quadrature points */
@@ -529,7 +529,7 @@ assemble_new_qtensor(dbl *el_length) /* 2 x approximate element length scales */
 
 
   /* Catch cases which are not available */
-  if(pd->e[R_MESH1]) EH(-1, "assemble_qtensor is not deformable mesh friendly.");
+  if(pd->e[pg->imtrx][R_MESH1]) EH(-1, "assemble_qtensor is not deformable mesh friendly.");
   if (pd->Num_Dim == 3) EH(-1, "qtensor not ready for 3D problems yet!");
   if (pd->CoordinateSystem != CARTESIAN
    && pd->CoordinateSystem != PROJECTED_CARTESIAN)
@@ -769,7 +769,7 @@ assemble_vorticity_direction()
   dbl detJ1, det_J_inv;
   
   
-  if ( ! pd->e[eqn = R_VORT_DIR1] )
+  if ( ! pd->e[pg->imtrx][eqn = R_VORT_DIR1] )
     {
       return(status);
     }
@@ -837,18 +837,18 @@ assemble_vorticity_direction()
       for(a = 0; a < DIM; a++)
 	{
 	  eqn = R_VORT_DIR1 + a;
-	  peqn = upd->ep[eqn];
+	  peqn = upd->ep[pg->imtrx][eqn];
 	  for(i = 0; i < ei->dof[eqn]; i++)
 	    {
 	      wt_func = bf[eqn]->phi[i];  
 
 	      advection = 0.;
 	      
-	      if ( pd->e[eqn] & T_ADVECTION )
+	      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 		{
 		  advection = -vort_dir_local[a];
 		  advection *= wt_func * dV;
-		  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 		}
 	      
 	      /*
@@ -857,11 +857,11 @@ assemble_vorticity_direction()
 	      
 	      source = 0;
 	      
-	      if ( pd->e[eqn] & T_SOURCE )
+	      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 		{
 		  source = fv->vd[a];    
 		  source *= wt_func * dV;
-		  source *= pd->etm[eqn][(LOG2_SOURCE)];
+		  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		}
 	  
 	      lec->R[peqn][i] += 
@@ -879,22 +879,22 @@ assemble_vorticity_direction()
       for(a = 0; a < DIM; a++)
 	{
 	  eqn = R_VORT_DIR1 + a;
-	  peqn = upd->ep[eqn];
+	  peqn = upd->ep[pg->imtrx][eqn];
 	  for ( i=0; i<ei->dof[eqn]; i++)
 	    {
 	      wt_func = bf[eqn]->phi[i];
 	      var = VORT_DIR1 + a;
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      for( j=0; j<ei->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 	
 		  source = 0.0;
-		  if ( pd->e[eqn] & T_SOURCE )
+		  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 		    {
 		      source += phi_j;
 		      source *= wt_func*dV;
-		      source *= pd->etm[eqn][(LOG2_SOURCE)];
+		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		    }		      
 		  lec->J[peqn][pvar][i][j] +=source;
 		}
@@ -915,7 +915,7 @@ assemble_vorticity_direction()
       for(b = 0; b < VIM; b++)
 	{
 	  var = VELOCITY1 + b;
-	  pvar = upd->vp[var];
+	  pvar = upd->vp[pg->imtrx][var];
 	  for( j=0; j<ei->dof[var]; j++)
 	    {
 	      phi_j = bf[var]->phi[j];
@@ -965,13 +965,13 @@ assemble_vorticity_direction()
 	      for(a = 0; a < DIM; a++)
 		{
 		  eqn = R_VORT_DIR1 + a;
-		  peqn = upd->ep[eqn];
+		  peqn = upd->ep[pg->imtrx][eqn];
 		  
 		  for ( i=0; i<ei->dof[eqn]; i++)
 		    {
 		      wt_func = bf[eqn]->phi[i];
-		      R_new[a][i] = (-vort_dir_pert[a]*pd->etm[eqn][(LOG2_ADVECTION)]+
-				     fv->vd[a]*pd->etm[eqn][(LOG2_SOURCE)])*wt_func * dV;
+		      R_new[a][i] = (-vort_dir_pert[a]*pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)]+
+				     fv->vd[a]*pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)])*wt_func * dV;
 		      lec->J[peqn][pvar][i][j] += (R_old[a][i]-R_new[a][i])/eps;
 		      
 		    }
@@ -986,7 +986,7 @@ assemble_vorticity_direction()
       /* Must calculate numerical Jacobians since analytical are intractable! */
       var = MESH_DISPLACEMENT1;
       
-      if (pd->v[var]&& 0) {
+      if (pd->v[pg->imtrx][var]&& 0) {
 	dofs = ei->dof[var];
 	memset(dd, 0, sizeof(double)*DIM*MDE);
 	for( j=0; j<dofs; j++)
@@ -1002,7 +1002,7 @@ assemble_vorticity_direction()
 	for(b = 0; b < dim; b++)
 	  {
 	    var = MESH_DISPLACEMENT1 + b;
-	    pvar = upd->vp[var];
+	    pvar = upd->vp[pg->imtrx][var];
 	    for( j=0; j<ei->dof[var]; j++)
 	      {
 		if(*esp->d[b][j] != 0.)
@@ -1209,13 +1209,13 @@ assemble_vorticity_direction()
 		for(a = 0; a < DIM; a++)
 		  {
 		    eqn = R_VORT_DIR1 + a;
-		    peqn = upd->ep[eqn];
+		    peqn = upd->ep[pg->imtrx][eqn];
 		    
 		    for ( i=0; i<ei->dof[eqn]; i++)
 		      {
 			wt_func = bf[eqn]->phi[i];
-			R_new[a][i] = (-vort_dir_pert[a]*pd->etm[eqn][(LOG2_ADVECTION)]+
-				       fv->vd[a]*pd->etm[eqn][(LOG2_SOURCE)])*wt_func 
+			R_new[a][i] = (-vort_dir_pert[a]*pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)]+
+				       fv->vd[a]*pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)])*wt_func 
 			  * wt * hh3 * detJ1;
 			lec->J[peqn][pvar][i][j] += (R_old[a][i]-R_new[a][i])/eps;
 			
@@ -1288,7 +1288,7 @@ hydro_qtensor_flux (struct Species_Conservation_Terms *st,
   dbl grad_phi_j_VQVt[DIM]; /* grad(phi_j) . (V Q V^t) */
   dbl VQVt_grad_phi_j[DIM]; /* (V Q V^t) . grad(phi_j) */
 
-  if(!pd->e[VORT_DIR3] && 0)
+  if(!pd->e[pg->imtrx][VORT_DIR3] && 0)
     {
       EH(-1, "Cannot use QTENSOR without the VORT_DIR{1,2,3} equations/variables active!");
       exit(-1);
@@ -1648,7 +1648,7 @@ hydro_qtensor_flux_new (struct Species_Conservation_Terms *st,
 
   dbl d_div_gdYVQVt_dvd[DIM][DIM][MDE];
 
-  if(!pd->e[VORT_DIR1])
+  if(!pd->e[pg->imtrx][VORT_DIR1])
     {
       EH(-1, "Cannot use this QTENSOR model without the VORT_DIR{1,2,3} equations/variables active!");
       exit(-1);

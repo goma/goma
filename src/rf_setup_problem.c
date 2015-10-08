@@ -311,7 +311,8 @@ free_problem(Exo_DB *exo,     /* ptr to the finite element mesh database */
 
 static void
 check_discontinuous_interp_type(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
-			        int var_type)
+			        int var_type,
+                                int imtrx)
      
     /********************************************************************
      *
@@ -322,8 +323,8 @@ check_discontinuous_interp_type(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
      *    the interface
      ********************************************************************/
 {
-  int *v_ptr = curr_pd->v;
-  int interp_type = curr_pd->i[var_type];
+  int *v_ptr = curr_pd->v[imtrx];
+  int interp_type = curr_pd->i[imtrx][var_type];
   if (v_ptr[var_type] & V_MATSPECIFIC) {
     switch (interp_type) {
     case I_NOTHING:
@@ -366,7 +367,8 @@ check_discontinuous_interp_type(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
 
 static void
 turn_on_discontinuous(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
-		      const int var_type)
+		      const int var_type,
+                      const int imtrx)
     
     /********************************************************************
      *
@@ -377,10 +379,10 @@ turn_on_discontinuous(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
      *    material boundaries.
      ********************************************************************/
 {
-  int *v_ptr = &(curr_pd->v[var_type]); 
+  int *v_ptr = &(curr_pd->v[imtrx][var_type]); 
   if ((*v_ptr) & (V_SOLNVECTOR)) {
     *v_ptr |= V_MATSPECIFIC;
-    check_discontinuous_interp_type(curr_pd, var_type);
+    check_discontinuous_interp_type(curr_pd, var_type, imtrx);
   }
 }
 /************************************************************************/
@@ -404,6 +406,7 @@ coordinate_discontinuous_variables(Exo_DB *exo,	Dpi *dpi)
      *******************************************************************/
 {
   int ibc, eqn_type, ss_index, side_index, k, node_num, imat;
+  int imtrx;
   int num_mat, mat_index, var_type, *ivec;
   UMI_LIST_STRUCT *curr_mat_list;
   NODE_INFO_STRUCT *node_ptr;
@@ -454,24 +457,34 @@ coordinate_discontinuous_variables(Exo_DB *exo,	Dpi *dpi)
 	       *  Now make sure that we have the discontinuous var turned
 	       *  on
 	       */
-	      for (imat = 0; imat < num_mat; imat++) {
-		mat_index= (curr_mat_list->List)[imat];
-		curr_pd = pd_glob[mat_index];
-                if (eqn_type == R_MOMENTUM1) {
-		  turn_on_discontinuous(curr_pd, R_MOMENTUM1);
-		  turn_on_discontinuous(curr_pd, R_MOMENTUM2);
-		  turn_on_discontinuous(curr_pd, R_MOMENTUM3);
-		  turn_on_discontinuous(curr_pd, PRESSURE);
-		} else if (eqn_type == R_SPECIES_UNK_0) {
-		  turn_on_discontinuous(curr_pd, R_MASS);	
-		  for (var_type = R_SPECIES_UNK_0;
-		       var_type < R_SPECIES_UNK_LAST; var_type++) {
-		    turn_on_discontinuous(curr_pd, var_type);
-		  }
-		} else {
-		  turn_on_discontinuous(curr_pd, eqn_type);
-		}
-	      }
+	      for (imat = 0; imat < num_mat; imat++) 
+                 {
+		  mat_index= (curr_mat_list->List)[imat];
+		  curr_pd = pd_glob[mat_index];
+                  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+                     {
+                      if (eqn_type == R_MOMENTUM1) 
+                        {
+		         turn_on_discontinuous(curr_pd, R_MOMENTUM1, imtrx);
+		         turn_on_discontinuous(curr_pd, R_MOMENTUM2, imtrx);
+		         turn_on_discontinuous(curr_pd, R_MOMENTUM3, imtrx);
+		         turn_on_discontinuous(curr_pd, PRESSURE, imtrx);
+                        }
+		      else if (eqn_type == R_SPECIES_UNK_0) 
+                        {
+		         turn_on_discontinuous(curr_pd, R_MASS, imtrx);	
+		         for (var_type = R_SPECIES_UNK_0;
+		              var_type < R_SPECIES_UNK_LAST; var_type++) 
+                            {
+		             turn_on_discontinuous(curr_pd, var_type, imtrx);
+		            }
+		        } 
+                      else 
+                        {
+		         turn_on_discontinuous(curr_pd, eqn_type, imtrx);
+		        }
+                     }
+	         }
 	    }
 	  }
 	}
@@ -487,26 +500,37 @@ coordinate_discontinuous_variables(Exo_DB *exo,	Dpi *dpi)
    */
 #ifdef PARALLEL
   ivec = alloc_int_1(V_LAST, 0);
-  for (imat = 0; imat < upd->Num_Mat; imat++) {
-    curr_pd = pd_glob[imat];
-    for (k = 0; k <  V_LAST; k++) {
-      ivec[k] = curr_pd->v[k];
-    }
-    ReduceBcast_BOR(ivec, V_LAST);
+  for (imat = 0; imat < upd->Num_Mat; imat++) 
+     {
+      curr_pd = pd_glob[imat];
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+         {
+          for (k = 0; k <  V_LAST; k++) 
+             {
+              ivec[k] = curr_pd->v[imtrx][k];
+             }
+         }
+      ReduceBcast_BOR(ivec, V_LAST);
 #ifdef DEBUG_HKM
-    print_sync_start(TRUE);
-    for (k = 0; k < V_LAST; k++) {
-      if (curr_pd->v[k] != ivec[k]) {
-        printf("P_%d: v field for var_type %d changed from %d to %d\n",
-	       ProcID, k, curr_pd->v[k], ivec[k]);
-      }
-    }
-    print_sync_end(TRUE);
+      print_sync_start(TRUE);
+      for (k = 0; k < V_LAST; k++) 
+         {
+          if (curr_pd->v[pg->imtrx][k] != ivec[k]) 
+            {
+             printf("P_%d: v field for var_type %d changed from %d to %d\n",
+	            ProcID, k, curr_pd->v[pg->imtrx][k], ivec[k]);
+            }
+         }
+      print_sync_end(TRUE);
 #endif
-    for (k = 0; k < V_LAST; k++) {
-      curr_pd->v[k] = ivec[k];
-    }    
-  }
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+         {
+          for (k = 0; k < V_LAST; k++) 
+             {
+              curr_pd->v[imtrx][k] = ivec[k];
+             }
+         }    
+     }
   safer_free((void **) &ivec);
 #endif
   

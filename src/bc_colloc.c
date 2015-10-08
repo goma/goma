@@ -577,7 +577,7 @@ apply_point_colloc_bc (
 	    if (eqn == R_MASS) {
 	      ieqn = MAX_PROB_EQN + BC_Types[bc_input_id].species_eq;
 	    } else {
-	      ieqn = upd->ep[eqn];
+	      ieqn = upd->ep[pg->imtrx][eqn];
 	    }
 
 	    if (ldof_eqn != -1)   {
@@ -596,7 +596,7 @@ apply_point_colloc_bc (
 	
 
 		for (var = 0; var < MAX_VARIABLE_TYPES; var++) {
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  if (pvar != -1 && (BC_Types[bc_input_id].desc->sens[var] || 1)) {
 		    /*
 		     * Warning!!!!!!!!!!!!!!!!!!!!!!!
@@ -611,7 +611,7 @@ apply_point_colloc_bc (
 		       * pointer to this entry *
 		       * if it exists, add sens into matrix
 		       */
-		      if (Dolphin[I][var] > 0) {				  
+		      if (Dolphin[pg->imtrx][I][var] > 0) {				  
 			if (! doFullJac) {
 			  ldof_var = ei->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {  
@@ -650,7 +650,7 @@ apply_point_colloc_bc (
 		    } else {
 		      for (w = 0; w < pd->Num_Species_Eqn; w++) {
 			pvar = MAX_PROB_VAR + w;
-			if (Dolphin[I][var] > 0) {
+			if (Dolphin[pg->imtrx][I][var] > 0) {
 			  ldof_var = ei->ln_to_first_dof[var][id];
 			  if (ldof_var != -1) {
 			    lec->J[ieqn][pvar] [ldof_eqn][ldof_var] += penalty * d_func[MAX_VARIABLE_TYPES + w];
@@ -749,7 +749,7 @@ fvelocity_profile (int var_flag,
     d_func[var_flag] = 0.0;
   else
     d_func[var_flag] = -1.0;
-  if( pd->e[R_MESH1] )
+  if( pd->e[pg->imtrx][R_MESH1] )
   {
   d_func[MESH_DISPLACEMENT1] = 
     dvelo_vary_fnc_d1(velo_condition, fv->x[0], fv->x[1], fv->x[2], p, time);
@@ -2251,7 +2251,7 @@ bc_eqn_index(int id,               /* local node number                 */
   struct BC_descriptions *bc_desc = bc->desc;
   NODE_INFO_STRUCT *node = Nodes[I];
   VARIABLE_DESCRIPTION_STRUCT *vd, *vd2 = NULL;
-  nv = node->Nodal_Vars_Info;
+  nv = node->Nodal_Vars_Info[pg->imtrx];
     
   /*
    *  Find equation number and species number from the BC description
@@ -2402,7 +2402,7 @@ bc_eqn_index(int id,               /* local node number                 */
    */
   *matID_retn = matID;
   *eqn = ieqn;
-  index_eqn = node->First_Unknown + node_offset;
+  index_eqn = node->First_Unknown[pg->imtrx] + node_offset;
   
   /*
    * HKM -> we can put this section into  
@@ -2795,7 +2795,7 @@ apply_table_bc( double *func,
       }
   else
       {
-      if(  basis != -1 && pd->e[R_MESH1 + basis] )
+      if(  basis != -1 && pd->e[pg->imtrx][R_MESH1 + basis] )
          {
                       d_func[R_MESH1 + basis ] -= slope;
          }

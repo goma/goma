@@ -296,8 +296,8 @@ apply_rotated_bc (
 			      fv->stangent, fv->dstangent_dx, sign_rot_mesh[i]);
 	}
 	if (rot_mom[i] && ei->ln_to_dof[VELOCITY1][id] != -1 && 
-	    pd->i[VELOCITY1] != I_Q2_D &&
-            pd->i[VELOCITY1] != I_Q1_D)	  { 
+	    pd->i[0][VELOCITY1] != I_Q2_D &&
+            pd->i[0][VELOCITY1] != I_Q1_D)	  { 
 		rotate_res_jac_mom(ei->ln_to_dof[VELOCITY1][id], 
 			     I, iconnect_ptr, num_local_nodes, ielem_dim-1,
 			     fv->snormal, fv->dsnormal_dx, fv->stangent,
@@ -396,7 +396,7 @@ rotate_res_jac_mesh (
         {
 	  Id = Proc_Elem_Connect[iconnect_ptr + id];
 	  ldof = ei->ln_to_dof[ShapeVar][id];
-	  if (Dolphin[I][MESH_DISPLACEMENT1] > 0 && Dolphin[Id][MESH_DISPLACEMENT1] > 0 )
+	  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 	    { 
 	      dsvector_dx[0][0][0][ldof] = dsnormal_dx[0][0][ldof];
 	    }
@@ -414,7 +414,7 @@ rotate_res_jac_mesh (
 		{
 		  Id = Proc_Elem_Connect[iconnect_ptr + id];
 		  ldof = ei->ln_to_dof[ShapeVar][id];
-		  if (Dolphin[I][MESH_DISPLACEMENT1] > 0  && Dolphin[Id][MESH_DISPLACEMENT1] > 0 )
+		  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0  && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 		    { 
 		      dsvector_dx[0][kdir][ldir][ldof] = dsnormal_dx[kdir][ldir][ldof];
 		      dsvector_dx[1][kdir][ldir][ldof] = sign * dstangent_dx[0][kdir][ldir][ldof];
@@ -436,7 +436,7 @@ rotate_res_jac_mesh (
 		{
 		  Id = Proc_Elem_Connect[iconnect_ptr + id];
 		  ldof = ei->ln_to_dof[ShapeVar][id];
-		  if (Dolphin[I][MESH_DISPLACEMENT1] > 0  && Dolphin[Id][MESH_DISPLACEMENT1] > 0 )
+		  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0  && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 		    { 
 		      
 		      dsvector_dx[0][kdir][ldir][ldof] = dsnormal_dx[kdir][ldir][ldof];
@@ -466,7 +466,7 @@ rotate_res_jac_mesh (
       for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	{
 	  rotated_resid[kdir] +=
-	    svector[kdir][ldir]*lec->R[upd->ep[R_MESH1 + ldir]][irow_index] ;
+	    svector[kdir][ldir]*lec->R[upd->ep[pg->imtrx][R_MESH1 + ldir]][irow_index] ;
 	}
     }
   
@@ -491,7 +491,7 @@ rotate_res_jac_mesh (
 	    {
 	      
 	      var=R_MESH1+j;
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[pg->imtrx][var];
 
 	      for ( n=0; n< ei->dof[var]; n++ ) 
 		{
@@ -499,7 +499,7 @@ rotate_res_jac_mesh (
 		  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		    {
 		      rotated_jacobian_vector[kdir][j][n]+=
-			svector[kdir][ldir] * lec->J[upd->ep[R_MESH1 + ldir]][pvar][irow_index][n];
+			svector[kdir][ldir] * lec->J[upd->ep[pg->imtrx][R_MESH1 + ldir]][pvar][irow_index][n];
 		    }
 		}
 	      
@@ -507,16 +507,16 @@ rotate_res_jac_mesh (
 		{
 		  Id = Proc_Elem_Connect[iconnect_ptr + id];
 		  ldof = ei->ln_to_dof[ShapeVar][id];
-		  if (Dolphin[I][MESH_DISPLACEMENT1] > 0  && Dolphin[Id][MESH_DISPLACEMENT1] > 0 )
+		  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0  && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 		    { 
 		      
 		      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 			{
 			  rotated_jacobian_vector[kdir][j][ldof] +=  
 			    dsvector_dx[kdir][ldir][j][ldof]
-			       *lec->R[upd->ep[R_MESH1+ldir]][irow_index] ;
+			       *lec->R[upd->ep[pg->imtrx][R_MESH1+ldir]][irow_index] ;
 			}
-		    } /* end of Baby_dolphin */
+		    } /* end of Baby_Dolphin[pg->imtrx] */
 		}	  
 	    } /* end of loop over sensitivities */
 	}
@@ -528,12 +528,12 @@ rotate_res_jac_mesh (
 	    {
 	      
 	      var=R_MESH1+j;
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      
 	      for ( n=0; n< ei->dof[var]; n++ ) 
 		{
 		  
-		  lec->J[upd->ep[R_MESH1 + kdir]][pvar][irow_index][n]
+		  lec->J[upd->ep[pg->imtrx][R_MESH1 + kdir]][pvar][irow_index][n]
 		    = rotated_jacobian_vector[kdir][j][n];
 		}
 	    }
@@ -542,8 +542,8 @@ rotate_res_jac_mesh (
 
       /* mesh wrt. pressure */
       var = PRESSURE;
-      if (pd->v[var]){
-	pvar = upd->vp[var];
+      if (pd->v[pg->imtrx][var]){
+	pvar = upd->vp[pg->imtrx][var];
 	for ( n=0; n<ei->dof[var]; n++) {
 	  
 	  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
@@ -553,7 +553,7 @@ rotate_res_jac_mesh (
 	  
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      peq = upd->ep[R_MESH1+ldir];
+	      peq = upd->ep[pg->imtrx][R_MESH1+ldir];
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
 		  rotated_jacobian_scalar[kdir][n] += 
@@ -564,7 +564,7 @@ rotate_res_jac_mesh (
 	  /*reinject back into lec-J for global assembly */
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      peq = upd->ep[R_MESH1+ldir];
+	      peq = upd->ep[pg->imtrx][R_MESH1+ldir];
 	      lec->J[peq][pvar][irow_index][n] = rotated_jacobian_scalar[ldir][n];
 	    }
 	} /* end of loop over nodes */
@@ -572,8 +572,8 @@ rotate_res_jac_mesh (
       
       /* mesh wrt. temperature */
       var = TEMPERATURE;
-      if (pd->v[var]){
-	pvar = upd->vp[var];
+      if (pd->v[pg->imtrx][var]){
+	pvar = upd->vp[pg->imtrx][var];
 	for ( n=0; n<ei->dof[var]; n++) {
 	  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 	    {
@@ -582,7 +582,7 @@ rotate_res_jac_mesh (
 	  
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      peq = upd->ep[R_MESH1+ldir];
+	      peq = upd->ep[pg->imtrx][R_MESH1+ldir];
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
 		  rotated_jacobian_scalar[kdir][n] += 
@@ -593,7 +593,7 @@ rotate_res_jac_mesh (
 	  /*reinject back into lec-J for global assembly */
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      peq = upd->ep[R_MESH1+ldir];
+	      peq = upd->ep[pg->imtrx][R_MESH1+ldir];
 	      lec->J[peq][pvar][irow_index][n] = rotated_jacobian_scalar[ldir][n];
 	    }
 	} /* end of loop over nodes */
@@ -604,8 +604,8 @@ rotate_res_jac_mesh (
       for (jvar = 0; jvar < ielem_surf_dim+1; jvar++)
 	{
 	  var = VELOCITY1 + jvar;
-	  if (pd->v[var]){
-	    pvar = upd->vp[var];
+	  if (pd->v[pg->imtrx][var]){
+	    pvar = upd->vp[pg->imtrx][var];
 	    for ( n=0; n<ei->dof[var]; n++) {
 	      
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
@@ -615,7 +615,7 @@ rotate_res_jac_mesh (
 	      
 	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		{
-		  peq = upd->ep[R_MESH1+ldir];
+		  peq = upd->ep[pg->imtrx][R_MESH1+ldir];
 		  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		    {
 		      rotated_jacobian_vector[kdir][jvar][n] += 
@@ -625,7 +625,7 @@ rotate_res_jac_mesh (
 	      /*reinject back into lec-J for global assembly */
 	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		{
-		  peq = upd->ep[R_MESH1+ldir];
+		  peq = upd->ep[pg->imtrx][R_MESH1+ldir];
 		  lec->J[peq][pvar][irow_index][n] = rotated_jacobian_vector[ldir][jvar][n];
 		}
 	    } /* end of loop over nodes */
@@ -638,7 +638,7 @@ rotate_res_jac_mesh (
       
       /* mesh wrt. species concentration */
       var = MASS_FRACTION;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (w=0; w<pd->Num_Species_Eqn; w++)
 	  {
 	    for ( n=0; n<ei->dof[var]; n++) {
@@ -650,7 +650,7 @@ rotate_res_jac_mesh (
 	      
 	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		{
-		  peq = upd->ep[R_MESH1+ldir];
+		  peq = upd->ep[pg->imtrx][R_MESH1+ldir];
 		  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		    {
 		      
@@ -662,7 +662,7 @@ rotate_res_jac_mesh (
 	      /*reinject back into lec-J for global assembly */
 	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		{
-		  peq = upd->ep[R_MESH1+ldir];
+		  peq = upd->ep[pg->imtrx][R_MESH1+ldir];
 		  lec->J[peq][MAX_PROB_VAR + w][irow_index][n] = rotated_jacobian_conc[ldir][w][n];
 		}
 	    } /* end of loop over nodes */
@@ -674,7 +674,7 @@ rotate_res_jac_mesh (
   /* Put rotated residual back into lec for scattering into global matrix */
   for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
     {
-      lec->R[ upd->ep[R_MESH1+kdir] ][irow_index] = rotated_resid[kdir];
+      lec->R[ upd->ep[pg->imtrx][R_MESH1+kdir] ][irow_index] = rotated_resid[kdir];
     } 
   
 } /* END of rotate_res_jac_mesh */
@@ -738,7 +738,7 @@ rotate_mesh_eqn (
   double rotated_resid[MAX_PDIM];
   double rotated_jacobian_scalar[MAX_PDIM][MDE];
   double  rotated_jacobian_vector[MAX_PDIM][MAX_PDIM][MDE];
-  NODAL_VARS_STRUCT *nv = Nodes[I]->Nodal_Vars_Info;
+  NODAL_VARS_STRUCT *nv = Nodes[I]->Nodal_Vars_Info[pg->imtrx];
   ROTATION_VECTORS_STRUCT *rot, *rot_n = rotation[I][eq][0];
   ROTATION_VECTORS_STRUCT *rot_t1 = rotation[I][eq][1];
   ROTATION_VECTORS_STRUCT *rot_t2 = 0;
@@ -761,7 +761,7 @@ rotate_mesh_eqn (
 	      ndof);
       EH(-1, Err_Msg);
     }
-    peqn_mesh[ldir] = upd->ep[R_MESH1 + ldir];
+    peqn_mesh[ldir] = upd->ep[pg->imtrx][R_MESH1 + ldir];
   }
 
   /* Now add on projection into n-t space */
@@ -799,13 +799,13 @@ rotate_mesh_eqn (
 	 */
 	for (b = 0; b < dim; b++) {	      
 	  var = R_MESH1 + b;
-	  pvar = upd->vp[var];
+	  pvar = upd->vp[pg->imtrx][var];
 
 	  if (strcmp(Matrix_Format, "msr") == 0) {
 	    /*
 	     * Find the global equation number
 	     */
-	    if ((index_eqn = Index_Solution(I, eqn, 0, 0, -2)) == -1) { 
+	    if ((index_eqn = Index_Solution(I, eqn, 0, 0, -2, pg->imtrx)) == -1) { 
 	      EH(-1, "Cant find eqn index");
 	    }
 	    /*
@@ -814,14 +814,14 @@ rotate_mesh_eqn (
 	     */
 	    for (j = 0; j < rot->d_vector_n; j++ )  {
 	      J = rot->d_vector_J[j];
-	      if (Dolphin[I][MESH_DISPLACEMENT1] > 0  &&
-		  Dolphin[J][MESH_DISPLACEMENT1] > 0 ) { 
+	      if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0  &&
+		  Dolphin[pg->imtrx][J][MESH_DISPLACEMENT1] > 0 ) { 
 		/* 
 		 * find entry in global matrix - note that the sensitivities of the 
 		 * rotation vector may be in a different element than the current 
 		 * element 
 		 */
-		if ((index_var = Index_Solution(J, var, 0, 0, -2)) != -1) { 
+		if ((index_var = Index_Solution(J, var, 0, 0, -2, pg->imtrx)) != -1) { 
 		  index = (index_eqn == index_var) ? index_eqn :
 		      in_list(index_var, ija[index_eqn], ija[index_eqn+1], ija);
 			  
@@ -838,13 +838,13 @@ rotate_mesh_eqn (
 	    bindx = ams->bindx;
 	    indx  = ams->indx;
 	    a     = ams->val;
-	    nv  = Nodes[I]->Nodal_Vars_Info;
+	    nv  = Nodes[I]->Nodal_Vars_Info[pg->imtrx];
 	    blk_row = get_nv_offset_idof(nv, eqn, 0, 0, NULL);
 	    row_dofs = rpntr[I+1] - rpntr[I];
 	    for (j = 0; j < rot->d_vector_n; j++) {
 	      J = rot->d_vector_J[j];
-	      if (Dolphin[I][MESH_DISPLACEMENT1] > 0 &&
-		  Dolphin[J][MESH_DISPLACEMENT1] > 0) { 
+	      if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 &&
+		  Dolphin[pg->imtrx][J][MESH_DISPLACEMENT1] > 0) { 
 		K = in_list(J, bpntr[I], bpntr[I+1], bindx);
 #ifdef DEBUG_HKM
 		if (K == -1) {
@@ -853,7 +853,7 @@ rotate_mesh_eqn (
 		  EH(-1, "rotate_mesh_eqn ERROR: vbr matrix structure error");
 		}
 #endif
-		nv = Nodes[J]->Nodal_Vars_Info;
+		nv = Nodes[J]->Nodal_Vars_Info[pg->imtrx];
 		blk_col = get_nv_offset_idof(nv, var, 0, 0, NULL);
 		/*
 		 * Calculate the index into the matrix:
@@ -870,7 +870,7 @@ rotate_mesh_eqn (
             /*
              * Find the global equation number
              */
-            if ((index_eqn = Index_Solution(I, eqn, 0, 0, -2)) == -1) {
+            if ((index_eqn = Index_Solution(I, eqn, 0, 0, -2, pg->imtrx)) == -1) {
               EH(-1, "Cant find eqn index");
             }
             /*
@@ -890,7 +890,7 @@ rotate_mesh_eqn (
                  * rotation vector may be in a different element than the current
                  * element
                  */
-                if ((index_var = Index_Solution(J, var, 0, 0, -2)) != -1) {
+                if ((index_var = Index_Solution(J, var, 0, 0, -2, pg->imtrx)) != -1) {
                   sum_val = 0;
                   for (ldir = 0; ldir < dim; ldir++) {
                     sum_val +=
@@ -931,7 +931,7 @@ rotate_mesh_eqn (
      * one column at a time
      */
     for (v = V_FIRST; v < V_LAST; v++) {
-      pv = upd->vp[v];
+      pv = upd->vp[pg->imtrx][v];
       if (pv != -1) {
 	if (v == MASS_FRACTION) {
 	  for (kv = 0; kv < upd->Max_Num_Species_Eqn; kv++) {	  
@@ -1031,7 +1031,7 @@ rotate_mesh_eqn (
 	if (rot->ok) {
 	  for (j = 0; j < dim; j++) {
 	    var = R_MESH1 + j;
-	    pvar = upd->vp[var];
+	    pvar = upd->vp[pg->imtrx][var];
 	    for (n = 0; n < ei->dof[var]; n++ ) {
 	      lec->J[peqn][pvar][id][n] += rotated_jacobian_vector[kdir][j][n];
 	    }
@@ -1105,7 +1105,7 @@ rotate_momentum_eqn (
 	rotated_resid[kdir] = 0.;     
 	for (ldir = 0; ldir < dim; ldir++)
 	  {
-	    peq = upd->ep[R_MOMENTUM1+ldir];
+	    peq = upd->ep[pg->imtrx][R_MOMENTUM1+ldir];
 	    rotated_resid[kdir] += 
 	      rotation[I][eq][kdir]->vector[ldir]*lec->R[peq][id];
 	  }
@@ -1132,7 +1132,7 @@ rotate_momentum_eqn (
 	    {
 	      
 	      var=MESH_DISPLACEMENT1+b;
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      
 	      for ( j=0; j< ei->dof[var]; j++ ) 
 		{
@@ -1141,7 +1141,7 @@ rotate_momentum_eqn (
 		    {
 		      rotated_jacobian_vector[kdir][b][j] += 
 			  rotation[I][eq][kdir]->vector[ldir] * 
-			  lec->J[upd->ep[R_MOMENTUM1 + ldir]][pvar][id][j];
+			  lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + ldir]][pvar][id][j];
 		    }
 		}
 
@@ -1151,16 +1151,16 @@ rotate_momentum_eqn (
 		for (j = 0; j < rotation[I][eq][kdir]->d_vector_n; j++ )  {
 		  int ktype, ndof, index_eqn, index_var;
 		  J = rotation[I][eq][kdir]->d_vector_J[j];
-		  if (Dolphin[I][R_MOMENTUM1] > 0  && Dolphin[J][MESH_DISPLACEMENT1] > 0) { 
+		  if (Dolphin[pg->imtrx][I][R_MOMENTUM1] > 0  && Dolphin[pg->imtrx][J][MESH_DISPLACEMENT1] > 0) { 
 		    /* find entry in global matrix - note that the sensitivities of the 
 		     * rotation vector may be in a different element than the current 
 		     * element */
 		    ktype = 0;
 		    ndof = 0;
-		    if ((index_eqn =  Index_Solution(I, eqn, ktype, ndof, -2)) == -1 ) { 
+		    if ((index_eqn =  Index_Solution(I, eqn, ktype, ndof, -2, pg->imtrx)) == -1 ) { 
 		      EH(-1, "Cant find eqn index");
 		    }
-		    if ((index_var =  Index_Solution(J, var, ktype, ndof, -2)) == -1 ) { 
+		    if ((index_var =  Index_Solution(J, var, ktype, ndof, -2, pg->imtrx)) == -1 ) { 
 		      EH(-1, "Cant find var index");
 		    }
 		      
@@ -1172,9 +1172,9 @@ rotate_momentum_eqn (
 		    for (ldir = 0; ldir < dim; ldir++) {
 		      a[index] +=  
 			  rotation[I][eq][kdir]->d_vector_dx[ldir][b][j]
-			  * lec->R[upd->ep[R_MESH1+ldir]][id];
+			  * lec->R[upd->ep[pg->imtrx][R_MESH1+ldir]][id];
 		    }
-		  } /* end of Baby_dolphin */
+		  } /* end of Baby_Dolphin[pg->imtrx] */
 		}
 	      }
 	      else if ( strcmp(Matrix_Format, "vbr") == 0 )
@@ -1189,7 +1189,7 @@ rotate_momentum_eqn (
 
 		  int K, blk_col;
 		  NODAL_VARS_STRUCT *nv;
-		  nv = Nodes[I]->Nodal_Vars_Info;
+		  nv = Nodes[I]->Nodal_Vars_Info[pg->imtrx];
 		  blk_row = get_nv_offset_idof(nv, eqn, 0, 0, NULL);
 		  row_dofs = rpntr[I+1] - rpntr[I];
 
@@ -1197,11 +1197,11 @@ rotate_momentum_eqn (
 		    {
 		      J = rotation[I][eq][kdir]->d_vector_J[j];
 
-		      if (Dolphin[I][R_MOMENTUM1] > 0  && Dolphin[J][MESH_DISPLACEMENT1] > 0 )
+		      if (Dolphin[pg->imtrx][I][R_MOMENTUM1] > 0  && Dolphin[pg->imtrx][J][MESH_DISPLACEMENT1] > 0 )
 			{ 
 
 			  K = in_list( J, bpntr[I], bpntr[I+1], bindx );   /* K is the block index */
-			  nv = Nodes[J]->Nodal_Vars_Info;
+			  nv = Nodes[J]->Nodal_Vars_Info[pg->imtrx];
 			  blk_col = get_nv_offset_idof(nv, var, 0, 0, NULL);
 
 			  index = indx[K] + row_dofs* blk_col + blk_row; /* here we assume only 1 mesh dof per node */
@@ -1210,7 +1210,7 @@ rotate_momentum_eqn (
 			    {
 			      a[index] +=  
 				rotation[I][eq][kdir]->d_vector_dx[ldir][b][j]
-				* lec->R[upd->ep[R_MESH1+ldir]][id];
+				* lec->R[upd->ep[pg->imtrx][R_MESH1+ldir]][id];
 			    }
 			}
 		    }
@@ -1231,11 +1231,11 @@ rotate_momentum_eqn (
                      * element */
                     ktype = 0;
                     ndof = 0;
-                    if ((index_eqn = Index_Solution(I, eqn, ktype, ndof, -2))
+                    if ((index_eqn = Index_Solution(I, eqn, ktype, ndof, -2, pg->imtrx))
                         == -1) {
                       EH(-1, "Cant find eqn index");
                     }
-                    if ((index_var = Index_Solution(J, var, ktype, ndof, -2))
+                    if ((index_var = Index_Solution(J, var, ktype, ndof, -2, pg->imtrx))
                         == -1) {
                       EH(-1, "Cant find var index");
                     }
@@ -1246,7 +1246,7 @@ rotate_momentum_eqn (
 
                     for (ldir = 0; ldir < dim; ldir++) {
                       sum_val += rotation[I][eq][kdir]->d_vector_dx[ldir][b][j]
-                          * lec->R[upd->ep[R_MESH1 + ldir]][id];
+                          * lec->R[upd->ep[0][R_MESH1 + ldir]][id];
                     }
                     global_row = ams->GlobalIDs[index_eqn];
                     global_col = ams->GlobalIDs[index_var];
@@ -1271,7 +1271,7 @@ rotate_momentum_eqn (
 			  for (ldir = 0; ldir < dim; ldir++)
 			    {
 			      rotated_jacobian_vector[kdir][b][w] += 
-				rotation[I][eq][kdir]->d_vector_dx[ldir][b][j] * lec->R[upd->ep[R_MESH1+ldir]][id];
+				rotation[I][eq][kdir]->d_vector_dx[ldir][b][j] * lec->R[upd->ep[pg->imtrx][R_MESH1+ldir]][id];
 			    }
 			}
 		    }
@@ -1288,10 +1288,10 @@ rotate_momentum_eqn (
 	    for ( j=0; j<dim; j++)
 	      {
 		var= MESH_DISPLACEMENT1+j;
-		pvar = upd->vp[var];
+		pvar = upd->vp[pg->imtrx][var];
 		for ( n=0; n< ei->dof[var]; n++ ) 
 		  {
-		    lec->J[upd->ep[R_MOMENTUM1 + kdir]][pvar][id][n]
+		    lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + kdir]][pvar][id][n]
 		      = rotated_jacobian_vector[kdir][j][n];
 		  }
 	      }
@@ -1301,8 +1301,8 @@ rotate_momentum_eqn (
       
       /* momentum wrt. pressure */
       var = PRESSURE;
-      if (pd->v[var]){
-	pvar = upd->vp[var];
+      if (pd->v[pg->imtrx][var]){
+	pvar = upd->vp[pg->imtrx][var];
 	for ( n=0; n<ei->dof[var]; n++) {
 
 	  rotated_jacobian_scalar[0][n] = 0.;
@@ -1315,7 +1315,7 @@ rotate_momentum_eqn (
 	      for (ldir = 0; ldir < dim; ldir++)
 		{
 		  rotated_jacobian_scalar[kdir][n] += 
-		    rotation[I][eq][kdir]->vector[ldir] * lec->J[upd->ep[R_MOMENTUM1+ldir]][pvar][id][n];
+		    rotation[I][eq][kdir]->vector[ldir] * lec->J[upd->ep[pg->imtrx][R_MOMENTUM1+ldir]][pvar][id][n];
 		}
 	      }
 	    }
@@ -1330,7 +1330,7 @@ rotate_momentum_eqn (
 	      for ( n=0; n< ei->dof[var]; n++ ) 
 		{
 		  
-		  lec->J[upd->ep[R_MOMENTUM1+ kdir]][pvar][id][n]
+		  lec->J[upd->ep[pg->imtrx][R_MOMENTUM1+ kdir]][pvar][id][n]
 		    = rotated_jacobian_scalar[kdir][n];
 		}
 	    }
@@ -1340,8 +1340,8 @@ rotate_momentum_eqn (
       
       /* momentum wrt. temperature */
       var = TEMPERATURE;
-      if (pd->v[var]){
-	pvar = upd->vp[var];
+      if (pd->v[pg->imtrx][var]){
+	pvar = upd->vp[pg->imtrx][var];
 	for ( n=0; n<ei->dof[var]; n++) {
 	  	  
 	  rotated_jacobian_scalar[0][n] = 0.;
@@ -1355,7 +1355,7 @@ rotate_momentum_eqn (
 		for (ldir = 0; ldir < dim; ldir++)
 		  {
 		    rotated_jacobian_scalar[kdir][n] += 
-		      rotation[I][eq][kdir]->vector[ldir]*lec->J[upd->ep[R_MOMENTUM1+ldir]][pvar][id][n];
+		      rotation[I][eq][kdir]->vector[ldir]*lec->J[upd->ep[pg->imtrx][R_MOMENTUM1+ldir]][pvar][id][n];
 		    /*                                should this be a ldir or a kdir? | */
 		  }
 		}
@@ -1371,7 +1371,7 @@ rotate_momentum_eqn (
 	      for ( n=0; n< ei->dof[var]; n++ ) 
 		{
 		  
-		  lec->J[upd->ep[R_MOMENTUM1+ kdir]][pvar][id][n]
+		  lec->J[upd->ep[pg->imtrx][R_MOMENTUM1+ kdir]][pvar][id][n]
 		    = rotated_jacobian_scalar[kdir][n];
 		}
 	    }
@@ -1383,8 +1383,8 @@ rotate_momentum_eqn (
 #ifdef COUPLED_FILL
       /* momentum wrt. temperature */
       var = LS;
-      if (pd->v[var]){
-	pvar = upd->vp[var];
+      if (pd->v[pg->imtrx][var]){
+	pvar = upd->vp[pg->imtrx][var];
 	for ( n=0; n<ei->dof[var]; n++) {
 	  
 	  rotated_jacobian_scalar[0][n] = 0.;
@@ -1399,7 +1399,7 @@ rotate_momentum_eqn (
 		for (ldir = 0; ldir < dim; ldir++)
 		  {
 		    rotated_jacobian_scalar[kdir][n] += 
-		      rotation[I][eq][kdir]->vector[ldir]*lec->J[upd->ep[R_MOMENTUM1+ldir]][pvar][id][n];
+		      rotation[I][eq][kdir]->vector[ldir]*lec->J[upd->ep[pg->imtrx][R_MOMENTUM1+ldir]][pvar][id][n];
 		    /*                                should this be a ldir or a kdir? | */
 		  }
 		}
@@ -1415,7 +1415,7 @@ rotate_momentum_eqn (
 	      for ( n=0; n< ei->dof[var]; n++ ) 
 		{
 		  
-		  lec->J[upd->ep[R_MOMENTUM1+ kdir]][pvar][id][n]
+		  lec->J[upd->ep[pg->imtrx][R_MOMENTUM1+ kdir]][pvar][id][n]
 		    = rotated_jacobian_scalar[kdir][n];
 		}
 	    }
@@ -1430,8 +1430,8 @@ rotate_momentum_eqn (
       for (jvar = 0; jvar < dim; jvar++)
 	{
 	  var = VELOCITY1 + jvar;
-	  if (pd->v[var]){
-	    pvar = upd->vp[var];
+	  if (pd->v[pg->imtrx][var]){
+	    pvar = upd->vp[pg->imtrx][var];
 	    for ( n=0; n<ei->dof[var]; n++) {
 	      
 	      for (kdir = 0; kdir < dim; kdir++)
@@ -1446,7 +1446,7 @@ rotate_momentum_eqn (
 		    for (ldir = 0; ldir < dim; ldir++)
 		      {
 			rotated_jacobian_vector[kdir][jvar][n] += 
-			  rotation[I][eq][kdir]->vector[ldir]*lec->J[upd->ep[R_MOMENTUM1+ldir]][pvar][id][n];
+			  rotation[I][eq][kdir]->vector[ldir]*lec->J[upd->ep[pg->imtrx][R_MOMENTUM1+ldir]][pvar][id][n];
 		      }
 		    }
 		}
@@ -1463,10 +1463,10 @@ rotate_momentum_eqn (
 	    for ( j=0; j<dim; j++)
 	      {
 		var= R_MOMENTUM1+j;
-		pvar = upd->vp[var];
+		pvar = upd->vp[pg->imtrx][var];
 		for ( n=0; n< ei->dof[var]; n++ ) 
 		  {
-		    lec->J[upd->ep[R_MOMENTUM1 + kdir]][pvar][id][n]
+		    lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + kdir]][pvar][id][n]
 		      = rotated_jacobian_vector[kdir][j][n];
 		  }
 	      }
@@ -1476,7 +1476,7 @@ rotate_momentum_eqn (
       
       /* momentum wrt. species concentration */
       var = MASS_FRACTION;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (w=0; w<pd->Num_Species_Eqn; w++)
 	  {
 	    for ( n=0; n<ei->dof[var]; n++) {
@@ -1494,7 +1494,7 @@ rotate_momentum_eqn (
 		      {
 			rotated_jacobian_conc[kdir][w][n] +=
 			  rotation[I][eq][kdir]->vector[ldir]*
-			  lec->J[upd->ep[R_MOMENTUM1+ldir]][MAX_PROB_VAR + w][id][n];
+			  lec->J[upd->ep[pg->imtrx][R_MOMENTUM1+ldir]][MAX_PROB_VAR + w][id][n];
 		      }
 		  }
 		}
@@ -1515,7 +1515,7 @@ rotate_momentum_eqn (
 		  for ( n=0; n< ei->dof[var]; n++ ) 
 		    {
 		      
-		      lec->J[upd->ep[R_MOMENTUM1 + kdir]][pvar][id][n]
+		      lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + kdir]][pvar][id][n]
 			= rotated_jacobian_scalar[kdir][n];
 		    }
 		}
@@ -1532,7 +1532,7 @@ rotate_momentum_eqn (
   for (kdir = 0; kdir < dim; kdir++)
     {
       if (rotation[I][eq][kdir]->ok) {
-	peq = upd->ep[R_MOMENTUM1+kdir];
+	peq = upd->ep[pg->imtrx][R_MOMENTUM1+kdir];
 	lec->R[peq][id] = rotated_resid[kdir];
       }
     } 
@@ -1616,10 +1616,10 @@ rotate_res_jac_mom (
         {
 	  Id = Proc_Elem_Connect[iconnect_ptr + id];
 	  ldof = ei->ln_to_dof[ShapeVar][id];
-	  if (Dolphin[I][MESH_DISPLACEMENT1] > 0 && Dolphin[Id][MESH_DISPLACEMENT1] > 0 )
+	  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 	    { 
 	      dsvector_dx[0][0][0][ldof] = dsnormal_dx[0][0][ldof];
-	    } /*end of Baby_dolphin */
+	    } /*end of Baby_Dolphin[pg->imtrx] */
 	}
       break;
       
@@ -1634,11 +1634,11 @@ rotate_res_jac_mom (
 		{
 		  Id = Proc_Elem_Connect[iconnect_ptr + id];
 		  ldof = ei->ln_to_dof[ShapeVar][id];
-		  if (Dolphin[I][MESH_DISPLACEMENT1] > 0 && Dolphin[Id][MESH_DISPLACEMENT1] > 0 )
+		  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 		    { 
 		      dsvector_dx[0][kdir][ldir][ldof] = dsnormal_dx[kdir][ldir][ldof];
 		      dsvector_dx[1][kdir][ldir][ldof] = sign * dstangent_dx[0][kdir][ldir][ldof];
-		    } /*end of Baby_dolphin */
+		    } /*end of Baby_Dolphin[pg->imtrx] */
 		}
 	    }
 	}
@@ -1656,13 +1656,13 @@ rotate_res_jac_mom (
 		{
 		  Id = Proc_Elem_Connect[iconnect_ptr + id];
 		  ldof = ei->ln_to_dof[ShapeVar][id];
-		  if (Dolphin[I][MESH_DISPLACEMENT1] > 0 && Dolphin[Id][MESH_DISPLACEMENT1] > 0 )
+		  if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0 )
 		    { 
 		      
 		      dsvector_dx[0][kdir][ldir][ldof] = dsnormal_dx[kdir][ldir][ldof];
 		      dsvector_dx[1][kdir][ldir][ldof] = sign * dstangent_dx[0][kdir][ldir][ldof];
 		      dsvector_dx[2][kdir][ldir][ldof] = sign * dstangent_dx[1][kdir][ldir][ldof];
-		    } /*end of Baby_dolphin */
+		    } /*end of Baby_Dolphin[pg->imtrx] */
 		}
 	    }
 	}
@@ -1687,7 +1687,7 @@ rotate_res_jac_mom (
       for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	{
 	  rotated_resid[kdir] +=
-	    svector[kdir][ldir]*lec->R[upd->ep[R_MOMENTUM1 + ldir]][irow_index];
+	    svector[kdir][ldir]*lec->R[upd->ep[pg->imtrx][R_MOMENTUM1 + ldir]][irow_index];
 	}
       
     } /* end of loop over direction */
@@ -1707,9 +1707,9 @@ rotate_res_jac_mom (
 	    {
 	      
 	      var=MESH_DISPLACEMENT1+j;
-	      if (pd->v[var])
+	      if (pd->v[pg->imtrx][var])
 		{
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  for ( n=0; n< ei->dof[var]; n++ ) 
 		    {
 		      
@@ -1717,7 +1717,7 @@ rotate_res_jac_mom (
 			{
 			  
 			  rotated_jacobian_vector[kdir][j][n]+=
-			    svector[kdir][ldir]*lec->J[upd->ep[R_MOMENTUM1 + ldir]][pvar][irow_index][n];
+			    svector[kdir][ldir]*lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + ldir]][pvar][irow_index][n];
 			}
 		    }
 		  
@@ -1725,16 +1725,16 @@ rotate_res_jac_mom (
 		    {
 		      Id = Proc_Elem_Connect[iconnect_ptr + id];
 		      ldof = ei->ln_to_dof[ShapeVar][id];
-		      if (Dolphin[I][MESH_DISPLACEMENT1] > 0 && Dolphin[Id][MESH_DISPLACEMENT1] > 0  )
+		      if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 && Dolphin[pg->imtrx][Id][MESH_DISPLACEMENT1] > 0  )
 			{ 
 			  
 			  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 			    {
 			      rotated_jacobian_vector[kdir][j][ldof] +=  
 				dsvector_dx[kdir][ldir][j][ldof]
-				*lec->R[upd->ep[R_MOMENTUM1+ldir]][irow_index];
+				*lec->R[upd->ep[pg->imtrx][R_MOMENTUM1+ldir]][irow_index];
 			    }
-			} /*end of Baby_dolphin */
+			} /*end of Baby_Dolphin[pg->imtrx] */
 		    }	  
 		}
 	    } /* end of loop over sensitivities */
@@ -1748,11 +1748,11 @@ rotate_res_jac_mom (
 	    {
 	      
 	      var=R_MESH1+j;
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      
 	      for ( n=0; n< ei->dof[var]; n++ ) 
 		{
-		  lec->J[upd->ep[R_MOMENTUM1 + kdir]][pvar][irow_index][n]
+		  lec->J[upd->ep[pg->imtrx][R_MOMENTUM1 + kdir]][pvar][irow_index][n]
 		    = rotated_jacobian_vector[kdir][j][n];
 		}
 	      
@@ -1761,8 +1761,8 @@ rotate_res_jac_mom (
       
       /* momentum wrt. pressure */
       var = PRESSURE;
-      if (pd->v[var]){
-	pvar = upd->vp[var];
+      if (pd->v[pg->imtrx][var]){
+	pvar = upd->vp[pg->imtrx][var];
 	for ( n=0; n<ei->dof[var]; n++) {
 	  
 	  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
@@ -1772,7 +1772,7 @@ rotate_res_jac_mom (
 	  
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      peq = upd->ep[R_MOMENTUM1+ldir];
+	      peq = upd->ep[pg->imtrx][R_MOMENTUM1+ldir];
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
 		  rotated_jacobian_scalar[kdir][n] += 
@@ -1782,7 +1782,7 @@ rotate_res_jac_mom (
 	  /*reinject back into lec-J  for global assembly */
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      peq = upd->ep[R_MOMENTUM1+ldir];
+	      peq = upd->ep[pg->imtrx][R_MOMENTUM1+ldir];
 	      lec->J[peq][pvar][irow_index][n] = rotated_jacobian_scalar[ldir][n];
 	    }
 	} /* end of loop over nodes */
@@ -1790,8 +1790,8 @@ rotate_res_jac_mom (
       
       /* momentum wrt. temperature */
       var = TEMPERATURE;
-      if (pd->v[var]){
-	pvar = upd->vp[var];
+      if (pd->v[pg->imtrx][var]){
+	pvar = upd->vp[pg->imtrx][var];
 	for ( n=0; n<ei->dof[var]; n++) {
 	  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 	    {
@@ -1800,7 +1800,7 @@ rotate_res_jac_mom (
 	  
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      peq = upd->ep[R_MOMENTUM1+ldir];
+	      peq = upd->ep[pg->imtrx][R_MOMENTUM1+ldir];
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
 		  rotated_jacobian_scalar[kdir][n] += 
@@ -1810,7 +1810,7 @@ rotate_res_jac_mom (
 	  /*reinject back into lec-J for frontal solver */
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      peq = upd->ep[R_MOMENTUM1+ldir];
+	      peq = upd->ep[pg->imtrx][R_MOMENTUM1+ldir];
 	      lec->J[peq][pvar][irow_index][n] = rotated_jacobian_scalar[ldir][n];
 	    }
 	} /* end of loop over nodes */
@@ -1819,8 +1819,8 @@ rotate_res_jac_mom (
 #ifdef COUPLED_FILL
       /* momentum wrt. temperature */
       var = FILL;
-      if (pd->v[var]){
-	pvar = upd->vp[var];
+      if (pd->v[pg->imtrx][var]){
+	pvar = upd->vp[pg->imtrx][var];
 	for ( n=0; n<ei->dof[var]; n++) {
 	  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 	    {
@@ -1829,7 +1829,7 @@ rotate_res_jac_mom (
 	  
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      peq = upd->ep[R_MOMENTUM1+ldir];
+	      peq = upd->ep[pg->imtrx][R_MOMENTUM1+ldir];
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		{
 		  rotated_jacobian_scalar[kdir][n] += 
@@ -1839,7 +1839,7 @@ rotate_res_jac_mom (
 	  /*reinject back into lec-J for frontal solver */
 	  for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 	    {
-	      peq = upd->ep[R_MOMENTUM1+ldir];
+	      peq = upd->ep[pg->imtrx][R_MOMENTUM1+ldir];
 	      lec->J[peq][pvar][irow_index][n] = rotated_jacobian_scalar[ldir][n];
 	    }
 	} /* end of loop over nodes */
@@ -1850,8 +1850,8 @@ rotate_res_jac_mom (
       for (jvar = 0; jvar < ielem_surf_dim+1; jvar++)
 	{
 	  var = VELOCITY1 + jvar;
-	  if (pd->v[var]){
-	    pvar = upd->vp[var];
+	  if (pd->v[pg->imtrx][var]){
+	    pvar = upd->vp[pg->imtrx][var];
 	    for ( n=0; n<ei->dof[var]; n++) {
 	      
 	      for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
@@ -1861,7 +1861,7 @@ rotate_res_jac_mom (
 	      
 	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		{
-		  peq = upd->ep[R_MOMENTUM1+ldir];
+		  peq = upd->ep[pg->imtrx][R_MOMENTUM1+ldir];
 		  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		    {
 		      rotated_jacobian_vector[kdir][jvar][n] +=
@@ -1871,7 +1871,7 @@ rotate_res_jac_mom (
 	      /*reinject back into lec-J for global assembly */
 	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		{
-		  peq = upd->ep[R_MOMENTUM1+ldir];
+		  peq = upd->ep[pg->imtrx][R_MOMENTUM1+ldir];
 		  lec->J[peq][pvar][irow_index][n] = rotated_jacobian_vector[ldir][jvar][n];
 		}
 	      
@@ -1881,7 +1881,7 @@ rotate_res_jac_mom (
       
       /* momentum wrt. species concentration */
       var = MASS_FRACTION;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (w=0; w<pd->Num_Species_Eqn; w++)
 	  {
 	    for ( n=0; n<ei->dof[var]; n++) {
@@ -1893,7 +1893,7 @@ rotate_res_jac_mom (
 	      
 	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		{
-		  peq = upd->ep[R_MOMENTUM1+ldir];
+		  peq = upd->ep[pg->imtrx][R_MOMENTUM1+ldir];
 		  for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
 		    {
 		      
@@ -1904,7 +1904,7 @@ rotate_res_jac_mom (
 	      /*reinject back into lec-J for frontal solver */
 	      for (ldir = 0; ldir < ielem_surf_dim+1; ldir++)
 		{
-		  peq = upd->ep[R_MOMENTUM1+ldir];
+		  peq = upd->ep[pg->imtrx][R_MOMENTUM1+ldir];
 		  lec->J[peq][MAX_PROB_VAR + w][irow_index][n] = rotated_jacobian_conc[ldir][w][n];
 		}
 	    } /* end of loop over nodes */
@@ -1916,7 +1916,7 @@ rotate_res_jac_mom (
   /* Put rotated residual back into lec for scattering into global matrix */
   for (kdir = 0; kdir < ielem_surf_dim+1; kdir++)
     {
-      lec->R[ upd->ep[R_MOMENTUM1+kdir] ][irow_index] = rotated_resid[kdir];
+      lec->R[ upd->ep[pg->imtrx][R_MOMENTUM1+kdir] ][irow_index] = rotated_resid[kdir];
     } 
   
   
@@ -2162,7 +2162,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 		  for (p=0; p<dim; p++) {
 		    normal->vector[p] = fv->snormal[p];
 		    normal->ok = 1;
-		    if (af->Assemble_Jacobian && pd->v[R_MESH1]) {
+		    if (af->Assemble_Jacobian && pd->v[pg->imtrx][R_MESH1]) {
 		      normal->d_vector_n = num_nodes_on_side;
 		      for ( j=0; j<num_nodes_on_side; j++) {
 			/* Find the local element node number for the current node */
@@ -2583,7 +2583,7 @@ void append_vectors( int inode,
 		}
 		vectors[vect]->ok++;
 		
-		if(af->Assemble_Jacobian && pd->e[R_MESH1] )
+		if(af->Assemble_Jacobian && pd->e[pg->imtrx][R_MESH1] )
 		{			
 			for ( j=0; j<num_nodes_on_side; j++) {
 				
@@ -3293,13 +3293,13 @@ rotate_eqns_at_node_2D( int iconn,
     {
       I = Proc_Elem_Connect[iconn+i];
 		
-      if(rotation[I][VECT_EQ_MOM] != NULL && pd->e[R_MOMENTUM1] ) {
+      if(rotation[I][VECT_EQ_MOM] != NULL && pd->e[pg->imtrx][R_MOMENTUM1] ) {
 	id_mom = ei->ln_to_first_dof[VELOCITY1][i];
 			
 	if(id_mom > -1 ) rotate_momentum_eqn(id_mom,  I, iconn, dim ,ams);
       }
 
-      if(rotation[I][VECT_EQ_MESH] != NULL && pd->e[R_MESH1] ) {
+      if(rotation[I][VECT_EQ_MESH] != NULL && pd->e[pg->imtrx][R_MESH1] ) {
 	id_mesh = ei->ln_to_first_dof[MESH_DISPLACEMENT1][i];
 			
 	if(id_mesh > -1 ) rotate_mesh_eqn(id_mesh,  I, iconn, dim ,ams);

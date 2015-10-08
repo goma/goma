@@ -295,7 +295,7 @@ variable_description_create(const int var_type, const int matID,
 
 VARIABLE_DESCRIPTION_STRUCT  *
 find_or_create_vd(const int var_type, const int ndof, const int mn,
-		  const int subvarIndex)
+		  const int subvarIndex, const int imtrx)
 				
     /********************************************************************
      *
@@ -320,7 +320,7 @@ find_or_create_vd(const int var_type, const int ndof, const int mn,
   if (mn >= 0) {
     pd_ptr = pd_glob[mn];
     matID = -1;
-    if (pd_ptr->v[var_type] & V_MATSPECIFIC) {
+    if (pd_ptr->v[imtrx][var_type] & V_MATSPECIFIC) {
       matID = mn;
     }
   } else {
@@ -470,42 +470,58 @@ vdesc_augment(void)
 {
   int i, k, have_generic = FALSE, have_MF = FALSE, 
       have_specific_MF = FALSE;
+  int imtrx;
   MATRL_PROP_STRUCT *mp_local;
   VARIABLE_DESCRIPTION_STRUCT *vd;
   /*
    * First look for a generic mass fraction
    */
-  vd = get_vd_ptr(MASS_FRACTION, -1, 0);
-  if (vd) {
-    have_generic = TRUE;
-    have_MF = TRUE;
-  }
+   vd = get_vd_ptr(MASS_FRACTION, -1, 0);
+   if (vd) 
+     {
+      have_generic = TRUE;
+      have_MF = TRUE;
+     }
   /*
    * Next look for a specific mass fraction unknown
    */
-  for (i = 0; i < upd->Num_Mat; i++) {
-    mp_local = mp_glob[i];
-    vd = get_vd_ptr(MASS_FRACTION, i, 0);
-    if (vd) {
-      have_MF = TRUE;
-      have_specific_MF = TRUE;
+  for (i = 0; i < upd->Num_Mat; i++) 
+     {
+      mp_local = mp_glob[i];
+      vd = get_vd_ptr(MASS_FRACTION, i, 0);
+      if (vd) 
+        {
+         have_MF = TRUE;
+         have_specific_MF = TRUE;
+        }
+     }
+  if (have_MF) 
+    {
+     if (have_generic) 
+       {
+        for (k = 0; k < upd->Max_Num_Species; k++) 
+           {
+            for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+               {
+	        vd = find_or_create_vd(MASS_FRACTION, 1, -1, k, imtrx);
+               }
+           }
+       }
+     if (have_specific_MF) 
+       {
+        for (i = 0; i < upd->Num_Mat; i++) 
+           {
+	    mp_local = mp_glob[i];
+	    for (k = 0; k < mp_local->Num_Species; k++) 
+               {
+                for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+                   {
+	            vd = find_or_create_vd(MASS_FRACTION, 1, i, k, imtrx);
+                   }
+	       }
+           }
+       }
     }
-  }
-  if (have_MF) {
-    if (have_generic) {
-      for (k = 0; k < upd->Max_Num_Species; k++) {
-	vd = find_or_create_vd(MASS_FRACTION, 1, -1, k);
-      }
-    }
-    if (have_specific_MF) {
-      for (i = 0; i < upd->Num_Mat; i++) {
-	mp_local = mp_glob[i];
-	for (k = 0; k < mp_local->Num_Species; k++) {
-	  vd = find_or_create_vd(MASS_FRACTION, 1, i, k);
-	}
-      }
-    }
-  }
 }
 /******************************************************************************/
 /******************************************************************************/

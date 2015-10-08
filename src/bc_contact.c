@@ -237,7 +237,7 @@ apply_contact_bc (
       EH( err, "load_porous_properties"); 
     }
 
-    if (TimeIntegration != STEADY && pd->e[MESH_DISPLACEMENT1]) {
+    if (TimeIntegration != STEADY && pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
       for(icount=0; icount<ielem_dim; icount++ ) {
 	x_dot[icount] = (1 + 2. * theta)
 	    * (fv->x[icount] - fv_old->x[icount])/delta_t
@@ -340,7 +340,7 @@ apply_contact_bc (
                   dof_l[aa] = 1;
                   phi_l[aa][0] = 1.0;
                 }
-              else if (pd->v[LAGR_MULT1])
+              else if (pd->v[pg->imtrx][LAGR_MULT1])
                 {
                   lm_fluid[aa] = fv->lm[aa];
                   dof_l[aa] = ei->dof[LAGR_MULT1+aa];
@@ -394,7 +394,7 @@ apply_contact_bc (
                 {
                   lagrange_mult[aa] = augc[ioffset+aa].lm_value;
                 }
-              else if (pd->v[LAGR_MULT1])
+              else if (pd->v[pg->imtrx][LAGR_MULT1])
                 {
                   lagrange_mult[aa] = fv->lm[aa];
                 }
@@ -402,7 +402,7 @@ apply_contact_bc (
               if (apply_AC)
                 {
                   var = LAGR_MULT1 + aa;
-                  if (pd->e[var] && !ac_lm)
+                  if (pd->e[pg->imtrx][var] && !ac_lm)
                     {
                       dof_l[aa] = ei->dof[var];
                       for (j=0; j<dof_l[aa]; j++)
@@ -605,7 +605,7 @@ apply_contact_bc (
 	    if (index_eq >= 0 || 
 		(((BC_Types[bc_input_id].BC_Name == LAGRANGE_NO_SLIP_BC) ||
 		 (BC_Types[bc_input_id].BC_Name == SOLID_LAGRANGE_MULT_BC)) &&
-		 ((ac_lm == 1) || (pd->i[R_LAGR_MULT1] == I_P0))) ) {
+		 ((ac_lm == 1) || (pd->i[pg->imtrx][R_LAGR_MULT1] == I_P0))) ) {
 	      /*
 	       * Obtain the first local variable degree of freedom
 	       * at the current node, whether or not it actually an
@@ -614,7 +614,7 @@ apply_contact_bc (
 	      
 	      if((BC_Types[bc_input_id].BC_Name == LAGRANGE_NO_SLIP_BC ||
 		  BC_Types[bc_input_id].BC_Name == SOLID_LAGRANGE_MULT_BC) &&
-		 (ac_lm == 1 || pd->i[R_LAGR_MULT1] == I_P0) )
+		 (ac_lm == 1 || pd->i[pg->imtrx][R_LAGR_MULT1] == I_P0) )
 		{
 		  /* Sorry, but this is special compensation for boundary
 		     integral conditions weigted by a piecewise constant
@@ -645,7 +645,7 @@ apply_contact_bc (
 		     basis function.  bc_eqn_index above does not handle this */
 		  if((BC_Types[bc_input_id].BC_Name == LAGRANGE_NO_SLIP_BC ||
 		     BC_Types[bc_input_id].BC_Name == SOLID_LAGRANGE_MULT_BC)&&
-		    (ac_lm == 1 || pd->i[R_LAGR_MULT1] == I_P0) )
+		    (ac_lm == 1 || pd->i[pg->imtrx][R_LAGR_MULT1] == I_P0) )
 		    {
 		      if(bf[R_LAGR_MULT1 + p ] != NULL) 
 			{
@@ -686,7 +686,7 @@ apply_contact_bc (
 		  && BC_Types[bc_input_id].BC_Name != PSPG_BC
 		  && BC_Types[bc_input_id].BC_Name != VELO_SLIP_SOLID_BC  
 			) {
-		weight *= pd->etm[eqn][(LOG2_BOUNDARY)];
+		weight *= pd->etm[pg->imtrx][eqn][(LOG2_BOUNDARY)];
 	      }
 
               /*
@@ -809,7 +809,7 @@ apply_contact_bc (
 	      if (eqn == R_MASS) {
 		ieqn = MAX_PROB_EQN + BC_Types[bc_input_id].species_eq;
 	      } else {
-		ieqn = upd->ep[eqn];
+		ieqn = upd->ep[pg->imtrx][eqn];
 	      }
 
 	      /*
@@ -852,7 +852,7 @@ apply_contact_bc (
 		    if (!af->Assemble_LSA_Mass_Matrix) {
 		      for (q = 0; q < pd->Num_Dim; q++) {
 			var = MESH_DISPLACEMENT1 + q;
-			pvar = upd->vp[var];
+			pvar = upd->vp[pg->imtrx][var];
 			if (pvar != -1) {
 			  for (j = 0; j < ei->dof[var]; j++) {
                             jac = weight * func[p] * fv->dsurfdet_dx[q][j];
@@ -866,7 +866,7 @@ apply_contact_bc (
 		     * variables
 		     */
 		    for (var=0; var < MAX_VARIABLE_TYPES; var++) {
-		      pvar = upd->vp[var];
+		      pvar = upd->vp[pg->imtrx][var];
 		      if (pvar != -1) {
 			for (j = 0; j < ei->dof[var]; j++) {
                           jac = weight * fv->sdet * d_func[p][var][j];
@@ -937,14 +937,14 @@ jump_down_to_fluid ( const Exo_DB *exo, /* Ptr to Exodus database */
   load_ei(fluid_mesh_elem_id, exo, 0);
   
 /* make sure this element has velocity defined */
-  if ( pd_glob[ei->mn]->i[VELOCITY1] <= 0 ) {
+  if ( pd_glob[ei->mn]->i[pg->imtrx][VELOCITY1] <= 0 ) {
     EH( -1, "Element block specified in contact bc does not contain velocity!.");
   }
     
 /* Find basis functions associated with velocity variables */
   for(j=0; j< Num_Basis_Functions; j++)
     {
-      if (pd_glob[ei->mn]->i[VELOCITY1] == bfd[j]->interpolation)
+      if (pd_glob[ei->mn]->i[pg->imtrx][VELOCITY1] == bfd[j]->interpolation)
         {
           velo_interp = j;
         }
@@ -1008,7 +1008,7 @@ contact_fn_dot_T(double func[DIM],
 /***************************** EXECUTION BEGINS ******************************/
   /* Based on current element id_side, choose the correct curvature sign */
 
-  DeformingMesh = pd->e[R_MESH1]; /* Use to catch bad references to moving */
+  DeformingMesh = pd->e[pg->imtrx][R_MESH1]; /* Use to catch bad references to moving */
 				  /* mesh which isn't. */
 
   if(DeformingMesh) 
@@ -1072,7 +1072,7 @@ Lagrange_mult_equation(double func[DIM],
 /***************************** EXECUTION BEGINS ******************************/
   /* Based on current element id_side, choose the correct curvature sign */
 
-  DeformingMesh = pd->e[R_MESH1]; /* Use to catch bad references to moving */
+  DeformingMesh = pd->e[pg->imtrx][R_MESH1]; /* Use to catch bad references to moving */
 				  /* mesh which isn't. */
 
   h_elem_avg = 0.03;
@@ -1446,7 +1446,7 @@ apply_embedded_bc (
 #ifdef COUPLED_FILL
 	  if (oAC != 0)
 	    {
-	      if( pd->e[R_FILL] && ipass == 0)
+	      if( pd->e[pg->imtrx][R_FILL] && ipass == 0)
 		{
 		  if(  tran->Fill_Equation == FILL_EQN_EIKONAL )
 		    {
@@ -1455,32 +1455,32 @@ apply_embedded_bc (
 		}
 	      if ( !ls->Ignore_F_deps )
 		{
-		  if( pd->e[R_FILL] && ipass == 0)
+		  if( pd->e[pg->imtrx][R_FILL] && ipass == 0)
 		    {
 		      if(  tran->Fill_Equation == FILL_EQN_EXT_V )
 			{
 			  err = assemble_extension_velocity_path_dependence();
 			}
 		    }
-		  if( pd->e[R_MOMENTUM1] && !ls->AdaptIntegration )
+		  if( pd->e[pg->imtrx][R_MOMENTUM1] && !ls->AdaptIntegration )
 		    {
 		      err = assemble_momentum_path_dependence(time_value, theta, dt, pg_data);
 		      EH( err, "assemble_momentum_path_dependence");
 		    }
-		  if( pd->e[R_PRESSURE] && !ls->AdaptIntegration )
+		  if( pd->e[pg->imtrx][R_PRESSURE] && !ls->AdaptIntegration )
 		    {
 		      err = assemble_continuity_path_dependence(
 			                     time_value, theta, dt,
 					     pg_data);
 		      EH( err, "assemble_continuity_path_dependence");
 		    }
-		  if( pd->e[R_ENERGY] && !ls->AdaptIntegration )
+		  if( pd->e[pg->imtrx][R_ENERGY] && !ls->AdaptIntegration )
 		    {
 		      assemble_energy_path_dependence(
 				 time_value, theta, dt,
 					        pg_data);
 		    }
-		  if( pd->e[R_MASS] && !ls->AdaptIntegration )
+		  if( pd->e[pg->imtrx][R_MASS] && !ls->AdaptIntegration )
 		    {
 		      assemble_mass_transport_path_dependence(time_value, theta, dt, pg_data->hsquared,
 							      pg_data->hhv, pg_data->dhv_dxnode,
@@ -1674,7 +1674,7 @@ assemble_embedded_bc (
           assemble_div_s_n_source ();
           break;
         case LS_CAP_CURVE_BC:
-          if( pd->e[R_NORMAL1] )
+          if( pd->e[pg->imtrx][R_NORMAL1] )
             assemble_curvature_with_normals_source () ;
           else
             assemble_curvature_source ();
@@ -1723,7 +1723,7 @@ assemble_embedded_bc (
             for ( a=0; a<ei->ielem_dim; a++)
               {
                 eqn = R_MOMENTUM1 + a;
-                peqn = upd->ep[eqn];
+                peqn = upd->ep[pg->imtrx][eqn];
 
                 for(i=0; i<ei->dof[eqn]; i++)
                   {
@@ -1736,7 +1736,7 @@ assemble_embedded_bc (
                     if ( af->Assemble_Jacobian )
                       {
                         v = LAGR_MULT1 + a;
-                        pvar = upd->vp[v];
+                        pvar = upd->vp[pg->imtrx][v];
                         ldof = ( (ac_lm) ? 1 : ei->dof[v]);
 
                         for ( j=0; j<ldof; j++)
@@ -1799,7 +1799,7 @@ assemble_embedded_bc (
                 
                 for (a=0; a<ei->ielem_dim; a++)
                   {
-                    if (  pd->TimeIntegration != STEADY &&  pd->v[MESH_DISPLACEMENT1+a] )
+                    if (  pd->TimeIntegration != STEADY &&  pd->v[pg->imtrx][MESH_DISPLACEMENT1+a] )
                       {
                         x_dot[a] = (1.+2.*theta) * (fv->x[a] - fv_old->x[a])/dt -
                           2. * theta * fv_dot->x[a];
@@ -1828,7 +1828,7 @@ assemble_embedded_bc (
                  */
                 setup_shop_at_point(ielem, xi, exo);
               }
-            else if (pd->e[R_SOLID1])
+            else if (pd->e[pg->imtrx][R_SOLID1])
               {
                 /* need to add x_dot calculation for rs */
               }
@@ -1889,13 +1889,13 @@ assemble_embedded_bc (
                   }
                 else
                   {
-                    peqn = upd->ep[eqn];
+                    peqn = upd->ep[pg->imtrx][eqn];
                     /* hard coded to P0 for now */
                     lec->R[peqn][0] += res;
                     
                     /* Sensitivities to fluid velocity */
                     v = VELOCITY1 + a;
-                    pvar = upd->vp[v];
+                    pvar = upd->vp[pg->imtrx][v];
                     for ( j=0; j<ei->dof[v]; j++)
                       {
                         phi_j = bf[v]->phi[j];
@@ -1964,7 +1964,7 @@ assemble_embedded_bc (
             for ( a=0; a<ei->ielem_dim; a++)
               {
                 eqn = R_MOMENTUM1 + a;
-                peqn = upd->ep[eqn];
+                peqn = upd->ep[pg->imtrx][eqn];
                 
                 for(i=0; i<ei->dof[eqn]; i++)
                   {
@@ -1977,7 +1977,7 @@ assemble_embedded_bc (
                     if ( ac_lm == 0 && af->Assemble_Jacobian )
                       {
                         v = LAGR_MULT1 + a;
-                        pvar = upd->vp[v];
+                        pvar = upd->vp[pg->imtrx][v];
                         
                         for (j = 0; j < ei->dof[v]; j++)
                           {
@@ -2070,18 +2070,18 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
 	case LS_T_BC:
           {
             eqn = bc->desc->equation;
-            peqn = upd->ep[eqn];
+            peqn = upd->ep[pg->imtrx][eqn];
 
-            if ( pd->i[eqn] == I_Q1_G ||
-	         pd->i[eqn] == I_Q2_G ||
-		 pd->i[eqn] == I_Q1_GP ||
-	         pd->i[eqn] == I_Q2_GP ||
-		 pd->i[eqn] == I_Q1_GN ||
-	         pd->i[eqn] == I_Q2_GN ||
-		 pd->i[eqn] == I_Q1_XG ||
-	         pd->i[eqn] == I_Q2_XG ||
-		 pd->i[eqn] == I_Q1_XV ||
-		 pd->i[eqn] == I_Q2_XV )
+            if ( pd->i[pg->imtrx][eqn] == I_Q1_G ||
+	         pd->i[pg->imtrx][eqn] == I_Q2_G ||
+		 pd->i[pg->imtrx][eqn] == I_Q1_GP ||
+	         pd->i[pg->imtrx][eqn] == I_Q2_GP ||
+		 pd->i[pg->imtrx][eqn] == I_Q1_GN ||
+	         pd->i[pg->imtrx][eqn] == I_Q2_GN ||
+		 pd->i[pg->imtrx][eqn] == I_Q1_XG ||
+	         pd->i[pg->imtrx][eqn] == I_Q2_XG ||
+		 pd->i[pg->imtrx][eqn] == I_Q1_XV ||
+		 pd->i[pg->imtrx][eqn] == I_Q2_XV )
               {
                 break; /* nothing needs to be done here */
               }
@@ -2114,8 +2114,8 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                       {
                         for (var=V_FIRST; var<V_LAST; var++)
                           {
-                            pvar = upd->vp[var];
-                            if (pvar != -1 && (Inter_Mask[eqn][var]))
+                            pvar = upd->vp[pg->imtrx][var];
+                            if (pvar != -1 && (Inter_Mask[pg->imtrx][eqn][var]))
                               {
                                 for ( j = 0; j< ei->dof[var]; j++ )
                                   {
@@ -2131,12 +2131,12 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
         case LS_CONT_FLUX_BC:
           {
             eqn = R_ENERGY;
-            peqn = upd->ep[eqn];
+            peqn = upd->ep[pg->imtrx][eqn];
 
-            if ( pd->i[eqn] == I_P0_G ||
-		 pd->i[eqn] == I_P1_G ||
-		 pd->i[eqn] == I_Q1_G ||
-		 pd->i[eqn] == I_Q2_G )
+            if ( pd->i[pg->imtrx][eqn] == I_P0_G ||
+		 pd->i[pg->imtrx][eqn] == I_P1_G ||
+		 pd->i[pg->imtrx][eqn] == I_Q1_G ||
+		 pd->i[pg->imtrx][eqn] == I_Q2_G )
               {
 		break;
               }
@@ -2171,8 +2171,8 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                       {
                         for (var=V_FIRST; var<V_LAST; var++)
                           {
-                            pvar = upd->vp[var];
-                            if (pvar != -1 && (Inter_Mask[eqn][var]))
+                            pvar = upd->vp[pg->imtrx][var];
+                            if (pvar != -1 && (Inter_Mask[pg->imtrx][eqn][var]))
                               {
                                 for ( j = 0; j< ei->dof[var]; j++ )
                                   {
@@ -2191,12 +2191,12 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
             for ( a=0; a<ei->ielem_dim; a++ )
               {
                 eqn = R_MOMENTUM1 + a;
-                peqn = upd->ep[eqn];
+                peqn = upd->ep[pg->imtrx][eqn];
 
-                if ( pd->i[eqn] == I_P0_G ||
-		     pd->i[eqn] == I_P1_G ||
-		     pd->i[eqn] == I_Q1_G ||
-		     pd->i[eqn] == I_Q2_G )
+                if ( pd->i[pg->imtrx][eqn] == I_P0_G ||
+		     pd->i[pg->imtrx][eqn] == I_P1_G ||
+		     pd->i[pg->imtrx][eqn] == I_Q1_G ||
+		     pd->i[pg->imtrx][eqn] == I_Q2_G )
                   {
 		    break;
                   }
@@ -2231,8 +2231,8 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                           {
                             for (var=V_FIRST; var<V_LAST; var++)
                               {
-                                pvar = upd->vp[var];
-                                if (pvar != -1 && (Inter_Mask[eqn][var]))
+                                pvar = upd->vp[pg->imtrx][var];
+                                if (pvar != -1 && (Inter_Mask[pg->imtrx][eqn][var]))
                                   {
                                     for ( j = 0; j< ei->dof[var]; j++ )
                                       {
@@ -2253,12 +2253,12 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
             for ( a=0; a<VIM; a++ )
               {
                 eqn = R_MOMENTUM1 + a;
-                peqn = upd->ep[eqn];
+                peqn = upd->ep[pg->imtrx][eqn];
 
-                if ( pd->i[eqn] == I_P0_G ||
-		     pd->i[eqn] == I_P1_G ||
-		     pd->i[eqn] == I_Q1_G ||
-		     pd->i[eqn] == I_Q2_G )
+                if ( pd->i[pg->imtrx][eqn] == I_P0_G ||
+		     pd->i[pg->imtrx][eqn] == I_P1_G ||
+		     pd->i[pg->imtrx][eqn] == I_Q1_G ||
+		     pd->i[pg->imtrx][eqn] == I_Q2_G )
                   {
 		    break;
                   }
@@ -2294,8 +2294,8 @@ apply_embedded_colloc_bc ( int ielem,      /* element number */
                           {
                             for (var=V_FIRST; var<V_LAST; var++)
                               {
-                                pvar = upd->vp[var];
-                                if (pvar != -1 && (Inter_Mask[eqn][var]))
+                                pvar = upd->vp[pg->imtrx][var];
+                                if (pvar != -1 && (Inter_Mask[pg->imtrx][eqn][var]))
                                   {
                                     for ( j = 0; j< ei->dof[var]; j++ )
                                       {
@@ -2457,11 +2457,11 @@ double dof_distance ( int var_type,
   
   /* LS must be defined at the node except for discontinuous vars */
   /* This rules out Q1 LS and Q2 velocity !! */
-  if ( pd->i[var_type] != I_P0 && pd->i[var_type] != I_P1 &&
-       pd->i[var_type] != I_P0_GP && pd->i[var_type] != I_P1_GP &&
-       pd->i[var_type] != I_P0_GN && pd->i[var_type] != I_P1_GN &&
-       pd->i[var_type] != I_P0_XV && pd->i[var_type] != I_P1_XV &&
-       pd->i[var_type] != I_P0_G && pd->i[var_type] != I_P1_G )
+  if ( pd->i[pg->imtrx][var_type] != I_P0 && pd->i[pg->imtrx][var_type] != I_P1 &&
+       pd->i[pg->imtrx][var_type] != I_P0_GP && pd->i[pg->imtrx][var_type] != I_P1_GP &&
+       pd->i[pg->imtrx][var_type] != I_P0_GN && pd->i[pg->imtrx][var_type] != I_P1_GN &&
+       pd->i[pg->imtrx][var_type] != I_P0_XV && pd->i[pg->imtrx][var_type] != I_P1_XV &&
+       pd->i[pg->imtrx][var_type] != I_P0_G && pd->i[pg->imtrx][var_type] != I_P1_G )
     {
       EH(-1, "This combination of LS and var interpolations is not supported!");
     }
@@ -2508,7 +2508,7 @@ gnn_distance( const int I,
               double * Fold,
               double * Fprev )
 {
-  int ie = Index_Solution( I, ls->var, 0, 0, -1);
+  int ie = Index_Solution( I, ls->var, 0, 0, -1, pg->imtrx);
   
   if ( ie == -1 )
     {
@@ -2520,7 +2520,7 @@ gnn_distance( const int I,
         {
 	  /* use local node 0 from element */
 	  int I0 = exo->elem_node_list[ exo->elem_node_pntr[elem] + 0 ];
-          ie = Index_Solution( I0, ls->var, 0, 0, -1);
+          ie = Index_Solution( I0, ls->var, 0, 0, -1, pg->imtrx);
         }
       
       if ( elem == -1 || ie == -1 )
@@ -2531,7 +2531,7 @@ gnn_distance( const int I,
 
   *F = x[ie];
   if (Fold != NULL) *Fold = xold[ie];
-  if (Fprev != NULL) *Fprev = x[ie] + damp_factor * var_damp[idv[ie][0]] * delta_x[ie];
+  if (Fprev != NULL) *Fprev = x[ie] + damp_factor * var_damp[idv[pg->imtrx][ie][0]] * delta_x[ie];
   
 }
 
@@ -2628,7 +2628,7 @@ lookup_active_dof(int var,
   index = Proc_Elem_Connect[eptr+node];
   /* DRN: XFEM is duped by Index_Solution, use gun_list */
   /*
-    nu = Index_Solution(index, var, 0, 0, -1);
+    nu = Index_Solution(index, var, 0, 0, -1, pg->imtrx);
   */
   nu = ei->gun_list[var][j];
 
@@ -2639,30 +2639,30 @@ lookup_active_dof(int var,
    * set nu to -2 to signal this.
    */
   nn = Nodes[index];
-  nv = nn->Nodal_Vars_Info;
+  nv = nn->Nodal_Vars_Info[pg->imtrx];
   noffset = get_nodal_unknown_offset(nv, var, -2, 0, NULL);
   if (nn->DBC != NULL)
     {
       /* dirichlet bc's only apply to natural dofs for xfem */
-      if (pd->i[var] == I_P0_G ||
-	  pd->i[var] == I_P1_G ||
-	  pd->i[var] == I_P0_GP ||
-	  pd->i[var] == I_P1_GP ||
-	  pd->i[var] == I_P0_GN ||
-	  pd->i[var] == I_P1_GN ||
-	  pd->i[var] == I_P0_XV ||
-	  pd->i[var] == I_P1_XV ||
-	  pd->i[var] == I_P1_XG ||
-	  pd->i[var] == I_Q1_G ||
-	  pd->i[var] == I_Q2_G ||
-	  pd->i[var] == I_Q1_GP ||
-	  pd->i[var] == I_Q2_GP ||
-	  pd->i[var] == I_Q1_GN ||
-	  pd->i[var] == I_Q2_GN ||
-	  pd->i[var] == I_Q1_XV ||
-	  pd->i[var] == I_Q2_XV ||
-	  pd->i[var] == I_Q1_XG ||
-	  pd->i[var] == I_Q2_XG )
+      if (pd->i[pg->imtrx][var] == I_P0_G ||
+	  pd->i[pg->imtrx][var] == I_P1_G ||
+	  pd->i[pg->imtrx][var] == I_P0_GP ||
+	  pd->i[pg->imtrx][var] == I_P1_GP ||
+	  pd->i[pg->imtrx][var] == I_P0_GN ||
+	  pd->i[pg->imtrx][var] == I_P1_GN ||
+	  pd->i[pg->imtrx][var] == I_P0_XV ||
+	  pd->i[pg->imtrx][var] == I_P1_XV ||
+	  pd->i[pg->imtrx][var] == I_P1_XG ||
+	  pd->i[pg->imtrx][var] == I_Q1_G ||
+	  pd->i[pg->imtrx][var] == I_Q2_G ||
+	  pd->i[pg->imtrx][var] == I_Q1_GP ||
+	  pd->i[pg->imtrx][var] == I_Q2_GP ||
+	  pd->i[pg->imtrx][var] == I_Q1_GN ||
+	  pd->i[pg->imtrx][var] == I_Q2_GN ||
+	  pd->i[pg->imtrx][var] == I_Q1_XV ||
+	  pd->i[pg->imtrx][var] == I_Q2_XV ||
+	  pd->i[pg->imtrx][var] == I_Q1_XG ||
+	  pd->i[pg->imtrx][var] == I_Q2_XG )
         {
           if (j%2 == 0 && nn->DBC[noffset] >= 0) nu = -2;
         }
@@ -2733,15 +2733,15 @@ setup_shop_at_point(int ielem,
    *  actually has mesh equations associated with it before calculation
    *  d basis function d mesh equations.
    */
-  if (ei->deforming_mesh && (pd->e[R_MESH1] || pd->v[R_MESH1]))
+  if (ei->deforming_mesh && (pd->e[pg->imtrx][R_MESH1] || pd->v[pg->imtrx][R_MESH1]))
     {
-      if (!pd->e[R_MESH1]) {
+      if (!pd->e[pg->imtrx][R_MESH1]) {
      // printf(" We are here\n");
       }
       err = load_bf_mesh_derivs(); 
       EH( err, "load_bf_mesh_derivs");
     }
-    //if (ei->deforming_mesh && pd->e[R_MESH1])
+    //if (ei->deforming_mesh && pd->e[pg->imtrx][R_MESH1])
     // {
     // err = load_bf_mesh_derivs(); 
     // EH( err, "load_bf_mesh_derivs");
@@ -2758,15 +2758,15 @@ setup_shop_at_point(int ielem,
    *  actually has mesh equations associated with it before calculation
    *  d value d mesh equations.
    */
-  if (ei->deforming_mesh && (pd->e[R_MESH1] || pd->v[R_MESH1]))
+  if (ei->deforming_mesh && (pd->e[pg->imtrx][R_MESH1] || pd->v[pg->imtrx][R_MESH1]))
     {
-      if (!pd->e[R_MESH1]) {
+      if (!pd->e[pg->imtrx][R_MESH1]) {
      //	printf(" We are here2\n");
       }
       err = load_fv_mesh_derivs(0);
       EH( err, "load_fv_mesh_derivs");
     }
-    //if (ei->deforming_mesh && pd->e[R_MESH1])
+    //if (ei->deforming_mesh && pd->e[pg->imtrx][R_MESH1])
     // {
     //  err = load_fv_mesh_derivs(0);
     //  EH( err, "load_fv_mesh_derivs");
@@ -2792,7 +2792,7 @@ fv_at_point(double *xi, int var)
     {
       phi_i = newshape( xi, ei->ielem_type, PSI,
                         ei->dof_list[var][i],
-                        ei->ielem_shape, pd->i[var], i );
+                        ei->ielem_shape, pd->i[pg->imtrx][var], i );
       esp = x_static + ei->ieqn_ledof[ei->lvdof_to_ledof[var][i]];
       val += phi_i * *esp;
     }
@@ -2810,7 +2810,7 @@ fv_old_at_point( double *xi,
     {
       phi_i = newshape( xi, ei->ielem_type, PSI,
                         ei->dof_list[var][i],
-                        ei->ielem_shape, pd->i[var], i );
+                        ei->ielem_shape, pd->i[pg->imtrx][var], i );
       esp = x_old_static + ei->ieqn_ledof[ei->lvdof_to_ledof[var][i]];
       val += phi_i * *esp;
     }
@@ -2832,7 +2832,7 @@ fv_and_phi_at_point( double *xi,
     {
       phi[i] = newshape( xi, ei->ielem_type, PSI,
                         ei->dof_list[var][i],
-                        ei->ielem_shape, pd->i[var], i );
+                        ei->ielem_shape, pd->i[pg->imtrx][var], i );
       esp = x_static + ei->ieqn_ledof[ei->lvdof_to_ledof[var][i]];
       val += phi[i] * *esp;
     }

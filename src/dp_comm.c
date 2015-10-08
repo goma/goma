@@ -82,7 +82,7 @@ exchange_dof(Comm_Ex *cx,  Dpi *dpi,  double *x)
    * store base address for the start of the external degrees of freedom
    * in this vector
    */
-  ptr_recv_list = x + num_internal_dofs + num_boundary_dofs;
+  ptr_recv_list = x + num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
   
   np_ptr = np_base;
   for (p = 0; p < dpi->num_neighbors; p++) {

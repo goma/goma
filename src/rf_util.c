@@ -296,18 +296,18 @@ put_fill_vector(const int N, double x[], const double fill_vector[],
   int ki;            /* counter from 0 to the number of dofs      */
 
   for (i = 0; i < N; i++) {
-    nvdof = Dolphin[i][R_FILL]; /* Number of FILL dofs at this node. */
+    nvdof = Dolphin[pg->imtrx][i][R_FILL]; /* Number of FILL dofs at this node. */
     for (ki = 0; ki < nvdof; ki++) {
-      ie = Index_Solution(i, R_FILL, 0, ki, -1);
+      ie = Index_Solution(i, R_FILL, 0, ki, -1, pg->imtrx);
       if (ie != -1)  {
-	if (ie > NumUnknowns) {
+	if (ie > NumUnknowns[pg->imtrx]) {
 	  EH(ie, "put_fill_vector");
 	} else {
 	  x[ie] = fill_vector[node_to_fill[i] + ki];
 	}
       } else if (ie == -1) {
         mn = first_matID_at_node(i);
-	ie = Index_Solution(i, R_FILL, 0, ki, mn);
+	ie = Index_Solution(i, R_FILL, 0, ki, mn, pg->imtrx);
 	if (ie != -1) {
 	  x[ie] = fill_vector[node_to_fill[i] + ki];
 	} else {
@@ -337,15 +337,15 @@ get_fill_vector ( const int N,
 
   for (i = 0; i < N; i++)
     {
-      nvdof = Dolphin[i][R_FILL];
+      nvdof = Dolphin[pg->imtrx][i][R_FILL];
       for ( ki=0; ki<nvdof; ki++)
 	{
-	  ie = Index_Solution(i, R_FILL, ktype, ki, -1);
+	  ie = Index_Solution(i, R_FILL, ktype, ki, -1, pg->imtrx);
 	  if (ie != -1) {
 	    fill_vector[node_to_fill[i] + ki] = x[ie];
 	  } else {
 	    mn = first_matID_at_node(i);
-	    ie = Index_Solution(i, R_FILL, ktype, ki, mn);
+	    ie = Index_Solution(i, R_FILL, ktype, ki, mn, pg->imtrx);
 	    if (ie != -1) {
 	      fill_vector[node_to_fill[i] + ki] = x[ie];
 	    } 
@@ -382,7 +382,7 @@ countmap_vardofs(const int varType, const int num_nodes, int *map)
     EH(-1, "Attempt to count a bogus variable.");
   }
   for (node = 0; node < num_nodes; node++) {
-    nv = Nodes[node]->Nodal_Vars_Info;
+    nv = Nodes[node]->Nodal_Vars_Info[pg->imtrx];
     nun = get_nv_ndofs_modMF(nv, varType);
     if (nun > 0) {
       map[node] = count;
@@ -408,10 +408,10 @@ count_fill_unknowns ( int N,
   num_fill_unknowns = 0;
   for (i = 0; i < N; i++)
     {
-      if ( Dolphin[i][FILL] )
+      if ( Dolphin[pg_imtrx][i][FILL] )
 	{
 	  node_to_fill[i] = num_fill_unknowns;
-	  num_fill_unknowns += Dolphin[i][FILL];
+	  num_fill_unknowns += Dolphin[pg->imtrx][i][FILL];
 	}
     }
 } /* END of routine count_fill_unknowns */
@@ -463,11 +463,11 @@ filter_conc (const int N,	/* number of nodes */
   const double minimum_shear_rate = 0.0;
   int i, ie;
   
-  if (pd->e[R_MASS]) {
+  if (pd->e[pg->imtrx][R_MASS]) {
     for (i = 0; i < N; i++) {
-      if (Dolphin[i][R_MASS]) {
+      if (Dolphin[pg->imtrx][i][R_MASS]) {
 	ie = Index_Solution(i, R_MASS, filter_species_material_number,
-			    0, -1); 
+			    0, -1, pg->imtrx); 
 	if (ie != -1) { 
 	  x[ie] = x[ie] > cmin ? x[ie] : cmin;
 	  if (cmax != 0.0) {
@@ -477,10 +477,10 @@ filter_conc (const int N,	/* number of nodes */
       }
     }
   }
-  if (pd->e[R_SHEAR_RATE])  {
+  if (pd->e[pg->imtrx][R_SHEAR_RATE])  {
     for (i = 0; i < N; i++) {
-      if (Dolphin[i][R_SHEAR_RATE]) {
-	ie = Index_Solution(i, R_SHEAR_RATE, 0, 0, -1); 
+      if (Dolphin[pg->imtrx][i][R_SHEAR_RATE]) {
+	ie = Index_Solution(i, R_SHEAR_RATE, 0, 0, -1, pg->imtrx); 
 	if (ie != -1) {
 	  if (x[ie] < minimum_shear_rate) {
 	    x[ie] = minimum_shear_rate;
@@ -607,16 +607,16 @@ time_step_control(const double delta_t,  const double delta_t_old,
    * Collect deviations from predicted and max values
    * and ncp[eqn] => Number of unknowns in each binned variable type
    */
-  for (i = 0; i < (num_internal_dofs+num_boundary_dofs); i++) {
+  for (i = 0; i < (num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]); i++) {
   
     valid = TRUE;
 
     inode = 0;
-    vd = Index_Solution_Inv(i, &inode, NULL, NULL, &idof);
+    vd = Index_Solution_Inv(i, &inode, NULL, NULL, &idof, pg->imtrx);
     eqn = vd->Variable_Type;
 
 #ifdef DEBUG_HKM
-    if (eqn != idv[i][0]) {
+    if (eqn != idv[pg->imtrx][i][0]) {
       EH(-1,"error in  Index_Solution_Inv mapping");
     }
 #endif
@@ -628,7 +628,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
         int interp;
         double F, Fold;
         if ( MatID == -1 ) MatID = 0;
-        interp = pd_glob[MatID]->i[eqn];
+        interp = pd_glob[MatID]->i[pg->imtrx][eqn];
         
         if ( is_xfem_interp( interp ) )
           {
@@ -1369,20 +1369,20 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
   switch (Guess_Flag) {
   case 0:
     /* Initialize all of the solution vector to zero */
-    for(i = 0; i < NumUnknowns; i++) {
+    for(i = 0; i < NumUnknowns[pg->imtrx]; i++) {
       u[i] = 0.0;
     }
 
     /* Some Special Cases */
 
     /* Structural shell variables */
-    if ( upd->vp[SHELL_X] && upd->vp[SHELL_Y])
+    if ( upd->vp[pg->imtrx][SHELL_X] && upd->vp[pg->imtrx][SHELL_Y])
       {
 	init_structural_shell_coord(u);
       }
 
     /* Shell normal vector unknowns requiring initialization */
-    if ( upd->vp[SHELL_NORMAL1] > -1 && upd->vp[SHELL_NORMAL2] > -1 )
+    if ( upd->vp[pg->imtrx][SHELL_NORMAL1] > -1 && upd->vp[pg->imtrx][SHELL_NORMAL2] > -1 )
       {
 	init_shell_normal_unknowns(u, exo, 10, 0.0, 0.0);
       }
@@ -1393,19 +1393,19 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
      *  Initialize the solution vector to random
      *  numbers between 0 and 1
      */      
-    fill_dvec_rand(u, NumUnknowns);
+    fill_dvec_rand(u, NumUnknowns[pg->imtrx]);
     break;
 
   case 2:
     /* Initialize all of the solution vector to  the value of 1 */      
-    for(i = 0; i < NumUnknowns; i++) {
+    for(i = 0; i < NumUnknowns[pg->imtrx]; i++) {
       u[i] = 1.0;
     }
     break;
       
   case 4:
     /* Initialize a solution vector from an ascii file */
-    read_initial_guess(u, NumUnknowns, uAC, nAC);
+    read_initial_guess(u, NumUnknowns[pg->imtrx], uAC, nAC);
     break;
       
   case 5:
@@ -1651,7 +1651,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	 */
 	for (n = 0; n < num_nodes; n++) {
 	  i = Proc_Elem_Connect[index++];
-	  nv = Nodes[i]->Nodal_Vars_Info;
+	  nv = Nodes[i]->Nodal_Vars_Info[pg->imtrx];
 	  for (j = 0; j < Num_Var_Init_Mat[mn]; j++) {
 	    int slaved = Var_init_mat[mn][j].slave_block;
 		
@@ -1666,7 +1666,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	     * a valid interpolation for that variable in the
 	     * current element block
 	     */
-	    if (nunks > 0 && pd->i[var] && !slaved) {
+	    if (nunks > 0 && pd->i[pg->imtrx][var] && !slaved) {
 	      /*
 	       * Check against ktype here to make sure we have 
 	       * an associated unknown
@@ -1677,7 +1677,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	      }
 	      if (nunks == 1) {
 		ipos = Index_Solution(i, var, 
-				      Var_init_mat[mn][j].ktype, 0, mn);
+				      Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
 		u[ipos] = Var_init_mat[mn][j].init_val;
 	      } else {
 		/*
@@ -1687,13 +1687,13 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 		 *  HKM -> we can't take this block out, until we
 		 *         get rid of the debugging section below.
 		 */
-		interpType = pd->i[var];
+		interpType = pd->i[pg->imtrx][var];
 		if (interpType == I_P0 || interpType == I_P1) {
 		  /*
 		   *  For P0 and P1 interpolation, only first dof is set
 		   */
 		  ipos = Index_Solution(i, var, 
-					Var_init_mat[mn][j].ktype, 0, mn);
+					Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
 		  u[ipos] = Var_init_mat[mn][j].init_val;
 		} else if (interpType == I_PQ1 || interpType == I_PQ2) {
 		  /*
@@ -1709,7 +1709,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 		  if (interpType == I_PQ2) ndof = 9;
 		  for (k = 0; k < ndof; k++) {
 		    ipos = Index_Solution(i, var, 
-					  Var_init_mat[mn][j].ktype, k, mn);
+					  Var_init_mat[mn][j].ktype, k, mn, pg->imtrx);
 		    u[ipos] = Var_init_mat[mn][j].init_val;
 		  }
 		} else {
@@ -1721,7 +1721,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 		   *   scheme wrt the element block id.
 		   */
 		  ipos = Index_Solution(i, var, 
-					Var_init_mat[mn][j].ktype, 0, mn);
+					Var_init_mat[mn][j].ktype, 0, mn, pg->imtrx);
 		  u[ipos] = Var_init_mat[mn][j].init_val;
 		}
 	      }
@@ -1870,13 +1870,13 @@ void init_structural_shell_coord(double u[])
 				       *never get here for 3D */
     {
       var = SHELL_X + comp;
-      if ( upd->vp[var] )
+      if ( upd->vp[pg->imtrx][var] )
 	{
 	  for (node = 0; node < Num_Node; node++ )
 	    {
-	      if (Dolphin[node][var] > 0)
+	      if (Dolphin[pg->imtrx][node][var] > 0)
 		{
-		  dof    = Index_Solution(node, var, 0, 0, -1);
+		  dof    = Index_Solution(node, var, 0, 0, -1, pg->imtrx);
 		  u[dof] = Coor[comp][node];
 		}
 	    } /* for: node(s) */
@@ -1926,8 +1926,8 @@ void init_shell_normal_unknowns(double u[], const Exo_DB *exo,
     {
       /* Get node number and indices into solution vector for normal dofs */
       has_normal = FALSE;
-      nxi = Index_Solution(inode, SHELL_NORMAL1, 0, 0, -2);
-      nyi = Index_Solution(inode, SHELL_NORMAL2, 0, 0, -2);
+      nxi = Index_Solution(inode, SHELL_NORMAL1, 0, 0, -2, pg->imtrx);
+      nyi = Index_Solution(inode, SHELL_NORMAL2, 0, 0, -2, pg->imtrx);
       if (nxi > -1 && nyi > -1) has_normal = TRUE;
 
       /* Proceed only when shell normal variable exists at this node */
@@ -2081,11 +2081,11 @@ write_ascii_soln (double *u,       /* Solution vector */
   if (dofname != NULL) {
     if (resid == NULL) {
       for (i = 0; i < np; i++) {
-	fprintf(file, "%23.16e %s\n", u[i], dofname[i]);
+	fprintf(file, "%23.16e %s\n", u[i], dofname[pg->imtrx][i]);
       }
     } else {
       for (i = 0; i < np; i++) {
-	fprintf(file, "%23.16e %s %23.16e\n", u[i], dofname[i], resid[i]);
+	fprintf(file, "%23.16e %s %23.16e\n", u[i], dofname[pg->imtrx][i], resid[i]);
       }
     }
   } else {
@@ -2157,7 +2157,7 @@ wr_soln_vec ( double u[],	/* solution vector */
 
   for ( i=0; i<np; i++ )
     {
-      DPRINTF (file, fmt, u[i], dofname[i], r[i]);
+      DPRINTF (file, fmt, u[i], dofname[pg->imtrx][i], r[i]);
     }
 
   fclose(file);
@@ -2193,6 +2193,7 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
       *******************************************************************/
 {
   int i, error, vdex,  num_dim, num_nodes, mn, icount;
+  int imtrx;
   int num_elem, num_elem_blk, num_node_sets, num_side_sets, time_step;
   float	version;		/* version number of EXODUS II */
   int	exoid;			/* ID of the open EXODUS II file */
@@ -2273,47 +2274,69 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
    * and variables available 
    */
 
-  if (action_flag == 0) {
-    for (var = V_FIRST; var < V_LAST; var++) {
-      icount = 0;
-      if (Num_Var_In_Type[var]) {
-	if (var == MASS_FRACTION) {
-	  for (mn = -1; mn < upd->Num_Mat; mn++) {
-	    if (mn == -1) {
-	      for (i = upd->Num_Mat-1; i >= 0; i--) {
-		if (mp_glob[i]->Num_Species == upd->Max_Num_Species) {
-		  matrl = mp_glob[i];
-		}
-	      }
-	    } else {
-	      matrl = mp_glob[mn];
-	    }
-	    for (w = 0; w < matrl->Num_Species_Eqn; w++) {
-	      error = rd_exoII_nv(u, var, mn, matrl, var_names, 
-				  num_nodes, num_vars,
-				  exoid, time_step, w);
-	      if (!error) icount++;
-	    }
-	  }
-	} else {
-	  for (mn = -1; mn < upd->Num_Mat; mn++) {
-	    if (mn == -1) {
-	      for (i = upd->Num_Mat - 1; i >= 0; i--) {
-		if (pd_glob[i]->i[var]) {
-		  matrl = mp_glob[i];
-		}
-	      }
-	    } else {
-	      matrl = mp_glob[mn];
-	    }
-	    error = rd_exoII_nv(u, var, mn, matrl, var_names, num_nodes,
-				num_vars, exoid, time_step, 0);
-	    if (!error) icount++;
-	  }
-	}
-      }
+  if (action_flag == 0) 
+    {
+     for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+        {
+         for (var = V_FIRST; var < V_LAST; var++) 
+            {
+             icount = 0;
+             if (Num_Var_In_Type[imtrx][var]) 
+               {
+	        if (var == MASS_FRACTION) 
+                  {
+	           for (mn = -1; mn < upd->Num_Mat; mn++) 
+                      {
+	               if (mn == -1) 
+                         {
+	                  for (i = upd->Num_Mat-1; i >= 0; i--) 
+                             {
+		              if (mp_glob[i]->Num_Species == upd->Max_Num_Species) 
+                                {
+		                 matrl = mp_glob[i];
+		                }
+	                     }
+	                 } 
+                       else 
+                         {
+	                  matrl = mp_glob[mn];
+	                 }
+	               for (w = 0; w < matrl->Num_Species_Eqn; w++) 
+                          {
+	                   error = rd_exoII_nv(u, var, mn, matrl, var_names, 
+				               num_nodes, num_vars,
+				               exoid, time_step, w);
+	                   if (!error) icount++;
+	                  }
+	              }
+	          } 
+                else 
+                  {
+	           for (mn = -1; mn < upd->Num_Mat; mn++) 
+                      {
+	               if (mn == -1) 
+                         {
+	                  for (i = upd->Num_Mat - 1; i >= 0; i--) 
+                             {
+		              if (pd_glob[i]->i[imtrx][var]) 
+                                {
+		                 matrl = mp_glob[i];
+		                }
+	                     }
+	                 } 
+                       else 
+                         {
+	                  matrl = mp_glob[mn];
+	                 }
+	               error = rd_exoII_nv(u, var, mn, matrl, var_names, num_nodes,
+				           num_vars, exoid, time_step, 0);
+	               if (!error) icount++;
+	              }
+	          }
+               }
+            }
+        }
     }
-  }
   
   if (action_flag == 1) {
     if (efv->ev) {	    
@@ -2812,7 +2835,7 @@ inject_nodal_vec(double sol_vec[], const int varType, const int k,
   NODAL_VARS_STRUCT *nv;
   VARIABLE_DESCRIPTION_STRUCT *vd;
   for (i = 0; i < DPI_ptr->num_owned_nodes; i++) {
-    nv = Nodes[i]->Nodal_Vars_Info;
+    nv = Nodes[i]->Nodal_Vars_Info[pg->imtrx];
     if (matID == -2) {
       for (j = 0; j < (int) nv->Num_Var_Desc_Per_Type[varType]; j++) {
         vindex = nv->Var_Type_Index[varType][j];
@@ -2824,13 +2847,13 @@ inject_nodal_vec(double sol_vec[], const int varType, const int k,
 	}
 #endif
 	if (k == (int) vd->Subvar_Index) {
-          index = (Nodes[i]->First_Unknown +
+          index = (Nodes[i]->First_Unknown[pg->imtrx] +
 		   nv->Nodal_Offset[vindex] + idof);
 	  sol_vec[index] = nodal_vec[i];
 	}
       }
     } else {
-      index = Index_Solution(i, varType, k, idof, matID);
+      index = Index_Solution(i, varType, k, idof, matID, pg->imtrx);
       if (index != -1) {
 	sol_vec[index] = nodal_vec[i];
       }
@@ -2862,18 +2885,24 @@ build_node_index_var(const int varType, const int num_nodes,
 		     int *var_node_list)
 {
   int node, count;
+  int imtrx;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES-1) {
       EH(-1, "Attempt to count a bogus variable.");
   }
   count = 0;
-  for (node = 0; node < num_nodes; node++) {
-    nv = Nodes[node]->Nodal_Vars_Info;
-    if (nv->Num_Var_Desc_Per_Type[varType] > 0) {
-      map[count] = node_index_global[node];
-      var_node_list[count] = node;
-      count++;
-    }
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+     {
+      for (node = 0; node < num_nodes; node++) 
+         {
+          nv = Nodes[node]->Nodal_Vars_Info[imtrx];
+          if (nv->Num_Var_Desc_Per_Type[varType] > 0) 
+            {
+             map[count] = node_index_global[node];
+             var_node_list[count] = node;
+             count++;
+            }
+         }
   }
   return count;
 }
@@ -2897,16 +2926,21 @@ int
 count_vardofs(const int varType, const int num_nodes)
 {
   int node, nun, count = 0;
+  int imtrx;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES-1) {
       EH(-1, "Attempt to count a bogus variable.");
   }
   count = 0;
-  for (node = 0; node < num_nodes; node++) {
-    nv = Nodes[node]->Nodal_Vars_Info;
-    nun = get_nv_ndofs_modMF(nv, varType);
-    count += nun;
-  }
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+     {
+      for (node = 0; node < num_nodes; node++) 
+         {
+          nv = Nodes[node]->Nodal_Vars_Info[imtrx];
+          nun = get_nv_ndofs_modMF(nv, varType);
+          count += nun;
+         }
+     }
   return (count);
 }
 
@@ -3014,7 +3048,7 @@ find_first_elem_with_var ( Exo_DB *e, int var )
     {
       mn = Matilda[ eb ];
       
-      found = pd_glob[mn]->v[var];
+      found = pd_glob[mn]->v[0][var];
       if( found ) first_elem = e->eb_ptr[eb];
     }
 
@@ -3215,7 +3249,7 @@ advance_porosity_ev(const int time_step, const int nn,
    * boundary when the porous material has the smaller material index!
    */
       mn = first_matID_at_node(n);
-       i = Index_Solution(n, eq, 0, 0, -1);
+       i = Index_Solution(n, eq, 0, 0, -1, pg->imtrx);
                                                                                 
   /* Proceed if eq is active at node */
       if (i > -1)
@@ -3280,7 +3314,7 @@ advance_porosity_goma_first(const int time_step, const int nn,
    * boundary when the porous material has the smaller material index!
    */
       mn = first_matID_at_node(n);
-       i = Index_Solution(n, eq, 0, 0, -1);
+       i = Index_Solution(n, eq, 0, 0, -1, pg->imtrx);
                                                                                 
   /* Proceed if eq is active at node */
       if (i > -1)

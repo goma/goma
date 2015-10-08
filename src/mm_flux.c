@@ -522,7 +522,7 @@ evaluate_flux(
 			  err = load_fv_mesh_derivs(1);
 			  EH( err, "load_fv_mesh_derivs");
 			  
-			  if (TimeIntegration != STEADY && pd->e[MESH_DISPLACEMENT1]) {
+			  if (TimeIntegration != STEADY && pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
 				  for (j = 0; j < VIM; j++) {
 					  x_dot[j] = fv_dot->x[j];
 				  } 
@@ -560,7 +560,7 @@ evaluate_flux(
 
 		  dim   = pd_glob[0]->Num_Dim;
 		  
-		  if(pd->e[R_MESH1] && cr->MeshMotion != ARBITRARY)
+		  if(pd->e[pg->imtrx][R_MESH1] && cr->MeshMotion != ARBITRARY)
 		    {
 		      err = belly_flop(elc->lame_mu);
 		      EH(err, "error in belly flop");
@@ -633,7 +633,7 @@ evaluate_flux(
 		    } /* end of STRESS_TENSOR */
 
 /* calculate real-solid stress here !!*/
-		  if(pd->e[R_SOLID1] && cr->MeshMotion != ARBITRARY)
+		  if(pd->e[pg->imtrx][R_SOLID1] && cr->MeshMotion != ARBITRARY)
 		    {
 		      mu = elc_rs->lame_mu;
 		      err = belly_flop_rs(mu);
@@ -694,7 +694,7 @@ evaluate_flux(
 		 *  assume only EVSS_F formulation for now
 		 */
   			memset( ves, 0, sizeof(dbl)*DIM*DIM);
-  			if ( pd->v[POLYMER_STRESS11] )
+  			if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
     			  {
 			    for ( a=0; a<VIM; a++)
         	              {
@@ -786,7 +786,7 @@ evaluate_flux(
  		 * computing the electric stress tensor upfront.
  		 */
   			memset( es, 0, sizeof(dbl)*DIM*DIM);
-		      if(pd->e[R_POTENTIAL])
+		      if(pd->e[pg->imtrx][R_POTENTIAL])
      			 {
  			  efield_sqr = 0.0;
  			  for ( a=0; a<VIM; a++)
@@ -829,7 +829,7 @@ evaluate_flux(
                                 {dsigmadC[a] = mp->d_surface_tension[MAX_VARIABLE_TYPES+a];}
                             }
 
-/*		  if (pd->e[R_POR_LIQ_PRES])
+/*		  if (pd->e[pg->imtrx][R_POR_LIQ_PRES])
 		    {
 		       if (mp->PorousMediaType == POROUS_SATURATED) { 
  			err = get_porous_fully_sat_terms(&pm_terms, tt, dt); 
@@ -1006,7 +1006,7 @@ evaluate_flux(
                         {
 			  if (cr->MeshMotion == ARBITRARY)
 			    local_q +=  fv->snormal[a]*( fv->v[a]-x_dot[a] ) ;
-			  else if (pd->v[MESH_DISPLACEMENT1])
+			  else if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 			    local_q +=  fv->snormal[a]*( fv->d[a] ) ;
 			  else
 			    EH(-1,"Inconsistency in volume-flux specification. Contact Developers");
@@ -1832,7 +1832,7 @@ evaluate_flux(
                              for (b = 0; b < Proc_NS_Count[nsp]; b++)
                                {
                k = Proc_NS_List[Proc_NS_Pointers[nsp]+b];
-               i1 = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1);
+               i1 = Index_Solution (k, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
                EH(i1, "Could not resolve index_solution.");
                                 for(i2=0 ; i2<pd->Num_Dim ; i2++)
                                   {
@@ -1989,7 +1989,7 @@ evaluate_flux(
 	 		EH( err, "load_fv_mesh_derivs");
 
 			if (TimeIntegration != STEADY && 
-					pd->e[MESH_DISPLACEMENT1]) {
+					pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
 				for (j = 0; j < VIM; j++) {
 					x_dot[j] = fv_dot->x[j];
 				  	} 
@@ -2146,7 +2146,7 @@ evaluate_flux(
 			    {
 			      var = VELOCITY1 + b ;
 
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  for(j=0 ; j < ei->dof[var]; j++)
 				    {
@@ -2168,7 +2168,7 @@ evaluate_flux(
 
 			  var = PRESSURE ;
 			  
-			  if( pd->v[var] )
+			  if( pd->v[pg->imtrx][var] )
 			    {
 			      for(j=0 ; j < ei->dof[var]; j++)
 				{				  
@@ -2182,7 +2182,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + b ;
 
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  for(j=0 ; j < ei->dof[var]; j++)
 				    {
@@ -2218,7 +2218,7 @@ evaluate_flux(
 			  
 			  var = TEMPERATURE ;
 			  
-			  if( pd->v[var] )
+			  if( pd->v[pg->imtrx][var] )
 			    {
 			      for(j=0 ; j < ei->dof[var]; j++)
 				{			
@@ -2231,7 +2231,7 @@ evaluate_flux(
 			    }
 
 			  var = MASS_FRACTION;
-			  if (pd->v[var]) {
+			  if (pd->v[pg->imtrx][var]) {
 			    for (w = 0; w < pd->Num_Species_Eqn; w++) {
 			      for (j = 0; j < ei->dof[var]; j++) {
 				/*
@@ -2243,7 +2243,7 @@ evaluate_flux(
 				gnn = ei->gnn_list[var][j];
 				ledof = ei->lvdof_to_ledof[var][j];
 				matIndex = ei->matID_ledof[ledof];
-				c = Index_Solution(gnn, var, w, 0, matIndex);
+				c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 				for (d_term = 0.0, a = 0; a < dim ; a++ ) {
 				  d_term += weight * det * fv->snormal[a] *
 				      (d_mu->C[w][j] * gamma[dir][a]);
@@ -2253,7 +2253,7 @@ evaluate_flux(
 			    }
 			  }
 
-  			if ( pd->v[POLYMER_STRESS11] )
+  			if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
     			  {
 			    for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
                 	       {
@@ -2275,7 +2275,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + b ;
 
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  for(j=0 ; j < ei->dof[var]; j++)
 				    {
@@ -2299,7 +2299,7 @@ evaluate_flux(
 				}
 			    }
 			 var = PRESSURE;
-			 if( pd->v[var] )
+			 if( pd->v[pg->imtrx][var] )
 				{
 				 for(j=0 ; j < ei->dof[var]; j++)
 				    {
@@ -2316,7 +2316,7 @@ evaluate_flux(
 				    }
 				}
 			 var = TEMPERATURE;
-			 if( pd->v[var] )
+			 if( pd->v[pg->imtrx][var] )
 				{
 				 for(j=0 ; j < ei->dof[var]; j++)
 				    {
@@ -2336,7 +2336,7 @@ evaluate_flux(
 			    {
 			      var = SOLID_DISPLACEMENT1 + b ;
 
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  for(j=0 ; j < ei->dof[var]; j++)
 				    {
@@ -2354,7 +2354,7 @@ evaluate_flux(
 				}
 			    }
 			  var = MASS_FRACTION;
-			  if (pd->v[var]) {
+			  if (pd->v[pg->imtrx][var]) {
 			    for (w = 0; w < pd->Num_Species_Eqn; w++) {
 			      for (j = 0; j < ei->dof[var]; j++) {
 				/*
@@ -2366,7 +2366,7 @@ evaluate_flux(
 				gnn = ei->gnn_list[var][j];
 				ledof = ei->lvdof_to_ledof[var][j];
 				matIndex = ei->matID_ledof[ledof];
-				c = Index_Solution(gnn, var, w, 0, matIndex);
+				c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 				for (d_term = 0.0, a = 0; a < dim ; a++ ) {
 				  d_term += weight * det * fv->snormal[a] *
 				      (dTT_dc[dir][a][w][j] * gamma[dir][a]);
@@ -2389,7 +2389,7 @@ evaluate_flux(
 			    {
 			      var = VELOCITY1 + p;
 			      
-			      if(pd->v[var])
+			      if(pd->v[pg->imtrx][var])
 				{
 				  for( j=0 ; j<ei->dof[var]; j++)
 				    {
@@ -2416,7 +2416,7 @@ evaluate_flux(
 
 			  var = PRESSURE;
 			      
-			  if(pd->v[var])
+			  if(pd->v[pg->imtrx][var])
 			    {
 			      for( j=0 ; j<ei->dof[var]; j++)
 				{
@@ -2434,7 +2434,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 
-			      if(pd->v[var])
+			      if(pd->v[pg->imtrx][var])
 				{
 				  for( j=0 ; j<ei->dof[var]; j++)
 				    {
@@ -2467,7 +2467,7 @@ evaluate_flux(
 
 			  var = TEMPERATURE;
 
-			  if(pd->v[var])
+			  if(pd->v[pg->imtrx][var])
 			    {
 			      for( j=0 ; j<ei->dof[var]; j++)
 				{
@@ -2486,7 +2486,7 @@ evaluate_flux(
 			
 
 			  var = MASS_FRACTION;
-			  if (pd->v[var]) {
+			  if (pd->v[pg->imtrx][var]) {
 			    for (w = 0; w < pd->Num_Species_Eqn; w++) {
 			      for (j = 0 ; j < ei->dof[var]; j++) {
 				/*
@@ -2498,7 +2498,7 @@ evaluate_flux(
 				gnn = ei->gnn_list[var][j];
 				ledof = ei->lvdof_to_ledof[var][j];
 				matIndex = ei->matID_ledof[ledof];
-				c = Index_Solution(gnn, var, w, 0, matIndex);
+				c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 				for (d_term = 0.0, a = 0; a < dim; a++) {
 				  for (b = 0 ; b < dim; b++) {
 				    d_term += weight * det * fv->snormal[a] *
@@ -2510,7 +2510,7 @@ evaluate_flux(
 			    }
 			  }
 
-  			if ( pd->v[POLYMER_STRESS11] )
+  			if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
     			  {
 			    for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
                 	       {
@@ -2533,7 +2533,7 @@ evaluate_flux(
 			{
 			  var = PRESSURE;
 			      
-			  if(pd->v[var])
+			  if(pd->v[pg->imtrx][var])
 			    {
 			      for( j=0 ; j<ei->dof[var]; j++)
 				{
@@ -2551,7 +2551,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 
-			      if(pd->v[var])
+			      if(pd->v[pg->imtrx][var])
 				{
 				  for( j=0 ; j<ei->dof[var]; j++)
 				    {
@@ -2579,7 +2579,7 @@ evaluate_flux(
 			    {
 			      var = SOLID_DISPLACEMENT1 + p;
 
-			      if(pd->v[var])
+			      if(pd->v[pg->imtrx][var])
 				{
 				  for( j=0 ; j<ei->dof[var]; j++)
 				    {
@@ -2601,7 +2601,7 @@ evaluate_flux(
 
 			  var = TEMPERATURE;
 
-			  if(pd->v[var])
+			  if(pd->v[pg->imtrx][var])
 			    {
 			      for( j=0 ; j<ei->dof[var]; j++)
 				{
@@ -2620,7 +2620,7 @@ evaluate_flux(
 			
 
 			  var = MASS_FRACTION;
-			  if (pd->v[var]) {
+			  if (pd->v[pg->imtrx][var]) {
 			    for (w = 0; w < pd->Num_Species_Eqn; w++) {
 			      for (j = 0 ; j < ei->dof[var]; j++) {
 				/*
@@ -2632,7 +2632,7 @@ evaluate_flux(
 				gnn = ei->gnn_list[var][j];
 				ledof = ei->lvdof_to_ledof[var][j];
 				matIndex = ei->matID_ledof[ledof];
-				c = Index_Solution(gnn, var, w, 0, matIndex);
+				c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 				for (d_term = 0.0, a = 0; a < dim; a++) {
 				  for (b = 0 ; b < dim; b++) {
 				    d_term += weight * det * fv->snormal[a] *
@@ -2662,7 +2662,7 @@ evaluate_flux(
 			    {
 			      var = VELOCITY1 + p;
 			      
-			      if(pd->v[var])
+			      if(pd->v[pg->imtrx][var])
 				{
 				  for( j=0 ; j<ei->dof[var]; j++)
 				    {
@@ -2690,7 +2690,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 
-			      if(pd->v[var])
+			      if(pd->v[pg->imtrx][var])
 				{
 				  for( j=0 ; j<ei->dof[var]; j++)
 				    {
@@ -2723,7 +2723,7 @@ evaluate_flux(
 
 			  var = TEMPERATURE;
 
-			  if(pd->v[var])
+			  if(pd->v[pg->imtrx][var])
 			    {
 			      for( j=0 ; j<ei->dof[var]; j++)
 				{
@@ -2742,7 +2742,7 @@ evaluate_flux(
 
 
 			  var = MASS_FRACTION;	  
-			  if (pd->v[var]) {
+			  if (pd->v[pg->imtrx][var]) {
 			      for(w = 0; w < pd->Num_Species_Eqn; w++) {
 				for(j = 0 ; j < ei->dof[var]; j++) {
 				  /*
@@ -2754,7 +2754,7 @@ evaluate_flux(
 				  gnn = ei->gnn_list[var][j];
 				  ledof = ei->lvdof_to_ledof[var][j];
 				  matIndex = ei->matID_ledof[ledof];
-				  c = Index_Solution(gnn, var, w, 0, matIndex);
+				  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 				  for (d_term = 0.0, a = 0; a < dim; a++) {
 				    for (b = 0; b < dim; b++) {
 				      d_term += weight * det * 
@@ -2767,7 +2767,7 @@ evaluate_flux(
 			      }
 			    }
 
-  			if ( pd->v[POLYMER_STRESS11] )
+  			if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
     			  {
 			    for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
                 	       {
@@ -2792,7 +2792,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 
-			      if(pd->v[var])
+			      if(pd->v[pg->imtrx][var])
 				{
 				  for( j=0 ; j<ei->dof[var]; j++)
 				    {
@@ -2815,7 +2815,7 @@ evaluate_flux(
 			    {
 			      var = SOLID_DISPLACEMENT1 + p;
 
-			      if(pd->v[var])
+			      if(pd->v[pg->imtrx][var])
 				{
 				  for( j=0 ; j<ei->dof[var]; j++)
 				    {
@@ -2837,7 +2837,7 @@ evaluate_flux(
 
 			  var = TEMPERATURE;
 
-			  if(pd->v[var])
+			  if(pd->v[pg->imtrx][var])
 			    {
 			      for( j=0 ; j<ei->dof[var]; j++)
 				{
@@ -2856,7 +2856,7 @@ evaluate_flux(
 
 
 			  var = MASS_FRACTION;	  
-			  if (pd->v[var]) {
+			  if (pd->v[pg->imtrx][var]) {
 			      for(w = 0; w < pd->Num_Species_Eqn; w++) {
 				for(j = 0 ; j < ei->dof[var]; j++) {
 				  /*
@@ -2868,7 +2868,7 @@ evaluate_flux(
 				  gnn = ei->gnn_list[var][j];
 				  ledof = ei->lvdof_to_ledof[var][j];
 				  matIndex = ei->matID_ledof[ledof];
-				  c = Index_Solution(gnn, var, w, 0, matIndex);
+				  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 				  for (d_term = 0.0, a = 0; a < dim; a++) {
 				    for (b = 0; b < dim; b++) {
 				      d_term += weight * det * 
@@ -2892,7 +2892,7 @@ evaluate_flux(
 			    {
 			      var = VELOCITY1 + p;
 			      
-			      if(pd->v[var])
+			      if(pd->v[pg->imtrx][var])
 				{
 				  for( j=0 ; j<ei->dof[var]; j++)
 				    {
@@ -2914,7 +2914,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 
-			      if(pd->v[var])
+			      if(pd->v[pg->imtrx][var])
 				{
 				  for( j=0 ; j<ei->dof[var]; j++)
 				    {
@@ -2958,7 +2958,7 @@ evaluate_flux(
 			    {
 			      var = VELOCITY1 +p;
 			      
-			      if( pd->v[var])
+			      if( pd->v[pg->imtrx][var])
 				{
 				  for( j=0; j<ei->dof[var]; j++)
 				    {
@@ -2976,7 +2976,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  
 				  for( j=0; j<ei->dof[var]; j++)
@@ -3001,7 +3001,7 @@ evaluate_flux(
 			    }
 
 			  var = MASS_FRACTION;
-			  if (pd->v[var]) {
+			  if (pd->v[pg->imtrx][var]) {
 			    for (w = 0; w < pd->Num_Species_Eqn; w++) {
 			      for (j = 0; j < ei->dof[var]; j++) {
 				/*
@@ -3013,7 +3013,7 @@ evaluate_flux(
 				gnn = ei->gnn_list[var][j];
 				ledof = ei->lvdof_to_ledof[var][j];
 				matIndex = ei->matID_ledof[ledof];
-				c = Index_Solution(gnn, var, w, 0, matIndex);
+				c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 				for (d_term = 0.0, a = 0; a < dim; a++) {
 				  d_term += - weight * det * d_k->C[w][j] *
 				      fv->snormal[a] * fv->grad_T[a] +
@@ -3029,7 +3029,7 @@ evaluate_flux(
 			case SPECIES_FLUX:
 
 			    var = MASS_FRACTION;
-			    if (pd->v[var]) {
+			    if (pd->v[pg->imtrx][var]) {
 			      for (w = 0; w < pd->Num_Species_Eqn; w++) {
 				for (j = 0; j < ei->dof[var]; j++) {
 				  /*
@@ -3041,7 +3041,7 @@ evaluate_flux(
 				  gnn = ei->gnn_list[var][j];
 				  ledof = ei->lvdof_to_ledof[var][j];
 				  matIndex = ei->matID_ledof[ledof];
-				  c = Index_Solution(gnn, var, w, 0, matIndex);
+				  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 				  d_term = d_term1 = 0.0;
 				  for (a = 0; a < dim; a++) {
 				    d_term += - weight * det * fv->snormal[a] *
@@ -3064,7 +3064,7 @@ evaluate_flux(
 			    {
 			      var = VELOCITY1 + p;
 
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  for( j=0; j<ei->dof[var]; j++)
 				    {
@@ -3079,7 +3079,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 			      
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  for( j=0; j<ei->dof[var]; j++)
 				    {
@@ -3103,7 +3103,7 @@ evaluate_flux(
 
 			  var = TEMPERATURE;
 
-			  if( pd->v[var])
+			  if( pd->v[pg->imtrx][var])
 			    {
 			      for( j=0; j<ei->dof[var]; j++)
 				{
@@ -3123,7 +3123,7 @@ evaluate_flux(
 			case CHARGED_SPECIES_FLUX:
 
 			    var = MASS_FRACTION;
-			    if (pd->v[var]) {
+			    if (pd->v[pg->imtrx][var]) {
 			      for (w = 0; w < pd->Num_Species_Eqn; w++) {
 				for (j = 0; j < ei->dof[var]; j++) {
 				  /*
@@ -3135,7 +3135,7 @@ evaluate_flux(
 				  gnn = ei->gnn_list[var][j];
 				  ledof = ei->lvdof_to_ledof[var][j];
 				  matIndex = ei->matID_ledof[ledof];
-				  c = Index_Solution(gnn, var, w, 0, matIndex);
+				  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 				  d_term = d_term1 = 0.0;
 				  for (a = 0; a < dim; a++) {
 				    d_term += - weight * det * fv->snormal[a] *
@@ -3159,7 +3159,7 @@ evaluate_flux(
 			    {
 			      var = VELOCITY1 + p;
 
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  for( j=0; j<ei->dof[var]; j++)
 				    {
@@ -3173,7 +3173,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 			      
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  for( j=0; j<ei->dof[var]; j++)
 				    {
@@ -3201,7 +3201,7 @@ evaluate_flux(
 
 			  var = TEMPERATURE;
 
-			  if( pd->v[var])
+			  if( pd->v[pg->imtrx][var])
 			    {
 			      for( j=0; j<ei->dof[var]; j++)
 				{
@@ -3219,7 +3219,7 @@ evaluate_flux(
 
 			  var = VOLTAGE;
 
-			  if( pd->v[var])
+			  if( pd->v[pg->imtrx][var])
 			    {
 			      for( j=0; j<ei->dof[var]; j++)
 				{
@@ -3238,7 +3238,7 @@ evaluate_flux(
 			case CURRENT_FICKIAN:
 
 			    var = MASS_FRACTION;
-			    if (pd->v[var]) {
+			    if (pd->v[pg->imtrx][var]) {
 			      for (w = 0; w < pd->Num_Species_Eqn; w++) {
 				for (j = 0; j < ei->dof[var]; j++) {
 				  /*
@@ -3250,7 +3250,7 @@ evaluate_flux(
 				  gnn = ei->gnn_list[var][j];
 				  ledof = ei->lvdof_to_ledof[var][j];
 				  matIndex = ei->matID_ledof[ledof];
-				  c = Index_Solution(gnn, var, w, 0, matIndex);
+				  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 				  d_term = d_term1 = 0.0;
 				  for (a = 0; a < dim; a++) {
 				    d_term += - weight * det * fv->snormal[a] *
@@ -3274,7 +3274,7 @@ evaluate_flux(
 			    {
 			      var = VELOCITY1 + p;
 
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  for( j=0; j<ei->dof[var]; j++)
 				    {
@@ -3288,7 +3288,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 			      
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  for( j=0; j<ei->dof[var]; j++)
 				    {
@@ -3316,7 +3316,7 @@ evaluate_flux(
 
 			  var = TEMPERATURE;
 
-			  if( pd->v[var])
+			  if( pd->v[pg->imtrx][var])
 			    {
 			      for( j=0; j<ei->dof[var]; j++)
 				{
@@ -3334,7 +3334,7 @@ evaluate_flux(
 
 			  var = VOLTAGE;
 
-			  if( pd->v[var])
+			  if( pd->v[pg->imtrx][var])
 			    {
 			      for( j=0; j<ei->dof[var]; j++)
 				{
@@ -3388,7 +3388,7 @@ evaluate_flux(
 			    {
 			      var = VELOCITY1 +p;
 			      
-			      if( pd->v[var])
+			      if( pd->v[pg->imtrx][var])
 				{
 				  for( j=0; j<ei->dof[var]; j++)
 				    {
@@ -3403,7 +3403,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  
 				  for( j=0; j<ei->dof[var]; j++)
@@ -3425,7 +3425,7 @@ evaluate_flux(
 			    }
 
 			  var = MASS_FRACTION;
-			  if (pd->v[var]) {
+			  if (pd->v[pg->imtrx][var]) {
 			    for (w = 0; w < pd->Num_Species_Eqn; w++) {
 			      for (j = 0; j < ei->dof[var]; j++) {
 				/*
@@ -3437,7 +3437,7 @@ evaluate_flux(
 				gnn = ei->gnn_list[var][j];
 				ledof = ei->lvdof_to_ledof[var][j];
 				matIndex = ei->matID_ledof[ledof];
-				c = Index_Solution(gnn, var, w, 0, matIndex);
+				c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 				for (d_term = 0.0, a = 0; a < dim; a++) {
 				  d_term += - weight * det * dkdC[w][j] * fv->snormal[a] * fv->grad_V[a];
 				}
@@ -3454,7 +3454,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 			      
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  for( j=0; j<ei->dof[var]; j++)
 				    {
@@ -3466,7 +3466,7 @@ evaluate_flux(
 			    }
 
 			  var = MASS_FRACTION;
-			  if (pd->v[var]) {
+			  if (pd->v[pg->imtrx][var]) {
 			    for (j = 0 ; j < ei->dof[var]; j++) {
 			      /*
 			       * Find the material index for the current
@@ -3477,7 +3477,7 @@ evaluate_flux(
 			      gnn = ei->gnn_list[var][j];
 			      ledof = ei->lvdof_to_ledof[var][j];
 			      matIndex = ei->matID_ledof[ledof];
-			      c = Index_Solution(gnn, var, w, 0, matIndex);
+			      c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 			      d_term = weight * det * bf[var]->phi[j];
 			      J_AC[c] += d_term;
 			    }
@@ -3490,7 +3490,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 
-			      if( pd->v[var])
+			      if( pd->v[pg->imtrx][var])
 				{
 				  for (j=0; j<ei->dof[var]; j++)
 				    {
@@ -3506,7 +3506,7 @@ evaluate_flux(
                             {
                               var = MESH_DISPLACEMENT1 + p;
 
-                              if( pd->v[var])
+                              if( pd->v[pg->imtrx][var])
                                 {
                                   for (j=0; j<ei->dof[var]; j++)
                                     {
@@ -3525,7 +3525,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 
-			      if (pd->v[var] )
+			      if (pd->v[pg->imtrx][var] )
 				{
 				  for( j=0; j<ei->dof[var]; j++)
 				    {
@@ -3599,7 +3599,7 @@ evaluate_flux(
  			    {
  			      var = MESH_DISPLACEMENT1 + p;
  
- 			      if( pd->v[var] )
+ 			      if( pd->v[pg->imtrx][var] )
  				{
  				  
  				  for( j=0; j<ei->dof[var]; j++)
@@ -3684,7 +3684,7 @@ evaluate_flux(
  			    {
  			      var = MESH_DISPLACEMENT1 + p;
  
- 			      if( pd->v[var] )
+ 			      if( pd->v[pg->imtrx][var] )
  				{
  				  
  				  for( j=0; j<ei->dof[var]; j++)
@@ -3768,7 +3768,7 @@ evaluate_flux(
  			    {
  			      var = MESH_DISPLACEMENT1 + p;
  
- 			      if( pd->v[var] )
+ 			      if( pd->v[pg->imtrx][var] )
  				{
  				  
  				  for( j=0; j<ei->dof[var]; j++)
@@ -3831,7 +3831,7 @@ evaluate_flux(
  			    {
  			      var = MESH_DISPLACEMENT1 + p;
  
- 			      if( pd->v[var] )
+ 			      if( pd->v[pg->imtrx][var] )
  				{
  				  
  				  for( j=0; j<ei->dof[var]; j++)
@@ -4025,7 +4025,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 
-			      if(pd->v[var])
+			      if(pd->v[pg->imtrx][var])
 				{
 				  for( j=0 ; j<ei->dof[var]; j++)
 				    {
@@ -4043,13 +4043,13 @@ evaluate_flux(
 				         *dsigmadT*bf[var]->phi[j];
  			    }
 			    var = MASS_FRACTION;
-			    if (pd->v[var]) {
+			    if (pd->v[pg->imtrx][var]) {
 			      for (w = 0; w < pd->Num_Species_Eqn; w++) {
 				for (j = 0; j < ei->dof[var]; j++) {
 				  gnn = ei->gnn_list[var][j];
 				  ledof = ei->lvdof_to_ledof[var][j];
 				  matIndex = ei->matID_ledof[ledof];
-				  c = Index_Solution(gnn, var, w, 0, matIndex);
+				  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 				  J_AC[c] += sign*fv->stangent[0][dir]
                                     *dsigmadC[w]*bf[var]->phi[j];
 				}
@@ -4067,7 +4067,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + p;
 
-			      if(pd->v[var])
+			      if(pd->v[pg->imtrx][var])
 				{
 				  for( j=0 ; j<ei->dof[var]; j++)
 				    {
@@ -4087,13 +4087,13 @@ evaluate_flux(
 				*dsigmadT*bf[var]->phi[j];
  			    }
 			    var = MASS_FRACTION;
-			    if (pd->v[var]) {
+			    if (pd->v[pg->imtrx][var]) {
 			      for (w = 0; w < pd->Num_Species_Eqn; w++) {
 				for (j = 0; j < ei->dof[var]; j++) {
 				  gnn = ei->gnn_list[var][j];
 				  ledof = ei->lvdof_to_ledof[var][j];
 				  matIndex = ei->matID_ledof[ledof];
-				  c = Index_Solution(gnn, var, w, 0, matIndex);
+				  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
 				  J_AC[c] += 2*M_PIE*fv->x[1]*sign*fv->stangent[0][dir]
                                     *dsigmadC[w]*bf[var]->phi[j];
 				}
@@ -4186,7 +4186,7 @@ evaluate_flux(
 			    {
 			      var = MESH_DISPLACEMENT1 + b ;
 
-			      if( pd->v[var] )
+			      if( pd->v[pg->imtrx][var] )
 				{
 				  for(j=0 ; j < ei->dof[var]; j++)
 				    {
@@ -4652,7 +4652,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 	     err = load_bf_grad();
 	     EH( err, "load_bf_grad");
 
-	     if ( pd->e[R_MESH1] )
+	     if ( pd->e[pg->imtrx][R_MESH1] )
 	      {
 	       err = load_bf_mesh_derivs(); 
 	       EH( err, "load_bf_mesh_derivs");
@@ -4661,7 +4661,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 	     err = load_fv_grads();
 	     EH( err, "load_fv_grads");	  
       
-	     if ( pd->e[R_MESH1] )
+	     if ( pd->e[pg->imtrx][R_MESH1] )
 	      {
 	       err = load_fv_mesh_derivs(1);
 	       EH( err, "load_fv_mesh_derivs");
@@ -4742,7 +4742,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 
   // Kind of a hack to keep track of the porous liquid inventory for a time-dependent BC
 					      
-  if(pd->e[R_SHELL_SAT_OPEN]) Porous_liq_inventory = sum; 
+  if(pd->e[pg->imtrx][R_SHELL_SAT_OPEN]) Porous_liq_inventory = sum; 
   
   return (sum); 
 }
@@ -4798,7 +4798,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	    {
 	      var = MESH_DISPLACEMENT1 + p;
 
-	      if( pd->v[var] )
+	      if( pd->v[pg->imtrx][var] )
 		{
 
 		  for( j=0; j<ei->dof[var]; j++)
@@ -4874,7 +4874,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	    {
 	      var = VELOCITY1 + p ;
 
-	      if( pd->v[var] )
+	      if( pd->v[pg->imtrx][var] )
 		{
 
 		  for( j=0; j<ei->dof[var]; j++)
@@ -4917,7 +4917,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	 *  assume only EVSS_F formulation for now
 	 */
   	memset( ves, 0, sizeof(dbl)*DIM*DIM);
-  	if ( pd->v[POLYMER_STRESS11] )
+  	if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
     	  {
 	    for ( p=0; p<VIM; p++)
                {
@@ -5062,7 +5062,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	      {
 		var = MESH_DISPLACEMENT1 + a;
 
-		if( pd->v[var] )
+		if( pd->v[pg->imtrx][var] )
 		  {
 		    for( j=0 ; j<ei->dof[var]; j++)
 		      {
@@ -5074,7 +5074,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	      }
 
 	    var = MASS_FRACTION;
-	    if (pd->v[var]) {
+	    if (pd->v[pg->imtrx][var]) {
 	      for (j = 0; j < ei->dof[var]; j++) {
 		/*
 		 * Find the material index for the current
@@ -5085,7 +5085,7 @@ compute_volume_integrand(const int quantity, const int elem,
 		gnn = ei->gnn_list[var][j];
 		ledof = ei->lvdof_to_ledof[var][j];
 		matIndex = ei->matID_ledof[ledof];
-		c = Index_Solution(gnn, var, species_no, 0, matIndex);
+		c = Index_Solution(gnn, var, species_no, 0, matIndex, pg->imtrx);
  		J_AC[c] += weight * det * dens_factor * bf[var]->phi[j];
 	      }
 	    }
@@ -5156,7 +5156,7 @@ compute_volume_integrand(const int quantity, const int elem,
 		gnn = ei->gnn_list[var][j];
 		ledof = ei->lvdof_to_ledof[var][j];
 		matIndex = ei->matID_ledof[ledof];
-		c = Index_Solution(gnn, var, species_no, 0, matIndex);
+		c = Index_Solution(gnn, var, species_no, 0, matIndex, pg->imtrx);
  		J_AC[c] += weight * det * s_terms.d_MassSource_dc[species_no][w1][j];
 	      }
 	     }
@@ -5202,7 +5202,7 @@ compute_volume_integrand(const int quantity, const int elem,
           {
             var = MESH_DISPLACEMENT1 + p;
 
-            if( pd->v[var] )
+            if( pd->v[pg->imtrx][var] )
               {
 
                 for( j=0; j<ei->dof[var]; j++)
@@ -5215,7 +5215,7 @@ compute_volume_integrand(const int quantity, const int elem,
           }
             var = TEMPERATURE;
 
-            if( pd->v[var] )
+            if( pd->v[pg->imtrx][var] )
               {
 
                 for( j=0; j<ei->dof[var]; j++)
@@ -5264,7 +5264,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
 	    var = PRESSURE;
 	    
-	    if( pd->v[var] )
+	    if( pd->v[pg->imtrx][var] )
 	      {
 		for ( j=0; j < ei->dof[var]; j++ )
 		  {
@@ -5277,7 +5277,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	      {
 		var = VELOCITY1 + a;
 
-		if( pd->v[var] )
+		if( pd->v[pg->imtrx][var] )
 		  {
 		    for( j=0; j<ei->dof[var]; j++)
 		      {
@@ -5296,7 +5296,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	      {
 		var = MESH_DISPLACEMENT1 + a;
 
-		if( pd->v[var] )
+		if( pd->v[pg->imtrx][var] )
 		  {
 		    for( j=0 ; j<ei->dof[var]; j++)
 		      {
@@ -5325,7 +5325,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	double alpha, height = 1.0;
         double H_U, dH_U_dtime, H_L, dH_L_dtime;
         double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
-	if(pd->e[R_LUBP]) height = height_function_model
+	if(pd->e[pg->imtrx][R_LUBP]) height = height_function_model
                           (&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
 			   dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
       if( adapt_int_flag)
@@ -5621,7 +5621,7 @@ compute_volume_integrand(const int quantity, const int elem,
       break;
     case I_POROUS_LIQUID_INV:
       {
-	if(pd->e[R_SHELL_SAT_OPEN])
+	if(pd->e[pg->imtrx][R_SHELL_SAT_OPEN])
 	  {
 	    n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
 	    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
@@ -5653,15 +5653,15 @@ compute_volume_integrand(const int quantity, const int elem,
           ( quantity == I_ELOADZ ? 2 : -1 ) ) );
 
 
-	if( pd->e[R_MASS] ) factor = fv->c[species_no];
+	if( pd->e[pg->imtrx][R_MASS] ) factor = fv->c[species_no];
 
     if ( params != NULL ) factor *= params[0];
 
-	if( pd->e[R_EFIELD1] )
+	if( pd->e[pg->imtrx][R_EFIELD1] )
 		{	
            *sum += factor*weight*det*fv->E_field[dir];	
         }
-	else if( pd->e[R_POTENTIAL] )
+	else if( pd->e[pg->imtrx][R_POTENTIAL] )
 		{
            *sum += factor*weight*det*(-fv->grad_V[dir]);
 		}		
@@ -6329,7 +6329,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	    err = load_fv_mesh_derivs(1);
 	    EH( err, "load_fv_mesh_derivs");
 
-            if(TimeIntegration != STEADY && pd->e[MESH_DISPLACEMENT1])
+            if(TimeIntegration != STEADY && pd->e[pg->imtrx][MESH_DISPLACEMENT1])
       		{
 	        for(j=0; j<ielem_dim; j++ )
        		   {
@@ -6374,7 +6374,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
            for( b=0 ; b < ielem_dim ; b++)
               {
                var = MESH_DISPLACEMENT1 + b ;
-               if( pd->v[var] )
+               if( pd->v[pg->imtrx][var] )
                   {
                    for(j=0 ; j < ei->dof[var]; j++)
                       {
@@ -6400,7 +6400,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 
  dim   = pd_glob[0]->Num_Dim;
 
- if(pd->e[R_MESH1] && cr->MeshMotion != ARBITRARY)
+ if(pd->e[pg->imtrx][R_MESH1] && cr->MeshMotion != ARBITRARY)
     {
       err = belly_flop(elc->lame_mu);
       EH(err, "error in belly flop");
@@ -6443,7 +6443,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
     } /* end of STRESS_TENSOR */
 
 /* calculate real-solid stress here !!*/
-  if(pd->e[R_SOLID1] && cr->MeshMotion != ARBITRARY)
+  if(pd->e[pg->imtrx][R_SOLID1] && cr->MeshMotion != ARBITRARY)
     {
       mu = elc_rs->lame_mu;
       err = belly_flop_rs(mu);
@@ -6477,7 +6477,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		 */
   			memset( ves_sens, 0, sizeof(dbl)*DIM*DIM);
   			memset( ves, 0, sizeof(dbl)*DIM*DIM);
-  			if ( pd->v[POLYMER_STRESS11] )
+  			if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
     			  {
 			    for ( a=0; a<VIM; a++)
         	              {
@@ -6513,7 +6513,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		/*  compute implicit viscosity sensitivities  */
 			mu_sens = 0.;
   			v = TEMPERATURE;
-  			if ( pd->v[v] )
+  			if ( pd->v[pg->imtrx][v] )
     			   {
       			     dofs  = ei->dof[v];
       			     for ( j=0; j<dofs; j++)
@@ -6532,7 +6532,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 			for ( a=0; a<velodim; a++)
     			  {
       			   v = VELOCITY1 + a;
-      			     if ( pd->v[v] )
+      			     if ( pd->v[pg->imtrx][v] )
 				{
 	  			 dofs     = ei->dof[v];
 	  			   for ( j=0; j<dofs; j++)
@@ -6548,7 +6548,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   			for ( a=0; a<dim; a++)
     			   {
       			      v = MESH_DISPLACEMENT1 + a;
-      				if ( pd->v[v] )
+      				if ( pd->v[pg->imtrx][v] )
 				   {
 	  			     dofs     = ei->dof[v];
 	  			     for ( j=0; j<dofs; j++)
@@ -6561,7 +6561,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
    		/* Pressure...  */
 
 			v = PRESSURE;
-  			if ( pd->v[v] )
+  			if ( pd->v[pg->imtrx][v] )
     			  {
 			      dofs  = ei->dof[v];
 			      for ( j=0; j<dofs; j++)
@@ -6573,7 +6573,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		/*  Concentration  */
 
 			v = MASS_FRACTION;
-  			if (pd->v[v]) {
+  			if (pd->v[pg->imtrx][v]) {
 			    for (a = 0; a < pd->Num_Species_Eqn; a++) {
 			      dofs = ei->dof[v];
 			      for (j = 0; j < dofs; j++) {
@@ -6584,7 +6584,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   		/* * Fill...  */
 
 			  v = FILL;
-			  if ( pd->v[v] )
+			  if ( pd->v[pg->imtrx][v] )
 			    {
 			      dofs  = ei->dof[v];
 			      for ( j=0; j<dofs; j++)
@@ -6614,7 +6614,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
    		 */
   			memset( es, 0, sizeof(dbl)*DIM*DIM);
   			memset( es_sens, 0, sizeof(dbl)*DIM*DIM);
-		      if(pd->e[R_POTENTIAL])
+		      if(pd->e[pg->imtrx][R_POTENTIAL])
      			 {
  			  efield_sqr = 0.0;
  			  efield_sqr_sens = 0.0;
@@ -6746,7 +6746,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 			  if (cr->MeshMotion == ARBITRARY)
                     local_q += ( fv->snormal[j]*(fv_sens->v[j]-x_dot[j])
                                  + normal_sens[j]*(fv->v[j]-x_dot[j]));
-			  else if (pd->v[MESH_DISPLACEMENT1])
+			  else if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
                     local_q += fv->snormal[j]*fv_sens->d[j]
                                + normal_sens[j]*fv->d[j];
 			  else
@@ -7405,7 +7405,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
            for( b=0 ; b < ielem_dim ; b++)
               {
                var = MESH_DISPLACEMENT1 + b ;
-               if( pd->v[var] )
+               if( pd->v[pg->imtrx][var] )
                   {
                    for(j=0 ; j < ei->dof[var]; j++)
                       {
@@ -7630,7 +7630,7 @@ load_fv_sens(void)
 
   v = TEMPERATURE;
   fv_sens->T = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7646,7 +7646,7 @@ load_fv_sens(void)
 
   v = FILL;
   fv_sens->F = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7661,7 +7661,7 @@ load_fv_sens(void)
 
   v = VOLTAGE;
   fv_sens->V = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7676,7 +7676,7 @@ load_fv_sens(void)
 
   v = SURF_CHARGE;
   fv_sens->qs = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7691,7 +7691,7 @@ load_fv_sens(void)
 
   v = SHELL_CURVATURE;
   fv_sens->sh_K = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7706,7 +7706,7 @@ load_fv_sens(void)
 
   v = SHELL_TENSION;
   fv_sens->sh_tens = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7721,7 +7721,7 @@ load_fv_sens(void)
 
   v = SHELL_X;
   fv_sens->sh_x = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7736,7 +7736,7 @@ load_fv_sens(void)
 
   v = SHELL_Y;
   fv_sens->sh_y = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7751,7 +7751,7 @@ load_fv_sens(void)
  
   v = SHELL_USER;
   fv_sens->sh_u = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7770,7 +7770,7 @@ load_fv_sens(void)
  
       v = SHELL_ANGLE1 + p;
       fv_sens->sh_ang[p]     = 0.;
-      if ( pd->v[v] )
+      if ( pd->v[pg->imtrx][v] )
 	{
 	  dofs     = ei->dof[v];
 	  for ( i=0; i<dofs; i++)
@@ -7787,7 +7787,7 @@ load_fv_sens(void)
 
   v = ACOUS_PREAL;
   fv_sens->apr = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7797,7 +7797,7 @@ load_fv_sens(void)
     }
   v = ACOUS_PIMAG;
   fv_sens->api = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7808,7 +7808,7 @@ load_fv_sens(void)
 
   v = ACOUS_REYN_STRESS;
   fv_sens->ars = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7819,7 +7819,7 @@ load_fv_sens(void)
 
   v = SHELL_BDYVELO;
   fv_sens->sh_bv = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7830,7 +7830,7 @@ load_fv_sens(void)
 
   v = SHELL_LUBP;
   fv_sens->sh_p = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7841,7 +7841,7 @@ load_fv_sens(void)
 
   v = LUBP;
   fv_sens->lubp = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7852,7 +7852,7 @@ load_fv_sens(void)
 
   v = LUBP_2;
   fv_sens->lubp_2 = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7863,7 +7863,7 @@ load_fv_sens(void)
 
   v = SHELL_FILMP;
   fv_sens->sh_fp = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7874,7 +7874,7 @@ load_fv_sens(void)
 
   v = SHELL_FILMH;
   fv_sens->sh_fh = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7885,7 +7885,7 @@ load_fv_sens(void)
 
   v = SHELL_PARTC;
   fv_sens->sh_pc = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7897,7 +7897,7 @@ load_fv_sens(void)
 
   v = SHELL_SAT_CLOSED;
   fv_sens->sh_sat_closed = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7908,7 +7908,7 @@ load_fv_sens(void)
 
   v = LIGHT_INTP;
   fv_sens->poynt[0] = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7919,7 +7919,7 @@ load_fv_sens(void)
 
   v = LIGHT_INTM;
   fv_sens->poynt[1] = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7930,7 +7930,7 @@ load_fv_sens(void)
 
   v = LIGHT_INTD;
   fv_sens->poynt[2] = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7941,7 +7941,7 @@ load_fv_sens(void)
 
   v = SHELL_PRESS_OPEN;
   fv_sens->sh_p_open = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7952,7 +7952,7 @@ load_fv_sens(void)
 
   v = SHELL_PRESS_OPEN_2;
   fv_sens->sh_p_open_2 = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7963,7 +7963,7 @@ load_fv_sens(void)
 
   v = SHELL_TEMPERATURE;
   fv_sens->sh_t = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7974,7 +7974,7 @@ load_fv_sens(void)
 
   v = SHELL_DELTAH;
   fv_sens->sh_dh = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7985,7 +7985,7 @@ load_fv_sens(void)
   
   v = SHELL_LUB_CURV;
   fv_sens->sh_l_curv = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -7996,7 +7996,7 @@ load_fv_sens(void)
 
   v = SHELL_LUB_CURV_2;
   fv_sens->sh_l_curv_2 = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -8007,7 +8007,7 @@ load_fv_sens(void)
   
   v = SHELL_SAT_GASN;
   fv_sens->sh_sat_gasn = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -8017,7 +8017,7 @@ load_fv_sens(void)
     }
   v = POR_SINK_MASS;
   fv_sens->sink_mass = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -8028,7 +8028,7 @@ load_fv_sens(void)
 
   v = SHELL_SHEAR_TOP;
   fv_sens->sh_shear_top = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -8039,7 +8039,7 @@ load_fv_sens(void)
 
   v = SHELL_SHEAR_BOT;
   fv_sens->sh_shear_bot = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -8050,7 +8050,7 @@ load_fv_sens(void)
 
   v = SHELL_CROSS_SHEAR;
   fv_sens->sh_cross_shear = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -8061,7 +8061,7 @@ load_fv_sens(void)
 
   v = MAX_STRAIN;
   fv_sens->max_strain = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -8072,7 +8072,7 @@ load_fv_sens(void)
 
   v = CUR_STRAIN;
   fv_sens->cur_strain = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -8087,7 +8087,7 @@ load_fv_sens(void)
 
   v = PRESSURE;
   fv_sens->P = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -8116,7 +8116,7 @@ load_fv_sens(void)
   for ( p=0; p<dim; p++)
     {
       v = MESH_DISPLACEMENT1 + p;
-      if ( pd->v[v] )
+      if ( pd->v[pg->imtrx][v] )
 	{
 	  dofs     = ei->dof[v];
 	  fv_sens->x[p] = 0.;
@@ -8142,7 +8142,7 @@ load_fv_sens(void)
   for ( p=0; p<dim; p++)
     {
       v = SOLID_DISPLACEMENT1 + p;
-      if ( pd->v[v] )
+      if ( pd->v[pg->imtrx][v] )
 	{
 	  dofs     = ei->dof[v];
 	  fv_sens->d_rs[p] = 0.;
@@ -8176,7 +8176,7 @@ load_fv_sens(void)
   for ( p=0; p<velodim; p++)
     {
       v = VELOCITY1 + p;
-      if ( pd->v[v] )
+      if ( pd->v[pg->imtrx][v] )
 	{
 	  dofs     = ei->dof[v];
 	  fv_sens->v[p] = 0.;
@@ -8201,7 +8201,7 @@ load_fv_sens(void)
  
       v = PVELOCITY1 + p;
       fv_sens->pv[p]     = 0.;
-      if ( pd->v[v] )
+      if ( pd->v[pg->imtrx][v] )
 	{
 	  dofs     = ei->dof[v];
 	  for ( i=0; i<dofs; i++)
@@ -8217,7 +8217,7 @@ load_fv_sens(void)
   
   v = EXT_VELOCITY;
   fv_sens->ext_v     = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs     = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -8236,7 +8236,7 @@ load_fv_sens(void)
  
       v = NORMAL1 + p;
       fv_sens->n[p]     = 0.;
-      if ( pd->v[v] )
+      if ( pd->v[pg->imtrx][v] )
 	{
 	  dofs     = ei->dof[v];
 	  for ( i=0; i<dofs; i++)
@@ -8253,7 +8253,7 @@ load_fv_sens(void)
 
   v = SHELL_DIFF_FLUX;
   fv_sens->ext_v     = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs     = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -8269,7 +8269,7 @@ load_fv_sens(void)
  
   v = SHELL_DIFF_CURVATURE;
   fv_sens->ext_v     = 0.;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs     = ei->dof[v];
       for ( i=0; i<dofs; i++)
@@ -8288,7 +8288,7 @@ load_fv_sens(void)
 
       v = SHELL_NORMAL1 + p;
       fv_sens->n[p]     = 0.;
-      if ( pd->v[v] )
+      if ( pd->v[pg->imtrx][v] )
         {
           dofs     = ei->dof[v];
           for ( i=0; i<dofs; i++)
@@ -8308,7 +8308,7 @@ load_fv_sens(void)
  
       v = EFIELD1 + p;
       fv_sens->pv[p]     = 0.;
-      if ( pd->v[v] )
+      if ( pd->v[pg->imtrx][v] )
 	{
 	  dofs     = ei->dof[v];
 	  for ( i=0; i<dofs; i++)
@@ -8333,7 +8333,7 @@ load_fv_sens(void)
 		  fv_sens->S[mode][p][q] = 0.;
 		  
 		  v = v_s[mode][p][q];
-		  if ( pd->v[v] )
+		  if ( pd->v[pg->imtrx][v] )
 		    {
 		      dofs     = ei->dof[v];
 		      for ( i=0; i<dofs; i++)
@@ -8361,7 +8361,7 @@ load_fv_sens(void)
 	  fv_sens->G[p][q] = 0.;
 
 	  v = v_g[p][q];
-	  if ( pd->v[v] )
+	  if ( pd->v[pg->imtrx][v] )
 	    {
 	      dofs     = ei->dof[v];
 	      for ( i=0; i<dofs; i++)
@@ -8378,7 +8378,7 @@ load_fv_sens(void)
    */
 
   v = MASS_FRACTION;
-  if (pd->v[v]) {
+  if (pd->v[pg->imtrx][v]) {
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       dofs = ei->dof[v];
       fv_sens->c[w] = 0.0;
@@ -8415,15 +8415,15 @@ load_fv_sens(void)
            * If the variable name is velocity, and the momentum equations are not active,
            * load the external_fields into the velocity fv for use in Advection-diffusion analysis
            */
-          if (strcmp(efv->name[w], "VX") == 0 && !pd->v[VELOCITY1])
+          if (strcmp(efv->name[w], "VX") == 0 && !pd->v[pg->imtrx][VELOCITY1])
 	    {
 	      fv_sens->v[0] = fv_sens->external_field[w];
 	    }
-          if (strcmp(efv->name[w], "VY") == 0 && !pd->v[VELOCITY2])
+          if (strcmp(efv->name[w], "VY") == 0 && !pd->v[pg->imtrx][VELOCITY2])
 	    {
 	      fv_sens->v[1] = fv_sens->external_field[w];
 	    }
-          if (strcmp(efv->name[w], "VZ") == 0 && !pd->v[VELOCITY3])
+          if (strcmp(efv->name[w], "VZ") == 0 && !pd->v[pg->imtrx][VELOCITY3])
 	    {
 	      fv_sens->v[2] = fv_sens->external_field[w];
 	    }
@@ -8431,19 +8431,19 @@ load_fv_sens(void)
            * If the variable name is mesh displacement, and the mesh equations are not active,
            * load the external_fields into the mesh fv
            */
-          if (strcmp(efv->name[w], "DMX") == 0 && !pd->v[MESH_DISPLACEMENT1])
+          if (strcmp(efv->name[w], "DMX") == 0 && !pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 	    {
 	      fv->d[0] = fv->external_field[w];
 	      fv_old->d[0] = fv_old->external_field[w];
 	      fv_dot->d[0] = fv_dot->external_field[w];
 	    }
-          if (strcmp(efv->name[w], "DMY") == 0 && !pd->v[MESH_DISPLACEMENT2])
+          if (strcmp(efv->name[w], "DMY") == 0 && !pd->v[pg->imtrx][MESH_DISPLACEMENT2])
 	    {
 	      fv->d[1] = fv->external_field[w];
 	      fv_old->d[1] = fv_old->external_field[w];
 	      fv_dot->d[1] = fv_dot->external_field[w];
 	    }
-          if (strcmp(efv->name[w], "DMZ") == 0 && !pd->v[MESH_DISPLACEMENT3])
+          if (strcmp(efv->name[w], "DMZ") == 0 && !pd->v[pg->imtrx][MESH_DISPLACEMENT3])
 	    {
 	      fv->d[2] = fv->external_field[w];
 	      fv_old->d[2] = fv_old->external_field[w];
@@ -8453,7 +8453,7 @@ load_fv_sens(void)
            * If the variable name is porosity, and the porosity equation is not active,
            * load the external_fields into the porosity fv
            */
-          if (strcmp(efv->name[w], "P_POR") == 0 && !pd->v[POR_POROSITY])
+          if (strcmp(efv->name[w], "P_POR") == 0 && !pd->v[pg->imtrx][POR_POROSITY])
 	    {
 	      fv->porosity = fv->external_field[w];
 	      fv_old->porosity = fv_old->external_field[w];
@@ -8555,7 +8555,7 @@ load_fv_grads_sens(void)
    * grad(T)
    */
   v = TEMPERATURE;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( p=0; p<VIM; p++)
@@ -8572,7 +8572,7 @@ load_fv_grads_sens(void)
    * grad(P)
    */
   v = PRESSURE;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( p=0; p<VIM; p++)
@@ -8589,7 +8589,7 @@ load_fv_grads_sens(void)
    * grad(F)
    */
   v = FILL;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( p=0; p<VIM; p++)
@@ -8606,7 +8606,7 @@ load_fv_grads_sens(void)
    * grad(V)
    */
   v = VOLTAGE;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( p=0; p<VIM; p++)
@@ -8622,7 +8622,7 @@ load_fv_grads_sens(void)
   /*
    * grad(SH)
   v = SHEAR_RATE;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( p=0; p<VIM; p++)
@@ -8646,7 +8646,7 @@ load_fv_grads_sens(void)
 	{
 	  fv_sens->grad_d[p][q] = 0.;
 	  v = MESH_DISPLACEMENT1 + p;
-	  if ( pd->v[v] )
+	  if ( pd->v[pg->imtrx][v] )
 	    {
 	      dofs     = ei->dof[v];
 	      for ( r=0; r<VIM; r++)
@@ -8671,7 +8671,7 @@ load_fv_grads_sens(void)
 	{
 	  fv_sens->grad_d_rs[p][q] = 0.;
 	  v = SOLID_DISPLACEMENT1 + p;
-	  if ( pd->v[v] )
+	  if ( pd->v[pg->imtrx][v] )
 	    {
 	      dofs     = ei->dof[v];
 	      for ( r=0; r<VIM; r++)
@@ -8710,7 +8710,7 @@ load_fv_grads_sens(void)
    */
   dofs     = ei->dof[VELOCITY1];
   v = VELOCITY1;
-  if(pd->v[v])
+  if(pd->v[pg->imtrx][v])
     {
       for ( p=0; p<VIM; p++)
 	{
@@ -8736,7 +8736,7 @@ load_fv_grads_sens(void)
    */
   dofs = ei->dof[PVELOCITY1];
   v = PVELOCITY1;
-  if(pd->v[v])
+  if(pd->v[pg->imtrx][v])
     {
       for ( p=0; p<VIM; p++)
 	{
@@ -8761,7 +8761,7 @@ load_fv_grads_sens(void)
    */
   dofs = ei->dof[EXT_VELOCITY];
   v = EXT_VELOCITY;
-  if(pd->v[v])
+  if(pd->v[pg->imtrx][v])
     {
       for ( p=0; p<VIM; p++)
 	{
@@ -8780,7 +8780,7 @@ load_fv_grads_sens(void)
    */
   v = EFIELD1;
   dofs = ei->dof[v];
-  if(pd->v[v])
+  if(pd->v[pg->imtrx][v])
     {
       for ( p=0; p<VIM; p++)
 	{
@@ -8803,7 +8803,7 @@ load_fv_grads_sens(void)
    * grad(apr,api)
    */
   v = ACOUS_PREAL;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( p=0; p<VIM; p++)
@@ -8816,7 +8816,7 @@ load_fv_grads_sens(void)
 	}
     }
   v = ACOUS_PIMAG;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( p=0; p<VIM; p++)
@@ -8829,7 +8829,7 @@ load_fv_grads_sens(void)
 	}
     }
   v = ACOUS_REYN_STRESS;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( p=0; p<VIM; p++)
@@ -8843,7 +8843,7 @@ load_fv_grads_sens(void)
     }
 	      
   v = SHELL_BDYVELO;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( p=0; p<VIM; p++)
@@ -8857,7 +8857,7 @@ load_fv_grads_sens(void)
     }
 	      
   v = SHELL_LUBP;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       dofs  = ei->dof[v];
       for ( p=0; p<VIM; p++)
@@ -8878,7 +8878,7 @@ load_fv_grads_sens(void)
   {
   v = VELOCITY1;
   dofs = ei->dof[VELOCITY1];
-  if(pd->v[v])
+  if(pd->v[pg->imtrx][v])
     {
       for(p = 0; p < VIM; p++)
 	{
@@ -8896,7 +8896,7 @@ load_fv_grads_sens(void)
    */
   fv_sens->div_v = 0.;
   v = VELOCITY1;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
  
       for ( p=0; p<VIM; p++)
@@ -8911,7 +8911,7 @@ load_fv_grads_sens(void)
    */
   fv_sens->div_pv = 0.;
   v = PVELOCITY1;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {
       for ( p=0; p<VIM; p++)
 	{
@@ -8927,7 +8927,7 @@ load_fv_grads_sens(void)
   for (w = 0; w < pd->Num_Species_Eqn; w++)
     {
       v = MASS_FRACTION;
-      if ( pd->v[v] )
+      if ( pd->v[pg->imtrx][v] )
 	{
 	  dofs     = ei->dof[v];
 	  for ( p=0; p<VIM; p++ )
@@ -8946,7 +8946,7 @@ load_fv_grads_sens(void)
    * grad(S), mode 0
    */
   v = POLYMER_STRESS11;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {  
       dofs = ei->dof[v];
       for ( mode=0; mode<vn->modes; mode++)
@@ -9030,7 +9030,7 @@ load_fv_grads_sens(void)
    */
   
   v = VELOCITY_GRADIENT11;
-  if ( pd->v[v] )
+  if ( pd->v[pg->imtrx][v] )
     {  
       dofs = ei->dof[v];
       for ( p=0; p<VIM; p++)
@@ -10200,7 +10200,7 @@ xi[2]=0;
 /*  find basis function for level-set field - maybe it should be mesh? */
 
   for (j = 0; j < Num_Basis_Functions; j++) {
-    if (pd_glob[ei->mn]->i[FILL] == bfd[j]->interpolation) {
+    if (pd_glob[ei->mn]->i[pg->imtrx][FILL] == bfd[j]->interpolation) {
       fill_interp = j;
     }
   }

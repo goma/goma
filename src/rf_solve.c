@@ -324,7 +324,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   if (libio->animas_step != -1) last_call = FALSE;
 
   /* Determine if external porosity updates are required */
-  if (Num_Var_In_Type[POR_LIQ_PRES] && efv->ev_porous_index > -1)
+  if (Num_Var_In_Type[pg->imtrx][POR_LIQ_PRES] && efv->ev_porous_index > -1)
   {
     update_porosity = TRUE;
     fprintf(stderr, " External porosity field %d will be updated.\n",
@@ -528,11 +528,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   num_total_nodes = dpi->num_universe_nodes;
 
-  numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
 #ifdef DEBUG
   fprintf(stderr, "P_%d: numProcUnknowns = %d (%d+%d)\n",ProcID, numProcUnknowns, 
-	  NumUnknowns, NumExtUnknowns);
+	  NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx]);
 #endif /* DEBUG */
   
   asdv(&resid_vector, numProcUnknowns);
@@ -613,7 +613,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     err = check_compatible_solver();
     EH(err, "Incompatible matrix solver for epetra, epetra supports amesos and aztecoo solvers.");
     check_parallel_error("Matrix format / Solver incompatibility");
-    ams[JAC]->RowMatrix = EpetraCreateRowMatrix(num_internal_dofs + num_boundary_dofs);
+    ams[JAC]->RowMatrix = EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
     EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
   } else if (strcmp(Matrix_Format, "msr") == 0) {
     log_msg("alloc_MSR_sparse_arrays...");
@@ -622,9 +622,9 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
      * An attic to store external dofs column names is needed when
      * running in parallel.
      */
-    alloc_extern_ija_buffer(num_universe_dofs,
-                            num_internal_dofs + num_boundary_dofs,
-                            ija, &ija_attic);
+    alloc_extern_ija_buffer(num_universe_dofs[pg->imtrx], 
+			    num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx], 
+			    ija, &ija_attic);
     /*
      * Any necessary one time initialization of the linear
      * solver package (Aztec).
@@ -648,11 +648,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     ams[JAC]->npn_plus = dpi->num_internal_nodes + dpi->num_boundary_nodes
         + dpi->num_external_nodes;
 
-    ams[JAC]->npu = num_internal_dofs + num_boundary_dofs;
-    ams[JAC]->npu_plus = num_universe_dofs;
+    ams[JAC]->npu      = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
+    ams[JAC]->npu_plus = num_universe_dofs[pg->imtrx];
 
-    ams[JAC]->nnz = ija[num_internal_dofs + num_boundary_dofs] - 1;
-    ams[JAC]->nnz_plus = ija[num_universe_dofs];
+    ams[JAC]->nnz = ija[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]] - 1;
+    ams[JAC]->nnz_plus = ija[num_universe_dofs[pg->imtrx]];
 
     ams[JAC]->RowMatrix = NULL;
 
@@ -755,7 +755,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   /* Load starting porous liquid pressures from solution vector */
       for (i=0; i<num_total_nodes; i++)
         {
-          j = Index_Solution(i, POR_LIQ_PRES, 0, 0, -1);
+          j = Index_Solution(i, POR_LIQ_PRES, 0, 0, -1, pg->imtrx);
           if (j > -1) base_p_liq[i] = x[j];
         }
     }
@@ -791,7 +791,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     matrix_systems_mask = 1;
       
     log_msg("sl_init()...");
-    sl_init(matrix_systems_mask, ams, exo, dpi, cx);
+    sl_init(matrix_systems_mask, ams, exo, dpi, cx, pg->imtrx);
     if( nAC > 0  || 
 	nn_post_fluxes_sens > 0 ||
 	nn_post_data_sens > 0 ) ams[JAC]->options[AZ_keep_info] = 1;
@@ -838,7 +838,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       check_parallel_error("Front solver not allowed with nprocs>1");
 #endif /* PARALLEL */
 	  
-      err = mf_setup(&exo->num_elems, &NumUnknowns, 
+      err = mf_setup(&exo->num_elems, &NumUnknowns[pg->imtrx], 
 		     &max_unk_elem, 
 		     &three,
 		     &one,
@@ -1036,11 +1036,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   		  double specmax[MAX_CONC],specmin[MAX_CONC],specavg, fraction;
  		  int eq_off = 0;
  
- 		  if(pd->e[R_ENERGY] )  eq_off++;
- 		  if(pd->e[R_MOMENTUM1] )  eq_off += pd->Num_Dim;
+ 		  if(pd->e[pg->imtrx][R_ENERGY] )  eq_off++;
+ 		  if(pd->e[pg->imtrx][R_MOMENTUM1] )  eq_off += pd->Num_Dim;
   		  inode = 0;
-  		  for(i=0 ; i < (num_internal_dofs+num_boundary_dofs); i++) {
-  			  vd = Index_Solution_Inv(i, &inode, NULL, &offset, &idof);
+  		  for(i=0 ; i < (num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]); i++) {
+  			  vd = Index_Solution_Inv(i, &inode, NULL, &offset, &idof, pg->imtrx);
   			  if( vd->Variable_Type == MASS_FRACTION )      {
   				if( i >= pd->Num_Species_Eqn + eq_off ) {
   		                  if (x[i] > specmax[offset-eq_off]) 
@@ -1132,8 +1132,8 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
     if(Particle_Dynamics)
       {
 	/* If this was steady-state we need to ensure the fv_old* values are the same as fv. */
-	dcopy1(NumUnknowns, x, x_old);
-	dcopy1(NumUnknowns, x, x_older);
+	dcopy1(NumUnknowns[pg->imtrx], x, x_old);
+	dcopy1(NumUnknowns[pg->imtrx], x, x_older);
 	initialize_particles(exo, x, x_old, xdot, xdot_old, resid_vector);
 	for(n = 0; n < Particle_Max_Time_Steps; n++)
 	  {
@@ -1317,7 +1317,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	  max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
 	
       err = mf_setup(&exo->num_elems, 
-		     &NumUnknowns, 
+		     &NumUnknowns[pg->imtrx], 
 		     &max_unk_elem, 
 		     &three,
 		     &one,
@@ -1356,8 +1356,8 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
      * appropriate, but the other items are there now, too.
      * Do this only once if in library mode.
      */
-    if (callnum == 1) sl_init(matrix_systems_mask, ams, exo, dpi, cx);	
-      
+    if (callnum == 1) sl_init(matrix_systems_mask, ams, exo, dpi, cx, pg->imtrx);	
+
     /*
      * make sure the Aztec was properly initialized
      */
@@ -1542,7 +1542,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
        * Initial Start up (t=0) for the FILL/LEVEL_SET equations
        */
     
-      if (upd->ep[FILL] > -1  && nt == 0) 
+      if (upd->ep[pg->imtrx][FILL] > -1  && nt == 0) 
 	{ /*  Start of LS initialization */
 
 #ifndef COUPLED_FILL
@@ -1663,7 +1663,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 		for( II=0; II < num_total_nodes; II++)
 		  {
-		    je =  Index_Solution(II, LS , 0, 0 , -1);
+		    je =  Index_Solution(II, LS , 0, 0 , -1, pg->imtrx);
 
 		    if( je != -1)
 		      {
@@ -1829,7 +1829,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 
       ls_old = ls;
-      if(upd->vp[PHASE1] > -1 && nt == 0 )
+      if(upd->vp[pg->imtrx][PHASE1] > -1 && nt == 0 )
 	{ /* Start of Phase Function initialization */
 		  
 		  
@@ -1837,7 +1837,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		  if (pfd != NULL)
 		  {
 			struct Level_Set_Data *ls_save =ls;			
-			if (upd->vp[PHASE1] > -1)
+			if (upd->vp[pg->imtrx][PHASE1] > -1)
 			  {
 			    switch (pfd->ls[0]->Evolution) {
 			    case LS_EVOLVE_ADVECT_EXPLICIT:
@@ -2751,11 +2751,11 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
  		  double specmax[MAX_CONC],specmin[MAX_CONC],specavg, fraction;
 		  int eq_off = 0;
 
-		  if(pd->e[R_ENERGY] )  eq_off++;
-		  if(pd->e[R_MOMENTUM1] )  eq_off += pd->Num_Dim;
+		  if(pd->e[pg->imtrx][R_ENERGY] )  eq_off++;
+		  if(pd->e[pg->imtrx][R_MOMENTUM1] )  eq_off += pd->Num_Dim;
  		  inode = 0;
- 		  for(i=0 ; i < (num_internal_dofs+num_boundary_dofs); i++) {
- 			  vd = Index_Solution_Inv(i, &inode, NULL, &offset, &idof);
+ 		  for(i=0 ; i < (num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]); i++) {
+ 			  vd = Index_Solution_Inv(i, &inode, NULL, &offset, &idof, pg->imtrx);
  			  if( vd->Variable_Type == MASS_FRACTION )      {
  				if( i >= pd->Num_Species_Eqn + eq_off ) {
  		                  if (x[i] > specmax[offset-eq_off]) 
@@ -3088,7 +3088,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
   safer_free((void **) &ve); 
 
-  if(num_universe_dofs != (num_internal_dofs + num_boundary_dofs) ) {
+  if(num_universe_dofs[pg->imtrx] != (num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]) ) {
     safer_free((void **) &ija_attic);
   }
 
@@ -3296,7 +3296,7 @@ predict_solution_newmark(int N, double delta_t,
 	  {
 	    for (a = 0; a < ei->ielem_dim; a++)
 	      {
-		j = Index_Solution(i, R_MESH1 + a, 0, 0 , -1);
+		j = Index_Solution(i, R_MESH1 + a, 0, 0 , -1, pg->imtrx);
 		x[j] = x_old[j] + c1 * xdot_old[j]
 		  + c2 * tran->xdbl_dot_old[j];
 		xdot[j] = xdot_old[j] + c3*tran->xdbl_dot_old[j];
@@ -3358,6 +3358,7 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
   int num_nodes, rd_nnv_save, rd_nev_save;
   int p;
   int ielem;
+  int imtrx;
   int e_start, e_end;
   int *moved;
   /*  int num_local_nodes; */
@@ -3385,7 +3386,7 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
   FILE *anneal_dat;
 
 
-  int numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  int numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
   asdv(&x_file, numProcUnknowns);
 
@@ -3399,8 +3400,13 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
 
   displacement_somewhere = FALSE;
 
-  for(m = 0; m < upd->Num_Mat; m++)
-      displacement_somewhere |= ( pd_glob[m]->e[R_MESH1] );
+  for (m = 0; m < upd->Num_Mat; m++)
+     {
+       for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+          {
+           displacement_somewhere |= ( pd_glob[m]->e[imtrx][R_MESH1] );
+          }
+     }
 
   if ( !displacement_somewhere ) 
   {
@@ -3464,11 +3470,11 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
 			      PSI, 
 			      ei->dof_list[var][i], 
 			      ei->ielem_shape,
-			      pd->i[var],
+			      pd->i[pg->imtrx][var],
 			      i);
 	  }
 
-	  if( pd->v[var] )
+	  if( pd->v[pg->imtrx][var] )
 	  {
 	    for(j = 0; j < ei->dof[var]; j++)
 	    {
@@ -3733,7 +3739,7 @@ shift_nodal_values ( int var,
 	
 	for( I=0; I<num_total_nodes; I++ )
 	{
-		ie = Index_Solution(I, var, 0, 0, matID );
+		ie = Index_Solution(I, var, 0, 0, matID, pg->imtrx );
 		if( ie != -1 )
 		{
 			x[ie] += shift;
@@ -3793,14 +3799,14 @@ npost[i] = Export_XP_ID[i]; }
   for (i=0; i<Num_Export_XS; i++)
     {
       ivar = Export_XS_ID[i];
-      if (Num_Var_In_Type[ivar] == 0)
+      if (Num_Var_In_Type[pg->imtrx][ivar] == 0)
         {
           fprintf(stderr, "Inactive variable specified: ID = %d\n", ivar);
           return -1;
         }
       for (j=0; j<nodes; j++)
         {
-          k = Index_Solution(j, ivar, 0, 0, -1);
+          k = Index_Solution(j, ivar, 0, 0, -1, pg->imtrx);
           var = ( (k>=0) ? x[k] : 0.0);
           libio->xsoln[scount] = var;
           scount++;

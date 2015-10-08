@@ -22,7 +22,7 @@
 /*
  *  Global Pointer to the Vector of Pointers to Node Structures
  *  for all of the nodes on the current processor
- *  Index of the array is the processor (local) node number.
+ *  Index of the array is the matrix number and processor (local) node number.
  *
  */
 NODE_INFO_STRUCT **Nodes = NULL;

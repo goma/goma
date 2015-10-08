@@ -5708,13 +5708,13 @@ rd_solver_specs(FILE *ifp,
   ECHO("\n***Solver Specifications***\n", echo_file);
 
 
-  iread = look_for_optional(ifp,"Number of Matrices",input,'=');
+  iread = look_for_optional(ifp,"Total Number of Matrices",input,'=');
   if (iread == 1) 
     {
-     upd->Total_Num_Matrices = read_int(ifp, "Number of Matrices");
+     upd->Total_Num_Matrices = read_int(ifp, "Total Number of Matrices");
      if (upd->Total_Num_Matrices < 1) 
        {
-        EH(-1, "Number of Matrices should be greater or equal to 1");
+        EH(-1, "Total Number of Matrices should be greater or equal to 1");
        }
      SPF(echo_string, "%s = %d", "Number of Matrices", upd->Total_Num_Matrices); ECHO(echo_string, echo_file);
     }
@@ -6571,15 +6571,18 @@ rd_solver_specs(FILE *ifp,
   /* look for optional flags specifying dependencies to ignore */
   {
     int eq, var;
-    
-    for (eq=0; eq<MAX_VARIABLE_TYPES; eq++)
-      {
-	for (var=0; var<MAX_VARIABLE_TYPES; var++)
-	  {
-	    Ignore_Deps[eq][var] = FALSE;
-	  }
-      }
-    
+    int imtrx;    
+
+    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+       {
+        for (eq=0; eq<MAX_VARIABLE_TYPES; eq++)
+           {
+	    for (var=0; var<MAX_VARIABLE_TYPES; var++)
+	       {
+	        Ignore_Deps[imtrx][eq][var] = FALSE;
+	       }
+           }
+       }
     while ((iread = look_forward_optional(ifp,"Ignore Dependency",input,'=')) == 1) {
       int eq_found = FALSE;
       int var_found = FALSE;
@@ -6617,50 +6620,55 @@ rd_solver_specs(FILE *ifp,
       
       if ( !strcmp(input, "all") || !strcmp(input, "ALL") )
         {
-	  for (var=0; var<MAX_VARIABLE_TYPES; var++)
-	    {
-	      if ( var != eq ) /* keep this entry only */
-	        {
-	          if ( symmetric_flag )
+          for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+             {
+	      for (var=0; var<MAX_VARIABLE_TYPES; var++)
+	         {
+	          if ( var != eq ) /* keep this entry only */
 	            {
-	              Ignore_Deps[eq][var] = TRUE;
-	              Ignore_Deps[var][eq] = TRUE;
+	             if ( symmetric_flag )
+	               {
+	                Ignore_Deps[imtrx][eq][var] = TRUE;
+	                Ignore_Deps[imtrx][var][eq] = TRUE;
+	               }
+                     else
+	               {
+	                Ignore_Deps[imtrx][eq][var] = TRUE;
+		       }
 	            }
-                  else
-	            {
-	              Ignore_Deps[eq][var] = TRUE;
-		    }
-	        }
-	    }
+	         }
+             }
 	}
       else
         {
-	
-          /* loop through equation names and compare to input */
-          for (var=0; var<MAX_VARIABLE_TYPES && !var_found; var++)
-	    {
-	      if ( !strcmp(input, Var_Name[var].name1) ||
-	           !strcmp(input, Var_Name[var].name2))
+	  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+             {
+              /* loop through equation names and compare to input */
+              for (var=0; var<MAX_VARIABLE_TYPES && !var_found; var++)
+	         {
+	          if ( !strcmp(input, Var_Name[var].name1) ||
+	               !strcmp(input, Var_Name[var].name2))
+	            {
+	             var_found = TRUE;
+	            }
+	         } 
+              if (!var_found)
 	        {
-	          var_found = TRUE;
+	         EH(-1, "Could not identify variable type for Ignore Dependency");
 	        }
-	    } 
-          if (!var_found)
-	    {
-	      EH(-1, "Could not identify variable type for Ignore Dependency");
-	    }
-          var--; /* this got incremented one more time than desired */
+              var--; /* this got incremented one more time than desired */
       
-          if ( symmetric_flag )
-	    {
-	      Ignore_Deps[eq][var] = TRUE;
-	      Ignore_Deps[var][eq] = TRUE;
-	    }
-          else
-	    {
-	      Ignore_Deps[eq][var] = TRUE;
-	    }
-	}
+              if ( symmetric_flag )
+	        {
+	         Ignore_Deps[imtrx][eq][var] = TRUE;
+	         Ignore_Deps[imtrx][var][eq] = TRUE;
+	        }
+              else
+	        {
+	         Ignore_Deps[imtrx][eq][var] = TRUE;
+	        }
+             }
+        }
     }
   }
 
@@ -7600,7 +7608,9 @@ rd_matl_blk_specs(FILE *ifp,
 		  char *input)
 {
   char err_msg[MAX_CHAR_IN_INPUT];
-  int	err, mn, i;
+  int	err, mn, i, imtrx;
+  int have_mesh_var; 
+  int have_por_liq_pres_var;
   FILE *imp;
   char MatFile[MAX_FNL];	/* Raw material database file. */
   char TmpMatFile[MAX_FNL];	/* Temporary copy of mat db after APREPRO. */
@@ -7658,14 +7668,19 @@ rd_matl_blk_specs(FILE *ifp,
       Unique_Interpolations[i] = I_NOTHING;
     }
 
-  upd->Total_Num_EQ = 0;
-  upd->Total_Num_Var = 0;
-
+  for (imtrx = 0; imtrx < MAX_NUM_MATRICES; imtrx++)
+     {
+      upd->Total_Num_EQ[imtrx] = 0;
+      upd->Total_Num_Var[imtrx] = 0;
+     }
 
   for ( i=0; i<MAX_VARIABLE_TYPES+MAX_CONC; i++)
     {
-      upd->ep[i] = -1;
-      upd->vp[i] = -1;
+      for (imtrx = 0; imtrx < MAX_NUM_MATRICES; imtrx++)
+         {
+          upd->ep[imtrx][i] = -1;
+          upd->vp[imtrx][i] = -1;
+         }
     }
 
 #ifndef COUPLED_FILL
@@ -7727,19 +7742,37 @@ rd_matl_blk_specs(FILE *ifp,
    * for running decoupled code-to-code problem types.  The one type we are 
    * supporting right now are JAS-GOMA couples for poroelastic flow. 
    */
+
+  /* Check if it has a particular DOF in any matrix */
+
+      have_mesh_var = 0; 
+      have_por_liq_pres_var = 0;
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+         {
+          if (pd_glob[0]->v[imtrx][MESH_DISPLACEMENT1])
+            {
+             have_mesh_var = 1;
+            }
+          if (pd_glob[0]->v[imtrx][POR_LIQ_PRES])
+            {
+             have_por_liq_pres_var = 1;
+            }
+         }
+
+
       efv->ev_porous_decouple = T_NOTHING;
       if(efv->ev)
 	{
 
 	  if ((strcmp(efv->name[0], "DMX") == 0 || strcmp(efv->name[0], "DISPLX") == 0) && 
 	      (strcmp(efv->name[1], "DMY") == 0  || strcmp(efv->name[1], "DISPLY") == 0) &&
-	      !pd_glob[0]->v[MESH_DISPLACEMENT1]       &&
-	      pd_glob[0]->v[POR_LIQ_PRES]                )
+	      (have_mesh_var == 0)       &&
+	      (have_por_liq_pres_var == 1 )               )
 	    {
 	      efv->ev_porous_decouple = T_SOMETHING;
 	    } 
-	  else if (!pd_glob[0]->v[MESH_DISPLACEMENT1]  &&
-		   pd_glob[0]->v[POR_LIQ_PRES]                )
+	  else if ( (have_mesh_var == 0)  &&
+		    (have_por_liq_pres_var == 1 )               )
 	    {
 	      EH(-1,"You have por_liq_press equation and efv's, but not the right order. Talk to PRS or RAR");
 	    }
@@ -7826,22 +7859,25 @@ rd_matl_blk_specs(FILE *ifp,
 
   ECHO("\nEND OF MAT\n", echo_input_file);
 
-  if (upd->Total_Num_EQ > MAX_PROB_VAR) {
-    fprintf(stderr,
-	    "%sTotal number of equations, %d, exceeds MAX_PROB_VAR, %d\n",
-	    "input FATAL ERROR: ", upd->Total_Num_EQ, MAX_PROB_VAR);
-    fprintf(stderr,
-	    "\tIncrease MAX_PROB_VAR to %d and rerun\n",
-	    upd->Total_Num_EQ);
-      EH(-1, "MAX_PROB_VAR is too small for number of equations");
-  }
-
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+     {
+      if (upd->Total_Num_EQ[imtrx] > MAX_PROB_VAR) 
+        {
+         fprintf(stderr,
+	         "%sTotal number of equations, %d, in Matrix, %d, exceeds MAX_PROB_VAR, %d\n",
+	         "input FATAL ERROR: ", upd->Total_Num_EQ[imtrx], (imtrx + 1), MAX_PROB_VAR);
+         fprintf(stderr,
+	         "\tIncrease MAX_PROB_VAR to %d and rerun\n",
+	         upd->Total_Num_EQ[imtrx]);
+         EH(-1, "MAX_PROB_VAR is too small for number of equations");
+        }
+     }
 }
 /***********************************************************************/
 /***********************************************************************/
 /***********************************************************************/
 
-static int set_eqn(int eqnNum, PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
+static int set_eqn(int eqnNum, int mtrxNum, PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
 
      /******************************************************************
       *
@@ -7851,13 +7887,13 @@ static int set_eqn(int eqnNum, PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
       *   in rd_eq_specs.
       ******************************************************************/
 {
-  if (pd_ptr->e[eqnNum]) {
+  if (pd_ptr->e[mtrxNum][eqnNum]) {
     fprintf(stderr, 
 	    "rd_eq_spec ERROR: eqnNum %d has already been activated.\n",
 	    eqnNum);
     EH(-1,"rd_eq_spec ERROR fatal error in equation specification\n");
   } else {
-    pd_ptr->e[eqnNum] = T_SOMETHING;
+    pd_ptr->e[mtrxNum][eqnNum] = T_SOMETHING;
   }
   return eqnNum;
 }
@@ -7865,7 +7901,7 @@ static int set_eqn(int eqnNum, PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
 /***********************************************************************/
 /***********************************************************************/
 
-static int set_var(int varType, PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
+static int set_var(int varType, int mtrxNum, PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
 
      /******************************************************************
       *
@@ -7875,13 +7911,13 @@ static int set_var(int varType, PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
       *   in rd_eq_specs.
       ******************************************************************/
 {
-  if (pd_ptr->v[varType]) {
+  if (pd_ptr->v[mtrxNum][varType]) {
     fprintf(stderr, 
 	    "rd_eq_spec ERROR: variable %d has already been activated.\n",
 	    varType);
     EH(-1,"rd_eq_spec ERROR fatal error in variable specification\n");
   }  else {
-    pd_ptr->v[varType] |= V_SOLNVECTOR;
+    pd_ptr->v[mtrxNum][varType] |= V_SOLNVECTOR;
   }
   return varType;
 }
@@ -7913,6 +7949,7 @@ rd_eq_specs(FILE *ifp,
   int nonDilute = FALSE;        /* Flag to indicate if the species
 				   equations use the dilute approximation or not */
   int	i, j, retn;
+  int   imtrx;                  /* Current matrix line from input. */
   int	ieqn;			/* Current equation linefrom input. */
   int   neqn;                   /* Current number of equations active within
 				   the current material. This will be greater
@@ -7926,6 +7963,9 @@ rd_eq_specs(FILE *ifp,
 				 * types, it can be greater than one
 				 */
   int numEqnLines = 0;          /* Number of Equation lines to be read */
+  int mtrx_index1 = 0;           /* Current matrix index read from input file - 1 based */
+  int mtrx_index0 = 0;           /* Current matrix index read from input file - 0 based */
+  int numMtrxLines = 0;         /* Number of matrix lines to be read */
   int MeshMotion = -1;
   PROBLEM_DESCRIPTION_STRUCT *pd_ptr = pd_glob[mn];
   char	ts[MAX_BC_KEYWORD_LENGTH]   = "\0";
@@ -8216,7 +8256,74 @@ rd_eq_specs(FILE *ifp,
     }
 
     SPF(echo_string,"%s = %d", "Number of viscoelastic modes", vn_glob[mn]->modes); ECHO(echo_string,echo_file);
-  } 
+  }
+
+  /* 
+   *  Initialize pd_ptr->Matrix Activity 
+   */ 
+
+  for (imtrx = 0; imtrx < MAX_NUM_MATRICES; imtrx++)
+     {
+      pd_ptr->Matrix_Activity[imtrx] = 0;
+     }
+
+
+  /*
+   *  Search for the number of matrices to be solved
+   */
+  err = look_forward_optional(ifp, "Number of Matrices", input, '=');
+
+  if (err == -1)
+  {
+          numMtrxLines = 1;
+	  pd_ptr->Num_Matrices = 1;
+	  SPF(echo_string,"%s = %d", "Number of Matrices", pd_ptr->Num_Matrices); ECHO(echo_string,echo_file);
+  }
+  else
+  {
+    if ( fscanf(ifp,"%d",&numMtrxLines) != 1)
+    {
+      EH( -1, "Expected to read 1 int for \"Number of Matrices\" - attempt to enumerate... ");
+      numMtrxLines = -1;
+    }
+
+  }
+
+  /*
+   * Count Number of Equations if Num_Matrices is set to -1
+   */
+  if (numMtrxLines == -1) 
+    {
+     numMtrxLines = count_list(ifp, "MATRIX", input, '=', "END OF MATRICES");   
+     pd_ptr->Num_Matrices = numMtrxLines;
+    }
+  
+  SPF(echo_string,"%s = %d", "Number of Matrices", pd_ptr->Num_Matrices); ECHO(echo_string,echo_file);
+
+
+  /* Loop over all matrices and read equation specifications within the matrices */
+
+  for (imtrx = 0; imtrx < numMtrxLines; imtrx++) {
+
+    if (numMtrxLines == 1)
+      {
+       look_forward_optional(ifp, "MATRIX", input, '=');
+       mtrx_index1 = 1;
+      }
+    else
+      {
+       look_for(ifp, "MATRIX", input, '=');
+
+       if ( fscanf(ifp,"%d",&mtrx_index1) != 1)
+         {
+          EH( -1, "Expected to read 1 int for \"MATRIX\"  ");
+         }
+
+       fscanf(ifp,"%d",&mtrx_index1);
+      }
+
+    mtrx_index0 = mtrx_index1 - 1;
+    pd_ptr->Matrix_Activity[mtrx_index0] = 1;
   
   /*
    * User has to say how many equations will be specified; just like
@@ -8271,14 +8378,14 @@ rd_eq_specs(FILE *ifp,
 
   for ( i=0; i<MAX_EQNS; i++ )
   {
-    pd_ptr->e[i] = T_NOTHING;	/* No terms active in this equation. */
-    pd_ptr->v[i] = V_NOTHING;	/* No active variables, either. */
-    pd_ptr->w[i] = I_NOTHING;	/* No weighting function. */
-    pd_ptr->i[i] = I_NOTHING;	/* Nothing to interpolate. */
-    pd_ptr->m[i] = -1;		/* Map from i to R_EQNTYPE initially undefd. */
+    pd_ptr->e[mtrx_index0][i] = T_NOTHING;	/* No terms active in this equation. */
+    pd_ptr->v[mtrx_index0][i] = V_NOTHING;	/* No active variables, either. */
+    pd_ptr->w[mtrx_index0][i] = I_NOTHING;	/* No weighting function. */
+    pd_ptr->i[mtrx_index0][i] = I_NOTHING;	/* Nothing to interpolate. */
+    pd_ptr->m[mtrx_index0][i] = -1;		/* Map from i to R_EQNTYPE initially undefd. */
     for ( j=0; j<MAX_TERM_TYPES; j++)
     {
-      pd_ptr->etm[i][j] = 0.;	/* Zero out all terms. */
+      pd_ptr->etm[mtrx_index0][i][j] = 0.;	/* Zero out all terms. */
     }
   }
 
@@ -8318,54 +8425,54 @@ rd_eq_specs(FILE *ifp,
      */
 
     if        (!strcasecmp(ts, "energy")) {
-      ce = set_eqn(R_ENERGY, pd_ptr);
+      ce = set_eqn(R_ENERGY, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "momentum1")) {
-      ce = set_eqn(R_MOMENTUM1, pd_ptr);
+      ce = set_eqn(R_MOMENTUM1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "momentum2")) {
-      ce = set_eqn(R_MOMENTUM2, pd_ptr);
+      ce = set_eqn(R_MOMENTUM2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "momentum3")) {
-      ce = set_eqn(R_MOMENTUM3, pd_ptr);
+      ce = set_eqn(R_MOMENTUM3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "pmomentum1")) {
-      ce = set_eqn(R_PMOMENTUM1, pd_ptr);
+      ce = set_eqn(R_PMOMENTUM1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "pmomentum2")) {
-      ce = set_eqn(R_PMOMENTUM2, pd_ptr);
+      ce = set_eqn(R_PMOMENTUM2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "pmomentum3")) {
-      ce = set_eqn(R_PMOMENTUM3, pd_ptr);
+      ce = set_eqn(R_PMOMENTUM3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "stress11")) {
-      ce = set_eqn(R_STRESS11, pd_ptr);
+      ce = set_eqn(R_STRESS11, mtrx_index0, pd_ptr);
       Use_DG = TRUE;
     } else if (!strcasecmp(ts, "stress12")) {
-      ce = set_eqn(R_STRESS12, pd_ptr);
+      ce = set_eqn(R_STRESS12, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "stress13")) {
-      ce = set_eqn(R_STRESS13, pd_ptr);
+      ce = set_eqn(R_STRESS13, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "stress22")) {
-      ce = set_eqn(R_STRESS22, pd_ptr);
+      ce = set_eqn(R_STRESS22, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "stress23")) {
-      ce = set_eqn(R_STRESS23, pd_ptr);
+      ce = set_eqn(R_STRESS23, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "stress33")) {
-      ce = set_eqn(R_STRESS33, pd_ptr);
+      ce = set_eqn(R_STRESS33, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gradient11")) {
-      ce = set_eqn(R_GRADIENT11, pd_ptr);
+      ce = set_eqn(R_GRADIENT11, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gradient12")) {
-      ce = set_eqn(R_GRADIENT12, pd_ptr);
+      ce = set_eqn(R_GRADIENT12, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gradient13")) {
-      ce = set_eqn(R_GRADIENT13, pd_ptr);
+      ce = set_eqn(R_GRADIENT13, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gradient21")) {
-      ce = set_eqn(R_GRADIENT21, pd_ptr);
+      ce = set_eqn(R_GRADIENT21, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gradient22")) {
-      ce = set_eqn(R_GRADIENT22, pd_ptr);
+      ce = set_eqn(R_GRADIENT22, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gradient23")) {
-      ce = set_eqn(R_GRADIENT23, pd_ptr);
+      ce = set_eqn(R_GRADIENT23, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gradient31")) {
-      ce = set_eqn(R_GRADIENT31, pd_ptr);
+      ce = set_eqn(R_GRADIENT31, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gradient32")) {
-      ce = set_eqn(R_GRADIENT32, pd_ptr);
+      ce = set_eqn(R_GRADIENT32, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gradient33")) {
-      ce = set_eqn(R_GRADIENT33, pd_ptr);
+      ce = set_eqn(R_GRADIENT33, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "bond")) {
-      ce = set_eqn(R_BOND_EVOLUTION, pd_ptr);
+      ce = set_eqn(R_BOND_EVOLUTION, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "species_bulk")) {
-      ce = set_eqn(R_MASS, pd_ptr);
+      ce = set_eqn(R_MASS, mtrx_index0, pd_ptr);
 #ifdef DEBUG
       printf("Input Number of Species Equations =  %d\n",
 	     pd_ptr->Num_Species_Eqn);
@@ -8374,194 +8481,194 @@ rd_eq_specs(FILE *ifp,
 	EH(-1, "Cannot solve species transport without number of species");
       }
     } else if (!strcasecmp(ts, "mesh1")) {
-      ce = set_eqn(R_MESH1, pd_ptr);
+      ce = set_eqn(R_MESH1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "mesh2")) {
-      ce = set_eqn(R_MESH2, pd_ptr);
+      ce = set_eqn(R_MESH2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "mesh3")) {
-      ce = set_eqn(R_MESH3, pd_ptr);
+      ce = set_eqn(R_MESH3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "mom_solid1")) {
-      ce = set_eqn(R_SOLID1, pd_ptr);
+      ce = set_eqn(R_SOLID1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "mom_solid2")) {
-      ce = set_eqn(R_SOLID2, pd_ptr);
+      ce = set_eqn(R_SOLID2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "mom_solid3")) {
-      ce = set_eqn(R_SOLID3, pd_ptr);
+      ce = set_eqn(R_SOLID3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "species_surf")) {
-      ce = set_eqn(R_MASS_SURF, pd_ptr);
+      ce = set_eqn(R_MASS_SURF, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "continuity")) {
-      ce = set_eqn(R_PRESSURE, pd_ptr);
+      ce = set_eqn(R_PRESSURE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "fill")) {
-      ce = set_eqn(R_FILL, pd_ptr);
+      ce = set_eqn(R_FILL, mtrx_index0, pd_ptr);
 #ifndef COUPLED_FILL
       /* set explicit flag for fill equation */
       Explicit_Fill = 1;
 #endif /* not COUPLED_FILL */
     } else if (!strcasecmp(ts, "level_set"))  {
       if ( ls == NULL ) EH(-1,"Level Set Interface tracking must be turned on.");
-      ce = set_eqn(R_LEVEL_SET, pd_ptr);
+      ce = set_eqn(R_LEVEL_SET, mtrx_index0, pd_ptr);
 #ifndef COUPLED_FILL
       /* set explicit flag for fill equation and turn on level set switch*/
       if (ls->Evolution == LS_EVOLVE_ADVECT_EXPLICIT  ||
           ls->Evolution == LS_EVOLVE_SEMILAGRANGIAN ) Explicit_Fill = 1;
 #endif /* not COUPLED_FILL */
     } else if (!strcasecmp(ts, "curvature") ) {
-      ce = set_eqn( R_CURVATURE, pd_ptr);
+      ce = set_eqn( R_CURVATURE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts,"normal1")) {
       if ( ls == NULL )  EH(-1," NORMAL1 equation requires Level Set Interface tracking on.");
-      ce = set_eqn( R_NORMAL1, pd_ptr );
+      ce = set_eqn( R_NORMAL1, mtrx_index0, pd_ptr );
     } else if (!strcasecmp(ts,"normal2")) {
       if ( ls == NULL )  EH(-1," NORMAL2 equation requires Level Set Interface tracking on.");
-      ce = set_eqn( R_NORMAL2, pd_ptr );
+      ce = set_eqn( R_NORMAL2, mtrx_index0, pd_ptr );
     } else if (!strcasecmp(ts,"normal3")) {
       if ( ls == NULL )  EH(-1," NORMAL3 equation requires Level Set Interface tracking on.");
-      ce = set_eqn( R_NORMAL3, pd_ptr );
+      ce = set_eqn( R_NORMAL3, mtrx_index0, pd_ptr );
     } else if (!strcasecmp(ts, "voltage")) {
-      ce = set_eqn(R_POTENTIAL, pd_ptr);
+      ce = set_eqn(R_POTENTIAL, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "surf_charge")) {
-      ce = set_eqn(R_SURF_CHARGE, pd_ptr);
+      ce = set_eqn(R_SURF_CHARGE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shear_rate"))  {
-      ce = set_eqn(R_SHEAR_RATE, pd_ptr);
+      ce = set_eqn(R_SHEAR_RATE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "vort_dir1")) {
-      ce = set_eqn(R_VORT_DIR1, pd_ptr);
+      ce = set_eqn(R_VORT_DIR1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "vort_dir2")) {
-      ce = set_eqn(R_VORT_DIR2, pd_ptr);
+      ce = set_eqn(R_VORT_DIR2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "vort_dir3")) {
-      ce = set_eqn(R_VORT_DIR3, pd_ptr);
+      ce = set_eqn(R_VORT_DIR3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "vort_lambda")) {
-      ce = set_eqn(R_VORT_LAMBDA, pd_ptr);
+      ce = set_eqn(R_VORT_LAMBDA, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "lagr_mult_1")) {
-      ce = set_eqn(R_LAGR_MULT1, pd_ptr);
+      ce = set_eqn(R_LAGR_MULT1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "lagr_mult_2")) {
-      ce = set_eqn(R_LAGR_MULT2, pd_ptr);
+      ce = set_eqn(R_LAGR_MULT2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "lagr_mult_3")) {
-      ce = set_eqn(R_LAGR_MULT3, pd_ptr);
+      ce = set_eqn(R_LAGR_MULT3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_curvature")) {
-      ce = set_eqn(R_SHELL_CURVATURE, pd_ptr);
+      ce = set_eqn(R_SHELL_CURVATURE, mtrx_index0, pd_ptr);
       pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "shell_tension")) {
-      ce = set_eqn(R_SHELL_TENSION, pd_ptr);
+      ce = set_eqn(R_SHELL_TENSION, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_x")) {
       pd_ptr->Do_Surf_Geometry = 1;
-      ce = set_eqn(R_SHELL_X, pd_ptr);
+      ce = set_eqn(R_SHELL_X, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_y")) {
-      ce = set_eqn(R_SHELL_Y, pd_ptr);
+      ce = set_eqn(R_SHELL_Y, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_user")) {
-      ce = set_eqn(R_SHELL_USER, pd_ptr);
+      ce = set_eqn(R_SHELL_USER, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_angle1")) {
-      ce = set_eqn(R_SHELL_ANGLE1, pd_ptr);
+      ce = set_eqn(R_SHELL_ANGLE1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_angle2")) {
-      ce = set_eqn(R_SHELL_ANGLE2, pd_ptr);
+      ce = set_eqn(R_SHELL_ANGLE2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_surf_div_v")) {
-      ce = set_eqn(R_SHELL_SURF_DIV_V, pd_ptr);
+      ce = set_eqn(R_SHELL_SURF_DIV_V, mtrx_index0, pd_ptr);
       pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "shell_surf_curv")) {
-      ce = set_eqn(R_SHELL_SURF_CURV, pd_ptr);
+      ce = set_eqn(R_SHELL_SURF_CURV, mtrx_index0, pd_ptr);
       pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "n_dot_curl_v")) {
-      ce = set_eqn(R_N_DOT_CURL_V, pd_ptr);
+      ce = set_eqn(R_N_DOT_CURL_V, mtrx_index0, pd_ptr);
       pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "grad_v_dot_n1")) {
-      ce = set_eqn(R_GRAD_S_V_DOT_N1, pd_ptr);
+      ce = set_eqn(R_GRAD_S_V_DOT_N1, mtrx_index0, pd_ptr);
       pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "grad_v_dot_n2")) {
-      ce = set_eqn(R_GRAD_S_V_DOT_N2, pd_ptr);
+      ce = set_eqn(R_GRAD_S_V_DOT_N2, mtrx_index0, pd_ptr);
       pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "grad_v_dot_n3")) {
-      ce = set_eqn(R_GRAD_S_V_DOT_N3, pd_ptr);
+      ce = set_eqn(R_GRAD_S_V_DOT_N3, mtrx_index0, pd_ptr);
       pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "acous_preal")) {
-      ce = set_eqn(R_ACOUS_PREAL, pd_ptr);
+      ce = set_eqn(R_ACOUS_PREAL, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "acous_pimag")) {
-      ce = set_eqn(R_ACOUS_PIMAG, pd_ptr);
+      ce = set_eqn(R_ACOUS_PIMAG, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "acous_reyn_stress")) {
-      ce = set_eqn(R_ACOUS_REYN_STRESS, pd_ptr);
+      ce = set_eqn(R_ACOUS_REYN_STRESS, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_bdyvelo")) {
-      ce = set_eqn(R_SHELL_BDYVELO, pd_ptr);
+      ce = set_eqn(R_SHELL_BDYVELO, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_lubp")) {
-      ce = set_eqn(R_SHELL_LUBP, pd_ptr);
+      ce = set_eqn(R_SHELL_LUBP, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "lubp")) {
-      ce = set_eqn(R_LUBP, pd_ptr);
+      ce = set_eqn(R_LUBP, mtrx_index0, pd_ptr);
    } else if (!strcasecmp(ts, "lubp_2")) {
-      ce = set_eqn(R_LUBP_2, pd_ptr);
+      ce = set_eqn(R_LUBP_2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_filmp")) {
-      ce = set_eqn(R_SHELL_FILMP, pd_ptr);
+      ce = set_eqn(R_SHELL_FILMP, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_filmh")) {
-      ce = set_eqn(R_SHELL_FILMH, pd_ptr);
+      ce = set_eqn(R_SHELL_FILMH, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_partc")) {
-      ce = set_eqn(R_SHELL_PARTC, pd_ptr);
+      ce = set_eqn(R_SHELL_PARTC, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_sat_closed")) {
-      ce = set_eqn(R_SHELL_SAT_CLOSED, pd_ptr);
+      ce = set_eqn(R_SHELL_SAT_CLOSED, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_sat_open")) {
-      ce = set_eqn(R_SHELL_SAT_OPEN, pd_ptr);
+      ce = set_eqn(R_SHELL_SAT_OPEN, mtrx_index0, pd_ptr);
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strcasecmp(ts, "shell_sat_open_2")) {
-      ce = set_eqn(R_SHELL_SAT_OPEN_2, pd_ptr);
+      ce = set_eqn(R_SHELL_SAT_OPEN_2, mtrx_index0, pd_ptr);
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strcasecmp(ts, "shell_energy")) {
-      ce = set_eqn(R_SHELL_ENERGY, pd_ptr);
+      ce = set_eqn(R_SHELL_ENERGY, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_deltah")) {
-      ce = set_eqn(R_SHELL_DELTAH, pd_ptr);
+      ce = set_eqn(R_SHELL_DELTAH, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_lub_curv")) {
-      ce = set_eqn(R_SHELL_LUB_CURV, pd_ptr);
+      ce = set_eqn(R_SHELL_LUB_CURV, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_lub_curv_2")) {
-      ce = set_eqn(R_SHELL_LUB_CURV_2, pd_ptr);
+      ce = set_eqn(R_SHELL_LUB_CURV_2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_sat_gasn")) {
-      ce = set_eqn(R_SHELL_SAT_GASN, pd_ptr);
+      ce = set_eqn(R_SHELL_SAT_GASN, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "sink_mass")) {
-      ce = set_eqn(R_POR_SINK_MASS, pd_ptr);
+      ce = set_eqn(R_POR_SINK_MASS, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_shear_top")) {
-      ce = set_eqn(R_SHELL_SHEAR_TOP, pd_ptr);
+      ce = set_eqn(R_SHELL_SHEAR_TOP, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_shear_bot")) {
-      ce = set_eqn(R_SHELL_SHEAR_BOT, pd_ptr);
+      ce = set_eqn(R_SHELL_SHEAR_BOT, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_cross_shear")) {
-      ce = set_eqn(R_SHELL_CROSS_SHEAR, pd_ptr);
+      ce = set_eqn(R_SHELL_CROSS_SHEAR, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "max_strain")) {
-      ce = set_eqn(R_MAX_STRAIN, pd_ptr);
+      ce = set_eqn(R_MAX_STRAIN, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "cur_strain")) {
-      ce = set_eqn(R_CUR_STRAIN, pd_ptr);
+      ce = set_eqn(R_CUR_STRAIN, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "shell_diff_flux")) {
-      ce = set_eqn(R_SHELL_DIFF_FLUX, pd_ptr);
+      ce = set_eqn(R_SHELL_DIFF_FLUX, mtrx_index0, pd_ptr);
       pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "shell_diff_curv")) {
-      ce = set_eqn(R_SHELL_DIFF_CURVATURE, pd_ptr);
+      ce = set_eqn(R_SHELL_DIFF_CURVATURE, mtrx_index0, pd_ptr);
       pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "shell_normal1")) {
-      ce = set_eqn(R_SHELL_NORMAL1, pd_ptr);
+      ce = set_eqn(R_SHELL_NORMAL1, mtrx_index0, pd_ptr);
       pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "shell_normal2")) {
-      ce = set_eqn(R_SHELL_NORMAL2, pd_ptr);
+      ce = set_eqn(R_SHELL_NORMAL2, mtrx_index0, pd_ptr);
       pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "ext_v")) {
-      ce = set_eqn(R_EXT_VELOCITY, pd_ptr);
+      ce = set_eqn(R_EXT_VELOCITY, mtrx_index0, pd_ptr);
       ls->Extension_Velocity = TRUE;
     } else if (!strcasecmp(ts, "efield1")) {
-      ce = set_eqn(R_EFIELD1, pd_ptr);
+      ce = set_eqn(R_EFIELD1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "efield2")) {
-      ce = set_eqn(R_EFIELD2, pd_ptr);
+      ce = set_eqn(R_EFIELD2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "efield3")) {
-      ce = set_eqn(R_EFIELD3, pd_ptr);
+      ce = set_eqn(R_EFIELD3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "intp")) {
-      ce = set_eqn(R_LIGHT_INTP, pd_ptr);
+      ce = set_eqn(R_LIGHT_INTP, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "intm")) {
-      ce = set_eqn(R_LIGHT_INTM, pd_ptr);
+      ce = set_eqn(R_LIGHT_INTM, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "intd")) {
-      ce = set_eqn(R_LIGHT_INTD, pd_ptr);
+      ce = set_eqn(R_LIGHT_INTD, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "phase1")) {
-      ce = set_eqn(R_PHASE1, pd_ptr);
+      ce = set_eqn(R_PHASE1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "phase2")) {
-      ce = set_eqn(R_PHASE2, pd_ptr);
+      ce = set_eqn(R_PHASE2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "phase3")) {
-      ce = set_eqn(R_PHASE3, pd_ptr);
+      ce = set_eqn(R_PHASE3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "phase4")) {
-      ce = set_eqn(R_PHASE4, pd_ptr);
+      ce = set_eqn(R_PHASE4, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "phase5")) {
-      ce = set_eqn(R_PHASE5, pd_ptr);
+      ce = set_eqn(R_PHASE5, mtrx_index0, pd_ptr);
    } else if (!strcasecmp(ts, "Enorm"))  {
-      ce = set_eqn(R_ENORM, pd_ptr);
+      ce = set_eqn(R_ENORM, mtrx_index0, pd_ptr);
 
     } else if (!strcasecmp(ts, "porous_sat"))  {
-      ce = set_eqn(R_POR_LIQ_PRES, pd_ptr);
-      if( pd_ptr->e[R_POR_GAS_PRES] || pd_ptr->e[R_POR_SATURATION] 
-          || pd_ptr->e[R_POR_ENERGY] )
+      ce = set_eqn(R_POR_LIQ_PRES, mtrx_index0, pd_ptr);
+      if( pd_ptr->e[mtrx_index0][R_POR_GAS_PRES] || pd_ptr->e[mtrx_index0][R_POR_SATURATION] 
+          || pd_ptr->e[mtrx_index0][R_POR_ENERGY] )
         {
 	  fprintf(stderr, "%s%s\n",
 		   "rd_eq_specs ERROR: ",
@@ -8570,9 +8677,9 @@ rd_eq_specs(FILE *ifp,
         }
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strcasecmp(ts, "porous_unsat")) {
-      ce = set_eqn(R_POR_LIQ_PRES, pd_ptr);
-      if( pd_ptr->e[R_POR_GAS_PRES] || pd_ptr->e[R_POR_SATURATION] 
-          || pd_ptr->e[R_POR_ENERGY] )
+      ce = set_eqn(R_POR_LIQ_PRES, mtrx_index0, pd_ptr);
+      if( pd_ptr->e[mtrx_index0][R_POR_GAS_PRES] || pd_ptr->e[mtrx_index0][R_POR_SATURATION] 
+          || pd_ptr->e[mtrx_index0][R_POR_ENERGY] )
         {
 	  fprintf(stderr, "%s%s\n",
 		   "rd_eq_specs ERROR: ",
@@ -8581,9 +8688,9 @@ rd_eq_specs(FILE *ifp,
         }
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strcasecmp(ts, "porous_liq"))  {
-      ce = set_eqn(R_POR_LIQ_PRES, pd_ptr);
+      ce = set_eqn(R_POR_LIQ_PRES, mtrx_index0, pd_ptr);
       if( tran->theta != 0.0)EH(-1,"Please don't use Time step parameter of 0.5                                   for porous media problems.  Use 0.0");
-      if( pd_ptr->e[R_POR_SATURATION] )
+      if( pd_ptr->e[mtrx_index0][R_POR_SATURATION] )
         {
 	  fprintf(stderr, "%s%s\n",
 		   "rd_eq_specs ERROR: ",
@@ -8592,8 +8699,8 @@ rd_eq_specs(FILE *ifp,
         }
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strcasecmp(ts, "porous_gas"))  {
-      ce = set_eqn(R_POR_GAS_PRES, pd_ptr);
-      if( pd_ptr->e[R_POR_SATURATION] )
+      ce = set_eqn(R_POR_GAS_PRES, mtrx_index0, pd_ptr);
+      if( pd_ptr->e[mtrx_index0][R_POR_SATURATION] )
         {
 	  fprintf(stderr, "%s%s\n",
 		   "rd_eq_specs ERROR: ",
@@ -8602,8 +8709,8 @@ rd_eq_specs(FILE *ifp,
         }
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strcasecmp(ts, "porous_energy"))  {
-      ce = set_eqn(R_POR_ENERGY, pd_ptr);
-      if( pd_ptr->e[R_POR_SATURATION] )
+      ce = set_eqn(R_POR_ENERGY, mtrx_index0, pd_ptr);
+      if( pd_ptr->e[mtrx_index0][R_POR_SATURATION] )
         {
 	  fprintf(stderr, "%s%s\n",
 		   "rd_eq_specs ERROR: ",
@@ -8612,12 +8719,12 @@ rd_eq_specs(FILE *ifp,
         }
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strcasecmp(ts, "porous_deform"))  {
-      ce = set_eqn(R_POR_POROSITY, pd_ptr);
+      ce = set_eqn(R_POR_POROSITY, mtrx_index0, pd_ptr);
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strcasecmp(ts, "porous_saturation"))  {
-      ce = set_eqn(R_POR_SATURATION, pd_ptr);
-      if( pd_ptr->e[R_POR_GAS_PRES] || pd_ptr->e[R_POR_LIQ_PRES] 
-          || pd_ptr->e[R_POR_ENERGY] )
+      ce = set_eqn(R_POR_SATURATION, mtrx_index0, pd_ptr);
+      if( pd_ptr->e[mtrx_index0][R_POR_GAS_PRES] || pd_ptr->e[mtrx_index0][R_POR_LIQ_PRES] 
+          || pd_ptr->e[mtrx_index0][R_POR_ENERGY] )
         {
 	  fprintf(stderr, "%s%s\n",
 		   "rd_eq_specs ERROR: ",
@@ -8642,8 +8749,8 @@ rd_eq_specs(FILE *ifp,
 	j = R_SPECIES_UNK_0;
 	eqnMult = pd_ptr->Num_Species_Eqn;
 	for (i = 0; i < pd_ptr->Num_Species_Eqn; i++, j++) {
-	  (void) set_eqn(j, pd_ptr);
-	  pd_ptr->m[j] = R_SPECIES_UNK_0 + j;
+	  (void) set_eqn(j, mtrx_index0, pd_ptr);
+	  pd_ptr->m[mtrx_index0][j] = R_SPECIES_UNK_0 + j;
 	}
       } else {
 	if (!interpret_int(ts + 12, &j)) {
@@ -8658,7 +8765,7 @@ rd_eq_specs(FILE *ifp,
 		  yo, j);
 	  exit(-1);
 	}
-	ce = set_eqn(R_SPECIES_UNK_0 + j, pd_ptr);
+	ce = set_eqn(R_SPECIES_UNK_0 + j, mtrx_index0, pd_ptr);
       }
     } else {
       fprintf(stderr, "%s:\tEQ %s not recognized.\n", yo, ts);
@@ -8674,7 +8781,7 @@ rd_eq_specs(FILE *ifp,
      * This sets up a useful mapping over the active equations...
      */
     for (j = 0; j < eqnMult; j++) {
-      pd_ptr->m[neqn] = ce + j;
+      pd_ptr->m[mtrx_index0][neqn] = ce + j;
       neqn++;
     }
 
@@ -8685,8 +8792,8 @@ rd_eq_specs(FILE *ifp,
      * materials in the problem. 
      */
     for (j = 0; j < eqnMult; j++) {
-      if (upd->ep[ce + j] == -1) {
-	upd->ep[ce + j] = (upd->Total_Num_EQ)++;
+      if (upd->ep[mtrx_index0][ce + j] == -1) {
+	upd->ep[mtrx_index0][ce + j] = (upd->Total_Num_EQ[mtrx_index0])++;
       }
     }
 
@@ -8708,172 +8815,172 @@ rd_eq_specs(FILE *ifp,
 
     if (!strcasecmp(ts, "Q1"))
     {
-      pd_ptr->w[ce] = I_Q1;
+      pd_ptr->w[mtrx_index0][ce] = I_Q1;
     }
     else if (!strcasecmp(ts, "Q2"))
     {
-      pd_ptr->w[ce] = I_Q2;
+      pd_ptr->w[mtrx_index0][ce] = I_Q2;
     }
     else if (!strcasecmp(ts, "Q1_G"))
     {
-      pd_ptr->w[ce] = I_Q1_G;
+      pd_ptr->w[mtrx_index0][ce] = I_Q1_G;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q2_G"))
     {
-      pd_ptr->w[ce] = I_Q2_G;
+      pd_ptr->w[mtrx_index0][ce] = I_Q2_G;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q1_GP"))
     {
-      pd_ptr->w[ce] = I_Q1_GP;
+      pd_ptr->w[mtrx_index0][ce] = I_Q1_GP;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q2_GP"))
     {
-      pd_ptr->w[ce] = I_Q2_GP;
+      pd_ptr->w[mtrx_index0][ce] = I_Q2_GP;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q1_GN"))
     {
-      pd_ptr->w[ce] = I_Q1_GN;
+      pd_ptr->w[mtrx_index0][ce] = I_Q1_GN;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q2_GN"))
     {
-      pd_ptr->w[ce] = I_Q2_GN;
+      pd_ptr->w[mtrx_index0][ce] = I_Q2_GN;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q1_XV"))
     {
-      pd_ptr->w[ce] = I_Q1_XV;
+      pd_ptr->w[mtrx_index0][ce] = I_Q1_XV;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q2_XV"))
     {
-      pd_ptr->w[ce] = I_Q2_XV;
+      pd_ptr->w[mtrx_index0][ce] = I_Q2_XV;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q1_XG"))
     {
-      pd_ptr->w[ce] = I_Q1_XG;
+      pd_ptr->w[mtrx_index0][ce] = I_Q1_XG;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q2_XG"))
     {
-      pd_ptr->w[ce] = I_Q2_XG;
+      pd_ptr->w[mtrx_index0][ce] = I_Q2_XG;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q1_HV"))
     {
-      pd_ptr->w[ce] = I_Q1_HV;
+      pd_ptr->w[mtrx_index0][ce] = I_Q1_HV;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q1_HG"))
     {
-      pd_ptr->w[ce] = I_Q1_HG;
+      pd_ptr->w[mtrx_index0][ce] = I_Q1_HG;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q1_HVG"))
     {
-      pd_ptr->w[ce] = I_Q1_HVG;
+      pd_ptr->w[mtrx_index0][ce] = I_Q1_HVG;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q2_HV"))
     {
-      pd_ptr->w[ce] = I_Q2_HV;
+      pd_ptr->w[mtrx_index0][ce] = I_Q2_HV;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q2_HG"))
     {
-      pd_ptr->w[ce] = I_Q2_HG;
+      pd_ptr->w[mtrx_index0][ce] = I_Q2_HG;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "Q2_HVG"))
     {
-      pd_ptr->w[ce] = I_Q2_HVG;
+      pd_ptr->w[mtrx_index0][ce] = I_Q2_HVG;
       upd->XFEM = TRUE;
     }
     else if ( !strcasecmp(ts, "Q2_LSA") )
     {
-      pd_ptr->w[ce] = I_Q2_LSA;
+      pd_ptr->w[mtrx_index0][ce] = I_Q2_LSA;
     }
     else if ( !strcasecmp(ts, "Q1_D") )
     {
-      pd_ptr->w[ce] = I_Q1_D;
+      pd_ptr->w[mtrx_index0][ce] = I_Q1_D;
     }
     else if ( !strcasecmp(ts, "PQ1") )
     {
-      pd_ptr->w[ce] = I_PQ1;
+      pd_ptr->w[mtrx_index0][ce] = I_PQ1;
     }
     else if ( !strcasecmp(ts, "Q2_D") )
     {
-      pd_ptr->w[ce] = I_Q2_D;
+      pd_ptr->w[mtrx_index0][ce] = I_Q2_D;
     }
     else if ( !strcasecmp(ts, "Q2_D_LSA") )
     {
-      pd_ptr->w[ce] = I_Q2_D_LSA;
+      pd_ptr->w[mtrx_index0][ce] = I_Q2_D_LSA;
     }
     else if ( !strcasecmp(ts, "PQ2") )
     {
-      pd_ptr->w[ce] = I_PQ2;
+      pd_ptr->w[mtrx_index0][ce] = I_PQ2;
     }
     else if ( !strcasecmp(ts, "P0") )
     {
-      pd_ptr->w[ce] = I_P0;
+      pd_ptr->w[mtrx_index0][ce] = I_P0;
     }
     else if ( !strcasecmp(ts, "P1") )
     {
-      pd_ptr->w[ce] = I_P1;
+      pd_ptr->w[mtrx_index0][ce] = I_P1;
     }
     else if (!strcasecmp(ts, "P0_G"))
     {
-      pd_ptr->w[ce] = I_P0_G;
+      pd_ptr->w[mtrx_index0][ce] = I_P0_G;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "P1_G"))
     {
-      pd_ptr->w[ce] = I_P1_G;
+      pd_ptr->w[mtrx_index0][ce] = I_P1_G;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "P0_GP"))
     {
-      pd_ptr->w[ce] = I_P0_GP;
+      pd_ptr->w[mtrx_index0][ce] = I_P0_GP;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "P1_GP"))
     {
-      pd_ptr->w[ce] = I_P1_GP;
+      pd_ptr->w[mtrx_index0][ce] = I_P1_GP;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "P0_GN"))
     {
-      pd_ptr->w[ce] = I_P0_GN;
+      pd_ptr->w[mtrx_index0][ce] = I_P0_GN;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "P1_GN"))
     {
-      pd_ptr->w[ce] = I_P1_GN;
+      pd_ptr->w[mtrx_index0][ce] = I_P1_GN;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "P0_XV"))
     {
-      pd_ptr->w[ce] = I_P0_XV;
+      pd_ptr->w[mtrx_index0][ce] = I_P0_XV;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "P1_XV"))
     {
-      pd_ptr->w[ce] = I_P1_XV;
+      pd_ptr->w[mtrx_index0][ce] = I_P1_XV;
       upd->XFEM = TRUE;
     }
     else if (!strcasecmp(ts, "P1_XG"))
     {
-      pd_ptr->w[ce] = I_P1_XG;
+      pd_ptr->w[mtrx_index0][ce] = I_P1_XG;
       upd->XFEM = TRUE;
     }
     else if ( !strcasecmp(ts, "SP") )
     {
-      pd_ptr->w[ce] = I_SP;
+      pd_ptr->w[mtrx_index0][ce] = I_SP;
       WH(-1,
 	 "CAUTION WITH SUBPARAMETRIC: DON'T USE WITH LAGRANGIAN OR TOTAL_ALE MESH MOTIONS");
     }
@@ -8891,7 +8998,7 @@ rd_eq_specs(FILE *ifp,
      */
     if (eqnMult > 1) {
       for (j = 1; j < eqnMult; j++) {
-        pd_ptr->w[ce+j] = pd_ptr->w[ce];
+        pd_ptr->w[mtrx_index0][ce+j] = pd_ptr->w[mtrx_index0][ce];
       }
     }
     
@@ -8902,14 +9009,14 @@ rd_eq_specs(FILE *ifp,
      * just the right kinds of basis function derivatives that we need...
      */
 
-    if ( in_list( pd_ptr->w[ce], 
+    if ( in_list( pd_ptr->w[mtrx_index0][ce], 
 		  0, Num_Interpolations, Unique_Interpolations) == -1 )
     {
-      Unique_Interpolations[Num_Interpolations] = pd_ptr->w[ce];
+      Unique_Interpolations[Num_Interpolations] = pd_ptr->w[mtrx_index0][ce];
       if ( Debug_Flag && ProcID == 0 )
       {
 	fprintf(stdout, "Unique_Interpolations[%d] = %d\n",
-		Num_Interpolations, pd_ptr->w[ce]);
+		Num_Interpolations, pd_ptr->w[mtrx_index0][ce]);
       }
       Num_Interpolations++;
     }
@@ -8933,226 +9040,226 @@ rd_eq_specs(FILE *ifp,
      */
 
     if        (!strcasecmp(ts, "T")) {
-      cv = set_var(TEMPERATURE, pd_ptr);
+      cv = set_var(TEMPERATURE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "U1")) {
-      cv = set_var(VELOCITY1, pd_ptr);
+      cv = set_var(VELOCITY1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "U2")) {
-      cv = set_var(VELOCITY2, pd_ptr);
+      cv = set_var(VELOCITY2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "U3")) {
-      cv = set_var(VELOCITY3, pd_ptr);
+      cv = set_var(VELOCITY3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "PU1")) {
-      cv = set_var(PVELOCITY1, pd_ptr);
+      cv = set_var(PVELOCITY1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "PU2")) {
-      cv = set_var(PVELOCITY2, pd_ptr);
+      cv = set_var(PVELOCITY2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "PU3")) {
-      cv = set_var(PVELOCITY3, pd_ptr);
+      cv = set_var(PVELOCITY3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "S11")) {
-      cv = set_var(POLYMER_STRESS11, pd_ptr);
+      cv = set_var(POLYMER_STRESS11, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "S12")) {
-      cv = set_var(POLYMER_STRESS12, pd_ptr);
+      cv = set_var(POLYMER_STRESS12, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "S13")) {
-      cv = set_var(POLYMER_STRESS13, pd_ptr);
+      cv = set_var(POLYMER_STRESS13, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "S22")) {
-      cv = set_var(POLYMER_STRESS22, pd_ptr);
+      cv = set_var(POLYMER_STRESS22, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "S23")) {
-      cv = set_var(POLYMER_STRESS23, pd_ptr);
+      cv = set_var(POLYMER_STRESS23, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "S33")) {
-      cv = set_var(POLYMER_STRESS33, pd_ptr);
+      cv = set_var(POLYMER_STRESS33, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "G11")) {
-      cv = set_var(VELOCITY_GRADIENT11, pd_ptr);
+      cv = set_var(VELOCITY_GRADIENT11, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "G12")) {
-      cv = set_var(VELOCITY_GRADIENT12, pd_ptr);
+      cv = set_var(VELOCITY_GRADIENT12, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "G13")) {
-      cv = set_var(VELOCITY_GRADIENT13, pd_ptr);
+      cv = set_var(VELOCITY_GRADIENT13, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "G21")) {
-      cv = set_var(VELOCITY_GRADIENT21, pd_ptr);
+      cv = set_var(VELOCITY_GRADIENT21, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "G22")) {
-      cv = set_var(VELOCITY_GRADIENT22, pd_ptr);
+      cv = set_var(VELOCITY_GRADIENT22, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "G23")) {
-      cv = set_var(VELOCITY_GRADIENT23, pd_ptr);
+      cv = set_var(VELOCITY_GRADIENT23, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "G31")) {
-      cv = set_var(VELOCITY_GRADIENT31, pd_ptr);
+      cv = set_var(VELOCITY_GRADIENT31, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "G32")) {
-      cv = set_var(VELOCITY_GRADIENT32, pd_ptr);
+      cv = set_var(VELOCITY_GRADIENT32, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "G33")) {
-      cv = set_var(VELOCITY_GRADIENT33, pd_ptr);
+      cv = set_var(VELOCITY_GRADIENT33, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "NN")) {
-      cv = set_var(BOND_EVOLUTION, pd_ptr);
+      cv = set_var(BOND_EVOLUTION, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "Y")) {
-      cv = set_var(MASS_FRACTION, pd_ptr);
+      cv = set_var(MASS_FRACTION, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "D1")) {
-      cv = set_var(MESH_DISPLACEMENT1, pd_ptr);
+      cv = set_var(MESH_DISPLACEMENT1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "D2")) {
-      cv = set_var(MESH_DISPLACEMENT2, pd_ptr);
+      cv = set_var(MESH_DISPLACEMENT2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "D3")) {
-      cv = set_var(MESH_DISPLACEMENT3, pd_ptr);
+      cv = set_var(MESH_DISPLACEMENT3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "D1_RS")) {
-      cv = set_var(SOLID_DISPLACEMENT1, pd_ptr);
+      cv = set_var(SOLID_DISPLACEMENT1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "D2_RS")) {
-      cv = set_var(SOLID_DISPLACEMENT2, pd_ptr);
+      cv = set_var(SOLID_DISPLACEMENT2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "D3_RS")) {
-      cv = set_var(SOLID_DISPLACEMENT3, pd_ptr);
+      cv = set_var(SOLID_DISPLACEMENT3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "P")) {
-      cv = set_var(PRESSURE, pd_ptr);
+      cv = set_var(PRESSURE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "F")) {
-      cv = set_var(FILL, pd_ptr);
+      cv = set_var(FILL, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "V")) {
-      cv = set_var(VOLTAGE, pd_ptr);
+      cv = set_var(VOLTAGE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "QS")) {
-      cv = set_var(SURF_CHARGE, pd_ptr);
+      cv = set_var(SURF_CHARGE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH")) {
-      cv = set_var(SHEAR_RATE, pd_ptr);
+      cv = set_var(SHEAR_RATE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "H")) {
-      cv = set_var(CURVATURE, pd_ptr);
+      cv = set_var(CURVATURE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "N1")) {
-      cv = set_var(NORMAL1, pd_ptr);
+      cv = set_var(NORMAL1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "N2")) {
-      cv = set_var(NORMAL2, pd_ptr);
+      cv = set_var(NORMAL2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "N3")) {
-      cv = set_var(NORMAL3, pd_ptr);
+      cv = set_var(NORMAL3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "S")) {
-      cv = set_var(SURFACE, pd_ptr);
+      cv = set_var(SURFACE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "P_LIQ")) {
-      cv = set_var(POR_LIQ_PRES, pd_ptr);
+      cv = set_var(POR_LIQ_PRES, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "P_GAS")) {
-      cv = set_var(POR_GAS_PRES, pd_ptr);
+      cv = set_var(POR_GAS_PRES, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "P_POR")) {
-      cv = set_var(POR_POROSITY, pd_ptr);
+      cv = set_var(POR_POROSITY, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "P_TEMP")) {
-      cv = set_var(POR_TEMP, pd_ptr);
+      cv = set_var(POR_TEMP, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "P_SAT")) {
-      cv = set_var(POR_SATURATION, pd_ptr);
+      cv = set_var(POR_SATURATION, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "VD1")) {
-      cv = set_var(VORT_DIR1, pd_ptr);
+      cv = set_var(VORT_DIR1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "VD2")) {
-      cv = set_var(VORT_DIR2, pd_ptr);
+      cv = set_var(VORT_DIR2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "VD3")) {
-      cv = set_var(VORT_DIR3, pd_ptr);
+      cv = set_var(VORT_DIR3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "VLAMBDA")) {
-      cv = set_var(VORT_LAMBDA, pd_ptr);
+      cv = set_var(VORT_LAMBDA, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "LM1")) {
-      cv = set_var(LAGR_MULT1, pd_ptr);
+      cv = set_var(LAGR_MULT1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "LM2")) {
-      cv = set_var(LAGR_MULT2, pd_ptr);
+      cv = set_var(LAGR_MULT2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "LM3")) {
-      cv = set_var(LAGR_MULT3, pd_ptr);
+      cv = set_var(LAGR_MULT3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "K")) {
-      cv = set_var(SHELL_CURVATURE, pd_ptr);
+      cv = set_var(SHELL_CURVATURE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "TENS")) {
-      cv = set_var(SHELL_TENSION, pd_ptr);
+      cv = set_var(SHELL_TENSION, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_X")) {
-      cv = set_var(SHELL_X, pd_ptr);
+      cv = set_var(SHELL_X, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_Y")) {
-      cv = set_var(SHELL_Y, pd_ptr);
+      cv = set_var(SHELL_Y, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_U")) {
-      cv = set_var(SHELL_USER, pd_ptr);
+      cv = set_var(SHELL_USER, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_ANG1")) {
-      cv = set_var(SHELL_ANGLE1, pd_ptr);
+      cv = set_var(SHELL_ANGLE1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_ANG2")) {
-      cv = set_var(SHELL_ANGLE2, pd_ptr);
+      cv = set_var(SHELL_ANGLE2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gamma1")) {
-      cv = set_var(SHELL_SURF_DIV_V, pd_ptr);
+      cv = set_var(SHELL_SURF_DIV_V, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gamma2")) {
-      cv = set_var(SHELL_SURF_CURV, pd_ptr);
+      cv = set_var(SHELL_SURF_CURV, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gamma4")) {
-      cv = set_var(N_DOT_CURL_V, pd_ptr);
+      cv = set_var(N_DOT_CURL_V, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gamma3_1")) {
-      cv = set_var(GRAD_S_V_DOT_N1, pd_ptr);
+      cv = set_var(GRAD_S_V_DOT_N1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gamma3_2")) {
-      cv = set_var(GRAD_S_V_DOT_N2, pd_ptr);
+      cv = set_var(GRAD_S_V_DOT_N2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "gamma3_3")) {
-      cv = set_var(GRAD_S_V_DOT_N3, pd_ptr);  
+      cv = set_var(GRAD_S_V_DOT_N3, mtrx_index0, pd_ptr);  
     } else if (!strcasecmp(ts, "APR")) {
-      cv = set_var(ACOUS_PREAL, pd_ptr);  
+      cv = set_var(ACOUS_PREAL, mtrx_index0, pd_ptr);  
     } else if (!strcasecmp(ts, "API")) {
-      cv = set_var(ACOUS_PIMAG, pd_ptr);  
+      cv = set_var(ACOUS_PIMAG, mtrx_index0, pd_ptr);  
     } else if (!strcasecmp(ts, "ARS")) {
-      cv = set_var(ACOUS_REYN_STRESS, pd_ptr);  
+      cv = set_var(ACOUS_REYN_STRESS, mtrx_index0, pd_ptr);  
     } else if (!strcasecmp(ts, "SH_BV")) {
-      cv = set_var(SHELL_BDYVELO, pd_ptr);  
+      cv = set_var(SHELL_BDYVELO, mtrx_index0, pd_ptr);  
     } else if (!strcasecmp(ts, "SH_P")) {
-      cv = set_var(SHELL_LUBP, pd_ptr);
+      cv = set_var(SHELL_LUBP, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "LUBP")) {
-      cv = set_var(LUBP, pd_ptr);
+      cv = set_var(LUBP, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "LUBP_2")) {
-      cv = set_var(LUBP_2, pd_ptr);
+      cv = set_var(LUBP_2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SHELL_FILMP")) {
-      cv = set_var(SHELL_FILMP, pd_ptr);
+      cv = set_var(SHELL_FILMP, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SHELL_FILMH")) {
-      cv = set_var(SHELL_FILMH, pd_ptr);
+      cv = set_var(SHELL_FILMH, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SHELL_PARTC")) {
-      cv = set_var(SHELL_PARTC, pd_ptr);
+      cv = set_var(SHELL_PARTC, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_SAT_CLOSED")) {
-      cv = set_var(SHELL_SAT_CLOSED, pd_ptr);
+      cv = set_var(SHELL_SAT_CLOSED, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_P_OPEN")) {
-      cv = set_var(SHELL_PRESS_OPEN, pd_ptr);
+      cv = set_var(SHELL_PRESS_OPEN, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_P_OPEN_2")) {
-      cv = set_var(SHELL_PRESS_OPEN_2, pd_ptr);
+      cv = set_var(SHELL_PRESS_OPEN_2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_T")) {
-      cv = set_var(SHELL_TEMPERATURE, pd_ptr);
+      cv = set_var(SHELL_TEMPERATURE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_DH")) {
-      cv = set_var(SHELL_DELTAH, pd_ptr);
+      cv = set_var(SHELL_DELTAH, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_L_CURV")) {
-      cv = set_var(SHELL_LUB_CURV, pd_ptr);
+      cv = set_var(SHELL_LUB_CURV, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_L_CURV_2")) {
-      cv = set_var(SHELL_LUB_CURV_2, pd_ptr);
+      cv = set_var(SHELL_LUB_CURV_2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_SAT_GASN")) {
-      cv = set_var(SHELL_SAT_GASN, pd_ptr);
+      cv = set_var(SHELL_SAT_GASN, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SINK_MASS")) {
-      cv = set_var(POR_SINK_MASS, pd_ptr);
+      cv = set_var(POR_SINK_MASS, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_SHEAR_TOP")) {
-      cv = set_var(SHELL_SHEAR_TOP, pd_ptr);
+      cv = set_var(SHELL_SHEAR_TOP, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_SHEAR_BOT")) {
-      cv = set_var(SHELL_SHEAR_BOT, pd_ptr);
+      cv = set_var(SHELL_SHEAR_BOT, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_CROSS_SHEAR")) {
-      cv = set_var(SHELL_CROSS_SHEAR, pd_ptr); 
+      cv = set_var(SHELL_CROSS_SHEAR, mtrx_index0, pd_ptr); 
     } else if (!strcasecmp(ts, "MAX_STRAIN")) {
-      cv = set_var(MAX_STRAIN, pd_ptr);   
+      cv = set_var(MAX_STRAIN, mtrx_index0, pd_ptr);   
     } else if (!strcasecmp(ts, "CUR_STRAIN")) {
-      cv = set_var(CUR_STRAIN, pd_ptr);       
+      cv = set_var(CUR_STRAIN, mtrx_index0, pd_ptr);       
     } else if (!strcasecmp(ts, "SH_J")) {
-      cv = set_var(SHELL_DIFF_FLUX, pd_ptr);
+      cv = set_var(SHELL_DIFF_FLUX, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_KD")) {
-      cv = set_var(SHELL_DIFF_CURVATURE, pd_ptr);
+      cv = set_var(SHELL_DIFF_CURVATURE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_N1")) {
-      cv = set_var(SHELL_NORMAL1, pd_ptr);
+      cv = set_var(SHELL_NORMAL1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "SH_N2")) {
-      cv = set_var(SHELL_NORMAL2, pd_ptr);
+      cv = set_var(SHELL_NORMAL2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "EXT_V")) {
-      cv = set_var(EXT_VELOCITY, pd_ptr);
+      cv = set_var(EXT_VELOCITY, mtrx_index0, pd_ptr);
 
     } else if (!strcasecmp(ts, "INTP")) {
-      cv = set_var(LIGHT_INTP, pd_ptr);
+      cv = set_var(LIGHT_INTP, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "INTM")) {
-      cv = set_var(LIGHT_INTM, pd_ptr);
+      cv = set_var(LIGHT_INTM, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "INTD")) {
-      cv = set_var(LIGHT_INTD, pd_ptr);
+      cv = set_var(LIGHT_INTD, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "E1")) {
-      cv = set_var(EFIELD1, pd_ptr);
+      cv = set_var(EFIELD1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "E2")) {
-      cv = set_var(EFIELD2, pd_ptr);
+      cv = set_var(EFIELD2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "E3")) {
-      cv = set_var(EFIELD3, pd_ptr);
+      cv = set_var(EFIELD3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "F1")) {
-      cv = set_var(PHASE1, pd_ptr);
+      cv = set_var(PHASE1, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "F2")) {
-      cv = set_var(PHASE2, pd_ptr);
+      cv = set_var(PHASE2, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "F3")) {
-      cv = set_var(PHASE3, pd_ptr);
+      cv = set_var(PHASE3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "F4")) {
-      cv = set_var(PHASE4, pd_ptr);
+      cv = set_var(PHASE4, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "F5")) {
-      cv = set_var(PHASE5, pd_ptr);
+      cv = set_var(PHASE5, mtrx_index0, pd_ptr);
 
     } else if (!strcasecmp(ts, "ENORM")) {
-      cv = set_var(ENORM, pd_ptr);
+      cv = set_var(ENORM, mtrx_index0, pd_ptr);
 
     } else if (!strncasecmp(ts, "Sp", 2)) {
       if (!strcasecmp(ts, "Sp")) {
 	cv = SPECIES_UNK_0;
 	j =  SPECIES_UNK_0;
 	for (i = 0; i < pd_ptr->Num_Species_Eqn; i++, j++) {
-	  (void) set_var(j, pd_ptr);
+	  (void) set_var(j, mtrx_index0, pd_ptr);
 	}
 	if (eqnMult != pd_ptr->Num_Species_Eqn) {
           fprintf(stderr, "%s: Incompatible EQ Sp line: %d %d\n",
@@ -9177,7 +9284,7 @@ rd_eq_specs(FILE *ifp,
 		  yo, eqnMult, pd_ptr->Num_Species_Eqn);
 	  EH(-1, "rd_eq_specs error");
 	}
-	cv = set_var(R_SPECIES_UNK_0 + j, pd_ptr);
+	cv = set_var(R_SPECIES_UNK_0 + j, mtrx_index0, pd_ptr);
       }
     } else {
       fprintf(stderr, "%s:\tUnrecognized variable.\n", yo);
@@ -9195,9 +9302,9 @@ rd_eq_specs(FILE *ifp,
      *         their implementation. 
      */
     for (j = 0; j < eqnMult; j++) {
-      if (upd->vp[cv + j] == -1) {
-	upd->vp[cv + j] = upd->Total_Num_Var;
-	upd->Total_Num_Var++;
+      if (upd->vp[mtrx_index0][cv + j] == -1) {
+	upd->vp[mtrx_index0][cv + j] = upd->Total_Num_Var[mtrx_index0];
+	upd->Total_Num_Var[mtrx_index0]++;
       }
     }
 
@@ -9235,105 +9342,105 @@ rd_eq_specs(FILE *ifp,
      *         interpolation at the node). This will be addressed later.
      */
     if         (!strcasecmp(ts, "Q1")) {
-      pd_ptr->i[cv] = I_Q1;
+      pd_ptr->i[mtrx_index0][cv] = I_Q1;
     } else if (!strcasecmp(ts, "Q2"))  {
-      pd_ptr->i[cv] = I_Q2;
+      pd_ptr->i[mtrx_index0][cv] = I_Q2;
     } else if (!strcasecmp(ts, "Q1_G"))  {
-      pd_ptr->i[cv] = I_Q1_G;
+      pd_ptr->i[mtrx_index0][cv] = I_Q1_G;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q2_G"))  {
-      pd_ptr->i[cv] = I_Q2_G;
+      pd_ptr->i[mtrx_index0][cv] = I_Q2_G;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q1_GP"))  {
-      pd_ptr->i[cv] = I_Q1_GP;
+      pd_ptr->i[mtrx_index0][cv] = I_Q1_GP;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q2_GP"))  {
-      pd_ptr->i[cv] = I_Q2_GP;
+      pd_ptr->i[mtrx_index0][cv] = I_Q2_GP;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q1_GN"))  {
-      pd_ptr->i[cv] = I_Q1_GN;
+      pd_ptr->i[mtrx_index0][cv] = I_Q1_GN;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q2_GN"))  {
-      pd_ptr->i[cv] = I_Q2_GN;
+      pd_ptr->i[mtrx_index0][cv] = I_Q2_GN;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q1_XV"))  {
-      pd_ptr->i[cv] = I_Q1_XV;
+      pd_ptr->i[mtrx_index0][cv] = I_Q1_XV;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q2_XV"))  {
-      pd_ptr->i[cv] = I_Q2_XV;
+      pd_ptr->i[mtrx_index0][cv] = I_Q2_XV;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q1_XG"))  {
-      pd_ptr->i[cv] = I_Q1_XG;
+      pd_ptr->i[mtrx_index0][cv] = I_Q1_XG;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q2_XG"))  {
-      pd_ptr->i[cv] = I_Q2_XG;
+      pd_ptr->i[mtrx_index0][cv] = I_Q2_XG;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q1_HV"))  {
-      pd_ptr->i[cv] = I_Q1_HV;
+      pd_ptr->i[mtrx_index0][cv] = I_Q1_HV;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q1_HG"))  {
-      pd_ptr->i[cv] = I_Q1_HG;
+      pd_ptr->i[mtrx_index0][cv] = I_Q1_HG;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q1_HVG"))  {
-      pd_ptr->i[cv] = I_Q1_HVG;
+      pd_ptr->i[mtrx_index0][cv] = I_Q1_HVG;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q2_HV"))  {
-      pd_ptr->i[cv] = I_Q2_HV;
+      pd_ptr->i[mtrx_index0][cv] = I_Q2_HV;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q2_HG"))  {
-      pd_ptr->i[cv] = I_Q2_HG;
+      pd_ptr->i[mtrx_index0][cv] = I_Q2_HG;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q2_HVG"))  {
-      pd_ptr->i[cv] = I_Q2_HVG;
+      pd_ptr->i[mtrx_index0][cv] = I_Q2_HVG;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "Q2_LSA"))  {
-      pd_ptr->i[cv] = I_Q2_LSA;
+      pd_ptr->i[mtrx_index0][cv] = I_Q2_LSA;
     } else if (!strcasecmp(ts, "Q1_D")) {
-      pd_ptr->i[cv] = I_Q1_D;
-      pd_ptr->v[cv] |= V_MATSPECIFIC;
+      pd_ptr->i[mtrx_index0][cv] = I_Q1_D;
+      pd_ptr->v[mtrx_index0][cv] |= V_MATSPECIFIC;
     } else if (!strcasecmp(ts, "PQ1"))  {
-      pd_ptr->i[cv] = I_PQ1;
+      pd_ptr->i[mtrx_index0][cv] = I_PQ1;
     } else if (!strcasecmp(ts, "Q2_D")) {
-      pd_ptr->i[cv] = I_Q2_D;
-      pd_ptr->v[cv] |= V_MATSPECIFIC;
+      pd_ptr->i[mtrx_index0][cv] = I_Q2_D;
+      pd_ptr->v[mtrx_index0][cv] |= V_MATSPECIFIC;
     } else if (!strcasecmp(ts, "Q2_D_LSA")) {
-      pd_ptr->i[cv] = I_Q2_D_LSA;
-      pd_ptr->v[cv] |= V_MATSPECIFIC;
+      pd_ptr->i[mtrx_index0][cv] = I_Q2_D_LSA;
+      pd_ptr->v[mtrx_index0][cv] |= V_MATSPECIFIC;
     } else if (!strcasecmp(ts, "PQ2")) {
-      pd_ptr->i[cv] = I_PQ2;
+      pd_ptr->i[mtrx_index0][cv] = I_PQ2;
     } else if (!strcasecmp(ts, "P0")) {
-      pd_ptr->i[cv] = I_P0;
+      pd_ptr->i[mtrx_index0][cv] = I_P0;
     } else if (!strcasecmp(ts, "P1")) {
-      pd_ptr->i[cv] = I_P1;
+      pd_ptr->i[mtrx_index0][cv] = I_P1;
     } else if (!strcasecmp(ts, "P0_G"))  {
-      pd_ptr->i[cv] = I_P0_G;
+      pd_ptr->i[mtrx_index0][cv] = I_P0_G;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "P1_G"))  {
-      pd_ptr->i[cv] = I_P1_G;
+      pd_ptr->i[mtrx_index0][cv] = I_P1_G;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "P0_GP"))  {
-      pd_ptr->i[cv] = I_P0_GP;
+      pd_ptr->i[mtrx_index0][cv] = I_P0_GP;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "P1_GP"))  {
-      pd_ptr->i[cv] = I_P1_GP;
+      pd_ptr->i[mtrx_index0][cv] = I_P1_GP;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "P0_GN"))  {
-      pd_ptr->i[cv] = I_P0_GN;
+      pd_ptr->i[mtrx_index0][cv] = I_P0_GN;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "P1_GN"))  {
-      pd_ptr->i[cv] = I_P1_GN;
+      pd_ptr->i[mtrx_index0][cv] = I_P1_GN;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "P0_XV"))  {
-      pd_ptr->i[cv] = I_P0_XV;
+      pd_ptr->i[mtrx_index0][cv] = I_P0_XV;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "P1_XV"))  {
-      pd_ptr->i[cv] = I_P1_XV;
+      pd_ptr->i[mtrx_index0][cv] = I_P1_XV;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "P1_XG"))  {
-      pd_ptr->i[cv] = I_P1_XG;
+      pd_ptr->i[mtrx_index0][cv] = I_P1_XG;
       upd->XFEM = TRUE;
     } else if (!strcasecmp(ts, "SP")) {
-      pd_ptr->i[cv] = I_SP;
+      pd_ptr->i[mtrx_index0][cv] = I_SP;
     } else {
       fprintf(stderr, 
 	      "%s:\tUnrecognized interpolation function for variable.\n", 
@@ -9350,10 +9457,10 @@ rd_eq_specs(FILE *ifp,
      * just the right kinds of basis function derivatives that we need...
      */
 
-    if (in_list(pd_ptr->i[cv], 
+    if (in_list(pd_ptr->i[mtrx_index0][cv], 
 		 0, Num_Interpolations, Unique_Interpolations) == -1)
     {
-      Unique_Interpolations[Num_Interpolations] = pd_ptr->i[cv];
+      Unique_Interpolations[Num_Interpolations] = pd_ptr->i[mtrx_index0][cv];
       Num_Interpolations++;
     }
 
@@ -9421,7 +9528,7 @@ rd_eq_specs(FILE *ifp,
     case R_GRAD_S_V_DOT_N2:
     case R_GRAD_S_V_DOT_N3:
       /* In case this actually gets used for a boolean anywhere ... */
-      pd_ptr->etm[ce][(LOG2_MASS)] = 1.0;
+      pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = 1.0;
       break;
 
       /*
@@ -9443,21 +9550,21 @@ rd_eq_specs(FILE *ifp,
 	  //  EH(-1,"Shell capability only avaible for 2D Cartesian systems");
           printf("WARNING: Shell Capability is experimental for non 2D Cartesian systems\n");
 	}
-      if (fscanf(ifp, "%lf", &(pd_ptr->etm[ce][(LOG2_DIFFUSION)])) != 1)
+      if (fscanf(ifp, "%lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)])) != 1)
         {
           sr = sprintf(err_msg, 
                        "Provide 1 equation term multiplier (dif) on %s in %s\n",
                        EQ_Name[ce].name1, pd_ptr->MaterialName);
           EH(-1, err_msg);
         }
-      if (pd_ptr->etm[ce][(LOG2_DIFFUSION)] == 0.0) 
+      if (pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)] == 0.0) 
 	{
 	  sr = sprintf(err_msg, 
                        "Equation term multiplier (dif) on %s in %s is equal to zero. Will get a singular jacobian\n",
                        EQ_Name[ce].name1, pd_ptr->MaterialName);
           EH(-1, err_msg);
 	}
-      SPF(endofstring(echo_string),"\t %.4g", pd_ptr->etm[ce][(LOG2_DIFFUSION)]);
+      SPF(endofstring(echo_string),"\t %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]);
       break;
 
 
@@ -9490,8 +9597,8 @@ rd_eq_specs(FILE *ifp,
     case R_SHELL_CROSS_SHEAR:
 
 	if ( fscanf(ifp, "%lf %lf", 
-		    &(pd_ptr->etm[ce][(LOG2_ADVECTION)]),
-		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]))
 	     != 2 )
 	{
 	  sr = sprintf(err_msg, 
@@ -9500,16 +9607,16 @@ rd_eq_specs(FILE *ifp,
 	  EH(-1, err_msg);
 	}
 
-	SPF( endofstring(echo_string),"\t %.4g %.4g", pd_ptr->etm[ce][(LOG2_ADVECTION)],
-	                                            pd_ptr->etm[ce][(LOG2_SOURCE)]);
+	SPF( endofstring(echo_string),"\t %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+	                                              pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]);
 
 
 	break;
     case R_SHELL_SAT_CLOSED:
     case R_SHELL_DELTAH:
       if ( fscanf(ifp, "%lf %lf", 
-		  &(pd_ptr->etm[ce][(LOG2_MASS)]),
-		  &(pd_ptr->etm[ce][(LOG2_DIVERGENCE)]))
+		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)]))
 	   != 2 )
 	{
 	  sr = sprintf(err_msg, 
@@ -9518,8 +9625,8 @@ rd_eq_specs(FILE *ifp,
 	  EH(-1, err_msg);
 	}
       
-      SPF( endofstring(echo_string),"\t %.4g %.4g", pd_ptr->etm[ce][(LOG2_MASS)],
-	   pd_ptr->etm[ce][(LOG2_DIVERGENCE)]);    
+      SPF( endofstring(echo_string),"\t %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+	   pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)]);    
       break;
 
 
@@ -9527,8 +9634,8 @@ rd_eq_specs(FILE *ifp,
     case R_MAX_STRAIN:
     case R_CUR_STRAIN:
       if ( fscanf(ifp, "%lf %lf", 
-		  &(pd_ptr->etm[ce][(LOG2_MASS)]),
-		  &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
+		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]))
 	   != 2 )
 	{
 	  sr = sprintf(err_msg, 
@@ -9537,8 +9644,8 @@ rd_eq_specs(FILE *ifp,
 	  EH(-1, err_msg);
 	}
       
-      SPF( endofstring(echo_string),"\t %.4g %.4g", pd_ptr->etm[ce][(LOG2_MASS)],
-	   pd_ptr->etm[ce][(LOG2_SOURCE)]);    
+      SPF( endofstring(echo_string),"\t %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+	   pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]);    
       break;
       
       /* 
@@ -9555,9 +9662,9 @@ rd_eq_specs(FILE *ifp,
 	case R_POR_SINK_MASS:
 
 	if ( fscanf(ifp, "%lf %lf %lf", 
-		    &(pd_ptr->etm[ce][(LOG2_MASS)]),
-		    &(pd_ptr->etm[ce][(LOG2_ADVECTION)]),
-		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]))
 	     != 3 )
 	{
 	  sr = sprintf(err_msg, 
@@ -9566,16 +9673,16 @@ rd_eq_specs(FILE *ifp,
 	  EH(-1, err_msg);
 	}
 
-	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[ce][(LOG2_MASS)],
-                                                         pd_ptr->etm[ce][(LOG2_ADVECTION)],
-	                                                 pd_ptr->etm[ce][(LOG2_SOURCE)]);
+	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+                                                           pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+	                                                   pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]);
 
 	break;
     case R_SHEAR_RATE:
 	if ( fscanf(ifp, "%lf %lf %lf", 
-		    &(pd_ptr->etm[ce][(LOG2_ADVECTION)]),
-		    &(pd_ptr->etm[ce][(LOG2_DIFFUSION)]),
-		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]))
 	     != 3 )
 	{
 	  sr = sprintf(err_msg, 
@@ -9584,16 +9691,16 @@ rd_eq_specs(FILE *ifp,
 	  EH(-1, err_msg);
 	}
 
-	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[ce][(LOG2_ADVECTION)],
-                                                         pd_ptr->etm[ce][(LOG2_DIFFUSION)],
-	                                                 pd_ptr->etm[ce][(LOG2_SOURCE)]);
+	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+                                                           pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
+	                                                   pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]);
 	break;
     case R_SHELL_LUB_CURV:
     case R_SHELL_LUB_CURV_2:
 	if ( fscanf(ifp, "%lf %lf %lf", 
-		    &(pd_ptr->etm[ce][(LOG2_MASS)]),
-		    &(pd_ptr->etm[ce][(LOG2_DIFFUSION)]),
-		    &(pd_ptr->etm[ce][(LOG2_DIVERGENCE)]))
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)]))
 	     != 3 )
 	{
 	  sr = sprintf(err_msg, 
@@ -9602,17 +9709,17 @@ rd_eq_specs(FILE *ifp,
 	  EH(-1, err_msg);
 	}
 
-	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[ce][(LOG2_MASS)],
-                                                         pd_ptr->etm[ce][(LOG2_DIFFUSION)],
-	                                                 pd_ptr->etm[ce][(LOG2_DIVERGENCE)]);
+	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+                                                           pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
+	                                                   pd_ptr->etm[mtrx_index0][ce][(LOG2_DIVERGENCE)]);
 	break;
     case R_CURVATURE:
     case R_LUBP:
     case R_LUBP_2:
         if ( fscanf(ifp, "%lf %lf %lf", 
-                    &(pd_ptr->etm[ce][(LOG2_BOUNDARY)]),
-                    &(pd_ptr->etm[ce][(LOG2_DIFFUSION)]),
-                    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
+                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)]),
+                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
+                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]))
              != 3 )
         {
           sr = sprintf(err_msg, 
@@ -9620,16 +9727,16 @@ rd_eq_specs(FILE *ifp,
                        EQ_Name[ce].name1, pd_ptr->MaterialName);
           EH(-1, err_msg);
         }
-	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[ce][(LOG2_BOUNDARY)],
-                                                         pd_ptr->etm[ce][(LOG2_DIFFUSION)],
-	                                                 pd_ptr->etm[ce][(LOG2_SOURCE)]);
+	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
+                                                           pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
+	                                                   pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]);
         break;
     case R_SHELL_SAT_OPEN:
     case R_SHELL_SAT_OPEN_2:
         if ( fscanf(ifp, "%lf %lf %lf", 
-                    &(pd_ptr->etm[ce][(LOG2_MASS)]),
-                    &(pd_ptr->etm[ce][(LOG2_DIFFUSION)]),
-                    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
+                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
+                    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]))
              != 3 )
         {
           sr = sprintf(err_msg, 
@@ -9637,9 +9744,9 @@ rd_eq_specs(FILE *ifp,
                        EQ_Name[ce].name1, pd_ptr->MaterialName);
           EH(-1, err_msg);
         }
-	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[ce][(LOG2_MASS)],
-                                                         pd_ptr->etm[ce][(LOG2_DIFFUSION)],
-	                                                 pd_ptr->etm[ce][(LOG2_SOURCE)]);
+	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+                                                           pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
+	                                                   pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]);
         break;
 	  
       /* 
@@ -9647,10 +9754,10 @@ rd_eq_specs(FILE *ifp,
        */
     case R_BOND_EVOLUTION:
       if ( fscanf(ifp, "%lf %lf %lf  %lf", 
-		  &(pd_ptr->etm[ce][(LOG2_MASS)]),
-		  &(pd_ptr->etm[ce][(LOG2_ADVECTION)]),
-		  &(pd_ptr->etm[ce][(LOG2_DIFFUSION)]),
-		  &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
+		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
+		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
+		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]))
 	   != 4 )
 	{
 	  sr = sprintf(err_msg, 
@@ -9659,10 +9766,10 @@ rd_eq_specs(FILE *ifp,
 	  EH(-1, err_msg);
 	}
 
-      SPF( endofstring(echo_string),"\t %.4g %.4g %.4g %.4g", pd_ptr->etm[ce][(LOG2_MASS)],
-	   pd_ptr->etm[ce][(LOG2_ADVECTION)],
-	   pd_ptr->etm[ce][(LOG2_DIFFUSION)],
-	   pd_ptr->etm[ce][(LOG2_SOURCE)]);
+      SPF( endofstring(echo_string),"\t %.4g %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+	                                                      pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+	                                                      pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
+	                                                      pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]);
 
 	break;
 
@@ -9705,11 +9812,11 @@ rd_eq_specs(FILE *ifp,
     case R_LIGHT_INTD:
 
 	if ( fscanf(ifp, "%lf %lf %lf %lf %lf", 
-		    &(pd_ptr->etm[ce][(LOG2_MASS)]),
-		    &(pd_ptr->etm[ce][(LOG2_ADVECTION)]),
-		    &(pd_ptr->etm[ce][(LOG2_BOUNDARY)]),
-		    &(pd_ptr->etm[ce][(LOG2_DIFFUSION)]),
-		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]))
 	     != 5 )
 	{
 	  sr = sprintf(err_msg, 
@@ -9717,11 +9824,11 @@ rd_eq_specs(FILE *ifp,
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
 	  EH(-1, err_msg);
 	}
-	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g %.4g %.4g", pd_ptr->etm[ce][(LOG2_MASS)],
-                                                                   pd_ptr->etm[ce][(LOG2_ADVECTION)],
-                                                                   pd_ptr->etm[ce][(LOG2_BOUNDARY)],
-                                                                   pd_ptr->etm[ce][(LOG2_DIFFUSION)],
-	                                                           pd_ptr->etm[ce][(LOG2_SOURCE)]);
+	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+                                                                     pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+                                                                     pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
+                                                                     pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
+	                                                             pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]);
 	break;
 
 	/* 
@@ -9734,12 +9841,12 @@ rd_eq_specs(FILE *ifp,
     case R_PMOMENTUM2:
     case R_PMOMENTUM3:
 	if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf", 
-		    &(pd_ptr->etm[ce][(LOG2_MASS)]),
-		    &(pd_ptr->etm[ce][(LOG2_ADVECTION)]),
-		    &(pd_ptr->etm[ce][(LOG2_BOUNDARY)]),
-		    &(pd_ptr->etm[ce][(LOG2_DIFFUSION)]),
-		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]),
-		    &(pd_ptr->etm[ce][(LOG2_POROUS_BRINK)]))
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)]),
+		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_POROUS_BRINK)]))
 	     != 6 )
 	{
 	  sr = sprintf(err_msg, 
@@ -9747,12 +9854,12 @@ rd_eq_specs(FILE *ifp,
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
 	  EH(-1, err_msg);
 	}
-	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g %.4g %.4g %.4g", pd_ptr->etm[ce][(LOG2_MASS)],
-	                                                                pd_ptr->etm[ce][(LOG2_ADVECTION)],
-                                                                        pd_ptr->etm[ce][(LOG2_BOUNDARY)],
-                                                                        pd_ptr->etm[ce][(LOG2_DIFFUSION)],
-	                                                                pd_ptr->etm[ce][(LOG2_SOURCE)],
-                                                                        pd_ptr->etm[ce][(LOG2_POROUS_BRINK)]);
+	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
+	                                                                  pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
+                                                                          pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
+                                                                          pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
+	                                                                  pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)],
+                                                                          pd_ptr->etm[mtrx_index0][ce][(LOG2_POROUS_BRINK)]);
 	break;
 
     case R_MASS_SURF:
@@ -9795,41 +9902,41 @@ rd_eq_specs(FILE *ifp,
    
   ce = R_STRESS11;
   cv = POLYMER_STRESS11;
-  if ( pd_ptr->e[ce] )
+  if ( pd_ptr->e[mtrx_index0][ce] )
   {
     cem = R_STRESS11_1;
     cvm = POLYMER_STRESS11_1;
     for(n=1; n<vn_glob[mn]->modes; n++)
     {
       /* set flag to turn on this stress mode */
-      pd_ptr->e[cem]  = pd_ptr->e[ce];
+      pd_ptr->e[mtrx_index0][cem]  = pd_ptr->e[mtrx_index0][ce];
       /* set weight function to be the same as mother mode,  R_STRESS11 */
-      pd_ptr->w[cem] = pd_ptr->w[ce];
+      pd_ptr->w[mtrx_index0][cem] = pd_ptr->w[mtrx_index0][ce];
       /* make sure the variable associated with this equation is on */
-      pd_ptr->v[cvm] = pd_ptr->v[cv];
+      pd_ptr->v[mtrx_index0][cvm] = pd_ptr->v[mtrx_index0][cv];
 
       /* set interpolation function to be the same as mother mode,  R_STRESS11 */
-      pd_ptr->i[cvm] = pd_ptr->i[cv];
+      pd_ptr->i[mtrx_index0][cvm] = pd_ptr->i[mtrx_index0][cv];
       /* turn on the eqn term multipliers the same as mother's */
-      pd_ptr->etm[cem][(LOG2_MASS)] = pd_ptr->etm[ce][(LOG2_MASS)];
-      pd_ptr->etm[cem][(LOG2_ADVECTION)] = pd_ptr->etm[ce][(LOG2_ADVECTION)];
-      pd_ptr->etm[cem][(LOG2_BOUNDARY)] = pd_ptr->etm[ce][(LOG2_BOUNDARY)];
-      pd_ptr->etm[cem][(LOG2_DIFFUSION)] = pd_ptr->etm[ce][(LOG2_DIFFUSION)];
-      pd_ptr->etm[cem][(LOG2_SOURCE)] = pd_ptr->etm[ce][(LOG2_SOURCE)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_MASS)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_ADVECTION)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_BOUNDARY)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_DIFFUSION)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_SOURCE)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)];
 	  
-      pd_ptr->m[neqn] = cem;
+      pd_ptr->m[mtrx_index0][neqn] = cem;
 	  
       /*
        * Setup actual equation to problem equation index arrays 
        */
-      if( upd->ep[cem] == -1)
+      if( upd->ep[mtrx_index0][cem] == -1)
       {
-	upd->ep[cem] = upd->Total_Num_EQ++;
+	upd->ep[mtrx_index0][cem] = upd->Total_Num_EQ[mtrx_index0]++;
       }
 
-      if( upd->vp[cvm] == -1 )
+      if( upd->vp[mtrx_index0][cvm] == -1 )
       {
-	upd->vp[cvm] = upd->Total_Num_Var++;
+	upd->vp[mtrx_index0][cvm] = upd->Total_Num_Var[mtrx_index0]++;
       }
 
       /* move on to the 11 component of the next stress tensor */
@@ -9842,40 +9949,40 @@ rd_eq_specs(FILE *ifp,
 
   ce = R_STRESS12;
   cv = POLYMER_STRESS12;
-  if ( pd_ptr->e[ce] )
+  if ( pd_ptr->e[mtrx_index0][ce] )
   {
     cem = R_STRESS12_1;
     cvm = POLYMER_STRESS12_1;
     for(n=1; n<vn_glob[mn]->modes; n++)
     {
       /* set flag to turn on this stress mode */
-      pd_ptr->e[cem]  = pd_ptr->e[ce];
+      pd_ptr->e[mtrx_index0][cem]  = pd_ptr->e[mtrx_index0][ce];
       /* set weight function to be the same as mother mode,  R_STRESS12 */
-      pd_ptr->w[cem] = pd_ptr->w[ce];
+      pd_ptr->w[mtrx_index0][cem] = pd_ptr->w[mtrx_index0][ce];
       /* make sure the variable associated with this equation is on */
-      pd_ptr->v[cvm] = pd_ptr->v[cv];
+      pd_ptr->v[mtrx_index0][cvm] = pd_ptr->v[mtrx_index0][cv];
 
       /* set interpolation function to be the same as mother mode,  R_STRESS12 */
-      pd_ptr->i[cvm] = pd_ptr->i[cv];
+      pd_ptr->i[mtrx_index0][cvm] = pd_ptr->i[mtrx_index0][cv];
       /* turn on the eqn term multipliers the same as mother's */
-      pd_ptr->etm[cem][(LOG2_MASS)] = pd_ptr->etm[ce][(LOG2_MASS)];
-      pd_ptr->etm[cem][(LOG2_ADVECTION)] = pd_ptr->etm[ce][(LOG2_ADVECTION)];
-      pd_ptr->etm[cem][(LOG2_BOUNDARY)] = pd_ptr->etm[ce][(LOG2_BOUNDARY)];
-      pd_ptr->etm[cem][(LOG2_DIFFUSION)] = pd_ptr->etm[ce][(LOG2_DIFFUSION)];
-      pd_ptr->etm[cem][(LOG2_SOURCE)] = pd_ptr->etm[ce][(LOG2_SOURCE)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_MASS)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_ADVECTION)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_BOUNDARY)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_DIFFUSION)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_SOURCE)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)];
 	  
-      pd_ptr->m[neqn] = cem;
+      pd_ptr->m[mtrx_index0][neqn] = cem;
 	  
       /*
        * Setup actual equation to problem equation index arrays 
        */
-      if( upd->ep[cem] == -1)
+      if( upd->ep[mtrx_index0][cem] == -1)
       {
-	upd->ep[cem] = upd->Total_Num_EQ++;
+	upd->ep[mtrx_index0][cem] = upd->Total_Num_EQ[mtrx_index0]++;
       }	 
-      if( upd->vp[cvm] == -1 )
+      if( upd->vp[mtrx_index0][cvm] == -1 )
       {
-	upd->vp[cvm] = upd->Total_Num_Var++;
+	upd->vp[mtrx_index0][cvm] = upd->Total_Num_Var[mtrx_index0]++;
       }
 	  
       /* move on to the 12 component of the next stress tensor */
@@ -9888,41 +9995,41 @@ rd_eq_specs(FILE *ifp,
 
   ce = R_STRESS22;
   cv = POLYMER_STRESS22;
-  if ( pd_ptr->e[ce] )
+  if ( pd_ptr->e[mtrx_index0][ce] )
   {
     cem = R_STRESS22_1;
     cvm = POLYMER_STRESS22_1;
     for (n=1; n<vn_glob[mn]->modes; n++)
     {
       /* set flag to turn on this stress mode */
-      pd_ptr->e[cem]  = pd_ptr->e[ce];
+      pd_ptr->e[mtrx_index0][cem]  = pd_ptr->e[mtrx_index0][ce];
       /* set weight function to be the same as mother mode,  R_STRESS22 */
-      pd_ptr->w[cem] = pd_ptr->w[ce];
+      pd_ptr->w[mtrx_index0][cem] = pd_ptr->w[mtrx_index0][ce];
       /* make sure the variable associated with this equation is on */
-      pd_ptr->v[cvm] = pd_ptr->v[cv];
+      pd_ptr->v[mtrx_index0][cvm] = pd_ptr->v[mtrx_index0][cv];
 
       /* set interpolation function to be the same as mother mode,
 	 R_STRESS22 */
-      pd_ptr->i[cvm] = pd_ptr->i[cv];
+      pd_ptr->i[mtrx_index0][cvm] = pd_ptr->i[mtrx_index0][cv];
       /* turn on the eqn term multipliers the same as mother's */
-      pd_ptr->etm[cem][(LOG2_MASS)] = pd_ptr->etm[ce][(LOG2_MASS)];
-      pd_ptr->etm[cem][(LOG2_ADVECTION)] = pd_ptr->etm[ce][(LOG2_ADVECTION)];
-      pd_ptr->etm[cem][(LOG2_BOUNDARY)] = pd_ptr->etm[ce][(LOG2_BOUNDARY)];
-      pd_ptr->etm[cem][(LOG2_DIFFUSION)] = pd_ptr->etm[ce][(LOG2_DIFFUSION)];
-      pd_ptr->etm[cem][(LOG2_SOURCE)] = pd_ptr->etm[ce][(LOG2_SOURCE)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_MASS)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_ADVECTION)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_BOUNDARY)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_DIFFUSION)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_SOURCE)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)];
 	  
-      pd_ptr->m[neqn] = cem;
+      pd_ptr->m[mtrx_index0][neqn] = cem;
 	  
       /*
        * Setup actual equation to problem equation index arrays 
        */
-      if( upd->ep[cem] == -1)
+      if( upd->ep[mtrx_index0][cem] == -1)
       {
-	upd->ep[cem] = upd->Total_Num_EQ++;
+	upd->ep[mtrx_index0][cem] = upd->Total_Num_EQ[mtrx_index0]++;
       }	 
-      if( upd->vp[cvm] == -1 )
+      if( upd->vp[mtrx_index0][cvm] == -1 )
       {
-	upd->vp[cvm] = upd->Total_Num_Var++;
+	upd->vp[mtrx_index0][cvm] = upd->Total_Num_Var[mtrx_index0]++;
       }
 	  
       /* move on to the 22 component of the next stress tensor */
@@ -9935,40 +10042,40 @@ rd_eq_specs(FILE *ifp,
 
   ce = R_STRESS13;
   cv = POLYMER_STRESS13;
-  if ( pd_ptr->e[ce] )
+  if ( pd_ptr->e[mtrx_index0][ce] )
   {
     cem = R_STRESS13_1;
     cvm = POLYMER_STRESS13_1;
     for (n=1; n<vn_glob[mn]->modes; n++)
     {
       /* set flag to turn on this stress mode */
-      pd_ptr->e[cem]  = pd_ptr->e[ce];
+      pd_ptr->e[mtrx_index0][cem]  = pd_ptr->e[mtrx_index0][ce];
       /* set weight function to be the same as mother mode,  R_STRESS13 */
-      pd_ptr->w[cem] = pd_ptr->w[ce];
+      pd_ptr->w[mtrx_index0][cem] = pd_ptr->w[mtrx_index0][ce];
       /* make sure the variable associated with this equation is on */
-      pd_ptr->v[cvm] = pd_ptr->v[cv];
+      pd_ptr->v[mtrx_index0][cvm] = pd_ptr->v[mtrx_index0][cv];
 
       /* set interpolation function to be the same as mother mode,  R_STRESS13 */
-      pd_ptr->i[cvm] = pd_ptr->i[cv];
+      pd_ptr->i[mtrx_index0][cvm] = pd_ptr->i[mtrx_index0][cv];
       /* turn on the eqn term multipliers the same as mother's */
-      pd_ptr->etm[cem][(LOG2_MASS)] = pd_ptr->etm[ce][(LOG2_MASS)];
-      pd_ptr->etm[cem][(LOG2_ADVECTION)] = pd_ptr->etm[ce][(LOG2_ADVECTION)];
-      pd_ptr->etm[cem][(LOG2_BOUNDARY)] = pd_ptr->etm[ce][(LOG2_BOUNDARY)];
-      pd_ptr->etm[cem][(LOG2_DIFFUSION)] = pd_ptr->etm[ce][(LOG2_DIFFUSION)];
-      pd_ptr->etm[cem][(LOG2_SOURCE)] = pd_ptr->etm[ce][(LOG2_SOURCE)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_MASS)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_ADVECTION)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_BOUNDARY)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_DIFFUSION)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_SOURCE)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)];
 	  
-      pd_ptr->m[neqn] = cem;
+      pd_ptr->m[mtrx_index0][neqn] = cem;
 	  
       /*
        * Setup actual equation to problem equation index arrays 
        */
-      if( upd->ep[cem] == -1)
+      if( upd->ep[mtrx_index0][cem] == -1)
       {
-	upd->ep[cem] = upd->Total_Num_EQ++;
+	upd->ep[mtrx_index0][cem] = upd->Total_Num_EQ[mtrx_index0]++;
       }	 
-      if( upd->vp[cvm] == -1 )
+      if( upd->vp[mtrx_index0][cvm] == -1 )
       {
-	upd->vp[cvm] = upd->Total_Num_Var++;
+	upd->vp[mtrx_index0][cvm] = upd->Total_Num_Var[mtrx_index0]++;
       }
 	  
       /* move on to the 13 component of the next stress tensor */
@@ -9981,40 +10088,40 @@ rd_eq_specs(FILE *ifp,
 
   ce = R_STRESS23;
   cv = POLYMER_STRESS23;
-  if ( pd_ptr->e[ce] )
+  if ( pd_ptr->e[mtrx_index0][ce] )
   {
     cem = R_STRESS23_1;
     cvm = POLYMER_STRESS23_1;
     for (n=1; n<vn_glob[mn]->modes; n++)
     {
       /* set flag to turn on this stress mode */
-      pd_ptr->e[cem]  = pd_ptr->e[ce];
+      pd_ptr->e[mtrx_index0][cem]  = pd_ptr->e[mtrx_index0][ce];
       /* set weight function to be the same as mother mode,  R_STRESS23 */
-      pd_ptr->w[cem] = pd_ptr->w[ce];
+      pd_ptr->w[mtrx_index0][cem] = pd_ptr->w[mtrx_index0][ce];
       /* make sure the variable associated with this equation is on */
-      pd_ptr->v[cvm] = pd_ptr->v[cv];
+      pd_ptr->v[mtrx_index0][cvm] = pd_ptr->v[mtrx_index0][cv];
 
       /* set interpolation function to be the same as mother mode,  R_STRESS23 */
-      pd_ptr->i[cvm] = pd_ptr->i[cv];
+      pd_ptr->i[mtrx_index0][cvm] = pd_ptr->i[mtrx_index0][cv];
       /* turn on the eqn term multipliers the same as mother's */
-      pd_ptr->etm[cem][(LOG2_MASS)] = pd_ptr->etm[ce][(LOG2_MASS)];
-      pd_ptr->etm[cem][(LOG2_ADVECTION)] = pd_ptr->etm[ce][(LOG2_ADVECTION)];
-      pd_ptr->etm[cem][(LOG2_BOUNDARY)] = pd_ptr->etm[ce][(LOG2_BOUNDARY)];
-      pd_ptr->etm[cem][(LOG2_DIFFUSION)] = pd_ptr->etm[ce][(LOG2_DIFFUSION)];
-      pd_ptr->etm[cem][(LOG2_SOURCE)] = pd_ptr->etm[ce][(LOG2_SOURCE)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_MASS)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_ADVECTION)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_BOUNDARY)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_DIFFUSION)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_SOURCE)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)];
 	  
-      pd_ptr->m[neqn] = cem;
+      pd_ptr->m[mtrx_index0][neqn] = cem;
 	  
       /*
        * Setup actual equation to problem equation index arrays 
        */
-      if( upd->ep[cem] == -1)
+      if( upd->ep[mtrx_index0][cem] == -1)
       {
-	upd->ep[cem] = upd->Total_Num_EQ++;
+	upd->ep[mtrx_index0][cem] = upd->Total_Num_EQ[mtrx_index0]++;
       }	 
-      if( upd->vp[cvm] == -1 )
+      if( upd->vp[mtrx_index0][cvm] == -1 )
       {
-	upd->vp[cvm] = upd->Total_Num_Var++;
+	upd->vp[mtrx_index0][cvm] = upd->Total_Num_Var[mtrx_index0]++;
       }
 	  
       /* move on to the 23 component of the next stress tensor */
@@ -10027,40 +10134,40 @@ rd_eq_specs(FILE *ifp,
 
   ce = R_STRESS33;
   cv = POLYMER_STRESS33;
-  if ( pd_ptr->e[ce] )
+  if ( pd_ptr->e[mtrx_index0][ce] )
   {
     cem = R_STRESS33_1;
     cvm = POLYMER_STRESS33_1;
     for (n=1; n<vn_glob[mn]->modes; n++)
     {
       /* set flag to turn on this stress mode */
-      pd_ptr->e[cem]  = pd_ptr->e[ce];
+      pd_ptr->e[mtrx_index0][cem]  = pd_ptr->e[mtrx_index0][ce];
       /* set weight function to be the same as mother mode,  R_STRESS33 */
-      pd_ptr->w[cem] = pd_ptr->w[ce];
+      pd_ptr->w[mtrx_index0][cem] = pd_ptr->w[mtrx_index0][ce];
       /* make sure the variable associated with this equation is on */
-      pd_ptr->v[cvm] = pd_ptr->v[cv];
+      pd_ptr->v[mtrx_index0][cvm] = pd_ptr->v[mtrx_index0][cv];
 
       /* set interpolation function to be the same as mother mode,  R_STRESS33 */
-      pd_ptr->i[cvm] = pd_ptr->i[cv];
+      pd_ptr->i[mtrx_index0][cvm] = pd_ptr->i[mtrx_index0][cv];
       /* turn on the eqn term multipliers the same as mother's */
-      pd_ptr->etm[cem][(LOG2_MASS)] = pd_ptr->etm[ce][(LOG2_MASS)];
-      pd_ptr->etm[cem][(LOG2_ADVECTION)] = pd_ptr->etm[ce][(LOG2_ADVECTION)];
-      pd_ptr->etm[cem][(LOG2_BOUNDARY)] = pd_ptr->etm[ce][(LOG2_BOUNDARY)];
-      pd_ptr->etm[cem][(LOG2_DIFFUSION)] = pd_ptr->etm[ce][(LOG2_DIFFUSION)];
-      pd_ptr->etm[cem][(LOG2_SOURCE)] = pd_ptr->etm[ce][(LOG2_SOURCE)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_MASS)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_ADVECTION)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_BOUNDARY)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_DIFFUSION)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)];
+      pd_ptr->etm[mtrx_index0][cem][(LOG2_SOURCE)] = pd_ptr->etm[mtrx_index0][ce][(LOG2_SOURCE)];
 	  
-      pd_ptr->m[neqn] = cem;
+      pd_ptr->m[mtrx_index0][neqn] = cem;
 	  
       /*
        * Setup actual equation to problem equation index arrays 
        */
-      if( upd->ep[cem] == -1)
+      if( upd->ep[mtrx_index0][cem] == -1)
       {
-	upd->ep[cem] = upd->Total_Num_EQ++;
+	upd->ep[mtrx_index0][cem] = upd->Total_Num_EQ[mtrx_index0]++;
       }	
-      if( upd->vp[cvm] == -1 )
+      if( upd->vp[mtrx_index0][cvm] == -1 )
       {
-	upd->vp[cvm] = upd->Total_Num_Var++;
+	upd->vp[mtrx_index0][cvm] = upd->Total_Num_Var[mtrx_index0]++;
       }
  
       /* move on to the 33 component of the next stress tensor */
@@ -10075,7 +10182,7 @@ rd_eq_specs(FILE *ifp,
    *  Store the total number of equations that are active in this
    *   material in the Problem_Description structure
    */
-  pd_ptr->Num_EQ = neqn;
+  pd_ptr->Num_EQ[mtrx_index0] = neqn;
 
   /*
    *  Check on tha bounds on the total number of equations permissible
@@ -10091,13 +10198,15 @@ rd_eq_specs(FILE *ifp,
    * 2D flows... */
   if(Linear_Stability == LSA_3D_OF_2D || Linear_Stability == LSA_3D_OF_2D_SAVE)
     {
-      if(!pd_glob[mn]->e[R_MOMENTUM3] || !pd_glob[mn]->v[VELOCITY3])
+      if(!pd_glob[mn]->e[0][R_MOMENTUM3] || !pd_glob[mn]->v[0][VELOCITY3])
 	{
 	  fprintf(stderr, "\nR_MOMENTUM3/VELOCITY3 are required for a 3D stability of a 2D flow.\n");
 	  fprintf(stderr, "They are missing in material %d (0-based)\n\n", mn);
 	  EH(-1, "missing equation for 3D stability of 2D flow");
 	}
     }
+
+  } /* End of loop over matrices */
 
 } /* END rd_eq_specs() -- read input file for equation & term specs *******/
 /**************************************************************************/

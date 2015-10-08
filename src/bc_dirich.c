@@ -92,7 +92,7 @@ put_dirichlet_in_matrix(double x[], const int num_total_nodes)
     I = Proc_Elem_Connect[ei->iconnect_ptr + i];
     node = Nodes[I];
     if (node->DBC && I < num_total_nodes) {
-      nv = node->Nodal_Vars_Info;
+      nv = node->Nodal_Vars_Info[pg->imtrx];
       offset = 0;
       for (lvdesc = 0; lvdesc < nv->Num_Var_Desc; lvdesc++) {
 	vd = nv->Var_Desc_List[lvdesc];
@@ -109,7 +109,7 @@ put_dirichlet_in_matrix(double x[], const int num_total_nodes)
 	     * ordering.
 	     */
 	    ldof_eqn = ei->ln_to_first_dof[var_type][i];
-	    for (j = 0, found = FALSE; j < Dolphin[I][var_type]; j++) {
+	    for (j = 0, found = FALSE; j < Dolphin[pg->imtrx][I][var_type]; j++) {
 	      ledof = ei->lvdof_to_ledof[var_type][ldof_eqn];
 	      matID_dof = ei->matID_ledof[ledof];
 	      if (matID == matID_dof || matID == -1) {
@@ -125,11 +125,11 @@ put_dirichlet_in_matrix(double x[], const int num_total_nodes)
 	      eqn = MAX_PROB_VAR + vd->Subvar_Index;
 	      var = eqn;
 	    } else {
-	      eqn = upd->ep[var_type];
-	      var = upd->vp[var_type];
+	      eqn = upd->ep[pg->imtrx][var_type];
+	      var = upd->vp[pg->imtrx][var_type];
 	    }
 
-	    if (pd->e[var_type])  /*Big test here.  We are no longer applying 
+	    if (pd->e[pg->imtrx][var_type])  /*Big test here.  We are no longer applying 
 				   dirichlets from materials that the variables 
 				   isn't defined */
 	      {
@@ -147,7 +147,7 @@ put_dirichlet_in_matrix(double x[], const int num_total_nodes)
 		    if (BC_Types[ibc].BC_relax == -1.0) {
 		      lec->R[eqn][ldof_eqn] = 0.0;
 		    } else {
-		      ieqn  = node->First_Unknown + offset;
+		      ieqn  = node->First_Unknown[pg->imtrx] + offset;
 		      V_set = BC_Types[ibc].BC_Data_Float[0];
 		      lec->R[eqn][ldof_eqn] = DIRICHLET_PENALTY * (x[ieqn] - V_set); 
 		    }

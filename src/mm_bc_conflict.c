@@ -115,7 +115,7 @@ static int **alloc_bc_unk_list_node(int inode)
 {
   int unk;
   NODE_INFO_STRUCT *node = Nodes[inode];
-  NODAL_VARS_STRUCT *nv = node->Nodal_Vars_Info;
+  NODAL_VARS_STRUCT *nv = node->Nodal_Vars_Info[pg->imtrx];
   int num = nv->Num_Unknowns;
   int **bc_unk_list_node;
   if (num <=  0) {
@@ -152,7 +152,7 @@ static void free_bc_unk_list_node(int ***bc_list_node_ptr, int inode)
 {
   int unk;
   NODE_INFO_STRUCT *node = Nodes[inode];
-  NODAL_VARS_STRUCT *nv = node->Nodal_Vars_Info;
+  NODAL_VARS_STRUCT *nv = node->Nodal_Vars_Info[pg->imtrx];
   int num = nv->Num_Unknowns;
   int **bc_list_node = *bc_list_node_ptr;
   for (unk = 0; unk < num; unk++) {
@@ -477,7 +477,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 	      /* the point actually makes the distinguished dup list*/
 		    
 	      node = Nodes[inode];
-	      nv = node->Nodal_Vars_Info;
+	      nv = node->Nodal_Vars_Info[pg->imtrx];
 	      ndofs = get_nv_ndofs(nv, R_MOMENTUM1);
 	      for (idof = 0; idof < ndofs; idof++) {
                 if ( idof >= nv->Num_Var_Desc_Per_Type[R_MOMENTUM1] ) continue; /*check needed for XFEM */
@@ -558,7 +558,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 		case POLYMER_STRESS22_7:
 		  {
 		    /* used material index determined for last element on the current side set */
-		    switch(pd_glob[matIndex]->i[varType])
+		    switch(pd_glob[matIndex]->i[0][varType])
 		      {
 		      case I_P0:
 		      case I_P1:
@@ -642,7 +642,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
   for (inode = 0; inode < num_total_nodes; inode++) {
     if (BC_Unk_List[inode] != NULL) {
       node = Nodes[inode];
-      nv = node->Nodal_Vars_Info;
+      nv = node->Nodal_Vars_Info[pg->imtrx];
       /* check for duplications */
       dups = 0;
       for (offset = 0; offset < nv->Num_Unknowns; offset++) {
@@ -1719,7 +1719,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
       inode = BC_dup_nodes[i];
       if (inode < (dpi->num_internal_nodes + dpi->num_boundary_nodes)) {
 	node = Nodes[inode];
-	nv = node->Nodal_Vars_Info;
+	nv = node->Nodal_Vars_Info[pg->imtrx];
 	fprintf(bc_dup_out, "\nAt global node %d",
 		node->Global_Node_Num + 1);
 	fprintf(bc_dup_out, " (proc node %d)", inode + 1);
@@ -1800,7 +1800,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
    */
   for (inode = 0; inode < num_total_nodes; inode++) {
     node = Nodes[inode];
-    nv =  node->Nodal_Vars_Info;
+    nv =  node->Nodal_Vars_Info[pg->imtrx];
     if (BC_Unk_List[inode] != NULL) {
       for (ivar = 0; ivar < 2; ivar++) {
 	/* if ivar=0 checking the MESH equations
@@ -2464,7 +2464,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
   for (inode = 0; inode < num_total_nodes; inode++) {
     if (BC_Unk_List[inode] != NULL) {
       node = Nodes[inode];
-      nv = node->Nodal_Vars_Info;
+      nv = node->Nodal_Vars_Info[pg->imtrx];
       /* Currently don't worry about rotation unless a BC exists at a 
        * node 
        */
@@ -2944,7 +2944,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
       if (Unlimited_Output) {
 	  fprintf(ofbc, "N=%d:", BC_dup_nodes[i]+1);
       }
-      nv = node->Nodal_Vars_Info;
+      nv = node->Nodal_Vars_Info[pg->imtrx];
       /* check for duplications */
       dups = 0;
       for (offset = 0; offset < nv->Num_Unknowns; offset++) {

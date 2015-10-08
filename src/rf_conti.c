@@ -293,7 +293,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
    */
   num_total_nodes = dpi->num_universe_nodes;
 
-  numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
   /* allocate memory for Volume Constraint Jacobian */
   if ( nAC > 0)
@@ -459,7 +459,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	  
 #ifdef HAVE_FRONT  
        err = mf_setup(&exo->num_elems, 
-		     &NumUnknowns, 
+		     &NumUnknowns[pg->imtrx], 
 		     &max_unk_elem, 
 		     &three,
 		     &one,
@@ -530,8 +530,8 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
        * An attic to store external dofs column names is needed when
        * running in parallel.
        */
-      alloc_extern_ija_buffer(num_universe_dofs, 
-			      num_internal_dofs+num_boundary_dofs, 
+      alloc_extern_ija_buffer(num_universe_dofs[pg->imtrx], 
+			      num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx], 
 			      ija, &ija_attic);
       /*
        * Any necessary one time initialization of the linear
@@ -553,11 +553,11 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
       ams[JAC]->npn      = dpi->num_internal_nodes + dpi->num_boundary_nodes;
       ams[JAC]->npn_plus = dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes;
 
-      ams[JAC]->npu      = num_internal_dofs+num_boundary_dofs;
-      ams[JAC]->npu_plus = num_universe_dofs;
+      ams[JAC]->npu      = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
+      ams[JAC]->npu_plus = num_universe_dofs[pg->imtrx];
 
-      ams[JAC]->nnz = ija[num_internal_dofs+num_boundary_dofs] - 1;
-      ams[JAC]->nnz_plus = ija[num_universe_dofs];
+      ams[JAC]->nnz = ija[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]] - 1;
+      ams[JAC]->nnz_plus = ija[num_universe_dofs[pg->imtrx]];
     }
   else if(  strcmp( Matrix_Format, "vbr" ) == 0)
     {
@@ -623,7 +623,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   matrix_systems_mask = 1;
 
   log_msg("sl_init()...");
-  sl_init(matrix_systems_mask, ams, exo, dpi, cx);
+  sl_init(matrix_systems_mask, ams, exo, dpi, cx, imtrx);
 
   /*
   * Make sure the solver was properly initialized on all processors.
@@ -688,7 +688,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
        */
       if(alqALC == -1)
 	{
-	  dcopy1(NumUnknowns,x_old,x);
+	  dcopy1(NumUnknowns[pg->imtrx],x_old,x);
 
 	  switch (Continuation)
 	    {
@@ -698,10 +698,10 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	      switch (aldALC)
 		{
 		case -1:
-		  v1add(NumUnknowns, &x[0], -delta_s, &x_sens[0]);
+		  v1add(NumUnknowns[pg->imtrx], &x[0], -delta_s, &x_sens[0]);
 		  break;
 		case +1:
-		  v1add(NumUnknowns, &x[0], +delta_s, &x_sens[0]);
+		  v1add(NumUnknowns[pg->imtrx], &x[0], +delta_s, &x_sens[0]);
 		  break;
 		default:
 		  DPRINTF(stderr, "%s: Bad aldALC, %d\n", yo, aldALC);
@@ -1242,7 +1242,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   safer_free( (void **) &x_sens_temp); 
 
   if((nn_post_data_sens+nn_post_fluxes_sens) > 0)
-          Dmatrix_death(x_sens_p,num_pvector,NumUnknowns);
+          Dmatrix_death(x_sens_p,num_pvector,NumUnknowns[pg->imtrx]);
 
   for(i = 0; i < MAX_NUMBER_MATLS; i++) {
     for(n = 0; n < MAX_MODES; n++) {

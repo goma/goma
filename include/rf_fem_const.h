@@ -943,6 +943,11 @@
 #define MAX_ELEMENT_INDICES_RELATED 2
 #endif
 
+#ifndef MAX_NUM_MATRICES 
+#define MAX_NUM_MATRICES 4          /* Maximum number of matrices to be solved in segregated solver fashion */
+#endif
+
+
 /*
  * Magic numbers for adaptive time step selection -- how much acceleration,
  * deceleration, and maximum time step size.

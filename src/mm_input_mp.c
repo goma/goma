@@ -263,6 +263,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 { /*start*/
   char err_msg[MAX_CHAR_IN_INPUT];
   int	i, j, var;
+  int imtrx;
   static const char yo[] = "rd_mp_specs";
   struct Elastic_Constitutive  *dum_ptr;
   
@@ -293,6 +294,25 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   int ii, jj, n_dij, k, n_species;   /* KSC: 7/98 */ 
   dbl dij, E, T0;                    /* KSC: 7/98, 9/04 */ 
   int n_rxn;                         /* KSC/GHE: 10/98 */ 
+
+  int have_mesh_eqn;
+  int have_por_liq_pres;
+  int have_por_gas_pres;
+  int have_por_porosity;
+  int have_por_sink_mass;
+  int have_por_energy;
+  int have_shell_sat_open;
+  int have_shell_sat_open2;
+  int have_shear_rate;
+  int have_vort_dir;
+  int have_lubp;
+  int have_lubp2;
+  int have_shell_filmp;
+  int have_shell_filmh;
+  int have_shell_partc;
+  int have_shell_energy;
+  int have_shell_sat_closed;
+  int have_shell_sat_gasn;
 
   /*
    *  Pointers to Material property structures. "matr_ptr" points to the
@@ -3896,6 +3916,44 @@ ECHO("\n----Acoustic Properties\n", echo_file);
    * Microstructure stuff ************************************
    */
 
+ /* Check for existance of porous media variables in any matrix*/
+
+  have_por_liq_pres = 0;
+  have_por_gas_pres = 0;
+  have_por_porosity = 0;
+  have_por_sink_mass = 0;
+  have_por_energy = 0;
+  have_shell_sat_open = 0;
+  have_shell_sat_open2 = 0;
+
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+     {
+      if (pd_glob[mn]->e[imtrx][R_POR_LIQ_PRES])
+        {
+         have_por_liq_pres = 1;
+        }
+      if (pd_glob[mn]->e[imtrx][R_POR_GAS_PRES])
+        {
+         have_por_gas_pres = 1;
+        }
+      if (pd_glob[mn]->e[imtrx][R_POR_POROSITY])
+        {
+         have_por_porosity = 1;
+        }
+      if (pd_glob[mn]->e[imtrx][R_POR_ENERGY])
+        {
+         have_por_energy = 1;
+        }
+      if (pd_glob[mn]->e[imtrx][R_SHELL_SAT_OPEN])
+        {
+         have_shell_sat_open = 1;
+        }
+      if (pd_glob[mn]->e[imtrx][R_SHELL_SAT_OPEN_2])
+        {
+         have_shell_sat_open2 = 1;
+        }
+     }
+
   strcpy(search_string, "Media Type");
   model_read = look_for_mat_prop(imp, search_string, 
 				 &(mat_ptr->PorousMediaType), 
@@ -3907,9 +3965,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     {
       mat_ptr->PorousMediaType = CONTINUOUS;
       /*consistency checks */
-      if( pd_glob[mn]->e[R_POR_LIQ_PRES])
+      if( have_por_liq_pres == 1 )
 	{
-	  SPF(err_msg,"CONTINUOS model for %s cannot be used with porous equation\n",search_string);
+	  SPF(err_msg,"CONTINUOUS model for %s cannot be used with porous equation\n",search_string);
 	  EH(-1,err_msg);
 	}
     }
@@ -3917,7 +3975,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     {
       mat_ptr->PorousMediaType = POROUS_SATURATED;
       /*consistency checks */
-      if( !pd_glob[mn]->e[R_POR_LIQ_PRES])
+      if( have_por_liq_pres == 0 )
 	{
 	  EH(-1,"You cannot run a porous media simulation without selecting the porous media equations");
 	}
@@ -3926,8 +3984,8 @@ ECHO("\n----Acoustic Properties\n", echo_file);
   else if (model_read == -1 &&  !strcmp(model_name, "POROUS_TWO_PHASE") )
     {
       mat_ptr->PorousMediaType = POROUS_TWO_PHASE;
-      if( !pd_glob[mn]->e[R_POR_LIQ_PRES] ||
-	  !pd_glob[mn]->e[R_POR_GAS_PRES] )
+      if( have_por_liq_pres == 0 ||
+	  have_por_gas_pres == 0  )
 	{
 	  EH(-1,"You cannot run a two-phase porous media simulation without selecting both the porous_liq and porous_gas equations");
 	}
@@ -3937,7 +3995,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      !strcmp(model_name, "POROUS_PART_SAT") ) )
     {
       mat_ptr->PorousMediaType = POROUS_UNSATURATED;
-      if( !pd_glob[mn]->e[R_POR_LIQ_PRES])
+      if( have_por_liq_pres == 0 )
 	{
 	  EH(-1,"You cannot run a porous media simulation without selecting the porous media equations");
 	}
@@ -3951,7 +4009,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     {
       mat_ptr->PorousMediaType = POROUS_SHELL_UNSATURATED;
       mat_ptr->i_ys = 0;
-      if( !pd_glob[mn]->e[R_SHELL_SAT_OPEN] && !pd_glob[mn]->e[R_SHELL_SAT_OPEN_2] )
+      if( (have_shell_sat_open == 0) && (have_shell_sat_open2 == 0) )
 	{
 	  EH(-1,"You cannot run a porous shell media simulation without selecting the sh_sat_open equation");
 	}
@@ -3960,9 +4018,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     {
       mat_ptr->PorousMediaType = CONTINUOUS;
       /*consistency checks */
-      if( pd_glob[mn]->e[R_POR_LIQ_PRES])
+      if( have_por_liq_pres == 1 )
 	{
-	  SPF(err_msg,"CONTINUOS model for %s cannot be used with porous equation\n",search_string);
+	  SPF(err_msg,"CONTINUOUS model for %s cannot be used with porous equation\n",search_string);
 	  EH(-1,err_msg);
 	}
 
@@ -3984,19 +4042,22 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       
       for( j=0; j< MAX_POROUS_NUM; j++ ) 
         {
-	  if( pd_glob[mn]->e[R_POR_LIQ_PRES+j] ) 
-            {
-              mat_ptr->Porous_Eqn[i] = R_POR_LIQ_PRES + j;
-              i++;
-            }
+          for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+             {
+	      if( pd_glob[mn]->e[imtrx][R_POR_LIQ_PRES+j] ) 
+                {
+                 mat_ptr->Porous_Eqn[i] = R_POR_LIQ_PRES + j;
+                 i++;
+                }
+             }
         }
-      if(pd_glob[mn]->e[R_SHELL_SAT_OPEN]) 
+      if(have_shell_sat_open == 1) 
 	{
 	  mat_ptr->Porous_Eqn[i] = R_SHELL_SAT_OPEN;
 	  i++;
 	}
 
-      if(pd_glob[mn]->e[R_SHELL_SAT_OPEN_2]) 
+      if(have_shell_sat_open2 == 1) 
 	{
 	  mat_ptr->Porous_Eqn[i] = R_SHELL_SAT_OPEN_2;
 	  i++;
@@ -4012,14 +4073,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				     &(mat_ptr->porosity), NO_USER, NULL,
 				     model_name, SCALAR_INPUT, &NO_SPECIES,es);
 
-      if(pd_glob[mn]->e[R_POR_POROSITY] && strcmp(model_name, "DEFORM")) 
+      if( (have_por_porosity == 1) && strcmp(model_name, "DEFORM")) 
 	{
 	  EH(-1," you must have a DEFORM porosity model with the pore porosity equation");
 	}
 
       if (model_read == -1 && !strcmp(model_name, "DEFORM") )
 	{
-          if( !pd_glob[mn]->e[R_POR_POROSITY] ) /* OK OK i get it...no R_POR_POROSITY without DEFORM and vice versa */
+          if( have_por_porosity == 0 ) /* OK OK i get it...no R_POR_POROSITY without DEFORM and vice versa */
 	    {
               EH(-1,"You cannot calculate porosity variation without the pore porosity equation");
 	    }
@@ -4085,10 +4146,10 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       /* Print out Porous Media Equation numbers used by Code */
 
       SPF(es, "\n(Active Porous Equations: pl = %d, pg = %d, porosity = %d, pe = %d)\n", 
-	  pd_glob[mn]->e[R_POR_LIQ_PRES], 
-	  pd_glob[mn]->e[R_POR_GAS_PRES],
-	  pd_glob[mn]->e[R_POR_POROSITY],
-	  pd_glob[mn]->e[R_POR_ENERGY]);
+	  have_por_liq_pres, 
+	  have_por_gas_pres,
+	  have_por_porosity,
+	  have_por_energy );
 
       ECHO(es,echo_file);
       
@@ -4250,7 +4311,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
       else if (model_read == -1 && !strcmp(model_name, "SINK_MASS_PERM") )
 	{
-	  if(!pd_glob[mn]->e[R_POR_SINK_MASS]) EH(-1, "SINK_MASS_PERM model not permitted without sink eqn");
+	  if(have_por_sink_mass == 0) EH(-1, "SINK_MASS_PERM model not permitted without sink eqn");
 
 	  mat_ptr->PermeabilityModel = SINK_MASS_PERM;
 	  num_const = read_constants(imp, &(mat_ptr->u_permeability), 
@@ -4760,7 +4821,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
       ECHO(es,echo_file);   
 
-      if (pd_glob[mn]->e[R_POR_ENERGY]) {
+      if (have_por_energy == 1) {
       /*
        * Density of solid matrix
        */
@@ -5252,7 +5313,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      }
 	  }
       /* Special constants for sink models formulation -- PRS 8/19/05 */
-      if(pd_glob[mn]->e[R_POR_SINK_MASS])
+      if(have_por_sink_mass == 1)
       {
 	model_read = look_for_mat_prop(imp, "Sink Adsorption Rate Data", 
 				       &(mat_ptr->PorousSinkConstantsModel),
@@ -5310,6 +5371,24 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	read_bc_mp = i;
       }
     }
+
+ /* Check for existance of shear rate and vorticity variable in any matrix*/
+
+  have_shear_rate = 0;
+  have_vort_dir = 0;
+
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+     {
+      if (pd_glob[mn]->e[imtrx][R_SHEAR_RATE])
+        {
+         have_shear_rate = 1;
+        }
+      if (pd_glob[mn]->e[imtrx][R_VORT_DIR1])
+        {
+         have_vort_dir = 1;
+        }
+     }
+
   
   if (pd_glob[mn]->Num_Species_Eqn > 0) 
     {
@@ -5396,28 +5475,28 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	{
 	  DiffusionConstitutiveEquation = HYDRODYNAMIC;
 	  
-          if( !pd_glob[mn]->e[R_SHEAR_RATE] )
+          if( have_shear_rate == 0 )
 	    EH(-1, "HYDRODYNAMIC mass flux requires shear_rate dof in EQ list.");
 	}
       else if ( !strcmp(model_name, "HYDRODYNAMIC_QTENSOR") )
 	{
 	  DiffusionConstitutiveEquation = HYDRODYNAMIC_QTENSOR;
 	  
-          if( !pd_glob[mn]->e[R_SHEAR_RATE] )
+          if( have_shear_rate == 0 )
 	    EH(-1, "HYDRODYNAMIC_QTENSOR mass flux requires shear_rate dof in EQ list.");
 	}
       else if ( !strcmp(model_name, "HYDRODYNAMIC_QTENSOR_OLD") )
 	{
 	  DiffusionConstitutiveEquation = HYDRODYNAMIC_QTENSOR_OLD;
 
-          if( !pd_glob[mn]->e[R_SHEAR_RATE] )
+          if( have_shear_rate == 0 )
 	    EH(-1, "HYDRODYNAMIC_QTENSOR mass flux requires shear_rate dof in EQ list.");
 	}
       else if ( !strcmp(model_name, "SUSPENSION_BALANCE") )
 	{
 	  DiffusionConstitutiveEquation = DM_SUSPENSION_BALANCE;
 	  
-	/*   if( !pd_glob[mn]->e[R_VORT_DIR1] ) */
+	/*   if( have_vort_dir == 0 ) */
 /* 	    EH(-1, "SUSPENSION_BALANCE mass flux requires a vorticity vector in EQ list."); */
 	}
       else if ( !strcmp(model_name, "NONE") )
@@ -6155,7 +6234,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      * And just check to make sure this is active, too.
 	      */
 	     
-		     if( !pd_glob[mn]->e[R_SHEAR_RATE] )
+		     if( have_shear_rate == 0 )
 		       {
 			 sr = sprintf(err_msg, 
 				      "Matl %s (conc %d) %s %s model needs the \"%s\" eqn active.\n",
@@ -7973,7 +8052,54 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
   ECHO("\n---Special Inputs\n", echo_file); /* added by PRS 3/17/2009 */ 
 
-  if(pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2])
+
+  /* Check for existance of shell DOFs in any matrix */
+  have_lubp = 0;
+  have_lubp2 = 0;
+  have_shell_filmp = 0;
+  have_shell_filmh = 0;
+  have_shell_partc = 0;
+  have_shell_energy = 0;
+  have_shell_sat_closed = 0;
+  have_shell_sat_gasn = 0;
+
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+     {
+      if (pd_glob[mn]->e[imtrx][R_LUBP])
+        {
+         have_lubp = 1;
+        }
+      if (pd_glob[mn]->e[imtrx][R_LUBP_2])
+        {
+         have_lubp2 = 1;
+        }
+      if (pd_glob[mn]->e[imtrx][R_SHELL_FILMP])
+        {
+         have_shell_filmp = 1;
+        }
+      if (pd_glob[mn]->e[imtrx][R_SHELL_FILMH])
+        {
+         have_shell_filmh = 1;
+        }
+      if (pd_glob[mn]->e[imtrx][R_SHELL_PARTC])
+        {
+         have_shell_partc = 1;
+        }
+      if (pd_glob[mn]->e[imtrx][R_SHELL_ENERGY])
+        {
+         have_shell_energy = 1;
+        }
+      if (pd_glob[mn]->e[imtrx][R_SHELL_SAT_CLOSED])
+        {
+         have_shell_sat_closed = 1;
+        }
+      if (pd_glob[mn]->e[imtrx][R_SHELL_SAT_GASN])
+        {
+         have_shell_sat_gasn = 1;
+        }
+     } 
+
+  if( (have_lubp == 1) || (have_lubp2 == 1) )
     {
       model_read = look_for_mat_prop(imp, "Upper Height Function Constants", 
 				     &(mat_ptr->HeightUFunctionModel), 
@@ -8724,12 +8850,12 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
   /* Shell Energy Cards - heat sources, sinks, etc. */
 
-  if (pd_glob[mn]->e[R_SHELL_ENERGY])
+  if ( have_shell_energy == 1 )
     {
       /* no source terms available.  Feel free to add some!  */
     } /* End of shell_energy cards */
 
-   if(pd_glob[mn]->e[R_SHELL_FILMP])
+   if( have_shell_filmp == 1 )
     {
 
       model_read = look_for_mat_prop(imp, "Film Evaporation Model", 
@@ -8867,7 +8993,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
     }
 
-  if(pd_glob[mn]->e[R_SHELL_FILMH])
+  if( have_shell_filmh == 1 )
     {
 
       model_read = look_for_mat_prop(imp, "Disjoining Pressure Model", 
@@ -8939,7 +9065,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
     }
 
-  if(pd_glob[mn]->e[R_SHELL_PARTC])
+  if( have_shell_partc == 1 )
     {
 
       model_read = look_for_mat_prop(imp, "Diffusion Coefficient Model", 
@@ -8982,14 +9108,26 @@ ECHO("\n----Acoustic Properties\n", echo_file);
    * Material input for fluid-structural interaction types for 
    * lubrication shell elements
    */
+
+   /* Check for mesh equation in any material and any matrix */
+   have_mesh_eqn = 0;
+   for (i = 0; i < upd->Total_Num_Matrices; i++)
+      {
+       if (upd->ep[i][R_MESH1] > -1)
+         {
+          have_mesh_eqn = 1;
+         }
+      }
+
+   
   //mat_ptr->FSIModel = FSI_SHELL_ONLY; 
 /*added by DSB 7/13; some post proc routines for 2D/shell problems
 					get confused if there are shell elements and no FSI model is specified.
 					Need to check that this doesn't break anything.*/  
 
-  if ( pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
-       pd_glob[mn]->e[R_SHELL_FILMP] ||
-       pd_glob[mn]->e[R_SHELL_SAT_OPEN] || pd_glob[mn]->e[R_SHELL_SAT_OPEN_2]) {
+  if ( (have_lubp == 1) || (have_lubp2 == 1) ||
+       (have_shell_filmp == 1) ||
+       (have_shell_sat_open == 1) || (have_shell_sat_open2 == 1) ) {
 
     model_read = look_for_mat_prop(imp, "FSI Deformation Model",
 				   &(mat_ptr->FSIModel),
@@ -9002,7 +9140,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
     } else if ( !strcmp(model_name, "FSI_MESH_CONTINUUM") ) {
       //PRS: Made this a WH instead of a EH as if the mesh equations are in a higher block #, this trips. 
-      if(upd->ep[R_MESH1] == -1) WH(-1," Must have mesh continuum equations on somewhere for FSI_MESH_CONTINUUM");
+      if(have_mesh_eqn == 0) WH(-1," Must have mesh continuum equations on somewhere for FSI_MESH_CONTINUUM");
       mat_ptr->FSIModel = FSI_MESH_CONTINUUM;
 
     } else if ( !strcmp(model_name, "FSI_MESH_SHELL") ) {
@@ -9034,9 +9172,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
    * Added by SAR 2010-03-01
    */
   
-  if(pd_glob[mn]->e[R_SHELL_SAT_CLOSED] || 
-     pd_glob[mn]->e[R_SHELL_SAT_OPEN]   || 
-     pd_glob[mn]->e[R_SHELL_SAT_OPEN_2])   {
+  if( (have_shell_sat_closed == 1) || 
+      (have_shell_sat_open == 1)   || 
+      (have_shell_sat_open2 == 1) )   {
     
     // Structured shell porosity
     model_read = look_for_mat_prop(imp, "Porous Shell Closed Porosity", 
@@ -9322,7 +9460,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
    * Added by SAR 2010-12-20
    */
   
-  if(pd_glob[mn]->e[R_SHELL_SAT_GASN]) {
+  if( have_shell_sat_gasn == 1 ) {
     
     // Gas diffusivity
     model_read = look_for_mat_prop(imp, "Porous Shell Gas Diffusivity", 

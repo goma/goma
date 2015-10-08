@@ -580,7 +580,7 @@ tuser(double *func,
 /*    } */
 /* */
 /*  var = TEMPERATURE; */
-/*  if (pd->v[var]) */
+/*  if (pd->v[pg->imtrx][var]) */
 /*    { */
 /*      d_func[var] = 1.; */
 /*    } */
@@ -624,7 +624,7 @@ yuser_surf(double *func,
 /* */
 /*  var = MASS_FRACTION; */
 /* */
-/*  if (pd->v[var]) */
+/*  if (pd->v[pg->imtrx][var]) */
 /*    { */
 /*      for( j=0 ; j<ei->dof[var]; j++) */
 /*	{ */
@@ -664,7 +664,7 @@ uuser_surf (func, d_func, u_bc, time)
     {
       func[0] = fv->v[0] - u_bc[2];
       var = VELOCITY1; 
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
         { 
           for( j=0 ; j<ei->dof[var]; j++)
             { 
@@ -680,7 +680,7 @@ uuser_surf (func, d_func, u_bc, time)
     {
       func[0] = fv->v[0] - u_bc[2];
       var = VELOCITY1; 
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
         { 
           for( j=0 ; j<ei->dof[var]; j++)
             { 
@@ -1079,7 +1079,7 @@ fn_dot_T_user (func, d_func, u_bc, time)
   /*
    * Example:
    *
-   *  DeformingMesh = pd->e[R_MESH1];     Catch bad references to moving 
+   *  DeformingMesh = pd->e[pg->imtrx][R_MESH1];     Catch bad references to moving 
    *				          mesh which isn't.
    *  eqn = VELOCITY1;
    *
@@ -1095,7 +1095,7 @@ fn_dot_T_user (func, d_func, u_bc, time)
    *      for (jvar=0; jvar<ei->ielem_dim; jvar++)
    *	{
    *	  var = MESH_DISPLACEMENT1 + jvar;
-   *	  if (pd->v[var]) 
+   *	  if (pd->v[pg->imtrx][var]) 
    *	    {
    *	      for ( j=0; j<ei->dof[var]; j++)
    *		{
@@ -1171,7 +1171,7 @@ void flow_n_dot_T_user (func, d_func, u_BC, time)
    *      for (jvar=0; jvar<ei->ielem_dim; jvar++)
    *	{
    *	  var = MESH_DISPLACEMENT1 + jvar;
-   *	  if (pd->v[var]) 
+   *	  if (pd->v[pg->imtrx][var]) 
    *	    {
    *	      for ( j=0; j<ei->dof[var]; j++)
    *		{
@@ -1437,7 +1437,7 @@ force_user_surf(double func[DIM],
       if(time < p[0])
 	{
 	  var = MESH_DISPLACEMENT1;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      for ( j=0; j<ei->dof[var]; j++)
 		{
@@ -1450,7 +1450,7 @@ force_user_surf(double func[DIM],
       else if (time > p[0])
 	{
 	  var = MESH_DISPLACEMENT1;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      for ( j=0; j<ei->dof[var]; j++)
 		{
@@ -1533,7 +1533,7 @@ volt_user_surf (double func[DIM],
 
   /* J_s_T --- sensitivity wrt electrolyte solution temperature */
   var=TEMPERATURE;
-  if (pd->v[var])
+  if (pd->v[pg->imtrx][var])
     {
       for (j = 0; j < ei->dof[var]; j++)
         {
@@ -1547,7 +1547,7 @@ volt_user_surf (double func[DIM],
 
   /* J_s_V --- sensitivity wrt electrolyte potential */
   var=VOLTAGE;
-  if (pd->v[var])
+  if (pd->v[pg->imtrx][var])
     {
       for (j = 0; j < ei->dof[var]; j++)
         {

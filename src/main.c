@@ -793,6 +793,10 @@ main(int argc, char **argv)
   /*
    *                           SOLVE THE PROBLEM
    */
+
+  if (upd->Total_Num_Matrices == 1){
+     pg->imtrx = 0;
+
   if (Debug_Flag) {
     switch (Continuation) {
     case ALC_ZEROTH:
@@ -866,6 +870,7 @@ main(int argc, char **argv)
       }
     break;
   }
+  } /* End of if upd->Total_Num_Matrices === 1 */
 
   if (ProcID == 0 && Brk_Flag == 1 && Num_Proc > 1) {
     fix_output();

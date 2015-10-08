@@ -325,7 +325,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
   num_total_nodes = dpi->num_universe_nodes;
 
-  numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
   /* allocate memory for Volume Constraint Jacobian. ACS 2/99 */
 
@@ -492,7 +492,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     }
 
     err = mf_setup(&exo->num_elems, 
-		   &NumUnknowns, 
+		   &NumUnknowns[pg->imtrx], 
 		   &max_unk_elem, 
 		   &three,
 		   &one,
@@ -558,8 +558,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
      * running in parallel.
      */
 
-    alloc_extern_ija_buffer(num_universe_dofs, 
-			    num_internal_dofs+num_boundary_dofs, 
+    alloc_extern_ija_buffer(num_universe_dofs[pg->imtrx], 
+			    num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx], 
 			    ija, &ija_attic);
     /*
      * Any necessary one time initialization of the linear
@@ -583,11 +583,11 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     ams[JAC]->npn      = dpi->num_internal_nodes + dpi->num_boundary_nodes;
     ams[JAC]->npn_plus = dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes;
 
-    ams[JAC]->npu      = num_internal_dofs+num_boundary_dofs;
-    ams[JAC]->npu_plus = num_universe_dofs;
+    ams[JAC]->npu      = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
+    ams[JAC]->npu_plus = num_universe_dofs[pg->imtrx];
 
-    ams[JAC]->nnz = ija[num_internal_dofs+num_boundary_dofs] - 1;
-    ams[JAC]->nnz_plus = ija[num_universe_dofs];
+    ams[JAC]->nnz = ija[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]] - 1;
+    ams[JAC]->nnz_plus = ija[num_universe_dofs[pg->imtrx]];
 
   }
   else if(  strcmp( Matrix_Format, "vbr" ) == 0)
@@ -658,7 +658,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   matrix_systems_mask = 1;
       
   log_msg("sl_init()...");
-  sl_init(matrix_systems_mask, ams, exo, dpi, cx);
+  sl_init(matrix_systems_mask, ams, exo, dpi, cx, pg->imtrx);
 
 #ifdef PARALLEL
   /*

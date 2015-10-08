@@ -115,7 +115,8 @@ sl_init(unsigned int option_mask,		/* option flag */
 	struct Aztec_Linear_Solver_System *ams[],
 	Exo_DB *exo,
 	Dpi *dpi,
-	Comm_Ex cx[])
+	Comm_Ex cx[],
+        int imtrx )
 {
 /* LOCAL VARIABLES */
   int i;
@@ -180,7 +181,7 @@ sl_init(unsigned int option_mask,		/* option flag */
 	   * Number of equations in the matrix that this processor owns.
 	   */
 
-	  A->N_update = num_internal_dofs + num_boundary_dofs; /* Whoa, mule! */
+	  A->N_update = num_internal_dofs[imtrx] + num_boundary_dofs[imtrx]; /* Whoa, mule! */
 	  A->update   = NULL;
 
 	  AZ_defaults(A->options, A->params);
@@ -270,9 +271,9 @@ sl_init(unsigned int option_mask,		/* option flag */
 
 	      A->data_org = (int *) smalloc(length*sizeof(int));
 
-	      A->data_org[AZ_N_internal]  = num_internal_dofs;
-	      A->data_org[AZ_N_border]    = num_boundary_dofs;
-	      A->data_org[AZ_N_external]  = num_external_dofs;
+	      A->data_org[AZ_N_internal]  = num_internal_dofs[imtrx];
+	      A->data_org[AZ_N_border]    = num_boundary_dofs[imtrx];
+	      A->data_org[AZ_N_external]  = num_external_dofs[imtrx];
 
 	      if ( strcmp(Matrix_Format, "vbr") == 0 )
 		{
@@ -311,12 +312,12 @@ sl_init(unsigned int option_mask,		/* option flag */
 		  fprintf(stderr, "P_%d: update_index[%d] (local name) = %d\n", 
 			  ProcID, i, A->update_index[i]);
 		}
-	      for ( i=0; i<num_external_dofs; i++)
+	      for ( i=0; i<num_external_dofs[pg->imtrx]; i++)
 		{
 		  fprintf(stderr, "P_%d: external[%d] (global name) = %d\n", 
 			  ProcID, i, A->external[i]);
 		}
-	      for ( i=0; i<num_external_dofs; i++)
+	      for ( i=0; i<num_external_dofs[pg->imtrx]; i++)
 		{
 		  fprintf(stderr, "P_%d: extern_index[%d] (local name) = %d\n",
 			  ProcID, i, A->extern_index[i]);

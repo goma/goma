@@ -401,7 +401,7 @@ PROTO((double [],		/* stream_fcn_vect */
  *      suppose the scalar quantity "foobar" requires the energy equation 
  *      to be active.
  *
- *      if ( FOOBAR != -1 && Num_Var_In_Type[R_ENERGY])
+ *      if ( FOOBAR != -1 && Num_Var_In_Type[pg->imtrx][R_ENERGY])
  *         {
  *            set_nv_tkud(rd, index, 0, 0, "FB","[1]", "Foobar", FALSE);
  *            index++;
@@ -587,7 +587,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   dim   = pd_glob[0]->Num_Dim;
 
-  if (pd->v[R_MESH1] && ei->ielem_dim >= dim) {
+  if (pd->v[pg->imtrx][R_MESH1] && ei->ielem_dim >= dim) {
     err = belly_flop(elc->lame_mu);
     EH(err, "error in belly flop");
     if (err == 2) exit(-1);
@@ -598,7 +598,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
    * into the post_proc_vector array
    */
 
-  if (STREAM_NORMAL_STRESS != -1 && pd->e[R_MOMENTUM1]) {
+  if (STREAM_NORMAL_STRESS != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
     speed = 0.;
     stream_grad = 0.;
 
@@ -627,7 +627,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[STREAM_NORMAL_STRESS] = 1.;
   }
 
-  if (DIV_VELOCITY != -1 && pd->e[PRESSURE]) {
+  if (DIV_VELOCITY != -1 && pd->e[pg->imtrx][PRESSURE]) {
     Dnn = 0.;
     for ( a=0; a<dim; a++)
       {
@@ -641,7 +641,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[DIV_VELOCITY] = 1.;
   }
 
-  if (DIV_PVELOCITY != -1 && pd->e[R_PMOMENTUM1]) {
+  if (DIV_PVELOCITY != -1 && pd->e[pg->imtrx][R_PMOMENTUM1]) {
     Dnn = 0.0;
     for ( a=0; a<dim; a++)
       Dnn += fv->grad_pv[a][a];
@@ -649,7 +649,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[DIV_PVELOCITY] = 1.0;
   }
 
-  if (DIV_TOTAL != -1 && pd->e[R_PMOMENTUM1]) {
+  if (DIV_TOTAL != -1 && pd->e[pg->imtrx][R_PMOMENTUM1]) {
     species_particle = (int) mp->u_density[0];
     p_vol_frac = fv->c[species_particle];
     Dnn = 0.0;
@@ -665,7 +665,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[DIV_TOTAL] = 1.0;
   }
 
-  if (PP_Viscosity != -1 && pd->e[R_MOMENTUM1]) {
+  if (PP_Viscosity != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
     for (a = 0; a < VIM; a++)
       {
 	for (b = 0; b < VIM; b++)
@@ -676,10 +676,10 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
     mu = viscosity(gn, gamma, NULL);
       
-    if (pd->v[POLYMER_STRESS11])
+    if (pd->v[pg->imtrx][POLYMER_STRESS11])
       {
 	/*  shift factor  */
-	if (pd->e[TEMPERATURE])
+	if (pd->e[pg->imtrx][TEMPERATURE])
 	  {
 	    if (vn->shiftModel == CONSTANT)
 	      {
@@ -713,19 +713,19 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[PP_Viscosity] = 1.;
   }  
 
-  if (PP_Viscosity != -1 && pd->e[R_LUBP]) {
+  if (PP_Viscosity != -1 && pd->e[pg->imtrx][R_LUBP]) {
     mu = viscosity(gn, NULL, NULL);
     local_post[PP_Viscosity] = mu;
     local_lumped[PP_Viscosity] = 1.0;
   }
 
-  if (PP_Viscosity != -1 && pd->e[R_SHELL_FILMP]) {
+  if (PP_Viscosity != -1 && pd->e[pg->imtrx][R_SHELL_FILMP]) {
     mu = viscosity(gn, NULL, NULL);
     local_post[PP_Viscosity] = mu;
     local_lumped[PP_Viscosity] = 1.0;
   }
 
-  if (PP_VolumeFractionGas != -1 && pd->e[R_MOMENTUM1]) {
+  if (PP_VolumeFractionGas != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
     double volF = 0.0;
     computeCommonMaterialProps_gp(time);
     volF = mp->volumeFractionGas;
@@ -734,14 +734,14 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   }
 
 
-  if (DENSITY != -1 && pd->e[R_MOMENTUM1] ) {
+  if (DENSITY != -1 && pd->e[pg->imtrx][R_MOMENTUM1] ) {
     rho = density(NULL, time);
     local_post[DENSITY] = rho;
     local_lumped[DENSITY] = 1.;
   }
 
 
-  if (MEAN_SHEAR != -1 && pd->e[R_MOMENTUM1] ){
+  if (MEAN_SHEAR != -1 && pd->e[pg->imtrx][R_MOMENTUM1] ){
     for (a = 0; a < dim; a++) {       
       for (b = 0; b < dim; b++) {
 	Dsh[a][b] = 0.5 * (fv->grad_v[a][b] + fv->grad_v[b][a]);
@@ -758,8 +758,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[MEAN_SHEAR] = 1.;
   }
 
-  if (PRESSURE_CONT != -1 && pd->v[PRESSURE] &&
-      (pd->e[R_MOMENTUM1] || (pd->MeshMotion == LAGRANGIAN ||
+  if (PRESSURE_CONT != -1 && pd->v[pg->imtrx][PRESSURE] &&
+      (pd->e[pg->imtrx][R_MOMENTUM1] || (pd->MeshMotion == LAGRANGIAN ||
 			      pd->MeshMotion == DYNAMIC_LAGRANGIAN)
        || (pd->MeshMotion == TOTAL_ALE)))
     {
@@ -767,25 +767,25 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_lumped[PRESSURE_CONT] = 1.;
     }
 
-  if (SH_DIV_S_V_CONT != -1 && pd->v[ SHELL_SURF_DIV_V])
+  if (SH_DIV_S_V_CONT != -1 && pd->v[pg->imtrx][ SHELL_SURF_DIV_V])
     {
       local_post[SH_DIV_S_V_CONT] = fv->div_s_v;
       local_lumped[SH_DIV_S_V_CONT] = 1.;
     }
 
-  if (SH_CURV_CONT != -1 && pd->v[SHELL_SURF_CURV])
+  if (SH_CURV_CONT != -1 && pd->v[pg->imtrx][SHELL_SURF_CURV])
     {
       local_post[SH_CURV_CONT] = fv->curv;
       local_lumped[SH_CURV_CONT] = 1.;
     }
 
-  if (FILL_CONT != -1 && pd->v[FILL])
+  if (FILL_CONT != -1 && pd->v[pg->imtrx][FILL])
     {
       local_post[FILL_CONT] = fv->F;
       local_lumped[FILL_CONT] = 1.;
     }
 
-  if (CONC_CONT != -1 && pd->v[MASS_FRACTION] )
+  if (CONC_CONT != -1 && pd->v[pg->imtrx][MASS_FRACTION] )
     {
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
@@ -794,16 +794,16 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	}
     }
 
-  if (STRESS_CONT != -1 && pd->v[POLYMER_STRESS11]) {
+  if (STRESS_CONT != -1 && pd->v[pg->imtrx][POLYMER_STRESS11]) {
     index = 0;
     for (mode = 0; mode < vn->modes; mode++) {    
-      if (pd->v[v_s[mode][0][0]]) {	  
+      if (pd->v[pg->imtrx][v_s[mode][0][0]]) {	  
 	for (a = 0; a < VIM; a++) {
 	  for (b = 0; b < VIM; b++) {
 	    /* since the stress tensor is symmetric,
 	       only assemble the upper half */ 
 	    if (a <= b) { 
-	      if (pd->v[v_s[mode][a][b]]) {
+	      if (pd->v[pg->imtrx][v_s[mode][a][b]]) {
 		local_post[STRESS_CONT + index] = fv->S[mode][a][b];
 		local_lumped[STRESS_CONT + index] = 1.;
 		index++;
@@ -823,7 +823,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	  if (a <= b) {  
 	    ts = 0.;
 	    for (mode = 0; mode < vn->modes; mode++) {    
-	      if (pd->v[v_s[mode][a][b]]) {
+	      if (pd->v[pg->imtrx][v_s[mode][a][b]]) {
 		ts += fv->S[mode][a][b];
 	      }
 	    }
@@ -836,7 +836,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     }
   }
 
-  if (FIRST_INVAR_STRAIN != -1 && pd->e[R_MESH1]) {
+  if (FIRST_INVAR_STRAIN != -1 && pd->e[pg->imtrx][R_MESH1]) {
     TrE = 0.;
     if (pd->CoordinateSystem == CYLINDRICAL) {
       TrE = fv->strain[0][0] + 2*fv->strain[1][1];
@@ -851,7 +851,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[FIRST_INVAR_STRAIN] = 1.;
   }
 
-  if (SEC_INVAR_STRAIN != -1 && pd->e[R_MESH1])
+  if (SEC_INVAR_STRAIN != -1 && pd->e[pg->imtrx][R_MESH1])
     {
       E_E = 0.;
       /* find second invariant of strain */
@@ -867,13 +867,13 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_lumped[SEC_INVAR_STRAIN] = 1.;
     }
   
-  if (THIRD_INVAR_STRAIN != -1 && pd->e[R_MESH1]) {
+  if (THIRD_INVAR_STRAIN != -1 && pd->e[pg->imtrx][R_MESH1]) {
     /* this is actually the volume change - third invarient of the Deformation Gradient! */
     local_post[THIRD_INVAR_STRAIN] = fv->volume_change;
     local_lumped[THIRD_INVAR_STRAIN] = 1.;
   }
 
-  if(DIELECTROPHORETIC_FIELD != -1 && pd->e[R_ENORM])
+  if(DIELECTROPHORETIC_FIELD != -1 && pd->e[pg->imtrx][R_ENORM])
     {
       if(Particle_Model_Data[1] <= 0.0 ||
 	 Particle_Model_Data[2] <= 0.0 ||
@@ -900,7 +900,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	}
     }
 
-  if(DIELECTROPHORETIC_FIELD_NORM != -1 && pd->e[R_ENORM])
+  if(DIELECTROPHORETIC_FIELD_NORM != -1 && pd->e[pg->imtrx][R_ENORM])
     {
       if(Particle_Model_Data[1] <= 0.0 ||
 	 Particle_Model_Data[2] <= 0.0 ||
@@ -929,14 +929,14 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_lumped[DIELECTROPHORETIC_FIELD_NORM] = 1.0;
     }
 
-  if(ENORMSQ_FIELD != -1 && pd->e[R_ENORM])
+  if(ENORMSQ_FIELD != -1 && pd->e[pg->imtrx][R_ENORM])
     for(a = 0; a < dim; a++)
       {
 	local_post[ENORMSQ_FIELD + a] = 2.0 * fv->Enorm * fv->grad_Enorm[a];
 	local_lumped[ENORMSQ_FIELD + a] = 1.0;
       }
 
-  if(ENORMSQ_FIELD_NORM != -1 && pd->e[R_ENORM])
+  if(ENORMSQ_FIELD_NORM != -1 && pd->e[pg->imtrx][R_ENORM])
     {
       dfnorm = 0.0;
       for(a = 0; a < dim; a++)
@@ -947,7 +947,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_lumped[ENORMSQ_FIELD_NORM] = 1.0;
     }
 
-  if (DIFFUSION_VECTORS != -1 && pd->e[R_MASS]) {
+  if (DIFFUSION_VECTORS != -1 && pd->e[pg->imtrx][R_MASS]) {
     if (mp->PorousMediaType == CONTINUOUS) {
       if (cr->MassFluxModel == FICKIAN) {
 	for (w = 0; w < pd->Num_Species_Eqn; w++) {
@@ -984,7 +984,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     }
   }
 
-  if (DIFFUSION_VECTORS_POR_LIQ_GPHASE != -1 && pd->e[POR_LIQ_PRES] &&
+  if (DIFFUSION_VECTORS_POR_LIQ_GPHASE != -1 && pd->e[pg->imtrx][POR_LIQ_PRES] &&
       mp->PorousMediaType != POROUS_SATURATED) {
     for (a = 0; a < VIM; a++) {
       /*
@@ -1001,7 +1001,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     }
   }
 
-  if (DIFFUSION_VECTORS_POR_AIR_GPHASE != -1 && pd->e[POR_LIQ_PRES] &&
+  if (DIFFUSION_VECTORS_POR_AIR_GPHASE != -1 && pd->e[pg->imtrx][POR_LIQ_PRES] &&
       mp->PorousMediaType != POROUS_SATURATED) {
     for (a = 0; a < VIM; a++) {
       /*
@@ -1020,7 +1020,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
 
 
-  if(CONDUCTION_VECTORS != -1 && pd->e[R_ENERGY])
+  if(CONDUCTION_VECTORS != -1 && pd->e[pg->imtrx][R_ENERGY])
   {
     if ( cr->HeatFluxModel == CR_HF_FOURIER_0 )
     {
@@ -1078,20 +1078,20 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     }
   }
   
-  if(SHELL_NORMALS != -1 && ( pd->e[R_SHELL_ANGLE1] || pd->e[R_LUBP] ) )
+  if(SHELL_NORMALS != -1 && ( pd->e[pg->imtrx][R_SHELL_ANGLE1] || pd->e[pg->imtrx][R_LUBP] ) )
   {
     double sh_n[DIM];
     for (a = 0; a < DIM; a++) {
       sh_n[a] = 0;
     }
-    if ( pd->e[R_SHELL_ANGLE1] ) {
+    if ( pd->e[pg->imtrx][R_SHELL_ANGLE1] ) {
       if ( dim == 2 ) {
 	sh_n[0] = cos( fv->sh_ang[0] );
 	sh_n[1] = sin( fv->sh_ang[0] );
       } else {
         EH(-1,"Not hard at all to implement SHELL_NORMALS for 3D, so just do it!");
       }
-    } else if ( pd->e[R_LUBP] ) {
+    } else if ( pd->e[pg->imtrx][R_LUBP] ) {
       int *n_dof = NULL;
       int dof_map[MDE];
       dbl wt = fv->wt;
@@ -1112,7 +1112,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   }
 
   /* calculate mesh stress here !!*/
-  if (STRESS_TENSOR != -1 && pd->e[R_MESH1])
+  if (STRESS_TENSOR != -1 && pd->e[pg->imtrx][R_MESH1])
     {
       /* 
        * Total mesh stress tensor...
@@ -1174,7 +1174,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
 
   /* calculate mesh strain here !!*/
-  if (STRAIN_TENSOR != -1 && pd->e[R_MESH1])
+  if (STRAIN_TENSOR != -1 && pd->e[pg->imtrx][R_MESH1])
     { 
       for (i=0; i< dim; i++)
 	{
@@ -1214,7 +1214,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   /* calculate EVP def grad here !!*/
   if (evpl->ConstitutiveEquation == EVP_HYPER &&
       EVP_DEF_GRAD_TENSOR != -1 && 
-      pd->e[R_MESH1])
+      pd->e[pg->imtrx][R_MESH1])
     { 
       /*even though I changed this to VIM, I noticed that FVPs
 	are not transmitted to restart file.....PRS 6/7/2002 */
@@ -1248,7 +1248,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	}
       /* To restart the EVP calculation, you also need the stress tensor. 
 	 We dump here if mesh-stress is requested !!*/
-      if (STRESS_TENSOR != -1 && pd->e[R_MESH1])
+      if (STRESS_TENSOR != -1 && pd->e[pg->imtrx][R_MESH1])
 	{
 	  for (i=0; i< DIM; i++)
 	    {
@@ -1323,19 +1323,19 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   if (POROUS_RHO_TOTAL_SOLVENTS != -1 && checkPorous) {
     w = 0;
-    if (pd->v[POR_LIQ_PRES]) {
+    if (pd->v[pg->imtrx][POR_LIQ_PRES]) {
       local_post[POROUS_RHO_TOTAL_SOLVENTS] = pmv->bulk_density[i_pl];
       local_lumped[POROUS_RHO_TOTAL_SOLVENTS] = 1.;
     }
     w++;
-    if (Num_Var_In_Type[R_POR_GAS_PRES]) {
-      if (pd->v[POR_GAS_PRES]) {
+    if (Num_Var_In_Type[pg->imtrx][R_POR_GAS_PRES]) {
+      if (pd->v[pg->imtrx][POR_GAS_PRES]) {
 	local_post[POROUS_RHO_TOTAL_SOLVENTS + w] = pmv->bulk_density[i_pg];
 	local_lumped[POROUS_RHO_TOTAL_SOLVENTS + w] = 1.;
       }
       w++;
     }
-    if (pd->v[POR_POROSITY]) {
+    if (pd->v[pg->imtrx][POR_POROSITY]) {
       local_post[POROUS_RHO_TOTAL_SOLVENTS + w] = pmv->bulk_density[i_pore];
       local_lumped[POROUS_RHO_TOTAL_SOLVENTS + w] = 1.;
     }
@@ -1346,22 +1346,22 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	mp->PorousMediaType == POROUS_TWO_PHASE || 
 	mp->PorousMediaType == POROUS_SHELL_UNSATURATED) {
       w = 0;
-      if (Num_Var_In_Type[R_POR_LIQ_PRES]) {
-	if (pd->v[POR_LIQ_PRES]) {
+      if (Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES]) {
+	if (pd->v[pg->imtrx][POR_LIQ_PRES]) {
 	  local_post[POROUS_RHO_GAS_SOLVENTS] = pmv->gas_density_solvents[i_pl];
 	  local_lumped[POROUS_RHO_GAS_SOLVENTS] = 1.;
 	}
 	w++;
       }
-      if (Num_Var_In_Type[R_POR_GAS_PRES]) {
-	if (pd->v[POR_GAS_PRES]) {
+      if (Num_Var_In_Type[pg->imtrx][R_POR_GAS_PRES]) {
+	if (pd->v[pg->imtrx][POR_GAS_PRES]) {
 	  local_post[POROUS_RHO_GAS_SOLVENTS + w] = pmv->gas_density_solvents[i_pg];
 	  local_lumped[POROUS_RHO_GAS_SOLVENTS + w] = 1.;
 	}
 	w++;
       }
-      if (Num_Var_In_Type[R_POR_POROSITY]) {
-	if (pd->v[POR_POROSITY]) {
+      if (Num_Var_In_Type[pg->imtrx][R_POR_POROSITY]) {
+	if (pd->v[pg->imtrx][POR_POROSITY]) {
 	  local_post[POROUS_RHO_GAS_SOLVENTS + w] = pmv->gas_density_solvents[i_pore];
 	  local_lumped[POROUS_RHO_GAS_SOLVENTS + w] = 1.;
 	}
@@ -1408,24 +1408,24 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_lumped[POROUS_LIQUID_ACCUM_RATE] = 1.;
     } /* end of POROUS_LIQUID_ACCUM_RATE */
 
-  if (ELECTRIC_FIELD != -1 && pd->e[R_POTENTIAL]) {
+  if (ELECTRIC_FIELD != -1 && pd->e[pg->imtrx][R_POTENTIAL]) {
     for ( a = 0; a < dim; a++ ) {
       local_post[ELECTRIC_FIELD + a] = -fv->grad_V[a];
       local_lumped[ELECTRIC_FIELD +a] = 1.0;
     }
   } /* end of ELECTRIC_FIELD */
 
-  if (ACOUSTIC_PRESSURE != -1 && (pd->e[R_ACOUS_PREAL] || pd->e[R_ACOUS_PIMAG]) ) {
+  if (ACOUSTIC_PRESSURE != -1 && (pd->e[pg->imtrx][R_ACOUS_PREAL] || pd->e[pg->imtrx][R_ACOUS_PIMAG]) ) {
       local_post[ACOUSTIC_PRESSURE] = sqrt(fv->apr*fv->apr + fv->api*fv->api);
       local_lumped[ACOUSTIC_PRESSURE] = 1.0;
   } /* end of ACOUSTIC_PRESSURE */
 
-  if (ACOUSTIC_PHASE_ANGLE != -1 && (pd->e[R_ACOUS_PREAL] || pd->e[R_ACOUS_PIMAG]) ) {
+  if (ACOUSTIC_PHASE_ANGLE != -1 && (pd->e[pg->imtrx][R_ACOUS_PREAL] || pd->e[pg->imtrx][R_ACOUS_PIMAG]) ) {
       local_post[ACOUSTIC_PHASE_ANGLE] = atan2(fv->api,fv->apr)*180/M_PIE;
       local_lumped[ACOUSTIC_PHASE_ANGLE] = 1.0;
   } /* end of ACOUSTIC_PHASE_ANGLE */
 
-  if (ACOUSTIC_ENERGY_DENSITY != -1 && (pd->e[R_ACOUS_PREAL] || pd->e[R_ACOUS_PIMAG]) ) {
+  if (ACOUSTIC_ENERGY_DENSITY != -1 && (pd->e[pg->imtrx][R_ACOUS_PREAL] || pd->e[pg->imtrx][R_ACOUS_PIMAG]) ) {
 	double acous_pgrad=0;
 	double k, R, omega;
 	k = wave_number( NULL, time);
@@ -1441,12 +1441,12 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_lumped[ACOUSTIC_ENERGY_DENSITY] = 1.0;
   } /* end of ACOUSTIC_ENERGY_DENSITY */
 
-  if (LIGHT_INTENSITY != -1 && (pd->e[R_LIGHT_INTP] || pd->e[R_LIGHT_INTM]) ) {
+  if (LIGHT_INTENSITY != -1 && (pd->e[pg->imtrx][R_LIGHT_INTP] || pd->e[pg->imtrx][R_LIGHT_INTM]) ) {
       local_post[LIGHT_INTENSITY] = fv->poynt[0]+fv->poynt[1];
       local_lumped[LIGHT_INTENSITY] = 1.0;
   } /* end of LIGHT_INTENSITY */
 
-  if (UNTRACKED_SPEC != -1 && pd->e[R_MASS]  ) {
+  if (UNTRACKED_SPEC != -1 && pd->e[pg->imtrx][R_MASS]  ) {
       double density_tot=0.;
       switch(mp->Species_Var_Type)   {
       case SPECIES_CONCENTRATION:
@@ -1489,7 +1489,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
      }
    }
 
-  if (ELECTRIC_FIELD_MAG != -1 && pd->e[R_POTENTIAL]) {
+  if (ELECTRIC_FIELD_MAG != -1 && pd->e[pg->imtrx][R_POTENTIAL]) {
     for ( a=0; a < dim; a++ ) {
       local_post[ELECTRIC_FIELD_MAG] += fv->grad_V[a] * fv->grad_V[a];
     }
@@ -1519,7 +1519,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   } /* end of POROUS_SUPGVELOCITY */
 
 
-  if (CURL_V != -1 && pd->e[R_MOMENTUM1]) {
+  if (CURL_V != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
     /* MMH: Note that in the SWIRLING coordinate system, we really
      * do have a 3-vector and not just a scalar.
        *
@@ -1545,7 +1545,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   /* calculate real-solid stress here !!  */
 
-  if(REAL_STRESS_TENSOR != -1 && pd->e[R_SOLID1])
+  if(REAL_STRESS_TENSOR != -1 && pd->e[pg->imtrx][R_SOLID1])
     {
       mu = elc_rs->lame_mu;
       err = belly_flop_rs(mu);
@@ -1590,7 +1590,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     } /* end of REAL_STRESS_TENSOR */
 
   /* calculate principal stress differences*/
-  if (PRINCIPAL_STRESS != -1 && pd->e[R_MESH1])
+  if (PRINCIPAL_STRESS != -1 && pd->e[pg->imtrx][R_MESH1])
     {
       double I_T, II_T, III_T, coeff_a, coeff_b;
       double m_par = 0,theta1, evalue1, evalue2, evalue3;
@@ -1655,7 +1655,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
                 TT[a][b] = mu*gamma[a][b]-fv->P*delta(a,b);
                }
              }
-         if ( pd->v[POLYMER_STRESS11] )
+         if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
            {
             for ( a=0; a<VIM; a++)
               {
@@ -1703,7 +1703,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     } /* end of PRINCIPAL_STRESS */
 
   /* calculate principal real stress differences*/
-  if (PRINCIPAL_REAL_STRESS != -1 && pd->e[R_SOLID1])
+  if (PRINCIPAL_REAL_STRESS != -1 && pd->e[pg->imtrx][R_SOLID1])
     {
       double I_T, II_T, III_T, coeff_a, coeff_b;
       double m_par = 0,theta1, evalue1, evalue2, evalue3;
@@ -1764,7 +1764,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
         local_lumped[PRINCIPAL_REAL_STRESS+2] = 1.;
     } /* end of PRINCIPAL_REAL_STRESS */
 
-  if ( LUB_HEIGHT != -1 && (pd->e[R_LUBP] || pd->e[R_SHELL_FILMP] ) ) {
+  if ( LUB_HEIGHT != -1 && (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP] ) ) {
     double H_U, dH_U_dtime, H_L, dH_L_dtime;
     double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
     
@@ -1775,12 +1775,12 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
     
-    if (pd->e[R_LUBP])
+    if (pd->e[pg->imtrx][R_LUBP])
       {	 
 	local_post[LUB_HEIGHT] = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
 						       dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
       }
-    else if (pd->e[R_SHELL_FILMP])
+    else if (pd->e[pg->imtrx][R_SHELL_FILMP])
       {
 	local_post[LUB_HEIGHT] = fv->sh_fh; 
       }
@@ -1808,7 +1808,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   } /* end of LUB_HEIGHT */
 
-  if ( LUB_HEIGHT_2 != -1 && (pd->e[R_LUBP_2] )) {
+  if ( LUB_HEIGHT_2 != -1 && (pd->e[pg->imtrx][R_LUBP_2] )) {
     double H_U_2, dH_U_2_dtime, H_L_2, dH_L_2_dtime;
     double dH_U_2_dX[DIM],dH_L_2_dX[DIM], dH_U_2_dp, dH_U_2_ddh;
     
@@ -1819,12 +1819,12 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
     
-    if (pd->e[R_LUBP_2])
+    if (pd->e[pg->imtrx][R_LUBP_2])
       {	 
 	local_post[LUB_HEIGHT_2] = height_function_model(&H_U_2, &dH_U_2_dtime, &H_L_2, &dH_L_2_dtime,
 						       dH_U_2_dX, dH_L_2_dX, &dH_U_2_dp, &dH_U_2_ddh, time, delta_t);
       }
-    else if (pd->e[R_SHELL_FILMP])
+    else if (pd->e[pg->imtrx][R_SHELL_FILMP])
       {
 	local_post[LUB_HEIGHT] = 0.; 
       }
@@ -1852,7 +1852,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   } /* end of LUB_HEIGHT_2 */
 
-  if ( (LUB_VELO_UPPER != -1 || LUB_VELO_LOWER != -1) && (pd->e[R_LUBP] ) ) {
+  if ( (LUB_VELO_UPPER != -1 || LUB_VELO_LOWER != -1) && (pd->e[pg->imtrx][R_LUBP] ) ) {
     /* Setup lubrication */
     int *n_dof = NULL;
     int dof_map[MDE];
@@ -1886,7 +1886,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   } /* end of LUB_VELO */
 
-  if ( (LUB_VELO_FIELD != -1) && (pd->e[R_LUBP] || pd->e[R_SHELL_FILMP]) ) {
+  if ( (LUB_VELO_FIELD != -1) && (pd->e[pg->imtrx][R_LUBP] || pd->e[pg->imtrx][R_SHELL_FILMP]) ) {
     
     /* Setup lubrication */
     int *n_dof = NULL;
@@ -1910,7 +1910,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   } /* end of LUB_VELO_FIELD */
 
-  if ( (PP_LAME_MU != -1) && (pd->e[R_MESH1]) ) {
+  if ( (PP_LAME_MU != -1) && (pd->e[pg->imtrx][R_MESH1]) ) {
 
     /* Define parameters */
     double mu;
@@ -1939,7 +1939,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     
   } /* end of PP_LAME_MU */
 
-  if ( (PP_LAME_LAMBDA != -1) && (pd->e[R_MESH1]) ) {
+  if ( (PP_LAME_LAMBDA != -1) && (pd->e[pg->imtrx][R_MESH1]) ) {
 
     /* Define parameters */
     double mu;
@@ -1967,7 +1967,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     
   } /* end of PP_LAME_LAMBDA */
 
-  if ( DISJ_PRESS != -1 && (pd->e[R_SHELL_FILMP] ) ) {
+  if ( DISJ_PRESS != -1 && (pd->e[pg->imtrx][R_SHELL_FILMP] ) ) {
  
       double DisjPress; 
       double grad_DisjPress[DIM]; 
@@ -1981,7 +1981,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   } /* end of DISJ_PRESS */
 
-  if ( (SH_SAT_OPEN != -1) && pd->e[R_SHELL_SAT_OPEN] ) {
+  if ( (SH_SAT_OPEN != -1) && pd->e[pg->imtrx][R_SHELL_SAT_OPEN] ) {
     
     /* Setup lubrication */
     int *n_dof = NULL;
@@ -2012,7 +2012,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   } /* end of SH_SAT_OPEN */
 
-  if ( (SH_SAT_OPEN != -1) && pd->e[R_SHELL_SAT_OPEN_2] ) {
+  if ( (SH_SAT_OPEN != -1) && pd->e[pg->imtrx][R_SHELL_SAT_OPEN_2] ) {
     
     /* Setup lubrication */
     int *n_dof = NULL;
@@ -2043,7 +2043,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   } /* end of SH_SAT_OPEN_2 */
 
-  if (VON_MISES_STRAIN != -1 && pd->e[R_MESH1]) {
+  if (VON_MISES_STRAIN != -1 && pd->e[pg->imtrx][R_MESH1]) {
 
     dbl INV, d_INV_dT[DIM][DIM];
     INV = calc_tensor_invariant(fv->strain, d_INV_dT, 4);
@@ -2051,7 +2051,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[VON_MISES_STRAIN] = 1.;
   }
 
-  if (VON_MISES_STRESS != -1 && pd->e[R_MESH1]) {
+  if (VON_MISES_STRESS != -1 && pd->e[pg->imtrx][R_MESH1]) {
 
     dbl INV, d_INV_dT[DIM][DIM];
 
@@ -2468,7 +2468,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
   if ( Num_Proc == 1 )
     {
-      if (STREAM != -1 && Num_Var_In_Type[R_MOMENTUM1])
+      if (STREAM != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1])
 	{
 	  listnd = (int *) smalloc (num_universe_nodes * sizeof(int));
 	}
@@ -2480,7 +2480,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
       if(pd_glob[i]->MeshMotion == LAGRANGIAN) check = 1;
       if(pd_glob[i]->MeshMotion == DYNAMIC_LAGRANGIAN) check = 1;
     }
-  if ( PRESSURE_CONT != -1 && (Num_Var_In_Type[R_MOMENTUM1] || check ))
+  if ( PRESSURE_CONT != -1 && (Num_Var_In_Type[pg->imtrx][R_MOMENTUM1] || check ))
     {
       /* PRS Cludge for remeshing guys */
       pressure_elem_vect  = (double *) smalloc(Num_Internal_Elems * 
@@ -2489,7 +2489,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
   if ( Num_Proc == 1 )
     {
-      if( FLUXLINES != -1 && Num_Var_In_Type[R_MASS])
+      if( FLUXLINES != -1 && Num_Var_In_Type[pg->imtrx][R_MASS])
 	{
 	  for (w=0; w< upd->Max_Num_Species_Eqn; w++)
 	    {
@@ -2514,7 +2514,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
   if ( Num_Proc == 1 )
     {
-      if(ENERGY_FLUXLINES != -1 && Num_Var_In_Type[R_ENERGY])
+      if(ENERGY_FLUXLINES != -1 && Num_Var_In_Type[pg->imtrx][R_ENERGY])
 	{
 	  listnde         = (int *) smalloc(num_universe_nodes * sizeof(int));
 	  if(CONDUCTION_VECTORS == -1) 
@@ -2543,21 +2543,21 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
   /*Initialize */
    if ( Num_Proc == 1 )
      {
-       if(STREAM != -1 && Num_Var_In_Type[R_MOMENTUM1])
+       if(STREAM != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1])
 	 {
 	   for (I = 0; I < num_universe_nodes; I++)
 	     {
 	       listnd[I] = 0 ;
 	     }
 	 }
-       if(ENERGY_FLUXLINES != -1 &&  Num_Var_In_Type[R_ENERGY])
+       if(ENERGY_FLUXLINES != -1 &&  Num_Var_In_Type[pg->imtrx][R_ENERGY])
 	 {
 	   for (I = 0; I < num_universe_nodes; I++)
 	     {
 	       listnde[I] = 0 ;
 	     }
 	 }
-       if(FLUXLINES != -1 && Num_Var_In_Type[R_MASS])
+       if(FLUXLINES != -1 && Num_Var_In_Type[pg->imtrx][R_MASS])
 	 {
 	   for (w=0; w < upd->Max_Num_Species_Eqn; w++)
 	     {
@@ -2780,7 +2780,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 /*                            SURFACE VARIABLES                               */
 /*     Evaluate Post-Processing Variables that are only defined on surfaces   */
 /******************************************************************************/
-   if (SURFACE_VECTORS != -1 && pd->e[R_MESH1] && Num_ROT == 0 )
+   if (SURFACE_VECTORS != -1 && pd->e[pg->imtrx][R_MESH1] && Num_ROT == 0 )
      {
 
        /* loop over side-sets and find surface vectors for all elements on each 
@@ -2924,7 +2924,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 		    * if it is not a right-hand side variable - it won't get 
 		    * added in (contribution is zero)
 		    */
-		   if(SURFACE_VECTORS != -1 && pd->e[R_MESH1] && dim == 2)
+		   if(SURFACE_VECTORS != -1 && pd->e[pg->imtrx][R_MESH1] && dim == 2)
 		     {
 	  
 		       for (p = 0; p < rd->TotalNVPostOutput; p++) 
@@ -3113,7 +3113,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	
 	       /* get convection velocity at the nodal points */
 	
-	       if (STREAM != -1  &&  Num_Var_In_Type[VELOCITY1] && ei->ielem_dim == 2)
+	       if (STREAM != -1  &&  Num_Var_In_Type[pg->imtrx][VELOCITY1] && ei->ielem_dim == 2)
 		 {
 		   /* Go for it -- Calculate the stream function at the nodes 
 		    * of this element 
@@ -3123,7 +3123,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
 		   if (ei->ielem_dim == 2) 
 		     {
-		       if (pd->e[R_MOMENTUM1]) 
+		       if (pd->e[pg->imtrx][R_MOMENTUM1]) 
 			 {
 			   for ( i=0; i<ei->ielem_dim; i++)
 			     {
@@ -3156,7 +3156,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 		       pd_glob[i]->MeshInertia) check = 2; 
 		 }
 	
-	       if (FLUXLINES != -1  && Num_Var_In_Type[R_MASS])
+	       if (FLUXLINES != -1  && Num_Var_In_Type[pg->imtrx][R_MASS])
 		 {
 		   for (w=0; w < upd->Max_Num_Species_Eqn; w++)
 		     {
@@ -3178,7 +3178,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 							     + w * ei->ielem_dim
 							     + i][I];
 				   if ( (check == 1) && 
-					Num_Var_In_Type[VELOCITY1] )
+					Num_Var_In_Type[pg->imtrx][VELOCITY1] )
 				     {
 				       vel[i][j] += ( (*esp->v[i][j]) * 
 						      (*esp->c[w][j]) );
@@ -3220,7 +3220,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 		     }  /* END of loop over components */
 		 }  /* END of if(FLUXLINES) */
 	    
-	       if (ENERGY_FLUXLINES != -1  && Num_Var_In_Type[R_ENERGY])  
+	       if (ENERGY_FLUXLINES != -1  && Num_Var_In_Type[pg->imtrx][R_ENERGY])  
 		 {
 		   /* Go for it -- Calculate the stream function at the nodes of this element */
 		   if (ei->ielem_dim == 2) 
@@ -3232,7 +3232,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 			     {
 			       I = Proc_Elem_Connect[ Proc_Connect_Ptr[iel] + j ];
 			       vel[i][j] = post_proc_vect[CONDUCTION_VECTORS + i][I];
-			       if((check==1) && Num_Var_In_Type[VELOCITY1])
+			       if((check==1) && Num_Var_In_Type[pg->imtrx][VELOCITY1])
 				 {
 				   vel[i][j] += *esp->v[i][j] * (*esp->T[j]);
 				 }
@@ -3273,7 +3273,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
    * do some last minute processing for special variable types 
    */
 
-   if (STREAM != -1 &&  Num_Var_In_Type[VELOCITY1]) {
+   if (STREAM != -1 &&  Num_Var_In_Type[pg->imtrx][VELOCITY1]) {
      /* First process global vector to recover average value at nodes*/
      for (I = 0; I < num_universe_nodes; I++) {
        ii = listnd[I];
@@ -3291,7 +3291,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
      free(listnd);
    }
 
-  if (FLUXLINES != -1 && Num_Var_In_Type[R_MASS]) {
+  if (FLUXLINES != -1 && Num_Var_In_Type[pg->imtrx][R_MASS]) {
     for (w = 0; w < upd->Max_Num_Species_Eqn; w++) {
       /* First process global vector to recover average value at nodes*/
       for (I = 0; I < num_universe_nodes; I++) {
@@ -3312,7 +3312,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
     }
   }
 
-   if (ENERGY_FLUXLINES != -1 && Num_Var_In_Type[R_ENERGY]) {
+   if (ENERGY_FLUXLINES != -1 && Num_Var_In_Type[pg->imtrx][R_ENERGY]) {
      /* First process global vector to recover average value at nodes*/
      for (I = 0; I < num_universe_nodes; I++) {
        ii = listnde[I];
@@ -3333,10 +3333,10 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
      } /* end of serial processing block for streamlines */
 
-   if (NS_RESIDUALS != -1 && Num_Var_In_Type[R_MOMENTUM1]) {
+   if (NS_RESIDUALS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
      for (I = 0; I < num_universe_nodes; I++){
        for (j = 0; j < ei->ielem_dim; j++) {
-	 ii = Index_Solution(I, R_MOMENTUM1 + j, 0, 0, -2);
+	 ii = Index_Solution(I, R_MOMENTUM1 + j, 0, 0, -2, pg->imtrx);
 	 if (ii != -1) {
 	   post_proc_vect[NS_RESIDUALS + j][I] = resid_vector[ii];
 	 }
@@ -3344,10 +3344,10 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
      }
    }
 
-   if (NS_RESIDUALS != -1 && Num_Var_In_Type[R_MOMENTUM1]) {
+   if (NS_RESIDUALS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
      for (I = 0; I < num_universe_nodes; I++){
        for (j = 0; j < ei->ielem_dim; j++) {
-	 ii = Index_Solution(I, R_MOMENTUM1 + j, 0, 0, -2);
+	 ii = Index_Solution(I, R_MOMENTUM1 + j, 0, 0, -2, pg->imtrx);
 	 if (ii != -1) {
 	   post_proc_vect[NS_RESIDUALS + j][I] = resid_vector[ii];
 	 }
@@ -3355,10 +3355,10 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
      }
    }
 
-   if (MM_RESIDUALS != -1 && Num_Var_In_Type[R_MESH1]) {
+   if (MM_RESIDUALS != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1]) {
      for (I = 0; I < num_universe_nodes; I++){
        for (j=0; j < ei->ielem_dim; j++) {
-	 ii = Index_Solution(I, R_MESH1 + j, 0, 0, -2);
+	 ii = Index_Solution(I, R_MESH1 + j, 0, 0, -2, pg->imtrx);
 	 if (ii != -1) {
 	   post_proc_vect[MM_RESIDUALS + j][I]=resid_vector[ii];
 	 }
@@ -3377,36 +3377,36 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
    }
 
    /* sum up all stress modes to compute the total stress */
-   if (TOTAL_STRESS11 != -1 && Num_Var_In_Type[R_STRESS11] ) 
+   if (TOTAL_STRESS11 != -1 && Num_Var_In_Type[pg->imtrx][R_STRESS11] ) 
    {
      sum_total_stress( x, R_STRESS11, 0, 
 		       post_proc_vect[TOTAL_STRESS11], exo);
    }
-   if (TOTAL_STRESS12 != -1 && Num_Var_In_Type[R_STRESS12] ) 
+   if (TOTAL_STRESS12 != -1 && Num_Var_In_Type[pg->imtrx][R_STRESS12] ) 
    {
      sum_total_stress( x, R_STRESS12, 0, 
 		       post_proc_vect[TOTAL_STRESS12], exo);
    }
     
-   if (TOTAL_STRESS13 != -1 && Num_Var_In_Type[R_STRESS13] ) 
+   if (TOTAL_STRESS13 != -1 && Num_Var_In_Type[pg->imtrx][R_STRESS13] ) 
    {
      sum_total_stress( x, R_STRESS13, 0, 
 		       post_proc_vect[TOTAL_STRESS13], exo);
    }
     
-   if (TOTAL_STRESS22 != -1 && Num_Var_In_Type[R_STRESS22] ) 
+   if (TOTAL_STRESS22 != -1 && Num_Var_In_Type[pg->imtrx][R_STRESS22] ) 
    {
      sum_total_stress( x, R_STRESS22, 0, 
 		       post_proc_vect[TOTAL_STRESS22], exo);
    }
     
-   if (TOTAL_STRESS23 != -1 && Num_Var_In_Type[R_STRESS23] ) 
+   if (TOTAL_STRESS23 != -1 && Num_Var_In_Type[pg->imtrx][R_STRESS23] ) 
    {
      sum_total_stress( x, R_STRESS23, 0, 
 		       post_proc_vect[TOTAL_STRESS23], exo);
    }
     
-   if (TOTAL_STRESS33 != -1 && Num_Var_In_Type[R_STRESS33] ) 
+   if (TOTAL_STRESS33 != -1 && Num_Var_In_Type[pg->imtrx][R_STRESS33] ) 
    {
      sum_total_stress( x, R_STRESS33, 0, 
 		       post_proc_vect[TOTAL_STRESS33], exo);
@@ -3504,7 +3504,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
   /* find basis functions associated with velocity variables */
 
   for (j = 0; j < Num_Basis_Functions; j++) {
-    if (pd_glob[ei->mn]->i[VELOCITY1] == bfd[j]->interpolation) {
+    if (pd_glob[ei->mn]->i[pg->imtrx][VELOCITY1] == bfd[j]->interpolation) {
       velo_interp = j;
     }
   }
@@ -3858,7 +3858,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
       if(pd_glob[i]->MeshMotion == LAGRANGIAN ||
 	 pd_glob[i]->MeshMotion == DYNAMIC_LAGRANGIAN) check = 1;
     }
-  if ( PRESSURE_CONT != -1 && (Num_Var_In_Type[VELOCITY1] || check))
+  if ( PRESSURE_CONT != -1 && (Num_Var_In_Type[pg->imtrx][VELOCITY1] || check))
     {
       /*PRS cludge for remeshing guys */
       for (I = 0; I < Num_Internal_Elems; I++){
@@ -3982,7 +3982,7 @@ post_process_elem(double x[], /* soln vector */
 
   /* Zienkiewicz-Zhu error indicator based on velocity */
 
-  if (ERROR_ZZ_VEL != -1 && Num_Var_In_Type[R_MOMENTUM1]) {
+  if (ERROR_ZZ_VEL != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
     compute_elem_size = 0;
     if (ERROR_ZZ_VEL_ELSIZE  != -1) compute_elem_size = 1;
     if (calc_zz_error_vel(x, x_old, xdot, xdot_old, resid_vector,
@@ -4007,9 +4007,9 @@ post_process_elem(double x[], /* soln vector */
      SAT_QP_SWITCH != -1)
     {
       ev_indx_tmp = ev_indx;
-      if(Num_Var_In_Type[R_POR_LIQ_PRES] || 
-	 Num_Var_In_Type[R_SHELL_SAT_OPEN] ||
-	 Num_Var_In_Type[R_SHELL_SAT_OPEN_2])
+      if(Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] || 
+	 Num_Var_In_Type[pg->imtrx][R_SHELL_SAT_OPEN] ||
+	 Num_Var_In_Type[pg->imtrx][R_SHELL_SAT_OPEN_2])
 	{
 	  for (eb_indx = 0; eb_indx < exo->num_elem_blocks; eb_indx++) {
 	    ev_indx = ev_indx_tmp;
@@ -4232,8 +4232,8 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
 	 turned on for each dimension that the element occupies. */
       valid_count = 0;
       for ( k = 0; k < i_elem_dim; k++ ) {
-	if ( pd->e[R_MOMENTUM1 + k] &&
-	     pd->v[VELOCITY1 + k] ) {
+	if ( pd->e[pg->imtrx][R_MOMENTUM1 + k] &&
+	     pd->v[pg->imtrx][VELOCITY1 + k] ) {
 	  valid_count++;
 	}
       }
@@ -4246,8 +4246,8 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
 
 	/* Save this interpolation if first time through - subsequent passes
 	 test if interpolation ever changes. This is a no no. */
-	if ( i_elem == i_start ) last_interp = pd->i[VELOCITY1];
-	if ( pd->i[VELOCITY1] != last_interp ) {
+	if ( i_elem == i_start ) last_interp = pd->i[pg->imtrx][VELOCITY1];
+	if ( pd->i[pg->imtrx][VELOCITY1] != last_interp ) {
 	  EH (-1,
 	      "Cannot mix velocity interpolation levels for error computation");
 	}
@@ -4617,8 +4617,8 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
        turned on for each dimension that the element occupies. */
     valid_count = 0;
     for ( k = 0; k < i_elem_dim; k++ ) {
-      if ( pd->e[R_MOMENTUM1 + k] &&
-	   pd->v[VELOCITY1 + k] ) {
+      if ( pd->e[pg->imtrx][R_MOMENTUM1 + k] &&
+	   pd->v[pg->imtrx][VELOCITY1 + k] ) {
 	valid_count++;
       }
     }
@@ -4988,7 +4988,7 @@ abs_error_at_elem ( int i_elem,
 
     mu = viscosity( gn, gamma, NULL );
 
-    if ( pd->v[POLYMER_STRESS11] ) {
+    if ( pd->v[pg->imtrx][POLYMER_STRESS11] ) {
       /* get polymer viscosity */
       mup = viscosity( gn, gamma, NULL );
       mu = mu + mup;
@@ -5343,7 +5343,7 @@ fill_lhs_lspatch(double * i_node_coords,
     }
     mu = viscosity( gn, gamma, NULL );
 
-    if ( pd->v[POLYMER_STRESS11] ) {
+    if ( pd->v[pg->imtrx][POLYMER_STRESS11] ) {
       /* get polymer viscosity */
       mup = viscosity( gn, gamma, NULL );
       mu = mu + mup;
@@ -5726,7 +5726,7 @@ calc_stream_fcn(double x[],				/* soln vector */
  gspt[0] = -0.7745966692; gspt[1] = 0.; gspt[2] = 0.7745966692;
  gswt[0] = 0.55555555556; gswt[1] = 0.8888888889; gswt[2]=0.555555556;
 
- DeformingMesh = pd->e[R_MESH1];
+ DeformingMesh = pd->e[pg->imtrx][R_MESH1];
 
  /*
   *  need to adapt this for subparametric mapping, because all
@@ -5735,7 +5735,7 @@ calc_stream_fcn(double x[],				/* soln vector */
  if (DeformingMesh) {
    for (i = 0; i < ei->num_local_nodes; i++) {
      I = Proc_Elem_Connect[ei->iconnect_ptr + i];
-     if (Index_Solution(I, MESH_DISPLACEMENT1, 0, 0, -2) != -1) {
+     if (Index_Solution(I, MESH_DISPLACEMENT1, 0, 0, -2, pg->imtrx) != -1) {
        xx[i] = Coor[0][I] + *esp->d[0][ei->ln_to_dof[R_MESH1][i]] ;
        yy[i] = Coor[1][I] + *esp->d[1][ei->ln_to_dof[R_MESH2][i]]; 
      } else {  /* elements are subparametric */
@@ -5748,14 +5748,14 @@ calc_stream_fcn(double x[],				/* soln vector */
 	 Iright = Proc_Elem_Connect[ei->iconnect_ptr + iright];
 	 xx[i] = Coor[0][I] +
 	     0.5 * (
-		 x[Index_Solution(Ileft, MESH_DISPLACEMENT1, 0, 0, -2)]
+		 x[Index_Solution(Ileft, MESH_DISPLACEMENT1, 0, 0, -2, pg->imtrx)]
 		 + x[Index_Solution(Iright, MESH_DISPLACEMENT1,
-				    0, 0, -2)]);
+				    0, 0, -2, pg->imtrx)]);
 	 yy[i] = Coor[1][I] +
 	     0.5 * (
-		 x[Index_Solution(Ileft, MESH_DISPLACEMENT2, 0, 0, -2)]
+		 x[Index_Solution(Ileft, MESH_DISPLACEMENT2, 0, 0, -2, pg->imtrx)]
 		 + x[Index_Solution(Iright, MESH_DISPLACEMENT2,
-				    0, 0, -2)]);
+				    0, 0, -2, pg->imtrx)]);
        } else {
 	 /* put centroid in center */
 	 I = Proc_Elem_Connect[ei->iconnect_ptr + 8];
@@ -5765,10 +5765,10 @@ calc_stream_fcn(double x[],				/* soln vector */
 	   Ileft = Proc_Elem_Connect[ei->iconnect_ptr + ileft];
 	   xx[i] += 
 	       0.25 * x[Index_Solution(Ileft, MESH_DISPLACEMENT1,
-				       0, 0, -2)];
+				       0, 0, -2, pg->imtrx)];
 	   yy[i] += 
 	       0.25 * x[Index_Solution(Ileft, MESH_DISPLACEMENT2,
-				       0, 0, -2)];
+				       0, 0, -2, pg->imtrx)];
 	 }
        }
      }
@@ -5782,7 +5782,7 @@ calc_stream_fcn(double x[],				/* soln vector */
  }
 
  if (pd->CoordinateSystem == CARTESIAN) {
-   if (pd_glob[0]->i[R_MOMENTUM1] == I_Q1) {
+   if (pd_glob[0]->i[pg->imtrx][R_MOMENTUM1] == I_Q1) {
      WH(-1, "Stream function with Q1 mapping may not be accurate ");
 
      for (i = 0; i < ei->num_sides; i++) {
@@ -5817,7 +5817,7 @@ calc_stream_fcn(double x[],				/* soln vector */
  } else if (pd->CoordinateSystem == CYLINDRICAL ||
             pd->CoordinateSystem == SWIRLING) {
 
-   if (pd_glob[0]->i[R_MOMENTUM1] == I_Q1) {
+   if (pd_glob[0]->i[pg->imtrx][R_MOMENTUM1] == I_Q1) {
      WH(-1, "Stream function with Q1 may not be accurate ");
      for (i = 0; i < ei->num_sides; i++) {
        i1 = i;
@@ -7722,7 +7722,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 	  for (mn = -1; mn < upd->Num_Mat; mn++) {
 	    if (mn == -1) {
               for (i = upd->Num_Mat-1; i >= 0; i--) {
-                if (pd_glob[i]->i[var]) {
+                if (pd_glob[i]->i[pg->imtrx][var]) {
                   matrl = mp_glob[i];
                 }
               }
@@ -7754,7 +7754,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
    *  convert to -1 = no and post-processing variable number = yes 
    */
   
-  if (STREAM != -1 &&  Num_Var_In_Type[VELOCITY1])
+  if (STREAM != -1 &&  Num_Var_In_Type[pg->imtrx][VELOCITY1])
      {
        if (Num_Dim == 3) {
 	 WH(-1,"Cant do stream function in 3D");
@@ -7784,7 +7784,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       STREAM = -1;
     }
 
-   if (STREAM_NORMAL_STRESS != -1 && Num_Var_In_Type[R_MOMENTUM1])
+   if (STREAM_NORMAL_STRESS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "SNS","[1]",
 		   "Streamwise normal stress", FALSE);
@@ -7802,7 +7802,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       STREAM_NORMAL_STRESS = -1;
     }
 
-   if (DIV_VELOCITY != -1 && Num_Var_In_Type[PRESSURE])
+   if (DIV_VELOCITY != -1 && Num_Var_In_Type[pg->imtrx][PRESSURE])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "DIVV","[1]",
 		   "Divergence of Velocity", FALSE);
@@ -7820,7 +7820,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
        DIV_VELOCITY = -1;
      }
 
-   if (DIV_PVELOCITY != -1 && Num_Var_In_Type[R_PMOMENTUM1])
+   if (DIV_PVELOCITY != -1 && Num_Var_In_Type[pg->imtrx][R_PMOMENTUM1])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "DIVPV","[1]",
 		   "Divergence of Particle Velocity", FALSE);
@@ -7838,7 +7838,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
        DIV_PVELOCITY = -1;
      }
 
-   if (DIV_TOTAL != -1 && Num_Var_In_Type[R_PMOMENTUM1])
+   if (DIV_TOTAL != -1 && Num_Var_In_Type[pg->imtrx][R_PMOMENTUM1])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "DIVTOTAL","[1]",
 		   "Divergence of Total Velocity", FALSE);
@@ -7857,9 +7857,9 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
      }
 
    if (PP_Viscosity != -1 && (
-			      Num_Var_In_Type[R_MOMENTUM1] ||
-			      Num_Var_In_Type[R_LUBP] ||
-			      Num_Var_In_Type[R_SHELL_FILMP]
+			      Num_Var_In_Type[pg->imtrx][R_MOMENTUM1] ||
+			      Num_Var_In_Type[pg->imtrx][R_LUBP] ||
+			      Num_Var_In_Type[pg->imtrx][R_SHELL_FILMP]
 			      ))
      {
        set_nv_tkud(rd, index, 0, 0, -2, "MU","[1]", "Viscosity", FALSE);
@@ -7877,7 +7877,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
        PP_Viscosity = -1;
      }
 
-  if (PP_VolumeFractionGas != -1 && Num_Var_In_Type[R_MOMENTUM1])
+  if (PP_VolumeFractionGas != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "VOLUMEFRACTIONGAS","[1]", "Volume Fraction of Gas Phase", FALSE);
        index++;
@@ -7895,7 +7895,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
      }
 
 
-   if (DENSITY != -1 && Num_Var_In_Type[R_MOMENTUM1])
+   if (DENSITY != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "RHO","[1]", "Density", FALSE);
        index++;
@@ -7912,7 +7912,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
        DENSITY= -1;
      }
 
-   if (MEAN_SHEAR != -1 && Num_Var_In_Type[R_MOMENTUM1])
+   if (MEAN_SHEAR != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "SHEAR","[1]", "Mean shear rate",
 		   FALSE);
@@ -7936,7 +7936,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
        if(pd_glob[i]->MeshMotion == LAGRANGIAN ||
 	  pd_glob[i]->MeshMotion == DYNAMIC_LAGRANGIAN) check = 1;
      }
-   if (PRESSURE_CONT != -1 && (Num_Var_In_Type[R_MOMENTUM1] || check ))
+   if (PRESSURE_CONT != -1 && (Num_Var_In_Type[pg->imtrx][R_MOMENTUM1] || check ))
      {
        set_nv_tkud(rd, index, 0, 0, -2, "PRESSURE","[1]", 
 		   "hydrodynamic pressure", FALSE);
@@ -7954,7 +7954,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       PRESSURE_CONT = -1;
     }
 
-   if (SH_DIV_S_V_CONT != -1 && (Num_Var_In_Type[R_MOMENTUM1]))
+   if (SH_DIV_S_V_CONT != -1 && (Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]))
      {
        set_nv_tkud(rd, index, 0, 0, -2, "SH_DIV_S_V","[1]", 
 		   "shell div_s_v", FALSE);
@@ -7973,7 +7973,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     }
 
 
-   if (SH_CURV_CONT != -1 && (Num_Var_In_Type[R_SHELL_SURF_CURV]))
+   if (SH_CURV_CONT != -1 && (Num_Var_In_Type[pg->imtrx][R_SHELL_SURF_CURV]))
      {
        set_nv_tkud(rd, index, 0, 0, -2, "SH_SURF_CURV","[1]",  "shell curv", FALSE);
        index++;
@@ -7990,7 +7990,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       SH_CURV_CONT= -1;
     }
  
-  if (FILL_CONT != -1 && (Num_Var_In_Type[R_FILL]  ))
+  if (FILL_CONT != -1 && (Num_Var_In_Type[pg->imtrx][R_FILL]  ))
      {
        set_nv_tkud(rd, index, 0, 0, -2, "FILL","[1]", "continuous fill",
 		   FALSE);
@@ -8008,7 +8008,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       FILL_CONT = -1;
     }
 
-  if (CONC_CONT != -1 && (Num_Var_In_Type[R_MASS]  ))
+  if (CONC_CONT != -1 && (Num_Var_In_Type[pg->imtrx][R_MASS]  ))
      {
        if (CONC_CONT == 2)
          {
@@ -8030,7 +8030,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       CONC_CONT = -1;
     }
 
-  if (STRESS_CONT != -1 && (Num_Var_In_Type[POLYMER_STRESS11]  ))
+  if (STRESS_CONT != -1 && (Num_Var_In_Type[pg->imtrx][POLYMER_STRESS11]  ))
     {
       if (STRESS_CONT == 2)
         {
@@ -8046,7 +8046,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 		  /* stress tensor is symmetric */ 
 		  if(a <= b)
 		    {  
-		      if (Num_Var_In_Type[v_s[mode][a][b]] )
+		      if (Num_Var_In_Type[pg->imtrx][v_s[mode][a][b]] )
 			{
 			  sprintf(species_name, "cs%d%d_%d", a+1, b+1, mode);
 			  sprintf(species_desc, "Continuous stress %d%d_%d",
@@ -8083,7 +8083,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 		  /* stress tensor is symmetric */ 
 		  if(a <= b)
 		    {  
-		      if (Num_Var_In_Type[v_s[0][a][b]] )
+		      if (Num_Var_In_Type[pg->imtrx][v_s[0][a][b]] )
 			{
 			  sprintf(species_name, "tcs%d%d", a+1, b+1);
 			  sprintf(species_desc, "Total continuous stress %d%d",
@@ -8103,7 +8103,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       STRESS_CONT = -1;
     }
 
-   if (FIRST_INVAR_STRAIN != -1 && Num_Var_In_Type[R_MESH1])
+   if (FIRST_INVAR_STRAIN != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1])
      {
       set_nv_tkud(rd, index, 0, 0, -2, "IE","[1]", 
 		  "1st invariant of strain tensor", FALSE);
@@ -8121,7 +8121,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       FIRST_INVAR_STRAIN = -1;
     }
 
-   if (SEC_INVAR_STRAIN != -1 && Num_Var_In_Type[R_MESH1])
+   if (SEC_INVAR_STRAIN != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1])
      {
       set_nv_tkud(rd, index, 0, 0, -2, "IIE","[1]", 
 		  "2nd invariant of strain tensor", FALSE);
@@ -8139,7 +8139,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       SEC_INVAR_STRAIN = -1;
     }
 
-   if (THIRD_INVAR_STRAIN != -1 && Num_Var_In_Type[R_MESH1])
+   if (THIRD_INVAR_STRAIN != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1])
      {
       set_nv_tkud(rd, index, 0, 0, -2, "IIIE","[1]", 
 		  "3rd invariant of strain tensor", FALSE);
@@ -8158,7 +8158,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     }
 
 
-   if(DIELECTROPHORETIC_FIELD != -1 && Num_Var_In_Type[R_POTENTIAL])
+   if(DIELECTROPHORETIC_FIELD != -1 && Num_Var_In_Type[pg->imtrx][R_POTENTIAL])
      { 
        if (DIELECTROPHORETIC_FIELD == 2)
          {
@@ -8182,7 +8182,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
    else
      DIELECTROPHORETIC_FIELD = -1;
 
-   if(DIELECTROPHORETIC_FIELD_NORM != -1 && Num_Var_In_Type[R_POTENTIAL])
+   if(DIELECTROPHORETIC_FIELD_NORM != -1 && Num_Var_In_Type[pg->imtrx][R_POTENTIAL])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "DFN", "[1]", "Dielectrophoretic force norm", FALSE);
        index++;
@@ -8197,7 +8197,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
    else
      DIELECTROPHORETIC_FIELD_NORM = -1;
 
-   if(ENORMSQ_FIELD != -1 && Num_Var_In_Type[R_POTENTIAL] && Num_Var_In_Type[R_ENORM])
+   if(ENORMSQ_FIELD != -1 && Num_Var_In_Type[pg->imtrx][R_POTENTIAL] && Num_Var_In_Type[pg->imtrx][R_ENORM])
      {
        if (ENORMSQ_FIELD == 2)
          {
@@ -8221,7 +8221,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
    else
      ENORMSQ_FIELD = -1;
 
-   if(ENORMSQ_FIELD_NORM != -1 && Num_Var_In_Type[R_POTENTIAL] && Num_Var_In_Type[R_ENORM])
+   if(ENORMSQ_FIELD_NORM != -1 && Num_Var_In_Type[pg->imtrx][R_POTENTIAL] && Num_Var_In_Type[pg->imtrx][R_ENORM])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "GENSNORM", "[1]", "|grad(|E|^2)|", FALSE);
        index++;
@@ -8296,7 +8296,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
    }
 
 
-   if (FLUXLINES != -1 && Num_Var_In_Type[R_MASS]) {
+   if (FLUXLINES != -1 && Num_Var_In_Type[pg->imtrx][R_MASS]) {
      if (FLUXLINES == 2)
        {
          EH(-1, "Post-processing vectors cannot be exported yet!");
@@ -8322,7 +8322,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
      FLUXLINES = -1;
    }
 
-  if (CONDUCTION_VECTORS != -1 && Num_Var_In_Type[R_ENERGY])
+  if (CONDUCTION_VECTORS != -1 && Num_Var_In_Type[pg->imtrx][R_ENERGY])
     {
       if (CONDUCTION_VECTORS == 2)
         {
@@ -8343,7 +8343,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       CONDUCTION_VECTORS = -1;
     }
 
-  if (ELECTRIC_FIELD != -1 && Num_Var_In_Type[R_POTENTIAL])
+  if (ELECTRIC_FIELD != -1 && Num_Var_In_Type[pg->imtrx][R_POTENTIAL])
     {
       if (ELECTRIC_FIELD == 2)
         {
@@ -8378,7 +8378,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       ELECTRIC_FIELD = -1;
     }
 
-  if (ELECTRIC_FIELD_MAG != -1 && Num_Var_In_Type[R_POTENTIAL])
+  if (ELECTRIC_FIELD_MAG != -1 && Num_Var_In_Type[pg->imtrx][R_POTENTIAL])
     {
 
       sprintf(nm, "EE");
@@ -8398,7 +8398,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       ELECTRIC_FIELD_MAG = -1;
     }
 
-  if (ENERGY_FLUXLINES != -1 && Num_Var_In_Type[R_ENERGY])
+  if (ENERGY_FLUXLINES != -1 && Num_Var_In_Type[pg->imtrx][R_ENERGY])
   {
     if (Num_Dim == 3) {
       WH(-1,"Cant do flux function in 3D");
@@ -8425,7 +8425,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     }
 
 /* there are always 6 entries in the stress tensor (3-D symmetric) */
-  if (STRESS_TENSOR != -1 && Num_Var_In_Type[R_MESH1])
+  if (STRESS_TENSOR != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1])
     {
       if (STRESS_TENSOR == 2)
         {
@@ -8466,7 +8466,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     }
 
 /* there are always 6 entries in the stress tensor (3-D symmetric) */
-  if (REAL_STRESS_TENSOR != -1 && Num_Var_In_Type[R_SOLID1])
+  if (REAL_STRESS_TENSOR != -1 && Num_Var_In_Type[pg->imtrx][R_SOLID1])
     {
       if (REAL_STRESS_TENSOR == 2)
         {
@@ -8506,7 +8506,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       REAL_STRESS_TENSOR = -1;
     }
 
-  if (STRAIN_TENSOR != -1 &&  Num_Var_In_Type[R_MESH1])
+  if (STRAIN_TENSOR != -1 &&  Num_Var_In_Type[pg->imtrx][R_MESH1])
     {
       if (STRAIN_TENSOR == 2)
         {
@@ -8548,7 +8548,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 
   if (evpl_glob[0]->ConstitutiveEquation == EVP_HYPER &&
       EVP_DEF_GRAD_TENSOR != -1 &&  
-      Num_Var_In_Type[R_MESH1])
+      Num_Var_In_Type[pg->imtrx][R_MESH1])
     {
       if (EVP_DEF_GRAD_TENSOR == 2)
         {
@@ -8595,7 +8595,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 	  index_post++;
 
 	}
-      if (STRESS_TENSOR != -1 && Num_Var_In_Type[R_MESH1])
+      if (STRESS_TENSOR != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1])
 	{
 	  set_nv_tkud(rd, index, 0, 0, -2, "TVP11","[1]",
 		      "EVP stretch stress x", FALSE);
@@ -8672,7 +8672,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       LAGRANGE_CONVECTION = -1;
     }
   						
-  if (SURFACE_VECTORS != -1  && Num_Var_In_Type[MESH_DISPLACEMENT1])		
+  if (SURFACE_VECTORS != -1  && Num_Var_In_Type[pg->imtrx][MESH_DISPLACEMENT1])		
     {
       if (SURFACE_VECTORS == 2)
         {
@@ -8716,7 +8716,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       SURFACE_VECTORS = -1;
     }
     
-  if (SHELL_NORMALS != -1  && ( Num_Var_In_Type[SHELL_ANGLE1] || Num_Var_In_Type[LUBP] ) )		
+  if (SHELL_NORMALS != -1  && ( Num_Var_In_Type[pg->imtrx][SHELL_ANGLE1] || Num_Var_In_Type[pg->imtrx][LUBP] ) )		
     {
       if (SHELL_NORMALS == 2)
         {
@@ -8767,7 +8767,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 printf("Before porous entries, IP = %d and IPE = %d\n",
 index_post, index_post_export);
 */
-  if (POROUS_SATURATION != -1 && Num_Var_In_Type[R_POR_LIQ_PRES] && 
+  if (POROUS_SATURATION != -1 && Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] && 
       check) {
     set_nv_tkud(rd, index, 0, 0, -2, "SAT", "[1]", "Saturation", FALSE);
     index++;
@@ -8783,7 +8783,7 @@ index_post, index_post_export);
   } 
 
   if (POROUS_RHO_TOTAL_SOLVENTS != -1 && 
-      Num_Var_In_Type[R_POR_LIQ_PRES] &&  check) {
+      Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] &&  check) {
     if (POROUS_RHO_TOTAL_SOLVENTS == 2)
       {
         EH(-1, "Post-processing vectors cannot be exported yet!");
@@ -8801,7 +8801,7 @@ index_post, index_post_export);
 		species_desc, FALSE);
     index++;
     index_post++;
-    if (Num_Var_In_Type[R_POR_POROSITY]) {
+    if (Num_Var_In_Type[pg->imtrx][R_POR_POROSITY]) {
       sprintf(species_name, "Rho_Total_solid");
       sprintf(species_desc, "Total density of solid solvent");
       set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]",
@@ -8814,13 +8814,13 @@ index_post, index_post_export);
   }
 
   if (POROUS_RHO_GAS_SOLVENTS != -1 &&
-      Num_Var_In_Type[R_POR_LIQ_PRES] && check) {
+      Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] && check) {
     if (POROUS_RHO_GAS_SOLVENTS == 2)
       {
         EH(-1, "Post-processing vectors cannot be exported yet!");
       }
     POROUS_RHO_GAS_SOLVENTS = index_post;
-    if (Num_Var_In_Type[R_POR_LIQ_PRES]) {
+    if (Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES]) {
       sprintf(species_name, "RhoSolv_g_liq");
       sprintf(species_desc, "Gas Phase Density of liq solvent");
       set_nv_tkud(rd, index, 0, 0, -2, species_name,"[1]",
@@ -8828,7 +8828,7 @@ index_post, index_post_export);
       index++;
       index_post++;
     }
-    if (Num_Var_In_Type[R_POR_GAS_PRES]) {
+    if (Num_Var_In_Type[pg->imtrx][R_POR_GAS_PRES]) {
       sprintf(species_name, "RhoSolv_g_air");
       sprintf(species_desc, "Gas Phase Density of gas solvent");
       set_nv_tkud(rd, index, 0, 0, -2, species_name,"[1]",
@@ -8836,7 +8836,7 @@ index_post, index_post_export);
       index++;
       index_post++;
     }
-    if (Num_Var_In_Type[R_POR_POROSITY]) {
+    if (Num_Var_In_Type[pg->imtrx][R_POR_POROSITY]) {
       sprintf(species_name, "RhoSolv_g_solid");
       sprintf(species_desc, "Gas Phase Density of solid solvent");
       set_nv_tkud(rd, index, 0, 0, -2, species_name,"[1]",
@@ -8849,7 +8849,7 @@ index_post, index_post_export);
   }
 
   if (POROUS_RHO_LPHASE != -1 && 
-      Num_Var_In_Type[R_POR_LIQ_PRES] && check) {
+      Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] && check) {
     sprintf(species_name, "Rho_Liq_Phase");
     sprintf(species_desc, "Density of the Liquid Phase");
     set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]",
@@ -8867,7 +8867,7 @@ index_post, index_post_export);
   }
 
   if (DARCY_VELOCITY_GAS != -1 &&
-      Num_Var_In_Type[R_POR_GAS_PRES] && check) {
+      Num_Var_In_Type[pg->imtrx][R_POR_GAS_PRES] && check) {
     if (DARCY_VELOCITY_GAS == 2)
       {
         EH(-1, "Post-processing vectors cannot be exported yet!");
@@ -8885,7 +8885,7 @@ index_post, index_post_export);
   }
 
   if (DARCY_VELOCITY_LIQ != -1 && 
-      Num_Var_In_Type[R_POR_LIQ_PRES] && check) {
+      Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] && check) {
     if (DARCY_VELOCITY_LIQ == 2)
       {
         EH(-1, "Post-processing vectors cannot be exported yet!");
@@ -8902,7 +8902,7 @@ index_post, index_post_export);
     DARCY_VELOCITY_LIQ = -1;
   }
   if (POROUS_LIQUID_ACCUM_RATE != -1 && 
-      Num_Var_In_Type[R_POR_LIQ_PRES] && check) {
+      Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] && check) {
     set_nv_tkud(rd, index, 0, 0, -2, "Liq_Inv_Dot", "[1]",
 		"Porous Liquid Accumlation Rate", FALSE);
     index++;
@@ -8922,7 +8922,7 @@ printf(" Before cap. pressure, IP = %d and IPE = %d\n",
 index_post, index_post_export);
 */
   if (CAPILLARY_PRESSURE != -1 && 
-      Num_Var_In_Type[R_POR_LIQ_PRES] && check) {
+      Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] && check) {
     set_nv_tkud(rd, index, 0, 0, -2, "PC", "[1]",
 		"Capillary Pressure", FALSE);
     index++;
@@ -8938,7 +8938,7 @@ index_post, index_post_export);
   }
 
   if (POROUS_GRIDPECLET != -1 && 
-      Num_Var_In_Type[R_POR_LIQ_PRES] && check) {
+      Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] && check) {
     set_nv_tkud(rd, index, 0, 0, -2, "Por_Grid_Peclet", "[1]",
 		"Porous Grid Peclet Number", FALSE);
     index++;
@@ -8954,7 +8954,7 @@ index_post, index_post_export);
   }
 
   if (POROUS_SUPGVELOCITY != -1 && 
-      Num_Var_In_Type[R_POR_LIQ_PRES] && check) {
+      Num_Var_In_Type[pg->imtrx][R_POR_LIQ_PRES] && check) {
     if (POROUS_SUPGVELOCITY == 2)
       {
         EH(-1, "Post-processing vectors cannot be exported yet!");
@@ -8978,7 +8978,7 @@ index_post, index_post_export);
 
   /* MMH: Output the vorticity vector.
    */
-  if (CURL_V != -1 && Num_Var_In_Type[R_MOMENTUM1])
+  if (CURL_V != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1])
      {
        if(pd->CoordinateSystem == SWIRLING ||
 	  pd->CoordinateSystem == PROJECTED_CARTESIAN ||
@@ -9045,7 +9045,7 @@ index_post, index_post_export);
     }
 
   if (ACOUSTIC_PRESSURE != -1  && 
-      (Num_Var_In_Type[R_ACOUS_PREAL] && Num_Var_In_Type[R_ACOUS_PIMAG]) )
+      (Num_Var_In_Type[pg->imtrx][R_ACOUS_PREAL] && Num_Var_In_Type[pg->imtrx][R_ACOUS_PIMAG]) )
     {
       set_nv_tkud(rd, index, 0, 0, -2, "AC_PRES","[1]", "Acoustic Pressure Magn.",
 		  FALSE);
@@ -9064,7 +9064,7 @@ index_post, index_post_export);
     }
 
   if (ACOUSTIC_PHASE_ANGLE != -1  && 
-      (Num_Var_In_Type[R_ACOUS_PREAL] && Num_Var_In_Type[R_ACOUS_PIMAG]) )
+      (Num_Var_In_Type[pg->imtrx][R_ACOUS_PREAL] && Num_Var_In_Type[pg->imtrx][R_ACOUS_PIMAG]) )
     {
       set_nv_tkud(rd, index, 0, 0, -2, "AC_PHASE","[1]", "Acoustic Phase Angle",
 		  FALSE);
@@ -9083,7 +9083,7 @@ index_post, index_post_export);
     }
 
   if (ACOUSTIC_ENERGY_DENSITY != -1  && 
-      (Num_Var_In_Type[R_ACOUS_PREAL] && Num_Var_In_Type[R_ACOUS_PIMAG]) )
+      (Num_Var_In_Type[pg->imtrx][R_ACOUS_PREAL] && Num_Var_In_Type[pg->imtrx][R_ACOUS_PIMAG]) )
     {
       set_nv_tkud(rd, index, 0, 0, -2, "AC_ED","[1]", "Acoustic Energy Density",
 		  FALSE);
@@ -9102,7 +9102,7 @@ index_post, index_post_export);
     }
 
   if (LIGHT_INTENSITY != -1  && 
-      (Num_Var_In_Type[R_LIGHT_INTP] && Num_Var_In_Type[R_LIGHT_INTM]) )
+      (Num_Var_In_Type[pg->imtrx][R_LIGHT_INTP] && Num_Var_In_Type[pg->imtrx][R_LIGHT_INTM]) )
     {
       set_nv_tkud(rd, index, 0, 0, -2, "L_INT","[1]", "Light Intensity",
 		  FALSE);
@@ -9120,7 +9120,7 @@ index_post, index_post_export);
       LIGHT_INTENSITY = -1;
     }
 
-  if (UNTRACKED_SPEC != -1  && Num_Var_In_Type[R_MASS] )
+  if (UNTRACKED_SPEC != -1  && Num_Var_In_Type[pg->imtrx][R_MASS] )
     {
       set_nv_tkud(rd, index, 0, 0, -2, "UNT_SPEC","[1]", "Untracked Species",
 		  FALSE);
@@ -9138,7 +9138,7 @@ index_post, index_post_export);
       UNTRACKED_SPEC = -1;
     }
 
-  if (PRINCIPAL_STRESS != -1  && Num_Var_In_Type[R_MESH1])
+  if (PRINCIPAL_STRESS != -1  && Num_Var_In_Type[pg->imtrx][R_MESH1])
     {
       if (PRINCIPAL_STRESS == 2)
         {
@@ -9170,7 +9170,7 @@ index_post, index_post_export);
       PRINCIPAL_STRESS = -1;
     }
 
-  if (PRINCIPAL_REAL_STRESS != -1  && Num_Var_In_Type[R_SOLID1])
+  if (PRINCIPAL_REAL_STRESS != -1  && Num_Var_In_Type[pg->imtrx][R_SOLID1])
     {
       if (PRINCIPAL_REAL_STRESS == 2)
         {
@@ -9202,7 +9202,7 @@ index_post, index_post_export);
       PRINCIPAL_REAL_STRESS = -1;
     }
 
-  if (LUB_HEIGHT != -1  && (Num_Var_In_Type[R_LUBP] || Num_Var_In_Type[R_SHELL_FILMP]) )
+  if (LUB_HEIGHT != -1  && (Num_Var_In_Type[pg->imtrx][R_LUBP] || Num_Var_In_Type[pg->imtrx][R_SHELL_FILMP]) )
     {
       if (LUB_HEIGHT == 2)
         {
@@ -9220,7 +9220,7 @@ index_post, index_post_export);
       LUB_HEIGHT = -1;
     }
 
-  if (LUB_HEIGHT_2 != -1  && (Num_Var_In_Type[R_LUBP_2] ))
+  if (LUB_HEIGHT_2 != -1  && (Num_Var_In_Type[pg->imtrx][R_LUBP_2] ))
     {
       if (LUB_HEIGHT_2 == 2)
         {
@@ -9238,7 +9238,7 @@ index_post, index_post_export);
       LUB_HEIGHT_2 = -1;
     }
 
-  if (LUB_VELO_UPPER != -1  && Num_Var_In_Type[R_LUBP])
+  if (LUB_VELO_UPPER != -1  && Num_Var_In_Type[pg->imtrx][R_LUBP])
     {
       if (LUB_VELO_UPPER == 2)
         {
@@ -9266,7 +9266,7 @@ index_post, index_post_export);
       LUB_VELO_UPPER = -1;
     }
 
-  if (LUB_VELO_LOWER != -1  && Num_Var_In_Type[R_LUBP])
+  if (LUB_VELO_LOWER != -1  && Num_Var_In_Type[pg->imtrx][R_LUBP])
     {
       if (LUB_VELO_LOWER == 2)
         {
@@ -9294,7 +9294,7 @@ index_post, index_post_export);
       LUB_VELO_LOWER = -1;
     }
 
-  if (LUB_VELO_FIELD != -1  && (Num_Var_In_Type[R_LUBP] || Num_Var_In_Type[R_SHELL_FILMP]))
+  if (LUB_VELO_FIELD != -1  && (Num_Var_In_Type[pg->imtrx][R_LUBP] || Num_Var_In_Type[pg->imtrx][R_SHELL_FILMP]))
     {
       if (LUB_VELO_FIELD == 2)
         {
@@ -9322,7 +9322,7 @@ index_post, index_post_export);
       LUB_VELO_FIELD = -1;
     }
 
-  if (DISJ_PRESS != -1  && Num_Var_In_Type[R_SHELL_FILMP])
+  if (DISJ_PRESS != -1  && Num_Var_In_Type[pg->imtrx][R_SHELL_FILMP])
     {
       if (DISJ_PRESS == 2)
         {
@@ -9342,7 +9342,7 @@ index_post, index_post_export);
     }
 
 
-  if (SH_SAT_OPEN != -1  && Num_Var_In_Type[R_SHELL_SAT_OPEN])
+  if (SH_SAT_OPEN != -1  && Num_Var_In_Type[pg->imtrx][R_SHELL_SAT_OPEN])
     {
       if (SH_SAT_OPEN == 2)
         {
@@ -9360,7 +9360,7 @@ index_post, index_post_export);
       SH_SAT_OPEN = -1;
     }
 
-  if (SH_SAT_OPEN != -1  && Num_Var_In_Type[R_SHELL_SAT_OPEN_2])
+  if (SH_SAT_OPEN != -1  && Num_Var_In_Type[pg->imtrx][R_SHELL_SAT_OPEN_2])
     {
       if (SH_SAT_OPEN == 2)
         {
@@ -9379,7 +9379,7 @@ index_post, index_post_export);
     }
 
 
-  if (PP_LAME_MU != -1  && Num_Var_In_Type[R_MESH1])
+  if (PP_LAME_MU != -1  && Num_Var_In_Type[pg->imtrx][R_MESH1])
     {
       if (PP_LAME_MU == 2)
         {
@@ -9398,7 +9398,7 @@ index_post, index_post_export);
     }
 
 
-  if (PP_LAME_LAMBDA != -1  && Num_Var_In_Type[R_MESH1])
+  if (PP_LAME_LAMBDA != -1  && Num_Var_In_Type[pg->imtrx][R_MESH1])
     {
       if (PP_LAME_LAMBDA == 2)
         {
@@ -9416,7 +9416,7 @@ index_post, index_post_export);
       PP_LAME_LAMBDA = -1;
     }
 
-  if (VON_MISES_STRAIN != -1 && Num_Var_In_Type[R_MESH1])
+  if (VON_MISES_STRAIN != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1])
     {
       set_nv_tkud(rd, index, 0, 0, -2, "VME","[1]", 
 		  "Von Mises Strain", FALSE);
@@ -9434,7 +9434,7 @@ index_post, index_post_export);
       VON_MISES_STRAIN = -1;
     }
 
-  if (VON_MISES_STRESS != -1 && Num_Var_In_Type[R_MESH1])
+  if (VON_MISES_STRESS != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1])
     {
       set_nv_tkud(rd, index, 0, 0, -2, "VMT","[1]", 
 		  "Von Mises Stress", FALSE);
@@ -9485,7 +9485,7 @@ index_post, index_post_export);
  *              post processing options
  */
 
-  if ( NS_RESIDUALS != -1 && Num_Var_In_Type[R_MOMENTUM1] )
+  if ( NS_RESIDUALS != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1] )
      {
       if (NS_RESIDUALS == 2)
         {
@@ -9513,7 +9513,7 @@ index_post, index_post_export);
       NS_RESIDUALS = -1;
     }
 
-  if ( MM_RESIDUALS != -1 && Num_Var_In_Type[R_MESH1])
+  if ( MM_RESIDUALS != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1])
      {
       if (MM_RESIDUALS == 2)
         {
@@ -9542,15 +9542,15 @@ index_post, index_post_export);
 
   /* write out total stress */
   var = R_STRESS11;
-  if ( Num_Var_In_Type[var])
+  if ( Num_Var_In_Type[pg->imtrx][var])
     {
       post_flag = 0;
       for (i = 0; i < upd->Num_Mat; i++)
 	{
-	  if(pd_glob[i]->i[var] == I_Q1 || pd_glob[i]->i[var] == I_Q2 
-	     || pd_glob[i]->i[var] == I_Q2_D || pd_glob[i]->i[var] == I_Q1_D 
-	     || pd_glob[i]->i[var] == I_SP || pd_glob[i]->i[var] ==
-	     I_Q2_LSA || pd_glob[i]->i[var] == I_Q2_D_LSA )
+	  if(pd_glob[i]->i[pg->imtrx][var] == I_Q1 || pd_glob[i]->i[pg->imtrx][var] == I_Q2 
+	     || pd_glob[i]->i[pg->imtrx][var] == I_Q2_D || pd_glob[i]->i[pg->imtrx][var] == I_Q1_D 
+	     || pd_glob[i]->i[pg->imtrx][var] == I_SP || pd_glob[i]->i[pg->imtrx][var] ==
+	     I_Q2_LSA || pd_glob[i]->i[pg->imtrx][var] == I_Q2_D_LSA )
 	    {
 	      if(vn_glob[i]->modes > 1)
 		{
@@ -9566,7 +9566,7 @@ index_post, index_post_export);
 	  index++;
 	  index_post++;
 	  var = R_STRESS12;
-	  if ( Num_Var_In_Type[var])
+	  if ( Num_Var_In_Type[pg->imtrx][var])
 	    {
 	      TOTAL_STRESS12 = index_post;
 	      set_nv_tkud(rd, index, var, 0, -2, "ts12", "[1]",
@@ -9580,7 +9580,7 @@ index_post, index_post_export);
 	    }
 	    
 	  var = R_STRESS22;
-	  if ( Num_Var_In_Type[var])
+	  if ( Num_Var_In_Type[pg->imtrx][var])
 	    {
 	      TOTAL_STRESS22 = index_post;
 	      set_nv_tkud(rd, index, var, 0, -2, "ts22", "[1]",
@@ -9593,7 +9593,7 @@ index_post, index_post_export);
 	      TOTAL_STRESS22 = -1;
 	    }
 	  var = R_STRESS13;
-	  if ( Num_Var_In_Type[var])
+	  if ( Num_Var_In_Type[pg->imtrx][var])
 	    {
 	      TOTAL_STRESS13 = index_post;
 	      set_nv_tkud(rd, index, var, 0, -2, "ts13", "[1]",
@@ -9606,7 +9606,7 @@ index_post, index_post_export);
 	      TOTAL_STRESS13 = -1;
 	    }
 	  var = R_STRESS23;
-	  if ( Num_Var_In_Type[var])
+	  if ( Num_Var_In_Type[pg->imtrx][var])
 	    {
 	      TOTAL_STRESS23 = index_post;
 	      set_nv_tkud(rd, index, var, 0, -2, "ts23", "[1]",
@@ -9619,7 +9619,7 @@ index_post, index_post_export);
 	      TOTAL_STRESS23 = -1;
 	    }
 	  var = R_STRESS33;
-	  if (Num_Var_In_Type[var])
+	  if (Num_Var_In_Type[pg->imtrx][var])
 	    {
 	      TOTAL_STRESS33 = index_post;
 	      set_nv_tkud(rd, index, var, 0, -2, "ts33", "[1]",
@@ -9649,7 +9649,7 @@ index_post, index_post_export);
         EH(-1, "Post-processing time derivatives cannot be exported yet!");
       }
     for (var = V_FIRST; var < V_LAST; var++) {
-      if (Num_Var_In_Type[var]) {
+      if (Num_Var_In_Type[pg->imtrx][var]) {
         if (variable_type_nodalInterp(var)) {
           if (var == MASS_FRACTION) {
             for (mn = -1; mn < upd->Num_Mat; mn++) {
@@ -9685,7 +9685,7 @@ index_post, index_post_export);
 	    for (mn = -1; mn < upd->Num_Mat; mn++) {
 	      if (mn == -1) {
 		for (i = upd->Num_Mat - 1; i >= 0; i--) {
-		  if (pd_glob[i]->i[var]) {
+		  if (pd_glob[i]->i[pg->imtrx][var]) {
 		    matrl = mp_glob[i];
 		  }
 		}
@@ -9757,9 +9757,9 @@ load_elem_tkn (struct Results_Description *rd,
      for element variable candidates (currently must be interpolated with I_P0 */
   for (i = 0; i < upd->Num_Mat; i++) {
     for ( j = V_FIRST; j < V_LAST; j++) {
-      if ( pd_glob[i]->v[j] != V_NOTHING ) {
-	if ( FALSE && pd_glob[i]->i[j] == I_P0 ) {
-	  if ( Num_Var_In_Type[j] > 1 ) {
+      if ( pd_glob[i]->v[pg->imtrx][j] != V_NOTHING ) {
+	if ( FALSE && pd_glob[i]->i[pg->imtrx][j] == I_P0 ) {
+	  if ( Num_Var_In_Type[pg->imtrx][j] > 1 ) {
 	    fprintf(stderr,
 		    "%s: Too many components in variable type (%s - %s) for element variable\n",
 		    yo,
@@ -9788,7 +9788,7 @@ load_elem_tkn (struct Results_Description *rd,
      each be listed separately and painfully */
 
   /* ZZ error based on the fluid shear stress energy norm */
-  if (ERROR_ZZ_VEL != -1 && Num_Var_In_Type[R_MOMENTUM1]) {
+  if (ERROR_ZZ_VEL != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1]) {
     set_ev_tkud( rd, 
 		 index,
 		 0, 
@@ -9817,7 +9817,7 @@ load_elem_tkn (struct Results_Description *rd,
   }
 
   /* ZZ error based on the heat flux energy norm */
-  if (ERROR_ZZ_Q != -1 && Num_Var_In_Type[R_ENERGY]) {
+  if (ERROR_ZZ_Q != -1 && Num_Var_In_Type[pg->imtrx][R_ENERGY]) {
     set_ev_tkud( rd, 
 		 index,
 		 0, 
@@ -9852,7 +9852,7 @@ load_elem_tkn (struct Results_Description *rd,
     if( pd_glob[i]->MeshMotion == LAGRANGIAN ||
 	pd_glob[i]->MeshMotion == DYNAMIC_LAGRANGIAN) check = 0;
   }
-  if (ERROR_ZZ_P != -1 && (Num_Var_In_Type[R_MOMENTUM1] || check)) {
+  if (ERROR_ZZ_P != -1 && (Num_Var_In_Type[pg->imtrx][R_MOMENTUM1] || check)) {
     set_ev_tkud( rd, 
 		 index,
 		 0, 

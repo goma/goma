@@ -164,7 +164,7 @@ shell_n_dot_flow_bc_confined(double func[DIM],
   if (af->Assemble_Jacobian)
     {
       var = LUBP;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
         for ( j=0; j<ei->dof[var]; j++)
            {
@@ -284,7 +284,7 @@ shell_n_dot_flow_bc_film(double func[DIM],
   if (af->Assemble_Jacobian) 
     {
       var = SHELL_FILMP;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
         for ( j=0; j<ei->dof[var]; j++)
            {
@@ -304,7 +304,7 @@ shell_n_dot_flow_bc_film(double func[DIM],
       }
 
       var = SHELL_FILMH;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
         for ( j=0; j<ei->dof[var]; j++)
            {
@@ -328,7 +328,7 @@ shell_n_dot_flow_bc_film(double func[DIM],
       }
 
       var = SHELL_PARTC;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
         for ( j=0; j<ei->dof[var]; j++)
            {
@@ -442,7 +442,7 @@ shell_n_dot_gradp_bc(double func[DIM],
   if (af->Assemble_Jacobian) 
     {
       var = SHELL_FILMP;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
         for ( j=0; j<ei->dof[var]; j++)
            {
@@ -462,7 +462,7 @@ shell_n_dot_gradp_bc(double func[DIM],
       }
 
       var = SHELL_FILMH;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
         for ( j=0; j<ei->dof[var]; j++)
            {
@@ -586,7 +586,7 @@ shell_n_dot_gradh_bc(double func[DIM],
   if (af->Assemble_Jacobian) 
     {
       var = SHELL_FILMH;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
         for ( j=0; j<ei->dof[var]; j++)
            {	              
@@ -728,7 +728,7 @@ shell_n_dot_pflux_bc(double func[DIM],
     {
 
       var = SHELL_FILMH;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
         for ( j=0; j<ei->dof[var]; j++)
            {
@@ -750,7 +750,7 @@ shell_n_dot_pflux_bc(double func[DIM],
 
 
       var = SHELL_PARTC;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
       {
         for ( j=0; j<ei->dof[var]; j++)
            {
@@ -852,7 +852,7 @@ void
 	var = LUBP;
 	for ( j_id=0; j_id<ei->dof[var]; j_id++)
 	  {
-	    if (pd->v[var])
+	    if (pd->v[pg->imtrx][var])
 	      {
 		phi_j = bf[var]->phi[j_id];
 		d_func[0][var][j_id] += phi_j;
@@ -876,7 +876,7 @@ void
 	var = SHELL_FILMP;
 	for ( j_id=0; j_id<ei->dof[var]; j_id++)
 	  {
-	    if (pd->v[var])
+	    if (pd->v[pg->imtrx][var])
 	      {
 		phi_j = bf[var]->phi[j_id];
 		d_func[0][var][j_id] -= phi_j;
@@ -928,7 +928,7 @@ put_lub_flux_in_film(int id, /* local element node number for the
      * if you are in the film phase, return without doing anything
      * In the solid phase, there are no fluid momentum equations.
      */
-    if (!pd->e[R_LUBP]) return;   
+    if (!pd->e[pg->imtrx][R_LUBP]) return;   
 
     
     id_doflubp = ei->ln_to_dof[R_LUBP][id];
@@ -959,8 +959,8 @@ put_lub_flux_in_film(int id, /* local element node number for the
      * check to make sure that both lubp dof and sh_fp
      * dof exist at this node
      */
-    if (Dolphin[I][R_LUBP] <= 0)     return;
-    if (Dolphin[I][R_SHELL_FILMP] <= 0) return;
+    if (Dolphin[pg->imtrx][I][R_LUBP] <= 0)     return;
+    if (Dolphin[pg->imtrx][I][R_SHELL_FILMP] <= 0) return;
 
     /*
      * add local contribution to lubp equation
@@ -972,8 +972,8 @@ put_lub_flux_in_film(int id, /* local element node number for the
 	  ieqn_filmp = R_SHELL_FILMP;
 	  id_doflubp = ei->ln_to_dof[ieqn_lubp][id];
 	  id_doffilmp = ei->ln_to_dof[ieqn_filmp][id];
-	  lec->R[upd->ep[ieqn_filmp]][id_doffilmp] =
-	       -lec->R[upd->ep[ieqn_lubp]][id_doflubp];
+	  lec->R[upd->ep[pg->imtrx][ieqn_filmp]][id_doffilmp] =
+	       -lec->R[upd->ep[pg->imtrx][ieqn_lubp]][id_doflubp];
     }
     
     /*
@@ -983,9 +983,9 @@ put_lub_flux_in_film(int id, /* local element node number for the
     if (af->Assemble_Jacobian)
       {
 	ieqn_lubp = R_LUBP;
-	peqn_lubp = upd->ep[ieqn_lubp];
+	peqn_lubp = upd->ep[pg->imtrx][ieqn_lubp];
 	ieqn_filmp = R_SHELL_FILMP;
-	peqn_filmp = upd->ep[ieqn_filmp];
+	peqn_filmp = upd->ep[pg->imtrx][ieqn_filmp];
 	id_doflubp = ei->ln_to_dof[ieqn_lubp][id];
 	id_doffilmp = ei->ln_to_dof[ieqn_filmp][id];
 
@@ -997,9 +997,9 @@ put_lub_flux_in_film(int id, /* local element node number for the
 	for ( q=0; q<dim; q++)
 	  {
 	    var = MESH_DISPLACEMENT1+q;
-	    if ( pd->v[var] )
+	    if ( pd->v[pg->imtrx][var] )
 	      {
-		pvar = upd->vp[var];
+		pvar = upd->vp[pg->imtrx][var];
 		for ( j_id=0; j_id<ei->dof[var]; j_id++)
 		  {
 		    lec->J[peqn_filmp][pvar][id_doffilmp][j_id] =
@@ -1012,9 +1012,9 @@ put_lub_flux_in_film(int id, /* local element node number for the
 	 * local J_lubp_lubp -> J_filmp_lubp
 	 */
 	var = LUBP;
-	if ( pd->v[var] )
+	if ( pd->v[pg->imtrx][var] )
 	  {
-	    pvar = upd->vp[var];
+	    pvar = upd->vp[pg->imtrx][var];
 	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
 	      {			
 		lec->J[peqn_filmp][pvar][id_doffilmp][j_id] =

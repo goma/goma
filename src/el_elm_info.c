@@ -711,7 +711,7 @@ node_info(const int  n,
    * that it is not active and hence no contribution to 
    * degrees of freedom at this node.
    */
-  if ( pd->i[var] == I_NOTHING )
+  if ( pd->i[pg->imtrx][var] == I_NOTHING )
     {
       return(0);
     }
@@ -731,7 +731,7 @@ node_info(const int  n,
                                          way to leave a switch;
                                          break's are not needed */
     case LINE_SEGMENT:
-      switch ( pd->i[var] )
+      switch ( pd->i[pg->imtrx][var] )
         {
         case I_Q1:              /* 2 node, 1 dof/node, Lagrangian linear */
           return( ( n < 2 ) ? 1 : 0 );
@@ -755,7 +755,7 @@ node_info(const int  n,
           return( ( n < 2 ) ? 2 : 0 );
 
         default:
-          sprintf(err_msg,"Unrecognized line segment interpolation: %d.\n",pd->i[var]);
+          sprintf(err_msg,"Unrecognized line segment interpolation: %d.\n",pd->i[pg->imtrx][var]);
           EH(-1, err_msg);
         }
 
@@ -764,7 +764,7 @@ node_info(const int  n,
        */
     case TRIANGLE:
     case TRISHELL:
-      switch ( pd->i[var] )
+      switch ( pd->i[pg->imtrx][var] )
         {
         case I_Q1:              /* 3 node, 1 dof/node, Lagrangian linear */
           return( ( n < 3 ) ? 1 : 0 );
@@ -782,7 +782,7 @@ node_info(const int  n,
 /*        return( ( n == 6 ) ? 3 : 0 );*/
 
         default:
-          sprintf(err_msg,"Unrecognized triangle interpolation: %d.\n",pd->i[var]);
+          sprintf(err_msg,"Unrecognized triangle interpolation: %d.\n",pd->i[pg->imtrx][var]);
           EH(-1, err_msg);
         }
 
@@ -790,7 +790,7 @@ node_info(const int  n,
        * Two dimensional quadrilaterals...
        */
     case QUADRILATERAL:
-      switch ( pd->i[var] )
+      switch ( pd->i[pg->imtrx][var] )
         {
         case I_Q1:              /* 4 node, 1 dof/node, Lagrangian bilinear */
         case I_Q1_GP:
@@ -978,7 +978,7 @@ node_info(const int  n,
             }
 
         default:
-          sprintf(err_msg,"Unrecognized quadrilaterial interpolation: %d.\n",pd->i[var]);
+          sprintf(err_msg,"Unrecognized quadrilaterial interpolation: %d.\n",pd->i[pg->imtrx][var]);
           EH(-1, err_msg);
         }
 
@@ -986,7 +986,7 @@ node_info(const int  n,
        * Three dimensional tetrahedrons...
        */
     case TETRAHEDRON:
-      switch ( pd->i[var] )
+      switch ( pd->i[pg->imtrx][var] )
         {
         case I_Q1:              /* 4 node, 1 dof/node, Lagrangian linear */
           return( ( n < 4 ) ? 1 : 0 );
@@ -1012,7 +1012,7 @@ node_info(const int  n,
 /*        return( ( n == 10 ) ? 4 : 0 );*/
 
         default:
-          sprintf(err_msg,"Unrecognized tetradedron interpolation: %d.\n",pd->i[var]);
+          sprintf(err_msg,"Unrecognized tetradedron interpolation: %d.\n",pd->i[pg->imtrx][var]);
           EH(-1, err_msg);
         }
 
@@ -1020,7 +1020,7 @@ node_info(const int  n,
        * Three dimensional prisms...
        */
     case PRISM:
-      switch ( pd->i[var] )
+      switch ( pd->i[pg->imtrx][var] )
         {
         case I_Q1:              /* 6 node, 1 dof/node, Lagrangian linear */
           return( ( n < 6 ) ? 1 : 0 );
@@ -1037,7 +1037,7 @@ node_info(const int  n,
           return( ( n == 15 ) ? 4 : 0 );
 
         default:
-          sprintf(err_msg,"Unrecognized prism interpolation: %d.\n",pd->i[var]);
+          sprintf(err_msg,"Unrecognized prism interpolation: %d.\n",pd->i[pg->imtrx][var]);
           EH(-1, err_msg);
         }
 
@@ -1045,7 +1045,7 @@ node_info(const int  n,
        * Three dimensional hexahedrons...
        */
     case HEXAHEDRON:
-      switch ( pd->i[var] )
+      switch ( pd->i[pg->imtrx][var] )
         {
         case I_Q1:              /* 8 node, 1 dof/node, Lagrangian linear */
         case I_Q1_GP:
@@ -1156,7 +1156,7 @@ node_info(const int  n,
           return( ( n < 8 ) ? 8 : 0 );
 
         default:
-          sprintf(err_msg,"Unrecognized hexahedron interpolation: %d.\n",pd->i[var]);
+          sprintf(err_msg,"Unrecognized hexahedron interpolation: %d.\n",pd->i[pg->imtrx][var]);
           EH(-1, err_msg);
         }
 

@@ -227,7 +227,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
    * Bail out fast if there's nothing to do...
    */
 
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -265,7 +265,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
       v[a] = fv->v[a];
 
       /* note, these are zero for steady calculations */
-      if (  pd->TimeIntegration != STEADY &&  pd->v[MESH_DISPLACEMENT1+a] )
+      if (  pd->TimeIntegration != STEADY &&  pd->v[pg->imtrx][MESH_DISPLACEMENT1+a] )
 	{
 	  x_dot[a] = fv_dot->x[a];
 	}
@@ -432,7 +432,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 		    {
 		      eqn = R_s[mode][a][b];
 		      
-		      peqn = upd->ep[eqn];
+		      peqn = upd->ep[pg->imtrx][eqn];
 		      
 		      /*
 		       * In the element, there will be contributions to this many equations
@@ -455,17 +455,17 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			  
 			  if ( pd->TimeIntegration != STEADY )
 			    {
-			      if ( pd->e[eqn] & T_MASS )
+			      if ( pd->e[pg->imtrx][eqn] & T_MASS )
 				{
 				  mass = s_dot[a][b] + mup *(g_dot[a][b] + gt_dot[a][b]);
 				  mass *= wt_func * lambda * det_J * wt;
 				  mass *= h3;
-				  mass *= pd->etm[eqn][(LOG2_MASS)];
+				  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 				}
 			    }
 			  
 			  advection = 0.;
-			  if ( pd->e[eqn] & T_ADVECTION )
+			  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 			    {
 			      if(lambda != 0.)
 				{
@@ -477,17 +477,17 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 						 + gt_dot_s[a][b] + s_dot_g[a][b] );
 				  
 				  advection *= wt_func * lambda *det_J * wt * h3;
-				  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+				  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 				}     
 			    }
 			  
 			  diffusion = 0.;
-			  if ( pd->e[eqn] & T_DIFFUSION )
+			  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 			    {
 			      /* add SU term in here when appropriate */
 			      diffusion += 0.;
 			      diffusion *= -wt_func * det_J * wt * h3;
-			      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 			    }
 			  
 			  /*
@@ -497,7 +497,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			  source = 0.;
 			  source1 = 0.;
 			  
-			  if ( pd->e[eqn] & T_SOURCE )
+			  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			    {
 			      source +=  s[a][b];
 			      if(alpha != 0.)
@@ -513,7 +513,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			      
 			      source *= wt_func * det_J * h3 * wt;
 			      
-			      source *= pd->etm[eqn][(LOG2_SOURCE)];
+			      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			    }
 			  
 			  /*
@@ -543,7 +543,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 		    {
 		      
 		      eqn = R_s[mode][a][b];
-		      peqn = upd->ep[eqn];
+		      peqn = upd->ep[pg->imtrx][eqn];
 		      
 		      for ( i=0; i<ei->dof[eqn]; i++)
 			{
@@ -569,9 +569,9 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			   */
 			  
 			  var = TEMPERATURE;
-			  if ( pd->v[var] )
+			  if ( pd->v[pg->imtrx][var] )
 			    {
-			      pvar = upd->vp[var];
+			      pvar = upd->vp[pg->imtrx][var];
 			      for ( j=0; j<ei->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
@@ -580,17 +580,17 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				  
 				  if ( pd->TimeIntegration != STEADY )
 				    {
-				      if ( pd->e[eqn] & T_MASS )
+				      if ( pd->e[pg->imtrx][eqn] & T_MASS )
 					{
 					  mass = d_mup->T[j] *(g_dot[a][b] + gt_dot[a][b]);
 					  mass *= wt_func;
 					  mass *= h3 * lambda * det_J * wt;
-					  mass *= pd->etm[eqn][(LOG2_MASS)];
+					  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 					}
 				    }
 				  
 				  advection = 0.;
-				  if ( pd->e[eqn] & T_ADVECTION )
+				  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 				    {
 				      if(lambda != 0.)
 					{
@@ -598,20 +598,20 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 							 v_dot_del_g[b][a] - x_dot_del_g[b][a]) -
 					    2.*gt_dot_g[a][b] - gt_dot_gt[a][b] - g_dot_g[a][b];
 					  advection *= wt_func * d_mup->T[j]* lambda * det_J * wt * h3;
-					  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+					  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 					}
 				    }
 				  
 				  
 				  diffusion = 0.;
-				  if ( pd->e[eqn] & T_DIFFUSION )
+				  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 				    {
-				      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+				      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 				    }
 				  
 				  source    = 0.;
 				  source1    = 0.;
-				  if ( pd->e[eqn] & T_SOURCE )
+				  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 				    {
 				      if(alpha != 0.)
 					{
@@ -622,7 +622,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  source  += source1;
 					}
 				      source *= wt_func * det_J * wt * h3;
-				      source *= pd->etm[eqn][(LOG2_SOURCE)];
+				      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				    }
 				  
 				  lec->J[peqn][pvar][i][j] +=
@@ -636,9 +636,9 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			  for ( p=0; p<dim; p++)
 			    {
 			      var = VELOCITY1+p;
-			      if ( pd->v[var] )
+			      if ( pd->v[pg->imtrx][var] )
 				{
-				  pvar = upd->vp[var];
+				  pvar = upd->vp[pg->imtrx][var];
 				  for ( j=0; j<ei->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];
@@ -648,7 +648,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      
 				      if ( pd->TimeIntegration != STEADY )
 					{
-					  if ( pd->e[eqn] & T_MASS )
+					  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 					    {
 					      mass = d_mup_dv_pj *(g_dot[a][b] + gt_dot[a][b]) *wt_func;
 					      
@@ -666,14 +666,14 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 						  mass += mass_a;
 						}
 					      
-					      mass *= pd->etm[eqn][(LOG2_MASS)] * lambda * det_J * wt * h3;
+					      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)] * lambda * det_J * wt * h3;
 					    }
 					  
 					}
 				      
 				      advection = 0.;
 				      
-				      if ( pd->e[eqn] & T_ADVECTION )
+				      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 					{
 					  if(lambda != 0.)
 					    {
@@ -709,22 +709,22 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      
 					      advection = advection_a + advection_b + advection_c;
 					      advection *= lambda * det_J * wt *h3;
-					      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+					      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 					    }
 					}
 				      
 				      diffusion = 0.;
 				      
-				      if ( pd->e[eqn] & T_DIFFUSION )
+				      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 					{
 					  /* add SU term in here when appropriate */
 					  
-					  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+					  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 					}
 				      
 				      source    = 0.;
 				      
-				      if ( pd->e[eqn] & T_SOURCE )
+				      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					{
 					  source_a = 0.;
 					  if(alpha != 0.)
@@ -755,7 +755,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  
 					  source = source_a + source_b;
 					  source *=  det_J * wt * h3;
-					  source *= pd->etm[eqn][(LOG2_SOURCE)];
+					  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					}
 				      
 				      lec->J[peqn][pvar][i][j] +=
@@ -768,7 +768,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			   * J_S_c
 			   */
 			  var = MASS_FRACTION;
-			  if ( pd->v[var] )
+			  if ( pd->v[pg->imtrx][var] )
 			    {
 			      pvar = MAX_PROB_VAR + w;
 			      for ( j=0; j<ei->dof[var]; j++)
@@ -782,18 +782,18 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      
 				      if ( pd->TimeIntegration != STEADY )
 					{
-					  if ( pd->e[eqn] & T_MASS )
+					  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 					    {
 					      mass = d_mup->C[w][j] *(g_dot[a][b] + gt_dot[a][b]);
 					      mass *= wt_func * lambda * det_J * wt;
 					      mass *= h3;
-					      mass *= pd->etm[eqn][(LOG2_MASS)];
+					      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 					    }
 					}
 				      
 				      
 				      advection = 0.;
-				      if ( pd->e[eqn] & T_ADVECTION )
+				      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 					{
 					  if(lambda != 0.)
 					    {
@@ -801,19 +801,19 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 							     v_dot_del_g[b][a] - x_dot_del_g[b][a]) -
 						2.*gt_dot_g[a][b] - gt_dot_gt[a][b] - g_dot_g[a][b];
 					      advection *= d_mup->C[w][j] * wt_func * lambda * det_J * wt * h3;
-					      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+					      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 					    }
 					}
 				      
 				      diffusion = 0.;
-				      if ( pd->e[eqn] & T_DIFFUSION )
+				      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 					{
-					  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+					  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 					}
 				      
 				      source    = 0.;
 				      
-				      if ( pd->e[eqn] & T_SOURCE )
+				      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					{
 					  
 					  if(alpha != 0.)
@@ -825,7 +825,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					    }
 					  
 					  source *= wt_func * det_J * wt * h3;
-					  source *= pd->etm[eqn][(LOG2_SOURCE)];
+					  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					  
 					}
 				      
@@ -844,9 +844,9 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			   * J_S_P
 			   */
 			  var = PRESSURE;
-			  if ( pd->v[var] )
+			  if ( pd->v[pg->imtrx][var] )
 			    {
-			      pvar = upd->vp[var];
+			      pvar = upd->vp[pg->imtrx][var];
 			      for ( j=0; j<ei->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
@@ -854,17 +854,17 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				  mass    = 0.;
 				  if ( pd->TimeIntegration != STEADY )
 				    {
-				      if ( pd->e[eqn] & T_MASS )
+				      if ( pd->e[pg->imtrx][eqn] & T_MASS )
 					{
 					  mass =  d_mup->P[j] *(g_dot[a][b] + gt_dot[a][b]);
 					  mass *= wt_func * lambda * det_J * wt;
 					  mass *= h3;
-					  mass *= pd->etm[eqn][(LOG2_MASS)];
+					  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 					}
 				    }
 				  
 				  advection = 0.;
-				  if ( pd->e[eqn] & T_ADVECTION )
+				  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 				    {
 				      if(lambda != 0.)
 					{
@@ -873,20 +873,20 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 							 v_dot_del_g[b][a] - x_dot_del_g[b][a]) -
 					    2.*gt_dot_g[a][b] - gt_dot_gt[a][b] - g_dot_g[a][b];
 					  advection *= wt_func  * lambda * det_J * wt * h3 * d_mup->P[j];
-					  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+					  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 					}
 				    }
 				  
 				  diffusion = 0.;
 				  
-				  if ( pd->e[eqn] & T_DIFFUSION )
+				  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 				    {
-				      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+				      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 				    }
 				  
 				  source    = 0.;
 				  
-				  if ( pd->e[eqn] & T_SOURCE )
+				  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 				    {
 				      if(alpha != 0.)
 					{
@@ -896,7 +896,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  source *= d_mup->P[j] * alpha * lambda;
 					}
 				      source *= wt_func * det_J * wt * h3;
-				      source *= pd->etm[eqn][(LOG2_SOURCE)];
+				      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				    }
 				  
 				  lec->J[peqn][pvar][i][j] +=
@@ -910,9 +910,9 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 			  for ( p=0; p<dim; p++)
 			    {
 			      var = MESH_DISPLACEMENT1+p;
-			      if ( pd->v[var] )
+			      if ( pd->v[pg->imtrx][var] )
 				{
-				  pvar = upd->vp[var];
+				  pvar = upd->vp[pg->imtrx][var];
 				  for ( j=0; j<ei->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];
@@ -934,7 +934,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      mass_b = 0.;
 				      if ( pd->TimeIntegration != STEADY )
 					{
-					  if ( pd->e[eqn] & T_MASS )
+					  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 					    {
 					      mass_a = s_dot[a][b] + mup *(g_dot[a][b] + gt_dot[a][b]);
 					      mass_a *= wt_func * ( d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj );
@@ -955,13 +955,13 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      
 					      mass = mass_a + mass_b + mass_c;
 					      mass *= lambda * wt;
-					      mass *= pd->etm[eqn][(LOG2_MASS)];
+					      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 					    }
 					}
 				      
 				      advection   = 0.;
 				      
-				      if ( pd->e[eqn] & T_ADVECTION )
+				      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 					{
 					  if(lambda != 0.)
 					    {
@@ -1014,7 +1014,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      advection_c = 0.;	
 					      if ( pd->TimeIntegration != STEADY )
 						{
-						  if ( pd->e[eqn] & T_MASS )
+						  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 						    {
 						      d_xdotdels_dm = (1.+2.*tt) * phi_j/dt 
 							* grad_s[p][a][b];
@@ -1049,7 +1049,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      
 					      advection = advection_a + advection_b + advection_c + advection_d;
 					      
-					      advection *=  wt * lambda * pd->etm[eqn][(LOG2_ADVECTION)];
+					      advection *=  wt * lambda * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 					      
 					    }
 					}
@@ -1060,9 +1060,9 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      
 				      diffusion = 0.;
 				      
-				      if ( pd->e[eqn] & T_DIFFUSION )
+				      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 					{
-					  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+					  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 					}
 				      
 				      /*
@@ -1072,7 +1072,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      
 				      source = 0.;
 				      
-				      if ( pd->e[eqn] & T_SOURCE )
+				      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					{
 					  source_a =  s[a][b];
 					  source_b = 0.;
@@ -1111,7 +1111,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  
 					  source  = source_a + source_b + source_c;
 					  
-					  source *=  wt * pd->etm[eqn][(LOG2_SOURCE)];
+					  source *=  wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					  
 					}
 				      
@@ -1130,29 +1130,29 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				{
 				  var =  v_g[p][q];
 				  
-				  if ( pd->v[var] )
+				  if ( pd->v[pg->imtrx][var] )
 				    {
-				      pvar = upd->vp[var];
+				      pvar = upd->vp[pg->imtrx][var];
 				      for ( j=0; j<ei->dof[var]; j++)
 					{
 					  phi_j = bf[var]->phi[j];
 					  mass = 0.;
 					  if ( pd->TimeIntegration != STEADY )
 					    {
-					      if ( pd->e[eqn] & T_MASS )
+					      if ( pd->e[pg->imtrx][eqn] & T_MASS )
 						{
 						  mass = mup *(1.+2.*tt) * phi_j/dt * ((double)delta(a,p) * (double)delta(b,q) 
 										       + (double)delta(b,p) * (double)delta(a,q)); 
 						  mass *= h3 * det_J;
 						  
-						  mass *= wt_func * lambda * wt * pd->etm[eqn][(LOG2_MASS)];
+						  mass *= wt_func * lambda * wt * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 						}
 					    }
 					  
 					  advection   = 0.;
 					  advection_a   = 0.;
 					  
-					  if ( pd->e[eqn] & T_ADVECTION )
+					  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 					    {
 					      if(lambda != 0.)
 						{
@@ -1174,7 +1174,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 						  
 						  advection *=  h3 * det_J ;
 						  
-						  advection *= wt_func * wt * lambda * pd->etm[eqn][(LOG2_ADVECTION)];
+						  advection *= wt_func * wt * lambda * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 						} 
 					    }
 					  
@@ -1184,9 +1184,9 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  
 					  diffusion = 0.;
 					  
-					  if ( pd->e[eqn] & T_DIFFUSION )
+					  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 					    {
-					      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+					      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 					    }
 					  
 					  /*
@@ -1195,7 +1195,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  
 					  source = 0.;		      
 					  
-					  if ( pd->e[eqn] & T_SOURCE )
+					  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					    {
 					      
 					      if(alpha != 0.)
@@ -1211,7 +1211,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 						  source *= alpha * lambda;
 						}
 					      
-					      source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
+					      source *= det_J * h3 * wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					      
 					    }
 					  
@@ -1232,26 +1232,26 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				{
 				  var =  v_s[mode][p][q];
 				  
-				  if ( pd->v[var] )
+				  if ( pd->v[pg->imtrx][var] )
 				    {
-				      pvar = upd->vp[var];
+				      pvar = upd->vp[pg->imtrx][var];
 				      for ( j=0; j<ei->dof[var]; j++)
 					{
 					  phi_j = bf[var]->phi[j];
 					  mass = 0.;
 					  if ( pd->TimeIntegration != STEADY )
 					    {
-					      if ( pd->e[eqn] & T_MASS )
+					      if ( pd->e[pg->imtrx][eqn] & T_MASS )
 						{
 						  mass = (1.+2.*tt) * phi_j/dt * (double)delta(a,p) * (double)delta(b,q); 
 						  mass *= h3 * det_J;
-						  mass *= wt_func * lambda * wt * pd->etm[eqn][(LOG2_MASS)];
+						  mass *= wt_func * lambda * wt * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 						}
 					    }
 					  
 					  advection   = 0.;
 					  
-					  if ( pd->e[eqn] & T_ADVECTION )
+					  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 					    {
 					      if(lambda != 0.)
 						{
@@ -1267,7 +1267,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 						  
 						  advection *=  h3 * det_J ;
 						  
-						  advection *= wt_func * wt * lambda * pd->etm[eqn][(LOG2_ADVECTION)];
+						  advection *= wt_func * wt * lambda * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 						}
 					    }
 					  
@@ -1277,9 +1277,9 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  
 					  diffusion = 0.;
 					  
-					  if ( pd->e[eqn] & T_DIFFUSION )
+					  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 					    {
-					      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+					      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 					    }
 					  
 					  /*
@@ -1288,7 +1288,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					  
 					  source = 0.;		      
 					  
-					  if ( pd->e[eqn] & T_SOURCE )
+					  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					    {
 					      source_a  =  phi_j * (double)delta(a,p) * (double)delta(b,q);
 					      
@@ -1306,7 +1306,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 					      
 					      source  = source_a + source_b;
 					      
-					      source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
+					      source *= det_J * h3 * wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					      
 					    }
 					  
@@ -1466,7 +1466,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
    * Bail out fast if there's nothing to do...
    */
 
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -1507,7 +1507,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       v[a] = fv->v[a];
 
       /* note, these are zero for steady calculations */
-      if (  pd->TimeIntegration != STEADY &&  pd->v[MESH_DISPLACEMENT1+a] )
+      if (  pd->TimeIntegration != STEADY &&  pd->v[pg->imtrx][MESH_DISPLACEMENT1+a] )
 	{
 	  x_dot[a] = fv_dot->x[a];
 	}
@@ -1583,7 +1583,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 /* end Petrov-Galerkin addition */
 
       /*  shift factor  */
-   if( pd->e[TEMPERATURE])
+   if( pd->e[pg->imtrx][TEMPERATURE])
       {
       if(vn->shiftModel == CONSTANT)
 	{
@@ -1726,17 +1726,17 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  
 			  if ( pd->TimeIntegration != STEADY )
 			    {
-			      if ( pd->e[eqn] & T_MASS )
+			      if ( pd->e[pg->imtrx][eqn] & T_MASS )
 				{
 				  mass = s_dot[a][b];
 				  mass *= wt_func * at * lambda * det_J * wt;
 				  mass *= h3;
-				  mass *= pd->etm[eqn][(LOG2_MASS)];
+				  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 				}
 			    }
 			  
 			  advection = 0.;
-			  if ( pd->e[eqn] & T_ADVECTION )
+			  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
  			    {
 			      if(lambda != 0.)
 				{
@@ -1746,17 +1746,17 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				  if( lcwt != 0.) advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
 
 				  advection *= wt_func * at * lambda *det_J * wt * h3;
-				  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+				  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 				}     
 			    }
 			  
 			  diffusion = 0.;
-			  if ( pd->e[eqn] & T_DIFFUSION )
+			  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 			    {
 			      /* add SU term in here when appropriate */
 			      diffusion += 0.;
 			      diffusion *= -wt_func * det_J * wt * h3;
-			      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 			    }
 			  
 			  /*
@@ -1764,7 +1764,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			   */
 			  
 			  source = 0.;
-			  if ( pd->e[eqn] & T_SOURCE )
+			  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			    {
 			      source +=  Z* s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
 
@@ -1779,7 +1779,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			      
 			      source *= wt_func * det_J * h3 * wt;
 			      
-			      source *= pd->etm[eqn][(LOG2_SOURCE)];
+			      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			    }
 			  
 			  /*
@@ -1787,7 +1787,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			   * locally into an accumulator)
 			   */
 			  
-			  lec->R[upd->ep[eqn]][i] += 
+			  lec->R[upd->ep[pg->imtrx][eqn]][i] += 
 			    mass + advection + diffusion + source;
 			}
 		    }
@@ -1810,7 +1810,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 		  if(a <= b) /* since the stress tensor is symmetric, only assemble the upper half */ 
 		    {
 		      eqn = R_s[mode][a][b];
-		      peqn = upd->ep[eqn];
+		      peqn = upd->ep[pg->imtrx][eqn];
 
 		      R_advection =  v_dot_del_s[a][b]  -  x_dot_del_s[a][b];
 		      if( ucwt != 0.) R_advection -= ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]);
@@ -1844,9 +1844,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			   */
 			  
 			  var = TEMPERATURE;
-			  if ( pd->v[var] )
+			  if ( pd->v[pg->imtrx][var] )
 			    {
-			      pvar = upd->vp[var];
+			      pvar = upd->vp[pg->imtrx][var];
 			      for ( j=0; j<ei->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
@@ -1855,17 +1855,17 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  
 			  	   if ( pd->TimeIntegration != STEADY )
 			    	     {
-			      	       if ( pd->e[eqn] & T_MASS )
+			      	       if ( pd->e[pg->imtrx][eqn] & T_MASS )
 					 {
 				  	  mass = s_dot[a][b];
 				  	  mass *= wt_func * d_at_dT[j] * lambda * det_J * wt;
 				  	  mass *= h3;
-				  	  mass *= pd->etm[eqn][(LOG2_MASS)];
+				  	  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 					 }
 			    	     }
 			  
 			  	   advection = 0.;
-			  	   if ( pd->e[eqn] & T_ADVECTION )
+			  	   if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
  			    	     {
 			      	      if(lambda != 0.)
 					{
@@ -1875,13 +1875,13 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				  	if( lcwt != 0.) advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
 
 				  	advection *= wt_func * d_at_dT[j] * lambda *det_J * wt * h3;
-				  	advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+				  	advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 					}     
 			    	     }
 			  
 				  source    = 0.;
 				  source1    = 0.;
-				  if ( pd->e[eqn] & T_SOURCE )
+				  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 				    {
 				      source = -(g[a][b] +  gt[a][b])
 					*(at*d_mup->T[j]+mup*d_at_dT[j]);
@@ -1892,7 +1892,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  source  += source1;
 					}
 				      source *= wt_func * det_J * wt * h3;
-				      source *= pd->etm[eqn][(LOG2_SOURCE)];
+				      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				    }
 				  
 				  lec->J[peqn][pvar][i][j] +=
@@ -1906,9 +1906,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  for ( p=0; p<dim; p++)
 			    {
 			      var = VELOCITY1+p;
-			      if ( pd->v[var] )
+			      if ( pd->v[pg->imtrx][var] )
 				{
-				  pvar = upd->vp[var];
+				  pvar = upd->vp[pg->imtrx][var];
 				  for ( j=0; j<ei->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];
@@ -1919,7 +1919,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 				      if ( pd->TimeIntegration != STEADY )
 					{
-					  if ( pd->e[eqn] & T_MASS )
+					  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 					    {
 					      if(supg!=0.)
 						{
@@ -1934,14 +1934,14 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 						  mass *=  s_dot[a][b];
 						}
 					      
-					      mass *= pd->etm[eqn][(LOG2_MASS)] * at * lambda * det_J * wt * h3;
+					      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)] * at * lambda * det_J * wt * h3;
 					    }
 					  
 					}
 				      
 				      advection = 0.;
 				      
-				      if ( pd->e[eqn] & T_ADVECTION )
+				      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 					{
 					  if(lambda != 0.)
 					    {
@@ -1967,22 +1967,22 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					      
 					      advection = advection_a +  advection_b;
 					      advection *= at * lambda * det_J * wt *h3;
-					      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+					      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 					    }
 					}
 				      
 				      diffusion = 0.;
 				      
-				      if ( pd->e[eqn] & T_DIFFUSION )
+				      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 					{
 					  /* add SU term in here when appropriate */
 					  
-					  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+					  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 					}
 				      
 				      source    = 0.;
 				      
-				      if ( pd->e[eqn] & T_SOURCE )
+				      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					{
 					  source_c =  -at * d_mup_dv_pj * ( g[a][b] +  gt[a][b]);
 					  source_c *= wt_func;
@@ -2010,7 +2010,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  
 					  source = source_a + source_b + source_c;
 					  source *=  det_J * wt * h3;
-					  source *= pd->etm[eqn][(LOG2_SOURCE)];
+					  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					}
 				  
 				      lec->J[peqn][pvar][i][j] +=
@@ -2023,7 +2023,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			   * J_S_c
 			   */
 			  var = MASS_FRACTION;
-			  if ( pd->v[var] )
+			  if ( pd->v[pg->imtrx][var] )
 			    {
 			      for ( j=0; j<ei->dof[var]; j++)
 				{
@@ -2034,7 +2034,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 				      source    = 0.;
 			  
-				      if ( pd->e[eqn] & T_SOURCE )
+				      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					{
 					  source_a =   -at * d_mup->C[w][j] * ( g[a][b] +  gt[a][b]);
 					  source_b = 0.;
@@ -2045,7 +2045,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					    }
 					  source = source_a + source_b;
 					  source *= wt_func * det_J * wt * h3;
-					  source *= pd->etm[eqn][(LOG2_SOURCE)];
+					  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					  
 					}
 				      
@@ -2064,15 +2064,15 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			   * J_S_P
 			   */
 			  var = PRESSURE;
-			  if ( pd->v[var] )
+			  if ( pd->v[pg->imtrx][var] )
 			    {
-			      pvar = upd->vp[var];
+			      pvar = upd->vp[pg->imtrx][var];
 			      for ( j=0; j<ei->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
 				  source    = 0.;
-				  if ( pd->e[eqn] & T_SOURCE )
+				  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 				    {
 				      source_a +=  -at * d_mup->P[j] * ( g[a][b] +  gt[a][b]);
 				      source_b = 0.;
@@ -2083,7 +2083,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					}
 				      source  = source_a + source_b;
 				      source *= wt_func * det_J * wt * h3;
-				      source *= pd->etm[eqn][(LOG2_SOURCE)];
+				      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				    }
 				  
 				  lec->J[peqn][pvar][i][j] +=
@@ -2097,9 +2097,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  for ( p=0; p<dim; p++)
 			    {
 			      var = MESH_DISPLACEMENT1+p;
-			      if ( pd->v[var] )
+			      if ( pd->v[pg->imtrx][var] )
 				{
-				  pvar = upd->vp[var];
+				  pvar = upd->vp[pg->imtrx][var];
 				  for ( j=0; j<ei->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];
@@ -2121,7 +2121,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      mass_b = 0.;
 				      if ( pd->TimeIntegration != STEADY )
 					{
-					  if ( pd->e[eqn] & T_MASS )
+					  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 					    {
 					      mass_a = s_dot[a][b];
 					      mass_a *= wt_func * ( d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj );
@@ -2137,13 +2137,13 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 						}
 					      
 					      mass = mass_a + mass_b;
-					      mass *= at * lambda * wt * pd->etm[eqn][(LOG2_MASS)];
+					      mass *= at * lambda * wt * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 					    }
 					}
 				      
 				      advection   = 0.;
 				      
-				      if ( pd->e[eqn] & T_ADVECTION )
+				      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 					{
 					  if(lambda != 0.)
 					    {
@@ -2180,7 +2180,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					      advection_c = 0.;	
 					      if ( pd->TimeIntegration != STEADY )
 						{
-						  if ( pd->e[eqn] & T_MASS )
+						  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 						    {
 						      d_xdotdels_dm = (1.+2.*tt) * phi_j/dt 
 							* grad_s[p][a][b];
@@ -2205,7 +2205,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  
 					      advection = advection_a + advection_b + advection_c + advection_d;
 					      
-					      advection *=  wt * at * lambda * pd->etm[eqn][(LOG2_ADVECTION)];
+					      advection *=  wt * at * lambda * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 					      
 					    }
 					}
@@ -2216,9 +2216,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 				      diffusion = 0.;
 				      
-				      if ( pd->e[eqn] & T_DIFFUSION )
+				      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 					{
-					  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+					  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 					}
 				      
 				      /*
@@ -2227,7 +2227,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 				      source = 0.;
 				      
-				      if ( pd->e[eqn] & T_SOURCE )
+				      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					{
 					  source_a =  R_source;
 					  source_b = -at * (g[a][b] +  gt[a][b]);
@@ -2254,7 +2254,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  
 					  source  = source_a + source_b + source_c;
 					  
-					  source *=  wt * pd->etm[eqn][(LOG2_SOURCE)];
+					  source *=  wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				      
 					}
 				      
@@ -2273,15 +2273,15 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				{
 				  var =  v_g[p][q];
 				  
-				  if ( pd->v[var] )
+				  if ( pd->v[pg->imtrx][var] )
 				    {
-				      pvar = upd->vp[var];
+				      pvar = upd->vp[pg->imtrx][var];
 				      for ( j=0; j<ei->dof[var]; j++)
 					{
 					  phi_j = bf[var]->phi[j];
 					  advection   = 0.;
 					  advection_a   = 0.;
-					  if ( pd->e[eqn] & T_ADVECTION )
+					  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 					    {
 					      if(lambda != 0.)
 						{
@@ -2291,7 +2291,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 						  
 						  advection *=  phi_j* h3 * det_J ;
 						  
-						  advection *= wt_func * wt * at * lambda * pd->etm[eqn][(LOG2_ADVECTION)];
+						  advection *= wt_func * wt * at * lambda * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 						} 
 					    }
 					  
@@ -2301,9 +2301,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  
 					  diffusion = 0.;
 					  
-					  if ( pd->e[eqn] & T_DIFFUSION )
+					  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 					    {
-					      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+					      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 					    }
 					  
 					  /*
@@ -2312,10 +2312,10 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  
 					  source = 0.;		      
 					  
-					  if ( pd->e[eqn] & T_SOURCE )
+					  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					    {
 					      source =  -at * mup *  phi_j *( (double)delta(a,p)*(double)delta(b,q) +  (double)delta(b,p)*(double)delta(a,q));
-					      source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
+					      source *= det_J * h3 * wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					    }
 					  
 					  lec->J[peqn][pvar][i][j] +=
@@ -2335,26 +2335,26 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				{
 				  var =  v_s[mode][p][q];
 				  
-				  if ( pd->v[var] )
+				  if ( pd->v[pg->imtrx][var] )
 				    {
-				      pvar = upd->vp[var];
+				      pvar = upd->vp[pg->imtrx][var];
 				      for ( j=0; j<ei->dof[var]; j++)
 					{
 					  phi_j = bf[var]->phi[j];
 					  mass = 0.;
 					  if ( pd->TimeIntegration != STEADY )
 					    {
-					      if ( pd->e[eqn] & T_MASS )
+					      if ( pd->e[pg->imtrx][eqn] & T_MASS )
 						{
 						  mass = (1.+2.*tt) * phi_j/dt * (double)delta(a,p) * (double)delta(b,q); 
 						  mass *= h3 * det_J;
-						  mass *= wt_func * at * lambda * wt * pd->etm[eqn][(LOG2_MASS)];
+						  mass *= wt_func * at * lambda * wt * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 						}
 					    }
 					  
 					  advection   = 0.;
 					  
-					  if ( pd->e[eqn] & T_ADVECTION )
+					  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 					    {
 					      if(lambda != 0.)
 						{
@@ -2371,7 +2371,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 						  
 						  advection *=  h3 * det_J ;
 						  
-						  advection *= wt_func * wt * at * lambda * pd->etm[eqn][(LOG2_ADVECTION)];
+						  advection *= wt_func * wt * at * lambda * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 						}
 					    }
 					  
@@ -2381,9 +2381,9 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  
 					  diffusion = 0.;
 					  
-					  if ( pd->e[eqn] & T_DIFFUSION )
+					  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 					    {
-					      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+					      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 					    }
 					  
 					  /*
@@ -2392,7 +2392,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  
 					  source = 0.;		      
 					  
-					  if ( pd->e[eqn] & T_SOURCE )
+					  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					    {
 					      source_a  =  Z * phi_j * (double)delta(a,p) * (double)delta(b,q);
  					      if( p == q) source_a +=  s[a][b] * dZ_dtrace * phi_j;  
@@ -2406,7 +2406,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					      
 					      source  = source_a + source_b;
 					      
-					      source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
+					      source *= det_J * h3 * wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					      
 					    }
 					  
@@ -2550,7 +2550,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
    * Bail out fast if there's nothing to do...
    */
 
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -2591,7 +2591,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
       v[a] = fv->v[a];
 
       /* note, these are zero for steady calculations */
-      if (  pd->TimeIntegration != STEADY &&  pd->v[MESH_DISPLACEMENT1+a] )
+      if (  pd->TimeIntegration != STEADY &&  pd->v[pg->imtrx][MESH_DISPLACEMENT1+a] )
 	{
 	  x_dot[a] = fv_dot->x[a];
 	}
@@ -2759,22 +2759,22 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			  mass = 0.;
 			  if ( pd->TimeIntegration != STEADY )
 			    {
-			      if ( pd->e[eqn] & T_MASS )
+			      if ( pd->e[pg->imtrx][eqn] & T_MASS )
 				{
 				  mass = s_dot[a][b]* H_ls / Gmod;
 				  mass *= wt_func * det_J * wt * h3;
-				  mass *= pd->etm[eqn][(LOG2_MASS)];
+				  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 				}
 			    }
 			  
 			  advection = 0.;
-			  if ( pd->e[eqn] & T_ADVECTION )
+			  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
  			    {
 			      advection +=  v_dot_del_s[a][b]  -  x_dot_del_s[a][b];
 			      advection -= (gt_dot_s[a][b] + s_dot_g[a][b]);
 			      
 			      advection *= wt_func * H_ls / Gmod *det_J * wt * h3;
-			      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+			      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 			    }
 			  
 			  
@@ -2783,7 +2783,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			   */
 			  
 			  source = 0.;
-			  if ( pd->e[eqn] & T_SOURCE )
+			  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			    {
 			      /* This source term involves the Newtonian fluid
 			       * viscosity expressed in the mixed formulation.
@@ -2797,7 +2797,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 
 			      source -= ( g[a][b] +  gt[a][b]);
 			      source *= wt_func * det_J * h3 * wt;
-			      source *= pd->etm[eqn][(LOG2_SOURCE)];
+			      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			    }
 			  
 			  /*
@@ -2805,7 +2805,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			   * locally into an accumulator)
 			   */
 			  
-			  lec->R[upd->ep[eqn]][i] += 
+			  lec->R[upd->ep[pg->imtrx][eqn]][i] += 
 			    mass + advection + source;
 			}
 		    }
@@ -2828,7 +2828,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 		  if(a <= b) /* since the stress tensor is symmetric, only assemble the upper half */ 
 		    {
 		      eqn = R_s[mode][a][b];
-		      peqn = upd->ep[eqn];
+		      peqn = upd->ep[pg->imtrx][eqn];
 
 		      R_advection =  v_dot_del_s[a][b]  -  x_dot_del_s[a][b];
 		      R_advection -= (gt_dot_s[a][b] + s_dot_g[a][b]);
@@ -2860,19 +2860,19 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			   */
 			  
 			  var = TEMPERATURE;
-			  if ( pd->v[var] )
+			  if ( pd->v[pg->imtrx][var] )
 			    {
-			      pvar = upd->vp[var];
+			      pvar = upd->vp[pg->imtrx][var];
 			      for ( j=0; j<ei->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
 				  source    = 0.;
-				  if ( pd->e[eqn] & T_SOURCE )
+				  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 				    {
 				      source -=  s[a][b] * (1.-H_ls)/(mup*mup)* d_mup->T[j];
 				      source *= wt_func * det_J * wt * h3;
-				      source *= pd->etm[eqn][(LOG2_SOURCE)];
+				      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				    }
 				  
 				  lec->J[peqn][pvar][i][j] +=
@@ -2886,9 +2886,9 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			  for ( p=0; p<dim; p++)
 			    {
 			      var = VELOCITY1+p;
-			      if ( pd->v[var] )
+			      if ( pd->v[pg->imtrx][var] )
 				{
-				  pvar = upd->vp[var];
+				  pvar = upd->vp[pg->imtrx][var];
 				  for ( j=0; j<ei->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];
@@ -2898,7 +2898,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      
 				      if ( pd->TimeIntegration != STEADY )
 					{
-					  if ( pd->e[eqn] & T_MASS )
+					  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 					    {
 					      if(supg!=0.)
 						{
@@ -2913,14 +2913,14 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 						  mass *=  s_dot[a][b] * H_ls / Gmod;
 						}
 					      
-					      mass *= pd->etm[eqn][(LOG2_MASS)] * det_J * wt * h3;
+					      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)] * det_J * wt * h3;
 					    }
 					  
 					}
 				      
 				      advection = 0.;
 				      
-				      if ( pd->e[eqn] & T_ADVECTION )
+				      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 					{
 					  advection_a = phi_j * 
 					    (grad_s[p][a][b]) * H_ls / Gmod;
@@ -2943,12 +2943,12 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  
 					  advection = advection_a +  advection_b;
 					  advection *= det_J * wt *h3;
-					  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+					  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 					}
 				      
 				      source    = 0.;
 				      
-				      if ( pd->e[eqn] & T_SOURCE )
+				      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					{
 					  source_a =  -d_mup_dv_pj * (s[a][b] * (1.-H_ls) / (mup*mup ));
 					  source_a *= wt_func;
@@ -2969,7 +2969,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  
 					  source = source_a + source_b;
 					  source *=  det_J * wt * h3;
-					  source *= pd->etm[eqn][(LOG2_SOURCE)];
+					  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					}
 				  
 				      lec->J[peqn][pvar][i][j] +=
@@ -2982,7 +2982,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			   * J_S_c
 			   */
 			  var = MASS_FRACTION;
-			  if ( pd->v[var] )
+			  if ( pd->v[pg->imtrx][var] )
 			    {
 			      for ( j=0; j<ei->dof[var]; j++)
 				{
@@ -2993,11 +2993,11 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      
 				      source    = 0.;
 			  
-				      if ( pd->e[eqn] & T_SOURCE )
+				      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					{
 					  source =   -d_mup->C[w][j] * (s[a][b] * (1.-H_ls) / (mup*mup) );
 					  source *= wt_func * det_J * wt * h3;
-					  source *= pd->etm[eqn][(LOG2_SOURCE)];
+					  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					  
 					}
 				      
@@ -3016,19 +3016,19 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			   * J_S_P
 			   */
 			  var = PRESSURE;
-			  if ( pd->v[var] )
+			  if ( pd->v[pg->imtrx][var] )
 			    {
-			      pvar = upd->vp[var];
+			      pvar = upd->vp[pg->imtrx][var];
 			      for ( j=0; j<ei->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
 				  source    = 0.;
-				  if ( pd->e[eqn] & T_SOURCE )
+				  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 				    {
 				      source =  -d_mup->P[j] * (s[a][b] * (1.-H_ls) / (mup*mup) );
 				      source *= wt_func * det_J * wt * h3;
-				      source *= pd->etm[eqn][(LOG2_SOURCE)];
+				      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				    }
 				  
 				  lec->J[peqn][pvar][i][j] +=
@@ -3042,9 +3042,9 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 			  for ( p=0; p<dim; p++)
 			    {
 			      var = MESH_DISPLACEMENT1+p;
-			      if ( pd->v[var] )
+			      if ( pd->v[pg->imtrx][var] )
 				{
-				  pvar = upd->vp[var];
+				  pvar = upd->vp[pg->imtrx][var];
 				  for ( j=0; j<ei->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];
@@ -3066,7 +3066,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      mass_b = 0.;
 				      if ( pd->TimeIntegration != STEADY )
 					{
-					  if ( pd->e[eqn] & T_MASS )
+					  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 					    {
 					      mass_a = s_dot[a][b]* H_ls / Gmod;
 					      mass_a *= wt_func * ( d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj );
@@ -3082,13 +3082,13 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 						}
 					      
 					      mass = mass_a + mass_b;
-					      mass *= wt * pd->etm[eqn][(LOG2_MASS)];
+					      mass *= wt * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 					    }
 					}
 				      
 				      advection   = 0.;
 				      
-				      if ( pd->e[eqn] & T_ADVECTION )
+				      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 					{
 					  /*
 					   * Four parts: 
@@ -3123,7 +3123,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  advection_c = 0.;	
 					  if ( pd->TimeIntegration != STEADY )
 					    {
-					      if ( pd->e[eqn] & T_MASS )
+					      if ( pd->e[pg->imtrx][eqn] & T_MASS )
 						{
 						  d_xdotdels_dm = (1.+2.*tt) * phi_j/dt 
 						    * grad_s[p][a][b];
@@ -3148,7 +3148,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  
 					  advection = advection_a + advection_b + advection_c + advection_d;
 					  
-					  advection *=  wt * pd->etm[eqn][(LOG2_ADVECTION)];
+					  advection *=  wt * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 					  
 					}
 				      
@@ -3158,7 +3158,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      
 				      source = 0.;
 				      
-				      if ( pd->e[eqn] & T_SOURCE )
+				      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					{
 					  source_a =  R_source;
 					  source_a *= wt_func * (d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj);
@@ -3179,7 +3179,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  
 					  source  = source_a + source_b + source_c;
 					  
-					  source *=  wt * pd->etm[eqn][(LOG2_SOURCE)];
+					  source *=  wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				      
 					}
 				      
@@ -3198,19 +3198,19 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				{
 				  var =  v_g[p][q];
 				  
-				  if ( pd->v[var] )
+				  if ( pd->v[pg->imtrx][var] )
 				    {
-				      pvar = upd->vp[var];
+				      pvar = upd->vp[pg->imtrx][var];
 				      for ( j=0; j<ei->dof[var]; j++)
 					{
 					  phi_j = bf[var]->phi[j];
 					  advection   = 0.;
-					  if ( pd->e[eqn] & T_ADVECTION )
+					  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 					    {
 					      advection -=  (s[p][b] * (double)delta(a,q) + s[a][p] * (double)delta(b,q));
 					      advection *=  phi_j* h3 * det_J ;
 					      
-					      advection *= wt_func * wt * H_ls / Gmod * pd->etm[eqn][(LOG2_ADVECTION)];
+					      advection *= wt_func * wt * H_ls / Gmod * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 					    }
 
 					  /*
@@ -3219,10 +3219,10 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  
 					  source = 0.;		      
 					  
-					  if ( pd->e[eqn] & T_SOURCE )
+					  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					    {
 					      source =  -phi_j *( (double)delta(a,p)*(double)delta(b,q) +  (double)delta(b,p)*(double)delta(a,q));
-					      source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
+					      source *= det_J * h3 * wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					    }
 					  
 					  lec->J[peqn][pvar][i][j] +=
@@ -3242,26 +3242,26 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				{
 				  var =  v_s[mode][p][q];
 				  
-				  if ( pd->v[var] )
+				  if ( pd->v[pg->imtrx][var] )
 				    {
-				      pvar = upd->vp[var];
+				      pvar = upd->vp[pg->imtrx][var];
 				      for ( j=0; j<ei->dof[var]; j++)
 					{
 					  phi_j = bf[var]->phi[j];
 					  mass = 0.;
 					  if ( pd->TimeIntegration != STEADY )
 					    {
-					      if ( pd->e[eqn] & T_MASS )
+					      if ( pd->e[pg->imtrx][eqn] & T_MASS )
 						{
 						  mass = (1.+2.*tt) * phi_j/dt * (double)delta(a,p) * (double)delta(b,q); 
 						  mass *= h3 * det_J;
-						  mass *= wt_func * H_ls / Gmod * wt * pd->etm[eqn][(LOG2_MASS)];
+						  mass *= wt_func * H_ls / Gmod * wt * pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 						}
 					    }
 					  
 					  advection   = 0.;
 					  
-					  if ( pd->e[eqn] & T_ADVECTION )
+					  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 					    {
 					      if((a == p) && (b == q))
 						{
@@ -3275,7 +3275,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 						  
 					      advection *=  h3 * det_J ;
 						  
-					      advection *= wt_func * wt *  H_ls / Gmod * pd->etm[eqn][(LOG2_ADVECTION)];
+					      advection *= wt_func * wt *  H_ls / Gmod * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 					    }
 					  
 					  /*
@@ -3284,11 +3284,11 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 					  
 					  source = 0.;		      
 					  
-					  if ( pd->e[eqn] & T_SOURCE )
+					  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 					    {
 					      source  = phi_j * (double)delta(a,p) * (double)delta(b,q) * (1.-H_ls) / mup;  
 		      
-					      source *= det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
+					      source *= det_J * h3 * wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					    }
 					  
 					  lec->J[peqn][pvar][i][j] +=
@@ -3391,7 +3391,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
    * Bail out fast if there's nothing to do...
    */
   
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -3483,11 +3483,11 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 		  
 		  advection = 0.;
 		  
-		  if ( pd->e[eqn] & T_ADVECTION )
+		  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 		    {
 		      advection -= grad_v[a][b];
 		      advection *= wt_func * det_J * wt * h3;
-		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 		    }
 		  
 		  /*
@@ -3496,14 +3496,14 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 		  
 		  source = 0;
 		  
-		  if ( pd->e[eqn] & T_SOURCE )
+		  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 		    {
 		      source +=  g[a][b];    
 		      source *= wt_func * det_J * h3 * wt;
-		      source *= pd->etm[eqn][(LOG2_SOURCE)];
+		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		    }
 		  
-		  lec->R[upd->ep[eqn]][i] += 
+		  lec->R[upd->ep[pg->imtrx][eqn]][i] += 
 		    advection  + source;      
 		}
 	    }
@@ -3521,7 +3521,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 	  for ( b=0; b<VIM; b++)
 	    {
 	      eqn = R_g[a][b];
-	      peqn = upd->ep[eqn];
+	      peqn = upd->ep[pg->imtrx][eqn];
 	      
 	      for ( i=0; i<ei->dof[eqn]; i++)
 		{
@@ -3533,20 +3533,20 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 		  for ( p=0; p<dim; p++)
 		    {
 		      var = VELOCITY1+p;
-		      if ( pd->v[var] )
+		      if ( pd->v[pg->imtrx][var] )
 			{
-			  pvar = upd->vp[var];
+			  pvar = upd->vp[pg->imtrx][var];
 			  for ( j=0; j<ei->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
 			      
 			      advection = 0.;
 			      
-			      if ( pd->e[eqn] & T_ADVECTION )
+			      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 				{
 				  advection -= bf[var]->grad_phi_e[j][p][a][b];
 				  advection *= wt_func * det_J * wt *h3;
-				  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+				  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 				  
 				}
 			      
@@ -3564,9 +3564,9 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 		  for ( p=0; p<dim; p++)
 		    {
 		      var = MESH_DISPLACEMENT1+p;
-		      if ( pd->v[var] )
+		      if ( pd->v[pg->imtrx][var] )
 			{
-			  pvar = upd->vp[var];
+			  pvar = upd->vp[pg->imtrx][var];
 			  for ( j=0; j<ei->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];
@@ -3577,7 +3577,7 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 			      
 			      advection   = 0.;
 			      
-			      if ( pd->e[eqn] & T_ADVECTION )
+			      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 				{
 				  /*
 				   * three parts: 
@@ -3600,19 +3600,19 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 				  
 				  advection = advection_a + advection_b;
 				  
-				  advection *= wt_func * wt * pd->etm[eqn][(LOG2_ADVECTION)];
+				  advection *= wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 				  
 				}
 			      
 			      source = 0.;
 			      
-			      if ( pd->e[eqn] & T_SOURCE )
+			      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 				{
 				  source +=  g[a][b];
 				  
 				  source *=  d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj;
 				  
-				  source *= wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
+				  source *= wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				  
 				}
 			      
@@ -3632,20 +3632,20 @@ assemble_gradient(dbl tt,	/* parameter to vary time integration from
 			{
 			  var =  v_g[p][q];
 			  
-			  if ( pd->v[var] )
+			  if ( pd->v[pg->imtrx][var] )
 			    {
-			      pvar = upd->vp[var];
+			      pvar = upd->vp[pg->imtrx][var];
 			      for ( j=0; j<ei->dof[var]; j++)
 				{
 				  phi_j = bf[var]->phi[j];
 				  
 				  source = 0.;		      
 				  
-				  if ( pd->e[eqn] & T_SOURCE )
+				  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 				    {
 				      if((a == p) && (b == q))
 					{
-					  source = phi_j  * det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
+					  source = phi_j  * det_J * h3 * wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 					}
 				    }
 				  
@@ -3754,7 +3754,7 @@ load_modal_pointers(int ve_mode, /* mode number */
     } 
   
   var = MESH_DISPLACEMENT1;
-  if ( pd->v[var] )
+  if ( pd->v[pg->imtrx][var] )
     {
       for ( p=0; p<VIM; p++)
 	{
@@ -4265,9 +4265,9 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 			      if(a <= b)
 				{
 				  eqn = R_s[mode][a][b];
-				  if ( pd->e[eqn] )
+				  if ( pd->e[pg->imtrx][eqn] )
 				    {
-				      peqn = upd->ep[eqn];
+				      peqn = upd->ep[pg->imtrx][eqn];
 				      
 				      for ( i=0; i<ei->dof[eqn]; i++)
 					{
@@ -4295,9 +4295,9 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 			      if(a <= b)
 				{
 				  eqn = R_s[mode][a][b];
-				  if ( pd->e[eqn] )
+				  if ( pd->e[pg->imtrx][eqn] )
 				    {
-				      peqn = upd->ep[eqn];
+				      peqn = upd->ep[pg->imtrx][eqn];
 				      
 				      for ( i=0; i<ei->dof[eqn]; i++)
 					{
@@ -4307,7 +4307,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 					   * J_S_S
 					   */
 					  var = eqn;
-					  pvar = upd->vp[var];
+					  pvar = upd->vp[pg->imtrx][var];
 					  for ( j=0; j<ei->dof[var]; j++)
 					    {
 					      phi_j = bf[var]->phi[j];
@@ -4350,9 +4350,9 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 					  for ( p=0; p<dim; p++)
 					    {
 					      var = VELOCITY1+p;
-					      if ( pd->v[var] )
+					      if ( pd->v[pg->imtrx][var] )
 						{
-						  pvar = upd->vp[var];
+						  pvar = upd->vp[pg->imtrx][var];
 						  for ( j=0; j<ei->dof[var]; j++)
 						    {
 						      phi_j = bf[var]->phi[j];
@@ -4376,9 +4376,9 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 					  for ( p=0; p<dim; p++)
 					    {
 					      var = MESH_DISPLACEMENT1+p;
-					      if ( pd->v[var] )
+					      if ( pd->v[pg->imtrx][var] )
 						{
-						  pvar = upd->vp[var];
+						  pvar = upd->vp[pg->imtrx][var];
 						  for ( j=0; j<ei->dof[var]; j++)
 						    {
 						      phi_j = bf[var]->phi[j];
@@ -4539,7 +4539,7 @@ neighbor_stress(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 	{
 	  phi[i] = newshape(xi, ielem_type, PSI, 
 			    ei->dof_list[v][i], 
-			    ielem_shape, pd->i[v], i);
+			    ielem_shape, pd->i[pg->imtrx][v], i);
 
 	  phi_v[ip][i] = phi[i];
 	}
@@ -4556,7 +4556,7 @@ neighbor_stress(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 	{
 	  phi_map[i] = newshape(xi, ielem_type, PSI, 
 				ei->dof_list[v][i], 
-				ielem_shape, pd->i[v], i);
+				ielem_shape, pd->i[pg->imtrx][v], i);
 	}
 
       iconnect_ptr    = Proc_Connect_Ptr[neighbor_elem]; /* find pointer to beginning */
@@ -4575,14 +4575,14 @@ neighbor_stress(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 	  for (b = 0; b < VIM; b++) {
 	    if (a <= b) {
 	      v = v_s[mode][a][b];
-	      if (pd->v[v]) {
+	      if (pd->v[pg->imtrx][v]) {
 		for (i = 0; i < num_local_nodes; i++) {
 		  gnn = Proc_Elem_Connect[iconnect_ptr + i];
-		  nvdof = Dolphin[gnn][v];
+		  nvdof = Dolphin[pg->imtrx][gnn][v];
 		  for (j = 0; j < nvdof; j++) {
 		    ledof = ei->lvdof_to_ledof[v][j];
 		    ie = Index_Solution(gnn, v, 0, j,
-					ei->matID_ledof[ledof]);
+					ei->matID_ledof[ledof], pg->imtrx);
 		    EH(ie, "Could not find vbl in sparse matrix.");
 		    if ( vn->dg_J_model == EXPLICIT_DG ||
 			 vn->dg_J_model == SEGREGATED) {
@@ -4720,7 +4720,7 @@ neighbor_stress_table(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 	{
 	  phi_map[i] = newshape(xi, ielem_type, PSI, 
 				ei->dof_list[v][i], 
-				ielem_shape, pd->i[v], i);
+				ielem_shape, pd->i[pg->imtrx][v], i);
 	}
 
       for ( i=0; i< ei->dof[v]; i++)
@@ -4845,7 +4845,7 @@ load_neighbor_pointers( Exo_DB *exo,
 	 * (according to this element) Note: this can be zero...
 	 *
 	 */
-	nv = Nodes[gnn]->Nodal_Vars_Info;
+	nv = Nodes[gnn]->Nodal_Vars_Info[pg->imtrx];
 	nunks = get_nv_ndofs_modMF(nv, v);
 #ifdef DEBUG_HKM
 	if (nunks != node_info(ln, etype, v, gnn)) {
@@ -4860,7 +4860,7 @@ load_neighbor_pointers( Exo_DB *exo,
 	      
 	for (i = 0; i < nunks; i++ ) {
 	  dof_list[v][ldof] = ln;
-	  gun_list[v][ldof] = Index_Solution(gnn, v, 0, i, -1);
+	  gun_list[v][ldof] = Index_Solution(gnn, v, 0, i, -1, pg->imtrx);
 	  ldof++;
 	}
       }
@@ -4874,7 +4874,7 @@ load_neighbor_pointers( Exo_DB *exo,
       for (meqn2 = 0; meqn2 < VIM; meqn2++)  {
 	if (meqn1 <= meqn2)  {
 	  eqn = R_s[mode][meqn1][meqn2];
-	  if (pd->e[eqn]) {
+	  if (pd->e[pg->imtrx][eqn]) {
 	    for (i = 0; i < ei->dof[eqn]; i++) {
 	      ie = ei->gun_list[eqn][i];
 	      EH(ie, "Bad eqn index.");
@@ -4882,7 +4882,7 @@ load_neighbor_pointers( Exo_DB *exo,
 	      mvar2 = meqn2;
 	      if (mvar1 <= mvar2)  {
 		var = v_s[mode][mvar1][mvar2];
-		if (pd->v[var]) {
+		if (pd->v[pg->imtrx][var]) {
 		  for (j = 0; j < dof[var]; j++ ) {
 		    je = gun_list[var][j];
 		    EH(je, "Bad var index.");
@@ -4909,22 +4909,22 @@ load_neighbor_pointers( Exo_DB *exo,
       for (meqn2 = 0; meqn2 < VIM; meqn2++) {
 	if (meqn1 <= meqn2) {
 	  eqn = R_s[mode][meqn1][meqn2];
-	  if (pd->e[eqn]) {
+	  if (pd->e[pg->imtrx][eqn]) {
 	    for (i = 0; i < ei->dof[eqn]; i++) {
 	      ie = ei->gun_list[eqn][i];
 	      I  = ei->gnn_list[eqn][i];
 	      row_dofs = rpntr[I+1] - rpntr[I];
-	      blk_row = Local_Offset[I][eqn];
+	      blk_row = Local_Offset[pg->imtrx][I][eqn];
 	      EH(ie, "Bad eqn index.");
 	      mvar1 = meqn1;
 	      mvar2 = meqn2;
 	      if (mvar1 <= mvar2) {
 		var = v_s[mode][mvar1][mvar2];
-		if (pd->v[var]) {
+		if (pd->v[pg->imtrx][var]) {
 		  for (j = 0; j < dof[var]; j++ ) {
 		    J =  *( enl +  dof_list[var][j] ) ;
 		    K = in_list(J, bpntr[I], bpntr[I+1], bindx);
-		    blk_col = Local_Offset[J][var];
+		    blk_col = Local_Offset[pg->imtrx][J][var];
 		    J_S_S[meqn1][meqn2][i] [mvar1][mvar2][j] =
 			a + indx[K] + row_dofs * (blk_col + j)
 			+ blk_row + i;
@@ -4978,9 +4978,9 @@ segregate_stress_update ( double x_update[] )
 		{
 		  eqn = R_s[a][b];
 		  
-		  if( pd->e[eqn] && ( ldof_eqn = ei->ln_to_first_dof[eqn][ln] != -1 ) )
+		  if( pd->e[pg->imtrx][eqn] && ( ldof_eqn = ei->ln_to_first_dof[eqn][ln] != -1 ) )
 		    {
-		      ieqn = upd->ep[eqn];
+		      ieqn = upd->ep[pg->imtrx][eqn];
 
 		      while ( ldof_eqn <= ei->ln_to_dof[eqn][ln] )
 			{
@@ -4994,9 +4994,9 @@ segregate_stress_update ( double x_update[] )
 
 				      lump = 0.0;
 
-				      if( pd->v[var] && (ldof_var = ei->ln_to_first_dof[var][ln] != -1 ) )
+				      if( pd->v[pg->imtrx][var] && (ldof_var = ei->ln_to_first_dof[var][ln] != -1 ) )
 					{
-					  pvar = upd->vp[var];
+					  pvar = upd->vp[pg->imtrx][var];
 
 					  while ( ldof_var <= ei->ln_to_dof[var][ln] )
 					    {

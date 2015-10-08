@@ -207,38 +207,43 @@ init_nodes (Exo_DB *exo, Dpi *dpi)
    */
   Nodes = (NODE_INFO_STRUCT **) alloc_ptr_1(number_proc_nodes);
   tptr = alloc_struct_1(NODE_INFO_STRUCT, number_proc_nodes);
-			
-  for (i = 0; i < number_proc_nodes; i++) {
-    /*
-     *  Point to one Node_Info structure
-     *  for the current node.
-     */
-    Nodes[i] = tptr + i;
-    /*
-     *  None of this has been made compatible with parallel processing
-     */
-    Nodes[i]->Proc_Node_Num = i;
-    Nodes[i]->Global_Node_Num = dpi->node_index_global[i];
-    Nodes[i]->Type.Internal = FALSE;
-    Nodes[i]->Type.Border  = FALSE;    
-    Nodes[i]->Type.External = FALSE;    
-    Nodes[i]->Proc = ProcID;
-    Nodes[i]->Nodal_Vars_Info = NULL;
 
-    if (i < Num_Internal_Nodes) {
-      Nodes[i]->Type.Internal = TRUE;
-      Nodes[i]->Type.Owned = TRUE;       
-    } else if (i < Num_Internal_Nodes + Num_Border_Nodes) {
-      Nodes[i]->Type.Border = TRUE;
-      Nodes[i]->Type.Owned = TRUE;
-    } else {
-      Nodes[i]->Type.External = TRUE;
-      Nodes[i]->Type.Owned = FALSE;
-      where = dpi->ptr_set_membership[i];
-      Nodes[i]->Proc = dpi->set_membership[where];
-    }
-  }
-
+  for (i = 0; i < number_proc_nodes; i++) 
+     {
+      /*
+       *  Point to one Node_Info structure
+       *  for the current node.
+       */
+      Nodes[i] = tptr + i;
+      /*
+       *  None of this has been made compatible with parallel processing
+       */
+      Nodes[i]->Proc_Node_Num = i;
+      Nodes[i]->First_Unknown = (int *) malloc( (upd->Total_Num_Matrices) * sizeof(int) );
+      Nodes[i]->Global_Node_Num = dpi->node_index_global[i];
+      Nodes[i]->Type.Internal = FALSE;
+      Nodes[i]->Type.Border  = FALSE;    
+      Nodes[i]->Type.External = FALSE;    
+      Nodes[i]->Proc = ProcID;
+      Nodes[i]->Nodal_Vars_Info = (NODAL_VARS_STRUCT **) alloc_ptr_1(upd->Total_Num_Matrices);
+      if (i < Num_Internal_Nodes) 
+        {
+         Nodes[i]->Type.Internal = TRUE;
+         Nodes[i]->Type.Owned = TRUE;       
+        } 
+      else if (i < Num_Internal_Nodes + Num_Border_Nodes) 
+        {
+         Nodes[i]->Type.Border = TRUE;
+         Nodes[i]->Type.Owned = TRUE;
+        } 
+      else 
+        {
+         Nodes[i]->Type.External = TRUE;
+         Nodes[i]->Type.Owned = FALSE;
+         where = dpi->ptr_set_membership[i];
+         Nodes[i]->Proc = dpi->set_membership[where];
+        }
+     }
 
   /*
    * Make a list of what materials each node belongs to
@@ -725,7 +730,7 @@ nullify_dirichlet_bcs(void)
   for (i = 0; i < total_nodes; i++) {
     node = Nodes[i];
     if (node->DBC) {
-      nv = node->Nodal_Vars_Info;
+      nv = node->Nodal_Vars_Info[pg->imtrx];
       for (v = 0; v < nv->Num_Unknowns; v++) {
 	node->DBC[v] = -1;
       }

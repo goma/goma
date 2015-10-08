@@ -132,7 +132,7 @@ struct Node_Info {
                                        structure, this field may change
                                        after the mesh is modified.
                                        Array index is mesh->Mesh_ID.         */
-    int First_Unknown;              /* Location in soln vector of node's
+    int *First_Unknown;             /* Location in soln vector of node's
                                        first unknown
 				       HKM -> Note there is no mesh
 				       dependence for this number
@@ -144,7 +144,7 @@ struct Node_Info {
 				     * present at this node */
     /* UMI_LIST_STRUCT Element_List; */ 
 
-    NODAL_VARS_STRUCT *Nodal_Vars_Info;
+    NODAL_VARS_STRUCT **Nodal_Vars_Info;
                                     /* Pointer to the Nodal_Vars struct for
                                      * this node.  The Nodal_Vars struct has
 				     * info on which variables are active at
@@ -242,7 +242,7 @@ extern void nullify_dirichlet_bcs(void);
  * Prototypes for the rf_node_vars.c file
  */
 extern int dof_lnode_var_type(const int, const int, const int,
-			      const int, PROBLEM_DESCRIPTION_STRUCT *);
+			      const int, PROBLEM_DESCRIPTION_STRUCT *, const int);
 extern int num_varType_at_node(const int, const int);
 extern int get_nv_ndofs(NODAL_VARS_STRUCT *, const int);
 extern int get_nv_ndofs_modMF(NODAL_VARS_STRUCT *, const int);
@@ -269,5 +269,5 @@ extern void nodal_vars_destroy(NODAL_VARS_STRUCT **);
 extern int find_var_type_index_in_nv(const int, NODAL_VARS_STRUCT *);
 int find_vd_index_in_nv(const int, const int, NODAL_VARS_STRUCT *);
 extern void pack_nv (struct nv_packed *, NODAL_VARS_STRUCT *);
-extern NODAL_VARS_STRUCT *unpack_nv (struct nv_packed *);
+extern NODAL_VARS_STRUCT *unpack_nv (struct nv_packed *, const int);
 #endif

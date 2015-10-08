@@ -230,7 +230,7 @@ assemble_potential(double time,	/* present time value */
    * Bail out fast if there's nothing to do...
    */
   eqn   = R_POTENTIAL;
-  if (! pd->e[eqn]) return(status);
+  if (! pd->e[pg->imtrx][eqn]) return(status);
 
   wt = fv->wt;		 	/* Gauss point weight. */
   h3 = fv->h3;			/* Differential volume element. */
@@ -267,7 +267,7 @@ assemble_potential(double time,	/* present time value */
 	  dhdV[j]= mp->d_current_source[var]*bf[var]->phi[j];
 	}
 
-      if(pd->v[VELOCITY1]) 
+      if(pd->v[pg->imtrx][VELOCITY1]) 
 	{
 	  for ( a=0; a<dim; a++)
 	    {
@@ -279,7 +279,7 @@ assemble_potential(double time,	/* present time value */
 	    }
 	}
 
-      if(pd->v[MESH_DISPLACEMENT1]) 
+      if(pd->v[pg->imtrx][MESH_DISPLACEMENT1]) 
 	{
 	  for ( a=0; a<dim; a++)
 	    {
@@ -291,7 +291,7 @@ assemble_potential(double time,	/* present time value */
 	    }
 	}
 
-      if (pd->v[MASS_FRACTION] )
+      if (pd->v[pg->imtrx][MASS_FRACTION] )
 	{
 	  for ( w=0; w<pd->Num_Species_Eqn; w++)
 	    {
@@ -359,7 +359,7 @@ assemble_potential(double time,	/* present time value */
          }
 
 
-      if(pd->v[VELOCITY1]) 
+      if(pd->v[pg->imtrx][VELOCITY1]) 
 	{
 	  for ( a=0; a<dim; a++)
 	    {
@@ -371,7 +371,7 @@ assemble_potential(double time,	/* present time value */
 	    }
 	}
 
-      if(pd->v[MESH_DISPLACEMENT1])
+      if(pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 	{ 
 	  for ( a=0; a<dim; a++)
 	    {
@@ -386,7 +386,7 @@ assemble_potential(double time,	/* present time value */
 /* Derivatives of the scalar h with respect to mole fraction are computed here; h is the
    single sum in Equation (2.13) of the thermal battery LDRD report. -- RSL 8/8/00 */
 
-      if (pd->v[MASS_FRACTION] )
+      if (pd->v[pg->imtrx][MASS_FRACTION] )
 	{
 	  for ( w=0; w<pd->Num_Species_Eqn; w++)
 	    {
@@ -427,7 +427,7 @@ assemble_potential(double time,	/* present time value */
 	}
 
 
-      if(pd->v[VELOCITY1]) 
+      if(pd->v[pg->imtrx][VELOCITY1]) 
 	{
 	  for ( a=0; a<dim; a++)
 	    {
@@ -439,7 +439,7 @@ assemble_potential(double time,	/* present time value */
 	    }
 	}
 
-      if(pd->v[MESH_DISPLACEMENT1])
+      if(pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 	{ 
 	  for ( a=0; a<dim; a++)
 	    {
@@ -451,7 +451,7 @@ assemble_potential(double time,	/* present time value */
 	    }
 	}
 
-      if (pd->v[MASS_FRACTION] )
+      if (pd->v[pg->imtrx][MASS_FRACTION] )
 	{
 	  for (w = 0; w < pd->Num_Species_Eqn; w++)
 	    {
@@ -486,7 +486,7 @@ assemble_potential(double time,	/* present time value */
          dhdV[j]= dh[1]*bf[var]->phi[j];
         }
 
-      if (pd->v[MASS_FRACTION] )
+      if (pd->v[pg->imtrx][MASS_FRACTION] )
         {
           for ( w=0; w<pd->Num_Species_Eqn; w++)
             {
@@ -521,7 +521,7 @@ assemble_potential(double time,	/* present time value */
 	  dhdV[j]= 0.0;
 	}
 
-      if(pd->v[VELOCITY1]) 
+      if(pd->v[pg->imtrx][VELOCITY1]) 
 	{
 	  for ( a=0; a<dim; a++)
 	    {
@@ -533,7 +533,7 @@ assemble_potential(double time,	/* present time value */
 	    }
 	}
 
-      if(pd->v[MESH_DISPLACEMENT1])
+      if(pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 	{ 
 	  for ( a=0; a<dim; a++)
 	    {
@@ -545,7 +545,7 @@ assemble_potential(double time,	/* present time value */
 	    }
 	}
 
-      if (pd->v[MASS_FRACTION] )
+      if (pd->v[pg->imtrx][MASS_FRACTION] )
 	{
 	  for ( w=0; w<pd->Num_Species_Eqn; w++)
 	    {
@@ -580,7 +580,7 @@ assemble_potential(double time,	/* present time value */
 	}
 
 
-      if (pd->v[VELOCITY1]) 
+      if (pd->v[pg->imtrx][VELOCITY1]) 
 	{
 	  for ( a=0; a<dim; a++)
 	    {
@@ -592,7 +592,7 @@ assemble_potential(double time,	/* present time value */
 	    }
 	}
 
-      if (pd->v[MESH_DISPLACEMENT1])
+      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 	{ 
 	  for ( a=0; a<dim; a++)
 	    {
@@ -604,7 +604,7 @@ assemble_potential(double time,	/* present time value */
 	    }
 	}
 
-      if (pd->v[MASS_FRACTION])
+      if (pd->v[pg->imtrx][MASS_FRACTION])
 	{
 	  for ( w=0; w<pd->Num_Species_Eqn; w++)
 	    {
@@ -641,7 +641,7 @@ assemble_potential(double time,	/* present time value */
 	}
 
 
-      if (pd->v[VELOCITY1]) 
+      if (pd->v[pg->imtrx][VELOCITY1]) 
 	{
 	  for ( a=0; a<dim; a++)
 	    {
@@ -653,7 +653,7 @@ assemble_potential(double time,	/* present time value */
 	    }
 	}
 
-      if (pd->v[MESH_DISPLACEMENT1])
+      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 	{ 
 	  for ( a=0; a<dim; a++)
 	    {
@@ -665,7 +665,7 @@ assemble_potential(double time,	/* present time value */
 	    }
 	}
 
-      if (pd->v[MASS_FRACTION])
+      if (pd->v[pg->imtrx][MASS_FRACTION])
 	{
 	  for ( w=0; w<pd->Num_Species_Eqn; w++)
 	    {
@@ -738,7 +738,7 @@ assemble_potential(double time,	/* present time value */
    here; ii2 is the first double sum in Equation (2.13) of the thermal battery LDRD report. --
    RSL 4/2/00 */
 
-         if (pd->v[MASS_FRACTION] )
+         if (pd->v[pg->imtrx][MASS_FRACTION] )
             {
              for ( w=0; w<pd->Num_Species_Eqn; w++)
                 {
@@ -813,7 +813,7 @@ assemble_potential(double time,	/* present time value */
 
 /* Derivatives of the vector ii2 (actually ii2/F) with respect to mole fraction -- RSL 9/8/00 */
 
-        /*  if (pd->v[MASS_FRACTION] )
+        /*  if (pd->v[pg->imtrx][MASS_FRACTION] )
             {
              for ( w=0; w<pd->Num_Species_Eqn; w++)
                 {
@@ -855,7 +855,7 @@ assemble_potential(double time,	/* present time value */
 
 /* Derivatives of the vector ii2 (actually ii2/F) with respect to mole fraction */
 
-         if (pd->v[MASS_FRACTION] )
+         if (pd->v[pg->imtrx][MASS_FRACTION] )
             {
              for ( w=0; w<pd->Num_Species_Eqn; w++)
                 {
@@ -880,7 +880,7 @@ assemble_potential(double time,	/* present time value */
   if (af->Assemble_Residual)
     {
       eqn = R_POTENTIAL;
-      peqn = upd->ep[eqn];
+      peqn = upd->ep[pg->imtrx][eqn];
 
       for ( i=0; i<ei->dof[eqn]; i++)
 	{
@@ -891,7 +891,7 @@ assemble_potential(double time,	/* present time value */
 	     }
 
 	  diffusion = 0.0;
-	  if (pd->e[eqn] & T_DIFFUSION) 
+	  if (pd->e[pg->imtrx][eqn] & T_DIFFUSION) 
 	  {
 	    for (p = 0; p < dim; p++) 
 		{
@@ -911,14 +911,14 @@ assemble_potential(double time,	/* present time value */
 			diffusion += grad_phi_i[p] * ii2[p];  
 	      	    }
             	}
-	     diffusion *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
+	     diffusion *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 	  }
 
 	  source = 0.0;
-	  if (pd->e[eqn] & T_SOURCE)
+	  if (pd->e[pg->imtrx][eqn] & T_SOURCE)
 	    {
 	      source  = phi_i * h;     
-	      source *= det_J * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
+	      source *= det_J * wt * h3 * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 	    }
 
 	  lec->R[peqn][i] += diffusion + source;  
@@ -934,7 +934,7 @@ assemble_potential(double time,	/* present time value */
   if (af->Assemble_Jacobian)
     {
       eqn   = R_POTENTIAL;
-      peqn = upd->ep[eqn];
+      peqn = upd->ep[pg->imtrx][eqn];
 
       for ( i=0; i<ei->dof[eqn]; i++)
 	{
@@ -956,9 +956,9 @@ assemble_potential(double time,	/* present time value */
 	   */
 	  var = VOLTAGE;
 
-	  if ( pd->v[var] )
+	  if ( pd->v[pg->imtrx][var] )
 	    {
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[0][var];
 	      for ( j=0; j<ei->dof[var]; j++)
 		{
 		  for ( p=0; p<dim; p++)
@@ -967,7 +967,7 @@ assemble_potential(double time,	/* present time value */
 		    }
 
 		  diffusion = 0.0;
-		  if (pd->e[eqn] & T_DIFFUSION)
+		  if (pd->e[pg->imtrx][eqn] & T_DIFFUSION)
 		    {
 		       for ( p=0; p<dim; p++)
 			 {
@@ -981,15 +981,15 @@ assemble_potential(double time,	/* present time value */
 			}
 		      diffusion *= det_J * wt;
 		      diffusion *= h3;
-		      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+		      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 		    }
 
 		  source = 0.0;
-		  if ( pd->e[eqn] & T_SOURCE )
+		  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 		    {
 		      source += phi_i * dhdV[j] * det_J * wt;
 		      source *= h3;
-		      source *= pd->etm[eqn][(LOG2_SOURCE)];
+		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		    }
 
 		  lec->J[peqn][pvar][i][j] += diffusion + source;
@@ -1000,9 +1000,9 @@ assemble_potential(double time,	/* present time value */
 	   * J_p_T 
 	   */
 	  var = TEMPERATURE;
-	  if ( pd->v[var] )
+	  if ( pd->v[pg->imtrx][var] )
 	    {
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[0][var];
 	      for ( j=0; j<ei->dof[var]; j++)
 		{
 		  for ( p=0; p<dim; p++)
@@ -1011,7 +1011,7 @@ assemble_potential(double time,	/* present time value */
 		    }
 
 		  diffusion = 0.0;
-		  if ( pd->e[eqn] & T_DIFFUSION )
+		  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 		    {
 		      for ( p=0; p<dim; p++)
 			{
@@ -1019,15 +1019,15 @@ assemble_potential(double time,	/* present time value */
 			}
 		      diffusion *= det_J * wt;
 		      diffusion *= h3;
-		      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+		      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 		    }
 
 		  source = 0.0;
-		  if ( pd->e[eqn] & T_SOURCE )
+		  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 		    {
 		      source += phi_i * dhdT[j] * det_J * wt;
 		      source *= h3;
-		      source *= pd->etm[eqn][(LOG2_SOURCE)];
+		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		    }
 
 		  lec->J[peqn][pvar][i][j] += diffusion + source;
@@ -1040,17 +1040,17 @@ assemble_potential(double time,	/* present time value */
 	  for ( b=0; b<dim; b++)
 	    {
 	      var = VELOCITY1+b;
-	      if ( pd->v[var] )
+	      if ( pd->v[pg->imtrx][var] )
 		{
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[0][var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
                       source = 0.0;
-		      if ( pd->e[eqn] & T_SOURCE )
+		      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			{
 			  source += phi_i * dhdv[b][j] * det_J * wt;
 			  source *= h3;
-			  source *= pd->etm[eqn][(LOG2_SOURCE)];
+			  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			}
 
 		      lec->J[peqn][pvar][i][j] += source;
@@ -1065,9 +1065,9 @@ assemble_potential(double time,	/* present time value */
 	  for ( b=0; b<dim; b++)
 	    {
 	      var = MESH_DISPLACEMENT1+b;
-	      if ( pd->v[var] )
+	      if ( pd->v[pg->imtrx][var] )
 		{
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[0][var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
 		      dh3dmesh_bj = fv->dh3dq[b] * bf[var]->phi[j];
@@ -1076,7 +1076,7 @@ assemble_potential(double time,	/* present time value */
 
 		      diffusion = 0.0;
 
-		      if ( pd->e[eqn] & T_DIFFUSION )
+		      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 			{
 			  /*
 			   * Three parts:
@@ -1164,18 +1164,18 @@ assemble_potential(double time,	/* present time value */
 
 			  diffusion = diff_a + diff_b + diff_c + diff_d;
 
-			  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 			}
 
 
 		      source = 0.0;
-		      if ( pd->e[eqn] & T_SOURCE )
+		      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			{
 			  source = phi_i * (h *          d_det_J_dmeshbj * h3 +
 					    h *          det_J           * dh3dmesh_bj +
 					    dhdX[b][j]*  det_J           * h3) * wt;
 
-			  source *= pd->etm[eqn][(LOG2_SOURCE)];
+			  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			}
 
 		      lec->J[peqn][pvar][i][j] += diffusion + source;   
@@ -1187,7 +1187,7 @@ assemble_potential(double time,	/* present time value */
 	   * J_p_c 
 	   */
 	  var = MASS_FRACTION;
-	  if ( pd->e[eqn] && pd->v[var] )
+	  if ( pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var] )
 	    {
 	      for ( w=0; w<pd->Num_Species_Eqn; w++)
 		{
@@ -1199,7 +1199,7 @@ assemble_potential(double time,	/* present time value */
 		        }
 
 		      diffusion = 0.0;
-		      if (pd->e[eqn] & T_DIFFUSION)
+		      if (pd->e[pg->imtrx][eqn] & T_DIFFUSION)
 			{
 			  for ( p=0; p<dim; p++)
 			    {
@@ -1225,16 +1225,16 @@ assemble_potential(double time,	/* present time value */
 
 			  diffusion *= det_J * wt;
 			  diffusion *= h3;
-			  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 			}
 		      
 		      source = 0.0;
-		      if (pd->e[eqn] & T_SOURCE)
+		      if (pd->e[pg->imtrx][eqn] & T_SOURCE)
 			{
 			  source += phi_i * dhdC[w][j];
 			  source *= det_J * wt;
 			  source *= h3;
-			  source *= pd->etm[eqn][(LOG2_SOURCE)];
+			  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			}
 
 		      lec->J[peqn][MAX_PROB_VAR + w][i][j] += diffusion + source;
@@ -1286,7 +1286,7 @@ surface_charge_surf(double *func,
   *func = sum - sigma;
 
   var = MASS_FRACTION;
-  if (pd->v[var])
+  if (pd->v[pg->imtrx][var])
     {
       for( j=0 ; j<ei->dof[var]; j++)
 	{
@@ -1360,7 +1360,7 @@ current_BV_surf(double func[DIM],
     {
       EH(-1, "Solution-temperature model not yet implemented");
     }
-  if (pd->e[R_ENERGY]) /* if energy equation is active, re-set electrolyte temperature */
+  if (pd->e[pg->imtrx][R_ENERGY]) /* if energy equation is active, re-set electrolyte temperature */
     {
       T = fv->T;   
     }
@@ -1454,7 +1454,7 @@ current_BV_surf(double func[DIM],
       
   /* J_s_T --- sensitivity wrt electrolyte solution temperature */ 
   var=TEMPERATURE;
-  if (pd->v[var])
+  if (pd->v[pg->imtrx][var])
     {
       for (j = 0; j < ei->dof[var]; j++)   
         {
@@ -1473,7 +1473,7 @@ current_BV_surf(double func[DIM],
 
   /* J_s_V --- sensitivity wrt electrolyte potential */ 
   var=VOLTAGE;
-  if (pd->v[var])
+  if (pd->v[pg->imtrx][var])
     {
       for (j = 0; j < ei->dof[var]; j++) 
         {
@@ -1494,7 +1494,7 @@ current_BV_surf(double func[DIM],
   for (jvar = 0; jvar < dim; jvar++) 
     {
       var=MESH_DISPLACEMENT1+jvar;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
         {
           for (j_id = 0; j_id < ei->dof[var]; j_id++) 
             {
@@ -1512,7 +1512,7 @@ current_BV_surf(double func[DIM],
   for(jvar=0; jvar<dim; jvar++) 
     {
       var = VELOCITY1 + jvar;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
         {
           for (j_id = 0; j_id < ei->dof[var]; j_id++) 
              {
@@ -1600,7 +1600,7 @@ current_ORR_surf(
 
   /* J_s_T --- sensitivity wrt electrolyte solution temperature */
   var=TEMPERATURE;
-  if (pd->v[var])
+  if (pd->v[pg->imtrx][var])
     {
       for (j = 0; j < ei->dof[var]; j++)
         {
@@ -1613,7 +1613,7 @@ current_ORR_surf(
 
   /* J_s_V --- sensitivity wrt electrolyte potential */
   var=VOLTAGE;
-  if (pd->v[var])
+  if (pd->v[pg->imtrx][var])
     {
       for (j = 0; j < ei->dof[var]; j++)
         {
@@ -1701,7 +1701,7 @@ current_HOR_surf(
 
   /* J_s_T --- sensitivity wrt electrolyte solution temperature */
   var=TEMPERATURE;
-  if (pd->v[var])
+  if (pd->v[pg->imtrx][var])
     {
       for (j = 0; j < ei->dof[var]; j++)
         {
@@ -1714,7 +1714,7 @@ current_HOR_surf(
 
   /* J_s_V --- sensitivity wrt electrolyte potential */
   var=VOLTAGE;
-  if (pd->v[var])
+  if (pd->v[pg->imtrx][var])
     {
       for (j = 0; j < ei->dof[var]; j++)
         {
@@ -1739,13 +1739,13 @@ assemble_Enorm()
   dbl advection, source;
 
   dim = pd->Num_Dim;
-  if(!pd->e[R_ENORM])
+  if(!pd->e[pg->imtrx][R_ENORM])
     return 0;
 
-  if(!pd->v[VOLTAGE])
+  if(!pd->v[pg->imtrx][VOLTAGE])
     EH(-1, "Must have VOLTAGE equation active to use ENORM.");
 
-  if(pd->v[MESH_DISPLACEMENT1])
+  if(pd->v[pg->imtrx][MESH_DISPLACEMENT1])
     EH(-1, "Sorry, assemble_Enorm has not been rigged for ALE.");
 
   wt = fv->wt;
@@ -1781,23 +1781,23 @@ assemble_Enorm()
 
 	  /* Might as well call the one term, |E|^2, the advection term... */
 	  advection = 0.0;
-	  if(pd->e[R_ENORM] & T_ADVECTION)
+	  if(pd->e[pg->imtrx][R_ENORM] & T_ADVECTION)
 	    {
 	      advection = -Enorm;
 	      advection *= wt_func * detJ * wt * h3;
-	      advection *= pd->etm[R_ENORM][(LOG2_ADVECTION)];
+	      advection *= pd->etm[pg->imtrx][R_ENORM][(LOG2_ADVECTION)];
 	    }
 	  
 	  /* And of course, the glorious LHS, "ENORM", shall just be the source term... */
 	  source = 0.0;
-	  if(pd->e[ENORM] & T_SOURCE)
+	  if(pd->e[pg->imtrx][ENORM] & T_SOURCE)
 	    {
 	      source = fv->Enorm;
 	      source *= wt_func * detJ * wt * h3;
-	      source *= pd->etm[R_ENORM][(LOG2_SOURCE)];
+	      source *= pd->etm[pg->imtrx][R_ENORM][(LOG2_SOURCE)];
 	    }
 
-	  lec->R[upd->ep[R_ENORM]] [i] += advection + source;
+	  lec->R[upd->ep[pg->imtrx][R_ENORM]] [i] += advection + source;
 	} /* for i = 0 ... dof[R_ENORM] */
     } /* if(Assemble_Residual) */
 
@@ -1812,13 +1812,13 @@ assemble_Enorm()
 	    {
 	      /* Only the advection term for _V. */
 	      advection = 0.0;
-	      if(pd->e[R_ENORM] & T_ADVECTION)
+	      if(pd->e[pg->imtrx][R_ENORM] & T_ADVECTION)
 		{
 		  advection = d_Enorm_d_V[k];
 		  advection *= wt_func * detJ * wt * h3;
-		  advection *= pd->etm[R_ENORM][(LOG2_ADVECTION)];
+		  advection *= pd->etm[pg->imtrx][R_ENORM][(LOG2_ADVECTION)];
 		}
-	      lec->J[upd->ep[R_ENORM]][upd->vp[VOLTAGE]] [i][k] += advection;
+	      lec->J[upd->ep[pg->imtrx][R_ENORM]][upd->vp[0][VOLTAGE]] [i][k] += advection;
 	    } /* for k = 0 ... dof[VOLTAGE] */
 
 	  /* J_Enorm_Enorm */
@@ -1826,14 +1826,14 @@ assemble_Enorm()
 	    {
 	      /* Only the source term for _Enorm. */
 	      source = 0.0;
-	      if(pd->e[R_ENORM] & T_SOURCE)
+	      if(pd->e[pg->imtrx][R_ENORM] & T_SOURCE)
 		{
 		  source = bf[ENORM]->phi[k];
 		  source *= wt_func * detJ * wt * h3;
-		  source *= pd->etm[R_ENORM][(LOG2_SOURCE)];
+		  source *= pd->etm[pg->imtrx][R_ENORM][(LOG2_SOURCE)];
 		}
 
-	      lec->J[upd->ep[R_ENORM]][upd->vp[ENORM]] [i][k] += source;
+	      lec->J[upd->ep[pg->imtrx][R_ENORM]][upd->vp[0][ENORM]] [i][k] += source;
 	    } /* for k = 0 ... dof[ENORM] */
 	} /* for i = 0 ... dof[R_ENORM] */
     } /* if (Assemble_Jacobian) */
@@ -1915,7 +1915,7 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
    * Bail out fast if there's nothing to do...
    */
   
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -1964,11 +1964,11 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
 	      
 	      advection = 0.;
 	      
-	      if ( pd->e[eqn] & T_ADVECTION )
+	      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 		{
 		  advection -= grad_V[a];
 		  advection *= wt_func * det_J * wt * h3;
-		  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 		}
 	      
 	      /*
@@ -1977,14 +1977,14 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
 	      
 	      source = 0;
 	      
-	      if ( pd->e[eqn] & T_SOURCE )
+	      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 		{
 		  source +=  Efield[a];    
 		  source *= wt_func * det_J * h3 * wt;
-		  source *= pd->etm[eqn][(LOG2_SOURCE)];
+		  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		}
 	      
-	      lec->R[upd->ep[eqn]][i] += 
+	      lec->R[upd->ep[pg->imtrx][eqn]][i] += 
 		advection  + source;      
 	    }
 	} 
@@ -1999,7 +1999,7 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
       for ( a=0; a<VIM; a++)
 	{
 	  eqn = R_EFIELD1 + a;
-	  peqn = upd->ep[eqn];
+	  peqn = upd->ep[pg->imtrx][eqn];
 	  
 	  for ( i=0; i<ei->dof[eqn]; i++)
 	    {
@@ -2009,20 +2009,20 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
 	       * J_Efield_V
 	       */
 	      var = VOLTAGE;
-	      if ( pd->v[var] )
+	      if ( pd->v[pg->imtrx][var] )
 		{
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[0][var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		      
 		      advection = 0.;
 		      
-		      if ( pd->e[eqn] & T_ADVECTION )
+		      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 			{
 			  advection -= bf[var]->grad_phi[j][a];
 			  advection *= wt_func * det_J * wt *h3;
-			  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+			  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 			  
 			}
 		      
@@ -2038,9 +2038,9 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
 	      for ( p=0; p<dim; p++)
 		{
 		  var = MESH_DISPLACEMENT1+p;
-		  if ( pd->v[var] )
+		  if ( pd->v[pg->imtrx][var] )
 		    {
-		      pvar = upd->vp[var];
+		      pvar = upd->vp[0][var];
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];
@@ -2051,7 +2051,7 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
 			  
 			  advection   = 0.;
 			  
-			  if ( pd->e[eqn] & T_ADVECTION )
+			  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 			    {
 			      /*
 			       * three parts: 
@@ -2074,19 +2074,19 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
 			      
 			      advection = advection_a + advection_b;
 			      
-			      advection *= wt_func * wt * pd->etm[eqn][(LOG2_ADVECTION)];
+			      advection *= wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 			      
 			    }
 			  
 			  source = 0.;
 			  
-			  if ( pd->e[eqn] & T_SOURCE )
+			  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			    {
 			      source +=  Efield[a];
 			      
 			      source *=  d_det_J_dmesh_pj * h3 + det_J * dh3dmesh_pj;
 			      
-			      source *= wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
+			      source *= wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				  
 			    }
 			  
@@ -2102,18 +2102,18 @@ assemble_electric_field() /* Least square equation Efield = grad (voltage) */
 	      
 	      var =  EFIELD1 + a;
 	      
-	      if ( pd->v[var] )
+	      if ( pd->v[pg->imtrx][var] )
 		{
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[0][var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
 		      
 		      source = 0.;		      
 		      
-		      if ( pd->e[eqn] & T_SOURCE )
+		      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			{
-			  source = phi_j  * det_J * h3 * wt_func * wt * pd->etm[eqn][(LOG2_SOURCE)];
+			  source = phi_j  * det_J * h3 * wt_func * wt * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			}
 		      
 		      lec->J[peqn][pvar][i][j] +=
@@ -2184,7 +2184,7 @@ apply_potential_grad_bc( double func[],
   if (af->Assemble_Jacobian) {
  
    var = VOLTAGE;
-   if (pd->v[var] )
+   if (pd->v[pg->imtrx][var] )
      {
     	for(j=0; j<ei->dof[var]; j++)
            {
@@ -2198,7 +2198,7 @@ apply_potential_grad_bc( double func[],
      }
  
   var = TEMPERATURE;
-  if (pd->v[var] )
+  if (pd->v[pg->imtrx][var] )
     {
       for (j=0; j<ei->dof[var]; j++)
         {
@@ -2210,7 +2210,7 @@ apply_potential_grad_bc( double func[],
         }
     }
  
-  if (pd->v[MESH_DISPLACEMENT1] )
+  if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
     {
        for ( b=0; b<VIM; b++)
          {
@@ -2301,7 +2301,7 @@ int i, j, a, w;
 	  dkdV[j]= mp->d_electrical_conductivity[var]*bf[var]->phi[j];
 	}
       
-      if (pd->v[MESH_DISPLACEMENT1])
+      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 	{
 	  for ( a=0; a<dim; a++)
 	    {
@@ -2313,7 +2313,7 @@ int i, j, a, w;
 	    }
 	}
 
-      if (pd->v[MASS_FRACTION])
+      if (pd->v[pg->imtrx][MASS_FRACTION])
 	{
 	  for ( w=0; w<pd->Num_Species_Eqn; w++)
 	    {
@@ -2410,7 +2410,7 @@ int i, j, a, w;
 	     dkdV[j]= 0.0;
 	   }
       
-         if (pd->v[MESH_DISPLACEMENT1])
+         if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 	   {
 	     for ( a=0; a<dim; a++)
 	       {
@@ -2426,7 +2426,7 @@ int i, j, a, w;
    are computed here; kappa is defined by Equation (2.14) of the thermal battery LDRD report.
    -- RSL 3/31/00 */
 
-         if (pd->v[MASS_FRACTION] )
+         if (pd->v[pg->imtrx][MASS_FRACTION] )
 	   {
 	     for ( w=0; w<pd->Num_Species_Eqn; w++)
 	       {
@@ -2527,7 +2527,7 @@ int i, j, a, w;
 	     dkdV[j]= 0.0;
 	   }
       
-         if (pd->v[MESH_DISPLACEMENT1] )
+         if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
 	   {
 	     for ( a=0; a<dim; a++)
 	       {
@@ -2539,7 +2539,7 @@ int i, j, a, w;
 	       }
 	   }
 
-         if (pd->v[MASS_FRACTION] )
+         if (pd->v[pg->imtrx][MASS_FRACTION] )
 	   {
 	     for ( w=0; w<pd->Num_Species_Eqn; w++)
 	       {
@@ -2557,7 +2557,7 @@ int i, j, a, w;
      {
       mn = ei->mn;
 
-      if (pd_glob[mn]->e[R_ENERGY])  /* if the energy equation is being solved */
+      if (pd_glob[mn]->e[pg->imtrx][R_ENERGY])  /* if the energy equation is being solved */
          {
           T = fv->T;
          }
@@ -2615,7 +2615,7 @@ int i, j, a, w;
           dkdV[j]= 0.0;
          }
 
-      if (pd->v[MESH_DISPLACEMENT1] )
+      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
          {
           for ( a=0; a<dim; a++)
              {
@@ -2630,7 +2630,7 @@ int i, j, a, w;
 /* Derivatives of electrical conductivity (actually kappa/F) with respect to mole fraction
  */
 
-      if (pd->v[MASS_FRACTION] )
+      if (pd->v[pg->imtrx][MASS_FRACTION] )
          {
           for ( w=0; w<pd->Num_Species_Eqn; w++)
              {
@@ -2676,7 +2676,7 @@ int i, j, a, w;
 	{
 	  dkdV[j]= 0.0;
 	}
-      if (pd->v[MESH_DISPLACEMENT1] )
+      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
 	{
 	  for ( a=0; a<dim; a++)
 	    {
@@ -2687,7 +2687,7 @@ int i, j, a, w;
 		}
 	    }
 	}
-      if (pd->v[MASS_FRACTION] )
+      if (pd->v[pg->imtrx][MASS_FRACTION] )
 	{
 	  for ( w=0; w<pd->Num_Species_Eqn; w++)
 	    {
@@ -2729,7 +2729,7 @@ int i, j, a, w;
 	{
 	  dkdV[j]= 0.0;
 	}
-      if (pd->v[MESH_DISPLACEMENT1] )
+      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
 	{
 	  for ( a=0; a<dim; a++)
 	    {
@@ -2740,7 +2740,7 @@ int i, j, a, w;
 		}
 	    }
 	}
-      if (pd->v[MASS_FRACTION] )
+      if (pd->v[pg->imtrx][MASS_FRACTION] )
 	{
 	  for ( w=0; w<pd->Num_Species_Eqn; w++)
 	    {
@@ -2774,7 +2774,7 @@ int i, j, a, w;
 	{
 	  dkdV[j]= 0.0;
 	}
-      if (pd->v[MESH_DISPLACEMENT1] )
+      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
 	{
 	  for ( a=0; a<dim; a++)
 	    {

@@ -1109,12 +1109,12 @@ noahs_ark()
   /*
    * Broadcast the Uniform_Problem_Description Information
    */
-  ddd_add_member(n, &upd->Total_Num_EQ, 1, MPI_INT);
-  ddd_add_member(n, &upd->Total_Num_Var, 1, MPI_INT);
+  ddd_add_member(n, &upd->Total_Num_EQ, MAX_NUM_MATRICES, MPI_INT);
+  ddd_add_member(n, &upd->Total_Num_Var, MAX_NUM_MATRICES, MPI_INT);
   ddd_add_member(n, &upd->CoordinateSystem, 1, MPI_INT);
   ddd_add_member(n, &upd->Num_Dim, 1, MPI_INT);
-  ddd_add_member(n, upd->vp, MAX_VARIABLE_TYPES+MAX_CONC, MPI_INT);
-  ddd_add_member(n, upd->ep, MAX_VARIABLE_TYPES+MAX_CONC, MPI_INT);
+  ddd_add_member(n, upd->vp, MAX_NUM_MATRICES * (MAX_VARIABLE_TYPES+MAX_CONC), MPI_INT);
+  ddd_add_member(n, upd->ep, MAX_NUM_MATRICES * (MAX_VARIABLE_TYPES+MAX_CONC), MPI_INT);
   ddd_add_member(n, &upd->Max_Num_Species, 1, MPI_INT);
   ddd_add_member(n, &upd->Max_Num_Species_Eqn, 1, MPI_INT);
   ddd_add_member(n, &upd->Tot_Num_VolSpecies, 1, MPI_INT);
@@ -1132,12 +1132,12 @@ noahs_ark()
 
       ddd_add_member(n, &pd_glob[i]->Num_EQ, 1, MPI_INT);
 
-      ddd_add_member(n, pd_glob[i]->e, MAX_EQNS, MPI_INT);
-      ddd_add_member(n, pd_glob[i]->v, MAX_EQNS, MPI_INT);
-      ddd_add_member(n, pd_glob[i]->w, MAX_EQNS, MPI_INT);
-      ddd_add_member(n, pd_glob[i]->i, MAX_EQNS, MPI_INT);
-      ddd_add_member(n, pd_glob[i]->m, MAX_EQNS, MPI_INT);
-      ddd_add_member(n, &pd_glob[i]->etm[0][0], MAX_EQNS*MAX_TERM_TYPES, 
+      ddd_add_member(n, pd_glob[i]->e, MAX_NUM_MATRICES * MAX_EQNS, MPI_INT);
+      ddd_add_member(n, pd_glob[i]->v, MAX_NUM_MATRICES * MAX_EQNS, MPI_INT);
+      ddd_add_member(n, pd_glob[i]->w, MAX_NUM_MATRICES * MAX_EQNS, MPI_INT);
+      ddd_add_member(n, pd_glob[i]->i, MAX_NUM_MATRICES * MAX_EQNS, MPI_INT);
+      ddd_add_member(n, pd_glob[i]->m, MAX_NUM_MATRICES * MAX_EQNS, MPI_INT);
+      ddd_add_member(n, &pd_glob[i]->etm[0][0][0], MAX_NUM_MATRICES * MAX_EQNS*MAX_TERM_TYPES, 
 		     MPI_DOUBLE);
       /*  pd_glob[i]->CoordinateSystem  is already assigned */
       ddd_add_member(n, &pd_glob[i]->MeshMotion, 1, MPI_INT);

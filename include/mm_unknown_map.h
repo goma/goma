@@ -47,17 +47,18 @@ extern int Index_Solution(
 				 * equal to zero, except for centroid        *
 				 * pressures, and hermite cubic interpolated *
 				 * variables.                                */
- const int                      /* material id -> or -1 if the specification *
+ const int,                     /* material id -> or -1 if the specification *
 				 * of the material doesn't matter in this    *
 				 * instance. It would matter if the soln     *
 				 * number at this node varied depending on   *
 				 * the material id                           */
+ const int                      /* Matrix ID */ 
     );
 
 extern int variable_type_nodalInterp(int);
 
 extern VARIABLE_DESCRIPTION_STRUCT *
-Index_Solution_Inv(const int, int *, int *, int *, int *);
+Index_Solution_Inv(const int, int *, int *, int *, int *, int);
 
 extern void dofname40(const int, char *);
 

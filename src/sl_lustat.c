@@ -314,7 +314,7 @@ plot_a ( int n,
        */
       for ( i=0; i<n; i++)
 	{
-	  if ( idv[i][0] == PRESSURE )
+	  if ( idv[pg->imtrx][i][0] == PRESSURE )
 	    {
 	      sym = 26101;
 	    }

@@ -458,12 +458,12 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
   if (densityJac == NULL) doJac = FALSE;
   if (doJac) {
     densityJac->Num_Terms = 0;
-    if (upd->vp[TEMPERATURE] != -1) {
+    if (upd->vp[pg->imtrx][TEMPERATURE] != -1) {
       num_dep = 1;
     } else {
       num_dep = 0;
     }
-    if (upd->vp[MASS_FRACTION] != -1 || upd->vp[SPECIES_UNK_0] != -1) {
+    if (upd->vp[pg->imtrx][MASS_FRACTION] != -1 || upd->vp[pg->imtrx][SPECIES_UNK_0] != -1) {
       num_dep += matrl->Num_Species;
     }
     propertyJac_realloc(&densityJac, num_dep);
@@ -681,11 +681,11 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
     }
  
     if (doJac) {
-      if (pd->v[TEMPERATURE]) {
+      if (pd->v[pg->imtrx][TEMPERATURE]) {
 	propertyJac_addEnd(densityJac, TEMPERATURE, matID, 0,
 			   - rho / stateVector[TEMPERATURE], rho);
       }
-      if (pd->v[MASS_FRACTION]) {
+      if (pd->v[pg->imtrx][MASS_FRACTION]) {
 	switch (speciesVT) {
 	case SPECIES_MASS_FRACTION:
 	    for (w = 0; w < num_species - 1; w++) {
@@ -754,7 +754,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 
       if (doJac) 
 	{
-	  if(pd->v[TEMPERATURE]) 
+	  if(pd->v[pg->imtrx][TEMPERATURE]) 
 	  {
 	    for (w = 0; w < matrl->Num_Species_Eqn; w++) 
 	      {
@@ -764,7 +764,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 	    propertyJac_addEnd(densityJac, TEMPERATURE, matID, 0,
 			       drho_dT, rho);
 	  }
-	  if(pd->v[MASS_FRACTION]) 
+	  if(pd->v[pg->imtrx][MASS_FRACTION]) 
 	    {
 	      for (w = 0; w < matrl->Num_Species_Eqn; w++) {
 		drho_dc = -(matrl->specific_volume[w] - sv_p)*rho*rho ;

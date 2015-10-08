@@ -228,13 +228,13 @@ extern int *Matilda;		/* defined and filled in rd_mesh.c */
 /* Information on the number of unknowns (variables) which are define       */
 
 
-extern int num_internal_dofs;	/* I own, nobody wants. */
+extern int *num_internal_dofs;	/* I own, nobody wants. */
 
-extern int num_boundary_dofs;	/* I own, other procs want. */
+extern int *num_boundary_dofs;	/* I own, other procs want. */
 
-extern int num_external_dofs;	/* They own, I want. */
+extern int *num_external_dofs;	/* They own, I want. */
 
-extern int num_universe_dofs;	/* All the dofs this processor is aware of. 
+extern int *num_universe_dofs;	/* All the dofs this processor is aware of. 
 				 * This is NOT the same as the number of
 				 * degrees of freedom in the global problem.
 				 * That number is considerably larger. */
@@ -287,13 +287,13 @@ extern int *ptr_fill_node_send;
 extern int *list_fill_node_send;
 
 
-extern int NumUnknowns; /* Number of unknown variables updated by this   */
+extern int *NumUnknowns; /* Number of unknown variables updated by this   */
 			/* processor                                     */
-extern int NumExtUnknowns;/* Number of external variables which are      */
+extern int *NumExtUnknowns;/* Number of external variables which are      */
 			/* copied and stored on the local processor      */
 extern int MaxVarPerNode;/* Global Maximum number of unknowns at any     */
 			/* node on any processor                         */
-extern int Num_Var_In_Type[MAX_VARIABLE_TYPES];
+extern int Num_Var_In_Type[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES];
                        /* The number of variables of this type  in the   */
                        /* current problem. For species variables types,  */
                        /* there are either  zero or Max_Num_Species_Eqn  */
@@ -319,16 +319,16 @@ extern int external_fill_unknowns; /*  Number of external FILL unknowns  */
  *	For example, if we're solving just the energy equation and temperature
  *	is interpolated at every node, then 
  *
- *		Local_Offset[node][TEMPERATURE] = 0; (the first unknown is T)
+ *		Local_Offset[matrix][node][TEMPERATURE] = 0; (the first unknown is T)
  *	and
- *		Local_Offset[node][VELOCITY1] = -1; (undefined offset)
+ *		Local_Offset[matrix][node][VELOCITY1] = -1; (undefined offset)
  *	
  *	Yes, this does duplicate some functionality of First_Y, First_MeshD,
  *	etc. Also, Index_P, will not really be needed anymore, since pressure
  *	is getting lumped together with other unknowns at a node.
  *	
  */
-extern int **Local_Offset;
+extern int ***Local_Offset;
 
 /*
  * Dolphin:  The scheme above is fine except for cases that occur when
@@ -344,7 +344,7 @@ extern int **Local_Offset;
  *	     Thus, poll every element and save the largest estimate for
  *	     the degrees of freedom required to represent each variable...
  *
- *	     Dolphin[node][variable] = dof
+ *	     Dolphin[matrix][node][variable] = dof
  *
  * where:
  *		node  == global node number
@@ -360,7 +360,7 @@ extern int **Local_Offset;
  *			 species concentrations must be multiplied by the 
  * 			 total number of concentrations that are active, too!
  */
-extern int 	**Dolphin;	
+extern int 	***Dolphin;	
 
 /* Information about element Topology */
 int num_vertex;
@@ -375,13 +375,13 @@ int *body_nodes;
  *            This should aid in debugging, etc. Allocation and setup in
  *	      mm_unknown_map.c.
  *
- * Now, idv[dof][0] = VELOCITY1, etc.
- *      idv[dof][1] = local nodal dof (0, except pressure& conc., for example)
- *	idv[dof][2] = associated global node number (0-based)
+ * Now, idv[matrix][dof][0] = VELOCITY1, etc.
+ *      idv[matrix][dof][1] = local nodal dof (0, except pressure& conc., for example)
+ *	idv[matrix][dof][2] = associated global node number (0-based)
  */
-extern int  **idv;    	    /* Integer variable name, nodal dof, node. */
-extern char **dofname;	    /* Names of variables. */
-extern char **resname;	    /* Names of residual equations. */
+extern int  ***idv;    	    /* Integer variable name, nodal dof, node. */
+extern char ***dofname;	    /* Names of variables. */
+extern char ***resname;	    /* Names of residual equations. */
 
 #define _H_RF_FEM
 

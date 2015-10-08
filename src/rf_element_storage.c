@@ -69,17 +69,17 @@ setup_element_storage(void)
     }
     pd = pd_glob[mn];
     eb_ptr = Element_Blocks + eb_index;
-    if (pd->e[R_POR_LIQ_PRES]) {
+    if (pd->e[pg->imtrx][R_POR_LIQ_PRES]) {
       if (pd->TimeIntegration == TRANSIENT) {
 	do_malloc = TRUE;
       }
     }
-    if (pd->e[R_SHELL_SAT_OPEN] || pd->e[R_SHELL_SAT_OPEN_2]) {
+    if (pd->e[pg->imtrx][R_SHELL_SAT_OPEN] || pd->e[pg->imtrx][R_SHELL_SAT_OPEN_2]) {
       if (pd->TimeIntegration == TRANSIENT) {
 	do_malloc = TRUE;
       }
     }
-    if(pd->e[R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
+    if(pd->e[pg->imtrx][R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
       if (pd->TimeIntegration == TRANSIENT) {
 	do_malloc = TRUE;
       }
@@ -147,15 +147,15 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
      * Do a large block allocation for efficiency
      * Argg. See PRS comment in rf_element_storage_struct.h 
      */
-     if (pd->e[R_POR_LIQ_PRES]) {
+     if (pd->e[pg->imtrx][R_POR_LIQ_PRES]) {
        base_ptr = alloc_dbl_1(4 * numStorage * eb_ptr->Num_Elems_In_Block, 
 			      DBL_NOINIT); 
      }
-     else if (pd->e[R_SHELL_SAT_OPEN] || pd->e[R_SHELL_SAT_OPEN_2] ) {
+     else if (pd->e[pg->imtrx][R_SHELL_SAT_OPEN] || pd->e[pg->imtrx][R_SHELL_SAT_OPEN_2] ) {
        base_ptr = alloc_dbl_1(4 * numStorage * eb_ptr->Num_Elems_In_Block, 
 			      DBL_NOINIT); 
      }
-     else if(pd->e[R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
+     else if(pd->e[pg->imtrx][R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
 
        /* This is for shrinkage stress model for thermexp */
        base_ptr = alloc_dbl_1( numStorage * eb_ptr->Num_Elems_In_Block, 
@@ -167,7 +167,7 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
     d_ptr = base_ptr;
     eb_ptr->ElemStorage = s_ptr;
     for (i = 0; i < eb_ptr->Num_Elems_In_Block; i++, s_ptr++) {
-      if (pd->e[R_POR_LIQ_PRES] || pd->e[R_SHELL_SAT_OPEN] || pd->e[R_SHELL_SAT_OPEN_2] ) {
+      if (pd->e[pg->imtrx][R_POR_LIQ_PRES] || pd->e[pg->imtrx][R_SHELL_SAT_OPEN] || pd->e[pg->imtrx][R_SHELL_SAT_OPEN_2] ) {
       s_ptr->Sat_QP_tn = d_ptr;
       d_ptr += numStorage;
       s_ptr->p_cap_QP = d_ptr;
@@ -177,7 +177,7 @@ init_element_storage(ELEM_BLK_STRUCT *eb_ptr)
       s_ptr->sat_curve_type_old = d_ptr;
       d_ptr += numStorage;
       }
-      else if (pd->e[R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
+      else if (pd->e[pg->imtrx][R_MESH1] && pd->MeshMotion == LAGRANGIAN) {
         s_ptr->solidified = d_ptr;
 	d_ptr += numStorage;
       }

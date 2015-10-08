@@ -75,7 +75,8 @@ PROTO ((unsigned int,		/* option flag */
 	struct Aztec_Linear_Solver_System *[],
 	Exo_DB *,		/* all the mesh information */
 	Dpi *,			/* all the distributed processing information */
-	Comm_Ex []));		/* after initialization, on a per proc basis */
+	Comm_Ex [],		/* after initialization, on a per proc basis */
+        int ));                 /* Matrix index */
 
 extern void sl_free
 PROTO((unsigned int ,		/* option_mask                               */

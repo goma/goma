@@ -924,7 +924,7 @@ calc_tangent_from_seed(struct Rotation_Vectors *tangent,
     }
   }
       
-  if (af->Assemble_Jacobian && pd->v[MESH_DISPLACEMENT1]) {
+  if (af->Assemble_Jacobian && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
     tangent->d_vector_n = normal->d_vector_n;
     for (j=0; j<tangent->d_vector_n; j++)  {
       tangent->d_vector_J[j] = normal->d_vector_J[j];
@@ -1009,7 +1009,7 @@ calc_tangent_along_basis(struct Rotation_Vectors *tangent,
     inode = Proc_Elem_Connect[ei->iconnect_ptr + id];
     tangent->d_vector_J[i] = inode;
     ldof = ei->ln_to_dof[ShapeVar][id];
-    if (pd->v[MESH_DISPLACEMENT1]) {
+    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
       if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
 	for (p=0; p<dim; p++) {
 	  tangent->vector[p] += bf[ShapeVar]->dphidxi[ldof][i_basis]
@@ -1023,12 +1023,12 @@ calc_tangent_along_basis(struct Rotation_Vectors *tangent,
     }
   }
       
-  if (af->Assemble_Jacobian && pd->v[MESH_DISPLACEMENT1]) {
+  if (af->Assemble_Jacobian && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
     for (i = 0; i < tangent->d_vector_n; i++) {
       id    = (int) local_elem_node_id[i];
       inode = Proc_Elem_Connect[ei->iconnect_ptr + id];
       ldof = ei->ln_to_dof[ShapeVar][id];
-      if (pd->v[MESH_DISPLACEMENT1]) {
+      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
 	if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
 	  for (p=0; p<dim; p++) {
 	    tangent->d_vector_dx[p][p][i] += bf[ShapeVar]->dphidxi[ldof][i_basis];
@@ -1077,7 +1077,7 @@ cross_vectors(struct Rotation_Vectors *tangent2,
 			     - normal->vector[1] * tangent1->vector[0]);
   }
       
-  if (af->Assemble_Jacobian && pd->v[MESH_DISPLACEMENT1]) {
+  if (af->Assemble_Jacobian && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
     tangent2->d_vector_n = normal->d_vector_n;
     for (j=0; j<tangent2->d_vector_n; j++)  {
       tangent2->d_vector_J[j] = normal->d_vector_J[j];
@@ -1167,7 +1167,7 @@ calc_unseeded_edge_tangents (struct Rotation_Vectors *tangent,
 {
   int 		j, inode, ldof;
   const int ShapeVar = pd->ShapeVar;
-  const int DeformingMesh = pd->e[R_MESH1];
+  const int DeformingMesh = pd->e[pg->imtrx][R_MESH1];
   int p;
   int j_id;
   double sign;
@@ -1378,7 +1378,7 @@ calc_unseeded_edge_tangents (struct Rotation_Vectors *tangent,
 	}
     }
     
-  if (af->Assemble_Jacobian && pd->v[MESH_DISPLACEMENT1]) {
+  if (af->Assemble_Jacobian && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
     tangent->d_vector_n = num_nodes_on_edge;
     for (j = 0; j < num_nodes_on_edge; j++) {
       j_id   = (int) edge_elem_node_id[j];
@@ -1438,7 +1438,7 @@ calc_unseeded_edge_tangents_TET (struct Rotation_Vectors *tangent,
 {
   int j, inode, ldof;
   const int ShapeVar = pd->ShapeVar;
-  const int DeformingMesh = pd->e[R_MESH1];
+  const int DeformingMesh = pd->e[pg->imtrx][R_MESH1];
   int p;
   int j_id;
   double sign;
@@ -1636,7 +1636,7 @@ calc_unseeded_edge_tangents_TET (struct Rotation_Vectors *tangent,
 	}
     }
     
-  if (af->Assemble_Jacobian && pd->v[MESH_DISPLACEMENT1]) {
+  if (af->Assemble_Jacobian && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
     tangent->d_vector_n = num_nodes_on_edge;
     for (j = 0; j < num_nodes_on_edge; j++) {
       j_id   = (int) edge_elem_node_id[j];
@@ -1701,7 +1701,7 @@ simple_normalize_vector(struct Rotation_Vectors *vector,
   for(p=0, sum = 0.; p<dim; p++) sum += vector->vector[p]*vector->vector[p];
   sqsum = sqrt(sum);
 
-  if (af->Assemble_Jacobian && pd->v[MESH_DISPLACEMENT1]) {
+  if (af->Assemble_Jacobian && pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
     for(j=0; j<vector->d_vector_n; j++) {
       for(p=0; p<dim; p++) {
 	d_sum[p][j] = 0.;
@@ -1825,7 +1825,7 @@ load_bf_grad(void)
        */
       for (vi = 0, v = -1; v == -1 && vi<MAX_VARIABLE_TYPES; vi++)
 	{
-	  if ( pd->i[vi] == bfd[b]->interpolation )
+	  if ( pd->i[0][vi] == bfd[b]->interpolation )
 	    {
 	      v = vi;
 	    }
@@ -3065,7 +3065,7 @@ alloc_MSR_sparse_arrays(int **ptr_ija,	/* column pointer array */
 
   /*   num_fill_unknowns  = dpi->num_universe_nodes; */
 
-  num_total_unknowns = num_universe_dofs;
+  num_total_unknowns = num_universe_dofs[pg->imtrx];
 
   /* set boolean for save old A matrix for data sensitivities,
      flux sensitivities, modified newton schemes, augmenting conditions,
@@ -3095,7 +3095,7 @@ alloc_MSR_sparse_arrays(int **ptr_ija,	/* column pointer array */
 
   num_total_fill_unknowns = gsum_Int(internal_fill_unknowns +
 				     boundary_fill_unknowns);
-  num_total_unknowns = gsum_Int(num_internal_dofs + num_boundary_dofs);
+  num_total_unknowns = gsum_Int(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
   dpi->num_dofs_global = num_total_unknowns;
 
   /*
@@ -3107,8 +3107,8 @@ alloc_MSR_sparse_arrays(int **ptr_ija,	/* column pointer array */
     local_value = (ija[ internal_fill_unknowns + boundary_fill_unknowns ]
 		   - external_fill_unknowns - 1);
   } else {
-    local_value = (ija[num_internal_dofs+num_boundary_dofs]
-		   - num_external_dofs - 1);
+    local_value = (ija[num_internal_dofs[pg->imtrx] +num_boundary_dofs[pg->imtrx] ]
+		   - num_external_dofs[pg->imtrx] - 1);
   }
   nnz = gsum_Int(local_value);
 #else
@@ -3198,7 +3198,7 @@ alloc_VBR_sparse_arrays (struct Aztec_Linear_Solver_System *ams ,
    *   calculate the total number of degrees of freedom in the problem
    *   by summing the contributions from each processor
    */
-  dpi->num_dofs_global = gsum_Int(num_internal_dofs + num_boundary_dofs);
+  dpi->num_dofs_global = gsum_Int(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
   nnz_tmp = gsum_Int(nnz);
 
   DPRINTF(stderr, "\n%-30s= %d\n", "Number of unknowns", 
@@ -3390,7 +3390,7 @@ find_MSR_problem_graph(int *ija[],	   /* column pointer array            */
   /*
    * Calculate the average number of degrees of freedom per node
    */
-  avgVarPerNode =(double) num_universe_dofs / (double) itotal_nodes;
+  avgVarPerNode =(double) num_universe_dofs[pg->imtrx] / (double) itotal_nodes;
   /*
    * Estimate the average connectivity of a node
    */
@@ -3402,7 +3402,7 @@ find_MSR_problem_graph(int *ija[],	   /* column pointer array            */
    *  -> Check for null pointer because this is a large 
    *     allocation
    */
-  nz_temp = num_universe_dofs * avgNodeToNodeConn * 
+  nz_temp = num_universe_dofs[pg->imtrx] * avgNodeToNodeConn * 
     avgVarPerNode * 1.1;
 
 
@@ -3425,7 +3425,7 @@ find_MSR_problem_graph(int *ija[],	   /* column pointer array            */
    * and then the total number of entries is storred at
    * ija[num_universe_dofs].
    */
-  nz_ptr = num_universe_dofs + 1;
+  nz_ptr = num_universe_dofs[pg->imtrx] + 1;
 #ifdef DEBUG_GRAPH
   fprintf(ifp, "P_%d: nz_ptr = %d\n", ProcID, nz_ptr);
 #endif  
@@ -3434,7 +3434,7 @@ find_MSR_problem_graph(int *ija[],	   /* column pointer array            */
    * loop over all of the nodes on this processor
    */
   for (inode = 0; inode < itotal_nodes; inode++) {
-    nv = Nodes[inode]->Nodal_Vars_Info;
+    nv = Nodes[inode]->Nodal_Vars_Info[pg->imtrx];
     /* 
      * Fill the vector list which points to the unknowns defined at this
      * node...
@@ -3475,7 +3475,7 @@ find_MSR_problem_graph(int *ija[],	   /* column pointer array            */
 	   j < exo->node_node_pntr[inode+1]; j++) {
 	inter_node = exo->node_node_list[j];
 	nodeCol = Nodes[inter_node];
-	nvCol = nodeCol->Nodal_Vars_Info;
+	nvCol = nodeCol->Nodal_Vars_Info[pg->imtrx];
 	      
 	/* 
 	 * fill the vector list which points to the unknowns 
@@ -3509,7 +3509,7 @@ find_MSR_problem_graph(int *ija[],	   /* column pointer array            */
 	   * Query the Interaction mask to determine if a jacobian entry
 	   * should be created 
 	   */
-	  add_var = Inter_Mask[rowVarType][colVarType];
+	  add_var = Inter_Mask[pg->imtrx][rowVarType][colVarType];
 
 	  /* The following code should be activated when solving DG viscoelastic problems
 	   * with full Jacobian treatment of upwind element stress terms
@@ -3521,8 +3521,8 @@ find_MSR_problem_graph(int *ija[],	   /* column pointer array            */
 	      eb1 = exo->elem_eb[ exo->centroid_list[ inode ] ] ;
 
 	      if (vn_glob[ Matilda[eb1] ]->dg_J_model == FULL_DG) {
-		i1 = pd_glob[ Matilda[eb1] ]->i[rowVarType];
-		i2 = pd_glob[ Matilda[eb1] ]->i[colVarType];
+		i1 = pd_glob[ Matilda[eb1] ]->i[pg->imtrx][rowVarType];
+		i2 = pd_glob[ Matilda[eb1] ]->i[pg->imtrx][colVarType];
 			  
 		if ((rowVarType == colVarType) &&
 		    (i1 == I_P0 || i1 == I_P1 || i1 == I_PQ1 || i1 == I_PQ2) &&
@@ -3530,7 +3530,7 @@ find_MSR_problem_graph(int *ija[],	   /* column pointer array            */
 		    (rowVarType != PRESSURE) &&
 		    (rowVarType > VELOCITY_GRADIENT33 || rowVarType < VELOCITY_GRADIENT11))
 		  {
-		    add_var = Inter_Mask[rowVarType][colVarType];
+		    add_var = Inter_Mask[pg->imtrx][rowVarType][colVarType];
 		  } else {
 		    add_var = 0;
 		  }
@@ -3543,7 +3543,7 @@ find_MSR_problem_graph(int *ija[],	   /* column pointer array            */
 	    /*
 	     * Determine the equation number of the current unknown
 	     */
-	    icol_index = nodeCol->First_Unknown + inter_unknown;
+	    icol_index = nodeCol->First_Unknown[pg->imtrx] + inter_unknown;
 
 	    if (icol_index != irow_index) {
 	      /*
@@ -3630,11 +3630,11 @@ find_VBR_problem_graph(int *indx[], int *bindx[], int *bpntr[],
 
   for (i = 0; i < row_nodes ; i++) 
     {
-      nvRow = Nodes[i]->Nodal_Vars_Info;
+      nvRow = Nodes[i]->Nodal_Vars_Info[pg->imtrx];
       for (k = (*bpntr)[i]; k < (*bpntr)[i+1]; k++)
 	{
 	  j = (*bindx)[k];
-	  nvCol = Nodes[j]->Nodal_Vars_Info;
+	  nvCol = Nodes[j]->Nodal_Vars_Info[pg->imtrx];
 	  (*indx)[k] = nnz;
 	  nnz += nvRow->Num_Unknowns * nvCol->Num_Unknowns;
 	}
@@ -3644,7 +3644,7 @@ find_VBR_problem_graph(int *indx[], int *bindx[], int *bpntr[],
 
   for( i = 0 ; i < row_nodes ; i++) 
     {
-      nvRow = Nodes[i]->Nodal_Vars_Info;
+      nvRow = Nodes[i]->Nodal_Vars_Info[pg->imtrx];
       (*rpntr)[i] = row_ptr; 
       row_ptr += nvRow->Num_Unknowns;
     }
@@ -3652,7 +3652,7 @@ find_VBR_problem_graph(int *indx[], int *bindx[], int *bpntr[],
 
   for (j = 0 ; j < col_nodes ; j++) 
     {
-      nvCol = Nodes[j]->Nodal_Vars_Info;
+      nvCol = Nodes[j]->Nodal_Vars_Info[pg->imtrx];
       (*cpntr)[j] = col_ptr;
       col_ptr += nvCol->Num_Unknowns;
     }
@@ -3716,7 +3716,7 @@ fill_variable_vector(int inode, int ivec_varType[], int ivec_matID[])
   NODAL_VARS_STRUCT *nvs;
   VARIABLE_DESCRIPTION_STRUCT *vd;
   node = Nodes[inode];
-  nvs = node->Nodal_Vars_Info;
+  nvs = node->Nodal_Vars_Info[pg->imtrx];
   for (l = 0; l < nvs->Num_Var_Desc; l++) {
     vd = nvs->Var_Desc_List[l];
     for (m = 0; m < vd->Ndof; m++) {
@@ -4947,7 +4947,7 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
   v = VELOCITY1;
   vdofs = ei->dof[v];
   
-  if ( pd->e[R_MESH1] )
+  if ( pd->e[pg->imtrx][R_MESH1] )
     {
       mdofs = ei->dof[R_MESH1];
     }
@@ -4972,7 +4972,7 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
    * d( gamma_dot )/dmesh
    */
   
-  if ( pd->e[R_MESH1] )
+  if ( pd->e[pg->imtrx][R_MESH1] )
     {
       
       for ( p=0; p<VIM; p++)
@@ -5071,26 +5071,26 @@ determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
     /*
      *  For shell variables e[] may be zero, but there may be a v[].
      */
-    if (pd_ptr->e[R_MESH1] || pd_ptr->v[MESH_DISPLACEMENT1] ) {
+    if (pd_ptr->e[0][R_MESH1] || pd_ptr->v[0][MESH_DISPLACEMENT1] ) {
       /*
        * If deforming mesh always make displacement the mapping
        * interpolation
        */
-      pd_ptr->IntegrationMap = pd_ptr->i[R_MESH1];
+      pd_ptr->IntegrationMap = pd_ptr->i[0][R_MESH1];
       pd_ptr->ShapeVar = R_MESH1;
     } else {
       if ((pd_ptr->ShapeVar =
-	   in_list(I_Q2, 0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) {
+	   in_list(I_Q2, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) {
 	pd_ptr->IntegrationMap = I_Q2;
       } else if ((pd_ptr->ShapeVar =
-		  in_list(I_Q1, 0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) {
+		  in_list(I_Q1, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) {
 	pd_ptr->IntegrationMap = I_Q1;
       } else if ((pd_ptr->ShapeVar =
-		  in_list(I_SP, 0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) {
+		  in_list(I_SP, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) {
 	pd_ptr->IntegrationMap = I_SP;
       } else {
-	pd_ptr->ShapeVar = pd_ptr->m[0];
-	pd_ptr->IntegrationMap = pd_ptr->i[ pd_ptr->ShapeVar ];
+	pd_ptr->ShapeVar = pd_ptr->m[0][0];
+	pd_ptr->IntegrationMap = pd_ptr->i[0][ pd_ptr->ShapeVar ];
       }
     }
   } else {
@@ -5099,13 +5099,13 @@ determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
      * as the mapping order
      */
     pd_ptr->ShapeVar = in_list(pd_ptr->IntegrationMap, 0, MAX_VARIABLE_TYPES,
-			       pd_ptr->i);
+			       pd_ptr->i[0]);
     if (pd_ptr->ShapeVar == -1) {
       EH (-1,
 	  "Error: Specified Element Mapping has no corresponding variable .");
     }
-    if (pd_ptr->e[R_MESH1] && 
-	pd_ptr->IntegrationMap != pd_ptr->i[R_MESH1]) {
+    if (pd_ptr->e[0][R_MESH1] && 
+	pd_ptr->IntegrationMap != pd_ptr->i[0][R_MESH1]) {
       WH (-1,
 	  "Warning: Having the Element Mapping differ from the "
 	  "displacement interpolation may produce unexpected results.");
@@ -5139,26 +5139,26 @@ determine_ProjectionVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
 {
   int var;
   pd_ptr->ProjectionVar = -1;
-  if (((var = in_list(I_Q2,   0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) ||
-      ((var = in_list(I_Q2_D, 0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) ||
-      ((var = in_list(I_Q2_G, 0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) ||
-      ((var = in_list(I_Q2_GP, 0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) ||
-      ((var = in_list(I_Q2_GN, 0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) ||
-      ((var = in_list(I_Q2_XV,0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) ||
-      ((var = in_list(I_SP,   0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) ||
-      ((var = in_list(I_Q1,   0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) ||
-      ((var = in_list(I_Q1_D, 0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) ||
-      ((var = in_list(I_Q1_G, 0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) ||
-      ((var = in_list(I_Q1_GP, 0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) ||
-      ((var = in_list(I_Q1_GN, 0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1) ||
-      ((var = in_list(I_Q1_XV,0, MAX_VARIABLE_TYPES, pd_ptr->i)) != -1)) {
+  if (((var = in_list(I_Q2,   0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
+      ((var = in_list(I_Q2_D, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
+      ((var = in_list(I_Q2_G, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
+      ((var = in_list(I_Q2_GP, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
+      ((var = in_list(I_Q2_GN, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
+      ((var = in_list(I_Q2_XV,0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
+      ((var = in_list(I_SP,   0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
+      ((var = in_list(I_Q1,   0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
+      ((var = in_list(I_Q1_D, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
+      ((var = in_list(I_Q1_G, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
+      ((var = in_list(I_Q1_GP, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
+      ((var = in_list(I_Q1_GN, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
+      ((var = in_list(I_Q1_XV,0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1)) {
     pd_ptr->ProjectionVar = var;
   } else {
     P0PRINTF("Warning: No suitable basis function was found for a Projection Operation\n");
   }
 #ifdef DEBUG_HKM
   P0PRINTF("Projection Variable set to %d with interp type = %d\n",
-	   pd_ptr->ProjectionVar, pd_ptr->i[pd_ptr->ProjectionVar]);
+	   pd_ptr->ProjectionVar, pd_ptr->i[0][pd_ptr->ProjectionVar]);
 #endif
 }
 
@@ -5176,13 +5176,13 @@ set_solid_inertia()
   for(mn = 0; mn < upd->Num_Mat; mn++)
     {
       if(pd->TimeIntegration != STEADY &&
-         pd_glob[mn]->etm[R_MESH1][(LOG2_MASS)] && 
+         pd_glob[mn]->etm[pg->imtrx][R_MESH1][(LOG2_MASS)] && 
          pd_glob[mn]->MeshMotion == DYNAMIC_LAGRANGIAN)
         {
           tran->solid_inertia = TRUE;
         } 
       else if (pd->TimeIntegration != STEADY &&
-               pd_glob[mn]->etm[R_SOLID1][(LOG2_MASS)] &&
+               pd_glob[mn]->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
                pd_glob[mn]->MeshMotion == TOTAL_ALE)
         {
           tran->solid_inertia = TRUE;

@@ -90,9 +90,9 @@ void user_aug_cond_residuals(int iAC,
      Miscellaneous information: 
         How to extract values of solution variables from database
 	  ndof = 0;
-	  i = Index_Solution(100, MESH_DISPLACEMENT1, 0, ndof, -1);
+	  i = Index_Solution(100, MESH_DISPLACEMENT1, 0, ndof, -1, matrix ID);
 	          or for a specific material id:
-          i = Index_Solution(100, MESH_DISPLACEMENT1, 0, ndof, mat_id);  
+          i = Index_Solution(100, MESH_DISPLACEMENT1, 0, ndof, mat_id, matrix ID);  
      ==========================
 
       Please read the following 2 notes and 1 example first!!                   */
@@ -145,7 +145,7 @@ void user_aug_cond_residuals(int iAC,
   /*           for (j = 0; j < Proc_NS_Count[nsp]; j++)                         */
   /*             {                                                              */
   /*               k = Proc_NS_List[Proc_NS_Pointers[nsp]+j];                   */
-  /*               i = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1);        */
+  /*               i = Index_Solution (k, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);        */
   /*               EH(i, "Could not resolve Index_Solution.");                  */
   /*               radius             = Coor[1][k] + x[i];                      */
   /*             }                                                              */
@@ -169,7 +169,7 @@ void user_aug_cond_residuals(int iAC,
   /*           n_load1 = augc[iAC].DataFlt[4];                                  */
   /*           species_num=0;                                                   */
   /*                                                                            */
-  /*           for(i=0;i<NumUnknowns;i++){                                      */
+  /*           for(i=0;i<NumUnknowns[pg->imtrx];i++){                           */
   /*             cAC[0][i]=0.0 ;         }                                      */
   /*                                                                            */
   /*           af->Assemble_Jacobian = TRUE;                                    */

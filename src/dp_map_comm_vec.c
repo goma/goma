@@ -361,6 +361,7 @@ setup_dof_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
      *****************************************************************************/
 {
   int i, p, where, owner, index_owner, dofs_i_want, local_node_number;
+  int imtrx;
   int index, base;
 
   /*
@@ -370,30 +371,39 @@ setup_dof_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
   for (p = 0; p < dpi->num_neighbors; p++) {
     cx[p].num_dofs_recv = 0;
   }
-  for (i = 0; i < dpi->num_external_nodes; i++) {
-    local_node_number = dpi->num_internal_nodes +
-	                dpi->num_boundary_nodes + i;
-    where = dpi->ptr_set_membership[local_node_number];
-    owner = dpi->set_membership[where];
-    index_owner = in_list(owner, 0, dpi->num_neighbors, dpi->neighbor);
-    dofs_i_want = Nodes[local_node_number]->Nodal_Vars_Info->Num_Unknowns;
-    cx[index_owner].num_dofs_recv += dofs_i_want;
-  }
+  
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+     {
+      for (i = 0; i < dpi->num_external_nodes; i++) 
+         {
+          local_node_number = dpi->num_internal_nodes +
+	                      dpi->num_boundary_nodes + i;
+          where = dpi->ptr_set_membership[local_node_number];
+          owner = dpi->set_membership[where];
+          index_owner = in_list(owner, 0, dpi->num_neighbors, dpi->neighbor);
+          dofs_i_want = Nodes[local_node_number]->Nodal_Vars_Info[imtrx]->Num_Unknowns;
+          cx[index_owner].num_dofs_recv += dofs_i_want;
+         }
+     }
 
   /*
    *  Count up the number of degrees of freedom that need to be sent
    *  from this processor to the p'th processor. 
    *
    */
-  for (p = 0; p < dpi->num_neighbors; p++) {
-    cx[p].num_dofs_send = 0;
-    for (i = ptr_node_send[p]; i < ptr_node_send[p+1]; i++) {
-      local_node_number = list_node_send[i];
-      cx[p].num_dofs_send +=
-	  Nodes[local_node_number]->Nodal_Vars_Info->Num_Unknowns;
-    }
-  }
-
+  for (p = 0; p < dpi->num_neighbors; p++) 
+     {
+      cx[p].num_dofs_send = 0;
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+         {
+          for (i = ptr_node_send[p]; i < ptr_node_send[p+1]; i++) 
+             {
+              local_node_number = list_node_send[i];
+              cx[p].num_dofs_send +=
+	      Nodes[local_node_number]->Nodal_Vars_Info[imtrx]->Num_Unknowns;
+             }
+         }
+     }
   /*
    *  Set up the index array for pointing into list_dof_send, ptr_dof_send.
    *  The pth entry points to the first entry in list_dof_send that
@@ -419,15 +429,19 @@ setup_dof_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
     list_dof_send = alloc_int_1(ptr_dof_send[dpi->num_neighbors], -1);
   }
   index = 0;
-  for (i = 0; i < ptr_node_send[dpi->num_neighbors]; i++) {
-    local_node_number = list_node_send[i];
-    base = Nodes[local_node_number]->First_Unknown;
-    for (p = 0; 
-	 p < Nodes[local_node_number]->Nodal_Vars_Info->Num_Unknowns; p++) {
-      list_dof_send[index] = base + p;
-      index++;
-    }
-  }
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+     {
+      for (i = 0; i < ptr_node_send[dpi->num_neighbors]; i++) 
+         {
+          local_node_number = list_node_send[i];
+          base = Nodes[local_node_number]->First_Unknown[imtrx];
+          for (p = 0; p < Nodes[local_node_number]->Nodal_Vars_Info[imtrx]->Num_Unknowns; p++) 
+             {
+              list_dof_send[index] = base + p;
+              index++;
+             }
+         }
+     }
 }
 /****************************************************************************/
 /****************************************************************************/
@@ -460,6 +474,7 @@ setup_fill_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
 {
   NODAL_VARS_STRUCT *nv;
   int p, i,  index, local_node_number;
+  int imtrx;
   /*
    * calculate the total number of unknowns of type FILL on this processor
    */
@@ -497,16 +512,22 @@ setup_fill_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
    *  Count up the number of FILL degrees of freedom that need to be sent
    *  from this processor to the p'th processor. 
    */  
-  for (p = 0; p < dpi->num_neighbors; p++) {
-    cx[p].num_fill_nodes_send = 0;
-    for (i = ptr_node_send[p]; i < ptr_node_send[p+1]; i++) {
-      local_node_number = list_node_send[i];
-      nv = Nodes[local_node_number]->Nodal_Vars_Info;
-      if (nv->Num_Var_Desc_Per_Type[FILL] > 0) {
-	cx[p].num_fill_nodes_send++;
-      }
-    }
-  }
+  for (p = 0; p < dpi->num_neighbors; p++) 
+     {
+      cx[p].num_fill_nodes_send = 0;
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+         {
+          for (i = ptr_node_send[p]; i < ptr_node_send[p+1]; i++) 
+             {
+              local_node_number = list_node_send[i];
+              nv = Nodes[local_node_number]->Nodal_Vars_Info[imtrx];
+              if (nv->Num_Var_Desc_Per_Type[FILL] > 0) 
+                {
+	         cx[p].num_fill_nodes_send++;
+                }
+             }
+         }
+     }
   
   /*
    *  Set up the index array for pointing into list_fill_dof_send,
@@ -531,21 +552,24 @@ setup_fill_comm_map(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
    *
    *     list_fill_node_send[] is allocated here, and is never freed.
    */
-  if (dpi->num_neighbors > 0) {
-    list_fill_node_send = alloc_int_1(ptr_fill_node_send[dpi->num_neighbors],
- 				      -1);
-    index = 0;
-    for (i = 0; i < ptr_node_send[dpi->num_neighbors]; i++) {
-      local_node_number = list_node_send[i];
-      nv = Nodes[local_node_number]->Nodal_Vars_Info;
-      if (nv->Num_Var_Desc_Per_Type[FILL] > 0) {
-        list_fill_node_send[index] = in_list(local_node_number, 0,
-                                             num_fill_unknowns,
-					     fill_node_list);
-        index++;
-      }
+  if (dpi->num_neighbors > 0) 
+    {
+     list_fill_node_send = alloc_int_1(ptr_fill_node_send[dpi->num_neighbors], -1);
+     index = 0;
+     for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+        {
+         for (i = 0; i < ptr_node_send[dpi->num_neighbors]; i++) 
+            {
+             local_node_number = list_node_send[i];
+             nv = Nodes[local_node_number]->Nodal_Vars_Info[imtrx];
+             if (nv->Num_Var_Desc_Per_Type[FILL] > 0) 
+               {
+                list_fill_node_send[index] = in_list(local_node_number, 0, num_fill_unknowns, fill_node_list);
+                index++;
+               }
+            }
+        }
     }
-  }
 }
 /****************************************************************************/
 /****************************************************************************/

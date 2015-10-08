@@ -111,7 +111,7 @@ load_enthalpy(double saturation, double pressure)
    Pl = fv->p_liq;
    T = fv->T;
    Pl_old = fv_old->p_liq;
-   if (pd->e[R_POR_GAS_PRES]) Pg_old = fv_old->p_gas; else Pg_old = pressure;
+   if (pd->e[pg->imtrx][R_POR_GAS_PRES]) Pg_old = fv_old->p_gas; else Pg_old = pressure;
    T_old = fv_old->T;
 
    if ( saturation != 0.0) {

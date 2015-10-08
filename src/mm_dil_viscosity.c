@@ -59,17 +59,17 @@ static void transferMultipleOfDerivatives(const dbl ratioVisc,
 					  DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu) {
   int j, a, w, var;
   int dim = ei->ielem_dim;
-  if (pd->v[TEMPERATURE]) {
+  if (pd->v[pg->imtrx][TEMPERATURE]) {
     for (j = 0; j < ei->dof[TEMPERATURE]; j++) {
       d_dilMu->T[j] = ratioVisc * d_mu->T[j]; 
     }
   }
-  if (pd->v[FILL]) {
+  if (pd->v[pg->imtrx][FILL]) {
     for (j = 0; j < ei->dof[FILL]; j++) {
       d_dilMu->F[j] = ratioVisc * d_mu->F[j]; 
     }
   }
-  if (pd->v[MESH_DISPLACEMENT1]) {
+  if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
     for (a = 0; a < dim; a++) {
       var = MESH_DISPLACEMENT1 + a;
       for (j = 0; j < ei->dof[var]; j++) {
@@ -77,14 +77,14 @@ static void transferMultipleOfDerivatives(const dbl ratioVisc,
       }
     }
   }
-  if (pd->v[MASS_FRACTION]) {
+  if (pd->v[pg->imtrx][MASS_FRACTION]) {
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       for (j = 0; j < ei->dof[MASS_FRACTION]; j++) {
 	d_dilMu->C[w][j] = ratioVisc * d_mu->C[w][j];
       }
     }
   }
-  if (pd->v[VELOCITY1]) {
+  if (pd->v[pg->imtrx][VELOCITY1]) {
     for (a = 0; a < dim; a++) {
       var = VELOCITY1 + a;
       for (j = 0; j < ei->dof[var]; j++) {
@@ -92,13 +92,13 @@ static void transferMultipleOfDerivatives(const dbl ratioVisc,
       }
     }
   }
-  if (pd->v[PRESSURE]) {
+  if (pd->v[pg->imtrx][PRESSURE]) {
     for (j = 0; j < ei->dof[PRESSURE]; j++) {
       d_dilMu->P[j] = ratioVisc * d_mu->P[j]; 
     }
   }
 
-  if (pd->v[PHASE1]) {
+  if (pd->v[pg->imtrx][PHASE1]) {
     for (a = 0; a < pfd->num_phase_funcs; a++) {
       var = PHASE1 + a;
       for(j = 0 ; j < ei->dof[var] ; j++) {
@@ -113,7 +113,7 @@ static void transferMultipleOfDerivatives(const dbl ratioVisc,
   }
 #endif
 
-  if (pd->v[BOND_EVOLUTION]) {
+  if (pd->v[pg->imtrx][BOND_EVOLUTION]) {
     for (j = 0; j < ei->dof[BOND_EVOLUTION]; j++) {
       d_dilMu->nn[j] = ratioVisc * d_mu->nn[j]; 
     }
@@ -143,13 +143,13 @@ static void transferGPDerivatives(const dbl multFac,
 				  DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu) {
   int j, w;
   int var = TEMPERATURE;
-  if (pd->v[var]) {
+  if (pd->v[pg->imtrx][var]) {
     for (j = 0; j < ei->dof[var]; j++) {
       d_dilMu->T[j] += multFac * gpDerivatives[var] * bf[var]->phi[j];
     }
   }
   var = MASS_FRACTION;
-  if (pd->v[var])  {
+  if (pd->v[pg->imtrx][var])  {
     for (w = 0; w < pd->Num_Species_Eqn; w++) {
       for (j = 0; j < ei->dof[var]; j++)  {
 	d_dilMu->C[w][j] += multFac * gpDerivatives[MAX_VARIABLE_TYPES + w] * bf[var]->phi[j];
@@ -304,7 +304,7 @@ dil_viscosity(GEN_NEWT_STRUCT *gn_local,
 	// depends on the concentration unknowns, and we are done.
 	
 	var = MASS_FRACTION;
-	if (pd->v[var]) {
+	if (pd->v[pg->imtrx][var]) {
 	  double tmp = 4. * muLValue / 3. / (volF * volF);
 	  double * dVolFdMF = &(mp->d_volumeFractionGas[0]) + MAX_VARIABLE_TYPES;
 	  for (w = 0; w < pd->Num_Species_Eqn; w++) {

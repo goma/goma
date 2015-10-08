@@ -147,7 +147,7 @@ get_columnNodeList_msr(const double *a, const int *ija, const int ieqn,
   /*
    * Add the diagonal term
    */
-  vd = Index_Solution_Inv(ieqn, &inode, NULL, NULL, NULL);
+  vd = Index_Solution_Inv(ieqn, &inode, NULL, NULL, NULL, pg->imtrx);
   add_to_umi_int_list(ls_ptr, inode);
   /*
    * Loop through all of the individual terms for the current equation
@@ -155,7 +155,7 @@ get_columnNodeList_msr(const double *a, const int *ija, const int ieqn,
    */
   for (j = ija[ieqn]; j < ija[ieqn + 1]; j++) {
     ieqnCol = ija[j];
-    vd = Index_Solution_Inv(ieqnCol, &inode, NULL, NULL, NULL);
+    vd = Index_Solution_Inv(ieqnCol, &inode, NULL, NULL, NULL, pg->imtrx);
     add_to_umi_int_list(ls_ptr, inode);
   }
   return ls_ptr->Length;
@@ -497,7 +497,7 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	 *  to num_unknonws_node, the number of unknowns located at the
 	 *  current node.
 	 */
-	num_unknowns_node = (int) node->Nodal_Vars_Info->Num_Unknowns;	
+	num_unknowns_node = (int) node->Nodal_Vars_Info[imtrx]->Num_Unknowns;	
 
 	/*
 	*  Determine the total number of nonzero block columns for the 
@@ -526,7 +526,7 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	  nodeC = Nodes[jblk];
 	  gNodeS[j] = nodeC->Global_Node_Num;
 	  iorder[j] = j;
-	  n1 = nodeC->Nodal_Vars_Info->Num_Unknowns;
+	  n1 = nodeC->Nodal_Vars_Info[imtrx]->Num_Unknowns;
 	  blkMatrix[j] = alloc_dbl_1(num_unknowns_node * n1, 0.0);
 	}
 
@@ -550,7 +550,7 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
           inode = iblk_row;
           for (j = ija[ieqn]; j < ija[ieqn + 1]; j++) {
             ieqnCol = ija[j];
-            vdC = Index_Solution_Inv(ieqnCol, &inode, NULL, &joffset, NULL);
+            vdC = Index_Solution_Inv(ieqnCol, &inode, NULL, &joffset, NULL, pg->imtrx);
             icol = bin_search_max(col_list_umi.List, num_cols, inode);
 	    a_blk = blkMatrix[icol];
 	    a_blk[i + joffset * num_unknowns_node] = a[j];
@@ -624,7 +624,7 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	 */
 	for (i = 0; i < num_unknowns_node; i++) {
 	  vdT = Index_Solution_Inv(ieqn, &inode, &i_Var_Desc,
-		       	           &i_offset, &idof);
+		       	           &i_offset, &idof, pg->imtrx);
 	  nodeT = Nodes[inode];
 #ifdef DEBUG_HKM
 	  if (nodeT != node) {
@@ -701,7 +701,7 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	   *   Calculate the number of columns in the current block column
 	   *   and cross check.
 	   */
-	  n1 = nodeC->Nodal_Vars_Info->Num_Unknowns;
+	  n1 = nodeC->Nodal_Vars_Info[imtrx]->Num_Unknowns;
 
 	  /*
 	   *     Print out an ascii header information
@@ -765,7 +765,7 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	  */
 	  for (i = 0; i < n1; i++) {
             vdT = Index_Solution_Inv(ieqn, &inode, &i_Var_Desc,
-		                     &i_offset, &idof);
+		                     &i_offset, &idof, pg->imtrx);
 #ifdef DEBUG_HKM
 	    nodeT = Nodes[inode];
 	    if (nodeT != nodeC) {
@@ -1211,7 +1211,7 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	*  node struct
 	*/
 	
-	num_unknowns_node = (int) node->Nodal_Vars_Info->Num_Unknowns;
+	num_unknowns_node = (int) node->Nodal_Vars_Info[imtrx]->Num_Unknowns;
 #ifdef DEBUG_HKM
 	if (m1 != num_unknowns_node) {
 	  fprintf(stderr,"%s logic error: m1 and ", yo);
@@ -1318,7 +1318,7 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	 */
 	for (i = 0; i < num_unknowns_node; i++) {
 	  vdT = Index_Solution_Inv(ieqn, &inode, &i_Var_Desc,
-		       	           &i_offset, &idof);
+		       	           &i_offset, &idof, pg->imtrx);
 	  nodeT = Nodes[inode];
 #ifdef DEBUG_HKM
 	  if (nodeT != node) {
@@ -1403,11 +1403,11 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	  
 	  n1 = ib2 - ib1;
 #ifdef DEBUG_HKM
-	  if ((int) nodeC->Nodal_Vars_Info->Num_Unknowns != n1) {
+	  if ((int) nodeC->Nodal_Vars_Info[imtrx]->Num_Unknowns != n1) {
 	    fprintf(stderr,"%s Logic error\n", yo);
 	    fprintf(stderr,
 		    "num unknowns differ: %d %d \n",
-		    nodeC->Nodal_Vars_Info->Num_Unknowns, n1);
+		    nodeC->Nodal_Vars_Info[imtrx]->Num_Unknowns, n1);
 	    exit (-1);
 	  }
 #endif
@@ -1470,7 +1470,7 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	  */
 	  for (i = 0; i < n1; i++) {
             vdT = Index_Solution_Inv(ieqn, &inode, &i_Var_Desc,
-		                     &i_offset, &idof);
+		                     &i_offset, &idof, pg->imtrx);
 	    nodeT = Nodes[inode];
 #ifdef DEBUG_HKM
 	    if (nodeT != nodeC) {

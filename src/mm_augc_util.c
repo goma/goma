@@ -1756,7 +1756,7 @@ alc_aug_cond (int iAC,
   alceq_p = dp_ds * (lambda - lambda_old);
 
   /* Solution contribution:  dx_ds * (x - x_old) with scale factor */
-  for (i=0; i<NumUnknowns; i++)
+  for (i=0; i<NumUnknowns[pg->imtrx]; i++)
     {
       alceq_s += sv[i] * sv[i] * dx[i] * (x[i] - x_old[i]);
     }
@@ -1777,7 +1777,7 @@ alc_aug_cond (int iAC,
   estimate_bAC(iAC, x_AC, bAC, numProcUnknowns, cx, mf_args);
 
   /* cAC is solution sensitivity from LOCA */
-  for (i=0; i<NumUnknowns; i++)
+  for (i=0; i<NumUnknowns[pg->imtrx]; i++)
     {
       cAC[iAC][i] =  dx[i] * sv[i] * sv[i];
     }
@@ -2095,14 +2095,14 @@ overlap_aug_cond ( int ija[],
 #if 0
    {
      int index;
-     int numProcUnknowns = NumUnknowns + NumExtUnknowns;
+     int numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
      for (jAC = 0; jAC < nAC; jAC++)
        {
          printf("jAC=%d, LM=%g, gAC=%g, dAC[%d][%d]=%g\n",jAC,augc[jAC].lm_value,gAC[jAC],jAC,jAC,dAC[jAC][jAC]);
          for ( index = 0; index<numProcUnknowns; index++)
            {
-             if (bAC[jAC][index] != 0. ) printf(" eqntype=%d, N=%d, bAC[jAC][%d]=%g\n",idv[index][0],idv[index][2],index,bAC[jAC][index]);
-             if (cAC[jAC][index] != 0. ) printf(" vartype=%d, N=%d, cAC[jAC][%d]=%g\n",idv[index][0],idv[index][2],index,cAC[jAC][index]);
+             if (bAC[jAC][index] != 0. ) printf(" eqntype=%d, N=%d, bAC[jAC][%d]=%g\n",idv[pg->imtrx][index][0],idv[pg->imtrx][index][2],index,bAC[jAC][index]);
+             if (cAC[jAC][index] != 0. ) printf(" vartype=%d, N=%d, cAC[jAC][%d]=%g\n",idv[pg->imtrx][index][0],idv[pg->imtrx][index][2],index,cAC[jAC][index]);
            }
        }
    }
@@ -2747,7 +2747,7 @@ std_lgr_cond ( int iAC,
 	    for( inode= 0, i=0; i<numProcUnknowns; i++) 
 	      {
 		int var, isDBC = -1;
-		vd = Index_Solution_Inv( i, &inode, NULL, &i_offset, NULL );
+		vd = Index_Solution_Inv( i, &inode, NULL, &i_offset, NULL, pg->imtrx );
 				  
 		var = vd->Variable_Type;
 				  
@@ -3301,7 +3301,7 @@ create_periodic_acs(Exo_DB *exo)
        */
       count2 = 0;
       for ( i = 0; i < count1; i++ ) {
-        ie = Index_Solution(node_list1[i], var, 0, 0, -1);
+        ie = Index_Solution(node_list1[i], var, 0, 0, -1, pg->imtrx);
 	if ( ie >= 0 ) count2++;
       }
   
@@ -3334,10 +3334,10 @@ create_periodic_acs(Exo_DB *exo)
            *      so I am using the fluid_eb and solid_eb to hold the equation indices that are tied together
            *      by this augmenting condition
            */
-          ie = Index_Solution(node_list1[i], var, 0, 0, -1);
+          ie = Index_Solution(node_list1[i], var, 0, 0, -1, pg->imtrx);
 	  if ( ie == -1 ) continue;
 	  augc[ac_count].fluid_eb = ie;
-	  ie = Index_Solution(node_list2match[i], var, 0, 0, -1);
+	  ie = Index_Solution(node_list2match[i], var, 0, 0, -1, pg->imtrx);
           augc[ac_count].solid_eb = ie;
 	  /*
 	  fprintf(stderr,"ac_count=%d,node1=%d,node2=%d,ie1=%d,ie2=%d\n",
@@ -3438,7 +3438,7 @@ double getPositionAC(struct AC_Information *augc, double *cAC_iAC,
     RETN_COORD(node, &posNode[0], &posNode[1], &posNode[2]);
     // Now add in the displacements 
     //            ( we assume here no complications due to subparametric mapping)
-    i = Index_Solution(node, MESH_DISPLACEMENT1, 0, 0, -1);
+    i = Index_Solution(node, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
     if (i != -1) {
       posNode[0] += x[i];
       posNode[1] += x[i+1];

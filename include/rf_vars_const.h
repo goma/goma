@@ -215,7 +215,7 @@ extern VARIABLE_DESCRIPTION_STRUCT *
 variable_description_create(const int, const int, const int, const int);
 
 extern VARIABLE_DESCRIPTION_STRUCT *
-find_or_create_vd(const int, const int, const int, const int);
+find_or_create_vd(const int, const int, const int, const int, const int);
 
 extern VARIABLE_DESCRIPTION_STRUCT *
 Variable_Description_Match(VARIABLE_DESCRIPTION_STRUCT *);

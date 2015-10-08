@@ -315,7 +315,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
    * Bail out fast if there's nothing to do...
    */
 
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -491,7 +491,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		  mass = 0.;
 		  if ( pd->TimeIntegration != STEADY )
 		    {
-		      if ( pd->e[eqn] & T_MASS ) {
+		      if ( pd->e[pg->imtrx][eqn] & T_MASS ) {
 			  mass = coeff_rho * s_terms.Y_dot[w];
 
                           if (mp->SpeciesSourceModel[w]  == ELECTRODE_KINETICS ||
@@ -510,7 +510,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			  }
 
 			  mass *= - phi_i * h3 * det_J * wt;
-			  mass *= pd->etm[eqn][LOG2_MASS];
+			  mass *= pd->etm[pg->imtrx][eqn][LOG2_MASS];
 			}
 		    }
 		  
@@ -532,7 +532,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		   *   type.
 		   */
 		  advection = 0.0;
-		  if ( pd->e[eqn] & T_ADVECTION )
+		  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 		    {
 		      advection_a = 0.0;
 		      for ( p=0; p<VIM; p++)
@@ -575,7 +575,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			  advection_b *= - coeff_rho * s_terms.taylor_flux_wt[i]*dt/2.;
 			}
 		      advection = advection_a + advection_b;
-		      advection *= pd->etm[eqn][(LOG2_ADVECTION)] * det_J * h3 * wt 
+		      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)] * det_J * h3 * wt 
 		       	           * mp->AdvectiveScaling[w];
 		    }
 		  
@@ -588,7 +588,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		   *      SPECIES_MOLE_FRACTION:    mol cm-2 sec-1
 		   */
 		  diffusion = 0.;
-		  if ( pd->e[eqn] & T_DIFFUSION )
+		  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 		    {
 		      for ( p=0; p<VIM; p++)
 			{
@@ -608,7 +608,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		         }
 
 		      diffusion *= h3 * det_J * wt;
-		      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+		      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 		    }
 		  /*
 		   * HKM -> Note the addition of a species molecular weight
@@ -619,7 +619,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		   *      SPECIES_MOLE_FRACTION:    mol cm-3 sec-1
 		   */
 		  source = 0.;
-		  if ( pd->e[eqn] & T_SOURCE )
+		  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 		    {
 		      source = s_terms.MassSource[w];
 
@@ -635,7 +635,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		         }
 
 		      source *= phi_i * h3 * det_J * wt; 
-		      source *= pd->etm[eqn][(LOG2_SOURCE)];
+		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		    }
 
                    /*
@@ -749,7 +749,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		   *       unknowns
 		   */
 		  var = MASS_FRACTION;
-		  if ( pd->e[eqn] && pd->v[var] )
+		  if ( pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var] )
 		    {
 		      for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
 			{
@@ -760,7 +760,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      mass = 0.;
 			      if ( pd->TimeIntegration != STEADY )
 				{
-				  if ( pd->e[eqn] & T_MASS )
+				  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 				  {
 				    /*
 				     * HKM -
@@ -801,12 +801,12 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				        mass *= epsilon;
 				       }
 				    mass *= - phi_i * h3 * det_J * wt;
-				    mass *= pd->etm[eqn][(LOG2_MASS)];
+				    mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 				  }
 				}
 			      
 			      advection = 0.;
-			      if ( pd->e[eqn] & T_ADVECTION )
+			      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 				{
 				  advection_a = 0.;
 				  for ( p=0; p<VIM; p++)
@@ -871,12 +871,12 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				    }
 				  
 				  advection = advection_a + advection_b;  
-				  advection *= pd->etm[eqn][(LOG2_ADVECTION)]* h3 * det_J * wt
+				  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)]* h3 * det_J * wt
 				    * mp->AdvectiveScaling[w];
 				}
 			      
 			      diffusion = 0.;
-			      if ( pd->e[eqn] & T_DIFFUSION )
+			      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 				{
 				  for ( p=0; p<VIM; p++)
 				    {
@@ -892,11 +892,11 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				     }
 				  
 				  diffusion *= h3 * det_J * wt;
-				  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+				  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 				}	  
 			      
 			      source = 0.;
-			      if ( pd->e[eqn] & T_SOURCE )
+			      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 				{
 				  source += s_terms.d_MassSource_dc[w][w1][j];
 
@@ -918,7 +918,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 
 				  source *= phi_i;
 				  source *= h3 * det_J * wt;
-				  source *= pd->etm[eqn][(LOG2_SOURCE)];
+				  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				}
 			      
 			      lec->J[MAX_PROB_VAR + w][MAX_PROB_VAR + w1][ii][j] += 
@@ -941,9 +941,9 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			var = PVELOCITY1+b;
 		      else
 			var = VELOCITY1+b;
-		      if ( pd->v[var] )
+		      if ( pd->v[pg->imtrx][var] )
 			{
-			  pvar = upd->vp[var];
+			  pvar = upd->vp[pg->imtrx][var];
 			  for ( j=0; j<ei->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];	
@@ -951,7 +951,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      mass = 0.;
 			      
 			      advection = 0.;
-			      if ( pd->e[eqn] & T_ADVECTION )
+			      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 				{
 				  advection_a =  -wt_func * coeff_rho * s_terms.d_conv_flux_dv[w][b] [b][j];
 				  
@@ -1003,27 +1003,27 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				  
 				  advection = advection_a + advection_b + advection_c;
 				  advection *= det_J * h3 * wt;
-				  advection *= pd->etm[eqn][(LOG2_ADVECTION)]
+				  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)]
 				    * mp->AdvectiveScaling[w];
 				}
 			      
 			      diffusion = 0.;
 			      
-			      if ( pd->e[eqn] & T_DIFFUSION )
+			      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 				{
 				  for ( p=0; p<VIM; p++)
 				    {
 				      diffusion += grad_phi_i[p] * s_terms.d_diff_flux_dv[w][p][b][j];
 				    }
-				  diffusion *= h3 * det_J * wt * pd->etm[eqn][LOG2_DIFFUSION]; 
+				  diffusion *= h3 * det_J * wt * pd->etm[pg->imtrx][eqn][LOG2_DIFFUSION]; 
 				}
 			      
 			      source = 0.;
-			      if ( pd->e[eqn] & T_SOURCE )
+			      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 				{
 				  source += phi_i * s_terms.d_MassSource_dv[w][b][j];
 				  source *= h3 * det_J * wt;
-				  source *= pd->etm[eqn][(LOG2_SOURCE)];
+				  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				}
 			      
 			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += 
@@ -1040,22 +1040,22 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		  for ( b=0; b<dim; b++)
 		    {
 		      var = VORT_DIR1+b;
-		      if ( pd->v[var] )
+		      if ( pd->v[pg->imtrx][var] )
 			{
-			  pvar = upd->vp[var];
+			  pvar = upd->vp[pg->imtrx][var];
 			  for ( j=0; j<ei->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];	
 			      
 			      diffusion = 0.;
 			      
-			      if ( pd->e[eqn] & T_DIFFUSION )
+			      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 				{
 				  for ( p=0; p<VIM; p++)
 				    {
 				      diffusion += grad_phi_i[p] * s_terms.d_diff_flux_dvd[w][p][b][j];
 				    }
-				  diffusion *= h3 * det_J * wt * pd->etm[eqn][LOG2_DIFFUSION]; 
+				  diffusion *= h3 * det_J * wt * pd->etm[pg->imtrx][eqn][LOG2_DIFFUSION]; 
 				}
 			      
 			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += 
@@ -1071,9 +1071,9 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		  for ( b=0; b<dim; b++)
 		    {
 		      var = MESH_DISPLACEMENT1+b;
-		      if ( pd->v[var] )
+		      if ( pd->v[pg->imtrx][var] )
 			{
-			  pvar = upd->vp[var];
+			  pvar = upd->vp[pg->imtrx][var];
 			  for ( j=0; j<ei->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];	      
@@ -1095,7 +1095,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      mass = 0.;
 			      if ( pd->TimeIntegration != STEADY )
 				{
-				  if ( pd->e[eqn] & T_MASS )
+				  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 				    {
 				      mass  = coeff_rho * s_terms.Y_dot[w];
 
@@ -1119,13 +1119,13 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				      mass *= - phi_i * 
 					( h3 * d_det_J_dmeshbj 
 					  + dh3dmesh_bj * det_J ) * wt;
-				      mass *= pd->etm[eqn][(LOG2_MASS)];
+				      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 				    }
 				}
 			      
 			      advection = 0.;
 			      
-			      if ( pd->e[eqn] & T_ADVECTION )
+			      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 				{
 				  /*
 				   * Two parts:
@@ -1247,14 +1247,14 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				  advection = advection_a + advection_f
 				            + advection_b + advection_d;
 				  
-				  advection *= pd->etm[eqn][(LOG2_ADVECTION)]
+				  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)]
 				    * mp->AdvectiveScaling[w];
 				}
 			      
 			      
 			      diffusion = 0.;
 			      
-			      if ( pd->e[eqn] & T_DIFFUSION )
+			      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 				{
 				  /*
 				   * Three parts:
@@ -1303,11 +1303,11 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
                                       diffusion *= small_c;
                                      }
 
-				  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
+				  diffusion *= pd->etm[pg->imtrx][eqn][LOG2_DIFFUSION];
 				}
 			      
 			      source = 0.;
-			      if ( pd->e[eqn] & T_SOURCE )
+			      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 				{
 				  source += s_terms.MassSource[w];
 
@@ -1338,7 +1338,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
                                       source += sumrm*det_J*h3*wt*phi_i;
                                      }
 
-				  source *= pd->etm[eqn][LOG2_SOURCE];
+				  source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
 				}
 			      
 			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += 
@@ -1352,9 +1352,9 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		   * J_s_T  sensitivity of species equation w.r.t. temperature
 		   */
 		  var = TEMPERATURE;
-		  if ( pd->e[eqn] && pd->v[var] )
+		  if ( pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var] )
 		    {
-		      pvar = upd->vp[var];
+		      pvar = upd->vp[pg->imtrx][var];
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];	      
@@ -1366,17 +1366,17 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			   */
 			  mass = 0.0;
 			  if (pd->TimeIntegration != STEADY) {
-			    if (pd->e[eqn] & T_ADVECTION) {
+			    if (pd->e[pg->imtrx][eqn] & T_ADVECTION) {
 			      if (coeff_rho_nonunity) {
 				mass = d_rho->T[j] * s_terms.Y_dot[w];
 				mass *= - phi_i * h3 * det_J * wt;
-				mass *= pd->etm[eqn] [(LOG2_MASS)];
+				mass *= pd->etm[pg->imtrx][eqn] [(LOG2_MASS)];
 			      }
 			    }
 			  }
 			  
 			  advection = 0.;
-			  if ( pd->e[eqn] & T_ADVECTION )
+			  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 			    {
 			      for ( p=0; p<VIM; p++)
 				{
@@ -1400,12 +1400,12 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				    -s_terms.taylor_flux_wt[i]*dt/2. * s_terms.d_taylor_flux_dT[w][b] [j];
 				}
 			      
-			      advection *= pd->etm[eqn][(LOG2_ADVECTION)] * h3 * det_J * wt
+			      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)] * h3 * det_J * wt
 				* mp->AdvectiveScaling[w];
 			    }
 			  
 			  diffusion = 0.;
-			  if ( pd->e[eqn] & T_DIFFUSION )
+			  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 			    {
 			      for ( p=0; p<VIM; p++)
 				{
@@ -1413,11 +1413,11 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				    * s_terms.d_diff_flux_dT[w][p] [j];
 				}
 			      diffusion *= h3 * det_J * wt;
-			      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 			    }
 			  
 			  source = 0.;
-			  if ( pd->e[eqn] & T_SOURCE )
+			  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			    {
 			      source += s_terms.d_MassSource_dT[w][j];
 
@@ -1433,7 +1433,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			         }
 
 			      source *= det_J*h3*wt*phi_i;
-			      source *= pd->etm[eqn][LOG2_SOURCE];
+			      source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
 			    }
 			  
 			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += mass + advection + diffusion + source;
@@ -1447,9 +1447,9 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
                if ( cr->MassFluxModel != FICKIAN_CHARGED) 
                 {
 		  var = VOLTAGE;
-		  if ( pd->e[eqn] && pd->v[var] )
+		  if ( pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var] )
 		    {
-		      pvar = upd->vp[var];
+		      pvar = upd->vp[pg->imtrx][var];
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];	      
@@ -1459,7 +1459,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			  advection = 0.;
 			  
 			  diffusion = 0.;
-			  if ( pd->e[eqn] & T_DIFFUSION )
+			  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 			    {
 			      for ( p=0; p<VIM; p++)
 				{
@@ -1475,11 +1475,11 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				     }
 				  
 			      diffusion *= h3 * det_J * wt;
-			      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 			    }
 			  
 			  source = 0.;
-			  if ( pd->e[eqn] & T_SOURCE )
+			  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			    {
 			      source += s_terms.d_MassSource_dV[w][j];
 
@@ -1495,7 +1495,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			         }
 
 			      source *= det_J*h3*wt*phi_i;
-			      source *= pd->etm[eqn][LOG2_SOURCE];
+			      source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
 			    }
 			  
 			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += mass + advection + diffusion + source;
@@ -1510,13 +1510,13 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
                else if ( cr->MassFluxModel == FICKIAN_CHARGED) 
                 {
 		  var = VOLTAGE;
-		  if ( pd->e[eqn] && pd->v[var] )
+		  if ( pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var] )
 		    {
-		      pvar = upd->vp[var];
+		      pvar = upd->vp[pg->imtrx][var];
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
 			  diffusion = 0.;
-			  if ( pd->e[eqn] & T_DIFFUSION )
+			  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 			    {
 			      for ( p=0; p<VIM; p++)
 				{
@@ -1524,7 +1524,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				    * s_terms.d_diff_flux_dV[w][p] [j];
 				}
 			      diffusion *= h3 * det_J * wt;
-			      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 			    }
 			  
 			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += diffusion;
@@ -1536,9 +1536,9 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		   * Jacobian with respect to pressure
 		   */
 		  var = PRESSURE; 
-		  if ( pd->e[eqn] && pd->v[var] )
+		  if ( pd->e[pg->imtrx][eqn] && pd->v[pg->imtrx][var] )
 		    {
-		      pvar = upd->vp[var];
+		      pvar = upd->vp[pg->imtrx][var];
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
 			  phi_j = bf[var]->phi[j];	      
@@ -1548,15 +1548,15 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			   *   easily add it in here
 			   */
 			  mass = 0.;
-			  if ( pd->e[eqn] & T_MASS )
+			  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 			    {
 			      mass += coeff_rho * s_terms.d_Y_dot_dP[w] [j];
 			      mass *= - phi_i * det_J * h3 * wt;
-			      mass *= pd->etm[eqn][(LOG2_MASS)];
+			      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 			    }
 			  
 			  diffusion = 0.;
-			  if ( pd->e[eqn] & T_DIFFUSION )
+			  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 			    {
 			      for ( p=0; p<VIM; p++)
 				{
@@ -1564,13 +1564,13 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				    * s_terms.d_diff_flux_dP[w][p] [j];
 				}
 			      diffusion *= h3 * det_J * wt;
-			      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 			    }
 			  
 			  /* Advection is velocity times gradient of 
 			     mass (or volume) fraction */
 			  advection = 0.;
-			  if ( pd->e[eqn] & T_ADVECTION )
+			  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 			    {
 			      for ( p=0; p<VIM; p++)
 				{
@@ -1578,7 +1578,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				}
 			      advection *= - wt_func ;
 			      
-			      advection *= pd->etm[eqn][(LOG2_ADVECTION)]* det_J * h3 * wt
+			      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)]* det_J * h3 * wt
 				* mp->AdvectiveScaling[w];
 			    }
 			  
@@ -1595,20 +1595,20 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		  if ( cr->MassFluxModel == HYDRODYNAMIC || cr->MassFluxModel == DM_SUSPENSION_BALANCE ) /* These terms only appear for this model */
 		    {
 		      var = SHEAR_RATE;
-		      if ( pd->v[var])
+		      if ( pd->v[pg->imtrx][var])
 			{
-			  pvar = upd->vp[var];
+			  pvar = upd->vp[pg->imtrx][var];
 			  for( j=0;  j<ei->dof[var] ; j++)
 			    {
 			      diffusion = 0.0;
-			      if ( pd->e[eqn] & T_DIFFUSION )
+			      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 				for ( p=0; p<VIM; p++)
 				  {
 				    diffusion += grad_phi_i[p]
 				      * s_terms.d_diff_flux_dSH[w][p][j];
 				  }
 			      diffusion *= h3 * det_J * wt;
-			      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 			      
 			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += diffusion;
 			      
@@ -1639,20 +1639,20 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			  for ( c=0; c<VIM; c++)
 			    {
 			      var = v_g[b][c];		      
-			      if ( pd->v[var])
+			      if ( pd->v[pg->imtrx][var])
 				{
-				  pvar = upd->vp[var];
+				  pvar = upd->vp[pg->imtrx][var];
 				  for( j=0;  j<ei->dof[var] ; j++)
 				    {
 				      diffusion = 0.0;
-				      if ( pd->e[eqn] & T_DIFFUSION )
+				      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 					for ( p=0; p<VIM; p++)
 					  {
 					    diffusion += grad_phi_i[p]
 					      * s_terms.d_diff_flux_dG[w][p][b][c][j];
 					  }
 				      diffusion *= h3 * det_J * wt;
-				      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+				      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 				      
 				      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += diffusion;
 				    }
@@ -1785,7 +1785,7 @@ assemble_mass_transport_path_dependence
    * Bail out fast if there's nothing to do...
    */
 
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -1952,7 +1952,7 @@ assemble_mass_transport_path_dependence
 		  mass = 0.;
 		  if ( pd->TimeIntegration != STEADY )
 		    {
-		      if ( pd->e[eqn] & T_MASS ) {
+		      if ( pd->e[pg->imtrx][eqn] & T_MASS ) {
 			  mass  = coeff_rho * s_terms.Y_dot[w];
 
                           if (mp->SpeciesSourceModel[w]  == ELECTRODE_KINETICS ||
@@ -1971,7 +1971,7 @@ assemble_mass_transport_path_dependence
 			  }
 
 			  mass *= - phi_i * h3 * det_J * wt;
-			  mass *= pd->etm[eqn][LOG2_MASS];
+			  mass *= pd->etm[pg->imtrx][eqn][LOG2_MASS];
 			}
 		    }
 		  
@@ -1993,7 +1993,7 @@ assemble_mass_transport_path_dependence
 		   *   type.
 		   */
 		  advection = 0.0;
-		  if ( pd->e[eqn] & T_ADVECTION )
+		  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 		    {
 		      advection_a = 0.0;
 		      for ( p=0; p<VIM; p++)
@@ -2036,7 +2036,7 @@ assemble_mass_transport_path_dependence
 			  advection_b *= - coeff_rho * s_terms.taylor_flux_wt[i]*dt/2.;
 			}
 		      advection = advection_a + advection_b;
-		      advection *= pd->etm[eqn][(LOG2_ADVECTION)] * det_J * h3 * wt 
+		      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)] * det_J * h3 * wt 
 		       	           * mp->AdvectiveScaling[w];
 		    }
 		  
@@ -2049,7 +2049,7 @@ assemble_mass_transport_path_dependence
 		   *      SPECIES_MOLE_FRACTION:    mol cm-2 sec-1
 		   */
 		  diffusion = 0.;
-		  if ( pd->e[eqn] & T_DIFFUSION )
+		  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 		    {
 		      for ( p=0; p<VIM; p++)
 			{
@@ -2069,7 +2069,7 @@ assemble_mass_transport_path_dependence
 		         }
 
 		      diffusion *= h3 * det_J * wt;
-		      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+		      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 		    }
 		  /*
 		   * HKM -> Note the addition of a species molecular weight
@@ -2080,7 +2080,7 @@ assemble_mass_transport_path_dependence
 		   *      SPECIES_MOLE_FRACTION:    mol cm-3 sec-1
 		   */
 		  source = 0.;
-		  if ( pd->e[eqn] & T_SOURCE )
+		  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 		    {
 		      source = s_terms.MassSource[w];
 
@@ -2096,7 +2096,7 @@ assemble_mass_transport_path_dependence
 		         }
 
 		      source *= phi_i * h3 * det_J * wt; 
-		      source *= pd->etm[eqn][(LOG2_SOURCE)];
+		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		    }
 		    
                   residual = mass + advection +  diffusion + source;
@@ -2105,7 +2105,7 @@ assemble_mass_transport_path_dependence
 		   * Path dependence is residual times derivative of H wrt to F
 		   */
 		  var = FILL;
-                  pvar = upd->vp[var];
+                  pvar = upd->vp[pg->imtrx][var];
                   for ( j=0; j<ei->dof[var]; j++ )
                     {
                       lec->J[MAX_PROB_VAR + w][pvar][ii][j] += lsi->d_H_dF[j] * residual * sign;
@@ -3126,7 +3126,7 @@ raoults_law(double func[],
 	    var = MASS_FRACTION;
 	    for ( j_id=0; j_id<ei->dof[var]; j_id++)
 	      {
-		if (pd->v[var])
+		if (pd->v[pg->imtrx][var])
 		  {
 		    phi_j = bf[var]->phi[j_id];
 
@@ -3200,7 +3200,7 @@ if(mp->VaporPressureModel[wspec] == ANTOINE
     var = TEMPERATURE ;
     for ( j_id=0; j_id<ei->dof[var]; j_id++)
       {
-	if (pd->v[var])
+	if (pd->v[pg->imtrx][var])
 	  {
 	    phi_j = bf[var]->phi[j_id];
 
@@ -3372,7 +3372,7 @@ raoults_law_new(double func[],
 
   if (af->Assemble_Jacobian) {
     var = MASS_FRACTION;
-    if (pd->v[var]) {
+    if (pd->v[pg->imtrx][var]) {
       tmp2 = A * Mbar * Xk_wspec;
       if (mp->Num_Species == mp->Num_Species_Eqn) {
 	for (j_id = 0; j_id < ei->dof[var]; j_id++) {
@@ -3402,7 +3402,7 @@ raoults_law_new(double func[],
   
     if (dpsatdT_w != 0.0) {
       var = TEMPERATURE;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
 	tmp1 =  dpsatdT_w * Xk_wspec / amb_pres;
 	for (j_id = 0; j_id < ei->dof[var]; j_id++) {
 	  phi_j = bf[var]->phi[j_id];
@@ -3701,7 +3701,7 @@ flory_huggins(double func[],
 	var = MASS_FRACTION;
 	for ( j_id=0; j_id<ei->dof[var]; j_id++)
 	  {
-	    if (pd->v[var])
+	    if (pd->v[pg->imtrx][var])
 	      {
 		phi_j = bf[var]->phi[j_id];
 		for (i=0; i<pd->Num_Species_Eqn; i++)
@@ -3801,7 +3801,7 @@ flory_huggins(double func[],
 	 var = MASS_FRACTION;
 	 for ( j_id=0; j_id<ei->dof[var]; j_id++)
 	   {
-	     if (pd->v[var])
+	     if (pd->v[pg->imtrx][var])
 	       {
 		 phi_j = bf[var]->phi[j_id];
 		 
@@ -3832,7 +3832,7 @@ flory_huggins(double func[],
 	 var = TEMPERATURE ;
 	 for ( j_id=0; j_id<ei->dof[var]; j_id++)
 	   {
-	     if (pd->v[var])
+	     if (pd->v[pg->imtrx][var])
 	       {
 		 phi_j = bf[var]->phi[j_id];
 		 
@@ -3929,7 +3929,7 @@ kinematic_species_bc(double func[DIM],
     for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
 	for (p = 0; p < pd->Num_Dim; p++) {
 	  var = MESH_DISPLACEMENT1 + p;
-	  if (pd->v[var]) {
+	  if (pd->v[pg->imtrx][var]) {
 	    for (j = 0; j < ei->dof[var]; j++) {
 	      phi_j = bf[var]->phi[j];
 	      d_func[0][var][j] -= (mass_c *
@@ -3945,7 +3945,7 @@ kinematic_species_bc(double func[DIM],
     for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
       for (p = 0; p < pd->Num_Dim; p++) {
 	var = MESH_DISPLACEMENT1 + p;
-	if (pd->v[var]) {
+	if (pd->v[pg->imtrx][var]) {
 	  for (j = 0; j < ei->dof[var]; j++) {
 	    phi_j = bf[var]->phi[j];
 	    d_func[0][var][j] += (mass_c *
@@ -3961,7 +3961,7 @@ kinematic_species_bc(double func[DIM],
       }
 	      
       var = VELOCITY1 + kdir;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
 	for (j = 0; j < ei->dof[var]; j++) {
 	  phi_j = bf[var]->phi[j];
           d_func[0][var][j] += (mass_c *
@@ -3970,7 +3970,7 @@ kinematic_species_bc(double func[DIM],
       }
 
       var = MASS_FRACTION;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
 	for (j = 0; j < ei->dof[var]; j++)	{
 	  phi_j = bf[var]->phi[j];
 	  d_func[0][MAX_VARIABLE_TYPES+wspec][j] += (mass_dc * phi_j *
@@ -4098,7 +4098,7 @@ mass_flux_surf_bc(double func[],
        * J_s_T
        */
       var=TEMPERATURE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (j = 0; j < ei->dof[var]; j++) {
 	  j_id = j;
 	  phi_j = bf[var]->phi[j_id];
@@ -4118,7 +4118,7 @@ mass_flux_surf_bc(double func[],
        * J_s_V
        */
       var=VOLTAGE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (j = 0; j < ei->dof[var]; j++) {
 	  j_id = j;
 	  phi_j = bf[var]->phi[j_id];
@@ -4140,7 +4140,7 @@ mass_flux_surf_bc(double func[],
       for (jvar = 0; jvar < dim; jvar++) 
 	{
 	  var=MESH_DISPLACEMENT1+jvar;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
 		{
@@ -4161,7 +4161,7 @@ mass_flux_surf_bc(double func[],
       for(jvar=0; jvar<dim; jvar++) 
 	{
 	  var = VELOCITY1 + jvar;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
 		{
@@ -4450,7 +4450,7 @@ mass_flux_surf_user_bc(double func[DIM],
        * J_s_T
        */
       var=TEMPERATURE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (j = 0; j < ei->dof[var]; j++) {
 	  j_id = j;
 	  phi_j = bf[var]->phi[j_id];
@@ -4464,7 +4464,7 @@ mass_flux_surf_user_bc(double func[DIM],
        * J_s_V
        */
       var=VOLTAGE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (j = 0; j < ei->dof[var]; j++) {
 	  j_id = j;
 	  phi_j = bf[var]->phi[j_id];
@@ -4540,7 +4540,7 @@ mass_flux_alloy_surf(double func[DIM],
        * J_s_T
        */
       var=TEMPERATURE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (j = 0; j < ei->dof[var]; j++) {
 	  j_id = j;
 	  phi_j = bf[var]->phi[j_id];
@@ -4620,7 +4620,7 @@ mass_flux_BV_surf_bc(
     {
       EH(-1, "Solution-temperature model not yet implemented");
     }
-  if(pd->e[R_ENERGY]) /* if energy equation is active, re-set electrolyte temperature */
+  if(pd->e[pg->imtrx][R_ENERGY]) /* if energy equation is active, re-set electrolyte temperature */
     {
       T = fv->T;   
     }
@@ -4700,7 +4700,7 @@ mass_flux_BV_surf_bc(
        * J_s_T
        */
       var=TEMPERATURE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (j = 0; j < ei->dof[var]; j++) {
 	  j_id = j;
 	  phi_j = bf[var]->phi[j_id];
@@ -4719,7 +4719,7 @@ mass_flux_BV_surf_bc(
        * J_s_V
        */
       var=VOLTAGE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (j = 0; j < ei->dof[var]; j++) {
 	  j_id = j;
 	  phi_j = bf[var]->phi[j_id];
@@ -4740,7 +4740,7 @@ mass_flux_BV_surf_bc(
       for (jvar = 0; jvar < dim; jvar++) 
 	{
 	  var=MESH_DISPLACEMENT1+jvar;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
 		{
@@ -4761,7 +4761,7 @@ mass_flux_BV_surf_bc(
       for(jvar=0; jvar<dim; jvar++) 
 	{
 	  var = VELOCITY1 + jvar;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
 		{
@@ -4860,7 +4860,7 @@ mass_flux_HOR_surf_bc(
 
       /* J_s_T --- sensitivity wrt temperature */
       var=TEMPERATURE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
        for (j = 0; j < ei->dof[var]; j++) {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -4871,7 +4871,7 @@ mass_flux_HOR_surf_bc(
 
       /* J_s_V --- sensitivity wrt voltage or potential */
       var=VOLTAGE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
        for (j = 0; j < ei->dof[var]; j++) {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -4963,7 +4963,7 @@ mass_flux_ORR_surf_bc(
 
       /* J_s_T --- sensitivity wrt temperature */
       var=TEMPERATURE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
        for (j = 0; j < ei->dof[var]; j++) {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -4974,7 +4974,7 @@ mass_flux_ORR_surf_bc(
 
       /* J_s_V --- sensitivity wrt voltage or potential */
       var=VOLTAGE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
        for (j = 0; j < ei->dof[var]; j++) {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -5062,7 +5062,7 @@ mass_flux_H2O_ANODE_surf_bc(
 
       /* J_s_T --- sensitivity wrt temperature */
       var=TEMPERATURE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
        for (j = 0; j < ei->dof[var]; j++) {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -5073,7 +5073,7 @@ mass_flux_H2O_ANODE_surf_bc(
 
       /* J_s_V --- sensitivity wrt voltage or potential */
       var=VOLTAGE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
        for (j = 0; j < ei->dof[var]; j++) {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -5167,7 +5167,7 @@ mass_flux_H2O_CATHODE_surf_bc(
 
       /* J_s_T --- sensitivity wrt temperature */
       var=TEMPERATURE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
        for (j = 0; j < ei->dof[var]; j++) {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -5178,7 +5178,7 @@ mass_flux_H2O_CATHODE_surf_bc(
 
       /* J_s_V --- sensitivity wrt voltage or potential */
       var=VOLTAGE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
        for (j = 0; j < ei->dof[var]; j++) {
           j_id = j;
           phi_j = bf[var]->phi[j_id];
@@ -5346,7 +5346,7 @@ mass_flux_SULFIDATION_surf_bc(
        * J_s_T
        */
       var=TEMPERATURE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (j = 0; j < ei->dof[var]; j++) {
 	  j_id = j;
 	  phi_j = bf[var]->phi[j_id];
@@ -5365,7 +5365,7 @@ mass_flux_SULFIDATION_surf_bc(
        * J_s_V
        */
       var=VOLTAGE;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
 	for (j = 0; j < ei->dof[var]; j++) {
 	  phi_j = bf[var]->phi[j];
 	  d_func[0][var][j] -= d_mass_flux[wspec][VOLTAGE] * phi_j;
@@ -5378,7 +5378,7 @@ mass_flux_SULFIDATION_surf_bc(
       for (jvar = 0; jvar < dim; jvar++) 
 	{
 	  var=MESH_DISPLACEMENT1+jvar;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
 		{
@@ -5399,7 +5399,7 @@ mass_flux_SULFIDATION_surf_bc(
       for(jvar=0; jvar<dim; jvar++) 
 	{
 	  var = VELOCITY1 + jvar;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
 		{
@@ -5545,7 +5545,7 @@ mass_flux_BV2_surf_bc(double func[],
        * J_s_T
        */
     var = TEMPERATURE;
-    if (pd->v[var]) {
+    if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei->dof[var]; j++) {
         j_id = j;
         phi_j = bf[var]->phi[j_id];
@@ -5562,7 +5562,7 @@ mass_flux_BV2_surf_bc(double func[],
        * J_s_V
        */
     var = VOLTAGE;
-    if (pd->v[var])
+    if (pd->v[pg->imtrx][var])
        {
         for (j = 0; j < ei->dof[var]; j++)
            {
@@ -5577,7 +5577,7 @@ mass_flux_BV2_surf_bc(double func[],
        */
     for (jvar = 0; jvar < dim; jvar++)  {
       var = MESH_DISPLACEMENT1 + jvar;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
         for (j_id = 0; j_id < ei->dof[var]; j_id++) {
           /*     d( )/dx        */
           /* additional terms due to convective flux */
@@ -5594,7 +5594,7 @@ mass_flux_BV2_surf_bc(double func[],
      
     for (jvar = 0; jvar < dim; jvar++) {
       var = VELOCITY1 + jvar;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
         for (j_id = 0; j_id < ei->dof[var]; j_id++)  {
           phi_j = bf[var]->phi[j_id];
           d_func[0][var][j_id] +=
@@ -5719,7 +5719,7 @@ mass_flux_NI_surf_bc(double func[],
        * J_s_T
        */
     var = TEMPERATURE;
-    if (pd->v[var]) {
+    if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei->dof[var]; j++) {
         j_id = j;
         phi_j = bf[var]->phi[j_id];
@@ -5736,7 +5736,7 @@ mass_flux_NI_surf_bc(double func[],
        * J_s_V
        */
     var = VOLTAGE;
-    if (pd->v[var])
+    if (pd->v[pg->imtrx][var])
        {
         for (j = 0; j < ei->dof[var]; j++)
            {
@@ -5751,7 +5751,7 @@ mass_flux_NI_surf_bc(double func[],
        */
     for (jvar = 0; jvar < dim; jvar++)  {
       var = MESH_DISPLACEMENT1 + jvar;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
         for (j_id = 0; j_id < ei->dof[var]; j_id++) {
           /*     d( )/dx        */
           /* additional terms due to convective flux */
@@ -5768,7 +5768,7 @@ mass_flux_NI_surf_bc(double func[],
 
     for (jvar = 0; jvar < dim; jvar++) {
       var = VELOCITY1 + jvar;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
         for (j_id = 0; j_id < ei->dof[var]; j_id++)  {
           phi_j = bf[var]->phi[j_id];
           d_func[0][var][j_id] +=
@@ -5851,7 +5851,7 @@ current_BV2_surf_bc(double func[],
      * J_s_T
      */
     var = TEMPERATURE;
-    if (pd->v[var])
+    if (pd->v[pg->imtrx][var])
        {
         for (j = 0; j < ei->dof[var]; j++)
            {
@@ -5865,7 +5865,7 @@ current_BV2_surf_bc(double func[],
      * J_s_V
      */
     var = VOLTAGE;
-    if (pd->v[var])
+    if (pd->v[pg->imtrx][var])
        {
         for (j = 0; j < ei->dof[var]; j++)
            {
@@ -5942,7 +5942,7 @@ current_NI_surf_bc(double func[],
      * J_s_T
      */
     var = TEMPERATURE;
-    if (pd->v[var])
+    if (pd->v[pg->imtrx][var])
        {
         for (j = 0; j < ei->dof[var]; j++)
            {
@@ -5956,7 +5956,7 @@ current_NI_surf_bc(double func[],
      * J_s_V
      */
     var = VOLTAGE;
-    if (pd->v[var])
+    if (pd->v[pg->imtrx][var])
        {
         for (j = 0; j < ei->dof[var]; j++)
            {
@@ -6097,7 +6097,7 @@ const_mass_flux_surf_bc(
        * J_s_T
        */
     var = TEMPERATURE;
-    if (pd->v[var]) {
+    if (pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei->dof[var]; j++) {
         j_id = j;
         phi_j = bf[var]->phi[j_id];
@@ -6115,7 +6115,7 @@ const_mass_flux_surf_bc(
        */
     for (jvar = 0; jvar < dim; jvar++)  {
       var = MESH_DISPLACEMENT1 + jvar;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
         for (j_id = 0; j_id < ei->dof[var]; j_id++) {
           /*     d( )/dx        */
           /* additional terms due to convective flux */
@@ -6132,7 +6132,7 @@ const_mass_flux_surf_bc(
      
     for (jvar = 0; jvar < dim; jvar++) {
       var = VELOCITY1 + jvar;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
         for (j_id = 0; j_id < ei->dof[var]; j_id++)  {
           phi_j = bf[var]->phi[j_id];
           d_func[0][var][j_id] +=
@@ -7113,7 +7113,7 @@ get_equil_surf_bc(double func[],
        * J_s_T
        */
       var=TEMPERATURE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (j = 0; j < ei->dof[var]; j++) {
 	  j_id = j;
 	  phi_j = bf[var]->phi[j_id];
@@ -7135,7 +7135,7 @@ get_equil_surf_bc(double func[],
       for (jvar = 0; jvar < dim; jvar++) 
 	{
 	  var=MESH_DISPLACEMENT1+jvar;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
 		{
@@ -7156,7 +7156,7 @@ get_equil_surf_bc(double func[],
       for (jvar=0; jvar<dim; jvar++) 
 	{
 	  var = VELOCITY1 + jvar;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
 		{
@@ -7275,7 +7275,7 @@ sus_mass_flux_surf_bc (double func[],
        * J_s_T
        */
       var=TEMPERATURE;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
 	{
 	  for (j = 0; j < ei->dof[var]; j++) 
 	    {
@@ -7293,7 +7293,7 @@ sus_mass_flux_surf_bc (double func[],
        * J_s_SH
        */
       var= SHEAR_RATE;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
 	{
 	  for (j = 0; j < ei->dof[var]; j++) 
 	    {
@@ -7312,7 +7312,7 @@ sus_mass_flux_surf_bc (double func[],
       for (jvar = 0; jvar < dim; jvar++) 
 	{
 	  var=MESH_DISPLACEMENT1+jvar;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
 		{
@@ -7405,7 +7405,7 @@ compute_leak_velocity(double *vnorm,
   
   /* Calculate flux contribution of bulk component */
   xbulk = 1.;
-  if (pd->v[MASS_FRACTION])
+  if (pd->v[pg->imtrx][MASS_FRACTION])
     for (w=0; w<pd->Num_Species_Eqn; w++) xbulk -= fv->c[w];
   
   /* Calculate volume flux of bulk component through surface */
@@ -7414,7 +7414,7 @@ compute_leak_velocity(double *vnorm,
   
   if (af->Assemble_Jacobian) {
     var = MASS_FRACTION;
-    if (pd->v[var])
+    if (pd->v[pg->imtrx][var])
       {
 	for (w=0; w<pd->Num_Species_Eqn; w++) {
 	  for (j=0; j<ei->dof[var]; j++) {
@@ -7439,7 +7439,7 @@ compute_leak_velocity(double *vnorm,
 	  
 	  driving_force = 1.;	  
 	  
-	  if (pd->v[MASS_FRACTION])
+	  if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {
 	      wspec    = fluxbc->BC_Data_Int[0];
 	      mode     = fluxbc->BC_Data_Int[2];
@@ -7500,7 +7500,7 @@ compute_leak_velocity(double *vnorm,
 	      vnormal += mp->mass_flux[wspec] * StoiCoef[wspec];
 /* This was causing compiler warnings: probably due to C[w] which should have been C[w][j]  */
     	      var = MASS_FRACTION;
-    	      if (pd->v[var])
+    	      if (pd->v[pg->imtrx][var])
       		{
 	      	for (w=0; w<pd->Num_Species_Eqn; w++) 
 		   {
@@ -7515,7 +7515,7 @@ compute_leak_velocity(double *vnorm,
 		}
 
 	      var = TEMPERATURE;
-	      if (pd->v[var])
+	      if (pd->v[pg->imtrx][var])
 	        {
                   for (j=0; j<ei->dof[var]; j++) 
 		  {
@@ -7529,7 +7529,7 @@ compute_leak_velocity(double *vnorm,
       else if (!strcmp(fluxbc->desc->name1,"YFLUX_CONST"))  
 	{
 	  
-	  if (pd->v[MASS_FRACTION])
+	  if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {
 	      wspec    = fluxbc->BC_Data_Int[0];
 	      vnormal -= fluxbc->BC_Data_Float[0] * StoiCoef[wspec];
@@ -7538,7 +7538,7 @@ compute_leak_velocity(double *vnorm,
       else if (!strcmp(fluxbc->desc->name1,"YFLUX_BV"))  
 	{                            /* mass flux given by Butler-Volmer kinectics, KSC: 11/2000 */
 	  
-	  if (pd->v[MASS_FRACTION])
+	  if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {
 	      wspec         = fluxbc->BC_Data_Int[0];   /* species number */   
 	      nu            = fluxbc->BC_Data_Float[0]; /* stoichiometric coeff. */
@@ -7559,7 +7559,7 @@ compute_leak_velocity(double *vnorm,
 		{
 		  EH(-1, "Solution-temperature model not yet implemented");
 		}
-	      if(pd->e[R_ENERGY]) /* if energy equation is active, re-set electrolyte temperature */
+	      if(pd->e[pg->imtrx][R_ENERGY]) /* if energy equation is active, re-set electrolyte temperature */
 		{
 		  T = fv->T;   
 		}
@@ -7584,7 +7584,7 @@ compute_leak_velocity(double *vnorm,
                     }
                 }
               var = TEMPERATURE;
-	      if (pd->v[var]) 
+	      if (pd->v[pg->imtrx][var]) 
 	        {
                   for (j=0; j<ei->dof[var]; j++)
                     {
@@ -7593,7 +7593,7 @@ compute_leak_velocity(double *vnorm,
                     }
                 }
               var = VOLTAGE;
-	      if (pd->v[var]) 
+	      if (pd->v[pg->imtrx][var]) 
 	        {
                   for ( j=0; j<ei->dof[var]; j++)
                     {
@@ -7606,7 +7606,7 @@ compute_leak_velocity(double *vnorm,
 
       else if (!strcmp(fluxbc->desc->name1,"YFLUX_HOR"))
             {             /* mass flux given by linearized kinetic model */
-             if (pd->v[MASS_FRACTION])
+             if (pd->v[pg->imtrx][MASS_FRACTION])
               {
                 wspec     = fluxbc->BC_Data_Int[0];
                 ai0       = fluxbc->BC_Data_Float[0];
@@ -7635,7 +7635,7 @@ compute_leak_velocity(double *vnorm,
                    }
                  }
                 var = TEMPERATURE;
-                if (pd->v[var]) 
+                if (pd->v[pg->imtrx][var]) 
                  {
                   for (j=0; j<ei->dof[var]; j++)
                    {
@@ -7644,7 +7644,7 @@ compute_leak_velocity(double *vnorm,
                    }
                  }
                 var = VOLTAGE;
-                if (pd->v[var])
+                if (pd->v[pg->imtrx][var])
                  {
                    for ( j=0; j<ei->dof[var]; j++)
                     {
@@ -7657,7 +7657,7 @@ compute_leak_velocity(double *vnorm,
 
       else if (!strcmp(fluxbc->desc->name1,"YFLUX_ORR"))
             {  /* mass flux given by the Tafel kinetic model for ORR */
-             if (pd->v[MASS_FRACTION])
+             if (pd->v[pg->imtrx][MASS_FRACTION])
               {
                 wspec     = fluxbc->BC_Data_Int[0];
                 ai0       = fluxbc->BC_Data_Float[0];
@@ -7684,7 +7684,7 @@ compute_leak_velocity(double *vnorm,
                    }
                  }
                 var = TEMPERATURE;
-                if (pd->v[var]) 
+                if (pd->v[pg->imtrx][var]) 
                  {
                   for (j=0; j<ei->dof[var]; j++)
                    {
@@ -7693,7 +7693,7 @@ compute_leak_velocity(double *vnorm,
                    }
                  }
                 var = VOLTAGE;
-                if (pd->v[var])
+                if (pd->v[pg->imtrx][var])
                  {
                    for ( j=0; j<ei->dof[var]; j++)
                     {
@@ -7706,7 +7706,7 @@ compute_leak_velocity(double *vnorm,
 
       else if (!strcmp(fluxbc->desc->name1,"YFLUX_H2O_ANODE"))
             {  /* H2O mass flux electro-osmatic drag */
-             if (pd->v[MASS_FRACTION])
+             if (pd->v[pg->imtrx][MASS_FRACTION])
               {
                 wspec     = fluxbc->BC_Data_Int[0];
                 ai0       = fluxbc->BC_Data_Float[0];
@@ -7732,7 +7732,7 @@ compute_leak_velocity(double *vnorm,
                    }
                  }
                 var = TEMPERATURE;
-                if (pd->v[var]) 
+                if (pd->v[pg->imtrx][var]) 
                  {
                   for (j=0; j<ei->dof[var]; j++)
                    {
@@ -7741,7 +7741,7 @@ compute_leak_velocity(double *vnorm,
                    }
                  }
                 var = VOLTAGE;
-                if (pd->v[var])
+                if (pd->v[pg->imtrx][var])
                  {
                    for ( j=0; j<ei->dof[var]; j++)
                     {
@@ -7754,7 +7754,7 @@ compute_leak_velocity(double *vnorm,
 
       else if (!strcmp(fluxbc->desc->name1,"YFLUX_H2O_CATHODE"))
             {  /* H2O mass flux electro-osmatic drag */
-             if (pd->v[MASS_FRACTION])
+             if (pd->v[pg->imtrx][MASS_FRACTION])
               {
                 wspec     = fluxbc->BC_Data_Int[0];
                 ai0       = fluxbc->BC_Data_Float[0];
@@ -7780,7 +7780,7 @@ compute_leak_velocity(double *vnorm,
                    }
                  }
                 var = TEMPERATURE;
-                if (pd->v[var]) 
+                if (pd->v[pg->imtrx][var]) 
                  {
                   for (j=0; j<ei->dof[var]; j++)
                    {
@@ -7789,7 +7789,7 @@ compute_leak_velocity(double *vnorm,
                    }
                  }
                 var = VOLTAGE;
-                if (pd->v[var])
+                if (pd->v[pg->imtrx][var])
                  {
                    for ( j=0; j<ei->dof[var]; j++)
                     {
@@ -7805,7 +7805,7 @@ compute_leak_velocity(double *vnorm,
          if(fluxbc->BC_Data_Int[2] != ANNIHILATION_ELECTRONEUTRALITY && 
             fluxbc->BC_Data_Int[2] != ANNIHILATION_ELECTRONEUTRALITY   )
           {
-	   if (pd->v[MASS_FRACTION])
+	   if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {
 	      mode         = fluxbc->BC_Data_Int[2];
 	      wspec        = fluxbc->BC_Data_Int[0];
@@ -7863,7 +7863,7 @@ compute_leak_velocity(double *vnorm,
                     }
                 }
               var = TEMPERATURE;
-	      if (pd->v[var]) 
+	      if (pd->v[pg->imtrx][var]) 
 	        {
                   for (j=0; j<ei->dof[var]; j++)
                     {
@@ -7878,7 +7878,7 @@ compute_leak_velocity(double *vnorm,
       else if (!strcmp(fluxbc->desc->name1,"YFLUX_USER"))  
 	{
 	  
-	  if (pd->v[MASS_FRACTION])
+	  if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {
 	      wspec           = fluxbc->BC_Data_Int[0];
 	      mass_flux_user_surf (mp->mass_flux, mp->d_mass_flux,
@@ -7897,7 +7897,7 @@ compute_leak_velocity(double *vnorm,
                     }
                 }
               var = TEMPERATURE;
-	      if (pd->v[var]) 
+	      if (pd->v[pg->imtrx][var]) 
 	        {
                   for (j=0; j<ei->dof[var]; j++)
                     {
@@ -7911,7 +7911,7 @@ compute_leak_velocity(double *vnorm,
       else if (!strcmp(fluxbc->desc->name1,"YFLUX_ALLOY"))  
 	{
 	  
-	  if (pd->v[MASS_FRACTION])
+	  if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {
 	      wspec           = fluxbc->BC_Data_Int[0];
 	      EH(-1, "KIN_LEAK: no yflux_alloy implemented. See source.");
@@ -7924,7 +7924,7 @@ compute_leak_velocity(double *vnorm,
       else  /* This is the YFLUX default in case you weren't paying attention */
 	{
 	  
-	  if (pd->v[MASS_FRACTION])
+	  if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {
 	      wspec           = fluxbc->BC_Data_Int[0];
 	      mass_tran_coeff = fluxbc->BC_Data_Float[0];
@@ -7947,7 +7947,7 @@ compute_leak_velocity(double *vnorm,
                     }
                 }
               var = TEMPERATURE;
-	      if (pd->v[var]) 
+	      if (pd->v[pg->imtrx][var]) 
 	        {
                   for (j=0; j<ei->dof[var]; j++)
                     {
@@ -8023,7 +8023,7 @@ compute_leak_velocity_heat(double *vnorm,
 
   if (af->Assemble_Jacobian) {
     var = TEMPERATURE;
-    if (pd->v[var])
+    if (pd->v[pg->imtrx][var])
       {
 	for (j=0; j<ei->dof[var]; j++) {
 	  for (a=0; a<VIM; a++)
@@ -8034,7 +8034,7 @@ compute_leak_velocity_heat(double *vnorm,
       }
     for (b = 0; b < dim; b++) {
       var = MESH_DISPLACEMENT1 + b;
-      if (pd->v[var] && fluxbc->BC_Name != LS_LATENT_HEAT_BC ) {
+      if (pd->v[pg->imtrx][var] && fluxbc->BC_Name != LS_LATENT_HEAT_BC ) {
 	for (j = 0; j < ei->dof[var]; j++) {
 		      
 	  for (a = 0; a < dim; a++) {
@@ -8116,7 +8116,7 @@ compute_leak_energy(double *enorm,
 
   /* Calculate energy flux of bulk component */
   xbulk = 1.;
-  if (pd->v[MASS_FRACTION])
+  if (pd->v[pg->imtrx][MASS_FRACTION])
     for (w=0; w<pd->Num_Species_Eqn; w++) xbulk -= fv->c[w];
   
   /* Calculate volume flux of bulk component through surface */
@@ -8126,7 +8126,7 @@ compute_leak_energy(double *enorm,
   
   if (af->Assemble_Jacobian) {
     var = MASS_FRACTION;
-    if (pd->v[var])
+    if (pd->v[pg->imtrx][var])
       {
 	for (w=0; w<pd->Num_Species_Eqn; w++) {
 	  for (j=0; j<ei->dof[var]; j++) {
@@ -8150,7 +8150,7 @@ compute_leak_energy(double *enorm,
 	  
 	  driving_force = 1.;	  
 	  
-	  if (pd->v[MASS_FRACTION])
+	  if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {
 	      wspec    = fluxbc->BC_Data_Int[0];
 	      mode     = fluxbc->BC_Data_Int[2];
@@ -8205,7 +8205,7 @@ compute_leak_energy(double *enorm,
 
 
 	      var = MASS_FRACTION;
-	      if (pd->v[var])
+	      if (pd->v[pg->imtrx][var])
 		{
 		  for (w=0; w<pd->Num_Species_Eqn; w++) {
 		    for (j=0; j<ei->dof[var]; j++) {
@@ -8217,7 +8217,7 @@ compute_leak_energy(double *enorm,
 		}
 
 	      var = TEMPERATURE;
-	      if (pd->v[var])
+	      if (pd->v[pg->imtrx][var])
 	        {
                   for (j=0; j<ei->dof[var]; j++) {
                     phi_j = bf[var]->phi[j];
@@ -8230,7 +8230,7 @@ compute_leak_energy(double *enorm,
 	} /*  if (!strcmp(fluxbc->desc->name1,"YFLUX_EQUIL") */
       else if (!strcmp(fluxbc->desc->name1,"YFLUX_CONST"))  
 	{	  
-	  if (pd->v[MASS_FRACTION])
+	  if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {
 	      wspec    = fluxbc->BC_Data_Int[0];
 	      enormal -= mp->density*mp->latent_heat_vap[wspec]*fluxbc->BC_Data_Float[0] * StoiCoef[wspec];
@@ -8238,7 +8238,7 @@ compute_leak_energy(double *enorm,
 	} /*  if (!strcmp(fluxbc->desc->name1,"YFLUX_CONST") */
       else if (!strcmp(fluxbc->desc->name1,"YFLUX_USER"))  
 	{
-	  if (pd->v[MASS_FRACTION])
+	  if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {
 	      wspec           = fluxbc->BC_Data_Int[0];
 	      mass_flux_user_surf (mp->mass_flux, mp->d_mass_flux,
@@ -8259,7 +8259,7 @@ compute_leak_energy(double *enorm,
                     }
                 }
               var = TEMPERATURE;
-	      if (pd->v[var]) 
+	      if (pd->v[pg->imtrx][var]) 
 	        {
                   for (j=0; j<ei->dof[var]; j++)
                     {
@@ -8274,7 +8274,7 @@ compute_leak_energy(double *enorm,
       else  /* This is the YFLUX default in case you weren't paying attention */
 	{
 	  
-	  if (pd->v[MASS_FRACTION])
+	  if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {
 	      wspec           = fluxbc->BC_Data_Int[0];
 	      mass_tran_coeff = fluxbc->BC_Data_Float[0];
@@ -8298,7 +8298,7 @@ compute_leak_energy(double *enorm,
                     }
                 }
               var = TEMPERATURE;
-	      if (pd->v[var]) 
+	      if (pd->v[pg->imtrx][var]) 
 	        {
                   for (j=0; j<ei->dof[var]; j++)
                     {
@@ -8411,7 +8411,7 @@ kin_bc_leak(double func[],
       for(kdir = 0; kdir < pd->Num_Dim; kdir++)
 	{
 	  var = MESH_DISPLACEMENT1 + kdir;
-	  if(pd->v[var])
+	  if(pd->v[pg->imtrx][var])
 	    for(j = 0; j < ei->dof[var]; j++)
 	      {
 		phi_j = bf[var]->phi[j];
@@ -8459,7 +8459,7 @@ kin_bc_leak(double func[],
 	var = MESH_DISPLACEMENT1 + jvar;
 	for ( j_id=0; j_id<ei->dof[var]; j_id++)
 	  {
-	    if (pd->v[var])
+	    if (pd->v[pg->imtrx][var])
 	      {
 		phi_j = bf[var]->phi[j_id];
 		for(kdir=0; kdir<dim; kdir++) 
@@ -8477,7 +8477,7 @@ kin_bc_leak(double func[],
     for(jvar=0; jvar<dim; jvar++) 
       {
 	var = VELOCITY1 + jvar;
-        if (pd->v[var])
+        if (pd->v[pg->imtrx][var])
           {
 	    for (j_id=0; j_id<ei->dof[var]; j_id++)
 	      {
@@ -8490,7 +8490,7 @@ kin_bc_leak(double func[],
       }
     
     var = TEMPERATURE;
-    if (pd->v[var]) 
+    if (pd->v[pg->imtrx][var]) 
       {
 	for (j_id=0; j_id<ei->dof[var]; j_id++)
 	  {
@@ -8503,14 +8503,14 @@ kin_bc_leak(double func[],
       }
 
     var = VOLTAGE;
-    if (pd->v[var]) {
+    if (pd->v[pg->imtrx][var]) {
       for (j_id = 0; j_id < ei->dof[var]; j_id++) {
 	d_func[0][var][j_id] -= d_vnorm->V[j_id];
       }
     }
     
     var = MASS_FRACTION;
-    if (pd->v[var]) 
+    if (pd->v[pg->imtrx][var]) 
       {
 	for (w = 0; w < pd->Num_Species_Eqn; w++) 
 	  {
@@ -8595,7 +8595,7 @@ kin_bc_electrodeposition (double func[],
       for (kdir = 0; kdir < pd->Num_Dim; kdir++)
          {
           var = MESH_DISPLACEMENT1 + kdir;
-          if (pd->v[var])
+          if (pd->v[pg->imtrx][var])
               for (j = 0; j < ei->dof[var]; j++)
                  {
                   phi_j = bf[var]->phi[j];
@@ -8617,7 +8617,7 @@ kin_bc_electrodeposition (double func[],
  
   if (!strcmp(BC_Types[ibc].desc->name1,"YFLUX_NI"))
      {
-      if (pd->v[MASS_FRACTION])
+      if (pd->v[pg->imtrx][MASS_FRACTION])
          {
           Vmolar = 6.596;  /*  molar volume of solid nickel  */
           while (ibc != -1)
@@ -8647,7 +8647,7 @@ kin_bc_electrodeposition (double func[],
 
   else if (!strcmp(BC_Types[ibc].desc->name1,"YFLUX_BV2"))
      {
-      if (pd->v[MASS_FRACTION])
+      if (pd->v[pg->imtrx][MASS_FRACTION])
          {
           while (ibc != -1)
              {
@@ -8688,7 +8688,7 @@ kin_bc_electrodeposition (double func[],
 
   if ( af->Assemble_Jacobian )
      {
-      if (pd->v[MESH_DISPLACEMENT1]) memset(dnxdot_dx, 0, DIM*DIM*MDE*sizeof(dbl));
+      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) memset(dnxdot_dx, 0, DIM*DIM*MDE*sizeof(dbl));
      }
  
   /* calculate -xdot and its derivatives */
@@ -8698,7 +8698,7 @@ kin_bc_electrodeposition (double func[],
       nxdot[p] = 0.;
       if ( pd->TimeIntegration != STEADY )
          {
-          if (pd->v[R_MESH1])
+          if (pd->v[pg->imtrx][R_MESH1])
              {
               nxdot[p] -= (1. + 2.*tt) * (fv->x[p] - fv_old->x[p])/dt
                           - 2. * tt * fv_dot->x[p];
@@ -8713,7 +8713,7 @@ kin_bc_electrodeposition (double func[],
           if ( pd->TimeIntegration != STEADY )
              {
               var = MESH_DISPLACEMENT1+p;
-              if (pd->v[var])
+              if (pd->v[pg->imtrx][var])
                  {
                   for ( i=0; i<ei->dof[var]; i++)
                      {
@@ -8731,7 +8731,7 @@ kin_bc_electrodeposition (double func[],
       for (jvar=0; jvar<dim; jvar++)
          {
           var = MESH_DISPLACEMENT1 + jvar;
-          if (pd->v[var])
+          if (pd->v[pg->imtrx][var])
              {
               for (j_id=0; j_id<ei->dof[var]; j_id++)
                  {
@@ -8746,7 +8746,7 @@ kin_bc_electrodeposition (double func[],
          }
 
       var = TEMPERATURE;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
          {
           for (j_id=0; j_id<ei->dof[var]; j_id++)
              {
@@ -8756,7 +8756,7 @@ kin_bc_electrodeposition (double func[],
          }
 
       var = VOLTAGE;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
          {
           for (j_id=0; j_id<ei->dof[var]; j_id++)
              {
@@ -8766,7 +8766,7 @@ kin_bc_electrodeposition (double func[],
          }
 
       var = MASS_FRACTION;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
          {
           for (w = 0; w < pd->Num_Species_Eqn; w++)
              {
@@ -8860,7 +8860,7 @@ vnorm_bc_electrodeposition (double func[],
       for (kdir = 0; kdir < pd->Num_Dim; kdir++)
          {
           var = MESH_DISPLACEMENT1 + kdir;
-          if (pd->v[var])
+          if (pd->v[pg->imtrx][var])
               for (j = 0; j < ei->dof[var]; j++)
                  {
                   phi_j = bf[var]->phi[j];
@@ -8882,7 +8882,7 @@ vnorm_bc_electrodeposition (double func[],
  
   if (!strcmp(BC_Types[ibc].desc->name1,"YFLUX_NI"))
      {
-      if (pd->v[MASS_FRACTION])
+      if (pd->v[pg->imtrx][MASS_FRACTION])
          {
           while (ibc != -1)
              {
@@ -8925,7 +8925,7 @@ vnorm_bc_electrodeposition (double func[],
 
   else if (!strcmp(BC_Types[ibc].desc->name1,"YFLUX_BV2"))
      {
-      if (pd->v[MASS_FRACTION])
+      if (pd->v[pg->imtrx][MASS_FRACTION])
          {
           while (ibc != -1)
              {
@@ -8978,7 +8978,7 @@ vnorm_bc_electrodeposition (double func[],
           var = MESH_DISPLACEMENT1 + jvar;
           for (j_id=0; j_id<ei->dof[var]; j_id++)
              {
-              if (pd->v[var])
+              if (pd->v[pg->imtrx][var])
                  {
                   phi_j = bf[var]->phi[j_id];
                   for (kdir=0; kdir<dim; kdir++)
@@ -8995,7 +8995,7 @@ vnorm_bc_electrodeposition (double func[],
           var = VELOCITY1 + jvar;
           for (j_id=0; j_id<ei->dof[var]; j_id++)
              {
-              if (pd->v[var])
+              if (pd->v[pg->imtrx][var])
                  {
                   phi_j = bf[var]->phi[j_id];
                   d_func[0][var][j_id] += d_vconv->v[jvar][jvar][j_id] * fv->snormal[jvar];
@@ -9004,7 +9004,7 @@ vnorm_bc_electrodeposition (double func[],
          }
 
       var = TEMPERATURE;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
          {
           for (j_id=0; j_id<ei->dof[var]; j_id++)
              {
@@ -9019,7 +9019,7 @@ vnorm_bc_electrodeposition (double func[],
          }
 
       var = VOLTAGE;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
          {
           for (j_id=0; j_id<ei->dof[var]; j_id++)
              {
@@ -9029,7 +9029,7 @@ vnorm_bc_electrodeposition (double func[],
          }
 
       var = MASS_FRACTION;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
          {
           for (w = 0; w < pd->Num_Species_Eqn; w++)
              {
@@ -9136,7 +9136,7 @@ lat_heat_bc(double func[],
  /* sum the contributions to the global stiffness matrix */
   
     var = TEMPERATURE;
-        if (pd->v[var]) 
+        if (pd->v[pg->imtrx][var]) 
           {
             for ( j_id=0; j_id<ei->dof[var]; j_id++)
               {
@@ -9146,7 +9146,7 @@ lat_heat_bc(double func[],
           }
 
     var = MASS_FRACTION;
-    if (pd->v[var]) 
+    if (pd->v[pg->imtrx][var]) 
       {
 	for (w = 0; w < pd->Num_Species_Eqn; w++) 
 	  {
@@ -9222,7 +9222,7 @@ lat_heat_internal_bc(double func[],
       for (kdir = 0; kdir < pd->Num_Dim; kdir++)
 	{
 	  var = MESH_DISPLACEMENT1 + kdir;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    for (j = 0; j < ei->dof[var]; j++)
 	      {
 		phi_j = bf[var]->phi[j];
@@ -9272,7 +9272,7 @@ lat_heat_internal_bc(double func[],
 	var = MESH_DISPLACEMENT1 + jvar;
 	for ( j_id=0; j_id<ei->dof[var]; j_id++)
 	  {
-	    if (pd->v[var])
+	    if (pd->v[pg->imtrx][var])
 	      {
 		phi_j = bf[var]->phi[j_id];
 		for(kdir=0; kdir<dim; kdir++) 
@@ -9292,7 +9292,7 @@ lat_heat_internal_bc(double func[],
 	var = VELOCITY1 + jvar;
 	for ( j_id=0; j_id<ei->dof[var]; j_id++)
 	  {
-	    if (pd->v[var])
+	    if (pd->v[pg->imtrx][var])
 	      {
 		d_func[0][var][j_id] -=  mp->density * lat_heat_lump*
 		  d_vconv->v[jvar][jvar][j_id] * fv->snormal[jvar];
@@ -9338,16 +9338,16 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
   dim = pd->Num_Dim;
   memset(vconv, 0, sizeof(double)*MAX_PDIM);
   if (af->Assemble_Jacobian && d_vconv != NULL ) {
-    if (pd->v[MESH_DISPLACEMENT1])
+    if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
       memset(d_vconv->X, 0, DIM*DIM*MDE*sizeof(dbl));
 
-    if (pd->v[VELOCITY1] || pd->v[POR_LIQ_PRES])
+    if (pd->v[pg->imtrx][VELOCITY1] || pd->v[pg->imtrx][POR_LIQ_PRES])
       memset(d_vconv->v, 0, DIM*DIM*MDE*sizeof(dbl));
 
-    if (pd->v[MASS_FRACTION] || pd->v[POR_LIQ_PRES])
+    if (pd->v[pg->imtrx][MASS_FRACTION] || pd->v[pg->imtrx][POR_LIQ_PRES])
       memset(d_vconv->C, 0, DIM*MAX_CONC*MDE*sizeof(dbl));
 
-    if (pd->v[TEMPERATURE])
+    if (pd->v[pg->imtrx][TEMPERATURE])
       memset(d_vconv->T, 0, DIM*MDE*sizeof(dbl));
   }
 
@@ -9359,7 +9359,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
       vconv[p] = fv->v[p];
       if (pd->TimeIntegration != STEADY) {
 	vconv_old[p] = fv_old->v[p];
-	if (pd->v[R_MESH1]) { 
+	if (pd->v[pg->imtrx][R_MESH1]) { 
 	  vconv[p]     -= fv_dot->x[p];
 	  vconv_old[p] -= fv_dot_old->x[p];
 	}
@@ -9371,7 +9371,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
     if (af->Assemble_Jacobian && d_vconv != NULL) {
       for (p = 0; p < VIM; p++) {
 	var = VELOCITY1 + p;
-	if (pd->v[var]) {
+	if (pd->v[pg->imtrx][var]) {
 	  for (i = 0; i < ei->dof[var]; i++) {
 	    d_vconv->v[p][p][i] = bf[var]->phi[i];
 	  }
@@ -9379,7 +9379,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 	  
 	if (pd->TimeIntegration != STEADY ) {
 	  var = MESH_DISPLACEMENT1 + p;
-	  if (pd->v[var]) {
+	  if (pd->v[pg->imtrx][var]) {
 	    for (i = 0; i < ei->dof[var]; i++) {
 	      d_vconv->X[p][p][i] -= bf[var]->phi[i] * (1 +2.* tt) /dt;
 	    }
@@ -9420,7 +9420,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
        /* calculate (sum diffusion flux)/solid volume frac. and it's derivatives 
 	*  v_solvent_flux  */
 
-       if (pd->v[MASS_FRACTION])   
+       if (pd->v[pg->imtrx][MASS_FRACTION])   
 	 /* if no solvents - then no convective velocity */
 	 {
 	   /* calculate volume fraction of solids and total diffusion flux */
@@ -9521,7 +9521,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 	for (p=0; p<dim; p++)
 	{
 	  var = MESH_DISPLACEMENT1;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	  {
 	    for (q=0; q<dim; q++)
 	    {
@@ -9542,7 +9542,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 	  }
 	  
 	  var = MASS_FRACTION;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	  {
 	    if ( cr->MassFluxModel == FICKIAN ||
 		 cr->MassFluxModel == STEFAN_MAXWELL ||
@@ -9602,7 +9602,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 	    * Velocity of solid in lab coordinates is the velocity of the stress free state
 	    * dotted into the deformation gradient tensor
 	    */
-	   if (! pd->v[MESH_DISPLACEMENT1])
+	   if (! pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 	     {
 	       for (p=0; p < dim; p++)
 		 {
@@ -9623,7 +9623,7 @@ get_convection_velocity(double vconv[DIM], /*Calculated convection velocity */
 		   for (b=0; b < dim; b++)
 		     {
 		       var = MESH_DISPLACEMENT1 + b;
-		       if (pd->v[var])
+		       if (pd->v[pg->imtrx][var])
 			 {
 			   for ( i=0; i<ei->dof[var]; i++)
 			     {
@@ -10055,7 +10055,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
     }
     if (af->Assemble_Jacobian) {
       var = TEMPERATURE;
-      if (pd->v[var])   {
+      if (pd->v[pg->imtrx][var])   {
 	for (j = 0; j < ei->dof[var]; j++) {
 	  dtmp = bf[var]->phi[j];
 	  for (w = 0; w < pd->Num_Species_Eqn; w++)  {
@@ -10063,7 +10063,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 	}
       }
-      if (pd->v[MASS_FRACTION] ) {
+      if (pd->v[pg->imtrx][MASS_FRACTION] ) {
 	for (w = 0; w < pd->Num_Species_Eqn; w++) {
 	  var = MASS_FRACTION;
 	  for (j = 0; j < ei->dof[var]; j++) {
@@ -10091,7 +10091,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	    var_offset = MAX_VARIABLE_TYPES + w;
 
 	    var = TEMPERATURE;
-	    if(pd->v[TEMPERATURE])
+	    if(pd->v[pg->imtrx][TEMPERATURE])
 	      {
 		for ( j=0; j<ei->dof[var]; j++)
 		  {
@@ -10101,7 +10101,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	      }
 
 	    var = MASS_FRACTION;
-	    if (pd->v[MASS_FRACTION] )
+	    if (pd->v[pg->imtrx][MASS_FRACTION] )
 	      {
 		for ( w1=0; w1<pd->Num_Species; w1++)
 		  {
@@ -10128,7 +10128,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	if ( af->Assemble_Jacobian )
 	{
 	  var = TEMPERATURE;
-	  if(pd->v[var])
+	  if(pd->v[pg->imtrx][var])
 	  {
 	    for ( j=0; j<ei->dof[var]; j++)
 	    {
@@ -10137,7 +10137,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 
 	  var = VOLTAGE;
-	  if(pd->v[var])
+	  if(pd->v[pg->imtrx][var])
 	  {
 	    for ( j=0; j<ei->dof[var]; j++)
 	    {
@@ -10145,7 +10145,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	    }
 	  }
 
-	  if(pd->v[VELOCITY1])
+	  if(pd->v[pg->imtrx][VELOCITY1])
 	  {
 	    for ( a=0; a<DIM; a++)
 	    {
@@ -10157,7 +10157,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	    }
 	  }
 
-	  if(pd->v[MESH_DISPLACEMENT1])
+	  if(pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 	  {
 	    for ( a=0; a<DIM; a++)
 	    {
@@ -10169,7 +10169,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	    }
 	  }
 
-	  if (pd->v[MASS_FRACTION] )
+	  if (pd->v[pg->imtrx][MASS_FRACTION] )
 	  {
 	    for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
 	    {
@@ -10197,12 +10197,12 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
        dsdT = 0;   
        for(a=0; a<MAX_CONC; a++) dsdC[a]=0.;  
 
-       if(pd->e[R_LIGHT_INTP])
+       if(pd->e[pg->imtrx][R_LIGHT_INTP])
          {
          intensity = fv->poynt[0];
-         if(pd->e[R_LIGHT_INTM])
+         if(pd->e[pg->imtrx][R_LIGHT_INTM])
           { intensity += fv->poynt[1];}
-         if(pd->e[R_LIGHT_INTD])
+         if(pd->e[pg->imtrx][R_LIGHT_INTD])
           { intensity += fv->poynt[2];}
          intensity *= mp->u_species_source[init_spec][1];
          intensity = MAX(intensity,0.0);
@@ -10349,7 +10349,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	if ( af->Assemble_Jacobian )
 	{
 	  var = TEMPERATURE;
-	  if(pd->v[var])
+	  if(pd->v[pg->imtrx][var])
 	  {
 	    for ( j=0; j<ei->dof[var]; j++)
 	    {
@@ -10357,7 +10357,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	    }
 	  }
 
-	  if (pd->v[MASS_FRACTION] )
+	  if (pd->v[pg->imtrx][MASS_FRACTION] )
 	  {
 	    for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
 	    {
@@ -10380,7 +10380,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	if ( af->Assemble_Jacobian )
 	{
 	  var = TEMPERATURE;
-	  if(pd->v[var])
+	  if(pd->v[pg->imtrx][var])
 	  {
 	    for ( j=0; j<ei->dof[var]; j++)
 	    {
@@ -10389,7 +10389,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 
 	  var = MASS_FRACTION;
-	  if (pd->v[MASS_FRACTION] )
+	  if (pd->v[pg->imtrx][MASS_FRACTION] )
 	  {
 	    var_offset = MAX_VARIABLE_TYPES + w;
 	    for ( j=0; j<ei->dof[var]; j++)
@@ -10410,7 +10410,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  {
 
 	    var = MASS_FRACTION;
-	    if (pd->v[MASS_FRACTION] )
+	    if (pd->v[pg->imtrx][MASS_FRACTION] )
 	      {
                 // Just include the diagonal contribution here
 		var_offset = MAX_VARIABLE_TYPES + w;
@@ -10422,7 +10422,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	      }
 
 	    var = TEMPERATURE;
-	    if (pd->v[var])
+	    if (pd->v[pg->imtrx][var])
 	      {
 		for (j = 0; j < ei->dof[var]; j++)
 		  {
@@ -10439,7 +10439,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	if ( af->Assemble_Jacobian )
 	{
 	  var = TEMPERATURE;
-	  if(pd->v[var])
+	  if(pd->v[pg->imtrx][var])
 	  {
 	    for ( j=0; j<ei->dof[var]; j++)
 	    {
@@ -10448,7 +10448,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 
 	  var = MASS_FRACTION;
-	  if (pd->v[MASS_FRACTION] )
+	  if (pd->v[pg->imtrx][MASS_FRACTION] )
 	  {
 	    var_offset = MAX_VARIABLE_TYPES + w;
 	    for ( j=0; j<ei->dof[var]; j++)
@@ -10474,7 +10474,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
         if ( af->Assemble_Jacobian )
          {
            var = TEMPERATURE;
-           if(pd->v[var])
+           if(pd->v[pg->imtrx][var])
             {
               for ( j=0; j<ei->dof[var]; j++)
                {
@@ -10483,7 +10483,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
             }
 
            var = VOLTAGE;
-           if(pd->v[var])
+           if(pd->v[pg->imtrx][var])
             {
               for ( j=0; j<ei->dof[var]; j++)
                {
@@ -10492,7 +10492,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
             }
 
            var = MASS_FRACTION;
-           if (pd->v[MASS_FRACTION] )
+           if (pd->v[pg->imtrx][MASS_FRACTION] )
             {
               for ( j=0; j<ei->dof[var]; j++)
                {
@@ -10513,7 +10513,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
         if ( af->Assemble_Jacobian )
          {
            var = TEMPERATURE;
-           if(pd->v[var])
+           if(pd->v[pg->imtrx][var])
             {
               for ( j=0; j<ei->dof[var]; j++)
                {
@@ -10522,7 +10522,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
             }
 
            var = VOLTAGE;
-           if(pd->v[var])
+           if(pd->v[pg->imtrx][var])
             {
               for ( j=0; j<ei->dof[var]; j++)
                {
@@ -10531,7 +10531,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
             }
 
            var = MASS_FRACTION;
-           if (pd->v[MASS_FRACTION] )
+           if (pd->v[pg->imtrx][MASS_FRACTION] )
             {
               for ( j=0; j<ei->dof[var]; j++)
                {
@@ -10548,7 +10548,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	if ( af->Assemble_Jacobian )
 	{
 	  var = TEMPERATURE;
-	  if(pd->v[var])
+	  if(pd->v[pg->imtrx][var])
 	  {
 	    for ( j=0; j<ei->dof[var]; j++)
 	    {
@@ -10559,7 +10559,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 
 	  var = VOLTAGE;  /*  RSL 8/4/00  */
-	  if(pd->v[var])
+	  if(pd->v[pg->imtrx][var])
 	  {
 	    for ( j=0; j<ei->dof[var]; j++)
 	    {
@@ -10568,7 +10568,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 
 	  var = MASS_FRACTION;
-	  if (pd->v[MASS_FRACTION] )
+	  if (pd->v[pg->imtrx][MASS_FRACTION] )
 /* The following block generalized by RSL 8/8/00 */
 	  {
 	    for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
@@ -10626,7 +10626,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
             if (af->Assemble_Jacobian)
                {
                 var = TEMPERATURE;
-                if (pd->v[var])
+                if (pd->v[pg->imtrx][var])
                    {
                     for (j=0; j<ei->dof[var]; j++)
                        {
@@ -10635,7 +10635,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
                     }
 
                 var = MASS_FRACTION;
-                if (pd->v[var])
+                if (pd->v[pg->imtrx][var])
                    {
                     for (w1=0; w1<pd->Num_Species_Eqn; w1++)
                        {
@@ -10740,7 +10740,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  for (b=0; b < pd->Num_Dim; b++)
 	    {
 	      var = MESH_DISPLACEMENT1 + b;
-	      if ( pd->v[var] )
+	      if ( pd->v[pg->imtrx][var] )
 		{
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
@@ -10809,7 +10809,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  for (a = 0; a < wim; a++)
 	    {
 	      var = VELOCITY1 + a;
-	      if ( pd->v[var] )
+	      if ( pd->v[pg->imtrx][var] )
 		{
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
@@ -11027,7 +11027,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
 
   volume_flag = (pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_VOLUME); /* RSL 8/24/00 */
 
-  if(pd_glob[mn]->e[R_ENERGY])  /* if the energy-transport equation is active, get temperature from fv */ 
+  if(pd_glob[mn]->e[pg->imtrx][R_ENERGY])  /* if the energy-transport equation is active, get temperature from fv */ 
     {
       T = fv->T;   
       if(pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_CHARGED)
@@ -11805,7 +11805,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
       for (q=0; q < pd->Num_Dim; q++)
 	{
 	  var = MESH_DISPLACEMENT1 + q;
-	  if ( pd->v[var] )
+	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      for ( j=0; j<ei->dof[var]; j++)
 		{
@@ -12060,7 +12060,7 @@ fickian_charged_flux (struct Species_Conservation_Terms *st, int w)
       
     for (q = 0; q < pd->Num_Dim; q++) {
       var = MESH_DISPLACEMENT1 + q;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
 	for (j = 0; j < ei->dof[var]; j++) {
 	  for (a = 0; a < VIM; a++) {
 	    st->d_diff_flux_dmesh[w][a] [q][j] = - coeff_rho *
@@ -12130,7 +12130,7 @@ fickian_charged_flux_x (struct Species_Conservation_Terms *st, double time,
   n_species = pd->Num_Species_Eqn + 1;
   mn = ei->mn;
 
-  if (pd_glob[mn]->e[R_ENERGY])  /* if the energy equation is being solved */
+  if (pd_glob[mn]->e[pg->imtrx][R_ENERGY])  /* if the energy equation is being solved */
      {
       T = fv->T;
      }
@@ -12227,7 +12227,7 @@ fickian_charged_flux_x (struct Species_Conservation_Terms *st, double time,
       for ( q=0; q<pd->Num_Dim; q++ )
          {
           var = MESH_DISPLACEMENT1 + q;
-          if ( pd->v[var] )
+          if ( pd->v[pg->imtrx][var] )
              {
               for ( j=0; j<ei->dof[var]; j++)
                  {
@@ -12370,7 +12370,7 @@ fickian_flux (struct Species_Conservation_Terms *st, int w)
 
     for (q = 0; q < pd->Num_Dim; q++) {
       var = MESH_DISPLACEMENT1 + q;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
         for (a = 0; a < VIM; a++) {
           for (j = 0; j < ei->dof[var]; j++) {
             st->d_diff_flux_dmesh[w][a][q][j] =
@@ -12482,7 +12482,7 @@ generalized_fickian_flux (struct Species_Conservation_Terms *st, int w)
       
     for (q = 0; q < pd->Num_Dim; q++) {
       var = MESH_DISPLACEMENT1 + q;
-      if (pd->v[var]) {
+      if (pd->v[pg->imtrx][var]) {
 	for (j = 0; j < ei->dof[var]; j++) {
 	  for (a = 0; a < VIM; a++) {
 	    for (w1 = 0; w1 < pd->Num_Species; w1++) {
@@ -12607,12 +12607,12 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
    * Bail out fast if there's nothing to do...
    */
   
-  if ( ! pd->e[eqn = R_SHEAR_RATE] )
+  if ( ! pd->e[pg->imtrx][eqn = R_SHEAR_RATE] )
     {
       return(status);
     }
   
-  peqn = upd->ep[eqn];
+  peqn = upd->ep[pg->imtrx][eqn];
 
   wt = fv->wt;                 /* Numerical integration weight */
   
@@ -12667,7 +12667,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 	    {
 	      var = VELOCITY1+a;
 	      
-	      for(j=0; pd->v[var] && j<ei->dof[var]; j++)
+	      for(j=0; pd->v[pg->imtrx][var] && j<ei->dof[var]; j++)
 		{
 		  d_I2_dv[a][j] += 2.0*(fv->grad_v[k][l]+fv->grad_v[l][k])* 
 		    (bf[var]->grad_phi_e[j][a][k][l]+bf[var]->grad_phi_e[j][a][l][k]);
@@ -12676,7 +12676,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 	  
 	  var = MESH_DISPLACEMENT1+a;
 	  
-	  for(j=0; pd->v[var] && j<ei->dof[var]; j++)
+	  for(j=0; pd->v[pg->imtrx][var] && j<ei->dof[var]; j++)
 	    {
 	      d_I2_dmesh[a][j] += 2.0*(fv->grad_v[k][l]+fv->grad_v[l][k])*
 		(fv->d_grad_v_dmesh[k][l][a][j] +
@@ -12703,11 +12703,11 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 		  
 		  advection = 0.;
 		  
-		  if ( pd->e[eqn] & T_ADVECTION )
+		  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 		    {
 		      advection = -gd;
 		      advection *= wt_func * det_J * wt * h3;
-		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 		    }
 
 		  /*
@@ -12720,7 +12720,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 
 		  diffusion = 0.;
 
-		  if( pd->e[eqn] & T_DIFFUSION )
+		  if( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 		    {
 		      for( p=0; p < dim ; p++)
 			{
@@ -12728,7 +12728,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 			}
 
 		      diffusion *= det_J*wt*h3;
-		      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+		      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 		    }
 		  
 		  /*
@@ -12737,11 +12737,11 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 		  
 		  source = 0;
 		  
-		  if ( pd->e[eqn] & T_SOURCE )
+		  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 		    {
 		      source += fv->SH;    
 		      source *= wt_func * det_J * h3 * wt;
-		      source *= pd->etm[eqn][(LOG2_SOURCE)];
+		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		    }
 		  
 		  lec->R[peqn][i] += 
@@ -12770,9 +12770,9 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 	    {
 	      var = VELOCITY1+a;
 
-	      if( pd->v[var])
+	      if( pd->v[pg->imtrx][var])
 		{
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  for( j=0; j<ei->dof[var]; j++)
 		    {
 
@@ -12780,7 +12780,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
      
 		      advection = 0.;
 			      
-		      if ( pd->e[eqn] & T_ADVECTION )
+		      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 			{
 			  if(gd != 0.)
 			    advection = -0.25*d_I2_dv[a][j]/gd;
@@ -12788,7 +12788,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 			    advection = 0.;
 
 			  advection *= wt_func * det_J * wt *h3;
-			  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+			  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 				  
 			}
 			      
@@ -12802,7 +12802,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 	   */
 	  
 	  var = SHEAR_RATE;
-	  pvar = upd->vp[var];
+	  pvar = upd->vp[pg->imtrx][var];
 	  for( j=0; j<ei->dof[var]; j++)
 	    {
 
@@ -12811,7 +12811,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 	      advection = 0.0;
 	      diffusion = 0.0;
 
-	      if( pd->e[eqn] & T_DIFFUSION )
+	      if( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 		{
 		  for( p=0; p<dim; p++)
 		    {
@@ -12819,16 +12819,16 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 		    }
 		  
 		  diffusion *= det_J*wt*h3;
-		  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+		  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 		}
 	      
 	      source = 0.0;
 
-		if ( pd->e[eqn] & T_SOURCE )
+		if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 		  {
 		    source += phi_j;
 		    source *= wt_func*det_J*wt*h3;
-		    source *= pd->etm[eqn][(LOG2_SOURCE)];
+		    source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		  }
 
 	      lec->J[peqn][pvar][i][j] += advection + source + diffusion ;
@@ -12842,9 +12842,9 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 	    {
 	      var = MESH_DISPLACEMENT1+p;
 
-	      if( pd->v[var])
+	      if( pd->v[pg->imtrx][var])
 		{
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  for( j=0; j<ei->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
@@ -12857,7 +12857,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 		      advection_a = 0.;  /* d[gd]/dmeshb,j* |J|*h3 */
 		      advection_b = 0.; /* gd*(dh3/dmesh*|J| + d|j|/dmesh*h3 ) */
 
-		      if ( pd->e[eqn] & T_ADVECTION )
+		      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 			{
 			  if( gd != 0.)
 			    advection_a = -0.25*d_I2_dmesh[p][j]*det_J*h3/gd;
@@ -12869,7 +12869,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 			    
 			  advection = advection_a + advection_b;
 			
-			  advection *= wt_func  * wt * pd->etm[eqn][(LOG2_ADVECTION)];
+			  advection *= wt_func  * wt * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 			}
 
@@ -12877,7 +12877,7 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 		      diffusion_b = 0. ; /* d(grad_phi_i)/dmesh,bj*grad_gd *|J|*h3 */
 		      diffusion_c = 0. ; /* grad_phi_i*grad_gd*( d|J|/dmesh,bj*h3 +|J|*dh3/dmesh,bj) */
 
-		      if( pd->e[eqn] & T_DIFFUSION )
+		      if( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 			{
 			  for( a=0; a<dim ; a++)
 			    {
@@ -12891,18 +12891,18 @@ assemble_invariant ( double tt,	/* parameter to vary time integration from
 			  diffusion_c *= d_det_J_dmesh_pj*h3 + det_J*dh3dmesh_pj;
 
 			  diffusion = diffusion_a + diffusion_b + diffusion_c;
-			  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 			  
 			}
 		      
 			      
 		      source    = 0.;
 
-		      if ( pd->e[eqn] & T_SOURCE )
+		      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			{
 			  source += fv->SH;
 			  source *= d_det_J_dmesh_pj*h3 + det_J*dh3dmesh_pj;
-			  source *=  wt_func*wt*pd->etm[eqn][(LOG2_SOURCE)];
+			  source *=  wt_func*wt*pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			}
 			      
 		      lec->J[peqn][pvar][i][j] += source + advection + diffusion;
@@ -12962,25 +12962,25 @@ get_particle_convection_velocity(double pvconv[DIM],
    if ( af->Assemble_Jacobian )
      {
        var = MESH_DISPLACEMENT1;
-       if (pd->v[var])
+       if (pd->v[pg->imtrx][var])
 	 {
 	   memset(d_pvconv->X, 0, DIM*DIM*MDE*sizeof(dbl));
 	 }
 
        var = PVELOCITY1;
-       if (pd->v[var])
+       if (pd->v[pg->imtrx][var])
 	 {
 	   memset(d_pvconv->v, 0, DIM*DIM*MDE*sizeof(dbl));
 	 }
 
        var = MASS_FRACTION;
-       if (pd->v[var])
+       if (pd->v[pg->imtrx][var])
 	 {
 	   memset(d_pvconv->C, 0, DIM*MAX_CONC*MDE*sizeof(dbl));
 	 }
 
        var = TEMPERATURE;
-       if (pd->v[var])
+       if (pd->v[pg->imtrx][var])
 	 {
 	   memset(d_pvconv->T, 0, DIM*MDE*sizeof(dbl));
 	 }
@@ -12997,7 +12997,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 	   if ( pd->TimeIntegration != STEADY )
 	     {
 	       pvconv_old[p] = fv_old->pv[p];
-	       if (pd->v[R_MESH1]) {
+	       if (pd->v[pg->imtrx][R_MESH1]) {
 		 pvconv[p] -= fv_dot->x[p];
 		 pvconv_old[p] -= fv_dot_old->x[p];
 	       }
@@ -13012,7 +13012,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 	   for (p=0; p<VIM; p++)
 	     {
 	       var = PVELOCITY1+p;
-	       if (pd->v[var])
+	       if (pd->v[pg->imtrx][var])
 		 {
 		   for ( i=0; i<ei->dof[var]; i++)
 		     {
@@ -13023,7 +13023,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 	       if ( pd->TimeIntegration != STEADY )
 		 {
 		   var = MESH_DISPLACEMENT1+p;
-		   if (pd->v[var])
+		   if (pd->v[pg->imtrx][var])
 		     { 
 		       for ( i=0; i<ei->dof[var]; i++)
 			 {
@@ -13057,8 +13057,8 @@ get_particle_convection_velocity(double pvconv[DIM],
 
        /* calculate (sum diffusion flux)/solid volume frac. and it's derivatives 
 	*  v_solvent_flux  */
-/*       if (pd->v[MASS_FRACTION] && mp->PorousMediaType == CONTINUOUS)   */
-       if (pd->v[MASS_FRACTION] )  
+/*       if (pd->v[pg->imtrx][MASS_FRACTION] && mp->PorousMediaType == CONTINUOUS)   */
+       if (pd->v[pg->imtrx][MASS_FRACTION] )  
 	 /* if no solvents - then no convective velocity */
 	 {
 	   /* calculate volume fraction of solids and total diffusion flux */
@@ -13114,7 +13114,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 	       for (p=0; p<dim; p++)
 		 {
 		   var = MESH_DISPLACEMENT1;
-		   if (pd->v[var])
+		   if (pd->v[pg->imtrx][var])
 		     {
 		       for (q=0; q<dim; q++)
 			 {
@@ -13137,7 +13137,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 		   /* Temperature dependence of diffusivity not yet implemented  */
 		   /*
 		   var = TEMPERATURE;
-		   if (pd->v[var])
+		   if (pd->v[pg->imtrx][var])
 		     {
 		       for ( i=0; i<ei->dof[var]; i++)
 			 {
@@ -13155,7 +13155,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 		   */
 		   
 		   var = MASS_FRACTION;
-		   if (pd->v[var])
+		   if (pd->v[pg->imtrx][var])
 		     {
 		       if ( cr->MassFluxModel == FICKIAN )
 			 {
@@ -13203,7 +13203,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 		   if ( pd->TimeIntegration != STEADY )
 		     {
 		       var = MESH_DISPLACEMENT1+p;
-		       if (pd->v[var])
+		       if (pd->v[pg->imtrx][var])
 			 { 
 			   for ( i=0; i<ei->dof[var]; i++)
 			     {
@@ -13241,7 +13241,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 	    * Velocity of solid in lab coordinates is the velocity of the stress free state
 	    * dotted into the deformation gradient tensor
 	    */
-	   if (! pd->v[MESH_DISPLACEMENT1])
+	   if (! pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 	     {
 	       for (p=0; p < dim; p++)
 		 {
@@ -13262,7 +13262,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 		   for (b=0; b < dim; b++)
 		     {
 		       var = MESH_DISPLACEMENT1 + b;
-		       if (pd->v[var])
+		       if (pd->v[pg->imtrx][var])
 			 {
 			   for ( i=0; i<ei->dof[var]; i++)
 			     {
@@ -13299,10 +13299,10 @@ ls_modulate_speciessource(int w,
 	
  if(  mp->mp2nd == NULL ||
       mp->mp2nd->SpeciesSourceModel[w] != CONSTANT ||
-      !(pd->e[R_MASS] & T_SOURCE) ) return(0);
+      !(pd->e[pg->imtrx][R_MASS] & T_SOURCE) ) return(0);
 	  
 /* kludge for solidification tracking with phase function 0 */
- if(pfd != NULL && pd->e[R_EXT_VELOCITY])
+ if(pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY])
 	{
 	ls_old = ls;
 	ls = pfd->ls[0];
@@ -13340,7 +13340,7 @@ ls_modulate_speciessource(int w,
 					st->d_MassSource_dF[w],
 					&factor);
 
-	  if( pd->v[var=TEMPERATURE] )
+	  if( pd->v[pg->imtrx][var=TEMPERATURE] )
 	    {
 	      for ( i=0; i<ei->dof[var]; i++)
 		{
@@ -13348,7 +13348,7 @@ ls_modulate_speciessource(int w,
 		}
 	    }
 
-	  if(  pd->v[var=MESH_DISPLACEMENT1] )
+	  if(  pd->v[pg->imtrx][var=MESH_DISPLACEMENT1] )
 	    {
 	      for( b=0; b<dim; b++ )
 		{
@@ -13359,7 +13359,7 @@ ls_modulate_speciessource(int w,
 		}
 	    }
 
-	  if( pd->v[var=VELOCITY1] )
+	  if( pd->v[pg->imtrx][var=VELOCITY1] )
 	    {
 	      for( b=0; b<dim; b++ )
 		{
@@ -13370,7 +13370,7 @@ ls_modulate_speciessource(int w,
 		}
 	    }
 
-	  if(  pd->v[var=MASS_FRACTION] )
+	  if(  pd->v[pg->imtrx][var=MASS_FRACTION] )
 	    {
 	      for( b=0; b<pd->Num_Species; b++ )
 		{
@@ -13381,7 +13381,7 @@ ls_modulate_speciessource(int w,
 		}
 	    }
 	
-	  if( pd->v[var=VOLTAGE] )
+	  if( pd->v[pg->imtrx][var=VOLTAGE] )
 	  {
 		  for( i=0 ; i<ei->dof[var+b]; i++)
 		  {
@@ -13466,7 +13466,7 @@ fickian_charged_gradient_bc(double func[],
       
    	 for (q = 0; q < pd->Num_Dim; q++) {
      	 var = MESH_DISPLACEMENT1 + q;
-      		if (pd->v[var]) {
+      		if (pd->v[pg->imtrx][var]) {
 		for (j = 0; j < ei->dof[var]; j++) {
 	 	 for (a = 0; a < VIM; a++) {
 	   	 st.d_diff_flux_dmesh[w][a] [q][j] += coeff_rho * mp->diffusivity[w]*fv->d_grad_c_dmesh[a][w] [q][j];
@@ -13479,7 +13479,7 @@ fickian_charged_gradient_bc(double func[],
            }
     	}
 
-	if(pd->v[var=TEMPERATURE] ){
+	if(pd->v[pg->imtrx][var=TEMPERATURE] ){
   	 for (a = 0; a < VIM; a++) {
      	 for (j = 0; j < ei->dof[var]; j++) {
 	   d_func[0][var][j] += sign*fv->snormal[a]*st.d_diff_flux_dT[w][a][j];
@@ -13487,7 +13487,7 @@ fickian_charged_gradient_bc(double func[],
 	 }	
 	}
 
-	if(pd->v[var=VOLTAGE] ){
+	if(pd->v[pg->imtrx][var=VOLTAGE] ){
   	 for (a = 0; a < VIM; a++) {
      	 for (j = 0; j < ei->dof[var]; j++) {
 	   d_func[0][var][j] += sign*fv->snormal[a]*st.d_diff_flux_dV[w][a][j];

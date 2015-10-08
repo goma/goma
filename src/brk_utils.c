@@ -88,7 +88,7 @@ write_brk_file(char* brkfile_name, Exo_DB *exo) {
 
     /* Find EQ variables in use */
     for (eq = 0; eq < MAX_VARIABLE_TYPES; eq++) {
-      if (pd_glob[eb]->v[eq]) {
+      if (pd_glob[eb]->v[0][eq]) {
         var_in_use[nbev] = eq;
         nbev++;
       }
@@ -99,7 +99,7 @@ write_brk_file(char* brkfile_name, Exo_DB *exo) {
       int eqid = var_in_use[eq];
       int dof;
       for (i = 0; i < npe; i++) {
-        dof = dof_lnode_interp_type(i, elementType, pd_glob[eb]->i[eqid], 1);
+        dof = dof_lnode_interp_type(i, elementType, pd_glob[eb]->i[0][eqid], 1);
         if (dof > dof_for_var[eq]) {
           dof_for_var[eq] = dof;
         }
@@ -125,7 +125,7 @@ write_brk_file(char* brkfile_name, Exo_DB *exo) {
     /* find interactions based on variables in use */
     for (row = 0; row < nbev; row++) {
       for (col = 0; col < nbev; col++) {
-        fprintf(brkfile, "%d ", Inter_Mask[var_in_use[row]][var_in_use[col]]);
+        fprintf(brkfile, "%d ", Inter_Mask[pg->imtrx][var_in_use[row]][var_in_use[col]]);
       }
       fprintf(brkfile, "\n");
     }
@@ -141,7 +141,7 @@ write_brk_file(char* brkfile_name, Exo_DB *exo) {
         int dof;
 
         /* Use edge as 1 for worst case */
-        dof = dof_lnode_interp_type(i, elementType, pd_glob[eb]->i[eqid], 1);
+        dof = dof_lnode_interp_type(i, elementType, pd_glob[eb]->i[0][eqid], 1);
         if (dof > 0) {
           fprintf(brkfile, "%d ", eqid);
         } 

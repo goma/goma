@@ -195,7 +195,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
 
   /* Now do sensitivies */
 
-  if (pd->v[MASS_FRACTION] )
+  if (pd->v[pg->imtrx][MASS_FRACTION] )
     {
       var = MASS_FRACTION;
       for(a = 0; a<DIM; a++)
@@ -207,7 +207,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
 	}
     }
 
-  if (pd->v[TEMPERATURE] )
+  if (pd->v[pg->imtrx][TEMPERATURE] )
     {
       var = TEMPERATURE;
       for (j=0; j<ei->dof[var]; j++)
@@ -233,7 +233,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
 	}
     }
 
-      if (pd->v[MESH_DISPLACEMENT1] )
+      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
 	{
 	  for ( b=0; b<dim; b++)
 	    {
@@ -283,7 +283,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
      *	 EH(-1,"Cannot use Joule heating term with variable conductivity yet");
      *       }
      *
-     *	if (pd->v[MASS_FRACTION] )
+     *	if (pd->v[pg->imtrx][MASS_FRACTION] )
      *	  {
      *	    var = MASS_FRACTION;
      *	    for(a = 0; a<DIM; a++)
@@ -296,7 +296,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
      *	      }
      *	  }
      *
-     *	if (pd->v[MESH_DISPLACEMENT1] )
+     *	if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
      *	  {
      *	    for ( a=0; a<dim; a++)
      *	      {
@@ -422,7 +422,7 @@ usr_viscosity_gen(dbl *mu,
   
   vdofs = ei->dof[VELOCITY1];
   
-  if ( pd->e[R_MESH1] )
+  if ( pd->e[pg->imtrx][R_MESH1] )
     {
       mdofs = ei->dof[R_MESH1];
     }
@@ -456,7 +456,7 @@ usr_viscosity_gen(dbl *mu,
   /*
    * d( mu )/dmesh
    */
-  if ( pd->e[R_MESH1] )
+  if ( pd->e[pg->imtrx][R_MESH1] )
     {
       for ( b=0; b<VIM; b++)
 	{
@@ -491,7 +491,7 @@ usr_viscosity_gen(dbl *mu,
    * d( mu )/dT
    */
   var = TEMPERATURE;
-  if ( pd->e[var] )
+  if ( pd->e[pg->imtrx][var] )
     {
       dmudT = 0.; /* change this line for your function */
       
@@ -506,7 +506,7 @@ usr_viscosity_gen(dbl *mu,
    * d( mu )/dC
    */
   var = MASS_FRACTION;
-  if (pd->v[var] )
+  if (pd->v[pg->imtrx][var] )
     {
       dmudC = 0.;   /* change this line for your function */
 

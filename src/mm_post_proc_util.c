@@ -111,7 +111,7 @@ if(!mode)
 	for(id=0; id<num_local_nodes; id++)
 	  {
 	    I = exo->node_list[iconn_ptr + id];
-            i = Index_Solution(I, MESH_DISPLACEMENT1, 0, 0, -1);
+            i = Index_Solution(I, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
 	    if (i == -1 && pd_glob[mn]->IntegrationMap != SUBPARAMETRIC)
 		{
             	    sum_xcoord += Coor[0][I];

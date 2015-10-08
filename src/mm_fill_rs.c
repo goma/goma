@@ -205,7 +205,7 @@ assemble_real_solid(double time_value,
    * Bail out fast if there's nothing to do...
    */
 
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -303,7 +303,7 @@ assemble_real_solid(double time_value,
       /* Now add on the advection due to Purly Eulerian moving of the solid through
        * the mesh, as would occur in the Level-set solid eulerian case */
       if ( pd->TimeIntegration != STEADY &&
-	   pd->etm[eqn][(LOG2_ADVECTION)] )
+	   pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)] )
 	{
 	  for ( a=0; a<dim; a++)
 	    {
@@ -356,7 +356,7 @@ assemble_real_solid(double time_value,
   
   newmark_beta = tran->newmark_beta;
   if ( pd->TimeIntegration != STEADY && 
-       pd->etm[eqn][(LOG2_MASS)] )
+       pd->etm[pg->imtrx][eqn][(LOG2_MASS)] )
     {
       for (a=0; a<dim; a++)
 	{
@@ -391,7 +391,7 @@ assemble_real_solid(double time_value,
       for ( a=0; a<dim; a++)
 	{
 	  eqn = R_SOLID1 + a;
-	  peqn = upd->ep[eqn];
+	  peqn = upd->ep[pg->imtrx][eqn];
 
 	  for ( i=0; i<ei->dof[eqn]; i++)
 	    {
@@ -399,19 +399,19 @@ assemble_real_solid(double time_value,
 	      
 	      mass = 0.;
 	      if ( pd->TimeIntegration != STEADY &&
-		   pd->etm[eqn][(LOG2_MASS)])
+		   pd->etm[pg->imtrx][eqn][(LOG2_MASS)])
 		{
-		  if ( pd->e[eqn] & T_MASS )
+		  if ( pd->e[pg->imtrx][eqn] & T_MASS )
 		    {
 		      mass  = -x_dbl_dot[a];
 		      mass *= phi_i * rho * det_J * wt;
 		      mass *= h3;
-		      mass *= pd->etm[eqn][(LOG2_MASS)];
+		      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 		    }
 		}	
 
 	      diffusion = 0.;
-	      if ( pd->e[eqn] & T_DIFFUSION )
+	      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 		{
  		      for ( q=0; q<VIM; q++) 
  			{ 
@@ -425,12 +425,12 @@ assemble_real_solid(double time_value,
 		      diffusion *= - det_J * wt;
 		      diffusion *= h3;
 
-		  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+		  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 		}
 
 	      /* add inertia of moving SOLID */
 	      advection = 0.;
-	      if ( pd->e[eqn] & T_ADVECTION )
+	      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 		{
 		  WH(-1,"Warning: Real_SOLID advection untested.\n");
 		  for ( p=0; p<dim; p++)
@@ -448,16 +448,16 @@ assemble_real_solid(double time_value,
 		  advection *= rho * det_J * wt;
 		  /* Advection term only applies in Lagrangian SOLID motion */
 		  advection *= h3;
-		  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 		}
 
 	      source = 0.;
-	      if ( pd->e[eqn] & T_SOURCE )
+	      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 		{
 		  source = phi_i * g[a] * det_J * wt;
 		  /* Source term only applies in Lagrangian mesh motion */
 		  source *= h3;
-		  source *= pd->etm[eqn][(LOG2_SOURCE)];
+		  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		}
 
 	      /* porous term removed for SOLID equation - the additional effects due
@@ -477,7 +477,7 @@ assemble_real_solid(double time_value,
       for ( a=0; a<dim; a++)
 	{
 	  eqn = R_SOLID1+a;
-	  peqn = upd->ep[eqn];
+	  peqn = upd->ep[pg->imtrx][eqn];
 
 	  for ( i=0; i<ei->dof[eqn]; i++)
 	    {
@@ -500,8 +500,8 @@ assemble_real_solid(double time_value,
 	      for ( b=0; b<dim; b++)
 		{
 		  var = MESH_DISPLACEMENT1+b;
-		  pvar = upd->vp[var];
-		  if ( pd->v[var] )
+		  pvar = upd->vp[pg->imtrx][var];
+		  if ( pd->v[pg->imtrx][var] )
 		    {
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
@@ -513,11 +513,11 @@ assemble_real_solid(double time_value,
 
 			  mass = 0.;
 			  if ( pd->TimeIntegration != STEADY &&
-			       pd->etm[eqn][(LOG2_MASS)])
+			       pd->etm[pg->imtrx][eqn][(LOG2_MASS)])
 			    {
 			      mass -= x_dbl_dot[a]*phi_i*rho*wt*
 				(d_det_J_dmeshbj * h3 + dh3dmesh_bj * det_J);
-			      mass *= pd->etm[eqn][(LOG2_MASS)];
+			      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 			    }
 
 			  diffusion = 0.;			  
@@ -526,7 +526,7 @@ assemble_real_solid(double time_value,
 			   *   diff_b = Int ( grad(phi_i e_a) : d(Pi)/dmesh |Jv| )
 			   *   diff_c = Int ( grad(phi_i e_a) : Pi d(|Jv|)/dmesh )
 			   */
-			  if ( pd->e[eqn] & T_DIFFUSION )
+			  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 			    {
 
 			      /* LAGRANGIAN MESH - Solve in curvilinear coordinates */
@@ -579,14 +579,14 @@ assemble_real_solid(double time_value,
 
 			  diffusion = diff_a + diff_b + diff_c;
 			      
-			  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 		 
 							  
 			  /* add inertia of moving mesh */
 			  advect_a = 0.;
 			  advect_b = 0.;
 			  advect_c = 0.;
-			  if ( pd->e[eqn] & T_ADVECTION )
+			  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 			    {
 			      for ( p=0; p<dim; p++)
 				{
@@ -616,15 +616,15 @@ assemble_real_solid(double time_value,
 			      advect_c *=  rho * det_J * wt;
 
 			      advection = advect_a + advect_b + advect_c;
-			      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+			      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 			    }
 
 			  source = 0.;
 
-			  if ( pd->e[eqn] & T_SOURCE )
+			  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			    {
 			      source = phi_i * g[a] * (d_det_J_dmeshbj * h3 + det_J * dh3dmesh_bj) * wt;
-			      source *= pd->etm[eqn][LOG2_SOURCE];
+			      source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
 			    }
 			  
 			  lec->J[peqn][pvar][i][j] += mass + diffusion + source 
@@ -639,8 +639,8 @@ assemble_real_solid(double time_value,
 	      for ( b=0; b<dim; b++)
 		{
 		  var = SOLID_DISPLACEMENT1+b;
-		  pvar = upd->vp[var];
-		  if ( pd->v[var] )
+		  pvar = upd->vp[pg->imtrx][var];
+		  if ( pd->v[pg->imtrx][var] )
 		    {
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
@@ -649,11 +649,11 @@ assemble_real_solid(double time_value,
 			  mass = 0.;
 			  if ( pd->TimeIntegration != STEADY)
 			    {
-			      if ( pd->e[eqn] & T_MASS )
+			      if ( pd->e[pg->imtrx][eqn] & T_MASS )
 				{
 				  mass = -(double)delta(a,b)*phi_j/newmark_beta/dt/dt;
 				  mass *= phi_i * rho * det_J * h3 * wt;
-				  mass *= pd->etm[eqn][(LOG2_MASS)];
+				  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 				}
 				  
 			    }
@@ -662,7 +662,7 @@ assemble_real_solid(double time_value,
 			  /* Only one part here because grads and Jv depend only on d:
 			   *   diff_b = Int ( grad(phi_i e_a) : d(Pi)/drs |Jv| )
 			   */
-			  if ( pd->e[eqn] & T_DIFFUSION )
+			  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
 			    {
 
 			      diff_b = 0.;				   
@@ -681,14 +681,14 @@ assemble_real_solid(double time_value,
 
 			  diffusion = diff_b;
 			      
-			  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			  diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 		 
 							  
 			  /* add inertia of moving mesh */
 			  advect_a = 0.;
 			  advect_b = 0.;
 			  advect_c = 0.;
-			  if ( pd->e[eqn] & T_ADVECTION )
+			  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
 			    {
 			      for ( p=0; p<dim; p++)
 				{
@@ -716,15 +716,15 @@ assemble_real_solid(double time_value,
 			      advect_b *=  rho * det_J * wt;
 			  
 			      advection = advect_a + advect_b + advect_c;
-			      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+			      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 			    }
 
 			  source = 0.;
 
-			  if ( pd->e[eqn] & T_SOURCE )
+			  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			    {
 			      source = 0. ;   /* because Mapping jacobian only depends on mesh, for now */
-			      source *= pd->etm[eqn][LOG2_SOURCE];
+			      source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
 			    }
 			  
 			  lec->J[peqn][pvar][i][j] += mass + diffusion + source 
@@ -738,8 +738,8 @@ assemble_real_solid(double time_value,
 	       */
 	      /* For Lagrangian Mesh, add in the sensitivity to pressure  */
 		  var = PRESSURE;
-		  pvar = upd->vp[var];
-		  if (pd->v[var])
+		  pvar = upd->vp[pg->imtrx][var];
+		  if (pd->v[pg->imtrx][var])
 		    {
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
@@ -756,7 +756,7 @@ assemble_real_solid(double time_value,
 				}
 			    }
 			  diffusion *= - det_J * wt * h3;
-			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
+			  diffusion *= pd->etm[pg->imtrx][eqn][LOG2_DIFFUSION];
 
 			  lec->J[peqn][pvar][i][j] += diffusion;
 			}
@@ -767,7 +767,7 @@ assemble_real_solid(double time_value,
  * J_r_c
  */
 	      var = MASS_FRACTION;
-	      if (pd->v[var])
+	      if (pd->v[pg->imtrx][var])
 		{
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
@@ -777,13 +777,13 @@ assemble_real_solid(double time_value,
 			  advection = 0.;
 			  /* For Lagrangian Mesh with advection, add in the 
 			     sensitivity to concentration  */
-			  if ( pd->e[eqn] & T_ADVECTION  ) 
+			  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION  ) 
 			    {
 			      /* Grab this sensitivity from assemble_mesh when you need it */
 			    }
 
 			  diffusion = 0.;
-			  if ( pd->e[eqn] & T_DIFFUSION  )
+			  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION  )
 			    { 
 			      phi_j = bf[var]->phi[j];
 			      for ( p=0; p<dim; p++)
@@ -798,7 +798,7 @@ assemble_real_solid(double time_value,
 				    }
 				}
 			      diffusion *= - det_J * wt * h3;
-			      diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
+			      diffusion *= pd->etm[pg->imtrx][eqn][LOG2_DIFFUSION];
 			    }
 
 			  lec->J[peqn][MAX_PROB_VAR + w][i][j] += advection + diffusion;
@@ -810,8 +810,8 @@ assemble_real_solid(double time_value,
  * J_r_p_liq
  */
 	      var = POR_LIQ_PRES;
-	      pvar = upd->vp[var];
-	      if (pd->v[var])
+	      pvar = upd->vp[pg->imtrx][var];
+	      if (pd->v[pg->imtrx][var])
 		{
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
@@ -819,13 +819,13 @@ assemble_real_solid(double time_value,
 		      advection = 0.;
 		      /* For Lagrangian Mesh with advection, add in the 
 			 sensitivity to concentration  */
-		      if ( pd->e[eqn] & T_ADVECTION  ) 
+		      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION  ) 
 			{
 			  /* Grab this sensitivity from assemble_mesh when you need it */
 			}
 
 		      diffusion = 0.;
-		      if ( pd->e[eqn] & T_DIFFUSION  )
+		      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION  )
 			{ 
 			  phi_j = bf[var]->phi[j];
 			  for ( p=0; p<dim; p++)
@@ -840,7 +840,7 @@ assemble_real_solid(double time_value,
 				}
 			    }
 			  diffusion *= - det_J * wt * h3;
-			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
+			  diffusion *= pd->etm[pg->imtrx][eqn][LOG2_DIFFUSION];
 			}
 
 		      lec->J[peqn][pvar][i][j] += advection + diffusion;
@@ -851,8 +851,8 @@ assemble_real_solid(double time_value,
  * J_r_p_gas
  */
 	      var = POR_GAS_PRES;
-	      pvar = upd->vp[var];
-	      if (pd->v[var])
+	      pvar = upd->vp[pg->imtrx][var];
+	      if (pd->v[pg->imtrx][var])
 		{
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
@@ -860,13 +860,13 @@ assemble_real_solid(double time_value,
 		      advection = 0.;
 		      /* For Lagrangian Mesh with advection, add in the 
 			 sensitivity to concentration  */
-		      if ( pd->e[eqn] & T_ADVECTION  ) 
+		      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION  ) 
 			{
 			  /* Grab this sensitivity from assemble_mesh when you need it */
 			}
 
 		      diffusion = 0.;
-		      if ( pd->e[eqn] & T_DIFFUSION  )
+		      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION  )
 			{ 
 			  phi_j = bf[var]->phi[j];
 			  for ( p=0; p<dim; p++)
@@ -881,7 +881,7 @@ assemble_real_solid(double time_value,
 				}
 			    }
 			  diffusion *= - det_J * wt * h3;
-			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
+			  diffusion *= pd->etm[pg->imtrx][eqn][LOG2_DIFFUSION];
 			}
 
 		      lec->J[peqn][pvar][i][j] += advection + diffusion;
@@ -892,8 +892,8 @@ assemble_real_solid(double time_value,
  * J_r_p_gas
  */
 	      var = POR_POROSITY;
-	      pvar = upd->vp[var];
-	      if (pd->v[var])
+	      pvar = upd->vp[pg->imtrx][var];
+	      if (pd->v[pg->imtrx][var])
 		{
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
@@ -901,13 +901,13 @@ assemble_real_solid(double time_value,
 		      advection = 0.;
 		      /* For Lagrangian Mesh with advection, add in the 
 			 sensitivity to concentration  */
-		      if ( pd->e[eqn] & T_ADVECTION  ) 
+		      if ( pd->e[pg->imtrx][eqn] & T_ADVECTION  ) 
 			{
 			  /* Grab this sensitivity from assemble_mesh when you need it */
 			}
 
 		      diffusion = 0.;
-		      if ( pd->e[eqn] & T_DIFFUSION  )
+		      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION  )
 			{ 
 			  phi_j = bf[var]->phi[j];
 			  for ( p=0; p<dim; p++)
@@ -922,7 +922,7 @@ assemble_real_solid(double time_value,
 				}
 			    }
 			  diffusion *= - det_J * wt * h3;
-			  diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
+			  diffusion *= pd->etm[pg->imtrx][eqn][LOG2_DIFFUSION];
 			}
 
 		      lec->J[peqn][pvar][i][j] += advection + diffusion;
@@ -933,12 +933,12 @@ assemble_real_solid(double time_value,
  /*
   * J_d_T
   */
-               if ( pd->e[eqn]  ) 
+               if ( pd->e[pg->imtrx][eqn]  ) 
                  {
                    var = TEMPERATURE;
-                   if (pd->v[var])
+                   if (pd->v[pg->imtrx][var])
                      {
-                       pvar = upd->vp[var];
+                       pvar = upd->vp[pg->imtrx][var];
                        for ( j=0; j<ei->dof[var]; j++)
                          {
                            diffusion = 0.;
@@ -951,7 +951,7 @@ assemble_real_solid(double time_value,
                                  }
                              }
                            diffusion *= - det_J * wt * h3;
-                           diffusion *= pd->etm[eqn][LOG2_DIFFUSION];
+                           diffusion *= pd->etm[pg->imtrx][eqn][LOG2_DIFFUSION];
                            lec->J[peqn][pvar][i][j] += advection + diffusion;
                          }
                      }
@@ -1028,7 +1028,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 
   /*   add thermo-elasticity terms  */
  
-  if( pd->e[R_ENERGY])
+  if( pd->e[pg->imtrx][R_ENERGY])
     {
       for ( p=0; p<dim; p++)
 	{
@@ -1049,7 +1049,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 	      for ( b=0; b<dim; b++)
 		{
 		  v = MESH_DISPLACEMENT1 + b;
-		  if ( pd->v[v] )
+		  if ( pd->v[pg->imtrx][v] )
 		    {
 		      dofs     = ei->dof[v];
 		      for ( j=0; j<dofs; j++)
@@ -1060,7 +1060,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 
 			  dTT_dx[p][q][b][j] += d_lambda_dx[b][j] * fv->volume_strain * delta(p,q) 
 			    + 2. * d_mu_dx[b][j] * fv->strain[p][q];
-			  if( pd->e[R_ENERGY] )
+			  if( pd->e[pg->imtrx][R_ENERGY] )
 			    {
 			      dTT_dx[p][q][b][j] -=  2. * d_mu_dx[b][j] * thermexp *
 				(fv->T - elc_rs->solid_reference_temp) * delta(p,q);
@@ -1069,7 +1069,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 			}
 		    }
 		  v = SOLID_DISPLACEMENT1 + b;
-		  if ( pd->v[v] )
+		  if ( pd->v[pg->imtrx][v] )
 		    {
 		      dofs     = ei->dof[v];
 		      for ( j=0; j<dofs; j++)
@@ -1080,7 +1080,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 
 			  dTT_drs[p][q][b][j] += d_lambda_drs[b][j] * fv->volume_strain * delta(p,q) 
 			    + 2. * d_mu_drs[b][j] * fv->strain[p][q];
-			  if( pd->e[R_ENERGY] )
+			  if( pd->e[pg->imtrx][R_ENERGY] )
 			    {
 			      dTT_drs[p][q][b][j] -=  2. * d_mu_drs[b][j] * thermexp *
 				(fv->T - elc_rs->solid_reference_temp) * delta(p,q);
@@ -1091,7 +1091,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 		}
 	      /*  Temperature sensitivities here */
 	      v = TEMPERATURE;
-	      if ( pd->v[v] )
+	      if ( pd->v[pg->imtrx][v] )
 		{
 		  dofs     = ei->dof[v];
 
@@ -1109,7 +1109,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 		}
 	      /*  max_strain sensitivities here */
 	      v = MAX_STRAIN;
-	      if ( pd->v[v] )
+	      if ( pd->v[pg->imtrx][v] )
 		{
 		  dofs     = ei->dof[v];
 		  
@@ -1134,7 +1134,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
   /* now, add in pressure due to swelling for incompressible lagrangian
    * mesh motion */
   var = PRESSURE;
-  if (pd->v[var] && !mp->PorousMediaType ) 
+  if (pd->v[pg->imtrx][var] && !mp->PorousMediaType ) 
     {
       if (cr->RealSolidFluxModel == INCOMP_PSTRAIN 
 	  || cr->RealSolidFluxModel == INCOMP_PSTRESS || cr->RealSolidFluxModel == INCOMP_3D)
@@ -1161,7 +1161,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 	      WH(-1,"Effective stress law may be missing constant");
 	    TT[a][a] -=  (1 - (1 - mp->porosity) * elc_rs->lame_lambda / elc_rs->u_lambda[0]) * 
 	      mp->saturation * fv->p_liq; 
-	    if (pd->v[POR_GAS_PRES]) 
+	    if (pd->v[pg->imtrx][POR_GAS_PRES]) 
 	      {
 		TT[a][a] -=  (1 - (1 - mp->porosity) 
 			      * elc_rs->lame_lambda / elc_rs->u_lambda[0]) * 
@@ -1171,14 +1171,14 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 	  } else if (mp->CapStress == PARTIALLY_WETTING) {
 	    EH(-1,"See Lagragian case, this effective stress may not be correct!.  Not ready yet");
 	    TT[a][a] -= mp->saturation * fv->p_liq; 
-	    if (pd->v[POR_GAS_PRES])  TT[a][a] -= (1. - mp->saturation) * fv->p_gas; 
+	    if (pd->v[pg->imtrx][POR_GAS_PRES])  TT[a][a] -= (1. - mp->saturation) * fv->p_gas; 
 	    
 	  } else if (mp->CapStress == WETTING) {
 	    EH(-1,"Need to reconcile the WETTING model pressures.  Not ready yet");
 	    /* If liquid is wetting, so that all surfaces are covered
 	       by a thin layer of liquid */
 	    TT[a][a] -= (1 - mp->porosity * (1. - mp->saturation)) * fv->p_liq;  
-	    if (pd->v[POR_GAS_PRES]) TT[a][a] -= mp->porosity * (1. - mp->saturation) * fv->p_gas;  
+	    if (pd->v[pg->imtrx][POR_GAS_PRES]) TT[a][a] -= mp->porosity * (1. - mp->saturation) * fv->p_gas;  
 	  } else if (mp->PorousMediaType == POROUS_SATURATED) { 
 	    TT[a][a] -= fv->p_liq; 
 	    
@@ -1189,7 +1189,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
   if ( af->Assemble_Jacobian )
     {
       var = PRESSURE; 
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
 	{
 	  if (cr->RealSolidFluxModel == INCOMP_PSTRESS || cr->RealSolidFluxModel == HOOKEAN_PSTRESS)
 	    { 
@@ -1227,7 +1227,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 	 elastic and bulk modulus */
       
       var = MASS_FRACTION;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
 	{
 	  
 	  /* sensitivity of total stress to species concentrations (or pressures)
@@ -1255,7 +1255,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
          porous media vars dependent elastic and bulk modulus */
 
       var = POR_LIQ_PRES;   /*PRS:  PLEASE Check this against that in mesh_stress_tensor*/
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
 	{
 	  
 	  /* sensitivity of total stress to porous media vars
@@ -1277,14 +1277,14 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 			  ( 
 			   mp->saturation + mp->d_saturation[POR_LIQ_PRES] * fv->p_liq);
 			
-			if (pd->v[POR_GAS_PRES]) 
+			if (pd->v[pg->imtrx][POR_GAS_PRES]) 
 			  {
 			    dTT_dp_gas[p][p][j] -= bf[var]->phi[j] * 
 			      (1 - (1 - mp->porosity) * elc_rs->lame_lambda / elc_rs->u_lambda[0]) * 
 			      ( 
 			       (1. - mp->saturation) - mp->d_saturation[POR_GAS_PRES] * fv->p_gas); 
 			  }
-			if (pd->v[POR_POROSITY]) {
+			if (pd->v[pg->imtrx][POR_POROSITY]) {
 			  dTT_dporosity[p][p][j] -= bf[var]->phi[j] 
 			    * (
 			       mp->d_porosity[POR_POROSITY] * elc_rs->lame_lambda 
@@ -1295,7 +1295,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 			       * mp->d_saturation[POR_POROSITY]
 			       )  * fv->p_liq; 
 			}
-			if (pd->v[POR_GAS_PRES] && pd->v[POR_POROSITY]) {
+			if (pd->v[pg->imtrx][POR_GAS_PRES] && pd->v[pg->imtrx][POR_POROSITY]) {
 			  dTT_dporosity[p][p][j] -= bf[var]->phi[j]
 			    * ( 
 			       mp->d_porosity[POR_POROSITY] 
@@ -1309,19 +1309,19 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 			dTT_dp_liq[p][p][j] -= bf[var]->phi[j] *
 			  ( 
 			   mp->saturation + mp->d_saturation[POR_LIQ_PRES] *  fv->p_liq ); 
-			if (pd->v[POR_GAS_PRES]) 
+			if (pd->v[pg->imtrx][POR_GAS_PRES]) 
 			  {
 			    dTT_dp_gas[p][p][j] -= bf[var]->phi[j] * 
 			      ( 
 			       (1. - mp->saturation) + mp->d_saturation[POR_GAS_PRES] * 
 			       (fv->p_liq - fv->p_gas) ); 
 			  }
-			if (pd->v[POR_POROSITY]) 
+			if (pd->v[pg->imtrx][POR_POROSITY]) 
 			  {
 			    dTT_dporosity[p][p][j] -= bf[var]->phi[j]
 			      * mp->d_saturation[POR_POROSITY] * fv->p_liq;
 			  }
-			if (pd->v[POR_POROSITY] && pd->v[POR_GAS_PRES]) 
+			if (pd->v[pg->imtrx][POR_POROSITY] && pd->v[pg->imtrx][POR_GAS_PRES]) 
 			  {
 			    dTT_dporosity[p][p][j] += bf[var]->phi[j] 
 			      * mp->d_saturation[POR_POROSITY] * fv->p_gas;
@@ -1334,13 +1334,13 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 			  * (
 			     (1 -  mp->porosity * (1. - mp->saturation))
 			     + mp->porosity * mp->d_saturation[POR_LIQ_PRES] * fv->p_liq );
-			if(pd->v[POR_GAS_PRES])
+			if(pd->v[pg->imtrx][POR_GAS_PRES])
 			  {
 			    dTT_dp_gas[p][p][j] -= bf[var]->phi[j] * mp->porosity * 
 			      (
 			       (1. - mp->saturation) - mp->d_saturation[POR_GAS_PRES] *fv->p_gas );
 			  }
-			if (pd->v[POR_POROSITY])  
+			if (pd->v[pg->imtrx][POR_POROSITY])  
 			  {
 			    dTT_dporosity[p][p][j] -= bf[var]->phi[j] 
 			      * (
@@ -1348,7 +1348,7 @@ solid_stress_tensor(dbl TT[DIM][DIM],
 				 + mp->porosity * mp->d_saturation[POR_POROSITY] 
 				 ) * fv->p_liq;
 			  }
-			if (pd->v[POR_POROSITY] && pd->v[POR_GAS_PRES])  
+			if (pd->v[pg->imtrx][POR_POROSITY] && pd->v[pg->imtrx][POR_GAS_PRES])  
 			  {
 			    dTT_dporosity[p][p][j] -= bf[var]->phi[j]
 			      * (
@@ -1444,8 +1444,8 @@ belly_flop_rs(dbl mu)		/* elastic modulus - (for plane stress case) */
    * mesh deformation.  So make it as such
    */
   if(pd->TimeIntegration != STEADY && 
-     pd->etm[R_SOLID1][(LOG2_MASS)] &&
-     !pd->e[R_MESH1])
+     pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
+     !pd->e[pg->imtrx][R_MESH1])
     {
       for ( p=0; p<dim; p++)
 	{
@@ -1799,12 +1799,12 @@ if (cr->RealSolidFluxModel == LINEAR)
 #endif
                  }
               neg_elem_volume = TRUE;
-	      if(pd->e[R_MESH1]) return(2);
+	      if(pd->e[pg->imtrx][R_MESH1]) return(2);
 	    }
 	  if (det2d <= 0.) 
              {
                neg_elem_volume = TRUE;
-               if(pd->e[R_MESH1]) return(2);
+               if(pd->e[pg->imtrx][R_MESH1]) return(2);
              }
 	  
 	  if ( af->Assemble_Jacobian )
@@ -2062,32 +2062,32 @@ get_convection_velocity_rs(double vconv[DIM], /*Calculated convection velocity *
    if ( af->Assemble_Jacobian && d_vconv != NULL )
      {
        var = MESH_DISPLACEMENT1;
-       if (pd->v[var])
+       if (pd->v[pg->imtrx][var])
 	 {
 	   memset(d_vconv->X, 0, DIM*DIM*MDE*sizeof(dbl));
 	 }
 
        var = SOLID_DISPLACEMENT1;
-       if (pd->v[var])
+       if (pd->v[pg->imtrx][var])
 	 {
 	   memset(d_vconv->rs, 0, DIM*DIM*MDE*sizeof(dbl));
 	 }
 
        var = VELOCITY1;
-       if (pd->v[var])
+       if (pd->v[pg->imtrx][var])
 	 {
 	   memset(d_vconv->v, 0, DIM*DIM*MDE*sizeof(dbl));
 	 }
 
 
        var = MASS_FRACTION;
-       if (pd->v[var])
+       if (pd->v[pg->imtrx][var])
 	 {
 	   memset(d_vconv->C, 0, DIM*MAX_CONC*MDE*sizeof(dbl));
 	 }
 
        var = TEMPERATURE;
-       if (pd->v[var])
+       if (pd->v[pg->imtrx][var])
 	 {
 	   memset(d_vconv->T, 0, DIM*MDE*sizeof(dbl));
 	 }
@@ -2124,7 +2124,7 @@ get_convection_velocity_rs(double vconv[DIM], /*Calculated convection velocity *
 	* Velocity of solid in lab coordinates is the velocity of the stress free state
 	* dotted into the deformation gradient tensor for the material
 	*/
-       if (! pd->v[MESH_DISPLACEMENT1])
+       if (! pd->v[pg->imtrx][MESH_DISPLACEMENT1])
 	 {
 	   for (p=0; p < dim; p++)
 	     {
@@ -2145,7 +2145,7 @@ get_convection_velocity_rs(double vconv[DIM], /*Calculated convection velocity *
 	       for (b=0; b < dim; b++)
 		 {
 		   var = MESH_DISPLACEMENT1 + b;
-		   if (pd->v[var])
+		   if (pd->v[pg->imtrx][var])
 		     {
 		       for ( i=0; i<ei->dof[var]; i++)
 			 {
@@ -2161,7 +2161,7 @@ get_convection_velocity_rs(double vconv[DIM], /*Calculated convection velocity *
 		     }
 
                    var = SOLID_DISPLACEMENT1 + b;
-                   if (pd->v[var])
+                   if (pd->v[pg->imtrx][var])
                      {
                        for ( i=0; i<ei->dof[var]; i++)
                          {
@@ -2314,7 +2314,7 @@ if(base_displ_model)
 	      for (p=0; p<pd->Num_Dim; p++)
 		{
 		  var = MESH_DISPLACEMENT1 + p;
-		  if (pd->v[var])
+		  if (pd->v[pg->imtrx][var])
 		    {
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
@@ -2329,7 +2329,7 @@ if(base_displ_model)
 		}
 	      
 	      var = SOLID_DISPLACEMENT1 + kdir;
-	      if (pd->v[var])
+	      if (pd->v[pg->imtrx][var])
 		{
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
@@ -2409,7 +2409,7 @@ f_kinematic_displacement_rs_bc(double func[DIM],
 	      for (p=0; p<pd->Num_Dim; p++)
 		{
 		  var = MESH_DISPLACEMENT1 + p;
-		  if (pd->v[var])
+		  if (pd->v[pg->imtrx][var])
 		    {
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
@@ -2430,7 +2430,7 @@ f_kinematic_displacement_rs_bc(double func[DIM],
 		}
 	      
 	      var = SOLID_DISPLACEMENT1 + kdir;
-	      if (pd->v[var])
+	      if (pd->v[pg->imtrx][var])
 		{
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
@@ -2441,7 +2441,7 @@ f_kinematic_displacement_rs_bc(double func[DIM],
 	    }
 
 	  var = SHELL_DELTAH;
-	  if ( upd->vp[var] != -1 ) {
+	  if ( upd->vp[pg->imtrx][var] != -1 ) {
 	
 	    /*** Loop over DOFs (j) ***/
 	    for ( j=0; j<ei->dof[var]; j++) {

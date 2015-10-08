@@ -219,7 +219,7 @@ assemble_fill(double tt,
    * Bail out fast if there's nothing to do...
    */
 
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -271,7 +271,7 @@ assemble_fill(double tt,
    * Calculate lubrication velocity for direct integration
    */
   int lubon = 0;
-  if ( pd->e[R_LUBP] ) {
+  if ( pd->e[pg->imtrx][R_LUBP] ) {
     // if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G  ||
     //     tran->Fill_Weight_Fcn == FILL_WEIGHT_TG ) {
  if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G  ) {
@@ -283,7 +283,7 @@ assemble_fill(double tt,
   }
   int *n_dof = NULL;
   int dof_map[MDE];
-  if ( pd->e[R_LUBP] ) {
+  if ( pd->e[pg->imtrx][R_LUBP] ) {
 
     /* Set up shells */
     n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
@@ -298,7 +298,7 @@ assemble_fill(double tt,
     det_J = fv->sdet;
 
   }
- if ( pd->e[R_LUBP_2] ) {
+ if ( pd->e[pg->imtrx][R_LUBP_2] ) {
 
    EH(-1," if you have a fill equation turned on in the R_LUBP_2 phase, you are in the wrong place");
     /* Set up shells */
@@ -336,7 +336,7 @@ assemble_fill(double tt,
 	}
 
   v_dot_DF = 0.0;
-  if ( pd->TimeIntegration != STEADY && pd->v[MESH_DISPLACEMENT1] )
+  if ( pd->TimeIntegration != STEADY && pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
     {
       x_dot_old = fv_dot_old->x;
       for ( a=0; a < VIM; a++ )
@@ -349,7 +349,7 @@ assemble_fill(double tt,
 	}
     }
   else if  (pd->TimeIntegration != STEADY &&
-	    pd->etm[R_SOLID1][(LOG2_MASS)] &&
+	    pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
 	    pd->MeshMotion == TOTAL_ALE)    /*This is the Eulerian solid-mech case */
     {
       xx	 = fv->d_rs;
@@ -397,7 +397,7 @@ assemble_fill(double tt,
       memset(vc_dot_Dphi, 0, sizeof(double)*MDE);
       supg_term = 0.;
       get_supg_stuff(&supg_term, vcent, d_vcent_du, d_supg_term_du, d_supg_term_dx,
-		     pd->e[R_MESH1]);
+		     pd->e[pg->imtrx][R_MESH1]);
     }
 
   /* Compute and save v.grad(phi) and vcent.grad(phi). */
@@ -432,7 +432,7 @@ assemble_fill(double tt,
 
   if ( af->Assemble_Residual )
     {
-      peqn = upd->ep[eqn];
+      peqn = upd->ep[pg->imtrx][eqn];
       if(ls == NULL) var  = FILL;  
       	else var  = ls->var;  
       for( i=0; i < ei->dof[eqn]; i++ )
@@ -491,7 +491,7 @@ assemble_fill(double tt,
 
 	       advection = 0.;
 	       for (a = 0; a < dim; a++) advection += wfcn * v_rel_old[a] * fv->grad_F[a];
-	       if (pd->e[R_EXT_VELOCITY] &&
+	       if (pd->e[pg->imtrx][R_EXT_VELOCITY] &&
 			(pfd == NULL || eqn == R_PHASE1)) 
 			advection += fv_old->ext_v * wfcn;
 
@@ -501,7 +501,7 @@ assemble_fill(double tt,
 
 	      mass = F_dot  * phi_i ;   
 	      advection = v_dot_DF  * phi_i ;
-	      if (pd->e[R_EXT_VELOCITY] &&
+	      if (pd->e[pg->imtrx][R_EXT_VELOCITY] &&
 		  (pfd == NULL || eqn == R_PHASE1)) 
 		advection += fv->ext_v * phi_i;
 
@@ -519,8 +519,8 @@ assemble_fill(double tt,
 	      EH(-1,"Unknown Fill_Weight_Fcn");
 
 	    }
-	  mass *= pd->etm[eqn][(LOG2_MASS)];
-	  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+	  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+	  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 	  /* hang on to the integrand (without the "dV") for use below. */
 	  rmp[i] = mass + advection;
@@ -538,7 +538,7 @@ assemble_fill(double tt,
   
   if ( af->Assemble_Jacobian )
     {
-      peqn = upd->ep[eqn];
+      peqn = upd->ep[pg->imtrx][eqn];
       for ( i=0; i < ei->dof[eqn]; i++ )
 	{
 	  
@@ -584,9 +584,9 @@ assemble_fill(double tt,
 
           if(ls == NULL) var  = FILL;  
       	        else var  = ls->var;  
-	  if ( pd->v[var] )
+	  if ( pd->v[pg->imtrx][var] )
 	    {
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      for( j=0; j < ei->dof[var]; j++) 
 		{
 		  phi_j = bf[eqn]->phi[j];
@@ -652,8 +652,8 @@ assemble_fill(double tt,
 
 		    } /* switch(Fill_Weight_Fcn) */
 		    
-		  mass *= pd->etm[eqn][(LOG2_MASS)];
-	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+	          advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;		  
 
@@ -669,10 +669,10 @@ assemble_fill(double tt,
 	  for ( b=0; b < VIM; b++ )
 	    {
 	      var = VELOCITY1 + b;
-	      if ( pd->v[var] )
+	      if ( pd->v[pg->imtrx][var] )
 		{
 		  
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  for ( j=0; j < ei->dof[var]; j++ )
 		    {
 		      
@@ -725,8 +725,8 @@ assemble_fill(double tt,
 
 			} /* switch(Fill_Weight_Fcn) */
 			
-		      mass *= pd->etm[eqn][(LOG2_MASS)];
-	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+	              advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 		      lec->J[peqn][pvar][i][j] += (mass + advection) * wt * det_J * h3;
 
@@ -734,10 +734,10 @@ assemble_fill(double tt,
 		}
 	    }
 	      var = EXT_VELOCITY;
-	      if ( pd->v[var] )
+	      if ( pd->v[pg->imtrx][var] )
 		{
 		  
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  for ( j=0; j < ei->dof[var]; j++ )
 		    {
 		      phi_j = bf[var]->phi[j];	      
@@ -755,7 +755,7 @@ assemble_fill(double tt,
 
 			  mass = 0.;
 			  advection = 0.;
-	       if (pd->e[R_EXT_VELOCITY] &&
+	       if (pd->e[pg->imtrx][R_EXT_VELOCITY] &&
 			(pfd == NULL || eqn == R_PHASE1)) 
 			advection += phi_j * phi_i;
 
@@ -781,8 +781,8 @@ assemble_fill(double tt,
 
 			} /* switch(Fill_Weight_Fcn) */
 			
-		      mass *= pd->etm[eqn][(LOG2_MASS)];
-	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+	              advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 		      lec->J[peqn][pvar][i][j] += (mass + advection) * wt * det_J * h3;
 
@@ -797,18 +797,18 @@ assemble_fill(double tt,
 	  for ( b=0; b < VIM; b++ )
 	    {
 	      var = MESH_DISPLACEMENT1 + b;
-	      if ( pd->v[var] )
+	      if ( pd->v[pg->imtrx][var] )
 		{
 		  
 		  if ( lubon ) {
 
-		    pvar = upd->vp[var];
+		    pvar = upd->vp[pg->imtrx][var];
 		    for ( j=0; j<ei->dof[var]; j++) {
 		      c = dof_map[j];
 		      phi_j = bf[var]->phi[j];
 
 		      mass = 0.;
-		      mass *= pd->etm[eqn][(LOG2_MASS)];
+		      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 		      
 		      advection = 0.0;
 		      for ( a=0; a < dim; a++ ) {
@@ -816,7 +816,7 @@ assemble_fill(double tt,
 			advection -= (1+2*tt)/dt * phi_j * delta(a,b) * grad_F[a] * phi_i;
 			advection += v_rel[a] * fv->d_grad_F_dmesh[a][b][j] * phi_i;
 		      }
-	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+	              advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 		      lec->J[peqn][pvar][i][c] += (mass + advection) * wt * h3 * fv->sdet;
 		      lec->J[peqn][pvar][i][c] += rmp[i] * wt * h3 * fv->dsurfdet_dx[b][c];
@@ -824,7 +824,7 @@ assemble_fill(double tt,
 
 		  } else {
 
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
 		      
@@ -877,8 +877,8 @@ assemble_fill(double tt,
 
 			} /* switch(Fill_Weight_Fcn) */
 			
-		      mass *= pd->etm[eqn][(LOG2_MASS)];
-	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+	              advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 		      lec->J[peqn][pvar][i][j] += (mass + advection) * wt * det_J * h3;
 
@@ -932,10 +932,10 @@ assemble_fill(double tt,
 	  for ( b=0; b < VIM; b++ )
 	    {
 	      var = SOLID_DISPLACEMENT1 + b;
-	      if ( pd->v[var] )
+	      if ( pd->v[pg->imtrx][var] )
 		{
 		  
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
 		      
@@ -990,7 +990,7 @@ assemble_fill(double tt,
 
 			} /* switch(Fill_Weight_Fcn) */
 		      
-		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 		      lec->J[peqn][pvar][i][j] += advection * wt * det_J * h3;
 
@@ -1011,9 +1011,9 @@ assemble_fill(double tt,
 	   *************************************************************/
 
           var = LUBP;
-	  if ( pd->v[var] && lubon )
+	  if ( pd->v[pg->imtrx][var] && lubon )
 	    {
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      for( j=0; j < ei->dof[var]; j++) 
 		{
 		  phi_j = bf[eqn]->phi[j];
@@ -1029,8 +1029,8 @@ assemble_fill(double tt,
 		    advection += LubAux->dv_avg_dp2[a][j] * grad_F[a] * wfcn * phi_j;
 		  }
 		    
-		  mass *= pd->etm[eqn][(LOG2_MASS)];
-	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+	          advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;		  
 
@@ -1045,9 +1045,9 @@ assemble_fill(double tt,
 	   *************************************************************/
 
           var = SHELL_LUB_CURV;
-	  if ( pd->v[var] && lubon )
+	  if ( pd->v[pg->imtrx][var] && lubon )
 	    {
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      for( j=0; j < ei->dof[var]; j++) 
 		{
 		  phi_j = bf[eqn]->phi[j];
@@ -1058,8 +1058,8 @@ assemble_fill(double tt,
 		  for (a = 0; a < dim; a++)
 		    advection += LubAux->dv_avg_dk[a][j] * grad_F[a] * phi_i * phi_j;
 		    
-		  mass *= pd->etm[eqn][(LOG2_MASS)];
-	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+	          advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;		  
 
@@ -1075,9 +1075,9 @@ assemble_fill(double tt,
 	   *************************************************************/
 
           var = SHELL_DELTAH;
-	  if ( pd->v[var] && lubon )
+	  if ( pd->v[pg->imtrx][var] && lubon )
 	    {
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      for( j=0; j < ei->dof[var]; j++) 
 		{
 		  phi_j = bf[eqn]->phi[j];
@@ -1088,8 +1088,8 @@ assemble_fill(double tt,
 		  for (a = 0; a < dim; a++)
 		    advection += LubAux->dv_avg_ddh[a][j] * grad_F[a] * phi_i * phi_j;
 		    
-		  mass *= pd->etm[eqn][(LOG2_MASS)];
-	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+	          advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;		  
 
@@ -1216,7 +1216,7 @@ assemble_fill_ext_v(double tt,
    * Bail out fast if there's nothing to do...
    */
 
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -1301,7 +1301,7 @@ assemble_fill_ext_v(double tt,
     }
   gfmag_old = sqrt( gfmag_old );
 
-  if ( pd->TimeIntegration != STEADY && pd->v[MESH_DISPLACEMENT1] )
+  if ( pd->TimeIntegration != STEADY && pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
     {
       x_dot_old = fv_dot_old->x;
       v_rel_n = 0.0;
@@ -1446,7 +1446,7 @@ assemble_fill_ext_v(double tt,
 
   if ( af->Assemble_Residual )
     {
-      peqn = upd->ep[eqn];
+      peqn = upd->ep[pg->imtrx][eqn];
       for( i=0; i < ei->dof[eqn]; i++ )
 	{
 	  phi_i = bf[eqn]->phi[i];
@@ -1524,9 +1524,9 @@ assemble_fill_ext_v(double tt,
 
 	    }
 
-	  mass *= pd->etm[eqn][(LOG2_MASS)];
-	  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
-	  source *= pd->etm[eqn][(LOG2_SOURCE)];
+	  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+	  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+	  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		  
 	  /* hang on to the integrand (without the "dV") for use below. */
 	  rmp[i] = mass + advection;
@@ -1544,7 +1544,7 @@ assemble_fill_ext_v(double tt,
   
   if ( af->Assemble_Jacobian )
     {
-      peqn = upd->ep[eqn];
+      peqn = upd->ep[pg->imtrx][eqn];
       for ( i=0; i < ei->dof[eqn]; i++ )
 	{
 	  
@@ -1573,9 +1573,9 @@ assemble_fill_ext_v(double tt,
 	   *
 	   *************************************************************/
 	  var = ls->var;
-	  if ( pd->v[var] )
+	  if ( pd->v[pg->imtrx][var] )
 	    {
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      for( j=0; j < ei->dof[var]; j++) 
 		{
 		  phi_j = bf[var]->phi[j];
@@ -1665,9 +1665,9 @@ assemble_fill_ext_v(double tt,
 
 		    } /* switch(Fill_Weight_Fcn) */
 
-		  mass *= pd->etm[eqn][(LOG2_MASS)];
-	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
-		  source *= pd->etm[eqn][(LOG2_SOURCE)];
+		  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+	          advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+		  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		  
 		  lec->J[peqn][pvar][i][j] += wt * h3 * det_J * (mass + advection + source);		  
 
@@ -1681,10 +1681,10 @@ assemble_fill_ext_v(double tt,
 	   *
 	   *************************************************************/
 	  var = EXT_VELOCITY;
-	  if ( pd->v[var] )
+	  if ( pd->v[pg->imtrx][var] )
 	    {
 	      
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      for ( j=0; j < ei->dof[var]; j++ )
 		{
 		  
@@ -1749,9 +1749,9 @@ assemble_fill_ext_v(double tt,
 		      
 		    } /* switch(Fill_Weight_Fcn) */
 		  
-		  mass *= pd->etm[eqn][(LOG2_MASS)];
-	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
-		  source *= pd->etm[eqn][(LOG2_SOURCE)];
+		  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+	          advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+		  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		  
 		  lec->J[peqn][pvar][i][j] += wt * det_J * h3 * (mass + advection + source);
 		  
@@ -1767,10 +1767,10 @@ assemble_fill_ext_v(double tt,
 	  for ( b=0; b < VIM; b++ )
 	    {
 	      var = MESH_DISPLACEMENT1 + b;
-	      if ( pd->v[var] )
+	      if ( pd->v[pg->imtrx][var] )
 		{
 		  
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
 		      
@@ -1808,8 +1808,8 @@ assemble_fill_ext_v(double tt,
 
 			} /* switch(Fill_Weight_Fcn) */
 		      
-		      mass *= pd->etm[eqn][(LOG2_MASS)];
-	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		      mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+	              advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 		      lec->J[peqn][pvar][i][j] += wt * det_J * h3 * (mass + advection);
 
@@ -1897,7 +1897,7 @@ assemble_fill_gradf(double tt,
    * Bail out fast if there's nothing to do...
    */
 
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -2036,7 +2036,7 @@ assemble_fill_gradf(double tt,
 
   if ( af->Assemble_Residual )
     {
-      peqn = upd->ep[eqn];
+      peqn = upd->ep[pg->imtrx][eqn];
       for( i=0; i < ei->dof[eqn]; i++ )
 	{
 	  phi_i = bf[eqn]->phi[i];
@@ -2053,7 +2053,7 @@ assemble_fill_gradf(double tt,
 	    case FILL_WEIGHT_G:  /* Plain ol' Galerkin method */
 
 	      rhs = (lsi->gfmag - 1.) * S * phi_i;
-	      rhs *= pd->etm[eqn][(LOG2_SOURCE)];
+	      rhs *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
 	      break;
 
@@ -2061,7 +2061,7 @@ assemble_fill_gradf(double tt,
 
 	      rhs = (lsi->gfmag - 1.) * ( S * phi_i  ) +
 	            visc * gradF_gradphi[i];	
-              rhs *= pd->etm[eqn][(LOG2_SOURCE)];
+              rhs *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 	      break;
 
               
@@ -2087,7 +2087,7 @@ assemble_fill_gradf(double tt,
   
   if ( af->Assemble_Jacobian )
     {
-      peqn = upd->ep[eqn];
+      peqn = upd->ep[pg->imtrx][eqn];
       for ( i=0; i < ei->dof[eqn]; i++ )
 	{
 	  
@@ -2107,9 +2107,9 @@ assemble_fill_gradf(double tt,
 	   *
 	   *************************************************************/
 	  var = FILL;
-	  if ( pd->v[var] )
+	  if ( pd->v[pg->imtrx][var] )
 	    {
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      for( j=0; j < ei->dof[var]; j++) 
 		{
 		  phi_j = bf[var]->phi[j];
@@ -2125,13 +2125,13 @@ assemble_fill_gradf(double tt,
 		    case FILL_WEIGHT_GLS:  /* Galerkin Least Squares*/
                       tmp = wfcn * lsi->d_gfmag_dF[j] +
 			    (d_visc_dF[j] * gradF_gradphi[i] + visc * gradphi_gradphi[i][j]);
-                      tmp *= pd->etm[eqn][(LOG2_SOURCE)];
+                      tmp *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		      break;
 
 		    case FILL_WEIGHT_G:  /* Plain ol' Galerkin method */
 
 		      tmp = wfcn * lsi->d_gfmag_dF[j];
-                      tmp *= pd->etm[eqn][(LOG2_SOURCE)];
+                      tmp *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		      break;
                       
 		    default:
@@ -2156,10 +2156,10 @@ assemble_fill_gradf(double tt,
 	  for ( b=0; b < VIM; b++ )
 	    {
 	      var = MESH_DISPLACEMENT1 + b;
-	      if ( pd->v[var] )
+	      if ( pd->v[pg->imtrx][var] )
 		{
 		  
-		  pvar = upd->vp[var];
+		  pvar = upd->vp[pg->imtrx][var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
 		      d_gradF_dmesh_gradF = 0.;
@@ -2178,7 +2178,7 @@ assemble_fill_gradf(double tt,
 			case FILL_WEIGHT_G:  /* Plain ol' Galerkin */
 			  
 			  tmp = 2.*wfcn * S *d_gradF_dmesh_gradF;
-			  tmp *= pd->etm[eqn][(LOG2_SOURCE)];
+			  tmp *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
 			  break;
 
@@ -2190,7 +2190,7 @@ assemble_fill_gradf(double tt,
 
 			  tmp  =  wfcn*(2.*S*d_gradF_dmesh_gradF ) +
                             d_wfcn_dx*(grad_F_2 - 1.0);
-			  tmp *= pd->etm[eqn][(LOG2_SOURCE)];
+			  tmp *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			  
 
 			  break;
@@ -2332,7 +2332,7 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
       memset(d_supg_term_dx, 0, sizeof(double)*MDE*DIM);
       supg_term = 0.0;
       get_supg_stuff(&supg_term, vcent, d_vcent_du, d_supg_term_du, d_supg_term_dx,
-		     pd->e[R_MESH1]);
+		     pd->e[pg->imtrx][R_MESH1]);
     }
   /* static char yo[] = "assemble_fill"; */
 
@@ -2350,7 +2350,7 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
    * Bail out fast if there's nothing to do...
    */
 
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -2382,7 +2382,7 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
     /* note, these are zero for steady calculations */
     v_old[a] = fv_old->v[a];
     if (((pd->TimeIntegration) != STEADY) && 
-	(pd->v[MESH_DISPLACEMENT1+a])) {
+	(pd->v[pg->imtrx][MESH_DISPLACEMENT1+a])) {
       xx[a] = fv->x[a];
       x_old[a] = fv_old->x[a];
       x_dot_old[a] = fv_dot->x[a];
@@ -2409,7 +2409,7 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
 	{
 	  I = Proc_Elem_Connect[ei->iconnect_ptr + i];
 	  node = Nodes[I];
-	  nv = node->Nodal_Vars_Info;
+	  nv = node->Nodal_Vars_Info[pg->imtrx];
 	  /* check for multiple dofs */
 	  nvdofi = get_nv_ndofs(nv, eqn);
 	  offseti = get_nodal_unknown_offset(nv, eqn, -2, 0, &vd);
@@ -2506,7 +2506,7 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
 		  I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
 		  
 		  node = Nodes[I];
-		  nv = node->Nodal_Vars_Info;
+		  nv = node->Nodal_Vars_Info[pg->imtrx];
 		  nvdofi = get_nv_ndofs(nv, eqn);
 		  offseti = get_nodal_unknown_offset(nv, eqn, -2, 0, &vd);	  
 		  for (ki = 0; ki < nvdofi; ki++)
@@ -2537,7 +2537,7 @@ assemble_fill(double afill[],	/* Jacobian matrix for fill equation  */
 			  for( j=0; j< ei->num_local_nodes; j++) 
 			  {
 				  J = Proc_Elem_Connect[ei->iconnect_ptr + j]; 
-				  nvdofj = Dolphin[J][eqn];
+				  nvdofj = Dolphin[pg->imtrx][J][eqn];
 				  for ( kj=0; kj<nvdofj; kj++)
 					  
 				  {
@@ -2747,7 +2747,7 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
    * Bail out fast if there's nothing to do...
    */
 
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -2795,7 +2795,7 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
   ext_v = fv->ext_v;
   ext_v_old = fv_old->ext_v;
   dtinv = 1./dt;
-  if ( pd->TimeIntegration != STEADY && pd->v[MESH_DISPLACEMENT1] )
+  if ( pd->TimeIntegration != STEADY && pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
     {
       x_dot_old = fv_dot_old->x;
       v_rel_n = 0.0;
@@ -2844,7 +2844,7 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
 	{
 	  I = Proc_Elem_Connect[ei->iconnect_ptr + i];
 	  node = Nodes[I];
-	  nv = node->Nodal_Vars_Info;
+	  nv = node->Nodal_Vars_Info[pg->imtrx];
 	  /* check for multiple dofs */
 	  nvdofi = get_nv_ndofs(nv, eqn);
 	  offseti = get_nodal_unknown_offset(nv, eqn, -2, 0, &vd);
@@ -2897,7 +2897,7 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
 	  I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
 
 	  node = Nodes[I];
-	  nv = node->Nodal_Vars_Info;
+	  nv = node->Nodal_Vars_Info[pg->imtrx];
 	  nvdofi = get_nv_ndofs(nv, eqn);
 	  offseti = get_nodal_unknown_offset(nv, eqn, -2, 0, &vd);	  
 	  for (ki = 0; ki < nvdofi; ki++)
@@ -2921,7 +2921,7 @@ assemble_fill_ext_v(double afill[],	/* Jacobian matrix for fill equation  */
 	      for( j=0; j< ei->num_local_nodes; j++) 
 		{
 		  J = Proc_Elem_Connect[ei->iconnect_ptr + j]; 
-		  nvdofj = Dolphin[J][eqn];
+		  nvdofj = Dolphin[pg->imtrx][J][eqn];
 		  for ( kj=0; kj<nvdofj; kj++)
 
 		    {
@@ -3097,7 +3097,7 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
    * Bail out fast if there's nothing to do...
    */
 
-  if ( ! pd->e[eqn] )
+  if ( ! pd->e[pg->imtrx][eqn] )
     {
       return(status);
     }
@@ -3145,7 +3145,7 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
   ext_v = fv->ext_v;
   ext_v_old = fv_old->ext_v;
   dtinv = 1./dt;
-  if ( pd->TimeIntegration != STEADY && pd->v[MESH_DISPLACEMENT1] )
+  if ( pd->TimeIntegration != STEADY && pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
     {
       x_dot_old = fv_dot_old->x;
       v_rel_n = 0.0;
@@ -3194,7 +3194,7 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
 	{
 	  I = Proc_Elem_Connect[ei->iconnect_ptr + i];
 	  node = Nodes[I];
-	  nv = node->Nodal_Vars_Info;
+	  nv = node->Nodal_Vars_Info[pg->imtrx];
 	  /* check for multiple dofs */
 	  nvdofi = get_nv_ndofs(nv, eqn);
 	  offseti = get_nodal_unknown_offset(nv, eqn, -2, 0, &vd);
@@ -3247,7 +3247,7 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
 	  I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
 
 	  node = Nodes[I];
-	  nv = node->Nodal_Vars_Info;
+	  nv = node->Nodal_Vars_Info[pg->imtrx];
 	  nvdofi = get_nv_ndofs(nv, eqn);
 	  offseti = get_nodal_unknown_offset(nv, eqn, -2, 0, &vd);	  
 	  for (ki = 0; ki < nvdofi; ki++)
@@ -3271,7 +3271,7 @@ assemble_fill_gradf(double afill[],	/* Jacobian matrix for fill equation  */
 	      for( j=0; j< ei->num_local_nodes; j++) 
 		{
 		  J = Proc_Elem_Connect[ei->iconnect_ptr + j]; 
-		  nvdofj = Dolphin[J][eqn];
+		  nvdofj = Dolphin[pg->imtrx][J][eqn];
 		  for ( kj=0; kj<nvdofj; kj++)
 
 		    {
@@ -3923,12 +3923,12 @@ assemble_fill_fake( double tt, double dt)
    * Unpack variables from structures for local convenience...
    */
   eqn  = ls->var;
-  peqn = upd->ep[eqn];
+  peqn = upd->ep[pg->imtrx][eqn];
 
   /*
    * Bail out fast if there's nothing to do...
    */
-  if (! pd->e[eqn]) {
+  if (! pd->e[pg->imtrx][eqn]) {
     return (0);
   }
 
@@ -3938,7 +3938,7 @@ assemble_fill_fake( double tt, double dt)
    * is zero)
    */
   var  = ls->var;
-  pvar = upd->vp[var];
+  pvar = upd->vp[pg->imtrx][var];
   for (i = 0; i < ei->dof[eqn]; i++) {
     lec->R[peqn][i] = 0.;
     /*
@@ -4075,25 +4075,25 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
       ielem_type      = Elem_Type(exo, e_start);
       
       discontinuous = 0;
-      if(pd->i[FILL]==I_P1)
+      if(pd->i[pg->imtrx][FILL]==I_P1)
 	{
 	  if (dim == 2) ielem_type_fill = P1_QUAD;
 	  if (dim == 3) ielem_type_fill = P1_HEX;
 	  discontinuous = 1;
 	}
-      else if(pd->i[FILL]==I_P0)
+      else if(pd->i[pg->imtrx][FILL]==I_P0)
 	{
 	  if (dim == 2) ielem_type_fill = P0_QUAD;
 	  if (dim == 3) ielem_type_fill = P0_HEX;
 	  discontinuous = 1;
 	}
-      else if(pd->i[FILL]==I_PQ1)
+      else if(pd->i[pg->imtrx][FILL]==I_PQ1)
 	{
 	  if (dim == 2) ielem_type_fill = C_BILINEAR_QUAD;
 	  if (dim == 3) EH(-1,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
 	  discontinuous = 1;
 	}
-      else if(pd->i[FILL]==I_PQ2)
+      else if(pd->i[pg->imtrx][FILL]==I_PQ2)
 	{
 	  if (dim == 2) ielem_type_fill = BIQUAD_QUAD;
 	  if (dim == 3) EH(-1,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
@@ -4188,7 +4188,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 		}
 
 	      /* Get element size information for GLS terms in assemble_fill_ext_v */
-	      h_elem_siz(hsquared, hhv, dhv_dxnode, pd->e[R_MESH1]);
+	      h_elem_siz(hsquared, hhv, dhv_dxnode, pd->e[pg->imtrx][R_MESH1]);
 
 	      
       
@@ -4272,7 +4272,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 		      /* This calls the decoupled version of the extenion
 		       * velocity code
 		       */
-		      if(pd->e[R_EXT_VELOCITY] )
+		      if(pd->e[pg->imtrx][R_EXT_VELOCITY] )
 			{
 			  err = assemble_fill_ext_v(afill, ijaf, rf, delta_t, 
 						    theta, node_to_fill, hsquared);
@@ -4648,7 +4648,7 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 		    {
 		      I = Proc_Elem_Connect[ei->iconnect_ptr + i];
 		      node = Nodes[I];
-		      nv = node->Nodal_Vars_Info;
+		      nv = node->Nodal_Vars_Info[pg->imtrx];
 		      nvdofi = get_nv_ndofs(nv, eqn);
 		      offseti = get_nodal_unknown_offset(nv, eqn, -2, 0, &vd);
 		      for ( ki=0; ki<nvdofi; ki++)
@@ -4683,7 +4683,7 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 		    {
 		      I = Proc_Elem_Connect[ei->iconnect_ptr + i]; 
 		      node = Nodes[I];
-		      nv = node->Nodal_Vars_Info;
+		      nv = node->Nodal_Vars_Info[pg->imtrx];
 		      nvdofi = get_nv_ndofs(nv, eqn);
 		      offseti = get_nodal_unknown_offset(nv, eqn, -2, 0, &vd);	  
 		      
@@ -4697,7 +4697,7 @@ assemble_surface (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 			  for( j=0; j< ei->num_local_nodes; j++) 
 			    {
 			      J = Proc_Elem_Connect[ei->iconnect_ptr + j]; 
-			      nvdofj = Dolphin[J][eqn];
+			      nvdofj = Dolphin[pg->imtrx][J][eqn];
 			      for ( kj=0; kj<nvdofj; kj++)
 				{
 				  jdof = ei->ln_to_first_dof[eqn][j] + kj;
@@ -4824,7 +4824,7 @@ neighbor_fill(Exo_DB *exo,
 	{
 	  phi[i] = newshape(xi, ielem_type, PSI, 
 			    ei->dof_list[v][i], 
-			    ielem_shape, pd->i[v], i);
+			    ielem_shape, pd->i[pg->imtrx][v], i);
 	}
 
       
@@ -4840,7 +4840,7 @@ neighbor_fill(Exo_DB *exo,
 	{
 	  phi_map[i] = newshape(xi, ielem_type, PSI, 
 				ei->dof_list[v][i], 
-				ielem_shape, pd->i[v], i);
+				ielem_shape, pd->i[pg->imtrx][v], i);
 
 	  gnn = Proc_Elem_Connect[iconnect_ptr + i];
 
@@ -4858,7 +4858,7 @@ neighbor_fill(Exo_DB *exo,
 	  nvdof = num_varType_at_node(gnn, FILL);
 	  for ( j=0; j<nvdof; j++)
 	    {
-	      ie = Index_Solution(gnn, FILL, ktype, j, -1);
+	      ie = Index_Solution(gnn, FILL, ktype, j, -1, pg->imtrx);
 	      EH(ie, "Could not find vbl in sparse matrix.");
 	      	      
 	      F_neighbor[ip] += x[ie] * phi[j];
@@ -5416,9 +5416,9 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 			  for ( b=0; b<dim; b++)
 			    {
 			      var = var1 + b;
-			      if ( pd->v[var] )
+			      if ( pd->v[pg->imtrx][var] )
 				{	      
-				  pvar = upd->vp[var];
+				  pvar = upd->vp[pg->imtrx][var];
 				  for ( j=0; j<ei->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];	
@@ -5439,9 +5439,9 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 			  for ( b=0; b<dim; b++)
 			    {
 			      var = MESH_DISPLACEMENT1+b;
-			      if ( pd->v[var] )
+			      if ( pd->v[pg->imtrx][var] )
 				{
-				  pvar = upd->vp[var];
+				  pvar = upd->vp[pg->imtrx][var];
 				  for ( j=0; j<ei->dof[var]; j++)
 				    {
 				      phi_j = bf[var]->phi[j];	      
@@ -5571,7 +5571,7 @@ neighbor_species(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 	{
 	  phi[i] = newshape(xi, ielem_type, PSI, 
 			    ei->dof_list[v][i], 
-			    ielem_shape, pd->i[v], i);
+			    ielem_shape, pd->i[pg->imtrx][v], i);
 	}
 
       v = pd->ShapeVar;
@@ -5587,7 +5587,7 @@ neighbor_species(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 	{
 	  phi_map[i] = newshape(xi, ielem_type, PSI, 
 				ei->dof_list[v][i], 
-				ielem_shape, pd->i[v], i);
+				ielem_shape, pd->i[pg->imtrx][v], i);
 	}
 
       iconnect_ptr    = Proc_Connect_Ptr[neighbor_elem]; /* find pointer to beginning */
@@ -5611,10 +5611,10 @@ neighbor_species(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 	    {
 	      gnn = Proc_Elem_Connect[iconnect_ptr + i];
 	      node = Nodes[gnn];
-	      nvdof = get_nv_ndofs_modMF(node->Nodal_Vars_Info, v);
+	      nvdof = get_nv_ndofs_modMF(node->Nodal_Vars_Info[pg->imtrx], v);
 	      for (j = 0; j < nvdof; j++)
 		{
-		  ie = Index_Solution(gnn, v, w, 0, -2) + j;
+		  ie = Index_Solution(gnn, v, w, 0, -2, pg->imtrx) + j;
 		  EH(ie, "Could not find vbl in sparse matrix.");
 		  conc_neighbor[ip][w] += x[ie] * phi[j];
 		}
@@ -5724,7 +5724,7 @@ boundary_curvature( double func[DIM],
 	    {
 	      var = MESH_DISPLACEMENT1 + a;
 
-	      if( pd->v[var])
+	      if( pd->v[pg->imtrx][var])
 		  {
 			  for( j=0 ; j<ei->dof[var] ; j++ )
 			  {
@@ -5739,7 +5739,7 @@ boundary_curvature( double func[DIM],
 #ifdef COUPLED_FILL
 	  var = LS;
 
-	  if( pd->v[var] )
+	  if( pd->v[pg->imtrx][var] )
 	    {
 	      /* 
 	       * Compute d_n_F
@@ -5817,7 +5817,7 @@ curvature_momentum_source ( double f[DIM],
     {
       var = MESH_DISPLACEMENT1 + b;
       
-      if ( pd->v[var] )
+      if ( pd->v[pg->imtrx][var] )
 	{
 	  
 	  for( j = 0 ; j<ei->dof[var] ; j++)
@@ -5837,7 +5837,7 @@ curvature_momentum_source ( double f[DIM],
 #else
   var = CURVATURE;
 
-  if(  pd->v[var] )
+  if(  pd->v[pg->imtrx][var] )
     {
       for( j=0 ; j<ei->dof[var] ; j++ )
 	{
@@ -5853,7 +5853,7 @@ curvature_momentum_source ( double f[DIM],
 
   var = LS;
 
-  if( pd->v[var] )
+  if( pd->v[pg->imtrx][var] )
     {
       for( j=0 ; j<ei->dof[var] ; j++ )
 	{
@@ -5919,7 +5919,7 @@ assemble_phase_function ( double time_value,
 
   eqn = PHASE1;
   
-  if ( !pd->e[eqn] || pfd == NULL )
+  if ( !pd->e[pg->imtrx][eqn] || pfd == NULL )
     {
       return(status);
     }
@@ -5930,7 +5930,7 @@ assemble_phase_function ( double time_value,
    * On Phase fields we associate the level set with LUBP_2 field.   
    */
   int lubon = 0;
-  if ( pd->e[R_LUBP_2] ) {
+  if ( pd->e[pg->imtrx][R_LUBP_2] ) {
     // if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G ||
     //	 tran->Fill_Weight_Fcn == FILL_WEIGHT_TG) {
     if ( tran->Fill_Weight_Fcn == FILL_WEIGHT_G ) {
@@ -5958,7 +5958,7 @@ assemble_phase_function ( double time_value,
 
   int *n_dof = NULL;
   int dof_map[MDE];
-  if ( pd->e[R_LUBP_2] ) {
+  if ( pd->e[pg->imtrx][R_LUBP_2] ) {
 
     /* Set up shells */
     n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
@@ -5990,7 +5990,7 @@ assemble_phase_function ( double time_value,
   }
 
   v_dot_DF = 0.0;
-  if ( pd->TimeIntegration != STEADY && pd->v[MESH_DISPLACEMENT1] )
+  if ( pd->TimeIntegration != STEADY && pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
     {
       x_dot_old = fv_dot_old->x;
       for ( a=0; a < VIM; a++ )
@@ -6003,7 +6003,7 @@ assemble_phase_function ( double time_value,
 	}
     }
   else if  (pd->TimeIntegration != STEADY &&
-	    pd->etm[R_SOLID1][(LOG2_MASS)] &&
+	    pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
 	    pd->MeshMotion == TOTAL_ALE)    /*This is the Eulerian solid-mech case */
     {
       xx	 = fv->d_rs;
@@ -6049,7 +6049,7 @@ assemble_phase_function ( double time_value,
       memset(d_supg_term_dx, 0, sizeof(double)*MDE*DIM);
       memset(vc_dot_Dphi, 0, sizeof(double)*MDE);
       supg_term = 0.;
-      get_supg_stuff(&supg_term, vcent, d_vcent_du, d_supg_term_du, d_supg_term_dx, pd->e[R_MESH1]);
+      get_supg_stuff(&supg_term, vcent, d_vcent_du, d_supg_term_du, d_supg_term_dx, pd->e[pg->imtrx][R_MESH1]);
     }
 
   memset( v_dot_Dphi, 0, sizeof(double)*MDE);
@@ -6084,7 +6084,7 @@ assemble_phase_function ( double time_value,
     {
 
       eqn = R_PHASE1 + a;
-      peqn = upd->ep[eqn];
+      peqn = upd->ep[pg->imtrx][eqn];
 	  
       /* pf = fv->pF[a]; */
       pf_dot = fv_dot->pF[a];
@@ -6192,9 +6192,9 @@ assemble_phase_function ( double time_value,
 
 		  var = PHASE1 + a;
 		      
-		  if ( pd->v[var] )
+		  if ( pd->v[pg->imtrx][var] )
 		    {
-		      pvar = upd->vp[var];
+		      pvar = upd->vp[pg->imtrx][var];
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
 			  
@@ -6244,14 +6244,14 @@ assemble_phase_function ( double time_value,
 			  lec->J[peqn][pvar][i][j] += tmp;
 
 			} /* for ( j = 0 ... */
-		    } /* if ( pd->v[var] ) */
+		    } /* if ( pd->v[pg->imtrx][var] ) */
 		  /* T */
 
 		  var = TEMPERATURE;
 		      
-		  if ( pd->v[var] )
+		  if ( pd->v[pg->imtrx][var] )
 		    {
-		      pvar = upd->vp[var];
+		      pvar = upd->vp[pg->imtrx][var];
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
 			  
@@ -6275,7 +6275,7 @@ assemble_phase_function ( double time_value,
 			  lec->J[peqn][pvar][i][j] += tmp;
 
 			} /* for ( j = 0 ... */
-		    } /* if ( pd->v[var] ) */
+		    } /* if ( pd->v[pg->imtrx][var] ) */
 		  
 		  /*
 		   *   J_pf_v 
@@ -6285,9 +6285,9 @@ assemble_phase_function ( double time_value,
 		    {
 		      var = VELOCITY1 +b;
 		      
-		      if( pd->v[var] )
+		      if( pd->v[pg->imtrx][var] )
 			{
-			  pvar = upd->vp[var];
+			  pvar = upd->vp[pg->imtrx][var];
 
 			  for ( j=0; j < ei->dof[var]; j++ )
 			    {
@@ -6338,9 +6338,9 @@ assemble_phase_function ( double time_value,
 		   *************************************************************/
 
 		  var = LUBP_2;
-		  if (pd->v[var] && lubon )
+		  if (pd->v[pg->imtrx][var] && lubon )
 		    {
-		      pvar = upd->vp[var];
+		      pvar = upd->vp[pg->imtrx][var];
 		      for( j=0; j < ei->dof[var]; j++) 
 			{
 			  phi_j = bf[eqn]->phi[j];
@@ -6356,8 +6356,8 @@ assemble_phase_function ( double time_value,
 			    advection += LubAux->dv_avg_dp2[p][j] * grad_pf[p] * wfcn * phi_j;
 			  }
 			  
-			  mass *= pd->etm[eqn][(LOG2_MASS)];
-			  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+			  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+			  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 			  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;		  
 
@@ -6372,9 +6372,9 @@ assemble_phase_function ( double time_value,
 	   *************************************************************/
 
           var = SHELL_LUB_CURV;
-	  if ( pd->v[var] && lubon )
+	  if ( pd->v[pg->imtrx][var] && lubon )
 	    {
-	      pvar = upd->vp[var];
+	      pvar = upd->vp[pg->imtrx][var];
 	      for( j=0; j < ei->dof[var]; j++) 
 		{
 		  phi_j = bf[eqn]->phi[j];
@@ -6385,8 +6385,8 @@ assemble_phase_function ( double time_value,
 		  for (a = 0; a < dim; a++)
 		    advection += LubAux->dv_avg_dk[a][j] * grad_pf[a] * phi_i * phi_j;
 		    
-		  mass *= pd->etm[eqn][(LOG2_MASS)];
-	          advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+	          advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
 		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;		  
 
@@ -6400,7 +6400,7 @@ assemble_phase_function ( double time_value,
       ls = ls_old;
     }
 
-   if ( pd->e[R_LUBP_2] )  safe_free((void *) n_dof);
+   if ( pd->e[pg->imtrx][R_LUBP_2] )  safe_free((void *) n_dof);
   return (0);
 }
 
@@ -6467,9 +6467,9 @@ assemble_pf_constraint( double delta_t,
 	{
 		var = PHASE1 + i;
 		
-		pvar = upd->vp[var];
+		pvar = upd->vp[pg->imtrx][var];
 		
-		if(pd->v[var] )
+		if(pd->v[pg->imtrx][var] )
 		{
 			for( j=0; j<ei->dof[var] ; j++ )
 			{
