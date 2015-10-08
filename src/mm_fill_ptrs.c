@@ -1273,6 +1273,55 @@ load_varType_Interpolation_ptrs(const int varType, double **esp_ptr,
     esp_dot_ptr[i] = xdot_static  + ie;
   }
 }
+
+static void
+load_varType_Interpolation_ptrs_current_mat(int imtrx, const int varType, double **esp_ptr)
+
+     /***********************************************************************
+      *
+      * load_varType_Interpolation_ptrs_current:
+      *
+      * Only load 1 value from the current x
+      *
+      *  Utility routine to fill up pointers to solution variables.
+      *  (Might think about unrolling the loop in this routine in the
+      *   future).
+      ************************************************************************/
+{
+  int i, ie, dofs, ledof;
+  int *lvdof_to_ledof_tmp = ei[imtrx]->lvdof_to_ledof[varType];
+  dofs = ei[imtrx]->dof[varType];
+  for (i = 0; i < dofs; i++) {
+    ledof = lvdof_to_ledof_tmp[i];
+    ie = ei[imtrx]->ieqn_ledof[ledof];
+    esp_ptr[i]     = x_static     + ie;
+  }
+}
+
+static void
+load_varType_Interpolation_ptrs_mat(int imtrx, const int varType, double **esp_ptr,
+                                    double **esp_old_ptr, double **esp_dot_ptr)
+
+     /***********************************************************************
+      *
+      * load_varType_Interpolation_ptrs:
+      *
+      *  Utility routine to fill up pointers to solution variables.
+      *  (Might think about unrolling the loop in this routine in the
+      *   future).
+      ************************************************************************/
+{ 
+  int i, ie, dofs, ledof;
+  int *lvdof_to_ledof_tmp = ei[imtrx]->lvdof_to_ledof[varType];
+  dofs = ei[imtrx]->dof[varType];
+  for (i = 0; i < dofs; i++) {
+    ledof = lvdof_to_ledof_tmp[i];
+    ie = ei[imtrx]->ieqn_ledof[ledof];
+    esp_ptr[i]     = x_static     + ie;
+    esp_old_ptr[i] = x_old_static + ie;
+    esp_dot_ptr[i] = xdot_static  + ie;
+  }
+}
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
@@ -1670,9 +1719,7 @@ load_elem_dofptr(const int ielem,
 	  upd->ep[pg->imtrx][R_AUX_MOMENTUM1] >= 0) {
     dofs = ei[pg->imtrx]->dof[R_AUX_MOMENTUM1];
     for (i = 0; i < dofs; i++) {
-      esp->v[2][i]       = p0;
-      esp_old->v[2][i]   = p0;
-      esp_dot->v[2][i]   = p0;
+      esp->v_star[2][i]       = p0;
     }
   }
 
@@ -2148,6 +2195,799 @@ load_elem_dofptr(const int ielem,
   /* extra setup needed for XFEM */
   if ( xfem != NULL ) load_xfem_for_elem( x, exo );
   
+  return (status);
+}
+
+/* load_elem_dofptr -- load info for ea var how many dof's in elem; where to put
+ *
+ * requirements and input:
+ * -----------------------
+ *
+ *	ei -- pointer to Element_Indeces structure
+ *
+ *	Comments:  "ei" should be already be partially filled with the
+ * 	correct information about this element. Here, we simply load
+ * 	up how many degrees of freedom are associated with each type of
+ * 	variable (and kind) in this element. Suppose that TEMPERATURE has
+ *	four degrees of freedom in this element. Then,
+ *
+ *		ei[pg->imtrx]->dof[TEMPERATURE] = 4
+ *		ei[pg->imtrx]->dof[PRESSURE]    = 3    ( in 2D with piecewise linear)
+ *
+ *	and...
+ *		ei[pg->imtrx]->dof_list[TEMPERATURE] = { 0, 1, 2, 3}
+ *		ei[pg->imtrx]->dof_list[PRESSURE]    = { 8, 8, 8}
+ *
+ *	If none, then...
+ *		ei[pg->imtrx]->dof[SOLUTE]	     = 0;
+ *		ei[pg->imtrx]->dof_list[SOLUTE] = NULL;
+ *
+ *	*esp->T[i] = x[?] such that *esp->T[i] points to temperature at
+ *		the local degree of freedom in the element.
+ *
+ * return values:
+ * --------------
+ *		0 -- everything went fine
+ *	       -1 -- something went wrong
+ */
+/* TODO: REFACTOR OUT */
+int 
+load_elem_dofptr_all(const int ielem,
+                     const Exo_DB * exo)
+{
+  int eqn;			/* equation, variable name indeces */
+  int gnn;			/* Global Node Number */
+  int dofs=0;
+  int nvdof, ledof, mode;
+  int ie;			/* index into global solution */
+  int i;			/* indeces for dofs */
+  int b, c;			/* index for concentration */
+  int p;			/* for vector eq.'s. */
+  int status;
+  int k;
+  int R_s[MAX_MODES][DIM][DIM], R_g[DIM][DIM];
+  struct Level_Set_Data *ls_old;
+
+#ifdef DEBUG
+  int dim, eshape, etype, nnodes;
+#endif /* DEBUG */
+
+  /* load eqn and variable number in tensor form */
+  (void) stress_eqn_pointer(R_s);
+
+  R_g[0][0] = R_GRADIENT11;
+  R_g[0][1] = R_GRADIENT12;
+  R_g[1][0] = R_GRADIENT21;
+  R_g[1][1] = R_GRADIENT22;
+  R_g[0][2] = R_GRADIENT13;
+  R_g[1][2] = R_GRADIENT23;
+  R_g[2][0] = R_GRADIENT31;
+  R_g[2][1] = R_GRADIENT32; 
+  R_g[2][2] = R_GRADIENT33; 
+
+  /*
+   * Count how many dofs/node for each kind of variable...
+   */
+
+  status = 0;
+
+  /*
+   * Looking for the stuff that loaded up gun_list, ln_to_dof,
+   * and all their friends ?
+   * They've moved to a more suitable residence in the function load_ei.
+   */
+  int imtrx;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    if (pg->imtrx == imtrx) continue;
+    load_ei(ielem, exo, 0, imtrx);
+    x_static	       = pg->matrices[imtrx].x;
+    x_old_static	       = pg->matrices[imtrx].x_old;
+    xdot_static	       = pg->matrices[imtrx].xdot;
+    xdot_old_static      = pg->matrices[imtrx].xdot_old;
+    x_dbl_dot_static     = NULL;
+    x_dbl_dot_old_static = NULL;
+
+    double * x = x_static;
+    double * x_old = x_old_static;
+    double * xdot = xdot_static;
+
+    /*
+     * Load up pointers into ...
+     * 	global unknown vector,	"x"
+     *	global residual vector,	"resid_vector"
+     * 	global Jacobian matrix,	"a"
+     *    external field vectors (if required)
+     */
+
+    /*
+     * Look at the problem description to figure out which pointers make sense
+     * to set up...then load them up with the right pointers into the global
+     * residual and into the global A matrix...
+     *
+     * The equations and varibles at each node have a close correspondence so
+     * we do them at the same time...
+     */
+    eqn = R_MESH1;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->d[0], esp_old->d[0],
+                                      esp_dot->d[0]);
+      if (tran->solid_inertia) {
+        dofs = ei[imtrx]->dof[eqn];
+        for ( i=0; i<dofs; i++) {
+          gnn   = ei[imtrx]->gnn_list[eqn][i];
+          ie = Index_Solution(gnn, eqn, 0, 0, -1, imtrx);
+          esp_dbl_dot->d[0][i]   = tran->xdbl_dot     + ie;
+        }
+      }
+    }
+
+    eqn = R_MESH2;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->d[1], esp_old->d[1],
+                                      esp_dot->d[1]);
+      if (tran->solid_inertia) {
+        dofs = ei[imtrx]->dof[eqn];
+        for ( i=0; i<dofs; i++) {
+          gnn   = ei[imtrx]->gnn_list[eqn][i];
+          ie = Index_Solution(gnn, eqn, 0, 0, -1, imtrx);
+          esp_dbl_dot->d[1][i]   = tran->xdbl_dot     + ie;
+        }
+      }
+    }
+
+    eqn   = R_MESH3;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->d[2], esp_old->d[2],
+                                      esp_dot->d[2]);
+      if (tran->solid_inertia) {
+        dofs = ei[imtrx]->dof[eqn];
+        for ( i=0; i<dofs; i++) {
+          gnn   = ei[imtrx]->gnn_list[eqn][i];
+          ie = Index_Solution(gnn, eqn, 0, 0, -1, imtrx);
+          esp_dbl_dot->d[2][i]   = tran->xdbl_dot     + ie;
+        }
+      }
+    }
+    else if ((pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
+              pd_glob[0]->CoordinateSystem == SWIRLING ||
+              pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) && upd->ep[imtrx][R_MESH1] >= 0) {
+      dofs = ei[imtrx]->dof[R_MESH1];
+      for (i = 0; i < dofs; i++) {
+        esp->d[2][i]       = p0;
+        esp_old->d[2][i]   = p0;
+        esp_dot->d[2][i]   = p0;
+        esp_dbl_dot->d[2][i] = p0;
+      }
+    }
+
+    eqn = R_SOLID1;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->d_rs[0], esp_old->d_rs[0],
+                                      esp_dot->d_rs[0]);
+      if (tran->solid_inertia) {
+        dofs = ei[imtrx]->dof[eqn];
+        for ( i=0; i<dofs; i++) {
+          gnn   = ei[imtrx]->gnn_list[eqn][i];
+          ie = Index_Solution(gnn, eqn, 0, 0, -1, imtrx);
+          esp_dbl_dot->d_rs[0][i]   = tran->xdbl_dot     + ie;
+        }
+      }
+    }
+
+    eqn = R_SOLID2;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->d_rs[1], esp_old->d_rs[1],
+                                      esp_dot->d_rs[1]);
+      if (tran->solid_inertia) {
+        dofs = ei[imtrx]->dof[eqn];
+        for ( i=0; i<dofs; i++) {
+          gnn   = ei[imtrx]->gnn_list[eqn][i];
+          ie = Index_Solution(gnn, eqn, 0, 0, -1, imtrx);
+          esp_dbl_dot->d_rs[1][i]   = tran->xdbl_dot     + ie;
+        }
+      }
+    }
+
+    eqn = R_SOLID3;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->d_rs[2], esp_old->d_rs[2],
+                                      esp_dot->d_rs[2]);
+      if (tran->solid_inertia) {
+        dofs = ei[imtrx]->dof[eqn];
+        for ( i=0; i<dofs; i++) {
+          gnn   = ei[imtrx]->gnn_list[eqn][i];
+          ie = Index_Solution(gnn, eqn, 0, 0, -1, imtrx);
+          esp_dbl_dot->d_rs[2][i]   = tran->xdbl_dot     + ie;
+        }
+      }
+    }
+    else if((pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
+             pd_glob[0]->CoordinateSystem == SWIRLING ||
+             pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) && upd->ep[imtrx][R_SOLID1] >= 0) {
+      dofs = ei[imtrx]->dof[R_SOLID1];
+      for ( i=0; i<dofs; i++) {
+        esp->d_rs[2][i]      = p0;
+        esp_old->d_rs[2][i]  = p0;
+        esp_dot->d_rs[2][i]  = p0;
+        esp_dbl_dot->d_rs[2][i] = p0;
+      }
+    }
+
+    eqn = R_ENERGY;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->T, esp_old->T, esp_dot->T);
+    }
+
+    eqn = R_POTENTIAL;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->V, esp_old->V, esp_dot->V);
+    }
+
+    eqn = R_SURF_CHARGE;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->qs, esp_old->qs, esp_dot->qs);
+    }
+
+    eqn = R_FILL;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->F, esp_old->F, esp_dot->F);
+    }
+
+    eqn = R_CURVATURE;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->H, esp_old->H, esp_dot->H);
+    }
+
+    eqn = R_NORMAL1;
+    if( upd->ep[imtrx][eqn] >=0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->n[0], esp_old->n[0], esp_dot->n[0]);
+    }
+     
+    eqn = R_NORMAL2;
+    if( upd->ep[imtrx][eqn] >=0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->n[1], esp_old->n[1], esp_dot->n[1]);
+    }
+     
+    eqn = R_NORMAL3;
+    if( upd->ep[imtrx][eqn] >=0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->n[2], esp_old->n[2], esp_dot->n[2]);
+    }
+    else if((pd_glob[0] ->CoordinateSystem == CYLINDRICAL ||
+             pd_glob[0]->CoordinateSystem == SWIRLING    ||
+             pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN ) &&
+            upd->ep[imtrx][R_NORMAL1] >= 0) {
+      dofs = ei[imtrx]->dof[R_NORMAL1];
+      for (i = 0; i < dofs; i++) 
+        {
+          esp->n[2][i]       = p0;
+          esp_old->n[2][i]   = p0;
+          esp_dot->n[2][i]   = p0;
+        }
+    }
+     
+  
+    for(p = 0; p < DIM; p++)
+      {
+        eqn = R_VORT_DIR1 + p;
+        if(upd->ep[imtrx][eqn] >= 0)
+          {
+            dofs = ei[imtrx]->dof[eqn];
+            for(i = 0; i < dofs; i++)
+              {
+                ie = ei[imtrx]->gun_list[eqn][i];
+                esp->vd[p][i] = x + ie;
+              }
+          }
+      }
+
+    eqn = R_VORT_LAMBDA;
+    if(upd->ep[imtrx][eqn] >= 0)
+      {
+        dofs = ei[imtrx]->dof[eqn];
+        for(i = 0; i < dofs; i++)
+          {
+            ie = ei[imtrx]->gun_list[eqn][i];
+            esp->vlambda[i] = x + ie;
+          }
+      }
+
+    eqn = R_BOND_EVOLUTION;
+    if(pd->e[eqn])
+      {
+        load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->nn, esp_old->nn, esp_dot->nn);
+      }
+
+    eqn = R_SHEAR_RATE;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      dofs = ei[imtrx]->dof[eqn];
+      for ( i=0; i<dofs; i++) {
+        ie = ei[imtrx]->gun_list[eqn][i];
+        esp->SH[i] = x + ie;
+      }
+    }
+
+    eqn = R_ENORM;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      dofs = ei[imtrx]->dof[eqn];
+      for ( i=0; i<dofs; i++) {
+        ie = ei[imtrx]->gun_list[eqn][i];
+        esp->Enorm[i] = x + ie;
+        esp_old->Enorm[i] = x_old + ie;
+      }
+    }
+
+    eqn = R_MOMENTUM1;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->v[0], esp_old->v[0],
+                                      esp_dot->v[0]);
+    }
+ 
+    eqn   = R_MOMENTUM2;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->v[1], esp_old->v[1],
+                                      esp_dot->v[1]);
+    }
+
+    if (*p0 != 0.) {
+      EH(-1, "Hey, this zero is not zero!");
+    }
+
+    eqn = R_MOMENTUM3;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->v[2], esp_old->v[2],
+                                      esp_dot->v[2]);
+    }
+    else if((pd_glob[0] ->CoordinateSystem == CYLINDRICAL) &&
+            upd->ep[imtrx][R_MOMENTUM1] >= 0) {
+      dofs = ei[imtrx]->dof[R_MOMENTUM1];
+      for (i = 0; i < dofs; i++) {
+        esp->v[2][i]       = p0;
+        esp_old->v[2][i]   = p0;
+        esp_dot->v[2][i]   = p0;
+      }
+    }
+
+    eqn = R_AUX_MOMENTUM1;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_current_mat(imtrx, eqn, esp->v_star[0]);
+    }
+
+    eqn = R_AUX_MOMENTUM2;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_current_mat(imtrx, eqn, esp->v_star[1]);
+    }
+
+    eqn = R_AUX_MOMENTUM3;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_current_mat(imtrx, eqn, esp->v_star[2]);
+      /* R_MOMENTUM3 has a special case for CYLINDRICAL coords that isn't present here
+       * probably needs to be looked at
+       *
+       * Looks like it sets v to zero.
+       */
+    }else if((pd_glob[0] ->CoordinateSystem == CYLINDRICAL) &&
+             upd->ep[imtrx][R_AUX_MOMENTUM1] >= 0) {
+      dofs = ei[imtrx]->dof[R_AUX_MOMENTUM1];
+      for (i = 0; i < dofs; i++) {
+        esp->v_star[2][i]       = p0;
+      }
+    }
+
+    eqn = R_EXT_VELOCITY;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->ext_v, esp_old->ext_v,
+                                      esp_dot->ext_v);
+    }
+ 
+    eqn = R_EFIELD1;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->E_field[0], esp_old->E_field[0],
+                                      esp_dot->E_field[0]);
+    }
+ 
+    eqn   = R_EFIELD2;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->E_field[1], esp_old->E_field[1],
+                                      esp_dot->E_field[1]);
+    }
+
+    eqn = R_EFIELD3;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->E_field[2], esp_old->E_field[2],
+                                      esp_dot->E_field[2]);
+    }
+    else if((pd_glob[0] ->CoordinateSystem == CYLINDRICAL) &&
+            upd->ep[imtrx][R_EFIELD1] >= 0) {
+      dofs = ei[imtrx]->dof[R_EFIELD1];
+      for (i = 0; i < dofs; i++) {
+        esp->E_field[2][i]       = p0;
+        esp_old->E_field[2][i]   = p0;
+        esp_dot->E_field[2][i]   = p0;
+      }
+    }
+
+    eqn = R_PMOMENTUM1;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->pv[0], esp_old->pv[0],
+                                      esp_dot->pv[0]);
+    }
+
+    eqn = R_PMOMENTUM2;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->pv[1], esp_old->pv[1],
+                                      esp_dot->pv[1]);
+    }
+  
+    eqn   = R_PMOMENTUM3;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->pv[2], esp_old->pv[2],
+                                      esp_dot->pv[2]);
+    }
+    else if((pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
+             pd_glob[0]->CoordinateSystem == SWIRLING ||
+             pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) &&
+            upd->ep[imtrx][R_PMOMENTUM1] >= 0) {
+      dofs = ei[imtrx]->dof[R_PMOMENTUM1];
+      for (i = 0; i < dofs; i++) {
+        esp->pv[2][i]       = p0;
+        esp_old->pv[2][i]   = p0;
+        esp_dot->pv[2][i]   = p0;
+      }
+    }
+
+    eqn = R_PRESSURE;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->P, esp_old->P, esp_dot->P);
+    }
+
+    eqn = R_PRESSURE_POISSON;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_current_mat(imtrx, eqn, esp->P_star);
+    }
+
+    eqn = R_LAGR_MULT1;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->lm[0], esp_old->lm[0],
+                                      esp_dot->lm[0]);
+    }
+ 
+    eqn = R_LAGR_MULT2;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->lm[1], esp_old->lm[1],
+                                      esp_dot->lm[1]);
+    }
+
+    eqn = R_LAGR_MULT3;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->lm[2], esp_old->lm[2],
+                                      esp_dot->lm[2]);
+    }
+
+    eqn = R_SHELL_CURVATURE;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_K, esp_old->sh_K, esp_dot->sh_K);
+    }
+
+    eqn = R_SHELL_TENSION;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_tens, esp_old->sh_tens, esp_dot->sh_tens);
+    }
+
+    eqn = R_SHELL_X;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_x, esp_old->sh_x, esp_dot->sh_x);
+    }
+
+    eqn = R_SHELL_Y;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_y, esp_old->sh_y, esp_dot->sh_y);
+    }
+  
+    eqn = R_SHELL_USER;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_u, esp_old->sh_u, esp_dot->sh_u);
+    }
+  
+    eqn = R_SHELL_ANGLE1;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_ang[0], esp_old->sh_ang[0], esp_dot->sh_ang[0]);
+      for (i = 0; i < ei[imtrx]->dof[R_SHELL_ANGLE1]; i++) {
+        if ( *esp->sh_ang[0][i] > M_PIE ) *esp->sh_ang[0][i] -= 2. * M_PIE;
+        else if ( *esp->sh_ang[0][i] < -M_PIE ) *esp->sh_ang[0][i] += 2. * M_PIE;
+      }
+    }
+  
+    eqn = R_SHELL_ANGLE2;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_ang[1], esp_old->sh_ang[1], esp_dot->sh_ang[1]);
+      for (i = 0; i < ei[imtrx]->dof[R_SHELL_ANGLE2]; i++) {
+        if ( *esp->sh_ang[1][i] > M_PIE ) *esp->sh_ang[1][i] -= 2. * M_PIE;
+        else if ( *esp->sh_ang[1][i] < -M_PIE ) *esp->sh_ang[1][i] += 2. * M_PIE;
+      }
+    }
+
+    eqn = R_SHELL_SURF_DIV_V;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->div_s_v, esp_old->div_s_v, esp_dot->div_s_v);
+    }
+
+    eqn = R_SHELL_SURF_CURV;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->curv, esp_old->curv, esp_dot->curv);
+    }
+
+    eqn = R_N_DOT_CURL_V;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->n_dot_curl_s_v, esp_old->n_dot_curl_s_v, esp_dot->n_dot_curl_s_v);
+    }
+
+    eqn = R_GRAD_S_V_DOT_N1;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->grad_v_dot_n[0], esp_old->grad_v_dot_n[0], esp_dot->grad_v_dot_n[0]);
+    }
+
+    eqn = R_GRAD_S_V_DOT_N2;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->grad_v_dot_n[1], esp_old->grad_v_dot_n[1], esp_dot->grad_v_dot_n[1]);
+    }
+
+    eqn = R_GRAD_S_V_DOT_N3;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->grad_v_dot_n[2], esp_old->grad_v_dot_n[2], esp_dot->grad_v_dot_n[2]);
+    }
+
+    eqn = R_SHELL_DIFF_FLUX;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_J, esp_old->sh_J, esp_dot->sh_J);
+    }
+ 
+    eqn = R_SHELL_DIFF_CURVATURE;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_Kd, esp_old->sh_Kd, esp_dot->sh_Kd);
+    }
+ 
+    eqn = R_SHELL_NORMAL1;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->n[0], esp_old->n[0], esp_dot->n[0]);
+    }
+ 
+    eqn = R_SHELL_NORMAL2;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->n[1], esp_old->n[1], esp_dot->n[1]);
+    }
+
+    for( b=0; b<MAX_PHASE_FUNC; b++) {
+      eqn =  R_PHASE1+b;
+      if( upd->ep[imtrx][eqn]>=0 ) {
+        load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->pF[b], esp_old->pF[b], esp_dot->pF[b]);
+      }
+    }
+
+    eqn = R_ACOUS_PREAL;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->apr, esp_old->apr, esp_dot->apr);
+    }
+    eqn = R_ACOUS_PIMAG;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->api, esp_old->api, esp_dot->api);
+    }
+    eqn = R_ACOUS_REYN_STRESS;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->ars, esp_old->ars, esp_dot->ars);
+    }
+    eqn = R_SHELL_BDYVELO;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_bv, esp_old->sh_bv, esp_dot->sh_bv);
+    }
+    eqn = R_SHELL_LUBP;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_p, esp_old->sh_p, esp_dot->sh_p);
+    }
+    eqn = R_LUBP;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->lubp, esp_old->lubp, esp_dot->lubp);
+    }
+    eqn = R_LUBP_2;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->lubp_2, esp_old->lubp_2, esp_dot->lubp_2);
+    }
+    eqn = R_SHELL_FILMP;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_fp, esp_old->sh_fp, esp_dot->sh_fp);
+    }
+    eqn = R_SHELL_FILMH;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_fh, esp_old->sh_fh, esp_dot->sh_fh);
+    }
+    eqn = R_SHELL_PARTC;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_pc, esp_old->sh_pc, esp_dot->sh_pc);
+    }
+    eqn = R_SHELL_SAT_CLOSED;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_sat_closed, esp_old->sh_sat_closed, esp_dot->sh_sat_closed);
+    }
+    eqn = R_SHELL_SAT_OPEN;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_p_open, esp_old->sh_p_open, esp_dot->sh_p_open);
+    }
+    eqn = R_SHELL_SAT_OPEN_2;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_p_open_2, esp_old->sh_p_open_2, esp_dot->sh_p_open_2);
+    }
+    eqn = R_SHELL_ENERGY;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_t, esp_old->sh_t, esp_dot->sh_t);
+    }
+    eqn = R_SHELL_DELTAH;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_dh, esp_old->sh_dh, esp_dot->sh_dh);
+    }
+    eqn = R_SHELL_LUB_CURV;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_l_curv, esp_old->sh_l_curv, esp_dot->sh_l_curv);
+    }
+    eqn = R_SHELL_LUB_CURV_2;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_l_curv_2, esp_old->sh_l_curv_2, esp_dot->sh_l_curv_2);
+    }
+    eqn = R_SHELL_SAT_GASN;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_sat_gasn, esp_old->sh_sat_gasn, esp_dot->sh_sat_gasn);
+    }
+    eqn = R_POR_SINK_MASS;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sink_mass, esp_old->sink_mass, esp_dot->sink_mass);
+    }
+    eqn = R_LIGHT_INTP;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->poynt[0], esp_old->poynt[0],
+                                      esp_dot->poynt[0]);
+    }
+    eqn   = R_LIGHT_INTM;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->poynt[1], esp_old->poynt[1],
+                                      esp_dot->poynt[1]);
+    }
+    eqn = R_LIGHT_INTD;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->poynt[2], esp_old->poynt[2],
+                                      esp_dot->poynt[2]);
+    }
+
+    eqn = R_SHELL_SHEAR_TOP;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_shear_top, esp_old->sh_shear_top, esp_dot->sh_shear_top);
+    }
+
+    eqn = R_SHELL_SHEAR_BOT;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_shear_bot, esp_old->sh_shear_bot, esp_dot->sh_shear_bot);
+    }
+
+    eqn = R_SHELL_CROSS_SHEAR;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->sh_cross_shear, esp_old->sh_cross_shear, esp_dot->sh_cross_shear);
+    }
+
+    eqn = R_MAX_STRAIN;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->max_strain, esp_old->max_strain, esp_dot->max_strain);
+    }
+
+    eqn = R_CUR_STRAIN;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->cur_strain, esp_old->cur_strain, esp_dot->cur_strain);
+    }
+
+ 
+    eqn = R_STRESS11;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      /* This should loop through all the stress variables 
+       * for all the modes.
+       */
+      for (mode = 0; mode < vn->modes; mode++) {
+        for (b = 0; b < VIM; b++) {
+          for (c = 0; c < VIM; c++) {
+            if (b <= c) {
+              eqn = R_s[mode][b][c];
+              if (upd->ep[imtrx][eqn] >= 0) {
+                load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->S[mode][b][c],
+                                                esp_old->S[mode][b][c],
+                                                esp_dot->S[mode][b][c]);
+              } else {
+                dofs = ei[imtrx]->dof[R_STRESS11];
+                for (i = 0; i < dofs; i++) {
+                  esp->S[mode][b][c][i]       = p0;
+                  esp_old->S[mode][b][c][i]   = p0;
+                  esp_dot->S[mode][b][c][i]   = p0;
+                }
+              }
+            }
+          }
+        }
+      }
+      if((pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
+          pd_glob[0]->CoordinateSystem == SWIRLING ||
+          pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) ) {
+        if( upd->ep[imtrx][R_STRESS33] == -1 )
+	  EH(-1,"Hey,the STRESS33 is needed in CYLINDRICAL VE problems!");
+      }
+    } 
+  
+    eqn = R_GRADIENT11;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      /* This should loop through all the velocity gradient 
+       * components of the tensor
+       */
+      for (b = 0; b < VIM; b++) {
+        for (c = 0; c < VIM; c++) {
+          eqn = R_g[b][c];
+          if (upd->ep[imtrx][eqn] >= 0) {
+            load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->G[b][c],
+                                            esp_old->G[b][c], esp_dot->G[b][c]);
+          } else {
+            dofs = ei[imtrx]->dof[R_GRADIENT11];
+            for (i = 0; i < dofs; i++) {
+              esp->G[b][c][i]       = p0;
+              esp_old->G[b][c][i]   = p0;
+              esp_dot->G[b][c][i]   = p0;
+            }
+          }
+        }
+      }
+    }
+
+    eqn = R_POR_LIQ_PRES;
+    if ( upd->ep[imtrx][eqn] >= 0 )
+      {
+        load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->p_liq, esp_old->p_liq,
+                                        esp_dot->p_liq);
+      }
+
+    eqn = R_POR_GAS_PRES;
+    if ( upd->ep[imtrx][eqn] >= 0 )
+      {
+        load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->p_gas, esp_old->p_gas,
+                                        esp_dot->p_gas);
+      }
+
+    eqn = R_POR_POROSITY;
+    if ( upd->ep[imtrx][eqn] >= 0 )
+      {
+        load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->porosity, esp_old->porosity,
+                                        esp_dot->porosity);
+      }
+
+    eqn = R_POR_ENERGY;
+    if ( pd->e[eqn] )
+      {
+        load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->T, esp_old->T,
+                                        esp_dot->T);
+      }
+
+    eqn = R_POR_SATURATION;
+    if ( upd->ep[imtrx][eqn] >= 0 )
+      {
+        EH(-1,"Saturation-based formulation not implemented yet");
+      }
+  
+    eqn  = R_MASS;
+    if (upd->ep[imtrx][eqn] >= 0) {
+      for (k = 0; k < pd->Num_Species_Eqn; k++) {
+        dofs = ei[imtrx]->dof[eqn];
+        for ( i=0; i<dofs; i++) {
+          gnn   = ei[imtrx]->gnn_list[eqn][i];
+          nvdof = ei[imtrx]->Baby_Dolphin[eqn][i];
+          ledof = ei[imtrx]->lvdof_to_ledof[eqn][i]; 
+          ie = Index_Solution(gnn, R_MASS, k, nvdof, ei[imtrx]->matID_ledof[ledof], imtrx);
+          esp->c[k][i]       = x        + ie;
+          esp_old->c[k][i]   = x_old    + ie;
+          esp_dot->c[k][i]   = xdot     + ie;
+        }
+      }
+    }
+  }
   return (status);
 }
 /*************************************************************************/

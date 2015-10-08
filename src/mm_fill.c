@@ -541,11 +541,14 @@ matrix_fill(
    * a bona fide zero value so that references to undefined variables
    * give a zero by default...
    */
+  err = load_elem_dofptr_all(ielem, exo);
+  EH(err, "load_elem_dofptr_all");
 
   
   err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 
 			 resid_vector, 0);
   EH(err, "load_elem_dofptr");
+
 
   if (upd->SegregatedSolve) {
     load_splitb_esp(ielem, exo);
@@ -1057,6 +1060,7 @@ matrix_fill(
 	  err = load_fv();
 	  EH( err, "load_fv");
 
+
 	  /*
 	   * Here, load in the final part of the necessary basis function
 	   * information derivatives in the physical space coordinates.
@@ -1364,7 +1368,9 @@ matrix_fill(
         load_splitb_fv(ielem);
       }
 
-       
+       	  err = load_fv_all();
+	  EH( err, "load_fv_all");
+
       /*
        * Here, load in the final part of the necessary basis function
        * information derivatives in the physical space coordinates.
@@ -1395,6 +1401,10 @@ matrix_fill(
        */
       err = load_fv_grads();
       EH( err, "load_fv_grads");
+
+
+      err = load_fv_grads_all();
+      EH( err, "load_fv_grads_all");
 
       if (upd->SegregatedSolve) {
         load_splitb_fv_grads(ielem);

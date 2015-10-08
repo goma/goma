@@ -313,14 +313,17 @@ assemble_aux_u(dbl time,   // Current time
   
   //v_star = fv->v_star;
   v_star = fv->v_star;
-  v_old = (pg->sbcfv).v_old;
-  P_old = (pg->sbcfv).P_old;
+  v_old = fv_old->v;
+  //v_old = (pg->sbcfv).v_old;
+  //P_old = (pg->sbcfv).P_old;
+  P_old = fv_old->P;
 
   for(a=0; a<VIM; a++)
     {
       grad_v_star[a] = fv->grad_v_star[a];
       //grad_v_star[a] = fv->grad_v[a];
-      grad_v_old[a] = (pg->sbcfv).grad_v_old[a];
+      //grad_v_old[a] = (pg->sbcfv).grad_v_old[a];
+      grad_v_old[a] = fv_old->grad_v[a];
     }
 
   for(a=0; a<VIM; a++)
@@ -580,10 +583,11 @@ assemble_press_poisson(dbl time,  // Current time
   h3 = fv->h3;
   grad_phi = bf[eqn]->grad_phi;
 
-  //div_v_star = fv->div_v_star;
+  div_v_star = fv->div_v_star;
   //grad_P_star = fv->grad_P_star;
-  div_v_star = (pg->sbcfv).div_v_star;
-  v_star = (pg->sbcfv).v_star;
+  //div_v_star = (pg->sbcfv).div_v_star;
+  //v_star = (pg->sbcfv).v_star;
+  v_star = fv->v_star;
   grad_P_star = fv->grad_P_star;
   grad_P_old = fv_old->grad_P;
 
@@ -731,12 +735,13 @@ int assemble_press_proj(dbl time,  // Current time
   det_J = bf[eqn]->detJ;	       
   h3 = fv->h3;
 
-  //v_star = fv->v_star;
-  v_star = (pg->sbcfv).v_star;
+  v_star = fv->v_star;
+  //v_star = (pg->sbcfv).v_star;
   v = fv->v;
-  //grad_P_star = fv->grad_P_star
-  P_star = (pg->sbcfv).P_star;
-  grad_P_star = (pg->sbcfv).grad_P_star;
+  grad_P_star = fv->grad_P_star;
+    //  P_star = (pg->sbcfv).P_star;
+  P_star = fv->P_star;
+  //grad_P_star = (pg->sbcfv).grad_P_star;
   grad_P_old = fv_old->grad_P;
 
   rho = density(NULL, time);
@@ -917,19 +922,19 @@ assemble_press_update(dbl time,  // Current time
   h3 = fv->h3;
   grad_phi = bf[eqn]->grad_phi;
 
-  //div_v_star = fv->div_v_star;
+  div_v_star = fv->div_v_star;
   //grad_v_star = fv->grad_v_star;
-  div_v_star = (pg->sbcfv).div_v_star;
+  //div_v_star = (pg->sbcfv).div_v_star;
   P = fv->P;
-  //P_star = fv->P_star;
-  P_star = (pg->sbcfv).P_star;
+  P_star = fv->P_star;
+  //P_star = (pg->sbcfv).P_star;
   P_old = fv_old->P;
   grad_P_old = fv_old->grad_P;
 
   for(a=0; a<VIM; a++)
     {
-      //grad_v_star[a] = fv->grad_v_star[a];
-      grad_v_star[a] = (pg->sbcfv).grad_v_star[a];
+      grad_v_star[a] = fv->grad_v_star[a];
+      //grad_v_star[a] = (pg->sbcfv).grad_v_star[a];
     }
   
   for(a=0; a<VIM; a++)

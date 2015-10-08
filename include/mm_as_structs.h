@@ -1655,6 +1655,7 @@ struct Field_Variables
   
   dbl div_v;			/* Divergence of velocity. */
   dbl grad_v[DIM][DIM];		/* Gradient of velocity.  d (v_i) / d (x_j) */
+  dbl div_v_star;			/* Divergence of velocity*. */
   dbl grad_v_star[DIM][DIM];    /* Velocity* segregated */
   dbl curl_v[DIM];		/* Curl of velocity, aka vorticity. */
 
