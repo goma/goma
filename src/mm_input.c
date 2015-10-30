@@ -8419,6 +8419,9 @@ rd_eq_specs(FILE *ifp,
     } else if (!strcasecmp(ts, "shell_curvature")) {
       ce = set_eqn(R_SHELL_CURVATURE, pd_ptr);
       pd_ptr->Do_Surf_Geometry = 1;
+    } else if (!strcasecmp(ts, "shell_curvature2")) {
+      ce = set_eqn(R_SHELL_CURVATURE2, pd_ptr);
+      pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "shell_tension")) {
       ce = set_eqn(R_SHELL_TENSION, pd_ptr);
     } else if (!strcasecmp(ts, "shell_x")) {
@@ -8511,6 +8514,9 @@ rd_eq_specs(FILE *ifp,
       pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "shell_normal2")) {
       ce = set_eqn(R_SHELL_NORMAL2, pd_ptr);
+      pd_ptr->Do_Surf_Geometry = 1;
+    } else if (!strcasecmp(ts, "shell_normal3")) {
+      ce = set_eqn(R_SHELL_NORMAL3, pd_ptr);
       pd_ptr->Do_Surf_Geometry = 1;
     } else if (!strcasecmp(ts, "ext_v")) {
       ce = set_eqn(R_EXT_VELOCITY, pd_ptr);
@@ -9020,6 +9026,8 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(LAGR_MULT3, pd_ptr);
     } else if (!strcasecmp(ts, "K")) {
       cv = set_var(SHELL_CURVATURE, pd_ptr);
+    } else if (!strcasecmp(ts, "K2")) {
+      cv = set_var(SHELL_CURVATURE2, pd_ptr);
     } else if (!strcasecmp(ts, "TENS")) {
       cv = set_var(SHELL_TENSION, pd_ptr);
     } else if (!strcasecmp(ts, "SH_X")) {
@@ -9100,6 +9108,8 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(SHELL_NORMAL1, pd_ptr);
     } else if (!strcasecmp(ts, "SH_N2")) {
       cv = set_var(SHELL_NORMAL2, pd_ptr);
+    } else if (!strcasecmp(ts, "SH_N3")) {
+      cv = set_var(SHELL_NORMAL3, pd_ptr);
     } else if (!strcasecmp(ts, "EXT_V")) {
       cv = set_var(EXT_VELOCITY, pd_ptr);
 
@@ -9410,6 +9420,7 @@ rd_eq_specs(FILE *ifp,
        * One term ...
        */
     case R_SHELL_CURVATURE:
+    case R_SHELL_CURVATURE2:
     case R_SHELL_TENSION:
     case R_SHELL_X:
     case R_SHELL_Y:
@@ -9417,6 +9428,7 @@ rd_eq_specs(FILE *ifp,
     case R_SHELL_DIFF_CURVATURE:
     case R_SHELL_NORMAL1:
     case R_SHELL_NORMAL2:
+    case R_SHELL_NORMAL3:
 
       /* add a little consistency check for any 3D or cylindrical problems */
       if ((pd_ptr->CoordinateSystem != CARTESIAN &&

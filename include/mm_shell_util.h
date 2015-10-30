@@ -92,6 +92,39 @@ PROTO((double *div_s_nv,	/* Surface divergence of normal (scalar) */
        double d_div_s_nv_dnv[DIM][MDE],     /* Self-sensitivities */
        double d_div_s_nv_dmesh[DIM][MDE])); /* Mesh sensitivities */
 
+EXTERN void shell_tangents
+PROTO((
+       double t0[DIM],
+       double t1[DIM],
+       double dt0_dx[DIM][DIM][MDE],
+       double dt1_dx[DIM][DIM][MDE]
+     ));
+
+EXTERN void shell_tangents_seeded
+PROTO((
+       double t0[DIM],
+       double t1[DIM],
+       double dt0_dnormal[DIM][DIM][MDE],
+       double dt1_dnormal[DIM][DIM][MDE]
+     ));
+
+
+EXTERN void shell_stress_tensor
+PROTO((
+       double TT[DIM][DIM],
+       double dTT_dx[DIM][DIM][DIM][MDE],
+       double dTT_dnormal[DIM][DIM][DIM][MDE]
+     ));
+
+EXTERN void shell_moment_tensor
+PROTO((
+       double M[DIM][DIM],
+       double dM_dx[DIM][DIM][DIM][MDE],
+       double dM_dnormal[DIM][DIM][DIM][MDE],
+       double dM_curv1[DIM][DIM][MDE],
+       double dM_curv2[DIM][DIM][MDE]
+     ));
+
 EXTERN void lubrication_shell_initialize
 PROTO((
        int *n_dof,           // Degrees of freedom
@@ -128,6 +161,7 @@ PROTO((
 
 EXTERN void calculate_lub_q_v_old
 PROTO((
+       const int EQN,
        double time_old,
        double dt_old,
        double xi[DIM],

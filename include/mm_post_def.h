@@ -531,6 +531,8 @@ extern int LUB_VELO_FIELD;       /* Velocity field calculated from lubrication *
 extern int DISJ_PRESS;       /* Disjoining pressure */
 extern int SH_SAT_OPEN;          /* Saturation for open porous shells */
 extern int SH_SAT_OPEN_2;        /* Saturation for open porous shells 2 */
+extern int SH_STRESS_TENSOR;    /* stress tensor for structural shell */
+extern int SH_TANG;             /* Tangents vectors for structural shell */
 extern int PP_LAME_MU;         /* Lame MU coefficient for solid/mesh */
 extern int PP_LAME_LAMBDA;     /* Lame LAMBDA coefficient for solid/mesh */
 extern int VON_MISES_STRAIN;

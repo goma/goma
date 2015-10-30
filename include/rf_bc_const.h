@@ -782,6 +782,8 @@
 #define SH_LUBP_BC          970000013
 #define SH_LUBP_SOLID_BC    970000014
 #define SH_LUBP_SOLID_RS_BC    970000015
+#define SH_S11_WEAK_BC      970000016
+#define SH_S22_WEAK_BC      970000017
 
 /* Shell variables that are not structural shells */
 #define SH_GAMMA1_BC            980000001
@@ -972,7 +974,7 @@
 #define SH_P_OPEN_USER_BC 777000021
 #define LUB_PRESS_2_BC  777000022
 #define SHELL_OPEN_PRESS_2_BC 777000023
-
+#define LUB_STATIC_BC 777000024
 
 
 /* Vectors used for rotations */

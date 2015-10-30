@@ -1406,6 +1406,11 @@ load_variable (double *x_var,        /* variable value */
       var = SHELL_CURVATURE;
       *d_x_var = 1.;
       break;
+   case SHELL_CURVATURE2:
+      *x_var = fv->sh_K2;
+      var = SHELL_CURVATURE2;
+      *d_x_var = 1.;
+      break;
     case SHELL_TENSION:
       *x_var = fv->sh_tens;
       var = SHELL_TENSION;
@@ -1484,6 +1489,11 @@ load_variable (double *x_var,        /* variable value */
     case SHELL_NORMAL2:
       *x_var = fv->n[1];
       var = SHELL_NORMAL2;
+      *d_x_var = 1.;
+      break;
+    case SHELL_NORMAL3:
+      *x_var = fv->n[2];
+      var = SHELL_NORMAL3;
       *d_x_var = 1.;
       break;
     case ACOUS_PREAL:

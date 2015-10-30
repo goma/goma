@@ -112,7 +112,8 @@
 #define FSI_SHELL_ONLY           5
 #define FSI_MESH_UNDEF           6
 #define FSI_MESH_ONEWAY          7
-
+#define FSI_SHELL_ONLY_MESH      8
+#define FSI_SHELL_ONLY_UNDEF     9
 
 
 /****************************************************************************/
@@ -389,53 +390,55 @@
 #define NORMAL3               134    /* normal to LS field, component 3 */
 
 #define SHELL_CURVATURE       135
-#define SHELL_TENSION         136
-#define SHELL_X               137
-#define SHELL_Y               138
-#define SHELL_USER            139
-#define PHASE1                140
-#define PHASE2                141
-#define PHASE3                142
-#define PHASE4                143
-#define PHASE5                144
-#define SHELL_ANGLE1          145 /*  Smoothed normal orientation computed using shell elements, theta */
-#define SHELL_ANGLE2          146 /*  Smoothed normal orientation computed using shell elements, phi */
-#define SHELL_SURF_DIV_V      147 /*  (I-nn).div(V) ..From Surface Rheo Constitutive model */
-#define SHELL_SURF_CURV       148 /*  2H = div_s(n), mean curvature ..From Surface Rheo Constitutive model */
-#define N_DOT_CURL_V          149 /*  curl(V).n , higher-order quantity ..From Surface Rheo Constitutive model */
-#define GRAD_S_V_DOT_N1       150 /*  grad_s(v).n - x , higher-order quantity ..From Surface Rheo Constitutive model */
-#define GRAD_S_V_DOT_N2       151 /*  grad_s(v).n - y , higher-order quantity ..From Surface Rheo Constitutive model */
-#define GRAD_S_V_DOT_N3       152 /*  grad_s(v).n - z , higher-order quantity ..From Surface Rheo Constitutive model */
-#define ACOUS_PREAL           153 /*  Acoustic harmonic pressure - real part    */
-#define ACOUS_PIMAG           154 /*  Acoustic harmonic pressure - imag part    */
-#define SHELL_DIFF_FLUX       155 /* sh_J - material diffusion on a shell surface */
-#define SHELL_DIFF_CURVATURE  156 /* K = div_s_n used with shell normal vector unknowns */
-#define SHELL_NORMAL1         157 /* X-component of shell normal vector unknown */
-#define SHELL_NORMAL2         158 /* Y-component of shell normal vector unknown */
-#define ACOUS_REYN_STRESS     159 /*  Acoustic Reynolds Stress    */
-#define SHELL_BDYVELO         160 /*  Acoustic Boundary Velocity Squared    */
-#define SHELL_LUBP            161 /*  Shell Lubrication Pressure    */
-#define LUBP                  162 /*  Lubrication Pressure    */
-#define SHELL_FILMP           163 /*  Lubrication pressure of a thin film */
-#define SHELL_FILMH           164 /*  Film thickness */
-#define SHELL_PARTC           165 /*  Particle concentration in the thin film */
-#define SHELL_SAT_CLOSED      166 /*  Structured porous shell saturation - closed pores - SAR */
-#define SHELL_PRESS_OPEN      167 /*  Structured porous shell saturation - open pores - SAR */
-#define SHELL_TEMPERATURE     168 /*  Shell temperature */
-#define SHELL_DELTAH          169 /*  Lubrication shell thickness change (melting problems)*/
-#define SHELL_LUB_CURV        170 /*  Curvature from the level set field in a lubrication shell - SAR */
-#define SHELL_SAT_GASN        171 /*  Structured porous shell saturation - gas compression - SAR */
-#define SHELL_SHEAR_TOP       172 /*  Shear rate at top wall - lubrication shell for generalized Newtonian flow */
-#define SHELL_SHEAR_BOT       173 /*  Shear rate at bottom wall - lubrication shell for generalized Newtonian flow */
-#define SHELL_CROSS_SHEAR     174 /*  Cross stream shear stress - lubrication shell for generalized Newtonian flow */
-#define MAX_STRAIN            175 /*  Time-history maximum von mises strain in a solid material */
-#define CUR_STRAIN            176 /*  Current value of the von mises strain in a solid material */
-#define LUBP_2                177 /*  Second Lubrication Pressure for multilayer problems  */
-#define SHELL_PRESS_OPEN_2    178 /*  Second Structured porous shell pressure - open pores - SAR */
-#define SHELL_LUB_CURV_2      179 /*  Curvature from the phase field in a lubrication_2 shell - PRS*/
-#define LIGHT_INTP            180 /*  Light Intensity - Plus direction propagation-RBS*/
-#define LIGHT_INTM            181 /*  Light Intensity - Minus direction propagation-RBS*/
-#define LIGHT_INTD            182 /*  Light Intensity - Scattering Dispersion-RBS*/
+#define SHELL_CURVATURE2      136
+#define SHELL_TENSION         137
+#define SHELL_X               138
+#define SHELL_Y               139
+#define SHELL_USER            140
+#define PHASE1                141
+#define PHASE2                142
+#define PHASE3                143
+#define PHASE4                144
+#define PHASE5                145
+#define SHELL_ANGLE1          146 /*  Smoothed normal orientation computed using shell elements, theta */
+#define SHELL_ANGLE2          147 /*  Smoothed normal orientation computed using shell elements, phi */
+#define SHELL_SURF_DIV_V      148 /*  (I-nn).div(V) ..From Surface Rheo Constitutive model */
+#define SHELL_SURF_CURV       149 /*  2H = div_s(n), mean curvature ..From Surface Rheo Constitutive model */
+#define N_DOT_CURL_V          150 /*  curl(V).n , higher-order quantity ..From Surface Rheo Constitutive model */
+#define GRAD_S_V_DOT_N1       151 /*  grad_s(v).n - x , higher-order quantity ..From Surface Rheo Constitutive model */
+#define GRAD_S_V_DOT_N2       152 /*  grad_s(v).n - y , higher-order quantity ..From Surface Rheo Constitutive model */
+#define GRAD_S_V_DOT_N3       153 /*  grad_s(v).n - z , higher-order quantity ..From Surface Rheo Constitutive model */
+#define ACOUS_PREAL           154 /*  Acoustic harmonic pressure - real part    */
+#define ACOUS_PIMAG           155 /*  Acoustic harmonic pressure - imag part    */
+#define SHELL_DIFF_FLUX       156 /* sh_J - material diffusion on a shell surface */
+#define SHELL_DIFF_CURVATURE  157 /* K = div_s_n used with shell normal vector unknowns */
+#define SHELL_NORMAL1         158 /* X-component of shell normal vector unknown */
+#define SHELL_NORMAL2         159 /* Y-component of shell normal vector unknown */
+#define SHELL_NORMAL3         160 /* Z-component of shell normal vector unknown */
+#define ACOUS_REYN_STRESS     161 /*  Acoustic Reynolds Stress    */
+#define SHELL_BDYVELO         162 /*  Acoustic Boundary Velocity Squared    */
+#define SHELL_LUBP            163 /*  Shell Lubrication Pressure    */
+#define LUBP                  164 /*  Lubrication Pressure    */
+#define SHELL_FILMP           165 /*  Lubrication pressure of a thin film */
+#define SHELL_FILMH           166 /*  Film thickness */
+#define SHELL_PARTC           167 /*  Particle concentration in the thin film */
+#define SHELL_SAT_CLOSED      168 /*  Structured porous shell saturation - closed pores - SAR */
+#define SHELL_PRESS_OPEN      169 /*  Structured porous shell saturation - open pores - SAR */
+#define SHELL_TEMPERATURE     170 /*  Shell temperature */
+#define SHELL_DELTAH          171 /*  Lubrication shell thickness change (melting problems)*/
+#define SHELL_LUB_CURV        172 /*  Curvature from the level set field in a lubrication shell - SAR */
+#define SHELL_SAT_GASN        173 /*  Structured porous shell saturation - gas compression - SAR */
+#define SHELL_SHEAR_TOP       174 /*  Shear rate at top wall - lubrication shell for generalized Newtonian flow */
+#define SHELL_SHEAR_BOT       175 /*  Shear rate at bottom wall - lubrication shell for generalized Newtonian flow */
+#define SHELL_CROSS_SHEAR     176 /*  Cross stream shear stress - lubrication shell for generalized Newtonian flow */
+#define MAX_STRAIN            177 /*  Time-history maximum von mises strain in a solid material */
+#define CUR_STRAIN            178 /*  Current value of the von mises strain in a solid material */
+#define LUBP_2                179 /*  Second Lubrication Pressure for multilayer problems  */
+#define SHELL_PRESS_OPEN_2    180 /*  Second Structured porous shell pressure - open pores - SAR */
+#define SHELL_LUB_CURV_2      181 /*  Curvature from the phase field in a lubrication_2 shell - PRS*/
+#define LIGHT_INTP            182 /*  Light Intensity - Plus direction propagation-RBS*/
+#define LIGHT_INTM            183 /*  Light Intensity - Minus direction propagation-RBS*/
+#define LIGHT_INTD            184 /*  Light Intensity - Scattering Dispersion-RBS*/
 /*
  * define a variable to hold an external field which will be 
  * held fixed in the problem but parametered by the basis functions
@@ -740,58 +743,60 @@
 
 /* Shell element variables */
 #define R_SHELL_CURVATURE       135 /*  Curvature for structural shell elements*/
-#define R_SHELL_TENSION         136 /*  Tension variable for structural shell elements */
-#define R_SHELL_X               137 /*  Shell X position equation */
-#define R_SHELL_Y               138 /*  Shell Y position equation */
-#define R_SHELL_USER            139 /*  Shell user equation */
-#define R_PHASE1                140 /* First phase function */
-#define R_PHASE2                141 /* Second phase function */
-#define R_PHASE3                142 /* Third phase function */
-#define R_PHASE4                143 /* Fourth phase function */
-#define R_PHASE5                144 /* Fifth phase function */
+#define R_SHELL_CURVATURE2      136 /*  Second curvature for structural shell elements*/
+#define R_SHELL_TENSION         137 /*  Tension variable for structural shell elements */
+#define R_SHELL_X               138 /*  Shell X position equation */
+#define R_SHELL_Y               139 /*  Shell Y position equation */
+#define R_SHELL_USER            140 /*  Shell user equation */
+#define R_PHASE1                141 /* First phase function */
+#define R_PHASE2                142 /* Second phase function */
+#define R_PHASE3                143 /* Third phase function */
+#define R_PHASE4                144 /* Fourth phase function */
+#define R_PHASE5                145 /* Fifth phase function */
 
 /* more shell element vars */
-#define R_SHELL_ANGLE1          145 /*  Smoothed normal orientation computed using shell elements, theta */
-#define R_SHELL_ANGLE2          146 /*  Smoothed normal orientation computed using shell elements, phi */
+#define R_SHELL_ANGLE1          146 /*  Smoothed normal orientation computed using shell elements, theta */
+#define R_SHELL_ANGLE2          147 /*  Smoothed normal orientation computed using shell elements, phi */
 
 /*Still more shell element vars */
-#define R_SHELL_SURF_DIV_V      147 /*  (I-nn).div(V) ..From Surface Rheo Constitutive model */
-#define R_SHELL_SURF_CURV       148 /*  2H = - div_s(n), mean curvature ..From Surface Rheo Constitutive model */
-#define R_N_DOT_CURL_V          149 /*  curl(V).n , higher-order quantity ..From Surface Rheo Constitutive model */
-#define R_GRAD_S_V_DOT_N1       150 /*  grad_s(v).n - x , higher-order quantity ..From Surface Rheo Constitutive model */
-#define R_GRAD_S_V_DOT_N2       151 /*  grad_s(v).n - y , higher-order quantity ..From Surface Rheo Constitutive model */
-#define R_GRAD_S_V_DOT_N3       152 /*  grad_s(v).n - z , higher-order quantity ..From Surface Rheo Constitutive model */
-#define R_ACOUS_PREAL           153 /*  Acoustic harmonic wave equation - real part */
-#define R_ACOUS_PIMAG           154 /*  Acoustic harmonic wave equation - imaginary part */
-#define R_SHELL_DIFF_FLUX       155 /* sh_J - material diffusion on a shell surface */
-#define R_SHELL_DIFF_CURVATURE  156 /* K = div_s_n used with shell normal vector unknowns */
-#define R_SHELL_NORMAL1         157 /* X-component of shell normal vector unknown */
-#define R_SHELL_NORMAL2         158 /* Y-component of shell normal vector unknown */
-#define R_ACOUS_REYN_STRESS     159 /*  Acoustic Reynolds Stress */
-#define R_SHELL_BDYVELO         160 /*  Acoustic Streaming Velocity shell */
-#define R_SHELL_LUBP            161 /*  Lubrication Pressure shell */
-#define R_LUBP                  162 /*  Lubrication pressure Reynolds equation not on shell */
-#define R_SHELL_FILMP           163 /*  Lubrication pressure of a thin film */
-#define R_SHELL_FILMH           164 /*  Film thickness */
-#define R_SHELL_PARTC           165 /*  Particles concentration */
-#define R_SHELL_SAT_CLOSED      166 /*  Structured porous shell - Closed pores - SAR  */
-#define R_SHELL_SAT_OPEN        167 /*  Structured porous shell - Open pores - SAR  */
-#define R_SHELL_ENERGY          168 /*  Shell energy equation */
-#define R_SHELL_DELTAH          169 /*  Shell gap evolution equation (e.g. melting problems) */
-#define R_SHELL_LUB_CURV        170 /*  Curvature from the level set field in a lubrication shell - SAR */
-#define R_SHELL_SAT_GASN        171 /*  Structured porous shell - Gas compression - SAR */
-#define R_SHELL_SHEAR_TOP       172 /*  Shear rate at top wall - lubrication shell for generalized Newtonian flow */
-#define R_SHELL_SHEAR_BOT       173 /*  Shear rate at bottom wall - lubrication shell for generalized Newtonian flow */
-#define R_SHELL_CROSS_SHEAR     174 /*  Cross stream shear stress - lubrication shell for generalized Newtonian flow */
-#define R_MAX_STRAIN            175 /*  Time-history maximum von mises strain in a solid material */
-#define R_CUR_STRAIN            176 /*  Current value of the von mises strain in a solid material */
-#define R_LUBP_2                177 /*  Second lubrication_pressure for multilayer flows */
-#define R_SHELL_SAT_OPEN_2      178 /*  Second open pore shell lubrication saturation */
-#define R_SHELL_LUB_CURV_2      179 /*  Curvature from the phase field in a lubrication_2 shell - PRS */
-#define R_LIGHT_INTP            180 /*  Light Intensity - Plus direction propagation*/
-#define R_LIGHT_INTM            181 /*  Light Intensity - Minus direction propagation*/
-#define R_LIGHT_INTD            182 /*  Light Intensity - Scattering Dispersion*/
-#define V_LAST		        183
+#define R_SHELL_SURF_DIV_V      148 /*  (I-nn).div(V) ..From Surface Rheo Constitutive model */
+#define R_SHELL_SURF_CURV       149 /*  2H = - div_s(n), mean curvature ..From Surface Rheo Constitutive model */
+#define R_N_DOT_CURL_V          150 /*  curl(V).n , higher-order quantity ..From Surface Rheo Constitutive model */
+#define R_GRAD_S_V_DOT_N1       151 /*  grad_s(v).n - x , higher-order quantity ..From Surface Rheo Constitutive model */
+#define R_GRAD_S_V_DOT_N2       152 /*  grad_s(v).n - y , higher-order quantity ..From Surface Rheo Constitutive model */
+#define R_GRAD_S_V_DOT_N3       153 /*  grad_s(v).n - z , higher-order quantity ..From Surface Rheo Constitutive model */
+#define R_ACOUS_PREAL           154 /*  Acoustic harmonic wave equation - real part */
+#define R_ACOUS_PIMAG           155 /*  Acoustic harmonic wave equation - imaginary part */
+#define R_SHELL_DIFF_FLUX       156 /* sh_J - material diffusion on a shell surface */
+#define R_SHELL_DIFF_CURVATURE  157 /* K = div_s_n used with shell normal vector unknowns */
+#define R_SHELL_NORMAL1         158 /* X-component of shell normal vector unknown */
+#define R_SHELL_NORMAL2         159 /* Y-component of shell normal vector unknown */
+#define R_SHELL_NORMAL3         160 /* Z-component of shell normal vector unknown */
+#define R_ACOUS_REYN_STRESS     161 /*  Acoustic Reynolds Stress */
+#define R_SHELL_BDYVELO         162 /*  Acoustic Streaming Velocity shell */
+#define R_SHELL_LUBP            163 /*  Lubrication Pressure shell */
+#define R_LUBP                  164 /*  Lubrication pressure Reynolds equation not on shell */
+#define R_SHELL_FILMP           165 /*  Lubrication pressure of a thin film */
+#define R_SHELL_FILMH           166 /*  Film thickness */
+#define R_SHELL_PARTC           167 /*  Particles concentration */
+#define R_SHELL_SAT_CLOSED      168 /*  Structured porous shell - Closed pores - SAR  */
+#define R_SHELL_SAT_OPEN        169 /*  Structured porous shell - Open pores - SAR  */
+#define R_SHELL_ENERGY          170 /*  Shell energy equation */
+#define R_SHELL_DELTAH          171 /*  Shell gap evolution equation (e.g. melting problems) */
+#define R_SHELL_LUB_CURV        172 /*  Curvature from the level set field in a lubrication shell - SAR */
+#define R_SHELL_SAT_GASN        173 /*  Structured porous shell - Gas compression - SAR */
+#define R_SHELL_SHEAR_TOP       174 /*  Shear rate at top wall - lubrication shell for generalized Newtonian flow */
+#define R_SHELL_SHEAR_BOT       175 /*  Shear rate at bottom wall - lubrication shell for generalized Newtonian flow */
+#define R_SHELL_CROSS_SHEAR     176 /*  Cross stream shear stress - lubrication shell for generalized Newtonian flow */
+#define R_MAX_STRAIN            177 /*  Time-history maximum von mises strain in a solid material */
+#define R_CUR_STRAIN            178 /*  Current value of the von mises strain in a solid material */
+#define R_LUBP_2                179 /*  Second lubrication_pressure for multilayer flows */
+#define R_SHELL_SAT_OPEN_2      180 /*  Second open pore shell lubrication saturation */
+#define R_SHELL_LUB_CURV_2      181 /*  Curvature from the phase field in a lubrication_2 shell - PRS */
+#define R_LIGHT_INTP            182 /*  Light Intensity - Plus direction propagation*/
+#define R_LIGHT_INTM            183 /*  Light Intensity - Minus direction propagation*/
+#define R_LIGHT_INTD            184 /*  Light Intensity - Scattering Dispersion*/
+#define V_LAST		        185
 
 
 /* MMH

@@ -1783,7 +1783,7 @@ matrix_fill(
 
 /* Both SHELL_FILMP and SHELL_FILMH have to be activated to solve film profile equation */
 
-      if( pde[R_SHELL_FILMP] & pde[R_SHELL_FILMH] )
+      if( pde[R_SHELL_FILMP] && pde[R_SHELL_FILMH] )
 	{
 	  err = assemble_film(time_value, theta, delta_t, xi, exo);
 	  EH( err, "assemble_film");
@@ -1791,11 +1791,11 @@ matrix_fill(
 	  CHECKFINITE("assemble_film");
 #endif
         }
-      else if( (!(pde[R_SHELL_FILMP])) & pde[R_SHELL_FILMH] )
+      else if( (!(pde[R_SHELL_FILMP])) && pde[R_SHELL_FILMH] )
 	{
 	  EH( -1, "Both SHELL_FILMP and SHELL_FILMH must be activated !");
 	}
-      else if( pde[R_SHELL_FILMP] & (!(pde[R_SHELL_FILMH])) )
+      else if( pde[R_SHELL_FILMP] && (!(pde[R_SHELL_FILMH])) )
 	{
 	  EH( -1, "Both SHELL_FILMP and SHELL_FILMH must be activated !");
 	}
@@ -1803,7 +1803,7 @@ matrix_fill(
 
 /* Film particles equation has to be activated along with either SHELL_FILMP and SHELL_FILMH or LUBP */
 
-      if( pde[R_SHELL_FILMP] & pde[R_SHELL_FILMH] & pde[R_SHELL_PARTC] )
+      if( pde[R_SHELL_FILMP] && pde[R_SHELL_FILMH] && pde[R_SHELL_PARTC] )
 	{
 	  err = assemble_film_particles(time_value, theta, delta_t, xi, &pg_data, exo);
 	  EH( err, "assemble_film_particles");
@@ -1812,7 +1812,7 @@ matrix_fill(
 #endif
         }
 
-      else if( pde[R_LUBP] & pde[R_SHELL_PARTC] )
+      else if( pde[R_LUBP] && pde[R_SHELL_PARTC] )
 	{
 	  err = assemble_film_particles(time_value, theta, delta_t, xi, &pg_data, exo);
 	  EH( err, "assemble_film_particles");
@@ -1821,12 +1821,12 @@ matrix_fill(
 #endif
         }
 
-      else if( (!(pde[R_SHELL_FILMP])) & pde[R_SHELL_FILMH] & pde[R_SHELL_PARTC] )
+      else if( (!(pde[R_SHELL_FILMP])) && pde[R_SHELL_FILMH] && pde[R_SHELL_PARTC] )
 	{
 	  EH( -1, " SHELL_PARTC requires SHELL_FILMP and SHELL_FILMH !");
 	}
 
-      else if( pde[R_SHELL_FILMP] & !(pde[R_SHELL_FILMH]) & pde[R_SHELL_PARTC] )
+      else if( pde[R_SHELL_FILMP] && !(pde[R_SHELL_FILMH]) && pde[R_SHELL_PARTC] )
         {
           EH( -1, " SHELL_PARTC requires SHELL_FILMP and SHELL_FILMH !");
         }
@@ -1924,7 +1924,7 @@ matrix_fill(
 	}
 
       /* Shell structure with only sh_K, not sh_tens is verboten! */
-      else if (pde[R_MESH1] && pde[R_SHELL_CURVATURE] && !pde[R_SHELL_TENSION])
+      else if (pde[R_MESH1] && pde[R_SHELL_CURVATURE] && !pde[R_SHELL_TENSION] && !pde[R_SHELL_CURVATURE2])
 	{
 	  EH( -1, "Must have both SHELL_TENSION AND SHELL_CURVATURE eqs");
 	}
@@ -1938,7 +1938,7 @@ matrix_fill(
 #endif
         }
 
-      if (pde[R_SHELL_DIFF_CURVATURE] || pde[R_SHELL_NORMAL1])
+      if  ( (pde[R_SHELL_DIFF_CURVATURE] || pde[R_SHELL_NORMAL1]) && !(pde[R_SHELL_NORMAL3]) )
         {
           if (!pde[R_SHELL_NORMAL1] || !pde[R_SHELL_NORMAL2]) {
 	    EH(-1, 
@@ -1950,6 +1950,36 @@ matrix_fill(
           CHECKFINITE("assemble_shell_geometry");
 #endif
         }
+
+      if (pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2] && pde[R_SHELL_NORMAL3])
+        {
+
+          err = assemble_shell_normal(xi, exo);
+          EH( err, "assemble_shell_normal");
+#ifdef CHECK_FINITE
+          CHECKFINITE("assemble_shell_normal");
+#endif
+      	}
+
+      if ( pde[R_SHELL_CURVATURE] && pde[R_SHELL_CURVATURE2])
+        {
+         err = assemble_shell_curvature(xi, exo);
+         EH( err, "assemble_shell_curvature");
+#ifdef CHECK_FINITE
+         CHECKFINITE("assemble_shell_curvature");
+#endif
+
+        }
+
+      if ( pde[R_MESH1] && pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2] && pde[R_SHELL_NORMAL3])
+        {
+         err = assemble_shell_mesh(xi, exo);
+         EH( err, "assemble_shell_mesh");
+#ifdef CHECK_FINITE
+         CHECKFINITE("assemble_shell_mesh");
+#endif
+
+      	}
 
       if( pde[R_MOMENTUM1] )
 	{

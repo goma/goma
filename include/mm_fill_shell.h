@@ -307,4 +307,19 @@ PROTO((double,                   /* Time */
 
 EXTERN int load_lsi_shell_second
 PROTO(( const double ));       /* width */
+
+
+EXTERN int assemble_shell_normal
+PROTO((double [DIM],             /* Local stu coords */
+       const Exo_DB *exo));      /* ExodusII database struct pointer */
+
+EXTERN int assemble_shell_curvature
+PROTO((double [DIM],             /* Local stu coords */
+       const Exo_DB *exo));      /* ExodusII database struct pointer */
+
+EXTERN int assemble_shell_mesh
+PROTO((double [DIM],             /* Local stu coords */
+       const Exo_DB *exo ));     /* ExodusII database struct pointer */
+
+
 #endif /* _MM_FILL_SHELL_H */

@@ -1509,6 +1509,8 @@ set_interaction_masks(Exo_DB *exo)
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = SHELL_NORMAL2;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
 	  v = N_DOT_CURL_V;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
@@ -1729,6 +1731,8 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = SHELL_CURVATURE;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_CURVATURE2;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = PRESSURE;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = POR_LIQ_PRES;
@@ -1883,6 +1887,13 @@ set_interaction_masks(Exo_DB *exo)
 	  v = CUR_STRAIN;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  break;
+
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
 	case R_MASS_SURF:
 	  v = VELOCITY1;
@@ -2295,8 +2306,34 @@ set_interaction_masks(Exo_DB *exo)
 	  v = PRESSURE;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
           break;
 	  
+        case R_SHELL_CURVATURE2:
+          v = SHELL_CURVATURE2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+          break;
+
 	case R_SHELL_ANGLE1:
           v = SHELL_ANGLE1;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
@@ -2541,6 +2578,17 @@ set_interaction_masks(Exo_DB *exo)
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           break;
 
+        case R_SHELL_NORMAL3:
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+
 	case R_ACOUS_PREAL:
 	case R_ACOUS_PIMAG:
 	case R_ACOUS_REYN_STRESS:
@@ -2641,6 +2689,13 @@ set_interaction_masks(Exo_DB *exo)
           v = SHELL_CROSS_SHEAR;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
           /* Need to add the height-var here and velocity var here */
           break;
 
@@ -2686,6 +2741,13 @@ set_interaction_masks(Exo_DB *exo)
           v = SHELL_SHEAR_BOT;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = SHELL_CROSS_SHEAR;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
           /* Need to add the height-var here and velocity var here */
@@ -3011,6 +3073,15 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = SHELL_DELTAH;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+	  v = SHELL_NORMAL1;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_NORMAL2;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_NORMAL3;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+
 	  break;
 
         case R_SHEAR_RATE:

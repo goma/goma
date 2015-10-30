@@ -451,6 +451,7 @@ variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input, "NORMAL3"))                     var = NORMAL3;
 
   else if (!strcmp(input, "SHELL_CURVATURE"))             var = SHELL_CURVATURE;
+  else if (!strcmp(input, "SHELL_CURVATURE2"))            var = SHELL_CURVATURE2;
   else if (!strcmp(input, "SHELL_TENSION"))               var = SHELL_TENSION;
   else if (!strcmp(input, "SHELL_X"))                     var = SHELL_X;
   else if (!strcmp(input, "SHELL_Y"))                     var = SHELL_Y;

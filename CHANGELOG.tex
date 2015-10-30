@@ -198,6 +198,23 @@ Description: Adds a Galerkin least-squares stabilization term using the residual
 Example: Continuity Stabilization = local
 
 
+Capability:  Two-dimensional structural shell equations (extension of the one-dimensional shell implemented in Goma)
+Developer: Kristianto Tjiptowidjojo, June 2014
+Description:  Two-dimensional shell equations require the following: 
+             - Three shell normal equations - only have one ETM
+             - Two shell curvature equations - only have two ETM
+             - Three mesh equations - for structural shell, we only consider boundary, diffusion, and source ETMs 
+Example: 
+EQ = shell_normal1    Q1  SH_N1 Q1                1.0
+EQ = shell_normal2    Q1  SH_N2 Q1                1.0
+EQ = shell_normal3    Q1  SH_N3 Q1                1.0
+EQ = mesh1            Q1  D1    Q1  0.   0.  1.0  1.0  1.0
+EQ = mesh2            Q1  D2    Q1  0.   0.  1.0  1.0  1.0
+EQ = mesh3            Q1  D3    Q1  0.   0.  1.0  1.0  1.0
+EQ = shell_curvature  Q1  K     Q1                1.0
+EQ = shell_curvature2 Q1  K2    Q1                1.0
+                                    mass adv bnd  dif  src
+
 PRS ADDED TO MANUAL (12/11/2012) as noted:
 
 Capability:  Specialized interpolations for sharp-interface tracking. 
@@ -351,6 +368,17 @@ Description: Applieds a temperature shift fact to LAME Mu models (right now hard
 or
         Lame Temperature Shift = POWER_LAW {Troom} {Tmelt} {exponent}
 Example: Lame Temperature Shift = POWER_LAW 25. 550. 0.94
+
+Capability:  Shell extensional stiffness = {CONSTANT}
+Developers: Kristianto Tjiptowidjojo  Date: June 2014
+Description: Specified extensional stiffness for the membrane part of the two-dimensional shell equations
+Example: Shell extensional stiffness     = CONSTANT	1.0e6
+
+Capability: Shell Poisson ratio = {CONSTANT}
+Developers: Kristianto Tjiptowidjojo  Date: June 2014
+Description: Specified Poisson ratio for the two-dimensional shell equations
+Example: Shell Poisson ratio     = CONSTANT	0.3
+
 
 Capability:  Liquid Constitutive Equation = SYLGARD
 Developer: RRRAO

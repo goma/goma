@@ -290,6 +290,13 @@ setup_pd()
 		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
 		}
 	    }
+	  else if(ce == R_SHELL_CURVATURE2)
+	    {
+	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+		{
+		  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+		}
+	    }
 	  else if(ce == R_SHELL_TENSION)
 	    {
 	      if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
@@ -333,6 +340,13 @@ setup_pd()
                 }
             }
           else if(ce == R_SHELL_NORMAL2)
+            {
+              if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
+                {
+                  pd_glob[mn]->e[ce] |= T_DIFFUSION;
+                }
+            }
+          else if(ce == R_SHELL_NORMAL3)
             {
               if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. )
                 {

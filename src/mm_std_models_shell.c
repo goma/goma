@@ -380,7 +380,7 @@ height_function_model (double *H_U,
 
      Length = fv->x[0] - x_0;
      if (Length > 0.95*r) EH(-1, "Problem in calculating height function model CIRCLE_MELT");
-     
+
      *H_U = H_low + r - sqrt(r*r - Length*Length) + fv->sh_dh;
      *dH_U_dtime = Length/sqrt(r*r - Length*Length);
      *dH_U_dtime = 0.0;

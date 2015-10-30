@@ -1125,6 +1125,11 @@ assembly_alloc(Exo_DB *exo)
     esp->sh_K = (dbl **) alloc_ptr_1(MDE);
   }
 
+  if (Num_Var_In_Type[SHELL_CURVATURE2]) {
+    esp->sh_K2 = (dbl **) alloc_ptr_1(MDE);
+  }
+
+
   if (Num_Var_In_Type[SHELL_TENSION]) {
     esp->sh_tens = (dbl **) alloc_ptr_1(MDE);
   }

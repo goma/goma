@@ -273,7 +273,7 @@ PROTO(( double [DIM],
 
 static void copy_distance_function
 PROTO(( double *,
-		double ** ));
+	double **));
 
 static double determine_adc_probability 
 PROTO (( struct Boundary_Condition *,
@@ -6558,7 +6558,7 @@ load_lsi(const double width)
   lsi->alpha = 0.5 * width;
   alpha      = lsi->alpha;
   
-  copy_distance_function( &F, &grad_F );
+  copy_distance_function( &F, &grad_F);
 
   lsi->near  = ls->on_sharp_surf || fabs(F) < alpha;
 
@@ -6606,14 +6606,17 @@ load_lsi(const double width)
 
       /* Evaluate heaviside using FEM basis functions */
       double Hni, d_Hni_dF, Fi;
+      double Hni_old, Fi_old;
       int eqn = R_FILL;
       lsi->Hn = 0.0;
+      lsi->Hn_old = 0.0;
       memset(lsi->gradHn, 0.0, sizeof(double)*DIM);
+      memset(lsi->gradHn_old, 0.0, sizeof(double)*DIM);
       memset(lsi->d_Hn_dF, 0.0, sizeof(double)*MDE);
       memset(lsi->d_gradHn_dF, 0.0, sizeof(double)*DIM*MDE);
       memset(lsi->d_Hn_dmesh, 0.0, sizeof(double)*DIM*MDE);
       memset(lsi->d_gradHn_dmesh, 0.0, sizeof(double)*DIM*DIM*MDE);
-      
+
       if(pd->v[LUBP] || pd->v[SHELL_SAT_CLOSED] || pd->v[SHELL_PRESS_OPEN ] || pd->v[SHELL_SAT_GASN] ) 
 	{
 	  for ( i = 0; i < ei->dof[eqn]; i++ ) {
@@ -6645,9 +6648,20 @@ load_lsi(const double width)
 		}
 	      }
 	    }
-	  }
+
+	    Fi_old = *esp_old->F[i];
+	    if ( fabs(Fi_old) > lsi->alpha ) {
+	      Hni_old = ( Fi_old < 0.0 ) ? 0.0 : 1.0;
+	    } else {
+	      Hni_old  = 0.5 * (1.0 + Fi_old/lsi->alpha + sin(M_PIE*Fi_old/lsi->alpha)/M_PIE);
+            }
+	    lsi->Hn_old += Hni_old * bf[eqn]->phi[i];
+	    for ( j = 0; j < VIM; j++ ) {
+	      lsi->gradHn_old[j] += Hni_old * bf[eqn]->grad_phi[i][j];
+            }
+          }
 	}
-      else if (pd->v[LUBP_2] || pd->v[SHELL_PRESS_OPEN_2]) 
+      else if (pd->v[LUBP_2] || pd->v[SHELL_PRESS_OPEN_2])
 	{
 	  eqn = R_PHASE1;
 	  for ( i = 0; i < ei->dof[eqn]; i++ ) {
@@ -6679,6 +6693,17 @@ load_lsi(const double width)
 		}
 	      }
 	    }
+
+	    Fi_old = *esp_old->pF[0][i];
+	    if ( fabs(Fi_old) > lsi->alpha ) {
+	      Hni_old = ( Fi_old < 0.0 ) ? 0.0 : 1.0;
+	    } else {
+	      Hni_old  = 0.5 * (1.0 + Fi_old/lsi->alpha + sin(M_PIE*Fi_old/lsi->alpha)/M_PIE);
+            }
+	    lsi->Hn_old += Hni_old * bf[eqn]->phi[i];
+	    for ( j = 0; j < VIM; j++ ) {
+	      lsi->gradHn_old[j] += Hni_old * bf[eqn]->grad_phi[i][j];
+            }
 	  }
 	} 
  
@@ -6694,9 +6719,9 @@ load_lsi(const double width)
 
 /******************************************************************************
  * load_lsi_shell_second: Special case of load_lsi forced to be written to circumvent
- * the shell-shell-friend situation encountered in multilayer shell stacks.  The 
- * friend code does not work for this pathological case, so we need to do nonlocal 
- * operations and cannot do a setup-shop-at-point approach.  
+ * the shell-shell-friend situation encountered in multilayer shell stacks.  The
+ * friend code does not work for this pathological case, so we need to do nonlocal
+ * operations and cannot do a setup-shop-at-point approach. 
  *  *
  * Input
  * =====
@@ -6712,14 +6737,14 @@ load_lsi_shell_second(const double width)
   double F = 0, alpha, *grad_F = NULL;
   int a, b;
   int i, j, k;
-  
+
   /* Zero things out. */
   zero_lsi();
-  
+
   /* Check if we're in the mushy zone. */
   lsi->alpha = 0.5 * width;
   alpha      = lsi->alpha;
-  
+
   copy_distance_function( &F, &grad_F );
 
   lsi->near  = ls->on_sharp_surf || fabs(F) < alpha;
@@ -6734,7 +6759,7 @@ load_lsi_shell_second(const double width)
     }
   lsi->gfmag = sqrt( lsi->gfmag );
   lsi->gfmaginv     = ( lsi->gfmag == 0.0 ) ? 1.0 : 1.0 / lsi->gfmag;
-  
+
   for ( a=0; a < VIM; a++)
     {
       lsi->normal[a] *= lsi->gfmaginv;
@@ -6819,7 +6844,7 @@ load_lsi_shell_second(const double width)
 }
 
 static void copy_distance_function( double *F,
-				    double **grad_F )
+				    double **grad_F)
 {
   int offset=0;
 
@@ -6832,7 +6857,6 @@ static void copy_distance_function( double *F,
 		case PHASE1:
 		case PHASE2:
 		case PHASE3:
-			
 		case PHASE4:
 		case PHASE5:
 			offset = ls->var - PHASE1;

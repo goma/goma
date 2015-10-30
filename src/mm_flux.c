@@ -7700,6 +7700,17 @@ load_fv_sens(void)
         }
     }
 
+  v = SHELL_CURVATURE2;
+  fv_sens->sh_K2 = 0.;
+  if ( pd->v[v] )
+    {
+      dofs  = ei->dof[v];
+      for ( i=0; i<dofs; i++)
+        {
+          fv_sens->sh_K2 += *esp_old->sh_K2[i] * bf[v]->phi[i];
+        }
+    }
+
   /*
    *  Structural shell tension
    */

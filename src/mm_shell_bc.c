@@ -203,6 +203,348 @@ shell_n_dot_flow_bc_confined(double func[DIM],
 /*****************************************************************************/
 /*****************************************************************************/
 
+void
+lub_static_pressure(double func[DIM],
+                    double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                    const double P_atm,    /* imposed atmospheric pressure */
+                    const double time,     /* current time */
+                    const double dt,	   /* current time step size */
+                    double xi[DIM],        /* Local stu coordinates */
+                    const Exo_DB *exo)
+
+     /***********************************************************************
+      *
+      * lub_static_pressure():
+      *
+      *  Function which evaluates the expression specifying the
+      *  pressure at a quadrature point normal to the side
+      *  of an element to be in static equilibrium.
+      *
+      *         func =   LUB_P - (P_atm - HEAVISIDE * CURV * sigma/H)
+      *
+      *  The boundary condition LUB_STATIC employs this function.
+      *
+      *
+      * Input:
+      *
+      *
+      *  LUB_P         = Lubrication pressure
+      *  P_atm         = specified on the bc card as the first float
+      *  HEAVISIDE     = Heaviside function -- active only when F < 0
+      *  CURV          = Analytical curvature in direction normal to the substrate
+      *  sigma         = Surface tension
+      *  H             = Distance between top and bottom wall
+      *
+      * Output:
+      *
+      *  func[0] = value of the function mentioned above
+      *  d_func[0][varType][lvardof] =
+      *              Derivate of func[0] wrt
+      *              the variable type, varType, and the local variable
+      *              degree of freedom, lvardof, corresponding to that
+      *              variable type.
+      *
+      *
+      *   Author: K. Tjiptowidjojo    (08/05/2014)
+      *
+      ********************************************************************/
+{
+  int i, j, k, jk, var;
+  int dim;
+  int *n_dof = NULL;
+  int dof_map[MDE];
+
+  dbl phi_j;
+
+ /*
+  * Prepare geometry
+  */
+
+  dim = pd->Num_Dim;
+
+  n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+
+  /* Extract wall heights */
+  dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime;
+  dbl dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, dt);
+
+  /***** DEFORM HEIGHT AND CALCULATE SENSITIVITIES *****/
+
+  /* Define variables */
+  dbl D_H_DX[DIM][MDE], D_H_DP[MDE];
+  dbl D_H_DRS[DIM][MDE];
+  dbl D_H_DNORMAL[DIM][MDE];
+  memset(D_H_DX,  0.0, sizeof(double)*DIM*MDE);
+  memset(D_H_DRS,  0.0, sizeof(double)*DIM*MDE);
+  memset(D_H_DNORMAL,  0.0, sizeof(double)*DIM*MDE);
+  memset(D_H_DP,  0.0, sizeof(double)*MDE);
+
+  /* Deform height */
+  switch ( mp->FSIModel ) {
+  case FSI_MESH_CONTINUUM:
+  case FSI_MESH_UNDEF:
+  case FSI_SHELL_ONLY_UNDEF:
+  for ( i = 0; i < dim; i++)
+     {
+      H -= fv->snormal[i] * fv->d[i];
+     }
+  break;
+  case FSI_SHELL_ONLY_MESH:
+    if (pd->e[R_SHELL_NORMAL1] && pd->e[R_SHELL_NORMAL2] && pd->e[R_SHELL_NORMAL3] )
+      {
+       for ( i = 0; i < dim; i++)
+          {
+           H -= fv->n[i] * fv->d[i];
+          }
+      }
+    else
+      {
+       for ( i = 0; i < dim; i++)
+          {
+           H -= fv->snormal[i] * fv->d[i];
+          }
+      }
+  break;
+  case FSI_REALSOLID_CONTINUUM:
+  for ( i = 0; i < dim; i++) 
+     {
+      H -= fv->snormal[i] * fv->d_rs[i];
+     }
+  break;
+ }
+
+ /* Calculate height sensitivity to mesh */
+ switch ( mp->FSIModel ) {
+ case FSI_MESH_CONTINUUM:
+ case FSI_MESH_UNDEF:
+ case FSI_SHELL_ONLY_UNDEF:
+ for ( i = 0; i < dim; i++)
+    {
+     for ( j = 0; j < dim; j++)
+        {
+         for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++)
+            {
+              jk = dof_map[k];
+              D_H_DX[j][jk] += delta(i,j)*(dH_U_dX[i]-dH_L_dX[i])*bf[MESH_DISPLACEMENT1]->phi[k];
+              D_H_DX[j][jk] -= fv->dsnormal_dx[i][j][jk] * fv->d[i];
+              D_H_DX[j][jk] -= fv->snormal[i] * delta(i,j) * bf[MESH_DISPLACEMENT1]->phi[k];
+            }
+	}
+    }
+  break;
+ case FSI_SHELL_ONLY_MESH:
+   if ( (pd->e[R_SHELL_NORMAL1]) && (pd->e[R_SHELL_NORMAL2]) && (pd->e[R_SHELL_NORMAL3]) )
+     {
+      for ( i = 0; i < dim; i++)
+         {
+          for ( j = 0; j < dim; j++)
+             {
+              for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++)
+                 {
+                  jk = dof_map[k];
+                  D_H_DX[j][jk] += delta(i,j)*(dH_U_dX[i]-dH_L_dX[i])*bf[MESH_DISPLACEMENT1]->phi[k];
+                  D_H_DX[j][jk] -= fv->n[i] * delta(i,j) * bf[MESH_DISPLACEMENT1]->phi[k];
+                 }
+             }
+         }
+     }
+   else
+     {
+      for ( i = 0; i < dim; i++)
+         {
+          for ( j = 0; j < dim; j++)
+             {
+              for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++)
+                 {
+                  jk = dof_map[k];
+                  D_H_DX[j][jk] += delta(i,j)*(dH_U_dX[i]-dH_L_dX[i])*bf[MESH_DISPLACEMENT1]->phi[k];
+                  D_H_DX[j][jk] -= fv->dsnormal_dx[i][j][jk] * fv->d[i];
+                  D_H_DX[j][jk] -= fv->snormal[i] * delta(i,j) * bf[MESH_DISPLACEMENT1]->phi[k];
+                 }
+             }
+         }
+     }
+  break;
+ case FSI_REALSOLID_CONTINUUM:
+ for ( i = 0; i < dim; i++) 
+    {
+     for ( j = 0; j < dim; j++) 
+        {
+         for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++) 
+            {
+             jk = dof_map[k];
+             D_H_DX[j][jk] += delta(i,j)*(dH_U_dX[i]-dH_L_dX[i])*bf[MESH_DISPLACEMENT1]->phi[k];
+             D_H_DX[j][jk] -= fv->dsnormal_dx[i][j][jk] * fv->d_rs[i];
+	    }
+         for ( k = 0; k < ei->dof[SOLID_DISPLACEMENT1]; k++) 
+            {
+             jk = dof_map[k];
+             D_H_DRS[j][jk] -= fv->snormal[i] * delta(i,j) * bf[SOLID_DISPLACEMENT1]->phi[jk];
+            }
+        }
+    }
+  break;
+ }
+
+ /* Calculate height sensitivity to shell normal */
+ switch ( mp->FSIModel ) {
+
+ case FSI_SHELL_ONLY_MESH:
+ if ( (pd->e[R_SHELL_NORMAL1]) && (pd->e[R_SHELL_NORMAL2]) && (pd->e[R_SHELL_NORMAL3]) )
+   {
+    for ( i = 0; i < dim; i++)
+       {
+        for ( j = 0; j < dim; j++)
+           {
+            for ( k = 0; k < ei->dof[SHELL_NORMAL1]; k++)
+               {
+                D_H_DNORMAL[j][k] -= delta(i,j) * bf[SHELL_NORMAL1]->phi[k] * fv->d[i];
+               }
+           }
+       }
+   }
+  break;
+ }
+
+  /***** CALCULATE HEAVISIDE AND SENSITIVITIES *****/
+
+  dbl Hn = 0.0;
+  dbl D_Hn_DF[MDE], D_Hn_DX[DIM][MDE];
+  memset(D_Hn_DF, 0.0, sizeof(double)*MDE);
+  memset(D_Hn_DX, 0.0, sizeof(double)*DIM*MDE);
+
+
+  if ( pd->v[FILL] )
+    {
+     load_lsi( ls->Length_Scale );
+     load_lsi_derivs();
+     Hn = 1.0 - lsi->Hn;
+    }
+
+  /* Calculate F sensitivity */
+  if ( pd->v[FILL] )
+    {
+     for ( i = 0; i < ei->dof[FILL]; i++)
+        {
+         D_Hn_DF[i] = - lsi->d_Hn_dF[i];
+        }
+    }
+
+  /***** CALCULATE CURVATURE AND SENSITIVITIES *****/
+
+  dbl CURV = 0.0;
+  dbl D_CURV_DH = 0.0;
+  dbl D_CURV_DF[MDE], D_CURV_DX[DIM][MDE];
+  memset(D_CURV_DF, 0.0, sizeof(double)*MDE);
+  memset(D_CURV_DX, 0.0, sizeof(double)*DIM*MDE);
+
+  /* Curvature - analytic in the "z" direction  */
+  dbl dcaU, dcaL, slopeU, slopeL;
+  dcaU = dcaL = slopeU = slopeL = 0;
+  if ( pd->v[FILL] )
+    {
+     dcaU = mp->dcaU*M_PIE/180.0;
+     dcaL = mp->dcaL*M_PIE/180.0;
+     slopeU = slopeL = 0.;
+     for ( i = 0; i < dim; i++)
+        {
+          slopeU += dH_U_dX[i]*lsi->normal[i];
+          slopeL += dH_L_dX[i]*lsi->normal[i];
+        }
+     CURV += (cos(M_PIE-dcaU-atan(slopeU)) + cos(M_PIE-dcaL-atan(-slopeL)))/H ;
+    }
+
+  /* Sensitivity to height */
+  if ( pd->v[FILL] )  D_CURV_DH = -(cos(M_PIE-dcaU-atan(slopeU)) + cos(M_PIE-dcaL-atan(-slopeL)))/(H*H);
+
+
+  /* Sensitivity to level set F */
+  if ( pd->v[FILL] )
+    {
+     for ( i = 0; i < ei->dof[FILL]; i++)
+        {
+         for ( j = 0; j < dim; j++)
+            {
+             D_CURV_DF[i] += sin(dcaU+atan(slopeU))/(H*(1+slopeU*slopeU))*dH_U_dX[j]**lsi->d_normal_dF[j];
+             D_CURV_DF[i] += sin(dcaL+atan(slopeL))/(H*(1+slopeL*slopeL))*dH_L_dX[j]**lsi->d_normal_dF[j];
+            }
+	}
+    }
+
+  /* Sensitivity to mesh */
+  if ( pd->v[FILL] )
+    {
+     for ( i = 0; i < dim; i++)
+        {
+         for ( j = 0; j < n_dof[MESH_DISPLACEMENT1]; j++)
+            {
+             D_CURV_DX[i][j] += D_CURV_DH * D_H_DX[i][j];
+            }
+	}
+    }
+
+
+  /***** CALCULATE RESIDUAL CONTRIBUTION *****/
+
+  func[0] = fv->lubp - (P_atm + mp->surface_tension * Hn * CURV);
+
+
+  /***** CALCULATE JACOBIAN CONTRIBUTION *****/
+
+  if (af->Assemble_Jacobian)
+    {
+
+      /* Sensitivity w.r.t. pressure */
+      var = LUBP;
+      if (pd->v[var])
+        {
+         for (j = 0; j < ei->dof[var]; j++)
+            {
+             phi_j = bf[var]->phi[j];
+
+             d_func[0][var][j] = phi_j - mp->surface_tension * Hn * D_CURV_DH * D_H_DP[j];
+            }
+	}
+
+
+      /* Sensitivity w.r.t. level set */
+      var = FILL;
+      if (pd->v[var])
+        {
+         for (j = 0; j < ei->dof[var]; j++)
+            {
+             d_func[0][var][j] = - mp->surface_tension * (D_Hn_DF[j] * CURV + Hn * D_CURV_DF[j]);
+            }
+	}
+
+      /* Sensitivity w.r.t. mesh */
+      if (pd->v[MESH_DISPLACEMENT1])
+        {
+         for (i = 0; i < dim; i++)
+            {
+             var = MESH_DISPLACEMENT1 + i;
+
+             for (j = 0; j < ei->dof[var]; j++)
+                {
+                 d_func[0][var][j] = - mp->surface_tension * (D_Hn_DX[i][j] * CURV + Hn * D_CURV_DX[i][j]);
+                }
+            }
+	}
+
+    } /* end of if Assemble_Jacobian */
+
+
+
+  /* clean-up */
+  safe_free((void *) n_dof);
+
+} /* END of routine lub_static_pressure  */
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
 
 void 
 shell_n_dot_flow_bc_film(double func[DIM],
@@ -272,7 +614,7 @@ shell_n_dot_flow_bc_film(double func[DIM],
 
 /* Calculate the flow rate and its sensitivties */
 
-  calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
+  calculate_lub_q_v(R_SHELL_FILMP, time, dt, xi, exo);
 
 
   if (af->Assemble_LSA_Mass_Matrix)
@@ -815,6 +1157,182 @@ shell_n_dot_pflux_bc(double func[DIM],
 /*****************************************************************************/
 
 /****************************************************************************/
+
+void
+apply_shell_traction_bc(double func[DIM],
+                       	double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                        const int BC_name, /* BC name identifier */
+                        const dbl tx,   /* Traction in x-direction */
+                        const dbl ty,   /* Traction in y-direction */
+                        const dbl tz)	   /* Traction in z-direction */
+
+     /***********************************************************************
+      *
+      * apply_shell_traction_bc():
+      *
+      *  Function which which evaluates traction  at a quadrature point
+      *  normal to the side of an element.
+      *
+      *   func[0] =   e . (i tx + j ty + k tz)
+      *
+      *  e is either e1 or e2 depending on the type of BC
+      *
+      *  The boundary condition SH_S11_WEAK_BC and SH_S22_WEAK_BC
+      *  employ this function.
+      *
+      *
+      * Input:
+      *
+      * tx, ty, tz   = Traction components
+      *
+      * Output:
+      *
+      *  func[0] = value of the function mentioned above
+      *  d_func[0][varType][lvardof] =
+      *              Derivate of func[0] wrt
+      *              the variable type, varType, and the local variable
+      *              degree of freedom, lvardof, corresponding to that
+      *              variable type.
+      *
+      *   Author: K. Tjiptowidjojo    (5/22/2014)
+      *
+      ********************************************************************/
+{
+  int var, dim, a, b;
+  int j;
+
+  dbl t0[DIM];
+  dbl t1[DIM];
+  dbl dt0_dx[DIM][DIM][MDE];
+  dbl dt1_dx[DIM][DIM][MDE];
+  dbl dt0_dnormal[DIM][DIM][MDE];
+  dbl dt1_dnormal[DIM][DIM][MDE];
+
+  dbl e[DIM];
+  dbl de_dx[DIM][DIM][MDE];
+  dbl de_dnormal[DIM][DIM][MDE];
+
+/************** PRECALCULATION ***********************/
+
+  /* Unpack variables from structures for local convenience... */
+  dim = pd->Num_Dim;
+
+
+  /******* TANGENTS AND THEIR SENSITIVITIES **********/
+
+  memset(dt0_dx, 0.0, sizeof(double)*DIM*DIM*MDE);
+  memset(dt1_dx, 0.0, sizeof(double)*DIM*DIM*MDE);
+  memset(dt0_dnormal, 0.0, sizeof(double)*DIM*DIM*MDE);
+  memset(dt1_dnormal, 0.0, sizeof(double)*DIM*DIM*MDE);
+
+  shell_tangents(t0, t1, dt0_dx, dt1_dx);
+
+//  shell_tangents_seeded(t0, t1, dt0_dnormal, dt1_dnormal);
+
+
+  for (a = 0; a < dim; a++)
+     {
+      if (BC_name == SH_S11_WEAK_BC)
+        {
+         e[a] = t0[a];
+        }
+      else if (BC_name == SH_S22_WEAK_BC)
+        {
+         e[a] = t1[a];
+        }
+     }
+
+  memset( de_dx, 0.0, sizeof(double)*DIM*DIM*MDE);
+  memset( de_dnormal, 0.0, sizeof(double)*DIM*DIM*MDE);
+
+  for (b = 0; b < dim; b++)
+     {
+      var = MESH_DISPLACEMENT1 + b;
+
+      for (j = 0; j < ei->dof[var]; j++)
+         {
+          for (a = 0; a < dim; a++)
+             {
+              if (BC_name == SH_S11_WEAK_BC)
+                {
+                 de_dx[a][b][j] = dt0_dx[a][b][j];
+                }
+              else if (BC_name == SH_S22_WEAK_BC)
+                {
+                 de_dx[a][b][j] = dt1_dx[a][b][j];
+                }
+             }
+         }
+     }
+
+  for (b = 0; b < dim; b++)
+     {
+      var = SHELL_NORMAL1 + b;
+
+      for (j = 0; j < ei->dof[var]; j++)
+         {
+          for (a = 0; a < dim; a++)
+             {
+              if (BC_name == SH_S11_WEAK_BC)
+                {
+                 de_dnormal[a][b][j] = dt0_dnormal[a][b][j];
+                }
+              else if (BC_name == SH_S22_WEAK_BC)
+                {
+                 de_dnormal[a][b][j] = dt1_dnormal[a][b][j];
+                }
+             }
+         }
+     }
+
+/************** APPLY TRACTION ***********************/
+
+  func[0] = e[0] * tx + e[1] * ty + e[2] * tz;
+
+  if (af->Assemble_Jacobian)
+    {
+
+     var = MESH_DISPLACEMENT1;
+     if ( pd->v[var] )
+       {
+
+        /*** Loop over dimensions of mesh displacement ***/
+        for ( b = 0; b < dim; b++)
+           {
+            var = MESH_DISPLACEMENT1 + b;
+
+            for (j = 0; j < ei->dof[var]; j++)
+               {
+                d_func[0][var][j] = de_dx[0][b][j] * tx + de_dx[1][b][j] * ty + de_dx[2][b][j] * tz;
+               }
+           }
+       }
+
+     var = SHELL_NORMAL1;
+     if ( pd->v[var] )
+       {
+
+        /*** Loop over dimensions of shell normal ***/
+        for ( b = 0; b < dim; b++)
+           {
+            var = SHELL_NORMAL1 + b;
+
+            for (j = 0; j < ei->dof[var]; j++)
+               {
+                d_func[0][var][j] = de_dnormal[0][b][j] * tx + de_dnormal[1][b][j] * ty + de_dnormal[2][b][j] * tz;
+               }
+           }
+       }
+    }
+}
+
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+
+/****************************************************************************/
+
+
 
 void 
  match_lubrication_film_pressure(double func[],
