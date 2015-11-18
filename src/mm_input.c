@@ -1562,6 +1562,9 @@ rd_timeint_specs(FILE *ifp,
 	  EH( -1, "error reading Initial Time");
 	}
       SPF(echo_string,"%s = %.4g","Initial Time",tran->init_time); ECHO(echo_string, echo_file);
+      if( (TimeMax - tran->init_time) <= 0.0 ) {
+      	EH( -1, "Your maximum time is less than or equal to your initial time!"); // a condition which may result in NAN's in the esp_dot struct
+      }
     }
 
     tran->const_dt_after_failure = 0.;
