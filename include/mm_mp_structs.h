@@ -668,7 +668,6 @@ struct Material_Properties
   dbl lubmomsource[DIM];
   dbl d_lubmomsource[DIM][MAX_VARIABLE_TYPES + MAX_CONC];
   int len_lubmomsource;
-  dbl *u_lubmomsource_function_constants;
   int LubMomSourceModel;
 
   dbl FilmEvap;
