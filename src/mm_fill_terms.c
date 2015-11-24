@@ -4428,7 +4428,6 @@ assemble_continuity(dbl time_value,   /* current time */
   int v_s[MAX_MODES][DIM][DIM], v_g[DIM][DIM];
   int mode;
   
-  int *pde = pd->e[pg->imtrx];
   int *pdv = pd->v[pg->imtrx];
 
   dbl pspg[DIM];

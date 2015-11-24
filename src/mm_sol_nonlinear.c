@@ -51,6 +51,7 @@ static char rcsid[] =
 
 #include "sl_aztecoo_interface.h"
 
+#include "sl_stratimikos_interface.h"
 #define _MM_SOL_NONLINEAR_C
 #include "goma.h"
 

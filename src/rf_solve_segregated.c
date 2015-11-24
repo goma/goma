@@ -31,6 +31,7 @@
 #include "sl_epetra_util.h"
 
 #define _RF_SOLVE_SEGREGATED_C
+#include "rf_solve_segregated.h"
 #include "goma.h"
 #include "mm_solve_linear_segregated.h"
 #include "el_quality.h"
@@ -134,9 +135,9 @@ dbl *te_out) /* te_out - return actual end time */
   double *timeValueRead;
   double timeValueReadTrans = 0.0;
   double time_print, i_print;
-  double theta = 0.0, time;
+  double theta = 0.0, time = 0;
   static double time1 = 0.0; /* Current time that the simulation is trying  to find the solution for */
-  double delta_t_new, delta_t, delta_t_old, delta_t_older, delta_t_oldest;
+  double delta_t_new=0, delta_t=0, delta_t_old=0, delta_t_older=0, delta_t_oldest=0;
   char tspstring[MAX_FNL];
   int n;
   int nt;
@@ -549,7 +550,6 @@ dbl *te_out) /* te_out - return actual end time */
       }
 
       if (converged) {
-        int steady_state_reached = TRUE;
         double distance = 0;
 
         for (i = 0; i < upd->Total_Num_Matrices; i++) {
@@ -936,7 +936,7 @@ dbl *te_out) /* te_out - return actual end time */
         /* Assume we want the minimum delta_t_new */
         delta_t_new = 1e20;
         for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-          double mat_dt_new;
+          double mat_dt_new=1e20;
           
           if (pg->time_step_control_disabled[pg->imtrx]) {
               success_dt = 1;

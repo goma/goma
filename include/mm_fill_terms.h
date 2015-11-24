@@ -180,7 +180,14 @@ PROTO((	double ,		/* time - present time value         */
 EXTERN int load_fv		/* mm_fill_terms.c                           */
 PROTO((void ));
 
+EXTERN int 
+load_fv_all(void);
+
+
 EXTERN int load_fv_grads	/* mm_fill_terms.c                           */
+PROTO((void ));
+
+EXTERN int load_fv_grads_all	/* mm_fill_terms.c                           */
 PROTO((void ));
 
 EXTERN int load_fv_mesh_derivs	/* mm_fill_terms.c                           */

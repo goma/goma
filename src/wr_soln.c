@@ -173,7 +173,8 @@ write_solution_segregated(char output_file[], /* name EXODUS II file */
                Exo_DB *exo,
                Dpi *dpi)
 {
-  int i, i_post, step=0;
+  int i, step=0;
+  //int i_post;
 #ifdef DEBUG
   static char *yo="write_solution";
   fprintf(stderr, "%s: begins\n", yo);

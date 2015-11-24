@@ -62,6 +62,10 @@ PROTO((const int,		/* element index                             */
 				 * global_h_elem_siz, but not all the 
 				 * computationally expensive pointers        */
 
+int 
+load_elem_dofptr_all(const int ielem,
+                     const Exo_DB * exo);
+
 EXTERN int load_elem_aijaptr	/* mm_fill_ptrs.c                            */
 PROTO((int [],			/* ija - column indeces                      */
        dbl []));		/* a - matrix nonzero values                 */
