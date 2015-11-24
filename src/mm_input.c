@@ -5963,13 +5963,13 @@ rd_solver_specs(FILE *ifp,
   if (iread == 1) {
     read_string(ifp, input, '\n');
     strip(input);
-    strcpy(Stratimikos_File, input);
+    strcpy(Stratimikos_File[0], input);
     SPF(echo_string, eoformat, search_string, input);
     ECHO(echo_string, echo_file);
   } else {
     // Set stratimikos.xml as defualt stratimikos file
     SPF(echo_string, def_form, search_string, "stratimikos.xml", default_string);
-    strcpy(Stratimikos_File, "stratimikos.xml");
+    strcpy(Stratimikos_File[0], "stratimikos.xml");
     ECHO(echo_string, echo_file);
   }
 

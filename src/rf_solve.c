@@ -43,6 +43,8 @@ static char rcsid[] = "$Id: rf_solve.c,v 5.21 2010-03-17 22:23:54 hkmoffa Exp $"
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
 
+#include "rf_solve_segregated.h"
+
 #define _RF_SOLVE_C
 #include "goma.h"
 #include "el_quality.h"

@@ -1225,29 +1225,6 @@ double *xdot_old_static;
 double *x_dbl_dot_static;
 double *x_dbl_dot_old_static;
 
-static void
-load_varType_Interpolation_ptrs_current(const int varType, double **esp_ptr)
-
-     /***********************************************************************
-      *
-      * load_varType_Interpolation_ptrs_current:
-      *
-      * Only load 1 value from the current x
-      *
-      *  Utility routine to fill up pointers to solution variables.
-      *  (Might think about unrolling the loop in this routine in the
-      *   future).
-      ************************************************************************/
-{
-  int i, ie, dofs, ledof;
-  int *lvdof_to_ledof_tmp = ei[pg->imtrx]->lvdof_to_ledof[varType];
-  dofs = ei[pg->imtrx]->dof[varType];
-  for (i = 0; i < dofs; i++) {
-    ledof = lvdof_to_ledof_tmp[i];
-    ie = ei[pg->imtrx]->ieqn_ledof[ledof];
-    esp_ptr[i]     = x_static     + ie;
-  }
-}
 
 static void
 load_varType_Interpolation_ptrs(const int varType, double **esp_ptr,
@@ -1271,30 +1248,6 @@ load_varType_Interpolation_ptrs(const int varType, double **esp_ptr,
     esp_ptr[i]     = x_static     + ie;
     esp_old_ptr[i] = x_old_static + ie;
     esp_dot_ptr[i] = xdot_static  + ie;
-  }
-}
-
-static void
-load_varType_Interpolation_ptrs_current_mat(int imtrx, const int varType, double **esp_ptr)
-
-     /***********************************************************************
-      *
-      * load_varType_Interpolation_ptrs_current:
-      *
-      * Only load 1 value from the current x
-      *
-      *  Utility routine to fill up pointers to solution variables.
-      *  (Might think about unrolling the loop in this routine in the
-      *   future).
-      ************************************************************************/
-{
-  int i, ie, dofs, ledof;
-  int *lvdof_to_ledof_tmp = ei[imtrx]->lvdof_to_ledof[varType];
-  dofs = ei[imtrx]->dof[varType];
-  for (i = 0; i < dofs; i++) {
-    ledof = lvdof_to_ledof_tmp[i];
-    ie = ei[imtrx]->ieqn_ledof[ledof];
-    esp_ptr[i]     = x_static     + ie;
   }
 }
 
@@ -2217,7 +2170,6 @@ load_elem_dofptr_all(const int ielem,
   int status;
   int k;
   int R_s[MAX_MODES][DIM][DIM], R_g[DIM][DIM];
-  struct Level_Set_Data *ls_old;
 
 #ifdef DEBUG
   int dim, eshape, etype, nnodes;
