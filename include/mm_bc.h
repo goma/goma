@@ -32,23 +32,23 @@ PROTO((double [],		/* x - solution vector at this processor     */
        Dpi *));			/* dpi - ptr to distrib proc FE database     */
 
 EXTERN void alloc_First_Elem_BC
-PROTO((struct elem_side_bc_struct ***, /* First_Elem_Side_BC_Array ptr       */
-       struct elem_edge_bc_struct ***, /* First_Elem_Edge_BC_Array ptr       */
+PROTO((struct elem_side_bc_struct ****, /* First_Elem_Side_BC_Array ptr       */
+       struct elem_edge_bc_struct ****, /* First_Elem_Edge_BC_Array ptr       */
        const int ));	       	       /* num_internal_elems                 */
 
 EXTERN void set_up_Surf_BC
-PROTO((struct elem_side_bc_struct *[ ],	/* First_Elem_Side_BC_Array          */
+PROTO((struct elem_side_bc_struct **[ ],	/* First_Elem_Side_BC_Array          */
        Exo_DB *,		/* exo - ptr to FE db                        */
        Dpi *));			/* dpi - ptr to dist proc info               */
 	   
 EXTERN void free_Surf_BC
-PROTO(( struct elem_side_bc_struct *[ ],	/* First_Elem_Side_BC_Array          */
+PROTO(( struct elem_side_bc_struct **[ ],	/* First_Elem_Side_BC_Array          */
        Exo_DB *,		/* exo - ptr to FE db                        */
        Dpi *));			/* dpi - ptr to dist proc info               */
 
 	   
 EXTERN void free_Edge_BC
-PROTO(( struct elem_edge_bc_struct *[ ],	/* First_Elem_Side_BC_Array          */
+PROTO(( struct elem_edge_bc_struct **[ ],	/* First_Elem_Side_BC_Array          */
        Exo_DB *,		/* exo - ptr to FE db                        */
        Dpi *));			/* dpi - ptr to dist proc info               */
        
@@ -56,7 +56,7 @@ EXTERN void set_up_Embedded_BC
 PROTO((void ));
 
 EXTERN void set_up_Edge_BC
-PROTO((struct elem_edge_bc_struct *[ ],	/* First_Elem_Edge_BC_Array          */
+PROTO((struct elem_edge_bc_struct **[ ],	/* First_Elem_Edge_BC_Array          */
        Exo_DB *,		/* exo                                       */
        Dpi *));			/* dpi                                       */
 

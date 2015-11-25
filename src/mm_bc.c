@@ -786,8 +786,8 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
 /*****************************************************************************/
 
 void 
-alloc_First_Elem_BC (struct elem_side_bc_struct ***First_Elem_Side_BC_Array,
-		     struct elem_edge_bc_struct ***First_Elem_Edge_BC_Array,
+alloc_First_Elem_BC (struct elem_side_bc_struct ****First_Elem_Side_BC_Array,
+		     struct elem_edge_bc_struct ****First_Elem_Edge_BC_Array,
 		     const int num_internal_elems)
      /*************************************************************************
       *
@@ -812,15 +812,23 @@ alloc_First_Elem_BC (struct elem_side_bc_struct ***First_Elem_Side_BC_Array,
       *                           the pointers to structures
       ***********************************************************************/
 {
+  int imtrx;
 
 #ifdef DEBUG
   printf ("alloc_First_Elem_BC: size of (struct elem_side_bc_struct) = %d\n",
 	  sizeof(struct elem_side_bc_struct));
 #endif
-  *First_Elem_Side_BC_Array = (struct elem_side_bc_struct **)
-    alloc_ptr_1(num_internal_elems);
-  *First_Elem_Edge_BC_Array = (struct elem_edge_bc_struct **)
-    alloc_ptr_1(num_internal_elems);
+  int sz_side = sizeof (struct elem_side_bc_struct ***); 
+  int sz_edge = sizeof (struct elem_edge_bc_struct ***);
+  *First_Elem_Side_BC_Array = malloc(sz_side * upd->Total_Num_Matrices);
+  *First_Elem_Edge_BC_Array = malloc(sz_edge * upd->Total_Num_Matrices);
+
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    (*First_Elem_Side_BC_Array)[imtrx] = (struct elem_side_bc_struct **)
+      alloc_ptr_1(num_internal_elems);
+    (*First_Elem_Edge_BC_Array)[imtrx] = (struct elem_edge_bc_struct **)
+      alloc_ptr_1(num_internal_elems);
+  }
   return;
 }
 /**************************************************************************************************************************/
@@ -892,7 +900,7 @@ searchEBForNode(int eb_id_target, Exo_DB *exo, int nodeTarget, int *ielemList, i
 /************************************************************************************************************************/
 
 void
-set_up_Surf_BC(struct elem_side_bc_struct *First_Elem_Side_BC_Array[ ],
+set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
 	       Exo_DB *exo, Dpi *dpi)
 
 /*****************************************************************
@@ -1025,7 +1033,7 @@ set_up_Surf_BC(struct elem_side_bc_struct *First_Elem_Side_BC_Array[ ],
 				fprintf(stderr, "local_node_list[%d] = %d\n", j, inode);
 			      }
 #endif
-			      setup_Elem_BC(&First_Elem_Side_BC_Array[ielem], &BC_Types[ibc],
+			      setup_Elem_BC(&First_Elem_Side_BC_Array[BC_Types[ibc].matrix][ielem], &BC_Types[ibc],
 					    ibc, num_nodes_on_side, ielem, 
 					    local_node_list, exo);
 			    }
@@ -1123,7 +1131,7 @@ set_up_Surf_BC(struct elem_side_bc_struct *First_Elem_Side_BC_Array[ ],
 			j, local_node_list[j]);
 	      }
 #endif
-	      setup_Elem_BC(&First_Elem_Side_BC_Array[ielem], &BC_Types[ibc],
+	      setup_Elem_BC(&First_Elem_Side_BC_Array[BC_Types[ibc].matrix][ielem], &BC_Types[ibc],
 			    ibc, num_nodes_on_side, ielem, 
 			    local_node_list, exo);
 	    }  /* END for (i = 0; i < Proc_SS_Elem_Count[iss]; i++)          */
@@ -1361,38 +1369,40 @@ set_up_Surf_BC(struct elem_side_bc_struct *First_Elem_Side_BC_Array[ ],
 /*****************************************************************************/
 
 void
-free_Surf_BC( struct elem_side_bc_struct *First_Elem_Side_BC_Array [],
+free_Surf_BC( struct elem_side_bc_struct **First_Elem_Side_BC_Array [],
 	      Exo_DB *exo, Dpi *dpi )
 {
   int e_start, e_end;
   int ielem;
+  int imtrx;
   struct elem_side_bc_struct *current_bc;
   struct elem_side_bc_struct *next_bc;
 	
   e_start = exo->eb_ptr[0];
   e_end   = exo->eb_ptr[exo->num_elem_blocks];
-	
-  for( ielem= e_start; ielem < e_end; ielem++)
-    {
-      if ( First_Elem_Side_BC_Array[ ielem ] != NULL )
-	{
-	  current_bc = First_Elem_Side_BC_Array[ ielem ];
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    for( ielem= e_start; ielem < e_end; ielem++)
+      {
+        if ( First_Elem_Side_BC_Array[imtrx][ ielem ] != NULL )
+          {
+            current_bc = First_Elem_Side_BC_Array[imtrx][ ielem ];
 			
-	  do {
-	    safer_free( (void **) &current_bc->local_node_id );
-	    safer_free( (void **) &current_bc->local_elem_node_id );
-	    /*				elem_qp_storage_free( current_bc );*/
+            do {
+              safer_free( (void **) &current_bc->local_node_id );
+              safer_free( (void **) &current_bc->local_elem_node_id );
+              /*				elem_qp_storage_free( current_bc );*/
 				
-	    next_bc = current_bc->next_side_bc;
+              next_bc = current_bc->next_side_bc;
 				
-	    safer_free( (void **) &current_bc );
+              safer_free( (void **) &current_bc );
 				
-	    current_bc = next_bc;
-	  }
-	  while ( current_bc != NULL );
+              current_bc = next_bc;
+            }
+            while ( current_bc != NULL );
 			
-	}
-    }
+          }
+      }
+  }
 	
   safer_free ( (void **) &First_Elem_Side_BC_Array );
 
@@ -1400,48 +1410,49 @@ free_Surf_BC( struct elem_side_bc_struct *First_Elem_Side_BC_Array [],
 			
 			
 void
-free_Edge_BC ( struct elem_edge_bc_struct *First_Elem_Edge_BC_Array[ ],
+free_Edge_BC ( struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 	       Exo_DB *exo, Dpi *dpi)
 {
   int e_start, e_end;
   int ielem;
+  int imtrx;
   struct elem_edge_bc_struct *current_bc;
   struct elem_edge_bc_struct *next_bc;
 	
   e_start = exo->eb_ptr[0];
   e_end   = exo->eb_ptr[exo->num_elem_blocks];
-	
-  for( ielem= e_start; ielem < e_end; ielem++)
-    {
-      if ( First_Elem_Edge_BC_Array[ ielem ] != NULL )
-	{
-	  current_bc =  First_Elem_Edge_BC_Array[ ielem ];
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    for( ielem= e_start; ielem < e_end; ielem++)
+      {
+        if ( First_Elem_Edge_BC_Array[imtrx][ ielem ] != NULL )
+          {
+            current_bc =  First_Elem_Edge_BC_Array[imtrx][ ielem ];
 			
-	  do {
-	    safer_free( (void **) &current_bc->elem_side_bc_1->local_node_id );
-	    safer_free( (void **) &current_bc->elem_side_bc_1->local_elem_node_id );
-	    safer_free( (void **) &current_bc->elem_side_bc_2->local_node_id );
-	    safer_free( (void **) &current_bc->elem_side_bc_2->local_elem_node_id );
+            do {
+              safer_free( (void **) &current_bc->elem_side_bc_1->local_node_id );
+              safer_free( (void **) &current_bc->elem_side_bc_1->local_elem_node_id );
+              safer_free( (void **) &current_bc->elem_side_bc_2->local_node_id );
+              safer_free( (void **) &current_bc->elem_side_bc_2->local_elem_node_id );
 				
-	    safer_free ( (void **) &current_bc->elem_side_bc_1 );
-	    safer_free ( (void **) &current_bc->elem_side_bc_2 );
-	    next_bc = current_bc->next_edge_bc;
+              safer_free ( (void **) &current_bc->elem_side_bc_1 );
+              safer_free ( (void **) &current_bc->elem_side_bc_2 );
+              next_bc = current_bc->next_edge_bc;
 				
-	    safer_free( (void **) &current_bc );
+              safer_free( (void **) &current_bc );
 				
-	    current_bc = next_bc;
-	  }
-	  while ( current_bc != NULL );
-	}
-    }
-	
+              current_bc = next_bc;
+            }
+            while ( current_bc != NULL );
+          }
+      }
+  }	
   safer_free ( (void **) &First_Elem_Edge_BC_Array );
 
 }
 	
 
 void
-set_up_Edge_BC (struct elem_edge_bc_struct *First_Elem_Edge_BC_Array[ ],
+set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 		Exo_DB *exo, Dpi *dpi)
 {
   int num_nodes_on_side2;	/* of the 2nd side set, when checking for
@@ -1652,7 +1663,7 @@ set_up_Edge_BC (struct elem_edge_bc_struct *First_Elem_Edge_BC_Array[ ],
 			  num_nodes_on_edge = node_ctr;
 			}
 		    
-		      this_edge_bc = setup_Elem_Edge_BC (&First_Elem_Edge_BC_Array[ielem],
+		      this_edge_bc = setup_Elem_Edge_BC (&First_Elem_Edge_BC_Array[BC_Types[ibc].matrix][ielem],
 							 &BC_Types[ibc],
 							 ibc, num_nodes_on_edge, ipin, FALSE,
 							 ielem, 
@@ -1765,7 +1776,7 @@ set_up_Edge_BC (struct elem_edge_bc_struct *First_Elem_Edge_BC_Array[ ],
 			  /*
 			   * Set up elem_edge_bc structure for this edge */
 			
-			  this_edge_bc = setup_Elem_Edge_BC (&First_Elem_Edge_BC_Array[ielem],
+			  this_edge_bc = setup_Elem_Edge_BC (&First_Elem_Edge_BC_Array[BC_Types[ibc].matrix][ielem],
 							     &BC_Types[ibc],
 							     ibc, num_nodes_on_edge, ipin, TRUE,
 							     ielem, 

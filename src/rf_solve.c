@@ -70,8 +70,8 @@ PROTO((int *,			/* nelem_glob */
  * Global variables defined in this file.
  */
 
-struct elem_side_bc_struct **First_Elem_Side_BC_Array;
-struct elem_edge_bc_struct **First_Elem_Edge_BC_Array;
+struct elem_side_bc_struct ***First_Elem_Side_BC_Array;
+struct elem_edge_bc_struct ***First_Elem_Edge_BC_Array;
 
 #define ROUND_TO_ONE 0.9999999
 

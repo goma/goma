@@ -782,7 +782,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 
 	  numerical_jacobian(ams, x, resid_vector, delta_t, theta, 
 			     x_old, x_older, xdot, xdot_old,x_update,
-			     num_total_nodes, First_Elem_Side_BC_Array, 
+			     num_total_nodes, First_Elem_Side_BC_Array[pg->imtrx], 
 			     Debug_Flag, time_value, exo, dpi,
 			     &h_elem_avg, &U_norm);
 
@@ -878,7 +878,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 		   */
 		  err = matrix_fill_full(ams, x, resid_vector, 
 					 x_old, x_older, xdot, xdot_old, x_update,
-					 &delta_t, &theta, First_Elem_Side_BC_Array, 
+					 &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], 
 					 &time_value, exo, dpi, &num_total_nodes,
 					 &h_elem_avg, &U_norm, NULL);
 		  a_end = ut();
@@ -909,7 +909,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 								x_update,
 								&delta_t,
 								&theta,
-								First_Elem_Side_BC_Array,
+								First_Elem_Side_BC_Array[pg->imtrx],
 								&time_value,
 								exo,
 								dpi,
@@ -945,7 +945,7 @@ EH(-1,"version not compiled with frontal solver");
 	      err = matrix_fill_full(ams, x, resid_vector, 
 				     x_old, x_older, xdot, xdot_old, x_update,
 				     &delta_t, &theta, 
-				     First_Elem_Side_BC_Array, 
+				     First_Elem_Side_BC_Array[pg->imtrx], 
 				     &time_value, exo, dpi,
 				     &num_total_nodes,
 				     &h_elem_avg, &U_norm, NULL);
@@ -1052,7 +1052,7 @@ EH(-1,"version not compiled with frontal solver");
 	  mf_args.x_update = x_update;
 	  mf_args.delta_t = &delta_t;
 	  mf_args.theta_  = &theta;
-	  mf_args.first_elem_side_bc = First_Elem_Side_BC_Array;
+	  mf_args.first_elem_side_bc = First_Elem_Side_BC_Array[pg->imtrx];
 	  mf_args.time = &time_value;
 	  mf_args.exo  = exo;
 	  mf_args.dpi  = dpi;
@@ -1708,7 +1708,7 @@ EH(-1,"version not compiled with frontal solver");
                                     x_update,
                                     &delta_t,
                                     &theta,
-                                    First_Elem_Side_BC_Array,
+                                    First_Elem_Side_BC_Array[pg->imtrx],
                                     &time_value,
                                     exo,
                                     dpi,
@@ -3468,7 +3468,7 @@ soln_sens ( double lambda,  /*  parameter */
   err = matrix_fill_full(ams, x, res_p, 
 			 x_old, x_older, xdot, xdot_old, x_update, 
 			 &delta_t, &theta, 
-			 First_Elem_Side_BC_Array, 
+			 First_Elem_Side_BC_Array[pg->imtrx], 
 			 &time_value, exo, dpi,
 			 &num_total_nodes,
 			 &h_elem_avg, &U_norm, NULL);
@@ -3508,7 +3508,7 @@ soln_sens ( double lambda,  /*  parameter */
   err = matrix_fill_full(ams, x, res_m, 
 			 x_old, x_older, xdot, xdot_old, x_update,
 			 &delta_t, &theta, 
-			 First_Elem_Side_BC_Array, 
+			 First_Elem_Side_BC_Array[pg->imtrx], 
 			 &time_value, exo, dpi,
 			 &num_total_nodes,
 			 &h_elem_avg, &U_norm, NULL);
@@ -3754,7 +3754,7 @@ soln_sens ( double lambda,  /*  parameter */
                                     x_update,
                                     &delta_t,
                                     &theta,
-                                    First_Elem_Side_BC_Array,
+                                    First_Elem_Side_BC_Array[pg->imtrx],
                                     &time_value,
                                     exo,
                                     dpi,

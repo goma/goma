@@ -2368,8 +2368,8 @@ matrix_fill(
    * be added back in (i.e. if transport equations is integrated by parts twice)
    * Do this before rotating mesh or momentum equations
    **************************************************************************/
-  if (First_Elem_Edge_BC_Array[ielem] != NULL) {
-    elem_edge_bc = First_Elem_Edge_BC_Array[ielem];
+  if (First_Elem_Edge_BC_Array[pg->imtrx][ielem] != NULL) {
+    elem_edge_bc = First_Elem_Edge_BC_Array[pg->imtrx][ielem];
       
     /******************************************************************************/
     do {  /* begining of do while construct 
@@ -2733,9 +2733,9 @@ matrix_fill(
   /******************************************************************************/
   
   /******************************************************************************/
-  if (First_Elem_Edge_BC_Array[ielem] != NULL) {
+  if (First_Elem_Edge_BC_Array[pg->imtrx][ielem] != NULL) {
     /******************************************************************************/
-    elem_edge_bc = First_Elem_Edge_BC_Array[ielem];
+    elem_edge_bc = First_Elem_Edge_BC_Array[pg->imtrx][ielem];
       
     /****************************************************************************/
     do {  /* begining of do while construct */
