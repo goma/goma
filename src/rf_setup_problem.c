@@ -60,6 +60,97 @@
 
 #include "dp_utils.h"
 
+static void
+associate_bc_to_matrix(void);
+
+static void
+set_bc_equation(void)
+{
+  int ibc;
+
+  for (ibc = 0; ibc < Num_BC; ibc++) {
+    /*
+     *  Create a couple of pointers to cut down on the
+     *  amount of indirect addressing
+     */
+    int eqn = (BC_Types[ibc].desc)->equation;
+
+    if (BC_Types[ibc].equation == -1) {
+      if (eqn >= V_FIRST && eqn < V_LAST) {
+        BC_Types[ibc].equation = eqn;
+      } else {
+        switch (eqn) {
+        case R_MESH_NORMAL:
+        case R_MESH_TANG1:
+        case R_MESH_TANG2:
+        case MESH_POSITION1:
+          BC_Types[ibc].equation = R_MESH1;
+          break;
+        case MESH_POSITION2:
+          BC_Types[ibc].equation = R_MESH2;
+          break;
+        case MESH_POSITION3:
+          BC_Types[ibc].equation = R_MESH3;
+          break;
+        case R_MOM_NORMAL:
+        case R_MOM_TANG1:
+        case R_MOM_TANG2:
+           BC_Types[ibc].equation = R_MOMENTUM1;
+          break;
+        case R_SOLID_NORMAL:
+        case R_SOLID_TANG1:
+        case R_SOLID_TANG2:
+        case SOLID_NORM:
+        case SOLID_TANG1:
+        case SOLID_TANG2:
+        case SOLID_POSITION1:
+          BC_Types[ibc].equation = R_SOLID1;
+        case SOLID_POSITION2:
+          BC_Types[ibc].equation = R_SOLID2;
+        case SOLID_POSITION3:
+          BC_Types[ibc].equation = R_SOLID3;
+          break;
+        default:
+          EH(-1, "Error in linking BC to equation");
+          break;
+        }
+      }
+    }
+  }
+}
+
+static void
+associate_bc_to_matrix(void)
+{
+  int ibc;
+  int imtrx;
+  int mn;
+
+  for (ibc = 0; ibc < Num_BC; ibc++) {
+    /*
+     *  Create a couple of pointers to cut down on the
+     *  amount of indirect addressing
+     */
+    int eqn = BC_Types[ibc].equation;
+
+    BC_Types[ibc].matrix = -1;
+
+    if (eqn >= V_FIRST && eqn < V_LAST) {
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+        for (mn = 0; mn < upd->Num_Mat; mn++) {
+          if (pd_glob[mn]->e[imtrx][eqn]) {
+            BC_Types[ibc].matrix = imtrx;
+          }
+        }
+      }
+    }
+    if (BC_Types[ibc].matrix == -1) {
+      EH(-1, "Could not associate boundary condition to a matrix");
+    }
+  }
+}
+
+
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
@@ -129,6 +220,13 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * conditions
    */
   determine_dvi_index();
+
+
+  set_bc_equation();
+
+  /* Link BCs to matrix by equation */
+  associate_bc_to_matrix();
+
 
   /*
    * Enumerate my own degrees of freedom on this processor.

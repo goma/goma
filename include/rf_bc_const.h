@@ -1221,6 +1221,8 @@ struct Boundary_Condition {
                                  *  0 - no
                                  *  1 - Yes, hanging off of node info structure
                                  *  2 - Yes, hanging off of side  */
+  int matrix;
+  int equation;
 #ifdef USE_CGM
   /* CGM handles.  There's probably a more generic way to do this, but
    * for now here you go... We need the strings because the assignment
