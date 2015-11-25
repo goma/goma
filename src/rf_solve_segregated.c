@@ -539,7 +539,7 @@ dbl *te_out) /* te_out - return actual end time */
                                       xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
                                       scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx],
                                       tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
-                                      gvec_elem, time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, is_steady_state,
+                                      gvec_elem[pg->imtrx], time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, is_steady_state,
                                       NULL, NULL, time1, NULL,
                                       NULL, NULL, NULL);
 

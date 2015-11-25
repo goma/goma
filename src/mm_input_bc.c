@@ -2505,6 +2505,7 @@ rd_bc_specs(FILE *ifp,
 		   !strcmp(input, Var_Name[k].name2))
 		{
 		  BC_Types[ibc].BC_Data_Int[0] = Var_Name[k].Index;
+                  BC_Types[ibc].equation = EQ_Name[k].Index;
 		  eq_found = TRUE;
 		}
 	    }
@@ -2716,6 +2717,7 @@ rd_bc_specs(FILE *ifp,
 		{
 		  BC_Types[ibc].BC_Data_Int[0] = EQ_Name[k].Index;
 		  eq_found = TRUE;
+                  BC_Types[ibc].equation = EQ_Name[k].Index;
 		}
 	    }
 	  if ( ! eq_found )

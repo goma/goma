@@ -2364,6 +2364,8 @@ initialize_Boundary_Condition (struct Boundary_Condition *bc_ptr)
   bc_ptr->BC_matrl_index_4 = -1;
   bc_ptr->BC_EBID_Apply = -1;
   bc_ptr->species_eq = -1;
+  bc_ptr->equation = -1;
+  bc_ptr->matrix = 0;
   
   /*
    *  Since the table structs are dynamically allocated. This index is used
