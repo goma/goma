@@ -74,8 +74,8 @@ set_bc_equation(void)
      *  amount of indirect addressing
      */
     int eqn = (BC_Types[ibc].desc)->equation;
-
-    if (BC_Types[ibc].equation == -1) {
+    int set_eqn = BC_Types[ibc].equation;
+    if (set_eqn < 0 || set_eqn >= V_LAST) {
       if (eqn >= V_FIRST && eqn < V_LAST) {
         BC_Types[ibc].equation = eqn;
       } else {
@@ -145,6 +145,7 @@ associate_bc_to_matrix(void)
       }
     }
     if (BC_Types[ibc].matrix == -1) {
+      printf("Bad BC %s\n", (BC_Types[ibc].desc)->name1);
       EH(-1, "Could not associate boundary condition to a matrix");
     }
   }
