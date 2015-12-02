@@ -118,16 +118,28 @@ static int **alloc_bc_unk_list_node(int inode)
   NODAL_VARS_STRUCT *nv = node->Nodal_Vars_Info[pg->imtrx];
   int num = nv->Num_Unknowns;
   int **bc_unk_list_node;
-  if (num <=  0) {
-    fprintf(stderr,
-	    "P_%d: Warning: node %d with zero unknowns has an applied bc\n",
-	    ProcID, inode);
+
+  if (num <= 0 && upd->Total_Num_Matrices > 1) {
     num = 1;
   }
   bc_unk_list_node = (int **) alloc_ptr_1(num);
   for (unk = 0; unk < num; unk++) {
     bc_unk_list_node[unk] = alloc_int_1(MAX_NODAL_BCS, -1);
   }
+
+  int sum_unknowns = 0;
+  int imtrx;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    NODAL_VARS_STRUCT *nv = node->Nodal_Vars_Info[imtrx];
+    sum_unknowns += nv->Num_Unknowns;
+  }
+
+  if (sum_unknowns <=  0) {
+    fprintf(stderr,
+            "P_%d: Warning: node %d with zero unknowns has an applied bc\n",
+            ProcID, inode);
+  }
+
   return bc_unk_list_node;
 }
 /*****************************************************************************/
