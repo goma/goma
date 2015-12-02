@@ -145,8 +145,10 @@ associate_bc_to_matrix(void)
       }
     }
     if (BC_Types[ibc].matrix == -1) {
-      printf("Bad BC %s\n", (BC_Types[ibc].desc)->name1);
-      EH(-1, "Could not associate boundary condition to a matrix");
+      char errstr[512];
+      snprintf(errstr, 512, "Could not find matching matrix for BC #%d %s, BC will not be used", 
+               ibc, (BC_Types[ibc].desc)->name1);
+      WH(-1, errstr);
     }
   }
 }
@@ -361,7 +363,9 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    *  if necessary
    */
   if (Debug_Flag) {
-    print_setup_Surf_BC(First_Elem_Side_BC_Array);
+    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+      print_setup_Surf_BC(First_Elem_Side_BC_Array[pg->imtrx]);
+    }
   }
 
   /*

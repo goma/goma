@@ -1920,7 +1920,7 @@ overlap_aug_cond ( int ija[],
                     }
 
     /* Find the appropriate side and point elem_side_bc to it */
-                  elem_side_bc = First_Elem_Side_BC_Array[ielem];
+                  elem_side_bc = First_Elem_Side_BC_Array[pg->imtrx][ielem];
                   jside = elem_side_bc->id_side;
                   if (iside != jside)
                     {
@@ -1941,7 +1941,7 @@ overlap_aug_cond ( int ija[],
 					   h,
 					   mu_avg,
 					   *mf_args->U_norm,
-					   First_Elem_Side_BC_Array,
+					   First_Elem_Side_BC_Array[pg->imtrx],
 					   ielem,
 					   ei[pg->imtrx]->ielem_type,
 					   ei[pg->imtrx]->num_local_nodes,
@@ -2041,7 +2041,7 @@ overlap_aug_cond ( int ija[],
             {
               int call_contact;
               int ibc, bc_input_id, bct;
-              elem_side_bc = First_Elem_Side_BC_Array[ielem];
+              elem_side_bc = First_Elem_Side_BC_Array[pg->imtrx][ielem];
 
               load_elem_dofptr(ielem, exo, x_static, x_old_static,
                                 xdot_static, xdot_old_static,
@@ -2068,7 +2068,7 @@ overlap_aug_cond ( int ija[],
                                                h,
                                                mu_avg,
                                               *mf_args->U_norm,
-                                               First_Elem_Side_BC_Array,
+                                               First_Elem_Side_BC_Array[pg->imtrx],
                                                ielem,
                                                ei[pg->imtrx]->ielem_type,
                                                ei[pg->imtrx]->num_local_nodes,

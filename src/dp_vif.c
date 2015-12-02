@@ -938,6 +938,8 @@ noahs_ark()
 
       ddd_add_member(n, &BC_Types[i].BC_Desc_index, 1, MPI_INT);            
       ddd_add_member(n, &BC_Types[i].index_dad, 1, MPI_INT);            
+      ddd_add_member(n, &BC_Types[i].equation, 1, MPI_INT);
+      ddd_add_member(n, &BC_Types[i].matrix, 1, MPI_INT);
       ddd_add_member(n, &BC_Types[i].species_eq, 1, MPI_INT);            
 
       ddd_add_member(n, &BC_Types[i].BC_relax, 1, MPI_DOUBLE);            

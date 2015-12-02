@@ -201,7 +201,7 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
   matrix_fill_full(ams, &x[0], &resid_vector[0], 
 		   x_old, x_older, xdot, xdot_old, x_update,
 		   &delta_t, &theta, 
-		   First_Elem_Side_BC_Array, 
+		   First_Elem_Side_BC_Array[pg->imtrx], 
 		   &time_value, exo, dpi, 
 		   &num_total_nodes, &zero[0], &zero[0], NULL);
 
@@ -248,7 +248,7 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
       matrix_fill_full(ams, x, resid_vector, 
 		       x_old, x_older, xdot, xdot_old, x_update,
 		       &delta_t, &theta, 
-		       First_Elem_Side_BC_Array, 
+		       First_Elem_Side_BC_Array[pg->imtrx], 
 		       &time_value, exo, dpi, 
 		       &num_total_nodes, 
 		       &zero[0], &zero[0], NULL);
@@ -264,7 +264,7 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
       matrix_fill_full(ams, x, resid_vector, 
 		       x_old, x_older, xdot, xdot_old, x_update,
 		       &delta_t, &theta, 
-		       First_Elem_Side_BC_Array, 
+		       First_Elem_Side_BC_Array[pg->imtrx], 
 		       &time_value, exo, dpi, 
 		       &num_total_nodes, 
 		       &zero[0], &zero[0], NULL);
@@ -315,7 +315,7 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
   tran->delta_t = 1.0;      /*for Newmark-Beta terms in Lagrangian Solid*/
   matrix_fill_full(ams, x, resid_vector, 
 		   x_old, x_older, xdot, xdot_old, x_update,
-		   &delta_t, &theta, First_Elem_Side_BC_Array, 
+		   &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], 
 		   &time_value, exo, dpi, &num_total_nodes, 
 		   &zero[0], &zero[0], NULL);
 
@@ -498,7 +498,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
       
       matrix_fill_full(ams, x, resid_vector, 
 		       x_old, x_older, xdot, xdot_old, x_update,
-		       &delta_t, &theta, First_Elem_Side_BC_Array, 
+		       &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], 
 		       &time_value, exo, dpi, 
 		       &num_total_nodes, &zero[0], &zero[0], NULL);
 
@@ -515,7 +515,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
       matrix_fill_full(ams, x, resid_vector, 
 		       x_old, x_older, xdot, xdot_old, x_update,
 		       &delta_t, &theta, 
-		       First_Elem_Side_BC_Array, 
+		       First_Elem_Side_BC_Array[pg->imtrx], 
 		       &time_value, exo, dpi, 
 		       &num_total_nodes, &zero[0], &zero[0], NULL);
 
@@ -591,7 +591,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	  matrix_fill_full(ams, x, resid_vector, x_old,
 			   x_older, xdot, xdot_old,
 			   x_update, &delta_t, &theta,
-			   First_Elem_Side_BC_Array, &time_value, exo,
+			   First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo,
 			   dpi, &num_total_nodes, &zero[0], &zero[0],
 			   NULL);
 	  
@@ -602,7 +602,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	  tran->delta_t = 1.0e+72;   /*for Newmark-Beta terms in Lagrangian Solid*/
 	  matrix_fill_full(ams, x, resid_vector, x_old,
 			   x_older, xdot, xdot_old, x_update,
-			   &delta_t, &theta, First_Elem_Side_BC_Array,
+			   &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx],
 			   &time_value, exo, dpi, &num_total_nodes,
 			   &zero[0], &zero[0], NULL);
 	  
@@ -615,7 +615,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	  matrix_fill_full(ams, x, resid_vector, x_old,
 			   x_older, xdot, xdot_old,
 			   x_update, &delta_t, &theta,
-			   First_Elem_Side_BC_Array, &time_value, exo,
+			   First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo,
 			   dpi, &num_total_nodes, &zero[0], &zero[0],
 			   NULL);
 	  
@@ -626,7 +626,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	  tran->delta_t = 1.0e+72;  /*for Newmark-Beta terms in Lagrangian Solid*/
 	  matrix_fill_full(ams, &x[0], &resid_vector[0], x_old,
 			   x_older, xdot, xdot_old, x_update,
-			   &delta_t, &theta, First_Elem_Side_BC_Array,
+			   &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx],
 			   &time_value, exo, dpi, &num_total_nodes,
 			   &zero[0], &zero[0], NULL);
 
@@ -674,7 +674,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
       ams->val = mass_matrix_1;
       matrix_fill_full(ams, x, resid_vector, x_old, x_older,
 		       xdot, xdot_old, x_update, &delta_t, &theta,
-		       First_Elem_Side_BC_Array, &time_value, exo,
+		       First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo,
 		       dpi, &num_total_nodes, &zero[0], &zero[0],
 		       NULL);
 
@@ -683,7 +683,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
       ams->val = mass_matrix_2;
       matrix_fill_full(ams, x, resid_vector, x_old, x_older,
 		       xdot, xdot_old, x_update, &delta_t, &theta,
-		       First_Elem_Side_BC_Array, &time_value, exo,
+		       First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo,
 		       dpi, &num_total_nodes, &zero[0], &zero[0],
 		       NULL);
 

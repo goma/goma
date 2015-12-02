@@ -1033,9 +1033,11 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
 				fprintf(stderr, "local_node_list[%d] = %d\n", j, inode);
 			      }
 #endif
-			      setup_Elem_BC(&First_Elem_Side_BC_Array[BC_Types[ibc].matrix][ielem], &BC_Types[ibc],
-					    ibc, num_nodes_on_side, ielem, 
-					    local_node_list, exo);
+                              if (BC_Types[ibc].matrix >= 0) {
+                                setup_Elem_BC(&First_Elem_Side_BC_Array[BC_Types[ibc].matrix][ielem], &BC_Types[ibc],
+                                              ibc, num_nodes_on_side, ielem, 
+                                              local_node_list, exo);
+                              }
 			    }
 			}  /* END for (i = 0; i < Proc_NS_Count[ins]; i++)           */
 		    }  /* END if (Proc_NS_Ids[ins] == BC_Types[ibc].BC_ID)	     */
@@ -1131,9 +1133,11 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
 			j, local_node_list[j]);
 	      }
 #endif
-	      setup_Elem_BC(&First_Elem_Side_BC_Array[BC_Types[ibc].matrix][ielem], &BC_Types[ibc],
-			    ibc, num_nodes_on_side, ielem, 
-			    local_node_list, exo);
+              if (BC_Types[ibc].matrix >= 0) {
+                setup_Elem_BC(&First_Elem_Side_BC_Array[BC_Types[ibc].matrix][ielem], &BC_Types[ibc],
+                              ibc, num_nodes_on_side, ielem, 
+                              local_node_list, exo);
+              }
 	    }  /* END for (i = 0; i < Proc_SS_Elem_Count[iss]; i++)          */
 	  }  /* END if (Proc_SS_Ids[iss] == BC_Types[ibc].BC_ID)	     */
 	}  /* END for (iss = 0; iss < Proc_Num_Side_Sets; iss++) 	     */
@@ -1663,25 +1667,27 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 			  num_nodes_on_edge = node_ctr;
 			}
 		    
-		      this_edge_bc = setup_Elem_Edge_BC (&First_Elem_Edge_BC_Array[BC_Types[ibc].matrix][ielem],
-							 &BC_Types[ibc],
-							 ibc, num_nodes_on_edge, ipin, FALSE,
-							 ielem, 
-							 node_list, exo);
+                      if (BC_Types[ibc].matrix >= 0) {
+                        this_edge_bc = setup_Elem_Edge_BC (&First_Elem_Edge_BC_Array[BC_Types[ibc].matrix][ielem],
+                                                           &BC_Types[ibc],
+                                                           ibc, num_nodes_on_edge, ipin, FALSE,
+                                                           ielem, 
+                                                           node_list, exo);
 
 #ifdef DEBUG		    /* create elem_side_bc's for SS1 and SS2 */
-		      printf("ielem %d, ibc %d, ss_1 %d, ss_2 %d\n", ielem, ibc, ss_id1, ss_id2);
+                        printf("ielem %d, ibc %d, ss_1 %d, ss_2 %d\n", ielem, ibc, ss_id1, ss_id2);
 #endif
-		      setup_Elem_BC (&(this_edge_bc->elem_side_bc_1), 
-				     &BC_Types[ibc],
-				     ibc, num_nodes_on_side, ielem, 
-				     &(exo->ss_node_list[iss1][exo->ss_node_side_index[iss1][i]]), exo);
+                        setup_Elem_BC (&(this_edge_bc->elem_side_bc_1), 
+                                       &BC_Types[ibc],
+                                       ibc, num_nodes_on_side, ielem, 
+                                       &(exo->ss_node_list[iss1][exo->ss_node_side_index[iss1][i]]), exo);
 
 
-		      setup_Elem_BC (&(this_edge_bc->elem_side_bc_2), 
-				     &BC_Types[ibc],
-				     ibc, num_nodes_on_side, ielem, 
-				     &(exo->ss_node_list[iss2][exo->ss_node_side_index[iss2][j]]), exo);	
+                        setup_Elem_BC (&(this_edge_bc->elem_side_bc_2), 
+                                       &BC_Types[ibc],
+                                       ibc, num_nodes_on_side, ielem, 
+                                       &(exo->ss_node_list[iss2][exo->ss_node_side_index[iss2][j]]), exo);	
+                      }
    
 		    }
 		  else
@@ -1775,26 +1781,27 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 
 			  /*
 			   * Set up elem_edge_bc structure for this edge */
-			
-			  this_edge_bc = setup_Elem_Edge_BC (&First_Elem_Edge_BC_Array[BC_Types[ibc].matrix][ielem],
-							     &BC_Types[ibc],
-							     ibc, num_nodes_on_edge, ipin, TRUE,
-							     ielem, 
-							     node_list, exo);
+                          if (BC_Types[ibc].matrix >= 0) {			
+                            this_edge_bc = setup_Elem_Edge_BC (&First_Elem_Edge_BC_Array[BC_Types[ibc].matrix][ielem],
+                                                               &BC_Types[ibc],
+                                                               ibc, num_nodes_on_edge, ipin, TRUE,
+                                                               ielem, 
+                                                               node_list, exo);
 
-			  /* create elem_side_bc's for SS1 and SS2 */
-
-
-			  setup_Elem_BC (&(this_edge_bc->elem_side_bc_1), 
-					 &BC_Types[ibc],
-					 ibc, num_nodes_on_side, ielem, 
-					 &(exo->ss_node_list[iss1][exo->ss_node_side_index[iss1][i]]), exo);
+                            /* create elem_side_bc's for SS1 and SS2 */
 
 
-			  setup_Elem_BC (&(this_edge_bc->elem_side_bc_2), 
-					 &BC_Types[ibc],
-					 ibc, num_nodes_on_side, ielem2, 
-					 &(exo->ss_node_list[iss2][exo->ss_node_side_index[iss2][j]]), exo);
+                            setup_Elem_BC (&(this_edge_bc->elem_side_bc_1), 
+                                           &BC_Types[ibc],
+                                           ibc, num_nodes_on_side, ielem, 
+                                           &(exo->ss_node_list[iss1][exo->ss_node_side_index[iss1][i]]), exo);
+
+
+                            setup_Elem_BC (&(this_edge_bc->elem_side_bc_2), 
+                                           &BC_Types[ibc],
+                                           ibc, num_nodes_on_side, ielem2, 
+                                           &(exo->ss_node_list[iss2][exo->ss_node_side_index[iss2][j]]), exo);
+                          }
 			} /* end of if (found ) */	
 
 
