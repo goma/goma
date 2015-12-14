@@ -119,24 +119,6 @@ setup_pd()
       VIM = Num_Dim;
     }
 
-  /* Initialize matrix indices */
-  for (mn = 0; mn < upd->Num_Mat; mn++) {
-    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-      for ( i=0; i<MAX_VARIABLE_TYPES; i++) {
-        pd_glob[mn]->mi[i] = -1;
-      }
-    }
-  }
-
-  for (mn = 0; mn < upd->Num_Mat; mn++) {
-    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-      for ( i=0; i<MAX_VARIABLE_TYPES; i++) {
-        if (pd_glob[mn]->v[imtrx][i]) {
-          pd_glob[mn]->mi[i] = imtrx;
-        }
-      }
-    }
-  }
 
    /*
     * Make one to one correspondence of each material in input file with each

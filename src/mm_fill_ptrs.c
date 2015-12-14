@@ -312,7 +312,7 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
    *  this block OR on a parent block (if this is a shell element)
    */
   ei_ptr->deforming_mesh = FALSE;
-  if (pd_ptr->e[0][R_MESH1])
+  if (pd_ptr->e[imtrx][R_MESH1])
     {
       ei_ptr->deforming_mesh = TRUE;
     }

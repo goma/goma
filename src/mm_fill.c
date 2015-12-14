@@ -1074,7 +1074,8 @@ matrix_fill(
 	   * we really need this information...
 	   */
       
-	  if ( pde[R_MESH1] )
+          
+          if (pd->gv[R_MESH1])
 	    {
 	      err = load_bf_mesh_derivs(); 
 	      EH( err, "load_bf_mesh_derivs");
@@ -1088,7 +1089,8 @@ matrix_fill(
 	  EH( err, "load_fv_grads");	  
             
 
-	  if ( pde[R_MESH1] )
+
+          if (pd->gv[R_MESH1])
 	    {
 	      err = load_fv_mesh_derivs(1);
 	      EH( err, "load_fv_mesh_derivs");
@@ -1359,9 +1361,6 @@ matrix_fill(
       err = load_fv();
       EH( err, "load_fv");
 
-       	  err = load_fv_all();
-	  EH( err, "load_fv_all");
-
       /*
        * Here, load in the final part of the necessary basis function
        * information derivatives in the physical space coordinates.
@@ -1380,7 +1379,7 @@ matrix_fill(
        * we really need this information...
        */
       
-      if (pde[R_MESH1] || pd->v[pg->imtrx][R_MESH1])
+      if (pd->gv[R_MESH1])
 	{
 	  err = load_bf_mesh_derivs(); 
 	  EH( err, "load_bf_mesh_derivs");
@@ -1394,10 +1393,7 @@ matrix_fill(
       EH( err, "load_fv_grads");
 
 
-      err = load_fv_grads_all();
-      EH( err, "load_fv_grads_all");
-
-      if ( pde[R_MESH1] ||  pd->v[pg->imtrx][R_MESH1])
+      if (pd->gv[R_MESH1])
 	{
 	  err = load_fv_mesh_derivs(1);
 	  EH( err, "load_fv_mesh_derivs");

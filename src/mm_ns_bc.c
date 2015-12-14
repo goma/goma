@@ -429,7 +429,7 @@ fvelo_normal_bc(double func[DIM],
       for (kdir = 0; kdir < pd->Num_Dim; kdir++)
 	{
 	  var = MESH_DISPLACEMENT1 + kdir;
-	  if (pd->v[pg->imtrx][var])
+	  if (pd->gv[var])
 	    {
 	      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 		{
@@ -565,8 +565,8 @@ if(lsi->near && 0) fprintf(stderr,"vn_ls %g %g %g %g\n",fv->x[0],penalty,factor,
 
       for (p=0; p<pd->Num_Dim; p++) {
 	var = MESH_DISPLACEMENT1 + p;
-	if (pd->v[pg->imtrx][var]) {
-	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
+	if (pd->gv[var]) {
+	  for ( j=0; j<ei[pd->mi[var]]->dof[var]; j++) {
 	    phi_j = bf[var]->phi[j];
 	    d_func[0][var][j] += penalty*(fv->v[kdir] - x_dot[kdir]) * fv->dsnormal_dx[kdir][p][j];
 	    if (TimeIntegration != 0 && p == kdir) {
@@ -577,16 +577,16 @@ if(lsi->near && 0) fprintf(stderr,"vn_ls %g %g %g %g\n",fv->x[0],penalty,factor,
       }
 	      
       var = VELOCITY1 + kdir;
-      if (pd->v[pg->imtrx][var]) {
-	for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
+      if (pd->gv[var]) {
+	for ( j=0; j<ei[pd->mi[var]]->dof[var]; j++) {
 	  phi_j = bf[var]->phi[j];
 	  d_func[0][var][j] += penalty* phi_j * fv->snormal[kdir];
 	}
       }
 
       var = PVELOCITY1 + kdir;
-      if (pd->v[pg->imtrx][var]) {
-	for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
+      if (pd->gv[var]) {
+	for ( j=0; j<ei[pd->mi[var]]->dof[var]; j++) {
 	  phi_j = bf[var]->phi[j];
 	  d_func[0][var][j] += penalty*phi_j * fv->snormal[kdir];
 	}
@@ -600,7 +600,7 @@ if(lsi->near && 0) fprintf(stderr,"vn_ls %g %g %g %g\n",fv->x[0],penalty,factor,
       if((type == VELO_NORMAL_LS_BC || type == VELO_NORMAL_LS_PETROV_BC
            || VELO_NORMAL_LS_COLLOC_BC)  && pd->v[pg->imtrx][var] )
 	{
-	  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	  for( j=0; j<ei[pd->mi[var]]->dof[var]; j++)
 	    {
 	      d_func[0][var][j] += (fv->v[kdir]-x_dot[kdir])*fv->snormal[kdir]*d_penalty_dF*bf[var]->phi[j];
 	    }
@@ -4699,7 +4699,7 @@ fn_dot_T(double cfunc[MDE][DIM],
     }
   
   eqn = VELOCITY1;
-  if(pd->v[pg->imtrx][eqn]) 
+  if(pd->gv[eqn]) 
     {
       for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) 
 	{

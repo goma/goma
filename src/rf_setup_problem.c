@@ -153,6 +153,47 @@ associate_bc_to_matrix(void)
   }
 }
 
+static void
+set_matrix_index_and_global_v(void)
+{
+  int mn;
+  int i;
+  int imtrx;
+
+  /* Initialize matrix indices */
+  for (mn = 0; mn < upd->Num_Mat; mn++) {
+    for ( i=0; i<MAX_VARIABLE_TYPES; i++) {
+      pd_glob[mn]->mi[i] = -1;
+    }
+  }
+
+  for (mn = 0; mn < upd->Num_Mat; mn++) {
+    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+      for ( i=0; i<MAX_VARIABLE_TYPES; i++) {
+        if (pd_glob[mn]->v[imtrx][i]) {
+          pd_glob[mn]->mi[i] = imtrx;
+        }
+      }
+    }
+  }
+
+  for (mn = 0; mn < upd->Num_Mat; mn++) {
+    for ( i=0; i<MAX_VARIABLE_TYPES; i++) {
+      pd_glob[mn]->gv[i] = 0;
+    }
+  }
+
+  for (mn = 0; mn < upd->Num_Mat; mn++) {
+    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+      for ( i=0; i<MAX_VARIABLE_TYPES; i++) {
+        if (pd_glob[mn]->v[imtrx][i]) {
+          pd_glob[mn]->gv[i] = 1;
+        }
+      }
+    }
+  }
+}
+
 
 /****************************************************************************/
 /****************************************************************************/
@@ -389,6 +430,8 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * Setup some structures for solving problems with shell elements.
    */
   init_shell_element_blocks(exo);
+
+  set_matrix_index_and_global_v();
 
   /* Communicate non-shared but needed BC information */
   exchange_bc_info();

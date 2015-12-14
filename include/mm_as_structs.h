@@ -892,6 +892,11 @@ struct Problem_Description
                                                       * -1 -> Not present in any matrix
                                                       * >= 0 -> index into global matrix number
                                                       */
+  int	gv[MAX_VARIABLE_TYPES];                      /* If this variable is on in any matrix (for field variable access)
+                                                        0 -> not in any matrix
+                                                        1 -> in a matrix
+                                                      */
+
   int	w[MAX_NUM_MATRICES][MAX_EQNS];              /* Weight function for equations */
   int	i[MAX_NUM_MATRICES][MAX_VARIABLE_TYPES];    /* Interpolation type for each unknown 
                                                      * in the current element block */

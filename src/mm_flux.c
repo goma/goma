@@ -507,10 +507,6 @@ evaluate_flux(
 			  err = load_fv();
 			  EH( err, "load_fv");
 
-                          err = load_fv_all();
-                          EH( err, "load_fv_all");
-
-			  
 			  err = load_bf_grad();
 			  EH( err, "load_bf_grad");
 			  
@@ -528,9 +524,6 @@ evaluate_flux(
 			  err = load_fv_grads();
 			  EH( err, "load_fv_grads");
 
-                          err = load_fv_grads_all();
-
-			  
 			  err = load_fv_mesh_derivs(1);
 			  EH( err, "load_fv_mesh_derivs");
 			  
@@ -1982,10 +1975,6 @@ evaluate_flux(
  			err = load_fv();
  			EH( err, "load_fv");
 
-                        err = load_fv_all();
-                        EH( err, "load_fv_all");
-
- 
 			err = load_bf_grad();
 			EH( err, "load_bf_grad");
 		  
@@ -2003,9 +1992,6 @@ evaluate_flux(
 	 		err = load_fv_grads();
 	 		EH( err, "load_fv_grads");
 
-                        err = load_fv_grads_all();
-
-			  
 	 		err = load_fv_mesh_derivs(1);
 	 		EH( err, "load_fv_mesh_derivs");
 
@@ -3973,7 +3959,6 @@ evaluate_flux(
             	   EH( err, "beer_belly");
 
             	   err = load_fv();
-                   err = load_fv_all();
             	   EH( err, "load_fv");
 
             	   err = load_bf_grad();
@@ -3992,9 +3977,6 @@ evaluate_flux(
 	 	   err = load_fv_grads();
 	 	   EH( err, "load_fv_grads");
 
-
-	 	   err = load_fv_grads_all();
-			  
 	 	   err = load_fv_mesh_derivs(1);
 	 	   EH( err, "load_fv_mesh_derivs");
 
@@ -4634,7 +4616,6 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
  	      
  	     	err = load_fv();
  	     	EH( err, "load_fv");
-                load_fv_all();
  
  		fprintf(jfp,"%d %d %g %g %g\n",elem,i,fv->x[0],fv->x[1],fv->x[2]);
  		}
@@ -4682,7 +4663,6 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 	      
 	     err = load_fv();
 	     EH( err, "load_fv");
-             load_fv_all();
 
 	     err = load_bf_grad();
 	     EH( err, "load_bf_grad");
@@ -4694,7 +4674,6 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 	      }
 
 	     err = load_fv_grads();
-             load_fv_grads_all();
 	     EH( err, "load_fv_grads");	  
       
 	     if ( pd->e[pg->imtrx][R_MESH1] )
@@ -5810,7 +5789,6 @@ evaluate_global_flux (const Exo_DB *exo,
 		      /* precalculate variables at  current integration pt.*/
 		      err = load_fv();
 		      EH( err, "load_fv");
-                      load_fv_all();
 		  
 		      err = load_bf_grad();
 		      EH( err, "load_bf_grad");
@@ -5829,7 +5807,6 @@ evaluate_global_flux (const Exo_DB *exo,
 		       */
 
 		      err = load_fv_grads();
-                      load_fv_grads_all();
 		      EH( err, "load_fv_grads");
 
 		      compute_surface_integrand( quantity, elem, species_id, 
@@ -6346,7 +6323,6 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	      /* precalculate variables at  current integration pt.*/
 	      err = load_fv();
 	      EH( err, "load_fv");
-              load_fv_all();
 
 	      err = load_fv_sens();
 	      EH( err, "load_fv_sens");
@@ -6365,7 +6341,6 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	     * Gauss point.
 	     */
 	    err = load_fv_grads();
-            load_fv_grads_all();
 	    EH( err, "load_fv_grads");
 
 	    err = load_fv_grads_sens();
@@ -7410,7 +7385,6 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 
             	   err = load_fv();
             	   EH( err, "load_fv");
-                   load_fv_all();
 
                    err = load_fv_sens();
                    EH( err, "load_fv_sens");
@@ -7429,7 +7403,6 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                                            num_nodes_on_side,
                                            id_local_elem_coord);
 	 	   err = load_fv_grads();
-                   load_fv_grads_all();
 	 	   EH( err, "load_fv_grads");
 			  
                    err = load_fv_grads_sens();
