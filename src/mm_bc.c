@@ -1038,6 +1038,7 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
                                               ibc, num_nodes_on_side, ielem, 
                                               local_node_list, exo);
                               }
+
 			    }
 			}  /* END for (i = 0; i < Proc_NS_Count[ins]; i++)           */
 		    }  /* END if (Proc_NS_Ids[ins] == BC_Types[ibc].BC_ID)	     */
@@ -1138,6 +1139,7 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
                               ibc, num_nodes_on_side, ielem, 
                               local_node_list, exo);
               }
+
 	    }  /* END for (i = 0; i < Proc_SS_Elem_Count[iss]; i++)          */
 	  }  /* END if (Proc_SS_Ids[iss] == BC_Types[ibc].BC_ID)	     */
 	}  /* END for (iss = 0; iss < Proc_Num_Side_Sets; iss++) 	     */
@@ -1781,6 +1783,7 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 
 			  /*
 			   * Set up elem_edge_bc structure for this edge */
+
                           if (BC_Types[ibc].matrix >= 0) {			
                             this_edge_bc = setup_Elem_Edge_BC (&First_Elem_Edge_BC_Array[BC_Types[ibc].matrix][ielem],
                                                                &BC_Types[ibc],
