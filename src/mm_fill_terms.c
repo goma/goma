@@ -8781,7 +8781,7 @@ load_fv(void)
       v = EXTERNAL;
       for ( w=0; w<efv->Num_external_field; w++)
 	{
-	  dofs     = ei[pd->mi[v]]->dof_ext[w];
+	  dofs     = ei[pg->imtrx]->dof_ext[w];
 	  fv->external_field[w] = 0.;
 	  fv_old->external_field[w] = 0.;
 	  fv_dot->external_field[w] = 0.;
@@ -10586,7 +10586,7 @@ load_fv_grads(void)
      v = EXTERNAL;
      for ( w=0; w<efv->Num_external_field; w++)
        {
-	 dofs     = ei[pd->mi[v]]->dof_ext[w];
+	 dofs     = ei[pg->imtrx]->dof_ext[w];
 	 if( efv->i[w] != I_TABLE )
 	   {
 	     if (strcmp(efv->name[w], "F1") == 0 && !pd->gv[PHASE1])
