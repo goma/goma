@@ -3536,91 +3536,90 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
      /* now, add in pressure due to swelling for incompressible lagrangian
       * mesh motion */
      var = PRESSURE;
-     for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
-       {
-	 if (pd->v[imtrx][var] && ( mp->PorousMediaType == CONTINUOUS ) ) 
-	   {
-	     if (cr->MeshFluxModel == INCOMP_PSTRAIN ||
-		 cr->MeshFluxModel == INCOMP_PSTRESS || 
-		 cr->MeshFluxModel == INCOMP_3D      ||
-		 cr->MeshFluxModel == LINEAR)
-	       {
-		 for ( a=0; a<DIM; a++)
-		   {
-		     TT[a][a] -=  fv->P; 
-		   }
-	       }
-	   }
-       
-	 /* pressure force is the pressure of each phase times its volume fraction */
-	 if ((mp->PorousMediaType == POROUS_UNSATURATED || 
-	      mp->PorousMediaType == POROUS_SATURATED || 
-	      mp->PorousMediaType == POROUS_TWO_PHASE) && pd->e[imtrx][R_POR_POROSITY]) 
-	   {
-	     for ( a=0; a<VIM; a++)
-	       {
-		 if (mp->CapStress == NO_CAP_STRESS)
-		   {
-		     /*do nothing*/
-		   }
-		 else if (mp->CapStress == COMPRESSIBLE && mp->PorousMediaType != POROUS_SATURATED) 
-		   {
-		     EH(-1,"Need to reconcile the COMPRESSIBLE model pressures.  Not ready yet");
-		     /* Compressible model of effective stress law with
-		      *  partially saturated media from Zienkeivicz and Garg and Nur */
-		     if (elc->lame_lambda_model != POWER_LAW) 
-		       EH(-1,"Effective stress law may be missing constant");
-		     
-		     TT[a][a] -=  (1 - (1 - mp->porosity) * elc->lame_lambda / elc->u_lambda[0]) * 
-		       mp->saturation * fv->p_liq; 
-		     if (pd->v[imtrx][POR_GAS_PRES])
-		       {
-			 TT[a][a] -=  (1 - (1 - mp->porosity) 
-				       * elc->lame_lambda / elc->u_lambda[0]) * 
-			   (1. - mp->saturation) * fv->p_gas; 
-			 
-		       }
-		   } 
-		 else if (mp->CapStress == PARTIALLY_WETTING && mp->PorousMediaType != POROUS_SATURATED) 
-		   {
-		     p_gas_star =  mp->u_porous_gas_constants[3];
-		     TT[a][a] -= (1. - mp->saturation)*p_gas_star + mp->saturation * fv->p_liq;
-		     
-		     if (pd->v[imtrx][POR_GAS_PRES]) TT[a][a] -= (1. - mp->saturation) * fv->p_gas; 
-		   }
-	       
-		 else if (mp->CapStress == WETTING && mp->PorousMediaType != POROUS_SATURATED) 
-		   {
-		     /* If liquid is wetting, so that all surfaces are covered
-			by a thin layer of liquid */
-		     EH(-1,"Need to reconcile the WETTING model pressures.  Not ready yet");
-		     TT[a][a] -= (1 - mp->porosity * (1. - mp->saturation)) * fv->p_liq;  
-		     if (pd->v[imtrx][POR_GAS_PRES]) TT[a][a] -= mp->porosity * (1. - mp->saturation) * fv->p_gas;  
-		   }
-		 else if (mp->PorousMediaType == POROUS_SATURATED && pd->e[imtrx][POR_POROSITY])
-		   { 
-		     TT[a][a] -= fv->p_liq; 
-		     
-		   }
-		 else 
-		   {
-		     WH(-1,"No way to put liquid stress into porous matrix because you have const porosity and/or no pore eqn");
-		   }
-		 
-		 if(pd->e[imtrx][R_POR_SINK_MASS])
-		   {
-		     
-		     /*This factor is used to partition the strain of an agm particle between the network
-		      *and the pore-space.  factor=0 implies porespace only. 
-		      */
-		     factor = mp->u_porous_sink_constants[7];  
-		     
-		     TT[a][a] -= factor*2*mu*fv->sink_mass*mp->u_porous_sink_constants[5]/mp->density; 
-		   }
 
-	       }
-	   }
+     if (pd->gv[var] && ( mp->PorousMediaType == CONTINUOUS ) ) 
+       {
+         if (cr->MeshFluxModel == INCOMP_PSTRAIN ||
+             cr->MeshFluxModel == INCOMP_PSTRESS || 
+             cr->MeshFluxModel == INCOMP_3D      ||
+             cr->MeshFluxModel == LINEAR)
+           {
+             for ( a=0; a<DIM; a++)
+               {
+                 TT[a][a] -=  fv->P; 
+               }
+           }
        }
+       
+     /* pressure force is the pressure of each phase times its volume fraction */
+     if ((mp->PorousMediaType == POROUS_UNSATURATED || 
+          mp->PorousMediaType == POROUS_SATURATED || 
+          mp->PorousMediaType == POROUS_TWO_PHASE) && pd->gv[R_POR_POROSITY]) 
+       {
+         for ( a=0; a<VIM; a++)
+           {
+             if (mp->CapStress == NO_CAP_STRESS)
+               {
+                 /*do nothing*/
+               }
+             else if (mp->CapStress == COMPRESSIBLE && mp->PorousMediaType != POROUS_SATURATED) 
+               {
+                 EH(-1,"Need to reconcile the COMPRESSIBLE model pressures.  Not ready yet");
+                 /* Compressible model of effective stress law with
+                  *  partially saturated media from Zienkeivicz and Garg and Nur */
+                 if (elc->lame_lambda_model != POWER_LAW) 
+                   EH(-1,"Effective stress law may be missing constant");
+		     
+                 TT[a][a] -=  (1 - (1 - mp->porosity) * elc->lame_lambda / elc->u_lambda[0]) * 
+                   mp->saturation * fv->p_liq; 
+                 if (pd->gv[POR_GAS_PRES])
+                   {
+                     TT[a][a] -=  (1 - (1 - mp->porosity) 
+                                   * elc->lame_lambda / elc->u_lambda[0]) * 
+                       (1. - mp->saturation) * fv->p_gas; 
+			 
+                   }
+               } 
+             else if (mp->CapStress == PARTIALLY_WETTING && mp->PorousMediaType != POROUS_SATURATED) 
+               {
+                 p_gas_star =  mp->u_porous_gas_constants[3];
+                 TT[a][a] -= (1. - mp->saturation)*p_gas_star + mp->saturation * fv->p_liq;
+		     
+                 if (pd->gv[POR_GAS_PRES]) TT[a][a] -= (1. - mp->saturation) * fv->p_gas; 
+               }
+	       
+             else if (mp->CapStress == WETTING && mp->PorousMediaType != POROUS_SATURATED) 
+               {
+                 /* If liquid is wetting, so that all surfaces are covered
+                    by a thin layer of liquid */
+                 EH(-1,"Need to reconcile the WETTING model pressures.  Not ready yet");
+                 TT[a][a] -= (1 - mp->porosity * (1. - mp->saturation)) * fv->p_liq;  
+                 if (pd->gv[POR_GAS_PRES]) TT[a][a] -= mp->porosity * (1. - mp->saturation) * fv->p_gas;  
+               }
+             else if (mp->PorousMediaType == POROUS_SATURATED && pd->gv[POR_POROSITY])
+               { 
+                 TT[a][a] -= fv->p_liq; 
+		     
+               }
+             else 
+               {
+                 WH(-1,"No way to put liquid stress into porous matrix because you have const porosity and/or no pore eqn");
+               }
+		 
+             if(pd->gv[R_POR_SINK_MASS])
+               {
+		     
+                 /*This factor is used to partition the strain of an agm particle between the network
+                  *and the pore-space.  factor=0 implies porespace only. 
+                  */
+                 factor = mp->u_porous_sink_constants[7];  
+		     
+                 TT[a][a] -= factor*2*mu*fv->sink_mass*mp->u_porous_sink_constants[5]/mp->density; 
+               }
+
+           }
+       }
+
      
      if ( af->Assemble_Jacobian )
        {
