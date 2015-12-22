@@ -101,8 +101,13 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 
   status = 0;
 
-  dim = ei[pg->imtrx]->ielem_dim;
-  mdof = ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];
+  if (pd->gv[MESH_DISPLACEMENT1]) {
+    dim = ei[pd->mi[MESH_DISPLACEMENT1]]->ielem_dim;
+    mdof = ei[pd->mi[MESH_DISPLACEMENT1]]->dof[MESH_DISPLACEMENT1];
+  } else {
+    dim = ei[pg->imtrx]->ielem_dim;
+    mdof = ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];
+  }
   /*******************************************************************************/
   /* load up the displacement gradient and it's sensitivities or calculate it in 
    * psuedo-cartesian coordinates if using arbitrary mesh */
@@ -147,9 +152,9 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	  for ( q=0; q<dim; q++)
 	    {
 	      v = MESH_DISPLACEMENT1 + p;
-	      if ( pd->v[pg->imtrx][v] )
+	      if ( pd->gv[v] )
 		{
-		  dofs     = ei[pg->imtrx]->dof[v];
+		  dofs     = ei[pd->mi[v]]->dof[v];
 		  for ( i=0; i<dofs; i++)
 		    {
 		      grad_d[p][q] += 
@@ -169,15 +174,15 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	for ( b=0; b<dim; b++)
 	  {
 	    v = MESH_DISPLACEMENT1 + b;
-	    if ( pd->v[pg->imtrx][v] )
+	    if ( pd->gv[v] )
 	      {
-		for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
+		for ( j=0; j<ei[pd->mi[v]]->dof[v]; j++)
 		  {
 		    for ( p=0; p<dim; p++)
 		      {
 			d_grad_d[p][b][b][j] += bf[v]->d_phi[j][p];
 		      }
-		    for ( i=0; i<ei[pg->imtrx]->dof[v]; i++)
+		    for ( i=0; i<ei[pd->mi[v]]->dof[v]; i++)
 		      {
 			for ( p=0; p<dim; p++)
 			  {
@@ -194,10 +199,10 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	for ( b=0; b<dim; b++)
 	  {
 	    v = MESH_DISPLACEMENT1 + b;
-	    if ( pd->v[pg->imtrx][v] )
+	    if ( pd->gv[v] )
 	      {
 			bfv = bf[v];
-		for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
+		for ( j=0; j<ei[pd->mi[v]]->dof[v]; j++)
 		  {
 			d_grad_d[0][b][b][j] = bfv->d_phi[j][0];
 			d_grad_d[1][b][b][j] = bfv->d_phi[j][1];
@@ -205,7 +210,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 			if ( dim == 3 )
 			 d_grad_d[2][b][b][j] = bfv->d_phi[j][2];
 
-		    for ( i=0; i<ei[pg->imtrx]->dof[v]; i++)
+		    for ( i=0; i<ei[pd->mi[v]]->dof[v]; i++)
 			{
 				d_grad_d[0][0][b][j] += *esp->d[0][i] * bfv->d_d_phi_dmesh[i][0][b][j];
 				d_grad_d[1][1][b][j] += *esp->d[1][i] * bfv->d_d_phi_dmesh[i][1][b][j];
@@ -298,29 +303,35 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	  {
 	    for ( b=0; b<dim; b++)
 	      {
-		for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
-		  {
-		    d_cauchy_green_dx[p][q][b][j] = 0.5 * 
-		      (d_grad_d[p][q][b][j] + d_grad_d[q][p][b][j]);
-		  }
+                if (pd->gv[MESH_DISPLACEMENT1+b]) {
+
+                  for ( j=0; j<ei[pd->mi[MESH_DISPLACEMENT1+b]]->dof[MESH_DISPLACEMENT1+b]; j++)
+                    {
+                      d_cauchy_green_dx[p][q][b][j] = 0.5 * 
+                        (d_grad_d[p][q][b][j] + d_grad_d[q][p][b][j]);
+                    }
+                }
 	      }
 	    if (cr->MeshFluxModel != LINEAR) {
 	      for ( a=0; a<VIM; a++)
 		{
 		  for ( b=0; b<dim; b++)
 		    {
-		      for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
-			{
-			  /* dot product between displacement gradient and 
-			   * it's transpose - note that there are two ways to 
-			   * do this
-			   * the right way sums d(d_j)/d(x_m) d(d_j)/d(x_k) 
-			   * over j to get B_m_k
-			   */
-			  d_cauchy_green_dx[p][q][b][j] -= 0.5 * 
-			    ( d_grad_d[p][a][b][j] * grad_d[q][a] 
-			      + grad_d[p][a] * d_grad_d[q][a][b][j] ); 
-			}
+                      if (pd->gv[MESH_DISPLACEMENT1+b]) {
+
+                        for ( j=0; j<ei[pd->mi[MESH_DISPLACEMENT1+b]]->dof[MESH_DISPLACEMENT1+b]; j++)
+                          {
+                            /* dot product between displacement gradient and 
+                             * it's transpose - note that there are two ways to 
+                             * do this
+                             * the right way sums d(d_j)/d(x_m) d(d_j)/d(x_k) 
+                             * over j to get B_m_k
+                             */
+                            d_cauchy_green_dx[p][q][b][j] -= 0.5 * 
+                              ( d_grad_d[p][a][b][j] * grad_d[q][a] 
+                                + grad_d[p][a] * d_grad_d[q][a][b][j] ); 
+                          }
+                      }
 		    }
 		}
 	    }
@@ -329,7 +340,9 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 #else
 	  for ( b=0; b<dim; b++)
 	  {
-		  for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
+
+            if (pd->gv[MESH_DISPLACEMENT1+b]) {
+		  for ( j=0; j<ei[pd->mi[MESH_DISPLACEMENT1+b]]->dof[MESH_DISPLACEMENT1+b]; j++)
 		  {
 			  /*d_cauchy_green_dx[p][q][b][j] = 0.5 *  (d_grad_d[p][q][b][j] + d_grad_d[q][p][b][j]);*/
 
@@ -347,13 +360,15 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 				d_cauchy_green_dx[0][2][b][j] = 0.5 *  (d_grad_d[0][2][b][j] + d_grad_d[2][0][b][j]);
 			  }
 		  }
+            }
 	  }
 	  if (cr->MeshFluxModel != LINEAR) {
 	      for ( a=0; a<VIM; a++)
 		  {
 			  for ( b=0; b<dim; b++)
 			  {
-				  for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
+                            if (pd->gv[MESH_DISPLACEMENT1+b]) {
+				  for ( j=0; j<ei[pd->mi[MESH_DISPLACEMENT1+b]]->dof[MESH_DISPLACEMENT1+b]; j++)
 				  {
 					  /*d_cauchy_green_dx[p][q][b][j] -= 0.5 * ( d_grad_d[p][a][b][j] * grad_d[q][a] + grad_d[p][a] * d_grad_d[q][a][b][j] ); */
 					  
@@ -371,6 +386,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 						  d_cauchy_green_dx[0][2][b][j] -= 0.5 * ( d_grad_d[0][a][b][j] * grad_d[2][a] + grad_d[0][a] * d_grad_d[2][a][b][j] );				
 					  }
 				  }
+                            }
 			  }
 		  }
 	  }
@@ -408,10 +424,12 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		  {
 		    for ( b=0; b<dim; b++)
 		      {
-			for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
-			  {
-			    fv->d_deform_grad_dx[p][q][b][j] = d_grad_d[p][q][b][j];
-			  }
+                        if (pd->gv[MESH_DISPLACEMENT1+b]) {
+                          for ( j=0; j<ei[pd->mi[MESH_DISPLACEMENT1+b]]->dof[MESH_DISPLACEMENT1+b]; j++)
+                            {
+                              fv->d_deform_grad_dx[p][q][b][j] = d_grad_d[p][q][b][j];
+                            }
+                        }
 		      }
 		  }
 	      }
@@ -435,17 +453,26 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		  {
 		    for ( b=0; b<dim; b++)
 		      {
-			for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
-			  {
-			    d_invdeform_grad_dx[p][q][b][j] = - d_grad_d[p][q][b][j];
-			  }
+                        if (pd->gv[MESH_DISPLACEMENT1+b]) {
+                          for ( j=0; j<ei[pd->mi[MESH_DISPLACEMENT1+b]]->dof[MESH_DISPLACEMENT1+b]; j++)
+                            {
+                              d_invdeform_grad_dx[p][q][b][j] = - d_grad_d[p][q][b][j];
+                            }
+                        }
 		      }
 		  }
 	      }
 	  }
-	  invert_tensor(invdeform_grad, fv->deform_grad, VIM,
-			d_invdeform_grad_dx, fv->d_deform_grad_dx, 
-			ei[pg->imtrx]->dof[MESH_DISPLACEMENT1], af->Assemble_Jacobian);
+
+          if (pd->gv[MESH_DISPLACEMENT1]) {
+            invert_tensor(invdeform_grad, fv->deform_grad, VIM,
+                          d_invdeform_grad_dx, fv->d_deform_grad_dx, 
+                          ei[pd->mi[MESH_DISPLACEMENT1]]->dof[MESH_DISPLACEMENT1], af->Assemble_Jacobian);
+          } else {
+            invert_tensor(invdeform_grad, fv->deform_grad, VIM,
+                          d_invdeform_grad_dx, fv->d_deform_grad_dx, 
+                          ei[pg->imtrx]->dof[MESH_DISPLACEMENT1], af->Assemble_Jacobian);
+          }
 	}
     }
 
@@ -478,19 +505,20 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 
 	    for ( b=0; b<dim; b++)
 	      {
-		for ( j=0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+b]; j++)
-		  {
-		  	fv->d_volume_change_dx[b][j] = d_cauchy_green_dx[0][0] [b][j];		    
-			fv->d_volume_strain_dx[b][j] = d_cauchy_green_dx[0][0] [b][j];		    
+                if (pd->gv[MESH_DISPLACEMENT1+b]) {
+                  for ( j=0; j<ei[pd->mi[MESH_DISPLACEMENT1+b]]->dof[MESH_DISPLACEMENT1+b]; j++)
+                    {
+                      fv->d_volume_change_dx[b][j] = d_cauchy_green_dx[0][0] [b][j];		    
+                      fv->d_volume_strain_dx[b][j] = d_cauchy_green_dx[0][0] [b][j];		    
 
-		    fv->d_volume_change_dx[b][j] += d_cauchy_green_dx[1][1] [b][j];		    
-		    fv->d_volume_strain_dx[b][j] += d_cauchy_green_dx[1][1] [b][j];	
-			if ( VIM == 3) {	    
-		    fv->d_volume_change_dx[b][j] += d_cauchy_green_dx[2][2] [b][j];		    
-		    fv->d_volume_strain_dx[b][j] += d_cauchy_green_dx[2][2] [b][j];		    
-			}
-		  }
-		
+                      fv->d_volume_change_dx[b][j] += d_cauchy_green_dx[1][1] [b][j];		    
+                      fv->d_volume_strain_dx[b][j] += d_cauchy_green_dx[1][1] [b][j];	
+                      if ( VIM == 3) {	    
+                        fv->d_volume_change_dx[b][j] += d_cauchy_green_dx[2][2] [b][j];		    
+                        fv->d_volume_strain_dx[b][j] += d_cauchy_green_dx[2][2] [b][j];		    
+                      }
+                    }
+                }		
 	  }
       }
 	  

@@ -179,7 +179,12 @@ beer_belly(void)
    * there are mesh equations active on either the shell block or
    * any neighboring bulk block.
    */
-  DeformingMesh = ei[imtrx]->deforming_mesh;
+
+  if (pd->gv[MESH_DISPLACEMENT1]) {
+    DeformingMesh = ei[pd->mi[MESH_DISPLACEMENT1]]->deforming_mesh;
+  } else {
+    DeformingMesh = ei[imtrx]->deforming_mesh;
+  }
 
   if (( si = in_list(pd->IntegrationMap, 0, Num_Interpolations, 
 		     Unique_Interpolations)) == -1)
@@ -244,11 +249,11 @@ beer_belly(void)
     {
       if ( DeformingMesh )
 	{
-	  for ( k=0; k<mdof; k++)
+	  for ( k=0; k<ei[pd->mi[R_MESH1]]->dof[R_MESH1]; k++)
 	    {
-	      node  = ei[imtrx]->dof_list[R_MESH1][k];
+	      node  = ei[pd->mi[R_MESH1]]->dof_list[R_MESH1][k];
 
-	      index = Proc_Elem_Connect[ Proc_Connect_Ptr[ei[imtrx]->ielem] + node ];
+	      index = Proc_Elem_Connect[ Proc_Connect_Ptr[ei[pd->mi[R_MESH1]]->ielem] + node ];
 
 	      fv->x[i]     +=  ( Coor[i][index] + *esp->d[i][k]     ) * bf[R_MESH1]->phi[k];
 
@@ -285,11 +290,11 @@ beer_belly(void)
 	{
 	  if (DeformingMesh)
 	    {
-	      for (k = 0; k < mdof; k++)
+	      for (k = 0; k < ei[pd->mi[R_MESH1]]->dof[R_MESH1]; k++)
 		{
-		  node  = ei[imtrx]->dof_list[R_MESH1][k];
+		  node  = ei[pd->mi[R_MESH1]]->dof_list[R_MESH1][k];
 		      
-		  index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[imtrx]->ielem]+node];
+		  index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[pd->mi[R_MESH1]]->ielem]+node];
 
 		  MapBf->J[i][j] 
 		    += ( Coor[j][index] + *esp->d[j][k] ) 
@@ -409,7 +414,7 @@ beer_belly(void)
 	{
 	  for (j = 0; j < pdim; j++)
 	    {
-	      for (k = 0; k < mdof; k++)
+	      for (k = 0; k < ei[pd->mi[R_MESH1]]->dof[R_MESH1]; k++)
 		{
 		  MapBf->dJ[0][j] [j][k]  = bf[R_MESH1]->dphidxi[k][0];
 		  MapBf->d_det_J_dm[j][k] = bf[R_MESH1]->dphidxi[k][0]
@@ -446,7 +451,7 @@ beer_belly(void)
 	    {
 	      for (j = 0; j < pdim; j++)
 		{
-		  for (n = 0; n < mdof; n++)
+		  for (n = 0; n < ei[pd->mi[R_MESH1]]->dof[R_MESH1]; n++)
 		    {
 		      MapBf->dJ[i][j][j][n] = bf[R_MESH1]->dphidxi[n][i];
 		    }
@@ -462,7 +467,7 @@ beer_belly(void)
 
 	  for (k = 0; k < pdim; k++)
 	    {
-	      for (n = 0; n < mdof; n++)
+	      for (n = 0; n < ei[pd->mi[R_MESH1]]->dof[R_MESH1]; n++)
 		{
 		  MapBf->d_det_J_dm[k][n] =
 		    MapBf->dJ[0][0][k][n] *  MapBf-> J[1][1]
@@ -482,7 +487,7 @@ beer_belly(void)
 
 	  for (k = 0; k < pdim; k++)
 	    {
-	      for (n = 0; n < mdof; n++)
+	      for (n = 0; n < ei[pd->mi[R_MESH1]]->dof[R_MESH1]; n++)
 		{
 		  g              = -(f*f) * MapBf->d_det_J_dm[k][n];
 		  MapBf->dB[0][0][k][n] = MapBf->dJ[1][1][k][n] * f 
@@ -562,7 +567,7 @@ beer_belly(void)
 	    {
 	      for (j = 0; j < pdim; j++)
 		{
-		  for (n = 0; n < mdof; n++)
+		  for (n = 0; n < ei[pd->mi[R_MESH1]]->dof[R_MESH1]; n++)
 		    {
 		      MapBf->dJ[i][j][j][n] = bf[R_MESH1]->dphidxi[n][i];
 		    }
@@ -622,7 +627,7 @@ beer_belly(void)
 
 	  for (k = 0; k < pdim; k++)
 	    {
-	      for (n = 0; n < mdof; n++)
+	      for (n = 0; n < ei[pd->mi[R_MESH1]]->dof[R_MESH1]; n++)
 		{
 		  g              = -(f*f) * MapBf->d_det_J_dm[k][n];
 
@@ -716,7 +721,7 @@ beer_belly(void)
 		    {
 		      for (k = 0; k < pdim; k++)
 			{
-			  for (n = 0; n < mdof; n++)
+			  for (n = 0; n < ei[pd->mi[R_MESH1]]->dof[R_MESH1]; n++)
 			    {
 			      bfd[t]->d_det_J_dm[k][n] = MapBf->d_det_J_dm[k][n];
 

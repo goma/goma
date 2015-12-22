@@ -431,7 +431,7 @@ fvelo_normal_bc(double func[DIM],
 	  var = MESH_DISPLACEMENT1 + kdir;
 	  if (pd->gv[var])
 	    {
-	      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+	      for (j = 0; j < ei[pd->mi[var]]->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
 		  d_func[0][var][j] -= phi_j * fv->snormal[kdir];
@@ -4705,7 +4705,7 @@ fn_dot_T(double cfunc[MDE][DIM],
 	{
 	  id = (int) elem_side_bc->local_elem_node_id[i];
 	  I = Proc_Elem_Connect[iconnect_ptr + id];
-	  ldof  = ei[pg->imtrx]->ln_to_first_dof[eqn][id];
+	  ldof  = ei[pd->mi[eqn]]->ln_to_first_dof[eqn][id];
 	  
 	  /* Calculate the residual contribution from surface gradient of basis function */
 	  if (ldof >= 0 )
