@@ -577,7 +577,7 @@ if(lsi->near && 0) fprintf(stderr,"vn_ls %g %g %g %g\n",fv->x[0],penalty,factor,
       }
 	      
       var = VELOCITY1 + kdir;
-      if (pd->gv[var]) {
+      if (pd->v[pg->imtrx][var]) {
 	for ( j=0; j<ei[pd->mi[var]]->dof[var]; j++) {
 	  phi_j = bf[var]->phi[j];
 	  d_func[0][var][j] += penalty* phi_j * fv->snormal[kdir];
@@ -585,7 +585,7 @@ if(lsi->near && 0) fprintf(stderr,"vn_ls %g %g %g %g\n",fv->x[0],penalty,factor,
       }
 
       var = PVELOCITY1 + kdir;
-      if (pd->gv[var]) {
+      if (pd->v[pg->imtrx][var]) {
 	for ( j=0; j<ei[pd->mi[var]]->dof[var]; j++) {
 	  phi_j = bf[var]->phi[j];
 	  d_func[0][var][j] += penalty*phi_j * fv->snormal[kdir];

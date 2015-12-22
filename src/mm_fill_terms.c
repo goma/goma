@@ -8208,7 +8208,7 @@ load_fv(void)
 	}
 
       /* Zero these only if not using mesh displacements: */
-      else if (upd->vp[pg->imtrx][v] == -1)
+      else if (!pdgv[MESH_DISPLACEMENT1])
 	{
 	  v            = pd->ShapeVar;
 	  dofs         = ei[pd->mi[v]]->dof[v];
