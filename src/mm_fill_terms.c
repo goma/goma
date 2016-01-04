@@ -10757,7 +10757,7 @@ load_fv_mesh_derivs(int okToZero)
   int imtrx; 
   int mesh_on = FALSE;
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-    if (ei[pg->imtrx]->deforming_mesh)
+    if (ei[imtrx]->deforming_mesh)
     {
       mesh_on = TRUE;
     }
@@ -10790,6 +10790,8 @@ load_fv_mesh_derivs(int okToZero)
   
   transient_run = pd->TimeIntegration != STEADY ; 
   discontinuous_porous_media = mp->PorousMediaType !=CONTINUOUS ;
+
+  okToZero = FALSE;
 
   /*
    * d(grad(T))/dmesh
