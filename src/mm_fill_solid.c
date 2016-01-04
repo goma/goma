@@ -101,8 +101,13 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 
   status = 0;
 
-  dim = ei[pg->imtrx]->ielem_dim;
-  mdof = ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];
+ if (pd->gv[MESH_DISPLACEMENT1]) {
+    dim = ei[pd->mi[MESH_DISPLACEMENT1]]->ielem_dim;
+    mdof = ei[pd->mi[MESH_DISPLACEMENT1]]->dof[MESH_DISPLACEMENT1];
+  } else {
+    dim = ei[pg->imtrx]->ielem_dim;
+    mdof = ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];
+  }
   /*******************************************************************************/
   /* load up the displacement gradient and it's sensitivities or calculate it in 
    * psuedo-cartesian coordinates if using arbitrary mesh */
@@ -149,7 +154,7 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 	      v = MESH_DISPLACEMENT1 + p;
 	      if ( pd->gv[v] )
 		{
-		  dofs     = ei[pg->imtrx]->dof[v];
+		  dofs     = ei[pd->mi[v]]->dof[v];
 		  for ( i=0; i<dofs; i++)
 		    {
 		      grad_d[p][q] += 
@@ -443,9 +448,16 @@ belly_flop(dbl mu)		/* elastic modulus (plane stress case) */
 		  }
 	      }
 	  }
-	  invert_tensor(invdeform_grad, fv->deform_grad, VIM,
-			d_invdeform_grad_dx, fv->d_deform_grad_dx, 
-			ei[pg->imtrx]->dof[MESH_DISPLACEMENT1], af->Assemble_Jacobian);
+    
+          if (pd->gv[MESH_DISPLACEMENT1]) {
+            invert_tensor(invdeform_grad, fv->deform_grad, VIM,
+                          d_invdeform_grad_dx, fv->d_deform_grad_dx, 
+                          ei[pd->mi[MESH_DISPLACEMENT1]]->dof[MESH_DISPLACEMENT1], af->Assemble_Jacobian);
+          } else {
+            invert_tensor(invdeform_grad, fv->deform_grad, VIM,
+                          d_invdeform_grad_dx, fv->d_deform_grad_dx, 
+                          ei[pg->imtrx]->dof[MESH_DISPLACEMENT1], af->Assemble_Jacobian);
+          }
 	}
     }
 
