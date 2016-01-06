@@ -296,8 +296,8 @@ apply_rotated_bc (
 			      fv->stangent, fv->dstangent_dx, sign_rot_mesh[i]);
 	}
 	if (rot_mom[i] && ei[pg->imtrx]->ln_to_dof[VELOCITY1][id] != -1 && 
-	    pd->i[0][VELOCITY1] != I_Q2_D &&
-            pd->i[0][VELOCITY1] != I_Q1_D)	  { 
+	    pd->i[pg->imtrx][VELOCITY1] != I_Q2_D &&
+            pd->i[pg->imtrx][VELOCITY1] != I_Q1_D)	  { 
 		rotate_res_jac_mom(ei[pg->imtrx]->ln_to_dof[VELOCITY1][id], 
 			     I, iconnect_ptr, num_local_nodes, ielem_dim-1,
 			     fv->snormal, fv->dsnormal_dx, fv->stangent,
@@ -1246,7 +1246,7 @@ rotate_momentum_eqn (
 
                     for (ldir = 0; ldir < dim; ldir++) {
                       sum_val += rotation[I][eq][kdir]->d_vector_dx[ldir][b][j]
-                          * lec->R[upd->ep[0][R_MESH1 + ldir]][id];
+                          * lec->R[upd->ep[pg->imtrx][R_MESH1 + ldir]][id];
                     }
                     global_row = ams->GlobalIDs[index_eqn];
                     global_col = ams->GlobalIDs[index_var];

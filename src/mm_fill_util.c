@@ -5069,12 +5069,12 @@ determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
     /*
      *  For shell variables e[] may be zero, but there may be a v[].
      */
-    if (pd_ptr->e[0][R_MESH1] || pd_ptr->v[0][MESH_DISPLACEMENT1] ) {
+    if (pd_ptr->e[pg->imtrx][R_MESH1] || pd_ptr->v[pg->imtrx][MESH_DISPLACEMENT1] ) {
       /*
        * If deforming mesh always make displacement the mapping
        * interpolation
        */
-      pd_ptr->IntegrationMap = pd_ptr->i[0][R_MESH1];
+      pd_ptr->IntegrationMap = pd_ptr->i[pg->imtrx][R_MESH1];
       pd_ptr->ShapeVar = R_MESH1;
     } else {
       if ((pd_ptr->ShapeVar =
@@ -5087,8 +5087,8 @@ determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
 		  in_list(I_SP, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) {
 	pd_ptr->IntegrationMap = I_SP;
       } else {
-	pd_ptr->ShapeVar = pd_ptr->m[0][0];
-	pd_ptr->IntegrationMap = pd_ptr->i[0][ pd_ptr->ShapeVar ];
+	pd_ptr->ShapeVar = pd_ptr->m[pg->imtrx][0];
+	pd_ptr->IntegrationMap = pd_ptr->i[pg->imtrx][ pd_ptr->ShapeVar ];
       }
     }
   } else {
@@ -5097,12 +5097,12 @@ determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
      * as the mapping order
      */
     pd_ptr->ShapeVar = in_list(pd_ptr->IntegrationMap, 0, MAX_VARIABLE_TYPES,
-			       pd_ptr->i[0]);
+			       pd_ptr->i[pg->imtrx]);
     if (pd_ptr->ShapeVar == -1) {
       EH (-1,
 	  "Error: Specified Element Mapping has no corresponding variable .");
     }
-    if (pd_ptr->e[0][R_MESH1] && 
+    if (pd_ptr->e[pg->imtrx][R_MESH1] && 
 	pd_ptr->IntegrationMap != pd_ptr->i[0][R_MESH1]) {
       WH (-1,
 	  "Warning: Having the Element Mapping differ from the "
@@ -5137,26 +5137,26 @@ determine_ProjectionVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
 {
   int var;
   pd_ptr->ProjectionVar = -1;
-  if (((var = in_list(I_Q2,   0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
-      ((var = in_list(I_Q2_D, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
-      ((var = in_list(I_Q2_G, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
-      ((var = in_list(I_Q2_GP, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
-      ((var = in_list(I_Q2_GN, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
-      ((var = in_list(I_Q2_XV,0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
-      ((var = in_list(I_SP,   0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
-      ((var = in_list(I_Q1,   0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
-      ((var = in_list(I_Q1_D, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
-      ((var = in_list(I_Q1_G, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
-      ((var = in_list(I_Q1_GP, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
-      ((var = in_list(I_Q1_GN, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) ||
-      ((var = in_list(I_Q1_XV,0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1)) {
+  if (((var = in_list(I_Q2,   0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
+      ((var = in_list(I_Q2_D, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
+      ((var = in_list(I_Q2_G, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
+      ((var = in_list(I_Q2_GP, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
+      ((var = in_list(I_Q2_GN, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
+      ((var = in_list(I_Q2_XV,0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
+      ((var = in_list(I_SP,   0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
+      ((var = in_list(I_Q1,   0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
+      ((var = in_list(I_Q1_D, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
+      ((var = in_list(I_Q1_G, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
+      ((var = in_list(I_Q1_GP, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
+      ((var = in_list(I_Q1_GN, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
+      ((var = in_list(I_Q1_XV,0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1)) {
     pd_ptr->ProjectionVar = var;
   } else {
     P0PRINTF("Warning: No suitable basis function was found for a Projection Operation\n");
   }
 #ifdef DEBUG_HKM
   P0PRINTF("Projection Variable set to %d with interp type = %d\n",
-	   pd_ptr->ProjectionVar, pd_ptr->i[0][pd_ptr->ProjectionVar]);
+	   pd_ptr->ProjectionVar, pd_ptr->i[pg->imtrx][pd_ptr->ProjectionVar]);
 #endif
 }
 

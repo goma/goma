@@ -3045,7 +3045,7 @@ find_first_elem_with_var ( Exo_DB *e, int var )
     {
       mn = Matilda[ eb ];
       
-      found = pd_glob[mn]->v[0][var];
+      found = pd_glob[mn]->v[pg->imtrx][var];
       if( found ) first_elem = e->eb_ptr[eb];
     }
 
