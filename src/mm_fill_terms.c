@@ -377,10 +377,6 @@ assemble_mesh (double time,
       eqm->vol_count++;
     }
 
-  if (fv->volume_strain > 1e-10) {
-
-    printf("%g %g %g\n", fv->x[0], fv->x[1], fv->volume_strain);
-  }
   /*
    * Total mesh stress tensor...
    */
