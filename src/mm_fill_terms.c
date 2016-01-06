@@ -377,6 +377,10 @@ assemble_mesh (double time,
       eqm->vol_count++;
     }
 
+  if (fv->volume_strain > 1e-10) {
+
+    printf("%g %g %g\n", fv->x[0], fv->x[1], fv->volume_strain);
+  }
   /*
    * Total mesh stress tensor...
    */
@@ -2523,53 +2527,49 @@ assemble_momentum(dbl time,       /* current time */
     }
   /* end Petrov-Galerkin addition */
   
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+  if( pd->gv[POLYMER_STRESS11] )
     {
-      if( pd->v[imtrx][POLYMER_STRESS11] )
-	{
-	  (void)stress_eqn_pointer(v_s);
+      (void)stress_eqn_pointer(v_s);
 	  
-	  v_g[0][0] = VELOCITY_GRADIENT11;
-	  v_g[0][1] = VELOCITY_GRADIENT12;
-	  v_g[1][0] = VELOCITY_GRADIENT21;
-	  v_g[1][1] = VELOCITY_GRADIENT22;
-	  v_g[0][2] = VELOCITY_GRADIENT13;
-	  v_g[1][2] = VELOCITY_GRADIENT23;
-	  v_g[2][0] = VELOCITY_GRADIENT31;
-	  v_g[2][1] = VELOCITY_GRADIENT32;
-	  v_g[2][2] = VELOCITY_GRADIENT33;
-	}
+      v_g[0][0] = VELOCITY_GRADIENT11;
+      v_g[0][1] = VELOCITY_GRADIENT12;
+      v_g[1][0] = VELOCITY_GRADIENT21;
+      v_g[1][1] = VELOCITY_GRADIENT22;
+      v_g[0][2] = VELOCITY_GRADIENT13;
+      v_g[1][2] = VELOCITY_GRADIENT23;
+      v_g[2][0] = VELOCITY_GRADIENT31;
+      v_g[2][1] = VELOCITY_GRADIENT32;
+      v_g[2][2] = VELOCITY_GRADIENT33;
     }
+
 
   /* Set up variables for particle/fluid momentum coupling.
    */
   particle_momentum_on = 0;
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+  if(pd->gv[R_PMOMENTUM1])
     {
-      if(pd->e[imtrx][R_PMOMENTUM1])
-	{
-	  particle_momentum_on = 1;
-	  /* This is the species number of the particle phase. */
-	  species = (int) mp->u_density[0];
-	  p_vol_frac = fv->c[species];
-	  ompvf = 1.0 - p_vol_frac;
-	  /* Uncomment this to check for when the particle volume fraction
-	   * becomes non-physical.  Beware, however, that the intermediate
-	   * solutions may, indeed, become negative while converging to a
-	   * physical solution.
-	   if(p_vol_frac<0.0 || p_vol_frac>1.0)
-	   {
-	   if(fabs(p_vol_frac)<1e-14)
-	   p_vol_frac=0.0;
-	   else
-	   {
-	   printf("assemble_momentum: p_vol_frac=%g, exiting\n",p_vol_frac);
-	   exit(0);
-	   }
-	   }
-	  */
-	}
+      particle_momentum_on = 1;
+      /* This is the species number of the particle phase. */
+      species = (int) mp->u_density[0];
+      p_vol_frac = fv->c[species];
+      ompvf = 1.0 - p_vol_frac;
+      /* Uncomment this to check for when the particle volume fraction
+       * becomes non-physical.  Beware, however, that the intermediate
+       * solutions may, indeed, become negative while converging to a
+       * physical solution.
+       if(p_vol_frac<0.0 || p_vol_frac>1.0)
+       {
+       if(fabs(p_vol_frac)<1e-14)
+       p_vol_frac=0.0;
+       else
+       {
+       printf("assemble_momentum: p_vol_frac=%g, exiting\n",p_vol_frac);
+       exit(0);
+       }
+       }
+      */
     }
+
 
 
   /*
@@ -2675,13 +2675,11 @@ assemble_momentum(dbl time,       /* current time */
   /*
    * Field variables...
    */
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+  if(pd->gv[MESH_DISPLACEMENT1])
     {
-      if(pd->v[imtrx][MESH_DISPLACEMENT1])
-	{
-	  mesh_disp_on = 1;
-	}
+      mesh_disp_on = 1;
     }
+
 
   x_dot = zero;
   if (  transient_run &&  mesh_disp_on )
@@ -4497,23 +4495,21 @@ assemble_continuity(dbl time_value,   /* current time */
      pd->CoordinateSystem == PROJECTED_CARTESIAN)
     wim = wim+1;
   
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+  if (pd->gv[POLYMER_STRESS11])
     {
-      if (pd->v[imtrx][POLYMER_STRESS11])
-	{
-	  err = stress_eqn_pointer(v_s);
+      err = stress_eqn_pointer(v_s);
 	  
-	  v_g[0][0] = VELOCITY_GRADIENT11;
-	  v_g[0][1] = VELOCITY_GRADIENT12;
-	  v_g[1][0] = VELOCITY_GRADIENT21;
-	  v_g[1][1] = VELOCITY_GRADIENT22;
-	  v_g[0][2] = VELOCITY_GRADIENT13;
-	  v_g[1][2] = VELOCITY_GRADIENT23;
-	  v_g[2][0] = VELOCITY_GRADIENT31;
-	  v_g[2][1] = VELOCITY_GRADIENT32;
-	  v_g[2][2] = VELOCITY_GRADIENT33; 
-	}
+      v_g[0][0] = VELOCITY_GRADIENT11;
+      v_g[0][1] = VELOCITY_GRADIENT12;
+      v_g[1][0] = VELOCITY_GRADIENT21;
+      v_g[1][1] = VELOCITY_GRADIENT22;
+      v_g[0][2] = VELOCITY_GRADIENT13;
+      v_g[1][2] = VELOCITY_GRADIENT23;
+      v_g[2][0] = VELOCITY_GRADIENT31;
+      v_g[2][1] = VELOCITY_GRADIENT32;
+      v_g[2][2] = VELOCITY_GRADIENT33; 
     }
+
   
   wt = fv->wt;
   det_J = bf[eqn]->detJ;		/* Really, ought to be mesh eqn. */
@@ -4535,47 +4531,39 @@ assemble_continuity(dbl time_value,   /* current time */
   suspensionsource_on = (mp->MomentumSourceModel == SUSPENSION );
 
 
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+  if ( lagrangian_mesh_motion && pd->gv[R_MESH1])
     {
-      if ( lagrangian_mesh_motion && pd->e[imtrx][R_MESH1])
-	{
-	  err = belly_flop(elc->lame_mu);
-	  EH(err, "error in belly flop");
-	  if (err == 2) return(err);
-	}
-    }  
-  
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)     
-    {
-      if(total_ale_on && !pd->v[imtrx][VELOCITY1])
-	{
-	  total_ale_and_velo_off = 1;
-	}
+      err = belly_flop(elc->lame_mu);
+      EH(err, "error in belly flop");
+      if (err == 2) return(err);
     }
 
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+  if(total_ale_on && !pd->gv[VELOCITY1])
     {
-      if(total_ale_and_velo_off && pd->e[imtrx][R_SOLID1])
-	{
-	  err = belly_flop_rs(elc_rs->lame_mu);
-	  EH(err, "error in belly flop for real solid");
-	  if (err == 2) return(err);	  
-	}
+      total_ale_and_velo_off = 1;
     }
+
+
+  if(total_ale_and_velo_off && pd->gv[R_SOLID1])
+    {
+      err = belly_flop_rs(elc_rs->lame_mu);
+      EH(err, "error in belly flop for real solid");
+      if (err == 2) return(err);	  
+    }
+
 
 
   particle_momentum_on = 0;
   species = -1;
   ompvf = 1.0;
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+
+  if(pd->gv[R_PMOMENTUM1])
     {
-      if(pd->e[imtrx][R_PMOMENTUM1])
-	{
-	  particle_momentum_on = 1;
-	  species = (int) mp->u_density[0];
-	  ompvf = 1.0 - fv->c[species];
-	}
+      particle_momentum_on = 1;
+      species = (int) mp->u_density[0];
+      ompvf = 1.0 - fv->c[species];
     }
+
 
 
   if(PSPG)
@@ -4722,37 +4710,35 @@ assemble_continuity(dbl time_value,   /* current time */
 	  advection = 0.0;
 	  if (advection_on)
 	    {
-	      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
-		{
-		  if (pd->v[imtrx][VELOCITY1]) /* then must be solving fluid mechanics in this material */
-		    {
+              if (pd->gv[VELOCITY1]) /* then must be solving fluid mechanics in this material */
+                {
 		      
-		      /*
-		       * Standard incompressibility constraint means we have
-		       * a solenoidal velocity field
-		       */
+                  /*
+                   * Standard incompressibility constraint means we have
+                   * a solenoidal velocity field
+                   */
 		      
-		      advection = div_v;
+                  advection = div_v;
 		      
-		      /* We get a more complicated advection term because the
-		       * particle phase is not incompressible.
-		       */
-		      if (particle_momentum_on) advection *= ompvf;
+                  /* We get a more complicated advection term because the
+                   * particle phase is not incompressible.
+                   */
+                  if (particle_momentum_on) advection *= ompvf;
 		      
-		      advection *= phi_i * d_area;
-		      advection *= advection_etm;
-		    }
-		  else if (lagrangian_mesh_motion || total_ale_on)
-		    /* use divergence of displacement for linear elasticity */
-		    {
-		      advection = fv->volume_change;
+                  advection *= phi_i * d_area;
+                  advection *= advection_etm;
+                }
+              else if (lagrangian_mesh_motion || total_ale_on)
+                /* use divergence of displacement for linear elasticity */
+                {
+                  advection = fv->volume_change;
 		      
-		      if( particle_momentum_on ) advection *= ompvf;
+                  if( particle_momentum_on ) advection *= ompvf;
 		      
-		      advection *= phi_i * h3 * det_J * wt;
-		      advection *= advection_etm;
-		    }
-		}
+                  advection *= phi_i * h3 * det_J * wt;
+                  advection *= advection_etm;
+                }
+
 
 	      if (electrode_kinetics_on || ion_reactions_on)
 		{
@@ -4785,94 +4771,92 @@ assemble_continuity(dbl time_value,   /* current time */
 	  sourceBase = 0.0;
 	  if (source_on)
 	    {
-	      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
-		{
-		  if (pd->v[imtrx][VELOCITY1])
-		    {
-		      /* DRN (07/13/05):
-			 This was previously:
-			 source     =  P;
-			 But this messes with level set problems that have a density source
-			 over part of the domain and constant in other regions.  If someone was
-			 counting on this behavior as a form of a penalty method to give a non-zero
-			 diagonal entry, we should implement a new density model that accomplishes this.
-			 I really don't know what you want for DENSITY_IDEAL_GAS, though?!?
+              if (pd->gv[VELOCITY1])
+                {
+                  /* DRN (07/13/05):
+                     This was previously:
+                     source     =  P;
+                     But this messes with level set problems that have a density source
+                     over part of the domain and constant in other regions.  If someone was
+                     counting on this behavior as a form of a penalty method to give a non-zero
+                     diagonal entry, we should implement a new density model that accomplishes this.
+                     I really don't know what you want for DENSITY_IDEAL_GAS, though?!?
 			 
-			 source     =  0.;
-			 }*/
-		      if ( mp->DensityModel == DENSITY_FOAM || 
-			   mp->DensityModel == DENSITY_FOAM_CONC || 
-			   mp->DensityModel == DENSITY_FOAM_TIME ||
-			   mp->DensityModel == DENSITY_FOAM_TIME_TEMP)
-			{
-			  /* These density models locally permit a time and spatially varying
-			     density.  Consequently, the Lagrangian derivative of the density
-			     terms in the continuity equation are not zero and are
-			     included here as a source term
-			  */
-			  source = FoamVolumeSource(time_value, dt, tt, dFVS_dv, dFVS_dT,
-						    dFVS_dx, dFVS_dC, dFVS_dF);
-			  sourceBase = source;
-			  foam_volume_source_on = 1;
-			}
-		      else if ( mp->DensityModel == REACTIVE_FOAM )
-			{
-			  /* These density models locally permit a time and spatially varying
-			     density.  Consequently, the Lagrangian derivative of the density
-			     terms in the continuity equation are not zero and are
-			     included here as a source term
-			  */
-			  source = REFVolumeSource( time_value,
-						    dt,
-						    tt,
-						    dFVS_dv,
-						    dFVS_dT,
-						    dFVS_dx,
-						    dFVS_dC );
-			  sourceBase  = source;
-			  foam_volume_source_on =  1;
-			}
+                     source     =  0.;
+                     }*/
+                  if ( mp->DensityModel == DENSITY_FOAM || 
+                       mp->DensityModel == DENSITY_FOAM_CONC || 
+                       mp->DensityModel == DENSITY_FOAM_TIME ||
+                       mp->DensityModel == DENSITY_FOAM_TIME_TEMP)
+                    {
+                      /* These density models locally permit a time and spatially varying
+                         density.  Consequently, the Lagrangian derivative of the density
+                         terms in the continuity equation are not zero and are
+                         included here as a source term
+                      */
+                      source = FoamVolumeSource(time_value, dt, tt, dFVS_dv, dFVS_dT,
+                                                dFVS_dx, dFVS_dC, dFVS_dF);
+                      sourceBase = source;
+                      foam_volume_source_on = 1;
+                    }
+                  else if ( mp->DensityModel == REACTIVE_FOAM )
+                    {
+                      /* These density models locally permit a time and spatially varying
+                         density.  Consequently, the Lagrangian derivative of the density
+                         terms in the continuity equation are not zero and are
+                         included here as a source term
+                      */
+                      source = REFVolumeSource( time_value,
+                                                dt,
+                                                tt,
+                                                dFVS_dv,
+                                                dFVS_dT,
+                                                dFVS_dx,
+                                                dFVS_dC );
+                      sourceBase  = source;
+                      foam_volume_source_on =  1;
+                    }
 		      
-		      /*
-			else if
-			( mp->DensityModel == SUSPENSION ||
-			mp->DensityModel == SUSPENSION_PM )
-			{
-		      */
-		      /* Although the suspension density models meet the definition of
-			 a locally variable density model, the Lagrangian derivative
-			 of their densities can be represented as a divergence of
-			 mass flux.  This term must be integrated by parts and so is
-			 included separately later on and is not include as part of the "source"
-			 terms 
-			 source = 0.0;
-			 }  */
+                  /*
+                    else if
+                    ( mp->DensityModel == SUSPENSION ||
+                    mp->DensityModel == SUSPENSION_PM )
+                    {
+                  */
+                  /* Although the suspension density models meet the definition of
+                     a locally variable density model, the Lagrangian derivative
+                     of their densities can be represented as a divergence of
+                     mass flux.  This term must be integrated by parts and so is
+                     included separately later on and is not include as part of the "source"
+                     terms 
+                     source = 0.0;
+                     }  */
 		      
 		      
-		      /* To include, or not to include, that is the question
-		       * when considering the particle momentum coupled eq.'s...
-		       */
+                  /* To include, or not to include, that is the question
+                   * when considering the particle momentum coupled eq.'s...
+                   */
 		      
-		      /* We get this source term because the fluid phase is not
-		       * incompressible.
-		       */
-		      if (particle_momentum_on)
-			{
-			  source = 0.0;
-			  for(a = 0; a < wim; a++ )
-			    {
-			      /* Cannot use s_terms.conv_flux[a] here because that
-			       * is defined in terms of the particle phase
-			       * velocities.
-			       */
-			      source -= fv->grad_c[species][a] * v[a];
-			    }
-			  sourceBase = source;
-			}
-		      source *= phi_i * d_area;
-		      source *= source_etm;
-		    }
-		}
+                  /* We get this source term because the fluid phase is not
+                   * incompressible.
+                   */
+                  if (particle_momentum_on)
+                    {
+                      source = 0.0;
+                      for(a = 0; a < wim; a++ )
+                        {
+                          /* Cannot use s_terms.conv_flux[a] here because that
+                           * is defined in terms of the particle phase
+                           * velocities.
+                           */
+                          source -= fv->grad_c[species][a] * v[a];
+                        }
+                      sourceBase = source;
+                    }
+                  source *= phi_i * d_area;
+                  source *= source_etm;
+                }
+
 
 	      if ((lagrangian_mesh_motion || total_ale_and_velo_off))
 		/* add swelling as a source of volume */
@@ -8996,7 +8980,7 @@ load_fv_grads(void)
   /* Use a static flag so unused grads are zero on first call, but are not zero subsequently
   *  This is for efficieny
   */  
-  static int zero_unused_grads = TRUE;
+  static int zero_unused_grads =FALSE;
 
   /*
    * grad(T)
@@ -9259,7 +9243,7 @@ load_fv_grads(void)
 		}
 	    }
 	}
-    } else if (upd->vp[pg->imtrx][MESH_DISPLACEMENT1] == -1) 
+    } else 
       {
 	for (p = 0; p < VIM; p++)
 	  {
