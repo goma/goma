@@ -5066,15 +5066,26 @@ determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
       ***********************************************************************/
 {
   if (pd_ptr->IntegrationMap == ISOPARAMETRIC) {
+
+    int imtrx;
+    int mesh_matrix = -1;
+
+    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+      if (pd_ptr->v[imtrx][R_MESH1]) {
+        mesh_matrix = imtrx;
+        break;
+      }
+    }
+
     /*
      *  For shell variables e[] may be zero, but there may be a v[].
      */
-    if (pd_ptr->e[pg->imtrx][R_MESH1] || pd_ptr->v[pg->imtrx][MESH_DISPLACEMENT1] ) {
+    if (mesh_matrix >= 0) {
       /*
        * If deforming mesh always make displacement the mapping
        * interpolation
        */
-      pd_ptr->IntegrationMap = pd_ptr->i[pg->imtrx][R_MESH1];
+      pd_ptr->IntegrationMap = pd_ptr->i[mesh_matrix][R_MESH1];
       pd_ptr->ShapeVar = R_MESH1;
     } else {
       if ((pd_ptr->ShapeVar =

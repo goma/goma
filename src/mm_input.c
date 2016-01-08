@@ -9978,19 +9978,6 @@ rd_eq_specs(FILE *ifp,
   
 
   /*
-   *  Part 6 --
-   * 
-   *   Now figure out the mapping order, shape variables and
-   *   the projection variable.
-   *
-   *   - pd_ptr->IntegrationMap variable is determined here
-   *   - pd_ptr->ShapeVar       variable also
-   *     pd_ptr->ProjectionVar
-   */
-  determine_ShapeVar(pd_ptr);
-  determine_ProjectionVar(pd_ptr);
-  
-  /*
    *  Part 7 --
    * 
    *       In this section, we turn on the rest of the stress equations
@@ -10305,6 +10292,21 @@ rd_eq_specs(FILE *ifp,
     }
 
   } /* End of loop over matrices */
+
+
+  /*
+   *  Part 6 --
+   * 
+   *   Now figure out the mapping order, shape variables and
+   *   the projection variable.
+   *
+   *   - pd_ptr->IntegrationMap variable is determined here
+   *   - pd_ptr->ShapeVar       variable also
+   *     pd_ptr->ProjectionVar
+   */
+  determine_ShapeVar(pd_ptr);
+  determine_ProjectionVar(pd_ptr);
+  
 
 } /* END rd_eq_specs() -- read input file for equation & term specs *******/
 /**************************************************************************/

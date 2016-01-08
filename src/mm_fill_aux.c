@@ -1341,7 +1341,7 @@ surface_determinant_and_normal(
   double tmp;
   int dim =  pd->Num_Dim;
 
-  DeformingMesh = pd->e[pg->imtrx][R_MESH1];
+  DeformingMesh = pd->gv[R_MESH1];
   ShapeVar = pd->ShapeVar;
 
   siz = MAX_PDIM*MDE*sizeof(double);
@@ -1660,7 +1660,7 @@ surface_determinant_and_normal(
             {
               id   = (int) local_elem_node_id[i];
               inode = Proc_Elem_Connect[iconnect_ptr + id];
-              ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
+              ldof = ei[pd->mi[MESH_DISPLACEMENT1]]->ln_to_dof[ShapeVar][id];
               if (Dolphin[pg->imtrx][inode][MESH_DISPLACEMENT1] > 0 )
                 {
                   phi_i = map_bf->phi[ldof];
