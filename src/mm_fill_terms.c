@@ -8167,9 +8167,10 @@ load_fv(void)
 		      fv_dot_dot->d[p] += *esp_dbl_dot->d[p][i] * bfv->phi[i];
 		      fv_dot_dot->x[p] += *esp_dbl_dot->d[p][i] * bfv->phi[i];
 		    }
-		  fv_dot_old->x[p] += *(xdot_old_static - xdot_static +
+
+		  fv_dot_old->x[p] += *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot +
 					esp_dot->d[p][i]) * bfv->phi[i];
-		  fv_dot_old->d[p] += *(xdot_old_static - xdot_static +
+		  fv_dot_old->d[p] += *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot +
 					esp_dot->d[p][i]) * bfv->phi[i];
 		  if (tran->solid_inertia)
 		    {
@@ -8245,7 +8246,7 @@ load_fv(void)
 		    {
 		      fv_dot_dot->d_rs[p] += *esp_dbl_dot->d_rs[p][i] * bf[v]->phi[i];
 		    }
-		  fv_dot_old->d_rs[p] += *(xdot_old_static - xdot_static +
+		  fv_dot_old->d_rs[p] += *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot +
 					   esp_dot->d_rs[p][i]) * bf[v]->phi[i];
 		  if (tran->solid_inertia)
 		    {
@@ -8607,7 +8608,7 @@ load_fv(void)
 	  fv_old->p_liq += *esp_old->p_liq[i] * bf[v]->phi[i];
 	  fv_dot->p_liq += *esp_dot->p_liq[i] * bf[v]->phi[i];
 	  fv_dot_old->p_liq += 
-	    *(xdot_old_static - xdot_static + esp_dot->p_liq[i]) *
+	    *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot + esp_dot->p_liq[i]) *
 	    bf[v]->phi[i];
 	}
       }
@@ -8635,7 +8636,7 @@ load_fv(void)
 	if (pd->TimeIntegration != STEADY) {
 	  fv_old->p_gas += *esp_old->p_gas[i] * bf[v]->phi[i];
 	  fv_dot->p_gas += *esp_dot->p_gas[i] * bf[v]->phi[i];
-	  fv_dot_old->p_gas += *(xdot_old_static - xdot_static + 
+	  fv_dot_old->p_gas += *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot +
 				 esp_dot->p_gas[i]) * bf[v]->phi[i];
 	}
       }
@@ -8664,7 +8665,7 @@ load_fv(void)
 	if (pd->TimeIntegration != STEADY) {
 	  fv_old->porosity += *esp_old->porosity[i] * bf[v]->phi[i];
 	  fv_dot->porosity += *esp_dot->porosity[i] * bf[v]->phi[i];
-	  fv_dot_old->porosity += *(xdot_old_static - xdot_static + 
+	  fv_dot_old->porosity += *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot +
 				    esp_dot->porosity[i]) * bf[v]->phi[i];
 	}
       }
@@ -8685,7 +8686,7 @@ load_fv(void)
 	if (pd->TimeIntegration != STEADY) {
 	  fv_old->T += *esp_old->T[i] * bf[v]->phi[i];
 	  fv_dot->T += *esp_dot->T[i] * bf[v]->phi[i];
-	  fv_dot_old->T += *(xdot_old_static - xdot_static + 
+	  fv_dot_old->T += *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot +
 			     esp_dot->T[i]) * bf[v]->phi[i];
 			  
 	}

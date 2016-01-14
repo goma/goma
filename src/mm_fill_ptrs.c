@@ -2881,6 +2881,14 @@ load_elem_dofptr_all(const int ielem,
       }
     }
   }
+
+  x_static	       = pg->matrices[pg->imtrx].x;
+  x_old_static	       = pg->matrices[pg->imtrx].x_old;
+  xdot_static	       = pg->matrices[pg->imtrx].xdot;
+  xdot_old_static      = pg->matrices[pg->imtrx].xdot_old;
+  x_dbl_dot_static     = NULL;
+  x_dbl_dot_old_static = NULL;
+
   return (status);
 }
 /*************************************************************************/
