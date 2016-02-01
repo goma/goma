@@ -900,8 +900,11 @@ dbl *te_out) /* te_out - return actual end time */
             scale[pg->imtrx], &converged, &nprint, gv, time1, exo, dpi, cx, n,
             &time_step_reform);
 */
-        if (err == -1)
+        if (err == -1) {
           converged = FALSE;
+          /* Copy previous solution values if failed timestep */
+          dcopy1(numProcUnknowns[pg->imtrx], x_old[pg->imtrx], x[pg->imtrx]);
+        }
         inewton = err;
         evpl_glob[0]->update_flag = 0; /*See get_evp_stress_tensor for description */
         af->Sat_hyst_reevaluate = FALSE; /*See load_saturation for description*/
