@@ -540,10 +540,6 @@ matrix_fill(
    * a bona fide zero value so that references to undefined variables
    * give a zero by default...
    */
-  err = load_elem_dofptr_all(ielem, exo);
-  EH(err, "load_elem_dofptr_all");
-
-  
   err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 
 			 resid_vector, 0);
   EH(err, "load_elem_dofptr");

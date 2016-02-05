@@ -1337,6 +1337,7 @@ load_elem_dofptr(const int ielem,
   int status;
   int k;
   int R_s[MAX_MODES][DIM][DIM], R_g[DIM][DIM];
+  int err;
   struct Level_Set_Data *ls_old;
 
 #ifdef DEBUG
@@ -2119,6 +2120,10 @@ load_elem_dofptr(const int ielem,
   /* extra setup needed for XFEM */
   if ( xfem != NULL ) load_xfem_for_elem( x, exo );
   
+
+  err = load_elem_dofptr_all(ielem, exo);
+  EH(err, "load_elem_dofptr_all");
+
   return (status);
 }
 
@@ -2193,6 +2198,8 @@ load_elem_dofptr_all(const int ielem,
    */
 
   status = 0;
+
+  if (upd->Total_Num_Matrices == 1) return 0;
 
   /*
    * Looking for the stuff that loaded up gun_list, ln_to_dof,

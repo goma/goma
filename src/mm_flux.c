@@ -338,9 +338,6 @@ evaluate_flux(
 	   * routine should not write onto "x"...
 	   */
 
-          err = load_elem_dofptr_all(elem_list[i], exo);
-          EH(err, "load_elem_dofptr_all");
-
 
 	  err = load_elem_dofptr( elem_list[i], 
 				  (Exo_DB*) exo,
@@ -3922,9 +3919,6 @@ evaluate_flux(
                      (mn == map_mat_index(blk_id) && 
                       dpi->elem_owner[corner_elem] == ProcID)) {
 
-                   err = load_elem_dofptr_all(corner_elem, exo);
-                   EH(err, "load_elem_dofptr_all");
-
 	  	   err = load_elem_dofptr( corner_elem, 
 				  (Exo_DB*) exo,
 				  (dbl *) x,
@@ -4469,8 +4463,6 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 	  /*needed for saturation hyst. func. */
 	  PRS_mat_ielem = ei[pg->imtrx]->ielem - exo->eb_ptr[find_elemblock_index(ei[pg->imtrx]->ielem, exo)]; 
 
-            err = load_elem_dofptr_all(elem, exo);
-            EH(err, "load_elem_dofptr_all");
 
           err = load_elem_dofptr(elem, (Exo_DB*) exo,
 			         (dbl *) x, (dbl *) x, (dbl *) xdot,
@@ -5755,9 +5747,6 @@ evaluate_global_flux (const Exo_DB *exo,
 	  if (( num_exterior_faces = get_exterior_faces( elem, exterior_faces, exo, dpi ) ) > 0 ) /* and if it has exterior */
 	    {
 
-            err = load_elem_dofptr_all(elem, exo);
-            EH(err, "load_elem_dofptr_all");
-
 	      err = load_elem_dofptr(elem, (Exo_DB*) exo,
 				     (dbl *) x, (dbl *) x, (dbl *) x,
 				     (dbl *) x, (dbl *) x, 0);
@@ -6159,9 +6148,6 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	   * Yes, "x" gets recycled like garbage. Fortunately, this 
 	   * routine should not write onto "x"...
 	   */
-            err = load_elem_dofptr_all(elem_list[i], exo);
-            EH(err, "load_elem_dofptr_all");
-
 	  err = load_elem_dofptr(elem_list[i], (Exo_DB*) exo,
 				 (dbl *) x, (dbl *) &x_sens_p[vector_id][0],
 				 (dbl *) xdot, (dbl *) xdot, (dbl *) x, 0);
@@ -7346,9 +7332,6 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	        if ( mat_id == -1 || 
                      (mn == map_mat_index(mat_id) && 
                       dpi->elem_owner[corner_elem] == ProcID)) {
-
-            err = load_elem_dofptr_all(corner_elem, exo);
-            EH(err, "load_elem_dofptr_all");
 
 	  	   err = load_elem_dofptr( corner_elem, 
 				  (Exo_DB*) exo,
