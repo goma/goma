@@ -3010,8 +3010,6 @@ ark_landing()
 	      m->    u_dcaL_function_constants); 
       dalloc( m->len_lubsource, 
 	      m->    u_lubsource_function_constants); 
-      dalloc( m->len_lubmomsource, 
-	      m->    u_lubmomsource_function_constants); 
       /*
        * special usage models for porous shell
        */
@@ -3395,8 +3393,6 @@ noahs_dove()
 	  m->    u_dcaL_function_constants);
     crdv( m->len_lubsource, 
     	  m->    u_lubsource_function_constants);
-    crdv( m->len_lubmomsource, 
-	  m->    u_lubmomsource_function_constants);
     /* 
      * some more specialized constants (PorousShell)
      */

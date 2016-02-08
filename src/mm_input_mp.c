@@ -8758,7 +8758,6 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		  EH(-1,"Lubrication momentum source constant model expects 3 flts");
 		}
 	      num_const = mp_glob[mn]->len_lubmomsource = 3;
-	      mat_ptr->u_lubmomsource_function_constants = alloc_dbl_1(1,0.0);
 
 	      SPF_DBL_VEC(endofstring(es), num_const,  mat_ptr->lubmomsource );
 
