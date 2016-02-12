@@ -695,8 +695,8 @@ PREFIX_INC = $(PREFIX)/include
 # ============
 
 # Object files depend on includes and the makefile
-$(RELEASE_OBJS) = $(GOMA_INCS) $(MAKEFILE_NAME) $(USER_SETTINGS_FILE)
-$(DEBUG_OBJS) = $(GOMA_INCS) $(MAKEFILE_NAME) $(USER_SETTINGS_FILE)
+RELEASE_DEPENDS = $(GOMA_INCS) $(MAKEFILE_NAME) $(USER_SETTINGS_FILE)
+DEBUG_DEPENDS = $(GOMA_INCS) $(MAKEFILE_NAME) $(USER_SETTINGS_FILE)
 
 # Main targets
 # ------------
@@ -743,38 +743,38 @@ $(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(BRKFIX_DEBUG_OBJS) $(USER_DEBUG
 
 # release objects
 
-$(RELEASE_OBJ_DIR)/%.o: %.c
+$(RELEASE_OBJ_DIR)/%.o: %.c $(RELEASE_DEPENDS)
 	@mkdir -p $(RELEASE_OBJ_DIR)/$(BRKFIX_DIR)
-	$(CC) -c $(CFLAGS) -o $@ $^
+	$(CC) -c $(CFLAGS) -o $@ $<
 
-$(RELEASE_OBJ_DIR)/%.o: %.F
+$(RELEASE_OBJ_DIR)/%.o: %.F $(RELEASE_DEPENDS)
 	@mkdir -p $(RELEASE_OBJ_DIR)
-	$(FC) -c $(FFLAGS) -o $@ $^
+	$(FC) -c $(FFLAGS) -o $@ $<
 
-$(RELEASE_OBJ_DIR)/%.o: %.C
+$(RELEASE_OBJ_DIR)/%.o: %.C $(RELEASE_DEPENDS)
 	@mkdir -p $(RELEASE_OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $@ $^
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-$(RELEASE_OBJ_DIR)/%.o: %.cpp
+$(RELEASE_OBJ_DIR)/%.o: %.cpp $(RELEASE_DEPENDS)
 	@mkdir -p $(RELEASE_OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $@ $^
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 # debug objects
-$(DEBUG_OBJ_DIR)/%.o: %.c
+$(DEBUG_OBJ_DIR)/%.o: %.c $(DEBUG_DEPENDS)
 	@mkdir -p $(DEBUG_OBJ_DIR)/$(BRKFIX_DIR)
-	$(CC) -c $(CFLAGS) -o $@ $^
+	$(CC) -c $(CFLAGS) -o $@ $<
 
-$(DEBUG_OBJ_DIR)/%.o: %.F
+$(DEBUG_OBJ_DIR)/%.o: %.F $(DEBUG_DEPENDS)
 	@mkdir -p $(DEBUG_OBJ_DIR)
-	$(FC) -c $(FFLAGS) -o $@ $^
+	$(FC) -c $(FFLAGS) -o $@ $<
 
-$(DEBUG_OBJ_DIR)/%.o: %.C
+$(DEBUG_OBJ_DIR)/%.o: %.C $(DEBUG_DEPENDS)
 	@mkdir -p $(DEBUG_OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $@ $^
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-$(DEBUG_OBJ_DIR)/%.o: %.cpp
+$(DEBUG_OBJ_DIR)/%.o: %.cpp $(DEBUG_DEPENDS)
 	@mkdir -p $(RELEASE_OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $@ $^
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 
 
