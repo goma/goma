@@ -762,6 +762,11 @@ set_aztec_options_params ( int options[],
       Linear_Solver = AMESOS;
       options[AZ_solver] = -1;
   }
+  else if ( strcmp(Matrix_Solver, "stratimikos") == 0)
+  {
+    Linear_Solver = STRATIMIKOS;
+    options[AZ_solver] = -1;
+  }
   else if ( strcmp(Matrix_Solver, "aztecoo") == 0 )
   {
     Linear_Solver = AZTECOO;

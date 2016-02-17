@@ -51,6 +51,8 @@ static char rcsid[] =
 
 #include "sl_aztecoo_interface.h"
 
+#include "sl_stratimikos_interface.h"
+
 #define _MM_SOL_NONLINEAR_C
 #include "goma.h"
 
@@ -1471,6 +1473,21 @@ EH(-1,"version not compiled with frontal solver");
         }
         break;
 
+      case STRATIMIKOS:
+        if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
+          int iterations;
+          int err = stratimikos_solve(ams, delta_x, resid_vector, &iterations, Stratimikos_File);
+          if (err)
+          {
+          EH(err, "Error in stratimikos solve");
+          check_parallel_error("Error in solve - stratimikos");
+          }
+          aztec_stringer(AZ_normal, iterations, &stringer[0]);
+        } else {
+          EH(-1, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
+        }
+        break;
+
       case MA28:
 	  /*
 	   * sl_ma28 keeps internal static variables to determine whether
@@ -1652,6 +1669,16 @@ EH(-1,"version not compiled with frontal solver");
               matrix_solved = (ams->status[AZ_why] == AZ_normal);
             } else {
               EH(-1, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
+            }
+            break;
+          case STRATIMIKOS:
+            if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
+              int iterations;
+              int err = stratimikos_solve(ams, &wAC[iAC][0], &bAC[iAC][0], &iterations, Stratimikos_File);
+              EH(err, "Error in stratimikos solve");
+              aztec_stringer(AZ_normal, iterations, &stringer_AC[0]);
+            } else {
+              EH(-1, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
             }
             break;
 
@@ -3685,6 +3712,17 @@ soln_sens ( double lambda,  /*  parameter */
         matrix_solved = (ams->status[AZ_why] == AZ_normal);
       } else {
         EH(-1, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
+      }
+      break;
+
+    case STRATIMIKOS:
+      if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
+        int iterations;
+        int err = stratimikos_solve(ams,  x_sens, resid_vector_sens, &iterations, Stratimikos_File);
+        EH(err, "Error in stratimikos solve");
+        aztec_stringer(AZ_normal, iterations, &stringer[0]);
+      } else {
+        EH(-1, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
       }
       break;
     case MA28:

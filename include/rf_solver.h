@@ -84,6 +84,8 @@ String_line Amesos_Package;
 
 String_line AztecOO_Solver;
 
+String_line Stratimikos_File;
+
 /*
  * A new Aztec 2.0 option. There are more and difft options and our
  * previous options probably ought to be revised to reflect the newer

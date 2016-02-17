@@ -154,7 +154,7 @@ LD_LIBRARY_PATH := $(GCC_LIB64):$(GCC_LIB):${LD_LIBRARY_PATH}
 # If built with build-goma-dependencies.sh, includes flags for SEACAS, UMFpack, and all other necessary
 # libraries and includes otherwise not listed below.
 
-TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-11.8.1-Built
+#TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-11.8.1-Built
 
 include $(TRILINOS_TOP)/include/Makefile.export.Trilinos
 
@@ -429,7 +429,8 @@ SL_SRC= sl_lu.c\
         sl_leastsquares.C \
         sl_epetra_interface.cpp \
         sl_epetra_util.cpp \
-        sl_aztecoo_interface.cpp
+        sl_aztecoo_interface.cpp \
+        sl_stratimikos_interface.cpp
 
 SL_INC= spConfig.h\
         spDefs.h\
@@ -446,7 +447,8 @@ SL_INC= spConfig.h\
         sl_rcm.h \
         sl_epetra_interface.h \
         sl_epetra_util.h \
-        sl_aztecoo_interface.h
+        sl_aztecoo_interface.h \
+        sl_stratimikos_interface.h
 
 
 # _____	Machine dependent routines "md_" prefix _______________________________
