@@ -5252,13 +5252,12 @@ assemble_continuity(dbl time_value,   /* current time */
 	  var = VELOCITY_GRADIENT11;
 	  if ( PSPG && pdv[var] )
 	    {
-	      pvar = upd->vp[var];
-
 	      for ( p=0; p<VIM; p++)
 		{
 		  for ( q=0; q<VIM; q++)
 		    {
 		      var = v_g[p][q];
+		      pvar = upd->vp[var];
 		      if ( pd->v[var] )
 			{
 			  for ( j=0; j<ei->dof[var]; j++)
