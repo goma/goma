@@ -3118,7 +3118,7 @@ void calc_scale_vec_conwrap(double *x, double *scale_vec, int numUnks)
 {
   static int sv_init = TRUE;	/* Initialize arrays on first call */
   int p=9, ip1=8;
-  int i, iunk, idof, index, ivd, index_adj;
+  int i, iunk, idof, index, ivd;
   double *sv_sum=NULL;		/* Running sum of each var type    */
   VARIABLE_DESCRIPTION_STRUCT *vdi;  /* Ptr to current vd struct   */
 
@@ -3162,13 +3162,16 @@ void calc_scale_vec_conwrap(double *x, double *scale_vec, int numUnks)
 	      index = vdi->List_Index;
 
   /* P1: The second and third pressure vars are stored at the back of the array */
-	      if (vdi->Ndof > 1 && idof > 0)
-                {
-	          index_adj = idof - 1;
-	          if (vdi->MatID > 0) index_adj += 2 * vdi->MatID; /* MatID starts @ 0 */
-	          index = Num_Var_Info_Records + index_adj;
-	        }
-	  
+  /* KT 02/19/2016: This logic causes memory error when using P1
+                    Commenting these lines do not appear to affect the performance
+                    of arc length continuation */
+//	      if (vdi->Ndof > 1 && idof > 0)
+//                {
+//	          index_adj = idof - 1;
+//	          if (vdi->MatID > 0) index_adj += 2 * vdi->MatID; /* MatID starts @ 0 */
+//	          index = Num_Var_Info_Records + index_adj;
+//	        }
+
   /* Assign sv_index and increment sv_count */
 	      passdown.sv_index[iunk] = index;
 	      passdown.sv_count[index] += 1.0;
