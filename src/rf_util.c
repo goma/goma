@@ -2334,6 +2334,10 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
       printf("rd_vectors_from_exoII: Allocated field %d for %s at %p\n",
 	     variable_no, efv->name[variable_no], efv->ext_fld_ndl_val[variable_no]);
       vdex = -1;
+      if (TimeIntegration != STEADY)	{
+        efv->ext_fld_ndl_val_old[variable_no] = alloc_dbl_1(num_nodes,0.); 
+        efv->ext_fld_ndl_val_older[variable_no] = alloc_dbl_1(num_nodes,0.); 
+      	}
       for (i = 0; i < num_vars; i++) {
 	if (strcmp(var_names[i], efv->name[variable_no]) == 0) {
 	  vdex = i + 1;

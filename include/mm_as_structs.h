@@ -943,6 +943,8 @@ struct External_Field_Variables
   dbl   *f_data;                /*Array holding value of each pixel */
   dbl   *ext_fld_ndl_val[MAX_EXTERNAL_FIELD]; 
                                /* Array holding actual field nodal values */
+  dbl   *ext_fld_ndl_val_old[MAX_EXTERNAL_FIELD]; 
+  dbl   *ext_fld_ndl_val_older[MAX_EXTERNAL_FIELD]; 
   int   TALE;                  /* boolean for whether TALE is active or not */
   dbl   *init_displacement_ndl_val[2*DIM];  
                                /* Array holding initial displacments for */ 
@@ -2346,6 +2348,7 @@ struct Species_Conservation_Terms
   dbl d_MassSource_dv[MAX_CONC] [DIM][MDE];
   dbl d_MassSource_dpv[MAX_CONC] [DIM][MDE];
   dbl d_MassSource_dT[MAX_CONC][MDE];
+  dbl d_MassSource_dI[MAX_CONC][MDE];
   dbl d_MassSource_dV[MAX_CONC][MDE];
   dbl d_MassSource_dpmv[MAX_CONC] [MAX_PMV][MDE];
   dbl d_MassSource_dF[MAX_CONC][MDE];
@@ -2826,6 +2829,9 @@ struct heat_source_dependence
   double S[MAX_MODES][DIM][DIM][MDE]; /* stress mode dependence. */
   double F[MDE];           /* level set field dependence */
   double P[MDE];	   /* acoustic pressure dependence  */
+  double APR[MDE];	   /* acoustic pressure dependence  */
+  double API[MDE];	   /* acoustic pressure dependence  */
+  double INT[MDE];	   /* acoustic pressure dependence  */
 };
 typedef struct heat_source_dependence HEAT_SOURCE_DEPENDENCE_STRUCT;
 

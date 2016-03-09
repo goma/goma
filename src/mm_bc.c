@@ -1257,6 +1257,10 @@ set_up_Surf_BC(struct elem_side_bc_struct *First_Elem_Side_BC_Array[ ],
 	BC_Types[ibc].BC_Name == VELO_SLIP_ROT_BC ||
 	BC_Types[ibc].BC_Name == VELO_SLIP_FILL_BC ||
 	BC_Types[ibc].BC_Name == VELO_SLIP_ROT_FILL_BC ||
+	BC_Types[ibc].BC_Name == AIR_FILM_BC ||
+	BC_Types[ibc].BC_Name == AIR_FILM_ROT_BC ||
+	BC_Types[ibc].BC_Name == VELO_SLIP_FLUID_BC ||
+	BC_Types[ibc].BC_Name == VELO_SLIP_ROT_FLUID_BC ||
 	BC_Types[ibc].BC_Name == VELO_STREAMING_BC ) {
       poinbc = BC_Types[ibc].BC_Data_Int[0];
       if (poinbc != 0 && poinbc != -1) {    /*the -1 case is another new
@@ -1330,7 +1334,11 @@ set_up_Surf_BC(struct elem_side_bc_struct *First_Elem_Side_BC_Array[ ],
 	    {
 	      if ( ( BC_Types[ibc2].BC_ID == ibc_id ) && 
 		   ( ( BC_Types[ibc2].BC_Name == VELO_SLIP_BC ) ||
-		     ( BC_Types[ibc2].BC_Name == VELO_SLIP_ROT_BC ) ) )
+		     ( BC_Types[ibc2].BC_Name == VELO_SLIP_ROT_BC ) ||
+		     ( BC_Types[ibc2].BC_Name == VELO_SLIP_FLUID_BC ) ||
+		     ( BC_Types[ibc2].BC_Name == VELO_SLIP_ROT_FLUID_BC ) ||
+		     ( BC_Types[ibc2].BC_Name == AIR_FILM_BC ) ||
+		     ( BC_Types[ibc2].BC_Name == AIR_FILM_ROT_BC ) ) ) 
 		{
 		  /*
 		   * Set integer to BC number of matching SLIP CONDITON
@@ -2900,6 +2908,11 @@ int exchange_bc_info(void)
     /* check if BC needs special exchange information */
     switch (BC_Types[ibc].BC_Name) {
     case VELO_SLIP_BC:
+    case VELO_SLIP_ROT_BC:
+    case VELO_SLIP_FLUID_BC:
+    case VELO_SLIP_ROT_FLUID_BC:
+    case AIR_FILM_BC:
+    case AIR_FILM_ROT_BC:
       exchange_fvelo_slip_bc_info(ibc);
       break;
     default:

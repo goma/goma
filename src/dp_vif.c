@@ -2422,6 +2422,7 @@ noahs_ark()
 
   ddd_add_member(n, &STREAM, 1, MPI_INT);
   ddd_add_member(n, &STREAM_NORMAL_STRESS, 1, MPI_INT);
+  ddd_add_member(n, &STREAM_SHEAR_STRESS, 1, MPI_INT);
   ddd_add_member(n, &MEAN_SHEAR, 1, MPI_INT);
   ddd_add_member(n, &PRESSURE_CONT, 1, MPI_INT);
   ddd_add_member(n, &SH_DIV_S_V_CONT, 1, MPI_INT);

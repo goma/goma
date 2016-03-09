@@ -689,7 +689,18 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	case VELO_SLIP_ROT_BC:
 	case VELO_SLIP_FILL_BC:
  	case VELO_SLIP_ROT_FILL_BC:
+	case VELO_SLIP_FLUID_BC:
+	case VELO_SLIP_ROT_FLUID_BC:
 	  fvelo_slip_bc(func, d_func, x, 
+			(int) bc->BC_Name,
+			bc->BC_Data_Float,
+			(int) bc->BC_Data_Int[0],
+			xsurf, theta, delta_t);
+	  break;  
+
+	case AIR_FILM_BC:
+	case AIR_FILM_ROT_BC:
+	  fvelo_airfilm_bc(func, d_func, x, 
 			(int) bc->BC_Name,
 			bc->BC_Data_Float,
 			(int) bc->BC_Data_Int[0],
@@ -964,7 +975,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	    }
 
 	    if (bc->BC_Name == CAP_REPULSE_ROLL_BC) {
-	      apply_repulsion_roll(cfunc, d_cfunc, 
+	      apply_repulsion_roll(cfunc, d_cfunc, x, 
                                bc->BC_Data_Float[2], 
 			       &(bc->BC_Data_Float[3]),
 			       &(bc->BC_Data_Float[6]),
@@ -973,6 +984,8 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                bc->BC_Data_Float[11], 
                                bc->BC_Data_Float[12], 
                                bc->BC_Data_Float[13], 
+                               bc->BC_Data_Float[14], 
+                               bc->BC_Data_Int[2],
 			      elem_side_bc, iconnect_ptr);
 	    }
 	    if (bc->BC_Name == CAP_REPULSE_USER_BC) {
@@ -1641,6 +1654,21 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	    break;
 	case LIGHTP_JUMP_BC:
 	case LIGHTM_JUMP_BC:
+	  if (ei->elem_blk_id == bc->BC_Data_Int[0]) {
+	    iapply = 1;
+	  } else {
+	    iapply = 1;
+	  }
+	  if (iapply) {
+	  qside_light_jump(func, d_func, time_intermediate,(int)bc->BC_Name,
+			    bc->BC_Data_Int[0],
+			    bc->BC_Data_Int[1]);
+	  } else {
+	    skip_other_side = FALSE;
+	  }
+	 break;
+	case LIGHTP_JUMP_2_BC:
+	case LIGHTM_JUMP_2_BC:
 	  qside_light_jump(func, d_func, time_intermediate,(int)bc->BC_Name,
 			    bc->BC_Data_Int[0],
 			    bc->BC_Data_Int[1]);
@@ -1759,10 +1787,14 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			wall_velo[1] = -fv->snormal[0]*BC_Types[i1].BC_Data_Float[0];
 			break;
 		      case VELO_SLIP_BC:
+		      case VELO_SLIP_FLUID_BC:
+		      case AIR_FILM_BC:
 			wall_velo[0] = BC_Types[i1].BC_Data_Float[1];
 			wall_velo[1] = BC_Types[i1].BC_Data_Float[2];
 			break;
 		      case VELO_SLIP_ROT_BC:
+		      case VELO_SLIP_ROT_FLUID_BC:
+		      case AIR_FILM_ROT_BC:
 			wall_velo[0] = BC_Types[i1].BC_Data_Float[1]*(fv->x[1]-BC_Types[i1].BC_Data_Float[3]);
 			wall_velo[1] =BC_Types[i1].BC_Data_Float[1]*(fv->x[0]-BC_Types[i1].BC_Data_Float[2]);
 			break;
@@ -2056,7 +2088,12 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                   ledof = ei->lvdof_to_ledof[eqn][ldof_eqn];
                   mn_first = ei->matID_ledof[ledof];
 
-		  if (((Current_EB_ptr->Elem_Blk_Id  +1) % 2) == 0) {
+                  if((BC_Types[bc_input_id].BC_Data_Int[1] && 
+                        Current_EB_ptr->Elem_Blk_Id == 
+                              BC_Types[bc_input_id].BC_Data_Int[1])  ||  
+                      (!BC_Types[bc_input_id].BC_Data_Int[1] &&
+                      ((Current_EB_ptr->Elem_Blk_Id  +1) % 2) == 0))   {
+
 		    phi_i = bf[eqn]->phi[ldof_eqn];
 		    weight *= phi_i;
 		  } else {
@@ -2068,9 +2105,6 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		    if (mn_first != vd->MatID) {
 		      ldof_eqn++;
                     }
-#ifdef DEBUG
-                 
-#endif
 		  }
 
 		  /*
@@ -2089,6 +2123,8 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		       bc->BC_Name == VL_POLY_BC ||
 		       bc->BC_Name == SDC_STEFANFLOW_BC ||
 		       bc->BC_Name == SDC_KIN_SF_BC ||
+		       bc->BC_Name == LIGHTP_JUMP_BC ||
+		       bc->BC_Name == LIGHTM_JUMP_BC ||  
 		       bc->BC_Name == T_CONTACT_RESIS_2_BC)) {
 		    ldof_eqn += 1;
 		  }

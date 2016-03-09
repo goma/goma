@@ -2835,6 +2835,24 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
     }
   }
           }
+  if (efv->ev && i_print) {
+	error = 0;
+	  if (file != NULL) {
+	    error = write_ascii_soln(x, resid_vector, numProcUnknowns,
+				     x_AC, nAC, time, file);
+	    if (error != 0) {
+	      fprintf(stderr, 
+		      "%s:  error writing ASCII soln file\n", yo);
+	    }
+	  }
+	  if (Write_Intermediate_Solutions == 0) {
+	    write_solution(ExoFileOut, resid_vector, x, x_sens_p,
+			   x_old, xdot, xdot_old, tev, tev_post, gv,
+			   rd, gindex, p_gsize, gvec, gvec_elem,
+			   &nprint, delta_t, theta, time, x_pp, exo, dpi);
+	    nprint++;
+	  }
+     }
 #endif
 
 	if (time1 >= (ROUND_TO_ONE * TimeMax))  {

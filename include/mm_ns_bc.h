@@ -207,6 +207,18 @@ int
 exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */);
 
 
+void
+fvelo_airfilm_bc(double func[MAX_PDIM],
+	      double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+	      double x[],
+	      const int type,    /* whether rotational or not */
+              double bc_float[MAX_BC_FLOAT_DATA],
+	      const int dcl_node,/*   node id for DCL  */
+	      const double xsurf[MAX_PDIM], /* coordinates of surface Gauss  *
+					     * point, i.e. current position  */
+	      const double tt,   /* parameter in time stepping alg           */
+	      const double dt);   /* current time step value                  */
+
 EXTERN void fvelo_slip_level
 PROTO(( double [MAX_PDIM],	/* func                                      */
 	double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
@@ -281,14 +293,17 @@ PROTO((double cfunc[MDE][DIM],
 EXTERN void apply_repulsion_roll
 PROTO((double cfunc[MDE][DIM],
        double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+       double [],		/* Solution vector */
        const double ,		/* roll radius      */
        const double [3],		/* axis origin      */
        const double [3],		/* direction angles      */
+       const double ,		/* omega - roll rotation rate    */
        const double ,		/* repulsion length scale      */
        const double ,		/* repulsion exponent     */
        const double ,		/* repulsion coefficient     */
-       const double ,		/* inverse slip coefficient    */
-       const double ,		/* omega - roll rotation rate    */
+       const double ,		/* gas viscosity   */
+       const double ,		/* exclusion scale    */
+       const int ,		/* DCL node id    */
        struct elem_side_bc_struct *, /* elem_side_bc */
        const int ));		/* iconnect_ptr */
 
@@ -532,7 +547,9 @@ PROTO((double *,		/* func */
        const double ,		/* theta_max */
        const double ,		/* dewet parameter */
        const int ,		/* BC identifier */
-       double [MAX_PDIM][MDE] ));		/* wall velo derivs	*/
+       double [MAX_PDIM][MDE],          /* wall velo derivs     */
+       const int ));            /* local_node_number    */
+
 
 
 

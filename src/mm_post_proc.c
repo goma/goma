@@ -219,6 +219,7 @@ int SEC_INVAR_STRAIN = -1;	/* 2nd strain invariant vertex,midside nodes*/
 int STRAIN_TENSOR = -1;		/* strain tensor for mesh deformation  */
 int STREAM = -1;	       	/* stream function*/
 int STREAM_NORMAL_STRESS = -1;	/* streamwise normal stress function*/
+int STREAM_SHEAR_STRESS = -1;	/* streamwise shear stress function*/
 int STRESS_CONT = -1;	        /* stress at vertex & midside nodes*/
 int STRESS_TENSOR = -1;		/* stress tensor for mesh deformation 
 				 * (Lagrangian pressure) */
@@ -545,7 +546,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   /*
    * Additional variables for projection
    */
-  dbl Ttt, E_E, TrE, Dnn, ts;
+  dbl Ttt, E_E, TrE, Dnn, ts, Tnt, nv[DIM] = {0.,0.,0.};
   int i_pg, i_pl, i_pore;
 
   double *local_post, *local_lumped;
@@ -627,6 +628,35 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     }
     local_post[STREAM_NORMAL_STRESS] = Ttt;
     local_lumped[STREAM_NORMAL_STRESS] = 1.;
+  }
+  if (STREAM_SHEAR_STRESS != -1 && pd->e[R_MOMENTUM1]) {
+    nv[0] = fv->v[1];  nv[1] = -fv->v[0]; 
+    speed = 0.;
+    stream_grad = 0.;
+
+    for ( a=0; a<VIM; a++)
+      {
+	for ( b=0; b<VIM; b++)
+	  {
+	    gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	  }
+      }
+    for ( a=0; a<dim; a++)
+      {
+	speed += fv->v[a] * fv->v[a];
+	for ( b=0; b<dim; b++)
+	  {
+	    /* vv:gamma */
+	    stream_grad += fv->v[a] * gamma[a][b] * nv[b];
+	  }
+      }
+    if (speed > 0.0) {
+      Tnt = mp->viscosity* stream_grad / sqrt(speed)/sqrt(speed);
+    } else {
+      Tnt = 0.0;
+    }
+    local_post[STREAM_SHEAR_STRESS] = Tnt;
+    local_lumped[STREAM_SHEAR_STRESS] = 1.;
   }
 
   if (DIV_VELOCITY != -1 && pd->e[PRESSURE]) {
@@ -6180,6 +6210,7 @@ rd_post_process_specs(FILE *ifp,
 
   iread = look_for_post_proc(ifp, "Stream Function", &STREAM);
   iread = look_for_post_proc(ifp, "Streamwise normal stress", &STREAM_NORMAL_STRESS);
+  iread = look_for_post_proc(ifp, "Streamwise shear stress", &STREAM_SHEAR_STRESS);
   iread = look_for_post_proc(ifp, "Mean shear rate", &MEAN_SHEAR);
   iread = look_for_post_proc(ifp, "Pressure contours", &PRESSURE_CONT);
   iread = look_for_post_proc(ifp, "Shell div_s_v contours", &SH_DIV_S_V_CONT);
@@ -7890,6 +7921,23 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       STREAM_NORMAL_STRESS = -1;
     }
 
+   if (STREAM_SHEAR_STRESS != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "SSS","[1]",
+		   "Streamwise shear stress", FALSE);
+       index++;
+       if (STREAM_SHEAR_STRESS == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       STREAM_SHEAR_STRESS = index_post;
+       index_post++;
+    }
+  else
+    {
+      STREAM_SHEAR_STRESS = -1;
+    }
    if (DIV_VELOCITY != -1 && Num_Var_In_Type[PRESSURE])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "DIVV","[1]",

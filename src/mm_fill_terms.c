@@ -1544,7 +1544,6 @@ assemble_energy(double time,	/* present time value */
 	  lec->R[peqn][i] +=
 	    mass + advection +  diffusion + source;
 
-
 	}
     }
 
@@ -2222,7 +2221,7 @@ assemble_energy(double time,	/* present time value */
 		  source = 0.;
 		  if ( pd->e[eqn] & T_SOURCE )
 		    {
-		      source += phi_i * d_h->P[j] *fv->apr * det_J * wt;
+		      source += phi_i * d_h->APR[j] * det_J * wt;
 		      source *= h3;
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
@@ -2243,7 +2242,7 @@ assemble_energy(double time,	/* present time value */
 		  source = 0.;
 		  if ( pd->e[eqn] & T_SOURCE )
 		    {
-		      source += phi_i * d_h->P[j] *fv->api * det_J * wt;
+		      source += phi_i * d_h->API[j] * det_J * wt;
 		      source *= h3;
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
@@ -2251,6 +2250,60 @@ assemble_energy(double time,	/* present time value */
 		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
 		}
 	    }
+
+	  var = LIGHT_INTP;
+	  if ( pd->v[var] )
+	    {
+	      pvar = upd->vp[var];
+	      for ( j=0; j<ei->dof[var]; j++)
+		{
+		  source = 0.;
+		  if ( pd->e[eqn] & T_SOURCE )
+		    {
+		      source += phi_i * d_h->INT[j] * det_J * wt;
+		      source *= h3;
+		      source *= pd->etm[eqn][(LOG2_SOURCE)];
+		    }
+
+		  lec->J[peqn][pvar][i][j] +=  source;
+		}
+	     }
+
+
+	  var = LIGHT_INTM;
+	  if ( pd->v[var] )
+	    {
+	      pvar = upd->vp[LIGHT_INTM];
+	      for ( j=0; j<ei->dof[var]; j++)
+		{
+		  source = 0.;
+		  if ( pd->e[eqn] & T_SOURCE )
+		    {
+		      source += phi_i * d_h->INT[j] * det_J * wt;
+		      source *= h3;
+		      source *= pd->etm[eqn][(LOG2_SOURCE)];
+		    }
+		  lec->J[peqn][pvar][i][j] += source;
+                }
+            }
+
+
+	  var = LIGHT_INTD;
+	  if ( pd->v[var] )
+	    {
+	     pvar = upd->vp[var];
+	     for ( j=0; j<ei->dof[var]; j++)
+	       {
+		  source = 0.;
+		  if ( pd->e[eqn] & T_SOURCE )
+		    {
+		      source += phi_i * d_h->INT[j] * det_J * wt;
+		      source *= h3;
+		      source *= pd->etm[eqn][(LOG2_SOURCE)];
+		    }
+		  lec->J[peqn][pvar][i][j] += source;
+               }
+            }
 	}
     }
 
@@ -17796,6 +17849,12 @@ load_matrl_statevector(MATRL_PROP_STRUCT *mp_local)
       } else if (var_type == FILL) {
 	sv[var_type] = scalar_fv_fill_altmatrl(esp->F, lvdesc, num_dofs,
 					       var_type);
+      } else if (var_type == LIGHT_INTP) {
+	sv[var_type] = scalar_fv_fill_altmatrl(esp->poynt[0], lvdesc, num_dofs,
+					       var_type);
+      } else if (var_type == LIGHT_INTM) {
+	sv[var_type] = scalar_fv_fill_altmatrl(esp->poynt[1], lvdesc, num_dofs,
+					       var_type);
       } else {
         EH(-1,"Unimplemented");
       }
@@ -28028,7 +28087,9 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
       memset( d_h->X, 0, sizeof(double)*DIM*MDE);
       memset( d_h->C, 0, sizeof(double)*MAX_CONC*MDE);
       memset( d_h->S, 0, sizeof(double)*MAX_MODES*DIM*DIM*MDE);
-      memset( d_h->P, 0, sizeof(double)*MDE);
+      memset( d_h->APR, 0, sizeof(double)*MDE);
+      memset( d_h->API, 0, sizeof(double)*MDE);
+      memset( d_h->INT, 0, sizeof(double)*MDE);
     }
 
   if(mp->HeatSourceModel == USER )
@@ -28092,33 +28153,46 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 	}
 
     }
-  else if(mp->HeatSourceModel == PHOTO_CURING )
+  else if(mp->HeatSourceModel ==PHOTO_CURING )
     {
        double intensity;
-       double k_prop, k_inh = 0, free_rad;
-       double *param,dhdC[MAX_CONC],dhdT;
+       double k_prop, k_inh = 0, free_rad, d_free_rad_dI;
+       double *param,dhdC[MAX_CONC],dhdT,dhdI,Conc[MAX_CONC];
        int model_bit, num_mon, O2_spec=-1, rad_spec=-1, init_spec = 0;
+       double intensity_cgs = 2.998e+10*8.85e-12/200.0;
+       double dbl_small = 1.0e-20;
 
        param = mp->u_heat_source;
        model_bit = ((int)param[0]);
        h = 0;
-       dhdT = 0;
+       dhdT = 0;  dhdI = 0; d_free_rad_dI = 0;
        for(a=0; a<MAX_CONC; a++) dhdC[a]=0.;
 
-#if 1
-       intensity = 0;
+       intensity = 0.;
        if(pd->e[R_LIGHT_INTP])
-          { intensity += fv->poynt[0];}
-       if(pd->e[R_LIGHT_INTM])
+         {
+         intensity += fv->poynt[0];
+         if(pd->e[R_LIGHT_INTM])
           { intensity += fv->poynt[1];}
-       if(pd->e[R_LIGHT_INTD])
+         if(pd->e[R_LIGHT_INTD])
           { intensity += fv->poynt[2];}
-       intensity *= mp->u_species_source[init_spec][1];
-       intensity = MAX(intensity,0.0);
-#else
-      intensity = mp->u_species_source[init_spec][1]*
+         intensity *= mp->u_species_source[init_spec][1];
+         intensity = MAX(intensity,0.0);
+         }
+       else if(pd->e[R_ACOUS_PREAL])
+         {
+         intensity = mp->u_species_source[init_spec][1]*
+                     intensity_cgs*
                      (SQUARE(fv->apr)+SQUARE(fv->api));
-#endif
+         }
+       else
+        { WH(-1,"No Intensity field found in PHOTO_CURING\n"); }
+
+      /* insure concentrations are positive  */
+	for ( j=0; j<pd->Num_Species_Eqn; j++)
+	    {
+	     Conc[j] = MAX(dbl_small,fv->c[j]);
+	    }
 
 /**  heat source from momomer heat of reaction     **/
         num_mon = model_bit>>2;
@@ -28127,7 +28201,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
             {
             O2_spec = init_spec + num_mon +2;
             rad_spec = O2_spec + 1;
-            free_rad = fv->c[rad_spec];
+            free_rad = Conc[rad_spec];
             }
        else if( model_bit & 1)
             {
@@ -28135,19 +28209,27 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
             k_inh = mp->u_species_source[O2_spec][1]*
                     exp(-mp->u_species_source[O2_spec][2]*
                     (1./fv->T - 1./mp->u_species_source[O2_spec][3]));
-            free_rad = sqrt(SQUARE(k_inh*fv->c[O2_spec])/4.+
-                mp->u_species_source[init_spec+1][2]*intensity*fv->c[init_spec])
-                - k_inh*fv->c[O2_spec]/2.;
+            free_rad = sqrt(SQUARE(k_inh*Conc[O2_spec])/4.+
+                mp->u_species_source[init_spec+1][2]*intensity*Conc[init_spec])
+                - k_inh*Conc[O2_spec]/2.;
+            d_free_rad_dI += 0.5*Conc[init_spec]*
+                              mp->u_species_source[init_spec+1][2]/
+                           sqrt(SQUARE(k_inh*Conc[O2_spec])/4.+
+                mp->u_species_source[init_spec+1][2]*intensity*Conc[init_spec]);
             }
        else if( model_bit & 2)
             {
             rad_spec = init_spec + num_mon +2;
-            free_rad = fv->c[rad_spec];
+            free_rad = Conc[rad_spec];
             }
        else
             {
             free_rad = sqrt(mp->u_species_source[init_spec+1][2]*
-                       intensity*fv->c[init_spec]);
+                       intensity*Conc[init_spec]);
+            if (free_rad  > 0 )	{
+            d_free_rad_dI += 0.5/free_rad
+                     *mp->u_species_source[init_spec+1][2]*Conc[init_spec];
+                    }
             }
 
       for(w=init_spec+2 ; w<init_spec+num_mon+2 ; w++)
@@ -28155,42 +28237,44 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
           k_prop = mp->u_species_source[w][1]*
                 exp(-mp->u_species_source[w][2]*
                 (1./fv->T - 1./mp->u_species_source[w][3]));
-          h += k_prop*fv->c[w]*free_rad*param[w]*mp->molecular_weight[w];
+          h += k_prop*Conc[w]*free_rad*param[w]*mp->molecular_weight[w];
           dhdC[w] += k_prop*free_rad*param[w]*mp->molecular_weight[w];
           dhdT += k_prop*mp->u_species_source[w][2]/SQUARE(fv->T)
-                *fv->c[w]*free_rad*param[w]*mp->molecular_weight[w];
+                *Conc[w]*free_rad*param[w]*mp->molecular_weight[w];
+          dhdI += k_prop*d_free_rad_dI*param[w]*mp->molecular_weight[w];
 
           if(model_bit & 2)
                { 
-                dhdC[rad_spec] += k_prop*fv->c[w]*param[w]*mp->molecular_weight[w];
+                dhdC[rad_spec] += k_prop*Conc[w]*param[w]*mp->molecular_weight[w];
                }
           else if(model_bit & 1)
                { 
-                dhdC[O2_spec] += k_prop*fv->c[w]*param[w]*
-                      mp->molecular_weight[w]*(SQUARE(k_inh/2.)*fv->c[O2_spec]/
-                       sqrt(SQUARE(k_inh*fv->c[O2_spec])/4.+
-                mp->u_species_source[init_spec+1][2]*intensity*fv->c[init_spec])
+                dhdC[O2_spec] += k_prop*Conc[w]*param[w]*
+                      mp->molecular_weight[w]*(SQUARE(k_inh/2.)*Conc[O2_spec]/
+                       sqrt(SQUARE(k_inh*Conc[O2_spec])/4.+
+                mp->u_species_source[init_spec+1][2]*intensity*Conc[init_spec])
                        -k_inh/2.);
-                dhdC[init_spec] += k_prop*fv->c[w]*param[w]*
+                dhdC[init_spec] += k_prop*Conc[w]*param[w]*
                        mp->molecular_weight[w]*
                        0.5*mp->u_species_source[init_spec+1][2]*intensity/
-                       sqrt(SQUARE(k_inh*fv->c[O2_spec])/4.+
-           mp->u_species_source[init_spec+1][2]*intensity*fv->c[init_spec]);
+                       sqrt(SQUARE(k_inh*Conc[O2_spec])/4.+
+           mp->u_species_source[init_spec+1][2]*intensity*Conc[init_spec]);
 
                }
           else 
                { 
-                dhdC[init_spec] += k_prop*fv->c[w]*param[w]*
+                dhdC[init_spec] += k_prop*Conc[w]*param[w]*
                        mp->molecular_weight[w]*
                        0.5*sqrt(mp->u_species_source[init_spec+1][2]*intensity/
-                       fv->c[init_spec]);
+                       Conc[init_spec]);
                }
          }
 
 /**  add heat generation from light absorption  **/
 
-      h +=  param[1]*intensity*fv->c[init_spec];
+      h +=  param[1]*intensity*Conc[init_spec];
       dhdC[init_spec] += param[1]*intensity;
+      dhdI =  param[1]*Conc[init_spec];
 
       var = TEMPERATURE;
       if ( d_h != NULL && pd->e[var] )
@@ -28198,6 +28282,33 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
           for ( j=0; j<ei->dof[var]; j++)
             {
               d_h->T[j]= dhdT*bf[var]->phi[j];
+            }
+        }
+      var = LIGHT_INTP;
+      if ( d_h != NULL && pd->e[var] )
+        {
+          for ( j=0; j<ei->dof[var]; j++)
+            {
+              d_h->INT[j]= dhdI*bf[var]->phi[j]
+                           *mp->u_species_source[init_spec][1];
+            }
+        }
+      var = ACOUS_PREAL;
+      if ( d_h != NULL && pd->e[var] )
+        {
+          for ( j=0; j<ei->dof[var]; j++)
+            {
+              d_h->APR[j]= dhdI*bf[var]->phi[j]
+              *mp->u_species_source[init_spec][1]*intensity_cgs*2.0*fv->apr;
+            }
+        }
+      var = ACOUS_PIMAG;
+      if ( d_h != NULL && pd->e[var] )
+        {
+          for ( j=0; j<ei->dof[var]; j++)
+            {
+              d_h->API[j]= dhdI*bf[var]->phi[j]
+              *mp->u_species_source[init_spec][1]*intensity_cgs*2.0*fv->api;
             }
         }
 
@@ -31635,7 +31746,15 @@ if(af->Assemble_Jacobian)
     {
 	  for (j=0; j<ei->dof[var]; j++)
 	    {
-	      d_h->P[j] += 0.5*param[0]*temp1*visc_cmb*temp3*2.*bf[var]->phi[j]; 
+	      d_h->APR[j] += 0.5*param[0]*temp1*visc_cmb*temp3*2.*fv->apr*bf[var]->phi[j]; 
+	    }
+    }
+  var = ACOUS_PIMAG;
+  if ( d_h != NULL && pd->v[var] )
+    {
+	  for (j=0; j<ei->dof[var]; j++)
+	    {
+	      d_h->API[j] += 0.5*param[0]*temp1*visc_cmb*temp3*2.*fv->api*bf[var]->phi[j]; 
 	    }
     }
    
