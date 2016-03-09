@@ -8078,113 +8078,111 @@ load_fv(void)
   }
 #endif
 
-  for (p = 0; pdv[MESH_DISPLACEMENT1] && p < dim; p++)
-    {
-      v = MESH_DISPLACEMENT1 + p;
+  if (ei->deforming_mesh) {
+    v = pd->ShapeVar;
+    /*
+     * ShapeVar will always be mesh displacement where it is defined.
+     * Otherwise (e.g. for shell elements), it will be set correctly.
+     */
+    bfv = bf[v];
+    dofs     = ei->dof[v];
+
+    for (p = 0; p < dim; p++)
+      {
+
 	  
-      fv->x0[p]        = 0.0;
-      fv->x[p]         = 0.0;
-      fv_old->x[p]     = 0.0;
-      fv_dot->x[p]     = 0.0;
-      fv_dot_old->x[p] = 0.0;
+	fv->x0[p]        = 0.0;
+	fv->x[p]         = 0.0;
+	fv_old->x[p]     = 0.0;
+	fv_dot->x[p]     = 0.0;
+	fv_dot_old->x[p] = 0.0;
 
-      fv->d[p]     = 0.0;
-      fv_old->d[p] = 0.0;
-      fv_dot->d[p] = 0.0;
-      fv_dot_old->d[p] = 0.0;
+	fv->d[p]     = 0.0;
+	fv_old->d[p] = 0.0;
+	fv_dot->d[p] = 0.0;
+	fv_dot_old->d[p] = 0.0;
 
-      if (tran->solid_inertia)
-	{
-	  fv_dot_dot->x[p] = 0;
-	  fv_dot_dot->d[p] = 0;
-	}
+	if (tran->solid_inertia)
+	  {
+	    fv_dot_dot->x[p] = 0;
+	    fv_dot_dot->d[p] = 0;
+	  }
 
-      /*
-       * If this is a shell element, mesh displacements may not be
-       * defined on this element block even if the mesh is deforming.
-       * In this case, displacements are defined on a neighbor block
-       * and ei->deforming_mesh will be TRUE, so that the true
-       * displaced coordinates can be loaded here.
-       */
-      if (ei->deforming_mesh)
-	{
-          /*
-           * ShapeVar will always be mesh displacement where it is defined.
-           * Otherwise (e.g. for shell elements), it will be set correctly.
-           */
-	  bfv = bf[pd->ShapeVar];
-	  dofs     = ei->dof[v];
-	  
-	  for (i = 0; i < dofs; i++)
-	    {
-	      node = ei->dof_list[R_MESH1][i];
-	      index = Proc_Elem_Connect[Proc_Connect_Ptr[ei->ielem] +node];
-	      fv->d[p] += *esp->d[p][i] * bfv->phi[i];
-	      fv->x[p] +=  ( Coor[p][index] + *esp->d[p][i] ) * bfv->phi[i];
-	      fv->x0[p] +=  Coor[p][index] * bfv->phi[i];
+	/*
+	 * If this is a shell element, mesh displacements may not be
+	 * defined on this element block even if the mesh is deforming.
+	 * In this case, displacements are defined on a neighbor block
+	 * and ei->deforming_mesh will be TRUE, so that the true
+	 * displaced coordinates can be loaded here.
+	 */
+	for (i = 0; i < dofs; i++)
+	  {
+	    node = ei->dof_list[R_MESH1][i];
+	    index = Proc_Elem_Connect[Proc_Connect_Ptr[ei->ielem] +node];
+	    fv->d[p] += *esp->d[p][i] * bfv->phi[i];
+	    fv->x[p] +=  ( Coor[p][index] + *esp->d[p][i] ) * bfv->phi[i];
+	    fv->x0[p] +=  Coor[p][index] * bfv->phi[i];
  
-	      /*
-	       * HKM -> We calculate the old xdot's by doing a little pointer
-	       *        arithmetic. Basically we use esp_dot as an offset to
-	       *        the base and then correct for the base address.
-	       */
-	      if (transient_run)
-		{
-		  fv_old->d[p] += *esp_old->d[p][i] * bfv->phi[i];
-		  fv_old->x[p] +=  ( Coor[p][index] + *esp_old->d[p][i] ) *
-		    bf[v]->phi[i];
-		  fv_dot->d[p] += *esp_dot->d[p][i] * bfv->phi[i];
-		  fv_dot->x[p] += *esp_dot->d[p][i] * bfv->phi[i];
-		  if (tran->solid_inertia)
-		    {
-		      fv_dot_dot->d[p] += *esp_dbl_dot->d[p][i] * bfv->phi[i];
-		      fv_dot_dot->x[p] += *esp_dbl_dot->d[p][i] * bfv->phi[i];
-		    }
-		  fv_dot_old->x[p] += *(xdot_old_static - xdot_static +
-					esp_dot->d[p][i]) * bfv->phi[i];
-		  fv_dot_old->d[p] += *(xdot_old_static - xdot_static +
-					esp_dot->d[p][i]) * bfv->phi[i];
-		  if (tran->solid_inertia)
-		    {
-		      fv_dot_dot_old->d[p] += *(x_dbl_dot_old_static - 
-						x_dbl_dot_static + 
-						esp_dbl_dot->d[p][i])*bfv->phi[i];
-		    }
-		}
-	      else
-		{	  
-                  fv_old->d[p] = fv->d[p];
-                  fv_old->x[p] = fv->x[p]; /* Fixed grid stays fixed thru time. */
-		}
+	    /*
+	     * HKM -> We calculate the old xdot's by doing a little pointer
+	     *        arithmetic. Basically we use esp_dot as an offset to
+	     *        the base and then correct for the base address.
+	     */
+	    if (transient_run)
+	      {
+		fv_old->d[p] += *esp_old->d[p][i] * bfv->phi[i];
+		fv_old->x[p] +=  ( Coor[p][index] + *esp_old->d[p][i] ) *
+		  bf[v]->phi[i];
+		fv_dot->d[p] += *esp_dot->d[p][i] * bfv->phi[i];
+		fv_dot->x[p] += *esp_dot->d[p][i] * bfv->phi[i];
+		if (tran->solid_inertia)
+		  {
+		    fv_dot_dot->d[p] += *esp_dbl_dot->d[p][i] * bfv->phi[i];
+		    fv_dot_dot->x[p] += *esp_dbl_dot->d[p][i] * bfv->phi[i];
+		  }
+		fv_dot_old->x[p] += *(xdot_old_static - xdot_static +
+				      esp_dot->d[p][i]) * bfv->phi[i];
+		fv_dot_old->d[p] += *(xdot_old_static - xdot_static +
+				      esp_dot->d[p][i]) * bfv->phi[i];
+		if (tran->solid_inertia)
+		  {
+		    fv_dot_dot_old->d[p] += *(x_dbl_dot_old_static - 
+					      x_dbl_dot_static + 
+					      esp_dbl_dot->d[p][i])*bfv->phi[i];
+		  }
+	      }
+	    else
+	      {	  
+		fv_old->d[p] = fv->d[p];
+		fv_old->x[p] = fv->x[p]; /* Fixed grid stays fixed thru time. */
+	      }
 
-	    }
-	}
-
+	  }
+      }
       /* Zero these only if not using mesh displacements: */
-      else if (upd->vp[v] == -1)
-	{
-	  v            = pd->ShapeVar;
-	  dofs         = ei->dof[v];
+  } else if (upd->vp[MESH_DISPLACEMENT1] == -1) {
+    v            = pd->ShapeVar;
+    dofs         = ei->dof[v];
+    for (p = 0; p < dim; p++)
+      {
+	fv->d[p]     = 0.0;
+	fv_old->d[p] = 0.0;
+	fv_dot->d[p] = 0.0;
+	fv_dot_dot->d[p] = 0.0;
 
-	  fv->d[p]     = 0.0;
-	  fv_old->d[p] = 0.0;
-	  fv_dot->d[p] = 0.0;
-	  fv_dot_dot->d[p] = 0.0;
-
-	  fv->x[p]     = 0.;
-	  for (i = 0; i < dofs; i++)
-	    {
-	      node = ei->dof_list[v][i];
-	      index = Proc_Elem_Connect[Proc_Connect_Ptr[ei->ielem] +node];
-	      fv->x[p] +=  ( Coor[p][index] ) * bf[v]->phi[i];
-	    }
-	  fv_old->x[p] = fv->x[p]; /* Fixed grid stays fixed thru time. */
-	  fv->x0[p] = fv->x[p];
-	  fv_dot->x[p] = 0.0;
-	  fv_dot_dot->x[p] = 0.0;
-
-	}
-    }
+	fv->x[p]     = 0.;
+	for (i = 0; i < dofs; i++)
+	  {
+	    node = ei->dof_list[v][i];
+	    index = Proc_Elem_Connect[Proc_Connect_Ptr[ei->ielem] +node];
+	    fv->x[p] +=  ( Coor[p][index] ) * bf[v]->phi[i];
+	  }
+	fv_old->x[p] = fv->x[p]; /* Fixed grid stays fixed thru time. */
+	fv->x0[p] = fv->x[p];
+	fv_dot->x[p] = 0.0;
+	fv_dot_dot->x[p] = 0.0;
+      }
+  }
   
   /*
    * SOLID displacement (vector)...
