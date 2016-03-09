@@ -2800,6 +2800,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
  	  }	/*search  */
 	}	/*  nn_volume	*/
 #endif
+#ifdef REACTION_PRODUCT_EFV
         for (i = 0; i < exo->num_nodes; i++) {
             if (efv->ev  && nt > 1) {
                      int ef;
@@ -2811,6 +2812,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
                 }
              }
           memset(Spec_source_lumped_mass, 0.0, sizeof(double)*exo->num_nodes);
+#endif
  	  for (i = 0; i < nn_volume; i++) {
  	    evaluate_volume_integral(exo, dpi, pp_volume[i]->volume_type,
  				     pp_volume[i]->volume_name,
@@ -2822,7 +2824,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
  				     NULL, x, xdot, delta_t_old, time, 1);
  	  }
 
-#if 1
+#ifdef REACTION_PRODUCT_EFV
         for (i = 0; i < exo->num_nodes; i++) {
   if (efv->ev  && nt > 1 ) {
     int ef;

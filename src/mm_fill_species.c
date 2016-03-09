@@ -7531,18 +7531,15 @@ compute_leak_velocity(double *vnorm,
 	for (w=0; w<pd->Num_Species_Eqn; w++) {
 	  for (j=0; j<ei->dof[var]; j++) {
 	    phi_j = bf[var]->phi[j];
-            d_vnorm->C[w][j] = -mass_tran_coeff * phi_j;
-
-/*	    d_vnorm->C[w][j] = -mp->specific_volume[pd->Num_Species_Eqn]*
+	    d_vnorm->C[w][j] = -mp->specific_volume[pd->Num_Species_Eqn]*
                   mass_tran_coeff*(density_tot * d_xbulk_dC[w]
-                    +mp->d_density[MAX_VARIABLE_TYPES+w]*xbulk)*phi_j;*/
+                    +mp->d_density[MAX_VARIABLE_TYPES+w]*xbulk)*phi_j;
 	  }
 	}
       }
   }
-  vnormal += mass_tran_coeff * ( xbulk - Y_c );
-  /*vnormal += density_tot*mp->specific_volume[pd->Num_Species_Eqn]*
-                  mass_tran_coeff * ( xbulk - Y_c );*/
+  vnormal += density_tot*mp->specific_volume[pd->Num_Species_Eqn]*
+                  mass_tran_coeff * ( xbulk - Y_c );
 
   add_fluxes = (fluxbc == NULL);
   while ( fluxbc != NULL )
