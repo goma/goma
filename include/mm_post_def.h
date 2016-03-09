@@ -71,6 +71,9 @@
 #define FORCE_Z_NEG		376
 #define SPECIES_FLUX_REVOLUTION	398
 #define REPULSIVE_FORCE   	399
+#define POYNTING_X   	        400
+#define POYNTING_Y   	        401
+#define POYNTING_Z   	        402
 
 #define I_VOLUME        0
 #define I_DISSIP        1
@@ -110,6 +113,7 @@
 #define I_POS_VOLPLANE  35 
 #define I_NEG_VOLPLANE  36 
 #define I_SPECIES_SOURCE  37
+#define I_KINETIC_ENERGY  38
 
 
 #ifdef _MM_POST_PROC_C
@@ -124,7 +128,7 @@ typedef struct Post_Processing_Flux_Names FLUX_NAME_STRUCT;
 extern FLUX_NAME_STRUCT pp_flux_names[];
 extern int Num_Flux_Names;
 
-struct Post_Processing_Flux_Names pp_flux_names[46] =  {
+struct Post_Processing_Flux_Names pp_flux_names[49] =  {
         { "FORCE_NORMAL",       FORCE_NORMAL },
         { "FORCE_TANGENT1",     FORCE_TANGENT1 },
         { "FORCE_TANGENT2",     FORCE_TANGENT2 },
@@ -170,7 +174,10 @@ struct Post_Processing_Flux_Names pp_flux_names[46] =  {
         { "FORCE_Y_NEG",            FORCE_Y_NEG },
         { "FORCE_Z_NEG",            FORCE_Z_NEG },
         { "SPECIES_FLUX_REVOLUTION",       SPECIES_FLUX_REVOLUTION },
-        { "REPULSIVE_FORCE",       REPULSIVE_FORCE }
+        { "REPULSIVE_FORCE",       REPULSIVE_FORCE },
+        { "POYNTING_X",       POYNTING_X },
+        { "POYNTING_Y",       POYNTING_Y },
+        { "POYNTING_Z",       POYNTING_Z },
 };
 
 int Num_Flux_Names = sizeof(pp_flux_names) / 
@@ -225,7 +232,8 @@ VOL_NAME_STRUCT pp_vol_names[] =
   { "VOL_PLANE",          I_VOLUME_PLANE },
   { "POS_PLANE_FILL",   I_POS_VOLPLANE},
   { "NEG_PLANE_FILL",   I_NEG_VOLPLANE},
-  { "SPECIES_SOURCE",    I_SPECIES_SOURCE}
+  { "SPECIES_SOURCE",    I_SPECIES_SOURCE},
+  { "KINETIC_ENERGY",    I_KINETIC_ENERGY}
 };
 
 int Num_Vol_Names = sizeof( pp_vol_names )/ sizeof( VOL_NAME_STRUCT );
@@ -491,6 +499,7 @@ extern int SEC_INVAR_STRAIN;	/* 2nd strain invariant vertex,midside nodes*/
 extern int STRAIN_TENSOR;	/* strain tensor for mesh deformation  */
 extern int STREAM;		/* stream function*/
 extern int STREAM_NORMAL_STRESS; /* streamwise normal stress function*/
+extern int STREAM_SHEAR_STRESS; /* streamwise shear stress function*/
 extern int STRESS_CONT;	        /* stress at vertex & midside nodes*/
 extern int STRESS_TENSOR;	/* stress tensor for mesh deformation 
 				 * (Lagrangian pressure) */

@@ -1742,7 +1742,6 @@ rep_force_roll_n_dot_f_bc(double func[DIM],
 	    }
 	}
     }
-/*fprintf(stderr," force %g %g %g\n",coord[0],force,friction);*/
 
   for (a=0; a<ei->ielem_dim; a++)
     {  
@@ -5526,7 +5525,8 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
      }
 
 /*  species expansion	*/
-   if (pd->e[R_MASS] && pd->MeshMotion != ARBITRARY)
+   if (pd->e[R_MASS] && 
+        (pd->MeshMotion != ARBITRARY || mp->SpecVolExpModel[0] == PHOTO_CURING)) 
    {
 	for(w=0 ; w<pd->Num_Species_Eqn ; w++)
 	   {

@@ -971,8 +971,12 @@ rd_bc_specs(FILE *ifp,
 	 */
 	case VELO_SLIP_BC:
 	case VELO_SLIP_ROT_BC:
+	case VELO_SLIP_FLUID_BC:
+	case VELO_SLIP_ROT_FLUID_BC:
 	case VELO_SLIP_FILL_BC:
  	case VELO_SLIP_ROT_FILL_BC:
+	case AIR_FILM_BC:
+	case AIR_FILM_ROT_BC:
 	  if ( fscanf(ifp, "%lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],
 		      &BC_Types[ibc].BC_Data_Float[1],
@@ -995,6 +999,7 @@ rd_bc_specs(FILE *ifp,
 	    }
 	  else
 	    SPF(endofstring(echo_string)," %d %.4g", BC_Types[ibc].BC_Data_Int[0],BC_Types[ibc].BC_Data_Float[4]); 
+
 
 	  break;
 
@@ -1578,7 +1583,6 @@ rd_bc_specs(FILE *ifp,
 
 	  break;
 
-	case CAP_REPULSE_ROLL_BC:
 	case CAP_REPULSE_USER_BC:
 
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", 
@@ -1602,17 +1606,18 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }
 
-	   for(i=0;i<13;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
+	   for(i=0;i<14;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
 
 	  /* Try reading the optional integer. */
-	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1)
+	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1)
 	    {
-	      BC_Types[ibc].BC_Data_Int[0] = -1;
+	      BC_Types[ibc].BC_Data_Int[2] = -1;
 	    }
 	  else
-	    SPF(endofstring(echo_string)," %d",BC_Types[ibc].BC_Data_Int[0]); 
+	    SPF(endofstring(echo_string)," %d",BC_Types[ibc].BC_Data_Int[2]); 
 
 	  break;
+	case CAP_REPULSE_ROLL_BC:
 	case QRAD_REPULSE_ROLL_BC:
 
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", 
@@ -1638,6 +1643,14 @@ rd_bc_specs(FILE *ifp,
 	    }
 
 	   for(i=0;i<15;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
+
+	  /* Try reading the optional integer. */
+	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[2]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Int[2] = -1;
+	    }
+	  else
+	    SPF(endofstring(echo_string)," %d",BC_Types[ibc].BC_Data_Int[2]); 
 
 	  break;
 	  /*
@@ -2160,6 +2173,8 @@ rd_bc_specs(FILE *ifp,
         case T_CONTACT_RESIS_2_BC:
         case LIGHTP_JUMP_BC:
         case LIGHTM_JUMP_BC:
+        case LIGHTP_JUMP_2_BC:
+        case LIGHTM_JUMP_2_BC:
 
 	  if ( fscanf(ifp, "%d %d", &BC_Types[ibc].BC_Data_Int[0],
 		      &BC_Types[ibc].BC_Data_Int[1]) != 2)

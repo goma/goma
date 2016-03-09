@@ -2800,6 +2800,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
  	  }	/*search  */
 	}	/*  nn_volume	*/
 #endif
+#ifdef REACTION_PRODUCT_EFV
         for (i = 0; i < exo->num_nodes; i++) {
             if (efv->ev  && nt > 1) {
                      int ef;
@@ -2811,6 +2812,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
                 }
              }
           memset(Spec_source_lumped_mass, 0.0, sizeof(double)*exo->num_nodes);
+#endif
  	  for (i = 0; i < nn_volume; i++) {
  	    evaluate_volume_integral(exo, dpi, pp_volume[i]->volume_type,
  				     pp_volume[i]->volume_name,
@@ -2822,7 +2824,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
  				     NULL, x, xdot, delta_t_old, time, 1);
  	  }
 
-#if 1
+#ifdef REACTION_PRODUCT_EFV
         for (i = 0; i < exo->num_nodes; i++) {
   if (efv->ev  && nt > 1 ) {
     int ef;
@@ -2835,6 +2837,24 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
     }
   }
           }
+  if (efv->ev && i_print) {
+	error = 0;
+	  if (file != NULL) {
+	    error = write_ascii_soln(x, resid_vector, numProcUnknowns,
+				     x_AC, nAC, time, file);
+	    if (error != 0) {
+	      fprintf(stderr, 
+		      "%s:  error writing ASCII soln file\n", yo);
+	    }
+	  }
+	  if (Write_Intermediate_Solutions == 0) {
+	    write_solution(ExoFileOut, resid_vector, x, x_sens_p,
+			   x_old, xdot, xdot_old, tev, tev_post, gv,
+			   rd, gindex, p_gsize, gvec, gvec_elem,
+			   &nprint, delta_t, theta, time, x_pp, exo, dpi);
+	    nprint++;
+	  }
+     }
 #endif
 
 	if (time1 >= (ROUND_TO_ONE * TimeMax))  {

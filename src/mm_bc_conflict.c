@@ -1482,6 +1482,10 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 			    break;
 			case VELO_SLIP_BC:
 			case VELO_SLIP_ROT_BC:
+			case VELO_SLIP_FLUID_BC:
+			case VELO_SLIP_ROT_FLUID_BC:
+			case AIR_FILM_BC:
+			case AIR_FILM_ROT_BC:
 			    a1 = BC_Types[ibc1].BC_Data_Float[0] ;
 			    b1 = BC_Types[ibc2].BC_Data_Float[0] ;		
 			    a2 = BC_Types[ibc1].BC_Data_Float[1] ;

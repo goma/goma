@@ -125,6 +125,7 @@ evaluate_flux(
   int num_local_nodes, iconnect_ptr, dim, ielem_dim, current_id;
   int nset_id, sset_id;
   double Tract[DIM], Torque[DIM], local_Torque[DIM];
+  double Mag_real[DIM], Mag_imag[DIM], E_real[DIM], E_imag[DIM];
 
   /* 
    * Variables for vicosity and derivative 
@@ -1100,13 +1101,33 @@ evaluate_flux(
 
 		    case SPECIES_FLUX:
 
-		      Diffusivity();
+                      for (a = 0; a < VIM; a++) {
+	                if ( cr->MassFluxModel == FICKIAN  ||
+	                     cr->MassFluxModel == STEFAN_MAXWELL  ||
+	                     cr->MassFluxModel == STEFAN_MAXWELL_CHARGED  ||
+	                     cr->MassFluxModel == STEFAN_MAXWELL_VOLUME )
+	                    {
+	                     if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
 
-                      for(a=0; a<VIM; a++)
-                        {
-                          local_q += ( -mp->diffusivity[species_id]*
-                                  fv->snormal[a]*fv->grad_c[species_id][a] );
-                          local_qconv += ( fv->snormal[a]*(fv->v[a]-x_dot[a])*fv->c[species_id] );
+	                     local_q += fv->snormal[a] * 
+                               (-mp->diffusivity[species_id]*fv->grad_c[species_id][a]);
+	                    }
+	                else if ( cr->MassFluxModel == GENERALIZED_FICKIAN)
+	                    {
+	                     if ( Generalized_Diffusivity() )  EH( -1, "Error in Diffusivity.");
+	                     for (w=0; w<pd->Num_Species_Eqn; w++)
+	                       {
+	                        local_q +=  fv->snormal[a] * 
+                                           (-mp->diffusivity_gen_fick[species_id][w]
+                                              *fv->grad_c[w][a]);
+	                       }
+	                    }
+	                else  if ( cr->MassFluxModel == DARCY )
+	                    { /* diffusion induced convection is zero */ }
+	                else
+	                    { EH( -1, "Unimplemented mass flux constitutive relation."); }
+                          local_qconv += (fv->snormal[a]*(fv->v[a]-x_dot[a])
+                                         *fv->c[species_id] );
                         }
                           local_qconv = 0;
                           local_flux +=  weight*det*local_q;
@@ -1907,6 +1928,71 @@ evaluate_flux(
                               local_flux_conv += weight *det*local_qconv;
 		      break;
 
+		    case POYNTING_X:
+		    case POYNTING_Y:
+		    case POYNTING_Z:
+			/* For scalar e-field calculations, we will assume the e-vector 
+                         * points out of the plane, i.e. normal to the plane of 
+                         * incidence, Ez */
+		      R_imped = acoustic_impedance( d_R, time_value );
+		      wnum = wave_number( d_wnum, time_value );
+		      kR_inv = 1./(wnum*R_imped);
+                      memset( Mag_real,0, sizeof(double)*DIM);
+                      memset( Mag_imag,0, sizeof(double)*DIM);
+                      memset( E_real,0, sizeof(double)*DIM);
+                      memset( E_imag,0, sizeof(double)*DIM);
+		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN)
+			EH(-1, "POYNTING has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+
+		      if(pd->CoordinateSystem == SWIRLING || 
+			 pd->CoordinateSystem == CYLINDRICAL)
+			{
+			EH(-1, "POYNTING has not been checked for CYLINDRICAL yet.");
+			  for ( a=0; a<VIM; a++)
+			    {
+			      for ( b=0; b<VIM; b++)
+				{
+			      /*
+			       *  note that for CYLINDRICAL and SWIRLING coordinate systems
+			       * the h3 factor has been incorporated already into sdet
+			       * the moment arm is incorporated into sideset.
+			       */
+
+                                  local_q += ( fv->x[1] * e_theta[a]*
+					(vs[a][b]+ves[a][b])*fv->snormal[b] );
+
+				}
+			    }
+                                  local_flux += weight * det* local_q;
+			}
+		      else if( pd->CoordinateSystem == CARTESIAN ) 
+			{
+                          Mag_imag[0] = kR_inv*fv->grad_apr[1];
+                          Mag_imag[1] = -kR_inv*fv->grad_apr[0];
+                          Mag_real[0] = kR_inv*fv->grad_api[1];
+                          Mag_real[1] = -kR_inv*fv->grad_api[0];
+                          E_real[2] = fv->apr;  E_imag[2] = fv->api;
+			  for ( a=0; a<DIM; a++)
+			    {
+			      for ( b=0; b<DIM; b++)
+				{
+				  for ( c=0; c<DIM; c++)
+				    {
+				      local_Torque[a] += 0.5*( permute(b,c,a) *
+				(E_real[b]*Mag_real[c]-E_imag[b]*Mag_imag[c]) );
+				    }
+				}
+			    }
+			  for ( a=0; a<DIM; a++)
+			    { Torque[a] += weight * det * local_Torque[a];}
+			  local_flux = Torque[quantity-POYNTING_X];
+			}
+		      else
+			{
+			  EH(-1,"Torque cannot be calculated in this case.");
+			}
+		      break;
+		  
 		    case N_DOT_X:
 		      /* 
 		       * This is the position vector dotted into the local normal
@@ -4718,10 +4804,13 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 
   if (quantity == I_SPECIES_SOURCE)
       { 
-      Spec_source_inventory[mn][species_id] += 0.5*sum*(delta_t+tran->delta_t);
+       if(time_value <= tran->init_time+delta_t)
+ 	    { 
+             Spec_source_inventory[mn][species_id] = sum;
+	    }	else	{
+            Spec_source_inventory[mn][species_id] += 0.5*sum*(delta_t+tran->delta_t);
+	    }
       }
-
-
   if( print_flag && ProcID == 0 )
     {
       FILE *jfp;
@@ -5100,8 +5189,10 @@ compute_volume_integrand(const int quantity, const int elem,
         zero_structure(&s_terms, sizeof(struct Species_Conservation_Terms), 1);
         get_continuous_species_terms(&s_terms, time, tran->theta, delta_t, NULL);
         if(time > tran->init_time+delta_t)
- 	   {*sum += weight*det*(-s_terms.MassSource[species_no]) ;}
-#if 1  
+ 	   {
+            *sum += weight*det*(-s_terms.MassSource[species_no])
+                    *mp->specific_volume[species_no]/mp->specific_volume[pd->Num_Species_Eqn];
+           }
   if (efv->ev) {
         if( efv->i[species_no] != I_TABLE)
           {       
@@ -5110,21 +5201,25 @@ compute_volume_integrand(const int quantity, const int elem,
 		ldof=ei->ln_to_dof[eqn][i];
                 if(ldof >= 0 )
                    {
-        if(time <= tran->init_time+delta_t)
- 	   {*sum += weight*det*efv->ext_fld_ndl_val[species_no][ie] ;}
-                  efv->ext_fld_ndl_val[species_no][ie] += 
-                  bf[eqn]->phi[ldof]*weight*det*
-                       0.5*(delta_t+tran->delta_t)
-                              *(-s_terms.MassSource[species_no]);
-                     if(species_no == 0)	{
+                    if(time <= tran->init_time+delta_t)
+ 	                 {
+                          *sum += weight*det*bf[eqn]->phi[ldof]*
+                          efv->ext_fld_ndl_val[species_no][ie];
+                         }
+                    efv->ext_fld_ndl_val[species_no][ie] += 
+                              bf[eqn]->phi[ldof]*weight*det*
+                              0.5*(delta_t+tran->delta_t)
+                              *(-s_terms.MassSource[species_no])
+                    *mp->specific_volume[species_no]/mp->specific_volume[pd->Num_Species_Eqn];
+                    if(species_no == 0)	
+                          {
                           Spec_source_lumped_mass[ie] += 
                                bf[eqn]->phi[ldof]*weight*det;
-                                }
+                          }
                    }
                 } 
           }
   }
-#endif
 
 	if( J_AC != NULL )
 	  {
@@ -5222,6 +5317,44 @@ compute_volume_integrand(const int quantity, const int elem,
                   {
                     J_AC[ ei->gun_list[var][j] ] +=
                               rho*Cp*bf[var]->phi[j]*weight*det;
+                  }
+              }
+      }
+/*      EH(-1,"This volumetric integral not yet implemented \n");  */
+      }
+      break;
+
+    case I_KINETIC_ENERGY:
+      {
+
+      *sum += fv->T*weight*det;
+
+      if( J_AC != NULL )
+      {
+        for( p=0; p<dim; p++)
+          {
+            var = MESH_DISPLACEMENT1 + p;
+
+            if( pd->v[var] )
+              {
+
+                for( j=0; j<ei->dof[var]; j++)
+                  {
+                    J_AC[ ei->gun_list[var][j] ] += fv->T * weight *
+                              ( h3 * bf[pd->ShapeVar]->d_det_J_dm[p][j] +
+                              fv->dh3dq[p]*bf[var]->phi[j] * det_J );
+                  }
+              }
+          }
+            var = TEMPERATURE;
+
+            if( pd->v[var] )
+              {
+
+                for( j=0; j<ei->dof[var]; j++)
+                  {
+                    J_AC[ ei->gun_list[var][j] ] +=
+                              bf[var]->phi[j]*weight*det;
                   }
               }
       }

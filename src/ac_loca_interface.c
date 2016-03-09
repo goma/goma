@@ -107,6 +107,7 @@ static char rcsid[] =
 #ifdef KOMPLEX
 #include "azk_komplex.h"
 #endif
+#include "sl_amesos_interface.h"
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -1111,6 +1112,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
       con.private_info.step_num = 0;
       err = nonlinear_solver_conwrap(x, (void *)&con, 0, 0.0, 0.0);
       solution_output_conwrap(1, x, 0.0, NULL, 0.0, NULL, 0.0, 0, err, &con);
+  printf("LOCA LSA ONLY HAS FINISHED: \n");
     }
 
   /* Otherwise, now call continuation library and return */
@@ -1396,10 +1398,10 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
         nCC = cpcc[0].nCC;
         DPRINTF (stderr, "\n\tStep number: %4d of %4d (max)",
 			      step_num+1, cont->MaxPathSteps);
-        if (nCC > 1 || nUC > 0)
-          {
             theta = (lambda - cont->BegParameterValue)
                   / (cont->EndParameterValue - cont->BegParameterValue);
+        if (nCC > 1 || nUC > 0)
+          {
             DPRINTF (stderr, "\n\tAttempting solution at: theta = %g", theta);
           }
         else
@@ -1566,6 +1568,10 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
          DPRINTF(stderr, "%s: write_solution end call WIS\n", yo);
 #endif
        }
+
+    DPRINTF(stderr,
+            "\n\tStep accepted, theta (proportion complete) = %10.6e\n",
+            theta);
 
      /* Save continuation parameter values */
      if (passdown.method != LOCA_LSA_ONLY)
@@ -1895,6 +1901,18 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
 
           break;
           
+        case AMESOS:
+
+             if( strcmp( Matrix_Format,"msr" ) == 0 ) {
+                 amesos_solve_msr( Amesos_Package, ams, x, xr, 1 );
+             } else if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
+                 amesos_solve_epetra(Amesos_Package, ams, x, xr);
+             } else {
+                 EH(-1," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
+             }
+        strcpy(stringer, " 1 ");
+        break;
+
         case MA28:
           /*
            * sl_ma28 keeps interntal static variables to determine whether
