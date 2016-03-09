@@ -135,7 +135,8 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
 {
   int ielem=0, e_start=0, e_end=0, ebn=0 ;
   char yo[] = "matrix_fill_full";
-  extern int PRS_mat_ielem; 
+  extern int PRS_mat_ielem;
+  int err, err_global;
   
 #define debug_subelement_decomposition 0
 #if debug_subelement_decomposition
@@ -195,10 +196,12 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
     /*needed for saturation hyst. func. */
     PRS_mat_ielem = ielem - exo->eb_ptr[ebn]; 
     
-    matrix_fill(ams, x, resid_vector, x_old, x_older, xdot, xdot_old, x_update,
-		ptr_delta_t, ptr_theta, first_elem_side_BC_array,
-		ptr_time_value, exo, dpi, &ielem, ptr_num_total_nodes,
-		ptr_h_elem_avg, ptr_U_norm, estifm, 0);
+    err = matrix_fill(ams, x, resid_vector, x_old, x_older, xdot, xdot_old, x_update,
+		      ptr_delta_t, ptr_theta, first_elem_side_BC_array,
+		      ptr_time_value, exo, dpi, &ielem, ptr_num_total_nodes,
+		      ptr_h_elem_avg, ptr_U_norm, estifm, 0);
+
+    if (err) break;
   
     if (neg_elem_volume) {
       log_msg("Negative elem det J in element (%d)", ielem+1);
@@ -239,8 +242,14 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
                 MPI_INT, MPI_MAX, MPI_COMM_WORLD);
   zero_detJ = zero_detJ_global;
 
+  MPI_Allreduce(&err, &err_global, 1,
+                MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+  err = err_global;
+
 #endif
 
+  if (err) return -1;
+  
   /*
    * Do common utility tasks, such as printing out the matrix when in
    * debug mode
@@ -261,13 +270,14 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
   if (neg_lub_height) return -1;
   if (zero_detJ) return -1;
 
+
   return 0;
 }
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
 
-void
+int
 matrix_fill(
 	    struct Aztec_Linear_Solver_System *ams,
 	    double x[],			/* Solution vector */
@@ -667,7 +677,7 @@ matrix_fill(
 #if 1
           /* Squawk then fail timestep. */
           fprintf(stderr,"Negative subelement volume in element (%d)!\n", ielem+1);
-          return;
+          return -1;
 #endif
         }
 #if 0
@@ -965,7 +975,8 @@ matrix_fill(
 	  err = assemble_projection_stabilization(exo); 
 	  EH(err, "assemble_projection_stabilization");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_projection_stabilization");
+	  err = CHECKFINITE("assemble_projection_stabilization"); 
+	  if (err) return -1;
 #endif
 	}
 	  
@@ -974,7 +985,8 @@ matrix_fill(
 	  err = assemble_PPPS_generalized(exo); 
 	  EH(err, "assemble_PPPS_generalized");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_PPPS_generalized");
+	  err = CHECKFINITE("assemble_PPPS_generalized"); 
+	  if (err) return -1;
 #endif
 	}
     }
@@ -1038,8 +1050,8 @@ matrix_fill(
       
 	  err = beer_belly();
 	  EH( err, "beer_belly");
-	  if( neg_elem_volume ) return;
-          if( zero_detJ ) return;
+	  if( neg_elem_volume ) return -1;
+          if( zero_detJ ) return -1;
       
 	  /*
 	   * Load up field variable values at this Gauss point, but not
@@ -1103,7 +1115,8 @@ matrix_fill(
               err = assemble_fill_fake(theta, delta_t);
 	      EH( err, "assemble_fill_fake");
 #ifdef CHECK_FINITE
-	      CHECKFINITE("assemble_fill_fake");
+	      err = CHECKFINITE("assemble_fill_fake"); 
+	      if (err) return -1;
 #endif /* CHECK_FINITE */
             }
           else if (  tran->Fill_Equation == FILL_EQN_EXT_V && pde[R_EXT_VELOCITY])
@@ -1114,7 +1127,8 @@ matrix_fill(
 	      ls = ls_old; /*Make things right again */
 	      EH( err, "assemble_fill_ext_v");
 #ifdef CHECK_FINITE
-	      CHECKFINITE("assemble_fill_ext_v");
+	      err = CHECKFINITE("assemble_fill_ext_v"); 
+	      if (err) return -1;
 #endif /* CHECK_FINITE */
 	    }
 	  else if(  tran->Fill_Equation == FILL_EQN_ADVECT )
@@ -1122,7 +1136,8 @@ matrix_fill(
 	      err = assemble_fill(theta, delta_t, pg_data.hsquared, pg_data.hh, pg_data.dh_dxnode, R_FILL, xi, exo, time_value);
 	      EH( err, "assemble_fill");
 #ifdef CHECK_FINITE
-	      CHECKFINITE("assemble_fill");
+	      err = CHECKFINITE("assemble_fill"); 
+	      if (err) return -1;
 #endif /* CHECK_FINITE */
 	      if(pfd != NULL && pde[R_EXT_VELOCITY])
 		{
@@ -1133,7 +1148,8 @@ matrix_fill(
 		  ls = ls_old; /*Make things right again */
 		  EH( err, "assemble_fill");
 #ifdef CHECK_FINITE
-		  CHECKFINITE("assemble_fill");
+		  err = CHECKFINITE("assemble_fill"); 
+		  if (err) return -1;
 #endif /* CHECK_FINITE */
 		}
 	    }
@@ -1141,7 +1157,8 @@ matrix_fill(
 	  err = assemble_fill_fake(theta, delta_t);
 	  EH( err, "assemble_fill_fake");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_fill_fake");
+	  err = CHECKFINITE("assemble_fill_fake"); 
+	  if (err) return -1;
 #endif  /* CHECK_FINITE */
 #endif /* COUPLED_FILL */
 	}
@@ -1340,8 +1357,8 @@ matrix_fill(
       
       err = beer_belly();
       EH(err, "beer_belly");
-      if (neg_elem_volume) return;
-      if( zero_detJ ) return;
+      if (neg_elem_volume) return -1;
+      if( zero_detJ ) return -1;
       
       /*
        * Load up field variable values at this Gauss point, but not
@@ -1460,7 +1477,8 @@ matrix_fill(
 	  err = segregate_stress_update( x_update );
 	  EH(err, "assemble_stress_fortin");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_stress_fortin");
+	  err = CHECKFINITE("assemble_stress_fortin"); 
+	  if (err) return -1;
 #endif
 	}
       else if (vn->evssModel == EVSS_G)
@@ -1469,7 +1487,8 @@ matrix_fill(
 				pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
 	  EH(err, "assemble_stress");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_stress");
+	  err = CHECKFINITE("assemble_stress"); 
+	  if (err) return -1;
 #endif
 	}
       else if (vn->evssModel == EVSS_L)
@@ -1478,7 +1497,8 @@ matrix_fill(
 					  pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
 	  EH(err, "assemble_stress_level_set");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_stress_level_set");
+	  err = CHECKFINITE("assemble_stress_level_set"); 
+	  if (err) return -1;
 #endif
 	}
       
@@ -1488,7 +1508,8 @@ matrix_fill(
 	  
 	  EH(err, "assemble_invariant");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_invariant");
+	  err = CHECKFINITE("assemble_invariant"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -1497,7 +1518,8 @@ matrix_fill(
 	  err = assemble_Enorm();
 	  EH(err, "assemble_Enorm");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_Enorm");
+	  err = CHECKFINITE("assemble_Enorm"); 
+	  if (err) return -1;
 #endif
 	}
       
@@ -1506,7 +1528,8 @@ matrix_fill(
 	  err = assemble_gradient(theta, delta_t);
 	  EH(err, "assemble_gradient");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_gradient");
+	  err = CHECKFINITE("assemble_gradient"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -1515,9 +1538,10 @@ matrix_fill(
 	  err = assemble_mesh(time_value, theta, delta_t, ielem, ip, ip_total);
 	  EH(err, "assemble_mesh");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_mesh");
+	  err = CHECKFINITE("assemble_mesh"); 
+	  if (err) return -1;
 #endif
-          if (neg_elem_volume) return;
+          if (neg_elem_volume) return -1;
 	}
 
       /*
@@ -1560,18 +1584,20 @@ matrix_fill(
 					pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
 	  EH( err, "assemble_mass_transport");	  
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_mass_transport");	
+	  err = CHECKFINITE("assemble_mass_transport"); 
+	  if (err) return -1;	
 #endif
-          if( neg_elem_volume ) return;
+          if( neg_elem_volume ) return -1;
 	}
 
       if (pde[R_POR_LIQ_PRES] || pde[R_POR_SATURATION]) {
 	err = assemble_porous_transport(time_value, theta, delta_t);
 	EH(err, "assemble_porous");
 #ifdef CHECK_FINITE
-	CHECKFINITE("assemble_porous");	  
+	err = CHECKFINITE("assemble_porous"); 
+	if (err) return -1;	  
 #endif
-	if (neg_elem_volume) return;
+	if (neg_elem_volume) return -1;
       }
       
       if (pde[R_SOLID1] && assemble_rs)
@@ -1579,7 +1605,8 @@ matrix_fill(
 	  err = assemble_real_solid(time_value, theta, delta_t);
 	  EH( err, "assemble_mesh");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_mesh");
+	  err = CHECKFINITE("assemble_mesh"); 
+	  if (err) return -1;
 #endif
 	}
       
@@ -1588,7 +1615,8 @@ matrix_fill(
           err = assemble_energy(time_value, theta, delta_t, &pg_data);
 	  EH( err, "assemble_energy");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_energy");
+	  err = CHECKFINITE("assemble_energy"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -1597,7 +1625,8 @@ matrix_fill(
           err = assemble_potential(time_value, theta, delta_t);
 	  EH( err, "assemble_potential");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_potential");
+	  err = CHECKFINITE("assemble_potential"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -1607,7 +1636,8 @@ matrix_fill(
 				  R_ACOUS_PREAL, ACOUS_PREAL);
 	  EH( err, "assemble_acoustic");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_acoustic");
+	  err = CHECKFINITE("assemble_acoustic"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -1617,7 +1647,8 @@ matrix_fill(
 				  R_ACOUS_PIMAG, ACOUS_PIMAG);
 	  EH( err, "assemble_acoustic");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_acoustic");
+	  err = CHECKFINITE("assemble_acoustic"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -1626,7 +1657,8 @@ matrix_fill(
           err = assemble_acoustic_reynolds_stress(time_value, theta, delta_t, &pg_data);
 	  EH( err, "assemble_acoustic_reynolds_stress");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_acoustic_reynolds_stress");
+	  err = CHECKFINITE("assemble_acoustic_reynolds_stress"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -1635,7 +1667,10 @@ matrix_fill(
           err = assemble_poynting(time_value, theta, delta_t, &pg_data, 
 				  R_LIGHT_INTP, LIGHT_INTP);
 	  EH( err, "assemble_poynting");
-	  CHECKFINITE("assemble_poynting");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_poynting"); 
+	  if (err) return -1;
+#endif
 	}
 
       if( pde[R_LIGHT_INTM] )
@@ -1643,7 +1678,10 @@ matrix_fill(
           err = assemble_poynting(time_value, theta, delta_t, &pg_data, 
 				  R_LIGHT_INTM, LIGHT_INTM);
 	  EH( err, "assemble_poynting");
-	  CHECKFINITE("assemble_poynting");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_poynting"); 
+	  if (err) return -1;
+#endif
 	}
 
       if( pde[R_LIGHT_INTD] )
@@ -1651,7 +1689,10 @@ matrix_fill(
           err = assemble_poynting(time_value, theta, delta_t, &pg_data, 
 				  R_LIGHT_INTD, LIGHT_INTD);
 	  EH( err, "assemble_poynting");
-	  CHECKFINITE("assemble_poynting");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_poynting"); 
+	  if (err) return -1;
+#endif
 	}
 
       if( pde[R_POR_SINK_MASS] )
@@ -1659,7 +1700,8 @@ matrix_fill(
 	  err = assemble_pore_sink_mass(time_value, theta, delta_t);
 	  EH( err, "assemble_pore_sink_mass");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_pore_sink_mass");
+	  err = CHECKFINITE("assemble_pore_sink_mass"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -1668,7 +1710,8 @@ matrix_fill(
           err = assemble_electric_field();
 	  EH( err, "assemble_electric_field");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_electric_field");
+	  err = CHECKFINITE("assemble_electric_field"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -1677,7 +1720,8 @@ matrix_fill(
           err = assemble_surface_charge(time_value, theta, delta_t, wt, xi, exo, R_SURF_CHARGE);
           EH( err, "assemble_surface_charge");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_surface_charge");
+	  err = CHECKFINITE("assemble_surface_charge"); 
+	  if (err) return -1;
 #endif
         }
  
@@ -1686,7 +1730,8 @@ matrix_fill(
           err = assemble_surface_charge(time_value, theta, delta_t, wt, xi, exo, R_SHELL_USER);
           EH( err, "assemble_surface_charge");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_surface_charge");
+	  err = CHECKFINITE("assemble_surface_charge"); 
+	  if (err) return -1;
 #endif
         }
         
@@ -1695,7 +1740,8 @@ matrix_fill(
           err = assemble_surface_charge(time_value, theta, delta_t, wt, xi, exo, R_SHELL_BDYVELO);
           EH( err, "assemble_surface_charge");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_surface_charge");
+	  err = CHECKFINITE("assemble_surface_charge"); 
+	  if (err) return -1;
 #endif
         }
         
@@ -1709,9 +1755,10 @@ matrix_fill(
           err = assemble_lubrication(R_LUBP, time_value, theta, delta_t, xi, exo);
           EH( err, "assemble_lubrication");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_lubrication");
+          err = CHECKFINITE("assemble_lubrication"); 
+	  if (err) return -1;
 #endif
-          if (neg_lub_height) return;
+          if (neg_lub_height) return -1;
         }
 
       if( pde[R_LUBP_2] )
@@ -1719,9 +1766,10 @@ matrix_fill(
           err = assemble_lubrication(R_LUBP_2, time_value, theta, delta_t, xi, exo);
           EH( err, "assemble_lubrication");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_lubrication");
+          err = CHECKFINITE("assemble_lubrication"); 
+	  if (err) return -1;
 #endif
-          if (neg_lub_height) return;
+          if (neg_lub_height) return -1;
         }
 
       if( pde[R_MAX_STRAIN] )
@@ -1729,7 +1777,8 @@ matrix_fill(
           err = assemble_max_strain();
           EH( err, "assemble_max_strain");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_max_strain");
+          err = CHECKFINITE("assemble_max_strain"); 
+	  if (err) return -1;
 #endif
         }
 
@@ -1738,7 +1787,8 @@ matrix_fill(
           err = assemble_cur_strain();
           EH( err, "assemble_cur_strain");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_cur_strain");
+          err = CHECKFINITE("assemble_cur_strain"); 
+	  if (err) return -1;
 #endif
         }
 
@@ -1747,7 +1797,8 @@ matrix_fill(
           err = assemble_lubrication_curvature(time_value, theta, delta_t, &pg_data, xi, exo);
           EH( err, "assemble_lubrication_curvature");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_lubrication_curvature");
+          err = CHECKFINITE("assemble_lubrication_curvature"); 
+	  if (err) return -1;
 #endif
         }
 
@@ -1758,7 +1809,8 @@ matrix_fill(
           err = assemble_lubrication_curvature_2(time_value, theta, delta_t, &pg_data, xi, exo);
           EH( err, "assemble_lubrication_curvature_2");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_lubrication_curvature_2");
+          err = CHECKFINITE("assemble_lubrication_curvature_2"); 
+	  if (err) return -1;
 #endif
 	  ls = ls_old;
         }
@@ -1768,7 +1820,8 @@ matrix_fill(
           err = assemble_shell_energy(time_value, theta, delta_t, xi, &pg_data, exo);
           EH( err, "assemble_shell_energy");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_shell_energy");
+          err = CHECKFINITE("assemble_shell_energy"); 
+	  if (err) return -1;
 #endif
         }
 
@@ -1777,7 +1830,8 @@ matrix_fill(
           err = assemble_shell_deltah(time_value, theta, delta_t, xi, exo);
           EH( err, "assemble_shell_deltah");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_shell_deltah");
+          err = CHECKFINITE("assemble_shell_deltah"); 
+	  if (err) return -1;
 #endif
         }
 
@@ -1788,7 +1842,8 @@ matrix_fill(
 	  err = assemble_film(time_value, theta, delta_t, xi, exo);
 	  EH( err, "assemble_film");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_film");
+	  err = CHECKFINITE("assemble_film"); 
+	  if (err) return -1;
 #endif
         }
       else if( (!(pde[R_SHELL_FILMP])) && pde[R_SHELL_FILMH] )
@@ -1808,7 +1863,8 @@ matrix_fill(
 	  err = assemble_film_particles(time_value, theta, delta_t, xi, &pg_data, exo);
 	  EH( err, "assemble_film_particles");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_film_particles");
+	  err = CHECKFINITE("assemble_film_particles"); 
+	  if (err) return -1;
 #endif
         }
 
@@ -1817,7 +1873,8 @@ matrix_fill(
 	  err = assemble_film_particles(time_value, theta, delta_t, xi, &pg_data, exo);
 	  EH( err, "assemble_film_particles");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_film_particles");
+	  err = CHECKFINITE("assemble_film_particles"); 
+	  if (err) return -1;
 #endif
         }
 
@@ -1837,7 +1894,8 @@ matrix_fill(
           err = assemble_porous_shell_closed(theta, delta_t, xi, exo);
           EH( err, "assemble_porous_shell_closed");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_porous_shell_closed");
+          err = CHECKFINITE("assemble_porous_shell_closed"); 
+	  if (err) return -1;
 #endif
         }
 
@@ -1847,7 +1905,8 @@ matrix_fill(
           err = assemble_porous_shell_gasn(theta, delta_t, xi, exo); 
           EH( err, "assemble_porous_shell_gasn");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_porous_shell_gasn");
+          err = CHECKFINITE("assemble_porous_shell_gasn"); 
+	  if (err) return -1;
 #endif
         }
 
@@ -1856,7 +1915,8 @@ matrix_fill(
           err = assemble_porous_shell_open( theta, delta_t, xi, exo);
           EH( err, "assemble_porous_shell_open");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_porous_shell_open");
+          err = CHECKFINITE("assemble_porous_shell_open"); 
+	  if (err) return -1;
 #endif
         }
 
@@ -1865,7 +1925,8 @@ matrix_fill(
           err = assemble_porous_shell_open_2( theta, delta_t, xi, exo);
           EH( err, "assemble_porous_shell_open_2");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_porous_shell_open_2");
+          err = CHECKFINITE("assemble_porous_shell_open_2"); 
+	  if (err) return -1;
 #endif
         }
       if( pde[R_SHELL_ANGLE1] )
@@ -1873,7 +1934,8 @@ matrix_fill(
           err = assemble_shell_angle(time_value, theta, delta_t, xi, exo);
           EH( err, "assemble_shell_angle");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_shell_angle");
+	  err = CHECKFINITE("assemble_shell_angle"); 
+	  if (err) return -1;
 #endif
         }
 
@@ -1882,7 +1944,8 @@ matrix_fill(
           err = assemble_shell_surface_rheo_pieces(time_value, theta, delta_t, xi, exo);
           EH( err, "assemble_shell_surface_rheo_pieces");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_shell_surface_rheo_pieces");
+	  err = CHECKFINITE("assemble_shell_surface_rheo_pieces"); 
+	  if (err) return -1;
 #endif
         }
  
@@ -1892,7 +1955,8 @@ matrix_fill(
 	  err = assemble_shell_structure(time_value, theta, delta_t, wt, xi, exo);
 	  EH( err, "assemble_shell_structure");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_shell_structure");
+	  err = CHECKFINITE("assemble_shell_structure"); 
+	  if (err) return -1;
 #endif
 	  if(pde[R_MESH1])
 	    {
@@ -1900,7 +1964,8 @@ matrix_fill(
 					       exo);
 	      EH( err, "assemble_shell_coordinates");
 #ifdef CHECK_FINITE
-	      CHECKFINITE("assemble_shell_coordinates");
+	      err = CHECKFINITE("assemble_shell_coordinates"); 
+	      if (err) return -1;
 #endif
 	    }
 	}
@@ -1911,14 +1976,16 @@ matrix_fill(
 	  err = assemble_shell_tension(time_value, theta, delta_t, wt, xi, exo);
 	  EH( err, "assemble_shell_tension");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_shell_tension");
+	  err = CHECKFINITE("assemble_shell_tension"); 
+	  if (err) return -1;
 #endif
 	  if( pde[R_MESH1] ) 
 	    {
 	      err = assemble_shell_coordinates(time_value, theta, delta_t, wt, xi, exo);
 	      EH( err, "assemble_shell_coordinates");
 #ifdef CHECK_FINITE
-	      CHECKFINITE("assemble_shell_coordinates");
+	      err = CHECKFINITE("assemble_shell_coordinates"); 
+	      if (err) return -1;
 #endif
 	    }
 	}
@@ -1934,7 +2001,8 @@ matrix_fill(
           err = assemble_shell_diffusion(time_value, theta, delta_t, wt, xi, exo);
           EH( err, "assemble_shell_diffusion");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_shell_diffusion");
+          err = CHECKFINITE("assemble_shell_diffusion"); 
+	  if (err) return -1;
 #endif
         }
 
@@ -1947,7 +2015,8 @@ matrix_fill(
           err = assemble_shell_geometry(time_value, theta, delta_t, wt, xi, exo);  
 	  EH( err, "assemble_shell_geometry");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_shell_geometry");
+          err = CHECKFINITE("assemble_shell_geometry"); 
+	  if (err) return -1;
 #endif
         }
 
@@ -1957,7 +2026,8 @@ matrix_fill(
           err = assemble_shell_normal(xi, exo);
           EH( err, "assemble_shell_normal");
 #ifdef CHECK_FINITE
-          CHECKFINITE("assemble_shell_normal");
+          err = CHECKFINITE("assemble_shell_normal"); 
+	  if (err) return -1;
 #endif
       	}
 
@@ -1966,7 +2036,8 @@ matrix_fill(
          err = assemble_shell_curvature(xi, exo);
          EH( err, "assemble_shell_curvature");
 #ifdef CHECK_FINITE
-         CHECKFINITE("assemble_shell_curvature");
+         err = CHECKFINITE("assemble_shell_curvature"); 
+	 if (err) return -1;
 #endif
 
         }
@@ -1976,7 +2047,8 @@ matrix_fill(
          err = assemble_shell_mesh(xi, exo);
          EH( err, "assemble_shell_mesh");
 #ifdef CHECK_FINITE
-         CHECKFINITE("assemble_shell_mesh");
+         err = CHECKFINITE("assemble_shell_mesh"); 
+	 if (err) return -1;
 #endif
 
       	}
@@ -1986,7 +2058,8 @@ matrix_fill(
           err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
           EH( err, "assemble_momentum");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_momentum");
+	  err = CHECKFINITE("assemble_momentum"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -1995,7 +2068,8 @@ matrix_fill(
           err = assemble_pmomentum(time_value, theta, delta_t);
 	  EH( err, "assemble_pmomentum");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_pmomentum");
+	  err = CHECKFINITE("assemble_pmomentum"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -2007,7 +2081,8 @@ matrix_fill(
 	      err = assemble_fill_gradf(theta, delta_t, pg_data.hsquared, pg_data.hh, pg_data.dh_dxnode);
 	      EH( err, "assemble_fill_gradf");
 #ifdef CHECK_FINITE
-	      CHECKFINITE("assemble_fill_gradf");
+	      err = CHECKFINITE("assemble_fill_gradf"); 
+	      if (err) return -1;
 #endif /* CHECK_FINITE */
 	    }
 #endif /* COUPLED_FILL */
@@ -2030,7 +2105,8 @@ matrix_fill(
 
 	  EH(err,"assemble curvature projection");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble curvature projection");
+	  err = CHECKFINITE("assemble curvature projection"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -2039,7 +2115,8 @@ matrix_fill(
 	  err = assemble_normals();
 	  EH(err,"assemble_normals");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_normals");
+	  err = CHECKFINITE("assemble_normals"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -2048,9 +2125,10 @@ matrix_fill(
 	  err = assemble_continuity(time_value, theta, delta_t, &pg_data);
 	  EH( err, "assemble_continuity");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_continuity");
+	  err = CHECKFINITE("assemble_continuity"); 
+	  if (err) return -1;
 #endif
-          if( neg_elem_volume ) return;
+          if( neg_elem_volume ) return -1;
 	}
       
       if(pde[R_VORT_DIR1]) /* Then R_VORT_DIR2 and R_VORT_DIR3 should be on*/
@@ -2058,7 +2136,8 @@ matrix_fill(
 	  err = assemble_vorticity_direction();
 	  EH(err, "assemble_vorticity_direction");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_vorticity_direction");
+	  err = CHECKFINITE("assemble_vorticity_direction"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -2067,7 +2146,8 @@ matrix_fill(
 	  err = assemble_bond_evolution(time_value, theta, delta_t);
 	  EH(err, "assemble_bond_evolution");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_bond_evolution");
+	  err = CHECKFINITE("assemble_bond_evolution"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -2082,7 +2162,8 @@ matrix_fill(
 	   ls = ls_old;
 
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_phase_functions");
+	  err = CHECKFINITE("assemble_phase_functions"); 
+	  if (err) return -1;
 #endif /* CHECK_FINITE */
 	  if( pfd->Use_Constraint == TRUE )
 	    {
@@ -2102,7 +2183,8 @@ matrix_fill(
 	  err = assemble_fill_fake(theta, delta_t);
 	  EH( err, "assemble_fill_fake");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_fill_fake");
+	  err = CHECKFINITE("assemble_fill_fake"); 
+	  if (err) return -1;
 #endif /* CHECK_FINITE*/
 	  ls = ls_old;
 	}
@@ -2115,7 +2197,8 @@ matrix_fill(
 	  err = assemble_volume( owner );
 	  EH( err, "assemble_volume");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_volume");
+	  err = CHECKFINITE("assemble_volume"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -2127,7 +2210,8 @@ matrix_fill(
 	  err = assemble_LSvelocity( owner, ielem );
 	  EH( err, "assemble_LSvelocity");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_LSvelocity");
+	  err = CHECKFINITE("assemble_LSvelocity"); 
+	  if (err) return -1;
 #endif
 	}
 
@@ -2139,7 +2223,8 @@ matrix_fill(
 	  /*err = assemble_volume_lagrange_multiplier( time_value, theta, delta_t ); */
 	  EH( err, "assemble_volume_lagrange_multiplier");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_volume_lagrange_multiplier");
+	  err = CHECKFINITE("assemble_volume_lagrange_multiplier"); 
+	  if (err) return -1;
 #endif
 	}
       
@@ -2168,7 +2253,8 @@ matrix_fill(
 	    {
 	      apply_embedded_bc( ielem, x, delta_t, theta, time_value, &pg_data, -1, NULL, NULL, NULL, exo );
 #ifdef CHECK_FINITE
-	      CHECKFINITE("apply_embedded_bc");
+	      err = CHECKFINITE("apply_embedded_bc"); 
+	      if (err) return -1;
 #endif
 	    }
 	  else
@@ -2179,7 +2265,8 @@ matrix_fill(
 					  &pg_data,
 					  -1, NULL, NULL, NULL );
 #ifdef CHECK_FINITE
-	      CHECKFINITE("apply_distributed_sources");
+	      err = CHECKFINITE("apply_distributed_sources"); 
+	      if (err) return -1;
 #endif
 	    }	    
 	}
@@ -2198,7 +2285,8 @@ matrix_fill(
 	      if ( ls->Length_Scale == 0. || Do_Overlap )
 		{
 		  apply_embedded_bc( ielem, x, delta_t, theta, time_value, &pg_data, -1, NULL, NULL, NULL, exo );
-		  CHECKFINITE("apply_embedded_bc");
+		  err = CHECKFINITE("apply_embedded_bc"); 
+		  if (err) return -1;
 		}
 	      else
 		{
@@ -2208,7 +2296,8 @@ matrix_fill(
 					      &pg_data,
 					      -1, NULL, NULL, NULL );
 #ifdef CHECK_FINITE
-		  CHECKFINITE("apply_distributed_sources");
+		  err = CHECKFINITE("apply_distributed_sources"); 
+		  if (err) return -1;
 #endif
 		}
 	    }
@@ -2227,7 +2316,8 @@ matrix_fill(
 	    {
 	      apply_embedded_bc( ielem, x, delta_t, theta, time_value, &pg_data, -1, NULL, NULL, NULL, exo );
 #ifdef CHECK_FINITE
-	      CHECKFINITE("apply_embedded_bc");
+	      err = CHECKFINITE("apply_embedded_bc"); 
+	      if (err) return -1;
 #endif
 	    }
 	}
@@ -2263,7 +2353,8 @@ matrix_fill(
 					 neighbor, ielem, num_local_nodes);
 	  EH( err, "assemble_surface_species"); 
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_surface_species");
+	  err = CHECKFINITE("assemble_surface_species"); 
+	  if (err) return -1;
 #endif
 	}
     } 
@@ -2291,7 +2382,8 @@ matrix_fill(
 					  neighbor, ielem, num_local_nodes);
 	    EH( err, "assemble_surface_stress"); 
 #ifdef CHECK_FINITE
-	    CHECKFINITE("assemble_surface_stress");
+	    err = CHECKFINITE("assemble_surface_stress"); 
+	    if (err) return -1;
 #endif
 	  }
 	}
@@ -2342,9 +2434,10 @@ matrix_fill(
 				  WEAK_INT_SURF, time_value, element_search_grid, exo);
 	EH(err, " apply_integrated_bc");
 #ifdef CHECK_FINITE
-	CHECKFINITE("apply_integrated_bc");
+	err = CHECKFINITE("apply_integrated_bc"); 
+	if (err) return -1;
 #endif
-	if (neg_elem_volume) return;
+	if (neg_elem_volume) return -1;
       }
         
       if (call_shell_grad) {
@@ -2355,9 +2448,10 @@ matrix_fill(
                                   WEAK_SHELL_GRAD, time_value, exo);
         EH(err, " apply_shell_grad_bc");
 #ifdef CHECK_FINITE
-	CHECKFINITE("apply_shell_grad_bc");
+	err = CHECKFINITE("apply_shell_grad_bc"); 
+	if (err) return -1;
 #endif
-        if (neg_elem_volume) return;
+        if (neg_elem_volume) return -1;
 
       }
       if(call_sharp_int ) 
@@ -2368,9 +2462,10 @@ matrix_fill(
 	}
       EH(err, " apply_sharp_integrated_bc");
 #ifdef CHECK_FINITE
-      CHECKFINITE("apply_sharp_integrated_bc");
+      err = CHECKFINITE("apply_sharp_integrated_bc"); 
+      if (err) return -1;
 #endif
-      if (neg_elem_volume) return;
+      if (neg_elem_volume) return -1;
 
 
     } while ((elem_side_bc = elem_side_bc->next_side_bc) != NULL);
@@ -2417,9 +2512,10 @@ matrix_fill(
 					WEAK_INT_EDGE, exo); 
 	EH( err, " apply_integrated_curve_bc"); 
 #ifdef CHECK_FINITE
-	CHECKFINITE("apply_integrated_curve_bc");
+	err = CHECKFINITE("apply_integrated_curve_bc"); 
+	if (err) return -1;
 #endif
-	if( neg_elem_volume ) return;
+	if( neg_elem_volume ) return -1;
       } 
       /****************************************************************************/
     } while ( (elem_edge_bc = elem_edge_bc->next_edge_bc) != NULL );
@@ -2518,7 +2614,8 @@ matrix_fill(
 				 exo);
 	  EH(err, " apply_rotated_bc");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("apply_rotated_bc");
+	  err = CHECKFINITE("apply_rotated_bc"); 
+	  if (err) return -1;
 #endif					
 	}
       }
@@ -2651,9 +2748,10 @@ matrix_fill(
 					local_node_list_fs, time_value, exo);
 	    EH( err, " apply_point_colloc_bc");
 #ifdef CHECK_FINITE
-	    CHECKFINITE("apply_point_colloc_bc");
+	    err = CHECKFINITE("apply_point_colloc_bc"); 
+	    if (err) return -1;
 #endif
-	    if (neg_elem_volume) return;
+	    if (neg_elem_volume) return -1;
 	  }
 	
 	/*
@@ -2670,7 +2768,8 @@ matrix_fill(
 				      STRONG_INT_SURF, time_value, element_search_grid, exo);
 	    EH( err, " apply_integrated_bc");
 #ifdef CHECK_FINITE
-	    CHECKFINITE("apply_integrated_bc");
+	    err = CHECKFINITE("apply_integrated_bc"); 
+	    if (err) return -1;
 #endif
 	    /*printf("Element: %d, ID_side: %d \n", ei->ielem, elem_side_bc->id_side );
 	      for(i3=0; i3< (int)  elem_side_bc->num_nodes_on_side; i3++)
@@ -2680,7 +2779,7 @@ matrix_fill(
 	      }*/
 	
 		  
-	    if (neg_elem_volume) return;
+	    if (neg_elem_volume) return -1;
 	  }
 	
 
@@ -2703,9 +2802,10 @@ matrix_fill(
 				   time_value);
 	    EH( err, " apply_special_bc");
 #ifdef CHECK_FINITE
-	    CHECKFINITE("apply_special_bc");
+	    err = CHECKFINITE("apply_special_bc"); 
+	    if (err) return -1;
 #endif
-	    if( neg_elem_volume ) return;
+	    if( neg_elem_volume ) return -1;
 	  }
 	  
 	if (call_contact)
@@ -2735,9 +2835,10 @@ matrix_fill(
 				    -1, NULL, NULL, NULL, NULL, time_value, exo);
 	    EH( err, " apply_contact_bc");
 #ifdef CHECK_FINITE
-	    CHECKFINITE("apply_contact_bc");
+	    err = CHECKFINITE("apply_contact_bc"); 
+	    if (err) return -1;
 #endif
-	    if( neg_elem_volume ) return;
+	    if( neg_elem_volume ) return -1;
 
 	    ls = ls_save;
 
@@ -2784,9 +2885,10 @@ matrix_fill(
 					num_total_nodes, STRONG_INT_EDGE, exo); 
 	EH( err, " apply_integrated_curve_bc");
 #ifdef CHECK_FINITE
-	CHECKFINITE("apply_integrated_curve_bc");
+	err = CHECKFINITE("apply_integrated_curve_bc"); 
+	if (err) return -1;
 #endif
-	if( neg_elem_volume ) return;
+	if( neg_elem_volume ) return -1;
       }
 	
       /*
@@ -2803,9 +2905,10 @@ matrix_fill(
 					 local_node_list_fs, time_value);
 	EH( err, " apply_point_colloc_bc");
 #ifdef CHECK_FINITE
-	CHECKFINITE("apply_point_colloc_bc");
+	err = CHECKFINITE("apply_point_colloc_bc"); 
+	if (err) return -1;
 #endif
-	if( neg_elem_volume ) return;
+	if( neg_elem_volume ) return -1;
       }
 	
       /****************************************************************************/
@@ -2829,7 +2932,8 @@ matrix_fill(
   err = put_dirichlet_in_matrix(x, num_total_nodes);
   EH(err, " put_dirichlet_in_matrix");
 #ifdef CHECK_FINITE
-  CHECKFINITE("put_dirichlet_in_matrix");
+  err = CHECKFINITE("put_dirichlet_in_matrix"); 
+  if (err) return -1;
 #endif
 
   /* PRS test code for shell endpoint conditions.  4/21/2004 */
@@ -3031,6 +3135,8 @@ matrix_fill(
 	  }
       }
     }
+
+  return 0;
 } /*   END OF matrix_fill                                                     */
 /******************************************************************************/
 
@@ -3731,7 +3837,7 @@ zero_lec(void)
 }
 /****************************************************************************/
 
-void
+int
 checkfinite(const char *file, const int line, const char *message)
 {
   /* look through lec->R and lec-J for NAN's or anything else inappropriate */
@@ -3762,6 +3868,7 @@ checkfinite(const char *file, const int line, const char *message)
 		fprintf(stderr, "lec->R[%s][edof=%d] = %g\n",
 			EQ_Name[eqn].name1,i,lec->R[peqn][i]);
 		all_finite = FALSE;
+		goto non_finite_entry;
               }
               for (var = V_FIRST; var < V_LAST;  var++)
                 {
@@ -3780,7 +3887,8 @@ checkfinite(const char *file, const int line, const char *message)
                             {
                               fprintf(stderr,"lec->J[%s][%s][edof=%d][vdof=%d] = %g\n",
 				      EQ_Name[eqn].name1, Var_Name[var].name1, i, j, lec->J[peqn][pvar][i][j]);
-                              all_finite = FALSE;
+			      all_finite = FALSE;
+			      goto non_finite_entry;
                             }
                         }
                     }
@@ -3788,21 +3896,18 @@ checkfinite(const char *file, const int line, const char *message)
             }
         }
     }
-  if (!all_finite)
-    {
+
+ non_finite_entry:
+  if (all_finite != TRUE) {
 #ifndef PARALLEL
-      fprintf(stderr,"Non-finite entry in lec found at  %s:%d: %s\n", file, line, message); 
-/*      exit(-1);  */
+    fprintf(stderr,"Non-finite entry in lec found at  %s:%d: %s\n", file, line, message); 
 #else
-      fprintf(stderr, "P_%d: Non-finite entry in lec found at %s:%d: %s\n", ProcID, file, line, message);
-      if (Num_Proc == 1) {
-        MPI_Finalize();
-        exit(-1);
-      }
-      parallel_err = TRUE;
+    fprintf(stderr, "P_%d: Non-finite entry in lec found at %s:%d: %s\n", ProcID, file, line, message);
 #endif
-    }
-  return;
+    return -1;
+  }
+    
+  return 0;
 }
 
 

@@ -51,7 +51,7 @@ PROTO((struct Aztec_Linear_Solver_System *,
        dbl *));     /* estifm - element stiffness Matrix for frontal solver */
 
 
-EXTERN void matrix_fill
+EXTERN int matrix_fill
 PROTO((struct Aztec_Linear_Solver_System *,	
        double [],		/* x - Solution vector                       */
        double [],		/* resid_vector - Residual vector            */
@@ -84,7 +84,7 @@ PROTO((struct Aztec_Linear_Solver_System *,
 				 * frontal solver                            */
        int ));                  /* zeroCA */
 
-EXTERN void checkfinite
+EXTERN int checkfinite
 PROTO((const char * const,      /* file                                      */
        const int ,	       	/* line                                      */
        const char * const));	/* message                                   */
