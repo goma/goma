@@ -131,7 +131,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   double        *lambda=NULL, *lambdaEnd=NULL;
   double	hunt_par, dhunt_par, hunt_par_old;	/* hunting continuation parameter */
   double        dhunt_par_max=1.0, dhunt_par_min=0., dhunt_par_0=0.1;
-  double        dhunt_par_new, dhunt_par_old;
+  double        dhunt_par_new = 0.0, dhunt_par_old;
 #ifdef LOG_HUNTING_PLEASE
   int		log_hunt = TRUE;
 #else

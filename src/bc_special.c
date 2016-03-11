@@ -121,7 +121,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
   double dwall_velo_dx[MAX_PDIM][MDE],dvelo_dx[MAX_PDIM][MAX_PDIM];
   int found_wall_velocity;
   /* HKM - worried that jflag shouldn't be initialized all the way up here */
-  int jcnt, jflag=-1, local_node_id, matID_apply;
+  int jcnt, jflag=-1, local_node_id = -1, matID_apply;
   int GD_count; 
   int Gibbs = 1;
   int iapply = 0;

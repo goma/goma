@@ -1349,7 +1349,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
   int nits=0; /* num_modnewt_its=0;  */
   int i, iAC;
   int iCC = 0, iTC = 0, iUC = 0, nCC = 0;
-  double theta;
+  double theta = 0.0;
   double evol_local=0.0;
 #ifdef PARALLEL
   double evol_global=0.0;
