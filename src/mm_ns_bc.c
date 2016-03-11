@@ -3387,6 +3387,7 @@ fvelo_slip_bc(double func[MAX_PDIM],
   if(type == VELO_SLIP_FLUID_BC || type == VELO_SLIP_ROT_FLUID_BC)
     {
      double v_solid=0., res, jac, delta, flow, eps=1.0e-8, viscinv;
+     double jacinv;
      for (p = 0; p < pd->Num_Dim; p++) 
         {
           velo_avg += fv->stangent[0][p]*(vs[p] + fv->v[p]);
@@ -3402,17 +3403,18 @@ fvelo_slip_bc(double func[MAX_PDIM],
      thick = flow/velo_avg;
      j=0;
      do {
-         res = CUBE(thick)*viscinv*pgrad/12. + thick*velo_avg - flow;
-         jac = 0.25*SQUARE(thick)*viscinv*pgrad + velo_avg;
-         delta = -res/jac;
+         res = -CUBE(thick)*viscinv*pgrad/12. + thick*velo_avg - flow;
+         jac = -0.25*SQUARE(thick)*viscinv*pgrad + velo_avg;
+         jacinv = 1.0/jac;
+         delta = -res*jacinv;
          thick += delta;
          j++;
         } while(fabs(delta) > eps && j<20);
-     if(1 && thick > DBL_SMALL)
+     if(thick > DBL_SMALL)
 	{
-          betainv = thick*viscinv;
-          dthick_dV = -0.5*thick/jac;
-          dthick_dP = -CUBE(thick)*viscinv/12./jac;
+          betainv = bc_float[0]/thick;
+          dthick_dV = -0.5*jacinv;     /*  1/h*derivative  */
+          dthick_dP = CUBE(thick)*viscinv/12.*jacinv;
 	}  else	{
           betainv = LITTLE_PENALTY;
 	}
@@ -3475,8 +3477,8 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
 		phi_j = bf[var]->phi[j];
 	for (p=0; p<pd->Num_Dim; p++)
 	  {
-	    if(Pflag) d_func[p][var][j] += 0.5*dthick_dV*fv->stangent[0][jvar]*fv->grad_P[p]*phi_j;
-	    d_func[p][var][j] += dthick_dV/bc_float[0]*fv->stangent[0][jvar]*vslip[p]*phi_j;
+	    if(Pflag) d_func[p][var][j] += 0.5*thick*dthick_dV*fv->stangent[0][jvar]*fv->grad_P[p]*phi_j;
+	    d_func[p][var][j] += betainv*dthick_dV*fv->stangent[0][jvar]*vslip[p]*phi_j;
           }
 	      }
 	  }
@@ -3494,13 +3496,13 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
 		      {
 			for (a = 0; a < pd->Num_Dim; a++)
 			  {
-	                    d_func[p][var][j] += dthick_dV/bc_float[0]*vslip[p]
+	                    d_func[p][var][j] += -betainv*dthick_dV*vslip[p]
                                 *fv->dstangent_dx[0][a][jvar][j];
 	                   if(Pflag) 
                             {
-                             d_func[p][var][j] += 0.5*dthick_dV*fv->grad_P[p]*fv->dstangent_dx[0][a][jvar][j];
+                             d_func[p][var][j] += 0.5*thick*dthick_dV*fv->grad_P[p]*fv->dstangent_dx[0][a][jvar][j];
 		             d_func[p][var][j] += 0.5*fv->grad_P[p]*dthick_dP*fv->dstangent_dx[0][a][jvar][j];
-		             d_func[p][var][j] += vslip[p]*dthick_dP*fv->dstangent_dx[0][a][jvar][j]/bc_float[0];
+		             d_func[p][var][j] += vslip[p]*dthick_dP*fv->dstangent_dx[0][a][jvar][j]*(-betainv);
                             }
 			  }
 		      }
@@ -3565,12 +3567,12 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
           {
 	   for (j = 0; j < ei->dof[var]; j++) 
 	      {
-	       phi_j = bf[var]->phi[j];
 	       for (p = 0; p < pd->Num_Dim; p++) 
 	          {
-		    d_func[p][var][j] += 0.5*thick* bf[var]->grad_phi[j][p];
+	            phi_j = bf[var]->grad_phi[j][p];
+		    d_func[p][var][j] += 0.5*thick* phi_j;
 		    d_func[p][var][j] += 0.5*fv->grad_P[p]*dthick_dP*fv->stangent[0][p]*phi_j;
-		    d_func[p][var][j] += vslip[p]*dthick_dP*fv->stangent[0][p]*phi_j/bc_float[0];
+		    d_func[p][var][j] += vslip[p]*(-betainv)*dthick_dP*fv->stangent[0][p]*phi_j;
 	          }
 	      }
           }
