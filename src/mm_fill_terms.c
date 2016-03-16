@@ -2314,7 +2314,7 @@ assemble_momentum(dbl time,       /* current time */
   int wim;
   int i, j, jk, p, q, a, b, c;
   
-  int ledof, eqn, var, ii, peqn, pvar, w, imtrx;
+  int ledof, eqn, var, ii, peqn, pvar, w;
   
   int *pde = pd->e[pg->imtrx];
   int *pdv = pd->v[pg->imtrx];

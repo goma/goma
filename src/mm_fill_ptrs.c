@@ -2180,7 +2180,7 @@ load_elem_dofptr_all(const int ielem,
   int dim, eshape, etype, nnodes;
 #endif /* DEBUG */
 
-  if (upd->Total_Num_Matrices == 1) return;
+  if (upd->Total_Num_Matrices == 1) return 0;
 
   /* load eqn and variable number in tensor form */
   (void) stress_eqn_pointer(R_s);
