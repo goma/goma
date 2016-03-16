@@ -126,29 +126,38 @@ associate_bc_to_matrix(void)
   int imtrx;
   int mn;
 
-  for (ibc = 0; ibc < Num_BC; ibc++) {
-    /*
-     *  Create a couple of pointers to cut down on the
-     *  amount of indirect addressing
-     */
-    int eqn = BC_Types[ibc].equation;
-
-    BC_Types[ibc].matrix = -1;
-
-    if (eqn >= V_FIRST && eqn < V_LAST) {
-      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-        for (mn = 0; mn < upd->Num_Mat; mn++) {
-          if (pd_glob[mn]->e[imtrx][eqn]) {
-            BC_Types[ibc].matrix = imtrx;
-          }
-        }
-      }
+  if (upd->Total_Num_Matrices == 1) {
+    /* Preserve legacy behavior */
+    for (ibc = 0; ibc < Num_BC; ibc++) {
+    
+      BC_Types[ibc].matrix = 0;
+      
     }
-    if (BC_Types[ibc].matrix == -1) {
-      char errstr[512];
-      snprintf(errstr, 512, "Could not find matching matrix for BC #%d %s, BC will not be used", 
-               ibc, (BC_Types[ibc].desc)->name1);
-      WH(-1, errstr);
+  } else {
+    for (ibc = 0; ibc < Num_BC; ibc++) {
+      /*
+       *  Create a couple of pointers to cut down on the
+       *  amount of indirect addressing
+       */
+      int eqn = BC_Types[ibc].equation;
+
+      BC_Types[ibc].matrix = -1;
+
+      if (eqn >= V_FIRST && eqn < V_LAST) {
+	for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+	  for (mn = 0; mn < upd->Num_Mat; mn++) {
+	    if (pd_glob[mn]->e[imtrx][eqn]) {
+	      BC_Types[ibc].matrix = imtrx;
+	    }
+	  }
+	}
+      }
+      if (BC_Types[ibc].matrix == -1) {
+	char errstr[512];
+	snprintf(errstr, 512, "Could not find matching matrix for BC #%d %s, BC will not be used", 
+		 ibc, (BC_Types[ibc].desc)->name1);
+	WH(-1, errstr);
+      }
     }
   }
 }
