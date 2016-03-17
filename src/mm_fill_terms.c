@@ -4671,25 +4671,25 @@ assemble_continuity(dbl time_value,   /* current time */
 		  mass *= phi_i * d_area;
 		}
 	    }
+	  
 	  if (electrode_kinetics_on || ion_reactions_on) 
 	    {
 	      mass = 0.0;
 	      if (transient_run)
 		{
 		  var = MASS_FRACTION;
-		  for (w = 0; w < pd->Num_Species-1; w++)
-		    {
-		      derivative = 0.0;
-		      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
-			{
-			  for (j = 0; j < ei[imtrx]->dof[var]; j++)
-			    {
-			      if ( bf[var]->phi[j] > 0.0 ) break;
-			    }			
-			  derivative = d_rho->C[w][j]/bf[var]->phi[j];
-			}
-		      mass += derivative * s_terms.Y_dot[w];
-		    }
+		  if (pd->gv[var]) {
+		    for (w = 0; w < pd->Num_Species-1; w++)
+		      {
+			derivative = 0.0;
+			for (j = 0; j < ei[pd->mi[var]]->dof[var]; j++)
+			  {
+			    if ( bf[var]->phi[j] > 0.0 ) break;
+			  }			
+			derivative = d_rho->C[w][j]/bf[var]->phi[j];
+		      }
+		    mass += derivative * s_terms.Y_dot[w];
+		  }
 		  mass *= epsilon/rho;
 		  mass *= phi_i * d_area;
 		}
@@ -4740,24 +4740,24 @@ assemble_continuity(dbl time_value,   /* current time */
 		{
 		  advection = div_v;
 		  var = MASS_FRACTION;
-		  for (w=0; w<pd->Num_Species-1; w++)
-		    {
-		      derivative = 0.0;
-		      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
-			{
-			  for ( j=0; j<ei[imtrx]->dof[var]; j++)
-			    {
-			      if ( bf[var]->phi[j] > 0.0 ) break;
-			    }			
-			  derivative = d_rho->C[w][j]/bf[var]->phi[j];
-			}
-		      sum = 0.;
-		      for (p=0; p<dim; p++)
-			{
-			  sum += s_terms.conv_flux[w][p];
-			}
-		      advection += derivative * sum / rho;
-		    }
+		  if (pd->gv[var]) {
+		    for (w=0; w<pd->Num_Species-1; w++)
+		      {
+			derivative = 0.0;
+			for ( j=0; j<ei[pd->mi[var]]->dof[var]; j++)
+			  {
+			    if ( bf[var]->phi[j] > 0.0 ) break;
+			  }			
+			derivative = d_rho->C[w][j]/bf[var]->phi[j];
+		
+			sum = 0.;
+			for (p=0; p<dim; p++)
+			  {
+			    sum += s_terms.conv_flux[w][p];
+			  }
+			advection += derivative * sum / rho;
+		      }
+		  }
 		  advection *= phi_i *d_area;
 		  advection *= advection_etm;
 		}
@@ -4889,12 +4889,9 @@ assemble_continuity(dbl time_value,   /* current time */
 	      for ( a=0; a<wim; a++)
 		{
 		  meqn = R_MOMENTUM1+a;
-		  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+		  if( pd->gv[meqn])
 		    {
-		      if( pd->e[imtrx][meqn])
-			{
-			  pressure_stabilization += grad_phi[i][a] * pspg[a];
-			}
+		      pressure_stabilization += grad_phi[i][a] * pspg[a];
 		    }
 		}
 	      pressure_stabilization *= d_area;
