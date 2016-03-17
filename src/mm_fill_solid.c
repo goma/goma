@@ -3253,74 +3253,71 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 
   if (evpl->ConstitutiveEquation == NO_MODEL)
     {
-      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+      for ( p=0; p<VIM; p++)
 	{
-	  for ( p=0; p<VIM; p++)
+	  for ( q=0; q<VIM; q++)
 	    {
-	      for ( q=0; q<VIM; q++)
-		{
-		  TT[p][q] = lambda * fv->volume_strain * delta(p,q) + 2. * mu * fv->strain[p][q];
-		}
+	      TT[p][q] = lambda * fv->volume_strain * delta(p,q) + 2. * mu * fv->strain[p][q];
 	    }
+	}
 	  
-	  /* add shrinkage stress, if called for */
-	  if(elc->thermal_expansion_model == SHRINKAGE)
+      /* add shrinkage stress, if called for */
+      if(elc->thermal_expansion_model == SHRINKAGE)
+	{
+	  if((fv->external_field[0] >= 1.63 && fv->external_field[0] <= 1.7) ||
+	     Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].solidified[ip])
 	    {
-	      if((fv->external_field[0] >= 1.63 && fv->external_field[0] <= 1.7) ||
-		 Element_Blocks[ei[imtrx]->elem_blk_index].ElemStorage[mat_ielem].solidified[ip])
+	      for ( p=0; p<VIM; p++)
 		{
-		  for ( p=0; p<VIM; p++)
+		  for ( q=0; q<VIM; q++)
 		    {
-		      for ( q=0; q<VIM; q++)
-			{
-			  TT[p][q] -=  (2.* mu + 3.*lambda) * (-0.04) * delta(p,q);
-			}
+		      TT[p][q] -=  (2.* mu + 3.*lambda) * (-0.04) * delta(p,q);
 		    }
-		  Element_Blocks[ei[imtrx]->elem_blk_index].ElemStorage[mat_ielem].solidified[ip] = 1.0;
 		}
+	      Element_Blocks[ei[pg->imtrx]->elem_blk_index].ElemStorage[mat_ielem].solidified[ip] = 1.0;
 	    }
+	}
  
-	  /*  add thermo-elasticity  */
-	  if( pd->e[imtrx][R_ENERGY] )
+      /*  add thermo-elasticity  */
+      if( pd->gv[R_ENERGY] )
+	{
+	  if( elc->thermal_expansion_model == CONSTANT)
 	    {
-	      if( elc->thermal_expansion_model == CONSTANT)
+	      for ( p=0; p<VIM; p++)
 		{
-		  for ( p=0; p<VIM; p++)
+		  for ( q=0; q<VIM; q++)
 		    {
-		      for ( q=0; q<VIM; q++)
-			{
-			  TT[p][q] -=  (2.* mu + 3.*lambda) * thermexp * 
-			    (fv->T - elc->solid_reference_temp) * delta(p,q);
-			}
-		    }
-		}
-	      if( elc->thermal_expansion_model == USER)
-		{
-		  for ( p=0; p<VIM; p++)
-		    {
-		      for ( q=0; q<VIM; q++)
-			{
-			  TT[p][q] -=  (2.* mu + 3.*lambda) * thermexp * delta(p,q);
-			}
+		      TT[p][q] -=  (2.* mu + 3.*lambda) * thermexp * 
+			(fv->T - elc->solid_reference_temp) * delta(p,q);
 		    }
 		}
 	    }
+	  if( elc->thermal_expansion_model == USER)
+	    {
+	      for ( p=0; p<VIM; p++)
+		{
+		  for ( q=0; q<VIM; q++)
+		    {
+		      TT[p][q] -=  (2.* mu + 3.*lambda) * thermexp * delta(p,q);
+		    }
+		}
+	    }
+	}
 	
       
-	  /*   add species expansion/shrinkage	*/
-	  if (pd->e[imtrx][R_MASS])
+      /*   add species expansion/shrinkage	*/
+      if (pd->gv[R_MASS])
+	{
+	  for (w=0; w<pd->Num_Species_Eqn; w++) 
 	    {
-	      for (w=0; w<pd->Num_Species_Eqn; w++) 
+	      if(mp->SpecVolExpModel[w] == CONSTANT )
 		{
-		  if(mp->SpecVolExpModel[w] == CONSTANT )
+		  for ( p=0; p<VIM; p++)
 		    {
-		      for ( p=0; p<VIM; p++)
+		      for ( q=0; q<VIM; q++)
 			{
-			  for ( q=0; q<VIM; q++)
-			    {
-			      TT[p][q] -=  (2.* mu + 3.*lambda) * speciesexp[w] * 
-				(fv->c[w] - mp->reference_concn[w]) * delta(p,q);
-			    }
+			  TT[p][q] -=  (2.* mu + 3.*lambda) * speciesexp[w] * 
+			    (fv->c[w] - mp->reference_concn[w]) * delta(p,q);
 			}
 		    }
 		}

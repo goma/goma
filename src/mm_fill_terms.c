@@ -8174,7 +8174,7 @@ load_fv(void)
 		    fv_dot_old->d[p] += *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot +
 					  esp_dot->d[p][i]) * bfv->phi[i];
 		  } else {
-		    fv_dot_old->d[p] += *(xdot_old_static - xdot_static +
+		    fv_dot_old->x[p] += *(xdot_old_static - xdot_static +
 					  esp_dot->d[p][i]) * bfv->phi[i];
 		    fv_dot_old->d[p] += *(xdot_old_static - xdot_static +
 					  esp_dot->d[p][i]) * bfv->phi[i];
