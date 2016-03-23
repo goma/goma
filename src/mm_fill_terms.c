@@ -4687,8 +4687,8 @@ assemble_continuity(dbl time_value,   /* current time */
 			    if ( bf[var]->phi[j] > 0.0 ) break;
 			  }			
 			derivative = d_rho->C[w][j]/bf[var]->phi[j];
+			mass += derivative * s_terms.Y_dot[w];
 		      }
-		    mass += derivative * s_terms.Y_dot[w];
 		  }
 		  mass *= epsilon/rho;
 		  mass *= phi_i * d_area;
@@ -4996,14 +4996,11 @@ assemble_continuity(dbl time_value,   /* current time */
 			      for (jj=0; jj<pd->Num_Species-1; jj++)
 				{
 				  derivative = 0.0;
-				  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+				  for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
 				    {
-				      for ( q=0; q<ei[imtrx]->dof[MASS_FRACTION]; q++)
-					{
-					  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
-					}
-				      derivative = d_rho->C[jj][q]/bf[MASS_FRACTION]->phi[q];
+				      if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
 				    }
+				  derivative = d_rho->C[jj][q]/bf[MASS_FRACTION]->phi[q];
 				  sum += derivative * s_terms.d_conv_flux_dv[jj][b][b][j];
 				}
 			      div_phi_j_e_b += sum/rho;
@@ -5049,12 +5046,9 @@ assemble_continuity(dbl time_value,   /* current time */
 			  for ( a=0; a<wim; a++)
 			    {
 			      meqn = R_MOMENTUM1+a;
-			      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+			      if( pd->e[pg->imtrx][meqn])
 				{
-				  if( pd->e[imtrx][meqn])
-				    {
-				      pressure_stabilization += grad_phi[i][a] * d_pspg->v[a][b][j];
-				    }
+				  pressure_stabilization += grad_phi[i][a] * d_pspg->v[a][b][j];
 				}
 			    }
 			  pressure_stabilization *= d_area;
@@ -5094,12 +5088,9 @@ assemble_continuity(dbl time_value,   /* current time */
 		  for ( a=0; a<wim; a++)
 		    {
 		      meqn = R_MOMENTUM1+a;
-		      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+		      if( pd->e[pg->imtrx][meqn])
 			{
-			  if( pd->e[imtrx][meqn])
-			    {
-			      pressure_stabilization += grad_phi[i][a] * d_pspg->T[a][j];
-			    }
+			  pressure_stabilization += grad_phi[i][a] * d_pspg->T[a][j];
 			}
 		    }
 		  pressure_stabilization *= d_area;
@@ -5211,12 +5202,9 @@ assemble_continuity(dbl time_value,   /* current time */
 		      for ( a=0; a<wim; a++)
 			{
 			  meqn = R_MOMENTUM1 + a;
-			  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
-			    {
-			      if ( pd->e[imtrx][meqn] & T_DIFFUSION )
-				{ 
-				  pressure_stabilization += grad_phi[i][a] * d_pspg->P[a][j];
-				}
+			  if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
+			    { 
+			      pressure_stabilization += grad_phi[i][a] * d_pspg->P[a][j];
 			    }
 			}
 		      pressure_stabilization *= d_area;
@@ -5254,12 +5242,9 @@ assemble_continuity(dbl time_value,   /* current time */
 				  for ( a=0; a<wim; a++)
 				    {
 				      meqn = R_MOMENTUM1+a;
-				      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+				      if( pd->e[pg->imtrx][meqn])
 					{
-					  if( pd->e[imtrx][meqn])
-					    {
-					      pressure_stabilization += grad_phi[i][a] * d_pspg->S[a][mode][p][q][j];
-					    }
+					  pressure_stabilization += grad_phi[i][a] * d_pspg->S[a][mode][p][q][j];
 					}
 				    }
 				  
@@ -5295,12 +5280,9 @@ assemble_continuity(dbl time_value,   /* current time */
 			      for ( a=0; a<wim; a++)
 				{
 				  meqn = R_MOMENTUM1+a;
-				  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+				  if( pd->e[pg->imtrx][meqn])
 				    {
-				      if( pd->e[imtrx][meqn])
-					{
-					  pressure_stabilization += grad_phi[i][a] * d_pspg->g[a][p][q][j];
-					}
+				      pressure_stabilization += grad_phi[i][a] * d_pspg->g[a][p][q][j];
 				    }
 				}
 			      pressure_stabilization *=  h3 * det_J * wt;
@@ -5375,14 +5357,11 @@ assemble_continuity(dbl time_value,   /* current time */
 			      for (w=0; w<pd->Num_Species-1; w++)
 				{
 				  derivative = 0.0;
-				  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+				  for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
 				    {
-				      for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
-					{
-					  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
-					}
-				      derivative = d_rho->C[w][q]/bf[MASS_FRACTION]->phi[q];
+				      if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
 				    }
+				  derivative = d_rho->C[w][q]/bf[MASS_FRACTION]->phi[q];
 				  mass += derivative * s_terms.Y_dot[w];
 				}
 			      mass *= epsilon/rho;
@@ -5393,72 +5372,65 @@ assemble_continuity(dbl time_value,   /* current time */
 		      advection  = 0.0;
 		      if (advection_on)
 			{
-			  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+			  if (pdv[VELOCITY1])
 			    {
-			      if (pd->v[imtrx][VELOCITY1])
+			      h_flux = 0.0;
+			      if((hydromassflux_on) && ( suspensionsource_on ) )
 				{
-				  h_flux = 0.0;
-				  if((hydromassflux_on) && ( suspensionsource_on ) )
+				  for( p=0; p<dim; p++)
 				    {
-				      for( p=0; p<dim; p++)
-					{
-					  h_flux += grad_phi[i][p]*s_terms.diff_flux[w0][p]
-					    * d_h3detJ_dmesh_bj + grad_phi[i][p]* s_terms.d_diff_flux_dmesh[w0][p][b][j] 
-					    * det_J * h3 + bf[eqn]->d_grad_phi_dmesh[i][p] [b][j] * s_terms.diff_flux[w0][p] * det_J * h3;
-					}
-				      h_flux *= ( rhos - rhof )/rhof * wt * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];	
+				      h_flux += grad_phi[i][p]*s_terms.diff_flux[w0][p]
+					* d_h3detJ_dmesh_bj + grad_phi[i][p]* s_terms.d_diff_flux_dmesh[w0][p][b][j] 
+					* det_J * h3 + bf[eqn]->d_grad_phi_dmesh[i][p] [b][j] * s_terms.diff_flux[w0][p] * det_J * h3;
+				    }
+				  h_flux *= ( rhos - rhof )/rhof * wt * pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];	
 				      
-				    }
-				  
-				  div_v_dmesh = fv->d_div_v_dmesh[b][j];
-				  
-				  
-				  advection+= div_v_dmesh * det_J * h3 + div_v * ( d_h3detJ_dmesh_bj );
-				  
-				  if (electrode_kinetics_on || ion_reactions_on ) /*  RSL  9/28/01  */
-				    {
-				      sum_a = 0.;
-				      sum_b = 0.;
-				      for (w=0; w<pd->Num_Species-1; w++)
-					{
-					  derivative = 0.0;
-					  for (imtrx2 = 0; imtrx2 < upd->Total_Num_Matrices; imtrx2++) 
-					    {
-					      for ( q=0; q<ei[imtrx2]->dof[MASS_FRACTION]; q++)
-						{
-						  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
-						}
-					      derivative = d_rho->C[w][q]/bf[MASS_FRACTION]->phi[q];
-					    }
-					  sum1 = 0.;
-					  sum2 = 0.;
-					  for (p=0; p<dim; p++)
-					    {
-					      sum1 += s_terms.conv_flux[w][p];
-					      sum2 += s_terms.d_conv_flux_dmesh[w][p][b][j];
-					    }
-					  sum_a += derivative * sum1;
-					  sum_b += derivative * sum2;
-					}
-				      sum_a /= rho;
-				      sum_b /= rho;
-				      advection += sum_b * det_J * h3 + sum_a * d_h3detJ_dmesh_bj;
-				    }
-				  
-				  advection*= phi_i * wt;
-				} 
-			      else if (lagrangian_mesh_motion || total_ale_and_velo_off)
-				{
-				  advection += fv->volume_change 
-				    * ( d_h3detJ_dmesh_bj ); 
-				  
-				  advection += fv->d_volume_change_dx[b][j] * 
-				    h3 * det_J; 
-				  
-				  advection *= phi_i * wt;
 				}
+				  
+			      div_v_dmesh = fv->d_div_v_dmesh[b][j];
+				  
+				  
+			      advection+= div_v_dmesh * det_J * h3 + div_v * ( d_h3detJ_dmesh_bj );
+				  
+			      if (electrode_kinetics_on || ion_reactions_on ) /*  RSL  9/28/01  */
+				{
+				  sum_a = 0.;
+				  sum_b = 0.;
+				  for (w=0; w<pd->Num_Species-1; w++)
+				    {
+				      derivative = 0.0;
+				      for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
+					{
+					  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
+					}
+				      derivative = d_rho->C[w][q]/bf[MASS_FRACTION]->phi[q];
+				      sum1 = 0.;
+				      sum2 = 0.;
+				      for (p=0; p<dim; p++)
+					{
+					  sum1 += s_terms.conv_flux[w][p];
+					  sum2 += s_terms.d_conv_flux_dmesh[w][p][b][j];
+					}
+				      sum_a += derivative * sum1;
+				      sum_b += derivative * sum2;
+				    }
+				  sum_a /= rho;
+				  sum_b /= rho;
+				  advection += sum_b * det_J * h3 + sum_a * d_h3detJ_dmesh_bj;
+				}
+				  
+			      advection*= phi_i * wt;
+			    } 
+			  else if (lagrangian_mesh_motion || total_ale_and_velo_off)
+			    {
+			      advection += fv->volume_change 
+				* ( d_h3detJ_dmesh_bj ); 
+				  
+			      advection += fv->d_volume_change_dx[b][j] * 
+				h3 * det_J; 
+				  
+			      advection *= phi_i * wt;
 			    }
-			  
 			  advection *= advection_etm;
 			}
 		      
@@ -5515,14 +5487,11 @@ assemble_continuity(dbl time_value,   /* current time */
 			  for ( a=0; a<wim; a++)
 			    {
 			      meqn = R_MOMENTUM1+a;
-			      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+			      if( pd->e[pg->imtrx][meqn])
 				{
-				  if( pd->e[imtrx][meqn])
-				    {
-				      pressure_stabilization += grad_phi[i][a] * d_pspg->X[a][b][j] * h3 * det_J * wt
-					+ grad_phi[i][a] * pspg[a] *  wt * d_h3detJ_dmesh_bj
-					+ bf[eqn]->d_grad_phi_dmesh[i][a][b][j] * pspg[a] * wt  * h3 * det_J;
-				    }
+				  pressure_stabilization += grad_phi[i][a] * d_pspg->X[a][b][j] * h3 * det_J * wt
+				    + grad_phi[i][a] * pspg[a] *  wt * d_h3detJ_dmesh_bj
+				    + bf[eqn]->d_grad_phi_dmesh[i][a][b][j] * pspg[a] * wt  * h3 * det_J;
 				}
 			    }
 			}
@@ -5618,13 +5587,10 @@ assemble_continuity(dbl time_value,   /* current time */
 			  for ( a=0; a<wim; a++)
 			    {
 			      meqn = R_MOMENTUM1 + a;
-			        for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
-				  {
-				    if ( pd->e[imtrx][meqn] & T_DIFFUSION )
-				      {
-					pressure_stabilization += grad_phi[i][a] * d_pspg->C[a][w][j];
-				      }
-				  }
+			      if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
+				{
+				  pressure_stabilization += grad_phi[i][a] * d_pspg->C[a][w][j];
+				}
 			    }
 			  pressure_stabilization *= h3 * det_J * wt;
 			}
@@ -5663,14 +5629,11 @@ assemble_continuity(dbl time_value,   /* current time */
 			  for (jj=0; jj<pd->Num_Species-1; jj++)
 			    {
 			      derivative = 0.0;
-			      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+			      for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
 				{
-				  for ( q=0; q<ei[imtrx]->dof[MASS_FRACTION]; q++)
-				    {
-				      if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
-				    }
-				  derivative = d_rho->C[jj][q]/bf[MASS_FRACTION]->phi[q];
+				  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
 				}
+			      derivative = d_rho->C[jj][q]/bf[MASS_FRACTION]->phi[q];
 			      sum += derivative * (s_terms.d_Y_dot_dc[jj][w][j] -
 						   d_rho->C[w][j]*s_terms.Y_dot[jj]/rho);
 			    }
@@ -5685,14 +5648,11 @@ assemble_continuity(dbl time_value,   /* current time */
 			  for (jj=0; jj<pd->Num_Species-1; jj++)
 			    {
 			      derivative = 0.0;
-			      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) 
+			      for ( q=0; q<ei[pg->imtrx]->dof[MASS_FRACTION]; q++)
 				{
-				  for ( q=0; q<ei[imtrx]->dof[MASS_FRACTION]; q++)
-				    {
-				      if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
-				    }
-				  derivative = d_rho->C[jj][q]/bf[MASS_FRACTION]->phi[q];
+				  if ( bf[MASS_FRACTION]->phi[q] > 0.0 ) break;
 				}
+			      derivative = d_rho->C[jj][q]/bf[MASS_FRACTION]->phi[q];
 			      sum1 = 0.;
 			      sum2 = 0.;
 			      for ( p=0; p<VIM; p++)
