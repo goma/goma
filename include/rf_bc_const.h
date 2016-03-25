@@ -1329,19 +1329,18 @@ struct elem_edge_bc_struct {
 extern int *boundary_node_list;
 extern int **ss_on_boundary_node_list;
 extern int num_boundary_nodes;
-extern int num_BC_nodes;
 extern int **BC_dup_nodes;
 extern int ****BC_dup_list;
 extern int *BC_dup_ptr;
 extern int *ss_to_blks[MAX_MAT_PER_SS+1];
 extern int dup_blks_list[MAX_MAT_PER_SS+1];
 extern int *SS_Internal_Boundary;
-extern int *mesh_rotate_node;
-extern int *mesh_rotate_ss;
-extern int num_mesh_rotate;
-extern int *mom_rotate_node;
-extern int *mom_rotate_ss;
-extern int num_mom_rotate;
+extern int **mesh_rotate_node;
+extern int **mesh_rotate_ss;
+extern int *num_mesh_rotate;
+extern int **mom_rotate_node;
+extern int **mom_rotate_ss;
+extern int *num_mom_rotate;
 extern int PRESSURE_DATUM; /* flag to determine if a pressure datum is set */
 extern int pressure_datum_element; /* element in which the pressure datum is set */
 extern double pressure_datum_value; /* value of the pressure datum */

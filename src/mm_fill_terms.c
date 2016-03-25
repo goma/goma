@@ -4372,7 +4372,7 @@ assemble_continuity(dbl time_value,   /* current time */
   int p, q, a, b;
 
   int eqn, var;
-  int peqn, pvar, imtrx, imtrx2;
+  int peqn, pvar;
   int w;
 
   int i, j;

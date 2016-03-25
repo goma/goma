@@ -2473,9 +2473,9 @@ matrix_fill(
 	 */
 	I = Proc_Elem_Connect[iconnect_ptr + i]; 
 	if (I < (dpi->num_internal_nodes + dpi->num_boundary_nodes)) {
-	  if (in_list(I, 0, num_mom_rotate, mom_rotate_node) != -1) 
+	  if (in_list(I, 0, num_mom_rotate[pg->imtrx], mom_rotate_node[pg->imtrx]) != -1) 
 	    call_rotate = 1;
-	  if (in_list(I, 0, num_mesh_rotate, mesh_rotate_node) != -1)
+	  if (in_list(I, 0, num_mesh_rotate[pg->imtrx], mesh_rotate_node[pg->imtrx]) != -1)
 	    call_rotate = 1;
 	}
       }

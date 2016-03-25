@@ -69,16 +69,15 @@ static char rcsid[] = "$Id: mm_bc_conflict.c,v 5.7 2009-01-12 16:41:48 hkmoffa E
  * Variable DEFINITIONS...
  */
 
-int num_BC_nodes = 0;
 int **BC_dup_nodes = NULL;
 int ****BC_dup_list = NULL;
 int *BC_dup_ptr = NULL;
-int *mesh_rotate_node = NULL;
-int *mesh_rotate_ss = NULL;
-int num_mesh_rotate = 0;
-int *mom_rotate_node = NULL;
-int *mom_rotate_ss = NULL;
-int num_mom_rotate = 0;
+int **mesh_rotate_node = NULL;
+int **mesh_rotate_ss = NULL;
+int *num_mesh_rotate;
+int **mom_rotate_node = NULL;
+int **mom_rotate_ss = NULL;
+int *num_mom_rotate;
 
 /********** R O U T I N E S   D E F I N E D   I N   T H I S   F I L E **********
 *
@@ -348,6 +347,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 /*      BOUNDARY CONDITIONS SPECIFIED BY NODE SETS                           */
 /*  visit each node on all node sets and list the BC's applied there         */
 /*****************************************************************************/
+
 
   for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
   /* 
@@ -636,8 +636,6 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 #ifdef DEBUG
     fprintf(stderr, "P_%d has num_bc_nodes = %d\n", ProcID, num_bc_nodes);
 #endif
-
-    num_BC_nodes = num_bc_nodes;
 
     /*
      * When running distributed, some processors have small chunks of the overall
@@ -1803,14 +1801,14 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
     /* make a list of momentum and mesh nodes that will have rotated conditions
      * and the SS#'s of the sides on which they should be rotated
      */
-    num_mesh_rotate  = 0;
-    num_mom_rotate   = 0;
+    num_mesh_rotate[pg->imtrx]  = 0;
+    num_mom_rotate[pg->imtrx]   = 0;
 
     if( num_bc_nodes > 0 ) {
-      mesh_rotate_node = alloc_int_1(num_bc_nodes, INT_NOINIT);
-      mesh_rotate_ss   = alloc_int_1(num_bc_nodes, INT_NOINIT);
-      mom_rotate_node  = alloc_int_1(num_bc_nodes, INT_NOINIT);
-      mom_rotate_ss    = alloc_int_1(num_bc_nodes, INT_NOINIT);
+      mesh_rotate_node[pg->imtrx] = alloc_int_1(num_bc_nodes, INT_NOINIT);
+      mesh_rotate_ss[pg->imtrx]   = alloc_int_1(num_bc_nodes, INT_NOINIT);
+      mom_rotate_node[pg->imtrx]  = alloc_int_1(num_bc_nodes, INT_NOINIT);
+      mom_rotate_ss[pg->imtrx]    = alloc_int_1(num_bc_nodes, INT_NOINIT);
     }
 
     /* loop through nodes and remove nodes that don't have conflicts 
@@ -1923,22 +1921,22 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                 fprintf(stderr, "Rotate MESH for BC's at node %d\n",
                         inode+1);
               }
-              if (num_mesh_rotate == 0 ||
-                  mesh_rotate_node[num_mesh_rotate-1] != inode) {
-                mesh_rotate_node[num_mesh_rotate] = inode;
-                mesh_rotate_ss[num_mesh_rotate] = ss_rot;
-                num_mesh_rotate++;
+              if (num_mesh_rotate[pg->imtrx] == 0 ||
+                  mesh_rotate_node[pg->imtrx][num_mesh_rotate[pg->imtrx]-1] != inode) {
+                mesh_rotate_node[pg->imtrx][num_mesh_rotate[pg->imtrx]] = inode;
+                mesh_rotate_ss[pg->imtrx][num_mesh_rotate[pg->imtrx]] = ss_rot;
+                num_mesh_rotate[pg->imtrx]++;
               }
             }
             if (i_rotate && ivar == 1) {
               if (Debug_Flag > 0)
 		fprintf(stderr, "Rotate MOMENTUM for BC's at node %d\n",
 			inode+1);
-              if (num_mom_rotate == 0 ||
-                  mom_rotate_node[num_mom_rotate-1] != inode) {
-                mom_rotate_node[num_mom_rotate] = inode;
-                mom_rotate_ss[num_mom_rotate] = ss_rot;
-                num_mom_rotate++;
+              if (num_mom_rotate[pg->imtrx] == 0 ||
+                  mom_rotate_node[pg->imtrx][num_mom_rotate[pg->imtrx]-1] != inode) {
+                mom_rotate_node[pg->imtrx][num_mom_rotate[pg->imtrx]] = inode;
+                mom_rotate_ss[pg->imtrx][num_mom_rotate[pg->imtrx]] = ss_rot;
+                num_mom_rotate[pg->imtrx]++;
               }
             }
       
@@ -1959,13 +1957,13 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
     }
 
     if ( num_bc_nodes > 0 ) {
-      mesh_rotate_node = (int *)realloc(mesh_rotate_node, num_mesh_rotate * sizeof(int));
-      mesh_rotate_ss   = (int *)realloc(mesh_rotate_ss, num_mesh_rotate * sizeof(int));
-      mom_rotate_node  = (int *)realloc(mom_rotate_node, num_mom_rotate * sizeof(int));
-      mom_rotate_ss    = (int *)realloc(mom_rotate_ss, num_mom_rotate * sizeof(int));
+      mesh_rotate_node[pg->imtrx] = (int *)realloc(mesh_rotate_node[pg->imtrx], num_mesh_rotate[pg->imtrx] * sizeof(int));
+      mesh_rotate_ss[pg->imtrx]   = (int *)realloc(mesh_rotate_ss[pg->imtrx], num_mesh_rotate[pg->imtrx] * sizeof(int));
+      mom_rotate_node[pg->imtrx]  = (int *)realloc(mom_rotate_node[pg->imtrx], num_mom_rotate[pg->imtrx] * sizeof(int));
+      mom_rotate_ss[pg->imtrx]    = (int *)realloc(mom_rotate_ss[pg->imtrx], num_mom_rotate[pg->imtrx] * sizeof(int));
     }
 
-    if( mesh_rotate_node >0 || mom_rotate_node > 0 )
+    if( mesh_rotate_node[pg->imtrx] >0 || mom_rotate_node[pg->imtrx] > 0 )
       {
 	int ebi=0;
 	
@@ -1978,18 +1976,18 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
       }
 	
     if (Debug_Flag > 0) {
-      for (i = 0; i < num_mesh_rotate; i++) {
+      for (i = 0; i < num_mesh_rotate[pg->imtrx]; i++) {
         fprintf(stderr, "\tMESH node %d rotate on SS %d\n",
-                mesh_rotate_node[i]+1,mesh_rotate_ss[i]);
+                mesh_rotate_node[pg->imtrx][i]+1,mesh_rotate_ss[pg->imtrx][i]);
       }
     }
-    if (Debug_Flag > 0 && num_mom_rotate > 0) {
-      fprintf(stderr, "Rotate MOMENTUM for BC's at %d NODES \n",num_mom_rotate);
+    if (Debug_Flag > 0 && num_mom_rotate[pg->imtrx] > 0) {
+      fprintf(stderr, "Rotate MOMENTUM for BC's at %d NODES \n",num_mom_rotate[pg->imtrx]);
     }
     if (Debug_Flag > 0) {
-      for (i = 0; i < num_mom_rotate; i++) {
+      for (i = 0; i < num_mom_rotate[pg->imtrx]; i++) {
         fprintf(stderr, "\tMOMENTUM node %d rotate on SS %d\n",
-                mom_rotate_node[i]+1,mom_rotate_ss[i]);
+                mom_rotate_node[pg->imtrx][i]+1,mom_rotate_ss[pg->imtrx][i]);
       }
     }
   
@@ -2478,7 +2476,6 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
      * that flow chart somewhat religiously
      */
     
-    num_BC_nodes = num_bc_nodes;
     BC_dup_nodes[pg->imtrx] = alloc_int_1(num_bc_nodes, -1);
     BC_dup_list[pg->imtrx] = (int ***) alloc_ptr_1(num_bc_nodes);
     BC_dup_ptr[pg->imtrx] = 0;

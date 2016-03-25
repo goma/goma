@@ -150,10 +150,10 @@ apply_rotated_bc (
       I = Proc_Elem_Connect[iconnect_ptr + id]; /* Find global node */
       /* check to see if this global node is in the momentum rotation list and
        * make sure this nodal equation hasn't been rotated yet */
-      if (((irot = in_list(I, 0, num_mom_rotate, mom_rotate_node)) != -1) && 
+      if (((irot = in_list(I, 0, num_mom_rotate[pg->imtrx], mom_rotate_node[pg->imtrx])) != -1) && 
 	  mom_already_rotated[id] == 0) {
 	/* determine if SS for rotation is on this side */
-	ss_rot = mom_rotate_ss[irot];
+	ss_rot = mom_rotate_ss[pg->imtrx][irot];
 	for (ibc = 0; 
 	     (bc_input_id = (int) elem_side_bc->BC_input_id[ibc]) != -1; ibc++) {
 	    if (BC_Types[bc_input_id].BC_ID == ss_rot) {
@@ -185,10 +185,10 @@ apply_rotated_bc (
 	  }
       }
       
-      if (((irot = in_list(I, 0, num_mesh_rotate, mesh_rotate_node)) != -1) && 
+      if (((irot = in_list(I, 0, num_mesh_rotate[pg->imtrx], mesh_rotate_node[pg->imtrx])) != -1) && 
 	  mesh_already_rotated[id] == 0) {
 	/* determine if SS for rotation is on this side */
-	ss_rot = mesh_rotate_ss[irot];
+	ss_rot = mesh_rotate_ss[pg->imtrx][irot];
         /* check to see if this global node is in the mesh rotation list and
          * make sure this nodal equation hasn't been rotated yet */
 	for (ibc = 0; (bc_input_id = (int) elem_side_bc->BC_input_id[ibc]) != -1; ibc++)
@@ -2384,19 +2384,19 @@ calculate_2D_rotation_vectors (Exo_DB *exo,		/* the mesh */
       rotation_allocated = TRUE;
     }
 	  
-  while ( mesh_count < num_mesh_rotate || mom_count < num_mom_rotate )
+  while ( mesh_count < num_mesh_rotate[pg->imtrx] || mom_count < num_mom_rotate[pg->imtrx] )
     {
   
-      if( mom_count < num_mom_rotate )
+      if( mom_count < num_mom_rotate[pg->imtrx] )
 	{
-	  inode = mom_rotate_node[mom_count];
-	  local_ROT_list[inode][0] = mom_rotate_ss[mom_count];
+	  inode = mom_rotate_node[pg->imtrx][mom_count];
+	  local_ROT_list[inode][0] = mom_rotate_ss[pg->imtrx][mom_count];
 	}
 		
-      if( mesh_count < num_mesh_rotate )
+      if( mesh_count < num_mesh_rotate[pg->imtrx] )
 	{
-	  inode = mesh_rotate_node[mesh_count];
-	  local_ROT_list[inode][1] = mesh_rotate_ss[mesh_count];
+	  inode = mesh_rotate_node[pg->imtrx][mesh_count];
+	  local_ROT_list[inode][1] = mesh_rotate_ss[pg->imtrx][mesh_count];
 	}
 		
       mesh_count++; mom_count++;
