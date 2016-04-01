@@ -3925,8 +3925,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
   rewind(imp);
   mat_ptr->porosity_external_field_index = -1;
-  mat_ptr-> perm_external_field_index = -1;
+  mat_ptr->perm_external_field_index = -1;
   mat_ptr->Xperm_external_field_index = -1;
+  mat_ptr->rel_liq_perm_external_field_index = -1;
   efv->ev_dpordt_index = -1;
   mat_ptr->SAT_external_field_index = -1;
   mat_ptr->por_shell_closed_porosity_ext_field_index = -1;
@@ -4634,6 +4635,42 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 	  mat_ptr->len_u_rel_liq_perm = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_rel_liq_perm); 
+	}
+      else if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD") )
+	{
+
+	  if ( fscanf(imp,"%s", input ) !=  1 )
+	    {
+	      EH(-1,"Expecting trailing keyword for Rel Liq Permeability EXTERNAL_FIELD model.\n");
+	    }
+	  ii=0;
+	  for ( j=0; j<efv->Num_external_field; j++)
+	    {
+	      if (!strcmp(efv->name[j], input) ) 
+		{
+		  ii=1;
+                  mat_ptr->rel_liq_perm_external_field_index = j;
+		}
+	    }
+	  if( ii==0 )
+	    {
+	      EH(-1,"Must activate external fields to use this Rel Liq Permeability model and requested name must be an external field name");
+	    }
+	  mat_ptr->RelLiqPermModel = EXTERNAL_FIELD;
+
+	  /* pick up scale factor for property */
+	  num_const = read_constants(imp, &(mat_ptr->u_rel_liq_perm),
+				     NO_SPECIES);
+	  mat_ptr->len_u_rel_liq_perm = num_const;
+	  if ( num_const < 1)
+	    {
+	      sr = sprintf(err_msg,
+		   "Matl %s expected at least 1 constant for %s %s model.\n",
+			   pd_glob[mn]->MaterialName,
+			   "Rel Liq Permeability",
+			   "EXTERNAL_FIELD");
+	      EH(-1, err_msg);
+	    }
 	}
       else
 	{
