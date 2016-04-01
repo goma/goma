@@ -1588,6 +1588,19 @@ surface_determinant_and_normal(
       /* calculate surface determinant using the coordinate scale factors
        * for orthogonal curvilinear coordinates */
       det_h01 = sqrt(t[0][0]*t[0][0] + t[0][1]*t[0][1]);
+
+      /*
+       * If the shells are not aligned in the x-y plane, det_h01 is zero
+       * When we set up the surface normal/determinant,  we assume the 
+       * shells are aligned with the x-y plane.  This avoids dividing by 
+       * zero and giving junk for the surface normal/determinant
+       * DSH 03/24/2016
+       */
+      if(det_h01==0)
+	{
+	  EH(-1, "The shell elements need to be aligned in the X-Y plane for this problem to work");
+	}
+
       r_det_h01 = 1. / det_h01;
       
       fv->sdet = fv->h[2] * det_h01;

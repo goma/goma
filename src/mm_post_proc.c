@@ -1961,7 +1961,14 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
     /* Calculate velocities */
-    calculate_lub_q_v(R_LUBP, time, delta_t, xi, exo);
+    if(pd->e[R_LUBP])
+      {
+	calculate_lub_q_v(R_LUBP, time, delta_t, xi, exo);
+      }
+    else
+      {
+	calculate_lub_q_v(R_SHELL_FILMP, time, delta_t, xi, exo);
+      }
 
     /* Post velocities */
     local_post[LUB_VELO_FIELD] = LubAux->v_avg[0];
