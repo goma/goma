@@ -3,10 +3,7 @@
 These build scripts exist to alleviate the pain of building the
 libraries goma needs to run.
 
-There are 3 options to choose from:
-
-`build-goma-dependencies.sh`: This script is known to work with the
-most platforms and older compiler versions.
+There are 2 options to choose from:
 
 `build-goma-dep-trilinos-12.sh`: This script builds with the newest
 trilinos and expects gcc 4.8 or gcc 4.9.
