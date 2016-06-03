@@ -375,6 +375,7 @@
 #define GD_TIME_EXP  400002
 #define GD_TIME_SIN  400003
 #define GD_TIME_TABLE  400004
+#define GD_TIME_MAX   400005
 
 /* velocity constants in cartesian form */
 

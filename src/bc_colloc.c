@@ -2430,7 +2430,7 @@ bc_eqn_index(int id,               /* local node number                 */
 /*****************************************************************************/
 
 int
-evaluate_time_func(const double time,
+evaluate_time_func(double time,
 		   double *f_time,      /* computed time function */
 		   const int bc_input_id)
     
@@ -2442,6 +2442,13 @@ evaluate_time_func(const double time,
 {  
   int time_function;
 
+  /* Check if max time was specified  and reset time if so */
+  if (BC_Types[bc_input_id].BC_Data_Int[3] == GD_TIME_MAX) {
+    if (time > BC_Types[bc_input_id].BC_Data_Float[2]) {
+      time = BC_Types[bc_input_id].BC_Data_Float[2];
+    }
+  }
+  
   /* ---- Find variable number and species number */
   time_function = BC_Types[bc_input_id].BC_Data_Int[2];
   
