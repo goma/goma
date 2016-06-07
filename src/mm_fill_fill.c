@@ -3862,7 +3862,7 @@ integrate_explicit_eqn(
 
       get_fill_vector(num_total_nodes, x, xf, node_to_fill);
       get_fill_vector(num_total_nodes, xdot, xfdot, node_to_fill);
-      converged = (Norm[0][2] <  Epsilon[0]);
+      converged = (Norm[0][2] <  Epsilon[pg->imtrx][0]);
       inewton++;
     }
   

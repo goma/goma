@@ -614,6 +614,91 @@ look_forward_optional(FILE *ifp, const char *string, char input[],
   }
   return(status);
 }
+
+int 
+look_forward_optional_until(FILE *ifp, const char *string, char *untilstring, char input[],
+			    const char ch_term)
+   /***********************************************************************
+    *
+    * look_forward_optional_until():
+    *
+    * Scan the input file (reading in strings according to 
+    * 'read_string(ifp,)' specifications) 
+    * until the character pattern in 'string' is matched.
+    * If 'string' is not matched, return a value of -1.
+    * If 'string' is matched, return 1.
+    *
+    * This search starts at the current position in the input
+    * file and searches to the end until it finds the input string or the untilstring
+    * If this routine can't find the input string, it returns to the 
+    * file position where the search was started. If it finds the
+    * string pattern, it leaves the file pointer positioned after the
+    * ch_term character.
+    *
+    * Author:			Ray S. Tuminaro Div 1422 
+    * Date:			8/8/90
+    * revised:		4/24/95 Rich Cairncross
+    *
+    * Parameter list:
+    *  ifp      == pointer to file "input"
+    *  string   == contains string pattern to be matched.
+    *  input    == buffer array to hold characters that are read in.
+    *              The length of the buffer array is MAX_CHAR_IN_INPUT,
+    *              whose current value is 256.
+    *  ch_term  == termination character. When scanning a line of input
+    *	           is read until either a newline, the 'ch' termination
+    *	           character is read, or the end-of-file is read.
+    * Return Value:
+    *    1 if string is matched
+    *   -1 if no match
+    *********************************************************************/
+{
+  int status = 1;
+  fpos_t file_position;  /* position in file at start of search */
+#ifndef tflop
+  fgetpos(ifp, &file_position);
+#else
+  file_position = ftell(ifp);
+#endif
+
+  /*
+   *  Read the first line to get the while look initialized
+   */
+  if (read_string(ifp, input, ch_term) == -1) {
+#ifndef tflop
+    fsetpos(ifp, &file_position);
+#else
+    fseek(ifp, file_position, SEEK_SET);
+#endif
+    return(-1);
+  }
+  strip(input);
+  /*
+   * Main loop -> process the input file until a match is found
+   */
+  while (strcmp(input, string) != 0 ) {
+    if (strcmp(input, untilstring) == 0) {
+#ifndef tflop
+      fsetpos(ifp, &file_position);
+#else
+      fseek(ifp, file_position, SEEK_SET);
+#endif
+      return(-1);
+    }      
+
+    if (read_string(ifp, input, ch_term) == -1) {
+#ifndef tflop
+      fsetpos(ifp, &file_position);
+#else
+      fseek(ifp, file_position, SEEK_SET);
+#endif
+      return(-1);
+    }
+    strip(input);
+  }
+  return(status);
+}
+
 /**************************************************************************/
 /**************************************************************************/
 /**************************************************************************/
@@ -5704,7 +5789,7 @@ rd_solver_specs(FILE *ifp,
 
   int iread, k, i;
   int is_Solver_Serial = TRUE;
-  
+  int imtrx;    
   /*
    * Caution! This routine is gradually evolving to a dumb reader. Checking
    * for consistent and meaningful input is now done mostly in
@@ -6456,26 +6541,37 @@ rd_solver_specs(FILE *ifp,
     }
 
   look_for(ifp, "Normalized Residual Tolerance", input, '=');
-  if (fscanf(ifp, "%le", &Epsilon[0]) != 1)
+  if (fscanf(ifp, "%le", &Epsilon[0][0]) != 1)
     {
       EH( -1, "error reading Normalized (Newton) Residual Tolerance");
     }
 
-  SPF(echo_string,"%s = %.4g", "Normalized Residual Tolerance", Epsilon[0]); ECHO(echo_string,echo_file);
+  for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    Epsilon[imtrx][0] = Epsilon[0][0];
+  }
+  SPF(echo_string,"%s = %.4g", "Normalized Residual Tolerance", Epsilon[0][0]); ECHO(echo_string,echo_file);
 
   iread = look_for_optional(ifp, "Normalized Correction Tolerance", input, '=');
   if (iread == 1)
     {
-      if (fscanf(ifp, "%le", &Epsilon[2]) != 1)
+      if (fscanf(ifp, "%le", &Epsilon[0][2]) != 1)
         {
 	  EH( -1, "error reading Normalized (Newton) Correction Tolerance");
         }
-      SPF(echo_string,"%s = %.4g", "Normalized Correction Tolerance", Epsilon[2] ); ECHO(echo_string,echo_file);
+      SPF(echo_string,"%s = %.4g", "Normalized Correction Tolerance", Epsilon[0][2] ); ECHO(echo_string,echo_file);
     }
     else
     {
-      Epsilon[2]=1.0e+10;
+      Epsilon[0][2]=1.0e+10;
     }
+  
+  for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    Epsilon[imtrx][2] = Epsilon[0][2];
+  }
+
+  for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    Epsilon[imtrx][1] = 0.;
+  }
 
   iread = look_for_optional(ifp, "Residual Ratio Tolerance", input, '=');
   if ( iread == 1 )
@@ -6483,13 +6579,19 @@ rd_solver_specs(FILE *ifp,
       read_string(ifp,input,'\n');
       strip(input);
       strcpy(Matrix_Convergence_Tolerance, input); /* save for aztec use */
-      if ( sscanf(input, "%le", &Epsilon[1]) != 1 )
+      if ( sscanf(input, "%le", &Epsilon[0][1]) != 1 )
 	{
 	  EH( -1, "Bad residual ratio (matrix convergence) tolerance.");
 	}
-      SPF(echo_string,"%s = %.4g", "Residual Ratio Tolerance", Epsilon[1] ); ECHO(echo_string,echo_file);
+      SPF(echo_string,"%s = %.4g", "Residual Ratio Tolerance", Epsilon[0][1] ); ECHO(echo_string,echo_file);
+
+      for (imtrx = 1; imtrx < upd->Total_Num_Matrices; imtrx++) {
+	Epsilon[imtrx][1] = Epsilon[0][1];
+      }
+
     }
 
+  
   iread = look_for_optional(ifp, "Pressure Stabilization", input, '=');
   if (iread == 1) { 
     (void) read_string(ifp, input, '\n');
@@ -6651,7 +6753,7 @@ rd_solver_specs(FILE *ifp,
   /* look for optional flags specifying dependencies to ignore */
   {
     int eq, var;
-    int imtrx;    
+
 
     for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
        {
@@ -8401,27 +8503,63 @@ rd_eq_specs(FILE *ifp,
 
        fscanf(ifp,"%d",&mtrx_index1);
        mtrx_index0 = mtrx_index1 - 1;
-
-       if ( look_for_next_string( ifp, "Disable time step control", input, '=') ) 
+       
+       SPF(echo_string,"MATRIX = %d", mtrx_index1); ECHO(echo_string,echo_file);
+       
+       if ( look_forward_optional_until( ifp, "Disable time step control", "MATRIX", input, '=') == 1) 
          {
            read_string(ifp, input, '\n');
            strip(input);
            if (strcmp(input, "yes") == 0) {
              pg->time_step_control_disabled[mtrx_index0] = TRUE;
+	     SPF(echo_string,"Time step control disabled for matrix %d", mtrx_index1); ECHO(echo_string,echo_file);
            }
          }
       }
     int iread;
     strcpy(search_string, "Stratimikos File");
-    iread = look_forward_optional(ifp, search_string, input, '=');
+    iread = look_forward_optional_until(ifp, search_string, "MATRIX", input, '=');
     if (iread == 1) {
       read_string(ifp, input, '\n');
       strip(input);
       strcpy(Stratimikos_File[imtrx], input);
+      SPF(echo_string,"Stratimikos file = %s for matrix %d", Stratimikos_File[imtrx], mtrx_index1); ECHO(echo_string,echo_file);
     } else {
       // Set stratimikos.xml as defualt stratimikos file
       strcpy(Stratimikos_File[imtrx], "stratimikos.xml");
     }
+
+    iread = look_forward_optional_until(ifp, "Normalized Residual Tolerance", "MATRIX",  input, '=');
+    if (iread == 1)
+      {
+	if (fscanf(ifp, "%le", &Epsilon[imtrx][0]) != 1)
+	  {
+	    EH( -1, "error reading Normalized (Newton) Correction Tolerance");
+	  }
+	SPF(echo_string,"%s = %.4g matrix %d", "Normalized Residual Tolerance", Epsilon[imtrx][0], mtrx_index1); ECHO(echo_string,echo_file);
+      }
+
+
+    iread = look_forward_optional_until(ifp, "Normalized Correction Tolerance", "MATRIX",  input, '=');
+    if (iread == 1)
+      {
+	if (fscanf(ifp, "%le", &Epsilon[imtrx][2]) != 1)
+	  {
+	    EH( -1, "error reading Normalized (Newton) Correction Tolerance");
+	  }
+	SPF(echo_string,"%s = %.4g matrix %d", "Normalized Correction Tolerance", Epsilon[imtrx][2], mtrx_index1); ECHO(echo_string,echo_file);
+      }
+
+    iread = look_forward_optional_until(ifp, "Residual Ratio Tolerance", "MATRIX",  input, '=');
+    if ( iread == 1 )
+      {
+	if ( fscanf(ifp, "%le", &Epsilon[imtrx][1]) != 1 )
+	  {
+	    EH( -1, "Bad residual ratio (matrix convergence) tolerance.");
+	  }
+	SPF(echo_string,"%s = %.4g matrix %d", "Residual Ratio Tolerance", Epsilon[imtrx][1], mtrx_index1); ECHO(echo_string,echo_file);
+      }
+
 
     pd_ptr->Matrix_Activity[mtrx_index0] = 1;
   
