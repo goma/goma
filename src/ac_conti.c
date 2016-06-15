@@ -157,6 +157,8 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 				   for post processing */
   int		tev_post;	/* total number of elem variables and kinds 
 				   for post processing */
+
+  double *gv;
   int           iUC;            /* User-defined continuation condition index */
 
 #ifdef HAVE_FRONT
@@ -238,13 +240,26 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   rd->ngv = 0;			/* number global variables in results */
   rd->nhv = 0;			/* number history variables in results */
 
-  rd->ngv = 5;			/* number global variables in results 
+  rd->ngv = 5 + nAC;			/* number global variables in results 
 				   see load_global_var_info for names*/
   error = load_global_var_info(rd, 0, "CONV");
   error = load_global_var_info(rd, 1, "NEWT_IT");
   error = load_global_var_info(rd, 2, "MAX_IT");
   error = load_global_var_info(rd, 3, "CONVRATE");
   error = load_global_var_info(rd, 4, "MESH_VOLUME");
+
+  if ( nAC > 0   )
+    {
+      char name[10];
+
+      for( i = 0 ; i < nAC ; i++ )
+	{
+	  sprintf(name, "AUGC_%d",i+1);
+	  error = load_global_var_info(rd, 5 + i, name);
+	}
+    }
+
+  gv = alloc_dbl_1( rd->ngv, 0.0 );
 
   /* load nodal types, kinds, names */
   error = load_nodal_tkn(rd, 
@@ -663,6 +678,10 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
    * OF STEPS SURPASSED
    */
 
+  if (nAC > 0) {
+    dcopy1( nAC, x_AC, &(gv[5]) );
+  }
+  
   for(n = 0; n < MaxPathSteps; n++)
     {
       alqALC = 1;
@@ -838,7 +857,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 				      &nprint, 
 				      tev, 
 				      tev_post,
-				      NULL,
+				      gv,
 				      rd,
 				      gindex,
 				      p_gsize,
@@ -873,7 +892,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	      DPRINTF(stderr, "%s: write_solution call WIS\n", yo);
 #endif
 	      write_solution(ExoFileOut, resid_vector, x, x_sens_p,
-			     x_old, xdot, xdot_old, tev, tev_post, NULL, rd, 
+			     x_old, xdot, xdot_old, tev, tev_post, gv, rd, 
 			     gindex, p_gsize, gvec, gvec_elem, &nprint, 
 			     delta_s, theta, path1, NULL, exo, dpi);
 #ifdef DEBUG
@@ -1176,7 +1195,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	  }
 	  if (Write_Intermediate_Solutions == 0 ) {
 	    write_solution(ExoFileOut, resid_vector, x, x_sens_p, 
-			   x_old, xdot, xdot_old, tev, tev_post, NULL,
+			   x_old, xdot, xdot_old, tev, tev_post, gv,
 			   rd, gindex, p_gsize, gvec, gvec_elem, &nprint,
 			   delta_s, theta, path1, NULL, exo, dpi);
 	    nprint++;
@@ -1342,7 +1361,9 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   safer_free( (void **) &x_update); 
 
   safer_free( (void **) &x_sens); 
-  safer_free( (void **) &x_sens_temp); 
+  safer_free( (void **) &x_sens_temp);
+
+  free(gv);
 
   if((nn_post_data_sens+nn_post_fluxes_sens) > 0)
           Dmatrix_death(x_sens_p,num_pvector,numProcUnknowns);
@@ -1373,6 +1394,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
       safer_free((void **) &(gvec_elem [eb_indx]));
     }
 
+  
   safer_free( (void **) &gvec_elem); 
   if (cpcc != NULL) safer_free( (void **) &cpcc);
 
@@ -1380,6 +1402,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   safer_free( (void **) &Local_Offset);
   safer_free( (void **) &Dolphin);
 
+  
   if (file != NULL) fclose(file);
 
   return;

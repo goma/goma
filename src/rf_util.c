@@ -1427,7 +1427,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
      * As of Mar 18, 2002, brkfix doesn't support global variables, hence, this
      * capability does not exist for parallel operations.
      */
-    if( nAC > 0 && Num_Proc == 1)  
+    if( nAC > 0 )
       {
 	int ngv;
 
@@ -1475,7 +1475,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
      * capability does not exist for parallel operations.
      */
 	
-    if( nAC > 0 && Num_Proc == 1) 
+    if( nAC > 0 )
       {
 	int ngv;
 
