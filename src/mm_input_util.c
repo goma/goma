@@ -1000,6 +1000,7 @@ look_for_species_prop(FILE *imp,  const char *search_string,
   if (!strcmp(model_name, "CONSTANT") || num_args <= 1) 
     {
       material_property[species_ID] =  arg_list[0];
+      fill_user_constant = FALSE;
     }
     
   /*
@@ -1016,14 +1017,16 @@ look_for_species_prop(FILE *imp,  const char *search_string,
 		yo, mat_ptr->Material_Name, search_string);		
 	sprintf(err_mesg,
 		"/tSpace for pointer vector over species needs to be malloced first\n");
-	EH(-1, err_mesg);
+	EH(-1, err_mesg);  
       }
     } else {
-      if (User_constants[species_ID] != NULL) {
-	safer_free((void **) &(User_constants[species_ID]));
-      }
-      User_constants[species_ID] = arg_list;
-      User_count[species_ID] = num_args;
+	safer_free((void **) &(User_constants[species_ID]));  
+	User_constants[species_ID] = (dbl *)array_alloc(1, num_args, sizeof(dbl));
+        User_constants[species_ID] = arg_list;
+        /*    for(i=0 ; i<num_args ; i++)	{
+            User_constants[species_ID][i] = arg_list[i];
+		}  */
+        User_count[species_ID] = num_args;
     }
   } else {
     safer_free((void **) &(arg_list));

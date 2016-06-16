@@ -4937,6 +4937,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	       
       break;
     case I_LUB_LOAD:
+     {
       n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
       lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
@@ -4947,8 +4948,25 @@ compute_volume_integrand(const int quantity, const int elem,
       /* clean-up */
       safe_free((void *) n_dof);
 
-      break; 
+      break;
+     }
+    case I_SHELL_VOLUME:
+     {
+      n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+      det = fv->sdet; //Different determinant since this is a shell
 
+      dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime;
+      dbl dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+      H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
+
+      *sum += H* weight * det;
+
+      /* clean-up */
+      safe_free((void *) n_dof);
+
+      break;
+     }
     case I_SPEED:
      {
       double vsq;
@@ -4985,6 +5003,17 @@ compute_volume_integrand(const int quantity, const int elem,
         double ves[MAX_PDIM][MAX_PDIM];	/* viscoelastic stress */
         int ve_mode;
 
+  if (mp->HeatSourceModel == VISC_DISS )
+    {
+      *sum += weight*det*visc_diss_heat_source(NULL, mp->u_heat_source);
+    }
+  else if (mp->HeatSourceModel == VISC_ACOUSTIC )
+    {
+      *sum += weight*det*visc_diss_heat_source(NULL, mp->u_heat_source);
+      *sum += weight*det*visc_diss_acoustic_source(NULL, mp->u_heat_source, mp->len_u_heat_source);
+    }
+  else
+    {
 	for( p=0; p<VIM; p++)
 	  {
 	    for( q=0; q<VIM; q++)
@@ -5033,6 +5062,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	    EH(-1,"Appropriate Jacobian entries for the DISSIP volume integral are not available.\n");
 	  }
 
+    }
       }
       break;
 

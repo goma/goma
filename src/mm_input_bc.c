@@ -1663,6 +1663,9 @@ rd_bc_specs(FILE *ifp,
         case UVARY_BC:
 	case VVARY_BC: 
 	case WVARY_BC: 
+        case U_PARABOLA_BC:
+        case V_PARABOLA_BC:
+        case W_PARABOLA_BC:
 	case SPLINEX_BC:  
 	case SPLINEY_BC: 
 	case SPLINEZ_BC:

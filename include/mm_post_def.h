@@ -109,12 +109,12 @@
 #define I_SURF_TEMP     31
 #define I_JOULE         32
 #define I_LUB_LOAD      33
-#define I_VOLUME_PLANE  34 
-#define I_POS_VOLPLANE  35 
-#define I_NEG_VOLPLANE  36 
+#define I_VOLUME_PLANE  34
+#define I_POS_VOLPLANE  35
+#define I_NEG_VOLPLANE  36
 #define I_SPECIES_SOURCE  37
 #define I_KINETIC_ENERGY  38
-
+#define I_SHELL_VOLUME 39
 
 #ifdef _MM_POST_PROC_C
 struct Post_Processing_Flux_Names
@@ -233,7 +233,8 @@ VOL_NAME_STRUCT pp_vol_names[] =
   { "POS_PLANE_FILL",   I_POS_VOLPLANE},
   { "NEG_PLANE_FILL",   I_NEG_VOLPLANE},
   { "SPECIES_SOURCE",    I_SPECIES_SOURCE},
-  { "KINETIC_ENERGY",    I_KINETIC_ENERGY}
+  { "KINETIC_ENERGY",    I_KINETIC_ENERGY},
+  { "SHELL_VOLUME",      I_SHELL_VOLUME}
 };
 
 int Num_Vol_Names = sizeof( pp_vol_names )/ sizeof( VOL_NAME_STRUCT );

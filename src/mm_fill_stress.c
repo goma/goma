@@ -4147,7 +4147,13 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 	      /* if there is no neighbor and no tables, set this value to zero 
 	       * I am assuming we will only get here for inflow
 	       * boundaries... later we will do something better.*/
-	      
+	      for (a = 0; a < MAX_SURF_GP; a++) {
+		for (b = 0; b < MDE; b++) {
+		  phi_neighbor[a][b] = 0.0;
+		}
+	      }
+
+	      phi_v = phi_neighbor[0];
 
 	      for ( mode=0; mode<vn->modes; mode++)
 		{
@@ -4321,11 +4327,12 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 					       lec->J[peqn][pvar][i][j] -= 
 						advection; 
 
-					      if ( vn->dg_J_model == FULL_DG )
+					       advection = 0;
+					      if ( vn->dg_J_model == FULL_DG && found_it)
 						{
-						  advection = wt * fv->sdet * vdotn *
-						    ve[mode]->time_const *
-						    phi_v[j] * phi_i;
+						    advection = wt * fv->sdet * vdotn *
+						      ve[mode]->time_const *
+						      phi_v[j] * phi_i;
 						  
 						  if (Linear_Solver != FRONT)
 						    {

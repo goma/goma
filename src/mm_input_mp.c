@@ -6875,10 +6875,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       model_read = look_for_species_prop(imp, "Reference Concentration", mat_ptr,  
 				         mat_ptr->RefConcnModel,
 				         mat_ptr->reference_concn,
-			   	         NO_USER, NULL, model_name, 
-				         SCALAR_INPUT, &species_no,es );
+			   	         mat_ptr->u_reference_concn, mat_ptr->len_u_reference_concn, 
+                                         model_name, SCALAR_INPUT, &species_no,es );
+
       fallback_chemkin_generic_prop(&model_read, j,  &(mat_ptr->RefConcnModel[j]),
 				    TRUE, mat_ptr);
+      if(mat_ptr->len_u_reference_concn[species_no] > 0) 
+              mat_ptr->reference_concn[species_no] = mat_ptr->u_reference_concn[species_no][0];
+
       EH(model_read, "Reference Concentration");
 
       ECHO(es,echo_file);
@@ -7793,24 +7797,26 @@ ECHO("\n----Acoustic Properties\n", echo_file);
           SpeciesSourceModel = PHOTO_CURING;
           model_read = 1;
           mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
-          if ( fscanf(imp, "%lf %lf %lf %lf",
-                            &a0, &a1, &a2, &a3) != 4)
+          if ( fscanf(imp, "%lf %lf %lf %lf %lf %lf",
+                            &a0, &a1, &a2, &a3, &a4, &a5) != 6)
             {
                   sr = sprintf(err_msg,
-                               "Matl %s needs 4 floats for %s %s model.\n",
+                               "Matl %s needs 6 floats for %s %s model.\n",
                                pd_glob[mn]->MaterialName,
                                "Species Source", "PHOTO_CURING");
                   EH(-1, err_msg);
             }
           mat_ptr->u_species_source[species_no] = (dbl *)
-                                                 array_alloc(1,4,sizeof(dbl));
+                                                 array_alloc(1,6,sizeof(dbl));
           mat_ptr->len_u_species_source[species_no] = 4;
           mat_ptr->u_species_source[species_no][0] = a0;  /* model bit O2:Radical*/
           mat_ptr->u_species_source[species_no][1] = a1;  /* intensity_coeff */
           mat_ptr->u_species_source[species_no][2] = a2;  /* functionality*/
           mat_ptr->u_species_source[species_no][3] = a3;  /* Rate Arrhenius */
+          mat_ptr->u_species_source[species_no][4] = a4;  /* Monomer 2nd Order */
+          mat_ptr->u_species_source[species_no][5] = a5;  /* All 2nd Order Coeff */
 
-          SPF_DBL_VEC(endofstring(es), 4,  mat_ptr->u_species_source[species_no]);
+          SPF_DBL_VEC(endofstring(es), 6,  mat_ptr->u_species_source[species_no]);
         }
 
 

@@ -2093,34 +2093,6 @@ EH(-1,"version not compiled with frontal solver");
 	  xdot[i] -= damp_factor * var_damp[idv[i][0]] * delta_x[i] * (1.0 + 2 * theta) / delta_t;
 	}
 	exchange_dof(cx, dpi, xdot);	
-     /* Check and correct for negative values of thickness and concentration 
-        in shell film profile equation */
-
-
-
-      if (pd->v[SHELL_FILMP] || pd->v[SHELL_PARTC])
-        {
-	    for (i = 0; i < num_total_nodes; i++) 
-	      {
-                if (pd->v[SHELL_FILMH])
-                  {
-                   j = Index_Solution(i, R_SHELL_FILMH, 0, 0 , -1);
- 
-                   if (x[j] < 1.0e-6 ) 
-                     {
-                       x[j] = 1.0e-6;
-                     } 
-                  }
-                if (pd->v[SHELL_PARTC])
-                  {
-                   j = Index_Solution(i, R_SHELL_PARTC, 0, 0 , -1);
-                   if (x[j] < 1.0e-6 ) 
-                     {
-                       x[j] = 1.0e-6;
-                     } 
-                  }
-              }
-        }
 
 		
 	/* Now go back and correct all those dofs in solid regions undergoing newmark-beta

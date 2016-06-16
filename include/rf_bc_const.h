@@ -380,12 +380,14 @@
 
 #define U_BC     1
 #define UVARY_BC 3
+#define U_PARABOLA_BC 35
 #define UUSER_BC 4
 
 #define PU_BC     5
 
 #define V_BC     10
 #define VVARY_BC 30
+#define V_PARABOLA_BC 305
 #define VUSER_BC 40
 
 #define PV_BC     50
@@ -393,6 +395,7 @@
 #define W_BC     100
 
 #define WVARY_BC 300
+#define W_PARABOLA_BC 3005
 #define WUSER_BC 400
 
 #define PW_BC     500
