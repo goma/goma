@@ -215,6 +215,15 @@ EQ = shell_curvature  Q1  K     Q1                1.0
 EQ = shell_curvature2 Q1  K2    Q1                1.0
                                     mass adv bnd  dif  src
 
+Capability: VOLUME_INT SHELL_VOLUME: Shell volume post processing capability 
+Developers: Kristianto Tjiptowidjojo
+Description:  Integrate the lubrication height over entire mesh area.  
+Example: 
+Post Processing Volumetric Integration =
+VOLUME_INT = SHELL_VOLUME 1 0 volume.out
+END OF VOLUME_INT
+
+
 PRS ADDED TO MANUAL (12/11/2012) as noted:
 
 Capability:  Specialized interpolations for sharp-interface tracking. 

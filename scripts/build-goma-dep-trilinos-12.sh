@@ -84,13 +84,13 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 "lapack-3.2.1.tgz" \
 "netcdf-4.3.3.1.tar.gz" \
 "openmpi-1.6.4.tar.gz" \
-"ParMetis-3.1.1.tar.gz" \
+"parmetis-4.0.3.tar.gz" \
 "sparse.tar.gz" 
-"superlu_dist_2.3.tar.gz" \
+"superlu_dist_5.0.0.tar.gz" \
 "y12m-1.0.tar.gz" \
-"trilinos-12.2.1-Source.tar.bz2" \
+"trilinos-12.6.3-Source.tar.bz2" \
 "scalapack-2.0.2.tgz" \
-"MUMPS_4.10.0.tar.gz" \
+"MUMPS_5.0.1.tar.gz" \
 "SuiteSparse-4.4.4.tar.gz" \
 "matio-1.5.2.tar.gz")
 
@@ -102,13 +102,13 @@ ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "a3202a4f9e2f15ffd05d15dab4ac7857" \
 "5c9dad3705a3408d27f696e5b31fb88c" \
 "70aa9b6271d904c6b337ca326e6613d1" \
-"57318dbaddff2c3d1ef820cff0bf87b0" \
+"f69c479586bf6bb7aff6a9bc0c739628" \
 "1566d914d1035ac17b73fe9bc0eed02a" \
-"8cf8cb964bb25ff6981f994b7e794f29" \
+"2b53baf1b0ddbd9fcf724992577f0670" \
 "eed01310baca61f22fb8a88a837d2ae3" \
-"760f14cbce482b4b9a41d1c18297b531" \
+"d94e31193559b334fd41d05eb22f9285" \
 "2f75e600a2ba155ed9ce974a1c4b536f" \
-"959e9981b606cd574f713b8422ef0d9f" \
+"b477573fdcc87babe861f62316833db0" \
 "e0af74476935c9ff6d971df8bb6b82fc" \
 "85b007b99916c63791f28398f6a4c6f1")
 
@@ -120,13 +120,13 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://www.netlib.org/lapack/lapack-3.2.1.tgz" \
 "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.1.tar.gz" \
 "http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.4.tar.gz" \
-"http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/OLD/ParMetis-3.1.1.tar.gz" \
+"http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz" \
 "http://sourceforge.net/projects/sparse/files/sparse/sparse1.4b/sparse1.4b.tar.gz/download" \
-"http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_2.3.tar.gz" \
+"http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_5.0.0.tar.gz" \
 "http://sisyphus.ru/cgi-bin/srpm.pl/Branch5/y12m/getsource/0" \
-"http://trilinos.csbsju.edu/download/files/trilinos-12.2.1-Source.tar.bz2" \
+"http://trilinos.csbsju.edu/download/files/trilinos-12.6.3-Source.tar.bz2" \
 "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz" \
-"http://mumps.enseeiht.fr/MUMPS_4.10.0.tar.gz" \
+"http://graal.ens-lyon.fr/MUMPS/MUMPS_5.0.1.tar.gz" \
 "http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.4.4.tar.gz" \
 "http://downloads.sourceforge.net/project/matio/matio/1.5.2/matio-1.5.2.tar.gz")
 
@@ -138,13 +138,13 @@ ARCHIVE_DIR_NAMES=("ARPACK" \
 "lapack-3.2.1" \
 "netcdf-4.3.3.1" \
 "openmpi_1.6.4" \
-"ParMetis-3.1.1" \
+"parmetis-4.0.3" \
 "sparse" \
-"SuperLU_DIST_2.3" \
+"SuperLU_DIST_5.0.0" \
 "y12m-1.0" \
-"trilinos-12.2.1-Source" \
+"trilinos-12.6.3-Source" \
 "scalapack-2.0.2" \
-"MUMPS_4.10.0" \
+"MUMPS_5.0.1" \
 "SuiteSparse" \
 "matio-1.5.2")
 
@@ -404,6 +404,8 @@ function mychecksum {
     local MD5ARCHIVE=($(md5sum $archive))
     if [ $MD5SAVED != $MD5ARCHIVE ]; then
         echo "Issue checksum with archive:"
+	echo "$MD5SAVED"
+	echo "$MD5ARCHIVE"
         echo $archive
         continue_check
     fi
@@ -489,6 +491,8 @@ else
     make -j$MAKE_JOBS
     make install
 fi
+
+export PATH=$GOMA_LIB/cmake-2.8.12.2/bin:$PATH
 
 
 #continue_check
@@ -603,12 +607,21 @@ fi
 
 #continue_check
 #make parMetis
-cd $GOMA_LIB/ParMetis-3.1.1
-if [ -f libparmetis.a ]
+cd $GOMA_LIB
+if [ -d parmetis-4.0.3/lib ]
 then
     echo "ParMetis already Built"
 else
-    make -j$MAKE_JOBS
+    mv parmetis-4.0.3 tmpdir
+    mkdir parmetis-4.0.3
+    mv tmpdir parmetis-4.0.3/src
+    cd parmetis-4.0.3/src
+    make config cc=mpicc cxx=mpicxx prefix=$GOMA_LIB/parmetis-4.0.3
+    make
+    make install
+    cd ..
+    cp src/metis/include/metis.h include
+    cp src/build/Linux-x86_64/libmetis/libmetis.a lib/
 fi
 
 #continue_check
@@ -627,15 +640,39 @@ fi
 
 #continue_check
 #make SuperLU
-cd $GOMA_LIB/SuperLU_DIST_2.3
+cd $GOMA_LIB/SuperLU_DIST_5.0.0
 if [ -f lib/libsuperludist.a ]
 then
     echo "SuperLU_DIST already built"
 else
-    make PLAT= DSuperLUroot=$GOMA_LIB/SuperLU_DIST_2.3 BLASLIB="$GOMA_LIB/BLAS-3.6.0/blas_LINUX.a" METISLIB="-L$GOMA_LIB/ParMetis-3.1.1 -lmetis" PARMETISLIB="-L$GOMA_LIB/ParMetis-3.1.1 -lparmetis" ARCHFLAGS=-rc RANLIB=echo CC=mpicc CFLAGS=-D_SP NOOPTS= FORTRAN=gfortran FFLAGS="-O3 -Q" LOADER=mpicxx LOADOPTS=-lgfortran CDEFS="-DAdd_"
-    cd lib/
-    cp libsuperlu_dist_2.3.a libsuperludist.a
-    cd ..
+    cat > make.inc << EOF
+SuperLUroot     =  $GOMA_LIB/SuperLU_DIST_5.0.0
+DSUPERLULIB     = $GOMA_LIB/SuperLU_DIST_5.0.0/lib/libsuperludist.a
+
+# BLASDEF       = -DUSE_VENDOR_BLAS
+
+LIBS            = $GOMA_LIB/SuperLU_DIST_5.0.0/lib/libsuperludist.a $GOMA_LIB/BLAS-3.6.0/blas_LINUX.a $GOMA_LIB/parmetis-4.0.3/lib/libparmetis.a $GOMA_LIB/parmetis-4.0.3/lib/libmetis.a -lgfortran
+
+#
+#  The archiver and the flag(s) to use when building archive (library)
+#  If your system has no ranlib, set RANLIB = echo.
+#
+ARCH         = /usr/bin/ar
+ARCHFLAGS    = cr
+RANLIB       = /usr/bin/ranlib
+
+CC           = mpicc
+CFLAGS       = -O3 -DNDEBUG -DUSE_VENDOR_BLAS -DDEBUGlevel=0 -DPRNTlevel=0 -std=c99 -g -I$GOMA_LIB/parmetis-4.0.3/include
+CDEFS = -DAdd_
+# CFLAGS       += -D
+# CFLAGS       +=
+NOOPTS       = -O0
+FORTRAN      = /usr/bin/gfortran
+
+LOADER       = mpicc
+LOADOPTS     = -Wl,-rpath,$GOMA_LIB/SuperLU_DIST_5.0.0/lib
+EOF
+    make
 fi
 
 #continue_check
@@ -743,22 +780,78 @@ fi
 
 #continue_check
 # make mumps
-cd $GOMA_LIB/MUMPS_4.10.0
+cd $GOMA_LIB/MUMPS_5.0.1
 if [ -f lib/libdmumps.a ]
 then
     echo "MUMPS already built"
 else
-    cp Make.inc/Makefile.gfortran.PAR Makefile.inc
-    echo "$MUMPS_PATCH" > mumps.patch
-    patch Makefile.inc < mumps.patch
+    cat > Makefile.inc <<EOF
+# Begin orderings
+#LSCOTCHDIR = /usr/lib
+#ISCOTCH   = -I/usr/include/scotch # only needed for ptscotch
+
+#LSCOTCH   = -L\$(LSCOTCHDIR) -lptesmumps -lptscotch -lptscotcherr
+#LSCOTCH   = -L\$(LSCOTCHDIR) -lesmumps -lscotch -lscotcherr
+
+LPORDDIR = \$(topdir)/PORD/lib/
+IPORD    = -I\$(topdir)/PORD/include/
+LPORD    = -L\$(LPORDDIR) -lpord
+
+LMETISDIR = $GOMA_LIB/parmetis-4.0.3
+IMETIS    = -I\$(LMETISDIR)/include
+LMETIS    = -L\$(LMETISDIR)/lib -lparmetis -lmetis
+
+ORDERINGSF = -Dparmetis -Dpord
+ORDERINGSC  = \$(ORDERINGSF)
+LORDERINGS = \$(LMETIS) \$(LPORD)
+IORDERINGSF =
+IORDERINGSC = \$(IMETIS) \$(IPORD)
+# End orderings
+################################################################################
+
+PLAT    =
+LIBEXT  = .a
+OUTC    = -o
+OUTF    = -o
+RM = /bin/rm -f
+CC = mpicc
+FC = mpif90
+FL = mpif90
+AR = ar vr 
+RANLIB = ranlib
+SCALAP  = -L$GOMA_LIB/scalapack-2.0.2 -lscalapack
+
+INCPAR = -I$GOMA_LIB/openmpi-1.6.4/include
+
+LIBPAR = \$(SCALAP)  -L$GOMA_LIB/openmpi-1.6.4/lib -lmpi -lmpi_f77
+
+INCSEQ = -I\$(topdir)/libseq
+LIBSEQ  =  -L\$(topdir)/libseq -lmpiseq
+
+LIBBLAS = -L$GOMA_LIB/BLAS-3.6.0 -lblas
+LIBOTHERS = -lpthread
+
+#Preprocessor defs for calling Fortran from C (-DAdd_ or -DAdd__ or -DUPPER)
+CDEFS   = -DAdd_
+
+#Begin Optimized options
+OPTF    = -O  -DALLOW_NON_INIT
+OPTL    = -O
+OPTC    = -O
+#End Optimized options
+INCS = \$(INCPAR)
+LIBS = \$(LIBPAR)
+LIBSEQNEEDED =
+
+EOF
     make -j$MAKE_JOBS
 fi
 
 #continue_check
 #make trilinos
-rm -rf $GOMA_LIB/trilinos-12.2.1-Temp
-mkdir $GOMA_LIB/trilinos-12.2.1-Temp
-cd $GOMA_LIB/trilinos-12.2.1-Temp
+rm -rf $GOMA_LIB/trilinos-12.6.3-Temp
+mkdir $GOMA_LIB/trilinos-12.6.3-Temp
+cd $GOMA_LIB/trilinos-12.6.3-Temp
 
 rm -f CMakeCache.txt
 
@@ -771,12 +864,10 @@ export MPI_BASE_DIR=$GOMA_LIB/openmpi-1.6.4
 # Have to set this to get TRY_RUN(...) commands to work
 export LD_LIBRARY_PATH=$MPI_BASE_DIR/lib:$LD_LIBRARY_PATH
 
-export PATH=$GOMA_LIB/cmake-2.8.12.2/bin:$PATH
-
 MPI_LIBS="-LMPI_BASE_DIR/lib -lmpi_f90 -lmpi_f77 -lmpi"
 SEACAS_LIBS="-L${GOMA_LIB}/hdf5-1.8.15/lib -lhdf5_hl -lhdf5 -lz -lm"
 # Install directory
-TRILINOS_INSTALL=$GOMA_LIB/trilinos-12.2.1-Built
+TRILINOS_INSTALL=$GOMA_LIB/trilinos-12.6.3-Built
 #continue_check
 
 
@@ -841,20 +932,20 @@ cmake \
   -D AMD_INCLUDE_DIRS:PATH="$GOMA_LIB/SuiteSparse/AMD/Include;$GOMA_LIB/SuiteSparse/SuiteSparse_config" \
 -D TPL_ENABLE_SuperLUDist:BOOL=ON \
   -D SuperLUDist_LIBRARY_NAMES:STRING="superludist" \
-  -D SuperLUDist_LIBRARY_DIRS:PATH=$GOMA_LIB/SuperLU_DIST_2.3/lib \
-  -D SuperLUDist_INCLUDE_DIRS:PATH=$GOMA_LIB/SuperLU_DIST_2.3/SRC \
+  -D SuperLUDist_LIBRARY_DIRS:PATH=$GOMA_LIB/SuperLU_DIST_5.0.0/lib \
+  -D SuperLUDist_INCLUDE_DIRS:PATH=$GOMA_LIB/SuperLU_DIST_5.0.0/SRC \
 -D TPL_ENABLE_ParMETIS:BOOL=ON \
-  -D ParMETIS_LIBRARY_DIRS:PATH=$GOMA_LIB/ParMetis-3.1.1\
-  -D ParMETIS_INCLUDE_DIRS:PATH=$GOMA_LIB/ParMetis-3.1.1 \
-  -D TPL_ParMETIS_INCLUDE_DIRS:PATH=$GOMA_LIB/ParMetis-3.1.1 \
+  -D ParMETIS_LIBRARY_DIRS:PATH=$GOMA_LIB/parmetis-4.0.3/lib \
+  -D ParMETIS_INCLUDE_DIRS:PATH=$GOMA_LIB/parmetis-4.0.3/include \
+  -D TPL_ParMETIS_INCLUDE_DIRS:PATH=$GOMA_LIB/parmetis-4.0.3/include \
   -D TPL_ENABLE_y12m:BOOL=ON \
   -D y12m_LIBRARY_NAMES:STRING="y12m" \
   -D y12m_LIBRARY_DIRS:PATH=$GOMA_LIB/y12m \
 -D TPL_ENABLE_MUMPS:BOOL=ON \
   -D MUMPS_LIBRARY_NAMES:STRING="dmumps;mumps_common;pord" \
-  -D MUMPS_LIBRARY_DIRS:PATH=$GOMA_LIB/MUMPS_4.10.0/lib \
-  -D MUMPS_INCLUDE_DIRS:PATH=$GOMA_LIB/MUMPS_4.10.0/include \
-  -D CMAKE_CXX_FLAGS:STRING="-DMUMPS_4_9" \
+  -D MUMPS_LIBRARY_DIRS:PATH="$GOMA_LIB/MUMPS_5.0.1/lib;$GOMA_LIB/MUMPS_5.0.1/PORD/lib" \
+  -D MUMPS_INCLUDE_DIRS:PATH="$GOMA_LIB/MUMPS_5.0.1/include;$GOMA_LIB/MUMPS_5.0.1/PORD/include" \
+  -D CMAKE_CXX_FLAGS:STRING="-DMUMPS_5_0" \
   -D Amesos_ENABLE_SCALAPACK:BOOL=ON \
   -D SCALAPACK_INCLUDE_DIRS:FILEPATH="$GOMA_LIB/scalapack-2.0.2/SRC" \
   -D SCALAPACK_LIBRARY_DIRS:FILEPATH="$GOMA_LIB/scalapack-2.0.2" \
@@ -866,7 +957,7 @@ cmake \
 -D Amesos_ENABLE_UMFPACK:BOOL=ON \
 -D Amesos_ENABLE_MUMPS:BOOL=ON \
 $EXTRA_ARGS \
-$GOMA_LIB/trilinos-12.2.1-Source
+$GOMA_LIB/trilinos-12.6.3-Source
 
 
 
