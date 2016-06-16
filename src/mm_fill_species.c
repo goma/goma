@@ -10426,8 +10426,10 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
        double k_prop=0, k_term=0, k_inh=0, free_rad, d_free_rad_dI;
        double *param,s,dsdC[MAX_CONC],dsdT,dsdI,Conc[MAX_CONC];
        int model_bit, num_mon, O2_spec=-1, rad_spec=-1, init_spec = 0;
+       double k_propX=1, k_propT=0, k_propX_num=0, k_propX_den=0;
        double intensity_cgs = 2.998e+10*8.85e-12/200.0;
-       double dbl_small = 1.0e-20;
+       double dbl_small = 1.0e-15, Xconv_denom=0;
+       double Xconv=0.0, Xconv_init=0.0, dXdC[MAX_CONC], sum_mon=0;
 
        param = mp->u_species_source[w];
        model_bit = ((int)param[0]);
@@ -10506,6 +10508,37 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
                   }
             }
 
+       switch(mp->Species_Var_Type)   {
+           case SPECIES_DENSITY:
+                for ( w1=init_spec+2; w1<init_spec+2+num_mon; w1++)
+	            { 
+                     Xconv += fv->external_field[w1]/mp->molecular_weight[w1]/mp->specific_volume[w1];
+                     sum_mon += Conc[w1]/mp->molecular_weight[w1];
+                     dXdC[w1] = -1.0/mp->molecular_weight[w1];
+                    }
+                break;
+           case SPECIES_CONCENTRATION:
+                for ( w1=init_spec+2; w1<init_spec+2+num_mon; w1++)
+	            { 
+                     Xconv += fv->external_field[w1]/mp->specific_volume[w1];
+                     sum_mon += Conc[w1];
+                     dXdC[w1] = -1.0;
+                    }
+                break;
+           default:
+                EH(-1,"invalid Species Type for PHOTO_CURING\n");
+           }
+       Xconv *= mp->specific_volume[pd->Num_Species_Eqn];
+       Xconv_denom = Xconv + sum_mon;
+       Xconv /= Xconv_denom;
+       Xconv = MAX(dbl_small,Xconv);
+       Xconv = MIN(1.0-dbl_small,Xconv);
+       for ( w1=init_spec+2; w1<init_spec+2+num_mon; w1++)
+            { dXdC[w1] *= Xconv/Xconv_denom; }
+        if(Xconv <= dbl_small || Xconv >= (1.0-dbl_small) )
+            { memset( dXdC, 0, sizeof(double) * MAX_CONC); }
+/*fprintf (stderr,"photo %g %g %g \n",Xconv,sum_mon,fv->external_field[2]);   */
+
        if(w == init_spec) 
          {
             s = -Conc[w]*intensity;
@@ -10521,32 +10554,39 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
        else if(w > init_spec+1 && w <= init_spec+num_mon+1)
          {
             k_prop = param[1]*exp(-param[2]*(1./fv->T - 1./param[3]));
-            s = -k_prop*Conc[w]*free_rad;
-            dsdC[w] = -k_prop*free_rad;
-            dsdT = -Conc[w]*free_rad*k_prop*param[2]/SQUARE(fv->T);
-            dsdI += -k_prop*Conc[w]*d_free_rad_dI;
+            k_propX_num = (1.0-param[4])*(1.-Xconv)+param[4]*(1.0-Xconv_init);
+            k_propX_den = k_propX_num - (1.0-param[4])*(1.-Xconv)*log((1.-Xconv)/(1.0-Xconv_init));
+            k_propX = SQUARE(k_propX_num)/k_propX_den;
+            k_propT = k_prop*k_propX;
+            s = -k_propT*Conc[w]*free_rad;
+            dsdC[w] = dXdC[w]*(param[4]-1.0)*k_propX*(2./k_propX_num
+                          +log((1.-Xconv)/(1.0-Xconv_init))/k_propX_den);
+            dsdC[w] *= k_prop*Conc[w]*free_rad;
+            dsdC[w] += -k_propT*free_rad;
+            dsdT = -Conc[w]*free_rad*k_propT*param[2]/SQUARE(fv->T);
+            dsdI += -k_propT*Conc[w]*d_free_rad_dI;
 	  if( (model_bit & 1)  && (model_bit & 2))
             {
-            dsdC[rad_spec] = -k_prop*Conc[w];
+            dsdC[rad_spec] = -k_propT*Conc[w];
             } 
           else if( model_bit & 1)
             {
-            dsdC[O2_spec] = -k_prop*Conc[w]*(SQUARE(k_inh/2.)*Conc[O2_spec]/
+            dsdC[O2_spec] = -k_propT*Conc[w]*(SQUARE(k_inh/2.)*Conc[O2_spec]/
                        sqrt(SQUARE(k_inh*Conc[O2_spec])/4.+
                 mp->u_species_source[init_spec+1][2]*intensity*Conc[init_spec])
                        -k_inh/2.);
-            dsdC[init_spec] = -k_prop*Conc[w]*0.5*
+            dsdC[init_spec] = -k_propT*Conc[w]*0.5*
                        (mp->u_species_source[init_spec+1][2]*intensity/
                        sqrt(SQUARE(k_inh*Conc[O2_spec])/4.+
                 mp->u_species_source[init_spec+1][2]*intensity*Conc[init_spec]));
             }
           else if( model_bit & 2)
             {
-            dsdC[rad_spec] = -k_prop*Conc[w];
+            dsdC[rad_spec] = -k_propT*Conc[w];
             }
           else
             {
-            dsdC[init_spec] = -k_prop*Conc[w]*
+            dsdC[init_spec] = -k_propT*Conc[w]*
                        (sqrt(mp->u_species_source[init_spec+1][2]*intensity/
                        Conc[init_spec])/2.);
             }

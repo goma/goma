@@ -394,6 +394,8 @@ struct Material_Properties
 
   int RefConcnModel[MAX_CONC];
   dbl reference_concn[MAX_CONC];
+  dbl *u_reference_concn[MAX_CONC];
+  int len_u_reference_concn[MAX_CONC];
 
 
   int AdvectiveScalingModel[MAX_CONC];

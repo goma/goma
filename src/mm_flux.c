@@ -5003,6 +5003,17 @@ compute_volume_integrand(const int quantity, const int elem,
         double ves[MAX_PDIM][MAX_PDIM];	/* viscoelastic stress */
         int ve_mode;
 
+  if (mp->HeatSourceModel == VISC_DISS )
+    {
+      *sum += weight*det*visc_diss_heat_source(NULL, mp->u_heat_source);
+    }
+  else if (mp->HeatSourceModel == VISC_ACOUSTIC )
+    {
+      *sum += weight*det*visc_diss_heat_source(NULL, mp->u_heat_source);
+      *sum += weight*det*visc_diss_acoustic_source(NULL, mp->u_heat_source, mp->len_u_heat_source);
+    }
+  else
+    {
 	for( p=0; p<VIM; p++)
 	  {
 	    for( q=0; q<VIM; q++)
@@ -5051,6 +5062,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	    EH(-1,"Appropriate Jacobian entries for the DISSIP volume integral are not available.\n");
 	  }
 
+    }
       }
       break;
 

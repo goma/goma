@@ -381,13 +381,23 @@ apply_point_colloc_bc (
 	      fmesh_constraint(&func, d_func, bc_input_id);
 	      break;
 
-	    case VVARY_BC:
 	    case UVARY_BC:
+	    case VVARY_BC:
 	    case WVARY_BC:
 		var_flag = BC_Types[bc_input_id].desc->equation;
 		fvelocity_profile(var_flag, ielem_dim, BC_Types[bc_input_id].BC_Name,
 				  &func, d_func, BC_Types[bc_input_id].u_BC,
 				  time_intermediate);
+		break;
+		    
+	    case U_PARABOLA_BC:
+	    case V_PARABOLA_BC:
+	    case W_PARABOLA_BC:
+		var_flag = BC_Types[bc_input_id].desc->equation;
+		fvelocity_parabola(var_flag, ielem_dim, 
+			BC_Types[bc_input_id].BC_Name,
+			&func, d_func, BC_Types[bc_input_id].u_BC,
+			time_intermediate,BC_Types[bc_input_id].len_u_BC);
 		break;
 		    
 	    case GD_CONST_BC:
@@ -763,6 +773,79 @@ fvelocity_profile (int var_flag,
   *func -= fv->v[var_flag-VELOCITY1];
   
 } /* END of routine fvelocity_profile                                        */
+/*****************************************************************************/
+
+void 
+fvelocity_parabola (const int var_flag,
+        const int ielem_dim,
+        const int velo_condition,
+        double *func,
+        double d_func[],       /* defined [MAX_VARIABLE_TYPES + MAX_CONC] */
+        const double p[],      /* parameters passed in from the input deck*/
+        const double time,           /* time at which bc's are evaluated   */
+        const int num_const)           /* number of passed parameters   */
+{
+/*    parabolic velocity profile
+ *      p[0] = coordinate1
+ *      p[1] = coordinate2
+ *      p[2] = flow in positive coordinate direction
+ */
+double coord1, coord2, qflow, gap, pre_factor;
+int i;
+	coord1 = p[0];
+	coord2 = p[1];
+	qflow = p[2];
+	gap = fabs(coord2-coord1);
+	pre_factor = 6.*qflow/(gap*gap*gap);
+
+  if(ielem_dim > 2)
+     {
+      EH(-1,"Velo parabola not ready for 3D yet!\n");
+      return;
+     }
+  for(i=0;i<ielem_dim;i++)
+     {
+      d_func[MESH_DISPLACEMENT1+i] = 0.0;
+     }
+
+  if(af->Assemble_LSA_Mass_Matrix)
+    d_func[var_flag] = 0.0;
+  else
+    d_func[var_flag] = -1.0;
+
+
+  if( gap > DBL_SMALL)
+  {
+  if( velo_condition == U_PARABOLA_BC)
+    {
+      *func = pre_factor*(fv->x[1]-coord1)*(coord2-fv->x[1]);
+      if( pd->e[R_MESH1] )
+         {
+           d_func[MESH_DISPLACEMENT2] = pre_factor*(coord1+coord2-2.*fv->x[1]);
+         }
+    }
+  else if ( velo_condition == V_PARABOLA_BC )
+    {
+	*func = pre_factor*(fv->x[0]-coord1)*(coord2-fv->x[0]);
+      if( pd->e[R_MESH1] )
+         {
+           d_func[MESH_DISPLACEMENT1] = pre_factor*(coord1+coord2-2.*fv->x[0]);
+         }
+    }
+  else {   *func =0.; }
+  }  else   {
+       *func = 0.0;
+  }
+/*
+if(num_const > 3)
+{
+Add time varying stuff
+}
+*/
+
+  *func -= fv->v[var_flag-VELOCITY1];
+  
+} /* END of routine fvelocity_parabola                                        */
 /*****************************************************************************/
 
 void

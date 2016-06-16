@@ -11182,6 +11182,7 @@ set_mp_to_unity(const int mn)
       m->len_u_species_source[i]	= 0;
       m->len_u_species_vol_expansion[i] = 0;
       m->len_u_vapor_pressure[i]	= 0;
+      m->len_u_reference_concn[i]	= 0;
     }
 
 

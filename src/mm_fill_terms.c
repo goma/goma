@@ -14437,13 +14437,15 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
     }
   else if (mp->DensityModel == SOLVENT_POLYMER)
     {
+      double *param = mp->u_density;
+
       /* added ACSun 7/99 */
       rho = 0.;
       for (w = 0; w < pd->Num_Species_Eqn; w++)
 	{
 	  sv[w] = mp->specific_volume[w];
 	}
-      sv_p = mp->specific_volume[pd->Num_Species_Eqn];
+      sv_p = param[0];
       var = MASS_FRACTION;
 
       switch (matrl_species_var_type) {
@@ -28151,14 +28153,16 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 	}
 
     }
-  else if(mp->HeatSourceModel ==PHOTO_CURING )
+  else if(mp->HeatSourceModel == PHOTO_CURING )
     {
        double intensity;
        double k_prop, k_inh = 0, free_rad, d_free_rad_dI;
        double *param,dhdC[MAX_CONC],dhdT,dhdI,Conc[MAX_CONC];
        int model_bit, num_mon, O2_spec=-1, rad_spec=-1, init_spec = 0;
+       double k_propX=1, k_propT=0, k_propX_num=0, k_propX_den=0;
        double intensity_cgs = 2.998e+10*8.85e-12/200.0;
-       double dbl_small = 1.0e-20;
+       double dbl_small = 1.0e-15,Xconv_denom = 0.;
+       double Xconv=0.0, Xconv_init=0.0, dXdC[MAX_CONC], sum_mon=0;
 
        param = mp->u_heat_source;
        model_bit = ((int)param[0]);
@@ -28230,29 +28234,68 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
                     }
             }
 
+       switch(mp->Species_Var_Type)   {
+           case SPECIES_DENSITY:
+                for ( w=init_spec+2; w<init_spec+2+num_mon; w++)
+	            { 
+                     Xconv += fv->external_field[w]/mp->molecular_weight[w]/mp->specific_volume[w];
+                     sum_mon += Conc[w]/mp->molecular_weight[w];
+                     dXdC[w] = -1.0/mp->molecular_weight[w];
+                    }
+                break;
+           case SPECIES_CONCENTRATION:
+                for ( w=init_spec+2; w<init_spec+2+num_mon; w++)
+	            { 
+                     Xconv += fv->external_field[w]/mp->specific_volume[w];
+                     sum_mon += Conc[w];
+                     dXdC[w] = -1.0;
+                    }
+                break;
+           default:
+                EH(-1,"invalid Species Type for PHOTO_CURING\n");
+           }
+       Xconv *= mp->specific_volume[pd->Num_Species_Eqn];
+       Xconv_denom = Xconv + sum_mon;
+       Xconv /= Xconv_denom;
+       Xconv = MAX(dbl_small,Xconv);
+       Xconv = MIN(1.0-dbl_small,Xconv);
+       for ( w=init_spec+2; w<init_spec+2+num_mon; w++)
+            { dXdC[w] *= Xconv/Xconv_denom; }
+        if(Xconv <= dbl_small || Xconv >= (1.0-dbl_small) )
+            { memset( dXdC, 0, sizeof(double) * MAX_CONC); }
+
       for(w=init_spec+2 ; w<init_spec+num_mon+2 ; w++)
          {
           k_prop = mp->u_species_source[w][1]*
                 exp(-mp->u_species_source[w][2]*
                 (1./fv->T - 1./mp->u_species_source[w][3]));
-          h += k_prop*Conc[w]*free_rad*param[w]*mp->molecular_weight[w];
-          dhdC[w] += k_prop*free_rad*param[w]*mp->molecular_weight[w];
-          dhdT += k_prop*mp->u_species_source[w][2]/SQUARE(fv->T)
+          k_propX_num = (1.0-mp->u_species_source[w][4])*(1.-Xconv)+mp->u_species_source[w][4]*(1.0-Xconv_init);
+          k_propX_den = k_propX_num - (1.0-mp->u_species_source[w][4])*(1.-Xconv)*log((1.-Xconv)/(1.0-Xconv_init));
+          k_propX = SQUARE(k_propX_num)/k_propX_den;
+          k_propT = k_prop*k_propX;
+
+          h += k_propT*Conc[w]*free_rad*param[w]*mp->molecular_weight[w];
+          dhdC[w] = dXdC[w]*(mp->u_species_source[w][4]-1.0)*k_propX*(2./k_propX_num
+                          +log((1.-Xconv)/(1.0-Xconv_init))/k_propX_den);
+          dhdC[w] *= k_prop*Conc[w];  dhdC[w] += k_propT;
+          dhdC[w] *= free_rad*param[w]*mp->molecular_weight[w];
+
+          dhdT += k_propX*k_prop*mp->u_species_source[w][2]/SQUARE(fv->T)
                 *Conc[w]*free_rad*param[w]*mp->molecular_weight[w];
-          dhdI += k_prop*d_free_rad_dI*param[w]*mp->molecular_weight[w];
+          dhdI += k_propT*d_free_rad_dI*param[w]*mp->molecular_weight[w];
 
           if(model_bit & 2)
                { 
-                dhdC[rad_spec] += k_prop*Conc[w]*param[w]*mp->molecular_weight[w];
+                dhdC[rad_spec] += k_propT*Conc[w]*param[w]*mp->molecular_weight[w];
                }
           else if(model_bit & 1)
                { 
-                dhdC[O2_spec] += k_prop*Conc[w]*param[w]*
+                dhdC[O2_spec] += k_propT*Conc[w]*param[w]*
                       mp->molecular_weight[w]*(SQUARE(k_inh/2.)*Conc[O2_spec]/
                        sqrt(SQUARE(k_inh*Conc[O2_spec])/4.+
                 mp->u_species_source[init_spec+1][2]*intensity*Conc[init_spec])
                        -k_inh/2.);
-                dhdC[init_spec] += k_prop*Conc[w]*param[w]*
+                dhdC[init_spec] += k_propT*Conc[w]*param[w]*
                        mp->molecular_weight[w]*
                        0.5*mp->u_species_source[init_spec+1][2]*intensity/
                        sqrt(SQUARE(k_inh*Conc[O2_spec])/4.+
@@ -28261,7 +28304,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
                }
           else 
                { 
-                dhdC[init_spec] += k_prop*Conc[w]*param[w]*
+                dhdC[init_spec] += k_propT*Conc[w]*param[w]*
                        mp->molecular_weight[w]*
                        0.5*sqrt(mp->u_species_source[init_spec+1][2]*intensity/
                        Conc[init_spec]);
