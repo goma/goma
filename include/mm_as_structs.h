@@ -1075,6 +1075,7 @@ struct Continuation_Information
   dbl eps;
   int use_var_norm[MAX_VARIABLE_TYPES];
   int print_freq;
+  int fix_freq;
   double print_delt;
   double print_delt2_path;
   double print_delt2;

@@ -706,8 +706,9 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
    */
 
   rd_exo(mono, in_exodus_file_name, 0, (EXODB_ACTION_RD_INIT +
-						 EXODB_ACTION_RD_MESH +
-						 EXODB_ACTION_RD_RES0));
+					EXODB_ACTION_RD_MESH +
+					EXODB_ACTION_RD_RES0 + 
+					EXODB_ACTION_RD_RESG));
 		  
   /*
    * Convenience variables...
@@ -4196,6 +4197,61 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       wr_resetup_exo(E, E->path, 0);
       zero_base(E);
 
+
+      if ( E->num_glob_vars > 0 ) {
+	int status;
+	E->cmode = EX_WRITE;
+
+
+	E->io_wordsize   = 0;	/* i.e., query */
+	E->comp_wordsize = sizeof(dbl);
+	E->exoid         = ex_open(E->path, 
+				   E->cmode, 
+				   &E->comp_wordsize, 
+				   &E->io_wordsize, 
+				   &E->version);
+
+	mono->cmode = EX_READ;
+
+
+	mono->io_wordsize   = 0;	/* i.e., query */
+	mono->comp_wordsize = sizeof(dbl);
+	mono->exoid         = ex_open(mono->path, 
+				   mono->cmode, 
+				   &mono->comp_wordsize, 
+				   &mono->io_wordsize, 
+				   &mono->version);
+
+	status = ex_put_var_names(E->exoid, "g", mono->num_glob_vars,
+				  mono->glob_var_names);
+	EH(status, "ex_put_var_names(g)");
+
+	alloc_exo_gv(mono, 1);
+
+
+	for (i = 0; i < mono->num_gv_time_indeces; i++) {
+	  status = ex_get_glob_vars(mono->exoid, i+1,
+				    mono->num_glob_vars,
+				    mono->gv[0]);
+	  EH(status, "ex_put_glob_vars");
+
+	  
+	  status = ex_put_glob_vars(E->exoid, i+1,
+				    mono->num_glob_vars,
+				    mono->gv[0]);
+	  EH(status, "ex_put_glob_vars");
+	}
+
+	
+	status = ex_close(E->exoid);
+	EH(status, "ex_close()");
+
+	status = ex_close(mono->exoid);
+	EH(status, "ex_close()");
+
+	free_exo_gv(mono);
+
+      }
       /*
        * If there are any nodal variables, then read their values from
        * each "timestep" and transcribe them into the right place
