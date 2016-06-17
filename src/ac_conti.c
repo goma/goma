@@ -21,7 +21,7 @@
 
 #define _AC_CONTI_C
 #include "goma.h"
-
+#include "brk_utils.h"
 int w;
 
 #include "sl_util.h"		/* defines sl_init() */
@@ -123,6 +123,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   int           numProcUnknowns;
   int           const_delta_s, step_print;
   double        i_print;
+  int    step_fix = 0;           /* What step to fix the problem on */
   double	path,		/* Current value (should have solution here) */
                 path1;		/* New value (would like to get solution here) */
   double	delta_s, delta_s_new, delta_s_old, delta_s_older;
@@ -171,6 +172,11 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 #ifdef PARALLEL
   double evol_global=0.0;
 #endif
+
+  /* Set step_fix only if parallel run and only if fix freq is enabled*/
+  if (Num_Proc > 1 && cont->fix_freq > 0) {
+    step_fix = 1; /* Always fix on the first timestep to match print frequency */
+  }
 
   static const char yo[]="continue_problem"; 
 
@@ -1201,6 +1207,19 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	    nprint++;
 	  }
 	}
+
+      if (step_fix != 0 && nt == step_fix) {
+#ifdef PARALLEL
+	/* Barrier because fix needs both files to be finished printing 
+	   and fix always occurs on the same timestep as printing */
+	MPI_Barrier(MPI_COMM_WORLD);
+#endif
+	if (ProcID == 0 && Brk_Flag == 1) {
+	  fix_output();
+	}
+	/* Fix step is relative to print step */
+	step_fix += cont->fix_freq*cont->print_freq;
+      }
       
       /*
        * backup old solutions

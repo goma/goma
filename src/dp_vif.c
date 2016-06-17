@@ -1269,6 +1269,7 @@ noahs_ark()
       ddd_add_member(n, &cont->eps,               1, MPI_DOUBLE);
       ddd_add_member(n,  cont->use_var_norm, MAX_VARIABLE_TYPES, MPI_INT);
       ddd_add_member(n, &cont->print_freq,        1, MPI_INT);
+      ddd_add_member(n, &cont->fix_freq, 1, MPI_INT);
       ddd_add_member(n, &cont->print_delt,        1, MPI_DOUBLE);
       ddd_add_member(n, &cont->print_delt2_path,  1, MPI_DOUBLE);
       ddd_add_member(n, &cont->print_delt2,       1, MPI_DOUBLE);

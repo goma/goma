@@ -67,3 +67,17 @@ Following are sample cards:
     # Fix every 5 prints
     Fix Frequency = 5
 ```
+
+### Continuation Specifications
+
+    -- After Continuation Printing Frequency in input file
+
+#### Continuation Fix Frequency
+
+```
+Continuation Fix Frequency = <integer>
+```
+
+##### Description/Usage
+
+See Fix Frequency
