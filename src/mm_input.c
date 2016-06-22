@@ -3258,6 +3258,19 @@ rd_track_specs(FILE *ifp,
       cont->print_freq = print_freq;
 	  SPF(echo_string,"%s = %d", input, print_freq); ECHO(echo_string,echo_file);
 
+      cont->fix_freq = 0;
+      if (Num_Proc > 1) {
+        iread = look_for_optional(ifp,"Continuation Fix Frequency",input,'=');
+        if (iread == 1) {
+          cont->fix_freq = read_int(ifp, "Continuation Fix Frequency");
+          if (cont->fix_freq < 0) {
+            EH(-1, "Expected Fix Frequency > 0");
+          }
+          SPF(echo_string, "%s = %d", "Continuation Fix Frequency", cont->fix_freq); ECHO(echo_string, echo_file);
+        }
+      }
+
+
       if (Continuation == LOCA)
         {
         

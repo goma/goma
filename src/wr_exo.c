@@ -807,9 +807,6 @@ wr_global_result_exo( Exo_DB *exo,
    * brkfix doesn't support global variables, when this
    * changes this restriction should be removed. TAB 3/2002 */
 
-  if( Num_Proc != 1 ) return;  /* Return if not running serial */
-
-
   if( u == NULL ) return ; /* Do nothing if this is NULL */
 
   exo->cmode = EX_WRITE;
