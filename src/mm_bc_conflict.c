@@ -1352,6 +1352,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 			 */
 			switch (bct2) {
 			case PLANE_BC:
+			case FILLET_BC:
 			case GEOM_BC:	/* aka SPLINE note that the relation here may depend on 
 					 * the functional form of the geometry  */
 			case SLOPEX_BC:

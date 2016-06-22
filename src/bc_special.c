@@ -203,7 +203,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 	 GD_count to indicate that we've got the geometry here */
 
       if (    BC_Types[bc_input_id].BC_Name == PLANE_BC ||
-	      BC_Types[bc_input_id].BC_Name == SPLINE_BC ||
+              BC_Types[bc_input_id].BC_Name == SPLINE_BC ||
+              BC_Types[bc_input_id].BC_Name == FILLET_BC ||
 	      BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||	      
 	      BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_RS_BC ||      
  	      BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_PETROV_BC ||      
@@ -232,7 +233,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
  	      BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_PETROV_BC ||      
  	      BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_COLLOC_BC ||      
 	      BC_Types[bc_input_id].BC_Name == PLANE_BC ||
-	      BC_Types[bc_input_id].BC_Name == SPLINE_BC ||
+              BC_Types[bc_input_id].BC_Name == SPLINE_BC ||
+              BC_Types[bc_input_id].BC_Name == FILLET_BC ||
 	      BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ||
 
 	      (BC_Types[bc_input_id].BC_Name == GD_CONST_BC ||
@@ -351,7 +353,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 		 BC_Types[bc_input_id].BC_Name == KIN_LEAK_BC ||
 		 BC_Types[bc_input_id].BC_Name == KIN_ELECTRODEPOSITION_BC ||  /*  RSL 5/28/02  */
 		 BC_Types[bc_input_id].BC_Name == PLANE_BC ||
-		 BC_Types[bc_input_id].BC_Name == SPLINE_BC  || 
+                 BC_Types[bc_input_id].BC_Name == SPLINE_BC  || 
+                 BC_Types[bc_input_id].BC_Name == FILLET_BC  ||
 		 BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||      
 		 BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_RS_BC ||      
  		 BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_PETROV_BC ||  
@@ -458,6 +461,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			if(!(variable_wall_normal)) 
 			  {
 			    CA_sselem[jcnt]=ielem; 
+			    local_node_id = id;
 			    for(p=0;p<ielem_dim;p++)
 			      {
 				ssnormal[jcnt][p]=BC_Types[j].BC_Data_Float[p+1];
@@ -473,7 +477,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			  }
 			
 		      } else if((variable_wall_normal) && (BC_Types[bc_input_id].BC_Name == PLANE_BC ||
-							   BC_Types[bc_input_id].BC_Name == SPLINE_BC || 
+                                                           BC_Types[bc_input_id].BC_Name == SPLINE_BC || 
+                                                           BC_Types[bc_input_id].BC_Name == FILLET_BC ||
 							   BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||	      
 							   BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_RS_BC ||	      
  							   BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_PETROV_BC ||
@@ -502,7 +507,11 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			   entries in here for other contact angles. Hence only increment
 			   if GD_count indicates zero or one geometry condition*/
 
-                        if(GD_count <= 1) CA_sselem[jcnt]=ielem; 
+                        if(GD_count <= 1) 
+				{ 
+                                  CA_sselem[jcnt]=ielem; 
+			          local_node_id = id;
+				}
 			
 			/* from calc_surf_normal we get the normal of the fluid instead of
 			   the normal of the solid. We need to negate the normal and its

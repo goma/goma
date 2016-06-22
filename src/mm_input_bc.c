@@ -929,6 +929,7 @@ rd_bc_specs(FILE *ifp,
  	    }
  	  else
  	    {
+	  SPF_DBL_VEC(endofstring(echo_string), 4,  BC_Types[ibc].BC_Data_Float);
 	      /* Scan for the optional int. If not present, put a -1 in second data position */ 
 	      /* This is to ensure a nonzero entry in BC_Data_Int[2] for CA */
 	      /* note: optional int isn't listed in the manual. What's it for? */
@@ -1666,6 +1667,7 @@ rd_bc_specs(FILE *ifp,
         case U_PARABOLA_BC:
         case V_PARABOLA_BC:
         case W_PARABOLA_BC:
+        case FILLET_BC:
 	case SPLINEX_BC:  
 	case SPLINEY_BC: 
 	case SPLINEZ_BC:

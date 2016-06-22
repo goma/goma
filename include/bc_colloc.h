@@ -71,6 +71,13 @@ PROTO((const int ,		/* ielem_dim */
        double [],		/* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
        dbl *));		/* aa - function parameters from data card  */
 
+EXTERN void f_fillet
+PROTO((const int ,		/* ielem_dim */
+       double *,		/* func */
+       double [],		/* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
+       const double *,		/* p - function parameters from data card  */
+       const int ));		/* number of parameters from bc card  */
+
 #ifdef USE_CGM
 EXTERN void sm_fplane
 PROTO((const int ,		/* ielem_dim */
