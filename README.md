@@ -1,4 +1,5 @@
 # Goma 6.1
+![](http://129.24.4.70:8080/buildStatus/icon?job=GomaMaster "Build Status")
 
 A Full-Newton Finite Element Program for Free and Moving Boundary Problems with Coupled Fluid/Solid Momentum, Energy, Mass, and Chemical Species Transport
 
