@@ -1,0 +1,35 @@
+if  which cmake ; then
+    echo "Congrats, you have cmake installed."
+    echo "Well then, let's get right to it."
+    read -p "You already ran the build-goma-dep script, right? [y/N]?" -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        echo "Okay, where did you tell the script to install the dependancies?"
+    else
+        read -p "Did you build the Goma dependancies manually? [y/N]" -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo "Okay, what directory did you put those dependancies in?"
+        else
+            echo
+            echo "Please run the script, it's in the scripts directory and it"
+            echo "will set everything up for you."
+            echo "Okay I am going to exit now, you come back when you are done"
+            exit 1
+        fi
+    fi
+    read LIB_LOCATION
+    
+    cmake CMakeLists.txt -d DIR_LIB="$LIB_LOCATION"
+
+    sleep 5
+    echo "Wow, it's over already?"
+    echo 
+    echo "Assuming there were no errors you should be set"
+    echo "Now you have to run 'make' to compile Goma"
+    echo "Have a good day."
+else
+    echo "Please install cmake before trying to install Goma."
+    echo "cmake can either be found in your repository or downloaded"
+    echo "at https://cmake.org/"
+fi
