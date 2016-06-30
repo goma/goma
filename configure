@@ -5,11 +5,13 @@ if  which cmake ; then
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "Okay, where did you tell the script to install the dependancies?"
+        echo "Please enter the full path."
     else
         read -p "Did you build the Goma dependancies manually? [y/N]" -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
             echo "Okay, what directory did you put those dependancies in?"
+            echo "Please enter the full path."
         else
             echo
             echo "Please run the script, it's in the scripts directory and it"
@@ -20,9 +22,18 @@ if  which cmake ; then
     fi
     read LIB_LOCATION
     
-    cmake CMakeLists.txt -d DIR_LIB="$LIB_LOCATION"
+    if ! cmake CMakeLists.txt -DDIR_LIB="$LIB_LOCATION" ; then
+        exit 2
+    fi
 
-    sleep 5
+    echo
+    echo
+    for i in `seq 1 20`; do
+        printf "."
+        sleep 0.2
+    done
+    echo
+
     echo "Wow, it's over already?"
     echo 
     echo "Assuming there were no errors you should be set"

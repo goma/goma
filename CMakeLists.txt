@@ -1,26 +1,75 @@
 # CMAKE file for Goma 6.1
 cmake_minimum_required (VERSION 3.0)
-project(Goma)
 
-# Goma Version
-set (Goma_VERSION_MAJOR 6)
-set (Goma_VERSION_MINOR 1)
+#Party like it's 1977
+enable_language(Fortran)
+
+
+include(${CMAKE_SOURCE_DIR}/ProjectName.cmake)
+include(${CMAKE_SOURCE_DIR}/CMakeScripts.cmake)
+
+
+#It is required that you name the project in the main file in addition to an include
+project(${PROJECT_NAME} NONE)
+
+
+#Sets CXX11 on so you can use STD11
+#This can be turned off if the person uses the graphical cmake though not recommended
+option(Goma_ENABLE_CXX11_DEFAULT "Use the CXX11 flag. Required if you used the normal build script" ON)
+
+
+
+find_path(TRILINOS_TOP NAMES bin/cth_pressure_map)
+find_path(MPI_TOP NAMES bin/mpicc)
+
+set(SPARSE_LIB "-L${TRILINOS_TOP}/../sparse/lib -lsparse")
+set(ARPACK_LIB "-L${TRILINOS_TOP}/../ARPACK/lib -larpack")
+
+
+set(GOMA_MPI_LIB "-L${MPI_TOP}/lib -lmpi -lmpi_f77")
+set(FORTRAN_LIB "-lc -lgcc -lstdc++ -lgfortran")
+set(SYS_LIB "-lm -lz")
+
+
+#set(UMFPACK_TOP "${TRILINOS_TOP}/../SuiteSparse/UMFPACK/Include")
+
+
+
+set(GCC_TOP /usr)
+set(PREFIX ${CMAKE_SOURCE_DIR}/build)
+
 
 
 set (PROJECT_HEADER_DIR "include")
 set (PROJECT_SRC_DIR "src")
 
-#TODO: Add a file to Goma src that can take advantage of the settings set by CMake
-#configure_file ()
+
+include_directories("${PROJECT_SOURCE_DIR}/${PROJECT_SRC_DIR}")
+add_subdirectory(${PROJECT_SRC_DIR})
 
 
 
-# Where are the library files you preinstalled.
-set(DIR_LIB "lib" CACHE FILEPATH "Please tell me where you installed the libraries")
+#Now done in SRC
 
-option(ADD_BASHRC "Use .bash_rc, and not update-alternatives, to add trilinos to your PATH?" OFF)
+#file(GLOB_RECURSE GOMA_SRC ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/*.cpp ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/*.C ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/*.F ${CMAKE_SOURCE_DIR}/${PROJECT_SRC_DIR}/*.c)
+#file(GLOB_RECURSE GOMA_HEADERS ${CMAKE_SOURCE_DIR}/${PROJECT_HEADER_DIR}/*.h ${CMAKE_SOURCE_DIR}/${PROJECT_HEADER_DIR}/*.H)
 
 
 
-# Add the src directory and its cmake file
-#add_subdirectory (src)
+
+
+
+
+
+
+
+#add_subdirectory(src)
+#add_subdirectory(include)
+
+
+#get_cmake_property(_variableNames VARIABLES)
+#foreach (_variableName ${_variableNames})
+#    message(STATUS "${_variableName}=${${_variableName}}")
+#endforeach()
+
+

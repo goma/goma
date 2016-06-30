@@ -1,0 +1,4 @@
+set(PROJECT_NAME Goma)
+
+set(Goma_VERSION_MAJOR 6)
+set(Goma_VERSION_MINOR 1)
