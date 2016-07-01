@@ -88,7 +88,7 @@ export PATH=\"${TRILINOS_TOP}/bin:$PATH\"")
 
 
 
-install (TARGETS "${CMAKE_SOURCE_DIR}/src/${PROJECT_NAME}" DESTINATION bin)
+install (TARGETS "${PROJECT_NAME}" DESTINATION bin)
 
 
 
