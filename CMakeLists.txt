@@ -16,22 +16,28 @@ project(${PROJECT_NAME} NONE)
 #Sets CXX11 on so you can use STD11
 #This can be turned off if the person uses the graphical cmake though not recommended
 option(Goma_ENABLE_CXX11_DEFAULT "Use the CXX11 flag. Required if you used the normal build script" ON)
+option(HAS_STRATIMIKOS "If you have stratimikos and want support for it enable this" OFF)
+
+if(HAS_STRATIMIKOS)
+    set(CUSTOM_DEFINE "${CUSTOM_DEFINE} -DHAVE_STRATIMIKOS")
+endif()
 
 
 
 find_path(TRILINOS_TOP NAMES bin/cth_pressure_map)
 find_path(MPI_TOP NAMES bin/mpicc)
 
+
 set(SPARSE_LIB "-L${TRILINOS_TOP}/../sparse/lib -lsparse")
 set(ARPACK_LIB "-L${TRILINOS_TOP}/../ARPACK/lib -larpack")
 
+set(LIB_DIR "${TRILINOS_TOP}/..")
 
-set(GOMA_MPI_LIB "-L${MPI_TOP}/lib -lmpi -lmpi_f77")
+set(GOMA_MPI_LIB "-L/home/eli/goma/lib/openmpi-1.6.4/lib -lmpi -lmpi_f77")
 set(FORTRAN_LIB "-lc -lgcc -lstdc++ -lgfortran")
 set(SYS_LIB "-lm -lz")
 
 
-#set(UMFPACK_TOP "${TRILINOS_TOP}/../SuiteSparse/UMFPACK/Include")
 
 
 

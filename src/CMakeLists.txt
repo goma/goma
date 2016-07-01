@@ -8,30 +8,42 @@ set(TRILINOS_PREFIX ${TRILINOS_TOP}/lib/cmake/Trilinos)
 set(CMAKE_PREFIX_PATH ${TRILINOS_PREFIX} ${CMAKE_PREFIX_PATH})
 find_package(Trilinos REQUIRED)
 
-MESSAGE("\nFound Trilinos!  Here are the details: ")
-MESSAGE("   Trilinos_DIR = ${Trilinos_DIR}")
-MESSAGE("   Trilinos_VERSION = ${Trilinos_VERSION}")
-MESSAGE("End of Trilinos details\n")
-MESSAGE("Switching to Trilinos mode!\n")
+
+
+message("\nFound Trilinos!  Here are the details: ")
+message("   Trilinos_DIR = ${Trilinos_DIR}")
+message("   Trilinos_VERSION = ${Trilinos_VERSION}")
+message("End of Trilinos details\n")
+message("Switching to Trilinos mode!\n")
+
 
 set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
 set(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
 set(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
 
 
-set(STARTING_LIBS "${SPARSE_LIB} ${Trilinos_LIBRARY_DIRS} ${Trilinos_LIBRARIES} ${ARPACK_LIB}")
+
+
+set(LD_FLAGS "-O ${Trilinos_EXTRA_LD_FLAGS}")
+
+#${Trilinos_TPL_LIBRARIES}
+set(TRILINOS_LIB_COMPLETELIST "${Trilinos_LIBRARY_DIRS} ${Trilinos_LIBRARIES}")
+set(STARTING_LIBS "${SPARSE_LIB} ${TRILINOS_LIB_COMPLETELIST} ${ARPACK_LIB}")
 
 
 
 #These are NOT libraries but rather compiler commands
 #They are called libs to keep consistancy with the original makefile
-set(ENDING_LIBS "${GOMA_MPI_LIB} ${FORTRAN_LIB} ${SYS_LIB}")
+set(ENDING_LIBS "${FORTRAN_LIB} ${SYS_LIB}")
+
 
 #Suppress warnings because Goma isn't responsible for (most of) the spagetti code in trilinos and I don't want people thinking otherwise
-set(CMAKE_CXX_FLAGS  "${Trilinos_CXX_COMPILER_FLAGS} ${CMAKE_CXX_FLAGS} ${STARTING_LIBS} ${ENDING_LIBS} ${Trilinos_EXTRA_LD_FLAGS} -w")
+#set(CMAKE_CXX_FLAGS  "${Trilinos_CXX_COMPILER_FLAGS} ${CMAKE_CXX_FLAGS} ${STARTING_LIBS} ${ENDING_LIBS} ${Trilinos_EXTRA_LD_FLAGS} -w")
+
+set(CMAKE_CXX_FLAGS   "${Trilinos_CXX_COMPILER_FLAGS} ${CMAKE_CXX_FLAGS} -w")
 set(CMAKE_C_FLAGS  "${Trilinos_C_COMPILER_FLAGS} ${CMAKE_C_FLAGS} -w")
 set(CMAKE_Fortran_FLAGS  "${Trilinos_Fortran_COMPILER_FLAGS} ${CMAKE_Fortran_FLAGS}")
-
+set(CMAKE_EXE_LINKER_FLAGS "${LD_FLAGS}")
 
 
 
@@ -39,7 +51,7 @@ set(CMAKE_Fortran_FLAGS  "${Trilinos_Fortran_COMPILER_FLAGS} ${CMAKE_Fortran_FLA
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${MPI_TOP}/include)
 include_directories(${TRILINOS_TOP}/include)
-include_directories(${UMFPACK_TOP}) #UMF please
+#include_directories(${UMFPACK_TOP}) #UMF please
 
 
 
@@ -57,7 +69,9 @@ add_definitions(-Dlinux
 -DMAX_CONC=4
 -DCOUPLED_FILL
 -DPARALLEL
--DEIGEN_SERIAL)
+-DEIGEN_SERIAL
+${CUSTOM_DEFINE}
+)
 
 
 
@@ -66,19 +80,25 @@ get_source_files(SOURCE_FILES)
 
 
 INCLUDE_DIRECTORIES(${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
-LINK_DIRECTORIES(${Trilinos_LIBRARY_DIRS} ${Trilinos_TPL_LIBRARY_DIRS})
+
+
+#LINK_DIRECTORIES(${Trilinos_LIBRARY_DIRS} ${Trilinos_TPL_LIBRARY_DIRS})
+
+#link_directories(${LD_FLAGS} -o "${LIB_DIR}/libgoma.a" "${LIB_DIR}/libgomau.a" ${STARTING_LIBS} ${ENDING_LIBS})
+
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES}) 
+
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${SPARSE_LIB} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${ARPACK_LIB} ${GOMA_MPI_LIB} ${Trilinos_EXTRA_LD_FLAGS} ${ENDING_LIBS})
 
 set_project_info(${PROJECT_NAME} "${CMAKE_SOURCE_DIR}/${TARGETDIR}")
 
 
+#make install support
+install (TARGETS Goma DESTINATION bin)
 
-#A quick way to debug these scripts, uncomment the 4 lines below:
 
-get_cmake_property(_variableNames VARIABLES)
-foreach (_variableName ${_variableNames})
-    message(STATUS "${_variableName}=${${_variableName}}")
-endforeach()
+
+
+
