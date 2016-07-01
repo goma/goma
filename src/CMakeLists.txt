@@ -88,9 +88,6 @@ export PATH=\"${TRILINOS_TOP}/bin:$PATH\"")
 
 
 
-install (TARGETS "${PROJECT_NAME}" DESTINATION bin)
-
-
 
 #make uninstall support avalible in the lists file above this one
 
