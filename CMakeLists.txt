@@ -123,7 +123,7 @@ add_subdirectory(${PROJECT_SRC_DIR})
 
 
 #make install support
-install (SCRIPT "${CMAKE_SOURCE_DIR}/install.cmake")
+install (CODE "execute_process(${CMAKE_COMMAND} -DMPI_TOP=${MPI_TOP} -DTRILINOS_TOP=${TRILINOS_TOP} -P ${CMAKE_SOURCE_DIR}/install.cmake)" )
 
 
 #make uninstall support

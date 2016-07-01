@@ -7,9 +7,5 @@ export LD_LIBRARY_PATH=\"${MPI_TOP}/lib:$LD_LIBRARY_PATH\"
 export PATH=\"${MPI_TOP}/bin:$PATH\"
 export PATH=\"${TRILINOS_TOP}/bin:$PATH\"")
 
-file (APPEND "$ENV{HOME}/.bashrc" "
-
-source ~/.profile")
-
 file (WRITE "${CMAKE_SOURCE_DIR}/install_manifest.txt" "/usr/local/bin/${PROJECT_NAME}")
 
