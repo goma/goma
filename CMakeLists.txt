@@ -128,6 +128,7 @@ add_subdirectory(${PROJECT_SRC_DIR})
 
 
 #make install support
+install (TARGETS "${CMAKE_SOURCE_DIR}/src/${PROJECT_NAME}" DESTINATION bin)
 install (SCRIPT "${CMAKE_SOURCE_DIR}/install.cmake")
 
 
