@@ -39,8 +39,6 @@ option(Debug_Mode "This enables the debug flag in make, building it with Debug e
 option(Has_Stratimikos "If you have stratimikos and want support for it enable this. This modifies the definitions" OFF)
 
 
-set(User_Define "")
-set(User_Flags "")
 
 if(Has_Stratimikos)
     set(User_Define "${User_Define} -DHAVE_STRATIMIKOS")
