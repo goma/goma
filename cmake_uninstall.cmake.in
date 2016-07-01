@@ -1,6 +1,13 @@
+#This is a basic uninstall script which just removes all files located in install_manifest if they exist.
+#
+#For best results do not modify install_manifest before running this.
+#
+#If you want this script to work after moving Goma then please update install_manifest to accurately represent Goma's location
+
 if(NOT EXISTS "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
   message(FATAL_ERROR "Cannot find install manifest: @CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
 endif(NOT EXISTS "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt")
+
 
 file(READ "@CMAKE_CURRENT_BINARY_DIR@/install_manifest.txt" files)
 string(REGEX REPLACE "\n" ";" files "${files}")
@@ -19,3 +26,5 @@ foreach(file ${files})
     message(STATUS "File $ENV{DESTDIR}${file} does not exist.")
   endif(IS_SYMLINK "$ENV{DESTDIR}${file}" OR EXISTS "$ENV{DESTDIR}${file}")
 endforeach(file)
+
+message(STATUS "Please remove the lines added to ~/.profile to completely uninstall Goma.")
