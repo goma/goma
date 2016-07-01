@@ -25,11 +25,8 @@ cmake_policy(SET CMP0053 OLD)
 enable_language(Fortran)
 
 
-include(${CMAKE_SOURCE_DIR}/ProjectName.cmake)
+set(PROJECT_NAME goma)
 include(${CMAKE_SOURCE_DIR}/CMakeScripts.cmake)
-
-
-#It is required that you name the project in the main file in addition to an include
 project(${PROJECT_NAME} NONE)
 
 
@@ -128,7 +125,6 @@ add_subdirectory(${PROJECT_SRC_DIR})
 
 
 #make install support
-install (TARGETS "${CMAKE_SOURCE_DIR}/src/${PROJECT_NAME}" DESTINATION bin)
 install (SCRIPT "${CMAKE_SOURCE_DIR}/install.cmake")
 
 
@@ -140,22 +136,4 @@ configure_file(
     IMMEDIATE @ONLY)
 
 add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake)
-
-
-
-
-
-
-
-
-
-#add_subdirectory(src)
-#add_subdirectory(include)
-
-
-#get_cmake_property(_variableNames VARIABLES)
-#foreach (_variableName ${_variableNames})
-#    message(STATUS "${_variableName}=${${_variableName}}")
-#endforeach()
-
 
