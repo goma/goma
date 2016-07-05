@@ -13,11 +13,11 @@
 # CMake file for Goma 6.1
 # #######################
 #
-# If you are a developer on this project: Do not commit any files generated
-# by this script to the repository or everything will break in the future.
+#If you are a developer on this project: Do not commit any files generated
+#by this script to the repository or everything will break in the future.
 #
-# Also reject any pull requests attempting to do the same.
-# It's just not worth debugging when everything falls apart 2 years later.
+#Also reject any pull requests attempting to do the same.
+#It's just not worth debugging when everything falls apart 2 years later.
 #
 
 
