@@ -72,7 +72,7 @@ if(CXX_11_STD)
     set(EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -std=c++11")
 endif()
 
-#These are all set here so you can modify them with ccmake. This works because they are set with the "CACHE" flag. The last input in set is the description you will see
+#These are all set here so you can modify them with ccmake. This works because they are set with the "CACHE" flag. The last input in set is the description you will see.
 set(User_Define "-Dlinux -DCOMPILER_64BIT -DENABLE_AMESOS -DTRILINOS -DCHECK_FINITE -DNO_CHEBYSHEV_PLEASE -DMDE=27 -DMAX_PROB_VAR=15 -DMAX_EXTERNAL_FIELD=4 -DMAX_CONC=4 -DCOUPLED_FILL -DPARALLEL -DEIGEN_SERIAL" CACHE STRING "Enter or modify the compiler definitions. This is in addition to any options above.")
 set(User_Flags "-O" CACHE STRING "Enter any compiler flags you want to run on all three compilers. This is in addition to any options above.")
 
