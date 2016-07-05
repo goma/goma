@@ -144,7 +144,7 @@ add_subdirectory(${GOMA_SOURCE_FILES})
 
 #make install support
 #This passes some data to install.cmake which uses it to add a few lines to your .profile
-install (CODE "execute_process(${CMAKE_COMMAND} -DMPI_TOP=${MPI_TOP} -DTRILINOS_TOP=${TRILINOS_TOP} -P ${CMAKE_SOURCE_DIR}/install.cmake)" )
+install (CODE "execute_process(COMMAND ${CMAKE_COMMAND} -DMPI_TOP=${MPI_TOP} -DTRILINOS_TOP=${TRILINOS_TOP} -P ${CMAKE_SOURCE_DIR}/install.cmake)" )
 
 
 
