@@ -1,7 +1,14 @@
 #The project name must be set in every CMakeLists files
 #This is so you can have subprojects inside projects with a different name
-project(goma)
-message(STATUS "Adding Goma files to Make")
+
+if(Debug_Mode)
+    project(gomad)
+else()
+    project(goma)
+endif()
+
+
+message(STATUS "Adding ${PROJECT_NAME} files to Make")
 
 #Telling cmake where to find all the trilinos cmake files. These import all the libraries used by trilinos automatically
 set(TRILINOS_PREFIX ${TRILINOS_TOP}/lib/cmake/Trilinos)
@@ -62,7 +69,7 @@ target_link_libraries(${PROJECT_NAME} ${SPARSE_LIB} ${Trilinos_LIBRARIES} ${Tril
 
 
 #Install goma to $CMAKE_INSTALL_PREFIX/bin (by default /usr/local/bin). This can only be specified with -DCMAKE_INSTALL_PREFIX="LOCATION"
-install(TARGETS goma DESTINATION bin)
+install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
 
 #make uninstall support done at the CMake above this one.
