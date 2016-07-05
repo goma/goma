@@ -35,9 +35,11 @@ set(ENDING_LIBS "${FORTRAN_LIB} ${SYS_LIB}")
 
 #When debug mode is off, -w is run on C++ and C to suppress all the trilinos warnings that aren't Goma's responsibility.
 #There are a lot of warnings and they can confuse the average user
-set(CMAKE_CXX_FLAGS   "${Trilinos_CXX_COMPILER_FLAGS} ${CMAKE_CXX_FLAGS} ${USER_FLAGS} ${USER_CXX_FLAGS}")
-set(CMAKE_C_FLAGS  "${Trilinos_C_COMPILER_FLAGS} ${CMAKE_C_FLAGS} ${USER_FLAGS} ${USER_C_FLAGS}")
-set(CMAKE_Fortran_FLAGS  "${Trilinos_Fortran_COMPILER_FLAGS} ${CMAKE_Fortran_FLAGS} ${USER_FLAGS} ${USER_F_FLAGS}")
+
+#CMAKE Flags can be specified with CMAKE -DCMAKE_C_FLAGS or by editing the user flags.
+set(CMAKE_CXX_FLAGS   "${CMAKE_CXX_FLAGS} ${USER_FLAGS} ${USER_CXX_FLAGS}")
+set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ${USER_FLAGS} ${USER_C_FLAGS}")
+set(CMAKE_Fortran_FLAGS  "${CMAKE_Fortran_FLAGS} ${USER_FLAGS} ${USER_F_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${LD_FLAGS} ${USER_FLAGS} ${USER_LD_FLAGS}")
 
 #Imports all nessisary headers.
