@@ -52,9 +52,8 @@ project(${PROJECT_NAME} NONE)
 #Run "ccmake ." to change any options here after running "cmake ."
 option(Debug_Mode "This enables the debug flag in make, building it with Debug enabled." OFF)
 option(Has_Stratimikos "If you have stratimikos and want support for it enable this. This modifies the definitions" OFF)
+option(CXX_11_STD "Unless you have an older compiler, or you used the NoCXX11 library, keep this enabled" ON)
 
-#There is no option for the c++11 flag because Trilinos already handles it.
-#I am not quite sure why but it compiles just fine without it.
 
 
 #This adds a flag to the "User_Flags" section for stratimikos support. This flag is the same as the old makefile but I haven't tested it.
@@ -70,6 +69,9 @@ else()
     set(EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -w")
 endif()
 
+if(CXX_11_STD)
+    set(EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -std=c++11")
+endif()
 
 #These are all set here so you can modify them with ccmake. This works because they are set with the "CACHE" flag. The last input in set is the description you will see
 set(User_Define "-Dlinux -DCOMPILER_64BIT -DENABLE_AMESOS -DTRILINOS -DCHECK_FINITE -DNO_CHEBYSHEV_PLEASE -DMDE=27 -DMAX_PROB_VAR=15 -DMAX_EXTERNAL_FIELD=4 -DMAX_CONC=4 -DCOUPLED_FILL -DPARALLEL -DEIGEN_SERIAL" CACHE STRING "Enter or modify the compiler definitions. This is in addition to any options above.")
