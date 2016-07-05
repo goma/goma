@@ -26,9 +26,7 @@
 #Every other variable follows this format WORD_WORD_WORD
 #All arguments are in all caps (EG REQUIRED)
 #Endif() needs empty parenthesis
-#4 spaces of indentation for all loops/statements
 #Comments should usually go before the code they explain
-#All variables are called with ${} and not $()
 
 
 #This tells cmake to work in the future when cmake decides to change everything.
@@ -61,12 +59,15 @@ option(Has_Stratimikos "If you have stratimikos and want support for it enable t
 
 #This adds a flag to the "User_Flags" section for stratimikos support. This flag is the same as the old makefile but I haven't tested it.
 if(Has_Stratimikos)
-    set(User_Define "${User_Define} -DHAVE_STRATIMIKOS")
+    set(EXTRA_DEFINE "${EXTRA_DEFINE} -DHAVE_STRATIMIKOS")
 endif()
 if(Debug_Mode)
-#Warn all. Can also do more in the future depending on what you all need. This requires overriding User_C_Flags and User_CXX_Flags
-    set(User_Flags "${User_Flags} -Wall")
+    #Display all warnings. Can also do more in the future depending on what you all need.
+    set(EXTRA_FLAGS "${EXTRA_FLAGS} -Wall")
     set(DCMAKE_BUILD_TYPE "Debug")
+else()
+    set(EXTRA_C_FLAGS "${EXTRA_C_FLAGS} -w")
+    set(EXTRA_CXX_FLAGS "${EXTRA_CXX_FLAGS} -w")
 endif()
 
 
@@ -76,8 +77,8 @@ set(User_Define "${User_Define} -Dlinux -DCOMPILER_64BIT -DENABLE_AMESOS -DTRILI
 set(User_Flags "${User_Flags}" CACHE STRING "Enter any compiler flags you want to run on all three compilers. This overrides any cache related options.")
 #-w suppresses warnings becasue gosh darn it the Trilinos people are engineers not programmers.
 #And besides, there is no OSHA for code. Yet.
-set(User_C_Flags "-w" CACHE STRING "Enter any extra compiler flags you want for all C compilation.")
-set(User_CXX_Flags "-w" CACHE STRING "Enter any extra compiler flags you want for all C++ compilation.")
+set(User_C_Flags "" CACHE STRING "Enter any extra compiler flags you want for all C compilation.")
+set(User_CXX_Flags "" CACHE STRING "Enter any extra compiler flags you want for all C++ compilation.")
 set(User_F_Flags "" CACHE STRING "Enter any extra compiler flags you want for all Fortran compilation.")
 set(User_LD_Flags "" CACHE STRING "Enter any extra compiler flags you want when linking files and creating the Goma executable.")
 
@@ -91,14 +92,15 @@ find_path(Trilinos_Location NAMES bin/cth_pressure_map CACHE FILEPATH "Specify w
 find_path(MPI_Location NAMES bin/mpicc CACHE FILEPATH "Specify where you installed the MPI libraries.")
 
 #Converting variable names from ones which are easy for people to read to ones which follow the CMAKE variable standards.
-set(MPI_TOP ${MPI_Location})
-set(TRILINOS_TOP ${Trilinos_Location})
-set(USER_DEFINE ${User_Define})
-set(USER_FLAGS ${User_Flags})
-set(USER_C_FLAGS ${User_C_Flags})
-set(USER_CXX_FLAGS ${User_C_Flags})
-set(USER_F_FLAGS ${User_C_Flags})
-set(USER_LD_FLAGS ${User_C_Flags})
+#Also adding the flags defined by the variables
+set(MPI_TOP "${MPI_Location}")
+set(TRILINOS_TOP "${Trilinos_Location}")
+set(USER_DEFINE "${User_Define} ${EXTRA_DEFINE}")
+set(USER_FLAGS "${User_Flags} ${EXTRA_FLAGS}")
+set(USER_C_FLAGS "${User_C_Flags} ${EXTRA_C_FLAGS}")
+set(USER_CXX_FLAGS "${User_CXX_Flags} ${EXTRA_CXX_FLAGS}")
+set(USER_F_FLAGS "${User_F_Flags}")
+set(USER_LD_FLAGS "${User_LD_Flags}")
 
 
 #Setting other libraries (can be overridden by user). These all are set off of Trilinos by default (under the assumption you installed all your libraries in the same place).

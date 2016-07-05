@@ -1,7 +1,6 @@
 project(goma)
 message(STATUS "Adding Goma files to Make")
 
-set(TARGETDIR bin)
 
 set(TRILINOS_PREFIX ${TRILINOS_TOP}/lib/cmake/Trilinos)
 
@@ -10,10 +9,9 @@ find_package(Trilinos REQUIRED)
 
 
 
-message("\nFound Trilinos!  Here are the details: ")
+message("\nFound Trilinos!")
 message("   Trilinos_DIR = ${Trilinos_DIR}")
 message("   Trilinos_VERSION = ${Trilinos_VERSION}")
-message("End of Trilinos details\n")
 message("Switching to Trilinos mode!\n")
 
 
@@ -64,7 +62,7 @@ get_source_files(SOURCE_FILES)
 
 
 
-INCLUDE_DIRECTORIES(${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
+include_directories(${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
 
 
 
@@ -72,12 +70,13 @@ INCLUDE_DIRECTORIES(${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
 
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} ${SPARSE_LIB} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${ARPACK_LIB} ${GOMA_MPI_LIB} ${Trilinos_EXTRA_LD_FLAGS} ${ENDING_LIBS})
+target_link_libraries(${PROJECT_NAME} ${SPARSE_LIB} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${ARPACK_LIB} ${GOMA_MPI_LIB} ${Trilinos_EXTRA_LD_FLAGS} ${ENDING_LIBS})
 
-set_project_info(${PROJECT_NAME} "${CMAKE_SOURCE_DIR}/${TARGETDIR}")
+#set_project_info(${PROJECT_NAME} "${CMAKE_SOURCE_DIR}/${TARGETDIR}")
 
 
 
+install(TARGETS goma DESTINATION bin)
 
 
 
