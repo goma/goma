@@ -11,3 +11,5 @@ goma
 .project
 /TAGS
 /.settings/
+cmake-config
+cmake-debug

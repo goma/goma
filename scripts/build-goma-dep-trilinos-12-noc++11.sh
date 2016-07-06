@@ -42,7 +42,8 @@ if [ -z "$1" ]
     exit 1
 fi
 
-GOMA_LIB=$1
+cd $1
+GOMA_LIB=`pwd`
 export GOMA_LIB
 
 OWNER=$USER
