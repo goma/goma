@@ -24,6 +24,11 @@
 #include "sl_util_structs.h"
 #include "sl_stratimikos_interface.h"
 
+#include "Thyra_SolveSupportTypes.hpp"
+#include "EpetraExt_RowMatrixOut.h"
+#include "EpetraExt_VectorOut.h"
+
+
 extern "C" {
 
 int stratimikos_solve(struct Aztec_Linear_Solver_System *ams, double *x_,
@@ -82,6 +87,10 @@ int stratimikos_solve(struct Aztec_Linear_Solver_System *ams, double *x_,
       try {
         *iterations = status.extraParameters.get()->get<int> ("Iteration Count");
       } catch (const Teuchos::Exceptions::InvalidParameter &excpt) {}
+    }
+
+    if (status.solveStatus != Thyra::SOLVE_STATUS_CONVERGED) {
+      *iterations = -1;
     }
 
     /* Convert solution vector */
