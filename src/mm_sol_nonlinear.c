@@ -746,7 +746,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 		  }
 	  }
 
-	
+
       /* get global element size and velocity norm if needed for PSPG or Cont_GLS */
 	  if((PSPG && Num_Var_In_Type[PRESSURE]) || (Cont_GLS && Num_Var_In_Type[VELOCITY1]))
 	  {
@@ -1477,12 +1477,15 @@ EH(-1,"version not compiled with frontal solver");
         if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
           int iterations;
           int err = stratimikos_solve(ams, delta_x, resid_vector, &iterations, Stratimikos_File);
-          if (err)
-          {
-          EH(err, "Error in stratimikos solve");
-          check_parallel_error("Error in solve - stratimikos");
+          if (err) {
+	    EH(err, "Error in stratimikos solve");
+	    check_parallel_error("Error in solve - stratimikos");
           }
-          aztec_stringer(AZ_normal, iterations, &stringer[0]);
+	  if (iterations == -1) {
+	    strcpy(stringer, "err");
+	  } else {
+	    aztec_stringer(AZ_normal, iterations, &stringer[0]);
+	  }
         } else {
           EH(-1, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
         }
@@ -1676,7 +1679,11 @@ EH(-1,"version not compiled with frontal solver");
               int iterations;
               int err = stratimikos_solve(ams, &wAC[iAC][0], &bAC[iAC][0], &iterations, Stratimikos_File);
               EH(err, "Error in stratimikos solve");
-              aztec_stringer(AZ_normal, iterations, &stringer_AC[0]);
+	      if (iterations == -1) {
+		strcpy(stringer, "err");
+	      } else {
+		aztec_stringer(AZ_normal, iterations, &stringer[0]);
+	      }
             } else {
               EH(-1, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
             }
@@ -3692,7 +3699,11 @@ soln_sens ( double lambda,  /*  parameter */
         int iterations;
         int err = stratimikos_solve(ams,  x_sens, resid_vector_sens, &iterations, Stratimikos_File);
         EH(err, "Error in stratimikos solve");
-        aztec_stringer(AZ_normal, iterations, &stringer[0]);
+	if (iterations == -1) {
+	  strcpy(stringer, "err");
+	} else {
+	  aztec_stringer(AZ_normal, iterations, &stringer[0]);
+	}
       } else {
         EH(-1, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
       }

@@ -1,16 +1,38 @@
 # Goma dependencies build scripts
 
-These build scripts exist to alleviate the pain of building the
-libraries goma needs to run.
+Before building Goma, a number of packages and libraries must be available.
 
-There are 2 options to choose from:
+The build scripts in this directory exist to alleviate the pain of building-by-hand the libraries goma needs to run. They are used regularly in Ubuntu 14.04+ and CentOS 6+.
 
-`build-goma-dep-trilinos-12.sh`: This script builds with the newest
-trilinos and expects gcc 4.8 or gcc 4.9.
+They will build the following packages and libraries (with or without support for C++ 11):
 
-`build-goma-dep-trilinos-12-noc++11.sh`: This script builds with the
-newest trilinos but disables support for c++11 to support older
-compilers.
+* OpenMPI
+* CMake
+* HDF5
+* MatIO
+* NetCDF
+* ARPACK
+* BLAS
+* LAPACK
+* ParMETIS
+* Sparse
+* SuperLU_DIST
+* Y12M
+* ScaLAPACK
+* MUMPS
+* SuiteSparse
+* Trilinos w/SEACAS
+
+
+`build-goma-dep-trilinos-12.sh`: This script builds Trilinos 12.6.3
+ with support for c++11 and expects gcc to be version 4.8.1 or greater.
+
+`build-goma-dep-trilinos-12-noc++11.sh`: This script builds with Trilinos
+12.6.3 and disables support for c++11 to support older compilers.
+
+`build-TPL-experimental.sh`: This script is experimental, it uses OpenBLAS
+and stand-alone SEACAS. It appears that use of OpenBLAS affects solutions
+for certain types of problems. Proceed with caution.
 
 Dependencies for these scripts are:
 
@@ -23,7 +45,8 @@ Dependencies for these scripts are:
 
 # Additional Requirements
 
-openmpi should be added to your path and library path:
+## Environment Variables
+OpenMPI should be added to the path and library path:
 
     export LD_LIBRARY_PATH="/[path to gomalibs]/openmpi-1.6.4/lib:$LD_LIBRARY_PATH"
     export PATH="/[path to gomalibs]/openmpi-1.6.4/bin:$PATH"
@@ -31,17 +54,13 @@ openmpi should be added to your path and library path:
 SEACAS tools from Trilinos (e.g. aprepro and blot) should be added to
 your path
 
-    export PATH="/[path to gomalibs]/trilinos-11.8.1-Build/bin:$PATH"  
+    export PATH="/[path to gomalibs]/trilinos-12.6.3-Build/bin:$PATH"  
 
-Or for Trilinos 12:
+## settings.mk
 
-    export PATH="/[path to gomalibs]/trilinos-12.0.1-Build/bin:$PATH"
+Copy settings.mk-example to settings.mk and adjust `GOMA_LIBS` to point to the location where the libraries were built. If the build script was not used, locations for all the libraries referenced in  (examples available in the main goma directory).
 
-After that adjust your settings.mk to point to the proper gomalibs
-and Trilinos location (examples available in the main goma directory).
-
-If you built Trilinos 12 with c++11 (not the noc++11 script) you also
-need to declare the CXXSTD in your settings.mk:
+If Trilinos was built with c++11, **declare the CXXSTD** in your settings.mk:
 
     CXXSTD=-std=c++11
 
