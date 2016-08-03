@@ -1,0 +1,181 @@
+#!/bin/bash
+
+###
+### The CMake Configuration File
+###
+### Except under very special circumstances, you should use this file.
+### It's much faster and easier than configuring manually
+###
+###
+### How to use this file:
+### Assign where you built the libraries to GOMA_LIBS below (goma_libs).
+
+GOMA_LIBS=
+
+### Then, cd into a "build" directory, and execute this script.
+### If all went well, Makefile's will exist and Goma will build with "make"
+### Otherwise fill in the missing paths below i.e. MPI_DIR, SEACAS_DIR, etc.
+### Then execute this script again. Repeat until the configuration is complete.
+
+if [ -f $(pwd)/CMakeCache.txt ]; then
+    rm -f CMakeCache.txt
+fi
+
+if which cmake ; then
+
+    echo "Preparing to run cmake with the user set settings"
+
+    ### Any arguements you give this script will be passed through to cmake
+    EXTRA_ARGS=$@
+
+    ### Do not change this.
+    #Default = goma
+    PROJECT_NAME=goma
+
+    ### This assumes that you haven't changed the name of the cmake script
+    GOMADIR=$(cd `echo $0 | sed 's/cmake-config//'`; pwd)
+
+    ### CMAKE_INSTALL_PREFIX/bin is where Goma will build with make install.
+    ### Running make will build goma in your current directory which is usually
+    ### all you need but this can be useful if you want to place goma
+    ### in your path automatically.
+
+    ### Use "make install" to install to your prefix
+    CMAKE_INSTALL_PREFIX=$GOMADIR
+
+    ### Change these ONLY if some of your libraries are in a different location.
+    ### If you used the build script, leave these blank.
+    #Default AUTODETECT
+    Trilinos_DIR=
+    #Default AUTODETECT
+    MPI_DIR=
+    #Default AUTODETECT
+    Sparse_DIR=
+    #Default AUTODETECT
+    Arpack_DIR=
+    ### Only needed with standalone seacas on.
+    #Default AUTODETECT
+    SEACAS_DIR=
+
+    ### These options will automatically add variables to your build flag
+
+    ### Build with stratimikos support. This will approximately double the
+    ### executable size of Goma.
+    ### Default AUTODETECT
+    Build_Stratimikos=
+    ### Build with the standalone SEACAS instead of the Trilinos SEACAS
+    ### If this is off, Trilinos needs to be build with SEACAS.
+    ### Will automatically detect if seacas is standalone if left blank.
+    #default AUTODETECT
+    Standalone_SEACAS=
+
+    ### Will append needed libraries to your .profile on make install
+    ### This is not recommended if you create a run script.
+    #default OFF
+    Write_To_Profile=OFF
+
+    ### Will create a script wrapper which runs Goma with the proper
+    ### environment variables. With this you can type ./rungoma
+    ### to run goma with everything set. Recommended for people
+    ### who are unfamiliar with UNIX environment variables.
+    #default ON
+    Create_Run_Script=ON
+
+    ### Keep on unless you built your libraries with the noc++11 script
+    #default ON
+    CXX11_STD=ON
+
+    ### Any custom compiler flags
+
+    # C++ flags
+    User_CXX_Flags=
+    # C flags
+    User_C_Flags=
+    # Fortran Flags
+    User_F_Flags=
+    # Link Directory flags
+    User_LD_Flags=
+    # All compiler flags
+    #default -O1
+    User_Flags="-O1"
+
+
+    ### Definitions given to the compiler in the format -D(Definition)
+    ### These are goma's default defines. Change as needed.
+    User_Define="-Dlinux \
+    -DCOMPILER_64BIT \
+    -DENABLE_AMESOS \
+    -DTRILINOS \
+    -DCHECK_FINITE \
+    -DNO_CHEBYSHEV_PLEASE \
+    -DMDE=27 \
+    -DMAX_PROB_VAR=15 \
+    -DMAX_EXTERNAL_FIELD=4 \
+    -DMAX_CONC=4 \
+    -DCOUPLED_FILL \
+    -DPARALLEL \
+    -DEIGEN_SERIAL"
+
+    ### ------------------------------------------------------------------------
+    ###                             END OF SETTINGS
+    ### ------------------------------------------------------------------------
+    ###
+    ###                  DO NOT EDIT ANYTHING BELOW THIS LINE
+    ### ------------------------------------------------------------------------
+
+    ### This allows the libraries to be autodetected when left blank.
+    ### Also will automatically find Trilinos and MPI
+    if [ -n "$GOMA_LIBS" ]; then
+        Trilinos_DIR=$( readlink -m $(find ${GOMA_LIBS} -path */lib/libamesos.a)/../.. )
+        MPI_DIR=$( readlink -m $(find ${GOMA_LIBS} -path */bin/mpicc)/../.. )
+        GOMA_LIBS=-D${PROJECT_NAME}_LIBS\=${GOMA_LIBS}
+    fi
+    if [ -n "$Trilinos_DIR" ]; then
+        Trilinos_DIR=-D${PROJECT_NAME}_Trilinos_DIR\=${Trilinos_DIR}
+    fi
+    if [ -n "$MPI_DIR" ]; then
+        MPI_DIR=-D${PROJECT_NAME}_MPI_DIR\=${MPI_DIR}
+    fi
+    if [ -n "$Sparse_DIR" ]; then
+        Sparse_DIR=-D${PROJECT_NAME}_Sparse_DIR\=${Sparse_DIR}
+    fi
+    if [ -n "$Arpack_DIR" ]; then
+        Arpack_DIR=-D${PROJECT_NAME}_Arpack_DIR\=${Arpack_DIR}
+    fi
+    if [ -n "$SEACAS_DIR" ]; then
+        SEACAS_DIR=-D${PROJECT_NAME}_SEACAS_DIR\=${SEACAS_DIR}
+    fi
+
+    ### These allow blank options to work since
+    ### cmake assumes any blank options are OFF
+    if [ -n "$Standalone_SEACAS" ]; then
+         Standalone_SEACAS=-D${PROJECT_NAME}_Standalone_SEACAS\=${Standalone_SEACAS}
+    fi
+    if [ -n "$Build_Stratimikos" ]; then
+         Build_Stratimikos=-D${PROJECT_NAME}_Build_Stratimikos\=${Build_Stratimikos}
+    fi
+
+    ### Running cmake with these userset settings
+
+    cmake \
+	${GOMA_LIBS} ${Trilinos_DIR} ${MPI_DIR} ${Sparse_DIR} \
+	${Arpack_DIR} ${SEACAS_DIR} ${Standalone_SEACAS} ${Build_Stratimikos} \
+	-D${PROJECT_NAME}_Create_Run_Script=${Create_Run_Script} \
+	-D${PROJECT_NAME}_Write_To_Profile=${Write_To_Profile} \
+	-D${PROJECT_NAME}_CXX11_STD=${CXX11_STD} \
+	-D${PROJECT_NAME}_User_CXX_Flags=${User_CXX_Flags} \
+	-D${PROJECT_NAME}_User_C_Flags=${User_C_Flags} \
+	-D${PROJECT_NAME}_User_F_Flags=${User_F_Flags} \
+	-D${PROJECT_NAME}_User_LD_Flags=${User_LD_Flags} \
+	-D${PROJECT_NAME}_User_Flags=${User_Flags} \
+	-D${PROJECT_NAME}_Write_To_Profile=${Write_To_Profile} \
+        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} \
+	-DCMAKE_BUILD_TYPE=RELEASE \
+	${EXTRA_ARGS} ${GOMADIR}
+
+
+else
+    echo "cmake not found, please install it before running this."
+    echo "Please see your package repository or https://cmake.org/"
+fi
+
