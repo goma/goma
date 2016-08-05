@@ -2168,8 +2168,9 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			(eb_in_matrl(BC_Types[bc_input_id].BC_Data_Int[0], mn) ||
 			 eb_in_matrl(BC_Types[bc_input_id].BC_Data_Int[1], mn)))
 		      {
-			type = pd_glob[mn]->w[eqn];
-			if (bfi[type] == NULL) EH(-1,"Illegal cross basis func");
+			//type = pd_glob[mn]->w[eqn];
+			//if (bfi[type] == NULL) EH(-1,"Illegal cross basis func");
+			
 			/* note that here, we don't have the ln_to_dof
 			   array for the adjacent 
 			   material - for now assume that ldof_eqn = id */
@@ -2177,7 +2178,18 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			   are used for velocity, then we
 			   cannot apply these sorts of BCs
 			   --ADD DIAGNOSTIC  */
-			phi_i = bfi[type]->phi[id];
+			
+			//phi_i = bfi[type]->phi[id];
+			
+			/* DSH 08/2016
+			 * The above was the old way of loading up basis functions for 
+			 * CROSS_PHASE boundary conditions when we are in the adjacent 
+			 * material.  This approach breaks down when considering shells
+			 * mixed with continuum elements.  In either case, bf[eqn] works,
+			 * so I am not sure why the bfi[type] was used in the first place.
+			 */
+			
+			phi_i = bf[eqn]->phi[id];
 			weight *= phi_i;
 		      }
 		  }
