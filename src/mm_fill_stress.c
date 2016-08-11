@@ -5111,7 +5111,7 @@ numerical_viscosity(dbl s[DIM][DIM],                       /* total stress */
 	  
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
-	      d_mun_dG[a][b][j] = -eps*(sqrt(1.+ eps2*s_dbl_dot_s))/pow((1.+eps2*g_dbl_dot_g),1.5)
+	      d_mun_dG[a][b][j] = eps*(sqrt(1.+ eps2*s_dbl_dot_s))/pow((1.+eps2*g_dbl_dot_g),1.5)
   		*gamma_cont[a][b]*bf[var]->phi[j];
 	    }
 	}
