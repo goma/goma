@@ -59,7 +59,7 @@ SEACAS_TOP = $(GOMA_LIBS)/SEACAS-2013-12-03
 
 # Trilinos install directory (include, lib)
 
-TRILINOS_TOP = $(GOMA_LIBS)/trilinos-12.2.1-Built
+TRILINOS_TOP = $(GOMA_LIBS)/trilinos-12.2.2-Built
 
 # Install location
 # will install files in $PREFIX/include/goma, $PREFIX/lib, $PREFIX/bin
