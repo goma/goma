@@ -4838,7 +4838,7 @@ load_neighbor_pointers( Exo_DB *exo,
    *     dof_list[v][ldof] -> local dof to local node map
    *     gun_list[v][ldof] -> local dof to proc unknown index.
    */
-  for (v = v_s[mode][0][0]; v < v_s[mode][2][2] ; v++) {
+  for (v = v_s[mode][0][0]; v <= v_s[mode][2][2] ; v++) {
     if (Num_Var_In_Type[v]) {
       ldof = 0;
       for (ln = 0; ln < nnodes ; ln++) {
