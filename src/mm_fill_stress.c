@@ -4838,7 +4838,7 @@ load_neighbor_pointers( Exo_DB *exo,
    *     dof_list[v][ldof] -> local dof to local node map
    *     gun_list[v][ldof] -> local dof to proc unknown index.
    */
-  for (v = v_s[mode][0][0]; v < v_s[mode][2][2] ; v++) {
+  for (v = v_s[mode][0][0]; v <= v_s[mode][2][2] ; v++) {
     if (Num_Var_In_Type[v]) {
       ldof = 0;
       for (ln = 0; ln < nnodes ; ln++) {
@@ -5111,7 +5111,7 @@ numerical_viscosity(dbl s[DIM][DIM],                       /* total stress */
 	  
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
-	      d_mun_dG[a][b][j] = -eps*(sqrt(1.+ eps2*s_dbl_dot_s))/pow((1.+eps2*g_dbl_dot_g),1.5)
+	      d_mun_dG[a][b][j] = eps*(sqrt(1.+ eps2*s_dbl_dot_s))/pow((1.+eps2*g_dbl_dot_g),1.5)
   		*gamma_cont[a][b]*bf[var]->phi[j];
 	    }
 	}

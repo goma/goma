@@ -45,6 +45,15 @@ if [ -z "$1" ]
     exit 1
 fi
 
+mkdir -p $1
+
+# check that we were able to make that directory
+if [ ! -d $1 ] 
+    then
+    echo "ERROR: could not create directory $1"
+    exit 1
+fi
+        
 cd $1
 GOMA_LIB=`pwd`
 export GOMA_LIB
@@ -95,7 +104,7 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 "sparse.tar.gz" 
 "superlu_dist_5.0.0.tar.gz" \
 "y12m-1.0.tar.gz" \
-"trilinos-12.6.3-Source.tar.bz2" \
+"trilinos-12.6.4-Source.tar.bz2" \
 "scalapack-2.0.2.tgz" \
 "MUMPS_5.0.1.tar.gz" \
 "SuiteSparse-4.4.4.tar.gz" \
@@ -113,7 +122,7 @@ ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "1566d914d1035ac17b73fe9bc0eed02a" \
 "2b53baf1b0ddbd9fcf724992577f0670" \
 "eed01310baca61f22fb8a88a837d2ae3" \
-"d94e31193559b334fd41d05eb22f9285" \
+"b4edf20a997caa1ca88340f6e3dab514" \
 "2f75e600a2ba155ed9ce974a1c4b536f" \
 "b477573fdcc87babe861f62316833db0" \
 "e0af74476935c9ff6d971df8bb6b82fc" \
@@ -128,10 +137,10 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.1.tar.gz" \
 "http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.4.tar.gz" \
 "http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz" \
-"http://sourceforge.net/projects/sparse/files/sparse/sparse1.4b/sparse1.4b.tar.gz/download" \
+"http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
 "http://crd-legacy.lbl.gov/~xiaoye/SuperLU/superlu_dist_5.0.0.tar.gz" \
 "http://sisyphus.ru/cgi-bin/srpm.pl/Branch5/y12m/getsource/0" \
-"http://trilinos.csbsju.edu/download/files/trilinos-12.6.3-Source.tar.bz2" \
+"https://trilinos.org/oldsite/download/files/trilinos-12.6.4-Source.tar.bz2" \
 "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz" \
 "http://graal.ens-lyon.fr/MUMPS/MUMPS_5.0.1.tar.gz" \
 "http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.4.4.tar.gz" \
@@ -743,9 +752,9 @@ fi
 
 #continue_check
 #make trilinos
-rm -rf $GOMA_LIB/trilinos-12.6.3-Temp
-mkdir $GOMA_LIB/trilinos-12.6.3-Temp
-cd $GOMA_LIB/trilinos-12.6.3-Temp
+rm -rf $GOMA_LIB/trilinos-12.6.4-Temp
+mkdir $GOMA_LIB/trilinos-12.6.4-Temp
+cd $GOMA_LIB/trilinos-12.6.4-Temp
 
 rm -f CMakeCache.txt
 
@@ -762,7 +771,7 @@ export PATH=$GOMA_LIB/cmake-2.8.12.2/bin:$PATH
 
 MPI_LIBS="-LMPI_BASE_DIR/lib -lmpi_f90 -lmpi_f77 -lmpi"
 # Install directory
-TRILINOS_INSTALL=$GOMA_LIB/trilinos-12.6.3-Built
+TRILINOS_INSTALL=$GOMA_LIB/trilinos-12.6.4-Built
 #continue_check
 
 
@@ -847,7 +856,7 @@ cmake \
 -D Amesos_ENABLE_UMFPACK:BOOL=ON \
 -D Amesos_ENABLE_MUMPS:BOOL=ON \
 $EXTRA_ARGS \
-$GOMA_LIB/trilinos-12.6.3-Source
+$GOMA_LIB/trilinos-12.6.4-Source
 
 
 
