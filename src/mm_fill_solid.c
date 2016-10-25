@@ -3296,7 +3296,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	{
 	     for (w=0; w<pd->Num_Species_Eqn; w++) 
 	       {
-		 if(mp->SpecVolExpModel[w] == CONSTANT )
+		 if(mp->SpecVolExpModel[w] == CONSTANT ||
+                     mp->SpecVolExpModel[w] == PHOTO_CURING)
 		   {
 		     for ( p=0; p<VIM; p++)
 		       {
@@ -3349,7 +3350,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 			     {
 			       for (w=0; w<pd->Num_Species_Eqn; w++) 
 				 {
-				   if(mp->SpecVolExpModel[w] == CONSTANT )
+				   if(mp->SpecVolExpModel[w] == CONSTANT ||
+                                        mp->SpecVolExpModel[w] == PHOTO_CURING)
 				     {
 				       dTT_dx[p][q][b][j] -=  (2. * d_mu_dx[b][j] + 3.*d_lambda_dx[b][j])
 					 * speciesexp[w] * (fv->c[w] - mp->reference_concn[w]) 
@@ -3437,7 +3439,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
  		     {
 		       for (w=0; w<pd->Num_Species_Eqn; w++) 
 			 {
-			   if(mp->SpecVolExpModel[w] == CONSTANT )
+			   if(mp->SpecVolExpModel[w] == CONSTANT ||
+                                 mp->SpecVolExpModel[w] == PHOTO_CURING)
 			     {
 			       dTT_dc[p][q][w][j] -=  (2.* mu + 3.*lambda)*
 				 speciesexp[w]*bf[v]->phi[j]*delta(p,q); 
@@ -5530,7 +5533,8 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
    {
 	for(w=0 ; w<pd->Num_Species_Eqn ; w++)
 	   {
-   	    if(mp->SpecVolExpModel[w] == CONSTANT )
+   	    if(mp->SpecVolExpModel[w] == CONSTANT  ||
+                mp->SpecVolExpModel[w] == PHOTO_CURING)
      		{
        	    	speciesexp[w] = mp->species_vol_expansion[w];
      		}

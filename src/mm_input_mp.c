@@ -7797,15 +7797,19 @@ ECHO("\n----Acoustic Properties\n", echo_file);
           SpeciesSourceModel = PHOTO_CURING;
           model_read = 1;
           mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
-          if ( fscanf(imp, "%lf %lf %lf %lf %lf %lf",
-                            &a0, &a1, &a2, &a3, &a4, &a5) != 6)
+          if ( fscanf(imp, "%lf %lf %lf %lf ",
+                            &a0, &a1, &a2, &a3) != 4)
             {
                   sr = sprintf(err_msg,
-                               "Matl %s needs 6 floats for %s %s model.\n",
+                               "Matl %s needs 4 floats for %s %s model.\n",
                                pd_glob[mn]->MaterialName,
                                "Species Source", "PHOTO_CURING");
                   EH(-1, err_msg);
             }
+	  if ( fscanf(imp, "%lf", &a4) != 1)
+	    { a4 = 1.0; }
+	  if ( fscanf(imp, "%lf", &a5) != 1)
+	    { a5 = 0.0; }
           mat_ptr->u_species_source[species_no] = (dbl *)
                                                  array_alloc(1,6,sizeof(dbl));
           mat_ptr->len_u_species_source[species_no] = 4;
