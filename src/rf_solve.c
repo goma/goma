@@ -2292,79 +2292,100 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	delta_t_new = time_step_control(delta_t, delta_t_old, const_delta_t,
 					x, x_pred, x_old, x_AC, x_AC_pred,
 					eps, &success_dt, tran->use_var_norm);
-	if (const_delta_t) {
+	if (const_delta_t) 
+          {
 	  success_dt  = TRUE;
 	  delta_t_new = delta_t;
-	} else if ( failed_recently_countdown > 0 ) {
+	  } 
+       else if ( failed_recently_countdown > 0 ) 
+          {
           delta_t_new = delta_t;
           failed_recently_countdown--;
-	} else if (delta_t_new > Delta_t_max) {
+	  } 
+       else if (delta_t_new > Delta_t_max) 
+          {
 	  delta_t_new = Delta_t_max;
-/*        } else if ( !success_dt && delta_t_new < tran->resolved_delta_t_min ) {*/
-        } else if ( delta_t_new < tran->resolved_delta_t_min ) {
-/*          if ( delta_t > tran->resolved_delta_t_min ) {  */
+          } 
+       else if ( delta_t_new < tran->resolved_delta_t_min ) 
+          {
             /* fool algorithm into using delta_t = tran->resolved_delta_t_min */
             delta_t_new = tran->resolved_delta_t_min;
 	    success_dt  = TRUE;
-	DPRINTF(stderr,"\n\tminimum resolved step limit!\n");
+	    DPRINTF(stderr,"\n\tminimum resolved step limit! - step control\n");
        /*     if(!success_dt)delta_t /= tran->time_step_decelerator;
 	    tran->delta_t  = delta_t;
 	    tran->delta_t_avg = 0.25*(delta_t+delta_t_old+delta_t_older
 					+delta_t_oldest);  */
-/*          } else {
-             accept any converged solution with
+          } 
+       else 
+          {
+            /* accept any converged solution with
                delta_t <= tran->resolved_delta_t_min 
-            success_dt = TRUE;
-            delta_t_new = delta_t;
-          }  */
-        }
+            */
+            /*success_dt = TRUE;
+            delta_t_new = delta_t;*/
+          }  
         
-        if ( ls != NULL && tran->Courant_Limit != 0. ) {
+        if ( ls != NULL && tran->Courant_Limit != 0. ) 
+          {
           double Courant_dt;
           Courant_dt = tran->Courant_Limit *
                        Courant_Time_Step( x, x_old, x_older, xdot, xdot_old,
                                         resid_vector, ams[0]->proc_config, exo );
-          if ( Courant_dt > 0. && Courant_dt < delta_t_new ) {
+          if ( Courant_dt > 0. && Courant_dt < delta_t_new ) 
+            {
             DPRINTF(stderr,"\nCourant Limit requires dt <= %g\n",Courant_dt);
             delta_t_new = Courant_dt;
+            }
           }
-        }
         
       }
 
-      if (converged && success_dt) {
-	if (Filter_Species) {
+      if (converged && success_dt) 
+        {
+	if (Filter_Species) 
+          {
 	  err = filter_conc(num_total_nodes, x, filter_species_material_number, 
 			    c_min, c_max ); 
-	}
+	  }
 	nt  += 1;
 	time = time1;
   
 	/* Determine whether to print out the data or not */
 	i_print = 0;
-	if (tran->print_freq == 0) {
+	if (tran->print_freq == 0) 
+          {
 	  if ((time > time_print) || 
 	      (fabs(time - time_print) < (1.e-4 * tran->print_delt)))
-	  {
-	    if (tran->print_delt2 < 0.) {
+	    {
+	    if (tran->print_delt2 < 0.) 
+              {
 	      i_print	  = 1;
 	      time_print += tran->print_delt;
-	    } else {
-	      if (time < tran->print_delt2_time) {
+	      } 
+            else 
+              {
+	      if (time < tran->print_delt2_time) 
+                {
 		i_print	    = 1;
 		time_print += tran->print_delt;
-	      } else {
+	        } 
+              else 
+                {
 		i_print	    = 1;
 		time_print += tran->print_delt2;
+	        }
 	      }
 	    }
-	  }
-	} else {
-	  if (nt == step_print) {
-	    i_print	= 1;
-	    step_print += tran->print_freq;
-	  }
-	}
+	   } 
+         else 
+           {
+	    if (nt == step_print) 
+              {
+	       i_print	= 1;
+	       step_print += tran->print_freq;
+	      }
+	   }
 
 	if (time1 >= (ROUND_TO_ONE * TimeMax)) i_print = 1;
 
@@ -2502,9 +2523,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
              and fix always occurs on the same timestep as printing */
           MPI_Barrier(MPI_COMM_WORLD);
 #endif
-          if (ProcID == 0 && Brk_Flag == 1) {
-            fix_output();
-          }
+          if (ProcID == 0 && Brk_Flag == 1) { fix_output(); }
           /* Fix step is relative to print step */
           step_fix += tran->fix_freq*tran->print_freq;
         }
@@ -2512,24 +2531,28 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	 * Adjust the time step if the new time will be larger than the
 	 * next printing time.
 	 */
-	if (tran->print_freq == 0 && success_dt) {
+	if (tran->print_freq == 0 && success_dt) 
+          {
 	  if ((time + 1.2 * delta_t_new >= time_print)
-	      && (time_print > time)) {
+	      && (time_print > time)) 
+            {
 	    delta_t_new = time_print - time;
 	    DPRINTF(stderr, 
 		    "reset delta_t = %g to maintain printing frequency\n"
 		    , delta_t_new);
 	    if (delta_t_new <= 0) 
 		EH(-1, "error with time-step printing control");
-	  } else if(time >= time_print) {
-	    if (delta_t_new != tran->print_delt) {
+	    } 
+          else if(time >= time_print) 
+            {
+	    if (delta_t_new != tran->print_delt) 
+              {
 	      delta_t_new = tran->print_delt;
 	      DPRINTF(stderr, 
 		      "reset delta_t = %g to maintain printing frequency\n"
 		      , delta_t_new);
-	      if (delta_t_new <= 0) {
-		EH(-1, "error with time-step printing control");
-	      }
+	      if (delta_t_new <= 0) 
+                { EH(-1, "error with time-step printing control"); }
 	    }
 	  }
 	}
@@ -2857,7 +2880,8 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
      }
 #endif
 
-	if (time1 >= (ROUND_TO_ONE * TimeMax))  {
+	if (time1 >= (ROUND_TO_ONE * TimeMax))  
+          {
 	  DPRINTF(stderr,"\t\tout of time!\n");
      	  if (Anneal_Mesh)
 	    {
@@ -2871,7 +2895,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      EH(err, "anneal_mesh() bad return.");
 	    }
 	  goto free_and_clear;
-	}
+	  }
         if (!good_mesh) goto free_and_clear;
 
       } /*  if(converged && success_dt) */
@@ -2879,7 +2903,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       else /* not converged or unsuccessful time step */
       {
 /* Set bit TRUE in next line to enable retries for failed first timestep*/
-        if(relax_bit && nt == 0 && n < 15) {
+        if(relax_bit && nt == 0 && n < 5) {
              if(inewton == -1)        {
  	DPRINTF(stderr,"\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
                   if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
@@ -2916,9 +2940,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
                           DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
                        }
                    }
-           } else if(delta_t < tran->resolved_delta_t_min/tran->time_step_decelerator)
+           } else if(converged && delta_t < tran->resolved_delta_t_min/tran->time_step_decelerator)
                    {
-	DPRINTF(stderr,"\n\tminimum resolved step limit!\n");
+	DPRINTF(stderr,"\n\tminimum resolved step limit! - not converged\n");
 	delta_t_oldest = delta_t_older;
 	delta_t_older  = delta_t_old;
 	delta_t_old    = delta_t;

@@ -10428,7 +10428,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
        int model_bit, num_mon, O2_spec=-1, rad_spec=-1, init_spec = 0;
        double k_propX=1, k_propT=0, k_propX_num=0, k_propX_den=0;
        double intensity_cgs = 2.998e+10*8.85e-12/200.0;
-       double dbl_small = 1.0e-15, Xconv_denom=0;
+       double dbl_small = 1.0e-15, Xconv_denom=0, sum_init=0;
        double Xconv=0.0, Xconv_init=0.0, dXdC[MAX_CONC], sum_mon=0;
 
        param = mp->u_species_source[w];
@@ -10515,6 +10515,8 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
                      Xconv += fv->external_field[w1]/mp->molecular_weight[w1]/mp->specific_volume[w1];
                      sum_mon += Conc[w1]/mp->molecular_weight[w1];
                      dXdC[w1] = -1.0/mp->molecular_weight[w1];
+                     Xconv_init +=  mp->u_reference_concn[w1][1]/mp->molecular_weight[w1]/mp->specific_volume[w1];
+                     sum_init += mp->u_reference_concn[w1][0]/mp->molecular_weight[w1];
                     }
                 break;
            case SPECIES_CONCENTRATION:
@@ -10523,21 +10525,24 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
                      Xconv += fv->external_field[w1]/mp->specific_volume[w1];
                      sum_mon += Conc[w1];
                      dXdC[w1] = -1.0;
+                     Xconv_init += mp->u_reference_concn[w1][1]/mp->specific_volume[w1];
+                     sum_init += mp->u_reference_concn[w1][0];
                     }
                 break;
            default:
                 EH(-1,"invalid Species Type for PHOTO_CURING\n");
            }
        Xconv *= mp->specific_volume[pd->Num_Species_Eqn];
+       Xconv_init *= mp->specific_volume[pd->Num_Species_Eqn];
        Xconv_denom = Xconv + sum_mon;
        Xconv /= Xconv_denom;
        Xconv = MAX(dbl_small,Xconv);
        Xconv = MIN(1.0-dbl_small,Xconv);
+       Xconv_init /= (Xconv_init + sum_init);
        for ( w1=init_spec+2; w1<init_spec+2+num_mon; w1++)
             { dXdC[w1] *= Xconv/Xconv_denom; }
         if(Xconv <= dbl_small || Xconv >= (1.0-dbl_small) )
             { memset( dXdC, 0, sizeof(double) * MAX_CONC); }
-/*fprintf (stderr,"photo %g %g %g \n",Xconv,sum_mon,fv->external_field[2]);   */
 
        if(w == init_spec) 
          {

@@ -210,6 +210,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
  	      BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_PETROV_BC ||      
  	      BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_COLLOC_BC ||
 	      BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ||	      	      
+	      BC_Types[bc_input_id].BC_Name == SOLID_FLUID_BC ||	      	      
+	      BC_Types[bc_input_id].BC_Name == SOLID_FLUID_RS_BC ||	      	      
 	      (BC_Types[bc_input_id].BC_Name == GD_CONST_BC ||
 	       BC_Types[bc_input_id].BC_Name == GD_LINEAR_BC ||
 	       BC_Types[bc_input_id].BC_Name == GD_INVERSE_BC ||
@@ -236,7 +238,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
               BC_Types[bc_input_id].BC_Name == SPLINE_BC ||
               BC_Types[bc_input_id].BC_Name == FILLET_BC ||
 	      BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ||
-
+	      BC_Types[bc_input_id].BC_Name == SOLID_FLUID_BC ||
+	      BC_Types[bc_input_id].BC_Name == SOLID_FLUID_RS_BC ||
 	      (BC_Types[bc_input_id].BC_Name == GD_CONST_BC ||
 	       BC_Types[bc_input_id].BC_Name == GD_LINEAR_BC ||
 	       BC_Types[bc_input_id].BC_Name == GD_INVERSE_BC ||
@@ -361,6 +364,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
  		 BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_COLLOC_BC ||
 		 BC_Types[bc_input_id].BC_Name == MESH_CONSTRAINT_BC ||
 		 BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ||
+		 BC_Types[bc_input_id].BC_Name == SOLID_FLUID_BC ||
+		 BC_Types[bc_input_id].BC_Name == SOLID_FLUID_RS_BC ||
 		 ( (BC_Types[bc_input_id].BC_Name == GD_CONST_BC ||
 		    BC_Types[bc_input_id].BC_Name == GD_LINEAR_BC ||
 		    BC_Types[bc_input_id].BC_Name == GD_INVERSE_BC ||
@@ -479,24 +484,26 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 		      } else if((variable_wall_normal) && (BC_Types[bc_input_id].BC_Name == PLANE_BC ||
                                                            BC_Types[bc_input_id].BC_Name == SPLINE_BC || 
                                                            BC_Types[bc_input_id].BC_Name == FILLET_BC ||
-							   BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||	      
-							   BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_RS_BC ||	      
- 							   BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_PETROV_BC ||
- 							   BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_COLLOC_BC ||
-							   BC_Types[bc_input_id].BC_Name == MESH_CONSTRAINT_BC ||
-							   BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ||
- 							   ( (BC_Types[bc_input_id].BC_Name == GD_CONST_BC ||
-							      BC_Types[bc_input_id].BC_Name == GD_LINEAR_BC ||
-							      BC_Types[bc_input_id].BC_Name == GD_INVERSE_BC ||
-							      BC_Types[bc_input_id].BC_Name == GD_PARAB_BC ||
-							      BC_Types[bc_input_id].BC_Name == GD_PARAB_OFFSET_BC ||
-							      BC_Types[bc_input_id].BC_Name == GD_CIRC_BC || 
-							      BC_Types[bc_input_id].BC_Name == GD_TIME_BC || 
-							      BC_Types[bc_input_id].BC_Name == GD_POLYN_BC ||
-							      BC_Types[bc_input_id].BC_Name == GD_TABLE_BC) 
-							     && 
-							     (BC_Types[bc_input_id].desc->equation == R_MESH_NORMAL || 
-							      BC_Types[bc_input_id].desc->equation == R_MESH2)
+                                    BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||	      
+				    BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_RS_BC ||	      
+ 				    BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_PETROV_BC ||
+ 				    BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_COLLOC_BC ||
+				    BC_Types[bc_input_id].BC_Name == MESH_CONSTRAINT_BC ||
+				    BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ||
+				    BC_Types[bc_input_id].BC_Name == SOLID_FLUID_BC ||
+				    BC_Types[bc_input_id].BC_Name == SOLID_FLUID_RS_BC ||
+ 					   ( (BC_Types[bc_input_id].BC_Name == GD_CONST_BC ||
+					      BC_Types[bc_input_id].BC_Name == GD_LINEAR_BC ||
+					      BC_Types[bc_input_id].BC_Name == GD_INVERSE_BC ||
+					      BC_Types[bc_input_id].BC_Name == GD_PARAB_BC ||
+					      BC_Types[bc_input_id].BC_Name == GD_PARAB_OFFSET_BC ||
+					      BC_Types[bc_input_id].BC_Name == GD_CIRC_BC || 
+					      BC_Types[bc_input_id].BC_Name == GD_TIME_BC || 
+					      BC_Types[bc_input_id].BC_Name == GD_POLYN_BC ||
+					      BC_Types[bc_input_id].BC_Name == GD_TABLE_BC) 
+					     && 
+					     (BC_Types[bc_input_id].desc->equation == R_MESH_NORMAL || 
+					      BC_Types[bc_input_id].desc->equation == R_MESH2)
 							     ) ) ) {
 			
 		        /* However, we may have already gotten started, applied the

@@ -4105,6 +4105,7 @@ evaluate_flux(
 		       if( pd->CoordinateSystem == CARTESIAN ) 
 			  {
                          local_flux += sign*mp->surface_tension*fv->stangent[0][dir];
+
  	                if( J_AC != NULL)
  		           {
 			  for( p=0; p<dim ; p++)
@@ -4120,26 +4121,31 @@ evaluate_flux(
 				    }
 				}
 			    }
- 			  var = TEMPERATURE;
- 			  
- 			  for(j=0; j<ei->dof[var]; j++)
- 			    {
-				      J_AC[ ei->gun_list[var][j] ] += 
+ 			 var = TEMPERATURE;
+			 if(pd->v[var])
+			     {
+ 			      for(j=0; j<ei->dof[var]; j++)
+ 			          {
+				   J_AC[ ei->gun_list[var][j] ] += 
                          	         sign*fv->stangent[0][dir]
 				         *dsigmadT*bf[var]->phi[j];
- 			    }
-			    var = MASS_FRACTION;
-			    if (pd->v[var]) {
-			      for (w = 0; w < pd->Num_Species_Eqn; w++) {
-				for (j = 0; j < ei->dof[var]; j++) {
+ 			          }
+ 			     }
+			 var = MASS_FRACTION;
+			 if (pd->v[var]) 
+                            {
+			     for (w = 0; w < pd->Num_Species_Eqn; w++) 
+                                {
+				for (j = 0; j < ei->dof[var]; j++) 
+                                  {
 				  gnn = ei->gnn_list[var][j];
 				  ledof = ei->lvdof_to_ledof[var][j];
 				  matIndex = ei->matID_ledof[ledof];
 				  c = Index_Solution(gnn, var, w, 0, matIndex);
 				  J_AC[c] += sign*fv->stangent[0][dir]
                                     *dsigmadC[w]*bf[var]->phi[j];
-				}
-			      }
+				  }
+			        }
 			    }
  		           }
 			}
@@ -4147,44 +4153,48 @@ evaluate_flux(
 			 pd->CoordinateSystem == CYLINDRICAL)
 			{
                          local_flux += 2*M_PIE*fv->x[1]*sign*mp->surface_tension*fv->stangent[0][dir];
- 	                if( J_AC != NULL)
+ 	                 if( J_AC != NULL)
  		           {
-			  for( p=0; p<dim ; p++)
-			    {
+			   for( p=0; p<dim ; p++)
+			     {
 			      var = MESH_DISPLACEMENT1 + p;
-
 			      if(pd->v[var])
 				{
-				  for( j=0 ; j<ei->dof[var]; j++)
-				    {
-				      J_AC[ ei->gun_list[var][j] ] += 
-                         2*M_PIE*sign*mp->surface_tension*
+				 for( j=0 ; j<ei->dof[var]; j++)
+				   {
+				    J_AC[ ei->gun_list[var][j] ] += 
+                                           2*M_PIE*sign*mp->surface_tension*
 			(fv->x[1]*fv->dstangent_dx[0][dir][p][j]+
 			delta(p,1)*bf[var]->phi[j]*fv->stangent[0][dir]);
-				    }
-				}
+				   }
+			        }
 			    }
  			  var = TEMPERATURE;
- 			  
- 			  for(j=0; j<ei->dof[var]; j++)
- 			    {
-				      J_AC[ ei->gun_list[var][j] ] += 
-                         2*M_PIE*sign*fv->x[1]*fv->stangent[0][dir]
-				*dsigmadT*bf[var]->phi[j];
- 			    }
-			    var = MASS_FRACTION;
-			    if (pd->v[var]) {
-			      for (w = 0; w < pd->Num_Species_Eqn; w++) {
-				for (j = 0; j < ei->dof[var]; j++) {
+			  if(pd->v[var])
+			      {
+ 			       for(j=0; j<ei->dof[var]; j++)
+ 			           {
+				    J_AC[ ei->gun_list[var][j] ] += 
+                                           2*M_PIE*sign*fv->x[1]*fv->stangent[0][dir]
+				           *dsigmadT*bf[var]->phi[j];
+ 			           }
+ 			      }
+			  var = MASS_FRACTION;
+			  if (pd->v[var]) 
+                              {
+			      for (w = 0; w < pd->Num_Species_Eqn; w++) 
+                                {
+				for (j = 0; j < ei->dof[var]; j++) 
+                                  {
 				  gnn = ei->gnn_list[var][j];
 				  ledof = ei->lvdof_to_ledof[var][j];
 				  matIndex = ei->matID_ledof[ledof];
 				  c = Index_Solution(gnn, var, w, 0, matIndex);
 				  J_AC[c] += 2*M_PIE*fv->x[1]*sign*fv->stangent[0][dir]
                                     *dsigmadC[w]*bf[var]->phi[j];
-				}
+				  }
+			        }
 			      }
-			    }
  		           }
 			}
 			else
@@ -5216,36 +5226,52 @@ compute_volume_integrand(const int quantity, const int elem,
       {
         struct Species_Conservation_Terms s_terms; 
         int w1,i,ie,ldof,eqn=MASS_FRACTION;
+        const int init_spec=0;
+        double exp_factor=1.0;
         zero_structure(&s_terms, sizeof(struct Species_Conservation_Terms), 1);
         get_continuous_species_terms(&s_terms, time, tran->theta, delta_t, NULL);
+
+  /* correct mass based on shrinkage */
+	switch (species_no)
+	   {
+            case 0:
+                exp_factor = mp->specific_volume[init_spec]/mp->specific_volume[init_spec+1];
+                break;
+            case 1:
+                exp_factor = mp->specific_volume[init_spec+1]/mp->specific_volume[init_spec];
+                break;
+            default:
+                exp_factor = mp->specific_volume[species_no]/mp->specific_volume[pd->Num_Species_Eqn];
+                break;
+           }
+  /* integrate product reaction rate */
         if(time > tran->init_time+delta_t)
  	   {
-            *sum += weight*det*(-s_terms.MassSource[species_no])
-                    *mp->specific_volume[species_no]/mp->specific_volume[pd->Num_Species_Eqn];
+            *sum += weight*det*(-s_terms.MassSource[species_no])*exp_factor;
            }
   if (efv->ev) {
         if( efv->i[species_no] != I_TABLE)
           {       
-           for (i = 0; i < ei->num_local_nodes; i++) {
+           for (i = 0; i < ei->num_local_nodes; i++) 
+               {
                 ie = Proc_Elem_Connect[ei->iconnect_ptr + i];
 		ldof=ei->ln_to_dof[eqn][i];
                 if(ldof >= 0 )
                    {
+          /* on first time step, integrate initial reaction product field  */
                     if(time <= tran->init_time+delta_t)
  	                 {
                           *sum += weight*det*bf[eqn]->phi[ldof]*
-                          efv->ext_fld_ndl_val[species_no][ie];
+                                       efv->ext_fld_ndl_val[species_no][ie];
                          }
+         /* and increment reaction product field  */
                     efv->ext_fld_ndl_val[species_no][ie] += 
                               bf[eqn]->phi[ldof]*weight*det*
                               0.5*(delta_t+tran->delta_t)
-                              *(-s_terms.MassSource[species_no])
-                    *mp->specific_volume[species_no]/mp->specific_volume[pd->Num_Species_Eqn];
+                              *(-s_terms.MassSource[species_no])*exp_factor;
+        /* for one time through, integrate lumped mass matrix   */
                     if(species_no == 0)	
-                          {
-                          Spec_source_lumped_mass[ie] += 
-                               bf[eqn]->phi[ldof]*weight*det;
-                          }
+                          { Spec_source_lumped_mass[ie] += bf[eqn]->phi[ldof]*weight*det; }
                    }
                 } 
           }
@@ -5261,9 +5287,10 @@ compute_volume_integrand(const int quantity, const int elem,
 		  {
 		    for( j=0 ; j<ei->dof[var]; j++)
 		      {
-	    
-			J_AC[ ei->gun_list[var][j] ] += weight*  ( h3 * bf[pd->ShapeVar]->d_det_J_dm[a][j] +
- 			fv->dh3dq[a]*bf[var]->phi[j] * det_J )*s_terms.MassSource[species_no];
+		       J_AC[ ei->gun_list[var][j] ] += 
+                            weight*  ( h3 * bf[pd->ShapeVar]->d_det_J_dm[a][j] +
+ 		            fv->dh3dq[a]*bf[var]->phi[j] * det_J )
+                            *(-s_terms.MassSource[species_no])*exp_factor;
 		      }
 		  }
 	      }
@@ -5282,7 +5309,7 @@ compute_volume_integrand(const int quantity, const int elem,
 		ledof = ei->lvdof_to_ledof[var][j];
 		matIndex = ei->matID_ledof[ledof];
 		c = Index_Solution(gnn, var, species_no, 0, matIndex);
- 		J_AC[c] += weight * det * s_terms.d_MassSource_dc[species_no][w1][j];
+ 		J_AC[c] += weight * det * (-s_terms.d_MassSource_dc[species_no][w1][j])*exp_factor;
 	      }
 	     }
 	    }
