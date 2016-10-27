@@ -154,7 +154,7 @@
  * and concentration multiplicity are not limited by these values.
  */
 
-#define MAX_EQNVARS				16
+#define MAX_EQNVARS				22
 #define UNDEFINED_EQNVARID			(-55555)
 #define LEN_NODE_DESCRIPTION			(4*MAX_EQNVARS+1)
 

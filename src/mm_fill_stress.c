@@ -3845,6 +3845,8 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
   double wt;                  /* Quadrature weights units - ergs/(sec*cm*K) = g*cm/(sec^3*K)     */
 
   dbl *phi_v=NULL;
+
+  dbl alpha = 0.5;
     
   /***************************************************************************/
 
@@ -4243,6 +4245,10 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 	    {
 	      vdotn += fv->v[a]* fv->snormal[a];
 	    }
+
+	  /* add alpha for upwinding and possible stability */
+	  vdotn *= alpha;
+
 	  vdotn_norm = sqrt(vdotn*vdotn);
 	  
 	  if ((vdotn <  0.) && (vdotn_norm > 1.e-7))
@@ -4366,7 +4372,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 						      
 						      advection =  phi_i * wt * fv->sdet * 
 							ve[mode]->time_const *
-							phi_j * fv->snormal[p] *
+							phi_j * fv->snormal[p] * alpha *
 							(s[a][b]- s_n[mode][a][b]);
 						      
 						      lec->J[peqn][pvar][i][j] -=
@@ -5111,7 +5117,10 @@ numerical_viscosity(dbl s[DIM][DIM],                       /* total stress */
 	  
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
-	      d_mun_dG[a][b][j] = eps*(sqrt(1.+ eps2*s_dbl_dot_s))/pow((1.+eps2*g_dbl_dot_g),1.5)
+	      /* d_mun_dG[a][b][j] = -eps*(sqrt(1.+ eps2*s_dbl_dot_s))/pow((1.+eps2*g_dbl_dot_g),1.5) */
+  	      /* 	*gamma_cont[a][b]*bf[var]->phi[j]; */
+	      d_mun_dG[a][b][j] = -eps*mun/(1.+eps2*g_dbl_dot_g)
+
   		*gamma_cont[a][b]*bf[var]->phi[j];
 	    }
 	}

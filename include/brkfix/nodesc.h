@@ -31,7 +31,7 @@
 #define _NODESC_H
 
 
-#define MAX_EQNVARS			16
+#define MAX_EQNVARS			34
 
 #define MAX_NODE_KINDS			32
 

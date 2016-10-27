@@ -2001,6 +2001,12 @@ carreau_suspension_viscosity(struct Generalized_Newtonian *gn_local,
   
   calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
 
+  if(fabs(gammadot) <= 1.0e-7)
+    {
+     gammadot = .0001 ;
+    }
+ 
+ 
   vdofs = ei->dof[VELOCITY1];
   
   if ( pd->e[R_MESH1] )
