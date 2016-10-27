@@ -5805,6 +5805,9 @@ assemble_volume(bool owner)
   dbl d_detJh3_dmeshbj;
   dbl d_func_dmeshbj;           /* Sensitivity of func to (b,j)mesh dof. */
 
+  double P_amb=1.013E+06;   /* cgs units */
+  double R_gas = 82.07*1.013E+06;
+  double moles_gas;
   status = 0;
   func=1.;
 
@@ -5839,6 +5842,11 @@ assemble_volume(bool owner)
    * 3= mass fraction of species w * volume
    * Add as needed
    */
+  if(augc[iAC].len_AC > 0)
+    {
+     R_gas = augc[iAC].DataFlt[0];
+     P_amb = augc[iAC].DataFlt[1];
+    }
 
   switch (VC_mode)
     {
@@ -5871,9 +5879,16 @@ assemble_volume(bool owner)
 	  EH(-1," must have momentum equation on for this AC");
 	}
       break;
+    case 5: /* ideal gas version */
+    case 15:
+      moles_gas = 0.0;
+      for (j=0; j<pd->Num_Species; j++)
+           {  moles_gas += fv->c[spec_id]/mp->molecular_weight[spec_id];  }
+      func = fv->P+P_amb - R_gas*fv->T*moles_gas;
+      break;
 
     default:
-      EH(-1, "assemble_volue() unknown integral calculation\n");
+      EH(-1, "assemble_volume() unknown integral calculation\n");
       break;
     }
 
@@ -5955,6 +5970,62 @@ assemble_volume(bool owner)
 	      augc[iAC].d_evol_dx[vj] += phi_j * det_J * wt * h3;
 		}
 	    }
+	
+	}
+  if (VC_mode == 5) 
+    {
+      var = PRESSURE ;
+      eqn = R_PRESSURE;
+      if (pd->v[var])
+	{
+	  for (j = 0; j < ei->dof[var]; j++) 
+	    {
+	      phi_j = bf[var]->phi[j];
+	      ktype = 0;
+	      gnn   = ei->gnn_list[eqn][j];
+	      nvdof = ei->Baby_Dolphin[eqn][j];
+	      ledof =  ei->lvdof_to_ledof[eqn][j];
+	      vj    = Index_Solution(gnn, eqn, ktype , nvdof,
+				     ei->matID_ledof[ledof]);
+	      augc[iAC].d_evol_dx[vj] += phi_j * det_J * wt * h3;
+		}
+	    }
+      var = MASS_FRACTION ;
+      eqn = R_MASS;
+      if (pd->v[var])
+	{
+	  for (j = 0; j < ei->dof[var]; j++) 
+	    {
+	      phi_j = bf[var]->phi[j];
+              for (ktype=0; ktype<pd->Num_Species; ktype++)
+                {
+	      gnn   = ei->gnn_list[eqn][j];
+	      nvdof = ei->Baby_Dolphin[eqn][j];
+	      ledof =  ei->lvdof_to_ledof[eqn][j];
+	      vj    = Index_Solution(gnn, eqn, ktype , nvdof,
+				     ei->matID_ledof[ledof]);
+	      augc[iAC].d_evol_dx[vj] -= R_gas*fv->T/mp->molecular_weight[ktype]
+                                            *phi_j * det_J * wt * h3;
+                }
+	    }
+	}
+      var = TEMPERATURE ;
+      eqn = R_ENERGY;
+      if (pd->v[var])
+	{
+	  for (j = 0; j < ei->dof[var]; j++) 
+	    {
+	      phi_j = bf[var]->phi[j];
+	      ktype = spec_id;
+	      gnn   = ei->gnn_list[eqn][j];
+	      nvdof = ei->Baby_Dolphin[eqn][j];
+	      ledof =  ei->lvdof_to_ledof[eqn][j];
+	      vj    = Index_Solution(gnn, eqn, ktype , nvdof,
+				     ei->matID_ledof[ledof]);
+	      augc[iAC].d_evol_dx[vj] -= R_gas*(fv->c[spec_id]/mp->molecular_weight[spec_id])
+                                            *phi_j * det_J * wt * h3;
+	    }
+	}
 	
 	}
   
@@ -28161,7 +28232,7 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
        int model_bit, num_mon, O2_spec=-1, rad_spec=-1, init_spec = 0;
        double k_propX=1, k_propT=0, k_propX_num=0, k_propX_den=0;
        double intensity_cgs = 2.998e+10*8.85e-12/200.0;
-       double dbl_small = 1.0e-15,Xconv_denom = 0.;
+       double dbl_small = 1.0e-15, Xconv_denom=0, sum_init=0;
        double Xconv=0.0, Xconv_init=0.0, dXdC[MAX_CONC], sum_mon=0;
 
        param = mp->u_heat_source;
@@ -28241,6 +28312,8 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
                      Xconv += fv->external_field[w]/mp->molecular_weight[w]/mp->specific_volume[w];
                      sum_mon += Conc[w]/mp->molecular_weight[w];
                      dXdC[w] = -1.0/mp->molecular_weight[w];
+                     Xconv_init +=  mp->u_reference_concn[w][1]/mp->molecular_weight[w]/mp->specific_volume[w];
+                     sum_init += mp->u_reference_concn[w][0]/mp->molecular_weight[w];
                     }
                 break;
            case SPECIES_CONCENTRATION:
@@ -28249,16 +28322,20 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
                      Xconv += fv->external_field[w]/mp->specific_volume[w];
                      sum_mon += Conc[w];
                      dXdC[w] = -1.0;
+                     Xconv_init += mp->u_reference_concn[w][1]/mp->specific_volume[w];
+                     sum_init += mp->u_reference_concn[w][0];
                     }
                 break;
            default:
                 EH(-1,"invalid Species Type for PHOTO_CURING\n");
            }
        Xconv *= mp->specific_volume[pd->Num_Species_Eqn];
+       Xconv_init *= mp->specific_volume[pd->Num_Species_Eqn];
        Xconv_denom = Xconv + sum_mon;
        Xconv /= Xconv_denom;
        Xconv = MAX(dbl_small,Xconv);
        Xconv = MIN(1.0-dbl_small,Xconv);
+       Xconv_init /= (Xconv_init + sum_init);
        for ( w=init_spec+2; w<init_spec+2+num_mon; w++)
             { dXdC[w] *= Xconv/Xconv_denom; }
         if(Xconv <= dbl_small || Xconv >= (1.0-dbl_small) )
@@ -28313,9 +28390,10 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 
 /**  add heat generation from light absorption  **/
 
-      h +=  param[1]*intensity*Conc[init_spec];
-      dhdC[init_spec] += param[1]*intensity;
-      dhdI =  param[1]*Conc[init_spec];
+      h +=  param[1]*intensity*mp->light_absorption;
+      dhdI =  param[1]*mp->light_absorption;
+      for ( w=0; w<pd->Num_Species_Eqn; w++)
+          {  dhdC[w] += param[1]*intensity*mp->d_light_absorption[MAX_VARIABLE_TYPES+w];  }
 
       var = TEMPERATURE;
       if ( d_h != NULL && pd->e[var] )
@@ -31637,7 +31715,7 @@ visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 		      dbl *param, int num_const) /* General multipliers */
 {
   /* Local Variables */
-  int var;
+  int var, err;
 
   int w, j;
   double omega, visc_first, visc_second, R_gas;
@@ -31655,8 +31733,8 @@ visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha = &d_alpha_struct;
 
   double visc_cmb;				/* Combined viscosity term  */
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_visc_cmb_struct; 
-  CONDUCTIVITY_DEPENDENCE_STRUCT *d_visc_cmb = &d_visc_cmb_struct;
+  VISCOSITY_DEPENDENCE_STRUCT d_visc_cmb_struct; 
+  VISCOSITY_DEPENDENCE_STRUCT *d_visc_cmb = &d_visc_cmb_struct;
 
   dbl gamma[DIM][DIM];
   dbl mu;
@@ -31688,36 +31766,42 @@ visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
     some of the options require extra derivatives be calculated.
 	I'll use oscillation frequency for now.
 */
+/* First evaluate bulk viscosity at rest conditions
+   Then evaluate shear viscosity at frequency.
+   The visc_first parameter is a bulk viscosity multiplier  */
+
+  visc_cmb = viscosity(gn, gamma, d_visc_cmb);
 #if 1
   gamma[0][0] = omega;
 #endif
-#if 0
-  gamma[0][0] = k/R*(SQUARE(fv->apr)+SQUARE(fv->api))*
-		sqrt(2.*(1+4.*SQUARE(alpha)/SQUARE(omega)));
-#endif
   mu = viscosity(gn, gamma, d_mu);
-  visc_cmb = 4.*mu/3. + visc_first;
-      memset( d_visc_cmb->T, 0, sizeof(double)*MDE);
-      memset( d_visc_cmb->X, 0, sizeof(double)*DIM*MDE);
-      memset( d_visc_cmb->C, 0, sizeof(double)*MAX_CONC*MDE);
-      memset( d_visc_cmb->F, 0, sizeof(double)*MDE);
+  visc_cmb = 4.*mu/3. + visc_first*visc_cmb;
   for (j=0; j<ei->dof[TEMPERATURE]; j++)
-	    { d_visc_cmb->T[j] = d_mu->T[j]; }
+	    { 
+             d_visc_cmb->T[j] *= visc_first*d_mu->T[j]; 
+             d_visc_cmb->T[j] += (4./3.)*d_mu->T[j]; 
+            }
   for (j=0; j<ei->dof[FILL]; j++)
-	    { d_visc_cmb->F[j] = d_mu->F[j]; }
+	    { 
+             d_visc_cmb->F[j] *= visc_first*d_mu->F[j]; 
+             d_visc_cmb->F[j] += (4./3.)*d_mu->F[j]; 
+            }
   for (j=0; j<ei->dof[MASS_FRACTION]; j++)
       {
       for ( w=0; w<pd->Num_Species_Eqn; w++)
-	    { d_visc_cmb->C[w][j] = d_mu->C[w][j]; }
+	    { 
+             d_visc_cmb->C[w][j] *= visc_first*d_mu->C[w][j]; 
+             d_visc_cmb->C[w][j] += (4./3.)*d_mu->C[w][j]; 
+            }
       }
   if( ls != NULL)
   {
-  visc_cmb = ls_modulate_thermalconductivity( visc_cmb,
-                                  visc_second,
+          err = ls_modulate_viscosity( &visc_cmb, visc_second,
                                   ls->Length_Scale,
-                                  (double) mp->mp2nd->wavenumbermask[0],
-                                  (double) mp->mp2nd->wavenumbermask[1],
-                                  d_visc_cmb );
+                                  (double) mp->mp2nd->viscositymask[0],
+                                  (double) mp->mp2nd->viscositymask[1],
+                                  d_visc_cmb, mp->mp2nd->ViscosityModel );
+          EH(err, "ls_modulate_viscosity");
 /*  optionally set impedance to true value input on card	*/
   if(num_const == 4)
 	{
@@ -31731,14 +31815,14 @@ visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 	}
   }
 
-#if 0
-fprintf(stderr,"visc %g %g %g %d %g %g %g %d\n",mu,visc_cmb,gamma[0][0], num_const, param[3], fv->F, lsi->H, ls->SubElemIntegration);
-#endif
   ap_square = SQUARE(fv->apr) + SQUARE(fv->api);
   temp1 = SQUARE(k)/SQUARE(R);
-  temp3 = (1. + 4.*SQUARE(alpha)/SQUARE(omega));
+  temp3 = (1. + 4.*SQUARE(alpha));
   h = ap_square*temp1*visc_cmb*temp3;
-  h *= 0.5*param[0];
+  h *= param[0];
+#if 0
+fprintf(stderr,"visc %g %g %g %g %g %g %g\n",mu,visc_cmb,gamma[0][0], visc_first, temp1, temp3, h);
+#endif
 
   /* Now do sensitivies */
 if(af->Assemble_Jacobian)
@@ -31749,9 +31833,10 @@ if(af->Assemble_Jacobian)
     {
 	  for (j=0; j<ei->dof[var]; j++)
 	    {
-	      d_h->T[j] += 0.5*param[0]*ap_square*visc_cmb*
-			(temp1*4.*alpha*d_alpha->T[j]/SQUARE(omega) 
-			+ temp3*2.*k*(R*d_k->T[j]-k*d_R->T[j])/(R*R*R));
+	      d_h->T[j] += param[0]*ap_square*(visc_cmb*
+			(temp1*4.*alpha*d_alpha->T[j] 
+			+ temp3*2.*k*(R*d_k->T[j]-k*d_R->T[j])/(R*R*R))
+                        +d_visc_cmb->T[j]*temp1*temp3);
 	    }
     }
 
@@ -31763,9 +31848,10 @@ if(af->Assemble_Jacobian)
          {
 	  for (j=0; j<ei->dof[var]; j++)
 	    {
-	     d_h->C[w][j] += 0.5*param[0]*ap_square*visc_cmb*
-			(temp1*4.*alpha*d_alpha->C[w][j]/SQUARE(omega) 
-			+ temp3*2.*k*(R*d_k->C[w][j]-k*d_R->C[w][j])/(R*R*R));
+	     d_h->C[w][j] += param[0]*ap_square*(visc_cmb*
+			(temp1*4.*alpha*d_alpha->C[w][j] 
+			+ temp3*2.*k*(R*d_k->C[w][j]-k*d_R->C[w][j])/(R*R*R))
+                        + d_visc_cmb->C[w][j]*temp1*temp3);
 	    }
          }
     }
@@ -31775,9 +31861,9 @@ if(af->Assemble_Jacobian)
     {
 	  for (j=0; j<ei->dof[var]; j++)
 	    {
-	      d_h->F[j] += 0.5*param[0]*ap_square*
-			(temp1*visc_cmb*4.*alpha*d_alpha->F[j]/SQUARE(omega) 
-			+ visc_cmb*temp3*2.*k*(R*d_k->F[j]-k*d_R->F[j])/(R*R*R)
+	      d_h->F[j] += param[0]*ap_square*(visc_cmb*
+			(temp1*4.*alpha*d_alpha->F[j] 
+			+ temp3*2.*k*(R*d_k->F[j]-k*d_R->F[j])/(R*R*R))
 			+ temp1*temp3*d_visc_cmb->F[j]);
 	    }
     }
@@ -31787,7 +31873,7 @@ if(af->Assemble_Jacobian)
     {
 	  for (j=0; j<ei->dof[var]; j++)
 	    {
-	      d_h->APR[j] += 0.5*param[0]*temp1*visc_cmb*temp3*2.*fv->apr*bf[var]->phi[j]; 
+	      d_h->APR[j] += param[0]*temp1*visc_cmb*temp3*2.*fv->apr*bf[var]->phi[j]; 
 	    }
     }
   var = ACOUS_PIMAG;
@@ -31795,7 +31881,7 @@ if(af->Assemble_Jacobian)
     {
 	  for (j=0; j<ei->dof[var]; j++)
 	    {
-	      d_h->API[j] += 0.5*param[0]*temp1*visc_cmb*temp3*2.*fv->api*bf[var]->phi[j]; 
+	      d_h->API[j] += param[0]*temp1*visc_cmb*temp3*2.*fv->api*bf[var]->phi[j]; 
 	    }
     }
    

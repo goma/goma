@@ -1565,10 +1565,41 @@ std_aug_cond(int iAC,
 				FALSE,
 				mf_args->x,
 				mf_args->xdot,
-				cAC[iAC],
+				cAC[iAC], 
 				*(mf_args->delta_t),
 				*(mf_args->time),
 				0);
+      if(augc[iAC].len_AC > 2)
+      {
+      int mfid, ssid, mtid, compid;
+      double inventory1, ac_factor=1.0;
+
+      mfid = (int)augc[iAC].DataFlt[0];
+      ssid = (int)augc[iAC].DataFlt[1];
+      mtid = (int)augc[iAC].DataFlt[2];
+        if(augc[iAC].len_AC > 3)
+          {compid = (int)augc[iAC].DataFlt[3];}
+        else
+          {compid = 0;}
+        if(augc[iAC].len_AC > 4)
+          {ac_factor = augc[iAC].DataFlt[4];}
+      inventory1 = evaluate_flux(mf_args->exo,
+				mf_args->dpi,
+				ssid,
+				mfid,
+				NULL,
+				mtid,
+				compid,
+				NULL,
+				FALSE,
+				mf_args->x,
+				mf_args->xdot,
+				cAC[iAC], 
+				*(mf_args->delta_t),
+				*(mf_args->time),
+				0);
+      inventory += ac_factor*inventory1;
+      }
       /*
        * And last of all. set the diagonal sensitivities to zero (but not for Level Set Velocity AC)
        */

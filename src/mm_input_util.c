@@ -929,7 +929,7 @@ look_for_species_prop(FILE *imp,  const char *search_string,
    *  Check on the number of arguments
    */
   num_args = numTok - 2;
-  if (num_values_expected > 0) 
+  if (num_values_expected > 0 && strcmp(model_name, "USER")) 
     {
     if (num_args != num_values_expected) 
       {
@@ -1001,6 +1001,7 @@ look_for_species_prop(FILE *imp,  const char *search_string,
     {
       material_property[species_ID] =  arg_list[0];
       fill_user_constant = FALSE;
+      if (!strcmp(model_name, "PHOTO_CURING")) materialModel[species_ID] = PHOTO_CURING;
     }
     
   /*
