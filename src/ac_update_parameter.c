@@ -86,7 +86,6 @@ update_parameterC(int iCC,       /* CONDITION NUMBER */
 
   int ic, mn, mpr;
   int ibc, idf;
-  //struct Boundary_Condition *BC_Type;
 
 #ifdef DEBUG
   static const char yo[] = "update_parameterC";
@@ -203,7 +202,6 @@ update_parameterTP(int iTC,       /* CONDITION NUMBER */
 
   int ic, mn, mpr;
   int ibc, idf;
-  //struct Boundary_Condition *BC_Type;
 
 #ifdef DEBUG
   static const char yo[] = "update_parameterTP";
@@ -285,7 +283,6 @@ update_parameterHC(int iHC,      /* Hunting condition number */
 
   int ic, mn, mpr;
   int ibc, idf;
-  //struct Boundary_Condition *BC_Type;
 
 #ifdef DEBUG
   static const char yo[] = "update_parameterHC";
@@ -305,7 +302,8 @@ update_parameterHC(int iHC,      /* Hunting condition number */
   if (hunt[iHC].Type == 1) {
     ibc = hunt[iHC].BCID;
     idf = hunt[iHC].DFID;
-    update_BC_parameter(lambda, ibc, idf, cx, exo, dpi);
+    if(ibc > -1)
+	{ update_BC_parameter(lambda, ibc, idf, cx, exo, dpi); }
   }
 
   /*
@@ -367,7 +365,6 @@ update_parameterS(double lambda, /* PARAMETER VALUE */
 
   int ic, mn, mpr;
   int ibc, idf;
-  //struct Boundary_Condition *BC_Type;
 
 #ifdef DEBUG
   static const char yo[] = "update_parameterS";
@@ -1072,7 +1069,6 @@ retrieve_parameterS(double *lambda, /* PARAMETER VALUE */
   int ic;
   int mn,mpr;
   int ibc, idf;
-  //struct Boundary_Condition *BC_Type;
   
 #ifdef DEBUG
   static const char yo[]="retrieve_parameterS";

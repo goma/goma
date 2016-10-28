@@ -1183,6 +1183,7 @@ struct Boundary_Condition {
   dbl   BC_Data_Float[MAX_BC_FLOAT_DATA];
   int   len_u_BC;		/* number of elements in the user constant 
 				   list (0 most of the time) */
+  int   max_DFlt;
   int   Storage_ID;             /* ID of the quadature point storage for this bc 
 				 * Must be positive for it to exist. zero means
 				 * that it does not yet exist 
