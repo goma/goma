@@ -746,7 +746,6 @@ f_fillet (int ielem_dim,
         const int num_const)           /* number of passed parameters   */
 {    
 /**************************** EXECUTION BEGINS *******************************/
-  int  i;
   double xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
   double theta;
 

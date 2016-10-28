@@ -2356,6 +2356,7 @@ initialize_Boundary_Condition (struct Boundary_Condition *bc_ptr)
    * transporting this list across processors.
    */
   bc_ptr->len_u_BC = 0;
+  bc_ptr->max_DFlt = 0;
 
   /*
    * Also, the majority of boundary conditions may rely upon
