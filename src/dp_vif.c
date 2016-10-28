@@ -931,6 +931,7 @@ noahs_ark()
       ddd_add_member(n, BC_Types[i].BC_Data_Float, MAX_BC_FLOAT_DATA, 
 		     MPI_DOUBLE);
       ddd_add_member(n, &BC_Types[i].len_u_BC, 1, MPI_INT);            
+      ddd_add_member(n, &BC_Types[i].max_DFlt, 1, MPI_INT);            
 
       /* double u_BC delivered by Dove...*/
 

@@ -720,6 +720,7 @@ rd_bc_specs(FILE *ifp,
 		      yo, BC_Types[ibc].desc->name1);
 	      EH(-1, err_msg);
 	    }
+            BC_Types[ibc].max_DFlt = 2;
 	    
 	    SPF(endofstring(echo_string), " %.4g", BC_Types[ibc].BC_Data_Float[0]);
 	    
@@ -814,6 +815,7 @@ rd_bc_specs(FILE *ifp,
 	    }
 
 	  SPF_DBL_VEC(endofstring(echo_string), 3,  BC_Types[ibc].BC_Data_Float);
+          BC_Types[ibc].max_DFlt = 3;
 
           break;
 
@@ -839,6 +841,7 @@ rd_bc_specs(FILE *ifp,
 	    }
 
 	  SPF_DBL_VEC(endofstring(echo_string), 3,  BC_Types[ibc].BC_Data_Float);
+          BC_Types[ibc].max_DFlt = 3;
 
 	  /* Try reading the optional integer. */
 	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1)
@@ -909,6 +912,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }
 
+          BC_Types[ibc].max_DFlt = 4;
 	  SPF_DBL_VEC(endofstring(echo_string), 4,  BC_Types[ibc].BC_Data_Float);
           break;
 	  /*
@@ -929,6 +933,7 @@ rd_bc_specs(FILE *ifp,
  	    }
  	  else
  	    {
+          BC_Types[ibc].max_DFlt = 4;
 	  SPF_DBL_VEC(endofstring(echo_string), 4,  BC_Types[ibc].BC_Data_Float);
 	      /* Scan for the optional int. If not present, put a -1 in second data position */ 
 	      /* This is to ensure a nonzero entry in BC_Data_Int[2] for CA */
@@ -963,6 +968,7 @@ rd_bc_specs(FILE *ifp,
 #ifdef USE_CGM
 	  BC_Types[ibc].cgm_plane_handle = NULL;
 #endif
+          BC_Types[ibc].max_DFlt = 4;
 	  SPF_DBL_VEC(endofstring(echo_string), 4,  BC_Types[ibc].BC_Data_Float);
 
           break;
@@ -989,6 +995,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }
 
+          BC_Types[ibc].max_DFlt = 4;
 	  SPF_DBL_VEC(endofstring(echo_string), 4,  BC_Types[ibc].BC_Data_Float);
 
 	  if ( fscanf(ifp, "%d %lf", 
@@ -1000,6 +1007,7 @@ rd_bc_specs(FILE *ifp,
 	    }
 	  else
 	    SPF(endofstring(echo_string)," %d %.4g", BC_Types[ibc].BC_Data_Int[0],BC_Types[ibc].BC_Data_Float[4]); 
+          BC_Types[ibc].max_DFlt = 5;
 
 
 	  break;
@@ -1043,6 +1051,7 @@ rd_bc_specs(FILE *ifp,
 		      BC_Types[ibc].BC_Data_Float[8] = 0.0;
 	    }
 
+          BC_Types[ibc].max_DFlt = 9;
 	  SPF_DBL_VEC(endofstring(echo_string), 9,  BC_Types[ibc].BC_Data_Float);
 
 	  break;
@@ -1078,6 +1087,7 @@ rd_bc_specs(FILE *ifp,
 		      BC_Types[ibc].BC_Data_Float[6] = 0.0;
 	    }
 
+          BC_Types[ibc].max_DFlt = 7;
 	  SPF_DBL_VEC(endofstring(echo_string), 7,  BC_Types[ibc].BC_Data_Float);
 
 	  break;
@@ -1104,6 +1114,7 @@ rd_bc_specs(FILE *ifp,
 
 	  SPF_INT_VEC(endofstring(echo_string), 3,  BC_Types[ibc].BC_Data_Int);
 	  SPF_DBL_VEC(endofstring(echo_string), 5,  BC_Types[ibc].BC_Data_Float);
+          BC_Types[ibc].max_DFlt = 5;
 
           break;
 
@@ -1177,6 +1188,7 @@ rd_bc_specs(FILE *ifp,
 	      BC_Types[ibc].BC_Data_Float[4]=0.;
 	    }
  
+           BC_Types[ibc].max_DFlt = 5;
 	   BC_Types[ibc].species_eq = BC_Types[ibc].BC_Data_Int[0];
 
 	   break;
@@ -1255,6 +1267,7 @@ rd_bc_specs(FILE *ifp,
 
 	   SPF(endofstring(echo_string)," %s %d", input,BC_Types[ibc].BC_Data_Int[0]);
 	   SPF_DBL_VEC(endofstring(echo_string), 10,  BC_Types[ibc].BC_Data_Float);
+           BC_Types[ibc].max_DFlt = 10;
 	    
 	   break; 
 
@@ -1710,6 +1723,7 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, err_msg);
 	    }			   
 	  BC_Types[ibc].len_u_BC = num_const;
+	  BC_Types[ibc].max_DFlt = num_const;
 	  
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);
 
@@ -2002,6 +2016,7 @@ rd_bc_specs(FILE *ifp,
 
           SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);
           SPF_DBL_VEC(endofstring(echo_string),7, BC_Types[ibc].BC_Data_Float);
+          BC_Types[ibc].max_DFlt = 7;
           break;
 
           /*
@@ -2033,6 +2048,7 @@ rd_bc_specs(FILE *ifp,
 
           SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);
           SPF_DBL_VEC(endofstring(echo_string),8, BC_Types[ibc].BC_Data_Float);
+          BC_Types[ibc].max_DFlt = 8;
           break;
 
           /*
@@ -2065,6 +2081,7 @@ rd_bc_specs(FILE *ifp,
 
           SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);
           SPF_DBL_VEC(endofstring(echo_string),9, BC_Types[ibc].BC_Data_Float);
+          BC_Types[ibc].max_DFlt = 9;
           break;
 
           /*
@@ -2096,6 +2113,7 @@ rd_bc_specs(FILE *ifp,
 
           SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);
           SPF_DBL_VEC(endofstring(echo_string),10, BC_Types[ibc].BC_Data_Float);
+          BC_Types[ibc].max_DFlt = 10;
           break;
 
         case YFLUX_BV2_BC:
@@ -2122,6 +2140,7 @@ rd_bc_specs(FILE *ifp,
 
 	  SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);
 	  SPF_DBL_VEC(endofstring(echo_string),9, BC_Types[ibc].BC_Data_Float);
+          BC_Types[ibc].max_DFlt = 9;
 
           break;
 
@@ -2143,6 +2162,7 @@ rd_bc_specs(FILE *ifp,
 
 	  SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);
 	  SPF_DBL_VEC(endofstring(echo_string),2, BC_Types[ibc].BC_Data_Float);
+          BC_Types[ibc].max_DFlt = 2;
 
           break;
 	  
@@ -2863,6 +2883,7 @@ rd_bc_specs(FILE *ifp,
 		  EH(-1, err_msg);
 		}
 	      SPF_DBL_VEC(endofstring(echo_string), 1, BC_Types[ibc].BC_Data_Float);
+              BC_Types[ibc].max_DFlt = 1;
 	      break;
 	    case GD_LINEAR_BC:
 	    case GD_INVERSE_BC:
@@ -2877,6 +2898,7 @@ rd_bc_specs(FILE *ifp,
 		  EH(-1, err_msg);
 		}
 
+              BC_Types[ibc].max_DFlt = 2;
 	      SPF_DBL_VEC(endofstring(echo_string), 2, BC_Types[ibc].BC_Data_Float);
 	      break;
 	    case GD_PARAB_BC:
@@ -2893,6 +2915,7 @@ rd_bc_specs(FILE *ifp,
 		  EH(-1, err_msg);
 		}
 
+              BC_Types[ibc].max_DFlt = 3;
 	      SPF_DBL_VEC(endofstring(echo_string), 3, BC_Types[ibc].BC_Data_Float);
 
 	      break;
@@ -2910,6 +2933,7 @@ rd_bc_specs(FILE *ifp,
 		  EH(-1, err_msg);
 		}
 
+              BC_Types[ibc].max_DFlt = 4;
 	      SPF_DBL_VEC(endofstring(echo_string), 4, BC_Types[ibc].BC_Data_Float);
 
 	      break;
@@ -2931,6 +2955,7 @@ rd_bc_specs(FILE *ifp,
 		  EH(-1, err_msg);
 		}
 
+              BC_Types[ibc].max_DFlt = 7;
 	      SPF_DBL_VEC(endofstring(echo_string), 7, BC_Types[ibc].BC_Data_Float);
 	      break;
 
@@ -2947,6 +2972,7 @@ rd_bc_specs(FILE *ifp,
 				   BC_Types[ibc].BC_ID);
 		      EH(-1, err_msg);
 		    }
+                  BC_Types[ibc].max_DFlt = 2;
 		  SPF_DBL_VEC(endofstring(echo_string), 2, BC_Types[ibc].BC_Data_Float);
 		}
 	      else
@@ -3251,6 +3277,31 @@ rd_bc_specs(FILE *ifp,
       BC_consistency( &BC_Types[ibc] );
 
       ECHO(echo_string, echo_file);
+
+      /* check hunting BC data floats for out-of-bounds*/
+      if(nHC)
+       {
+       for(i=0 ; i<nHC ; i++)
+         {
+         if(hunt[i].Type == 1 && hunt[i].BCID == ibc)
+             {
+              if(hunt[i].DFID >= BC_Types[ibc].max_DFlt)
+                  WH(-1,"Whoa.... hunting data float outside range\n");
+             }
+         }
+       }
+      /* check loca BC data floats for out-of-bounds*/
+      if(nCC)
+       {
+       for(i=0 ; i<nCC ; i++)
+         {
+         if(cpcc[i].Type == 1 && cpcc[i].BCID == ibc)
+             {
+              if(cpcc[i].DFID >= BC_Types[ibc].max_DFlt)
+                  WH(-1,"Whoa.... loca data float outside range\n");
+             }
+         }
+       }
 
     }
 
