@@ -10882,18 +10882,37 @@ assemble_porous_shell_open(
     E_MASS_P[i] += H * phi * dSdP_Pnode * *esp_dot->sh_p_open[i];
   }
 
+  // We are now outside of mass lumping zone. Everything is evaluated at Gauss point from now on
+
+  // Evaluate capillary pressure and load saturation
+  cap_pres = Patm - fv->sh_p_open;
+  load_saturation(phi, cap_pres, d_cap_pres);
+
+  // Load relative permeability as a function of saturation
+  if (mp->RelLiqPermModel != CONSTANT &&
+      mp->RelLiqPermModel != VAN_GENUCHTEN &&
+      mp->RelLiqPermModel != EXTERNAL_FIELD )
+    {
+      EH(-1,"Only CONSTANT, VAN_GENUCHTEN, and EXTERNAL_FIELD  models are allowed for Rel Liq Permeability model in Open Pore Shell equation ");
+    }
+  load_liq_perm(phi, cap_pres, mp->saturation, d_cap_pres);
+  dbl rel_liq_perm = mp->rel_liq_perm;
+
+
   // Calculate DIFFUSION terms
   dbl E_DIFF[DIM] = {0.0};
   dbl E_DIFF_P[DIM][DIM] = {{0.0}};
+  dbl E_DIFF_P2[DIM][DIM] = {{0.0}};
   for ( a = 0; a < DIM; a++) {
     for ( b = 0; b < DIM; b++) {
-      E_DIFF[a]      += -H / mu * mp->perm_tensor[a][b] * fv->grad_sh_p_open[b];
-      E_DIFF_P[a][b] += -H / mu * mp->perm_tensor[a][b];
+      E_DIFF[a]      += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm * fv->grad_sh_p_open[b];
+      E_DIFF_P[a][b] += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm;
+      E_DIFF_P2[a][b] += -H / mu * mp->perm_tensor[a][b] * mp->d_rel_liq_perm[SHELL_PRESS_OPEN] * fv->grad_sh_p_open[b];
     }
   }
 
   // Calculate SOURCE term
-  dbl E_SOUR, E_SOUR_P, E_SOUR_PLUB;
+  dbl E_SOUR = 0.0, E_SOUR_P = 0.0, E_SOUR_PLUB = 0.0;
   dbl E_SOUR_F[MDE] = {0.0};
   dbl E_SOUR_2, E_SOUR_P_2, E_SOUR_2_PLUB_2;
   dbl E_SOUR_2_PF[MDE] = {0.0};
@@ -10903,16 +10922,18 @@ assemble_porous_shell_open(
                                       // criteria.  This should not be const.  We have tofigure this out.
   Peff  = fv->lubp*Hside + Pmin*(1-Hside);
 
-  E_SOUR      = kappa / mu * (fv->sh_p_open - Peff) / (2*S*H);
-  E_SOUR_P    = kappa / mu / (2*S*H);
-  E_SOUR_P   -= kappa / mu * (fv->sh_p_open - Peff) / (2*pow(S,2)*H) * dSdP;
-  E_SOUR_PLUB =-kappa / mu / (2*S*H) * Hside;
-  if ( pd->e[R_FILL] ) {
-    for ( i = 0; i < ei->dof[FILL]; i++) {
-      E_SOUR_F[i] = kappa / mu * (-1) / (2*S*H) * (fv->lubp - Pmin) * d_Hside_dF[i];
+ if (pd->e[R_LUBP])
+   {
+    E_SOUR      = kappa / mu * (fv->sh_p_open - Peff) / (2*S*H);
+    E_SOUR_P    = kappa / mu / (2*S*H);
+    E_SOUR_P   -= kappa / mu * (fv->sh_p_open - Peff) / (2*pow(S,2)*H) * dSdP;
+    E_SOUR_PLUB =-kappa / mu / (2*S*H) * Hside;
+    if ( pd->e[R_FILL] ) {
+       for ( i = 0; i < ei->dof[FILL]; i++) {
+          E_SOUR_F[i] = kappa / mu * (-1) / (2*S*H) * (fv->lubp - Pmin) * d_Hside_dF[i];
+       }
     }
-  }
-
+   }
   // HACK to keep liquid from being sucked back to the lubrication layer
   if ( E_SOUR > 0.0 ) {
     // E_SOUR = 0.0;
@@ -11119,6 +11140,7 @@ assemble_porous_shell_open(
 	    for ( a = 0; a < DIM; a++) {
 	      for ( b = 0; b < DIM; b++) {
 		diff -= E_DIFF_P[a][b] * gradII_phi_i[a] * gradII_phi_j[b];
+		diff -= E_DIFF_P2[a][b] * gradII_phi_i[a] * phi_j;
 	      }
 	    }
 	  }
@@ -11590,13 +11612,32 @@ assemble_porous_shell_open_2(
     E_MASS_P[i] += H * phi * dSdP_Pnode * *esp_dot->sh_p_open_2[i];
   }
 
+  // We are now outside of mass lumping zone. Everything is evaluated at Gauss point from now on
+
+  // Evaluate capillary pressure and load saturation
+  cap_pres = Patm - fv->sh_p_open;
+  load_saturation(phi, cap_pres, d_cap_pres);
+
+  // Load relative permeability as a function of saturation
+  if (mp->RelLiqPermModel != CONSTANT &&
+      mp->RelLiqPermModel != VAN_GENUCHTEN &&
+      mp->RelLiqPermModel != EXTERNAL_FIELD )
+    {
+      EH(-1,"Only CONSTANT, VAN_GENUCHTEN, and EXTERNAL_FIELD  models are allowed for Rel Liq Permeability model in Open Pore Shell equation ");
+    }
+  load_liq_perm(phi, cap_pres, mp->saturation, d_cap_pres);
+  dbl rel_liq_perm = mp->rel_liq_perm;
+
+
   // Calculate DIFFUSION terms
   dbl E_DIFF[DIM] = {0.0};
   dbl E_DIFF_P[DIM][DIM] = {{0.0}};
+  dbl E_DIFF_P2[DIM][DIM] = {{0.0}};
   for ( a = 0; a < DIM; a++) {
     for ( b = 0; b < DIM; b++) {
-      E_DIFF[a]      += -H / mu * mp->perm_tensor[a][b] * fv->grad_sh_p_open_2[b];
-      E_DIFF_P[a][b] += -H / mu * mp->perm_tensor[a][b];
+      E_DIFF[a]      += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm * fv->grad_sh_p_open_2[b];
+      E_DIFF_P[a][b] += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm;
+      E_DIFF_P2[a][b] += -H / mu * mp->perm_tensor[a][b] * mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] * fv->grad_sh_p_open[b];
     }
   }
 
@@ -11744,6 +11785,7 @@ assemble_porous_shell_open_2(
 	    for ( a = 0; a < DIM; a++) {
 	      for ( b = 0; b < DIM; b++) {
 		diff -= E_DIFF_P[a][b] * gradII_phi_i[a] * gradII_phi_j[b];
+                diff -= E_DIFF_P2[a][b] * gradII_phi_i[a] * phi_j;
 	      }
 	    }
 	  }

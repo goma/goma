@@ -497,6 +497,7 @@ struct Material_Properties
   int len_u_rel_liq_perm;
   dbl *u_rel_liq_perm;
   dbl d_rel_liq_perm[MAX_VARIABLE_TYPES + MAX_CONC + MAX_PMV];
+  int rel_liq_perm_external_field_index;
 
   dbl saturation;
   int SaturationModel;
