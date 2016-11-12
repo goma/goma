@@ -7966,6 +7966,7 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
      *    mp->d_rel_liq_perm[POR_LIQ_PRES]
      *    mp->d_rel_liq_perm[POR_GAS_PRES]
      *    mp->d_rel_liq_perm[POR_POROSITY]
+     *    mp->d_rel_liq_perm[SHELL_PRESS_OPEN] OR mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2]
      **************************************************************************/
 {
   double s_eff, d_s_eff, rel_liq_perm, a1, factor, r_pore, rad, factor2;
@@ -8005,6 +8006,14 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
       {
 	mp->rel_liq_perm = 0.0;
 	mp->d_rel_liq_perm[POR_LIQ_PRES] = 0.0;
+        if (pd->e[R_SHELL_SAT_OPEN])
+          {
+	   mp->d_rel_liq_perm[SHELL_PRESS_OPEN] = 0.0;
+          }
+        else if (pd->e[R_SHELL_SAT_OPEN_2])
+          {
+	   mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] = 0.0;
+          }
       }
     /*
      *  Clip the relative permeability at one -> it can never be
@@ -8013,12 +8022,20 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
      *  by zero as factor=1.0 below.    Now and then GOMA aborts due
      *  to this.  
      */
-    else if (s_eff >= 0.99999)  
+    else if (s_eff >= 0.99999)
       {
 	mp->rel_liq_perm = 1.0 / viscosity;
 	mp->d_rel_liq_perm[POR_LIQ_PRES] = 0.0;
+        if (pd->e[R_SHELL_SAT_OPEN])
+          {
+	   mp->d_rel_liq_perm[SHELL_PRESS_OPEN] = 0.0;
+          }
+        else if (pd->e[R_SHELL_SAT_OPEN_2])
+          {
+	   mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] = 0.0;
+          }
       }
-    else 
+    else
       {
       expon2 = 1.0 / lambda;
       factor  = pow(s_eff, expon2);
@@ -8036,27 +8053,45 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
 	d_s_eff = 1.0 / (sat_max - sat_min);
 	if (a1 == 0.0) {
 	  mp->d_rel_liq_perm[POR_LIQ_PRES] = 0.0;
+          if (pd->e[R_SHELL_SAT_OPEN])
+            {
+	     mp->d_rel_liq_perm[SHELL_PRESS_OPEN] = 0.0;
+            }
+          else if (pd->e[R_SHELL_SAT_OPEN_2])
+            {
+	     mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] = 0.0;
+            }
 	} else {
-	  mp->d_rel_liq_perm[POR_LIQ_PRES] = 
-	      d_s_eff * rel_liq_perm * mp->d_saturation[POR_LIQ_PRES] * 
-	      (0.5 / s_eff + 
+	  mp->d_rel_liq_perm[POR_LIQ_PRES] =
+	      d_s_eff * rel_liq_perm * mp->d_saturation[POR_LIQ_PRES] *
+	      (0.5 / s_eff +
 	       2. * factor2 * factor / ((1.0 - factor) * s_eff * a1)  );
+          if (pd->e[R_SHELL_SAT_OPEN])
+            {
+	     mp->d_rel_liq_perm[SHELL_PRESS_OPEN] = d_s_eff * rel_liq_perm * mp->d_saturation[SHELL_PRESS_OPEN] *
+	                                            (0.5 / s_eff + 2. * factor2 * factor / ((1.0 - factor) * s_eff * a1)  );
+            }
+          else if (pd->e[R_SHELL_SAT_OPEN_2])
+            {
+	     mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] = d_s_eff * rel_liq_perm * mp->d_saturation[SHELL_PRESS_OPEN_2] *
+	                                            (0.5 / s_eff + 2. * factor2 * factor / ((1.0 - factor) * s_eff * a1)  );
+            }
 	}
 	if (pd->e[R_POR_GAS_PRES]) {
 	  if (a1 == 0.0) {
 	    mp->d_rel_liq_perm[POR_LIQ_PRES] = 0.0;
 	  } else {
-	    mp->d_rel_liq_perm[POR_GAS_PRES] = 
-		d_s_eff * rel_liq_perm * mp->d_saturation[POR_GAS_PRES] * 
-		(0.5 / s_eff + 
+	    mp->d_rel_liq_perm[POR_GAS_PRES] =
+		d_s_eff * rel_liq_perm * mp->d_saturation[POR_GAS_PRES] *
+		(0.5 / s_eff +
 		 2. * factor2 * factor / ((1.0 - factor) * s_eff * a1));
 	  }
 	}
-      }    
+      }
       }
   }
   else if (mp->RelLiqPermModel == PSD_VOL) {
-    /*  
+    /*
      * FOR PSD_VOL EQUATION -
      *
      * all parameters are loaded from saturation and permeability
@@ -8073,7 +8108,7 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
     if (pd->e[R_POR_POROSITY]) r_pore = pmv->r_pore;
     else                       r_pore = mp->u_saturation[3];
     rad = pmv->r_cap / r_pore;
-	  
+
     if (pmv->r_cap > r_pore) {
       mp->rel_liq_perm = 1.0 / viscosity;
       mp->d_rel_liq_perm[POR_LIQ_PRES] = 0.0;
@@ -8087,8 +8122,10 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
       mp->rel_liq_perm = (CUBE(rad) - CUBE(mp->u_permeability[2])) * factor;
 
       if ( af->Assemble_Jacobian) {
-	mp->d_rel_liq_perm[POR_LIQ_PRES]= 3. * pow(pmv->r_cap, 2.0) 
+	mp->d_rel_liq_perm[POR_LIQ_PRES]= 3. * pow(pmv->r_cap, 2.0)
 	    * pmv->d_r_cap[POR_LIQ_PRES] / pow(r_pore,3.0) * factor;
+
+
 	if (pd->e[R_POR_GAS_PRES]) {
 	  mp->d_rel_liq_perm[POR_GAS_PRES] = 
 	      3.0 * pow(pmv->r_cap,2.0) * pmv->d_r_cap[POR_GAS_PRES] 
@@ -8121,10 +8158,12 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
 		    (2. + 4. * rad + 4. * rad * rad + 8./3. * pow(rad,3.0) 
 		     + 4./3. * pow(rad,4.0)))
 		   / mp->u_rel_liq_perm[0]);
-	  
+
     if (af->Assemble_Jacobian) {
       mp->d_rel_liq_perm[POR_LIQ_PRES] = d_rel_d_rad * pmv->d_r_cap[POR_LIQ_PRES]
 	  / r_pore;
+
+
       if (pd->e[R_POR_GAS_PRES]) mp->d_rel_liq_perm[POR_GAS_PRES] = d_rel_d_rad 
 				     * pmv->d_r_cap[POR_GAS_PRES] 
 				     / r_pore;
@@ -8145,10 +8184,12 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
 		   - exp(-factor * rad *rad) * 
 		   (4. * factor * factor / 2. * pow(rad,3.0) + 2. * factor * rad)
 	)/ mp->u_rel_liq_perm[0];
-	  
+
     if (af->Assemble_Jacobian) {
       mp->d_rel_liq_perm[POR_LIQ_PRES] = d_rel_d_rad * pmv->d_r_cap[POR_LIQ_PRES]
 	  / r_pore;
+
+
       if (pd->e[R_POR_GAS_PRES]) mp->d_rel_liq_perm[POR_GAS_PRES] = d_rel_d_rad 
 				     * pmv->d_r_cap[POR_GAS_PRES] 
 				     / r_pore;
@@ -8156,9 +8197,30 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
 				     * pmv->d_r_pore[POR_POROSITY] * rad / r_pore;
     }
   }
+  else if (mp->RelLiqPermModel == EXTERNAL_FIELD) {
+    /*
+     *
+     * FOR EXTERNAL FIELD
+     *  mp->u_rel_liq_perm[0] is the scaling factor for the read-in external field variable
+     */
+
+     int i_rel_perm_ev = mp->rel_liq_perm_external_field_index;
+     dbl scale = mp->u_rel_liq_perm[0];
+
+     mp->rel_liq_perm = scale * fv->external_field[i_rel_perm_ev];
+     mp->d_rel_liq_perm[POR_LIQ_PRES] = 0.0;
+     if (pd->e[R_SHELL_SAT_OPEN])
+       {
+        mp->d_rel_liq_perm[SHELL_PRESS_OPEN] = 0.0;
+       }
+     else if (pd->e[R_SHELL_SAT_OPEN_2])
+       {
+        mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] = 0.0;
+       }
+  }
   else
   {
-    EH(-1, "No models for liquid permeability");
+   EH(-1, "No models for liquid relative permeability");
   }
   return;
 } /* end  load_liq_perm  */
