@@ -10908,9 +10908,10 @@ assemble_porous_shell_open(
   dbl E_DIFF_P2[DIM][DIM] = {{0.0}};
   for ( a = 0; a < DIM; a++) {
     for ( b = 0; b < DIM; b++) {
-      E_DIFF[a]      += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm * fv->grad_sh_p_open[b];
+      E_DIFF[a]      += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm * (fv->grad_sh_p_open[b] - mp->momentum_source[b]) ;
       E_DIFF_P[a][b] += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm;
-      E_DIFF_P2[a][b] += -H / mu * mp->perm_tensor[a][b] * mp->d_rel_liq_perm[SHELL_PRESS_OPEN] * fv->grad_sh_p_open[b];
+      E_DIFF_P2[a][b] += -H / mu * mp->perm_tensor[a][b] * mp->d_rel_liq_perm[SHELL_PRESS_OPEN] *
+                         (fv->grad_sh_p_open[b] - mp->momentum_source[b]);
     }
   }
 
@@ -11628,7 +11629,10 @@ assemble_porous_shell_open_2(
     {
       EH(-1,"Only CONSTANT, VAN_GENUCHTEN, and EXTERNAL_FIELD  models are allowed for Rel Liq Permeability model in Open Pore Shell equation ");
     }
-  load_liq_perm(phi, cap_pres, mp->saturation, d_cap_pres);
+  if (mp->RelLiqPermModel != CONSTANT)
+    {
+     load_liq_perm(phi, cap_pres, mp->saturation, d_cap_pres);
+    }
   dbl rel_liq_perm = mp->rel_liq_perm;
 
 
@@ -11638,9 +11642,10 @@ assemble_porous_shell_open_2(
   dbl E_DIFF_P2[DIM][DIM] = {{0.0}};
   for ( a = 0; a < DIM; a++) {
     for ( b = 0; b < DIM; b++) {
-      E_DIFF[a]      += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm * fv->grad_sh_p_open_2[b];
+      E_DIFF[a]      += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm * (fv->grad_sh_p_open_2[b] - mp->momentum_source[b]);
       E_DIFF_P[a][b] += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm;
-      E_DIFF_P2[a][b] += -H / mu * mp->perm_tensor[a][b] * mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] * fv->grad_sh_p_open[b];
+      E_DIFF_P2[a][b] += -H / mu * mp->perm_tensor[a][b] * mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] *
+                         (fv->grad_sh_p_open_2[b] - mp->momentum_source[b]);
     }
   }
 
