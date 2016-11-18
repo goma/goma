@@ -101,7 +101,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
  *
  ****************************************************************************/
 {
-  int ip, w, i, I, ibc, k, j, id, icount, ss_index, type, mn, lnn;
+  int ip, w, i, I, ibc, k, j, id, icount, ss_index, mn, lnn;
   int iapply, matID_apply, id_side, i_basis = -1, skip_other_side;
   int new_way = FALSE, ledof, mn_first;
   int eqn, ieqn, var, pvar, p, q, index_eq, ldof_eqn, lvdesc, jlv;
