@@ -1484,7 +1484,8 @@ assembly_alloc(Exo_DB *exo)
 	mp_glob[mn]->PorousMediaType == POROUS_UNSATURATED || 
 	mp_glob[mn]->PorousMediaType == POROUS_TWO_PHASE ||
 	mp_glob[mn]->PorousMediaType == POROUS_SHELL_UNSATURATED) {
-      if (mp_glob[mn]->Porous_Mass_Lump) {
+      if ( (mp_glob[mn]->Porous_Mass_Lump) ||
+           (mp_glob[mn]->PorousMediaType == POROUS_SHELL_UNSATURATED) ) {
 	pmv_ml = alloc_struct_1(PMV_ML_STRUCT, 1);
       }
       break;

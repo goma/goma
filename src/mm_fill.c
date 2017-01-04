@@ -967,7 +967,16 @@ matrix_fill(
       load_nodal_porous_properties(theta, delta_t);
     }
   }
-  
+
+  if ( (pde[R_SHELL_SAT_OPEN]) || (pde[R_SHELL_SAT_OPEN_2]) ) {
+    if (pde[R_SHELL_SAT_OPEN]) {
+       load_nodal_shell_porous_properties(theta, delta_t, R_SHELL_SAT_OPEN);
+    }
+    else if (pde[R_SHELL_SAT_OPEN_2]) {
+       load_nodal_shell_porous_properties(theta, delta_t, R_SHELL_SAT_OPEN_2);
+    }
+  }
+
   if (pde[R_PRESSURE])
     {
       if (PSPP == 1)

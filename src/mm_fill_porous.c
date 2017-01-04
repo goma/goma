@@ -54,6 +54,8 @@
 #include "mm_fill_terms.h"
 #include "mm_fill_porous.h"
 
+#include "mm_std_models_shell.h"
+
 #define _MM_FILL_POROUS_C
 #include "sl_aux.h"
 #include "goma.h"
@@ -1856,6 +1858,168 @@ load_nodal_porous_properties(double tt, double dt)
 /**************************************************************************/
 /**************************************************************************/
 
+void
+load_nodal_shell_porous_properties(double tt, double dt, int eqn)
+
+    /*********************************************************************
+     *
+     * load_nodal_shell_porous_properties():
+     *
+     *   This routine calculates the mass lumped quantities at node
+     *   points - This is shell version of load_nodal_porous_properties
+     *
+     *  Input
+     * -------
+     *
+     *
+     *  Output
+     * -------
+     *
+     *  pmv_ml->Inventory_Solvent
+     *  pmv_ml->Inventory_Solvent_old
+     *  pmv_ml->Inventory_Solvent_dot
+     *
+     *
+     *********************************************************************/
+{
+  int   idof, lnn, i_lvdesc, lvd, err;
+  int i_ext_field = 0;
+  double xi[3];
+  double phi, H, Patm, cap_pres, d_cap_pres[2];
+  int *lvdesc_to_lnn, *lvdesc_to_idof;
+  int i_pl = 0; /*Piggyback pmv_ml structure, i_pl = 0 --> shell_press_open */
+                /*                            i_pl = 1 --> shell_press_open_2*/
+
+  if (eqn == R_SHELL_SAT_OPEN_2) i_pl = 1;
+
+  i_lvdesc = ei->Lvdesc_First_Var_Type[eqn];
+  lvdesc_to_lnn =  ei->Lvdesc_to_Lnn[i_lvdesc];
+  lvdesc_to_idof = ei->Lvdesc_to_lvdof[i_lvdesc];
+  for (lvd = 0; lvd < ei->Lvdesc_Numdof[i_lvdesc]; lvd++) {
+    idof = lvdesc_to_idof[lvd];
+
+    /*
+     * Translate the degree of freedom into the local node number
+     */
+    lnn = lvdesc_to_lnn[lvd];
+
+    /*
+     * Find the correct local element coordinates, xi[], at the 
+     * the current local node number, lnn.
+     */
+    find_nodal_stu(lnn, ei->ielem_type, xi, xi+1, xi+2);
+
+    /*
+     * Load up basis function information for each basis function
+     * type needed by the current material at the current
+     * location, xi[], in the element. This is done in terms
+     * of local element coordinates.
+     */
+    err = load_basis_functions(xi, bfd);
+    EH(err, "load_basis_functions");
+    err = beer_belly();
+    EH(err, "beer_belly");
+    err = load_fv();
+    EH(err, "load_fv");
+
+
+    /*
+     * Evaluate constitutive relations with gauss point defined at the node
+     */
+
+    /* First, get porosity */
+    if (mp->PorosityModel == CONSTANT)
+      {
+       if (pd->TimeIntegration == TRANSIENT)
+         {
+          mp_old->porosity = mp->porosity;
+         }
+      }
+    else if (mp->PorosityModel == EXTERNAL_FIELD)
+      {
+       i_ext_field = mp->porosity_external_field_index;
+       mp->porosity = fv->external_field[i_ext_field];
+       if (pd->TimeIntegration == TRANSIENT)
+         {
+          mp_old->porosity = mp->porosity;
+         }
+      }
+    else
+      {
+       EH(-1, "Only CONSTANT and EXTERNAL_FIELD porosity models are supported in shell porous open equation");
+      }
+
+    phi = mp->porosity;                         /* Porosity */
+
+
+    H =  porous_shell_closed_height_model();    /* Pore height (vertical */
+    Patm = mp->PorousShellPatm;                  /* Gas pressure - always constant */
+    cap_pres = Patm - fv->sh_p_open;
+    if (eqn == R_SHELL_SAT_OPEN_2)  cap_pres = Patm - fv->sh_p_open_2;
+    if (pd->TimeIntegration == TRANSIENT) {
+     pmv_old->cap_pres = Patm - fv_old->sh_p_open;
+     if (eqn == R_SHELL_SAT_OPEN_2) pmv_old->cap_pres = Patm - fv_old->sh_p_open_2;
+    }
+    load_saturation(phi, cap_pres, d_cap_pres);
+
+    /*
+     * Calculate Inventory_Solvent_dot[MDE][MAX_PMV]
+     * and d_Inventory_solvent_dot_dpmv[MDE][MAX_PMV][MAX_PMV];
+     */
+
+    /*
+     * Store calculated quantities in the pmv_ml structure
+     */
+
+    pmv_ml->Inventory_Solvent_old[idof][i_pl] = H * mp->porosity * mp_old->saturation;
+    pmv_ml->Inventory_Solvent[idof][i_pl] = H * mp->porosity * mp->saturation;
+
+
+    /*
+     * Calculate Inventory_Solvent_dot[MDE][MAX_PMV]
+     *
+     */
+    if (tt > 0.0) {
+      pmv_ml->Inventory_Solvent_dot_old[idof][i_pl] =
+	  fv_dot_old->sh_p_open  * H * mp->porosity * mp_old->d_saturation[SHELL_PRESS_OPEN];
+      if (eqn == R_SHELL_SAT_OPEN_2) pmv_ml->Inventory_Solvent_dot_old[idof][i_pl] =
+          fv_dot_old->sh_p_open_2  * H * mp_old->porosity * mp_old->d_saturation[SHELL_PRESS_OPEN_2];
+
+
+      pmv_ml->Inventory_Solvent_dot[idof][i_pl] =
+	  (1.0 + 2.0 * tt) *
+	  (pmv_ml->Inventory_Solvent[idof][i_pl] -
+	   pmv_ml->Inventory_Solvent_old[idof][i_pl]) / dt
+	  - 2.0 * tt  * pmv_ml->Inventory_Solvent_dot_old[idof][i_pl];
+
+    } else {
+      pmv_ml->Inventory_Solvent_dot[idof][i_pl] =
+	  (pmv_ml->Inventory_Solvent[idof][i_pl] -
+	   pmv_ml->Inventory_Solvent_old[idof][i_pl]) / dt;
+    }
+
+    /*
+     * Store d_Inventory_solvent_dot_dpmv[MDE][MAX_PMV][MAX_PMV]
+     * calculated in other places
+     *
+     * Right now it only has R_SHELL_SAT_OPEN as eqn and SHELL_PRESS_OPEN as var
+     * Or R_SHELL_SAT_OPEN_2 as eqn and SHELL_PRESS_OPEN_2 as var
+     */
+    if (af->Assemble_Jacobian) {
+	pmv_ml->d_Inventory_Solvent_dot_dpmv[idof][i_pl][i_pl] =
+	    (1 + 2. * tt) *
+	  H * mp->porosity * mp->d_saturation[SHELL_PRESS_OPEN]/ dt ;
+
+        if (eqn == R_SHELL_SAT_OPEN_2) pmv_ml->d_Inventory_Solvent_dot_dpmv[idof][i_pl][i_pl] =
+           (1 + 2. * tt) *
+            H * mp->porosity * mp->d_saturation[SHELL_PRESS_OPEN_2]/ dt ;
+    }
+  }
+} /* END load_nodal_shell_porous_properties() */
+/**************************************************************************/
+/**************************************************************************/
+/**************************************************************************/
+
 int
 get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 			  double tt, /* time integration scheme param */
@@ -2618,7 +2782,9 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 	cap_pres = pmv->cap_pres = p_gas_star - fv->p_liq;
 	d_cap_pres[i_pl] = -1.;
 	mp->saturation = load_saturation(mp->porosity, cap_pres, d_cap_pres);
-	load_liq_perm(mp->porosity, cap_pres, mp->saturation, d_cap_pres);
+        if (mp->RelLiqPermModel != CONSTANT) {
+	   load_liq_perm(mp->porosity, cap_pres, mp->saturation, d_cap_pres);
+        }
 	load_mass_flux(mp->porosity, cap_pres, mp->saturation, d_cap_pres);
 	/*
 	 * Calculate U_supg
@@ -2670,7 +2836,9 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
        */
       cap_pres = pmv->cap_pres = p_gas_star - fv->p_liq;
       mp->saturation = load_saturation(mp->porosity, cap_pres, d_cap_pres);
-      load_liq_perm(mp->porosity, cap_pres, mp->saturation, d_cap_pres);
+      if (mp->RelLiqPermModel != CONSTANT) {
+         load_liq_perm(mp->porosity, cap_pres, mp->saturation, d_cap_pres);
+      }
       load_mass_flux(mp->porosity, cap_pres, mp->saturation, d_cap_pres);
       /*
        * Calculate U_supg
@@ -3024,7 +3192,9 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
 	cap_pres = pmv->cap_pres = p_gas_star - fv->p_liq;
 	d_cap_pres[i_pl] = -1.;
 	mp->saturation = load_saturation(mp->porosity, cap_pres, d_cap_pres);
-	load_liq_perm(mp->porosity, cap_pres, mp->saturation, d_cap_pres);
+        if (mp->RelLiqPermModel != CONSTANT) {
+	   load_liq_perm(mp->porosity, cap_pres, mp->saturation, d_cap_pres);
+        }
 	load_mass_flux(mp->porosity, cap_pres, mp->saturation, d_cap_pres);
 	/*
 	 * Calculate U_supg
@@ -3076,7 +3246,9 @@ get_porous_part_sat_terms_decoupled(struct Porous_Media_Terms *pmt,
        */
       cap_pres = pmv->cap_pres = p_gas_star - fv->p_liq;
       mp->saturation = load_saturation(mp->porosity, cap_pres, d_cap_pres);
-      load_liq_perm(mp->porosity, cap_pres, mp->saturation, d_cap_pres);
+      if (mp->RelLiqPermModel != CONSTANT) {
+         load_liq_perm(mp->porosity, cap_pres, mp->saturation, d_cap_pres);
+      }
       load_mass_flux(mp->porosity, cap_pres, mp->saturation, d_cap_pres);
       /*
        * Calculate U_supg
@@ -5252,6 +5424,20 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	if (pd->e[R_POR_GAS_PRES]) {
 	  mp_old->d_saturation[POR_GAS_PRES] = 
 	    -mp_old->d_saturation[POR_LIQ_PRES];
+        }
+        if (pd->e[R_SHELL_SAT_OPEN]) {
+           mp_old->d_saturation[SHELL_PRESS_OPEN] =
+           -(1.0 - mp->u_saturation[0] - mp->u_saturation[1]) *
+            expon2 * pow((1.0 + pow(suction_old, mp->u_saturation[2])), expon2 - 1.0)
+            * mp->u_saturation[2] * mp->u_saturation[3]
+            * pow(suction_old, mp->u_saturation[2] - 1.0);
+	}
+        if (pd->e[R_SHELL_SAT_OPEN_2]) {
+           mp_old->d_saturation[SHELL_PRESS_OPEN_2] =
+           -(1.0 - mp->u_saturation[0] - mp->u_saturation[1]) *
+            expon2 * pow((1.0 + pow(suction_old, mp->u_saturation[2])), expon2 - 1.0)
+            * mp->u_saturation[2] * mp->u_saturation[3]
+            * pow(suction_old, mp->u_saturation[2] - 1.0);
 	}
       }
     }
@@ -5758,6 +5944,14 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
       mp_old->saturation = con_a-con_b*tanh(con_c-con_d/cap_pres_clip);
       mp_old->d_saturation[POR_LIQ_PRES] = con_b*con_d/cap_pres_clip/cap_pres_clip*
 	(1-pow(tanh(con_c-con_d/cap_pres_clip),2.0));
+      if (pd->e[R_SHELL_SAT_OPEN]) {
+         mp_old->d_saturation[SHELL_PRESS_OPEN] = con_b*con_d/cap_pres_clip/cap_pres_clip*
+	 (1-pow(tanh(con_c-con_d/cap_pres_clip),2.0));
+      }
+      if (pd->e[R_SHELL_SAT_OPEN_2]) {
+         mp_old->d_saturation[SHELL_PRESS_OPEN_2] = con_b*con_d/cap_pres_clip/cap_pres_clip*
+	 (1-pow(tanh(con_c-con_d/cap_pres_clip),2.0));
+      }
       if (pd->e[R_POR_GAS_PRES]) {
 	mp_old->d_saturation[POR_GAS_PRES] = -mp->d_saturation[POR_LIQ_PRES];
       }
@@ -5821,7 +6015,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	mp->d_saturation[SHELL_PRESS_OPEN_2] = con_b*con_d*(1.0-pow(tanh(con_c-con_d/cap_pres_clip),2.0))/
                                      cap_pres_clip/cap_pres_clip;
       }
-    
+
     if (af->Assemble_Jacobian) {
       /*
        *  Calculate the second derivative of the dependence of saturation
@@ -5841,7 +6035,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	mp->d_d_saturation[POR_GAS_PRES][POR_GAS_PRES] = 
 	  mp->d_d_saturation[POR_LIQ_PRES][POR_LIQ_PRES];
 	  }
-      
+
       if (pd->e[R_SHELL_SAT_OPEN])
 	{
 	  mp->d_d_saturation[SHELL_PRESS_OPEN][SHELL_PRESS_OPEN] = 
@@ -5859,7 +6053,7 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	}
 
     }
-    
+
     /*
      * Now Calculate the old saturation value if we are doing a transient
      * calculation
@@ -5875,6 +6069,14 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	(1-pow(tanh(con_c-con_d/cap_pres_clip),2.0));
       if (pd->e[R_POR_GAS_PRES]) {
 	mp_old->d_saturation[POR_GAS_PRES] = -mp->d_saturation[POR_LIQ_PRES];
+      }
+      if (pd->e[R_SHELL_SAT_OPEN]) {
+        mp_old->d_saturation[SHELL_PRESS_OPEN] = con_b*con_d/cap_pres_clip/cap_pres_clip*
+        (1-pow(tanh(con_c-con_d/cap_pres_clip),2.0));
+      }
+      if (pd->e[R_SHELL_SAT_OPEN_2]) {
+        mp_old->d_saturation[SHELL_PRESS_OPEN_2] = con_b*con_d/cap_pres_clip/cap_pres_clip*
+        (1-pow(tanh(con_c-con_d/cap_pres_clip),2.0));
       }
     }
   }
@@ -6267,6 +6469,25 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 	  WH(-1, "SHELL_TANH MODEL not yet fitted for pressure gradients in both gas and liquid");
 	  //Do nothing because the saturation model is called from assemble_porous_shell_open 
 	}
+
+      /*
+       * Now Calculate the old saturation value if we are doing a transient
+       * calculation
+       */
+      if (pd->TimeIntegration == TRANSIENT)
+        {
+         cap_pres = pmv_old->cap_pres;
+         mp_old->saturation = shell_saturation_pressure_curve(-cap_pres, &dSdP, &dSdP_P);
+
+         if (pd->e[R_SHELL_SAT_OPEN])
+           {
+            mp_old->d_saturation[SHELL_PRESS_OPEN] = dSdP;
+           }
+         if (pd->e[R_SHELL_SAT_OPEN_2])
+           {
+            mp_old->d_saturation[SHELL_PRESS_OPEN_2] = dSdP;
+           }
+        }
     }
   else
     {
