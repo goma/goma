@@ -11772,6 +11772,26 @@ translate_command_line( int argc,
 	      istr++;
 	      clc[*nclc]->type = CONT_BC_LIST;
 	    }
+/* 
+ * OPTION -wr_int: TURN INTERMEDIATE RESULTS ON
+ */
+	  else if(strcmp(argv[istr], "-wr_int") == 0)
+	    {
+	      (*nclc)++;
+	      istr++;
+	      clc[*nclc]->type = WRITE_INTERMEDIATE;
+	    }
+/* 
+ * OPTION -time_pl: SPECIFY EXOII FILE STEP NUMBER TO READ
+ */
+	  else if(strcmp(argv[istr], "-time_pl") == 0)
+	    {
+	      (*nclc)++;
+	      istr++;
+	      clc[*nclc]->type = EXOII_TIME_PLANE;
+	      clc[*nclc]->i_val = atoi(argv[istr]);
+	      istr++;
+	    }
 /*
  * OPTION -ne:  Disable file echoing 
  */
@@ -12031,6 +12051,14 @@ apply_command_line(struct Command_line_command **clc,
        else if (clc[i]->type == CONT_BC_LIST) {
 	 fprintf(stdout,"-bc_list request.\n\n\t goma done.\n\n"); 
 	 exit(0);
+       }
+       else if (clc[i]->type == WRITE_INTERMEDIATE) {
+	 fprintf(stdout,"Write Intermediate Solutions request.\n\n"); 
+         Write_Intermediate_Solutions = TRUE;
+       }
+       else if (clc[i]->type == EXOII_TIME_PLANE) {
+	 fprintf(stdout,"Exodus Time Plane = %d\n\n",clc[i]->i_val); 
+	 ExoTimePlane = clc[i]->i_val;
        }
      }
   return;

@@ -2500,7 +2500,6 @@ skip_solve:
       DPRINTF(stderr, "scaled solution norms  %13.6e %13.6e %13.6e \n", 
 	      Norm[4][0], Norm[4][1], Norm[4][2]);
 
-
   /*
     * COMPUTE SOLUTION SENSITIVITY TO PARAMETERS AS REQUESTED
     */
@@ -3373,7 +3372,7 @@ soln_sens ( double lambda,  /*  parameter */
 {
   double dlambda, lambda_tmp, hunt_val;
 
-  int i,iHC;
+  int i,iHC,iAC;
   dbl          a_start;        /* mark start of assembly */
   dbl          a_end;          /* mark end of assembly */
   int       err;
@@ -3392,6 +3391,12 @@ soln_sens ( double lambda,  /*  parameter */
 
   double fd_factor=1.0E-06;	/*  finite difference step */
 
+#ifdef LOG_HUNTING_PLEASE
+  int		log_hunt = TRUE;
+#else
+  int		log_hunt = FALSE;
+#endif
+  int  log_capable[nHC];
   /*
   static int first_soln_sens_linear_solver_call = 1;
   */
@@ -3400,6 +3405,16 @@ soln_sens ( double lambda,  /*  parameter */
 				  * matrix_fill's. */
 
   exchange_dof(cx, dpi, x);
+
+  for(iHC=0 ; iHC < nHC ; iHC++)
+    {
+    if(log_hunt &&  
+       hunt[iHC].BegParameterValue > 0 && hunt[iHC].EndParameterValue > 0 
+       && hunt[iHC].BegParameterValue != hunt[iHC].EndParameterValue)
+         { log_capable[iHC] = TRUE;  }
+    else
+         {log_capable[iHC] = FALSE;  }
+    }
 
   /*
    *
@@ -3429,8 +3444,14 @@ soln_sens ( double lambda,  /*  parameter */
 		case HUN_FIRST:
 		for (iHC=0;iHC<nHC;iHC++)
 			{
+             if(log_capable[iHC])
+                    {
+                       hunt_val = hunt[iHC].BegParameterValue*
+   pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,lambda_tmp);
+                    }  else  {
 			hunt_val = hunt[iHC].BegParameterValue + lambda_tmp*
 				(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
+                    }
 			update_parameterHC(iHC, hunt_val, x, xdot, NULL, 1.0, cx, exo,dpi);
 			}
 		break;
@@ -3447,6 +3468,11 @@ soln_sens ( double lambda,  /*  parameter */
   af->Assemble_Jacobian = FALSE;
   af->Assemble_LSA_Jacobian_Matrix = FALSE;
   af->Assemble_LSA_Mass_Matrix = FALSE;
+  if(nAC > 0)
+    {
+     for(iAC=0 ; iAC<nAC ; iAC++)
+          {augc[iAC].evol =0.0;}
+    }
 
   err = matrix_fill_full(ams, x, res_p, 
 			 x_old, x_older, xdot, xdot_old, x_update, 
@@ -3469,8 +3495,14 @@ soln_sens ( double lambda,  /*  parameter */
 		case HUN_FIRST:
 		for (iHC=0;iHC<nHC;iHC++)
 			{
+             if(log_capable[iHC])
+                    {
+                       hunt_val = hunt[iHC].BegParameterValue*
+   pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,lambda_tmp);
+                    }  else  {
 			hunt_val = hunt[iHC].BegParameterValue + lambda_tmp*
 				(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
+                    }
 			update_parameterHC(iHC, hunt_val, x, xdot, NULL, 1.0, cx, exo,dpi);
 			}
 		break;
@@ -3487,6 +3519,11 @@ soln_sens ( double lambda,  /*  parameter */
   af->Assemble_Jacobian = FALSE;
   af->Assemble_LSA_Jacobian_Matrix = FALSE;
   af->Assemble_LSA_Mass_Matrix = FALSE;
+  if(nAC > 0)
+    {
+     for(iAC=0 ; iAC<nAC ; iAC++)
+          {augc[iAC].evol =0.0;}
+    }
 
   err = matrix_fill_full(ams, x, res_m, 
 			 x_old, x_older, xdot, xdot_old, x_update,
@@ -3512,8 +3549,14 @@ soln_sens ( double lambda,  /*  parameter */
 		case HUN_FIRST:
 		for (iHC=0;iHC<nHC;iHC++)
 			{
+             if(log_capable[iHC])
+                    {
+                       hunt_val = hunt[iHC].BegParameterValue*
+   pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,lambda);
+                    }  else  {
 			hunt_val = hunt[iHC].BegParameterValue + lambda*
-				(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
+		(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
+                    }
 			update_parameterHC(iHC, hunt_val, x, xdot, NULL, 1.0, cx, exo,dpi);
 			}
 		break;

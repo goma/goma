@@ -761,6 +761,7 @@ rd_bc_specs(FILE *ifp,
 			   yo, BC_Types[ibc].desc->name1);
 	      EH(-1, err_msg);
 	    }
+          BC_Types[ibc].max_DFlt = 2;
 	  SPF(endofstring(echo_string), " %.4g %.4g",BC_Types[ibc].BC_Data_Float[0], BC_Types[ibc].BC_Data_Float[1]); 
           break;
 
@@ -774,6 +775,7 @@ rd_bc_specs(FILE *ifp,
 	  if (fscanf(ifp, "%lf %lf", &BC_Types[ibc].BC_Data_Float[2], &BC_Types[ibc].BC_Data_Float[3]) != 2)
 	    {
 	    }
+          BC_Types[ibc].max_DFlt = 4;
 	  SPF(endofstring(echo_string), " %.4g %.4g %.4g %.4g", BC_Types[ibc].BC_Data_Float[0],
               BC_Types[ibc].BC_Data_Float[1], BC_Types[ibc].BC_Data_Float[2], BC_Types[ibc].BC_Data_Float[3]); 
 
@@ -933,7 +935,6 @@ rd_bc_specs(FILE *ifp,
  	    }
  	  else
  	    {
-          BC_Types[ibc].max_DFlt = 4;
 	  SPF_DBL_VEC(endofstring(echo_string), 4,  BC_Types[ibc].BC_Data_Float);
 	      /* Scan for the optional int. If not present, put a -1 in second data position */ 
 	      /* This is to ensure a nonzero entry in BC_Data_Int[2] for CA */
@@ -945,6 +946,7 @@ rd_bc_specs(FILE *ifp,
 	      else
 		SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[2] );
  	    }
+          BC_Types[ibc].max_DFlt = 4;
 	  
 	  break;
 
@@ -2492,6 +2494,7 @@ rd_bc_specs(FILE *ifp,
              is needed. */
 	  /* BC_Types[ibc].species_eq = BC_Types[ibc].BC_Data_Int[0]; */
 
+          BC_Types[ibc].max_DFlt = 3;
 	  SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]); 
 	  for(i=0;i<3;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[i]);
 
@@ -3286,7 +3289,10 @@ rd_bc_specs(FILE *ifp,
          if(hunt[i].Type == 1 && hunt[i].BCID == ibc)
              {
               if(hunt[i].DFID >= BC_Types[ibc].max_DFlt)
+                  {
                   WH(-1,"Whoa.... hunting data float outside range\n");
+fprintf(stderr," HC %d BC %d of %d\n",i,hunt[i].DFID,BC_Types[ibc].max_DFlt);
+                  }
              }
          }
        }
