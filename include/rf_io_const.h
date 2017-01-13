@@ -119,6 +119,8 @@
 #define CONT_MPID              131 /* MPID */
 #define CONT_MTID              132 /* MAT PROPOERTY TAG ID */
 #define CONT_BC_LIST           900 /* BC LIST AND STOP */
+#define WRITE_INTERMEDIATE     901 /* Turn Write_Intermediate_Solution on */
+#define EXOII_TIME_PLANE       902 /* Specify read_exoII_file time plane (step number) */
 
 #ifndef ANNEAL_FILE_NAME
 #define ANNEAL_FILE_NAME		"anneal.exoII"
