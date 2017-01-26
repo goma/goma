@@ -10861,30 +10861,20 @@ assemble_porous_shell_open(
     }
   }
 
-  dbl E_MASS[MDE], E_MASS_P[MDE];
-  dbl Pnode, dSdPnode, dSdP_Pnode;
-  dbl d_cap_pres[2], cap_pres;
-  d_cap_pres[0] = d_cap_pres[1] = 0.;
-  dbl Patm = mp->PorousShellPatm;
+  dbl E_MASS[MDE] = {0.0}, E_MASS_P[MDE] = {0.0};
 
   for ( i = 0; i < ei->dof[eqn]; i++) {
-    Pnode = *esp->sh_p_open[i];
-    cap_pres = Patm - Pnode;
-    //Snode = shell_saturation_pressure_curve(Pnode, &dSdPnode, &dSdP_Pnode);
-   
-    /* CHECK FOR REMOVAL */
-    load_saturation(phi, cap_pres, d_cap_pres);
-    dSdPnode = mp->d_saturation[SHELL_PRESS_OPEN];
-    dSdP_Pnode = mp->d_d_saturation[SHELL_PRESS_OPEN][SHELL_PRESS_OPEN];
-
-    E_MASS[i]    = H * phi * dSdPnode   * *esp_dot->sh_p_open[i];
-    E_MASS_P[i]  = H * phi * dSdPnode   * (1.0+2.0*tt)/dt;
-    E_MASS_P[i] += H * phi * dSdP_Pnode * *esp_dot->sh_p_open[i];
+    E_MASS[i]    = pmv_ml->Inventory_Solvent_dot[i][0];
+    E_MASS_P[i]  = pmv_ml->d_Inventory_Solvent_dot_dpmv[i][0][0];
   }
 
   // We are now outside of mass lumping zone. Everything is evaluated at Gauss point from now on
 
   // Evaluate capillary pressure and load saturation
+  dbl d_cap_pres[2], cap_pres;
+  d_cap_pres[0] = d_cap_pres[1] = 0.;
+  dbl Patm = mp->PorousShellPatm;
+
   cap_pres = Patm - fv->sh_p_open;
   load_saturation(phi, cap_pres, d_cap_pres);
 
@@ -10906,12 +10896,24 @@ assemble_porous_shell_open(
   dbl E_DIFF[DIM] = {0.0};
   dbl E_DIFF_P[DIM][DIM] = {{0.0}};
   dbl E_DIFF_P2[DIM][DIM] = {{0.0}};
-  for ( a = 0; a < DIM; a++) {
-    for ( b = 0; b < DIM; b++) {
-      E_DIFF[a]      += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm * (fv->grad_sh_p_open[b] - mp->momentum_source[b]) ;
-      E_DIFF_P[a][b] += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm;
-      E_DIFF_P2[a][b] += -H / mu * mp->perm_tensor[a][b] * mp->d_rel_liq_perm[SHELL_PRESS_OPEN] *
-                         (fv->grad_sh_p_open[b] - mp->momentum_source[b]);
+
+  if (mp->PermeabilityModel != CONSTANT) {
+    for ( a = 0; a < DIM; a++) {
+       for ( b = 0; b < DIM; b++) {
+          E_DIFF[a]      += -H * mp->perm_tensor[a][b] * rel_liq_perm * (gradIIp[b] - mp->momentum_source[b]) ;
+          E_DIFF_P[a][b] += -H * mp->perm_tensor[a][b] * rel_liq_perm;
+          E_DIFF_P2[a][b] += -H  * mp->perm_tensor[a][b] * mp->d_rel_liq_perm[SHELL_PRESS_OPEN] *
+                             (gradIIp[b] - mp->momentum_source[b]);
+       }
+    }
+  } else {
+    for ( a = 0; a < DIM; a++) {
+       E_DIFF[a]      += -H * mp->permeability * rel_liq_perm * (gradIIp[a] - mp->momentum_source[a]) ;
+       for ( b = 0; b < DIM; b++) {
+          E_DIFF_P[a][b] += -H * mp->permeability * delta(a,b) * rel_liq_perm;
+          E_DIFF_P2[a][b] += -H * mp->permeability * delta(a,b) * mp->d_rel_liq_perm[SHELL_PRESS_OPEN] *
+                             (gradIIp[b] - mp->momentum_source[b]);
+       }
     }
   }
 
@@ -10946,8 +10948,8 @@ assemble_porous_shell_open(
     // for ( i = 0; i < ei->dof[FILL]; i++) E_SOUR_F[i] = 0.0;
   }
 
-  // OK, if we have multilayer, we need to get source terms from the second-story lubrication field, whose 
-  // footprint is dictated by a phase field.   We could use setup_shop but the element friend thing is not 
+  // OK, if we have multilayer, we need to get source terms from the second-story lubrication field, whose
+  // footprint is dictated by a phase field.   We could use setup_shop but the element friend thing is not
   // function with this really pathological shell-on-shell stack.   So we will have to do things by hand.
 
   dbl Hside_2 = 1.0, d_Hside_2_dpF[DIM] = {0.0}; dbl lubp_2 = 0.0; dbl pF=0.0;
@@ -10956,7 +10958,7 @@ assemble_porous_shell_open(
     {
       //Compute Heaviside function for phase field
       ls_old = ls;
-      if(pfd != NULL) ls = pfd->ls[0]; 
+      if(pfd != NULL) ls = pfd->ls[0];
       if ( upd->vp[PHASE1] >= 0) {
 	load_lsi_shell_second( ls->Length_Scale );
 	Hside_2 = 1 - lsi->Hn;
@@ -10969,7 +10971,7 @@ assemble_porous_shell_open(
 	{
 	  lubp_2 +=    *esp->lubp_2[i] * bf[R_LUBP_2]->phi[i];
 	  pF +=    *esp->pF[0][i] * bf[R_PHASE1]->phi[i];
-	} 
+	}
 
 
       Peff2=  lubp_2*Hside_2 + Pmin*(1-Hside_2);
@@ -10983,7 +10985,7 @@ assemble_porous_shell_open(
 	  }
 	}
 
-      //Now convert back to level set field   
+      //Now convert back to level set field
       ls = ls_old;
       if ( upd->vp[FILL] >= 0) {
 	load_lsi( ls->Length_Scale );
@@ -11020,20 +11022,20 @@ assemble_porous_shell_open(
   eqn = R_SHELL_SAT_OPEN;
   if (af->Assemble_Residual) {
     peqn = upd->ep[eqn];
-    
+
     // Loop over DOF (i)
-    for ( i = 0; i < ei->dof[eqn]; i++) {         
-      
+    for ( i = 0; i < ei->dof[eqn]; i++) {
+
       // Load basis functions
       ShellBF( eqn, i, &phi_i, grad_phi_i, gradII_phi_i, d_gradII_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-      
+
       // Assemble mass term
       mass = 0.0;
       if ( T_MASS ) {
 	mass += E_MASS[i] * phi_i;
       }
       mass *= dA * etm_mass;
-      
+
       // Assemble diffusion term
       diff = 0.0;
       if ( T_DIFFUSION ) {
@@ -11042,7 +11044,7 @@ assemble_porous_shell_open(
 	}
       }
       diff *= dA * etm_diff;
-      
+
       // Assemble source term
       sour = 0.0;
       if ( T_SOURCE ) {
@@ -11052,7 +11054,7 @@ assemble_porous_shell_open(
 
       // Assemble full residual
       lec->R[peqn][i] += mass + diff + sour;
-      
+
     }  // End of loop over DOF (i)
 
   } // End of residual assembly of R_SHELL_SAT_OPEN
@@ -11061,13 +11063,13 @@ assemble_porous_shell_open(
   eqn = R_LUBP;
   if (af->Assemble_Residual & pd->e[eqn]) {
     peqn = upd->ep[eqn];
-    
+
     // Loop over DOF (i)
-    for ( i = 0; i < ei->dof[eqn]; i++) {         
-      
+    for ( i = 0; i < ei->dof[eqn]; i++) {
+
       // Load basis functions
       ShellBF( eqn, i, &phi_i, grad_phi_i, gradII_phi_i, d_gradII_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-            
+
       // Assemble source term
       sour = 0.0;
       if ( T_SOURCE ) {
@@ -11077,7 +11079,7 @@ assemble_porous_shell_open(
 
       // Assemble full residual
       lec->R[peqn][i] += sour;
-      
+
     }  // End of loop over DOF (i)
 
   } // End of residual assembly of R_LUBP
@@ -11086,13 +11088,13 @@ assemble_porous_shell_open(
   eqn = R_LUBP_2;
   if ((af->Assemble_Residual & upd->ep[eqn]) >= 0) {
     peqn = upd->ep[eqn];
-    
+
     // Loop over DOF (i)
-    for ( i = 0; i < ei->dof[eqn]; i++) {         
-      
+    for ( i = 0; i < ei->dof[eqn]; i++) {
+
       // Load basis functions
       ShellBF( eqn, i, &phi_i, grad_phi_i, gradII_phi_i, d_gradII_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-            
+
       // Assemble source term
       sour = 0.0;
       if ( T_SOURCE ) {
@@ -11102,7 +11104,7 @@ assemble_porous_shell_open(
 
       // Assemble full residual
       lec->R[peqn][i] += sour;
-      
+
     }  // End of loop over DOF (i)
 
   } // End of residual assembly of R_LUBP_2
@@ -11112,13 +11114,13 @@ assemble_porous_shell_open(
   eqn = R_SHELL_SAT_OPEN;
   if (af->Assemble_Jacobian) {
     peqn = upd->ep[eqn];
-    
+
     // Loop over DOF (i)
     for ( i = 0; i < ei->dof[eqn]; i++) {
-      
+
       // Load basis functions
       ShellBF( eqn, i, &phi_i, grad_phi_i, gradII_phi_i, d_gradII_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-      
+
       // Assemble sensitivities for SHELL_PRESS_OPEN
       var = SHELL_PRESS_OPEN;
       if (pd->v[var]) {
@@ -11129,7 +11131,7 @@ assemble_porous_shell_open(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-      
+
 	  // Assemble mass term
 	  mass = 0.0;
 	  if ( T_MASS ) {
@@ -11137,7 +11139,7 @@ assemble_porous_shell_open(
 	    if ( i == j ) mass += E_MASS_P[i] * phi_i;
 	  }
 	  mass *= dA * etm_mass;
-	  
+
 	  // Assemble diffusion term
 	  diff = 0.0;
 	  if ( T_DIFFUSION ) {
@@ -11149,21 +11151,21 @@ assemble_porous_shell_open(
 	    }
 	  }
 	  diff *= dA * etm_diff;
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += (E_SOUR_P*mytest[i] + E_SOUR_P_2*mytest_2[i]) * phi_i * phi_j;
 	  }
 	  sour *= dA * etm_sour;
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += mass + diff + sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of SHELL_PRESS_OPEN sensitivities
-      
+
       // Assemble sensitivities for LUBP
       var = LUBP;
       if (pd->v[var]) {
@@ -11174,19 +11176,19 @@ assemble_porous_shell_open(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_PLUB * phi_i * phi_j;
 	  }
 	  sour *= dA * etm_sour * mytest[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of LUBP sensitivities
 
       // Assemble sensitivities for LUBP
@@ -11199,21 +11201,21 @@ assemble_porous_shell_open(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_2_PLUB_2 * phi_i * phi_j;
 	  }
 	  sour *= dA * etm_sour * mytest_2[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of LUBP sensitivities
-      
+
       // Assemble sensitivities for FILL
       var = FILL;
       if (pd->v[var]) {
@@ -11224,19 +11226,19 @@ assemble_porous_shell_open(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_F[j] * phi_i;
 	  }
 	  sour *= dA * etm_sour * mytest[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of FILL sensitivities
 
  // Assemble sensitivities for PHASE1
@@ -11249,21 +11251,21 @@ assemble_porous_shell_open(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_2_PF[j] * phi_i;
 	  }
 	  sour *= dA * etm_sour * mytest_2[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of PHASE1 sensitivities
-                 
+
     } // End of loop over DOF (i)
 
   } // End of Jacobian assembly of R_SHELL_SAT_OPEN
@@ -11271,13 +11273,13 @@ assemble_porous_shell_open(
   eqn = R_LUBP;
   if (af->Assemble_Jacobian & pd->e[eqn]) {
     peqn = upd->ep[eqn];
-    
+
     // Loop over DOF (i)
     for ( i = 0; i < ei->dof[eqn]; i++) {
-      
+
       // Load basis functions
       ShellBF( eqn, i, &phi_i, grad_phi_i, gradII_phi_i, d_gradII_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-      
+
       // Assemble sensitivities for SHELL_PRESS_OPEN
       var = SHELL_PRESS_OPEN;
       if (pd->v[var]) {
@@ -11288,21 +11290,21 @@ assemble_porous_shell_open(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
- 	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_P * phi_i * phi_j;
 	  }
 	  sour *= dA * etm_sour * mytest[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of SHELL_PRESS_OPEN sensitivities
-      
+
       // Assemble sensitivities for LUBP
       var = LUBP;
       if (pd->v[var]) {
@@ -11313,21 +11315,21 @@ assemble_porous_shell_open(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_PLUB * phi_i * phi_j;
 	  }
 	  sour *= dA * etm_sour * mytest[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of LUBP sensitivities
-      
+
       // Assemble sensitivities for FILL
       var = FILL;
       if (pd->v[var]) {
@@ -11338,21 +11340,21 @@ assemble_porous_shell_open(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_F[j] * phi_i;
 	  }
 	  sour *= dA * etm_sour * mytest[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of FILL sensitivities
-                 
+
     } // End of loop over DOF (i)
 
   } // End of Jacobian assembly of R_LUBP
@@ -11360,13 +11362,13 @@ assemble_porous_shell_open(
   eqn = R_LUBP_2;
   if ((af->Assemble_Jacobian & upd->ep[eqn]) >= 0) {
     peqn = upd->ep[eqn];
-    
+
     // Loop over DOF (i)
     for ( i = 0; i < ei->dof[eqn]; i++) {
-      
+
       // Load basis functions
       ShellBF( eqn, i, &phi_i, grad_phi_i, gradII_phi_i, d_gradII_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-      
+
       // Assemble sensitivities for SHELL_PRESS_OPEN
       var = SHELL_PRESS_OPEN;
       if (pd->v[var]) {
@@ -11377,21 +11379,21 @@ assemble_porous_shell_open(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
- 	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_P_2 * phi_i * phi_j;
 	  }
 	  sour *= dA * etm_sour * mytest_2[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of SHELL_PRESS_OPEN sensitivities
-      
+
       // Assemble sensitivities for LUBP
       var = LUBP_2;
       if (upd->vp[var] >=0) {
@@ -11402,21 +11404,21 @@ assemble_porous_shell_open(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_2_PLUB_2 * phi_i * phi_j;
 	  }
 	  sour *= dA * etm_sour * mytest_2[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of LUBP sensitivities
-      
+
       // Assemble sensitivities for FILL
       var = PHASE1;
       if (upd->vp[var] >= 0) {
@@ -11427,21 +11429,21 @@ assemble_porous_shell_open(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_2_PF[j] * phi_i;
 	  }
 	  sour *= dA * etm_sour * mytest_2[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of FILL sensitivities
-                 
+
     } // End of loop over DOF (i)
 
   } // End of Jacobian assembly of R_LUBP_2
@@ -11465,22 +11467,22 @@ assemble_porous_shell_open(
  * Created:     Friday August 3, 2012 prschun
  *
  */
-/*ARGSUSED*/ 
+/*ARGSUSED*/
 int
 assemble_porous_shell_open_2(
 			   dbl tt,                     // Time integration form
 			   dbl dt,                     // Time step size
 			   dbl xi[DIM],                // Current coordinates
 			   const Exo_DB *exo           // ExoII handle
-			   ) 
+			   )
   /* PRS Note:  this open porous shell routine only interacts with R_LUBP_2 and
    * phase-fields.   That is, unlike its brother assemble_porous_shell_open, which interacts
-   * with R_LUBP and eventually R_LUBP_2 from the other side of the layered stack, this 
+   * with R_LUBP and eventually R_LUBP_2 from the other side of the layered stack, this
    * routine is for a shell that has no other lubrication layer above it, for now.  (8/16/2012)
    */
 {
 
-  /* --- Initialization -----------------------------------------------------*/    
+  /* --- Initialization -----------------------------------------------------*/
 
   // Variable definitions
   int eqn, peqn, var, pvar;                       // Equation / variables
@@ -11499,7 +11501,7 @@ assemble_porous_shell_open_2(
 
   if (!pd->e[eqn]) return(status);
 
-  // For that matter, also bail out if there is no R_LUBP_2 equation here, as then it is 
+  // For that matter, also bail out if there is no R_LUBP_2 equation here, as then it is
   // a moot point even being in here;
 
   if (!pd->e[R_LUBP_2]) return(status);
@@ -11533,21 +11535,21 @@ assemble_porous_shell_open_2(
 
   /* Load up properties */
   mu = mp->viscosity;
-  /* OK this is a cludge for the second ply.  the viscosity function in the gap needs to be modulated,but here we just need 
+  /* OK this is a cludge for the second ply.  the viscosity function in the gap needs to be modulated,but here we just need
    * the liquid imbibing phase viscosity.  PRS (9/21/2012)
    */
   if (mp->ViscosityModel == CONST_PHASE_FUNCTION) mu = mp->u_viscosity[2];
-    
-  /* --- Calculate equation components ---------------------------------------*/    
+
+  /* --- Calculate equation components ---------------------------------------*/
 
 
-  if (mp->SaturationModel != SHELL_TANH && 
+  if (mp->SaturationModel != SHELL_TANH &&
       mp->SaturationModel != TANH &&
       mp->SaturationModel != TANH_EXTERNAL &&
-      mp->SaturationModel != TANH_HYST) 
+      mp->SaturationModel != TANH_HYST)
     {
       EH(-1,"Pacito problema: Only shell_tanh, tanh, tanh_external, and tanh_hyst model available for shell open pore. Not much work to remedy this, though");
-      // PRS: just need to expand the nodal call on the mass term 
+      // PRS: just need to expand the nodal call on the mass term
     }
 
   dbl S, dSdP;
@@ -11579,7 +11581,7 @@ assemble_porous_shell_open_2(
   dbl Hside = 1.0, d_Hside_dF[DIM] = {0.0};
   if ( pd->v[PHASE1] ) {
     ls_old = ls;
-    if(pfd != NULL) ls = pfd->ls[0]; 
+    if(pfd != NULL) ls = pfd->ls[0];
     load_lsi( ls->Length_Scale );
     Hside = 1 - lsi->Hn;
     for ( i = 0; i < ei->dof[PHASE1]; i++) d_Hside_dF[i] = -lsi->d_Hn_dF[i];
@@ -11596,30 +11598,20 @@ assemble_porous_shell_open_2(
   }
 
   dbl E_MASS[MDE], E_MASS_P[MDE];
-  dbl Pnode, dSdPnode, dSdP_Pnode;
-  dbl d_cap_pres[2], cap_pres;
-  d_cap_pres[0] = d_cap_pres[1] = 0.;
-  dbl Patm = mp->PorousShellPatm;
 
   for ( i = 0; i < ei->dof[eqn]; i++) {
-    Pnode = *esp->sh_p_open_2[i];
-    cap_pres = Patm - Pnode;
-    //Snode = shell_saturation_pressure_curve(Pnode, &dSdPnode, &dSdP_Pnode);
-   
-    /* CHECK FOR REMOVAL */
-    load_saturation(phi, cap_pres, d_cap_pres);
-    dSdPnode = mp->d_saturation[SHELL_PRESS_OPEN_2];
-    dSdP_Pnode = mp->d_d_saturation[SHELL_PRESS_OPEN_2][SHELL_PRESS_OPEN_2];
-
-    E_MASS[i]    = H * phi * dSdPnode   * *esp_dot->sh_p_open_2[i];
-    E_MASS_P[i]  = H * phi * dSdPnode   * (1.0+2.0*tt)/dt;
-    E_MASS_P[i] += H * phi * dSdP_Pnode * *esp_dot->sh_p_open_2[i];
+    E_MASS[i]    = pmv_ml->Inventory_Solvent_dot[i][1];
+    E_MASS_P[i]  = pmv_ml->d_Inventory_Solvent_dot_dpmv[i][1][1];
   }
 
   // We are now outside of mass lumping zone. Everything is evaluated at Gauss point from now on
 
   // Evaluate capillary pressure and load saturation
-  cap_pres = Patm - fv->sh_p_open;
+  dbl d_cap_pres[2], cap_pres;
+  d_cap_pres[0] = d_cap_pres[1] = 0.;
+  dbl Patm = mp->PorousShellPatm;
+
+  cap_pres = Patm - fv->sh_p_open_2;
   load_saturation(phi, cap_pres, d_cap_pres);
 
   // Load relative permeability as a function of saturation
@@ -11642,9 +11634,9 @@ assemble_porous_shell_open_2(
   dbl E_DIFF_P2[DIM][DIM] = {{0.0}};
   for ( a = 0; a < DIM; a++) {
     for ( b = 0; b < DIM; b++) {
-      E_DIFF[a]      += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm * (fv->grad_sh_p_open_2[b] - mp->momentum_source[b]);
-      E_DIFF_P[a][b] += -H / mu * mp->perm_tensor[a][b] * rel_liq_perm;
-      E_DIFF_P2[a][b] += -H / mu * mp->perm_tensor[a][b] * mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] *
+      E_DIFF[a]      += -H * mp->perm_tensor[a][b] * rel_liq_perm * (fv->grad_sh_p_open_2[b] - mp->momentum_source[b]);
+      E_DIFF_P[a][b] += -H * mp->perm_tensor[a][b] * rel_liq_perm;
+      E_DIFF_P2[a][b] += -H * mp->perm_tensor[a][b] * mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] *
                          (fv->grad_sh_p_open_2[b] - mp->momentum_source[b]);
     }
   }
@@ -11693,20 +11685,20 @@ assemble_porous_shell_open_2(
   eqn = R_SHELL_SAT_OPEN_2;
   if (af->Assemble_Residual) {
     peqn = upd->ep[eqn];
-    
+
     // Loop over DOF (i)
-    for ( i = 0; i < ei->dof[eqn]; i++) {         
-      
+    for ( i = 0; i < ei->dof[eqn]; i++) {
+
       // Load basis functions
       ShellBF( eqn, i, &phi_i, grad_phi_i, gradII_phi_i, d_gradII_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-      
+
       // Assemble mass term
       mass = 0.0;
       if ( T_MASS ) {
 	mass += E_MASS[i] * phi_i;
       }
       mass *= dA * etm_mass;
-      
+
       // Assemble diffusion term
       diff = 0.0;
       if ( T_DIFFUSION ) {
@@ -11715,7 +11707,7 @@ assemble_porous_shell_open_2(
 	}
       }
       diff *= dA * etm_diff;
-      
+
       // Assemble source term
       sour = 0.0;
       if ( T_SOURCE ) {
@@ -11725,7 +11717,7 @@ assemble_porous_shell_open_2(
 
       // Assemble full residual
       lec->R[peqn][i] += mass + diff + sour;
-      
+
     }  // End of loop over DOF (i)
 
   } // End of residual assembly of R_SHELL_SAT_OPEN
@@ -11734,13 +11726,13 @@ assemble_porous_shell_open_2(
   eqn = R_LUBP_2;
   if (af->Assemble_Residual & pd->e[eqn]) {
     peqn = upd->ep[eqn];
-    
+
     // Loop over DOF (i)
-    for ( i = 0; i < ei->dof[eqn]; i++) {         
-      
+    for ( i = 0; i < ei->dof[eqn]; i++) {
+
       // Load basis functions
       ShellBF( eqn, i, &phi_i, grad_phi_i, gradII_phi_i, d_gradII_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-            
+
       // Assemble source term
       sour = 0.0;
       if ( T_SOURCE ) {
@@ -11750,7 +11742,7 @@ assemble_porous_shell_open_2(
 
       // Assemble full residual
       lec->R[peqn][i] += sour;
-      
+
     }  // End of loop over DOF (i)
 
   } // End of residual assembly of R_LUBP_2
@@ -11761,13 +11753,13 @@ assemble_porous_shell_open_2(
   eqn = R_SHELL_SAT_OPEN_2;
   if (af->Assemble_Jacobian) {
     peqn = upd->ep[eqn];
-    
+
     // Loop over DOF (i)
     for ( i = 0; i < ei->dof[eqn]; i++) {
-      
+
       // Load basis functions
       ShellBF( eqn, i, &phi_i, grad_phi_i, gradII_phi_i, d_gradII_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-      
+
       // Assemble sensitivities for SHELL_PRESS_OPEN_2
       var = SHELL_PRESS_OPEN_2;
       if (pd->v[var]) {
@@ -11778,7 +11770,7 @@ assemble_porous_shell_open_2(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-      
+
 	  // Assemble mass term
 	  mass = 0.0;
 	  if ( T_MASS ) {
@@ -11786,7 +11778,7 @@ assemble_porous_shell_open_2(
 	    if ( i == j ) mass += E_MASS_P[i] * phi_i;
 	  }
 	  mass *= dA * etm_mass;
-	  
+
 	  // Assemble diffusion term
 	  diff = 0.0;
 	  if ( T_DIFFUSION ) {
@@ -11798,21 +11790,21 @@ assemble_porous_shell_open_2(
 	    }
 	  }
 	  diff *= dA * etm_diff;
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_P * phi_i * phi_j;
 	  }
 	  sour *= dA * etm_sour * mytest[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += mass + diff + sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of SHELL_PRESS_OPEN_2 sensitivities
-      
+
       // Assemble sensitivities for LUBP_2
       var = LUBP_2;
       if (pd->v[var]) {
@@ -11823,21 +11815,21 @@ assemble_porous_shell_open_2(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_PLUB * phi_i * phi_j;
 	  }
 	  sour *= dA * etm_sour * mytest[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of LUBP_2 sensitivities
-      
+
       // Assemble sensitivities for PHASE1
       var = PHASE1;
       if (pd->v[var]) {
@@ -11848,21 +11840,21 @@ assemble_porous_shell_open_2(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_F[j] * phi_i;
 	  }
 	  sour *= dA * etm_sour * mytest[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of phase1 sensitivities
-                 
+
     } // End of loop over DOF (i)
 
   } // End of Jacobian assembly of R_SHELL_SAT_OPEN_2
@@ -11870,13 +11862,13 @@ assemble_porous_shell_open_2(
   eqn = R_LUBP_2;
   if (af->Assemble_Jacobian & pd->e[eqn]) {
     peqn = upd->ep[eqn];
-    
+
     // Loop over DOF (i)
     for ( i = 0; i < ei->dof[eqn]; i++) {
-      
+
       // Load basis functions
       ShellBF( eqn, i, &phi_i, grad_phi_i, gradII_phi_i, d_gradII_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-      
+
       // Assemble sensitivities for SHELL_PRESS_OPEN
       var = SHELL_PRESS_OPEN_2;
       if (pd->v[var]) {
@@ -11887,21 +11879,21 @@ assemble_porous_shell_open_2(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
- 	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_P * phi_i * phi_j;
 	  }
 	  sour *= dA * etm_sour * mytest[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of SHELL_PRESS_OPEN sensitivities
-      
+
       // Assemble sensitivities for LUBP_2
       var = LUBP_2;
       if (pd->v[var]) {
@@ -11912,21 +11904,21 @@ assemble_porous_shell_open_2(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_PLUB * phi_i * phi_j;
 	  }
 	  sour *= dA * etm_sour * mytest[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of LUBP sensitivities
-      
+
       // Assemble sensitivities for PHASE1
       var = PHASE1;
       if (pd->v[var]) {
@@ -11937,21 +11929,21 @@ assemble_porous_shell_open_2(
 
 	  // Load basis functions
 	  ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  
+
 	  // Assemble source term
 	  sour = 0.0;
-	  if ( T_SOURCE ) {   
+	  if ( T_SOURCE ) {
 	    sour += E_SOUR_F[j] * phi_i;
 	  }
 	  sour *= dA * etm_sour * mytest[i];
-	  
+
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += sour;
-	  
+
 	} // End of loop over DOF (j)
-	
+
       } // End of PHASE1 sensitivities
-                 
+
     } // End of loop over DOF (i)
 
   } // End of Jacobian assembly of R_LUBP
@@ -11965,6 +11957,9 @@ assemble_porous_shell_open_2(
 
 
 /* End of file mm_fill_shell.c */
+
+/*****************************************************************************/
+/*****************************************************************************/
 
   /*
     shell_lubr_solid_struct_bc(): Balance of Shell-lubrication forces with
