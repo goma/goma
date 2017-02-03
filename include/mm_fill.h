@@ -99,7 +99,7 @@ PROTO((double pf_constraint,
 #if  defined (CHECK_FINITE)  || defined (DEBUG_NAN) || defined (DEBUG_INF)
 #define CHECKFINITE(MESSAGE)	checkfinite(__FILE__, __LINE__, MESSAGE)
 #else
-#define CHECKFINITE(MESSAGE)	{}
+#define CHECKFINITE(MESSAGE)	0
 #endif
 
 #endif /* _MM_FILL_H */
