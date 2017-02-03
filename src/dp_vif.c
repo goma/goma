@@ -2489,6 +2489,7 @@ noahs_ark()
   ddd_add_member(n, &LUB_VELO_UPPER, 1, MPI_INT);
   ddd_add_member(n, &LUB_VELO_LOWER, 1, MPI_INT);
   ddd_add_member(n, &LUB_VELO_FIELD, 1, MPI_INT);
+  ddd_add_member(n, &LUB_VELO_FIELD_2, 1, MPI_INT);
   ddd_add_member(n, &DISJ_PRESS, 1, MPI_INT);
   ddd_add_member(n, &SH_SAT_OPEN, 1, MPI_INT);
   ddd_add_member(n, &SH_SAT_OPEN_2, 1, MPI_INT);
