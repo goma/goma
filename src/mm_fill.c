@@ -2294,7 +2294,9 @@ matrix_fill(
 	      if ( ls->Length_Scale == 0. || Do_Overlap )
 		{
 		  apply_embedded_bc( ielem, x, delta_t, theta, time_value, &pg_data, -1, NULL, NULL, NULL, exo );
+#ifdef CHECK_FINITE
 		  err = CHECKFINITE("apply_embedded_bc"); 
+#endif
 		  if (err) return -1;
 		}
 	      else
