@@ -248,6 +248,7 @@ int LUB_HEIGHT_2 = -1;
 int LUB_VELO_UPPER = -1;
 int LUB_VELO_LOWER = -1;
 int LUB_VELO_FIELD = -1;
+int LUB_VELO_FIELD_2 = -1;
 int DISJ_PRESS = -1;
 int SH_SAT_OPEN = -1;
 int SH_SAT_OPEN_2 = -1;
@@ -1945,7 +1946,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_post[LUB_VELO_LOWER+2] = veloL[2];
       local_lumped[LUB_VELO_LOWER+2] = 1.0;
     }
-    
+
     /* Cleanup */
     fv->wt = wt;
     safe_free((void *) n_dof);
@@ -1953,7 +1954,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   } /* end of LUB_VELO */
 
   if ( (LUB_VELO_FIELD != -1) && (pd->e[R_LUBP] || pd->e[R_SHELL_FILMP]) ) {
-    
+
     /* Setup lubrication */
     int *n_dof = NULL;
     int dof_map[MDE];
@@ -1977,11 +1978,35 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[LUB_VELO_FIELD+1] = 1.0;
     local_post[LUB_VELO_FIELD+2] = LubAux->v_avg[2];
     local_lumped[LUB_VELO_FIELD+2] = 1.0;
-    
+
     /* Cleanup */
     safe_free((void *) n_dof);
 
   } /* end of LUB_VELO_FIELD */
+
+  if ( (LUB_VELO_FIELD_2 != -1) && (pd->e[R_LUBP_2]) ) {
+
+    /* Setup lubrication */
+    int *n_dof = NULL;
+    int dof_map[MDE];
+    n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+    /* Calculate velocities */
+    calculate_lub_q_v(R_LUBP_2, time, delta_t, xi, exo);
+
+    /* Post velocities */
+    local_post[LUB_VELO_FIELD_2] = LubAux->v_avg[0];
+    local_lumped[LUB_VELO_FIELD_2] = 1.0;
+    local_post[LUB_VELO_FIELD_2+1] = LubAux->v_avg[1];
+    local_lumped[LUB_VELO_FIELD_2+1] = 1.0;
+    local_post[LUB_VELO_FIELD_2+2] = LubAux->v_avg[2];
+    local_lumped[LUB_VELO_FIELD_2+2] = 1.0;
+
+    /* Cleanup */
+    safe_free((void *) n_dof);
+
+  } /* end of LUB_VELO_FIELD_2 */
 
   if ( (PP_LAME_MU != -1) && (pd->e[R_MESH1]) ) {
 
@@ -6297,6 +6322,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Lubrication Upper Velocity", &LUB_VELO_UPPER);
   iread = look_for_post_proc(ifp, "Lubrication Lower Velocity", &LUB_VELO_LOWER);
   iread = look_for_post_proc(ifp, "Lubrication Velocity Field", &LUB_VELO_FIELD);
+  iread = look_for_post_proc(ifp, "Lubrication Velocity Field 2", &LUB_VELO_FIELD_2);
   iread = look_for_post_proc(ifp, "Disjoining Pressure", &DISJ_PRESS);
   iread = look_for_post_proc(ifp, "Porous Shell Open Saturation", &SH_SAT_OPEN);
   iread = look_for_post_proc(ifp, "Shell Stress Tensor", &SH_STRESS_TENSOR);
@@ -9463,6 +9489,34 @@ index_post, index_post_export);
   else
     {
       LUB_VELO_FIELD = -1;
+    }
+
+  if (LUB_VELO_FIELD_2 != -1  && (Num_Var_In_Type[R_LUBP_2]))
+    {
+      if (LUB_VELO_FIELD_2 == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      LUB_VELO_FIELD_2 = index_post;
+      sprintf(nm, "LUB_VELO_2_X");
+      sprintf(ds, "Lubrication Velocity x-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+      sprintf(nm, "LUB_VELO_2_Y");
+      sprintf(ds, "Lubrication Velocity y-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+      sprintf(nm, "LUB_VELO_2_Z");
+      sprintf(ds, "Lubrication Velocity z-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+  else
+    {
+      LUB_VELO_FIELD_2 = -1;
     }
 
   if (DISJ_PRESS != -1  && Num_Var_In_Type[R_SHELL_FILMP])

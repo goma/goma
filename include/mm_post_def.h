@@ -538,6 +538,7 @@ extern int LUB_HEIGHT_2;       /* Lubrication gap, second layer*/
 extern int LUB_VELO_UPPER;       /* Lubrication upper surface velocity*/
 extern int LUB_VELO_LOWER;       /* Lubrication lower surface velocity*/
 extern int LUB_VELO_FIELD;       /* Velocity field calculated from lubrication */
+extern int LUB_VELO_FIELD_2;     /* Velocity field calculated from lubrication, second layer */
 extern int DISJ_PRESS;       /* Disjoining pressure */
 extern int SH_SAT_OPEN;          /* Saturation for open porous shells */
 extern int SH_SAT_OPEN_2;        /* Saturation for open porous shells 2 */
