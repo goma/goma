@@ -10881,9 +10881,10 @@ assemble_porous_shell_open(
   // Load relative permeability as a function of saturation
   if (mp->RelLiqPermModel != CONSTANT &&
       mp->RelLiqPermModel != VAN_GENUCHTEN &&
+      mp->RelLiqPermModel != VAN_GENUCHTEN_EXTERNAL &&
       mp->RelLiqPermModel != EXTERNAL_FIELD )
     {
-      EH(-1,"Only CONSTANT, VAN_GENUCHTEN, and EXTERNAL_FIELD  models are allowed for Rel Liq Permeability model in Open Pore Shell equation ");
+      EH(-1,"Only CONSTANT, VAN_GENUCHTEN, VAN_GENUCHTEN_EXTERNAL, and EXTERNAL_FIELD  models are allowed for Rel Liq Permeability model in Open Pore Shell equation ");
     }
   if (mp->RelLiqPermModel != CONSTANT)
     {
@@ -11617,9 +11618,10 @@ assemble_porous_shell_open_2(
   // Load relative permeability as a function of saturation
   if (mp->RelLiqPermModel != CONSTANT &&
       mp->RelLiqPermModel != VAN_GENUCHTEN &&
+      mp->RelLiqPermModel != VAN_GENUCHTEN_EXTERNAL &&
       mp->RelLiqPermModel != EXTERNAL_FIELD )
     {
-      EH(-1,"Only CONSTANT, VAN_GENUCHTEN, and EXTERNAL_FIELD  models are allowed for Rel Liq Permeability model in Open Pore Shell equation ");
+      EH(-1,"Only CONSTANT, VAN_GENUCHTEN, VAN_GENUCHTEN_EXTERNAL, and EXTERNAL_FIELD  models are allowed for Rel Liq Permeability model in Open Pore Shell equation ");
     }
   if (mp->RelLiqPermModel != CONSTANT)
     {

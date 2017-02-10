@@ -210,6 +210,7 @@ int POROUS_LIQUID_ACCUM_RATE = -1;
                                 /* The rate at which liquid in a partially
 				 * saturated porous medium is accumulating
 				 * at a point */
+int REL_LIQ_PERM = -1;          /* Relative liquid permeability in porous media */
 
 int PRESSURE_CONT = -1;		/* pressure at vertex & midside nodes*/
 int SH_DIV_S_V_CONT = -1;	/* SH_DIV_S_V at midside nodes */
@@ -575,6 +576,13 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   i_pl = 0;
   i_pg = 1;
   i_pore = 2;
+
+  /* Porous media shell variables */
+  dbl S;
+  dbl d_cap_pres[2], cap_pres;
+  d_cap_pres[0] = d_cap_pres[1] = 0.;
+  dbl Patm;
+
 
 #ifdef DEBUG
   fprintf(stderr, 
@@ -1342,7 +1350,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
    * Porous Media post-processing
    */
   checkPorous = 0;
-  if (mp->PorousMediaType == POROUS_UNSATURATED ||			
+  if (mp->PorousMediaType == POROUS_UNSATURATED ||
       mp->PorousMediaType == POROUS_TWO_PHASE   ||
       mp->PorousMediaType == POROUS_SHELL_UNSATURATED   ||
       mp->PorousMediaType == POROUS_SATURATED) {
@@ -2080,66 +2088,60 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   } /* end of DISJ_PRESS */
 
   if ( (SH_SAT_OPEN != -1) && pd->e[R_SHELL_SAT_OPEN] ) {
-    
-    /* Setup lubrication */
-    int *n_dof = NULL;
-    int dof_map[MDE];
-    dbl wt_old = fv->wt;
-   
-    n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
-    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-    fv->wt = wt_old;
 
-    /* Calculate velocities */
-    //    dbl dSdP, dSdP_P;
-    dbl S;
-    dbl d_cap_pres[2], cap_pres;
-    dbl Patm = mp->PorousShellPatm;
-    d_cap_pres[0] = d_cap_pres[1] = 0.;
-    dbl P = fv->sh_p_open;
-    cap_pres = Patm - P;
-    //S = shell_saturation_pressure_curve(P, &dSdP, &dSdP_P);
+    /* Calculate saturation */
+    Patm = mp->PorousShellPatm;
+    cap_pres = Patm - fv->sh_p_open;
     S = load_saturation(mp->porosity, cap_pres, d_cap_pres);
 
-    /* Post velocities */
+    /* Post saturation */
     local_post[SH_SAT_OPEN] = S;
     local_lumped[SH_SAT_OPEN] = 1.0;
-    
-    /* Cleanup */
-    safe_free((void *) n_dof);
-
   } /* end of SH_SAT_OPEN */
 
-  if ( (SH_SAT_OPEN != -1) && pd->e[R_SHELL_SAT_OPEN_2] ) {
-    
-    /* Setup lubrication */
-    int *n_dof = NULL;
-    int dof_map[MDE];
-    dbl wt_old = fv->wt;
-   
-    n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
-    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-    fv->wt = wt_old;
+  if ( (SH_SAT_OPEN_2 != -1) && pd->e[R_SHELL_SAT_OPEN_2] ) {
 
-    /* Calculate velocities */
-    //    dbl dSdP, dSdP_P;
-    dbl S;
-    dbl d_cap_pres[2], cap_pres;
-    dbl Patm = mp->PorousShellPatm;
-    d_cap_pres[0] = d_cap_pres[1] = 0.;
-    dbl P = fv->sh_p_open_2;
-    cap_pres = Patm - P;
-    //S = shell_saturation_pressure_curve(P, &dSdP, &dSdP_P);
+    /* Calculate saturation */
+    Patm = mp->PorousShellPatm;
+    cap_pres = Patm - fv->sh_p_open_2;
     S = load_saturation(mp->porosity, cap_pres, d_cap_pres);
 
-    /* Post velocities */
+    /* Post saturation */
     local_post[SH_SAT_OPEN_2] = S;
     local_lumped[SH_SAT_OPEN_2] = 1.0;
-    
-    /* Cleanup */
-    safe_free((void *) n_dof);
-
   } /* end of SH_SAT_OPEN_2 */
+
+  if (REL_LIQ_PERM != -1 &&
+      (mp->PorousMediaType == POROUS_UNSATURATED ||
+       mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
+       mp->PorousMediaType == POROUS_TWO_PHASE )) {
+
+    /* Continuum porous media */
+    if (pd->e[R_POR_LIQ_PRES]) {
+      local_post[REL_LIQ_PERM] = mp->rel_liq_perm;
+      local_lumped[REL_LIQ_PERM] = 1.;
+    }
+
+    /* Shell porous media */
+    else if ( (pd->e[R_SHELL_SAT_OPEN]) ||
+             (pd->e[R_SHELL_SAT_OPEN_2]) ){
+
+      /* Calculate saturation */
+      Patm = mp->PorousShellPatm;
+      cap_pres = Patm - fv->sh_p_open;
+      if (pd->e[R_SHELL_SAT_OPEN_2]) cap_pres = Patm - fv->sh_p_open_2;
+      S = load_saturation(mp->porosity, cap_pres, d_cap_pres);
+
+      /* Then get relative permeability */
+      if (mp->RelLiqPermModel != CONSTANT) {
+         load_liq_perm(mp->porosity, cap_pres, mp->saturation, d_cap_pres);
+      }
+
+      local_post[REL_LIQ_PERM] = mp->rel_liq_perm;
+      local_lumped[REL_LIQ_PERM] = 1.;
+    }
+  } /* end of REL_LIQ_PERM */
+
 
   if ( (SH_STRESS_TENSOR != -1) && pd->e[R_SHELL_NORMAL1]
       && pd->e[R_SHELL_NORMAL2] && pd->e[R_SHELL_NORMAL3] && pd->e[R_MESH1]  ) {
@@ -6325,6 +6327,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Lubrication Velocity Field 2", &LUB_VELO_FIELD_2);
   iread = look_for_post_proc(ifp, "Disjoining Pressure", &DISJ_PRESS);
   iread = look_for_post_proc(ifp, "Porous Shell Open Saturation", &SH_SAT_OPEN);
+  iread = look_for_post_proc(ifp, "Porous Shell Open Saturation 2", &SH_SAT_OPEN_2);
   iread = look_for_post_proc(ifp, "Shell Stress Tensor", &SH_STRESS_TENSOR);
   iread = look_for_post_proc(ifp, "Shell Tangents", &SH_TANG);
   iread = look_for_post_proc(ifp, "Lame MU", &PP_LAME_MU);
@@ -6353,7 +6356,8 @@ rd_post_process_specs(FILE *ifp,
 			     &POROUS_GRIDPECLET);
   iread = look_for_post_proc(ifp, "SUPG Velocity in porous media",
 			     &POROUS_SUPGVELOCITY);
- 
+  iread = look_for_post_proc(ifp, "Relative Liquid Permeability",
+			     &REL_LIQ_PERM);
   iread = look_for_post_proc(ifp, "Vorticity Vector", &CURL_V);
 
   /* Report count of post-proc vars to be exported */
@@ -8927,6 +8931,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
   for (i = 0; i < upd->Num_Mat; i++) {
     if (mp_glob[i]->PorousMediaType == POROUS_UNSATURATED ||
 	mp_glob[i]->PorousMediaType == POROUS_SATURATED ||
+        mp_glob[i]->PorousMediaType == POROUS_SHELL_UNSATURATED ||
 	mp_glob[i]->PorousMediaType == POROUS_TWO_PHASE ) {
       check = 1;
     }
@@ -9139,6 +9144,26 @@ index_post, index_post_export);
   } else {
     POROUS_SUPGVELOCITY = -1;
   }
+
+  if (REL_LIQ_PERM != -1 &&
+      ( Num_Var_In_Type[R_POR_LIQ_PRES] ||
+        Num_Var_In_Type[R_SHELL_SAT_OPEN] ||
+        Num_Var_In_Type[R_SHELL_SAT_OPEN_2] )
+        && check) {
+    set_nv_tkud(rd, index, 0, 0, -2, "Rel_liq_perm", "[1]",
+		"Relative Liquid Permeability", FALSE);
+    index++;
+    if (REL_LIQ_PERM == 2)
+      {
+        Export_XP_ID[index_post_export] = index_post;
+        index_post_export++;
+      }
+    REL_LIQ_PERM = index_post;
+    index_post++;
+  } else {
+    REL_LIQ_PERM = -1;
+  }
+
 /*
 printf(" After porous entries, IP = %d and IPE = %d\n",
 index_post, index_post_export);
@@ -9557,9 +9582,9 @@ index_post, index_post_export);
       SH_SAT_OPEN = -1;
     }
 
-  if (SH_SAT_OPEN != -1  && Num_Var_In_Type[R_SHELL_SAT_OPEN_2])
+  if (SH_SAT_OPEN_2 != -1  && Num_Var_In_Type[R_SHELL_SAT_OPEN_2])
     {
-      if (SH_SAT_OPEN == 2)
+      if (SH_SAT_OPEN_2 == 2)
         {
           EH(-1, "Post-processing vectors cannot be exported yet!");
         }

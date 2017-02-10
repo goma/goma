@@ -322,6 +322,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  SHELL_CYLINDER_SQUARE  20
 #define  SHELL_TANH      21
 #define  TANH_EXTERNAL      22
+#define  VAN_GENUCHTEN_EXTERNAL   23
 
 /* Types of Flowing Liquid Viscosity Models */
 #define MOLTEN_GLASS     3

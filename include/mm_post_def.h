@@ -492,6 +492,7 @@ extern int POROUS_LIQUID_ACCUM_RATE;
                                 /* The rate at which liquid in a partially
 				 * saturated porous medium is accumulating
 				 * at a point */
+extern int REL_LIQ_PERM;        /* Relative liquid permeability in porous media */
 extern int PRESSURE_CONT;	/* pressure at vertex & midside nodes*/
 extern int SH_DIV_S_V_CONT;	/* SH_DIV_S_V at midside nodes */
 extern int SH_CURV_CONT;	/* SH_SURF_CURV at midside nodes */
