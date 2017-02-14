@@ -4353,7 +4353,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
 	  memset(mat_ptr->perm_tensor, 0, sizeof(double)*DIM*DIM); /*these are loaded up later */
 
-	  mat_ptr->len_u_permeability = num_const;	  	  
+	  mat_ptr->len_u_permeability = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_permeability);
 	}
       else if (model_read == -1 && !strcmp(model_name, "SM_TENSOR") )
@@ -4416,12 +4416,13 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    {
 	      sr = sprintf(err_msg, 
 		   "Matl %s expected at least 1 constant for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Permeability", 
+			   pd_glob[mn]->MaterialName,
+			   "Rel Liq Permeability",
 			   "EXTERNAL_FIELD");
 	      EH(-1, err_msg);
 	    }
 	}
+
       else
 	{
 	  EH(model_read, "Permeability: Card missing or wrong model? ");
@@ -4672,6 +4673,40 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      EH(-1, err_msg);
 	    }
 	}
+      else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN_EXTERNAL") )
+        {
+          if ( fscanf(imp,"%s", input ) !=  1 )
+            {
+              EH(-1,"Expecting trailing keyword for VAN_GENUCHTEN_EXTERNAL_FIELD model.\n");
+            }
+          ii=0;
+          for ( j=0; j<efv->Num_external_field; j++)
+            {
+              if (!strcmp(efv->name[j], input))
+                { 
+                  ii=1;
+                  mat_ptr->rel_liq_perm_external_field_index = j;
+                }
+            }
+          if( ii==0 )
+            {
+              EH(-1,"Must activate external fields to use this VAN_GENUCHTEN_EXTERNAL model");
+            }
+          mat_ptr->RelLiqPermModel = VAN_GENUCHTEN_EXTERNAL;
+          num_const = read_constants(imp, &(mat_ptr->u_rel_liq_perm),
+                                     NO_SPECIES);
+          if ( num_const < 5)
+            {
+              sr = sprintf(err_msg,
+                   "Matl %s expected at least 5 constants for %s %s model.\n",
+                           pd_glob[mn]->MaterialName,
+                           "Rel Liq Permeability",
+                           "VAN_GENUCHTEN_EXTERNAL");
+              EH(-1, err_msg);
+            }
+          mat_ptr->len_u_rel_liq_perm = num_const;
+          SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_rel_liq_perm);
+        }
       else
 	{
 	  EH(model_read, "Rel Liq Permeability");

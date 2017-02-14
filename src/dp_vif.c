@@ -2469,6 +2469,7 @@ noahs_ark()
   ddd_add_member(n, &POROUS_RHO_LPHASE, 1, MPI_INT);
   ddd_add_member(n, &POROUS_RHO_TOTAL_SOLVENTS, 1, MPI_INT);
   ddd_add_member(n, &POROUS_SATURATION, 1, MPI_INT);
+  ddd_add_member(n, &REL_LIQ_PERM, 1, MPI_INT);
   ddd_add_member(n, &ERROR_ZZ_VEL, 1, MPI_INT);
   ddd_add_member(n, &ERROR_ZZ_VEL_ELSIZE, 1, MPI_INT);
   ddd_add_member(n, &ERROR_ZZ_Q, 1, MPI_INT);
