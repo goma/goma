@@ -304,7 +304,20 @@ apply_point_colloc_bc (
  		fspline_rs(ielem_dim, &func, d_func, BC_Types[bc_input_id].u_BC,
  			time_intermediate);
  		break;
- 
+
+            case UUSER_COLLOC_BC:
+                uuser_colloc_surf(&func, d_func, BC_Types[bc_input_id].u_BC,
+                                  id, time_intermediate);
+                break;
+            case VUSER_COLLOC_BC:
+               	vuser_colloc_surf(&func, d_func, BC_Types[bc_input_id].u_BC,
+                                  id, time_intermediate);
+                break;
+            case WUSER_COLLOC_BC:
+               	wuser_colloc_surf(&func, d_func, BC_Types[bc_input_id].u_BC,
+                                  id, time_intermediate);
+                break;
+
 	    case T_USER_BC:
 		tuser(&func, d_func, BC_Types[bc_input_id].u_BC,
 		       time_intermediate);
