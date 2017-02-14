@@ -695,7 +695,27 @@ uuser_surf (func, d_func, u_bc, time)
   
   return;
 } /* END of routine uuser_surf                                              */
+
 /****************************************************************************/
+
+void
+uuser_colloc_surf ( double *func,
+                    double d_func[],
+                    const double u_bc[],  /* parameters to parameterize velocity model*/
+                    const int id,         /* node ID of the collocated surface */
+                    const double time )
+/******************************************************************************
+*
+*  Function which calculates the boundary collocation for user-defined velocity
+*
+******************************************************************************/
+{
+
+/* Comment this out FIRST!!!!! */
+   EH(-1,"No U_USER_COLLOC model implemented");
+
+} /* END of routine uuser_colloc_surf                                       */
+
 
 /****************************************************************************/
 
@@ -730,6 +750,26 @@ vuser_surf (func, d_func, u_bc, time)
 
 /****************************************************************************/
 
+void
+vuser_colloc_surf ( double *func,
+                    double d_func[],
+                    const double u_bc[],  /* parameters to parameterize velocity model*/
+                    const int id,         /* node ID of the collocated surface */
+                    const double time )
+/******************************************************************************
+*
+*  Function which calculates the boundary collocation for user-defined velocity
+*
+******************************************************************************/
+{
+
+/* Comment this out FIRST!!!!! */
+   EH(-1,"No V_USER_COLLOC model implemented");
+
+} /* END of routine vuser_colloc_surf                                       */
+
+/****************************************************************************/
+
 void 
 wuser_surf (func, d_func, u_bc, time)
 
@@ -758,6 +798,24 @@ wuser_surf (func, d_func, u_bc, time)
   return;
 } /* END of routine wuser_surf                                               */
 /*****************************************************************************/
+
+void
+wuser_colloc_surf ( double *func,
+                    double d_func[],
+                    const double u_bc[],  /* parameters to parameterize velocity model*/
+                    const int id,         /* node ID of the collocated surface */
+                    const double time )
+/******************************************************************************
+*
+*  Function which calculates the boundary collocation for user-defined velocity
+*
+******************************************************************************/
+{
+
+/* Comment this out FIRST!!!!! */
+   EH(-1,"No W_USER_COLLOC model implemented");
+
+} /* END of routine vuser_colloc_surf                                       */
 
 /****************************************************************************/
 

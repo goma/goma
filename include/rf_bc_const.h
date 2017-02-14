@@ -382,31 +382,34 @@
 #define UVARY_BC 3
 #define U_PARABOLA_BC 35
 #define UUSER_BC 4
+#define UUSER_COLLOC_BC 5
 
-#define PU_BC     5
+#define PU_BC     6
 
 #define V_BC     10
 #define VVARY_BC 30
 #define V_PARABOLA_BC 305
 #define VUSER_BC 40
+#define VUSER_COLLOC_BC 50
 
-#define PV_BC     50
+#define PV_BC     60
 
 #define W_BC     100
 
 #define WVARY_BC 300
 #define W_PARABOLA_BC 3005
 #define WUSER_BC 400
+#define WUSER_COLLOC_BC 500
 
-#define PW_BC     500
+#define PW_BC     600
 
-#define DX_USER_BC 510
-#define DY_USER_BC 520
-#define DZ_USER_BC 530
+#define DX_USER_BC 710
+#define DY_USER_BC 720
+#define DZ_USER_BC 730
 
-#define DX_USER_NODE_BC 511
-#define DY_USER_NODE_BC 521
-#define DZ_USER_NODE_BC 531
+#define DX_USER_NODE_BC 711
+#define DY_USER_NODE_BC 721
+#define DZ_USER_NODE_BC 731
 
 /* velocity constants in normal/tangential form */
 

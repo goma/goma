@@ -1695,6 +1695,9 @@ rd_bc_specs(FILE *ifp,
 	case UUSER_BC:
 	case VUSER_BC:
 	case WUSER_BC:
+        case UUSER_COLLOC_BC:
+       	case VUSER_COLLOC_BC:
+        case WUSER_COLLOC_BC:
 	case QUSER_BC:
 	case DX_USER_BC:
 	case DY_USER_BC:
