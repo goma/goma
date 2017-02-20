@@ -10994,6 +10994,31 @@ assemble_porous_shell_open(
 
     }
 
+  // Load sink terms due to adsorption and its sensitivities
+  dbl E_SINK = 0.0, E_SINK_P[MDE], E_SINK_SINK[MDE];
+  dbl d_MassSource[MAX_VARIABLE_TYPES + MAX_CONC][MDE];
+  memset(E_SINK_P,  0.0, sizeof(double) * MDE);
+  memset(E_SINK_SINK,  0.0, sizeof(double) * MDE);
+  memset(d_MassSource,  0.0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC) * MDE);
+
+  if (pd->e[R_POR_SINK_MASS])
+    {
+     E_SINK = por_mass_source_model(d_MassSource);
+
+     /* Load sensitivities w.r.t. shell porous open */
+     for (j = 0; j < ei->dof[SHELL_PRESS_OPEN]; j++)
+        {
+         E_SINK_P[j] = d_MassSource[SHELL_PRESS_OPEN][j];
+        }
+
+     /* Load sensitivities w.r.t. pore sink mass */
+     for (j = 0; j < ei->dof[POR_SINK_MASS]; j++)
+        {
+         E_SINK_SINK[j] = d_MassSource[POR_SINK_MASS][j];
+        }
+    }
+
+
   // Assemble test for LS weight
   int mytest[MDE];
   for ( i = 0; i < ei->dof[eqn]; i++) {
@@ -11050,6 +11075,7 @@ assemble_porous_shell_open(
       sour = 0.0;
       if ( T_SOURCE ) {
 	sour += (E_SOUR*mytest[i] + E_SOUR_2*mytest_2[i]) * phi_i;
+        sour -= E_SINK * phi_i;
       }
       sour *= dA * etm_sour;
 
@@ -11157,15 +11183,37 @@ assemble_porous_shell_open(
 	  sour = 0.0;
 	  if ( T_SOURCE ) {
 	    sour += (E_SOUR_P*mytest[i] + E_SOUR_P_2*mytest_2[i]) * phi_i * phi_j;
+            sour -= E_SINK_P[j] * phi_i;
 	  }
 	  sour *= dA * etm_sour;
 
 	  // Assemble full Jacobian
 	  lec->J[peqn][pvar][i][j] += mass + diff + sour;
-
 	} // End of loop over DOF (j)
 
       } // End of SHELL_PRESS_OPEN sensitivities
+
+      // Assemble sensitivities for POR_SINK_MASS
+      var = POR_SINK_MASS;
+      if (pd->v[var]) {
+  	pvar = upd->vp[var];
+
+        // Loop over DOF (j)
+        for ( j = 0; j < ei->dof[var]; j++) {
+
+          // Assemble source term
+          sour = 0.0;
+          if ( T_SOURCE ) {
+            sour -= E_SINK_SINK[j] * phi_i;
+          }
+          sour *= dA * etm_sour;
+
+          // Assemble full Jacobian
+          lec->J[peqn][pvar][i][j] += sour;
+
+        } // End of loop over DOF (j)
+
+      } // End of POR_SINK_MASS sensitivities
 
       // Assemble sensitivities for LUBP
       var = LUBP;

@@ -689,6 +689,7 @@ rd_bc_specs(FILE *ifp,
         case POROUS_GAS_PRESSURE_BC:
         case POROUS_GAS_FLUX_CONST_BC:
 	case POROUS_TEMP_BC:
+	case POROUS_SINK_BC:
         case SH_X_BC:
 	case SH_Y_BC:
 	case SH_K_BC:

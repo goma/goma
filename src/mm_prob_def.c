@@ -222,15 +222,15 @@ setup_pd()
 		  pd_glob[mn]->e[ce] |= T_SOURCE;
 		}
 	    }
-	  else if ((ce == R_FILL) || 
+	  else if ((ce == R_FILL) ||
 		   (ce == R_PHASE1) ||
 		   (ce == R_PHASE2) ||
 		   (ce == R_PHASE3) ||
 		   (ce == R_PHASE4) ||
 		   (ce == R_PHASE5) ||
-		   (ce == R_ACOUS_REYN_STRESS) ||  
-                   (ce == R_SHELL_LUBP) ||
-		   (ce == R_POR_SINK_MASS))
+		   (ce == R_ACOUS_REYN_STRESS) ||
+		   (ce == R_POR_SINK_MASS) ||
+                   (ce == R_SHELL_LUBP))
 	    {
 	      if ( pd_glob[mn]->etm[ce][(LOG2_MASS)] != 0. )
 		{

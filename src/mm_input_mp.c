@@ -5397,6 +5397,22 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      }
 	    mat_ptr->len_u_porous_sink_constants = num_const;
 	  } 
+	else if ( model_read == -1 && !strcmp(model_name, "POWER_LAW") )
+	  {
+	    mat_ptr->PorousSinkConstantsModel = POWER_LAW;
+			  
+	    num_const = read_constants(imp, &(mat_ptr->u_porous_sink_constants), 
+										 NO_SPECIES);
+	    if ( num_const < 4 ) 
+	      {
+		sr = sprintf(err_msg, 
+			     "Matl %s needs 4 constants for %s %s model.\n",
+			     pd_glob[mn]->MaterialName,
+			     "Sink Adsorption Rate Data", "POWER_LAW");
+		EH(-1, err_msg);
+	      }
+	    mat_ptr->len_u_porous_sink_constants = num_const;
+	  } 
 	else if (!strcmp(model_name, "CONSTANT") )
 	  {
 	    EH(-1,"Ironically we don't allow a CONSTANT model for Sink Adsorption Rate Data.  Try LINEAR");
