@@ -71,6 +71,9 @@ PROTO((void));
 EXTERN double porous_shell_closed_height_model   /* mm_std_models_shell.c          */
 PROTO((void));
 
+EXTERN double porous_shell_cross_perm_model     /* mm_std_models_shell.c          */
+PROTO((void));
+
 EXTERN void dynamic_contact_angle_model
 PROTO((
        double *,
