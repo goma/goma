@@ -24,11 +24,11 @@ They will build the following packages and libraries (with or without support fo
 * Trilinos w/SEACAS
 
 
-`build-goma-dep-trilinos-12.sh`: This script builds Trilinos 12.6.3
+`build-goma-dep-trilinos-12.sh`: This script builds Trilinos 12.10.1
  with support for c++11 and expects gcc to be version 4.8.1 or greater.
 
 `build-goma-dep-trilinos-12-noc++11.sh`: This script builds with Trilinos
-12.6.3 and disables support for c++11 to support older compilers.
+12.10.1 and disables support for c++11 to support older compilers.
 
 `build-TPL-experimental.sh`: This script is experimental, it uses OpenBLAS
 and stand-alone SEACAS. It appears that use of OpenBLAS affects solutions
@@ -54,7 +54,7 @@ OpenMPI should be added to the path and library path:
 SEACAS tools from Trilinos (e.g. aprepro and blot) should be added to
 your path
 
-    export PATH="/[path to gomalibs]/trilinos-12.6.3-Build/bin:$PATH"  
+    export PATH="/[path to gomalibs]/trilinos-12.10.1-Build/bin:$PATH"  
 
 ## settings.mk
 
