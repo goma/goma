@@ -63,7 +63,7 @@ This will take a long time (hours). `nice` lowers the process priority, effectiv
 
 Test that these libraries built successfully by checking for aprepro.
 
-`${gomadir}/TPLs/trilinos-12.6.3/bin/aprepro -v`
+`${gomadir}/TPLs/trilinos-12.10.1/bin/aprepro -v`
 
 If the libraries built successfully, this will print the version of the SEACAS Algebraic Preprocessor, if not address any errors before moving on.
 
