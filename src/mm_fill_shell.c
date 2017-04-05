@@ -10797,6 +10797,7 @@ assemble_porous_shell_open(
   // Load porous medium parameters
   dbl phi = mp->porosity;                         // Porosity
   dbl H =  porous_shell_closed_height_model();    // Pore height (vertical)
+  dbl kappa = porous_shell_cross_perm_model();    // Pores cross permeability
 
   // Load field variables - PRS NOTE: NEED cross BC for integrating the two (set-up-shop)
   //  dbl P = fv->sh_p_open;                          // Porous pressure
@@ -10819,30 +10820,6 @@ assemble_porous_shell_open(
   S = mp->saturation;
   dSdP = mp->d_saturation[SHELL_PRESS_OPEN];
 
-  // Load permeability tensor
-  dbl kappa = 0.0;
-
-  // May want to add this as a kappa model. 
-  // for ( i = 0; i < DIM; i++) kappa -= fv->snormal[i]*mp->perm_tensor[2][i];
-
-  if (mp->PorousShellCrossKappaModel == CONSTANT)
-    {
-      kappa                 = mp->PorousShellCrossKappa;
-    }
-  else if (mp->PorousShellCrossKappaModel == EXTERNAL_FIELD)
-    {
-      EH(mp->Xperm_external_field_index, "Cross Permeability external field not found!");
-      kappa = mp->PorousShellCrossKappa = 
-	mp->u_PorousShellCrossKappa_function_constants[0]*fv->external_field[mp->Xperm_external_field_index];
-      if (pd->TimeIntegration == TRANSIENT)
-	{
-	  mp_old->PorousShellCrossKappa =mp->u_PorousShellCrossKappa_function_constants[0]*fv->external_field[mp->Xperm_external_field_index];
-	}
-    }
-  else
-    {
-      EH(-1,"Unrecognized Cross Kappa model");
-    }
 
   // Load heaviside for level set weighting
   dbl Hside = 1.0, d_Hside_dF[DIM] = {0.0};
@@ -11577,6 +11554,8 @@ assemble_porous_shell_open_2(
   // Load porous medium parameters
   dbl phi = mp->porosity;                         // Porosity
   dbl H =  porous_shell_closed_height_model();    // Pore height (vertical)
+  dbl kappa = porous_shell_cross_perm_model();    // Pores cross permeability
+
 
   // Load field variables - PRS NOTE: NEED cross BC for integrating the two (set-up-shop)
 
@@ -11604,27 +11583,6 @@ assemble_porous_shell_open_2(
   dbl S, dSdP;
   S = mp->saturation;
   dSdP = mp->d_saturation[SHELL_PRESS_OPEN_2];
-
-  // Load permeability tensor
-  dbl kappa = 0.0;
-
-  if (mp->PorousShellCrossKappaModel == CONSTANT)
-    {
-      kappa                 = mp->PorousShellCrossKappa;
-    }
-  else if (mp->PorousShellCrossKappaModel == EXTERNAL_FIELD)
-    {
-      EH(mp->Xperm_external_field_index, "Cross Permeability external field not found!");
-      kappa = mp->PorousShellCrossKappa = fv->external_field[mp->Xperm_external_field_index];
-      if (pd->TimeIntegration == TRANSIENT)
-	{
-	  mp_old->PorousShellCrossKappa = fv->external_field[mp->Xperm_external_field_index];
-	}
-    }
-  else
-    {
-      EH(-1,"Unrecognized Cross Kappa model");
-    }
 
   // Load heaviside for phase-field  weighting
   dbl Hside = 1.0, d_Hside_dF[DIM] = {0.0};

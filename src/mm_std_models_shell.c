@@ -1315,8 +1315,45 @@ porous_shell_closed_height_model() {
   return(H);
 }
 /* END of porous_shell_height_model */
+
+/*****************************************************************************/
+
+double
+porous_shell_cross_perm_model() {
+/******************************************************************************
+*
+*  This function computes the cross permeability  of an open porous shell based on
+*  either a constant value or an external field.  Used with the function
+*  assemble_porous_shell_open and assemble_porous_shell_open_2.
+*
+*  Kristianto Tjiptowidjojo (tjiptowi@sandia.gov) - April 2017
+*
+******************************************************************************/
+  dbl kappa = 0.0;
+
+  if (mp->PorousShellCrossKappaModel == CONSTANT)
+    {
+      kappa                 = mp->PorousShellCrossKappa;
+    }
+  else if (mp->PorousShellCrossKappaModel == EXTERNAL_FIELD)
+    {
+      EH(mp->Xperm_external_field_index, "Cross Permeability external field not found!");
+      kappa = mp->PorousShellCrossKappa = 
+        mp->u_PorousShellCrossKappa_function_constants[0]*fv->external_field[mp->Xperm_external_field_index];
+      if (pd->TimeIntegration == TRANSIENT)
+        {
+          mp_old->PorousShellCrossKappa =mp->u_PorousShellCrossKappa_function_constants[0]*fv->external_field[mp->Xperm_external_field_index];
+        }
+    }
+  else
+    {
+      EH(-1,"Unrecognized Porous Shell Cross Permeability  model");
+    }
+
+  return(kappa);
+}
+/* END of porous_shell_height_model */
    
-/* END of file mm_std_models_shell.c */
 /*****************************************************************************/
 
    
@@ -1434,3 +1471,5 @@ void dynamic_contact_angle_model(
   return;
 }
 /*** END OF dynamic_contact_angle_model ***/
+
+/* END of file mm_std_models_shell.c */
