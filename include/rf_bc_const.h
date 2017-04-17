@@ -216,6 +216,7 @@
 #define LS_SPECIAL        19
 
 /* define some other catagories */
+#define STRESS  6 /* Six components in each mode */
 #define VECTOR  3
 #define SCALAR  1
 
@@ -482,6 +483,8 @@
 #define S22_7_BC    71004
 #define S23_7_BC    71005
 #define S33_7_BC    71006
+
+#define STRESS_DEVELOPED_BC  81001
 
 /* velocity gradient */
 

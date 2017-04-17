@@ -148,6 +148,8 @@ PROTO((double *,		/* x_var - variable value */
 extern int bc_eqn_index(int, int, int, int, int, int *, int *,
 			VARIABLE_DESCRIPTION_STRUCT **);
 
+extern int bc_eqn_index_stress(int, int, int, int, int, int, int *, int *,
+			VARIABLE_DESCRIPTION_STRUCT **);
 EXTERN int evaluate_time_func
 PROTO((const double ,		/* time                                      */
        double *,		/* f_time - computed time function           */

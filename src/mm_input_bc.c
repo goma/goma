@@ -461,6 +461,7 @@ rd_bc_specs(FILE *ifp,
         case SHELL_FLOW_DEVELOPED_BC:
         case SHELL_GRAD_FH_NOBC_BC:
         case SHELL_GRAD_PC_NOBC_BC:
+        case STRESS_DEVELOPED_BC:
 	  break;
 
 	  /* Fall through for all cases which require a single floating point
