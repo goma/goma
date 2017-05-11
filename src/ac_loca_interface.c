@@ -1055,6 +1055,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
 
   /* This is for a single steady state followed by LSA */
     case LOCA_LSA_ONLY:
+fprintf(stderr,"LOCA LSA ONLY\n");
       con.general_info.method = LOCA_LSA_ONLY;
       con.general_info.param = 0.0;
       con.stepping_info.max_steps = 0;
@@ -2016,7 +2017,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
           }
         else
           {
-            printf("\tResolve time = %7.1e\n", (s_end - s_start) );
+            printf(" Resolve_time:%7.1e ", (s_end - s_start) );
           }
       }
       
@@ -3667,9 +3668,19 @@ static void print_final(double param, int step_num, int mat_fills,
   printf("\tNumber of steps            = %d\n", step_num+1);
   printf("\tNumber of Matrix fills     = %d\n", mat_fills);
   printf("\tNumber of Residual fills   = %d\n", res_fills);
+  fprintf(stderr,"\n"); 
+  fprintf(stderr,"CONTINUATION ROUTINE HAS FINISHED: \n");
+  fprintf(stderr,"\tEnding Parameter value     = %g\n", param);
+  fprintf(stderr,"\tNumber of steps            = %d\n", step_num+1);
+  fprintf(stderr,"\tNumber of Matrix fills     = %d\n", mat_fills);
+  fprintf(stderr,"\tNumber of Residual fills   = %d\n", res_fills);
   if (Linear_Solver == AZTEC)
-  printf("\tNumber of linear solve its = %d\n", linear_its);
-  printf("\n"); /*print_line("~", 80);*/
+       {
+        printf("\tNumber of linear solve its = %d\n", linear_its);
+        fprintf(stderr,"\tNumber of linear solve its = %d\n", linear_its);
+        }
+  printf("\n"); 
+  DPRINTF(stderr,"\n\n\t I will continue no more!\n\t No more continuation for you!\n");
 
 }
 /*****************************************************************************/

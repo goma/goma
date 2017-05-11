@@ -50,8 +50,8 @@
 #include "mm_as_structs.h"
 #include "mm_as.h"
 
-#include "mm_mp.h"
 #include "mm_mp_structs.h"
+#include "mm_mp.h"
  
 #include "mm_eh.h"
 
@@ -205,6 +205,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
       if (    BC_Types[bc_input_id].BC_Name == PLANE_BC ||
               BC_Types[bc_input_id].BC_Name == SPLINE_BC ||
               BC_Types[bc_input_id].BC_Name == FILLET_BC ||
+              BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
 	      BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||	      
 	      BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_RS_BC ||      
  	      BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_PETROV_BC ||      
@@ -237,6 +238,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 	      BC_Types[bc_input_id].BC_Name == PLANE_BC ||
               BC_Types[bc_input_id].BC_Name == SPLINE_BC ||
               BC_Types[bc_input_id].BC_Name == FILLET_BC ||
+              BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
 	      BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ||
 	      BC_Types[bc_input_id].BC_Name == SOLID_FLUID_BC ||
 	      BC_Types[bc_input_id].BC_Name == SOLID_FLUID_RS_BC ||
@@ -358,6 +360,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 		 BC_Types[bc_input_id].BC_Name == PLANE_BC ||
                  BC_Types[bc_input_id].BC_Name == SPLINE_BC  || 
                  BC_Types[bc_input_id].BC_Name == FILLET_BC  ||
+                 BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC  ||
 		 BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||      
 		 BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_RS_BC ||      
  		 BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_PETROV_BC ||  
@@ -482,8 +485,9 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			  }
 			
 		      } else if((variable_wall_normal) && (BC_Types[bc_input_id].BC_Name == PLANE_BC ||
-                                                           BC_Types[bc_input_id].BC_Name == SPLINE_BC || 
-                                                           BC_Types[bc_input_id].BC_Name == FILLET_BC ||
+                                                          BC_Types[bc_input_id].BC_Name == SPLINE_BC || 
+                                                          BC_Types[bc_input_id].BC_Name == FILLET_BC ||
+                                                      BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
                                     BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||	      
 				    BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_RS_BC ||	      
  				    BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_PETROV_BC ||
@@ -736,6 +740,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			      memset( dwall_velo_dx,0,
 				      MAX_PDIM*MDE*sizeof(double) );
 			      for (i1 = 0; i1 < Num_BC; i1++) {
+
 				if( (BC_Types[i1].BC_Data_Int[0] == I &&
 				     (BC_Types[i1].BC_Name == VELO_TANGENT_BC ||
 				      BC_Types[i1].BC_Name == VELO_STREAMING_BC ||
@@ -746,9 +751,9 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 				      BC_Types[i1].BC_Name == VELO_SLIP_ROT_FLUID_BC ||
 				      BC_Types[i1].BC_Name == AIR_FILM_BC ||
 				      BC_Types[i1].BC_Name == AIR_FILM_ROT_BC))
-				    || (BC_Types[i1].BC_Data_Int[2] == I &&
-					(BC_Types[i1].BC_Name == VELO_TANGENT_SOLID_BC || 
-					 BC_Types[i1].BC_Name == VELO_SLIP_SOLID_BC)) )
+                	    || BC_Types[i1].BC_Name == VELO_TANGENT_SOLID_BC
+                           || (BC_Types[i1].BC_Data_Int[2] == I &&
+			 BC_Types[i1].BC_Name == VELO_SLIP_SOLID_BC) )
 				  {
 				    int mn;
 				    switch(BC_Types[i1].BC_Name)

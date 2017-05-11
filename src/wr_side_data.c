@@ -56,6 +56,7 @@ static char rcsid[] =
 
 #include "mm_post_def.h"
 #include "mm_post_proc.h"
+#include "mm_std_models_shell.h"
 
 #include "goma.h"
 
@@ -465,6 +466,54 @@ ns_data_print(pp_Data * p,
             ordinate = x[id_var];
             id_var = Index_Solution(node, LIGHT_INTM, 0, 0, mat_num);
             ordinate += x[id_var];
+            iprint = 1;
+          }
+        else if ( strncasecmp(qtity_str, "lub_height", 10 ) == 0 )
+          {
+             dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime;
+             dbl dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+             int *n_dof = NULL;
+             int dof_map[MDE];
+	    if ( ! exo->node_elem_conn_exists )
+	      {
+		EH(-1, "Cannot compute angle without node_elem_conn.");
+	      }
+	    
+	    elem_list[0] = exo->node_elem_list[exo->node_elem_pntr[node]];
+
+	    /*
+	     * Find out where this node appears in the elements local
+	     * node ordering scheme...
+	     */
+
+	    local_node[0] = in_list(node, exo->elem_node_pntr[elem_list[0]], 
+				    exo->elem_node_pntr[elem_list[0]+1],
+				    exo->elem_node_list);
+
+	    EH(local_node[0], "Can not find node in elem node connectivity!?! ");
+	    local_node[0] -= exo->elem_node_pntr[elem_list[0]];
+
+		load_ei(elem_list[0], exo, 0);
+
+		find_nodal_stu(local_node[0], ei->ielem_type, xi, xi+1, xi+2);
+		err = load_basis_functions(xi, bfd);
+
+		EH( err, "problem from load_basis_functions");
+	    
+		err = beer_belly();
+		EH( err, "beer_belly");
+	    
+		err = load_fv();
+		EH( err, "load_fv");
+	    
+            n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+            lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+                                                                 
+
+             /* Lubrication height from model */
+                H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, 
+                     dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time_value, time_step_size); 
+            ordinate = H;
             iprint = 1;
           }
         else if ( strncasecmp(qtity_str, "external_field", 14 ) == 0 )

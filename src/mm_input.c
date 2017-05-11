@@ -11292,6 +11292,10 @@ usage(const int exit_flag)
   fprintf(stdout, 
 	  "\t-bc_list                        List BC tags for continuation\n");
   fprintf(stdout, 
+	  "\t-wr_int                         Turn Write Intermediate Results On\n");
+  fprintf(stdout, 
+	  "\t-time_pl INT                    read_exoII_file time plane (default last)\n");
+  fprintf(stdout, 
 	  "\t-v          --version           Print code version and exit\n");
 
   exit(exit_flag);

@@ -796,6 +796,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     /*
      * IF STEP CHANGED, REDO FIRST ORDER PREDICTION
      */
+ if (hunt_par >= 1.0) { alqALC = -1;  }
 
     if(alqALC == -1)
     {
@@ -833,7 +834,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	  DPRINTF(stderr, "\n\tFirst Order Hunting:");
 	  break; }
       DPRINTF(stderr, "\n\tStep number: %4d of %4d (max)", n+1, MaxPathSteps);
-      DPRINTF(stderr, "\n\tAttempting solution at: theta = %g",hunt_par);
+      DPRINTF(stderr, "\n\tAttempting solution at: theta = %g ;  step = %g",hunt_par,dhunt_par);
       for (iHC=0;iHC<nHC;iHC++) {
 	switch (hunt[iHC].Type) {
 	case 1: /* BC */
@@ -1054,7 +1055,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
       if (!converged) {
 
-	if (ni > 10) {
+	if (ni > Max_Newton_Steps/2) {
  	  DPRINTF(stderr,"\n ************************************\n");
  	  DPRINTF(stderr," W: Did not converge in Newton steps.\n");
  	  DPRINTF(stderr,"    Find better initial guess.       \n");
@@ -1091,6 +1092,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
 	  if (dhunt_par < dhunt_par_min) {
  	    DPRINTF(stderr,"\n X: C step-length reduced below minimum.");
+ 	    DPRINTF(stderr,"\n theta: %g ;  theta_min: %g",dhunt_par,dhunt_par_min);
  	    DPRINTF(stderr,"\n    Program terminated.\n");
 	    /* This needs to have a return value of 0, indicating
 	     * success, for the continuation script to not treat this
@@ -1268,6 +1270,16 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
  	         (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
         		 (damp_factor3 <= 1. && damp_factor3 >= 0.))
  		{
+                if(hunt[0].BCID == -1)
+                   {
+	            if (Write_Intermediate_Solutions == 0) {    
+	                 write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old, 
+			        xdot, xdot_old, tev, tev_post,NULL,  rd, gindex,
+			        p_gsize, gvec, gvec_elem, &nprint, delta_s[0], 
+ 			        theta, custom_tol1, NULL, exo, dpi);
+	                 nprint++;
+ 	                 }
+ 	         }
  		custom_tol1 *= 100.;
  		custom_tol2 *= 100.;
  		custom_tol3 *= 100.;
@@ -1275,11 +1287,22 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
  		}
  		else
  		{
+                if(hunt[0].BCID == -1)
+                   {
+	            if (Write_Intermediate_Solutions == 0) {    
+ 	DPRINTF(stderr,"  writing solution %g  \n",damp_factor1);
+	                 write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old, 
+			        xdot, xdot_old, tev, tev_post,NULL,  rd, gindex,
+			        p_gsize, gvec, gvec_elem, &nprint, delta_s[0], 
+ 			        theta, damp_factor1, NULL, exo, dpi);
+	                 nprint++;
+ 	                 }
+ 	         }
  		damp_factor1 *= 2.0;
 		damp_factor1 = MIN(damp_factor1,1.0);
  	DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
  		}
- 	}
+ 	  }
  
 
       }  /* end of !converged */
@@ -1293,7 +1316,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     custom_tol1 = toler_org[0];
     custom_tol2 = toler_org[1];
     custom_tol3 = toler_org[2];
-    damp_factor1 = damp_org;
+    /*  damp_factor1 = damp_org;  */
+    damp_factor1 = 1.0;
     DPRINTF(stderr,
 	    "\n\tStep accepted, theta (proportion complete) = %10.6e\n",
 	    hunt_par);

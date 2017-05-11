@@ -388,6 +388,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 
 /* surface tension laws */
 #define DILATION 3
+#define GIBBS_ISOTHERM 35
 
 /* Species Time Integration choices */
 #define STANDARD  0

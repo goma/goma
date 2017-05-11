@@ -6607,7 +6607,6 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
   /*** CALCULATE FLOW RATE FROM FUNCTION **************************************/
   calculate_lub_q_v(EQN,  time, dt, xi, exo); //PRS: NEED TO DO SOMETHING HERE
 
-
   /*** CALCULATE PHYSICAL PROPERTIES AND SENSITIVITIES ************************/
 
   /* Lubrication height from model */
@@ -6802,8 +6801,8 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
       if ( pd->e[eqn] & T_SOURCE ) {
 	source = (mp->lubsource);
 	source += -dH_dtime;     
-	source += veloU[0]*dH_U_dX[0] + veloU[1]*dH_U_dX[1];
-	source -= veloL[0]*dH_L_dX[0] + veloL[1]*dH_L_dX[1];
+	source += (veloU[0]*dH_U_dX[0] + veloU[1]*dH_U_dX[1] - veloU[2]);
+	source -= (veloL[0]*dH_L_dX[0] + veloL[1]*dH_L_dX[1] - veloL[2]);
 	source *= phi_i;
       }
       source *= det_J * wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];
@@ -6988,8 +6987,8 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 	    if ( pd->e[eqn] && T_SOURCE ) {
 	      source += -dH_dtime_dmesh[b][j] * det_J;
 	      source += (mp->lubsource - dH_dtime) * fv->dsurfdet_dx[b][jk];
-	      source += (veloU[0]*dH_U_dX[0] + veloU[1]*dH_U_dX[1])*fv->dsurfdet_dx[b][jk];
-	      source -= (veloL[0]*dH_L_dX[0] + veloL[1]*dH_L_dX[1])*fv->dsurfdet_dx[b][jk];
+	      source += (veloU[0]*dH_U_dX[0] + veloU[1]*dH_U_dX[1] - veloU[2])*fv->dsurfdet_dx[b][jk];
+	      source -= (veloL[0]*dH_L_dX[0] + veloL[1]*dH_L_dX[1] - veloL[2])*fv->dsurfdet_dx[b][jk];
 	      source *= phi_i;
 	    }
 	    source *= wt * h3 * pd->etm[eqn][(LOG2_SOURCE)];

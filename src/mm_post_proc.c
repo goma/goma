@@ -6297,6 +6297,7 @@ rd_post_process_specs(FILE *ifp,
     {
       if ( fgets(line, 81, ifp) != NULL)
 	{
+          double dummy[1] = {-1.0};
 	  strip(line);
 	  len_u_post_proc = count_parameters(line);
 	  if ( len_u_post_proc > 0)
@@ -6310,6 +6311,8 @@ rd_post_process_specs(FILE *ifp,
 		  u_post_proc[i] = atof(arguments[i]);
 		}
 	    }
+          else
+            {u_post_proc = dummy;}  
 	}
     } 
 
