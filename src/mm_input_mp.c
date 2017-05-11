@@ -2744,6 +2744,27 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_surface_tension);
 
 	} 
+      else if ( !strcmp(model_name, "GIBBS_ISOTHERM") )
+	{
+	  mat_ptr->SurfaceTensionModel = GIBBS_ISOTHERM;
+	  
+	  num_const = read_constants(imp, &(mat_ptr->u_surface_tension),
+				     NO_SPECIES);
+	  
+	  if ( num_const < 3) 
+	    {
+	      sr = sprintf(err_msg, 
+			   "Matl %s expected at least 3 constants for %s %s model.\n",
+			   pd_glob[mn]->MaterialName, 
+			   search_string, 
+			   model_name );
+	      EH(-1, err_msg);
+	    }
+	  mat_ptr->len_u_surface_tension = num_const;
+
+	  SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_surface_tension);
+
+	} 
       else
 	{
 	  mat_ptr->SurfaceTensionModel = CONSTANT;	
@@ -8551,10 +8572,10 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  model_read = 1;
 	  mat_ptr->VeloUFunctionModel = ROLL;
 	  num_const = read_constants(imp, &(mat_ptr->u_veloU_function_constants), NO_SPECIES);
-	  if( num_const < 9)
+	  if( num_const < 1)
 	    {
 	      sr = sprintf(err_msg, 
-			   "Matl %s needs 9 constants for %s %s model.\n",
+			   "Matl %s needs 1 constant for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Velocity Function", "ROLL");
 	      EH(-1, err_msg);
@@ -8616,10 +8637,10 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  model_read = 1;
 	  mat_ptr->VeloLFunctionModel = ROLL;
 	  num_const = read_constants(imp, &(mat_ptr->u_veloL_function_constants), NO_SPECIES);
-	  if( num_const < 9)
+	  if( num_const < 1)
 	    {
 	      sr = sprintf(err_msg, 
-			   "Matl %s needs 9 constants for %s %s model.\n",
+			   "Matl %s needs 1 constant for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Lower Velocity Function", "ROLL");
 	      EH(-1, err_msg);

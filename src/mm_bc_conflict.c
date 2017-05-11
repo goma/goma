@@ -776,6 +776,8 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 		  ibc2 = BC_Unk_List[inode][offset_mom2][j];
  		  if (BC_Types[ibc2].BC_Name == VELO_TANGENT_BC ||
  		  	BC_Types[ibc2].BC_Name == VELO_TANGENT_USER_BC ||
+ 		  	BC_Types[ibc2].BC_Name == VELO_SLIP_FLUID_BC ||
+ 		  	BC_Types[ibc2].BC_Name == VELO_SLIP_ROT_FLUID_BC ||
  			BC_Types[ibc2].BC_Name == VELO_STREAMING_BC ) {
 		    /* Hmm, we got a hit.  Now make sure they are not coming from the same
 		       side set, which is something that is common */
@@ -1353,6 +1355,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 			switch (bct2) {
 			case PLANE_BC:
 			case FILLET_BC:
+			case ROLL_FLUID_BC:
 			case GEOM_BC:	/* aka SPLINE note that the relation here may depend on 
 					 * the functional form of the geometry  */
 			case SLOPEX_BC:

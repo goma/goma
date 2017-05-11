@@ -3211,11 +3211,18 @@ fvelo_slip_bc(double func[MAX_PDIM],
   /* Note: positive omega is CLOCKWISE */
   if(type == VELO_SLIP_ROT_BC  ||  type == VELO_SLIP_ROT_FILL_BC || type == VELO_SLIP_ROT_FLUID_BC )
     {
+      double factor = 1.0,current_rad, rad_input = bc_float[5];
       omega = vsx;
       X_0[0] = vsy;
       X_0[1] = vsz;
-      vs[0] = omega * ( fv->x[1] - X_0[1] );
-      vs[1] = - omega * ( fv->x[0] - X_0[0] );
+      if( rad_input > 0)  { 
+        current_rad = sqrt(SQUARE(fv->x[1]-X_0[1])+SQUARE(fv->x[0]-X_0[0]));
+        factor = rad_input/current_rad;
+           }  else   {
+        factor = 1.0;
+              }
+      vs[0] = factor*omega * ( fv->x[1] - X_0[1] );
+      vs[1] = - factor*omega * ( fv->x[0] - X_0[0] );
       vs[2] = 0.;
       if( TimeIntegration == TRANSIENT && pd->e[R_MESH1] )
           {
@@ -3392,12 +3399,12 @@ fvelo_slip_bc(double func[MAX_PDIM],
         {
           velo_avg += fv->stangent[0][p]*(vs[p] + fv->v[p]);
           v_solid += fv->stangent[0][p]*vs[p];
+          if(Pflag)
+             {
+              pgrad += fv->stangent[0][p]*fv->grad_P[p];
+	     }
         }
      velo_avg *= 0.5;
-     if(Pflag)
-        {
-          pgrad += fv->stangent[0][p]*fv->grad_P[p];
-	}
      flow = MAX(0.,bc_float[4]*v_solid);
      viscinv = 1./bc_float[0];
      thick = flow/velo_avg;
@@ -3475,11 +3482,10 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
 	    for (j=0; j<ei->dof[var]; j++)
 	      {
 		phi_j = bf[var]->phi[j];
-	for (p=0; p<pd->Num_Dim; p++)
-	  {
-	    if(Pflag) d_func[p][var][j] += 0.5*thick*dthick_dV*fv->stangent[0][jvar]*fv->grad_P[p]*phi_j;
-	    d_func[p][var][j] += betainv*dthick_dV*fv->stangent[0][jvar]*vslip[p]*phi_j;
-          }
+	        d_func[jvar][var][j] += -betainv*dthick_dV*fv->stangent[0][jvar]*vslip[jvar]*phi_j;
+/* don't think we need -- seems OK 4-12-2017 */
+	        if(Pflag) d_func[jvar][var][j] += 0.5*thick*dthick_dV*
+                                fv->stangent[0][jvar]*fv->grad_P[jvar]*phi_j;
 	      }
 	  }
        }
@@ -3494,17 +3500,14 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
 		  {
 		    for (p = 0; p < pd->Num_Dim; p++)
 		      {
-			for (a = 0; a < pd->Num_Dim; a++)
-			  {
-	                    d_func[p][var][j] += -betainv*dthick_dV*vslip[p]
-                                *fv->dstangent_dx[0][a][jvar][j];
+	               d_func[p][var][j] += -betainv*dthick_dV*vslip[p]
+                                *fv->dstangent_dx[0][p][jvar][j];
 	                   if(Pflag) 
                             {
-                             d_func[p][var][j] += 0.5*thick*dthick_dV*fv->grad_P[p]*fv->dstangent_dx[0][a][jvar][j];
-		             d_func[p][var][j] += 0.5*fv->grad_P[p]*dthick_dP*fv->dstangent_dx[0][a][jvar][j];
-		             d_func[p][var][j] += vslip[p]*dthick_dP*fv->dstangent_dx[0][a][jvar][j]*(-betainv);
+                             d_func[p][var][j] += 0.5*thick*dthick_dV*fv->grad_P[p]*fv->dstangent_dx[0][p][jvar][j];
+		             d_func[p][var][j] += 0.5*fv->grad_P[p]*dthick_dP*fv->dstangent_dx[0][p][jvar][j];
+		             d_func[p][var][j] += vslip[p]*dthick_dP*fv->dstangent_dx[0][p][jvar][j]*(-betainv);
                             }
-			  }
 		      }
 		  }
 	      }
@@ -4388,6 +4391,51 @@ load_surface_tension (
 	      }
 	    }
 	  }
+	}
+      else if(mp->SurfaceTensionModel == GIBBS_ISOTHERM)
+	{
+         double temp;
+         int w;
+         /* get temperature  */
+          if ( pd->e[TEMPERATURE] )
+             {temp = fv->T;}
+          else
+             {temp = upd->Process_Temperature;}
+
+	  for(p=0; p<DIM; p++) {
+	    for(j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++) {
+	      dsigma_dx[p][j] = 0.;
+	    }
+	  }
+          mp->surface_tension = mp->u_surface_tension[0]*
+              pow((mp->u_surface_tension[1]-temp)/
+                  (mp->u_surface_tension[1]-mp->reference[TEMPERATURE])
+                   ,mp->u_surface_tension[2]);		         
+          mp->d_surface_tension[TEMPERATURE] = mp->u_surface_tension[0]*
+              pow((mp->u_surface_tension[1]-temp)/
+                  (mp->u_surface_tension[1]-mp->reference[TEMPERATURE])
+                  ,mp->u_surface_tension[2]-1.)
+                  *(-mp->u_surface_tension[2]/
+                  (mp->u_surface_tension[1]-mp->reference[TEMPERATURE]));		         
+							 
+          if( mp->len_u_surface_tension > 3 && pd->Num_Species_Eqn > 0)
+             {
+             for(w=0 ; w<pd->Num_Species_Eqn ; w++)
+             {
+             if( fv->c[w] < mp->u_surface_tension[5+3*w])
+               {
+                  mp->surface_tension -= mp->u_surface_tension[3+3*w]*
+                        log(1.0+fv->c[w]/mp->u_surface_tension[4+3*w]);
+                  mp->d_surface_tension[MAX_VARIABLE_TYPES+w] =
+                        -mp->u_surface_tension[3+3*w]
+                        /(fv->c[w]+mp->u_surface_tension[4+3*w]);
+               }  else   {
+                  mp->surface_tension -= mp->u_surface_tension[3+3*w]*
+                               log(1.0+mp->u_surface_tension[5+3*w]/
+                               mp->u_surface_tension[4+3*w]);
+               }
+             }
+             }
 	}
       else
 	{

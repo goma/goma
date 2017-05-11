@@ -369,6 +369,10 @@ apply_point_colloc_bc (
 		f_fillet(ielem_dim, &func, d_func, 
 		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC);
 		break;
+	    case ROLL_FLUID_BC:
+		f_roll_fluid(ielem_dim, &func, d_func, 
+		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC);
+		break;
 #ifdef USE_CGM
 	    case SM_PLANE_BC:       /* Solid Model PLANE BC */
 	      /* I took out the plane generation at the BC level.  It
@@ -811,6 +815,189 @@ f_fillet (int ielem_dim,
       d_func[MESH_DISPLACEMENT3] = 0.0;
 
 } /* END of routine f_fillet                                                   */
+/*****************************************************************************/
+
+void 
+f_roll_fluid (int ielem_dim,
+        double *func,
+        double d_func[],	/* dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
+        const double *p,		/*  function parameters from data card  */
+        const int num_const)           /* number of passed parameters   */
+{    
+/**************************** EXECUTION BEGINS *******************************/
+  double roll_rad; /* roll radius */
+  double origin[3];        /* roll axis origin (x,y,z) */
+  double dir_angle[3];     /* axis direction angles */
+  double coord[3];     /* current coordinates */
+  double axis_pt[3], rad_dir[3], d_dist[3], dist, R, factor, t;
+  double omega,v_dir[3], v_roll[3];
+  double velo_avg = 0.0,  pgrad=0.;
+  double v_solid=0., res, jac, delta, flow, eps=1.0e-8, viscinv;
+  double jacinv, thick, dthick_dV, dthick_dP;
+  int Pflag = TRUE;
+  int j,var,jvar,k;
+
+  if(af->Assemble_LSA_Mass_Matrix)
+    return;
+
+  if(num_const < 7)
+       EH(-1,"Need at least 7 parameters for Roll geometry bc!\n");
+
+
+  roll_rad=p[0];
+  origin[0] = p[1];    origin[1] = p[2];  origin[2] = p[3];
+  dir_angle[0] = p[4];   dir_angle[1] = p[5];   dir_angle[2] = p[6];
+
+/* calculate distance from interface surface to solid surface for repulsion calculations */
+
+      coord[0] = fv->x[0];
+      coord[1] = fv->x[1];
+      if( ielem_dim == 3)
+        { coord[2] = fv->x[2];}
+      else
+        { coord[2] = 0.0;}
+
+/*  find intersection of axis with normal plane - i.e., locate point on
+ *          axis that intersects plane normal to axis that contains local point. */
+
+    factor = SQUARE(dir_angle[0]) + SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]);
+    t = (dir_angle[0]*(coord[0]-origin[0]) + dir_angle[1]*(coord[1]-origin[1])
+        + dir_angle[2]*(coord[2]-origin[2]))/factor;
+    axis_pt[0] = origin[0]+dir_angle[0]*t;
+    axis_pt[1] = origin[1]+dir_angle[1]*t;
+    axis_pt[2] = origin[2]+dir_angle[2]*t;
+
+/*  compute radius and radial direction */
+
+    R = sqrt( SQUARE(coord[0]-axis_pt[0]) + SQUARE(coord[1]-axis_pt[1]) +
+                SQUARE(coord[2]-axis_pt[2]) );
+    rad_dir[0] = (coord[0]-axis_pt[0])/R;
+    rad_dir[1] = (coord[1]-axis_pt[1])/R;
+    rad_dir[2] = (coord[2]-axis_pt[2])/R;
+    dist = R - roll_rad;
+    d_dist[0] = rad_dir[0]*(1.-SQUARE(dir_angle[0])/factor)
+          +rad_dir[1]*(-dir_angle[1]*dir_angle[0]/factor)
+          +rad_dir[2]*(-dir_angle[2]*dir_angle[0]/factor);
+    d_dist[1] = rad_dir[1]*(1.-SQUARE(dir_angle[1])/factor)
+          +rad_dir[0]*(-dir_angle[0]*dir_angle[1]/factor)
+          +rad_dir[2]*(-dir_angle[2]*dir_angle[1]/factor);
+    d_dist[2] = rad_dir[2]*(1.-SQUARE(dir_angle[2])/factor)
+          +rad_dir[0]*(-dir_angle[0]*dir_angle[2]/factor)
+          +rad_dir[1]*(-dir_angle[1]*dir_angle[2]/factor);
+
+
+    if(num_const < 10)
+       WH(-1,"ROLL_FLUID: Less than 10 parameters - reverting to roll surface!\n");
+  
+    omega=p[7];
+/* compute velocity direction as perpendicular to both axis and radial
+ *         direction.  Positive direction is determined by right hand rule */
+
+     v_dir[0] = dir_angle[1]*rad_dir[2]-dir_angle[2]*rad_dir[1];
+     v_dir[1] = dir_angle[2]*rad_dir[0]-dir_angle[0]*rad_dir[2];
+     v_dir[2] = dir_angle[0]*rad_dir[1]-dir_angle[1]*rad_dir[0];
+
+     v_roll[0] =  omega*roll_rad*v_dir[0];
+     v_roll[1] =  omega*roll_rad*v_dir[1];
+     v_roll[2] =  omega*roll_rad*v_dir[2];
+
+     if( TimeIntegration == TRANSIENT && pd->e[R_MESH1] )
+          {
+            /* Add the mesh motion to the substrate velocity */
+            v_roll[0] += fv_dot->x[0];
+            v_roll[1] += fv_dot->x[1];
+            v_roll[2] += fv_dot->x[2];
+          }
+
+  /* quantities specific to FLUID bcs   */
+
+  if(num_const > 8 && p[9] >= 0.0)
+     {
+     for (j = 0; j < pd->Num_Dim; j++)
+        {
+          velo_avg += fv->stangent[0][j]*(v_roll[j] + fv->v[j]);
+          v_solid += fv->stangent[0][j]*v_roll[j];
+          if(Pflag)
+              {
+                pgrad += fv->stangent[0][j]*fv->grad_P[j];
+              }
+        }
+     velo_avg *= 0.5;
+     flow = MAX(0.,p[9]*v_solid);
+     viscinv = 1./p[8];
+     thick = flow/velo_avg;
+     j=0;
+     do {
+         res = -CUBE(thick)*viscinv*pgrad/12. + thick*velo_avg - flow;
+         jac = -0.25*SQUARE(thick)*viscinv*pgrad + velo_avg;
+         jacinv = 1.0/jac;
+         delta = -res*jacinv;
+         thick += delta;
+         j++;
+        } while(fabs(delta) > eps && j<20);
+      dthick_dV = -0.5*jacinv;     /*  1/h*derivative  */
+      dthick_dP = CUBE(thick)*viscinv/12.*jacinv;
+#if 0
+fprintf(stderr,"slip %d %g %g %g %g\n",Pflag,fv->x[0],thick,flow/v_solid,velo_avg);
+fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
+#endif
+    *func = dist - thick;
+    d_func[MESH_DISPLACEMENT1] =  d_dist[0];
+    d_func[MESH_DISPLACEMENT2] =  d_dist[1];
+    d_func[MESH_DISPLACEMENT3] =  d_dist[2];
+#if 1
+    for (jvar=0; jvar<pd->Num_Dim; jvar++)
+      {
+        var = VELOCITY1 + jvar;
+        for (k=0; k<pd->Num_Dim; k++)
+          {
+           d_func[var] += -thick*dthick_dV*fv->stangent[0][k];
+          }
+       }
+#endif
+#if 0
+/* Mesh motion Jacobian entries   */
+        for (jvar=0; jvar<ei->ielem_dim; jvar++)
+          {
+            var = MESH_DISPLACEMENT1 + jvar;
+            if (pd->v[var])
+              {
+                    for (k = 0; k < pd->Num_Dim; k++)
+                      {
+                        d_func[var] += -thick*dthick_dV*fv->v[k]
+                                *fv->stangent[0][k];
+                        if(Pflag)
+                          {
+                          d_func[var] += -dthick_dP*fv->grad_P[k]*fv->stangent[0][k];
+                          }
+                      }
+              }
+          }
+
+#endif
+#if 0
+   var = PRESSURE;
+    if (pd->v[var])
+      {
+        if(Pflag )
+          {
+               for (k = 0; k < pd->Num_Dim; k++)
+                  {
+                    d_func[var] += -dthick_dP*fv->stangent[0][k];
+                  }
+          }
+      }
+#endif
+    }	else	{
+    *func = dist;
+    d_func[MESH_DISPLACEMENT1] =  d_dist[0];
+    d_func[MESH_DISPLACEMENT2] =  d_dist[1];
+    d_func[MESH_DISPLACEMENT3] =  d_dist[2];
+    }
+
+
+
+} /* END of routine f_roll_fluid                                                   */
 /*****************************************************************************/
 
 #ifdef USE_CGM

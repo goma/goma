@@ -94,7 +94,7 @@ height_function_model (double *H_U,
 {
  double H = 0.;
  double H_dot, H_init, H_delta, H_low, x_0, Length, r;
- double R, origin[3], dir_angle[3], t, axis_pt[3], dist, cos_angle;
+ double R, origin[3], dir_angle[3], t, axis_pt[3], dist, cos_denom;
 
 
  if(pd->TimeIntegration == STEADY) time = 0.;
@@ -227,9 +227,11 @@ height_function_model (double *H_U,
 /*  find intersection of axis with normal plane - i.e., locate point on
 	axis that intersects plane normal to axis that contains local point. */
 
-     t = (dir_angle[0]*(fv->x[0]-origin[0]) + dir_angle[1]*(fv->x[1]-origin[1])
-	+ dir_angle[2]*(-origin[2]))/(SQUARE(dir_angle[0]) +
-	SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]));
+     cos_denom = (SQUARE(dir_angle[0]) + SQUARE(dir_angle[1]) 
+                                + SQUARE(dir_angle[2]));
+     t = (dir_angle[0]*(fv->x[0]-origin[0]) 
+             + dir_angle[1]*(fv->x[1]-origin[1])
+	     + dir_angle[2]*(fv->x[2]-origin[2]))/cos_denom;
      axis_pt[0] = origin[0]+dir_angle[0]*t;
      axis_pt[1] = origin[1]+dir_angle[1]*t;
      axis_pt[2] = origin[2]+dir_angle[2]*t;
@@ -237,23 +239,32 @@ height_function_model (double *H_U,
 /*  compute radial direction	*/
 
      dist = sqrt(SQUARE(fv->x[0]-axis_pt[0])+SQUARE(fv->x[1]-axis_pt[1]));
-     if(dist > R ) EH(-1,"point outside of roll");
-     *H_U = axis_pt[2] - sqrt(SQUARE(R) - SQUARE(dist));
+     if(dist > R )
+        {
+         *H_U = R;
+         dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.0;
+        }
+     else
+        {
+     *H_U = axis_pt[2]-fv->x[2] - sqrt(SQUARE(R) - SQUARE(dist));
      *dH_U_dtime = 0.;  /* finish later  */
-     cos_angle = dir_angle[0]/(SQUARE(dir_angle[0]) +
-                                  SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]));
-     dH_U_dX[0] = dir_angle[2]*cos_angle +
-                   ((fv->x[0]-axis_pt[0])*(1.-dir_angle[0]*cos_angle)
-                    +(fv->x[1]-axis_pt[1])*(-dir_angle[1]*cos_angle))
+     dH_U_dX[0] = ((fv->x[0]-axis_pt[0])*
+                              (1.-SQUARE(dir_angle[0])/cos_denom)
+          +(fv->x[1]-axis_pt[1])*(-dir_angle[0]*dir_angle[1]/cos_denom)
+          +(fv->x[2]-axis_pt[2])*(-dir_angle[0]*dir_angle[2]/cos_denom))
                     /sqrt(SQUARE(R) - SQUARE(dist));
-     cos_angle = dir_angle[1]/(SQUARE(dir_angle[0]) +
-                                  SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]));
-     dH_U_dX[1] = dir_angle[2]*cos_angle +
-                   ((fv->x[0]-axis_pt[0])*(-dir_angle[0]*cos_angle)
-                    +(fv->x[1]-axis_pt[1])*(1.-dir_angle[1]*cos_angle))
+     dH_U_dX[1] = ((fv->x[0]-axis_pt[0])*
+                              (-dir_angle[1]*dir_angle[0]/cos_denom)
+            +(fv->x[1]-axis_pt[1])*(1.-SQUARE(dir_angle[1])/cos_denom)
+            +(fv->x[2]-axis_pt[2])*(-dir_angle[1]*dir_angle[2]/cos_denom))
                     /sqrt(SQUARE(R) - SQUARE(dist));
 
-     dH_U_dX[2] = 0.;
+     dH_U_dX[2] = -1.+((fv->x[0]-axis_pt[0])*
+                              (-dir_angle[2]*dir_angle[0]/cos_denom)
+            +(fv->x[1]-axis_pt[1])*(-dir_angle[2]*dir_angle[1]/cos_denom)
+            +(fv->x[2]-axis_pt[2])*(-SQUARE(dir_angle[2])/cos_denom))
+                    /sqrt(SQUARE(R) - SQUARE(dist));
+        }
    }
 
    else if(mp->HeightUFunctionModel == CAP_SQUEEZE)
@@ -451,9 +462,11 @@ height_function_model (double *H_U,
 /*  find intersection of axis with normal plane - i.e., locate point on
 	axis that intersects plane normal to axis that contains local point. */
 
-     t = (dir_angle[0]*(fv->x[0]-origin[0]) + dir_angle[1]*(fv->x[1]-origin[1])
-	+ dir_angle[2]*(-origin[2]))/(SQUARE(dir_angle[0]) +
-	SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]));
+     cos_denom = (SQUARE(dir_angle[0]) + SQUARE(dir_angle[1]) 
+                                + SQUARE(dir_angle[2]));
+     t = (dir_angle[0]*(fv->x[0]-origin[0]) 
+             + dir_angle[1]*(fv->x[1]-origin[1])
+	     + dir_angle[2]*(fv->x[2]-origin[2]))/cos_denom;
      axis_pt[0] = origin[0]+dir_angle[0]*t;
      axis_pt[1] = origin[1]+dir_angle[1]*t;
      axis_pt[2] = origin[2]+dir_angle[2]*t;
@@ -462,22 +475,31 @@ height_function_model (double *H_U,
 
      dist = sqrt(SQUARE(fv->x[0]-axis_pt[0])+SQUARE(fv->x[1]-axis_pt[1]));
      if(dist > R ) EH(-1,"point outside of roll");
-     *H_L = axis_pt[2] + sqrt(SQUARE(R) - SQUARE(dist));
+     if(dist > R )
+        {
+         *H_L = -R;
+         dH_L_dX[0] = dH_L_dX[1] = dH_L_dX[2] = 0.0;
+        }
+     else
+        {
+     *H_L = axis_pt[2]-fv->x[2] + sqrt(SQUARE(R) - SQUARE(dist));
      *dH_L_dtime = 0.;  /* finish later  */
-     cos_angle = dir_angle[0]/(SQUARE(dir_angle[0]) +
-                                  SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]));
-     dH_L_dX[0] = dir_angle[2]*cos_angle -
-                   ((fv->x[0]-axis_pt[0])*(1.-dir_angle[0]*cos_angle)
-                    +(fv->x[1]-axis_pt[1])*(-dir_angle[1]*cos_angle))
+     dH_L_dX[0] = -((fv->x[0]-axis_pt[0])*
+                              (1.-SQUARE(dir_angle[0])/cos_denom)
+          +(fv->x[1]-axis_pt[1])*(-dir_angle[0]*dir_angle[1]/cos_denom)
+          +(fv->x[2]-axis_pt[2])*(-dir_angle[0]*dir_angle[2]/cos_denom))
                     /sqrt(SQUARE(R) - SQUARE(dist));
-     cos_angle = dir_angle[1]/(SQUARE(dir_angle[0]) +
-                                  SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]));
-     dH_L_dX[1] = dir_angle[2]*cos_angle -
-                   ((fv->x[0]-axis_pt[0])*(-dir_angle[0]*cos_angle)
-                    +(fv->x[1]-axis_pt[1])*(1.-dir_angle[1]*cos_angle))
+     dH_L_dX[1] = -((fv->x[0]-axis_pt[0])*
+                              (-dir_angle[1]*dir_angle[0]/cos_denom)
+            +(fv->x[1]-axis_pt[1])*(1.-SQUARE(dir_angle[1])/cos_denom)
+            +(fv->x[2]-axis_pt[2])*(-dir_angle[1]*dir_angle[2]/cos_denom))
                     /sqrt(SQUARE(R) - SQUARE(dist));
-
-     dH_U_dX[2] = 0.;
+     dH_L_dX[2] = -1.-((fv->x[0]-axis_pt[0])*
+                              (-dir_angle[2]*dir_angle[0]/cos_denom)
+            +(fv->x[1]-axis_pt[1])*(-dir_angle[2]*dir_angle[1]/cos_denom)
+            +(fv->x[2]-axis_pt[2])*(-SQUARE(dir_angle[2])/cos_denom))
+                    /sqrt(SQUARE(R) - SQUARE(dist));
+      }
    }
  else if(mp->HeightLFunctionModel == TABLE) {
    struct  Data_Table *table_local;
@@ -566,7 +588,7 @@ velocity_function_model (double veloU[DIM],
  double speed;
  double H_dot, hgt;
  double R, origin[3], dir_angle[3], t, axis_pt[3], rad_dir[3], dist;
- double omega, v_dir[3];
+ double omega, cos_denom, v_dir[3];
 
 
  if(mp->VeloUFunctionModel == CONSTANT)
@@ -585,56 +607,71 @@ velocity_function_model (double veloU[DIM],
    }
  else if(mp->VeloUFunctionModel == ROLL)
    {
-     R = mp->u_veloU_function_constants[0];
+     if(mp->HeightUFunctionModel == ROLL)
+       {
+        R = mp->u_heightU_function_constants[0];
 /*  origin and direction of rotation axis	*/
-     origin[0] = mp->u_veloU_function_constants[1];
-     origin[1] = mp->u_veloU_function_constants[2];
-     origin[2] = mp->u_veloU_function_constants[3];
-     dir_angle[0] = mp->u_veloU_function_constants[4];
-     dir_angle[1] = mp->u_veloU_function_constants[5];
-     dir_angle[2] = mp->u_veloU_function_constants[6];
-     H_dot = mp->u_veloU_function_constants[7];
-     omega = mp->u_veloU_function_constants[8];
-     origin[2] += H_dot*time;
+        origin[0] = mp->u_heightU_function_constants[1];
+        origin[1] = mp->u_heightU_function_constants[2];
+        origin[2] = mp->u_heightU_function_constants[3];
+        dir_angle[0] = mp->u_heightU_function_constants[4];
+        dir_angle[1] = mp->u_heightU_function_constants[5];
+        dir_angle[2] = mp->u_heightU_function_constants[6];
+        H_dot = mp->u_heightU_function_constants[7];
+        origin[2] += H_dot*time;
 
 /*  find intersection of axis with normal plane - i.e., locate point on
 	axis that intersects plane normal to axis that contains local point. */
 
-     t = (dir_angle[0]*(fv->x[0]-origin[0]) + dir_angle[1]*(fv->x[1]-origin[1])
-	+ dir_angle[2]*(-origin[2]))/(SQUARE(dir_angle[0]) +
-	SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]));
-     axis_pt[0] = origin[0]+dir_angle[0]*t;
-     axis_pt[1] = origin[1]+dir_angle[1]*t;
-     axis_pt[2] = origin[2]+dir_angle[2]*t;
+        cos_denom = (SQUARE(dir_angle[0]) + SQUARE(dir_angle[1]) 
+                                + SQUARE(dir_angle[2]));
+        t = (dir_angle[0]*(fv->x[0]-origin[0]) + dir_angle[1]*(fv->x[1]-origin[1])
+	+ dir_angle[2]*(-origin[2]))/cos_denom;
+        axis_pt[0] = origin[0]+dir_angle[0]*t;
+        axis_pt[1] = origin[1]+dir_angle[1]*t;
+        axis_pt[2] = origin[2]+dir_angle[2]*t;
 
 /*  compute radial direction	*/
 
-     dist = sqrt(SQUARE(fv->x[0]-axis_pt[0])+SQUARE(fv->x[1]-axis_pt[1]));
-     if(dist > R ) EH(-1,"point outside of roll");
-     hgt = axis_pt[2] - sqrt(SQUARE(R) - SQUARE(dist));
-     t = (dir_angle[0]*(fv->x[0]-origin[0]) + dir_angle[1]*(fv->x[1]-origin[1])
-	+ dir_angle[2]*(hgt-origin[2]))/(SQUARE(dir_angle[0]) +
-	SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]));
-     axis_pt[0] = origin[0]+dir_angle[0]*t;
-     axis_pt[1] = origin[1]+dir_angle[1]*t;
-     axis_pt[2] = origin[2]+dir_angle[2]*t;
+        dist = sqrt(SQUARE(fv->x[0]-axis_pt[0])+SQUARE(fv->x[1]-axis_pt[1]));
+        if(dist > R ) 
+         {
+          veloU[0] =  0.0;
+          veloU[1] =  0.0;
+          veloU[2] =  0.0;
+         }
+        else
+         {
+          hgt = axis_pt[2] - sqrt(SQUARE(R) - SQUARE(dist));
+          t = (dir_angle[0]*(fv->x[0]-origin[0]) + dir_angle[1]*(fv->x[1]-origin[1])
+	      + dir_angle[2]*(hgt-origin[2]))/cos_denom;
+          axis_pt[0] = origin[0]+dir_angle[0]*t;
+          axis_pt[1] = origin[1]+dir_angle[1]*t;
+          axis_pt[2] = origin[2]+dir_angle[2]*t;
 
 /*  compute radius and radial direction	*/
 
-    rad_dir[0] = (fv->x[0]-axis_pt[0])/R;
-    rad_dir[1] = (fv->x[1]-axis_pt[1])/R;
-    rad_dir[2] = (hgt-axis_pt[2])/R;
+          rad_dir[0] = (fv->x[0]-axis_pt[0])/R;
+          rad_dir[1] = (fv->x[1]-axis_pt[1])/R;
+          rad_dir[2] = (hgt-axis_pt[2])/R;
 
 /* compute velocity direction as perpendicular to both axis and radial 
 	direction.  Positive direction is determined by right hand rule */
 
-    v_dir[0] = dir_angle[1]*rad_dir[2]-dir_angle[2]*rad_dir[1];
-    v_dir[1] = dir_angle[2]*rad_dir[0]-dir_angle[0]*rad_dir[2];
-    v_dir[2] = dir_angle[0]*rad_dir[1]-dir_angle[1]*rad_dir[0];
+          v_dir[0] = dir_angle[1]*rad_dir[2]-dir_angle[2]*rad_dir[1];
+          v_dir[1] = dir_angle[2]*rad_dir[0]-dir_angle[0]*rad_dir[2];
+          v_dir[2] = dir_angle[0]*rad_dir[1]-dir_angle[1]*rad_dir[0];
 
-    veloU[0] =  omega*R*v_dir[0];
-    veloU[1] =  omega*R*v_dir[1];
-    veloU[2] =  omega*R*v_dir[2];
+          omega = mp->u_veloU_function_constants[0];
+          veloU[0] =  omega*R*v_dir[0];
+          veloU[1] =  omega*R*v_dir[1];
+          veloU[2] =  omega*R*v_dir[2];
+         }
+       }
+       else
+       {
+        WH(-1,"VelocityU and HeightU ROLL functions don't match.");
+       }
    }
  else if(mp->VeloUFunctionModel == TANGENTIAL_ROTATE)
    {
@@ -746,56 +783,71 @@ velocity_function_model (double veloU[DIM],
    }
  else if(mp->VeloLFunctionModel == ROLL)
    {
-     R = mp->u_veloL_function_constants[0];
+    if(mp->HeightLFunctionModel == ROLL)
+      {
+       R = mp->u_heightL_function_constants[0];
 /*  origin and direction of rotation axis	*/
-     origin[0] = mp->u_veloL_function_constants[1];
-     origin[1] = mp->u_veloL_function_constants[2];
-     origin[2] = mp->u_veloL_function_constants[3];
-     dir_angle[0] = mp->u_veloL_function_constants[4];
-     dir_angle[1] = mp->u_veloL_function_constants[5];
-     dir_angle[2] = mp->u_veloL_function_constants[6];
-     H_dot = mp->u_veloL_function_constants[7];
-     omega = mp->u_veloL_function_constants[8];
-     origin[2] += H_dot*time;
+       origin[0] = mp->u_heightL_function_constants[1];
+       origin[1] = mp->u_heightL_function_constants[2];
+       origin[2] = mp->u_heightL_function_constants[3];
+       dir_angle[0] = mp->u_heightL_function_constants[4];
+       dir_angle[1] = mp->u_heightL_function_constants[5];
+       dir_angle[2] = mp->u_heightL_function_constants[6];
+       H_dot = mp->u_heightL_function_constants[7];
+       origin[2] += H_dot*time;
 
 /*  find intersection of axis with normal plane - i.e., locate point on
 	axis that intersects plane normal to axis that contains local point. */
 
-     t = (dir_angle[0]*(fv->x[0]-origin[0]) + dir_angle[1]*(fv->x[1]-origin[1])
-	+ dir_angle[2]*(-origin[2]))/(SQUARE(dir_angle[0]) +
-	SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]));
-     axis_pt[0] = origin[0]+dir_angle[0]*t;
-     axis_pt[1] = origin[1]+dir_angle[1]*t;
-     axis_pt[2] = origin[2]+dir_angle[2]*t;
+        cos_denom = (SQUARE(dir_angle[0]) + SQUARE(dir_angle[1]) 
+                                + SQUARE(dir_angle[2]));
+        t = (dir_angle[0]*(fv->x[0]-origin[0]) + dir_angle[1]*(fv->x[1]-origin[1])
+	                + dir_angle[2]*(-origin[2]))/cos_denom;
+        axis_pt[0] = origin[0]+dir_angle[0]*t;
+        axis_pt[1] = origin[1]+dir_angle[1]*t;
+        axis_pt[2] = origin[2]+dir_angle[2]*t;
 
 /*  compute radial direction	*/
 
-     dist = sqrt(SQUARE(fv->x[0]-axis_pt[0])+SQUARE(fv->x[1]-axis_pt[1]));
-     if(dist > R ) EH(-1,"point outside of roll");
-     hgt = axis_pt[2] + sqrt(SQUARE(R) - SQUARE(dist));
-     t = (dir_angle[0]*(fv->x[0]-origin[0]) + dir_angle[1]*(fv->x[1]-origin[1])
-	+ dir_angle[2]*(hgt-origin[2]))/(SQUARE(dir_angle[0]) +
-	SQUARE(dir_angle[1]) + SQUARE(dir_angle[2]));
-     axis_pt[0] = origin[0]+dir_angle[0]*t;
-     axis_pt[1] = origin[1]+dir_angle[1]*t;
-     axis_pt[2] = origin[2]+dir_angle[2]*t;
+        dist = sqrt(SQUARE(fv->x[0]-axis_pt[0])+SQUARE(fv->x[1]-axis_pt[1]));
+        if(dist > R ) 
+          {
+           veloL[0] =  0.0;
+           veloL[1] =  0.0;
+           veloL[2] =  0.0;
+          }
+        else
+         {
+          hgt = axis_pt[2] + sqrt(SQUARE(R) - SQUARE(dist));
+          t = (dir_angle[0]*(fv->x[0]-origin[0]) + dir_angle[1]*(fv->x[1]-origin[1])
+	                   + dir_angle[2]*(hgt-origin[2]))/cos_denom;
+          axis_pt[0] = origin[0]+dir_angle[0]*t;
+          axis_pt[1] = origin[1]+dir_angle[1]*t;
+          axis_pt[2] = origin[2]+dir_angle[2]*t;
 
 /*  compute radius and radial direction	*/
 
-    rad_dir[0] = (fv->x[0]-axis_pt[0])/R;
-    rad_dir[1] = (fv->x[1]-axis_pt[1])/R;
-    rad_dir[2] = (hgt-axis_pt[2])/R;
+          rad_dir[0] = (fv->x[0]-axis_pt[0])/R;
+          rad_dir[1] = (fv->x[1]-axis_pt[1])/R;
+          rad_dir[2] = (hgt-axis_pt[2])/R;
 
 /* compute velocity direction as perpendicular to both axis and radial 
 	direction.  Positive direction is determined by right hand rule */
 
-    v_dir[0] = dir_angle[1]*rad_dir[2]-dir_angle[2]*rad_dir[1];
-    v_dir[1] = dir_angle[2]*rad_dir[0]-dir_angle[0]*rad_dir[2];
-    v_dir[2] = dir_angle[0]*rad_dir[1]-dir_angle[1]*rad_dir[0];
+          v_dir[0] = dir_angle[1]*rad_dir[2]-dir_angle[2]*rad_dir[1];
+          v_dir[1] = dir_angle[2]*rad_dir[0]-dir_angle[0]*rad_dir[2];
+          v_dir[2] = dir_angle[0]*rad_dir[1]-dir_angle[1]*rad_dir[0];
 
-    veloL[0] =  omega*R*v_dir[0];
-    veloL[1] =  omega*R*v_dir[1];
-    veloL[2] =  omega*R*v_dir[2];
+          omega = mp->u_veloL_function_constants[0];
+          veloL[0] =  omega*R*v_dir[0];
+          veloL[1] =  omega*R*v_dir[1];
+          veloL[2] =  omega*R*v_dir[2];
+         }
+      }
+      else
+      {
+        WH(-1,"VelocityL and HeightL ROLL functions don't match.");
+      }
    }
  else if(mp->VeloLFunctionModel == TANGENTIAL_ROTATE)
    {

@@ -1011,6 +1011,13 @@ rd_bc_specs(FILE *ifp,
 	    }
 	  else
 	    SPF(endofstring(echo_string)," %d %.4g", BC_Types[ibc].BC_Data_Int[0],BC_Types[ibc].BC_Data_Float[4]); 
+	  if ( fscanf(ifp, "%lf", 
+		      &BC_Types[ibc].BC_Data_Float[5]) != 1)
+	    {
+		      BC_Types[ibc].BC_Data_Float[5] = 0.;
+	    }
+	  else
+	    SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[5]); 
           BC_Types[ibc].max_DFlt = 5;
 
 
@@ -1685,6 +1692,7 @@ rd_bc_specs(FILE *ifp,
         case V_PARABOLA_BC:
         case W_PARABOLA_BC:
         case FILLET_BC:
+        case ROLL_FLUID_BC:
 	case SPLINEX_BC:  
 	case SPLINEY_BC: 
 	case SPLINEZ_BC:

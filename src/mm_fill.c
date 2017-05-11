@@ -3145,7 +3145,7 @@ matrix_fill(
 	    WH(-1,"\nNot all contact angle conditions were applied!\n");
 	    for (j = 0;j < count;j++)
 	  	{
-	          fprintf(stderr,"CAs %d %d %d %d %d\n",j,CA_id[j],CA_fselem[j],CA_sselem[j],CA_proc[j]);
+	          fprintf(stderr,"CA:%d ID:%d fselem:%d sselem:%d Proc:%d\n",j,CA_id[j],CA_fselem[j],CA_sselem[j],CA_proc[j]);
 		}
 	    fprintf(stderr,"Count=%d  Done=%d\n",count,Num_CAs_done);
 	  }
