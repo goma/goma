@@ -7350,7 +7350,6 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
                                      if (lambda != 0.0)
                                        {
                                         advection -=  phi_j * ucwt * (gt[a][p] * (double)delta(b,q) + g[q][b] * (double)delta(a,p));
-                                        advection -=  phi_j * ucwt * (gt[a][p] * (double)delta(b,q) + g[q][b] * (double)delta(a,p));
                                         advection +=  phi_j * lcwt * (gt[q][b] * (double)delta(p,a) + g[a][p] * (double)delta(q,b));
                                         advection *=  at * lambda;
                                        }
