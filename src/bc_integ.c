@@ -2483,7 +2483,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                   if (pvar != -1) {
                                      for (j = 0; j < ei->dof[var]; j++) {
                                          lec->J[ieqn][pvar][ldof_eqn][j] +=
-                                         weight * func[p] * fv->dsurfdet_dx[q][j];
+                                         weight * func_stress[imode][p] * fv->dsurfdet_dx[q][j];
                                      }
                                  }
                              }
