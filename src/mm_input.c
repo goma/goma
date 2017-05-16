@@ -4764,6 +4764,7 @@ rd_ac_specs(FILE *ifp,
                 if( fscanf(ifp,"%lf",&augc_initial_value[iAC]) != 1 )
                       {
           fprintf(stderr,"%s:\tError reading augc_initial_value[%d]\n", yo, iAC);
+          fprintf(stderr,"\tAdd AC value after initialize?\n");
                       }
               }
         }

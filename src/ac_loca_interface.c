@@ -1055,7 +1055,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
 
   /* This is for a single steady state followed by LSA */
     case LOCA_LSA_ONLY:
-fprintf(stderr,"LOCA LSA ONLY\n");
       con.general_info.method = LOCA_LSA_ONLY;
       con.general_info.param = 0.0;
       con.stepping_info.max_steps = 0;

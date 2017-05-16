@@ -233,6 +233,10 @@
 #ifndef DBL_MAX
 #define DBL_MAX 1.0E300
 #endif
+/* finite difference stepsize  */
+#ifndef FD_FACTOR
+#define FD_FACTOR 1.0E-05
+#endif
 
 /*
  * This definition has a result of true if the double precision argument is
