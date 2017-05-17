@@ -1267,9 +1267,9 @@ apply_embedded_bc (
     }
     
   fplus = 0.8 * fmax;
-  if ( fplus > 1.e-4 * h_elem ) fplus = 1.e-4 * h_elem;
+  if ( fplus > FD_FACTOR * h_elem ) fplus = FD_FACTOR * h_elem;
   fminus = 0.8 * fmin;
-  if ( fminus < -1.e-4 * h_elem ) fminus = -1.e-4 * h_elem;
+  if ( fminus < -FD_FACTOR * h_elem ) fminus = -FD_FACTOR * h_elem;
   
 #if 0
   if ( fplus > -fminus )

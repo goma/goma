@@ -3389,7 +3389,7 @@ soln_sens ( double lambda,  /*  parameter */
   double time_local =0.0;
   double time_global=0.0;
 
-  double fd_factor=1.0E-06;	/*  finite difference step */
+  double fd_factor=FD_FACTOR;	/*  finite difference step */
 
 #ifdef LOG_HUNTING_PLEASE
   int		log_hunt = TRUE;
@@ -3425,8 +3425,7 @@ soln_sens ( double lambda,  /*  parameter */
   a_start = ut();
 
   dlambda = fd_factor*lambda;
-  if (dlambda == 0.0) 
-    { dlambda = fd_factor; }
+  dlambda = (fabs(dlambda) < fd_factor ? fd_factor : dlambda);
 
   /*
    * GET RESIDUAL SENSITIVITY
