@@ -4267,10 +4267,13 @@ calculate_lub_q_v (
       VAR2=SHELL_LUB_CURV;
       if (EQN == R_LUBP_2) VAR2=SHELL_LUB_CURV_2; 
       
+      LubAux->H = H;
+      LubAux->gradP_mag = 0;
       for (i = 0; i < dim; i++)
         {
 	  LubAux->q[i] = q[i];
 	  LubAux->v_avg[i] = v_avg[i];
+	  LubAux->gradP_mag += SQUARE(GRADP[i] - GRAV[i]);
 	  
 	  for ( j = 0; j < ei->dof[EQN]; j++) {
 	    LubAux->dq_dp1[i][j] = D_Q_DP1[i][j];
@@ -4317,6 +4320,7 @@ calculate_lub_q_v (
 	    LubAux->dv_avg_dc[i][j] = D_V_DC[i][j];
 	  }	 
         }
+      LubAux->gradP_mag = sqrt(LubAux->gradP_mag);
       
       for ( j = 0; j < ei->dof[MESH_DISPLACEMENT1]; j++) {
 	jk = dof_map[j];
