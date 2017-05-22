@@ -2932,6 +2932,7 @@ struct Lubrication_Auxiliaries
   double gradP_mag;                    /* Magnitude of pressure gradient */
   double gradP_tangent[DIM];           /* Tangent vector of the pressure gradient */
   double gradP_normal[DIM];            /* Unit vector perpendicular to the pressure gradient */
+  double H;                            /* Lubrication Gap Height */
 
   double dgradP_mag_dP;                /* Pressure gradient magnitude sensitivities w.r.t. pressure */
   double dgradP_tangent_dP[DIM];       /* Pressure gradient tangent sensitivities w.r.t. pressure */

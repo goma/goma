@@ -112,10 +112,6 @@ evaluate_flux(
   int var;
   int *n_dof=NULL;
   int dof_map[MDE];
-  dbl H_lub; 
-  dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
-  dbl dH_U_dX[DIM],dH_L_dX[DIM];
-  dbl dH_U_dp, dH_U_ddh;
   dbl base_normal[DIM];
 
   double wt,weight;
@@ -1026,27 +1022,13 @@ evaluate_flux(
 		      n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
 		      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
-		      H_lub = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time_value, 0); 
-		      switch ( mp->FSIModel ) {
-		      case FSI_MESH_CONTINUUM:
-		      case FSI_MESH_UNDEF:
-			for ( a = 0; a < dim; a++) {
-			  H_lub -= fv->snormal[a] * fv->d[a];
-			}
-			break; 
-		      case FSI_REALSOLID_CONTINUUM:
-			for ( a = 0; a < dim; a++) {
-			  H_lub -= fv->snormal[a] * fv->d_rs[a];
-			}
-			break;
-		      }
 		      /* Calculate the flow rate and its sensitivties */
 
 		      calculate_lub_q_v(R_LUBP, time_value, 0, xi, exo);
 
                       for(a=0; a<VIM; a++)
                         {
-			    local_q +=  base_normal[a]*LubAux->v_avg[a] * H_lub;
+			    local_q +=  base_normal[a]*LubAux->q[a];
                         }
                           local_flux += weight*det* local_q ;
 			  /* clean-up */
