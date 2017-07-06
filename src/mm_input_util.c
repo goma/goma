@@ -65,6 +65,40 @@
 #include "mm_input.h"
 #include "rf_allo.h"
 
+/* Read up to n doubles from a file up to a newline 
+
+
+   ifp is the file ptr where the current line should be looked at
+
+   n is the number of doubles to look for
+
+   array is a double array of at least length n
+
+   return number of doubles found and read
+*/
+int look_for_n_doubles(FILE *ifp, int n, double *array)
+{
+  char strbuf[MAX_INPUT_LINE_LENGTH];
+  char *fgerror;
+  int error;
+  int i;
+  int buf_offset;
+  int read_count;
+  fgerror = fgets(strbuf, MAX_INPUT_LINE_LENGTH, ifp);
+  if (fgerror == NULL) {
+    EH(-1, "Error reading line");
+  }
+
+  buf_offset = 0;
+  for (i = 0; i < n; i++) {
+    error = sscanf(strbuf + buf_offset, "%lf%n", &array[i], &read_count );
+    buf_offset += read_count;
+    if (error != 1) break;
+  }
+
+  return i;
+}
+
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/

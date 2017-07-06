@@ -129,7 +129,7 @@ double convergence_rate_tolerance; /* tolerance for jacobian reformation
 double modified_newt_norm_tol; /* tolerance for jacobian reformation 
                                        based on residual norm */
 
-double Epsilon[3];	/* Used for determining stopping criteria.     */
+double Epsilon[MAX_NUM_MATRICES][3];	/* Used for determining stopping criteria.     */
 
 int NZeros;             /* Number of nonzeros in this procs matrix     */
 

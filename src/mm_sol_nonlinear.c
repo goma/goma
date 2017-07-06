@@ -502,7 +502,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
     DPRINTF(stderr, "%s: max Newton itns = %d\n", 
 	    yo, Max_Newton_Steps);
     DPRINTF(stderr, "%s: convergence tol = %.1e %.1e \n",
-	    yo, Epsilon[0], Epsilon[2]);
+	    yo, Epsilon[pg->imtrx][0], Epsilon[pg->imtrx][2]);
   }
 
   /*
@@ -1226,10 +1226,10 @@ EH(-1,"version not compiled with frontal solver");
 
       DPRINTF(stderr, "%7.1e %7.1e %7.1e ",  Norm[0][0], Norm[0][1], Norm[0][2]);
 		  
-	  if( inewton > 0 && Norm[0][2] < Epsilon[0] && Norm[2][2] < Epsilon[0] )
+	  if( inewton > 0 && Norm[0][2] < Epsilon[pg->imtrx][0] && Norm[2][2] < Epsilon[pg->imtrx][0] )
 	  {
 #ifdef SKIP_LAST_SOLVE
-		*converged = Epsilon[2] > 1.0 ? TRUE : FALSE ;
+		*converged = Epsilon[pg->imtrx][2] > 1.0 ? TRUE : FALSE ;
 #endif
 	   }
       
@@ -2309,8 +2309,8 @@ EH(-1,"version not compiled with frontal solver");
        *         as required by LOCA)
        ********************************************************************/
       
-      *converged = ((Norm[0][2] < Epsilon[0] && Norm[2][2] < Epsilon[0]) &&
-		    ((Norm_r[0][2] + Norm_r[1][2]) < Epsilon[2]) &&
+      *converged = ((Norm[0][2] < Epsilon[pg->imtrx][0] && Norm[2][2] < Epsilon[pg->imtrx][0]) &&
+		    ((Norm_r[0][2] + Norm_r[1][2]) < Epsilon[pg->imtrx][2]) &&
 		    (continuation_converged));
 
       /********************************************************************
@@ -2402,7 +2402,7 @@ EH(-1,"version not compiled with frontal solver");
 	
 skip_solve:
 
-   if(Epsilon[2] > 1)
+   if(Epsilon[pg->imtrx][2] > 1)
    {
      if ( !(*converged) || (  Linear_Solver == FRONT ) || inewton == 0 ) {
 	   DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
@@ -2452,7 +2452,7 @@ skip_solve:
 	DPRINTF(stderr, "          AC ");
 	DPRINTF(stderr, "%7.1e %7.1e %7.1e ", Norm[2][0],
 			Norm[2][1], Norm[2][2]);
-	if(Epsilon[2] > 1) {
+	if(Epsilon[pg->imtrx][2] > 1) {
 	  if ( !(*converged)  || (  Linear_Solver == FRONT ) || inewton == 0	) {
 		DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]);
 	  }

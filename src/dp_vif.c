@@ -794,7 +794,7 @@ noahs_ark()
   ddd_add_member(n, &modified_newton, 1, MPI_INT);
   ddd_add_member(n, &convergence_rate_tolerance, 1, MPI_DOUBLE);
   ddd_add_member(n, &modified_newt_norm_tol, 1, MPI_DOUBLE);
-  ddd_add_member(n, Epsilon, 3, MPI_DOUBLE);
+  ddd_add_member(n, Epsilon, MAX_NUM_MATRICES*3, MPI_DOUBLE);
 
   /*
    * Eigensolver inputs.
