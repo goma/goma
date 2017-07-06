@@ -60,6 +60,8 @@
 
 #include "dp_utils.h"
 
+#include "goma.h"
+
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
@@ -287,6 +289,11 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
 
   /* Communicate non-shared but needed BC information */
   exchange_bc_info();
+
+  /*
+   * Make sure all nodesets accounted for on Lame MU = CONTACT_LINE/2 models.
+   */
+  check_nodesets_on_lame_mu_contact_line_models(dpi);
 
   return 0;
 }
@@ -1379,6 +1386,96 @@ find_MaxMatrlPerNode(void)
   }
   lmax = gmax_int(lmax);
   return lmax;
+}
+/***************************************************************************/
+/***************************************************************************/
+/***************************************************************************/
+
+void
+check_nodesets_on_lame_mu_contact_line_models(Dpi *dpi)
+
+/*
+ * This function checks to make sure all the nodesets indicated in the
+ * Lame MU = CONTACT_LINE/2 models are present in the problem and only
+ * have one node on each of the nodesets.
+ */
+
+{
+  int mn;
+  int length;
+  int ins;
+  int facticity = 0;
+  int fallacy = 0;
+
+  for (mn = 0; mn < upd->Num_Mat; mn++)
+    {
+      elc = elc_glob[mn];
+      if (elc->lame_mu_model == CONTACT_LINE)
+	{
+	  length = dpi->num_node_sets_global;
+	  for (ins = 0; ins < length; ins++)
+	    {
+	      if (dpi->ns_id_global[ins] == elc->u_mu[0])
+		{
+		  facticity = 1;
+		  if (dpi->ns_num_nodes_global[ins] == 1)
+		    {
+		      fallacy = 1;
+		    }
+		}
+	    }
+	  if (facticity != 1)
+	    {
+	      EH(-1,"Cannot find NS number on Lame MU CONTACT_LINE model");
+	    }
+	  if (fallacy != 1)
+	    {
+	      EH(-1,"Nodeset has more than one node on Lame MU CONTACT_LINE model");
+	    }
+	}
+      else if (elc->lame_mu_model == CONTACT_LINE2)
+	{
+	  length = dpi->num_node_sets_global;
+	  for (ins = 0; ins < length; ins++)
+	    {
+	      if (dpi->ns_id_global[ins] == elc->u_mu[0])
+		{
+		  facticity = 1;
+		  if (dpi->ns_num_nodes_global[ins] != 1)
+		    {
+		      fallacy = 1;
+		    }
+		}
+	    }
+	  if (facticity != 1)
+	    {
+	      EH(-1,"Cannot find first NS number on Lame MU CONTACT_LINE2 model");
+	    }
+	  if (fallacy != 1)
+	    {
+	      EH(-1,"First nodeset has more than one node on Lame MU CONTACT_LINE2 model");
+	    }
+	  for (ins = 0; ins < length; ins++)
+	    {
+	      if (dpi->ns_id_global[ins] == elc->u_mu[4])
+		{
+		  facticity = 2;
+		  if (dpi->ns_num_nodes_global[ins] != 1)
+		    {
+		      fallacy = 2;
+		    }
+		}
+	    }
+	  if (facticity != 2)
+	    {
+	      EH(-1,"Cannot find second NS number on Lame MU CONTACT_LINE2 model");
+	    }
+	  if (fallacy != 2)
+	    {
+	      EH(-1,"Second nodeset has more than one node on Lame MU CONTACT_LINE2 model");
+	    }
+	}
+    }
 }
 /***************************************************************************/
 /***************************************************************************/

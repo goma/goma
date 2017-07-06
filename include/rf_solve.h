@@ -91,6 +91,7 @@ extern void bc_matrl_index(Exo_DB *);
 extern int find_MaxMatrlPerNode(void);
 extern void setup_external_nodal_matrls(Exo_DB *, Dpi *, Comm_Ex *);
 extern int create_periodic_acs(Exo_DB *);
+extern void check_nodesets_on_lame_mu_contact_line_models(Dpi *);
 
 /*
  * main.c function prototypes

@@ -728,15 +728,23 @@ update_MT_parameter(double lambda, /* Parameter value */
       break;
 
     case TAGC_LAME_MU_CONTACT_LINE_G0:
-      *(elc_glob[mn]->u_mu+1) = lambda;
+      elc_glob[mn]->u_mu[1] = lambda;
       break;
 
     case TAGC_LAME_MU_CONTACT_LINE_G1:
-      *(elc_glob[mn]->u_mu+2) = lambda;
+      elc_glob[mn]->u_mu[2] = lambda;
       break;
 
     case TAGC_LAME_MU_CONTACT_LINE_R0:
-      *(elc_glob[mn]->u_mu+3) = lambda;
+      elc_glob[mn]->u_mu[3] = lambda;
+      break;
+
+    case TAGC_LAME_MU_CONTACT_LINE_G2:
+      elc_glob[mn]->u_mu[5] = lambda;
+      break;
+
+    case TAGC_LAME_MU_CONTACT_LINE_R1:
+      elc_glob[mn]->u_mu[6] = lambda;
       break;
 
     case TAGC_LAME_LAMBDA:
@@ -1531,15 +1539,23 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
       break;
 
     case TAGC_LAME_MU_CONTACT_LINE_G0:
-      *lambda = *(elc_glob[mn]->u_mu+1);
+      *lambda = elc_glob[mn]->u_mu[1];
       break;
 
     case TAGC_LAME_MU_CONTACT_LINE_G1:
-      *lambda = *(elc_glob[mn]->u_mu+2);
+      *lambda = elc_glob[mn]->u_mu[2];
       break;
 
     case TAGC_LAME_MU_CONTACT_LINE_R0:
-      *lambda = *(elc_glob[mn]->u_mu+3);
+      *lambda = elc_glob[mn]->u_mu[3];
+      break;
+
+    case TAGC_LAME_MU_CONTACT_LINE_G2:
+      *lambda = elc_glob[mn]->u_mu[5];
+      break;
+
+    case TAGC_LAME_MU_CONTACT_LINE_R1:
+      *lambda = elc_glob[mn]->u_mu[6];
       break;
 
     case TAGC_LAME_LAMBDA:

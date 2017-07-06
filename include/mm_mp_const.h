@@ -355,11 +355,12 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 /* Modulus parameters */
 /*#define POWER_LAW    4  - defined rf_fem_const.h*/
 #define CONTACT_LINE    5
+#define CONTACT_LINE2   11
 #define SHEAR_HARDEN    6
 #define EXPONENTIAL     7
 #define DENSE_POWER_LAW 8
 #define POISSON_RATIO   9
-#define SHRINKAGE      10
+#define SHRINKAGE       10
 
 /* Diffusion Constitutive equation parameters */
 #define FICKIAN	3
@@ -609,6 +610,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_LAME_MU_CONTACT_LINE_G0       6001
 #define TAGC_LAME_MU_CONTACT_LINE_G1       6002
 #define TAGC_LAME_MU_CONTACT_LINE_R0       6003
+#define TAGC_LAME_MU_CONTACT_LINE_G2       6004
+#define TAGC_LAME_MU_CONTACT_LINE_R1       6005
 #define TAGC_LAME_LAMBDA                   6100
 #define TAGC_BEND_STIFFNESS                6110
 #define TAGC_CONV_LAG_VELX                 6201

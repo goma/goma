@@ -448,15 +448,23 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
 	break;
 
       case TAGC_LAME_MU_CONTACT_LINE_G0:
-	xa[iAC] = *(elc_glob[mn]->u_mu+1);
+	xa[iAC] = elc_glob[mn]->u_mu[1];
 	break;
 
       case TAGC_LAME_MU_CONTACT_LINE_G1:
-	xa[iAC] = *(elc_glob[mn]->u_mu+2);
+	xa[iAC] = elc_glob[mn]->u_mu[2];
 	break;
 
       case TAGC_LAME_MU_CONTACT_LINE_R0:
-	xa[iAC] = *(elc_glob[mn]->u_mu+3);
+	xa[iAC] = elc_glob[mn]->u_mu[3];
+	break;
+
+      case TAGC_LAME_MU_CONTACT_LINE_G2:
+	xa[iAC] = elc_glob[mn]->u_mu[5];
+	break;
+
+      case TAGC_LAME_MU_CONTACT_LINE_R1:
+	xa[iAC] = elc_glob[mn]->u_mu[6];
 	break;
 
       case TAGC_LAME_LAMBDA:
@@ -1180,15 +1188,23 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 	break;
 
       case TAGC_LAME_MU_CONTACT_LINE_G0:
-	*(elc_glob[mn]->u_mu+1) = lambda;
+	elc_glob[mn]->u_mu[1] = lambda;
 	break;
 
       case TAGC_LAME_MU_CONTACT_LINE_G1:
-	*(elc_glob[mn]->u_mu+2) = lambda;
+	elc_glob[mn]->u_mu[2] = lambda;
 	break;
 
       case TAGC_LAME_MU_CONTACT_LINE_R0:
-	*(elc_glob[mn]->u_mu+3) = lambda;
+	elc_glob[mn]->u_mu[3] = lambda;
+	break;
+
+      case TAGC_LAME_MU_CONTACT_LINE_G2:
+	elc_glob[mn]->u_mu[5] = lambda;
+	break;
+
+      case TAGC_LAME_MU_CONTACT_LINE_R1:
+	elc_glob[mn]->u_mu[6] = lambda;
 	break;
 
       case TAGC_LAME_LAMBDA:

@@ -895,6 +895,21 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	    }
 	  elc_glob[mn]->len_u_mu = num_const;	  
 	}
+      else if ( !strcmp(model_name, "CONTACT_LINE2"))
+	{
+	  elc_glob[mn]->lame_mu_model = CONTACT_LINE2;
+	  num_const = read_constants(imp, &(elc_glob[mn]->u_mu), NO_SPECIES);
+	  if ( num_const < 7) 
+	    {
+	      sr = sprintf(err_msg, 
+		   "Matl %s expected at least 7 constants for %s %s model.\n",
+			   pd_glob[mn]->MaterialName, 
+			   "Lame MU", 
+			   "CONTACT_LINE2");
+	      EH(-1, err_msg);
+	    }
+	  elc_glob[mn]->len_u_mu = num_const;	  
+	}
       else if ( !strcmp(model_name, "SHEAR_HARDEN"))
 	{
 	  elc_glob[mn]->lame_mu_model = SHEAR_HARDEN;
@@ -1392,6 +1407,22 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			       pd_glob[mn]->MaterialName, 
 			       "Lame MU", 
 			       "CONTACT_LINE");
+		  EH(-1, err_msg);
+		}
+	      elc_glob[mn]->len_u_mu = num_const;	
+	      SPF_DBL_VEC(endofstring(es), num_const,elc_glob[mn]->u_mu );
+	    }
+	  else if ( !strcmp(model_name, "CONTACT_LINE2"))
+	    {
+	      elc_glob[mn]->lame_mu_model = CONTACT_LINE2;
+	      num_const = read_constants(imp, &(elc_glob[mn]->u_mu), NO_SPECIES);
+	      if ( num_const < 7) 
+		{
+		  sr = sprintf(err_msg, 
+			       "Matl %s expected at least 7 constants for %s %s model.\n",
+			       pd_glob[mn]->MaterialName, 
+			       "Lame MU", 
+			       "CONTACT_LINE2");
 		  EH(-1, err_msg);
 		}
 	      elc_glob[mn]->len_u_mu = num_const;	
