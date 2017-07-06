@@ -494,8 +494,8 @@ dbl *te_out) /* te_out - return actual end time */
   }
 
   for (iAC = 0; iAC < nAC; iAC++) {
-    if (augc[iAC].Type != AC_USERBC) {
-      EH(-1, "Cannot use non-BC AC's in segregated solve");
+    if (augc[iAC].Type != AC_USERBC && augc[iAC].Type != AC_FLUX) {
+      EH(-1, "Can only use BC and flux AC's in segregated solve");
     }
   }
 
@@ -521,27 +521,47 @@ dbl *te_out) /* te_out - return actual end time */
   }
 
   for (iAC = 0; iAC < nAC; iAC++) {
-    int ibc = augc[iAC].BCID;
-    int eqn = BC_Types[ibc].equation;
+    if (augc[iAC].Type == AC_USERBC) {
+      int ibc = augc[iAC].BCID;
+      int eqn = BC_Types[ibc].equation;
 
-    if (!(eqn >= V_FIRST && eqn < V_LAST)) {
-      EH(-1, "AC BC not associated with an equation, not supported in segregated solve");
-    }
-
-    int found = FALSE;
-    int imtrx;
-    // find matrix that has that equation
-    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-      if (upd->vp[imtrx][eqn] > -1) {
-	found = TRUE;
-	matrix_augc[imtrx][matrix_nAC[imtrx]] = augc[iAC];
-	invACidx[imtrx][matrix_nAC[imtrx]] = iAC;
-	matrix_nAC[imtrx]++;
+      if (!(eqn >= V_FIRST && eqn < V_LAST)) {
+	EH(-1, "AC BC not associated with an equation, not supported in segregated solve");
       }
-    }
 
-    if (!found) {
-      EH(-1, "Could not associate AC with a matrix");
+      int found = FALSE;
+      int imtrx;
+      // find matrix that has that equation
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+	if (upd->vp[imtrx][eqn] > -1) {
+	  found = TRUE;
+	  matrix_augc[imtrx][matrix_nAC[imtrx]] = augc[iAC];
+	  invACidx[imtrx][matrix_nAC[imtrx]] = iAC;
+	  matrix_nAC[imtrx]++;
+	}
+      }
+
+      if (!found) {
+	EH(-1, "Could not associate BC AC with a matrix");
+      }
+    } else if (augc[iAC].Type == AC_FLUX) {
+      int found = FALSE;
+      int imtrx;
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+	if (upd->vp[imtrx][R_MOMENTUM1] > -1) {
+	  WH(-1, "Associating FLUX AC with momentum matrix");
+	  found = TRUE;
+	  matrix_augc[imtrx][matrix_nAC[imtrx]] = augc[iAC];
+	  invACidx[imtrx][matrix_nAC[imtrx]] = iAC;
+	  matrix_nAC[imtrx]++;
+	}
+      }
+
+      if (!found) {
+	EH(-1, "Could not associate FLUX AC with momentum matrix");
+      }
+    } else {
+      EH(-1, "AC type not supported");
     }
 	
   }
@@ -684,9 +704,82 @@ dbl *te_out) /* te_out - return actual end time */
           converged = FALSE;
 
         if (!converged) break;
+
+	if (nAC > 0)
+	  {
+	    DPRINTF(stderr, "\n------------------------------\n");
+	    DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
+	    DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+
+	    for(iAC = 0; iAC < nAC; iAC++)
+	      {
+		if(augc[iAC].Type == AC_USERBC)
+		  {
+		    DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", 
+			    augc[iAC].BCID, augc[iAC].DFID, x_AC[pg->imtrx][iAC]);
+		  }
+		/*		  else if(augc[iAC].Type == AC_USERMAT ||
+				  augc[iAC].Type == AC_FLUX_MAT )
+				  {
+				  DPRINTF(stderr, "\tMT[%4d] MP[%4d]=% 10.6e\n", 
+				  augc[iAC].MTID, augc[iAC].MPID, x_AC[iAC]);
+				  }
+				  else if(augc[iAC].Type == AC_VOLUME)
+				  {
+				  evol_local = augc[iAC].evol;
+				  #ifdef PARALLEL
+				  if( Num_Proc > 1 ) {
+				  MPI_Allreduce( &evol_local, &evol_global, 1,
+				  MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	  
+				  evol_local = evol_global;
+				  }
+				  #endif
+				  DPRINTF(stderr, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", 
+				  augc[iAC].MTID, augc[iAC].VOLID, evol_local, 
+				  x_AC[iAC]);
+				  }
+				  else if(augc[iAC].Type == AC_LS_VEL)
+				  {
+				  evol_local = augc[iAC].lsvol;
+				  lsvel_local = augc[iAC].lsvel;
+
+
+				  #ifdef PARALLEL
+				  if( Num_Proc > 1 ) {
+				  MPI_Allreduce( &evol_local, &evol_global, 1,
+				  MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+				  MPI_Allreduce( &lsvel_local, &lsvel_global, 1,
+				  MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+				  evol_local = evol_global;	  
+				  lsvel_local = lsvel_global;
+				  }
+				  #endif
+
+				  lsvel_local = lsvel_local / evol_local;
+
+				  DPRINTF(stderr, "\tMT[%4d] LSVEL phase[%4d]=%10.6e Param=%10.6e\n", 
+				  augc[iAC].MTID, augc[iAC].LSPHASE, lsvel_local, 
+				  x_AC[iAC]);
+				  }
+				  else if(augc[iAC].Type == AC_FLUX)
+				  {
+				  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=%10.6e\n", 
+				  augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
+				  } */
+	      }
+	  }
+
       }
 
       if (converged) {
+
+	for(i=0; matrix_nAC[pg->imtrx] > 0 && i < matrix_nAC[pg->imtrx]; i++) 
+	  {
+	    gv[5 + invACidx[pg->imtrx][i] ] = x_AC[pg->imtrx][i];
+	  }
+
+
         double distance = 0;
 
         for (i = 0; i < upd->Total_Num_Matrices; i++) {
@@ -719,70 +812,7 @@ dbl *te_out) /* te_out - return actual end time */
                                     xdot_old, tev, tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t,
                                     theta, time1, NULL, exo, dpi);
 
-	  if (nAC > 0)
-	    {
-	      DPRINTF(stderr, "\n------------------------------\n");
-	      DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
-	      DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
 
-	      for(iAC = 0; iAC < nAC; iAC++)
-		{
-		  if(augc[iAC].Type == AC_USERBC)
-		    {
-		      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", 
-			      augc[iAC].BCID, augc[iAC].DFID, x_AC[pg->imtrx][iAC]);
-		    }
-		  /*		  else if(augc[iAC].Type == AC_USERMAT ||
-			  augc[iAC].Type == AC_FLUX_MAT )
-		    {
-		      DPRINTF(stderr, "\tMT[%4d] MP[%4d]=% 10.6e\n", 
-			      augc[iAC].MTID, augc[iAC].MPID, x_AC[iAC]);
-		    }
-		  else if(augc[iAC].Type == AC_VOLUME)
-		    {
-		      evol_local = augc[iAC].evol;
-#ifdef PARALLEL
-		      if( Num_Proc > 1 ) {
-			MPI_Allreduce( &evol_local, &evol_global, 1,
-				       MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-	  
-			evol_local = evol_global;
-		      }
-#endif
-		      DPRINTF(stderr, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", 
-			      augc[iAC].MTID, augc[iAC].VOLID, evol_local, 
-			      x_AC[iAC]);
-		    }
-		  else if(augc[iAC].Type == AC_LS_VEL)
-		    {
-		      evol_local = augc[iAC].lsvol;
-		      lsvel_local = augc[iAC].lsvel;
-
-
-#ifdef PARALLEL
-		      if( Num_Proc > 1 ) {
-			MPI_Allreduce( &evol_local, &evol_global, 1,
-				       MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-			MPI_Allreduce( &lsvel_local, &lsvel_global, 1,
-				       MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-			evol_local = evol_global;	  
-			lsvel_local = lsvel_global;
-		      }
-#endif
-
-		      lsvel_local = lsvel_local / evol_local;
-
-		      DPRINTF(stderr, "\tMT[%4d] LSVEL phase[%4d]=%10.6e Param=%10.6e\n", 
-			      augc[iAC].MTID, augc[iAC].LSPHASE, lsvel_local, 
-			      x_AC[iAC]);
-		    }
-		  else if(augc[iAC].Type == AC_FLUX)
-		    {
-		      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=%10.6e\n", 
-			      augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
-		    } */
-		}
-	    }
 
           if (ProcID == 0) {
             printf("\n Steady state reached \n");
@@ -1117,6 +1147,11 @@ dbl *te_out) /* te_out - return actual end time */
         af->Sat_hyst_reevaluate = FALSE; /*See load_saturation for description*/
 
 	if (converged) {
+	  for(i=0; matrix_nAC[pg->imtrx] > 0 && i < matrix_nAC[pg->imtrx]; i++) 
+	    {
+	      gv[5 + invACidx[pg->imtrx][i] ] = x_AC[pg->imtrx][i];
+	    }
+	  
 	  if (nAC > 0) {
 	    DPRINTF(stderr, "\n------------------------------\n");
 	    DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
