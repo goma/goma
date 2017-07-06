@@ -179,6 +179,21 @@ dbl *te_out) /* te_out - return actual end time */
   int relax_bit = FALSE;
 #endif
 
+  int     totalnAC;
+  int    *matrix_nAC;
+  int     iAC;                   /* Counter                                  */
+  double **x_AC = NULL;           /* Solution vector of extra unknowns          */
+  double **x_AC_old = NULL;       /* old solution vector of extra unknowns      */
+  double **x_AC_older = NULL;     /* older solution vector of extra unknowns    */
+  double **x_AC_oldest = NULL;    /* oldest solution vector of extra unknowns   */
+  double **x_AC_dot = NULL;       /* current time derivative of extra unknowns  */
+  double **x_AC_dot_old = NULL;   /* old time derivative of extra unknowns      */
+  double **x_AC_dot_older = NULL; /* Older time derivative of extra unknowns    */
+  double **x_AC_pred = NULL;      /* predicted extraunknowns */
+
+  struct AC_Information **matrix_augc;
+  struct AC_Information *augc_save = NULL;
+
   tran->solid_inertia = 0;
   static int callnum = 1; /* solve_problem_segregated call counter */
 
@@ -237,7 +252,7 @@ dbl *te_out) /* te_out - return actual end time */
     rd[pg->imtrx]->ngv = 0; /* number global variables in results  */
     rd[pg->imtrx]->nhv = 0; /* number history variables in results */
 
-    rd[pg->imtrx]->ngv = 5; /* number global variables in results
+    rd[pg->imtrx]->ngv = 5 + nAC; /* number global variables in results
      * see load_global_var_info for names
      */
 
@@ -247,7 +262,23 @@ dbl *te_out) /* te_out - return actual end time */
     error = load_global_var_info(rd[pg->imtrx], 3, "CONVRATE");
     error = load_global_var_info(rd[pg->imtrx], 4, "MESH_VOLUME");
 
-    gv = alloc_dbl_1(rd[pg->imtrx]->ngv, 0.0);
+    if ( rd[pg->imtrx]->ngv > MAX_NGV ) 
+      EH(-1, "Augmenting condition values overflowing MAX_NGV.  Change and rerun .");
+
+    if ( nAC > 0   )
+      {
+	char name[10];
+
+	for( i = 0 ; i < nAC ; i++ )
+	  {
+	    sprintf(name, "AUGC_%d",i+1);
+	    error = load_global_var_info(rd, 5 + i, name);
+	  }
+      }
+
+    if (gv == NULL) {
+      gv = alloc_dbl_1(rd[pg->imtrx]->ngv, 0.0);
+    }
 
     /*
      *  Load output nodal types, kinds and names into the structure
@@ -401,8 +432,8 @@ dbl *te_out) /* te_out - return actual end time */
     }
   } else if (strcmp(Matrix_Format, "msr") == 0) {
 
-    log_msg("alloc_MSR_sparse_arrays...")
-;    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    log_msg("alloc_MSR_sparse_arrays...");
+    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
       alloc_MSR_sparse_arrays(&(ija[pg->imtrx]), &(a[pg->imtrx]),
           &(a_old[pg->imtrx]), 0, node_to_fill, exo, dpi);
 
@@ -451,15 +482,118 @@ dbl *te_out) /* te_out - return actual end time */
     EH(-1, "Attempted to allocate unknown sparse matrix format");
   }
 
-  /* Read initial values from exodus file */
-  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-    init_vec(x[pg->imtrx], cx[pg->imtrx], exo, dpi, NULL, 0, &timeValueRead[pg->imtrx]);
+  double * global_x_AC = NULL;
+
+  if (nAC > 0) {
+    global_x_AC = calloc(sizeof(double), nAC);
   }
 
-  //dcopy1(numProcUnknowns[2],x[2],x[0]);
-  //dcopy1(numProcUnknowns[3],x[3],x[1]);
-  
+  /* Read initial values from exodus file */
+  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    init_vec(x[pg->imtrx], cx[pg->imtrx], exo, dpi, global_x_AC, nAC, &timeValueRead[pg->imtrx]);
+  }
 
+  for (iAC = 0; iAC < nAC; iAC++) {
+    if (augc[iAC].Type != AC_USERBC) {
+      EH(-1, "Cannot use non-BC AC's in segregated solve");
+    }
+  }
+
+  totalnAC = nAC;
+  augc_save = augc;
+  matrix_augc = malloc(sizeof(struct AC_Information *) * upd->Total_Num_Matrices);
+  matrix_nAC = calloc(sizeof(int), upd->Total_Num_Matrices);
+  
+  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    matrix_nAC[pg->imtrx] = 0;
+    matrix_augc[pg->imtrx] = malloc(sizeof(struct AC_Information) * totalnAC);
+    
+  }
+
+  int ** invACidx = NULL;
+
+  if (nAC > 0) {
+    invACidx = malloc(sizeof(int *) * upd->Total_Num_Matrices);
+    int i;
+    for (i = 0; i < upd->Total_Num_Matrices; i++) {
+      invACidx[i] = malloc(sizeof(int)*nAC);
+    }
+  }
+
+  for (iAC = 0; iAC < nAC; iAC++) {
+    int ibc = augc[iAC].BCID;
+    int eqn = BC_Types[ibc].equation;
+
+    if (!(eqn >= V_FIRST && eqn < V_LAST)) {
+      EH(-1, "AC BC not associated with an equation, not supported in segregated solve");
+    }
+
+    int found = FALSE;
+    int imtrx;
+    // find matrix that has that equation
+    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+      if (upd->vp[imtrx][eqn] > -1) {
+	found = TRUE;
+	matrix_augc[imtrx][matrix_nAC[imtrx]] = augc[iAC];
+	invACidx[imtrx][matrix_nAC[imtrx]] = iAC;
+	matrix_nAC[imtrx]++;
+      }
+    }
+
+    if (!found) {
+      EH(-1, "Could not associate AC with a matrix");
+    }
+	
+  }
+
+  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    for (iAC = 0; iAC < matrix_nAC[pg->imtrx]; iAC++) {
+      matrix_augc[pg->imtrx][iAC].d_evol_dx = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
+      matrix_augc[pg->imtrx][iAC].d_lsvel_dx = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0); 
+      matrix_augc[pg->imtrx][iAC].d_lsvol_dx = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0); 
+    }
+  }
+
+    /* Allocate AC unknown arrays on the first call */
+  if (totalnAC > 0) {
+    x_AC           = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+    x_AC_old       = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+    x_AC_older     = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+    x_AC_oldest    = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+    x_AC_dot       = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+    x_AC_dot_old   = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+    x_AC_dot_older = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+    x_AC_pred      = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+
+    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+      if (matrix_nAC[pg->imtrx] > 0) {
+	x_AC[pg->imtrx]           = alloc_dbl_1(matrix_nAC[pg->imtrx], 0.0);
+	x_AC_old[pg->imtrx]       = alloc_dbl_1(matrix_nAC[pg->imtrx], 0.0);
+	x_AC_older[pg->imtrx]     = alloc_dbl_1(matrix_nAC[pg->imtrx], 0.0);
+	x_AC_oldest[pg->imtrx]    = alloc_dbl_1(matrix_nAC[pg->imtrx], 0.0);
+	x_AC_dot[pg->imtrx]       = alloc_dbl_1(matrix_nAC[pg->imtrx], 0.0);
+	x_AC_dot_old[pg->imtrx]   = alloc_dbl_1(matrix_nAC[pg->imtrx], 0.0);
+	x_AC_dot_older[pg->imtrx] = alloc_dbl_1(matrix_nAC[pg->imtrx], 0.0);
+	x_AC_pred[pg->imtrx]      = alloc_dbl_1(matrix_nAC[pg->imtrx], 0.0);
+
+	// use initialization
+	for (iAC = 0; iAC < matrix_nAC[pg->imtrx]; iAC++) {
+	  x_AC[pg->imtrx][iAC] = global_x_AC[invACidx[pg->imtrx][iAC]];
+	}
+      } else {
+	x_AC[pg->imtrx]           = NULL;
+	x_AC_old[pg->imtrx]       = NULL;
+	x_AC_older[pg->imtrx]     = NULL;
+	x_AC_oldest[pg->imtrx]    = NULL;
+	x_AC_dot[pg->imtrx]       = NULL;
+	x_AC_dot_old[pg->imtrx]   = NULL;
+	x_AC_dot_older[pg->imtrx] = NULL;
+	x_AC_pred[pg->imtrx]      = NULL;
+      }
+    }
+  }
+
+  dcopy1( totalnAC, global_x_AC, &(gv[5]) );
   /***************************************************************************
    *            STEADY STATE SOLUTION PROCEDURE
    ***************************************************************************/
@@ -534,13 +668,16 @@ dbl *te_out) /* te_out - return actual end time */
           printf("\n===================== SOLVING MATRIX %d Step %d ===========================\n\n", pg->imtrx, n);
         }
 
+	nAC = matrix_nAC[pg->imtrx];
+	augc = matrix_augc[pg->imtrx];
+
         err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t,
                                       theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
                                       xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
                                       scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx],
                                       tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
                                       gvec_elem[pg->imtrx], time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, is_steady_state,
-                                      NULL, NULL, time1, NULL,
+                                      x_AC[pg->imtrx], x_AC_dot[pg->imtrx], time1, NULL,
                                       NULL, NULL, NULL);
 
         if (err == -1)
@@ -581,6 +718,71 @@ dbl *te_out) /* te_out - return actual end time */
           write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot,
                                     xdot_old, tev, tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t,
                                     theta, time1, NULL, exo, dpi);
+
+	  if (nAC > 0)
+	    {
+	      DPRINTF(stderr, "\n------------------------------\n");
+	      DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
+	      DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+
+	      for(iAC = 0; iAC < nAC; iAC++)
+		{
+		  if(augc[iAC].Type == AC_USERBC)
+		    {
+		      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", 
+			      augc[iAC].BCID, augc[iAC].DFID, x_AC[pg->imtrx][iAC]);
+		    }
+		  /*		  else if(augc[iAC].Type == AC_USERMAT ||
+			  augc[iAC].Type == AC_FLUX_MAT )
+		    {
+		      DPRINTF(stderr, "\tMT[%4d] MP[%4d]=% 10.6e\n", 
+			      augc[iAC].MTID, augc[iAC].MPID, x_AC[iAC]);
+		    }
+		  else if(augc[iAC].Type == AC_VOLUME)
+		    {
+		      evol_local = augc[iAC].evol;
+#ifdef PARALLEL
+		      if( Num_Proc > 1 ) {
+			MPI_Allreduce( &evol_local, &evol_global, 1,
+				       MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+	  
+			evol_local = evol_global;
+		      }
+#endif
+		      DPRINTF(stderr, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", 
+			      augc[iAC].MTID, augc[iAC].VOLID, evol_local, 
+			      x_AC[iAC]);
+		    }
+		  else if(augc[iAC].Type == AC_LS_VEL)
+		    {
+		      evol_local = augc[iAC].lsvol;
+		      lsvel_local = augc[iAC].lsvel;
+
+
+#ifdef PARALLEL
+		      if( Num_Proc > 1 ) {
+			MPI_Allreduce( &evol_local, &evol_global, 1,
+				       MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+			MPI_Allreduce( &lsvel_local, &lsvel_global, 1,
+				       MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+			evol_local = evol_global;	  
+			lsvel_local = lsvel_global;
+		      }
+#endif
+
+		      lsvel_local = lsvel_local / evol_local;
+
+		      DPRINTF(stderr, "\tMT[%4d] LSVEL phase[%4d]=%10.6e Param=%10.6e\n", 
+			      augc[iAC].MTID, augc[iAC].LSPHASE, lsvel_local, 
+			      x_AC[iAC]);
+		    }
+		  else if(augc[iAC].Type == AC_FLUX)
+		    {
+		      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=%10.6e\n", 
+			      augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
+		    } */
+		}
+	    }
 
           if (ProcID == 0) {
             printf("\n Steady state reached \n");
@@ -885,14 +1087,19 @@ dbl *te_out) /* te_out - return actual end time */
         if (ProcID == 0) {
         printf("\n===================== SOLVING MATRIX %d ===========================\n\n", pg->imtrx);
         }
+
+	nAC = matrix_nAC[pg->imtrx];
+	augc = matrix_augc[pg->imtrx];
+
         err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t,
-               theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
-               xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
-               scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx],
-               tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
-               gvec_elem[pg->imtrx], time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, 0,
-               NULL, NULL, time1, NULL,
-               NULL, NULL, NULL);
+				      theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
+				      xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
+				      scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx],
+				      tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
+				      gvec_elem[pg->imtrx], time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, 0,
+				      x_AC[pg->imtrx], x_AC_dot[pg->imtrx], time1, NULL,
+				      NULL, NULL, NULL);
+
         /*
         err = solve_linear_segregated(ams[pg->imtrx], x[pg->imtrx], delta_t,
             theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
@@ -909,6 +1116,63 @@ dbl *te_out) /* te_out - return actual end time */
         evpl_glob[0]->update_flag = 0; /*See get_evp_stress_tensor for description */
         af->Sat_hyst_reevaluate = FALSE; /*See load_saturation for description*/
 
+	if (converged) {
+	  if (nAC > 0) {
+	    DPRINTF(stderr, "\n------------------------------\n");
+	    DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
+	    DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+		      
+	    for (iAC = 0; iAC < nAC; iAC++) {
+	      if (augc[iAC].Type == AC_USERBC) 
+		{
+		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID, augc[iAC].DFID, x_AC[pg->imtrx][iAC]);
+		  /* temporary printing */
+#if 0
+                  if( (int)augc[iAC].DataFlt[1] == 6)
+		    {
+		      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 0, BC_Types[augc[iAC].DFID].BC_Data_Float[0]);
+		      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 2, BC_Types[augc[iAC].DFID].BC_Data_Float[2]);
+		      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 3, BC_Types[augc[iAC].DFID].BC_Data_Float[3]);
+		      augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
+		      DPRINTF(stderr, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
+
+		    }
+                  if( (int)augc[iAC].DataFlt[1] == 61)
+		    {
+		      augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
+		      DPRINTF(stderr, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
+
+		    }
+#endif
+		}
+	      /*	      else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT)
+			      {
+			      DPRINTF(stderr, "\tMT[%4d] MP[%4d]=% 10.6e\n", augc[iAC].MTID, augc[iAC].MPID, x_AC[iAC]);
+			      }
+			      else if (augc[iAC].Type == AC_VOLUME)
+			      {
+			      evol_local = augc[iAC].evol;
+			      #ifdef PARALLEL
+			      if (Num_Proc > 1) {
+			      MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		  
+			      evol_local = evol_global;
+			      }
+			      #endif	  
+			      DPRINTF(stderr, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID, augc[iAC].VOLID, evol_local, x_AC[iAC]);
+			      } 
+			      else if (augc[iAC].Type == AC_FLUX) 
+			      {
+			      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
+			      }
+			      else if (augc[iAC].Type == AC_POSITION)
+			      {
+			      DPRINTF(stderr, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n", 
+			      augc[iAC].MTID, augc[iAC].evol, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
+			      } */
+	    }
+	  }
+	}
+	
         /*
          * HKM -> I do not know if these operations are needed. I added
          *        an exchange of xdot[] here, because if x[] is exchanged
@@ -944,8 +1208,10 @@ dbl *te_out) /* te_out - return actual end time */
           if (pg->time_step_control_disabled[pg->imtrx]) {
               success_dt = 1;
           } else {
+	    nAC = matrix_nAC[pg->imtrx];
+	    augc = matrix_augc[pg->imtrx];
             mat_dt_new = time_step_control(delta_t, delta_t_old, const_delta_t,
-                                           x[pg->imtrx], x_pred[pg->imtrx], x_old[pg->imtrx], NULL, NULL, eps,
+                                           x[pg->imtrx], x_pred[pg->imtrx], x_old[pg->imtrx], x_AC[pg->imtrx], x_AC_pred[pg->imtrx], eps,
                                            &success_dt, tran->use_var_norm);
           }
 
@@ -1041,6 +1307,8 @@ dbl *te_out) /* te_out - return actual end time */
                     theta, time1, NULL, exo, dpi);
             nprint++;
           }
+
+
         } /* if(i_print) */
         evpl_glob[0]->update_flag = 1;
 
@@ -1126,7 +1394,19 @@ dbl *te_out) /* te_out - return actual end time */
           dcopy1(numProcUnknowns[pg->imtrx], x_old[pg->imtrx],
               x_older[pg->imtrx]);
           dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_old[pg->imtrx]);
+
+	  if (matrix_nAC[pg->imtrx] > 0) {
+	    dcopy1(matrix_nAC[pg->imtrx], x_AC_dot_old[pg->imtrx], x_AC_dot_older[pg->imtrx]);
+	    dcopy1(matrix_nAC[pg->imtrx], x_AC_dot[pg->imtrx],     x_AC_dot_old[pg->imtrx]);
+	    dcopy1(matrix_nAC[pg->imtrx], x_AC_older[pg->imtrx],   x_AC_oldest[pg->imtrx]);
+	    dcopy1(matrix_nAC[pg->imtrx], x_AC_old[pg->imtrx],     x_AC_older[pg->imtrx]);
+	    dcopy1(matrix_nAC[pg->imtrx], x_AC[pg->imtrx],         x_AC_old[pg->imtrx]);
+	  }
+
         }
+
+
+	
         delta_t_oldest = delta_t_older;
         delta_t_older = delta_t_old;
         delta_t_old = delta_t;
