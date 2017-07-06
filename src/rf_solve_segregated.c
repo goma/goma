@@ -265,14 +265,14 @@ dbl *te_out) /* te_out - return actual end time */
     if ( rd[pg->imtrx]->ngv > MAX_NGV ) 
       EH(-1, "Augmenting condition values overflowing MAX_NGV.  Change and rerun .");
 
-    if ( nAC > 0   )
+    if ( nAC > 0 )
       {
 	char name[10];
 
 	for( i = 0 ; i < nAC ; i++ )
 	  {
 	    sprintf(name, "AUGC_%d",i+1);
-	    error = load_global_var_info(rd, 5 + i, name);
+	    error = load_global_var_info(rd[pg->imtrx], 5 + i, name);
 	  }
       }
 
