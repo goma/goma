@@ -1,21 +1,41 @@
 #!/bin/bash
+set -e
 
 ###
-### The CMake Configuration File
+### Please read the following comments to get goma up and running.
+###
+
+GOMADIR=$(realpath `dirname "$0"`)
+
+###
+### Configure Cmake and build Goma
 ###
 ### Except under very special circumstances, you should use this file.
 ### It's much faster and easier than configuring manually
 ###
 ###
 ### How to use this file:
-### Assign where you built the libraries to GOMA_LIBS below (goma_libs).
+### Assign where you built the libraries to GOMA_LIBS below (goma_libs)
+### by provinding a location here:
 
-GOMA_LIBS=
+GOMA_LIBS="$GOMADIR/scripts/gomaTPLs"
 
-### Then, cd into a "build" directory, and execute this script.
-### If all went well, Makefile's will exist and Goma will build with "make"
+###
+### Set any custom settings below
+###
+### Next, rename this file to build-goma with "mv build-goma-example build-goma"
+###
+### Then, create the build directory with "mkdir build"
+###
+### Move to the build directory with "cd build"
+###
+### Lastly, execute this script with "../build-goma -jN"
+### This will build goma with n threads.
+###
+### If all went well, you will now have a fully compiled version of Goma ready for use.
 ### Otherwise fill in the missing paths below i.e. MPI_DIR, SEACAS_DIR, etc.
 ### Then execute this script again. Repeat until the configuration is complete.
+
 
 if [ -f $(pwd)/CMakeCache.txt ]; then
     rm -f CMakeCache.txt
@@ -25,15 +45,10 @@ if which cmake ; then
 
     echo "Preparing to run cmake with the user set settings"
 
-    ### Any arguements you give this script will be passed through to cmake
-    EXTRA_ARGS=$@
-
     ### Do not change this.
     #Default = goma
     PROJECT_NAME=goma
 
-    ### This assumes that you haven't changed the name of the cmake script
-    GOMADIR=$(cd `echo $0 | sed 's/cmake-config//'`; pwd)
 
     ### CMAKE_INSTALL_PREFIX/bin is where Goma will build with make install.
     ### Running make will build goma in your current directory which is usually
@@ -45,10 +60,13 @@ if which cmake ; then
 
     ### Change these ONLY if some of your libraries are in a different location.
     ### If you used the build script, leave these blank.
-    #Default AUTODETECT
-    Trilinos_DIR=
+
+    ### It's highly recommended you change this if you have openMPI installed natively.
     #Default AUTODETECT
     MPI_DIR=
+
+    #Default AUTODETECT
+    Trilinos_DIR=
     #Default AUTODETECT
     Sparse_DIR=
     #Default AUTODETECT
@@ -68,11 +86,6 @@ if which cmake ; then
     ### Will automatically detect if seacas is standalone if left blank.
     #default AUTODETECT
     Standalone_SEACAS=
-
-    ### Will append needed libraries to your .profile on make install
-    ### This is not recommended if you create a run script.
-    #default OFF
-    Write_To_Profile=OFF
 
     ### Will create a script wrapper which runs Goma with the proper
     ### environment variables. With this you can type ./rungoma
@@ -168,12 +181,12 @@ if which cmake ; then
 	-D${PROJECT_NAME}_User_F_Flags=${User_F_Flags} \
 	-D${PROJECT_NAME}_User_LD_Flags=${User_LD_Flags} \
 	-D${PROJECT_NAME}_User_Flags=${User_Flags} \
-	-D${PROJECT_NAME}_Write_To_Profile=${Write_To_Profile} \
-        -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} \
-	-DCMAKE_BUILD_TYPE=RELEASE \
-	${EXTRA_ARGS} ${GOMADIR}
+    -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} ${GOMADIR}
 
-
+    echo
+    echo "Your custom makefile has been generated"
+    echo "Now run make to build goma"
+    echo
 else
     echo "cmake not found, please install it before running this."
     echo "Please see your package repository or https://cmake.org/"

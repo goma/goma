@@ -27,4 +27,3 @@ foreach(file ${files})
   endif(IS_SYMLINK "$ENV{DESTDIR}${file}" OR EXISTS "$ENV{DESTDIR}${file}")
 endforeach(file)
 
-#message(STATUS "Please remove the lines added to ~/.profile to completely uninstall Goma.")
