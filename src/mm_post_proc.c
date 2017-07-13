@@ -8208,11 +8208,13 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 
   if (STRESS_CONT != -1 && (Num_Var_In_Type[POLYMER_STRESS11]  ))
     {
+      int index_post_save = index_post;
+
       if (STRESS_CONT == 2)
         {
           EH(-1, "Post-processing vectors cannot be exported yet!");
         }
-      STRESS_CONT = index_post;
+
       for ( mode=0; mode<MAX_MODES; mode++)
 	{
 	  for ( a=0; a<VIM; a++)
@@ -8241,6 +8243,8 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 		}
 	    }
 	}
+
+      STRESS_CONT = index_post_save;
 
       check = 0;
       for (i = 0; i < upd->Num_Mat; i++)
