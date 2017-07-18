@@ -867,6 +867,10 @@ main(int argc, char **argv)
     break;
   }
 
+#ifdef PARALLEL
+   MPI_Barrier(MPI_COMM_WORLD);
+#endif
+
   if (ProcID == 0 && Brk_Flag == 1 && Num_Proc > 1) {
     fix_output();
   }
