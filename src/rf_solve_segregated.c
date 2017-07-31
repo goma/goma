@@ -37,6 +37,14 @@
 #include "el_quality.h"
 
 #define ROUND_TO_ONE 0.9999999
+static int discard_previous_time_step(int num_unks, 
+				      double *x,
+				      double *x_old,
+				      double *x_older,
+				      double *x_oldest,
+				      double *xdot,
+				      double *xdot_old, 
+				      double *xdot_older);
 
 double vector_distance_squared(int size, double *vec1, double *vec2) {
   double distance_sq = 0;
@@ -117,6 +125,8 @@ dbl *te_out) /* te_out - return actual end time */
   static double **xdot = NULL; /* current time derivative of soln   */
   static double **xdot_old = NULL; /* old time derivative of soln       */
   static double **xdot_older = NULL; /* old time derivative of soln       */
+  double **x_previous = NULL;
+  
   double **x_pred = NULL;
 
   double **x_update = NULL; /* update at last iteration          */
@@ -128,7 +138,6 @@ dbl *te_out) /* te_out - return actual end time */
   int *node_to_fill = NULL;
 
   static struct Aztec_Linear_Solver_System **ams;
-
   /*
    * Variables for time integration
    */
@@ -149,7 +158,7 @@ dbl *te_out) /* te_out - return actual end time */
   int const_delta_t, const_delta_ts, step_print;
   int success_dt;
   int failed_recently_countdown = 0;
-
+  int num_total_nodes;
   /*
    * Local variables
    */
@@ -194,6 +203,11 @@ dbl *te_out) /* te_out - return actual end time */
   struct AC_Information **matrix_augc;
   struct AC_Information *augc_save = NULL;
 
+  int did_renorm;                /* Flag indicating if we renormalized.       */
+  int Renorm_Now = FALSE;        /* Flag forcing renormalization regardless of gradient */
+  int Fill_Matrix = 0;
+
+  double time2 = 0.0;
   tran->solid_inertia = 0;
   static int callnum = 1; /* solve_problem_segregated call counter */
 
@@ -210,7 +224,7 @@ dbl *te_out) /* te_out - return actual end time */
     step_fix = 1; /* Always fix on the first timestep to match print frequency */
   }
   pg->matrices = malloc(sizeof(struct Matrix_Data) * upd->Total_Num_Matrices);
-
+  num_total_nodes = dpi->num_universe_nodes;
   /*
    *            BEGIN EXECUTION
    */
@@ -381,7 +395,7 @@ dbl *te_out) /* te_out - return actual end time */
     xdot_older = malloc(upd->Total_Num_Matrices * sizeof(double *));
     x_pred = malloc(upd->Total_Num_Matrices * sizeof(double *));
     delta_x = malloc(upd->Total_Num_Matrices * sizeof(double *));
-
+    x_previous = malloc(upd->Total_Num_Matrices * sizeof(double *));
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
       x[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
       x_old[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
@@ -392,6 +406,7 @@ dbl *te_out) /* te_out - return actual end time */
       xdot_older[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
       x_pred[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
       delta_x[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
+      x_previous[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
     }
   }
 
@@ -574,17 +589,17 @@ dbl *te_out) /* te_out - return actual end time */
     }
   }
 
-    /* Allocate AC unknown arrays on the first call */
-  if (totalnAC > 0) {
-    x_AC           = malloc(sizeof(double *) * upd->Total_Num_Matrices);
-    x_AC_old       = malloc(sizeof(double *) * upd->Total_Num_Matrices);
-    x_AC_older     = malloc(sizeof(double *) * upd->Total_Num_Matrices);
-    x_AC_oldest    = malloc(sizeof(double *) * upd->Total_Num_Matrices);
-    x_AC_dot       = malloc(sizeof(double *) * upd->Total_Num_Matrices);
-    x_AC_dot_old   = malloc(sizeof(double *) * upd->Total_Num_Matrices);
-    x_AC_dot_older = malloc(sizeof(double *) * upd->Total_Num_Matrices);
-    x_AC_pred      = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+  /* Allocate AC unknown arrays on the first call */
 
+  x_AC           = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+  x_AC_old       = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+  x_AC_older     = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+  x_AC_oldest    = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+  x_AC_dot       = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+  x_AC_dot_old   = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+  x_AC_dot_older = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+  x_AC_pred      = malloc(sizeof(double *) * upd->Total_Num_Matrices);
+  if (totalnAC > 0) {
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
       if (matrix_nAC[pg->imtrx] > 0) {
 	x_AC[pg->imtrx]           = alloc_dbl_1(matrix_nAC[pg->imtrx], 0.0);
@@ -661,6 +676,7 @@ dbl *te_out) /* te_out - return actual end time */
       sl_init(matrix_systems_mask, ams, exo, dpi, cx[pg->imtrx]);
     }
 
+    
     /*
      * make sure the Aztec was properly initialized
      */
@@ -840,6 +856,7 @@ dbl *te_out) /* te_out - return actual end time */
       fprintf(stderr, "solving transient problem\n");
     }
 
+    nt = 0;
     /*
      *  Transfer information from the Transient_Information structure to local variables
      */
@@ -875,7 +892,7 @@ dbl *te_out) /* te_out - return actual end time */
      *  since it is only used locally
      */
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-        x_pred[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
+      x_pred[pg->imtrx] = alloc_dbl_1(numProcUnknowns[pg->imtrx], 0.0);
 
 
       /*
@@ -888,8 +905,226 @@ dbl *te_out) /* te_out - return actual end time */
        *          the evaluation of xdot[] at t = 0+. This algorithm
        *          perhaps could be introduced here.
        */
-	find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
+      find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
 
+      if ( nt == 0 )
+        {
+          xfem = NULL;
+          if ( upd->XFEM )
+            {
+              xfem = alloc_struct_1(struct Extended_Shape_Fcn_Basics, 1);
+              xfem->ielem = -1;
+              xfem->tot_vol = alloc_dbl_1(numProcUnknowns, 0.0);
+              xfem->active_vol =  alloc_dbl_1(numProcUnknowns, 0.0);
+              if (ls == NULL)
+                {
+                  EH(-1,"Currently, XFEM requires traditional level set (not pf)");
+                }
+            }
+        }
+    
+      if (upd->ep[pg->imtrx][FILL] > -1  && nt == 0) 
+	{ /*  Start of LS initialization */
+
+	  Fill_Matrix = pg->imtrx;
+#ifndef COUPLED_FILL
+	  EH(-1, "Segregated not setup for COUPLED_FILL undefined");
+#endif /* not COUPLED_FILL */
+
+	  if (ls != NULL || pfd != NULL) 
+	    {
+	
+	      int eqntype	   = ls->Init_Method;
+	      /* This is a temporary loc for this allocation */
+	  	  
+	  
+	      switch (ls->Evolution) {
+	      case LS_EVOLVE_ADVECT_EXPLICIT:
+		DPRINTF(stdout, "\n\t Using decoupled / subcycling for FILL equation.\n");
+		break;
+	      case LS_EVOLVE_ADVECT_COUPLED:
+		DPRINTF(stdout, "\n\t Using Coupled Level Set evolution!\n");
+		break;
+	      case LS_EVOLVE_SLAVE:
+		DPRINTF(stdout, "\n\t USING SLAVE LEVEL SET INTERFACE\n");
+		break;
+	      case LS_EVOLVE_SEMILAGRANGIAN:
+		DPRINTF(stdout, "\n\t Using semi-Lagrangian Level Set Evolution\n");
+		break;
+	      default:
+		EH(-1,"Level Set Evolution scheme not found \n");
+	      }
+
+
+	      if ( ls->Length_Scale < 0.0 )
+		EH(-1, "\tError: a Level Set Length Scale needs to be specified\n");
+            
+	      if( ls->Integration_Depth > 0 || ls->SubElemIntegration || ls->AdaptIntegration )
+		{
+
+		  if ( ls->Integration_Depth > 0 )
+		    {
+		      int first_elem;
+
+		      first_elem = find_first_elem_with_var( exo, LS );
+		  
+		      if( first_elem != -1 )
+			{
+			  load_ei(first_elem , exo, 0, pg->imtrx);
+
+			  Subgrid_Tree = create_shape_fcn_tree ( ls->Integration_Depth );
+			  DPRINTF(stdout,"\n\tSubgrid Integration of level set interface active.\n");
+			}
+		    }
+		  else if ( ls->SubElemIntegration )
+		    {
+		      DPRINTF(stdout,"\n\tSubelement Integration of level set interface active.\n");
+		    }
+		  else if ( ls->AdaptIntegration )
+		    {
+		      DPRINTF(stdout,"\n\tAdaptive Integration of level set interface active.\n");
+		      DPRINTF(stdout,"\tAdaptive Integration Interface Order = %d\n",ls->Adaptive_Order);
+		    }
+		  Subgrid_Int.ip_total = 0;
+		  Subgrid_Int.s = NULL;
+		  Subgrid_Int.wt = NULL;
+		}
+
+	      switch (eqntype) {
+	      case  PROJECT :
+
+		DPRINTF(stderr,"\n\t Projection level set initialization \n");
+
+		EH(-1,"Use of \"PROJECT\" is obsolete.");
+
+		break;
+		       
+	      case EXO_READ :
+		      
+		DPRINTF(stderr, "\t\t Level set read from exodus database \n");
+
+		break;
+
+	      case SURFACES :
+
+		DPRINTF(stderr, "\n\t\t Surface object level set initialization : ");
+
+		/* parallel synchronization of initialization surfaces */
+		if ( Num_Proc > 1 )
+		  {
+		    if (!ls->init_surf_list) ls->init_surf_list = create_surf_list();
+		    assemble_Global_surf_list( ls->init_surf_list );
+		  }
+              
+		surf_based_initialization( x[pg->imtrx], NULL, NULL, exo, num_total_nodes,
+					   ls->init_surf_list, 0., 0., 0. );
+
+	      
+		DPRINTF(stderr, "- done \n");
+
+
+		break;
+
+	      case SM_OBJECT:
+		cgm_based_initialization(x[pg->imtrx], num_total_nodes);
+		break;
+
+	      default:
+		WH(-1,"Level Set Initialization method not found \n");
+	      } /* end of switch( eqntype )  */
+
+	      exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], 0);
+
+	      if (converged) 
+		{
+		  switch (ls->Renorm_Method) {
+
+		  case HUYGENS :
+		  case HUYGENS_C :
+		    Renorm_Now =  ( ls->Force_Initial_Renorm || (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0) );
+
+		    did_renorm = huygens_renormalization(x[pg->imtrx], num_total_nodes, exo, cx[pg->imtrx], dpi,  
+							 num_fill_unknowns, numProcUnknowns[pg->imtrx],  
+							 time1, Renorm_Now );
+	    
+		    break;
+
+		  case CORRECT :
+
+		    EH(-1,"Use of \"CORRECT\" is obsolete.");
+		    break;	
+		  default:
+		    if ( ls->Evolution == LS_EVOLVE_ADVECT_EXPLICIT ||
+			 ls->Evolution == LS_EVOLVE_ADVECT_COUPLED )
+		      WH(-1,"No level set renormalization is on.\n");
+		  } /* end of switch(ls->Renorm_Method ) */
+		}
+	      /*
+	       * More initialization needed. Have to set those field variables that initially are indexed by
+	       * level set function.  For example, species  concentration and temperature.
+	       */
+	      if( ls->Num_Var_Init > 0 ) 
+		ls_var_initialization ( x[pg->imtrx], exo, dpi, cx[pg->imtrx] );
+
+	      /* 	  DPRINTF(stderr, "Done with ls_var_initialization.\n"); */
+
+	      /*
+	       * Now check to see if we need to build a surface represent.
+	       * on each time step.  Initialize the structures if so.
+	       */
+	      {
+		int build = FALSE, ibc = 0;
+
+		while ( !build && ibc < Num_BC)
+		  {
+		    build = ( BC_Types[ibc].BC_Name == LS_INLET_BC );
+		    build = build || ( BC_Types[ibc].BC_Name == LS_ADC_BC );
+		    ibc++;
+		  }
+		  
+		  
+		/* Here we create space for an isosurface list that is updated
+		 * every time step.  
+		 */
+	  
+		if( build && ls->last_surf_list == NULL ) 
+		  {
+		    struct LS_Surf *tmp_surf = NULL;
+		    struct LS_Surf_Iso_Data *tmp_data;
+
+		    ls->last_surf_list = create_surf_list();
+
+		    tmp_surf = create_surf( LS_SURF_ISOSURFACE );
+		    tmp_data = ( struct LS_Surf_Iso_Data *) tmp_surf->data;
+		    tmp_data->isovar = FILL;
+		    tmp_data->isoval = 0.0;
+
+		    append_surf( ls->last_surf_list, tmp_surf );
+		  }
+            
+	      } /* matches int build */
+
+	    }  /* end of ls != NULL */
+	  dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_old[pg->imtrx]);
+	  dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_older[pg->imtrx]);
+	  dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_oldest[pg->imtrx]);
+
+	  exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], 0);
+	  exchange_dof(cx[pg->imtrx], dpi, x_old[pg->imtrx], 0);
+	  exchange_dof(cx[pg->imtrx], dpi, x_oldest[pg->imtrx], 0);
+
+	}
+
+      
+      if( ls != NULL && ls->last_surf_list != NULL )
+	{
+	  /* Find the interface surf at the last full time step (x_old = tmp_x)
+	   * for use during this explicit step */
+
+	  create_subsurfs(  ls->last_surf_list, x_old[pg->imtrx], exo );
+	}
+
+	
       /*
        * Before propagating x_n back into the historical records in
        * x_n-1, x_n-2 and x_n-3, make sure external dofs are the best
@@ -927,6 +1162,8 @@ dbl *te_out) /* te_out - return actual end time */
         sl_init(matrix_systems_mask, ams, exo, dpi, cx[pg->imtrx]);
       }
 
+    nt		     = 0;
+
     /*
      * make sure the Aztec was properly initialized
      */
@@ -958,170 +1195,192 @@ dbl *te_out) /* te_out - return actual end time */
       }
       tran->time_value = time1;
 
+
       for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
 
-        /*
-         * What is known at this exact point in the code:
-         *
-         *
-         *  At time = time, x_old[] = the solution
-         *                  xdot_old[] = derivative of the solution
-         *  At time = time - delta_t_old:
-         *                  x_older[] = the solution
-         *                  xdot_older[] = derivative of the solution
-         *  At time = time -  delta_t_old -  delta_t_older
-         *                  x_oldest[] = the solution
-         *                  xdot_oldest[] = derivative of the solution
-         *  The value of x[] and xdot[] contain ambivalent information
-         *  at this point.
-         *
-         *  We seek the solution at time = time1 = time + delta_t
-         *  by first obtaining a predicted solution x_pred[] with
-         *  associated xdot[], and then solving a corrected solution,
-         *  x[], with associated time derivative, xdot[].
-         *
-         *  Note, we may be here due to a failed time step. In this
-         *  case x[] and xdot[] will be filled with garbage. For a
-         *  previously completed time step, x[] and xdot[] will be
-         *  equal to x_old[] and xdot_old[].
-         */
+	/*
+	 * What is known at this exact point in the code:
+	 *
+	 *
+	 *  At time = time, x_old[] = the solution
+	 *                  xdot_old[] = derivative of the solution
+	 *  At time = time - delta_t_old:
+	 *                  x_older[] = the solution
+	 *                  xdot_older[] = derivative of the solution
+	 *  At time = time -  delta_t_old -  delta_t_older
+	 *                  x_oldest[] = the solution
+	 *                  xdot_oldest[] = derivative of the solution
+	 *  The value of x[] and xdot[] contain ambivalent information
+	 *  at this point.
+	 *
+	 *  We seek the solution at time = time1 = time + delta_t
+	 *  by first obtaining a predicted solution x_pred[] with
+	 *  associated xdot[], and then solving a corrected solution,
+	 *  x[], with associated time derivative, xdot[].
+	 *
+	 *  Note, we may be here due to a failed time step. In this
+	 *  case x[] and xdot[] will be filled with garbage. For a
+	 *  previously completed time step, x[] and xdot[] will be
+	 *  equal to x_old[] and xdot_old[].
+	 */
 
-        /*
-         * SMD 1/24/11
-         * If external field is time_dep update the current solution,
-         * x_old, to the values of the external variables at that time point.
-         */
-        if (efv->ev) {
-          timeValueReadTrans = time;
-          int w;
-          for (w = 0; w < efv->Num_external_field; w++) {
-            if (strcmp(efv->field_type[w], "transient") == 0) {
-              err = rd_trans_vectors_from_exoII(x_old[pg->imtrx], efv->file_nm[w],
-                  w, n, &timeValueReadTrans, cx[pg->imtrx], dpi);
-              if (err != 0) {
-                DPRINTF(stderr, "%s: err from rd_trans_vectors_from_exoII\n", yo);
-              }
-            }
-          }
-        }
+	/*
+	 * SMD 1/24/11
+	 * If external field is time_dep update the current solution,
+	 * x_old, to the values of the external variables at that time point.
+	 */
+	if (efv->ev) {
+	  timeValueReadTrans = time;
+	  int w;
+	  for (w = 0; w < efv->Num_external_field; w++) {
+	    if (strcmp(efv->field_type[w], "transient") == 0) {
+	      err = rd_trans_vectors_from_exoII(x_old[pg->imtrx], efv->file_nm[w],
+						w, n, &timeValueReadTrans, cx[pg->imtrx], dpi);
+	      if (err != 0) {
+		DPRINTF(stderr, "%s: err from rd_trans_vectors_from_exoII\n", yo);
+	      }
+	    }
+	  }
+	}
 
-        /*
-         * Get started with forward/Backward Euler predictor-corrector
-         * to damp out any bad things
-         */
-        if ((nt - last_renorm_nt) == 0) {
-          theta = 0.0;
-          const_delta_t = 1.0;
+	/*
+	 * Get started with forward/Backward Euler predictor-corrector
+	 * to damp out any bad things
+	 */
+	if ((nt - last_renorm_nt) == 0) {
+	  theta = 0.0;
+	  const_delta_t = 1.0;
 
-        } else if ((nt - last_renorm_nt) >= 3) {
-          /* Now revert to the scheme input by the user */
-          theta = tran->theta;
-          const_delta_t = const_delta_ts;
-          /*
-           * If the previous step failed due to a convergence error
-           * or time step truncation error, then revert to a
-           * Backwards-Euler method to restart the calculation
-           * using a smaller time step.
-           * -> standard ODE solver trick (HKM -> Haven't
-           *    had time to benchmark this. Will leave it commented
-           *    out).
-           *
-           *  if (!converged || !success_dt) {
-           *    theta = 0.0;
-           *  }
-           */
-        }
+	} else if ((nt - last_renorm_nt) >= 3) {
+	  /* Now revert to the scheme input by the user */
+	  theta = tran->theta;
+	  const_delta_t = const_delta_ts;
+	  /*
+	   * If the previous step failed due to a convergence error
+	   * or time step truncation error, then revert to a
+	   * Backwards-Euler method to restart the calculation
+	   * using a smaller time step.
+	   * -> standard ODE solver trick (HKM -> Haven't
+	   *    had time to benchmark this. Will leave it commented
+	   *    out).
+	   *
+	   *  if (!converged || !success_dt) {
+	   *    theta = 0.0;
+	   *  }
+	   */
+	}
 
-        /* Reset the node->DBC[] arrays to -1 where set
-         * so that the boundary conditions are set correctly
-         * at each time step.
-         */
-        nullify_dirichlet_bcs();
+	/* Reset the node->DBC[] arrays to -1 where set
+	 * so that the boundary conditions are set correctly
+	 * at each time step.
+	 */
+	nullify_dirichlet_bcs();
 
-        find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
+	find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
 
-        if (ProcID == 0) {
-          if (theta == 0.0)
-            strcpy(tspstring, "(BE)");
-          else if (theta == 0.5)
-            strcpy(tspstring, "(CN)");
-          else if (theta == 1.0)
-            strcpy(tspstring, "(FE)");
-          else
-            sprintf(tspstring, "(TSP %3.1f)", theta);
-          fprintf(stderr, "\n=> Try for soln at t=%g with dt=%g [%d for %d] %s\n",
-              time1, delta_t, nt, n, tspstring);
-          log_msg("Predicting try at t=%g, dt=%g [%d for %d so far] %s",
-          time1, delta_t, nt, n, tspstring)
-  ;      }
+	if (ProcID == 0) {
+	  if (theta == 0.0)
+	    strcpy(tspstring, "(BE)");
+	  else if (theta == 0.5)
+	    strcpy(tspstring, "(CN)");
+	  else if (theta == 1.0)
+	    strcpy(tspstring, "(FE)");
+	  else
+	    sprintf(tspstring, "(TSP %3.1f)", theta);
+	  fprintf(stderr, "\n=> Try for soln at t=%g with dt=%g [%d for %d] %s\n",
+		  time1, delta_t, nt, n, tspstring);
+	  log_msg("Predicting try at t=%g, dt=%g [%d for %d so far] %s",
+		  time1, delta_t, nt, n, tspstring)
+	    ;      }
 
-        /*
-         * Predict the solution, x[], and its derivative, xdot[],
-         * at the new time, time1, using the old solution, xdot_old[],
-         * And its derivatives at the old time, time.
-         */
+	/*
+	 * Predict the solution, x[], and its derivative, xdot[],
+	 * at the new time, time1, using the old solution, xdot_old[],
+	 * And its derivatives at the old time, time.
+	 */
 
-        if (upd->SegregatedSolve && pg->imtrx == 0) {
-          predict_solution_u_star(numProcUnknowns[pg->imtrx], delta_t, delta_t_old,
-              delta_t_older, theta, x, x_old, x_older, x_oldest);
-        } else {
-          predict_solution(numProcUnknowns[pg->imtrx], delta_t, delta_t_old,
-              delta_t_older, theta, x[pg->imtrx], x_old[pg->imtrx],
-              x_older[pg->imtrx], x_oldest[pg->imtrx], xdot[pg->imtrx],
-              xdot_old[pg->imtrx], xdot_older[pg->imtrx]);
-        }
+	if (upd->SegregatedSolve && pg->imtrx == 0) {
+	  predict_solution_u_star(numProcUnknowns[pg->imtrx], delta_t, delta_t_old,
+				  delta_t_older, theta, x, x_old, x_older, x_oldest);
+	} else {
+	  predict_solution(numProcUnknowns[pg->imtrx], delta_t, delta_t_old,
+			   delta_t_older, theta, x[pg->imtrx], x_old[pg->imtrx],
+			   x_older[pg->imtrx], x_oldest[pg->imtrx], xdot[pg->imtrx],
+			   xdot_old[pg->imtrx], xdot_older[pg->imtrx]);
+	}
 
-        /*
-         * Now, that we have a predicted solution for the current
-         * time, x[], exchange the degrees of freedom to update the
-         * ghost node information.
-         */
-        exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
-        exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
+	if (ls != NULL && ls->Evolution == LS_EVOLVE_SLAVE)
+	  {
+	    surf_based_initialization(x[pg->imtrx], NULL, NULL, exo, num_total_nodes,
+				      ls->init_surf_list, time1, theta, delta_t);
+	  }
 
-        /*
-         *  Set dirichlet conditions in some places. Note, I believe
-         *  this step can change the solution vector
-         */
-        find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
+	/*
+	 * Now, that we have a predicted solution for the current
+	 * time, x[], exchange the degrees of freedom to update the
+	 * ghost node information.
+	 */
+	exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
+	exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
 
-        /*
-         *  HKM -> I don't know if this extra exchange operation
-         *         is needed or not. It was originally in the
-         *         algorithm. It may be needed if find_and_set..()
-         *         changes the solution vector. However, it would
-         *         seem to me that we could get rid of the duplication
-         *         of effort here.
-         *         -> I also added an exchange of xdot[], because
-         *            if x[] is needed to be exchanged, then xdot[] must
-         *            be exchanged as well.
-         */
+	if (matrix_nAC[pg->imtrx] > 0) {
 
-        exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
-        exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
+	  predict_solution(matrix_nAC[pg->imtrx], delta_t, delta_t_old, delta_t_older,
+			   theta, x_AC[pg->imtrx], x_AC_old[pg->imtrx], x_AC_older[pg->imtrx], x_AC_oldest[pg->imtrx],
+			   x_AC_dot[pg->imtrx], x_AC_dot_old[pg->imtrx], x_AC_dot_older[pg->imtrx]);
 
-        /*
-         * Save the predicted solution for the time step
-         * norm calculation to be carried out after convergence
-         * of the nonlinear implicit problem
-         */
-        dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_pred[pg->imtrx]);
+	  for(iAC = 0; iAC < matrix_nAC[pg->imtrx]; iAC++)
+	    {
+	      update_parameterAC(iAC, x[pg->imtrx], xdot[pg->imtrx], x_AC[pg->imtrx], cx[pg->imtrx], exo, dpi);
+	      augc[iAC].tmp2 = x_AC_dot[pg->imtrx][iAC];
+	      augc[iAC].tmp3 = x_AC_old[pg->imtrx][iAC];
+	    }
+	}
 
-        /*
-         *  Solve the nonlinear problem. If we achieve convergence,
-         *  set the flag, converged, to true on return. If not
-         *  set the flag to false.
 
-         */
+	/*
+	 *  Set dirichlet conditions in some places. Note, I believe
+	 *  this step can change the solution vector
+	 */
+	find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
 
-        if (ProcID == 0) {
-        printf("\n===================== SOLVING MATRIX %d ===========================\n\n", pg->imtrx);
-        }
+	/*
+	 *  HKM -> I don't know if this extra exchange operation
+	 *         is needed or not. It was originally in the
+	 *         algorithm. It may be needed if find_and_set..()
+	 *         changes the solution vector. However, it would
+	 *         seem to me that we could get rid of the duplication
+	 *         of effort here.
+	 *         -> I also added an exchange of xdot[], because
+	 *            if x[] is needed to be exchanged, then xdot[] must
+	 *            be exchanged as well.
+	 */
+
+	exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
+	exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
+
+	/*
+	 * Save the predicted solution for the time step
+	 * norm calculation to be carried out after convergence
+	 * of the nonlinear implicit problem
+	 */
+	dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_pred[pg->imtrx]);
+
+	/*
+	 *  Solve the nonlinear problem. If we achieve convergence,
+	 *  set the flag, converged, to true on return. If not
+	 *  set the flag to false.
+
+	 */
+
+	if (ProcID == 0) {
+	  printf("\n===================== SOLVING MATRIX %d ===========================\n\n", pg->imtrx);
+	}
 
 	nAC = matrix_nAC[pg->imtrx];
 	augc = matrix_augc[pg->imtrx];
 
-        err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t,
+	err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t,
 				      theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
 				      xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
 				      scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx],
@@ -1130,21 +1389,21 @@ dbl *te_out) /* te_out - return actual end time */
 				      x_AC[pg->imtrx], x_AC_dot[pg->imtrx], time1, NULL,
 				      NULL, NULL, NULL);
 
-        /*
-        err = solve_linear_segregated(ams[pg->imtrx], x[pg->imtrx], delta_t,
-            theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
-            xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
-            scale[pg->imtrx], &converged, &nprint, gv, time1, exo, dpi, cx, n,
-            &time_step_reform);
-*/
-        if (err == -1) {
-          converged = FALSE;
-          /* Copy previous solution values if failed timestep */
-          dcopy1(numProcUnknowns[pg->imtrx], x_old[pg->imtrx], x[pg->imtrx]);
-        }
-        inewton = err;
-        evpl_glob[0]->update_flag = 0; /*See get_evp_stress_tensor for description */
-        af->Sat_hyst_reevaluate = FALSE; /*See load_saturation for description*/
+	/*
+	  err = solve_linear_segregated(ams[pg->imtrx], x[pg->imtrx], delta_t,
+	  theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
+	  xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
+	  scale[pg->imtrx], &converged, &nprint, gv, time1, exo, dpi, cx, n,
+	  &time_step_reform);
+	*/
+	if (err == -1) {
+	  converged = FALSE;
+	  /* Copy previous solution values if failed timestep */
+	  dcopy1(numProcUnknowns[pg->imtrx], x_old[pg->imtrx], x[pg->imtrx]);
+	}
+	inewton = err;
+	evpl_glob[0]->update_flag = 0; /*See get_evp_stress_tensor for description */
+	af->Sat_hyst_reevaluate = FALSE; /*See load_saturation for description*/
 
 	if (converged) {
 	  for(i=0; matrix_nAC[pg->imtrx] > 0 && i < matrix_nAC[pg->imtrx]; i++) 
@@ -1163,7 +1422,7 @@ dbl *te_out) /* te_out - return actual end time */
 		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID, augc[iAC].DFID, x_AC[pg->imtrx][iAC]);
 		  /* temporary printing */
 #if 0
-                  if( (int)augc[iAC].DataFlt[1] == 6)
+		  if( (int)augc[iAC].DataFlt[1] == 6)
 		    {
 		      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 0, BC_Types[augc[iAC].DFID].BC_Data_Float[0]);
 		      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 2, BC_Types[augc[iAC].DFID].BC_Data_Float[2]);
@@ -1172,7 +1431,7 @@ dbl *te_out) /* te_out - return actual end time */
 		      DPRINTF(stderr, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
 
 		    }
-                  if( (int)augc[iAC].DataFlt[1] == 61)
+		  if( (int)augc[iAC].DataFlt[1] == 61)
 		    {
 		      augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
 		      DPRINTF(stderr, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
@@ -1208,17 +1467,19 @@ dbl *te_out) /* te_out - return actual end time */
 	  }
 	}
 	
-        /*
-         * HKM -> I do not know if these operations are needed. I added
-         *        an exchange of xdot[] here, because if x[] is exchanged
-         *        then xdot needs to be exchanged as well.
-         */
+	/*
+	 * HKM -> I do not know if these operations are needed. I added
+	 *        an exchange of xdot[] here, because if x[] is exchanged
+	 *        then xdot needs to be exchanged as well.
+	 */
 
-        exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
-        exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
+	exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
+	exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
 
-        if (!converged) break;
+	if (!converged) goto finish_step;
       }
+
+    finish_step:
 
       if (converged)
         af->Sat_hyst_reevaluate = TRUE; /*see load_saturation */
@@ -1254,6 +1515,19 @@ dbl *te_out) /* te_out - return actual end time */
             success_dt = 1;
           }
 
+	  if (pg->imtrx == Fill_Matrix) {
+	    if ( ls != NULL && tran->Courant_Limit != 0. ) {
+	      double Courant_dt;
+	      Courant_dt = tran->Courant_Limit *
+		Courant_Time_Step( x[pg->imtrx], x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx], xdot_old[pg->imtrx],
+				   resid_vector[pg->imtrx], ams[pg->imtrx]->proc_config, exo );
+	      if ( Courant_dt > 0. && Courant_dt < mat_dt_new ) {
+		DPRINTF(stderr,"\nCourant Limit requires dt <= %g\n",Courant_dt);
+		mat_dt_new = Courant_dt;
+	      }
+	    }
+	  }
+	  
           num_success += success_dt ? 1 : 0;
           if (upd->SegregatedSolve) {
             if (pg->imtrx == 0) {
@@ -1262,6 +1536,8 @@ dbl *te_out) /* te_out - return actual end time */
           } else {
             delta_t_new = MIN(mat_dt_new, delta_t_new);
           }
+
+	  
         }
 
 
@@ -1316,7 +1592,7 @@ dbl *te_out) /* te_out - return actual end time */
             step_print += tran->print_freq;
           }
         }
-        
+	
         pg->imtrx = 0;
 	for (i = 0; i < nn_post_fluxes; i++) {
 	  (void) evaluate_flux(exo, dpi, 
@@ -1413,32 +1689,7 @@ dbl *te_out) /* te_out - return actual end time */
           }
         }
 
-        /*
-         *   save xdot to xdot_old for next time step
-         */
-        for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-          dcopy1(numProcUnknowns[pg->imtrx], xdot_old[pg->imtrx],
-              xdot_older[pg->imtrx]);
-          if (tran->solid_inertia)
-            dcopy1(numProcUnknowns[pg->imtrx], tran->xdbl_dot,
-                tran->xdbl_dot_old);
-          dcopy1(numProcUnknowns[pg->imtrx], xdot[pg->imtrx],
-              xdot_old[pg->imtrx]);
-          dcopy1(numProcUnknowns[pg->imtrx], x_older[pg->imtrx],
-              x_oldest[pg->imtrx]);
-          dcopy1(numProcUnknowns[pg->imtrx], x_old[pg->imtrx],
-              x_older[pg->imtrx]);
-          dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_old[pg->imtrx]);
 
-	  if (matrix_nAC[pg->imtrx] > 0) {
-	    dcopy1(matrix_nAC[pg->imtrx], x_AC_dot_old[pg->imtrx], x_AC_dot_older[pg->imtrx]);
-	    dcopy1(matrix_nAC[pg->imtrx], x_AC_dot[pg->imtrx],     x_AC_dot_old[pg->imtrx]);
-	    dcopy1(matrix_nAC[pg->imtrx], x_AC_older[pg->imtrx],   x_AC_oldest[pg->imtrx]);
-	    dcopy1(matrix_nAC[pg->imtrx], x_AC_old[pg->imtrx],     x_AC_older[pg->imtrx]);
-	    dcopy1(matrix_nAC[pg->imtrx], x_AC[pg->imtrx],         x_AC_old[pg->imtrx]);
-	  }
-
-        }
 
 
 	
@@ -1473,8 +1724,129 @@ dbl *te_out) /* te_out - return actual end time */
         if (!good_mesh)
           goto free_and_clear;
 
-      } /*  if(converged && success_dt) */
 
+	if (converged && ls != NULL) 
+	  {
+	    pg->imtrx = Fill_Matrix;
+	    int ibc, ls_adc_event;
+	    /* Resolve LS_ADC boundaries ( Attach/Dewet/Coalesce ) */
+	    for( ibc=0;ibc<Num_BC;ibc++)
+	      {
+		ls_adc_event = FALSE;
+		switch ( BC_Types[ibc].BC_Name )
+		  {
+		  case LS_ADC_OLD_BC:
+		    resolve_ls_adc_old ( &(BC_Types[ibc]), exo, x[pg->imtrx], delta_t, &ls_adc_event, nt );
+		    break;
+		  case LS_ADC_BC:
+		    resolve_ls_adc ( ls->last_surf_list->start->subsurf_list, &(BC_Types[ibc]), exo,
+				     x[pg->imtrx], delta_t, &ls_adc_event, nt );
+
+		    break;
+		  default:
+		    break;
+		  }
+#ifdef PARALLEL
+		if (ls_adc_event) 
+		  {
+		    exchange_dof( cx[pg->imtrx], dpi, x[pg->imtrx] , 0);
+		  }
+#endif
+		if ( ls_adc_event && tran->Restart_Time_Integ_After_Renorm )
+		  {
+		    /* like a restart */
+		    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+		      discard_previous_time_step(numProcUnknowns[pg->imtrx], x[pg->imtrx],
+						 x_old[pg->imtrx], x_older[pg->imtrx],
+						 x_oldest[pg->imtrx], xdot[pg->imtrx],
+						 xdot_old[pg->imtrx], xdot_older[pg->imtrx]);
+		    }
+		    
+		    last_renorm_nt = nt;
+		    if ( delta_t_new > fabs(Delta_t0) )
+		      delta_t_new *= tran->time_step_decelerator;
+
+		    pg->imtrx = 0;
+		  }
+
+	      }
+
+	    /* Check for renormalization  */
+
+
+	    ls->Renorm_Countdown -= 1;
+	    switch (ls->Renorm_Method) 
+	      {
+			
+	      case HUYGENS:
+	      case HUYGENS_C:
+				
+		Renorm_Now = ( ls->Renorm_Freq != 0 && 
+			       ls->Renorm_Countdown == 0 ) 
+		  || ls_adc_event == TRUE;
+
+		pg->imtrx = Fill_Matrix;
+		did_renorm = huygens_renormalization(x[pg->imtrx], num_total_nodes,
+						     exo, cx[pg->imtrx], dpi, num_fill_unknowns, numProcUnknowns[pg->imtrx],
+						     time2, Renorm_Now);
+		if ( did_renorm )
+		  { exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], 0);	}
+		if ( did_renorm && tran->Restart_Time_Integ_After_Renorm )
+		  {
+		    /* like a restart */
+		    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+		      discard_previous_time_step(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_old[pg->imtrx],
+						 x_older[pg->imtrx], x_oldest[pg->imtrx], xdot[pg->imtrx],
+						 xdot_old[pg->imtrx], xdot_older[pg->imtrx]);
+		    }
+		    last_renorm_nt = nt;
+		    if ( delta_t_new > fabs(Delta_t0) ) delta_t_new *= tran->time_step_decelerator;
+		  }
+		pg->imtrx = 0;
+		break;
+				
+	      case CORRECT:
+		EH(-1,"Use of \"CORRECT\" is obsolete.");
+		break;
+	      default:
+		break;
+	      }
+		
+	    if( ls->Sat_Hyst_Renorm_Lockout > 0 ) {
+	      af->Sat_hyst_reevaluate = FALSE;
+	      ls->Sat_Hyst_Renorm_Lockout -= 1;
+	    }
+		
+	  }
+	
+        /*
+         *   save xdot to xdot_old for next time step
+         */
+        for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+          dcopy1(numProcUnknowns[pg->imtrx], xdot_old[pg->imtrx],
+              xdot_older[pg->imtrx]);
+          if (tran->solid_inertia)
+            dcopy1(numProcUnknowns[pg->imtrx], tran->xdbl_dot,
+                tran->xdbl_dot_old);
+          dcopy1(numProcUnknowns[pg->imtrx], xdot[pg->imtrx],
+              xdot_old[pg->imtrx]);
+          dcopy1(numProcUnknowns[pg->imtrx], x_older[pg->imtrx],
+              x_oldest[pg->imtrx]);
+          dcopy1(numProcUnknowns[pg->imtrx], x_old[pg->imtrx],
+              x_older[pg->imtrx]);
+          dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_old[pg->imtrx]);
+
+	  if (matrix_nAC[pg->imtrx] > 0) {
+	    dcopy1(matrix_nAC[pg->imtrx], x_AC_dot_old[pg->imtrx], x_AC_dot_older[pg->imtrx]);
+	    dcopy1(matrix_nAC[pg->imtrx], x_AC_dot[pg->imtrx],     x_AC_dot_old[pg->imtrx]);
+	    dcopy1(matrix_nAC[pg->imtrx], x_AC_older[pg->imtrx],   x_AC_oldest[pg->imtrx]);
+	    dcopy1(matrix_nAC[pg->imtrx], x_AC_old[pg->imtrx],     x_AC_older[pg->imtrx]);
+	    dcopy1(matrix_nAC[pg->imtrx], x_AC[pg->imtrx],         x_AC_old[pg->imtrx]);
+	  }
+
+        }
+	
+      } /*  if(converged && success_dt) */
       else /* not converged or unsuccessful time step */
       {
         /* Set bit TRUE in next line to enable retries for failed first timestep*/
@@ -1554,7 +1926,6 @@ dbl *te_out) /* te_out - return actual end time */
         DPRINTF(stderr, "time step too small, I'm giving up!\n");
         break;
       }
-
     } /* end of time step loop */
   } /* end of if steady else transient */
   free_and_clear: return;
@@ -1576,3 +1947,25 @@ predict_solution_u_star(int N, dbl delta_t, dbl delta_t_old, dbl delta_t_older,
     }
   
 }
+
+static int discard_previous_time_step(int num_unks, 
+				      double *x,
+				      double *x_old,
+				      double *x_older,
+				      double *x_oldest,
+				      double *xdot,
+				      double *xdot_old, 
+				      double *xdot_older)
+{
+  
+  dcopy1(num_unks, x,       x_old);
+  dcopy1(num_unks, x_old,   x_older);
+  dcopy1(num_unks, x_older, x_oldest);
+	
+  /* also need to kill xdot(s) */
+  memset(xdot,0, sizeof(double)*num_unks);
+  memset(xdot_old,0, sizeof(double)*num_unks);
+  memset(xdot_older,0, sizeof(double)*num_unks);
+	
+  return (0);
+}	
