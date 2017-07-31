@@ -385,6 +385,23 @@ setup_pd()
 		  pd_glob[mn]->e[ce] |= T_SOURCE;
 		}
 	    }
+
+	  else if ((ce == R_TFMP_MASS) ||
+	           (ce == R_TFMP_BOUND)) {
+	    if ( pd_glob[mn]->etm[ce][(LOG2_MASS)] != 0. ) {
+	      pd_glob[mn]->e[ce] |= T_MASS;
+	    }
+	    if ( pd_glob[mn]->etm[ce][(LOG2_ADVECTION)] != 0. ) {
+	      pd_glob[mn]->e[ce] |= T_ADVECTION;
+	    }
+	    if ( pd_glob[mn]->etm[ce][(LOG2_DIFFUSION)] != 0. ) {
+	      pd_glob[mn]->e[ce] |= T_DIFFUSION;
+	    }
+	    if ( pd_glob[mn]->etm[ce][(LOG2_SOURCE)] != 0. ) {
+	      pd_glob[mn]->e[ce] |= T_SOURCE;
+	    }
+	  }
+
 	  else if((ce == R_ENERGY )||
 		  (ce == R_MASS)||
 		  (ce == R_MESH1)||

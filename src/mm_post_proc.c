@@ -260,6 +260,11 @@ int PP_LAME_LAMBDA = -1;
 int VON_MISES_STRESS = -1;
 int VON_MISES_STRAIN = -1;
 int UNTRACKED_SPEC = -1;
+int TFMP_GAS_VELO = -1;
+int TFMP_LIQ_VELO = -1;
+int TFMP_INV_PECLET = -1;
+int TFMP_KRG    = -1;
+
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -799,12 +804,16 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[MEAN_SHEAR] = 1.;
   }
 
-  if (PRESSURE_CONT != -1 && pd->v[PRESSURE] &&
+  if (PRESSURE_CONT != -1 && (pd->v[PRESSURE] || pd->v[TFMP_PRES]) &&
       (pd->e[R_MOMENTUM1] || (pd->MeshMotion == LAGRANGIAN ||
 			      pd->MeshMotion == DYNAMIC_LAGRANGIAN)
        || (pd->MeshMotion == TOTAL_ALE)))
     {
-      local_post[PRESSURE_CONT] = fv->P;
+      if (pd->v[PRESSURE]) {
+	local_post[PRESSURE_CONT] = fv->P;
+      } else if (pd->v[TFMP_PRES]) {
+	local_post[PRESSURE_CONT] = fv->tfmp_pres;
+      }
       local_lumped[PRESSURE_CONT] = 1.;
     }
 
@@ -1518,7 +1527,269 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_lumped[UNTRACKED_SPEC] = 1.0;
   } /* end of UNTRACKED_SPEC*/
 
+  if ( (TFMP_GAS_VELO != -1 || TFMP_LIQ_VELO != -1 || TFMP_KRG != -1)
+       && pd->e[R_TFMP_MASS] && pd->e[R_TFMP_BOUND]) {
 
+    int k;
+    int *n_dof = NULL;
+    int dof_map[MDE];
+    double v_l[DIM], v_g[DIM];
+    /*
+     * Prepare geometry
+     */
+    n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+    /* Gather necessary values (S, h, Krg, gradII_P)*/
+
+    // need pure phase viscosities
+    double mu_l = 0.01; //    [g/cm/s]
+    double mu_g = 186e-6; //  [g/cm/s] air
+
+    switch(mp->tfmp_viscosity_model){
+    case CONSTANT:
+      mu_g = mp->tfmp_viscosity_const[0];
+      if (mp->len_tfmp_viscosity_const == 2) {
+	mu_l = mp->tfmp_viscosity_const[1];
+      }
+      break;
+    default:
+      // viscosity of air and water, as defined above
+      break;
+    }
+
+    
+    double S = fv->tfmp_sat;
+    /* Use the height_function_model */
+    double H_U, dH_U_dtime, H_L, dH_L_dtime;
+    double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+    double h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
+			      dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
+
+    dbl Krl;// = S*S/2.0*(3.0 - S);
+    dbl Krg;// = (1.0-S)*(1.0-S)*(1.0-S) + 3.0/2.0*mu_g/mu_l*S*(1.0-S)*(2.0-S);
+
+    
+    // try shifted-scaled rel perms
+    
+      // gas transition
+    dbl Scg, alphag, Scl, alphal;
+    switch (mp->tfmp_rel_perm_model) {
+    case PIECEWISE:
+      Scg = mp->tfmp_rel_perm_const[0];
+      alphag = mp->tfmp_rel_perm_const[1];
+      Scl = mp->tfmp_rel_perm_const[2];
+      alphal = mp->tfmp_rel_perm_const[3];
+      break;
+    default:
+      Scg = 0.78;
+      alphag = 0.1;
+      Scl = 0.78;
+      alphal = 0.1;
+      break;
+    }
+    
+    dbl mg = -1./2./alphag;
+    dbl cg = -mg*(Scg + alphag);
+    dbl ml = 1./2./alphal;
+    dbl cl = -ml*(Scl - alphal);
+  
+    if ( S <= Scg - alphag) {
+      Krg = 1.0;
+      //dKrg_dS = 0.0;
+    } else if ( S > Scg - alphag && S < Scg + alphag ) {
+      Krg = mg*S + cg;
+      //dKrg_dS = mg;
+    } else {
+      Krg = 0.0;
+      //dKrg_dS = 0.0;
+    }
+    
+    // liquid transition
+    
+    if ( S <= Scl - alphal) {
+      Krl = 0.0;
+      //dKrl_dS = 0.0;
+    } else if ( S > Scl - alphal && S < Scl + alphal ) {
+      Krl = ml*S + cl;
+      //dKrl_dS = ml;
+      
+    } else { // S > 1.0
+      Krl = 1.0 ;
+      //dKrl_dS = 0.0;
+    }
+    
+
+    dbl grad_P[DIM], gradII_P[DIM];
+    for (k = 0; k<DIM; k++) {
+      grad_P[k] = fv->grad_tfmp_pres[k];
+    }
+
+    Inn(grad_P, gradII_P);
+    
+    /* Calculate Velocity */
+    for (k = 0; k<DIM; k++) {
+      v_l[k] = -h*h/12.0/mu_l*Krl*gradII_P[k];
+      v_g[k] = -h*h/12.0/mu_g*Krg*gradII_P[k];
+    }
+    if (TFMP_GAS_VELO != -1) {
+      local_post[TFMP_GAS_VELO] = v_g[0];
+      local_lumped[TFMP_GAS_VELO] += 1;
+      local_post[TFMP_GAS_VELO + 1] = v_g[1];
+      local_lumped[TFMP_GAS_VELO + 1] += 1;
+      local_post[TFMP_GAS_VELO + 2] = v_g[2];
+      local_lumped[TFMP_GAS_VELO + 2] += 1;
+    }
+    if (TFMP_LIQ_VELO != -1) {
+      local_post[TFMP_LIQ_VELO] = v_l[0];
+      local_lumped[TFMP_LIQ_VELO] += 1;
+      local_post[TFMP_LIQ_VELO + 1] = v_l[1];
+      local_lumped[TFMP_LIQ_VELO + 1] += 1;
+      local_post[TFMP_LIQ_VELO + 2] = v_l[2];
+      local_lumped[TFMP_LIQ_VELO + 2] += 1;
+    }
+    if (TFMP_KRG != -1) {
+      local_post[TFMP_KRG] = Krg;
+      local_lumped[TFMP_KRG] += 1;
+      //    } else {
+      //      local_post[TFMP_KRG] = 0.0;
+    }
+
+
+    /* Cleanup */
+    safe_free((void *) n_dof);
+  }
+  if ( (TFMP_INV_PECLET != -1 )
+       && pd->e[R_TFMP_MASS] && pd->e[R_TFMP_BOUND]) {
+
+    int k;
+    int *n_dof = NULL;
+    int dof_map[MDE];
+
+    /*
+     * Prepare geometry
+     */
+    n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+    /* Gather necessary values (S, h, Krg, gradII_P)*/
+
+    // need pure phase viscosities
+    double mu_l = 0.01; //    [g/cm/s]
+
+    switch(mp->tfmp_viscosity_model){
+    case CONSTANT:
+      if (mp->len_tfmp_viscosity_const == 2) {
+	mu_l = mp->tfmp_viscosity_const[1];
+      }
+      break;
+    default:
+      // viscosity of water, as defined above
+      break;
+    }
+
+    
+    double S = fv->tfmp_sat;
+    /* Use the height_function_model */
+    double H_U, dH_U_dtime, H_L, dH_L_dtime;
+    double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+    double h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
+			      dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
+
+    dbl Krl;// = S*S/2.0*(3.0 - S);
+
+    // split rel perms
+    dbl Scl, alphal;
+
+    switch (mp->tfmp_rel_perm_model) {
+    case PIECEWISE:
+      Scl = mp->tfmp_rel_perm_const[2];
+      alphal = mp->tfmp_rel_perm_const[3];
+      break;
+    default:
+      Scl = 0.78;
+      alphal = 0.1;
+      break;
+    }
+
+    // liquid transition
+    dbl ml = 1./2./alphal;
+    dbl cl = -ml*(Scl - alphal);
+
+    if ( S <= Scl - alphal) {
+      Krl = 0.0;
+    } else if ( S > Scl - alphal && S < Scl + alphal ) {
+      Krl = ml*S + cl;
+    } else { // S > 1.0
+      Krl = 1.0 ;
+    }
+    dbl D, Scd, betad, md, cd, Krd;
+    switch (mp->tfmp_diff_model) {
+    case CONSTANT:
+      D = mp->tfmp_diff_const[0];
+      Krd = 0.0;
+      break;
+      //  case EXPONENTIAL:
+      //D = 3.16e-22*exp(34.53877639491068*S);
+      //dD_dS = 3.16e-22*34.53877639491068*exp(34.53877639491068*S);
+      //break;
+    case PIECEWISE:
+      D = mp->tfmp_diff_const[0];
+      // diffusion transition
+      Scd = mp->tfmp_diff_const[1];
+      betad = mp->tfmp_diff_const[2];
+      md = 1.f/2.f/betad;
+      cd = -md*(Scd - betad);
+
+      if ( S < Scd - betad) {
+	Krd = 0.0;
+      } else { // ( S >= Scd - betad) { // && S <= Scd + betad ) {
+	Krd = md*S + cd;
+      }
+      break;
+      
+    default:
+      D = 0.0;
+      Krd = 0.0;
+      break;
+    }
+    
+    dbl grad_P[DIM], gradII_P[DIM];
+    dbl grad_S[DIM], gradII_S[DIM];
+
+    for (k = 0; k<DIM; k++) {
+      grad_P[k] = fv->grad_tfmp_pres[k];
+      grad_S[k] = fv->grad_tfmp_sat[k];
+    }
+
+    Inn(grad_P, gradII_P);
+    Inn(grad_S, gradII_S);
+
+    dbl mag_gradII_P = 0.0;
+    dbl mag_gradII_S = 0.0;
+    
+    /* Calculate gradient magnitudes */
+    for (k = 0; k<DIM; k++) {
+      mag_gradII_P += gradII_P[k]*gradII_P[k];
+      mag_gradII_S += gradII_S[k]*gradII_S[k];
+    }
+    mag_gradII_P = sqrt(mag_gradII_P);
+    mag_gradII_S = sqrt(mag_gradII_S);
+
+    //if (TFMP_GAS_VELO != -1) {
+    //if ( Krd != 0.0 && mag_gradII_S >= 1.e-10 ) {
+    if ( Krl != 0.0 && mag_gradII_P != 0.0) {
+      local_post[TFMP_INV_PECLET] = (D*Krd*mag_gradII_S)/(Krl*h*h*h/12.0/mu_l*mag_gradII_P);
+    } else {
+      local_post[TFMP_INV_PECLET] = 0.0;
+    }
+    local_lumped[TFMP_INV_PECLET] += 1;
+
+    //}
+    /* Cleanup */
+    safe_free((void *) n_dof);
+  }
+  
 /*  EXTERNAL tables	*/
    if (efv->ev) {
      for (j=0; j < efv->Num_external_field; j++) {
@@ -1805,7 +2076,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
         local_lumped[PRINCIPAL_REAL_STRESS+2] = 1.;
     } /* end of PRINCIPAL_REAL_STRESS */
 
-  if ( LUB_HEIGHT != -1 && (pd->e[R_LUBP] || pd->e[R_SHELL_FILMP] ) ) {
+  if ( LUB_HEIGHT != -1 && (pd->e[R_LUBP] || pd->e[R_SHELL_FILMP] || pd->e[R_TFMP_MASS] ) ) {
     double H_U, dH_U_dtime, H_L, dH_L_dtime;
     double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
     
@@ -1816,7 +2087,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
     
-    if (pd->e[R_LUBP])
+    if (pd->e[R_LUBP] || pd->e[R_TFMP_MASS])
       {	 
 	local_post[LUB_HEIGHT] = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
 						       dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
@@ -6363,6 +6634,11 @@ rd_post_process_specs(FILE *ifp,
 			     &REL_LIQ_PERM);
   iread = look_for_post_proc(ifp, "Vorticity Vector", &CURL_V);
 
+  iread = look_for_post_proc(ifp, "TFMP_gas_velo", &TFMP_GAS_VELO);
+  iread = look_for_post_proc(ifp, "TFMP_liq_velo", &TFMP_LIQ_VELO);
+  iread = look_for_post_proc(ifp, "TFMP_inverse_Peclet", &TFMP_INV_PECLET);
+  iread = look_for_post_proc(ifp, "TFMP_Krg", &TFMP_KRG);
+  
   /* Report count of post-proc vars to be exported */
   /*
     fprintf(stderr, "Goma will export %d post-processing variables.\n", Num_Export_XP);
@@ -9399,7 +9675,7 @@ index_post, index_post_export);
       PRINCIPAL_REAL_STRESS = -1;
     }
 
-  if (LUB_HEIGHT != -1  && (Num_Var_In_Type[R_LUBP] || Num_Var_In_Type[R_SHELL_FILMP]) )
+  if (LUB_HEIGHT != -1  && (Num_Var_In_Type[R_LUBP] || Num_Var_In_Type[R_SHELL_FILMP] || Num_Var_In_Type[R_TFMP_MASS]) )
     {
       if (LUB_HEIGHT == 2)
         {
@@ -9753,6 +10029,99 @@ index_post, index_post_export);
     {
       VON_MISES_STRESS = -1;
     }
+
+  if (TFMP_GAS_VELO != -1  && Num_Var_In_Type[R_TFMP_MASS] && Num_Var_In_Type[R_TFMP_BOUND])
+    {
+      if (TFMP_GAS_VELO == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      TFMP_GAS_VELO = index_post;
+      sprintf(nm, "TFMP_GAS_VX");
+      sprintf(ds, "TFMP Gas Velocity x-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+      sprintf(nm, "TFMP_GAS_VY");
+      sprintf(ds, "TFMP Gas Velocity y-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+      sprintf(nm, "TFMP_GAS_VZ");
+      sprintf(ds, "TFMP Gas Velocity z-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+  else
+    {
+      TFMP_GAS_VELO = -1;
+    }
+
+  if (TFMP_LIQ_VELO != -1  && Num_Var_In_Type[R_TFMP_MASS] && Num_Var_In_Type[R_TFMP_BOUND])
+    {
+      if (TFMP_LIQ_VELO == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      TFMP_LIQ_VELO = index_post;
+      sprintf(nm, "TFMP_LIQ_VX");
+      sprintf(ds, "TFMP Liq Velocity x-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+      sprintf(nm, "TFMP_LIQ_VY");
+      sprintf(ds, "TFMP Liq Velocity y-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+      sprintf(nm, "TFMP_LIQ_VZ");
+      sprintf(ds, "TFMP Liq Velocity z-component");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+  else
+    {
+      TFMP_LIQ_VELO = -1;
+    }
+
+  if (TFMP_INV_PECLET != -1  && Num_Var_In_Type[R_TFMP_MASS] && Num_Var_In_Type[R_TFMP_BOUND])
+    {
+      if (TFMP_INV_PECLET == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      TFMP_INV_PECLET = index_post;
+      sprintf(nm, "TFMP_INV_PECLET");
+      sprintf(ds, "TFMP Local Peclet Number");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+  else
+    {
+      TFMP_INV_PECLET = -1;
+    }
+  if (TFMP_KRG != -1  && Num_Var_In_Type[R_TFMP_BOUND])
+    {
+      if (TFMP_KRG == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      TFMP_KRG = index_post;
+      sprintf(nm, "TFMP_KRG");
+      sprintf(ds, "TFMP Local Gas Permeability");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+    }
+  else
+    {
+      TFMP_KRG = -1;
+    }
+
+
   
 /* Add external variables if they are present */
 

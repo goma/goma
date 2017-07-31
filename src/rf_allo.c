@@ -1274,7 +1274,6 @@ alloc_copy_string_FL(const char *copyFrom, const char *filename,
   return strcpy(cptr, copyFrom);
 }
 
-
 void checkFinite(double tmp) {
   if (! finite(tmp)) {
     if(isnan(tmp)) {

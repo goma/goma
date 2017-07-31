@@ -115,6 +115,8 @@
 #define I_SPECIES_SOURCE  37
 #define I_KINETIC_ENERGY  38
 #define I_SHELL_VOLUME 39
+#define I_TFMP_FORCE    40
+
 
 #ifdef _MM_POST_PROC_C
 struct Post_Processing_Flux_Names
@@ -234,7 +236,8 @@ VOL_NAME_STRUCT pp_vol_names[] =
   { "NEG_PLANE_FILL",   I_NEG_VOLPLANE},
   { "SPECIES_SOURCE",    I_SPECIES_SOURCE},
   { "KINETIC_ENERGY",    I_KINETIC_ENERGY},
-  { "SHELL_VOLUME",      I_SHELL_VOLUME}
+  { "SHELL_VOLUME",      I_SHELL_VOLUME},
+  { "TFMP_FORCE",        I_TFMP_FORCE}
 };
 
 int Num_Vol_Names = sizeof( pp_vol_names )/ sizeof( VOL_NAME_STRUCT );
@@ -549,9 +552,13 @@ extern int PP_LAME_MU;         /* Lame MU coefficient for solid/mesh */
 extern int PP_LAME_LAMBDA;     /* Lame LAMBDA coefficient for solid/mesh */
 extern int VON_MISES_STRAIN;
 extern int VON_MISES_STRESS;
+
 extern int UNTRACKED_SPEC;		/*Untracked Species Concentration */
 
-
+extern int TFMP_GAS_VELO;
+extern int TFMP_LIQ_VELO;
+extern int TFMP_INV_PECLET;
+extern int TFMP_KRG;
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *

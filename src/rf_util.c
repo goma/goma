@@ -847,6 +847,8 @@ time_step_control(const double delta_t,  const double delta_t_old,
     Err_norm      += ecp[LIGHT_INTM];
     Err_norm      += ecp[LIGHT_INTD];
 /*    Err_norm      += ecp[EXT_VELOCITY];  */
+    Err_norm      += ecp[TFMP_PRES];
+    Err_norm      += ecp[TFMP_SAT];
  
     num_unknowns += ncp[SURF_CHARGE];
     num_unknowns += ncp[SHELL_CURVATURE];
@@ -869,6 +871,8 @@ time_step_control(const double delta_t,  const double delta_t_old,
     num_unknowns += ncp[LIGHT_INTM];
     num_unknowns += ncp[LIGHT_INTD];
 /*    num_unknowns += ncp[EXT_VELOCITY];  */
+    num_unknowns += ncp[TFMP_PRES];
+    num_unknowns += ncp[TFMP_SAT];
 
   if (use_var_norm[8] ) /* LS equation is set with special card in Level Set section */
   {

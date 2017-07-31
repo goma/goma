@@ -182,6 +182,7 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
 
   e_start = exo->eb_ptr[0];
   e_end   = exo->eb_ptr[exo->num_elem_blocks];
+  
   for (ielem = e_start, ebn = 0; ielem < e_end && !neg_elem_volume && !neg_lub_height && !zero_detJ; ielem++) {
 
     /*First we must calculate the material-referenced element
@@ -2062,6 +2063,15 @@ matrix_fill(
 
       	}
 
+      if(pde[R_TFMP_MASS] && pde[R_TFMP_BOUND])
+	{
+	  err = assemble_shell_tfmp( time_value, theta, delta_t, xi, &pg_data, exo );
+	  EH( err, "assemble_shell_tfmp");
+#ifdef CHECK_FINITE
+	  CHECKFINITE("assemble_shell_tfmp");
+#endif
+	}
+
       if( pde[R_MOMENTUM1] )
 	{
           err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
@@ -2236,7 +2246,7 @@ matrix_fill(
 	  if (err) return -1;
 #endif
 	}
-      
+
       /******************************************************************************/
     }
   /* END  for (ip = 0; ip < ip_total; ip++)                               */  

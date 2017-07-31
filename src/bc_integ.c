@@ -1191,6 +1191,28 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                            (elem_side_bc->local_elem_node_id) );
             break;
 
+	case SHELL_TFMP_FREE_LIQ_BC:
+	  shell_n_dot_liq_velo_bc_tfmp(func, d_func, 0.0, 
+				       time_value, delta_t,
+				       xi, exo);
+	  surface_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes,
+					 ielem_dim - 1,
+					 (int) elem_side_bc->id_side,
+					 (int) elem_side_bc->num_nodes_on_side,
+					 (elem_side_bc->local_elem_node_id) );
+	  break;
+	case SHELL_TFMP_NUM_DIFF_BC:
+	  shell_num_diff_bc_tfmp(func, d_func, 
+				       time_value, delta_t,
+				       xi, exo);
+	  surface_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes,
+					 ielem_dim - 1,
+					 (int) elem_side_bc->id_side,
+					 (int) elem_side_bc->num_nodes_on_side,
+					 (elem_side_bc->local_elem_node_id) );
+	  break;
+
+
         case SH_S11_WEAK_BC:
         case SH_S22_WEAK_BC:
           apply_shell_traction_bc(func, d_func,
@@ -2239,7 +2261,9 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		  && bc->BC_Name != LS_ADC_BC
 		  && bc->BC_Name != SHEAR_TO_SHELL_BC 
 		  && bc->BC_Name != POR_LIQ_FLUX_FILL_BC 
-		  && bc->BC_Name != DARCY_LUB_BC) {
+		  && bc->BC_Name != DARCY_LUB_BC
+		  && bc->BC_Name != SHELL_TFMP_FREE_LIQ_BC
+		  && bc->BC_Name != SHELL_TFMP_NUM_DIFF_BC) {
 		weight *= pd->etm[eqn][(LOG2_BOUNDARY)];
 	      }
 

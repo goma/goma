@@ -1999,6 +1999,16 @@ load_variable (double *x_var,        /* variable value */
       var = SHELL_CROSS_SHEAR;
       *d_x_var = 1.;
       break;
+    case TFMP_PRES:
+      *x_var = fv->tfmp_pres;
+      var = TFMP_PRES;
+      *d_x_var = 1;
+      break;
+    case TFMP_SAT:
+      *x_var = fv->tfmp_sat;
+      var = TFMP_SAT;
+      *d_x_var = 1;
+      break;
     case MAX_STRAIN:
       *x_var = fv->max_strain;
       var = MAX_STRAIN;
@@ -2479,7 +2489,6 @@ load_variable (double *x_var,        /* variable value */
       var = PHASE1 + b;
       *d_x_var = 1.;
       break;
-      
 
       /* if variable type is mesh position **not** mesh displacement*/
     case MESH_POSITION1:

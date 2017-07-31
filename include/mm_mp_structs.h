@@ -831,6 +831,40 @@ struct Material_Properties
   dbl d_Inertia_coefficient[MAX_VARIABLE_TYPES + MAX_CONC];
   int InertiaCoefficientModel;
 
+  // TFMP structure for material properties function constants
+  int tfmp_density_model;
+  int len_tfmp_density_const;
+  dbl *tfmp_density_const;
+
+  int tfmp_viscosity_model;
+  int len_tfmp_viscosity_const;
+  dbl *tfmp_viscosity_const;
+
+  // TFMP indicators for the stabilizing diffusivity corrector
+  int tfmp_diff_model;
+  int len_tfmp_diff_const;
+  dbl *tfmp_diff_const;
+
+  // TFMP variables for wt function application
+  int tfmp_wt_model;
+  int tfmp_wt_len;
+  dbl tfmp_wt_const;
+
+  int tfmp_mass_lump;
+  int tfmp_clipping;
+  dbl tfmp_clip_strength;
+
+  int tfmp_rel_perm_model;
+  int len_tfmp_rel_perm_const;
+  dbl *tfmp_rel_perm_const;
+
+  dbl tfmp_dissolved_gas_diff;
+  dbl tfmp_henrys_law_const;
+
+  int tfmp_drop_lattice_model;
+  int len_tfmp_drop_lattice_const;
+  dbl *tfmp_drop_lattice_const;
+  
   int table_index;
 
   

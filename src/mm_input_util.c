@@ -497,6 +497,8 @@ variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input, "LIGHT_INTP"))                  var = LIGHT_INTP;
   else if (!strcmp(input, "LIGHT_INTM"))                  var = LIGHT_INTM;
   else if (!strcmp(input, "LIGHT_INTD"))                  var = LIGHT_INTD;
+  else if (!strcmp(input, "TFMP_PRES"))                   var = TFMP_PRES;
+  else if (!strcmp(input, "TFMP_SAT"))                    var = TFMP_SAT;
   /*
    * Kluge to break up large if block. Problems with HP compiler!
    */  

@@ -462,6 +462,8 @@ rd_bc_specs(FILE *ifp,
         case SHELL_GRAD_FH_NOBC_BC:
         case SHELL_GRAD_PC_NOBC_BC:
         case STRESS_DEVELOPED_BC:
+  	case SHELL_TFMP_FREE_LIQ_BC:
+	case SHELL_TFMP_NUM_DIFF_BC:
 	  break;
 
 	  /* Fall through for all cases which require a single floating point
@@ -716,7 +718,8 @@ rd_bc_specs(FILE *ifp,
         case SHELL_OPEN_PRESS_BC:
         case SHELL_OPEN_PRESS_2_BC:
         case SH_GAMMA1_BC:
-	
+	case SHELL_TFMP_PRES_BC:
+  
 	    if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1) {
 	      sprintf(err_msg, "%s: Expected 1 flt for %s.",
 		      yo, BC_Types[ibc].desc->name1);
