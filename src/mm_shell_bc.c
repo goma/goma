@@ -1225,9 +1225,7 @@ apply_shell_traction_bc(double func[DIM],
   memset(dt0_dnormal, 0.0, sizeof(double)*DIM*DIM*MDE);
   memset(dt1_dnormal, 0.0, sizeof(double)*DIM*DIM*MDE);
 
-  shell_tangents(t0, t1, dt0_dx, dt1_dx);
-
-//  shell_tangents_seeded(t0, t1, dt0_dnormal, dt1_dnormal);
+  shell_tangents(t0, t1, dt0_dx, dt1_dx, dt0_dnormal, dt1_dnormal);
 
 
   for (a = 0; a < dim; a++)
@@ -1560,7 +1558,7 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
       * shell_n_dot_liq_velo_bc_tfmp():
       *
       *  Function which evaluates the expression specifying the
-      *  gas velocity at a quadrature point normal to the side
+      *  liquid velocity at a quadrature point normal to the side
       *  of an element.
       *
       *         func =   - velocity + n .( - h^2 /(12*mu_l)(krl) (grad tfmp_pres) )
@@ -1589,23 +1587,32 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
       * 
       ********************************************************************/
 {
-  int j, k, var;
+  int j, k, l, var;
   int *n_dof = NULL;
   int dof_map[MDE];
   double phi_j;
   double grad_phi_j[DIM], gradII_phi_j[DIM];
-  double bound_normal[DIM];
+  double bound_normal[DIM], dbound_normal_dx[DIM][DIM][MDE];
 
-  double S, h, grad_P[DIM], gradII_P[DIM], v_l[DIM];
+  double S, h, v_l[DIM];
+  dbl grad_P[DIM], gradII_P[DIM];
+  dbl dgrad_P_dmesh[DIM][DIM][MDE], dgradII_P_dmesh[DIM][DIM][MDE];
 
-
-/* Save the boundary normal vector */
+  // mesh sensitivity dot products
+  dbl gradIIP_dot_bound_normal, dgradIIP_dmesh_dot_bound_normal, gradIIP_dot_dbound_normal_dmesh;
+  
+  /* Save the boundary normal vector */
 
   for(k = 0; k < pd->Num_Dim; k++) {
     bound_normal[k] = fv->snormal[k];
+    for (l = 0; l<DIM; l++) {
+      for (j = 0; j <ei->dof[MESH_DISPLACEMENT1]; j++) {
+	dbound_normal_dx[k][l][j] = fv->dsnormal_dx[k][l][j];
+      }
+    }
   }
 
-/*
+  /*
   * Prepare geometry
   */
   n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
@@ -1629,9 +1636,26 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
   /* Use the height_function_model */
   double H_U, dH_U_dtime, H_L, dH_L_dtime;
   double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+  double dh_dmesh[DIM][MDE];
+  double dh_dnormal[DIM][MDE];
+  memset (dh_dmesh, 0.0, sizeof(double)*DIM*MDE);
+  memset (dh_dnormal, 0.0, sizeof(double)*DIM*MDE);
   h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
 			    dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
 
+  switch ( mp->FSIModel ) {
+  case FSI_SHELL_ONLY_MESH:
+    for (k=0; k<DIM; k++) {
+      h -= fv->n[k]*fv->d[k];
+      for(j = 0; j<ei->dof[MESH_DISPLACEMENT1]; j++) {
+	dh_dmesh[k][j] -= fv->n[k]*bf[MESH_DISPLACEMENT1]->phi[j];
+	dh_dnormal[k][j] -= fv->d[k]*bf[SHELL_NORMAL1]->phi[j];
+      }
+    }
+    break;
+  default:
+    break;
+  }
   
   // try shifted-scaled rel perms
   dbl Krl, dKrl_dS;
@@ -1666,8 +1690,14 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
 
   for (k = 0; k<DIM; k++) {
     grad_P[k] = fv->grad_tfmp_pres[k];
+    for (j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++) {
+      for (l=0; l<DIM; l++) {
+	dgrad_P_dmesh[k][l][j] = fv->d_grad_tfmp_pres_dmesh[k][l][j];
+      }
+    }
   }
-  Inn(grad_P, gradII_P);
+  ShellRotate(grad_P, dgrad_P_dmesh, gradII_P, dgradII_P_dmesh, n_dof[MESH_DISPLACEMENT1]);
+
   
   /* Calculate Velocity */
   for (k = 0; k<DIM; k++) {
@@ -1680,6 +1710,8 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
     func[0] += v_l[k]*bound_normal[k];
   }
   func[0] *= h;
+
+  // res = -h*h*h/12.0/mu_l*Krl*gradIIP_dot_grad
 
   /* Calculate Jacobian contributions */
   if (af->Assemble_Jacobian) {
@@ -1711,6 +1743,46 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
 	d_func[0][var][j] *= -h*h/12.0/mu_l*dKrl_dS*phi_j * h;
       }
     }
+
+    for (l = 0; l<DIM; l++) {
+      var = MESH_DISPLACEMENT1 + l;
+      if (pd->v[var]) {
+	for (j=0; j<ei->dof[var]; j++) {
+	  gradIIP_dot_bound_normal = 0.0;
+	  dgradIIP_dmesh_dot_bound_normal = 0.0;
+	  gradIIP_dot_dbound_normal_dmesh = 0.0;
+	  
+	  for (k = 0; k<DIM; k++) {
+	    gradIIP_dot_bound_normal += gradII_P[k]*bound_normal[k];
+	    dgradIIP_dmesh_dot_bound_normal += dgradII_P_dmesh[k][l][j]*bound_normal[k];
+	    gradIIP_dot_dbound_normal_dmesh += gradII_P[k]*dbound_normal_dx[k][l][j];
+	  }
+	  d_func[0][var][j] += -3.0*h*h*dh_dmesh[l][j]/12.0/mu_l*Krl*gradIIP_dot_bound_normal;
+	  d_func[0][var][j] += -h*h*h/12.0/mu_l*Krl*dgradIIP_dmesh_dot_bound_normal;
+	  d_func[0][var][j] += -h*h*h/12.0/mu_l*Krl*gradIIP_dot_dbound_normal_dmesh;
+
+	  
+	}
+      }
+	
+    }
+
+    for (l = 0; l<DIM; l++) {
+      var = SHELL_NORMAL1 + l;
+      if (pd->v[var]) {
+	for (j=0; j<ei->dof[var]; j++) {
+	  gradIIP_dot_bound_normal = 0.0;
+	  
+	  for (k = 0; k<DIM; k++) {
+	    gradIIP_dot_bound_normal += gradII_P[k]*bound_normal[k];
+	  }
+	  d_func[0][var][j] += -3.0*h*h*dh_dnormal[l][j]/12.0/mu_l*Krl*gradIIP_dot_bound_normal;
+	  
+	}
+      }
+	
+    }
+    
   }
   /* Cleanup */
   safe_free((void *) n_dof);

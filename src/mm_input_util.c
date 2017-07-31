@@ -545,6 +545,7 @@ variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input,"D_X3_DT"))                      var = D_X3_DT;
   else if (!strcmp(input,"D_S_DT"))                       var = D_S_DT;
   else if (!strcmp(input,"D_P_DT"))                       var = D_P_DT;
+  else if (!strcmp(input,"SHELL_NORMAL3"))                       var = SHELL_NORMAL3;
 
 
   else {

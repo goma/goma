@@ -637,6 +637,7 @@ struct Material_Properties
   dbl *u_heightU_function_constants;
   int HeightUFunctionModel;
   int heightU_ext_field_index;
+  int heightU_function_constants_tableid;
 
   dbl heightL;
   dbl d_heightL[MAX_VARIABLE_TYPES + MAX_CONC];
@@ -877,7 +878,15 @@ struct Material_Properties
   int tfmp_drop_lattice_model;
   int len_tfmp_drop_lattice_const;
   dbl *tfmp_drop_lattice_const;
-  
+
+  /* Properties for Fixed Deformable Roller
+  CTPM "coupled two-phase membrane"
+  */
+
+  int shell_tangent_model;
+  int len_shell_tangent_seed_vec_const;
+  dbl *shell_tangent_seed_vec_const;
+
   int table_index;
 
   

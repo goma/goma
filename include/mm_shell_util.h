@@ -97,6 +97,15 @@ PROTO((
        double t0[DIM],
        double t1[DIM],
        double dt0_dx[DIM][DIM][MDE],
+       double dt1_dx[DIM][DIM][MDE],
+       double dt0_dnormal[DIM][DIM][MDE],
+       double dt1_dnormal[DIM][DIM][MDE]
+     ));
+EXTERN void shell_tangents_isoparametric
+PROTO((
+       double t0[DIM],
+       double t1[DIM],
+       double dt0_dx[DIM][DIM][MDE],
        double dt1_dx[DIM][DIM][MDE]
      ));
 
