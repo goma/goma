@@ -9566,6 +9566,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
 	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->tfmp_density_const );
 	mat_ptr->len_tfmp_density_const = num_const;
+	if (num_const == 1) {
+	  safe_free(mat_ptr->tfmp_density_const);
+	  mat_ptr->tfmp_density_const = alloc_dbl_1(4, 0.0);
+	  // make sure reasonable values are here, to prevent divide by zero and provide a uniform ambient pressure value.
+	  mat_ptr->tfmp_density_const[1] = 1.0;
+	  mat_ptr->tfmp_density_const[2] = 1.0;
+	  mat_ptr->tfmp_density_const[3] = 0.0;
+	}
       }
       if (model_read == 1 && !strcmp(model_name, "IDEAL_GAS") ) { 
 	model_read = 1;
@@ -9575,6 +9583,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	
 	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->tfmp_density_const );
 	mat_ptr->len_tfmp_density_const = num_const;
+	if (num_const != 4) {
+	  EH(-1, "The IDEAL_GAS model requires 4 values: molecular weight of gas, universal gas constant, temperature[const], ambient pressure.");
+	}
       }
     } else {
       EH(-1, "You must use the \"Thin Film Multiphase Density\" card to specify the gas density for the tfmp equations.");
@@ -9601,18 +9612,21 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       SPF(es, "%s = %s", search_string, model_name);
       if (!strcmp(model_name, "CONSTANT") ) {
 	model_read = 1;
-	mat_ptr->tfmp_density_model = CONSTANT;
+	mat_ptr->tfmp_viscosity_model = CONSTANT;
 	num_const = read_constants(imp, &(mat_ptr->tfmp_viscosity_const), 
 				   NO_SPECIES);
 
 	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->tfmp_viscosity_const );
 	mat_ptr->len_tfmp_viscosity_const = num_const;
-	if (num_const == 1) {
-	  WH(-1, "The viscosity entered will be used for the gas phase, the default liquid viscosity is that of water in cgs.\nYou may specify a second, liquid viscosity with the \"Thin Film Multiphase Viscosity\" card.");
+	if (num_const != 2) {
+	  sr = sprintf(err_msg,
+		       "Wrong number of parameters on property, %s",
+		       search_string);
+	  EH(-1, err_msg);
 	}
       }
     } else {
-      WH(-1, "Default fluid viscosities are for air and water (in cgs), to specify them use the \"Thin Film Multiphase Viscosity\" card.");
+      EH(-1, "No default fluid viscosities, to specify them use the \"Thin Film Multiphase Viscosity\" card.");
     }
   }
   if(pd_glob[mn]->e[R_TFMP_MASS]) {
@@ -9644,11 +9658,12 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
 
 	mat_ptr->len_tfmp_diff_const = num_const;
-	SPF_DBL_VEC( endofstring(es), 1 , mat_ptr->tfmp_diff_const );      
+	SPF_DBL_VEC( endofstring(es), 1 , mat_ptr->tfmp_diff_const );
       } else if (!strcmp(model_name, "PIECEWISE") ) {
 	mat_ptr->tfmp_diff_model = PIECEWISE;
 	
 	mat_ptr->len_tfmp_diff_const = read_constants(imp, &(mat_ptr->tfmp_diff_const), NO_SPECIES);
+	SPF_DBL_VEC( endofstring(es), mat_ptr->len_tfmp_diff_const, mat_ptr->tfmp_diff_const );
 	
       }
     ECHO(es, echo_file); 
@@ -9656,16 +9671,15 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       WH(-1, "If you're having trouble try adding some numerical diffusion with the \"Thin Film Multiphase Diffusivity Model\" material property.");
     }
   }
-  
-  if(pd_glob[mn]->e[R_TFMP_MASS]) {
+
+
+  if(pd_glob[mn]->e[R_TFMP_BOUND]) {
     char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
-    strcpy(search_string, "Thin Film Multiphase Dissolved Gas Diffusivity");
+    strcpy(search_string, "Thin Film Multiphase Dissolution Model");
     model_read = look_for_optional(imp,
 				       search_string,
 				       input,
 				       '=');
-				     
-
     if(model_read == 1) {
       if (fscanf(imp, "%s", model_name) != 1) {
 	sr = sprintf(err_msg, 
@@ -9674,54 +9688,23 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	EH(-1, err_msg);
       }
       SPF(es, "%s = %s", search_string, model_name);
-      if (!strcmp(model_name, "CONSTANT") ) {
-	model_read = 1;
-	//mat_ptr->tfmp_diff_model = CONSTANT;
-	if (fscanf(imp, "%lg",&(mat_ptr->tfmp_dissolved_gas_diff)) != 1) {
+      num_const = read_constants(imp, &(mat_ptr->tfmp_dissolution_const), NO_SPECIES);
+      if (!strcmp(model_name, "SQUARE") ) {
+	mat_ptr->tfmp_dissolution_model = TFMP_SQUARE;
+	if (num_const != 3) {
 	  sr = sprintf(err_msg,
-		       "Error property %s only supports 1 input value.",
+		       "Error property %s only supports 3 input values.",
 		       search_string);
 	  EH(-1, err_msg);
 	}
-	SPF_DBL_VEC( endofstring(es), 1 , &mat_ptr->tfmp_dissolved_gas_diff );
+	mat_ptr->len_tfmp_dissolution_const = num_const;
+	SPF_DBL_VEC( endofstring(es), 3 , &mat_ptr->tfmp_dissolved_gas_diff );
       }
     ECHO(es, echo_file);
     } else {
-      EH(-1, "There is no default value of dissolved gas diffusivity, you must set it with the \"Thin Film Multiphase Dissolved Gas Diffusivity\" material property.");
-    }
-  }
-  
-  if(pd_glob[mn]->e[R_TFMP_MASS]) {
-    char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
-    strcpy(search_string, "Thin Film Multiphase Henrys Law Constant");
-    model_read = look_for_optional(imp,
-				       search_string,
-				       input,
-				       '=');
-				     
-    
-    if(model_read == 1) {
-      if (fscanf(imp, "%s", model_name) != 1) {
-	sr = sprintf(err_msg, 
-		     "Error reading model name string in material file, property %s",
-		     search_string);
-	EH(-1, err_msg);
-      }
-      SPF(es, "%s = %s", search_string, model_name);
-      if (!strcmp(model_name, "CONSTANT") ) {
-	model_read = 1;
-	if (fscanf(imp, "%lg",&(mat_ptr->tfmp_henrys_law_const)) != 1) {
-	  sr = sprintf(err_msg,
-		       "Error property %s only supports 1 input value.",
-		       search_string);
-	  EH(-1, err_msg);
-	}
-	
-	SPF_DBL_VEC( endofstring(es), 1 , &mat_ptr->tfmp_henrys_law_const );
-      }
-    ECHO(es, echo_file); 
-    } else {
-      EH(-1, "There is no default value for Henry's Law Constant, you must set it with the \"Thin Film Multiphase Henrys Law Constant\" material property.");
+      mat_ptr->tfmp_dissolution_model = NO_MODEL;
+      mat_ptr->len_tfmp_dissolution_const = 0;
+      WH(-1, "By default, dissolution is inactive. Use \"Thin Film Multiphase Dissolution Model\" to activate it.");
     }
   }
 
@@ -9755,7 +9738,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       }
       ECHO(es, echo_file);
     } else {
-      WH(-1, "The default rel perms are determined by piecewise functions describing a square drop lattice with slight variation.\nYou can set them using the \"Thin Film Multiphase Relative Permeability Model\" material property.");
+      EH(-1, "There are no defaults for \"Thin Film Multiphase Relative Permeability Model\". You must set them.");
     }
   }
   

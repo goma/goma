@@ -1613,15 +1613,15 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
 
   /* Gather necessary values (S, h, Krg, gradII_P)*/
 
-  // need pure phase viscosities
-  double mu_l = 0.01; //    [g/cm/s]
-
+  // need pure phase viscosity
+  dbl mu_l;
   switch(mp->tfmp_viscosity_model){
   case CONSTANT:
-    mu_l = mp->tfmp_viscosity_const[0];
+    mu_l = mp->tfmp_viscosity_const[1];
     break;
   default:
-    // viscosity of water, as defined above
+    // if mp is not set, assemble function will bomb out.
+    mu_l = 0.0; //otherwise setup a nofinite
     break;
   }
   
@@ -1631,7 +1631,6 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
   double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
   h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
 			    dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
-
 
   
   // try shifted-scaled rel perms

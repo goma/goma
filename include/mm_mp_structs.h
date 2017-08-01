@@ -858,8 +858,14 @@ struct Material_Properties
   int len_tfmp_rel_perm_const;
   dbl *tfmp_rel_perm_const;
 
+  int tfmp_dissolution_model;
+  int len_tfmp_dissolution_const;
+  dbl *tfmp_dissolution_const;
+
+  // axe em
   dbl tfmp_dissolved_gas_diff;
   dbl tfmp_henrys_law_const;
+  //
 
   int tfmp_drop_lattice_model;
   int len_tfmp_drop_lattice_const;

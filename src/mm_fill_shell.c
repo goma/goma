@@ -15907,11 +15907,7 @@ assemble_shell_tfmp(double time,   /* Time */
   double h3    = fv->h3;
 
   // need pure phase viscosities
-  double mu_l = 0.01; //    [g/cm/s]
-  double mu_g = 186e-6; //  [g/cm/s]
-
-  //double mu_l = 0.001; // [kg/m/s]
-  //double mu_g = 18.6e-6; // [kg/m/s]
+  double mu_l, mu_g;
 
   switch(mp->tfmp_viscosity_model){
   case CONSTANT:
@@ -15921,33 +15917,11 @@ assemble_shell_tfmp(double time,   /* Time */
     }
     break;
   default:
-    // viscosity of air and water, as defined above
+    WH(-1, "There is no tfmp viscosity");
+    return -1;
     break;
   }
   
-  // need ideal gas law constant
-  // this puts constraints on the input units e.g. cgs vs mks
-  double R = 83146217.5; // cm^2 g/(s^2 mol K) cgs
-  //double R = 8.31462175; // m^2 kg/(s^2 mol K) mks
-
-  // Molecular weight of gas
-  double Mg = 44.01; // CO2 g/mol
-  
-  // Temperature (standard ambient 25 degC)
-  double T = 298.15; // K
-
-  // Diffusion Coefficient of gas species in liquid solvent
-  //double Dgl = 2.233e-9; // m^2/s CO2 in water
-  double Dgl = 2.233e-5; // cm^2/s CO2 in water
-
-  Dgl = mp->tfmp_dissolved_gas_diff;
-  
-  // Henry's Law Constant
-  //double Hgl = 3.4e-2; //     [(mol/L/atm)]
-  double Hgls = 3.3555e-11; // = Hgl/1000.0/101325.0/10.0 [(mol/cc)/(g/cm/s^2)]
-
-  Hgls = mp->tfmp_henrys_law_const;
-
   // drop pitch for square lattice
   dbl lambda, Vd;
   
@@ -15957,25 +15931,31 @@ assemble_shell_tfmp(double time,   /* Time */
     Vd = mp->tfmp_drop_lattice_const[1];// cm^3
     break;
   default:
-    lambda = 160e-4; // cm
-    Vd = 6e-9;// cm^3
+    if (mp->tfmp_dissolution_model != NO_MODEL) {
+      WH(-1, "The lattice model is not set and the dissolution model is not NO_MODEL");
+      return -1;
+    }
     break;
   }
-  
-  dbl Patm = 1013250.0; // 101.325 kPa -> cgs units
 
   double S = fv->tfmp_sat;
 
+  // ideal gas law mat props
+  double Mg, R, T, Patm;
   double rho_g, drho_g_dP;
-
   switch(mp->tfmp_density_model) {
   case IDEAL_GAS:
-    Mg = mp->tfmp_density_const[0]; // grams per mole
+    Mg =   mp->tfmp_density_const[0]; // grams per mole
+    R =    mp->tfmp_density_const[1]; 
+    T =    mp->tfmp_density_const[2];
+    Patm = mp->tfmp_density_const[3];
     rho_g = fv->tfmp_pres*Mg/R/T;
     drho_g_dP = Mg/R/T;
     break;
   case CONSTANT:
   default:
+    // still use the ambient pressure set to 0 by default for CONSTANT
+    Patm = mp->tfmp_density_const[3];
     rho_g = mp->tfmp_density_const[0]; // grams per cubic centimeter
     drho_g_dP = 0.0;
     break;
@@ -15987,7 +15967,7 @@ assemble_shell_tfmp(double time,   /* Time */
   int dof_map[MDE];
   n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
   lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
-  double det_J = fv->sdet; 
+  double det_J = fv->sdet;
   double dA = det_J * wt * h3;
 
   dbl grad_P[DIM], gradII_P[DIM];
@@ -16048,11 +16028,15 @@ assemble_shell_tfmp(double time,   /* Time */
     Scl = mp->tfmp_rel_perm_const[2];
     alphal = mp->tfmp_rel_perm_const[3];
     break;
+  case LEVER:
+    Scg = 0.5;
+    alphag = 0.5;
+    Scl = 0.5;
+    alphal = 0.5;
+    break;
   default:
-    Scg = 0.78;
-    alphag = 0.1;
-    Scl = 0.78;
-    alphal = 0.1;
+    WH(-1, "relative permeability model not set");
+    return -1;
     break;
   }
     
@@ -16073,7 +16057,7 @@ assemble_shell_tfmp(double time,   /* Time */
    }
 
   // liquid transition
-  
+
   if ( S <= Scl - alphal) {
     Krl = 0.0;
     dKrl_dS = 0.0;
@@ -16099,59 +16083,75 @@ assemble_shell_tfmp(double time,   /* Time */
     grad_h[k] = dH_U_dX[k] - dH_L_dX[k];
   }
 
-  
-  
   Inn(grad_h, gradII_h);
 
   dbl J, dJ_dP, dJ_dS, fS, dfS_dS, bg, dbg_dP, trans_diss, sqrtPI, L;
+  dbl Dgl, Hgls;
   //  dbl dJ_dh, dL_dh;
-  trans_diss = PI/4.0f;
-  sqrtPI = sqrt(PI);
-  if (S < 1.0 && S > 0.0 ) {
 
-    // dependence on saturation
-    if (S > trans_diss) {
+  switch(mp->tfmp_dissolution_model) {
+  case TFMP_SQUARE:
+
+    // Diffusion Coefficient of gas species in liquid solvent
+    Dgl = mp->tfmp_dissolution_const[0];
+    // Henry's Law Constant
+    Hgls = mp->tfmp_dissolution_const[1];
+    // Molecular weight of gas 
+    Mg = mp->tfmp_dissolution_const[2];
+    
+    trans_diss = PI/4.0f;
+    sqrtPI = sqrt(PI);
+    if (S < 1.0 && S > 0.0 ) {
+
+      // dependence on saturation
+      if (S > trans_diss) {
       
-      fS = 2.0*sqrtPI/lambda*sqrt(S);
-      dfS_dS = sqrtPI/lambda/sqrt(S);
-      L = sqrt(Vd/PI/h);
-      //      dL_dh = -sqrt(Vd/PI/h*h*h)/2.0;
-    
-    } else {
-      fS = 4.0/lambda*sqrt(1.0-S);
-      dfS_dS = -4.0/lambda/2.0/sqrt(1.0-S);
-      if (Vd/lambda/lambda/h >= 1.0) { // Length is maxed for lattice defined by
-	                              // Vd and lambda
-	L = lambda/sqrt(2.0);
-	//	dL_dh = 0.0;
+	fS = 2.0*sqrtPI/lambda*sqrt(S);
+	dfS_dS = sqrtPI/lambda/sqrt(S);
+	L = sqrt(Vd/PI/h);
+	//      dL_dh = -sqrt(Vd/PI/h*h*h)/2.0;
+	
       } else {
-	L = lambda/sqrt(2.0)*(1.0 - sqrt((1.0-Vd/lambda/lambda/h)/2.0));
-	//	dL_dh = lambda/2.0/sqrt(2.0*(1.0-Vd/lambda/lambda/h))*Vd/lambda/lambda/h/h;
+	fS = 4.0/lambda*sqrt(1.0-S);
+	dfS_dS = -4.0/lambda/2.0/sqrt(1.0-S);
+	if (Vd/lambda/lambda/h >= 1.0) { // Length is maxed for lattice defined by
+	  // Vd and lambda
+	  L = lambda/sqrt(2.0);
+	  //	dL_dh = 0.0;
+	} else {
+	  L = lambda/sqrt(2.0)*(1.0 - sqrt((1.0-Vd/lambda/lambda/h)/2.0));
+	  //	dL_dh = lambda/2.0/sqrt(2.0*(1.0-Vd/lambda/lambda/h))*Vd/lambda/lambda/h/h;
+	}
       }
-    }
 
-    //Concentration of gas at interface moles/cm^3
-    bg = (fv->tfmp_pres - Patm)*Hgls;
-    dbg_dP = Hgls;
+      //Concentration of gas at interface moles/cm^3
+      bg = (fv->tfmp_pres - Patm)*Hgls;
+      dbg_dP = Hgls;
+
+    } else {
+      fS = 0.0;
+      dfS_dS = 0.0;
+      L = 1.0;
+      //    dL_dh = 0.0;
+      bg = 0.0;
+      dbg_dP= 0.0;
+      J = 0.0;
+      dJ_dP = 0.0;
+      dJ_dS = 0.0;
+    }
+    J = h*Dgl*Mg*bg*fS/L;
+    dJ_dP = h*Dgl*Mg*dbg_dP*fS/L;
+    dJ_dS = h*Dgl*Mg*bg*dfS_dS/L;
     
-  } else {
-    fS = 0.0;
-    dfS_dS = 0.0;
-    L = 1.0;
-    //    dL_dh = 0.0;
-    bg = 0.0;
-    dbg_dP= 0.0;
+    break;
+  default:
     J = 0.0;
     dJ_dP = 0.0;
     dJ_dS = 0.0;
+    break;
   }
-  J = h*Dgl*Mg*bg*fS/L;
-  dJ_dP = h*Dgl*Mg*dbg_dP*fS/L;
-  dJ_dS = h*Dgl*Mg*bg*dfS_dS/L;
-  //dJ_dh = fS*Dgl*Mg*bg*(-h/L/L*dL_dh + 1.0/L);
 
   int mass_lumping = mp->tfmp_mass_lump;
-  dbl liq_strength = 1.;  
   int clipping = mp->tfmp_clipping;
   dbl clip_strength = mp->tfmp_clip_strength;
 
@@ -16209,7 +16209,7 @@ assemble_shell_tfmp(double time,   /* Time */
 	
       	diff *= dA * etm_diff_eqn;
       }
-      lec->R[peqn][i] +=liq_strength*(mass + adv + diff);
+      lec->R[peqn][i] += mass + adv + diff;
     }
 
     /* Assemble the gas volume conservation equation */
@@ -16373,7 +16373,7 @@ assemble_shell_tfmp(double time,   /* Time */
 	  diff *= etm_diff_eqn;
 	  
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += liq_strength*dA*(mass + adv + diff);
+	  lec->J[peqn][pvar][i][j] += dA*(mass + adv + diff);
 	  
 	} // End of loop over DOF (j)
 	  
@@ -16430,7 +16430,7 @@ assemble_shell_tfmp(double time,   /* Time */
 	    diff *= etm_diff_eqn;
 	  }
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += liq_strength*dA*(mass + adv + diff);
+	  lec->J[peqn][pvar][i][j] += dA*(mass + adv + diff);
       	} // End of loop over DOF (j)
       }// End of R_TFMP_MASS sensitivities to TFMP_SAT
     } // End of loop over DOF (i)

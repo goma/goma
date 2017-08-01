@@ -95,9 +95,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  POROUS_CONST_INIT       5
 
 /* types of drop patterns */
-#define TFMP_SQUARE                   0
-#define TFMP_TRIANGULAR               1
-#define TFMP_HEXAGONAL                2
+#define TFMP_SQUARE                   300
+#define TFMP_TRIANGULAR               301
+#define TFMP_HEXAGONAL                302
 
 /*
  * Options for k in potential equation

@@ -1842,9 +1842,9 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->tfmp_clipping, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->tfmp_clip_strength, 1, MPI_DOUBLE);
 
-      ddd_add_member(n, &mp_glob[i]->tfmp_dissolved_gas_diff, 1, MPI_DOUBLE);
-      ddd_add_member(n, &mp_glob[i]->tfmp_henrys_law_const, 1, MPI_DOUBLE);
-
+      ddd_add_member(n, &mp_glob[i]->tfmp_dissolution_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_tfmp_dissolution_const, 1, MPI_INT);
+      
       ddd_add_member(n, &mp_glob[i]->tfmp_drop_lattice_model, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_tfmp_drop_lattice_const, 1, MPI_INT);
 
@@ -2973,7 +2973,8 @@ ark_landing()
 
       dalloc( m->len_tfmp_rel_perm_const,
               m->    tfmp_rel_perm_const);
-
+      dalloc( m->len_tfmp_dissolution_const,
+              m->    tfmp_dissolution_const);
       dalloc( m->len_tfmp_drop_lattice_const,
               m->    tfmp_drop_lattice_const);
 	    

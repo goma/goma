@@ -2068,7 +2068,10 @@ matrix_fill(
 	  err = assemble_shell_tfmp( time_value, theta, delta_t, xi, &pg_data, exo );
 	  EH( err, "assemble_shell_tfmp");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_shell_tfmp");
+	  err = CHECKFINITE("assemble_shell_tfmp");
+	  if (err) {
+	    return -1;
+	  }
 #endif
 	}
 

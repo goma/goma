@@ -5868,7 +5868,8 @@ compute_volume_integrand(const int quantity, const int elem,
 	pressure = fv->tfmp_pres;
 	// atmospheric pressure, as defined at the boundary
 	// maybe this should be a material property.
-	dbl Patm = 1013250.0; // [g/cm/s]
+	dbl Patm = mp->tfmp_density_const[3];
+	
 	/* do this part later
 	dbl surface_tension = ;//[cgs please]
 	 */
