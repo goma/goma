@@ -9698,7 +9698,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  EH(-1, err_msg);
 	}
 	mat_ptr->len_tfmp_dissolution_const = num_const;
-	SPF_DBL_VEC( endofstring(es), 3 , &mat_ptr->tfmp_dissolved_gas_diff );
+	SPF_DBL_VEC( endofstring(es), mat_ptr->len_tfmp_dissolution_const , mat_ptr->tfmp_dissolution_const );
       }
     ECHO(es, echo_file);
     } else {

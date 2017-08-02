@@ -15912,9 +15912,7 @@ assemble_shell_tfmp(double time,   /* Time */
   switch(mp->tfmp_viscosity_model){
   case CONSTANT:
     mu_g = mp->tfmp_viscosity_const[0];
-    if (mp->len_tfmp_viscosity_const == 2) {
-      mu_l = mp->tfmp_viscosity_const[1];
-    }
+    mu_l = mp->tfmp_viscosity_const[1];
     break;
   default:
     WH(-1, "There is no tfmp viscosity");
@@ -15931,6 +15929,7 @@ assemble_shell_tfmp(double time,   /* Time */
     Vd = mp->tfmp_drop_lattice_const[1];// cm^3
     break;
   default:
+    lambda = Vd = 1.0;
     if (mp->tfmp_dissolution_model != NO_MODEL) {
       WH(-1, "The lattice model is not set and the dissolution model is not NO_MODEL");
       return -1;
@@ -15988,6 +15987,7 @@ assemble_shell_tfmp(double time,   /* Time */
     Krd = 0.0;
     dKrd_dS = 0.0;
     break;
+
   case PIECEWISE:
     D = mp->tfmp_diff_const[0];
     // diffusion transition
@@ -15999,12 +15999,12 @@ assemble_shell_tfmp(double time,   /* Time */
     if ( S < Scd - betad) {
       Krd = 0.0;
       dKrd_dS = 0.0;
-    } else { // ( S >= Scd - betad) { // && S <= Scd + betad ) {
+    } else {
       Krd = md*S + cd;
       dKrd_dS = md;
     }
     break;
-    
+
   default:
     D = 0.0;
     Krd = 0.0;
@@ -16187,7 +16187,6 @@ assemble_shell_tfmp(double time,   /* Time */
       /* Assemble advection term */
       adv = 0.0;
       if ( T_ADVECTION ) {
-	//	adv += phi_i*Krl*dh_dtime;
 	adv += phi_i*S*dh_dtime;
       	adv *= dA * etm_adv_eqn;
       }
@@ -16202,12 +16201,13 @@ assemble_shell_tfmp(double time,   /* Time */
 	  gradS_dot_gradphi_i += gradII_S[k]*gradII_phi_i[k];
 
       	}
+	// phi_i*div( -h^2/12/mu_l grad(P)) = -grad(phi_i)dot(-h^2/12/mu_l*grad(P)) + grad(phi_i*-h^2/12/mu_l*grad(P))
 	diff += h*h*h/12.0/mu_l*Krl*gradP_dot_gradphi_i;
 
 	// -phi_i*h*D*krd*laplacian(S)
 	diff += h*D*Krd*gradS_dot_gradphi_i;
 	
-      	diff *= dA * etm_diff_eqn;
+      	diff *= dA*etm_diff_eqn;
       }
       lec->R[peqn][i] += mass + adv + diff;
     }
@@ -16229,14 +16229,16 @@ assemble_shell_tfmp(double time,   /* Time */
 
       if( T_MASS ) {
 
-	if (drho_g_dP == 0.0) {
+	if (mp->tfmp_density_model == CONSTANT) {
 	  mass += phi_i*(1.0-S)*dh_dtime;
-	  /* no mass lumping */
-	  //mass += -phi_i*h*fv_dot->tfmp_sat;
-	 
-	  mass += -phi_i*h*(*esp_dot->tfmp_sat[i]);
+
+	  if (mass_lumping == 1) {
+	    mass += -phi_i*h*(*esp_dot->tfmp_sat[i]);
+	  } else {
+	    mass += -phi_i*h*fv_dot->tfmp_sat;
+	  }
 	} else {
-	
+
 	  if (mass_lumping == 1) {
 	    mass += (phi_i
 		     *(h*(1.0-S)*drho_g_dP*(*esp_dot->tfmp_pres[i])
@@ -16267,31 +16269,13 @@ assemble_shell_tfmp(double time,   /* Time */
       adv = 0.0;      
       if ( T_ADVECTION ) {
 	gradP_dot_gradphi_i = 0.0;
-	gradP_dot_gradP = 0.0;
-	gradP_dot_gradh = 0.0;
 	for ( k = 0; k<DIM; k++) {
 	  gradP_dot_gradphi_i += gradII_P[k]*gradII_phi_i[k];
-	  gradP_dot_gradP += gradII_P[k]*gradII_P[k];
-	  gradP_dot_gradh += gradII_P[k]*gradII_h[k];
 	}
 
-	if (drho_g_dP == 0.0) {
+	if (mp->tfmp_density_model == CONSTANT) {
 	  adv += gradP_dot_gradphi_i*h*h*h*Krg/12.0/mu_g;
 	} else {
-	  /*
-	  adv += (h*h/12.0/mu_g*Krg
-		  *(gradP_dot_gradh*phi_i*rho_g
-		    + gradP_dot_gradP*phi_i*h*drho_g_dP
-		    + gradP_dot_gradphi_i*h*rho_g
-		    )
-		  );
-	  
-	  adv += (phi_i*(-h*h/12/mu_g*Krg)
-		  *(rho_g*gradP_dot_gradh
-		    + h*gradP_dot_gradP*drho_g_dP
-		    )
-		  );
-	  */
 	  adv += gradP_dot_gradphi_i*rho_g*h*h*h/12.0/mu_g*Krg;
 	}
 	if (S > 1.0 && clipping == 1) {
@@ -16347,19 +16331,12 @@ assemble_shell_tfmp(double time,   /* Time */
 	  // Assemble mass term
 	  mass = 0.0;
 	  if ( T_MASS ) {
-	    mass *= etm_mass_eqn;
 	  }
-	  //mass *= dA * etm_mass_eqn;
+
 	  // Assemble advection term
 	  adv = 0.0;
-	  gradphi_i_dot_gradphi_j = 0.0;
 
 	  if ( T_ADVECTION ) {
-	    for (k=0; k<DIM; k++) {
-	      gradphi_i_dot_gradphi_j += gradII_phi_i[k]*gradII_phi_j[k];
-	    }
-
-	    adv *= etm_adv_eqn;
 	  }
 	  // Assemble diffusion term
 	  diff = 0.0;
@@ -16403,7 +16380,7 @@ assemble_shell_tfmp(double time,   /* Time */
 	  }
 	  // Assemble advection term
 	  adv = 0.0;
-	  gradP_dot_gradphi_j = 0.0;
+
 	  if ( T_ADVECTION ) {
 	    adv += phi_i*phi_j*dh_dtime;
 	    
@@ -16461,7 +16438,7 @@ assemble_shell_tfmp(double time,   /* Time */
 	  // Assemble mass term
 	  mass = 0.0;
 	  if ( T_MASS ) {
-	    if (drho_g_dP == 0.0) {
+	    if (mp->tfmp_density_model == CONSTANT) {
 	      
 	    } else {
 	      
@@ -16504,27 +16481,9 @@ assemble_shell_tfmp(double time,   /* Time */
 	      gradP_dot_gradphi_i += gradII_P[k]*gradII_phi_i[k];
 	      gradphi_i_dot_gradphi_j += gradII_phi_i[k]*gradII_phi_j[k];
 	    }
-	    if (drho_g_dP == 0.0) {
+	    if (mp->tfmp_density_model == CONSTANT) {
 	      adv += gradphi_i_dot_gradphi_j*h*h*h/12.0/mu_g*Krg;
 	    } else {
-	      /*
-	      adv += (h*h/12.0/mu_g*Krg
-		      *(phi_i*(drho_g_dP*phi_j*gradP_dot_gradh
-			       + rho_g*gradh_dot_gradphi_j
-			       + h*drho_g_dP*2.0*gradP_dot_gradphi_j
-			       )
-			+ h*gradP_dot_gradphi_i*drho_g_dP*phi_j
-			+ h*gradphi_i_dot_gradphi_j*rho_g
-			)
-		      );
-	      
-	      adv += (phi_i*(-h*h/12/mu_g*Krg)
-		      *(drho_g_dP*phi_j*gradP_dot_gradh
-			+ rho_g*gradh_dot_gradphi_j
-			+ h*2*drho_g_dP*gradP_dot_gradphi_j
-			)
-		      );
-	      */
 	      adv += h*h*h/12.0/mu_g*Krg
 		*(gradP_dot_gradphi_i*drho_g_dP*phi_j
 		  + gradphi_i_dot_gradphi_j*rho_g		 
@@ -16537,11 +16496,9 @@ assemble_shell_tfmp(double time,   /* Time */
 	  }
 	  // Assemble diffusion term
 	  diff = 0.0;
-	  gradphi_i_dot_gradphi_j = 0.0;
 	  if ( T_DIFFUSION ) {
 	    
 	  }
-	  diff *= etm_diff_eqn;
 
 	  source = 0.0;
 	  if ( T_SOURCE ) {
@@ -16571,12 +16528,15 @@ assemble_shell_tfmp(double time,   /* Time */
 	  // Assemble mass term
 	  mass = 0.0;
 	  if( T_MASS ) {
-	    if (drho_g_dP == 0.0) {
+	    if (mp->tfmp_density_model == CONSTANT) {
 	      mass += -phi_i*phi_j*dh_dtime;
-	      /* no mass lumping */
-	      //mass += -phi_i*h*phi_j*((1.0+2.0*tt)/delta_t);
-	      
-	      mass += -phi_i*h*delta(i,j)*((1.0+2.0*tt)/delta_t);
+
+	      if (mass_lumping == 1) {
+		mass += -phi_i*h*delta(i,j)*((1.0+2.0*tt)/delta_t);
+	      } else {
+		mass += -phi_i*h*phi_j*((1.0+2.0*tt)/delta_t);
+	      }
+
 	    } else { 
 	      if (mass_lumping == 1) {
 		mass += (phi_i
@@ -16616,23 +16576,9 @@ assemble_shell_tfmp(double time,   /* Time */
 	      gradP_dot_gradP += gradII_P[k]*gradII_P[k];
 	      gradP_dot_gradphi_i += gradII_P[k]*gradII_phi_i[k];
 	    }
-	    if (drho_g_dP == 0.0) {
+	    if (mp->tfmp_density_model == CONSTANT) {
 	      adv += gradP_dot_gradphi_i*h*h*h/12.0/mu_g*dKrg_dS*phi_j;
 	    } else {
-	      /*
-	      adv += (h*h/12.0/mu_g*dKrg_dS*phi_j
-		    *(gradP_dot_gradh*phi_i*rho_g
-		      + gradP_dot_gradP*phi_i*h*drho_g_dP
-		      + gradP_dot_gradphi_i*h*rho_g
-		      )
-		    );
-
-	    adv += (phi_i*(-h*h/12/mu_g*dKrg_dS)*phi_j
-		    *(rho_g*gradP_dot_gradh
-		      + h*gradP_dot_gradP*drho_g_dP
-		      )
-		    );
-	      */
 	      adv += h*h*h/12.0/mu_g*rho_g*gradP_dot_gradphi_i*dKrg_dS*phi_j;
 	    }
 	    if (S >= 1.0 && clipping == 1) {
@@ -16644,9 +16590,10 @@ assemble_shell_tfmp(double time,   /* Time */
 	  // Assemble diffusion term
 	  diff = 0.0;
 	  if ( T_DIFFUSION ) {
-	    diff += 0.0;
+
 	  }
-	  diff *= etm_diff_eqn;
+
+	  // Assemble source term
 	  source = 0.0;
 	  if ( T_SOURCE ) {
 	    source += phi_i*phi_j*dJ_dS;
