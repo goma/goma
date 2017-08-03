@@ -304,6 +304,13 @@ PROTO((double,                   /* Time */
        double [DIM],             /* Local stu coords */
        const Exo_DB * ));        /* ExodusII database struct pointer */  
 
+EXTERN int assemble_shell_tfmp
+PROTO((double,                   /* Time */
+       double,                   /* theta or tt*/
+       double,                   /* dt */
+       double [DIM],             /* Local stu coords */
+       PG_DATA *,
+       const Exo_DB * ));        /* ExodusII database struct pointer */  
 
 EXTERN int load_lsi_shell_second
 PROTO(( const double ));       /* width */

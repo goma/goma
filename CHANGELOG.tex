@@ -1,6 +1,7 @@
 \documentclass{article}
 \usepackage[letterpaper, margin=1in]{geometry}
 \usepackage{amsmath,amssymb,amsfonts}
+\usepackage{bm}
 \usepackage{alltt}
 
 \title{Changes/additions to GOMA since last manual update}
@@ -35,7 +36,7 @@ Finally, NOTE that we have provided several categories for changes.   Specifical
 %***************************************************
 
 Issue:  CHEMKIN untested for 10 years and current test suite problems are inactive.   
-Issue:  mm_input.c: Domain Mapping File is a chemkin thing that needs to be deleted or ressurected.   
+Issue:  mm\_input.c: Domain Mapping File is a chemkin thing that needs to be deleted or ressurected.   
 %***************************************************
 %************Configuration Management Changes*******
 %***************************************************
@@ -273,8 +274,27 @@ PRS NOT ADDED (7)
 #define I_Q2_HVG	43 /* Lagrangian quadratic with discontinuous enrichment for jump in value and gradient. */
 #define I_TABLE		44 /* Table Interpolation	*/
 
+Capability: TFMP: Thin film multiphase flow model [equations, variables, boundary conditions, post processing]
+Developers: Andrew Cochrane, July 2017
+Description: Multiphase model for nanoimprint lithography
+Example:
+BC = SHELL_TFMP_PRES_BC     NS 1     1013250
+BC = SHELL_TFMP_FREE_LIQ_BC SS 1
 
+#Number of EQ = 2                # mas adv bnd dif src por
+EQ = tfmp_mass  Q1  TFMP_PRES  Q1   1   1       1
+EQ = tfmp_bound Q1  TFMP_SAT   Q1   1   1           1
 
+Post Processing Specifications
+TFMP_gas_velo = yes
+TFMP_liq_velo = yes
+TFMP_inverse_Peclet = yes
+TFMP_Krg = yes
+
+Volumetric Integration Output Format = CSV
+Post Processing Volumetric Integration = 
+VOLUME_INT = POROUS_LIQ_INVENTORY 1 0 volume.csv
+END OF VOLUME_INT
 
 \end{alltt}
 %***************************************************
@@ -618,6 +638,21 @@ ient=0}
 +Porous Shell Cross Permeability = CONSTANT {20*0.000000819505}
 +Porous Shell Initial Pore Pressure = CONSTANT -4000
 
+Capability: TFMP: Thin film multiphase flow model [equations, variables, boundary conditions, post processing]
+Developers: Andrew Cochrane, July 2017
+Description: Multiphase model for nanoimprint lithography
+Example:
+Upper Height Function Constants = CONSTANT_SPEED -1925e-7 2000e-7
+FSI Deformation Model = FSI_SHELL_ONLY
+Thin Film Multiphase Density = CONSTANT {44.01} {83146217.5} {298.15} {1013250.}
+Thin Film Multiphase Viscosity  = CONSTANT {mu_g} {mu_l}
+Thin Film Multiphase Diffusivity Model = PIECEWISE {bdif} {tfmp_diff_center} {tfmp_beta_d}
+Thin Film Multiphase Mass Lumping = TRUE
+Thin Film Multiphase Clipping = {tfmp_clip} {tfmp_clip_strength}
+Thin Film Multiphase Relative Permeability Model = PIECEWISE {Scg} {alphag} {Scl} {alphal}
+Thin Film Multiphase Dissolution Model = SQUARE 2.233e-5 3.3555e-11 44.01
+Thin Film Multiphase Drop Lattice = SQUARE 1.0 1.0
+
 \end{alltt}
 %***************************************************
 %************Overall Capabilities*******************
@@ -680,5 +715,15 @@ Angle quality weight=
 Triangle quality weight=
 Element quality tolerance type=
 
+Capability: TFMP: Thin film multiphase flow model [equations, variables, boundary conditions, post processing]
+Developers: Andrew Cochrane, July 2017
+Description: Multiphase model for disperse and separated gas-liquid lubrication flow with gas dissolution.
 \end{alltt}
+\begin{align*}
+ \frac{\partial Sh}{\partial t} + \bm{\nabla \cdot} (\bm{\bar{v_l}}h) &= 0 \\
+ \frac{\partial \rho_g(1-S)h}{\partial t} + \bm {\nabla} \cdot (\bm{\bar{v_g}}\rho_gh) + J &= 0
+\end{align*}
+
+
+
 \end{document}

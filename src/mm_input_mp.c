@@ -30,7 +30,7 @@
 #include <string.h>
 
 #include <ctype.h>		/* for toupper(), isspace() */
-
+#include <math.h>
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
@@ -8142,7 +8142,8 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
   ECHO("\n---Special Inputs\n", echo_file); /* added by PRS 3/17/2009 */ 
 
-  if(pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2])
+  if(pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
+     pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND])
     {
       model_read = look_for_mat_prop(imp, "Upper Height Function Constants", 
 				     &(mat_ptr->HeightUFunctionModel), 
@@ -9158,7 +9159,8 @@ ECHO("\n----Acoustic Properties\n", echo_file);
   if ( pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
        pd_glob[mn]->e[R_SHELL_FILMP] ||
        pd_glob[mn]->e[R_SHELL_SAT_OPEN] || pd_glob[mn]->e[R_SHELL_SAT_OPEN_2] ||
-       (pd_glob[mn]->e[R_SHELL_NORMAL1] && pd_glob[mn]->e[R_SHELL_NORMAL2] && pd_glob[mn]->e[R_SHELL_NORMAL3]) ) {
+       (pd_glob[mn]->e[R_SHELL_NORMAL1] && pd_glob[mn]->e[R_SHELL_NORMAL2] && pd_glob[mn]->e[R_SHELL_NORMAL3]) ||
+       pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) {
 
     model_read = look_for_mat_prop(imp, "FSI Deformation Model",
 				   &(mat_ptr->FSIModel),
@@ -9533,6 +9535,316 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     ECHO(es,echo_file);
 
   } // End of porous shell gas diffusion constants
+  
+  /*
+   * Inputs specific to thin film multiphase flow density and viscosity calculations
+    // So far, the density card only pertains to the gas model.
+    // The incompressible liquid density does not matter.
+   */
+  if(pd_glob[mn]->e[R_TFMP_MASS]) {
+    char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
+    strcpy(search_string, "Thin Film Multiphase Density");
+    model_read = look_for_optional(imp,
+				       search_string,
+				       input,
+				       '=');
+				     
+    if(model_read == 1) {
+      if (fscanf(imp, "%s", model_name) != 1) {
+	sr = sprintf(err_msg, 
+		     "Error reading model name string in material file, property %s",
+		     search_string);
+	EH(-1, err_msg);
+      }
+    
+      SPF(es, "%s = %s", search_string, model_name);
+      if (model_read == 1 && !strcmp(model_name, "CONSTANT") ) {
+	model_read = 1;
+	mat_ptr->tfmp_density_model = CONSTANT;
+	num_const = read_constants(imp, &(mat_ptr->tfmp_density_const), 
+				   NO_SPECIES);
+
+	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->tfmp_density_const );
+	mat_ptr->len_tfmp_density_const = num_const;
+	if (num_const == 1) {
+	  safe_free(mat_ptr->tfmp_density_const);
+	  mat_ptr->tfmp_density_const = alloc_dbl_1(4, 0.0);
+	  // make sure reasonable values are here, to prevent divide by zero and provide a uniform ambient pressure value.
+	  mat_ptr->tfmp_density_const[1] = 1.0;
+	  mat_ptr->tfmp_density_const[2] = 1.0;
+	  mat_ptr->tfmp_density_const[3] = 0.0;
+	}
+      }
+      if (model_read == 1 && !strcmp(model_name, "IDEAL_GAS") ) { 
+	model_read = 1;
+	mat_ptr->tfmp_density_model = IDEAL_GAS;
+	num_const = read_constants(imp, &(mat_ptr->tfmp_density_const), 
+				   NO_SPECIES);
+	
+	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->tfmp_density_const );
+	mat_ptr->len_tfmp_density_const = num_const;
+	if (num_const != 4) {
+	  EH(-1, "The IDEAL_GAS model requires 4 values: molecular weight of gas, universal gas constant, temperature[const], ambient pressure.");
+	}
+      }
+    } else {
+      EH(-1, "You must use the \"Thin Film Multiphase Density\" card to specify the gas density for the tfmp equations.");
+    }
+    ECHO(es, echo_file);
+  }
+  
+  if(pd_glob[mn]->e[R_TFMP_MASS]) {
+    char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
+    strcpy(search_string, "Thin Film Multiphase Viscosity");
+    model_read = look_for_optional(imp,
+				       search_string,
+				       input,
+				       '=');
+				     
+
+    if(model_read == 1) {
+      if (fscanf(imp, "%s", model_name) != 1) {
+	sr = sprintf(err_msg, 
+		     "Error reading model name string in material file, property %s",
+		     search_string);
+	EH(-1, err_msg);
+      }
+      SPF(es, "%s = %s", search_string, model_name);
+      if (!strcmp(model_name, "CONSTANT") ) {
+	model_read = 1;
+	mat_ptr->tfmp_viscosity_model = CONSTANT;
+	num_const = read_constants(imp, &(mat_ptr->tfmp_viscosity_const), 
+				   NO_SPECIES);
+
+	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->tfmp_viscosity_const );
+	mat_ptr->len_tfmp_viscosity_const = num_const;
+	if (num_const != 2) {
+	  sr = sprintf(err_msg,
+		       "Wrong number of parameters on property, %s",
+		       search_string);
+	  EH(-1, err_msg);
+	}
+      }
+    } else {
+      EH(-1, "No default fluid viscosities, to specify them use the \"Thin Film Multiphase Viscosity\" card.");
+    }
+  }
+  if(pd_glob[mn]->e[R_TFMP_MASS]) {
+    char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
+    strcpy(search_string, "Thin Film Multiphase Diffusivity Model");
+    model_read = look_for_optional(imp,
+				       search_string,
+				       input,
+				       '=');
+				     
+
+    if(model_read == 1) {
+      WH(-1, "\"Thin Film Multiphase Diffusivity Model\" adds a diffusion term to the liquid volume balance equation for the express purpose of numerical stabilization, proceed with caution.");
+      if (fscanf(imp, "%s", model_name) != 1) {
+	sr = sprintf(err_msg, 
+		     "Error reading model name string in material file, property %s",
+		     search_string);
+	EH(-1, err_msg);
+      }
+      SPF(es, "%s = %s", search_string, model_name);
+      if (!strcmp(model_name, "CONSTANT") ) {
+	model_read = 1;
+	mat_ptr->tfmp_diff_model = CONSTANT;
+	if (fscanf(imp, "%lg", mat_ptr->tfmp_diff_const) != 1) {
+	  sr = sprintf(err_msg, 
+		       "Wrong number of constants in material file, property %s",
+		       search_string);
+	  EH(-1, err_msg);
+	}
+
+	mat_ptr->len_tfmp_diff_const = num_const;
+	SPF_DBL_VEC( endofstring(es), 1 , mat_ptr->tfmp_diff_const );
+      } else if (!strcmp(model_name, "PIECEWISE") ) {
+	mat_ptr->tfmp_diff_model = PIECEWISE;
+	
+	mat_ptr->len_tfmp_diff_const = read_constants(imp, &(mat_ptr->tfmp_diff_const), NO_SPECIES);
+	SPF_DBL_VEC( endofstring(es), mat_ptr->len_tfmp_diff_const, mat_ptr->tfmp_diff_const );
+	
+      }
+    ECHO(es, echo_file); 
+    } else {
+      WH(-1, "If you're having trouble try adding some numerical diffusion with the \"Thin Film Multiphase Diffusivity Model\" material property.");
+    }
+  }
+
+
+  if(pd_glob[mn]->e[R_TFMP_BOUND]) {
+    char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
+    strcpy(search_string, "Thin Film Multiphase Dissolution Model");
+    model_read = look_for_optional(imp,
+				       search_string,
+				       input,
+				       '=');
+    if(model_read == 1) {
+      if (fscanf(imp, "%s", model_name) != 1) {
+	sr = sprintf(err_msg, 
+		     "Error reading model name string in material file, property %s",
+		     search_string);
+	EH(-1, err_msg);
+      }
+      SPF(es, "%s = %s", search_string, model_name);
+      num_const = read_constants(imp, &(mat_ptr->tfmp_dissolution_const), NO_SPECIES);
+      if (!strcmp(model_name, "SQUARE") ) {
+	mat_ptr->tfmp_dissolution_model = TFMP_SQUARE;
+	if (num_const != 3) {
+	  sr = sprintf(err_msg,
+		       "Error property %s only supports 3 input values.",
+		       search_string);
+	  EH(-1, err_msg);
+	}
+	mat_ptr->len_tfmp_dissolution_const = num_const;
+	SPF_DBL_VEC( endofstring(es), mat_ptr->len_tfmp_dissolution_const , mat_ptr->tfmp_dissolution_const );
+      }
+    ECHO(es, echo_file);
+    } else {
+      mat_ptr->tfmp_dissolution_model = NO_MODEL;
+      mat_ptr->len_tfmp_dissolution_const = 0;
+      WH(-1, "By default, dissolution is inactive. Use \"Thin Film Multiphase Dissolution Model\" to activate it.");
+    }
+  }
+
+  if(pd_glob[mn]->e[R_TFMP_MASS]) {
+    char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
+    strcpy(search_string, "Thin Film Multiphase Relative Permeability Model");
+    model_read = look_for_optional(imp,
+				   search_string,
+				   input,
+				   '=');
+    if (model_read == 1) {
+      if (fscanf(imp, "%s", model_name) != 1) {
+	sr = sprintf(err_msg, 
+		     "Error reading model name string in material file, property %s",
+		     search_string);
+	EH(-1, err_msg);
+      }
+      SPF(es, "%s = %s", search_string, model_name);
+      if (!strcmp(model_name, "LEVER") ) {
+	mat_ptr->tfmp_rel_perm_model = LEVER;
+	mat_ptr->len_tfmp_rel_perm_const = 0;
+      } else if (!strcmp(model_name, "PIECEWISE") ) {
+	mat_ptr->tfmp_rel_perm_model = PIECEWISE;
+	mat_ptr->len_tfmp_rel_perm_const = read_constants(imp, &mat_ptr->tfmp_rel_perm_const, NO_SPECIES);
+	SPF_DBL_VEC( endofstring(es), mat_ptr->len_tfmp_rel_perm_const , mat_ptr->tfmp_rel_perm_const );
+      } else {
+	sr = sprintf(err_msg, 
+		     "Invalid model name string in material file, property %s",
+		     search_string);
+	EH(-1, err_msg);
+      }
+      ECHO(es, echo_file);
+    } else {
+      EH(-1, "There are no defaults for \"Thin Film Multiphase Relative Permeability Model\". You must set them.");
+    }
+  }
+  
+  if(pd_glob[mn]->e[R_TFMP_BOUND] && pd_glob[mn]->e[R_TFMP_MASS]) {
+    strcpy(search_string, "Thin Film Multiphase Mass Lumping");
+    model_read = look_for_mat_prop(imp, search_string,
+				   NULL,
+				   NULL, NO_USER, NULL,
+				   model_name, SCALAR_INPUT, &NO_SPECIES,es);
+    if (model_read == 1) {
+      if (!strcasecmp(model_name, "yes") || 
+	  !strcasecmp(model_name, "true")) {
+	mat_ptr->tfmp_mass_lump = TRUE;
+	SPF(es, "%s = %s",search_string,"TRUE");
+      } else if (!strcasecmp(model_name, "no") ||
+		 !strcasecmp(model_name, "false")) {
+	mat_ptr->tfmp_mass_lump = FALSE;
+	SPF(es, "%s = %s",search_string,"FALSE");
+      } else {
+	EH(-1,"Thin Film Multiphase Mass Lumping must be set to TRUE, YES, FALSE, or NO");
+      }
+    } else {
+      WH(-1, "Mass lumping is on by default.");
+      mat_ptr->tfmp_mass_lump = TRUE;
+      SPF(es, "%s = %s",search_string,"TRUE");	
+    }
+    ECHO(es, echo_file);    
+  }
+  
+  if(pd_glob[mn]->e[R_TFMP_BOUND]) {
+    char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
+    strcpy(model_name, "\0");
+    strcpy(search_string, "Thin Film Multiphase Clipping");
+    model_read = look_for_optional(imp,
+				   search_string,
+				   input,
+				   '=');
+    if (model_read == 1) {
+      if (fscanf(imp, "%s", model_name) != 1) {
+	sr = sprintf(err_msg, 
+		     "Error reading model name string in material file, property %s",
+		     search_string);
+	EH(-1, err_msg);
+      }
+      SPF(es, "%s = %s", search_string, model_name);
+      //      EH(-1, model_name);
+      if ( !strcasecmp(model_name, "yes") ||
+	   !strcasecmp(model_name, "true") ) {
+	mat_ptr->tfmp_clipping = TRUE;
+	if (fscanf(imp, "%lg",&(mat_ptr->tfmp_clip_strength)) != 1) {
+	  sr = sprintf(err_msg, 
+		       "Wrong number of constants in material file, property %s",
+		       search_string);
+	  EH(-1, err_msg);
+	}
+	SPF(endofstring(es)," %.4g", mat_ptr->tfmp_clip_strength );
+	
+      }
+      else if ( !strcasecmp(model_name, "no") ||
+		!strcasecmp(model_name, "false" )) {
+	mat_ptr->tfmp_clipping = FALSE;
+	WH(-1, "Spurious oscillations can be mitigated with the \"Thin Film Multiphase Clipping\" material property.");
+      } 
+      else {
+	SPF(err_msg,"Syntax error or invalid model for %s\n", search_string);
+	EH(-1,err_msg);
+      }
+
+    } else {
+	mat_ptr->tfmp_clipping = FALSE;
+	SPF(es, "%s = %s",search_string,"FALSE");
+	WH(-1, "\"Thin Film Multiphase Clipping\" is off by default.");
+    }
+    ECHO(es, echo_file);
+  }
+
+  if(pd_glob[mn]->e[R_TFMP_MASS]) {
+    char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
+    strcpy(search_string, "Thin Film Multiphase Drop Lattice");
+    model_read = look_for_optional(imp,
+				   search_string,
+				   input,
+				   '=');
+    if (model_read == 1) {
+      if (fscanf(imp, "%s", model_name) != 1) {
+	sr = sprintf(err_msg,
+		     "Error reading model name string in material file, property %s",
+		     search_string);
+	EH(-1, err_msg);
+      }
+      SPF(es, "%s = %s", search_string, model_name);
+      if (!strcmp(model_name, "SQUARE") ) {
+	mat_ptr->tfmp_drop_lattice_model = TFMP_SQUARE;
+	num_const = read_constants(imp, &(mat_ptr->tfmp_drop_lattice_const), NO_SPECIES);
+	if (num_const != 2) {
+	  EH(-1,
+	     "Thin Film Multiphase Drop Lattice 'SQUARE' requires two and only two input values, lambda and Vd");
+	}
+	mat_ptr->len_tfmp_drop_lattice_const = num_const;
+	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->tfmp_drop_lattice_const );
+      }
+    } else {
+      WH(-1, "By default, \"Thin Film Multiphase Drop Lattice\" is a square lattice with spacing of 160 microns and 6 pL drop volume, units in cgs.");
+    }
+    ECHO(es, echo_file);
+  }
   
   
   /*********************************************************************/

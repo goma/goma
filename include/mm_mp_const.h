@@ -94,6 +94,11 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  EXTERNAL_FIELD          4
 #define  POROUS_CONST_INIT       5
 
+/* types of drop patterns */
+#define TFMP_SQUARE                   300
+#define TFMP_TRIANGULAR               301
+#define TFMP_HEXAGONAL                302
+
 /*
  * Options for k in potential equation
  * (electrical conductivity or permittivity)
@@ -295,6 +300,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define SUSP_BAL   13
 #define ARRHENIUS  14 /* for temperature-dependent S-M diffusivities, KSC */
 #define SHOCK   15
+#define PIECEWISE 16
 
 /* Types of vapor or gas pressure relations */
 #define  KELVIN        3
@@ -323,6 +329,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  SHELL_TANH      21
 #define  TANH_EXTERNAL      22
 #define  VAN_GENUCHTEN_EXTERNAL   23
+#define  LEVER           24
 
 /* Types of Flowing Liquid Viscosity Models */
 #define MOLTEN_GLASS     3

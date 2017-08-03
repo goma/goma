@@ -160,6 +160,10 @@ noahs_raven()
   ddd_add_member(n, &Particle_Number_Sample_Types, 1, MPI_INT);
   ddd_add_member(n, &Particle_Number_PBCs, 1, MPI_INT);
   ddd_add_member(n, &Num_Var_LS_Init, 1, MPI_INT);
+  ddd_add_member(n, &TFMP_GAS_VELO, 1, MPI_INT);
+  ddd_add_member(n, &TFMP_LIQ_VELO, 1, MPI_INT);
+  ddd_add_member(n, &TFMP_INV_PECLET, 1, MPI_INT);
+  ddd_add_member(n, &TFMP_KRG, 1, MPI_INT);
 #ifdef USE_CGM
   ddd_add_member(n, &cgm_input_string_length, 1, MPI_INT);
 #endif
@@ -1816,7 +1820,35 @@ noahs_ark()
 		     (MAX_VARIABLE_TYPES + MAX_CONC)*
 		     (MAX_VARIABLE_TYPES + MAX_CONC),
 		     MPI_DOUBLE);
+      /*
+       * TFMP model parameters
+       */
+      ddd_add_member(n, &mp_glob[i]->tfmp_diff_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_tfmp_diff_const, 1, MPI_INT);
+      
+      ddd_add_member(n, &mp_glob[i]->tfmp_wt_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->tfmp_wt_const, 1, MPI_DOUBLE);
 
+      ddd_add_member(n, &mp_glob[i]->tfmp_density_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_tfmp_density_const, 1, MPI_INT);
+
+      ddd_add_member(n, &mp_glob[i]->tfmp_viscosity_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_tfmp_viscosity_const, 1, MPI_INT);
+
+      ddd_add_member(n, &mp_glob[i]->tfmp_rel_perm_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_tfmp_rel_perm_const, 1, MPI_INT);
+      
+      ddd_add_member(n, &mp_glob[i]->tfmp_mass_lump, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->tfmp_clipping, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->tfmp_clip_strength, 1, MPI_DOUBLE);
+
+      ddd_add_member(n, &mp_glob[i]->tfmp_dissolution_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_tfmp_dissolution_const, 1, MPI_INT);
+      
+      ddd_add_member(n, &mp_glob[i]->tfmp_drop_lattice_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_tfmp_drop_lattice_const, 1, MPI_INT);
+
+     
       /*
        * Loop over user-defined constants lists of lengths.
        *
@@ -1876,6 +1908,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->heat_capacity_tableid, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->diffusivity_tableid, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->saturation_tableid, 1, MPI_INT);
+
       /*
        * Material property constants that are vectors over the concentration
        * index.
@@ -2019,7 +2052,8 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->len_u_FilmEvap_function_constants, 1 , MPI_INT); 
       ddd_add_member(n, &mp_glob[i]->len_u_DisjPress_function_constants, 1 , MPI_INT); 
       ddd_add_member(n, &mp_glob[i]->len_u_DiffCoeff_function_constants, 1 , MPI_INT); 
-     
+
+
       /*
        * Material properties that are fixed size arrays governed by
        * the maximum number of species and maximum number of dependent
@@ -2930,6 +2964,20 @@ ark_landing()
       dalloc( m->len_u_light_absorption,
               m->    u_light_absorption);
 
+      dalloc( m->len_tfmp_density_const,
+              m->    tfmp_density_const);
+      dalloc( m->len_tfmp_viscosity_const,
+              m->    tfmp_viscosity_const);
+      dalloc( m->len_tfmp_diff_const,
+              m->    tfmp_diff_const);
+
+      dalloc( m->len_tfmp_rel_perm_const,
+              m->    tfmp_rel_perm_const);
+      dalloc( m->len_tfmp_dissolution_const,
+              m->    tfmp_dissolution_const);
+      dalloc( m->len_tfmp_drop_lattice_const,
+              m->    tfmp_drop_lattice_const);
+	    
       /*
        * User defined material property lists for each species...
        *     HKM -> Changed this to number of species, not
@@ -3295,6 +3343,19 @@ noahs_dove()
 
     crdv( m->len_u_light_absorption,
 	  m->    u_light_absorption);
+
+    crdv( m->len_tfmp_density_const,
+	  m->    tfmp_density_const);
+    crdv( m->len_tfmp_viscosity_const,
+	  m->    tfmp_viscosity_const);
+    crdv( m->len_tfmp_diff_const,
+	  m->    tfmp_diff_const);
+
+    crdv( m->len_tfmp_rel_perm_const,
+	  m->    tfmp_rel_perm_const);
+
+    crdv( m->len_tfmp_drop_lattice_const,
+	  m->    tfmp_drop_lattice_const);
 
     /*
      *  Add species names

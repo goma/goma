@@ -4334,8 +4334,7 @@ calculate_lub_q_v (
       fv->wt = wt_old;
       safe_free((void *) n_dof);
       
-    }
-  
+    }   /* End of Film flow - Newtonian   */
   
   /* Film flow - Newtonian */
   else if (EQN == R_SHELL_FILMP)
@@ -4604,7 +4603,7 @@ calculate_lub_q_v (
         }
       
     }
-  
+
   
   return;
   

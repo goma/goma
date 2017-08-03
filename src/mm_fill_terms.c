@@ -8846,6 +8846,22 @@ load_fv(void)
 	fv->vlambda += *esp->vlambda[i] * bf[v]->phi[i];
     }
 
+  if (pdv[TFMP_PRES]) 
+    {
+      v = TFMP_PRES;
+      scalar_fv_fill(esp->tfmp_pres, esp_dot->tfmp_pres, esp_old->tfmp_pres, bf[v]->phi, ei->dof[v],
+		     &(fv->tfmp_pres), &(fv_dot->tfmp_pres), &(fv_old->tfmp_pres));
+      stateVector[v] = fv->tfmp_pres;
+    } 
+  if (pdv[TFMP_SAT]) 
+    {
+      v = TFMP_SAT;
+      scalar_fv_fill(esp->tfmp_sat, esp_dot->tfmp_sat, esp_old->tfmp_sat, bf[v]->phi, ei->dof[v],
+		     &(fv->tfmp_sat), &(fv_dot->tfmp_sat), &(fv_old->tfmp_sat));
+      stateVector[v] = fv->tfmp_sat;
+    } 
+
+  
   /*
    * External...
    */
@@ -10661,6 +10677,53 @@ load_fv_grads(void)
     for (p=0; p<VIM; p++) fv->grad_poynt[2][p] = 0.0;
   } 
 
+  if ( pd->v[TFMP_PRES] )
+    {
+      v = TFMP_PRES;
+      dofs  = ei->dof[v];
+#ifdef DO_NO_UNROLL
+      for ( p=0; p<VIM; p++)
+	{
+	  fv->grad_tfmp_pres[p] = 0.0;
+		  
+	  for ( i=0; i<dofs; i++)
+	    {
+	      fv->grad_tfmp_pres[p] += *esp->tfmp_pres[i] * bf[v]->grad_phi[i] [p];
+	      fv_old->grad_tfmp_pres[p] += *esp_old->tfmp_pres[i] * bf[v]->grad_phi[i] [p]
+	    }
+	}
+#else
+      grad_scalar_fv_fill( esp->tfmp_pres, bf[v]->grad_phi, dofs, fv->grad_tfmp_pres);
+    } else if ( zero_unused_grads &&  upd->vp[TFMP_PRES] == -1 ) {
+      for (p=0; p<VIM; p++) fv->grad_tfmp_pres[p] = 0.0;
+    }
+
+#endif
+
+
+  if ( pd->v[TFMP_SAT] )
+    {
+      v = TFMP_SAT;
+      dofs  = ei->dof[v];
+#ifdef DO_NO_UNROLL
+      for ( p=0; p<VIM; p++)
+	{
+	  fv->grad_tfmp_sat[p] = 0.0;
+		  
+	  for ( i=0; i<dofs; i++)
+	    {
+	      fv->grad_tfmp_sat[p] += *esp->tfmp_sat[i] * bf[v]->grad_phi[i] [p];
+	      fv_old->grad_tfmp_sat[p] += *esp_old->tfmp_sat[i] * bf[v]->grad_phi[i] [p]
+	    }
+	}
+#else
+      grad_scalar_fv_fill( esp->tfmp_sat, bf[v]->grad_phi, dofs, fv->grad_tfmp_sat);
+    } else if ( zero_unused_grads &&  upd->vp[TFMP_SAT] == -1 ) {
+      for (p=0; p<VIM; p++) fv->grad_tfmp_sat[p] = 0.0;
+    }
+#endif
+
+  
  /*
   * External 
   */

@@ -2023,6 +2023,20 @@ load_elem_dofptr(const int ielem,
     {
       EH(-1,"Saturation-based formulation not implemented yet");
     }
+
+  eqn = R_TFMP_MASS;
+  if ( pd->e[eqn] )
+    {
+      load_varType_Interpolation_ptrs(eqn, esp->tfmp_sat, esp_old->tfmp_sat,
+				      esp_dot->tfmp_sat);
+    }
+
+  eqn = R_TFMP_BOUND;
+  if ( pd->e[eqn] )
+    {
+      load_varType_Interpolation_ptrs(eqn, esp->tfmp_pres, esp_old->tfmp_pres,
+				      esp_dot->tfmp_pres);
+    }
   
   eqn  = R_MASS;
   if (upd->ep[eqn] >= 0) {
