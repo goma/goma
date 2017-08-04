@@ -223,7 +223,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   int    i, num_total_nodes;
   int    numProcUnknowns;
   int    const_delta_t, const_delta_ts, step_print;
-  int    step_fix = 0;           /* What step to fix the problem on */
+  int    step_fix = 0, i_fix = 0;           /* What step to fix the problem on */
   int    good_mesh = TRUE;
   int    w;                      /* counter for looping external variables */
   static int nprint = 0;
@@ -2353,6 +2353,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
   
 	/* Determine whether to print out the data or not */
 	i_print = 0;
+	i_fix = 0;
 	if (tran->print_freq == 0) 
           {
 	  if ((time > time_print) || 
@@ -2361,6 +2362,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	    if (tran->print_delt2 < 0.) 
               {
 	      i_print	  = 1;
+	      i_fix	  = 1;
 	      time_print += tran->print_delt;
 	      } 
             else 
@@ -2368,12 +2370,14 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      if (time < tran->print_delt2_time) 
                 {
 		i_print	    = 1;
+	        i_fix	  = 1;
 		time_print += tran->print_delt;
 	        } 
               else 
                 {
 		i_print	    = 1;
-		time_print += tran->print_delt2;
+	        i_fix	    = 1;
+                time_print += tran->print_delt2;
 	        }
 	      }
 	    }
@@ -2462,7 +2466,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	    DPRINTF(stderr, "\n------------------------------\n");
 	    DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
 	    DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
-		      
+
 	    for (iAC = 0; iAC < nAC; iAC++) {
 	      if (augc[iAC].Type == AC_USERBC) 
 		{
@@ -2495,10 +2499,10 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		  evol_local = augc[iAC].evol;
 #ifdef PARALLEL
 		  if (Num_Proc > 1) {
-		    MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);		  
+		    MPI_Allreduce(&evol_local, &evol_global, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
 		    evol_local = evol_global;
 		  }
-#endif	  
+#endif
 		  DPRINTF(stderr, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID, augc[iAC].VOLID, evol_local, x_AC[iAC]);
 		} 
 	      else if (augc[iAC].Type == AC_FLUX) 
@@ -2514,12 +2518,13 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	  }
 
 	} /* if(i_print) */
-	evpl_glob[0]->update_flag = 1; 
+	evpl_glob[0]->update_flag = 1;
 
         /* Fix output if current time step matches frequency */
-        if (step_fix != 0 && nt == step_fix) {
+        if ( (step_fix != 0 && nt == step_fix) ||
+             (i_fix == 1) && (tran->fix_freq > 0) ) {
 #ifdef PARALLEL
-          /* Barrier because fix needs both files to be finished printing 
+          /* Barrier because fix needs both files to be finished printing
              and fix always occurs on the same timestep as printing */
           MPI_Barrier(MPI_COMM_WORLD);
 #endif
@@ -2527,7 +2532,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
           /* Fix step is relative to print step */
           step_fix += tran->fix_freq*tran->print_freq;
         }
-	/* 
+	/*
 	 * Adjust the time step if the new time will be larger than the
 	 * next printing time.
 	 */
