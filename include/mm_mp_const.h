@@ -60,6 +60,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  FILL_SRC       10
 #define  VARIABLE_DENSITY 11    /* Drying of Polymeric Film */
 #define  LEVEL_SET      1212      /* density varies smoothly from - to + level set */
+#define  VE_LEVEL_SET      1213      /* density varies smoothly from - to + level set */
 #define  EHD_POLARIZATION 13    /* EHD Polarization force */
 #define  LS_QUADRATIC    14      /* variation on LEVEL_SET viscosity model */
 #define  ACOUSTIC    15      /* Acoustic energy density coupled to NS */

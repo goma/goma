@@ -2554,6 +2554,34 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  ve_glob[mn][mm]->gn->nexp=0.;
 	  ve_glob[mn][mm]->gn->nexpModel=CONSTANT;
 	}
+
+      strcpy(search_string, "Positive Level Set Polymer Viscosity");
+
+      model_read = look_for_modal_prop(imp, search_string,
+				       vn_glob[mn]->modes,
+				       &matl_model,
+				       modal_data,
+				       es);
+
+      if( model_read == 1 ) {
+
+	  if( ls == NULL ) EH(-1, "Positive Level Set Polymer Viscosity requires activation of Level Set Tracking.\n");
+
+	  for(mm=0;mm<vn_glob[mn]->modes;mm++)
+	    {
+	      ve_glob[mn][mm]->gn->pos_ls_mup = modal_data[mm];
+	      ve_glob[mn][mm]->gn->mu0Model = VE_LEVEL_SET;
+	      ve_glob[mn][mm]->gn->ConstitutiveEquation = VE_LEVEL_SET;
+	    }
+
+
+	  ECHO(es,echo_file);
+      } else if ( model_read == -2 ) {
+	SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
+	fprintf(stderr, "%s\n", err_msg);
+	exit(-1);
+      }
+      
       strcpy( search_string, "Polymer Time Constant");
 
       model_read = look_for_modal_prop(imp,search_string , 
@@ -2577,6 +2605,36 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  ve_glob[mn][mm]->time_constModel = matl_model;
 	}
 
+      strcpy(search_string, "Positive Level Set Polymer Time Constant");
+
+      model_read = look_for_modal_prop(imp, search_string,
+				       vn_glob[mn]->modes,
+				       &matl_model,
+				       modal_data,
+				       es);
+
+      if( model_read == 1 ) {
+
+	if( ls == NULL ) EH(-1, "Positive Level Set Polymer Time Constant requires activation of Level Set Tracking.\n");
+
+	for(mm=0;mm<vn_glob[mn]->modes;mm++)
+	  {
+	    ve_glob[mn][mm]->pos_ls.time_const = modal_data[mm];
+	    if (ve_glob[mn][mm]->time_constModel != CONSTANT) {
+	      fprintf(stderr, "%s\n", "Only CONSTANT Polymer Time Constant model supported for viscoelastic level set");
+	      exit(-1);
+	    }
+	    ve_glob[mn][mm]->time_constModel = VE_LEVEL_SET;
+	  }
+
+
+	ECHO(es,echo_file);
+      } else if ( model_read == -2 ) {
+	SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
+	fprintf(stderr, "%s\n", err_msg);
+	exit(-1);
+      }
+      
       if (vn_glob[mn]->ConstitutiveEquation == GIESEKUS )
 	{
 	  strcpy(search_string, "Mobility Parameter");
@@ -2603,12 +2661,39 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
 	  ECHO(es,echo_file);
 
+	  strcpy(search_string, "Positive Level Set Mobility Parameter");
+
+	  model_read = look_for_modal_prop(imp, search_string,
+					   vn_glob[mn]->modes,
+					   &matl_model,
+					   modal_data,
+					   es);
+
+	  if( model_read == 1 ) {
+
+	    if( ls == NULL ) EH(-1, "Positive Level Set Mobility Parameter requires activation of Level Set Tracking.\n");
+
+	    for(mm=0;mm<vn_glob[mn]->modes;mm++)
+	      {
+		ve_glob[mn][mm]->pos_ls.alpha = modal_data[mm];
+		ve_glob[mn][mm]->alphaModel = VE_LEVEL_SET;
+	      }
+
+
+	    ECHO(es,echo_file);
+	  } else if ( model_read == -2 ) {
+	    SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
+	    fprintf(stderr, "%s\n", err_msg);
+	    exit(-1);
+	  }
+
 	}
      else
        {
 	 for(mm=0;mm<vn_glob[mn]->modes;mm++)
 	   {
 	     ve_glob[mn][mm]->alpha=0.;
+	     ve_glob[mn][mm]->pos_ls.alpha=0.;
 	     ve_glob[mn][mm]->alphaModel=CONSTANT;
 	   }
        }
@@ -2638,7 +2723,33 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	    }
 
 	  ECHO(es,echo_file);
+	  
+	  strcpy(search_string, "Positive Level Set PTT Xi parameter");
 
+	  model_read = look_for_modal_prop(imp, search_string,
+					   vn_glob[mn]->modes,
+					   &matl_model,
+					   modal_data,
+					   es);
+
+	  if( model_read == 1 ) {
+
+	    if( ls == NULL ) EH(-1, "Positive Level Set PTT Xi parameter requires activation of Level Set Tracking.\n");
+
+	    for(mm=0;mm<vn_glob[mn]->modes;mm++)
+	      {
+		ve_glob[mn][mm]->pos_ls.xi = modal_data[mm];
+		ve_glob[mn][mm]->xiModel = VE_LEVEL_SET;
+	      }
+
+
+	    ECHO(es,echo_file);
+	  } else if ( model_read == -2 ) {
+	    SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
+	    fprintf(stderr, "%s\n", err_msg);
+	    exit(-1);
+	  }
+	  
 	  strcpy(search_string, "PTT Epsilon parameter");
 
 	  model_read = look_for_modal_prop(imp,search_string , 
@@ -2662,18 +2773,45 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	      ve_glob[mn][mm]->eps = modal_data[mm];
 	      ve_glob[mn][mm]->epsModel = matl_model;
 	    }
+
+	  strcpy(search_string, "Positive Level Set PTT Epsilon parameter");
+
+	  model_read = look_for_modal_prop(imp, search_string,
+					   vn_glob[mn]->modes,
+					   &matl_model,
+					   modal_data,
+					   es);
+
+	  if( model_read == 1 ) {
+
+	    if( ls == NULL ) EH(-1, "Positive Level Set PTT Epsilon parameter requires activation of Level Set Tracking.\n");
+
+	    for(mm=0;mm<vn_glob[mn]->modes;mm++)
+	      {
+		ve_glob[mn][mm]->pos_ls.eps = modal_data[mm];
+		ve_glob[mn][mm]->epsModel = VE_LEVEL_SET;
+	      }
+
+	    ECHO(es,echo_file); 
+	  } else if ( model_read == -2 ) {
+	    SPF(err_msg,"Only CONSTANT %s mode model supported.", search_string);
+	    fprintf(stderr, "%s\n", err_msg);
+	    exit(-1);
+	  }
 	}
      else
        {
 	 for(mm=0;mm<vn_glob[mn]->modes;mm++)
 	   {
 	     ve_glob[mn][mm]->xi=0.;
+	     ve_glob[mn][mm]->pos_ls.xi=0.;
 	     ve_glob[mn][mm]->xiModel=CONSTANT;
 	   }
 
 	 for(mm=0;mm<vn_glob[mn]->modes;mm++)
 	   {
 	     ve_glob[mn][mm]->eps=0.;
+	     ve_glob[mn][mm]->pos_ls.eps=0.;
 	     ve_glob[mn][mm]->epsModel=CONSTANT;
 	   }
        }

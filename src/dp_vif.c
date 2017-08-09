@@ -2204,6 +2204,7 @@ noahs_ark()
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->ConstitutiveEquation, 1, MPI_INT);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->mu0, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->mu0Model, 1, MPI_INT);
+	  ddd_add_member(n, &ve_glob[i][mode]->gn->pos_ls_mup, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->nexp, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->nexpModel, 1, MPI_INT);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->muinf, 1, MPI_DOUBLE);
@@ -2241,6 +2242,11 @@ noahs_ark()
 	  ddd_add_member(n, &ve_glob[i][mode]->xiModel, 1, MPI_INT);
 	  ddd_add_member(n, &ve_glob[i][mode]->eps, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &ve_glob[i][mode]->epsModel, 1, MPI_INT);
+
+	  ddd_add_member(n, &ve_glob[i][mode]->pos_ls.time_const, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &ve_glob[i][mode]->pos_ls.alpha, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &ve_glob[i][mode]->pos_ls.xi, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &ve_glob[i][mode]->pos_ls.eps, 1, MPI_DOUBLE);
 	  
 	}
   
@@ -2449,6 +2455,11 @@ noahs_ark()
   ddd_add_member(n, &PP_Viscosity, 1, MPI_INT);
   ddd_add_member(n, &PP_VolumeFractionGas, 1, MPI_INT);
   ddd_add_member(n, &DENSITY, 1, MPI_INT);
+  ddd_add_member(n, &POLYMER_VISCOSITY, 1, MPI_INT);
+  ddd_add_member(n, &POLYMER_TIME_CONST, 1, MPI_INT);
+  ddd_add_member(n, &MOBILITY_PARAMETER, 1, MPI_INT);
+  ddd_add_member(n, &PTT_XI, 1, MPI_INT);
+  ddd_add_member(n, &PTT_EPSILON, 1, MPI_INT);
   ddd_add_member(n, &NS_RESIDUALS, 1, MPI_INT);
   ddd_add_member(n, &MM_RESIDUALS, 1, MPI_INT);
   ddd_add_member(n, &FLUXLINES, 1, MPI_INT);

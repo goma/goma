@@ -136,6 +136,12 @@ int DARCY_VELOCITY_LIQ = -1;    /* Darcy velocity vectors for flow in a
 				 * saturated or unsaturated medium */
 int DENSITY = -1;	       	/* density function at vertex and midside 
 				 * nodes, e.g. for particle settling etc. */
+int POLYMER_VISCOSITY = -1;
+int POLYMER_TIME_CONST = -1;
+int PTT_XI = -1;
+int PTT_EPSILON = -1;
+int MOBILITY_PARAMETER = -1;
+
 int DIELECTROPHORETIC_FIELD = -1;
                                 /* Dielectrophoretic force vectors. */
 int DIELECTROPHORETIC_FIELD_NORM = -1;
@@ -740,6 +746,88 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[DENSITY] = 1.;
   }
 
+  if (POLYMER_VISCOSITY != -1 && pd->e[pg->imtrx][R_STRESS11] ) {
+    mode = 0;
+    double mup = viscosity(ve[mode]->gn, gamma, NULL);
+    local_post[POLYMER_VISCOSITY] = mup;
+    local_lumped[POLYMER_VISCOSITY] = 1.;
+  }
+
+  if (POLYMER_TIME_CONST != -1 && pd->e[pg->imtrx][R_STRESS11] ) {
+    mode = 0;
+    double lambda;
+    double mup = viscosity(ve[mode]->gn, gamma, NULL);
+    if (ve[mode]->time_constModel == CONSTANT) {
+      lambda = ve[mode]->time_const;
+    } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
+      lambda = mup/ve[mode]->time_const;
+    } else if (ls != NULL && ve[mode]->time_constModel == VE_LEVEL_SET) {
+      double pos_lambda = ve[mode]->pos_ls.time_const;
+      double neg_lambda = ve[mode]->time_const;
+      double width     = ls->Length_Scale;
+      err = level_set_property(neg_lambda, pos_lambda, width, &lambda, NULL);
+      EH(err, "level_set_property() failed for polymer time constant.");
+    }
+    local_post[POLYMER_TIME_CONST] = lambda;
+    local_lumped[POLYMER_TIME_CONST] = 1.;
+  }
+
+  if (PTT_XI != -1 && pd->e[pg->imtrx][R_STRESS11] ) {
+    mode = 0;
+    double xi;
+    double mup = viscosity(ve[mode]->gn, gamma, NULL);
+    if (ve[mode]->xiModel == CONSTANT) {
+      xi = ve[mode]->xi;
+    } else if (ve[mode]->xiModel == CARREAU || ve[mode]->xiModel == POWER_LAW) {
+      xi = mup/ve[mode]->xi;
+    } else if (ls != NULL && ve[mode]->xiModel == VE_LEVEL_SET) {
+      double pos_xi = ve[mode]->pos_ls.xi;
+      double neg_xi = ve[mode]->xi;
+      double width     = ls->Length_Scale;
+      err = level_set_property(neg_xi, pos_xi, width, &xi, NULL);
+      EH(err, "level_set_property() failed for polymer time constant.");
+    }
+    local_post[PTT_XI] = xi;
+    local_lumped[PTT_XI] = 1.;
+  }
+
+  if (PTT_EPSILON != -1 && pd->e[pg->imtrx][R_STRESS11] ) {
+    mode = 0;
+    double eps;
+    double mup = viscosity(ve[mode]->gn, gamma, NULL);
+    if (ve[mode]->epsModel == CONSTANT) {
+      eps = ve[mode]->eps;
+    } else if (ve[mode]->epsModel == CARREAU || ve[mode]->epsModel == POWER_LAW) {
+      eps = mup/ve[mode]->eps;
+    } else if (ls != NULL && ve[mode]->epsModel == VE_LEVEL_SET) {
+      double pos_eps = ve[mode]->pos_ls.eps;
+      double neg_eps = ve[mode]->eps;
+      double width     = ls->Length_Scale;
+      err = level_set_property(neg_eps, pos_eps, width, &eps, NULL);
+      EH(err, "level_set_property() failed for polymer time constant.");
+    }
+    local_post[PTT_EPSILON] = eps;
+    local_lumped[PTT_EPSILON] = 1.;
+  }
+
+  if (MOBILITY_PARAMETER != -1 && pd->e[pg->imtrx][R_STRESS11] ) {
+    mode = 0;
+    double alpha;
+    double mup = viscosity(ve[mode]->gn, gamma, NULL);
+    if (ve[mode]->alphaModel == CONSTANT) {
+      alpha = ve[mode]->alpha;
+    } else if (ve[mode]->alphaModel == CARREAU || ve[mode]->alphaModel == POWER_LAW) {
+      alpha = mup/ve[mode]->alpha;
+    } else if (ls != NULL && ve[mode]->alphaModel == VE_LEVEL_SET) {
+      double pos_alpha = ve[mode]->pos_ls.alpha;
+      double neg_alpha = ve[mode]->alpha;
+      double width     = ls->Length_Scale;
+      err = level_set_property(neg_alpha, pos_alpha, width, &alpha, NULL);
+      EH(err, "level_set_property() failed for polymer time constant.");
+    }
+    local_post[MOBILITY_PARAMETER] = alpha;
+    local_lumped[MOBILITY_PARAMETER] = 1.;
+  }
 
   if (MEAN_SHEAR != -1 && pd->e[pg->imtrx][R_MOMENTUM1] ){
     for (a = 0; a < dim; a++) {       
@@ -6113,6 +6201,12 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Viscosity", &PP_Viscosity);
   iread = look_for_post_proc(ifp, "Volume Fraction of Gas Phase", &PP_VolumeFractionGas);
   iread = look_for_post_proc(ifp, "Density", &DENSITY);
+  iread = look_for_post_proc(ifp, "Polymer Viscosity", &DENSITY);
+  iread = look_for_post_proc(ifp, "Polymer Viscosity", &POLYMER_VISCOSITY);
+  iread = look_for_post_proc(ifp, "Polymer Time Constant", &POLYMER_TIME_CONST);
+  iread = look_for_post_proc(ifp, "Mobility Parameter", &MOBILITY_PARAMETER);
+  iread = look_for_post_proc(ifp, "PTT Xi parameter", &PTT_XI);
+  iread = look_for_post_proc(ifp, "PTT Epsilon parameter", &PTT_EPSILON);
   iread = look_for_post_proc(ifp, "Navier Stokes Residuals", &NS_RESIDUALS);
   iread = look_for_post_proc(ifp, "Moving Mesh Residuals", &MM_RESIDUALS);
   iread = look_for_post_proc(ifp, "Mass Diffusion Vectors", &DIFFUSION_VECTORS);
@@ -8873,6 +8967,92 @@ index_post, index_post_export);
 	   CURL_V = -1;
 	 }
      }
+
+  if (POLYMER_VISCOSITY != -1 && Num_Var_In_Type[pg->imtrx][R_STRESS11])
+    {
+      set_nv_tkud(rd, index, 0, 0, -2, "MUP","[1]", "Polymer Viscosity", FALSE);
+      index++;
+      if (POLYMER_VISCOSITY == 2)
+	{
+	  Export_XP_ID[index_post_export] = index_post;
+	  index_post_export++;
+	}
+      POLYMER_VISCOSITY = index_post;
+      index_post++;
+    }
+  else
+    {
+      POLYMER_VISCOSITY = -1;
+    }
+
+  if (POLYMER_TIME_CONST != -1 && Num_Var_In_Type[pg->imtrx][R_STRESS11])
+    {
+      set_nv_tkud(rd, index, 0, 0, -2, "LAMBDA","[1]", "Polymer Time Constant", FALSE);
+      index++;
+      if (POLYMER_TIME_CONST == 2)
+	{
+	  Export_XP_ID[index_post_export] = index_post;
+	  index_post_export++;
+	}
+      POLYMER_TIME_CONST = index_post;
+      index_post++;
+    }
+  else
+    {
+      POLYMER_TIME_CONST = -1;
+    }
+
+  if (MOBILITY_PARAMETER != -1 && Num_Var_In_Type[pg->imtrx][R_STRESS11])
+    {
+      set_nv_tkud(rd, index, 0, 0, -2, "ALPHA","[1]", "Mobility Parameter", FALSE);
+      index++;
+      if (MOBILITY_PARAMETER == 2)
+	{
+	  Export_XP_ID[index_post_export] = index_post;
+	  index_post_export++;
+	}
+      MOBILITY_PARAMETER = index_post;
+      index_post++;
+    }
+  else
+    {
+      MOBILITY_PARAMETER = -1;
+    }
+
+  if (PTT_XI != -1 && Num_Var_In_Type[pg->imtrx][R_STRESS11])
+    {
+      set_nv_tkud(rd, index, 0, 0, -2, "XI","[1]", "PTT Xi parameter", FALSE);
+      index++;
+      if (PTT_XI == 2)
+	{
+	  Export_XP_ID[index_post_export] = index_post;
+	  index_post_export++;
+	}
+      PTT_XI = index_post;
+      index_post++;
+    }
+  else
+    {
+      PTT_XI = -1;
+    }
+
+  if (PTT_EPSILON != -1 && Num_Var_In_Type[pg->imtrx][R_STRESS11])
+    {
+      set_nv_tkud(rd, index, 0, 0, -2, "EPSILON","[1]", "PTT Epsilon parameter", FALSE);
+      index++;
+      if (PTT_EPSILON == 2)
+	{
+	  Export_XP_ID[index_post_export] = index_post;
+	  index_post_export++;
+	}
+      PTT_EPSILON = index_post;
+      index_post++;
+    }
+  else
+    {
+      PTT_EPSILON = -1;
+    }
+  
 
   if (USER_POST != -1)
     {

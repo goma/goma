@@ -858,7 +858,8 @@ struct Generalized_Newtonian
   int ConstitutiveEquation;
 
   dbl mu0;
-  int mu0Model;	
+  int mu0Model;
+  dbl pos_ls_mup;
   int len_u_mu0;
   dbl *u_mu0;
   dbl nexp;
@@ -921,6 +922,17 @@ struct Generalized_Newtonian
 };
 typedef struct Generalized_Newtonian GEN_NEWT_STRUCT;
 
+struct Positive_LS_Viscoelastic_Properties
+{
+  double time_const;            /* relaxation constant */
+
+  double alpha;                 /* This is the Geisekus mobility parameter */
+
+  double xi;                    /* This is the PTT upper convected / lower convected weight parameter */
+
+  double eps;                   /* This is the PTT elongational parameter */
+};
+
 struct Viscoelastic_Constitutive
 {
   /* this struct contains the polymer viscosity
@@ -939,6 +951,8 @@ struct Viscoelastic_Constitutive
 
   dbl eps;                   /* This is the PTT elongational parameter */
   int epsModel;
+
+  struct Positive_LS_Viscoelastic_Properties pos_ls;
 };
 typedef struct  Viscoelastic_Constitutive VISC_CONST_STRUCT;
    

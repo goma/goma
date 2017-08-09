@@ -1370,7 +1370,16 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   dbl source;
   dbl source1;
   dbl source_a=0, source_b=0, source_c=0;
-
+  int err;
+  dbl alpha;     /* This is the Geisekus mobility parameter */
+  dbl d_alpha_dF[MDE];
+  dbl lambda=0;    /* polymer relaxation constant */
+  dbl d_lambda_dF[MDE];
+  double xi;
+  double d_xi_dF[MDE];
+  dbl ucwt, lcwt; /* Upper convected derviative weight, Lower convected derivative weight */
+  dbl eps;       /* This is the PTT elongation parameter */
+  double d_eps_dF[MDE];
   /*
    * 
    * Note how carefully we avoid refering to d(phi[i])/dx[j] and refer instead
@@ -1437,10 +1446,6 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   dbl wlf_denom;
 
   /* constitutive equation parameters */
-  dbl alpha;     /* This is the Geisekus mobility parameter */
-  dbl lambda=0;    /* polymer relaxation constant */
-  dbl ucwt, lcwt; /* Upper convected derviative weight, Lower convected derivative weight */
-  dbl eps;       /* This is the PTT elongation parameter */
   dbl Z=1.0;         /* This is the factor appearing in front of the stress tensor in PTT */
   dbl dZ_dtrace =0.0;
 
@@ -1653,24 +1658,63 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
 
       /* get Geisekus mobility parameter */
-      alpha = ve[mode]->alpha;
+      if (ve[mode]->alphaModel == CONSTANT) {
+	alpha = ve[mode]->alpha;
+      } else if (ls != NULL && ve[mode]->alphaModel == VE_LEVEL_SET) {
+	double pos_alpha = ve[mode]->pos_ls.alpha;
+	double neg_alpha = ve[mode]->alpha;
+	double width     = ls->Length_Scale;
+	err = level_set_property(neg_alpha, pos_alpha, width, &alpha, d_alpha_dF);
+	EH(err, "level_set_property() failed for mobility parameter.");
+      } else {
+	EH(-1, "Unknown mobility parameter model");
+      }
       
       /* get time constant */
-      if(ve[mode]->time_constModel == CONSTANT)
-	{
-	  lambda = ve[mode]->time_const;
-	}
-      else if(ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW)
-	{
-	  lambda = mup/ve[mode]->time_const;
-	}
+      if (ve[mode]->time_constModel == CONSTANT) {
+	lambda = ve[mode]->time_const;
+      } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
+	lambda = mup/ve[mode]->time_const;
+      } else if (ls != NULL && ve[mode]->time_constModel == VE_LEVEL_SET) {
+	double pos_lambda = ve[mode]->pos_ls.time_const;
+	double neg_lambda = ve[mode]->time_const;
+	double width     = ls->Length_Scale;
+	err = level_set_property(neg_lambda, pos_lambda, width, &lambda, d_lambda_dF);
+	EH(err, "level_set_property() failed for polymer time constant.");
+      }
 
-      ucwt = 1.0 - ve[mode]->xi / 2.0 ;
-      lcwt = ve[mode]->xi / 2.0 ;
+      if (ve[mode]->xiModel == CONSTANT) {
+	xi = ve[mode]->xi;
+      } else if (ls != NULL && ve[mode]->xiModel == VE_LEVEL_SET) {
+	double pos_xi = ve[mode]->pos_ls.xi;
+	double neg_xi = ve[mode]->xi;
+	double width     = ls->Length_Scale;
+	err = level_set_property(neg_xi, pos_xi, width, &xi, d_xi_dF);
+	EH(err, "level_set_property() failed for ptt xi parameter.");
+      } else {
+	EH(-1, "Unknown PTT Xi parameter model");
+      }
       
-      eps = ve[mode]->eps;
+      ucwt = 1.0 - xi / 2.0 ;
+      lcwt = xi / 2.0 ;
+      
+      if (ve[mode]->epsModel == CONSTANT) {
+	eps = ve[mode]->eps;
+      } else if (ls != NULL && ve[mode]->epsModel == VE_LEVEL_SET) {
+	double pos_eps = ve[mode]->pos_ls.eps;
+	double neg_eps = ve[mode]->eps;
+	double width     = ls->Length_Scale;
+	err = level_set_property(neg_eps, pos_eps, width, &eps, d_eps_dF);
+	EH(err, "level_set_property() failed for ptt epsilon parameter.");
+      } else {
+	EH(-1, "Unknown PTT Epsilon parameter model");
+      }
 
-       Z = exp( eps*lambda*trace/mup ); dZ_dtrace = Z*eps*lambda/mup ;
+      if (lambda == 0) {
+	Z = 1.0; dZ_dtrace = 0;
+      } else {
+	Z = exp( eps*lambda*trace/mup ); dZ_dtrace = Z*eps*lambda/mup ;
+      }
 
       /* get tensor dot products for future use */
       
@@ -2324,7 +2368,93 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				    }
 				}
 			    }
-		      
+
+			  /*
+			   * J_S_F
+			   */
+			  var = FILL;
+			  if ( pd->v[pg->imtrx][var] )
+			    {
+			      pvar = upd->vp[pg->imtrx][var];
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+				{
+				  phi_j = bf[var]->phi[j];
+				      
+				  mass = 0.;
+				      
+				  if ( pd->TimeIntegration != STEADY )
+				    {
+				      if ( pd->e[pg->imtrx][eqn] & T_MASS )
+					{
+
+					  mass = s_dot[a][b];
+					  mass *= d_lambda_dF[j];
+					  mass *= wt_func * at * det_J * wt;
+					  mass *= h3;
+					  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+					}
+				    }
+				      
+				  advection = 0.;
+				      
+				  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
+				    {
+				      if(d_lambda_dF[j] != 0.)
+					{
+				  
+					  advection +=  v_dot_del_s[a][b]  -  x_dot_del_s[a][b];
+					  if( ucwt != 0.) advection -= ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]);
+					  if( lcwt != 0.) advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
+
+					  advection *= d_lambda_dF[j];
+					  advection *= wt_func * at * det_J * wt * h3;
+					  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+					}     
+				    }
+				      
+				  diffusion = 0.;
+				      
+				  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
+				    {
+				      /* add SU term in here when appropriate */
+					  
+				      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+				    }
+				      
+				  source    = 0.;
+				      
+				  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+				    {
+
+				      double invmup = 1/mup;
+				      // PTT
+				      if (eps != 0) {
+					// product rule + exponential
+					source += Z * ((lambda*trace*d_eps_dF[j]*invmup) + (d_lambda_dF[j]*trace*eps*invmup) -
+						       (lambda*trace*eps*d_mup->F[j]*invmup*invmup)) * s[a][b];
+				      }
+				      
+				      source +=  -at * d_mup->F[j] * (g[a][b] +  gt[a][b]);
+				      
+
+				      // Giesekus
+				      if(alpha != 0.)
+					{
+					  source += s_dot_s[a][b]*(-alpha*lambda*d_mup->F[j]*invmup*invmup +
+								   d_alpha_dF[j]*lambda*invmup + alpha*d_lambda_dF[j]*invmup);
+				  
+					}
+			      
+				      source *= wt_func * det_J * h3 * wt;
+			      
+				      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+
+				    }
+				  
+				  lec->J[peqn][pvar][i][j] +=
+				    mass + advection + diffusion + source;
+				}
+			    }
 			  
 			  /*
 			   * J_S_S

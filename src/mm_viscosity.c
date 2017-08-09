@@ -640,12 +640,23 @@ viscosity(struct Generalized_Newtonian *gn_local,
       mu = carreau_wlf_conc_viscosity(gn_local, gamma_dot, d_mu,
 				      gn_local->ConstitutiveEquation);
     }
+  else if (ls != NULL && gn_local->ConstitutiveEquation == VE_LEVEL_SET )
+    {
+      double pos_mup   = gn_local->pos_ls_mup;
+      double neg_mup   = gn_local->mu0;
+      double width     = ls->Length_Scale;
+      if ( d_mu != NULL )
+	err = level_set_property(neg_mup, pos_mup, width, &mu, d_mu->F);
+      else
+	err = level_set_property(neg_mup, pos_mup, width, &mu, NULL);
+      EH(err, "level_set_property() failed for polymer viscosity.");
+    }
   else
     {
       EH(-1,"Unrecognized viscosity model for non-Newtonian fluid");
     }
   
-  if (ls != NULL && 
+  if (ls != NULL && gn_local->ConstitutiveEquation != VE_LEVEL_SET && 
       mp->ViscosityModel != LEVEL_SET &&
       mp->ViscosityModel != LS_QUADRATIC &&
       mp->mp2nd != NULL &&
