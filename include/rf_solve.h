@@ -34,6 +34,17 @@ extern Comm_Ex *cx;
  * rf_solve.c prototypes
  */
 
+EXTERN void slow_square_dgemm         /* Matrix multiplication C = A X B */
+PROTO(( int ,                    /* Whether multiplying by transpose */
+        int ,                    /* Dimensions of matrix */
+        double [DIM][DIM] ,            /* A */
+        double [DIM][DIM] ,            /* B */
+        double [DIM][DIM]));           /* C */
+
+EXTERN void initial_guess_stress_to_log_conf
+PROTO((double *,                /* x array (solutions from initial guess) */
+       int));                   /* num_total_nodes */
+
 EXTERN void solve_problem
 PROTO((Exo_DB *,		/* exo - ptr to finite element mesh database */
        Dpi *,  			/* dpi - ptr to distributed processing info */

@@ -119,6 +119,162 @@ PROTO(( int,
 		double *,
 		int ));
 
+// C = A X B
+void slow_square_dgemm(int transpose_b, int N, double A[N][N], double B[N][N], double C[N][N]) {
+  int i,j,k;
+  double tmp;
+  if (transpose_b) {
+    for (i = 0; i < N; i++) {
+      for (j = 0; j < N; j++) {
+	tmp = 0;
+	for (k = 0; k < N; k++) {
+	  tmp += A[i][k] * B[j][k];
+	}
+	C[i][j] = tmp;
+      }
+    }
+  } else {
+    for ( i = 0; i < N; i++) {
+      for (j = 0; j < N; j++) {
+	tmp = 0;
+	for (k = 0; k < N; k++) {
+	  tmp += A[i][k] * B[k][j];
+	}
+	C[i][j] = tmp;
+      }
+    }
+  }
+}
+
+void
+initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
+{
+  int a,b;
+
+  double s[VIM][VIM];
+  double log_s[VIM][VIM];
+  int s_idx[2][2];
+  int M = VIM;
+  int N = VIM;
+  int LDA = N;
+  int LDU = M;
+  int LDVT = N;
+  int node,v,i,j;
+
+  int INFO;
+  int LWORK = 20;
+  double WORK[LWORK];
+  double A[VIM*VIM];
+  dbl gamma_dot[DIM][DIM];
+  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;
+  VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mu_struct;
+
+  int mode,mn;
+  double lambda;
+  double mup;
+  int v_s[MAX_MODES][DIM][DIM];
+
+  stress_eqn_pointer(v_s);
+
+  for (mn = 0; mn < upd->Num_Mat; mn++) // mn = Material Number
+  {
+    for (mode=0; mode<vn_glob[mn]->modes; mode++)
+    {
+    ve[mode]  = ve_glob[mn][mode];
+  
+    for (node = 0; node < num_total_nodes; node++) {
+      memset(WORK, 0, sizeof(double)*LWORK);
+      memset(A, 0.0, sizeof(double)*VIM*VIM);
+
+      for (a=0; a < 2; a++) {
+        for (b=0; b < 2; b++) {
+          v = v_s[mode][a][b];
+          s_idx[a][b] = Index_Solution(node, v, 0, 0, -2);
+        }
+      }
+
+      mup = viscosity(ve[mode]->gn, gamma_dot, d_mup);
+    
+      if(ve[mode]->time_constModel == CONSTANT)
+        {
+	  lambda = ve[mode]->time_const;
+        }
+      else if(ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW)
+        {
+	  lambda = mup/ve[mode]->time_const;
+        }
+
+      // skip node if stress variables not found
+      if (s_idx[0][0] == -1 || s_idx[0][1] == -1 || s_idx[1][1] == -1) continue;
+
+      // get stress tensor from initial guess
+      s[0][0] = x[s_idx[0][0]];
+      s[0][1] = x[s_idx[0][1]];
+      s[1][0] = x[s_idx[0][1]];
+      s[1][1] = x[s_idx[1][1]];
+
+      // Convert stress to c
+      for (i = 0; i < VIM; i++) {
+        for (j = 0; j < VIM; j++) {
+	  s[i][j] = (lambda/mup) * s[i][j] + (double)delta(i,j);
+        }
+      }
+    
+      // convert to column major
+      for (i = 0; i < VIM; i++) {
+        for (j = 0; j < VIM; j++) {
+	  A[i*VIM + j] = s[j][i];
+        }
+      }
+
+      double W[VIM];
+
+      // eig solver
+      dsyev_("V", "U", &N, A, &LDA, W, WORK, &LWORK, &INFO, 1, 1);
+
+      double U[VIM][VIM];
+
+      // transpose (revert to row major)
+      for (i = 0; i < VIM; i++) {
+        for (j = 0; j < VIM; j++) {
+	  U[i][j] = A[j*VIM + i];
+        }
+      }
+
+      // Take log of diagonal
+      double D[VIM][VIM];
+      for (i = 0; i < VIM; i++) {
+        for (j = 0; j < VIM; j++) {
+	  if (i == j) {
+	    D[i][j] = log(W[i]);
+	  } else {
+	    D[i][j] = 0.0;
+	  }
+        }
+      }
+
+      /* matrix multiplication, the slow way */
+      slow_square_dgemm(0, VIM, U, D, log_s);
+  
+      // multiply by transpose
+      slow_square_dgemm(1, VIM, log_s, U, D);
+
+      for (i = 0; i < VIM; i++) {
+        for (j = 0; j < VIM; j++) {
+	  log_s[i][j] = D[i][j];
+        }
+      }
+
+      x[s_idx[0][0]] = log_s[0][0];
+      x[s_idx[0][1]] = log_s[0][1];
+      x[s_idx[1][1]] = log_s[1][1];
+
+    } // Loop over nodes
+    } // Loop over modes
+  } // Loop over materials
+}
+
+
 void
 solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	      Dpi *dpi,		 /* distributed processing information       */
@@ -742,6 +898,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	      DPRINTF(stdout, "\n Initial Simulation Time Has been set to %g\n", timeValueRead);
 	    }
 	}
+    }
+
+  if(Conformation_Flag == 1 && vn->evssModel == LOG_CONF) // If mapping is needed for log-conformation tensor
+    {
+      initial_guess_stress_to_log_conf(x, num_total_nodes);
     }
 
   /* Load external fields from import vectors xnv_in & xev_in */
