@@ -84,6 +84,39 @@ PROTO((struct Aztec_Linear_Solver_System *,
 				 * frontal solver                            */
        int ));                  /* zeroCA */
 
+EXTERN int matrix_fill_stress
+PROTO((struct Aztec_Linear_Solver_System *,    
+       double [],               /* x - Solution vector                       */
+       double [],               /* resid_vector - Residual vector            */
+       double [],               /* x_old -  previous last time step          */
+       double [],               /* x_older - previous prev time step         */
+       double [],               /* xdot - xdot of current solution           */
+       double [],               /* xdot_old - xdot_old of current soln       */
+       double [],               /* x_update - last update vector             */
+       double *,                /* delta_t - current time step size          */
+       double *,                /* theta- parameter to vary time integration 
+                                 * from explicit (theta = 1) to implicit 
+                                 * (theta = 0)                               */
+       struct elem_side_bc_struct *[], /* first_elem_side_BC_array
+                                        * This is an array of pointers to the 
+                                        * first surface integral defined for 
+                                        * each element.
+                                        * It has a length equal to the total 
+                                        * number of elements defined on 
+                                        * current processor                  */
+       double *,                /* time_value  */
+       Exo_DB *,                /* exo - ptr to EXODUS II finite element db  */
+       Dpi *,                   /* dpi - ptr to distributed processing info  */
+       int *,                   /* ielem - element number                    */
+       int *,                   /* num_total_nodes - Number of nodes that each
+                                 * processor is responsible for              */
+       dbl *,                   /* h_elem_avg - global average element size 
+                                 * for PSPG                                  */
+       dbl *,                   /* U_norm - global average velocity for PSPG */
+       dbl *,                   /* estifm - element stiffness Matrix for 
+                                 * frontal solver                            */
+       int ));                  /* zeroCA */
+
 EXTERN int checkfinite
 PROTO((const char * const,      /* file                                      */
        const int ,	       	/* line                                      */

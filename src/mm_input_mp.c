@@ -2349,6 +2349,10 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	{
 	  vn_glob[mn]->evssModel = EVSS_L;
 	}
+      else if ( !strcmp(model_name, "LOG_CONF") )
+	{
+	  vn_glob[mn]->evssModel = LOG_CONF;
+	}
       else
 	{
 	  if( vn_glob[mn]->ConstitutiveEquation == PTT ) 
