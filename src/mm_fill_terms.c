@@ -4031,8 +4031,19 @@ assemble_momentum(dbl time,       /* current time */
 					  {
 					    for ( q=0; q<VIM; q++)
 					      {
-						diffusion -=
-						  grad_phi_i_e_a[p][q] * d_Pi->S[p][q][mode][b][c][j];
+                                                if(vn->evssModel == LOG_CONF)
+				                  {
+				                    if( b <= c )
+				                      {
+						        diffusion -=
+						          grad_phi_i_e_a[p][q] * d_Pi->S[p][q][mode][b][c][j];
+				                      }
+					          }
+				                else
+				                  {
+						    diffusion -=
+						      grad_phi_i_e_a[p][q] * d_Pi->S[p][q][mode][b][c][j];
+				                  }
 					      }
 					  }
 					diffusion *= det_J * wt * h3;
@@ -4052,7 +4063,7 @@ assemble_momentum(dbl time,       /* current time */
 	       * J_m_G
 	       */
 		  
-	      if ( pdv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F) )
+	      if ( pdv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF) )
 		{
 		  for ( b=0; b<VIM; b++)
 		    {
@@ -10027,7 +10038,7 @@ load_fv_grads(void)
 		  }
 	  }
   }
-  
+ 
   
   /*
    * grad(G)
@@ -28540,7 +28551,6 @@ fluid_stress_conf( double Pi[DIM][DIM],
 	}
     }
 
-  var = POLYMER_STRESS11;
 
   // Calculate d_exp_s_ds for LOG_CONF case
   for (mode = 0; mode < vn->modes; mode++)
@@ -28548,45 +28558,38 @@ fluid_stress_conf( double Pi[DIM][DIM],
       compute_d_exp_s_ds(fv->S[mode], exp_s[mode], d_exp_s_ds[mode]);
     }
 
-                
-  // POLYMER_STRESS
-  if(d_Pi!=NULL && pd->v[var])
+  if ( d_Pi != NULL && pd->v[POLYMER_STRESS11] )
     {
-      for(p=0; p<VIM; p++)
-	{
-	  for(q=0; q<VIM; q++)
-	    {
-	      for(mode=0; mode<vn->modes; mode++)
-		{
-		  // Polymer viscosity
-		  mup = viscosity(ve[mode]->gn, gamma, d_mup);
-		  // Polymer time constant
-		  lambda = 0.0;
-		  if(ve[mode]->time_constModel == CONSTANT)
-		    {
-		      lambda = ve[mode]->time_const;
-		    }	
-                  for(a=0; a<VIM; a++)
+      for ( mode=0; mode<vn->modes; mode++)
+        {
+          mup = viscosity(ve[mode]->gn, gamma, d_mup);
+          lambda = 0.; 
+          if(ve[mode]->time_constModel == CONSTANT)
+            {
+              lambda = ve[mode]->time_const;
+            }
+          for ( p=0; p<VIM; p++)
+            {
+              for ( q=0; q<VIM; q++)
+                {
+                  for ( b=0; b<VIM; b++)
                     {
-                      for(b=0; b<VIM; b++)
+                      for ( c=0; c<VIM; c++)
                         {
-                          var = v_s[mode][a][b];
-                          for(j=0; j<ei->dof[var]; j++)
+                          var = v_s[mode][b][c];
+                          for ( j=0; j<ei->dof[var]; j++)
                             {
                               if(conf == LOG_CONF)
                                 {
-                                  d_Pi->S[p][q][mode][a][b][j] = mup/lambda*d_exp_s_ds[mode][p][q][a][b]*bf[var]->phi[j];
+                                  d_Pi->S[p][q][mode][b][c][j] =
+                                    mup/lambda*d_exp_s_ds[mode][p][q][b][c] * bf[var]->phi[j];
                                 }
-		              else
-		                {
-		                  d_Pi->S[p][q][mode][a][b][j] = delta(a,p)*delta(b,q)*bf[var]->phi[j];
-		                }
                             }
-		        } // loop over b
-		    } // loop over a
-		} // loop over modes
-	    } // loop over q
-	} // loop over p
+                        }
+                    }
+                } // for q
+            } // for p
+        } // Loop over modes
     }
 
   var = VELOCITY_GRADIENT11;
