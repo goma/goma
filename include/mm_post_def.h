@@ -552,6 +552,7 @@ extern int PP_LAME_MU;         /* Lame MU coefficient for solid/mesh */
 extern int PP_LAME_LAMBDA;     /* Lame LAMBDA coefficient for solid/mesh */
 extern int VON_MISES_STRAIN;
 extern int VON_MISES_STRESS;
+extern int LOG_CONF_MAP;      /* Map log-conformation tensor to stress */
 
 extern int UNTRACKED_SPEC;		/*Untracked Species Concentration */
 

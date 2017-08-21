@@ -900,7 +900,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	}
     }
 
-  if(Conformation_Flag == 1 && vn->evssModel == LOG_CONF) // If mapping is needed for log-conformation tensor
+  if(Conformation_Flag == 1) // If mapping is needed for log-conformation tensor
     {
       initial_guess_stress_to_log_conf(x, num_total_nodes);
     }

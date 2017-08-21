@@ -106,7 +106,7 @@ evaluate_flux(
 			  const int print_flag)     /*  flag for printing results,1=print*/
 			  {
   int j;			/* local index loop counter                 */
-  int i;			/* Index for the local node number - row    */
+  int i, r;			/* Index for the local node number - row    */
   int ip = 0, a, b, c, p, w = -1;
   int mn;
   int var;
@@ -693,17 +693,52 @@ evaluate_flux(
   			memset( ves, 0, sizeof(dbl)*DIM*DIM);
   			if ( pd->v[POLYMER_STRESS11] )
     			  {
-			    for ( a=0; a<VIM; a++)
-        	              {
-			        for ( b=0; b<VIM; b++)
-            			   {
-			             for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
-                		       {
-                  			ves[a][b] += fv->S[ve_mode][a][b];
-                			}
-            			   }
-        		      }
-    			   }
+                            dbl log_c[DIM][DIM];
+                            dbl exp_s[DIM][DIM];
+                            dbl R1[DIM][DIM];
+                            dbl eig_values[DIM];
+		            dbl mup = 0.;
+ 			    dbl lambda = 0.;
+                            if(vn->evssModel==LOG_CONF)
+                              {
+                                for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
+                                  {
+			            for (p=0; p<VIM; p++)
+			              {
+			                for (r=0; r<VIM; r++)
+				          {
+				            log_c[p][r] = fv->S[ve_mode][p][r];
+			                  }
+				      }
+				    compute_exp_s(log_c, exp_s, eig_values, R1);
+		                    mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
+			            if(ve[ve_mode]->time_constModel == CONSTANT)
+				      {
+				        lambda = ve[ve_mode]->time_const;
+			              }
+				    for (a=0; a<VIM; a++)
+			              {
+				        for (b=0; b<VIM; b++)
+				          {
+				            ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
+					  }
+			              }
+				  }
+			      }
+		            else
+		              {
+			        for ( a=0; a<VIM; a++)
+        	                  {
+			            for ( b=0; b<VIM; b++)
+            			       {
+			                 for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                		           {
+                  			     ves[a][b] += fv->S[ve_mode][a][b];
+                			   }
+            			       }
+        		          }
+    			       }
+			   } // if pd->v[POLYMER_STRESS11]
 
 		/*
 		 * OK, let's simplify things by computing the viscous
