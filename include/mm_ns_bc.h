@@ -386,6 +386,11 @@ PROTO((double [MAX_MODES][6],		/* func                                      */
        const double ,		/* Time step   */
        const double ));		/* Time step parameter */
 
+EXTERN void stress_no_v_dot_gradS_logc
+PROTO((double [MAX_MODES][6],           /* func                                      */
+       double [MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+       const double ,           /* Time step   */
+       const double ));         /* Time step parameter */
 
 EXTERN void PSPG_consistency_bc
 PROTO((double *,		/* func                                      */
