@@ -3069,7 +3069,7 @@ evaluate_time_func(const double current_time,
   double time = current_time;
   int time_function;
   /* Check if max time was specified and reset time if greater than max time */
-  if (BC_Types[bc_input_id].BC_Data_Int[3] == GD_TIME_MAX) {
+  if (BC_Types[bc_input_id].BC_Data_Int[4] == GD_TIME_MAX) {
     if (time > BC_Types[bc_input_id].BC_Data_Float[2]) {
       time = BC_Types[bc_input_id].BC_Data_Float[2];
     }

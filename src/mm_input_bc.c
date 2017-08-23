@@ -2983,8 +2983,10 @@ rd_bc_specs(FILE *ifp,
 
 	      if ( BC_Types[ibc].BC_Data_Int[2] != GD_TIME_TABLE )
 		{
-		  
-		  int lfdcount = look_for_n_doubles(ifp, 3, BC_Types[ibc].BC_Data_Float);
+
+		  double *gd_time_values = NULL;
+		  int lfdcount = read_constants(ifp, &gd_time_values, 0);
+
 		  if ( lfdcount < 2 || lfdcount > 3)
                     {
 		      sr = sprintf(err_msg, "Expected 2 or 3 flts for %s on %sID=%d.\n",
@@ -2993,8 +2995,15 @@ rd_bc_specs(FILE *ifp,
                                    BC_Types[ibc].BC_ID);
                       EH(-1, err_msg);
                     }
-                  SPF_DBL_VEC(endofstring(echo_string), lfdcount, BC_Types[ibc].BC_Data_Float);
+                  SPF_DBL_VEC(endofstring(echo_string), lfdcount, gd_time_values);
 
+		  for (k = 0; k < lfdcount; k++) {
+		    BC_Types[ibc].BC_Data_Float[k] = gd_time_values[k];
+		  }
+
+		  free(gd_time_values);
+
+		  BC_Types[ibc].BC_Data_Int[4] = 0;
 		  if (lfdcount == 3) {
 		    if (BC_Types[ibc].BC_Data_Float[2] < 0) {
 		      sr = sprintf(err_msg, "Expected a positive value for maximum time on %s on %sID=%d.\n",
@@ -3003,7 +3012,7 @@ rd_bc_specs(FILE *ifp,
                                    BC_Types[ibc].BC_ID);
                       EH(-1, err_msg);
 		    }
-		    BC_Types[ibc].BC_Data_Int[3] = GD_TIME_MAX;
+		    BC_Types[ibc].BC_Data_Int[4] = GD_TIME_MAX;
 		  }
 
                   BC_Types[ibc].max_DFlt = lfdcount;

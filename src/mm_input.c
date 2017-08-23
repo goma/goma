@@ -10897,7 +10897,7 @@ read_constants(FILE *imp,	     /* pointer to file */
 	       const int species_no) /* species number (zero if no species) */
 
 {
-  static char yo[] = "read_species";
+  static char yo[] = "read_constants";
   char  line[255];
   char  *arguments[MAX_NUMBER_PARAMS];
   int num_const, i;
