@@ -302,7 +302,8 @@ count_parameters(const char string[])
   i = 0;
   state = np = 0;
 
-  while((ch = string[i]) != '\0'  && ch != '\n') {
+  /* '#' and '$' denote start of comment */
+  while((ch = string[i]) != '\0'  && ch != '\n' && ch != '#' && ch != '$') {
     i++;
     if(ch == ' '  || ch == '\t' || ch == ',' || ch == '\f' ||
        ch == '\r' || ch == '\v' || ch == '=' ) {
