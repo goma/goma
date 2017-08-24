@@ -3182,6 +3182,10 @@ matrix_fill(
 /******************************************************************************/
 
 
+/* matrix_fill_stress is called from numerical_jacobian_compute_stress function
+ * and is mainly used for the log-conformation formulation for viscoelastic stress.
+ * It is a copy of the matrix_fill function, but only calls assemble_stress.
+ */
 int
 matrix_fill_stress(
 	    struct Aztec_Linear_Solver_System *ams,
@@ -3211,16 +3215,6 @@ matrix_fill_stress(
 	    dbl *ptr_U_norm    ,          /* global average velocity for PSPG */
 	    dbl *estifm,                 /* element stiffness Matrix for frontal solver*/
 	    int zeroCA)                   /* boolean to zero zeroCA */
-
-     /******************************************************************************
-  Function which fills the FEM stiffness matrices and the right-hand side.
-
-  Author:          Harry Moffat, Scott Hutchinson (1421)
-  Date:            24 November 1992
-  Revised:         Wed Mar  2 14:05:04 MST 1994 pasacki@sandia.gov
-  Revised:         9/15/94 RRR
-  Revised:         Summer 1998, SY Tam (UNM)
-     ******************************************************************************/
 
 {
   extern int MMH_ip;
@@ -3280,18 +3274,6 @@ matrix_fill_stress(
 
   double ls_F[MDE];		/* local copy for adaptive weights  */
   double ad_wtpos[10],ad_wtneg[10];	/*adaptive integration weights  */
-
-#if 0
-  dbl h[DIM];                 /* element size variable for PSPG */
-  dbl hh[DIM][DIM];
-  dbl dh_dxnode[DIM][MDE];
-
-  dbl hsquared[DIM];          /* square of the element size variable for SUPG */
-  dbl hhv[DIM][DIM];
-  dbl dhv_dxnode[DIM][MDE];
-  dbl v_avg[DIM];              /* average element velocity for SUPG */
-  dbl dv_dnode[DIM][MDE];      /* nodal derivatives of average element velocity for SUPG */
-#endif
 
   struct Petrov_Galerkin_Data pg_data;
 
@@ -3364,45 +3346,6 @@ matrix_fill_stress(
   /*          INITIALIZATION THAT IS DEPENDENT ON THE ELEMENT NUMBER            */
   /******************************************************************************/
   
-  /*
-   * For each variable there are generally different degrees of
-   * freedom that they and their equations contribute to.
-   *
-   * For this element, load up arrays that tell, for each variable,
-   *
-   *	(i) how many degrees of freedom they contribute towords
-   *	(ii) the local node number associated with each degree of
-   *	     freedom
-   *	(iii) pointers in the "esp" structure that tell where
-   *	      things are located in the global scheme...
-   *		(a) nodal unknowns in this element...
-   *		(b) Residual equations receiving contributions in
-   *		    this element.
-   *		(c) where the Jacobian entries go in the global
-   *		    "a" matrix in its MSR format...
-   */
-
-  /*   Initialize CA element arrays. These arrays are */
-  /*   are used to track the connectivity of elements */
-  /*   around contact lines, so that a variable wall  */
-  /*   normal can be used when the wall and free surface */
-  /*   are in separate elements.                      */
-  /*   PRS NOTE:  This is actually a very inefficient */
-  /*   initialization, as these arrays could be set up*/
-  /*   in one pre-processing step. However, that step */
-  /*   requires an element sweep without assembly.    */
-  /*   Could and should be done.                      */
-
-  /*
-   * Hmmm...the elem_order_map[] array is not always guaranteed to exist.
-   * Need to make provision for this, say in rd_exo.c. (and don't forget
-   * to free it up at the end, too!)
-   *
-   * There's a boolean exo->elem_order_map_exists that should be set and 
-   * checked accordingly to avoid problems in case exo->elem_order_map is NULL
-   *
-   */
-
   if (Proc_NS_List_Length > 0 && ((zeroCA == 1) || ((Linear_Solver != FRONT && ielem == exo->eb_ptr[0]) ||
                                                     (Linear_Solver == FRONT && ielem == exo->elem_order_map[0]-1))))
     {
@@ -3438,25 +3381,6 @@ matrix_fill_stress(
       mm_fill_total = 0;
     }
 
-  /*
-   *  load_elem_dofptr:
-   *       This routine loads a lot of useful pointers concerning the
-   *       current element refering to materials number:
-   *             mp = pointer to the material property structure
-   *             pd = problem description structure
-   *             cr = cr structure
-   *             elc
-   *             vn = vn structure
-   *             ve = ve structure
-   *       It also fills in these element based structures:
-   *             ei = Element Indeces structures
-   *
-   * First, make all the pointers for different variables point to
-   * a bona fide zero value so that references to undefined variables
-   * give a zero by default...
-   */
-
-  
   err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 
 			 resid_vector, 0);
   EH(err, "load_elem_dofptr");
@@ -3545,56 +3469,7 @@ matrix_fill_stress(
 	  num_local_nodes);
 #endif /* DEBUG */
 
-  /* subgrid or subelement integration setup */
-  if( pd->v[FILL] && ls != NULL && ls->Integration_Depth > 0 &&
-      ls->elem_overlap_state )
-    {
-      Subgrid_Int.active = TRUE;
-
-#ifdef SUBELEMENT_FOR_SUBGRID
-      /* DRN: you can also do subgrid integration with the following.
-         it recursive divides element to create small subelements and then
-         creates subgrid integration points */
-      Subgrid_Int.ip_total = get_subelement_integration_pts ( &Subgrid_Int.s, &Subgrid_Int.wt, &Subgrid_Int.ip_sign, 0., -2, 0 );
-      /*DPRINTF(stderr,"DEBUG ielem=%d, ip_total=%d\n",ei->ielem,Subgrid_Int.ip_total);*/
-#else
-      Subgrid_Int.ip_total = get_subgrid_integration_pts ( Subgrid_Tree, &element_search_grid,
-							   &Subgrid_Int.s, &Subgrid_Int.wt, ls->Length_Scale );
-      /*DPRINTF(stderr,"DEBUG ielem=%d, ip_total=%d\n",ei->ielem,Subgrid_Int.ip_total);*/
-#endif
-#if 0
-      print_subgrid_integration_pts ( Subgrid_Int.s, Subgrid_Int.wt, Subgrid_Int.ip_total );
-#endif
-    }
-  else if( pd->v[FILL] && ls != NULL &&
-           ls->SubElemIntegration && 
-	   ls->elem_overlap_state )
-    {
-      Subgrid_Int.active = TRUE;
-      Subgrid_Int.ip_total = get_subelement_integration_pts ( &Subgrid_Int.s, &Subgrid_Int.wt, &Subgrid_Int.ip_sign, 0., -2, 0 );
-      if ( neg_elem_volume )
-        {
-#if 0
-	  /* Squawk then turn off the switch. */
-          WH( -1, "Negative subelement volume detected.");
-	  neg_elem_volume = FALSE;
-#endif
-#if 1
-          /* Squawk then fail timestep. */
-          fprintf(stderr,"Negative subelement volume in element (%d)!\n", ielem+1);
-          return -1;
-#endif
-        }
-#if 0
-      print_subgrid_integration_pts ( Subgrid_Int.s, Subgrid_Int.wt, Subgrid_Int.ip_total );
-#endif
-    }
-  else if( pd->v[FILL] && ls != NULL && ls->AdaptIntegration && ls->elem_overlap_state )
-    {Subgrid_Int.active = TRUE;}
-  else
-    {
-      Subgrid_Int.active = FALSE;
-    }
+  Subgrid_Int.active = FALSE;
 
   /*
    * Clean out local element contribution (lec) accumulator...
@@ -3603,12 +3478,6 @@ matrix_fill_stress(
       
   /* XFEM setup */
   /* DRN-now using check_xfem_contribution to do this */
-#if 0
-  if ( xfem!= NULL ) kill_extended_eqns( x, exo );
-#endif
-  if (ls != NULL) ls->Elem_Sign = 0;
-
-
                         
   /******************************************************************************/
   /*                              BLOCK 1.5                                     */
@@ -3630,15 +3499,6 @@ matrix_fill_stress(
   pg_data.mu_avg = 0.;
   pg_data.rho_avg = 0.;
 
-
-  /* get element level constants for upwinding and
-     stabilized schemes, if necessary */
-  /*
-   * If PSPG is turned on, then calculate the centroid viscosity
-   * for use in the PSPG formulas. Note, we actually call 
-   * load_basis_functions here. Is this big penalty necessary or
-   * can be piggyback on top of one gauss point?
-   */
   if(PSPG)
     {
       if(PSPG == 1)
@@ -3683,14 +3543,6 @@ matrix_fill_stress(
       }
     }
 
-  if(pde[FILL] || pde[PHASE1])      /* UMR fix for non-FILL problems */
-    {
-      if(ls != NULL)
-	{
-	  h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
-	}
-    }
-
   /*
    * The current SUPG model requires a value for the element's size and the
    * average velocity. Evaluate this here.
@@ -3730,18 +3582,6 @@ matrix_fill_stress(
     h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
     assemble_new_qtensor(pg_data.hsquared);
   }
-
-  /*
-   * Here we will do a quick element-level manipulation for the use of Lagrange
-   * multipliers for fluid-structural surfaces (viz. overset grid). This section may change if
-   * the assemble_volume_lagrange_multiplier guts change.  
-   * Quickly trivialize residuals and jacobian for elements that don't contain 
-   * an isosurface. For elements not containing a solid/fluid boundary, we will
-   * set set the Jacobian and Residual to be such that no updates occur. Actually, this
-   * test should be done at a much higher level, and not within a Gauss Integration loop, but
-   * we will do this here for now.   PRS: If we go forward with this we need to put this
-   * in a subroutine
-   */
 
   ls_old = ls;
   if(!pde[R_MESH1])
@@ -3943,48 +3783,16 @@ matrix_fill_stress(
       err = load_basis_functions(xi, bfd);
       EH( err, "problem from load_basis_functions");
 
-      /*
-       * This has elemental Jacobian transformation and some 
-       * basic mesh derivatives...
-       *
-       * The physical space derivatives from beer_belly are still
-       * "raw", in the sense that they do not yet include the 
-       * scale factors necessary to make them into *gradients*.
-       * That is done in load_fv.
-       */
-      
       err = beer_belly();
       EH(err, "beer_belly");
       if (neg_elem_volume) return -1;
       if( zero_detJ ) return -1;
       
-      /*
-       * Load up field variable values at this Gauss point, but not
-       * any gradients of field variables. Do load up the scale factors
-       * and derivatives inherent to the coordinate system, such as
-       * grad_(e_a) tensor... which is nontrivial in cylindrical 
-       * coordinates.
-       */
       err = load_fv();
       EH( err, "load_fv");
        
-      /*
-       * Here, load in the final part of the necessary basis function
-       * information derivatives in the physical space coordinates.
-       * Now we can form the true physical space gradient operators
-       * because we have available the scale factors.
-       */
-      
       err = load_bf_grad();
       EH( err, "load_bf_grad");
-      
-      /*
-       * Finally, load the mesh derivatives of the gradients of the
-       * basis functions with respect to physical space coordinates.
-       *
-       * Only call this high computational intensity tensor workout if 
-       * we really need this information...
-       */
       
       if (pde[R_MESH1] || pd->v[R_MESH1])
 	{
@@ -4005,17 +3813,6 @@ matrix_fill_stress(
 	  EH( err, "load_fv_mesh_derivs");
 	}
 
-      /* QUESTION
-       * Since we are already at a gauss point and have calculated
-       * all the field variables and their derivatives, shouldn't
-       * we calculate all the material properties here, rather than
-       * in the subroutines?
-       * Then, each mp would be calculated only ONCE per gauss point
-       * and would be available for all the assembly routines
-       *
-       * ANSWER
-       * Yes.  Write the source!
-       */
       computeCommonMaterialProps_gp(time_value);
       
       /*
@@ -4038,18 +3835,6 @@ matrix_fill_stress(
       /******************************************************************************/
     }
   /* END  for (ip = 0; ip < ip_total; ip++)                               */  
-
-  if ( pde[R_LEVEL_SET] && ls != NULL )
-    apply_embedded_colloc_bc( ielem, x, delta_t, theta, time_value,
-                              exo, dpi );
-
-  if( pde[R_EXT_VELOCITY] ) 
-    {
-      ls_old = ls;
-      if(pfd != NULL) ls = pfd->ls[0];  /* this is a major hack */
-      assemble_boundary_extension_velocity(x, exo, dpi);
-      ls = ls_old; /*Make things right again */
-    }
 
 
   /**************************************************************************/
@@ -4284,15 +4069,6 @@ matrix_fill_stress(
 	/*if (bct == WEAK_SHIFT) call_special = 1; */
       } /* end of loop over boundary condition number */
 	
-      /* MMH notes: This next call was commented out when I updated
-       * the BC's for LSA.  If someone wants to be able to do the
-       * following call, with LSA, then they need to be careful.
-       *
-       * If uncommenting also uncomment other call_special references
-       */
-      /* if (call_special) shift_residuals_and_jacobians(ija, a, x, resid_vector, */
-      /* 					      	first_elem_side_BC_array) */
-      /****************************************************************************/
     } while ( (elem_side_bc = elem_side_bc->next_side_bc) != NULL );
     /* END of do  while () construct				      */
     /******************************************************************************/
@@ -4451,21 +4227,6 @@ matrix_fill_stress(
 	    if (bct == COLLOCATE_SURF ) call_col = 1;
 	    if (bct == CONTACT_SURF ) call_contact = 1;	    
 	  }
-	/*
-	 * Major change here 6/10/98 to accomodate frontal solver.  Here the 
-	 * FLUID_SOLID/SOLID_FLUID BCs actually use local element contribution 
-	 * from the lec structure.  So, before the apply_integrated_bc was called
-	 * first and usually a companion NO_SLIP condition obliterated the fluid
-	 * momentum contributions to lec and so when the fluid-solid condition 
-	 * followed, there were no stresses left to balance.  HEre we simply
-	 * switched the order of the calls below (i.e. call_col befor call_int)
-	 * to avoid this.  Cross your fingers!
-	 */
-	
-	/*
-	 * BOUNDARY CONDITIONS OF TYPE 1 - Pointwise Collocation at the 
-	 * nodal points
-	 */
 	if (call_col) 
 	  {
 	    err = apply_point_colloc_bc(resid_vector, delta_t, theta,
@@ -4717,51 +4478,6 @@ matrix_fill_stress(
     for(i = 0; i < MDE; i++)
       lec->J[R_MOMENTUM3][VELOCITY3][i][i] = 1.0;
 
-  if ( ls != NULL && ls->Ignore_F_deps )
-    {
-      int peqn, pvar;
-      for (eqn = V_FIRST; eqn < V_LAST;  eqn++)
-        {
-          peqn = upd->ep[eqn];
-          if ( peqn != -1 && eqn != R_FILL )
-            {
-              var = FILL;
-              pvar = upd->vp[var];
-              for (i = 0; i < ei->dof[eqn]; i++)
-                {
-                  for (j = 0; j < ei->dof[var]; j++)
-                    {
-                      lec->J[peqn][pvar][i][j] = 0.;
-                      /*
-			if ( lec->J[peqn][pvar][i][j] != 0. )
-                        DPRINTF(stderr,"lec->J[eqn=%d][var=FILL][%d][%d] = %g\n",eqn,i,j,lec->J[peqn][pvar][i][j]);
-                      */
-                    }
-                }
-            }
-        }
-    }
-  if ( pfd != NULL && pfd->ls[0]->Evolution == LS_EVOLVE_SLAVE )
-    {
-      int peqn, pvar;
-      for (eqn = V_FIRST; eqn < V_LAST;  eqn++)
-        {
-          peqn = upd->ep[eqn];
-          if ( peqn != -1 && eqn != R_PHASE1 )
-            {
-              var = PHASE1;
-              pvar = upd->vp[var];
-              for (i = 0; i < ei->dof[eqn]; i++)
-                {
-                  for (j = 0; j < ei->dof[var]; j++)
-                    {
-                      lec->J[peqn][pvar][i][j] = 0.;
-                    }
-                }
-            }
-        }
-    }
-  
   /*
    * Load local element stiffness matrix (lec) into global matrix, depending
    * on solver used - front vs. everything else, and matrix storage format

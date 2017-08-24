@@ -269,9 +269,9 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
       x[s_idx[0][1]] = log_s[0][1];
       x[s_idx[1][1]] = log_s[1][1];
 
-    } // Loop over nodes
-    } // Loop over modes
-  } // Loop over materials
+    } /* Loop over nodes */
+    } /* Loop over modes */
+  } /* Loop over materials */
 }
 
 

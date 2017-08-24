@@ -5812,12 +5812,11 @@ compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
 	  d_exp_s_ds[p][q][i][j] = (exp_s_p[p][q] - exp_s[p][q]) / ds;
 	}
       }
-      
-      for (m = 0; m < VIM; m++) {
-        for (n=0; n < VIM; n++) {
-          s_p[m][n] = s[m][n];
-        }
-      }
+     
+      s_p[i][j] = s[i][j];
+      if( i != j) {
+        s_p[j][i] = s[j][i];
+      } 
     }
   }
 }

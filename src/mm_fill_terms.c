@@ -4031,19 +4031,8 @@ assemble_momentum(dbl time,       /* current time */
 					  {
 					    for ( q=0; q<VIM; q++)
 					      {
-                                                if(vn->evssModel == LOG_CONF)
-				                  {
-				                    if( b <= c )
-				                      {
-						        diffusion -=
-						          grad_phi_i_e_a[p][q] * d_Pi->S[p][q][mode][b][c][j];
-				                      }
-					          }
-				                else
-				                  {
-						    diffusion -=
-						      grad_phi_i_e_a[p][q] * d_Pi->S[p][q][mode][b][c][j];
-				                  }
+					        diffusion -=
+				                  grad_phi_i_e_a[p][q] * d_Pi->S[p][q][mode][b][c][j];
 					      }
 					  }
 					diffusion *= det_J * wt * h3;
@@ -28069,7 +28058,6 @@ fluid_stress_conf( double Pi[DIM][DIM],
   dbl s[DIM][DIM];                      // Polymer stress tensor
   dbl gamma_cont[DIM][DIM];             // Shear rate tensor based on continuous gradient of velocity
   dbl P;
-  dbl s11,s12,s22;
 
   dbl R1[DIM][DIM];
   dbl eig_values[DIM];
@@ -28259,11 +28247,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
 		      lambda = ve[mode]->time_const;
 		    }
 
-		  // DEVSS-G term using mup
-		  if(evss_f)
-		    {
-		      Pi[a][b] += mup*(gamma[a][b]-gamma_cont[a][b]);
-		    }
+		  Pi[a][b] += mup*(gamma[a][b]-gamma_cont[a][b]);
 
 		  // PolymerStress contribution
 		  if(conf)
@@ -28579,7 +28563,10 @@ fluid_stress_conf( double Pi[DIM][DIM],
                           var = v_s[mode][b][c];
                           for ( j=0; j<ei->dof[var]; j++)
                             {
-                              if(conf == LOG_CONF)
+                              d_Pi->S[p][q][mode][b][c][j] = 0.;
+                              /* Note: We use b <= c below to be consistent with the symmetry of the stress
+                                 tensor and to avoid double contributions to the Jacobian in assemble_momentum */
+                              if ( b <= c && conf == LOG_CONF )
                                 {
                                   d_Pi->S[p][q][mode][b][c][j] =
                                     mup/lambda*d_exp_s_ds[mode][p][q][b][c] * bf[var]->phi[j];
@@ -28587,9 +28574,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
                             }
                         }
                     }
-                } // for q
-            } // for p
-        } // Loop over modes
+                } /* for q */
+            } /* for p */
+        } /* Loop over modes */
     }
 
   var = VELOCITY_GRADIENT11;
