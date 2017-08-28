@@ -33,8 +33,6 @@
 cmake_minimum_required (VERSION 2.8)
 cmake_policy(VERSION 2.8)
 
-
-### Party like it's 1977. This is in here for the two fortran files inside Goma.
 enable_language(Fortran)
 
 ### This tells goma where to compile to, and the prefix of every variable
@@ -43,7 +41,6 @@ include(${CMAKE_SOURCE_DIR}/cmake/CMakeScripts.cmake)
 
 ### Run "ccmake ." to change any options here after running "cmake ."
 option(${PROJECT_NAME}_CXX11_STD "Unless you have an older compiler, or you used the NoCXX11 library, keep this enabled" ON)
-option(${PROJECT_NAME}_Write_To_Profile "This will automatically add the libraries to your profile, it is recommended to keep this off" OFF)
 option(${PROJECT_NAME}_Create_Run_Script "This will create rungoma, a script which runs goma with all nessisary settings" ON)
 
 
@@ -136,9 +133,9 @@ set(${PROJECT_NAME}_LIBS "${${PROJECT_NAME}_Trilinos_DIR}/.." CACHE FILEPATH "Sp
 set(${PROJECT_NAME}_SPARSE_LIB "-L${${PROJECT_NAME}_Sparse_DIR}/lib -lsparse")
 set(${PROJECT_NAME}_ARPACK_LIB "-L${${PROJECT_NAME}_Arpack_DIR}/lib -larpack")
 set(${PROJECT_NAME}_LIB_DIR ${${PROJECT_NAME}_LIBS})
-set(${PROJECT_NAME}_MPI_LIB "-L${${PROJECT_NAME}_MPI_TOP}/lib -lmpi -lmpi_f77")
-set(${PROJECT_NAME}_FORTRAN_LIB "-lc -lgcc -lstdc++ -lgfortran")
-set(${PROJECT_NAME}_SYS_LIB "-lm -lz")
+set(${PROJECT_NAME}_MPI_LIB "-L${${PROJECT_NAME}_MPI_TOP}/lib -lmpi -lmpi_mpifh" CACHE STRING "Specify the MPI libraries to link against. Both an MPI fortran and an MPI library are required.")
+set(${PROJECT_NAME}_FORTRAN_LIB "-lc -lgcc -lstdc++ -lgfortran" CACHE STRING "Specify the fortran and c compiler specific libraries")
+set(${PROJECT_NAME}_SYS_LIB "-lm -lz" CACHE STRING "Specify the system libraries to link against. Math libraries belong here.")
 
 
 ### I really wish I could combine these two together but you can't. (set (Var EXISTS) doesn't work)
@@ -171,16 +168,6 @@ message(STATUS "Adding ${PROJECT_NAME} files to Make")
 ### Telling cmake where to find all the trilinos cmake files. These import all the libraries used by trilinos automatically
 set(Trilinos_PREFIX ${${PROJECT_NAME}_TRILINOS_TOP}/lib/cmake/Trilinos)
 set(CMAKE_PREFIX_PATH ${Trilinos_PREFIX} ${CMAKE_PREFIX_PATH})
-
-### make install support
-### This passes some data to install.cmake which uses it to add a few lines to your .profile
-if (${${PROJECT_NAME}_Write_To_Profile})
-  if (${${PROJECT_NAME}_Standalone_SEACAS})
-    install (CODE "execute_process(COMMAND ${CMAKE_COMMAND} -DTRILINOS_TOP=${${PROJECT_NAME}_SEACAS_DIR} -DMPI_TOP=${${PROJECT_NAME}_MPI_TOP} -P ${CMAKE_SOURCE_DIR}/cmake/install.cmake)" )
-  else()
-    install (CODE "execute_process(COMMAND ${CMAKE_COMMAND} -DMPI_TOP=${${PROJECT_NAME}_MPI_TOP} -DTRILINOS_TOP=${${PROJECT_NAME}_TRILINOS_TOP} -P ${CMAKE_SOURCE_DIR}/cmake/install.cmake)" )
-  endif()
-endif()
 
 if (${${PROJECT_NAME}_Create_Run_Script})
   if (${${PROJECT_NAME}_Standalone_SEACAS})
@@ -277,17 +264,19 @@ file(GLOB SOURCE_FILES
   "include/brkfix/*.h")
 
 
-if(${CMAKE_BUILD_TYPE} MATCHES DEBUG)
-  add_executable("${PROJECT_NAME}d" ${SOURCE_FILES})
-else()
-  add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-endif()
+add_executable("${PROJECT_NAME}d" EXCLUDE_FROM_ALL ${SOURCE_FILES})
+target_compile_options("${PROJECT_NAME}d" PUBLIC "-gdwarf")
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 
-if(${CMAKE_BUILD_TYPE} MATCHES DEBUG)
-  target_link_libraries("${PROJECT_NAME}d" ${${PROJECT_NAME}_SPARSE_LIB} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${${PROJECT_NAME}_ARPACK_LIB} ${${PROJECT_NAME}_MPI_LIB} ${Trilinos_EXTRA_LD_FLAGS} ${${PROJECT_NAME}_SEACAS_LIB} ${${PROJECT_NAME}_ENDING_LIBS})
-else()
-  target_link_libraries(${PROJECT_NAME} ${${PROJECT_NAME}_SPARSE_LIB} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${${PROJECT_NAME}_ARPACK_LIB} ${${PROJECT_NAME}_MPI_LIB} ${Trilinos_EXTRA_LD_FLAGS} ${${PROJECT_NAME}_SEACAS_LIB} ${${PROJECT_NAME}_ENDING_LIBS})
-endif()
+target_link_libraries("${PROJECT_NAME}d" ${${PROJECT_NAME}_SPARSE_LIB} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${${PROJECT_NAME}_ARPACK_LIB} ${Trilinos_EXTRA_LD_FLAGS} ${${PROJECT_NAME}_SEACAS_LIB})
+target_link_libraries(${PROJECT_NAME} ${${PROJECT_NAME}_SPARSE_LIB} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${${PROJECT_NAME}_ARPACK_LIB}  ${Trilinos_EXTRA_LD_FLAGS} ${${PROJECT_NAME}_SEACAS_LIB})
+
+message("Sparse: ${${PROJECT_NAME}_SPARSE_LIB}")
+message("Trilinos: ${Trilinos_LIBRARIES}")
+message("Trilinos TPL: ${Trilinos_TPL_LIBRARIES}")
+message("Arpack: ${${PROJECT_NAME}_ARPACK_LIB}")
+message("Trilinos Extra:${Trilinos_EXTRA_LD_FLAGS}")
+message("Seacas: ${${PROJECT_NAME}_SEACAS_LIB}")
 
 ### Install goma to $CMAKE_INSTALL_PREFIX/bin (by default /usr/local/bin). This can only be specified with -DCMAKE_INSTALL_PREFIX="LOCATION"
 if(${CMAKE_BUILD_TYPE} MATCHES DEBUG)
@@ -303,6 +292,6 @@ configure_file(
   IMMEDIATE @ONLY)
 
 add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake)
-
-### make debug will reconfigure with debugging enabled and then build in the library set by make config
-add_custom_target(debug COMMAND "/bin/bash" ${CMAKE_SOURCE_DIR}/cmake-debug-example "-D${PROJECT_NAME}_LIBS\\=${${PROJECT_NAME}_LIB_DIR}" AUTOMAKE $(MAKE))
+add_custom_target(debug COMMAND /bin/bash -c echo "" COMMENT "Cmake does not support make debug. Please run:
+make gomad
+to build goma with debugging flags.")

@@ -13,3 +13,5 @@ goma
 /.settings/
 cmake-config
 cmake-debug
+/scripts/easygomabuild.txt
+/scripts/gomaTPLs/
