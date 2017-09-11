@@ -1854,6 +1854,7 @@ rd_levelset_specs(FILE *ifp,
         {
           ls =  alloc_struct_1(struct Level_Set_Data, 1);
           ls->var = FILL;
+	  ls->MatrixNum = 0;
           ls->embedded_bc = NULL;
           ls->init_surf_list = NULL;
           ls->last_surf_list = NULL;

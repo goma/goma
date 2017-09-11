@@ -2157,7 +2157,15 @@ EH(-1,"version not compiled with frontal solver");
 	/* Now go back and correct all those dofs that use XFEM */
 	if(xfem != NULL)
 	  {
-            xfem_correct( num_total_nodes, x, xdot, x_old, xdot_old, delta_x, theta, delta_t );
+	    if (upd->Total_Num_Matrices > 0) {
+	      if (pg->imtrx == ls->MatrixNum) {
+		xfem_correct( num_total_nodes, x, xdot, x_old, xdot_old, delta_x, theta, delta_t );
+	      } else {
+		xfem_correct( num_total_nodes, x, xdot, x_old, xdot_old, NULL, theta, delta_t );
+	      }
+	    } else {
+	      xfem_correct( num_total_nodes, x, xdot, x_old, xdot_old, delta_x, theta, delta_t );
+	    }
 	    exchange_dof(cx, dpi, x, pg->imtrx);
 	    exchange_dof(cx, dpi, xdot, pg->imtrx);
 	  }

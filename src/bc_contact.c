@@ -2508,7 +2508,7 @@ gnn_distance( const int I,
               double * Fold,
               double * Fprev )
 {
-  int ie = Index_Solution( I, ls->var, 0, 0, -1, pg->imtrx);
+  int ie = Index_Solution( I, ls->var, 0, 0, -1, ls->MatrixNum);
   
   if ( ie == -1 )
     {
@@ -2520,7 +2520,7 @@ gnn_distance( const int I,
         {
 	  /* use local node 0 from element */
 	  int I0 = exo->elem_node_list[ exo->elem_node_pntr[elem] + 0 ];
-          ie = Index_Solution( I0, ls->var, 0, 0, -1, pg->imtrx);
+          ie = Index_Solution( I0, ls->var, 0, 0, -1, ls->MatrixNum);
         }
       
       if ( elem == -1 || ie == -1 )

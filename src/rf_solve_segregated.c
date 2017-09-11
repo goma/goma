@@ -208,6 +208,7 @@ dbl *te_out) /* te_out - return actual end time */
   int Fill_Matrix = 0;
 
   double time2 = 0.0;
+  struct Extended_Shape_Fcn_Basics **matrix_xfem;
   tran->solid_inertia = 0;
   static int callnum = 1; /* solve_problem_segregated call counter */
 
@@ -779,7 +780,7 @@ dbl *te_out) /* te_out - return actual end time */
 				  x_AC[iAC]);
 				  }
 				  else if(augc[iAC].Type == AC_FLUX)
-				  {
+				  {p
 				  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=%10.6e\n", 
 				  augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
 				  } */
@@ -907,26 +908,35 @@ dbl *te_out) /* te_out - return actual end time */
        */
       find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
 
-      if ( nt == 0 )
+      if ( nt == 0 && pg->imtrx == 0)
         {
           xfem = NULL;
           if ( upd->XFEM )
             {
-              xfem = alloc_struct_1(struct Extended_Shape_Fcn_Basics, 1);
-              xfem->ielem = -1;
-              xfem->tot_vol = alloc_dbl_1(numProcUnknowns, 0.0);
-              xfem->active_vol =  alloc_dbl_1(numProcUnknowns, 0.0);
+	      matrix_xfem = calloc(upd->Total_Num_Matrices, sizeof(struct Extended_Shape_Fcn_Basics *));
+	      int imtrx;
+	      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+		matrix_xfem[imtrx] = alloc_struct_1(struct Extended_Shape_Fcn_Basics, 1);
+		matrix_xfem[imtrx]->ielem = -1;
+		matrix_xfem[imtrx]->tot_vol = alloc_dbl_1(numProcUnknowns[imtrx], 0.0);
+		matrix_xfem[imtrx]->active_vol =  alloc_dbl_1(numProcUnknowns[imtrx], 0.0);
+	      }
               if (ls == NULL)
                 {
                   EH(-1,"Currently, XFEM requires traditional level set (not pf)");
                 }
             }
         }
+
+      if (upd->XFEM) {
+	xfem = matrix_xfem[pg->imtrx];
+      }
     
       if (upd->ep[pg->imtrx][FILL] > -1  && nt == 0) 
 	{ /*  Start of LS initialization */
 
 	  Fill_Matrix = pg->imtrx;
+	  ls->MatrixNum = pg->imtrx;
 #ifndef COUPLED_FILL
 	  EH(-1, "Segregated not setup for COUPLED_FILL undefined");
 #endif /* not COUPLED_FILL */
@@ -1197,6 +1207,9 @@ dbl *te_out) /* te_out - return actual end time */
 
 
       for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+	if (upd->XFEM) {
+	  xfem = matrix_xfem[pg->imtrx];
+	}
 
 	/*
 	 * What is known at this exact point in the code:

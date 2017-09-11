@@ -6035,17 +6035,23 @@ xfem_correct( int num_total_nodes,
 
           interp = pd_glob[MatID]->i[pg->imtrx][var_type];
 
+	  int fill_matrix = pd_glob[MatID]->mi[R_FILL];
+	  if (fill_matrix < 0) {
+	    EH(-1, "Could not find fill matrix");
+	  }
+
           if ( is_xfem_interp( interp ) )
             {
               double F, F_old, F_prev;
 
               if ( delta_x == NULL ) {
 
-                gnn_distance( I, x, x_old, NULL, &F, &F_old, NULL );
+                gnn_distance( I, pg->matrices[fill_matrix].x,  pg->matrices[fill_matrix].x_old, NULL, &F, &F_old, NULL );
 
               } else {
 
-                gnn_distance( I, x, x_old, delta_x, &F, &F_old, &F_prev );
+                gnn_distance( I,  pg->matrices[fill_matrix].x,  pg->matrices[fill_matrix].x_old,
+			      delta_x, &F, &F_old, &F_prev );
 
                 if ( sign_change( F, F_prev ) ) /* corrector changed sign of node */
                   {
