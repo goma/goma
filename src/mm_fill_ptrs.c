@@ -2103,7 +2103,10 @@ load_elem_dofptr(const int ielem,
       }
     }
   }
-  
+
+  err = load_elem_dofptr_all(ielem, exo);
+  EH(err, "load_elem_dofptr_all");
+
   /* extra setup needed for level set problems */
   if ( ls != NULL ) determine_ls_elem_overlap_state();
   ls_old = ls;
@@ -2121,8 +2124,6 @@ load_elem_dofptr(const int ielem,
   if ( xfem != NULL ) load_xfem_for_elem( x, exo );
   
 
-  err = load_elem_dofptr_all(ielem, exo);
-  EH(err, "load_elem_dofptr_all");
 
   return (status);
 }

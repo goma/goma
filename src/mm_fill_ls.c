@@ -3299,7 +3299,7 @@ current_elem_on_isosurface ( int isovar,
   double f[MDE];
   int i;
 
-  if (!(pd->v[pg->imtrx][isovar])) return (FALSE);
+  if (!(pd->gv[isovar])) return (FALSE);
 
   esp = x_static + ei[pg->imtrx]->ieqn_ledof[ei[pg->imtrx]->lvdof_to_ledof[isovar][0]];
   f[0] = *esp - isoval;
@@ -8814,7 +8814,7 @@ current_elem_overlaps_interface( double width )
   double absolute_minimum = DBL_MAX;
   double absolute_maximum = 0.;
  
-  if (!(pd->v[pg->imtrx][ls->var])) return (FALSE);
+  if (!(pd->gv[ls->var])) return (FALSE);
   
   if ( width == 0. )
     {
@@ -8822,7 +8822,7 @@ current_elem_overlaps_interface( double width )
       return on_isosurface;
     }
   
-  for( i=0 ; i < ei[pg->imtrx]->dof[ls->var] ; i++ )
+  for( i=0 ; i < ei[pd->mi[ls->var]]->dof[ls->var] ; i++ )
     {
 	  switch (ls->var )
 	  {

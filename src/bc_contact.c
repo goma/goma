@@ -2445,8 +2445,8 @@ find_segment_s_wt(const int iquad,           /* current GQ index */
 double dof_distance ( int var_type,
                       int lvdof )
 {
-  int ln = ei[pg->imtrx]->dof_list[var_type][lvdof];
-  int F_dof = ei[pg->imtrx]->ln_to_dof[ls->var][ln];
+  int ln = ei[pd->mi[var_type]]->dof_list[var_type][lvdof];
+  int F_dof = ei[pd->mi[ls->var]]->ln_to_dof[ls->var][ln];
   
   if ( F_dof != -1 ) {
     if (ls->var == LS)
@@ -2467,7 +2467,7 @@ double dof_distance ( int var_type,
     }
       
   /* define element var distance to be distance to node 0 */
-  F_dof = ei[pg->imtrx]->ln_to_dof[ls->var][0];
+  F_dof = ei[pd->mi[ls->var]]->ln_to_dof[ls->var][0];
   if ( F_dof < 0 ) {
     EH(-1,"dof_distance expect LS var to be define at local node 0");
   }
@@ -2479,7 +2479,7 @@ double dof_distance ( int var_type,
 
 double lnn_distance ( int ln )
 {
-  int F_dof = ei[pg->imtrx]->ln_to_dof[ls->var][ln];
+  int F_dof = ei[pd->mi[ls->var]]->ln_to_dof[ls->var][ln];
   
   if ( F_dof != -1 ) {
     if (ls->var == LS)
@@ -2488,7 +2488,7 @@ double lnn_distance ( int ln )
       return *(esp->pF[ls->var-PHASE1][F_dof]);
   }
   /* define element var distance to be distance to node 0 */
-  F_dof = ei[pg->imtrx]->ln_to_dof[ls->var][0];
+  F_dof = ei[pd->mi[ls->var]]->ln_to_dof[ls->var][0];
   if ( F_dof < 0 ) {
     EH(-1,"dof_distance expect LS var to be define at local node 0");
   }

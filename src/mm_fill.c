@@ -630,7 +630,7 @@ matrix_fill(
 #endif /* DEBUG */
 
   /* subgrid or subelement integration setup */
-  if( pd->v[pg->imtrx][FILL] && ls != NULL && ls->Integration_Depth > 0 &&
+  if( pd->gv[FILL] && ls != NULL && ls->Integration_Depth > 0 &&
       ls->elem_overlap_state )
     {
       Subgrid_Int.active = TRUE;
@@ -650,7 +650,7 @@ matrix_fill(
       print_subgrid_integration_pts ( Subgrid_Int.s, Subgrid_Int.wt, Subgrid_Int.ip_total );
 #endif
     }
-  else if( pd->v[pg->imtrx][FILL] && ls != NULL &&
+  else if( pd->gv[FILL] && ls != NULL &&
            ls->SubElemIntegration && 
 	   ls->elem_overlap_state )
     {
@@ -673,7 +673,7 @@ matrix_fill(
       print_subgrid_integration_pts ( Subgrid_Int.s, Subgrid_Int.wt, Subgrid_Int.ip_total );
 #endif
     }
-  else if( pd->v[pg->imtrx][FILL] && ls != NULL && ls->AdaptIntegration && ls->elem_overlap_state )
+  else if( pd->gv[FILL] && ls != NULL && ls->AdaptIntegration && ls->elem_overlap_state )
     {Subgrid_Int.active = TRUE;}
   else
     {
@@ -767,7 +767,7 @@ matrix_fill(
       }
     }
 
-  if(pde[FILL] || pde[PHASE1])      /* UMR fix for non-FILL problems */
+  if(pd->gv[FILL] || pd->gv[PHASE1])      /* UMR fix for non-FILL problems */
     {
       if(ls != NULL)
 	{
@@ -2122,7 +2122,7 @@ matrix_fill(
     }
   /* END  for (ip = 0; ip < ip_total; ip++)                               */  
 
-  if ( pde[R_LEVEL_SET] && ls != NULL )
+  if ( pd->gv[R_LEVEL_SET] && ls != NULL )
     apply_embedded_colloc_bc( ielem, x, delta_t, theta, time_value,
                               exo, dpi );
 
@@ -2137,7 +2137,7 @@ matrix_fill(
   /*First apply BCS to embedded primary level-set surface. */
   if (ls != NULL )
     {
-      if ( pde[ls->var] && ls->elem_overlap_state )
+      if ( pd->gv[ls->var] && ls->elem_overlap_state )
 	{
 	  if ( ls->Length_Scale == 0. || Do_Overlap )
 	    {
@@ -2168,7 +2168,7 @@ matrix_fill(
       if (pfd->ls[0]->Evolution == LS_EVOLVE_SLAVE)
 
 	{
-	  if ( pde[ls->var] && ls->elem_overlap_state )
+	  if ( pd->gv[ls->var] && ls->elem_overlap_state )
 	    {
 	      if ( ls->Length_Scale == 0. || Do_Overlap )
 		{
@@ -2188,7 +2188,7 @@ matrix_fill(
 		}
 	    }
 	}
-      else if( pde[R_PHASE1] && !pde[R_FILL] )
+      else if( pd->gv[R_PHASE1] && !pd->gv[R_FILL] )
 	{
 	  apply_distributed_sources ( ielem, ls->Length_Scale,
 				      x, exo,
@@ -2196,9 +2196,9 @@ matrix_fill(
 				      &pg_data,
 				      -1, NULL, NULL, NULL );
 	}
-      else if (pde[R_PHASE1] && pde[R_EXT_VELOCITY])
+      else if (pd->gv[R_PHASE1] && pd->gv[R_EXT_VELOCITY])
 	{
-	  if ( pde[ls->var] && ls->elem_overlap_state )
+	  if ( pd->gv[ls->var] && ls->elem_overlap_state )
 	    {
 	      apply_embedded_bc( ielem, x, delta_t, theta, time_value, &pg_data, -1, NULL, NULL, NULL, exo );
 #ifdef CHECK_FINITE
