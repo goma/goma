@@ -1641,6 +1641,9 @@ assemble_embedded_bc (
         case LS_CAPILLARY_BC:
           assemble_csf_tensor();
           break;
+	case LS_CAP_HYSING_N_BC:
+	  assemble_cap_hysing_n_source(dt);
+	  break;
         case LS_FLOW_PRESSURE_BC:
           assemble_p_source( bc->BC_Data_Float[0], bc->BC_Data_Int[0] );
           break;

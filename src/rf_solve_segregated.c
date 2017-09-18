@@ -509,6 +509,16 @@ dbl *te_out) /* te_out - return actual end time */
     init_vec(x[pg->imtrx], cx[pg->imtrx], exo, dpi, global_x_AC, nAC, &timeValueRead[pg->imtrx]);
   }
 
+  if (TimeIntegration != STEADY)
+    {
+      if (tran->init_time < 0.0)
+	{
+	  tran->init_time = timeValueRead[0];
+	  DPRINTF(stdout, "\n Initial Simulation Time Has been set to %g\n", timeValueRead[0]);
+	}
+    }
+
+
   for (iAC = 0; iAC < nAC; iAC++) {
     if (augc[iAC].Type != AC_USERBC && augc[iAC].Type != AC_FLUX) {
       EH(-1, "Can only use BC and flux AC's in segregated solve");

@@ -438,6 +438,8 @@ rd_bc_specs(FILE *ifp,
 	case LS_CAP_CURVE_BC:
 	case LS_CAP_DIV_N_BC:
 	case LS_CAP_DIV_S_N_BC:
+	case LS_CAP_HYSING_N_BC:
+	case LS_CAP_HYSING_N_END_FORCE_BC:
         case H_FREE_BC:
 	case QNOBC_BC:
 	case APR_NOBC_BC:
