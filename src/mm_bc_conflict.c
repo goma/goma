@@ -790,7 +790,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 		       *  as they are not redundant.  The user signifies this case
 		       *  with a -1 in the Data_int[0] slot
 		       */
-		      if (BC_Types[ibc2].BC_Data_Int[0] != -1)  /*this is a last defense
+		      if (BC_Types[ibc2].BC_Data_Int[0] > -1)  /*this is a last defense
 								  to retain velo_tangent*/
 		      {
 			delete_bc_entry(BC_Unk_List[inode][offset_mom2], j);

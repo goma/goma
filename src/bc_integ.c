@@ -700,6 +700,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	case VELO_SLIP_ROT_FLUID_BC:
 	  fvelo_slip_bc(func, d_func, x, 
 			(int) bc->BC_Name,
+			(int) bc->max_DFlt,
 			bc->BC_Data_Float,
 			(int) bc->BC_Data_Int[0],
 			xsurf, theta, delta_t);
