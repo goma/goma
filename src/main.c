@@ -793,6 +793,12 @@ main(int argc, char **argv)
   /*
    *                           SOLVE THE PROBLEM
    */
+  if( TimeIntegration == TRANSIENT)
+    {
+        Continuation = ALC_NONE;
+        solve_problem(EXO_ptr, DPI_ptr, NULL);
+    }  
+
   if (Debug_Flag) {
     switch (Continuation) {
     case ALC_ZEROTH:
@@ -839,6 +845,7 @@ main(int argc, char **argv)
   fprintf(stderr, "P_%d: Before entering solve problem\n", ProcID);
 #endif
 
+    
   switch (Continuation) {
   case ALC_ZEROTH:
   case ALC_FIRST:
@@ -860,7 +867,7 @@ main(int argc, char **argv)
       {
         error = do_loca(cx, EXO_ptr, DPI_ptr);
       }
-    else
+    else if(TimeIntegration != TRANSIENT)
       {
         solve_problem(EXO_ptr, DPI_ptr, NULL);
       }

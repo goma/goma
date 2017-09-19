@@ -1023,6 +1023,24 @@ rd_bc_specs(FILE *ifp,
 	    SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[5]); 
           BC_Types[ibc].max_DFlt = 5;
 
+	  if ( fscanf(ifp, "%lf", 
+		      &BC_Types[ibc].BC_Data_Float[6]) != 1)
+	    {
+		      BC_Types[ibc].BC_Data_Float[6] = 0.;
+	    }
+	  else
+	    SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[6]); 
+          BC_Types[ibc].max_DFlt = 6;
+
+	  if ( fscanf(ifp, "%lf", 
+		      &BC_Types[ibc].BC_Data_Float[7]) != 1)
+	    {
+		      BC_Types[ibc].BC_Data_Float[7] = 1;
+	    }
+	  else
+	    SPF(endofstring(echo_string)," %g", BC_Types[ibc].BC_Data_Float[7]); 
+          BC_Types[ibc].max_DFlt = 7;
+
 
 	  break;
 
@@ -1744,6 +1762,8 @@ rd_bc_specs(FILE *ifp,
 	  BC_Types[ibc].max_DFlt = num_const;
 	  
 	  for(i=0;i<num_const;i++) SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].u_BC[i]);
+          if(BC_Types[ibc].BC_Name == ROLL_FLUID_BC)
+                BC_Types[ibc].BC_Data_Int[0] = (int)BC_Types[ibc].u_BC[9];
 
           break;
 

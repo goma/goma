@@ -1164,13 +1164,28 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	 {
 	   elc_glob[mn]->thermal_expansion_model = SHRINKAGE;
 	   num_const = read_constants(imp, &(elc_glob[mn]->u_thermal_expansion), NO_SPECIES);
-	   if ( num_const < 1) 
+	   if ( num_const < 2) 
 	     {
 	       sr = sprintf(err_msg, 
 			    "Matl %s expected at least 2 constants for %s %s model.\n",
 			    pd_glob[mn]->MaterialName, 
 			    "Thermal Expansion", 
 			    "SHRINKAGE");
+	       EH(-1, err_msg);
+	     }
+	   elc_glob[mn]->len_u_thermal_expansion = num_const;
+	 } 
+      else if( !strcmp(model_name, "IDEAL_GAS") )
+	 {
+	   elc_glob[mn]->thermal_expansion_model = IDEAL_GAS;
+	   num_const = read_constants(imp, &(elc_glob[mn]->u_thermal_expansion), NO_SPECIES);
+	   if ( num_const < 1) 
+	     {
+	       sr = sprintf(err_msg, 
+			    "Matl %s expected at least 1 constant for %s %s model.\n",
+			    pd_glob[mn]->MaterialName, 
+			    "Thermal Expansion", 
+			    "IDEAL_GAS");
 	       EH(-1, err_msg);
 	     }
 	   elc_glob[mn]->len_u_thermal_expansion = num_const;

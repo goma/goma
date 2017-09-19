@@ -102,6 +102,7 @@ apply_point_colloc_bc (
   int doFullJac = 0;
   double nwall[3];
   int contact_flag = FALSE;
+  double xsurf[MAX_PDIM];
 
 
   /***************************************************************************/
@@ -370,8 +371,12 @@ apply_point_colloc_bc (
 		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC);
 		break;
 	    case ROLL_FLUID_BC:
+                icount = BC_Types[bc_input_id].BC_Data_Int[2];
+xsurf[0] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+1];
+xsurf[1] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+2];
+xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 		f_roll_fluid(ielem_dim, &func, d_func, 
-		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC);
+		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC, xsurf);
 		break;
 #ifdef USE_CGM
 	    case SM_PLANE_BC:       /* Solid Model PLANE BC */
@@ -822,7 +827,8 @@ f_roll_fluid (int ielem_dim,
         double *func,
         double d_func[],	/* dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
         const double *p,		/*  function parameters from data card  */
-        const int num_const)           /* number of passed parameters   */
+        const int num_const,           /* number of passed parameters   */
+        double *xsurf)           /* number of passed parameters   */
 {    
 /**************************** EXECUTION BEGINS *******************************/
   double roll_rad; /* roll radius */
@@ -835,6 +841,9 @@ f_roll_fluid (int ielem_dim,
   double v_solid=0., res, jac, delta, flow, eps=1.0e-8, viscinv;
   double jacinv, thick, dthick_dV, dthick_dP;
   int Pflag = TRUE;
+  double cur_pt[3]={0,0,0};
+  double pg_factor=1.0, tang_sgn=1.0, v_mag=0.;;
+
   int j,var,jvar,k;
 
   if(af->Assemble_LSA_Mass_Matrix)
@@ -913,16 +922,45 @@ f_roll_fluid (int ielem_dim,
 
   if(num_const > 8 && p[9] >= 0.0)
      {
+      dist = 0.;
+      for(var=0; var < pd->Num_Dim; var ++)
+       {
+        /* Uses undeformed node position */
+         dist += SQUARE(fv->x0[var]-xsurf[var]);
+       }
+         dist /= SQUARE(p[10]);
+if(dist < 10)fprintf(stderr,"roll_fl %g %g %g\n",fv->x0[0],xsurf[0],dist);
+
+     Pflag = (int)p[11];
+     velo_avg = 0.0;  pgrad=0.;  v_mag = 0.;
      for (j = 0; j < pd->Num_Dim; j++)
         {
           velo_avg += fv->stangent[0][j]*(v_roll[j] + fv->v[j]);
           v_solid += fv->stangent[0][j]*v_roll[j];
+          v_mag += SQUARE(v_roll[j]);
           if(Pflag)
               {
                 pgrad += fv->stangent[0][j]*fv->grad_P[j];
               }
         }
+     v_mag = sqrt(v_mag);
+     tang_sgn = v_solid/v_mag;
+     tang_sgn = (double)SGN(v_solid/v_mag);
      velo_avg *= 0.5;
+   /* sometimes the tangent/normals flip causing havoc....*/
+     if(v_solid < 0)
+        {
+         WH(-1,"fvelo_slip: normals and tangents have flipped! - try CONTACT_LINE model\n");
+         velo_avg *= tang_sgn;
+         v_solid *= tang_sgn;
+         pgrad *= tang_sgn;
+        }
+
+     pg_factor = 1.0;
+     if(dist < 10.0)
+         {pg_factor = 1.0-exp(-dist);  }
+     pgrad *= pg_factor;
+
      flow = MAX(0.,p[9]*v_solid);
      viscinv = 1./p[8];
      thick = flow/velo_avg;
@@ -945,7 +983,7 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
     d_func[MESH_DISPLACEMENT1] =  d_dist[0];
     d_func[MESH_DISPLACEMENT2] =  d_dist[1];
     d_func[MESH_DISPLACEMENT3] =  d_dist[2];
-#if 1
+#if 0
     for (jvar=0; jvar<pd->Num_Dim; jvar++)
       {
         var = VELOCITY1 + jvar;
@@ -968,7 +1006,7 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
                                 *fv->stangent[0][k];
                         if(Pflag)
                           {
-                          d_func[var] += -dthick_dP*fv->grad_P[k]*fv->stangent[0][k];
+                          d_func[var] += -dthick_dP*pg_factor*fv->grad_P[k]*fv->stangent[0][k];
                           }
                       }
               }
@@ -983,7 +1021,7 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
           {
                for (k = 0; k < pd->Num_Dim; k++)
                   {
-                    d_func[var] += -dthick_dP*fv->stangent[0][k];
+                    d_func[var] += -dthick_dP*pg_factor*fv->stangent[0][k];
                   }
           }
       }
