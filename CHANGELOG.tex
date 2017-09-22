@@ -188,6 +188,16 @@ Description:  Added second open porous shell equation to accomodate
 lubrication regions. 
 Example: EQ = shell_sat_open_2   Q1 SH_P_OPEN_2   Q1 1           1   1
 
+Capability: Modification to GD_TIME to allow setting a maximum time
+Developer: W. Ortiz
+Description: User specified max time is used in place of current
+solution time in order to allow a value to ramp up to a fixed
+value. The max time parameter is optional.
+Example:
+BC = GD_LINEAR SS 1 R_MOMENTUM1 0 VELOCITY1 0 {web_speed/time_max} 0.
+BC = GD_TIME   SS 1 R_MOMENTUM1 0 LINEAR 0 0 1. {time_max}
+BC = GD_LINEAR SS 1 R_MOMENTUM1 0 VELOCITY1 0 0. -1.
+
 Capability: Boundary condition for hydrostatic pressure
 Developer: D. Hariprasad, December 2014
 Description: Specifies pressure as P = P_0 + rho*g*x where rho is a vairable density and the user specifies P_0.

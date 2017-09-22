@@ -3094,7 +3094,7 @@ bc_eqn_index_stress(int id,               /* local node number                 *
 /*****************************************************************************/
 
 int
-evaluate_time_func(const double time,
+evaluate_time_func(const double current_time,
 		   double *f_time,      /* computed time function */
 		   const int bc_input_id)
     
@@ -3103,8 +3103,15 @@ evaluate_time_func(const double time,
       * Function which multiplies a time function by previously
       * loaded GD conditions.
       ************************************************************************/
-{  
+{
+  double time = current_time;
   int time_function;
+  /* Check if max time was specified and reset time if greater than max time */
+  if (BC_Types[bc_input_id].BC_Data_Int[4] == GD_TIME_MAX) {
+    if (time > BC_Types[bc_input_id].BC_Data_Float[2]) {
+      time = BC_Types[bc_input_id].BC_Data_Float[2];
+    }
+  }
 
   /* ---- Find variable number and species number */
   time_function = BC_Types[bc_input_id].BC_Data_Int[2];
