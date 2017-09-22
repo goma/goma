@@ -793,11 +793,6 @@ main(int argc, char **argv)
   /*
    *                           SOLVE THE PROBLEM
    */
-  if( TimeIntegration == TRANSIENT)
-    {
-        Continuation = ALC_NONE;
-        solve_problem(EXO_ptr, DPI_ptr, NULL);
-    }  
 
   if (Debug_Flag) {
     switch (Continuation) {
@@ -842,10 +837,21 @@ main(int argc, char **argv)
       DPRINTF(stderr, "%s: solve_problem...\n", yo);
       break;
   }
-  fprintf(stderr, "P_%d: Before entering solve problem\n", ProcID);
 #endif
 
     
+  if( TimeIntegration == TRANSIENT)
+        {
+        Continuation = ALC_NONE;
+        if (Debug_Flag) {
+          P0PRINTF("%s: solve_problem...TRANSIENT superceded Continuation...\n", yo);
+          }
+#ifdef DEBUG
+   DPRINTF(stderr, "%s: solve_problem...TRANSIENT superceded Continuation...\n", yo);
+#endif
+        solve_problem(EXO_ptr, DPI_ptr, NULL);
+        }  
+
   switch (Continuation) {
   case ALC_ZEROTH:
   case ALC_FIRST:
