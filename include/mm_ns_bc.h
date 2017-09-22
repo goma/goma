@@ -196,6 +196,7 @@ fvelo_slip_bc(double func[MAX_PDIM],
 	      double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 	      double x[],
 	      const int type,    /* whether rotational or not */
+	      const int max_float,    /* max float number */
               double bc_float[MAX_BC_FLOAT_DATA],
 	      const int dcl_node,/*   node id for DCL  */
 	      const double xsurf[MAX_PDIM], /* coordinates of surface Gauss  *

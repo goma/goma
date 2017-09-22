@@ -3279,6 +3279,17 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 		    }
 		}
 	    }
+	  if( elc->thermal_expansion_model == IDEAL_GAS)
+	    {
+	      for ( p=0; p<VIM; p++)
+		{
+		  for ( q=0; q<VIM; q++)
+		    {
+		      TT[p][q] -=  (2.* mu + 3.*lambda) / (thermexp + fv->T) * 
+			(fv->T - elc->solid_reference_temp) * delta(p,q);
+		    }
+		}
+	    }
 	  if( elc->thermal_expansion_model == USER)
 	    {
 	      for ( p=0; p<VIM; p++)
@@ -3333,7 +3344,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 			     + 2. * d_mu_dx[b][j] * fv->strain[p][q];
 			   if( pd->e[R_ENERGY] )
 			     {
-	  			if( elc->thermal_expansion_model == CONSTANT)
+	  			if( elc->thermal_expansion_model == CONSTANT || 
+                                    elc->thermal_expansion_model == IDEAL_GAS )
 	  			{
 			       dTT_dx[p][q][b][j] -=  (2. * d_mu_dx[b][j] + 3.*d_lambda_dx[b][j])
 				 * thermexp * 
@@ -3380,6 +3392,15 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 			 {
 			   dTT_dT[p][q][j] -=  (2.* mu + 3.*lambda) * thermexp * bf[v]->phi[j] 
 			     * delta(p,q); 
+			 }
+		     }
+		   if( elc->thermal_expansion_model == IDEAL_GAS)
+		     {
+		       for ( j=0; j<dofs; j++)
+			 {
+			   dTT_dT[p][q][j] -=  (2.* mu + 3.*lambda) * 
+                                    (thermexp+elc->solid_reference_temp)/SQUARE(fv->T+thermexp)
+                                      * bf[v]->phi[j] * delta(p,q); 
 			 }
 		     }
 		   if( elc->thermal_expansion_model == USER)
@@ -5514,7 +5535,11 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
      }
    else if(elc_ptr->thermal_expansion_model == SHRINKAGE)
      {
-	*thermexp = elc_ptr->thermal_expansion;
+	*thermexp = elc_ptr->u_thermal_expansion[0];
+     }
+   else if(elc_ptr->thermal_expansion_model == IDEAL_GAS)
+     {
+	*thermexp = elc_ptr->u_thermal_expansion[0];
      }
    else if(elc_ptr->thermal_expansion_model == USER )
      {

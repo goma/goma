@@ -3082,6 +3082,7 @@ fvelo_slip_bc(double func[MAX_PDIM],
 	      double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 	      double x[],
 	      const int type,    /* whether rotational or not */
+	      const int max_float,    /* Max float number from input file */
               double bc_float[MAX_BC_FLOAT_DATA],
 	      const int dcl_node,/*   node id for DCL  */
 	      const double xsurf[MAX_PDIM], /* coordinates of surface Gauss  *
@@ -3117,6 +3118,7 @@ fvelo_slip_bc(double func[MAX_PDIM],
   double slip_dir[MAX_PDIM], vslip[MAX_PDIM], vrel[MAX_PDIM], vrel_dotn;
   double X_0[3], omega, velo_avg=0., pgrad=0., thick=0., dthick_dV=0., dthick_dP=0.;
   int Pflag = TRUE;
+  double pg_factor=1.0, tang_sgn=1.0;
   
   int icount;
   double dist;                  /* distance btw current position and dynamic CL */
@@ -3319,7 +3321,17 @@ fvelo_slip_bc(double func[MAX_PDIM],
    ***************************************************************************/
 
 
-  if (alpha != 0. && type != VELO_SLIP_FLUID_BC && type != VELO_SLIP_ROT_FLUID_BC )
+  if (type == VELO_SLIP_FLUID_BC || type == VELO_SLIP_ROT_FLUID_BC)
+    {
+    dist = 0.;
+    for(icount=0; icount < pd->Num_Dim; icount ++)
+       {
+        /* Uses undeformed node position */
+         dist += SQUARE(xsurf[icount]-bc_float[max_float+1+icount]);
+       }
+         dist /= SQUARE(bc_float[6]); 
+    }
+  else if (alpha != 0. )
     {
       if  ( ( type == VELO_SLIP_FILL_BC || type == VELO_SLIP_ROT_FILL_BC ) 
 	    && ls !=NULL )
@@ -3330,13 +3342,12 @@ fvelo_slip_bc(double func[MAX_PDIM],
       else
         {
           /* Coord position in bc_float, from BC_Data_Float */
-          int float_offset = 5;
           dist = 0.;
           for(icount=0; icount < pd->Num_Dim; icount ++)
             {
               /* Uses undeformed node position */
-              dist += (xsurf[icount]-bc_float[icount + float_offset]) *
-                (xsurf[icount]-bc_float[icount + float_offset]);
+              dist += (xsurf[icount]-bc_float[icount + max_float +1]) *
+                (xsurf[icount]-bc_float[icount + max_float +1]);
             }
           dist = sqrt(dist);
         }
@@ -3345,7 +3356,8 @@ fvelo_slip_bc(double func[MAX_PDIM],
     {
       dist    = 1.0;
     }
-  
+
+
   /* for exponentially decaying slip, max out betainv when equivalent to 
    * STRONG IC for no slip
    */
@@ -3390,21 +3402,51 @@ fvelo_slip_bc(double func[MAX_PDIM],
 
   /* quantities specific to FLUID bcs   */
 
+  Pflag = (int)bc_float[7];
   velo_avg = 0.0;  pgrad=0.;
   if(type == VELO_SLIP_FLUID_BC || type == VELO_SLIP_ROT_FLUID_BC)
     {
      double v_solid=0., res, jac, delta, flow, eps=1.0e-8, viscinv;
-     double jacinv;
+     double jacinv,v_mag=0.;
+     tang_sgn=0.;
      for (p = 0; p < pd->Num_Dim; p++) 
         {
+          tang_sgn += fv->stangent[0][p]*vs[p];
           velo_avg += fv->stangent[0][p]*(vs[p] + fv->v[p]);
           v_solid += fv->stangent[0][p]*vs[p];
+          v_mag += SQUARE(vs[p]);
           if(Pflag)
              {
               pgrad += fv->stangent[0][p]*fv->grad_P[p];
 	     }
         }
+     v_mag = sqrt(v_mag);
+     tang_sgn = v_solid/v_mag;
+     tang_sgn = (double)SGN(v_solid/v_mag);
      velo_avg *= 0.5;
+   /* sometimes the tangent/normals flip causing havoc....*/
+     if(v_solid < 0)
+	{
+         WH(-1,"fvelo_slip: normals and tangents have flipped! - try CONTACT_LINE model\n");
+         velo_avg *= tang_sgn;
+         v_solid *= tang_sgn;
+         pgrad *= tang_sgn;
+	}
+#if 1
+         if(dist < 10.0)
+             {pg_factor = 1.0-exp(-dist);  }
+         else
+             {pg_factor = 1.0;}
+#else
+         if(dist < 1.0)
+             {pg_factor = 0.0;}
+         else if(dist < 2.0)
+             {pg_factor = (dist-1.0);}
+         else
+             {pg_factor = 1.0;}
+#endif
+     pgrad *= pg_factor;
+
      flow = MAX(0.,bc_float[4]*v_solid);
      viscinv = 1./bc_float[0];
      thick = flow/velo_avg;
@@ -3439,7 +3481,7 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
     {
        for ( p=0 ; p < pd->Num_Dim ; p++ )
            {
-             func[p] += 0.5*thick*fv->grad_P[p];
+             func[p] += 0.5*thick*pg_factor*fv->grad_P[p];
            }
     }
 
@@ -3482,10 +3524,10 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
 	    for (j=0; j<ei->dof[var]; j++)
 	      {
 		phi_j = bf[var]->phi[j];
-	        d_func[jvar][var][j] += -betainv*dthick_dV*fv->stangent[0][jvar]*vslip[jvar]*phi_j;
+	        d_func[jvar][var][j] += -betainv*dthick_dV*tang_sgn*fv->stangent[0][jvar]*vslip[jvar]*phi_j;
 /* don't think we need -- seems OK 4-12-2017 */
 	        if(Pflag) d_func[jvar][var][j] += 0.5*thick*dthick_dV*
-                                fv->stangent[0][jvar]*fv->grad_P[jvar]*phi_j;
+                     tang_sgn*fv->stangent[0][jvar]*pg_factor*fv->grad_P[jvar]*phi_j;
 	      }
 	  }
        }
@@ -3501,12 +3543,13 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
 		    for (p = 0; p < pd->Num_Dim; p++)
 		      {
 	               d_func[p][var][j] += -betainv*dthick_dV*vslip[p]
-                                *fv->dstangent_dx[0][p][jvar][j];
+                                *tang_sgn*fv->dstangent_dx[0][p][jvar][j];
 	                   if(Pflag) 
                             {
-                             d_func[p][var][j] += 0.5*thick*dthick_dV*fv->grad_P[p]*fv->dstangent_dx[0][p][jvar][j];
-		             d_func[p][var][j] += 0.5*fv->grad_P[p]*dthick_dP*fv->dstangent_dx[0][p][jvar][j];
-		             d_func[p][var][j] += vslip[p]*dthick_dP*fv->dstangent_dx[0][p][jvar][j]*(-betainv);
+                             d_func[p][var][j] += 0.5*thick*dthick_dV*pg_factor*fv->grad_P[p]*tang_sgn*fv->dstangent_dx[0][p][jvar][j];
+		             d_func[p][var][j] += 0.5*pg_factor*fv->grad_P[p]*dthick_dP*tang_sgn*fv->dstangent_dx[0][p][jvar][j];
+		             d_func[p][var][j] += 0.5*pg_factor*fv->d_grad_P_dmesh[p][jvar][j]*thick;
+		             d_func[p][var][j] += vslip[p]*dthick_dP*tang_sgn*fv->dstangent_dx[0][p][jvar][j]*(-betainv);
                             }
 		      }
 		  }
@@ -3574,8 +3617,8 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
 	          {
 	            phi_j = bf[var]->grad_phi[j][p];
 		    d_func[p][var][j] += 0.5*thick* phi_j;
-		    d_func[p][var][j] += 0.5*fv->grad_P[p]*dthick_dP*fv->stangent[0][p]*phi_j;
-		    d_func[p][var][j] += vslip[p]*(-betainv)*dthick_dP*fv->stangent[0][p]*phi_j;
+		    d_func[p][var][j] += 0.5*pg_factor*fv->grad_P[p]*dthick_dP*tang_sgn*fv->stangent[0][p]*phi_j;
+		    d_func[p][var][j] += vslip[p]*(-betainv)*dthick_dP*tang_sgn*fv->stangent[0][p]*phi_j;
 	          }
 	      }
           }
@@ -3708,9 +3751,10 @@ exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */)
   /* if velo slip has */
   int velo_slip_root = 0;
   /* Offset for where to place coordinates in BC_Data_Float */
-  int float_offset = 5;
+  int float_offset;
   double node_coord[pd->Num_Dim]; /* temporary buffer for node coordinates */
 
+  float_offset = BC_Types[ibc].max_DFlt+1;
   /* Skip this if calculation is not needed */
   if (BC_Types[ibc].BC_Data_Int[0] == -1 || BC_Types[ibc].BC_Data_Int[0] == 0) {
     return 0;
@@ -3731,7 +3775,7 @@ exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */)
 #endif /* #ifdef PARALLEL */
 
   if (ProcID == velo_slip_root) {
-    int node = BC_Types[ibc].BC_Data_Int[0];
+    int node = abs(BC_Types[ibc].BC_Data_Int[0]);
     /* find coordinate position of reference node */
     for (i = 0; i < pd->Num_Dim; i++) {
       node_coord[i] = Coor[i][node];
@@ -3750,9 +3794,17 @@ exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */)
 #endif
 
   /* set BC_Data_Float values */
+if(1 || BC_Types[ibc].BC_Name != ROLL_FLUID_BC)  {
   for (i = 0; i < pd->Num_Dim; i++) {
     BC_Types[ibc].BC_Data_Float[float_offset + i] = node_coord[i];
   }
+}	else	{
+  for (i = 0; i < pd->Num_Dim; i++) {
+    BC_Types[ibc].u_BC[float_offset + i] = node_coord[i];
+  }
+
+fprintf(stderr,"exchange %d %g %g\n",ibc,node_coord[0],node_coord[1]);
+}
   return 0;
 }
 
@@ -13119,6 +13171,7 @@ q_velo_slip_bc(double func[MAX_PDIM],
   /* use fvelo_slip to evaluate slip and derivatives */
   fvelo_slip_bc(slip_stress, d_slip_stress, x, 
                 (int) BC_Types[ibc].BC_Name,
+                (int) BC_Types[ibc].max_DFlt,
                 BC_Types[ibc].BC_Data_Float,
                 (int) BC_Types[ibc].BC_Data_Int[0],
                 xsurf, tt, dt);
