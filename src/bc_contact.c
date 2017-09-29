@@ -1642,7 +1642,7 @@ assemble_embedded_bc (
           assemble_csf_tensor();
           break;
 	case LS_CAP_HYSING_N_BC:
-	  assemble_cap_hysing_n_source(dt);
+	  assemble_cap_hysing_n_source(dt, theta);
 	  break;
         case LS_FLOW_PRESSURE_BC:
           assemble_p_source( bc->BC_Data_Float[0], bc->BC_Data_Int[0] );

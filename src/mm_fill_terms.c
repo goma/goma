@@ -20009,7 +20009,7 @@ assemble_div_s_n_source ( )
 }
 
 int
-assemble_cap_hysing_n_source(double dt)
+assemble_cap_hysing_n_source(double dt, theta)
 {
   int i,j,a,b,p,q, k,ii, ledof;
   int eqn, peqn, var, pvar;
