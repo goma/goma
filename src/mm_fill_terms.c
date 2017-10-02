@@ -20009,7 +20009,7 @@ assemble_div_s_n_source ( )
 }
 
 int
-assemble_cap_hysing_n_source(double dt, theta)
+assemble_cap_hysing_n_source(double dt, double theta)
 {
   int i,j,a,b,p,q, k,ii, ledof;
   int eqn, peqn, var, pvar;
@@ -20027,6 +20027,7 @@ assemble_cap_hysing_n_source(double dt, theta)
   double grad_s_v[DIM][DIM];
   double grad_s_phi_i_e_a[DIM][DIM];
   double d_grad_s_v_dv[DIM][DIM];
+  double d_grad_s_v_dF[DIM][DIM];
   //  double d_grad_s_v_dn[DIM][DIM];
 
   double source, source_etm;
@@ -20063,12 +20064,11 @@ assemble_cap_hysing_n_source(double dt, theta)
 
   continuous_surface_tension(mp->surface_tension, csf, d_csf_dF, d_csf_dX);
 
-
-  for (p = 0; p < VIM; p++) {
-    for (q = 0; q < VIM; q++) {
+  for ( p=0; p<VIM; p++) {
+    for ( q=0; q<VIM; q++) {
       grad_s_v[p][q] = fv->grad_v[p][q];
-      for (a = 0; a < VIM; a++) {
-	grad_s_v[p][q] -= lsi->normal[p] * lsi->normal[a] * fv->grad_v[a][q];
+      for (k = 0; k < VIM; k++) {
+	grad_s_v[p][q] -= (lsi->normal[p] * lsi->normal[k]) * fv->grad_v[k][q];
       }
     }
   }
@@ -20166,24 +20166,19 @@ assemble_cap_hysing_n_source(double dt, theta)
 		  source *= -det_J * wt * h3;
 		  source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
 
-		  for (p = 0; p < VIM; p++) {
-		    for (q = 0; q < VIM; q++) {
-		      grad_s_phi_i_e_a[p][q] = grad_phi_i_e_a[p][q];
-		      for (k = 0; k < VIM; k++) {
-			grad_s_phi_i_e_a[p][q] -= lsi->normal[p] * lsi->normal[k] * grad_phi_i_e_a[k][q];
-		      }
-		    }
-		  }
-
 		  diffusion = 0;
-
+		  /*
+		   * 			grad_v[a][b] = d v_b
+		   *				       -----
+		   *				       d x_a
+		   */
 		  for ( p=0; p<VIM; p++) {
 		    for ( q=0; q<VIM; q++) {
-		      diffusion += grad_s_phi_i_e_a[p][q] * (dt * mp->surface_tension * lsi->delta) * grad_s_v[q][p];
+		      diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * grad_s_v[p][q];
 		    }
 		  }
 
-		  diffusion *= -det_J * wt * h3;
+		  diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi->delta);
 
 		  lec->R[peqn][ii] += source + diffusion;
 		}
@@ -20217,15 +20212,6 @@ assemble_cap_hysing_n_source(double dt, theta)
 
 		  grad_phi_i_e_a = bfm->grad_phi_e[i][a];
 
-		  for (p = 0; p < VIM; p++) {
-		    for (q = 0; q < VIM; q++) {
-		      grad_s_phi_i_e_a[p][q] = grad_phi_i_e_a[p][q];
-		      for (k = 0; k < VIM; k++) {
-			grad_s_phi_i_e_a[p][q] -= lsi->normal[p] * lsi->normal[k] * grad_phi_i_e_a[k][q];
-		      }
-		    }
-		  }
-
 		  var = VELOCITY1;
 		  if(pd->v[pg->imtrx][var])
 		    {
@@ -20251,11 +20237,11 @@ assemble_cap_hysing_n_source(double dt, theta)
 
 			      for ( p=0; p<VIM; p++) {
 				for ( q=0; q<VIM; q++) {
-				  diffusion += grad_s_phi_i_e_a[p][q] * (dt * mp->surface_tension * lsi->delta) * d_grad_s_v_dv[q][p];
+				  diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * d_grad_s_v_dv[p][q];
 				}
 			      }
 
-			      diffusion *= -det_J * wt * h3;
+			      diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi->delta);
 			      lec->J[peqn][pvar][ii][j] += diffusion;
 			    }
 			}
@@ -20288,16 +20274,25 @@ assemble_cap_hysing_n_source(double dt, theta)
 			  source *= source_etm;
 
 
-			  diffusion = 0;
 			  for ( p=0; p<VIM; p++) {
 			    for ( q=0; q<VIM; q++) {
-			      diffusion += grad_s_phi_i_e_a[p][q] * (dt * mp->surface_tension * lsi->d_delta_dF[j]) * grad_s_v[q][p];
+			      d_grad_s_v_dF[p][q] = fv->grad_v[p][q];
+			      for (k = 0; k < VIM; k++) {
+				d_grad_s_v_dF[p][q] -= (lsi->d_normal_dF[p][j] * lsi->normal[k]) * fv->grad_v[k][q] +
+				  (lsi->normal[p] * lsi->d_normal_dF[q][j]) * fv->grad_v[k][q];
+			      }
 			    }
 			  }
 
-			  // A bunch of lsi->d_normal_dF terms
+			  diffusion = 0;
+			  for ( p=0; p<VIM; p++) {
+			    for ( q=0; q<VIM; q++) {
+			      diffusion += grad_s_phi_i_e_a[p][q] * d_grad_s_v_dF[p][q] * lsi->delta +
+				grad_s_phi_i_e_a[p][q] * grad_s_v[p][q] * lsi->d_delta_dF[j];
+			    }
+			  }
 
-			  diffusion *= -det_J * wt * h3;
+			  diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension);
 			  lec->J[peqn][pvar][ii][j] += source + diffusion;
 			}
 		    }
@@ -20305,29 +20300,7 @@ assemble_cap_hysing_n_source(double dt, theta)
 		  var = MESH_DISPLACEMENT1;
 		  if(pd->v[pg->imtrx][var])
 		    {
-		      for( b=0; b<VIM; b++)
-			{
-			  var = MESH_DISPLACEMENT1 + b;
-			  pvar = upd->vp[pg->imtrx][var];
-
-			  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-			    {
-			      phi_j = bf[var]->phi[j];
-
-			      source =0.;
-			      for ( p=0; p<VIM; p++)
-				{
-				  for ( q=0; q<VIM; q++)
-				    {
-				      source += grad_phi_i_e_a[p][q] * d_csf_dX[q][p][b][j];
-				    }
-				}
-			      source *= -d_area;
-			      source *= source_etm;
-
-			      lec->J[peqn][pvar][ii][j] += source;
-			    }
-			}
+		      EH(-1, "Jacobian terms for hysing capillary wrt mesh not implemented");
 		    }
 
 		}
