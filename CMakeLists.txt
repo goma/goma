@@ -60,6 +60,14 @@ else()
   set(${${PROJECT_NAME}_EXTRA_F_FLAGS} "${${PROJECT_NAME}_EXTRA_F_FLAGS} ")
 endif()
 
+execute_process(COMMAND git describe --dirty --always --tags OUTPUT_VARIABLE GitVersion RESULT_VARIABLE IsGit)
+if(IsGit EQUAL 0)
+  string(REGEX REPLACE "\n$" "" GitVersion "${GitVersion}")
+else()
+  unset(GitVersion)
+endif()
+
+
 ### These are all set here so you can modify them with ccmake. This works because they are set with the "CACHE" flag. The last input in set is the description you will see
 set(${PROJECT_NAME}_User_Define "-Dlinux"
   "-DCOMPILER_64BIT"
@@ -228,7 +236,11 @@ set(${PROJECT_NAME}_ENDING_LIBS "${${PROJECT_NAME}_FORTRAN_LIB} ${${PROJECT_NAME
 
 ### CMAKE Flags can be specified with CMAKE -DCMAKE_C_FLAGS or by editing the user flags.
 set(CMAKE_CXX_FLAGS   "${CMAKE_CXX_FLAGS} ${${PROJECT_NAME}_USER_FLAGS} ${${PROJECT_NAME}_USER_CXX_FLAGS}")
-set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} ${${PROJECT_NAME}_USER_FLAGS} ${${PROJECT_NAME}_USER_C_FLAGS}")
+if(GitVersion)
+  set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGitVersion=\\\"${GitVersion}\\\" ${${PROJECT_NAME}_USER_FLAGS} ${${PROJECT_NAME}_USER_C_FLAGS}")
+else()
+  set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS}  ${${PROJECT_NAME}_USER_FLAGS} ${${PROJECT_NAME}_USER_C_FLAGS}")
+endif()
 set(CMAKE_Fortran_FLAGS  "${CMAKE_Fortran_FLAGS} ${${PROJECT_NAME}_USER_FLAGS} ${${PROJECT_NAME}_USER_F_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${${PROJECT_NAME}_LD_FLAGS} ${${PROJECT_NAME}_USER_FLAGS} ${${PROJECT_NAME}_USER_LD_FLAGS}")
 
@@ -241,7 +253,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS}")
 set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} ${CMAKE_Fortran_FLAGS}")
 
 
-### Imports all nessisary headers.
+### Imports all necessary headers.
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(SYSTEM ${${PROJECT_NAME}_MPI_TOP}/include)
 include_directories(SYSTEM ${${PROJECT_NAME}_TRILINOS_TOP}/include)
