@@ -142,7 +142,7 @@ ifdef HAS_GIT
 	GIT_VERSION=$(shell git describe --dirty --always --tags 2> /dev/null)
 
 ifneq "$(GIT_VERSION)" ""
-	VERSION = -DGitVersion=\"$(GIT_VERSION)\"
+	VERSION = -DGIT_VERSION=\"$(GIT_VERSION)\"
 endif
 
 endif

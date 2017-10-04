@@ -56,8 +56,8 @@
 
 #ifndef VERSION
 
-  #ifdef GitVersion
-    #define VERSION GitVersion
+  #ifdef GIT_VERSION
+    #define VERSION GIT_VERSION
   #else
     #define VERSION "6.0.0"
   #endif
@@ -541,8 +541,8 @@ extern int zero_detJ_global;
 
 #ifndef VERSION
 
-  #ifdef GitVersion
-    #define VERSION GitVersion
+  #ifdef GIT_VERSION
+    #define VERSION GIT_VERSION
   #else
     #define VERSION "6.0.0"
   #endif
