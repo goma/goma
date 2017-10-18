@@ -4134,7 +4134,17 @@ fvelo_slip_level(double func[MAX_PDIM],
     }
 
   /* compute stress tensor and its derivatives */
-  if( type == VELO_SLIP_LEVEL_SIC_BC) fluid_stress( Pi, d_Pi );
+  if( type == VELO_SLIP_LEVEL_SIC_BC) 
+    {
+      if(vn->evssModel == LOG_CONF)
+        {
+          fluid_stress_conf( Pi, d_Pi);
+        }
+      else
+        {
+          fluid_stress( Pi, d_Pi );
+        }
+    }
 
   if (af->Assemble_Jacobian) 
     {
@@ -4842,8 +4852,14 @@ sheet_tension ( double cfunc[MDE][DIM],
         }
     }
 
-
-  fluid_stress( Pi, &d_Pi );
+    if(vn->evssModel == LOG_CONF)
+      {
+        fluid_stress_conf( Pi, &d_Pi);
+      }
+    else  
+      {
+        fluid_stress( Pi, &d_Pi );
+      }
 
   HL = 0.0;
   memset( dHL_dv, 0, sizeof(double)*DIM*MDE);
@@ -6485,7 +6501,14 @@ flow_n_dot_T_nobc(double func[DIM],
   if(iflag == -1) fv->P = pdatum;
 
   /* compute stress tensor and its derivatives */
-  fluid_stress( Pi, d_Pi );
+  if(vn->evssModel == LOG_CONF)
+    {
+      fluid_stress_conf( Pi, d_Pi);
+    }
+  else  
+    {
+      fluid_stress( Pi, d_Pi );
+    }
 
   /* now is the time to clean up, so, if using the datum for pressure, fix fv->P
    */
@@ -11210,7 +11233,17 @@ apply_sharp_wetting_velocity(double func[MAX_PDIM],
 	}
     }
   /* compute stress tensor and its derivatives */
-  if( include_stress)  fluid_stress( Pi, d_Pi );
+  if( include_stress)  
+    {
+      if(vn->evssModel == LOG_CONF)
+        {
+          fluid_stress_conf( Pi, d_Pi);
+        }
+      else  
+        {
+          fluid_stress( Pi, d_Pi );
+        }
+    }
 
   for( a=0; a<dim; a++)
     {
@@ -14837,7 +14870,14 @@ shear_to_shell ( double cfunc[MDE][DIM],
   
   detJ = 1.0;
 
-  fluid_stress( Pi, &d_Pi );
+  if(vn->evssModel == LOG_CONF)
+    {
+      fluid_stress_conf( Pi, &d_Pi);
+    }
+  else  
+    {
+      fluid_stress( Pi, &d_Pi );
+    }
 
   TL = 0.0;
   memset( dTL_dv, 0, sizeof(double)*DIM*MDE);

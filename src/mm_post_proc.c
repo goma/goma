@@ -6608,7 +6608,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Error ZZ velocity", &ERROR_ZZ_VEL);
   iread = look_for_post_proc(ifp, "Error ZZ heat flux", &ERROR_ZZ_Q);
   iread = look_for_post_proc(ifp, "Error ZZ pressure", &ERROR_ZZ_P);
-  iread = look_for_post_proc(ifp, "Log Conf Stress", &LOG_CONF_MAP);
+  iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &LOG_CONF_MAP);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
 
   /*
