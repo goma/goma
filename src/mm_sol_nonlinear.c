@@ -944,7 +944,7 @@ EH(-1,"version not compiled with frontal solver");
 				     &num_total_nodes,
 				     &h_elem_avg, &U_norm, NULL);
 	     
-              if( vn->evssModel == LOG_CONF && pd->v[POLYMER_STRESS11] )
+              if( vn->evssModel == LOG_CONF && pd->v[POLYMER_STRESS11] && af->Assemble_Jacobian == TRUE)
                 {
                   numerical_jacobian_compute_stress(ams, x, resid_vector, delta_t, theta, 
                                      x_old, x_older, xdot, xdot_old,x_update,
