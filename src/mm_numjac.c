@@ -81,6 +81,407 @@ typedef struct {
 /*****************************************************************************/
 /*****************************************************************************/
 
+
+void 
+numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,	
+		   double x[],	/* Solution vector for the current processor */
+		   double resid_vector[],   /* Residual vector for the current 
+					     * processor */
+		   double delta_t, /* time step size */
+		   double theta, /* parameter to vary time integration from 
+				    explicit (theta = 1) to 
+				    implicit (theta = 0) */
+		   double x_old[], /* Value of the old solution vector */
+		   double x_older[], /* Value of the real old soln vect */
+
+		   double xdot[], /* Value of xdot predicted for new solution */
+		   double xdot_old[], /* Value of xdot at previous time */
+
+		   double x_update[],
+		   int num_total_nodes, 
+		   
+		   struct elem_side_bc_struct *first_elem_side_BC_array[],
+				/* This is an array of pointers to the first
+				   surface integral defined for each element.
+				   It has a length equal to the total number
+				   of elements defined on the current proc */
+		   int Debug_Flag, /* flag for calculating numerical jacobian
+				      -1 == calc num jac w/o rescaling
+				      -2 == calc num jac w/  rescaling */
+		   double time_value, /* current value of time */
+		   Exo_DB *exo,	    /* ptr to whole fe mesh */
+		   Dpi *dpi,        /* any distributed processing info */
+		   double *h_elem_avg,
+		   double *U_norm)
+/******************************************************************************
+  This function is a copy of the numerical_jacobian function below.
+  It is made to compute the numerical Jacobians for the case
+  of the log-conformation tensor. 
+******************************************************************************/
+{
+  int i, j, k, l, m, ii, nn, kount, nnonzero, index;
+  int zeroCA;
+  int *ija = ams->bindx;
+  double *resid_vector_1, *x_1;
+  double dx;
+  int *irow, *jcolumn, *nelem;
+  int v_s[MAX_MODES][DIM][DIM];
+  int mode;
+  int num_elems, num_dofs;
+  int my_elem_num, my_node_num, elem_num, node_num;
+  int elem_already_listed;
+  int *output_list;
+  int *elem_list, *dof_list;
+  NODE_INFO_STRUCT *node;
+  NODAL_VARS_STRUCT *nvs;
+  VARIABLE_DESCRIPTION_STRUCT *vd;
+  int var_i, var_j;
+  double x_scale[MAX_VARIABLE_TYPES];
+  int count[MAX_VARIABLE_TYPES];
+  double *nj;
+  char errstring[256];
+  double *resid_vector_save;
+  int numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  if(strcmp(Matrix_Format, "msr"))
+    EH(-1, "Cannot compute numerical jacobian values for non-MSR formats.");
+
+/* calculates the total number of non-zero entries in the analytical jacobian, a[] */ 
+  nnonzero = NZeros+1;
+  nn = ija[numProcUnknowns]-ija[0]; /* total number of diagonal entries a[] */
+
+  /* allocate arrays to hold jacobian and vector values */
+  irow = (int *) array_alloc(1, nnonzero, sizeof(int));
+  jcolumn = (int *) array_alloc(1, nnonzero, sizeof(int));
+  nelem = (int *) array_alloc(1, nnonzero, sizeof(int));
+  resid_vector_1 =  (double *) array_alloc(1, numProcUnknowns, sizeof(double));
+  x_1 =  (double *) array_alloc(1, numProcUnknowns, sizeof(double));
+  output_list = (int *)array_alloc(1, numProcUnknowns, sizeof(int));
+  dof_list = (int *)array_alloc(1, numProcUnknowns, sizeof(int));
+  elem_list = (int *)array_alloc(1, ELEM_LIST_SIZE, sizeof(int));
+
+  nj = calloc(sizeof(double), ams->bindx[numProcUnknowns]);
+  memcpy(nj, ams->val, ams->bindx[numProcUnknowns]*(sizeof(double)));
+ 
+  // Load stress equation pointers
+  stress_eqn_pointer(v_s);
+
+  resid_vector_save = (double *) array_alloc(1, numProcUnknowns, sizeof(double));
+  memcpy(resid_vector_save, resid_vector, numProcUnknowns*(sizeof(double)));
+ 
+  /* Cannot do this with Front */
+  if (Linear_Solver == FRONT) EH(-1,"Cannot use frontal solver with numjac. Use umf or lu");
+
+  /* Initialization */
+
+  /* There are a couple of places in checking the Jacobian numerically
+   * that you really need to know the scale of the unknowns in the problem.
+   * One is to determine the right size fo a finite difference step and
+   * the second is in evaluating the scale of the residual.  So first step
+   * is to estimate the scale for all variables in the problem */
+  memset(x_scale, 0, (MAX_VARIABLE_TYPES)*sizeof(dbl));
+  memset(count, 0, (MAX_VARIABLE_TYPES)*sizeof(int));
+  for (i = 0; i < numProcUnknowns; i++) 
+    {
+      var_i = idv[i][0];
+      count[var_i]++;
+      x_scale[var_i] += x[i]*x[i];
+    }
+  dbl scale_tmp = global_h_elem_siz(x, x_old, xdot, resid_vector, exo, dpi);
+  for (i = 0; i < MAX_VARIABLE_TYPES; i++) 
+    {
+      if (count[i]) x_scale[i] = sqrt(x_scale[i]/count[i]);
+      /* Now check for bad news.  If x[i] is zero everywhere then, 
+       * use the element size for displacements and for other
+       * quantities assume x is order 1.
+       */
+      if (x_scale[i] == 0.)
+        {
+          switch (i)
+            {
+            case MESH_DISPLACEMENT1:
+            case MESH_DISPLACEMENT2:
+            case MESH_DISPLACEMENT3:
+            case SOLID_DISPLACEMENT1:
+            case SOLID_DISPLACEMENT2:
+            case SOLID_DISPLACEMENT3:
+              x_scale[i] = scale_tmp;
+              break;
+            
+            default:
+              x_scale[i] = 1.;
+              break;
+            }
+        }
+    }
+  /* for level set problems we have an inherent scale */
+  if (ls != NULL && ls->Length_Scale != 0.) x_scale[FILL] = ls->Length_Scale;
+    
+  /* copy x vector */
+  for (i = 0; i < numProcUnknowns; i++)
+    {
+      x_1[i] = x[i];
+    }
+    
+  /* first calculate the residual vector corresponding to the solution vector read in 
+     the initial guess file; also calculate the analytical jacobian entries */
+  af->Assemble_Residual = TRUE;
+  af->Assemble_Jacobian = FALSE;  
+  af->Assemble_LSA_Jacobian_Matrix = FALSE;
+  af->Assemble_LSA_Mass_Matrix = FALSE;
+
+  //memset(resid_vector, 0, numProcUnknowns*sizeof(dbl));
+  //(void) matrix_fill_full(ams, x, resid_vector, 
+//			  x_old, x_older, xdot, xdot_old,x_update,
+//			  &delta_t, &theta, 
+//			  first_elem_side_BC_array,
+//			  &time_value, exo, dpi, 
+//			  &num_total_nodes, 
+//			  h_elem_avg, U_norm, NULL); 
+
+
+
+  
+  /*
+   *  now calculate analytical and numerical jacobians at perturbed values
+   *  check that the perturbed residuals are consistent with range possible
+   *  for range of analytical jacobian values
+   */
+  for (j = 0; j < numProcUnknowns; j++)       /* loop over each column */  
+    {
+      /*
+       * Perturb one variable at a time
+       */
+
+      //      sprintf(errstring, "Computing J[:,%d] with respect to %s\n", j, Var_Name[idv[j][0]].name1);
+      //      printf(errstring);
+       
+      if ( ls != NULL && ls->Ignore_F_deps && idv[j][0] == FILL ) continue;
+
+      dx = x_scale[idv[j][0]] * FD_DELTA_UNKNOWN;
+      if(dx < 1.0E-15) dx = 1.0E-7;
+      x_1[j] = x[j] + dx;
+
+      num_elems = 0;
+      for(i = 0; i < ELEM_LIST_SIZE; i++)
+	elem_list[i] = 0;
+      for(i = 0; i < numProcUnknowns; i++)
+	output_list[i] = FALSE;
+      
+      af->Assemble_Residual = TRUE;
+      af->Assemble_LSA_Jacobian_Matrix = FALSE;
+      af->Assemble_LSA_Mass_Matrix = FALSE;
+      af->Assemble_Jacobian = FALSE;
+      neg_elem_volume = FALSE;
+      neg_lub_height = FALSE;
+      zero_detJ = FALSE;
+
+      my_node_num = idv[j][2];
+
+      /* Which elements to fill?  We need every element that contains
+       * this node, plus all of the elements connected to them, even if
+       * they are only connected by a node (and not a side).
+       *
+       * First, we put all the elements containing this node into the
+       * list.  It is not possible for repeated elements, here.
+       */
+      for(i = exo->node_elem_pntr[my_node_num];
+	  i < exo->node_elem_pntr[my_node_num+1]; i++)
+	{
+	  my_elem_num = exo->node_elem_list[i];
+	  elem_list[num_elems++] = my_elem_num;
+	}
+
+      /* Now we go through each element we have, then each node on
+       * those elements, then every element containing those nodes.
+       * Add those elements, if they have not already been added.
+       */
+      for(i = exo->node_elem_pntr[my_node_num];
+	  i < exo->node_elem_pntr[my_node_num+1]; i++)
+	{
+	  my_elem_num = exo->node_elem_list[i];
+	  for(k = exo->elem_node_pntr[my_elem_num];
+	      k < exo->elem_node_pntr[my_elem_num+1]; k++)
+	    {
+	      node_num = exo->elem_node_list[k];
+	      for(l = exo->node_elem_pntr[node_num];
+		  l < exo->node_elem_pntr[node_num+1]; l++)
+		{
+		  elem_num = exo->node_elem_list[l];
+		  if(elem_num == -1)
+		    continue;
+		  elem_already_listed = FALSE;
+		  for(m = 0; m < num_elems; m++)
+		    if(elem_list[m] == elem_num)
+		      {
+			elem_already_listed = TRUE;
+			break;
+		      }
+		  if(!elem_already_listed)
+		    elem_list[num_elems++] = elem_num;
+		}
+	    }
+	}
+
+      /* For which variables do we report the numerical vs. analytic
+       * jacobians?  Only those that are actually contained in an
+       * element that contains our unknown's node.  We need to search
+       * for all of the unknowns on all of the nodes on all of these
+       * elements (whew!).  We specifically SHOULDN'T compare
+       * numerical and analytic jacobians for any nodes except these,
+       * because all of those nodes are not fully populated (so that
+       * the residuals will come out incorrect for comparison
+       * purposes).
+       */
+      for (i = exo->node_elem_pntr[my_node_num]; 
+	   i < exo->node_elem_pntr[my_node_num+1]; i++) {
+	my_elem_num = exo->node_elem_list[i];
+	load_ei(my_elem_num, exo, 0);
+	for (k = exo->elem_node_pntr[my_elem_num]; 
+	     k < exo->elem_node_pntr[my_elem_num+1]; k++) {
+	  node_num = exo->elem_node_list[k];
+	  node = Nodes[node_num];
+	  nvs = node->Nodal_Vars_Info;
+	  for (l = 0; l < nvs->Num_Var_Desc; l++) {
+	    vd = nvs->Var_Desc_List[l];
+	    for (m = 0; m < vd->Ndof; m++) {
+	      index = node->First_Unknown + nvs->Nodal_Offset[l] + m;
+	      output_list[index] = TRUE;
+	    }
+	  }
+	}
+      }
+      
+      /* make compact list of Eqdof's that will be checked; put diagonal term first */
+      dof_list[0] = j;
+      num_dofs = 1;
+      for (i=0; i<numProcUnknowns; i++)
+        {
+          if (i!=j && output_list[i])
+            {
+              dof_list[num_dofs++] = i;
+            }
+        }
+          
+      /* compute residual and Jacobian at perturbed soln */
+      memset(resid_vector_1, 0, numProcUnknowns*sizeof(dbl));
+
+      if (pd_glob[0]->TimeIntegration != STEADY) {
+	xdot[j] += (x_1[j] - x[j])  * (1.0 + 2 * theta) / delta_t;
+      }
+      
+      if ( xfem != NULL )
+        clear_xfem_contribution( ams->npu );
+      
+      for (i = 0; i < num_elems; i++) {
+	zeroCA = -1;
+	if (i == 0) zeroCA = 1; 
+	load_ei(elem_list[i], exo, 0);
+        /* matrix_fill_stress is a copy of matrix_fill, but only
+           runs the assemble_stress_log_conf function */
+	matrix_fill_stress(ams, x_1, resid_vector_1, 
+		    x_old, x_older,  xdot, xdot_old, x_update,
+		    &delta_t, &theta, 
+		    first_elem_side_BC_array,
+		    &time_value, exo, dpi,
+		    &elem_list[i], &num_total_nodes,
+		    h_elem_avg, U_norm, NULL, zeroCA);
+	if( neg_elem_volume ) break;
+	if( neg_lub_height ) break;
+	if( zero_detJ ) break;
+      }
+
+      if ( xfem != NULL )
+        check_xfem_contribution( ams->npu, ams, resid_vector_1, x_1, exo );
+    
+      /*
+       * Free memory allocated above
+       */
+      global_qp_storage_destroy();
+      
+      
+      for (ii = 0; ii < num_dofs; ii++)
+        {
+	  
+          i = dof_list[ii];
+	  var_i = idv[i][0];
+          var_j = idv[j][0];
+
+          for (mode=0; mode < vn->modes; mode++)
+          {
+	        /* Only for stress terms */
+	  if (idv[i][0] >= v_s[mode][0][0] && idv[i][0] <= v_s[mode][2][2])
+            {
+
+              if (Inter_Mask[var_i][var_j]) {
+
+	        int ja = (i == j) ? j : in_list(j, ams->bindx[i], ams->bindx[i+1], ams->bindx);
+	        if (ja == -1) {
+	          sprintf(errstring, "Index not found (%d, %d) for interaction (%d, %d)", i, j, idv[i][0], idv[j][0]);
+	          EH(ja, errstring);
+	        }
+	      nj[ja] = (resid_vector_1[i] - resid_vector[i]) / (dx);
+	     }
+           }
+          } // Loop over modes
+
+        }
+
+      /* 
+       * return solution vector to its original state
+       */
+      if (pd_glob[0]->TimeIntegration != STEADY) {
+	xdot[j] -= (x_1[j] - x[j])  * (1.0 + 2 * theta) / delta_t;
+      }    
+      x_1[j] = x[j];
+    }                          /* End of for (j=0; j<numProcUnknowns; j++) */  
+
+#ifdef PARALLEL
+  neg_elem_volume_global = FALSE;
+  MPI_Allreduce(&neg_elem_volume, &neg_elem_volume_global, 1,
+		MPI_INT, MPI_LOR, MPI_COMM_WORLD);
+  neg_elem_volume = neg_elem_volume_global;
+
+  neg_lub_height_global = FALSE;
+  MPI_Allreduce(&neg_lub_height, &neg_lub_height_global, 1,
+		MPI_INT, MPI_LOR, MPI_COMM_WORLD);
+  neg_lub_height = neg_lub_height_global;
+
+  zero_detJ_global = FALSE;
+  MPI_Allreduce(&zero_detJ, &zero_detJ_global, 1,
+		MPI_INT, MPI_LOR, MPI_COMM_WORLD);
+  zero_detJ = zero_detJ_global;
+#endif
+
+  if (neg_elem_volume) {
+    DPRINTF(stderr, "neg_elem_volume triggered \n");
+    exit(-1);
+  }
+  if (neg_lub_height) {
+    DPRINTF(stderr, "neg_lub_height triggered \n");
+    exit(-1);
+  }
+  if (zero_detJ) {
+    DPRINTF(stderr, "zero_detJ triggered \n");
+    exit(-1);
+  }
+
+  
+  memcpy(ams->val, nj, ams->bindx[numProcUnknowns]*(sizeof(double))); 
+  free(nj);
+  memcpy(resid_vector, resid_vector_save, numProcUnknowns*(sizeof(double))); 
+  free(resid_vector_save);
+  /* free arrays to hold jacobian and vector values */
+  safe_free( (void *) irow) ;
+  safe_free( (void *) jcolumn) ;
+  safe_free( (void *) nelem) ;
+  safe_free( (void *) resid_vector_1) ;
+  safe_free( (void *) x_1) ;
+  safe_free( (void *) output_list);
+  safe_free( (void *) dof_list);
+  safe_free( (void *) elem_list);
+}
+
+
 void 
 numerical_jacobian(struct Aztec_Linear_Solver_System *ams,	
 		   double x[],	/* Solution vector for the current processor */

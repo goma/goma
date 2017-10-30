@@ -493,6 +493,10 @@ EXTERN void fluid_stress
 PROTO (( double [DIM][DIM],                      /* Pi[DIM][DIM] */
          STRESS_DEPENDENCE_STRUCT * ));          /* d_Pi         */
 
+EXTERN void fluid_stress_conf
+PROTO (( double [DIM][DIM],                      /* Pi[DIM][DIM] */
+         STRESS_DEPENDENCE_STRUCT * ));          /* d_Pi         */
+
 EXTERN void heat_flux
 PROTO (( double [DIM],                      /* q[DIM] */
          HEAT_FLUX_DEPENDENCE_STRUCT *,          /* dq     */

@@ -1511,6 +1511,18 @@ matrix_fill(
 	  if (err) return -1;
 #endif
 	}
+      else if(vn->evssModel==LOG_CONF)
+        {
+          err = assemble_stress_log_conf(theta, delta_t, pg_data.hsquared,
+                                     pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
+          err = segregate_stress_update( x_update );
+          EH(err, "assemble_stress_log_conf");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_stress_log_conf");
+          if (err) return -1;
+#endif
+        }
+
       
       if (pde[R_SHEAR_RATE])
 	{
@@ -3168,6 +3180,1373 @@ matrix_fill(
   return 0;
 } /*   END OF matrix_fill                                                     */
 /******************************************************************************/
+
+
+/* matrix_fill_stress is called from numerical_jacobian_compute_stress function
+ * and is mainly used for the log-conformation formulation for viscoelastic stress.
+ * It is a copy of the matrix_fill function, but only calls assemble_stress.
+ */
+int
+matrix_fill_stress(
+	    struct Aztec_Linear_Solver_System *ams,
+	    double x[],			/* Solution vector */
+	    double resid_vector[],		/* Residual vector */
+	    double x_old[],		/* Solution vector , previous last time step */
+	    double x_older[],		/* Solution vector , previous prev time step */
+	    double xdot[],			/* xdot of current solution                  */
+	    double xdot_old[],		/* xdot_old of current solution              */
+	    double x_update[],             /* last update vector */
+	    double *ptr_delta_t,		/* current time step size                    */
+	    double *ptr_theta,		/* parameter to vary time integration from 
+					 * explicit (theta = 1) to implicit 
+					 * (theta = 0) */
+	    struct elem_side_bc_struct *first_elem_side_BC_array[],
+	    /* This is an array of pointers to the first
+	       surface integral defined for each element.
+	       It has a length equal to the total number
+	       of elements defined on current processor */
+	    double *ptr_time_value,
+	    Exo_DB *exo,			/* ptr to EXODUS II finite element mesh db */
+	    Dpi *dpi,			/* ptr to distributed processing info */
+	    int *ptr_ielem,                 /* element number */
+	    int *ptr_num_total_nodes,       /* Number of nodes that each processor is
+					       responsible for                              */
+	    dbl *ptr_h_elem_avg,          /* global average element size for PSPG */
+	    dbl *ptr_U_norm    ,          /* global average velocity for PSPG */
+	    dbl *estifm,                 /* element stiffness Matrix for frontal solver*/
+	    int zeroCA)                   /* boolean to zero zeroCA */
+
+{
+  extern int MMH_ip;
+  extern int PRS_mat_ielem;
+
+  double delta_t, theta, time_value, h_elem_avg;  /*see arg list */
+  int ielem, num_total_nodes;
+  
+#if 0
+  int status = 0;		/* variable describing status of the matrix */
+				/* calculation this is set to -1 if further */
+				/* iteration is not recommended*/
+#endif
+
+  static int CA_id[MAX_CA];            /*  array of CA conditions */
+  static int CA_fselem[MAX_CA];        /*  array of CA free surface elements  */
+  static int CA_sselem[MAX_CA];        /*  array of CA solid surface elements */
+  static int CA_proc[MAX_CA];          /*  Processor which has each CA */
+
+  int mn;                     /* material block counter */
+  int err;		      /* temp variable to hold diagnostic flags.      */
+  int ip;                     /* ip is the local quadrature point index       */
+  int ip_total;               /* ip_total is the total number of volume
+				 quadrature points in the element             */
+  int j;			/* local index loop counter 	             */
+  int i;		      /* Index for the local node number - row        */
+  int b, eqn = -1, e, lm_dof;      /*convenient params for neatness */
+  int I;		      /* Index for global node number - row        */
+  int ielem_type = 0;         /* Element type of the current element          */
+  int ielem_dim;              /* Element physical dimension                   */
+  int num_local_nodes;        /* Number of local basis functions in the
+				 current element                              */
+  int iconnect_ptr;           /* Pointer to the beginning of the connectivity
+				 list for the current element                 */
+  int ibc;		      /* Index for the boundary condition 	      */
+  int var = -1;			/* variable name (TEMPERATURE, etc) */
+
+  double s, t, u;             /* Gaussian-quadrature point locations          */
+  
+  int call_int, call_col, call_contact, call_shell_grad, call_sharp_int; 
+  /* int call_special; */
+  /* flags for calling boundary
+     condition routines */
+  int call_rotate;
+  int rotate_mesh, rotate_momentum;
+  int assemble_rs, make_trivial = 0; /* Flags for Eulerian solid mechanics
+				    and level-set */
+  int bct, mode;
+
+  /* ___________________________________________________________________________*/
+  /* ___________________________________________________________________________*/
+
+  double xi[DIM];		/* Local element coordinates of Gauss point. */
+  
+  double wt = 0.0;              /* Quadrature weights
+				 units - ergs/(sec*cm*K) = g*cm/(sec^3*K)     */
+
+  double ls_F[MDE];		/* local copy for adaptive weights  */
+  double ad_wtpos[10],ad_wtneg[10];	/*adaptive integration weights  */
+
+  struct Petrov_Galerkin_Data pg_data;
+
+  struct Porous_Media_Terms pm_terms;  /*Needed up here for Hysteresis switching criterion*/
+
+  struct elem_side_bc_struct *elem_side_bc ;
+  /* Pointer to an element side boundary condition
+     structure				      */
+  struct elem_edge_bc_struct *elem_edge_bc ;
+  /* Pointer to an element edge boundary condition
+     structure				      */
+  int  bc_input_id;	      /* Input ID of the surf_int boundary condition  */
+  int id_side;                /* side counter for discontinuous Galerkin method */
+
+  /* List to keep track of nodes at which residual and
+     Jacobian corrections have been made           */
+  /* for mesh equations */
+  /* List to keep track of nodes at which residual and
+     Jacobian corrections have been made           */
+  /* for mesh equations */
+  int local_node_list_fs[MDE]; /* list to keep track of nodes at which solid contributions
+				  have been transfered to liquid (fluid-solid boundaries)*/
+
+  int discontinuous_mass; /* flag that tells you if you are doing Discontinuous Galerkin 
+			     for the species equations */
+  int discontinuous_stress; /* flag that tells you if you are doing Discontinuous Galerkin 
+			       for the species equations */
+  int ielem_type_mass = -1;	/* flag to give discontinuous interpolation type */
+
+  int pspg_local = 0;
+  
+  bool owner = TRUE;
+
+  NODE_INFO_STRUCT *node;
+  SGRID *element_search_grid=NULL;
+
+  struct Level_Set_Data *ls_old;
+
+  static double mm_fill_start, mm_fill_end; /* Count CPU time this call. */
+
+  static char yo[] = "matrix_fill"; /* My name to take blame... */
+  
+  int *pde ;
+  
+  /* 
+   * BEGINNING OF EXECUTABLE STATEMENTS 
+   */
+
+  mm_fill_start = ut();
+
+  /*
+   * Unpack some pointers that were added to help portability of front 
+   */
+  delta_t	  = *ptr_delta_t;
+  theta		  = *ptr_theta;
+  time_value	  = *ptr_time_value;
+  ielem		  = *ptr_ielem;
+  num_total_nodes = *ptr_num_total_nodes;
+  h_elem_avg = pg_data.h_elem_avg	  = *ptr_h_elem_avg;
+  pg_data.U_norm	  = *ptr_U_norm;
+
+  if (Debug_Flag > 1) {
+    P0PRINTF("%s: begins\n", yo);
+  }
+  
+
+  /******************************************************************************/
+  /*                                BLOCK 1                                     */
+  /*          LOOP OVER THE ELEMENTS DEFINED ON THE CURRENT PROCESSOR           */
+  /*          INITIALIZATION THAT IS DEPENDENT ON THE ELEMENT NUMBER            */
+  /******************************************************************************/
+  
+  if (Proc_NS_List_Length > 0 && ((zeroCA == 1) || ((Linear_Solver != FRONT && ielem == exo->eb_ptr[0]) ||
+                                                    (Linear_Solver == FRONT && ielem == exo->elem_order_map[0]-1))))
+    {
+      int nsp, nspk, count=-1;
+      memset( CA_fselem, -1, sizeof(int)*MAX_CA);
+      memset( CA_sselem, -1, sizeof(int)*MAX_CA);
+      memset( CA_id, -1, sizeof(int)*MAX_CA);
+      memset( CA_proc, -1, sizeof(int)*MAX_CA);
+      for (j = 0;j < Num_BC;j++)
+	{
+	  switch (BC_Types[j].BC_Name)
+	    {
+	    case CA_BC:
+	    case CA_MOMENTUM_BC:
+	    case VELO_THETA_HOFFMAN_BC:
+	    case VELO_THETA_TPL_BC:
+	    case VELO_THETA_COX_BC:
+	    case VELO_THETA_SHIK_BC:
+                 nsp = match_nsid(BC_Types[j].BC_ID);
+                 nspk = Proc_NS_List[Proc_NS_Pointers[nsp]];
+                 if(nsp != -1 && Nodes[nspk]->Proc == ProcID)
+                     {
+                       count++;
+                       CA_proc[count] = ProcID;
+                     }
+	      break;
+	    }
+	}
+
+      /*
+       * Initialize the accumulated CPU time for assembly...
+       */
+      mm_fill_total = 0;
+    }
+
+  err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 
+			 resid_vector, 0);
+  EH(err, "load_elem_dofptr");
+
+  err = bf_mp_init(pd);
+  mn = ei->mn;
+  pde = (int*) pd->e;
+
+  
+  for ( mode=0; mode<vn->modes; mode++)
+    {
+      ve[mode]  = ve_glob[mn][mode];
+    }
+  
+  /* discontinuous Galerkin information */
+  /* element type, assumed to be globally consistent for now */
+
+  /* need to take this section out and up above.  Inefficient now as it assumes
+     every element is different */
+
+  
+  discontinuous_mass = 0;
+
+  if(pd->i[MASS_FRACTION]==I_P1)
+    {
+      if (pd->Num_Dim == 2) ielem_type_mass = P1_QUAD;
+      if (pd->Num_Dim == 3) ielem_type_mass = P1_HEX;
+      discontinuous_mass = 1;
+    }
+  else if(pd->i[MASS_FRACTION]==I_P0)
+    {
+      if (pd->Num_Dim == 2) ielem_type_mass = P0_QUAD;
+      if (pd->Num_Dim == 3) ielem_type_mass = P0_HEX;
+      discontinuous_mass = 1;
+    }
+  else if(pd->i[MASS_FRACTION]==I_PQ1)
+    {
+      if (pd->Num_Dim == 2) ielem_type_mass = BILINEAR_QUAD;
+      if (pd->Num_Dim == 3) EH(-1,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
+      discontinuous_mass = 1;
+    }
+  else if(pd->i[MASS_FRACTION]==I_PQ2)
+    {
+      if (pd->Num_Dim == 2) ielem_type_mass = BIQUAD_QUAD;
+      if (pd->Num_Dim == 3) EH(-1,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
+      discontinuous_mass = 1;
+    }
+  else
+    {
+      ielem_type_mass = ielem_type;
+    }
+  
+  discontinuous_stress = 0;
+  
+  if(pd->i[POLYMER_STRESS11]==I_P1)
+    {
+      discontinuous_stress = 1;
+    }
+  else if(pd->i[POLYMER_STRESS11]==I_P0)
+    {
+      discontinuous_stress = 1;
+    }
+  else if(pd->i[POLYMER_STRESS11]==I_PQ1)
+    {
+      if (pd->Num_Dim == 3) EH(-1,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
+      discontinuous_stress = 1;
+    }
+  else if(pd->i[POLYMER_STRESS11]==I_PQ2)
+    {
+      if (pd->Num_Dim == 3) EH(-1,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
+      discontinuous_stress = 1;
+    }
+
+  ielem_type      = ei->ielem_type;  /* element type */
+  
+  num_local_nodes = ei->num_local_nodes; /* number of local  basis functions */
+  
+  ielem_dim       = ei->ielem_dim; /* physical dimension  of this element */
+  
+  iconnect_ptr    = ei->iconnect_ptr; /* find pointer to beginning  of this element's connectivity list */
+  
+
+#ifdef DEBUG
+  fprintf(stderr, "P_%d: ielem           = %d\n", ProcID, ielem);
+  fprintf(stderr, "P_%d: num_local_nodes = %d\n", ProcID, 
+	  num_local_nodes);
+#endif /* DEBUG */
+
+  Subgrid_Int.active = FALSE;
+
+  /*
+   * Clean out local element contribution (lec) accumulator...
+   */
+  zero_lec();
+      
+  /* XFEM setup */
+  /* DRN-now using check_xfem_contribution to do this */
+                        
+  /******************************************************************************/
+  /*                              BLOCK 1.5                                     */
+  /*             INITIAL CALCULATIONS AT CENTROID OF THE ELEMENT                */
+  /******************************************************************************/
+  
+  /* 
+   * set element size variable to zero if not used -- just to be safe 
+   */
+
+  memset( pg_data.h,          0, sizeof(double)*DIM);
+  memset( pg_data.hh,         0, sizeof(double)*DIM*DIM);
+  memset( pg_data.dh_dxnode,  0, sizeof(double)*MDE*DIM);
+  memset( pg_data.hsquared,   0, sizeof(double)*DIM);
+  memset( pg_data.hhv,        0, sizeof(double)*DIM*DIM);
+  memset( pg_data.dhv_dxnode, 0, sizeof(double)*MDE*DIM);
+  memset( pg_data.v_avg,      0, sizeof(double)*DIM);
+  memset( pg_data.dv_dnode,   0, sizeof(double)*MDE*DIM);
+  pg_data.mu_avg = 0.;
+  pg_data.rho_avg = 0.;
+
+  if(PSPG)
+    {
+      if(PSPG == 1)
+	{
+	  pspg_local = 0;
+	}
+      /* This is the flag for the standard local PSPG */ 
+      else if(PSPG == 2)
+	{
+	  pspg_local = 1;
+	}
+    }
+
+  if (PSPG && pde[R_PRESSURE] && pde[R_MOMENTUM1]) {
+    xi[0] = 0.0;
+    xi[1] = 0.0;
+    xi[2] = 0.0;  
+    (void) load_basis_functions(xi, bfd);
+    pg_data.mu_avg = element_viscosity();
+    pg_data.rho_avg = density(NULL, time_value);
+
+    if(pspg_local)
+      {
+	h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
+	element_velocity(pg_data.v_avg, pg_data.dv_dnode, exo);
+      }
+  }
+
+  if(Cont_GLS && pde[R_PRESSURE] && pde[R_MOMENTUM1]) 
+    {
+    xi[0] = 0.0;
+    xi[1] = 0.0;
+    xi[2] = 0.0;  
+    (void) load_basis_functions(xi, bfd);
+    pg_data.mu_avg = element_viscosity();
+    pg_data.rho_avg = density(NULL, time_value);
+
+    if(Cont_GLS==2)
+      {
+	h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
+	element_velocity(pg_data.v_avg, pg_data.dv_dnode, exo);
+      }
+    }
+
+  /*
+   * The current SUPG model requires a value for the element's size and the
+   * average velocity. Evaluate this here.
+   */
+  if ((vn->wt_funcModel == SUPG && pde[R_STRESS11] && pde[R_MOMENTUM1]) || 
+      (mp->Spwt_funcModel == SUPG && pde[R_MASS] &&
+       (pde[R_MOMENTUM1] || pde[R_MESH1])) ||
+      (mp->Mwt_funcModel == SUPG && pde[R_MOMENTUM1]) ||
+      (mp->Ewt_funcModel == SUPG && pde[R_ENERGY] &&
+       (pde[R_MOMENTUM1] || pde[R_MESH1])) ||
+      (mp->Ewt_funcModel == SUPG && pde[R_SHELL_ENERGY] &&
+       (pde[R_LUBP] ))) {
+    h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
+    element_velocity(pg_data.v_avg, pg_data.dv_dnode, exo);
+  }
+  
+  if (cr->MassFluxModel == HYDRODYNAMIC)
+    {
+      /* For shock capturing diffusivity in Phillips model */
+      h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
+    }
+  if (mp->DiffusivityModel[0] == HYDRO &&
+      mp->QTensorDiffType[0]  == CONSTANT) {
+    h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
+    assemble_qtensor(pg_data.hsquared);
+  }
+
+  if (cr->MassFluxModel == HYDRODYNAMIC_QTENSOR_OLD)
+    {
+      h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
+      assemble_qtensor(pg_data.hsquared);
+    }
+  
+  /* Ryan's new qtensor model */
+  else if (mp->DiffusivityModel[0] == HYDRO &&
+           mp->QtensorExtensionPModel == CONSTANT) {
+    h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
+    assemble_new_qtensor(pg_data.hsquared);
+  }
+
+  ls_old = ls;
+  if(!pde[R_MESH1])
+    {
+      if(pfd != NULL) ls = pfd->ls[0];  /* this is a major hack */
+      if(pde[R_LAGR_MULT1] &&
+	 !ls->elem_overlap_state)
+	{
+	  for(b=0; b < pd->Num_Dim; b++)
+	    {
+	      for (i = 0; i < ei->dof[R_LAGR_MULT1 + b]; i++) {
+		if(af->Assemble_Residual)
+		  {
+		    lm_dof = ei->gun_list[R_LAGR_MULT1 + b][i];
+		    eqn = upd->ep[R_LAGR_MULT1 + b];
+		    var = upd->vp[LAGR_MULT1 + b];
+		    lec->R[eqn][i] = x[lm_dof];
+		  }
+       
+		if(af->Assemble_Jacobian)
+		  {
+		    zero_lec_row(lec->J, eqn, i);
+		    lec->J[eqn][var][i][i] = 1.0;
+		  }
+	      }
+	    }
+	}
+    }
+  else
+    { 
+      if (pde[R_LAGR_MULT1])
+	{
+	  for(b=0; b < pd->Num_Dim; b++)
+	    {
+	      for (i = 0; i < ei->dof[R_LAGR_MULT1 + b]; i++) {
+		if(af->Assemble_Residual)
+		  {
+		    eqn = upd->ep[R_LAGR_MULT1 + b];
+		    var = upd->vp[LAGR_MULT1 + b];
+		    lec->R[eqn][i] = 0.;
+		  }
+       
+		if(af->Assemble_Jacobian)
+		  {
+		    zero_lec_row(lec->J, eqn, i);
+		    lec->J[eqn][var][i][i] = 1.e-15;
+		  }
+	      }
+	    }
+	}
+    }
+  ls = ls_old; /*Make things right again */
+      
+  /*
+   * Here we will do another quick element-level manipulation for Eulerian Solid
+   * mechanics problems using the level-set method and the assemble_real_solid 
+   * TALE routine.   In this situation we have a fixed mesh (hence no mesh motion
+   * equations), and real-solid motion through the mesh. When not in the solid region
+   * as delineated by the level-set field we will trivialize the real-solid equations 
+   * by setting the displacements to zero.  On elements that connect to elements through
+   * which the level-set interface cuts, we will not assemble AT ALL, so as to achieve
+   * the natural stress condition on the intefacial elements.
+   */
+  /* assemble fake equation for elements off interface */
+  assemble_rs = TRUE;
+
+  if (pde[R_SOLID1])
+    {
+      if (pd->etm[R_SOLID1][(LOG2_MASS)]) EH(-1,"Cannot do real inertia for TALE yet. Remove this line if trying to perform EULERIAN solid mechanics");
+      eqn = R_SOLID1;
+      if (pd->TimeIntegration != STEADY && 
+	  pd->etm[R_SOLID1][(LOG2_MASS)] &&
+	  !ls->elem_overlap_state &&
+	  *esp->F[0] >= 0.0)
+	{
+	  for (i = 0; i < ei->dof[eqn]; i++)
+	    {
+	      make_trivial = TRUE;
+	      if ( (pd->i[eqn] == I_Q1) || (pd->i[eqn] == I_Q2 ) )
+		{
+		  /* check all neighboring elements to see if any 
+		     span the interface */
+		  I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+		  for (j = exo->node_elem_pntr[I]; j < 
+			 exo->node_elem_pntr[I+1]; j++)
+		    {
+		      e = exo->node_elem_list[j];
+		      if (elem_overlaps_interface( e, x, exo, ls->Length_Scale ))
+			{ 
+			  make_trivial = FALSE;
+			  assemble_rs = FALSE;
+			 
+			}
+		    }
+		}
+	    }
+	  if (make_trivial)
+	    {
+	      assemble_rs = FALSE;
+	      for (b=0; b < pd->Num_Dim; b++)
+		{
+		  for (i = 0; i < ei->dof[R_SOLID1 + b]; i++) {
+		    if(af->Assemble_Residual)
+		      {
+			eqn = upd->ep[R_SOLID1 + b];
+			var = upd->vp[R_SOLID1 + b];
+			lec->R[eqn][i] = 0.;
+		      }
+			     
+		    if (af->Assemble_Jacobian)
+		      {
+			zero_lec_row(lec->J, eqn, i);
+			lec->J[eqn][var][i][i] = 1.e-15;
+		      }
+		  }
+		}
+	    }
+	}
+    }
+
+  /******************************************************************************/
+  /*                              BLOCK 1.6                                     */
+  /*                Precalculations above the Gauss point loop                  */
+  /******************************************************************************/
+
+  if (pde[R_POR_LIQ_PRES]) {
+    if (mp->Porous_Mass_Lump) {
+      load_nodal_porous_properties(theta, delta_t);
+    }
+  }
+
+  if ( (pde[R_SHELL_SAT_OPEN]) || (pde[R_SHELL_SAT_OPEN_2]) ) {
+    if (pde[R_SHELL_SAT_OPEN]) {
+       load_nodal_shell_porous_properties(theta, delta_t, R_SHELL_SAT_OPEN);
+    }
+    else if (pde[R_SHELL_SAT_OPEN_2]) {
+       load_nodal_shell_porous_properties(theta, delta_t, R_SHELL_SAT_OPEN_2);
+    }
+  }
+
+  if (pde[R_PRESSURE])
+    {
+      if (PSPP == 1)
+	{
+	  err = assemble_projection_stabilization(exo); 
+	  EH(err, "assemble_projection_stabilization");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_projection_stabilization"); 
+	  if (err) return -1;
+#endif
+	}
+	  
+      if (PSPP == 2)
+	{
+	  err = assemble_PPPS_generalized(exo); 
+	  EH(err, "assemble_PPPS_generalized");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_PPPS_generalized"); 
+	  if (err) return -1;
+#endif
+	}
+    }
+
+
+  ip_total = elem_info(NQUAD, ielem_type);
+  
+  /* Loop over all the Volume Quadrature integration points */
+
+  for (ip = 0; ip < ip_total; ip++)
+    {
+      MMH_ip = ip;
+
+      /* case 1: normal gauss integration */
+      find_stu(ip, ielem_type, &s, &t, &u); /* find quadrature point */
+      wt = Gq_weight (ip, ielem_type); /* find quadrature weights for */
+
+      /* locations for current ip */
+      
+      /*
+       * Local element coordinates...
+       */
+      
+      xi[0] = s;
+      xi[1] = t;
+      xi[2] = u;
+
+      fv->wt = wt;
+      
+      /* 
+       *	    PASS wt to assembly routines!!!!! ...
+       */
+      
+      /*
+       * Load up basis function information for each basis function
+       * type needed by the current material. This is done in terms
+       * of local element coordinates.
+       */
+
+      err = load_basis_functions(xi, bfd);
+      EH( err, "problem from load_basis_functions");
+
+      err = beer_belly();
+      EH(err, "beer_belly");
+      if (neg_elem_volume) return -1;
+      if( zero_detJ ) return -1;
+      
+      err = load_fv();
+      EH( err, "load_fv");
+       
+      err = load_bf_grad();
+      EH( err, "load_bf_grad");
+      
+      if (pde[R_MESH1] || pd->v[R_MESH1])
+	{
+	  err = load_bf_mesh_derivs(); 
+	  EH( err, "load_bf_mesh_derivs");
+	}
+      
+      /*
+       * Load up physical space gradients of field variables at this
+       * Gauss point.
+       */
+      err = load_fv_grads();
+      EH( err, "load_fv_grads");	  
+            
+      if ( pde[R_MESH1] ||  pd->v[R_MESH1])
+	{
+	  err = load_fv_mesh_derivs(1);
+	  EH( err, "load_fv_mesh_derivs");
+	}
+
+      computeCommonMaterialProps_gp(time_value);
+      
+      /*
+       * Presumably, we have all the pieces we need.
+       */
+      do_LSA_mods(LSA_VOLUME);
+
+      if(vn->evssModel==LOG_CONF)
+        {
+          err = assemble_stress_log_conf(theta, delta_t, pg_data.hsquared,
+                                     pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
+          err = segregate_stress_update( x_update );
+          EH(err, "assemble_stress_log_conf");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_stress_log_conf");
+	  if (err) return -1;
+#endif
+        }
+        
+      /******************************************************************************/
+    }
+  /* END  for (ip = 0; ip < ip_total; ip++)                               */  
+
+
+  /**************************************************************************/
+  /*                          BLOCK 2'                                      */
+  /*                   START OF SURFACE INTEGRATION LOOP                    */
+  /*         LOOP OVER THE NUMBER OF SURFACE QUADRATURE POINTS              */
+  /*             For Discontinuous Galerkin implementations                 */
+  /**************************************************************************/
+         
+  /* Loop over all the surface Quadrature integration points */
+        
+	  
+  if (discontinuous_mass)
+    {
+      int neighbor;  
+      int index, face;
+	      
+      for (face = 0; face < ei->num_sides; face++)
+	{
+		  
+	  index = exo->elem_elem_pntr[ielem] + face;
+	  neighbor = exo->elem_elem_list[index];
+		  
+	  id_side = face + 1;
+		  
+	  err = assemble_surface_species(exo, x, delta_t, theta,
+					 ielem_type, ielem_type_mass, id_side, 
+					 neighbor, ielem, num_local_nodes);
+	  EH( err, "assemble_surface_species"); 
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_surface_species"); 
+	  if (err) return -1;
+#endif
+	}
+    } 
+
+  if (discontinuous_stress)
+    {      
+      int neighbor;  
+      int index, face;
+	      
+      var = 4*MDE*(MAX_PROB_VAR+MAX_CONC)*MDE;
+      memset(lec->J_stress_neighbor, 0, sizeof(double)*var); 
+
+      for (face = 0; face < ei->num_sides; face++)
+	{
+		  
+	  index = exo->elem_elem_pntr[ielem] + face;
+	  neighbor = exo->elem_elem_list[index];
+		  
+	  id_side = face + 1;
+		  
+	  /*      if(neighbor != -1) */
+	  {
+	    err = assemble_surface_stress(exo, x, ams, x_update, delta_t, theta, 
+					  ielem_type, ielem_type_mass, id_side, 
+					  neighbor, ielem, num_local_nodes);
+	    EH( err, "assemble_surface_stress"); 
+#ifdef CHECK_FINITE
+	    err = CHECKFINITE("assemble_surface_stress"); 
+	    if (err) return -1;
+#endif
+	  }
+	}
+    }
+
+
+  /**************************************************************************
+   *                          BLOCK 3 - Weak SURFACE Boundary Conditions
+   *                   START OF SURFACE INTEGRATION LOOP                         
+   * apply BC's that are added into the BOUNDARY term of the integrated-by-parts
+   * weighted residual equations.  Do this before rotating mesh or momentum equations
+   **************************************************************************/
+  /******************************************************************************/
+  if (first_elem_side_BC_array[ielem] != NULL) {
+    elem_side_bc = first_elem_side_BC_array[ielem];
+    /***************************************************************************
+     *  begining of do while construct which loops over the sides of this
+     *  element that have boundary conditions applied on to them.
+     ***************************************************************************/
+    do {
+
+      call_int = 0;
+      call_shell_grad = 0;
+      call_sharp_int = FALSE;
+      
+      for (ibc = 0; (bc_input_id = (int) elem_side_bc->BC_input_id[ibc]) != -1;
+	   ibc++) 
+	{
+	  if (BC_Types[bc_input_id].desc->method == WEAK_INT_SURF) 
+	    {
+	      call_int = 1;
+	    }
+	  if ( (BC_Types[bc_input_id].desc->method == WEAK_SHELL_GRAD ||
+		BC_Types[bc_input_id].desc->method == STRONG_SHELL_GRAD) &&
+	       (num_elem_friends[ielem] > 0) && (ielem_dim > 1) ) 
+	    {
+	      call_shell_grad = TRUE;
+	    } 
+	  if( BC_Types[bc_input_id].desc->method == WEAK_SHARP_INT ) 
+	    call_sharp_int = TRUE;
+	}
+	  
+      if (call_int) {
+	err = apply_integrated_bc(x, resid_vector, delta_t, theta,
+				  pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+				  ielem, ielem_type, num_local_nodes, ielem_dim,
+				  iconnect_ptr, elem_side_bc, num_total_nodes,
+				  WEAK_INT_SURF, time_value, element_search_grid, exo);
+	EH(err, " apply_integrated_bc");
+#ifdef CHECK_FINITE
+	err = CHECKFINITE("apply_integrated_bc"); 
+	if (err) return -1;
+#endif
+	if (neg_elem_volume) return -1;
+      }
+        
+      if (call_shell_grad) {
+        err = apply_shell_grad_bc(x, resid_vector, delta_t, theta,
+                                  pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+                                  ielem, ielem_type, num_local_nodes, ielem_dim,
+				  iconnect_ptr, elem_side_bc, num_total_nodes,
+                                  WEAK_SHELL_GRAD, time_value, exo);
+        EH(err, " apply_shell_grad_bc");
+#ifdef CHECK_FINITE
+	err = CHECKFINITE("apply_shell_grad_bc"); 
+	if (err) return -1;
+#endif
+        if (neg_elem_volume) return -1;
+
+      }
+      if(call_sharp_int ) 
+	{
+	  err = apply_sharp_integrated_bc ( x, resid_vector, time_value, delta_t, theta, pg_data.hsquared,
+					    ielem, ielem_type, num_local_nodes, ielem_dim, 
+					    iconnect_ptr, elem_side_bc, WEAK_SHARP_INT, exo );
+	}
+      EH(err, " apply_sharp_integrated_bc");
+#ifdef CHECK_FINITE
+      err = CHECKFINITE("apply_sharp_integrated_bc"); 
+      if (err) return -1;
+#endif
+      if (neg_elem_volume) return -1;
+
+
+    } while ((elem_side_bc = elem_side_bc->next_side_bc) != NULL);
+  } /* END if (First_Elem_Side_BC_Array[ielem] != NULL) */
+  
+  /**************************************************************************
+   *                          BLOCK 4 - Weak EDGE Boundary Conditions
+   *                   START OF CURVE INTEGRATION LOOP       
+   * apply BC's that are added into the integrated-by-parts part of the BOUNDARY 
+   * term of the integrated-by-parts weighted residual equations.   This only applies
+   * for conditions like capillary that require end-of-the-interface fluxes to
+   * be added back in (i.e. if transport equations is integrated by parts twice)
+   * Do this before rotating mesh or momentum equations
+   **************************************************************************/
+  if (First_Elem_Edge_BC_Array[ielem] != NULL) {
+    elem_edge_bc = First_Elem_Edge_BC_Array[ielem];
+      
+    /******************************************************************************/
+    do {  /* begining of do while construct 
+	   * which loops over the sides of this element that have boundary 
+	   * conditions */
+      /****************************************************************************/
+	
+      /*
+       *  Set flags for subroutines to call for each boundary condition 
+       *  on this side
+       */
+      call_int = 0;
+      for (ibc = 0;
+	   (bc_input_id = (int) elem_edge_bc->BC_input_id[ibc]) != -1; ibc++) {
+	bct = BC_Types[bc_input_id].desc->method;
+	if (bct == WEAK_INT_EDGE) call_int = 1;
+      }
+      /*
+       * BOUNDARY CONDITIONS OF TYPE 1 - Integrated along edge - 
+       *        only do the weak integrated conditions here
+       */
+      if (call_int) { 
+	err = apply_integrated_curve_bc(x, resid_vector, delta_t,
+					theta, ielem, 
+					ielem_type, num_local_nodes, 
+					ielem_dim, iconnect_ptr, 
+					elem_edge_bc, num_total_nodes, 
+					WEAK_INT_EDGE, exo); 
+	EH( err, " apply_integrated_curve_bc"); 
+#ifdef CHECK_FINITE
+	err = CHECKFINITE("apply_integrated_curve_bc"); 
+	if (err) return -1;
+#endif
+	if( neg_elem_volume ) return -1;
+      } 
+      /****************************************************************************/
+    } while ( (elem_edge_bc = elem_edge_bc->next_edge_bc) != NULL );
+    /* END of do  while () construct				      */
+    /******************************************************************************/
+  } /* END if (First_Elem_edge_BC_Array[ielem] != NULL) 		      */
+  
+  /**************************************************************************
+   *                          BLOCK 5 - Weak POINT Boundary Conditions
+   *                   START OF POINT INTEGRATION LOOP  ?!?       
+   *  are we ever going to need a condition like this?  Probably not, because
+   *  integrals over a point in 3D are zero... unless it's a singular point
+   *  for now we'll assume this can't happen
+   **************************************************************************/
+  
+  /******************************************************************************/
+  /**************************************************************************
+   *                          BLOCK 6 - Weak Shifty Boundary Conditions
+   *   This section is for boundary conditions which equate the BOUNDARY terms
+   *   of two different residual equations, e.g. FLUID_SOLID and SOLID_FLUID 
+   *   type BC's.
+   *   Do this before rotating mesh or momentum equations
+   **************************************************************************/
+  /******************************************************************************/
+  if (first_elem_side_BC_array[ielem] != NULL) {
+    elem_side_bc = first_elem_side_BC_array[ielem];
+      
+    /******************************************************************************/
+    do {  /* begining of do while construct 
+	   * which loops over the sides of this element that have boundary 
+	   * conditions */
+      /******************************************************************************/
+      /* Determine which types of bc's apply on this side */
+      /*call_special = 0; */
+      for (ibc = 0; 
+	   (bc_input_id = (int) elem_side_bc->BC_input_id[ibc]) != -1; 
+	   ibc++) {
+	bct = BC_Types[bc_input_id].desc->method;
+	/*if (bct == WEAK_SHIFT) call_special = 1; */
+      } /* end of loop over boundary condition number */
+	
+    } while ( (elem_side_bc = elem_side_bc->next_side_bc) != NULL );
+    /* END of do  while () construct				      */
+    /******************************************************************************/
+  } /* END if (First_Elem_Side_BC_Array[ielem] != NULL) 		      */
+  /******************************************************************************/
+  
+  /**************************************************************************
+   *                          BLOCK 7
+   * rotate equations here before dirichlet or strong conditions 
+   * and do any shifting of residual and jacobian contributions
+   **************************************************************************/
+  /* 
+   * Make sure there are BC's at this node and that we have vector equations
+   */
+  /*if (  first_elem_side_BC_array[ielem] != NULL && */
+  if(  (pde[R_MOMENTUM1] || pde[R_MESH1]) &&
+       Num_ROT == 0) {
+    if (ielem_dim == 2) {
+      call_rotate =0;
+      /* determine if rotation is needed */
+      for (i = 0;  ( call_rotate == 0 ) && (i < num_local_nodes); i++) {
+	/*
+	 * To address a particular residual equation, map the local
+	 * elemental node number i into a processor node index I.
+	 * Then, make sure this node is owned by this processor
+	 */
+	I = Proc_Elem_Connect[iconnect_ptr + i]; 
+	if (I < (dpi->num_internal_nodes + dpi->num_boundary_nodes)) {
+	  if (in_list(I, 0, num_mom_rotate, mom_rotate_node) != -1) 
+	    call_rotate = 1;
+	  if (in_list(I, 0, num_mesh_rotate, mesh_rotate_node) != -1)
+	    call_rotate = 1;
+	}
+      }
+      /* MMH: I am assuming that apply_rotated_bc will work properly
+       * in LSA b/c it doesn't "add" anything, only rearranges it,
+       * and we supposedly have the correct contributions by now.
+       */
+      if (call_rotate) {
+	if  ( Use_2D_Rotation_Vectors == TRUE )
+	  rotate_eqns_at_node_2D( iconnect_ptr, ielem_dim, num_local_nodes, ams);
+	else if( first_elem_side_BC_array[ielem] != NULL ) {
+	  err = apply_rotated_bc(resid_vector, first_elem_side_BC_array,
+				 ielem, ielem_type, num_local_nodes, 
+				 ielem_dim, iconnect_ptr, num_total_nodes,
+				 exo);
+	  EH(err, " apply_rotated_bc");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("apply_rotated_bc"); 
+	  if (err) return -1;
+#endif					
+	}
+      }
+    }
+  }
+  
+  if ((pde[R_MOMENTUM1] || pde[R_MESH1]) && Num_ROT > 0 ) {
+    int id_mesh, id_mom; /* local temporary things */
+      
+    /* Make sure there are BC's at this node and that we have vector equations*/
+      
+    /* determine if rotation is needed */
+    for (i = 0; i < num_local_nodes; i++) {
+      id_mesh = ei->ln_to_dof[MESH_DISPLACEMENT1][i];
+      id_mom  = ei->ln_to_dof[VELOCITY1][i];
+      /*
+       *  To address a particular residual equation, map the local
+       *   elemental node number i into a global index I
+       *  You only have to rotate equations at nodes that you own?!?
+       */
+      I = Proc_Elem_Connect[iconnect_ptr + i];
+      if (I < (dpi->num_internal_nodes + dpi->num_boundary_nodes)) {
+	/* 
+	 * Check for rotation of mesh equations or momentum equations
+	 * work on MESH first
+	 */
+	rotate_mesh = 0;
+	if (ROT_list[I] != NULL && 
+	    (ROT_list[I][VECT_EQ_MESH] != -1) &&
+	    pde[R_MESH1] &&
+	    id_mesh > -1 )                     rotate_mesh = 1;
+	  
+	  
+	rotate_momentum = 0;
+	  
+	if (ROT_list[I] != NULL && 
+	    (ROT_list[I][VECT_EQ_MOM] != -1) &&
+	    pde[R_MOMENTUM1] &&
+	    id_mom > -1 ) rotate_momentum = 1;
+	  
+	/* Now rotate the appropriate equations and sensitivities*/
+	if (rotate_mesh) {
+	  /* Call mesh rotation routine */
+	  /* MMH: I am assuming that rotate_mesh_eqn will work
+	   * properly in LSA b/c it doesn't "add" anything, only
+	   * rearranges it, and we supposedly have the correct
+	   * contributions by now.  I am worried, though, with this
+	   * call b/c there is direct access to a[] in here, instead
+	   * of through lec->J's...
+	   */
+	  rotate_mesh_eqn(id_mesh, I, iconnect_ptr, ielem_dim, ams); 
+	}
+	  
+	if (rotate_momentum) {
+	  /* Call momentum rotation routine */
+	  /* MMH: See comment above for rotate_mesh_eqn. */
+	  rotate_momentum_eqn(id_mom,  I, iconnect_ptr, ielem_dim,ams);
+	}
+      }
+    } /* end of loop over nodes */
+  } /* end of if Num_ROT > 0 */ 
+
+  
+  /******************************************************************************/
+  /*                              BLOCK 9                                       */
+  /* Start of STRONG Boundary Conditions (other than Dirichlet). There are two  */
+  /* types depending on whether they are integrated or pointwise collocation    */
+  /******************************************************************************/
+  /*
+   *   initialize node list for fluid/solid boundaries
+   */
+  for (i=0; i< num_local_nodes; i++) {
+    local_node_list_fs[i] = -1;
+  }
+
+  /******************************************************************************/
+  if (first_elem_side_BC_array[ielem] != NULL) 
+    {
+      /****************************************************************************/
+      /* We may want to figure out which equations are rotated and which boundary
+       * conditions are applied in a strong sense (replacing equations as opposed
+       * to the weak sense in which boundary conditions are added to the existing
+       * equations), and do the rotation and zeroing (or subtracting local
+       * contributions) now, before we get into the heavy duty boundary 
+       * condition stuff
+       */
+      elem_side_bc = first_elem_side_BC_array[ielem];
+      
+      /*****************************************************************************/
+      do {  /* begining of do while construct */
+	/* which loops over the sides of this element that have boundary 
+	   conditions */
+	
+	/*
+	 *  Set flags for subroutines to call for each boundary condition
+	 *  on this side
+	 */
+	call_int = 0;
+	call_col = 0;
+	call_contact = 0.;
+	for (ibc = 0; 
+	     (bc_input_id = (int) elem_side_bc->BC_input_id[ibc]) != -1; ibc++) 
+	  {
+	    bct = BC_Types[bc_input_id].desc->method;
+	    if (bct == STRONG_INT_SURF) call_int = 1;
+	    if (bct == COLLOCATE_SURF ) call_col = 1;
+	    if (bct == CONTACT_SURF ) call_contact = 1;	    
+	  }
+	if (call_col) 
+	  {
+	    err = apply_point_colloc_bc(resid_vector, delta_t, theta,
+					ielem, ip_total,
+					ielem_type, num_local_nodes, ielem_dim,
+					iconnect_ptr, elem_side_bc, num_total_nodes, 
+					local_node_list_fs, time_value, exo);
+	    EH( err, " apply_point_colloc_bc");
+#ifdef CHECK_FINITE
+	    err = CHECKFINITE("apply_point_colloc_bc"); 
+	    if (err) return -1;
+#endif
+	    if (neg_elem_volume) return -1;
+	  }
+	
+	/*
+	 * BOUNDARY CONDITIONS OF TYPE 2 - Integrated over the surface 
+	 * - only do the strong integrated conditions here
+	 */
+	if (call_int) 
+	  {
+	    err = apply_integrated_bc(x, resid_vector, delta_t, theta,
+				      pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+				      ielem, ielem_type, num_local_nodes, 
+				      ielem_dim, iconnect_ptr, elem_side_bc, 
+				      num_total_nodes, 
+				      STRONG_INT_SURF, time_value, element_search_grid, exo);
+	    EH( err, " apply_integrated_bc");
+#ifdef CHECK_FINITE
+	    err = CHECKFINITE("apply_integrated_bc"); 
+	    if (err) return -1;
+#endif
+	    /*printf("Element: %d, ID_side: %d \n", ei->ielem, elem_side_bc->id_side );
+	      for(i3=0; i3< (int)  elem_side_bc->num_nodes_on_side; i3++)
+	      {
+	      id3 = (int) elem_side_bc->local_elem_node_id[i3]; I3 =  I = Proc_Elem_Connect[iconnect_ptr + id3];
+	      printf("\tI: %d, R[0][%d]: %7.4g, R[1][%d]: %7.4g\n", I3, id3, lec->R[0][id3], id3,  lec->R[1][id3]);
+	      }*/
+	
+		  
+	    if (neg_elem_volume) return -1;
+	  }
+	
+
+	/*
+	 * BOUNDARY CONDITIONS which don't really fit in with the above types
+	 */
+	if (call_int || call_col) 
+	  {
+	    /* add call to Gibb's inequality condition is evaluated
+	     * within apply_special_bc, and potentially contact lines
+	     * are suddenly fixed here 
+	     */
+	    err = apply_special_bc(ams, x, resid_vector, 
+				   x_old, x_older, xdot, xdot_old, 
+				   delta_t, theta, first_elem_side_BC_array, 
+				   ielem, ip_total, ielem_type, 
+				   num_local_nodes, ielem_dim, iconnect_ptr, 
+				   elem_side_bc, num_total_nodes, SPECIAL,
+				   CA_id, CA_fselem, CA_sselem, exo,
+				   time_value);
+	    EH( err, " apply_special_bc");
+#ifdef CHECK_FINITE
+	    err = CHECKFINITE("apply_special_bc"); 
+	    if (err) return -1;
+#endif
+	    if( neg_elem_volume ) return -1;
+	  }
+	  
+	if (call_contact)
+	  {
+	    struct Level_Set_Data *ls_save = ls;
+
+	    /* Special contact conditions are applied here. These are boundary
+	       conditions that require a contact search or a mesh search, such
+	       as that which might happen with overlapping grids.   */
+
+	    /* Cludge her for BCs that are tied to R_PHASE0 */
+	    if(pfd != NULL) 
+	      {
+		ls = pfd->ls[0];
+	      }
+	    else
+	      {
+		EH(-1,"YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
+	      }
+
+	    err = apply_contact_bc (x, resid_vector, delta_t, theta,
+				    pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+				    first_elem_side_BC_array,
+				    ielem, ielem_type, num_local_nodes, 
+				    ielem_dim, iconnect_ptr, elem_side_bc, 
+				    num_total_nodes, CONTACT_SURF,
+				    -1, NULL, NULL, NULL, NULL, time_value, exo);
+	    EH( err, " apply_contact_bc");
+#ifdef CHECK_FINITE
+	    err = CHECKFINITE("apply_contact_bc"); 
+	    if (err) return -1;
+#endif
+	    if( neg_elem_volume ) return -1;
+
+	    ls = ls_save;
+
+	  }
+	/****************************************************************************/
+      } while ( (elem_side_bc = elem_side_bc->next_side_bc) != NULL );
+      /* END of do  while () construct				      */
+      /******************************************************************************/
+    } /* END if (First_Elem_Side_BC_Array[ielem] != NULL) 		      */
+  /******************************************************************************/
+  
+  /******************************************************************************/
+  if (First_Elem_Edge_BC_Array[ielem] != NULL) {
+    /******************************************************************************/
+    elem_edge_bc = First_Elem_Edge_BC_Array[ielem];
+      
+    /****************************************************************************/
+    do {  /* begining of do while construct */
+      /* which loops over the sides of this element that have boundary 
+	 conditions */
+      /****************************************************************************/
+	
+      /*
+       *  Set flags for subroutines to call for each boundary 
+       *  condition on this side
+       */
+      call_int = 0;
+      call_col = 0;
+      for (ibc = 0; 
+	   (bc_input_id = (int) elem_edge_bc->BC_input_id[ibc]) != -1; ibc++) {
+	bct = BC_Types[bc_input_id].desc->method;
+	if (bct == STRONG_INT_EDGE) call_int = 1;
+	if (bct == COLLOCATE_EDGE ) call_col = 1;    
+      }
+	
+      /*
+       * BOUNDARY CONDITIONS OF TYPE 1 - Integrated over the surface
+       * - only do the strong integrated conditions here
+       */
+      if (call_int) {
+	err = apply_integrated_curve_bc(x, resid_vector, delta_t, theta,
+					ielem, ielem_type, num_local_nodes, 
+					ielem_dim,  iconnect_ptr, elem_edge_bc, 
+					num_total_nodes, STRONG_INT_EDGE, exo); 
+	EH( err, " apply_integrated_curve_bc");
+#ifdef CHECK_FINITE
+	err = CHECKFINITE("apply_integrated_curve_bc"); 
+	if (err) return -1;
+#endif
+	if( neg_elem_volume ) return -1;
+      }
+	
+      /*
+       * BOUNDARY CONDITIONS OF TYPE 2 - Pointwise Collocation at the 
+       * nodal points
+       */
+      if (call_col) {
+	err = apply_point_colloc_edge_bc(x, x_old, x_older,  xdot, xdot_old,
+					 resid_vector, delta_t, theta, 
+					 ielem, ip_total, ielem_type, 
+					 num_local_nodes, ielem_dim,
+					 iconnect_ptr, elem_edge_bc, 
+					 num_total_nodes, 
+					 local_node_list_fs, time_value);
+	EH( err, " apply_point_colloc_bc");
+#ifdef CHECK_FINITE
+	err = CHECKFINITE("apply_point_colloc_bc"); 
+	if (err) return -1;
+#endif
+	if( neg_elem_volume ) return -1;
+      }
+	
+      /****************************************************************************/
+    } while ( (elem_edge_bc = elem_edge_bc->next_edge_bc) != NULL );
+    /* END of do  while () construct				      */
+    /******************************************************************************/
+  } /* END if (First_Elem_Edge_BC_Array[ielem] != NULL) 		      */
+
+
+
+
+  /********************************************************************************
+   *                          BLOCK 8
+   * Now zero out the rows that correspond to Dirichlet Conditions
+   *  i.e. conditions where the value of the solution vector is known and
+   *       so the residual is set to zero and jacobian has a one on the diagonal
+   *       (sometimes one is not on the diagonal, as in the case
+   *        of distinguishing conditions)
+   ********************************************************************************/
+  
+  err = put_dirichlet_in_matrix(x, num_total_nodes);
+  EH(err, " put_dirichlet_in_matrix");
+#ifdef CHECK_FINITE
+  err = CHECKFINITE("put_dirichlet_in_matrix"); 
+  if (err) return -1;
+#endif
+
+  /* PRS test code for shell endpoint conditions.  4/21/2004 */
+  if(pde[R_MESH1] && pde[R_SHELL_TENSION])
+    {
+      for(i=0; i<num_local_nodes; i++)
+	{
+	  I = Proc_Elem_Connect[iconnect_ptr + i];
+	  node = Nodes[I];
+	  /*Now apply condition */
+	  if(node->DBSH_SLOPE_X == 1)
+	    {
+	      eqn = R_MESH1;
+	      lec->R[upd->ep[eqn]][i] = 1.0*BIG_PENALTY;
+	    }
+	  if(node->DBSH_SLOPE_Y == 1)
+	    {
+	      eqn = R_MESH2;
+	      lec->R[upd->ep[eqn]][i] = 0.0*BIG_PENALTY;
+	    }
+	}
+    }
+
+  if((Linear_Stability == LSA_3D_OF_2D
+      || Linear_Stability == LSA_3D_OF_2D_SAVE)
+     && !(af->Assemble_LSA_Jacobian_Matrix)
+     && !(af->Assemble_LSA_Mass_Matrix))
+    /* Cheap, but effective!  Zero out the equation rows for
+     * R_MOMENTUM3, and the columns for sensitivities to VELOCITY3,
+     * then stick in a Dirichlet condition.  The end effect should be
+     * that our original 2D steady-state problem has an appended
+     * system equivalent to the identity problem, "I x = 0". */
+    for(i = 0; i < MDE; i++)
+      {
+	eqn = upd->ep[R_MOMENTUM3];
+	var = upd->vp[VELOCITY3];
+	zero_lec_row(lec->J, eqn, i);
+	zero_lec_column(lec->J, var, i);
+	lec->J[eqn][var][i][i] = 1.0;
+	lec->R[eqn][i] = 0.0;
+      }
+  /* If we're doing normal mode LSA, and we're on wavenumber 0, then
+   * the jacobian contributions to the w-momentum equation are
+   * (rightly) all zero.  This causes a zero row, which we don't
+   * really want.  We want to emulate the Dirichlet = 0 "boundary
+   * condition" for all internal nodes, so we put a 1 on the diagonal
+   * for the same reason(s) as above.  We don't want this to be
+   * subtracted out, so we only apply it on one pass. */
+  if((Linear_Stability == LSA_3D_OF_2D ||
+      Linear_Stability == LSA_3D_OF_2D_SAVE)
+     && af->Assemble_LSA_Jacobian_Matrix
+     && LSA_3D_of_2D_wave_number == 0
+     && LSA_3D_of_2D_pass == 1)
+    for(i = 0; i < MDE; i++)
+      lec->J[R_MOMENTUM3][VELOCITY3][i][i] = 1.0;
+
+  /*
+   * Load local element stiffness matrix (lec) into global matrix, depending
+   * on solver used - front vs. everything else, and matrix storage format
+   * MSR vs VBR.
+   */
+
+  load_lec(exo, ielem, ams, x, resid_vector, estifm);
+
+  /*  if( pfd != NULL && pfd->Use_Constraint == TRUE )
+      {
+      load_pf_constraint(  pf_constraint, d_pf_lm, d_lm_pf );
+      }
+  */
+
+  /******************************************************************************/
+  /*                              BLOCK 13                                      */
+  /*                            CLEANUP BLOCK                                   */
+  /******************************************************************************/
+
+  /*
+   *  Good spot to print out the element stiffness matrix and residual or to
+   *  free any memory that was allocated on the element level
+   */
+  mm_fill_end = ut();
+  mm_fill_total += mm_fill_end - mm_fill_start;
+
+  /* 
+   *  Free up Subgrid integration arrays 
+   */
+
+  if( Subgrid_Int.active )
+    {
+      safe_free ( (void *) Subgrid_Int.s  ); Subgrid_Int.s = NULL;
+      safe_free ( (void *) Subgrid_Int.wt ); Subgrid_Int.wt = NULL;
+      free_search_grid ( &element_search_grid );
+    }
+
+
+  if (Debug_Flag > 1) {
+    P0PRINTF("%s: ends\n", yo);
+    MMH_ip = -1;
+  }
+  if( (Linear_Solver != FRONT && ielem == exo->eb_ptr[exo->num_elem_blocks]-1) 
+      || (Linear_Solver == FRONT && ielem == exo->elem_order_map[exo->num_elem_blocks]-1))
+    {
+      if (zeroCA == 0) {
+        int count = 0, Num_CAs_done = 0;
+	for (j = 0;j < MAX_CA;j++)
+	  {
+	    if (CA_id[j] == -2) Num_CAs_done++;
+	    if (CA_proc[j] == ProcID) count++;
+	  }
+	
+	if (count != Num_CAs_done)
+	  {
+	    WH(-1,"\nNot all contact angle conditions were applied!\n");
+	    for (j = 0;j < count;j++)
+	  	{
+	          fprintf(stderr,"CA:%d ID:%d fselem:%d sselem:%d Proc:%d\n",j,CA_id[j],CA_fselem[j],CA_sselem[j],CA_proc[j]);
+		}
+	    fprintf(stderr,"Count=%d  Done=%d\n",count,Num_CAs_done);
+	  }
+      }
+    }
+
+  return 0;
+} /*   END OF matrix_fill_stress                                                     */
+
+
 
 static void
 load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */

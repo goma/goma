@@ -57,6 +57,38 @@
 #define SCALED_RESIDUAL_TOLERANCE_CUTOFF (1.0e-8) /* don't report scaled error if values
 						    * are this small */
 
+EXTERN void numerical_jacobian_compute_stress  /* mm_numjac.c                               */
+PROTO((struct Aztec_Linear_Solver_System *, /* ams                           */
+       double [],               /* x - soln vector for current processor     */
+       double [],               /* resid_vector -for current processor       */
+       double ,                 /* delta_t - time step size                  */
+       double ,                 /* theta - parameter varies time integration *
+                                 * from explicit (theta = 1) to              *
+                                 * implicit (theta = 0)                      */
+       double [],               /* x_old - Value of the old solution vector  */
+       double [],               /* x_older - Value of the real old soln vect */
+       double [],               /* xdot - predicted for new solution         */
+       double [],               /* xdot_old - Value of xdot at previous time */
+       double [],               /* x_update                                  */
+       int ,                    /* num_total_nodes                           */
+       struct elem_side_bc_struct *[], /* first_elem_side_BC_array           *
+                                        * This is an array of pointers to    *
+                                        * the first surface integral defined *
+                                        * for each element.  It has a length *
+                                        * equal to the total number of       *
+                                        * elements on the current proc       */
+       int ,                    /* Debug_Flag - flag for calculating         *
+                                 * numerical jacobian:                       *
+                                 *    -1 == calc num jac w/o rescaling       *
+                                 *    -2 == calc num jac w/  rescaling       *
+                                 *    -3 == calc num jac w/ diagonal scaling */
+       double ,                 /* time_value - current time                 */
+       Exo_DB *,                /* exo - ptr to whole fe mesh                */
+       Dpi *,                   /* dpi - any distributed processing info     */
+       double *,
+       double *));
+
+
 EXTERN void numerical_jacobian	/* mm_numjac.c                               */
 PROTO((struct Aztec_Linear_Solver_System *, /* ams                           */
        double [],		/* x - soln vector for current processor     */

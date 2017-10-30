@@ -52,6 +52,20 @@ PROTO((dbl ,			/* tt - parm to vary time integration from
 				 * routine "element_velocity."               */
        dbl [DIM][MDE]));	/* dvc_dnode                                 */
 
+EXTERN int assemble_stress_log_conf
+PROTO((dbl ,                    /* tt - parm to vary time integration from 
+                                 * explicit (tt = 1) to implicit (tt = 0)    */
+       dbl ,                    /* dt - current time step size               */
+       dbl [DIM],               /* h - not scale factors methinks            */
+       dbl [DIM][DIM],          /* hh                                        */
+       dbl [DIM][MDE],          /* dh_dxnode                                 */
+       dbl [DIM],               /* vcent - avg element velocity, which is the
+                                 * centroid velocity for Q2 and the average of
+                                 * the vertices for Q1. It comes from the 
+                                 * routine "element_velocity."               */
+       dbl [DIM][MDE]));        /* dvc_dnode    */
+
+
 EXTERN int assemble_stress_level_set
 PROTO((dbl ,			/* tt - parm to vary time integration from 
 				 * explicit (tt = 1) to implicit (tt = 0)    */
@@ -170,5 +184,16 @@ PROTO((dbl [DIM][DIM],		/* s - total stress */
        dbl [DIM][DIM],		/* gamma_cont - continuous shear rate */
        dbl [MAX_MODES][DIM][DIM][MDE], /* d_mun_dS - derivative of mun wrt S*/ 
        dbl [DIM][DIM][MDE]));	/* d_mun_dG - derivative of mun wrt G */
+
+void
+compute_exp_s(double [DIM][DIM],
+	      double [DIM][DIM],
+              double [DIM],
+	      double [DIM][DIM]);
+
+void
+compute_d_exp_s_ds(dbl [DIM][DIM],                   //s - stress
+                   dbl [DIM][DIM],                   // exp_s
+                   dbl [DIM][DIM][DIM][DIM]);        // d_exp_s_ds
 
 #endif /* _MM_FILL_STRESS_H */
