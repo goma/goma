@@ -132,6 +132,21 @@ DEFINES ?= -Dlinux \
 #          -DLIBRARY_MODE \
 #          -DUSE_CHEMKIN -DSENKIN_OUTPUT -DDEBUG_HKM \
 
+# Git Version information
+# check for executable
+HAS_GIT := $(shell command -v git 2> /dev/null)
+
+
+
+ifdef HAS_GIT
+	GIT_VERSION=$(shell git describe --dirty --always --tags 2> /dev/null)
+
+ifneq "$(GIT_VERSION)" ""
+	VERSION = -DGIT_VERSION=\"$(GIT_VERSION)\"
+endif
+
+endif
+
 # External Libraries
 # ==================
 
@@ -235,7 +250,7 @@ F_WARN_FLAGS ?=
 FFLAGS = $(CCFLAGS) $(F_WARN_FLAGS) $(DEFINES) $(INCLUDES)
 
 # C compiler flags
-CFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(INCLUDES)
+CFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(VERSION) $(INCLUDES)
 
 # C++ compiler flags
 CXXSTD ?= 

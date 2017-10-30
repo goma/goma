@@ -55,7 +55,13 @@
 #endif /* HAVE_CONFIG_H */
 
 #ifndef VERSION
-#define VERSION "6.0.0"
+
+  #ifdef GIT_VERSION
+    #define VERSION GIT_VERSION
+  #else
+    #define VERSION "6.0.0"
+  #endif
+
 #endif
 
 /*****************************************************************************/
@@ -532,8 +538,15 @@ extern int zero_detJ_global;
  * versus 6 issue.)  This is not needed if goma is compiled with autoconf.
  * (Eric Benner 8/6/09)
  */ 
+
 #ifndef VERSION
-#define VERSION "6.0.0"
+
+  #ifdef GIT_VERSION
+    #define VERSION GIT_VERSION
+  #else
+    #define VERSION "6.0.0"
+  #endif
+
 #endif
 
 #endif
