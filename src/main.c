@@ -300,6 +300,9 @@ main(int argc, char **argv)
   struct Command_line_command **clc=NULL; /* point to command line structure */
   int           nclc = 0;		/* number of command line commands */
 
+#ifdef FP_EXCEPT
+  feenableexcept ((FE_OVERFLOW | FE_DIVBYZERO | FE_INVALID));
+#endif
 /********************** BEGIN EXECUTION ***************************************/
 
 #ifdef FP_EXCEPT

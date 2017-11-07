@@ -84,6 +84,27 @@ PROTO((double func[DIM],
        double xi[DIM],        /* Local stu coords */
        const Exo_DB *exo));   /* ExodusII database struct pointer */
 
+EXTERN void shell_lubrication_outflow
+PROTO((double func[DIM],
+       double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+       const double time,     /* current time */
+       const double dt,       /* current time step size */
+       double xi[DIM],        /* Local stu coords */
+       const Exo_DB *exo));   /* ExodusII database struct pointer */
+
+EXTERN void apply_sdet
+PROTO((double func[DIM],
+       double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+       double xi[DIM],        /* Local stu coords */
+       const Exo_DB *exo));   /* ExodusII database struct pointer */
+
+EXTERN void apply_sh_weak
+PROTO((double func[DIM],
+       double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+       double xi[DIM],        /* Local stu coords */
+       const Exo_DB *exo,   /* ExodusII database struct pointer */
+       const double dy_ds));  /* applied dy_ds at boundary */
+
 EXTERN void shell_n_dot_liq_velo_bc_tfmp
 PROTO((double func[DIM],
        double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
@@ -94,6 +115,22 @@ PROTO((double func[DIM],
        const Exo_DB *exo));   /* ExodusII database struct pointer */
 
 EXTERN void shell_num_diff_bc_tfmp
+PROTO((double func[DIM],
+       double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+       const double time,     /* current time */
+       const double dt,       /* current time step size */
+       double xi[DIM],        /* Local stu coords */
+       const Exo_DB *exo));   /* ExodusII database struct pointer */
+
+EXTERN void shell_tfmp_avg_plate_velo_liq
+PROTO((double func[DIM],
+       double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+       const double time,     /* current time */
+       const double dt,       /* current time step size */
+       double xi[DIM],        /* Local stu coords */
+       const Exo_DB *exo));   /* ExodusII database struct pointer */
+
+EXTERN void shell_tfmp_n_dot_grad_s
 PROTO((double func[DIM],
        double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
        const double time,     /* current time */

@@ -454,8 +454,12 @@ rd_bc_specs(FILE *ifp,
         case SHELL_GRAD_FH_NOBC_BC:
         case SHELL_GRAD_PC_NOBC_BC:
         case STRESS_DEVELOPED_BC:
-  	case SHELL_TFMP_FREE_LIQ_BC:
+	case SHELL_TFMP_FREE_LIQ_BC:
 	case SHELL_TFMP_NUM_DIFF_BC:
+	case SHELL_TFMP_GRAD_S_BC:
+	case SHELL_TFMP_FREE_GAS_BC:
+  case SHELL_LUBRICATION_OUTFLOW_BC:
+  
 	  break;
 
 	  /* Fall through for all cases which requires a single integer value
@@ -536,7 +540,9 @@ rd_bc_specs(FILE *ifp,
         case SHELL_GRAD_FP_BC:
         case SHELL_GRAD_FH_BC:
         case SHELL_GRAD_PC_BC:
-
+  case SH_SDET_BC:
+  case SH_MESH2_WEAK_BC:
+  
 	  if ( fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1)
 	    {
 	      sr = sprintf(err_msg, "%s: Expected 1 flt for %s.",
@@ -742,6 +748,7 @@ rd_bc_specs(FILE *ifp,
 	case EM_H2I_BC:
 	case EM_H3R_BC:
 	case EM_H3I_BC:
+	case SHELL_TFMP_SAT_BC:
   
 	    if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1) {
 	      sprintf(err_msg, "%s: Expected 1 flt for %s.",
@@ -3880,7 +3887,14 @@ BC_consistency( struct Boundary_Condition *BC_Type)
           // This boundary condition uses a side on a shell element in 2D. This is 
 	  // a node set consisting of one node. Therefore, it's ok.
           if (BC_Type->desc->BC_Name != SH_GAMMA1_DERIV_SYMM_BC && 
-              BC_Type->desc->BC_Name != SH_GAMMA2_DERIV_SYMM_BC )
+              BC_Type->desc->BC_Name != SH_GAMMA2_DERIV_SYMM_BC &&
+							BC_Type->desc->BC_Name != SHELL_TFMP_FREE_LIQ_BC &&
+							BC_Type->desc->BC_Name != SHELL_TFMP_FREE_GAS_BC &&
+							BC_Type->desc->BC_Name != SHELL_TFMP_GRAD_S_BC &&
+							BC_Type->desc->BC_Name != GRAD_LUB_PRESS_BC &&
+              BC_Type->desc->BC_Name != SH_SDET_BC &&
+              BC_Type->desc->BC_Name != SH_MESH2_WEAK_BC &&
+              BC_Type->desc->BC_Name != SHELL_LUBRICATION_OUTFLOW_BC )
             {
               sprintf(err_msg, "%s %s %d\n\t\t %s", "BC Consistency error detected. ",
                       BC_Type->desc->name1, BC_Type->BC_ID, " BC is not applicable to node sets ");

@@ -47,6 +47,7 @@
 #include "mm_qp_storage.h"
 
 #include "mm_eh.h"
+#include "shell_tfmp_util.h"
 
 #define eps(i,j,k)   ( (i-j)*(j-k)*(k-i)/2 )
 
@@ -178,7 +179,7 @@ shell_n_dot_flow_bc_confined(double func[DIM],
 
             for (ii=0; ii<pd->Num_Dim; ii++)
               {
-               d_func[0][var][j] += LubAux->dq_dp1[ii][j] * grad_II_phi_j[ii] * bound_normal[ii];
+               d_func[0][var][j] += -LubAux->dq_dp1[ii][j] * grad_II_phi_j[ii] * bound_normal[ii];
               }
            }
       }
@@ -189,10 +190,10 @@ shell_n_dot_flow_bc_confined(double func[DIM],
 
   /* Calculate the residual contribution        */
 
-  func[0] = - flowrate;
+  func[0] = flowrate;
   for (ii = 0; ii < pd->Num_Dim; ii++)
     {
-      func[0] +=  LubAux->q[ii] * bound_normal[ii];
+      func[0] +=  -LubAux->q[ii] * bound_normal[ii];
     }
 
   /* clean-up */
@@ -1593,23 +1594,35 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
   double phi_j;
   double grad_phi_j[DIM], gradII_phi_j[DIM];
   double bound_normal[DIM], dbound_normal_dx[DIM][DIM][MDE];
-
-  double S, h, v_l[DIM];
-  dbl grad_P[DIM], gradII_P[DIM];
-  dbl dgrad_P_dmesh[DIM][DIM][MDE], dgradII_P_dmesh[DIM][DIM][MDE];
+  double S;
+  dbl gradII_P[DIM];
+  dbl dgradII_P_dmesh[DIM][DIM][MDE];
 
   // mesh sensitivity dot products
   dbl gradIIP_dot_bound_normal, dgradIIP_dmesh_dot_bound_normal, gradIIP_dot_dbound_normal_dmesh;
   
   /* Save the boundary normal vector */
 
-  for(k = 0; k < pd->Num_Dim; k++) {
-    bound_normal[k] = fv->snormal[k];
-    for (l = 0; l<DIM; l++) {
-      for (j = 0; j <ei->dof[MESH_DISPLACEMENT1]; j++) {
-	dbound_normal_dx[k][l][j] = fv->dsnormal_dx[k][l][j];
+  memset(bound_normal,0.0, sizeof(double)*DIM);
+  memset(dbound_normal_dx, 0.0, sizeof(double)*DIM*DIM*MDE);
+
+  switch(mp->ehl_integration_kind){
+    case SIK_XY:;
+      for(k = 0; k < pd->Num_Dim; k++) {
+        bound_normal[k] = fv->snormal[k];
+        for (l = 0; l<DIM; l++) {
+          for (j = 0; j <ei->dof[MESH_DISPLACEMENT1]; j++) {
+            dbound_normal_dx[k][l][j] = fv->dsnormal_dx[k][l][j];
+          }
+        }
       }
-    }
+      break;
+    default:
+    case SIK_S:
+      bound_normal[0] = 1.0;
+      bound_normal[1] = 0.0;
+      bound_normal[2] = 0.0;
+      break;
   }
 
   /*
@@ -1619,168 +1632,204 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
   lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
   /* Gather necessary values (S, h, Krg, gradII_P)*/
-
-  // need pure phase viscosity
-  dbl mu_l;
-  switch(mp->tfmp_viscosity_model){
-  case CONSTANT:
-    mu_l = mp->tfmp_viscosity_const[1];
-    break;
-  default:
-    // if mp is not set, assemble function will bomb out.
-    mu_l = 0.0; //otherwise setup a nofinite
-    break;
-  }
-  
   S = fv->tfmp_sat;
-  /* Use the height_function_model */
-  double H_U, dH_U_dtime, H_L, dH_L_dtime;
-  double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+
+  // need pure phase viscosities
+  double mu_l, mu_g;
+
+  load_viscosity_model(
+    &mu_l, &mu_g
+  );
+
+  // here dh_dtime is not used, so it doesn't matter what tt is.
+  double tt = 1.0;
+
+  GAP_STRUCT gap_v;
+  GAP_STRUCT *gap = &gap_v;
+  gap->time = time;
+  gap->tt = tt;
+  gap->delta_t = delta_t;
+  gap->n_dof = n_dof;
+  gap->dof_map = dof_map;
+  load_gap_model(gap);
+
+  double h = gap->h;
   double dh_dmesh[DIM][MDE];
   double dh_dnormal[DIM][MDE];
-  memset (dh_dmesh, 0.0, sizeof(double)*DIM*MDE);
-  memset (dh_dnormal, 0.0, sizeof(double)*DIM*MDE);
-  h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
-			    dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
+  //double dh_dtime = gap->dh_dtime;
+  //double d2h_dtime_dmesh[DIM][MDE];
+  //double d2h_dtime_dnormal[DIM][MDE];
+  //double gradII_h[DIM];
+  //double d_gradIIh_dmesh[DIM][DIM][MDE];
+  //double d_gradIIh_dnormal[DIM][DIM][MDE];
 
-  switch ( mp->FSIModel ) {
-  case FSI_SHELL_ONLY_MESH:
-    for (k=0; k<DIM; k++) {
-      h -= fv->n[k]*fv->d[k];
-      for(j = 0; j<ei->dof[MESH_DISPLACEMENT1]; j++) {
-	dh_dmesh[k][j] -= fv->n[k]*bf[MESH_DISPLACEMENT1]->phi[j];
-	dh_dnormal[k][j] -= fv->d[k]*bf[SHELL_NORMAL1]->phi[j];
+  for (int k=0; k<DIM; k++) {
+    //gradII_h[k] = gap->gradII_h[k];
+    for (int i=0; i<MDE; i++) {
+      dh_dmesh[k][i] = gap->dh_dmesh[k][i];
+      dh_dnormal[k][i] = gap->dh_dnormal[k][i];
+      //d2h_dtime_dmesh[k][i] = gap->d2h_dtime_dmesh[k][i];
+      //d2h_dtime_dnormal[k][i] = gap->d2h_dtime_dnormal[k][i];
+    }
+    /*
+    for (int l=0; l<DIM; l++){
+      for (int i=0; i<MDE; i++){
+        d_gradIIh_dmesh[k][l][i] = gap->d_gradIIh_dmesh[k][l][i];
+        d_gradIIh_dnormal[k][l][i] = gap->d_gradIIh_dnormal[k][l][i];
       }
     }
-    break;
-  default:
-    break;
-  }
-  
-  // try shifted-scaled rel perms
-  dbl Krl, dKrl_dS;
-  dbl Scl, alphal;
-  switch (mp->tfmp_rel_perm_model) {
-  case PIECEWISE:
-    Scl = mp->tfmp_rel_perm_const[2];
-    alphal = mp->tfmp_rel_perm_const[3];
-    break;
-  default:
-    Scl = 0.78;
-    alphal = 0.1;
-    break;
-  }
-    
-  dbl ml = 1./2./alphal;
-  dbl cl = -ml*(Scl - alphal);
-  
-  // liquid transition
-  
-  if ( S <= Scl - alphal) {
-    Krl = 0.0;
-    dKrl_dS = 0.0;
-  } else if ( S > Scl - alphal && S < Scl + alphal ) {
-    Krl = ml*S + cl;
-    dKrl_dS = ml;
-    
-  } else { // S > 1.0
-    Krl = 1.0 ;
-    dKrl_dS = 0.0;
+    */
   }
 
-  for (k = 0; k<DIM; k++) {
-    grad_P[k] = fv->grad_tfmp_pres[k];
-    for (j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++) {
-      for (l=0; l<DIM; l++) {
-	dgrad_P_dmesh[k][l][j] = fv->d_grad_tfmp_pres_dmesh[k][l][j];
+  /* Use the velocity function model */
+  double veloU[DIM], veloL[DIM], veloAVG[DIM];
+  velocity_function_model(veloU, veloL, time, delta_t);
+
+  for (k=0; k<DIM; k++) {
+    veloAVG[k] = (veloU[k] + veloL[k])/2.;
+  }
+  veloAVG[2] = 0.0;
+  double n_dot_v_avg = 0.0;
+  for (k=0; k<DIM; k++) {
+    n_dot_v_avg += bound_normal[k]*veloAVG[k];
+  }
+
+  //  rel perms
+  double Krl, dKrl_dS, Krg, dKrg_dS;
+  load_relative_permeability_model(S, &Krl, &dKrl_dS, &Krg, &dKrg_dS);
+    
+  ShellRotate(fv->grad_tfmp_pres, fv->d_grad_tfmp_pres_dmesh, gradII_P, dgradII_P_dmesh, n_dof[MESH_DISPLACEMENT1]);
+
+  // because I didn't fix ShellRotate to work with domain_s integration
+  double csigrad[DIM];
+  double det_J;
+  double d_det_J_dmeshkj[DIM][MDE];
+
+  if (mp->ehl_integration_kind == SIK_S){
+    // fill mapping determinate and sensitivity to mesh motion
+    detJ_2d_bar(&det_J, d_det_J_dmeshkj);
+
+    double *grad;
+
+    if (pd->Num_Dim == 2 && ei->ielem_type == LINEAR_BAR) {
+      // only one dimension to integrate over, s.
+      var = TFMP_PRES;
+      grad = gradII_P;
+
+      memset (grad, 0.0, sizeof(double)*DIM);
+      memset (csigrad, 0.0, sizeof(double)*DIM);
+      for (int i=0; i<ei->dof[var]; i++) {
+        csigrad[0] += *esp->tfmp_pres[i]*bf[var]->dphidxi[i][0];
+      }
+
+      grad[0] = csigrad[0]/det_J;
+
+      for (int k=0; k<DIM; k++) {
+        for (int i=0; i<ei->dof[var]; i++){
+          dgradII_P_dmesh[0][k][i] = csigrad[0]*(-1.0)/det_J/det_J*d_det_J_dmeshkj[k][i];
+        }
       }
     }
   }
-  ShellRotate(grad_P, dgrad_P_dmesh, gradII_P, dgradII_P_dmesh, n_dof[MESH_DISPLACEMENT1]);
 
-  
-  /* Calculate Velocity */
-  for (k = 0; k<DIM; k++) {
-    v_l[k] = -h*h/12.0/mu_l*Krl*gradII_P[k];
-  }
-  
+
   /* Calculate residual contribution */
-  func[0] = 0.0;
-  for (k = 0; k<pd->Num_Dim; k++) {
-    func[0] += v_l[k]*bound_normal[k];
+  for (k = 0; k<DIM; k++) {
+    // Pressure gradient driven
+    func[0] += -h*h*h/12.0/mu_l*Krl*gradII_P[k]*bound_normal[k];
   }
-  func[0] *= h;
+  // Gap Velocity driven
+  //func[0] += h*S*n_dot_v_avg;
 
-  // res = -h*h*h/12.0/mu_l*Krl*gradIIP_dot_grad
+
+  double n_dot_grad_P, n_dot_phi_j;
+  double d_gradII_phi_j_dmesh[DIM][DIM][MDE];
 
   /* Calculate Jacobian contributions */
   if (af->Assemble_Jacobian) {
     var = TFMP_PRES;
     if (pd->v[var]) {
       for (j=0; j<ei->dof[var]; j++) {
-	phi_j = bf[var]->phi[j];
-	for (k=0; k<pd->Num_Dim; k++) {
-	  grad_phi_j[k] = bf[var]->grad_phi[j][k];
-	  gradII_phi_j[k] = 0.0;
-	}
-	Inn(grad_phi_j, gradII_phi_j);
-
-	for (k=0; k<pd->Num_Dim; k++) {
-	  d_func[0][var][j] += bound_normal[k]*gradII_phi_j[k];
-	}
-	d_func[0][var][j] *= -h*h/12.0/mu_l*Krl * h;
+        ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
+	
+        n_dot_phi_j = 0.0;
+      	for (k=0; k<DIM; k++) {
+	        n_dot_phi_j += bound_normal[k]*gradII_phi_j[k];
+	      }
+        if (S <= 1.0 ){
+          // Pressure gradient driven
+          d_func[0][var][j] += n_dot_phi_j*(-h*h*h/12.0/mu_l*Krl);
+          // Gap Velocity driven
+          //d_func[0][var][j] += 0.0;
+        }
       }
     }
 
     var = TFMP_SAT;
     if (pd->v[var]) {
       for (j=0; j<ei->dof[var]; j++) {
-	//	d_func[0][var][j] = 0.0;
-	phi_j = bf[var]->phi[j];
-	for (k=0; k<pd->Num_Dim; k++) {
-	  d_func[0][var][j] += bound_normal[k]*gradII_P[k];
-	}
-	d_func[0][var][j] *= -h*h/12.0/mu_l*dKrl_dS*phi_j * h;
+        ShellBF(R_TFMP_MASS, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
+        n_dot_grad_P = 0.0;
+        for (k=0; k<DIM; k++) {
+          n_dot_grad_P += bound_normal[k]*gradII_P[k];
+        }
+        if (S <= 1.0 ){
+          // Pressure gradient driven
+          d_func[0][var][j] += n_dot_grad_P	*(-h*h/12.0/mu_l*dKrl_dS*phi_j*h);
+          // Gap Velocity driven
+          //d_func[0][var][j] += h*phi_j*n_dot_v_avg;
+        }
       }
     }
 
     for (l = 0; l<DIM; l++) {
       var = MESH_DISPLACEMENT1 + l;
       if (pd->v[var]) {
-	for (j=0; j<ei->dof[var]; j++) {
-	  gradIIP_dot_bound_normal = 0.0;
-	  dgradIIP_dmesh_dot_bound_normal = 0.0;
-	  gradIIP_dot_dbound_normal_dmesh = 0.0;
+	      for (j=0; j<ei->dof[var]; j++) {
+          gradIIP_dot_bound_normal = 0.0;
+          dgradIIP_dmesh_dot_bound_normal = 0.0;
+          gradIIP_dot_dbound_normal_dmesh = 0.0;
 	  
-	  for (k = 0; k<DIM; k++) {
-	    gradIIP_dot_bound_normal += gradII_P[k]*bound_normal[k];
-	    dgradIIP_dmesh_dot_bound_normal += dgradII_P_dmesh[k][l][j]*bound_normal[k];
-	    gradIIP_dot_dbound_normal_dmesh += gradII_P[k]*dbound_normal_dx[k][l][j];
-	  }
-	  d_func[0][var][j] += -3.0*h*h*dh_dmesh[l][j]/12.0/mu_l*Krl*gradIIP_dot_bound_normal;
-	  d_func[0][var][j] += -h*h*h/12.0/mu_l*Krl*dgradIIP_dmesh_dot_bound_normal;
-	  d_func[0][var][j] += -h*h*h/12.0/mu_l*Krl*gradIIP_dot_dbound_normal_dmesh;
+          for (k = 0; k<DIM; k++) {
+            gradIIP_dot_bound_normal += gradII_P[k]*bound_normal[k];
+            dgradIIP_dmesh_dot_bound_normal += dgradII_P_dmesh[k][l][j]*bound_normal[k];
+            gradIIP_dot_dbound_normal_dmesh += gradII_P[k]*dbound_normal_dx[k][l][j];
+          }
+          if (S <= 1.0 ){
+            // Pressure gradient driven
+            d_func[0][var][j] += -3.0*h*h*dh_dmesh[l][j]/12.0/mu_l*Krl*gradIIP_dot_bound_normal;
+            d_func[0][var][j] += -h*h*h/12.0/mu_l*Krl*dgradIIP_dmesh_dot_bound_normal;
+            d_func[0][var][j] += -h*h*h/12.0/mu_l*Krl*gradIIP_dot_dbound_normal_dmesh;
+            // Gap Velocity driven
+            //d_func[0][var][j] += dh_dmesh[l][j]*S*n_dot_v_avg;
+          }
+          //d_func[0][var][j] = dgradII_P_dmesh[0][l][j];
+          //d_func[0][var][j] = dh_dmesh[l][j];
+          //d_func[0][var][j] = d_det_J_dmeshkj[l][j];
+          //d_func[0][var][j] = 0.0;
 
-	  
-	}
+	      }
       }
-	
     }
 
     for (l = 0; l<DIM; l++) {
       var = SHELL_NORMAL1 + l;
       if (pd->v[var]) {
-	for (j=0; j<ei->dof[var]; j++) {
-	  gradIIP_dot_bound_normal = 0.0;
-	  
-	  for (k = 0; k<DIM; k++) {
-	    gradIIP_dot_bound_normal += gradII_P[k]*bound_normal[k];
-	  }
-	  d_func[0][var][j] += -3.0*h*h*dh_dnormal[l][j]/12.0/mu_l*Krl*gradIIP_dot_bound_normal;
-	  
-	}
-      }
-	
+        for (j=0; j<ei->dof[var]; j++) {
+          gradIIP_dot_bound_normal = 0.0;
+          // AMCTODO - is bound_normal sensitive to normal?
+          // for ds: no
+          for (k = 0; k<DIM; k++) {
+            gradIIP_dot_bound_normal += gradII_P[k]*bound_normal[k];
+          }
+          if (S <= 1.0 ){
+            // Pressure gradient driven
+            d_func[0][var][j] += -3.0*h*h*dh_dnormal[l][j]/12.0/mu_l*Krl*gradIIP_dot_bound_normal;
+            // Gap Velocity driven
+            //d_func[0][var][j] += dh_dnormal[l][j]*S*n_dot_v_avg;
+          }
+        }
+      }	
     }
     
   }
@@ -1840,7 +1889,7 @@ shell_num_diff_bc_tfmp(double func[DIM],
   double grad_phi_j[DIM], gradII_phi_j[DIM];
   double bound_normal[DIM], bound_normalII[DIM];
 
-  double S, grad_S[DIM], gradII_S[DIM];
+  double S, gradII_S[DIM];
   double gradS_dot_n, gradphi_j_dot_n;
 
 /* Save the boundary normal vector */
@@ -1858,44 +1907,12 @@ shell_num_diff_bc_tfmp(double func[DIM],
   /* Gather necessary values (S, D, Krd)*/
 
   S = fv->tfmp_sat;
-  
+
   //Artificial diffusion constant
-  dbl D, Scd, betad, md, cd, Krd, dKrd_dS;
-  //D = .00001;
-  switch (mp->tfmp_diff_model) {
-  case CONSTANT:
-    D = mp->tfmp_diff_const[0];
-    Krd = 0.0;
-    dKrd_dS = 0.0;
-    break;
-  case PIECEWISE:
-    D = mp->tfmp_diff_const[0];
-    // diffusion transition
-    Scd = mp->tfmp_diff_const[1];
-    betad = mp->tfmp_diff_const[2];
-    md = 1.f/2.f/betad;
-    cd = -md*(Scd - betad);
-  
-    if ( S < Scd - betad) {
-      Krd = 0.0;
-      dKrd_dS = 0.0;
-    } else { // ( S >= Scd - betad) { // && S <= Scd + betad ) {
-      Krd = md*S + cd;
-      dKrd_dS = md;
-    }
-    break;
-    
-  default:
-    D = 0.0;
-    Krd = 0.0;
-    dKrd_dS = 0.0;
-    break;
-  }
-   
-  for (k = 0; k<DIM; k++) {
-    grad_S[k] = fv->grad_tfmp_sat[k];
-  }
-  Inn(grad_S, gradII_S);
+  double D, Krd, dKrd_dS;
+  load_molecular_diffusion_model(S, &D, &Krd, &dKrd_dS);
+
+  Inn(fv->grad_tfmp_sat, gradII_S);
   
   /* Calculate residual contribution */
   func[0] = 0.0;
@@ -1903,25 +1920,23 @@ shell_num_diff_bc_tfmp(double func[DIM],
     func[0] += bound_normalII[k]*gradII_S[k]*D*Krd;
   }
 
+  double d_gradII_phi_j_dmesh[DIM][DIM][MDE];
+
   /* Calculate Jacobian contributions */
   if (af->Assemble_Jacobian) {
     var = TFMP_SAT;
     if (pd->v[var]) {
       for (j=0; j<ei->dof[var]; j++) {
-	phi_j = bf[var]->phi[j];
-	gradS_dot_n = 0.0;
-	gradphi_j_dot_n= 0.0;
-	for (k=0; k<pd->Num_Dim; k++) {
-	  grad_phi_j[k] = bf[var]->grad_phi[j][k];
-	}
-	Inn(grad_phi_j, gradII_phi_j);
-	for (k=0; k<pd->Num_Dim; k++) {
-	  gradS_dot_n += gradII_S[k]*bound_normalII[k];
-	  gradphi_j_dot_n += gradII_phi_j[k]*bound_normalII[k];
-	}
+        ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
+        gradS_dot_n = 0.0;
+        gradphi_j_dot_n= 0.0;
+        for (k=0; k<pd->Num_Dim; k++) {
+          gradS_dot_n += gradII_S[k]*bound_normalII[k];
+          gradphi_j_dot_n += gradII_phi_j[k]*bound_normalII[k];
+        }
 
-	d_func[0][var][j] += -(gradphi_j_dot_n*D*Krd
-			      + gradS_dot_n*D*dKrd_dS*phi_j);
+        d_func[0][var][j] += -(gradphi_j_dot_n*D*Krd
+                  + gradS_dot_n*D*dKrd_dS*phi_j);
       }
     }
   }
@@ -1930,3 +1945,1072 @@ shell_num_diff_bc_tfmp(double func[DIM],
 } /* end of routine shell_num_diff_bc_tfmp */
 /*****************************************************************************/
 
+void 
+shell_tfmp_avg_plate_velo_liq(double func[DIM],
+			     double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+			     const double time,     /* current time */
+			     const double delta_t,       /* current time step size */
+			     double xi[DIM],        /* Local stu coordinates */
+			     const Exo_DB *exo) 
+
+     /***********************************************************************
+      *
+      * shell_tfmp_avg_plate_velo():
+      *
+      *  Function which evaluates the expression specifying the
+      *  liquid velocity at a quadrature point normal to the side
+      *  of an element.
+      *
+      *   func = h*S*n dot v_avg
+      *
+      *
+      *  The boundary condition SHELL_TFMP_AVG_PLATE_VELO_BC employs this
+      *  function.
+      *
+      *
+      * Input:
+      *
+      *  v_avg   = comes from mp?
+      *  S       = saturation (fv->tfmp_sat)
+      *  h       = Film thickness
+      *
+      * Output:
+      *
+      *  func[0] = value of the function mentioned above
+      *  d_func[0][varType][lvardof] =
+      *              Derivate of func[0] wrt
+      *              the variable type, varType, and the local variable
+      *              degree of freedom, lvardof, corresponding to that
+      *              variable type.
+      *
+      *   Author: Andrew Cochrane (2/20/2018)
+      *   
+      ********************************************************************/
+{
+  int j, k, l, var;
+  int *n_dof = NULL;
+  int dof_map[MDE];
+  double phi_j;
+  double bound_normal[DIM], dbound_normal_dx[DIM][DIM][MDE];
+
+  double S, h;
+  double n_dot_v_avg;
+  /* Save the boundary normal vector */
+
+  memset(bound_normal,0.0, sizeof(double)*DIM);
+  memset(dbound_normal_dx, 0.0, sizeof(double)*DIM*DIM*MDE);
+
+  switch(mp->ehl_integration_kind){
+    case SIK_XY:;
+      for(k = 0; k < pd->Num_Dim; k++) {
+        bound_normal[k] = fv->snormal[k];
+        for (l = 0; l<DIM; l++) {
+          for (j = 0; j <ei->dof[MESH_DISPLACEMENT1]; j++) {
+            dbound_normal_dx[k][l][j] = fv->dsnormal_dx[k][l][j];
+          }
+        }
+      }
+      break;
+    default:
+    case SIK_S:
+      bound_normal[0] = 1.0;
+      bound_normal[1] = 0.0;
+      bound_normal[2] = 0.0;
+      break;
+  }
+
+  /*
+  * Prepare geometry
+  */
+  n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+  /* Gather necessary values (S, h, v_avg)*/
+  
+  S = fv->tfmp_sat;
+  /* Use the height_function_model */
+  double H_U, dH_U_dtime, H_L, dH_L_dtime;
+  double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+
+  h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
+			    dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
+
+  double dh_dmesh[DIM][MDE];
+  double dh_dnormal[DIM][MDE];
+  double d2h_dtime_dmesh[DIM][MDE];
+  double d2h_dtime_dnormal[DIM][MDE];
+	double d_gradIIh_dmesh[DIM][DIM][MDE];
+	double d_gradIIh_dnormal[DIM][DIM][MDE];
+
+  double gradII_h[DIM];
+
+	for (k = 0; k<DIM; k++) {
+		gradII_h[k] = dH_U_dX[k] - dH_L_dX[k];
+	}
+
+
+  // here dh_dtime is not used, so it doesn't matter what tt is.
+  double tt = 1.0;
+  double dh_dtime;
+  load_displacement_coupling_model(
+    tt,
+    delta_t,
+    &h,
+    &dh_dtime,
+    gradII_h,
+    dh_dmesh,
+    dh_dnormal,
+    d2h_dtime_dmesh,
+    d2h_dtime_dnormal,
+    d_gradIIh_dmesh,
+    d_gradIIh_dnormal,
+    n_dof,
+    dof_map
+  );
+
+  double v_avg[DIM], veloU[DIM], veloL[DIM];
+  //double liquid_flux_density[DIM];
+
+  velocity_function_model(veloU, veloL, time, delta_t);
+
+  for (k=0; k<ei->ielem_dim; k++) {
+    v_avg[k] = (veloU[k] + veloL[k])/2.;
+  }
+  v_avg[2] = 0.0;
+
+  n_dot_v_avg = 0.0;
+  for (k=0; k<DIM; k++) {
+    //liquid_flux_density[k] = h*v_avg[k]*S;
+    n_dot_v_avg += bound_normal[k]*v_avg[k];
+  }
+
+  func[0] += h*S*n_dot_v_avg;
+
+
+  if (af->Assemble_Jacobian) {
+    
+    var = TFMP_SAT;
+    if (pd->v[var]) {
+      for (j=0; j<ei->dof[var]; j++) {
+        phi_j = bf[var]->phi[j];
+        for (k=0; k<DIM; k++) {
+          d_func[0][var][j] += bound_normal[k]*v_avg[k]*h*phi_j;
+        }
+      }
+    }
+
+    for (l=0; l<DIM; l++) {
+      var = MESH_DISPLACEMENT1 + l;
+      if (pd->v[var]) {
+
+        for (j=0; j<ei->dof[var]; j++) {
+          d_func[0][var][j] += n_dot_v_avg*S*dh_dmesh[l][j];
+        }
+      }
+      var = SHELL_NORMAL1 + l;
+      if (pd->v[var]) {
+        for (j=0; j<ei->dof[var]; j++) {
+          d_func[0][var][j] += n_dot_v_avg*S*dh_dnormal[l][j];
+        }
+      }
+    }  
+  }
+  /* Cleanup */
+  safe_free((void *) n_dof);
+}/* end of routine shell_tfmp_avg_plate_velo_liq */
+
+void 
+shell_tfmp_n_dot_grad_s(double func[DIM],
+			     double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+			     const double time,     /* current time */
+			     const double delta_t,       /* current time step size */
+			     double xi[DIM],        /* Local stu coordinates */
+			     const Exo_DB *exo) 
+
+     /***********************************************************************
+      * AMCTODO - rewrite this description
+      * shell_tfmp_avg_plate_velo():
+      *
+      *  Function for strong integration of n_dot_grad_s
+      *  
+      *   func = n dot grad(S)
+      *
+      *
+      *  The boundary condition SHELL_TFMP_AVG_PLATE_VELO_BC employs this
+      *  function.
+      *
+      *
+      * Input:
+      *
+      *  S       = saturation (fv->tfmp_sat)
+      *  n       = outflow normal vector
+      *
+      * Output:
+      *
+      *  func[0] = value of the function mentioned above
+      *  d_func[0][varType][lvardof] =
+      *              Derivate of func[0] wrt
+      *              the variable type, varType, and the local variable
+      *              degree of freedom, lvardof, corresponding to that
+      *              variable type.
+      *
+      *   Author: Andrew Cochrane (2/27/2018)
+      *   
+      ********************************************************************/
+{
+  int j, k, l, var;
+  int *n_dof = NULL;
+  int dof_map[MDE];
+  double phi_j;
+  double grad_phi_j[DIM], gradII_phi_j[DIM];
+  double bound_normal[DIM], bound_normalII[DIM];
+
+  double gradII_S[DIM];
+  double gradphi_j_dot_n;
+
+/* Save the boundary normal vector */
+
+  for(k = 0; k < pd->Num_Dim; k++) {
+    bound_normal[k] = fv->snormal[k];
+  }
+  Inn(bound_normal, bound_normalII);
+/*
+  * Prepare geometry
+  */
+  n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+  /* Gather necessary values (S, D, Krd)*/
+
+  Inn(fv->grad_tfmp_sat, gradII_S);
+   /* Calculate residual contribution */
+
+  for (k = 0; k<pd->Num_Dim; k++) {
+    func[0] += bound_normalII[k]*gradII_S[k];
+  }
+  double d_gradII_phi_j_dmesh[DIM][DIM][MDE];
+  /* Calculate Jacobian contributions */
+  if (af->Assemble_Jacobian) {
+
+    var = TFMP_SAT;
+    if (pd->v[var]) {
+      for (j=0; j<ei->dof[var]; j++) {
+        ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
+        gradphi_j_dot_n= 0.0;
+        for (k=0; k<DIM; k++) {
+          gradphi_j_dot_n += gradII_phi_j[k]*bound_normalII[k];
+        }
+        d_func[0][var][j] += -(gradphi_j_dot_n);
+      }
+    }
+
+    for (l=0; l<DIM; l++) {
+      var = SHELL_NORMAL1 + l;
+      if (pd->v[var]) {
+        for (j=0; j<ei->dof[var]; j++) {
+          ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
+          for (k=0; k<DIM; k++) {
+            d_func[0][var][j] += phi_j*gradII_S[k];
+          }
+        }
+      }
+    } 
+  }
+ /* Cleanup */
+  safe_free((void *) n_dof);
+}
+
+void 
+shell_n_dot_gas_velo_bc_tfmp(double func[DIM],
+			     double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+			     const double flowrate, /* imposed flow rate */
+			     const double time,     /* current time */
+			     const double delta_t,       /* current time step size */
+			     double xi[DIM],        /* Local stu coordinates */
+			     const Exo_DB *exo)
+
+     /***********************************************************************
+      *
+      * shell_n_dot_gas_velo_bc_tfmp():
+      *
+      *  Function which evaluates the expression specifying the
+      *  liquid velocity at a quadrature point normal to the side
+      *  of an element.
+      *
+      *         func =   - velocity + n .( - h^2 /(12*mu_g)(krg) (grad tfmp_pres) )
+
+      *
+      *  The boundary condition SHELL_TFMP_FREE_GAS_BC employs this function.
+      *
+      *
+      * Input:
+      *
+      *  velocity       = 0.0 for now (could be specified on the bc card as the first float)
+      *  grad tfmp_pres = Lubrication pressure gradient
+      *  h              = Film thickness
+      *
+      * Output:
+      *
+      *  func[0] = value of the function mentioned above
+      *  d_func[0][varType][lvardof] =
+      *              Derivate of func[0] wrt
+      *              the variable type, varType, and the local variable
+      *              degree of freedom, lvardof, corresponding to that
+      *              variable type.
+      *
+      *   Author: Andrew Cochrane (3/01/2018)
+      * 
+      ********************************************************************/
+{
+  int j, k, l, var;
+  int *n_dof = NULL;
+  int dof_map[MDE];
+  double phi_j;
+  double grad_phi_j[DIM], gradII_phi_j[DIM];
+  double bound_normal[DIM], dbound_normal_dx[DIM][DIM][MDE];
+  double S;
+  dbl gradII_P[DIM];
+  dbl dgradII_P_dmesh[DIM][DIM][MDE];
+
+  // mesh sensitivity dot products
+  dbl gradIIP_dot_bound_normal, dgradIIP_dmesh_dot_bound_normal, gradIIP_dot_dbound_normal_dmesh;
+  
+  /* Save the boundary normal vector */
+
+  memset(bound_normal,0.0, sizeof(double)*DIM);
+  memset(dbound_normal_dx, 0.0, sizeof(double)*DIM*DIM*MDE);
+
+  switch(mp->ehl_integration_kind){
+    case SIK_XY:;
+      for(k = 0; k < pd->Num_Dim; k++) {
+        bound_normal[k] = fv->snormal[k];
+        for (l = 0; l<DIM; l++) {
+          for (j = 0; j <ei->dof[MESH_DISPLACEMENT1]; j++) {
+            dbound_normal_dx[k][l][j] = fv->dsnormal_dx[k][l][j];
+          }
+        }
+      }
+      break;
+    default:
+    case SIK_S:
+      bound_normal[0] = 1.0;
+      bound_normal[1] = 0.0;
+      bound_normal[2] = 0.0;
+      break;
+  }
+
+  /*
+  * Prepare geometry
+  */
+  n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+  /* Gather necessary values (S, h, Krg, gradII_P)*/
+  
+  // need pure phase viscosities
+  double mu_l, mu_g;
+
+  load_viscosity_model(
+    &mu_l, &mu_g
+  );
+  
+  S = fv->tfmp_sat;
+
+  // here dh_dtime is not used, so it doesn't matter what tt is.
+  double tt = 1.0;
+
+  GAP_STRUCT gap_v;
+  GAP_STRUCT *gap = &gap_v;
+  gap->time = time;
+  gap->tt = tt;
+  gap->delta_t = delta_t;
+  gap->n_dof = n_dof;
+  gap->dof_map = dof_map;
+  load_gap_model(gap);
+
+  double h = gap->h;
+  double dh_dmesh[DIM][MDE];
+  double dh_dnormal[DIM][MDE];
+  //double dh_dtime = gap->dh_dtime;
+  //double d2h_dtime_dmesh[DIM][MDE];
+  //double d2h_dtime_dnormal[DIM][MDE];
+  //double gradII_h[DIM];
+  //double d_gradIIh_dmesh[DIM][DIM][MDE];
+  //double d_gradIIh_dnormal[DIM][DIM][MDE];
+
+  for (int k=0; k<DIM; k++) {
+    //gradII_h[k] = gap->gradII_h[k];
+    for (int i=0; i<MDE; i++) {
+      dh_dmesh[k][i] = gap->dh_dmesh[k][i];
+      dh_dnormal[k][i] = gap->dh_dnormal[k][i];
+      //d2h_dtime_dmesh[k][i] = gap->d2h_dtime_dmesh[k][i];
+      //d2h_dtime_dnormal[k][i] = gap->d2h_dtime_dnormal[k][i];
+    }
+    /*
+    for (int l=0; l<DIM; l++){
+      for (int i=0; i<MDE; i++){
+        d_gradIIh_dmesh[k][l][i] = gap->d_gradIIh_dmesh[k][l][i];
+        d_gradIIh_dnormal[k][l][i] = gap->d_gradIIh_dnormal[k][l][i];
+      }
+    }
+    */
+  }
+
+  /* Use the velocity function model */
+  double veloU[DIM], veloL[DIM], veloAVG[DIM];
+  velocity_function_model(veloU, veloL, time, delta_t);
+  for (k=0; k<DIM; k++) {
+    veloAVG[k] = (veloU[k] + veloL[k])/2.;
+  }
+  veloAVG[2] = 0.0;
+  double n_dot_v_avg = 0.0;
+  for (k=0; k<DIM; k++) {
+    n_dot_v_avg += bound_normal[k]*veloAVG[k];
+  }
+
+  //  rel perms
+  double Krl, dKrl_dS, Krg, dKrg_dS;
+  load_relative_permeability_model(S, &Krl, &dKrl_dS, &Krg, &dKrg_dS);
+
+  ShellRotate(fv->grad_tfmp_pres, fv->d_grad_tfmp_pres_dmesh, gradII_P, dgradII_P_dmesh, n_dof[MESH_DISPLACEMENT1]);
+
+  // because I didn't fix ShellRotate to work with domain_s integration
+  double csigrad[DIM];
+  double det_J;
+  double d_det_J_dmeshkj[DIM][MDE];
+
+  if (mp->ehl_integration_kind == SIK_S){
+    // fill mapping determinate and sensitivity to mesh motion
+    detJ_2d_bar(&det_J, d_det_J_dmeshkj);
+
+    double *grad;
+
+    if (pd->Num_Dim == 2 && ei->ielem_type == LINEAR_BAR) {
+      // only one dimension to integrate over, s.
+      var = TFMP_PRES;
+      grad = gradII_P;
+
+      memset (grad, 0.0, sizeof(double)*DIM);
+      memset (csigrad, 0.0, sizeof(double)*DIM);
+      for (int i=0; i<ei->dof[var]; i++) {
+        csigrad[0] += *esp->tfmp_pres[i]*bf[var]->dphidxi[i][0];
+      }
+
+      grad[0] = csigrad[0]/det_J;
+
+      for (int k=0; k<DIM; k++) {
+        for (int i=0; i<ei->dof[var]; i++){
+          dgradII_P_dmesh[0][k][i] = csigrad[0]*(-1.0)/det_J/det_J*d_det_J_dmeshkj[k][i];
+        }
+      }
+    }
+  }
+
+  /* Calculate residual contribution */
+  for (k = 0; k<pd->Num_Dim; k++) {
+    func[0] += -h*h*h/12.0/mu_g*Krg*gradII_P[k]*bound_normal[k];
+  }
+
+  // boundary velocity term
+  func[0] += h*(1.0 - S)*n_dot_v_avg;
+
+  // res = -h*h*h/12.0/mu_g*Krg*gradIIP_dot_grad
+  double n_dot_grad_P, n_dot_grad_phi_j;
+  double d_gradII_phi_j_dmesh[DIM][DIM][MDE];
+
+  /* Calculate Jacobian contributions */
+  if (af->Assemble_Jacobian) {
+    var = TFMP_PRES;
+    if (pd->v[var]) {
+      for (j=0; j<ei->dof[var]; j++) {
+	      ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
+        n_dot_grad_phi_j = 0.0;
+        for (k=0; k<DIM; k++) {
+          n_dot_grad_phi_j += bound_normal[k]*gradII_phi_j[k];
+        }
+        // pressure gradient term
+        d_func[0][var][j] += n_dot_grad_phi_j*(-h*h*h/12.0/mu_g*Krg);
+      }
+    }
+
+    var = TFMP_SAT;
+    if (pd->v[var]) {
+      for (j=0; j<ei->dof[var]; j++) {
+        ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
+        n_dot_grad_P = 0.0;
+        for (k=0; k<DIM; k++) {
+          n_dot_grad_P += bound_normal[k]*gradII_P[k];
+        }
+        // pressure gradient term
+        d_func[0][var][j] += n_dot_grad_P*(-h*h*h/12.0/mu_g*dKrg_dS*phi_j);
+        // Boundary velocity terms
+        d_func[0][var][j] += h*(-1.0)*n_dot_v_avg;
+      }
+    }
+
+    for (l = 0; l<DIM; l++) {
+      var = MESH_DISPLACEMENT1 + l;
+      if (pd->v[var]) {
+        for (j=0; j<ei->dof[var]; j++) {
+          gradIIP_dot_bound_normal = 0.0;
+          dgradIIP_dmesh_dot_bound_normal = 0.0;
+          gradIIP_dot_dbound_normal_dmesh = 0.0;
+          
+          for (k = 0; k<DIM; k++) {
+            gradIIP_dot_bound_normal += gradII_P[k]*bound_normal[k];
+            dgradIIP_dmesh_dot_bound_normal += dgradII_P_dmesh[k][l][j]*bound_normal[k];
+            gradIIP_dot_dbound_normal_dmesh += gradII_P[k]*dbound_normal_dx[k][l][j];
+          }
+          // pressure gradient term
+          d_func[0][var][j] += -3.0*h*h*dh_dmesh[l][j]/12.0/mu_g*Krg*gradIIP_dot_bound_normal;
+          d_func[0][var][j] += -h*h*h/12.0/mu_g*Krg*dgradIIP_dmesh_dot_bound_normal;
+          d_func[0][var][j] += -h*h*h/12.0/mu_g*Krg*gradIIP_dot_dbound_normal_dmesh;
+          // Boundary velocity terms
+          d_func[0][var][j] += dh_dmesh[l][j]*(1.0 - S)*n_dot_v_avg;
+        }
+      }
+	
+    }
+
+    for (l = 0; l<DIM; l++) {
+      var = SHELL_NORMAL1 + l;
+      if (pd->v[var]) {
+        for (j=0; j<ei->dof[var]; j++) {
+          gradIIP_dot_bound_normal = 0.0;
+          // AMCTODO - is bound_normal sensitive to normal?
+          for (k = 0; k<DIM; k++) {
+            gradIIP_dot_bound_normal += gradII_P[k]*bound_normal[k];
+          }
+          // pressure gradient term
+          d_func[0][var][j] += -3.0*h*h*dh_dnormal[l][j]/12.0/mu_g*Krg*gradIIP_dot_bound_normal;
+          // Boundary velocity terms
+          d_func[0][var][j] += dh_dnormal[l][j]*(1.0 - S)*n_dot_v_avg;
+        }
+      }
+	
+    }
+    
+  }
+  /* Cleanup */
+  safe_free((void *) n_dof);
+} /* end of routine shell_n_dot_gas_velo_bc_tfmp */
+/*****************************************************************************/
+
+void
+shell_lubrication_outflow(
+  double func[DIM],
+  double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+  const double time,     /* current time */
+  const double delta_t,       /* current time step size */
+  double xi[DIM],        /* Local stu coordinates */
+  const Exo_DB *exo)
+{
+  int var;
+  // 1d case only right now gradII_P[0] === dP_ds
+  // need pure phase viscosities
+  double mu_l, mu_g;
+
+  load_viscosity_model(
+    &mu_l, &mu_g
+  );
+  /*
+  * Prepare geometry
+  */
+  int *n_dof = NULL;
+  int dof_map[MDE];
+  n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+  /* Use the height_function_model */
+  double H_U, dH_U_dtime, H_L, dH_L_dtime;
+  double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+
+  double h;
+
+  h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
+          dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
+
+  double dh_dmesh[DIM][MDE];
+  double dh_dnormal[DIM][MDE];
+  double d2h_dtime_dmesh[DIM][MDE];
+  double d2h_dtime_dnormal[DIM][MDE];
+  double d_gradIIh_dmesh[DIM][DIM][MDE];
+  double d_gradIIh_dnormal[DIM][DIM][MDE];
+
+  double gradII_h[DIM];
+
+  for (int k = 0; k<DIM; k++) {
+    gradII_h[k] = dH_U_dX[k] - dH_L_dX[k];
+  }
+  memset (dh_dmesh, 0.0, sizeof(double)*DIM*MDE);
+  memset (dh_dnormal, 0.0, sizeof(double)*DIM*MDE);
+  memset (d2h_dtime_dmesh, 0.0, sizeof(double)*DIM*MDE);
+  memset (d2h_dtime_dnormal, 0.0, sizeof(double)*DIM*MDE);
+  memset (d_gradIIh_dmesh, 0.0, sizeof(double)*DIM*DIM*MDE);
+  memset (d_gradIIh_dnormal, 0.0, sizeof(double)*DIM*DIM*MDE);
+  // here dh_dtime is not used, so it doesn't matter what tt is.
+  double tt = 1.0;
+  double dh_dtime;
+  load_displacement_coupling_model(
+    tt,
+    delta_t,
+    &h,
+    &dh_dtime,
+    gradII_h,
+    dh_dmesh,
+    dh_dnormal,
+    d2h_dtime_dmesh,
+    d2h_dtime_dnormal,
+    d_gradIIh_dmesh,
+    d_gradIIh_dnormal,
+    n_dof,
+    dof_map
+  );
+
+  double gradII_P[DIM];
+  double dgradII_P_dmesh[DIM][DIM][MDE];
+  ShellRotate(fv->grad_tfmp_pres, fv->d_grad_tfmp_pres_dmesh, gradII_P, dgradII_P_dmesh, n_dof[MESH_DISPLACEMENT1]);
+
+  double phi_j, grad_phi_j[DIM], gradII_phi_j[DIM], d_gradII_phi_j_dmesh[DIM][DIM][MDE];
+
+  // because I didn't fix ShellRotate to work with domain_s integration
+  double csigrad[DIM];
+  double det_J;
+  double d_det_J_dmeshkj[DIM][MDE];
+
+  //double gradII_curv[DIM];
+  //double dgradII_curv_dmesh[DIM][DIM][MDE];
+
+  if (mp->ehl_integration_kind == SIK_S) {
+    // fill mapping determinate and sensitivity to mesh motion
+    detJ_2d_bar(&det_J, d_det_J_dmeshkj);
+
+    double *grad;
+
+    if (pd->Num_Dim == 2 && ei->ielem_type == LINEAR_BAR) {
+      // only one dimension to integrate over, s.
+      var = TFMP_PRES;
+      grad = gradII_P;
+
+      memset (grad, 0.0, sizeof(double)*DIM);
+      memset (csigrad, 0.0, sizeof(double)*DIM);
+      for (int i=0; i<ei->dof[var]; i++) {
+        csigrad[0] += *esp->tfmp_pres[i]*bf[var]->dphidxi[i][0];
+      }
+
+      grad[0] = csigrad[0]/det_J;
+
+      for (int k=0; k<DIM; k++) {
+        for (int i=0; i<ei->dof[var]; i++){
+          dgradII_P_dmesh[0][k][i] = csigrad[0]*(-1.0)/det_J/det_J*d_det_J_dmeshkj[k][i];
+        }
+      }
+
+      /*
+      var = SHELL_CURVATURE;
+      grad = gradII_curv;
+      memset (grad, 0.0, sizeof(double)*DIM);
+      memset (csigrad, 0.0, sizeof(double)*DIM);
+      for (int i=0; i<ei->dof[var]; i++) {
+        csigrad[0] += *esp->sh_K[i]*bf[var]->dphidxi[i][0];
+      }
+
+      grad[0] = csigrad[0]/det_J;
+
+      for (int k=0; k<DIM; k++) {
+        for (int i=0; i<ei->dof[var]; i++){
+          dgradII_curv_dmesh[0][k][i] = csigrad[0]*(-1.0)/det_J/det_J*d_det_J_dmeshkj[k][i];
+        }
+      }
+      */
+    }
+  }
+
+  double scale_factor = 1.0;
+
+  if (af->Assemble_Residual) {
+    func[0] +=  scale_factor*h*(-h*h/12.0/mu_l*gradII_P[0]);
+    //func[0] = fv->tfmp_pres;
+    //func[0] = gradII_P[0];
+    func[0] = -h*h*h/12.0/mu_l*gradII_P[0];
+  }
+  if (af->Assemble_Jacobian) {
+    var = TFMP_PRES;
+
+    for (int j=0; j<ei->dof[var]; j++) {
+      ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
+      //d_func[0][var][j] += scale_factor*h*(-h*h/12.0f/mu_l*gradII_phi_j[0]);
+      d_func[0][var][j] = -h*h*h/12.0/mu_l*gradII_phi_j[0];
+    }
+
+    var = SHELL_CURVATURE;
+    for (int j=0; j<ei->dof[var]; j++) {
+      ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
+      //d_func[0][var][j] += scale_factor*h*(-h*h/12.0/mu_l*fv->sh_tens*gradII_phi_j[0]);
+    }
+    var = SHELL_TENSION;
+    for (int j=0; j<ei->dof[var]; j++) {
+      //ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
+      //d_func[0][var][j] += scale_factor*h*(-h*h/12.0/mu_l*phi_j*gradII_curv[0]);
+    }
+    for (int l=0; l<pd->Num_Dim; l++) {
+      var = MESH_DISPLACEMENT1 + l;
+      for (int j=0; j<ei->dof[var]; j++) {
+        ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
+        //d_func[0][var][j] += -scale_factor*3.0*h*h*dh_dmesh[l][j]/12.0/mu_l*gradII_P[0];
+        d_func[0][var][j] += -h*h*dh_dmesh[l][j]/4.0/mu_l*gradII_P[0];
+        d_func[0][var][j] += -h*h*h/12.0/mu_l*dgradII_P_dmesh[0][l][j];
+      }
+      var = SHELL_NORMAL1 + l;
+      for (int j=0; j<ei->dof[var]; j++) {
+        ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
+        //d_func[0][var][j] += -scale_factor*3.0*h*h*dh_dnormal[l][j]/12.0/mu_l*gradII_P[0];
+        d_func[0][var][j] += -h*h*dh_dnormal[l][j]/4.0/mu_l*gradII_P[0];
+      }
+    }
+  }
+
+}/* end of routine shell_lubrication_outflow */
+
+
+void 
+shell_tfmp_avg_plate_velo_gas(double func[DIM],
+			     double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+			     const double time,     /* current time */
+			     const double delta_t,       /* current time step size */
+			     double xi[DIM],        /* Local stu coordinates */
+			     const Exo_DB *exo) 
+
+     /***********************************************************************
+      *
+      * shell_tfmp_avg_plate_velo_gas():
+      *
+      *  Function which evaluates the expression specifying the
+      *  gas flux at a quadrature point normal to the side
+      *  of an element.
+      *
+      *   func = h*(1-S)*n dot v_avg
+      *
+      *
+      *  The boundary condition SHELL_TFMP_AVG_PLATE_VELO_BC employs this
+      *  function.
+      *
+      *
+      * Input:
+      *
+      *  v_avg   = comes from mp?
+      *  S       = saturation (fv->tfmp_sat)
+      *  h       = Film thickness
+      *
+      * Output:
+      *
+      *  func[0] = value of the function mentioned above
+      *  d_func[0][varType][lvardof] =
+      *              Derivate of func[0] wrt
+      *              the variable type, varType, and the local variable
+      *              degree of freedom, lvardof, corresponding to that
+      *              variable type.
+      *
+      *   Author: Andrew Cochrane (2/20/2018)
+      *   
+      ********************************************************************/
+{
+  int j, k, l, var;
+  int *n_dof = NULL;
+  int dof_map[MDE];
+  double phi_j;
+  double grad_phi_j[DIM], gradII_phi_j[DIM];
+  double bound_normal[DIM];//, dbound_normal_dx[DIM][DIM][MDE];
+
+  double S, h, v_avg[DIM], veloU[DIM], veloL[DIM];
+  double gas_flux_density[DIM];
+  /* Save the boundary normal vector */
+
+  for(k = 0; k < pd->Num_Dim; k++) {
+    bound_normal[k] = fv->snormal[k];
+    /*
+    for (l = 0; l<DIM; l++) {
+      for (j = 0; j <ei->dof[MESH_DISPLACEMENT1]; j++) {
+	      dbound_normal_dx[k][l][j] = fv->dsnormal_dx[k][l][j];
+      }
+    }
+    */
+  }
+
+  /*
+  * Prepare geometry
+  */
+  n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+  /* Gather necessary values (S, h, v_avg)*/
+  
+  S = fv->tfmp_sat;
+  /* Use the height_function_model */
+  double H_U, dH_U_dtime, H_L, dH_L_dtime;
+  double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+
+  h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
+			    dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
+
+  double dh_dmesh[DIM][MDE];
+  double dh_dnormal[DIM][MDE];
+  double d2h_dtime_dmesh[DIM][MDE];
+  double d2h_dtime_dnormal[DIM][MDE];
+	double d_gradIIh_dmesh[DIM][DIM][MDE];
+	double d_gradIIh_dnormal[DIM][DIM][MDE];
+
+  double gradII_h[DIM];
+
+	for (k = 0; k<DIM; k++) {
+		gradII_h[k] = dH_U_dX[k] - dH_L_dX[k];
+	}
+
+  // here dh_dtime is not used, so it doesn't matter what tt is.
+  double tt = 1.0;
+  double dh_dtime;
+  load_displacement_coupling_model(
+    tt,
+    delta_t,
+    &h,
+    &dh_dtime,
+    gradII_h,
+    dh_dmesh,
+    dh_dnormal,
+    d2h_dtime_dmesh,
+    d2h_dtime_dnormal,
+    d_gradIIh_dmesh,
+    d_gradIIh_dnormal,
+    n_dof,
+    dof_map
+  );
+
+  velocity_function_model(veloU, veloL, time, delta_t);
+
+  for (k=0; k<DIM; k++) {
+    v_avg[k] = (veloU[k] + veloL[k])/2.;
+  }
+  v_avg[2] = 0.0;
+
+
+  for (k=0; k<DIM; k++) {
+    gas_flux_density[k] = h*v_avg[k]*(1.0-S);
+  }
+  
+  for (k=0; k<DIM; k++){
+    func[0] += gas_flux_density[k]*bound_normal[k];
+  }
+  
+  double d_gradII_phi_j_dmesh[DIM][DIM][MDE];
+  if (af->Assemble_Jacobian) {
+    var = TFMP_SAT;
+    if (pd->v[var]) {
+      for (j=0; j<ei->dof[var]; j++) {
+        ShellBF(var, j, &phi_j, grad_phi_j, gradII_phi_j, d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
+        for (k=0; k<DIM; k++) {
+          d_func[0][var][j] += -bound_normal[k]*v_avg[k]*h*phi_j;
+        }
+      }
+    }
+
+    for (l=0; l<DIM; l++) {
+      var = MESH_DISPLACEMENT1 + l;
+      if (pd->v[var]) {
+        for (j=0; j<ei->dof[var]; j++) {
+          for (k=0; k<DIM; k++) {
+            d_func[0][var][j] += bound_normal[k]*v_avg[k]*(1.0 - S)*dh_dmesh[k][j];
+          }
+        }
+      }
+      var = SHELL_NORMAL1 + l;
+      if (pd->v[var]) {
+        for (j=0; j<ei->dof[var]; j++) {
+          for (k=0; k<DIM; k++) {
+            d_func[0][var][j] += bound_normal[k]*v_avg[k]*(1.0 - S)*dh_dnormal[k][j];
+          }
+        }
+      }
+    }
+  }
+  /* Cleanup */
+  safe_free((void *) n_dof);
+}/* end of routine shell_tfmp_avg_plate_velo_gas */
+
+void 
+apply_sdet(double func[DIM],
+			     double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+           double xi[DIM],        /* Local stu coordinates */
+           const Exo_DB *exo)
+     /***********************************************************************
+      *
+      * apply_sdet():
+      *
+      *  Function which evaluates the expression specifying the
+      *  surface determinant at a quadrature point. sign TBD
+      *  
+      *
+      *   func = 1/2*phi_i*sdet*sdet
+      *
+      *
+      *  The boundary condition SH_SDET_BC employs this
+      *  function.
+      *
+      *
+      * Input:
+      *
+      *  sdet   = surface determinant
+      *
+      * Output:
+      *
+      *  func[0] = value of the function mentioned above
+      *  d_func[0][varType][lvardof] =
+      *              Derivate of func[0] wrt
+      *              the variable type, varType, and the local variable
+      *              degree of freedom, lvardof, corresponding to that
+      *              variable type.
+      *
+      *   Author: Andrew Cochrane (4/5/2018)
+      *   
+      ********************************************************************/
+           {
+            int j, var;
+
+            int *n_dof = NULL;
+            int dof_map[MDE];
+
+            n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+            lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+            double det_J;
+            double d_det_J_dmeshkj[DIM][MDE];
+            memset(d_det_J_dmeshkj, 0.0, sizeof(double)*DIM*MDE);
+            detJ_2d_bar(&det_J, d_det_J_dmeshkj);
+
+
+            double factor = 1.0;
+            func[0] += factor*0.5*det_J*det_J;
+
+            if (af->Assemble_Jacobian) {
+              var = MESH_DISPLACEMENT1;
+              if (pd->v[var]) {
+                for (j=0; j<ei->dof[var]; j++) {
+                  d_func[0][var][j] += factor*det_J*d_det_J_dmeshkj[0][j];
+                }
+              }
+              var = MESH_DISPLACEMENT2;
+              if (pd->v[var]) {
+                for (j=0; j<ei->dof[var]; j++) {
+                  d_func[0][var][j] += factor*det_J*d_det_J_dmeshkj[1][j];
+                }
+              }
+            }
+
+           }/* end of routine apply_sdet */
+
+void 
+apply_sh_weak(double func[DIM],
+			     double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+           double xi[DIM],        /* Local stu coordinates */
+			     const Exo_DB *exo,
+           const double dy_ds)
+     /***********************************************************************
+      *
+      * apply_sh_weak():
+      *
+      *  Function which evaluates the expression specifying the
+      *  surface determinant at a quadrature point. sign TBD
+      *  
+      *
+      *   func = -phi_i*dy_ds
+      *
+      *
+      *  The boundary condition SH_MESH2_WEAK_BC employs this
+      *  function.
+      *
+      *
+      * Input:
+      *
+      *  y   = y(global)-position of mesh
+      *  s   = position in mesh basis
+      *
+      * Output:
+      *
+      *  func[0] = value of the function mentioned above
+      *  d_func[0][varType][lvardof] =
+      *              Derivate of func[0] wrt
+      *              the variable type, varType, and the local variable
+      *              degree of freedom, lvardof, corresponding to that
+      *              variable type.
+      *
+      *   Author: Andrew Cochrane (4/10/2018)
+      *   
+      ********************************************************************/
+{
+  int j, var;
+
+  int i, eqn, node, index;
+
+  int *n_dof = NULL;
+  int dof_map[MDE];
+
+  // if value of dy_ds isn't defined on BC input, it is set to 0
+
+  n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+  // get the gradient of mesh position
+  eqn = R_MESH2;
+  dbl d_sh_y_dcsi = 0.;
+  dbl d_phi_dcsi[MDE];
+  double d_sh_y_dcsi_dmesh[DIM][MDE];
+
+  memset(d_sh_y_dcsi_dmesh, 0.0, sizeof(double)*DIM*MDE);
+
+  for (i=0; i< ei->dof[eqn]; i++) {
+    node = ei->dof_list[R_MESH2][i];
+    index = Proc_Elem_Connect[ei->iconnect_ptr + node];
+    d_phi_dcsi[i] = bf[eqn]->dphidxi[i][0];
+    d_sh_y_dcsi += (Coor[1][index] + *esp->d[1][i]) * d_phi_dcsi[i];
+
+    // don't need to loop over k, it's just sensitive to d[1];
+    d_sh_y_dcsi_dmesh[1][i] += d_phi_dcsi[i];
+  }
+
+  // get the linear bar determinate of mapping
+  //(need to modify for elements with more dim than BAR element)
+  double det_J;
+  double d_det_J_dmeshkj[DIM][MDE];
+  detJ_2d_bar(&det_J, d_det_J_dmeshkj);
+
+  if (af->Assemble_Residual) {
+    if (dy_ds == 0.0) {
+      func[0] += -d_sh_y_dcsi/det_J;
+    } else { // use input value
+      func[0] += dy_ds/det_J;
+    }
+  }
+  
+  if (af->Assemble_Jacobian) {
+    var = MESH_DISPLACEMENT1;
+    if (pd->v[var]) {
+      for (j=0; j<ei->dof[var]; j++) {
+        if (dy_ds == 0.0) {
+          d_func[0][var][j] += d_sh_y_dcsi/det_J/det_J*d_det_J_dmeshkj[0][j];
+        } else { // use input value (not sensitive to anything)
+          d_func[0][var][j] += -1.0*dy_ds/det_J/det_J*d_det_J_dmeshkj[0][j];
+        }
+
+      }
+    }
+    var = MESH_DISPLACEMENT2;
+    if (pd->v[var]) {
+      for (j=0; j<ei->dof[var]; j++) {
+        if (dy_ds == 0.0) {
+          d_func[0][var][j] +=  d_sh_y_dcsi/det_J/det_J*d_det_J_dmeshkj[1][j];
+          d_func[0][var][j] +=  -d_phi_dcsi[j]/det_J;
+        } else { // use input value (not sensitive to anything)
+          d_func[0][var][j] += -1.0*dy_ds/det_J/det_J*d_det_J_dmeshkj[1][j];
+        }
+      }
+    }
+  }
+
+}/* end of routine apply_sdet */

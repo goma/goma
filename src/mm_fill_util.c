@@ -329,15 +329,25 @@ beer_belly(void)
   /* But first we pull a fast one.  If this is a 3D shell element, we up dim to dim+1 so
    *  that the 3D case is executed, but only after we populate the 3rd column of J with 
    * arbitrary nonzero constants so as to keep J full rank
+   
+   * AMC - This might work for the gradients once they are in the plane of the element,
+   * but the gradients with respect to global coordinate system do indeed depend on
+   * the values assigned to the right most column of the 
+   * Jacobian of the mapping (MapBf->J).
+   * 
+   * There are problems that depend on the rightmost column being the values
+   * computed above, so use this block with caution.
    */
-  if(elem_shape == SHELL || elem_shape == TRISHELL) 
+  if(elem_shape == SHELL
+     || elem_shape == TRISHELL
+     || (mp->ehl_integration_kind == SIK_S))
     {
       dim++;
       for (t = 0; t < Num_Basis_Functions; t++)
 	{ 
 	  for (j = 0; j < pdim; j++)
 	    {
-	      bfd[t]->J[2][j] = MapBf->J[2][j] = (j+1)*1.0;
+	      bfd[t]->J[pd->Num_Dim-1][j] = MapBf->J[pd->Num_Dim-1][j] = (j+1)*1.0;
 	    }
 	}
 
@@ -345,13 +355,18 @@ beer_belly(void)
        *didn't screw things up. Note that the detJ in the shell case can be 
        *negative, but it is important to point out that we are not using it for 
        *for integration, but only as a crutch for inversion of J */
-
+      if (pd->Num_Dim == 3) {
       MapBf->detJ = MapBf->J[0][0] * ( MapBf->J[1][1] * MapBf->J[2][2]
 				       -MapBf->J[1][2] * MapBf->J[2][1])
 	- MapBf->J[0][1] * ( MapBf->J[1][0] * MapBf->J[2][2]
 			     -MapBf->J[2][0] * MapBf->J[1][2])
 	+ MapBf->J[0][2] * ( MapBf->J[1][0] * MapBf->J[2][1]
 			     -MapBf->J[2][0] * MapBf->J[1][1]);
+      }
+      if (pd->Num_Dim == 2) {
+        MapBf->detJ = MapBf->J[0][0] * MapBf->J[1][1]
+	- MapBf->J[0][1] * MapBf->J[1][0];
+      }
 
       if(fabs(MapBf->detJ) < 1.e-10)
        	{
@@ -365,7 +380,6 @@ beer_belly(void)
         }
 
     }
-  
   
 
   /* Compute inverse of Jacobian for only the MapBf right now */
@@ -417,6 +431,7 @@ beer_belly(void)
       break;
 
     case 2:
+      dim = ei->ielem_dim;
       MapBf->detJ    =  MapBf->J[0][0] * MapBf->J[1][1]
 	- MapBf->J[0][1] * MapBf->J[1][0];
 

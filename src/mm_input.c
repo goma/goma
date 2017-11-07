@@ -1163,10 +1163,17 @@ rd_genl_specs(FILE *ifp,
        * 
        * PRS 7/27/2011
        */
-
+      if(Num_Var_External+1 > MAX_EXTERNAL_FIELD)
+  {
+    SPF(err_msg,
+        ">%d external field vars. Fix MAX_EXTERNAL_FIELD"
+        " (rf_fem_const.h), recompile.",
+        MAX_EXTERNAL_FIELD);
+          EH(-1,err_msg);
+  }
       if ( efv->ipix[Num_Var_External])
 	{
-	  if (fscanf (ifp,"%d",&efv->ipix_matid[Num_Var_External]) != 1)
+    if (fscanf (ifp,"%d",&efv->ipix_matid[Num_Var_External]) != 1)
 	    {
 	      EH(-1, "Must specify a material ID for external pix field");
 	    }
@@ -1184,14 +1191,7 @@ rd_genl_specs(FILE *ifp,
 
     
       Num_Var_External++;
-      if(Num_Var_External > MAX_EXTERNAL_FIELD) 
-	{
-	  SPF(err_msg, 
-	      ">%d external field vars. Fix MAX_EXTERNAL_FIELD"
-	      " (rf_fem_const.h), recompile.",
-	      MAX_EXTERNAL_FIELD);
-          EH(-1,err_msg);
-	}
+
       ECHO(echo_string, echo_file);
     }
 

@@ -39,6 +39,14 @@ PROTO((double time_value,        /* Time */
        double xi[DIM],           /* Local stu coordinates */
        const Exo_DB *exo));      /* ExodusII database struct pointer */
 
+EXTERN int assemble_shell_web_structure
+PROTO((double time_value,        /* Time */
+       double theta,             /* Time stepping parameter */
+       double delta_t,           /* Time step size */
+       const double wt,          /* Gauss surface point weight */
+       double xi[DIM],           /* Local stu coordinates */
+       const Exo_DB *exo));      /* ExodusII database struct pointer */
+
 EXTERN int assemble_shell_tension
 PROTO((double time_value,        /* Time */
        double theta,             /* Time stepping parameter */
@@ -48,6 +56,14 @@ PROTO((double time_value,        /* Time */
        const Exo_DB *exo));      /* ExodusII database struct pointer */
 
 EXTERN int assemble_shell_coordinates
+PROTO((double time_value,        /* Time */
+       double theta,             /* Time stepping parameter */
+       double delta_t,           /* Time step size */
+       const double wt,          /* Gauss surface point weight */
+       double xi[DIM],           /* Local stu coordinates */
+       const Exo_DB *exo));        /* ExodusII database struct pointer */
+
+EXTERN int assemble_shell_web_coordinates
 PROTO((double time_value,        /* Time */
        double theta,             /* Time stepping parameter */
        double delta_t,           /* Time step size */
@@ -311,6 +327,13 @@ PROTO((double,                   /* Time */
        double [DIM],             /* Local stu coords */
        PG_DATA *,
        const Exo_DB * ));        /* ExodusII database struct pointer */  
+
+EXTERN int assemble_shell_lubrication
+PROTO((double,                   /* Time */
+       double,                   /* theta or tt*/
+       double,                   /* dt */
+       double [DIM],             /* Local stu coords */
+       const Exo_DB * ));        /* ExodusII database struct pointer */
 
 EXTERN int load_lsi_shell_second
 PROTO(( const double ));       /* width */

@@ -257,6 +257,13 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    */
   set_up_Embedded_BC();
   
+  /* Special 1D
+   * Set up surface integral boundary conditions
+   * that apply at single nodes.
+   */
+
+  setup_Point_BC(First_Elem_Side_BC_Array, exo, dpi);
+
   /*
    *  Print out the edge boudary condition structures
    *  if necessary

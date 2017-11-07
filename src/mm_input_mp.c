@@ -1172,7 +1172,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	if (num_const != 0) {
 	  EH(-1, "ISOPARAMETRIC Shell Tangent Computation Method takes no other input parameters");
 	}
-      }
+      } else
       if (model_read == 1 && !strcmp(model_name, "SEEDED") ) {
 	model_read = 1;
 	mat_ptr->shell_tangent_model = SEEDED;
@@ -1225,7 +1225,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         if (num_const != 0) {
           EH(-1, "EXPANDED Shell Moment Tensor Model takes no other input parameters");
         }
-      }
+      } else
 
       if (model_read == 1 && !strcmp(model_name, "SIMPLE") ) {
         model_read = 1;
@@ -8645,7 +8645,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
       mat_ptr->heightU_ext_field_index = -1; //Default to NO external field
 
-      if ( model_read == -1 && !strcmp(model_name, "CONSTANT_SPEED") )  
+      if ( model_read == -1 && !strcmp(model_name, "CONSTANT_SPEED") )
 	{
 	  model_read = 1;
 	  mat_ptr->HeightUFunctionModel = CONSTANT_SPEED;
@@ -8968,7 +8968,39 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      EH(-1, err_msg);
 	    }
        }
-      
+      else if ( model_read == -1 && !strcmp(model_name, "ROLLER") )
+  {
+    model_read = 1;
+    mat_ptr->HeightUFunctionModel = ROLLER;
+    num_const = read_constants(imp, &(mat_ptr->u_heightU_function_constants), NO_SPECIES);
+    if (num_const > 3) {
+      /* We may have an external field "height" we will be adding to this model.  Check
+       * for it now and flag its existence through the material properties structure
+       */
+      mat_ptr->heightU_ext_field_index = -1; //Default to NO external field
+      if ( efv->ev ) {
+        for (i = 0; i < efv->Num_external_field; i++) {
+          if(!strcmp(efv->name[i], "HEIGHT")) {
+            mat_ptr->heightU_ext_field_index = i;
+          }
+        }
+      } else {
+        EH(-1," You have a fourth float on Upper Height Function Constants card, but NO external field named 'HEIGHT'!");
+      }
+    }
+
+    if( num_const < 3 || num_const > 4)
+      {
+        sr = sprintf(err_msg,
+         "Matl %s needs 3 constants for %s %s model.\n",
+         pd_glob[mn]->MaterialName,
+         "Upper Height Function", "ROLLER");
+        EH(-1, err_msg);
+      }
+    mat_ptr->len_u_heightU_function_constants = num_const;
+    SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
+  }
+
        else if(model_read == -1)
 	 {
 	   EH(model_read, "Upper Height Function model invalid");
@@ -9695,7 +9727,11 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        pd_glob[mn]->e[R_SHELL_FILMP] ||
        pd_glob[mn]->e[R_SHELL_SAT_OPEN] || pd_glob[mn]->e[R_SHELL_SAT_OPEN_2] ||
        (pd_glob[mn]->e[R_SHELL_NORMAL1] && pd_glob[mn]->e[R_SHELL_NORMAL2] && pd_glob[mn]->e[R_SHELL_NORMAL3]) ||
-       pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) {
+//       ((pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) && pd_glob[mn]->e[R_MESH1]) ||
+       (  (pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND])
+           && (pd_glob[mn]->e[R_SHELL_TENSION] && pd_glob[mn]->e[R_SHELL_CURVATURE])
+       )
+     ){
 
     model_read = look_for_mat_prop(imp, "FSI Deformation Model",
 				   &(mat_ptr->FSIModel),
@@ -9735,7 +9771,6 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
     } else {
       EH(model_read, "This FSI Deformation Model is not valid!");
-
     }
 
     ECHO(es,echo_file);    
@@ -10076,7 +10111,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     // So far, the density card only pertains to the gas model.
     // The incompressible liquid density does not matter.
    */
-  if(pd_glob[mn]->e[R_TFMP_MASS]) {
+  if(pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) {
     char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
     strcpy(search_string, "Thin Film Multiphase Density");
     model_read = look_for_optional(imp,
@@ -10102,6 +10137,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->tfmp_density_const );
 	mat_ptr->len_tfmp_density_const = num_const;
 	if (num_const == 1) {
+    mat_ptr->len_tfmp_density_const = 4;
 	  safe_free(mat_ptr->tfmp_density_const);
 	  mat_ptr->tfmp_density_const = alloc_dbl_1(4, 0.0);
 	  // make sure reasonable values are here, to prevent divide by zero and provide a uniform ambient pressure value.
@@ -10128,7 +10164,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     ECHO(es, echo_file);
   }
   
-  if(pd_glob[mn]->e[R_TFMP_MASS]) {
+  if(pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) {
     char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
     strcpy(search_string, "Thin Film Multiphase Viscosity");
     model_read = look_for_optional(imp,
@@ -10164,7 +10200,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       EH(-1, "No default fluid viscosities, to specify them use the \"Thin Film Multiphase Viscosity\" card.");
     }
   }
-  if(pd_glob[mn]->e[R_TFMP_MASS]) {
+  if(pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) {
     char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
     strcpy(search_string, "Thin Film Multiphase Diffusivity Model");
     model_read = look_for_optional(imp,
@@ -10184,7 +10220,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       SPF(es, "%s = %s", search_string, model_name);
       if (!strcmp(model_name, "CONSTANT") ) {
 	model_read = 1;
+  
 	mat_ptr->tfmp_diff_model = CONSTANT;
+  mat_ptr->tfmp_diff_const = alloc_dbl_1(1, 0.0);
 	if (fscanf(imp, "%lg", mat_ptr->tfmp_diff_const) != 1) {
 	  sr = sprintf(err_msg, 
 		       "Wrong number of constants in material file, property %s",
@@ -10192,7 +10230,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  EH(-1, err_msg);
 	}
 
-	mat_ptr->len_tfmp_diff_const = num_const;
+	mat_ptr->len_tfmp_diff_const = 1;
 	SPF_DBL_VEC( endofstring(es), 1 , mat_ptr->tfmp_diff_const );
       } else if (!strcmp(model_name, "PIECEWISE") ) {
 	mat_ptr->tfmp_diff_model = PIECEWISE;
@@ -10243,7 +10281,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     }
   }
 
-  if(pd_glob[mn]->e[R_TFMP_MASS]) {
+  if(pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) {
     char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
     strcpy(search_string, "Thin Film Multiphase Relative Permeability Model");
     model_read = look_for_optional(imp,
@@ -10261,6 +10299,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       if (!strcmp(model_name, "LEVER") ) {
 	mat_ptr->tfmp_rel_perm_model = LEVER;
 	mat_ptr->len_tfmp_rel_perm_const = 0;
+      } else if (!strcmp(model_name, "SATURATION") ) {
+        mat_ptr->tfmp_rel_perm_model = SATURATION;
+        mat_ptr->len_tfmp_rel_perm_const = 0;
       } else if (!strcmp(model_name, "PIECEWISE") ) {
 	mat_ptr->tfmp_rel_perm_model = PIECEWISE;
 	mat_ptr->len_tfmp_rel_perm_const = read_constants(imp, &mat_ptr->tfmp_rel_perm_const, NO_SPECIES);
@@ -10277,7 +10318,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     }
   }
   
-  if(pd_glob[mn]->e[R_TFMP_BOUND] && pd_glob[mn]->e[R_TFMP_MASS]) {
+  if(pd_glob[mn]->e[R_TFMP_BOUND] || pd_glob[mn]->e[R_TFMP_MASS]) {
     strcpy(search_string, "Thin Film Multiphase Mass Lumping");
     model_read = look_for_optional(imp,
 				   search_string,
@@ -10357,7 +10398,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     ECHO(es, echo_file);
   }
 
-  if(pd_glob[mn]->e[R_TFMP_MASS]) {
+  if(pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) {
     char input[MAX_CHAR_IN_INPUT] = "zilch\0"; 
     strcpy(search_string, "Thin Film Multiphase Drop Lattice");
     model_read = look_for_optional(imp,
@@ -10388,6 +10429,176 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     ECHO(es, echo_file);
   }
 
+  /* check for roller-web gap thickness model */
+  if(pd_glob[mn]->e[R_MESH1] && pd_glob[mn]->e[R_TFMP_BOUND]) {
+    char input[MAX_CHAR_IN_INPUT] = "zilch\0";
+    strcpy(search_string, "Elastohydrodynamic Lubrication Gap Model");
+    model_read = look_for_optional(imp,
+               search_string,
+               input,
+               '=');
+
+    if(model_read == 1) {
+      if (fscanf(imp, "%s", model_name) != 1) {
+        sr = sprintf(err_msg,
+         "Error reading model name string in material file, property %s",
+         search_string);
+        EH(-1, err_msg);
+      }
+
+      SPF(es, "%s = %s", search_string, model_name);
+      if (model_read == 1 && !strcmp(model_name, "NDOTD") ) {
+        model_read = 1;
+        mat_ptr->ehl_gap_model = GM_NDOTD;
+        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
+        //NO_SPECIES);
+
+//        if (num_const != 0) {
+//          EH(-1, "NDOTD Elastohydrodynamic Lubrication Gap Model takes no other input parameters");
+//        }
+      } else
+
+      if (model_read == 1 && !strcmp(model_name, "RADIAL") ) {
+        model_read = 1;
+        mat_ptr->ehl_gap_model = GM_RADIAL;
+        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
+        //NO_SPECIES);
+
+//        if (num_const != 0) {
+//          EH(-1, "RADIAL Elastohydrodynamic Lubrication Gap Model takes no other input parameters");
+//        }
+      }
+
+      else {
+        // default is simple
+        mat_ptr->ehl_gap_model = GM_RADIAL;
+        SPF(es, "%s = %s", search_string, "RADIAL");
+      }
+
+      ECHO(es, echo_file);
+    }
+  }
+
+  /* check for roller-web normal calculation method (only needed if gap model is NDOTD) */
+  if(pd_glob[mn]->e[R_MESH1] && pd_glob[mn]->e[R_TFMP_BOUND]
+     && mat_ptr->ehl_gap_model == GM_NDOTD) {
+    char input[MAX_CHAR_IN_INPUT] = "zilch\0";
+    strcpy(search_string, "Elastohydrodynamic Lubrication Normal Calculation Method");
+    model_read = look_for_optional(imp,
+               search_string,
+               input,
+               '=');
+
+    if(model_read == 1) {
+      if (fscanf(imp, "%s", model_name) != 1) {
+        sr = sprintf(err_msg,
+         "Error reading model name string in material file, property %s",
+         search_string);
+        EH(-1, err_msg);
+      }
+
+      SPF(es, "%s = %s", search_string, model_name);
+      if (model_read == 1 && !strcmp(model_name, "MAPPING") ) {
+        model_read = 1;
+        mat_ptr->ehl_normal_method = NCM_MAPPING;
+        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
+        //NO_SPECIES);
+
+//        if (num_const != 0) {
+//          EH(-1, "MAPPING Elastohydrodynamic Lubrication Normal Calculation Method takes no other input parameters");
+//        }
+      } else
+
+      if (model_read == 1 && !strcmp(model_name, "SIK_S_WEB") ) {
+        model_read = 1;
+        mat_ptr->ehl_normal_method = NCM_PRIMITIVE_S_WEB;
+        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
+        //NO_SPECIES);
+
+//        if (num_const != 0) {
+//          EH(-1, "SIK_S_WEB Elastohydrodynamic Lubrication Normal Calculation Method takes no other input parameters");
+//        }
+      } else
+      if (model_read == 1 && !strcmp(model_name, "SIK_S_ROLLER") ) {
+        model_read = 1;
+        mat_ptr->ehl_normal_method = NCM_PRIMITIVE_S_ROLLER;
+        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
+        //NO_SPECIES);
+
+//        if (num_const != 0) {
+//          EH(-1, "SIK_S_ROLLER Elastohydrodynamic Lubrication Normal Calculation Method takes no other input parameters");
+//        }
+      } else
+      if (model_read == 1 && !strcmp(model_name, "SIK_XY") ) {
+        model_read = 1;
+        mat_ptr->ehl_normal_method = NCM_PRIMITIVE_XY;
+        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
+        //NO_SPECIES);
+
+//        if (num_const != 0) {
+//          EH(-1, "SIK_XY Elastohydrodynamic Lubrication Normal Calculation Method takes no other input parameters");
+//        }
+      }
+
+      else {
+        // default is normal of roller
+        mat_ptr->ehl_normal_method = NCM_PRIMITIVE_S_ROLLER;
+        SPF(es, "%s = %s", search_string, "SIK_S_ROLLER");
+      }
+
+      ECHO(es, echo_file);
+    }
+  }
+
+  /* check for 2d bar integration kind */
+  if(pd_glob[mn]->e[R_MESH1] && pd_glob[mn]->e[R_TFMP_BOUND]) {
+    char input[MAX_CHAR_IN_INPUT] = "zilch\0";
+    strcpy(search_string, "Elastohydrodynamic Lubrication Shell Integration Kind");
+    model_read = look_for_optional(imp,
+               search_string,
+               input,
+               '=');
+
+    if(model_read == 1) {
+      if (fscanf(imp, "%s", model_name) != 1) {
+        sr = sprintf(err_msg,
+         "Error reading model name string in material file, property %s",
+         search_string);
+        EH(-1, err_msg);
+      }
+
+      SPF(es, "%s = %s", search_string, model_name);
+      if (model_read == 1 && !strcmp(model_name, "S") ) {
+        model_read = 1;
+        mat_ptr->ehl_integration_kind = SIK_S;
+        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
+        //NO_SPECIES);
+
+//        if (num_const != 0) {
+//          EH(-1, "S Elastohydrodynamic Lubrication Shell Integration Kind takes no other input parameters");
+//        }
+      } else
+
+      if (model_read == 1 && !strcmp(model_name, "XY") ) {
+        model_read = 1;
+        mat_ptr->ehl_integration_kind = SIK_XY;
+        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
+        //NO_SPECIES);
+
+//        if (num_const != 0) {
+//          EH(-1, "XY Elastohydrodynamic Lubrication Shell Integration Kind takes no other input parameters");
+//        }
+      }
+
+      else {
+        // default is S
+        mat_ptr->ehl_integration_kind = SIK_XY;
+        SPF(es, "%s = %s", search_string, "XY");
+      }
+
+      ECHO(es, echo_file);
+    }
+  }
   
   /*********************************************************************/
 
