@@ -1573,7 +1573,7 @@ dbl *te_out) /* te_out - return actual end time */
           DPRINTF(stderr, "\n\tminimum resolved step limit!\n");
         }
 
-	if (pg->imtrx == Fill_Matrix) {
+	if (pg->imtrx = Fill_Matrix) {
 	  if ( ls != NULL && tran->Courant_Limit != 0. ) {
 	    double Courant_dt;
 	    Courant_dt = tran->Courant_Limit *
