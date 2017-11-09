@@ -10328,7 +10328,7 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
 		  ip_total = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
 		}
 		    
-              if ( is_xfem_interp( pd->i[pg->imtrx][VELOCITY1] ) )
+              if ( is_xfem_interp( pd->i[pd->mi[VELOCITY1]][VELOCITY1] ) )
 	         num_passes = 2;
 	      else
 	        num_passes = 1;
@@ -10370,11 +10370,11 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
 		  
 		      /* prediction of normal velocity */
 		      vnorm = 0.;
-		      if ( pd->v[pg->imtrx][EXT_VELOCITY] )
+		      if ( pd->v[pd->mi[EXT_VELOCITY]][EXT_VELOCITY] )
 		        {
 		          vnorm += ( 2.5 * fv->ext_v - 1.5 * fv_old->ext_v );
 		        }
-		      if ( pd->v[pg->imtrx][VELOCITY1] && tran->Fill_Equation != FILL_EQN_EXT_V )
+		      if ( pd->v[pd->mi[VELOCITY1]][VELOCITY1] && tran->Fill_Equation != FILL_EQN_EXT_V )
 		        {
 		          for ( a = 0; a < VIM; a++ )
 		            {
