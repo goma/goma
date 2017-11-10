@@ -1573,18 +1573,18 @@ dbl *te_out) /* te_out - return actual end time */
           DPRINTF(stderr, "\n\tminimum resolved step limit!\n");
         }
 
-	if (pg->imtrx = Fill_Matrix) {
-	  if ( ls != NULL && tran->Courant_Limit != 0. ) {
-	    double Courant_dt;
-	    Courant_dt = tran->Courant_Limit *
-	      Courant_Time_Step( x[pg->imtrx], x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx], xdot_old[pg->imtrx],
-				 resid_vector[pg->imtrx], ams[pg->imtrx]->proc_config, exo );
-	    if ( Courant_dt > 0. && Courant_dt < delta_t_new ) {
-	      DPRINTF(stderr,"\nCourant Limit requires dt <= %g\n",Courant_dt);
-	      delta_t_new = Courant_dt;
-	    }
+	pg->imtrx = Fill_Matrix;
+	if ( ls != NULL && tran->Courant_Limit != 0. ) {
+	  double Courant_dt;
+	  Courant_dt = tran->Courant_Limit *
+	    Courant_Time_Step( x[pg->imtrx], x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx], xdot_old[pg->imtrx],
+			       resid_vector[pg->imtrx], ams[pg->imtrx]->proc_config, exo );
+	  if ( Courant_dt > 0. && Courant_dt < delta_t_new ) {
+	    DPRINTF(stderr,"\nCourant Limit requires dt <= %g\n",Courant_dt);
+	    delta_t_new = Courant_dt;
 	  }
 	}
+
       }
 
       if (converged && success_dt) {
