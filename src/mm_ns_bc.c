@@ -7478,12 +7478,11 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
 *****************************************************************************/
 {
 
-  int i,j, eqn, var, a, b, q, mode, w, k;
+  int i,j, eqn, a, b, mode, w, k;
   int siz;
   int R_s[MAX_MODES][DIM][DIM];
   int v_s[MAX_MODES][DIM][DIM];
   int inv_v_s [DIM][DIM];
-  int v_g[DIM][DIM];
   int dim = pd->Num_Dim;
 
   dbl grad_v[DIM][DIM];    /* Velocity gradient based on velocity - discontinuous across element */
@@ -7495,26 +7494,18 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
   dbl s_dot[DIM][DIM];     /* stress tensor from last time step */
   dbl g[DIM][DIM];         /* velocity gradient tensor */
   dbl gt[DIM][DIM];        /* transpose of velocity gradient tensor */
-  dbl source_a;
 
   dbl source_term1[DIM][DIM];
   dbl advection_term1[DIM][DIM];
-
-  /* dot product tensors */
-  dbl s_dot_s[DIM][DIM];
 
   /* polymer viscosity and derivatives */
   dbl mup;
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
-  dbl d_mup_dv_pj;
 
   /*  shift function */
   dbl at = 0.0;
-  dbl d_at_dT[MDE];
   dbl wlf_denom;
-
-  dbl term1=0.;
 
   // Decomposition of velocity vector
   dbl eig_values[DIM];
@@ -7534,9 +7525,8 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
   dbl Z=1.0;         /* This is the factor appearing in front of the stress tensor in PTT */
 
   /* ETMs*/
-  dbl mass, advection, source, source1;
+  dbl mass, advection, source;
 
-  dbl phi_j;
   dbl d_lambda;
 
   if(af->Assemble_LSA_Mass_Matrix)
@@ -7552,16 +7542,6 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
 
   (void) stress_eqn_pointer(v_s);
   (void) stress_eqn_pointer(R_s);
-
-  v_g[0][0] = VELOCITY_GRADIENT11;
-  v_g[0][1] = VELOCITY_GRADIENT12;
-  v_g[1][0] = VELOCITY_GRADIENT21;
-  v_g[1][1] = VELOCITY_GRADIENT22;
-  v_g[0][2] = VELOCITY_GRADIENT13;
-  v_g[1][2] = VELOCITY_GRADIENT23;
-  v_g[2][0] = VELOCITY_GRADIENT31;
-  v_g[2][1] = VELOCITY_GRADIENT32;
-  v_g[2][2] = VELOCITY_GRADIENT33;
 
   memset( exp_s, 0, sizeof(double)*DIM*DIM);
   memset( R1, 0, sizeof(double)*DIM*DIM);
@@ -7603,10 +7583,6 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
       if (vn->shiftModel == CONSTANT)
         {
          at = vn->shift[0];
-         for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
-            {
-             d_at_dT[j]=0.;
-            }
 	}
       else if(vn->shiftModel == MODIFIED_WLF)
         {
@@ -7614,20 +7590,11 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
          if(wlf_denom != 0.)
            {
             at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
-            for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
-               {
-                d_at_dT[j]= -at*vn->shift[0]*vn->shift[1]
-                            /(wlf_denom*wlf_denom)*bf[TEMPERATURE]->phi[j];
-               }
            }
          else
            {
             at = 1.;
            }
-         for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
-            {
-             d_at_dT[j]=0.;
-            }
 	}
      }
    else

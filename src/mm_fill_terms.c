@@ -28007,9 +28007,6 @@ fluid_stress_conf( double Pi[DIM][DIM],
     * Vicosity and derivatives, we use this for collecting polymer
     * viscosity terms when considering Non-Newontian fluids
     */
-  dbl mu = 0.0;
-  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;
-  VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
 
   // Polymer viscosity and derivatives, polymer time constant
   dbl mup = 0.0, lambda = 0.0;
@@ -28020,25 +28017,6 @@ fluid_stress_conf( double Pi[DIM][DIM],
   dbl mus = 0.0;
   VISCOSITY_DEPENDENCE_STRUCT d_mus_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mus = &d_mus_struct;
-
-  // Numerical "adaptive" viscosity and derivatives
-  dbl mu_num;
-  dbl d_mun_dS[MAX_MODES][DIM][DIM][MDE];
-  dbl d_mun_dG[DIM][DIM][MDE];
-  dbl term1=0.0;
-
-  // Dilational viscosity
-  dbl kappa = 0.0;
-  DILVISCOSITY_DEPENDENCE_STRUCT d_dilMu_struct;
-  DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu = &d_dilMu_struct;
-  int kappaWipesMu = 1;
-
-  // Shift factor and T dependence
-  dbl at = 0.0;
-  dbl d_at_dT[MDE];
-  //Some convenient viscosity variables
-  dbl wlf_denom;
-  dbl mu_over_mu_num = 0.0;
 
   // conformation tensor
   dbl exp_s[MAX_MODES][DIM][DIM];
@@ -28055,7 +28033,6 @@ fluid_stress_conf( double Pi[DIM][DIM],
 
   dbl *grad_v[DIM];		        // Gradient of v.
   dbl gamma[DIM][DIM];                  // Shear rate tensor based on velocity
-  dbl s[DIM][DIM];                      // Polymer stress tensor
   dbl gamma_cont[DIM][DIM];             // Shear rate tensor based on continuous gradient of velocity
   dbl P;
 
@@ -28064,19 +28041,16 @@ fluid_stress_conf( double Pi[DIM][DIM],
 
   // Flag to use a Fortin DEVSS-G stress formulation
   int evss_f;
-  int use_mup;                          // Flag for mup or mus on DEVSS-G term
+
   int v_s[MAX_MODES][DIM][DIM];
   int v_g[DIM][DIM];
   int mode;                             // Index for modal viscoelastic counter
   int conf;                             // Flag for Conformation tensor
 
   // Flag for doing dilational viscosity contributions
-  int do_dilational_visc = 0;
+
   int dim, wim;
   int a, b, p, q, j, w, c, var;
-  dbl (* grad_phi_e ) [DIM][DIM][DIM] = NULL;
-  int eqn = R_MOMENTUM1;
-
 
   dim   = pd->Num_Dim;
   wim   = dim;
@@ -28107,7 +28081,6 @@ fluid_stress_conf( double Pi[DIM][DIM],
   // If d_Pi == NULL, we won't need the viscosity dependencies
   if(d_Pi == NULL)
     {
-      d_mu  = NULL;
       d_mus = NULL;
       d_mup = NULL;
     }

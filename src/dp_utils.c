@@ -291,7 +291,7 @@ ddd_add_member(DDD p,
   /*
    *  This is just the identity operator on most systems
    */
-  MPI_Address(address, &p->address[i]);
+  MPI_Get_address(address, &p->address[i]);
 #ifdef DEBUG
    /* the check below does not work on dec or tflop */
   if ((int) address != p->address[i]) {
@@ -320,10 +320,10 @@ void
 ddd_set_commit(DDD p)
 {
 #ifdef PARALLEL
-  MPI_Type_struct(p->num_members, p->block_count, p->address,
+  MPI_Type_create_struct(p->num_members, p->block_count, p->address,
 		  p->data_type, &p->new_type);
   MPI_Type_commit(&p->new_type);
-  MPI_Type_extent(p->new_type, &p->extent);
+  MPI_Type_get_extent(p->new_type, &p->lb, &p->extent);
   MPI_Type_size(p->new_type, &p->size);
   /*  rtn = MPI_Type_count(p->new_type, &p->count); */
 #endif

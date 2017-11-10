@@ -119,9 +119,8 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
   of the log-conformation tensor. 
 ******************************************************************************/
 {
-  int i, j, k, l, m, ii, nn, kount, nnonzero, index;
+  int i, j, k, l, m, ii, nnonzero, index;
   int zeroCA;
-  int *ija = ams->bindx;
   double *resid_vector_1, *x_1;
   double dx;
   int *irow, *jcolumn, *nelem;
@@ -147,7 +146,6 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 
 /* calculates the total number of non-zero entries in the analytical jacobian, a[] */ 
   nnonzero = NZeros+1;
-  nn = ija[numProcUnknowns]-ija[0]; /* total number of diagonal entries a[] */
 
   /* allocate arrays to hold jacobian and vector values */
   irow = (int *) array_alloc(1, nnonzero, sizeof(int));

@@ -501,17 +501,17 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 	/*status = ex_put_var_param(mono->exoid, "g", mono->num_glob_vars);
 	EH(status, "ex_put_var_param(g)");
 	*/
-	status = ex_put_var_names(mono->exoid, "g", mono->num_glob_vars,
-				  mono->glob_var_names);
-	EH(status, "ex_put_var_names(g)");
+	status = ex_put_variable_names(mono->exoid, EX_GLOBAL, mono->num_glob_vars,
+				       mono->glob_var_names);
+	EH(status, "ex_put_variable_names global");
 
 
 
 	for (i = 0; i < mono->num_gv_time_indeces; i++) {
-	  status = ex_put_glob_vars(mono->exoid, mono->gv_time_indeces[i],
-			   mono->num_glob_vars,
-			   mono->gv[i]);
-	  EH(status, "ex_put_glob_vars");
+	  status = ex_put_var(mono->exoid, mono->gv_time_indeces[i], EX_GLOBAL,
+			      1, 0, mono->num_glob_vars,
+			      mono->gv[i]);
+	  EH(status, "ex_put_var global vars");
 	}
 
 	status = ex_close(mono->exoid);

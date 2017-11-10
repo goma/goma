@@ -7314,10 +7314,15 @@ rd_post_process_specs(FILE *ifp,
      */
 
     for (i = 0; i < nn_post_data; i++) {
+      char *fgetsretval;
       look_for(ifp, "DATA", input, '=');
 
       save_position = ftell(ifp);
-      fgets(data_line_buffer, MAX_CHAR_IN_INPUT, ifp);
+      fgetsretval = fgets(data_line_buffer, MAX_CHAR_IN_INPUT, ifp);
+      if (fgetsretval == NULL) {
+	EH(-1, "Error reading post processing line");
+      }
+
       fseek(ifp, save_position, SEEK_SET);
 
       /*

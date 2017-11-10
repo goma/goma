@@ -839,12 +839,18 @@ f_roll_fluid (int ielem_dim,
   double omega,v_dir[3], v_roll[3];
   double velo_avg = 0.0,  pgrad=0.;
   double v_solid=0., res, jac, delta, flow, eps=1.0e-8, viscinv;
-  double jacinv, thick, dthick_dV, dthick_dP;
+  double jacinv, thick;
+#if 0
+  double dthick_dV, dthick_dP;
+#endif
   int Pflag = TRUE;
-  double cur_pt[3]={0,0,0};
   double pg_factor=1.0, tang_sgn=1.0, v_mag=0.;;
 
-  int j,var,jvar,k;
+  int j,var;
+
+#if 0
+  int jvar, k;
+#endif
 
   if(af->Assemble_LSA_Mass_Matrix)
     return;
@@ -973,8 +979,10 @@ if(dist < 10)fprintf(stderr,"roll_fl %g %g %g\n",fv->x0[0],xsurf[0],dist);
          thick += delta;
          j++;
         } while(fabs(delta) > eps && j<20);
-      dthick_dV = -0.5*jacinv;     /*  1/h*derivative  */
-      dthick_dP = CUBE(thick)*viscinv/12.*jacinv;
+#if 0
+     dthick_dV = -0.5*jacinv;     /*  1/h*derivative  */
+     dthick_dP = CUBE(thick)*viscinv/12.*jacinv;
+#endif
 #if 0
 fprintf(stderr,"slip %d %g %g %g %g\n",Pflag,fv->x[0],thick,flow/v_solid,velo_avg);
 fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
