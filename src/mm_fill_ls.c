@@ -6036,10 +6036,11 @@ xfem_correct( int num_total_nodes,
           interp = pd_glob[MatID]->i[pg->imtrx][var_type];
 
 	  int fill_matrix = pd_glob[MatID]->mi[R_FILL];
-	  if (fill_matrix < 0) {
+	  if (upd->Total_Num_Matrices == 1 && fill_matrix < 0) {
+	    fill_matrix = pg->imtrx;
+	  } else if (fill_matrix < 0) {
 	    EH(-1, "Could not find fill matrix");
 	  }
-
           if ( is_xfem_interp( interp ) )
             {
               double F, F_old, F_prev;
