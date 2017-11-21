@@ -1641,8 +1641,15 @@ assemble_embedded_bc (
         case LS_CAPILLARY_BC:
           assemble_csf_tensor();
           break;
-	case LS_CAP_HYSING_N_BC:
-	  assemble_cap_hysing_n_source(dt, theta);
+	case LS_CAP_HYSING_BC:
+	  assemble_cap_hysing(dt, bc->BC_Data_Float[0]);
+	  break;
+	case LS_CAP_DENNER_DIFF_BC:
+	  if (pd->gv[R_NORMAL1]) {
+	    assemble_cap_denner_diffusion_n(dt, bc->BC_Data_Float[0]);
+	  } else {
+	    assemble_cap_denner_diffusion(dt, bc->BC_Data_Float[0]);
+	  }
 	  break;
         case LS_FLOW_PRESSURE_BC:
           assemble_p_source( bc->BC_Data_Float[0], bc->BC_Data_Int[0] );
@@ -1677,7 +1684,7 @@ assemble_embedded_bc (
           assemble_div_s_n_source ();
           break;
         case LS_CAP_CURVE_BC:
-          if( pd->e[pg->imtrx][R_NORMAL1] )
+          if( pd->gv[R_NORMAL1] )
             assemble_curvature_with_normals_source () ;
           else
             assemble_curvature_source ();

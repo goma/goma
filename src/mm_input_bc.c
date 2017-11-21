@@ -438,8 +438,6 @@ rd_bc_specs(FILE *ifp,
 	case LS_CAP_CURVE_BC:
 	case LS_CAP_DIV_N_BC:
 	case LS_CAP_DIV_S_N_BC:
-	case LS_CAP_HYSING_N_BC:
-	case LS_CAP_HYSING_N_END_FORCE_BC:
         case H_FREE_BC:
 	case QNOBC_BC:
 	case APR_NOBC_BC:
@@ -508,6 +506,8 @@ rd_bc_specs(FILE *ifp,
         case LS_W_BC:
         case LS_Q_BC:
         case LS_FLOW_PRESSURE_BC:
+	case LS_CAP_HYSING_BC:
+	case LS_CAP_DENNER_DIFF_BC:
  	case SH_FLUID_STRESS_BC:
 	case SH_LUBP_SOLID_BC:
 	case SH_LUBP_SOLID_RS_BC:

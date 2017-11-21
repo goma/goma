@@ -201,14 +201,13 @@ dbl *te_out) /* te_out - return actual end time */
   double **x_AC_pred = NULL;      /* predicted extraunknowns */
 
   struct AC_Information **matrix_augc;
-  struct AC_Information *augc_save = NULL;
 
   int did_renorm;                /* Flag indicating if we renormalized.       */
   int Renorm_Now = FALSE;        /* Flag forcing renormalization regardless of gradient */
   int Fill_Matrix = 0;
 
   double time2 = 0.0;
-  struct Extended_Shape_Fcn_Basics **matrix_xfem;
+  struct Extended_Shape_Fcn_Basics **matrix_xfem = NULL;
   tran->solid_inertia = 0;
   static int callnum = 1; /* solve_problem_segregated call counter */
 
@@ -526,7 +525,6 @@ dbl *te_out) /* te_out - return actual end time */
   }
 
   totalnAC = nAC;
-  augc_save = augc;
   matrix_augc = malloc(sizeof(struct AC_Information *) * upd->Total_Num_Matrices);
   matrix_nAC = calloc(sizeof(int), upd->Total_Num_Matrices);
   
