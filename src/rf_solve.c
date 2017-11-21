@@ -523,6 +523,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   asdv(&gvec, Num_Node);
 
+
   /*
    * Allocate space and manipulate for all the nodes that this processor
    * is aware of...
@@ -608,6 +609,17 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     }
   
   node_to_fill = alloc_int_1(num_total_nodes, 0);
+
+  pg->matrices = malloc(sizeof(struct Matrix_Data));
+  pg->matrices[pg->imtrx].ams = ams[JAC];
+  pg->matrices[pg->imtrx].x = x;
+  pg->matrices[pg->imtrx].x_old = x_old;
+  pg->matrices[pg->imtrx].x_older = x_older;
+  pg->matrices[pg->imtrx].xdot = xdot;
+  pg->matrices[pg->imtrx].xdot_old = xdot_old;
+  pg->matrices[pg->imtrx].x_update = x_update;
+  pg->matrices[pg->imtrx].scale = scale;
+  pg->matrices[pg->imtrx].resid_vector = resid_vector;
 
   /* Allocate sparse matrix */
 
