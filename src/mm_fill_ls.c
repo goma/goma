@@ -7729,7 +7729,7 @@ map_local_coordinates( double *xi, double *x )
   int dim = ei[pg->imtrx]->ielem_dim;
   int ShapeVar = pd->ShapeVar;
   int DeformingMesh = pd->e[pg->imtrx][R_MESH1];
-  int mdof = ei[pg->imtrx]->dof[ShapeVar];
+  int mdof = ei[pd->mi[ShapeVar]]->dof[ShapeVar];
   int ln, I;
   int iconnect = Proc_Connect_Ptr[ ei[pg->imtrx]->ielem ];
   double phi_j;
@@ -7748,12 +7748,12 @@ map_local_coordinates( double *xi, double *x )
 	{
 	  for( j=0; j<mdof; j++)
 	    {
-	      ln = ei[pg->imtrx]->dof_list[ShapeVar][j];
+	      ln = ei[pd->mi[ShapeVar]]->dof_list[ShapeVar][j];
 
 	      I = Proc_Elem_Connect[ iconnect + ln ];
 
 	      phi_j = newshape( xi, ei[pg->imtrx]->ielem_type, PSI, ln,
-                                ei[pg->imtrx]->ielem_shape, pd->i[pg->imtrx][ShapeVar], j );
+                                ei[pg->imtrx]->ielem_shape, pd->i[pd->mi[ShapeVar]][ShapeVar], j );
 
 	      x[a] += Coor[a][I] * phi_j;
 
@@ -7763,12 +7763,12 @@ map_local_coordinates( double *xi, double *x )
 	{
 	  for( j=0; j<mdof; j++)
 	    {
-	      ln = ei[pg->imtrx]->dof_list[ShapeVar][j];
+	      ln = ei[pd->mi[ShapeVar]]->dof_list[ShapeVar][j];
 
 	      I = Proc_Elem_Connect[ iconnect + ln ];
 
 	      phi_j = newshape( xi, ei[pg->imtrx]->ielem_type, PSI, ln,
-                                ei[pg->imtrx]->ielem_shape, pd->i[pg->imtrx][ShapeVar], j );
+                                ei[pg->imtrx]->ielem_shape, pd->i[pd->mi[ShapeVar]][ShapeVar], j );
 
 	      x[a] += ( Coor[a][I] + *esp->d[a][j] ) * phi_j;
 	    }
