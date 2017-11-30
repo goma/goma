@@ -1051,7 +1051,7 @@ dbl *te_out) /* te_out - return actual end time */
 		WH(-1,"Level Set Initialization method not found \n");
 	      } /* end of switch( eqntype )  */
 
-	      exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], 0);
+	      exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
 
 	      if (converged) 
 		{
@@ -1127,9 +1127,9 @@ dbl *te_out) /* te_out - return actual end time */
 	  dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_older[pg->imtrx]);
 	  dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_oldest[pg->imtrx]);
 
-	  exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], 0);
-	  exchange_dof(cx[pg->imtrx], dpi, x_old[pg->imtrx], 0);
-	  exchange_dof(cx[pg->imtrx], dpi, x_oldest[pg->imtrx], 0);
+	  exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
+	  exchange_dof(cx[pg->imtrx], dpi, x_old[pg->imtrx], pg->imtrx);
+	  exchange_dof(cx[pg->imtrx], dpi, x_oldest[pg->imtrx], pg->imtrx);
 
 	}
 
@@ -1193,6 +1193,12 @@ dbl *te_out) /* te_out - return actual end time */
     const_delta_ts = const_delta_t;
     last_renorm_nt = 0;
 
+    if (Write_Initial_Solution) {
+      write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot,
+				xdot_old, tev, tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t,
+				theta, time1, NULL, exo, dpi);
+      nprint++;
+    }
     /*******************************************************************
      *  TOP OF THE TIME STEP LOOP -> Loop over time steps whether
      *                               they be successful or not
