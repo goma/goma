@@ -37,6 +37,10 @@
 /*
  * Prototypes for functions in mm_post_proc.c
  */
+EXTERN void post_process_global(double *x,	 /* Solution vector for the current processor */
+				Exo_DB *exo,
+				Dpi *dpi,
+				double time);
 
 EXTERN void post_process_nodal  /* mm_post_proc.c                            */
 PROTO((double [],               /* x                                         */

@@ -230,6 +230,26 @@ VOL_NAME_STRUCT pp_vol_names[] =
 
 int Num_Vol_Names = sizeof( pp_vol_names )/ sizeof( VOL_NAME_STRUCT );
 
+#define PP_GLOBAL_START 0
+#define PP_GLOBAL_LS_INTERFACE_PRINT 0
+#define PP_GLOBAL_LS_INTERFACE_PRINT_ALL_TIMES 1
+#define PP_GLOBAL_COUNT 2 /* Increase when another is added */
+
+struct Post_Processing_Global_Names
+{
+  char  *name;          /* flux string */
+  int   Index;          /* identifier  */
+};
+
+typedef struct Post_Processing_Global_Names GLOBAL_NAME_STRUCT;
+
+extern GLOBAL_NAME_STRUCT pp_global_names[];
+extern int Num_Global_Names;
+
+struct Post_Processing_Global_Names pp_global_names[PP_GLOBAL_COUNT] =  {
+  { "LEVEL_SET_INTERFACE_PRINT", PP_GLOBAL_LS_INTERFACE_PRINT },
+  { "LEVEL_SET_INTERFACE_PRINT_ALL_TIMES", PP_GLOBAL_LS_INTERFACE_PRINT_ALL_TIMES }
+};
 
 #endif
 
@@ -351,6 +371,20 @@ struct Post_Processing_Error
 typedef struct Post_Processing_Error pp_Error;
 
 /*
+ * Define structure to hold details of global post process types
+ */
+
+struct Post_Processing_Global
+{
+  int type;
+  char type_name[MAX_DOFNAME]; /*name of flux type requested */
+  char filenm[MAX_FNL];
+};
+
+typedef struct Post_Processing_Global pp_Global;
+
+
+/*
  * All of these variables are actually defined in mm_post_proc.c
  *
  * The nn_* integers contain information about the actual sizes of these
@@ -364,6 +398,7 @@ extern pp_Data_Sens    **pp_data_sens;
 extern pp_Error         *pp_error_data;
 extern pp_Particles    **pp_particles;
 extern pp_Volume       **pp_volume;
+extern pp_Global       **pp_global;
 
 extern int nn_post_fluxes;
 extern int nn_post_fluxes_sens;
@@ -373,6 +408,7 @@ extern int nn_error_metrics;
 extern int nn_particles;
 extern int nn_volume;
 extern int ppvi_type;
+extern int nn_global;
 
 extern int Num_Nodal_Post_Proc_Var;
 extern int Num_Elem_Post_Proc_Var;

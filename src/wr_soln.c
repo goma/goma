@@ -74,9 +74,13 @@ write_solution(char output_file[], /* name EXODUS II file */
     wr_nodal_result_exo(exo, output_file, gvec, i+1, step, time_value);
   }
 
+  /* Special case for global post processing, usually file output */
+  post_process_global(x, exo, dpi, time_value);
+
 #ifdef DEBUG
   fprintf(stderr, "%s: done with regular nodal vars; start tnv_post\n", yo);
 #endif
+
 
   /*
    *  Add additional user-specified post processing variables
@@ -107,6 +111,7 @@ write_solution(char output_file[], /* name EXODUS II file */
       }
     }
   }
+
 
   /* Now element quantities */
   for(i = 0; i < tev; i++) {
@@ -183,6 +188,9 @@ write_solution_segregated(char output_file[], /* name EXODUS II file */
   /* First nodal quantities */
   int offset = 0;
   for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    /* Special case for global post processing, usually file output */
+    post_process_global(x[pg->imtrx], exo, dpi, time_value);
+
     if (pg->imtrx > 0) {
       offset += rd[pg->imtrx -1]->TotalNVSolnOutput + rd[pg->imtrx -1]->TotalNVPostOutput;
     }
