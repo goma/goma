@@ -151,7 +151,8 @@ PROTO((double *,		/* x_var - variable value */
        const double ,		/* tt - parameter to vary time integration 
 				 * from explicit (tt = 1) to 
 				 * implicit (tt = 0) */
-       const double ));		/* dt - current time step size */
+       const double ,		/* dt - current time step size */
+       double [] ));		/* vector sensitivity vector - SPEED */
 
 extern int bc_eqn_index(int, int, int, int, int, int *, int *,
 			VARIABLE_DESCRIPTION_STRUCT **);

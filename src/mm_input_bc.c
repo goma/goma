@@ -1924,7 +1924,9 @@ rd_bc_specs(FILE *ifp,
 	      EH(-1, "Don't you wish ...there were PERIODIC_BC");
 
 	    SPF(endofstring(echo_string)," %d", BC_Types[ibc].BC_Data_Int[0]);
-	    if(BC_Types[ibc].BC_Name == KIN_DISPLACEMENT_BC)
+	    if(BC_Types[ibc].BC_Name == KIN_DISPLACEMENT_BC  ||
+               BC_Types[ibc].BC_Name == KIN_DISPLACEMENT_COLLOC_BC ||
+               BC_Types[ibc].BC_Name == KIN_DISPLACEMENT_PETROV_BC)
              {
 	  num_const = read_constants(ifp, &(BC_Types[ibc].u_BC), NO_SPECIES);
 	  BC_Types[ibc].len_u_BC = num_const;	  

@@ -9537,6 +9537,24 @@ rd_eq_specs(FILE *ifp,
        * Two terms.... 
        */
     case R_PRESSURE:
+	if ( fscanf(ifp, "%lf %lf", 
+		    &(pd_ptr->etm[ce][(LOG2_ADVECTION)]),
+		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
+	     != 2 )
+	{
+            pd_ptr->etm[ce][(LOG2_ADVECTION)] = 1.0;
+	    pd_ptr->etm[ce][(LOG2_SOURCE)] = 0.0;
+	    sr = sprintf(err_msg, 
+		       "Using default equation term multipliers (adv,src) on %s in %s",
+		       EQ_Name[ce].name1, pd_ptr->MaterialName);
+	    WH(-1, err_msg);
+	  fprintf(stderr,"\t %s %.4g %.4g \n",EQ_Name[ce].name1, 
+                    pd_ptr->etm[ce][(LOG2_ADVECTION)], pd_ptr->etm[ce][(LOG2_SOURCE)]);
+	}
+
+	SPF( endofstring(echo_string),"\t %.4g %.4g", pd_ptr->etm[ce][(LOG2_ADVECTION)],
+	                                            pd_ptr->etm[ce][(LOG2_SOURCE)]);
+      break;
     case R_GRADIENT11:
     case R_GRADIENT12:
     case R_GRADIENT13:
@@ -9546,6 +9564,24 @@ rd_eq_specs(FILE *ifp,
     case R_GRADIENT31:
     case R_GRADIENT32:
     case R_GRADIENT33:
+	if ( fscanf(ifp, "%lf %lf", 
+		    &(pd_ptr->etm[ce][(LOG2_ADVECTION)]),
+		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
+	     != 2 )
+	{
+            pd_ptr->etm[ce][(LOG2_ADVECTION)] = 1.0;
+	    pd_ptr->etm[ce][(LOG2_SOURCE)] = 1.0;
+	    sr = sprintf(err_msg, 
+		       "Using default equation term multipliers (adv,src) on %s in %s",
+		       EQ_Name[ce].name1, pd_ptr->MaterialName);
+	    WH(-1, err_msg);
+	  fprintf(stderr,"\t %s %.4g %.4g \n",EQ_Name[ce].name1, 
+                    pd_ptr->etm[ce][(LOG2_ADVECTION)], pd_ptr->etm[ce][(LOG2_SOURCE)]);
+	}
+
+	SPF( endofstring(echo_string),"\t %.4g %.4g", pd_ptr->etm[ce][(LOG2_ADVECTION)],
+	                                            pd_ptr->etm[ce][(LOG2_SOURCE)]);
+      break;
     case R_EFIELD1:
     case R_EFIELD2:
     case R_EFIELD3:
@@ -9774,7 +9810,7 @@ rd_eq_specs(FILE *ifp,
 
 
 	/* 
-	 * Five terms.... 
+	 * Five terms....  mesh-like 
 	 */
     case R_MESH1:
     case R_MESH2:
@@ -9782,6 +9818,38 @@ rd_eq_specs(FILE *ifp,
     case R_SOLID1:
     case R_SOLID2:
     case R_SOLID3:
+
+	if ( fscanf(ifp, "%lf %lf %lf %lf %lf", 
+		    &(pd_ptr->etm[ce][(LOG2_MASS)]),
+		    &(pd_ptr->etm[ce][(LOG2_ADVECTION)]),
+		    &(pd_ptr->etm[ce][(LOG2_BOUNDARY)]),
+		    &(pd_ptr->etm[ce][(LOG2_DIFFUSION)]),
+		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
+	     != 5 )
+	{
+            pd_ptr->etm[ce][(LOG2_MASS)] = 0.0; 
+            pd_ptr->etm[ce][(LOG2_ADVECTION)] = 0.0;
+	    pd_ptr->etm[ce][(LOG2_BOUNDARY)] = 1.0;
+	    pd_ptr->etm[ce][(LOG2_DIFFUSION)] = 1.0;
+	    pd_ptr->etm[ce][(LOG2_SOURCE)] = 0.0;
+	    sr = sprintf(err_msg, 
+		       "Using default equation term multipliers (mas,adv,bnd,dif,src) on %s in %s",
+		       EQ_Name[ce].name1, pd_ptr->MaterialName);
+	    WH(-1, err_msg);
+	  fprintf(stderr,"\t %s %.4g %.4g %.4g %.4g %.4g \n", EQ_Name[ce].name1,
+               pd_ptr->etm[ce][(LOG2_MASS)],
+	       pd_ptr->etm[ce][(LOG2_ADVECTION)], pd_ptr->etm[ce][(LOG2_BOUNDARY)],
+               pd_ptr->etm[ce][(LOG2_DIFFUSION)], pd_ptr->etm[ce][(LOG2_SOURCE)]);
+	}
+	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g %.4g %.4g", pd_ptr->etm[ce][(LOG2_MASS)],
+                                                                   pd_ptr->etm[ce][(LOG2_ADVECTION)],
+                                                                   pd_ptr->etm[ce][(LOG2_BOUNDARY)],
+                                                                   pd_ptr->etm[ce][(LOG2_DIFFUSION)],
+	                                                           pd_ptr->etm[ce][(LOG2_SOURCE)]);
+	break;
+	/* 
+	 * Five terms....  other
+	 */
     case R_ENERGY:
     case R_POTENTIAL:         /* KSC: 2/99 */ 
     case R_MASS:
@@ -9817,10 +9885,22 @@ rd_eq_specs(FILE *ifp,
 		    &(pd_ptr->etm[ce][(LOG2_SOURCE)]))
 	     != 5 )
 	{
-	  sr = sprintf(err_msg, 
-		       "Provide 5 equation term multipliers (mas,adv,bnd,dif,src) on %s in %s",
+            if(TimeIntegration == TRANSIENT)
+                { pd_ptr->etm[ce][(LOG2_MASS)] = 1.0; }
+            else
+                { pd_ptr->etm[ce][(LOG2_MASS)] = .0; }
+            pd_ptr->etm[ce][(LOG2_ADVECTION)] = 1.0;
+	    pd_ptr->etm[ce][(LOG2_BOUNDARY)] = 1.0;
+	    pd_ptr->etm[ce][(LOG2_DIFFUSION)] = 1.0;
+	    pd_ptr->etm[ce][(LOG2_SOURCE)] = 1.0;
+	    sr = sprintf(err_msg, 
+		       "Using default equation term multipliers (mas,adv,bnd,dif,src) on %s in %s",
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
-	  EH(-1, err_msg);
+	    WH(-1, err_msg);
+	  fprintf(stderr,"\t %s %.4g %.4g %.4g %.4g %.4g \n", EQ_Name[ce].name1,
+               pd_ptr->etm[ce][(LOG2_MASS)],
+	       pd_ptr->etm[ce][(LOG2_ADVECTION)], pd_ptr->etm[ce][(LOG2_BOUNDARY)],
+               pd_ptr->etm[ce][(LOG2_DIFFUSION)], pd_ptr->etm[ce][(LOG2_SOURCE)]);
 	}
 	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g %.4g %.4g", pd_ptr->etm[ce][(LOG2_MASS)],
                                                                    pd_ptr->etm[ce][(LOG2_ADVECTION)],
@@ -9847,10 +9927,23 @@ rd_eq_specs(FILE *ifp,
 		    &(pd_ptr->etm[ce][(LOG2_POROUS_BRINK)]))
 	     != 6 )
 	{
-	  sr = sprintf(err_msg, 
-		       "Provide 6 equation term multipliers (mas,adv,bnd,dif,src,prs) on %s in %s",
+            if(TimeIntegration == TRANSIENT)
+                { pd_ptr->etm[ce][(LOG2_MASS)] = 1.0; }
+            else
+                { pd_ptr->etm[ce][(LOG2_MASS)] = .0; }
+            pd_ptr->etm[ce][(LOG2_ADVECTION)] = 1.0;
+	    pd_ptr->etm[ce][(LOG2_BOUNDARY)] = 1.0;
+	    pd_ptr->etm[ce][(LOG2_DIFFUSION)] = 1.0;
+	    pd_ptr->etm[ce][(LOG2_SOURCE)] = 1.0;
+	    pd_ptr->etm[ce][(LOG2_POROUS_BRINK)] = 0.0;
+	    sr = sprintf(err_msg, 
+		       "Using default equation term multipliers (mas,adv,bnd,dif,src,prs) on %s in %s",
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
-	  EH(-1, err_msg);
+	    WH(-1, err_msg);
+	  fprintf(stderr,"\t %s %.4g %.4g %.4g %.4g %.4g %.4g \n", EQ_Name[ce].name1,
+               pd_ptr->etm[ce][(LOG2_MASS)], pd_ptr->etm[ce][(LOG2_ADVECTION)], 
+               pd_ptr->etm[ce][(LOG2_BOUNDARY)], pd_ptr->etm[ce][(LOG2_DIFFUSION)],
+               pd_ptr->etm[ce][(LOG2_SOURCE)], pd_ptr->etm[ce][(LOG2_POROUS_BRINK)]);
 	}
 	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g %.4g %.4g %.4g", pd_ptr->etm[ce][(LOG2_MASS)],
 	                                                                pd_ptr->etm[ce][(LOG2_ADVECTION)],

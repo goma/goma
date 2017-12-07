@@ -487,8 +487,9 @@
 #define R_SOLID_TANG1   1162 /* aka first tangent solid equation */
 #define R_SOLID_TANG2   1163 /* aka second tangent solid equation */
 #define SOLID_NORM      1164 /* aka solid normal first component ?? */
-#define SOLID_TANG1     1165 /* aka first solid tangent ?? */
-#define SOLID_TANG2     1166 /* aka second solid tangent  ?? */
+#define SOLID_TANG1     1165 /* aka first solid tangent component */
+#define SOLID_TANG2     1166 /* aka second solid tangent  component */
+#define SPEED           1167 /* aka velocity magnitude */
 
 #define R_ANYTHING      -1  /* aka for bc's which can apply to any equation */
 

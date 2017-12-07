@@ -2561,6 +2561,7 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		ieqn_solid = R_SOLID1 + p;
 		lec->R[upd->ep[ieqn_solid]][id_dofsol] += 
 		    scale*lec->R[upd->ep[ieqn_mom]][id_dofmom];
+/*fprintf(stderr,"solid_fluid %g %g %g\n",scale,fv->x[0],fv->P);*/
 	      }
 	}
       }

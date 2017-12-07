@@ -929,7 +929,8 @@ f_roll_fluid (int ielem_dim,
          dist += SQUARE(fv->x0[var]-xsurf[var]);
        }
          dist /= SQUARE(p[10]);
-if(dist < 10)fprintf(stderr,"roll_fl %g %g %g\n",fv->x0[0],xsurf[0],dist);
+/*if(dist < 10)fprintf(stderr,"roll_fl %g %g %g\n",fv->x0[0],xsurf[0],dist);
+*/
 
      Pflag = (int)p[11];
      velo_avg = 0.0;  pgrad=0.;  v_mag = 0.;
@@ -979,6 +980,7 @@ if(dist < 10)fprintf(stderr,"roll_fl %g %g %g\n",fv->x0[0],xsurf[0],dist);
 fprintf(stderr,"slip %d %g %g %g %g\n",Pflag,fv->x[0],thick,flow/v_solid,velo_avg);
 fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
 #endif
+	thick = 0.;
     *func = dist - thick;
     d_func[MESH_DISPLACEMENT1] =  d_dist[0];
     d_func[MESH_DISPLACEMENT2] =  d_dist[1];
@@ -1295,10 +1297,11 @@ fgeneralized_dirichlet(double *func,
 					 * implicit (tt = 0) */
 		       const double dt) /* current time step size          */
 {
-  int jvar, wspec;
+  int jvar, wspec, vector_sens, b;
   int index_var;                  /* Column index into the global stiffness matrix*/
   dbl x_var;                      /* value of variable at this node */
   dbl d_x_var;                    /* sensitivity of variable to nodal unknown */
+  dbl d_vect_var[DIM];            /* sensitivity of vector variable to nodal unknown */
   dbl slope;                      /* slope of interpolated function in table */
   dbl x_var_mp[1];                /* dummy variable for table lookup subroutines */
   
@@ -1312,8 +1315,12 @@ fgeneralized_dirichlet(double *func,
   wspec = BC_Types[bc_input_id].BC_Data_Int[3];
   
   /* put value of variable in GD Condition into x_var and put it's sensitivity in d_x_var */
-  index_var = load_variable( &x_var, &d_x_var, jvar, wspec, tt, dt);
+  index_var = load_variable( &x_var, &d_x_var, jvar, wspec, tt, dt, d_vect_var);
   
+  if(jvar == SPEED)
+      { vector_sens = 1;}
+  else
+      { vector_sens = 0;}
   /* Now add in contributions to residual vector and jacobian matrix */
   
   switch(gd_condition)
@@ -1323,7 +1330,14 @@ fgeneralized_dirichlet(double *func,
       *func = (x_var - BC_Types[bc_input_id].BC_Data_Float[0] );
       
       if (af->Assemble_Jacobian) {
-	d_func[index_var] = d_x_var;
+          if (vector_sens)
+              {
+                for(b=0 ; b<DIM  ; b++)	{
+	            d_func[index_var+b] = d_vect_var[b];
+                    }
+              }  else   {
+	         d_func[index_var] = d_x_var;
+              }
       }
       break;
       
@@ -1333,7 +1347,14 @@ fgeneralized_dirichlet(double *func,
 	       + BC_Types[bc_input_id].BC_Data_Float[0] );
       
       if (af->Assemble_Jacobian) {
+          if (vector_sens)
+              {
+                for(b=0 ; b<DIM  ; b++)	{
+	d_func[index_var+b] = d_vect_var[b] * BC_Types[bc_input_id].BC_Data_Float[1] ;
+                    }
+              }  else   {
 	d_func[index_var] = d_x_var * BC_Types[bc_input_id].BC_Data_Float[1] ;
+              }
       }
       break;
 
@@ -1343,7 +1364,14 @@ fgeneralized_dirichlet(double *func,
 	       + BC_Types[bc_input_id].BC_Data_Float[0] );
       
       if (af->Assemble_Jacobian) {
+          if (vector_sens)
+              {
+                for(b=0 ; b<DIM  ; b++)	{
+	d_func[index_var+b] = -d_vect_var[b] * BC_Types[bc_input_id].BC_Data_Float[1]/(x_var*x_var) ;
+                    }
+              }  else   {
 	d_func[index_var] = -d_x_var * BC_Types[bc_input_id].BC_Data_Float[1]/(x_var*x_var) ;
+              }
       }
       break;
       
@@ -1354,8 +1382,16 @@ fgeneralized_dirichlet(double *func,
 	       + BC_Types[bc_input_id].BC_Data_Float[0] );
       
       if (af->Assemble_Jacobian) {
+          if (vector_sens)
+              {
+                for(b=0 ; b<DIM  ; b++)	{
+	d_func[index_var+b] = d_vect_var[b] * ( BC_Types[bc_input_id].BC_Data_Float[1] 
+					+ 2. * x_var * BC_Types[bc_input_id].BC_Data_Float[2] );
+                    }
+              }  else   {
 	d_func[index_var] = d_x_var * ( BC_Types[bc_input_id].BC_Data_Float[1] 
 					+ 2. * x_var * BC_Types[bc_input_id].BC_Data_Float[2] );
+              }
       }
       break;
     case(GD_PARAB_OFFSET_BC):  /* C2 (x - C3)^2 + C1 (x - C3) + c0 */
@@ -1367,9 +1403,18 @@ fgeneralized_dirichlet(double *func,
 	       * BC_Types[bc_input_id].BC_Data_Float[1]
 	       + BC_Types[bc_input_id].BC_Data_Float[0] );
       if (af->Assemble_Jacobian) {
+          if (vector_sens)
+              {
+                for(b=0 ; b<DIM  ; b++)	{
+	d_func[index_var+b] = d_vect_var[b] * ( BC_Types[bc_input_id].BC_Data_Float[1]
+			                + 2. * (x_var - BC_Types[bc_input_id].BC_Data_Float[3]) 
+					* BC_Types[bc_input_id].BC_Data_Float[2] );
+                    }
+              }  else   {
 	d_func[index_var] = d_x_var * ( BC_Types[bc_input_id].BC_Data_Float[1]
 			                + 2. * (x_var - BC_Types[bc_input_id].BC_Data_Float[3]) 
 					* BC_Types[bc_input_id].BC_Data_Float[2] );
+              }
       }
       break;
     case(GD_CIRC_BC):  /* C2 ( x - C1 )^2  - c0^2 */
@@ -1382,8 +1427,16 @@ fgeneralized_dirichlet(double *func,
 	       - BC_Types[bc_input_id].BC_Data_Float[0] * BC_Types[bc_input_id].BC_Data_Float[0]);
       
       if (af->Assemble_Jacobian) {
+          if (vector_sens)
+              {
+                for(b=0 ; b<DIM  ; b++)	{
+	d_func[index_var+b] = d_vect_var[b] * ( 2. * BC_Types[bc_input_id].BC_Data_Float[2] * (
+			x_var - BC_Types[bc_input_id].BC_Data_Float[1] ) );
+                    }
+              }  else   {
 	d_func[index_var] = d_x_var * ( 2. * BC_Types[bc_input_id].BC_Data_Float[2] * (
 			x_var - BC_Types[bc_input_id].BC_Data_Float[1] ) );
+              }
       }
       break;
 
@@ -1401,12 +1454,24 @@ fgeneralized_dirichlet(double *func,
       /* printf("POLYN fit X,F = %f %f\n", x_var, *func); */
 
       if (af->Assemble_Jacobian) {
+          if (vector_sens)
+              {
+                for(b=0 ; b<DIM  ; b++)	{
+	d_func[index_var+b] = d_vect_var[b] * ( BC_Types[bc_input_id].BC_Data_Float[1] 
+				       + 2. * x_var * BC_Types[bc_input_id].BC_Data_Float[2]
+			       + 3. * x_var * x_var * BC_Types[bc_input_id].BC_Data_Float[3]
+		       + 4. * x_var * x_var * x_var * BC_Types[bc_input_id].BC_Data_Float[4]
+	       + 5. * x_var * x_var * x_var * x_var * BC_Types[bc_input_id].BC_Data_Float[5]
+       + 6. * x_var * x_var * x_var * x_var * x_var * BC_Types[bc_input_id].BC_Data_Float[6] );
+                    }
+              }  else   {
 	d_func[index_var] = d_x_var * ( BC_Types[bc_input_id].BC_Data_Float[1] 
 				       + 2. * x_var * BC_Types[bc_input_id].BC_Data_Float[2]
 			       + 3. * x_var * x_var * BC_Types[bc_input_id].BC_Data_Float[3]
 		       + 4. * x_var * x_var * x_var * BC_Types[bc_input_id].BC_Data_Float[4]
 	       + 5. * x_var * x_var * x_var * x_var * BC_Types[bc_input_id].BC_Data_Float[5]
        + 6. * x_var * x_var * x_var * x_var * x_var * BC_Types[bc_input_id].BC_Data_Float[6] );
+              }
       }
       break;
 
@@ -1419,7 +1484,14 @@ fgeneralized_dirichlet(double *func,
 
       if (af->Assemble_Jacobian) 
 	{
+          if (vector_sens)
+              {
+                for(b=0 ; b<DIM  ; b++)	{
+	  d_func[index_var+b] = BC_Types[bc_input_id].BC_Data_Float[0]*slope*d_vect_var[b];
+                    }
+              }  else   {
 	  d_func[index_var] = BC_Types[bc_input_id].BC_Data_Float[0]*slope*d_x_var;
+              }
 	}
 
       break;
@@ -1427,7 +1499,7 @@ fgeneralized_dirichlet(double *func,
     default:
       return(-1);
     }
-  
+
   return(0);
 } /* END of routine fgeneralized_dirichlet                                   */
 /*****************************************************************************/
@@ -1762,7 +1834,8 @@ load_variable (double *x_var,        /* variable value */
                int wspec,            /* species number */
                double tt,            /* parameter to vary time integration from 
                                         explicit (tt = 1) to implicit (tt = 0) */
-               double dt)            /* current time step size */
+               double dt,            /* current time step size */
+               double d_vect_var[])	/* vector sensitivities  */
 
 /******************************************************************************
 
@@ -1775,9 +1848,11 @@ load_variable (double *x_var,        /* variable value */
 ******************************************************************************/
 
 {
-  int var=-1,b;
+  int var=-1, b;
   *x_var = 0.;
   *d_x_var = 0.;
+
+  memset(d_vect_var, 0, DIM*sizeof(double) );
 
   if (jvar >= D_VEL1_DT && jvar <= D_P_DT) {
     if ( pd->TimeIntegration == STEADY ) EH(-1, "Unsteady GD for Steady problem");
@@ -2573,6 +2648,22 @@ load_variable (double *x_var,        /* variable value */
       *x_var = fv->porosity;
       var = POR_GAS_PRES;
       *d_x_var = 1.;
+      break;
+     /* adding velocity magnitude, i.e. SPEED  */
+    case SPEED:
+      for(b=0 ; b<pd->Num_Dim ; b++)	{
+          *x_var += SQUARE(fv->v[b]);
+          }
+      if(pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN)
+          { *x_var += SQUARE(fv->v[pd->Num_Dim]);  }
+      *x_var = sqrt(*x_var);
+      var = VELOCITY1;
+      *d_x_var = 1./(*x_var);
+      for(b=0 ; b<pd->Num_Dim ; b++)	{
+          d_vect_var[b] += fv->v[b]*(*d_x_var);
+          }
+      if(pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN)
+          { d_vect_var[pd->Num_Dim] += fv->v[pd->Num_Dim]*(*d_x_var);  }
       break;
 
       /* if variable type is a time derivative */

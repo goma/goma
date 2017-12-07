@@ -147,7 +147,8 @@ struct BC_descriptions  BC_Desc[] =
   { "MOVING_PLANE",  "MOVING_PLANE_BC",    COLLOCATE_SURF, MOVING_PLANE_BC, R_MESH_NORMAL, SCALAR, R_MESH1, {0, 0, 0, 0, 0, 1, 1, 1, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "MESH_CONSTRAINT",  "MESH_CONSTRAINT_BC",  COLLOCATE_SURF, MESH_CONSTRAINT_BC,  R_MESH_NORMAL, SCALAR, R_MESH1, {0, 0, 0, 0, 0, 1, 1, 1, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB },
   { "FILLET",  "FILLET_BC",    COLLOCATE_SURF, FILLET_BC, R_MESH_NORMAL, SCALAR, R_MESH1, {0, 0, 0, 0, 0, 1, 1, 1, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
-  { "ROLL_FLUID",  "ROLL_FLUID_BC",    COLLOCATE_SURF, ROLL_FLUID_BC, R_MESH_NORMAL, SCALAR, R_MESH1, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+/*  { "ROLL_FLUID",  "ROLL_FLUID_BC",    COLLOCATE_SURF, ROLL_FLUID_BC, R_MESH_NORMAL, SCALAR, R_MESH1, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,*/
+  { "ROLL_FLUID",  "ROLL_FLUID_BC",    COLLOCATE_SURF, ROLL_FLUID_BC, R_MESH2, SCALAR, NO_ROT, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
 
   { "P", "P_BC", DIRICHLET, P_BC, R_PRESSURE, SCALAR, NO_ROT, {0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
 
@@ -1301,6 +1302,7 @@ struct Equation_Names Var_Name[] =  {
     { "MESH_POSITION3", "Z",  MESH_POSITION3 } ,
 
     { "VEL_NORM",       "VN", VEL_NORM } ,
+    { "SPEED",       "VMAG", SPEED } ,
 
     { "D_VEL1_DT", "UDOT", D_VEL1_DT } ,
     { "D_VEL2_DT", "VDOT", D_VEL2_DT } ,
@@ -1310,14 +1312,14 @@ struct Equation_Names Var_Name[] =  {
 
     { "D_X1_DT",   "XDOT", D_X1_DT } ,
     { "D_X2_DT",   "YDOT", D_X2_DT } ,
-    { "D_X3_DT",   "ZDOT", D_X3_DT } ,			/* 198 */
+    { "D_X3_DT",   "ZDOT", D_X3_DT } ,			/* 199 */
     { "D_S_DT",    "SDOT", D_S_DT } ,
 
     { "D_P_DT",    "PDOT", D_P_DT } ,
 
     { "SOLID_POSITION1", "X_RS",  SOLID_POSITION1 } ,  
     { "SOLID_POSITION2", "Y_RS",  SOLID_POSITION2 } ,
-    { "SOLID_POSITION3", "Z_RS",  SOLID_POSITION3 } 	/* 203 */
+    { "SOLID_POSITION3", "Z_RS",  SOLID_POSITION3 } 	/* 204 */
 };
 
 int Num_Var_Names = sizeof(Var_Name) / sizeof(struct Equation_Names);  
