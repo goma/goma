@@ -4222,24 +4222,24 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 				   &mono->io_wordsize, 
 				   &mono->version);
 
-	status = ex_put_var_names(E->exoid, "g", mono->num_glob_vars,
-				  mono->glob_var_names);
-	EH(status, "ex_put_var_names(g)");
+	status = ex_put_variable_names(E->exoid, EX_GLOBAL, mono->num_glob_vars,
+				       mono->glob_var_names);
+	EH(status, "ex_put_variable_names global");
 
 	alloc_exo_gv(mono, 1);
 
 
 	for (i = 0; i < mono->num_gv_time_indeces; i++) {
-	  status = ex_get_glob_vars(mono->exoid, i+1,
-				    mono->num_glob_vars,
-				    mono->gv[0]);
-	  EH(status, "ex_put_glob_vars");
+	  status = ex_get_var(mono->exoid, i+1, EX_GLOBAL,
+			      1, 1, mono->num_glob_vars,
+			      mono->gv[0]);
+	  EH(status, "ex_get_var global");
 
 	  
-	  status = ex_put_glob_vars(E->exoid, i+1,
-				    mono->num_glob_vars,
+	  status = ex_put_var(E->exoid, i+1, EX_GLOBAL,
+			      1, 0, mono->num_glob_vars,
 				    mono->gv[0]);
-	  EH(status, "ex_put_glob_vars");
+	  EH(status, "ex_put_var glob_vars");
 	}
 
 	

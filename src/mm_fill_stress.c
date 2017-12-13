@@ -56,6 +56,11 @@
 
 extern struct Boundary_Condition *inlet_BC[MAX_VARIABLE_TYPES+MAX_CONC];
 
+// direct call to a fortran LAPACK eigenvalue routine
+extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
+			double *W, double *WORK, int *LWORK, int *INFO,
+			int len_jobz, int len_uplo);
+
 /*  _______________________________________________________________________  */
 
 /* assemble_stress -- assemble terms (Residual &| Jacobian) for polymer stress eqns
@@ -2439,30 +2444,24 @@ assemble_stress_log_conf(dbl tt,
 		     dbl vcent[DIM], 
 		     dbl dvc_dnode[DIM][MDE])
 {
-  int dim, r, p, q, a, b, w;
-  int eqn, var,siz;
-  int peqn, pvar;
+  int dim, p, q, a, b, w;
+  int eqn, siz;
 
-  int i, j, k, l, m, status, mode;
+  int i, j, status, mode;
   dbl v[DIM];			       
   dbl x_dot[DIM];	      
   dbl h3;		        
-  dbl dh3dmesh_pj;	        
 
   dbl grad_v[DIM][DIM];
   dbl gamma[DIM][DIM];                
   dbl det_J;                            
-  dbl d_det_J_dmesh_pj; 
 
   dbl mass;			        
-  dbl mass_a, mass_b;
-  dbl advection;	
+  dbl advection;
   dbl source;
   dbl source_term1[DIM][DIM];
-  dbl diffusion;
 
   dbl wt_func;
-  dbl phi_j;
   dbl wt;
   dbl tmp1[DIM][DIM],tmp2[DIM][DIM],tmp3[DIM][DIM];
   dbl advection_term1[DIM][DIM];
@@ -2470,14 +2469,11 @@ assemble_stress_log_conf(dbl tt,
   //Variables for stress, velocity gradient
   int R_s[MAX_MODES][DIM][DIM]; 
   int v_s[MAX_MODES][DIM][DIM]; 
-  int v_g[DIM][DIM]; 
   dbl s[DIM][DIM], exp_s[DIM][DIM];
   dbl s_dot[DIM][DIM];    
   dbl grad_s[DIM][DIM][DIM];
   dbl d_grad_s_dmesh[DIM][DIM][DIM][DIM][MDE];
-  int use_G=0;
-  dbl g[DIM][DIM];       
-  dbl gt[DIM][DIM];        
+  dbl gt[DIM][DIM];
 
   //Polymer viscosity
   dbl mup;
@@ -2486,7 +2482,6 @@ assemble_stress_log_conf(dbl tt,
 
   //Temperature shift
   dbl at = 0.0;
-  dbl d_at_dT[MDE];
   dbl wlf_denom;
 
   //Consitutive prameters
@@ -2495,7 +2490,6 @@ assemble_stress_log_conf(dbl tt,
   dbl d_lambda;
   dbl eps;      
   dbl Z=1.0;        
-  dbl dZ_dtrace =0.0;
 
   // Decomposition of velocity vector
   dbl M1[DIM][DIM];
@@ -2509,20 +2503,13 @@ assemble_stress_log_conf(dbl tt,
   //Advective terms
   dbl v_dot_del_s[DIM][DIM];
   dbl x_dot_del_s[DIM][DIM];
-  dbl d_xdotdels_dm;
-  dbl d_vdotdels_dm;
-  dbl v_dot_del_exp_s[DIM][DIM];
-  dbl x_dot_del_exp_s[DIM][DIM];
-  dbl d_xdotdelexps_dm;
-  dbl d_vdotdelexps_dm;
 
   //Trace of stress
   dbl trace=0.0; 
 
   //SUPG terms
-  dbl h_elem=0, h_elem_inv=0, h_elem_deriv=0;
+  dbl h_elem=0;
   dbl supg=0;
-  dbl term1=0.0;
 
   status = 0;
   eqn   = R_STRESS11;			
@@ -2541,15 +2528,6 @@ assemble_stress_log_conf(dbl tt,
   (void) stress_eqn_pointer(v_s);
   (void) stress_eqn_pointer(R_s);
 
-  v_g[0][0] = VELOCITY_GRADIENT11;
-  v_g[0][1] = VELOCITY_GRADIENT12;
-  v_g[1][0] = VELOCITY_GRADIENT21;
-  v_g[1][1] = VELOCITY_GRADIENT22;
-  v_g[0][2] = VELOCITY_GRADIENT13;
-  v_g[1][2] = VELOCITY_GRADIENT23;
-  v_g[2][0] = VELOCITY_GRADIENT31;
-  v_g[2][1] = VELOCITY_GRADIENT32; 
-  v_g[2][2] = VELOCITY_GRADIENT33; 
 
   memset( s, 0, sizeof(double)*DIM*DIM);
   memset( exp_s, 0, sizeof(double)*DIM*DIM);
@@ -2588,17 +2566,7 @@ assemble_stress_log_conf(dbl tt,
 	}
     }
 
-  //Velocity gradient projection, maybe
-  for(a=0; a<VIM; a++)
-    {
-      for(b=0; b<VIM; b++)
-	{
-	  g[a][b]   = fv->G[a][b];
-	  gt[a][b]  = fv->G[b][a];
-	}
-    }
-  
-  
+
   if(vn->wt_funcModel == GALERKIN)
     {
       supg = 0.0;
@@ -2618,14 +2586,6 @@ assemble_stress_log_conf(dbl tt,
 	}
       h_elem = sqrt(h_elem)/2.0;
 
-      if(h_elem==0.0) 
-	{
-	  h_elem_inv = 1.0;
-	}
-      else
-	{
-	  h_elem_inv = 1.0/h_elem;
-	}
     }
 
   //Shift factor
@@ -2634,10 +2594,6 @@ assemble_stress_log_conf(dbl tt,
       if(vn->shiftModel == CONSTANT)
 	{
 	  at = vn->shift[0];
-	  for(j=0; j<ei->dof[TEMPERATURE]; j++)
-	    {
-	      d_at_dT[j]=0.;
-	    }
 	}
       else if(vn->shiftModel == MODIFIED_WLF)
 	{
@@ -2645,19 +2601,12 @@ assemble_stress_log_conf(dbl tt,
 	  if(wlf_denom!= 0.0)
 	    {
 	      at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
-	      for(j=0; j<ei->dof[TEMPERATURE]; j++)
-		{
-		  d_at_dT[j]= -at*vn->shift[0]*vn->shift[1]/(wlf_denom*wlf_denom)*bf[TEMPERATURE]->phi[j];
-		}
 	    }
 	  else
 	    { 
 	      at = 1.0;
 	    } 
-	  for(j=0; j<ei->dof[TEMPERATURE]; j++)
-	    {
-	      d_at_dT[j] = 0.0;
-	    }
+
 	}
     }
   else
@@ -5775,10 +5724,9 @@ compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
 {
   double s_p[DIM][DIM];
   double exp_s_p[DIM][DIM];
-  double det_exp_s;
   double eig_values[DIM];
   double R1[DIM][DIM];
-  int m,n,i,j,p,q;
+  int i,j,p,q;
 
   memset(exp_s_p,    0, sizeof(double)*DIM*DIM);
   memset(exp_s,      0, sizeof(double)*DIM*DIM);

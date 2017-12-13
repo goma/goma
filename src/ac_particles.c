@@ -5639,12 +5639,16 @@ load_restart_file(void)
   zero_a_particle(&p);
   while(!feof(fp))
     {
+      char *fgetserr;
       for(i = 0; i < pdim; i++)
 	if(fscanf(fp, "%lf ", &p.x[i]) != 1)
 	  continue;		/* probable EOF */
       if(fscanf(fp, "%lf %d", &p.time, &p.owning_elem_id) != 2)
 	continue;		/* probable EOF */
-      fgets(garbage, 254, fp);
+      fgetserr = fgets(garbage, 254, fp);
+      if (fgetserr == NULL) {
+	EH(-1, "Error reading line in particle restart file");
+      }
       if(get_element_xi_newton(p.owning_elem_id, p.x, p.xi) == -1)
 	EH(-1, "Could not place particle from restart.");
       load_field_variables_at_xi(p.owning_elem_id, p.xi);

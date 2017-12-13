@@ -87,6 +87,7 @@ struct Derived_Datatype_Description
   MPI_Datatype  new_type;
 
   MPI_Aint extent;              /* extent of new derived data type */
+  MPI_Aint lb;
   /*  int count;                        count of new derived data type */
   int size;                     /* size of new derived data type */
 };    

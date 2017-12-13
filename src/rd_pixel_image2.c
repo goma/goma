@@ -219,8 +219,8 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
       nod_var_names[i] = nod_var_names_temp[i];
     }
     
-    err = ex_put_var_param(exoout, "n", num_nod_vars);
-    err = ex_put_var_names(exoout, "n", num_nod_vars, nod_var_names);
+    err = ex_put_variable_param(exoout, EX_NODAL, num_nod_vars);
+    err = ex_put_variable_names(exoout, EX_NODAL, num_nod_vars, nod_var_names);
     err = ex_put_time(exoout, time_step, &time_value);
     safe_free(nod_var_names);
     first_time_fopen2 = FALSE;
@@ -254,14 +254,32 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   resz = 1;
   z0 = 0;
   if (pixdim == 2) { 
-    fscanf(pixfid,"%d %d",&(pixsize[0]),&(pixsize[1])); 
-    fscanf(pixfid,"%lf %lf",&resx, &resy);
-    fscanf(pixfid,"%lf %lf",&x0, &y0);
+    err = fscanf(pixfid,"%d %d",&(pixsize[0]),&(pixsize[1]));
+    if (err != 2) {
+      EH(-1, "Error reading pixel file expected two ints");
+    }
+    err = fscanf(pixfid,"%lf %lf",&resx, &resy);
+    if (err != 2) {
+      EH(-1, "Error reading pixel file expected two floats");
+    }
+    err = fscanf(pixfid,"%lf %lf",&x0, &y0);
+    if (err != 2) {
+      EH(-1, "Error reading pixel file expected two floats");
+    }
   }
   else if (pixdim == 3){ 
-    fscanf(pixfid,"%d %d %d",&(pixsize[0]),&(pixsize[1]),&(pixsize[2])); 
-    fscanf(pixfid,"%lf %lf %lf",&resx, &resy, &resz);
-    fscanf(pixfid,"%lf %lf %lf",&x0, &y0, &z0);
+    err = fscanf(pixfid,"%d %d %d",&(pixsize[0]),&(pixsize[1]),&(pixsize[2]));
+    if (err != 3) {
+      EH(-1, "Error reading pixel file expected three ints");
+    }
+    err = fscanf(pixfid,"%lf %lf %lf",&resx, &resy, &resz);
+    if (err != 3) {
+      EH(-1, "Error reading pixel file expected three floats");
+    }
+    err = fscanf(pixfid,"%lf %lf %lf",&x0, &y0, &z0);
+    if (err != 3) {
+      EH(-1, "Error reading pixel file expected three floats");
+    }
   }
   else EH(-1,"Problem reading pixel/voxel input file; first entry should be dimensionality (2 or 3)");
 
@@ -474,7 +492,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
     }
   }
 
-  err = ex_put_nodal_var(exoout, time_step, k, exo->num_nodes, nodal_var_vals);
+  err = ex_put_var(exoout, time_step, EX_NODAL, k, 1, exo->num_nodes, nodal_var_vals);
   //err = ex_close(exoout);
 
 

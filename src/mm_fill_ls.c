@@ -10033,19 +10033,19 @@ subelement_mesh_output (double x[],
   ex_put_elem_num_map( exoid, emap );
   */
 
-  ex_put_elem_block ( exoid, 1, "TRI", nvelems, nodes_per_elem, 0 );
-  ex_put_elem_conn ( exoid, 1, vconn );
+  ex_put_block ( exoid, EX_ELEM_BLOCK, 1, "TRI", nvelems, nodes_per_elem, 0, 0, 0 );
+  ex_put_conn ( exoid, EX_ELEM_BLOCK, 1, vconn, 0, 0 );
   
-  ex_put_elem_block ( exoid, 2, "SHEL", nselems, nodes_per_side, 0 );
-  ex_put_elem_conn ( exoid, 2, sconn );
+  ex_put_block ( exoid, EX_ELEM_BLOCK, 2, "SHEL", nselems, nodes_per_side, 0, 0, 0 );
+  ex_put_conn ( exoid, EX_ELEM_BLOCK, 2, sconn, 0, 0 );
   
   /* dummy nodeset on volume */
-  ex_put_node_set_param( exoid, 1, ivconn, 0 );
-  ex_put_node_set( exoid, 1, vconn );
+  ex_put_set_param( exoid, EX_NODE_SET, 1, ivconn, 0 );
+  ex_put_set( exoid, EX_NODE_SET, 1, vconn, NULL );
 
   /* dummy nodeset on surface */
-  ex_put_node_set_param( exoid, 2, isconn, 0 );
-  ex_put_node_set( exoid, 2, sconn );
+  ex_put_set_param( exoid, EX_NODE_SET, 2, isconn, 0 );
+  ex_put_set( exoid, EX_NODE_SET, 2, sconn, NULL );
   
   /* no data for now */
 

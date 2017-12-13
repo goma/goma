@@ -309,12 +309,12 @@ smooth_stop_with_msg( const char *msg )
 	if( Num_Proc == 1 )
 	{
 		fprintf(stderr, "\n\t -- Goma stops smoothly--\n");
-		fprintf(stderr, msg );
+		fputs(msg, stderr);
 	}
 	else
 	{
 		fprintf(stderr,"\n\n Proc %d -- Goma stops smoothly --\n", ProcID);
-		DPRINTF(stderr, msg);
+		DFPUTS(msg, stderr);
 	}	
 	MPI_Finalize();
 	exit(-1);

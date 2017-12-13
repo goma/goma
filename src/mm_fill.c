@@ -3220,7 +3220,7 @@ matrix_fill_stress(
   extern int MMH_ip;
   extern int PRS_mat_ielem;
 
-  double delta_t, theta, time_value, h_elem_avg;  /*see arg list */
+  double delta_t, theta, time_value;  /*see arg list */
   int ielem, num_total_nodes;
   
 #if 0
@@ -3260,7 +3260,7 @@ matrix_fill_stress(
      condition routines */
   int call_rotate;
   int rotate_mesh, rotate_momentum;
-  int assemble_rs, make_trivial = 0; /* Flags for Eulerian solid mechanics
+  int make_trivial = 0; /* Flags for Eulerian solid mechanics
 				    and level-set */
   int bct, mode;
 
@@ -3272,12 +3272,9 @@ matrix_fill_stress(
   double wt = 0.0;              /* Quadrature weights
 				 units - ergs/(sec*cm*K) = g*cm/(sec^3*K)     */
 
-  double ls_F[MDE];		/* local copy for adaptive weights  */
-  double ad_wtpos[10],ad_wtneg[10];	/*adaptive integration weights  */
 
   struct Petrov_Galerkin_Data pg_data;
 
-  struct Porous_Media_Terms pm_terms;  /*Needed up here for Hysteresis switching criterion*/
 
   struct elem_side_bc_struct *elem_side_bc ;
   /* Pointer to an element side boundary condition
@@ -3305,7 +3302,6 @@ matrix_fill_stress(
 
   int pspg_local = 0;
   
-  bool owner = TRUE;
 
   NODE_INFO_STRUCT *node;
   SGRID *element_search_grid=NULL;
@@ -3332,7 +3328,6 @@ matrix_fill_stress(
   time_value	  = *ptr_time_value;
   ielem		  = *ptr_ielem;
   num_total_nodes = *ptr_num_total_nodes;
-  h_elem_avg = pg_data.h_elem_avg	  = *ptr_h_elem_avg;
   pg_data.U_norm	  = *ptr_U_norm;
 
   if (Debug_Flag > 1) {
@@ -3646,7 +3641,6 @@ matrix_fill_stress(
    * the natural stress condition on the intefacial elements.
    */
   /* assemble fake equation for elements off interface */
-  assemble_rs = TRUE;
 
   if (pde[R_SOLID1])
     {
@@ -3672,15 +3666,13 @@ matrix_fill_stress(
 		      if (elem_overlaps_interface( e, x, exo, ls->Length_Scale ))
 			{ 
 			  make_trivial = FALSE;
-			  assemble_rs = FALSE;
-			 
+
 			}
 		    }
 		}
 	    }
 	  if (make_trivial)
 	    {
-	      assemble_rs = FALSE;
 	      for (b=0; b < pd->Num_Dim; b++)
 		{
 		  for (i = 0; i < ei->dof[R_SOLID1 + b]; i++) {
