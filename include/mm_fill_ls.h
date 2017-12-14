@@ -386,6 +386,13 @@ PROTO((double [],                /* Jacobian matrix for fill equation  */
                                   * explicit (tt = 1) to implicit (tt = 0) */
        int [] ));                /* node_to_fill -  */
 
+EXTERN int print_ls_interface( double *x,
+			       Exo_DB *exo,
+			       Dpi    *dpi,
+			       const double time,
+			       char *filenm,
+			       int print_all_times );
+
 EXTERN void print_surf_list 
 PROTO(( struct LS_Surf_List *,
         double ));
