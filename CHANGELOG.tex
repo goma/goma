@@ -198,6 +198,45 @@ BC = GD_LINEAR SS 1 R_MOMENTUM1 0 VELOCITY1 0 {web_speed/time_max} 0.
 BC = GD_TIME   SS 1 R_MOMENTUM1 0 LINEAR 0 0 1. {time_max}
 BC = GD_LINEAR SS 1 R_MOMENTUM1 0 VELOCITY1 0 0. -1.
 
+Capability: Post processing global and printing of level set points
+Developer: W. Ortiz
+Description: Added a new Post Processing Global section to post
+processing to allow for file output post processing. The global post
+processing runs at each print so that it follows printing frequency.
+
+Printing of LS interface to text datafiles. Uses reconstruction method
+(Points or Facets) to print out appropriate points representing the
+level set interface.
+
+Two options LEVEL_SET_INTERFACE_PRINT prints the interface at the last
+time step and takes a file name for input and overwrites file at every
+step; and LEVEL_SET_INTERFACE_PRINT_ALL_TIMES prints interface at
+every time step, including the time in the output and appending to the
+filename.
+
+Allows for easier data processing of interface position, such as for
+plotting.
+
+Example:
+Post Processing Global =
+GLOBAL = LEVEL_SET_INTERFACE_PRINT interface.dat
+GLOBAL = LEVEL_SET_INTERFACE_PRINT_ALL_TIMES interface_all.dat
+END OF GLOBAL
+
+File formats:
+- LEVEL_SET_INTERFACE_PRINT (tab separated)
+
+x_coord y_coord point_indicator
+
+- LEVEL_SET_INTERFACE_PRINT_ALL_TIMES (tab separated)
+
+time x_coord y_coord point_indicator
+
+Where point_indicator is 0 always if data is for point reconstruction,
+and is 0, 1 for point pairs making up facet lines for facet
+reconstruction.
+
+
 Capability: Boundary condition for hydrostatic pressure
 Developer: D. Hariprasad, December 2014
 Description: Specifies pressure as P = P_0 + rho*g*x where rho is a vairable density and the user specifies P_0.
@@ -737,3 +776,8 @@ Description: Multiphase model for disperse and separated gas-liquid lubrication 
 
 
 \end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:
