@@ -4324,7 +4324,9 @@ find_intersections( struct LS_Surf_List *list,
                       }
                     else
                       {
-                        safe_free( surf );
+			free(surf->data);
+			free(surf->closest_point);
+			free(surf);
                       }
                   }
 

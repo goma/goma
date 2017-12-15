@@ -141,6 +141,7 @@ ddd_alloc(void)
 void 
 ddd_free(DDD p)
 {
+  MPI_Type_free(&p->new_type);
   free(p->block_count);
   free(p->data_type);
   free(p->address);
