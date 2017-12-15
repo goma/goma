@@ -100,7 +100,6 @@ write_solution(char output_file[], /* name EXODUS II file */
     fprintf(stderr, "%s: done w/ post_process_nodal\n", yo);
 #endif
 
-
     /*
      *  Write out time derivatives if requested
      */
