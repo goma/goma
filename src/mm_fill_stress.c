@@ -2566,6 +2566,14 @@ assemble_stress_log_conf(dbl tt,
 	}
     }
 
+    // Velocity gradient projection
+  for (a=0; a<VIM; a++)
+    {
+      for (b=0; b<VIM; b++)
+	{
+	  gt[a][b] = fv->G[b][a];
+	}
+    }
 
   if(vn->wt_funcModel == GALERKIN)
     {
