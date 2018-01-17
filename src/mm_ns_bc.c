@@ -7492,7 +7492,6 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
   dbl exp_s[DIM][DIM];  // Exponential of log_conf
   dbl trace = 0.0;         /* trace of the stress tensor */
   dbl s_dot[DIM][DIM];     /* stress tensor from last time step */
-  dbl g[DIM][DIM];         /* velocity gradient tensor */
   dbl gt[DIM][DIM];        /* transpose of velocity gradient tensor */
 
   dbl source_term1[DIM][DIM];
@@ -7572,8 +7571,7 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
      {
       for ( b=0; b<VIM; b++)
          {
-          g[a][b]  = fv->G[a][b];
-          gt[b][a] = g[a][b];
+          gt[b][a] = fv->G[a][b];
          }
      }
 
@@ -7640,6 +7638,10 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
         {
           compute_exp_s(s, exp_s, eig_values, R1); 
         }
+      else if(VIM == 3)
+	{
+	  EH(-1, "Log-conformation tensor not tested for 3D.");	  
+	}
 
       // Decompose velocity gradient
 
