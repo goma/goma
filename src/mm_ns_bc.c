@@ -7638,9 +7638,9 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
         {
           compute_exp_s(s, exp_s, eig_values, R1); 
         }
-      else if(VIM == 3)
+      else
 	{
-	  EH(-1, "Log-conformation tensor not tested for 3D.");	  
+	  EH(-1, "Log-conformation tensor tested only for 2D.");	  
 	}
 
       // Decompose velocity gradient
