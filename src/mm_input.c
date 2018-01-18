@@ -14490,13 +14490,13 @@ echo_compiler_settings()
        fprintf(echo_file, "%-30s= %s\n", "HAVE_SPARSE", "no");
 #endif
 
-#ifdef HAVE_BLAS
+#ifdef GOMA_HAVE_BLAS
        fprintf(echo_file, "%-30s= %s\n", "HAVE_BLAS", "yes");
 #else
        fprintf(echo_file, "%-30s= %s\n", "HAVE_BLAS", "no");
 #endif
 
-#ifdef HAVE_LAPACK
+#ifdef GOMA_HAVE_LAPACK
        fprintf(echo_file, "%-30s= %s\n", "HAVE_LAPACK", "yes");
 #else
        fprintf(echo_file, "%-30s= %s\n", "HAVE_LAPACK", "no");
