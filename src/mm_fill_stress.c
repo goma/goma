@@ -2566,6 +2566,14 @@ assemble_stress_log_conf(dbl tt,
 	}
     }
 
+    // Velocity gradient projection
+  for (a=0; a<VIM; a++)
+    {
+      for (b=0; b<VIM; b++)
+	{
+	  gt[a][b] = fv->G[b][a];
+	}
+    }
 
   if(vn->wt_funcModel == GALERKIN)
     {
@@ -2640,7 +2648,20 @@ assemble_stress_log_conf(dbl tt,
 	{
           compute_exp_s(s, exp_s, eig_values, R1);
 	}
+      else
+	{
+	  EH(-1, "Log-conformation tensor only tested for 2D.");	  
+	}
 
+      /* Check to make sure eigenvalues are positive (negative eigenvalues will not
+         work for log-conformation formulation). These eigenvalues are for the
+         conformation tensor, not the log-conformation tensor. */
+      if(eig_values[0] < 0. || eig_values[1] < 0.)
+	{
+	  WH(-1, "Error: Negative eigenvalue for conformation tensor");
+	  return -1;
+	}
+      
       memset(D, 0, sizeof(double)*DIM*DIM);
       D[0][0] = eig_values[0];
       D[1][1] = eig_values[1];

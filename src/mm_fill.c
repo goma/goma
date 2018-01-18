@@ -1515,6 +1515,7 @@ matrix_fill(
         {
           err = assemble_stress_log_conf(theta, delta_t, pg_data.hsquared,
                                      pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
+	  if (err) return -1;
           err = segregate_stress_update( x_update );
           EH(err, "assemble_stress_log_conf");
 #ifdef CHECK_FINITE
@@ -3816,7 +3817,8 @@ matrix_fill_stress(
         {
           err = assemble_stress_log_conf(theta, delta_t, pg_data.hsquared,
                                      pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
-          err = segregate_stress_update( x_update );
+	  if (err) return -1;
+	  err = segregate_stress_update( x_update );
           EH(err, "assemble_stress_log_conf");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_stress_log_conf");
