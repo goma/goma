@@ -30,7 +30,7 @@ GOMA_LIBS="$GOMADIR/scripts/gomaTPLs"
 ### Move to the build directory with "cd build"
 ###
 ### Lastly, execute this script with "../build-goma -jN"
-### This will build goma with n threads.
+### This will build goma with n processors.
 ###
 ### If all went well, you will now have a fully compiled version of Goma ready for use.
 ### Otherwise fill in the missing paths below i.e. MPI_DIR, SEACAS_DIR, etc.

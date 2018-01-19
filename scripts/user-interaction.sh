@@ -255,7 +255,7 @@ F compiler: `which mpifort` \n\
     fi
 
     QUESTION="${QUESTION}Library Location: `readlink --canonicalize ${GOMA_LIB}` \n\
-Compile Threads: $USED_MAKE_JOBS \n\
+Compile Processorss: $USED_MAKE_JOBS \n\
 \n\
 Proceed?"
     recommended=true

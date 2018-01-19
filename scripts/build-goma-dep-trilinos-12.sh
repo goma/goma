@@ -23,6 +23,7 @@
 
 # Tells the TPL builder which C compiler to use, choices are [intel, gnu, user]
 #CC_NAME="user"
+
 # if CC_NAME="user" the following variables must be specified manually
 
 SYSTEM_COMPILER_BASE=/usr
@@ -66,11 +67,11 @@ FORTRAN_LIBS="-lgfortran"
 
 # Tells the TPL builder which MPI you are using.
 # Possible options are: "intel" "open". "open" is recommended
-#export MPI_NAME=""
+#export MPI_NAME="open"
 
 # Tells the TPL builder which math libraries to use.
 # Possible options are: "intel" "netlib blas" "atlas". "netlib blas" is recommended
-#export MATH_LIBRARIES=""
+#export MATH_LIBRARIES="netlib blas"
 
 # Tells the TPL builder where the Atlas/Intel math libraries are if those are used
 #export MATH_PATH=""
@@ -211,7 +212,7 @@ fi
 
 ARCHIVE_NAMES=("arpack96.tar.gz" \
 "patch.tar.gz" \
-"hdf5-1.8.19.tar.gz" \
+"hdf5-1.8.20.tar.gz" \
 "netcdf-4.4.1.1.tar.gz" \
 "parmetis-4.0.3.tar.gz" \
 "sparse.tar.gz" \
@@ -226,7 +227,7 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 #meaning each y12m tar has a unique MD5SUM.
 ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "14830d758f195f272b8594a493501fa2" \
-"7f568e2464d4ab0a74d16b23956d900b" \
+"7f2d3fd67106968eb45d133f5a22150f" \
 "503a2d6b6035d116ed53b1d80c811bda" \
 "f69c479586bf6bb7aff6a9bc0c739628" \
 "1566d914d1035ac17b73fe9bc0eed02a" \
@@ -239,7 +240,7 @@ ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 
 ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
-"https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.19.tar.gz" \
+"https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.20.tar.gz" \
 "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.4.1.1.tar.gz" \
 "http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz" \
 "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
@@ -254,7 +255,7 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 # When in reality it isn't
 ARCHIVE_DIR_NAMES=("ARPACK" \
 "FAKE_DIR_FOR_ARPACK_PATCH" \
-"hdf5-1.8.19" \
+"hdf5-1.8.20" \
 "netcdf-4.4.1.1" \
 "parmetis-4.0.3" \
 "sparse" \
@@ -849,7 +850,7 @@ export CXX=${SYSTEM_CXX}
 
 if [ "$build_cmake" == "false" ] ; then
     echo "Native cmake found of sufficient version, skipping build"
-elseB
+else
     cd $GOMA_LIB/cmake-3.9.5
     if [ -f bin/cmake ]
     then
@@ -885,15 +886,20 @@ fi
 cd $GOMA_LIB
 
 #hdf5
-if [ -e hdf5-1.8.19/lib/libhdf5.a ]
+if [ -e hdf5-1.8.20/lib/libhdf5.a ]
 then
     echo "hdf5 already built"
 else
-    mv hdf5-1.8.19 tmpdir
-    mkdir hdf5-1.8.19
-    mv tmpdir hdf5-1.8.19/src
-    cd hdf5-1.8.19/src
-    CC="$MPI_C_COMPILER" CPP="$MPI_C_COMPILER -E" AR=${ARCHIVER} ./configure --enable-shared=off --prefix=$GOMA_LIB/hdf5-1.8.19 --enable-parallel
+    if ! [ -e hdf5-1.8.20/.goma-extracted ]
+    then
+	mv hdf5-1.8.20 tmpdir
+	mkdir hdf5-1.8.20
+	mv tmpdir hdf5-1.8.20/src
+	touch hdf5-1.8.20/.goma-extracted
+    fi
+
+    cd hdf5-1.8.20/src
+    CC="$MPI_C_COMPILER" CPP="$MPI_C_COMPILER -E" AR=${ARCHIVER} ./configure --enable-shared=off --prefix=$GOMA_LIB/hdf5-1.8.20 --enable-parallel
     make -j$MAKE_JOBS
     make install
     cd ../..
@@ -906,11 +912,15 @@ if [ -e matio-1.5.10/lib/libmatio.a ]
 then
     echo "matio already built"
 else
-    mv matio-1.5.10 tmpdir
-    mkdir matio-1.5.10
-    mv tmpdir matio-1.5.10/src
+    if ! [ -e matio-1.5.10/.goma-extracted]
+    then
+	mv matio-1.5.10 tmpdir
+	mkdir matio-1.5.10
+	mv tmpdir matio-1.5.10/src
+	touch matio-1.5.10/.goma-extracted
+    fi
     cd matio-1.5.10/src
-    CC=${MPI_C_COMPILER} LD=${MPI_CXX_COMPILER} AR=${ARCHIVER} LIBS="-ldl" ./configure --with-hdf5=${GOMA_LIB}/hdf5-1.8.19 --prefix=${GOMA_LIB}/matio-1.5.10 --enable-shared=off
+    CC=${MPI_C_COMPILER} LD=${MPI_CXX_COMPILER} AR=${ARCHIVER} LIBS="-ldl" ./configure --with-hdf5=${GOMA_LIB}/hdf5-1.8.20 --prefix=${GOMA_LIB}/matio-1.5.10 --enable-shared=off
     make -j$MAKE_JOBS
     make install
 fi
@@ -923,23 +933,27 @@ if [ -e netcdf-4.4.1.1/lib/libnetcdf.a ]
 then
     echo "netcdf already built"
 else
-    mv netcdf-4.4.1.1 tmpdir
-    mkdir netcdf-4.4.1.1
-    mv tmpdir netcdf-4.4.1.1/src
+    if ! [ -e netcdf-4.4.1.1/.goma-extracted ]
+    then
+	mv netcdf-4.4.1.1 tmpdir
+	mkdir netcdf-4.4.1.1
+	mv tmpdir netcdf-4.4.1.1/src
+	touch netcdf-4.4.1.1/.goma-extracted
+    fi
     cd $GOMA_LIB/netcdf-4.4.1.1/src
     cd include
     echo "$NETCDF_PATCH" > netcdf.patch
     patch -f --ignore-whitespace netcdf.h < netcdf.patch
     cd ..
-    export CPPFLAGS=-I$GOMA_LIB/hdf5-1.8.19/include
-#    export LDFLAGS=-L$GOMA_LIB/hdf5-1.8.19/lib
+    export CPPFLAGS=-I$GOMA_LIB/hdf5-1.8.20/include
+#    export LDFLAGS=-L$GOMA_LIB/hdf5-1.8.20/lib
     echo $CPPFLAGS
     echo $LDFLAGS
 
-    CC=${MPI_C_COMPILER} CFLAGS="-I${GOMA_LIB}/hdf5-1.8.19/include" \
+    CC=${MPI_C_COMPILER} CFLAGS="-I${GOMA_LIB}/hdf5-1.8.20/include" \
       CPP="${MPI_C_COMPILER} -E" \
-      CPPFLAGS="-I${GOMA_LIB}/hdf5-1.8.19/include" \
-      LDFLAGS="-L${GOMA_LIB}/hdf5-1.8.19/lib" \
+      CPPFLAGS="-I${GOMA_LIB}/hdf5-1.8.20/include" \
+      LDFLAGS="-L${GOMA_LIB}/hdf5-1.8.20/lib" \
       ./configure \
       --prefix=$GOMA_LIB/netcdf-4.4.1.1 \
       --enable-shared=off \
@@ -1007,8 +1021,12 @@ else
     make
     make install
     cd ..
-    cp src/metis/include/metis.h include
-    cp src/build/Linux-x86_64/libmetis/libmetis.a lib/
+    if [ -d include ]; then
+	cp src/metis/include/metis.h include
+    fi
+    if [ -d lib ]; then
+	cp src/build/Linux-x86_64/libmetis/libmetis.a lib/
+    fi
 fi
 
 
@@ -1144,7 +1162,8 @@ EOF
 
     patch SuiteSparse_config.mk < SuiteSparse_config.patch
     cd ..
-    #continue_check
+    echo ${MPI_C_COMPILER}
+    continue_check
     if [ -z "${BLAS_FLAGS}" ]; then
         make static AUTOCC="no" CC="${MPI_C_COMPILER}" \
              CXX="${MPI_CXX_COMPILER}" \
@@ -1316,7 +1335,8 @@ fi
 rm -f CMakeCache.txt
 
 MPI_LIBS="-lmpi ${MPI_FORTRAN_LIB}"
-HDF5_LIBS="-L${GOMA_LIB}/hdf5-1.8.19/lib -lhdf5_hl -lhdf5 -lz -ldl"
+
+HDF5_LIBS="-L${GOMA_LIB}/hdf5-1.8.20/lib -lhdf5_hl -lhdf5 -lz -ldl"
 # Install directory
 TRILINOS_INSTALL=$GOMA_LIB/trilinos-12.10.1-Built
 
@@ -1377,7 +1397,7 @@ else
 -D BLAS_LIBRARY_DIRS="${BLAS_LIBRARY_DIR}" \
 -D BLAS_LIBRARY_NAMES="${BLAS_LIBRARY_NAME}" \
 -D CMAKE_INSTALL_PREFIX:PATH=$TRILINOS_INSTALL \
--D Trilinos_EXTRA_LINK_FLAGS:STRING="$HDF5_LIBS $MPI_LIBS $FORTRAN_LIBS" \
+-D Trilinos_EXTRA_LINK_FLAGS:STRING="$HDF5_LIBS $MPI_LIBS $FORTRAN_LIBS -lrt" \
 -D TPL_ENABLE_UMFPACK:BOOL=ON \
   -D UMFPACK_LIBRARY_NAMES:STRING="umfpack;amd;suitesparseconfig" \
   -D UMFPACK_LIBRARY_DIRS:PATH="$GOMA_LIB/SuiteSparse/UMFPACK/Lib;$GOMA_LIB/SuiteSparse/AMD/Lib;$GOMA_LIB/SuiteSparse/SuiteSparse_config" \
