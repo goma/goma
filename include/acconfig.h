@@ -40,10 +40,10 @@
 #undef HAVE_Y12M
 
 /* BLAS */
-#undef HAVE_BLAS
+#undef GOMA_HAVE_BLAS
 
 /* LAPACK */
-#undef HAVE_LAPACK
+#undef GOMA_HAVE_LAPACK
 
 /* Aztec */
 #undef HAVE_AZTEC

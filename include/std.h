@@ -35,11 +35,11 @@
 #define HAVE_UMFPACK 1
 #define HAVE_AZTEC 1
 /* Trilinos now seems to define these */
-#ifndef HAVE_BLAS
-  #define HAVE_BLAS 1
+#ifndef GOMA_HAVE_BLAS
+  #define GOMA_HAVE_BLAS 1
 #endif
-#ifndef HAVE_LAPACK
-  #define HAVE_LAPACK 1
+#ifndef GOMA_HAVE_LAPACK
+  #define GOMA_HAVE_LAPACK 1
 #endif
 #define HAVE_Y12M 1
 
