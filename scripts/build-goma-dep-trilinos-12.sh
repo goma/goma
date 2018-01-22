@@ -1163,7 +1163,7 @@ EOF
     patch SuiteSparse_config.mk < SuiteSparse_config.patch
     cd ..
     echo ${MPI_C_COMPILER}
-    continue_check
+#    continue_check
     if [ -z "${BLAS_FLAGS}" ]; then
         make static AUTOCC="no" CC="${MPI_C_COMPILER}" \
              CXX="${MPI_CXX_COMPILER}" \
@@ -1439,7 +1439,7 @@ else
 $EXTRA_ARGS \
 $GOMA_LIB/trilinos-12.10.1-Source
 
-    continue_check
+#    continue_check
     make -j$MAKE_JOBS
     make install
 fi
