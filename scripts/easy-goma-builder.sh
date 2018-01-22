@@ -38,7 +38,7 @@ fi
 
 CC_NAME="gnu"
 CC_CMD="gcc"
-COMPILER_VERSION=$(gcc --version | grep -o -e "[0-9]\+\.[0-9]*\.[0-9]* " | grep -o -e "[0-9]\+\.[0-9]*\.[0-9]*") &> /dev/null
+COMPILER_VERSION=$(gcc -dumpversion)
 [ "$COMPILER_VERSION" = "`echo -e "4.8.1\n$COMPILER_VERSION" | sort -V | tail -n1`" ] && CXX11="true" || CXX11="false"
 if [[ "$CXX11" == "true" ]]; then
    CXX11="true"
