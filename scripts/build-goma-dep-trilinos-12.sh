@@ -9,6 +9,7 @@
 # 2015, February: Andrew Cochrane modified to handle recent changes to SEACAS-latest and hdf5, also added some logic to help with troubleshooting
 # 2017, June: Andrew Cochrane added compatibility for Intel Parallel Studio.
 # 2017, July: Eli Stone updated many libraries and enabled standalone openmpi - modularized the script a little bit..
+# 2017, Nov: Andrew added "user" CC_NAME option
 
 # This script tries to build all of the libraries needed for goma
 # in the specified directories.
@@ -20,8 +21,40 @@
 
 #These can be set here by uncommenting, or in environment variables beforehand (such as by running the Easy Goma Builder script), or by running the script as normal
 
-# Tells the TPL builder which CC
-#export CC_NAME=""
+# Tells the TPL builder which C compiler to use, choices are [intel, gnu, user]
+#CC_NAME="user"
+
+# if CC_NAME="user" the following variables must be specified manually
+
+SYSTEM_COMPILER_BASE=/usr
+SYSTEM_CC=$SYSTEM_COMPILER_BASE/bin/gcc
+SYSTEM_CXX=$SYSTEM_COMPILER_BASE/bin/g++
+SYSTEM_FC=$SYSTEM_COMPILER_BASE/bin/gfortran
+SYSTEM_CPP=$SYSTEM_COMPILER_BASE/bin/cpp
+f77=$SYSTEM_COMPILER_BASE/bin/gfortran
+f90=$SYSTEM_COMPILER_BASE/bin/gfortran
+LINKER=$SYSTEM_CXX
+# don't use a version of ar that was
+# compiled without --enable-plugins (und{erd}ocumented feature)
+# -- see https://gcc.gnu.org/ml/gcc-help/2012-03/msg00100.html
+ARCHIVER=ar
+
+# If using gnu compiler toolchain that isn't in standard location it is super
+# important to put it's libraries on the LD_LIBARY_PATH
+#export LD_LIBRARY_PATH="$SYSTEM_COMPILER_BASE/lib64:$LD_LIBRARY_PATH"
+
+#echo $LD_LIBRARY_PATH
+#continue_check()
+
+# if mpi is built by the script these get reset later.
+MPI_C_COMPILER="mpicc" 
+MPI_CXX_COMPILER="mpiCC"
+# mpif90 and mpif77 are depricated in favor of just mpifort.
+MPI_F90_COMPILER="mpifort"
+MPI_F77_COMPILER="mpifort"
+MPI_RUNNER="mpirun"
+FORTRAN_LIBS="-lgfortran"
+
 
 # Tells the TPL builder where MPI is installed.
 # Usually /usr/lib/openmpi/
@@ -34,11 +67,11 @@
 
 # Tells the TPL builder which MPI you are using.
 # Possible options are: "intel" "open". "open" is recommended
-#export MPI_NAME=""
+#export MPI_NAME="open"
 
 # Tells the TPL builder which math libraries to use.
 # Possible options are: "intel" "netlib blas" "atlas". "netlib blas" is recommended
-#export MATH_LIBRARIES=""
+#export MATH_LIBRARIES="netlib blas"
 
 # Tells the TPL builder where the Atlas/Intel math libraries are if those are used
 #export MATH_PATH=""
@@ -100,7 +133,7 @@ then
     usage
     exit 1
 fi
-export GOMA_LIB=`realpath $1`
+export GOMA_LIB=`readlink --canonicalize $1`
 
 if ulimit -S -n 2048 &> /dev/null; then
     echo
@@ -179,7 +212,7 @@ fi
 
 ARCHIVE_NAMES=("arpack96.tar.gz" \
 "patch.tar.gz" \
-"hdf5-1.8.19.tar.gz" \
+"hdf5-1.8.20.tar.gz" \
 "netcdf-4.4.1.1.tar.gz" \
 "parmetis-4.0.3.tar.gz" \
 "sparse.tar.gz" \
@@ -194,7 +227,7 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 #meaning each y12m tar has a unique MD5SUM.
 ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "14830d758f195f272b8594a493501fa2" \
-"7f568e2464d4ab0a74d16b23956d900b" \
+"7f2d3fd67106968eb45d133f5a22150f" \
 "503a2d6b6035d116ed53b1d80c811bda" \
 "f69c479586bf6bb7aff6a9bc0c739628" \
 "1566d914d1035ac17b73fe9bc0eed02a" \
@@ -207,7 +240,7 @@ ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 
 ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
-"http://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.19/src/hdf5-1.8.19.tar.gz" \
+"https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.20.tar.gz" \
 "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.4.1.1.tar.gz" \
 "http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz" \
 "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
@@ -222,7 +255,7 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 # When in reality it isn't
 ARCHIVE_DIR_NAMES=("ARPACK" \
 "FAKE_DIR_FOR_ARPACK_PATCH" \
-"hdf5-1.8.19" \
+"hdf5-1.8.20" \
 "netcdf-4.4.1.1" \
 "parmetis-4.0.3" \
 "sparse" \
@@ -270,7 +303,7 @@ if [[ "$MPI_BASE_DIR" == "BUILD" ]]; then
     MPI_BASE_DIR="$GOMA_LIB/openmpi-2.1.1"
     MPI_IS_BUILT_FROM_SCRATCH="true"
     echo
-    echo "You are building Goma without openMPI installed."
+    echo "OpenMPI 2.1.1 will be built."
     echo "You will have to add ${MPI_BASE_DIR}/lib to your LD_LIBRARY_PATH"
     echo "And ${MPI_BASE_DIR}/bin to your PATH environment variables"
     echo "Before running Goma"
@@ -278,19 +311,23 @@ if [[ "$MPI_BASE_DIR" == "BUILD" ]]; then
     continue_check
 fi
 
-cmake_vers=$(cmake --version |grep "version" | awk '{print $NF}')
-[ "$cmake_vers" = "`echo -e "2.8.12.2\n$cmake_vers" | sort -V | tail -n1`" ] && build_cmake="true" || build_cmake="false"
+if command -v cmake; then
+    cmake_vers=$(cmake --version |grep "version" | awk '{print $NF}')
+    [ "$cmake_vers" = "`echo -e "2.8.12.2\n$cmake_vers" | sort -V | tail -n1`" ] && build_cmake="true" || build_cmake="false"
+else
+    build_cmake="true"
+fi
 
 if [ "$build_cmake" == "false" ] ; then
     echo "Native cmake found newer than 2.8.12.2, skipping download"
 else
-    ARCHIVE_NAMES+=("cmake-2.8.12.2.tar.gz")
-    ARCHIVE_MD5SUMS+=("17c6513483d23590cbce6957ec6d1e66")
-    ARCHIVE_URLS+=("http://www.cmake.org/files/v2.8/cmake-2.8.12.2.tar.gz")
-    ARCHIVE_DIR_NAMES+=("cmake-2.8.12.2")
+    ARCHIVE_NAMES+=("cmake-3.9.5.tar.gz")
+    ARCHIVE_MD5SUMS+=("0922130d0e0c142a88e58c6e4fef4d7d")
+    ARCHIVE_URLS+=("https://cmake.org/files/v3.9/cmake-3.9.5.tar.gz")
+    ARCHIVE_DIR_NAMES+=("cmake-3.9.5")
     ARCHIVE_HOMEPAGES+=("https://cmake.org/")
     ARCHIVE_REAL_NAMES+=("CMake")
-    echo "You are building Goma without cmake on your path. This may cause the easy goma builder to fail."
+    echo "Cmake not found, will build."
     echo
 fi
 
@@ -308,13 +345,14 @@ function setMPIvars() {
     elif [[ "$MPI_NAME" == "open" ]]; then
         export MPI_FORTRAN_LIB="-lmpi_mpifh"
         export PATH=${MPI_BASE_DIR}/bin:${PATH}
+	echo "in setMPIvars() LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
         export LD_LIBRARY_PATH=${MPI_BASE_DIR}/lib:${LD_LIBRARY_PATH}
+	echo "in setMPIvars() LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
         unset MKL_BLACS_MPI
     else
-        echo "Unsupported MPI: $MPI_NAME. You can continue but the build probably will fail."
+        echo "Unknown MPI: $MPI_NAME. You can continue, but what will happen?"
         MPI_NAME="open"
         continue_check
-        setMPIvars
     fi
 }
 
@@ -366,11 +404,26 @@ function setCompilerVars() {
         export f90=gfortran
         export LINKER="ld"
         export ARCHIVER="ar"
+    elif [[ "$CC_NAME" == "user" ]]; then
+	echo "MPI_C_COMPILER=$MPI_C_COMPILER"
+        echo "MPI_CXX_COMPILER=$MPI_CXX_COMPILER"
+        echo "MPI_F90_COMPILER=$MPI_F90_COMPILER"
+        echo "MPI_F77_COMPILER=$MPI_F77_COMPILER"
+        echo "MPI_RUNNER=$MPI_RUNNER"
+        echo "FORTRAN_LIBS=$FORTRAN_LIBS"
+        echo "SYSTEM_CC=$SYSTEM_CC"
+        echo "SYSTEM_CXX=$SYSTEM_CXX"
+        echo "SYSTEM_FC=$SYSTEM_FC"
+        echo "SYSTEM_CPP=$SYSTEM_CPP"
+        echo "f77=$f77"
+        echo "f90=$f90"
+        echo "LINKER=$LINKER"
+        echo "ARCHIVER=$ARCHIVER"
     else
         echo "Unsupported compiler: $CC_NAME. You can continue but the build probably will fail."
         CC_NAME="gnu"
         continue_check
-        setCompilerVars
+
     fi
 }
 
@@ -453,21 +506,23 @@ function setMathVars {
         "LAPACK" \
         "ScaLAPACK")
 
-        export BLAS_LIBRARY_DIR="${GOMA_LIB}/BLAS-3.7.1"
-        export BLAS_LIBRARY_NAME_ARG="-L${BLAS_LIBRARY_DIR} -lblas"
+        BLAS_LIBRARY_DIR="${GOMA_LIB}/BLAS-3.7.1"
+        BLAS_LIBRARY_NAME_ARG="-L${BLAS_LIBRARY_DIR} -lblas"
         BLAS_LIBRARY_NAME="blas"
-        export BLACS_LIBRARY_NAME="scalapack"
-        export LAPACK_LIBRARY_DIR="${GOMA_LIB}/lapack-3.7.1"
-        export LAPACK_LIBRARY_NAME_ARG="-L${LAPACK_LIBRARY_DIR} -llapack"
+        BLACS_LIBRARY_NAME="scalapack"
+        LAPACK_LIBRARY_DIR="${GOMA_LIB}/lapack-3.7.1"
+        LAPACK_LIBRARY_NAME_ARG="-L${LAPACK_LIBRARY_DIR} -llapack"
         LAPACK_LIBRARY_NAME="liblapack.a"
-        export SCALAPACK_LIBRARY_DIR="${GOMA_LIB}/scalapack-2.0.2"
-        export SCALAPACK_LIBRARY_NAME="scalapack"
-        export SCALAPACK_LIBRARY_NAME_ARG="-L${SCALAPACK_LIBRARY_DIR} -lscalapack"
+        SCALAPACK_LIBRARY_DIR="${GOMA_LIB}/scalapack-2.0.2"
+        SCALAPACK_LIBRARY_NAME="scalapack"
+        SCALAPACK_LIBRARY_NAME_ARG="-L${SCALAPACK_LIBRARY_DIR} -lscalapack"
         SCALAPACK_INCLUDE_DIR="${GOMA_LIB}/scalapack-2.0.2/SRC"
         # Alternative to the intel "blas_flags" variable
-        export NON_INTEL_BLAS_LIBRARY="${BLAS_LIBRARY_DIR}/libblas.a"
-        export NON_INTEL_BLAS_LINK="-L${BLAS_LIBRARY_DIR} -l${BLAS_LIBRARY_NAME} ${FORTRAN_LIBS}"
-        export SUITESPARSE_NON_INTEL_LAPACK_LINK="${LAPACK_LIBRARY_NAME_ARG} ${FORTRAN_LIBS}"
+        NON_INTEL_BLAS_LIBRARY="${BLAS_LIBRARY_DIR}/libblas.a"
+        NON_INTEL_BLAS_LINK="-L${BLAS_LIBRARY_DIR} -l${BLAS_LIBRARY_NAME} ${FORTRAN_LIBS}"
+        SUITESPARSE_NON_INTEL_LAPACK_LINK="${LAPACK_LIBRARY_NAME_ARG} ${FORTRAN_LIBS}"
+
+
     elif [[ "$MATH_LIBRARIES" == "atlas" ]]; then
         USING_MKLS="OFF"
         if [ -n "$MATH_PATH" ]; then
@@ -517,11 +572,11 @@ function setMathVars {
         echo "But netlib blas libraries will be used instead"
         MATH_LIBRARIES="netlib blas"
         continue_check
-        setMathVars
     fi
 }
-
+echo "You are going to build with CC_NAME=$CC_NAME"
 setCompilerVars
+continue_check
 setMPIvars
 setMathVars
 
@@ -531,40 +586,6 @@ export OWNER
 export MPI_BASE_DIR
 export MAKE_JOBS
 
-# The y12m we use does not include a makefile, so this is a simple one for compiling a static library.
-read -d '' Y12M_MAKE << "EOF"
-LIB=y12m
-FFLAGS=-O
-FC=$(MPI_F77_COMPILER)
-OBJ = \
-	y12m.o  \
-	y12mae.o    \
-	y12maf.o    \
-	y12mbe.o    \
-	y12mbf.o    \
-	y12mce.o    \
-	y12mcf.o    \
-	y12mde.o    \
-	y12mdf.o    \
-	y12mfe.o    \
-	y12mge.o    \
-	y12mhe.o    \
-	y12cck.o
-lib$(LIB).a:	$(OBJ)
-	ar ru lib$(LIB).a $?
-	ranlib lib$(LIB).a
-EOF
-
-# This patch tells scalapack where blas and lapack are.
-# This is useful because scalapack cannot detect which math libraries are used automatically
-read -d '' SCALAPACK_PATCH << "EOF"
-58,59c59,60
-< BLASLIB       = -lblas
-< LAPACKLIB     = -llapack
----
-> BLASLIB       =  $(BLAS_FLAGS) $(NON_INTEL_BLAS_LINK)
-> LAPACKLIB     =  $(LAPACK_LIBRARY_NAME_ARG)
-EOF
 
 
 read -d '' MUMPS_PATCH << "EOF"
@@ -615,9 +636,6 @@ read -d '' MUMPS_PATCH << "EOF"
 > LIBBLAS = -L$(BLAS_LIBRARY_DIR) $(BLAS_LIBRARY_NAME_ARG)
 EOF
 
-# Get rid of non-existing directory error
-
-# This patch increases the maximum matrix sizes that NetCDF can manage
 read -d '' NETCDF_PATCH << "EOF"
 229c229
 < #define NC_MAX_DIMS	1024
@@ -633,7 +651,7 @@ read -d '' NETCDF_PATCH << "EOF"
 > #define NC_MAX_VAR_DIMS	8 /**< max per variable dimensions */
 EOF
 
-# This patch allows building Blas with the intel compiler
+
 read -d '' BLAS_PATCH << "EOF"
 18c18
 < FORTRAN  = gfortran
@@ -645,27 +663,6 @@ read -d '' BLAS_PATCH << "EOF"
 > LOADER   = $(SYSTEM_FC)
 EOF
 
-# This patch is to handle the fact that Arpack was built before POSIX.
-read -d '' ARMAKE_PATCH << "EOF"
-28c28
-< home = $(HOME)/ARPACK
----
-> home = $(GOMA_LIB)/ARPACK
-35c35
-< PLAT = SUN4
----
-> PLAT = x86_64
-104,105c104,105
-< FC      = f77
-< FFLAGS	= -O -cg89
----
-> FC      = $(MPI_F77_COMPILER)
-> FFLAGS	= -O $(BLAS_FLAGS)
-115c115
-< MAKE    = /bin/make
----
-> MAKE    = make
-EOF
 
 #Etime isn't provided anymore so comment it out
 read -d '' ARPACK_SECOND_PATCH << "EOF"
@@ -673,27 +670,6 @@ read -d '' ARPACK_SECOND_PATCH << "EOF"
 <       EXTERNAL           ETIME
 ---
 > *     EXTERNAL           ETIME
-EOF
-
-# Absolute make path doesn't matter and is inconsistant between distros.
-
-
-# This first hunk is probably unnessisary
-# Since intel versions of LAPACK and BLAS are done automatically by modern Suitesparse
-# We only need to tell it where the non-intel versions are.
-read -d '' SUITESPARSE_CONFIG_PATCH << "EOF"
-148c150
-<     LAPACK ?= -llapack
----
->     LAPACK = $(SUITESPARSE_NON_INTEL_LAPACK_LINK)
-164c166
-<             BLAS = -lopenblas
----
->             BLAS = $(NON_INTEL_BLAS_LINK)
-250c252
-<     UMFPACK_CONFIG ?=
----
->     UMFPACK_CONFIG = -DNCHOLMOD
 EOF
 
 
@@ -875,16 +851,16 @@ export CXX=${SYSTEM_CXX}
 if [ "$build_cmake" == "false" ] ; then
     echo "Native cmake found of sufficient version, skipping build"
 else
-    cd $GOMA_LIB/cmake-2.8.12.2
+    cd $GOMA_LIB/cmake-3.9.5
     if [ -f bin/cmake ]
     then
         echo "cmake is already built"
     else
-        ./bootstrap --prefix=$GOMA_LIB/cmake-2.8.12.2
+        CC=$SYSTEM_CC CXX=$SYSTEM_CXX FC=$SYSTEM_FC ./bootstrap --prefix=$GOMA_LIB/cmake-3.9.5
         make -j$MAKE_JOBS
         make install
     fi
-    export PATH=$GOMA_LIB/cmake-2.8.12.2/bin:$PATH
+    export PATH=$GOMA_LIB/cmake-3.9.5/bin:$PATH
 fi
 
 
@@ -910,15 +886,20 @@ fi
 cd $GOMA_LIB
 
 #hdf5
-if [ -e hdf5-1.8.19/lib/libhdf5.a ]
+if [ -e hdf5-1.8.20/lib/libhdf5.a ]
 then
     echo "hdf5 already built"
 else
-    mv hdf5-1.8.19 tmpdir
-    mkdir hdf5-1.8.19
-    mv tmpdir hdf5-1.8.19/src
-    cd hdf5-1.8.19/src
-    CC="$MPI_C_COMPILER" CPP="$MPI_C_COMPILER -E" LD="$LINKER" AR="$ARCHIVER" ./configure --enable-parallel --enable-shared=off --prefix=$GOMA_LIB/hdf5-1.8.19
+    if ! [ -e hdf5-1.8.20/.goma-extracted ]
+    then
+	mv hdf5-1.8.20 tmpdir
+	mkdir hdf5-1.8.20
+	mv tmpdir hdf5-1.8.20/src
+	touch hdf5-1.8.20/.goma-extracted
+    fi
+
+    cd hdf5-1.8.20/src
+    CC="$MPI_C_COMPILER" CPP="$MPI_C_COMPILER -E" AR=${ARCHIVER} ./configure --enable-shared=off --prefix=$GOMA_LIB/hdf5-1.8.20 --enable-parallel
     make -j$MAKE_JOBS
     make install
     cd ../..
@@ -931,11 +912,15 @@ if [ -e matio-1.5.10/lib/libmatio.a ]
 then
     echo "matio already built"
 else
-    mv matio-1.5.10 tmpdir
-    mkdir matio-1.5.10
-    mv tmpdir matio-1.5.10/src
+    if ! [ -e matio-1.5.10/.goma-extracted]
+    then
+	mv matio-1.5.10 tmpdir
+	mkdir matio-1.5.10
+	mv tmpdir matio-1.5.10/src
+	touch matio-1.5.10/.goma-extracted
+    fi
     cd matio-1.5.10/src
-    CC=${MPI_C_COMPILER} LD=${LINKER} AR=${ARCHIVER} ./configure --with-hdf5=$GOMA_LIB/hdf5-1.8.19 --prefix=$GOMA_LIB/matio-1.5.10 --enable-shared=off
+    CC=${MPI_C_COMPILER} LD=${MPI_CXX_COMPILER} AR=${ARCHIVER} LIBS="-ldl" ./configure --with-hdf5=${GOMA_LIB}/hdf5-1.8.20 --prefix=${GOMA_LIB}/matio-1.5.10 --enable-shared=off
     make -j$MAKE_JOBS
     make install
 fi
@@ -948,21 +933,32 @@ if [ -e netcdf-4.4.1.1/lib/libnetcdf.a ]
 then
     echo "netcdf already built"
 else
-    mv netcdf-4.4.1.1 tmpdir
-    mkdir netcdf-4.4.1.1
-    mv tmpdir netcdf-4.4.1.1/src
+    if ! [ -e netcdf-4.4.1.1/.goma-extracted ]
+    then
+	mv netcdf-4.4.1.1 tmpdir
+	mkdir netcdf-4.4.1.1
+	mv tmpdir netcdf-4.4.1.1/src
+	touch netcdf-4.4.1.1/.goma-extracted
+    fi
     cd $GOMA_LIB/netcdf-4.4.1.1/src
     cd include
     echo "$NETCDF_PATCH" > netcdf.patch
     patch -f --ignore-whitespace netcdf.h < netcdf.patch
     cd ..
-    export CPPFLAGS=-I$GOMA_LIB/hdf5-1.8.19/include
-#    export LDFLAGS=-L$GOMA_LIB/hdf5-1.8.19/lib
+    export CPPFLAGS=-I$GOMA_LIB/hdf5-1.8.20/include
+#    export LDFLAGS=-L$GOMA_LIB/hdf5-1.8.20/lib
     echo $CPPFLAGS
     echo $LDFLAGS
-    CC=${MPI_C_COMPILER} CFLAGS="-I${GOMA_LIB}/hdf5-1.8.19/include" CPP="${MPI_C_COMPILER} -E" \
-    CPPFLAGS="-I${GOMA_LIB}/hdf5-1.8.19/include" LDFLAGS="-L${GOMA_LIB}/hdf5-1.8.19/lib" \
-    ./configure --prefix=$GOMA_LIB/netcdf-4.4.1.1 --enable-shared=off --disable-dap --enable-parallel-tests
+
+    CC=${MPI_C_COMPILER} CFLAGS="-I${GOMA_LIB}/hdf5-1.8.20/include" \
+      CPP="${MPI_C_COMPILER} -E" \
+      CPPFLAGS="-I${GOMA_LIB}/hdf5-1.8.20/include" \
+      LDFLAGS="-L${GOMA_LIB}/hdf5-1.8.20/lib" \
+      ./configure \
+      --prefix=$GOMA_LIB/netcdf-4.4.1.1 \
+      --enable-shared=off \
+      --disable-dap
+
     make -j$MAKE_JOBS
     make install
     cd ../..
@@ -977,7 +973,7 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     then
         echo "BLAS already built"
     else
-        echo "$BLAS_PATCH" > makepatch.inc
+        echo $("$BLAS_PATCH") > makepatch.inc
         patch -f make.inc < makepatch.inc
         make -j$MAKE_JOBS cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI}
         cp blas_LINUX.a libblas.a
@@ -1021,28 +1017,50 @@ else
     echo "$PARMETIS_PATCH" > parmetis_make.patch
     patch -f Makefile < parmetis_make.patch
     echo "make config parmetis?"
-    #continue_check
     make config cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI} prefix=$GOMA_LIB/parmetis-4.0.3
     make
     make install
     cd ..
-    cp src/metis/include/metis.h include
-    cp src/build/Linux-x86_64/libmetis/libmetis.a lib/
+    if [ -d include ]; then
+	cp src/metis/include/metis.h include
+    fi
+    if [ -d lib ]; then
+	cp src/build/Linux-x86_64/libmetis/libmetis.a lib/
+    fi
 fi
 
 
-#continue_check
 #make ARPACK
 cd $GOMA_LIB/ARPACK
 if [ -e libarpack_x86_64.a ]
 then
     echo "ARPACK already built"
 else
-    echo "$ARMAKE_PATCH" > ARmake.patch
+    cat > ARmake.patch << EOF
+28c28
+< home = \$(HOME)/ARPACK
+---
+> home = $GOMA_LIB/ARPACK
+35c35
+< PLAT = SUN4
+---
+> PLAT = x86_64
+104,105c104,105
+< FC      = f77
+< FFLAGS	= -O -cg89
+---
+> FC      = $MPI_F77_COMPILER
+> FFLAGS	= -O $BLAS_FLAGS
+115c115
+< MAKE    = /bin/make
+---
+> MAKE    = make
+EOF
+
     patch ARmake.inc < ARmake.patch
     # Documentation says this should always be needed but in reality only intel MKL requires it.
     if [[ "$MATH_LIBRARIES" == "intel" ]]; then
-        echo "$ARPACK_SECOND_PATCH" > UTIL/second.f.patch
+        echo $("$ARPACK_SECOND_PATCH") > UTIL/second.f.patch
         patch UTIL/second.f < UTIL/second.f.patch
     fi
     make all
@@ -1050,7 +1068,6 @@ else
     cp libarpack_x86_64.a lib/libarpack.a
 fi
 
-#continue_check
 #make SuperLU
 cd $GOMA_LIB/superlu_dist-5.1.3
 if [ -e lib/libsuperludist.a ]
@@ -1088,8 +1105,6 @@ EOF
     make
 fi
 
-#continue_check
-
 if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     #make lapack
     cd $GOMA_LIB/lapack-3.7.1
@@ -1098,7 +1113,7 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
         echo "LAPACK already built"
     else
         mv make.inc.example make.inc
-        echo "$LAPACK_PATCH" > make.patch
+        echo $("$LAPACK_PATCH") > make.patch
         patch make.inc < make.patch
         make lapacklib -j$MAKE_JOBS cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI}
 #        cp lapack_LINUX.a liblapack.a
@@ -1106,7 +1121,6 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     export LD_LIBRARY_PATH="${GOMA_LIB}/lapack-3.7.1:$LD_LIBRARY_PATH"
 fi
 
-#continue_check
 #make sparse
 cd $GOMA_LIB/sparse
 if [ -e lib/libsparse.a ]
@@ -1121,8 +1135,6 @@ else
     cd ..
 fi
 
-#continue_check
-
 #make SuiteSparse
 cd $GOMA_LIB/SuiteSparse
 if [ -e UMFPACK/Lib/libumfpack.a ]
@@ -1131,10 +1143,27 @@ then
 else
     cd SuiteSparse_config
     echo "compiler flag MPI is ${COMPILER_FLAG_MPI}"
-    echo "$SUITESPARSE_CONFIG_PATCH" > SuiteSparse_config.patch
+
+    cat > SuiteSparse_config.patch << EOF
+148c150
+<     LAPACK ?= -llapack
+---
+>     LAPACK = $SUITESPARSE_NON_INTEL_LAPACK_LINK
+164c166
+<             BLAS = -lopenblas
+---
+>             BLAS = $NON_INTEL_BLAS_LINK
+250c252
+<     UMFPACK_CONFIG ?=
+---
+>     UMFPACK_CONFIG = -DNCHOLMOD
+EOF
+
+
     patch SuiteSparse_config.mk < SuiteSparse_config.patch
     cd ..
-    #continue_check
+    echo ${MPI_C_COMPILER}
+#    continue_check
     if [ -z "${BLAS_FLAGS}" ]; then
         make static AUTOCC="no" CC="${MPI_C_COMPILER}" \
              CXX="${MPI_CXX_COMPILER}" \
@@ -1151,19 +1180,41 @@ fi
 # Otherwise Goma dynamically links to UMFPACK when intel is sourced and disabled
 export LD_LIBRARY_PATH="${GOMA_LIB}/SuiteSparse/UMFPACK/Lib:$LD_LIBRARY_PATH"
 
-#continue_check
 #make y12m
 cd $GOMA_LIB/y12m
 if [ -e liby12m.a ]
 then
     echo "y12m already built"
 else
-    echo "$Y12M_MAKE" > makefile
+# The y12m we use does not include a makefile, so this is a simple one for compiling a static library.
+
+cat > makefile << EOF
+LIB=y12m
+FFLAGS=-O
+FC=$MPI_F77_COMPILER
+OBJ = \
+	y12m.o  \
+	y12mae.o    \
+	y12maf.o    \
+	y12mbe.o    \
+	y12mbf.o    \
+	y12mce.o    \
+	y12mcf.o    \
+	y12mde.o    \
+	y12mdf.o    \
+	y12mfe.o    \
+	y12mge.o    \
+	y12mhe.o    \
+	y12cck.o
+lib\$(LIB).a:	\$(OBJ)
+	ar ru lib\$(LIB).a \$?
+	ranlib lib\$(LIB).a
+EOF
+
     make
 fi
 
 
-#continue_check
 if [[ "$MATH_LIBRARIES" == "intel" ]] && [[ ! "$SCALAPACK_LIBRARY_NAME" = "scalapack" ]]; then
     echo "Not building scalapack because intel MKL used"
 else
@@ -1173,14 +1224,22 @@ else
         echo "scalapack already built"
     else
         cp SLmake.inc.example SLmake.inc
-        echo "$SCALAPACK_PATCH" > scalapack.patch
+
+cat > scalapack.patch << EOF
+58,59c59,60
+< BLASLIB       = -lblas
+< LAPACKLIB     = -llapack
+---
+> BLASLIB       =  $NON_INTEL_BLAS_LINK
+> LAPACKLIB     =  $LAPACK_LIBRARY_NAME_ARG
+EOF
+
         patch SLmake.inc < scalapack.patch
         make CC="${MPI_C_COMPILER}" FC="${MPI_F90_COMPILER}" # scalapack only compiles with 1 make job
     fi
     export LD_LIBRARY_PATH="${GOMA_LIB}/scalapack-2.0.2:$LD_LIBRARY_PATH"
 fi
 
-#continue_check
 # make mumps
 cd $GOMA_LIB/MUMPS_5.1.1
 if [ -e lib/libdmumps.a ]
@@ -1216,19 +1275,19 @@ LIBEXT  = .a
 OUTC    = -o
 OUTF    = -o
 RM = rm -f
-CC = \$(MPI_C_COMPILER) \$(BLAS_FLAGS) \$(FORTRAN_LIBS)
-FC = \$(MPI_F90_COMPILER)
-FL = \$(MPI_F90_COMPILER) \$(BLAS_FLAGS)
-AR = \$(ARCHIVER) vr 
+CC = $MPI_C_COMPILER $BLAS_FLAGS $FORTRAN_LIBS
+FC = $MPI_F90_COMPILER
+FL = $MPI_F90_COMPILER $BLAS_FLAGS
+AR = $ARCHIVER vr 
 RANLIB = ranlib
-SCALAP  = \$(SCALAPACK_LIBRARY_NAME_ARG) \$(LAPACK_LIBRARY_NAME_ARG) \$(BLACS_LIBRARY_NAME_ARG) \$(NON_INTEL_BLAS_LINK)
+SCALAP  = $SCALAPACK_LIBRARY_NAME_ARG $LAPACK_LIBRARY_NAME_ARG $BLACS_LIBRARY_NAME_ARG $NON_INTEL_BLAS_LINK
 
 
-INCPAR = -I\$(mpi_var)/include
-LIBPAR = \$(SCALAP) -L\$(MPI_BASE_DIR)/lib -lmpi \$(MPI_FORTRAN_LIB)
+INCPAR = -I$MPI_BASE_DIR/include
+LIBPAR = \$(SCALAP) -L$MPI_BASE_DIR/lib -lmpi $MPI_FORTRAN_LIB
 
-#ifndef \$(OPENMPI_TOP)
-#    LIBPAR = \$(SCALAP)
+#ifndef $OPENMPI_TOP
+#    LIBPAR = $SCALAP
 #endif
 
 INCSEQ = -I\$(topdir)/libseq
@@ -1253,21 +1312,21 @@ EOF
 
     if [[ "$CC_NAME" == "intel" ]]; then
         #TODO: Find if CC_NAME or MATH_LIBRARIES affects this
-        echo -e "$MUMPS_MAKE_PATCH" > examples/Makefile.patch
+        echo -e $("$MUMPS_MAKE_PATCH") > examples/Makefile.patch
         patch -f examples/Makefile < examples/Makefile.patch
         #continue_check
     fi
     make -j$MAKE_JOBS
 fi
 
-#continue_check
 #make trilinos
 rm -rf $GOMA_LIB/trilinos-12.10.1-Temp
 mkdir $GOMA_LIB/trilinos-12.10.1-Temp
 cd $GOMA_LIB/trilinos-12.10.1-Temp
 
 # Allows building Trilinos with versions of netlib Lapack greater than 3.6.
-# THIS IS FIXED ON TRILINOS GIT. Updating Trilinos will make this unnessiary
+# THIS IS FIXED ON TRILINOS GIT. Updating Trilinos will make this unnecessary
+# more info https://groups.google.com/forum/#!msg/trilinos/K516c8ErQGg/ClsCNl6bDQAJ
 if [ "$MATH_LIBRARIES" == "netlib blas" ]; then
     echo "$TRILINOS_EPETRA_LAPACK_PATCH" > trilepelapack.patch
     patch $GOMA_LIB/trilinos-12.10.1-Source/packages/epetra/src/Epetra_LAPACK_wrappers.h < trilepelapack.patch
@@ -1276,7 +1335,8 @@ fi
 rm -f CMakeCache.txt
 
 MPI_LIBS="-lmpi ${MPI_FORTRAN_LIB}"
-HDF_LIBS="-L${GOMA_LIB}/hdf5-1.8.19/lib -lhdf5_hl -lhdf5 -lz -ldl"
+
+HDF5_LIBS="-L${GOMA_LIB}/hdf5-1.8.20/lib -lhdf5_hl -lhdf5 -lz -ldl"
 # Install directory
 TRILINOS_INSTALL=$GOMA_LIB/trilinos-12.10.1-Built
 
@@ -1291,6 +1351,7 @@ else
 -D CMAKE_C_COMPILER:FILEPATH=${MPI_C_COMPILER} \
 -D CMAKE_Fortran_COMPILER:FILEPATH=${MPI_F90_COMPILER} \
 -D CMAKE_VERBOSE_MAKEFILE:BOOL=TRUE \
+-D CMAKE_VERBOSE_CONFIGURE:BOOL=TRUE \
 -D BUILD_SHARED_LIBS:BOOL=OFF \
 -D Trilinos_ENABLE_Triutils:BOOL=ON \
 -D Trilinos_ENABLE_SEACAS:BOOL=ON \
@@ -1336,7 +1397,7 @@ else
 -D BLAS_LIBRARY_DIRS="${BLAS_LIBRARY_DIR}" \
 -D BLAS_LIBRARY_NAMES="${BLAS_LIBRARY_NAME}" \
 -D CMAKE_INSTALL_PREFIX:PATH=$TRILINOS_INSTALL \
--D Trilinos_EXTRA_LINK_FLAGS:STRING="$HDF_LIBS $MPI_LIBS $NON_INTEL_BLAS_LINK" \
+-D Trilinos_EXTRA_LINK_FLAGS:STRING="$HDF5_LIBS $MPI_LIBS $FORTRAN_LIBS -lrt" \
 -D TPL_ENABLE_UMFPACK:BOOL=ON \
   -D UMFPACK_LIBRARY_NAMES:STRING="umfpack;amd;suitesparseconfig" \
   -D UMFPACK_LIBRARY_DIRS:PATH="$GOMA_LIB/SuiteSparse/UMFPACK/Lib;$GOMA_LIB/SuiteSparse/AMD/Lib;$GOMA_LIB/SuiteSparse/SuiteSparse_config" \
@@ -1378,6 +1439,7 @@ else
 $EXTRA_ARGS \
 $GOMA_LIB/trilinos-12.10.1-Source
 
+#    continue_check
     make -j$MAKE_JOBS
     make install
 fi
