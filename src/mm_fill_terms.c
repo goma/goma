@@ -16067,7 +16067,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
     {
       err = fill_momentum_source(f);
     }
-  else if (mp->MomentumSourceModel == LEVEL_SET  && pd->v[pg->imtrx][FILL]  )
+  else if (mp->MomentumSourceModel == LEVEL_SET  && pd->gv[FILL]  )
     {
       DENSITY_DEPENDENCE_STRUCT d_rho_struct;  /* density dependence */
       DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
@@ -16085,7 +16085,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 #endif /* COUPLED_FILL */
 		}
 	}
-	else if ( mp->MomentumSourceModel == LEVEL_SET  && pd->v[pg->imtrx][PHASE1]  )
+	else if ( mp->MomentumSourceModel == LEVEL_SET  && pd->gv[PHASE1]  )
 	{
       DENSITY_DEPENDENCE_STRUCT d_rho_struct;  /* density dependence */
       DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;

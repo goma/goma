@@ -1131,18 +1131,22 @@ dbl *te_out) /* te_out - return actual end time */
 	  exchange_dof(cx[pg->imtrx], dpi, x_old[pg->imtrx], pg->imtrx);
 	  exchange_dof(cx[pg->imtrx], dpi, x_oldest[pg->imtrx], pg->imtrx);
 
-	}
+
 
       
-      if( ls != NULL && ls->last_surf_list != NULL )
-	{
-	  /* Find the interface surf at the last full time step (x_old = tmp_x)
-	   * for use during this explicit step */
+	  if( ls != NULL && ls->last_surf_list != NULL )
+	    {
+	      /* Find the interface surf at the last full time step (x_old = tmp_x)
+	       * for use during this explicit step */
+	      x_static	       = x[pg->imtrx];
+	      x_old_static	       = x_old[pg->imtrx];
+	      xdot_static	       = xdot[pg->imtrx];
+	      xdot_old_static      = xdot_old[pg->imtrx];
 
-	  create_subsurfs(  ls->last_surf_list, x_old[pg->imtrx], exo );
+	      create_subsurfs(  ls->last_surf_list, x_old[pg->imtrx], exo );
+	    }
+
 	}
-
-	
       /*
        * Before propagating x_n back into the historical records in
        * x_n-1, x_n-2 and x_n-3, make sure external dofs are the best

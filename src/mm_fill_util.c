@@ -812,7 +812,7 @@ calc_surf_tangent (const int  ielem, /* current element number               */
     for (i=0; i<num_nodes_on_side; i++)  {
       id   = (int) local_elem_node_id[i];
       inode = Proc_Elem_Connect[iconnect_ptr + id];
-      ldof  = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
+      ldof  = ei[pd->mi[ShapeVar]]->ln_to_dof[ShapeVar][id];
       
       if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
 	fv->dstangent_dx[0][0][1][ldof] = -fv->dsnormal_dx[1][1][ldof];
@@ -865,7 +865,7 @@ calc_surf_tangent (const int  ielem, /* current element number               */
     for (i=0; i<num_nodes_on_side; i++)  {
       id   = (int) local_elem_node_id[i];
       inode = Proc_Elem_Connect[iconnect_ptr + id];
-      ldof  = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];      
+      ldof  = ei[pd->mi[ShapeVar]]->ln_to_dof[ShapeVar][id];
       if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
 	for (j=0; j<ielem_surf_dim+1; j++) {
 	  dalpha_dx[j] = (2.*fv->snormal[2]*fv->dsnormal_dx[2][j][ldof] + (fv->snormal[0]-fv->snormal[1])*
@@ -1023,7 +1023,7 @@ calc_tangent_along_basis(struct Rotation_Vectors *tangent,
     id    = (int) local_elem_node_id[i];
     inode = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + id];
     tangent->d_vector_J[i] = inode;
-    ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][id];
+    ldof = ei[pd->mi[ShapeVar]]->ln_to_dof[ShapeVar][id];
     if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
       if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
 	for (p=0; p<dim; p++) {
@@ -1375,7 +1375,7 @@ calc_unseeded_edge_tangents (struct Rotation_Vectors *tangent,
     {
       j_id    = (int) edge_elem_node_id[j];
       inode = Proc_Elem_Connect[iconnect_ptr + j_id];
-      ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][j_id];
+      ldof = ei[pd->mi[ShapeVar]]->ln_to_dof[ShapeVar][j_id];
       if ( DeformingMesh ) {
 	if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {
 	  for (p=0;p<dim;p++) {
@@ -1563,7 +1563,7 @@ calc_unseeded_edge_tangents_TET (struct Rotation_Vectors *tangent,
     {
       j_id    = (int) edge_elem_node_id[j];
       inode = Proc_Elem_Connect[iconnect_ptr + j_id];
-      ldof = ei[pg->imtrx]->ln_to_dof[ShapeVar][j_id];
+      ldof = ei[pd->mi[ShapeVar]]->ln_to_dof[ShapeVar][j_id];
       if(id_edge == 1 || id_edge == 3 || id_edge == 4)
 	{
 	  if ( DeformingMesh ) {
@@ -1657,7 +1657,7 @@ calc_unseeded_edge_tangents_TET (struct Rotation_Vectors *tangent,
       j_id   = (int) edge_elem_node_id[j];
       inode = Proc_Elem_Connect[iconnect_ptr + j_id];
       tangent->d_vector_J[j] = inode;
-      ldof  = ei[pg->imtrx]->ln_to_dof[ShapeVar][j_id];
+      ldof  = ei[pd->mi[ShapeVar]]->ln_to_dof[ShapeVar][j_id];
 	  if (num_varType_at_node(inode, MESH_DISPLACEMENT1)) {   
 	    if(id_edge == 1 || id_edge == 3 || id_edge == 4)
 	      {
