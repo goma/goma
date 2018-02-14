@@ -642,6 +642,7 @@ noahs_ark()
   ddd_add_member(n, &Number_Jac_Dump, 1, MPI_INT);
 #endif
   ddd_add_member(n, &Guess_Flag, 1, MPI_INT);
+  ddd_add_member(n, &Conformation_Flag, 1, MPI_INT);
 
   /*
    * The variable initialization structures are of fixed size, but only
@@ -792,6 +793,7 @@ noahs_ark()
 
   ddd_add_member(n, &Max_Newton_Steps, 1, MPI_INT);
   ddd_add_member(n, &Guess_Flag, 1, MPI_INT);
+  ddd_add_member(n, &Conformation_Flag, 1, MPI_INT);
   ddd_add_member(n, &damp_factor1, 1, MPI_DOUBLE);
   ddd_add_member(n, &damp_factor2, 1, MPI_DOUBLE);
   ddd_add_member(n, &damp_factor3, 1, MPI_DOUBLE);

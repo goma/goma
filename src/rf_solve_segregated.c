@@ -46,6 +46,9 @@ static int discard_previous_time_step(int num_unks,
 				      double *xdot_old, 
 				      double *xdot_older);
 
+/* rf_solve.c */
+extern void initial_guess_stress_to_log_conf(double *x, int num_total_nodes);
+
 double vector_distance_squared(int size, double *vec1, double *vec2) {
   double distance_sq = 0;
 #ifdef PARALLEL
@@ -506,7 +509,13 @@ dbl *te_out) /* te_out - return actual end time */
   /* Read initial values from exodus file */
   for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
     init_vec(x[pg->imtrx], cx[pg->imtrx], exo, dpi, global_x_AC, nAC, &timeValueRead[pg->imtrx]);
+
+    if (upd->ep[pg->imtrx][POLYMER_STRESS11] >= 0 && Conformation_Flag == 1) {
+      initial_guess_stress_to_log_conf(x[pg->imtrx], num_total_nodes);
+    }
+
   }
+
 
   if (TimeIntegration != STEADY)
     {
@@ -808,6 +817,8 @@ dbl *te_out) /* te_out - return actual end time */
         double distance = 0;
 
         for (i = 0; i < upd->Total_Num_Matrices; i++) {
+	  //double d1 = vector_distance(NumUnknowns[i], x[i], x_old[i]);
+	  //printf("M%d distance = %g\n", i, d1);
           distance += vector_distance_squared(NumUnknowns[i], x[i], x_old[i]);
         }
 
@@ -816,6 +827,11 @@ dbl *te_out) /* te_out - return actual end time */
         if (ProcID == 0) {
           printf("\nL_2 x changes %g\n", distance);
         }
+
+	//	write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot,
+	//				  xdot_old, tev, tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t,
+	//				  theta, (double) nprint, NULL, exo, dpi);
+	//	nprint++;
 
         if (distance < tran->steady_state_tolerance) {
 

@@ -1011,6 +1011,38 @@ rd_genl_specs(FILE *ifp,
       ECHO("Initial Guess card not read correctly", echo_file);
     }
 
+  iread = look_for_optional(ifp,"Conformation Map",input,'=');
+  if(iread == 1)
+    {
+      (void) read_string(ifp,input,'\n');
+      strip(input);
+      nargs = sscanf(input, "%s %s %s", first_string, second_string, third_string);
+      if ( nargs == 0 )
+        {
+          EH(-1, "Found zero arguments for Conformation Map");
+        }
+      else if ( nargs == 1 )
+        {
+          if (strcasecmp(first_string, "no") == 0 )
+            {
+              Conformation_Flag = 0;
+            }
+          else if (strcasecmp(first_string, "yes") == 0 )
+            {
+              Conformation_Flag = 1;
+            }
+
+          SPF(echo_string,eoformat,"Conformation Map", first_string); ECHO(echo_string, echo_file);
+
+        }
+      else
+        {
+          fprintf(stderr,"%s:\tUnknown conformation map (%s)\n", yo, input);
+          exit(-1);
+        }
+    } else {
+    Conformation_Flag = 0;
+  }
   /*
    *             Search for commands to initialize a specific variable
    */

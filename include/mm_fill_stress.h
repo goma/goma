@@ -52,6 +52,15 @@ PROTO((dbl ,			/* tt - parm to vary time integration from
 				 * routine "element_velocity."               */
        dbl [DIM][MDE]));	/* dvc_dnode                                 */
 
+EXTERN int
+assemble_stress_log_conf(dbl tt,
+			 dbl dt,
+			 dbl h[DIM],
+			 dbl hh[DIM][DIM],
+			 dbl dh_dxnode[DIM][MDE],
+			 dbl vcent[DIM],
+			 dbl dvc_dnode[DIM][MDE]);
+
 EXTERN int assemble_stress_level_set
 PROTO((dbl ,			/* tt - parm to vary time integration from 
 				 * explicit (tt = 1) to implicit (tt = 0)    */
@@ -170,5 +179,11 @@ PROTO((dbl [DIM][DIM],		/* s - total stress */
        dbl [DIM][DIM],		/* gamma_cont - continuous shear rate */
        dbl [MAX_MODES][DIM][DIM][MDE], /* d_mun_dS - derivative of mun wrt S*/ 
        dbl [DIM][DIM][MDE]));	/* d_mun_dG - derivative of mun wrt G */
+
+EXTERN void
+compute_exp_s(double s[DIM][DIM],
+	      double exp_s[DIM][DIM],
+              double eig_values[DIM],
+              double R[DIM][DIM]);
 
 #endif /* _MM_FILL_STRESS_H */

@@ -949,7 +949,17 @@ EH(-1,"version not compiled with frontal solver");
 				     &time_value, exo, dpi,
 				     &num_total_nodes,
 				     &h_elem_avg, &U_norm, NULL);
-	      
+
+	      if( vn->evssModel == LOG_CONF && upd->ep[pg->imtrx][POLYMER_STRESS11] >= 0 && af->Assemble_Jacobian == TRUE)
+                {
+                  numerical_jacobian_compute_stress(ams, x, resid_vector, delta_t, theta,
+						    x_old, x_older, xdot, xdot_old,x_update,
+						    num_total_nodes, First_Elem_Side_BC_Array[pg->imtrx],
+						    Debug_Flag, time_value, exo, dpi,
+						    &h_elem_avg, &U_norm);
+                }
+
+
 	      a_end = ut();
 	      if (err == -1) {
                 return_value = -1;
