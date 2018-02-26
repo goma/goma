@@ -29,7 +29,7 @@
  * rf_solve_segregated.c prototypes
  */
 
-EXTERN double vector_distance_squared(int size, double *vec1, double *vec2);
+EXTERN double vector_distance_squared(int size, double *vec1, double *vec2, int ignore_pressure, int imtrx);
 EXTERN double vector_distance(int size, double *vec1, double *vec2);
 
 EXTERN void solve_problem_segregated(Exo_DB *, /* exo - ptr to finite element mesh database */

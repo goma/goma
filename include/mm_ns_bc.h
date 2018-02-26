@@ -369,6 +369,21 @@ EXTERN void flow_n_dot_T_segregated
 (double [DIM],		                            // func
  double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE]); // d_func
 
+EXTERN void
+stress_no_v_dot_gradS(double func[MAX_MODES][6],
+                      double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                      const double dt,
+                      const double tt
+			   );
+
+EXTERN void
+stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
+                      double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                      const double dt,
+                      const double tt
+			   );
+
+
 EXTERN void press_poisson_segregated
 (double * ,                                        // func 
  double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], // d_func

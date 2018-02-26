@@ -130,6 +130,16 @@ PROTO((double *,		/* x_var - variable value */
 
 extern int bc_eqn_index(int, int, int, int, int, int *, int *,
 			VARIABLE_DESCRIPTION_STRUCT **);
+EXTERN int
+bc_eqn_index_stress(int id,               /* local node number                 */
+	            int I,                /* processor node number             */
+	            int bc_input_id,      /* boundary condition number         */
+	            int curr_matID,       /* Current material ID */
+	            int kdir,             /* coordinate index for stress components */
+                    int mode,       /* Stress mode number */
+	            int *eqn,       /* eqn to which this condition is applied     */
+	            int *matID_retn, /* material ID to apply this eqn on           */
+	            VARIABLE_DESCRIPTION_STRUCT **vd_retn);
 
 EXTERN int evaluate_time_func
 PROTO((const double ,		/* time                                      */

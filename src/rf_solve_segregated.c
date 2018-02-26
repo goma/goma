@@ -49,7 +49,7 @@ static int discard_previous_time_step(int num_unks,
 /* rf_solve.c */
 extern void initial_guess_stress_to_log_conf(double *x, int num_total_nodes);
 
-double vector_distance_squared(int size, double *vec1, double *vec2) {
+double vector_distance_squared(int size, double *vec1, double *vec2, int ignore_pressure, int imtrx) {
   double distance_sq = 0;
 #ifdef PARALLEL
   double global_distance = 0;
@@ -57,6 +57,7 @@ double vector_distance_squared(int size, double *vec1, double *vec2) {
   double x;
   int i;
   for (i = 0; i < size; i++) {
+    if (ignore_pressure && idv[imtrx][i][0] == PRESSURE) continue;
     x = (vec1[i] - vec2[i]);
     distance_sq += x*x;
   }
@@ -81,6 +82,48 @@ double vector_distance(int size, double *vec1, double *vec2) {
   }
 #ifdef PARALLEL
   MPI_Allreduce(&distance, &global_distance, 1, MPI_DOUBLE, MPI_SUM, 
+		MPI_COMM_WORLD);
+  distance = global_distance;
+#endif /* PARALLEL */
+  return sqrt(distance);
+}
+
+double vector_distance_vel(int size, double *vec1, double *vec2) {
+  double distance = 0;
+#ifdef PARALLEL
+  double global_distance = 0;
+#endif
+  double x;
+  int i;
+  for (i = 0; i < size; i++) {
+    if (idv[0][i][0] == VELOCITY1 || idv[0][i][0] == VELOCITY2) {
+      x = (vec1[i] - vec2[i]);
+      distance += x*x;
+    }
+  }
+#ifdef PARALLEL
+  MPI_Allreduce(&distance, &global_distance, 1, MPI_DOUBLE, MPI_SUM,
+		MPI_COMM_WORLD);
+  distance = global_distance;
+#endif /* PARALLEL */
+  return sqrt(distance);
+}
+
+double vector_distance_pres(int size, double *vec1, double *vec2) {
+  double distance = 0;
+#ifdef PARALLEL
+  double global_distance = 0;
+#endif
+  double x;
+  int i;
+  for (i = 0; i < size; i++) {
+    if (idv[0][i][0] == PRESSURE) {
+      x = (vec1[i] - vec2[i]);
+      distance += x*x;
+    }
+  }
+#ifdef PARALLEL
+  MPI_Allreduce(&distance, &global_distance, 1, MPI_DOUBLE, MPI_SUM,
 		MPI_COMM_WORLD);
   distance = global_distance;
 #endif /* PARALLEL */
@@ -816,10 +859,21 @@ dbl *te_out) /* te_out - return actual end time */
 
         double distance = 0;
 
-        for (i = 0; i < upd->Total_Num_Matrices; i++) {
-	  //double d1 = vector_distance(NumUnknowns[i], x[i], x_old[i]);
-	  //printf("M%d distance = %g\n", i, d1);
-          distance += vector_distance_squared(NumUnknowns[i], x[i], x_old[i]);
+        for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+	  find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
+	  double d1 = vector_distance(NumUnknowns[pg->imtrx], x[pg->imtrx], x_old[pg->imtrx]);
+	  if (pg->imtrx == 0) {
+	    double vel = vector_distance_vel(NumUnknowns[pg->imtrx], x[pg->imtrx], x_old[pg->imtrx]);
+	    double pres = vector_distance_pres(NumUnknowns[pg->imtrx], x[pg->imtrx], x_old[pg->imtrx]);
+	    if (ProcID ==0) {
+	      printf("M%d distance = %g, %g, %g\n", i, d1, vel, pres);
+	    }
+	  } else {
+	    if (ProcID ==0) {
+	      printf("M%d distance = %g \n", i, d1);
+	    }
+	  }
+          distance += vector_distance_squared(NumUnknowns[pg->imtrx], x[pg->imtrx], x_old[pg->imtrx], FALSE, pg->imtrx);
         }
 
         distance = sqrt(distance);
