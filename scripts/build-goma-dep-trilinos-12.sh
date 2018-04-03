@@ -313,7 +313,11 @@ fi
 
 if command -v cmake; then
     cmake_vers=$(cmake --version |grep "version" | awk '{print $NF}')
-    [ "$cmake_vers" = "`echo -e "2.8.12.2\n$cmake_vers" | sort -V | tail -n1`" ] && build_cmake="true" || build_cmake="false"
+    if [[ "$cmake_vers" = $(echo -e "$cmake_vers\n2.8.12.2\n" | sort -V |tail -n1) ]]; then
+	build_cmake="false"
+    else
+	build_cmake="true"
+    fi
 else
     build_cmake="true"
 fi
