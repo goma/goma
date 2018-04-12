@@ -1709,7 +1709,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->Light_AbsorptionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Shell_User_ParModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->PermittivityModel, 1, MPI_INT);
-
+      ddd_add_member(n, &mp_glob[i]->PBE_BA_Type, 1, MPI_INT);
       /* External field indeces PRS 10-1-2013 (shutdown times) */
 
       ddd_add_member(n,&mp_glob[i]->porosity_external_field_index, 1, MPI_INT);

@@ -7945,6 +7945,29 @@ load_fv_sens(void)
 	}
     }
 
+  v = MOMENT0;
+  if (pd->v[pg->imtrx][v]) {
+    for (w = 0; w < MAX_MOMENTS; w++) {
+      dofs = ei[pg->imtrx]->dof[v];
+      fv_sens->moment[w] = 0.0;
+      for (i = 0; i < dofs; i++) {
+	fv_sens->moment[w] += *esp_old->moment[w][i] * bf[v]->phi[i];
+      }
+    }
+  } else {
+    for (w = 0; w < MAX_MOMENTS; w++) {
+      fv_sens->moment[w] = 0.0;
+    }
+  }
+
+  v = DENSITY_EQN;
+  fv_sens->rho = 0.;
+  if ( pd->v[pg->imtrx][v] ) {
+    dofs  = ei[pg->imtrx]->dof[v];
+    for ( i=0; i<dofs; i++) {
+      fv_sens->rho += *esp_old->rho[i] * bf[v]->phi[i];
+    }
+  }
   v = SHELL_PRESS_OPEN;
   fv_sens->sh_p_open = 0.;
   if ( pd->v[pg->imtrx][v] )

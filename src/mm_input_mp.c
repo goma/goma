@@ -652,6 +652,34 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density ); 
   }
+  else if (model_read == -1 && !strcmp(model_name, "FOAM_PBE") )
+    {
+      mat_ptr->DensityModel = DENSITY_FOAM_PBE;
+      num_const = read_constants(imp, &(mat_ptr->u_density), 0);
+      if (num_const != 3)
+	{
+	  sprintf(err_msg,
+		  "Material %s - expected 3 constants for %s %s model.\n",
+		  pd_glob[mn]->MaterialName, "Density", "FOAM_PBE");
+	  EH(-1, err_msg);
+	}
+      mat_ptr->len_u_density = num_const;
+      SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density );
+    }
+  else if (model_read == -1 && !strcmp(model_name, "FOAM_PBE_EQN") )
+    {
+      mat_ptr->DensityModel = DENSITY_FOAM_PBE_EQN;
+      num_const = read_constants(imp, &(mat_ptr->u_density), 0);
+      if (num_const != 3)
+	{
+	  sprintf(err_msg,
+		  "Material %s - expected 3 constants for %s %s model.\n",
+		  pd_glob[mn]->MaterialName, "Density", "FOAM_PBE");
+	  EH(-1, err_msg);
+	}
+      mat_ptr->len_u_density = num_const;
+      SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density );
+    }
   else
     {
       sprintf(err_msg, 
@@ -2981,6 +3009,22 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  mat_ptr->len_u_thermal_conductivity = num_const;
 
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_thermal_conductivity);       
+	}
+      else if( !strcmp(model_name, "FOAM_PBE") )
+	{
+	  mat_ptr->ConductivityModel = FOAM_PBE;
+	  num_const = read_constants(imp, &(mat_ptr->u_thermal_conductivity), 0);
+	  /* if (num_const < 5)  */
+	  /*   { */
+	  /*     sprintf(err_msg,  */
+	  /* 	      "Material %s - expected at least 5 constants for %s %s model.\n", */
+	  /* 	      pd_glob[mn]->MaterialName, search_string, "THERMAL"); */
+	  /*     EH(-1, err_msg); */
+	  /*   } */
+
+	  mat_ptr->len_u_thermal_conductivity = num_const;
+
+	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_thermal_conductivity);
 	}
       else if ( !strcmp(model_name, "EXTERNAL_FIELD")){
 	if ( fscanf(imp,"%s", input ) !=  1 ){	  
@@ -5673,6 +5717,32 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       cr_glob[mn]->MassFluxModel = DiffusionConstitutiveEquation;
       
       ECHO(es,echo_file);
+
+      strcpy(search_string,"PBE Blowing Agent Type" );
+      model_read = look_for_mat_prop(imp, search_string,
+				     &(mat_ptr->PBE_BA_Type),
+				     &(a0), NO_USER, NULL, model_name, NO_INPUT,
+				     &NO_SPECIES,es);
+
+      if ( !strcmp(model_name, "N_PENTANE") )
+	{
+	  mat_ptr->PBE_BA_Type = PBE_N_PENTANE;
+	}
+      else if ( !strcmp(model_name, "R_11"))
+	{
+	  mat_ptr->PBE_BA_Type = PBE_R_11;
+	}
+      else if ( !strcmp(model_name, " ")) // default
+	{
+	  mat_ptr->PBE_BA_Type = PBE_N_PENTANE;
+	}
+      else
+	{
+	  EH(-1, "Unknown PBA Blowing Agent Type");
+	}
+
+      ECHO(es,echo_file);
+
     }
   
   /* Parameters for Ryan's Q tensor model */
@@ -7729,7 +7799,16 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->len_u_heat_source = num_const;
       SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heat_source);
     }
+  else if ( !strcmp(model_name, "FOAM_PBE") )
+    {
+      HeatSourceModel = HS_FOAM_PBE;
+      model_read = 1;
+      mat_ptr->HeatSourceModel = HeatSourceModel;
 
+      num_const = read_constants(imp, &(mat_ptr->u_heat_source), NO_SPECIES);
+      mat_ptr->len_u_heat_source = num_const;
+      SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heat_source);
+    }
   else
     {
       if(model_read == -1)
@@ -8002,16 +8081,16 @@ ECHO("\n----Acoustic Properties\n", echo_file);
           model_read = 1;
           mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
           if ( fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
-                            &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7, &a8, &a9, &a10)  != 11)
+		      &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7, &a8, &a9, &a10)  != 11)
             {
-                  sr = sprintf(err_msg,
-                               "Matl %s needs 11 floats for %s %s model.\n",
-                               pd_glob[mn]->MaterialName,
-                               "Species Source", "ELECTROOSMOTIC");
-                  EH(-1, err_msg);
+	      sr = sprintf(err_msg,
+			   "Matl %s needs 11 floats for %s %s model.\n",
+			   pd_glob[mn]->MaterialName,
+			   "Species Source", "ELECTROOSMOTIC");
+	      EH(-1, err_msg);
             }
           mat_ptr->u_species_source[species_no] = (dbl *)
-                                                 array_alloc(1,11,sizeof(dbl));
+	    array_alloc(1,11,sizeof(dbl));
           mat_ptr->len_u_species_source[species_no] = 11;
           mat_ptr->u_species_source[species_no][0] = a0;   /* index of species involved in rxn */
           mat_ptr->u_species_source[species_no][1] = a1;   /* stoichiometric coefficient, s */
@@ -8027,6 +8106,130 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
           SPF_DBL_VEC(endofstring(es), 11,  mat_ptr->u_species_source[species_no]);
         }
+      else if ( !strcmp(model_name, "FOAM_PBE_WATER") )
+	{
+	  SpeciesSourceModel = FOAM_PBE_WATER;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  if ( fscanf(imp, "%lf %lf %lf  %lf",
+		      &a0, &a1, &a2, &a3)
+	       != 4 )
+	    {
+	      sr = sprintf(err_msg,
+			   "Matl %s needs  4 constants for %s %s model.\n",
+			   pd_glob[mn]->MaterialName,
+			   "Species Source", "FOAM_PBE_WATER");
+	      EH(-1, err_msg);
+	    }
+	  // Set this species type to be an extrinsic variable
+	  //mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+	  mat_ptr->u_species_source[species_no] = (dbl *)
+	    array_alloc(1,4,sizeof(dbl));
+
+	  mat_ptr->len_u_species_source[species_no] = 4;
+
+	  mat_ptr->u_species_source[species_no][0] = a0;  /* C0_W */
+	  mat_ptr->u_species_source[species_no][1] = a1;  /* A_W */
+	  mat_ptr->u_species_source[species_no][2] = a2;  /* E_W */
+	  mat_ptr->u_species_source[species_no][3] = a3;  /* Delta_H_W */
+
+	  SPF_DBL_VEC(endofstring(es), 4,  mat_ptr->u_species_source[species_no]);
+	}
+      else if ( !strcmp(model_name, "FOAM_PBE_OH") )
+	{
+	  SpeciesSourceModel = FOAM_PBE_OH;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  if ( fscanf(imp, "%lf %lf %lf %lf %lf %lf",
+		      &a0, &a1, &a2, &a3, &a4, &a5)
+	       != 6 )
+	    {
+	      sr = sprintf(err_msg,
+			   "Matl %s needs  6 constants for %s %s model.\n",
+			   pd_glob[mn]->MaterialName,
+			   "Species Source", "FOAM_PBE_OH");
+	      EH(-1, err_msg);
+	    }
+	  // Set this species type to be an extrinsic variable
+	  //mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+	  mat_ptr->u_species_source[species_no] = (dbl *)
+	    array_alloc(1,6,sizeof(dbl));
+
+	  mat_ptr->len_u_species_source[species_no] = 5;
+
+	  mat_ptr->u_species_source[species_no][0] = a0;  /* C0_OH */
+	  mat_ptr->u_species_source[species_no][1] = a1;  /* A_OH */
+	  mat_ptr->u_species_source[species_no][2] = a2;  /* E_OH */
+	  mat_ptr->u_species_source[species_no][3] = a3;  /* Delta_H_OH */
+	  mat_ptr->u_species_source[species_no][4] = a4;  /* C0_NCO */
+	  mat_ptr->u_species_source[species_no][5] = a5;  /* Gelling Point */
+	  SPF_DBL_VEC(endofstring(es), 5,  mat_ptr->u_species_source[species_no]);
+	}
+      else if ( !strcmp(model_name, "FOAM_PBE_CO2_L") )
+	{
+	  SpeciesSourceModel = FOAM_PBE_CO2_L;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  if ( fscanf(imp, "%lf",
+		      &a0)
+	       != 1 )
+	    {
+	      sr = sprintf(err_msg,
+			   "Matl %s needs  1 constant for %s %s model.\n",
+			   pd_glob[mn]->MaterialName,
+			   "Species Source", "FOAM_PBE_CO2_L");
+	      EH(-1, err_msg);
+	    }
+	  // Set this species type to be an extrinsic variable
+	  //mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+	  mat_ptr->u_species_source[species_no] = (dbl *)
+	    array_alloc(1,1,sizeof(dbl));
+
+	  mat_ptr->len_u_species_source[species_no] = 1;
+
+	  mat_ptr->u_species_source[species_no][0] = a0;  /* M_CO2 */
+
+	  SPF_DBL_VEC(endofstring(es), 1,  mat_ptr->u_species_source[species_no]);
+	}
+      else if ( !strcmp(model_name, "FOAM_PBE_CO2_G"))
+	{
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = FOAM_PBE_CO2_G;
+	}
+      else if ( !strcmp(model_name, "FOAM_PBE_BA_L") )
+	{
+	  SpeciesSourceModel = FOAM_PBE_BA_L;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  if ( fscanf(imp, "%lf %lf %lf %lf %lf",
+		      &a0, &a1, &a2, &a3, &a4)
+	       != 5 )
+	    {
+	      sr = sprintf(err_msg,
+			   "Matl %s needs  5 constant for %s %s model.\n",
+			   pd_glob[mn]->MaterialName,
+			   "Species Source", "FOAM_PBE_BA_L");
+	      EH(-1, err_msg);
+	    }
+	  // Set this species type to be an extrinsic variable
+	  //mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+	  mat_ptr->u_species_source[species_no] = (dbl *)
+	    array_alloc(1,5,sizeof(dbl));
+
+	  mat_ptr->len_u_species_source[species_no] = 5;
+
+	  mat_ptr->u_species_source[species_no][0] = a0;  /* M_BA */
+	  mat_ptr->u_species_source[species_no][1] = a1;  /* Lambda, latent heat */
+	  mat_ptr->u_species_source[species_no][2] = a2;  /* G0 growth rate */
+	  mat_ptr->u_species_source[species_no][3] = a3;  /* T0 reference temp */
+	  mat_ptr->u_species_source[species_no][4] = a4;  /* M_NCO */
+	  SPF_DBL_VEC(endofstring(es), 1,  mat_ptr->u_species_source[species_no]);
+	}
+      else if ( !strcmp(model_name, "FOAM_PBE_BA_G"))
+	{
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = FOAM_PBE_BA_G;
+	}
 
       else if ( !strcmp(model_name, "ELECTRODE_KINETICS") )
 	{

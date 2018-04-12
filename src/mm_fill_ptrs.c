@@ -2063,6 +2063,20 @@ load_elem_dofptr(const int ielem,
     }
   }
 
+  for (k = 0; k < MAX_MOMENTS; k++) {
+    eqn = R_MOMENT0 + k;
+    if (upd->ep[eqn] >= 0) {
+      load_varType_Interpolation_ptrs(eqn, esp->moment[k], esp_old->moment[k],
+				      esp_dot->moment[k]);
+    }
+  }
+  eqn = R_DENSITY_EQN;
+  if ( pd->e[eqn] )
+    {
+      load_varType_Interpolation_ptrs(eqn, esp->rho, esp_old->rho,
+				      esp_dot->rho);
+    }
+
   /*
    * External field variables
    * Warning - here the distinction between nodes and dof's gets
@@ -2863,7 +2877,7 @@ load_elem_dofptr_all(const int ielem,
       }
 
     eqn = R_POR_ENERGY;
-    if ( pd->e[eqn] )
+    if ( pd->e[imtrx][eqn] )
       {
         load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->T, esp_old->T,
                                         esp_dot->T);
@@ -2890,6 +2904,21 @@ load_elem_dofptr_all(const int ielem,
         }
       }
     }
+
+    for (k = 0; k < MAX_MOMENTS; k++) {
+      eqn = R_MOMENT0 + k;
+      if (upd->ep[imtrx][eqn] >= 0) {
+	load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->moment[k], esp_old->moment[k],
+					esp_dot->moment[k]);
+      }
+    }
+    eqn = R_DENSITY_EQN;
+    if ( pd->e[imtrx][eqn] )
+      {
+	load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->rho, esp_old->rho,
+					esp_dot->rho);
+      }
+
   }
 
   x_static	       = pg->matrices[pg->imtrx].x;

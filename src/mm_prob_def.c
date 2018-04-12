@@ -235,6 +235,10 @@ setup_pd()
 		   (ce == R_PHASE5) ||
 		   (ce == R_ACOUS_REYN_STRESS) ||  
                    (ce == R_SHELL_LUBP) ||
+		   (ce == R_MOMENT0) ||
+		   (ce == R_MOMENT1) ||
+		   (ce == R_MOMENT2) ||
+		   (ce == R_MOMENT3) ||
 		   (ce == R_POR_SINK_MASS))
 	        {
 	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0. )
@@ -526,7 +530,8 @@ setup_pd()
 		  (ce == R_N_DOT_CURL_V) ||
 		  (ce == R_GRAD_S_V_DOT_N1) ||
 		  (ce == R_GRAD_S_V_DOT_N2) ||
-		  (ce == R_GRAD_S_V_DOT_N3))
+		  (ce == R_GRAD_S_V_DOT_N3) ||
+		  (ce == R_DENSITY_EQN))
 	        {
 	      /* These equations have no term multipliers, but
 	       * something needs to be set to make the equation

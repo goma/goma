@@ -1286,6 +1286,14 @@ assembly_alloc(Exo_DB *exo)
     esp->poynt = (dbl ***) alloc_ptr_2(vim, MDE);
   }
 
+  if (Num_Var_In_Type[imtrx][MOMENT0]) {
+    esp->moment = (dbl ***) alloc_ptr_2(MAX_MOMENTS, MDE);
+  }
+
+  if(Num_Var_In_Type[imtrx][DENSITY_EQN]) {
+    esp->rho = (dbl **) alloc_ptr_1(MDE);
+  }
+
   if(Num_Var_In_Type[imtrx][SHELL_SHEAR_TOP]) {
     esp->sh_shear_top = (dbl **) alloc_ptr_1(MDE);
   }

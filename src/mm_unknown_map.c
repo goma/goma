@@ -1718,8 +1718,18 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
 	  v = SHELL_FILMH;
 	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+
+	  v = MOMENT0;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT1;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT2;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT3;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = DENSITY_EQN;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
           break;
-	  
 	case R_PMOMENTUM1:
 	case R_PMOMENTUM2:
 	case R_PMOMENTUM3:
@@ -1809,6 +1819,16 @@ set_interaction_masks(Exo_DB *exo)
           v = POR_SATURATION;
           if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
 
+	  v = MOMENT0;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT1;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT2;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT3;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = DENSITY_EQN;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
 	  break;
 	  
 	case R_MASS:
@@ -2291,6 +2311,16 @@ set_interaction_masks(Exo_DB *exo)
 	  v = FILL;
 	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
 
+	  v = MOMENT0;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT1;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT2;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT3;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = DENSITY_EQN;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
 	  break;
 
 	case R_STRESS11:
@@ -3814,6 +3844,53 @@ set_interaction_masks(Exo_DB *exo)
           v = LS;
 	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
 	  break;
+
+	case R_MOMENT0:
+	case R_MOMENT1:
+	case R_MOMENT2:
+	case R_MOMENT3:
+	  v = VELOCITY1;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = VELOCITY2;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = VELOCITY3;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT0;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT1;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT2;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT3;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = TEMPERATURE;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MASS_FRACTION;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+
+	case R_DENSITY_EQN:
+	  v = DENSITY_EQN;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = VELOCITY1;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = VELOCITY2;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = VELOCITY3;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT0;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT1;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT2;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MOMENT3;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = TEMPERATURE;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+	  v = MASS_FRACTION;
+	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
+
+
 	case R_SPECIES_UNK_0:
 	case R_SPECIES_UNK_1:
 	case R_SPECIES_UNK_2:

@@ -985,6 +985,11 @@ struct Equation_Names EQ_Name[] = {
     { "R_LIGHT_INTP", "LIGHT_INTP", R_LIGHT_INTP},
     { "R_LIGHT_INTM", "LIGHT_INTM", R_LIGHT_INTM},
     { "R_LIGHT_INTD", "LIGHT_INTD", R_LIGHT_INTD},  /*   182  */
+    { "R_MOMENT0", "MOMENT0", R_MOMENT0},     /*   183  */
+    { "R_MOMENT1", "MOMENT1", R_MOMENT1},     /*   184  */
+    { "R_MOMENT2", "MOMENT2", R_MOMENT2},     /*   185  */
+    { "R_MOMENT3", "MOMENT3", R_MOMENT3},     /*   186  */
+    { "R_DENSITY_EQN", "DENSITY_EQN", R_DENSITY_EQN},     /*   187  */
 
     /*
      *  Note -> these entries must remain until we get rid
@@ -993,7 +998,7 @@ struct Equation_Names EQ_Name[] = {
      *          are species in the problem
      */
 
-    { "R_Y0", "Y0", V_LAST + 0} ,                    /* 187 */
+    { "R_Y0", "Y0", V_LAST + 0} ,                    /* 188 */
     { "R_Y1", "Y1", V_LAST + 1} ,
     { "R_Y2", "Y2", V_LAST + 2} ,
     { "R_Y3", "Y3", V_LAST + 3} ,
@@ -1003,7 +1008,7 @@ struct Equation_Names EQ_Name[] = {
     { "R_Y7", "Y7", V_LAST + 7} ,
     { "R_Y8", "Y8", V_LAST + 8} ,
     { "R_Y9", "Y9", V_LAST + 9} ,                    
-    { "R_Y10", "Y10", V_LAST + 10} ,                 /* 197 */
+    { "R_Y10", "Y10", V_LAST + 10} ,                 /* 198 */
     { "R_Y11", "Y11", V_LAST + 11} ,                   
     { "R_Y12", "Y12", V_LAST + 12} ,                  
     { "R_Y13", "Y13", V_LAST + 13} ,                  
@@ -1013,7 +1018,7 @@ struct Equation_Names EQ_Name[] = {
     { "R_Y17", "Y17", V_LAST + 17} ,                 
     { "R_Y18", "Y18", V_LAST + 18} ,                   
     { "R_Y19", "Y19", V_LAST + 19} ,                 
-    { "R_Y20", "Y20", V_LAST + 20} ,                 /* 207 */
+    { "R_Y20", "Y20", V_LAST + 20} ,                 /* 208 */
     { "R_Y21", "Y21", V_LAST + 21} ,
     { "R_Y22", "Y22", V_LAST + 22} ,
     { "R_Y23", "Y23", V_LAST + 23} ,
@@ -1022,21 +1027,21 @@ struct Equation_Names EQ_Name[] = {
     { "R_Y26", "Y26", V_LAST + 26} ,
     { "R_Y27", "Y27", V_LAST + 27} ,   
     { "R_Y28", "Y28", V_LAST + 28} ,
-    { "R_Y29", "Y29", V_LAST + 29} ,                 /* 216 */
+    { "R_Y29", "Y29", V_LAST + 29} ,                 /* 217 */
 
     /*
      * Add extra equation names for vector fields that can be rotated
      */
     
-    { "R_MOM_NORMAL",  "DN",  R_MOM_NORMAL } ,       /* 217 */
+    { "R_MOM_NORMAL",  "DN",  R_MOM_NORMAL } ,       /* 218 */
     { "R_MOM_TANG1",   "DT1", R_MOM_TANG1 } ,
     { "R_MOM_TANG2",   "DT2", R_MOM_TANG2 } ,
     { "R_MESH_NORMAL", "VN",  R_MESH_NORMAL } ,
     { "R_MESH_TANG1",  "VT1", R_MESH_TANG1 } ,
-    { "R_MESH_TANG2",  "VT2", R_MESH_TANG2 } ,       /* 222 */
+    { "R_MESH_TANG2",  "VT2", R_MESH_TANG2 } ,       /* 223 */
     { "R_SOLID_NORMAL", "SN",  R_SOLID_NORMAL } ,
     { "R_SOLID_TANG1",  "ST1", R_SOLID_TANG1 } ,
-    { "R_SOLID_TANG2",  "ST2", R_SOLID_TANG2 }         /* 225 */
+    { "R_SOLID_TANG2",  "ST2", R_SOLID_TANG2 }         /* 226 */
 };
 int Num_EQ_Names = sizeof(EQ_Name) / sizeof(struct Equation_Names);  
 
@@ -1255,9 +1260,14 @@ struct Equation_Names Var_Name[] =  {
     { "LIGHT_INTP", "INTP", LIGHT_INTP},
     { "LIGHT_INTM", "INTM", LIGHT_INTM},
     { "LIGHT_INTD", "INTD", LIGHT_INTD},                     /* 182 */
+    { "MOMENT0", "MOM0", MOMENT0},                     /* 183 */
+    { "MOMENT1", "MOM1", MOMENT1},                     /* 184 */
+    { "MOMENT2", "MOM2", MOMENT2},                     /* 185 */
+    { "MOMENT3", "MOM3", MOMENT3},                     /* 186 */
+    { "DENSITY_EQN", "RHO_EQN", DENSITY_EQN},                     /* 187 */
 
     { "MESH_POSITION1", "X",  MESH_POSITION1 } ,
-    { "MESH_POSITION2", "Y",  MESH_POSITION2 } ,	/* 188 */
+    { "MESH_POSITION2", "Y",  MESH_POSITION2 } ,	/* 189 */
     { "MESH_POSITION3", "Z",  MESH_POSITION3 } ,
 
     { "VEL_NORM",       "VN", VEL_NORM } ,
@@ -1270,14 +1280,14 @@ struct Equation_Names Var_Name[] =  {
 
     { "D_X1_DT",   "XDOT", D_X1_DT } ,
     { "D_X2_DT",   "YDOT", D_X2_DT } ,
-    { "D_X3_DT",   "ZDOT", D_X3_DT } ,			/* 198 */
+    { "D_X3_DT",   "ZDOT", D_X3_DT } ,			/* 199 */
     { "D_S_DT",    "SDOT", D_S_DT } ,
 
     { "D_P_DT",    "PDOT", D_P_DT } ,
 
     { "SOLID_POSITION1", "X_RS",  SOLID_POSITION1 } ,  
     { "SOLID_POSITION2", "Y_RS",  SOLID_POSITION2 } ,
-    { "SOLID_POSITION3", "Z_RS",  SOLID_POSITION3 } 	/* 203 */
+    { "SOLID_POSITION3", "Z_RS",  SOLID_POSITION3 } 	/* 204 */
 };
 
 int Num_Var_Names = sizeof(Var_Name) / sizeof(struct Equation_Names);  
@@ -1494,6 +1504,12 @@ struct Equation_Names Exo_Var_Names[] =
   { "Plus Propagating Intensity", "INTP", LIGHT_INTP },
   { "Minus Propagating Intensity", "INTM", LIGHT_INTM },
   { "Dispersive Scattering Intensity", "INTD", LIGHT_INTD },
+  { "Moment 0", "MOM0", MOMENT0 },
+  { "Moment 1", "MOM1", MOMENT1 },
+  { "Moment 2", "MOM2", MOMENT2 },
+  { "Moment 3", "MOM3", MOMENT3 },
+  { "Density equation", "RHO_EQN", DENSITY_EQN },
+
 };
 
 int Num_Exo_Var_Names = sizeof(Exo_Var_Names) / sizeof(struct Equation_Names);  
@@ -1757,6 +1773,11 @@ struct Equation_Names Var_Units[] =
   { "Plus Intensity", "[1]", LIGHT_INTP},
   { "Minus Intensity", "[1]", LIGHT_INTM},
   { "Dispersive Intensity", "[1]", LIGHT_INTD},
+  { "Moment 0", "[1]", MOMENT0},
+  { "Moment 1", "[1]", MOMENT1},
+  { "Moment 2", "[1]", MOMENT2},
+  { "Moment 3", "[1]", MOMENT3},
+  { "Density equation", "[1]", DENSITY_EQN},
 };
 
 int Num_Var_Units = sizeof(Var_Units) / sizeof(struct Equation_Names);  

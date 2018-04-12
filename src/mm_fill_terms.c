@@ -49,7 +49,7 @@
 #include "mm_eh.h"
 #include "mm_std_models.h"
 #include "mm_std_models_shell.h"
-
+#include "mm_fill_population.h"
 
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
@@ -1665,7 +1665,134 @@ assemble_energy(double time,	/* present time value */
 		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
 		}
 	    }
+	  /*
+	   * J_e_MOM
+	   */
+	  for (b = 0; b < MAX_MOMENTS; b++) {
+	    var = MOMENT0 + b;
+	    if ( pd->v[pg->imtrx][var] )
+	      {
+		pvar = upd->vp[pg->imtrx][var];
+		for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		  {
+		    phi_j = bf[var]->phi[j];
 
+		    for ( p=0; p<VIM; p++)
+		      {
+			grad_phi_j[p] = bf[var]->grad_phi[j][p];
+		      }
+
+		    mass = 0.;
+		    if ( pd->TimeIntegration != STEADY )
+		      {
+			if ( pd->e[pg->imtrx][eqn] & T_MASS )
+			  {
+			    mass  =  d_rho->moment[b][j] * Cp * T_dot;
+			    mass *= - phi_i * det_J * wt;
+			    mass *= h3;
+			    mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+			  }
+		      }
+
+		    advection = 0.;
+		    if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
+		      {
+			for ( p=0; p<VIM; p++)
+			  {
+			    advection +=  d_rho->moment[b][j] * Cp   *
+			      vconv[p] * grad_T[p];
+			  }
+			advection *= - wt_func * det_J * wt;
+			advection *= h3;
+			advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+		      }
+
+		    diffusion = 0.;
+		    if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
+		      {
+			for ( p=0; p<VIM; p++)
+			  {
+			    diffusion += d_q->moment[b][p][j] * grad_phi_i[p];
+			  }
+			diffusion *= det_J * wt;
+			diffusion *= h3;
+			diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+		      }
+
+		    source = 0.;
+		    if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+		      {
+			//source += phi_i * d_h->moment[b][j] * det_J * wt;
+			source *= h3;
+			source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+		      }
+
+		    lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+		  }
+	      }
+	  }
+
+	  var = DENSITY_EQN;
+	  if ( pd->v[pg->imtrx][var] )
+	    {
+	      pvar = upd->vp[pg->imtrx][var];
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  phi_j = bf[var]->phi[j];
+
+		  for ( p=0; p<VIM; p++)
+		    {
+		      grad_phi_j[p] = bf[var]->grad_phi[j][p];
+		    }
+
+		  mass = 0.;
+		  if ( pd->TimeIntegration != STEADY )
+		    {
+		      if ( pd->e[pg->imtrx][eqn] & T_MASS )
+			{
+			  mass  =  d_rho->rho[j] * Cp * T_dot;
+			  mass *= - phi_i * det_J * wt;
+			  mass *= h3;
+			  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+			}
+		    }
+
+		  advection = 0.;
+		  if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
+		    {
+		      for ( p=0; p<VIM; p++)
+			{
+			  advection +=  d_rho->rho[j] * Cp   *
+			    vconv[p] * grad_T[p];
+			}
+		      advection *= - wt_func * det_J * wt;
+		      advection *= h3;
+		      advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+		    }
+
+		  diffusion = 0.;
+		  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
+		    {
+		      for ( p=0; p<VIM; p++)
+			{
+			  //diffusion += d_q->rho[p][j] * grad_phi_i[p];
+			}
+		      diffusion *= det_J * wt;
+		      diffusion *= h3;
+		      diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+		    }
+
+		  source = 0.;
+		  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+		    {
+		      //source += phi_i * d_h->rho[j] * det_J * wt;
+		      source *= h3;
+		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+		    }
+
+		  lec->J[peqn][pvar][i][j] += mass + advection + diffusion + source;
+		}
+	    }
 	  /*
 	   * J_e_V
 	   */
@@ -3141,6 +3268,90 @@ assemble_momentum(dbl time,       /* current time */
 		}
 
 
+	      for ( b=0; b<MAX_MOMENTS; b++)
+		{
+		  var = MOMENT0 + b;
+		  if ( pdv[var] )
+		    {
+		      pvar = upd->vp[pg->imtrx][var];
+		      phi_j_vector = bf[var]->phi;
+		      J = lec->J[peqn][pvar][ii];
+
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			{
+			  phi_j = phi_j_vector[j];
+
+			  mass = 0.;
+
+			  if (transient_run )
+			    {
+			      if ( mass_on)
+				{
+				  mass = d_rho->moment[b][j] * v_dot[a];
+				  mass *= - phi_i * d_area;
+				  mass *= mass_etm;
+				}
+
+			      /* if porous flow is considered. KSC on 5/10/95 */
+			      if (porous_brinkman_on )
+				{
+				  mass /= por;
+				}
+			    }
+
+			  advection = 0.;
+			  if ( advection_on )
+			    {
+#ifdef DO_NO_UNROLL
+			      for ( p=0; p<wim; p++)
+				{
+				  advection += (v[p] - x_dot[p]) * grad_v[p][a];
+				}
+#else
+			      advection += (v[0] - x_dot[0]) * grad_v[0][a];
+			      advection += (v[1] - x_dot[1]) * grad_v[1][a];
+			      if(wim==3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
+#endif
+
+			      advection *= - wt_func * d_rho->moment[b][j] * d_area;
+			      advection *= advection_etm;
+
+			      if (porous_brinkman_on)
+				{
+				  por2 = por*por;
+				  advection /= por2;
+				}
+			    }
+
+			  porous = 0.;
+			  if (porous_brinkman_on)
+			    {
+			      if (vis != 0.)
+				{
+				  porous = v[a]*(d_rho->moment[b][j] *sc*speed/sqrt(per));
+				  porous    *= - phi_i * d_area;
+				  porous    *= porous_brinkman_etm;
+				}
+			      else
+				{
+				  porous = 0.;
+				}
+			    }
+
+			  if (particle_momentum_on)
+			    {
+			      mass *= (1.0 - p_vol_frac);
+			      advection *= (1.0 - p_vol_frac);
+			    }
+
+			  /*lec->J[peqn][pvar][ii][j] += mass + advection + porous + diffusion + source;*/
+			  J[j] += mass + advection + porous;
+#ifdef DEBUG_HKM
+			  checkFinite(J[j]);
+#endif
+			}
+		    }
+		}
 	      /*
 	       * J_m_nn
 	       */
@@ -4453,6 +4664,8 @@ assemble_continuity(dbl time_value,   /* current time */
   double dFVS_dx[DIM][MDE];
   double dFVS_dC[MAX_CONC][MDE];
   double dFVS_dF[MDE];
+  double dFVS_drho[MDE];
+  double dFVS_dMOM[MAX_MOMENTS][MDE];
 
   int transient_run = pd->TimeIntegration != STEADY;
   int advection_on =0;
@@ -4812,6 +5025,30 @@ assemble_continuity(dbl time_value,   /* current time */
                       sourceBase  = source;
                       foam_volume_source_on =  1;
                     }
+		  else if ( mp->DensityModel == DENSITY_FOAM_PBE )
+		    {
+		      memset( dFVS_dv, 0 , sizeof(double)*DIM*MDE );
+		      memset( dFVS_dT, 0 , sizeof(double)*MDE );
+		      memset( dFVS_dx, 0 , sizeof(double)*DIM*MDE );
+		      memset( dFVS_dMOM,    0 , sizeof(double)*MAX_MOMENTS*MDE );
+		      memset( dFVS_dF, 0 , sizeof(double)*MDE );
+		      memset( dFVS_drho, 0 , sizeof(double)*MDE );
+		      memset( dFVS_dC, 0 , sizeof(double)*MAX_CONC*MDE );
+		      source = PBEVolumeSource(time_value, dt, tt, dFVS_dv, dFVS_dT, dFVS_dx, dFVS_dC, dFVS_dMOM);
+		      foam_volume_source_on = 1;
+		    }
+		  else if ( mp->DensityModel == DENSITY_FOAM_PBE_EQN )
+		    {
+		      memset( dFVS_dv, 0 , sizeof(double)*DIM*MDE );
+		      memset( dFVS_dT, 0 , sizeof(double)*MDE );
+		      memset( dFVS_dx, 0 , sizeof(double)*DIM*MDE );
+		      memset( dFVS_dMOM,    0 , sizeof(double)*MAX_MOMENTS*MDE );
+		      memset( dFVS_dF, 0 , sizeof(double)*MDE );
+		      memset( dFVS_drho, 0 , sizeof(double)*MDE );
+		      memset( dFVS_dC, 0 , sizeof(double)*MAX_CONC*MDE );
+		      source = PBEVolumeSource_rhoeqn(time_value, dt, tt, dFVS_drho);
+		      foam_volume_source_on = 1;
+		    }
 		      
                   /*
                     else if
@@ -5440,6 +5677,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			  if( mp->DensityModel == DENSITY_FOAM || 
 			      mp->DensityModel == DENSITY_FOAM_CONC || 
 			      mp->DensityModel == DENSITY_FOAM_TIME ||
+			      mp->DensityModel == DENSITY_FOAM_PBE ||
 			      mp->DensityModel == DENSITY_FOAM_TIME_TEMP)
 			    {
 			      source = sourceBase * d_h3detJ_dmesh_bj * wt + dFVS_dx[b][j] * d_area;
@@ -5570,7 +5808,9 @@ assemble_continuity(dbl time_value,   /* current time */
 			{
 			  /* Foaming volume source term */
 
-			  if (  mp->DensityModel == REACTIVE_FOAM || mp->DensityModel == DENSITY_FOAM )
+			  if (  mp->DensityModel == REACTIVE_FOAM ||
+				mp->DensityModel == DENSITY_FOAM  ||
+				mp->DensityModel == DENSITY_FOAM_PBE)
 			    {
 			      source += dFVS_dC[w][j];
 			      source *= phi_i * h3 * det_J * wt* pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
@@ -5710,8 +5950,75 @@ assemble_continuity(dbl time_value,   /* current time */
 		    }
 		}
 	    }
+
+
+	  /*
+	   * J_c_MOM
+	   */
+	  for ( b=0; b<wim; b++)
+	    {
+	      var = MOMENT0+b;
+	      if ( pdv[var] )
+		{
+		  pvar = upd->vp[pg->imtrx][var];
+
+		  J = lec->J[peqn][pvar][i];
+
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		    {
+		      phi_j = bf[var]->phi[j];
+
+		      source = 0.;
+
+		      if( source_on)
+			{
+
+			  if ( foam_volume_source_on )
+			    {
+			      source = dFVS_dMOM[b][j];
+			    }
+
+			  source *= phi_i * d_area;
+			  source *= source_etm;
+			}
+
+		      J[j] += source;
+		    }
+		}
+	    }
+
+	  var = DENSITY_EQN;
+	  if ( pdv[var] )
+	    {
+	      pvar = upd->vp[pg->imtrx][var];
+
+	      J = lec->J[peqn][pvar][i];
+
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  phi_j = bf[var]->phi[j];
+
+		  source = 0.;
+
+		  if( source_on)
+		    {
+
+		      if ( foam_volume_source_on )
+			{
+			  source = dFVS_drho[j];
+			}
+
+		      source *= phi_i * d_area;
+		      source *= source_etm;
+		    }
+
+		  J[j] += source;
+		}
+	    }
+
 	}
     }
+  
   return(status);
 }
 
@@ -8748,6 +9055,24 @@ load_fv(void)
 	fv->vlambda += *esp->vlambda[i] * bf[v]->phi[i];
     }
 
+  for( p=0; pdgv[MOMENT0] && p<MAX_MOMENTS; p++)
+    {
+      v = MOMENT0 + p;
+      if ( pdgv[v] )
+	{
+	  scalar_fv_fill(esp->moment[p], esp_dot->moment[p], esp_old->moment[p], bf[v]->phi, ei[pd->mi[v]]->dof[v],
+			 &(fv->moment[p]), &(fv_dot->moment[p]), &(fv_old->moment[p]));
+	}
+    }
+
+  if (pdgv[DENSITY_EQN])
+    {
+      v = DENSITY_EQN;
+      scalar_fv_fill(esp->rho, esp_dot->rho, esp_old->rho, bf[v]->phi, ei[pd->mi[v]]->dof[v],
+		     &(fv->rho), &(fv_dot->rho), &(fv_old->rho));
+      stateVector[v] = fv->rho;
+    }
+
   /*
    * External...
    */
@@ -10552,7 +10877,51 @@ load_fv_grads(void)
 	}
     } else if ( zero_unused_grads && upd->vp[pg->imtrx][LIGHT_INTD] == -1 ) {
     for (p=0; p<VIM; p++) fv->grad_poynt[2][p] = 0.0;
-  } 
+  }
+
+  if (pd->gv[MOMENT0])
+    {
+      for (r = 0; r < MAX_MOMENTS; r++ )
+	{
+	  v = MOMENT0 + r;
+	  dofs = ei[pg->imtrx]->dof[v];
+
+	  for (p = 0; p < VIM; p++)
+	    {
+	      fv->grad_moment[r][p] = 0.0;
+
+	      for ( i=0; i<dofs; i++)
+		{
+		  fv->grad_moment[r][p] += *esp->moment[r][i] * bf[v]->grad_phi[i] [p];
+		}
+	    }
+	}
+    }
+
+  if ( pd->gv[DENSITY_EQN] )
+    {
+      v = DENSITY_EQN;
+      dofs  = ei[pg->imtrx]->dof[v];
+#ifdef DO_NO_UNROLL
+      for ( p=0; p<VIM; p++)
+	{
+	  fv->grad_rho[p] = 0.0;
+
+	  for ( i=0; i<dofs; i++)
+	    {
+	      fv->grad_rho[p] += *esp->rho[i] * bf[v]->grad_phi[i] [p];
+	      fv_old->grad_rho[p] += *esp_old->rho[i] * bf[v]->grad_phi[i] [p]
+		}
+	}
+#else
+      grad_scalar_fv_fill( esp->rho, bf[v]->grad_phi, dofs, fv->grad_rho);
+    } else if ( zero_unused_grads &&  upd->vp[pg->imtrx][DENSITY_EQN] == -1 ) {
+    for (p=0; p<VIM; p++) fv->grad_rho[p] = 0.0;
+  }
+
+#endif
+
+
 
  /*
   * External 
@@ -10841,6 +11210,35 @@ load_fv_mesh_derivs(int okToZero)
     }
   
   
+  int mom;
+  for (mom = 0; mom < MAX_MOMENTS; mom++) {
+    v = MOMENT0 + mom;
+    if (pd->gv[v]) {
+      bfv = bf[v];
+      vdofs  = ei[pg->imtrx]->dof[v];
+
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_moment_dmesh[mom][0][0][0]),0, siz);
+      for ( i=0; i<vdofs; i++)
+	{
+	  for (p = 0; p < dimNonSym; p++)
+	    {
+	      for ( b=0; b < dim; b++)
+		{
+		  for ( j=0; j<mdofs; j++)
+		    {
+		      fv->d_grad_moment_dmesh[mom][p] [b][j] +=
+			(*esp->moment[mom][i])  *  bfv->d_grad_phi_dmesh[i][p] [b][j];
+		    }
+		}
+	    }
+	}
+
+    } else if (upd->vp[pg->imtrx][v] != -1 && !is_initialized && okToZero) {
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_moment_dmesh[mom][0][0][0]),0, siz);
+    }
+  }
 
   /*
    * d(grad(V))/dmesh
@@ -13921,6 +14319,80 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	}
       
     }
+  else if (mp->DensityModel == DENSITY_FOAM_PBE)
+    {
+      int species_BA_g;
+      int species_CO2_g;
+      int species_CO2_l;
+      int species_BA_l;
+      int err;
+      err = get_foam_pbe_indices(NULL, NULL, &species_BA_l, &species_BA_g, &species_CO2_l, &species_CO2_g);
+      if (err) return 0;
+
+      double M_BA = mp->u_species_source[species_BA_l][0];
+      double M_CO2 = mp->u_species_source[species_CO2_l][0];
+      double rho_bubble = 0;
+      double rho_foam = mp->u_density[0];
+      double ref_press = mp->u_density[1];
+      double Rgas_const = mp->u_density[2];
+
+      if (fv->c[species_BA_g] > 0 || fv->c[species_CO2_g] > 0) {
+	rho_bubble = (ref_press/(Rgas_const*fv->T)) *
+	  (fv->c[species_CO2_g]*M_CO2 + fv->c[species_BA_g]*M_BA)/(fv->c[species_CO2_g] + fv->c[species_BA_g]);
+      }
+
+      double inv_mom_frac = 1/(1 + fv->moment[1]);
+      rho = rho_bubble*(fv->moment[1]*inv_mom_frac) + rho_foam*inv_mom_frac;
+
+      if (d_rho != NULL) {
+	var = TEMPERATURE;
+	if (pd->v[var] )
+	  {
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	      {
+		d_rho->T[j] = (-rho_bubble)/fv->T * (fv->moment[1]*inv_mom_frac) * bf[var]->phi[j];
+	      }
+	  }
+
+	var = MOMENT1;
+	if (pd->v[var] )
+	  {
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	      {
+		d_rho->moment[1][j] = (rho_bubble * inv_mom_frac * inv_mom_frac -
+				       rho_foam * inv_mom_frac * inv_mom_frac) * bf[var]->phi[j];
+	      }
+	  }
+
+	var = MASS_FRACTION;
+	if (pd->v[var])
+	  {
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+	      {
+		if (fv->c[species_BA_g] > 0 || fv->c[species_CO2_g] > 0) {
+		  d_rho->C[species_BA_g][j] = (fv->moment[1]*inv_mom_frac) * bf[var]->phi[j] * (ref_press/(Rgas_const*fv->T)) *
+		    ((M_BA - M_CO2)*fv->c[species_CO2_g])/
+		    ((fv->c[species_CO2_g] + fv->c[species_BA_g]) * (fv->c[species_CO2_g] + fv->c[species_BA_g]));
+
+		  d_rho->C[species_CO2_g][j] = (fv->moment[1]*inv_mom_frac) * bf[var]->phi[j] * (ref_press/(Rgas_const*fv->T)) *
+		    ((M_CO2-M_BA)*fv->c[species_BA_g])/
+		    ((fv->c[species_CO2_g] + fv->c[species_BA_g]) * (fv->c[species_CO2_g] + fv->c[species_BA_g]));
+		}
+	      }
+	  }
+      }
+    }
+  else if (mp->DensityModel == DENSITY_FOAM_PBE_EQN)
+    {
+      rho = fv->rho;
+
+      var = DENSITY_EQN;
+      if (d_rho !=NULL) {
+	for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+	  d_rho->rho[j] = bf[var]->phi[j];
+	}
+      }
+    }
   else if (mp->DensityModel == DENSITY_FOAM_CONC)
     {
       double Rgas, MW_f, MW_a, rho_epoxy, rho_fluor, T, Press;
@@ -14559,6 +15031,11 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 		tmp*3.*mp->u_thermal_conductivity[3]))*bf[var]->phi[j];
 	    }
 	}
+    }
+  else if (mp->ConductivityModel == FOAM_PBE)
+    {
+
+      k = foam_pbe_conductivity(d_k, time);
     }
   else if (mp->ConductivityModel == TABLE )
     {
@@ -28877,7 +29354,11 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   else if (mp->HeatSourceModel == HS_FOAM )
   {
       h = foam_heat_source(d_h, tt, dt);
-  }  
+  }
+  else if (mp->HeatSourceModel == HS_FOAM_PBE )
+    {
+      h = foam_pbe_heat_source(d_h, tt, dt);
+    }
   else if (mp->HeatSourceModel == USER_GEN )
     {
       if ( d_h == NULL )

@@ -48,7 +48,7 @@
 #include "mm_mp.h"
 #include "mm_species.h"
 #include "mm_std_models.h"
-
+#include "mm_fill_population.h"
 #include "mm_eh.h"
 
 #include "mm_fill_jac.h"
@@ -773,7 +773,66 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 	      }
 	    }
 	}
-  } else if (matrl->DensityModel == SOLVENT_POLYMER )
+
+    } else if (matrl->DensityModel == DENSITY_FOAM_PBE)
+    {
+      int species_BA_g;
+      int species_CO2_g;
+      int species_CO2_l;
+      int species_BA_l;
+      int err;
+      int var;
+      err = get_foam_pbe_indices(NULL, NULL, &species_BA_l, &species_BA_g, &species_CO2_l, &species_CO2_g);
+      if (err) return 0;
+
+      double M_BA = mp->u_species_source[species_BA_l][0];
+      double M_CO2 = mp->u_species_source[species_CO2_l][0];
+      double rho_bubble = 0;
+      double rho_foam = matrl->u_density[0];
+      double ref_press = matrl->u_density[1];
+      double Rgas_const = matrl->u_density[2];
+      double d_rho_dT = 0;
+      double d_rho_dM1 = 0;
+
+      if (fv->c[species_BA_g] > 0 || fv->c[species_CO2_g] > 0) {
+	rho_bubble = (ref_press/(Rgas_const*fv->T)) *
+	  (fv->c[species_CO2_g]*M_CO2 + fv->c[species_BA_g]*M_BA)/(fv->c[species_CO2_g] + fv->c[species_BA_g]);
+      }
+
+      double inv_mom_frac = 1/(1 + fv->moment[1]);
+      rho = rho_bubble*(fv->moment[1]*inv_mom_frac) + rho_foam*inv_mom_frac;
+
+
+      if(doJac)
+	{
+	  var = TEMPERATURE;
+	  if (pd->v[var] )
+	    {
+	      d_rho_dT = (-rho)/fv->T;
+	      propertyJac_addEnd(densityJac, var, matID, 0, d_rho_dT, rho);
+	    }
+
+	  var = MOMENT1;
+	  if (pd->v[var] )
+	    {
+	      d_rho_dM1 = 2 * inv_mom_frac * inv_mom_frac;
+	      propertyJac_addEnd(densityJac, var, matID, 0, d_rho_dM1, rho);
+	    }
+	}
+    } else if (matrl->DensityModel == DENSITY_FOAM_PBE_EQN)
+    {
+      rho = fv->rho;
+
+      if(doJac)
+	{
+	  int var = DENSITY_EQN;
+	  if (pd->v[var])
+	    {
+	      propertyJac_addEnd(densityJac, var, matID, 0, 1, rho);
+	    }
+	}
+
+    } else if (matrl->DensityModel == SOLVENT_POLYMER )
 
     /* assume Amagat's law, no volume change upon
      * mixing. ACS

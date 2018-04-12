@@ -54,7 +54,7 @@
 #include "mm_fill_fill.h"
 #include "mm_fill_stress.h"
 #include "mm_fill_shell.h"
-
+#include "mm_fill_population.h"
 #include "exo_struct.h"
 #include "dpi.h"
 
@@ -1986,6 +1986,27 @@ matrix_fill(
 	  CHECKFINITE("assemble_pmomentum");
 #endif
 	}
+
+      if( pde[R_MOMENT0] ||
+	  pde[R_MOMENT1] ||
+	  pde[R_MOMENT2] ||
+	  pde[R_MOMENT3] )
+	{
+	  err = assemble_moments(time_value, theta, delta_t, &pg_data);
+          EH( err, "assemble_moments");
+#ifdef CHECK_FINITE
+	  CHECKFINITE("assemble_moments");
+#endif
+	}
+      if( pde[R_DENSITY_EQN] )
+	{
+	  err = assemble_density();
+          EH( err, "assemble_density");
+#ifdef CHECK_FINITE
+	  CHECKFINITE("assemble_density");
+#endif
+	}
+
 
       if( pde[R_FILL] )
 	{

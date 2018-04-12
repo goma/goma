@@ -305,6 +305,7 @@ struct Material_Properties
   dbl d_rho_dT[MDE];
   dbl d_rho_dC[MAX_CONC][MDE];
 
+  int PBE_BA_Type;
     
   int Spwt_funcModel;
   dbl Spwt_func;

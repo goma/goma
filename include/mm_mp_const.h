@@ -69,7 +69,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define INGBER 18   /* heat generation by acoustics */
 #define GRAV_VIBRATIONAL 19   /* momentum source for gravity + vibration */
 #define MELT             20  /* Lubrication source term model*/
-
+#define HS_FOAM_PBE 21
 
 
 /* MMH */
@@ -156,6 +156,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
                                     */
 #define DENSITY_SUSPENSION_PM 14     /* special model for this system */
 #define DENSITY_THERMAL_BATTERY  905 /* special density model for thermal bat work */
+#define DENSITY_FOAM_PBE 34
+#define DENSITY_FOAM_PBE_EQN 35
+
 /**********************************************************************************/
 
 /*
@@ -169,6 +172,13 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 
 #define CHEMPOT_IDEALSOLN   4
 #define CHEMPOT_STOICHPHASE 5
+
+
+/*
+ * PBE Types
+ */
+#define PBE_R_11 0
+#define PBE_N_PENTANE 1
 
 
 /* #define FILL xxx already defined in rf_fem_const.h */
@@ -231,6 +241,12 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define SYLGARD    28         /* Sylgard viscosity model */
 #define PRANDTL_MIXING 29     /* Shell Turbulent Viscosity Model */
 
+#define FOAM_PBE_WATER	34
+#define FOAM_PBE_OH	35
+#define FOAM_PBE_CO2_L	36
+#define FOAM_PBE_CO2_G	37
+#define FOAM_PBE_BA_L	38
+#define FOAM_PBE_BA_G	39
 
 
 /*
@@ -253,7 +269,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define CONSTANT_MELT 25     /* Shell Energy Source QCONV model */
 #define CONSTANT_MELT_TURB 26    /* Shell Energy Source QCONV model */
 #define LUBRICATION_FRICTION 27  /* Shell energy source VD model with solid-solid friction */
-
+#define HSM_FOAM_PBE 34
 /*
  *  Viscosity modeling
  *      -> HKM separated out the individual sections
@@ -401,6 +417,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 /*Various thermophysical property models */
 #define ENTHALPY 4
 #define THERMAL_HEAT  45
+#define FOAM_PBE 46
 
 /*Electrode-kinetics Species Source model: KSC 10/13/98 */
 #define ELECTRODE_KINETICS 904

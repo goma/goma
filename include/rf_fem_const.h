@@ -437,6 +437,11 @@
 #define LIGHT_INTP            180 /*  Light Intensity - Plus direction propagation-RBS*/
 #define LIGHT_INTM            181 /*  Light Intensity - Minus direction propagation-RBS*/
 #define LIGHT_INTD            182 /*  Light Intensity - Scattering Dispersion-RBS*/
+#define MOMENT0               183
+#define MOMENT1               184
+#define MOMENT2               185
+#define MOMENT3               186
+#define DENSITY_EQN           187
 
 /*
  * define a variable to hold an external field which will be 
@@ -793,7 +798,12 @@
 #define R_LIGHT_INTP            180 /*  Light Intensity - Plus direction propagation*/
 #define R_LIGHT_INTM            181 /*  Light Intensity - Minus direction propagation*/
 #define R_LIGHT_INTD            182 /*  Light Intensity - Scattering Dispersion*/
-#define V_LAST		        183
+#define R_MOMENT0               183
+#define R_MOMENT1               184
+#define R_MOMENT2               185
+#define R_MOMENT3               186
+#define R_DENSITY_EQN           187
+#define V_LAST		        188
 
 
 /* MMH
@@ -949,6 +959,7 @@
 #define MAX_NUM_MATRICES 6          /* Maximum number of matrices to be solved in segregated solver fashion */
 #endif
 
+#define MAX_MOMENTS 4
 
 /*
  * Magic numbers for adaptive time step selection -- how much acceleration,

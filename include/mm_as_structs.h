@@ -530,6 +530,8 @@ struct Element_Variable_Pointers
   dbl *max_strain[MDE];                       /* Maximum Von Mises strain */
   dbl *cur_strain[MDE];                       /* Von Mises strain */
   dbl *poynt[DIM][MDE];				/* Poynting Vector for light intensity */
+  dbl *moment[MAX_MOMENTS][MDE];     	                /* moments */
+  dbl *rho[MDE];
 };
 
 /*___________________________________________________________________________*/
@@ -635,6 +637,8 @@ struct Element_Stiffness_Pointers
   dbl **max_strain;              /* max_strain[MDE], maximum Von Mises strain */
   dbl **cur_strain;              /* cur_strain[MDE], Von Mises strain */
   dbl ***poynt;		      	 /* *v[DIM][MDE], velocity */
+  dbl ***moment;	                 /* *moment[MAX_MOMENTS][MDE], moments */
+  dbl **rho;
 
 
   /*
@@ -1614,6 +1618,9 @@ struct Field_Variables
   dbl max_strain;              /* Maximum Von Mises strain */
   dbl cur_strain;              /* Von Mises strain */
   dbl poynt[DIM];			/* Poynting Vector */
+  dbl moment[MAX_MOMENTS];
+  dbl rho;
+
   /*
    * Grads of scalars...
    */
@@ -1622,6 +1629,8 @@ struct Field_Variables
   dbl grad_P[DIM];		/* Gradient of pressure. */
   dbl grad_P_star[DIM];            /* Gradient of pressure. */
   dbl grad_c[MAX_CONC][DIM];	/* Gradient of concentration(s). */
+  dbl grad_moment[MAX_MOMENTS][DIM];	/* Gradient of moments */
+  dbl grad_rho[DIM];		/* Gradient of density. */
   dbl grad_F[DIM];		/* Gradient of fill. */
   dbl grad_H[DIM];		/* Gradient of curvature. */
   dbl grad_V[DIM];		/* Gradient of voltage potential. */
@@ -1732,6 +1741,9 @@ struct Field_Variables
   dbl d_grad_V_dmesh[DIM] [DIM][MDE];
   dbl d_grad_qs_dmesh[DIM] [DIM][MDE];
   dbl d_grad_F_dmesh[DIM] [DIM][MDE];
+
+  dbl d_grad_moment_dmesh[MAX_MOMENTS][DIM] [DIM][MDE];
+
   dbl d_grad_SH_dmesh[DIM] [DIM][MDE];
 
   dbl d_grad_c_dmesh[DIM][MAX_CONC] [DIM][MDE];
@@ -1940,6 +1952,8 @@ struct Diet_Field_Variables
   dbl max_strain;              /* Maximum Von Mises strain */
   dbl cur_strain;              /* Von Mises strain */
   dbl poynt[DIM];			/* Poynting Vector */
+  dbl moment[MAX_MOMENTS];
+  dbl rho;
 
   /*  
    * Gradients... concentration is the only one we use in the
@@ -2769,6 +2783,7 @@ struct heat_flux_dependence
   double C[DIM][MAX_CONC][MDE];
   double X[DIM][DIM][MDE];
   double F[DIM][MDE];
+  double moment[MAX_MOMENTS][DIM][MDE];
 };
 typedef struct heat_flux_dependence HEAT_FLUX_DEPENDENCE_STRUCT;
 
@@ -2836,6 +2851,8 @@ struct density_dependence
   double C[MAX_CONC][MDE];
   double F[MDE];
   double pf[MAX_PHASE_FUNC][MDE];  /* phase function */
+  double moment[MAX_MOMENTS][MDE];
+  double rho[MDE];
 };
 typedef struct density_dependence DENSITY_DEPENDENCE_STRUCT;
 
@@ -2872,6 +2889,7 @@ struct conductivity_dependence
   double T[MDE];           /* temperature dependence. */
   double C[MAX_CONC][MDE]; /* conc dependence. */
   double F[MDE];           /* FILL dependence. */
+  double moment[MAX_MOMENTS][MDE];
 };
 typedef struct conductivity_dependence CONDUCTIVITY_DEPENDENCE_STRUCT;
 

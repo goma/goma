@@ -8935,6 +8935,16 @@ rd_eq_specs(FILE *ifp,
       ce = set_eqn(R_PHASE5, mtrx_index0, pd_ptr);
    } else if (!strcasecmp(ts, "Enorm"))  {
       ce = set_eqn(R_ENORM, mtrx_index0, pd_ptr);
+    } else if (!strcasecmp(ts, "moment0")) {
+      ce = set_eqn(R_MOMENT0, mtrx_index0, pd_ptr);
+    } else if (!strcasecmp(ts, "moment1")) {
+      ce = set_eqn(R_MOMENT1, mtrx_index0, pd_ptr);
+    } else if (!strcasecmp(ts, "moment2")) {
+      ce = set_eqn(R_MOMENT2, mtrx_index0, pd_ptr);
+    } else if (!strcasecmp(ts, "moment3")) {
+      ce = set_eqn(R_MOMENT3, mtrx_index0, pd_ptr);
+    } else if (!strcasecmp(ts, "density")) {
+      ce = set_eqn(R_DENSITY_EQN, mtrx_index0, pd_ptr);
 
     } else if (!strcasecmp(ts, "porous_sat"))  {
       ce = set_eqn(R_POR_LIQ_PRES, mtrx_index0, pd_ptr);
@@ -9524,6 +9534,16 @@ rd_eq_specs(FILE *ifp,
 
     } else if (!strcasecmp(ts, "ENORM")) {
       cv = set_var(ENORM, mtrx_index0, pd_ptr);
+    } else if (!strcasecmp(ts, "MOM0")) {
+      cv = set_var(MOMENT0, mtrx_index0, pd_ptr);
+    } else if (!strcasecmp(ts, "MOM1")) {
+      cv = set_var(MOMENT1, mtrx_index0, pd_ptr);
+    } else if (!strcasecmp(ts, "MOM2")) {
+      cv = set_var(MOMENT2, mtrx_index0, pd_ptr);
+    } else if (!strcasecmp(ts, "MOM3")) {
+      cv = set_var(MOMENT3, mtrx_index0, pd_ptr);
+    } else if (!strcasecmp(ts, "RHO_EQN")) {
+      cv = set_var(DENSITY_EQN, mtrx_index0, pd_ptr);
     } else if (!strncasecmp(ts, "Sp", 2)) {
       if (!strcasecmp(ts, "Sp")) {
 	cv = SPECIES_UNK_0;
@@ -9797,6 +9817,7 @@ rd_eq_specs(FILE *ifp,
     case R_GRAD_S_V_DOT_N1:
     case R_GRAD_S_V_DOT_N2:
     case R_GRAD_S_V_DOT_N3:
+    case R_DENSITY_EQN:
       /* In case this actually gets used for a boolean anywhere ... */
       pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = 1.0;
       break;
@@ -9928,7 +9949,12 @@ rd_eq_specs(FILE *ifp,
     case R_PHASE5:
     case R_ACOUS_REYN_STRESS:
     case R_SHELL_LUBP:
-	case R_POR_SINK_MASS:
+    case R_POR_SINK_MASS:
+    case MOMENT0:
+    case MOMENT1:
+    case MOMENT2:
+    case MOMENT3:
+
 
 	if ( fscanf(ifp, "%lf %lf %lf", 
 		    &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),

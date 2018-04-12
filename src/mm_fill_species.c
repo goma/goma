@@ -45,7 +45,7 @@
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
+#include "mm_fill_population.h"
 #include "mm_eh.h"
 
 #ifdef USE_CHEMKIN
@@ -10607,6 +10607,21 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	}
       }
 
+      else if (mp->SpeciesSourceModel[w] == FOAM_PBE_WATER) {
+	foam_pbe_conversion_water(st, time, tt, dt);
+      } else if (mp->SpeciesSourceModel[w] == FOAM_PBE_OH) {
+	foam_pbe_conversion_OH(st, time, tt, dt);
+      } else if (mp->SpeciesSourceModel[w] == FOAM_PBE_BA_G) {
+	foam_pbe_ba_gas_source(st, time, tt, dt);
+      } else if (mp->SpeciesSourceModel[w] == FOAM_PBE_BA_L) {
+	foam_pbe_ba_liquid_source(st, time, tt, dt);
+      } else if (mp->SpeciesSourceModel[w] == FOAM_PBE_CO2_G) {
+	foam_pbe_co2_gas_source(st, time, tt, dt);
+      } else if (mp->SpeciesSourceModel[w] == FOAM_PBE_CO2_L) {
+	foam_pbe_co2_liquid_source(st, time, tt, dt);
+      }
+
+
       else if (mp->SpeciesSourceModel[w]  == CONSTANT )
       {
 	st->MassSource[w]    = mp->species_source[w];
@@ -10614,6 +10629,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	 *  the initial memset of st - hopefully!
 	 */
       }
+
 
       else if (mp->SpeciesSourceModel[w]  == ION_REACTIONS) /*  RSL 6/6/02  */
          ; /*  this just prevents an error message from being printed  */
