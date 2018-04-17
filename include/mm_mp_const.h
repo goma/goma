@@ -69,7 +69,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define INGBER 18   /* heat generation by acoustics */
 #define GRAV_VIBRATIONAL 19   /* momentum source for gravity + vibration */
 #define MELT             20  /* Lubrication source term model*/
-
+#define HS_FOAM_PMDI_10 23
 
 
 /* MMH */
@@ -156,6 +156,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
                                     */
 #define DENSITY_SUSPENSION_PM 14     /* special model for this system */
 #define DENSITY_THERMAL_BATTERY  905 /* special density model for thermal bat work */
+#define DENSITY_FOAM_PMDI_10 20
 /**********************************************************************************/
 
 /*
@@ -230,7 +231,11 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define BINGHAM_WLF    27         /* Bingham WLF viscosity model */
 #define SYLGARD    28         /* Sylgard viscosity model */
 #define PRANDTL_MIXING 29     /* Shell Turbulent Viscosity Model */
+#define FOAM_PMDI_10              40
 
+#define FOAM_PMDI_10_RXN              41
+#define FOAM_PMDI_10_H2O              42
+#define FOAM_PMDI_10_CO2              43
 
 
 /*

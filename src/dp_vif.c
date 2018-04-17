@@ -1709,7 +1709,6 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->Light_AbsorptionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Shell_User_ParModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->PermittivityModel, 1, MPI_INT);
-
       /* External field indeces PRS 10-1-2013 (shutdown times) */
 
       ddd_add_member(n,&mp_glob[i]->porosity_external_field_index, 1, MPI_INT);
@@ -2145,6 +2144,10 @@ noahs_ark()
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->heatcapacity, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->heatcapacitymask[0], 2, MPI_INT);
 
+	  ddd_add_member(n, &mp_glob[i]->mp2nd->HeatSourceModel, 1, MPI_INT);
+	  ddd_add_member(n, &mp_glob[i]->mp2nd->heatsource, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &mp_glob[i]->mp2nd->heatsourcemask[0], 2, MPI_INT);
+
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->ThermalConductivityModel, 1, MPI_INT);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->thermalconductivity, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->thermalconductivitymask[0], 2, MPI_INT);
@@ -2172,6 +2175,14 @@ noahs_ark()
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->LightAbsorptionModel, 1, MPI_INT);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->lightabsorption, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->lightabsorptionmask[0], 2, MPI_INT);
+
+	  int w;
+	  for (w = 0; w < MAX_CONC; w++) {
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->SpeciesSourceModel[w], 1, MPI_INT);
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->speciessource[w], 1, MPI_DOUBLE);
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->speciessourcemask[0][w], 1, MPI_INT);
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->speciessourcemask[1][w], 1, MPI_INT);
+	  }
 	}
 
       /*

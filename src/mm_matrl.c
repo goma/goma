@@ -559,6 +559,51 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 	}
     
     }
+  else if (mp->DensityModel == DENSITY_FOAM_PMDI_10)
+    {
+      int var, j;
+      int w;
+      double volF = mp->volumeFractionGas;
+
+      double M_CO2 = mp->u_density[0];
+      double rho_liq = mp->u_density[1];
+      double ref_press = mp->u_density[2];
+      double Rgas_const = mp->u_density[3];
+
+      double rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
+
+      rho = rho_gas * volF + rho_liq * (1 - volF);
+
+      /* Now do sensitivies */
+
+      var = MASS_FRACTION;
+      if (volF > 0. && doJac)
+	{
+	  if (pd->v[pg->imtrx][var] )
+	    {
+	      for (w = 0; w < pd->Num_Species; w++) {
+		double drhodC =  (rho_gas * mp->d_volumeFractionGas[MAX_VARIABLE_TYPES+w] -
+				  rho_liq *  mp->d_volumeFractionGas[MAX_VARIABLE_TYPES+w]);
+		propertyJac_addEnd(densityJac, MASS_FRACTION,
+				   matID, w, drhodC, rho);
+	      }
+	    }
+	}
+
+      var = TEMPERATURE;
+      if(volF > 0. && doJac)
+	{
+	  if (pd->v[pg->imtrx][var] )
+	    {
+	      double drhoDT;
+	      drhoDT = (rho_gas/fv->T * volF + rho_gas * mp->d_volumeFractionGas[var] -
+			rho_liq*mp->d_volumeFractionGas[var]);
+	      propertyJac_addEnd(densityJac, TEMPERATURE, matID, 0,
+				 drhoDT, rho);
+	    }
+	}
+
+    }
   else if (matrl->DensityModel == LEVEL_SET)
     {
     double *param = matrl->u_density;

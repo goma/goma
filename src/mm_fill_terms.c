@@ -1388,7 +1388,7 @@ assemble_energy(double time,	/* present time value */
     }
   else if( mp->Ewt_funcModel == SUPG )
     {
-      if( !pd->e[pg->imtrx][R_MOMENTUM1])
+      if( !pd->gv[R_MOMENTUM1])
         EH(-1, " must have momentum equation velocity field for energy equation upwinding. You may want to turn it off");
       supg = mp->Ewt_func;
     }
@@ -4783,7 +4783,8 @@ assemble_continuity(dbl time_value,   /* current time */
                   if ( mp->DensityModel == DENSITY_FOAM || 
                        mp->DensityModel == DENSITY_FOAM_CONC || 
                        mp->DensityModel == DENSITY_FOAM_TIME ||
-                       mp->DensityModel == DENSITY_FOAM_TIME_TEMP)
+                       mp->DensityModel == DENSITY_FOAM_TIME_TEMP ||
+		       mp->DensityModel == DENSITY_FOAM_PMDI_10)
                     {
                       /* These density models locally permit a time and spatially varying
                          density.  Consequently, the Lagrangian derivative of the density
@@ -5440,7 +5441,8 @@ assemble_continuity(dbl time_value,   /* current time */
 			  if( mp->DensityModel == DENSITY_FOAM || 
 			      mp->DensityModel == DENSITY_FOAM_CONC || 
 			      mp->DensityModel == DENSITY_FOAM_TIME ||
-			      mp->DensityModel == DENSITY_FOAM_TIME_TEMP)
+			      mp->DensityModel == DENSITY_FOAM_TIME_TEMP ||
+			      mp->DensityModel == DENSITY_FOAM_PMDI_10)
 			    {
 			      source = sourceBase * d_h3detJ_dmesh_bj * wt + dFVS_dx[b][j] * d_area;
 			      source *= phi_i * source_etm;
@@ -14032,6 +14034,62 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	    }
 	}
     }
+  else if (mp->DensityModel == DENSITY_FOAM_PMDI_10)
+    {
+      int var, j;
+      int w;
+      double volF = mp->volumeFractionGas;
+
+      double M_CO2 = mp->u_density[0];
+      double rho_liq = mp->u_density[1];
+      double ref_press = mp->u_density[2];
+      double Rgas_const = mp->u_density[3];
+
+      double rho_gas = 0;
+
+      if (fv->T > 0) {
+	rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
+      }
+
+      rho = rho_gas * volF + rho_liq * (1 - volF);
+
+      /* Now do sensitivies */
+
+      var = MASS_FRACTION;
+      if (vol > 0. && d_rho != NULL )
+	{
+	  if (pd->v[pg->imtrx][var] )
+	    {
+	      for (w = 0; w < pd->Num_Species; w++) {
+		for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		  {
+		    d_rho->C[w][j] = (rho_gas * mp->d_volumeFractionGas[MAX_VARIABLE_TYPES+w] -
+				      rho_liq *  mp->d_volumeFractionGas[MAX_VARIABLE_TYPES+w])  * bf[var]->phi[j];
+		  }
+	      }
+	    }
+	}
+
+      var = TEMPERATURE;
+      if(d_rho != NULL )
+	{
+	  if (pd->v[pg->imtrx][var] )
+	    {
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  if (fv->T > 0) {
+		    d_rho->T[j] = (-rho_gas/fv->T * volF + rho_gas * mp->d_volumeFractionGas[var] -
+				   rho_liq*mp->d_volumeFractionGas[var]) * bf[var]->phi[j];
+		  } else {
+		    d_rho->T[j] = (rho_gas * mp->d_volumeFractionGas[var] -
+				   rho_liq*mp->d_volumeFractionGas[var]) * bf[var]->phi[j];
+		  }
+
+		}
+	    }
+	}
+
+    }
   else if (mp->DensityModel == SUSPENSION) {
     species = (int) mp->u_density[0];
     rho_f   = mp->u_density[1];
@@ -14560,6 +14618,52 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 	    }
 	}
     }
+  else if (mp->ConductivityModel == FOAM_PMDI_10 )
+    {
+      double rho;
+      DENSITY_DEPENDENCE_STRUCT d_rho_struct;
+      DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+
+      rho = density(d_rho, time);
+      if (mp->len_u_thermal_conductivity < 2) {
+	EH(-1, "Expected at least 2 constants for thermal conductivity FOAM_PMDI_10");
+	return 0;
+      }
+      if (mp->DensityModel != DENSITY_FOAM_PMDI_10) {
+	EH(-1, "FOAM_PMDI_10 Thermal conductivity requires FOAM_PMDI_10 density");
+	return 0;
+      }
+
+      double k_liq = mp->u_thermal_conductivity[0];
+      double k_gas = mp->u_thermal_conductivity[1];
+
+      double rho_liq = mp->u_density[1];
+
+      mp->thermal_conductivity = (2.0/3.0) * (rho / rho_liq) * k_liq + (1 - rho / rho_liq) * k_gas;
+
+      k    = mp->thermal_conductivity;
+
+      var = TEMPERATURE;
+      if( pd->v[pg->imtrx][var] && d_k != NULL )
+	{
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	    {
+	      d_k->T[j] = (2.0/3.0) * (d_rho->T[j] / rho_liq) * k_liq + (1 - d_rho->T[j] / rho_liq) * k_gas;
+	    }
+	}
+
+      int w;
+      var = MASS_FRACTION;
+      if( pd->v[pg->imtrx][var] && d_k != NULL )
+	{
+	  for (w = 0; w < pd->Num_Species_Eqn; w++) {
+	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	      {
+		d_k->C[w][j] = (2.0/3.0) * (d_rho->C[w][j] / rho_liq) * k_liq + (1 - d_rho->C[w][j] / rho_liq) * k_gas;
+	      }
+	  }
+	}
+    }
   else if (mp->ConductivityModel == TABLE )
     {
       struct  Data_Table *table_local; 
@@ -14779,6 +14883,10 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
   else if (mp->HeatCapacityModel == ENTHALPY )
     {
       Cp = enthalpy_heat_capacity_model( d_Cp );
+    }
+  else if (mp->HeatCapacityModel == FOAM_PMDI_10 )
+    {
+      Cp = foam_pmdi_10_heat_cap( d_Cp, time );
     }
   else if (mp->HeatCapacityModel == LEVEL_SET )
     {
@@ -18055,6 +18163,225 @@ double FoamVolumeSource(double time,
 	}
 	
     }
+  else if (mp->DensityModel == DENSITY_FOAM_PMDI_10)
+    {
+      int wCO2;
+      int wH2O;
+      int w;
+      DENSITY_DEPENDENCE_STRUCT d_rho_struct;
+      DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+
+      rho = density(d_rho, time);
+
+      wCO2 = -1;
+      wH2O = -1;
+      for (w = 0; w < pd->Num_Species; w++) {
+	switch (mp->SpeciesSourceModel[w]) {
+	case FOAM_PMDI_10_CO2:
+	  wCO2 = w;
+	  break;
+	case FOAM_PMDI_10_H2O:
+	  wH2O = w;
+	  break;
+	default:
+	  break;
+	}
+      }
+
+      if (wCO2 == -1) {
+	EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2");
+      } else if (wH2O == -1) {
+	EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+      }
+
+      double M_CO2 = mp->u_density[0];
+      double rho_liq = mp->u_density[1];
+      double ref_press = mp->u_density[2];
+      double Rgas_const = mp->u_density[3];
+      double rho_gas = 0;
+
+      if (fv->T > 0) {
+	rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
+      }
+
+
+      double nu = 0;
+      double d_nu_dC = 0;
+      double d_nu_dT = 0;
+
+      double nu_dot = 0;
+      double d_nu_dot_dC = 0;
+      double d_nu_dot_dT = 0;
+
+      double grad_nu[DIM];
+      double d_grad_nu_dC[DIM][MDE];
+      double d_grad_nu_dT[DIM];
+
+      if (fv->T > 0) {
+	nu = M_CO2 * fv->c[wCO2] / rho_gas;
+	d_nu_dC = M_CO2 / rho_gas;
+	d_nu_dT = M_CO2 * fv->c[wCO2] * Rgas_const / (ref_press * M_CO2);
+
+	nu_dot = M_CO2 * fv_dot->c[wCO2] / rho_gas;
+	d_nu_dot_dC = M_CO2 * (1 + 2*tt) / (dt * rho_gas);
+	d_nu_dot_dT = M_CO2 * fv_dot->c[wCO2] * Rgas_const / (ref_press * M_CO2);
+
+	for (a = 0; a < dim; a++) {
+	  grad_nu[a] = M_CO2 * fv->grad_c[wCO2][a] / rho_gas;
+	  if (af->Assemble_Jacobian) {
+	    d_grad_nu_dT[a] = M_CO2 * fv->grad_c[wCO2][a] * Rgas_const / (ref_press * M_CO2);
+	    for (j = 0; j < ei[pd->mi[MASS_FRACTION]]->dof[MASS_FRACTION]; j++) {
+	      d_grad_nu_dC[a][j] = M_CO2 * bf[MASS_FRACTION]->grad_phi[j][a] / rho_gas;
+	    }
+	  }
+	}
+      } else {
+	nu = 0;
+	d_nu_dC = 0;
+	d_nu_dT = 0;
+
+	nu_dot = 0;
+	d_nu_dot_dC = 0;
+	d_nu_dot_dT = 0;
+
+	for (a = 0; a < dim; a++) {
+	  grad_nu[a] = 0;
+	  if (af->Assemble_Jacobian) {
+	    d_grad_nu_dT[a] = 0;
+	    for (j = 0; j < ei[pd->mi[MASS_FRACTION]]->dof[MASS_FRACTION]; j++) {
+	      d_grad_nu_dC[a][j] = 0;
+	    }
+	  }
+	}
+
+      }
+
+      double inv1 = 1 / ( 1+ nu);
+      double inv2 = inv1*inv1;
+      double inv3 = inv1*inv2;
+
+      //double volF = nu * inv1;
+      //double d_volF_dC = (d_nu_dC) * inv2;
+      //double d_volF_dT = (d_nu_dT) * inv2;
+
+      double volF_dot = (nu_dot) * inv2;
+      double d_volF_dot_dC = (d_nu_dot_dC * (1 + nu) - nu_dot * 2 * d_nu_dC) * inv3;
+      double d_volF_dot_dT = (d_nu_dot_dT * (1 + nu) - nu_dot * 2 * d_nu_dT) * inv3;
+
+      double grad_volF[DIM];
+      double d_grad_volF_dC[DIM][MDE];
+      double d_grad_volF_dT[DIM];
+      for (a = 0; a < dim; a++) {
+	grad_volF[a] =  (grad_nu[a]) * inv2;
+	if (af->Assemble_Jacobian) {
+	  d_grad_volF_dT[a] = (d_grad_nu_dT[a] * (1 + nu) - 2 * grad_nu[a] * d_nu_dT) * inv3;
+	  for (j = 0; j < ei[pd->mi[MASS_FRACTION]]->dof[MASS_FRACTION]; j++) {
+	    d_grad_volF_dC[a][j] = (d_grad_nu_dC[a][j] * (1 + nu) - 2 * grad_nu[a] * d_nu_dC * bf[MASS_FRACTION]->phi[j]) * inv3;
+	  }
+	}
+      }
+
+      //double rho = rho_gas * volF + rho_liq * (1 - volF);
+      double rho_dot = rho_gas * volF_dot - rho_liq * volF_dot;
+      double d_rho_dot_dT = rho_gas * d_volF_dot_dT - rho_liq * d_volF_dot_dT;
+      if (fv->T > 0) {
+	d_rho_dot_dT = -(rho_gas/fv->T)*volF_dot + rho_gas * d_volF_dot_dT - rho_liq * d_volF_dot_dT;
+      }
+      double d_rho_dot_dC = rho_gas * d_volF_dot_dC - rho_liq * d_volF_dot_dC;
+
+      double grad_rho[DIM];
+      double d_grad_rho_dT[DIM][MDE];
+      double d_grad_rho_dC[DIM][MDE];
+
+      for (a = 0; a < dim; a++) {
+	grad_rho[a] = rho_gas * grad_volF[a] + rho_liq * (grad_volF[a]);
+	if (af->Assemble_Jacobian) {
+	  var = TEMPERATURE;
+	  for (j = 0; j < ei[pd->mi[var]]->dof[var]; j++) {
+	    d_grad_rho_dT[a][j] = rho_gas * d_grad_volF_dT[a] * bf[var]->phi[j] + rho_liq * (d_grad_volF_dT[a]*bf[var]->phi[j]);
+	    if (fv->T > 0) {
+	      d_grad_rho_dT[a][j] += -(rho_gas/fv->T)*bf[var]->phi[j]*grad_volF[a];
+	    }
+	  }
+
+	  var = MASS_FRACTION;
+	  for (j = 0; j < ei[pd->mi[var]]->dof[var]; j++) {
+	    d_grad_rho_dC[a][j] = rho_gas * d_grad_volF_dC[a][j] + rho_liq * (d_grad_volF_dC[a][j]);
+	  }
+	}
+      }
+
+      double inv_rho = 1/rho;
+
+      source = rho_dot;
+      for (a = 0; a < dim; a++) {
+	source += fv->v[a] * grad_rho[a];
+      }
+      source *= inv_rho;
+
+      if (af->Assemble_Jacobian)
+	{
+	  var = TEMPERATURE;
+	  if(pd->v[pg->imtrx][var] )
+	    {
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  source_a = d_rho_dot_dT*bf[var]->phi[j];
+		  source_b = 0;
+		  for (a = 0; a < dim; a++) {
+		    source_b += fv->v[a] * d_grad_rho_dT[a][j];
+		  }
+		  source_c = inv_rho*d_rho->T[j] * source;
+
+		  dFVS_dT[j] = inv_rho * (source_a + source_b) + source_c;
+		}
+	    }
+
+	  var = VELOCITY1;
+	  if(pd->v[pg->imtrx][var] )
+	    {
+	      for( a=0; a<dim; a++)
+		{
+		  var = VELOCITY1+a;
+		  for( j=0; pd->v[pg->imtrx][var] && j<ei[pg->imtrx]->dof[var]; j++)
+		    {
+		      dFVS_dv[a][j] = inv_rho * (bf[var]->phi[j] * grad_rho[a]);
+		    }
+		}
+	    }
+
+	  var = MASS_FRACTION;
+	  if(pd->v[pg->imtrx][var])
+	    {
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  source_a = d_rho_dot_dC*bf[var]->phi[j];
+		  source_b = 0;
+		  for (a = 0; a < dim; a++) {
+		    source_b += fv->v[a] * d_grad_rho_dC[a][j];
+		  }
+		  source_c = inv_rho*d_rho->C[wCO2][j] * source;
+
+		  dFVS_dC[wCO2][j] = inv_rho*(source_a + source_b) + source_c;
+		}
+	    }
+
+	  var = FILL;
+	  if(pd->v[pg->imtrx][var])
+	    {
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  source_c = inv_rho*d_rho->F[j] * source;
+
+		  dFVS_dC[wCO2][j] = source_c;
+		}
+	    }
+
+	}
+
+    }
+
+
 
   
   if (ls != NULL && mp->mp2nd != NULL &&
@@ -27496,6 +27823,7 @@ fluid_stress( double Pi[DIM][DIM],
   DILVISCOSITY_DEPENDENCE_STRUCT d_dilMu_struct;
   DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu = &d_dilMu_struct;
   int kappaWipesMu = 1;
+  dbl dilmuMult = 1.0;
 
   /* particle stress for suspension balance model*/
   dbl tau_p[DIM][DIM];
@@ -27874,7 +28202,8 @@ fluid_stress( double Pi[DIM][DIM],
    */
   if (mp->DilationalViscosityModel != DILVISCM_KAPPAWIPESMU) {
     kappa = dil_viscosity(gn, gamma, mu, d_mu, d_dilMu);
-    kappa = 0.0;
+    dilmuMult = mp->dilationalViscosityMultiplier;
+    //kappa = 0.0;
     kappaWipesMu = 0;
   }
 
@@ -27895,7 +28224,7 @@ fluid_stress( double Pi[DIM][DIM],
 
       // Add in the diagonal contribution
       if (!kappaWipesMu) {
-	Pi[a][a] -= (mu / 3.0 - 0.5 * kappa) * gamma[a][a];
+	Pi[a][a] -= dilmuMult*(mu / 3.0 - 0.5 * kappa) * gamma[a][a];
       }
     }
 
@@ -27930,7 +28259,7 @@ fluid_stress( double Pi[DIM][DIM],
       if (!kappaWipesMu) {
 	for (p = 0; p < VIM; p++) {
 	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-	    d_Pi->T[p][p][j] -= (d_mu->T[j]/3.0 - 0.5 * d_dilMu->T[j]) * gamma[p][p];
+	    d_Pi->T[p][p][j] -= dilmuMult*(d_mu->T[j]/3.0 - 0.5 * d_dilMu->T[j]) * gamma[p][p];
 	  }
 	}
       }
@@ -27965,7 +28294,7 @@ fluid_stress( double Pi[DIM][DIM],
       if (!kappaWipesMu) {
 	for (p = 0; p < VIM; p++) {
 	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-	    d_Pi->nn[p][p][j] -= (d_mu->nn[j]/3.0 - 0.5 * d_dilMu->nn[j]) * gamma[p][p];
+	    d_Pi->nn[p][p][j] -= dilmuMult*(d_mu->nn[j]/3.0 - 0.5 * d_dilMu->nn[j]) * gamma[p][p];
 	  }
 	}
       }
@@ -28002,7 +28331,7 @@ fluid_stress( double Pi[DIM][DIM],
       if (!kappaWipesMu) {
 	for (p = 0; p < VIM; p++) {
 	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-	    d_Pi->F[p][p][j] -= (d_mu->F[j] / 3.0 - 0.5 * d_dilMu->F[j]) * gamma[p][p];
+	    d_Pi->F[p][p][j] -= dilmuMult*(d_mu->F[j] / 3.0 - 0.5 * d_dilMu->F[j]) * gamma[p][p];
 	  }
 	}
       }
@@ -28045,7 +28374,7 @@ fluid_stress( double Pi[DIM][DIM],
 	  for (a = 0; a < pfd->num_phase_funcs; a++) {
 	    var = PHASE1 + a;
 	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-	      d_Pi->pf[p][p][a][j] -= (d_mu->pf[a][j]/3.0 - 0.5 * d_dilMu->pf[a][j]) * gamma[p][p];
+	      d_Pi->pf[p][p][a][j] -= dilmuMult*(d_mu->pf[a][j]/3.0 - 0.5 * d_dilMu->pf[a][j]) * gamma[p][p];
 	    }
 	  }
 	}
@@ -28102,7 +28431,7 @@ fluid_stress( double Pi[DIM][DIM],
 	      for (b = 0; b < wim; b++) {
 		for (j = 0; j < ei[pg->imtrx]->dof[VELOCITY1]; j++) {
 		  d_Pi->v[p][p][b][j] -=
-		    ((2.0 * mu / 3.0 - kappa) * (bf[VELOCITY1+p]->grad_phi_e[j][b][p][p]) +
+		    dilmuMult*((2.0 * mu / 3.0 - kappa) * (bf[VELOCITY1+p]->grad_phi_e[j][b][p][p]) +
 		     (d_mu->v[b][j] / 3.0 - 0.5 * d_dilMu->v[b][j]) * gamma[p][p]);
 		}
 	      }
@@ -28135,7 +28464,7 @@ fluid_stress( double Pi[DIM][DIM],
 	    for (b = 0; b < wim; b++) {
 	      for (j = 0; j < ei[pg->imtrx]->dof[VELOCITY1]; j++) {
 		d_Pi->v[p][p][b][j] -=
-		  ((2.0 * mu / 3.0 - kappa) * (grad_phi_e[j][b][p][p]) +
+		  dilmuMult*((2.0 * mu / 3.0 - kappa) * (grad_phi_e[j][b][p][p]) +
 		   (d_mu->v[b][j] / 3.0 - 0.5 * d_dilMu->v[b][j]) * gamma[p][p]);
 	      }
 	    }
@@ -28201,7 +28530,7 @@ fluid_stress( double Pi[DIM][DIM],
 	    for (b = 0; b < dim; b++) {
 	      for (j = 0; j<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; j++) {
 		d_Pi->X[p][p][b][j] -=
-		  ((2.0 * mu /3.0 - kappa) * (fv->d_grad_v_dmesh[p][p][b][j]) +
+		  dilmuMult*((2.0 * mu /3.0 - kappa) * (fv->d_grad_v_dmesh[p][p][b][j]) +
 		   (d_mu->X[b][j] / 3.0 - 0.5 * d_dilMu->X[b][j]) * gamma[p][p]);
 	      }
 	    }    
@@ -28300,7 +28629,7 @@ fluid_stress( double Pi[DIM][DIM],
 	  if (!kappaWipesMu) {   
 	    for (w = 0; w < pd->Num_Species_Eqn; w++) {
 	      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-		d_Pi->C[p][p][w][j] -= (d_mu->C[w][j] /3.0 - 0.5 * d_dilMu->C[w][j]) * gamma[p][p];
+		d_Pi->C[p][p][w][j] -= dilmuMult*(d_mu->C[w][j] /3.0 - 0.5 * d_dilMu->C[w][j]) * gamma[p][p];
 	      }
 	    }
 	  }    
@@ -28341,7 +28670,7 @@ fluid_stress( double Pi[DIM][DIM],
             }
 	  if (!kappaWipesMu) {
 	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-	      d_Pi->P[p][p][j] -= (d_mu->P[j] /3.0 - 0.5 * d_dilMu->P[j]) * gamma[p][p];
+	      d_Pi->P[p][p][j] -= dilmuMult*(d_mu->P[j] /3.0 - 0.5 * d_dilMu->P[j]) * gamma[p][p];
 	    }
 	  }  
         }
@@ -28877,7 +29206,11 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   else if (mp->HeatSourceModel == HS_FOAM )
   {
       h = foam_heat_source(d_h, tt, dt);
-  }  
+  }
+  else if (mp->HeatSourceModel == HS_FOAM_PMDI_10 )
+    {
+      h = foam_pmdi_10_heat_source(d_h, time, tt, dt);
+    }
   else if (mp->HeatSourceModel == USER_GEN )
     {
       if ( d_h == NULL )

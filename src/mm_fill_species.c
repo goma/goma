@@ -10456,6 +10456,106 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	    
 	  }
       }
+      else if (mp->SpeciesSourceModel[w]  == FOAM_PMDI_10_RXN)
+	{
+	  err = foam_pmdi10_rxn_species_source(w, mp->u_species_source[w], tt, dt);
+	  st->MassSource[w] =  mp->species_source[w];
+
+	  if ( af->Assemble_Jacobian )
+	    {
+
+	      var = MASS_FRACTION;
+	      if (pd->v[pg->imtrx][MASS_FRACTION] )
+		{
+		  // Just include the diagonal contribution here
+		  var_offset = MAX_VARIABLE_TYPES + w;
+		  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+		    {
+		      st->d_MassSource_dc[w][w][j] = mp->d_species_source[var_offset]
+			*bf[var]->phi[j];
+		    }
+		}
+
+	      var = TEMPERATURE;
+	      if (pd->v[pg->imtrx][var])
+		{
+		  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+		    {
+		      st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
+		    }
+		}
+	    }
+	}
+      else if (mp->SpeciesSourceModel[w]  == FOAM_PMDI_10_H2O)
+	{
+	  for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
+	    {
+	      var_offset = MAX_VARIABLE_TYPES + w1;
+	      mp->d_species_source[var_offset] = 0.0;
+	    }
+
+	  err = foam_pmdi10_h2o_species_source(w, mp->u_species_source[w], time, tt, dt);
+	  st->MassSource[w] =  mp->species_source[w];
+
+	  if ( af->Assemble_Jacobian )
+	    {
+
+	      var = MASS_FRACTION;
+	      if (pd->v[pg->imtrx][MASS_FRACTION] )
+		{
+		  for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
+		    {
+		      var_offset = MAX_VARIABLE_TYPES + w1;
+		      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+			{
+			  st->d_MassSource_dc[w][w1][j] = mp->d_species_source[var_offset]
+			    *bf[var]->phi[j];
+			}
+		    }
+		}
+
+	      var = TEMPERATURE;
+	      if (pd->v[pg->imtrx][var])
+		{
+		  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+		    {
+		      st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
+		    }
+		}
+	    }
+	}
+      else if (mp->SpeciesSourceModel[w]  == FOAM_PMDI_10_CO2)
+	{
+	  err = foam_pmdi10_co2_species_source(w, mp->u_species_source[w], time, tt, dt);
+	  st->MassSource[w] =  mp->species_source[w];
+
+	  if ( af->Assemble_Jacobian )
+	    {
+
+	      var = MASS_FRACTION;
+	      if (pd->v[pg->imtrx][MASS_FRACTION] )
+		{
+		  for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
+		    {
+		      var_offset = MAX_VARIABLE_TYPES + w1;
+		      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+			{
+			  st->d_MassSource_dc[w][w1][j] = mp->d_species_source[var_offset]
+			    *bf[var]->phi[j];
+			}
+		    }
+		}
+
+	      var = TEMPERATURE;
+	      if (pd->v[pg->imtrx][var])
+		{
+		  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+		    {
+		      st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
+		    }
+		}
+	    }
+	}
       else if (mp->SpeciesSourceModel[w]  == EPOXY_DEA )
       {
 	err = epoxy_dea_species_source(w, mp->u_species_source[w]);

@@ -321,6 +321,45 @@ dil_viscosity(GEN_NEWT_STRUCT *gn_local,
     }
 
   }
+  else if (gn_local->ConstitutiveEquation == FOAM_PMDI_10) {
+
+    if (mp->DilationalViscosityModel == DILVISCM_KAPPABUBBLES) {
+      double muL = mp->FlowingLiquid_viscosity;
+      double volF = mp->volumeFractionGas;
+
+      if (volF < 1e-6) {
+	volF = 1e-6;
+      }
+
+      double ratio = 4. / 3. * (1.0 - volF ) / volF;
+      kappa = ratio * muL;
+
+      if (d_dilMu != 0) {
+	// Ok, to get the derivatives, we copy a multiple of the dependencies from the pure
+	// species viscosities into the kappa dependencies
+	transferGPDerivatives(ratio, mp->d_FlowingLiquid_viscosity, d_dilMu);
+
+	// Then, we add in the explicit (1 - volF) / volF dependency, which only
+	// depends on the concentration unknowns, and we are done.
+
+	var = MASS_FRACTION;
+	if (pd->v[pg->imtrx][var]) {
+	  double tmp = 4. * muL/ 3. / (volF * volF);
+	  double * dVolFdMF = &(mp->d_volumeFractionGas[0]) + MAX_VARIABLE_TYPES;
+	  for (w = 0; w < pd->Num_Species_Eqn; w++) {
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+	      d_dilMu->C[w][j] -= tmp * dVolFdMF[w] * (bf[var]->phi[j]);
+	    }
+	  }
+	}
+
+      }
+
+    } else {
+      EH(-1, "unsupported Kappa Option");
+    }
+
+  }
   /*
    *     For the Other constitutive models, the default is  DILVISCM_KAPPAWIPESMU
    *     Anything else, we throw an error, because we haven't handled it
