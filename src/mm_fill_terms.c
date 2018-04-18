@@ -14648,7 +14648,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 	{
 	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	    {
-	      d_k->T[j] = (2.0/3.0) * (d_rho->T[j] / rho_liq) * k_liq + (1 - d_rho->T[j] / rho_liq) * k_gas;
+	      d_k->T[j] = (2.0/3.0) * (d_rho->T[j] / rho_liq) * k_liq - (d_rho->T[j] / rho_liq) * k_gas;
 	    }
 	}
 
@@ -14659,7 +14659,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 	  for (w = 0; w < pd->Num_Species_Eqn; w++) {
 	    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 	      {
-		d_k->C[w][j] = (2.0/3.0) * (d_rho->C[w][j] / rho_liq) * k_liq + (1 - d_rho->C[w][j] / rho_liq) * k_gas;
+		d_k->C[w][j] = (2.0/3.0) * (d_rho->C[w][j] / rho_liq) * k_liq - (d_rho->C[w][j] / rho_liq) * k_gas;
 	      }
 	  }
 	}

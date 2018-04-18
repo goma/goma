@@ -1850,9 +1850,7 @@ foam_pmdi_10_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 
 	double rho_gas = 0;
 
-	if (fv->T > 0) {
-	  rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
-	}
+	rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
 
 	double Y = 1.0 - rho_gas/rho;
 
@@ -1866,9 +1864,7 @@ foam_pmdi_10_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 	      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_h->T[j] = 0;
-		  if (fv->T > 0) {
-		    d_h->T[j] = Delta_H_RXN * (-rho_gas/(rho*fv->T)) * rho * fv_dot->c[wRXN];
-		  }
+		  d_h->T[j] = Delta_H_RXN * (-rho_gas/(rho*fv->T)) * rho * fv_dot->c[wRXN];
 		  d_h->T[j] += Delta_H_RXN * Y * d_rho->T[j] * fv_dot->c[wRXN] + Delta_H_RXN * (-rho_gas/(rho*rho)) * d_rho->T[j] * fv_dot->c[wRXN];
 		}
 	    }
@@ -2335,9 +2331,7 @@ foam_pmdi_10_heat_cap( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp, double time)
 
   double rho_gas = 0;
 
-  if (fv->T > 0) {
-    rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
-  }
+  rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
 
   Cp = (Cp_liq * rho_liq * (1 - volF) + Cp_gas * rho_gas * volF) / rho;
 
@@ -2353,11 +2347,9 @@ foam_pmdi_10_heat_cap( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp, double time)
 	      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		{
 		  d_Cp->T[j] = -Cp/rho * d_rho->T[j];
-		  d_Cp->T[j] += (Cp_liq * rho_liq * (1 - mp->d_volumeFractionGas[var])) * bf[var]->phi[j];
-		  if (fv->T > 0) {
-		    d_Cp->T[j] += ((Cp_gas * rho_gas * mp->d_volumeFractionGas[var]) / rho)
+		  d_Cp->T[j] += (Cp_liq * rho_liq * mp->d_volumeFractionGas[var]) / rho * bf[var]->phi[j];
+		  d_Cp->T[j] += ((Cp_gas * rho_gas * mp->d_volumeFractionGas[var]) / rho)
 		      * bf[var]->phi[j];
-		  }
 		}
  	    }
  	}
@@ -2372,7 +2364,7 @@ foam_pmdi_10_heat_cap( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp, double time)
 		for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		  {
 		    d_Cp->C[w][j] = -Cp/rho * d_rho->C[w][j];
-		    d_Cp->C[w][j] += ((Cp_liq * rho_liq * (1 - mp->d_volumeFractionGas[wvar]) + Cp_gas * rho_gas * mp->d_volumeFractionGas[wvar]) / rho)
+		    d_Cp->C[w][j] += ((Cp_liq * rho_liq * (mp->d_volumeFractionGas[wvar]) + Cp_gas * rho_gas * mp->d_volumeFractionGas[wvar]) / rho)
 		      * bf[var]->phi[j];
 		  }
 	      }

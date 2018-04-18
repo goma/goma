@@ -1600,6 +1600,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->viscosity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->dilationalViscosity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->dilationalViscosityRatio, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->dilationalViscosityMultiplier, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->volumeFractionGas, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->reaction_rate, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->solution_temperature, 1, MPI_DOUBLE);
