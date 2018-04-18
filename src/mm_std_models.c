@@ -1300,7 +1300,7 @@ foam_pmdi10_h2o_species_source(int species_no,   /* Current species number */
     source = 0;
     mp->species_source[species_no] = 0;
   } else {
-    source = N * A * exp(-norm_E/T) * pow(CH2O, n);
+    source = -N * A * exp(-norm_E/T) * pow(CH2O, n);
   }
   /**********************************************************/
 
