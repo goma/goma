@@ -10653,7 +10653,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	EH(-1,"Unrecognized species source model");
       }
 	
-	if( ls != NULL ) ls_modulate_speciessource ( w,  st );
+      if( ls != NULL ) ls_modulate_speciessource ( w,  st );
 
     }
 
@@ -10688,13 +10688,12 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
                        }
                    }
                }
+	    if( ls != NULL ) ls_modulate_speciessource ( w,  st );
            }
-		   
-		if( ls != NULL ) ls_modulate_speciessource ( w,  st );
 
        }
   }
-    
+
 
     /*
    * NOW, CALCULATE SENSITIVITIES for the Jacobian, if needed

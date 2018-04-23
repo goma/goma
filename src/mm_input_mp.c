@@ -8155,7 +8155,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  mat_ptr->u_species_source[species_no] = (dbl *)
 	    array_alloc(1,6,sizeof(dbl));
 
-	  mat_ptr->len_u_species_source[species_no] = 5;
+	  mat_ptr->len_u_species_source[species_no] = 6;
 
 	  mat_ptr->u_species_source[species_no][0] = a0;  /* C0_OH */
 	  mat_ptr->u_species_source[species_no][1] = a1;  /* A_OH */

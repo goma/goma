@@ -39,6 +39,8 @@
 #include "sl_aux.h"
 #include "goma.h"
 
+
+
 extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
 			double *W, double *WORK, int *LWORK, int *INFO,
 			int len_jobz, int len_uplo);
@@ -347,7 +349,7 @@ int foam_pbe_growth_rate(double growth_rate[MAX_CONC], double d_growth_rate_dc[M
 
 
 
-	if (fv->c[species_BA_l] > R11_max && R11_max > 0) {
+	if (fv->c[species_BA_l] > R11_max && R11_max > PBE_FP_SMALL) {
 	  growth_rate[species_BA_l] = G0 * (fv->c[species_BA_l] - R11_max)/ R11_max;
 	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	    d_growth_rate_dc[species_BA_l][j] = G0 * bf[var]->phi[j] / R11_max;
@@ -846,6 +848,12 @@ moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource)
   int species_CO2_l;
   int err = 0;
   int j;
+  double H = 1;
+
+  if (ls != NULL) {
+    load_lsi(ls->Length_Scale);
+    H = 1-lsi->H;
+  }
 
   struct moment_growth_rate *MGR = NULL;
 
@@ -854,7 +862,9 @@ moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource)
   if (err) return err;
 
   MGR = calloc(sizeof(struct moment_growth_rate), 1);
-  err = get_moment_growth_rate_term(MGR);
+  if (H > PBE_FP_SMALL) {
+    err = get_moment_growth_rate_term(MGR);
+  }
 
   if (err) {
     free(MGR);
@@ -862,20 +872,19 @@ moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource)
   }
 
   for (int mom = 0; mom < MAX_MOMENTS; mom++) {
-    msource[mom] = MGR->G[species_BA_l][mom] + MGR->G[species_CO2_l][mom];
+    msource[mom] = H*(MGR->G[species_BA_l][mom] + MGR->G[species_CO2_l][mom]);
     if (pd->v[pg->imtrx][MASS_FRACTION]) {
       for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
-	d_msource->C[mom][species_BA_l][j] = MGR->d_G_dC[species_BA_l][mom][j];
-	d_msource->C[mom][species_CO2_l][j] = MGR->d_G_dC[species_CO2_l][mom][j];
+	d_msource->C[mom][species_BA_l][j] = H*MGR->d_G_dC[species_BA_l][mom][j];
+	d_msource->C[mom][species_CO2_l][j] = H*MGR->d_G_dC[species_CO2_l][mom][j];
       }
     }
 
     if (pd->v[pg->imtrx][TEMPERATURE]) {
       for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
-	d_msource->T[mom][j] = MGR->d_G_dT[species_BA_l][mom][j] +  MGR->d_G_dT[species_CO2_l][mom][j];
+	d_msource->T[mom][j] = H*(MGR->d_G_dT[species_BA_l][mom][j] +  MGR->d_G_dT[species_CO2_l][mom][j]);
       }
     }
-
   }
 
   free(MGR);
@@ -947,7 +956,7 @@ assemble_density() /*  time step size      */
     double ref_press = mp->u_density[1];
     double Rgas_const = mp->u_density[2];
 
-    if (fv->c[species_BA_g] > 0 || fv->c[species_CO2_g] > 0) {
+    if (fv->c[species_BA_g] > PBE_FP_SMALL || fv->c[species_CO2_g] > PBE_FP_SMALL) {
       rho_bubble = (ref_press/(Rgas_const*fv->T)) *
 	(fv->c[species_CO2_g]*M_CO2 + fv->c[species_BA_g]*M_BA)/(fv->c[species_CO2_g] + fv->c[species_BA_g]);
     }
@@ -979,7 +988,7 @@ assemble_density() /*  time step size      */
       {
 	for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	  {
-	    if (fv->c[species_BA_g] > 0 || fv->c[species_CO2_g] > 0) {
+	    if (fv->c[species_BA_g] > PBE_FP_SMALL || fv->c[species_CO2_g] > PBE_FP_SMALL) {
 	      d_rho_dC[species_BA_g][j] = (fv->moment[1]*inv_mom_frac) * bf[var]->phi[j] * (ref_press/(Rgas_const*fv->T)) *
 		((M_BA - M_CO2)*fv->c[species_CO2_g])/
 		((fv->c[species_CO2_g] + fv->c[species_BA_g]) * (fv->c[species_CO2_g] + fv->c[species_BA_g]));
@@ -1239,7 +1248,7 @@ double PBEVolumeSource (double time,
   double ref_press = mp->u_density[1];
   double Rgas_const = mp->u_density[2];
 
-  if (fv->c[species_BA_g] > 0 || fv->c[species_CO2_g] > 0) {
+  if (fv->c[species_BA_g] > PBE_FP_SMALL || fv->c[species_CO2_g] > PBE_FP_SMALL) {
     rho_bubble = (ref_press/(Rgas_const*fv->T)) *
       (fv->c[species_CO2_g]*M_CO2 + fv->c[species_BA_g]*M_BA)/(fv->c[species_CO2_g] + fv->c[species_BA_g]);
   }
@@ -1278,7 +1287,7 @@ double PBEVolumeSource (double time,
   var = MASS_FRACTION;
   if (pd->v[pg->imtrx][var])
     {
-      if (fv->c[species_BA_g] > 0 || fv->c[species_CO2_g] > 0) {
+      if (fv->c[species_BA_g] > PBE_FP_SMALL || fv->c[species_CO2_g] > PBE_FP_SMALL) {
 	d_rho_dt_dC[species_BA_g] = (fv_dot->moment[1]*inv_mom_frac*inv_mom_frac) * (ref_press/(Rgas_const*fv->T)) *
 	  ((M_BA - M_CO2)*fv->c[species_CO2_g])/
 	  ((fv->c[species_CO2_g] + fv->c[species_BA_g]) * (fv->c[species_CO2_g] + fv->c[species_BA_g]));

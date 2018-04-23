@@ -1388,7 +1388,7 @@ assemble_energy(double time,	/* present time value */
     }
   else if( mp->Ewt_funcModel == SUPG )
     {
-      if( !pd->e[pg->imtrx][R_MOMENTUM1])
+      if( !pd->gv[R_MOMENTUM1])
         EH(-1, " must have momentum equation velocity field for energy equation upwinding. You may want to turn it off");
       supg = mp->Ewt_func;
     }
@@ -14336,7 +14336,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
       double ref_press = mp->u_density[1];
       double Rgas_const = mp->u_density[2];
 
-      if (fv->c[species_BA_g] > 0 || fv->c[species_CO2_g] > 0) {
+      if (fv->c[species_BA_g] > PBE_FP_SMALL || fv->c[species_CO2_g] > PBE_FP_SMALL) {
 	rho_bubble = (ref_press/(Rgas_const*fv->T)) *
 	  (fv->c[species_CO2_g]*M_CO2 + fv->c[species_BA_g]*M_BA)/(fv->c[species_CO2_g] + fv->c[species_BA_g]);
       }
@@ -14369,7 +14369,7 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	  {
 	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	      {
-		if (fv->c[species_BA_g] > 0 || fv->c[species_CO2_g] > 0) {
+		if (fv->c[species_BA_g] > PBE_FP_SMALL || fv->c[species_CO2_g] > PBE_FP_SMALL) {
 		  d_rho->C[species_BA_g][j] = (fv->moment[1]*inv_mom_frac) * bf[var]->phi[j] * (ref_press/(Rgas_const*fv->T)) *
 		    ((M_BA - M_CO2)*fv->c[species_CO2_g])/
 		    ((fv->c[species_CO2_g] + fv->c[species_BA_g]) * (fv->c[species_CO2_g] + fv->c[species_BA_g]));

@@ -2065,13 +2065,13 @@ load_elem_dofptr(const int ielem,
 
   for (k = 0; k < MAX_MOMENTS; k++) {
     eqn = R_MOMENT0 + k;
-    if (upd->ep[eqn] >= 0) {
+    if (upd->ep[pg->imtrx][eqn] >= 0) {
       load_varType_Interpolation_ptrs(eqn, esp->moment[k], esp_old->moment[k],
 				      esp_dot->moment[k]);
     }
   }
   eqn = R_DENSITY_EQN;
-  if ( pd->e[eqn] )
+  if ( pd->e[pg->imtrx][eqn] )
     {
       load_varType_Interpolation_ptrs(eqn, esp->rho, esp_old->rho,
 				      esp_dot->rho);

@@ -794,7 +794,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
       double d_rho_dT = 0;
       double d_rho_dM1 = 0;
 
-      if (fv->c[species_BA_g] > 0 || fv->c[species_CO2_g] > 0) {
+      if (fv->c[species_BA_g] > PBE_FP_SMALL || fv->c[species_CO2_g] > PBE_FP_SMALL) {
 	rho_bubble = (ref_press/(Rgas_const*fv->T)) *
 	  (fv->c[species_CO2_g]*M_CO2 + fv->c[species_BA_g]*M_BA)/(fv->c[species_CO2_g] + fv->c[species_BA_g]);
       }
@@ -806,14 +806,14 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
       if(doJac)
 	{
 	  var = TEMPERATURE;
-	  if (pd->v[var] )
+	  if (pd->v[pg->imtrx][var] )
 	    {
 	      d_rho_dT = (-rho)/fv->T;
 	      propertyJac_addEnd(densityJac, var, matID, 0, d_rho_dT, rho);
 	    }
 
 	  var = MOMENT1;
-	  if (pd->v[var] )
+	  if (pd->v[pg->imtrx][var] )
 	    {
 	      d_rho_dM1 = 2 * inv_mom_frac * inv_mom_frac;
 	      propertyJac_addEnd(densityJac, var, matID, 0, d_rho_dM1, rho);

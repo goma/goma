@@ -30,6 +30,8 @@
 #define EXTERN extern
 #endif
 
+#define PBE_FP_SMALL 1e-15
+
 #include "std.h"
 #include "mm_as_structs.h"
 
