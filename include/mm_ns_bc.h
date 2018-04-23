@@ -206,6 +206,17 @@ fvelo_slip_bc(double func[MAX_PDIM],
 int
 exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */);
 
+EXTERN void
+fvelo_slip_ls_heaviside(double func[MAX_PDIM],
+			double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+			double width,
+			double beta_negative,
+			double beta_positive,
+			const double vsx,      /* velocity components of solid  */
+			const double vsy,	/* surface on which slip condition   */
+			const double vsz,	/* is applied           */
+			const double tt,
+			const double dt);
 
 EXTERN void fvelo_slip_level
 PROTO(( double [MAX_PDIM],	/* func                                      */

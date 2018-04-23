@@ -1294,253 +1294,261 @@ dbl *te_out) /* te_out - return actual end time */
       tran->time_value = time1;
 
 
-      for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
-	if (upd->XFEM) {
-	  xfem = matrix_xfem[pg->imtrx];
-	}
+      for (int subcycle = 0; subcycle < upd->SegregatedSubcycles; subcycle++) {
+	for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+	  if (upd->XFEM) {
+	    xfem = matrix_xfem[pg->imtrx];
+	  }
 
-	/*
-	 * What is known at this exact point in the code:
-	 *
-	 *
-	 *  At time = time, x_old[] = the solution
-	 *                  xdot_old[] = derivative of the solution
-	 *  At time = time - delta_t_old:
-	 *                  x_older[] = the solution
-	 *                  xdot_older[] = derivative of the solution
-	 *  At time = time -  delta_t_old -  delta_t_older
-	 *                  x_oldest[] = the solution
-	 *                  xdot_oldest[] = derivative of the solution
-	 *  The value of x[] and xdot[] contain ambivalent information
-	 *  at this point.
-	 *
-	 *  We seek the solution at time = time1 = time + delta_t
-	 *  by first obtaining a predicted solution x_pred[] with
-	 *  associated xdot[], and then solving a corrected solution,
-	 *  x[], with associated time derivative, xdot[].
-	 *
-	 *  Note, we may be here due to a failed time step. In this
-	 *  case x[] and xdot[] will be filled with garbage. For a
-	 *  previously completed time step, x[] and xdot[] will be
-	 *  equal to x_old[] and xdot_old[].
-	 */
+	  /*
+	   * What is known at this exact point in the code:
+	   *
+	   *
+	   *  At time = time, x_old[] = the solution
+	   *                  xdot_old[] = derivative of the solution
+	   *  At time = time - delta_t_old:
+	   *                  x_older[] = the solution
+	   *                  xdot_older[] = derivative of the solution
+	   *  At time = time -  delta_t_old -  delta_t_older
+	   *                  x_oldest[] = the solution
+	   *                  xdot_oldest[] = derivative of the solution
+	   *  The value of x[] and xdot[] contain ambivalent information
+	   *  at this point.
+	   *
+	   *  We seek the solution at time = time1 = time + delta_t
+	   *  by first obtaining a predicted solution x_pred[] with
+	   *  associated xdot[], and then solving a corrected solution,
+	   *  x[], with associated time derivative, xdot[].
+	   *
+	   *  Note, we may be here due to a failed time step. In this
+	   *  case x[] and xdot[] will be filled with garbage. For a
+	   *  previously completed time step, x[] and xdot[] will be
+	   *  equal to x_old[] and xdot_old[].
+	   */
 
-	/*
-	 * SMD 1/24/11
-	 * If external field is time_dep update the current solution,
-	 * x_old, to the values of the external variables at that time point.
-	 */
-	if (efv->ev) {
-	  timeValueReadTrans = time;
-	  int w;
-	  for (w = 0; w < efv->Num_external_field; w++) {
-	    if (strcmp(efv->field_type[w], "transient") == 0) {
-	      err = rd_trans_vectors_from_exoII(x_old[pg->imtrx], efv->file_nm[w],
-						w, n, &timeValueReadTrans, cx[pg->imtrx], dpi);
-	      if (err != 0) {
-		DPRINTF(stderr, "%s: err from rd_trans_vectors_from_exoII\n", yo);
+	  /*
+	   * SMD 1/24/11
+	   * If external field is time_dep update the current solution,
+	   * x_old, to the values of the external variables at that time point.
+	   */
+	  if (efv->ev) {
+	    timeValueReadTrans = time;
+	    int w;
+	    for (w = 0; w < efv->Num_external_field; w++) {
+	      if (strcmp(efv->field_type[w], "transient") == 0) {
+		err = rd_trans_vectors_from_exoII(x_old[pg->imtrx], efv->file_nm[w],
+						  w, n, &timeValueReadTrans, cx[pg->imtrx], dpi);
+		if (err != 0) {
+		  DPRINTF(stderr, "%s: err from rd_trans_vectors_from_exoII\n", yo);
+		}
 	      }
 	    }
 	  }
-	}
 
-	/*
-	 * Get started with forward/Backward Euler predictor-corrector
-	 * to damp out any bad things
-	 */
-	if ((nt - last_renorm_nt) == 0) {
-	  theta = 0.0;
-	  const_delta_t = 1.0;
-
-	} else if ((nt - last_renorm_nt) >= 3) {
-	  /* Now revert to the scheme input by the user */
-	  theta = tran->theta;
-	  const_delta_t = const_delta_ts;
 	  /*
-	   * If the previous step failed due to a convergence error
-	   * or time step truncation error, then revert to a
-	   * Backwards-Euler method to restart the calculation
-	   * using a smaller time step.
-	   * -> standard ODE solver trick (HKM -> Haven't
-	   *    had time to benchmark this. Will leave it commented
-	   *    out).
-	   *
-	   *  if (!converged || !success_dt) {
-	   *    theta = 0.0;
-	   *  }
+	   * Get started with forward/Backward Euler predictor-corrector
+	   * to damp out any bad things
 	   */
-	}
+	  if ((nt - last_renorm_nt) == 0) {
+	    theta = 0.0;
+	    const_delta_t = 1.0;
 
-	/* Reset the node->DBC[] arrays to -1 where set
-	 * so that the boundary conditions are set correctly
-	 * at each time step.
-	 */
-	nullify_dirichlet_bcs();
-
-	find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
-
-	if (ProcID == 0) {
-	  if (theta == 0.0)
-	    strcpy(tspstring, "(BE)");
-	  else if (theta == 0.5)
-	    strcpy(tspstring, "(CN)");
-	  else if (theta == 1.0)
-	    strcpy(tspstring, "(FE)");
-	  else
-	    sprintf(tspstring, "(TSP %3.1f)", theta);
-	  fprintf(stderr, "\n=> Try for soln at t=%g with dt=%g [%d for %d] %s\n",
-		  time1, delta_t, nt, n, tspstring);
-	  log_msg("Predicting try at t=%g, dt=%g [%d for %d so far] %s",
-		  time1, delta_t, nt, n, tspstring)
-	    ;      }
-
-	/*
-	 * Predict the solution, x[], and its derivative, xdot[],
-	 * at the new time, time1, using the old solution, xdot_old[],
-	 * And its derivatives at the old time, time.
-	 */
-
-	if (upd->SegregatedSolve && pg->imtrx == 0) {
-	  predict_solution_u_star(numProcUnknowns[pg->imtrx], delta_t, delta_t_old,
-				  delta_t_older, theta, x, x_old, x_older, x_oldest);
-	} else {
-	  predict_solution(numProcUnknowns[pg->imtrx], delta_t, delta_t_old,
-			   delta_t_older, theta, x[pg->imtrx], x_old[pg->imtrx],
-			   x_older[pg->imtrx], x_oldest[pg->imtrx], xdot[pg->imtrx],
-			   xdot_old[pg->imtrx], xdot_older[pg->imtrx]);
-	}
-
-	if (ls != NULL && ls->Evolution == LS_EVOLVE_SLAVE)
-	  {
-	    surf_based_initialization(x[pg->imtrx], NULL, NULL, exo, num_total_nodes,
-				      ls->init_surf_list, time1, theta, delta_t);
+	  } else if ((nt - last_renorm_nt) >= 3) {
+	    /* Now revert to the scheme input by the user */
+	    theta = tran->theta;
+	    const_delta_t = const_delta_ts;
+	    /*
+	     * If the previous step failed due to a convergence error
+	     * or time step truncation error, then revert to a
+	     * Backwards-Euler method to restart the calculation
+	     * using a smaller time step.
+	     * -> standard ODE solver trick (HKM -> Haven't
+	     *    had time to benchmark this. Will leave it commented
+	     *    out).
+	     *
+	     *  if (!converged || !success_dt) {
+	     *    theta = 0.0;
+	     *  }
+	     */
 	  }
 
-	/*
-	 * Now, that we have a predicted solution for the current
-	 * time, x[], exchange the degrees of freedom to update the
-	 * ghost node information.
-	 */
-	exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
-	exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
+	  /* Reset the node->DBC[] arrays to -1 where set
+	   * so that the boundary conditions are set correctly
+	   * at each time step.
+	   */
+	  nullify_dirichlet_bcs();
 
-	if (matrix_nAC[pg->imtrx] > 0) {
+	  find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
 
-	  predict_solution(matrix_nAC[pg->imtrx], delta_t, delta_t_old, delta_t_older,
-			   theta, x_AC[pg->imtrx], x_AC_old[pg->imtrx], x_AC_older[pg->imtrx], x_AC_oldest[pg->imtrx],
-			   x_AC_dot[pg->imtrx], x_AC_dot_old[pg->imtrx], x_AC_dot_older[pg->imtrx]);
+	  if (ProcID == 0) {
+	    if (theta == 0.0)
+	      strcpy(tspstring, "(BE)");
+	    else if (theta == 0.5)
+	      strcpy(tspstring, "(CN)");
+	    else if (theta == 1.0)
+	      strcpy(tspstring, "(FE)");
+	    else
+	      sprintf(tspstring, "(TSP %3.1f)", theta);
+	    fprintf(stderr, "\n=> Try for soln at t=%g with dt=%g [%d for %d] %s\n",
+		    time1, delta_t, nt, n, tspstring);
+	    log_msg("Predicting try at t=%g, dt=%g [%d for %d so far] %s",
+		    time1, delta_t, nt, n, tspstring)
+	      ;      }
 
-	  for(iAC = 0; iAC < matrix_nAC[pg->imtrx]; iAC++)
-	    {
-	      update_parameterAC(iAC, x[pg->imtrx], xdot[pg->imtrx], x_AC[pg->imtrx], cx[pg->imtrx], exo, dpi);
-	      augc[iAC].tmp2 = x_AC_dot[pg->imtrx][iAC];
-	      augc[iAC].tmp3 = x_AC_old[pg->imtrx][iAC];
+	  /*
+	   * Predict the solution, x[], and its derivative, xdot[],
+	   * at the new time, time1, using the old solution, xdot_old[],
+	   * And its derivatives at the old time, time.
+	   */
+	  if (subcycle == 0) {
+	    if (upd->SegregatedSolve && pg->imtrx == 0) {
+	      predict_solution_u_star(numProcUnknowns[pg->imtrx], delta_t, delta_t_old,
+				      delta_t_older, theta, x, x_old, x_older, x_oldest);
+	    } else {
+	      predict_solution(numProcUnknowns[pg->imtrx], delta_t, delta_t_old,
+			       delta_t_older, theta, x[pg->imtrx], x_old[pg->imtrx],
+			       x_older[pg->imtrx], x_oldest[pg->imtrx], xdot[pg->imtrx],
+			       xdot_old[pg->imtrx], xdot_older[pg->imtrx]);
 	    }
-	}
+	  }
 
-
-	/*
-	 *  Set dirichlet conditions in some places. Note, I believe
-	 *  this step can change the solution vector
-	 */
-	find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
-
-	/*
-	 *  HKM -> I don't know if this extra exchange operation
-	 *         is needed or not. It was originally in the
-	 *         algorithm. It may be needed if find_and_set..()
-	 *         changes the solution vector. However, it would
-	 *         seem to me that we could get rid of the duplication
-	 *         of effort here.
-	 *         -> I also added an exchange of xdot[], because
-	 *            if x[] is needed to be exchanged, then xdot[] must
-	 *            be exchanged as well.
-	 */
-
-	exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
-	exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
-
-	/*
-	 * Save the predicted solution for the time step
-	 * norm calculation to be carried out after convergence
-	 * of the nonlinear implicit problem
-	 */
-	dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_pred[pg->imtrx]);
-
-	/*
-	 *  Solve the nonlinear problem. If we achieve convergence,
-	 *  set the flag, converged, to true on return. If not
-	 *  set the flag to false.
-
-	 */
-
-	if (ProcID == 0) {
-	  printf("\n===================== SOLVING MATRIX %d ===========================\n\n", pg->imtrx);
-	}
-
-	nAC = matrix_nAC[pg->imtrx];
-	augc = matrix_augc[pg->imtrx];
-
-	err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t,
-				      theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
-				      xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
-				      scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx],
-				      tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
-				      gvec_elem[pg->imtrx], time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, 0,
-				      x_AC[pg->imtrx], x_AC_dot[pg->imtrx], time1, NULL,
-				      NULL, NULL, NULL);
-
-	/*
-	  err = solve_linear_segregated(ams[pg->imtrx], x[pg->imtrx], delta_t,
-	  theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
-	  xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
-	  scale[pg->imtrx], &converged, &nprint, gv, time1, exo, dpi, cx, n,
-	  &time_step_reform);
-	*/
-	if (err == -1) {
-	  converged = FALSE;
-	  /* Copy previous solution values if failed timestep */
-	  dcopy1(numProcUnknowns[pg->imtrx], x_old[pg->imtrx], x[pg->imtrx]);
-	}
-	inewton = err;
-	evpl_glob[0]->update_flag = 0; /*See get_evp_stress_tensor for description */
-	af->Sat_hyst_reevaluate = FALSE; /*See load_saturation for description*/
-
-	if (converged) {
-	  for(i=0; matrix_nAC[pg->imtrx] > 0 && i < matrix_nAC[pg->imtrx]; i++) 
+	  if (ls != NULL && ls->Evolution == LS_EVOLVE_SLAVE)
 	    {
-	      gv[5 + invACidx[pg->imtrx][i] ] = x_AC[pg->imtrx][i];
+	      surf_based_initialization(x[pg->imtrx], NULL, NULL, exo, num_total_nodes,
+					ls->init_surf_list, time1, theta, delta_t);
 	    }
+
+	  /*
+	   * Now, that we have a predicted solution for the current
+	   * time, x[], exchange the degrees of freedom to update the
+	   * ghost node information.
+	   */
+	  exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
+	  exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
+
+	  if (matrix_nAC[pg->imtrx] > 0 && subcycle == 0) {
+
+	    predict_solution(matrix_nAC[pg->imtrx], delta_t, delta_t_old, delta_t_older,
+			     theta, x_AC[pg->imtrx], x_AC_old[pg->imtrx], x_AC_older[pg->imtrx], x_AC_oldest[pg->imtrx],
+			     x_AC_dot[pg->imtrx], x_AC_dot_old[pg->imtrx], x_AC_dot_older[pg->imtrx]);
+
+	    for(iAC = 0; iAC < matrix_nAC[pg->imtrx]; iAC++)
+	      {
+		update_parameterAC(iAC, x[pg->imtrx], xdot[pg->imtrx], x_AC[pg->imtrx], cx[pg->imtrx], exo, dpi);
+		augc[iAC].tmp2 = x_AC_dot[pg->imtrx][iAC];
+		augc[iAC].tmp3 = x_AC_old[pg->imtrx][iAC];
+	      }
+	  }
+
+
+	  /*
+	   *  Set dirichlet conditions in some places. Note, I believe
+	   *  this step can change the solution vector
+	   */
+	  find_and_set_Dirichlet(x[pg->imtrx], xdot[pg->imtrx], exo, dpi);
+
+	  /*
+	   *  HKM -> I don't know if this extra exchange operation
+	   *         is needed or not. It was originally in the
+	   *         algorithm. It may be needed if find_and_set..()
+	   *         changes the solution vector. However, it would
+	   *         seem to me that we could get rid of the duplication
+	   *         of effort here.
+	   *         -> I also added an exchange of xdot[], because
+	   *            if x[] is needed to be exchanged, then xdot[] must
+	   *            be exchanged as well.
+	   */
+
+	  exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
+	  exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
+
+	  /*
+	   * Save the predicted solution for the time step
+	   * norm calculation to be carried out after convergence
+	   * of the nonlinear implicit problem
+	   */
+	  if (subcycle == 0) {
+	    dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx], x_pred[pg->imtrx]);
+	  }
+
+	  /*
+	   *  Solve the nonlinear problem. If we achieve convergence,
+	   *  set the flag, converged, to true on return. If not
+	   *  set the flag to false.
+
+	   */
+
+	  if (ProcID == 0 && upd->SegregatedSubcycles == 1) {
+	    printf("\n===================== SOLVING MATRIX %d ===========================\n\n", pg->imtrx+1);
+	  } else if (ProcID == 0 && upd->SegregatedSubcycles > 1) {
+	    printf("\n===================== SOLVING MATRIX %d Subcycle %d/%d ===========================\n\n", pg->imtrx+1, subcycle+1, upd->SegregatedSubcycles);
+	  }
+
+	  nAC = matrix_nAC[pg->imtrx];
+	  augc = matrix_augc[pg->imtrx];
+
+	  err = solve_nonlinear_problem(ams[pg->imtrx], x[pg->imtrx], delta_t,
+					theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
+					xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
+					scale[pg->imtrx], &converged, &nprint, tev[pg->imtrx],
+					tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
+					gvec_elem[pg->imtrx], time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, 0,
+					x_AC[pg->imtrx], x_AC_dot[pg->imtrx], time1, NULL,
+					NULL, NULL, NULL);
+
+	  /*
+	    err = solve_linear_segregated(ams[pg->imtrx], x[pg->imtrx], delta_t,
+	    theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],
+	    xdot_old[pg->imtrx], resid_vector[pg->imtrx], x_update[pg->imtrx],
+	    scale[pg->imtrx], &converged, &nprint, gv, time1, exo, dpi, cx, n,
+	    &time_step_reform);
+	  */
+	  if (err == -1) {
+	    converged = FALSE;
+	    /* Copy previous solution values if failed timestep */
+	    for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+	      dcopy1(numProcUnknowns[imtrx], x_old[imtrx], x[imtrx]);
+	    }
+	  }
+	  inewton = err;
+	  evpl_glob[0]->update_flag = 0; /*See get_evp_stress_tensor for description */
+	  af->Sat_hyst_reevaluate = FALSE; /*See load_saturation for description*/
+
+	  if (converged) {
+	    for(i=0; matrix_nAC[pg->imtrx] > 0 && i < matrix_nAC[pg->imtrx]; i++)
+	      {
+		gv[5 + invACidx[pg->imtrx][i] ] = x_AC[pg->imtrx][i];
+	      }
 	  
-	  if (nAC > 0) {
-	    DPRINTF(stderr, "\n------------------------------\n");
-	    DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
-	    DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+	    if (nAC > 0) {
+	      DPRINTF(stderr, "\n------------------------------\n");
+	      DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
+	      DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
 		      
-	    for (iAC = 0; iAC < nAC; iAC++) {
-	      if (augc[iAC].Type == AC_USERBC) 
-		{
-		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID, augc[iAC].DFID, x_AC[pg->imtrx][iAC]);
-		  /* temporary printing */
+	      for (iAC = 0; iAC < nAC; iAC++) {
+		if (augc[iAC].Type == AC_USERBC)
+		  {
+		    DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID, augc[iAC].DFID, x_AC[pg->imtrx][iAC]);
+		    /* temporary printing */
 #if 0
-		  if( (int)augc[iAC].DataFlt[1] == 6)
-		    {
-		      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 0, BC_Types[augc[iAC].DFID].BC_Data_Float[0]);
-		      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 2, BC_Types[augc[iAC].DFID].BC_Data_Float[2]);
-		      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 3, BC_Types[augc[iAC].DFID].BC_Data_Float[3]);
-		      augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
-		      DPRINTF(stderr, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
+		    if( (int)augc[iAC].DataFlt[1] == 6)
+		      {
+			DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 0, BC_Types[augc[iAC].DFID].BC_Data_Float[0]);
+			DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 2, BC_Types[augc[iAC].DFID].BC_Data_Float[2]);
+			DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 3, BC_Types[augc[iAC].DFID].BC_Data_Float[3]);
+			augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
+			DPRINTF(stderr, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
 
-		    }
-		  if( (int)augc[iAC].DataFlt[1] == 61)
-		    {
-		      augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
-		      DPRINTF(stderr, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
+		      }
+		    if( (int)augc[iAC].DataFlt[1] == 61)
+		      {
+			augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
+			DPRINTF(stderr, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
 
-		    }
+		      }
 #endif
-		}
-	      /*	      else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT)
+		  }
+		/*	      else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT)
 			      {
 			      DPRINTF(stderr, "\tMT[%4d] MP[%4d]=% 10.6e\n", augc[iAC].MTID, augc[iAC].MPID, x_AC[iAC]);
 			      }
@@ -1564,20 +1572,21 @@ dbl *te_out) /* te_out - return actual end time */
 			      DPRINTF(stderr, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n", 
 			      augc[iAC].MTID, augc[iAC].evol, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
 			      } */
+	      }
 	    }
 	  }
-	}
 	
-	/*
-	 * HKM -> I do not know if these operations are needed. I added
-	 *        an exchange of xdot[] here, because if x[] is exchanged
-	 *        then xdot needs to be exchanged as well.
-	 */
+	  /*
+	   * HKM -> I do not know if these operations are needed. I added
+	   *        an exchange of xdot[] here, because if x[] is exchanged
+	   *        then xdot needs to be exchanged as well.
+	   */
 
-	exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
-	exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
+	  exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
+	  exchange_dof(cx[pg->imtrx], dpi, xdot[pg->imtrx], pg->imtrx);
 
-	if (!converged) goto finish_step;
+	  if (!converged) goto finish_step;
+	}
       }
 
     finish_step:

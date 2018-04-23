@@ -3643,6 +3643,98 @@ exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */)
 /****************************************************************************/
 /****************************************************************************/
 
+void
+fvelo_slip_ls_heaviside(double func[MAX_PDIM],
+			double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+			double width,
+			double beta_negative,
+			double beta_positive,
+			const double vsx,      /* velocity components of solid  */
+			const double vsy,	/* surface on which slip condition   */
+			const double vsz,	/* is applied           */
+			const double tt,
+			const double dt)
+{
+  int j, var, jvar, p, q, b;
+  double phi_j, vs[MAX_PDIM] ;
+  double beta, betainv;
+  double d_beta_dF[MDE];
+  double X_0[3], omega;
+
+  /************************* EXECUTION BEGINS *******************************/
+
+  if(af->Assemble_LSA_Mass_Matrix)
+    return;
+
+
+  load_lsi( width );
+#ifdef COUPLED_FILL
+  if ( af->Assemble_Jacobian )
+     {
+      load_lsi_derivs();
+      memset(d_beta_dF,0,MDE*sizeof(double));
+     }
+#endif /* COUPLED_FILL */
+
+  level_set_property(beta_negative, beta_positive, width, &beta, d_beta_dF);
+
+  betainv = 1.0/beta;
+
+  vs[0] = vsx;
+  vs[1] = vsy;
+  vs[2] = vsz;
+
+  if( TimeIntegration == TRANSIENT && pd->e[pg->imtrx][R_MESH1] )
+    {
+      /* Add the mesh motion to the substrate velocity */
+      vs[0] += fv_dot->x[0];
+      vs[1] += fv_dot->x[1];
+      vs[2] += fv_dot->x[2];
+    }
+
+  if (af->Assemble_Jacobian)
+    {
+      for (jvar=0; jvar<pd->Num_Dim; jvar++)
+	{
+	  var = VELOCITY1 + jvar;
+	  if (pd->v[pg->imtrx][var])
+	    {
+	      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  phi_j = bf[var]->phi[j];
+                  d_func[jvar][var][j] += (-betainv)*(phi_j);
+		}
+	    }
+
+	}
+
+      var = LS;
+      if( pd->v[pg->imtrx][var])
+	{
+	  for(p=0; p<pd->Num_Dim; p++)
+	    {
+	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  phi_j = bf[var]->phi[j];
+
+		  d_func[p][var][j] += (d_beta_dF[j]/beta/beta)*( fv->v[p] - vs[p] );
+		}
+	    }
+	}
+    }	/* end of of Assemble Jacobian		*/
+
+
+  /* Calculate the residual contribution	*/
+  for (p=0; p<pd->Num_Dim; p++)
+    {
+      func[p] += (-betainv) * (fv->v[p] - vs[p]);
+    }
+
+}
+/****************************************************************************/
+/****************************************************************************/
+/****************************************************************************/
+
 #if 1
 void 
 fvelo_slip_level(double func[MAX_PDIM],

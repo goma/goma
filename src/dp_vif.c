@@ -2183,6 +2183,8 @@ noahs_ark()
 	    ddd_add_member(n, &mp_glob[i]->mp2nd->speciessource[w], 1, MPI_DOUBLE);
 	    ddd_add_member(n, &mp_glob[i]->mp2nd->speciessourcemask[0][w], 1, MPI_INT);
 	    ddd_add_member(n, &mp_glob[i]->mp2nd->speciessourcemask[1][w], 1, MPI_INT);
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->use_species_source_width[w], 1, MPI_INT);
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->species_source_width[w], 1, MPI_DOUBLE);
 	  }
 	}
 

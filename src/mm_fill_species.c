@@ -10772,9 +10772,10 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
                        }
                    }
                }
+	    if( ls != NULL ) ls_modulate_speciessource ( w,  st );
            }
 		   
-		if( ls != NULL ) ls_modulate_speciessource ( w,  st );
+
 
        }
   }
@@ -13470,7 +13471,12 @@ ls_modulate_speciessource(int w,
 	  ls = ls_old;
 	}
     }
- width = ls->Length_Scale;
+
+  if (mp->mp2nd->use_species_source_width[w]) {
+    width = mp->mp2nd->species_source_width[w];
+  } else {
+    width = ls->Length_Scale;
+  }
  pm_minus = mp->mp2nd->speciessourcemask[0][w];	  
  pm_plus =  mp->mp2nd->speciessourcemask[1][w];	  
  

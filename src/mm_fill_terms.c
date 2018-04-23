@@ -49,7 +49,7 @@
 #include "mm_eh.h"
 #include "mm_std_models.h"
 #include "mm_std_models_shell.h"
-
+#include "mm_fill_common.h"
 
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
@@ -18603,8 +18603,7 @@ double REFVolumeSource (double time,
 }
 
 int
-assemble_projection_stabilization(Exo_DB *exo)
-
+assemble_projection_stabilization(Exo_DB *exo, double time)
      /* This routine applies the Dohrmann-Bochev Polynomial Projection Pressure Stabilization
       * to the continuity equation to help aid in iterative solutions the the Navier-Stokes equations
       * This routine also includes an expedient to ignore such terms near a level-set interface. 
@@ -18666,6 +18665,9 @@ assemble_projection_stabilization(Exo_DB *exo)
           wt = Gq_weight (ip, ei[pg->imtrx]->ielem_type); /* find quadrature weights for */
 
           setup_shop_at_point( ei[pg->imtrx]->ielem, xi, exo );
+
+	  computeCommonMaterialProps_gp(time);
+
           fv->wt = wt;
           h3 = fv->h3;
           det_J = bf[eqn]->detJ;

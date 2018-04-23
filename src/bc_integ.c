@@ -737,6 +737,16 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                              theta, delta_t);
 	  break;
 
+	case VELO_SLIP_LS_HEAVISIDE_BC:
+	  fvelo_slip_ls_heaviside( func, d_func,
+				   bc->BC_Data_Float[0],
+				   bc->BC_Data_Float[1],
+				   bc->BC_Data_Float[2],
+				   bc->BC_Data_Float[3],
+				   bc->BC_Data_Float[4],
+				   bc->BC_Data_Float[5],
+				   theta, delta_t);
+	  break;
 
 
 	case Q_VELO_SLIP_BC:

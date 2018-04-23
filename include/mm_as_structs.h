@@ -825,6 +825,7 @@ struct Uniform_Problem_Description {
                                        /*   for isothermal problems */
   int   XFEM;                     /* Flag indicating that XFEM is in use */
   int SegregatedSolve;            /* Flag indicating segregated solve should be used */
+  int SegregatedSubcycles;
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/
