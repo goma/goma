@@ -6713,6 +6713,21 @@ rd_solver_specs(FILE *ifp,
       ECHO("(Continuity Stabilization = None) (default)", echo_file);
     }
 
+  iread = look_for_optional(ifp, "Number of Segregated Subcycles", input, '=');
+  if (iread == 1) {
+    upd->SegregatedSubcycles = read_int(ifp, "Number of Segregated Subcycles");
+    if (upd->SegregatedSubcycles < 1) {
+      EH(-1, "Number of Segregated Subcycles should be greater or equal to 1");
+    }
+    SPF(echo_string,"%s = %d", "Number of Segregated Subcycles", upd->SegregatedSubcycles ); ECHO(echo_string,echo_file);
+  }
+  else
+    {
+      upd->SegregatedSubcycles = 1;
+      ECHO("(Number of Segregated Subcycles = 1) (default)", echo_file);
+    }
+
+
   /*IGBRK*/
   iread = look_for_optional(ifp, "Linear Stability", input, '=');
   if (iread == 1)

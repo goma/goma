@@ -118,6 +118,14 @@ PROTO((int ,			/* species_sus - solid volume fraction       */
        dbl ,			/* alpha_g - extent of rxn, gel point        */
        dbl ));			/* Aexp - exponent, thermal viscosity func  */
 
+EXTERN int
+foam_pmdi10_viscosity(int species,    /* species number for cure equation */
+		      dbl mu0,        /* monomer reference temperature viscosity */
+		      dbl alpha_g,    /* extent of reaction at the gel point */
+		      dbl A,          /* exponent for constitutive equation */
+		      dbl B,          /* exponent for constitutive equation */
+		      dbl norm_E);     /* Normalized activation energy */
+
 EXTERN int thermal_viscosity	/* mm_viscosity.c                            */
 PROTO((dbl ,			/* mu0 - ref temperature fluid viscosity     */
        dbl ));			/* Aexp - exponent for constitutive equation */

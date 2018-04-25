@@ -246,7 +246,7 @@ struct Material_Properties
   dbl *u_dilationalViscosity;
   dbl dilationalViscosityRatio;
   dbl d_dilationalViscosityRatio[MAX_VARIABLE_TYPES + MAX_CONC];
-
+  dbl dilationalViscosityMultiplier;
   //! Volume fraction of Gas for multiphase material models
   //!  (Currently there is one model, foam)
   dbl volumeFractionGas;
@@ -257,6 +257,7 @@ struct Material_Properties
   //! Integer representing the model for the dilationa viscosity
   int DilationalViscosityModel;
   int dilationalViscosity_tableid;
+
 
   int Mwt_funcModel;
   dbl Mwt_func;
@@ -1170,6 +1171,8 @@ struct Second_LS_Phase_Properties
   dbl speciessource[MAX_CONC];
   int speciessourcemask[2][MAX_CONC];;
   dbl speciessource_phase[MAX_PHASE_FUNC][MAX_CONC];
+  int use_species_source_width[MAX_CONC];
+  dbl species_source_width[MAX_CONC];
 
 
 };

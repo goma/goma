@@ -2935,6 +2935,9 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	       err = get_porous_part_sat_terms(&pm_terms, *time_ptr, delta_t);
 	       EH(err,"problem in getting the partially-saturated porous  terms");
 	     }
+
+	     computeCommonMaterialProps_gp(*time_ptr);
+
 	     /*
 	      * Calculate the contribution from this element of the
 	      * projection of the standard field variables unto the

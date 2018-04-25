@@ -1600,6 +1600,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->viscosity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->dilationalViscosity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->dilationalViscosityRatio, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->dilationalViscosityMultiplier, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->volumeFractionGas, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->reaction_rate, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->solution_temperature, 1, MPI_DOUBLE);
@@ -1710,6 +1711,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->Shell_User_ParModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->PermittivityModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->PBE_BA_Type, 1, MPI_INT);
+
       /* External field indeces PRS 10-1-2013 (shutdown times) */
 
       ddd_add_member(n,&mp_glob[i]->porosity_external_field_index, 1, MPI_INT);
@@ -2183,6 +2185,8 @@ noahs_ark()
 	    ddd_add_member(n, &mp_glob[i]->mp2nd->speciessource[w], 1, MPI_DOUBLE);
 	    ddd_add_member(n, &mp_glob[i]->mp2nd->speciessourcemask[0][w], 1, MPI_INT);
 	    ddd_add_member(n, &mp_glob[i]->mp2nd->speciessourcemask[1][w], 1, MPI_INT);
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->use_species_source_width[w], 1, MPI_INT);
+	    ddd_add_member(n, &mp_glob[i]->mp2nd->species_source_width[w], 1, MPI_DOUBLE);
 	  }
 	}
 

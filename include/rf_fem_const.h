@@ -956,7 +956,7 @@
 #endif
 
 #ifndef MAX_NUM_MATRICES 
-#define MAX_NUM_MATRICES 6          /* Maximum number of matrices to be solved in segregated solver fashion */
+#define MAX_NUM_MATRICES 11          /* Maximum number of matrices to be solved in segregated solver fashion */
 #endif
 
 #define MAX_MOMENTS 4

@@ -300,7 +300,7 @@ PROTO (( double ,
 	 double [MAX_CONC][MDE] ));
 
 EXTERN int assemble_projection_stabilization 
-PROTO (( Exo_DB * ));
+PROTO (( Exo_DB *, double ));
 
 EXTERN int assemble_PPPS_generalized
 PROTO (( Exo_DB * ));

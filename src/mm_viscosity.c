@@ -510,6 +510,35 @@ viscosity(struct Generalized_Newtonian *gn_local,
 	    }
 	}
     }
+  else if (gn_local->ConstitutiveEquation == FOAM_PMDI_10)
+    {
+      err = foam_pmdi10_viscosity(gn_local->cure_species_no, gn_local->mu0,
+			    gn_local->gelpoint, gn_local->cureaexp,
+			    gn_local->curebexp, gn_local->atexp);
+      EH(err, "foam_pmdi10_viscosity");
+
+      mu = mp->viscosity;
+
+      var = TEMPERATURE;
+      if ( d_mu != NULL && pd->v[pg->imtrx][TEMPERATURE] )
+	{
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	    {
+	      d_mu->T[j]= mp->d_viscosity[var]*bf[var]->phi[j];
+	    }
+	}
+
+      var = MASS_FRACTION;
+      if ( d_mu != NULL && pd->v[pg->imtrx][var] )
+	{
+	  w = gn_local->cure_species_no;
+	  var_offset = MAX_VARIABLE_TYPES + w;
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	    {
+	      d_mu->C[w][j] =mp->d_viscosity[var_offset]*bf[var]->phi[j];
+	    }
+	}
+    }
   else if (gn_local->ConstitutiveEquation == SYLGARD)
     {
       err = sylgard_viscosity(gn_local->cure_species_no, gn_local->mu0,
@@ -2509,6 +2538,126 @@ epoxy_viscosity(int species,    /* species number for cure equation */
   return(status);
 } /* end of epoxy_viscosity */
 
+
+/******************************************************************************
+ *     Function that computes the viscosity of foam pmdi10 model
+ *
+ *                     mu = mu0 * exp(E/RT) * ((alpha_g^A - alpha^A)/alpha^A)^(-B)
+ *       where
+ *                      mu0       = solvent viscosity
+ *                      alpha     = extent of reaction
+ *                      alpha_g   = extent of reaction at the gel point
+ *                      A, B      = exponent for cure behavior
+ *                      E/R       = Normalized activation energy
+ *
+ *     Function sets the viscosity members of mp.
+ *
+ *
+ *****************************************************************************/
+
+
+
+int
+foam_pmdi10_viscosity(int species,    /* species number for cure equation */
+		      dbl mu0,        /* monomer reference temperature viscosity */
+		      dbl alpha_g,    /* extent of reaction at the gel point */
+		      dbl A,          /* exponent for constitutive equation */
+		      dbl B,          /* exponent for constitutive equation */
+		      dbl norm_E)     /* Normalized activation energy */
+{
+  /* Local Variables */
+  dbl mu;   /* viscosity */
+  double muL;
+  dbl alpha;  /* extent of reaction */
+  dbl ratio;
+  dbl deriv;  /* stuff for the first derivative */
+  dbl T;      /* Convenient local variables */
+  int var;
+  int status = 1;
+  double volF;
+  int w;
+
+  alpha = fv->c[species]; /* extent of reaction */
+
+  double alpha_g_pow = pow(alpha_g, A);
+
+  if(alpha < alpha_g)
+    {
+      ratio = (alpha_g_pow - pow(alpha, A))/alpha_g_pow;
+    }
+  else /* do something special at the gel point */
+    {
+      ratio = 1e8;
+    }
+
+  T = upd->Process_Temperature;
+  if ( pd->gv[TEMPERATURE] )
+    {
+      T = fv->T;
+    }
+
+
+  if(T <= 0.)
+    {
+      muL = mu0  * pow (ratio, -B );
+    }
+  else
+    {
+      muL = mu0 * exp(-norm_E/T) * pow(ratio, -B);
+    }
+
+  volF = mp->volumeFractionGas;
+
+  mu = muL * exp(volF / (1- volF));
+  mp->viscosity = mu;
+  mp->FlowingLiquid_viscosity = muL;
+
+  double partial = (1 / ((1-volF)*(1-volF))) * exp(volF / (1 - volF));
+
+  /* dmu_dT */
+  var = TEMPERATURE;
+  if (T <= 0) {
+    mp->d_viscosity[var] = 0;
+    mp->d_FlowingLiquid_viscosity[var] = 0;
+  } else {
+    mp->d_FlowingLiquid_viscosity[var] = muL * norm_E/(T*T);
+    mp->d_viscosity[var] = mu * norm_E/(T*T) +
+      muL * mp->d_volumeFractionGas[var] * partial;
+  }
+  mp->d2_viscosity[var] = 0.0; // This doesn't seem to be used ever
+
+  if(pd->gv[var])
+    {
+      if( T <= 0.)
+	{
+	  mp->d_viscosity[var] 	= 0.;
+	  mp->d2_viscosity[var] = 0.;
+	}
+    }
+
+
+  /* dmu/dc */
+  var  = MASS_FRACTION;
+  mp->d_viscosity[MAX_VARIABLE_TYPES+species] = 0.;
+  mp->d2_viscosity[MAX_VARIABLE_TYPES+species] = 0.;
+  for (w = 0; w < pd->Num_Species; w++) {
+    mp->d_FlowingLiquid_viscosity[MAX_VARIABLE_TYPES+w] = 0;
+  }
+  if(pd->gv[var])
+    {
+      if(alpha < alpha_g)
+	{
+	  deriv = (-A*pow(alpha, A-1)/alpha_g_pow)*(-B)*(1/ratio) ;
+	  for (w = 0; w < pd->Num_Species; w++) {
+	    mp->d_viscosity[MAX_VARIABLE_TYPES+species] = mu * deriv +
+	      muL * mp->d_volumeFractionGas[MAX_VARIABLE_TYPES+w] * partial;
+	  }
+	  mp->d_FlowingLiquid_viscosity[MAX_VARIABLE_TYPES+species] = muL * deriv;
+	}
+    }
+
+  return(status);
+}
 
 int
 sylgard_viscosity(int species,    /* species number for cure equation */

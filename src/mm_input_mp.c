@@ -269,7 +269,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   
   int ConstitutiveEquation;
   int LameLambdaModel;
-  dbl a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10;
+  dbl a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12;
   dbl v0[DIM];
   int i0;
   /* dummy variable to hold modal data before it is put into the ve struct */
@@ -597,6 +597,20 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	}
       mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density ); 
+    }
+  else if (model_read == -1 && !strcmp(model_name, "FOAM_PMDI_10") )
+    {
+      mat_ptr->DensityModel = DENSITY_FOAM_PMDI_10;
+      num_const = read_constants(imp, &(mat_ptr->u_density), 0);
+      if (num_const < 3)
+	{
+	  sprintf(err_msg,
+		  "Material %s - expected at least 3 constants for %s %s model.\n",
+		  pd_glob[mn]->MaterialName, "Density", "FOAM_PMDI_10");
+	  EH(-1, err_msg);
+	}
+      mat_ptr->len_u_density = num_const;
+      SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density );
     }
   else if (model_read == -1 && !strcmp(model_name, "FOAM_CONC") )
     {
@@ -1503,7 +1517,11 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   else if ( !strcmp(model_name, "CARREAU_WLF_CONC_EXP") )
     {
       ConstitutiveEquation = CARREAU_WLF_CONC_EXP;
-    } 
+    }
+  else if ( !strcmp(model_name, "FOAM_PMDI_10") )
+    {
+      ConstitutiveEquation = FOAM_PMDI_10;
+    }
   else 
     {
       EH( -1, "Unrecognizable Constitutive Equation");
@@ -1647,7 +1665,8 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
       ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
       ConstitutiveEquation == BOND ||
-      ConstitutiveEquation == FOAM_EPOXY)
+      ConstitutiveEquation == FOAM_EPOXY ||
+      ConstitutiveEquation == FOAM_PMDI_10)
     {
       model_read = look_for_mat_prop(imp, "Low Rate Viscosity", 
 				     &(gn_glob[mn]->mu0Model), 
@@ -1860,7 +1879,8 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
      ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
      ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
      ConstitutiveEquation == THERMAL||
-     ConstitutiveEquation == FOAM_EPOXY)
+     ConstitutiveEquation == FOAM_EPOXY ||
+     ConstitutiveEquation == FOAM_PMDI_10)
     {
       model_read = look_for_mat_prop(imp, "Thermal Exponent", 
 				     &(gn_glob[mn]->atexpModel), 
@@ -2003,7 +2023,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }      
  
   if(ConstitutiveEquation == CURE || ConstitutiveEquation == EPOXY 
-     || ConstitutiveEquation == FILLED_EPOXY)
+     || ConstitutiveEquation == FILLED_EPOXY || ConstitutiveEquation == FOAM_PMDI_10)
     {
       model_read = look_for_mat_prop(imp, "Cure Gel Point", 
 				     &(gn_glob[mn]->gelpointModel), 
@@ -2177,12 +2197,28 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     // We're here if we found the card, but couldn't read it
     EH(model_read, "Dilational Viscosity");
   }
+
+  model_read = look_for_mat_prop(imp, "Dilational Viscosity Multiplier",
+				 &(i0),
+				 &(a0), NO_USER, NULL, model_name, SCALAR_INPUT,
+				 &NO_SPECIES,es);
+
+  mat_ptr->dilationalViscosityMultiplier = 1.0;
+
+  if( model_read != -1 )
+    {
+      mat_ptr->dilationalViscosityMultiplier = a0;
+
+      stringup(model_name);
+
+      if( strcmp( model_name, "CONSTANT") )
+	{
+          EH(-1, "Dilational Viscosity Multiplier can only be CONSTANT.\n");
+	}
+      ECHO(es,echo_file);
+    }
     
-
-
-
-
-  model_read = look_for_mat_prop(imp, "Second Level Set Viscosity", 
+  model_read = look_for_mat_prop(imp, "Second Level Set Viscosity",
 				 &(i0), 
 				 &(a0), NO_USER, NULL, model_name, SCALAR_INPUT, 
 				 &NO_SPECIES,es);
@@ -3010,6 +3046,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_thermal_conductivity);       
 	}
+
       else if( !strcmp(model_name, "FOAM_PBE") )
 	{
 	  mat_ptr->ConductivityModel = FOAM_PBE;
@@ -3021,6 +3058,22 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  /* 	      pd_glob[mn]->MaterialName, search_string, "THERMAL"); */
 	  /*     EH(-1, err_msg); */
 	  /*   } */
+	  mat_ptr->len_u_thermal_conductivity = num_const;
+
+	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_thermal_conductivity);
+
+	}
+      else if( !strcmp(model_name, "FOAM_PMDI_10") )
+	{
+	  mat_ptr->ConductivityModel = FOAM_PMDI_10;
+	  num_const = read_constants(imp, &(mat_ptr->u_thermal_conductivity), 0);
+	  if (num_const < 2)
+	    {
+	      sprintf(err_msg,
+		      "Material %s - expected at least 2 constants for %s %s model.\n",
+		      pd_glob[mn]->MaterialName, search_string, "FOAM_PMDI_10");
+	      EH(-1, err_msg);
+	    }
 
 	  mat_ptr->len_u_thermal_conductivity = num_const;
 
@@ -3184,6 +3237,24 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_heat_capacity); 
 	  
     }
+  else if(!strcmp(model_name, "FOAM_PMDI_10"))
+    {
+      mat_ptr->HeatCapacityModel = FOAM_PMDI_10;
+      num_const = read_constants(imp, &(mat_ptr->u_heat_capacity), 0);
+      if (num_const < 2)
+	{
+	  sprintf(err_msg,
+		  "Material %s - expected at least 2 constants for %s %s model.\n",
+		  pd_glob[mn]->MaterialName, search_string, "FOAM_PMDI_10");
+	  EH(-1, err_msg);
+	}
+
+      mat_ptr->len_u_heat_capacity = num_const;
+
+      SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_heat_capacity);
+
+    }
+
   else
     {
       EH(model_read, "Heat Capacity");
@@ -7789,6 +7860,16 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->len_u_heat_source = num_const;
       SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heat_source);
     }
+  else if ( !strcmp(model_name, "FOAM_PMDI_10") )
+    {
+      HeatSourceModel = HS_FOAM_PMDI_10;
+      model_read = 1;
+      mat_ptr->HeatSourceModel = HeatSourceModel;
+
+      num_const = read_constants(imp, &(mat_ptr->u_heat_source), NO_SPECIES);
+      mat_ptr->len_u_heat_source = num_const;
+      SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heat_source);
+    }
   else if ( !strcmp(model_name, "VISC_ACOUSTIC") )
     {
       HeatSourceModel = VISC_ACOUSTIC;
@@ -8018,6 +8099,72 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  mat_ptr->u_species_source[species_no][7] = a7;  /* high temperature limit */
 
 	  SPF_DBL_VEC(endofstring(es), 8,  mat_ptr->u_species_source[species_no]);
+	}
+      else if ( !strcmp(model_name, "FOAM_PMDI_10_RXN") )
+	{
+	  SpeciesSourceModel = FOAM_PMDI_10_RXN;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  if ( fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
+		      &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7, &a8, &a9, &a10, &a11, &a12)  != 12 )
+	    {
+		  sr = sprintf(err_msg,
+			       "Matl %s needs 13 constants for %s %s model.\n",
+			       pd_glob[mn]->MaterialName,
+			       "Species Source", "FOAM_PMDI_10_RXN");
+		  EH(-1, err_msg);
+	    }
+
+	  mat_ptr->u_species_source[species_no] = (dbl *)
+						 array_alloc(1,13,sizeof(dbl));
+
+	  mat_ptr->len_u_species_source[species_no] = 13;
+
+	  mat_ptr->u_species_source[species_no][0] = a0;  /* k0 */
+	  mat_ptr->u_species_source[species_no][1] = a1;  /* w */
+	  mat_ptr->u_species_source[species_no][2] = a2;  /* Beta */
+	  mat_ptr->u_species_source[species_no][3] = a3;  /* C_1 */
+	  mat_ptr->u_species_source[species_no][4] = a4;  /* C_2 */
+	  mat_ptr->u_species_source[species_no][5] = a5;  /* m */
+	  mat_ptr->u_species_source[species_no][6] = a6;  /* n */
+	  mat_ptr->u_species_source[species_no][7] = a7;  /* b */
+	  mat_ptr->u_species_source[species_no][8] = a8;  /* T_g0 */
+	  mat_ptr->u_species_source[species_no][9] = a9;  /* T_ginf */
+	  mat_ptr->u_species_source[species_no][10] = a10;  /* A */
+	  mat_ptr->u_species_source[species_no][11] = a11;  /* En/R */
+	  SPF_DBL_VEC(endofstring(es), 13,  mat_ptr->u_species_source[species_no]);
+	}
+      else if ( !strcmp(model_name, "FOAM_PMDI_10_H2O") )
+	{
+	  SpeciesSourceModel = FOAM_PMDI_10_H2O;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  if ( fscanf(imp, "%lf %lf %lf %lf",
+		      &a0, &a1, &a2, &a3)  != 4 )
+	    {
+		  sr = sprintf(err_msg,
+			       "Matl %s needs 4 constants for %s %s model.\n",
+			       pd_glob[mn]->MaterialName,
+			       "Species Source", "FOAM_PMDI_10_H2O");
+		  EH(-1, err_msg);
+	    }
+
+	  mat_ptr->u_species_source[species_no] = (dbl *)
+						 array_alloc(1,4,sizeof(dbl));
+
+	  mat_ptr->len_u_species_source[species_no] = 4;
+
+	  mat_ptr->u_species_source[species_no][0] = a0;  /* n */
+	  mat_ptr->u_species_source[species_no][1] = a1;  /* t_nuc */
+	  mat_ptr->u_species_source[species_no][2] = a2;  /* A */
+	  mat_ptr->u_species_source[species_no][3] = a3;  /* En/R */
+	  SPF_DBL_VEC(endofstring(es), 4,  mat_ptr->u_species_source[species_no]);
+	}
+      else if ( !strcmp(model_name, "FOAM_PMDI_10_CO2") )
+	{
+	  SpeciesSourceModel = FOAM_PMDI_10_CO2;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
 	}
       else if ( !strcmp(model_name, "BUTLER_VOLMER") )
         {
@@ -8249,64 +8396,90 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	       "Species Source model invalid. May need more cards for other species");
 	  }
       ECHO(es,echo_file);
-	  
+
       species_no = pd_glob[mn]->Num_Species;
-	  model_read = look_for_mat_prop(imp, "Second Level Set Species Source", 
-									   &(i0), 
-									   v0, NO_USER, NULL, model_name, SCALAR_INPUT, 
-									   &species_no,es);
+      model_read = look_for_mat_prop(imp, "Second Level Set Species Source",
+				     &(i0),
+				     v0, NO_USER, NULL, model_name, SCALAR_INPUT,
+				     &species_no,es);
 		
-		if( model_read != -1 )
+      if( model_read != -1 )
+	{
+	  if( ls == NULL ) EH(-1, "Second Level Set Species Source requires activation of Level Set Tracking.\n");
+			
+	  mat_ptr->mp2nd->SpeciesSourceModel[species_no] = i0;
+	  mat_ptr->mp2nd->speciessource[species_no] = v0[species_no];
+
+	  stringup(model_name);
+			
+	  if( !strcmp( model_name, "CONSTANT") )
+	    {
+	      if ( fscanf(imp,"%s", input ) !=  1 )
 		{
-			if( ls == NULL ) EH(-1, "Second Level Set Species Source requires activation of Level Set Tracking.\n");
-			
-			mat_ptr->mp2nd->SpeciesSourceModel[species_no] = i0;
-			mat_ptr->mp2nd->speciessource[species_no] = *v0; 
-			
-			stringup(model_name);
-			
-			if( !strcmp( model_name, "CONSTANT") )
-			{
-			  if ( fscanf(imp,"%s", input ) !=  1 )
-			    {
-			     EH(-1,"Expecting trailing keyword for Second Level Set Species Source.\n");
-			    }
-				
-			  stringup(input);
-				
-			  if( strncmp( input,"POSITIVE", 3 ) == 0 )
-			    {
-			     mat_ptr->mp2nd->speciessourcemask[0][species_no] = 0; mat_ptr->mp2nd->speciessourcemask[1][species_no] = 1;
-			    }
-			  else if (  strncmp( input,"NEGATIVE", 3 ) == 0 )
-			    {
-			     mat_ptr->mp2nd->speciessourcemask[0][species_no] = 1; mat_ptr->mp2nd->speciessourcemask[1][species_no] = 0;
-			    }
-			  else
-			    {
-			     EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Heat Source.\n");
-			    }
-			  SPF(endofstring(es), " %s", input);
-	  		  if( pfd != NULL)
-	    		    {
-			     for(i=0 ; i< pfd->num_phase_funcs ; i++)
-			       {
-      				if ( fscanf(imp,"%lf",&(mat_ptr->mp2nd->speciessource_phase[i][species_no])) != 1)
-					{ EH( -1, "error reading phase species source"); }    
-	  			SPF(endofstring(es)," %g", mat_ptr->mp2nd->speciessource_phase[i][species_no]);
-			       }
-	    		    }
-			}
-			else
-			{
-				EH(-1, "Second Level Set Species Source model can only be CONSTANT.\n");
-			}
+		  EH(-1,"Expecting trailing keyword for Second Level Set Species Source.\n");
 		}
+				
+	      stringup(input);
+				
+	      if( strncmp( input,"POSITIVE", 3 ) == 0 )
+		{
+		  mat_ptr->mp2nd->speciessourcemask[0][species_no] = 0; mat_ptr->mp2nd->speciessourcemask[1][species_no] = 1;
+		}
+	      else if (  strncmp( input,"NEGATIVE", 3 ) == 0 )
+		{
+		  mat_ptr->mp2nd->speciessourcemask[0][species_no] = 1; mat_ptr->mp2nd->speciessourcemask[1][species_no] = 0;
+		}
+	      else
+		{
+		  EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Heat Source.\n");
+		}
+	      SPF(endofstring(es), " %s", input);
+	      if( pfd != NULL)
+		{
+		  for(i=0 ; i< pfd->num_phase_funcs ; i++)
+		    {
+		      if ( fscanf(imp,"%lf",&(mat_ptr->mp2nd->speciessource_phase[i][species_no])) != 1)
+			{ EH( -1, "error reading phase species source"); }
+		      SPF(endofstring(es)," %g", mat_ptr->mp2nd->speciessource_phase[i][species_no]);
+		    }
+		}
+	    }
+	  else
+	    {
+	      EH(-1, "Second Level Set Species Source model can only be CONSTANT.\n");
+	    }
+	}
 		
-		ECHO(es,echo_file);
-		
+      ECHO(es,echo_file);
+
+      species_no = pd_glob[mn]->Num_Species;
+      model_read = look_for_mat_prop(imp, "Level Set Species Width",
+				     &(i0),
+				     v0, NO_USER, NULL, model_name, SCALAR_INPUT,
+				     &species_no,es);
+
+      if( model_read != -1 )
+	{
+	  if( ls == NULL ) EH(-1, "Level Set Species Width requires activation of Level Set Tracking.\n");
+
+	  mat_ptr->mp2nd->use_species_source_width[species_no] = 1;
+	  mat_ptr->mp2nd->species_source_width[species_no] = v0[species_no];
+
+	  stringup(model_name);
+
+	  if( strcmp( model_name, "CONSTANT") )
+	    {
+	      EH(-1, "Level Set Species Width can only be CONSTANT.\n");
+	    }
+	}
+
+      ECHO(es,echo_file);
+
 						
     }
+
+		
+						
 
   model_read = look_for_mat_prop(imp, "Current Source", 
 				     &(mat_ptr->CurrentSourceModel), 

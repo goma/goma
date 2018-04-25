@@ -779,15 +779,15 @@ matrix_fill(
    * The current SUPG model requires a value for the element's size and the
    * average velocity. Evaluate this here.
    */
-  if ((vn->wt_funcModel == SUPG && pde[R_STRESS11] && pde[R_MOMENTUM1]) || 
+  if ((vn->wt_funcModel == SUPG && pde[R_STRESS11] && pd->gv[R_MOMENTUM1]) ||
       (mp->Spwt_funcModel == SUPG && pde[R_MASS] &&
-       (pde[R_MOMENTUM1] || pde[R_MESH1])) ||
+       (pd->gv[R_MOMENTUM1] || pd->gv[R_MESH1])) ||
       (mp->Mwt_funcModel == SUPG && pde[R_MOMENTUM1]) ||
       (mp->Ewt_funcModel == SUPG && pde[R_ENERGY] &&
-       (pde[R_MOMENTUM1] || pde[R_MESH1])) ||
+       (pd->gv[R_MOMENTUM1] || pd->gv[R_MESH1])) ||
       (mp->Ewt_funcModel == SUPG && pde[R_SHELL_ENERGY] &&
        (pde[R_LUBP] ))) {
-    h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
+    h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pd->gv[R_MESH1]);
     element_velocity(pg_data.v_avg, pg_data.dv_dnode, exo);
   }
   
@@ -961,7 +961,7 @@ matrix_fill(
     {
       if (PSPP == 1)
 	{
-	  err = assemble_projection_stabilization(exo); 
+	  err = assemble_projection_stabilization(exo, time_value);
 	  EH(err, "assemble_projection_stabilization");
 #ifdef CHECK_FINITE
 	  CHECKFINITE("assemble_projection_stabilization");

@@ -19,7 +19,6 @@
 
 #ifdef _MM_STD_MODELS_C
 #define EXTERN
-#
 #endif
 
 #ifndef _MM_STD_MODELS_C
@@ -79,6 +78,14 @@ EXTERN double visc_diss_heat_source /* mm_std_models.c                       */
 PROTO((HEAT_SOURCE_DEPENDENCE_STRUCT *,
        dbl *));			/* param - General multipliers               */
 
+EXTERN double
+foam_pmdi_10_heat_cap( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp, double time);
+
+EXTERN double
+foam_pmdi_10_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
+			 double time,
+			 double tt,	/* parameter to vary time integration from explicit (tt = 1) to implicit (tt = 0) */
+			 double dt);	/* current time step size */
 EXTERN double enthalpy_heat_capacity_model /* mm_std_models.c                */
 PROTO((HEAT_CAPACITY_DEPENDENCE_STRUCT *));
 
@@ -199,6 +206,23 @@ PROTO(( int,
 	double *,		/* param - pointer to user-defined parm list */ 
 	double,                 /* tt */
 	double));               /* dt */
+
+EXTERN int
+foam_pmdi10_rxn_species_source(int species_no,   /* Current species number */
+			       double *param,
+			       double tt, double dt);
+
+EXTERN int
+foam_pmdi10_h2o_species_source(int species_no,   /* Current species number */
+			       double *param,
+			       double time,
+			       double tt, double dt);
+
+EXTERN int
+foam_pmdi10_co2_species_source(int species_no,   /* Current species number */
+			       double *param,
+			       double time,
+			       double tt, double dt);
 
 EXTERN int assemble_bond_evolution /* mm_std_models.c */
 PROTO((dbl,                     /* Current time */

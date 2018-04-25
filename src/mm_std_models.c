@@ -1171,6 +1171,240 @@ foam_epoxy_species_source(int species_no,   /* Current species number */
   return 0;
 }
 
+int
+foam_pmdi10_rxn_species_source(int species_no,   /* Current species number */
+			       double *param,
+			       double tt, double dt)
+/* param - pointer to user-defined parameter list */
+/* tt, dt - time derivative parameters */
+{
+  int eqn, var;
+
+  double k0 = param[0];
+  double w_rxn = param[1];
+  double beta = param[2];
+  double C_1 = param[3];
+  double C_2 = param[4];
+  double m = param[5];
+  double n = param[6];
+  double b = param[7];
+  double T_g0 = param[8];
+  double T_ginf = param[9];
+  double A = param[10];
+  double E_norm = param[11];
+
+  double T = fv->T;
+
+  double source = 0;
+
+  if (T <= 0) {
+    source = 0;
+    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = 0;
+    mp->d_species_source[TEMPERATURE] = 0;
+    return (source);
+  }
+  double xi = fv->c[species_no];
+
+
+
+  double T_g = (T_g0 * (1 - xi) + A * xi * T_ginf) / (1 - xi + A * xi);
+  double d_T_g_dT = 0;
+  double d_T_g_dC = ((-(T_g0 + A * T_ginf) * (1 - xi + A * xi)) - (T_g0 * (1 - xi) + A * xi * T_ginf) * (-1 + A)) /
+    ((1- xi + A * xi) * (1- xi + A * xi));
+
+  double frac = -C_1 * (T - T_g) / (C_2 + T - T_g);
+  double d_frac_dT = ((-C_1 * (1 - d_T_g_dT)) * (C_2 + T - T_g) - (-C_1 * (T - T_g)) * (1 - d_T_g_dT)) / ((C_2 + T - T_g) * (C_2 + T - T_g));
+  double d_frac_dC = ((-C_1 * (-d_T_g_dC)) * (C_2 + T - T_g) - (-C_1 * (T - T_g)) * (d_T_g_dC)) / ((C_2 + T - T_g) * (C_2 + T - T_g));
+
+  double a_T = pow(10, frac);
+  double d_a_T_dT = log(10) * a_T * d_frac_dT;
+  double d_a_T_dC = log(10) * a_T * d_frac_dC;
+
+  double k = (pow(1 + w_rxn * a_T, -beta)) * k0 * exp(-E_norm / T);
+
+  double d_k_dT = w_rxn * d_a_T_dT * (-beta) * k / (1 + w_rxn * a_T) +
+    E_norm/(fv->T * fv->T) * k;
+  double d_k_dC = w_rxn * d_a_T_dC * (-beta) * k / (1 + w_rxn * a_T);
+
+  if (xi < 0) {
+    source = k * b;
+  } else {
+    source = k * (b + pow(xi, m)) * pow(1 - xi, n);
+  }
+
+  /**********************************************************/
+
+  /* Species piece */
+  eqn = MASS_FRACTION;
+  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+    {
+      mp->species_source[species_no] = source;
+
+      /* Jacobian entries for source term */
+      var = MASS_FRACTION;
+      if (pd->v[pg->imtrx][var])
+	{
+	  if (xi < 0) {
+	    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = d_k_dC  * b;
+	  } else {
+	    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = d_k_dC  * (b + pow(xi, m)) * pow(1 - xi, n);
+	    if (xi > 0) {
+	      mp->d_species_source[MAX_VARIABLE_TYPES + species_no] += m * source / xi + n * source / (1 - xi);
+	    }
+	  }
+	}
+
+      var = TEMPERATURE;
+      if (pd->v[pg->imtrx][var])
+	{
+	  if (xi < 0) {
+	    mp->d_species_source[var] = d_k_dT * (b + pow(xi, m)) * pow(1 - xi, n);
+	  } else {
+	    mp->d_species_source[var] = d_k_dT * b;
+	  }
+	}
+    }
+
+  return 0;
+}
+
+int
+foam_pmdi10_h2o_species_source(int species_no,   /* Current species number */
+			       double *param,
+			       double time,
+			       double tt, double dt)
+/* param - pointer to user-defined parameter list */
+/* tt, dt - time derivative parameters */
+{
+  int eqn, var;
+
+  double CH2O = fv->c[species_no];
+  double T = fv->T;
+  double n = param[0];
+  double t_nuc = param[1];
+  double A = param[2];
+  double norm_E = param[3];
+
+  double N = 0.5 * (1 + tanh((time - t_nuc)/t_nuc));
+
+  double source = 0;
+
+  if (T <= 0) {
+    source = 0;
+    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = 0;
+    mp->d_species_source[TEMPERATURE] = 0;
+    return (source);
+  }
+
+  if (CH2O <= 0) {
+    source = 0;
+    mp->species_source[species_no] = 0;
+  } else {
+    source = -N * A * exp(-norm_E/T) * pow(CH2O, n);
+  }
+  /**********************************************************/
+
+  /* Species piece */
+  eqn = MASS_FRACTION;
+  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+    {
+      mp->species_source[species_no] = source;
+
+      /* Jacobian entries for source term */
+      var = MASS_FRACTION;
+      if (pd->v[pg->imtrx][var])
+	{
+	  if (CH2O > 0) {
+	    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = source * n / CH2O;
+	  }
+	}
+
+      var = TEMPERATURE;
+      if (pd->v[pg->imtrx][var])
+	{
+	  mp->d_species_source[var] = -norm_E/(T*T) * source;
+	}
+    }
+
+  return source;
+}
+
+int
+foam_pmdi10_co2_species_source(int species_no,   /* Current species number */
+			       double *param,
+			       double time,
+			       double tt, double dt)
+{
+  int eqn, var;
+
+
+  double T = fv->T;
+  int wH2O = -1;
+  int w;
+
+  for (w = 0; w < pd->Num_Species; w++) {
+    if (mp->SpeciesSourceModel[w] == FOAM_PMDI_10_H2O) {
+      wH2O = w;
+      break;
+    }
+  }
+
+  if (wH2O == -1) {
+    EH(-1, "Expected to find a speices with source FOAM_PMDI_10_H2O");
+    return 0;
+  }
+  double CH2O = fv->c[wH2O];
+  double n = mp->u_species_source[wH2O][0];
+  double t_nuc = mp->u_species_source[wH2O][1];
+  double A = mp->u_species_source[wH2O][2];
+  double norm_E = mp->u_species_source[wH2O][3];
+
+  double N = 0.5 * (1 + tanh((time - t_nuc)/t_nuc));
+
+  double source;
+
+  if (T <= 0) {
+    source = 0;
+    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = 0;
+    mp->d_species_source[MAX_VARIABLE_TYPES + wH2O] = 0;
+    mp->d_species_source[TEMPERATURE] = 0;
+    return (source);
+  }
+
+  if (CH2O <= 0) {
+    source = 0;
+    mp->species_source[species_no] = 0;
+  } else {
+    source = N * A * exp(-norm_E/T) * pow(CH2O, n);
+  }
+
+  /**********************************************************/
+
+  /* Species piece */
+  eqn = MASS_FRACTION;
+  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+    {
+      mp->species_source[species_no] = source;
+
+      /* Jacobian entries for source term */
+      var = MASS_FRACTION;
+      if (pd->v[pg->imtrx][var])
+	{
+	  if (CH2O > 0) {
+	    mp->d_species_source[MAX_VARIABLE_TYPES + wH2O] = source * n / CH2O;
+	  }
+	}
+
+      var = TEMPERATURE;
+      if (pd->v[pg->imtrx][var])
+	{
+	  mp->d_species_source[var] = -norm_E/(T*T) * source;
+	}
+    }
+
+  return source;
+}
+
 /* 
  * This is the source term for a suspension model
  * where the fluid and particles have different
@@ -1181,6 +1415,8 @@ double
 epoxy_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 		  double tt,	/* parameter to vary time integration from 
 				 * explicit (tt = 1) to implicit (tt = 0) */
+
+
 		  double dt)	/* current time step size */
 {
   int eqn, var;
@@ -1566,6 +1802,85 @@ foam_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 	    {
 			d_h->T[j] += -bf[var]->phi[j]*(  hT*3.0*phi0/2.0/a0 );
 		}
+	}
+	return ( h );
+}
+
+double
+foam_pmdi_10_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
+			 double time,
+			 double tt,	/* parameter to vary time integration from explicit (tt = 1) to implicit (tt = 0) */
+			 double dt)	/* current time step size */
+{
+	double h;
+	double rho;
+	DENSITY_DEPENDENCE_STRUCT d_rho_struct;
+	DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+
+	if (mp->DensityModel != DENSITY_FOAM_PMDI_10) {
+	  EH(-1, "Expected FOAM_PMDI_10 Density Model for FOAM_PMDI Heat Source");
+	  mp->heat_capacity = 0.0;
+	  return 0.0;
+	}
+
+	rho = density(d_rho, time);
+
+	int wRXN = -1;
+	int w;
+
+	for (w = 0; w < pd->Num_Species_Eqn; w++) {
+	  if (mp->SpeciesSourceModel[w] == FOAM_PMDI_10_RXN) {
+	    wRXN = w;
+	    break;
+	  }
+	}
+
+	if (wRXN == -1) {
+	  EH(-1, "Expected to find a species with source type FOAM_PMDI_10_RXN");
+	  return 0;
+	}
+
+	int j,var;
+
+	double Delta_H_RXN = mp->u_heat_source[0];
+	double M_CO2 = mp->u_density[0];
+	double ref_press = mp->u_density[2];
+
+	double Rgas_const = mp->u_density[3];
+
+	double rho_gas = 0;
+
+	rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
+
+	double Y = 1.0 - rho_gas/rho;
+
+	h = Delta_H_RXN * Y * rho * fv_dot->c[wRXN];
+
+	if (d_h != NULL) {
+	  var = TEMPERATURE ;
+
+	  if( pd->v[pg->imtrx][var] )
+	    {
+	      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  d_h->T[j] = 0;
+		  d_h->T[j] = Delta_H_RXN * (-rho_gas/(rho*fv->T)) * rho * fv_dot->c[wRXN];
+		  d_h->T[j] += Delta_H_RXN * Y * d_rho->T[j] * fv_dot->c[wRXN] + Delta_H_RXN * (-rho_gas/(rho*rho)) * d_rho->T[j] * fv_dot->c[wRXN];
+		}
+	    }
+
+	  var = MASS_FRACTION;
+	  if( pd->v[pg->imtrx][var] ) {
+	    for (w = 0; w < pd->Num_Species_Eqn; w++) {
+	      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  d_h->C[w][j] = Delta_H_RXN * Y * d_rho->C[w][j] * fv_dot->c[wRXN] + Delta_H_RXN * rho_gas/rho * d_rho->C[w][j] * fv_dot->c[wRXN];
+		  if (w == wRXN) {
+		    d_h->C[w][j] += Delta_H_RXN * Y * rho * bf[var]->phi[j] * (1 + 2. * tt) / dt;
+		  }
+		}
+	    }
+	  }
 	}
 	return ( h );
 }
@@ -1961,6 +2276,105 @@ if(af->Assemble_Jacobian)
   }  /* end of if Assemble Jacobian  */
 
   return(h);
+}
+
+double
+foam_pmdi_10_heat_cap( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp, double time)
+{
+  int var, j;
+  int w;
+  double Cp, Cp_liq, Cp_gas;
+  int wCO2;
+  int wH2O;
+  DENSITY_DEPENDENCE_STRUCT d_rho_struct;
+  DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+  double rho;
+
+  Cp_liq = mp->u_heat_capacity[0];
+  Cp_gas = mp->u_heat_capacity[1];
+
+  if (mp->DensityModel != DENSITY_FOAM_PMDI_10) {
+    EH(-1, "Expected FOAM_PMDI_10 Density Model for FOAM_PMDI Heat Capacity");
+    mp->heat_capacity = 0.0;
+    return 0.0;
+  }
+
+  rho = density(d_rho, time);
+
+  wCO2 = -1;
+  wH2O = -1;
+  for (w = 0; w < pd->Num_Species; w++) {
+    switch (mp->SpeciesSourceModel[w]) {
+    case FOAM_PMDI_10_CO2:
+      wCO2 = w;
+      break;
+    case FOAM_PMDI_10_H2O:
+      wH2O = w;
+      break;
+    default:
+      break;
+    }
+  }
+
+  if (wCO2 == -1) {
+    EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2");
+  } else if (wH2O == -1) {
+    EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+  }
+
+  double volF = mp->volumeFractionGas;
+
+  double M_CO2 = mp->u_density[0];
+  double rho_liq = mp->u_density[1];
+  double ref_press = mp->u_density[2];
+  double Rgas_const = mp->u_density[3];
+
+  double rho_gas = 0;
+
+  rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
+
+  Cp = (Cp_liq * rho_liq * (1 - volF) + Cp_gas * rho_gas * volF) / rho;
+
+  /* Now do sensitivies */
+
+  if(d_Cp != NULL && af->Assemble_Jacobian)
+    {
+      if (pd->v[pg->imtrx][TEMPERATURE] )
+	{
+	  var = TEMPERATURE;
+	  if (pd->v[pg->imtrx][var] )
+	    {
+	      for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  d_Cp->T[j] = -Cp/rho * d_rho->T[j];
+		  d_Cp->T[j] += (Cp_liq * rho_liq * mp->d_volumeFractionGas[var]) / rho * bf[var]->phi[j];
+		  d_Cp->T[j] += ((Cp_gas * rho_gas * mp->d_volumeFractionGas[var]) / rho)
+		      * bf[var]->phi[j];
+		}
+ 	    }
+ 	}
+
+      if (pd->v[pg->imtrx][MASS_FRACTION] )
+	{
+	  var = MASS_FRACTION;
+	  if (pd->v[pg->imtrx][var] )
+	    {
+	      for (w = 0; w < pd->Num_Species_Eqn; w++) {
+		int wvar = MAX_VARIABLE_TYPES + w;
+		for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		  {
+		    d_Cp->C[w][j] = -Cp/rho * d_rho->C[w][j];
+		    d_Cp->C[w][j] += ((Cp_liq * rho_liq * (mp->d_volumeFractionGas[wvar]) + Cp_gas * rho_gas * mp->d_volumeFractionGas[wvar]) / rho)
+		      * bf[var]->phi[j];
+		  }
+	      }
+ 	    }
+ 	}
+    }
+
+
+  mp->heat_capacity = Cp;
+  return(Cp);
 }
 
 

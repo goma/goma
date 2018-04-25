@@ -110,7 +110,7 @@ PROTO((int,			/* ielem - element number */
 EXTERN void setup_shop_at_point
 PROTO(( int,                    /* ielem - element number */
         double *,               /* xi */
-        const Exo_DB * ));
+        const Exo_DB *));
 
 EXTERN double fv_at_point
 PROTO(( double *,

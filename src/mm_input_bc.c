@@ -1045,6 +1045,22 @@ rd_bc_specs(FILE *ifp,
 
 	  break;
 
+	case VELO_SLIP_LS_HEAVISIDE_BC:
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf",
+		      &BC_Types[ibc].BC_Data_Float[0],           // ls_width
+		      &BC_Types[ibc].BC_Data_Float[1],           // beta_negative
+		      &BC_Types[ibc].BC_Data_Float[2],           // beta_positive
+		      &BC_Types[ibc].BC_Data_Float[3],           // v_x
+		      &BC_Types[ibc].BC_Data_Float[4],           // v_y
+		      &BC_Types[ibc].BC_Data_Float[5]) != 6)     // v_z
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 6 flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+	    }
+
+	  SPF_DBL_VEC(endofstring(echo_string), 6,  BC_Types[ibc].BC_Data_Float);
+	  break;
 	  /*
 	   * Fall through for all cases which require five floating point
 	   * values as data input plus optional parameters 

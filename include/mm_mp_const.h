@@ -70,7 +70,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define GRAV_VIBRATIONAL 19   /* momentum source for gravity + vibration */
 #define MELT             20  /* Lubrication source term model*/
 #define HS_FOAM_PBE 21
-
+#define HS_FOAM_PMDI_10 23
 
 /* MMH */
 /* #define  SUSPENSION_PM xxx Defiend below. */
@@ -158,7 +158,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define DENSITY_THERMAL_BATTERY  905 /* special density model for thermal bat work */
 #define DENSITY_FOAM_PBE 34
 #define DENSITY_FOAM_PBE_EQN 35
-
+#define DENSITY_FOAM_PMDI_10 20
 /**********************************************************************************/
 
 /*
@@ -241,12 +241,19 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define SYLGARD    28         /* Sylgard viscosity model */
 #define PRANDTL_MIXING 29     /* Shell Turbulent Viscosity Model */
 
+
 #define FOAM_PBE_WATER	34
 #define FOAM_PBE_OH	35
 #define FOAM_PBE_CO2_L	36
 #define FOAM_PBE_CO2_G	37
 #define FOAM_PBE_BA_L	38
 #define FOAM_PBE_BA_G	39
+
+#define FOAM_PMDI_10              40
+#define FOAM_PMDI_10_RXN              41
+#define FOAM_PMDI_10_H2O              42
+#define FOAM_PMDI_10_CO2              43
+
 
 
 /*
