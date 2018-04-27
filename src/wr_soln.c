@@ -179,7 +179,7 @@ write_solution_segregated(char output_file[], /* name EXODUS II file */
                Dpi *dpi)
 {
   int i, step=0;
-  //int i_post;
+  int i_post;
 #ifdef DEBUG
   static char *yo="write_solution";
   fprintf(stderr, "%s: begins\n", yo);
@@ -193,6 +193,9 @@ write_solution_segregated(char output_file[], /* name EXODUS II file */
 
     if (pg->imtrx > 0) {
       offset += rd[pg->imtrx -1]->TotalNVSolnOutput + rd[pg->imtrx -1]->TotalNVPostOutput;
+      if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
+	offset += rd[pg->imtrx -1]->TotalNVSolnOutput;
+      }
     }
     for (i = 0; i < rd[pg->imtrx]->TotalNVSolnOutput; i++) {
       extract_nodal_vec(x[pg->imtrx], rd[pg->imtrx]->nvtype[i], rd[pg->imtrx]->nvkind[i],
@@ -213,6 +216,9 @@ write_solution_segregated(char output_file[], /* name EXODUS II file */
   for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
     if (pg->imtrx > 0) {
       offset += rd[pg->imtrx -1]->TotalNVSolnOutput + rd[pg->imtrx -1]->TotalNVPostOutput;
+      if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
+	offset += rd[pg->imtrx -1]->TotalNVSolnOutput;
+      }
     }
     if (rd[pg->imtrx]->TotalNVPostOutput > 0) {
       step = (*nprint) + 1;
@@ -230,15 +236,28 @@ write_solution_segregated(char output_file[], /* name EXODUS II file */
       /*
        *  Write out time derivatives if requested
        */
-//      if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
-//        for (i = 0; i < rd[pg->imtrx]->TotalNVSolnOutput; i++) {
-//          i_post = rd[pg->imtrx]->TotalNVSolnOutput + rd[pg->imtrx]->TotalNVPostOutput + i;
-//          extract_nodal_vec(xdot[pg->imtrx], rd[pg->imtrx]->nvtype[i_post], rd[pg->imtrx]->nvkind[i_post],
-//                            rd[pg->imtrx]->nvmatID[i], gvec[pg->imtrx], exo, TRUE, time_value);
-//          wr_nodal_result_exo(exo, output_file, gvec, i_post + 1,
-//                              *nprint+1, time_value);
-//        }
-//      }
+
+    }
+  }
+
+  offset = 0;
+  if (tev_post > 0) {
+    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+
+      step = (*nprint) + 1;
+
+      if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
+	if (pg->imtrx > 0) {
+	  offset += rd[pg->imtrx-1]->TotalNVSolnOutput + rd[pg->imtrx-1]->TotalNVPostOutput + rd[pg->imtrx-1]->TotalNVSolnOutput;
+	}
+	for (i = 0; i < rd[pg->imtrx]->TotalNVSolnOutput; i++) {
+	  i_post = rd[pg->imtrx]->TotalNVSolnOutput + rd[pg->imtrx]->TotalNVPostOutput + i;
+	  extract_nodal_vec(xdot[pg->imtrx], rd[pg->imtrx]->nvtype[i_post], rd[pg->imtrx]->nvkind[i_post],
+			    rd[pg->imtrx]->nvmatID[i], gvec[pg->imtrx], exo, TRUE, time_value);
+	  wr_nodal_result_exo(exo, output_file, gvec[pg->imtrx], offset + i_post + 1,
+			      *nprint+1, time_value);
+	}
+      }
     }
   }
 //

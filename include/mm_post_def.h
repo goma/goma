@@ -110,6 +110,9 @@
 #define I_POS_VOLPLANE  35 
 #define I_NEG_VOLPLANE  36 
 #define I_SPECIES_SOURCE  37
+#define I_MASS 38
+#define I_MASS_NEGATIVE_FILL  39
+#define I_MASS_POSITIVE_FILL  40
 
 
 #ifdef _MM_POST_PROC_C
@@ -225,7 +228,10 @@ VOL_NAME_STRUCT pp_vol_names[] =
   { "VOL_PLANE",          I_VOLUME_PLANE },
   { "POS_PLANE_FILL",   I_POS_VOLPLANE},
   { "NEG_PLANE_FILL",   I_NEG_VOLPLANE},
-  { "SPECIES_SOURCE",    I_SPECIES_SOURCE}
+  { "SPECIES_SOURCE",    I_SPECIES_SOURCE},
+  { "MASS",              I_MASS},
+  { "MASS_NEGATIVE_FILL",              I_MASS_NEGATIVE_FILL},
+  { "MASS_POSITIVE_FILL",              I_MASS_POSITIVE_FILL}
 };
 
 int Num_Vol_Names = sizeof( pp_vol_names )/ sizeof( VOL_NAME_STRUCT );
@@ -578,6 +584,8 @@ extern int VON_MISES_STRAIN;
 extern int VON_MISES_STRESS;
 extern int UNTRACKED_SPEC;		/*Untracked Species Concentration */
 extern int LOG_CONF_MAP;
+extern int HEAVISIDE;
+extern int RHO_DOT;
 
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h

@@ -264,7 +264,8 @@ int VON_MISES_STRESS = -1;
 int VON_MISES_STRAIN = -1;
 int UNTRACKED_SPEC = -1;
 int LOG_CONF_MAP = -1;
-
+int HEAVISIDE = -1;
+int RHO_DOT = -1;
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
 double *u_post_proc = 0;       	/* user-provided values used in calculating 
@@ -747,6 +748,72 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     rho = density(NULL, time);
     local_post[DENSITY] = rho;
     local_lumped[DENSITY] = 1.;
+  }
+
+  if (HEAVISIDE != -1 && ls != NULL) {
+    load_lsi(ls->Length_Scale);
+    local_post[HEAVISIDE] = lsi->H;
+    local_lumped[HEAVISIDE] = 1.;
+  }
+
+  if (RHO_DOT != -1 && pd->e[pg->imtrx][R_MOMENTUM1] ) {
+    double rho_dot = 0;
+    if (mp->DensityModel == DENSITY_FOAM_PMDI_10) {
+      int wCO2;
+      int wH2O;
+      int w;
+
+      wCO2 = -1;
+      wH2O = -1;
+      for (w = 0; w < pd->Num_Species; w++) {
+	switch (mp->SpeciesSourceModel[w]) {
+	case FOAM_PMDI_10_CO2:
+	  wCO2 = w;
+	  break;
+	case FOAM_PMDI_10_H2O:
+	  wH2O = w;
+	  break;
+	default:
+	  break;
+	}
+      }
+
+      if (wCO2 == -1) {
+	EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2");
+      } else if (wH2O == -1) {
+	EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+      }
+
+      double M_CO2 = mp->u_density[0];
+      double rho_liq = mp->u_density[1];
+      double ref_press = mp->u_density[2];
+      double Rgas_const = mp->u_density[3];
+      double rho_gas = 0;
+
+      if (fv->T > 0) {
+	rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
+      }
+
+      double nu = 0;
+      double nu_dot = 0;
+
+      if (fv->T > 0) {
+	nu = M_CO2 * fv->c[wCO2] / rho_gas;
+	nu_dot = M_CO2 * fv_dot->c[wCO2] / rho_gas;
+      } else {
+	nu = 0;
+	nu_dot = 0;
+      }
+
+      double inv1 = 1 / ( 1+ nu);
+      double inv2 = inv1*inv1;
+
+      double volF_dot = (nu_dot) * inv2;
+
+      rho_dot = rho_gas * volF_dot - rho_liq * volF_dot;
+    }
+    local_post[RHO_DOT] = rho_dot;
+    local_lumped[RHO_DOT] = 1.;
   }
 
   if (POLYMER_VISCOSITY != -1 && pd->e[pg->imtrx][R_STRESS11] ) {
@@ -6290,6 +6357,8 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Viscosity", &PP_Viscosity);
   iread = look_for_post_proc(ifp, "Volume Fraction of Gas Phase", &PP_VolumeFractionGas);
   iread = look_for_post_proc(ifp, "Density", &DENSITY);
+  iread = look_for_post_proc(ifp, "Heaviside", &HEAVISIDE);
+  iread = look_for_post_proc(ifp, "Density Time Derivative", &RHO_DOT);
   iread = look_for_post_proc(ifp, "Polymer Viscosity", &DENSITY);
   iread = look_for_post_proc(ifp, "Polymer Viscosity", &POLYMER_VISCOSITY);
   iread = look_for_post_proc(ifp, "Polymer Time Constant", &POLYMER_TIME_CONST);
@@ -8150,6 +8219,32 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
            index_post_export++;
          }
        DENSITY = index_post;
+       index_post++;
+     }
+
+   if (HEAVISIDE != -1 && ls != NULL && Num_Var_In_Type[pg->imtrx][R_FILL])
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "Heaviside","[1]", "Heaviside", FALSE);
+       index++;
+       if (HEAVISIDE == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       HEAVISIDE = index_post;
+       index_post++;
+     }
+
+   if (RHO_DOT != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1])
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "RHO_DOT","[1]", "RHO_DOT", FALSE);
+       index++;
+       if (RHO_DOT == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       RHO_DOT = index_post;
        index_post++;
      }
 

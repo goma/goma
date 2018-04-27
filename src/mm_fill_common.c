@@ -176,21 +176,26 @@ static void calculateVolumeFractionGasPhase(const dbl time) {
       double d_phi_dC = 0.0;
       double d_phi_dT = 0.0;
 
-      if (fv->T > 0) {
-	rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
-	nu = M_CO2 * fv->c[wCO2] / rho_gas;
-	d_nu_dC = M_CO2 / rho_gas;
-	d_nu_dT = M_CO2 * fv->c[wCO2] * Rgas_const / (ref_press * M_CO2);
+      if (pd->gv[MOMENT1]) {
+	mp->volumeFractionGas = (fv->moment[1] / (1 + fv->moment[1]));
+      } else {
+	if (fv->T > 0) {
+	  rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
+	  nu = M_CO2 * fv->c[wCO2] / rho_gas;
+	  d_nu_dC = M_CO2 / rho_gas;
+	  d_nu_dT = M_CO2 * fv->c[wCO2] * Rgas_const / (ref_press * M_CO2);
 
-	phi = nu / (1 + nu);
-	d_phi_dC = (d_nu_dC) / ((1 + nu)*(1 + nu));
-	d_phi_dT = (d_nu_dT) / ((1 + nu)*(1 + nu));
+	  phi = nu / (1 + nu);
+	  d_phi_dC = (d_nu_dC) / ((1 + nu)*(1 + nu));
+	  d_phi_dT = (d_nu_dT) / ((1 + nu)*(1 + nu));
+	}
+
+
+	mp->volumeFractionGas = phi;
+	mp->d_volumeFractionGas[TEMPERATURE] = d_phi_dT;
+
+	mp->d_volumeFractionGas[MAX_VARIABLE_TYPES+wCO2] = d_phi_dC;
       }
-
-      mp->volumeFractionGas = phi;
-      mp->d_volumeFractionGas[TEMPERATURE] = d_phi_dT;
-
-      mp->d_volumeFractionGas[MAX_VARIABLE_TYPES+wCO2] = d_phi_dC;
     }
 }
 

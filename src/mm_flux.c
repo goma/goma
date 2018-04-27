@@ -53,7 +53,7 @@
 
 #include "mm_std_models_shell.h"
 #include "mm_std_models.h"
-
+#include "mm_fill_common.h"
 #define _MM_FLUX_C
 #include "goma.h"
 
@@ -4680,6 +4680,8 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 	     }
 	     do_LSA_mods(LSA_VOLUME);
 
+	     computeCommonMaterialProps_gp(time_value);
+
              if ( subelement_surf_integration_active ) bf[pd->ShapeVar]->detJ = 1.;
              
              compute_volume_integrand( quantity, elem, species_id, 
@@ -5094,6 +5096,94 @@ compute_volume_integrand(const int quantity, const int elem,
 		matIndex = ei[pg->imtrx]->matID_ledof[ledof];
 		c = Index_Solution(gnn, var, species_no, 0, matIndex, pg->imtrx);
  		J_AC[c] += weight * det * dens_factor * bf[var]->phi[j];
+	      }
+	    }
+	  }
+      }
+      break;
+
+    case I_MASS:
+    case I_MASS_NEGATIVE_FILL:
+    case I_MASS_POSITIVE_FILL:
+      {
+ 	double rho;
+	DENSITY_DEPENDENCE_STRUCT d_rho_struct;
+	DENSITY_DEPENDENCE_STRUCT *d_rho = NULL;
+
+	double H = 1.0;
+
+	if (ls != NULL && (quantity == I_MASS_NEGATIVE_FILL || quantity == I_MASS_POSITIVE_FILL)) {
+	  load_lsi(ls->Length_Scale);
+	  H = quantity == I_MASS_POSITIVE_FILL ? lsi->H : ( 1.0 - lsi->H );
+	}
+
+	if (J_AC != NULL) {
+	  rho = density(NULL, time);
+	} else {
+	  d_rho = &d_rho_struct;
+	  rho = density(d_rho, time);
+	}
+
+	*sum += weight*det*rho*H;
+
+	if( J_AC != NULL )
+	  {
+	    for( a=0; a<dim ; a++)
+	      {
+		var = MESH_DISPLACEMENT1 + a;
+
+		if( pd->v[pg->imtrx][var] )
+		  {
+		    for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+		      {
+
+			J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += weight*  (( h3 * bf[pd->ShapeVar]->d_det_J_dm[a][j] +
+									      fv->dh3dq[a]*bf[var]->phi[j] * det_J )*rho*H +
+									     det*rho*lsi->d_H_dmesh[a][j]);
+		      }
+		  }
+	      }
+
+	    var = TEMPERATURE;
+
+	    if( pd->v[pg->imtrx][var] )
+	      {
+		for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+		  {
+
+		    J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += weight * det * d_rho->T[j] * H;
+		  }
+	      }
+
+	    var = FILL;
+	    if( pd->v[pg->imtrx][var] )
+	      {
+		for( j=0 ; j<ei[pg->imtrx]->dof[var]; j++)
+		  {
+		    J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += weight * det * d_rho->F[j] * H;
+		    if (ls != NULL && (quantity == I_MASS_NEGATIVE_FILL || quantity == I_MASS_POSITIVE_FILL)) {
+		      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += weight * det * rho * lsi->d_H_dF[j];
+		    }
+		  }
+	      }
+
+	    var = MASS_FRACTION;
+	    if (pd->v[pg->imtrx][var]) {
+	      int w;
+	      for (w = 0; w < pd->Num_Species; w++) {
+		for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+		  /*
+		   * Find the material index for the current
+		   * local variable degree of freedom
+		   * (can't just query gun_list for MASS_FRACTION
+		   *  unknowns -> have to do a lookup)
+		   */
+		  gnn = ei[pg->imtrx]->gnn_list[var][j];
+		  ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+		  matIndex = ei[pg->imtrx]->matID_ledof[ledof];
+		  c = Index_Solution(gnn, var, w, 0, matIndex, pg->imtrx);
+		  J_AC[c] += weight * det * d_rho->C[w][j] * H;
+		}
 	      }
 	    }
 	  }

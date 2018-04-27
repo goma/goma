@@ -324,7 +324,7 @@ dil_viscosity(GEN_NEWT_STRUCT *gn_local,
   else if (gn_local->ConstitutiveEquation == FOAM_PMDI_10) {
 
     if (mp->DilationalViscosityModel == DILVISCM_KAPPABUBBLES) {
-      double muL = mp->FlowingLiquid_viscosity;
+      //      double muL = mp->FlowingLiquid_viscosity;
       double volF = mp->volumeFractionGas;
 
       if (volF < 1e-6) {
@@ -332,7 +332,7 @@ dil_viscosity(GEN_NEWT_STRUCT *gn_local,
       }
 
       double ratio = 4. / 3. * (1.0 - volF ) / volF;
-      kappa = ratio * muL;
+      kappa = ratio * muValue ;
 
       if (d_dilMu != 0) {
 	// Ok, to get the derivatives, we copy a multiple of the dependencies from the pure
@@ -344,11 +344,21 @@ dil_viscosity(GEN_NEWT_STRUCT *gn_local,
 
 	var = MASS_FRACTION;
 	if (pd->v[pg->imtrx][var]) {
-	  double tmp = 4. * muL/ 3. / (volF * volF);
+	  double tmp = 4. * muValue/ 3. / (volF * volF);
 	  double * dVolFdMF = &(mp->d_volumeFractionGas[0]) + MAX_VARIABLE_TYPES;
 	  for (w = 0; w < pd->Num_Species_Eqn; w++) {
 	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-	      d_dilMu->C[w][j] -= tmp * dVolFdMF[w] * (bf[var]->phi[j]);
+	      d_dilMu->C[w][j] -= ratio * d_mu->C[w][j]  + tmp * dVolFdMF[w] * (bf[var]->phi[j]);
+	    }
+	  }
+	}
+
+	var = TEMPERATURE;
+	if (pd->v[pg->imtrx][var]) {
+	  double tmp = 4. * muValue/ 3. / (volF * volF);
+	  for (w = 0; w < pd->Num_Species_Eqn; w++) {
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+	      d_dilMu->T[j] -= ratio * d_mu->T[j]  + tmp * mp->d_volumeFractionGas[var] * (bf[var]->phi[j]);
 	    }
 	  }
 	}

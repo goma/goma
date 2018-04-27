@@ -1716,6 +1716,20 @@ dbl *te_out) /* te_out - return actual end time */
 			       x[pg->imtrx], xdot[pg->imtrx], NULL, delta_t_old, time, 1); 
 	}
 
+	for (i = 0; i < nn_volume; i++ ) {
+	  evaluate_volume_integral(exo, dpi,
+				   pp_volume[i]->volume_type,
+				   pp_volume[i]->volume_name,
+				   pp_volume[i]->blk_id,
+				   pp_volume[i]->species_no,
+				   pp_volume[i]->volume_fname,
+				   pp_volume[i]->params,
+				   pp_volume[i]->num_params,
+				   NULL,  x[pg->imtrx], xdot[pg->imtrx], delta_t,
+				   time1, 1);
+	}
+
+
 
         if (time1 >= (ROUND_TO_ONE * TimeMax))
           i_print = 1;
