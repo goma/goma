@@ -18643,220 +18643,380 @@ double FoamVolumeSource(double time,
     }
   else if (mp->DensityModel == DENSITY_FOAM_PMDI_10)
     {
-      int wCO2;
-      int wH2O;
-      int w;
-      DENSITY_DEPENDENCE_STRUCT d_rho_struct;
-      DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+      if (pd->gv[MOMENT1]) {
+	int wCO2Liq;
+	int wCO2Gas;
+	int wH2O;
+	int w;
+	DENSITY_DEPENDENCE_STRUCT d_rho_struct;
+	DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
-      rho = density(d_rho, time);
+	rho = density(d_rho, time);
 
-      wCO2 = -1;
-      wH2O = -1;
-      for (w = 0; w < pd->Num_Species; w++) {
-	switch (mp->SpeciesSourceModel[w]) {
-	case FOAM_PMDI_10_CO2:
-	  wCO2 = w;
-	  break;
-	case FOAM_PMDI_10_H2O:
-	  wH2O = w;
-	  break;
-	default:
-	  break;
+	wCO2Liq = -1;
+	wCO2Gas = -1;
+	wH2O = -1;
+	for (w = 0; w < pd->Num_Species; w++) {
+	  switch (mp->SpeciesSourceModel[w]) {
+	  case FOAM_PMDI_10_CO2_LIQ:
+	    wCO2Liq = w;
+	    break;
+	  case FOAM_PMDI_10_CO2_GAS:
+	    wCO2Gas = w;
+	    break;
+	  case FOAM_PMDI_10_H2O:
+	    wH2O = w;
+	    break;
+	  default:
+	    break;
+	  }
 	}
-      }
 
-      if (wCO2 == -1) {
-	EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2");
-      } else if (wH2O == -1) {
-	EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
-      }
+	if (wCO2Liq == -1) {
+	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
+	} else if (wCO2Gas == -1) {
+	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
+	} else if (wH2O == -1) {
+	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+	}
 
-      double M_CO2 = mp->u_density[0];
-      double rho_liq = mp->u_density[1];
-      double ref_press = mp->u_density[2];
-      double Rgas_const = mp->u_density[3];
-      double rho_gas = 0;
+	double M_CO2 = mp->u_density[0];
+	double rho_liq = mp->u_density[1];
+	double ref_press = mp->u_density[2];
+	double Rgas_const = mp->u_density[3];
+	double rho_gas = 0;
 
-      if (fv->T > 0) {
-	rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
-      }
+	if (fv->T > 0) {
+	  rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
+	}
 
 
-      double nu = 0;
-      double d_nu_dC = 0;
-      double d_nu_dT = 0;
+	double nu = 0;
 
-      double nu_dot = 0;
-      double d_nu_dot_dC = 0;
-      double d_nu_dot_dT = 0;
+	double nu_dot = 0;
 
-      double grad_nu[DIM];
-      double d_grad_nu_dC[DIM][MDE];
-      double d_grad_nu_dT[DIM];
+	double grad_nu[DIM];
 
-      if (fv->T > 0) {
-	nu = M_CO2 * fv->c[wCO2] / rho_gas;
-	d_nu_dC = M_CO2 / rho_gas;
-	d_nu_dT = M_CO2 * fv->c[wCO2] * Rgas_const / (ref_press * M_CO2);
+	nu = fv->moment[1];
 
-	nu_dot = M_CO2 * fv_dot->c[wCO2] / rho_gas;
-	d_nu_dot_dC = M_CO2 * (1 + 2*tt) / (dt * rho_gas);
-	d_nu_dot_dT = M_CO2 * fv_dot->c[wCO2] * Rgas_const / (ref_press * M_CO2);
+	nu_dot = fv_dot->moment[1];
+	for (a = 0; a < dim; a++) {
+	  grad_nu[a] = fv->grad_moment[1][a];
+	}
+
+	double inv1 = 1 / ( 1+ nu);
+	double inv2 = inv1*inv1;
+
+
+	//double volF = nu * inv1;
+	//double d_volF_dC = (d_nu_dC) * inv2;
+	//double d_volF_dT = (d_nu_dT) * inv2;
+
+	double volF_dot = (nu_dot) * inv2;
+
+	double grad_volF[DIM];
+	for (a = 0; a < dim; a++) {
+	  grad_volF[a] =  (grad_nu[a]) * inv2;
+	}
+
+	//double rho = rho_gas * volF + rho_liq * (1 - volF);
+	double rho_dot = rho_gas * volF_dot - rho_liq * volF_dot;
+
+	double grad_rho[DIM];
+	double d_grad_rho_dT[DIM][MDE];
 
 	for (a = 0; a < dim; a++) {
-	  grad_nu[a] = M_CO2 * fv->grad_c[wCO2][a] / rho_gas;
+	  grad_rho[a] = rho_gas * grad_volF[a] + rho_liq * (grad_volF[a]);
 	  if (af->Assemble_Jacobian) {
-	    d_grad_nu_dT[a] = M_CO2 * fv->grad_c[wCO2][a] * Rgas_const / (ref_press * M_CO2);
-	    for (j = 0; j < ei[pd->mi[MASS_FRACTION]]->dof[MASS_FRACTION]; j++) {
-	      d_grad_nu_dC[a][j] = M_CO2 * bf[MASS_FRACTION]->grad_phi[j][a] / rho_gas;
+	    var = TEMPERATURE;
+	    for (j = 0; j < ei[pd->mi[var]]->dof[var]; j++) {
+	      if (fv->T > 0) {
+		d_grad_rho_dT[a][j] += -(rho_gas/fv->T)*bf[var]->phi[j]*grad_volF[a];
+	      }
 	    }
 	  }
 	}
-      } else {
-	nu = 0;
-	d_nu_dC = 0;
-	d_nu_dT = 0;
 
-	nu_dot = 0;
-	d_nu_dot_dC = 0;
-	d_nu_dot_dT = 0;
+	double inv_rho = 1/rho;
 
+	source = rho_dot;
 	for (a = 0; a < dim; a++) {
-	  grad_nu[a] = 0;
-	  if (af->Assemble_Jacobian) {
-	    d_grad_nu_dT[a] = 0;
-	    for (j = 0; j < ei[pd->mi[MASS_FRACTION]]->dof[MASS_FRACTION]; j++) {
-	      d_grad_nu_dC[a][j] = 0;
-	    }
-	  }
+	  source += fv->v[a] * grad_rho[a];
 	}
+	source *= inv_rho;
 
-      }
-
-      double inv1 = 1 / ( 1+ nu);
-      double inv2 = inv1*inv1;
-      double inv3 = inv1*inv2;
-
-      //double volF = nu * inv1;
-      //double d_volF_dC = (d_nu_dC) * inv2;
-      //double d_volF_dT = (d_nu_dT) * inv2;
-
-      double volF_dot = (nu_dot) * inv2;
-      double d_volF_dot_dC = (d_nu_dot_dC * (1 + nu) - nu_dot * 2 * d_nu_dC) * inv3;
-      double d_volF_dot_dT = (d_nu_dot_dT * (1 + nu) - nu_dot * 2 * d_nu_dT) * inv3;
-
-      double grad_volF[DIM];
-      double d_grad_volF_dC[DIM][MDE];
-      double d_grad_volF_dT[DIM];
-      for (a = 0; a < dim; a++) {
-	grad_volF[a] =  (grad_nu[a]) * inv2;
-	if (af->Assemble_Jacobian) {
-	  d_grad_volF_dT[a] = (d_grad_nu_dT[a] * (1 + nu) - 2 * grad_nu[a] * d_nu_dT) * inv3;
-	  for (j = 0; j < ei[pd->mi[MASS_FRACTION]]->dof[MASS_FRACTION]; j++) {
-	    d_grad_volF_dC[a][j] = (d_grad_nu_dC[a][j] * (1 + nu) - 2 * grad_nu[a] * d_nu_dC * bf[MASS_FRACTION]->phi[j]) * inv3;
-	  }
-	}
-      }
-
-      //double rho = rho_gas * volF + rho_liq * (1 - volF);
-      double rho_dot = rho_gas * volF_dot - rho_liq * volF_dot;
-      double d_rho_dot_dT = rho_gas * d_volF_dot_dT - rho_liq * d_volF_dot_dT;
-      if (fv->T > 0) {
-	d_rho_dot_dT = -(rho_gas/fv->T)*volF_dot + rho_gas * d_volF_dot_dT - rho_liq * d_volF_dot_dT;
-      }
-      double d_rho_dot_dC = rho_gas * d_volF_dot_dC - rho_liq * d_volF_dot_dC;
-
-      double grad_rho[DIM];
-      double d_grad_rho_dT[DIM][MDE];
-      double d_grad_rho_dC[DIM][MDE];
-
-      for (a = 0; a < dim; a++) {
-	grad_rho[a] = rho_gas * grad_volF[a] + rho_liq * (grad_volF[a]);
-	if (af->Assemble_Jacobian) {
-	  var = TEMPERATURE;
-	  for (j = 0; j < ei[pd->mi[var]]->dof[var]; j++) {
-	    d_grad_rho_dT[a][j] = rho_gas * d_grad_volF_dT[a] * bf[var]->phi[j] + rho_liq * (d_grad_volF_dT[a]*bf[var]->phi[j]);
-	    if (fv->T > 0) {
-	      d_grad_rho_dT[a][j] += -(rho_gas/fv->T)*bf[var]->phi[j]*grad_volF[a];
-	    }
-	  }
-
-	  var = MASS_FRACTION;
-	  for (j = 0; j < ei[pd->mi[var]]->dof[var]; j++) {
-	    d_grad_rho_dC[a][j] = rho_gas * d_grad_volF_dC[a][j] + rho_liq * (d_grad_volF_dC[a][j]);
-	  }
-	}
-      }
-
-      double inv_rho = 1/rho;
-
-      source = rho_dot;
-      for (a = 0; a < dim; a++) {
-	source += fv->v[a] * grad_rho[a];
-      }
-      source *= inv_rho;
-
-      if (af->Assemble_Jacobian)
-	{
-	  var = TEMPERATURE;
-	  if(pd->v[pg->imtrx][var] )
-	    {
-	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-		{
-		  source_a = d_rho_dot_dT*bf[var]->phi[j];
-		  source_b = 0;
-		  for (a = 0; a < dim; a++) {
-		    source_b += fv->v[a] * d_grad_rho_dT[a][j];
-		  }
-		  source_c = inv_rho*d_rho->T[j] * source;
-
-		  dFVS_dT[j] = inv_rho * (source_a + source_b) + source_c;
-		}
-	    }
-
-	  var = VELOCITY1;
-	  if(pd->v[pg->imtrx][var] )
-	    {
-	      for( a=0; a<dim; a++)
-		{
-		  var = VELOCITY1+a;
-		  for( j=0; pd->v[pg->imtrx][var] && j<ei[pg->imtrx]->dof[var]; j++)
-		    {
-		      dFVS_dv[a][j] = inv_rho * (bf[var]->phi[j] * grad_rho[a]);
+	if (af->Assemble_Jacobian)
+	  {
+	    var = TEMPERATURE;
+	    if(pd->v[pg->imtrx][var] )
+	      {
+		for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		  {
+		    source_a = 0;
+		    source_b = 0;
+		    for (a = 0; a < dim; a++) {
+		      source_b += fv->v[a] * d_grad_rho_dT[a][j];
 		    }
-		}
-	    }
+		    source_c = inv_rho*d_rho->T[j] * source;
 
-	  var = MASS_FRACTION;
-	  if(pd->v[pg->imtrx][var])
-	    {
-	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-		{
-		  source_a = d_rho_dot_dC*bf[var]->phi[j];
-		  source_b = 0;
-		  for (a = 0; a < dim; a++) {
-		    source_b += fv->v[a] * d_grad_rho_dC[a][j];
+		    dFVS_dT[j] = inv_rho * (source_a + source_b) + source_c;
 		  }
-		  source_c = inv_rho*d_rho->C[wCO2][j] * source;
+	      }
 
-		  dFVS_dC[wCO2][j] = inv_rho*(source_a + source_b) + source_c;
-		}
+	    var = VELOCITY1;
+	    if(pd->v[pg->imtrx][var] )
+	      {
+		for( a=0; a<dim; a++)
+		  {
+		    var = VELOCITY1+a;
+		    for( j=0; pd->v[pg->imtrx][var] && j<ei[pg->imtrx]->dof[var]; j++)
+		      {
+			dFVS_dv[a][j] = inv_rho * (bf[var]->phi[j] * grad_rho[a]);
+		      }
+		  }
+	      }
+
+	    var = MASS_FRACTION;
+	    if(pd->v[pg->imtrx][var])
+	      {
+		for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		  {
+		    source_a = 0;
+		    source_b = 0;
+		    for (a = 0; a < dim; a++) {
+		      source_b += fv->v[a] * 0;
+		    }
+		    source_c = inv_rho*d_rho->C[wCO2Liq][j] * source;
+
+		    dFVS_dC[wCO2Liq][j] = inv_rho*(source_a + source_b) + source_c;
+		  }
+	      }
+	    var = FILL;
+	    if(pd->v[pg->imtrx][var])
+	      {
+		for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		  {
+		    source_c = inv_rho*d_rho->F[j] * source;
+
+		    dFVS_dF[j] = source_c;
+		  }
+	      }
+	  }
+      } else {
+	int wCO2;
+	int wH2O;
+	int w;
+	DENSITY_DEPENDENCE_STRUCT d_rho_struct;
+	DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+
+	rho = density(d_rho, time);
+
+	wCO2 = -1;
+	wH2O = -1;
+	for (w = 0; w < pd->Num_Species; w++) {
+	  switch (mp->SpeciesSourceModel[w]) {
+	  case FOAM_PMDI_10_CO2:
+	    wCO2 = w;
+	    break;
+	  case FOAM_PMDI_10_H2O:
+	    wH2O = w;
+	    break;
+	  default:
+	    break;
+	  }
+	}
+
+	if (wCO2 == -1) {
+	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2");
+	} else if (wH2O == -1) {
+	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+	}
+
+	double M_CO2 = mp->u_density[0];
+	double rho_liq = mp->u_density[1];
+	double ref_press = mp->u_density[2];
+	double Rgas_const = mp->u_density[3];
+	double rho_gas = 0;
+
+	if (fv->T > 0) {
+	  rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
+	}
+
+
+	double nu = 0;
+	double d_nu_dC = 0;
+	double d_nu_dT = 0;
+
+	double nu_dot = 0;
+	double d_nu_dot_dC = 0;
+	double d_nu_dot_dT = 0;
+
+	double grad_nu[DIM];
+	double d_grad_nu_dC[DIM][MDE];
+	double d_grad_nu_dT[DIM];
+
+	if (fv->T > 0) {
+	  nu = M_CO2 * fv->c[wCO2] / rho_gas;
+	  d_nu_dC = M_CO2 / rho_gas;
+	  d_nu_dT = M_CO2 * fv->c[wCO2] * Rgas_const / (ref_press * M_CO2);
+
+	  nu_dot = M_CO2 * fv_dot->c[wCO2] / rho_gas;
+	  d_nu_dot_dC = M_CO2 * (1 + 2*tt) / (dt * rho_gas);
+	  d_nu_dot_dT = M_CO2 * fv_dot->c[wCO2] * Rgas_const / (ref_press * M_CO2);
+
+	  for (a = 0; a < dim; a++) {
+	    grad_nu[a] = M_CO2 * fv->grad_c[wCO2][a] / rho_gas;
+	    if (af->Assemble_Jacobian) {
+	      d_grad_nu_dT[a] = M_CO2 * fv->grad_c[wCO2][a] * Rgas_const / (ref_press * M_CO2);
+	      for (j = 0; j < ei[pd->mi[MASS_FRACTION]]->dof[MASS_FRACTION]; j++) {
+		d_grad_nu_dC[a][j] = M_CO2 * bf[MASS_FRACTION]->grad_phi[j][a] / rho_gas;
+	      }
 	    }
+	  }
+	} else {
+	  nu = 0;
+	  d_nu_dC = 0;
+	  d_nu_dT = 0;
 
-	  var = FILL;
-	  if(pd->v[pg->imtrx][var])
-	    {
-	      for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-		{
-		  source_c = inv_rho*d_rho->F[j] * source;
+	  nu_dot = 0;
+	  d_nu_dot_dC = 0;
+	  d_nu_dot_dT = 0;
 
-		  dFVS_dC[wCO2][j] = source_c;
-		}
+	  for (a = 0; a < dim; a++) {
+	    grad_nu[a] = 0;
+	    if (af->Assemble_Jacobian) {
+	      d_grad_nu_dT[a] = 0;
+	      for (j = 0; j < ei[pd->mi[MASS_FRACTION]]->dof[MASS_FRACTION]; j++) {
+		d_grad_nu_dC[a][j] = 0;
+	      }
 	    }
+	  }
 
 	}
 
+	double inv1 = 1 / ( 1+ nu);
+	double inv2 = inv1*inv1;
+	double inv3 = inv1*inv2;
+
+	//double volF = nu * inv1;
+	//double d_volF_dC = (d_nu_dC) * inv2;
+	//double d_volF_dT = (d_nu_dT) * inv2;
+
+	double volF_dot = (nu_dot) * inv2;
+	double d_volF_dot_dC = (d_nu_dot_dC * (1 + nu) - nu_dot * 2 * d_nu_dC) * inv3;
+	double d_volF_dot_dT = (d_nu_dot_dT * (1 + nu) - nu_dot * 2 * d_nu_dT) * inv3;
+
+	double grad_volF[DIM];
+	double d_grad_volF_dC[DIM][MDE];
+	double d_grad_volF_dT[DIM];
+	for (a = 0; a < dim; a++) {
+	  grad_volF[a] =  (grad_nu[a]) * inv2;
+	  if (af->Assemble_Jacobian) {
+	    d_grad_volF_dT[a] = (d_grad_nu_dT[a] * (1 + nu) - 2 * grad_nu[a] * d_nu_dT) * inv3;
+	    for (j = 0; j < ei[pd->mi[MASS_FRACTION]]->dof[MASS_FRACTION]; j++) {
+	      d_grad_volF_dC[a][j] = (d_grad_nu_dC[a][j] * (1 + nu) - 2 * grad_nu[a] * d_nu_dC * bf[MASS_FRACTION]->phi[j]) * inv3;
+	    }
+	  }
+	}
+
+	//double rho = rho_gas * volF + rho_liq * (1 - volF);
+	double rho_dot = rho_gas * volF_dot - rho_liq * volF_dot;
+	double d_rho_dot_dT = rho_gas * d_volF_dot_dT - rho_liq * d_volF_dot_dT;
+	if (fv->T > 0) {
+	  d_rho_dot_dT = -(rho_gas/fv->T)*volF_dot + rho_gas * d_volF_dot_dT - rho_liq * d_volF_dot_dT;
+	}
+	double d_rho_dot_dC = rho_gas * d_volF_dot_dC - rho_liq * d_volF_dot_dC;
+
+	double grad_rho[DIM];
+	double d_grad_rho_dT[DIM][MDE];
+	double d_grad_rho_dC[DIM][MDE];
+
+	for (a = 0; a < dim; a++) {
+	  grad_rho[a] = rho_gas * grad_volF[a] + rho_liq * (grad_volF[a]);
+	  if (af->Assemble_Jacobian) {
+	    var = TEMPERATURE;
+	    for (j = 0; j < ei[pd->mi[var]]->dof[var]; j++) {
+	      d_grad_rho_dT[a][j] = rho_gas * d_grad_volF_dT[a] * bf[var]->phi[j] + rho_liq * (d_grad_volF_dT[a]*bf[var]->phi[j]);
+	      if (fv->T > 0) {
+		d_grad_rho_dT[a][j] += -(rho_gas/fv->T)*bf[var]->phi[j]*grad_volF[a];
+	      }
+	    }
+
+	    var = MASS_FRACTION;
+	    for (j = 0; j < ei[pd->mi[var]]->dof[var]; j++) {
+	      d_grad_rho_dC[a][j] = rho_gas * d_grad_volF_dC[a][j] + rho_liq * (d_grad_volF_dC[a][j]);
+	    }
+	  }
+	}
+
+	double inv_rho = 1/rho;
+
+	source = rho_dot;
+	for (a = 0; a < dim; a++) {
+	  source += fv->v[a] * grad_rho[a];
+	}
+	source *= inv_rho;
+
+	if (af->Assemble_Jacobian)
+	  {
+	    var = TEMPERATURE;
+	    if(pd->v[pg->imtrx][var] )
+	      {
+		for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		  {
+		    source_a = d_rho_dot_dT*bf[var]->phi[j];
+		    source_b = 0;
+		    for (a = 0; a < dim; a++) {
+		      source_b += fv->v[a] * d_grad_rho_dT[a][j];
+		    }
+		    source_c = inv_rho*d_rho->T[j] * source;
+
+		    dFVS_dT[j] = inv_rho * (source_a + source_b) + source_c;
+		  }
+	      }
+
+	    var = VELOCITY1;
+	    if(pd->v[pg->imtrx][var] )
+	      {
+		for( a=0; a<dim; a++)
+		  {
+		    var = VELOCITY1+a;
+		    for( j=0; pd->v[pg->imtrx][var] && j<ei[pg->imtrx]->dof[var]; j++)
+		      {
+			dFVS_dv[a][j] = inv_rho * (bf[var]->phi[j] * grad_rho[a]);
+		      }
+		  }
+	      }
+
+	    var = MASS_FRACTION;
+	    if(pd->v[pg->imtrx][var])
+	      {
+		for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		  {
+		    source_a = d_rho_dot_dC*bf[var]->phi[j];
+		    source_b = 0;
+		    for (a = 0; a < dim; a++) {
+		      source_b += fv->v[a] * d_grad_rho_dC[a][j];
+		    }
+		    source_c = inv_rho*d_rho->C[wCO2][j] * source;
+
+		    dFVS_dC[wCO2][j] = inv_rho*(source_a + source_b) + source_c;
+		  }
+	      }
+
+	    var = FILL;
+	    if(pd->v[pg->imtrx][var])
+	      {
+		for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		  {
+		    source_c = inv_rho*d_rho->F[j] * source;
+
+		    dFVS_dF[j] = source_c;
+		  }
+	      }
+	  }
+
+      }
     }
 
 

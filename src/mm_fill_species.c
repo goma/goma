@@ -10556,6 +10556,14 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 		}
 	    }
 	}
+      else if (mp->SpeciesSourceModel[w]  == FOAM_PMDI_10_CO2_LIQ)
+	{
+	  err = foam_pmdi10_co2_liq_species_source(w, st, mp->u_species_source[w], time, tt, dt);
+	}
+      else if (mp->SpeciesSourceModel[w]  == FOAM_PMDI_10_CO2_GAS)
+	{
+	  err = foam_pmdi10_co2_gas_species_source(w, st, mp->u_species_source[w], time, tt, dt);
+	}
       else if (mp->SpeciesSourceModel[w]  == EPOXY_DEA )
       {
 	err = epoxy_dea_species_source(w, mp->u_species_source[w]);

@@ -2189,6 +2189,48 @@ rd_levelset_specs(FILE *ifp,
                   ls->Mass_Sign  = I_NEG_FILL;
                 }                 
             }
+          else if  ( strcmp( input,"Huygens_Constrained Mass Negative") == 0 )
+            {
+              ls->Renorm_Method = HUYGENS_C;
+
+	      strcat(echo_string, "Huygens_Constrained Mass Negative");
+
+              if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
+                {
+		  char *s = endofstring(echo_string);
+
+                  ls->Mass_Sign = I_MASS_NEGATIVE_FILL;
+                  ls->Mass_Value = fabs( ls->Mass_Value);
+
+		  SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
+                }
+              else
+                {
+                  ls->Mass_Value = 0.0;
+                  ls->Mass_Sign  = I_MASS_NEGATIVE_FILL;
+                }
+            }
+	  else if  ( strcmp( input,"Huygens_Constrained Mass Positive") == 0 )
+            {
+              ls->Renorm_Method = HUYGENS_C;
+
+	      strcat(echo_string, "Huygens_Constrained Mass Positive");
+
+              if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
+                {
+		  char *s = endofstring(echo_string);
+
+                  ls->Mass_Sign = I_MASS_NEGATIVE_FILL;
+                  ls->Mass_Value = fabs( ls->Mass_Value);
+
+		  SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
+                }
+              else
+                {
+                  ls->Mass_Value = 0.0;
+                  ls->Mass_Sign  = I_MASS_NEGATIVE_FILL;
+                }
+            }
           else if  ( ( strcmp( input,"None") == 0 ) ||  (strcmp( input,"No") == 0) )
             {
               ls->Renorm_Method = FALSE;

@@ -8166,6 +8166,18 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  model_read = 1;
 	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
 	}
+      else if ( !strcmp(model_name, "FOAM_PMDI_10_CO2_LIQ") )
+	{
+	  SpeciesSourceModel = FOAM_PMDI_10_CO2_LIQ;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	}
+      else if ( !strcmp(model_name, "FOAM_PMDI_10_CO2_GAS") )
+	{
+	  SpeciesSourceModel = FOAM_PMDI_10_CO2_GAS;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	}
       else if ( !strcmp(model_name, "BUTLER_VOLMER") )
         {
 	  if (MAX_CONC <= 4) EH(-1,"MAX_CONC must be greater than 4 for Butler_volumer");
@@ -8532,6 +8544,50 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     }
 
   ECHO(es,echo_file);
+
+  model_read = look_for_mat_prop(imp, "Moment Source",
+				 &(mat_ptr->MomentSourceModel),
+				 &(mat_ptr->moment_source),
+				 &(mat_ptr->u_moment_source),
+				 &(mat_ptr->len_u_moment_source),
+				 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+  if ( !strcmp(model_name, "FOAM_PMDI_10") )
+    {
+      mat_ptr->MomentSourceModel = FOAM_PMDI_10;
+      model_read = 1;
+      num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
+
+      /* Requires growth rate and coalescence rate constants */
+      if ( num_const < 2 )
+	{
+	  sr = sprintf(err_msg,
+		       "Matl %s needs 2 constants for %s %s model.\n",
+		       pd_glob[mn]->MaterialName,
+		       "Moment Source", "FOAM_PMDI_10");
+	  EH(-1, err_msg);
+	}
+      mat_ptr->len_u_moment_source = num_const;
+      SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_moment_source);
+    }
+  else if ( !strcmp(model_name, "FOAM_PBE") )
+    {
+      mat_ptr->MomentSourceModel = FOAM_PBE;
+      model_read = 1;
+      num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
+      mat_ptr->len_u_moment_source = num_const;
+      SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_moment_source);
+    }
+  else
+    {
+      if(model_read == -1)
+	{
+	  EH(model_read, "Moment Source model invalid");
+	}
+      EH(model_read, "Moment Source");
+    }
+
+  ECHO(es,echo_file);
+
 
   ECHO("\n---Initialization\n",echo_file);
 

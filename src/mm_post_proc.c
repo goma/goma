@@ -759,58 +759,76 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   if (RHO_DOT != -1 && pd->e[pg->imtrx][R_MOMENTUM1] ) {
     double rho_dot = 0;
     if (mp->DensityModel == DENSITY_FOAM_PMDI_10) {
-      int wCO2;
-      int wH2O;
-      int w;
-
-      wCO2 = -1;
-      wH2O = -1;
-      for (w = 0; w < pd->Num_Species; w++) {
-	switch (mp->SpeciesSourceModel[w]) {
-	case FOAM_PMDI_10_CO2:
-	  wCO2 = w;
-	  break;
-	case FOAM_PMDI_10_H2O:
-	  wH2O = w;
-	  break;
-	default:
-	  break;
-	}
-      }
-
-      if (wCO2 == -1) {
-	EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2");
-      } else if (wH2O == -1) {
-	EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
-      }
-
       double M_CO2 = mp->u_density[0];
       double rho_liq = mp->u_density[1];
       double ref_press = mp->u_density[2];
       double Rgas_const = mp->u_density[3];
-      double rho_gas = 0;
+      if (pd->gv[MOMENT1]) {
+	double rho_gas = 0;
 
-      if (fv->T > 0) {
-	rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
-      }
+	if (fv->T > 0) {
+	  rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
+	}
 
-      double nu = 0;
-      double nu_dot = 0;
+	double nu = fv->moment[1];
+	double nu_dot = fv_dot->moment[1];
 
-      if (fv->T > 0) {
-	nu = M_CO2 * fv->c[wCO2] / rho_gas;
-	nu_dot = M_CO2 * fv_dot->c[wCO2] / rho_gas;
+	double inv1 = 1 / ( 1+ nu);
+	double inv2 = inv1*inv1;
+
+	double volF_dot = (nu_dot) * inv2;
+
+	rho_dot = rho_gas * volF_dot - rho_liq * volF_dot;
       } else {
-	nu = 0;
-	nu_dot = 0;
+	int wCO2;
+	int wH2O;
+	int w;
+
+	wCO2 = -1;
+	wH2O = -1;
+	for (w = 0; w < pd->Num_Species; w++) {
+	  switch (mp->SpeciesSourceModel[w]) {
+	  case FOAM_PMDI_10_CO2:
+	    wCO2 = w;
+	    break;
+	  case FOAM_PMDI_10_H2O:
+	    wH2O = w;
+	    break;
+	  default:
+	    break;
+	  }
+	}
+
+	if (wCO2 == -1) {
+	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2");
+	} else if (wH2O == -1) {
+	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+	}
+
+	double rho_gas = 0;
+
+	if (fv->T > 0) {
+	  rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
+	}
+
+	double nu = 0;
+	double nu_dot = 0;
+
+	if (fv->T > 0) {
+	  nu = M_CO2 * fv->c[wCO2] / rho_gas;
+	  nu_dot = M_CO2 * fv_dot->c[wCO2] / rho_gas;
+	} else {
+	  nu = 0;
+	  nu_dot = 0;
+	}
+
+	double inv1 = 1 / ( 1+ nu);
+	double inv2 = inv1*inv1;
+
+	double volF_dot = (nu_dot) * inv2;
+
+	rho_dot = rho_gas * volF_dot - rho_liq * volF_dot;
       }
-
-      double inv1 = 1 / ( 1+ nu);
-      double inv2 = inv1*inv1;
-
-      double volF_dot = (nu_dot) * inv2;
-
-      rho_dot = rho_gas * volF_dot - rho_liq * volF_dot;
     }
     local_post[RHO_DOT] = rho_dot;
     local_lumped[RHO_DOT] = 1.;

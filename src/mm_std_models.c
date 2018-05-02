@@ -51,9 +51,12 @@ static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun E
 #include "mm_eh.h"
 
 #include "mm_fill_species.h"
+#include "mm_fill_population.h"
+#define _MM_STD_MODELS_C
 #include "mm_std_models.h"
 
-#define _MM_STD_MODELS_C
+
+
 #include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************
@@ -1405,6 +1408,198 @@ foam_pmdi10_co2_species_source(int species_no,   /* Current species number */
   return source;
 }
 
+int
+foam_pmdi10_co2_liq_species_source(int species_no,   /* Current species number */
+				   struct Species_Conservation_Terms *st,
+				   double *param,
+				   double time,
+				   double tt, double dt)
+{
+  int eqn, var;
+
+
+  double T = fv->T;
+  int wH2O = -1;
+  int w;
+  struct moment_growth_rate *MGR;
+
+  for (w = 0; w < pd->Num_Species; w++) {
+    if (mp->SpeciesSourceModel[w] == FOAM_PMDI_10_H2O) {
+      wH2O = w;
+      break;
+    }
+  }
+
+  if (!pd->gv[MOMENT1]) {
+    EH(-1, "Expected to find moment equations for FOAM_PMDI_10_CO2_LIQ");
+    return -1;
+  }
+
+  if (wH2O == -1) {
+    EH(-1, "Expected to find a speices with source FOAM_PMDI_10_H2O");
+    return -1;
+  }
+
+  MGR = calloc(sizeof(struct moment_growth_rate), 1);
+  int err = get_moment_growth_rate_term(MGR);
+  if (err) {
+    free(MGR);
+    return -1;
+  }
+
+  double CH2O = fv->c[wH2O];
+  double n = mp->u_species_source[wH2O][0];
+  double t_nuc = mp->u_species_source[wH2O][1];
+  double A = mp->u_species_source[wH2O][2];
+  double norm_E = mp->u_species_source[wH2O][3];
+
+  double N = 0.5 * (1 + tanh((time - t_nuc)/t_nuc));
+
+  double source;
+
+  if (T <= 0) {
+    source = 0;
+    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = 0;
+    mp->d_species_source[MAX_VARIABLE_TYPES + wH2O] = 0;
+    mp->d_species_source[TEMPERATURE] = 0;
+    free(MGR);
+    return (source);
+  }
+
+  double source_a;
+
+  if (CH2O <= 0) {
+    source = 0;
+    source_a = 0;
+    mp->species_source[species_no] = 0;
+  } else {
+    source_a = N * A * exp(-norm_E/T) * pow(CH2O, n);
+  }
+  source = source_a - MGR->G[species_no][1];
+
+  /**********************************************************/
+
+  /* Species piece */
+  eqn = MASS_FRACTION;
+  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+    {
+      int j;
+      mp->species_source[species_no] = source;
+      st->MassSource[species_no] = source;
+
+      /* Jacobian entries for source term */
+      var = MASS_FRACTION;
+      if (pd->v[pg->imtrx][var])
+	{
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+	    if (CH2O > 0) {
+	      st->d_MassSource_dc[species_no][wH2O][j] = source_a * n / CH2O * bf[var]->phi[j];
+	    }
+	    st->d_MassSource_dc[species_no][species_no][j] = -MGR->d_G_dC[species_no][1][j];
+	  }
+	}
+
+      var = TEMPERATURE;
+      if (pd->v[pg->imtrx][var])
+	{
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+	    st->d_MassSource_dT[species_no][j] = -norm_E/(T*T) * source_a * bf[var]->phi[j] - MGR->d_G_dT[species_no][1][j];
+	  }
+	}
+    }
+  free(MGR);
+  return 0;
+}
+
+int
+foam_pmdi10_co2_gas_species_source(int species_no,   /* Current species number */
+				   struct Species_Conservation_Terms *st,
+				   double *param,
+				   double time,
+				   double tt, double dt)
+{
+  int eqn, var;
+
+
+  double T = fv->T;
+  int wH2O = -1;
+  int wCO2Liq = -1;
+  int w;
+  struct moment_growth_rate *MGR;
+
+  for (w = 0; w < pd->Num_Species; w++) {
+    if (mp->SpeciesSourceModel[w] == FOAM_PMDI_10_H2O) {
+      wH2O = w;
+    }
+    else if (mp->SpeciesSourceModel[w] == FOAM_PMDI_10_CO2_LIQ) {
+      wCO2Liq = w;
+    }
+  }
+
+  if (!pd->gv[MOMENT1]) {
+    EH(-1, "Expected to find moment equations for FOAM_PMDI_10_CO2_LIQ");
+  }
+
+  if (wH2O == -1) {
+    EH(-1, "Expected to find a speices with source FOAM_PMDI_10_H2O");
+    return -1;
+  } else if (wCO2Liq == -1) {
+    EH(-1, "Expected to find a speices with source FOAM_PMDI_10_CO2_LIQ");
+    return -1;
+  }
+
+  MGR = calloc(sizeof(struct moment_growth_rate), 1);
+  int err = get_moment_growth_rate_term(MGR);
+  if (err) {
+    free(MGR);
+    return -1;
+  }
+
+
+  double source;
+  if (T <= 0) {
+    source = 0;
+    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = 0;
+    mp->d_species_source[MAX_VARIABLE_TYPES + wH2O] = 0;
+    mp->d_species_source[TEMPERATURE] = 0;
+    free(MGR);
+    return (source);
+  }
+
+  source = MGR->G[wCO2Liq][1];
+
+  /**********************************************************/
+
+  /* Species piece */
+  eqn = MASS_FRACTION;
+  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+    {
+      int j;
+      mp->species_source[species_no] = source;
+      st->MassSource[species_no] = source;
+
+      /* Jacobian entries for source term */
+      var = MASS_FRACTION;
+      if (pd->v[pg->imtrx][var])
+	{
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+	    st->d_MassSource_dc[species_no][wCO2Liq][j] = MGR->d_G_dC[wCO2Liq][1][j];
+	  }
+	}
+
+      var = TEMPERATURE;
+      if (pd->v[pg->imtrx][var])
+	{
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+	    st->d_MassSource_dT[species_no][j] = MGR->d_G_dT[species_no][1][j];
+	  }
+	}
+    }
+
+  free(MGR);
+  return 0;
+}
+
 /* 
  * This is the source term for a suspension model
  * where the fluid and particles have different
@@ -2316,8 +2511,8 @@ foam_pmdi_10_heat_cap( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp, double time)
     }
   }
 
-  if (wCO2 == -1) {
-    EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2");
+  if (wCO2 == -1 && !pd->gv[MOMENT1]) {
+    EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2 or Moment equations");
   } else if (wH2O == -1) {
     EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
   }

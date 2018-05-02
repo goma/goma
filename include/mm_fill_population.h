@@ -35,6 +35,10 @@
 #include "std.h"
 #include "mm_as_structs.h"
 
+/* Moment growth rate types */
+#define MOMENT_GR_PBE 0
+#define MOMENT_GR_PMDI_10 1
+
 EXTERN void wheeler_algorithm(int N, double *moments, double *weights, double *nodes);
 
 EXTERN int get_foam_pbe_indices(int *index_W, int *index_OH, int *index_BA_l,
@@ -60,6 +64,7 @@ struct moment_growth_rate {
   double G[MAX_CONC][MAX_MOMENTS];
   double d_G_dC[MAX_CONC][MAX_MOMENTS][MDE];
   double d_G_dT[MAX_CONC][MAX_MOMENTS][MDE];
+  double S[MAX_MOMENTS];
 };
 
 EXTERN int

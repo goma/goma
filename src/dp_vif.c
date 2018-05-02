@@ -1565,6 +1565,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->Porous_wt_func, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Volume_Expansion, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->current_source, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->moment_source, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->density, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->electrical_conductivity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->permittivity, 1, MPI_DOUBLE);
@@ -1643,6 +1644,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->Ewt_funcModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Mwt_funcModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->CurrentSourceModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->MomentSourceModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->HeightUFunctionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->HeightLFunctionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->VeloUFunctionModel, 1, MPI_INT);
@@ -1742,6 +1744,8 @@ noahs_ark()
       ddd_add_member(n, mp_glob[i]->d_Volume_Expansion,
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->d_current_source,
+		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
+      ddd_add_member(n, mp_glob[i]->d_moment_source,
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->d_density,
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
@@ -1846,6 +1850,7 @@ noahs_ark()
 
       ddd_add_member(n, &mp_glob[i]->len_u_Volume_Expansion, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_u_current_source, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_moment_source, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_u_density, 1, MPI_INT);   
       ddd_add_member(n, &mp_glob[i]->len_u_electrical_conductivity, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_u_permittivity, 1, MPI_INT);
@@ -2857,6 +2862,9 @@ ark_landing()
       dalloc( m->len_u_current_source,
 	      m->    u_current_source);
 
+      dalloc( m->len_u_moment_source,
+	      m->    u_moment_source);
+
       dalloc( m->len_u_density,
 	      m->    u_density);
 
@@ -3218,6 +3226,9 @@ noahs_dove()
 
     crdv( m->len_u_current_source,
 	  m->    u_current_source);
+
+    crdv( m->len_u_moment_source,
+	  m->    u_moment_source);
 
     crdv( m->len_u_density,
 	    m->    u_density);

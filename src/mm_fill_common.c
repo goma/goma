@@ -134,51 +134,53 @@ static void calculateVolumeFractionGasPhase(const dbl time) {
     }
   else if (mp->DensityModel == DENSITY_FOAM_PMDI_10)
     {
-      int wCO2;
-      int wH2O;
-      int w;
-
-      for (w = 0; w < MAX_VARIABLE_TYPES+MAX_CONC; w++) {
-	mp->d_volumeFractionGas[w] = 0.0;
-      }
-
-      wCO2 = -1;
-      wH2O = -1;
-      for (w = 0; w < pd->Num_Species; w++) {
-	switch (mp->SpeciesSourceModel[w]) {
-	case FOAM_PMDI_10_CO2:
-	  wCO2 = w;
-	  break;
-	case FOAM_PMDI_10_H2O:
-	  wH2O = w;
-	  break;
-	default:
-	  break;
-	}
-      }
-
-      if (wCO2 == -1) {
-	EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2");
-      } else if (wH2O == -1) {
-	EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
-      }
-
-      double M_CO2 = mp->u_density[0];
-      //double rho_liq = mp->u_density[1];
-      double ref_press = mp->u_density[2];
-      double Rgas_const = mp->u_density[3];
-      double rho_gas = 0;
-      double nu;
-      double d_nu_dC;
-      double d_nu_dT;
-
-      double phi = 0.0;
-      double d_phi_dC = 0.0;
-      double d_phi_dT = 0.0;
-
       if (pd->gv[MOMENT1]) {
 	mp->volumeFractionGas = (fv->moment[1] / (1 + fv->moment[1]));
+	mp->d_volumeFractionGas[MOMENT1] = 1 / ((1 + fv->moment[1])* (1 + fv->moment[1]));
       } else {
+	int wCO2;
+	int wH2O;
+	int w;
+
+	for (w = 0; w < MAX_VARIABLE_TYPES+MAX_CONC; w++) {
+	  mp->d_volumeFractionGas[w] = 0.0;
+	}
+
+	wCO2 = -1;
+	wH2O = -1;
+	for (w = 0; w < pd->Num_Species; w++) {
+	  switch (mp->SpeciesSourceModel[w]) {
+	  case FOAM_PMDI_10_CO2:
+	    wCO2 = w;
+	    break;
+	  case FOAM_PMDI_10_H2O:
+	    wH2O = w;
+	    break;
+	  default:
+	    break;
+	  }
+	}
+
+	if (wCO2 == -1) {
+	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2");
+	} else if (wH2O == -1) {
+	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+	}
+
+	double M_CO2 = mp->u_density[0];
+	//double rho_liq = mp->u_density[1];
+	double ref_press = mp->u_density[2];
+	double Rgas_const = mp->u_density[3];
+	double rho_gas = 0;
+	double nu;
+	double d_nu_dC;
+	double d_nu_dT;
+
+	double phi = 0.0;
+	double d_phi_dC = 0.0;
+	double d_phi_dT = 0.0;
+
+
 	if (fv->T > 0) {
 	  rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
 	  nu = M_CO2 * fv->c[wCO2] / rho_gas;

@@ -400,6 +400,96 @@ int foam_pbe_growth_rate(double growth_rate[MAX_CONC], double d_growth_rate_dc[M
   return 0;
 }
 
+int foam_pmdi_growth_rate(double growth_rate[MAX_CONC], double d_growth_rate_dc[MAX_CONC][MDE], double d_growth_rate_dT[MAX_CONC][MDE])
+{
+  int wCO2Liq;
+  int wCO2Gas;
+  int wH2O;
+  int w;
+
+  wCO2Liq = -1;
+  wCO2Gas = -1;
+  wH2O = -1;
+  for (w = 0; w < pd->Num_Species; w++) {
+    switch (mp->SpeciesSourceModel[w]) {
+    case FOAM_PMDI_10_CO2_LIQ:
+      wCO2Liq = w;
+      break;
+    case FOAM_PMDI_10_CO2_GAS:
+      wCO2Gas = w;
+      break;
+    case FOAM_PMDI_10_H2O:
+      wH2O = w;
+      break;
+    default:
+      break;
+    }
+  }
+
+  if (wCO2Liq == -1) {
+    EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
+    return -1;
+  } else if (wH2O == -1) {
+    EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+    return -1;
+  } else if (wCO2Gas == -1) {
+    EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
+    return -1;
+  }
+
+  double G0;
+
+  G0 = mp->u_moment_source[0];
+
+  int j;
+
+  for (w = 0; w < MAX_CONC; w++) {
+    growth_rate[w] = 0;
+    for (j = 0; j < MDE; j++) {
+      d_growth_rate_dc[w][j] = 0.0;
+      d_growth_rate_dT[w][j] = 0.0;
+    }
+  }
+
+  if (mp->DensityModel == DENSITY_FOAM_PMDI_10)
+    {
+      int var, j;
+      int w;
+
+      double M_CO2 = mp->u_density[0];
+      double rho_liq = mp->u_density[1];
+
+      var = MASS_FRACTION;
+
+      for (w = 0; w < pd->Num_Species_Eqn; w++) {
+
+	if (w == wCO2Liq) {
+	  double CO2_max = 4e-4;
+	  double mf = fv->c[wCO2Liq] * M_CO2 / rho_liq;
+	  double dmfdC = M_CO2 / rho_liq;
+
+	  if (mf > CO2_max) {
+	    growth_rate[wCO2Liq] = G0 * (mf - CO2_max) / CO2_max;
+	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+	      d_growth_rate_dc[wCO2Liq][j] = G0 * dmfdC * bf[var]->phi[j] / CO2_max;
+	    }
+
+	    for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+	      d_growth_rate_dT[wCO2Liq][j] = 0;
+	    }
+	  }
+	}
+      }
+    }
+  else
+    {
+      EH(-1, "Expected DENSITY_FOAM_PMDI_10 for growth rate");
+      return -1;
+    }
+
+  return 0;
+}
+
 
 double
 foam_pbe_conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
@@ -782,112 +872,286 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR)
   double d_growth_rate_dc[MAX_CONC][MDE];
   double d_growth_rate_dT[MAX_CONC][MDE];
 
-  int species_BA_l;
-  int species_CO2_l;
-  int species_OH;
-  int err;
-  int w,j;
-
-  for (w = 0; w < MAX_CONC; w++) {
-    for (j = 0; j < MDE; j++) {
-      growth_rate[w] = 0.0;
-      d_growth_rate_dc[w][j] = 0.0;
-      d_growth_rate_dT[w][j] = 0.0;
-    }
+  if (!pd->gv[MOMENT0] ||
+      !pd->gv[MOMENT1] ||
+      !pd->gv[MOMENT2] ||
+      !pd->gv[MOMENT3]) {
+    EH(-1, "Expected Moment equations for moment growth rate");
+    return -1;
   }
 
-
-  err = get_foam_pbe_indices(NULL, &species_OH, &species_BA_l,
-			     NULL, &species_CO2_l, NULL);
-  if (err) return err;
-
-  double gelling_point = mp->u_species_source[species_OH][5];
-  if (fv->c[species_OH] > gelling_point) {
-    return 0;
-  }
-
-
-  foam_pbe_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
-
+  /* Get quad weights and nodes */
   wheeler_algorithm(nnodes, fv_old->moment, weights, nodes);
 
+  switch (mp->MomentSourceModel) {
+  case FOAM_PBE:
+    {
+      int species_BA_l;
+      int species_CO2_l;
+      int species_OH;
+      int err;
+      int w,j;
 
-  // currently only compute G_wi terms for CO2_l and BA_l
-
-  MGR->G[species_BA_l][0] = 0;
-  MGR->G[species_CO2_l][0] = 0;
-  for (int k = 1; k < 2*nnodes; k++) {
-    for (int alpha = 0; alpha < nnodes; alpha++) {
-      double coeff = k * weights[alpha] * pow(nodes[alpha], k-1);
-      MGR->G[species_BA_l][k] = coeff*growth_rate[species_BA_l];
-      MGR->G[species_CO2_l][k] = coeff * growth_rate[species_CO2_l];
-      if (af->Assemble_Jacobian) {
-	if (pd->v[pg->imtrx][MASS_FRACTION]) {
-	  for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
-	    MGR->d_G_dC[species_BA_l][k][j] = coeff * d_growth_rate_dc[species_BA_l][j];
-	    MGR->d_G_dC[species_CO2_l][k][j] = coeff * d_growth_rate_dc[species_CO2_l][j];
-	  }
+      for (w = 0; w < MAX_CONC; w++) {
+	for (j = 0; j < MDE; j++) {
+	  growth_rate[w] = 0.0;
+	  d_growth_rate_dc[w][j] = 0.0;
+	  d_growth_rate_dT[w][j] = 0.0;
 	}
+      }
 
-	if (pd->v[pg->imtrx][TEMPERATURE]) {
-	  for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
-	    MGR->d_G_dT[species_BA_l][k][j] = coeff * d_growth_rate_dT[species_BA_l][j];
-	    MGR->d_G_dT[species_CO2_l][k][j] = coeff * d_growth_rate_dT[species_CO2_l][j];
+
+      err = get_foam_pbe_indices(NULL, &species_OH, &species_BA_l,
+				 NULL, &species_CO2_l, NULL);
+      if (err) return err;
+
+      double gelling_point = mp->u_species_source[species_OH][5];
+      if (fv->c[species_OH] > gelling_point) {
+	return 0;
+      }
+
+
+      foam_pbe_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
+
+      // currently only compute G_wi terms for CO2_l and BA_l
+
+      MGR->G[species_BA_l][0] = 0;
+      MGR->G[species_CO2_l][0] = 0;
+      for (int k = 1; k < 2*nnodes; k++) {
+	for (int alpha = 0; alpha < nnodes; alpha++) {
+	  double coeff = k * weights[alpha] * pow(nodes[alpha], k-1);
+	  MGR->G[species_BA_l][k] = coeff*growth_rate[species_BA_l];
+	  MGR->G[species_CO2_l][k] = coeff * growth_rate[species_CO2_l];
+	  if (af->Assemble_Jacobian) {
+	    if (pd->v[pg->imtrx][MASS_FRACTION]) {
+	      for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
+		MGR->d_G_dC[species_BA_l][k][j] = coeff * d_growth_rate_dc[species_BA_l][j];
+		MGR->d_G_dC[species_CO2_l][k][j] = coeff * d_growth_rate_dc[species_CO2_l][j];
+	      }
+	    }
+
+	    if (pd->v[pg->imtrx][TEMPERATURE]) {
+	      for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+		MGR->d_G_dT[species_BA_l][k][j] = coeff * d_growth_rate_dT[species_BA_l][j];
+		MGR->d_G_dT[species_CO2_l][k][j] = coeff * d_growth_rate_dT[species_CO2_l][j];
+	      }
+	    }
 	  }
 	}
       }
+      return 0;
     }
+    break;
+  case FOAM_PMDI_10:
+    {
+      int wCO2Liq;
+      int wCO2Gas;
+      int wH2O;
+      int w;
+      int j;
+
+      wCO2Liq = -1;
+      wCO2Gas = -1;
+      wH2O = -1;
+      for (w = 0; w < pd->Num_Species; w++) {
+	switch (mp->SpeciesSourceModel[w]) {
+	case FOAM_PMDI_10_CO2_LIQ:
+	  wCO2Liq = w;
+	  break;
+	case FOAM_PMDI_10_CO2_GAS:
+	  wCO2Gas = w;
+	  break;
+	case FOAM_PMDI_10_H2O:
+	  wH2O = w;
+	  break;
+	default:
+	  break;
+	}
+      }
+
+      if (wCO2Liq == -1) {
+	EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
+	return -1;
+      } else if (wH2O == -1) {
+	EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+	return -1;
+      } else if (wCO2Gas == -1) {
+	EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
+	return -1;
+      }
+
+      // Coalescence rate
+      double Beta0 = mp->u_moment_source[1];
+
+      foam_pmdi_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
+
+      // currently only compute G_wi terms for CO2_l and BA_l
+      MGR->G[wCO2Liq][0] = 0;
+      for (int k = 1; k < 2*nnodes; k++) {
+	MGR->S[k] = 0;
+	for (int alpha = 0; alpha < nnodes; alpha++) {
+	  double coeff = k * weights[alpha] * pow(nodes[alpha], k-1);
+	  MGR->G[wCO2Liq][k] = coeff * growth_rate[wCO2Liq];
+
+	  for (int beta = 0; beta < nnodes; beta++) {
+	    double coalescence_kernel = Beta0*(nodes[alpha] + nodes[beta]);
+	    double wa = weights[alpha];
+	    double wb = weights[beta];
+	    double na = nodes[alpha];
+	    double nb = nodes[beta];
+	    MGR->S[k] += wa*wb*(pow(na + nb, k) - pow(na,k) - pow(nb,k))*coalescence_kernel;
+	  }
+
+	  if (af->Assemble_Jacobian) {
+	    if (pd->v[pg->imtrx][MASS_FRACTION]) {
+	      for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
+		MGR->d_G_dC[wCO2Liq][k][j] = coeff * d_growth_rate_dc[wCO2Liq][j];
+	      }
+	    }
+
+	    if (pd->v[pg->imtrx][TEMPERATURE]) {
+	      for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+		MGR->d_G_dT[wCO2Liq][k][j] = coeff * d_growth_rate_dT[wCO2Liq][j];
+	      }
+	    }
+	  }
+	}
+      }
+      return 0;
+    }
+    break;
+  default:
+    EH(-1, "Unknown moment source model");
+    return -1;
+    break;
   }
-  return 0;
+  return -1;
 }
 
 int
 moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource)
 {
-  int species_BA_l;
-  int species_CO2_l;
-  int err = 0;
-  int j;
-  double H = 1;
-
-  if (ls != NULL) {
-    load_lsi(ls->Length_Scale);
-    H = 1-lsi->H;
-  }
-
   struct moment_growth_rate *MGR = NULL;
+  switch (mp->MomentSourceModel) {
+  case FOAM_PBE:
+    {
 
-  err = get_foam_pbe_indices(NULL, NULL, &species_BA_l,
-			     NULL, &species_CO2_l, NULL);
-  if (err) return err;
+      int species_BA_l;
+      int species_CO2_l;
+      int err = 0;
+      int j;
+      double H = 1;
 
-  MGR = calloc(sizeof(struct moment_growth_rate), 1);
-  if (H > PBE_FP_SMALL) {
-    err = get_moment_growth_rate_term(MGR);
-  }
-
-  if (err) {
-    free(MGR);
-    return err;
-  }
-
-  for (int mom = 0; mom < MAX_MOMENTS; mom++) {
-    msource[mom] = H*(MGR->G[species_BA_l][mom] + MGR->G[species_CO2_l][mom]);
-    if (pd->v[pg->imtrx][MASS_FRACTION]) {
-      for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
-	d_msource->C[mom][species_BA_l][j] = H*MGR->d_G_dC[species_BA_l][mom][j];
-	d_msource->C[mom][species_CO2_l][j] = H*MGR->d_G_dC[species_CO2_l][mom][j];
+      if (ls != NULL) {
+	load_lsi(ls->Length_Scale);
+	H = 1-lsi->H;
       }
-    }
 
-    if (pd->v[pg->imtrx][TEMPERATURE]) {
-      for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
-	d_msource->T[mom][j] = H*(MGR->d_G_dT[species_BA_l][mom][j] +  MGR->d_G_dT[species_CO2_l][mom][j]);
+      struct moment_growth_rate *MGR = NULL;
+
+      err = get_foam_pbe_indices(NULL, NULL, &species_BA_l,
+				 NULL, &species_CO2_l, NULL);
+      if (err) return err;
+
+      MGR = calloc(sizeof(struct moment_growth_rate), 1);
+      if (H > PBE_FP_SMALL) {
+	err = get_moment_growth_rate_term(MGR);
       }
-    }
-  }
 
-  free(MGR);
+      if (err) {
+	free(MGR);
+	return err;
+      }
+
+      for (int mom = 0; mom < MAX_MOMENTS; mom++) {
+	msource[mom] = H*(MGR->G[species_BA_l][mom] + MGR->G[species_CO2_l][mom]);
+	if (pd->v[pg->imtrx][MASS_FRACTION]) {
+	  for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
+	    d_msource->C[mom][species_BA_l][j] = H*MGR->d_G_dC[species_BA_l][mom][j];
+	    d_msource->C[mom][species_CO2_l][j] = H*MGR->d_G_dC[species_CO2_l][mom][j];
+	  }
+	}
+
+	if (pd->v[pg->imtrx][TEMPERATURE]) {
+	  for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+	    d_msource->T[mom][j] = H*(MGR->d_G_dT[species_BA_l][mom][j] +  MGR->d_G_dT[species_CO2_l][mom][j]);
+	  }
+	}
+      }
+      free(MGR);
+    }
+    break;
+  case FOAM_PMDI_10:
+    {
+      int wCO2Liq;
+      int wCO2Gas;
+      int wH2O;
+      int w;
+      int j;
+
+      wCO2Liq = -1;
+      wCO2Gas = -1;
+      wH2O = -1;
+      for (w = 0; w < pd->Num_Species; w++) {
+	switch (mp->SpeciesSourceModel[w]) {
+	case FOAM_PMDI_10_CO2_LIQ:
+	  wCO2Liq = w;
+	  break;
+	case FOAM_PMDI_10_CO2_GAS:
+	  wCO2Gas = w;
+	  break;
+	case FOAM_PMDI_10_H2O:
+	  wH2O = w;
+	  break;
+	default:
+	  break;
+	}
+      }
+
+      if (wCO2Liq == -1) {
+	EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
+	return -1;
+      } else if (wH2O == -1) {
+	EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+	return -1;
+      } else if (wCO2Gas == -1) {
+	EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
+	return -1;
+      }
+
+      double H = 1;
+
+      if (ls != NULL) {
+	load_lsi(ls->Length_Scale);
+	H = 1-lsi->H;
+      }
+      int err;
+      MGR = calloc(sizeof(struct moment_growth_rate), 1);
+      if (H > PBE_FP_SMALL) {
+	err = get_moment_growth_rate_term(MGR);
+      }
+
+      if (err) {
+	free(MGR);
+	return err;
+      }
+
+      for (int mom = 0; mom < MAX_MOMENTS; mom++) {
+	msource[mom] = H*(MGR->G[wCO2Liq][mom] + MGR->S[mom]);
+	if (pd->v[pg->imtrx][MASS_FRACTION]) {
+	  for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
+	    d_msource->C[mom][wCO2Liq][j] = H*MGR->d_G_dC[wCO2Liq][mom][j];
+
+	  }
+	}
+      }
+      free(MGR);
+    }
+    break;
+  default:
+    EH(-1, "Unknown moment source model");
+    break;
+  }
 
   return 0;
 }

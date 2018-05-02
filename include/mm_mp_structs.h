@@ -618,6 +618,12 @@ struct Material_Properties
   int len_u_current_source;
   dbl *u_current_source;
 
+  dbl moment_source;
+  dbl d_moment_source[MAX_VARIABLE_TYPES + MAX_CONC];
+  int MomentSourceModel;
+  int len_u_moment_source;
+  dbl *u_moment_source;
+
   dbl heightU;
   dbl d_heightU[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_heightU_function_constants;

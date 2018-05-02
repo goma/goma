@@ -253,8 +253,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define FOAM_PMDI_10_RXN              41
 #define FOAM_PMDI_10_H2O              42
 #define FOAM_PMDI_10_CO2              43
-
-
+#define FOAM_PMDI_10_CO2_LIQ              44
+#define FOAM_PMDI_10_CO2_GAS              45
 
 /*
  *  Heat source modeling
