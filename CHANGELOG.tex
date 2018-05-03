@@ -345,6 +345,41 @@ Post Processing Volumetric Integration =
 VOLUME_INT = POROUS_LIQ_INVENTORY 1 0 volume.csv
 END OF VOLUME_INT
 
+Capability:  Mapping stress from initial guess to log-conformation
+tensor (see "Log-conformation formulation for viscoelastic flows" under
+"Goma Material File Capabilities")
+Developers: Richard Martin and Weston Ortiz
+Date: 5/3/2018
+Description:  This input card is used with the log-conformation
+tensor (with Polymer Constitutive Equation = \{OLDROYDB | GIESEKUS | PTT\} and
+Polymer Stress Formulation = LOG_CONF in the material file). It is included with
+the card "Conformation Map = \{yes|no\}" right after the Initial Guess
+card and lets Goma know if the stress it's reading in is the regular polymer stress
+or the log-conformation tensor stress. When it reads in the regular polymer
+stress, you need to set "Conformation Map = yes". If the stress is already
+read in as the log-conformation tensor, set "Conformation Map = no".
+Example:
+General Specifications
+Initial Guess = read_exoII_file initial_guess.exoII
+Conformation Map = yes
+
+Capability:  Post processing of log-conformation tensor (see
+"Log-conformation formulation for viscoelastic flows" under
+"Goma Material File Capabilities")
+Developers: Richard Martin and Weston Ortiz
+Date: 5/3/2018
+Description:  This input card is used with the log-conformation
+tensor (with Polymer Constitutive Equation = \{OLDROYDB | GIESEKUS | PTT\} and
+Polymer Stress Formulation = LOG_CONF in the material file). It includes a post
+processing capability for the log-conformation tensor. The stress (S11, S12, and
+so forth) that Goma outputs is the log-conformation stress. To map it to the
+regular polymer stress, you need to set "Map Log-Conf Stress = yes" in the post-
+processing cards. The regular polymer stress will then be included in the output
+file as MS11, MS12, and so forth.
+Example:
+Post Processing Specifications
+Map Log-Conf Stress = yes
+
 \end{alltt}
 %***************************************************
 %************Goma Material File Capabilities********
@@ -701,6 +736,31 @@ Thin Film Multiphase Clipping = {tfmp_clip} {tfmp_clip_strength}
 Thin Film Multiphase Relative Permeability Model = PIECEWISE {Scg} {alphag} {Scl} {alphal}
 Thin Film Multiphase Dissolution Model = SQUARE 2.233e-5 3.3555e-11 44.01
 Thin Film Multiphase Drop Lattice = SQUARE 1.0 1.0
+
+Capability: Log-conformation formulation for viscoelastic flows
+Date: 5/3/2018
+Developers: Richard Martin, Weston Ortiz
+Description:  Uses an alternate formulation for the Oldroyd-B, Giesekus,
+and PTT polymer constitutive models, using the log-conformation tensor. It
+is included as "Polymer Stress Formulation = LOG_CONF" underneath
+the Polymer Constitutive Equation card in the material file. The
+stress tensor that it outputs (S11, S12, S22, and so forth) is the log-conformation
+tensor, not the regular polymer stress. Two input cards can be included in the
+input deck: "Conformation Map = \{yes|no\}", and "Map Log-Conf Stress = \{yes|no\}".
+The Conformation Map is included after the Initial Guess card, and
+lets Goma know if the stress in the initial guess file is the regular polymer stress
+(hence, "Conformation Map = yes"), or if the stress is read in as
+the log-conformation tensor ("Conformation Map = no"). In post
+processing, "Map Log-Conf Stress = yes" will output the regular polymer stress
+as MS11, MS12, and so forth. The log-conformation formulation works for multimode
+constitutive equations and 2-dimensional cases (does not work in 3D). See "Mapping
+stress from initial guess to log-conformation tensor" and "Post processing of
+log-conformation tensor" under "Goma Input File Capabilities" for more
+information.
+Example:
+Polymer Constitutive Equation = \{OLDROYDB | GIESEKUS | PTT\}
+Polymer Stress Formulation = LOG_CONF
+Polymer Weight Function = SUPG
 
 \end{alltt}
 %***************************************************
