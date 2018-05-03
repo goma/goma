@@ -8139,6 +8139,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  SpeciesSourceModel = FOAM_PMDI_10_H2O;
 	  model_read = 1;
 	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
 	  if ( fscanf(imp, "%lf %lf %lf %lf",
 		      &a0, &a1, &a2, &a3)  != 4 )
 	    {
@@ -8165,18 +8166,69 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  SpeciesSourceModel = FOAM_PMDI_10_CO2;
 	  model_read = 1;
 	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
 	}
       else if ( !strcmp(model_name, "FOAM_PMDI_10_CO2_LIQ") )
 	{
 	  SpeciesSourceModel = FOAM_PMDI_10_CO2_LIQ;
 	  model_read = 1;
 	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
 	}
       else if ( !strcmp(model_name, "FOAM_PMDI_10_CO2_GAS") )
 	{
 	  SpeciesSourceModel = FOAM_PMDI_10_CO2_GAS;
 	  model_read = 1;
 	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+	}
+      else if ( !strcmp(model_name, "FOAM_PMDI_10_H2O_DIVV") )
+	{
+	  SpeciesSourceModel = FOAM_PMDI_10_H2O;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+	  if ( fscanf(imp, "%lf %lf %lf %lf",
+		      &a0, &a1, &a2, &a3)  != 4 )
+	    {
+		  sr = sprintf(err_msg,
+			       "Matl %s needs 4 constants for %s %s model.\n",
+			       pd_glob[mn]->MaterialName,
+			       "Species Source", "FOAM_PMDI_10_H2O");
+		  EH(-1, err_msg);
+	    }
+
+	  mat_ptr->u_species_source[species_no] = (dbl *)
+						 array_alloc(1,4,sizeof(dbl));
+
+	  mat_ptr->len_u_species_source[species_no] = 4;
+
+	  mat_ptr->u_species_source[species_no][0] = a0;  /* n */
+	  mat_ptr->u_species_source[species_no][1] = a1;  /* t_nuc */
+	  mat_ptr->u_species_source[species_no][2] = a2;  /* A */
+	  mat_ptr->u_species_source[species_no][3] = a3;  /* En/R */
+	  SPF_DBL_VEC(endofstring(es), 4,  mat_ptr->u_species_source[species_no]);
+	}
+      else if ( !strcmp(model_name, "FOAM_PMDI_10_CO2_DIVV") )
+	{
+	  SpeciesSourceModel = FOAM_PMDI_10_CO2;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+	}
+      else if ( !strcmp(model_name, "FOAM_PMDI_10_CO2_LIQ_DIVV") )
+	{
+	  SpeciesSourceModel = FOAM_PMDI_10_CO2_LIQ;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+	}
+      else if ( !strcmp(model_name, "FOAM_PMDI_10_CO2_GAS_DIVV") )
+	{
+	  SpeciesSourceModel = FOAM_PMDI_10_CO2_GAS;
+	  model_read = 1;
+	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
 	}
       else if ( !strcmp(model_name, "BUTLER_VOLMER") )
         {
@@ -8551,42 +8603,37 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				 &(mat_ptr->u_moment_source),
 				 &(mat_ptr->len_u_moment_source),
 				 model_name, SCALAR_INPUT, &NO_SPECIES,es);
-  if ( !strcmp(model_name, "FOAM_PMDI_10") )
-    {
-      mat_ptr->MomentSourceModel = FOAM_PMDI_10;
-      model_read = 1;
-      num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
 
-      /* Requires growth rate and coalescence rate constants */
-      if ( num_const < 2 )
-	{
-	  sr = sprintf(err_msg,
-		       "Matl %s needs 2 constants for %s %s model.\n",
-		       pd_glob[mn]->MaterialName,
-		       "Moment Source", "FOAM_PMDI_10");
-	  EH(-1, err_msg);
-	}
-      mat_ptr->len_u_moment_source = num_const;
-      SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_moment_source);
-    }
-  else if ( !strcmp(model_name, "FOAM_PBE") )
-    {
-      mat_ptr->MomentSourceModel = FOAM_PBE;
-      model_read = 1;
-      num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
-      mat_ptr->len_u_moment_source = num_const;
-      SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_moment_source);
-    }
-  else
-    {
-      if(model_read == -1)
-	{
-	  EH(model_read, "Moment Source model invalid");
-	}
-      EH(model_read, "Moment Source");
-    }
+  if (model_read == -1) {
+    if ( !strcmp(model_name, "FOAM_PMDI_10") )
+      {
+	mat_ptr->MomentSourceModel = FOAM_PMDI_10;
+	model_read = 1;
+	num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
 
-  ECHO(es,echo_file);
+	/* Requires growth rate and coalescence rate constants */
+	if ( num_const < 2 )
+	  {
+	    sr = sprintf(err_msg,
+			 "Matl %s needs 2 constants for %s %s model.\n",
+			 pd_glob[mn]->MaterialName,
+			 "Moment Source", "FOAM_PMDI_10");
+	    EH(-1, err_msg);
+	  }
+	mat_ptr->len_u_moment_source = num_const;
+	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_moment_source);
+      }
+    else if ( !strcmp(model_name, "FOAM_PBE") )
+      {
+	mat_ptr->MomentSourceModel = FOAM_PBE;
+	model_read = 1;
+	num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
+	mat_ptr->len_u_moment_source = num_const;
+	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_moment_source);
+      }
+    ECHO(es,echo_file);
+  }
+
 
 
   ECHO("\n---Initialization\n",echo_file);

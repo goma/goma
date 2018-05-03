@@ -1447,6 +1447,19 @@ foam_pmdi10_co2_liq_species_source(int species_no,   /* Current species number *
     return -1;
   }
 
+  double Rgas_const = 8.31;
+  double ref_press = 1e6;
+
+  if (mp->DensityModel == DENSITY_FOAM_PMDI_10)
+    {
+      ref_press = mp->u_density[2];
+      Rgas_const = mp->u_density[3];
+    }
+  else
+    {
+      EH(-1, "Expected DENSITY_FOAM_PMDI_10 density model");
+    }
+
   double CH2O = fv->c[wH2O];
   double n = mp->u_species_source[wH2O][0];
   double t_nuc = mp->u_species_source[wH2O][1];
@@ -1475,7 +1488,7 @@ foam_pmdi10_co2_liq_species_source(int species_no,   /* Current species number *
   } else {
     source_a = N * A * exp(-norm_E/T) * pow(CH2O, n);
   }
-  source = source_a - MGR->G[species_no][1];
+  source = source_a - MGR->G[species_no][1] * ref_press / (Rgas_const * T);
 
   /**********************************************************/
 
@@ -1495,7 +1508,7 @@ foam_pmdi10_co2_liq_species_source(int species_no,   /* Current species number *
 	    if (CH2O > 0) {
 	      st->d_MassSource_dc[species_no][wH2O][j] = source_a * n / CH2O * bf[var]->phi[j];
 	    }
-	    st->d_MassSource_dc[species_no][species_no][j] = -MGR->d_G_dC[species_no][1][j];
+	    st->d_MassSource_dc[species_no][species_no][j] = -MGR->d_G_dC[species_no][1][j] * ref_press / (Rgas_const * T);
 	  }
 	}
 
@@ -1503,7 +1516,7 @@ foam_pmdi10_co2_liq_species_source(int species_no,   /* Current species number *
       if (pd->v[pg->imtrx][var])
 	{
 	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-	    st->d_MassSource_dT[species_no][j] = -norm_E/(T*T) * source_a * bf[var]->phi[j] - MGR->d_G_dT[species_no][1][j];
+	    st->d_MassSource_dT[species_no][j] = -norm_E/(T*T) * source_a * bf[var]->phi[j] - MGR->d_G_dT[species_no][1][j] * ref_press / (Rgas_const * T);
 	  }
 	}
     }
@@ -1555,6 +1568,18 @@ foam_pmdi10_co2_gas_species_source(int species_no,   /* Current species number *
     return -1;
   }
 
+  double Rgas_const = 8.31;
+  double ref_press = 1e6;
+
+  if (mp->DensityModel == DENSITY_FOAM_PMDI_10)
+    {
+      ref_press = mp->u_density[2];
+      Rgas_const = mp->u_density[3];
+    }
+  else
+    {
+      EH(-1, "Expected DENSITY_FOAM_PMDI_10 density model");
+    }
 
   double source;
   if (T <= 0) {
@@ -1566,7 +1591,7 @@ foam_pmdi10_co2_gas_species_source(int species_no,   /* Current species number *
     return (source);
   }
 
-  source = MGR->G[wCO2Liq][1];
+  source = MGR->G[wCO2Liq][1] * ref_press / (Rgas_const * T);
 
   /**********************************************************/
 
@@ -1583,7 +1608,7 @@ foam_pmdi10_co2_gas_species_source(int species_no,   /* Current species number *
       if (pd->v[pg->imtrx][var])
 	{
 	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-	    st->d_MassSource_dc[species_no][wCO2Liq][j] = MGR->d_G_dC[wCO2Liq][1][j];
+	    st->d_MassSource_dc[species_no][wCO2Liq][j] = MGR->d_G_dC[wCO2Liq][1][j] * ref_press / (Rgas_const * T);
 	  }
 	}
 
@@ -1591,7 +1616,7 @@ foam_pmdi10_co2_gas_species_source(int species_no,   /* Current species number *
       if (pd->v[pg->imtrx][var])
 	{
 	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-	    st->d_MassSource_dT[species_no][j] = MGR->d_G_dT[species_no][1][j];
+	    st->d_MassSource_dT[species_no][j] = MGR->d_G_dT[species_no][1][j] * ref_press / (Rgas_const * T);
 	  }
 	}
     }

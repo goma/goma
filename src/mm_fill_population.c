@@ -464,7 +464,7 @@ int foam_pmdi_growth_rate(double growth_rate[MAX_CONC], double d_growth_rate_dc[
       for (w = 0; w < pd->Num_Species_Eqn; w++) {
 
 	if (w == wCO2Liq) {
-	  double CO2_max = 4e-4;
+	  double CO2_max = 4.4e-4;
 	  double mf = fv->c[wCO2Liq] * M_CO2 / rho_liq;
 	  double dmfdC = M_CO2 / rho_liq;
 
@@ -987,11 +987,12 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR)
 
       // currently only compute G_wi terms for CO2_l and BA_l
       MGR->G[wCO2Liq][0] = 0;
-      for (int k = 1; k < 2*nnodes; k++) {
+      for (int k = 0; k < 2*nnodes; k++) {
 	MGR->S[k] = 0;
+	MGR->G[wCO2Liq][k] = 0;
 	for (int alpha = 0; alpha < nnodes; alpha++) {
 	  double coeff = k * weights[alpha] * pow(nodes[alpha], k-1);
-	  MGR->G[wCO2Liq][k] = coeff * growth_rate[wCO2Liq];
+	  MGR->G[wCO2Liq][k] += coeff * growth_rate[wCO2Liq];
 
 	  for (int beta = 0; beta < nnodes; beta++) {
 	    double coalescence_kernel = Beta0*(nodes[alpha] + nodes[beta]);
@@ -1016,6 +1017,7 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR)
 	    }
 	  }
 	}
+	MGR->S[k] *= 0.5;
       }
       return 0;
     }
@@ -1125,7 +1127,7 @@ moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource)
 	load_lsi(ls->Length_Scale);
 	H = 1-lsi->H;
       }
-      int err;
+      int err = 0;
       MGR = calloc(sizeof(struct moment_growth_rate), 1);
       if (H > PBE_FP_SMALL) {
 	err = get_moment_growth_rate_term(MGR);
@@ -1795,6 +1797,7 @@ assemble_moments(double time,	/* present time value */
   dbl advection_e;
 
   dbl source;
+  dbl diffusion;
 
   /*
    * Galerkin weighting functions for i-th energy residuals
@@ -1988,6 +1991,20 @@ assemble_moments(double time,	/* present time value */
 		advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 	      }
 
+	    diffusion = 0.;
+	    if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
+	      {
+
+		for ( p=0; p<VIM; p++)
+		  {
+		    diffusion += bf[eqn]->grad_phi[i][p] * fv->grad_moment[mom][p];
+		  }
+
+		diffusion *= det_J * wt;
+		diffusion *= h3;
+		diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+	      }
+
 	    source = 0.;
 	    if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 	      {
@@ -1997,7 +2014,7 @@ assemble_moments(double time,	/* present time value */
 	      }
 
 	    lec->R[peqn][i] +=
-	      mass + advection + source;
+	      mass + advection + source + diffusion;
 
 	  }
       }
@@ -2118,6 +2135,22 @@ assemble_moments(double time,	/* present time value */
 			  }
 			}
 
+		      diffusion = 0.;
+		      if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION )
+			{
+
+			  if (mom == b) {
+			    for ( p=0; p<VIM; p++)
+			      {
+				diffusion += bf[eqn]->grad_phi[i][p] * grad_phi_j[p];
+			      }
+
+			    diffusion *= det_J * wt;
+			    diffusion *= h3;
+			    diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+			  }
+			}
+
 		      source = 0.;
 		      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			{
@@ -2126,7 +2159,7 @@ assemble_moments(double time,	/* present time value */
 			  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			}
 
-		      lec->J[peqn][pvar][i][j] += mass + advection + source;
+		      lec->J[peqn][pvar][i][j] += mass + advection + source + diffusion;
 		    }
 		}
 	    }

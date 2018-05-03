@@ -235,10 +235,6 @@ setup_pd()
 		   (ce == R_PHASE5) ||
 		   (ce == R_ACOUS_REYN_STRESS) ||  
                    (ce == R_SHELL_LUBP) ||
-		   (ce == R_MOMENT0) ||
-		   (ce == R_MOMENT1) ||
-		   (ce == R_MOMENT2) ||
-		   (ce == R_MOMENT3) ||
 		   (ce == R_POR_SINK_MASS))
 	        {
 	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0. )
@@ -254,8 +250,11 @@ setup_pd()
 		    pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
 		   }
 	        }
-	      else if (ce == R_BOND_EVOLUTION)
-
+	      else if ((ce == R_MOMENT0) ||
+		       (ce == R_MOMENT1) ||
+		       (ce == R_MOMENT2) ||
+		       (ce == R_MOMENT3) ||
+		       (ce == R_BOND_EVOLUTION))
 	        {
 	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0. )
 		   {

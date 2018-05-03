@@ -10007,10 +10007,6 @@ rd_eq_specs(FILE *ifp,
     case R_ACOUS_REYN_STRESS:
     case R_SHELL_LUBP:
     case R_POR_SINK_MASS:
-    case MOMENT0:
-    case MOMENT1:
-    case MOMENT2:
-    case MOMENT3:
 
 
 	if ( fscanf(ifp, "%lf %lf %lf", 
@@ -10104,6 +10100,10 @@ rd_eq_specs(FILE *ifp,
       /* 
        * Four terms.... 
        */
+    case MOMENT0:
+    case MOMENT1:
+    case MOMENT2:
+    case MOMENT3:
     case R_BOND_EVOLUTION:
       if ( fscanf(ifp, "%lf %lf %lf  %lf", 
 		  &(pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)]),
