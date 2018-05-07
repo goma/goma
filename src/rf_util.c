@@ -2850,9 +2850,29 @@ inject_nodal_vec(double sol_vec[], const int varType, const int k,
 	}
       }
     } else {
-      index = Index_Solution(i, varType, k, idof, matID, pg->imtrx);
-      if (index != -1) {
-	sol_vec[index] = nodal_vec[i];
+      int ndof = 0;
+      if (pd->i[pg->imtrx][varType] == I_PQ1) {
+	ndof = 4;
+	WH(-1, "Using 4 dof injecting variable");
+      } else if (pd->i[pg->imtrx][varType] == I_PQ2) {
+	ndof = 9;
+	WH(-1, "Using 9 dof injecting variable");
+      }
+
+      if (ndof > 0) {
+	int local_dof = 0;
+	for (local_dof = 0; local_dof < ndof; local_dof++) {
+	  index = Index_Solution(i, varType, k, local_dof, matID, pg->imtrx);
+	  if (index != -1) {
+	    sol_vec[index] = nodal_vec[i];
+	  }
+	}
+      } else {
+	index = Index_Solution(i, varType, k, idof, matID, pg->imtrx);
+	if (index != -1) {
+	  sol_vec[index] = nodal_vec[i];
+	}
+
       }
     }
   }

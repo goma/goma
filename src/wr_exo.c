@@ -812,10 +812,16 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
       int count = 0;
       i = 0;
       while (count < total_nev) {
-        if (i >= rd[pg->imtrx]->nev) {
+        while (i >= rd[pg->imtrx]->nev && pg->imtrx < upd->Total_Num_Matrices) {
           i = 0;
           pg->imtrx++;
         }
+
+	if (pg->imtrx >= upd->Total_Num_Matrices) {
+	  EH(-1, "Error counting element variables");
+	  return;
+	}
+
         var_names[count] = rd[pg->imtrx]->evname[i];
 #ifdef DEBUG
           printf("%s: elem var_name[%d] = %s\n", yo, count, var_names[count]);
@@ -845,10 +851,16 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
       int count = 0;
       i = 0;
       while (count < total_nnv) {
-        if (i >= rd[pg->imtrx]->nnv) {
+        while (i >= rd[pg->imtrx]->nnv && pg->imtrx < upd->Total_Num_Matrices) {
           i = 0;
           pg->imtrx++;
         }
+
+	if (pg->imtrx >= upd->Total_Num_Matrices) {
+	  EH(-1, "Error counting nodal variables");
+	  return;
+	}
+
         var_names[count] = rd[pg->imtrx]->nvname[i];
   #ifdef DEBUG
         printf("%s: nodal var_name[%d] = %s\n", yo, count, var_names[count]);

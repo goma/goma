@@ -750,7 +750,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[DENSITY] = 1.;
   }
 
-  if (HEAVISIDE != -1 && ls != NULL) {
+  if (HEAVISIDE != -1 && ls != NULL && pd->e[pg->imtrx][R_FILL]) {
     load_lsi(ls->Length_Scale);
     local_post[HEAVISIDE] = lsi->H;
     local_lumped[HEAVISIDE] = 1.;

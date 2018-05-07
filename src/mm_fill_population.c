@@ -1890,7 +1890,7 @@ assemble_moments(double time,	/* present time value */
 
   det_J = bf[eqn]->detJ;		/* Really, ought to be mesh eqn. */
 
-  supg = 0.;
+  supg = 0.0;
 
 
   if(supg!=0.)
@@ -1942,6 +1942,15 @@ assemble_moments(double time,	/* present time value */
 	for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
 	  {
 
+	    wt_func = bf[eqn]->phi[i];
+	    if (supg != 0) {
+	      for(p=0; p<dim; p++)
+		{
+		  wt_func += supg * h_elem_inv * vconv[p] * bf[eqn]->grad_phi[i][p];
+		}
+	    }
+
+
 #if 1
 	    /* this is an optimization for xfem */
 	    if ( xfem != NULL )
@@ -1960,22 +1969,13 @@ assemble_moments(double time,	/* present time value */
 		if ( pd->e[pg->imtrx][eqn] & T_MASS )
 		  {
 		    mass  = fv_dot->moment[mom];
-		    mass *= - phi_i * det_J * wt;
+		    mass *= - wt_func * det_J * wt;
 		    mass *= h3;
 		    mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 		  }
 	      }
 
-	    /* only use Petrov Galerkin on advective term - if required */
-	    wt_func = bf[eqn]->phi[i];
-	    /* add Petrov-Galerkin terms as necessary */
-	    if(supg!=0.)
-	      {
-		for(p=0; p<dim; p++)
-		  {
-		    wt_func += supg * h_elem_inv * vconv[p] * bf[eqn]->grad_phi[i][p];
-		  }
-	      }
+
 
 	    advection = 0.;
 	    if ( pd->e[pg->imtrx][eqn] & T_ADVECTION )
@@ -2008,7 +2008,7 @@ assemble_moments(double time,	/* present time value */
 	    source = 0.;
 	    if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 	      {
-		source += phi_i * msource[mom] * det_J * wt;
+		source += wt_func * msource[mom] * det_J * wt;
 		source *= h3;
 		source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 	      }
@@ -2078,7 +2078,7 @@ assemble_moments(double time,	/* present time value */
 		    source = 0.;
 		    if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 		      {
-			source += phi_i * d_msource->T[mom][j] * det_J * wt;
+			source += wt_func * d_msource->T[mom][j] * det_J * wt;
 			source *= h3;
 			source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		      }
@@ -2113,7 +2113,7 @@ assemble_moments(double time,	/* present time value */
 
 				mass  = (1 + 2. * tt) * phi_j / dt;
 
-				mass *= - phi_i * det_J * wt;
+				mass *= - wt_func * det_J * wt;
 				mass *= h3;
 				mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 			      }
@@ -2154,7 +2154,7 @@ assemble_moments(double time,	/* present time value */
 		      source = 0.;
 		      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			{
-			  //source += phi_i * d_msource->moment[b][j] * det_J * wt;
+			  //source += wt_func * d_msource->moment[b][j] * det_J * wt;
 			  source *= h3;
 			  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			}
@@ -2222,7 +2222,7 @@ assemble_moments(double time,	/* present time value */
 
 			if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			  {
-			    //source += phi_i * d_msource->v[b][j] * det_J * wt;
+			    //source += wt_func * d_msource->v[b][j] * det_J * wt;
 			    source *= h3;
 			    source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			  }
@@ -2275,7 +2275,7 @@ assemble_moments(double time,	/* present time value */
 			    if ( pd->e[pg->imtrx][eqn] & T_MASS )
 			      {
 				mass  = fv_dot->moment[mom];
-				mass *= - phi_i *
+				mass *= - wt_func *
 				  (h3 * d_det_J_dmeshbj +
 				   dh3dmesh_bj * det_J)
 				  * wt;
@@ -2369,7 +2369,7 @@ assemble_moments(double time,	/* present time value */
 
 			if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			  {
-			    source = phi_i * (msource[mom] *          d_det_J_dmeshbj * h3 +
+			    source = wt_func * (msource[mom] *          d_det_J_dmeshbj * h3 +
 					      msource[mom] *          det_J           * dh3dmesh_bj) * wt;
 					      //d_msource->X[b][j]*  det_J           * h3) * wt;
 
@@ -2396,7 +2396,7 @@ assemble_moments(double time,	/* present time value */
 			source = 0.;
 			if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			  {
-			    source += phi_i * d_msource->C[mom][w][j] * det_J * wt;
+			    source += wt_func * d_msource->C[mom][w][j] * det_J * wt;
 			    source *= h3;
 			    source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			  }

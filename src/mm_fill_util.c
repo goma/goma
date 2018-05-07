@@ -5047,6 +5047,19 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
 /*************************************************************************/
 /*************************************************************************/
 
+int var_if_interp_type_enabled(PROBLEM_DESCRIPTION_STRUCT *pd_ptr, int interp_type)
+{
+  int imtrx;
+  int var;
+  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+    if ((var = in_list(interp_type, 0, MAX_VARIABLE_TYPES, pd_ptr->i[imtrx])) != -1) {
+      return var;
+    }
+  }
+  return -1;
+}
+
+
 void
 determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
     
@@ -5088,14 +5101,11 @@ determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
       pd_ptr->IntegrationMap = pd_ptr->i[mesh_matrix][R_MESH1];
       pd_ptr->ShapeVar = R_MESH1;
     } else {
-      if ((pd_ptr->ShapeVar =
-	   in_list(I_Q2, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) {
+      if ((pd_ptr->ShapeVar = var_if_interp_type_enabled(pd_ptr, I_Q2)) != -1) {
 	pd_ptr->IntegrationMap = I_Q2;
-      } else if ((pd_ptr->ShapeVar =
-		  in_list(I_Q1, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) {
+      } else if ((pd_ptr->ShapeVar = var_if_interp_type_enabled(pd_ptr, I_Q1)) != -1) {
 	pd_ptr->IntegrationMap = I_Q1;
-      } else if ((pd_ptr->ShapeVar =
-		  in_list(I_SP, 0, MAX_VARIABLE_TYPES, pd_ptr->i[0])) != -1) {
+      } else if ((pd_ptr->ShapeVar = var_if_interp_type_enabled(pd_ptr, I_SP)) != -1 ) {
 	pd_ptr->IntegrationMap = I_SP;
       } else {
 	pd_ptr->ShapeVar = pd_ptr->m[pg->imtrx][0];
@@ -5148,19 +5158,19 @@ determine_ProjectionVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
 {
   int var;
   pd_ptr->ProjectionVar = -1;
-  if (((var = in_list(I_Q2,   0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
-      ((var = in_list(I_Q2_D, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
-      ((var = in_list(I_Q2_G, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
-      ((var = in_list(I_Q2_GP, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
-      ((var = in_list(I_Q2_GN, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
-      ((var = in_list(I_Q2_XV,0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
-      ((var = in_list(I_SP,   0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
-      ((var = in_list(I_Q1,   0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
-      ((var = in_list(I_Q1_D, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
-      ((var = in_list(I_Q1_G, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
-      ((var = in_list(I_Q1_GP, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
-      ((var = in_list(I_Q1_GN, 0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1) ||
-      ((var = in_list(I_Q1_XV,0, MAX_VARIABLE_TYPES, pd_ptr->i[pg->imtrx])) != -1)) {
+  if (((var = var_if_interp_type_enabled(pd_ptr, I_Q2)) != -1) ||
+      ((var = var_if_interp_type_enabled(pd_ptr, I_Q2_D)) != -1) ||
+      ((var = var_if_interp_type_enabled(pd_ptr, I_Q2_G)) != -1) ||
+      ((var = var_if_interp_type_enabled(pd_ptr, I_Q2_GP)) != -1) ||
+      ((var = var_if_interp_type_enabled(pd_ptr, I_Q2_GN)) != -1) ||
+      ((var = var_if_interp_type_enabled(pd_ptr, I_Q2_XV)) != -1) ||
+      ((var = var_if_interp_type_enabled(pd_ptr, I_SP)) != -1) ||
+      ((var = var_if_interp_type_enabled(pd_ptr, I_Q1)) != -1) ||
+      ((var = var_if_interp_type_enabled(pd_ptr, I_Q1_D)) != -1) ||
+      ((var = var_if_interp_type_enabled(pd_ptr, I_Q1_G)) != -1) ||
+      ((var = var_if_interp_type_enabled(pd_ptr, I_Q1_GP)) != -1) ||
+      ((var = var_if_interp_type_enabled(pd_ptr, I_Q1_GN)) != -1) ||
+      ((var = var_if_interp_type_enabled(pd_ptr, I_Q1_XV)) != -1)) {
     pd_ptr->ProjectionVar = var;
   } else {
     P0PRINTF("Warning: No suitable basis function was found for a Projection Operation\n");
