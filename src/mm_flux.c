@@ -1146,7 +1146,6 @@ evaluate_flux(
                           local_qconv += (fv->snormal[a]*(fv->v[a]-x_dot[a])
                                          *fv->c[species_id] );
                         }
-                          local_qconv = 0;
                           local_flux +=  weight*det*local_q;
                           local_flux_conv += weight*det*local_qconv;
 		      break;
