@@ -114,14 +114,24 @@ void wheeler_algorithm(int N, double *moments, double *weights, double *nodes)
     P[1][i] = moments[i];
   }
 
-  a[0] = moments[1]/moments[0];
+  // use max 0, mom0 to normalize to avoid issues with level set two phase
+  a[0] = moments[1]/fmax(moments[0], PBE_FP_SMALL);
   b[0] = 0;
+
+  if (a[0] < PBE_FP_SMALL || moments[1] < 0.0) {
+    // special handling of small / negative moment 1, return 0 for all
+    for (int i = 0; i < N; i++) {
+      weights[i] = 0;
+      nodes[i] = 0;
+    }
+    return;
+  }
 
   for (int i = 0; i < N-1; i++) {
     for (int j = i; j < (2*N - i -2); j++) {
       P[i+2][j+1] = P[i+1][j+2] - a[i]*P[i+1][j+1] - b[i]*P[i][j+1];
     }
-    a[i+1] = -P[i+1][i+1]/P[i+1][i] + P[i+2][i+2]/P[i+2][i+1];
+    a[i+1] = -P[i+1][i+1] / P[i+1][i] + P[i+2][i+2] / P[i+2][i+1];
     b[i+1] = P[i+2][i+1] / P[i+1][i];
   }
 
@@ -400,7 +410,9 @@ int foam_pbe_growth_rate(double growth_rate[MAX_CONC], double d_growth_rate_dc[M
   return 0;
 }
 
-int foam_pmdi_growth_rate(double growth_rate[MAX_CONC], double d_growth_rate_dc[MAX_CONC][MDE], double d_growth_rate_dT[MAX_CONC][MDE])
+int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
+			  double d_growth_rate_dc[MAX_CONC][MDE],
+			  double d_growth_rate_dT[MAX_CONC][MDE])
 {
   int wCO2Liq;
   int wCO2Gas;
@@ -880,6 +892,13 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR)
     return -1;
   }
 
+  double H = 1;
+
+  if (ls != NULL) {
+    load_lsi(ls->Length_Scale);
+    H = 1-lsi->H;
+  }
+
   /* Get quad weights and nodes */
   wheeler_algorithm(nnodes, fv_old->moment, weights, nodes);
 
@@ -919,7 +938,8 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR)
       MGR->G[species_CO2_l][0] = 0;
       for (int k = 1; k < 2*nnodes; k++) {
 	for (int alpha = 0; alpha < nnodes; alpha++) {
-	  double coeff = k * weights[alpha] * pow(nodes[alpha], k-1);
+	  // special handling of pow to avoid FP exceptions
+	  double coeff = k * weights[alpha] * pow(fmax(nodes[alpha], PBE_FP_SMALL), k-1);
 	  MGR->G[species_BA_l][k] = coeff*growth_rate[species_BA_l];
 	  MGR->G[species_CO2_l][k] = coeff * growth_rate[species_CO2_l];
 	  if (af->Assemble_Jacobian) {
@@ -991,7 +1011,8 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR)
 	MGR->S[k] = 0;
 	MGR->G[wCO2Liq][k] = 0;
 	for (int alpha = 0; alpha < nnodes; alpha++) {
-	  double coeff = k * weights[alpha] * pow(nodes[alpha], k-1);
+	  // special handling of pow to avoid FP exceptions
+	  double coeff = k * weights[alpha] * pow(fmax(nodes[alpha], PBE_FP_SMALL), k-1);
 	  MGR->G[wCO2Liq][k] += coeff * growth_rate[wCO2Liq];
 
 	  for (int beta = 0; beta < nnodes; beta++) {
@@ -1129,9 +1150,8 @@ moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource)
       }
       int err = 0;
       MGR = calloc(sizeof(struct moment_growth_rate), 1);
-      if (H > PBE_FP_SMALL) {
-	err = get_moment_growth_rate_term(MGR);
-      }
+      err = get_moment_growth_rate_term(MGR);
+
 
       if (err) {
 	free(MGR);
@@ -1838,6 +1858,8 @@ assemble_moments(double time,	/* present time value */
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
 
+  dbl supg_tau;
+  dbl d_supg_tau_dv[DIM][MDE];
 
   double msource[MAX_MOMENTS];
   MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource;
@@ -1890,27 +1912,7 @@ assemble_moments(double time,	/* present time value */
 
   det_J = bf[eqn]->detJ;		/* Really, ought to be mesh eqn. */
 
-  supg = 0.0;
 
-
-  if(supg!=0.)
-    {
-      h_elem = 0.;
-      for ( p=0; p<dim; p++)
-	{
-	  h_elem += vcent[p] * vcent[p] / hsquared[p];
-	}
-      h_elem = sqrt(h_elem)/2.;
-      if(h_elem == 0.)
-	{
-	  h_elem_inv=0.;
-	}
-      else
-	{
-	  h_elem_inv=1./h_elem;
-	}
-
-    }
 /* end Petrov-Galerkin addition */
 
 /* get the convection velocity (it's different for arbitrary and
@@ -1928,6 +1930,58 @@ assemble_moments(double time,	/* present time value */
       EH(err, "Error in calculating effective convection velocity_rs");
     }
 
+  supg = 1.0;
+
+  if (supg!=0.)
+    {
+      int a;
+      double vnorm = 0;
+
+
+
+      for (a = 0; a < VIM; a++) {
+	vnorm += fv->v[a]*fv->v[a];
+      }
+      vnorm = sqrt(vnorm);
+
+      double hk = 0;
+      for (a = 0; a < dim; a++) {
+	hk += sqrt(hsquared[a]);
+      }
+
+      double D = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
+
+      if (D == 0) {
+	// if numerical diffusion is off use 1 for Peclet number
+	D = 1;
+      }
+
+      hk /= (double) dim;
+
+      double Pek = 0.5 * vnorm * hk / D;
+
+      double eta = Pek;
+      if (Pek > 1) {
+	eta = 1;
+      }
+
+      if (vnorm > 0) {
+	supg_tau = 0.5 * hk * eta / vnorm;
+
+	for (j = 0; j < ei[pd->mi[VELOCITY1]]->dof[VELOCITY1]; j++) {
+	  for (a = 0; a < VIM; a++) {
+	    //d_supg_tau_dv[a][j] =
+	  }
+	}
+      } else {
+	supg_tau = 0;
+	for (j = 0; j < ei[pd->mi[VELOCITY1]]->dof[VELOCITY1]; j++) {
+	  for (a = 0; a < VIM; a++) {
+	    d_supg_tau_dv[a][j] = 0.0;
+	  }
+	}
+      }
+    }
 
   /*
    * Residuals___________________________________________________________
@@ -1946,7 +2000,7 @@ assemble_moments(double time,	/* present time value */
 	    if (supg != 0) {
 	      for(p=0; p<dim; p++)
 		{
-		  wt_func += supg * h_elem_inv * vconv[p] * bf[eqn]->grad_phi[i][p];
+		  wt_func += supg * supg_tau * vconv[p] * bf[eqn]->grad_phi[i][p];
 		}
 	    }
 
@@ -2050,7 +2104,7 @@ assemble_moments(double time,	/* present time value */
 	      {
 		for(p=0; p<dim; p++)
 		  {
-		    wt_func += supg * h_elem_inv * vconv[p] * bf[eqn]->grad_phi[i][p];
+		    wt_func += supg * supg_tau * vconv[p] * bf[eqn]->grad_phi[i][p];
 		  }
 	      }
 

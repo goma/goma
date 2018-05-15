@@ -5259,6 +5259,8 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 				      nodes_per_side,
 				      local_elem_node_id );
 
+      //computeCommonMaterialProps_gp(time_value);
+
       do_LSA_mods(LSA_SURFACE);
 
       vdotn_avg = 0.;

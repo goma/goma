@@ -334,6 +334,7 @@ assemble_mesh (double time,
       return(status);
     }
 
+
   det_J = bf[eqn]->detJ;
   d_area = det_J*wt*h3;
 
@@ -1312,7 +1313,7 @@ assemble_energy(double time,	/* present time value */
 
 /* SUPG variables */
   dbl h_elem=0, h_elem_inv=0, h_elem_deriv=0, h_elem_inv_deriv=0.;
-  dbl supg, d_wt_func;
+  dbl supg, d_wt_func = 0.0;
 
   /*
    * Interpolation functions for variables and some of their derivatives.
@@ -2576,6 +2577,8 @@ assemble_momentum(dbl time,       /* current time */
   /* SUPG variables */
   dbl h_elem=0, h_elem_inv=0;
   dbl supg, d_wt_func;
+  dbl supg_tau;
+  dbl d_supg_tau_dv[DIM][MDE];
 
   const double *hsquared = pg_data->hsquared ;
   const double *vcent = pg_data->v_avg; /* Average element velocity, which is the
@@ -2633,21 +2636,50 @@ assemble_momentum(dbl time,       /* current time */
 
   if (supg!=0.)
     {
-      h_elem = 0.;
-      for ( p=0; p<dim; p++)
-        {
-          h_elem += vcent[p] * vcent[p] * hsquared[p];
-        }
-      h_elem = sqrt(h_elem)/2.;
-      if(h_elem == 0.)
-        {
-          h_elem_inv=0.;
-        }
-      else
-        {
-          h_elem_inv=1./h_elem;
-        }
+      double v_norm = 0;
+      for (a = 0; a < VIM; a++) {
+	v_norm += v[a]*v[a];
+      }
+      v_norm = sqrt(v_norm);
 
+      double hk = 0;
+      for (a = 0; a < dim; a++) {
+	hk += sqrt(hsquared[a]);
+      }
+
+      hk /= (double) dim;
+
+      // Peclet, using 1 for diffusion here, probably a better way
+      double Pek = 0.5 * v_norm * hk;
+
+      if (v_norm > 0) {
+	if (Pek < 1) {
+	  // if Peclet is small tau = (Pe) * h_k / ( 2 * v_norm)
+	  supg_tau = 0.5 * 0.5 * hk * hk;
+	} else {
+	  // if Peclet > 1 we do not use it in tau
+	  supg_tau = 0.5 * hk / v_norm;
+	}
+
+	for (j = 0; j < ei[pd->mi[VELOCITY1]]->dof[VELOCITY1]; j++) {
+	  for (a = 0; a < VIM; a++) {
+
+
+	    d_supg_tau_dv[a][j] = -0.5 * hk * v[a] / pow(v[a]*v[a], 1.5);
+	    if (Pek < 1) {
+	      d_supg_tau_dv[a][j] = 0;
+	    }
+
+	  }
+	}
+      } else {
+	supg_tau = 0;
+	for (j = 0; j < ei[pd->mi[VELOCITY1]]->dof[VELOCITY1]; j++) {
+	  for (a = 0; a < VIM; a++) {
+	    d_supg_tau_dv[a][j] = 0.0;
+	  }
+	}
+      }
     }
   /* end Petrov-Galerkin addition */
   
@@ -2912,6 +2944,17 @@ assemble_momentum(dbl time,       /* current time */
 		  if ( extended_dof && !xfem_active ) continue;
 		}
 
+	      /* only use SUPG if required */
+	      wt_func = phi_i;
+	      /* add Petrov-Galerkin terms as necessary */
+	      if (supg!=0.)
+		{
+		  for (p=0; p<dim; p++)
+		    {
+		      wt_func += supg * supg_tau * v[p] * bfm->grad_phi[i][p];
+		    }
+		}
+
 		  
 	      mass = 0.;
 	      if ( transient_run )
@@ -2919,7 +2962,7 @@ assemble_momentum(dbl time,       /* current time */
 		  if ( mass_on )
 		    {
 		      mass = v_dot[a] * rho;
-		      mass *= - phi_i*d_area;
+		      mass *= - wt_func*d_area;
 		      mass *= mass_etm;
 		    }
 		      
@@ -2934,17 +2977,7 @@ assemble_momentum(dbl time,       /* current time */
 		    }
 		}
 
-	      /* only use Petrov Galerkin on advective term - if required */
-	      wt_func = phi_i;
-	      /* add Petrov-Galerkin terms as necessary */
-	      if (supg!=0.)
-		{
-		  for (p=0; p<dim; p++)
-		    {
-		      wt_func += supg * h_elem * v[p] * bfm->grad_phi[i][p];
-		    }
-		}
-		  
+
 	      advection = 0.;
 	      if (advection_on)
 		{
@@ -3030,7 +3063,7 @@ assemble_momentum(dbl time,       /* current time */
 	      if (source_on)
 		{
 		  source += f[a];		      
-		  source *= phi_i * d_area;
+		  source *= wt_func * d_area;
 		  source *= source_etm;
 		}
 		  
@@ -3144,7 +3177,7 @@ assemble_momentum(dbl time,       /* current time */
 
 		  for(p=0; p<dim; p++)
 		    {
-		      wt_func += supg * h_elem * v[p] * bfm->grad_phi[i][p];
+		      wt_func += supg * supg_tau * v[p] * bfm->grad_phi[i][p];
 		    }
 		}
 		  
@@ -3169,7 +3202,7 @@ assemble_momentum(dbl time,       /* current time */
 			  if ( mass_on)
 			    {
 			      mass = d_rho->T[j] * v_dot[a];
-			      mass *= - phi_i * d_area;
+			      mass *= - wt_func * d_area;
 			      mass *= mass_etm;
 			    }
 			      
@@ -3250,7 +3283,7 @@ assemble_momentum(dbl time,       /* current time */
 		      source    = 0.;
 		      if ( source_on )
 			{
-			  source = phi_i * df->T[a][j] * d_area;
+			  source = wt_func * df->T[a][j] * d_area;
 			  source *= source_etm;
 			}
 			  
@@ -3289,7 +3322,7 @@ assemble_momentum(dbl time,       /* current time */
 			      if ( mass_on)
 				{
 				  mass = d_rho->moment[b][j] * v_dot[a];
-				  mass *= - phi_i * d_area;
+				  mass *= - wt_func * d_area;
 				  mass *= mass_etm;
 				}
 
@@ -3412,7 +3445,7 @@ assemble_momentum(dbl time,       /* current time */
 			  if ( mass_on )
 			    {
 			      mass = d_rho->F[j] * v_dot[a];
-			      mass *= - phi_i * d_area;
+			      mass *= - wt_func * d_area;
 			      mass *= mass_etm;
 			    }
 			      
@@ -3518,7 +3551,7 @@ assemble_momentum(dbl time,       /* current time */
 		      /* Stay away from evil Hessians. */
 		      if ( source_on )
 			{
-			  source = phi_i * df->F[a][j] * d_area;
+			  source = wt_func * df->F[a][j] * d_area;
 			  source *= source_etm;
 			}
 			  
@@ -3550,6 +3583,18 @@ assemble_momentum(dbl time,       /* current time */
 			  
 		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
+
+			  if(supg!=0.)
+			    {
+			      d_wt_func = supg * supg_tau * phi_j*bfm->grad_phi[i][b];
+
+			      for(p=0;p<dim;p++)
+				{
+				  d_wt_func += supg * d_supg_tau_dv[b][j] *
+				    v[p] * bfm->grad_phi[i][p];
+
+				}
+			    }
 			      
 			  phi_j = phi_j_vector[j];
 				  			      
@@ -3559,8 +3604,8 @@ assemble_momentum(dbl time,       /* current time */
 			      if ( mass_on && (a == b ))
 				{
 				  /*mass = (1.+2.*tt) * phi_j/dt * (double)delta(a,b); */
-				  mass = (1.+2.*tt) * phi_j/dt ;
-				  mass *= - phi_i * rho * d_area;
+				  mass = (1.+2.*tt) * phi_j/dt * wt_func + v_dot[a] * d_wt_func;
+				  mass *= - rho * d_area;
 				  mass *= mass_etm;
 				}
 				  
@@ -3629,18 +3674,7 @@ assemble_momentum(dbl time,       /* current time */
 			      advection_b = 0.;
 			      if(supg!=0.)
                             	{
-				  d_wt_func = supg * h_elem * phi_j*bfm->grad_phi[i][b];
-
-				  for(p=0;p<dim;p++)
-				    {
-				      d_wt_func += supg * vcent[b] * 
-                                           pg_data->dv_dnode[b][j] *
-					hsquared[b] * h_elem_inv / 4. *
-					v[p] * bfm->grad_phi[i][p];
-
-				    }
 				  advection_b +=  advection_a;
-
 				  advection_b *=  d_wt_func;
 				  advection_b *= - det_J * wt;
 				  advection_b *= h3;
@@ -3700,7 +3734,7 @@ assemble_momentum(dbl time,       /* current time */
 			  source    = 0.;
 			  if ( source_on )
 			    {
-			      source    = phi_i * df->v[a][b][j] * d_area;
+			      source    = wt_func * df->v[a][b][j] * d_area + d_wt_func * f[a] * d_area;
 			      source   *= source_etm;
 			    }
 
@@ -3780,7 +3814,7 @@ assemble_momentum(dbl time,       /* current time */
 			    source    = 0.;
 			    if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			      {
-				source    = phi_i * df->E[a][b][j] * det_J * h3 *wt;
+				source    = wt_func * df->E[a][b][j] * det_J * h3 *wt;
 				source   *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			      }
 						  
@@ -4000,7 +4034,7 @@ assemble_momentum(dbl time,       /* current time */
 				    mass += -rho * v_dot[a];
 				  else
 				    mass += d_rho->C[w][j] * v_dot[a];
-				  mass *= - phi_i * det_J * wt* h3;
+				  mass *= - wt_func * det_J * wt* h3;
 				  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 				}
 
@@ -4066,7 +4100,7 @@ assemble_momentum(dbl time,       /* current time */
 			  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			    {
 			      /* df->C was calculated in mm_std_models.c */
-			      source    = phi_i * df->C[a][w][j] * det_J * h3 *wt;
+			      source    = wt_func * df->C[a][w][j] * det_J * h3 *wt;
 			      source   *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			    }
 		  
@@ -4266,7 +4300,7 @@ assemble_momentum(dbl time,       /* current time */
 				if ( mass_on)
 				  {
 				    mass = v_dot[a];
-				    mass *= - phi_i * rho *
+				    mass *= - wt_func * rho *
 				      ( d_det_J_dmesh_bj * h3 + det_J * dh3dmesh_bj )
 				      * wt;
 				    mass *= mass_etm;
@@ -4489,7 +4523,7 @@ assemble_momentum(dbl time,       /* current time */
 			    source = 0.;	  
 			    if ( source_on)
 			      {
-				source += phi_i * wt * 
+				source += wt_func * wt *
 				  ( f[a]   *        d_det_J_dmesh_bj * h3 +
 				    f[a]   *        det_J *            dh3dmesh_bj + 
 				    df->X[a][b][j] * det_J *            h3);
