@@ -34,6 +34,8 @@
 #define EXTERN extern
 #endif
 
+#include "dg_utils.h"
+
 EXTERN int integrate_explicit_eqn
 PROTO((struct Aztec_Linear_Solver_System *, /* ams - cf "sl_util_structs.h"  */
        double [],		/* rf - residual for fill equation only      */
@@ -183,7 +185,8 @@ PROTO((const int ,              /* ielem_type                                */
        int []));		/* local_elem_node_id                        */
 
 EXTERN int assemble_surface_species
-PROTO((Exo_DB *,		/* exo - ptr to basic exodus ii mesh info    */
+PROTO((Exo_DB *,
+       Dpi *,/* exo - ptr to basic exodus ii mesh info    */
        double [],		/* x                                         */
        double ,			/* delta_t - current time step size          */
        double ,			/* theta - parameter to vary time integration 
@@ -195,7 +198,8 @@ PROTO((Exo_DB *,		/* exo - ptr to basic exodus ii mesh info    */
 				 * according to EXODUS convention            */
        int ,			/* neighbor - element neighboring this side  */
        int ,			/* ielem - current element                   */
-       int ));			/* num_local_nodes - number nodes per elem   */
+       int ,                    /* num_local_nodes - number nodes per elem   */
+       dg_neighbor_type *));
 
 EXTERN int elem_on_ss
 PROTO((Exo_DB *,		/* exo                                       */

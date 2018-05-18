@@ -334,7 +334,6 @@ assemble_mesh (double time,
       return(status);
     }
 
-
   det_J = bf[eqn]->detJ;
   d_area = det_J*wt*h3;
 
@@ -1313,7 +1312,7 @@ assemble_energy(double time,	/* present time value */
 
 /* SUPG variables */
   dbl h_elem=0, h_elem_inv=0, h_elem_deriv=0, h_elem_inv_deriv=0.;
-  dbl supg, d_wt_func = 0.0;
+  dbl supg, d_wt_func;
 
   /*
    * Interpolation functions for variables and some of their derivatives.
@@ -2577,8 +2576,6 @@ assemble_momentum(dbl time,       /* current time */
   /* SUPG variables */
   dbl h_elem=0, h_elem_inv=0;
   dbl supg, d_wt_func;
-  dbl supg_tau;
-  dbl d_supg_tau_dv[DIM][MDE];
 
   const double *hsquared = pg_data->hsquared ;
   const double *vcent = pg_data->v_avg; /* Average element velocity, which is the
@@ -2636,50 +2633,21 @@ assemble_momentum(dbl time,       /* current time */
 
   if (supg!=0.)
     {
-      double v_norm = 0;
-      for (a = 0; a < VIM; a++) {
-	v_norm += v[a]*v[a];
-      }
-      v_norm = sqrt(v_norm);
+      h_elem = 0.;
+      for ( p=0; p<dim; p++)
+        {
+          h_elem += vcent[p] * vcent[p] * hsquared[p];
+        }
+      h_elem = sqrt(h_elem)/2.;
+      if(h_elem == 0.)
+        {
+          h_elem_inv=0.;
+        }
+      else
+        {
+          h_elem_inv=1./h_elem;
+        }
 
-      double hk = 0;
-      for (a = 0; a < dim; a++) {
-	hk += sqrt(hsquared[a]);
-      }
-
-      hk /= (double) dim;
-
-      // Peclet, using 1 for diffusion here, probably a better way
-      double Pek = 0.5 * v_norm * hk;
-
-      if (v_norm > 0) {
-	if (Pek < 1) {
-	  // if Peclet is small tau = (Pe) * h_k / ( 2 * v_norm)
-	  supg_tau = 0.5 * 0.5 * hk * hk;
-	} else {
-	  // if Peclet > 1 we do not use it in tau
-	  supg_tau = 0.5 * hk / v_norm;
-	}
-
-	for (j = 0; j < ei[pd->mi[VELOCITY1]]->dof[VELOCITY1]; j++) {
-	  for (a = 0; a < VIM; a++) {
-
-
-	    d_supg_tau_dv[a][j] = -0.5 * hk * v[a] / pow(v[a]*v[a], 1.5);
-	    if (Pek < 1) {
-	      d_supg_tau_dv[a][j] = 0;
-	    }
-
-	  }
-	}
-      } else {
-	supg_tau = 0;
-	for (j = 0; j < ei[pd->mi[VELOCITY1]]->dof[VELOCITY1]; j++) {
-	  for (a = 0; a < VIM; a++) {
-	    d_supg_tau_dv[a][j] = 0.0;
-	  }
-	}
-      }
     }
   /* end Petrov-Galerkin addition */
   
@@ -2944,17 +2912,6 @@ assemble_momentum(dbl time,       /* current time */
 		  if ( extended_dof && !xfem_active ) continue;
 		}
 
-	      /* only use SUPG if required */
-	      wt_func = phi_i;
-	      /* add Petrov-Galerkin terms as necessary */
-	      if (supg!=0.)
-		{
-		  for (p=0; p<dim; p++)
-		    {
-		      wt_func += supg * supg_tau * v[p] * bfm->grad_phi[i][p];
-		    }
-		}
-
 		  
 	      mass = 0.;
 	      if ( transient_run )
@@ -2962,7 +2919,7 @@ assemble_momentum(dbl time,       /* current time */
 		  if ( mass_on )
 		    {
 		      mass = v_dot[a] * rho;
-		      mass *= - wt_func*d_area;
+		      mass *= - phi_i*d_area;
 		      mass *= mass_etm;
 		    }
 		      
@@ -2977,7 +2934,17 @@ assemble_momentum(dbl time,       /* current time */
 		    }
 		}
 
-
+	      /* only use Petrov Galerkin on advective term - if required */
+	      wt_func = phi_i;
+	      /* add Petrov-Galerkin terms as necessary */
+	      if (supg!=0.)
+		{
+		  for (p=0; p<dim; p++)
+		    {
+		      wt_func += supg * h_elem * v[p] * bfm->grad_phi[i][p];
+		    }
+		}
+		  
 	      advection = 0.;
 	      if (advection_on)
 		{
@@ -3063,7 +3030,7 @@ assemble_momentum(dbl time,       /* current time */
 	      if (source_on)
 		{
 		  source += f[a];		      
-		  source *= wt_func * d_area;
+		  source *= phi_i * d_area;
 		  source *= source_etm;
 		}
 		  
@@ -3172,12 +3139,10 @@ assemble_momentum(dbl time,       /* current time */
 	      wt_func = phi_i;
 	      /* add Petrov-Galerkin terms as necessary */
 	      if(supg!=0.)
-		{porous += (v[a]) * fv->dsurfdet_dx[b][j] * h3;
-			      porous += (v[a]) * fv->sdet  * dh3dmesh_bj;
-
+		{
 		  for(p=0; p<dim; p++)
 		    {
-		      wt_func += supg * supg_tau * v[p] * bfm->grad_phi[i][p];
+		      wt_func += supg * h_elem * v[p] * bfm->grad_phi[i][p];
 		    }
 		}
 		  
@@ -3202,7 +3167,7 @@ assemble_momentum(dbl time,       /* current time */
 			  if ( mass_on)
 			    {
 			      mass = d_rho->T[j] * v_dot[a];
-			      mass *= - wt_func * d_area;
+			      mass *= - phi_i * d_area;
 			      mass *= mass_etm;
 			    }
 			      
@@ -3283,7 +3248,7 @@ assemble_momentum(dbl time,       /* current time */
 		      source    = 0.;
 		      if ( source_on )
 			{
-			  source = wt_func * df->T[a][j] * d_area;
+			  source = phi_i * df->T[a][j] * d_area;
 			  source *= source_etm;
 			}
 			  
@@ -3322,7 +3287,7 @@ assemble_momentum(dbl time,       /* current time */
 			      if ( mass_on)
 				{
 				  mass = d_rho->moment[b][j] * v_dot[a];
-				  mass *= - wt_func * d_area;
+				  mass *= - phi_i * d_area;
 				  mass *= mass_etm;
 				}
 
@@ -3445,7 +3410,7 @@ assemble_momentum(dbl time,       /* current time */
 			  if ( mass_on )
 			    {
 			      mass = d_rho->F[j] * v_dot[a];
-			      mass *= - wt_func * d_area;
+			      mass *= - phi_i * d_area;
 			      mass *= mass_etm;
 			    }
 			      
@@ -3551,7 +3516,7 @@ assemble_momentum(dbl time,       /* current time */
 		      /* Stay away from evil Hessians. */
 		      if ( source_on )
 			{
-			  source = wt_func * df->F[a][j] * d_area;
+			  source = phi_i * df->F[a][j] * d_area;
 			  source *= source_etm;
 			}
 			  
@@ -3583,18 +3548,6 @@ assemble_momentum(dbl time,       /* current time */
 			  
 		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 			{
-
-			  if(supg!=0.)
-			    {
-			      d_wt_func = supg * supg_tau * phi_j*bfm->grad_phi[i][b];
-
-			      for(p=0;p<dim;p++)
-				{
-				  d_wt_func += supg * d_supg_tau_dv[b][j] *
-				    v[p] * bfm->grad_phi[i][p];
-
-				}
-			    }
 			      
 			  phi_j = phi_j_vector[j];
 				  			      
@@ -3604,8 +3557,8 @@ assemble_momentum(dbl time,       /* current time */
 			      if ( mass_on && (a == b ))
 				{
 				  /*mass = (1.+2.*tt) * phi_j/dt * (double)delta(a,b); */
-				  mass = (1.+2.*tt) * phi_j/dt * wt_func + v_dot[a] * d_wt_func;
-				  mass *= - rho * d_area;
+				  mass = (1.+2.*tt) * phi_j/dt ;
+				  mass *= - phi_i * rho * d_area;
 				  mass *= mass_etm;
 				}
 				  
@@ -3674,7 +3627,18 @@ assemble_momentum(dbl time,       /* current time */
 			      advection_b = 0.;
 			      if(supg!=0.)
                             	{
+				  d_wt_func = supg * h_elem * phi_j*bfm->grad_phi[i][b];
+
+				  for(p=0;p<dim;p++)
+				    {
+				      d_wt_func += supg * vcent[b] * 
+                                           pg_data->dv_dnode[b][j] *
+					hsquared[b] * h_elem_inv / 4. *
+					v[p] * bfm->grad_phi[i][p];
+
+				    }
 				  advection_b +=  advection_a;
+
 				  advection_b *=  d_wt_func;
 				  advection_b *= - det_J * wt;
 				  advection_b *= h3;
@@ -3734,7 +3698,7 @@ assemble_momentum(dbl time,       /* current time */
 			  source    = 0.;
 			  if ( source_on )
 			    {
-			      source    = wt_func * df->v[a][b][j] * d_area + d_wt_func * f[a] * d_area;
+			      source    = phi_i * df->v[a][b][j] * d_area;
 			      source   *= source_etm;
 			    }
 
@@ -3814,7 +3778,7 @@ assemble_momentum(dbl time,       /* current time */
 			    source    = 0.;
 			    if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			      {
-				source    = wt_func * df->E[a][b][j] * det_J * h3 *wt;
+				source    = phi_i * df->E[a][b][j] * det_J * h3 *wt;
 				source   *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			      }
 						  
@@ -4034,7 +3998,7 @@ assemble_momentum(dbl time,       /* current time */
 				    mass += -rho * v_dot[a];
 				  else
 				    mass += d_rho->C[w][j] * v_dot[a];
-				  mass *= - wt_func * det_J * wt* h3;
+				  mass *= - phi_i * det_J * wt* h3;
 				  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 				}
 
@@ -4100,7 +4064,7 @@ assemble_momentum(dbl time,       /* current time */
 			  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
 			    {
 			      /* df->C was calculated in mm_std_models.c */
-			      source    = wt_func * df->C[a][w][j] * det_J * h3 *wt;
+			      source    = phi_i * df->C[a][w][j] * det_J * h3 *wt;
 			      source   *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 			    }
 		  
@@ -4300,7 +4264,7 @@ assemble_momentum(dbl time,       /* current time */
 				if ( mass_on)
 				  {
 				    mass = v_dot[a];
-				    mass *= - wt_func * rho *
+				    mass *= - phi_i * rho *
 				      ( d_det_J_dmesh_bj * h3 + det_J * dh3dmesh_bj )
 				      * wt;
 				    mass *= mass_etm;
@@ -4523,7 +4487,7 @@ assemble_momentum(dbl time,       /* current time */
 			    source = 0.;	  
 			    if ( source_on)
 			      {
-				source += wt_func * wt *
+				source += phi_i * wt * 
 				  ( f[a]   *        d_det_J_dmesh_bj * h3 +
 				    f[a]   *        det_J *            dh3dmesh_bj + 
 				    df->X[a][b][j] * det_J *            h3);
@@ -8406,10 +8370,12 @@ load_fv(void)
   }
 #endif
 
-  for (p = 0; pdgv[MESH_DISPLACEMENT1] && p < dim; p++)
-    {
-      v = MESH_DISPLACEMENT1 + p;
-	  
+
+  for (p = 0; p < dim; p++)
+  {
+    v = MESH_DISPLACEMENT1 + p;
+    if (pdgv[v]) {
+
       fv->x0[p]        = 0.0;
       fv->x[p]         = 0.0;
       fv_old->x[p]     = 0.0;
@@ -8422,105 +8388,103 @@ load_fv(void)
       fv_dot_old->d[p] = 0.0;
 
       if (tran->solid_inertia)
-	{
-	  fv_dot_dot->x[p] = 0;
-	  fv_dot_dot->d[p] = 0;
-	}
+      {
+        fv_dot_dot->x[p] = 0;
+        fv_dot_dot->d[p] = 0;
+      }
 
       /*
-       * If this is a shell element, mesh displacements may not be
-       * defined on this element block even if the mesh is deforming.
-       * In this case, displacements are defined on a neighbor block
-       * and ei[pd->mi[v]]->deforming_mesh will be TRUE, so that the true
-       * displaced coordinates can be loaded here.
-       */
+         * If this is a shell element, mesh displacements may not be
+         * defined on this element block even if the mesh is deforming.
+         * In this case, displacements are defined on a neighbor block
+         * and ei[pd->mi[v]]->deforming_mesh will be TRUE, so that the true
+         * displaced coordinates can be loaded here.
+         */
       if (ei[pd->mi[v]]->deforming_mesh)
-	{
+      {
+        /*
+             * ShapeVar will always be mesh displacement where it is defined.
+             * Otherwise (e.g. for shell elements), it will be set correctly.
+             */
+        bfv = bf[pd->ShapeVar];
+        dofs     = ei[pd->mi[v]]->dof[v];
+
+        for (i = 0; i < dofs; i++)
+        {
+          node = ei[pd->mi[v]]->dof_list[R_MESH1][i];
+          index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[pd->mi[v]]->ielem] +node];
+          fv->d[p] += *esp->d[p][i] * bfv->phi[i];
+          fv->x[p] +=  ( Coor[p][index] + *esp->d[p][i] ) * bfv->phi[i];
+          fv->x0[p] +=  Coor[p][index] * bfv->phi[i];
+
           /*
-           * ShapeVar will always be mesh displacement where it is defined.
-           * Otherwise (e.g. for shell elements), it will be set correctly.
-           */
-	  bfv = bf[pd->ShapeVar];
-	  dofs     = ei[pd->mi[v]]->dof[v];
-	  
-	  for (i = 0; i < dofs; i++)
-	    {
-	      node = ei[pd->mi[v]]->dof_list[R_MESH1][i];
-	      index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[pd->mi[v]]->ielem] +node];
-	      fv->d[p] += *esp->d[p][i] * bfv->phi[i];
-	      fv->x[p] +=  ( Coor[p][index] + *esp->d[p][i] ) * bfv->phi[i];
-	      fv->x0[p] +=  Coor[p][index] * bfv->phi[i];
- 
-	      /*
-	       * HKM -> We calculate the old xdot's by doing a little pointer
-	       *        arithmetic. Basically we use esp_dot as an offset to
-	       *        the base and then correct for the base address.
-	       */
-	      if (transient_run)
-		{
-		  fv_old->d[p] += *esp_old->d[p][i] * bfv->phi[i];
-		  fv_old->x[p] +=  ( Coor[p][index] + *esp_old->d[p][i] ) *
-		    bf[v]->phi[i];
-		  fv_dot->d[p] += *esp_dot->d[p][i] * bfv->phi[i];
-		  fv_dot->x[p] += *esp_dot->d[p][i] * bfv->phi[i];
-		  if (tran->solid_inertia)
-		    {
-		      fv_dot_dot->d[p] += *esp_dbl_dot->d[p][i] * bfv->phi[i];
-		      fv_dot_dot->x[p] += *esp_dbl_dot->d[p][i] * bfv->phi[i];
-		    }
+                 * HKM -> We calculate the old xdot's by doing a little pointer
+                 *        arithmetic. Basically we use esp_dot as an offset to
+                 *        the base and then correct for the base address.
+                 */
+          if (transient_run)
+          {
+            fv_old->d[p] += *esp_old->d[p][i] * bfv->phi[i];
+            fv_old->x[p] +=  ( Coor[p][index] + *esp_old->d[p][i] ) *
+                bf[v]->phi[i];
+            fv_dot->d[p] += *esp_dot->d[p][i] * bfv->phi[i];
+            fv_dot->x[p] += *esp_dot->d[p][i] * bfv->phi[i];
+            if (tran->solid_inertia)
+            {
+              fv_dot_dot->d[p] += *esp_dbl_dot->d[p][i] * bfv->phi[i];
+              fv_dot_dot->x[p] += *esp_dbl_dot->d[p][i] * bfv->phi[i];
+            }
 
-		  if (upd->Total_Num_Matrices > 1) {
-		    fv_dot_old->x[p] += *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot +
-					  esp_dot->d[p][i]) * bfv->phi[i];
-		    fv_dot_old->d[p] += *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot +
-					  esp_dot->d[p][i]) * bfv->phi[i];
-		  } else {
-		    fv_dot_old->x[p] += *(xdot_old_static - xdot_static +
-					  esp_dot->d[p][i]) * bfv->phi[i];
-		    fv_dot_old->d[p] += *(xdot_old_static - xdot_static +
-					  esp_dot->d[p][i]) * bfv->phi[i];
-		  }
-		  if (tran->solid_inertia)
-		    {
-		      fv_dot_dot_old->d[p] += *(x_dbl_dot_old_static - 
-						x_dbl_dot_static + 
-						esp_dbl_dot->d[p][i])*bfv->phi[i];
-		    }
-		}
-	      else
-		{	  
-                  fv_old->d[p] = fv->d[p];
-                  fv_old->x[p] = fv->x[p]; /* Fixed grid stays fixed thru time. */
-		}
+            if (upd->Total_Num_Matrices > 1) {
+              fv_dot_old->x[p] += *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot +
+                  esp_dot->d[p][i]) * bfv->phi[i];
+              fv_dot_old->d[p] += *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot +
+                  esp_dot->d[p][i]) * bfv->phi[i];
+            } else {
+              fv_dot_old->x[p] += *(xdot_old_static - xdot_static +
+                                    esp_dot->d[p][i]) * bfv->phi[i];
+              fv_dot_old->d[p] += *(xdot_old_static - xdot_static +
+                                    esp_dot->d[p][i]) * bfv->phi[i];
+            }
+            if (tran->solid_inertia)
+            {
+              fv_dot_dot_old->d[p] += *(x_dbl_dot_old_static -
+                                        x_dbl_dot_static +
+                                        esp_dbl_dot->d[p][i])*bfv->phi[i];
+            }
+          }
+          else
+          {
+            fv_old->d[p] = fv->d[p];
+            fv_old->x[p] = fv->x[p]; /* Fixed grid stays fixed thru time. */
+          }
 
-	    }
-	}
-
-      /* Zero these only if not using mesh displacements: */
-      else if (!pdgv[MESH_DISPLACEMENT1])
-	{
-	  v            = pd->ShapeVar;
-	  dofs         = ei[pd->mi[v]]->dof[v];
-
-	  fv->d[p]     = 0.0;
-	  fv_old->d[p] = 0.0;
-	  fv_dot->d[p] = 0.0;
-	  fv_dot_dot->d[p] = 0.0;
-
-	  fv->x[p]     = 0.;
-	  for (i = 0; i < dofs; i++)
-	    {
-	      node = ei[pd->mi[v]]->dof_list[v][i];
-	      index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[pd->mi[v]]->ielem] +node];
-	      fv->x[p] +=  ( Coor[p][index] ) * bf[v]->phi[i];
-	    }
-	  fv_old->x[p] = fv->x[p]; /* Fixed grid stays fixed thru time. */
-	  fv->x0[p] = fv->x[p];
-	  fv_dot->x[p] = 0.0;
-	  fv_dot_dot->x[p] = 0.0;
-
-	}
+        }
+      }
     }
+    else  /* Zero these only if not using mesh displacements: */
+    {
+      v            = pd->ShapeVar;
+      dofs         = ei[pd->mi[v]]->dof[v];
+
+      fv->d[p]     = 0.0;
+      fv_old->d[p] = 0.0;
+      fv_dot->d[p] = 0.0;
+      fv_dot_dot->d[p] = 0.0;
+
+      fv->x[p]     = 0.;
+      for (i = 0; i < dofs; i++)
+      {
+        node = ei[pd->mi[v]]->dof_list[v][i];
+        index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[pd->mi[v]]->ielem] +node];
+        fv->x[p] +=  ( Coor[p][index] ) * bf[v]->phi[i];
+      }
+      fv_old->x[p] = fv->x[p]; /* Fixed grid stays fixed thru time. */
+      fv->x0[p] = fv->x[p];
+      fv_dot->x[p] = 0.0;
+      fv_dot_dot->x[p] = 0.0;
+    }
+  }
   
   /*
    * SOLID displacement (vector)...

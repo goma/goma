@@ -892,13 +892,6 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR)
     return -1;
   }
 
-  double H = 1;
-
-  if (ls != NULL) {
-    load_lsi(ls->Length_Scale);
-    H = 1-lsi->H;
-  }
-
   /* Get quad weights and nodes */
   wheeler_algorithm(nnodes, fv_old->moment, weights, nodes);
 

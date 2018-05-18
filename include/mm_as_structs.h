@@ -830,6 +830,7 @@ struct Uniform_Problem_Description {
   int   XFEM;                     /* Flag indicating that XFEM is in use */
   int SegregatedSolve;            /* Flag indicating segregated solve should be used */
   int SegregatedSubcycles;
+  int matrix_index[MAX_VARIABLE_TYPES];
 };
 typedef struct Uniform_Problem_Description UPD_STRUCT;
 /*____________________________________________________________________________*/

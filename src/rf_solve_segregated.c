@@ -35,6 +35,7 @@
 #include "goma.h"
 #include "mm_solve_linear_segregated.h"
 #include "el_quality.h"
+#include "dg_utils.h"
 
 #define ROUND_TO_ONE 0.9999999
 static int discard_previous_time_step(int num_unks, 
@@ -689,6 +690,19 @@ dbl *te_out) /* te_out - return actual end time */
     }
   }
 
+  dg_neighbor_type *dg_neighbor_data = NULL;
+  if (Num_Proc > 1 && parallel_discontinuous_galerkin_enabled(pd_glob, upd)) {
+    dg_neighbor_data = calloc(1, sizeof(dg_neighbor_type));
+
+    err = setup_dg_neighbor_data(pd_glob, upd, exo, dpi, dg_neighbor_data);
+    check_parallel_error("Setup Discontinuous Galerkin Neighbor Data");
+
+    if (err) {
+      goto free_and_clear;
+    }
+  }
+
+
   dcopy1( totalnAC, global_x_AC, &(gv[5]) );
   /***************************************************************************
    *            STEADY STATE SOLUTION PROCEDURE
@@ -775,7 +789,7 @@ dbl *te_out) /* te_out - return actual end time */
                                       tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
                                       gvec_elem[pg->imtrx], time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, is_steady_state,
                                       x_AC[pg->imtrx], x_AC_dot[pg->imtrx], time1, NULL,
-                                      NULL, NULL, NULL);
+                                      NULL, NULL, NULL, dg_neighbor_data);
 
         if (err == -1)
           converged = FALSE;
@@ -1494,7 +1508,7 @@ dbl *te_out) /* te_out - return actual end time */
 					tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx],
 					gvec_elem[pg->imtrx], time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform, 0,
 					x_AC[pg->imtrx], x_AC_dot[pg->imtrx], time1, NULL,
-					NULL, NULL, NULL);
+                                        NULL, NULL, NULL, dg_neighbor_data);
 
 	  /*
 	    err = solve_linear_segregated(ams[pg->imtrx], x[pg->imtrx], delta_t,

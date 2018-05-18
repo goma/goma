@@ -8106,19 +8106,19 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  model_read = 1;
 	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
 	  if ( fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
-		      &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7, &a8, &a9, &a10, &a11, &a12)  != 12 )
+		      &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7, &a8, &a9, &a10, &a11)  != 12 )
 	    {
 		  sr = sprintf(err_msg,
-			       "Matl %s needs 13 constants for %s %s model.\n",
+			       "Matl %s needs 12 constants for %s %s model.\n",
 			       pd_glob[mn]->MaterialName,
 			       "Species Source", "FOAM_PMDI_10_RXN");
 		  EH(-1, err_msg);
 	    }
 
 	  mat_ptr->u_species_source[species_no] = (dbl *)
-						 array_alloc(1,13,sizeof(dbl));
+						 array_alloc(1,12,sizeof(dbl));
 
-	  mat_ptr->len_u_species_source[species_no] = 13;
+	  mat_ptr->len_u_species_source[species_no] = 12;
 
 	  mat_ptr->u_species_source[species_no][0] = a0;  /* k0 */
 	  mat_ptr->u_species_source[species_no][1] = a1;  /* w */
@@ -8132,7 +8132,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  mat_ptr->u_species_source[species_no][9] = a9;  /* T_ginf */
 	  mat_ptr->u_species_source[species_no][10] = a10;  /* A */
 	  mat_ptr->u_species_source[species_no][11] = a11;  /* En/R */
-	  SPF_DBL_VEC(endofstring(es), 13,  mat_ptr->u_species_source[species_no]);
+	  SPF_DBL_VEC(endofstring(es), 12,  mat_ptr->u_species_source[species_no]);
 	}
       else if ( !strcmp(model_name, "FOAM_PMDI_10_H2O") )
 	{

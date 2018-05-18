@@ -857,6 +857,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 				      resid_vector_sens, 
 				      x_sens_temp,
 				      x_sens_p,
+                                      NULL,
                                       NULL);
 	  
 #ifdef DEBUG

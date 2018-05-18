@@ -30,6 +30,8 @@
 #define EXTERN extern
 #endif
 
+#include "dg_utils.h"
+
 extern int matrix_fill_full
 PROTO((struct Aztec_Linear_Solver_System *,
        double [],   /* x - Solution vector                       */	
@@ -48,7 +50,8 @@ PROTO((struct Aztec_Linear_Solver_System *,
        int *,	    /* num_total_nodes - Number of nodes that proc owns */
        dbl *,       /* h_elem_avg - global average element size  for PSPG */
        dbl *,       /* U_norm - global average velocity for PSPG */
-       dbl *));     /* estifm - element stiffness Matrix for frontal solver */
+       dbl *,
+       dg_neighbor_type *));     /* estifm - element stiffness Matrix for frontal solver */
 
 
 EXTERN void matrix_fill
@@ -82,7 +85,8 @@ PROTO((struct Aztec_Linear_Solver_System *,
        dbl *,			/* U_norm - global average velocity for PSPG */
        dbl *,			/* estifm - element stiffness Matrix for 
 				 * frontal solver                            */
-       int ));                  /* zeroCA */
+       int ,
+       dg_neighbor_type *));                  /* zeroCA */
 
 EXTERN void checkfinite
 PROTO((const char * const,      /* file                                      */

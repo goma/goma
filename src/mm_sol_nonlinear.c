@@ -52,6 +52,8 @@ static char rcsid[] =
 #include "sl_aztecoo_interface.h"
 
 #include "sl_stratimikos_interface.h"
+
+#include "dg_utils.h"
 #define _MM_SOL_NONLINEAR_C
 #include "goma.h"
 
@@ -260,7 +262,8 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 			    double *resid_vector_sens,
 			    double *x_sens,
 			    double **x_sens_p,	/*  solution sensitivities */
-                            void *con_ptr)   /* Identifies if called from LOCA */
+                            void *con_ptr,
+                            dg_neighbor_type *dg_neighbor_data)   /* Identifies if called from LOCA */
 {
 
   static int prev_matrix = 0;
@@ -850,6 +853,10 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
              is properly communicated */
           exchange_dof(cx,dpi, x, pg->imtrx);
 
+          if (dg_neighbor_data != NULL) {
+            dg_communicate_neighbor_data(exo, dpi, dg_neighbor_data, upd, x, pg->imtrx, Nodes, vn_glob);
+          }
+
 	  if (Linear_Solver == FRONT)
 	    {
 	      zero	  = 0;
@@ -880,7 +887,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 					 x_old, x_older, xdot, xdot_old, x_update,
 					 &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], 
 					 &time_value, exo, dpi, &num_total_nodes,
-					 &h_elem_avg, &U_norm, NULL);
+                                         &h_elem_avg, &U_norm, NULL, NULL);
 		  a_end = ut();
 		}
 	
@@ -948,7 +955,7 @@ EH(-1,"version not compiled with frontal solver");
 				     First_Elem_Side_BC_Array[pg->imtrx], 
 				     &time_value, exo, dpi,
 				     &num_total_nodes,
-				     &h_elem_avg, &U_norm, NULL);
+                                     &h_elem_avg, &U_norm, NULL, dg_neighbor_data);
 
 	      if( vn->evssModel == LOG_CONF && upd->ep[pg->imtrx][POLYMER_STRESS11] >= 0 && af->Assemble_Jacobian == TRUE)
                 {
@@ -3498,7 +3505,7 @@ soln_sens ( double lambda,  /*  parameter */
 			 First_Elem_Side_BC_Array[pg->imtrx], 
 			 &time_value, exo, dpi,
 			 &num_total_nodes,
-			 &h_elem_avg, &U_norm, NULL);
+                         &h_elem_avg, &U_norm, NULL, NULL);
   if (err == -1) return(err);
 
   lambda_tmp = lambda-dlambda;
@@ -3538,7 +3545,7 @@ soln_sens ( double lambda,  /*  parameter */
 			 First_Elem_Side_BC_Array[pg->imtrx], 
 			 &time_value, exo, dpi,
 			 &num_total_nodes,
-			 &h_elem_avg, &U_norm, NULL);
+                         &h_elem_avg, &U_norm, NULL, NULL);
   
   if (err == -1) return(err);
 

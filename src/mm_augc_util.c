@@ -1293,7 +1293,8 @@ user_aug_cond(int iAC,
 			     mf_args->num_total_nodes,
 			     mf_args->h_elem_avg,
 			     mf_args->U_norm,
-			     mf_args->estifm);
+                             mf_args->estifm,
+                             NULL);
 
       if (err == -1) return(err);
       /*  */
@@ -1326,7 +1327,8 @@ user_aug_cond(int iAC,
 			     mf_args->num_total_nodes,
 			     mf_args->h_elem_avg,
 			     mf_args->U_norm,
-			     mf_args->estifm);
+                             mf_args->estifm,
+                             NULL);
 	  
       if (err == -1) return(err);
       /*  */
@@ -2175,7 +2177,8 @@ estimate_bAC(  int iAC,
 			 mf_args->num_total_nodes,
 			 mf_args->h_elem_avg,
 			 mf_args->U_norm,
-			 mf_args->estifm);
+                         mf_args->estifm,
+                         NULL);
   
   if (err == -1) return(err);
 
@@ -2221,7 +2224,8 @@ estimate_bAC(  int iAC,
 			 mf_args->num_total_nodes,
 			 mf_args->h_elem_avg,
 			 mf_args->U_norm,
-			 mf_args->estifm);
+                         mf_args->estifm,
+                         NULL);
       
   if (err == -1) return(err);
 	  

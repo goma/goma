@@ -1519,7 +1519,8 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 				  passdown.resid_vector_sens, 
 				  passdown.x_sens_temp,
 				  passdown.x_sens_p,
-				  con_ptr);
+                                  con_ptr,
+                                  NULL);
 
 #ifdef DEBUG
     fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
@@ -2268,7 +2269,7 @@ void matrix_residual_fill_conwrap(double *x, double *rhs, int matflag)
 			    &(passdown.dpi->num_universe_nodes),
 			    &(h_elem_avg),
 			    &(U_norm),
-			    NULL);
+                            NULL, NULL);
   }
 
 /* Save unscaled matrix before the first resolve */
@@ -2401,7 +2402,7 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
                           &(nnodes),
                           &(h_elem_avg),
                           &(U_norm),
-                          NULL);
+                          NULL, NULL);
  
 
     }  /* End of Jacobian pass loop */
@@ -2478,7 +2479,7 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
                           &(nnodes),
                           &(h_elem_avg),
                           &(U_norm),
-                          NULL);
+                          NULL, NULL);
 
 
     }  /* End of mass matrix pass loop */

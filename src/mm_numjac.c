@@ -380,7 +380,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
 		    first_elem_side_BC_array,
 		    &time_value, exo, dpi,
 		    &elem_list[i], &num_total_nodes,
-		    h_elem_avg, U_norm, NULL, zeroCA);
+                    h_elem_avg, U_norm, NULL, zeroCA, NULL);
 	if( neg_elem_volume ) break;
 	if( neg_lub_height ) break;
 	if( zero_detJ ) break;
@@ -684,7 +684,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 			  first_elem_side_BC_array,
 			  &time_value, exo, dpi, 
 			  &num_total_nodes, 
-			  h_elem_avg, U_norm, NULL); 
+                          h_elem_avg, U_norm, NULL, NULL);
 
 #ifdef DEBUG_NUMJAC
   DPRINTF(stderr, "Before scaling:\n");
@@ -907,7 +907,7 @@ numerical_jacobian(struct Aztec_Linear_Solver_System *ams,
 		    first_elem_side_BC_array,
 		    &time_value, exo, dpi,
 		    &elem_list[i], &num_total_nodes,
-		    h_elem_avg, U_norm, NULL, zeroCA);
+                    h_elem_avg, U_norm, NULL, zeroCA, NULL);
 	if( neg_elem_volume ) break;
 	if( neg_lub_height ) break;
 	if( zero_detJ ) break;

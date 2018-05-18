@@ -95,6 +95,7 @@ PROTO((Exo_DB *,                /* exo                                       */
 
 static int neighbor_species
 PROTO((Exo_DB *,                /* exo - ptr to exodus ii mesh information   */
+       Dpi *,
        dbl [],                  /* x                                         */
        int ,                    /* current_elem                              */
        int ,                    /* neighbor_elem                             */
@@ -104,7 +105,9 @@ PROTO((Exo_DB *,                /* exo - ptr to exodus ii mesh information   */
        int [],                  /* local_elem_node_id                        */
        int ,                    /* ielem_type                                */
        int ,                    /* ielem_type_fill                           */
-       dbl **));                /* x_n                                       */
+       int ,
+       dbl **,                /* x_n                                       */
+       dg_neighbor_type *));
 
 
 
@@ -5153,6 +5156,7 @@ get_side_info(const int ielem_type,
 
 int
 assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
+                          Dpi *dpi,
 			  double x[],
 			  double delta_t, /* current time step size */
 			  double theta,	/* parameter to vary time integration from
@@ -5163,7 +5167,8 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 					 * EXODUS convention  */
 			  int neighbor,	/* element neighboring this side */
 			  int ielem,	/* current element */
-			  int num_local_nodes)   /* number of nodes per element */
+                          int num_local_nodes,   /* number of nodes per element */
+                          dg_neighbor_type *dg_neighbor_data)
 {
 /*    TAB certifies that this function conforms to the exo/patran side numbering convention 11/9/98. */
 
@@ -5276,11 +5281,14 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 /* 	  if(neighbor != -1  && vdotn_avg*vdotn_avg/vdotn_norm > 1.e-12 ) */
 	  if(neighbor != -1 )
 	    {
-	      err =  neighbor_species(exo, x, ielem, neighbor, conc_neighbor,
+              err =  neighbor_species(exo, dpi, x, ielem, neighbor, conc_neighbor,
 				      num_local_nodes, nodes_per_side,
 				      local_elem_node_id, ielem_type, 
-				      ielem_type_fill,  x_neighbor);
+                                      ielem_type_fill, id_side, x_neighbor, dg_neighbor_data);
 	      EH( err, "neighbor_species");
+              if (err == -1) {
+                return -1;
+              }
 	    }
 	  else
 	    {
@@ -5483,6 +5491,7 @@ assemble_surface_species (Exo_DB *exo,	/* ptr to basic exodus ii mesh informatio
 
 static int 
 neighbor_species(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
+                 Dpi *dpi,
 		 dbl x[],
 		 int current_elem,
 		 int neighbor_elem,
@@ -5492,7 +5501,9 @@ neighbor_species(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 		 int local_elem_node_id[],
 		 int ielem_type,
 		 int ielem_type_fill,
-		 dbl **x_n)
+                 int current_id_side,
+                 dbl **x_n,
+                 dg_neighbor_type *dg_neighbor_data)
 /*   
 *   This function take the current element and side and 
  *   knowing who the neighboring element is, finds the value
@@ -5552,9 +5563,15 @@ neighbor_species(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
 
   /* find localside number for neighbor element from
      global node numbers of current element */
-  
-  id_side = find_id_side (neighbor_elem, nodes_per_side,
-			  inode, id_local_elem_coord, exo);
+
+  if (neighbor_elem == -2) { // flag for parallel neighbor)
+    int current_face = current_id_side -1;
+    int index =  exo->elem_elem_pntr[current_elem] + current_face;
+    id_side = dpi->elem_elem_face_global[index] + 1;
+  } else {
+    id_side = find_id_side (neighbor_elem, nodes_per_side,
+                            inode, id_local_elem_coord, exo);
+  }
 
   for (ip = 0; ip < ip_total; ip++) 
     {
@@ -5569,11 +5586,11 @@ neighbor_species(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
       v = MASS_FRACTION;
      
       /* first load phi for the fill function */      
-      for (i = 0; i < ei[pg->imtrx]->dof[v]; i++)  
+      for (i = 0; i < ei[pd->mi[v]]->dof[v]; i++)
 	{
 	  phi[i] = newshape(xi, ielem_type, PSI, 
-			    ei[pg->imtrx]->dof_list[v][i], 
-			    ielem_shape, pd->i[pg->imtrx][v], i);
+                            ei[pd->mi[v]]->dof_list[v][i],
+                            ielem_shape, pd->i[pd->mi[v]][v], i);
 	}
 
       v = pd->ShapeVar;
@@ -5582,46 +5599,87 @@ neighbor_species(Exo_DB *exo,	/* ptr to basic exodus ii mesh information */
        *  the current element will work on the neighbor element that
        *  we are trying to get information for 
        */
-      
-      iconnect_ptr    = Proc_Connect_Ptr[neighbor_elem]; /* find pointer to beginning */
 
-      for (i = 0; i < ei[pg->imtrx]->dof[v]; i++)  
+      for (i = 0; i < ei[pd->mi[v]]->dof[v]; i++)
 	{
 	  phi_map[i] = newshape(xi, ielem_type, PSI, 
-				ei[pg->imtrx]->dof_list[v][i], 
-				ielem_shape, pd->i[pg->imtrx][v], i);
+                                ei[pd->mi[v]]->dof_list[v][i],
+                                ielem_shape, pd->i[pd->mi[v]][v], i);
 	}
 
-      iconnect_ptr    = Proc_Connect_Ptr[neighbor_elem]; /* find pointer to beginning */
-      for ( i=0; i< ei[pg->imtrx]->dof[v]; i++)
-	{
-	  gnn = Proc_Elem_Connect[iconnect_ptr + i];
+      if (neighbor_elem == -2) { // flag for parallel neighbor
+        int current_face = current_id_side -1;
+        int index =  exo->elem_elem_pntr[current_elem] + current_face;
+        int global_neighbor_elem = dpi->elem_elem_list_global[index];
 
-	  for ( p=0; p<dim; p++)
-	    {
-	      x_n[ip][p] +=  Coor[p][gnn] * phi_map[i];  
-	    }
-	}
-      /*
-       * HKM -> I don't know what's going on in this 
+        int global_neighbor_index = -1;
+        int nodes_per_elem = num_local_nodes;
+        for (int i = 0; i < dg_neighbor_data->neighbor_recv_elem_index[dpi->num_neighbors]; i++) {
+          if (dg_neighbor_data->global_recv_elem_list[i] == global_neighbor_elem) {
+            global_neighbor_index = i;
+            break;
+          }
+        }
+
+        if (global_neighbor_index == -1) {
+          EH(-1, "Could not find global elem in neighbor data");
+          return -1;
+        }
+
+        v = pd->ShapeVar;
+
+        for ( i=0; i< ei[pd->mi[v]]->dof[v]; i++)
+        {
+          for ( p=0; p<dim; p++)
+          {
+            double coord_val = dg_neighbor_data->nodal_recv_coord[p][global_neighbor_index*nodes_per_elem + i];
+            x_n[ip][p] += coord_val * phi_map[i];
+          }
+        }
+
+        int num_dof_species = dg_neighbor_data->mass_fraction_num_dof / pd->Num_Species;
+        int offset = global_neighbor_index * dg_neighbor_data->mass_fraction_num_dof;
+
+        for (int w = 0; w < pd->Num_Species; w++ ) {
+          for (int j = 0; j < num_dof_species; j++) {
+            int ie = offset + w*num_dof_species + j;
+            conc_neighbor[ip][w] += dg_neighbor_data->nodal_recv_mass_fraction_values[ie] * phi[j];
+          }
+        }
+      } else {
+        iconnect_ptr    = Proc_Connect_Ptr[neighbor_elem]; /* find pointer to beginning */
+        v = pd->ShapeVar;
+        for ( i=0; i< ei[pd->mi[v]]->dof[v]; i++)
+        {
+          gnn = Proc_Elem_Connect[iconnect_ptr + i];
+
+          for ( p=0; p<dim; p++)
+          {
+            x_n[ip][p] +=  Coor[p][gnn] * phi_map[i];
+          }
+        }
+
+        /*
+       * HKM -> I don't know what's going on in this
        *        next loop. It needs attention
        */
-      v = MASS_FRACTION;
-      for ( w=0; w<pd->Num_Species_Eqn; w++)
-	{
-	  for ( i=0; i< num_local_nodes; i++)
-	    {
-	      gnn = Proc_Elem_Connect[iconnect_ptr + i];
-	      node = Nodes[gnn];
-	      nvdof = get_nv_ndofs_modMF(node->Nodal_Vars_Info[pg->imtrx], v);
-	      for (j = 0; j < nvdof; j++)
-		{
-		  ie = Index_Solution(gnn, v, w, 0, -2, pg->imtrx) + j;
-		  EH(ie, "Could not find vbl in sparse matrix.");
-		  conc_neighbor[ip][w] += x[ie] * phi[j];
-		}
-	    }
-	}
+        v = MASS_FRACTION;
+        for ( w=0; w<pd->Num_Species_Eqn; w++)
+        {
+          for ( i=0; i< num_local_nodes; i++)
+          {
+            gnn = Proc_Elem_Connect[iconnect_ptr + i];
+            node = Nodes[gnn];
+            nvdof = get_nv_ndofs_modMF(node->Nodal_Vars_Info[pg->imtrx], v);
+            for (j = 0; j < nvdof; j++)
+            {
+              ie = Index_Solution(gnn, v, w, 0, -2, pg->imtrx) + j;
+              EH(ie, "Could not find vbl in sparse matrix.");
+              conc_neighbor[ip][w] += x[ie] * phi[j];
+            }
+          }
+        }
+      }
     }
 
   status = 1;

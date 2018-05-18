@@ -203,7 +203,7 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
 		   &delta_t, &theta, 
 		   First_Elem_Side_BC_Array[pg->imtrx], 
 		   &time_value, exo, dpi, 
-		   &num_total_nodes, &zero[0], &zero[0], NULL);
+                   &num_total_nodes, &zero[0], &zero[0], NULL, NULL);
 
   /* This call will fill in scale[] with the proper row scales.  I
    * need to get this in terms of the Jacobian, and the apply it to
@@ -251,7 +251,7 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
 		       First_Elem_Side_BC_Array[pg->imtrx], 
 		       &time_value, exo, dpi, 
 		       &num_total_nodes, 
-		       &zero[0], &zero[0], NULL);
+                       &zero[0], &zero[0], NULL, NULL);
 
       printf("Assembling B_tmpB...\n");
       af->Assemble_Residual = TRUE;
@@ -267,7 +267,7 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
 		       First_Elem_Side_BC_Array[pg->imtrx], 
 		       &time_value, exo, dpi, 
 		       &num_total_nodes, 
-		       &zero[0], &zero[0], NULL);
+                       &zero[0], &zero[0], NULL, NULL);
       
       for(i = 0; i < NZeros+1; i++)
 	{
@@ -317,7 +317,7 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
 		   x_old, x_older, xdot, xdot_old, x_update,
 		   &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], 
 		   &time_value, exo, dpi, &num_total_nodes, 
-		   &zero[0], &zero[0], NULL);
+                   &zero[0], &zero[0], NULL, NULL);
 
   /* MMH: Curious... Why NZeros + 1 ??? */
       /*
@@ -500,7 +500,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 		       x_old, x_older, xdot, xdot_old, x_update,
 		       &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], 
 		       &time_value, exo, dpi, 
-		       &num_total_nodes, &zero[0], &zero[0], NULL);
+                       &num_total_nodes, &zero[0], &zero[0], NULL, NULL);
 
       /* Jacobian matrix, pass 2 */
       printf("Assembling J (pass 2)...\n");
@@ -517,7 +517,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 		       &delta_t, &theta, 
 		       First_Elem_Side_BC_Array[pg->imtrx], 
 		       &time_value, exo, dpi, 
-		       &num_total_nodes, &zero[0], &zero[0], NULL);
+                       &num_total_nodes, &zero[0], &zero[0], NULL, NULL);
 
       /* Add the two passes together to get the "real" Jacobian
        * matrix. */
@@ -593,7 +593,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 			   x_update, &delta_t, &theta,
 			   First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo,
 			   dpi, &num_total_nodes, &zero[0], &zero[0],
-			   NULL);
+                           NULL, NULL);
 	  
 	  printf("Assembling B_tmpB (pass 1)...\n");
 	  LSA_3D_of_2D_pass = 1;
@@ -604,7 +604,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 			   x_older, xdot, xdot_old, x_update,
 			   &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx],
 			   &time_value, exo, dpi, &num_total_nodes,
-			   &zero[0], &zero[0], NULL);
+                           &zero[0], &zero[0], NULL, NULL);
 	  
 	  printf("Assembling B_tmpA (pass 2)...\n");
 	  LSA_3D_of_2D_pass = 2;
@@ -617,7 +617,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 			   x_update, &delta_t, &theta,
 			   First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo,
 			   dpi, &num_total_nodes, &zero[0], &zero[0],
-			   NULL);
+                           NULL, NULL);
 	  
 	  printf("Assembling B_tmpB (pass 2)...\n");
 	  LSA_3D_of_2D_pass = 2;
@@ -628,7 +628,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 			   x_older, xdot, xdot_old, x_update,
 			   &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx],
 			   &time_value, exo, dpi, &num_total_nodes,
-			   &zero[0], &zero[0], NULL);
+                           &zero[0], &zero[0], NULL, NULL);
 
 	  /* Now construct the actual Subtractionism versions of each
 	   * pass.  These are stored in mass_matrix_[1,2]_tmpA. */
@@ -676,7 +676,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 		       xdot, xdot_old, x_update, &delta_t, &theta,
 		       First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo,
 		       dpi, &num_total_nodes, &zero[0], &zero[0],
-		       NULL);
+                       NULL, NULL);
 
       printf("Assembling B (pass 2)...\n"); 
       LSA_3D_of_2D_pass = 2;
@@ -685,7 +685,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 		       xdot, xdot_old, x_update, &delta_t, &theta,
 		       First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo,
 		       dpi, &num_total_nodes, &zero[0], &zero[0],
-		       NULL);
+                       NULL, NULL);
 
       /* Get my mass matrix by adding the two passes together (don't
        * forget the -! */

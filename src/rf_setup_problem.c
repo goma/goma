@@ -173,6 +173,7 @@ set_matrix_index_and_global_v(void)
   for (mn = 0; mn < upd->Num_Mat; mn++) {
     for ( i=0; i<MAX_VARIABLE_TYPES; i++) {
       pd_glob[mn]->mi[i] = -1;
+      upd->matrix_index[i] = -1;
     }
   }
 
@@ -181,6 +182,7 @@ set_matrix_index_and_global_v(void)
       for ( i=0; i<MAX_VARIABLE_TYPES; i++) {
         if (pd_glob[mn]->v[imtrx][i]) {
           pd_glob[mn]->mi[i] = imtrx;
+          upd->matrix_index[i] = imtrx;
         }
       }
     }

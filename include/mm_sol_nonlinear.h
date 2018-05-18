@@ -27,6 +27,8 @@
 #define EXTERN extern
 #endif
 
+#include "dg_utils.h"
+
 EXTERN int solve_nonlinear_problem
 PROTO((struct Aztec_Linear_Solver_System *, /* ams - ptrs to Aztec linear    *
 					     * systems                       */
@@ -69,8 +71,8 @@ PROTO((struct Aztec_Linear_Solver_System *, /* ams - ptrs to Aztec linear    *
        double *,		/* resid_vector_sens                         */
        double *,		/* x_sens                                    */
        double **,  		/*  x_sens_p - solution sensitivities        */
-       void *                   /* con_ptr pointer                           */
-       ));
+       void *,                   /* con_ptr pointer                           */
+       dg_neighbor_type *));
 
 EXTERN double L2_norm		/* mm_sol_nonlinear.c */
 PROTO((double *,		/* vector */

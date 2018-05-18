@@ -820,7 +820,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 				    resid_vector_sens,
 				    x_sens,
 				    x_sens_p,
-                                    NULL);
+                                    NULL,
+          NULL);
 
 #ifdef DEBUG
       fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);

@@ -130,7 +130,8 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
 		     int *ptr_num_total_nodes,
 		     dbl *ptr_h_elem_avg,
 		     dbl *ptr_U_norm,
-		     dbl *estifm)
+                     dbl *estifm,
+                     dg_neighbor_type *dg_neighbor_data)
 
 {
   int ielem=0, e_start=0, e_end=0, ebn=0 ;
@@ -198,7 +199,7 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
     matrix_fill(ams, x, resid_vector, x_old, x_older, xdot, xdot_old, x_update,
 		ptr_delta_t, ptr_theta, first_elem_side_BC_array,
 		ptr_time_value, exo, dpi, &ielem, ptr_num_total_nodes,
-		ptr_h_elem_avg, ptr_U_norm, estifm, 0);
+                ptr_h_elem_avg, ptr_U_norm, estifm, 0, dg_neighbor_data);
   
     if (neg_elem_volume) {
       log_msg("Negative elem det J in element (%d)", ielem+1);
@@ -295,7 +296,8 @@ matrix_fill(
 	    dbl *ptr_h_elem_avg,          /* global average element size for PSPG */
 	    dbl *ptr_U_norm    ,          /* global average velocity for PSPG */
 	    dbl *estifm,                 /* element stiffness Matrix for frontal solver*/
-	    int zeroCA)                   /* boolean to zero zeroCA */
+            int zeroCA,
+            dg_neighbor_type *dg_neighbor_data)                   /* boolean to zero zeroCA */
 
      /******************************************************************************
   Function which fills the FEM stiffness matrices and the right-hand side.
@@ -2258,23 +2260,29 @@ matrix_fill(
     {
       int neighbor;  
       int index, face;
-	      
+
       for (face = 0; face < ei[pg->imtrx]->num_sides; face++)
-	{
-		  
-	  index = exo->elem_elem_pntr[ielem] + face;
-	  neighbor = exo->elem_elem_list[index];
-		  
-	  id_side = face + 1;
-		  
-	  err = assemble_surface_species(exo, x, delta_t, theta,
-					 ielem_type, ielem_type_mass, id_side, 
-					 neighbor, ielem, num_local_nodes);
-	  EH( err, "assemble_surface_species"); 
+      {
+
+        index = exo->elem_elem_pntr[ielem] + face;
+        neighbor = exo->elem_elem_list[index];
+
+        if (Num_Proc > 1 && exo->elem_elem_list[index] == -1 &&
+            dpi->elem_elem_list_global[index] != -1
+            && proc_to_neighbor(dpi->elem_elem_proc_global[index], dpi) != -1) {
+          neighbor = -2; // set flag for using dg_neighbor_data when we have a parallel neighbor
+        }
+
+        id_side = face + 1;
+
+        err = assemble_surface_species(exo, dpi, x, delta_t, theta,
+                                       ielem_type, ielem_type_mass, id_side,
+                                       neighbor, ielem, num_local_nodes, dg_neighbor_data);
+        EH( err, "assemble_surface_species");
 #ifdef CHECK_FINITE
-	  CHECKFINITE("assemble_surface_species");
+        CHECKFINITE("assemble_surface_species");
 #endif
-	}
+      }
     } 
 
   if (discontinuous_stress)
@@ -2284,6 +2292,11 @@ matrix_fill(
 	      
       var = 4*MDE*(MAX_PROB_VAR+MAX_CONC)*MDE;
       memset(lec->J_stress_neighbor, 0, sizeof(double)*var); 
+
+      if (Num_Proc > 1) {
+        EH(-1, "Discontinuous Galerkin for stress not implemented in parallel");
+        return;
+      }
 
       for (face = 0; face < ei[pg->imtrx]->num_sides; face++)
 	{
