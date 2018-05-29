@@ -215,6 +215,16 @@ endif()
 ### Alert the user that everything is going okay.
 message("\nFound Trilinos version: ${Trilinos_VERSION}\n")
 
+# Avoid the "Too many open files" error when linking
+# Need to reverse so that proper linking order is preserved
+# after removal
+LIST(REVERSE Trilinos_LIBRARIES)
+LIST(REMOVE_DUPLICATES Trilinos_LIBRARIES)
+LIST(REVERSE Trilinos_LIBRARIES)
+
+LIST(REVERSE Trilinos_TPL_LIBRARIES)
+LIST(REMOVE_DUPLICATES Trilinos_TPL_LIBRARIES)
+LIST(REVERSE Trilinos_TPL_LIBRARIES)
 
 option(${PROJECT_NAME}_Build_Stratimikos "If you have stratimikos and want support for it enable this. This modifies the definitions" ${Trilinos_Stratimikos_FOUND})
 if(${PROJECT_NAME}_Build_Stratimikos)
