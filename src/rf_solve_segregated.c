@@ -943,6 +943,8 @@ dbl *te_out) /* te_out - return actual end time */
    *                            Transient solution process 
    ********************************************************************************/
   else {
+
+    int renorm_subcycle_count = 0;
     if (Debug_Flag && ProcID == 0) {
       fprintf(stderr, "MaxTimeSteps: %d \tTimeMax: %f\n", MaxTimeSteps,
           TimeMax);
@@ -1138,7 +1140,7 @@ dbl *te_out) /* te_out - return actual end time */
 	      exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
 
 	      if (converged) 
-		{
+                {
 		  switch (ls->Renorm_Method) {
 
 		  case HUYGENS :
@@ -1160,6 +1162,7 @@ dbl *te_out) /* te_out - return actual end time */
 			 ls->Evolution == LS_EVOLVE_ADVECT_COUPLED )
 		      WH(-1,"No level set renormalization is on.\n");
 		  } /* end of switch(ls->Renorm_Method ) */
+
 		}
 	      /*
 	       * More initialization needed. Have to set those field variables that initially are indexed by
@@ -1308,7 +1311,8 @@ dbl *te_out) /* te_out - return actual end time */
       tran->time_value = time1;
 
 
-      for (int subcycle = 0; subcycle < upd->SegregatedSubcycles; subcycle++) {
+      for (int subcycle = 0; subcycle < upd->SegregatedSubcycles || subcycle < renorm_subcycle_count; subcycle++) {
+
 	for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
 	  if (upd->XFEM) {
 	    xfem = matrix_xfem[pg->imtrx];
@@ -1492,10 +1496,11 @@ dbl *te_out) /* te_out - return actual end time */
 
 	   */
 
-	  if (ProcID == 0 && upd->SegregatedSubcycles == 1) {
+          if (ProcID == 0 && upd->SegregatedSubcycles == 1 && renorm_subcycle_count <= 1) {
 	    printf("\n===================== SOLVING MATRIX %d ===========================\n\n", pg->imtrx+1);
-	  } else if (ProcID == 0 && upd->SegregatedSubcycles > 1) {
-	    printf("\n===================== SOLVING MATRIX %d Subcycle %d/%d ===========================\n\n", pg->imtrx+1, subcycle+1, upd->SegregatedSubcycles);
+          } else if (ProcID == 0 && (upd->SegregatedSubcycles > 1 || renorm_subcycle_count > 1)) {
+            int num_subcycles = MAX(upd->SegregatedSubcycles, renorm_subcycle_count);
+            printf("\n===================== SOLVING MATRIX %d Subcycle %d/%d ===========================\n\n", pg->imtrx+1, subcycle+1, num_subcycles);
 	  }
 
 	  nAC = matrix_nAC[pg->imtrx];
@@ -1602,6 +1607,9 @@ dbl *te_out) /* te_out - return actual end time */
 	  if (!converged) goto finish_step;
 	}
       }
+
+      // reset renorm subcycle after we have completed the appropriate number of subcycles
+      renorm_subcycle_count = 0;
 
     finish_step:
 
@@ -1928,7 +1936,12 @@ dbl *te_out) /* te_out - return actual end time */
 						     exo, cx[pg->imtrx], dpi, num_fill_unknowns, numProcUnknowns[pg->imtrx],
 						     time2, Renorm_Now);
 		if ( did_renorm )
-		  { exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], 0);	}
+                  {
+                    exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], 0);
+
+
+                    renorm_subcycle_count = ls->SubcyclesAfterRenorm;
+                  }
 		if ( did_renorm && tran->Restart_Time_Integ_After_Renorm )
 		  {
 		    /* like a restart */

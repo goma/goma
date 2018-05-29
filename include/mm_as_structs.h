@@ -2614,6 +2614,7 @@ struct Level_Set_Data { int    var;
                         int    Extension_Velocity;
                         int    CalcSurfDependencies;
                         int    MatrixNum; /* segregated problems */
+                        int    SubcyclesAfterRenorm;
                         double Neg_Vol;
                         double Pos_Vol;
                         double Surface_Area;

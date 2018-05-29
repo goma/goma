@@ -2189,11 +2189,11 @@ rd_levelset_specs(FILE *ifp,
                   ls->Mass_Sign  = I_NEG_FILL;
                 }                 
             }
-          else if  ( strcmp( input,"Huygens_Constrained Mass Negative") == 0 )
+          else if  ( strcmp( input,"Huygens_Constrained_Mass_Negative") == 0 )
             {
               ls->Renorm_Method = HUYGENS_C;
 
-	      strcat(echo_string, "Huygens_Constrained Mass Negative");
+              strcat(echo_string, "Huygens_Constrained_Mass_Negative");
 
               if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
                 {
@@ -2210,11 +2210,11 @@ rd_levelset_specs(FILE *ifp,
                   ls->Mass_Sign  = I_MASS_NEGATIVE_FILL;
                 }
             }
-	  else if  ( strcmp( input,"Huygens_Constrained Mass Positive") == 0 )
+          else if  ( strcmp( input,"Huygens_Constrained_Mass_Positive") == 0 )
             {
               ls->Renorm_Method = HUYGENS_C;
 
-	      strcat(echo_string, "Huygens_Constrained Mass Positive");
+              strcat(echo_string, "Huygens_Constrained_Mass_Positive");
 
               if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
                 {
@@ -2302,6 +2302,20 @@ rd_levelset_specs(FILE *ifp,
           ls->Renorm_Countdown = ls->Renorm_Freq;
 
 	  SPF(echo_string,"%s = %d","Level Set Renormalization Frequency", ls->Renorm_Freq); ECHO(echo_string,echo_file);
+        }
+
+      ls->SubcyclesAfterRenorm = 1;
+
+      iread = look_for_optional(ifp,"Level Set Renormalization Subcycles",input,'=');
+
+      if ( iread == 1 )
+        {
+          if( fscanf( ifp,"%d", &(ls->SubcyclesAfterRenorm) ) != 1 )
+            {
+              EH(-1,"Error reading renormalization subcycles.\n");
+            }
+
+          SPF(echo_string,"%s = %d","Level Set Renormalization Subcycles", ls->SubcyclesAfterRenorm); ECHO(echo_string,echo_file);
         }
 
       ls->Force_Initial_Renorm = FALSE;

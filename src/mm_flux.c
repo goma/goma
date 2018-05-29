@@ -5117,7 +5117,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	  H = quantity == I_MASS_POSITIVE_FILL ? lsi->H : ( 1.0 - lsi->H );
 	}
 
-	if (J_AC != NULL) {
+        if (J_AC == NULL) {
 	  rho = density(NULL, time);
 	} else {
 	  d_rho = &d_rho_struct;

@@ -352,7 +352,7 @@ int foam_pbe_growth_rate(double growth_rate[MAX_CONC], double d_growth_rate_dc[M
 	}
 	double R11_max = 0;
 	double d_R11_max_dT = 0;
-	if (xBL != 0) {
+        if (xBL > 0) {
 	  R11_max = (xBL/(1-xBL)) * (M_BA / M_NCO);
 	  d_R11_max_dT = (M_BA / M_NCO)*(d_xBL_dT*(1-xBL) - xBL*(-d_xBL_dT))/((1-xBL)*(1-xBL));
 	}
@@ -954,7 +954,6 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR)
       }
       return 0;
     }
-    break;
   case FOAM_PMDI_10:
     {
       int wCO2Liq;
@@ -1035,11 +1034,9 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR)
       }
       return 0;
     }
-    break;
   default:
     EH(-1, "Unknown moment source model");
     return -1;
-    break;
   }
   return -1;
 }
@@ -1752,7 +1749,7 @@ double PBEVolumeSource_rhoeqn(double time,
 
   source = 0;
 
-  if (fv->rho != 0) {
+  if (fv->rho > 0) {
     for (a = 0; a < wim; a++) {
       source += vconv[a] * fv->grad_rho[a];
     }
@@ -1924,6 +1921,7 @@ assemble_moments(double time,	/* present time value */
     }
 
   supg = 1.0;
+  supg_tau = 0.0;
 
   if (supg!=0.)
     {

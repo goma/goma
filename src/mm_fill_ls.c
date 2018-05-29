@@ -118,6 +118,17 @@ PROTO(( dbl *,
         Dpi *,
         dbl  ));
 
+static int
+Hrenorm_simplemass( Exo_DB *exo,
+                    Comm_Ex *cx,
+                    Dpi *dpi,
+                    double x[],
+                    struct LS_Surf_List *list,
+                    int num_total_nodes,
+                    int num_ls_unkns,
+                    int num_total_unkns,
+                    double time );
+
          
 static int Hrenorm_constrain
 PROTO(( Exo_DB *,
@@ -986,7 +997,7 @@ huygens_renormalization ( double *x,
 	  }
 	  else if ( ls->Renorm_Method == HUYGENS_C )
 	  {
-		  Hrenorm_constrain( exo, cx, dpi, x, list, num_total_nodes, 
+                  Hrenorm_simplemass(exo, cx, dpi, x, list, num_total_nodes,
 								num_ls_unkns, num_total_unkns, time );
 	  }
 	  else
@@ -3446,6 +3457,163 @@ significant_current_element_crossing ()
 */
 
 static int
+Hrenorm_simplemass( Exo_DB *exo,
+                    Comm_Ex *cx,
+                    Dpi *dpi,
+                    double x[],
+                    struct LS_Surf_List *list,
+                    int num_total_nodes,
+                    int num_ls_unkns,
+                    int num_total_unkns,
+                    double time )
+{
+  int I,ie,k, max_its, i;
+  double lamda, R_lamda, norm = 1.0;
+  double *dC;
+  double *F, *F_, *R, *b;
+  int *ie_map;
+  double bTb, bTR, RTR, M;
+  double d_lamda;
+  int global_ls_unkns = num_ls_unkns;
+  static double M0;
+  static int M0_set = 0;
+#ifdef PARALLEL
+  int *ext_dof = NULL;
+  double local_bTb = 0.;
+  double local_bTR = 0.;
+  double local_RTR = 0.;
+
+  double global_bTb = 0.;
+  double global_bTR = 0.;
+  double global_RTR = 0.;
+
+  double interface_size = 0;
+  double c = 0;
+  int eb, blk_id;
+  double Mold;
+
+
+  MPI_Allreduce( &num_ls_unkns, &global_ls_unkns, 1, MPI_INT, MPI_SUM,  MPI_COMM_WORLD);
+
+#endif
+
+  dC = F = F_ = R = b = NULL;
+
+  dalloc( num_total_unkns, dC );
+
+  dalloc ( num_ls_unkns, F );
+  dalloc ( num_ls_unkns, F_ );
+  dalloc ( num_ls_unkns, R );
+  dalloc ( num_ls_unkns, b );
+
+
+
+  ie_map = (int *) smalloc( num_ls_unkns*sizeof(int) );
+
+  if (!M0_set) {
+    M0 = find_LS_mass ( exo,
+                        dpi,
+                        NULL,
+                        dC,
+                        x,
+                        num_total_unkns);
+    M0_set = 1;
+  }
+
+  surf_based_initialization( x, NULL, NULL, exo, num_total_nodes, list, time, 0., 0. );
+#ifdef PARALLEL
+  exchange_dof ( cx, dpi, x, pg->imtrx );
+#endif
+
+  max_its = 10;
+  Mold = M0;
+  M = find_LS_mass ( exo,
+                     dpi,
+                     NULL,
+                     dC,
+                     x,
+                     num_total_unkns);
+  DPRINTF(stderr,"\n\t\t Mass old %g, Mass new %g: \t", M0, M);
+
+  for (i = 0; i < max_its; i++) {
+    if (fabs(M - Mold) < 1e-7) {
+      break;
+    }
+
+    for( eb=0; eb< dpi->num_elem_blocks_global; eb++)
+      {
+        int mn;
+        blk_id = dpi->eb_id_global[eb];
+        mn = map_mat_index(blk_id);
+
+        interface_size += evaluate_volume_integral ( exo,
+                                                     dpi,
+                                                     I_LS_ARC_LENGTH,
+                                                     NULL,
+                                                     blk_id,
+                                                     0,
+                                                     NULL,
+                                                     NULL,
+                                                     1,
+                                                     NULL,
+                                                     x,
+                                                     x,
+                                                     0.0,
+                                                     0.0,
+                                                     0 );
+      }
+
+
+
+    c = (M - Mold) / interface_size;
+    for( I =0,k=0 ; I < num_total_nodes; I++)
+      {
+        if ( (ie = Index_Solution( I, ls->var, 0,  0, -2, pg->imtrx)) != -1 )
+          {
+            x[ie] += c;
+          }
+      }
+#ifdef PARALLEL
+  exchange_dof ( cx, dpi, x, pg->imtrx );
+#endif
+
+    Mold = M0;
+    M = find_LS_mass ( exo,
+                       dpi,
+                       NULL,
+                       dC,
+                       x,
+                       num_total_unkns);
+
+    DPRINTF(stderr, "\n\t\t iter %d, Additive value: %f, new mass %g \n\t\t", i, c, M);
+
+
+
+  }
+
+
+
+#ifdef PARALLEL
+  if( Num_Proc > 1 ) ext_dof = (int *) smalloc( num_ls_unkns*sizeof(int) );
+#endif
+
+
+#ifdef PARALLEL
+  exchange_dof ( cx, dpi, x, pg->imtrx );
+#endif
+
+
+
+  safe_free ( dC );
+  safe_free ( F  );
+  safe_free ( F_ );
+  safe_free ( R  );
+  safe_free ( b  );
+
+  return (TRUE);
+}
+
+static int
 Hrenorm_constrain( Exo_DB *exo,
 		   Comm_Ex *cx,
 		   Dpi *dpi,
@@ -3523,6 +3691,14 @@ Hrenorm_constrain( Exo_DB *exo,
       EH(-1,"Error in Hrenorm_constrain. Level set unknowns unaccounted for.");
     }
 
+  M0 = find_LS_mass ( exo,
+                      dpi,
+                      NULL,
+                      dC,
+                      x,
+                      num_total_unkns);
+
+  if( ls->Mass_Value != 0.0) M0 = ls->Mass_Value;
 
   surf_based_initialization( x, NULL, NULL, exo, num_total_nodes, list, time, 0., 0. );
 
@@ -3532,14 +3708,6 @@ Hrenorm_constrain( Exo_DB *exo,
       x[ ie_map[k] ] = F[k];
     }
 
-  M0 = find_LS_mass ( exo,
-		      dpi,
-		      NULL,
-		      dC,
-		      x,
-		      num_total_unkns);
-
-  if( ls->Mass_Value != 0.0) M0 = ls->Mass_Value;
 
   R_lamda = lamda = 0.0;
 

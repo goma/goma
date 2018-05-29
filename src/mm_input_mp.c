@@ -8463,16 +8463,16 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
       species_no = pd_glob[mn]->Num_Species;
       model_read = look_for_mat_prop(imp, "Second Level Set Species Source",
-				     &(i0),
-				     v0, NO_USER, NULL, model_name, SCALAR_INPUT,
+                                     mat_ptr->mp2nd->SpeciesSourceModel,
+                                     mat_ptr->mp2nd->speciessource, NO_USER, NULL, model_name, SCALAR_INPUT,
 				     &species_no,es);
 		
       if( model_read != -1 )
 	{
 	  if( ls == NULL ) EH(-1, "Second Level Set Species Source requires activation of Level Set Tracking.\n");
 			
-	  mat_ptr->mp2nd->SpeciesSourceModel[species_no] = i0;
-	  mat_ptr->mp2nd->speciessource[species_no] = v0[species_no];
+          //mat_ptr->mp2nd->SpeciesSourceModel[species_no] = i0;
+          //mat_ptr->mp2nd->speciessource[species_no] = v0[species_no];
 
 	  stringup(model_name);
 			
@@ -8518,8 +8518,8 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
       species_no = pd_glob[mn]->Num_Species;
       model_read = look_for_mat_prop(imp, "Level Set Species Width",
-				     &(i0),
-				     v0, NO_USER, NULL, model_name, SCALAR_INPUT,
+                                     mat_ptr->mp2nd->use_species_source_width,
+                                     mat_ptr->mp2nd->species_source_width, NO_USER, NULL, model_name, SCALAR_INPUT,
 				     &species_no,es);
 
       if( model_read != -1 )
@@ -8527,7 +8527,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  if( ls == NULL ) EH(-1, "Level Set Species Width requires activation of Level Set Tracking.\n");
 
 	  mat_ptr->mp2nd->use_species_source_width[species_no] = 1;
-	  mat_ptr->mp2nd->species_source_width[species_no] = v0[species_no];
+          //mat_ptr->mp2nd->species_source_width[species_no] = v0[species_no];
 
 	  stringup(model_name);
 

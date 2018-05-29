@@ -11,8 +11,8 @@
 \************************************************************************/
 
 
-#ifndef _DG_UTILS_H
-#define _DG_UTILS_H
+#ifndef DG_UTILS_H
+#define DG_UTILS_H
 
 #ifdef EXTERN
 #undef EXTERN
