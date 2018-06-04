@@ -62,7 +62,7 @@ static char rcsid[] =
 #include "mm_post_proc.h"
 #undef MM_POST_PROC_DEFINE
 #include "mm_fill_ptrs.h"
-
+#include "mm_fill_population.h"
 
 #include "dpi.h"
 #include "exodusII.h"
@@ -266,6 +266,7 @@ int UNTRACKED_SPEC = -1;
 int LOG_CONF_MAP = -1;
 int HEAVISIDE = -1;
 int RHO_DOT = -1;
+int MOMENT_SOURCES = -1;
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
 double *u_post_proc = 0;       	/* user-provided values used in calculating 
@@ -1011,6 +1012,24 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       }
     }
   }
+
+
+  if (MOMENT_SOURCES != -1 && pd->v[pg->imtrx][MOMENT0])
+    {
+      double msource[MAX_MOMENTS];
+      MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource;
+      d_msource = calloc(sizeof(MOMENT_SOURCE_DEPENDENCE_STRUCT), 1);
+      moment_source(msource, d_msource);
+
+      for (int mom = 0; mom < MAX_MOMENTS; mom++)
+        {
+          if (pd->gv[MOMENT0 + mom])
+            {
+              local_post[MOMENT_SOURCES + mom] = msource[mom];
+              local_lumped[MOMENT_SOURCES + mom] = 1.;
+            }
+        }
+    }
 
   if (FIRST_INVAR_STRAIN != -1 && pd->e[pg->imtrx][R_MESH1]) {
     TrE = 0.;
@@ -6407,6 +6426,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Error ZZ pressure", &ERROR_ZZ_P);
   iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &LOG_CONF_MAP);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
+  iread = look_for_post_proc(ifp, "Moment Sources", &MOMENT_SOURCES);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -8427,6 +8447,24 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 	    }
 	}
      }
+
+  if (MOMENT_SOURCES != -1 && Num_Var_In_Type[pg->imtrx][MOMENT0])
+    {
+      MOMENT_SOURCES = index_post;
+      for (int mom = 0; mom < MAX_MOMENTS; mom++)
+        {
+          if (pd->gv[MOMENT0 + mom])
+            {
+              sprintf(species_name, "MOMSOURCE%d", mom);
+              sprintf(species_desc, "Moment Source %d",
+                      mom);
+              set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]",
+                          species_desc, FALSE);
+              index++;
+              index_post++;
+            }
+        }
+    }
 
    if (FIRST_INVAR_STRAIN != -1 && Num_Var_In_Type[pg->imtrx][R_MESH1])
      {

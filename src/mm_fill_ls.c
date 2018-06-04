@@ -997,8 +997,8 @@ huygens_renormalization ( double *x,
 	  }
 	  else if ( ls->Renorm_Method == HUYGENS_C )
 	  {
-                  Hrenorm_simplemass(exo, cx, dpi, x, list, num_total_nodes,
-								num_ls_unkns, num_total_unkns, time );
+		  Hrenorm_constrain(exo, cx, dpi, x, list, num_total_nodes,
+							num_ls_unkns, num_total_unkns, time );
 	  }
 	  else
 	  {

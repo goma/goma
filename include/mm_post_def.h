@@ -586,7 +586,7 @@ extern int UNTRACKED_SPEC;		/*Untracked Species Concentration */
 extern int LOG_CONF_MAP;
 extern int HEAVISIDE;
 extern int RHO_DOT;
-
+extern int MOMENT_SOURCES;
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *

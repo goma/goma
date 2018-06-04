@@ -1588,7 +1588,7 @@ foam_pmdi10_co2_gas_species_source(int species_no,   /* Current species number *
     mp->d_species_source[MAX_VARIABLE_TYPES + wH2O] = 0;
     mp->d_species_source[TEMPERATURE] = 0;
     free(MGR);
-    return (source);
+    return 0;
   }
 
   source = MGR->G[wCO2Liq][1] * ref_press / (Rgas_const * T);

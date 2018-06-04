@@ -2111,32 +2111,7 @@ EH(-1,"version not compiled with frontal solver");
 
 
 
-	/* if (pd->v[pg->imtrx][MOMENT0] || */
-	/*     pd->v[pg->imtrx][MOMENT1] || */
-	/*     pd->v[pg->imtrx][MOMENT2] || */
-	/*     pd->v[pg->imtrx][MOMENT3]) */
-	/*   { */
-	/*     /\* Floor values to DBL_SMALL *\/ */
-	/*     for (int var = MOMENT0; var <= MOMENT3; var++) { */
-	/*       /\* int values_floored = 0; *\/ */
-	/*       /\* double mx = -1e300, mn=1e300; *\/ */
 
-	/*       for (i = 0; i < num_total_nodes; i++) */
-	/* 	{ */
-	/* 	  if (pd->v[pg->imtrx][var]) */
-	/* 	    { */
-	/* 	      j = Index_Solution(i, var, 0, 0 , -1, pg->imtrx); */
- 
-	/* 	      if (x[j] < DBL_SMALL) */
-	/* 		{ */
-	/* 		  /\* if (x[j] > mx) mx = x[j]; *\/ */
-	/* 		  /\* if (x[j] < mn) mn = x[j]; *\/ */
-	/* 		  /\* values_floored++; *\/ */
-	/* 		  x[j] = DBL_SMALL; */
-
-	/* 		} */
-	/* 	    } */
-	/* 	} */
 
 	/*       /\* if (values_floored > 0) { *\/ */
 	/*       /\* 	printf("floored %d mx %g mn %g mom %d\n", values_floored, mx ,mn, MOMENT0 - var); *\/ */

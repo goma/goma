@@ -312,7 +312,7 @@ int setup_dg_neighbor_data(PROBLEM_DESCRIPTION_STRUCT **pd_ptrs,
     }
   }
 
-
+  free(recv_elem_count);
 
   int * global_send_elems = calloc(send_elem_index[dpi->num_neighbors], sizeof(int));
 
@@ -330,6 +330,8 @@ int setup_dg_neighbor_data(PROBLEM_DESCRIPTION_STRUCT **pd_ptrs,
       }
     }
   }
+
+  free(global_send_elems);
 
   // at this point we can assume that interp types and element types are the same globally
   int elem_type = get_type(dpi->eb_elem_type_global[0],

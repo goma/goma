@@ -1515,6 +1515,35 @@ dbl *te_out) /* te_out - return actual end time */
 					x_AC[pg->imtrx], x_AC_dot[pg->imtrx], time1, NULL,
                                         NULL, NULL, NULL, dg_neighbor_data);
 
+          if (pd_glob[0]->v[pg->imtrx][MOMENT0] ||
+              pd_glob[0]->v[pg->imtrx][MOMENT1] ||
+              pd_glob[0]->v[pg->imtrx][MOMENT2] ||
+              pd_glob[0]->v[pg->imtrx][MOMENT3])
+          {
+            /*     Floor values to 0 */
+            int floored_values = 0;
+            for (int var = MOMENT0; var <= MOMENT3; var++) {
+              for (i = 0; i < num_total_nodes; i++)
+              {
+                if (pd_glob[0]->v[pg->imtrx][var])
+                {
+                  int j = Index_Solution(i, var, 0, 0 , -1, pg->imtrx);
+
+                  if (j != -1 && x[pg->imtrx][j] < 0)
+                  {
+                    x[pg->imtrx][j] = 0.0;
+                    floored_values++;
+                  }
+                }
+              }
+            }
+
+            int global_floored = 0;
+            MPI_Allreduce(&floored_values, &global_floored, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+
+            P0PRINTF("Floored %d moment values\n", global_floored);
+          }
+
 	  /*
 	    err = solve_linear_segregated(ams[pg->imtrx], x[pg->imtrx], delta_t,
 	    theta, x_old[pg->imtrx], x_older[pg->imtrx], xdot[pg->imtrx],

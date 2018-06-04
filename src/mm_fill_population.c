@@ -114,6 +114,14 @@ void wheeler_algorithm(int N, double *moments, double *weights, double *nodes)
     P[1][i] = moments[i];
   }
 
+  if (moments[0] < PBE_FP_SMALL) {
+    for (int i = 0; i < N; i++) {
+      weights[i] = 0;
+      nodes[i] = 0;
+    }
+    return;
+  }
+
   // use max 0, mom0 to normalize to avoid issues with level set two phase
   a[0] = moments[1]/fmax(moments[0], PBE_FP_SMALL);
   b[0] = 0;
@@ -912,7 +920,6 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR)
 	}
       }
 
-
       err = get_foam_pbe_indices(NULL, &species_OH, &species_BA_l,
 				 NULL, &species_CO2_l, NULL);
       if (err) return err;
@@ -992,8 +999,24 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR)
 	return -1;
       }
 
+      double gamma[DIM][DIM];
+      for ( int a=0; a<VIM; a++)
+        {
+          for ( int b=0; b<VIM; b++)
+            {
+              gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+            }
+        }
+
+
+      double mu = viscosity(gn, gamma, NULL);
+
+      double eta0 = mp->FlowingLiquid_viscosity;
+
+
       // Coalescence rate
-      double Beta0 = mp->u_moment_source[1];
+      double Beta0 = (eta0 / mu) * mp->u_moment_source[1];
+
 
       foam_pmdi_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
 
@@ -1056,7 +1079,7 @@ moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource)
       double H = 1;
 
       if (ls != NULL) {
-	load_lsi(ls->Length_Scale);
+        load_lsi(ls->Length_Scale);
 	H = 1-lsi->H;
       }
 
@@ -1135,8 +1158,8 @@ moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource)
       double H = 1;
 
       if (ls != NULL) {
-	load_lsi(ls->Length_Scale);
-	H = 1-lsi->H;
+        load_lsi(ls->Length_Scale);
+        H = 1-lsi->H;
       }
       int err = 0;
       MGR = calloc(sizeof(struct moment_growth_rate), 1);
@@ -1887,8 +1910,14 @@ assemble_moments(double time,	/* present time value */
   /*
    * Bail out fast if there's nothing to do...
    */
-
-  if ( ! pd->e[pg->imtrx][eqn] )
+  int found_mom_eqn = 0;
+  for (int mom = 0; mom < MAX_MOMENTS; mom++) {
+    if (pd->e[pg->imtrx][eqn + mom]) {
+      found_mom_eqn = 1;
+      break;
+    }
+  }
+  if ( ! found_mom_eqn )
     {
       return(status);
     }
