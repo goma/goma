@@ -1354,6 +1354,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 
   int eqn, var;
   int peqn, pvar;
+  int evss_gradv=0;
 
   int i, j, status, mode;
   dbl v[DIM];			        /* Velocity field. */
@@ -1362,6 +1363,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   dbl dh3dmesh_pj;	        	/* Sensitivity to (p,j) mesh dof. */
 
   dbl grad_v[DIM][DIM];
+  dbl grad_v_t[DIM][DIM];
   dbl gamma[DIM][DIM];                  /* Shear-rate tensor based on velocity */
   dbl det_J;                            /* determinant of element Jacobian */
 
@@ -1463,6 +1465,11 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   dbl h_elem=0, h_elem_inv=0, h_elem_deriv=0;
   dbl supg=0;
 
+  if(vn->evssModel == EVSS_GRADV)
+    {
+      evss_gradv = 1;
+    }
+  
   status = 0;
 
   eqn   = R_STRESS11;			
@@ -1536,6 +1543,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       for ( b=0; b<VIM; b++)
 	{
 	  grad_v[a][b] = fv->grad_v[a][b];
+	  grad_v_t[a][b] = fv->grad_v[b][a];
 	}
     }
 
@@ -1683,14 +1691,30 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 
       if( ucwt != 0. )
 	{
-	  (void) tensor_dot(s, g, s_dot_g, VIM);
-	  (void) tensor_dot(gt, s, gt_dot_s, VIM);
+	  if(evss_gradv)
+	    {
+	      (void) tensor_dot(s, grad_v, s_dot_g, VIM);
+	      (void) tensor_dot(grad_v_t, s, gt_dot_s, VIM);
+	    }
+	  else
+	    {
+	      (void) tensor_dot(s, g, s_dot_g, VIM);
+	      (void) tensor_dot(gt, s, gt_dot_s, VIM);
+	    }
 	}
 
       if( lcwt != 0.) 
 	{
-	  (void) tensor_dot(s, gt, s_dot_gt, VIM);
-	  (void) tensor_dot(g, s, g_dot_s, VIM);
+	  if(evss_gradv)
+	    {
+	      (void) tensor_dot(s, grad_v_t, s_dot_gt, VIM);
+	      (void) tensor_dot(grad_v, s, g_dot_s, VIM);
+	    }
+	  else
+	    {
+	      (void) tensor_dot(s, gt, s_dot_gt, VIM);
+	      (void) tensor_dot(g, s, g_dot_s, VIM);
+	    }
 	}
       /*
        * Residuals_________________________________________________________________
@@ -1771,7 +1795,14 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  source = 0.;
 			  if ( pd->e[eqn] & T_SOURCE )
 			    {
-			      source +=  Z* s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
+			      if(evss_gradv)
+				{
+				  source += Z* s[a][b] - at * mup * (grad_v[a][b] + grad_v_t[a][b]);
+				}
+			      else
+				{
+				  source +=  Z* s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
+				}
 
 			      
 			      if(alpha != 0.)
@@ -1821,7 +1852,14 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 		      if( ucwt != 0.) R_advection -= ucwt*(gt_dot_s[a][b] + s_dot_g[a][b]);
 		      if( lcwt != 0.) R_advection += lcwt*(s_dot_gt[a][b] + g_dot_s[a][b]);
 
-		      R_source =   Z*s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
+		      if(evss_gradv)
+			{
+			  R_source =   Z*s[a][b] - at * mup * ( grad_v[a][b] +  grad_v_t[a][b]);
+			}
+		      else
+			{
+			  R_source =   Z*s[a][b] - at * mup * ( g[a][b] +  gt[a][b]);
+			}
 			      
 		      if(alpha != 0.) R_source  +=  alpha * lambda*( s_dot_s[a][b]/mup);
 		      
@@ -1888,8 +1926,16 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				  source1    = 0.;
 				  if ( pd->e[eqn] & T_SOURCE )
 				    {
-				      source = -(g[a][b] +  gt[a][b])
-					*(at*d_mup->T[j]+mup*d_at_dT[j]);
+				      if(evss_gradv)
+					{
+					  source = -(grad_v[a][b] +  grad_v_t[a][b])
+					    *(at*d_mup->T[j]+mup*d_at_dT[j]);
+					}
+				      else
+					{
+					  source = -(g[a][b] +  gt[a][b])
+					    *(at*d_mup->T[j]+mup*d_at_dT[j]);
+					}
 				      if(alpha != 0.)
 					{
 					  source1 -= s_dot_s[a][b]/(mup*mup)*d_mup->T[j];
@@ -1989,7 +2035,14 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 				      if ( pd->e[eqn] & T_SOURCE )
 					{
-					  source_c =  -at * d_mup_dv_pj * ( g[a][b] +  gt[a][b]);
+					  if(evss_gradv)
+					    {
+					      source_c =  -at * d_mup_dv_pj * ( grad_v[a][b] +  grad_v_t[a][b]);
+					    }
+					  else
+					    {
+					      source_c =  -at * d_mup_dv_pj * ( g[a][b] +  gt[a][b]);
+					    }
 					  source_c *= wt_func;
 					  
 					  source_a = 0.;
@@ -2041,7 +2094,14 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 			  
 				      if ( pd->e[eqn] & T_SOURCE )
 					{
-					  source_a =   -at * d_mup->C[w][j] * ( g[a][b] +  gt[a][b]);
+					  if(evss_gradv)
+					    {
+					      source_a =   -at * d_mup->C[w][j] * ( grad_v[a][b] +  grad_v_t[a][b]);
+					    }
+					  else
+					    {
+					      source_a =   -at * d_mup->C[w][j] * ( g[a][b] +  gt[a][b]);
+					    }
 					  source_b = 0.;
 					  if(alpha != 0.)
 					    {
@@ -2079,7 +2139,14 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				  source    = 0.;
 				  if ( pd->e[eqn] & T_SOURCE )
 				    {
-				      source_a +=  -at * d_mup->P[j] * ( g[a][b] +  gt[a][b]);
+				      if(evss_gradv)
+					{
+					  source_a +=  -at * d_mup->P[j] * ( grad_v[a][b] +  grad_v_t[a][b]);
+					}
+				      else
+					{
+					  source_a +=  -at * d_mup->P[j] * ( g[a][b] +  gt[a][b]);
+					}
 				      source_b = 0.;
 				      if(alpha != 0.)
 					{
@@ -2235,7 +2302,14 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      if ( pd->e[eqn] & T_SOURCE )
 					{
 					  source_a =  R_source;
-					  source_b = -at * (g[a][b] +  gt[a][b]);
+					  if(evss_gradv)
+					    {
+					      source_b = -at * (grad_v[a][b] +  grad_v_t[a][b]);
+					    }
+					  else
+					    {
+					      source_b = -at * (g[a][b] +  gt[a][b]);
+					    }
 					  
 					  if(alpha != 0.)
 					    {
@@ -2370,9 +2444,16 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 							  advection +=  (v[r]-x_dot[r])*  bf[var]->grad_phi[j][r];
 							}
 						    }
-						  
-						  advection -=  phi_j*ucwt * (gt[a][p] * (double)delta(b,q) + g[q][b] * (double)delta(a,p));
-						  advection +=  phi_j*lcwt * (gt[q][b] * (double)delta(p,a) + g[a][p] * (double)delta(q,b));
+						  if( evss_gradv)
+						    {
+						      advection -=  phi_j*ucwt * (grad_v_t[a][p] * (double)delta(b,q) + grad_v[q][b] * (double)delta(a,p));
+						      advection +=  phi_j*lcwt * (grad_v_t[q][b] * (double)delta(p,a) + grad_v[a][p] * (double)delta(q,b));
+						    }
+						  else
+						    {						  
+						      advection -=  phi_j*ucwt * (gt[a][p] * (double)delta(b,q) + g[q][b] * (double)delta(a,p));
+						      advection +=  phi_j*lcwt * (gt[q][b] * (double)delta(p,a) + g[a][p] * (double)delta(q,b));
+						    }
 						  
 						  advection *=  h3 * det_J ;
 						  
@@ -2448,6 +2529,7 @@ assemble_stress_log_conf(dbl tt,
   int eqn, siz;
 
   int i, j, status, mode;
+  int logc_gradv = 0;
   dbl v[DIM];			       
   dbl x_dot[DIM];	      
   dbl h3;		        
@@ -2512,6 +2594,11 @@ assemble_stress_log_conf(dbl tt,
   dbl supg=0;
 
   status = 0;
+  if(vn->evssModel == LOG_CONF_GRADV)
+    {
+      logc_gradv = 1;
+    }
+  
   eqn   = R_STRESS11;			
   //Check if we are actually needed
   if(!pd->e[eqn])
@@ -2687,7 +2774,14 @@ assemble_stress_log_conf(dbl tt,
               Rt_dot_gradv[i][j] = 0.;  
               for(w=0; w<VIM; w++) 
                 {
-                  Rt_dot_gradv[i][j] += R1_T[i][w] * gt[w][j];
+		  if(logc_gradv)
+		    {
+		      Rt_dot_gradv[i][j] += R1_T[i][w] * grad_v[j][w];
+		    }
+		  else
+		    {
+		      Rt_dot_gradv[i][j] += R1_T[i][w] * gt[w][j];
+		    }
                 }
             }
         }     
