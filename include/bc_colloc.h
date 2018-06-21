@@ -78,6 +78,13 @@ PROTO((const int ,		/* ielem_dim */
        const double *,		/* p - function parameters from data card  */
        const int ));		/* number of parameters from bc card  */
 
+EXTERN void f_double_rad
+PROTO((const int ,		/* ielem_dim */
+       double *,		/* func */
+       double [],		/* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
+       const double *,		/* p - function parameters from data card  */
+       const int ));		/* number of parameters from bc card  */
+
 EXTERN void f_roll_fluid
 PROTO((const int ,		/* ielem_dim */
        double *,		/* func */

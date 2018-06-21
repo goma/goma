@@ -1713,6 +1713,7 @@ rd_bc_specs(FILE *ifp,
         case V_PARABOLA_BC:
         case W_PARABOLA_BC:
         case FILLET_BC:
+        case DOUBLE_RAD_BC:
         case ROLL_FLUID_BC:
 	case SPLINEX_BC:  
 	case SPLINEY_BC: 

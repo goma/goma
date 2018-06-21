@@ -6813,6 +6813,30 @@ rd_eigen_specs(FILE *ifp,
         }
       break;
 
+    case HUN_ZEROTH:
+    case HUN_FIRST:
+fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
+      if (strcmp(input, "cayley") == 0)
+        {
+          eigen->Eigen_Algorithm = LSA_CAYLEY;
+        }
+      else if (strcmp(input, "si") == 0)
+        {
+          eigen->Eigen_Algorithm = LSA_SI;
+        }
+      else eigen->Eigen_Algorithm = LSA_DEFAULT;
+
+/* Initialize these to avoid UMR's: */
+      if (0 &&  loca_in->Cont_Alg == LOCA_LSA_ONLY)
+        {
+          cont->BegParameterValue = 0.0;
+          cont->EndParameterValue = 0.0;
+          cont->Delta_s0 = 0.0;
+          cont->MaxPathSteps = 0;
+          cont->print_freq = 1;
+          cont->upType = LOCA_LSA_ONLY;
+        }
+      break;
 /* For non-LOCA continuation, this card does not apply */
     default:
       fprintf(stdout, "LSA not available for continuation without LOCA!");

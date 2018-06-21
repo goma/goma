@@ -9101,6 +9101,7 @@ void fapply_moving_CA_sinh(
  const double wall_velocity,
  const double theta_max_degrees,
  const double dewet_input,
+ const double dcl_shearrate,
  const int bc_type,	/*  bc identifier	*/
  double dwall_velo_dx[MAX_PDIM][MDE],
  const int local_node)
@@ -9139,7 +9140,7 @@ void fapply_moving_CA_sinh(
   int iter, iter_max=20;
   double eps_tol=1.0e-12;
 #endif
-  double liq_visc = 0.0, gamma[DIM][DIM];
+  double liq_visc = 0.0, gamma[VIM][VIM];
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
 
@@ -9170,8 +9171,7 @@ void fapply_moving_CA_sinh(
   const double shik_max_factor = 1.01;
 /*  const double wall_sign = (TimeIntegration == STEADY) ? 1 : -1;  */
 /* disabling this sign change for now - doesn't seem necessary*/
-  const double wall_sign = (TimeIntegration == STEADY) ? 1 : 1;  
-
+  const double wall_sign = (TimeIntegration == STEADY) ? 1 : 1;   
 
   /*
    * What's the cosine of the current instantaneous contact angle, the
@@ -9216,14 +9216,23 @@ void fapply_moving_CA_sinh(
 
   if( bc_type == VELO_THETA_COX_BC || bc_type == VELO_THETA_HOFFMAN_BC )
 	{
+         if( dcl_shearrate > 0)
+           {
+             memset( gamma, 0, sizeof(double)*VIM*VIM);
+	     gamma[0][1] = gamma[1][0] = dcl_shearrate;
+             liq_visc = viscosity(gn, gamma, NULL);
+           }
+         else
+           {
          for ( p=0; p<VIM; p++)
             {
                 for ( q=0; q<VIM; q++)
                     {
-                     gamma[p][q] = fv->grad_v[p][q] + fv->grad_v[q][p];
+                     gamma[p][q] = fv->grad_v[p][q] + fv->grad_v[q][p]; 
                     }
+            }
+            liq_visc = viscosity(gn, gamma, d_mu);
            }
-          liq_visc = viscosity(gn, gamma, d_mu);
 	}
 
   /*
@@ -9422,13 +9431,16 @@ void fapply_moving_CA_sinh(
    *          v - t.dxdt = 0
    */
 
+#ifdef ALE_DCA_INFO_PLEASE
+if ( af->Assemble_Jacobian ) 
+fprintf(stderr,"v_wetting: %g v_mesh: %g dvmdt: %g DCA: %g\n",v,v_mesh, v_mesh_dt,acos(costheta)*180/M_PIE);
+#endif
 #if 0
-fprintf(stderr,"normals %g %g %g %g\n",fsnormal[0],fsnormal[1],ssnormal[0],ssnormal[1]);
-fprintf(stderr,"\nwall_v x_dot  %g %g %g \n",wall_sign*wall_velocity,x_dot[0],x_dot[1]);
-fprintf(stderr,"cos sin CA#  %g %g %g \n",costheta, sintheta, ca_no);
-fprintf(stderr,"v_wetting v_mesh DCA  %g %g %g %g\n",v,v_mesh, v_mesh_dt,acos(costheta)*180/M_PIE);
-fprintf(stderr,"dewet sign  %g %g %g\n",dewet, sign, wall_sign);
-fprintf(stderr,"velocity  %g %g %g %d\n",v,v_mesh,v_mesh_dt,local_node);
+fprintf(stderr,"fs_normal: %g %g ss_normal: %g %g\n",fsnormal[0],fsnormal[1],ssnormal[0],ssnormal[1]);
+fprintf(stderr,"\nwall_v: %g  x_dot: %g %g \n",wall_sign*wall_velocity,x_dot[0],x_dot[1]);
+fprintf(stderr,"cos: %g  sin: %g  CA#:  %g \n",costheta, sintheta, ca_no);
+fprintf(stderr,"dewet %g sign  %g wall_sign %g\n",dewet, sign, wall_sign);
+fprintf(stderr,"velocity  %g v_mesh %g dvmdt: %g node: %d\n",v,v_mesh,v_mesh_dt,local_node);
 #endif
 
   if ( pd->Num_Dim != 1) 

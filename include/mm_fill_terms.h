@@ -526,6 +526,11 @@ PROTO((HEAT_SOURCE_DEPENDENCE_STRUCT *,
        dbl *,			/* param - General multipliers   */
        int));			/* number of parameters   */
 
+EXTERN double em_diss_heat_source 
+PROTO((HEAT_SOURCE_DEPENDENCE_STRUCT *,
+       dbl *,			/* param - General multipliers   */
+       int));			/* number of parameters   */
+
 EXTERN int assemble_max_strain
 PROTO(( void ));
 
