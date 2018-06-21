@@ -1143,8 +1143,9 @@ dbl *te_out) /* te_out - return actual end time */
                 {
 		  switch (ls->Renorm_Method) {
 
-		  case HUYGENS :
-		  case HUYGENS_C :
+		  case HUYGENS:
+		  case HUYGENS_C:
+		  case HUYGENS_MASS_ITER:
 		    Renorm_Now =  ( ls->Force_Initial_Renorm || (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0) );
 
 		    did_renorm = huygens_renormalization(x[pg->imtrx], num_total_nodes, exo, cx[pg->imtrx], dpi,  
@@ -1955,7 +1956,7 @@ dbl *te_out) /* te_out - return actual end time */
 			
 	      case HUYGENS:
 	      case HUYGENS_C:
-				
+	      case HUYGENS_MASS_ITER:
 		Renorm_Now = ( ls->Renorm_Freq != 0 && 
 			       ls->Renorm_Countdown == 0 ) 
 		  || ls_adc_event == TRUE;

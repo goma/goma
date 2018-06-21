@@ -16566,7 +16566,9 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 		}
 	    }
 	}
-      else if ( mp->DensityModel == DENSITY_FOAM ||
+      else if ( mp->DensityModel == DENSITY_FOAM_PMDI_10 ||
+                mp->DensityModel == DENSITY_FOAM_PBE ||
+                mp->DensityModel == DENSITY_FOAM ||
 		mp->DensityModel == DENSITY_FOAM_TIME ||
 		mp->DensityModel == DENSITY_FOAM_TIME_TEMP)
 	{
@@ -16610,6 +16612,10 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 		}
 	    }
 	}
+      else
+        {
+          EH(-1, "Unknown density model for variable density");
+        }
 
     }
   else if (mp->MomentumSourceModel == SUSPENSION_PM)

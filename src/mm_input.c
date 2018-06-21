@@ -2191,7 +2191,7 @@ rd_levelset_specs(FILE *ifp,
             }
           else if  ( strcmp( input,"Huygens_Constrained_Mass_Negative") == 0 )
             {
-              ls->Renorm_Method = HUYGENS_C;
+              ls->Renorm_Method = HUYGENS_MASS_ITER;
 
               strcat(echo_string, "Huygens_Constrained_Mass_Negative");
 
@@ -2212,7 +2212,7 @@ rd_levelset_specs(FILE *ifp,
             }
           else if  ( strcmp( input,"Huygens_Constrained_Mass_Positive") == 0 )
             {
-              ls->Renorm_Method = HUYGENS_C;
+              ls->Renorm_Method = HUYGENS_MASS_ITER;
 
               strcat(echo_string, "Huygens_Constrained_Mass_Positive");
 

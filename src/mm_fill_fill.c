@@ -339,7 +339,7 @@ assemble_fill(double tt,
 	}
 
   v_dot_DF = 0.0;
-  if ( pd->TimeIntegration != STEADY && pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
+  if ( pd->TimeIntegration != STEADY && pd->gv[MESH_DISPLACEMENT1] )
     {
       x_dot_old = fv_dot_old->x;
       for ( a=0; a < VIM; a++ )

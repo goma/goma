@@ -1960,7 +1960,7 @@ assemble_moments(double time,	/* present time value */
 
 
       for (a = 0; a < VIM; a++) {
-	vnorm += fv->v[a]*fv->v[a];
+        vnorm += fv->v[a]*fv->v[a];
       }
       vnorm = sqrt(vnorm);
 
@@ -1972,8 +1972,8 @@ assemble_moments(double time,	/* present time value */
       double D = pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
 
       if (D == 0) {
-	// if numerical diffusion is off use 1 for Peclet number
-	D = 1;
+        // if numerical diffusion is off use 1 for Peclet number
+        D = 1e-6;
       }
 
       hk /= (double) dim;

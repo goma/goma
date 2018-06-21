@@ -1029,6 +1029,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
               local_lumped[MOMENT_SOURCES + mom] = 1.;
             }
         }
+      free(d_msource);
     }
 
   if (FIRST_INVAR_STRAIN != -1 && pd->e[pg->imtrx][R_MESH1]) {

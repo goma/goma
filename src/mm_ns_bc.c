@@ -3149,13 +3149,13 @@ fvelo_slip_bc(double func[MAX_PDIM],
   vs[1] = vsy;
   vs[2] = vsz;
 
-  if( TimeIntegration == TRANSIENT && pd->e[pg->imtrx][R_MESH1] )
-    {
-      /* Add the mesh motion to the substrate velocity */
-      vs[0] += fv_dot->x[0];
-      vs[1] += fv_dot->x[1];
-      vs[2] += fv_dot->x[2];
-    }
+//  if( TimeIntegration == TRANSIENT && pd->e[pg->imtrx][R_MESH1] )
+//    {
+//      /* Add the mesh motion to the substrate velocity */
+//      vs[0] += fv_dot->x[0];
+//      vs[1] += fv_dot->x[1];
+//      vs[2] += fv_dot->x[2];
+//    }
 
   /* dependence of slip coefficient on pressure and magnitude of slip */
   d_betainv_dvslip_mag = 0.;
@@ -3410,27 +3410,27 @@ fvelo_slip_bc(double func[MAX_PDIM],
 	  }
       }
 
-    if (TimeIntegration == TRANSIENT && pd->e[pg->imtrx][R_MESH1]) {
-      // Time derivative gets taken out for these two types, so we 
-      // must eliminate jac terms in these two cases
-      if (type != VELO_SLIP_ROT_BC  &&  type != VELO_SLIP_ROT_FILL_BC ) {
-	// Dependence on the mesh time derivatives
-	// Loop over the mesh vector
-	mass = (1.+2.*tt) / dt;
-	for (jvar = 0; jvar < ei[pg->imtrx]->ielem_dim; jvar++) {
-	  var = MESH_DISPLACEMENT1 + jvar;
-	  if (pd->v[pg->imtrx][var]) {
-	    // Get a pointer for the basis functions for mesh displacements
-	    phi_j_vector = bf[var]->phi;
-	    // Loop over the mesh unknowns
-	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-	      phi_j = phi_j_vector[j];
-	      d_func[jvar][var][j] += betainv * mass * phi_j;
-	    }
-	  }
-	}
-      }
-    }
+//    if (TimeIntegration == TRANSIENT && pd->e[pg->imtrx][R_MESH1]) {
+//      // Time derivative gets taken out for these two types, so we
+//      // must eliminate jac terms in these two cases
+//      if (type != VELO_SLIP_ROT_BC  &&  type != VELO_SLIP_ROT_FILL_BC ) {
+//	// Dependence on the mesh time derivatives
+//	// Loop over the mesh vector
+//	mass = (1.+2.*tt) / dt;
+//	for (jvar = 0; jvar < ei[pg->imtrx]->ielem_dim; jvar++) {
+//	  var = MESH_DISPLACEMENT1 + jvar;
+//	  if (pd->v[pg->imtrx][var]) {
+//	    // Get a pointer for the basis functions for mesh displacements
+//	    phi_j_vector = bf[var]->phi;
+//	    // Loop over the mesh unknowns
+//	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+//	      phi_j = phi_j_vector[j];
+//	      d_func[jvar][var][j] += betainv * mass * phi_j;
+//	    }
+//	  }
+//	}
+//      }
+//    }
   
     for (jvar=0; jvar<pd->Num_Dim; jvar++)
       {

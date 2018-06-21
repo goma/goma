@@ -388,6 +388,8 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
     }
   /* end Petrov-Galerkin addition */
 
+
+
   /************************************************************************/
   /*                       START OF SPECIES ASSEMBLE                      */
   /************************************************************************/
@@ -428,6 +430,48 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
        */
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
+
+	  double supg_tau = 0.0;
+
+	  if (supg!=0.)
+	    {
+	      int a;
+	      double vnorm = 0;
+
+
+
+	      for (a = 0; a < VIM; a++) {
+		vnorm += fv->v[a]*fv->v[a];
+	      }
+	      vnorm = sqrt(vnorm);
+
+	      double hk = 0;
+	      for (a = 0; a < dim; a++) {
+		hk += sqrt(h[a]);
+	      }
+
+	      double D = mp->diffusivity[w];
+
+	      if (D == 0) {
+		// if numerical diffusion is off use 1e-6 for Peclet number
+		D = 1e-6;
+	      }
+
+	      hk /= (double) dim;
+
+	      double Pek = 0.5 * vnorm * hk / D;
+
+	      double eta = Pek;
+	      if (Pek > 1) {
+		eta = 1;
+	      }
+
+	      if (vnorm > 0) {
+		supg_tau = 0.5 * hk * eta / vnorm;
+	      } else {
+		supg_tau = 0;
+	      }
+	    }
 	  /*
 	   *  Calculate the coef_rho term based upon the value of
 	   *  species_eqn_type.
@@ -478,6 +522,10 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 	   */
 	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 	    ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+
+	    /* only use Petrov Galerkin on advective term - if required */
+
+
 	    if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
 	      /*
 	       *  Here is where we figure out whether the row is to placed in
@@ -488,6 +536,17 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bf[eqn]->phi[i];
+
+		  wt_func = phi_i;
+		  /* add Petrov-Galerkin terms as necessary */
+		  if (supg != 0.0)
+		    {
+		      for(p=0; p<dim; p++)
+			{
+			  wt_func += supg * supg_tau * fv->v[p] * bf[eqn]->grad_phi[i][p];
+			}
+		    }
+
 		  mass = 0.;
 		  if ( pd->TimeIntegration != STEADY )
 		    {
@@ -509,21 +568,12 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			    mass *= (epsilon*small_c);
 			  }
 
-			  mass *= - phi_i * h3 * det_J * wt;
+			  mass *= - wt_func * h3 * det_J * wt;
 			  mass *= pd->etm[pg->imtrx][eqn][LOG2_MASS];
 			}
 		    }
 		  
-		  /* only use Petrov Galerkin on advective term - if required */
-		  wt_func = phi_i;
-		  /* add Petrov-Galerkin terms as necessary */
-		  if (supg != 0.0)
-		    {
-		      for(p=0; p<dim; p++)
-			{
-			  wt_func += supg * h_elem * fv->v[p] * bf[eqn]->grad_phi[i][p];
-			}
-		    }
+
 		  
 		  /*
 		   *   Advection is velocity times gradient of the species unknown
@@ -634,7 +684,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		          source -= x[w]*sumrm/sumxm;
 		         }
 
-		      source *= phi_i * h3 * det_J * wt; 
+		      source *= wt_func * h3 * det_J * wt;
 		      source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 		    }
 
@@ -673,6 +723,49 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
       
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
+	  double supg_tau = 0.0;
+
+	  if (supg!=0.)
+	    {
+	      int a;
+	      double vnorm = 0;
+
+
+
+	      for (a = 0; a < VIM; a++) {
+		vnorm += fv->v[a]*fv->v[a];
+	      }
+	      vnorm = sqrt(vnorm);
+
+	      double hk = 0;
+	      for (a = 0; a < dim; a++) {
+		hk += sqrt(h[a]);
+	      }
+
+	      double D = mp->diffusivity[w];
+
+	      if (D == 0) {
+		// if numerical diffusion is off use 1e-6 for Peclet number
+		D = 1e-6;
+	      }
+
+	      hk /= (double) dim;
+
+	      double Pek = 0.5 * vnorm * hk / D;
+
+	      double eta = Pek;
+	      if (Pek > 1) {
+		eta = 1;
+	      }
+
+	      if (vnorm > 0) {
+		supg_tau = 0.5 * hk * eta / vnorm;
+	      } else {
+		supg_tau = 0;
+	      }
+	    }
+
+
 	  /*
 	   *  Calculate the coef_rho term based upon the value of
 	   *  species_eqn_type.
@@ -715,6 +808,17 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 	  
 	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
 	    ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+
+	    wt_func = bf[eqn]->phi[i];
+	    /* add Petrov-Galerkin terms as necessary */
+	    if(supg!=0.0)
+	      {
+		for(p=0; p<dim; p++)
+		  {
+		    wt_func += supg * supg_tau * fv->v[p] * bf[eqn]->grad_phi[i][p];
+		  }
+	      }
+
 	    if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
 	      /*
 	       *  Here is where we figure out whether the row is to placed in
@@ -725,15 +829,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 	      ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];		  
 	      phi_i = bf[eqn]->phi[i];
 	
-		  wt_func = bf[eqn]->phi[i];
-		  /* add Petrov-Galerkin terms as necessary */
-		  if(supg!=0.0)
-		    {
-		      for(p=0; p<dim; p++)
-			{
-			  wt_func += supg * h_elem * fv->v[p] * bf[eqn]->grad_phi[i][p];
-			}
-		    }
+
 		  /*
 		   * Set up some preliminaries that are needed for the (a,i)
 		   * equation for bunches of (b,j) column variables...
@@ -800,7 +896,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				        mass -= rho*x[w]*sumdxdotm/sumxms;
 				        mass *= epsilon;
 				       }
-				    mass *= - phi_i * h3 * det_J * wt;
+				    mass *= - wt_func * h3 * det_J * wt;
 				    mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 				  }
 				}
@@ -916,7 +1012,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				      source -= sumrm*phi_j*factor/sumxm;
 				     }
 
-				  source *= phi_i;
+				  source *= wt_func;
 				  source *= h3 * det_J * wt;
 				  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				}

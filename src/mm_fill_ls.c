@@ -1000,6 +1000,11 @@ huygens_renormalization ( double *x,
 		  Hrenorm_constrain(exo, cx, dpi, x, list, num_total_nodes,
 							num_ls_unkns, num_total_unkns, time );
 	  }
+	  else if (ls->Renorm_Method == HUYGENS_MASS_ITER)
+	    {
+	      Hrenorm_simplemass(exo, cx, dpi, x, list, num_total_nodes,
+						    num_ls_unkns, num_total_unkns, time );
+	    }
 	  else
 	  {
 		  EH(-1,"You shouldn't actually be here. \n");

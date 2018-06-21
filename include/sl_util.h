@@ -42,6 +42,7 @@
 #define SURFACES                        6
 #define HUYGENS_C                       7
 #define SM_OBJECT                       8
+#define HUYGENS_MASS_ITER               9
 
 #define LS_SURF_POINT                   0
 #define LS_SURF_PLANE                   1

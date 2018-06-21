@@ -1894,6 +1894,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 	  case HUYGENS :
 	  case HUYGENS_C :
+	  case HUYGENS_MASS_ITER:
             Renorm_Now =  ( ls->Force_Initial_Renorm || (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0) );
 
 	    did_renorm = huygens_renormalization(x, num_total_nodes, exo, cx[0], dpi,  
@@ -2800,7 +2801,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 			
 			case HUYGENS:
 			case HUYGENS_C:
-				
+			case HUYGENS_MASS_ITER:
 				Renorm_Now = ( ls->Renorm_Freq != 0 && 
 					ls->Renorm_Countdown == 0 ) 
 					|| ls_adc_event == TRUE;
@@ -2848,7 +2849,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 				
 		  case HUYGENS:
 		  case HUYGENS_C:
-					
+		  case HUYGENS_MASS_ITER:
 		    Renorm_Now = ( ls->Renorm_Freq != 0 && 
 				   ls->Renorm_Countdown == 0 );
 				
