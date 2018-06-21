@@ -2767,7 +2767,7 @@ assemble_momentum(dbl time,       /* current time */
   /*
    * Calculate the momentum stress tensor at the current gauss point
    */
-  if(vn->evssModel==LOG_CONF)
+  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
     {
       fluid_stress_conf(Pi, d_Pi);
     }
@@ -4052,7 +4052,8 @@ assemble_momentum(dbl time,       /* current time */
 	       * J_m_G
 	       */
 		  
-	      if ( pdv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF) )
+	      if ( pdv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF
+					     || vn->evssModel == EVSS_GRADV || vn->evssModel == LOG_CONF_GRADV) )
 		{
 		  for ( b=0; b<VIM; b++)
 		    {
@@ -23791,7 +23792,7 @@ assemble_p_source ( double pressure, const int bcflag )
 	{
 	 if (!af->Assemble_Jacobian) d_Pi = NULL; 
   		/* compute stress tensor and its derivatives */
-           if(vn->evssModel==LOG_CONF)
+           if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
              {
                fluid_stress_conf(Pi, d_Pi);
              }
@@ -25156,7 +25157,7 @@ assemble_uvw_source ( int eqn, double val )
   else
     {
       /* compute stress tensor and its derivatives */
-      if(vn->evssModel==LOG_CONF)
+      if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
         {
           fluid_stress_conf(Pi, d_Pi);
         }
@@ -26193,7 +26194,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
   /*
    * Stress tensor, but don't need dependencies
    */
-  if(vn->evssModel==LOG_CONF)
+  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
     {
       fluid_stress_conf(Pi, NULL);
     }
@@ -27243,7 +27244,7 @@ fluid_stress( double Pi[DIM][DIM],
       particle_stress(tau_p, d_tau_p_dv, d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
     }
 
-  if ( pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F) )
+  if ( pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV) )
     {
       evss_f = 1.;
     }
@@ -28039,13 +28040,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
   dbl R1[DIM][DIM];
   dbl eig_values[DIM];
 
-  // Flag to use a Fortin DEVSS-G stress formulation
-  int evss_f;
-
   int v_s[MAX_MODES][DIM][DIM];
   int v_g[DIM][DIM];
   int mode;                             // Index for modal viscoelastic counter
-  int conf;                             // Flag for Conformation tensor
 
   // Flag for doing dilational viscosity contributions
 
@@ -28116,46 +28113,18 @@ fluid_stress_conf( double Pi[DIM][DIM],
       particle_stress(tau_p, d_tau_p_dv, d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
     }
 
-  // Load up DEVSS-G flag and Gs
-  if(pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel==LOG_CONF))
+  for(a=0; a<VIM; a++)
     {
-      evss_f = 1;
-    }
-  else
-    {
-      evss_f = 0;
-    }
-  if(evss_f)
-    {
-      for(a=0; a<VIM; a++)
-  	{
-  	  for(b=0; b<VIM; b++)
-  	    {
-  	      gamma_cont[a][b] = fv->G[a][b] + fv->G[b][a];
-  	    }
-  	}
-    }
-  else
-    {
-      memset(gamma_cont, 0, sizeof(double)*DIM*DIM);
+      for(b=0; b<VIM; b++)
+	{
+	  gamma_cont[a][b] = fv->G[a][b] + fv->G[b][a];
+	}
     }
 
-  // Turn on conformation tensor flag if desired
-  if (vn->evssModel == LOG_CONF)
-    {
-      conf = LOG_CONF;
-    }
-  else
-    {
-      conf = 0;
-    }
-
-
-  if (conf == LOG_CONF) {
-    for (mode = 0; mode < vn->modes; mode++) {
-      compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
-    }
+  for (mode = 0; mode < vn->modes; mode++) {
+    compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
   }
+
 
   // Load shear rate tensor
   for(a=0; a<VIM; a++)
@@ -28170,35 +28139,25 @@ fluid_stress_conf( double Pi[DIM][DIM],
   mus = viscosity(gn, gamma, d_mus);
 
   // Check if the conformation tensor mapping is valid
-  if(conf)
+  for(mode=0; mode<vn->modes; mode++)
     {
-      for(mode=0; mode<vn->modes; mode++)
-  	{
-  	  // Polymer viscosity
-  	  mup = viscosity(ve[mode]->gn, gamma, d_mup);
-  	  // Polymer time constant
-  	  lambda = 0.0;
-  	  if(ve[mode]->time_constModel == CONSTANT)
-  	    {
-  	      lambda = ve[mode]->time_const;
-  	    }  	  
-	  /* Looks like these models are not working right now
-	   *else if(ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW)
-	   * {
-	   *   lambda = mup/ve[mode]->time_const;
-	   * }
-	   */
-  	  if(lambda==0.0)
-  	    {
-  	      EH( -1, "The conformation tensor needs a non-zero polymer time constant.");
-  	    }
-  	  if(mup==0.0)
-  	    {
-  	      EH( -1, "The conformation tensor needs a non-zero polymer viscosity.");
-  	    }
-  	}
+      // Polymer viscosity
+      mup = viscosity(ve[mode]->gn, gamma, d_mup);
+      // Polymer time constant
+      lambda = 0.0;
+      if(ve[mode]->time_constModel == CONSTANT)
+	{
+	  lambda = ve[mode]->time_const;
+	}  	  
+      if(lambda==0.0)
+	{
+	  EH( -1, "The conformation tensor needs a non-zero polymer time constant.");
+	}
+      if(mup==0.0)
+	{
+	  EH( -1, "The conformation tensor needs a non-zero polymer viscosity.");
+	}
     }
-
 
   // Load up fluid stress terms in Pi
   for(a=0; a<VIM; a++)
@@ -28223,14 +28182,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
 		  Pi[a][b] += mup*(gamma[a][b]-gamma_cont[a][b]);
 
 		  // PolymerStress contribution
-		  if(conf)
-		    {
-		      Pi[a][b] += mup/lambda*(exp_s[mode][a][b]-(double)delta(a,b));
-		    }
-		  else
-		    {
-		      Pi[a][b] += fv->S[mode][a][b];
-		    }
+		  Pi[a][b] += mup/lambda*(exp_s[mode][a][b]-(double)delta(a,b));
 		}
             }
         }
@@ -28260,14 +28212,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 			    {
 			      lambda = ve[mode]->time_const;
 			    }
-			  if(evss_f)
-			    {
-			      d_Pi->T[p][q][j] += d_mup->T[j]*(gamma[p][q]-gamma_cont[p][q]);
-			    }
-			  if(conf)
-			    {
-			      d_Pi->T[p][q][j] += d_mup->T[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-			    }			  
+			  d_Pi->T[p][q][j] += d_mup->T[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->T[p][q][j] += d_mup->T[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			}		      
 		    }
 		}
@@ -28299,14 +28246,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 			      lambda = ve[mode]->time_const;
 			    }
 
-			  if(evss_f)
-			    {
-			      d_Pi->nn[p][q][j] += d_mup->nn[j]*(gamma[p][q]-gamma_cont[p][q]);
-			    }
-			  if(conf)
-			    {
-			      d_Pi->nn[p][q][j] += d_mup->nn[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-			    }			  
+			  d_Pi->nn[p][q][j] += d_mup->nn[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->nn[p][q][j] += d_mup->nn[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			}		      
 		    }
 		}
@@ -28338,14 +28280,10 @@ fluid_stress_conf( double Pi[DIM][DIM],
 			    {
 			      lambda = ve[mode]->time_const;
 			    }
-			  if(evss_f)
-			    {
-			      d_Pi->F[p][q][j] += d_mup->F[j]*(gamma[p][q]-gamma_cont[p][q]);
-			    }
-			  if(conf)
-			    {
-			      d_Pi->F[p][q][j] += d_mup->F[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-			    }			  
+			  
+			  d_Pi->F[p][q][j] += d_mup->F[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->F[p][q][j] += d_mup->F[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			}		      
 		    }
 		}
@@ -28380,14 +28318,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				{
 				  lambda = ve[mode]->time_const;
 				}
-			      if(evss_f)
-				{
-				  d_Pi->pf[p][q][a][j] += d_mup->pf[a][j]*(gamma[p][q]-gamma_cont[p][q]);
-				}
-			      if(conf)
-				{
-				  d_Pi->pf[p][q][a][j] += d_mup->pf[a][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-				}			  
+			      d_Pi->pf[p][q][a][j] += d_mup->pf[a][j]*(gamma[p][q]-gamma_cont[p][q]);
+			      // Log-conformation tensor stress
+			      d_Pi->pf[p][q][a][j] += d_mup->pf[a][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			    }		      
 			}
 		    }
@@ -28425,16 +28358,11 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				  lambda = ve[mode]->time_const;
 				}
 
-			      if(evss_f)
-				{
-				  d_Pi->v[p][q][b][j] += mup*bf[var+q]->grad_phi_e[j][b][p][q];
-				  d_Pi->v[p][q][b][j] += mup*bf[var+p]->grad_phi_e[j][b][q][p];
-				  d_Pi->v[p][q][b][j] += d_mup->v[b][j]*(gamma[p][q]-gamma_cont[p][q]);
-				}
-			      if(conf)
-				{
-				  d_Pi->v[p][q][b][j] += d_mup->v[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-				}			  
+			      d_Pi->v[p][q][b][j] += mup*bf[var+q]->grad_phi_e[j][b][p][q];
+			      d_Pi->v[p][q][b][j] += mup*bf[var+p]->grad_phi_e[j][b][q][p];
+			      d_Pi->v[p][q][b][j] += d_mup->v[b][j]*(gamma[p][q]-gamma_cont[p][q]);
+			      // Log-conformation tensor stress
+			      d_Pi->v[p][q][b][j] += d_mup->v[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			    }		      
 			}
 		    }
@@ -28490,16 +28418,11 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				  lambda = ve[mode]->time_const;
 				}
 
-			      if(evss_f)
-				{
-				  d_Pi->X[p][q][b][j] += mup*fv->d_grad_v_dmesh[p][q][b][j];
-				  d_Pi->X[p][q][b][j] += mup*fv->d_grad_v_dmesh[q][p][b][j];
-				  d_Pi->X[p][q][b][j] += d_mup->X[b][j]*(gamma[p][q]-gamma_cont[p][q]);
-				}
-			      if(conf)
-				{
-				  d_Pi->X[p][q][b][j] += d_mup->X[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-				}			  
+			      d_Pi->X[p][q][b][j] += mup*fv->d_grad_v_dmesh[p][q][b][j];
+			      d_Pi->X[p][q][b][j] += mup*fv->d_grad_v_dmesh[q][p][b][j];
+			      d_Pi->X[p][q][b][j] += d_mup->X[b][j]*(gamma[p][q]-gamma_cont[p][q]);
+			      // Log-conformation tensor stress
+			      d_Pi->X[p][q][b][j] += d_mup->X[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			    }		      
 			}
 		    }
@@ -28539,7 +28462,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
                               d_Pi->S[p][q][mode][b][c][j] = 0.;
                               /* Note: We use b <= c below to be consistent with the symmetry of the stress
                                  tensor and to avoid double contributions to the Jacobian in assemble_momentum */
-                              if ( b <= c && conf == LOG_CONF )
+                              if ( b <= c )
                                 {
                                   d_Pi->S[p][q][mode][b][c][j] =
                                     mup/lambda*d_exp_s_ds[mode][p][q][b][c] * bf[var]->phi[j];
@@ -28570,16 +28493,12 @@ fluid_stress_conf( double Pi[DIM][DIM],
 
 			  if(pd->v[POLYMER_STRESS11])
 			    {
-			      if(evss_f)
+			      for(mode=0; mode<vn->modes; mode++)
 				{
-				  for(mode=0; mode<vn->modes; mode++)
-				    {
-				      // Polymer viscosity
-				      mup = viscosity(ve[mode]->gn, gamma, d_mup);
-				      
-				      d_Pi->g[p][q][a][b][j] += mup*(delta(p,a)*delta(q,b)+delta(p,b)*delta(q,a))*bf[var]->phi[j];
-				    }
-				}			  
+				  // Polymer viscosity
+				  mup = viscosity(ve[mode]->gn, gamma, d_mup);
+				  d_Pi->g[p][q][a][b][j] += mup*(delta(p,a)*delta(q,b)+delta(p,b)*delta(q,a))*bf[var]->phi[j];
+				}
 			    }
 			}
 		    }
@@ -28614,14 +28533,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				{
 				  lambda = ve[mode]->time_const;
 				}
-			      if(evss_f)
-				{
-				  d_Pi->C[p][q][w][j] += d_mup->C[w][j]*(gamma[p][q]-gamma_cont[p][q]);
-				}
-			      if(conf)
-				{
-				  d_Pi->C[p][q][w][j] += d_mup->C[w][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-				}			  
+			      d_Pi->C[p][q][w][j] += d_mup->C[w][j]*(gamma[p][q]-gamma_cont[p][q]);
+			      // Log-conformation tensor stress
+			      d_Pi->C[p][q][w][j] += d_mup->C[w][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			    }		      
 			}
 		    }
@@ -28653,14 +28567,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 			    {
 			      lambda = ve[mode]->time_const;
 			    }
-			  if(evss_f)
-			    {
-			      d_Pi->P[p][q][j] += d_mup->P[j]*(gamma[p][q]-gamma_cont[p][q]);
-			    }
-			  if(conf)
-			    {
-			      d_Pi->P[p][q][j] += d_mup->P[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-			    }			  
+			  d_Pi->P[p][q][j] += d_mup->P[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->P[p][q][j] += d_mup->P[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			}		      
 		    }
 		}

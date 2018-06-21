@@ -2364,6 +2364,10 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	{
 	  vn_glob[mn]->evssModel = EVSS_F;
 	}
+      else if ( !strcmp(model_name, "EVSS_GRADV") )
+	{
+	  vn_glob[mn]->evssModel = EVSS_GRADV;
+	}
       else if ( !strcmp(model_name, "EVSS_L") )
 	{
 	  vn_glob[mn]->evssModel = EVSS_L;
@@ -2371,6 +2375,10 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       else if ( !strcmp(model_name, "LOG_CONF") )
 	{
 	  vn_glob[mn]->evssModel = LOG_CONF;
+	}
+      else if ( !strcmp(model_name, "LOG_CONF_GRADV") )
+	{
+	  vn_glob[mn]->evssModel = LOG_CONF_GRADV;
 	}
       else
 	{
@@ -2684,7 +2692,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	      exit(-1);
 	    }
 
-	  if( vn_glob[mn]->evssModel == LOG_CONF )
+	  if( vn_glob[mn]->evssModel == LOG_CONF || vn_glob[mn]->evssModel == LOG_CONF_GRADV)
 	    {
 	      if ( modal_data[mn] != 0.0 )
 		{
