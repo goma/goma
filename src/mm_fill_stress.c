@@ -1990,37 +1990,43 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 						  if(pd->CoordinateSystem != CYLINDRICAL)
 						    {
 						      if( ucwt != 0)
-                                                       {
-                                                         for( k=0; k<VIM; k++)
-                                                           {
-                                                             advection_c -= ucwt*((double)delta(a,p)*bf[VELOCITY1+a]->grad_phi[j][k]*s[k][b] +
-                                                                                 (double)delta(b,p)*s[a][k]*bf[VELOCITY1+b]->grad_phi[j][k]);
-                                                           }
-                                                       }
-                                                     if( lcwt != 0.)
-                                                       {
-                                                         advection_c += lcwt*(s[a][p]*bf[VELOCITY1+b]->grad_phi[j][b] +
-                                                                              s[b][p]*bf[VELOCITY1+a]->grad_phi[j][a]);
-                                                       }
-                                                   }
-                                                 else
-                                                   {
-                                                     if( ucwt != 0)
-                                                       {
-                                                         for( k=0; k<VIM; k++)
-                                                           {
-                                                             advection_c -= ucwt*((double)delta(a,p)*bf[var]->grad_phi[j][k]*s[k][b] +
-                                                                                 (double)delta(b,p)*s[a][k]*bf[var]->grad_phi[j][k]);
-                                                           }
-                                                       }
-                                                     if( lcwt != 0.)
-                                                       {
-                                                         advection_c += lcwt*(s[a][p]*bf[var]->grad_phi[j][b] +
-                                                                              s[b][p]*bf[var]->grad_phi[j][a]);
-                                                       }
-                                                   }
-                                                 advection_c *= wt_func;
-                                               }
+							{
+							  for( k=0; k<VIM; k++)
+							    {
+							      advection_c -= ucwt*(bf[VELOCITY1+a]->grad_phi_e[j][p][k][a]*s[k][b] +
+										   bf[VELOCITY1+b]->grad_phi_e[j][p][k][b]*s[a][k]);
+							    }
+							}
+						      if( lcwt != 0.)
+							{
+							  for( k=0; k<VIM; k++)
+							    {
+							      advection_c += lcwt*(bf[VELOCITY1+b]->grad_phi_e[j][p][b][k]*s[a][k] +
+										   bf[VELOCITY1+a]->grad_phi_e[j][p][a][k]*s[k][b]);
+							    }
+							}
+						    }
+						  else
+						    {
+						      if( ucwt != 0)
+							{
+							  for( k=0; k<VIM; k++)
+							    {
+							      advection_c -= ucwt*(bf[VELOCITY1]->grad_phi_e[j][p][k][a]*s[k][b] +
+										   bf[VELOCITY1]->grad_phi_e[j][p][k][b]*s[a][k]);
+							    }
+							}
+						      if( lcwt != 0.)
+							{
+							  for( k=0; k<VIM; k++)
+							    {
+							      advection_c += lcwt*(bf[VELOCITY1]->grad_phi_e[j][p][b][k]*s[a][k] +
+										   bf[VELOCITY1]->grad_phi_e[j][p][a][k]*s[k][b]);
+							    }
+							}
+						    }
+						  advection_c *= wt_func;
+						}
 						     
 					      advection = advection_a +  advection_b + advection_c;
 					      advection *= at * lambda * det_J * wt *h3;
@@ -2044,16 +2050,16 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 					  source_c =  -at * d_mup_dv_pj * ( g[a][b] +  gt[a][b]);
                                           if(evss_gradv)
                                             {
-                                             if(pd->CoordinateSystem != CYLINDRICAL)
-                                               {
-                                                 source_c -= at * mup * (bf[VELOCITY1+a]->grad_phi_e[j][p][a][b] +
-                                                                         bf[VELOCITY1+b]->grad_phi_e[j][p][b][a]);
-                                               }
-                                             else
-                                               {
-                                                 source_c -= at * mup * (bf[var]->grad_phi_e[j][p][a][b] +
-                                                                         bf[var]->grad_phi_e[j][p][b][a]);
-                                               }
+					      if(pd->CoordinateSystem != CYLINDRICAL)
+						{
+						  source_c -= at * mup * (bf[VELOCITY1+a]->grad_phi_e[j][p][a][b] +
+									  bf[VELOCITY1+b]->grad_phi_e[j][p][b][a]);
+						}
+					      else
+						{
+						  source_c -= at * mup * (bf[VELOCITY1]->grad_phi_e[j][p][a][b] +
+									  bf[VELOCITY1]->grad_phi_e[j][p][b][a]);
+						}
                                             }
 					  source_c *= wt_func;
 					  
