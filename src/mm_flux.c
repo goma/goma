@@ -5038,6 +5038,10 @@ compute_volume_integrand(const int quantity, const int elem,
       *sum += weight*det*visc_diss_heat_source(NULL, mp->u_heat_source);
       *sum += weight*det*visc_diss_acoustic_source(NULL, mp->u_heat_source, mp->len_u_heat_source);
     }
+  if (mp->HeatSourceModel == EM_DISS )
+    {
+      *sum += weight*det*em_diss_heat_source(NULL, mp->u_heat_source, mp->len_u_heat_source);
+    }
   else
     {
 	for( p=0; p<VIM; p++)

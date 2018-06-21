@@ -118,6 +118,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
   int    *ija = ams->bindx;
   int w, i, I, ibc, k, j, id, icount, ss_index,i1,i2,i3;     /* counters */
   double wall_velocity = 0.0, velo[MAX_PDIM], theta_max = 180.0, dewet = 1.0;
+  double dcl_shearrate = -1.0;
   double dwall_velo_dx[MAX_PDIM][MDE],dvelo_dx[MAX_PDIM][MAX_PDIM];
   int found_wall_velocity;
   /* HKM - worried that jflag shouldn't be initialized all the way up here */
@@ -205,6 +206,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
       if (    BC_Types[bc_input_id].BC_Name == PLANE_BC ||
               BC_Types[bc_input_id].BC_Name == SPLINE_BC ||
               BC_Types[bc_input_id].BC_Name == FILLET_BC ||
+              BC_Types[bc_input_id].BC_Name == DOUBLE_RAD_BC ||
               BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
 	      BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||	      
 	      BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_RS_BC ||      
@@ -238,6 +240,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 	      BC_Types[bc_input_id].BC_Name == PLANE_BC ||
               BC_Types[bc_input_id].BC_Name == SPLINE_BC ||
               BC_Types[bc_input_id].BC_Name == FILLET_BC ||
+              BC_Types[bc_input_id].BC_Name == DOUBLE_RAD_BC ||
               BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
 	      BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ||
 	      BC_Types[bc_input_id].BC_Name == SOLID_FLUID_BC ||
@@ -360,6 +363,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 		 BC_Types[bc_input_id].BC_Name == PLANE_BC ||
                  BC_Types[bc_input_id].BC_Name == SPLINE_BC  || 
                  BC_Types[bc_input_id].BC_Name == FILLET_BC  ||
+                 BC_Types[bc_input_id].BC_Name == DOUBLE_RAD_BC ||
                  BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC  ||
 		 BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||      
 		 BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_RS_BC ||      
@@ -484,27 +488,29 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			  
 			  }
 			
-		      } else if((variable_wall_normal) && (BC_Types[bc_input_id].BC_Name == PLANE_BC ||
-                                                          BC_Types[bc_input_id].BC_Name == SPLINE_BC || 
-                                                          BC_Types[bc_input_id].BC_Name == FILLET_BC ||
-                                                      BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
-                                    BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||	      
-				    BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_RS_BC ||	      
- 				    BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_PETROV_BC ||
- 				    BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_COLLOC_BC ||
-				    BC_Types[bc_input_id].BC_Name == MESH_CONSTRAINT_BC ||
-				    BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ||
-				    BC_Types[bc_input_id].BC_Name == SOLID_FLUID_BC ||
-				    BC_Types[bc_input_id].BC_Name == SOLID_FLUID_RS_BC ||
- 					   ( (BC_Types[bc_input_id].BC_Name == GD_CONST_BC ||
-					      BC_Types[bc_input_id].BC_Name == GD_LINEAR_BC ||
-					      BC_Types[bc_input_id].BC_Name == GD_INVERSE_BC ||
-					      BC_Types[bc_input_id].BC_Name == GD_PARAB_BC ||
-					      BC_Types[bc_input_id].BC_Name == GD_PARAB_OFFSET_BC ||
-					      BC_Types[bc_input_id].BC_Name == GD_CIRC_BC || 
-					      BC_Types[bc_input_id].BC_Name == GD_TIME_BC || 
-					      BC_Types[bc_input_id].BC_Name == GD_POLYN_BC ||
-					      BC_Types[bc_input_id].BC_Name == GD_TABLE_BC) 
+		      } else if((variable_wall_normal) && 
+                                (BC_Types[bc_input_id].BC_Name == PLANE_BC ||
+                                 BC_Types[bc_input_id].BC_Name == SPLINE_BC || 
+                                 BC_Types[bc_input_id].BC_Name == FILLET_BC ||
+                                 BC_Types[bc_input_id].BC_Name == DOUBLE_RAD_BC ||
+                                 BC_Types[bc_input_id].BC_Name == ROLL_FLUID_BC ||
+                             BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_BC ||	      
+			     BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_RS_BC ||	      
+ 				BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_PETROV_BC ||
+ 				BC_Types[bc_input_id].BC_Name == KIN_DISPLACEMENT_COLLOC_BC ||
+				BC_Types[bc_input_id].BC_Name == MESH_CONSTRAINT_BC ||
+				BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ||
+				BC_Types[bc_input_id].BC_Name == SOLID_FLUID_BC ||
+				BC_Types[bc_input_id].BC_Name == SOLID_FLUID_RS_BC ||
+ 				   ( (BC_Types[bc_input_id].BC_Name == GD_CONST_BC ||
+				      BC_Types[bc_input_id].BC_Name == GD_LINEAR_BC ||
+				      BC_Types[bc_input_id].BC_Name == GD_INVERSE_BC ||
+				      BC_Types[bc_input_id].BC_Name == GD_PARAB_BC ||
+				      BC_Types[bc_input_id].BC_Name == GD_PARAB_OFFSET_BC ||
+				      BC_Types[bc_input_id].BC_Name == GD_CIRC_BC || 
+				      BC_Types[bc_input_id].BC_Name == GD_TIME_BC || 
+				      BC_Types[bc_input_id].BC_Name == GD_POLYN_BC ||
+				      BC_Types[bc_input_id].BC_Name == GD_TABLE_BC) 
 					     && 
 					     (BC_Types[bc_input_id].desc->equation == R_MESH_NORMAL || 
 					      BC_Types[bc_input_id].desc->equation == R_MESH2)
@@ -884,7 +890,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			      if(BC_Types[j].BC_Name == VELO_THETA_SHIK_BC)
 				{theta_max = f[8];}
 			      if(BC_Types[j].BC_Name == VELO_THETA_HOFFMAN_BC)
-				{theta_max = f[9];}
+				{theta_max = f[9]; dcl_shearrate = f[10];}
 			      if(BC_Types[j].BC_Name == VELO_THETA_HOFFMAN_BC
 				|| BC_Types[j].BC_Name == VELO_THETA_COX_BC
 				|| BC_Types[j].BC_Name == VELO_THETA_TPL_BC
@@ -909,6 +915,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 						    wall_velocity,
 						    theta_max,
 						    dewet,
+						    dcl_shearrate,
 						    BC_Types[j_bc_id].BC_Name,
 						    dwall_velo_dx,
                                                     local_node_id);
@@ -1157,7 +1164,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 				      if(jflag != -1 && CA_fselem[jflag] != -1 && 
 					 CA_fselem[jflag] != ielem && 
 					 Linear_Solver != FRONT && 
-					 CA_id[jflag] == j_bc_id)
+					 CA_id[jflag] == j_bc_id && j_bc_id != -1)
 					{
 				          if (strcmp(Matrix_Format, "msr") != 0) {
 				            EH(-1, "Unexpected matrix format in apply_bc_special, use msr");
@@ -1196,7 +1203,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 				      if (jflag != -1 && CA_sselem[jflag] != -1 && 
 					  CA_sselem[jflag] != ei->ielem && 
 					  Linear_Solver != FRONT && 
-					  CA_id[jflag] == j_bc_id)
+					  CA_id[jflag] == j_bc_id && j_bc_id != -1)
 					{
                                           if (strcmp(Matrix_Format, "msr") != 0) {
                                             EH(-1,
@@ -1254,7 +1261,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 
 			if(jflag != -1 && CA_fselem[jflag] != -1 && 
 			   CA_sselem[jflag] != -1 && 
-			   CA_id[jflag] == j_bc_id)
+			   CA_id[jflag] == j_bc_id && j_bc_id != -1)
 			  {
 			    CA_id[jflag] = -2;
 			  }

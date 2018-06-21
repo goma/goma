@@ -29184,6 +29184,10 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
       h_acous = visc_diss_acoustic_source(d_h, mp->u_heat_source, mp->len_u_heat_source);
       h += h_acous;
     }
+  else if (mp->HeatSourceModel == EM_DISS )
+    {
+      h = em_diss_heat_source(d_h, mp->u_heat_source, mp->len_u_heat_source);
+    }
   else if (mp->HeatSourceModel == EPOXY )
     {
       h = epoxy_heat_source(d_h, tt, dt);
@@ -32553,6 +32557,127 @@ if(af->Assemble_Jacobian)
 	  for (j=0; j<ei->dof[var]; j++)
 	    {
 	      d_h->API[j] += param[0]*temp1*visc_cmb*temp3*2.*fv->api*bf[var]->phi[j]; 
+	    }
+    }
+   
+ 
+  }  /* end of if Assemble Jacobian  */
+
+  return(h);
+}
+/*  _______________________________________________________________________  */
+/*
+ * double em_diss_acoustic_source (dh, param)
+ *
+ * ------------------------------------------------------------------------------
+ * This routine is responsible for filling up the following forces and sensitivities
+ * at the current gauss point:
+ *     intput:  
+ *
+ *     output:  h             - heat source
+ *              d_h->T[j]    - derivative wrt temperature at node j.
+ *              d_h->V[j]    - derivative wrt voltage at node j.
+ *              d_h->C[i][j] - derivative wrt mass frac species i at node j
+ *              d_h->v[i][j] - derivative wrt velocity component i at node j
+ *              d_h->X[0][j] - derivative wrt mesh displacement components i at node j
+ *              d_h->S[m][i][j][k] - derivative wrt stress mode m of component ij at node k
+ *
+ *   NB: The user need only supply f, dfdT, dfdC, etc....mp struct is loaded up for you
+ * ---------------------------------------------------------------------------
+ */
+
+double
+em_diss_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
+		      dbl *param, int num_const) /* General multipliers */
+{
+  /* Local Variables */
+  int var, err;
+
+  int w, j;
+  double omega;
+  double h, ap_square;
+
+  double R;				/* Acoustic impedance. */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_R_struct; 
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_R = &d_R_struct;
+
+  double k;				/* Acoustic wave number. */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; 
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
+
+  double alpha;				/* Acoustic Absorption */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_alpha_struct; 
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha = &d_alpha_struct;
+
+  double time = tran->time_value;
+
+  /* Begin Execution */
+
+  /**********************************************************/
+  /* Source constant * viscosity* gammadot .. grad_v */
+
+  /* get mu and grad_mu */
+  omega = upd->Acoustic_Frequency;
+  R = acoustic_impedance( d_R, time );
+  k = wave_number( d_k, time );
+  alpha = acoustic_absorption( d_alpha, time );
+
+  ap_square = SQUARE(fv->apr) + SQUARE(fv->api);
+  h = ap_square*alpha*k/R;
+  h *= param[0];
+
+  /* Now do sensitivies */
+if(af->Assemble_Jacobian)
+  {
+
+  var = TEMPERATURE;
+  if ( d_h != NULL && pd->v[var] )
+    {
+	  for (j=0; j<ei->dof[var]; j++)
+	    {
+	      d_h->T[j] += param[0]*ap_square*(R*(alpha*d_k->T[j]+k*d_alpha->T[j])
+                           -alpha*k*d_R->T[j])/SQUARE(R);
+	    }
+    }
+
+
+  var = MASS_FRACTION;
+  if ( d_h != NULL && pd->v[var] )
+    {
+      for ( w=0; w<pd->Num_Species_Eqn; w++)
+         {
+	  for (j=0; j<ei->dof[var]; j++)
+	    {
+	      d_h->C[w][j] += param[0]*ap_square*(R*(alpha*d_k->C[w][j]+k*d_alpha->C[w][j])
+                           -alpha*k*d_R->C[w][j])/SQUARE(R);
+	    }
+         }
+    }
+
+  var = FILL;
+  if ( d_h != NULL && pd->v[var] )
+    {
+	  for (j=0; j<ei->dof[var]; j++)
+	    {
+	      d_h->F[j] += param[0]*ap_square*(R*(alpha*d_k->F[j]+k*d_alpha->F[j])
+                           -alpha*k*d_R->F[j])/SQUARE(R);
+	    }
+    }
+
+  var = ACOUS_PREAL;
+  if ( d_h != NULL && pd->v[var] )
+    {
+	  for (j=0; j<ei->dof[var]; j++)
+	    {
+	      d_h->APR[j] += param[0]*alpha*k/R*2.*fv->apr*bf[var]->phi[j]; 
+	    }
+    }
+  var = ACOUS_PIMAG;
+  if ( d_h != NULL && pd->v[var] )
+    {
+	  for (j=0; j<ei->dof[var]; j++)
+	    {
+	      d_h->API[j] += param[0]*alpha*k/R*2.*fv->api*bf[var]->phi[j]; 
 	    }
     }
    
