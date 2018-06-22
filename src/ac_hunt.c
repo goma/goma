@@ -157,7 +157,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   double	*gvec=NULL;
   double        ***gvec_elem;
   FILE          *file=NULL;
-  double 	toler_org[3],damp_org;
+  double 	toler_org[3];
   
   struct Results_Description  *rd=NULL;
   
@@ -192,7 +192,6 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   toler_org[0] = custom_tol1;
   toler_org[1] = custom_tol2;
   toler_org[2] = custom_tol3;
-  damp_org = damp_factor1;
 
   is_steady_state = TRUE;
 
@@ -1319,7 +1318,6 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     custom_tol1 = toler_org[0];
     custom_tol2 = toler_org[1];
     custom_tol3 = toler_org[2];
-    /*  damp_factor1 = damp_org;  */
     damp_factor1 = 1.0;
     DPRINTF(stderr,
 	    "\n\tStep accepted, theta (proportion complete) = %10.6e\n",

@@ -625,7 +625,7 @@ noahs_ark()
   ddd_add_member(n, Init_GuessFile, MAX_FNL, MPI_CHAR);
   ddd_add_member(n, Soln_OutFile, MAX_FNL, MPI_CHAR);
   ddd_add_member(n, ExoAuxFile, MAX_FNL, MPI_CHAR);
-  ddd_add_member(n, &ExoTimePlane, MAX_FNL, MPI_INT);
+  ddd_add_member(n, &ExoTimePlane, 1, MPI_INT);
   ddd_add_member(n, &Write_Intermediate_Solutions, 1, MPI_INT);
   ddd_add_member(n, &Write_Initial_Solution, 1, MPI_INT);
   

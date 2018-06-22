@@ -32537,9 +32537,7 @@ visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
    The visc_first parameter is a bulk viscosity multiplier  */
 
   visc_cmb = viscosity(gn, gamma, d_visc_cmb);
-#if 1
   gamma[0][0] = omega;
-#endif
   mu = viscosity(gn, gamma, d_mu);
   visc_cmb = 4.*mu/3. + visc_first*visc_cmb;
   for (j=0; j<ei->dof[TEMPERATURE]; j++)
@@ -32682,10 +32680,9 @@ em_diss_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
 		      dbl *param, int num_const) /* General multipliers */
 {
   /* Local Variables */
-  int var, err;
+  int var;
 
   int w, j;
-  double omega;
   double h, ap_square;
 
   double R;				/* Acoustic impedance. */
@@ -32708,7 +32705,6 @@ em_diss_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   /* Source constant * viscosity* gammadot .. grad_v */
 
   /* get mu and grad_mu */
-  omega = upd->Acoustic_Frequency;
   R = acoustic_impedance( d_R, time );
   k = wave_number( d_k, time );
   alpha = acoustic_absorption( d_alpha, time );

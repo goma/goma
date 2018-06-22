@@ -838,7 +838,7 @@ f_double_rad (const int ielem_dim,
 /**************************** EXECUTION BEGINS *******************************/
   double xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
   double xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
-  double theta1m, theta2m, th1, th1t, th2, th2t, curv_mid, rad_curv;
+  double theta1m, theta2m, th1, th2, th2t, curv_mid, rad_curv;
   double beta=0, xcirc, ycirc, dist1, dist2, dist_mid;
   int is_curved = 0;
 
@@ -906,7 +906,6 @@ fprintf(stderr,"circle %g %g %g %g\n",xcirc,ycirc,xcen2, ycen2);
   /**   compute angle of point on curve from arc center **/
 
   th1 = atan2(fv->x[1]-ycen1,fv->x[0]-xcen1);
-  th1t = th1 > 0.0 ? th1 : th1 + 2*M_PIE;
   th2 = atan2(fv->x[1]-ycen2,fv->x[0]-xcen2);
   th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;
 
@@ -985,12 +984,15 @@ f_roll_fluid (int ielem_dim,
   double omega,v_dir[3], v_roll[3];
   double velo_avg = 0.0,  pgrad=0.;
   double v_solid=0., res, jac, delta, flow, eps=1.0e-8, viscinv;
-  double jacinv, thick, dthick_dV, dthick_dP;
+  double jacinv, thick;
   int Pflag = TRUE;
-  double cur_pt[3]={0,0,0};
   double pg_factor=1.0, tang_sgn=1.0, v_mag=0.;;
 
-  int j,var,jvar,k;
+  int j,var;
+#if 0
+  int jvar,k;
+  double dthick_dV, dthick_dP;
+#endif
 
   if(af->Assemble_LSA_Mass_Matrix)
     return;
@@ -1120,8 +1122,10 @@ f_roll_fluid (int ielem_dim,
          thick += delta;
          j++;
         } while(fabs(delta) > eps && j<20);
+#if 0
       dthick_dV = -0.5*jacinv;     /*  1/h*derivative  */
       dthick_dP = CUBE(thick)*viscinv/12.*jacinv;
+#endif
 #if 0
 fprintf(stderr,"slip %d %g %g %g %g\n",Pflag,fv->x[0],thick,flow/v_solid,velo_avg);
 fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
@@ -1251,6 +1255,7 @@ int i;
 	coord2 = MAX(p[1],p[0]);
 	qflow = p[2];
 	gap = fabs(coord2-coord1);
+	pre_factor = 6.*qflow/(gap*gap*gap);
         switch (pd->CoordinateSystem) {
           case CARTESIAN:
 	       pre_factor = 6.*qflow/(gap*gap*gap);
