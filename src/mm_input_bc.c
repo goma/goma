@@ -1515,7 +1515,14 @@ rd_bc_specs(FILE *ifp,
             SPF(endofstring(echo_string)," %lf", BC_Types[ibc].BC_Data_Float[9]);
 	  if ( fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[10]) != 1)
 	    {
+	      if ( !strcmp(BC_Types[ibc].desc->name1,"VELO_THETA_HOFFMAN") ||
+                   !strcmp(BC_Types[ibc].desc->name1,"VELO_THETA_COX")  )
+                  {
+/* DCL shearrate for Hoffman/Cox condition  */
+		      BC_Types[ibc].BC_Data_Float[10] = -1.0;
+                  } else  { 
 		      BC_Types[ibc].BC_Data_Float[10] = 8.0;
+                  }
 	    }
           else
             SPF(endofstring(echo_string)," %lf", BC_Types[ibc].BC_Data_Float[10]);

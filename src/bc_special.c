@@ -889,7 +889,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			      f = BC_Types[j].BC_Data_Float;
 			      if(BC_Types[j].BC_Name == VELO_THETA_SHIK_BC)
 				{theta_max = f[8];}
-			      if(BC_Types[j].BC_Name == VELO_THETA_HOFFMAN_BC)
+			      if(BC_Types[j].BC_Name == VELO_THETA_HOFFMAN_BC ||
+                                 BC_Types[j].BC_Name == VELO_THETA_COX_BC )
 				{theta_max = f[9]; dcl_shearrate = f[10];}
 			      if(BC_Types[j].BC_Name == VELO_THETA_HOFFMAN_BC
 				|| BC_Types[j].BC_Name == VELO_THETA_COX_BC
