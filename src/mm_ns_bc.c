@@ -3684,14 +3684,6 @@ fvelo_slip_ls_heaviside(double func[MAX_PDIM],
   vs[1] = vsy;
   vs[2] = vsz;
 
-  if( TimeIntegration == TRANSIENT && pd->e[pg->imtrx][R_MESH1] )
-    {
-      /* Add the mesh motion to the substrate velocity */
-      vs[0] += fv_dot->x[0];
-      vs[1] += fv_dot->x[1];
-      vs[2] += fv_dot->x[2];
-    }
-
   if (af->Assemble_Jacobian)
     {
       for (jvar=0; jvar<pd->Num_Dim; jvar++)
