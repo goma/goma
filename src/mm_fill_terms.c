@@ -28539,6 +28539,7 @@ fluid_stress( double Pi[DIM][DIM],
       d_mu = NULL;
       d_mus = NULL;
       d_mup = NULL;
+      d_dilMu = NULL;
     }
       
 
