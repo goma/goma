@@ -559,6 +559,7 @@ PROTO((double *,		/* func */
        const double ,		/* wall velocity */
        const double ,		/* theta_max */
        const double ,		/* dewet parameter */
+       const double ,		/* dcl_shearrate */
        const int ,		/* BC identifier */
        double [MAX_PDIM][MDE],          /* wall velo derivs     */
        const int ));            /* local_node_number    */
