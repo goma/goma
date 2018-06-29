@@ -2767,7 +2767,7 @@ assemble_momentum(dbl time,       /* current time */
   /*
    * Calculate the momentum stress tensor at the current gauss point
    */
-  if(vn->evssModel==LOG_CONF)
+  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
     {
       fluid_stress_conf(Pi, d_Pi);
     }
@@ -4052,7 +4052,8 @@ assemble_momentum(dbl time,       /* current time */
 	       * J_m_G
 	       */
 		  
-	      if ( pdv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF) )
+	      if ( pdv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF
+					     || vn->evssModel == EVSS_GRADV || vn->evssModel == LOG_CONF_GRADV) )
 		{
 		  for ( b=0; b<VIM; b++)
 		    {
@@ -23791,7 +23792,7 @@ assemble_p_source ( double pressure, const int bcflag )
 	{
 	 if (!af->Assemble_Jacobian) d_Pi = NULL; 
   		/* compute stress tensor and its derivatives */
-           if(vn->evssModel==LOG_CONF)
+           if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
              {
                fluid_stress_conf(Pi, d_Pi);
              }
@@ -25156,7 +25157,7 @@ assemble_uvw_source ( int eqn, double val )
   else
     {
       /* compute stress tensor and its derivatives */
-      if(vn->evssModel==LOG_CONF)
+      if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
         {
           fluid_stress_conf(Pi, d_Pi);
         }
@@ -26193,7 +26194,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
   /*
    * Stress tensor, but don't need dependencies
    */
-  if(vn->evssModel==LOG_CONF)
+  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
     {
       fluid_stress_conf(Pi, NULL);
     }
@@ -27243,7 +27244,7 @@ fluid_stress( double Pi[DIM][DIM],
       particle_stress(tau_p, d_tau_p_dv, d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
     }
 
-  if ( pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F) )
+  if ( pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV) )
     {
       evss_f = 1.;
     }
@@ -28007,9 +28008,6 @@ fluid_stress_conf( double Pi[DIM][DIM],
     * Vicosity and derivatives, we use this for collecting polymer
     * viscosity terms when considering Non-Newontian fluids
     */
-  dbl mu = 0.0;
-  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;
-  VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
 
   // Polymer viscosity and derivatives, polymer time constant
   dbl mup = 0.0, lambda = 0.0;
@@ -28020,25 +28018,6 @@ fluid_stress_conf( double Pi[DIM][DIM],
   dbl mus = 0.0;
   VISCOSITY_DEPENDENCE_STRUCT d_mus_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mus = &d_mus_struct;
-
-  // Numerical "adaptive" viscosity and derivatives
-  dbl mu_num;
-  dbl d_mun_dS[MAX_MODES][DIM][DIM][MDE];
-  dbl d_mun_dG[DIM][DIM][MDE];
-  dbl term1=0.0;
-
-  // Dilational viscosity
-  dbl kappa = 0.0;
-  DILVISCOSITY_DEPENDENCE_STRUCT d_dilMu_struct;
-  DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu = &d_dilMu_struct;
-  int kappaWipesMu = 1;
-
-  // Shift factor and T dependence
-  dbl at = 0.0;
-  dbl d_at_dT[MDE];
-  //Some convenient viscosity variables
-  dbl wlf_denom;
-  dbl mu_over_mu_num = 0.0;
 
   // conformation tensor
   dbl exp_s[MAX_MODES][DIM][DIM];
@@ -28055,28 +28034,20 @@ fluid_stress_conf( double Pi[DIM][DIM],
 
   dbl *grad_v[DIM];		        // Gradient of v.
   dbl gamma[DIM][DIM];                  // Shear rate tensor based on velocity
-  dbl s[DIM][DIM];                      // Polymer stress tensor
   dbl gamma_cont[DIM][DIM];             // Shear rate tensor based on continuous gradient of velocity
   dbl P;
 
   dbl R1[DIM][DIM];
   dbl eig_values[DIM];
 
-  // Flag to use a Fortin DEVSS-G stress formulation
-  int evss_f;
-  int use_mup;                          // Flag for mup or mus on DEVSS-G term
   int v_s[MAX_MODES][DIM][DIM];
   int v_g[DIM][DIM];
   int mode;                             // Index for modal viscoelastic counter
-  int conf;                             // Flag for Conformation tensor
 
   // Flag for doing dilational viscosity contributions
-  int do_dilational_visc = 0;
+
   int dim, wim;
   int a, b, p, q, j, w, c, var;
-  dbl (* grad_phi_e ) [DIM][DIM][DIM] = NULL;
-  int eqn = R_MOMENTUM1;
-
 
   dim   = pd->Num_Dim;
   wim   = dim;
@@ -28107,7 +28078,6 @@ fluid_stress_conf( double Pi[DIM][DIM],
   // If d_Pi == NULL, we won't need the viscosity dependencies
   if(d_Pi == NULL)
     {
-      d_mu  = NULL;
       d_mus = NULL;
       d_mup = NULL;
     }
@@ -28143,46 +28113,18 @@ fluid_stress_conf( double Pi[DIM][DIM],
       particle_stress(tau_p, d_tau_p_dv, d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
     }
 
-  // Load up DEVSS-G flag and Gs
-  if(pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel==LOG_CONF))
+  for(a=0; a<VIM; a++)
     {
-      evss_f = 1;
-    }
-  else
-    {
-      evss_f = 0;
-    }
-  if(evss_f)
-    {
-      for(a=0; a<VIM; a++)
-  	{
-  	  for(b=0; b<VIM; b++)
-  	    {
-  	      gamma_cont[a][b] = fv->G[a][b] + fv->G[b][a];
-  	    }
-  	}
-    }
-  else
-    {
-      memset(gamma_cont, 0, sizeof(double)*DIM*DIM);
+      for(b=0; b<VIM; b++)
+	{
+	  gamma_cont[a][b] = fv->G[a][b] + fv->G[b][a];
+	}
     }
 
-  // Turn on conformation tensor flag if desired
-  if (vn->evssModel == LOG_CONF)
-    {
-      conf = LOG_CONF;
-    }
-  else
-    {
-      conf = 0;
-    }
-
-
-  if (conf == LOG_CONF) {
-    for (mode = 0; mode < vn->modes; mode++) {
-      compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
-    }
+  for (mode = 0; mode < vn->modes; mode++) {
+    compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
   }
+
 
   // Load shear rate tensor
   for(a=0; a<VIM; a++)
@@ -28197,35 +28139,25 @@ fluid_stress_conf( double Pi[DIM][DIM],
   mus = viscosity(gn, gamma, d_mus);
 
   // Check if the conformation tensor mapping is valid
-  if(conf)
+  for(mode=0; mode<vn->modes; mode++)
     {
-      for(mode=0; mode<vn->modes; mode++)
-  	{
-  	  // Polymer viscosity
-  	  mup = viscosity(ve[mode]->gn, gamma, d_mup);
-  	  // Polymer time constant
-  	  lambda = 0.0;
-  	  if(ve[mode]->time_constModel == CONSTANT)
-  	    {
-  	      lambda = ve[mode]->time_const;
-  	    }  	  
-	  /* Looks like these models are not working right now
-	   *else if(ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW)
-	   * {
-	   *   lambda = mup/ve[mode]->time_const;
-	   * }
-	   */
-  	  if(lambda==0.0)
-  	    {
-  	      EH( -1, "The conformation tensor needs a non-zero polymer time constant.");
-  	    }
-  	  if(mup==0.0)
-  	    {
-  	      EH( -1, "The conformation tensor needs a non-zero polymer viscosity.");
-  	    }
-  	}
+      // Polymer viscosity
+      mup = viscosity(ve[mode]->gn, gamma, d_mup);
+      // Polymer time constant
+      lambda = 0.0;
+      if(ve[mode]->time_constModel == CONSTANT)
+	{
+	  lambda = ve[mode]->time_const;
+	}  	  
+      if(lambda==0.0)
+	{
+	  EH( -1, "The conformation tensor needs a non-zero polymer time constant.");
+	}
+      if(mup==0.0)
+	{
+	  EH( -1, "The conformation tensor needs a non-zero polymer viscosity.");
+	}
     }
-
 
   // Load up fluid stress terms in Pi
   for(a=0; a<VIM; a++)
@@ -28250,14 +28182,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
 		  Pi[a][b] += mup*(gamma[a][b]-gamma_cont[a][b]);
 
 		  // PolymerStress contribution
-		  if(conf)
-		    {
-		      Pi[a][b] += mup/lambda*(exp_s[mode][a][b]-(double)delta(a,b));
-		    }
-		  else
-		    {
-		      Pi[a][b] += fv->S[mode][a][b];
-		    }
+		  Pi[a][b] += mup/lambda*(exp_s[mode][a][b]-(double)delta(a,b));
 		}
             }
         }
@@ -28287,14 +28212,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 			    {
 			      lambda = ve[mode]->time_const;
 			    }
-			  if(evss_f)
-			    {
-			      d_Pi->T[p][q][j] += d_mup->T[j]*(gamma[p][q]-gamma_cont[p][q]);
-			    }
-			  if(conf)
-			    {
-			      d_Pi->T[p][q][j] += d_mup->T[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-			    }			  
+			  d_Pi->T[p][q][j] += d_mup->T[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->T[p][q][j] += d_mup->T[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			}		      
 		    }
 		}
@@ -28326,14 +28246,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 			      lambda = ve[mode]->time_const;
 			    }
 
-			  if(evss_f)
-			    {
-			      d_Pi->nn[p][q][j] += d_mup->nn[j]*(gamma[p][q]-gamma_cont[p][q]);
-			    }
-			  if(conf)
-			    {
-			      d_Pi->nn[p][q][j] += d_mup->nn[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-			    }			  
+			  d_Pi->nn[p][q][j] += d_mup->nn[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->nn[p][q][j] += d_mup->nn[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			}		      
 		    }
 		}
@@ -28365,14 +28280,10 @@ fluid_stress_conf( double Pi[DIM][DIM],
 			    {
 			      lambda = ve[mode]->time_const;
 			    }
-			  if(evss_f)
-			    {
-			      d_Pi->F[p][q][j] += d_mup->F[j]*(gamma[p][q]-gamma_cont[p][q]);
-			    }
-			  if(conf)
-			    {
-			      d_Pi->F[p][q][j] += d_mup->F[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-			    }			  
+			  
+			  d_Pi->F[p][q][j] += d_mup->F[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->F[p][q][j] += d_mup->F[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			}		      
 		    }
 		}
@@ -28407,14 +28318,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				{
 				  lambda = ve[mode]->time_const;
 				}
-			      if(evss_f)
-				{
-				  d_Pi->pf[p][q][a][j] += d_mup->pf[a][j]*(gamma[p][q]-gamma_cont[p][q]);
-				}
-			      if(conf)
-				{
-				  d_Pi->pf[p][q][a][j] += d_mup->pf[a][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-				}			  
+			      d_Pi->pf[p][q][a][j] += d_mup->pf[a][j]*(gamma[p][q]-gamma_cont[p][q]);
+			      // Log-conformation tensor stress
+			      d_Pi->pf[p][q][a][j] += d_mup->pf[a][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			    }		      
 			}
 		    }
@@ -28452,16 +28358,11 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				  lambda = ve[mode]->time_const;
 				}
 
-			      if(evss_f)
-				{
-				  d_Pi->v[p][q][b][j] += mup*bf[var+q]->grad_phi_e[j][b][p][q];
-				  d_Pi->v[p][q][b][j] += mup*bf[var+p]->grad_phi_e[j][b][q][p];
-				  d_Pi->v[p][q][b][j] += d_mup->v[b][j]*(gamma[p][q]-gamma_cont[p][q]);
-				}
-			      if(conf)
-				{
-				  d_Pi->v[p][q][b][j] += d_mup->v[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-				}			  
+			      d_Pi->v[p][q][b][j] += mup*bf[var+q]->grad_phi_e[j][b][p][q];
+			      d_Pi->v[p][q][b][j] += mup*bf[var+p]->grad_phi_e[j][b][q][p];
+			      d_Pi->v[p][q][b][j] += d_mup->v[b][j]*(gamma[p][q]-gamma_cont[p][q]);
+			      // Log-conformation tensor stress
+			      d_Pi->v[p][q][b][j] += d_mup->v[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			    }		      
 			}
 		    }
@@ -28517,16 +28418,11 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				  lambda = ve[mode]->time_const;
 				}
 
-			      if(evss_f)
-				{
-				  d_Pi->X[p][q][b][j] += mup*fv->d_grad_v_dmesh[p][q][b][j];
-				  d_Pi->X[p][q][b][j] += mup*fv->d_grad_v_dmesh[q][p][b][j];
-				  d_Pi->X[p][q][b][j] += d_mup->X[b][j]*(gamma[p][q]-gamma_cont[p][q]);
-				}
-			      if(conf)
-				{
-				  d_Pi->X[p][q][b][j] += d_mup->X[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-				}			  
+			      d_Pi->X[p][q][b][j] += mup*fv->d_grad_v_dmesh[p][q][b][j];
+			      d_Pi->X[p][q][b][j] += mup*fv->d_grad_v_dmesh[q][p][b][j];
+			      d_Pi->X[p][q][b][j] += d_mup->X[b][j]*(gamma[p][q]-gamma_cont[p][q]);
+			      // Log-conformation tensor stress
+			      d_Pi->X[p][q][b][j] += d_mup->X[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			    }		      
 			}
 		    }
@@ -28566,7 +28462,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
                               d_Pi->S[p][q][mode][b][c][j] = 0.;
                               /* Note: We use b <= c below to be consistent with the symmetry of the stress
                                  tensor and to avoid double contributions to the Jacobian in assemble_momentum */
-                              if ( b <= c && conf == LOG_CONF )
+                              if ( b <= c )
                                 {
                                   d_Pi->S[p][q][mode][b][c][j] =
                                     mup/lambda*d_exp_s_ds[mode][p][q][b][c] * bf[var]->phi[j];
@@ -28597,16 +28493,12 @@ fluid_stress_conf( double Pi[DIM][DIM],
 
 			  if(pd->v[POLYMER_STRESS11])
 			    {
-			      if(evss_f)
+			      for(mode=0; mode<vn->modes; mode++)
 				{
-				  for(mode=0; mode<vn->modes; mode++)
-				    {
-				      // Polymer viscosity
-				      mup = viscosity(ve[mode]->gn, gamma, d_mup);
-				      
-				      d_Pi->g[p][q][a][b][j] += mup*(delta(p,a)*delta(q,b)+delta(p,b)*delta(q,a))*bf[var]->phi[j];
-				    }
-				}			  
+				  // Polymer viscosity
+				  mup = viscosity(ve[mode]->gn, gamma, d_mup);
+				  d_Pi->g[p][q][a][b][j] += mup*(delta(p,a)*delta(q,b)+delta(p,b)*delta(q,a))*bf[var]->phi[j];
+				}
 			    }
 			}
 		    }
@@ -28641,14 +28533,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				{
 				  lambda = ve[mode]->time_const;
 				}
-			      if(evss_f)
-				{
-				  d_Pi->C[p][q][w][j] += d_mup->C[w][j]*(gamma[p][q]-gamma_cont[p][q]);
-				}
-			      if(conf)
-				{
-				  d_Pi->C[p][q][w][j] += d_mup->C[w][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-				}			  
+			      d_Pi->C[p][q][w][j] += d_mup->C[w][j]*(gamma[p][q]-gamma_cont[p][q]);
+			      // Log-conformation tensor stress
+			      d_Pi->C[p][q][w][j] += d_mup->C[w][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			    }		      
 			}
 		    }
@@ -28680,14 +28567,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 			    {
 			      lambda = ve[mode]->time_const;
 			    }
-			  if(evss_f)
-			    {
-			      d_Pi->P[p][q][j] += d_mup->P[j]*(gamma[p][q]-gamma_cont[p][q]);
-			    }
-			  if(conf)
-			    {
-			      d_Pi->P[p][q][j] += d_mup->P[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-			    }			  
+			  d_Pi->P[p][q][j] += d_mup->P[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->P[p][q][j] += d_mup->P[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			}		      
 		    }
 		}
@@ -29301,6 +29183,10 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
       h = visc_diss_heat_source(d_h, mp->u_heat_source);
       h_acous = visc_diss_acoustic_source(d_h, mp->u_heat_source, mp->len_u_heat_source);
       h += h_acous;
+    }
+  else if (mp->HeatSourceModel == EM_DISS )
+    {
+      h = em_diss_heat_source(d_h, mp->u_heat_source, mp->len_u_heat_source);
     }
   else if (mp->HeatSourceModel == EPOXY )
     {
@@ -32560,9 +32446,7 @@ visc_diss_acoustic_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
    The visc_first parameter is a bulk viscosity multiplier  */
 
   visc_cmb = viscosity(gn, gamma, d_visc_cmb);
-#if 1
   gamma[0][0] = omega;
-#endif
   mu = viscosity(gn, gamma, d_mu);
   visc_cmb = 4.*mu/3. + visc_first*visc_cmb;
   for (j=0; j<ei->dof[TEMPERATURE]; j++)
@@ -32671,6 +32555,125 @@ if(af->Assemble_Jacobian)
 	  for (j=0; j<ei->dof[var]; j++)
 	    {
 	      d_h->API[j] += param[0]*temp1*visc_cmb*temp3*2.*fv->api*bf[var]->phi[j]; 
+	    }
+    }
+   
+ 
+  }  /* end of if Assemble Jacobian  */
+
+  return(h);
+}
+/*  _______________________________________________________________________  */
+/*
+ * double em_diss_acoustic_source (dh, param)
+ *
+ * ------------------------------------------------------------------------------
+ * This routine is responsible for filling up the following forces and sensitivities
+ * at the current gauss point:
+ *     intput:  
+ *
+ *     output:  h             - heat source
+ *              d_h->T[j]    - derivative wrt temperature at node j.
+ *              d_h->V[j]    - derivative wrt voltage at node j.
+ *              d_h->C[i][j] - derivative wrt mass frac species i at node j
+ *              d_h->v[i][j] - derivative wrt velocity component i at node j
+ *              d_h->X[0][j] - derivative wrt mesh displacement components i at node j
+ *              d_h->S[m][i][j][k] - derivative wrt stress mode m of component ij at node k
+ *
+ *   NB: The user need only supply f, dfdT, dfdC, etc....mp struct is loaded up for you
+ * ---------------------------------------------------------------------------
+ */
+
+double
+em_diss_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
+		      dbl *param, int num_const) /* General multipliers */
+{
+  /* Local Variables */
+  int var;
+
+  int w, j;
+  double h, ap_square;
+
+  double R;				/* Acoustic impedance. */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_R_struct; 
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_R = &d_R_struct;
+
+  double k;				/* Acoustic wave number. */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; 
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
+
+  double alpha;				/* Acoustic Absorption */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_alpha_struct; 
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_alpha = &d_alpha_struct;
+
+  double time = tran->time_value;
+
+  /* Begin Execution */
+
+  /**********************************************************/
+  /* Source constant * viscosity* gammadot .. grad_v */
+
+  /* get mu and grad_mu */
+  R = acoustic_impedance( d_R, time );
+  k = wave_number( d_k, time );
+  alpha = acoustic_absorption( d_alpha, time );
+
+  ap_square = SQUARE(fv->apr) + SQUARE(fv->api);
+  h = ap_square*alpha*k/R;
+  h *= param[0];
+
+  /* Now do sensitivies */
+if(af->Assemble_Jacobian)
+  {
+
+  var = TEMPERATURE;
+  if ( d_h != NULL && pd->v[var] )
+    {
+	  for (j=0; j<ei->dof[var]; j++)
+	    {
+	      d_h->T[j] += param[0]*ap_square*(R*(alpha*d_k->T[j]+k*d_alpha->T[j])
+                           -alpha*k*d_R->T[j])/SQUARE(R);
+	    }
+    }
+
+
+  var = MASS_FRACTION;
+  if ( d_h != NULL && pd->v[var] )
+    {
+      for ( w=0; w<pd->Num_Species_Eqn; w++)
+         {
+	  for (j=0; j<ei->dof[var]; j++)
+	    {
+	      d_h->C[w][j] += param[0]*ap_square*(R*(alpha*d_k->C[w][j]+k*d_alpha->C[w][j])
+                           -alpha*k*d_R->C[w][j])/SQUARE(R);
+	    }
+         }
+    }
+
+  var = FILL;
+  if ( d_h != NULL && pd->v[var] )
+    {
+	  for (j=0; j<ei->dof[var]; j++)
+	    {
+	      d_h->F[j] += param[0]*ap_square*(R*(alpha*d_k->F[j]+k*d_alpha->F[j])
+                           -alpha*k*d_R->F[j])/SQUARE(R);
+	    }
+    }
+
+  var = ACOUS_PREAL;
+  if ( d_h != NULL && pd->v[var] )
+    {
+	  for (j=0; j<ei->dof[var]; j++)
+	    {
+	      d_h->APR[j] += param[0]*alpha*k/R*2.*fv->apr*bf[var]->phi[j]; 
+	    }
+    }
+  var = ACOUS_PIMAG;
+  if ( d_h != NULL && pd->v[var] )
+    {
+	  for (j=0; j<ei->dof[var]; j++)
+	    {
+	      d_h->API[j] += param[0]*alpha*k/R*2.*fv->api*bf[var]->phi[j]; 
 	    }
     }
    

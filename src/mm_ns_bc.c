@@ -4188,7 +4188,7 @@ fvelo_slip_level(double func[MAX_PDIM],
   /* compute stress tensor and its derivatives */
   if( type == VELO_SLIP_LEVEL_SIC_BC) 
     {
-      if(vn->evssModel == LOG_CONF)
+      if(vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
         {
           fluid_stress_conf( Pi, d_Pi);
         }
@@ -4904,7 +4904,7 @@ sheet_tension ( double cfunc[MDE][DIM],
         }
     }
 
-    if(vn->evssModel == LOG_CONF)
+    if(vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
       {
         fluid_stress_conf( Pi, &d_Pi);
       }
@@ -6553,7 +6553,7 @@ flow_n_dot_T_nobc(double func[DIM],
   if(iflag == -1) fv->P = pdatum;
 
   /* compute stress tensor and its derivatives */
-  if(vn->evssModel == LOG_CONF)
+  if(vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
     {
       fluid_stress_conf( Pi, d_Pi);
     }
@@ -6731,7 +6731,8 @@ flow_n_dot_T_nobc(double func[DIM],
 	    }
 	}
 
-      if ( pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF) )
+      if ( pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF
+				       || vn->evssModel == EVSS_GRADV || vn->evssModel == LOG_CONF_GRADV) )
 	{
 	  for (p=0; p<pd->Num_Dim; p++)
 	    {
@@ -7478,13 +7479,13 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
 *****************************************************************************/
 {
 
-  int i,j, eqn, var, a, b, q, mode, w, k;
+  int i,j, eqn, a, b, mode, w, k;
   int siz;
   int R_s[MAX_MODES][DIM][DIM];
   int v_s[MAX_MODES][DIM][DIM];
   int inv_v_s [DIM][DIM];
-  int v_g[DIM][DIM];
   int dim = pd->Num_Dim;
+  int logc_gradv = 0;
 
   dbl grad_v[DIM][DIM];    /* Velocity gradient based on velocity - discontinuous across element */
   dbl gamma[DIM][DIM];     /* Shear-rate tensor based on velocity */
@@ -7493,28 +7494,19 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
   dbl exp_s[DIM][DIM];  // Exponential of log_conf
   dbl trace = 0.0;         /* trace of the stress tensor */
   dbl s_dot[DIM][DIM];     /* stress tensor from last time step */
-  dbl g[DIM][DIM];         /* velocity gradient tensor */
   dbl gt[DIM][DIM];        /* transpose of velocity gradient tensor */
-  dbl source_a;
 
   dbl source_term1[DIM][DIM];
   dbl advection_term1[DIM][DIM];
-
-  /* dot product tensors */
-  dbl s_dot_s[DIM][DIM];
 
   /* polymer viscosity and derivatives */
   dbl mup;
   VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
-  dbl d_mup_dv_pj;
 
   /*  shift function */
   dbl at = 0.0;
-  dbl d_at_dT[MDE];
   dbl wlf_denom;
-
-  dbl term1=0.;
 
   // Decomposition of velocity vector
   dbl eig_values[DIM];
@@ -7534,9 +7526,8 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
   dbl Z=1.0;         /* This is the factor appearing in front of the stress tensor in PTT */
 
   /* ETMs*/
-  dbl mass, advection, source, source1;
+  dbl mass, advection, source;
 
-  dbl phi_j;
   dbl d_lambda;
 
   if(af->Assemble_LSA_Mass_Matrix)
@@ -7553,20 +7544,15 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
   (void) stress_eqn_pointer(v_s);
   (void) stress_eqn_pointer(R_s);
 
-  v_g[0][0] = VELOCITY_GRADIENT11;
-  v_g[0][1] = VELOCITY_GRADIENT12;
-  v_g[1][0] = VELOCITY_GRADIENT21;
-  v_g[1][1] = VELOCITY_GRADIENT22;
-  v_g[0][2] = VELOCITY_GRADIENT13;
-  v_g[1][2] = VELOCITY_GRADIENT23;
-  v_g[2][0] = VELOCITY_GRADIENT31;
-  v_g[2][1] = VELOCITY_GRADIENT32;
-  v_g[2][2] = VELOCITY_GRADIENT33;
-
   memset( exp_s, 0, sizeof(double)*DIM*DIM);
   memset( R1, 0, sizeof(double)*DIM*DIM);
   memset( eig_values, 0, sizeof(double)*DIM);
 
+  if(vn->evssModel == LOG_CONF_GRADV)
+    {
+      logc_gradv = 1;
+    }
+  
   /*
    * Load up Field variables...
    */
@@ -7592,8 +7578,7 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
      {
       for ( b=0; b<VIM; b++)
          {
-          g[a][b]  = fv->G[a][b];
-          gt[b][a] = g[a][b];
+          gt[b][a] = fv->G[a][b];
          }
      }
 
@@ -7603,10 +7588,6 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
       if (vn->shiftModel == CONSTANT)
         {
          at = vn->shift[0];
-         for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
-            {
-             d_at_dT[j]=0.;
-            }
 	}
       else if(vn->shiftModel == MODIFIED_WLF)
         {
@@ -7614,20 +7595,11 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
          if(wlf_denom != 0.)
            {
             at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
-            for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
-               {
-                d_at_dT[j]= -at*vn->shift[0]*vn->shift[1]
-                            /(wlf_denom*wlf_denom)*bf[TEMPERATURE]->phi[j];
-               }
            }
          else
            {
             at = 1.;
            }
-         for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
-            {
-             d_at_dT[j]=0.;
-            }
 	}
      }
    else
@@ -7673,6 +7645,10 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
         {
           compute_exp_s(s, exp_s, eig_values, R1); 
         }
+      else
+	{
+	  EH(-1, "Log-conformation tensor tested only for 2D.");	  
+	}
 
       // Decompose velocity gradient
 
@@ -7701,7 +7677,14 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
               Rt_dot_gradv[i][j] = 0.;  
               for(w=0; w<VIM; w++) 
                 {
-                  Rt_dot_gradv[i][j] += R1_T[i][w] * gt[w][j];
+		  if(logc_gradv)
+		    {
+		      Rt_dot_gradv[i][j] += R1_T[i][w] * grad_v[j][w];
+		    }
+		  else
+		    {
+		      Rt_dot_gradv[i][j] += R1_T[i][w] * gt[w][j];
+		    }
                 }
             }
         }     
@@ -9132,6 +9115,7 @@ void fapply_moving_CA_sinh(
  const double wall_velocity,
  const double theta_max_degrees,
  const double dewet_input,
+ const double dcl_shearrate,
  const int bc_type,	/*  bc identifier	*/
  double dwall_velo_dx[MAX_PDIM][MDE],
  const int local_node)
@@ -9170,7 +9154,7 @@ void fapply_moving_CA_sinh(
   int iter, iter_max=20;
   double eps_tol=1.0e-12;
 #endif
-  double liq_visc = 0.0, gamma[DIM][DIM];
+  double liq_visc = 0.0, gamma[VIM][VIM];
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
 
@@ -9201,8 +9185,7 @@ void fapply_moving_CA_sinh(
   const double shik_max_factor = 1.01;
 /*  const double wall_sign = (TimeIntegration == STEADY) ? 1 : -1;  */
 /* disabling this sign change for now - doesn't seem necessary*/
-  const double wall_sign = (TimeIntegration == STEADY) ? 1 : 1;  
-
+  const double wall_sign = (TimeIntegration == STEADY) ? 1 : 1;   
 
   /*
    * What's the cosine of the current instantaneous contact angle, the
@@ -9247,14 +9230,23 @@ void fapply_moving_CA_sinh(
 
   if( bc_type == VELO_THETA_COX_BC || bc_type == VELO_THETA_HOFFMAN_BC )
 	{
+         if( dcl_shearrate > 0)
+           {
+             memset( gamma, 0, sizeof(double)*VIM*VIM);
+	     gamma[0][1] = gamma[1][0] = dcl_shearrate;
+             liq_visc = viscosity(gn, gamma, NULL);
+           }
+         else
+           {
          for ( p=0; p<VIM; p++)
             {
                 for ( q=0; q<VIM; q++)
                     {
-                     gamma[p][q] = fv->grad_v[p][q] + fv->grad_v[q][p];
+                     gamma[p][q] = fv->grad_v[p][q] + fv->grad_v[q][p]; 
                     }
+            }
+            liq_visc = viscosity(gn, gamma, d_mu);
            }
-          liq_visc = viscosity(gn, gamma, d_mu);
 	}
 
   /*
@@ -9453,13 +9445,16 @@ void fapply_moving_CA_sinh(
    *          v - t.dxdt = 0
    */
 
+#ifdef ALE_DCA_INFO_PLEASE
+if ( af->Assemble_Jacobian ) 
+fprintf(stderr,"v_wetting: %g v_mesh: %g dvmdt: %g DCA: %g\n",v,v_mesh, v_mesh_dt,acos(costheta)*180/M_PIE);
+#endif
 #if 0
-fprintf(stderr,"normals %g %g %g %g\n",fsnormal[0],fsnormal[1],ssnormal[0],ssnormal[1]);
-fprintf(stderr,"\nwall_v x_dot  %g %g %g \n",wall_sign*wall_velocity,x_dot[0],x_dot[1]);
-fprintf(stderr,"cos sin CA#  %g %g %g \n",costheta, sintheta, ca_no);
-fprintf(stderr,"v_wetting v_mesh DCA  %g %g %g %g\n",v,v_mesh, v_mesh_dt,acos(costheta)*180/M_PIE);
-fprintf(stderr,"dewet sign  %g %g %g\n",dewet, sign, wall_sign);
-fprintf(stderr,"velocity  %g %g %g %d\n",v,v_mesh,v_mesh_dt,local_node);
+fprintf(stderr,"fs_normal: %g %g ss_normal: %g %g\n",fsnormal[0],fsnormal[1],ssnormal[0],ssnormal[1]);
+fprintf(stderr,"\nwall_v: %g  x_dot: %g %g \n",wall_sign*wall_velocity,x_dot[0],x_dot[1]);
+fprintf(stderr,"cos: %g  sin: %g  CA#:  %g \n",costheta, sintheta, ca_no);
+fprintf(stderr,"dewet %g sign  %g wall_sign %g\n",dewet, sign, wall_sign);
+fprintf(stderr,"velocity  %g v_mesh %g dvmdt: %g node: %d\n",v,v_mesh,v_mesh_dt,local_node);
 #endif
 
   if ( pd->Num_Dim != 1) 
@@ -11287,7 +11282,7 @@ apply_sharp_wetting_velocity(double func[MAX_PDIM],
   /* compute stress tensor and its derivatives */
   if( include_stress)  
     {
-      if(vn->evssModel == LOG_CONF)
+      if(vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
         {
           fluid_stress_conf( Pi, d_Pi);
         }
@@ -14923,7 +14918,7 @@ shear_to_shell ( double cfunc[MDE][DIM],
   
   detJ = 1.0;
 
-  if(vn->evssModel == LOG_CONF)
+  if(vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
     {
       fluid_stress_conf( Pi, &d_Pi);
     }

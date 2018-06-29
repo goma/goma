@@ -2325,10 +2325,14 @@ rd_levelset_specs(FILE *ifp,
 
       if( strcmp(input, "GRID_SEARCH") == 0 )
         {
+	  int err;
 	  EH(-1,"The Level Set Search Option : GRID_SEARCH is not functioning at this time.\n");
 
           ls->Search_Option = GRID_SEARCH;
-          fscanf(ifp,"%d", &(ls->Grid_Search_Depth));
+          err = fscanf(ifp,"%d", &(ls->Grid_Search_Depth));
+	  if (err != 1) {
+	    EH(-1, "Expected to read one int for GRID_SEARCH");
+	  }
 
 	  SPF(endofstring(echo_string)," %d",ls->Grid_Search_Depth);
         }
@@ -6621,6 +6625,7 @@ rd_solver_specs(FILE *ifp,
   
   /* look for optional flags specifying dependencies to ignore */
   {
+    int err;
     int eq, var;
     
     for (eq=0; eq<MAX_VARIABLE_TYPES; eq++)
@@ -6664,7 +6669,12 @@ rd_solver_specs(FILE *ifp,
 	  EH(-1, "Error reading variable type for Ignore Dependency");
 	}
       /* look for optional flag to apply this card in a symmetric manner */
-      fscanf(ifp, "%d",&symmetric_flag);
+      err = fscanf(ifp, "%d",&symmetric_flag);
+
+      errno = 0;
+      if ((err != 0 || err != 1) && (err == EOF && errno != 0)) {
+	EH(-1, "Error reading symmetric flag for Ignore Dependency");
+      }
       
       if ( !strcmp(input, "all") || !strcmp(input, "ALL") )
         {
@@ -6803,6 +6813,30 @@ rd_eigen_specs(FILE *ifp,
         }
       break;
 
+    case HUN_ZEROTH:
+    case HUN_FIRST:
+fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
+      if (strcmp(input, "cayley") == 0)
+        {
+          eigen->Eigen_Algorithm = LSA_CAYLEY;
+        }
+      else if (strcmp(input, "si") == 0)
+        {
+          eigen->Eigen_Algorithm = LSA_SI;
+        }
+      else eigen->Eigen_Algorithm = LSA_DEFAULT;
+
+/* Initialize these to avoid UMR's: */
+      if (0 &&  loca_in->Cont_Alg == LOCA_LSA_ONLY)
+        {
+          cont->BegParameterValue = 0.0;
+          cont->EndParameterValue = 0.0;
+          cont->Delta_s0 = 0.0;
+          cont->MaxPathSteps = 0;
+          cont->print_freq = 1;
+          cont->upType = LOCA_LSA_ONLY;
+        }
+      break;
 /* For non-LOCA continuation, this card does not apply */
     default:
       fprintf(stdout, "LSA not available for continuation without LOCA!");
@@ -11778,7 +11812,7 @@ translate_command_line( int argc,
 		    }
 		  strcat(command_line_ap," ");
 		}
-	      sprintf(aprepro_command, command_line_ap);
+	      sprintf(aprepro_command, "%s", command_line_ap);
 	      strcpy_rtn = strcpy(clc[*nclc]->string, command_line_ap);
 	    } /*end of else if list */
 
@@ -14480,13 +14514,13 @@ echo_compiler_settings()
        fprintf(echo_file, "%-30s= %s\n", "HAVE_SPARSE", "no");
 #endif
 
-#ifdef HAVE_BLAS
+#ifdef GOMA_HAVE_BLAS
        fprintf(echo_file, "%-30s= %s\n", "HAVE_BLAS", "yes");
 #else
        fprintf(echo_file, "%-30s= %s\n", "HAVE_BLAS", "no");
 #endif
 
-#ifdef HAVE_LAPACK
+#ifdef GOMA_HAVE_LAPACK
        fprintf(echo_file, "%-30s= %s\n", "HAVE_LAPACK", "yes");
 #else
        fprintf(echo_file, "%-30s= %s\n", "HAVE_LAPACK", "no");

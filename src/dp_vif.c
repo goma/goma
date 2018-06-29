@@ -149,6 +149,7 @@ noahs_raven()
   ddd_add_member(n, &nn_post_data, 1, MPI_INT);
   ddd_add_member(n, &nn_post_data_sens, 1, MPI_INT);
   ddd_add_member(n, &nn_volume, 1, MPI_INT );
+  ddd_add_member(n, &nn_global, 1, MPI_INT);
   ddd_add_member(n, &Chemkin_Needed, 1, MPI_INT);
   ddd_add_member(n, &efv->ev, 1, MPI_INT);
   ddd_add_member(n, &LOCA_UMF_ID, 1, MPI_INT);
@@ -388,7 +389,17 @@ raven_landing()
 	                     array_alloc(1,1,sizeof( struct Post_Processing_Volumetric ) );
 	}
     }
-				 
+
+  if ( nn_global > 0 )
+    {
+      pp_global = (struct Post_Processing_Global **)
+	array_alloc(1, nn_global, sizeof(struct Post_Processing_Global *));
+      for ( i = 0; i < nn_global; i++)
+	{
+	  pp_global[i] = (struct Post_Processing_Global *)
+	    array_alloc(1, 1, sizeof(struct Post_Processing_Global));
+	}
+    }
 
   /*
    * Zienkewicz-Zhu error measures.
@@ -614,7 +625,7 @@ noahs_ark()
   ddd_add_member(n, Init_GuessFile, MAX_FNL, MPI_CHAR);
   ddd_add_member(n, Soln_OutFile, MAX_FNL, MPI_CHAR);
   ddd_add_member(n, ExoAuxFile, MAX_FNL, MPI_CHAR);
-  ddd_add_member(n, &ExoTimePlane, MAX_FNL, MPI_INT);
+  ddd_add_member(n, &ExoTimePlane, 1, MPI_INT);
   ddd_add_member(n, &Write_Intermediate_Solutions, 1, MPI_INT);
   ddd_add_member(n, &Write_Initial_Solution, 1, MPI_INT);
   
@@ -2623,6 +2634,15 @@ noahs_ark()
 	  ddd_add_member(n, &(pp_volume[i]->blk_id), 1, MPI_INT );
 	  ddd_add_member(n,   pp_volume[i]->volume_fname, MAX_FNL, MPI_CHAR );
 	  ddd_add_member(n, &(pp_volume[i]->num_params), 1, MPI_INT );
+	}
+    }
+
+  if( nn_global > 0 )
+    {
+      for( i=0; i< nn_global; i++)
+	{
+	  ddd_add_member(n, &(pp_global[i]->type), 1, MPI_INT );
+	  ddd_add_member(n,   pp_global[i]->filenm, MAX_FNL, MPI_CHAR );
 	}
     }
 			 

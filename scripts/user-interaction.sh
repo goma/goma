@@ -68,7 +68,7 @@ function compiler_test {
             exit 1
         fi
     else
-        if COMPILER_VERSION=$(gcc --version | grep -o -e "[0-9]\+\.[0-9]*\.[0-9]* " | grep -o -e "[0-9]\+\.[0-9]*\.[0-9]*") ; then
+        if COMPILER_VERSION=$(gcc -dumpversion) ; then
             [ "$COMPILER_VERSION" = "`echo -e "4.8.1\n$COMPILER_VERSION" | sort -V | tail -n1`" ] && CXX11="true" || CXX11="false"
             CC_NAME="gnu"
             FORTRAN_LIB="-lc -lgcc -lstdc++ -lgfortran"
@@ -254,8 +254,8 @@ F compiler: `which mpifort` \n\
 "
     fi
 
-    QUESTION="${QUESTION}Library Location: `realpath ${GOMA_LIB}` \n\
-Compile Threads: $USED_MAKE_JOBS \n\
+    QUESTION="${QUESTION}Library Location: `readlink --canonicalize ${GOMA_LIB}` \n\
+Compile Processorss: $USED_MAKE_JOBS \n\
 \n\
 Proceed?"
     recommended=true

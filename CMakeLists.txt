@@ -50,14 +50,14 @@ endif()
 
 ### If you ever want to add additional flags when running debug (other than -g which is automatically added)
 if (${CMAKE_BUILD_TYPE} MATCHES DEBUG)
-  set(${${PROJECT_NAME}_EXTRA_C_FLAGS} "${${PROJECT_NAME}_EXTRA_C_FLAGS} -Wall")
-  set(${${PROJECT_NAME}_EXTRA_CXX_FLAGS} "${${PROJECT_NAME}_EXTRA_CXX_FLAGS} -Wall")
-  set(${${PROJECT_NAME}_EXTRA_F_FLAGS} "${${PROJECT_NAME}_EXTRA_F_FLAGS}")
+  set(${PROJECT_NAME}_EXTRA_C_FLAGS "${${PROJECT_NAME}_EXTRA_C_FLAGS} -Wall")
+  set(${PROJECT_NAME}_EXTRA_CXX_FLAGS "${${PROJECT_NAME}_EXTRA_CXX_FLAGS} -Wall")
+  set(${PROJECT_NAME}_EXTRA_F_FLAGS "${${PROJECT_NAME}_EXTRA_F_FLAGS}")
 
 else()
-  set(${${PROJECT_NAME}_EXTRA_C_FLAGS} "${${PROJECT_NAME}_EXTRA_C_FLAGS} -Wall")
-  set(${${PROJECT_NAME}_EXTRA_CXX_FLAGS} "${${PROJECT_NAME}_EXTRA_CXX_FLAGS} -Wall")
-  set(${${PROJECT_NAME}_EXTRA_F_FLAGS} "${${PROJECT_NAME}_EXTRA_F_FLAGS} ")
+  set(${PROJECT_NAME}_EXTRA_C_FLAGS "${${PROJECT_NAME}_EXTRA_C_FLAGS} -Wall")
+  set(${PROJECT_NAME}_EXTRA_CXX_FLAGS "${${PROJECT_NAME}_EXTRA_CXX_FLAGS} -Wall")
+  set(${PROJECT_NAME}_EXTRA_F_FLAGS "${${PROJECT_NAME}_EXTRA_F_FLAGS} ")
 endif()
 
 execute_process(COMMAND git describe --dirty --always --tags OUTPUT_VARIABLE GitVersion RESULT_VARIABLE IsGit)
@@ -215,6 +215,16 @@ endif()
 ### Alert the user that everything is going okay.
 message("\nFound Trilinos version: ${Trilinos_VERSION}\n")
 
+# Avoid the "Too many open files" error when linking
+# Need to reverse so that proper linking order is preserved
+# after removal
+LIST(REVERSE Trilinos_LIBRARIES)
+LIST(REMOVE_DUPLICATES Trilinos_LIBRARIES)
+LIST(REVERSE Trilinos_LIBRARIES)
+
+LIST(REVERSE Trilinos_TPL_LIBRARIES)
+LIST(REMOVE_DUPLICATES Trilinos_TPL_LIBRARIES)
+LIST(REVERSE Trilinos_TPL_LIBRARIES)
 
 option(${PROJECT_NAME}_Build_Stratimikos "If you have stratimikos and want support for it enable this. This modifies the definitions" ${Trilinos_Stratimikos_FOUND})
 if(${PROJECT_NAME}_Build_Stratimikos)

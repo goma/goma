@@ -157,7 +157,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   double	*gvec=NULL;
   double        ***gvec_elem;
   FILE          *file=NULL;
-  double 	toler_org[3],damp_org;
+  double 	toler_org[3];
   
   struct Results_Description  *rd=NULL;
   
@@ -192,7 +192,6 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   toler_org[0] = custom_tol1;
   toler_org[1] = custom_tol2;
   toler_org[2] = custom_tol3;
-  damp_org = damp_factor1;
 
   is_steady_state = TRUE;
 
@@ -1060,7 +1059,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
  	  DPRINTF(stderr," W: Did not converge in Newton steps.\n");
  	  DPRINTF(stderr,"    Find better initial guess.       \n");
  	  DPRINTF(stderr," ************************************\n"); 
- 	  exit(0);
+          goto free_and_clear;
+ 	  /*exit(0);  */
 	}
 
         /*
@@ -1097,7 +1097,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	    /* This needs to have a return value of 0, indicating
 	     * success, for the continuation script to not treat this
 	     * as a failed command. */
-	    exit(0);
+          goto free_and_clear;
+ 	  /*exit(0);  */
             }
          } else  {
 	for (iHC=0;iHC<nHC;iHC++) {
@@ -1127,7 +1128,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	    /* This needs to have a return value of 0, indicating
 	     * success, for the continuation script to not treat this
 	     * as a failed command. */
-	    exit(0);
+          goto free_and_clear;
+ 	  /*exit(0);  */
 	  } 
 	}  /* end of iHC loop  */
     alqALC = 1;
@@ -1316,7 +1318,6 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     custom_tol1 = toler_org[0];
     custom_tol2 = toler_org[1];
     custom_tol3 = toler_org[2];
-    /*  damp_factor1 = damp_org;  */
     damp_factor1 = 1.0;
     DPRINTF(stderr,
 	    "\n\tStep accepted, theta (proportion complete) = %10.6e\n",
@@ -1513,7 +1514,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	{
 	  DPRINTF(stderr,"\n\tFailed to reach end of hunt in maximum number of successful steps (%d).\n\tSorry.\n",
 		  MaxPathSteps);
- 	  exit(0);
+          goto free_and_clear;
+ 	  /*exit(0);  */
 	}
 #ifdef PARALLEL
       check_parallel_error("Hunting error");

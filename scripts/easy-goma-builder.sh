@@ -38,12 +38,13 @@ fi
 
 CC_NAME="gnu"
 CC_CMD="gcc"
-COMPILER_VERSION=$(gcc --version | grep -o -e "[0-9]\+\.[0-9]*\.[0-9]* " | grep -o -e "[0-9]\+\.[0-9]*\.[0-9]*") &> /dev/null
+COMPILER_VERSION=$(gcc -dumpversion)
 [ "$COMPILER_VERSION" = "`echo -e "4.8.1\n$COMPILER_VERSION" | sort -V | tail -n1`" ] && CXX11="true" || CXX11="false"
 if [[ "$CXX11" == "true" ]]; then
    CXX11="true"
 else
    CXX11="false"
+   echo "Cannot use easy-builder with a compiler that does not support c++11"
    exit 1
 fi
 MATH_LIBRARIES="netlib blas"
@@ -51,7 +52,7 @@ SYS_LIB="-lm -lz"
 User_Flags="-O1"
 
 
-cd $(dirname `realpath $0`)
+cd $(dirname `readlink --canonicalize $0`)
 source user-interaction.sh
 GOMA_LIB=gomaTPLs
 if [ "$MPI_BASE_DIR" == "BUILD" ]; then
@@ -62,7 +63,7 @@ C compiler: Built mpicc \n\
 C++ compiler: Built mpicxx \n\
 F compiler: Built mpifort \n\
 Math Libraries: $MATH_LIBRARIES \n\
-Library Location: `realpath ${GOMA_LIB}` \n\
+Library Location: `readlink --canonicalize ${GOMA_LIB}` \n\
 \n\
 Build Goma with these settings?"
 elif [ "$MPI_NAME" == "intel" ]; then
@@ -73,7 +74,7 @@ C compiler: `which mpicc` \n\
 C++ compiler: `which mpicxx` \n\
 F compiler: `which mpifc` \n\
 Math Libraries: $MATH_LIBRARIES 3.7.1    (to be built) \n\
-Library Location: `realpath ${GOMA_LIB}` \n\
+Library Location: `readlink --canonicalize ${GOMA_LIB}` \n\
 \n\
 Build Goma with these settings?"
 else
@@ -84,7 +85,7 @@ C compiler: `which mpicc` \n\
 C++ compiler: `which mpicxx` \n\
 F compiler: `which mpifort` \n\
 Math Libraries: $MATH_LIBRARIES 3.7.1    (to be built) \n\
-Library Location: `realpath ${GOMA_LIB}` \n\
+Library Location: `readlink --canonicalize ${GOMA_LIB}` \n\
 \n\
 Build Goma with these settings?"
 fi
@@ -100,14 +101,14 @@ if [ "$isok" == "false" ]; then
     if [ -z "$GOMA_LIB" ]; then
         GOMA_LIB="gomaTPLs"
     fi
-    echo "Enter the number of threads you want to use to compile the libraries"
+    echo "Enter the number of processors you want to use to compile the libraries"
     read USED_MAKE_JOBS
     if [ -z "$USED_MAKE_JOBS" ]; then
         USED_MAKE_JOBS="1"
     fi
     confirm Easy Goma Builder script
 else
-    echo "Enter the number of threads you want to use to compile the libraries"
+    echo "Enter the number of processors you want to use to compile the libraries"
     read USED_MAKE_JOBS
     if [ -z "$USED_MAKE_JOBS" ]; then
         USED_MAKE_JOBS="1"
@@ -148,14 +149,14 @@ fi
 
 if [ "$MPI_NAME" == "open" ]; then
     if [ "$MPI_BASE_DIR" == "BUILD" ]; then
-        export PATH="`realpath ${GOMA_LIB}`/openmpi-2.1.1/bin:$PATH"
-        export LD_LIBRARY_PATH="`realpath ${GOMA_LIB}`/openmpi-2.1.1/lib:$LD_LIBRARY_PATH"
+        export PATH="`readlink --canonicalize ${GOMA_LIB}`/openmpi-2.1.1/bin:$PATH"
+        export LD_LIBRARY_PATH="`readlink --canonicalize ${GOMA_LIB}`/openmpi-2.1.1/lib:$LD_LIBRARY_PATH"
         BUILD_MPI="true"
         # This lets you at least compile openMPI with intel compiler, but this still breaks some unit tests
         if [ "$CC_NAME" == "intel" ]; then
-            MPI_LIB="-L`realpath ${GOMA_LIB}`/openmpi-2.1.1/lib -lmpi -lmpi_mpifh -lifcore"
+            MPI_LIB="-L`readlink --canonicalize ${GOMA_LIB}`/openmpi-2.1.1/lib -lmpi -lmpi_mpifh -lifcore"
         else
-            MPI_LIB="-L`realpath ${GOMA_LIB}`/openmpi-2.1.1/lib -lmpi -lmpi_mpifh"
+            MPI_LIB="-L`readlink --canonicalize ${GOMA_LIB}`/openmpi-2.1.1/lib -lmpi -lmpi_mpifh"
         fi
     else
         MPI_LIB="-L${MPI_BASE_DIR}/lib -lmpi -lmpi_mpifh"
@@ -185,7 +186,7 @@ if [ "$MATH_LIBRARIES" == "intel" ] && [ "$CC_NAME" == "gnu" ]; then
     User_Flags="-O1 -I${MKLROOT}/include/intel64/ilp64 -m64 -I${MKLROOT}/include"
 fi
 
-export GOMA_LIBS=`realpath ${GOMA_LIB}`
+export GOMA_LIBS=`readlink --canonicalize ${GOMA_LIB}`
 rm -rf ../build
 mkdir -p ../build
 cd ../build
@@ -201,7 +202,7 @@ if make -j ${USED_MAKE_JOBS} 2>&1 && [ -f goma ] | tee -a ../scripts/easygomabui
     echo "Visit https://goma.github.io for useful documentation & tutorials"
     echo
     echo "Goma is located at"
-    echo $(realpath "`dirname $0`/../bin/goma")
+    echo $(readlink --canonicalize "`dirname $0`/../bin/goma")
     echo
     echo "It's probably necessary that you run:"
     echo "export PATH=\$PATH:$GOMA_LIBS/trilinos-12.10.1-Built/bin"

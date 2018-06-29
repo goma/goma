@@ -699,7 +699,7 @@ evaluate_flux(
                             dbl eig_values[DIM];
 		            dbl mup = 0.;
  			    dbl lambda = 0.;
-                            if(vn->evssModel==LOG_CONF)
+                            if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
                               {
                                 for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
                                   {
@@ -1146,7 +1146,6 @@ evaluate_flux(
                           local_qconv += (fv->snormal[a]*(fv->v[a]-x_dot[a])
                                          *fv->c[species_id] );
                         }
-                          local_qconv = 0;
                           local_flux +=  weight*det*local_q;
                           local_flux_conv += weight*det*local_qconv;
 		      break;
@@ -5038,6 +5037,10 @@ compute_volume_integrand(const int quantity, const int elem,
     {
       *sum += weight*det*visc_diss_heat_source(NULL, mp->u_heat_source);
       *sum += weight*det*visc_diss_acoustic_source(NULL, mp->u_heat_source, mp->len_u_heat_source);
+    }
+  if (mp->HeatSourceModel == EM_DISS )
+    {
+      *sum += weight*det*em_diss_heat_source(NULL, mp->u_heat_source, mp->len_u_heat_source);
     }
   else
     {

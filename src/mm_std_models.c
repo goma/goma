@@ -5924,9 +5924,18 @@ electrolyte_temperature (double t,         /* present value of time */
           t0 = tran->init_time;
         }
 #ifndef tflop
-            if(t <= t0) system("rm T_vs_t.out");  /* zero the file before writing to it */ 
+      if(t <= t0)
+	{
+	  fp = fopen("T_vs_t.out", "w");
+	}
+      else
+	{
+	  fp = fopen("T_vs_t.out", "a");
+	}
+#else
+      fp = fopen("T_vs_t.out", "a");
 #endif
-            if( (fp = fopen("T_vs_t.out", "a")) != NULL)  
+            if(fp != NULL)
               {
                 fprintf(fp, "%15e %15e\n", t, T);
               }

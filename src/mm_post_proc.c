@@ -92,6 +92,7 @@ int nn_error_metrics;           /* Dimension of the following structure */
 int nn_particles;               /* Dimension of the following structure */
 int nn_volume;                  /* number of pp_volume_int structures */
 int ppvi_type;             /* Maybe there's a better way to do this, Seems like globals abound! AMC*/
+int nn_global;             /* Hopefully these post processing things get refactored into non-globals at some point */
 
 struct Post_Processing_Data        **pp_data;
 struct Post_Processing_Data_Sens   **pp_data_sens;
@@ -100,6 +101,7 @@ struct Post_Processing_Fluxes      **pp_fluxes;
 struct Post_Processing_Fluxes_Sens **pp_fluxes_sens;
 struct Post_Processing_Particles   **pp_particles;
 struct Post_Processing_Volumetric  **pp_volume;
+pp_Global       **pp_global;
 
 static int error_presence_key[3]; /* Truth key (dim 3) as to which error 
 				   * measure elem sizes are being done */
@@ -2513,7 +2515,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[VON_MISES_STRESS] = 1.;
   }
 
-  if (LOG_CONF_MAP != -1 && pd->v[POLYMER_STRESS11] && vn->evssModel == LOG_CONF) {
+  if (LOG_CONF_MAP != -1 && pd->v[POLYMER_STRESS11] &&
+      (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)) {
     index = 0;
     VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
     VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;
@@ -4539,6 +4542,38 @@ post_process_elem(double x[], /* soln vector */
   /* Release the struct array memory if it exists */
   if ( nn_error_metrics > 0 ) free (pp_error_data);
 }
+/*****************************************************************************/
+
+void
+post_process_global(double *x,	 /* Solution vector for the current processor */
+		    Exo_DB *exo,
+		    Dpi *dpi,
+		    double time)
+{
+  int i;
+  for (i = 0; i < nn_global; i++) {
+    switch (pp_global[i]->type) {
+    case PP_GLOBAL_LS_INTERFACE_PRINT:
+      {
+	if (ls != NULL) {
+	  print_ls_interface(x, exo, dpi, time, pp_global[i]->filenm, FALSE);
+	}
+      }
+      break;
+    case PP_GLOBAL_LS_INTERFACE_PRINT_ALL_TIMES:
+      {
+	if (ls != NULL) {
+	  print_ls_interface(x, exo, dpi, time, pp_global[i]->filenm, TRUE);
+	}
+      }
+      break;
+    default:
+      EH(-1, "Unknown global post process type");
+      break;
+    }
+  }
+}
+
 /********************************************************************************/
 /********************************************************************************/
 /********************************************************************************/
@@ -7314,10 +7349,15 @@ rd_post_process_specs(FILE *ifp,
      */
 
     for (i = 0; i < nn_post_data; i++) {
+      char *fgetsretval;
       look_for(ifp, "DATA", input, '=');
 
       save_position = ftell(ifp);
-      fgets(data_line_buffer, MAX_CHAR_IN_INPUT, ifp);
+      fgetsretval = fgets(data_line_buffer, MAX_CHAR_IN_INPUT, ifp);
+      if (fgetsretval == NULL) {
+	EH(-1, "Error reading post processing line");
+      }
+
       fseek(ifp, save_position, SEEK_SET);
 
       /*
@@ -7942,6 +7982,94 @@ rd_post_process_specs(FILE *ifp,
       ppvi_type = PPVI_VERBOSE;
     }
   }
+
+  /*
+   *  SCHEDULE POST-PROCESSING GLOBAL CALCULATIONS, IF NEEDED
+   */
+
+  iread=look_for_optional(ifp, "Post Processing Global", input, '=');
+
+  /* count number of post-processing flux calculation specifications */
+
+  if (iread == 1)
+    {
+      nn_global = count_list(ifp, "GLOBAL", input, '=', "END OF GLOBAL");
+      ECHO("\nPost Processing Global =\n", echo_file);
+    }
+  else
+    {
+      nn_global = 0;
+    }
+
+  /*
+   *  Allocate memory to hold the flux information
+   */
+
+  if ( nn_global > 0 )
+    {
+      sz = sizeof(struct Post_Processing_Global *);
+      pp_global = (struct Post_Processing_Global **) array_alloc(1, nn_global, sz);
+
+      sz = sizeof(struct Post_Processing_Global);
+
+      for(i = 0; i < nn_global; i++)
+	{
+	  pp_global[i] = (struct Post_Processing_Global *) array_alloc(1, 1, sz);
+	}
+
+      /*Now load up information by reading cards */
+
+      for (i = 0; i < nn_global; i++)
+	{
+	  look_for(ifp, "GLOBAL", input, '=');
+
+	  /* Read GLOBAL  type */
+
+	  if (fscanf(ifp, "%s", ts) != 1)
+	    {
+	      EH( -1, "error reading Post Processing Global input variable");
+	    }
+
+	  pp_global[i]->type = -1;
+	  for (k=0; k < PP_GLOBAL_COUNT; k++)
+	    {
+	      if(!strcmp(ts, pp_global_names[k].name))
+		{
+		  pp_global[i]->type = pp_global_names[k].Index;
+		  strcpy(pp_global[i]->type_name, ts);
+		  break;
+		}
+	    }
+	  if(pp_global[i]->type == -1)       {
+	    EH( -1, "Invalid Global name");
+	  }
+	  SPF(echo_string,"%s = %s", "GLOBAL", pp_global[i]->type_name);
+
+	  /* Custom post processing card reading for global */
+	  switch (pp_global[i]->type) {
+	    /* Read in a file name */
+	  case PP_GLOBAL_LS_INTERFACE_PRINT:
+	  case PP_GLOBAL_LS_INTERFACE_PRINT_ALL_TIMES:
+	    {
+
+	      /* read file name */
+	      if (fscanf(ifp, "%s", ts) != 1)
+		{
+		  EH( -1, "error reading Post Processing Global filename");
+		}
+	      strcpy(pp_global[i]->filenm, ts);
+	      SPF(endofstring(echo_string)," %s", pp_global[i]->filenm);
+	    }
+	    break;
+	  default:
+	    EH(-1, "Unsupported GLOBAL Post Processing Type");
+	    break;
+	  }
+
+	  ECHO(echo_string,echo_file);
+	}
+      ECHO("\nEND OF GLOBAL\n", echo_file);
+    }
 }
 /******************************************************************************/
 /******************************************************************************/

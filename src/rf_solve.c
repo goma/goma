@@ -119,6 +119,11 @@ PROTO(( int,
 		double *,
 		int ));
 
+// direct call to a fortran LAPACK eigenvalue routine
+extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
+			double *W, double *WORK, int *LWORK, int *INFO,
+			int len_jobz, int len_uplo);
+
 // C = A X B
 void slow_square_dgemm(int transpose_b, int N, double A[N][N], double B[N][N], double C[N][N]) {
   int i,j,k;
@@ -154,11 +159,8 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
   double s[VIM][VIM];
   double log_s[VIM][VIM];
   int s_idx[2][2];
-  int M = VIM;
   int N = VIM;
   int LDA = N;
-  int LDU = M;
-  int LDVT = N;
   int node,v,i,j;
 
   int INFO;
@@ -170,7 +172,7 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
   VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mu_struct;
 
   int mode,mn;
-  double lambda;
+  double lambda = 0;
   double mup;
   int v_s[MAX_MODES][DIM][DIM];
 
@@ -203,6 +205,10 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
         {
 	  lambda = mup/ve[mode]->time_const;
         }
+      else
+	{
+	  EH(-1, "Unknown model for Polymer Time Constant in initial guess log conf to stress");
+	}
 
       // skip node if stress variables not found
       if (s_idx[0][0] == -1 || s_idx[0][1] == -1 || s_idx[1][1] == -1) continue;
@@ -2683,7 +2689,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
         /* Fix output if current time step matches frequency */
         if ( (step_fix != 0 && nt == step_fix) ||
-             (i_fix == 1) && (tran->fix_freq > 0) ) {
+             ((i_fix == 1) && (tran->fix_freq > 0)) ) {
 #ifdef PARALLEL
           /* Barrier because fix needs both files to be finished printing
              and fix always occurs on the same timestep as printing */

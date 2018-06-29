@@ -1354,7 +1354,6 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 			 */
 			switch (bct2) {
 			case PLANE_BC:
-			case FILLET_BC:
 			case ROLL_FLUID_BC:
 			case GEOM_BC:	/* aka SPLINE note that the relation here may depend on 
 					 * the functional form of the geometry  */
@@ -1373,6 +1372,21 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 			    det2 = a1*c2-a2*c1;
 			    det3 = c1*b2-c2*b1;
 			    det = fabs(det1) + fabs(det2) + fabs(det3);
+			    break;
+			case FILLET_BC:
+			case DOUBLE_RAD_BC:
+			    a1 = BC_Types[ibc1].BC_Data_Float[0] ;
+			    a2 = BC_Types[ibc1].BC_Data_Float[1] ;			
+			    a3 = BC_Types[ibc1].BC_Data_Float[2] ;			
+			    a4 = BC_Types[ibc1].BC_Data_Float[3] ;			
+			    a5 = BC_Types[ibc1].BC_Data_Float[4] ;			
+			    b1 = BC_Types[ibc2].BC_Data_Float[0] ;
+			    b2 = BC_Types[ibc2].BC_Data_Float[1] ;
+			    b3 = BC_Types[ibc2].BC_Data_Float[2] ;
+			    b4 = BC_Types[ibc2].BC_Data_Float[3] ;
+			    b5 = BC_Types[ibc2].BC_Data_Float[4] ;
+			      det = fabs(a1 - b1) +  fabs(a2 - b2) +  fabs(a3 - b3)
+                                       + fabs(a4-b4) + fabs(a5 - b5);
 			    break;
 			case GD_CONST_BC:
 			    if ( (BC_Types[ibc1].BC_Data_Int[2] == BC_Types[ibc2].BC_Data_Int[2]) &&

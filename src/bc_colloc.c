@@ -370,6 +370,12 @@ apply_point_colloc_bc (
 		f_fillet(ielem_dim, &func, d_func, 
 		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC);
 		break;
+
+	    case DOUBLE_RAD_BC:
+		f_double_rad(ielem_dim, &func, d_func, 
+		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC);
+		break;
+
 	    case ROLL_FLUID_BC:
                 icount = BC_Types[bc_input_id].BC_Data_Int[2];
 xsurf[0] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+1];
@@ -761,7 +767,7 @@ fplane (int ielem_dim,
 /*****************************************************************************/
 
 void 
-f_fillet (int ielem_dim,
+f_fillet (const int ielem_dim,
         double *func,
         double d_func[],	/* dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
         const double *p,		/*  function parameters from data card  */
@@ -823,6 +829,145 @@ f_fillet (int ielem_dim,
 /*****************************************************************************/
 
 void 
+f_double_rad (const int ielem_dim,
+        double *func,
+        double d_func[],	/* dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
+        const double *p,		/*  function parameters from data card  */
+        const int num_const)           /* number of passed parameters   */
+{    
+/**************************** EXECUTION BEGINS *******************************/
+  double xpt1, ypt1, theta1, rad1, xcen1 , ycen1, alpha1;
+  double xpt2, ypt2, theta2, rad2, xcen2 , ycen2, alpha2;
+  double theta1m, theta2m, th1, th2, th2t, curv_mid, rad_curv;
+  double beta=0, xcirc, ycirc, dist1, dist2, dist_mid;
+  int is_curved = 0;
+
+  if(af->Assemble_LSA_Mass_Matrix)
+    return;
+
+  if(num_const < 8)
+       EH(-1,"Need at least 8 parameters for Double Rad lip geometry bc!\n");
+
+  xpt1=p[0];
+  ypt1=p[1];
+  theta1=p[2];
+  rad1=p[3];
+  xpt2=p[4];
+  ypt2=p[5];
+  theta2=p[6];
+  rad2=p[7];
+  if(num_const >= 8)
+       { curv_mid=p[8];  }
+  else
+       { curv_mid=0.0;  }
+
+  is_curved = DOUBLE_NONZERO(curv_mid);
+
+  /*  slope of middle line                */
+
+  theta1m = atan2(ypt2-ypt1,xpt2-xpt1);
+  theta1m = theta1m > theta1 ? theta1m : theta1m + 2*M_PIE;
+  theta2m = atan2(ypt1-ypt2,xpt1-xpt2);
+  alpha1 = 0.5*(theta1m-theta1);
+  alpha2 = 0.5*(theta2-theta2m);
+
+  xcen1 = xpt1 + (rad1/sin(alpha1))*cos(theta1+alpha1);
+  ycen1 = ypt1 + (rad1/sin(alpha1))*sin(theta1+alpha1);
+  xcen2 = xpt2 + (rad2/sin(alpha2))*cos(theta2m+alpha2);
+  ycen2 = ypt2 + (rad2/sin(alpha2))*sin(theta2m+alpha2);
+
+  if(is_curved)
+    {
+     rad_curv = 1./curv_mid;
+     dist_mid = sqrt(SQUARE(xpt1-xpt2)+SQUARE(ypt1-ypt2));
+     beta = asin(0.5*dist_mid*curv_mid);
+     xcirc = 0.5*(xpt1+xpt2)+rad_curv*cos(beta)*sin(theta1m);
+     ycirc = 0.5*(ypt1+ypt2)-rad_curv*cos(beta)*cos(theta1m);
+    /**   Shift fillet centers based on curvature  **/
+    /*  Using approximate distance from 90 degree corner for simplicity */
+
+     dist1 = rad1+sqrt((rad_curv-0.5*dist_mid)*(rad_curv+0.5*dist_mid-2*rad1))
+                 -sqrt((rad_curv-0.5*dist_mid)*(rad_curv+0.5*dist_mid));
+     dist2 = rad2+sqrt((rad_curv-0.5*dist_mid)*(rad_curv+0.5*dist_mid-2*rad2))
+                 -sqrt((rad_curv-0.5*dist_mid)*(rad_curv+0.5*dist_mid));
+#if 0
+     dist1 = 0;  dist2 = 0; 
+#endif
+     xcen1 -= dist1*cos(theta1);  ycen1 -= dist1*sin(theta1);
+     xcen2 -= dist2*cos(theta2);  ycen2 -= dist2*sin(theta2);
+#if 0
+fprintf(stderr,"arc distances %g %g \n",dist1,dist2);
+fprintf(stderr,"thetas %g %g %g %g\n",theta1, theta2, alpha1, alpha2);
+fprintf(stderr,"rads %g %g %g %g\n",rad1, rad2, rad_curv,beta);
+fprintf(stderr,"circle %g %g %g %g\n",xcirc,ycirc,xcen2, ycen2);
+#endif
+    }
+
+  /**   compute angle of point on curve from arc center **/
+
+  th1 = atan2(fv->x[1]-ycen1,fv->x[0]-xcen1);
+  th2 = atan2(fv->x[1]-ycen2,fv->x[0]-xcen2);
+  th2t = th2 > 0.0 ? th2 : th2 + 2*M_PIE;
+
+  /**  use different f depending on theta  **/
+
+  if( (theta1-0.5*M_PIE) <= th1 && th1 <= (theta1+alpha1))
+    {
+     *func = (fv->x[1]-ypt1)*cos(theta1) - (fv->x[0]-xpt1)*sin(theta1);
+      d_func[MESH_DISPLACEMENT1] =  -sin(theta1);
+      d_func[MESH_DISPLACEMENT2] =  cos(theta1);
+/*fprintf(stderr,"DR case 1 %g %g %g %g %g %g\n",*func,fv->x[0],fv->x[1],th1,th2,th2t);*/
+    }
+  else if ( (theta2-alpha2) <= th2t && (th2t - 0.5*M_PIE) <= theta2)
+    {
+     *func = (fv->x[1]-ypt2)*cos(theta2) - (fv->x[0]-xpt2)*sin(theta2);
+      d_func[MESH_DISPLACEMENT1] = -sin(theta2);
+      d_func[MESH_DISPLACEMENT2] = cos(theta2);
+/*fprintf(stderr,"DR case 2 %g %g %g %g %g %g\n",*func,fv->x[0],fv->x[1],th1,th2,th2t);*/
+    }
+  else if ( theta2m <= (th1+0.5*M_PIE-beta) && th1 <= (theta1-0.5*M_PIE))
+    {
+     *func = SQUARE(fv->x[0]-xcen1)+SQUARE(fv->x[1]-ycen1)-SQUARE(rad1);
+      d_func[MESH_DISPLACEMENT1] = 2.*(fv->x[0]-xcen1);
+      d_func[MESH_DISPLACEMENT2] = 2.*(fv->x[1]-ycen1);
+/*fprintf(stderr,"DR case 3 %g %g %g %g %g %g\n",*func,fv->x[0],fv->x[1],th1,th2,th2t);*/
+    }
+  else if ( (theta2m-0.5*M_PIE-beta) <= th2 && 
+                    ((th1+0.5*M_PIE-beta) <= theta2m || (th1+0.5*M_PIE-beta) <= (theta1m-M_PIE)))
+    {
+     if(is_curved)
+       {
+        *func = SQUARE(fv->x[0]-xcirc)+SQUARE(fv->x[1]-ycirc)-SQUARE(rad_curv);
+        d_func[MESH_DISPLACEMENT1] = 2.*(fv->x[0]-xcirc);
+        d_func[MESH_DISPLACEMENT2] = 2.*(fv->x[1]-ycirc);
+       }  
+     else
+       {
+        *func = (fv->x[1]-ypt1)*cos(theta1m) - (fv->x[0]-xpt1)*sin(theta1m);
+        d_func[MESH_DISPLACEMENT1] =  -sin(theta1m);
+        d_func[MESH_DISPLACEMENT2] =  cos(theta1m);
+       }
+/*fprintf(stderr,"DR case 4 %g %g %g %g %g %g %g %g\n",*func,fv->x[0],fv->x[1],th1,th2,th2t,theta1m,theta2m);*/
+    }
+  else if (  (th2t - 0.5*M_PIE) >= theta2 &&  (theta2m-0.5*M_PIE-beta) >= th2 )
+    {
+     *func = SQUARE(fv->x[0]-xcen2)+SQUARE(fv->x[1]-ycen2)-SQUARE(rad2);
+      d_func[MESH_DISPLACEMENT1] = 2.*(fv->x[0]-xcen2);
+      d_func[MESH_DISPLACEMENT2] = 2.*(fv->x[1]-ycen2);
+/*fprintf(stderr,"DR case 5 %g %g %g %g %g %g\n",*func,fv->x[0],fv->x[1],th1,th2,th2t);*/
+    }
+  else
+    {
+       fprintf(stderr,"Double Rad case not found... %g %g %g %g %g\n",fv->x[0],fv->x[1],th1,th2,th2t);
+    }
+
+  if(ielem_dim == 3)
+      d_func[MESH_DISPLACEMENT3] = 0.0;
+
+} /* END of routine f_double_rad                                             */
+/*****************************************************************************/
+
+void 
 f_roll_fluid (int ielem_dim,
         double *func,
         double d_func[],	/* dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
@@ -839,12 +984,15 @@ f_roll_fluid (int ielem_dim,
   double omega,v_dir[3], v_roll[3];
   double velo_avg = 0.0,  pgrad=0.;
   double v_solid=0., res, jac, delta, flow, eps=1.0e-8, viscinv;
-  double jacinv, thick, dthick_dV, dthick_dP;
+  double jacinv, thick;
   int Pflag = TRUE;
-  double cur_pt[3]={0,0,0};
   double pg_factor=1.0, tang_sgn=1.0, v_mag=0.;;
 
-  int j,var,jvar,k;
+  int j,var;
+#if 0
+  int jvar,k;
+  double dthick_dV, dthick_dP;
+#endif
 
   if(af->Assemble_LSA_Mass_Matrix)
     return;
@@ -974,8 +1122,10 @@ f_roll_fluid (int ielem_dim,
          thick += delta;
          j++;
         } while(fabs(delta) > eps && j<20);
+#if 0
       dthick_dV = -0.5*jacinv;     /*  1/h*derivative  */
       dthick_dP = CUBE(thick)*viscinv/12.*jacinv;
+#endif
 #if 0
 fprintf(stderr,"slip %d %g %g %g %g\n",Pflag,fv->x[0],thick,flow/v_solid,velo_avg);
 fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
@@ -1101,11 +1251,36 @@ fvelocity_parabola (const int var_flag,
 double coord1, coord2, qflow, gap, pre_factor, temp, expon, time_factor;
 double pl_index=1.0;
 int i;
-	coord1 = p[0];
-	coord2 = p[1];
+	coord1 = MIN(p[0],p[1]);
+	coord2 = MAX(p[1],p[0]);
 	qflow = p[2];
 	gap = fabs(coord2-coord1);
 	pre_factor = 6.*qflow/(gap*gap*gap);
+        switch (pd->CoordinateSystem) {
+          case CARTESIAN:
+	       pre_factor = 6.*qflow/(gap*gap*gap);
+               break;
+          case CYLINDRICAL:
+               switch (velo_condition) {
+                  case U_PARABOLA_BC:
+                      if(coord1 <= DBL_SMALL)
+                          { pre_factor = 2.*qflow/M_PIE/SQUARE(SQUARE(coord2));}
+                      else
+                          { 
+                           pre_factor = 2.*qflow/M_PIE/
+                                       (SQUARE(coord2)-SQUARE(coord1))/
+                                       (SQUARE(coord2)+SQUARE(coord1)
+                       -(SQUARE(coord2)-SQUARE(coord1))/log(coord2/coord1));
+                          }
+                      break;
+                  case V_PARABOLA_BC:
+	              pre_factor = 3.*qflow/M_PIE/(gap*gap*gap);
+                      break;
+                  }
+               break;
+          default:
+              EH(-1,"Velo parabola not ready for that Coordinate System yet!\n");
+          }
 
   if(ielem_dim > 2)
      {
@@ -1127,23 +1302,71 @@ int i;
   {
     if(num_const == 3 || p[3] == 1.0)   /*  Newtonian solution   */
       {
-       if( velo_condition == U_PARABOLA_BC)
-         {
-          *func = pre_factor*(fv->x[1]-coord1)*(coord2-fv->x[1]);
-          if( pd->e[R_MESH1] )
-             {
-              d_func[MESH_DISPLACEMENT2] = pre_factor*(coord1+coord2-2.*fv->x[1]);
-             }
-         }
-       else if ( velo_condition == V_PARABOLA_BC )
-        {
-	 *func = pre_factor*(fv->x[0]-coord1)*(coord2-fv->x[0]);
-          if( pd->e[R_MESH1] )
-            {
-             d_func[MESH_DISPLACEMENT1] = pre_factor*(coord1+coord2-2.*fv->x[0]);
-            }
-        }
-       else {   *func =0.; }
+
+       switch (pd->CoordinateSystem) {
+          case CARTESIAN:
+               switch (velo_condition) {
+                  case U_PARABOLA_BC:
+                      *func = pre_factor*(fv->x[1]-coord1)*(coord2-fv->x[1]);
+                      if( pd->e[R_MESH1] )
+                         {
+        d_func[MESH_DISPLACEMENT2] = pre_factor*(coord1+coord2-2.*fv->x[1]);
+                         }
+                      break;
+                  case V_PARABOLA_BC:
+	              *func = pre_factor*(fv->x[0]-coord1)*(coord2-fv->x[0]);
+                      if( pd->e[R_MESH1] )
+                         {
+       d_func[MESH_DISPLACEMENT1] = pre_factor*(coord1+coord2-2.*fv->x[0]);
+                         }
+                      break;
+                  case W_PARABOLA_BC:
+	              *func = pre_factor*(fv->x[0]-coord1)*(coord2-fv->x[0]);
+                      if( pd->e[R_MESH1] )
+                         {
+       d_func[MESH_DISPLACEMENT1] = pre_factor*(coord1+coord2-2.*fv->x[0]);
+                         }
+                      break;
+                  default:
+                      *func =0.; 
+                  }
+          case CYLINDRICAL:
+               switch (velo_condition) {
+                  case U_PARABOLA_BC:
+                      if(coord1 <= DBL_SMALL)
+                          {
+                           *func = pre_factor*(SQUARE(coord2)-SQUARE(fv->x[1]));
+                           if( pd->e[R_MESH1] )
+                              { 
+                      d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.*fv->x[1]); 
+                              }
+                          }
+                      else
+                          {
+                           *func = pre_factor*(SQUARE(coord1)-SQUARE(fv->x[1])
+                                    +(SQUARE(coord2)-SQUARE(coord1))*
+                                    (log(fv->x[1]/coord1)/log(coord2/coord1)));
+                           if( pd->e[R_MESH1] )
+                              { 
+                      d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.*fv->x[1]
+                +(SQUARE(coord2)-SQUARE(coord1))/log(coord2/coord1)/fv->x[1]);
+                              }
+                          }
+                      break;
+                  case V_PARABOLA_BC:
+	              *func = pre_factor/fv->x[1]*(fv->x[0]-coord1)*(coord2-fv->x[0]);
+                      if( pd->e[R_MESH1] )
+                         {
+       d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*(coord1+coord2-2.*fv->x[0]);
+       d_func[MESH_DISPLACEMENT2] = -(*func)/fv->x[1];
+                         }
+                      break;
+                  default:
+                      *func =0.; 
+                  }
+
+               break;
+          }
      }
     else if(num_const > 3 )   /*  Power-law  solution   */
       {
@@ -1151,29 +1374,73 @@ int i;
             {pl_index = gn->nexp;}
         else
             {pl_index = p[3];}
-        expon = 2.+1./pl_index;
-	pre_factor = (2.*pl_index+1.)/(pl_index +1.)*qflow/pow(gap,expon);
-        expon = 1.+1./pl_index;
-        temp = 2*fv->x[1]-coord1-coord2;
-       if( velo_condition == U_PARABOLA_BC)
-         {
-          temp = 2*fv->x[1]-coord1-coord2;
-          *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
-          if( pd->e[R_MESH1] )
-             {
-              d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
-             }
-         }
-       else if ( velo_condition == V_PARABOLA_BC )
-        {
-          temp = 2*fv->x[0]-coord1-coord2;
-          *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
-          if( pd->e[R_MESH1] )
-            {
-              d_func[MESH_DISPLACEMENT1] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
-            }
-        }
-       else {   *func =0.; }
+       switch (pd->CoordinateSystem) {
+          case CARTESIAN:
+               expon = 1.+1./pl_index;
+	       pre_factor = (2.*pl_index+1.)/(pl_index +1.)*qflow/pow(gap,expon+1.);
+               switch (velo_condition) {
+                  case U_PARABOLA_BC:
+                      temp = 2*fv->x[1]-coord1-coord2;
+                      *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
+                      if( pd->e[R_MESH1] )
+                         {
+    d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
+                         }
+                      break;
+                  case V_PARABOLA_BC:
+                      temp = 2*fv->x[0]-coord1-coord2;
+                      *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
+                      if( pd->e[R_MESH1] )
+                         {
+    d_func[MESH_DISPLACEMENT1] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
+                         }
+                      break;
+                  case W_PARABOLA_BC:
+                      temp = 2*fv->x[0]-coord1-coord2;
+                      *func = pre_factor*(pow(gap,expon) - pow(fabs(temp),expon));
+                      if( pd->e[R_MESH1] )
+                         {
+    d_func[MESH_DISPLACEMENT1] = pre_factor*(-2.*SGN(temp)*expon*pow(fabs(temp),1./pl_index));
+                         }
+                      break;
+                  default:
+                      *func =0.; 
+                  }
+          case CYLINDRICAL:
+               expon = 1.+1./pl_index;
+               switch (velo_condition) {
+                  case U_PARABOLA_BC:
+                      if(coord1 <= DBL_SMALL)
+                          {
+	                   pre_factor = (3.*pl_index+1.)/(pl_index +1.)
+                                         *qflow/M_PIE/pow(gap,expon+2.);
+                           *func = pre_factor*(pow(gap,expon) - pow(fv->x[1],expon));
+                           if( pd->e[R_MESH1] )
+                               {
+                                d_func[MESH_DISPLACEMENT2] = pre_factor*
+                                          (-expon*pow(fv->x[1],expon-1.));
+                               }
+                          }  else  {
+                              EH(-1,"Power-law annulus not done yet!\n");
+                          }
+                      break;
+                  case V_PARABOLA_BC:
+	              pre_factor = (2.*pl_index+1.)/(pl_index +1.)
+                                         *qflow/M_PIE/pow(gap,expon+1.);
+                      temp = 2*fv->x[0]-coord1-coord2;
+                      *func = pre_factor/fv->x[1]*(pow(gap,expon) - pow(fabs(temp),expon));
+                      if( pd->e[R_MESH1] )
+                         {
+                           d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*
+                                 (-2.*SGN(temp)*expon*pow(fabs(temp),expon-1.));
+                           d_func[MESH_DISPLACEMENT2] = -(*func)/fv->x[1];
+                         }
+                      break;
+                  default:
+                      *func =0.; 
+                  }
+               break;
+          }
      }
   }  else   {
        *func = 0.0;

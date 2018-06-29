@@ -3962,6 +3962,107 @@ generate_facet_list ( double (**point0)[DIM],
 
 }
 
+int
+print_ls_interface( double *x,
+		    Exo_DB *exo,
+		    Dpi    *dpi,
+		    const double time,
+		    char *filenm,
+		    int print_all_times )
+{
+  char output_filenm[MAX_FNL];
+  struct LS_Surf_List *list = NULL;
+  struct LS_Surf *isosurf = NULL;
+  struct LS_Surf_Iso_Data *s;
+  FILE *outfile = NULL;
+  int status = 0;
+
+  strncpy(output_filenm, filenm, MAX_FNL);
+  multiname(output_filenm, ProcID, Num_Proc);
+
+  if (print_all_times) {
+    outfile = fopen(output_filenm, "a");
+  } else {
+    outfile = fopen(output_filenm, "w");
+  }
+
+  if (outfile == NULL) {
+    EH(-1, "Output file for level set interface could not be opened");
+  }
+
+  list = create_surf_list();
+  isosurf = create_surf( LS_SURF_ISOSURFACE );
+  s = (struct LS_Surf_Iso_Data *) isosurf->data;
+  s->isovar = ls->var;
+  if ( ls->Initial_LS_Displacement != 0. )
+    {
+      s->isoval = ls->Initial_LS_Displacement;
+      ls->Initial_LS_Displacement = 0.;
+    }
+  else
+    {
+      s->isoval = 0.;
+    }
+
+
+  append_surf( list, isosurf );
+
+  create_subsurfs( list, x, exo );
+
+  struct LS_Surf *surf;
+  surf = list->start->subsurf_list->start;
+  while (surf != NULL) {
+
+    switch (surf->type) {
+    case LS_SURF_POINT :
+      {
+	struct LS_Surf_Point_Data *s = (struct LS_Surf_Point_Data *) surf->data;
+	double *p = s->x;
+	if (print_all_times) {
+	  fprintf(outfile, "%g\t%g\t%g\t%d\n", time, p[0], p[1], 0);
+	} else {
+	  fprintf(outfile, "%g\t%g\t%d\n", p[0], p[1], 0);
+	}
+      }
+      break;
+    case LS_SURF_FACET :
+      {
+	struct LS_Surf_Facet_Data *s = (struct LS_Surf_Facet_Data *) surf->data;
+
+	if (s->num_points == 2)
+	  {
+	    struct LS_Surf_Point_Data *s1 = (struct LS_Surf_Point_Data *)
+	      surf->subsurf_list->start->data;
+	    struct LS_Surf_Point_Data *s2 = (struct LS_Surf_Point_Data *)
+	      surf->subsurf_list->start->next->data;
+	    double *p1 = s1->x;
+	    double *p2 = s2->x;
+	    if (print_all_times) {
+	      fprintf(outfile, "%g\t%g\t%g\t%d\n", time, p1[0], p1[1], 0);
+	      fprintf(outfile, "%g\t%g\t%g\t%d\n", time, p2[0], p2[1], 1);
+	    } else {
+	      fprintf(outfile, "%g\t%g\t%d\n", p1[0], p1[1], 0);
+	      fprintf(outfile, "%g\t%g\t%d\n", p2[0], p2[1], 1);
+	    }
+	  }
+	else
+	  {
+	    EH(-1,"Facet based surfaces not yet implemented in 3-D");
+	  }
+      }
+      break;
+    default:
+      EH(-1, "Cannot print level set interfaces that are not Points or Facets");
+      break;
+    }
+
+    surf = surf->next;
+  }
+
+  free_surf_list ( &list );
+  fclose(outfile);
+  return(status);
+}
 
 void
 print_surf_list ( struct LS_Surf_List *list,
@@ -4223,7 +4324,9 @@ find_intersections( struct LS_Surf_List *list,
                       }
                     else
                       {
-                        safe_free( surf );
+			free(surf->data);
+			free(surf->closest_point);
+			free(surf);
                       }
                   }
 
@@ -10033,19 +10136,19 @@ subelement_mesh_output (double x[],
   ex_put_elem_num_map( exoid, emap );
   */
 
-  ex_put_elem_block ( exoid, 1, "TRI", nvelems, nodes_per_elem, 0 );
-  ex_put_elem_conn ( exoid, 1, vconn );
+  ex_put_block ( exoid, EX_ELEM_BLOCK, 1, "TRI", nvelems, nodes_per_elem, 0, 0, 0 );
+  ex_put_conn ( exoid, EX_ELEM_BLOCK, 1, vconn, 0, 0 );
   
-  ex_put_elem_block ( exoid, 2, "SHEL", nselems, nodes_per_side, 0 );
-  ex_put_elem_conn ( exoid, 2, sconn );
+  ex_put_block ( exoid, EX_ELEM_BLOCK, 2, "SHEL", nselems, nodes_per_side, 0, 0, 0 );
+  ex_put_conn ( exoid, EX_ELEM_BLOCK, 2, sconn, 0, 0 );
   
   /* dummy nodeset on volume */
-  ex_put_node_set_param( exoid, 1, ivconn, 0 );
-  ex_put_node_set( exoid, 1, vconn );
+  ex_put_set_param( exoid, EX_NODE_SET, 1, ivconn, 0 );
+  ex_put_set( exoid, EX_NODE_SET, 1, vconn, NULL );
 
   /* dummy nodeset on surface */
-  ex_put_node_set_param( exoid, 2, isconn, 0 );
-  ex_put_node_set( exoid, 2, sconn );
+  ex_put_set_param( exoid, EX_NODE_SET, 2, isconn, 0 );
+  ex_put_set( exoid, EX_NODE_SET, 2, sconn, NULL );
   
   /* no data for now */
 

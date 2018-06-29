@@ -454,9 +454,11 @@ assemble_fill(double tt,
          for ( a=0; a < VIM; a++ )
 	    {
 	     v_dot_Dphi[i] += v_rel[a] * grad_phi_i[a];
+	     if ( Fill_Weight_Fcn == FILL_WEIGHT_SUPG )
+	       {
+		 vc_dot_Dphi[i] += vcent[a] * grad_phi_i[a];
+	       }
             }
-	 if ( Fill_Weight_Fcn == FILL_WEIGHT_SUPG )
-	     vc_dot_Dphi[i] += vcent[a] * grad_phi_i[a];
         }
     }
 
