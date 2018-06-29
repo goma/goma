@@ -871,6 +871,8 @@ cmake \
 -D Amesos_ENABLE_KLU:BOOL=ON \
 -D Amesos_ENABLE_UMFPACK:BOOL=ON \
 -D Amesos_ENABLE_MUMPS:BOOL=ON \
+-D TPL_X11_LIBRARIES=/usr/lib64/libX11.so  \
+-D TPL_X11_INCLUDE_DIRS=/usr/include  \
 $EXTRA_ARGS \
 $GOMA_LIB/trilinos-12.2.2-Source
 

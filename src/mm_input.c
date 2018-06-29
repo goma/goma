@@ -6840,7 +6840,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
 /* For non-LOCA continuation, this card does not apply */
     default:
       fprintf(stdout, "LSA not available for continuation without LOCA!");
-      Linear_Stability = LSA_NONE;
+      Linear_Stability = LSA_NONE;  
       break;
     }
   }
