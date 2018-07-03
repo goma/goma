@@ -297,6 +297,12 @@ rd_dpi(Dpi *d,
   getdid(u, DIM_NUM_UNIVERSE_NODES,           TRUE,
 	 &si.num_universe_nodes);
 
+  getdid(u, DIM_LEN_SS_BLOCK_INDEX_GLOBAL, FALSE,
+         &si.len_ss_block_list_global);
+
+  getdid(u, DIM_LEN_SS_BLOCK_LIST_GLOBAL, FALSE,
+         &si.len_ss_block_list_global);
+
   /*
    * 3. Using the dimension IDs, inquire of the dimension values. Load
    *    those values into the DP array.
@@ -338,6 +344,11 @@ rd_dpi(Dpi *d,
   getdim(u, si.num_side_sets,                &d->num_side_sets);
   getdim(u, si.num_side_sets_global,         &d->num_side_sets_global);
   getdim(u, si.num_universe_nodes,           &d->num_universe_nodes);
+
+  // I don't really want a variable in dpi struct for this but from what I see
+  // netcdf expects dimensions to be defined in the netcdf file
+  int len_ss_block_list_global = 0;
+  getdim(u, si.len_ss_block_list_global, &len_ss_block_list_global);
 
 #ifdef DEBUG
   fprintf(stderr, "Processor %d has d->num_side_sets = %d\n", ProcID,
@@ -478,6 +489,15 @@ rd_dpi(Dpi *d,
   getvid(u, VAR_UNDEFINED_BASIC_EQNVAR_ID, TRUE,
 	 &si.undefined_basic_eqnvar_id);
 
+  getvid(u, VAR_SS_INTERNAL_GLOBAL, FALSE,
+         &si.ss_internal_global);
+
+  getvid(u, VAR_SS_BLOCK_INDEX_GLOBAL, FALSE,
+         &si.ss_block_index_global);
+
+  getvid(u, VAR_SS_BLOCK_LIST_GLOBAL, FALSE,
+         &si.ss_block_list_global);
+
   /*
    * 5. Allocate space to hold array variables.
    *
@@ -617,6 +637,8 @@ rd_dpi(Dpi *d,
       d->ss_id_global             = alloc_int_1(len, INT_NOINIT);
       d->ss_num_distfacts_global  = alloc_int_1(len, INT_NOINIT);
       d->ss_num_sides_global      = alloc_int_1(len, INT_NOINIT);
+      d->ss_internal_global       = alloc_int_1(len, INT_NOINIT);
+      d->ss_block_index_global    = alloc_int_1(len+1, INT_NOINIT);
     }
 
   if ( d->len_ss_elem_list > 0 )
@@ -635,6 +657,10 @@ rd_dpi(Dpi *d,
     {
       d->ss_index_global = alloc_int_1(d->num_side_sets, INT_NOINIT);
     }
+
+  if (len_ss_block_list_global > 0) {
+    d->ss_block_list_global = alloc_int_1(len_ss_block_list_global, INT_NOINIT);
+  }
 
   /*
    * 6. Get variables - this is messy. Netcdf 3 wants a different routine
@@ -859,6 +885,20 @@ rd_dpi(Dpi *d,
   get_variable(u, NC_INT, 0, 
 	       -1,	-1, 
 	       si.undefined_basic_eqnvar_id, &(d->undefined_basic_eqnvar_id));
+
+  if (d->num_side_sets_global > 0) {
+      get_variable(u, NC_INT, 1,
+                   d->num_side_sets_global, -1,
+                   si.ss_internal_global, d->ss_internal_global);
+
+      get_variable(u, NC_INT, 1,
+                   d->num_side_sets_global + 1, -1,
+                   si.ss_block_index_global, d->ss_block_index_global);
+
+      get_variable(u, NC_INT, 1,
+                   len_ss_block_list_global, -1,
+                   si.ss_block_list_global, d->ss_block_list_global);
+  }
   /*
    * 7. Close up.
    */
@@ -1229,6 +1269,8 @@ uni_dpi(Dpi *dpi,
 
   dpi->ss_num_sides_global     = exo->ss_num_sides;
 
+  dpi->ss_internal_global = find_ss_internal_boundary(exo);
+
   return;
 }
 /************************************************************************/
@@ -1299,6 +1341,10 @@ free_dpi(Dpi *d)
   safer_free((void **) &(d->ss_elem_list_index_global));
   safer_free((void **) &(d->ss_distfact_list_index_global));
   safer_free((void **) &(d->ss_index_global));
+
+  safer_free((void **) &(d->ss_block_index_global));
+  safer_free((void **) &(d->ss_block_list_global));
+  free(d->ss_internal_global);
 
   return;
 }
@@ -1393,7 +1439,7 @@ get_variable(const int netcdf_unit,
 	{
 	  sprintf(err_msg, "nc_get_var_int() varid=%d", 
 	          variable_identifier);
-	  //EH(-1, err_msg);
+      WH(-1, err_msg);
 	}
       break;
       
