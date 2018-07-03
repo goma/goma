@@ -4079,7 +4079,11 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
                  elem_index < (mono->ss_elem_index[ss_id] + mono->ss_num_sides[ss_id]);
                  elem_index++) {
                 int elem = mono->ss_elem_list[elem_index];
-                int block = mono->elem_eb[elem];
+                int block = find_elemblock_index(elem, mono);
+                if (block == -1)
+                  {
+                    EH(-1, "Element block not found");
+                  }
 
                 // check if block is in array for ss already
                 int known = 0;
