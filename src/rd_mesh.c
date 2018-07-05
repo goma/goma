@@ -202,6 +202,7 @@ read_mesh_exoII(Exo_DB *exo,
 				   like the element number map, but some
 				   information has its own netcdf name.
 				   */
+      check_parallel_error("Error in reading Distributed Processing Information");
     }
 	
 
