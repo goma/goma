@@ -5666,6 +5666,12 @@ ion_reaction_source ( int species_no )   /* current species number */
  */
 
 {
+
+#if MAX_CONC < 7
+  EH(-1, "ion_reaction_source expects MAX_CONC to be >= 7");
+  return -1;
+#else
+
   int eqn, var, j;
   int four, five;
   dbl k1, k2, k3, K1, K2, K3;
@@ -5673,11 +5679,7 @@ ion_reaction_source ( int species_no )   /* current species number */
   dbl dQ1dx2 = 0.0, dQ1dx3 = 0.0, dQ2dx5 = 0.0, dQ2dx1 = 0.0, dQ2dx2 = 0.0, dQ3dx4 = 0.0, dQ3dx0 = 0.0, dQ3dx3 = 0.0;
   dbl c, rho, M_mix, x[MAX_CONC] = {0};
 
-  if (MAX_CONC < 6) {
-    EH(-1, "ion_reaction_source expects MAX_CONC to be >= 6");
-    return -1;
-  }
- 
+
   /* Begin Execution */
  
   four = 4;
@@ -5870,6 +5872,7 @@ ion_reaction_source ( int species_no )   /* current species number */
          }
      }
   return 0;
+#endif // MAX_CONC < 7
 }
 /*****************************************************************************/
 /* END of routine ion_reaction_source                                        */
