@@ -348,6 +348,12 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 /*  visit each node on all node sets and list the BC's applied there         */
 /*****************************************************************************/
 
+  int *matrix_used_BC = NULL;
+
+  if (ProcID == 0 )
+    {
+      matrix_used_BC = calloc(Num_BC, sizeof(int));
+    }
 
   for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
   /* 
@@ -417,11 +423,12 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
           } /* if (exo->ns_id[ins] == BC_Types[ibc].BC_ID) { */
         } /* for (ins = 0; ins < exo->num_node_sets; ins++) { */
         used_BC = gsum_Int(used_BC);
-        if (ProcID == 0 && used_BC == 0) {
-          fprintf(stderr,
-                  "WARNING: Boundary condition %d, %s, applied on NS %d, is never used\n",
-                  ibc, BC_Types[ibc].desc->name1, BC_Types[ibc].BC_ID);
-        }
+        if (ProcID == 0)
+          {
+            matrix_used_BC[ibc] |= used_BC;
+          }
+
+
       }  /* END if (!strcmp(BC_Types[ibc].Set_Type, "NS"))   */
     } /* for (ibc = 0; ibc < Num_BC; ibc++) */
 
@@ -613,13 +620,10 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 
 
         used_BC = gsum_Int(used_BC);
-        if (ProcID == 0) {
-          if ((used_BC == 0)&&(special==0)) {
-            fprintf(stderr,
-                    "WARNING: Boundary condition %d, %s, applied on SS %d, is never used\n",
-                    ibc, BC_Types[ibc].desc->name1, BC_Types[ibc].BC_ID);
+        if (ProcID == 0)
+          {
+            matrix_used_BC[ibc] |= used_BC;
           }
-        }
       }  /* END if (!strcmp(BC_Types[ibc].Set_Type, "SS")) 		      */
     }  /* END for (ibc = 0; ibc < Num_BC; ibc++)				      */
 
@@ -2004,6 +2008,21 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
      * for each node */
     safer_free((void **)&BC_Unk_List);
   }
+
+  if (ProcID == 0)
+    {
+      for (int ibc = 0; ibc < Num_BC; ibc++)
+        {
+          if (matrix_used_BC[ibc] == 0)
+            {
+              fprintf(stderr,
+                      "WARNING: Boundary condition %d, %s, applied on NS %d, is never used\n",
+                      ibc, BC_Types[ibc].desc->name1, BC_Types[ibc].BC_ID);
+            }
+        }
+      free(matrix_used_BC);
+    }
+
 
   pg->imtrx = 0;
 
