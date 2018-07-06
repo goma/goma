@@ -1069,6 +1069,14 @@ moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource)
 {
   struct moment_growth_rate *MGR = NULL;
   switch (mp->MomentSourceModel) {
+  case CONSTANT:
+    {
+      for (int i = 0; i < MAX_MOMENTS; i++)
+        {
+          msource[i] = mp->moment_source;
+        }
+    }
+    break;
   case FOAM_PBE:
     {
 

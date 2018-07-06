@@ -152,17 +152,8 @@ beer_belly(void)
   struct Basis_Functions *MapBf;
   size_t v_length;
   dbl f, g, sum;
-  int imtrx = 0;
+  int imtrx = pd->mi[pd->ShapeVar];
 
-  if (upd->Total_Num_Matrices > 1) {
-    WH(-1, "The beer_belly for multiple matrices might have issues.");
-    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-      /* Find which matrix has the shapevar */
-      if (pd->v[imtrx][pd->ShapeVar]) {
-        break;
-      }
-    }
-  }
   static int is_initialized = FALSE;
   static int elem_blk_id_save = -123;
   

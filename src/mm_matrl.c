@@ -559,16 +559,16 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 	}
     
     }
-  else if (mp->DensityModel == DENSITY_FOAM_PMDI_10)
+  else if (matrl->DensityModel == DENSITY_FOAM_PMDI_10)
     {
       int var, j;
       int w;
-      double volF = mp->volumeFractionGas;
+      double volF = matrl->volumeFractionGas;
 
-      double M_CO2 = mp->u_density[0];
-      double rho_liq = mp->u_density[1];
-      double ref_press = mp->u_density[2];
-      double Rgas_const = mp->u_density[3];
+      double M_CO2 = matrl->u_density[0];
+      double rho_liq = matrl->u_density[1];
+      double ref_press = matrl->u_density[2];
+      double Rgas_const = matrl->u_density[3];
 
       double rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
 
