@@ -121,8 +121,9 @@ typedef char CK_NAME_STR[64];
 
 /* Define values for determining side of LS */
 
-#define LS_POSITIVE 0
-#define LS_NEGATIVE 1
+#define LS_OFF 0
+#define LS_POSITIVE 1
+#define LS_NEGATIVE 2
 
 /*
  * Define for right now the maximum number of local variable type descriptions

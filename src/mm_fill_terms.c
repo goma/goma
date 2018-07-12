@@ -28598,6 +28598,9 @@ fluid_stress( double Pi[DIM][DIM],
       load_lsi(ls->Length_Scale);
       switch(ls->ghost_stress)
         {
+        case LS_OFF:
+          Heaviside = 1;
+          break;
         case LS_POSITIVE:
           Heaviside = lsi->H;
           break;

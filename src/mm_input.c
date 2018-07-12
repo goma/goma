@@ -2717,7 +2717,7 @@ rd_levelset_specs(FILE *ifp,
 		}
 	}
 
-        ls->ghost_stress = FALSE;
+        ls->ghost_stress = LS_OFF;
 
         iread = look_for_optional(ifp, "Level Set Ghost Stress", input, '=');
         if (iread == 1)
@@ -2738,10 +2738,18 @@ rd_levelset_specs(FILE *ifp,
               {
                 ls->ghost_stress = LS_NEGATIVE;
               }
+            else if ((strcmp(input, "no") == 0) || (strcmp(input, "off")) == 0)
+              {
+                ls->ghost_stress = LS_OFF;
+              }
             else
               {
                 EH(-1, "Unknown value for Level Set Ghost Stress");
               }
+
+            SPF(echo_string,"%s = %s", "Level Set Ghost Stress", input);
+            ECHO(echo_string,echo_file);
+
           }
 
     }  /* if ( ls != NULL ) */
