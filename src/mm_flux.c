@@ -4359,6 +4359,8 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
   adaptive_integration_active = ( ls != NULL && ls->AdaptIntegration &&
 				 ( quantity == I_POS_FILL ||
 				   quantity == I_NEG_FILL ||
+				   quantity == I_MASS_NEGATIVE_FILL ||
+				   quantity == I_MASS_POSITIVE_FILL ||
 				   quantity == I_POS_VOLPLANE ||
 				   quantity == I_NEG_VOLPLANE ||
 				   quantity == I_POS_CENTER_X ||
@@ -4379,6 +4381,8 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 				 !adaptive_integration_active &&
 				 ( quantity == I_POS_FILL ||
 				   quantity == I_NEG_FILL ||
+				   quantity == I_MASS_NEGATIVE_FILL ||
+				   quantity == I_MASS_POSITIVE_FILL ||
 				   quantity == I_POS_VOLPLANE ||
 				   quantity == I_NEG_VOLPLANE ||
                                    quantity == I_POS_CENTER_X ||
@@ -4400,6 +4404,8 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
                                         ( params == NULL || params[0] == 0. ) &&
 				        ( quantity == I_POS_FILL ||
 				          quantity == I_NEG_FILL ||
+					  quantity == I_MASS_NEGATIVE_FILL ||
+					  quantity == I_MASS_POSITIVE_FILL ||
 				          quantity == I_POS_VOLPLANE ||
 				          quantity == I_NEG_VOLPLANE ||
                                           quantity == I_POS_CENTER_X ||
@@ -4488,6 +4494,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
               if ((Use_Subelement_Integration = current_elem_on_isosurface(FILL, 0.)))
 		{
                   if ( quantity == I_NEG_FILL ||
+                       quantity == I_MASS_NEGATIVE_FILL ||
 		       quantity == I_NEG_VOLPLANE ||
 		       quantity == I_NEG_VX ||
 		       quantity == I_NEG_VY ||
@@ -4497,6 +4504,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
                        quantity == I_NEG_CENTER_Z ) {
                     ip_total = get_subelement_integration_pts ( &s, &weight, NULL, 0., -2, -1 );
                   } else if ( quantity == I_POS_FILL ||
+                              quantity == I_MASS_POSITIVE_FILL ||
 		              quantity == I_POS_VOLPLANE ||
 		              quantity == I_POS_VX ||
 		              quantity == I_POS_VY ||

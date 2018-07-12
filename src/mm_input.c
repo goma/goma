@@ -1886,7 +1886,7 @@ rd_levelset_specs(FILE *ifp,
         {
           ls =  alloc_struct_1(struct Level_Set_Data, 1);
           ls->var = FILL;
-	  ls->MatrixNum = 0;
+          ls->MatrixNum = 0;
           ls->embedded_bc = NULL;
           ls->init_surf_list = NULL;
           ls->last_surf_list = NULL;
@@ -1895,14 +1895,15 @@ rd_levelset_specs(FILE *ifp,
           lsi = alloc_struct_1(struct Level_Set_Interface, 1);
           ls->Use_Level_Set = Use_Level_Set = TRUE ;
           zero_lsi();
-	  zero_lsi_derivs();
+          zero_lsi_derivs();
           ls->Elem_Sign = 0;
           ls->on_sharp_surf = 0;
           ls->Extension_Velocity = FALSE;
-	      ls->CalcSurfDependencies = FALSE;
-	      ls->Integration_Depth = 0;
-		  ls->AdaptIntegration = FALSE;
-	  	  ls->Sat_Hyst_Renorm_Lockout = 0;
+          ls->CalcSurfDependencies = FALSE;
+          ls->Integration_Depth = 0;
+          ls->AdaptIntegration = FALSE;
+          ls->Sat_Hyst_Renorm_Lockout = 0;
+          ls->ghost_stress = FALSE;
         }
 
       ECHO("\n***Level Set Interface Tracking***\n", echo_file);
@@ -2220,7 +2221,7 @@ rd_levelset_specs(FILE *ifp,
                 {
 		  char *s = endofstring(echo_string);
 
-                  ls->Mass_Sign = I_MASS_NEGATIVE_FILL;
+                  ls->Mass_Sign = I_MASS_POSITIVE_FILL;
                   ls->Mass_Value = fabs( ls->Mass_Value);
 
 		  SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
@@ -2228,7 +2229,91 @@ rd_levelset_specs(FILE *ifp,
               else
                 {
                   ls->Mass_Value = 0.0;
+                  ls->Mass_Sign  = I_MASS_POSITIVE_FILL;
+                }
+            }
+          else if  ( strcmp( input,"Smolianski_Like_Mass_Negative") == 0 )
+            {
+              ls->Renorm_Method = HUYGENS_MASS_ITER;
+
+              strcat(echo_string, "Huygens_Constrained_Mass_Negative");
+
+              if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
+                {
+                  char *s = endofstring(echo_string);
+
+                  ls->Mass_Sign = I_MASS_NEGATIVE_FILL;
+                  ls->Mass_Value = fabs( ls->Mass_Value);
+
+                  SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
+                }
+              else
+                {
+                  ls->Mass_Value = 0.0;
                   ls->Mass_Sign  = I_MASS_NEGATIVE_FILL;
+                }
+            }
+          else if  ( strcmp( input,"Smolianski_Like_Mass_Positive") == 0 )
+            {
+              ls->Renorm_Method = HUYGENS_MASS_ITER;
+
+              strcat(echo_string, "Huygens_Constrained_Mass_Positive");
+
+              if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
+                {
+                  char *s = endofstring(echo_string);
+
+                  ls->Mass_Sign = I_MASS_POSITIVE_FILL;
+                  ls->Mass_Value = fabs( ls->Mass_Value);
+
+                  SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
+                }
+              else
+                {
+                  ls->Mass_Value = 0.0;
+                  ls->Mass_Sign  = I_MASS_POSITIVE_FILL;
+                }
+            }
+          else if  ( strcmp( input,"Smolianski_Like_Negative") == 0 )
+            {
+              ls->Renorm_Method = HUYGENS_MASS_ITER;
+
+              strcat(echo_string, "Huygens_Constrained_Mass_Negative");
+
+              if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
+                {
+                  char *s = endofstring(echo_string);
+
+                  ls->Mass_Sign = I_NEG_FILL;
+                  ls->Mass_Value = fabs( ls->Mass_Value);
+
+                  SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
+                }
+              else
+                {
+                  ls->Mass_Value = 0.0;
+                  ls->Mass_Sign  = I_NEG_FILL;
+                }
+            }
+          else if  ( strcmp( input,"Smolianski_Like_Positive") == 0 )
+            {
+              ls->Renorm_Method = HUYGENS_MASS_ITER;
+
+              strcat(echo_string, "Huygens_Constrained_Mass_Positive");
+
+              if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
+                {
+                  char *s = endofstring(echo_string);
+
+                  ls->Mass_Sign = I_POS_FILL;
+                  ls->Mass_Value = fabs( ls->Mass_Value);
+
+                  SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
+                }
+              else
+                {
+                  ls->Mass_Value = 0.0;
+                  ls->Mass_Sign  = I_POS_FILL;
                 }
             }
           else if  ( ( strcmp( input,"None") == 0 ) ||  (strcmp( input,"No") == 0) )
@@ -2631,8 +2716,34 @@ rd_levelset_specs(FILE *ifp,
 			ls->PSPP_filter = TRUE;
 		}
 	}
-	
-	
+
+        ls->ghost_stress = FALSE;
+
+        iread = look_for_optional(ifp, "Level Set Ghost Stress", input, '=');
+        if (iread == 1)
+          {
+            if (fscanf(ifp, "%s", input) != 1)
+              {
+                EH(-1, "Error reading Level Set Ghost Stress");
+              }
+            strip(input);
+            stringup(input);
+
+            if ((strcmp(input, "POSITIVE") == 0))
+              {
+
+                ls->ghost_stress = LS_POSITIVE;
+              }
+            else if (strcmp(input, "NEGATIVE") == 0)
+              {
+                ls->ghost_stress = LS_NEGATIVE;
+              }
+            else
+              {
+                EH(-1, "Unknown value for Level Set Ghost Stress");
+              }
+          }
+
     }  /* if ( ls != NULL ) */
 
 

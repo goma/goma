@@ -118,6 +118,12 @@ typedef char CK_NAME_STR[64];
  *               
  */
 
+
+/* Define values for determining side of LS */
+
+#define LS_POSITIVE 0
+#define LS_NEGATIVE 1
+
 /*
  * Define for right now the maximum number of local variable type descriptions
  * to be equal to the maximum number of different variable types in the problem
@@ -2627,6 +2633,7 @@ struct Level_Set_Data { int    var;
 						int    Ghost_Integ;
 						int    PSPP_filter;
 						int    Sat_Hyst_Renorm_Lockout;
+                        int ghost_stress;
                       };
 
 /*

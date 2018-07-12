@@ -35,20 +35,24 @@
 
 int has_discontinuous_interp(PROBLEM_DESCRIPTION_STRUCT *pd, int var, int imtrx)
 {
-  switch (pd->i[imtrx][var]) {
-  case I_P0:
-  case I_P1:
-  case I_PQ1:
-  case I_PQ2:
-    return TRUE;
-  default:
-    return FALSE;
-  }
+  if (pd->mi[var] == imtrx)
+    {
+      switch (pd->i[imtrx][var]) {
+      case I_P0:
+      case I_P1:
+      case I_PQ1:
+      case I_PQ2:
+        return TRUE;
+      default:
+        return FALSE;
+      }
+    }
+  return FALSE;
 }
 
 int parallel_discontinuous_galerkin_enabled(PROBLEM_DESCRIPTION_STRUCT **pd_ptrs, UPD_STRUCT *upd)
 {
-  int enabled;
+  int enabled = 0;
   for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
     for (int mat = 0; mat < upd->Num_Mat; mat++) {
       if (has_discontinuous_interp(pd_ptrs[mat], MASS_FRACTION, imtrx)) {

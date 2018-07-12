@@ -216,7 +216,7 @@ fvelo_slip_ls_heaviside(double func[MAX_PDIM],
 			const double vsy,	/* surface on which slip condition   */
 			const double vsz,	/* is applied           */
 			const double tt,
-			const double dt);
+                        const double dt);
 
 EXTERN void fvelo_slip_level
 PROTO(( double [MAX_PDIM],	/* func                                      */

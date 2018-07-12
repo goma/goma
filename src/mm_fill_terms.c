@@ -28592,6 +28592,23 @@ fluid_stress( double Pi[DIM][DIM],
       evss_f = 1.0;
     }
 
+  double Heaviside = 1;
+  if (ls != NULL && ls->ghost_stress)
+    {
+      load_lsi(ls->Length_Scale);
+      switch(ls->ghost_stress)
+        {
+        case LS_POSITIVE:
+          Heaviside = lsi->H;
+          break;
+        case LS_NEGATIVE:
+          Heaviside = 1 - lsi->H;
+          break;
+        default:
+          EH(-1, "Unknown Level Set Ghost Stress value");
+          break;
+        }
+    }
   
   if ( evss_f )
     {
@@ -28763,8 +28780,8 @@ fluid_stress( double Pi[DIM][DIM],
 	  /* get polymer viscosity */
 	  mup = viscosity(ve[mode]->gn, gamma, d_mup);
 	      
-	  mu_over_mu_num += at * mup;
-	  mu += mu_num * at * mup;
+          mu_over_mu_num += Heaviside * at * mup;
+          mu += Heaviside * mu_num * at * mup;
 	      
 	  var = VELOCITY1;
 	  if ( d_Pi != NULL && pd->v[pg->imtrx][var] )
@@ -28879,7 +28896,7 @@ fluid_stress( double Pi[DIM][DIM],
 	{
 	  for(b=0; b<VIM; b++)
 	    {
-	      Pi[a][b] += -evss_f*(mu - mus)*gamma_cont[a][b] + s[a][b];
+              Pi[a][b] += -evss_f*(mu - mus)*gamma_cont[a][b] + Heaviside * s[a][b];
 	    }
 	}
     }
@@ -29217,7 +29234,7 @@ fluid_stress( double Pi[DIM][DIM],
                           for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                             {
                               d_Pi->S[p][q][mode][b][c][j] =
-				((double)delta(b,p) * (double)delta(c,q)) * bf[var]->phi[j]
+                                ((double)delta(b,p) * (double)delta(c,q)) * bf[var]->phi[j] * Heaviside
                                 + mu_over_mu_num * d_mun_dS[mode][b][c][j] *
 				( gamma[p][q] - evss_f * gamma_cont[p][q] );
                             }
