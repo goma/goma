@@ -299,6 +299,24 @@ wr_dpi(Dpi *d,
 		   d->num_universe_nodes,
 		   &si.num_universe_nodes);
 
+  
+  if (d->num_side_sets_global > 0) {
+    define_dimension(u, DIM_LEN_SS_BLOCK_INDEX_GLOBAL,
+                     d->num_side_sets_global + 1,
+                     &si.len_ss_block_index_global);
+    
+    define_dimension(u, DIM_LEN_SS_BLOCK_LIST_GLOBAL,
+                     d->ss_block_index_global[d->num_side_sets_global],
+                     &si.len_ss_block_list_global);
+  } else {
+      define_dimension(u, DIM_LEN_SS_BLOCK_INDEX_GLOBAL,
+                       0,
+                       &si.len_ss_block_index_global);
+      define_dimension(u, DIM_LEN_SS_BLOCK_LIST_GLOBAL,
+                       0,
+                       &si.len_ss_block_list_global);
+  }
+
   /*
    * Define variables. Arrays only get defined if their respective dimensions
    * are greater than zero.
@@ -575,6 +593,24 @@ wr_dpi(Dpi *d,
 		      &si.ss_prop_global);
     }
 
+  if ( d->num_side_sets_global > 0 )
+    {
+      define_variable(u, VAR_SS_INTERNAL_GLOBAL, NC_INT, 1,
+                      si.num_side_sets_global, -1,
+                      d->num_side_sets_global, -1,
+                      &si.ss_internal_global);
+
+      define_variable(u, VAR_SS_BLOCK_INDEX_GLOBAL, NC_INT, 1,
+                      si.len_ss_block_index_global, -1,
+                      d->num_side_sets_global + 1, -1,
+                      &si.ss_block_index_global);
+
+      define_variable(u, VAR_SS_BLOCK_LIST_GLOBAL, NC_INT, 1,
+                      si.len_ss_block_list_global, -1,
+                      d->ss_block_index_global[d->num_side_sets_global], -1,
+                      &si.ss_block_list_global);
+    }
+
   define_variable(u, VAR_UNDEFINED_BASIC_EQNVAR_ID, NC_INT, 0, 
 		  -1, -1,
 		  -1, -1,
@@ -829,6 +865,21 @@ wr_dpi(Dpi *d,
   put_variable(u, NC_INT, 0, 
 	       -1,	-1, 
 	       si.undefined_basic_eqnvar_id, &(d->undefined_basic_eqnvar_id));
+
+  if (d->num_side_sets_global > 0) {
+
+      put_variable(u, NC_INT, 1,
+                   d->num_side_sets_global, -1,
+                   si.ss_internal_global, d->ss_internal_global);
+
+      put_variable(u, NC_INT, 1,
+                   d->num_side_sets_global+1, -1,
+                   si.ss_block_index_global, d->ss_block_index_global);
+
+      put_variable(u, NC_INT, 1,
+                   d->ss_block_index_global[d->num_side_sets_global], -1,
+                   si.ss_block_list_global, d->ss_block_list_global);
+  }
 
   /*
    * Close the file (flush buffers).
