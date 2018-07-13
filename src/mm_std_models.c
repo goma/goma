@@ -3989,7 +3989,7 @@ suspension_balance(struct Species_Conservation_Terms *st,
 	      
 	      c_term += -M*d_div_tau_p_dy[a][w][j];
 	      
-	      mu_term = dM_dmu*d_mu->C[w][j]*div_tau_p[a];
+	      mu_term = -dM_dmu*d_mu->C[w][j]*div_tau_p[a];
 	      
 	      g_term = ((f+ df_dy*Y[w])*bf[var]->phi[j] + Y[w]*df_dmu *d_mu->C[w][j]);
 	      g_term *= Dg * mp->momentum_source[a]*del_rho;
