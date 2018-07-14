@@ -235,7 +235,7 @@ F_WARN_FLAGS ?=
 FFLAGS = $(CCFLAGS) $(F_WARN_FLAGS) $(DEFINES) $(INCLUDES)
 
 # C compiler flags
-CFLAGS = -std=c99 $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(INCLUDES)
+CFLAGS = -std=gnu99 $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(INCLUDES)
 
 # C++ compiler flags
 CXXSTD ?= 
