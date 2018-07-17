@@ -4075,10 +4075,12 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
           // populate list of blocks associated to side sets
 
           int ss_block_index = 0;
-          for (int ss_id = 0; ss_id < mono->num_side_sets; ss_id++)
+          int ss_id;
+          for (ss_id = 0; ss_id < mono->num_side_sets; ss_id++)
             {
               int ss_start = ss_block_index;
-              for (int elem_index = mono->ss_elem_index[ss_id];
+              int elem_index;
+              for (elem_index = mono->ss_elem_index[ss_id];
                    elem_index <
                    (mono->ss_elem_index[ss_id] + mono->ss_num_sides[ss_id]);
                    elem_index++)
@@ -4092,7 +4094,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
                   // check if block is in array for ss already
                   int known = 0;
-                  for (int i = ss_start; i < ss_block_index; i++)
+                  int i;
+                  for (i = ss_start; i < ss_block_index; i++)
                     {
                       if (D->ss_block_list_global[i] == block)
                         {
