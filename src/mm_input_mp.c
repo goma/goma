@@ -4537,6 +4537,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				   &(mat_ptr->len_u_FlowingLiquid_viscosity),
 				   model_name, SCALAR_INPUT, 
 				   &NO_SPECIES,es);
+
     if (!strcmp(model_name, "MOLTEN_GLASS")) {
       mat_ptr->FlowingLiquidViscosityModel = MOLTEN_GLASS;
       num_const = read_constants(imp, &(mat_ptr->u_FlowingLiquid_viscosity), 
@@ -4550,11 +4551,84 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       }
       mat_ptr->len_u_FlowingLiquid_viscosity = num_const;
       SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_FlowingLiquid_viscosity);
+
+    } else if (!strcmp(model_name, "EPOXY")) {
+      mat_ptr->FlowingLiquidViscosityModel = EPOXY;
+      num_const = read_constants(imp, &(mat_ptr->u_FlowingLiquid_viscosity), 
+				 NO_SPECIES);
+      if (num_const < 6) {
+	sprintf(err_msg, 
+		"Matl %s (conc %d) needs at least 3 constants for %s %s model.\n",
+		pd_glob[mn]->MaterialName, species_no,
+		search_string, "EPOXY");
+	EH(-1, err_msg);
+      }
+      mat_ptr->len_u_FlowingLiquid_viscosity = num_const;
+      SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_FlowingLiquid_viscosity);
+
     } else {
       EH(model_read, "FlowingLiquid Viscosity");
     }
 
-    if (mat_ptr->FlowingLiquid_viscosity != 0.) WH(-1,"ON POROUS_BRINKMAN: You will get erroneous results if you are using the brinkman formulation as an expedient for lubrication velocity calculation. FlowingliquidViscosity should be zero in that case");
+    if ( (mat_ptr->FlowingLiquid_viscosity != 0.) &&
+         ((pd_glob[mn]->e[R_LUBP]) || (pd_glob[mn]->e[R_LUBP_2])) )
+    WH(-1,"ON POROUS_BRINKMAN: You will get erroneous results if you are using the brinkman formulation as an expedient for lubrication velocity calculation. FlowingliquidViscosity should be zero in that case");
+
+    ECHO(es,echo_file);
+
+    model_read = look_for_mat_prop(imp, "Second Level Set FlowingLiquid Viscosity",
+				 &(i0),
+				 &(a0), NO_USER, NULL, model_name, SCALAR_INPUT,
+				 &NO_SPECIES,
+				 es);
+
+    if( model_read != -1 )
+      {
+       if( ls == NULL ) EH(-1, "Second Level Set FlowingLiquid Viscosity requires activation of Level Set Tracking.\n");
+
+       mat_ptr->mp2nd->FlowingLiquidViscosityModel = i0;
+       mat_ptr->mp2nd->FlowingLiquid_viscosity = a0;
+
+       stringup(model_name);
+
+       if( !strcmp( model_name, "CONSTANT") )
+	 {
+	  if ( fscanf(imp,"%s", input ) !=  1 )
+	    {
+	      EH(-1,"Expecting trailing keyword for Second Level Set FlowingLiquid Viscosity.\n");
+	    }
+
+	  stringup(input);
+
+	  if( strncmp( input,"POSITIVE", 3 ) == 0 )
+	    {
+	      mat_ptr->mp2nd->FlowingLiquid_viscositymask[0] = 0; mat_ptr->mp2nd->FlowingLiquid_viscositymask[1] = 1;
+	    }
+	  else if (  strncmp( input,"NEGATIVE", 3 ) == 0 )
+	    {
+	      mat_ptr->mp2nd->FlowingLiquid_viscositymask[0] = 1; mat_ptr->mp2nd->FlowingLiquid_viscositymask[1] = 0;
+	    }
+	  else
+	    {
+	      EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set FlowingLiquid Viscosity.\n");
+	    }
+	  SPF(endofstring(es)," %s",input);
+	  if( pfd != NULL)
+	    {
+		for(i=0 ; i< pfd->num_phase_funcs ; i++)
+		{
+      		if ( fscanf(imp,"%lf",&(mat_ptr->mp2nd->FlowingLiquid_viscosity_phase[i])) != 1)
+			{ EH( -1, "error reading phase FlowingLiquid viscosity"); }
+	  	SPF(endofstring(es)," %g", mat_ptr->mp2nd->FlowingLiquid_viscosity_phase[i]);
+		}
+	    }
+
+	 }
+       else
+	 {
+	  EH(-1, "Second Level Set FlowingLiquid Viscosity model can only be CONSTANT.\n");
+	 }
+      }
 
     ECHO(es,echo_file);
 

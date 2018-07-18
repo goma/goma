@@ -10963,7 +10963,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	printf("species source model = %d\n", mp->SpeciesSourceModel[w]);
 	EH(-1,"Unrecognized species source model");
       }
-	
+
 	if( ls != NULL ) ls_modulate_speciessource ( w,  st );
 
     }

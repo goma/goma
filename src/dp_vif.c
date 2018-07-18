@@ -2166,6 +2166,10 @@ noahs_ark()
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->viscosity, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->viscositymask[0], 2, MPI_INT);
 
+          ddd_add_member(n, &mp_glob[i]->mp2nd->FlowingLiquidViscosityModel, 1, MPI_INT);
+          ddd_add_member(n, &mp_glob[i]->mp2nd->FlowingLiquid_viscosity, 1, MPI_DOUBLE);
+          ddd_add_member(n, &mp_glob[i]->mp2nd->FlowingLiquid_viscositymask[0], 2, MPI_INT);
+
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->DensityModel, 1, MPI_INT);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->density, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->densitymask[0], 2, MPI_INT);
@@ -2500,6 +2504,7 @@ noahs_ark()
   ddd_add_member(n, &DIV_VELOCITY, 1, MPI_INT);
   ddd_add_member(n, &DIV_TOTAL, 1, MPI_INT);
   ddd_add_member(n, &PP_Viscosity, 1, MPI_INT);
+  ddd_add_member(n, &PP_FlowingLiquid_Viscosity, 1, MPI_INT);
   ddd_add_member(n, &PP_VolumeFractionGas, 1, MPI_INT);
   ddd_add_member(n, &DENSITY, 1, MPI_INT);
   ddd_add_member(n, &NS_RESIDUALS, 1, MPI_INT);
