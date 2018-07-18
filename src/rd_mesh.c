@@ -1,3 +1,4 @@
+
 /************************************************************************ *
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
@@ -208,7 +209,8 @@ read_mesh_exoII(Exo_DB *exo,
 
   // SS_Internal_Boundary uses the dpi values
   SS_Internal_Boundary = alloc_int_1(exo->num_side_sets, INT_NOINIT);
-  for (int ss_index = 0; ss_index < exo->num_side_sets; ss_index++)
+  int ss_index;
+  for (ss_index = 0; ss_index < exo->num_side_sets; ss_index++)
     {
       int global_ss_index = dpi->ss_index_global[ss_index];
       SS_Internal_Boundary[ss_index] = dpi->ss_internal_global[global_ss_index];
@@ -298,7 +300,8 @@ int *find_ss_internal_boundary(Exo_DB *e)
   int *first_side_node_list = alloc_int_1(MAX_NODES_PER_SIDE, -1);
   int *other_side_node_list = alloc_int_1(MAX_NODES_PER_SIDE, -1);
 
-  for (int ss_index = 0; ss_index < e->num_side_sets; ss_index++)
+  int ss_index;
+  for (ss_index = 0; ss_index < e->num_side_sets; ss_index++)
     {
       /*
        * It suffices to check the first element/side pair. The nodes here
@@ -308,7 +311,8 @@ int *find_ss_internal_boundary(Exo_DB *e)
       int side = 0;
       int start = e->ss_node_side_index[ss_index][side];
       int end = e->ss_node_side_index[ss_index][side + 1];
-      for (int i = 0; i < (end - start); i++)
+      int i;
+      for (i = 0; i < (end - start); i++)
         {
           first_side_node_list[i] = e->ss_node_list[ss_index][start + i];
         }
@@ -340,7 +344,8 @@ int *find_ss_internal_boundary(Exo_DB *e)
             {
               int start = e->ss_node_side_index[ss_index][side];
               int end = e->ss_node_side_index[ss_index][side + 1];
-              for (int i = 0; i < (end - start); i++)
+	      int i;
+              for (i = 0; i < (end - start); i++)
                 {
                   other_side_node_list[i] =
                       e->ss_node_list[ss_index][start + i];
@@ -356,7 +361,7 @@ int *find_ss_internal_boundary(Exo_DB *e)
                 }
               integer_sort((end - start), other_side_node_list);
               int equal_vectors = TRUE;
-              for (int i = 0; i < (end - start); i++)
+              for (i = 0; i < (end - start); i++)
                 {
                   equal_vectors &=
                       (other_side_node_list[i] == first_side_node_list[i]);
@@ -746,7 +751,8 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
         int global_ss_index = dpi->ss_index_global[ss_index];
         int start = dpi->ss_block_index_global[global_ss_index];
         int end = dpi->ss_block_index_global[global_ss_index +1];
-        for (int bidx = start; bidx < end; bidx++) {
+        int bidx;
+        for (bidx = start; bidx < end; bidx++) {
           // expects 1-indexed blocks
           ss_to_blks[bidx - start + 1][ss_index] = dpi->ss_block_list_global[bidx] + 1;
         }
