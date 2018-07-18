@@ -2192,7 +2192,7 @@ rd_levelset_specs(FILE *ifp,
             }
           else if  ( strcmp( input,"Huygens_Constrained_Mass_Negative") == 0 )
             {
-              ls->Renorm_Method = HUYGENS_MASS_ITER;
+              ls->Renorm_Method = HUYGENS_C;
 
               strcat(echo_string, "Huygens_Constrained_Mass_Negative");
 
@@ -2213,7 +2213,7 @@ rd_levelset_specs(FILE *ifp,
             }
           else if  ( strcmp( input,"Huygens_Constrained_Mass_Positive") == 0 )
             {
-              ls->Renorm_Method = HUYGENS_MASS_ITER;
+              ls->Renorm_Method = HUYGENS_C;
 
               strcat(echo_string, "Huygens_Constrained_Mass_Positive");
 
@@ -2236,14 +2236,14 @@ rd_levelset_specs(FILE *ifp,
             {
               ls->Renorm_Method = HUYGENS_MASS_ITER;
 
-              strcat(echo_string, "Huygens_Constrained_Mass_Negative");
+              strcat(echo_string, "Smolianski_Like_Mass_Negative");
 
               if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
                 {
                   char *s = endofstring(echo_string);
 
                   ls->Mass_Sign = I_MASS_NEGATIVE_FILL;
-                  ls->Mass_Value = fabs( ls->Mass_Value);
+                  ls->Mass_Value = ls->Mass_Value;
 
                   SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
                 }
@@ -2257,14 +2257,14 @@ rd_levelset_specs(FILE *ifp,
             {
               ls->Renorm_Method = HUYGENS_MASS_ITER;
 
-              strcat(echo_string, "Huygens_Constrained_Mass_Positive");
+              strcat(echo_string, "Smolianski_Like_Mass_Positive");
 
               if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
                 {
                   char *s = endofstring(echo_string);
 
                   ls->Mass_Sign = I_MASS_POSITIVE_FILL;
-                  ls->Mass_Value = fabs( ls->Mass_Value);
+                  ls->Mass_Value = ls->Mass_Value;
 
                   SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
                 }
@@ -2278,14 +2278,14 @@ rd_levelset_specs(FILE *ifp,
             {
               ls->Renorm_Method = HUYGENS_MASS_ITER;
 
-              strcat(echo_string, "Huygens_Constrained_Mass_Negative");
+              strcat(echo_string, "Smolianski_Like_Negative");
 
               if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
                 {
                   char *s = endofstring(echo_string);
 
                   ls->Mass_Sign = I_NEG_FILL;
-                  ls->Mass_Value = fabs( ls->Mass_Value);
+                  ls->Mass_Value = ls->Mass_Value;
 
                   SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
                 }
@@ -2299,14 +2299,14 @@ rd_levelset_specs(FILE *ifp,
             {
               ls->Renorm_Method = HUYGENS_MASS_ITER;
 
-              strcat(echo_string, "Huygens_Constrained_Mass_Positive");
+              strcat(echo_string, "Smolianski_Like_Positive");
 
               if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
                 {
                   char *s = endofstring(echo_string);
 
                   ls->Mass_Sign = I_POS_FILL;
-                  ls->Mass_Value = fabs( ls->Mass_Value);
+                  ls->Mass_Value = ls->Mass_Value;
 
                   SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
                 }

@@ -3473,24 +3473,15 @@ Hrenorm_simplemass( Exo_DB *exo,
                     double time )
 {
   int I,ie,k, max_its, i;
-  double lamda, R_lamda, norm = 1.0;
   double *dC;
   double *F, *F_, *R, *b;
   int *ie_map;
-  double bTb, bTR, RTR, M;
-  double d_lamda;
+  double M;
   int global_ls_unkns = num_ls_unkns;
   static double M0;
   static int M0_set = 0;
 #ifdef PARALLEL
   int *ext_dof = NULL;
-  double local_bTb = 0.;
-  double local_bTR = 0.;
-  double local_RTR = 0.;
-
-  double global_bTb = 0.;
-  double global_bTR = 0.;
-  double global_RTR = 0.;
 
   double interface_size = 0;
   double c = 0;
@@ -3515,15 +3506,33 @@ Hrenorm_simplemass( Exo_DB *exo,
 
   ie_map = (int *) smalloc( num_ls_unkns*sizeof(int) );
 
-  if (!M0_set) {
-    M0 = find_LS_mass ( exo,
-                        dpi,
-                        NULL,
-                        dC,
-                        x,
-                        num_total_unkns);
-    M0_set = 1;
-  }
+  if ((!M0_set) && (ls->Mass_Value >= 0.0))
+    {
+      if (ls->Mass_Value > 0)
+        {
+          M0 = ls->Mass_Value;
+        }
+      else
+        {
+          M0 = find_LS_mass ( exo,
+                              dpi,
+                              NULL,
+                              dC,
+                              x,
+                              num_total_unkns);
+          M0_set = 1;
+        }
+    }
+  else
+    {
+      M0 = find_LS_mass ( exo,
+                          dpi,
+                          NULL,
+                          dC,
+                          x,
+                          num_total_unkns);
+    }
+
 
   surf_based_initialization( x, NULL, NULL, exo, num_total_nodes, list, time, 0., 0. );
 #ifdef PARALLEL
