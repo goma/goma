@@ -4558,7 +4558,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				 NO_SPECIES);
       if (num_const < 6) {
 	sprintf(err_msg, 
-		"Matl %s (conc %d) needs at least 3 constants for %s %s model.\n",
+		"Matl %s (conc %d) needs at least 6 constants for %s %s model.\n",
 		pd_glob[mn]->MaterialName, species_no,
 		search_string, "EPOXY");
 	EH(-1, err_msg);
