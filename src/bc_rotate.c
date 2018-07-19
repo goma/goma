@@ -1224,8 +1224,8 @@ rotate_momentum_eqn (
                   int global_col;
                   int ktype, ndof, index_eqn, index_var;
                   J = rotation[I][eq][kdir]->d_vector_J[j];
-                  if (Dolphin[I][R_MOMENTUM1] > 0
-                      && Dolphin[J][MESH_DISPLACEMENT1] > 0) {
+                  if (Dolphin[pg->imtrx][I][R_MOMENTUM1] > 0
+                      && Dolphin[pg->imtrx][J][MESH_DISPLACEMENT1] > 0) {
                     /* find entry in global matrix - note that the sensitivities of the
                      * rotation vector may be in a different element than the current
                      * element */
