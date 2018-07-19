@@ -501,7 +501,18 @@ sylgard material.    NOT ADDED TO MANUAL.
 Capability:  Liquid Constitutive Equation = FOAM_EPOXY
 Developer: RRRAO
 Descritpion and problem: Need to add to goma6.0 manual a description of this model. 
-    NOT ADDED TO MANUAL.    
+    NOT ADDED TO MANUAL.
+
+Capability: FlowingLiquid Viscosity Card EPOXY
+Developer: Kristianto Tjiptowidjojo
+Description: Add epoxy curing model to the increase of FlowingLuqid Viscosity in Brinkman term of momentum equation.
+The functional form is the same as EPOXY model in Liquid Constitutive Equation
+Example: FlowingLiquid Viscosity = EPOXY {mu0} {alpha_g} {A} {B} {Aexp} {species_num}
+mu_0 is viscosity at reference, i.e. unreacted, state; alpha_g is extent reaction at gel point;
+A and B are exponents of extent-of-reaction dependence; Aexp is the exponent of thermal, i.e. Arrhenius, dependence;
+and species_num is the species index in integer that track the extent of reaction in the species equation
+
+      
 
 Capability: Dilational Viscosity 
 {TABLE ! DILVISCM_KAPPAWIPESMU? | ...}

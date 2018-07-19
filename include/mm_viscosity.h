@@ -153,5 +153,7 @@ PROTO  (( double *,                      /* Primary phase viscosity value */
 EXTERN void copy_pF_to_F 
 PROTO (( int  )) ;
 
+EXTERN double flowing_liquid_viscosity		/* mm_viscosity.c                            */
+PROTO((VISCOSITY_DEPENDENCE_STRUCT *)); /* d_flow_vis - flowing liquid viscosity sensitivity   */
 
 #endif /* _MM_VISCOSITY_H */

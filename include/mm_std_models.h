@@ -153,6 +153,11 @@ PROTO((dbl *,			/* vis - Base FLOWING LIQUID VISCOSITY       */
        dbl [MDE],		/* dvis_dT - temperature dependence.         */
        dbl *));			/* param  - parameter list                   */
 
+EXTERN int epoxy_flowing_liquid_viscosity /* mm_std_models.c                     */
+PROTO((dbl *,			          /* vis - Base FLOWING LIQUID VISCOSITY */
+       VISCOSITY_DEPENDENCE_STRUCT *,     /* vis sensitivity.                    */
+       dbl *));			          /* param  - parameter list             */
+
 EXTERN int electrode_species_source /* mm_std_models.c                       */
 PROTO((int ,			/* species_no - Current species number       */
        double ,			/* time - present time value                 */
