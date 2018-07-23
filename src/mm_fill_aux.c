@@ -994,7 +994,8 @@ h_elem_siz(dbl hsquared[DIM], dbl hh[DIM][DIM],
    */
 
   if (mp->FSIModel == FSI_MESH_CONTINUUM ||
-      mp->FSIModel == FSI_REALSOLID_CONTINUUM) DeformingMeshShell = 1;
+      mp->FSIModel == FSI_REALSOLID_CONTINUUM ||
+      mp->FSIModel == FSI_SHELL_ONLY_MESH) DeformingMeshShell = 1;
 
   j = Proc_Connect_Ptr[ei->ielem];
   for (p = 0; p < dim; p++) {
@@ -1013,6 +1014,23 @@ h_elem_siz(dbl hsquared[DIM], dbl hh[DIM][DIM],
     }
   }
   
+  // bar2
+  if (ei->ielem_dim == 1) {
+    memset(hsquared, 0.0, sizeof(double)*DIM);
+    memset(p1, 0.0, sizeof(double)*DIM);
+    p1[0] = xnode[0][0] - xnode[0][1]; // exodus puts the edge nodes first
+    if (pd->Num_Dim > 1) {
+      p1[1] = xnode[1][0] - xnode[1][1];
+    }
+    if (pd->Num_Dim > 2) {
+      p1[2] = xnode[2][0] - xnode[2][1];
+    }
+    hsquared[0] = p1[0]*p1[0] + p1[1]*p1[1] + p1[2]*p1[2] ;
+    //TODO: deal with hh and dhh_dxnode
+    //  This should be fine until we're using SUPG in 1D
+    return;
+  }
+
   if (dim == 2) {
     /*
      * Calculate the midpoint positions on each of the faces
@@ -1258,7 +1276,7 @@ global_h_elem_siz(dbl x[], dbl x_old[], dbl xdot[], dbl resid_vector[],
   for (e = 0; e < exo->num_elems; e++) {
     (void) load_elem_dofptr(e, exo , x, x_old, xdot, xdot, 
 			    resid_vector, 1);
-    if(ei->ielem_dim != 1) h_elem_siz(hsquared, hhv, dhv_dxnode, 0);
+    h_elem_siz(hsquared, hhv, dhv_dxnode, 0);
     h_elem = 0.;
     for (p = 0; p < ei->ielem_dim; p++) {
       h_elem += hsquared[p];
@@ -1282,7 +1300,6 @@ global_h_elem_siz(dbl x[], dbl x_old[], dbl xdot[], dbl resid_vector[],
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
-
 void
 
 surface_determinant_and_normal(
