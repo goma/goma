@@ -27757,6 +27757,7 @@ fluid_stress( double Pi[DIM][DIM],
   // Vorticity direction dependence for qtensor
   if ( d_Pi != NULL && pd->v[VORT_DIR1] )
     {
+      memset(d_Pi->vd, 0, DIM*DIM*DIM*MDE*sizeof(double));
       for ( p=0; p<VIM; p++)
         {
           for ( q=0; q<VIM; q++)
@@ -28329,6 +28330,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
   var = VORT_DIR1;
   if(d_Pi!=NULL && pd->v[var])
     {
+      memset(d_Pi->vd, 0, DIM*DIM*DIM*MDE*sizeof(double));
       for(p=0; p<VIM; p++)
         {
           for(q=0; q<VIM; q++)
