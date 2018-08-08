@@ -52,7 +52,7 @@ GCC_TOP = /usr
 # C_WARN_FLAGS	= -Wall
 
 # C++ standard flag (required for stratimikos support)
-# CXXSTD = -std=gnu++11
+CXXSTD = -std=gnu++11
 
 # Fortran warning flags
 # F_WARN_FLAGS	=
