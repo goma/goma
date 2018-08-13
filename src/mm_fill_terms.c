@@ -19245,6 +19245,163 @@ double REFVolumeSource (double time,
 }
 
 int
+assemble_projection_time_stabilization(Exo_DB *exo, double time, double tt, double dt)
+{
+  double phi_i, phi_j;
+  int var, pvar, ip, i, j, a, b, ipass, num_passes;
+  double xi[DIM];
+  /* Variables for vicosity and derivative */
+  double gamma[DIM][DIM];                  /* shrearrate tensor based on velocity */
+  double mu;
+  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
+  VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
+
+  int ip_total = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
+  int eqn = R_PRESSURE;
+  int peqn = upd->ep[pg->imtrx][eqn];
+  double wt, det_J, h3, d_vol;
+
+
+
+  if (ls == NULL)
+    {
+      num_passes = 1;
+    }
+  else
+    {
+      if ( ls->elem_overlap_state )
+        num_passes = 2;
+      else
+        num_passes = 1;
+    }
+
+  for ( ipass=0; ipass < num_passes; ipass++ )
+    {
+      if ( ls != NULL )
+        {
+          if ( num_passes == 2 )
+            ls->Elem_Sign = -1 + 2*ipass;
+          else
+            ls->Elem_Sign = 0;
+        }
+
+      double P_dot_avg = 0.;
+      double phi_avg[MDE];
+      double vol = 0.;
+      double ls_scale_factor = 1.0;  /* this is to turn off PSPP near the interface */
+
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
+        {
+          phi_avg[i] = 0.;
+        }
+
+      for (ip = 0; ip < ip_total; ip++)
+        {
+          find_stu(ip, ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]); /* find quadrature point */
+          wt = Gq_weight (ip, ei[pg->imtrx]->ielem_type); /* find quadrature weights for */
+
+          setup_shop_at_point( ei[pg->imtrx]->ielem, xi, exo );
+
+          computeCommonMaterialProps_gp(time);
+
+          fv->wt = wt;
+          h3 = fv->h3;
+          det_J = bf[eqn]->detJ;
+          d_vol = wt*det_J*h3;
+
+          P_dot_avg += fv_dot->P * d_vol;
+
+          for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
+            {
+              phi_i = bf[eqn]->phi[i];
+              phi_avg[i] += phi_i * d_vol;
+            }
+          vol += d_vol;
+        }
+
+      double inv_vol = 1./vol;
+      P_dot_avg *= inv_vol;
+      for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
+        {
+          phi_avg[i] *= inv_vol;
+        }
+
+      for (ip = 0; ip < ip_total; ip++)
+        {
+          find_stu(ip, ei[pg->imtrx]->ielem_type, &xi[0], &xi[1], &xi[2]); /* find quadrature point */
+          wt = Gq_weight (ip, ei[pg->imtrx]->ielem_type); /* find quadrature weights for */
+
+          setup_shop_at_point( ei[pg->imtrx]->ielem, xi, exo );
+          fv->wt = wt;
+          h3 = fv->h3;
+          det_J = bf[eqn]->detJ;
+          d_vol = wt*det_J*h3;
+
+          if ( ls != NULL && ls->PSPP_filter )
+            {
+              load_lsi( ls->Length_Scale );
+
+              ls_scale_factor = ls->on_sharp_surf ? 1.0 : 1.0 - lsi->delta/lsi->delta_max;  /*Punting in the case of subelementintegration */
+              if ( af->Assemble_Jacobian ) load_lsi_derivs();
+            }
+
+          /* load up shearrate tensor based on velocity */
+          for ( a=0; a<VIM; a++)
+            {
+              for ( b=0; b<VIM; b++)
+                {
+                  gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+                }
+            }
+          mu = viscosity(gn, gamma, d_mu);
+
+          if ( af->Assemble_Residual )
+            {
+              for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
+                {
+                  phi_i = bf[eqn]->phi[i];
+                  lec->R[peqn][i] += ls_scale_factor*PS_scaling*dt*(fv_dot->P - P_dot_avg) * (phi_i - phi_avg[i]) * d_vol;
+                }
+            }
+          if ( af->Assemble_Jacobian )
+            {
+
+              for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
+                {
+                  phi_i = bf[eqn]->phi[i];
+
+                  var = PRESSURE;
+                  pvar = upd->vp[pg->imtrx][var];
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                    {
+                      phi_j = bf[var]->phi[j];
+                      lec->J[peqn][pvar][i][j] += ls_scale_factor*dt*PS_scaling*(((1+2.*tt) / dt) * (phi_j - phi_avg[j])) * (phi_i - phi_avg[i]) * d_vol;
+                    }
+
+
+                  if (pd->v[pg->imtrx][var = LS])
+                    {
+                      pvar = upd->vp[pg->imtrx][var];
+                      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                        {
+                          phi_j = bf[var]->phi[j];
+
+                          if( ls != NULL && ls->PSPP_filter ) {
+
+                              lec->J[peqn][pvar][i][j] += -(lsi->d_delta_dF[j]/lsi->delta_max) * dt * PS_scaling*(fv_dot->P - P_dot_avg) *
+                                  (phi_i - phi_avg[i]) / mu * d_vol;
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+    }
+  return ( 1 );
+}
+
+int
 assemble_projection_stabilization(Exo_DB *exo, double time)
      /* This routine applies the Dohrmann-Bochev Polynomial Projection Pressure Stabilization
       * to the continuity equation to help aid in iterative solutions the the Navier-Stokes equations

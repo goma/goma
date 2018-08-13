@@ -6829,6 +6829,11 @@ rd_solver_specs(FILE *ifp,
 	PSPG = 0;
         PSPP = 2;
       }
+    else if ( strcmp(input,"pspp_time") == 0 )
+      {
+        PSPG = 0;
+        PSPP = 3;
+      }
     else
       {
 	EH( -1, "invalid choice: Pressure Stabilization yes, no, global or local, or pspp");

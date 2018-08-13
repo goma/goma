@@ -978,6 +978,15 @@ matrix_fill(
 	  CHECKFINITE("assemble_PPPS_generalized");
 #endif
 	}
+
+      if (PSPP == 3)
+        {
+          err = assemble_projection_time_stabilization(exo, time_value, theta, delta_t);
+          EH(err, "assemble_projection_stabilization");
+#ifdef CHECK_FINITE
+          CHECKFINITE("assemble_projection_stabilization");
+#endif
+        }
     }
 
   /******************************************************************************/

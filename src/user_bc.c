@@ -139,15 +139,28 @@ dbl velo_vary_fnc( velo_condition, x1, x2, x3, p, time)
 	  a1 = 0.;
 	}
       */
-      f = -2.0*x2;
+    double y = x2, z = x3;
+
+    //origin of circle
+    double z0 = (2.162810-1.21031)*0.5 + 1.21031;
+    double y0 = 0.0;
+
+    double R = 0.469015; // Radius of tube
+
+    double v_max = -4.52418;
+
+    double coeff = v_max*(1/(R*R));
+
+    double r = sqrt((y-y0)*(y-y0) + (z-z0)*(z-z0));
+
+    f = coeff * (R*R - r*r);
 
       /*  f = -a2*x2/radius; */
     }
   else if ( velo_condition == VVARY_BC )
     {
       
-      f = 2.*x1;
-      
+      f =0;
     }
   
 
