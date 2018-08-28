@@ -19337,6 +19337,8 @@ assemble_projection_time_stabilization(Exo_DB *exo, double time, double tt, doub
           det_J = bf[eqn]->detJ;
           d_vol = wt*det_J*h3;
 
+          computeCommonMaterialProps_gp(time);
+
           if ( ls != NULL && ls->PSPP_filter )
             {
               load_lsi( ls->Length_Scale );
@@ -19360,7 +19362,7 @@ assemble_projection_time_stabilization(Exo_DB *exo, double time, double tt, doub
               for ( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
                 {
                   phi_i = bf[eqn]->phi[i];
-                  lec->R[peqn][i] += ls_scale_factor*PS_scaling*dt*(fv_dot->P - P_dot_avg) * (phi_i - phi_avg[i]) * d_vol;
+                  lec->R[peqn][i] += ls_scale_factor*PS_scaling*dt*(fv_dot->P - P_dot_avg) * (phi_i - phi_avg[i]) / mu * d_vol;
                 }
             }
           if ( af->Assemble_Jacobian )
@@ -19375,7 +19377,7 @@ assemble_projection_time_stabilization(Exo_DB *exo, double time, double tt, doub
                   for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                     {
                       phi_j = bf[var]->phi[j];
-                      lec->J[peqn][pvar][i][j] += ls_scale_factor*dt*PS_scaling*(((1+2.*tt) / dt) * (phi_j - phi_avg[j])) * (phi_i - phi_avg[i]) * d_vol;
+                      lec->J[peqn][pvar][i][j] += ls_scale_factor*dt*PS_scaling*(((1+2.*tt) / dt) * (phi_j - phi_avg[j])) * (phi_i - phi_avg[i]) / mu * d_vol;
                     }
 
 
@@ -19499,7 +19501,8 @@ assemble_projection_stabilization(Exo_DB *exo, double time)
           h3 = fv->h3;
           det_J = bf[eqn]->detJ;
           d_vol = wt*det_J*h3;
-		  
+          computeCommonMaterialProps_gp(time);
+
 		  if ( ls != NULL && ls->PSPP_filter )
 		  {
 			load_lsi( ls->Length_Scale );
