@@ -7877,6 +7877,12 @@ rd_matl_blk_specs(FILE *ifp,
 #ifndef tflop
 	     err = system(System_Command);
 	     EH(err, "system() choked on mat file.");
+
+	     if (WEXITSTATUS(err) == 127)
+	       {
+		 EH(-1, "System call failed, aprepro not found");
+	       }
+
 #else
              EH(-1, "aprepro the mat file prior to running goma.");
 #endif
@@ -12088,6 +12094,12 @@ translate_command_line( int argc,
 #ifndef tflop
       err = system(command_line_ap);
       EH(err, "system() choked on input file.");
+
+      if (WEXITSTATUS(err) == 127)
+	{
+	  EH(-1, "System call failed, aprepro not found");
+	  return;
+	}
 #else
       EH(-1, "aprepro the input file prior to running goma.");
 #endif
@@ -13274,6 +13286,12 @@ fopen_aprepro( const char *filename, const char *format )
       err = system( System_Command);
 
       EH(err, "System call failed in fopen_aprepro.");
+
+      if (WEXITSTATUS(err) == 127)
+	{
+	  EH(-1, "System call failed, aprepro not found");
+	  return NULL;
+	}
 #else
       EH(-1, "aprepro the input file prior to running goma");
 #endif
