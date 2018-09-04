@@ -2331,7 +2331,7 @@ assemble_energy(double time,	/* present time value */
  * 	R  -- global residual vector
  *
  * out:
- *	a   -- gets loaded up with proper contribution 
+ *	a   -- gets loaded up with proper contribution
  *	lec -- gets loaded up with local contributions to resid, Jacobian
  * 	r  -- residual RHS vector
  *
@@ -2352,7 +2352,7 @@ assemble_momentum(dbl time,       /* current time */
 				     explicit (tt = 1) to implicit (tt = 0) */
 		  dbl dt,	  /* current time step size */
 		  dbl h_elem_avg, /* average global element size for PSPG*/
-		  const PG_DATA *pg_data, 
+		  const PG_DATA *pg_data,
 		  double xi[DIM],    /* Local stu coordinates */
 		  const Exo_DB *exo)
 {
@@ -2366,7 +2366,7 @@ assemble_momentum(dbl time,       /* current time */
   int i, j, jk, p, q, a, b, c;
 
   int ledof, eqn, var, ii, peqn, pvar, w;
-  
+
   int *pde = pd->e;
   int *pdv = pd->v;
 
@@ -2399,7 +2399,7 @@ assemble_momentum(dbl time,       /* current time */
   dbl det_J;                            /* determinant of element Jacobian */
 
   dbl d_det_J_dmesh_bj;			/* for specific (b,j) mesh dof */
-  
+
   dbl d_area;
 
   dbl mass;			        /* For terms and their derivatives */
@@ -2436,7 +2436,7 @@ assemble_momentum(dbl time,       /* current time */
 
   dbl phi_j;
   dbl (* d_grad_phi_i_e_a_dmesh ) [DIM][DIM][MDE] = NULL;
-  
+
   double * phi_i_vector, *phi_j_vector;
 
   dbl Pi[DIM][DIM];
@@ -2454,9 +2454,14 @@ assemble_momentum(dbl time,       /* current time */
   dbl d_per_dc[MAX_CONC][MDE];
 
   dbl vis;         /* flowing-liquid viscosity */
-  dbl dvis_dT[MDE];/* sensitivities of flowing-liquid viscosity */
+  /* Flowing-liquid viscosity sensitivities */
+  VISCOSITY_DEPENDENCE_STRUCT d_flow_mu_struct;  /* density dependence */
+  VISCOSITY_DEPENDENCE_STRUCT *d_flow_mu = &d_flow_mu_struct;
+
   dbl sc;          /* inertial coefficient */
   dbl speed;       /* magnitude of the velocity vector */
+
+
 
   /* density derivatives */
   DENSITY_DEPENDENCE_STRUCT d_rho_struct;  /* density dependence */
@@ -2481,14 +2486,14 @@ assemble_momentum(dbl time,       /* current time */
   int advection_on =0;
   int source_on =0;
   int diffusion_on =0;
-  int porous_brinkman_on =0; 
+  int porous_brinkman_on =0;
   int mesh_disp_on = pd->v[MESH_DISPLACEMENT1];
-  
+
   dbl mass_etm, advection_etm, diffusion_etm, source_etm, porous_brinkman_etm;
-  
+
   double *J = NULL;
   double *R ;
-  
+
   /*
    * Petrov-Galerkin weighting functions for i-th residuals
    * and some of their derivatives...
@@ -2514,11 +2519,11 @@ assemble_momentum(dbl time,       /* current time */
 
   int *n_dof = NULL;
   int dof_map[MDE];
-  
-  
+
+
   status = 0;
-  
-  
+
+
   /*
    * Unpack variables from structures for local convenience...
    */
@@ -2549,7 +2554,7 @@ assemble_momentum(dbl time,       /* current time */
   det_J = bf[eqn]->detJ;		/* Really, ought to be mesh eqn. */
 
   h3 = fv->h3;			/* Differential volume element (scales). */
-  
+
   d_area = det_J * wt * h3;
 
   supg = 0.;
@@ -2578,7 +2583,7 @@ assemble_momentum(dbl time,       /* current time */
 
     }
   /* end Petrov-Galerkin addition */
-  
+
   if( pd->v[POLYMER_STRESS11] )
     {
       (void)stress_eqn_pointer(v_s);
@@ -2654,47 +2659,26 @@ assemble_momentum(dbl time,       /* current time */
 
 	/* Adjust FEM weights */
 	dim = pd->Num_Dim;
-	fv->wt = wt;		
-	det_J = fv->sdet;   
+	fv->wt = wt;
+	det_J = fv->sdet;
 
-	/* 
+	/*
 	 * Calculate the velocity from the velocity calculator, of course!
 	 * But then why do I even need this equation?
 	 * I DON'T!!!
 	 */
 	calculate_lub_q_v(R_LUBP, time, dt, xi, exo);
-  
+
 	fv->wt = wt; /*load_neighbor_var_data screws fv->wt up */
       }
-      
+
 
 
       if (mp->PorousMediaType != POROUS_BRINKMAN)
 	WH(-1, "Set Porous term multiplier in continuous medium");
 
-      if(mp->FlowingLiquidViscosityModel == CONSTANT)
-	{
-	  /* Do nothing */
-	}
-      else if (mp->FlowingLiquidViscosityModel == MOLTEN_GLASS)
-	{
-	  (void) molten_glass_viscosity(&(mp->FlowingLiquid_viscosity),
-					dvis_dT, mp->u_FlowingLiquid_viscosity);
-	}
-      else if (mp->FlowingLiquidViscosityModel == USER)
-	{
-	  (void) usr_FlowingLiquidViscosity(mp->u_FlowingLiquid_viscosity);
-	  var = TEMPERATURE;
+      vis = flowing_liquid_viscosity(d_flow_mu);
 
-	  for ( j=0; j<ei->dof[var]; j++)
-	    {
-	      dvis_dT[j]= mp->d_FlowingLiquid_viscosity[var]*bf[var]->phi[j];
-	    }
-	}
-      else
-	{
-	  EH(-1,"Don't recognize your FlowingLiquidViscosity model");
-	}
 
       if (mp->PermeabilityModel == SOLIDIFICATION)
 	{
@@ -2750,14 +2734,14 @@ assemble_momentum(dbl time,       /* current time */
   speed = 0.0;
   speed += v[0]*v[0] + v[1]*v[1] ;
   if( wim == 3 ) speed += v[2]*v[2];
-  
+
   speed = sqrt(speed);
-  
+
   grad_v[0] = fv->grad_v[0];
   grad_v[1] = fv->grad_v[1];
   if( VIM == 3 ) grad_v[2] = fv->grad_v[2];
 #endif
-  
+
 #ifdef DEBUG_HKM
   bfm  = bf[R_MOMENTUM1];
   phi_i_vector = bfm->phi;
@@ -2767,7 +2751,7 @@ assemble_momentum(dbl time,       /* current time */
   /*
    * Calculate the momentum stress tensor at the current gauss point
    */
-  if(vn->evssModel==LOG_CONF)
+  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
     {
       fluid_stress_conf(Pi, d_Pi);
     }
@@ -2798,14 +2782,14 @@ assemble_momentum(dbl time,       /* current time */
 	  eqn  = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
 	  bfm  = bf[eqn];
-	  
-	  
+
+
 	  mass_on = pde[eqn] & T_MASS;
 	  advection_on =  pde[eqn] & T_ADVECTION ;
 	  diffusion_on = pde[eqn] & T_DIFFUSION;
 	  source_on = pde[eqn] & T_SOURCE;
 	  porous_brinkman_on = pde[eqn] & T_POROUS_BRINK;
-	  
+
 	  mass_etm = pd->etm[eqn][(LOG2_MASS)];
 	  advection_etm = pd->etm[eqn][(LOG2_ADVECTION)];
 	  diffusion_etm = pd->etm[eqn][(LOG2_DIFFUSION)];
@@ -2816,7 +2800,7 @@ assemble_momentum(dbl time,       /* current time */
 	   * In the element, there will be contributions to this many equations
 	   * based on the number of degrees of freedom...
 	   */
-	  
+
 	  R = lec->R[peqn];
 	  phi_i_vector = bfm->phi;
 #ifdef DEBUG_HKM
@@ -2834,10 +2818,10 @@ assemble_momentum(dbl time,       /* current time */
 	       */
 	      ii = ei->lvdof_to_row_lvdof[eqn][i];
 
-		  
+
 	      phi_i = phi_i_vector[i];
 	      grad_phi_i_e_a = bfm->grad_phi_e[i][a];
-		  
+
 
               /* this is an optimization for xfem */
 	      if ( xfem != NULL )
@@ -2848,7 +2832,7 @@ assemble_momentum(dbl time,       /* current time */
 		  if ( extended_dof && !xfem_active ) continue;
 		}
 
-		  
+
 	      mass = 0.;
 	      if ( transient_run )
 		{
@@ -2858,12 +2842,12 @@ assemble_momentum(dbl time,       /* current time */
 		      mass *= - phi_i*d_area;
 		      mass *= mass_etm;
 		    }
-		      
+
 		  if ( porous_brinkman_on )
 		    {
-		      mass /= por; 
+		      mass /= por;
 		    }
-		      
+
 		  if (particle_momentum_on)
 		    {
 		      mass *= ompvf;
@@ -2880,7 +2864,7 @@ assemble_momentum(dbl time,       /* current time */
 		      wt_func += supg * h_elem * v[p] * bfm->grad_phi[i][p];
 		    }
 		}
-		  
+
 	      advection = 0.;
 	      if (advection_on)
 		{
@@ -2893,23 +2877,23 @@ assemble_momentum(dbl time,       /* current time */
 		  advection += (v[0] - x_dot[0]) * grad_v[0][a];
 		  advection += (v[1] - x_dot[1]) * grad_v[1][a];
 		  if (wim == 3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
-#endif  
+#endif
 		  advection *= rho;
 		  advection *= - wt_func*d_area;
 		  advection *= advection_etm;
-		      
+
 		  if (porous_brinkman_on)
 		    {
-		      por2 = por*por; 
-		      advection /= por2; 
-		    } 
+		      por2 = por*por;
+		      advection /= por2;
+		    }
 
 		  if (particle_momentum_on)
 		    {
 		      advection *= ompvf;
 		    }
 		}
-		  
+
 	      porous = 0.;
 	      if ( porous_brinkman_on )
 		{
@@ -2920,7 +2904,7 @@ assemble_momentum(dbl time,       /* current time */
 		      porous    *= porous_brinkman_etm;
 		    }
 		  else if ( mp->FSIModel > 0 )
-		    {	      
+		    {
 		      porous = v[a] - LubAux->v_avg[a];
 		      porous *= phi_i * wt * fv->sdet * h3;
 		      porous *= porous_brinkman_etm;
@@ -2930,46 +2914,46 @@ assemble_momentum(dbl time,       /* current time */
 		      EH(-1, "cannot have both flowing liquid viscosity and mp->viscosity equal to zero");
 		    }
 		}
-		  
+
 	      diffusion = 0.;
 	      if ( diffusion_on )
 		{
 #ifdef DO_NO_UNROLL
 		  for ( p=0; p<VIM; p++) {
 		    for ( q=0; q<VIM; q++) {
-		      diffusion += grad_phi_i_e_a[p][q] * Pi[q][p]; 
+		      diffusion += grad_phi_i_e_a[p][q] * Pi[q][p];
 		    }
 		  }
 #else
-		  diffusion += grad_phi_i_e_a[0][0] * Pi[0][0]; 
-		  diffusion += grad_phi_i_e_a[1][1] * Pi[1][1]; 
-		  diffusion += grad_phi_i_e_a[1][0] * Pi[0][1]; 
+		  diffusion += grad_phi_i_e_a[0][0] * Pi[0][0];
+		  diffusion += grad_phi_i_e_a[1][1] * Pi[1][1];
+		  diffusion += grad_phi_i_e_a[1][0] * Pi[0][1];
 		  diffusion += grad_phi_i_e_a[0][1] * Pi[1][0];
 		  if( VIM == 3 ) {
-		    diffusion += grad_phi_i_e_a[2][2] * Pi[2][2]; 
-		    diffusion += grad_phi_i_e_a[2][1] * Pi[1][2]; 
-		    diffusion += grad_phi_i_e_a[2][0] * Pi[0][2]; 
-		    diffusion += grad_phi_i_e_a[1][2] * Pi[2][1]; 
-		    diffusion += grad_phi_i_e_a[0][2] * Pi[2][0]; 
-		  }  
+		    diffusion += grad_phi_i_e_a[2][2] * Pi[2][2];
+		    diffusion += grad_phi_i_e_a[2][1] * Pi[1][2];
+		    diffusion += grad_phi_i_e_a[2][0] * Pi[0][2];
+		    diffusion += grad_phi_i_e_a[1][2] * Pi[2][1];
+		    diffusion += grad_phi_i_e_a[0][2] * Pi[2][0];
+		  }
 #endif
-		      
+
 		  diffusion *= - d_area;
 		  diffusion *= diffusion_etm;
 		}
-		  
+
 	      /*
 	       * Source term...
 	       */
-		  
+
 	      source = 0.0;
 	      if (source_on)
 		{
-		  source += f[a];		      
+		  source += f[a];
 		  source *= phi_i * d_area;
 		  source *= source_etm;
 		}
-		  
+
 	      /* MMH For massful particles. */
 	      if(Particle_Dynamics &&
 		 (Particle_Model == SWIMMER_EXPLICIT || Particle_Model == SWIMMER_IMPLICIT))
@@ -2979,7 +2963,7 @@ assemble_momentum(dbl time,       /* current time */
 		     * source term. */
 		    source = element_particle_info[ei->ielem].source_term[i];
 		}
-	      
+
 	      //Continuity residual
 	      continuity_stabilization = 0.0;
               if (Cont_GLS)
@@ -2991,10 +2975,10 @@ assemble_momentum(dbl time,       /* current time */
 	        }
 
 	      /*
-	       * Add contributions to this residual (globally into Resid, and 
+	       * Add contributions to this residual (globally into Resid, and
 	       * locally into an accumulator)
 	       */
-		  
+
 	      /*lec->R[peqn][ii] += mass + advection + porous + diffusion + source;*/
               R[ii] += mass + advection + porous + diffusion + source + continuity_stabilization;
 
@@ -3002,7 +2986,7 @@ assemble_momentum(dbl time,       /* current time */
 	      printf("R_m[%d][%d] += %10f %10f %10f %10f %10f\n",
 		     a,i,mass,advection,porous,diffusion,source);
 #endif /* DEBUG_MOMENTUM_RES */
-		  
+
 	    }  /*end if (active_dofs) */
 	  } /* end of for (i=0,ei->dofs...) */
 	}
@@ -3019,25 +3003,25 @@ assemble_momentum(dbl time,       /* current time */
 	  eqn  = R_MOMENTUM1 + a;
 	  peqn = upd->ep[eqn];
 	  bfm  = bf[eqn];
-	  
+
 	  mass_on = pde[eqn] & T_MASS;
 	  advection_on =  pde[eqn] & T_ADVECTION ;
 	  diffusion_on = pde[eqn] & T_DIFFUSION;
 	  source_on = pde[eqn] & T_SOURCE;
 	  porous_brinkman_on = pde[eqn] & T_POROUS_BRINK;
-	  
+
 	  mass_etm = pd->etm[eqn][(LOG2_MASS)];
 	  advection_etm = pd->etm[eqn][(LOG2_ADVECTION)];
 	  diffusion_etm = pd->etm[eqn][(LOG2_DIFFUSION)];
 	  porous_brinkman_etm = pd->etm[eqn][(LOG2_POROUS_BRINK)];
 	  source_etm = pd->etm[eqn][(LOG2_SOURCE)];
-	  
+
 	  phi_i_vector = bfm->phi;
 #ifdef DEBUG_HKM
 	  checkFinite(phi_i_vector[0]);
 #endif
-	  
-	  for (i = 0; i < ei->dof[eqn]; i++) {		  
+
+	  for (i = 0; i < ei->dof[eqn]; i++) {
 	    ii = ei->lvdof_to_row_lvdof[eqn][i];
 
 	    ledof = ei->lvdof_to_ledof[eqn][i];
@@ -3049,13 +3033,13 @@ assemble_momentum(dbl time,       /* current time */
 	       *  ldof pertaining to the same variable type.
 	       */
 	      ii = ei->lvdof_to_row_lvdof[eqn][i];
-		  
+
 	      phi_i = phi_i_vector[i];
-		  
+
 	      /* Assign pointers into the bf structure */
-		  
-	      grad_phi_i_e_a = bfm->grad_phi_e[i][a];	      
-                 
+
+	      grad_phi_i_e_a = bfm->grad_phi_e[i][a];
+
 	      /* this is an optimization for xfem */
 	      if ( xfem != NULL )
 		{
@@ -3064,17 +3048,17 @@ assemble_momentum(dbl time,       /* current time */
 				  &xfem_active, &extended_dof, &base_interp, &base_dof );
 		  if ( extended_dof && !xfem_active ) continue;
 		}
-                    
+
 	      d_grad_phi_i_e_a_dmesh = bfm->d_grad_phi_e_dmesh[i][a];
-		  
-#ifdef DEBUG_MOMENTUM_JAC		  
+
+#ifdef DEBUG_MOMENTUM_JAC
 	      if(ei->ielem == 0)
 		{
 		  printf("\nASSEMBLE_MOMENTUM, a = %d, dof = %d\n", a, i);
 		  printf("\tphi_i = %g\n", phi_i);
 		}
 #endif /* DEBUG_MOMENTUM_JAC */
-		  
+
 	      wt_func = phi_i;
 	      /* add Petrov-Galerkin terms as necessary */
 	      if(supg!=0.)
@@ -3086,8 +3070,8 @@ assemble_momentum(dbl time,       /* current time */
 		      wt_func += supg * h_elem * v[p] * bfm->grad_phi[i][p];
 		    }
 		}
-		  
-	      /* 
+
+	      /*
 	       * J_m_T
 	       */
 	      if ( pdv[TEMPERATURE] )
@@ -3096,13 +3080,13 @@ assemble_momentum(dbl time,       /* current time */
 		  pvar = upd->vp[var];
 		  phi_j_vector = bf[var]->phi;
 		  J = lec->J[peqn][pvar][ii];
-		      
+
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
-		      phi_j = phi_j_vector[j];	      
-			  
+		      phi_j = phi_j_vector[j];
+
 		      mass = 0.;
-			  
+
 		      if (transient_run )
 			{
 			  if ( mass_on)
@@ -3111,14 +3095,14 @@ assemble_momentum(dbl time,       /* current time */
 			      mass *= - phi_i * d_area;
 			      mass *= mass_etm;
 			    }
-			      
+
 			  /* if porous flow is considered. KSC on 5/10/95 */ 
 			  if (porous_brinkman_on ) 
 			    {
 			      mass /= por; 
 			    } 
 			}
-			  
+
 		      advection = 0.;
 		      if ( advection_on )
 			{
@@ -3132,24 +3116,24 @@ assemble_momentum(dbl time,       /* current time */
 			  advection += (v[1] - x_dot[1]) * grad_v[1][a];
 			  if(wim==3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
 #endif
-				  
+
 			  advection *= - wt_func * d_rho->T[j] * d_area;
 			  advection *= advection_etm;
-			      
-			  if (porous_brinkman_on) 
+
+			  if (porous_brinkman_on)
 			    {
-			      por2 = por*por; 
-			      advection /= por2; 
+			      por2 = por*por;
+			      advection /= por2;
 			    }
 			}
-			  
+
 		      porous = 0.;
 		      if (porous_brinkman_on)
 			{
 			  if (vis != 0.)
 			    {
 			      porous = v[a]*(d_rho->T[j] *sc*speed/sqrt(per));
-			      porous += v[a]*(dvis_dT[j]/per);
+			      porous += v[a]*(d_flow_mu->T[j]/per);
 			      porous    *= - phi_i * d_area;
 			      porous    *= porous_brinkman_etm;
 			    }
@@ -3158,7 +3142,7 @@ assemble_momentum(dbl time,       /* current time */
 			      porous = 0.;
 			    }
 			}
-		      
+
 		      diffusion = 0.;
 		      if ( diffusion_on )
 			{
@@ -3185,20 +3169,20 @@ assemble_momentum(dbl time,       /* current time */
 			  diffusion *= - d_area;
 			  diffusion *= diffusion_etm;
 			}
-			  
+
 		      source    = 0.;
 		      if ( source_on )
 			{
 			  source = phi_i * df->T[a][j] * d_area;
 			  source *= source_etm;
 			}
-			  
+
 		      if (particle_momentum_on)
 			{
 			  mass *= (1.0 - p_vol_frac);
 			  advection *= (1.0 - p_vol_frac);
 			}
-			  
+
 		      /*lec->J[peqn][pvar][ii][j] += mass + advection + porous + diffusion + source;*/
 		      J[j] += mass + advection + porous + diffusion + source; 
 #ifdef DEBUG_HKM
@@ -3211,16 +3195,16 @@ assemble_momentum(dbl time,       /* current time */
 	      /*
 	       * J_m_nn
 	       */
-		  
-		  
+
+
 	      if ( pdv[BOND_EVOLUTION] )
 		{
 		  var = BOND_EVOLUTION;
 		  pvar = upd->vp[var];
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
-		      phi_j = bf[var]->phi[j];	      
-			  
+		      phi_j = bf[var]->phi[j];
+
 		      diffusion = 0.;
 		      if ( diffusion_on)
 			{
@@ -3228,14 +3212,14 @@ assemble_momentum(dbl time,       /* current time */
 			    {
 			      for ( q=0; q<VIM; q++)
 				{
-				  diffusion +=  grad_phi_i_e_a[p][q] * 
+				  diffusion +=  grad_phi_i_e_a[p][q] *
 				    d_Pi->nn[q][p][j];
 				}
 			    }
 			  diffusion *= - d_area ;
 			  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 			}
-			  
+
 		      lec->J[peqn][pvar][ii][j] +=
 			diffusion;
 		    }
@@ -3245,22 +3229,22 @@ assemble_momentum(dbl time,       /* current time */
 	      /* 
 	       * J_m_F
 	       */
-		  
-		  
+
+
 	      if ( pdv[FILL] )
 		{
 		  var = FILL;
 		  pvar = upd->vp[var];
-			  
+
 		  J = lec->J[peqn][pvar][ii];
-			  
+
 		  phi_j_vector = bf[var]->phi;
-			  
+
 		  for ( j=0; j < ei->dof[var]; j++)
 		    {
-		      phi_j = phi_j_vector[j];	      
+		      phi_j = phi_j_vector[j];
 
-				  
+
 		      mass = 0.;
 		      if ( transient_run )
 			{
@@ -3270,21 +3254,21 @@ assemble_momentum(dbl time,       /* current time */
 			      mass *= - phi_i * d_area;
 			      mass *= mass_etm;
 			    }
-			      
-			  /* if porous flow is considered. KSC on 5/10/95 */ 
-			  if (porous_brinkman_on) 
+
+			  /* if porous flow is considered. KSC on 5/10/95 */
+			  if (porous_brinkman_on)
 			    {
 			      if (vis != 0.)
 				{
-				  mass /= por; 
+				  mass /= por;
 				}
-			      else if (mp->viscosity ==0 )
+			      else if (mp->viscosity == 0.0 )
 				{
 				  EH(-1, "Error in Porous Brinkman specs.  See PRS ");
 				}
-			    } 
+			    }
 			}
-			  
+
 		      advection = 0.;
 		      if ( advection_on )
 			{
@@ -3293,35 +3277,35 @@ assemble_momentum(dbl time,       /* current time */
 			    {
 			      advection += (v[p] - x_dot[p]) * grad_v[p][a];
 			    }
-#else 
+#else
 			  advection += (v[0] - x_dot[0]) * grad_v[0][a];
 			  advection += (v[1] - x_dot[1]) * grad_v[1][a];
 			  if(wim==3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
 #endif
 			  advection *= - wt_func * d_rho->F[j] * d_area;
 			  advection *= advection_etm;
-			      
-			  /* if porous flow is considered. KSC on 5/10/95 */ 
-			  if ( porous_brinkman_on) 
+
+			  /* if porous flow is considered. KSC on 5/10/95 */
+			  if ( porous_brinkman_on)
 			    {
 
 			      if (vis != 0.)
 				{
-				  por2	     = por * por; 
-				  advection /= por2;  
+				  por2	     = por * por;
+				  advection /= por2;
 				}
 
-			      
-			    } 
+
+			    }
 			}
-			  
+
 		      porous = 0.;
 		      if ( porous_brinkman_on )
 			{
 			  if (vis != 0)
 			    {
 			      porous = v[a]*(d_rho->F[j] *sc*speed/sqrt(per));
-			      /* porous += v[a]*(dvis_dF[j]/per); */
+			      porous += v[a]*(d_flow_mu->F[j]/per);
 			      porous    *= - phi_i * d_area;
 			      porous    *= porous_brinkman_etm;
 			    }
@@ -3337,7 +3321,7 @@ assemble_momentum(dbl time,       /* current time */
 			      porous = 0.;
 			    }
 			}
-			  
+
 		      diffusion = 0.;
 		      if ( diffusion_on )
 			{
@@ -3354,7 +3338,7 @@ assemble_momentum(dbl time,       /* current time */
 			  diffusion +=  grad_phi_i_e_a[1][1] * d_Pi->F[1][1][j];
 			  diffusion +=  grad_phi_i_e_a[1][0] * d_Pi->F[0][1][j];
 			  diffusion +=  grad_phi_i_e_a[0][1] * d_Pi->F[1][0][j];
-				  
+
 			  if(VIM == 3)
 			    {
 			      diffusion +=  grad_phi_i_e_a[2][0] * d_Pi->F[0][2][j];
@@ -3363,20 +3347,20 @@ assemble_momentum(dbl time,       /* current time */
 			      diffusion +=  grad_phi_i_e_a[0][2] * d_Pi->F[2][0][j];
 			      diffusion +=  grad_phi_i_e_a[1][2] * d_Pi->F[2][1][j];
 			    }
-#endif				
+#endif
 			  diffusion *= - d_area;
 			  diffusion *= diffusion_etm;
 			}
-			  
+
 		      source = 0.;
-			  
+
 		      /* Stay away from evil Hessians. */
 		      if ( source_on )
 			{
 			  source = phi_i * df->F[a][j] * d_area;
 			  source *= source_etm;
 			}
-			  
+
 		      if (particle_momentum_on)
 			{
 			  mass *= (1.0 - p_vol_frac);
@@ -3388,7 +3372,7 @@ assemble_momentum(dbl time,       /* current time */
 		}
 #endif /* COUPLED_FILL */
 
-	  
+
 	      /*
 	       * J_m_v
 	       */
@@ -3398,16 +3382,16 @@ assemble_momentum(dbl time,       /* current time */
 		  if ( pdv[var] )
 		    {
 		      pvar = upd->vp[var];
-			  
+
 		      J = lec->J[peqn][pvar][ii];
-			  
+
 		      phi_j_vector = bf[var]->phi;
-			  
+
 		      for ( j=0; j<ei->dof[var]; j++)
 			{
-			      
+
 			  phi_j = phi_j_vector[j];
-				  			      
+
 			  mass = 0.;
 			  if ( transient_run)
 			    {
@@ -3418,26 +3402,26 @@ assemble_momentum(dbl time,       /* current time */
 				  mass *= - phi_i * rho * d_area;
 				  mass *= mass_etm;
 				}
-				  
-			      if (porous_brinkman_on) 
+
+			      if (porous_brinkman_on)
 				{
 				  if(vis != 0.)
 				    {
-				      mass /= por; 
+				      mass /= por;
 				    }
 				  else if (mp->viscosity == 0)
 				    {
 				      EH(-1, "incorrect viscosity settings on porous_brinkman");
 				    }
-				} 
+				}
 
 			      if (particle_momentum_on)
 				{
 				  mass *= ompvf;
 				}
 			    }
-			      
-			      
+
+
 			  porous = 0.0;
 			  if ( porous_brinkman_on )
 			    {
@@ -3478,7 +3462,7 @@ assemble_momentum(dbl time,       /* current time */
 			      advection_a += (v[1] - x_dot[1]) * bf[var]->grad_phi_e[j][b][1][a];
 			      if(wim==3) advection_a += (v[2] - x_dot[2]) * bf[var]->grad_phi_e[j][b][2][a];
 #endif
-				  
+
 
 			      advection_a *= rho;
 			      advection_b = 0.;
@@ -3488,7 +3472,7 @@ assemble_momentum(dbl time,       /* current time */
 
 				  for(p=0;p<dim;p++)
 				    {
-				      d_wt_func += supg * vcent[b] * 
+				      d_wt_func += supg * vcent[b] *
                                            pg_data->dv_dnode[b][j] *
 					hsquared[b] * h_elem_inv / 4. *
 					v[p] * bfm->grad_phi[i][p];
@@ -3537,7 +3521,7 @@ assemble_momentum(dbl time,       /* current time */
 			      diffusion += grad_phi_i_e_a[1][1] * d_Pi->v[1][1][b][j];
 			      diffusion += grad_phi_i_e_a[1][0] * d_Pi->v[0][1][b][j];
 			      diffusion += grad_phi_i_e_a[0][1] * d_Pi->v[1][0][b][j];
-					  
+
 			      if(VIM==3)
 				{
 				  diffusion += grad_phi_i_e_a[2][0] * d_Pi->v[0][2][b][j];
@@ -3546,8 +3530,8 @@ assemble_momentum(dbl time,       /* current time */
 				  diffusion += grad_phi_i_e_a[1][2] * d_Pi->v[2][1][b][j];
 				  diffusion += grad_phi_i_e_a[2][2] * d_Pi->v[2][2][b][j];
 				}
-#endif	  
-					  
+#endif
+
 			      diffusion *= -d_area;
 			      diffusion *= diffusion_etm;
 			    }
@@ -3589,13 +3573,13 @@ assemble_momentum(dbl time,       /* current time */
 			pvar = upd->vp[var];
 			for ( j=0; j<ei->dof[var]; j++)
 			  {
-						  
+
 			    phi_j = bf[var]->phi[j];
-						  
+
 			    diffusion = 0.;
 			    if ( pd->e[eqn] & T_DIFFUSION )
 			      {
-							  
+
 				for ( p=0; p<VIM; p++)
 				  {
 				    for ( q=0; q<VIM; q++)
@@ -3608,7 +3592,7 @@ assemble_momentum(dbl time,       /* current time */
 				diffusion *= h3;
 				diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 			      }
-						  
+
 			    lec->J[peqn][pvar][ii][j] +=
 			      diffusion;
 			  }
@@ -3628,17 +3612,17 @@ assemble_momentum(dbl time,       /* current time */
 			pvar = upd->vp[var];
 			for ( j=0; j<ei->dof[var]; j++)
 			  {
-						  
+
 			    phi_j = bf[var]->phi[j];
-						  
-						  
+
+
 			    source    = 0.;
 			    if ( pd->e[eqn] & T_SOURCE )
 			      {
 				source    = phi_i * df->E[a][b][j] * det_J * h3 *wt;
 				source   *= pd->etm[eqn][(LOG2_SOURCE)];
 			      }
-						  
+
 			    lec->J[peqn][pvar][ii][j] += source;
 			  }
 		      }
@@ -3655,17 +3639,17 @@ assemble_momentum(dbl time,       /* current time */
 		    pvar = upd->vp[var];
 		    for ( j=0; j<ei->dof[var]; j++)
 		      {
-						  
+
 			porous    = 0.;
 			if ( porous_brinkman_on)
 			  {
 			    /*This needs no insulation as the code shouldn't get here 
 			     *for traditional Brinkman form */
-             
+
 			    /* Need a few more basis functions */
 			    dbl grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
 			    ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
-			    
+
 			    /* Assemble */
 			    porous -= LubAux->dv_avg_dp1[a][j] * grad_II_phi_j[a];
 			    porous -= LubAux->dv_avg_dp2[a][j] * phi_j;
@@ -3673,7 +3657,7 @@ assemble_momentum(dbl time,       /* current time */
 			    // porous *= phi_i * wt * h3;
 			    porous *= porous_brinkman_etm;
 			  }
-						  
+
 			lec->J[peqn][pvar][ii][j] += porous;
 		      }
 		  }
@@ -3686,14 +3670,13 @@ assemble_momentum(dbl time,       /* current time */
 		var = SHELL_DELTAH;
 		if ( pdv[var] )
 		  {
-                   
+
 		    pvar = upd->vp[var];
 		    for ( j=0; j<ei->dof[var]; j++)
 		      {
-						  
+
 			phi_j = bf[var]->phi[j];
-						  
-						  
+
 			porous    = 0.;
 			if ( porous_brinkman_on)
 			  {
@@ -3701,7 +3684,7 @@ assemble_momentum(dbl time,       /* current time */
 			    porous *= phi_i * fv->sdet * wt * h3;
 			    porous *= porous_brinkman_etm;
 			  }
-						  
+
 			lec->J[peqn][pvar][ii][j] += porous;
 		      }
 		  }
@@ -3715,11 +3698,11 @@ assemble_momentum(dbl time,       /* current time */
 		      {
 			var = SOLID_DISPLACEMENT1+b;
 			if ( pdv[var] )
-			  {	    
+			  {
 			    if ( mp->FSIModel == FSI_REALSOLID_CONTINUUM ) {
 			      for ( j = 0; j < ei->dof[SOLID_DISPLACEMENT1]; j++ ) {
 				jk=dof_map[j];
-			    
+
 				phi_j = bf[var]->phi[j];
 
 				porous = 0.;
@@ -3730,7 +3713,7 @@ assemble_momentum(dbl time,       /* current time */
 
 
 				J[jk] += porous;
-    
+
 			      }
 			    }
 
@@ -3745,14 +3728,13 @@ assemble_momentum(dbl time,       /* current time */
 		var = SHELL_LUB_CURV;
 		if ( pdv[var] )
 		  {
-                   
+
 		    pvar = upd->vp[var];
 		    for ( j=0; j<ei->dof[var]; j++)
 		      {
-						  
+
 			phi_j = bf[var]->phi[j];
-						  
-						  
+
 			porous    = 0.;
 			if ( porous_brinkman_on)
 			  {
@@ -3760,7 +3742,7 @@ assemble_momentum(dbl time,       /* current time */
 			    porous *= phi_i * fv->sdet * wt * h3;
 			    porous *= porous_brinkman_etm;
 			  }
-						  
+
 			lec->J[peqn][pvar][ii][j] += porous;
 		      }
 		  }
@@ -3776,13 +3758,13 @@ assemble_momentum(dbl time,       /* current time */
 		    pvar = upd->vp[var];
 		    for ( j=0; j<ei->dof[var]; j++)
 		      {
-						  
+
 			porous    = 0.;
 			if ( porous_brinkman_on)
 			  {
-			    /*This needs no insulation as the code shouldn't get here 
+			    /*This needs no insulation as the code shouldn't get here
 			     *for traditional Brinkman form */
-             
+
 			    /* Need a few more basis functions */
 			    dbl grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
 			    ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
@@ -3792,7 +3774,7 @@ assemble_momentum(dbl time,       /* current time */
 			    porous *= phi_i * fv->sdet * wt * h3;
 			    porous *= porous_brinkman_etm;
 			  }
-						  
+
 			lec->J[peqn][pvar][ii][j] += porous;
 		      }
 		  }
@@ -3811,19 +3793,19 @@ assemble_momentum(dbl time,       /* current time */
 			porous    = 0.;
 			if ( porous_brinkman_on)
 			  {
-			    /*This needs no insulation as the code shouldn't get here 
+			    /*This needs no insulation as the code shouldn't get here
 			     *for traditional Brinkman form */
 
 			    dbl grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
              	            ShellBF(var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
-			    
+
 			    /* Assemble */
 			    porous -= LubAux->dv_avg_dh1[a][j] * grad_II_phi_j[a];
 			    porous -= LubAux->dv_avg_dh2[a][j] * phi_j;
 			    porous *= phi_i * fv->sdet * wt * h3;
 			    porous *= porous_brinkman_etm;
 			  }
-						  
+
 			lec->J[peqn][pvar][ii][j] += porous;
 		      }
 		  }
@@ -3832,7 +3814,7 @@ assemble_momentum(dbl time,       /* current time */
 	      /*
 	       * J_m_c
 	       */
-		  
+
 	      if ( pdv[MASS_FRACTION] )
 		{
 		  var = MASS_FRACTION;
@@ -3890,14 +3872,15 @@ assemble_momentum(dbl time,       /* current time */
 			  porous    = 0.;
 			  if ( pd->e[eqn] & T_POROUS_BRINK )
 			    {
-			      porous = v[a]*(d_rho->C[w][j] *sc*speed/sqrt(per)
-					     -0.5*rho*sc*speed/(per*sqrt(per))*d_per_dc[w][j]
-					     -vis/(per*per)*d_per_dc[w][j]);
-			      porous    *= - phi_i * det_J * wt * h3;
-			      porous    *= pd->etm[eqn][(LOG2_POROUS_BRINK)];
-
-			      /*Hack again here*/
-			      porous = 0.;
+                              if (vis != 0.)
+                                {
+			          porous = v[a]*(   d_rho->C[w][j] *sc*speed/sqrt(per)
+					          - 0.5*rho*sc*speed/(per*sqrt(per))*d_per_dc[w][j]
+					          - vis/(per*per)*d_per_dc[w][j]
+                                                  + d_flow_mu->C[w][j] / per);
+			          porous    *= - phi_i * det_J * wt * h3;
+			          porous    *= pd->etm[eqn][(LOG2_POROUS_BRINK)];
+                                }
 			    }
 
 
@@ -3924,7 +3907,7 @@ assemble_momentum(dbl time,       /* current time */
 			      source    = phi_i * df->C[a][w][j] * det_J * h3 *wt;
 			      source   *= pd->etm[eqn][(LOG2_SOURCE)];
 			    }
-		  
+
 
 			  lec->J[peqn][MAX_PROB_VAR + w][ii][j] +=
 			    mass + advection + porous + diffusion + source;
@@ -3935,22 +3918,20 @@ assemble_momentum(dbl time,       /* current time */
 	      /*
 	       * J_m_P
 	       */
-		  
+
 	      if ( pdv[PRESSURE] ){
 		var = PRESSURE;
 		pvar = upd->vp[var];
-			   
+
 		J = lec->J[peqn][pvar][ii];
-			   
+
 		for ( j=0; j<ei->dof[var]; j++)
 		  {
 
 		    /*  phi_j = bf[var]->phi[j]; */
-				   
 
-				   
 		    diffusion = 0.;
-				   
+
 		    if ( diffusion_on)
 		      {
 #ifdef DO_NO_UNROLL
@@ -3958,9 +3939,9 @@ assemble_momentum(dbl time,       /* current time */
 			  {
 			    for ( q=0; q<VIM; q++)
 			      {
-							   
+
 				diffusion -=  grad_phi_i_e_a[p][q] * d_Pi->P[q][p][j];
-							   
+
 #ifdef DEBUG_MOMENTUM_JAC
 				if(ei->ielem == 0)
 				  printf("P diffusion, %d, %d  -= %g %g\n",
@@ -3974,7 +3955,7 @@ assemble_momentum(dbl time,       /* current time */
 			diffusion -=  grad_phi_i_e_a[1][1] * d_Pi->P[1][1][j];
 			diffusion -=  grad_phi_i_e_a[1][0] * d_Pi->P[0][1][j];
 			diffusion -=  grad_phi_i_e_a[0][1] * d_Pi->P[1][0][j];
-					   
+
 			if(VIM==3)
 			  {
 			    diffusion -=  grad_phi_i_e_a[2][2] * d_Pi->P[2][2][j];
@@ -3987,15 +3968,14 @@ assemble_momentum(dbl time,       /* current time */
 			diffusion *= d_area;
 			diffusion *= diffusion_etm;
 		      }
-				   
-				   
+
 #ifdef DEBUG_MOMENTUM_JAC
 		    if(ei->ielem == 0)
 		      fprintf(stdout,
 			      "\tJ_m_P[%d][%d][%d] += %10f %10f %10f %10f\n",
 			      a,i,j,mass,advection,porous,diffusion);
 #endif /* DEBUG_MOMENTUM_JAC */
-				   
+
 		    /*lec->J[peqn][pvar][ii][j] += diffusion ;  */
 		    J[j] += diffusion;
 		  }
@@ -4012,19 +3992,19 @@ assemble_momentum(dbl time,       /* current time */
 			for ( c=0; c<VIM; c++)
 			  {
 			    var = v_s[mode][b][c];
-						  
+
 			    if ( pdv[var] )
 			      {
-							  
+
 				pvar = upd->vp[var];
-							  
+
 				for ( j=0; j<ei->dof[var]; j++)
-								  
+
 				  {
 				    phi_j = bf[var]->phi[j];
-								  
+
 				    diffusion = 0.;
-								  
+
 				    if ( pd->e[eqn] & T_DIFFUSION )
 				      {
 					for ( p=0; p<VIM; p++)
@@ -4038,7 +4018,7 @@ assemble_momentum(dbl time,       /* current time */
 					diffusion *= det_J * wt * h3;
 					diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 				      }
-								  
+
 				    lec->J[peqn][pvar][ii][j] +=
 				      diffusion;
 				  }
@@ -4047,31 +4027,31 @@ assemble_momentum(dbl time,       /* current time */
 		      }
 		  }
 	      }
-		  
+
 	      /*
 	       * J_m_G
 	       */
-		  
-	      if ( pdv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF) )
+	      if ( pdv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF
+					     || vn->evssModel == EVSS_GRADV || vn->evssModel == LOG_CONF_GRADV) )
 		{
 		  for ( b=0; b<VIM; b++)
 		    {
 		      for ( c=0; c<VIM; c++)
 			{
 			  var = v_g[b][c];
-					  
+
 			  if ( pdv[var] )
 			    {
-						  
+
 			      pvar = upd->vp[var];
-						  
+
 			      for ( j=0; j<ei->dof[var]; j++)
-							  
+
 				{
 				  phi_j = bf[var]->phi[j];
-							  
+
 				  diffusion = 0.;
-							  
+
 				  if ( pd->e[eqn] & T_DIFFUSION )
 				    {
 				      for ( p=0; p<VIM; p++)
@@ -4085,7 +4065,7 @@ assemble_momentum(dbl time,       /* current time */
 				      diffusion *= det_J * wt *h3;
 				      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 				    }
-							  
+
 				  lec->J[peqn][pvar][ii][j] +=diffusion;
 				}
 			    }
@@ -4103,19 +4083,19 @@ assemble_momentum(dbl time,       /* current time */
 		    if ( pdv[var] )
 		      {
 			pvar = upd->vp[var];
-					  
+
 			J = lec->J[peqn][pvar][ii];
-					  
+
 			for ( j=0; j<ei->dof[var]; j++)
 			  {
 			    phi_j = bf[var]->phi[j];
-						  
+
 			    d_det_J_dmesh_bj = bfm->d_det_J_dm[b][j];
-						  
+
 			    dh3dmesh_bj = fv->dh3dq[b] * phi_j;
-						  
+
 			    mass = 0.;
-						  
+
 			    if ( transient_run)
 			      {
 				if ( mass_on)
@@ -4126,28 +4106,24 @@ assemble_momentum(dbl time,       /* current time */
 				      * wt;
 				    mass *= mass_etm;
 				  }
-							  
-				/* if porous flow is considered. KSC on 5/10/95 */ 
-				if (porous_brinkman_on) 
+
+				/* if porous flow is considered. KSC on 5/10/95 */
+				if (porous_brinkman_on)
 				  {
-				    mass /= por; 
-				  } 
-							  
+				    mass /= por;
+				  }
+
 			      }
-						  
+
 			    porous = 0.;
 			    if (porous_brinkman_on )
 			      {
 				if(vis != 0.)
 				  {
-				    porous += v[a]*(rho*sc*speed/sqrt(per)+vis/per)*(double)delta(a,b);
+				    porous += v[a]*(rho*sc*speed/sqrt(per)+vis/per);
 				    porous *= -phi_i * wt * (  d_det_J_dmesh_bj * h3  + det_J * dh3dmesh_bj );
 				    porous *= porous_brinkman_etm;
-				    
-				    /* hack again here */
-				    porous = 0.;
-				     
-				  } 
+				  }
 
 				/* Case for sheet-only  */
 				else if ( mp->FSIModel == FSI_SHELL_ONLY ) {
@@ -4155,48 +4131,48 @@ assemble_momentum(dbl time,       /* current time */
 				  porous += (v[a] - LubAux->v_avg[a]) * fv->dsurfdet_dx[b][jk] * h3;
 				  porous += (v[a] - LubAux->v_avg[a]) * fv->sdet  * dh3dmesh_bj;
 				  porous -= LubAux->dv_avg_dx[a][b][j] * fv->sdet * h3;
-				  porous *= phi_i * wt;    
+				  porous *= phi_i * wt;
 				}
-				
+
 				else if (vis == 0. && mp->viscosity == 0.)
 				  {
 				    EH(-1, "cannot have both flowing liquid viscosity and mp->viscosity equal to zero");
 				  }
 
 			      }
-						  
-						  
+
+
 			    advection   = 0.;
-						  
+
 			    if ( advection_on )
 			      {
 				/*
-				 * Four parts: 
-				 *    advection_a = 
+				 * Four parts:
+				 *    advection_a =
 				 *    	Int ( ea.(v-xdot).d(Vv)/dmesh h3 |Jv| )
 				 *
-				 *    advection_b = 
+				 *    advection_b =
 				 *  (i)	Int ( ea.(v-xdot).Vv h3 d(|Jv|)/dmesh )
 				 *  (ii)  Int ( ea.(v-xdot).d(Vv)/dmesh h3 |Jv| )
 				 *  (iii) Int ( ea.(v-xdot).Vv dh3/dmesh |Jv|   )
 				 *
-				 * For unsteady problems, we have an 
+				 * For unsteady problems, we have an
 				 * additional term
 				 *
-				 *    advection_c = 
+				 *    advection_c =
 				 *    	Int ( ea.d(v-xdot)/dmesh.Vv h3 |Jv| )
 				 */
 #ifdef DO_NO_UNROLL
 				advection_a = 0.;
 				for ( p=0; p<wim; p++)
 				  {
-				    advection_a += 
-				      (v[p]-x_dot[p]) 
+				    advection_a +=
+				      (v[p]-x_dot[p])
 				      * fv->d_grad_v_dmesh[p][a] [b][j];
 				  }
 				advection_a *= -wt_func * rho * d_area;
-							  
-				advection_b = 0.;		      
+
+				advection_b = 0.;
 				for ( p=0; p<wim; p++)
 				  {
 				    advection_b += (v[p]    -x_dot[p]) * grad_v[p][a];
@@ -4206,21 +4182,20 @@ assemble_momentum(dbl time,       /* current time */
 				advection_a += (v[0]-x_dot[0]) * fv->d_grad_v_dmesh[0][a] [b][j];
 				advection_a += (v[1]-x_dot[1]) * fv->d_grad_v_dmesh[1][a] [b][j];
 				if( wim == 3 ) advection_a += (v[2]-x_dot[2]) * fv->d_grad_v_dmesh[2][a] [b][j];
-							  
+
 				advection_a *= -wt_func * rho * d_area;
-							  
-				advection_b = 0.;		      
-				advection_b += (v[0]    -x_dot[0]) * grad_v[0][a];				  
-				advection_b += (v[1]    -x_dot[1]) * grad_v[1][a];				  
-				if ( wim == 3 ) advection_b += (v[2]    -x_dot[2]) * grad_v[2][a];				  
+
+				advection_b = 0.;
+				advection_b += (v[0]    -x_dot[0]) * grad_v[0][a];
+				advection_b += (v[1]    -x_dot[1]) * grad_v[1][a];
+				if ( wim == 3 ) advection_b += (v[2]    -x_dot[2]) * grad_v[2][a];
 #endif
-				advection_b *= 
-				  -wt_func * rho * wt * 
-				  ( d_det_J_dmesh_bj * h3 
+				advection_b *=
+				  -wt_func * rho * wt *
+				  ( d_det_J_dmesh_bj * h3
 				    + det_J * dh3dmesh_bj );
-							  
-							  
-				advection_c = 0.;	
+
+				advection_c = 0.;
 				if ( transient_run )
 				  {
 				    if ( mass_on)
@@ -4228,49 +4203,49 @@ assemble_momentum(dbl time,       /* current time */
 #ifdef DO_NO_UNROLL
 					for ( p=0; p<wim; p++)
 					  {
-					    advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(p,b)) 
+					    advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(p,b))
 					      * grad_v[p][a];
 					  }
 #else
-					advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(0,b)) * grad_v[0][a];						  
-					advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(1,b)) * grad_v[1][a];						  
-					if( wim == 3 ) advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(2,b)) * grad_v[2][a];						  
+					advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(0,b)) * grad_v[0][a];
+					advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(1,b)) * grad_v[1][a];
+					if( wim == 3 ) advection_c +=   (-(1.+2.*tt) * phi_j/dt * (double)delta(2,b)) * grad_v[2][a];
 #endif
 					advection_c *= -wt_func * rho * d_area;
 				      }
 				  }
-							  
+
 				advection = advection_a + advection_b + advection_c;
-							  
+
 				advection *= advection_etm;
-				/* if porous flow is considered. KSC on 5/10/95 */ 
-				if (porous_brinkman_on) 
+				/* if porous flow is considered. KSC on 5/10/95 */
+				if (porous_brinkman_on)
 				  {
-				    por2 = por*por; 
-				    advection /= por2; 
-				  } 
+				    por2 = por*por;
+				    advection /= por2;
+				  }
 			      }
-						  
+
 			    /*
 			     * Diffusion...
 			     */
-						  
+
 			    diffusion = 0.;
-						  
+
 			    if ( diffusion_on )
 			      {
-							  
+
 				/* Three parts:
-				 *   diff_a = 
+				 *   diff_a =
 				 *   Int ( d(grad(phi_i e_a))/dmesh : Pi h3 |Jv|)
 				 *
-				 *   diff_b = 
+				 *   diff_b =
 				 *   Int ( grad(phi_i e_a) : d(Pi)/dmesh h3 |Jv|)
 				 *
-				 *   diff_c = 
+				 *   diff_c =
 				 *   Int ( grad(phi_i e_a) : Pi d(h3|Jv|)/dmesh )
 				 */
-							  
+
 				diff_a = 0.;
 				diff_b = 0.;
 				diff_c = 0.;
@@ -4279,78 +4254,78 @@ assemble_momentum(dbl time,       /* current time */
 				  {
 				    for ( q=0; q<VIM; q++)
 				      {
-					diff_a += 
+					diff_a +=
 					  d_grad_phi_i_e_a_dmesh[p][q] [b][j] * Pi[q][p];
-									  
+
 					diff_b +=
 					  grad_phi_i_e_a[p][q] * d_Pi->X[q][p][b][j];
-									  
+
 					diff_c += grad_phi_i_e_a[p][q] * Pi[q][p];
 				      }
 				  }
 #else
-				diff_a += d_grad_phi_i_e_a_dmesh[0][0] [b][j] * Pi[0][0];				  
-				diff_a += d_grad_phi_i_e_a_dmesh[1][1] [b][j] * Pi[1][1];				  
-				diff_a += d_grad_phi_i_e_a_dmesh[0][1] [b][j] * Pi[1][0];				  
-				diff_a += d_grad_phi_i_e_a_dmesh[1][0] [b][j] * Pi[0][1];		
-							  
+				diff_a += d_grad_phi_i_e_a_dmesh[0][0] [b][j] * Pi[0][0];
+				diff_a += d_grad_phi_i_e_a_dmesh[1][1] [b][j] * Pi[1][1];
+				diff_a += d_grad_phi_i_e_a_dmesh[0][1] [b][j] * Pi[1][0];
+				diff_a += d_grad_phi_i_e_a_dmesh[1][0] [b][j] * Pi[0][1];
+
 				diff_b += grad_phi_i_e_a[0][0] * d_Pi->X[0][0][b][j];
 				diff_b += grad_phi_i_e_a[1][1] * d_Pi->X[1][1][b][j];
 				diff_b += grad_phi_i_e_a[0][1] * d_Pi->X[1][0][b][j];
 				diff_b += grad_phi_i_e_a[1][0] * d_Pi->X[0][1][b][j];
-							  
-				diff_c += grad_phi_i_e_a[0][0] * Pi[0][0];					
-				diff_c += grad_phi_i_e_a[1][1] * Pi[1][1];					
-				diff_c += grad_phi_i_e_a[0][1] * Pi[1][0];					
-				diff_c += grad_phi_i_e_a[1][0] * Pi[0][1];					
-							  
+
+				diff_c += grad_phi_i_e_a[0][0] * Pi[0][0];
+				diff_c += grad_phi_i_e_a[1][1] * Pi[1][1];
+				diff_c += grad_phi_i_e_a[0][1] * Pi[1][0];
+				diff_c += grad_phi_i_e_a[1][0] * Pi[0][1];
+
 				if( VIM == 3)
 				  {
-				    diff_a += d_grad_phi_i_e_a_dmesh[2][2] [b][j] * Pi[2][2];				  
-				    diff_a += d_grad_phi_i_e_a_dmesh[2][1] [b][j] * Pi[1][2];				  
-				    diff_a += d_grad_phi_i_e_a_dmesh[2][0] [b][j] * Pi[0][2];				  
-				    diff_a += d_grad_phi_i_e_a_dmesh[1][2] [b][j] * Pi[2][1];				  
-				    diff_a += d_grad_phi_i_e_a_dmesh[0][2] [b][j] * Pi[2][0];				
-								  
+				    diff_a += d_grad_phi_i_e_a_dmesh[2][2] [b][j] * Pi[2][2];
+				    diff_a += d_grad_phi_i_e_a_dmesh[2][1] [b][j] * Pi[1][2];
+				    diff_a += d_grad_phi_i_e_a_dmesh[2][0] [b][j] * Pi[0][2];
+				    diff_a += d_grad_phi_i_e_a_dmesh[1][2] [b][j] * Pi[2][1];
+				    diff_a += d_grad_phi_i_e_a_dmesh[0][2] [b][j] * Pi[2][0];
+
 				    diff_b += grad_phi_i_e_a[2][2] * d_Pi->X[2][2][b][j];
 				    diff_b += grad_phi_i_e_a[2][1] * d_Pi->X[1][2][b][j];
 				    diff_b += grad_phi_i_e_a[2][0] * d_Pi->X[0][2][b][j];
 				    diff_b += grad_phi_i_e_a[1][2] * d_Pi->X[2][1][b][j];
 				    diff_b += grad_phi_i_e_a[0][2] * d_Pi->X[2][0][b][j];
-								  
-				    diff_c += grad_phi_i_e_a[2][2] * Pi[2][2];					
-				    diff_c += grad_phi_i_e_a[2][1] * Pi[1][2];					
-				    diff_c += grad_phi_i_e_a[2][0] * Pi[0][2];					
-				    diff_c += grad_phi_i_e_a[1][2] * Pi[2][1];					
-				    diff_c += grad_phi_i_e_a[0][2] * Pi[2][0];					
+
+				    diff_c += grad_phi_i_e_a[2][2] * Pi[2][2];
+				    diff_c += grad_phi_i_e_a[2][1] * Pi[1][2];
+				    diff_c += grad_phi_i_e_a[2][0] * Pi[0][2];
+				    diff_c += grad_phi_i_e_a[1][2] * Pi[2][1];
+				    diff_c += grad_phi_i_e_a[0][2] * Pi[2][0];
 				  }
-							  
-							  
+
+
 #endif
 				diff_a *= - d_area;
 				diff_b *= -d_area ;
 				diff_c *= - wt * ( d_det_J_dmesh_bj * h3 +
-												 
+
 						   det_J * dh3dmesh_bj );
 				diffusion = diff_a + diff_b + diff_c;
-							  
+
 				diffusion *= diffusion_etm;
 			      }
-						  
+
 			    /*
 			     * Source term...
 			     */
-						  
-			    source = 0.;	  
+
+			    source = 0.;
 			    if ( source_on)
 			      {
-				source += phi_i * wt * 
+				source += phi_i * wt *
 				  ( f[a]   *        d_det_J_dmesh_bj * h3 +
-				    f[a]   *        det_J *            dh3dmesh_bj + 
+				    f[a]   *        det_J *            dh3dmesh_bj +
 				    df->X[a][b][j] * det_J *            h3);
 				source *= source_etm;
 			      }
-						  
+
 			    if (particle_momentum_on)
 			      {
 				mass *= (1.0 - p_vol_frac);
@@ -4367,18 +4342,18 @@ assemble_momentum(dbl time,       /* current time */
 				    continuity_stabilization += grad_phi_i_e_a[p][p]*cont_gls *
 				                                (d_det_J_dmesh_bj *h3 + det_J *dh3dmesh_bj)*wt;
 				  }
-				
+
 			      }
 
 			    J[j] += mass + advection + porous + diffusion + source + continuity_stabilization;
 			  }
 
-			/* Special Case for shell lubrication velocities with bounding continuum.  Note j-loop is over bulk element */			
-			if ( mp->FSIModel == FSI_MESH_CONTINUUM || 
+			/* Special Case for shell lubrication velocities with bounding continuum.  Note j-loop is over bulk element */
+			if ( mp->FSIModel == FSI_MESH_CONTINUUM ||
 			     mp->FSIModel == FSI_REALSOLID_CONTINUUM) {
 			  for ( j = 0; j < ei->dof[MESH_DISPLACEMENT1]; j++ ) {
 			    jk=dof_map[j];
-			    
+
 			    phi_j = bf[var]->phi[j];
 			    dh3dmesh_bj = fv->dh3dq[b] * phi_j;
 
@@ -4398,7 +4373,7 @@ assemble_momentum(dbl time,       /* current time */
 		  }
 	      }
 	    } /* end of if(active_dofs) */
-	  } /* end of for(i=ei->dof*/ 
+	  } /* end of for(i=ei->dof*/
 	}
     }
   safe_free((void *) n_dof);
@@ -23791,7 +23766,7 @@ assemble_p_source ( double pressure, const int bcflag )
 	{
 	 if (!af->Assemble_Jacobian) d_Pi = NULL; 
   		/* compute stress tensor and its derivatives */
-           if(vn->evssModel==LOG_CONF)
+           if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
              {
                fluid_stress_conf(Pi, d_Pi);
              }
@@ -25156,7 +25131,7 @@ assemble_uvw_source ( int eqn, double val )
   else
     {
       /* compute stress tensor and its derivatives */
-      if(vn->evssModel==LOG_CONF)
+      if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
         {
           fluid_stress_conf(Pi, d_Pi);
         }
@@ -25980,7 +25955,9 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
   dbl d_per_dc[MAX_CONC][MDE];
 
   dbl vis;         /* flowing-liquid viscosity */
-  dbl dvis_dT[MDE];/* sensitivities of flowing-liquid viscosity */
+  /* Flowing-liquid viscosity sensitivities */
+  VISCOSITY_DEPENDENCE_STRUCT d_flow_mu_struct;  /* density dependence */
+  VISCOSITY_DEPENDENCE_STRUCT *d_flow_mu = &d_flow_mu_struct;
   dbl sc;          /* inertial coefficient */
   dbl speed;       /* magnitude of the velocity vector */
 
@@ -26109,29 +26086,9 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
     {
       if (mp->PorousMediaType != POROUS_BRINKMAN)
 	WH(-1, "Set Porous term multiplier in continuous medium");
-      if(mp->FlowingLiquidViscosityModel == CONSTANT)
-	{
-	  /* Do nothing */
-	}
-      else if (mp->FlowingLiquidViscosityModel == MOLTEN_GLASS)
-	{
-	  (void) molten_glass_viscosity(&(mp->FlowingLiquid_viscosity),
-					dvis_dT, mp->u_FlowingLiquid_viscosity);
-	}
-      else if (mp->FlowingLiquidViscosityModel == USER)
-	{
-	  (void) usr_FlowingLiquidViscosity(mp->u_FlowingLiquid_viscosity);
-	  var = TEMPERATURE;
 
-	  for ( j=0; j<ei->dof[var]; j++)
-	    {
-	      dvis_dT[j]= mp->d_FlowingLiquid_viscosity[var]*bf[var]->phi[j];
-	    }
-	}
-      else
-	{
-	  EH(-1,"Don't recognize your FlowingLiquidViscosity model");
-	}
+      /* Load variable FlowingLiquid_viscosity */
+      vis = flowing_liquid_viscosity(d_flow_mu);
 
       if (mp->PermeabilityModel == SOLIDIFICATION)
 	{
@@ -26152,8 +26109,6 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 
       /* Load up remaining parameters for the Brinkman Equation. */
       por = mp->porosity;
-      vis = mp->FlowingLiquid_viscosity;
-      /* Load variable FlowingLiquid_viscosity */
       sc  = mp->Inertia_coefficient;
     }
   else
@@ -26193,7 +26148,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
   /*
    * Stress tensor, but don't need dependencies
    */
-  if(vn->evssModel==LOG_CONF)
+  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
     {
       fluid_stress_conf(Pi, NULL);
     }
@@ -26220,13 +26175,13 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 		  eqn  = R_MOMENTUM1 + a;
 		  peqn = upd->ep[eqn];
 		  bfm  = bf[eqn];
-		  
+
 		  mass_on = pde[eqn] & T_MASS;
 		  advection_on =  pde[eqn] & T_ADVECTION ;
 		  diffusion_on = pde[eqn] & T_DIFFUSION;
 		  source_on = pde[eqn] & T_SOURCE;
 		  porous_brinkman_on = pde[eqn] & T_POROUS_BRINK;
-		  
+
 		  mass_etm = pd->etm[eqn][(LOG2_MASS)];
 		  advection_etm = pd->etm[eqn][(LOG2_ADVECTION)];
 		  diffusion_etm = pd->etm[eqn][(LOG2_DIFFUSION)];
@@ -26236,7 +26191,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 		   * In the element, there will be contributions to this many equations
 		   * based on the number of degrees of freedom...
 		   */
-		  
+
 		  for (i = 0; i < ei->dof[eqn]; i++) {
 			  ledof = ei->lvdof_to_ledof[eqn][i];
 			  if (ei->active_interp_ledof[ledof]) {
@@ -26247,13 +26202,13 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 				   *  ldof pertaining to the same variable type.
 				   */
 				  ii = ei->lvdof_to_row_lvdof[eqn][i];
-				  
+
 				  phi_i = bfm->phi[i];
-				  
+
 				  mass = 0.;
-				  
+
 				  grad_phi_i_e_a = bfm->grad_phi_e[i][a];
-				  
+
 				  if ( transient_run  )
 				  {
 					  if ( mass_on )
@@ -26262,18 +26217,18 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 						  mass *= - phi_i * d_area;
 						  mass *= mass_etm;
 					  }
-					  
+
 					  if (porous_brinkman_on )
 					  {
 						  mass /= por;
 					  }
-					  
+
 					  if(particle_momentum_on)
 					  {
 						  mass *= ompvf;
 					  }
 				  }
-				  
+
 				  advection = 0.;
 				  if (advection_on  )
 				  {
@@ -26282,29 +26237,29 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 					  {
 						  advection += (v[p] - x_dot[p]) * grad_v[p][a];
 					  }
-					  
+
 #else
 					  advection += (v[0] - x_dot[0]) * grad_v[0][a];
 					  advection += (v[1] - x_dot[1]) * grad_v[1][a];
 					  if( wim == 3 ) advection += (v[2] - x_dot[2]) * grad_v[2][a];
-					  
+
 #endif
 					  advection *= rho;
 					  advection *= - phi_i * d_area ;
 					  advection *= advection_etm;
-					  
+
 					  if ( porous_brinkman_on  )
 					  {
 						  por2 = por*por;
 						  advection /= por2;
 					  }
-					  
+
 					  if(particle_momentum_on)
 					  {
 						  advection *= ompvf;
 					  }
 				  }
-				  
+
 				  porous    = 0.;
 				  if ( porous_brinkman_on  )
 				  {
@@ -26313,8 +26268,8 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 					  porous    *= porous_brinkman_etm;
 
 				  }
-				  
-				  
+
+
 				  diffusion = 0.;
 				  if ( diffusion_on  )
 				  {
@@ -26331,32 +26286,32 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 					  diffusion += grad_phi_i_e_a[1][1] * Pi[1][1];
 					  diffusion += grad_phi_i_e_a[0][1] * Pi[1][0];
 					  diffusion += grad_phi_i_e_a[1][0] * Pi[0][1];
-					  
+
 					  if( VIM == 3 )
 					  {
 						  diffusion += grad_phi_i_e_a[2][2] * Pi[2][2];
 						  diffusion += grad_phi_i_e_a[2][1] * Pi[1][2];
 						  diffusion += grad_phi_i_e_a[2][0] * Pi[0][2];
 						  diffusion += grad_phi_i_e_a[1][2] * Pi[2][1];
-						  diffusion += grad_phi_i_e_a[0][2] * Pi[2][0];				  
+						  diffusion += grad_phi_i_e_a[0][2] * Pi[2][0];
 					  }
-					  
+
 #endif
-					  
+
 					  diffusion *= - d_area;
 					  diffusion *= diffusion_etm ;
 				  }
-				  
-				  
+
+
 				  source = 0.0;
 				  if ( source_on )
 				  {
 					  source += f[a];
-					  
+
 					  source *= phi_i * d_area;
 					  source *= source_etm;
 				  }
-				  
+
 				  /* MMH For massful particles. */
 				  if(Particle_Dynamics &&
 					 (Particle_Model == SWIMMER_EXPLICIT || Particle_Model == SWIMMER_IMPLICIT))
@@ -26376,19 +26331,19 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
 				      }
 				      continuity_stabilization *= cont_gls*d_area;
 				    }
-				  
-				  
+
+
 				  momentum_residual =
 					  mass + advection + porous + diffusion + source + continuity_stabilization;
-				  
+
 				  var = FILL;
 				  pvar = upd->vp[var];
 				  for ( j=0; j<ei->dof[var]; j++ )
 				  {
-					  
+
 					  lec->J[peqn][pvar][ii][j] += lsi->d_H_dF[j] * momentum_residual * sign;
 				  }
-				  
+
 			  }  /*end if (active_dofs) */
 		  } /* end of for (i=0,ei->dofs...) */
 	  }
@@ -27243,7 +27198,7 @@ fluid_stress( double Pi[DIM][DIM],
       particle_stress(tau_p, d_tau_p_dv, d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
     }
 
-  if ( pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F) )
+  if ( pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV) )
     {
       evss_f = 1.;
     }
@@ -27802,6 +27757,7 @@ fluid_stress( double Pi[DIM][DIM],
   // Vorticity direction dependence for qtensor
   if ( d_Pi != NULL && pd->v[VORT_DIR1] )
     {
+      memset(d_Pi->vd, 0, DIM*DIM*DIM*MDE*sizeof(double));
       for ( p=0; p<VIM; p++)
         {
           for ( q=0; q<VIM; q++)
@@ -28039,13 +27995,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
   dbl R1[DIM][DIM];
   dbl eig_values[DIM];
 
-  // Flag to use a Fortin DEVSS-G stress formulation
-  int evss_f;
-
   int v_s[MAX_MODES][DIM][DIM];
   int v_g[DIM][DIM];
   int mode;                             // Index for modal viscoelastic counter
-  int conf;                             // Flag for Conformation tensor
 
   // Flag for doing dilational viscosity contributions
 
@@ -28116,46 +28068,18 @@ fluid_stress_conf( double Pi[DIM][DIM],
       particle_stress(tau_p, d_tau_p_dv, d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
     }
 
-  // Load up DEVSS-G flag and Gs
-  if(pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel==LOG_CONF))
+  for(a=0; a<VIM; a++)
     {
-      evss_f = 1;
-    }
-  else
-    {
-      evss_f = 0;
-    }
-  if(evss_f)
-    {
-      for(a=0; a<VIM; a++)
-  	{
-  	  for(b=0; b<VIM; b++)
-  	    {
-  	      gamma_cont[a][b] = fv->G[a][b] + fv->G[b][a];
-  	    }
-  	}
-    }
-  else
-    {
-      memset(gamma_cont, 0, sizeof(double)*DIM*DIM);
+      for(b=0; b<VIM; b++)
+	{
+	  gamma_cont[a][b] = fv->G[a][b] + fv->G[b][a];
+	}
     }
 
-  // Turn on conformation tensor flag if desired
-  if (vn->evssModel == LOG_CONF)
-    {
-      conf = LOG_CONF;
-    }
-  else
-    {
-      conf = 0;
-    }
-
-
-  if (conf == LOG_CONF) {
-    for (mode = 0; mode < vn->modes; mode++) {
-      compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
-    }
+  for (mode = 0; mode < vn->modes; mode++) {
+    compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
   }
+
 
   // Load shear rate tensor
   for(a=0; a<VIM; a++)
@@ -28170,35 +28094,25 @@ fluid_stress_conf( double Pi[DIM][DIM],
   mus = viscosity(gn, gamma, d_mus);
 
   // Check if the conformation tensor mapping is valid
-  if(conf)
+  for(mode=0; mode<vn->modes; mode++)
     {
-      for(mode=0; mode<vn->modes; mode++)
-  	{
-  	  // Polymer viscosity
-  	  mup = viscosity(ve[mode]->gn, gamma, d_mup);
-  	  // Polymer time constant
-  	  lambda = 0.0;
-  	  if(ve[mode]->time_constModel == CONSTANT)
-  	    {
-  	      lambda = ve[mode]->time_const;
-  	    }  	  
-	  /* Looks like these models are not working right now
-	   *else if(ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW)
-	   * {
-	   *   lambda = mup/ve[mode]->time_const;
-	   * }
-	   */
-  	  if(lambda==0.0)
-  	    {
-  	      EH( -1, "The conformation tensor needs a non-zero polymer time constant.");
-  	    }
-  	  if(mup==0.0)
-  	    {
-  	      EH( -1, "The conformation tensor needs a non-zero polymer viscosity.");
-  	    }
-  	}
+      // Polymer viscosity
+      mup = viscosity(ve[mode]->gn, gamma, d_mup);
+      // Polymer time constant
+      lambda = 0.0;
+      if(ve[mode]->time_constModel == CONSTANT)
+	{
+	  lambda = ve[mode]->time_const;
+	}  	  
+      if(lambda==0.0)
+	{
+	  EH( -1, "The conformation tensor needs a non-zero polymer time constant.");
+	}
+      if(mup==0.0)
+	{
+	  EH( -1, "The conformation tensor needs a non-zero polymer viscosity.");
+	}
     }
-
 
   // Load up fluid stress terms in Pi
   for(a=0; a<VIM; a++)
@@ -28223,14 +28137,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
 		  Pi[a][b] += mup*(gamma[a][b]-gamma_cont[a][b]);
 
 		  // PolymerStress contribution
-		  if(conf)
-		    {
-		      Pi[a][b] += mup/lambda*(exp_s[mode][a][b]-(double)delta(a,b));
-		    }
-		  else
-		    {
-		      Pi[a][b] += fv->S[mode][a][b];
-		    }
+		  Pi[a][b] += mup/lambda*(exp_s[mode][a][b]-(double)delta(a,b));
 		}
             }
         }
@@ -28260,14 +28167,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 			    {
 			      lambda = ve[mode]->time_const;
 			    }
-			  if(evss_f)
-			    {
-			      d_Pi->T[p][q][j] += d_mup->T[j]*(gamma[p][q]-gamma_cont[p][q]);
-			    }
-			  if(conf)
-			    {
-			      d_Pi->T[p][q][j] += d_mup->T[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-			    }			  
+			  d_Pi->T[p][q][j] += d_mup->T[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->T[p][q][j] += d_mup->T[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			}		      
 		    }
 		}
@@ -28299,14 +28201,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 			      lambda = ve[mode]->time_const;
 			    }
 
-			  if(evss_f)
-			    {
-			      d_Pi->nn[p][q][j] += d_mup->nn[j]*(gamma[p][q]-gamma_cont[p][q]);
-			    }
-			  if(conf)
-			    {
-			      d_Pi->nn[p][q][j] += d_mup->nn[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-			    }			  
+			  d_Pi->nn[p][q][j] += d_mup->nn[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->nn[p][q][j] += d_mup->nn[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			}		      
 		    }
 		}
@@ -28338,14 +28235,10 @@ fluid_stress_conf( double Pi[DIM][DIM],
 			    {
 			      lambda = ve[mode]->time_const;
 			    }
-			  if(evss_f)
-			    {
-			      d_Pi->F[p][q][j] += d_mup->F[j]*(gamma[p][q]-gamma_cont[p][q]);
-			    }
-			  if(conf)
-			    {
-			      d_Pi->F[p][q][j] += d_mup->F[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-			    }			  
+			  
+			  d_Pi->F[p][q][j] += d_mup->F[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->F[p][q][j] += d_mup->F[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			}		      
 		    }
 		}
@@ -28380,14 +28273,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				{
 				  lambda = ve[mode]->time_const;
 				}
-			      if(evss_f)
-				{
-				  d_Pi->pf[p][q][a][j] += d_mup->pf[a][j]*(gamma[p][q]-gamma_cont[p][q]);
-				}
-			      if(conf)
-				{
-				  d_Pi->pf[p][q][a][j] += d_mup->pf[a][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-				}			  
+			      d_Pi->pf[p][q][a][j] += d_mup->pf[a][j]*(gamma[p][q]-gamma_cont[p][q]);
+			      // Log-conformation tensor stress
+			      d_Pi->pf[p][q][a][j] += d_mup->pf[a][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			    }		      
 			}
 		    }
@@ -28425,16 +28313,11 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				  lambda = ve[mode]->time_const;
 				}
 
-			      if(evss_f)
-				{
-				  d_Pi->v[p][q][b][j] += mup*bf[var+q]->grad_phi_e[j][b][p][q];
-				  d_Pi->v[p][q][b][j] += mup*bf[var+p]->grad_phi_e[j][b][q][p];
-				  d_Pi->v[p][q][b][j] += d_mup->v[b][j]*(gamma[p][q]-gamma_cont[p][q]);
-				}
-			      if(conf)
-				{
-				  d_Pi->v[p][q][b][j] += d_mup->v[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-				}			  
+			      d_Pi->v[p][q][b][j] += mup*bf[var+q]->grad_phi_e[j][b][p][q];
+			      d_Pi->v[p][q][b][j] += mup*bf[var+p]->grad_phi_e[j][b][q][p];
+			      d_Pi->v[p][q][b][j] += d_mup->v[b][j]*(gamma[p][q]-gamma_cont[p][q]);
+			      // Log-conformation tensor stress
+			      d_Pi->v[p][q][b][j] += d_mup->v[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			    }		      
 			}
 		    }
@@ -28447,6 +28330,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
   var = VORT_DIR1;
   if(d_Pi!=NULL && pd->v[var])
     {
+      memset(d_Pi->vd, 0, DIM*DIM*DIM*MDE*sizeof(double));
       for(p=0; p<VIM; p++)
         {
           for(q=0; q<VIM; q++)
@@ -28490,16 +28374,11 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				  lambda = ve[mode]->time_const;
 				}
 
-			      if(evss_f)
-				{
-				  d_Pi->X[p][q][b][j] += mup*fv->d_grad_v_dmesh[p][q][b][j];
-				  d_Pi->X[p][q][b][j] += mup*fv->d_grad_v_dmesh[q][p][b][j];
-				  d_Pi->X[p][q][b][j] += d_mup->X[b][j]*(gamma[p][q]-gamma_cont[p][q]);
-				}
-			      if(conf)
-				{
-				  d_Pi->X[p][q][b][j] += d_mup->X[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-				}			  
+			      d_Pi->X[p][q][b][j] += mup*fv->d_grad_v_dmesh[p][q][b][j];
+			      d_Pi->X[p][q][b][j] += mup*fv->d_grad_v_dmesh[q][p][b][j];
+			      d_Pi->X[p][q][b][j] += d_mup->X[b][j]*(gamma[p][q]-gamma_cont[p][q]);
+			      // Log-conformation tensor stress
+			      d_Pi->X[p][q][b][j] += d_mup->X[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			    }		      
 			}
 		    }
@@ -28539,7 +28418,7 @@ fluid_stress_conf( double Pi[DIM][DIM],
                               d_Pi->S[p][q][mode][b][c][j] = 0.;
                               /* Note: We use b <= c below to be consistent with the symmetry of the stress
                                  tensor and to avoid double contributions to the Jacobian in assemble_momentum */
-                              if ( b <= c && conf == LOG_CONF )
+                              if ( b <= c )
                                 {
                                   d_Pi->S[p][q][mode][b][c][j] =
                                     mup/lambda*d_exp_s_ds[mode][p][q][b][c] * bf[var]->phi[j];
@@ -28570,16 +28449,12 @@ fluid_stress_conf( double Pi[DIM][DIM],
 
 			  if(pd->v[POLYMER_STRESS11])
 			    {
-			      if(evss_f)
+			      for(mode=0; mode<vn->modes; mode++)
 				{
-				  for(mode=0; mode<vn->modes; mode++)
-				    {
-				      // Polymer viscosity
-				      mup = viscosity(ve[mode]->gn, gamma, d_mup);
-				      
-				      d_Pi->g[p][q][a][b][j] += mup*(delta(p,a)*delta(q,b)+delta(p,b)*delta(q,a))*bf[var]->phi[j];
-				    }
-				}			  
+				  // Polymer viscosity
+				  mup = viscosity(ve[mode]->gn, gamma, d_mup);
+				  d_Pi->g[p][q][a][b][j] += mup*(delta(p,a)*delta(q,b)+delta(p,b)*delta(q,a))*bf[var]->phi[j];
+				}
 			    }
 			}
 		    }
@@ -28614,14 +28489,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				{
 				  lambda = ve[mode]->time_const;
 				}
-			      if(evss_f)
-				{
-				  d_Pi->C[p][q][w][j] += d_mup->C[w][j]*(gamma[p][q]-gamma_cont[p][q]);
-				}
-			      if(conf)
-				{
-				  d_Pi->C[p][q][w][j] += d_mup->C[w][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-				}			  
+			      d_Pi->C[p][q][w][j] += d_mup->C[w][j]*(gamma[p][q]-gamma_cont[p][q]);
+			      // Log-conformation tensor stress
+			      d_Pi->C[p][q][w][j] += d_mup->C[w][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			    }		      
 			}
 		    }
@@ -28653,14 +28523,9 @@ fluid_stress_conf( double Pi[DIM][DIM],
 			    {
 			      lambda = ve[mode]->time_const;
 			    }
-			  if(evss_f)
-			    {
-			      d_Pi->P[p][q][j] += d_mup->P[j]*(gamma[p][q]-gamma_cont[p][q]);
-			    }
-			  if(conf)
-			    {
-			      d_Pi->P[p][q][j] += d_mup->P[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
-			    }			  
+			  d_Pi->P[p][q][j] += d_mup->P[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->P[p][q][j] += d_mup->P[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
 			}		      
 		    }
 		}

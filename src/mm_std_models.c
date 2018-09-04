@@ -800,7 +800,10 @@ epoxy_dea_species_source( int species_no,    /* Current species number */
   
   /* Begin Execution */
   
-  T = fv->T;
+  if ( pd->e[TEMPERATURE] )
+       {T = fv->T;}
+  else
+       {T = upd->Process_Temperature;}
   /* extent of reaction, alpha */
   alpha = fv->c[species_no];
   /*  if(alpha <= 0.) alpha = 0.0001; */
@@ -929,7 +932,11 @@ epoxy_species_source(int species_no,   /* Current species number */
   /* Begin Execution */
   
 
-  T = fv->T;
+  if ( pd->e[TEMPERATURE] )
+       {T = fv->T;}
+  else
+       {T = upd->Process_Temperature;}
+
   /* extent of reaction, alpha */
   alpha = fv->c[species_no];
   /*  if(alpha <= 0.) alpha = 0.0001; */
@@ -1044,7 +1051,10 @@ foam_epoxy_species_source(int species_no,   /* Current species number */
   /* Begin Execution */
   
 
-  T = fv->T;
+  if ( pd->e[TEMPERATURE] )
+       {T = fv->T;}
+  else
+       {T = upd->Process_Temperature;}
 
   Press = upd->Pressure_Datum;
   rho_v_inv = Rgas*T/(Press*MW_f);
@@ -3989,7 +3999,7 @@ suspension_balance(struct Species_Conservation_Terms *st,
 	      
 	      c_term += -M*d_div_tau_p_dy[a][w][j];
 	      
-	      mu_term = dM_dmu*d_mu->C[w][j]*div_tau_p[a];
+	      mu_term = -dM_dmu*d_mu->C[w][j]*div_tau_p[a];
 	      
 	      g_term = ((f+ df_dy*Y[w])*bf[var]->phi[j] + Y[w]*df_dmu *d_mu->C[w][j]);
 	      g_term *= Dg * mp->momentum_source[a]*del_rho;
@@ -5165,44 +5175,179 @@ molten_glass_viscosity(dbl *vis, /* Base FLOWING LIQUID VISCOITY  */
   BB = mp->u_FlowingLiquid_viscosity[1];
   CC = mp->u_FlowingLiquid_viscosity[2];
 
- /************Initialize everything for saftey**************/
+ /************Initialize everything for safety**************/
 
-  eqn   = R_MOMENTUM1;			
+  eqn   = R_MOMENTUM1;
   if ( pd->e[eqn] & T_POROUS_BRINK )
     {
       *vis    = 0.;
-      
-      var = TEMPERATURE;
-      for (j=0; j<ei->dof[var]; j++)
-	{
-	  dvis_dT[j] = 0.;
-	}
 
+      if (dvis_dT != NULL)
+        {
+         var = TEMPERATURE;
+         for (j=0; j<ei->dof[var]; j++)
+	    {
+	     dvis_dT[j] = 0.;
+	    }
+        }
     }
   /**********************************************************/
-  
+
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
-  
-  T = fv->T;                                       
-  
+
+  T = fv->T;
+
   /**********************************************************/
       *vis = pow(10.0,AA+BB/(T-CC));
 
-  /* Now do sensitivies */
+  /* Now do sensitivities */
 
-  var = TEMPERATURE;
-  for ( j=0; j<ei->dof[var]; j++)
-  {
-    dvis_dT[j]=-BB*exp(AA+BB/(T-CC))/pow(T-CC,2.0);
-  }
-
+  if (dvis_dT != NULL)
+    {
+     var = TEMPERATURE;
+     for ( j=0; j<ei->dof[var]; j++)
+        {
+         dvis_dT[j]=-BB*exp(AA+BB/(T-CC))/pow(T-CC,2.0);
+        }
+    }
 
   return(0);
 }
 /*****************************************************************************/
 /* END of routine molten_glass_viscosity */
 /*****************************************************************************/
+
+/*
+ * Molten Glass Viscosity Model
+ */
+
+/*
+ * epoxy_flowing_liquid_viscosity ( vis, d_flow_mu)
+ *
+ * ----------------------------------------------------------------------------
+ * This routine is responsible for filling up the following properties and sensitivities
+ * at the current gauss point:
+ *     intput:  
+ *
+ *     output:  vis         - Flowing liquid viscosity
+ *              d_flow_mu   - derivative wrt DOF at node j.
+ * ----------------------------------------------------------------------------
+ */
+
+int
+epoxy_flowing_liquid_viscosity(dbl *vis, /* Base FLOWING LIQUID VISCOITY  */
+		               VISCOSITY_DEPENDENCE_STRUCT *d_flow_mu, /* its dependence. */
+		               dbl *param) /* parameter list */
+{
+  /* Local Variables */
+
+  dbl mu0 = param[0];           /* monomer reference temperature viscosity */
+  dbl alpha_g = param[1];       /* extent of reaction at the gel point */
+  dbl A = param[2];             /* exponent for constitutive equation */
+  dbl B = param[3];             /* exponent for constitutive equation */
+  dbl Aexp = param[4];	        /* exponent for thermal viscosity dependence */
+  int species = (int) param[5]; /* species number for cure equation */
+
+  dbl mu;     /* viscosity */
+  dbl alpha;  /* extent of reaction */
+  dbl exponent;
+  dbl ratio;
+  dbl deriv;  /* stuff for the first derivative */
+  dbl T;      /* Convenient local variables */
+  int j, var;
+
+
+  /* Begin Execution */
+
+
+  /******** Evaluate terms for viscosity *********/
+
+  alpha = fv->c[species]; /* extent of reaction */
+
+  if(alpha < alpha_g)
+    {
+      ratio = (alpha_g)/(alpha_g - alpha);
+      exponent = A + B * alpha;
+    }
+  else /* do something special at the gel point */
+    {
+      ratio = 100000;
+      exponent = A + B*alpha_g;
+    }
+
+
+  if ( pd->e[TEMPERATURE] )
+       {T = fv->T;}
+  else
+       {T = upd->Process_Temperature;}
+
+
+  if(T <= 0.)
+    {
+      mu = mu0  * pow ( ratio, exponent );
+    }
+  else
+    {
+      mu = mu0 * exp (Aexp/T) * pow ( ratio, exponent );
+    }
+
+  *vis = mu;
+
+
+  /******** Evaluate viscosity senstivities *********/
+
+  if (d_flow_mu != NULL)
+    {
+
+     /* d_flow_mu_dT */
+     var = TEMPERATURE;
+     if(pd->v[var])
+       {
+        if( T <= 0.)
+          {
+           mp->d_FlowingLiquid_viscosity[var]  = 0.;
+          }
+        else
+          {
+           mp->d_FlowingLiquid_viscosity[var] = -mu * Aexp/(T*T) ;
+          }
+
+        for ( j=0; j<ei->dof[var]; j++)
+          {
+           d_flow_mu->T[j]= mp->d_FlowingLiquid_viscosity[var]*bf[var]->phi[j];
+          }
+
+       }
+
+     /* d_flow_mu_dC */
+     var = MASS_FRACTION;
+     if(pd->v[var])
+       {
+        if(alpha < alpha_g)
+          {
+           deriv = exponent/(alpha_g - alpha) + B*log(ratio);
+           mp->d_FlowingLiquid_viscosity[MAX_VARIABLE_TYPES + species] = mu * deriv;
+          }
+        else
+	  {
+           deriv = 0.0;
+           mp->d_FlowingLiquid_viscosity[MAX_VARIABLE_TYPES + species] = 0.;
+          }
+
+        for ( j=0; j<ei->dof[var]; j++)
+          {
+           d_flow_mu->C[species][j]= mp->d_FlowingLiquid_viscosity[var]*bf[var]->phi[j];
+          }
+
+       }
+    }
+  return(0);
+}
+/*****************************************************************************/
+/* END of routine epoxy_flowing_liquid_viscosity */
+/*****************************************************************************/
+
 
 /*
  * Solidification Permeability Model
@@ -5666,6 +5811,12 @@ ion_reaction_source ( int species_no )   /* current species number */
  */
 
 {
+
+#if MAX_CONC < 7
+  EH(-1, "ion_reaction_source expects MAX_CONC to be >= 7");
+  return -1;
+#else
+
   int eqn, var, j;
   int four, five;
   dbl k1, k2, k3, K1, K2, K3;
@@ -5673,11 +5824,7 @@ ion_reaction_source ( int species_no )   /* current species number */
   dbl dQ1dx2 = 0.0, dQ1dx3 = 0.0, dQ2dx5 = 0.0, dQ2dx1 = 0.0, dQ2dx2 = 0.0, dQ3dx4 = 0.0, dQ3dx0 = 0.0, dQ3dx3 = 0.0;
   dbl c, rho, M_mix, x[MAX_CONC] = {0};
 
-  if (MAX_CONC < 6) {
-    EH(-1, "ion_reaction_source expects MAX_CONC to be >= 6");
-    return -1;
-  }
- 
+
   /* Begin Execution */
  
   four = 4;
@@ -5870,6 +6017,7 @@ ion_reaction_source ( int species_no )   /* current species number */
          }
      }
   return 0;
+#endif // MAX_CONC < 7
 }
 /*****************************************************************************/
 /* END of routine ion_reaction_source                                        */

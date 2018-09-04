@@ -551,6 +551,7 @@ extern int TOTAL_STRESS23;	/* sum over all modes for multi-mode models */
 extern int TOTAL_STRESS33;	/* sum over all modes for multi-mode models */
 extern int USER_POST;		/* a user defined function */
 extern int PP_Viscosity;        /* Value of the fluid viscosity */
+extern int PP_FlowingLiquid_Viscosity;   /* Value of the fluid flowing liquid viscosity (Porous Brinkman term) */
 extern int PP_VolumeFractionGas;/* Value of the volume fraction of the gas component
                                    in a foam or other two phase material */
 

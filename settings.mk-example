@@ -52,7 +52,7 @@ GCC_TOP = /usr
 # C_WARN_FLAGS	= -Wall
 
 # C++ standard flag (required for stratimikos support)
-# CXXSTD = -std=gnu++11
+CXXSTD = -std=gnu++11
 
 # Fortran warning flags
 # F_WARN_FLAGS	=
@@ -88,6 +88,9 @@ PREFIX = /home/goma/build
 
 # If you want stratimikos support, use the above DEFINES and add the following
 #	     -DHAVE_STRATIMIKOS
+
+# Enable trapping on floating point exception (useful for debugging NaN's)
+#	     -DFP_EXCEPT
 
 # TOOLING used for install, cleaning, and library creation
 # install

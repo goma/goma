@@ -4188,7 +4188,7 @@ fvelo_slip_level(double func[MAX_PDIM],
   /* compute stress tensor and its derivatives */
   if( type == VELO_SLIP_LEVEL_SIC_BC) 
     {
-      if(vn->evssModel == LOG_CONF)
+      if(vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
         {
           fluid_stress_conf( Pi, d_Pi);
         }
@@ -4904,7 +4904,7 @@ sheet_tension ( double cfunc[MDE][DIM],
         }
     }
 
-    if(vn->evssModel == LOG_CONF)
+    if(vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
       {
         fluid_stress_conf( Pi, &d_Pi);
       }
@@ -6553,7 +6553,7 @@ flow_n_dot_T_nobc(double func[DIM],
   if(iflag == -1) fv->P = pdatum;
 
   /* compute stress tensor and its derivatives */
-  if(vn->evssModel == LOG_CONF)
+  if(vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
     {
       fluid_stress_conf( Pi, d_Pi);
     }
@@ -6731,7 +6731,8 @@ flow_n_dot_T_nobc(double func[DIM],
 	    }
 	}
 
-      if ( pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF) )
+      if ( pd->v[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == LOG_CONF
+				       || vn->evssModel == EVSS_GRADV || vn->evssModel == LOG_CONF_GRADV) )
 	{
 	  for (p=0; p<pd->Num_Dim; p++)
 	    {
@@ -7484,6 +7485,7 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
   int v_s[MAX_MODES][DIM][DIM];
   int inv_v_s [DIM][DIM];
   int dim = pd->Num_Dim;
+  int logc_gradv = 0;
 
   dbl grad_v[DIM][DIM];    /* Velocity gradient based on velocity - discontinuous across element */
   dbl gamma[DIM][DIM];     /* Shear-rate tensor based on velocity */
@@ -7546,6 +7548,11 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
   memset( R1, 0, sizeof(double)*DIM*DIM);
   memset( eig_values, 0, sizeof(double)*DIM);
 
+  if(vn->evssModel == LOG_CONF_GRADV)
+    {
+      logc_gradv = 1;
+    }
+  
   /*
    * Load up Field variables...
    */
@@ -7670,7 +7677,14 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
               Rt_dot_gradv[i][j] = 0.;  
               for(w=0; w<VIM; w++) 
                 {
-                  Rt_dot_gradv[i][j] += R1_T[i][w] * gt[w][j];
+		  if(logc_gradv)
+		    {
+		      Rt_dot_gradv[i][j] += R1_T[i][w] * grad_v[j][w];
+		    }
+		  else
+		    {
+		      Rt_dot_gradv[i][j] += R1_T[i][w] * gt[w][j];
+		    }
                 }
             }
         }     
@@ -11268,7 +11282,7 @@ apply_sharp_wetting_velocity(double func[MAX_PDIM],
   /* compute stress tensor and its derivatives */
   if( include_stress)  
     {
-      if(vn->evssModel == LOG_CONF)
+      if(vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
         {
           fluid_stress_conf( Pi, d_Pi);
         }
@@ -14904,7 +14918,7 @@ shear_to_shell ( double cfunc[MDE][DIM],
   
   detJ = 1.0;
 
-  if(vn->evssModel == LOG_CONF)
+  if(vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
     {
       fluid_stress_conf( Pi, &d_Pi);
     }

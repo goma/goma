@@ -699,7 +699,7 @@ evaluate_flux(
                             dbl eig_values[DIM];
 		            dbl mup = 0.;
  			    dbl lambda = 0.;
-                            if(vn->evssModel==LOG_CONF)
+                            if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
                               {
                                 for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
                                   {

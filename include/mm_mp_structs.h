@@ -1204,6 +1204,10 @@ struct Second_LS_Phase_Properties
   int speciessourcemask[2][MAX_CONC];;
   dbl speciessource_phase[MAX_PHASE_FUNC][MAX_CONC];
 
+  int FlowingLiquidViscosityModel;
+  dbl FlowingLiquid_viscosity;
+  int FlowingLiquid_viscositymask[2];
+  dbl FlowingLiquid_viscosity_phase[MAX_PHASE_FUNC];
 
 };
 

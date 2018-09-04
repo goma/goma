@@ -3432,5 +3432,99 @@ copy_pF_to_F ( int phase )
 
 }
 
- 
+/*******************************************************************************
+ * flowing_liquid_viscosity(): Calculate the flowing liquid viscosity used in
+ *                             Brinkman term of momentum equation together with
+ *                             its sensitivities with respect to solution unknowns
+ *                             at the Gauss point. It typically depends on species
+ *                             concentration, temperature, etc
+ *
+ * Input
+ *----------
+ *
+ * Output
+ * -----
+ *
+ *   flow_vis    = flowing liquid viscosity
+ *   d_flow_vis  = dependence of flowing liquid viscosity on the independent unknowns
+ *                 in the local element stiffness matrix.
+ *
+ *
+ *
+ *******************************************************************************/
+double
+flowing_liquid_viscosity(VISCOSITY_DEPENDENCE_STRUCT *d_flow_vis)
+{
+
+  int err;
+  int var;
+  int j;
+
+  double flow_vis = 0.;
+
+  /* Zero out sensitivities */
+  if (d_flow_vis != NULL)
+    {
+     zeroStructures(d_flow_vis, 1);
+    }
+  if (mp->PorousMediaType != POROUS_BRINKMAN)
+        WH(-1, "Set Porous term multiplier in continuous medium");
+
+
+  /***** Evaluate FlowingLiquid Viscosity based on the specified model ****/
+
+  if (mp->FlowingLiquidViscosityModel == CONSTANT)
+     {
+      flow_vis = mp->FlowingLiquid_viscosity;
+      mp_old->FlowingLiquid_viscosity = flow_vis;
+     }
+
+  else if (mp->FlowingLiquidViscosityModel == MOLTEN_GLASS)
+     {
+      (void) molten_glass_viscosity(&flow_vis,
+                                    d_flow_vis->T, mp->u_FlowingLiquid_viscosity);
+     }
+
+  else if (mp->FlowingLiquidViscosityModel == EPOXY)
+     {
+      (void) epoxy_flowing_liquid_viscosity(&flow_vis, d_flow_vis, mp->u_FlowingLiquid_viscosity);
+     }
+
+  else if (mp->FlowingLiquidViscosityModel == USER)
+     {
+      (void) usr_FlowingLiquidViscosity(mp->u_FlowingLiquid_viscosity);
+      var = TEMPERATURE;
+
+      if (d_flow_vis != NULL)
+        {
+         for ( j=0; j<ei->dof[var]; j++)
+            {
+             d_flow_vis->T[j]= mp->d_FlowingLiquid_viscosity[var]*bf[var]->phi[j];
+            }
+        }
+     }
+
+  else
+     {
+      EH(-1,"Don't recognize your FlowingLiquidViscosity model");
+     }
+
+
+  if (ls != NULL && 
+      mp->mp2nd != NULL &&
+      (mp->mp2nd->FlowingLiquidViscosityModel == CONSTANT )
+    )
+    {
+      err= ls_modulate_viscosity(&flow_vis, mp->mp2nd->FlowingLiquid_viscosity, ls->Length_Scale,
+                                 (double) mp->mp2nd->FlowingLiquid_viscositymask[0],
+                                 (double) mp->mp2nd->FlowingLiquid_viscositymask[1],
+                                 d_flow_vis, mp->mp2nd->FlowingLiquidViscosityModel );
+      EH(err, "ls_modulate_viscosity");
+    }
+
+
+  return(flow_vis);
+
+} /* End of flowing_liquid_viscosity*/
+
 /* end of file mm_viscosity.c */

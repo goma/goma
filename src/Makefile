@@ -238,7 +238,7 @@ INCLUDES = $(GOMA_INC) $(SPARSE_INC) $(TRILINOS_INC) \
 DEBUG_FLAGS ?= -g -gdwarf-2
 
 # All compiler options
-CCFLAGS ?= -O
+CCFLAGS ?= -O2
 
 # C/C++ warning flags
 C_WARN_FLAGS ?= -Wall

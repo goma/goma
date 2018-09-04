@@ -774,6 +774,15 @@ assemble_vorticity_direction()
       return(status);
     }
 
+  for (a=0; a < DIM; a++)
+    {
+      for (b=0; b < DIM; b++)
+	{
+	  gamma_dot[a][b] = 0.;
+	  gamma_dot_pert[a][b] = 0.;
+	}
+    }
+  
   dim = pd->Num_Dim;
   WIM  = dim;
   if (pd->CoordinateSystem == SWIRLING ||
@@ -817,12 +826,11 @@ assemble_vorticity_direction()
 	  for( b=0; b<VIM; b++)
 	    {
 	      gamma_dot[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
-	      
 	    }
 	}
       
       /* Get local vorticity direction for least squares projection*/
-      for ( a=0; a<VIM; a++)
+      for ( a=0; a<DIM; a++)
 	{
 	  vort_dir_local[a] = 0.0;
 	  vort_dir[a] = 0.;
@@ -2559,6 +2567,7 @@ find_super_special_eigenvector(dbl T[DIM][DIM],
 			       int print)
 {
   int num_zero_eigenvalues;
+  int i,j;
   dbl A[3][3];
   dbl a0, a2, a1;
   dbl q, r, d, m, theta, z1, z2, z3;
@@ -2567,7 +2576,14 @@ find_super_special_eigenvector(dbl T[DIM][DIM],
   *eigenvalue = 0.0;
 
   /* First, get a copy of the shear rate tensor. */
-  memcpy(A, T, DIM * DIM * sizeof(dbl));
+  memset(A, 0, 9 * sizeof(dbl));
+  for (i=0; i < DIM; i++)
+    {
+      for (j=0; j < DIM; j++)
+	{
+	  A[i][j] = T[i][j];
+	}
+    }
 
   /* Now find the zeros of the cubic polynomial characteristic
    * equation.  This requires some complex number mumbo-jubmo, which I
@@ -2705,6 +2721,10 @@ find_super_special_eigenvector(dbl T[DIM][DIM],
     {
       /* At least 2 zeros => all 3 are zero (symmetry) */
     }
+  /* Try to catch some roundoff errors. */
+  if(fabs(v[0]) < QTENSOR_SMALL_DBL) v[0] = 0.0;
+  if(fabs(v[1]) < QTENSOR_SMALL_DBL) v[1] = 0.0;
+  if(fabs(v[2]) < QTENSOR_SMALL_DBL) v[2] = 0.0;
 }
 
 /* This routine diagonalizes a symmetric 2-tensor of size 3 by 3.
