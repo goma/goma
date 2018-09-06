@@ -205,7 +205,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
   int var, ii,  pvar, ledof;
   const int eqn = R_MASS;
   const int dim = pd->Num_Dim;
-  int p, b, q, w, w1, i, j, status, c;
+  int a, p, b, q, w, w1, i, j, status, c;
   /*
    *    species_eqn_type:
    *        This is a temp variable that gets set at the top
@@ -358,6 +358,9 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
    */
   rho  = density(d_rho, time);
 
+  double supg_tau = 0.;
+  double d_supg_tau_dv[DIM][MDE];
+
   if( mp->Spwt_funcModel == GALERKIN)
     {
       supg = 0.;
@@ -368,24 +371,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
     }
 
 
-  if(supg!=0.)
-    {
-      h_elem = 0.;
-      for ( p=0; p<dim; p++)
-	{
-	  h_elem += vcent[p]*vcent[p]*h[p];
-	}
-      h_elem = sqrt(h_elem)/2.;
-      if(h_elem == 0.) 
-	{
-	  h_elem_inv=0.;
-	}
-      else
-	{
-	  h_elem_inv=1./h_elem;
-	}
-	
-    }
+
   /* end Petrov-Galerkin addition */
 
   /************************************************************************/
@@ -428,6 +414,44 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
        */
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
+	  if(supg!=0.)
+	    {
+	      int a;
+	      double vnorm = 0;
+
+	      for (a = 0; a < VIM; a++) {
+		vnorm += fv->v[a]*fv->v[a];
+	      }
+	      vnorm = sqrt(vnorm);
+
+	      double hk = 0;
+	      for (a = 0; a < dim; a++) {
+		hk += sqrt(h[a]);
+	      }
+
+	      double D = mp->diffusivity[w];
+
+	      if ((D <= 0) || (mp->DiffusivityModel[w] != CONSTANT)) {
+		// if numerical diffusion is off use 1e-6 for Peclet number
+		D = 1e-6;
+	      }
+
+	      hk /= (double) dim;
+
+	      double Pek = 0.5 * vnorm * hk / D;
+
+	      double eta = Pek;
+	      if (Pek > 1) {
+		eta = 1;
+	      }
+
+	      if (vnorm > 0) {
+		supg_tau = 0.5 * hk * eta / vnorm;
+	      } else {
+		supg_tau = 0;
+	      }
+
+	    }
 	  /*
 	   *  Calculate the coef_rho term based upon the value of
 	   *  species_eqn_type.
@@ -488,6 +512,18 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 	      ii = ei->lvdof_to_row_lvdof[eqn][i];
 
 		  phi_i = bf[eqn]->phi[i];
+
+		  /* only use Petrov Galerkin on advective term - if required */
+		  wt_func = phi_i;
+		  /* add Petrov-Galerkin terms as necessary */
+		  if (supg != 0.0)
+		    {
+		      for(p=0; p<dim; p++)
+			{
+			  wt_func += supg * supg_tau * fv->v[p] * bf[eqn]->grad_phi[i][p];
+			}
+		    }
+
 		  mass = 0.;
 		  if ( pd->TimeIntegration != STEADY )
 		    {
@@ -509,21 +545,12 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			    mass *= (epsilon*small_c);
 			  }
 
-			  mass *= - phi_i * h3 * det_J * wt;
+			  mass *= - wt_func * h3 * det_J * wt;
 			  mass *= pd->etm[eqn][LOG2_MASS];
 			}
 		    }
 		  
-		  /* only use Petrov Galerkin on advective term - if required */
-		  wt_func = phi_i;
-		  /* add Petrov-Galerkin terms as necessary */
-		  if (supg != 0.0)
-		    {
-		      for(p=0; p<dim; p++)
-			{
-			  wt_func += supg * h_elem * fv->v[p] * bf[eqn]->grad_phi[i][p];
-			}
-		    }
+
 		  
 		  /*
 		   *   Advection is velocity times gradient of the species unknown
@@ -634,7 +661,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		          source -= x[w]*sumrm/sumxm;
 		         }
 
-		      source *= phi_i * h3 * det_J * wt; 
+		      source *= wt_func * h3 * det_J * wt;
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 
@@ -673,6 +700,61 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
       
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
+	  if(supg!=0.)
+	    {
+	      double vnorm = 0;
+
+	      for (a = 0; a < VIM; a++) {
+		vnorm += fv->v[a]*fv->v[a];
+	      }
+	      vnorm = sqrt(vnorm);
+
+	      double hk = 0;
+	      for (a = 0; a < dim; a++) {
+		hk += sqrt(h[a]);
+	      }
+
+	      double D = mp->diffusivity[w];
+
+	      if ((D <= 0) || (mp->DiffusivityModel[w] != CONSTANT)) {
+		// if numerical diffusion is off use 1e-6 for Peclet number
+		D = 1e-6;
+	      }
+
+	      hk /= (double) dim;
+
+	      double Pek = 0.5 * vnorm * hk / D;
+
+	      double eta = Pek;
+	      if (Pek > 1) {
+		eta = 1;
+	      }
+
+	      if (vnorm > 0) {
+		supg_tau = 0.5 * hk * eta / vnorm;
+
+		for (a = 0; a < VIM; a++)
+		  {
+		    var = VELOCITY1 + a;
+		    for (j = 0; j < ei->dof[var]; j++)
+		      {
+			d_supg_tau_dv[a][j] = - 0.5*hk*eta*fv->v[a]*bf[var]->phi[j] / (pow(vnorm, 3));
+		      }
+		  }
+
+
+	      } else {
+		supg_tau = 0;
+		for (i = 0; i < DIM; i++)
+		  {
+		    for (j = 0; j < MDE; j++)
+		      {
+			d_supg_tau_dv[i][j] = 0.0;
+		      }
+		  }
+	      }
+
+	    }
 	  /*
 	   *  Calculate the coef_rho term based upon the value of
 	   *  species_eqn_type.
@@ -731,7 +813,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		    {
 		      for(p=0; p<dim; p++)
 			{
-			  wt_func += supg * h_elem * fv->v[p] * bf[eqn]->grad_phi[i][p];
+			  wt_func += supg * supg_tau * fv->v[p] * bf[eqn]->grad_phi[i][p];
 			}
 		    }
 		  /*
@@ -800,7 +882,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				        mass -= rho*x[w]*sumdxdotm/sumxms;
 				        mass *= epsilon;
 				       }
-				    mass *= - phi_i * h3 * det_J * wt;
+				    mass *= - wt_func * h3 * det_J * wt;
 				    mass *= pd->etm[eqn][(LOG2_MASS)];
 				  }
 				}
@@ -916,7 +998,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				      source -= sumrm*phi_j*factor/sumxm;
 				     }
 
-				  source *= phi_i;
+				  source *= wt_func;
 				  source *= h3 * det_J * wt;
 				  source *= pd->etm[eqn][(LOG2_SOURCE)];
 				}
@@ -947,14 +1029,47 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			  for ( j=0; j<ei->dof[var]; j++)
 			    {
 			      phi_j = bf[var]->phi[j];	
+
+			      d_wt_func = 0.;
+
+			      if(supg != 0.)
+				{
+				  for( p=0; p<dim; p++ )
+				    {
+				      d_wt_func += supg *
+					d_supg_tau_dv[b][j] * fv->v[p]*bf[eqn]->grad_phi[i][p];
+				    }
+				}
 			      
 			      mass = 0.;
+
+			      if ( (supg != 0.0) && (pd->e[eqn] & T_MASS) ) {
+				  mass = coeff_rho * s_terms.Y_dot[w];
+
+				  if (mp->SpeciesSourceModel[w]  == ELECTRODE_KINETICS ||
+				      mp->SpeciesSourceModel[w]  == ION_REACTIONS) /*  RSL 3/19/01  */
+				  {
+				    mass = s_terms.Y_dot[w];
+				    sumxdot = 0.0;
+				    sumxdotm = 0.0;
+				    for (j = 0; j < num_species - 1; j++) {
+				      sumxdotm += s_terms.Y_dot[j] * M[j];
+				      sumxdot  += s_terms.Y_dot[j];
+				    }
+				    sumxdotm -= sumxdot * M[num_species-1];
+				    mass -= x[w]*sumxdotm/sumxm;
+				    mass *= (epsilon*small_c);
+				  }
+
+				  mass *= - d_wt_func * h3 * det_J * wt;
+				  mass *= pd->etm[eqn][LOG2_MASS];
+				}
 			      
 			      advection = 0.;
 			      if ( pd->e[eqn] & T_ADVECTION )
 				{
 				  advection_a =  -wt_func * coeff_rho * s_terms.d_conv_flux_dv[w][b] [b][j];
-				  
+
                                   if (mp->SpeciesSourceModel[w]  == ELECTRODE_KINETICS ||
                                       mp->SpeciesSourceModel[w]  == ION_REACTIONS) /*  RSL 3/19/01  */
 				     {
@@ -974,15 +1089,9 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 
 				  advection_b = 0.;
 				  if(supg!=0.)
-				    {
-				      d_wt_func = supg * h_elem * phi_j * bf[eqn]->grad_phi[i][b];
-				      
+				    {				      
 				      for(p=0;p<dim;p++)
 					{
-					  d_wt_func += supg * vcent[b]*dvc_dnode[b][j]
-					    *h[b]*h_elem_inv/4.
-					    *fv->v[p] * bf[eqn]->grad_phi[i][p];
-					  
 					  advection_b +=  coeff_rho * s_terms.conv_flux[w][p];
 					}
 				      
@@ -1021,9 +1130,29 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      source = 0.;
 			      if ( pd->e[eqn] & T_SOURCE )
 				{
-				  source += phi_i * s_terms.d_MassSource_dv[w][b][j];
+				  source += wt_func * s_terms.d_MassSource_dv[w][b][j];
 				  source *= h3 * det_J * wt;
 				  source *= pd->etm[eqn][(LOG2_SOURCE)];
+
+				  double source_b = 0;
+				  if (supg != 0)
+				    {
+				      source_b = s_terms.MassSource[w];
+
+				      if (mp->SpeciesSourceModel[w]  == ELECTRODE_KINETICS ||
+					  mp->SpeciesSourceModel[w]  == ION_REACTIONS) /*  RSL 3/19/01  */
+					 {
+					  sumrm = 0.;
+					  for (j=0; j<num_species; j++)
+					     {
+					      sumrm += s_terms.MassSource[j] * M[j];
+					     }
+					  source_b -= x[w]*sumrm/sumxm;
+					 }
+
+				      source_b *= d_wt_func * h3 * det_J * wt;
+				      source_b *= pd->etm[eqn][(LOG2_SOURCE)];
+				    }
 				}
 			      
 			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += 
@@ -1116,7 +1245,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
                                           mass *= (epsilon*small_c);
                                          }
 
-				      mass *= - phi_i * 
+				      mass *= - wt_func *
 					( h3 * d_det_J_dmeshbj 
 					  + dh3dmesh_bj * det_J ) * wt;
 				      mass *= pd->etm[eqn][(LOG2_MASS)];
@@ -1323,8 +1452,8 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
                                      }
 
 				  source *= ( h3 * d_det_J_dmeshbj + dh3dmesh_bj * det_J )
-				    * wt * phi_i; 
-				  source += s_terms.d_MassSource_dmesh[w][b][j]*det_J*h3*wt*phi_i;
+				    * wt * wt_func;
+				  source += s_terms.d_MassSource_dmesh[w][b][j]*det_J*h3*wt*wt_func;
 
                                   if (mp->SpeciesSourceModel[w]  == ELECTRODE_KINETICS ||
                                       mp->SpeciesSourceModel[w]  == ION_REACTIONS) /*  RSL 9/27/01  */
@@ -1335,7 +1464,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
                                           sumrm += s_terms.d_MassSource_dmesh[q][b][j] * M[q];
                                          }
                                       sumrm *= (-x[w]/sumxm);
-                                      source += sumrm*det_J*h3*wt*phi_i;
+                                      source += sumrm*det_J*h3*wt*wt_func;
                                      }
 
 				  source *= pd->etm[eqn][LOG2_SOURCE];
@@ -1369,7 +1498,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			    if (pd->e[eqn] & T_ADVECTION) {
 			      if (coeff_rho_nonunity) {
 				mass = d_rho->T[j] * s_terms.Y_dot[w];
-				mass *= - phi_i * h3 * det_J * wt;
+				mass *= - wt_func * h3 * det_J * wt;
 				mass *= pd->etm[eqn] [(LOG2_MASS)];
 			      }
 			    }
@@ -1432,7 +1561,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			          source -= x[w]*sumdrm/sumxm;
 			         }
 
-			      source *= det_J*h3*wt*phi_i;
+			      source *= det_J*h3*wt*wt_func;
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
@@ -1450,7 +1579,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			  if ( pd->e[eqn] & T_SOURCE )
 			    {
 			      source += s_terms.d_MassSource_dI[w][j];
-			      source *= det_J*h3*wt*phi_i;
+			      source *= det_J*h3*wt*wt_func;
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
@@ -1468,7 +1597,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			  if ( pd->e[eqn] & T_SOURCE )
 			    {
 			      source += s_terms.d_MassSource_dI[w][j];
-			      source *= det_J*h3*wt*phi_i;
+			      source *= det_J*h3*wt*wt_func;
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
@@ -1486,7 +1615,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			  if ( pd->e[eqn] & T_SOURCE )
 			    {
 			      source += s_terms.d_MassSource_dI[w][j];
-			      source *= det_J*h3*wt*phi_i;
+			      source *= det_J*h3*wt*wt_func;
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
@@ -1548,7 +1677,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			          source -= x[w]*sumdrm/sumxm;
 			         }
 
-			      source *= det_J*h3*wt*phi_i;
+			      source *= det_J*h3*wt*wt_func;
 			      source *= pd->etm[eqn][LOG2_SOURCE];
 			    }
 			  
@@ -1605,7 +1734,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			  if ( pd->e[eqn] & T_MASS )
 			    {
 			      mass += coeff_rho * s_terms.d_Y_dot_dP[w] [j];
-			      mass *= - phi_i * det_J * h3 * wt;
+			      mass *= - wt_func * det_J * h3 * wt;
 			      mass *= pd->etm[eqn][(LOG2_MASS)];
 			    }
 			  

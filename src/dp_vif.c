@@ -1939,6 +1939,8 @@ noahs_ark()
       ddd_add_member(n, mp_glob[i]->mu_diffusivity, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->f_diffusivity, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->g_diffusivity, MAX_CONC, MPI_DOUBLE);
+      ddd_add_member(n, mp_glob[i]->SBM_Lengths, MAX_CONC, MPI_DOUBLE);
+      ddd_add_member(n, mp_glob[i]->NSCoeff, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->cur_diffusivity, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->q_diffusivity[0][0], MAX_CONC * DIM,
 		     MPI_DOUBLE);
@@ -1983,6 +1985,8 @@ noahs_ark()
       ddd_add_member(n, mp_glob[i]->GamDiffType,  MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->MuDiffType,   MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->GravDiffType, MAX_CONC, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->SBM_Type, MAX_CONC, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->NSCoeffType, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->FickDiffType, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->CurvDiffType, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->QTensorDiffType, MAX_CONC, MPI_INT);
@@ -2024,6 +2028,8 @@ noahs_ark()
       ddd_add_member(n, mp_glob[i]->len_u_cdiffusivity, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->len_u_fdiffusivity, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->len_u_gdiffusivity, MAX_CONC, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->len_SBM_Lengths2, MAX_CONC, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->len_u_nscoeff, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->len_u_qdiffusivity, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->len_u_species_source, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->len_u_species_vol_expansion, MAX_CONC, 
@@ -2582,6 +2588,13 @@ noahs_ark()
   ddd_add_member(n, &LOG_CONF_MAP, 1, MPI_INT);
   ddd_add_member(n, &VELO_SPEED, 1, MPI_INT);
   ddd_add_member(n, &GIES_CRIT, 1, MPI_INT);
+  ddd_add_member(n, &J_FLUX, 1, MPI_INT);
+  ddd_add_member(n, &EIG, 1, MPI_INT);
+  ddd_add_member(n, &EIG1, 1, MPI_INT);
+  ddd_add_member(n, &EIG2, 1, MPI_INT);
+  ddd_add_member(n, &EIG3, 1, MPI_INT);
+  ddd_add_member(n, &GRAD_SH, 1, MPI_INT);
+  ddd_add_member(n, &GRAD_Y, 1, MPI_INT);
   ddd_add_member(n, &EXTERNAL_POST, 1, MPI_INT);
   ddd_add_member(n, &SURFACE_VECTORS, 1, MPI_INT);
   ddd_add_member(n, &SHELL_NORMALS, 1, MPI_INT);
@@ -3067,6 +3080,12 @@ ark_landing()
 	  dalloc( m->len_u_gdiffusivity[j],
 		  m->    u_gdiffusivity[j]); 
 
+	  dalloc( m->len_SBM_Lengths2[j],
+		  m->    SBM_Lengths2[j]); 
+	  
+	  dalloc( m->len_u_nscoeff[j],
+		  m->    u_nscoeff[j]); 
+	  
 	  dalloc( m->len_u_qdiffusivity[j],
 		  m->    u_qdiffusivity[j]); 
 
@@ -3451,7 +3470,7 @@ noahs_dove()
     for (j = 0; j < pd_glob[i]->Num_Species; j++)
       {
 #ifdef DEBUG
-	printf("P%d: Dove species %d has u lengths: %d %d %d %d %d %d %d %d %d %d\n",
+	printf("P%d: Dove species %d has u lengths: %d %d %d %d %d %d %d %d %d %d %d %d\n",
 	       ProcID, j, 
 	       m->len_u_diffusivity[j],
 	       m->len_u_gadiffusivity[j],
@@ -3459,6 +3478,8 @@ noahs_dove()
 	       m->len_u_cdiffusivity[j],
 	       m->len_u_fdiffusivity[j],
 	       m->len_u_gdiffusivity[j],
+	       m->len_u_nscoeff[j],
+	       m->len_SBM_Lengths2[j],
 	       m->len_u_qdiffusivity[j],
 	       m->len_u_species_source[j],
 	       m->len_u_species_vol_expansion[j],
@@ -3477,6 +3498,10 @@ noahs_dove()
 	      m->    u_fdiffusivity[j]);
 	crdv( m->len_u_gdiffusivity[j],
 	      m->    u_gdiffusivity[j]);
+	crdv( m->len_SBM_Lengths2[j],
+	      m->    SBM_Lengths2[j]);
+	crdv( m->len_u_nscoeff[j],
+	      m->    u_nscoeff[j]);
 	crdv( m->len_u_qdiffusivity[j],
 	      m->    u_qdiffusivity[j]);
 	crdv( m->len_u_species_source[j],

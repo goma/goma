@@ -373,15 +373,19 @@ struct Material_Properties
   int GamDiffType[MAX_CONC]  ;
   int MuDiffType[MAX_CONC]  ;
   int GravDiffType[MAX_CONC]  ;
+  int SBM_Type[MAX_CONC]  ;
   int FickDiffType[MAX_CONC]  ;
   int CurvDiffType[MAX_CONC]  ;
   int QTensorDiffType[MAX_CONC] ;
+  int NSCoeffType[MAX_CONC] ;
   int len_u_gadiffusivity[MAX_CONC];            /*this is currently defined for MPI*/ 
   int len_u_mdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/ 
   int len_u_fdiffusivity[MAX_CONC];             
-  int len_u_gdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/ 
+  int len_u_gdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/
+  int len_SBM_Lengths2[MAX_CONC];             /*this is currently defined for MPI*/ 
   int len_u_cdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/ 
-  int len_u_qdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/ 
+  int len_u_qdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/
+  int len_u_nscoeff[MAX_CONC] ;
 
   dbl gam_diffusivity[MAX_CONC] ;               /* Kc from shear-gradient term */
   dbl *u_gadiffusivity[MAX_CONC] ;              
@@ -389,8 +393,12 @@ struct Material_Properties
   dbl *u_mdiffusivity[MAX_CONC] ;               
   dbl f_diffusivity[MAX_CONC] ;                 /* normal Fickian diffusion term */
   dbl *u_fdiffusivity[MAX_CONC] ;
-  dbl g_diffusivity[MAX_CONC] ;                 /* hindered settling function */ 
-  dbl *u_gdiffusivity[MAX_CONC] ;               /*this is currently defined for MPI*/ 
+  dbl g_diffusivity[MAX_CONC] ;                 /* hindered settling function */
+  dbl SBM_Lengths[MAX_CONC] ;                 /* hindered settling function */
+  dbl NSCoeff[MAX_CONC] ;
+  dbl *u_nscoeff[MAX_CONC] ;
+  dbl *u_gdiffusivity[MAX_CONC] ;               /*this is currently defined for MPI*/
+  dbl *SBM_Lengths2[MAX_CONC] ;               /*this is currently defined for MPI*/ 
   dbl cur_diffusivity[MAX_CONC] ;              /* curvature induced migration term */ 
   dbl *u_cdiffusivity[MAX_CONC] ;             
   dbl q_diffusivity[MAX_CONC][DIM] ;	/* Q tensor diffusion components. */ 
