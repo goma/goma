@@ -77,11 +77,6 @@ struct Rotation_Specs *ROT_Types;
 
 static Spfrtn sr;
 
-/*
- * How to blurt out what we found.
- */
-
-static const char oformat[MAX_CHAR_IN_INPUT] = "%s: %-40s = %s\n";
 
 /*
  * What to look for each time...

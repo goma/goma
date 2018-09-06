@@ -31,13 +31,14 @@
 /* GOMA include files */
 #include "goma.h"
 
-#define SLEN 255
+#define SLEN 256
+#define SLEN_2 512
 
 void
 rd_particle_specs(FILE *ifp, char *input)
 {
   PBC_t *PBC;
-  char err_msg[SLEN], s_tmp[SLEN], s_tmp_save[SLEN], *s_ptr1, *s_ptr2;
+  char err_msg[MAX_CHAR_ERR_MSG], s_tmp[SLEN], s_tmp_save[SLEN_2], *s_ptr1, *s_ptr2;
   int i, j, iread;
 
   iread = look_for_optional(ifp, "Particle Specifications", input, '=');

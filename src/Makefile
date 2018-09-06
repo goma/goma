@@ -174,7 +174,8 @@ LD_LIBRARY_PATH := $(GCC_LIB64):$(GCC_LIB):${LD_LIBRARY_PATH}
 include $(TRILINOS_TOP)/include/Makefile.export.Trilinos
 
 # Trilinos includes and libraries
-TRILINOS_INC ?= $(subst -I, -isystem, $(Trilinos_INCLUDE_DIRS) $(Trilinos_TPL_INCLUDE_DIRS))
+TRILINOS_INC_REMOVE_USR_INCLUDE = $(subst -I/usr/include, ,  $(Trilinos_INCLUDE_DIRS) $(Trilinos_TPL_INCLUDE_DIRS))
+TRILINOS_INC ?= $(subst -I, -isystem, $(TRILINOS_INC_REMOVE_USR_INCLUDE))
 TRILINOS_LIB ?= $(Trilinos_LIBRARY_DIRS) $(Trilinos_TPL_LIBRARY_DIRS) \
 		$(Trilinos_LIBRARIES) $(Trilinos_TPL_LIBRARIES)
 

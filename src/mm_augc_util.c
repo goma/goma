@@ -815,7 +815,7 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 #ifndef tflop
       int err;
       FILE *jfp=NULL;
-      char cmd_str[80];
+      char cmd_str[MAX_SYSTEM_COMMAND_LENGTH];
       double temp,lambda_user;
       int ibc_user,idf_user,count;
   
