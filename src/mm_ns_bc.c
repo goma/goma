@@ -6912,6 +6912,147 @@ if(iflag != -1)
 } /* END of routine flow_n_dot_T_gradv                                      */
 /*****************************************************************************/
 
+/* FLOW_GRADV_SIC Strongly integrated condition */
+void
+flow_n_dot_T_gradv_sic(double func[DIM],
+		   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+		   const double pdatum, /* pressure datum from input card */
+		   const int iflag)  /* -1 to use pdatum, otherwise use P  */
+
+/****************************************************************************
+*
+*  Function which uses the fully-developed fluid stresses
+*		 in the fluid stress bcs
+*
+*****************************************************************************/
+{
+  int i, j, var, p, q;
+  int a, b;
+  double press;
+
+  /*
+   * Variables for vicosity and derivative
+   */
+  dbl gamma[DIM][DIM];
+  dbl mu;
+  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
+  VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
+
+  if(af->Assemble_LSA_Mass_Matrix)
+    return;
+
+
+	if(iflag != -1)
+	{press = fv->P;}
+	else
+	{press = pdatum;}
+
+
+
+  /**
+	compute gammadot, viscosity
+   **/
+                for ( i=0; i<VIM; i++)
+                  {
+                    for ( j=0; j<VIM; j++)
+                      {
+                        gamma[i][j] = fv->grad_v[i][j] + fv->grad_v[j][i];
+                      }
+                  }
+
+                mu = viscosity(gn, gamma, d_mu);
+     if (af->Assemble_Jacobian)
+       {
+
+
+  var = TEMPERATURE;
+  if (pd->v[var] )
+    {
+      for (j=0; j<ei->dof[var]; j++)
+        {
+	  for (p=0; p<pd->Num_Dim; p++)
+	     {
+	       for (q=0; q<pd->Num_Dim; q++)
+		{
+		d_func[p][var][j] += fv->snormal[q]*d_mu->T[j]*fv->grad_v[p][q];
+		}
+	     }
+        }
+    }
+
+if(iflag != -1)
+{
+  var = PRESSURE;
+  if (pd->v[var] )
+    {
+      for (j=0; j<ei->dof[var]; j++)
+        {
+	  for (p=0; p<pd->Num_Dim; p++)
+	     {
+		d_func[p][var][j] += 0.;
+	     }
+        }
+    }
+}
+
+  if (pd->v[VELOCITY1] )
+    {
+      for ( a=0; a<VIM; a++)
+        {
+            var = VELOCITY1+a;
+            for (j=0; j<ei->dof[var]; j++)
+               {
+	         for (p=0; p<pd->Num_Dim; p++)
+	     	  {
+		     for (q=0; q<pd->Num_Dim; q++)
+			{
+		d_func[p][var][j] += fv->snormal[q]*(mu*bf[var]->grad_phi_e[j][a][p][q]
+			+ fv->grad_v[p][q] * d_mu->v[a][j]);
+			}
+	     	  }
+               }
+        }
+    }
+  if (pd->v[MESH_DISPLACEMENT1] )
+    {
+	for ( b=0; b<VIM; b++)
+    	   {
+	     var = MESH_DISPLACEMENT1+b;
+       	     for (j=0; j<ei->dof[var]; j++)
+                {
+                   for (p=0; p<pd->Num_Dim; p++)
+                     {
+			d_func[p][var][j] += 0.;
+
+                          for (q=0; q<pd->Num_Dim; q++)
+                            {
+               d_func[p][var][j] += fv->snormal[q]*(mu*fv->d_grad_v_dmesh[p][q][b][j]
+                        + fv->grad_v[p][q] * d_mu->X[b][j])
+			+ fv->dsnormal_dx[q][b][j]*mu*fv->grad_v[p][q];
+                            }
+                     }
+               }
+            }
+    }
+
+
+
+
+       }  /*  end of if Assemble_Jacobian  */
+
+   /*  load in stresses */
+
+	 for (p=0; p<pd->Num_Dim; p++)
+		{
+		for (q=0; q<pd->Num_Dim; q++)
+		  {
+		    func[p] += fv->snormal[q]*mu*fv->grad_v[p][q];
+		  }
+		}
+
+} /* END of routine flow_n_dot_T_gradv_sic                                   */
+/*****************************************************************************/
+
 void
 stress_no_v_dot_gradS(double func[MAX_MODES][6],
                       double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],

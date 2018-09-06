@@ -3823,7 +3823,7 @@ suspension_balance(struct Species_Conservation_Terms *st,
   int a, j, p, b, var;
   int status=1;
   int dim;
-  dbl gamma_dot[DIM][DIM];
+  dbl gamma_dot[DIM][DIM],h;
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
   dbl mu;
@@ -3834,7 +3834,7 @@ suspension_balance(struct Species_Conservation_Terms *st,
   dbl *Y, (*grad_Y)[DIM];
 
   dbl f, maxpack, rzexp = 0;
-  dbl df_dy, df_dmu;
+  dbl df_dy, df_dmu, gammadot=0., lift_coeff,coeff = 0.;
   dbl M;  /* hindrance function */
   dbl dM_dy, dM_dmu;
   
@@ -3851,12 +3851,22 @@ suspension_balance(struct Species_Conservation_Terms *st,
   dbl df_dmu0 = 0.0, dmu0_dcure = 0.0, dmu0_dT = 0.0;
   dbl del_rho = 0.0;
 
+  dbl d_gd_dv[DIM][MDE];        /* derivative of strain rate invariant 
+				   wrt velocity */ 
+  dbl d_gd_dmesh[DIM][MDE];     /* derivative of strain rate invariant 
+				   wrt mesh */
+  dbl d_lift_dgd;
   
   /* Set up some convenient local variables and pointers */
   Y = fv->c;
   grad_Y = fv->grad_c;
   
   dim = pd->Num_Dim;
+  h = 0.85 - fv->x[1];
+  if ( h < 1.e-4 )
+    {
+      h = 1.e-4;
+    }
   
   /* Compute gamma_dot[][] */
   
@@ -3871,6 +3881,9 @@ suspension_balance(struct Species_Conservation_Terms *st,
 	  gamma_dot[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
 	}
     }
+
+  /* This is the shear rate based on velocity */
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
   
   mu = viscosity(gn, gamma_dot, d_mu);
   
@@ -3949,9 +3962,12 @@ suspension_balance(struct Species_Conservation_Terms *st,
   if (Y[w] >= maxpack) Y[w]=maxpack;
   if (mp->GravDiffType[w] == RICHARDSON_ZAKI )
     {
-      f = pow(1.-Y[w],rzexp)/mu;
-      df_dmu =  -f/mu; 
+      f = pow(1.-Y[w],rzexp)/mu0;
+      f *= (1.-Y[w]/maxpack);
+      //df_dmu =  -f/mu;
+      df_dmu = 0.;
       df_dy = -rzexp*f/(1.-Y[w]);
+      df_dy += -pow(1. - Y[w], rzexp)/(mu0 * maxpack);
     }
   else
     {
@@ -3973,16 +3989,26 @@ suspension_balance(struct Species_Conservation_Terms *st,
 				   d_div_tau_p_dv, d_div_tau_p_dmesh, d_div_tau_p_dvd,d_div_tau_p_dp, w);
 
   
-  
   /* this is the hindered settling term that modifies the flux */
   M = Dg*f;
   dM_dy = Dg * df_dy;
-  dM_dmu = Dg * df_dmu;
+  //dM_dmu = Dg * df_dmu;
+  dM_dmu = 0.;
+
+  lift_coeff = 3. * mu0 * gammadot * 1.2 /(4 * 3.141592654 * h );
+  d_lift_dgd = lift_coeff / gammadot;
   
   /* assemble residual */
   for ( a=0; a<dim; a++)
     {
       st->diff_flux[w][a] = -M*div_tau_p[a];
+      if ( a == 1 )
+	{
+	  if ( h < 0.7 )
+	    {
+	      st->diff_flux[w][a] -= M * lift_coeff;
+	    }
+	}
       st->diff_flux[w][a] += M*Y[w]*mp->momentum_source[a]*del_rho; 
       st->diff_flux[w][a] += -Dd[a]*grad_Y[w][a];
     }
@@ -3995,11 +4021,20 @@ suspension_balance(struct Species_Conservation_Terms *st,
 	{
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
-	      c_term = -dM_dy*bf[var]->phi[j]*div_tau_p[a];
+	      if ( a == 1 && h < 0.7 )
+		{
+		  coeff = lift_coeff;
+		}
+	      else
+		{
+		  coeff = 0.;
+		}
+	      
+	      c_term = -dM_dy*bf[var]->phi[j]*(div_tau_p[a] + coeff);
 	      
 	      c_term += -M*d_div_tau_p_dy[a][w][j];
 	      
-	      mu_term = -dM_dmu*d_mu->C[w][j]*div_tau_p[a];
+	      mu_term = -dM_dmu*d_mu->C[w][j]*(div_tau_p[a] + coeff);
 	      
 	      g_term = ((f+ df_dy*Y[w])*bf[var]->phi[j] + Y[w]*df_dmu *d_mu->C[w][j]);
 	      g_term *= Dg * mp->momentum_source[a]*del_rho;
@@ -4049,6 +4084,8 @@ suspension_balance(struct Species_Conservation_Terms *st,
 	      
 	      c_term = -M*d_div_tau_p_dgd[a][j];
 
+	      if (a == 1 && h < 0.7) c_term -= M * d_lift_dgd;
+
 	      st->d_diff_flux_dSH[w][a] [j] = c_term;
 	    }
 	}
@@ -4081,6 +4118,11 @@ suspension_balance(struct Species_Conservation_Terms *st,
 		  for( j=0;  j<ei->dof[var]; j++)
 		    {
 		      c_term = -M*d_div_tau_p_dv[a][p][j];
+
+		      if (a == 1 && h < 0.7)
+			{
+			  c_term -= M * d_lift_dgd * d_gd_dv[a][j];
+			}
 		      
 		      mu_term = 0.;
 		      
@@ -4516,10 +4558,9 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 			   int w)                            /* species number */
 {
   /*local variables */
-  int a, j, p, q, b, var;
+  int a, j, p, b, var;
   int status=1;
   int dim, wim, dofs;
-  int print=0;
   
   dbl gammadot, *grad_gd, gamma_dot[DIM][DIM];
   dbl mu0;
@@ -4534,16 +4575,10 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
   
   dbl qtensor[DIM][DIM];
-  dbl div_qtensor[DIM];
   dbl d_qtensor_dvd[DIM][DIM][DIM][MDE];
   
-  dbl vort_dir_local[DIM], tmp;
-  
-  dbl div_phi_j_e_b;
   dbl d_div_q_dvd[DIM][DIM][MDE];
   dbl d_div_q_dmesh[DIM][DIM][MDE];
-  
-  dbl (* grad_phi_e)[DIM][DIM][DIM]= NULL;
 
   dbl maxpack, maxpack2, Kn;
   dbl pp,  d_pp_dy, d_pp2_dy2;
@@ -4552,20 +4587,11 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   grad_Y = fv->grad_c;
   grad_gd = fv->grad_SH;
   gammadot = fv->SH;
-  
- 
+   
   dim = pd->Num_Dim;
   wim   = dim;
   if(pd->CoordinateSystem == SWIRLING) wim = wim+1;
 
-  /* Compute gamma_dot[][] */
-  
- /*  if(!pd->e[VORT_DIR1]) */
-/*     { */
-/*       EH(-1, "Cannot use this QTENSOR model without the VORT_DIR{1,2,3} equations/variables active!"); */
-/*       exit(-1); */
-/*     } */
-  
   /* Compute gammadot, grad(gammadot), gamma_dot[][], d_gd_dG, and d_grad_gd_dG */
   
   memset(gamma_dot, 0, DIM*DIM*sizeof(dbl) );
@@ -4588,116 +4614,15 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
       grad_mu[a] +=dmu_dY[w] * fv->grad_c[w][a];
     }
   
-  if( cr->MassFluxModel == HYDRODYNAMIC_QTENSOR_OLD)
+  /* assume a diagonal Q tensor */
+  memset(qtensor,  0, DIM*DIM*sizeof(dbl) );
+  for ( a=0; a<VIM; a++)
     {
-      /* Get Q tensor */
-      for ( a=0; a<VIM; a++)
-	{
-	  vort_dir_local[a] = 0.0;
-	}
-      find_super_special_eigenvector(gamma_dot, vort_dir_local, &tmp, print);
-      
-      for ( a=0; a<VIM; a++)
-	{
-	  for ( b=0; b<VIM; b++)
-	    {
-	      qtensor[a][b] = (dbl)delta(a,b) -
-		0.5 * vort_dir_local[a] * vort_dir_local[b];
-	    }
-	}
-      EH(-1, "This qtensor model not currently functional.");
+      qtensor[a][a] = mp->u_qdiffusivity[w][a];
     }
-  else if( cr->MassFluxModel == HYDRODYNAMIC_QTENSOR) 
-    {
-      /* Get Q tensor */
-      for ( a=0; a<VIM; a++)
-	{
-	  div_qtensor[a]=-0.5*fv->vd[a]*fv->div_vd;
-	  
-	  for ( b=0; b<VIM; b++)
-	    {
-	      qtensor[a][b] = (dbl)delta(a,b) -
-		0.5 * fv->vd[a] * fv->vd[b];
-	      div_qtensor[a] -= 0.5*fv->vd[b] * fv->grad_vd[b][a];
-	    }
-	}
-      
-      var = VORT_DIR1;
-      memset(d_qtensor_dvd, 0, DIM*DIM*DIM*MDE*sizeof(dbl));
-      for(p = 0; p < DIM; p++)
-	{
-	  for(q = 0; q < DIM; q++)
-	    {
-	      for(b = 0; b < DIM; b++)
-		{
-		  for(j = 0; j < ei->dof[var]; j++)
-		    {
-		      d_qtensor_dvd[p][q][b][j]=-0.5*bf[var]->phi[j]*
-			(fv->vd[q]*delta(p,b)+fv->vd[p]*delta(q,b));
-		    }
-		}
-	    }
-	}
-      
-      memset(d_div_q_dvd, 0, DIM*DIM*MDE*sizeof(dbl));
-      for(a = 0; a < DIM; a++)
-	{
-	  for(b = 0; b < DIM; b++)
-	    {
-	      for(j = 0; j < ei->dof[var]; j++)
-		{
-		  div_phi_j_e_b = 0.;
-		  for ( p=0; p<VIM; p++)
-		    {
-		      div_phi_j_e_b += 
-			bf[var]->grad_phi_e[j][b] [p][p];
-		    }
-		  
-		  d_div_q_dvd[a][b][j] = -0.5*(bf[var]->phi[j]*delta(a,b)*fv->div_vd +
-					       fv->vd[a]*div_phi_j_e_b);
-		  for ( p=0; p<VIM; p++)
-		    {
-		      d_div_q_dvd[a][b][j] -= 0.5*bf[var]->phi[j]* delta(p,b)*fv->grad_vd[p][a] +
-			0.5*fv->vd[p] * bf[var]->grad_phi_e[j][b] [p][a];
-		    }
-		}
-	    }
-	}
-      
-      var = MESH_DISPLACEMENT1;
-      memset(d_div_q_dmesh, 0, DIM*DIM*MDE*sizeof(dbl));
-      for ( a=0; a<VIM; a++)
-	{
-	  for(j = 0; j < ei->dof[var]; j++)
-	    {
-	      for ( p=0; p<VIM; p++)
-		{
-		  d_div_q_dmesh[a][p][j]=-0.5*fv->vd[a]*fv->d_div_vd_dmesh[p][j]*0.;
-		  for ( b=0; b<VIM; b++)
-		    {
-		      d_div_q_dmesh[a][p][j] -= 0.5*fv->vd[b] * fv->d_grad_vd_dmesh[b][a][p][j];
-		    }
-		}
-	    }
-	}
-	
-    }
-  else
-    {
-      /* assume a diagonal Q tensor */
-      memset(qtensor,  0, DIM*DIM*sizeof(dbl) );
-      for ( a=0; a<VIM; a++)
-	{
-	  qtensor[a][a] = mp->u_qdiffusivity[w][a];
-	  div_qtensor[a]=0.;
-	}
-      memset(d_div_q_dmesh, 0, DIM*DIM*MDE*sizeof(dbl));
-      memset(d_div_q_dvd, 0, DIM*DIM*MDE*sizeof(dbl));
-      memset(d_qtensor_dvd, 0, DIM*DIM*DIM*MDE*sizeof(dbl));
-
-    }
-  
-
+  memset(d_div_q_dmesh, 0, DIM*DIM*MDE*sizeof(dbl));
+  memset(d_div_q_dvd, 0, DIM*DIM*MDE*sizeof(dbl));
+  memset(d_qtensor_dvd, 0, DIM*DIM*DIM*MDE*sizeof(dbl));
       
   if(gn->ConstitutiveEquation == SUSPENSION
      || gn->ConstitutiveEquation == CARREAU_SUSPENSION
@@ -4719,7 +4644,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     {
       comp = pow((1.-y_norm),-2.);
       comp1 = 2./maxpack*pow((1.-y_norm),-3.);
-      comp2 = -6.0/maxpack2*pow((1.-y_norm),-4.);
+      comp2 = 6.0/maxpack2*pow((1.-y_norm),-4.);
     }
   else
     {
@@ -4728,7 +4653,8 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     }
   
   /* Migrate this input deck later */
-  Kn = 0.75;
+  // Kn = 0.75;
+  Kn = mp->NSCoeff[w];
   
   
   /* This is the particle pressure */
@@ -4739,14 +4665,12 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   d_pp2_dy2 = 2.*Kn/maxpack2*comp +  4.*Kn*y_norm/maxpack*comp1 + Kn*y_norm*y_norm*comp2;
   
   memset(div_tau_p, 0, DIM*sizeof(dbl));
-  dbl cp =0;
   
   for ( a=0; a<wim; a++)
     {
-      div_tau_p[a] += mu0*(pp*div_qtensor[a]*gammadot)+(grad_Y[w][a]*fv->P+Y[w]*fv->grad_P[a])*cp;
       for ( b=0; b<wim; b++)
 	{
-	  div_tau_p[a] += mu0*qtensor[a][b]*(pp*grad_gd[b]+gammadot*d_pp_dy*grad_Y[w][b])+ gamma_dot[a][b]*grad_mu[b];
+	  div_tau_p[a] += mu0*qtensor[a][b]*(pp*grad_gd[b]+gammadot*d_pp_dy*grad_Y[w][b]);
 	}
     }
   
@@ -4758,71 +4682,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
       memset(d_div_tau_p_dy, 0, DIM*MAX_CONC*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dmesh, 0, DIM*DIM*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dp, 0, DIM*MDE*sizeof(dbl) );
-      
-      var = VELOCITY1;
-      grad_phi_e =bf[var]->grad_phi_e;
-      if(pd->v[var])
-	{
-	  for ( a=0; a<wim; a++)
-	    {
-	      for ( p=0; p<dim; p++)
-		{
-		  for( j=0; j<ei->dof[var];j++)
-		    {
-		      for ( b=0; b<wim; b++)
-			{
-			  d_div_tau_p_dv[a][p][j] = (grad_phi_e[j][p][a][b] + grad_phi_e[j][p][a][b])*grad_mu[b];
-			}
-		    }
-		}
-	    }
-	}
-      
-      var = VORT_DIR1;
-      if(pd->v[var])
-	{
-	  for ( a=0; a<wim; a++)
-	    {
-	      for ( p=0; p<dim; p++)
-		{
-		  for( j=0; j<ei->dof[var];j++)
-		    {
-		      d_div_tau_p_dvd[a][p][j] += mu0*(pp*d_div_q_dvd[a][p][j]*gammadot);
-		      
-		      for ( b=0; b<wim; b++)
-			{
-			  d_div_tau_p_dvd[a][p][j]+= mu0*d_qtensor_dvd[a][b][p][j]*
-			    (pp*grad_gd[b]+gammadot*d_pp_dy*grad_Y[w][b]);
-			}
-		    }
-		}
-	    }
-	}
-      
-      
-      /*       var = VELOCITY_GRADIENT11; */
-      /*       if(pd->v[var]) */
-      /* 	{ */
-      /* 	  dofs = ei->dof[var]; */
-      /* 	  for ( a=0; a<wim; a++) */
-      /* 	    { */
-      /* 	      for ( p=0; p<VIM; p++) */
-      /* 		{ */
-      /* 		  for ( q=0; q<VIM; q++) */
-      /* 		    { */
-      /* 		      for( j=0; j<dofs;j++) */
-      /* 			{ */
-      /* 			  d_div_tau_p_dg[a][p][q][j] += mu0*pp*gd_inv* */
-      /* 			    (bf[var]->phi[j]*(fv->grad_G[a][p][q] + fv->grad_G[a][q][p])  */
-      /* 			     + bf[var]->grad_phi[j] [a]* gamma_dot_g[p][q] */
-      /* 			     - 0.5*grad_gd[a]*bf[var]->phi[j]*gamma_dot_g[p][q]*gd_inv2); */
-      /* 			} */
-      /* 		    } */
-      /* 		} */
-      /* 	    } */
-      /* 	} */
-      
-      
+            
       var = MASS_FRACTION;
       if(pd->v[var])
 	{
@@ -4830,32 +4690,13 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 	  for ( a=0; a<wim; a++)
 	    {
 	      for( j=0; j<dofs;j++)
-		{
-		  d_div_tau_p_dy[a][w][j] += mu0*(d_pp_dy*bf[var]->phi[j]*div_qtensor[a]*gammadot)
-		    +(bf[var]->grad_phi[j][a]*fv->P+bf[var]->phi[j]*fv->grad_P[a])*cp;
-		  
+		{ 
 		  for ( b=0; b<wim; b++)
 		    {
 		      d_div_tau_p_dy[a][w][j] += mu0*qtensor[a][b]*(d_pp_dy*bf[var]->phi[j]*grad_gd[b] 
 								    +gammadot*d_pp2_dy2*bf[var]->phi[j]*grad_Y[w][b]
-								    +gammadot*d_pp_dy*bf[var]->grad_phi[j][b])
-			+ gamma_dot[a][b]*dmu_dY[w] * bf[var]->grad_phi[j][b];
-		      
+								    +gammadot*d_pp_dy*bf[var]->grad_phi[j][b]);
 		    }
-		}
-	    }
-	}
-      
-      var = PRESSURE;
-      if(pd->v[var])
-	{
-	  dofs = ei->dof[var];
-	  for ( a=0; a<wim; a++)
-	    {
-	      for( j=0; j<dofs;j++)
-		{
-		  d_div_tau_p_dp[a][j] +=(grad_Y[w][a]*bf[var]->phi[j]+Y[w]*bf[var]->grad_phi[j][a])*cp;
-		  
 		}
 	    }
 	}
@@ -4868,10 +4709,9 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 	    {
 	      for( j=0; j<dofs;j++)
 		{
-		  d_div_tau_p_dgd[a][j] = mu0*(pp*div_qtensor[a]*bf[var]->phi[j]);
 		  for ( b=0; b<wim; b++)
 		    {
-		      d_div_tau_p_dgd[a][j] +=mu0*qtensor[a][b]*(pp*bf[var]->grad_phi[j][b]+bf[var]->phi[j]*d_pp_dy*grad_Y[w][b]);
+		      d_div_tau_p_dgd[a][j] += mu0*qtensor[a][b]*(pp*bf[var]->grad_phi[j][b]+bf[var]->phi[j]*d_pp_dy*grad_Y[w][b]);
 		    }
 		}
 	    }
@@ -4888,14 +4728,10 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 		{
 		  for ( a=0; a<wim; a++)
 		    {
-		      d_div_tau_p_dmesh[a][p][j] += mu0*(pp* d_div_q_dmesh[a][p][j]*gammadot);
 		      for ( b=0; b<wim; b++)
 			{
 			  d_div_tau_p_dmesh[a][p][j] += mu0*qtensor[a][b]*(pp*fv->d_grad_SH_dmesh[b][p][j]
-									   +gammadot*d_pp_dy*fv->d_grad_c_dmesh[b][w][p][j])+
-			    (fv->d_grad_v_dmesh[b][a][p][j]+ fv->d_grad_v_dmesh[a][b][p][j])*grad_mu[b]
-			    +  gamma_dot[a][b]*dmu_dY[w] * fv->d_grad_c_dmesh[w][b][p][j];
-			  
+									   +gammadot*d_pp_dy*fv->d_grad_c_dmesh[b][w][p][j]);
 			}
 		    }
 		}
