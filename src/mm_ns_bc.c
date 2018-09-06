@@ -9607,8 +9607,10 @@ fprintf(stderr,"velocity  %g v_mesh %g dvmdt: %g node: %d\n",v,v_mesh,v_mesh_dt,
 				drhs_den_ddpj = (v0-1)*dveloc0_ddpj + dnnddpj;
 				drhs_den_ss_ddpj = (v0-1)*dveloc0_ss_ddpj + dnn_ss_ddpj;
 				if(theta_max > theta_max_degrees*M_PIE/180.)
+				  {
 					drhs_den_ddpj *= (1.-1./shik_max_factor);
 					drhs_den_ss_ddpj *= (1.-1./shik_max_factor);
+				  }
 				drhs_ddpj = (rhs_den*drhs_num_ddpj 
 					- rhs_num*drhs_den_ddpj)/SQUARE(rhs_den);
 				drhs_ss_ddpj = (rhs_den*drhs_num_ss_ddpj 

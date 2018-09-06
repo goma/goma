@@ -2121,6 +2121,7 @@ assemble_energy(double time,	/* present time value */
 	  var = FILL;
 	  if ( pd->e[eqn] && pd->v[var] )
 	    {
+	      pvar = upd->vp[var];
 	      for ( j=0; j<ei->dof[var]; j++)
 		{
 		  phi_j = bf[var]->phi[j];
@@ -2169,7 +2170,7 @@ assemble_energy(double time,	/* present time value */
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
 		  
-		  lec->J[peqn][var][i][j] += advection + mass + diffusion + source;
+		  lec->J[peqn][pvar][i][j] += advection + mass + diffusion + source;
 		}
 	    }
 #endif /* COUPLED_FILL */

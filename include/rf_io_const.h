@@ -49,6 +49,11 @@
 #define MAX_CHAR_IN_INPUT	256 /* How many characters in input line? */
 #endif
 
+#ifndef MAX_CHAR_ECHO_INPUT
+#define MAX_CHAR_ECHO_INPUT	1024 /* specifier for echo_string needs to be at least */
+#endif                               /* 3*MAX_CHAR_IN_INPUT + 4 to account for "%s = %s %s" format */
+
+
 #ifndef MAX_INFO
 #define MAX_INFO	101	/* maximum number of "info" records */
 #endif
@@ -58,10 +63,10 @@
 #endif
 
 #ifndef MAX_VAR_NAME_LNGTH
-#define MAX_VAR_NAME_LNGTH 20 /* maximum length of variable names         */
+#define MAX_VAR_NAME_LNGTH 32 /* maximum length of variable names         */
                               /* for Exodus II db output                  */
-                              /* HKM -> Changed it from 10 to             */
-                              /*         20 to conform to exodus standard */
+                              /* HKM -> Changed it from 20 to             */
+                              /*         32 to conform to exodus standard */
                               /*        Note: Chemkin needs at least 16   */
                               /*              Plus 3 for a prefix standard */
 #endif
@@ -81,6 +86,12 @@
 #define MAX_COMMAND_LINE_LENGTH	(1024) /* maximum number of characters in */
 				       /* a command line sent to system() */
 #endif
+
+#ifndef MAX_SYSTEM_COMMAND_LENGTH
+#define MAX_SYSTEM_COMMAND_LENGTH	(1280) /* maximum number of characters in */
+				       /* a system command for aprepro */
+#endif
+
 
 #define INPUT_FILE               1 /* command for reading from alternate input file */
 #define NO_DISPLAY               2 /* command for eliminating output to screen */

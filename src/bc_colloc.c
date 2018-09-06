@@ -1475,16 +1475,16 @@ fspline (int ielem_dim,
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
-    d_func[MESH_DISPLACEMENT1] = 
-      dfncd1(fv->x[0], fv->x[1], fv->x[2], p,  time);
+  d_func[MESH_DISPLACEMENT1] =
+    dfncd1(fv->x[0], fv->x[1], fv->x[2], p,  time);
 
-    d_func[MESH_DISPLACEMENT2] = 
-      dfncd2(fv->x[0], fv->x[1], fv->x[2], p, time);
+  d_func[MESH_DISPLACEMENT2] =
+    dfncd2(fv->x[0], fv->x[1], fv->x[2], p, time);
 
-    if (ielem_dim == 3) d_func[MESH_DISPLACEMENT3] = 
-      dfncd3(fv->x[0], fv->x[1], fv->x[2], p, time);
+  if (ielem_dim == 3) d_func[MESH_DISPLACEMENT3] =
+			dfncd3(fv->x[0], fv->x[1], fv->x[2], p, time);
     
-    *func = fnc(fv->x[0], fv->x[1], fv->x[2], p, time);
+  *func = fnc(fv->x[0], fv->x[1], fv->x[2], p, time);
   
 } /* END of routine fspline                                                  */
 /*****************************************************************************/
@@ -1499,16 +1499,16 @@ fspline_rs (int ielem_dim,
   if(af->Assemble_LSA_Mass_Matrix)
     return;
  
-    d_func[SOLID_DISPLACEMENT1] = 
-      dfncd1(fv->x[0], fv->x[1], fv->x[2], p,  time);
+  d_func[SOLID_DISPLACEMENT1] =
+    dfncd1(fv->x[0], fv->x[1], fv->x[2], p,  time);
 
-    d_func[SOLID_DISPLACEMENT2] = 
-      dfncd2(fv->x[0], fv->x[1], fv->x[2], p, time);
+  d_func[SOLID_DISPLACEMENT2] =
+    dfncd2(fv->x[0], fv->x[1], fv->x[2], p, time);
 
-    if (ielem_dim == 3) d_func[SOLID_DISPLACEMENT3] = 
-      dfncd3(fv->x[0], fv->x[1], fv->x[2], p, time);
+  if (ielem_dim == 3) d_func[SOLID_DISPLACEMENT3] =
+			dfncd3(fv->x[0], fv->x[1], fv->x[2], p, time);
      
-    *func = fnc(fv->x[0], fv->x[1], fv->x[2], p, time);
+  *func = fnc(fv->x[0], fv->x[1], fv->x[2], p, time);
   
 } /* END of routine fspline_rs                                               */
 /*****************************************************************************/
