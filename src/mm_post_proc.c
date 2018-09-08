@@ -6601,7 +6601,7 @@ rd_post_process_specs(FILE *ifp,
   char file_name[MAX_CHAR_IN_INPUT];
   char optional_format[MAX_CHAR_IN_INPUT];
 
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char echo_file[MAX_CHAR_IN_INPUT]="\0";
   int elemBlock_id = -1;
 
@@ -8109,7 +8109,7 @@ look_for_post_proc(FILE *ifp,	/* pointer to file                           */
 #endif
   char	input[MAX_CHAR_IN_INPUT];
   int iread;
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char echo_file[MAX_CHAR_IN_INPUT]="\0";
 
   strcpy(echo_file,Echo_Input_File);
