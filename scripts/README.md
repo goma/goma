@@ -4,7 +4,7 @@ Before building Goma, a number of packages and libraries must be available.
 
 The build scripts in this directory exist to alleviate the pain of building-by-hand the libraries goma needs to run. They are used regularly in Ubuntu 14.04+ and CentOS 6+.
 
-They will build the following packages and libraries (with or without support for C++ 11):
+They will build the following packages and libraries 
 
 * OpenMPI
 * CMake
@@ -23,16 +23,8 @@ They will build the following packages and libraries (with or without support fo
 * SuiteSparse
 * Trilinos w/SEACAS
 
-
 `build-goma-dep-trilinos-12.sh`: This script builds Trilinos 12.10.1
  with support for c++11 and expects gcc to be version 4.8.1 or greater.
-
-`build-goma-dep-trilinos-12-noc++11.sh`: This script builds with Trilinos
-12.10.1 and disables support for c++11 to support older compilers.
-
-`build-TPL-experimental.sh`: This script is experimental, it uses OpenBLAS
-and stand-alone SEACAS. It appears that use of OpenBLAS affects solutions
-for certain types of problems. Proceed with caution.
 
 Dependencies for these scripts are:
 
@@ -69,11 +61,11 @@ If Trilinos was built with c++11, **declare the CXXSTD** in your settings.mk:
 
 Name
 
-	build-goma-dependencies.sh
+	build-goma-dep-trilinos-12.sh
 
 Synopsis
 
-	build-goma-dependincies.sh -jN [library install path]
+	build-goma-dep-trilinos-12.sh -jN [library install path]
 
 Description
 
