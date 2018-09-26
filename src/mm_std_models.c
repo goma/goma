@@ -1251,8 +1251,9 @@ foam_pmdi10_rxn_species_source(int species_no,   /* Current species number */
 	    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = d_k_dC  * b;
 	  } else {
 	    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] = d_k_dC  * (b + pow(xi, m)) * pow(1 - xi, n);
+	    mp->d_species_source[MAX_VARIABLE_TYPES + species_no] += n * source / (1 - xi);
 	    if (xi > 0) {
-	      mp->d_species_source[MAX_VARIABLE_TYPES + species_no] += m * source / xi + n * source / (1 - xi);
+	      mp->d_species_source[MAX_VARIABLE_TYPES + species_no] += m * k  * pow(1-xi,n) * pow(xi, m) / xi;
 	    }
 	  }
 	}
