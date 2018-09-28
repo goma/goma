@@ -58,10 +58,10 @@
 #endif
 
 #ifndef MAX_VAR_NAME_LNGTH
-#define MAX_VAR_NAME_LNGTH 20 /* maximum length of variable names         */
+#define MAX_VAR_NAME_LNGTH 32 /* maximum length of variable names         */
                               /* for Exodus II db output                  */
                               /* HKM -> Changed it from 10 to             */
-                              /*         20 to conform to exodus standard */
+                              /*         32 to conform to exodus standard */
                               /*        Note: Chemkin needs at least 16   */
                               /*              Plus 3 for a prefix standard */
 #endif

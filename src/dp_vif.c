@@ -396,6 +396,17 @@ raven_landing()
 		    array_alloc(1, 1, sizeof(struct Post_Processing_Global));
 	}
     }
+
+  if ( nn_average > 0 )
+    {
+      pp_average = (struct Post_Processing_Averages **)
+       array_alloc(1, nn_average, sizeof(struct Post_Processing_Averages *));
+      for ( i = 0; i < nn_average; i++)
+        {
+          pp_average[i] = (struct Post_Processing_Averages *)
+                    array_alloc(1, 1, sizeof(struct Post_Processing_Averages));
+        }
+    }
   /*
    * Zienkewicz-Zhu error measures.
    */
@@ -2635,6 +2646,17 @@ noahs_ark()
 	  ddd_add_member(n, &(pp_global[i]->type), 1, MPI_INT );
 	  ddd_add_member(n,   pp_global[i]->filenm, MAX_FNL, MPI_CHAR );
 	}
+    }
+
+
+    if( nn_average > 0 )
+    {
+      for( i=0; i< nn_average; i++)
+        {
+          ddd_add_member(n, &(pp_average[i]->type), 1, MPI_INT );
+          ddd_add_member(n, &(pp_average[i]->species_index), 1, MPI_INT );
+          ddd_add_member(n,   pp_average[i]->type_name, MAX_VAR_NAME_LNGTH, MPI_CHAR );
+        }
     }
 			 
 /*

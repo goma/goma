@@ -389,6 +389,15 @@ struct Post_Processing_Global
 
 typedef struct Post_Processing_Global pp_Global;
 
+typedef struct Post_Processing_Averages
+{
+  int type;
+  char type_name[MAX_VAR_NAME_LNGTH];
+  int species_index;
+  int index_post;
+  int index;
+} pp_Average;
+
 
 /*
  * All of these variables are actually defined in mm_post_proc.c
@@ -405,6 +414,7 @@ extern pp_Error         *pp_error_data;
 extern pp_Particles    **pp_particles;
 extern pp_Volume       **pp_volume;
 extern pp_Global       **pp_global;
+extern pp_Average      **pp_average;
 
 extern int nn_post_fluxes;
 extern int nn_post_fluxes_sens;
@@ -415,6 +425,7 @@ extern int nn_particles;
 extern int nn_volume;
 extern int ppvi_type;
 extern int nn_global;
+extern int nn_average;
 
 extern int Num_Nodal_Post_Proc_Var;
 extern int Num_Elem_Post_Proc_Var;
