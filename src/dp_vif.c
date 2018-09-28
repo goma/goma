@@ -150,6 +150,7 @@ noahs_raven()
   ddd_add_member(n, &nn_post_data_sens, 1, MPI_INT);
   ddd_add_member(n, &nn_volume, 1, MPI_INT );
   ddd_add_member(n, &nn_global, 1, MPI_INT);
+  ddd_add_member(n, &nn_average, 1, MPI_INT);
   ddd_add_member(n, &Chemkin_Needed, 1, MPI_INT);
   ddd_add_member(n, &efv->ev, 1, MPI_INT);
   ddd_add_member(n, &LOCA_UMF_ID, 1, MPI_INT);
@@ -2655,6 +2656,8 @@ noahs_ark()
         {
           ddd_add_member(n, &(pp_average[i]->type), 1, MPI_INT );
           ddd_add_member(n, &(pp_average[i]->species_index), 1, MPI_INT );
+          ddd_add_member(n, &(pp_average[i]->index), 1, MPI_INT );
+          ddd_add_member(n, &(pp_average[i]->index_post), 1, MPI_INT );
           ddd_add_member(n,   pp_average[i]->type_name, MAX_VAR_NAME_LNGTH, MPI_CHAR );
         }
     }
