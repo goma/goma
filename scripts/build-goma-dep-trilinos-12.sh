@@ -491,16 +491,16 @@ function setMathVars {
         USING_MKLS="OFF"
         #Add packages that otherwise come preinstalled in intel compiler.
         ARCHIVE_NAMES+=("blas-3.7.1.tgz" \
-        "lapack-3.7.1.tgz" \
+        "lapack-3.8.0.tar.gz" \
         "scalapack-2.0.2.tgz")
         ARCHIVE_MD5SUMS+=("cd132aea6f7055a49aa48ca0a61e7cd5" \
-        "dcdeeed73de152c4643ccc5b1aeb453c" \
+        "96591affdbf58c450d45c1daa540dbd2" \
         "2f75e600a2ba155ed9ce974a1c4b536f" )
         ARCHIVE_URLS+=("http://www.netlib.org/blas/blas-3.7.1.tgz" \
-        "http://www.netlib.org/lapack/lapack-3.7.1.tgz" \
+        "http://www.netlib.org/lapack/lapack-3.8.0.tar.gz" \
         "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz" )
         ARCHIVE_DIR_NAMES+=("BLAS-3.7.1" \
-        "lapack-3.7.1" \
+        "lapack-3.8.0" \
         "scalapack-2.0.2" )
         ARCHIVE_HOMEPAGES+=("http://www.netlib.org/blas/" \
         "http://www.netlib.org/lapack/" \
@@ -513,7 +513,7 @@ function setMathVars {
         BLAS_LIBRARY_NAME_ARG="-L${BLAS_LIBRARY_DIR} -lblas"
         BLAS_LIBRARY_NAME="blas"
         BLACS_LIBRARY_NAME="scalapack"
-        LAPACK_LIBRARY_DIR="${GOMA_LIB}/lapack-3.7.1"
+        LAPACK_LIBRARY_DIR="${GOMA_LIB}/lapack-3.8.0"
         LAPACK_LIBRARY_NAME_ARG="-L${LAPACK_LIBRARY_DIR} -llapack"
         LAPACK_LIBRARY_NAME="liblapack.a"
         SCALAPACK_LIBRARY_DIR="${GOMA_LIB}/scalapack-2.0.2"
@@ -1110,7 +1110,7 @@ fi
 
 if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     #make lapack
-    cd $GOMA_LIB/lapack-3.7.1
+    cd $LAPACK_LIBRARY_DIR
     if [ -e liblapack.a ]
     then
         echo "LAPACK already built"
@@ -1121,7 +1121,7 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
         make lapacklib -j$MAKE_JOBS cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI}
 #        cp lapack_LINUX.a liblapack.a
     fi
-    export LD_LIBRARY_PATH="${GOMA_LIB}/lapack-3.7.1:$LD_LIBRARY_PATH"
+    export LD_LIBRARY_PATH="${LAPACK_LIBRARY_DIR}:$LD_LIBRARY_PATH"
 fi
 
 #make sparse
