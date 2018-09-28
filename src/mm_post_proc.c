@@ -93,6 +93,7 @@ int nn_particles;               /* Dimension of the following structure */
 int nn_volume;                  /* number of pp_volume_int structures */
 int ppvi_type;             /* Maybe there's a better way to do this, Seems like globals abound! AMC*/
 int nn_global;             /* Hopefully these post processing thin get refactored into non-globals at some point */
+int nn_average;
 
 struct Post_Processing_Data        **pp_data;
 struct Post_Processing_Data_Sens   **pp_data_sens;
@@ -102,6 +103,7 @@ struct Post_Processing_Fluxes_Sens **pp_fluxes_sens;
 struct Post_Processing_Particles   **pp_particles;
 struct Post_Processing_Volumetric  **pp_volume;
 pp_Global       **pp_global;
+pp_Average      **pp_average;
 
 static int error_presence_key[3]; /* Truth key (dim 3) as to which error 
 				   * measure elem sizes are being done */
@@ -378,6 +380,19 @@ static int midsid
 PROTO((double [],		/* stream_fcn_vect */
        Exo_DB *));		/* exo */
 
+void
+sum_average_nodal(double **avg_count, double ** avg_sum, int global_node);
+
+void
+post_process_average(double x[],	 /* Solution vector for the current processor */
+		     double x_old[],	/* Solution vector at last time step */
+		     double xdot[],     /* time derivative of solution vector */
+		     double xdot_old[], /* dx/dt at previous time step */
+		     double resid_vector[], /* Residual vector for the
+					       current proc */
+		     Exo_DB *exo,
+		     Dpi *dpi,
+		     double **post_proc_vect);
 
 /*
  * Prototypes of functions defined in other files that are needed here.
@@ -2509,6 +2524,154 @@ post_process_global(double *x,	 /* Solution vector for the current processor */
   }
 }
 
+void
+post_process_average(double x[],	 /* Solution vector for the current processor */
+		     double x_old[],	/* Solution vector at last time step */
+		     double xdot[],     /* time derivative of solution vector */
+		     double xdot_old[], /* dx/dt at previous time step */
+		     double resid_vector[], /* Residual vector for the
+					       current proc */
+		     Exo_DB *exo,
+		     Dpi *dpi,
+		     double **post_proc_vect)
+{
+  int ielem;
+  int ebn;
+  int err;
+  int e_start = exo->eb_ptr[0];
+  int e_end   = exo->eb_ptr[exo->num_elem_blocks];
+  double xi[DIM];
+
+  double **avg_count;
+  double **avg_sum;
+
+  if (nn_average <= 0)
+    {
+      return;
+    }
+
+  avg_count = calloc(nn_average, sizeof(double *));
+  avg_sum = calloc(nn_average, sizeof(double *));
+  for (int i = 0; i < nn_average; i++)
+    {
+      avg_count[i] = calloc(dpi->num_universe_nodes, sizeof(double));
+      avg_sum[i] = calloc(dpi->num_universe_nodes, sizeof(double));
+    }
+
+  for (ielem = e_start, ebn = 0; ielem < e_end; ielem++)
+    {
+      ebn = find_elemblock_index(ielem, exo);
+      int mn = Matilda[ebn];
+      if (mn < 0) {
+        continue;
+      }
+
+      err = load_elem_dofptr(ielem, exo, x, x_old,
+                             xdot, xdot_old,
+                             resid_vector, 0);
+      EH(err, "load_elem_dofptr");
+
+      err = bf_mp_init(pd);
+      EH(err, "bf_mp_init");
+
+      fv->wt = 1.e30;
+
+      int node;
+      for (node = 0; node < ei[pg->imtrx]->num_local_nodes; node++)
+        {
+
+          int global_node = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + node];
+
+          find_nodal_stu(node, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2 );
+
+          err = load_basis_functions(xi, bfd);
+          EH( err, "problem from load_basis_functions");
+
+          err = beer_belly();
+          EH( err, "beer_belly");
+
+          err = load_fv();
+          EH( err, "load_fv");
+
+          err = load_bf_grad();
+          EH( err, "load_bf_grad");
+
+          if (ei[pg->imtrx]->deforming_mesh && (pd->e[pg->imtrx][R_MESH1] || pd->v[pg->imtrx][R_MESH1]))
+            {
+              if (!pd->e[pg->imtrx][R_MESH1]) {
+             // printf(" We are here\n");
+              }
+              err = load_bf_mesh_derivs();
+              EH( err, "load_bf_mesh_derivs");
+            }
+
+          err = load_fv_grads();
+          EH( err, "load_fv_grads");
+
+          if (ei[pg->imtrx]->deforming_mesh && (pd->e[pg->imtrx][R_MESH1] || pd->v[pg->imtrx][R_MESH1]))
+            {
+              if (!pd->e[pg->imtrx][R_MESH1]) {
+             //	printf(" We are here2\n");
+              }
+              err = load_fv_mesh_derivs(0);
+              EH( err, "load_fv_mesh_derivs");
+            }
+
+          if (mp->PorousMediaType != CONTINUOUS)
+            {
+              err = load_porous_properties();
+              EH( err, "load_porous_properties");
+            }
+
+          sum_average_nodal(avg_count, avg_sum, global_node);
+
+
+        }
+    }
+
+    for (int i = 0; i < nn_average; i++)
+      {
+        int node;
+        for (node = 0; node < dpi->num_universe_nodes; node++)
+          {
+            if (Num_Var_In_Type[pg->imtrx][pp_average[i]->type])
+              {
+                post_proc_vect[pp_average[i]->index_post][node] = avg_sum[i][node]/avg_count[i][node];
+              }
+          }
+      }
+
+    for (int i = 0; i < nn_average; i++)
+      {
+        free(avg_count[i]);
+        free(avg_sum[i]);
+      }
+
+    free(avg_count);
+    free(avg_sum);
+
+}
+
+void
+sum_average_nodal(double **avg_count, double ** avg_sum, int global_node)
+{
+  for (int i = 0; i < nn_average; i++)
+    {
+      avg_count[i][global_node] += 1;
+      switch (pp_average[i]->type)
+        {
+        case PRESSURE:
+          avg_sum[i][global_node] += fv->P;
+          break;
+        case MASS_FRACTION:
+          avg_sum[i][global_node] += fv->c[pp_average[i]->species_index];
+          break;
+        default:
+          EH(-1, "Unknown nodal average type");
+        }
+    }
+}
+
 /*****************************************************************************/
 
 void 
@@ -3694,6 +3857,11 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
      sum_total_stress( x, R_STRESS33, 0, 
 		       post_proc_vect[TOTAL_STRESS33], exo);
    }
+
+   if (nn_average > 0)
+     {
+       post_process_average(x, x_old, xdot, xdot_old, resid_vector, exo, dpi, post_proc_vect);
+     }
 
 /*****************************************************************************/
 /*                               BLOCK 4                                     */
@@ -7835,6 +8003,90 @@ rd_post_process_specs(FILE *ifp,
 	}
       ECHO("\nEND OF GLOBAL\n", echo_file);
     }
+
+
+  iread=look_for_optional(ifp, "Post Processing Averages", input, '=');
+
+  /* count number of post-processing flux calculation specifications */
+
+  if (iread == 1)
+    {
+      nn_average = count_list(ifp, "AVERAGE", input, '=', "END OF AVERAGES");
+      ECHO("\nPost Processing Averages =\n", echo_file);
+    }
+  else
+    {
+      nn_average = 0;
+    }
+
+  if ( nn_average > 0 )
+    {
+      sz = sizeof(pp_Average *);
+      pp_average = (pp_Average **) array_alloc(1, nn_average, sz);
+
+      sz = sizeof(pp_Average);
+
+      for(i = 0; i < nn_average; i++)
+        {
+          pp_average[i] = (pp_Average *) array_alloc(1, 1, sz);
+        }
+
+      /*Now load up information by reading cards */
+
+      for (i = 0; i < nn_average; i++)
+        {
+          look_for(ifp, "AVERAGE", input, '=');
+          save_position = ftell(ifp);
+          fgets(data_line_buffer, MAX_CHAR_IN_INPUT, ifp);
+          fseek(ifp, save_position, SEEK_SET);
+
+          pp_average[i]->type = -1;
+
+	  int read_average_items = sscanf(data_line_buffer, "%s %d",
+					  variable_name, &(pp_average[i]->species_index));
+
+	  if (read_average_items < 2)
+	    {
+	      EH(-1, "Error in reading Average post_processing");
+	    }
+
+	  for (k=0; k<Num_Var_Names; k++)
+	    {
+	      if ( !strncasecmp(variable_name, Var_Name[k].name1,
+				strlen(variable_name)) ||
+		   !strncasecmp(variable_name, Var_Name[k].name2,
+				strlen(variable_name)))
+		{
+		  pp_average[i]->type = Var_Name[k].Index;
+		  if (pp_average[i]->type == MASS_FRACTION)
+		    {
+		      int err = snprintf(pp_average[i]->type_name,
+					 MAX_VAR_NAME_LNGTH,
+					 "%s%d%s", Var_Name[k].name2,
+					 pp_average[i]->species_index,
+					 "_AVG");
+		      if (err < 0 || err >= MAX_VAR_NAME_LNGTH)
+			{
+			  EH(-1, "Error writing mass fraction variable for average");
+			}
+		    }
+		  else
+		    {
+		      strcpy(pp_average[i]->type_name, Var_Name[k].name2);
+		      strcat(pp_average[i]->type_name, "_AVG");
+		    }
+		  break;
+		}
+	    }
+
+	  SPF(echo_string,"%s = %s", "AVERAGE", variable_name);
+	  SPF(endofstring(echo_string)," %d", pp_average[i]->species_index);
+
+
+
+        }
+      ECHO("\nEND OF AVERAGE\n", echo_file);
+    }
 }
 
 /******************************************************************************/
@@ -9927,6 +10179,22 @@ index_post, index_post_export);
 	}
     }
 
+  if ( nn_average > 0)
+    {
+      for (i = 0; i < nn_average; i++)
+        {
+          if (Num_Var_In_Type[pg->imtrx][pp_average[i]->type])
+            {
+              pp_average[i]->index = index;
+              pp_average[i]->index_post = index_post;
+
+              set_nv_tkud(rd, index, 0, 0, -2, pp_average[i]->type_name, "[1]",
+                          "average value", FALSE);
+              index++;
+              index_post++;
+            }
+        }
+    }
   rd->TotalNVPostOutput = index - rd->TotalNVSolnOutput;
 
   

@@ -1287,7 +1287,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
       case I_Q1:                /* 3 node, 1 dof/node, Lagrangian linear */
           return( ( n < 3 ) ? 1 : 0 );
       case I_Q2:                /* 6 node, 1 dof/node, Lagrangian quadratic */
-        EH(-1, "no quadratic triangles available yet");
+          return( ( n < 6 ) ? 1 : 0 );
       case I_Q2_LSA:
           return( ( n < 6 ) ? 1 : 0 );
       case I_P0:                /* 1 node, 1 dof/node, piecewise constant */
@@ -3965,7 +3965,7 @@ get_type(char string[],         /* EXODUS name of parent element  */
       }
     }
 
-  else if (strncmp(string, "TRI3", 4) == 0)
+  else if (strncmp(string, "TRI", 3) == 0)
     {  /* select element shape */
       switch (nodes){              /* select number of nodes in this element */
       case 3:
@@ -3981,6 +3981,9 @@ get_type(char string[],         /* EXODUS name of parent element  */
 	  EH(-1,err_msg);
 	}
 	break;
+      case 6:
+        answer = QUAD6_TRI;
+        break;
       default:
 	sprintf(err_msg,"TRIANGLE element with %d nodes not implemented.\n", nodes);
 	EH(-1,err_msg);
