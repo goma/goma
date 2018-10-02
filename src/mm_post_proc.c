@@ -268,7 +268,7 @@ int TFMP_LIQ_VELO = -1;
 int TFMP_INV_PECLET = -1;
 int TFMP_KRG    = -1;
 int LOG_CONF_MAP = -1;
-
+int J_FLUX = -1;
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -2580,6 +2580,23 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
         } // for a
       }     
     } // Loop over modes
+  }
+
+  if (cr->MassFluxModel == DM_SUSPENSION_BALANCE ) {
+    index = 0;
+    int w = 0;
+    for (a = 0; a < dim; a++)
+      {
+	hs[a] = 0.;
+      }
+    
+    err = get_continuous_species_terms(&s_terms, time, theta, delta_t, hs);
+    for (a=0; a < dim; a++)
+      {
+	local_post[J_FLUX + index] = s_terms.diff_flux[w][a];
+	local_lumped[J_FLUX + index] = 1.;
+	index++;
+      }
   }
 
   if (USER_POST != -1) {
@@ -6660,6 +6677,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Error ZZ heat flux", &ERROR_ZZ_Q);
   iread = look_for_post_proc(ifp, "Error ZZ pressure", &ERROR_ZZ_P);
   iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &LOG_CONF_MAP);
+  iread = look_for_post_proc(ifp, "Particle stress flux", &J_FLUX);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
 
   /*
@@ -9474,6 +9492,25 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       LOG_CONF_MAP = -1;
     }
 
+   if (J_FLUX != -1)
+    {
+      J_FLUX = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "J1","[1]",
+                  "particle flux x", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "J2","[1]",
+                  "particle flux y", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "J3","[1]",
+                  "particle flux z", FALSE);
+      index++;
+      index_post++;
+    }
+
+    
   /*
    * Porous flow post-processing setup section
    */

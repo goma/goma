@@ -1587,7 +1587,6 @@ struct Field_Variables
   dbl tfmp_pres;                    /* thin-film multi-phase lubrication pressure */
   dbl tfmp_sat;                  /* thin-film multi-phase saturation */
 
-
   /*
    * Grads of scalars...
    */
