@@ -396,7 +396,15 @@ typedef struct Post_Processing_Averages
   int species_index;
   int index_post;
   int index;
+  int non_variable_type;
 } pp_Average;
+
+enum AverageExtraTypes
+{
+  AVG_DENSITY,
+  AVG_HEAVISIDE,
+  AVG_VISCOSITY
+};
 
 
 /*

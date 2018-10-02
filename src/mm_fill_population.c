@@ -2011,6 +2011,9 @@ assemble_moments(double time,	/* present time value */
       }
     }
 
+  double sspg = 1.0;
+
+
   /*
    * Residuals___________________________________________________________
    */
@@ -2031,6 +2034,11 @@ assemble_moments(double time,	/* present time value */
 		  wt_func += supg * supg_tau * vconv[p] * bf[eqn]->grad_phi[i][p];
 		}
 	    }
+
+	    if (sspg != 0.0)
+	      {
+		wt_func += sspg * ((1 + dim)*bf[eqn]->phi[i]  - 1);
+	      }
 
 
 #if 1
@@ -2135,6 +2143,12 @@ assemble_moments(double time,	/* present time value */
 		    wt_func += supg * supg_tau * vconv[p] * bf[eqn]->grad_phi[i][p];
 		  }
 	      }
+
+	    if (sspg != 0.0)
+	      {
+		wt_func += sspg * ((1 + dim)*bf[eqn]->phi[i] - 1);
+	      }
+
 
 	    /*
 	     * Set up some preliminaries that are needed for the (a,i)

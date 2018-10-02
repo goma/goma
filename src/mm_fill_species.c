@@ -412,6 +412,8 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
       
 /*    } */   /* end of if CONTINUOUS */
 
+      double sspg = 1.0;
+
   /*
    * Residuals_________________________________________________________________
    */
@@ -472,6 +474,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		supg_tau = 0;
 	      }
 	    }
+
 	  /*
 	   *  Calculate the coef_rho term based upon the value of
 	   *  species_eqn_type.
@@ -545,6 +548,11 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			{
 			  wt_func += supg * supg_tau * fv->v[p] * bf[eqn]->grad_phi[i][p];
 			}
+		    }
+
+		  if (sspg != 0.0)
+		    {
+		      wt_func += sspg * ((1 + dim)*phi_i - 1);
 		    }
 
 		  mass = 0.;
@@ -817,6 +825,11 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		  {
 		    wt_func += supg * supg_tau * fv->v[p] * bf[eqn]->grad_phi[i][p];
 		  }
+	      }
+
+	    if (sspg != 0.0)
+	      {
+		wt_func += sspg * ((1 + dim)*bf[eqn]->phi[i] - 1);
 	      }
 
 	    if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
