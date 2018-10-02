@@ -1957,7 +1957,12 @@ assemble_moments(double time,	/* present time value */
       EH(err, "Error in calculating effective convection velocity_rs");
     }
 
-  supg = 1.0;
+
+  supg = 0.0;
+  if (mp->Momentwt_funcModel == SUPG)
+    {
+      supg = mp->Momentwt_func;
+    }
   supg_tau = 0.0;
 
   if (supg!=0.)
@@ -2011,7 +2016,7 @@ assemble_moments(double time,	/* present time value */
       }
     }
 
-  double sspg = 1.0;
+  double sspg = mp->MomentSSPG_func;
 
 
   /*

@@ -781,7 +781,12 @@ matrix_fill(
    * The current SUPG model requires a value for the element's size and the
    * average velocity. Evaluate this here.
    */
-  if ((vn->wt_funcModel == SUPG && pde[R_STRESS11] && pd->gv[R_MOMENTUM1]) ||
+  if ((mp->Momentwt_funcModel == SUPG && (pde[R_MOMENT0] ||
+                                          pde[R_MOMENT1] ||
+                                          pde[R_MOMENT2] ||
+                                          pde[R_MOMENT3])
+                                          && pd->gv[R_MOMENTUM1]) ||
+      (vn->wt_funcModel == SUPG && pde[R_STRESS11] && pd->gv[R_MOMENTUM1]) ||
       (mp->Spwt_funcModel == SUPG && pde[R_MASS] &&
        (pd->gv[R_MOMENTUM1] || pd->gv[R_MESH1])) ||
       (mp->Mwt_funcModel == SUPG && pde[R_MOMENTUM1]) ||

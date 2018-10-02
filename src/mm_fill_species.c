@@ -412,7 +412,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
       
 /*    } */   /* end of if CONTINUOUS */
 
-      double sspg = 1.0;
+      double sspg = mp->SpSSPG_func;
 
   /*
    * Residuals_________________________________________________________________
