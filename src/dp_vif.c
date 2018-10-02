@@ -2658,6 +2658,7 @@ noahs_ark()
           ddd_add_member(n, &(pp_average[i]->species_index), 1, MPI_INT );
           ddd_add_member(n, &(pp_average[i]->index), 1, MPI_INT );
           ddd_add_member(n, &(pp_average[i]->index_post), 1, MPI_INT );
+          ddd_add_member(n, &(pp_average[i]->non_variable_type), 1, MPI_INT );
           ddd_add_member(n,   pp_average[i]->type_name, MAX_VAR_NAME_LNGTH, MPI_CHAR );
         }
     }
