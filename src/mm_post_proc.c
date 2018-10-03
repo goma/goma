@@ -269,6 +269,8 @@ int TFMP_INV_PECLET = -1;
 int TFMP_KRG    = -1;
 int LOG_CONF_MAP = -1;
 int J_FLUX = -1;
+int GRAD_SH = -1;
+int GRAD_Y = -1;
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -2599,6 +2601,26 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       }
   }
 
+  if (GRAD_SH != -1 && pd->v[SHEAR_RATE]) {
+    index = 0;
+    for (a=0; a < dim; a++)
+      {
+	local_post[GRAD_SH + index] = fv->grad_SH[a];
+	local_lumped[GRAD_SH + index] = 1.;
+	index++;
+      }
+  }
+
+  if (GRAD_Y != -1 && pd->v[MASS_FRACTION]) {
+    index = 0;
+    for (a=0; a < dim; a++)
+      {
+	local_post[GRAD_Y + index] = fv->grad_c[0][a];
+	local_lumped[GRAD_Y + index] = 1.;
+	index++;
+      }
+  }
+  
   if (USER_POST != -1) {
       /* calculate a user-specified post-processing variable */
       
@@ -6678,6 +6700,8 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Error ZZ pressure", &ERROR_ZZ_P);
   iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &LOG_CONF_MAP);
   iread = look_for_post_proc(ifp, "Particle stress flux", &J_FLUX);
+  iread = look_for_post_proc(ifp, "Shear gradient", &GRAD_SH);
+  iread = look_for_post_proc(ifp, "Concentration gradient", &GRAD_Y);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
 
   /*
@@ -9506,6 +9530,44 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       index_post++;
       set_nv_tkud(rd, index, 0, 0, -2, "J3","[1]",
                   "particle flux z", FALSE);
+      index++;
+      index_post++;
+    }
+
+   if (GRAD_SH != -1)
+    {
+      GRAD_SH = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_SH0","[1]",
+                  "Shear gradient x", FALSE);
+      index++;
+      index_post++;
+      
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_SH1","[1]",
+                  "Shear gradient y", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_SH2","[1]",
+                  "Shear gradient z", FALSE);
+      index++;
+      index_post++;
+    }
+
+   if (GRAD_Y != -1)
+    {
+      GRAD_Y = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_Y0","[1]",
+                  "Concentration gradient x", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_Y1","[1]",
+                  "Concentration gradient y", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_Y2","[1]",
+                  "Concentration gradient z", FALSE);
       index++;
       index_post++;
     }

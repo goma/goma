@@ -2558,6 +2558,8 @@ noahs_ark()
   ddd_add_member(n, &UNTRACKED_SPEC, 1, MPI_INT);
   ddd_add_member(n, &LOG_CONF_MAP, 1, MPI_INT);
   ddd_add_member(n, &J_FLUX, 1, MPI_INT);
+  ddd_add_member(n, &GRAD_SH, 1, MPI_INT);
+  ddd_add_member(n, &GRAD_Y, 1, MPI_INT);
 
   if ( len_u_post_proc > 0 )
     {
