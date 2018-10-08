@@ -585,6 +585,8 @@ extern int VON_MISES_STRAIN;
 extern int VON_MISES_STRESS;
 extern int LOG_CONF_MAP;      /* Map log-conformation tensor to stress */
 extern int J_FLUX;            /* Particle stress flux                  */
+extern int GRAD_Y;            /* Concentration gradient                  */
+extern int GRAD_SH;            /* Shear gradient                */
 
 extern int UNTRACKED_SPEC;		/*Untracked Species Concentration */
 

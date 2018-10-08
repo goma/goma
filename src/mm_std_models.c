@@ -3948,12 +3948,21 @@ suspension_balance(struct Species_Conservation_Terms *st,
   if (Y[w] >= maxpack) Y[w]=maxpack;
   if (mp->GravDiffType[w] == RICHARDSON_ZAKI )
     {
-      f = pow(1.-Y[w],rzexp)/mu0;
-      f *= (1.-Y[w]/maxpack);
-      //df_dmu =  -f/mu;
-      df_dmu = 0.;
-      df_dy = -rzexp*f/(1.-Y[w]);
-      df_dy += -pow(1. - Y[w], rzexp)/(mu0 * maxpack);
+      if(Y[w]/maxpack < 0.99)
+	{
+	  f = pow(1.-Y[w],rzexp)/mu0;
+	  f *= (1.-Y[w]/maxpack);
+	  //df_dmu =  -f/mu;
+	  df_dmu = 0.;
+	  df_dy = -rzexp*f/(1.-Y[w]);
+	  df_dy += -pow(1. - Y[w], rzexp)/(mu0 * maxpack);
+	}
+      else
+	{
+	  f = 0.;
+	  df_dmu = 0.;
+	  df_dy = 0.;
+	}
     }
   else
     {
@@ -4544,11 +4553,18 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   dbl maxpack, maxpack2, Kn;
   dbl pp,  d_pp_dy, d_pp2_dy2;
   dbl comp, comp1, comp2 = 0, y_norm;
+  dbl gamma_sh;
+  
   Y = fv->c;
   grad_Y = fv->grad_c;
   grad_gd = fv->grad_SH;
   gammadot = fv->SH;
-   
+
+  if (gammadot < 1.e-2)
+    {
+      gammadot = 1.e-2;
+    }
+  
   dim = pd->Num_Dim;
   wim   = dim;
   if(pd->CoordinateSystem == SWIRLING) wim = wim+1;
@@ -4601,7 +4617,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
   y_norm = Y[w]/maxpack;
   maxpack2 = maxpack*maxpack;
-  if(y_norm < 1.0)
+  if(y_norm < 0.99)
     {
       comp = pow((1.-y_norm),-2.);
       comp1 = 2./maxpack*pow((1.-y_norm),-3.);
@@ -4624,6 +4640,8 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   d_pp_dy = 2.*Kn*y_norm/maxpack*comp + Kn*y_norm*y_norm*comp1;
   
   d_pp2_dy2 = 2.*Kn/maxpack2*comp +  4.*Kn*y_norm/maxpack*comp1 + Kn*y_norm*y_norm*comp2;
+
+  gamma_sh = (50.e-6)*(9.e-3)/(9.e-4)/(9.e-4);
   
   memset(div_tau_p, 0, DIM*sizeof(dbl));
   
@@ -4631,7 +4649,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     {
       for ( b=0; b<wim; b++)
 	{
-	  div_tau_p[a] += mu0*qtensor[a][b]*(pp*grad_gd[b]+gammadot*d_pp_dy*grad_Y[w][b]);
+	  div_tau_p[a] += mu0*qtensor[a][b]*(pp*grad_gd[b]+(gammadot+gamma_sh)*d_pp_dy*grad_Y[w][b]);
 	}
     }
   
@@ -4655,8 +4673,8 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 		  for ( b=0; b<wim; b++)
 		    {
 		      d_div_tau_p_dy[a][w][j] += mu0*qtensor[a][b]*(d_pp_dy*bf[var]->phi[j]*grad_gd[b] 
-								    +gammadot*d_pp2_dy2*bf[var]->phi[j]*grad_Y[w][b]
-								    +gammadot*d_pp_dy*bf[var]->grad_phi[j][b]);
+								    +(gammadot+gamma_sh)*d_pp2_dy2*bf[var]->phi[j]*grad_Y[w][b]
+								    +(gammadot+gamma_sh)*d_pp_dy*bf[var]->grad_phi[j][b]);
 		    }
 		}
 	    }
@@ -4692,7 +4710,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 		      for ( b=0; b<wim; b++)
 			{
 			  d_div_tau_p_dmesh[a][p][j] += mu0*qtensor[a][b]*(pp*fv->d_grad_SH_dmesh[b][p][j]
-									   +gammadot*d_pp_dy*fv->d_grad_c_dmesh[b][w][p][j]);
+									   +(gammadot+gamma_sh)*d_pp_dy*fv->d_grad_c_dmesh[b][w][p][j]);
 			}
 		    }
 		}
