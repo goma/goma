@@ -3948,7 +3948,7 @@ suspension_balance(struct Species_Conservation_Terms *st,
   if (Y[w] >= maxpack) Y[w]=maxpack;
   if (mp->GravDiffType[w] == RICHARDSON_ZAKI )
     {
-      if(Y[w]/maxpack < 0.99)
+      if(Y[w]/maxpack < 0.95)
 	{
 	  f = pow(1.-Y[w],rzexp)/mu0;
 	  f *= (1.-Y[w]/maxpack);
@@ -4617,7 +4617,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
   y_norm = Y[w]/maxpack;
   maxpack2 = maxpack*maxpack;
-  if(y_norm < 0.99)
+  if(y_norm < 0.95)
     {
       comp = pow((1.-y_norm),-2.);
       comp1 = 2./maxpack*pow((1.-y_norm),-3.);
