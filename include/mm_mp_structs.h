@@ -311,6 +311,15 @@ struct Material_Properties
   int Spwt_funcModel;
   dbl Spwt_func;
 
+  int SpSSPG_funcModel;
+  dbl SpSSPG_func;
+
+  int Momentwt_funcModel;
+  dbl Momentwt_func;
+
+  int MomentSSPG_funcModel;
+  dbl MomentSSPG_func;
+
   dbl diffusivity[MAX_CONC];
   int DiffusivityModel[MAX_CONC];
   int diffusivity_tableid[MAX_CONC];

@@ -381,7 +381,7 @@ PROTO((double [],		/* stream_fcn_vect */
        Exo_DB *));		/* exo */
 
 void
-sum_average_nodal(double **avg_count, double ** avg_sum, int global_node);
+sum_average_nodal(double **avg_count, double ** avg_sum, int global_node, double time);
 
 void
 post_process_average(double x[],	 /* Solution vector for the current processor */
@@ -392,7 +392,8 @@ post_process_average(double x[],	 /* Solution vector for the current processor *
 					       current proc */
 		     Exo_DB *exo,
 		     Dpi *dpi,
-		     double **post_proc_vect);
+		     double **post_proc_vect,
+		     double time);
 
 /*
  * Prototypes of functions defined in other files that are needed here.
@@ -2533,7 +2534,8 @@ post_process_average(double x[],	 /* Solution vector for the current processor *
 					       current proc */
 		     Exo_DB *exo,
 		     Dpi *dpi,
-		     double **post_proc_vect)
+		     double **post_proc_vect,
+		     double time)
 {
   int ielem;
   int ebn;
@@ -2565,6 +2567,15 @@ post_process_average(double x[],	 /* Solution vector for the current processor *
       if (mn < 0) {
         continue;
       }
+
+      pd  = pd_glob[mn];
+      cr  = cr_glob[mn];
+      elc = elc_glob[mn];
+      elc_rs = elc_rs_glob[mn];
+      gn  = gn_glob[mn];
+      mp  = mp_glob[mn];
+      vn  = vn_glob[mn];
+      evpl = evpl_glob[mn];
 
       err = load_elem_dofptr(ielem, exo, x, x_old,
                              xdot, xdot_old,
@@ -2623,7 +2634,10 @@ post_process_average(double x[],	 /* Solution vector for the current processor *
               EH( err, "load_porous_properties");
             }
 
-          sum_average_nodal(avg_count, avg_sum, global_node);
+          computeCommonMaterialProps_gp(time);
+
+
+          sum_average_nodal(avg_count, avg_sum, global_node, time);
 
 
         }
@@ -2634,7 +2648,8 @@ post_process_average(double x[],	 /* Solution vector for the current processor *
         int node;
         for (node = 0; node < dpi->num_universe_nodes; node++)
           {
-            if (Num_Var_In_Type[pg->imtrx][pp_average[i]->type])
+            if ((pp_average[i]->non_variable_type && pg->imtrx == 0) ||
+                (!pp_average[i]->non_variable_type && Num_Var_In_Type[pg->imtrx][pp_average[i]->type]))
               {
                 post_proc_vect[pp_average[i]->index_post][node] = avg_sum[i][node]/avg_count[i][node];
               }
@@ -2653,22 +2668,85 @@ post_process_average(double x[],	 /* Solution vector for the current processor *
 }
 
 void
-sum_average_nodal(double **avg_count, double ** avg_sum, int global_node)
+sum_average_nodal(double **avg_count, double ** avg_sum, int global_node, double time)
 {
   for (int i = 0; i < nn_average; i++)
     {
       avg_count[i][global_node] += 1;
-      switch (pp_average[i]->type)
+      if (pp_average[i]->non_variable_type == 0)
         {
-        case PRESSURE:
-          avg_sum[i][global_node] += fv->P;
-          break;
-        case MASS_FRACTION:
-          avg_sum[i][global_node] += fv->c[pp_average[i]->species_index];
-          break;
-        default:
-          EH(-1, "Unknown nodal average type");
+          switch (pp_average[i]->type)
+            {
+            case PRESSURE:
+              avg_sum[i][global_node] += fv->P;
+              break;
+            case TEMPERATURE:
+              avg_sum[i][global_node] += fv->T;
+              break;
+            case MASS_FRACTION:
+              avg_sum[i][global_node] += fv->c[pp_average[i]->species_index];
+              break;
+            case MOMENT0:
+              avg_sum[i][global_node] += fv->moment[0];
+              break;
+            case MOMENT1:
+              avg_sum[i][global_node] += fv->moment[1];
+              break;
+            case MOMENT2:
+              avg_sum[i][global_node] += fv->moment[2];
+              break;
+            case MOMENT3:
+              avg_sum[i][global_node] += fv->moment[3];
+              break;
+            case DENSITY_EQN:
+              {
+                double rho = density(NULL, time);
+                avg_sum[i][global_node] += rho;
+              }
+              break;
+            default:
+              EH(-1, "Unknown nodal average type");
+              break;
+            }
         }
+      else
+        {
+          switch (pp_average[i]->type)
+            {
+            case AVG_DENSITY:
+              {
+                double rho = density(NULL, time);
+                avg_sum[i][global_node] += rho;
+              }
+            case AVG_HEAVISIDE:
+              {
+                load_lsi(ls->Length_Scale);
+                avg_sum[i][global_node] += lsi->H;
+              }
+              break;
+            case AVG_VISCOSITY:
+              {
+                double gamma[DIM][DIM];
+                int a;
+                int b;
+                for (a = 0; a < VIM; a++)
+                  {
+                    for (b = 0; b < VIM; b++)
+                      {
+                        gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+                      }
+                  }
+
+                double mu = viscosity(gn, gamma, NULL);
+                avg_sum[i][global_node] += mu;
+              }
+              break;
+            default:
+              EH(-1, "Unknown nodal average non-variable type");
+              break;
+            }
+        }
+
     }
 }
 
@@ -3860,7 +3938,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
    if (nn_average > 0)
      {
-       post_process_average(x, x_old, xdot, xdot_old, resid_vector, exo, dpi, post_proc_vect);
+       post_process_average(x, x_old, xdot, xdot_old, resid_vector, exo, dpi, post_proc_vect, *time_ptr);
      }
 
 /*****************************************************************************/
@@ -8041,6 +8119,7 @@ rd_post_process_specs(FILE *ifp,
           fseek(ifp, save_position, SEEK_SET);
 
           pp_average[i]->type = -1;
+          pp_average[i]->non_variable_type = 0;
 
 	  int read_average_items = sscanf(data_line_buffer, "%s %d",
 					  variable_name, &(pp_average[i]->species_index));
@@ -8079,8 +8158,36 @@ rd_post_process_specs(FILE *ifp,
 		}
 	    }
 
+	    if (pp_average[i]->type == -1)
+	      {
+		if (!strncasecmp(variable_name, "DENSITY_AVG", strlen(variable_name)))
+		  {
+		    strcpy(pp_average[i]->type_name, "DENSITY_AVG");
+		    pp_average[i]->non_variable_type = 1;
+		    pp_average[i]->type = AVG_HEAVISIDE;
+		  }
+		else if (!strncasecmp(variable_name, "HEAVISIDE", strlen(variable_name)))
+		  {
+		    strcpy(pp_average[i]->type_name, "HEAVISIDE_AVG");
+		    pp_average[i]->non_variable_type = 1;
+		    pp_average[i]->type = AVG_HEAVISIDE;
+		  }
+		else if (!strncasecmp(variable_name, "VISCOSITY", strlen(variable_name)))
+		  {
+		    strcpy(pp_average[i]->type_name, "VISCOSITY_AVG");
+		    pp_average[i]->non_variable_type = 1;
+		    pp_average[i]->type = AVG_VISCOSITY;
+		  }
+		else
+		  {
+		    fprintf(stderr, "Error reading unknown variable type: %s\n", variable_name);
+		    EH(-1, "Unknown variable type for post processing");
+		  }
+	      }
+
 	  SPF(echo_string,"%s = %s", "AVERAGE", variable_name);
 	  SPF(endofstring(echo_string)," %d", pp_average[i]->species_index);
+	  ECHO(echo_string,echo_file);
 
 
 
@@ -10183,7 +10290,8 @@ index_post, index_post_export);
     {
       for (i = 0; i < nn_average; i++)
         {
-          if (Num_Var_In_Type[pg->imtrx][pp_average[i]->type])
+          if ((pp_average[i]->non_variable_type && pg->imtrx == 0) ||
+              (!pp_average[i]->non_variable_type && Num_Var_In_Type[pg->imtrx][pp_average[i]->type]))
             {
               pp_average[i]->index = index;
               pp_average[i]->index_post = index_post;

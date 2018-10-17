@@ -4641,11 +4641,13 @@ find_intersections( struct LS_Surf_List *list,
       }
       break;    
 
+  case TRIANGLE:
   case TRISHELL:
     
     switch( pd->i[pg->imtrx][isovar] ) {
       
     case I_Q1:                     /* bilinear triangular shell */
+    case I_Q2:
       {
 	double links[3][2] = { { 0,1 },{ 1,2 },{ 2,0 } };
 	

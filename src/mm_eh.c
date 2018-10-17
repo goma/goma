@@ -160,6 +160,15 @@ save_place(const int severity,
 void 
 logprintf(const char *format, ... )
 {
+#ifdef DISABLE_LOGGING
+  if ( current_severity < 0 )
+    {
+      DPRINTF(stderr, "\nAbnormal termination in logprintf -- enable logging for details.\n");
+
+      exit(current_severity);
+    }
+  return;
+#else
   int n;
   time_t now;
   static char time_format[] = "%b %d %T";
@@ -179,6 +188,7 @@ logprintf(const char *format, ... )
    * to multiplex into separate files for each processor. Finally, you might
    * want to separate heavy debugging messages.
    */
+
 
   /*
    * Check for an open file output stream, open one if there isn't one yet...
@@ -294,6 +304,7 @@ logprintf(const char *format, ... )
     }
 
   return;
+#endif
 }
 
 

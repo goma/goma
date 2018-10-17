@@ -1957,7 +1957,12 @@ assemble_moments(double time,	/* present time value */
       EH(err, "Error in calculating effective convection velocity_rs");
     }
 
-  supg = 1.0;
+
+  supg = 0.0;
+  if (mp->Momentwt_funcModel == SUPG)
+    {
+      supg = mp->Momentwt_func;
+    }
   supg_tau = 0.0;
 
   if (supg!=0.)
@@ -2011,6 +2016,9 @@ assemble_moments(double time,	/* present time value */
       }
     }
 
+  double sspg = mp->MomentSSPG_func;
+
+
   /*
    * Residuals___________________________________________________________
    */
@@ -2031,6 +2039,11 @@ assemble_moments(double time,	/* present time value */
 		  wt_func += supg * supg_tau * vconv[p] * bf[eqn]->grad_phi[i][p];
 		}
 	    }
+
+	    if (sspg != 0.0)
+	      {
+		wt_func += sspg * ((1 + dim)*bf[eqn]->phi[i]  - 1);
+	      }
 
 
 #if 1
@@ -2135,6 +2148,12 @@ assemble_moments(double time,	/* present time value */
 		    wt_func += supg * supg_tau * vconv[p] * bf[eqn]->grad_phi[i][p];
 		  }
 	      }
+
+	    if (sspg != 0.0)
+	      {
+		wt_func += sspg * ((1 + dim)*bf[eqn]->phi[i] - 1);
+	      }
+
 
 	    /*
 	     * Set up some preliminaries that are needed for the (a,i)

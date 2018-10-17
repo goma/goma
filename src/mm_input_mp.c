@@ -2307,6 +2307,32 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
+
+  model_read = look_for_mat_prop(imp, "Moment Weight Function",
+                                 &(mat_ptr->Momentwt_funcModel),
+                                 &(mat_ptr->Momentwt_func), NO_USER, NULL,
+                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+  if ( !strcmp(model_name, "SUPG") )
+    {
+      mat_ptr->Momentwt_funcModel = SUPG;
+      fscanf(imp, "%lg",&(mat_ptr->Momentwt_func));
+      SPF(endofstring(es),"SUPG %.4g", mat_ptr->Mwt_func );
+    }
+  else
+    {
+      mat_ptr->Momentwt_funcModel = GALERKIN;
+      mat_ptr->Momentwt_func = 0.;
+      SPF(es,"\t(%s = %s)", "Moment Weight Function", "GALERKIN");
+    }
+  ECHO(es,echo_file);
+
+  model_read = look_for_mat_prop(imp, "Moment SSPG Function",
+                                 &(mat_ptr->MomentSSPG_funcModel),
+                                 &(mat_ptr->MomentSSPG_func), NO_USER, NULL,
+                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+  ECHO(es,echo_file);
+
   /*
    *  Polymer Constitutive Equation
    *
@@ -5853,6 +5879,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       SPF(es,"\t(%s = %s)", "Species Weight Function", "GALERKIN");
     }
   ECHO(es,echo_file);
+
+  model_read = look_for_mat_prop(imp, "Species SSPG Function",
+                                 &(mat_ptr->SpSSPG_funcModel),
+                                 &(mat_ptr->SpSSPG_func), NO_USER, NULL,
+                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+  ECHO(es,echo_file);
+
+
 
   /*
    *   Special section (LONG) to read in parameters associated with Stefan-Maxwell diffusion 
