@@ -1967,7 +1967,7 @@ dbl *te_out) /* te_out - return actual end time */
 						     time2, Renorm_Now);
 		if ( did_renorm )
                   {
-                    exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], 0);
+                    exchange_dof(cx[pg->imtrx], dpi, x[pg->imtrx], pg->imtrx);
 
 
                     renorm_subcycle_count = ls->SubcyclesAfterRenorm;
