@@ -1261,6 +1261,7 @@ int i;
 	       pre_factor = 6.*qflow/(gap*gap*gap);
                break;
           case CYLINDRICAL:
+          case SWIRLING:
                switch (velo_condition) {
                   case U_PARABOLA_BC:
                       if(coord1 <= DBL_SMALL)
@@ -1331,6 +1332,7 @@ int i;
                       *func =0.; 
                   }
           case CYLINDRICAL:
+          case SWIRLING:
                switch (velo_condition) {
                   case U_PARABOLA_BC:
                       if(coord1 <= DBL_SMALL)
@@ -1407,6 +1409,7 @@ int i;
                       *func =0.; 
                   }
           case CYLINDRICAL:
+          case SWIRLING:
                expon = 1.+1./pl_index;
                switch (velo_condition) {
                   case U_PARABOLA_BC:
