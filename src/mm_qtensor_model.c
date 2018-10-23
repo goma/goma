@@ -171,6 +171,11 @@ assemble_qtensor(dbl *el_length) /* 2 x approximate element length scales */
   dbl gd_delta = 0.0;
   dbl *h;
   dbl *hq[DIM];
+  dbl v1[DIM], v2[DIM], v3[DIM];
+
+  memset(v1, 0, DIM * sizeof(double));
+  memset(v2, 0, DIM * sizeof(double));
+  memset(v3, 0, DIM * sizeof(double));
 
   print = 0;
   /*
@@ -209,7 +214,7 @@ assemble_qtensor(dbl *el_length) /* 2 x approximate element length scales */
 	  printf("E = | % 10.4g % 10.4g % 10.4g |\n", E[1][0], E[1][1], E[1][2]);
 	  printf("    + % 10.4g % 10.4g % 10.4g +\n", E[2][0], E[2][1], E[2][2]);
 	}
-      find_super_special_eigenvector(E, vort_dir_local, &tmp, print);
+      find_super_special_eigenvector(E, vort_dir_local, v1, v2, v3, &tmp, print);
 
       for(i = 0; i < DIM; i++) {
         memset( d_vort_dir_d_x[i], 0, DIM * sizeof(dbl) );
@@ -243,7 +248,7 @@ assemble_qtensor(dbl *el_length) /* 2 x approximate element length scales */
 	    for(j = 0; j < DIM; j++)
 	      E[i][j] = fv->grad_v[i][j] + fv->grad_v[j][i];
 
-          find_super_special_eigenvector(E, vort_dir_delta, &tmp, print);
+          find_super_special_eigenvector(E, vort_dir_delta, v1, v2, v3, &tmp, print);
 
 	  /*
 	  gd_delta = 0.0;
@@ -353,7 +358,12 @@ assemble_qtensor_vort(dbl *el_length) /* 2 x approximate element length scales *
   dbl gd_delta = 0.0;
   dbl *h;
   dbl *hq[DIM];
+  dbl v1[DIM], v2[DIM], v3[DIM];
 
+  memset(v1, 0, DIM * sizeof(double));
+  memset(v2, 0, DIM * sizeof(double));
+  memset(v3, 0, DIM * sizeof(double));
+  
   print = 0;
 
   for(i = 0; i < DIM; i++) {
@@ -387,7 +397,7 @@ assemble_qtensor_vort(dbl *el_length) /* 2 x approximate element length scales *
 	  printf("E = | % 10.4g % 10.4g % 10.4g |\n", E[1][0], E[1][1], E[1][2]);
 	  printf("    + % 10.4g % 10.4g % 10.4g +\n", E[2][0], E[2][1], E[2][2]);
 	}
-      find_super_special_eigenvector(E, vort_dir_local, &tmp, print);
+      find_super_special_eigenvector(E, vort_dir_local, v1, v2, v3, &tmp, print);
 
       for(i = 0; i < DIM; i++) {
         memset( d_vort_dir_d_x[i], 0, DIM * sizeof(dbl) );
@@ -421,7 +431,7 @@ assemble_qtensor_vort(dbl *el_length) /* 2 x approximate element length scales *
 	    for(j = 0; j < DIM; j++)
 	      E[i][j] = fv->grad_v[i][j] + fv->grad_v[j][i];
 
-          find_super_special_eigenvector(E, vort_dir_delta, &tmp, print);
+          find_super_special_eigenvector(E, vort_dir_delta, v1, v2, v3, &tmp, print);
 
 	  /*
 	  gd_delta = 0.0;
@@ -767,7 +777,11 @@ assemble_vorticity_direction()
   dbl xcoor[DIM][MDE], hh3, h[DIM], hq[DIM][DIM], radius, theta;
   dbl grad_e[DIM][DIM][DIM];
   dbl detJ1, det_J_inv;
-  
+  dbl v1[DIM], v2[DIM], v3[DIM];
+
+  memset(v1, 0, DIM * sizeof(double));
+  memset(v2, 0, DIM * sizeof(double));
+  memset(v3, 0, DIM * sizeof(double));
   
   if ( ! pd->e[eqn = R_VORT_DIR1] )
     {
@@ -829,7 +843,7 @@ assemble_vorticity_direction()
 	}
       vort_dir[0] = 1.;
 
-      find_super_special_eigenvector(gamma_dot, vort_dir_local, &tmp, print); 
+      find_super_special_eigenvector(gamma_dot, vort_dir_local, v1, v2, v3, &tmp, print); 
       
       bias_eigenvector_to(vort_dir_local, vort_dir);
       memset(R_old, 0, sizeof(double)*DIM*MDE);
@@ -958,7 +972,7 @@ assemble_vorticity_direction()
 	      /* Get local vorticity direction for least squares projection*/
 	      for ( p=0; p<VIM; p++ )
 		vort_dir_pert[p] = vort_dir_local[p];
-	      find_super_special_eigenvector(gamma_dot_pert, vort_dir_pert, &tmp, print);
+	      find_super_special_eigenvector(gamma_dot_pert, vort_dir_pert, v1, v2, v3, &tmp, print);
 	      bias_eigenvector_to(vort_dir_pert, vort_dir);
 	      
 	      memset(R_new, 0, sizeof(double)*DIM*MDE);
@@ -1202,7 +1216,7 @@ assemble_vorticity_direction()
 		/* Get local vorticity direction for least squares projection*/
 		for ( p=0; p<VIM; p++ )
 		  vort_dir_pert[p] = vort_dir_local[p];
-		find_super_special_eigenvector(gamma_dot_pert, vort_dir_pert, &tmp, print);
+		find_super_special_eigenvector(gamma_dot_pert, vort_dir_pert, v1, v2, v3, &tmp, print);
 		bias_eigenvector_to(vort_dir_pert, vort_dir);
 		
 		memset(R_new, 0, sizeof(double)*DIM*MDE);
@@ -2555,19 +2569,34 @@ find_eigenvector(dbl AA[3][3],
 void
 find_super_special_eigenvector(dbl T[DIM][DIM],
 			       dbl *v,
+			       dbl *v1,
+			       dbl *v2,
+			       dbl *v3,
 			       dbl *eigenvalue,
 			       int print)
 {
   int num_zero_eigenvalues;
+  int i,j;
   dbl A[3][3];
   dbl a0, a2, a1;
   dbl q, r, d, m, theta, z1, z2, z3;
+  dbl eig1=0., eig2=0., eig3=0.;
 
   memset(v, 0, DIM * sizeof(dbl));
+  memset(v1, 0, DIM * sizeof(dbl));
+  memset(v2, 0, DIM * sizeof(dbl));
+  memset(v3, 0, DIM * sizeof(dbl));
+ 
   *eigenvalue = 0.0;
 
-  /* First, get a copy of the shear rate tensor. */
-  memcpy(A, T, DIM * DIM * sizeof(dbl));
+  memset(A, 0, 9 * sizeof(dbl));
+  for (i=0; i < DIM; i++)
+    {
+      for (j=0; j < DIM; j++)
+	{
+	  A[i][j] = T[i][j];
+	}
+    }
 
   /* Now find the zeros of the cubic polynomial characteristic
    * equation.  This requires some complex number mumbo-jubmo, which I
@@ -2650,6 +2679,9 @@ find_super_special_eigenvector(dbl T[DIM][DIM],
 #endif
     }
 
+  /* Arrange eigenvalues as tension, compression, vorticity */
+  /* eig(compression) < eig(vorticity) < eig(tension)       */
+  
   if(num_zero_eigenvalues <= 1)
     {
       /* Good, there must be a "largest" and "smallest" eigenvalue. */
@@ -2659,6 +2691,9 @@ find_super_special_eigenvector(dbl T[DIM][DIM],
 	    /* z3 < z2 < z1 */
 	    find_eigenvector(A, z2, v, print);
 	    *eigenvalue = z2;
+	    eig1 = z1;
+	    eig2 = z3;
+	    eig3 = z2;
 	  }
 	else
 	  if(z3 > z1)
@@ -2666,12 +2701,18 @@ find_super_special_eigenvector(dbl T[DIM][DIM],
 	      /* z2 < z1 < z3 */
 	      find_eigenvector(A, z1, v, print);
 	      *eigenvalue = z1;
+	      eig1 = z3;
+	      eig2 = z2;
+	      eig3 = z1;
 	    }
 	  else
 	    {
 	      /* z2 < z3 < z1 */
 	      find_eigenvector(A, z3, v, print);
 	      *eigenvalue = z3;
+	      eig1 = z1;
+	      eig2 = z2;
+	      eig3 = z3;
 	    }
       else
 	if(z2 > z3)
@@ -2680,18 +2721,27 @@ find_super_special_eigenvector(dbl T[DIM][DIM],
 	      /* z1 < z3 < z2 */
 	      find_eigenvector(A, z3, v, print);
 	      *eigenvalue = z3;
+	      eig1 = z2;
+	      eig2 = z1;
+	      eig3 = z3;
 	    }
 	  else
 	    {
 	      /* z3 < z1 < z2 */
 	      find_eigenvector(A, z1, v, print);
 	      *eigenvalue = z1;
+	      eig1 = z2;
+	      eig2 = z3;
+	      eig3 = z1;
 	    }
 	else
 	  {
 	    /* z1 < z2 < z3 */
 	    find_eigenvector(A, z2, v, print);
 	    *eigenvalue = z2;
+	    eig1 = z3;
+	    eig2 = z1;
+	    eig3 = z2;
 	  }
 
       if(print)
@@ -2705,6 +2755,23 @@ find_super_special_eigenvector(dbl T[DIM][DIM],
     {
       /* At least 2 zeros => all 3 are zero (symmetry) */
     }
+  find_eigenvector(A, eig1, v1, print);
+  find_eigenvector(A, eig2, v2, print);
+  find_eigenvector(A, eig3, v3, print);
+  /* Try to catch some roundoff errors. */
+  if(fabs(v[0]) < QTENSOR_SMALL_DBL) v[0] = 0.0;
+  if(fabs(v[1]) < QTENSOR_SMALL_DBL) v[1] = 0.0;
+  if(fabs(v[2]) < QTENSOR_SMALL_DBL) v[2] = 0.0;
+
+  /* Do some shortcuts for 2D  (change later) */
+  /*  v3[0] = 0.;
+  v3[1] = 0.;
+  v3[2] = 1.;
+
+  v1[0] = v2[1] * v3[2] - v2[2] * v3[1];
+  v1[1] = v2[2] * v3[0] - v2[0] * v3[2];
+  v1[2] = v2[0] * v3[1] - v2[1] * v3[0]; */
+
 }
 
 /* This routine diagonalizes a symmetric 2-tensor of size 3 by 3.
