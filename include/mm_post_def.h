@@ -591,6 +591,7 @@ extern int TFMP_GAS_VELO;
 extern int TFMP_LIQ_VELO;
 extern int TFMP_INV_PECLET;
 extern int TFMP_KRG;
+extern int VELO_SPEED;              /* i.e., velocity magnitude */
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *

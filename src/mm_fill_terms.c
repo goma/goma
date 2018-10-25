@@ -32678,16 +32678,10 @@ assemble_poynting(double time,	/* present time value */
 		  const int py_eqn,	/* eqn id and var id	*/
 		  const int py_var )
 {
-  int eqn, var, peqn, pvar, dim, p, b, w, i, j, status, light_eqn = 0;
+  int err, eqn, var, peqn, pvar, dim, p, b, w, i, j, status, light_eqn = 0;
 
   dbl P;		                /* Light Intensity	*/
   dbl grad_P, Psign = 0;		/* grad intensity */
-
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_R_struct; 
-  CONDUCTIVITY_DEPENDENCE_STRUCT *d_R = &d_R_struct;
-
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; 
-  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
 
   dbl alpha;				/* Acoustic Absorption */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_alpha_struct; 
@@ -32697,19 +32691,20 @@ assemble_poynting(double time,	/* present time value */
   //  dbl diff_a;
   dbl diff_b, diff_c, diff_d;
 
+  dbl advection=0, source=0, advection_b=0;
   /*
    * Galerkin weighting functions for i-th energy residuals
    * and some of their derivatives...
    */
 
-  dbl phi_i;
+  dbl phi_i, wt_func;
 
   /*
    * Interpolation functions for variables and some of their derivatives.
    */
 
   dbl phi_j;
-  dbl grad_phi_j[DIM];
+  dbl grad_phi_j[DIM], grad_phi_i[DIM];
 
   dbl h3;			/* Volume element (scale factors). */
   dbl dh3dmesh_bj;		/* Sensitivity to (b,j) mesh dof. */
@@ -32718,6 +32713,22 @@ assemble_poynting(double time,	/* present time value */
 
   dbl d_det_J_dmeshbj;			/* for specified (b,j) mesh dof */
   dbl wt;
+
+  const double *hsquared = pg_data->hsquared ;
+  const double *vcent = pg_data->v_avg; /* Average element velocity, which is the
+	  centroid velocity for Q2 and the average
+	  of the vertices for Q1. It comes from
+	  the routine "element_velocity." */
+
+/* SUPG variables */
+  dbl h_elem=0, h_elem_inv=0, h_elem_inv_deriv=0;
+  dbl d_wt_func;
+
+  double vconv[MAX_PDIM]; /*Calculated convection velocity */
+  double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
+  CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
+  CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
+
 
   /*   static char yo[] = "assemble_acoustic";*/
   status = 0;
@@ -32731,6 +32742,7 @@ assemble_poynting(double time,	/* present time value */
  */
   double svect[3]={0.,-1.,0.};
   double mucos=1.0;
+  double diff_const=1.0E-8;
 
   /*
    * Bail out fast if there's nothing to do...
@@ -32752,15 +32764,27 @@ assemble_poynting(double time,	/* present time value */
    * with temperature, spatial coordinates, and species concentration.
    */
 
-  /* CHECK FOR REMOVAL */
-  acoustic_impedance( d_R, time );
+      h_elem = 0.;
+      for ( p=0; p<dim; p++)
+	{ h_elem += vcent[p] * vcent[p] / hsquared[p]; }
+      h_elem = sqrt(h_elem)/2.;
+      if(h_elem == 0.)
+	{ h_elem_inv=0.; }
+      else
+	{ h_elem_inv=1./h_elem; }
 
-  /* CHECK FOR REMOVAL */
-  wave_number( d_k, time );
+/* get the convection velocity (it's different for arbitrary and
+   lagrangian meshes) */
+  if( cr->MeshMotion == ARBITRARY ||
+      cr->MeshMotion == LAGRANGIAN ||
+      cr->MeshMotion == DYNAMIC_LAGRANGIAN)
+    {
+      err = get_convection_velocity(vconv, vconv_old, d_vconv, dt, tt);
+      EH(err, "Error in calculating effective convection velocity");
+    }
+/* end Petrov-Galerkin addition */
 
   alpha = light_absorption( d_alpha, time );
-
-  /*acoustic_flux( q, d_q, time, py_eqn, py_var );*/
 
   switch(py_eqn)
    {
@@ -32775,6 +32799,7 @@ assemble_poynting(double time,	/* present time value */
     case R_LIGHT_INTD:
          light_eqn = 2;
          Psign = 0.;
+         mucos = 0.;
          break;
     default:
          EH(-1,"light intensity equation");
@@ -32809,7 +32834,26 @@ assemble_poynting(double time,	/* present time value */
             }
 #endif
 	  phi_i = bf[eqn]->phi[i];
+          wt_func = 0;
+	  for(p=0; p<dim; p++)
+            { wt_func += h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p]; }
 
+	  advection = 0.;
+	  source = -1.;
+	  if ( pd->e[eqn] & T_ADVECTION )
+	    {
+	      for ( p=0; p<dim; p++)
+		{
+		  grad_phi_i[p] = bf[var]->grad_phi[i][p];
+		  advection += wt_func*vconv[p]*fv->grad_poynt[light_eqn][p];
+	          advection += diff_const*grad_phi_i[p]*fv->grad_poynt[light_eqn][p];
+		}
+	      advection += wt_func*source;
+
+	      advection *= det_J * wt;
+	      advection *= h3;
+	      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+	    }
 	  diffusion = 0.;
 	  if ( pd->e[eqn] & T_DIFFUSION )
 	    {
@@ -32820,7 +32864,7 @@ assemble_poynting(double time,	/* present time value */
 	      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 	    }
 
-	  lec->R[peqn][i] += diffusion;
+	  lec->R[peqn][i] += diffusion + advection;
 	}
     }
 
@@ -32841,11 +32885,16 @@ assemble_poynting(double time,	/* present time value */
             {
 	      int xfem_active, extended_dof, base_interp, base_dof;
 	      xfem_dof_state( i, pd->i[eqn], ei->ielem_shape,
-                              &xfem_active, &extended_dof, &base_interp, &base_dof );
+                      &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      if ( extended_dof && !xfem_active ) continue;
             }
 #endif
 	  phi_i = bf[eqn]->phi[i];
+          wt_func = 0;
+	  for(p=0; p<dim; p++)
+             { wt_func += h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p]; }
+          for ( p=0; p<VIM; p++)
+		    { grad_phi_i[p] = bf[eqn]->grad_phi[i][p];}
 
 	  /*
 	   * Set up some preliminaries that are needed for the (a,i)
@@ -32868,6 +32917,19 @@ assemble_poynting(double time,	/* present time value */
 		      grad_phi_j[p] = bf[var]->grad_phi[j][p];
 		    }
 
+	          advection = 0.;
+	          if ( pd->e[eqn] & T_ADVECTION )
+	            {
+	             for ( p=0; p<dim; p++)
+		        {
+		         advection += wt_func*vconv[p]*grad_phi_j[p];
+	                 advection += diff_const*grad_phi_i[p]*grad_phi_j[p];
+		        }
+
+	             advection *= det_J * wt;
+	             advection *= h3;
+	             advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+	            }
 		  diffusion = 0.;
 		  if ( pd->e[eqn] & T_DIFFUSION )
 		    {
@@ -32881,7 +32943,7 @@ assemble_poynting(double time,	/* present time value */
 		      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += diffusion;
+		  lec->J[peqn][pvar][i][j] += diffusion + advection;
 		}
 	    }
 	  /*
@@ -32902,7 +32964,7 @@ assemble_poynting(double time,	/* present time value */
 
 		  if ( pd->e[eqn] & T_DIFFUSION )
 		    {
-			  diffusion = phi_i*d_alpha->T[j]*P;
+		      diffusion = phi_i*d_alpha->T[j]*P;
 		      diffusion *= det_J * wt;
 		      diffusion *= h3;
 		      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
@@ -32989,8 +33051,49 @@ assemble_poynting(double time,	/* present time value */
 		    }
 		}
 	    }
+	  /*
+	   * J_e_v
+	   */
+	  for ( b=0; b<dim; b++)
+	    {
+	      var = VELOCITY1+b;
+	      if ( pd->v[var] )
+	        {
+	         pvar = upd->vp[var];
+	         for ( j=0; j<ei->dof[var]; j++)
+		   {
+		    phi_j = bf[var]->phi[j];
 
-	}
+                    advection = 0; advection_b = 0;
+	            if ( pd->e[eqn] & T_ADVECTION )
+	               {
+	                for ( p=0; p<dim; p++)
+		         {
+		          advection += phi_i*phi_j*fv->grad_poynt[light_eqn][p];
+		         }
+
+	                advection *= det_J * wt;
+	                advection *= h3;
+	                advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+			d_wt_func = h_elem_inv*d_vconv->v[b][b][j]*grad_phi_i[b]
+			  + h_elem_inv_deriv * vconv[b] * grad_phi_i[b];
+
+			for(p=0;p<dim;p++)
+			 {
+		            advection_b += vconv[p]*fv->grad_poynt[light_eqn][p];
+			 }
+
+			advection_b *=  d_wt_func;
+			advection_b *= - det_J * wt;
+			advection_b *= h3;
+			advection_b *= pd->etm[eqn][(LOG2_ADVECTION)];
+
+		        lec->J[peqn][pvar][i][j] += advection + advection_b;
+	               }
+	           }
+	         }
+	     }
+         }
     }
 
   return(status);

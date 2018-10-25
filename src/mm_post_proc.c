@@ -268,6 +268,7 @@ int TFMP_LIQ_VELO = -1;
 int TFMP_INV_PECLET = -1;
 int TFMP_KRG    = -1;
 int LOG_CONF_MAP = -1;
+int VELO_SPEED = -1;
 
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
@@ -518,7 +519,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   double dTT_dcur_strain[MAX_PDIM][MAX_PDIM][MDE];
 
   /*  double elast_modulus;	*/
-  double speed, stream_grad;
+  double speed, stream_grad, velo_sqrd;
   double vconv[MAX_PDIM]; /*Calculated convection velocity */
   double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
@@ -820,6 +821,15 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     }
     local_post[MEAN_SHEAR] = 4. * pow(fabs(Dnn), 0.5);
     local_lumped[MEAN_SHEAR] = 1.;
+  }
+
+  if (VELO_SPEED != -1 && pd->e[R_MOMENTUM1] ){
+    velo_sqrd = 0.;
+    for (a = 0; a < VIM; a++) {       
+	velo_sqrd += SQUARE(fv->v[a]);
+        }
+    local_post[VELO_SPEED] = sqrt(velo_sqrd);
+    local_lumped[VELO_SPEED] = 1.;
   }
 
   if (PRESSURE_CONT != -1 && (pd->v[PRESSURE] || pd->v[TFMP_PRES]) &&
@@ -6660,6 +6670,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Error ZZ heat flux", &ERROR_ZZ_Q);
   iread = look_for_post_proc(ifp, "Error ZZ pressure", &ERROR_ZZ_P);
   iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &LOG_CONF_MAP);
+  iread = look_for_post_proc(ifp, "Velocity Magnitude", &VELO_SPEED);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
 
   /*
@@ -8596,6 +8607,24 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
   else
     {
       MEAN_SHEAR = -1;
+    }
+
+   if (VELO_SPEED != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "VELO_SPEED","[1]", "Velocity Magnitude",
+		   FALSE);
+       index++;
+       if (VELO_SPEED == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       VELO_SPEED = index_post;
+       index_post++;
+    }
+  else
+    {
+      VELO_SPEED = -1;
     }
 
    check = 0;

@@ -6737,7 +6737,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
     			  {
 			    for ( a=0; a<WIM; a++)
         	              {
-			        for ( b=0; b<WIM; b++)
+			        for ( b=0; b<VIM; b++)
             			   {
 			             for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
                 		       {
@@ -6757,7 +6757,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
     			 {
 			  for ( a=0; a<WIM; a++)
 			    {
-			      for ( b=0; b<WIM; b++)
+			      for ( b=0; b<VIM; b++)
 				{
 			gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
 		  	gamma_sens[a][b] = fv_sens->grad_v[a][b] + fv_sens->grad_v[b][a];
@@ -6850,7 +6850,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 
 			  for ( a=0; a<WIM; a++)
 			    {
-			      for ( b=0; b<WIM; b++)
+			      for ( b=0; b<VIM; b++)
 				{
 				  vs_sens[a][b] = 
 					mu*gamma_sens[a][b]-fv_sens->P*delta(a,b)
@@ -6869,7 +6869,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
      			 {
  			  efield_sqr = 0.0;
  			  efield_sqr_sens = 0.0;
- 			  for ( a=0; a<WIM; a++)
+ 			  for ( a=0; a<VIM; a++)
  			    {
  				  efield[a] = - fv->grad_V[a];
  				  efield_sens[a] = - fv_sens->grad_V[a];
@@ -6877,9 +6877,9 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
  				  efield_sqr_sens += 2.*efield[a]*efield_sens[a];
  			    }
  
- 			  for ( a=0; a<WIM; a++)
+ 			  for ( a=0; a<VIM; a++)
  			    {
- 			      for ( b=0; b<WIM; b++)
+ 			      for ( b=0; b<VIM; b++)
  				{
  				  es[a][b] = efield[a]*efield[b] 
                                             - 0.5*efield_sqr*delta(a,b);
@@ -6979,9 +6979,9 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
       printf("untested\n");
       exit(-1);
 #endif
-                for (j=0; j<WIM; j++)
+                for (j=0; j<VIM; j++)
                   {
-                  for (a=0; a<WIM; a++)
+                  for (a=0; a<VIM; a++)
                     {
             local_q += fv->snormal[j] * dq_gradT[j][a] * fv_sens->grad_T[a];
                     }
@@ -7235,7 +7235,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	      case FORCE_X:
 		if(cr->MeshMotion == ARBITRARY)
 		{
-		for ( a=0; a<WIM; a++)
+		for ( a=0; a<VIM; a++)
 		  {
                         local_q += ((vs_sens[0][a] + ves_sens[0][a])
 		   	    *fv->snormal[a] +normal_sens[a]*(vs[0][a]+ves[0][a]));
@@ -7262,7 +7262,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	      case FORCE_X_POS:
 		if(cr->MeshMotion == ARBITRARY)
 		{
-		for ( a=0; a<WIM; a++)
+		for ( a=0; a<VIM; a++)
 		  {
                         local_q += ((vs_sens[0][a] + ves_sens[0][a])
 				*fv->snormal[a]) ;
@@ -7289,7 +7289,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	      case FORCE_X_NEG:
 		if(cr->MeshMotion == ARBITRARY)
 		{
-		for ( a=0; a<WIM; a++)
+		for ( a=0; a<VIM; a++)
 		  {
                         local_q += ((vs_sens[0][a] + ves_sens[0][a])
 				*fv->snormal[a]) ;
@@ -7316,7 +7316,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	      case FORCE_Y:
 		if(cr->MeshMotion == ARBITRARY)
 		{
-		for ( a=0; a<WIM; a++)
+		for ( a=0; a<VIM; a++)
 		  {
                         local_q += ((vs_sens[1][a] + ves_sens[1][a])
 				*fv->snormal[a]);
@@ -7341,7 +7341,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	      case FORCE_Y_POS:
 		if(cr->MeshMotion == ARBITRARY)
 		{
-		for ( a=0; a<WIM; a++)
+		for ( a=0; a<VIM; a++)
 		  {
                         local_q += ((vs_sens[1][a] + ves_sens[1][a])
 				*fv->snormal[a]);
@@ -7368,7 +7368,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	      case FORCE_Y_NEG:
 		if(cr->MeshMotion == ARBITRARY)
 		{
-		for ( a=0; a<WIM; a++)
+		for ( a=0; a<VIM; a++)
 		  {
                         local_q += ((vs_sens[1][a] + ves_sens[1][a])
 				*fv->snormal[a]);
@@ -7397,7 +7397,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		{
 			if(pd->Num_Dim == 3)
 			{
-			for ( a=0; a<WIM; a++)
+			for ( a=0; a<VIM; a++)
 		  	   {
                         	local_q += ((vs_sens[2][a] + ves_sens[2][a])
 					*fv->snormal[a]);
@@ -7429,7 +7429,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		{
 			if(pd->Num_Dim == 3)
 			{
-			for ( a=0; a<WIM; a++)
+			for ( a=0; a<VIM; a++)
 		  	   {
                         	local_q += ((vs_sens[2][a] + ves_sens[2][a])
 					*fv->snormal[a]);
@@ -7463,7 +7463,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		{
 			if(pd->Num_Dim == 3)
 			{
-			for ( a=0; a<WIM; a++)
+			for ( a=0; a<VIM; a++)
 		  	   {
                         	local_q += ((vs_sens[2][a] + ves_sens[2][a])
 					*fv->snormal[a]);
@@ -7849,7 +7849,7 @@ load_fv_sens(void)
   int v;			/* variable type indicator */
   int i;			/* index */
   int p, q;			/* dimension indeces */
-  int dim, WIM;
+  int dim;
   int velodim;			/* Someday...we might have more velocity */
 				/* components than we have spatial dimensions */
 				/* these are the 2.5 dimensional problems.*/
@@ -7874,10 +7874,6 @@ load_fv_sens(void)
   stress_eqn_pointer(v_s);
 
   dim = ei->ielem_dim;
-  WIM = dim;
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
-    WIM = WIM+1;
 
   /*
    * Temperature...
@@ -8619,9 +8615,9 @@ load_fv_sens(void)
    * Velocity Gradient (tensor)...
    */
   
-  for ( p=0; p<WIM; p++)
+  for ( p=0; p<VIM; p++)
     {
-      for ( q=0; q<WIM; q++)
+      for ( q=0; q<VIM; q++)
 	{
 	  /* good default behavior */
 	  fv_sens->G[p][q] = 0.;
@@ -9005,9 +9001,9 @@ load_fv_grads_sens(void)
   v = VELOCITY1;
   if(pd->v[v])
     {
-      for ( p=0; p<WIM; p++)
+      for ( p=0; p<VIM; p++)
 	{
-	  for ( q=0; q<WIM; q++)
+	  for ( q=0; q<VIM; q++)
 	    {
 	      fv_sens->grad_v[p][q] = 0.;
 	      for ( r=0; r<WIM; r++)
@@ -9031,9 +9027,9 @@ load_fv_grads_sens(void)
   v = PVELOCITY1;
   if(pd->v[v])
     {
-      for ( p=0; p<WIM; p++)
+      for ( p=0; p<VIM; p++)
 	{
-	  for ( q=0; q<WIM; q++)
+	  for ( q=0; q<VIM; q++)
 	    {
 	      fv_sens->grad_pv[p][q] = 0.0;
 	      for ( r=0; r<WIM; r++)
@@ -9056,7 +9052,7 @@ load_fv_grads_sens(void)
   v = EXT_VELOCITY;
   if(pd->v[v])
     {
-      for ( p=0; p<WIM; p++)
+      for ( p=0; p<VIM; p++)
 	{
 	  fv_sens->grad_ext_v[p]= 0.0;
 	  for ( i=0; i<dofs; i++)
@@ -9192,7 +9188,7 @@ load_fv_grads_sens(void)
   if ( pd->v[v] )
     {
  
-      for ( p=0; p<WIM; p++)
+      for ( p=0; p<VIM; p++)
 	{
 	  fv_sens->div_v += fv_sens->grad_v[p][p];
 	}
@@ -9206,7 +9202,7 @@ load_fv_grads_sens(void)
   v = PVELOCITY1;
   if ( pd->v[v] )
     {
-      for ( p=0; p<WIM; p++)
+      for ( p=0; p<VIM; p++)
 	{
 	  fv_sens->div_pv += fv_sens->grad_pv[p][p];
 	}
