@@ -432,7 +432,7 @@ static int eig_driver(char which[], char bmat[], int iparam[], int mode,
       else {
         if (printproc > 1)
           printf("eig_driver ERROR: bad value of mode! %d\n", mode);
-          exit(-1);
+	exit(-1);
       }
 
          /*  (J-sM) vecx = rhs  */

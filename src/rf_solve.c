@@ -591,7 +591,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   if ( nAC > 0   )
   {
-    char name[10];
+    char name[20];
 
     for( i = 0 ; i < nAC ; i++ )
       {

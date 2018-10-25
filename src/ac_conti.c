@@ -256,7 +256,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
   if ( nAC > 0   )
     {
-      char name[10];
+      char name[20];
 
       for( i = 0 ; i < nAC ; i++ )
 	{

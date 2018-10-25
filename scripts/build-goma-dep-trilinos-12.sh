@@ -223,7 +223,7 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 "sparse.tar.gz" \
 "superlu_dist-5.1.3.tar.gz" \
 "y12m.tar.gz" \
-"trilinos-12.10.1-Source.tar.gz" \
+"Trilinos-trilinos-release-12-12-1.tar.gz" \
 "MUMPS_5.1.1.tar.gz" \
 "SuiteSparse-4.5.5.tar.gz" \
 "matio-1.5.10.tar.gz")
@@ -238,7 +238,7 @@ ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "1566d914d1035ac17b73fe9bc0eed02a" \
 "fdee368cba0e95cb0143b6d47915e7a1" \
 "SKIP" \
-"4f190a02e007077e0b5097301cda32c2" \
+"ecd4606fa332212433c98bf950a69cc7" \
 "f15c6b5dd8c71b1241004cd19818259d" \
 "0a5b38af0016f009409a9606d2f1b555" \
 "d3b6e9d24a04c56036ef57e8010c80f1")
@@ -256,7 +256,7 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
 "http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v5.1.3" \
 "http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz\\&filename=y12m%2Fy12m.f" \
-"http://trilinos.csbsju.edu/download/files/trilinos-12.10.1-Source.tar.gz" \
+"https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz" \
 "http://mumps.enseeiht.fr/MUMPS_5.1.1.tar.gz" \
 "http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.5.5.tar.gz" \
 "http://superb-dca2.dl.sourceforge.net/project/matio/matio/1.5.10/matio-1.5.10.tar.gz")
@@ -276,7 +276,7 @@ ARCHIVE_DIR_NAMES=("ARPACK" \
 "sparse" \
 "superlu_dist-5.1.3" \
 "y12m" \
-"trilinos-12.10.1-Source" \
+"Trilinos-trilinos-release-12-12-1" \
 "MUMPS_5.1.1" \
 "SuiteSparse" \
 "matio-1.5.10")
@@ -292,7 +292,6 @@ ARCHIVE_HOMEPAGES=("http://www.caam.rice.edu/software/ARPACK/" \
 "http://mumps.enseeiht.fr/" \
 "http://faculty.cse.tamu.edu/davis/suitesparse.html" \
 "https://sourceforge.net/projects/matio/")
-
 
 ARCHIVE_REAL_NAMES=("ARPACK96" \
 "HDF5" \
@@ -507,16 +506,16 @@ function setMathVars {
         USING_MKLS="OFF"
         #Add packages that otherwise come preinstalled in intel compiler.
         ARCHIVE_NAMES+=("blas-3.7.1.tgz" \
-        "lapack-3.7.1.tgz" \
+        "lapack-3.8.0.tar.gz" \
         "scalapack-2.0.2.tgz")
         ARCHIVE_MD5SUMS+=("cd132aea6f7055a49aa48ca0a61e7cd5" \
-        "dcdeeed73de152c4643ccc5b1aeb453c" \
+        "96591affdbf58c450d45c1daa540dbd2" \
         "2f75e600a2ba155ed9ce974a1c4b536f" )
         ARCHIVE_URLS+=("http://www.netlib.org/blas/blas-3.7.1.tgz" \
-        "http://www.netlib.org/lapack/lapack-3.7.1.tgz" \
+        "http://www.netlib.org/lapack/lapack-3.8.0.tar.gz" \
         "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz" )
         ARCHIVE_DIR_NAMES+=("BLAS-3.7.1" \
-        "lapack-3.7.1" \
+        "lapack-3.8.0" \
         "scalapack-2.0.2" )
         ARCHIVE_HOMEPAGES+=("http://www.netlib.org/blas/" \
         "http://www.netlib.org/lapack/" \
@@ -529,7 +528,7 @@ function setMathVars {
         BLAS_LIBRARY_NAME_ARG="-L${BLAS_LIBRARY_DIR} -lblas"
         BLAS_LIBRARY_NAME="blas"
         BLACS_LIBRARY_NAME="scalapack"
-        LAPACK_LIBRARY_DIR="${GOMA_LIB}/lapack-3.7.1"
+        LAPACK_LIBRARY_DIR="${GOMA_LIB}/lapack-3.8.0"
         LAPACK_LIBRARY_NAME_ARG="-L${LAPACK_LIBRARY_DIR} -llapack"
         LAPACK_LIBRARY_NAME="liblapack.a"
         SCALAPACK_LIBRARY_DIR="${GOMA_LIB}/scalapack-2.0.2"
@@ -1139,7 +1138,7 @@ fi
 
 if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     #make lapack
-    cd $GOMA_LIB/lapack-3.7.1
+    cd $LAPACK_LIBRARY_DIR
     if [ -e liblapack.a ]
     then
         echo "LAPACK already built"
@@ -1150,7 +1149,7 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
         make lapacklib -j$MAKE_JOBS cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI}
 #        cp lapack_LINUX.a liblapack.a
     fi
-    export LD_LIBRARY_PATH="${GOMA_LIB}/lapack-3.7.1:$LD_LIBRARY_PATH"
+    export LD_LIBRARY_PATH="${LAPACK_LIBRARY_DIR}:$LD_LIBRARY_PATH"
 fi
 
 #make sparse
@@ -1352,17 +1351,9 @@ EOF
 fi
 
 #make trilinos
-rm -rf $GOMA_LIB/trilinos-12.10.1-Temp
-mkdir $GOMA_LIB/trilinos-12.10.1-Temp
-cd $GOMA_LIB/trilinos-12.10.1-Temp
-
-# Allows building Trilinos with versions of netlib Lapack greater than 3.6.
-# THIS IS FIXED ON TRILINOS GIT. Updating Trilinos will make this unnecessary
-# more info https://groups.google.com/forum/#!msg/trilinos/K516c8ErQGg/ClsCNl6bDQAJ
-if [ "$MATH_LIBRARIES" == "netlib blas" ]; then
-    echo "$TRILINOS_EPETRA_LAPACK_PATCH" > trilepelapack.patch
-    patch $GOMA_LIB/trilinos-12.10.1-Source/packages/epetra/src/Epetra_LAPACK_wrappers.h < trilepelapack.patch
-fi
+rm -rf $GOMA_LIB/trilinos-12.12.1-Temp
+mkdir $GOMA_LIB/trilinos-12.12.1-Temp
+cd $GOMA_LIB/trilinos-12.12.1-Temp
 
 rm -f CMakeCache.txt
 
@@ -1370,9 +1361,9 @@ MPI_LIBS="-lmpi ${MPI_FORTRAN_LIB}"
 
 HDF5_LIBS="-L${GOMA_LIB}/hdf5-1.8.20/lib -lhdf5_hl -lhdf5 -lz -ldl"
 # Install directory
-TRILINOS_INSTALL=$GOMA_LIB/trilinos-12.10.1-Built
+TRILINOS_INSTALL=$GOMA_LIB/trilinos-12.12.1-Built
 
-if [ -e $GOMA_LIB/trilinos-12.10.1-Built/bin/aprepro ]; then
+if [ -e $GOMA_LIB/trilinos-12.12.1-Built/bin/aprepro ]; then
     echo "Trilinos is already built!"
 else
     cmake \
@@ -1426,6 +1417,7 @@ else
 -D LAPACK_LIBRARY_DIRS="${LAPACK_LIBRARY_DIR}" \
 -D LAPACK_LIBRARY_NAMES="${LAPACK_LIBRARY_NAME}" \
 -D TPL_ENABLE_BLAS:BOOL=ON \
+-DHAVE_EPETRA_LAPACK_GSSVD3:BOOL=ON \
 -D BLAS_LIBRARY_DIRS="${BLAS_LIBRARY_DIR}" \
 -D BLAS_LIBRARY_NAMES="${BLAS_LIBRARY_NAME}" \
 -D CMAKE_INSTALL_PREFIX:PATH=$TRILINOS_INSTALL \
@@ -1469,7 +1461,7 @@ else
 -D Amesos_ENABLE_UMFPACK:BOOL=ON \
 -D Amesos_ENABLE_MUMPS:BOOL=ON \
 $EXTRA_ARGS \
-$GOMA_LIB/trilinos-12.10.1-Source
+$GOMA_LIB/Trilinos-trilinos-release-12-12-1
 
 #    continue_check
     make -j$MAKE_JOBS

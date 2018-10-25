@@ -89,6 +89,8 @@
 #define DIM_NUM_SIDE_SETS			"num_side_sets_proc"
 #define DIM_NUM_SIDE_SETS_GLOBAL		"num_side_sets_global"
 #define DIM_NUM_UNIVERSE_NODES			"num_universe_nodes"
+#define DIM_LEN_SS_BLOCK_INDEX_GLOBAL           "len_ss_block_index_global"
+#define DIM_LEN_SS_BLOCK_LIST_GLOBAL            "len_ss_block_list_global"
 
 /*
  * netCDF Variables.
@@ -146,6 +148,10 @@
 #define VAR_SS_NUM_SIDES_GLOBAL			"ss_num_sides_global"
 #define VAR_SS_PROP_GLOBAL			"ss_prop_global"
 #define VAR_UNDEFINED_BASIC_EQNVAR_ID		"undefined_basic_eqnvar_id"
+
+#define VAR_SS_BLOCK_INDEX_GLOBAL               "ss_block_index_global"
+#define VAR_SS_BLOCK_LIST_GLOBAL                "ss_block_list_global"
+#define VAR_SS_INTERNAL_GLOBAL                  "ss_internal_global"
 
 /*
  * Some defaults describing the maximum problem sizes that were considered
@@ -251,6 +257,7 @@ struct Distributed_Processing_Information
 
   int *ns_node_index_global;	/* New! [num_node_sets_global] */
   int *ns_distfact_index_global;/* New! [num_node_sets_global] */
+  int *ss_internal_global;
 
   int *ns_distfact_list_index_global; /* New! - where to put distfacts from
 				       * this processor in the global list
@@ -328,6 +335,9 @@ struct Distributed_Processing_Information
   int undefined_basic_eqnvar_id; /* scalar - pad ends of the rectangular shaped
 				  * 2d arrays of node descriptions with these*/
 
+  int *ss_block_index_global;
+  int *ss_block_list_global;
+
 };
 
 typedef struct Distributed_Processing_Information Dpi;
@@ -380,6 +390,8 @@ struct Shadow_Identifiers
   int num_side_sets;
   int num_side_sets_global;
   int num_universe_nodes;
+  int len_ss_block_index_global;
+  int len_ss_block_list_global;
 
   /*
    * variables (arrays).
@@ -443,6 +455,11 @@ struct Shadow_Identifiers
   int ss_elem_index_global;
   int ss_elem_len_global;
   int ss_elem_list_index_global;
+
+  int ss_block_index_global;
+  int ss_block_list_global;
+  int ss_internal_global;
+
 
   int ss_id_global;		/* List of global side set identifiers. */
   int ss_index_global;		/* Global sideset INDEX for each local

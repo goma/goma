@@ -239,6 +239,7 @@ int TOTAL_STRESS23 = -1;       	/* sum over all modes for multi-mode models */
 int TOTAL_STRESS33 = -1;       	/* sum over all modes for multi-mode models */
 int USER_POST = -1;	       	/* a user defined function */
 int PP_Viscosity = -1;          /* Viscosity */
+int PP_FlowingLiquid_Viscosity = -1;          /* Flowing Liquid Viscosity - Porous Brinkman term */
 int PP_VolumeFractionGas = -1;  /* Volume fraction of gas in a foam or other two phase material */
 int ACOUSTIC_PRESSURE = -1;
 int ACOUSTIC_PHASE_ANGLE = -1;
@@ -772,6 +773,20 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     mu = viscosity(gn, NULL, NULL);
     local_post[PP_Viscosity] = mu;
     local_lumped[PP_Viscosity] = 1.0;
+  }
+
+  if ( PP_FlowingLiquid_Viscosity != -1 &&
+       pd->e[R_MOMENTUM1] ) {
+    if (mp->PorousMediaType == POROUS_BRINKMAN)
+      {
+       mu = flowing_liquid_viscosity(NULL);
+      }
+    else
+      {
+       mu = 0.0;
+      }
+    local_post[PP_FlowingLiquid_Viscosity] = mu;
+    local_lumped[PP_FlowingLiquid_Viscosity] = 1.0;
   }
 
   if (PP_VolumeFractionGas != -1 && pd->e[R_MOMENTUM1]) {
@@ -6586,7 +6601,7 @@ rd_post_process_specs(FILE *ifp,
   char file_name[MAX_CHAR_IN_INPUT];
   char optional_format[MAX_CHAR_IN_INPUT];
 
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char echo_file[MAX_CHAR_IN_INPUT]="\0";
   int elemBlock_id = -1;
 
@@ -6619,6 +6634,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Electric Field", &ELECTRIC_FIELD);
   iread = look_for_post_proc(ifp, "Electric Field Magnitude", &ELECTRIC_FIELD_MAG);
   iread = look_for_post_proc(ifp, "Viscosity", &PP_Viscosity);
+  iread = look_for_post_proc(ifp, "FlowingLiquid Viscosity", &PP_FlowingLiquid_Viscosity);
   iread = look_for_post_proc(ifp, "Volume Fraction of Gas Phase", &PP_VolumeFractionGas);
   iread = look_for_post_proc(ifp, "Density", &DENSITY);
   iread = look_for_post_proc(ifp, "Navier Stokes Residuals", &NS_RESIDUALS);
@@ -8093,7 +8109,7 @@ look_for_post_proc(FILE *ifp,	/* pointer to file                           */
 #endif
   char	input[MAX_CHAR_IN_INPUT];
   int iread;
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char echo_file[MAX_CHAR_IN_INPUT]="\0";
 
   strcpy(echo_file,Echo_Input_File);
@@ -8508,6 +8524,25 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
    else
      {
        PP_Viscosity = -1;
+     }
+
+
+   if (PP_FlowingLiquid_Viscosity != -1 &&
+       Num_Var_In_Type[R_MOMENTUM1] )
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "FLOW_MU","[1]", "FlowingLiquid Viscosity", FALSE);
+       index++;
+       if (PP_FlowingLiquid_Viscosity == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       PP_FlowingLiquid_Viscosity = index_post;
+       index_post++;
+     }
+   else
+     {
+       PP_FlowingLiquid_Viscosity = -1;
      }
 
   if (PP_VolumeFractionGas != -1 && Num_Var_In_Type[R_MOMENTUM1])

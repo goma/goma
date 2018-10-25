@@ -26,6 +26,8 @@
 #define EXTERN extern
 #endif
 
+EXTERN int * find_ss_internal_boundary(Exo_DB *e);
+
 EXTERN int find_mat_number	/* rd_mesh.c */
 PROTO((const int ,		/* ielem - element number (0 based) */
        const Exo_DB *));	/* exo - the whole mesh */
@@ -44,7 +46,9 @@ PROTO((Exo_DB *,		/* ptr to EXOII mesh datastructure */
        Dpi    *));		/* ptr to distributed processing info d.s. */
 
 EXTERN void setup_old_exo	/* rd_mesh.c */
-PROTO((Exo_DB *));		/* ptr to EXODUS II mesh database */
+PROTO((Exo_DB *,		/* ptr to EXODUS II mesh database */
+       Dpi *,
+       int));
 
 EXTERN void check_sidesets	/* rd_mesh.c */
 PROTO((Exo_DB *,		/* EXODUS II FE db has all mesh info    (in) */

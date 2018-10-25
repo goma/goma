@@ -44,7 +44,8 @@ static int proc_ident PROTO((const void *, const void *));
  * node-node connectivity list.
  */
 
-static char err_msg[MAX_CHAR_ERR_MSG];
+// Larger error message size in case we need to echo a system command with a failure.
+static char err_msg[MAX_CHAR_ERR_MSG*2];
 static Spfrtn sr=0;
 
 /*

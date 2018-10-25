@@ -727,7 +727,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
   zero_base(mono);
 
-  setup_old_exo(mono);
+  setup_old_exo(mono, NULL, 1);
 
 
   /*
@@ -1573,6 +1573,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   ebi              = (int *) smalloc(neb*SZ_INT);
 
   new_proc_eb_ptr  = (int *) smalloc((neb+1)*SZ_INT);
+
+  int * ss_internal = find_ss_internal_boundary(mono);
 
   for ( s=0; s<num_pieces; s++)
     {
@@ -4061,6 +4063,60 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	    }
 	}
 
+      D->ss_block_index_global = NULL;
+      D->ss_block_list_global = NULL;
+      if (mono->num_side_sets > 0)
+        {
+          D->ss_block_index_global =
+              calloc(mono->num_side_sets + 1, sizeof(int));
+          D->ss_block_list_global =
+              calloc(MAX_MAT_PER_SS * mono->num_side_sets, sizeof(int));
+
+          // populate list of blocks associated to side sets
+
+          int ss_block_index = 0;
+          int ss_id;
+          for (ss_id = 0; ss_id < mono->num_side_sets; ss_id++)
+            {
+              int ss_start = ss_block_index;
+              int elem_index;
+              for (elem_index = mono->ss_elem_index[ss_id];
+                   elem_index <
+                   (mono->ss_elem_index[ss_id] + mono->ss_num_sides[ss_id]);
+                   elem_index++)
+                {
+                  int elem = mono->ss_elem_list[elem_index];
+                  int block = find_elemblock_index(elem, mono);
+                  if (block == -1)
+                    {
+                      EH(-1, "Element block not found");
+                    }
+
+                  // check if block is in array for ss already
+                  int known = 0;
+                  int i;
+                  for (i = ss_start; i < ss_block_index; i++)
+                    {
+                      if (D->ss_block_list_global[i] == block)
+                        {
+                          known = 1;
+                        }
+                    }
+
+                  if (!known)
+                    {
+                      D->ss_block_list_global[ss_block_index] = block;
+                      ss_block_index++;
+                    }
+                }
+
+              D->ss_block_index_global[ss_id] = ss_start;
+              D->ss_block_index_global[ss_id + 1] = ss_block_index;
+            }
+        }
+
+      D->ss_internal_global = ss_internal;
+
 #ifdef DEBUG
       for ( i=0; i<mono->eb_num_props; i++)
 	{
@@ -4516,14 +4572,18 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       free(D->global_node_description[0]);
       free(D->eb_elem_type_global[0]);
+
+      D->ss_internal_global = NULL; // skip freeing ss_internal
       free_dpi(D);
 
     } /* set loop */
+
 
   free(proc_eb_id);
   free(proc_eb_ptr);
   free(ebi);
   free(new_proc_eb_ptr);
+  free(ss_internal);
 
   if ( mono->num_dim > 0 )
     {
@@ -4858,17 +4918,12 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
   free(Proc_SS_Node_Count);
   free(Proc_SS_Node_Pointers);
-  free(SS_Internal_Boundary);
   free(mono->eb_elem_itype);
 
   free(Coor);
   Coor = NULL;
   free(Matilda);
   Matilda = NULL;
-
-  for ( i=0; i<MAX_MAT_PER_SS+1; i++) {
-    free(ss_to_blks[i]);
-  }
 
   free_element_blocks(mono);
 

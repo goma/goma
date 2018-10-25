@@ -83,7 +83,7 @@ struct  Command_line_command
   int    i_val;
   double r_val;
 };
-char aprepro_command[256];
+char aprepro_command[1024];
 
 #endif
 
