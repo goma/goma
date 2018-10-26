@@ -6097,6 +6097,7 @@ assemble_phase_function ( double time_value,
       return(status);
     }
   
+  memset(grad_II_phi_i, 0, sizeof(double)*DIM);
 
   /*
    * Calculate lubrication velocity for direct integration
