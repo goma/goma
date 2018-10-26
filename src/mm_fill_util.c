@@ -788,6 +788,7 @@ calc_surf_tangent (const int  ielem, /* current element number               */
      */
     fv->stangent[0][0] = -fv->snormal[1];
     fv->stangent[0][1] =  fv->snormal[0];
+    fv->stangent[1][2] =  1.0;
     for (j=0 ; j < nodes_per_elem; j++) {
       fv->dstangent_dx[0][0][0][j]=0.;
       fv->dstangent_dx[0][0][1][j]=0.;
