@@ -996,6 +996,10 @@ update_MT_parameter(double lambda, /* Parameter value */
       mp_glob[mn]->u_lubsource_function_constants[2] = lambda;
       break;
 
+    case TAGC_HEAT_SOURCE_0:
+      mp_glob[mn]->u_heat_source[0] = lambda;
+      break;
+
     default: 
       printf("\n\t Error: Invalid Material Property Tag %d\n", mpr);
       exit(0);
@@ -1794,6 +1798,10 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
 
     case TAGC_LUB_SOURCE_2:
       *lambda = mp_glob[mn]->u_lubsource_function_constants[2];
+      break;
+
+    case TAGC_HEAT_SOURCE_0:
+      *lambda = mp_glob[mn]->u_heat_source[0];
       break;
 
     default: 

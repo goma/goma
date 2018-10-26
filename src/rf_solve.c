@@ -407,7 +407,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 #ifdef RESET_TRANSIENT_RELAXATION_PLEASE
   double damp_factor_org[2]={damp_factor1,damp_factor2};
   double toler_org[3]={custom_tol1,custom_tol2,custom_tol3};
-
 #endif
   /*
    * Other local variables...
@@ -458,6 +457,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 #else
   int relax_bit = FALSE;	
 #endif
+  int no_relax_retry = 8;
 
   static const char yo[]="solve_problem"; /* So my name is in a string.        */
 
@@ -2398,9 +2398,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
        */
       if (nt > 0)
       {
-              if (converged && (nt - last_renorm_nt) > 0 )
-              { damp_factor2 = -1.;  damp_factor1 = 1.0;}
-              else
+              if (converged)
+              { damp_factor2 = -1.;  damp_factor1 = 1.0; }
+              else if (nt < no_relax_retry)
               {
                damp_factor2 = damp_factor_org[1];
                damp_factor1 = damp_factor_org[0];
@@ -3074,8 +3074,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	  
       else /* not converged or unsuccessful time step */
       {
-/* Set bit TRUE in next line to enable retries for failed first timestep*/
-        if(relax_bit && nt == 0 && n < 5) {
+/*fprintf(stderr,"conv succ %d %d %d\n",converged, success_dt,no_relax_retry);*/
+        if(relax_bit && ((n-nt) < no_relax_retry)  ) {
+	     success_dt = TRUE;
              if(inewton == -1)        {
  	DPRINTF(stderr,"\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
                   if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&

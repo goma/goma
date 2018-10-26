@@ -118,7 +118,7 @@ evaluate_flux(
   int err;			/* temp variable to hold diagnostic flags. */
   int ielem=-1;                 /* element number */
   int ip_total, ielem_type, gnn, ledof, matIndex;
-  int num_local_nodes, iconnect_ptr, dim, ielem_dim, current_id;
+  int num_local_nodes, iconnect_ptr, dim, ielem_dim, current_id, WIM;
   int nset_id, sset_id;
   double Tract[DIM], Torque[DIM], local_Torque[DIM];
   double Mag_real[DIM], Mag_imag[DIM], E_real[DIM], E_imag[DIM];
@@ -261,6 +261,12 @@ evaluate_flux(
     base_normal[a] = 0;
   }
   memset( Torque, 0, sizeof(double)*DIM );
+
+  dim   = pd_glob[0]->Num_Dim;
+  WIM = dim;
+  if (pd->CoordinateSystem == SWIRLING ||
+      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+    WIM = WIM+1;
 
   /* load eqn and variable number in tensor form */
   err = stress_eqn_pointer(v_s);
@@ -555,7 +561,6 @@ evaluate_flux(
 
 /**   get solid stresses  **/
 
-		  dim   = pd_glob[0]->Num_Dim;
 		  
 		  if(pd->e[R_MESH1] && cr->MeshMotion != ARBITRARY)
 		    {
@@ -703,9 +708,9 @@ evaluate_flux(
                               {
                                 for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
                                   {
-			            for (p=0; p<VIM; p++)
+			            for (p=0; p<WIM; p++)
 			              {
-			                for (r=0; r<VIM; r++)
+			                for (r=0; r<WIM; r++)
 				          {
 				            log_c[p][r] = fv->S[ve_mode][p][r];
 			                  }
@@ -716,9 +721,9 @@ evaluate_flux(
 				      {
 				        lambda = ve[ve_mode]->time_const;
 			              }
-				    for (a=0; a<VIM; a++)
+				    for (a=0; a<WIM; a++)
 			              {
-				        for (b=0; b<VIM; b++)
+				        for (b=0; b<WIM; b++)
 				          {
 				            ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
 					  }
@@ -727,9 +732,9 @@ evaluate_flux(
 			      }
 		            else
 		              {
-			        for ( a=0; a<VIM; a++)
+			        for ( a=0; a<WIM; a++)
         	                  {
-			            for ( b=0; b<VIM; b++)
+			            for ( b=0; b<WIM; b++)
             			       {
 			                 for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
                 		           {
@@ -748,9 +753,9 @@ evaluate_flux(
   			memset( gamma, 0, sizeof(dbl)*DIM*DIM);
 		      if(cr->MeshMotion == ARBITRARY)
     			 {
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
-			      for ( b=0; b<VIM; b++)
+			      for ( b=0; b<WIM; b++)
 				{
 				  gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
 				}
@@ -758,9 +763,9 @@ evaluate_flux(
 			  
 			  mu = viscosity(gn, gamma, d_mu);
 
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
-			      for ( b=0; b<VIM; b++)
+			      for ( b=0; b<WIM; b++)
 				{
 				  vs[a][b] = mu*gamma[a][b]-fv->P*delta(a,b);
 				}
@@ -768,9 +773,9 @@ evaluate_flux(
                           if(profile_flag & 1)
                              {
    				gamma_dot = 0.;
-   				for ( a=0; a<VIM; a++)
+   				for ( a=0; a<WIM; a++)
      				   {
-       					for ( b=0; b<VIM; b++)
+       					for ( b=0; b<WIM; b++)
          				  {
            				   gamma_dot +=  gamma[a][b] * gamma[b][a];
          				  }
@@ -1034,7 +1039,7 @@ evaluate_flux(
                       break;
 
 		    case VOLUME_FLUX:
-                      for(a=0; a<VIM; a++)
+                      for(a=0; a<WIM; a++)
                         {
 			  if (cr->MeshMotion == ARBITRARY)
 			    local_q +=  fv->snormal[a]*( fv->v[a]-x_dot[a] ) ;
@@ -1094,7 +1099,7 @@ evaluate_flux(
 		    case PVELOCITY1:
 		    case PVELOCITY2:
 		    case PVELOCITY3:
-                      for(a=0; a<VIM; a++)
+                      for(a=0; a<WIM; a++)
                         {
                           local_q +=  fv->snormal[a]*fv->pv[a] ;
                         }
@@ -1352,9 +1357,9 @@ evaluate_flux(
 		      if(pd->CoordinateSystem == SWIRLING || 
 			 pd->CoordinateSystem == CYLINDRICAL)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
-			      for ( b=0; b<VIM; b++)
+			      for ( b=0; b<WIM; b++)
 				{
 			      /*
 			       *  note that for CYLINDRICAL and SWIRLING coordinate systems
@@ -1371,7 +1376,7 @@ evaluate_flux(
 			}
 		      else if( pd->CoordinateSystem == CARTESIAN ) 
 			{
-			  if( VIM == 2 ) 
+			  if( WIM == 2 ) 
 			    {
 			      fv->x[2] = 0.0;
 			      fv->snormal[2] = 0.0;
@@ -1440,9 +1445,9 @@ evaluate_flux(
 		    case FORCE_NORMAL:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
-			      for ( b=0; b<VIM; b++)
+			      for ( b=0; b<WIM; b++)
 				{
                                   local_q += (fv->snormal[a]*
                         		(vs[a][b]+ves[a][b] )*fv->snormal[b]);
@@ -1471,9 +1476,9 @@ evaluate_flux(
 		      
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
-			      for ( b=0; b<VIM; b++)
+			      for ( b=0; b<WIM; b++)
 				{
                                   local_q += (fv->stangent[0][a]*
 					(vs[a][b] + ves[a][b])*fv->snormal[b]);
@@ -1502,11 +1507,11 @@ evaluate_flux(
 		
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  if(pd->Num_Dim == 3)
+			  if(pd->Num_Dim == 3 || upd->CoordinateSystem == SWIRLING   )
 			    {
-			      for ( a=0; a<VIM; a++)
+			      for ( a=0; a<WIM; a++)
 				{
-				  for ( b=0; b<VIM; b++)
+				  for ( b=0; b<WIM; b++)
 				    {
                                       local_q += (fv->stangent[1][a]
 						*(vs[a][b] + ves[a][b])
@@ -1540,7 +1545,7 @@ evaluate_flux(
 		    case FORCE_X:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
 			      local_q += ((vs[0][a] + ves[0][a] ) *fv->snormal[a]) ;
 			      local_qconv += ( -rho*(fv->v[0]-x_dot[0])
@@ -1562,7 +1567,7 @@ evaluate_flux(
 		    case FORCE_X_POS:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
                               local_q += ((vs[0][a] + ves[0][a] ) *fv->snormal[a]) ;
                               local_qconv += ( -rho*(fv->v[0]-x_dot[0])
@@ -1586,7 +1591,7 @@ evaluate_flux(
 		    case FORCE_X_NEG:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
                               local_q += ((vs[0][a] + ves[0][a] ) *fv->snormal[a]) ;
                               local_qconv += ( -rho*(fv->v[0]-x_dot[0])
@@ -1610,7 +1615,7 @@ evaluate_flux(
 		    case FORCE_Y:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
                              local_q += ((vs[1][a] + ves[1][a]) *fv->snormal[a]);
                              local_qconv += ( -rho*(fv->v[1]-x_dot[1])
@@ -1632,7 +1637,7 @@ evaluate_flux(
 		    case FORCE_Y_POS:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
                              local_q += ((vs[1][a] + ves[1][a]) *fv->snormal[a]);
                              local_qconv += ( -rho*(fv->v[1]-x_dot[1])
@@ -1656,7 +1661,7 @@ evaluate_flux(
 		    case FORCE_Y_NEG:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
                              local_q += ((vs[1][a] + ves[1][a]) *fv->snormal[a]);
                              local_qconv += ( -rho*(fv->v[1]-x_dot[1])
@@ -1682,7 +1687,7 @@ evaluate_flux(
 			{
 			  if(pd->Num_Dim == 3)
 			    {
-			      for ( a=0; a<VIM; a++)
+			      for ( a=0; a<WIM; a++)
 				{
                                   local_q += ((vs[2][a] + ves[2][a]) *fv->snormal[a]);
 
@@ -1714,7 +1719,7 @@ evaluate_flux(
 			{
 			  if(pd->Num_Dim == 3)
 			    {
-			      for ( a=0; a<VIM; a++)
+			      for ( a=0; a<WIM; a++)
 				{
                                   local_q += ((vs[2][a] + ves[2][a]) *fv->snormal[a]);
 
@@ -1748,7 +1753,7 @@ evaluate_flux(
 			{
 			  if(pd->Num_Dim == 3)
 			    {
-			      for ( a=0; a<VIM; a++)
+			      for ( a=0; a<WIM; a++)
 				{
                                   local_q += ((vs[2][a] + ves[2][a]) *fv->snormal[a]);
 
@@ -1930,9 +1935,9 @@ evaluate_flux(
 		      /* This is the energy dissipated at the surface due to surface tension 
 		       *  See Batchelor, JFM, 1970 for details 
 		       */
-		      for( a=0; a<VIM ; a++)
+		      for( a=0; a<WIM ; a++)
 			{
-			  for( b=0 ; b<VIM ; b++)
+			  for( b=0 ; b<WIM ; b++)
 			    {
 			      local_q += mp->surface_tension * 
                                        ( fv->grad_v[a][b]*( delta(a,b)
@@ -2152,7 +2157,7 @@ evaluate_flux(
         	}
                        }
 
-         		for (a=0; a<VIM; a++)
+         		for (a=0; a<WIM; a++)
              			{
 				local_q -= fv->snormal[a]*lsi->normal[a];
 				local_qconv += SQUARE(fv->v[a] - x_dot[a]);
@@ -2359,7 +2364,7 @@ evaluate_flux(
     			  {
 			    for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
                 	       {
-			         for ( b=0; b<VIM; b++)
+			         for ( b=0; b<WIM; b++)
             			   {
 				      var = v_s[ve_mode][dir][b];
 				      for(j=0 ; j < ei->dof[var]; j++)
@@ -2497,9 +2502,9 @@ evaluate_flux(
 				    {
 				      d_term = d_term1 = 0.0;
 
-				      for ( a=0; a<VIM; a++)
+				      for ( a=0; a<WIM; a++)
 					{
-					  for ( b=0; b<VIM; b++)
+					  for ( b=0; b<WIM; b++)
 					    {
 					      d_term  += weight*det *fv->snormal[a]*fv->snormal[b]*
 						        ( mu*( bf[var]->grad_phi_e[j][p][a][b] + bf[var]->grad_phi_e[j][p][b][a] ) +
@@ -2542,9 +2547,9 @@ evaluate_flux(
 				    {
 				      d_term = d_term1 = d_term2 = d_term3 = 0.0;
 
-				      for( a=0; a < VIM; a++)
+				      for( a=0; a < WIM; a++)
 					{
-					  for(b=0 ; b<VIM; b++)
+					  for(b=0 ; b<WIM; b++)
 					    {
 					      d_term += weight * det *fv->snormal[a]*fv->snormal[b]*
 						        (mu* ( fv->d_grad_v_dmesh[a][b][p][j] + fv->d_grad_v_dmesh[b][a][p][j]) + 
@@ -2616,7 +2621,7 @@ evaluate_flux(
     			  {
 			    for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
                 	       {
-			         for ( b=0; b<VIM; b++)
+			         for ( b=0; b<WIM; b++)
             			   {
 				     for( a=0; a < dim; a++)
 				       {
@@ -2770,9 +2775,9 @@ evaluate_flux(
 				    {
 				      d_term = d_term1 = 0.0;
 
-				      for ( a=0; a<VIM; a++)
+				      for ( a=0; a<WIM; a++)
 					{
-					  for ( b=0; b<VIM; b++)
+					  for ( b=0; b<WIM; b++)
 					    {
 					      d_term  += weight*det *fv->stangent[dir][a]*fv->snormal[b]*
 						        ( mu*( bf[var]->grad_phi_e[j][p][a][b] + bf[var]->grad_phi_e[j][p][b][a] ) +
@@ -2873,7 +2878,7 @@ evaluate_flux(
     			  {
 			    for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
                 	       {
-			         for ( b=0; b<VIM; b++)
+			         for ( b=0; b<WIM; b++)
             			   {
 				     for( a=0; a < dim; a++)
 				       {
@@ -3000,7 +3005,7 @@ evaluate_flux(
 				    {
 				      d_term = d_term1 = 0.0;
 
-				      for ( a=0; a<VIM; a++)
+				      for ( a=0; a<WIM; a++)
 					{
 					  d_term += weight*det*fv->snormal[a] * ( bf[var]->phi[j]*delta(p,a) ) ;
 					}
@@ -5044,18 +5049,18 @@ compute_volume_integrand(const int quantity, const int elem,
     }
   else
     {
-	for( p=0; p<VIM; p++)
+	for( p=0; p<WIM; p++)
 	  {
-	    for( q=0; q<VIM; q++)
+	    for( q=0; q<WIM; q++)
 	      {
 		gamma_dot[p][q] = fv->grad_v[p][q] + fv->grad_v[q][p];
 	      }
 	  }
 
 	mu = viscosity( gn, gamma_dot, NULL);
-	for( p=0; p<VIM; p++)
+	for( p=0; p<WIM; p++)
 	  {
-	    for( q=0; q<VIM; q++)
+	    for( q=0; q<WIM; q++)
 	      {
 		vs[p][q] = mu*gamma_dot[p][q] - fv->P*delta(p,q);
 	      }
@@ -5067,9 +5072,9 @@ compute_volume_integrand(const int quantity, const int elem,
   	memset( ves, 0, sizeof(dbl)*DIM*DIM);
   	if ( pd->v[POLYMER_STRESS11] )
     	  {
-	    for ( p=0; p<VIM; p++)
+	    for ( p=0; p<WIM; p++)
                {
-	        for ( q=0; q<VIM; q++)
+	        for ( q=0; q<WIM; q++)
         	   {
 	             for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
         	       {
@@ -5080,7 +5085,7 @@ compute_volume_integrand(const int quantity, const int elem,
     	}
 
 
-	for(p=0; p<VIM; p++)
+	for(p=0; p<WIM; p++)
 	  {
 	    for ( q=0; q<WIM; q++)
 	      {
@@ -5137,17 +5142,17 @@ compute_volume_integrand(const int quantity, const int elem,
 	
 	double gamma_dot[DIM][DIM], II=0.0 ;
 
-	for( p=0; p<VIM; p++)
+	for( p=0; p<WIM; p++)
 	  {
-	    for( q=0; q<VIM; q++)
+	    for( q=0; q<WIM; q++)
 	      {
 		gamma_dot[p][q] = fv->grad_v[p][q] + fv->grad_v[q][p];
 	      }
 	  }
 
-	for( p=0; p<VIM; p++)
+	for( p=0; p<WIM; p++)
 	  {
-	    for( q=0; q<VIM; q++)
+	    for( q=0; q<WIM; q++)
 	      {
 		II   += gamma_dot[p][q]*gamma_dot[q][p];
 	      }
@@ -5456,9 +5461,9 @@ compute_volume_integrand(const int quantity, const int elem,
 	  }
 			       
 
-	for( p=0; p<VIM; p++)
+	for( p=0; p<WIM; p++)
 	  {
-	    for( q=0; q<VIM; q++)
+	    for( q=0; q<WIM; q++)
 	      {
 		gamma_dot[p][q] = fv->grad_v[p][q] + fv->grad_v[q][p];
 	      }
@@ -6241,7 +6246,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   double dTT_dcur_strain[MAX_PDIM][MAX_PDIM][MDE];
   double TT_sens[MAX_PDIM][MAX_PDIM];
   double elast_modulus;
-  int dim, velodim;
+  int dim, WIM;
 
   double es[MAX_PDIM][MAX_PDIM], efield[MAX_PDIM];	/* electric stress */
   double efield_sqr;				/* efield magnitude squared  */
@@ -6305,6 +6310,11 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   memset( Torque, 0, sizeof(double)*DIM );
   memset(TT_sens, 0, sizeof(double) * MAX_PDIM * MAX_PDIM);
 
+  dim   = pd_glob[0]->Num_Dim;
+  WIM = dim;
+  if (pd->CoordinateSystem == SWIRLING ||
+      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+    WIM = WIM+1;
   /* load eqn and variable number in tensor form */
   err = stress_eqn_pointer(v_s);
   af->Assemble_Jacobian = TRUE;
@@ -6725,7 +6735,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   			memset( ves, 0, sizeof(dbl)*DIM*DIM);
   			if ( pd->v[POLYMER_STRESS11] )
     			  {
-			    for ( a=0; a<VIM; a++)
+			    for ( a=0; a<WIM; a++)
         	              {
 			        for ( b=0; b<VIM; b++)
             			   {
@@ -6745,7 +6755,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		 */
 		      if(cr->MeshMotion == ARBITRARY)
     			 {
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
 			      for ( b=0; b<VIM; b++)
 				{
@@ -6770,12 +6780,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		
 		/*  velocity  */
 
-  			velodim = dim;	
-  			if(pd->CoordinateSystem == SWIRLING ||
-			     pd->CoordinateSystem == PROJECTED_CARTESIAN)
-    			velodim = dim + 1;
-
-			for ( a=0; a<velodim; a++)
+			for ( a=0; a<WIM; a++)
     			  {
       			   v = VELOCITY1 + a;
       			     if ( pd->v[v] )
@@ -6843,7 +6848,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
  *      end of material property sensitivity pre-calcs
  */
 
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
 			      for ( b=0; b<VIM; b++)
 				{
@@ -6987,7 +6992,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                 break;
 
 	      case VOLUME_FLUX:
-                for(j=0; j<VIM; j++)
+                for(j=0; j<WIM; j++)
                   {
 			  if (cr->MeshMotion == ARBITRARY)
                     local_q += ( fv->snormal[j]*(fv_sens->v[j]-x_dot[j])
@@ -7005,7 +7010,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	      case PVELOCITY1:
 	      case PVELOCITY2:
 	      case PVELOCITY3:
-                for(j=0; j<VIM; j++)
+                for(j=0; j<WIM; j++)
                   {
                     local_q += fv->snormal[j]*fv_sens->pv[j]
                                + normal_sens[j]*fv->pv[j];
@@ -7031,7 +7036,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		break;
 
 	      case SPECIES_FLUX:
-                for(j=0; j<VIM; j++)
+                for(j=0; j<WIM; j++)
                   {
                     local_q += ( mp->diffusivity[species_id]*(
                           fv->snormal[j]*fv_sens->grad_c[species_id][j]
@@ -7053,9 +7058,9 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		if(pd->CoordinateSystem == SWIRLING || 
 		   pd->CoordinateSystem == CYLINDRICAL)
 		  {
-		    for ( a=0; a<VIM; a++)
+		    for ( a=0; a<WIM; a++)
 		      {
-			for ( b=0; b<VIM; b++)
+			for ( b=0; b<WIM; b++)
 			  {
 			/*
 			 *  note that for CYLINDRICAL and SWIRLING coordinate systems
@@ -7073,7 +7078,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		  }
 		else if( pd->CoordinateSystem == CARTESIAN ) 
 		  {
-                    if( VIM == 2 ) 
+                    if( WIM == 2 ) 
                        {
                          fv->x[2] = 0.0;
                          fv->snormal[2] = 0.0;
@@ -7123,9 +7128,9 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
       case FORCE_NORMAL:
 		if(cr->MeshMotion == ARBITRARY)
 		{
-                for ( a=0; a<VIM; a++)
+                for ( a=0; a<WIM; a++)
                   {
-                    for ( b=0; b<VIM; b++)
+                    for ( b=0; b<WIM; b++)
                       {
                 local_q += (fv->snormal[a]*
 			(vs_sens[a][b] +ves_sens[a][b])
@@ -7161,9 +7166,9 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 
 		if(cr->MeshMotion == ARBITRARY)
 		{
-		for ( a=0; a<VIM; a++)
+		for ( a=0; a<WIM; a++)
 		  {
-		    for ( b=0; b<VIM; b++)
+		    for ( b=0; b<WIM; b++)
 		      {
                         local_q += (fv->stangent[0][a]*(vs_sens[a][b]
 				+ves_sens[a][b])*fv->snormal[b]);
@@ -7193,11 +7198,11 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 
 		if(cr->MeshMotion == ARBITRARY)
 		{
-		  if(pd->Num_Dim == 3)
+		  if(pd->Num_Dim == 3 || upd->CoordinateSystem == SWIRLING   )
 		    {
-                for ( a=0; a<VIM; a++)
+                for ( a=0; a<WIM; a++)
                   {
-                    for ( b=0; b<VIM; b++)
+                    for ( b=0; b<WIM; b++)
                       {
                         local_q += ( fv->stangent[1][a]*(vs_sens[a][b]
 					+ves_sens[a][b])*fv->snormal[b]);
@@ -8826,10 +8831,14 @@ load_fv_grads_sens(void)
   int dofs;			/* degrees of freedom for a var in the elem */
   int w;			/* concentration species counter */
   const int dim = pd->Num_Dim;
-  int status;
+  int status, WIM;
   int mode;
 
   status = 0;
+  WIM = dim;
+  if (pd->CoordinateSystem == SWIRLING ||
+      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+    WIM = WIM+1;
 
   /*
    * grad(T)
@@ -8997,7 +9006,7 @@ load_fv_grads_sens(void)
 	  for ( q=0; q<VIM; q++)
 	    {
 	      fv_sens->grad_v[p][q] = 0.;
-	      for ( r=0; r<VIM; r++)
+	      for ( r=0; r<WIM; r++)
 		{
 		  for ( i=0; i<dofs; i++)
 		    {
@@ -9023,7 +9032,7 @@ load_fv_grads_sens(void)
 	  for ( q=0; q<VIM; q++)
 	    {
 	      fv_sens->grad_pv[p][q] = 0.0;
-	      for ( r=0; r<VIM; r++)
+	      for ( r=0; r<WIM; r++)
 		{
 		  for ( i=0; i<dofs; i++)
 		    {
@@ -9160,11 +9169,11 @@ load_fv_grads_sens(void)
   dofs = ei->dof[VELOCITY1];
   if(pd->v[v])
     {
-      for(p = 0; p < VIM; p++)
+      for(p = 0; p < WIM; p++)
 	{
 	  fv_sens->curl_v[p] = 0.0;
 	  for(i = 0; i < dofs; i++)
-	    for(a = 0; a < VIM; a++)
+	    for(a = 0; a < WIM; a++)
 	     fv_sens->curl_v[p] += *esp_old->v[a][i] * bf[v]->curl_phi_e[i][a][p];
 	}
     }
