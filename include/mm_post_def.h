@@ -456,6 +456,7 @@ extern int DARCY_VELOCITY_LIQ;  /* Darcy velocity vectors for flow in a
 				 * saturated or unsaturated medium */
 extern int DENSITY;		/* density function at vertex and midside 
 				 * nodes, e.g. for particle settling etc. */
+extern int HEAVISIDE;
 extern int DIELECTROPHORETIC_FIELD;
                                 /* Dielectrophoretic force vectors. */
 extern int DIELECTROPHORETIC_FIELD_NORM;

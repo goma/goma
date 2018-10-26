@@ -336,6 +336,9 @@ PROTO(( void));
 EXTERN int load_lsi
 PROTO(( const double ));       /* width */
 
+EXTERN int
+load_lsi_old(const double width, struct Level_Set_Interface *lsi_old);
+
 EXTERN int load_lsi_adjmatr
 PROTO(( const double ));      /* width */
 

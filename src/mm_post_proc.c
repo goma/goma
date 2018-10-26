@@ -138,6 +138,8 @@ int DARCY_VELOCITY_LIQ = -1;    /* Darcy velocity vectors for flow in a
 				 * saturated or unsaturated medium */
 int DENSITY = -1;	       	/* density function at vertex and midside 
 				 * nodes, e.g. for particle settling etc. */
+
+int HEAVISIDE = -1;
 int DIELECTROPHORETIC_FIELD = -1;
                                 /* Dielectrophoretic force vectors. */
 int DIELECTROPHORETIC_FIELD_NORM = -1;
@@ -2612,6 +2614,14 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       }     
     } // Loop over modes
   }
+
+  if (HEAVISIDE != -1) {
+    load_lsi(ls->Length_Scale);
+
+    local_post[HEAVISIDE] = lsi->H;
+    local_lumped[HEAVISIDE] = 1.;
+  }
+
 
   if (USER_POST != -1) {
       /* calculate a user-specified post-processing variable */
@@ -6694,6 +6704,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Velocity Magnitude", &VELO_SPEED);
   iread = look_for_post_proc(ifp, "Giesekus Criterion", &GIES_CRIT);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
+  iread = look_for_post_proc(ifp, "Heaviside", &HEAVISIDE);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -9838,6 +9849,25 @@ index_post, index_post_export);
     {
       CURL_V = -1;
     }
+
+  if (HEAVISIDE != -1 && (Num_Var_In_Type[R_MOMENTUM1] || check ))
+    {
+      set_nv_tkud(rd, index, 0, 0, -2, "HEAVISIDE","[1]",
+		  "Heaviside level set", FALSE);
+      index++;
+      if (HEAVISIDE == 2)
+	{
+	  Export_XP_ID[index_post_export] = index_post;
+	  index_post_export++;
+	}
+      HEAVISIDE = index_post;
+      index_post++;
+    }
+  else
+    {
+      HEAVISIDE = -1;
+    }
+
 
   if (USER_POST != -1)
     {

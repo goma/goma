@@ -1937,6 +1937,9 @@ struct Diet_Field_Variables
   dbl grad_tfmp_pres[DIM];       /* Gradient of the thin-film multi-phase lubrication pressure */
   dbl grad_tfmp_sat[DIM];       /* Gradient of the thin-film multi-phase lubrication saturation */
 
+  dbl grad_n[DIM][DIM];         /* Normal to level set function OR shell normal */
+  dbl div_n;                    /* Divergence of LS normal field */
+
   /* Material tensors used at old time values */
   dbl strain[DIM][DIM];         /* Strain tensor */
   dbl volume_change;            /* Volume change */

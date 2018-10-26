@@ -2495,6 +2495,7 @@ noahs_ark()
   ddd_add_member(n, &PP_FlowingLiquid_Viscosity, 1, MPI_INT);
   ddd_add_member(n, &PP_VolumeFractionGas, 1, MPI_INT);
   ddd_add_member(n, &DENSITY, 1, MPI_INT);
+  ddd_add_member(n, &HEAVISIDE, 1, MPI_INT);
   ddd_add_member(n, &NS_RESIDUALS, 1, MPI_INT);
   ddd_add_member(n, &MM_RESIDUALS, 1, MPI_INT);
   ddd_add_member(n, &FLUXLINES, 1, MPI_INT);
