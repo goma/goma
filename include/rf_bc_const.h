@@ -898,6 +898,8 @@
 #define LS_CAP_DIV_S_N_BC     47002005
 #define LS_ADC_BC		      47002009
 #define LS_ADC_OLD_BC		  47002007
+#define LS_CAP_HYSING_BC             47002010
+#define LS_CAP_DENNER_DIFF_BC             47002011
 
 /* surface normal dirichlet bc's */
 #define N1_BC                 47002100

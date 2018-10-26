@@ -1984,13 +1984,16 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
           put_fill_vector(num_total_nodes, x, xf, node_to_fill);
 	}
 #endif /* not COUPLED_FILL */
-	dcopy1(numProcUnknowns, x, x_old);
-	dcopy1(numProcUnknowns, x, x_older);
-	dcopy1(numProcUnknowns, x, x_oldest);
+	if (converged) // avoid death spiral on initial failure
+	  {
+	    dcopy1(numProcUnknowns, x, x_old);
+	    dcopy1(numProcUnknowns, x, x_older);
+	    dcopy1(numProcUnknowns, x, x_oldest);
 
-	exchange_dof(cx, dpi, x);
-	exchange_dof(cx, dpi, x_old);
-	exchange_dof(cx, dpi, x_oldest);
+	    exchange_dof(cx, dpi, x);
+	    exchange_dof(cx, dpi, x_old);
+	    exchange_dof(cx, dpi, x_oldest);
+	  }
 
 	}
 
