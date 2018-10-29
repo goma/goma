@@ -1008,7 +1008,8 @@ rd_bc_specs(FILE *ifp,
 		      BC_Types[ibc].BC_Data_Float[4] = 0.;
 	    }
 	  else
-	    SPF(endofstring(echo_string)," %d %.4g", BC_Types[ibc].BC_Data_Int[0],BC_Types[ibc].BC_Data_Float[4]); 
+	    SPF(endofstring(echo_string)," %d %.4g",
+		BC_Types[ibc].BC_Data_Int[0], BC_Types[ibc].BC_Data_Float[4]);
 	  if ( fscanf(ifp, "%lf", 
 		      &BC_Types[ibc].BC_Data_Float[5]) != 1)
 	    {
@@ -1038,10 +1039,77 @@ rd_bc_specs(FILE *ifp,
 
 
 	  break;
+	case VELO_SLIP_POWER_CARD_BC:
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf",
+		      &BC_Types[ibc].BC_Data_Float[0],
+		      &BC_Types[ibc].BC_Data_Float[1],
+		      &BC_Types[ibc].BC_Data_Float[2],
+		      &BC_Types[ibc].BC_Data_Float[3],
+		      &BC_Types[ibc].BC_Data_Float[4]) != 5)
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 5 flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+	    }
+	  BC_Types[ibc].max_DFlt = 5;
+	  SPF_DBL_VEC(endofstring(echo_string), 5,  BC_Types[ibc].BC_Data_Float);
+	  break;
+	case VELO_SLIP_POWER_BC:
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf",
+		      &BC_Types[ibc].BC_Data_Float[0],
+		      &BC_Types[ibc].BC_Data_Float[1],
+		      &BC_Types[ibc].BC_Data_Float[2],
+		      &BC_Types[ibc].BC_Data_Float[3],
+		      &BC_Types[ibc].BC_Data_Float[4]) != 5)
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 5 flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+	    }
+	  BC_Types[ibc].max_DFlt = 5;
+	  SPF_DBL_VEC(endofstring(echo_string), 5,  BC_Types[ibc].BC_Data_Float);
+
+
+	  // Read in 3 tangential vector components for 3D
+
+	  if ( fscanf(ifp, "%lf",
+		      &BC_Types[ibc].BC_Data_Float[5]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Float[5] = 0.0;
+	    }
+	  else
+	    {
+	      SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[5]);
+	      BC_Types[ibc].max_DFlt = 6;
+	    }
+
+
+	  if ( fscanf(ifp, "%lf",
+		      &BC_Types[ibc].BC_Data_Float[6]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Float[6] = 0.0;
+	    }
+	  else
+	    {
+	      SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[6]);
+	      BC_Types[ibc].max_DFlt = 7;
+	    }
+
+	  if ( fscanf(ifp, "%lf",
+		      &BC_Types[ibc].BC_Data_Float[7]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Float[7] = 0.0;
+	    }
+	  else
+	    {
+	      SPF(endofstring(echo_string)," %g", BC_Types[ibc].BC_Data_Float[7]);
+	      BC_Types[ibc].max_DFlt = 8;
+	    }
+	  break;
 
 	  /*
 	   * Fall through for all cases which require five floating point
-	   * values as data input 
+	   * values as data input
 	   */
 
 	case VELO_EK_3D_BC:
