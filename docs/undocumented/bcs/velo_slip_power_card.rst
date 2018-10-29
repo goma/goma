@@ -1,6 +1,6 @@
-***************
-VELO_SLIP_POWER
-***************
+********************
+VELO_SLIP_POWER_CARD
+********************
 
 ::
 
@@ -22,7 +22,7 @@ The slip velocity is a vector and is raised to a power component-wise.
 There are five required values in <float_list> and three optional values; definitions of
 the input parameters are as follows:
 
-**VELO_SLIP_POWER**
+**VELO_SLIP_POWER_CARD**
   Name of the boundary condition (<bc_name>).
   
 **SS**
@@ -63,7 +63,7 @@ Examples
 Following is a sample card without the optional parameters:
 ::
 
-     BC = VELO_SLIP_POWER SS 10 0.1 0.0 0.0 0.0 2.0 
+     BC = VELO_SLIP_POWER_CARD SS 10 0.1 0.0 0.0 0.0 2.0 
 
 -------------------------
 Technical Discussion
