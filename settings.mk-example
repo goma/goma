@@ -92,6 +92,9 @@ PREFIX = /home/goma/build
 # Enable trapping on floating point exception (useful for debugging NaN's)
 #	     -DFP_EXCEPT
 
+# To enable .log files with some extra information
+#	     -DENABLE_LOGGING
+
 # TOOLING used for install, cleaning, and library creation
 # install
 # INSTALL	= cp
