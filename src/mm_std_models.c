@@ -4567,7 +4567,8 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   dbl B_t=0., C=0., B_c=0., rho_k=0.;
   dbl Q_prime[DIM][DIM],R[DIM][DIM];
   dbl omega[DIM],omega_rel[DIM],omega_rel_norm;
-
+  dbl radius_p, L_char, U_max;
+  
   memset(v1, 0, DIM * sizeof(double));
   memset(v2, 0, DIM * sizeof(double));
   memset(v3, 0, DIM * sizeof(double));
@@ -4728,7 +4729,11 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
   d_pp2_dy2 = 2.*Kn/maxpack2*comp +  4.*Kn*y_norm/maxpack*comp1 + Kn*y_norm*y_norm*comp2;
 
-  gamma_nl = (50.e-6)*(9.e-3)/(9.e-4)/(9.e-4);
+  radius_p = mp->SBM_Lengths2[w][0];
+  L_char = mp->SBM_Lengths2[w][1];
+  U_max = mp->SBM_Lengths2[w][2];
+  
+  gamma_nl = radius_p * U_max / (L_char * L_char);
   
   memset(div_tau_p, 0, DIM*sizeof(dbl));
   

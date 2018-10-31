@@ -10172,7 +10172,8 @@ load_fv_grads(void)
 	  }
   } else if ( zero_unused_grads && upd->vp[VORT_DIR1] == -1 ) 
 	   fv->div_vd = 0.0;
-
+  
+  
 /*
  * grad_sh_K
  * Gradient of curvature in structural shell
