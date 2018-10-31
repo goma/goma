@@ -4578,9 +4578,9 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   grad_gd = fv->grad_SH;
   gammadot = fv->SH;
 
-  if (gammadot < 1.e-2)
+  if (gammadot < 1.e-10)
     {
-      gammadot = 1.e-2;
+      gammadot = 1.e-10;
     }
   
   dim = pd->Num_Dim;
@@ -4621,7 +4621,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 
   // Q tensor for specific geometry (channel at 30 deg angle)
 
-  dbl rad = 30. * M_PIE / 180.;
+  /*dbl rad = 30. * M_PIE / 180.;
   dbl SI = sin(rad);
   dbl CO = cos(rad);
   memset(qtensor, 0, DIM*DIM*sizeof(dbl));
@@ -4629,7 +4629,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   qtensor[0][1] = -0.2 * SI * CO;
   qtensor[1][0] = -0.2 * SI * CO;
   qtensor[1][1] = 1. - 0.2 * CO * CO;
-  qtensor[2][2] = 0.5;
+  qtensor[2][2] = 0.5; */
 
   /* Solve for the eigenvalues of gamma_dot   */
   
