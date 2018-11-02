@@ -1497,6 +1497,7 @@ noahs_ark()
       ddd_add_member(n, &ls->PSPP_filter, 1,      MPI_INT);
       ddd_add_member(n, &ls->Sat_Hyst_Renorm_Lockout, 1,  MPI_INT);
       ddd_add_member(n, &ls->SubcyclesAfterRenorm, 1,  MPI_INT);
+      ddd_add_member(n, &ls->ghost_stress, 1, MPI_INT);
     }
 
   if ( pfd != NULL )
