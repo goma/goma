@@ -2561,6 +2561,10 @@ noahs_ark()
   ddd_add_member(n, &UNTRACKED_SPEC, 1, MPI_INT);
   ddd_add_member(n, &LOG_CONF_MAP, 1, MPI_INT);
   ddd_add_member(n, &J_FLUX, 1, MPI_INT);
+  ddd_add_member(n, &EIG, 1, MPI_INT);
+  ddd_add_member(n, &EIG1, 1, MPI_INT);
+  ddd_add_member(n, &EIG2, 1, MPI_INT);
+  ddd_add_member(n, &EIG3, 1, MPI_INT);
   ddd_add_member(n, &GRAD_SH, 1, MPI_INT);
   ddd_add_member(n, &GRAD_Y, 1, MPI_INT);
 

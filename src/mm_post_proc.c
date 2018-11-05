@@ -55,6 +55,7 @@ static char rcsid[] =
 #include "mm_as.h"
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
+#include "mm_qtensor_model.h"
 
 #include "mm_eh.h"
 #include "mm_more_utils.h"
@@ -269,6 +270,10 @@ int TFMP_INV_PECLET = -1;
 int TFMP_KRG    = -1;
 int LOG_CONF_MAP = -1;
 int J_FLUX = -1;
+int EIG = -1;
+int EIG1 = -1;
+int EIG2 = -1;
+int EIG3 = -1;
 int GRAD_SH = -1;
 int GRAD_Y = -1;
 
@@ -2620,6 +2625,76 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	index++;
       }
   }
+
+  if ( EIG1 != -1 ) {
+    index = 0;
+    dbl v1[DIM];
+    dbl v2[DIM], v3[DIM];
+    dbl e1 = 0., e2 = 0., e3 = 0.;
+    dbl gamma_dot[DIM][DIM], eigen[3];
+    dbl v_bias[DIM], vy_bias[DIM], vort_bias[DIM];
+    
+    memset(v1, 0, DIM*sizeof(dbl));
+    memset(v2, 0, DIM*sizeof(dbl));
+    memset(v3, 0, DIM*sizeof(dbl));
+    memset(v_bias, 0, DIM*sizeof(dbl));
+    memset(vort_bias, 0, DIM*sizeof(dbl));
+    memset(vy_bias, 0, DIM*sizeof(dbl));
+    memset(gamma_dot, 0, DIM*DIM*sizeof(dbl));
+    
+    for (a=0; a < dim; a++)
+      {
+	for (b=0; b < dim; b++)
+	  {
+	    gamma_dot[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	  }
+      }
+    
+    find_eigenvalues_eigenvectors( gamma_dot, &e1, &e2, &e3, v1, v2, v3 );
+    eigen[0] = e1;
+    eigen[1] = e2;
+    eigen[2] = e3;
+
+    v_bias[0] = 1.;
+    vy_bias[1] = 1.;
+    vort_bias[2] = 1.;
+
+    bias_eigenvector_to(v1, v_bias);
+    bias_eigenvector_to(v2, vy_bias);
+    bias_eigenvector_to(v3, vort_bias);
+   
+    for ( a = 0; a < DIM; a++)
+      {
+	local_post[EIG + index] = eigen[a];
+	local_lumped[EIG + index] = 1.;
+	index++;
+      }
+
+    index = 0;
+    for ( a = 0; a < DIM; a++)
+      {
+	local_post[EIG1 + index] = v1[a];
+	local_lumped[EIG1 + index] = 1.;
+	index++;
+      }
+
+    index = 0;
+    for ( a = 0; a < DIM; a++)
+      {
+	local_post[EIG2 + index] = v2[a];
+	local_lumped[EIG2 + index] = 1.;
+	index++;
+      }
+
+    index = 0;
+    for ( a = 0; a < DIM; a++)
+      {
+	local_post[EIG3 + index] = v3[a];
+	local_lumped[EIG3 + index] = 1.;
+	index++;
+      }
+  }
+
   
   if (USER_POST != -1) {
       /* calculate a user-specified post-processing variable */
@@ -6700,6 +6775,10 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Error ZZ pressure", &ERROR_ZZ_P);
   iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &LOG_CONF_MAP);
   iread = look_for_post_proc(ifp, "Particle stress flux", &J_FLUX);
+  iread = look_for_post_proc(ifp, "Eigenvalues", &EIG);
+  iread = look_for_post_proc(ifp, "Eigenvector1", &EIG1);
+  iread = look_for_post_proc(ifp, "Eigenvector2", &EIG2);
+  iread = look_for_post_proc(ifp, "Eigenvector3", &EIG3);
   iread = look_for_post_proc(ifp, "Shear gradient", &GRAD_SH);
   iread = look_for_post_proc(ifp, "Concentration gradient", &GRAD_Y);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
@@ -9571,6 +9650,79 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       index++;
       index_post++;
     }
+
+  if (EIG != -1)
+    {
+      EIG = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN0","[1]",
+                  "First eigenvalue", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN1","[1]",
+                  "Second eigenvalue", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN2","[1]",
+                  "Third eigenvalue", FALSE);
+      index++;
+      index_post++;
+    }
+
+   if (EIG1 != -1)
+    {
+      EIG1 = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN0_0","[1]",
+                  "First eigenvector x", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN0_1","[1]",
+                   "First eigenvector y", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN0_2","[1]",
+                  "First eigenvector z", FALSE);
+      index++;
+      index_post++;
+    }
+
+   if (EIG2 != -1)
+    {
+      EIG2 = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN1_0","[1]",
+                  "Second eigenvector x", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN1_1","[1]",
+                   "Second eigenvector y", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN1_2","[1]",
+                  "Second eigenvector z", FALSE);
+      index++;
+      index_post++;
+    }
+   
+   if (EIG3 != -1)
+    {
+      EIG3 = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN2_0","[1]",
+                  "Third eigenvector x", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN2_1","[1]",
+                   "Third eigenvector y", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN2_2","[1]",
+                  "Third eigenvector z", FALSE);
+      index++;
+      index_post++;
+    }
+    
 
     
   /*

@@ -43,6 +43,7 @@ static char rcsid[] = "$Id: mm_qtensor_model.c,v 5.2 2009-05-20 15:31:33 hkmoffa
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
+#include "mm_qtensor_model.h"
 
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
@@ -87,7 +88,7 @@ static char rcsid[] = "$Id: mm_qtensor_model.c,v 5.2 2009-05-20 15:31:33 hkmoffa
  * for anything other than 3-vectors.
  */
 
-static int bias_eigenvector_to(dbl *, dbl *);
+//static int bias_eigenvector_to(dbl *, dbl *);
 
 static int get_local_qtensor
 PROTO((double [][DIM]));
@@ -2773,6 +2774,202 @@ find_super_special_eigenvector(dbl T[DIM][DIM],
   v1[2] = v2[0] * v3[1] - v2[1] * v3[0]; */
 
 }
+
+void
+find_eigenvalues_eigenvectors(dbl T[DIM][DIM],
+			      dbl *e1, dbl *e2, dbl *e3,
+			       dbl *v1,
+			       dbl *v2,
+			       dbl *v3)
+{
+  int num_zero_eigenvalues;
+  int i,j, print=0;
+  dbl A[3][3];
+  dbl a0, a2, a1;
+  dbl q, r, d, m, theta, z1, z2, z3;
+  dbl eig1=0., eig2=0., eig3=0.;
+  dbl v[3];
+
+  memset(v, 0, DIM * sizeof(dbl));
+  memset(v1, 0, DIM * sizeof(dbl));
+  memset(v2, 0, DIM * sizeof(dbl));
+  memset(v3, 0, DIM * sizeof(dbl));
+ 
+  dbl eigenvalue = 0.0;
+
+  memset(A, 0, 9 * sizeof(dbl));
+  for (i=0; i < DIM; i++)
+    {
+      for (j=0; j < DIM; j++)
+	{
+	  A[i][j] = T[i][j];
+	}
+    }
+
+  /* Now find the zeros of the cubic polynomial characteristic
+   * equation.  This requires some complex number mumbo-jubmo, which I
+   * have significantly simplified on some assumptions (symmetric
+   * tensor, etc.).
+   */
+
+  /* Note that if T really is a rate of deformation tensor, then a2 =
+   * 0 because it is just the trace, and the trace should be zero if
+   * the flow is incompressible. */
+  get_characteristic_eq_coeffs(A, &a0, &a1, &a2);
+
+  q = (3.0 * a1 - a2 * a2) / 9.0;
+  /* q will only be > 0 due to roundoff. */
+  if(q > 0.0)
+    q = 0.0;
+  r = (a1 * a2 - 3.0 * a0) / 6.0 - a2 * a2 *a2 / 27.0;
+#ifdef DEBUG_DIAGONALIZATION
+  if(print)
+    {
+      printf( "q = % 10.4g, r = % 10.4g ", q, r);
+      fflush(stdout);
+    }
+#endif
+  /* This will only fail if q and r are corrupted by roundoff. */
+  d = -q*q*q - r*r;
+  if(d < 0.0)
+    d = 0.0;
+  else
+    d = sqrt(d);
+#ifdef DEBUG_DIAGONALIZATION
+  if(print)
+    printf( "d = % 10.4g\n", d);
+#endif
+  theta = atan2(d, r) / 3.0;
+#ifdef DEBUG_DIAGONALIZATION
+  if(print)
+    {
+      printf( "theta = % 10.4g, ", theta);
+      fflush(stdout);
+    }
+#endif
+  if(q == 0.0)
+    m = 0.0;
+  else
+    m = sqrt(-q);
+#ifdef DEBUG_DIAGONALIZATION
+  if(print)
+    printf( "m = % 10.4g\n", m);
+#endif
+  z1 = 2.0 * m * cos(theta) - a2 / 3.0;
+  z2 = -m * (cos(theta) + sqrt(3.0) * sin(theta)) - a2 / 3.0;
+  z3 = -m * (cos(theta) - sqrt(3.0) * sin(theta)) - a2 / 3.0;
+#ifdef DEBUG_DIAGONALIZATION
+  if(print)
+    printf( "z1 = % 16.14g, z2 = % 16.14g, z3 = % 16.14g\n", z1, z2, z3);
+  fflush(stdout);
+#endif
+
+  /* Try to catch some roundoff errors. */
+  if(fabs(z1) < QTENSOR_SMALL_DBL) z1 = 0.0;
+  if(fabs(z2) < QTENSOR_SMALL_DBL) z2 = 0.0;
+  if(fabs(z3) < QTENSOR_SMALL_DBL) z3 = 0.0;
+
+  num_zero_eigenvalues = (z1 == 0.0) + (z2 == 0.0) + (z3 == 0.0);
+  if(print)
+    {
+#ifdef DEBUG_QTENSOR
+      printf( "EIGENVALUES = %g, %g, %g\n", z1, z2, z3);
+#endif
+#ifdef DEBUG_DIAGONALIZATION
+      printf( "Before entering find_eigenvector(), A = \n");
+      for(i = 0; i < 3; i++)
+	{
+	  for(j = 0; j < 3; j++)
+	    printf( "% 10.4g ", A[i][j]);
+	  printf( "\n");
+	}
+      fflush(stdout);
+#endif
+    }
+
+  /* Arrange eigenvalues as tension, compression, vorticity */
+  /* eig(compression) < eig(vorticity) < eig(tension)       */
+  
+  if(num_zero_eigenvalues <= 1)
+    {
+      /* Good, there must be a "largest" and "smallest" eigenvalue. */
+      if(z1 > z2)
+	if(z2 > z3)
+	  { 
+	    /* z3 < z2 < z1 */
+	    find_eigenvector(A, z2, v, print);
+	    eigenvalue = z2;
+	    eig1 = z1;
+	    eig2 = z3;
+	    eig3 = z2;
+	  }
+	else
+	  if(z3 > z1)
+	    {
+	      /* z2 < z1 < z3 */
+	      find_eigenvector(A, z1, v, print);
+	      eigenvalue = z1;
+	      eig1 = z3;
+	      eig2 = z2;
+	      eig3 = z1;
+	    }
+	  else
+	    {
+	      /* z2 < z3 < z1 */
+	      find_eigenvector(A, z3, v, print);
+	      eigenvalue = z3;
+	      eig1 = z1;
+	      eig2 = z2;
+	      eig3 = z3;
+	    }
+      else
+	if(z2 > z3)
+	  if(z3 > z1)
+	    {
+	      /* z1 < z3 < z2 */
+	      find_eigenvector(A, z3, v, print);
+	      eigenvalue = z3;
+	      eig1 = z2;
+	      eig2 = z1;
+	      eig3 = z3;
+	    }
+	  else
+	    {
+	      /* z3 < z1 < z2 */
+	      find_eigenvector(A, z1, v, print);
+	      eigenvalue = z1;
+	      eig1 = z2;
+	      eig2 = z3;
+	      eig3 = z1;
+	    }
+	else
+	  {
+	    /* z1 < z2 < z3 */
+	    find_eigenvector(A, z2, v, print);
+	    eigenvalue = z2;
+	    eig1 = z3;
+	    eig2 = z1;
+	    eig3 = z2;
+	  }
+    }
+  else
+    {
+      /* At least 2 zeros => all 3 are zero (symmetry) */
+    }
+  find_eigenvector(A, eig1, v1, print);
+  find_eigenvector(A, eig2, v2, print);
+  find_eigenvector(A, eig3, v3, print);
+  /* Try to catch some roundoff errors. */
+  if(fabs(v[0]) < QTENSOR_SMALL_DBL) v[0] = 0.0;
+  if(fabs(v[1]) < QTENSOR_SMALL_DBL) v[1] = 0.0;
+  if(fabs(v[2]) < QTENSOR_SMALL_DBL) v[2] = 0.0;
+
+  *e1 = eig1;
+  *e2 = eig2;
+  *e3 = eig3;
+}
+
+
 
 /* This routine diagonalizes a symmetric 2-tensor of size 3 by 3.
  * Usually, this is the rate-of-deformation tensor.  In that case,

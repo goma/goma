@@ -51,6 +51,7 @@ static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun E
 #include "mm_eh.h"
 
 #include "mm_fill_species.h"
+#include "mm_qtensor_model.h"
 #include "mm_std_models.h"
 
 #define _MM_STD_MODELS_C
@@ -4568,6 +4569,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   dbl Q_prime[DIM][DIM],R[DIM][DIM];
   dbl omega[DIM],omega_rel[DIM],omega_rel_norm;
   dbl radius_p, L_char, U_max;
+  dbl v_bias[DIM], vort_bias[DIM], vy_bias[DIM];
   
   memset(v1, 0, DIM * sizeof(double));
   memset(v2, 0, DIM * sizeof(double));
@@ -4639,6 +4641,18 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     }
   find_super_special_eigenvector(gamma_dot, vort_dir_local, v1, v2, v3, &tmp, print);
 
+  memset(v_bias, 0, DIM*sizeof(dbl));
+  memset(vort_bias, 0, DIM*sizeof(dbl));
+  memset(vy_bias, 0, DIM*sizeof(dbl));
+    
+  v_bias[0] = 1.;
+  vy_bias[1] = 1.;
+  vort_bias[2] = 1.;
+  
+  bias_eigenvector_to(v1, v_bias);
+  bias_eigenvector_to(v2, vy_bias);
+  bias_eigenvector_to(v3, vort_bias);
+  
   memset(omega, 0, sizeof(double)*DIM);
   memset(omega_rel, 0, sizeof(double)*DIM);
   omega[2] = fv->grad_v[0][1]-fv->grad_v[1][0];
@@ -4683,8 +4697,8 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     {
       R[a][0] = v1[a];
       R[a][1] = v2[a];
+      R[a][2] = v3[a];
     }
-  R[2][2] = 1.;
 
   memset(qtensor, 0, DIM*DIM*sizeof(dbl));
   rotate_tensor(Q_prime, qtensor, R, 0);

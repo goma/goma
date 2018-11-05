@@ -70,6 +70,9 @@ EXTERN void find_super_special_eigenvector(dbl [DIM][DIM], /* mm_qtensor_model.c
 					   dbl *,  /* eigenvalue of vorticity direction */
 					   int);   /* print toggle  */
 
+EXTERN void find_eigenvalues_eigenvectors(dbl [3][3], dbl *, dbl *, dbl *,
+					  dbl *, dbl *, dbl *);  /* mm_qtensor_model.c */
+
 EXTERN void diagonalize_symmetric_tensor /* mm_qtensor_model.c */
 PROTO((dbl [3][3],		/* tensor to diagonalize. */
        dbl *,			/* flow direction vector. */
@@ -103,6 +106,9 @@ PROTO((dbl [3][3],		/* E, rate of deformation tensor */
        dbl *,			/* a0 */
        dbl *,			/* a1 */
        dbl *));			/* a2 */
+
+EXTERN int bias_eigenvector_to(dbl *,    /* eigenvector  */
+			       dbl *);    /* reference vector */
 
 EXTERN void assemble_qtensor
 PROTO((dbl *));
