@@ -2230,6 +2230,7 @@ noahs_ark()
       ddd_add_member(n, &vn_glob[i]->wt_funcModel, 1, MPI_INT);
       ddd_add_member(n, &vn_glob[i]->eps, 1, MPI_DOUBLE);
       ddd_add_member(n, &vn_glob[i]->evssModel, 1, MPI_INT);
+      ddd_add_member(n, &vn_glob[i]->shiftModel, 1, MPI_INT);
       ddd_add_member(n, &vn_glob[i]->modes, 1, MPI_INT);
       ddd_add_member(n, &vn_glob[i]->dg_J_model, 1, MPI_INT);
 

@@ -68,7 +68,8 @@
 #define EVSS_F          2  /* Fortin's formulation */
 #define EVSS_L          3  /* Level set solid-fluid formulation */
 #define LOG_CONF        4  /* Log-conformation tensor formulation */
-#define LOG_CONF_LAGGED 5
+#define EVSS_GRADV      5
+#define LOG_CONF_GRADV  6
 
 /* Discontinuous Galerkin viscoelastic jacobian options */
 #define EXPLICIT_DG     1

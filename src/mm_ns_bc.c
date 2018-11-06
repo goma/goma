@@ -6224,7 +6224,7 @@ flow_n_dot_T_nobc(double func[DIM],
 	    }
 	}
 
-      if ( pd->v[pg->imtrx][POLYMER_STRESS11] && (vn->evssModel == EVSS_F) )
+      if ( pd->v[pg->imtrx][POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV) )
 	{
 	  for (p=0; p<pd->Num_Dim; p++)
 	    {
@@ -8312,6 +8312,7 @@ evaluate_gibbs_criterion(
 
   pos[0] = x_pos - fv->x[0];
   pos[1] = y_pos - fv->x[1];
+  pos[2] = 0.0;
   if(pd->Num_Dim == 3)
     {
       pos[2] += x_pos - fv->x[2];

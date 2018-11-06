@@ -2842,7 +2842,7 @@ assemble_momentum(dbl time,       /* current time */
   /*
    * Calculate the momentum stress tensor at the current gauss point
    */
-  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_LAGGED)
+  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
     {
       fluid_stress_conf(Pi, d_Pi);
     }
@@ -4204,7 +4204,7 @@ assemble_momentum(dbl time,       /* current time */
 	       * J_m_G
 	       */
 		  
-	      if ( pdv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F) )
+	      if ( pdv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV) )
 		{
 		  for ( b=0; b<VIM; b++)
 		    {
@@ -25319,7 +25319,7 @@ assemble_p_source ( double pressure, const int bcflag )
 	{
 	 if (!af->Assemble_Jacobian) d_Pi = NULL; 
   		/* compute stress tensor and its derivatives */
-         if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_LAGGED)
+         if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
            {
              fluid_stress_conf(Pi, d_Pi);
            }
@@ -26685,7 +26685,7 @@ assemble_uvw_source ( int eqn, double val )
   else
     {
       /* compute stress tensor and its derivatives */
-      if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_LAGGED)
+      if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
         {
           fluid_stress_conf(Pi, d_Pi);
         }
@@ -27723,7 +27723,7 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
   /*
    * Stress tensor, but don't need dependencies
    */
-  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_LAGGED)
+  if(vn->evssModel==LOG_CONF || vn->evssModel==LOG_CONF_GRADV)
     {
       fluid_stress_conf(Pi, NULL);
     }
@@ -28780,7 +28780,7 @@ fluid_stress( double Pi[DIM][DIM],
     }
 
   evss_f = 0.0;
-  if(pd->gv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F))
+  if(pd->gv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV))
     {
       evss_f = 1.0;
     }

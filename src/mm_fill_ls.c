@@ -11121,6 +11121,7 @@ build_integ_element( Integ_Elem * e, double isoval, int ielem_type,
             double nodes[6][DIM];
 	    int side_ids[3];
 
+	    memset(side_crossing, 0, sizeof(int)*4);
 
             /* determine what we are going to do with this element (set job) */
             

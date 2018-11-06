@@ -1474,7 +1474,7 @@ matrix_fill(
        */
       do_LSA_mods(LSA_VOLUME);
 
-      if(vn->evssModel == EVSS_F)
+      if(vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV)
 	{
 	  err = assemble_stress_fortin(theta, delta_t, pg_data.hsquared,
 				       pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
@@ -1502,7 +1502,7 @@ matrix_fill(
 	  CHECKFINITE("assemble_stress_level_set");
 #endif
 	}
-      else if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_LAGGED)
+      else if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
         {
           err = assemble_stress_log_conf(theta, delta_t, pg_data.hsquared,
 					 pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
