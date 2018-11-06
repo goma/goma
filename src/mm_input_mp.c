@@ -269,7 +269,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   
   int ConstitutiveEquation;
   int LameLambdaModel;
-  dbl a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12;
+  dbl a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11;
   dbl v0[DIM];
   int i0;
   /* dummy variable to hold modal data before it is put into the ve struct */
@@ -2413,6 +2413,10 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	{
 	  vn_glob[mn]->evssModel = LOG_CONF;
 	}
+      else if ( !strcmp(model_name, "LOG_CONF_LAGGED") )
+        {
+          vn_glob[mn]->evssModel = LOG_CONF_LAGGED;
+        }
       else
 	{
 	  if( vn_glob[mn]->ConstitutiveEquation == PTT ) 

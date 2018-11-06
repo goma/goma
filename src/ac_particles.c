@@ -3627,6 +3627,8 @@ compute_particle_dt(particle_t * const p,
   int i, gravity_index;
   const dbl Particle_CFL_Maximum = 0.2;
 
+  memset(forces, 0, sizeof(double)*DIM);
+
   /* Get the index into acceleration vectors for gravity. */
   if(pd->CoordinateSystem == CARTESIAN)
     gravity_index = 2*pdim - 1; /* y or z depending on 2D or 3D */

@@ -1850,12 +1850,11 @@ EH(-1,"version not compiled with frontal solver");
 	  if (sAC[j][j] == 0.0) { 
 	    sAC[j][j] = 1.0e-20;
 	  }
-	  if (j != nAC) { 
-	    dumAC = 1.0/sAC[j][j];
-	    for (i=j+1;i<nAC;i++) {
-	      sAC[i][j] *= dumAC;
-	    } 
+	  dumAC = 1.0/sAC[j][j];
+	  for (i=j+1;i<nAC;i++) {
+	    sAC[i][j] *= dumAC;
 	  }
+
 	}
 	iiAC = -1;
 	for (i=0;i<nAC;i++) {

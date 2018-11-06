@@ -118,7 +118,6 @@ extern int current_severity;	/* global error signal (-1=die,0=prnt,1=dbg) */
  *
  * Requires use of a local static const char yo[] ="Routine_name".
  */
-#ifdef ENABLE_LOGGING
 #define log_err(...) \
 do \
   { \
@@ -140,11 +139,6 @@ do \
     save_place(GOMA_DBG, yo, __FILE__, __LINE__);  \
     logprintf(__VA_ARGS__); \
   } while(0)
-#else
-#define log_err(...) do {} while(0)
-#define log_msg(...) do {} while(0)
-#define log_dbg(...) do {} while(0)
-#endif
 
 #ifndef DEFAULT_GOMA_LOG_FILENAME
 #define DEFAULT_GOMA_LOG_FILENAME ".log"

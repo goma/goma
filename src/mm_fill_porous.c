@@ -2295,18 +2295,18 @@ get_porous_part_sat_terms(struct Porous_Media_Terms *pmt,
 	      cr->PorousFluxModel == POWERLAW_DARCY_FICKIAN) {
 	    for (a=0; a < VIM; a++) {
 	      pmt->d_diff_flux_dmesh[i_pl][a] [b][j] += 
-		  pmv->d_rel_mass_flux_dmesh[a][i_pl] [b][j] +
+		  pmv->d_rel_mass_flux_dmesh[i_pl][a] [b][j] +
 		  d_vconv->X[a][b][j] * pmv->bulk_density[i_pl];
 
 	      if (pd->e[pg->imtrx][R_POR_GAS_PRES]) {
 		pmt->d_diff_flux_dmesh[i_pg][a] [b][j] += 
-		    pmv->d_rel_mass_flux_dmesh[a][i_pg] [b][j] +
+		    pmv->d_rel_mass_flux_dmesh[i_pg][a] [b][j] +
 		    d_vconv->X[a][b][j] * pmv->bulk_density[i_pg];
 	      }
 
 	      if (pd->e[pg->imtrx][R_POR_ENERGY]) 
 		pmt->d_diff_flux_dmesh[i_pe][a] [b][j] += 
-		  pmv->d_rel_mass_flux_dmesh[a][i_pe] [b][j] +
+		  pmv->d_rel_mass_flux_dmesh[i_pe][a] [b][j] +
 		  d_vconv->X[a][b][j] * pmv->bulk_density[i_pe];
 	      
 	    }
@@ -8737,7 +8737,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 		    {
 		      for ( w=0; w<MAX_PMV; w++)
 			{
-			  pmv->d_rel_mass_flux_dmesh[a][w] [b][j] = 0.;
+			  pmv->d_rel_mass_flux_dmesh[w][a] [b][j] = 0.;
 			}
 		    }
 		  for (a=0; a < WIM; a++)
@@ -8753,13 +8753,13 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 				      mp->PermeabilityModel != KC_TENSOR &&
 				      mp->PermeabilityModel != SM_TENSOR) 
 				    {
-				       pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+				       pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 				         - mp->permeability * mp->rel_liq_perm 
 				         * pmv->liq_Xvol_solvents[w] * fv->d_grad_p_liq_dmesh[a][b][j]
 				         * mp->density ;
 				       if (pd->e[pg->imtrx][R_POR_GAS_PRES]) 
 					 {
-					   pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+					   pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 					     - mp->permeability * mp->rel_gas_perm
 					     * pmv->gas_density_solvents[w] * fv->d_grad_p_gas_dmesh[a][b][j];
 					 }
@@ -8768,13 +8768,13 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 				    {
 				      for (p=0; p < WIM; p++)
 					{
-					  pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+					  pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 					    - mp->perm_tensor[a][p] * mp->rel_liq_perm 
 					    * pmv->liq_Xvol_solvents[w] * fv->d_grad_p_liq_dmesh[p][b][j]
 					    * mp->density;
 					  if (pd->e[pg->imtrx][R_POR_GAS_PRES]) 
 					    {
-					      pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+					      pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 						- mp->perm_tensor[a][p] * mp->rel_gas_perm
 						* pmv->gas_density_solvents[w] * fv->d_grad_p_gas_dmesh[p][b][j];
 					    }
@@ -8782,13 +8782,13 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 					      mp->PermeabilityModel == KC_TENSOR   ||
 					      mp->PermeabilityModel == SM_TENSOR)
 					    {
-					      pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+					      pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 						- mp->d_perm_tensor_dx[a][p][b][j] * mp->rel_liq_perm 
 						* pmv->liq_Xvol_solvents[w] * fv->grad_p_liq[p]
 						* mp->density;
 					      if (pd->e[pg->imtrx][R_POR_GAS_PRES]) 
 						{
-						  pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+						  pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 						    - mp->d_perm_tensor_dx[a][p][b][j] * mp->rel_gas_perm
 						    * pmv->gas_density_solvents[w] * fv->grad_p_gas[p];
 						}
@@ -8800,7 +8800,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 
                           /* Additional terms for energy equation */
 			   if (pd->e[pg->imtrx][R_POR_GAS_PRES]) 
-			       pmv->d_rel_mass_flux_dmesh[a][i_pe] [b][j] += 
+			       pmv->d_rel_mass_flux_dmesh[i_pe][a] [b][j] +=
 				    - mp->thermal_conductivity * fv->d_grad_T_dmesh[a][b][j];
 
 			} /* DARCY_FICKIAN */
@@ -8808,7 +8808,7 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
 			{
 			  for ( w=0; w<MAX_PMV; w++) {
 			    if (w != i_pore) {  /* no diffusion term for solid phase */
-				  pmv->d_rel_mass_flux_dmesh[a][w] [b][j] -= mp->porous_diffusivity[w]
+				  pmv->d_rel_mass_flux_dmesh[w][a] [b][j] -= mp->porous_diffusivity[w]
 				    * (pmv->d_gas_density_solvents[w][POR_LIQ_PRES]* fv->d_grad_p_liq_dmesh[a][b][j] +
 				       pmv->d_gas_density_solvents[w][POR_GAS_PRES]* fv->d_grad_p_gas_dmesh[a][b][j] +
 				       pmv->d_gas_density_solvents[w][POR_POROSITY]* fv->d_grad_porosity_dmesh[a][b][j]);
@@ -9706,7 +9706,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 		    {
 		      for ( w=0; w<MAX_PMV; w++)
 			{
-			  pmv->d_rel_mass_flux_dmesh[a][w] [b][j] = 0.;
+			  pmv->d_rel_mass_flux_dmesh[w][a] [b][j] = 0.;
 			}
 		    }
 		  for (a=0; a < VIM; a++)
@@ -9719,24 +9719,24 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 				  mp->PermeabilityModel != ORTHOTROPIC &&
 				  mp->PermeabilityModel != SM_TENSOR &&
 				  mp->PermeabilityModel != KC_TENSOR ) {
-				pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+				pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 				  - mp->permeability * mp->rel_liq_perm 
 				  * pmv->liq_Xvol_solvents[w] * fv->d_grad_p_liq_dmesh[a][b][j]
 				  * mp->density ;
 				if (pd->e[pg->imtrx][R_POR_GAS_PRES]) {
-				  pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+				  pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 				    - mp->permeability * mp->rel_gas_perm
 				    * pmv->gas_density_solvents[w] * fv->d_grad_p_gas_dmesh[a][b][j];
 				}
 			      } else {
 				for (p=0; p < VIM; p++)
 				  {
-		 		    pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+				    pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 				      - mp->perm_tensor[a][p] * mp->rel_liq_perm 
 				      * pmv->liq_Xvol_solvents[w] * fv->d_grad_p_liq_dmesh[p][b][j]
 				      * mp->density;
 				    if (pd->e[pg->imtrx][R_POR_GAS_PRES]) {
-				      pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+				      pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 					- mp->perm_tensor[a][p] * mp->rel_gas_perm
 					* pmv->gas_density_solvents[w] * fv->d_grad_p_gas_dmesh[p][b][j];
 				    }
@@ -9744,12 +9744,12 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 				       mp->PermeabilityModel == SM_TENSOR ||
 				       mp->PermeabilityModel == KC_TENSOR)
 				      {
-					pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+					pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 					  - mp->d_perm_tensor_dx[a][p][b][j] * mp->rel_liq_perm 
 					  * pmv->liq_Xvol_solvents[w] * fv->grad_p_liq[p]
 					  * mp->density;
 					if (pd->e[pg->imtrx][R_POR_GAS_PRES]) {
-					  pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+					  pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 					    - mp->d_perm_tensor_dx[a][p][b][j] * mp->rel_gas_perm
 					    * pmv->gas_density_solvents[w] * fv->grad_p_gas[p];
 					}
@@ -9761,7 +9761,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 
                           /* Additional terms for energy equation */
 			   if (pd->e[pg->imtrx][R_POR_GAS_PRES]) 
-			       pmv->d_rel_mass_flux_dmesh[a][i_pe] [b][j] += 
+			       pmv->d_rel_mass_flux_dmesh[i_pe][a] [b][j] +=
 				    - mp->thermal_conductivity * fv->d_grad_T_dmesh[a][b][j];
 
 			} /* DARCY_FICKIAN */
@@ -9774,28 +9774,28 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 				 mp->PermeabilityModel != ORTHOTROPIC &&
 				 mp->PermeabilityModel != SM_TENSOR &&
 				 mp->PermeabilityModel != KC_TENSOR ) {
-				pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+				pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 				  - mp->permeability * mp->rel_liq_perm 
 				  * pmv->liq_Xvol_solvents[w] 
 				  *  n_pow*pow(fv->grad_p_liq[a], n_pow-1)
 				  *  fv->d_grad_p_liq_dmesh[a][b][j]
 				  * mp->density ;
 				if (pd->e[pg->imtrx][R_POR_GAS_PRES]) {
-				  pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+				  pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 				    - mp->permeability * mp->rel_gas_perm
 				    * pmv->gas_density_solvents[w] * fv->d_grad_p_gas_dmesh[a][b][j];
 				}
 			      } else {
 				for (p=0; p < VIM; p++)
 				  {
-				    pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+				    pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 				      - mp->perm_tensor[a][p] * mp->rel_liq_perm 
 				      * pmv->liq_Xvol_solvents[w] 
 				      *  n_pow*pow(fv->grad_p_liq[a], n_pow-1) 
 				      * fv->d_grad_p_liq_dmesh[p][b][j]
 				      * mp->density;
 				    if (pd->e[pg->imtrx][R_POR_GAS_PRES]) {
-				      pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+				      pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 					- mp->perm_tensor[a][p] * mp->rel_gas_perm
 					* pmv->gas_density_solvents[w] * fv->d_grad_p_gas_dmesh[p][b][j];
 				    }
@@ -9803,14 +9803,14 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 				       mp->PermeabilityModel == SM_TENSOR   ||
 				       mp->PermeabilityModel == KC_TENSOR)
 				      {
-					pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+					pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 					  - mp->d_perm_tensor_dx[a][p][b][j] * mp->rel_liq_perm 
 					  * pmv->liq_Xvol_solvents[w] 
 					  *  n_pow*pow(fv->grad_p_liq[a], n_pow-1) 
 					  * fv->grad_p_liq[p]
 					  * mp->density;
 					if (pd->e[pg->imtrx][R_POR_GAS_PRES]) {
-					  pmv->d_rel_mass_flux_dmesh[a][w] [b][j] += 
+					  pmv->d_rel_mass_flux_dmesh[w][a] [b][j] +=
 					    - mp->d_perm_tensor_dx[a][p][b][j] * mp->rel_gas_perm
 					    * pmv->gas_density_solvents[w] * fv->grad_p_gas[p];
 					}
@@ -9829,7 +9829,7 @@ load_mass_flux(double porosity, double cap_pres, double saturation,
 			{
 			  for ( w=0; w<MAX_PMV; w++) {
 			    if (w != i_pore) {  /* no diffusion term for solid phase */
-				  pmv->d_rel_mass_flux_dmesh[a][w] [b][j] -= mp->porous_diffusivity[w]
+				  pmv->d_rel_mass_flux_dmesh[w][a] [b][j] -= mp->porous_diffusivity[w]
 				    * (pmv->d_gas_density_solvents[w][POR_LIQ_PRES]* fv->d_grad_p_liq_dmesh[a][b][j] +
 				       pmv->d_gas_density_solvents[w][POR_GAS_PRES]* fv->d_grad_p_gas_dmesh[a][b][j] +
 				       pmv->d_gas_density_solvents[w][POR_POROSITY]* fv->d_grad_porosity_dmesh[a][b][j]);

@@ -767,7 +767,7 @@ fvelocity_profile (int var_flag,
 
 void
 fspline (int ielem_dim,
-         double *func, 
+         double *func,
          double d_func[],     /* dimensioned [MAX_VARIABLE_TYPES + MAX_CONC] */
          double p[],          /* parameters to parameterize temperature eqn model*/
          double time)         /* time  at which bc's are evaluated     */
@@ -775,16 +775,16 @@ fspline (int ielem_dim,
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
-    d_func[MESH_DISPLACEMENT1] = 
+  d_func[MESH_DISPLACEMENT1] =
       dfncd1(fv->x[0], fv->x[1], fv->x[2], p,  time);
 
-    d_func[MESH_DISPLACEMENT2] = 
+  d_func[MESH_DISPLACEMENT2] =
       dfncd2(fv->x[0], fv->x[1], fv->x[2], p, time);
 
-    if (ielem_dim == 3) d_func[MESH_DISPLACEMENT3] = 
+  if (ielem_dim == 3) d_func[MESH_DISPLACEMENT3] =
       dfncd3(fv->x[0], fv->x[1], fv->x[2], p, time);
-    
-    *func = fnc(fv->x[0], fv->x[1], fv->x[2], p, time);
+
+  *func = fnc(fv->x[0], fv->x[1], fv->x[2], p, time);
   
 } /* END of routine fspline                                                  */
 /*****************************************************************************/
@@ -798,17 +798,17 @@ fspline_rs (int ielem_dim,
 {
   if(af->Assemble_LSA_Mass_Matrix)
     return;
- 
-    d_func[SOLID_DISPLACEMENT1] = 
+
+  d_func[SOLID_DISPLACEMENT1] =
       dfncd1(fv->x[0], fv->x[1], fv->x[2], p,  time);
 
-    d_func[SOLID_DISPLACEMENT2] = 
+  d_func[SOLID_DISPLACEMENT2] =
       dfncd2(fv->x[0], fv->x[1], fv->x[2], p, time);
 
-    if (ielem_dim == 3) d_func[SOLID_DISPLACEMENT3] = 
+  if (ielem_dim == 3) d_func[SOLID_DISPLACEMENT3] =
       dfncd3(fv->x[0], fv->x[1], fv->x[2], p, time);
-     
-    *func = fnc(fv->x[0], fv->x[1], fv->x[2], p, time);
+
+  *func = fnc(fv->x[0], fv->x[1], fv->x[2], p, time);
   
 } /* END of routine fspline_rs                                               */
 /*****************************************************************************/

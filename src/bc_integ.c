@@ -1081,7 +1081,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  break;
 
         case STRESS_DEVELOPED_BC:
-          if (vn->evssModel == LOG_CONF)
+          if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_LAGGED)
             {
               stress_no_v_dot_gradS_logc(func_stress, d_func_stress, delta_t, theta);
             }

@@ -103,8 +103,6 @@ static Spfrtn sr;
 /*
  * How to blurt out what we found.
  */
-
-static const char oformat[MAX_CHAR_IN_INPUT] = "%s: %-40s = %s\n";
 static const char eoformat[MAX_CHAR_IN_INPUT] = "%s = %s";
 
 /*
@@ -14826,16 +14824,16 @@ echo_compiler_settings()
        fprintf(echo_file, "%-30s= %s\n", "HAVE_SPARSE", "no");
 #endif
 
-#ifdef HAVE_BLAS
-       fprintf(echo_file, "%-30s= %s\n", "HAVE_BLAS", "yes");
+#ifdef GOMA_HAVE_BLAS
+       fprintf(echo_file, "%-30s= %s\n", "GOMA_HAVE_BLAS", "yes");
 #else
-       fprintf(echo_file, "%-30s= %s\n", "HAVE_BLAS", "no");
+       fprintf(echo_file, "%-30s= %s\n", "GOMA_HAVE_BLAS", "no");
 #endif
 
-#ifdef HAVE_LAPACK
-       fprintf(echo_file, "%-30s= %s\n", "HAVE_LAPACK", "yes");
+#ifdef GOMA_HAVE_LAPACK
+       fprintf(echo_file, "%-30s= %s\n", "GOMA_HAVE_LAPACK", "yes");
 #else
-       fprintf(echo_file, "%-30s= %s\n", "HAVE_LAPACK", "no");
+       fprintf(echo_file, "%-30s= %s\n", "GOMA_HAVE_LAPACK", "no");
 #endif
 
 #ifdef HAVE_Y12M

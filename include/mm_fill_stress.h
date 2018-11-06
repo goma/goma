@@ -185,5 +185,8 @@ compute_exp_s(double s[DIM][DIM],
 	      double exp_s[DIM][DIM],
               double eig_values[DIM],
               double R[DIM][DIM]);
-
+EXTERN void
+compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
+		   dbl exp_s[DIM][DIM],
+		   dbl d_exp_s_ds[DIM][DIM][DIM][DIM]);
 #endif /* _MM_FILL_STRESS_H */

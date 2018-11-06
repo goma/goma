@@ -294,7 +294,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
    * Last revised by Rich Cairncross 12/05/95
    ***************************************************************************/
 {
-  int es, i, ibc, iss, num_bc_nodes, used_BC, varType, special;
+  int es, i, ibc, iss, num_bc_nodes, used_BC, varType;
   int ibc1, ibc2, inode, bct1, bct2=-1, k;
   int ins, action, idum, imove, istay, i_delete, i_dont_move;
   int eqn, idup, idup1, idup2, p, j, num_total_nodes, dups;
@@ -444,7 +444,6 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
          * Set a flag to indicate that a boundary condition is used
          */
         used_BC = 0;
-        special = 0;
         /* Loop over the total number of side sets defined on the current processor */
         for (iss = 0; iss < exo->num_side_sets; iss++) {
           /* Check for a match between the ID of the current side set and the side set
@@ -553,7 +552,6 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
  
             if(BC_Types[ibc].BC_Name == TABLE_BC)
               {
-                special=0;
                 varType=BC_Types[ibc].table->f_index;
                 switch(varType)
                   {
@@ -593,7 +591,6 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                             fprintf(stderr,
                                     "WARNING: Boundary condition %d, %s, applied on SS %d, may be used as an inlet condition \n",
                                     ibc, BC_Types[ibc].desc->name1, BC_Types[ibc].BC_ID);
-                            special = 1; 
                             break;
                           }
                         default:

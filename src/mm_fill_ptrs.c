@@ -1596,7 +1596,7 @@ load_elem_dofptr(const int ielem,
     }
 
   eqn = R_BOND_EVOLUTION;
-  if(pd->e[eqn])
+  if(pd->e[pg->imtrx][eqn])
     {
       load_varType_Interpolation_ptrs(eqn, esp->nn, esp_old->nn, esp_dot->nn);
     }
@@ -2035,7 +2035,7 @@ load_elem_dofptr(const int ielem,
     }
 
   eqn = R_POR_ENERGY;
-  if ( pd->e[eqn] )
+  if ( pd->e[pg->imtrx][eqn] )
     {
       load_varType_Interpolation_ptrs(eqn, esp->T, esp_old->T,
 				      esp_dot->T);
@@ -2126,7 +2126,7 @@ load_elem_dofptr(const int ielem,
   ls_old = ls;
   if (pfd != NULL)
     {
-      if (pfd->ls[0]->Evolution == LS_EVOLVE_SLAVE || pd->e[R_EXT_VELOCITY])
+      if (pfd->ls[0]->Evolution == LS_EVOLVE_SLAVE || pd->e[pg->imtrx][R_EXT_VELOCITY])
 	{
 	  ls = pfd->ls[0];
 	  determine_ls_elem_overlap_state();
@@ -2439,7 +2439,7 @@ load_elem_dofptr_all(const int ielem,
       }
 
     eqn = R_BOND_EVOLUTION;
-    if(pd->e[eqn])
+    if(pd->e[imtrx][eqn])
       {
         load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->nn, esp_old->nn, esp_dot->nn);
       }

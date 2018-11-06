@@ -3472,16 +3472,14 @@ Hrenorm_simplemass( Exo_DB *exo,
                     int num_total_unkns,
                     double time )
 {
-  int I,ie,k, max_its, i;
+  int I,ie, max_its, i;
   double *dC;
   double *F, *F_, *R, *b;
-  int *ie_map;
   double M;
   int global_ls_unkns = num_ls_unkns;
   static double M0;
   static int M0_set = 0;
 #ifdef PARALLEL
-  int *ext_dof = NULL;
 
   double interface_size = 0;
   double c = 0;
@@ -3501,10 +3499,6 @@ Hrenorm_simplemass( Exo_DB *exo,
   dalloc ( num_ls_unkns, F_ );
   dalloc ( num_ls_unkns, R );
   dalloc ( num_ls_unkns, b );
-
-
-
-  ie_map = (int *) smalloc( num_ls_unkns*sizeof(int) );
 
   if ((!M0_set) && (ls->Mass_Value >= 0.0))
     {
@@ -3556,9 +3550,7 @@ Hrenorm_simplemass( Exo_DB *exo,
 
     for( eb=0; eb< dpi->num_elem_blocks_global; eb++)
       {
-        int mn;
         blk_id = dpi->eb_id_global[eb];
-        mn = map_mat_index(blk_id);
 
         interface_size += evaluate_volume_integral ( exo,
                                                      dpi,
@@ -3580,7 +3572,7 @@ Hrenorm_simplemass( Exo_DB *exo,
 
 
     c = (M - Mold) / interface_size;
-    for( I =0,k=0 ; I < num_total_nodes; I++)
+    for( I =0 ; I < num_total_nodes; I++)
       {
         if ( (ie = Index_Solution( I, ls->var, 0,  0, -2, pg->imtrx)) != -1 )
           {
@@ -3604,13 +3596,6 @@ Hrenorm_simplemass( Exo_DB *exo,
 
 
   }
-
-
-
-#ifdef PARALLEL
-  if( Num_Proc > 1 ) ext_dof = (int *) smalloc( num_ls_unkns*sizeof(int) );
-#endif
-
 
 #ifdef PARALLEL
   exchange_dof ( cx, dpi, x, pg->imtrx );

@@ -54,6 +54,12 @@
 #define _MM_FILL_STRESS_C
 #include "goma.h"
 
+
+
+extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
+			double *W, double *WORK, int *LWORK, int *INFO,
+			int len_jobz, int len_uplo);
+
 extern struct Boundary_Condition *inlet_BC[MAX_VARIABLE_TYPES+MAX_CONC];
 
 /*  _______________________________________________________________________  */
@@ -5849,6 +5855,57 @@ compute_exp_s(double s[DIM][DIM],
 
 } // End compute_exp_s
 
+void
+compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
+		   dbl exp_s[DIM][DIM],
+		   dbl d_exp_s_ds[DIM][DIM][DIM][DIM])
+{
+  double s_p[DIM][DIM];
+  double exp_s_p[DIM][DIM];
+  double eig_values[DIM];
+  double R1[DIM][DIM];
+  int i,j,p,q;
+
+  memset(exp_s_p,    0, sizeof(double)*DIM*DIM);
+  memset(exp_s,      0, sizeof(double)*DIM*DIM);
+  memset(d_exp_s_ds, 0, sizeof(double)*DIM*DIM*DIM*DIM);
+
+  compute_exp_s(s, exp_s, eig_values, R1);
+
+  for (i = 0; i < VIM; i++) {
+    for (j = 0; j < VIM; j++) {
+       s_p[i][j] = s[i][j];
+ }
+  }
+
+  double ds = 1e-9;
+
+  for (i = 0; i < VIM; i++) {
+    for (j = 0; j < VIM; j++) {
+
+      // perturb s
+      s_p[i][j] += ds;
+      if( i != j) {
+        s_p[j][i] = s_p[i][j];
+      }
+
+      // find exp_s at perturbed value
+      compute_exp_s(s_p, exp_s_p, eig_values, R1);
+
+      // approximate derivative
+      for (p = 0; p < VIM; p++) {
+        for (q = 0; q < VIM; q++) {
+          d_exp_s_ds[p][q][i][j] = (exp_s_p[p][q] - exp_s[p][q]) / ds;
+        }
+      }
+
+      s_p[i][j] = s[i][j];
+      if( i != j) {
+        s_p[j][i] = s[j][i];
+      }
+    }
+  }
+}
 /*****************************************************************************/
 /* END OF FILE mm_fill_stress.c */
 /*****************************************************************************/

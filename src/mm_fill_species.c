@@ -3575,6 +3575,9 @@ flory_huggins(double func[],
   double chi[MAX_CONC][MAX_CONC]; /* chi is the binary interaction parameter*/
   double mw_last=0, dmdv=0; /* Molecular weight of non-condensable and conversion factor */
 
+  memset(prod, 0, MAX_CONC*sizeof(double));
+  memset(y_mass, 0, MAX_CONC*sizeof(double));
+
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
@@ -4420,7 +4423,7 @@ yflux_disc_rxn_bc(double func[],
        * J_s_T
        */
       var=TEMPERATURE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	  j_id = j;
 	  phi_j = bf[var]->phi[j_id];
@@ -4440,7 +4443,7 @@ yflux_disc_rxn_bc(double func[],
        * J_s_V
        */
       var=VOLTAGE;
-      if (pd->v[var]){
+      if (pd->v[pg->imtrx][var]){
 	for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	  j_id = j;
 	  phi_j = bf[var]->phi[j_id];
@@ -4462,7 +4465,7 @@ yflux_disc_rxn_bc(double func[],
       for (jvar = 0; jvar < dim; jvar++) 
 	{
 	  var=MESH_DISPLACEMENT1+jvar;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) 
 		{
@@ -4483,7 +4486,7 @@ yflux_disc_rxn_bc(double func[],
       for(jvar=0; jvar<dim; jvar++) 
 	{
 	  var = VELOCITY1 + jvar;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) 
 		{
@@ -6299,6 +6302,8 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
      double bottom, prod2, sum_C;
      double chi[MAX_CONC][MAX_CONC]; /* chi is the binary interaction parameter*/
      double mw_last=0; /* Molecular weight of non-condensable and conversion factor */
+
+     memset(prod, 0, MAX_CONC*sizeof(double));
      
      if (MAX_CONC < 3) {
        EH(-1, "mass_flux_equil_mtc expects MAX_CONC >= 3");
@@ -6797,6 +6802,7 @@ act_coeff(dbl lngamma[MAX_CONC], dbl dlngamma_dC[MAX_CONC][MAX_CONC],
       memset(lngamma, 0,sizeof(double)*MAX_CONC);
       memset(dlngamma_dC, 0,sizeof(double)*MAX_CONC*MAX_CONC);
       memset(C, 0, sizeof(double)*MAX_CONC);
+      memset(prod, 0, sizeof(double)*MAX_CONC);
 
   if(mode==RAOULT)
     {

@@ -1502,7 +1502,7 @@ matrix_fill(
 	  CHECKFINITE("assemble_stress_level_set");
 #endif
 	}
-      else if(vn->evssModel==LOG_CONF)
+      else if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_LAGGED)
         {
           err = assemble_stress_log_conf(theta, delta_t, pg_data.hsquared,
 					 pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);

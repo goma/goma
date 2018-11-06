@@ -302,6 +302,9 @@ PROTO (( double ,
 EXTERN int assemble_projection_stabilization 
 PROTO (( Exo_DB *, double ));
 
+EXTERN int
+assemble_projection_time_stabilization(Exo_DB *exo, double time, double tt, double dt);
+
 EXTERN int assemble_PPPS_generalized
 PROTO (( Exo_DB * ));
          
@@ -508,6 +511,10 @@ PROTO(( double *,
 EXTERN void fluid_stress
 PROTO (( double [DIM][DIM],                      /* Pi[DIM][DIM] */
          STRESS_DEPENDENCE_STRUCT * ));          /* d_Pi         */
+
+EXTERN void
+fluid_stress_conf( double Pi[DIM][DIM],
+                   STRESS_DEPENDENCE_STRUCT *d_Pi);
 
 EXTERN void heat_flux
 PROTO (( double [DIM],                      /* q[DIM] */

@@ -56,9 +56,10 @@ char Err_Msg[MAX_CHAR_ERR_MSG];
  *       sequence and time is important, so a /var/adm/log format
  *       is used.
  */
-
+#ifdef ENABLE_LOGGING
 static FILE *log_strm=NULL;
 static char log_filename[MAX_FNL] = DEFAULT_GOMA_LOG_FILENAME;
+#endif
 
 /*
  * Global variable helps to put the brakes on a parallel train wreck, but
@@ -160,7 +161,7 @@ save_place(const int severity,
 void 
 logprintf(const char *format, ... )
 {
-#ifdef DISABLE_LOGGING
+#ifndef ENABLE_LOGGING
   if ( current_severity < 0 )
     {
       DPRINTF(stderr, "\nAbnormal termination in logprintf -- enable logging for details.\n");
@@ -320,12 +321,12 @@ smooth_stop_with_msg( const char *msg )
 	if( Num_Proc == 1 )
 	{
 		fprintf(stderr, "\n\t -- Goma stops smoothly--\n");
-		fprintf(stderr, msg );
+		fputs(msg, stderr);
 	}
 	else
 	{
 		fprintf(stderr,"\n\n Proc %d -- Goma stops smoothly --\n", ProcID);
-		DPRINTF(stderr, msg);
+		DFPUTS(msg, stderr);
 	}	
 	MPI_Finalize();
 	exit(-1);

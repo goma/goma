@@ -56,11 +56,6 @@
 
 char *program_name;		/* name this program was run with */
 
-static const char program_description[] = "GOMA distributed problem recomposition tool";
-
-static const char copyright[] = 
-"Copyright (c) 1999-2000 Sandia National Laboratories. All rights reserved.";
-
 int *ep;			/* element pointers into node list */
 int *np;			/* node pointers into element list */
 

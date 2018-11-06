@@ -3126,8 +3126,7 @@ fvelo_slip_bc(double func[MAX_PDIM],
   double d_betainv_dF[MDE];
   double sign;
   int tang_slip_only;
-  double *phi_j_vector;
-  double mass;
+
 #define PRESSURE_DEPENDENT_SLIP 0
 #if PRESSURE_DEPENDENT_SLIP
   double vslip_mag;
@@ -3655,12 +3654,10 @@ fvelo_slip_ls_heaviside(double func[MAX_PDIM],
 			const double tt,
 			const double dt)
 {
-  int j, var, jvar, p, q, b;
+  int j, var, jvar, p;
   double phi_j, vs[MAX_PDIM] ;
   double beta, betainv;
   double d_beta_dF[MDE];
-  double X_0[3], omega;
-
   /************************* EXECUTION BEGINS *******************************/
 
   if(af->Assemble_LSA_Mass_Matrix)

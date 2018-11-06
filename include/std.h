@@ -35,11 +35,11 @@
 #define HAVE_UMFPACK 1
 #define HAVE_AZTEC 1
 /* Trilinos now seems to define these */
-#ifndef HAVE_BLAS
-  #define HAVE_BLAS 1
+#ifndef GOMA_HAVE_BLAS
+  #define GOMA_HAVE_BLAS 1
 #endif
-#ifndef HAVE_LAPACK
-  #define HAVE_LAPACK 1
+#ifndef GOMA_HAVE_LAPACK
+  #define GOMA_HAVE_LAPACK 1
 #endif
 #define HAVE_Y12M 1
 
@@ -363,8 +363,9 @@ typedef int MPI_Aint;
  */
 
 #ifdef PARALLEL
-#  define DPRINTF if ( ProcID == 0 ) fprintf
-#  define P0PRINTF if (ProcID == 0) printf
+#  define DPRINTF(...) do {if ( ProcID == 0 ) { fprintf(__VA_ARGS__); } } while(0)
+#  define P0PRINTF(...) do {if (ProcID == 0) { printf(__VA_ARGS__); } } while(0)
+#  define DFPUTS(...) do {if (ProcID == 0) { fputs(__VA_ARGS__); } } while(0)
 #else
 #  define DPRINTF fprintf
 #  define P0PRINTF printf

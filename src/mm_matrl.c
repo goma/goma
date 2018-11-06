@@ -561,7 +561,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
     }
   else if (matrl->DensityModel == DENSITY_FOAM_PMDI_10)
     {
-      int var, j;
+      int var;
       int w;
       double volF = matrl->volumeFractionGas;
 
@@ -871,7 +871,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
       if(doJac)
 	{
 	  int var = DENSITY_EQN;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
 	      propertyJac_addEnd(densityJac, var, matID, 0, 1, rho);
 	    }
