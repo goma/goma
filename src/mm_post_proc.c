@@ -2589,7 +2589,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     } // Loop over modes
   }
 
-  if (cr->MassFluxModel == DM_SUSPENSION_BALANCE ) {
+  /*if (cr->MassFluxModel == DM_SUSPENSION_BALANCE ) {
     index = 0;
     int w = 0;
     for (a = 0; a < dim; a++)
@@ -2604,7 +2604,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	local_lumped[J_FLUX + index] = 1.;
 	index++;
       }
-  }
+      }*/
 
   if (GRAD_SH != -1 && pd->v[SHEAR_RATE]) {
     index = 0;
@@ -9595,7 +9595,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       LOG_CONF_MAP = -1;
     }
 
-   if (J_FLUX != -1)
+    /*if (J_FLUX != -1)
     {
       J_FLUX = index_post;
       set_nv_tkud(rd, index, 0, 0, -2, "J1","[1]",
@@ -9611,7 +9611,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
                   "particle flux z", FALSE);
       index++;
       index_post++;
-    }
+      }*/
 
    if (GRAD_SH != -1)
     {
