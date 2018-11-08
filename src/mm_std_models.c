@@ -4613,7 +4613,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
   /* assume a diagonal Q tensor */
   memset(qtensor,  0, DIM*DIM*sizeof(dbl) );
-  for ( a=0; a<VIM; a++)
+  for ( a=0; a<DIM; a++)
     {
       qtensor[a][a] = mp->u_qdiffusivity[w][a];
     }
@@ -4651,7 +4651,10 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
   bias_eigenvector_to(v1, v_bias);
   bias_eigenvector_to(v2, vy_bias);
-  bias_eigenvector_to(v3, vort_bias);
+  
+  v3[0] = v2[1] * v1[2] - v2[2] * v1[1];
+  v3[1] = v2[2] * v1[0] - v2[0] * v1[2];
+  v3[2] = v2[0] * v1[1] - v2[1] * v1[0];
   
   memset(omega, 0, sizeof(double)*DIM);
   memset(omega_rel, 0, sizeof(double)*DIM);
@@ -4685,19 +4688,25 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     }
 
   memset(Q_prime, 0, sizeof(dbl)*DIM*DIM);
-  Q_prime[0][0] = (qtensor[0][0]+qtensor[1][1]) * B_t / 2.;
+  /*Q_prime[0][0] = (qtensor[0][0]+qtensor[1][1]) * B_t / 2.;
   Q_prime[0][1] = (qtensor[0][0]-qtensor[1][1]) * C / 2.;
   Q_prime[1][0] = Q_prime[0][1];
   Q_prime[1][1] = (qtensor[0][0] + qtensor[1][1]) * B_c / 2.;
-  Q_prime[2][2] = qtensor[2][2];
+  Q_prime[2][2] = qtensor[2][2];*/
+
+  Q_prime[0][0] = (qtensor[0][0]+qtensor[1][1]) / 2.;
+  Q_prime[0][2] = (-qtensor[0][0]+qtensor[1][1]) / 2.;
+  Q_prime[1][1] = qtensor[2][2];
+  Q_prime[2][0] = (-qtensor[0][0]+qtensor[1][1]) / 2.;
+  Q_prime[2][2] = (qtensor[0][0] + qtensor[1][1]) / 2.;
 
   memset(R, 0, DIM*DIM*sizeof(dbl));
 
   for (a=0; a < DIM; a++)
     {
-      R[a][0] = v1[a];
-      R[a][1] = v2[a];
-      R[a][2] = v3[a];
+      R[a][0] = v2[a];
+      R[a][1] = v3[a];
+      R[a][2] = v1[a];
     }
 
   memset(qtensor, 0, DIM*DIM*sizeof(dbl));
