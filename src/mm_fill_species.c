@@ -205,7 +205,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
   int var, ii,  pvar, ledof;
   const int eqn = R_MASS;
   const int dim = pd->Num_Dim;
-  int p, b, q, w, w1, i, j, status, c;
+  int a, p, b, q, w, w1, i, j, status, c;
   /*
    *    species_eqn_type:
    *        This is a temp variable that gets set at the top
@@ -702,7 +702,6 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 	{
 	  if(supg!=0.)
 	    {
-	      int a;
 	      double vnorm = 0;
 
 	      for (a = 0; a < VIM; a++) {
@@ -734,10 +733,10 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 	      if (vnorm > 0) {
 		supg_tau = 0.5 * hk * eta / vnorm;
 
-		for (int a = 0; a < VIM; a++)
+		for (a = 0; a < VIM; a++)
 		  {
-		    int var = VELOCITY1 + a;
-		    for (int j = 0; j < ei->dof[var]; j++)
+		    var = VELOCITY1 + a;
+		    for (j = 0; j < ei->dof[var]; j++)
 		      {
 			d_supg_tau_dv[a][j] = - 0.5*hk*eta*fv->v[a]*bf[var]->phi[j] / (pow(vnorm, 3));
 		      }
@@ -746,9 +745,9 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 
 	      } else {
 		supg_tau = 0;
-		for (int i = 0; i < DIM; i++)
+		for (i = 0; i < DIM; i++)
 		  {
-		    for (int j = 0; j < MDE; j++)
+		    for (j = 0; j < MDE; j++)
 		      {
 			d_supg_tau_dv[i][j] = 0.0;
 		      }
