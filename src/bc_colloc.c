@@ -1331,6 +1331,7 @@ int i;
                   default:
                       *func =0.; 
                   }
+               break;
           case CYLINDRICAL:
           case SWIRLING:
                switch (velo_condition) {
@@ -1366,7 +1367,6 @@ int i;
                   default:
                       *func =0.; 
                   }
-
                break;
           }
      }
@@ -1408,6 +1408,7 @@ int i;
                   default:
                       *func =0.; 
                   }
+               break;
           case CYLINDRICAL:
           case SWIRLING:
                expon = 1.+1./pl_index;

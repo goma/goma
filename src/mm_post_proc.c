@@ -825,7 +825,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   if (VELO_SPEED != -1 && pd->e[R_MOMENTUM1] ){
     velo_sqrd = 0.;
-    for (a = 0; a < VIM; a++) {       
+    for (a = 0; a < dim; a++) {       
 	velo_sqrd += SQUARE(fv->v[a]);
         }
     local_post[VELO_SPEED] = sqrt(velo_sqrd);
