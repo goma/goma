@@ -27848,7 +27848,7 @@ fluid_stress( double Pi[DIM][DIM],
         }
     }
 
-  if ( d_Pi != NULL && pd->v[VELOCITY_GRADIENT11] )
+  if ( d_Pi != NULL && pd->v[VELOCITY_GRADIENT11] && pd->v[POLYMER_STRESS11])
     {
       for ( p=0; p<VIM; p++)
         {

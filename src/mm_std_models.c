@@ -3821,7 +3821,7 @@ int
 suspension_balance(struct Species_Conservation_Terms *st,
 		   int w)                      /* species number */
 {     
-  int a, j, p, b, var;
+  int a, j, p, b, var, q;
   int status=1;
   int dim;
   dbl gamma_dot[DIM][DIM];
@@ -3846,17 +3846,28 @@ suspension_balance(struct Species_Conservation_Terms *st,
   dbl d_div_tau_p_dy[DIM][MAX_CONC][MDE];      /* derivative wrt concentration */
   dbl d_div_tau_p_dv[DIM][DIM][MDE];           /* derivative wrt velocity */
   dbl d_div_tau_p_dmesh[DIM][DIM][MDE];        /* derivative wrt mesh */
-  dbl d_div_tau_p_dvd[DIM][DIM][MDE];          /* derivative wrt vorticity dir */
+  dbl d_div_tau_p_dG[DIM][DIM][DIM][MDE];          /* derivative wrt velocity gradient G */
   dbl d_div_tau_p_dp[DIM][MDE];                /* derivative wrt pressure */
   
   dbl df_dmu0 = 0.0, dmu0_dcure = 0.0, dmu0_dT = 0.0;
   dbl del_rho = 0.0;
+  int v_g[DIM][DIM];
   
   /* Set up some convenient local variables and pointers */
   Y = fv->c;
   grad_Y = fv->grad_c;
   
   dim = pd->Num_Dim;
+
+  v_g[0][0] = VELOCITY_GRADIENT11;
+  v_g[0][1] = VELOCITY_GRADIENT12;
+  v_g[1][0] = VELOCITY_GRADIENT21;
+  v_g[1][1] = VELOCITY_GRADIENT22;
+  v_g[0][2] = VELOCITY_GRADIENT13;
+  v_g[1][2] = VELOCITY_GRADIENT23;
+  v_g[2][0] = VELOCITY_GRADIENT31;
+  v_g[2][1] = VELOCITY_GRADIENT32; 
+  v_g[2][2] = VELOCITY_GRADIENT33;
   
   /* Compute gamma_dot[][] */
   
@@ -3977,12 +3988,12 @@ suspension_balance(struct Species_Conservation_Terms *st,
   memset( d_div_tau_p_dy, 0, sizeof(double) * DIM*MAX_CONC*MDE);
   memset( d_div_tau_p_dv, 0, sizeof(double) * DIM*DIM*MDE);
   memset( d_div_tau_p_dmesh, 0, sizeof(double) * DIM*DIM*MDE);
-  memset( d_div_tau_p_dvd, 0, sizeof(double) * DIM*DIM*MDE);
+  memset( d_div_tau_p_dG, 0, sizeof(double) * DIM*DIM*DIM*MDE);
   memset( d_div_tau_p_dp, 0, sizeof(double) * DIM*MDE);
   
   /* This is the divergence of the particle stress  */
   divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
-				   d_div_tau_p_dv, d_div_tau_p_dmesh, d_div_tau_p_dvd,d_div_tau_p_dp, w);
+				   d_div_tau_p_dv, d_div_tau_p_dmesh, d_div_tau_p_dG,d_div_tau_p_dp, w);
 
   
   /* this is the hindered settling term that modifies the flux */
@@ -4102,27 +4113,6 @@ suspension_balance(struct Species_Conservation_Terms *st,
 		}
 	    }
 	}
-	  
-      var = VORT_DIR1;
-      memset(st->d_diff_flux_dvd, 0, MAX_CONC*DIM*DIM*MDE*sizeof(dbl));
-      
-      if(pd->v[var])
-	{
-	  for ( a=0; a<VIM; a++)   
-	    {
-	      for( p=0; p<VIM; p++ )
-		{
-		  for( j=0;  j<ei->dof[var]; j++)
-		    {
-		      c_term = -M*d_div_tau_p_dvd[a][p][j];
-		      
-		      mu_term = 0.;
-		      
-		      st->d_diff_flux_dvd[w][a][p][j] = c_term + mu_term;
-		    }
-		}
-	    }
-	} 
 
       var = MESH_DISPLACEMENT1;
       memset(st->d_diff_flux_dmesh, 0, MAX_CONC*DIM*DIM*MDE*sizeof(dbl));
@@ -4147,55 +4137,28 @@ suspension_balance(struct Species_Conservation_Terms *st,
 		}
 	    }
 	}
-    }
 
-     /*  var = VELOCITY_GRADIENT11; */
-/*       if ( pd->v[var] ) */
-/* 	{ */
-/* 	  for ( a=0; a<dim; a++) */
-/* 	    {		       */
-/* 	      for ( c=0; c<VIM; c++) */
-/* 		{ */
-/* 		  for ( d=0; d<VIM; d++) */
-/* 		    { */
-/* 		      var = v_g[c][d]; */
-/* 		      if ( pd->v[var] ) */
-/* 			{ */
-/* 			  for ( j=0; j<ei->dof[var]; j++) */
-/* 			    { */
-/* 			      mu_term = 0.; */
-/* 			      c_term = -Y[w]*M*d_div_tau_p_dgd[a][c][d][j]; */
-/* 			      phi_j = bf[var]->phi[j]; */
-/* 			      for ( p=0; p<VIM; p++) */
-/* 				{		       */
-/* 				  for ( q=0; q<VIM; q++) */
-/* 				    {		       */
-/* 				      mu_term += -Y[w]*M*mu*bf[var]->grad_phi[j] [a] */
-/* 					*(delta(q,d)*delta(p,c)+delta(q,c)*delta(p,d)); */
-				      
-/* 				      if ( pd->CoordinateSystem != CARTESIAN ) */
-/* 					{ */
-/* 					  for ( r=0; r<VIM; r++) */
-/* 					    { */
-/* 					      mu_term -= -Y[w]*M*mu* (delta(q,d)*delta(p,c)+delta(q,c)*delta(p,d)) */
-/* 						* phi_j  *  (fv->grad_e[p][r][q]+fv->grad_e[q][p][r]); */
-/* 					    } */
-/* 					} */
-/* 				      for ( r=0; r<VIM; r++) */
-/* 					{ */
-/* 					  mu_term -= (delta(b,d)*delta(a,c)+delta(b,c)*delta(a,d)) */
-/* 					    * phi_j *  fv->grad_e[b][a][r]; */
-/* 					} */
-/* 				    } */
-/* 				} */
-/* 			      st->d_diff_flux_dG[w][a][c][d][j] = c_term  +  mu_term; */
-/* 			    } */
-			  
-/* 			} */
-/* 		    } */
-/* 		} */
-/* 	    } */
-/* 	} */
+      var = VELOCITY_GRADIENT11;
+      if ( pd->v[var] )
+	{
+	  for ( a=0; a < VIM; a++)
+	    {
+	      for ( p=0; p < VIM; p++)
+		{
+		  for ( q = 0; q < VIM; q++)
+		    {
+		      var = v_g[p][q];
+		      for ( j=0; j<ei->dof[var]; j++)
+			{
+			  c_term = -M * d_div_tau_p_dG[a][p][q][j];
+			  st->d_diff_flux_dG[w][a][p][q][j] = c_term;
+			}
+		    } /* for q */
+		} /* for p */
+	    } /* for a */
+	} /* if pd->p[var] */
+
+    }  /* End Jacobian */
 
 
   return(status);
@@ -4530,7 +4493,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 			   dbl d_div_tau_p_dy[DIM][MAX_CONC][MDE],/* derivative wrt concentration */
 			   dbl d_div_tau_p_dv[DIM][DIM][MDE],       /* derivative wrt velocity */
 			   dbl d_div_tau_p_dmesh[DIM][DIM][MDE],       /* derivative wrt mesh */
-			   dbl d_div_tau_p_dvd[DIM][DIM][MDE],       /* derivative wrt vorticity direction */
+			   dbl d_div_tau_p_dG[DIM][DIM][DIM][MDE],       /* derivative wrt velocity gradient G */
 			   dbl d_div_tau_p_dp[DIM][MDE],       /* derivative wrt pressure */
 			   int w)                            /* species number */
 {
@@ -4564,10 +4527,8 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 
   dbl vort_dir_local[DIM];
   int print = 0;
-  dbl v1[DIM],v2[DIM],v3[DIM],tmp=0.,sqrt2_inv=0.;
-  dbl B_t=0., C=0., B_c=0., rho_k=0.;
+  dbl v1[DIM],v2[DIM],v3[DIM],tmp=0.;
   dbl Q_prime[DIM][DIM],R[DIM][DIM];
-  dbl omega[DIM],omega_rel[DIM],omega_rel_norm;
   dbl radius_p, L_char, U_max;
   dbl v_bias[DIM], vort_bias[DIM], vy_bias[DIM];
 
@@ -4576,6 +4537,19 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   dbl v1_pert[DIM], v2_pert[DIM], v3_pert[DIM];
   dbl qtensor_pert[DIM][DIM];
   dbl d_qtensor_dv[DIM][DIM][DIM];
+
+  dbl g[DIM][DIM];
+  dbl gt[DIM][DIM];
+  dbl gamma_cont[DIM][DIM];
+  int v_g[DIM][DIM];
+  dbl gamma_cont_pert[DIM][DIM];
+  dbl g_pert[DIM][DIM], R_pert[DIM][DIM];
+  
+  memset(g, 0, DIM * DIM * sizeof(double));
+  memset(gt, 0, DIM * DIM * sizeof(double));
+  memset(gamma_cont, 0, DIM*DIM* sizeof(dbl));
+  memset(g_pert, 0, DIM * DIM * sizeof(double));
+  memset(R_pert, 0, DIM * DIM * sizeof(double));
   
   memset(v1, 0, DIM * sizeof(double));
   memset(v2, 0, DIM * sizeof(double));
@@ -4585,6 +4559,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   memset(v2_pert, 0, DIM * sizeof(double));
   memset(v3_pert, 0, DIM * sizeof(double));
   memset(d_qtensor_dv, 0, DIM * DIM * DIM * sizeof(dbl));
+  memset(gamma_cont_pert, 0, DIM * DIM * sizeof(dbl));
   
   Y = fv->c;
   grad_Y = fv->grad_c;
@@ -4594,6 +4569,33 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   if (gammadot < 1.e-10)
     {
       gammadot = 1.e-10;
+    }
+
+  v_g[0][0] = VELOCITY_GRADIENT11;
+  v_g[0][1] = VELOCITY_GRADIENT12;
+  v_g[1][0] = VELOCITY_GRADIENT21;
+  v_g[1][1] = VELOCITY_GRADIENT22;
+  v_g[0][2] = VELOCITY_GRADIENT13;
+  v_g[1][2] = VELOCITY_GRADIENT23;
+  v_g[2][0] = VELOCITY_GRADIENT31;
+  v_g[2][1] = VELOCITY_GRADIENT32; 
+  v_g[2][2] = VELOCITY_GRADIENT33; 
+
+  for ( a = 0; a < VIM; a++)
+    {
+      for ( b = 0; b < VIM; b++)
+	{
+	  g[a][b] = fv->G[a][b];
+	  gt[b][a] = g[a][b];
+	}
+    }
+
+  for (a=0; a < VIM; a++)
+    {
+      for ( b=0; b < VIM; b++)
+	{
+	  gamma_cont[a][b] = g[a][b] + gt[a][b];
+	}
     }
   
   dim = pd->Num_Dim;
@@ -4632,25 +4634,13 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   memset(d_div_q_dvd, 0, DIM*DIM*MDE*sizeof(dbl));
   memset(d_qtensor_dvd, 0, DIM*DIM*DIM*MDE*sizeof(dbl));
 
-  // Q tensor for specific geometry (channel at 30 deg angle)
-
-  /*dbl rad = 30. * M_PIE / 180.;
-  dbl SI = sin(rad);
-  dbl CO = cos(rad);
-  memset(qtensor, 0, DIM*DIM*sizeof(dbl));
-  qtensor[0][0] = 1. - 0.2 * SI * SI;
-  qtensor[0][1] = -0.2 * SI * CO;
-  qtensor[1][0] = -0.2 * SI * CO;
-  qtensor[1][1] = 1. - 0.2 * CO * CO;
-  qtensor[2][2] = 0.5; */
-
   /* Solve for the eigenvalues of gamma_dot   */
   
   for ( a=0; a<VIM; a++)
     {
       vort_dir_local[a] = 0.0;
     }
-  find_super_special_eigenvector(gamma_dot, vort_dir_local, v1, v2, v3, &tmp, print);
+  find_super_special_eigenvector(gamma_cont, vort_dir_local, v1, v2, v3, &tmp, print);
 
   memset(v_bias, 0, DIM*sizeof(dbl));
   memset(vort_bias, 0, DIM*sizeof(dbl));
@@ -4666,44 +4656,8 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   v3[0] = v2[1] * v1[2] - v2[2] * v1[1];
   v3[1] = v2[2] * v1[0] - v2[0] * v1[2];
   v3[2] = v2[0] * v1[1] - v2[1] * v1[0];
-  
-  memset(omega, 0, sizeof(double)*DIM);
-  memset(omega_rel, 0, sizeof(double)*DIM);
-  omega[2] = fv->grad_v[0][1]-fv->grad_v[1][0];
-  omega_rel_norm = 0.;
-  
-  for (a=0; a < DIM; a++)
-    {
-      omega_rel[a] = omega[a]/2.;
-      omega_rel_norm += omega_rel[a] * omega_rel[a];
-    }
-
-  omega_rel_norm = sqrt(omega_rel_norm);
-  rho_k = 2. * omega_rel_norm / (gammadot/2. + omega_rel_norm);
-
-  if (rho_k >= 0. && rho_k < 1.)
-    {
-      B_t = rho_k;
-      C = rho_k;
-      B_c = -rho_k + 2;
-    }
-  else if(rho_k >= 1. && rho_k <= 2.)
-    {
-      B_t = 1.;
-      C = 1.;
-      B_c = 1.;
-    }
-  else
-    {
-      printf("rho_k is out of range. Should be between 0 and 2.");
-    }
 
   memset(Q_prime, 0, sizeof(dbl)*DIM*DIM);
-  /*Q_prime[0][0] = (qtensor[0][0]+qtensor[1][1]) * B_t / 2.;
-  Q_prime[0][1] = (qtensor[0][0]-qtensor[1][1]) * C / 2.;
-  Q_prime[1][0] = Q_prime[0][1];
-  Q_prime[1][1] = (qtensor[0][0] + qtensor[1][1]) * B_c / 2.;
-  Q_prime[2][2] = qtensor[2][2];*/
 
   Q_prime[0][0] = (qtensor[0][0]+qtensor[1][1]) / 2.;
   Q_prime[0][2] = (-qtensor[0][0]+qtensor[1][1]) / 2.;
@@ -4719,19 +4673,9 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
       R[a][1] = v3[a];
       R[a][2] = v1[a];
     }
-
-  memset(R, 0, DIM*DIM*sizeof(dbl));
-  R[0][0] = fv->grad_v[1][0];
-  R[1][0] = 2.*fv->grad_v[0][1];
-  R[2][1] = 1.0;
-  R[0][2] = 0.01;
-  R[1][2] = -0.02;
   
   memset(qtensor, 0, DIM*DIM*sizeof(dbl));
   rotate_tensor(Q_prime, qtensor, R, 0);
-  qtensor[0][0] = fv->grad_v[0][1];
-  qtensor[1][1] = 0.8;
-  qtensor[2][2] = 0.5;
   
   if(gn->ConstitutiveEquation == SUSPENSION
      || gn->ConstitutiveEquation == CARREAU_SUSPENSION
@@ -4793,7 +4737,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     {
       memset(d_div_tau_p_dgd, 0, DIM*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dv, 0, DIM*DIM*MDE*sizeof(dbl) );
-      memset(d_div_tau_p_dvd,0, DIM*DIM*MDE*sizeof(dbl) );
+      memset(d_div_tau_p_dG,0, DIM*DIM*DIM*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dy, 0, DIM*MAX_CONC*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dmesh, 0, DIM*DIM*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dp, 0, DIM*MDE*sizeof(dbl) );
@@ -4853,214 +4797,85 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 	    }
 	}
 
-      /* d_tau_p_d_v */
-      /* Must calculate numerical Jacobians since analytical are intractable! */
-      /* This code is from assemble_vorticity_directions   */
-      memset(vv, 0, sizeof(double)*DIM*MDE);
-      var = VELOCITY1;
-      for(a = 0; a < VIM; a++)
+      /* J_div_tau_G  */
+
+      dbl d_qtensor_dG[DIM][DIM][DIM][DIM];      
+      var = VELOCITY_GRADIENT11;
+      if(pd->v[var])
 	{
-	  for( j=0; j<ei->dof[var]; j++)
+	  memset(d_qtensor_dG, 0, DIM*DIM*DIM*DIM*sizeof(dbl));
+	  eps = 1.e-9;
+	  for ( a=0; a < VIM; a++)
 	    {
-	      vv[a][j]=*esp->v[a][j];
+	      for (b=0; b < VIM; b++)
+		{
+		  g_pert[a][b] = g[a][b];
+		}
 	    }
-	}
-      for(b = 0; b < VIM; b++)
-	{
-	  var = VELOCITY1 + b;
-	  for( j=0; j<ei->dof[var]; j++)
+	  
+	  for ( a=0; a < VIM; a++)
 	    {
-	      phi_j = bf[var]->phi[j];
-	      
-	      if(*esp->v[b][j] != 0.)
+	      for ( b=0; b < VIM; b++)
 		{
-		  eps = *esp->v[b][j] * DELTA_UNKNOWN ;
-		}
-	      else
-		{
-		  eps = DELTA_UNKNOWN ;
-		}
-	      
-	      vv[b][j]+=eps;
-	      memset(grad_v, 0, sizeof(double)*DIM*DIM);
-	      for ( p=0; p<DIM; p++)
-		{
-		  for ( q=0; q<DIM; q++)
+		  g_pert[a][b] += eps;
+		  for ( i=0; i < VIM; i++)
 		    {
-		      for ( r=0; r<DIM; r++)
+		      for ( j=0; j < VIM; j++)
 			{
-			  for ( i=0; i<ei->dof[var]; i++)
+			  gamma_cont_pert[i][j] = g_pert[i][j] + g_pert[j][i];
+			}
+		    }
+		  
+		  find_super_special_eigenvector(gamma_cont_pert, vort_dir_local, v1_pert, v2_pert,
+						 v3_pert, &tmp, print);
+		  bias_eigenvector_to(v1_pert, v_bias);
+		  bias_eigenvector_to(v2_pert, vy_bias);
+  
+		  v3_pert[0] = v2_pert[1] * v1_pert[2] - v2_pert[2] * v1_pert[1];
+		  v3_pert[1] = v2_pert[2] * v1_pert[0] - v2_pert[0] * v1_pert[2];
+		  v3_pert[2] = v2_pert[0] * v1_pert[1] - v2_pert[1] * v1_pert[0];
+
+		  memset(R_pert, 0, DIM*DIM*sizeof(dbl));
+
+		  for (i=0; i < DIM; i++)
+		    {
+		      R_pert[i][0] = v2_pert[i];
+		      R_pert[i][1] = v3_pert[i];
+		      R_pert[i][2] = v1_pert[i];
+		    }
+
+		  memset(qtensor_pert, 0, DIM*DIM*sizeof(dbl));
+		  rotate_tensor(Q_prime, qtensor_pert, R_pert, 0);
+		  
+		  for ( p = 0; p < VIM; p++)
+		    {
+		      for ( q =0; q < VIM; q++)
+			{
+			  d_qtensor_dG[p][q][a][b] = (qtensor_pert[p][q] - qtensor[p][q]) / eps;
+			}
+		    }
+		  g_pert[a][b] = g[a][b];
+		}
+	    }
+
+	  for ( p = 0; p < dim; p++)
+	    {
+	      for ( q = 0; q < dim; q++)
+		{
+		  var = v_g[p][q];
+		  dofs = ei->dof[var];
+		  for ( j=0; j < dofs; j++)
+		    {
+		      for ( a = 0; a < dim; a++)
+			{
+			  for ( b = 0; b < dim; b++)
 			    {
-			      grad_v[p][q] +=
-				vv[r][i] * bf[var]->grad_phi_e[i][r] [p][q];
+			      d_div_tau_p_dG[a][p][q][j] += mu0 * d_qtensor_dG[a][b][p][q] * bf[var]->phi[j] *
+				(pp * grad_gd[b] + (gammadot + gamma_nl) * d_pp_dy*grad_Y[w][b]);
 			    }
 			}
 		    }
 		}
-	      memset(gamma_dot_pert, 0, sizeof(double)*DIM*DIM);
-	      for( p=0; p<DIM; p++ )
-		{
-		  for ( q=0; q<DIM; q++)
-		    {
-		      gamma_dot_pert[p][q] = grad_v[p][q] + grad_v[q][p];
-		      
-		    }
-		}
-	      
-	      find_super_special_eigenvector(gamma_dot_pert, vort_dir_local, v1_pert, v2_pert, v3_pert, &tmp, print);
-	      bias_eigenvector_to(v1_pert, v_bias);
-	      bias_eigenvector_to(v2_pert, vy_bias);
-  
-	      v3_pert[0] = v2_pert[1] * v1_pert[2] - v2_pert[2] * v1_pert[1];
-	      v3_pert[1] = v2_pert[2] * v1_pert[0] - v2_pert[0] * v1_pert[2];
-	      v3_pert[2] = v2_pert[0] * v1_pert[1] - v2_pert[1] * v1_pert[0];
-
-	      memset(R, 0, DIM*DIM*sizeof(dbl));
-
-	      for (a=0; a < DIM; a++)
-		{
-		  R[a][0] = v2_pert[a];
-		  R[a][1] = v3_pert[a];
-		  R[a][2] = v1_pert[a];
-		}
-
-	      memset(qtensor_pert, 0, DIM*DIM*sizeof(dbl));
-	      rotate_tensor(Q_prime, qtensor_pert, R, 0); 
-
-	      for(p=0; p < DIM; p++)
-		{
-		  for (q=0; q < DIM; q++)
-		    {		      
-		      d_qtensor_dv[b][p][q] = (qtensor_pert[p][q] - qtensor[p][q]) / eps;
-		    }
-		}
-	      
-	      // Testing below
-	      dbl Q1_rot[DIM][DIM][DIM];
-	      dbl Q2_rot[DIM][DIM][DIM];
-	      dbl d_R_Q[DIM][DIM][DIM];
-	      dbl R_Q[DIM][DIM];
-	      dbl RT[DIM][DIM];
-	      dbl d_R[DIM][DIM][DIM];
-	      dbl d_RT[DIM][DIM][DIM];
-	      //int zz;
-	      dbl R_pert[DIM][DIM];
-	      dbl RT_pert[DIM][DIM];
-	      dbl v_pert[DIM];
-	      dbl d_R2[DIM][DIM][DIM];
-	      dbl d_RT2[DIM][DIM][DIM];
-
-	      for(p=0; p<DIM; p++)
-		{
-		  v_pert[p] = fv->v[p];
-		}
-	      v_pert[b] += eps;
-
-	      memset(R_pert, 0, DIM*DIM*sizeof(dbl));
-	      memset(RT_pert, 0, DIM*DIM*sizeof(dbl));
-	      R_pert[0][0] = v_pert[0];
-	      R_pert[1][0] = 2.*v_pert[1];
-	      R_pert[2][1] = 1.;
-	      R_pert[0][2] = 0.01;
-	      R_pert[1][2] = -0.02;
-
-	      memset(R, 0, DIM*DIM*sizeof(dbl));
-	      memset(RT, 0, DIM*DIM*sizeof(dbl));
-	      memset(d_R, 0, DIM*DIM*DIM*sizeof(dbl));
-	      memset(d_RT, 0, DIM*DIM*DIM*sizeof(dbl));
-	      memset(d_R2, 0, DIM*DIM*DIM*sizeof(dbl));
-	      memset(d_RT2, 0, DIM*DIM*DIM*sizeof(dbl));
-	      
-	      
-	      R[0][0] = fv->v[0];
-	      R[1][0] = 2.*fv->v[1];
-	      R[2][1] = 1.;
-	      R[0][2] = 0.01;
-	      R[1][2] = -0.02;
-
-	      for(p=0; p < DIM; p++)
-		{
-		  for (q=0; q < DIM; q++)
-		    {
-		      RT[p][q] = R[q][p];
-		      RT_pert[p][q] = R_pert[q][p];
-		    }
-		}
-
-	      d_R[0][0][0] = 1.0;
-	      d_R[1][1][0] = 2.0;
-	      d_RT[0][0][0] = 1.0;
-	      d_RT[1][0][1] = 2.0;	      
-
-	      /*for(p=0; p < DIM; p++)
-		{
-		  for (q=0; q < DIM; q++)
-		    {
-		      d_R2[b][p][q] = (R_pert[p][q] - R[p][q]) / eps;
-		      d_RT2[b][p][q] = (RT_pert[p][q] - RT[p][q]) / eps;
-		    }
-		}
-	      
-	      memset(d_R_Q, 0, DIM*DIM*DIM*sizeof(dbl));
-	      memset(R_Q, 0, DIM*DIM*sizeof(dbl));
-
-	      for(p=0; p < DIM; p++)
-		{
-		  for (q=0; q < DIM; q++)
-		    {
-		      for (k=0; k < DIM; k++)
-			{
-			  d_R_Q[b][p][q] += d_R2[b][p][k] * Q_prime[k][q];
-			  R_Q[p][q] += R[p][k] * Q_prime[k][q];
-			}
-		    }
-		    }*/
-	      
-	      /*memset(Q1_rot, 0, DIM*DIM*DIM*sizeof(dbl));
-	      memset(Q2_rot, 0, DIM*DIM*DIM*sizeof(dbl));
-	      for(p=0; p < DIM; p++)
-		{
-		  for (q=0; q < DIM; q++)
-		    {
-		      for (k=0; k < DIM; k++)
-			{
-			  Q1_rot[b][p][q] += d_R_Q[b][p][k] * RT[k][q];
-			  Q2_rot[b][p][q] += R_Q[p][k] * d_RT2[b][k][q];
-			}
-		    }
-		    }*/
-	      
-	      /*for(p=0; p < DIM; p++)
-		{
-		  for (q=0; q < DIM; q++)
-		    {
-		      d_qtensor_dv[b][p][q] = Q1_rot[b][p][q] + Q2_rot[b][p][q];
-		    }
-		    }*/
-
-	      memset(qtensor_pert, 0, DIM*DIM*sizeof(dbl));
-	      qtensor_pert[0][0] = grad_v[0][1];
-	      qtensor_pert[1][1] = 0.8;
-	      qtensor_pert[2][2] = 0.5;
-	      for(p=0; p < DIM; p++)
-		{
-		  for (q=0; q < DIM; q++)
-		    {		      
-		      d_qtensor_dv[b][p][q] = (qtensor_pert[p][q] - qtensor[p][q]) / eps;
-		    }
-		}
-	      
-	      // End of testing
-	      
-	      for(a=0; a < DIM; a++)
-		{
-		  for (p=0; p < DIM; p++)
-		    {
-		      d_div_tau_p_dv[b][a][j] += mu0 * d_qtensor_dv[b][a][p] * bf[var]->phi[j]
-		          * (pp * grad_gd[p]+ (gammadot + gamma_nl) * d_pp_dy * grad_Y[w][p]);	
-		    }
-		}
-	      vv[b][j]=*esp->v[b][j];
 	    }
 	}
       

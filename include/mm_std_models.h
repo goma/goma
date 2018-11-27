@@ -121,7 +121,7 @@ PROTO((dbl [DIM],               /* divergence of the stress*/
        dbl [DIM][MAX_CONC][MDE],/* derivative wrt concentration */
        dbl [DIM][DIM][MDE],     /* derivative wrt velocity */
        dbl [DIM][DIM][MDE],     /* derivative wrt mesh */
-       dbl [DIM][DIM][MDE],     /* derivative wrt vorticity direction */
+       dbl [DIM][DIM][DIM][MDE],   /* derivative wrt velocity gradient G */
        dbl [DIM][MDE],          /* derivative wrt pressure */
        int ));	                /* species number */
 
