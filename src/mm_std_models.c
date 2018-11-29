@@ -3837,7 +3837,7 @@ suspension_balance(struct Species_Conservation_Terms *st,
   dbl f, maxpack, rzexp = 0;
   dbl df_dy, df_dmu;
   dbl M;  /* hindrance function */
-  dbl dM_dy, dM_dmu;
+  dbl dM_dy, dM_dmu, gammadot = 0.;
   
   dbl c_term, mu_term, g_term, d_term;
   
@@ -3848,10 +3848,18 @@ suspension_balance(struct Species_Conservation_Terms *st,
   dbl d_div_tau_p_dmesh[DIM][DIM][MDE];        /* derivative wrt mesh */
   dbl d_div_tau_p_dG[DIM][DIM][DIM][MDE];          /* derivative wrt velocity gradient G */
   dbl d_div_tau_p_dp[DIM][MDE];                /* derivative wrt pressure */
+
+  dbl d_gd_dv[DIM][MDE];        /* derivative of strain rate invariant 
+				   wrt velocity */ 
+  dbl d_gd_dmesh[DIM][MDE];     /* derivative of strain rate invariant 
+				   wrt mesh */
   
   dbl df_dmu0 = 0.0, dmu0_dcure = 0.0, dmu0_dT = 0.0;
   dbl del_rho = 0.0;
   int v_g[DIM][DIM];
+  dbl d_lift_dgd, d_lift_dc;
+  dbl y_loc, x_loc, r_loc, h;
+  dbl lift_dir[DIM], lift_coeff;
   
   /* Set up some convenient local variables and pointers */
   Y = fv->c;
@@ -3859,6 +3867,38 @@ suspension_balance(struct Species_Conservation_Terms *st,
   
   dim = pd->Num_Dim;
 
+  memset(lift_dir, 0, DIM*sizeof(dbl));
+
+  x_loc = fv->x[0];
+  y_loc = fv->x[1];
+  r_loc = x_loc * x_loc + y_loc * y_loc;
+  if(r_loc > 0.)
+    {
+      r_loc = sqrt(r_loc);
+    }
+  else
+    {
+      r_loc = 0.;
+    }
+
+  h = 0.02 - r_loc;
+  if ( h < 1.e-5 )
+    {
+      h = 1.e-5;
+    }
+
+  lift_dir[2] = 0.;
+  if(r_loc > 1.e-5)
+    {
+      lift_dir[0] = -x_loc/r_loc;
+      lift_dir[1] = -y_loc/r_loc;
+    }
+  else
+    {
+      lift_dir[0] = -x_loc;
+      lift_dir[1] = -y_loc;
+    }
+  
   v_g[0][0] = VELOCITY_GRADIENT11;
   v_g[0][1] = VELOCITY_GRADIENT12;
   v_g[1][0] = VELOCITY_GRADIENT21;
@@ -3882,6 +3922,8 @@ suspension_balance(struct Species_Conservation_Terms *st,
 	  gamma_dot[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
 	}
     }
+
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
   
   mu = viscosity(gn, gamma_dot, d_mu);
   
@@ -4001,11 +4043,16 @@ suspension_balance(struct Species_Conservation_Terms *st,
   dM_dy = Dg * df_dy;
   //dM_dmu = Dg * df_dmu;
   dM_dmu = 0.;
+
+  lift_coeff = 3. * mu0 * gammadot * 1.2 * Y[w] / (4. * M_PIE * h);
+  d_lift_dgd = lift_coeff / gammadot;
+  d_lift_dc = lift_coeff / Y[w];
   
   /* assemble residual */
   for ( a=0; a<dim; a++)
     {
       st->diff_flux[w][a] = -M*div_tau_p[a];
+      st->diff_flux[w][a] += M * lift_coeff * lift_dir[a];
       st->diff_flux[w][a] += M*Y[w]*mp->momentum_source[a]*del_rho; 
       st->diff_flux[w][a] += -Dd[a]*grad_Y[w][a];
     }
@@ -4019,9 +4066,10 @@ suspension_balance(struct Species_Conservation_Terms *st,
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
 	      
-	      c_term = -dM_dy*bf[var]->phi[j]*div_tau_p[a];
+	      c_term = -dM_dy*bf[var]->phi[j]*(div_tau_p[a] - lift_coeff*lift_dir[a]);
 	      
 	      c_term += -M*d_div_tau_p_dy[a][w][j];
+	      c_term += M * d_lift_dc * lift_dir[a] * bf[var]->phi[j];
 	      
 	      mu_term = -dM_dmu*d_mu->C[w][j]*div_tau_p[a];
 	      
@@ -4105,6 +4153,7 @@ suspension_balance(struct Species_Conservation_Terms *st,
 		  for( j=0;  j<ei->dof[var]; j++)
 		    {
 		      c_term = -M*d_div_tau_p_dv[a][p][j];
+		      c_term += M * d_lift_dgd * d_gd_dv[p][j] * lift_dir[a];
 		      
 		      mu_term = 0.;
 		      
