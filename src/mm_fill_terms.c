@@ -9434,25 +9434,26 @@ load_fv_grads(void)
   if (pd->v[VELOCITY1])
     {
       dofs  = ei->dof[VELOCITY1];
-      v = VELOCITY1;  
-#ifdef DO_NO_UNROLL	  
+      v = VELOCITY1;
       for (p = 0; p < VIM; p++)
 	{
 	  for (q = 0; q < VIM; q++)
 	    {
 	      fv->grad_v[p][q] = 0.0;
+	      fv_old->grad_v[p][q] = 0.0;
 	      for (r = 0; r < wim; r++)
 		{
 		  for (i = 0; i < dofs; i++)
 		    {
-		      fv->grad_v[p][q] += (*esp->v[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];	      
+		      fv->grad_v[p][q] += (*esp->v[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];
+		      if ( pd->TimeIntegration != STEADY )
+			{
+			  fv_old->grad_v[p][q] += (*esp_old->v[r][i]) * bf[v]->grad_phi_e[i][r][p][q];
+			}
 		    }
 		}
 	    }
 	}
-#else
-      grad_vector_fv_fill(esp->v, bf[v]->grad_phi_e, dofs, fv->grad_v);
-#endif
     } 
   else if (zero_unused_grads && upd->vp[VELOCITY1] == -1) 
     {

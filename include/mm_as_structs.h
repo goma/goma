@@ -1940,6 +1940,8 @@ struct Diet_Field_Variables
   dbl strain[DIM][DIM];         /* Strain tensor */
   dbl volume_change;            /* Volume change */
 
+  dbl grad_v[DIM][DIM];         /* Velocity gradient */
+
 };
 
 struct Rotation_Vectors

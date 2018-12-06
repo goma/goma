@@ -358,7 +358,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
    */
   rho  = density(d_rho, time);
 
-  double supg_tau;
+  double supg_tau = 0.;
   double d_supg_tau_dv[DIM][MDE];
 
   if( mp->Spwt_funcModel == GALERKIN)

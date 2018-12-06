@@ -2794,8 +2794,6 @@ find_eigenvalues_eigenvectors(dbl T[DIM][DIM],
   memset(v1, 0, DIM * sizeof(dbl));
   memset(v2, 0, DIM * sizeof(dbl));
   memset(v3, 0, DIM * sizeof(dbl));
- 
-  dbl eigenvalue = 0.0;
 
   memset(A, 0, 9 * sizeof(dbl));
   for (i=0; i < DIM; i++)
@@ -2898,7 +2896,6 @@ find_eigenvalues_eigenvectors(dbl T[DIM][DIM],
 	  { 
 	    /* z3 < z2 < z1 */
 	    find_eigenvector(A, z2, v, print);
-	    eigenvalue = z2;
 	    eig1 = z1;
 	    eig2 = z3;
 	    eig3 = z2;
@@ -2908,7 +2905,6 @@ find_eigenvalues_eigenvectors(dbl T[DIM][DIM],
 	    {
 	      /* z2 < z1 < z3 */
 	      find_eigenvector(A, z1, v, print);
-	      eigenvalue = z1;
 	      eig1 = z3;
 	      eig2 = z2;
 	      eig3 = z1;
@@ -2917,7 +2913,6 @@ find_eigenvalues_eigenvectors(dbl T[DIM][DIM],
 	    {
 	      /* z2 < z3 < z1 */
 	      find_eigenvector(A, z3, v, print);
-	      eigenvalue = z3;
 	      eig1 = z1;
 	      eig2 = z2;
 	      eig3 = z3;
@@ -2928,7 +2923,6 @@ find_eigenvalues_eigenvectors(dbl T[DIM][DIM],
 	    {
 	      /* z1 < z3 < z2 */
 	      find_eigenvector(A, z3, v, print);
-	      eigenvalue = z3;
 	      eig1 = z2;
 	      eig2 = z1;
 	      eig3 = z3;
@@ -2937,7 +2931,6 @@ find_eigenvalues_eigenvectors(dbl T[DIM][DIM],
 	    {
 	      /* z3 < z1 < z2 */
 	      find_eigenvector(A, z1, v, print);
-	      eigenvalue = z1;
 	      eig1 = z2;
 	      eig2 = z3;
 	      eig3 = z1;
@@ -2946,7 +2939,6 @@ find_eigenvalues_eigenvectors(dbl T[DIM][DIM],
 	  {
 	    /* z1 < z2 < z3 */
 	    find_eigenvector(A, z2, v, print);
-	    eigenvalue = z2;
 	    eig1 = z3;
 	    eig2 = z1;
 	    eig3 = z2;
