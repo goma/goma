@@ -30,20 +30,20 @@ _MACH =
 
 # Useful for standard goma libary install location
 
-ARCH = rhel6_ompi
+#ARCH = FD25_gcc-6.2.1 
 
 # Goma library path, by default we assume all major non-standard libraries are under
 # the goma library path
 
-GOMA_LIBS = /home/goma/production/$(ARCH)
+GOMA_LIBS = /home/ferminb/000_Local_gits/Goma/goma
 
 # MPI install location, used for include, lib, and bin directories
 
-MPI_TOP = /usr/bin/openmpi-1.6.3
+MPI_TOP = /usr/lib64/openmpi
 
 # GCC_TOP is the corresponding location of the gcc compilers and libs that are
 # used by the MPI compilers
-GCC_TOP = /usr
+GCC_TOP = /usr/lib64
 
 # PURIFY
 # ------
@@ -115,12 +115,12 @@ DEFINES ?= -Dlinux \
            -DMAX_CONC=4 \
            -DCOUPLED_FILL \
            -DPARALLEL \
+           -DHAVE_STRATIMIKOS \
            -DEIGEN_SERIAL
 
 # Other defines:
 #          -DCHECKFINITE
 #          -DMAX_CONC=1 \
-#          -DUSE_CGM \
 #          -DEIGEN_SERIAL \
 #          -DEIGEN_PARALLEL \
 #          -DNO_CHEBYSHEV_PLEASE \
@@ -169,13 +169,12 @@ LD_LIBRARY_PATH := $(GCC_LIB64):$(GCC_LIB):${LD_LIBRARY_PATH}
 # If built with build-goma-dependencies.sh, includes flags for SEACAS, UMFpack, and all other necessary
 # libraries and includes otherwise not listed below.
 
-#TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-11.8.1-Built
+TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-12.10.1-Built
 
 include $(TRILINOS_TOP)/include/Makefile.export.Trilinos
 
 # Trilinos includes and libraries
-TRILINOS_INC_REMOVE_USR_INCLUDE = $(subst -I/usr/include, ,  $(Trilinos_INCLUDE_DIRS) $(Trilinos_TPL_INCLUDE_DIRS))
-TRILINOS_INC ?= $(subst -I, -isystem, $(TRILINOS_INC_REMOVE_USR_INCLUDE))
+TRILINOS_INC ?= $(subst -I, -isystem, $(Trilinos_INCLUDE_DIRS) $(Trilinos_TPL_INCLUDE_DIRS))
 TRILINOS_LIB ?= $(Trilinos_LIBRARY_DIRS) $(Trilinos_TPL_LIBRARY_DIRS) \
 		$(Trilinos_LIBRARIES) $(Trilinos_TPL_LIBRARIES)
 
@@ -210,7 +209,7 @@ SPARSE_TOP ?= $(GOMA_LIBS)/sparse
 SPARSE_LIB ?= -L$(SPARSE_TOP)/lib  -lsparse$(_MACH)
 
 # Sparse includes are located in the goma directory
-SPARSE_INC ?=
+SPARSE_INC ?= -I$(SPARSE_TOP)/src
 
 # FORTRAN LIBRARIES
 # -----------------
@@ -239,7 +238,7 @@ INCLUDES = $(GOMA_INC) $(SPARSE_INC) $(TRILINOS_INC) \
 DEBUG_FLAGS ?= -g -gdwarf-2
 
 # All compiler options
-CCFLAGS ?= -O2
+CCFLAGS ?= -O
 
 # C/C++ warning flags
 C_WARN_FLAGS ?= -Wall
@@ -319,17 +318,6 @@ MAIN_SRC= main.c
 MAIN_INC= std.h\
           goma.h
 
-
-# _____ Geometry Model routines "gm_" prefix __________________________________
-
-GM_SRC= gm_cgm_c_interface.C \
-        gm_cgm_util.c
-
-GM_INC= gm_cgm_c_interface.h \
-        gm_cgm_util.h \
-        gm_cgm_typedefs.h
-
-
 # _____ Advanced capabilities routines "ac_" prefix ___________________________
 
 AC_SRC= ac_conti.c\
@@ -397,8 +385,6 @@ RF_INC= rf_allo.h\
         rf_io_defn.h\
         rf_io_structs.h\
         rf_masks.h\
-        rf_masks_const.h\
-        rf_masks_globs.h\
         rf_mp.h\
         rf_node.h\
         rf_node_const.h\
@@ -448,10 +434,7 @@ SL_SRC= sl_lu.c\
         sl_aztecoo_interface.cpp \
         sl_stratimikos_interface.cpp
 
-SL_INC= spConfig.h\
-        spDefs.h\
-        spmatrix.h\
-        sl_aux.h\
+SL_INC= sl_aux.h\
         sl_auxutil.h\
         sl_eggroll.h\
         sl_eggroll_def.h\
@@ -645,12 +628,12 @@ USER_INC= user_ac.h\
 # _____ Full macros ___________________________________________________________
 
 GOMA_SRC = $(BC_SRC) $(EL_SRC) $(RF_SRC) $(MAIN_SRC) $(SL_SRC) $(MD_SRC) $(MM_SRC)\
-           $(DP_SRC) $(AC_SRC) $(LOCA_SRC) $(GM_SRC) $(BFU_SRC)
+           $(DP_SRC) $(AC_SRC) $(LOCA_SRC) $(BFU_SRC)
 
 BRKFIX_SRC = $(BF_SRC)
 
 GOMA_INCS = $(EL_INC) $(MAIN_INC) $(RF_INC) $(SL_INC) $(MD_INC) $(DP_INC) $(BC_INC)\
-           $(MM_INC) $(USER_INC) $(AC_INC) $(LOCA_INC) $(GM_INC) $(BF_INC)
+           $(MM_INC) $(USER_INC) $(AC_INC) $(LOCA_INC) $(BF_INC)
 
 GOMA_INCS := ${addprefix $(INCLUDE_DIR)/, $(GOMA_INCS)}
 

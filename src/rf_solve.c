@@ -1860,7 +1860,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      break;
 
 	  case SM_OBJECT:
-	    cgm_based_initialization(x, num_total_nodes);
+      EH(-1, "CGM not supported, SM_OBJECT level set initialization");
 #ifndef COUPLED_FILL
               if (Explicit_Fill)
 		{

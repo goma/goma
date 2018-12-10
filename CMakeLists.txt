@@ -134,6 +134,7 @@ set(${PROJECT_NAME}_Sparse_DIR "${${PROJECT_NAME}_Trilinos_DIR}/../sparse" CACHE
 set(${PROJECT_NAME}_Arpack_DIR "${${PROJECT_NAME}_Trilinos_DIR}/../ARPACK" CACHE FILEPATH "Specify where you installed the Arpack libraries.")
 set(${PROJECT_NAME}_SEACAS_DIR "${${PROJECT_NAME}_Trilinos_DIR}/../seacas" CACHE FILEPATH "If SEACAS is standalone, specify where it is installed.")
 set(${PROJECT_NAME}_LIBS "${${PROJECT_NAME}_Trilinos_DIR}/.." CACHE FILEPATH "Specify where you want the Goma libraries to be temporarilly placed.")
+set(${PROJECT_NAME}_Sparse_INCLUDE_DIR "${${PROJECT_NAME}_Trilinos_DIR}/../sparse/src" CACHE FILEPATH "Specify where you installed the Sparse libraries.")
 
 
 ### Once again back to following standards. Also done so that some flags can be placed on the libraries.
@@ -267,6 +268,7 @@ set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} ${CMAKE_Fortran_FLAG
 include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(SYSTEM ${${PROJECT_NAME}_MPI_TOP}/include)
 include_directories(SYSTEM ${${PROJECT_NAME}_TRILINOS_TOP}/include)
+include_directories(SYSTEM ${${PROJECT_NAME}_Sparse_INCLUDE_DIR})
 if(${${PROJECT_NAME}_Standalone_SEACAS})
   include_directories(SYSTEM "${${PROJECT_NAME}_SEACAS_DIR}/include")
 endif()
@@ -294,6 +296,7 @@ target_link_libraries("${PROJECT_NAME}d" ${${PROJECT_NAME}_SPARSE_LIB} ${Trilino
 target_link_libraries(${PROJECT_NAME} ${${PROJECT_NAME}_SPARSE_LIB} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${${PROJECT_NAME}_ARPACK_LIB}  ${Trilinos_EXTRA_LD_FLAGS} ${${PROJECT_NAME}_SEACAS_LIB})
 
 message("Sparse: ${${PROJECT_NAME}_SPARSE_LIB}")
+message("Sparse include: ${${PROJECT_NAME}_Sparse_INCLUDE_DIR}")
 message("Trilinos: ${Trilinos_LIBRARIES}")
 message("Trilinos TPL: ${Trilinos_TPL_LIBRARIES}")
 message("Arpack: ${${PROJECT_NAME}_ARPACK_LIB}")

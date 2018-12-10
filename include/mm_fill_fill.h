@@ -275,10 +275,6 @@ PROTO(( double *,
         double  ,
 	int    ));
 
-EXTERN void cgm_based_initialization 
-PROTO (( double *,
-         int));
-
 EXTERN void surf_based_initialization 
 PROTO (( double *,
          double *,

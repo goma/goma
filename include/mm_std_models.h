@@ -19,11 +19,14 @@
 
 #ifdef _MM_STD_MODELS_C
 #define EXTERN
-#
 #endif
 
 #ifndef _MM_STD_MODELS_C
 #define EXTERN extern
+#endif
+
+#ifndef PI
+#define PI 3.14159265358979323846
 #endif
 
 EXTERN int bouss_momentum_source /* mm_std_models.c                          */

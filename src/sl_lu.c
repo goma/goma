@@ -21,7 +21,7 @@ static char rcsid[] = "$Id: sl_lu.c,v 5.2 2007-12-07 17:14:37 hkmoffa Exp $";
 
 #include <stdio.h>
 #include <stdlib.h>
-#include "spmatrix.h"
+#include "spMatrix.h"
 #include "spConfig.h"
 
 #define _SL_LU_C
