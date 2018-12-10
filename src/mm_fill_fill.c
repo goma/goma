@@ -468,7 +468,11 @@ assemble_fill(double tt,
       vmag_old += fv_old->v[a] * fv_old->v[a];
     }
   vmag_old = sqrt( vmag_old );
-  tau_gls = 1./sqrt((2./dt)*(2./dt) + (2.*vmag_old/h_elem)*(2.*vmag_old/h_elem));
+  tau_gls = 0.0;
+  if (Fill_Weight_Fcn == FILL_WEIGHT_EXPLICIT)
+    {
+      tau_gls = 1./sqrt((2./dt)*(2./dt) + (2.*vmag_old/h_elem)*(2.*vmag_old/h_elem));
+    }
 
   /**********************************************************************
    **********************************************************************
