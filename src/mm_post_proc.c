@@ -814,8 +814,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     }
     /* find second invariant of strain-rate */
     Dnn = 0.0;
-    for (a = 0; a < ; a++) {
-      for (b = 0; b < ; b++) {
+    for (a = 0; a < dim; a++) {
+      for (b = 0; b < dim; b++) {
 	Dnn += (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
       }
     }
