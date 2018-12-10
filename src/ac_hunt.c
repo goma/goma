@@ -1062,6 +1062,18 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
                path1[iHC] = hunt[iHC].BegParameterValue *
                    pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,hunt_par);
               }  
+            else if(hunt[iHC].ramp == 1)
+              {
+               delta_s[iHC] *= 0.5;
+ 	       switch (aldALC[iHC]) {
+	           case -1: 
+	               path1[iHC] = path[iHC] - delta_s[iHC];
+	               break;
+	           case +1: 
+	               path1[iHC] = path[iHC] + delta_s[iHC];
+	               break;
+	           }
+              }
             else  
               {
                path1[iHC] = hunt[iHC].BegParameterValue +
@@ -1272,6 +1284,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
      * check path step error, if too large do not enlarge path step 
      */
 
+    iHC = MAX(0,log_ID);
     if ((ni == 1) && (n != 0) && (!const_delta_s[iHC])) 
       {
        dhunt_par_new = path_step_control(num_total_nodes, 

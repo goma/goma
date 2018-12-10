@@ -9234,6 +9234,7 @@ void fapply_moving_CA_sinh(
            {
              memset( gamma, 0, sizeof(double)*VIM*VIM);
 	     gamma[0][1] = gamma[1][0] = dcl_shearrate;
+             fv->T = mp->reference[TEMPERATURE];
              liq_visc = viscosity(gn, gamma, NULL);
            }
          else
