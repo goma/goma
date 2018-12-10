@@ -798,10 +798,12 @@ matrix_fill(
       (mp->Ewt_funcModel == SUPG && pde[R_ENERGY] &&
        (pde[R_MOMENTUM1] || pde[R_MESH1])) ||
       (mp->Ewt_funcModel == SUPG && pde[R_SHELL_ENERGY] &&
-       (pde[R_LUBP] ))) {
-    h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
-    element_velocity(pg_data.v_avg, pg_data.dv_dnode, exo);
-  }
+       (pde[R_LUBP] )) ||
+      ((pde[R_FILL]) && ((tran->Fill_Weight_Fcn == FILL_WEIGHT_SUPG) || (tran->Fill_Weight_Fcn == FILL_WEIGHT_EXPLICIT))))
+    {
+      h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
+      element_velocity(pg_data.v_avg, pg_data.dv_dnode, exo);
+    }
   
   if (cr->MassFluxModel == HYDRODYNAMIC)
     {
