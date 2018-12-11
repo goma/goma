@@ -21,8 +21,8 @@
 #define EXTERN
 #endif
 
-#ifndef PI
-#define PI 3.14159265358979323846
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
 #endif
 
 #ifndef _MM_STD_MODELS_SHELL_C
