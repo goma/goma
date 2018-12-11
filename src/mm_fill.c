@@ -738,7 +738,7 @@ matrix_fill(
 	}
     }
 
-  if (PSPG && pde[R_PRESSURE] && pde[R_MOMENTUM1]) {
+  if ((PSPG || (mp->Mwt_funcModel == SUPG)) && pde[R_PRESSURE] && pde[R_MOMENTUM1]) {
     xi[0] = 0.0;
     xi[1] = 0.0;
     xi[2] = 0.0;  

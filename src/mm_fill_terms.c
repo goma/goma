@@ -2632,23 +2632,88 @@ assemble_momentum(dbl time,       /* current time */
   else if( mp->Mwt_funcModel == SUPG)
     { supg = mp->Mwt_func; }
 
+  double tau_supg = 0;
+  double d_tau_supg_dv[DIM][MDE];
+  double d_tau_supg_dX[DIM][MDE];
+  double mu;
+  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
+  VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
+
+
+  /*** Density ***/
+  rho = density(d_rho, time);
+
   if (supg!=0.)
     {
-      h_elem = 0.;
-      for ( p=0; p<dim; p++)
+      double gamma[DIM][DIM];
+      for ( a=0; a<VIM; a++)
         {
-          h_elem += vcent[p] * vcent[p] * hsquared[p];
-        }
-      h_elem = sqrt(h_elem)/2.;
-      if(h_elem == 0.)
-        {
-          h_elem_inv=0.;
-        }
-      else
-        {
-          h_elem_inv=1./h_elem;
+          for ( b=0; b<VIM; b++)
+            {
+              gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+            }
         }
 
+
+      mu = viscosity(gn, gamma, d_mu);
+      double hh_siz = 0.;
+      for ( p=0; p<dim; p++)
+        {
+          hh_siz += hsquared[p];
+        }
+      // Average value of h**2 in the element
+      hh_siz = hh_siz/ ((double )dim);
+
+      // Average value of v**2 in the element
+      double vv_speed = 0.0;
+      for ( a=0; a<wim; a++)
+        {
+          vv_speed += pg_data->v_avg[a]*pg_data->v_avg[a];
+        }
+
+      // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
+      double tau_supg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
+      if (  pd->TimeIntegration != STEADY)
+        {
+          tau_supg1 += 4.0/(dt*dt);
+        }
+      tau_supg = PS_scaling/sqrt(tau_supg1);
+
+      // tau_pspg derivatives wrt v from vv_speed
+      if (pd->v[pg->imtrx][VELOCITY1] )
+        {
+          for ( b=0; b<dim; b++)
+            {
+              var = VELOCITY1+b;
+              if ( pd->v[pg->imtrx][var] )
+                {
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                    {
+                      d_tau_supg_dv[b][j] = -tau_supg/tau_supg1;
+                      d_tau_supg_dv[b][j] *= 1/hh_siz * pg_data->v_avg[b]*pg_data->dv_dnode[b][j];
+                    }
+                }
+            }
+        }
+
+      // tau_pspg derivatives wrt mesh from hh_siz
+      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
+        {
+          for ( b=0; b<dim; b++)
+            {
+              var = MESH_DISPLACEMENT1+b;
+              if ( pd->v[pg->imtrx][var] )
+                {
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                    {
+                      d_tau_supg_dX[b][j] = tau_supg/tau_supg1;
+                      d_tau_supg_dX[b][j] *= (vv_speed + 18.0*(mu/rho)/hh_siz) / (hh_siz*hh_siz);
+                      d_tau_supg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
+
+		    }
+		}
+	    }
+	}
     }
   /* end Petrov-Galerkin addition */
   
@@ -2701,10 +2766,6 @@ assemble_momentum(dbl time,       /* current time */
    * Material property constants, etc. Any variations for this
    * Gauss point were evaluated in load_material_properties().
    */
-
-  /*** Density ***/
-
-  rho = density(d_rho, time);
 
   if ( pd->e[pg->imtrx][eqn] & T_POROUS_BRINK )
     {
@@ -2950,7 +3011,7 @@ assemble_momentum(dbl time,       /* current time */
 		{
 		  for (p=0; p<dim; p++)
 		    {
-		      wt_func += supg * h_elem * v[p] * bfm->grad_phi[i][p];
+		      wt_func += supg * tau_supg * v[p] * bfm->grad_phi[i][p];
 		    }
 		}
 		  
@@ -3151,7 +3212,7 @@ assemble_momentum(dbl time,       /* current time */
 		{
 		  for(p=0; p<dim; p++)
 		    {
-		      wt_func += supg * h_elem * v[p] * bfm->grad_phi[i][p];
+		      wt_func += supg * tau_supg * v[p] * bfm->grad_phi[i][p];
 		    }
 		}
 		  
@@ -3636,13 +3697,11 @@ assemble_momentum(dbl time,       /* current time */
 			      advection_b = 0.;
 			      if(supg!=0.)
                             	{
-				  d_wt_func = supg * h_elem * phi_j*bfm->grad_phi[i][b];
+                                  d_wt_func = supg * tau_supg * phi_j*bfm->grad_phi[i][b];
 
 				  for(p=0;p<dim;p++)
 				    {
-				      d_wt_func += supg * vcent[b] * 
-                                           pg_data->dv_dnode[b][j] *
-					hsquared[b] * h_elem_inv / 4. *
+				      d_wt_func += supg * d_tau_supg_dv[b][j] *
 					v[p] * bfm->grad_phi[i][p];
 
 				    }
@@ -30992,6 +31051,12 @@ calc_pspg( dbl pspg[DIM],
   /*** Density ***/
   rho = density(d_rho, time_value);
 
+  /*
+   * get viscosity for velocity second derivative/diffusion
+   * term in PSPG stuff
+   */
+  mu = viscosity(gn, gamma, d_mu );
+
   if(pspg_global)
     {
       
@@ -31027,49 +31092,98 @@ calc_pspg( dbl pspg[DIM],
 	  vv_speed += v_avg[a]*v_avg[a];
 	}
       
-      // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
-      tau_pspg1 = rho_avg*rho_avg*vv_speed/hh_siz + (9.0*mu_avg*mu_avg)/(hh_siz*hh_siz);
-      if (  pd->TimeIntegration != STEADY)
-	{
-	  tau_pspg1 += 4.0/(dt*dt);
-	}
-      tau_pspg = PS_scaling/sqrt(tau_pspg1);
+      if ((mp->DensityModel == CONSTANT) && ((gn->ConstitutiveEquation == NEWTONIAN) && (mp->ViscosityModel == CONSTANT)))
+        {
 
-      // tau_pspg derivatives wrt v from vv_speed
-      if ( d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1] )
-	{
-	  for ( b=0; b<dim; b++)
-	    {
-	      var = VELOCITY1+b;
-	      if ( pd->v[pg->imtrx][var] )
-		{
-		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-		    {
-		      d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1; 
-		      d_tau_pspg_dv[b][j] *= rho_avg*rho_avg/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
-		    }
-		}
-	    }
-	}
+            // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
+            tau_pspg1 = rho_avg*rho_avg*vv_speed/hh_siz + (9.0*mu_avg*mu_avg)/(hh_siz*hh_siz);
+            if (  pd->TimeIntegration != STEADY)
+              {
+                tau_pspg1 += 4.0/(dt*dt);
+              }
+            tau_pspg = PS_scaling/(rho_avg*sqrt(tau_pspg1));
 
-      // tau_pspg derivatives wrt mesh from hh_siz
-      if ( d_pspg != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
-	{
-	  for ( b=0; b<dim; b++)
-	    {
-	      var = MESH_DISPLACEMENT1+b;
-	      if ( pd->v[pg->imtrx][var] )
-		{
-		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-		    {			
-		      d_tau_pspg_dX[b][j] = tau_pspg/tau_pspg1;
-		      d_tau_pspg_dX[b][j] *= (rho_avg*rho_avg*vv_speed + 18.0*mu_avg*mu_avg/hh_siz) / (hh_siz*hh_siz);
-		      d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
-		      
-		    }
-		}
-	    }
-	}
+            // tau_pspg derivatives wrt v from vv_speed
+            if ( d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1] )
+              {
+                for ( b=0; b<dim; b++)
+                  {
+                    var = VELOCITY1+b;
+                    if ( pd->v[pg->imtrx][var] )
+                      {
+                        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                          {
+                            d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1;
+                            d_tau_pspg_dv[b][j] *= rho_avg*rho_avg/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
+                          }
+                      }
+                  }
+              }
+
+            // tau_pspg derivatives wrt mesh from hh_siz
+            if ( d_pspg != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
+              {
+                for ( b=0; b<dim; b++)
+                  {
+                    var = MESH_DISPLACEMENT1+b;
+                    if ( pd->v[pg->imtrx][var] )
+                      {
+                        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                          {
+                            d_tau_pspg_dX[b][j] = tau_pspg/tau_pspg1;
+                            d_tau_pspg_dX[b][j] *= (rho_avg*rho_avg*vv_speed + 18.0*mu_avg*mu_avg/hh_siz) / (hh_siz*hh_siz);
+                            d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
+
+                          }
+                      }
+                  }
+              }
+        }
+      else
+        {
+          // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
+          tau_pspg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
+          if (  pd->TimeIntegration != STEADY)
+            {
+              tau_pspg1 += 4.0/(dt*dt);
+            }
+          tau_pspg = PS_scaling/(rho*sqrt(tau_pspg1));
+
+          // tau_pspg derivatives wrt v from vv_speed
+          if ( d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1] )
+            {
+              for ( b=0; b<dim; b++)
+                {
+                  var = VELOCITY1+b;
+                  if ( pd->v[pg->imtrx][var] )
+                    {
+                      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                        {
+                          d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1;
+                          d_tau_pspg_dv[b][j] *= 1/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
+                        }
+                    }
+                }
+            }
+
+          // tau_pspg derivatives wrt mesh from hh_siz
+          if ( d_pspg != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
+            {
+              for ( b=0; b<dim; b++)
+                {
+                  var = MESH_DISPLACEMENT1+b;
+                  if ( pd->v[pg->imtrx][var] )
+                    {
+                      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                        {
+                          d_tau_pspg_dX[b][j] = tau_pspg/tau_pspg1;
+                          d_tau_pspg_dX[b][j] *= (vv_speed + 18.0*(mu/rho)/hh_siz) / (hh_siz*hh_siz);
+                          d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
+                        }
+                    }
+                }
+            }
+        }
     }
 
   for ( a=0; a<VIM; a++) grad_v[a] = fv->grad_v[a];
@@ -31083,11 +31197,6 @@ calc_pspg( dbl pspg[DIM],
 	}
     }
 
-  /*
-   * get viscosity for velocity second derivative/diffusion
-   * term in PSPG stuff
-   */
-  mu = viscosity(gn, gamma, d_mu );
 
 
   /* get variables we will need for momentum residual */
