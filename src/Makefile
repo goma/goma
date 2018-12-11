@@ -30,16 +30,16 @@ _MACH =
 
 # Useful for standard goma libary install location
 
-#ARCH = FD25_gcc-6.2.1 
+ARCH = rhel6_ompi 
 
 # Goma library path, by default we assume all major non-standard libraries are under
 # the goma library path
 
-GOMA_LIBS = /home/ferminb/000_Local_gits/Goma/goma
+GOMA_LIBS = /home/goma/production/$(ARCH)
 
 # MPI install location, used for include, lib, and bin directories
 
-MPI_TOP = /usr/lib64/openmpi
+MPI_TOP = /usr/bin/openmpi-1.6.3
 
 # GCC_TOP is the corresponding location of the gcc compilers and libs that are
 # used by the MPI compilers
@@ -238,7 +238,7 @@ INCLUDES = $(GOMA_INC) $(SPARSE_INC) $(TRILINOS_INC) \
 DEBUG_FLAGS ?= -g -gdwarf-2
 
 # All compiler options
-CCFLAGS ?= -O
+CCFLAGS ?= -O2
 
 # C/C++ warning flags
 C_WARN_FLAGS ?= -Wall
