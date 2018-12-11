@@ -3672,10 +3672,27 @@ fvelo_slip_ls_heaviside(double func[MAX_PDIM],
       memset(d_beta_dF,0,MDE*sizeof(double));
      }
 #endif /* COUPLED_FILL */
+  dbl gamma[DIM][DIM];
+  dbl mu;
+  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
+  VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
+
+  /**
+     compute gammadot, viscosity
+  **/
+  for ( int i=0; i<VIM; i++)
+    {
+      for ( int j=0; j<VIM; j++)
+  	{
+  	  gamma[i][j] = fv->grad_v[i][j] + fv->grad_v[j][i];
+  	}
+    }
+
+  mu = viscosity(gn, gamma, d_mu);
 
   level_set_property(beta_negative, beta_positive, width, &beta, d_beta_dF);
 
-  betainv = 1.0/beta;
+  betainv = mu/beta;
 
   vs[0] = vsx;
   vs[1] = vsy;
@@ -3707,6 +3724,7 @@ fvelo_slip_ls_heaviside(double func[MAX_PDIM],
 		  phi_j = bf[var]->phi[j];
 
 		  d_func[p][var][j] += (d_beta_dF[j]/beta/beta)*( fv->v[p] - vs[p] );
+		  //d_func[p][var][j] += (d_beta_dF[j])*( fv->v[p] - vs[p] );
 		}
 	    }
 	}
