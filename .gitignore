@@ -16,3 +16,5 @@ cmake-config
 cmake-debug
 /scripts/easygomabuild.txt
 /scripts/gomaTPLs/
+/scripts/build-goma-dep-trilinos-12.sh
+/src/Makefile

@@ -413,7 +413,7 @@ ns_data_print(pp_Data * p,
 
 		/* cos (theta) = n1.n2 / ||n1|| ||n2|| */
 
-		ordinate += 180. - (180./PI)*acos((n1[0]*n2[0] + n1[1]*n2[1])/
+		ordinate += 180. - (180./M_PI)*acos((n1[0]*n2[0] + n1[1]*n2[1])/
 						    (sqrt(n1[0]*n1[0]+n1[1]*n1[1])*
 						     sqrt(n2[0]*n2[0]+n2[1]*n2[1])));
 		}
