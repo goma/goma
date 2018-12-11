@@ -9,7 +9,7 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
-// 
+ 
 /*
  * $Id: ac_particles.h,v 5.1 2007-09-18 18:53:40 prschun Exp $
  */
