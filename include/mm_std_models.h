@@ -25,10 +25,6 @@
 #define EXTERN extern
 #endif
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
 EXTERN int bouss_momentum_source /* mm_std_models.c                          */
 PROTO((dbl [DIM],		/* f - Body force.                           */
        MOMENTUM_SOURCE_DEPENDENCE_STRUCT *,
