@@ -60,10 +60,6 @@ static char rcsid[] =
 
 #include "goma.h"
  
-#ifndef PI
-#define PI 3.14159265358979323846
-#endif
-
 extern double time_goma_started; /* def'd and set in main.c */
 
 char err_msg[MAX_CHAR_IN_INPUT];
