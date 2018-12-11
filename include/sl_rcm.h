@@ -8,7 +8,7 @@
 * the U.S. Government retains certain rights in this software.            *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
-\************************************************************************/
+***************************************************************************/
 
 /* 
  *	sl_rcm.h
@@ -21,7 +21,6 @@
 
 #ifndef _RCM_H
 #define _RCM_H
-#endif
 
 #define UPPER_CASE		/* Solaris, HP/UX, Linux, IRIX, janus, ... */
 
@@ -117,3 +116,4 @@
 
 #endif
 
+#endif

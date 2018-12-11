@@ -5265,7 +5265,7 @@ checkfinite(const char *file, const int line, const char *message)
         {
           for (i = 0; i < ei->dof[eqn]; i++)
             {
-              j = finite(lec->R[peqn][i]);
+              j = isfinite(lec->R[peqn][i]);
               if (!j) {
 		fprintf(stderr, "lec->R[%s][edof=%d] = %g\n",
 			EQ_Name[eqn].name1,i,lec->R[peqn][i]);
@@ -5285,7 +5285,7 @@ checkfinite(const char *file, const int line, const char *message)
 		      }
                       for (j = 0; j < ei_ptr->dof[var]; j++)
                         {
-                          if (!finite(lec->J[peqn][pvar][i][j]))
+                          if (!isfinite(lec->J[peqn][pvar][i][j]))
                             {
                               fprintf(stderr,"lec->J[%s][%s][edof=%d][vdof=%d] = %g\n",
 				      EQ_Name[eqn].name1, Var_Name[var].name1, i, j, lec->J[peqn][pvar][i][j]);

@@ -8,7 +8,7 @@
 * the U.S. Government retains certain rights in this software.            *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
-\************************************************************************/
+***************************************************************************/
 
 /* 
  * These are definitions for the global I/O varibles needed for
@@ -24,6 +24,9 @@
  *       Declarations for the variables defined in this file are
  *       included in rf_io.h.
  */
+
+#ifndef _RF_IO_DEFN_H
+#define _RF_IO_DEFN_H
 
 #include <limits.h>
 #include "std.h"
@@ -122,3 +125,4 @@ char front_scratch_directory[MAX_FNL] = FRONT_SCRATCH_DIRECTORY;
 /******************************************************************************/
 /* end of rf_io_defn.h                                                        */
 /******************************************************************************/
+#endif

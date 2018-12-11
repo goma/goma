@@ -8,7 +8,7 @@
 * the U.S. Government retains certain rights in this software.            *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
-\************************************************************************/
+***************************************************************************/
 
 /* 
  *  Routines for dumping Goma's Jacobian out to a

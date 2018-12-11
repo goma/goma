@@ -1167,7 +1167,7 @@ bingham_viscosity(struct Generalized_Newtonian *gn_local,
 #else
       /* normal, non-melting version */
       at_shift = exp(atexp * (1./temp - 1./mp->reference[TEMPERATURE]));
-      if(!finite(at_shift)) { at_shift = DBL_MAX; }
+      if(!isfinite(at_shift)) { at_shift = DBL_MAX; }
       d_at_s = -at_shift *atexp /(temp*temp) ;
 #endif
     }
@@ -1252,7 +1252,7 @@ if(mu <= 1.)
 	    at_shift* d_yield_d_at * visc_cy +
 	    at_shift * (mu0 - muinf + yield) * d_visc_cy * d_shear_d_at;
  	  dmudT *= d_at_s;
-	  if(!finite(dmudT)) { dmudT = DBL_MAX; }
+	  if(!isfinite(dmudT)) { dmudT = DBL_MAX; }
 #endif	
 	}
       else
@@ -1394,7 +1394,7 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
       if(wlf_denom != 0.)
 	{
 	  at_shift=exp(atexp*(Tref-temp)/wlf_denom);
-          if(!finite(at_shift)) { at_shift = DBL_MAX; }
+          if(!isfinite(at_shift)) { at_shift = DBL_MAX; }
 	  d_at_dT = at_shift*atexp/wlf_denom*(-1.-(Tref-temp)/wlf_denom);
 	}
   
@@ -1447,7 +1447,7 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
 	    at_shift* d_yield_d_at * visc_cy +
 	    at_shift * (mu0 - muinf + yield) * d_visc_cy * d_shear_d_at;
  	  dmudT *= d_at_dT;
-	  if(!finite(dmudT)) { dmudT = DBL_MAX; }
+	  if(!isfinite(dmudT)) { dmudT = DBL_MAX; }
 	}
       else
 	{
@@ -1674,7 +1674,7 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
       if(wlf_denom != 0.)
 	{
 	  at_shift=exp(atexp*(mp->reference[TEMPERATURE]-temp)/wlf_denom);
-	  if(!finite(at_shift)) { at_shift = DBL_MAX; }
+	  if(!isfinite(at_shift)) { at_shift = DBL_MAX; }
 	}
   
   if(gammadot != 0.)
@@ -1711,7 +1711,7 @@ carreau_wlf_viscosity(struct Generalized_Newtonian *gn_local,
 	  dmudT = mu +
 	  at_shift * at_shift * (mu0 - muinf) * d_visc_cy * d_shear_d_at;
 	  dmudT *= - atexp*wlfc2/(wlf_denom*wlf_denom);
-	  if(!finite(dmudT)) { dmudT = DBL_MAX; }
+	  if(!isfinite(dmudT)) { dmudT = DBL_MAX; }
 	}
       else
 	{
@@ -3145,7 +3145,7 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
    if(wlf_denom != 0.)
  	{
        at_shift=exp(atexp*(mp->reference[TEMPERATURE]-temp)/wlf_denom);
-       if(!finite(at_shift)) { at_shift = DBL_MAX; }
+       if(!isfinite(at_shift)) { at_shift = DBL_MAX; }
  	}
    else
      {
@@ -3226,7 +3226,7 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
  	  dmudT = mu +
  	  at_conc*at_conc*at_shift*at_shift*(mu0 - muinf)*d_visc_cy*d_shear_d_at;
  	  dmudT *= - atexp*wlfc2/(wlf_denom*wlf_denom);
-	  if(!finite(dmudT)) { dmudT = DBL_MAX; }
+	  if(!isfinite(dmudT)) { dmudT = DBL_MAX; }
  	}
        else
  	{

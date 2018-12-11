@@ -8,7 +8,7 @@
 * the U.S. Government retains certain rights in this software.            *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
-\************************************************************************/
+***************************************************************************/
  
 /*
  * Created: 1997/06/17 07:07 MDT pasacki@sandia.gov

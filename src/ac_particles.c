@@ -15,6 +15,8 @@
 /*
  * $Id: ac_particles.c,v 5.6 2009-04-24 23:42:32 hkmoffa Exp $
  */
+/* Needed to declare POSIX drand48 */
+#define _XOPEN_SOURCE
 
 /* Standard include files */
 #include <stdio.h>
@@ -25,7 +27,6 @@
 /* GOMA include files */
 #define _AC_PARTICLES_C
 #include "goma.h"
-
 
 /* Global variables extern declared in ac_particles.h. */
 int Particle_Dynamics;		/* global toggle indicating particles are present. */
@@ -214,7 +215,6 @@ initialize_particles(const Exo_DB * exo,
   int i, j, el_index_begin, el_index_end, num_els, elem_id;
   char time_of_day[80];
   particle_t p;
-  dbl drand48(void);
 
 #ifdef PARALLEL
   int proc_index, left_over;

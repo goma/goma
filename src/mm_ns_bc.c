@@ -9307,7 +9307,7 @@ void fapply_moving_CA_sinh(
 			eps = -(ca_no - 1.31*pow(ca_no,0.99)*A_dca-A_dca)/
 					(1.-1.31*0.99*A_dca/pow(ca_no,0.01));
 			ca_no += eps;
-			if(!finite(ca_no))
+			if(!isfinite(ca_no))
 			    {
 				ca_no = eps = DBL_MAX/10.;
 			    }
