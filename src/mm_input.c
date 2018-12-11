@@ -4609,6 +4609,13 @@ rd_hunt_specs(FILE *ifp,
       }
 	  
 	  ECHO(echo_string,echo_file);
+          if(hunt[iHC].ramp == 2 && 
+             ((hunt[iHC].BegParameterValue == hunt[iHC].EndParameterValue) ||
+             (hunt[iHC].BegParameterValue<0 || hunt[iHC].EndParameterValue<0)))
+             {
+              hunt[iHC].ramp = 0;  
+              fprintf(stderr, "%s:\tImproper Log ramp for hunting condition %d\n", yo, iHC);
+             }
   }
 
 /* This section is required for backward compatibility - EDW */
