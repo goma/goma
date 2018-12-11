@@ -1588,6 +1588,8 @@ struct Equation_Names Post_Var_Name[] =
   {"VON_MISES_STRAIN", "VON_MISES_STRAIN", -1},
   {"VON_MISES_STRESS", "VON_MISES_STRESS", -1},
   {"LUB_HEIGHT", "LUB_HEIGHT", -1},
+  {"VELO_SPEED", "VELO_SPEED", -1},
+  {"GIES_CRIT", "GIES_CRIT", -1},
 };
 
 int Num_Post_Var_Names = sizeof(Post_Var_Name) / sizeof(struct Equation_Names);  

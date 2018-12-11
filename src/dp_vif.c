@@ -2555,12 +2555,7 @@ noahs_ark()
   ddd_add_member(n, &UNTRACKED_SPEC, 1, MPI_INT);
   ddd_add_member(n, &LOG_CONF_MAP, 1, MPI_INT);
   ddd_add_member(n, &VELO_SPEED, 1, MPI_INT);
-
-  if ( len_u_post_proc > 0 )
-    {
-      ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);
-    }
-
+  ddd_add_member(n, &GIES_CRIT, 1, MPI_INT);
   ddd_add_member(n, &EXTERNAL_POST, 1, MPI_INT);
   ddd_add_member(n, &SURFACE_VECTORS, 1, MPI_INT);
   ddd_add_member(n, &SHELL_NORMALS, 1, MPI_INT);
