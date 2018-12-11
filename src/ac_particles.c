@@ -16,6 +16,9 @@
  * $Id: ac_particles.c,v 5.6 2009-04-24 23:42:32 hkmoffa Exp $
  */
 
+/* Needed to declare POSIX function drand48 */
+#define _XOPEN_SOURCE
+
 /* Standard include files */
 #include <stdio.h>
 #include <stdlib.h>
