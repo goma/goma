@@ -25,8 +25,8 @@
 #ifndef _SL_EGGROLL_DEF_H
 #define _SL_EGGROLL_DEF_H
 
-#ifndef PI
-#define PI 3.14159265358979323846
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
 #endif
 
 #define IDG_EPS    1.0e-14
