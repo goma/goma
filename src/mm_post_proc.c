@@ -819,7 +819,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	Dnn += (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
       }
     }
-    local_post[MEAN_SHEAR] = sqrt(fabs(Dnn));
+    local_post[MEAN_SHEAR] = sqrt(2.*fabs(Dnn));
     local_lumped[MEAN_SHEAR] = 1.;
   }
 
