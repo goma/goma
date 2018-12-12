@@ -19,6 +19,9 @@
  *
  */
 
+/* Needed to declare POSIX drand48 */
+#define _XOPEN_SOURCE
+
 #ifdef USE_RCSID
 static char rcsid[] =
 "$Id: wr_side_data.c,v 5.9 2010-07-01 17:28:20 ebenner Exp $";

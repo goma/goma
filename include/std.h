@@ -8,12 +8,15 @@
 * the U.S. Government retains certain rights in this software.            *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
-\************************************************************************/
+***************************************************************************/
  
 
 /*
  *$Id: std.h,v 5.3 2010-07-01 17:29:33 ebenner Exp $
  */
+
+#ifndef _GOMA_STD_H
+#define _GOMA_STD_H
 
 #ifndef _RF_GOMA_H
 #define _RF_GOMA_H
@@ -36,11 +39,13 @@
 #define HAVE_AZTEC 1
 /* Trilinos now seems to define these */
 #ifndef GOMA_HAVE_BLAS
-  #define GOMA_HAVE_BLAS 1
+#define GOMA_HAVE_BLAS 1
 #endif
+
 #ifndef GOMA_HAVE_LAPACK
-  #define GOMA_HAVE_LAPACK 1
+#define GOMA_HAVE_LAPACK 1
 #endif
+
 #define HAVE_Y12M 1
 
 #ifdef EIGEN_SERIAL
@@ -548,6 +553,8 @@ extern int zero_detJ_global;
   #else
     #define VERSION "6.0.0"
   #endif
+
+#endif
 
 #endif
 

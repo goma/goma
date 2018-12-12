@@ -20,6 +20,9 @@ static char rcsid[] =
 "$Id: rf_util.c,v 5.19 2010-05-27 21:03:25 prschun Exp $";
 #endif
 
+/* Needed to declare POSIX drand48 */
+#define _XOPEN_SOURCE
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
