@@ -211,8 +211,17 @@
 #define PETA_2                          1125899906842624
 #define EXA_2                           1152921504606846976
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+
 #ifndef M_PIE
-#define M_PIE 3.14159265358979323846
+#define M_PIE M_PI
+#endif
+
+#ifndef PI
+#define PI M_PI
 #endif
 
 #define delta(m,n)	((m) == (n) ? 1 : 0 ) /* Kroenecker delta */

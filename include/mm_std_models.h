@@ -19,7 +19,6 @@
 
 #ifdef _MM_STD_MODELS_C
 #define EXTERN
-#
 #endif
 
 #ifndef _MM_STD_MODELS_C

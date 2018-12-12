@@ -59,7 +59,7 @@ static char rcsid[] =
 #include "mm_std_models_shell.h"
 
 #include "goma.h"
-
+ 
 extern double time_goma_started; /* def'd and set in main.c */
 
 char err_msg[MAX_CHAR_IN_INPUT];

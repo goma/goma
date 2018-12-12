@@ -13,6 +13,8 @@
 #ifndef _RF_MASKS_CONST_H_
 #define _RF_MASKS_CONST_H_
 
+#include "std.h"
+#include "rf_fem_const.h"
 
 /*
  * Maximum number of materials in which discontinuous interpolation

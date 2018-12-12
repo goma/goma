@@ -26,6 +26,8 @@
  */
 
 #include <limits.h>
+#include "std.h"
+#include "rf_io_const.h"
 
 char	Input_File[MAX_FNL]="\0";  /* input EXODUS II database w/ problem defn */
 

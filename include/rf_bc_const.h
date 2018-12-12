@@ -66,9 +66,6 @@
 #include "exo_struct.h"		/* To know about Exo_DB type. */
 #include "dpi.h"		/* To know about Dpi type. */
 
-#ifdef USE_CGM
-#include "gm_cgm_typedefs.h"    /* Typedefs for the CGM C Interface */
-#endif
 
 #ifndef EXTERN
 #define EXTERN extern
@@ -1243,16 +1240,6 @@ struct Boundary_Condition {
                                  *  0 - no
                                  *  1 - Yes, hanging off of node info structure
                                  *  2 - Yes, hanging off of side  */
-#ifdef USE_CGM
-  /* CGM handles.  There's probably a more generic way to do this, but
-   * for now here you go... We need the strings because the assignment
-   * of the handle pointers is delayed until well after input is read
-   * in to allow for multiple processors to get their own handles...
-   */
-  char cgm_edge_name[255];
-  EdgeHandle *cgm_edge_handle;
-  PlaneHandle *cgm_plane_handle;
-#endif
 };
 typedef struct Boundary_Condition BOUNDARY_CONDITION_STRUCT;
 
