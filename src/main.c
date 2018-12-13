@@ -8,7 +8,7 @@
 * the U.S. Government retains certain rights in this software.            *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
-\************************************************************************/
+***************************************************************************/
  
 #include <stdlib.h>
 #include <stdio.h>
@@ -18,7 +18,6 @@
 #include <unistd.h>
 
 #include "std.h"
-
 
 #ifdef HAVE_SUNMATH
 #include <sunmath.h>
@@ -990,7 +989,7 @@ print_code_version(void)
      * Print the code version to standard out
      */
 {
-  printf("%s\n", VERSION);
+  printf("%s\n", GOMA_VERSION);
 }
 
 void
@@ -1016,7 +1015,7 @@ echo_command_line( int argc, char *argv[], char *echo_file)
 	
 	SPF(echo_string,"Run Time : %s",  time_string);
 		
-	SPF(endofstring(echo_string),"Version : %s", VERSION);
+	SPF(endofstring(echo_string),"Version : %s", GOMA_VERSION);
 	
 	ECHO(echo_string,echo_file);
 	

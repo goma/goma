@@ -18,6 +18,9 @@
  * Revised: 1997/04/10 13:26 MDT pasacki@sandia.gov
  */
 
+/* Needed to declare POSIX mkstemp */
+#define _XOPEN_SOURCE 500
+
 #define _UTILS_C
 
 #include <stdio.h>

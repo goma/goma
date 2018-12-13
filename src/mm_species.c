@@ -8,7 +8,7 @@
 * the U.S. Government retains certain rights in this software.            *
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
-\************************************************************************/
+***************************************************************************/
  
 /*
  *$Id: mm_species.c,v 5.2 2007-09-18 18:53:46 prschun Exp $

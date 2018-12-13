@@ -15,13 +15,11 @@
  *$Id: std.h,v 5.3 2010-07-01 17:29:33 ebenner Exp $
  */
 
-#ifndef _GOMA_STD_H
-#define _GOMA_STD_H
-
 #ifndef _RF_GOMA_H
 #define _RF_GOMA_H
 
 #include <ctype.h>
+#include <stdlib.h> /* WEXITSTATUS */
 
 /* If we're using autoconf, then include the config.h file. */
 #ifdef HAVE_CONFIG_H
@@ -59,14 +57,14 @@
 
 #endif /* HAVE_CONFIG_H */
 
-#ifndef VERSION
-
-  #ifdef GIT_VERSION
-    #define VERSION GIT_VERSION
+#ifndef GOMA_VERSION                      /* 1) VERSION must be a keyword, won't work with it */
+  #ifdef GIT_VERSION                      /* 2) needed all of this to convet GIT_VERSION to the proper string */
+    #define STRINGSIZE_(x) #x
+    #define STRINGSIZE(x) STRINGSIZE_(x)
+    #define GOMA_VERSION STRINGSIZE(GIT_VERSION)
   #else
-    #define VERSION "6.0.0"
+    #define GOMA_VERSION "6.0.0"
   #endif
-
 #endif
 
 /*****************************************************************************/
@@ -546,16 +544,15 @@ extern int zero_detJ_global;
  * (Eric Benner 8/6/09)
  */ 
 
-#ifndef VERSION
-
-  #ifdef GIT_VERSION
-    #define VERSION GIT_VERSION
+#ifndef GOMA_VERSION						/* 1) VERSION must be a keyword, won't work with it */
+  #ifdef GIT_VERSION						/* 2) needed all of this to convet GIT_VERSION to the proper string */
+	#define STRINGSIZE_(x) #x
+    #define STRINGSIZE(x) STRINGSIZE_(x)
+    #define GOMA_VERSION STRINGSIZE(GIT_VERSION)
+    #define GOMA_VERSION GIT_VERSION
   #else
-    #define VERSION "6.0.0"
+    #define GOMA_VERSION "6.0.0"
   #endif
-
-#endif
-
 #endif
 
 #endif
