@@ -32743,6 +32743,7 @@ assemble_poynting(double time,	/* present time value */
   double svect[3]={0.,-1.,0.};
   double mucos=1.0;
   double diff_const=1.0E-8;
+  double time_source=0.0, d_time_source=0.;
 
   /*
    * Bail out fast if there's nothing to do...
@@ -32811,6 +32812,10 @@ assemble_poynting(double time,	/* present time value */
      {
       grad_P += svect[i]*fv->grad_poynt[light_eqn][i];
      }
+  if(fv->T > mp->reference[TEMPERATURE])
+     { time_source = fv->T - mp->reference[TEMPERATURE];d_time_source = 1.0;}
+  else
+     {time_source = 0.; d_time_source = 0.;}
   /*
    * Residuals___________________________________________________________
    */
@@ -32839,7 +32844,7 @@ assemble_poynting(double time,	/* present time value */
             { wt_func += h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p]; }
 
 	  advection = 0.;
-	  source = -1.;
+	  source = -time_source;
 	  if ( pd->e[eqn] & T_ADVECTION )
 	    {
 	      for ( p=0; p<dim; p++)
@@ -32962,6 +32967,14 @@ assemble_poynting(double time,	/* present time value */
 		      grad_phi_j[p] = bf[var]->grad_phi[j][p];
 		    }
 
+	          if ( pd->e[eqn] & T_ADVECTION )
+	            {
+	             advection = -wt_func*d_time_source*phi_j;
+	             advection *= det_J * wt;
+	             advection *= h3;
+	             advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+	            }
+
 		  if ( pd->e[eqn] & T_DIFFUSION )
 		    {
 		      diffusion = phi_i*d_alpha->T[j]*P;
@@ -32970,7 +32983,7 @@ assemble_poynting(double time,	/* present time value */
 		      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += diffusion;
+		  lec->J[peqn][pvar][i][j] += diffusion + advection;
 		}
 	    }
 
