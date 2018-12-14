@@ -807,15 +807,15 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   }
 
   if (MEAN_SHEAR != -1 && pd->e[R_MOMENTUM1] ){
-    for (a = 0; a < VIM; a++) {       
-      for (b = 0; b < VIM; b++) {
+    for (a = 0; a < dim; a++) {       
+      for (b = 0; b < dim; b++) {
 	Dsh[a][b] = (fv->grad_v[a][b] + fv->grad_v[b][a]);
       }
     }
     /* find second invariant of strain-rate */
     Dnn = 0.0;
-    for (a = 0; a < VIM; a++) {
-      for (b = 0; b < VIM; b++) {
+    for (a = 0; a < dim; a++) {
+      for (b = 0; b < dim; b++) {
 	Dnn += (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
       }
     }
