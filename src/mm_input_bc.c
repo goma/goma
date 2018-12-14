@@ -172,9 +172,6 @@ rd_bc_specs(FILE *ifp,
 
   struct Rotation_Specs *rot;
 
-#ifdef USE_CGM
-  PlaneHandle* planeHdl;
-#endif
 
   /*
    * Initialize...
@@ -956,22 +953,7 @@ rd_bc_specs(FILE *ifp,
 	   * (CGM) entities
 	   */
         case SM_PLANE_BC:           /* Solid Model PLANE BC */
-	  if ( fscanf(ifp, "%lf %lf %lf %lf",
-		      &BC_Types[ibc].BC_Data_Float[0],
-		      &BC_Types[ibc].BC_Data_Float[1],
-		      &BC_Types[ibc].BC_Data_Float[2],
-		      &BC_Types[ibc].BC_Data_Float[3]) != 4)
-	    {
-	      sr = sprintf(err_msg, "%s: Expected 4 flts for %s.",
-			   yo, BC_Types[ibc].desc->name1);
-	      EH(-1, err_msg);
-	    }
-	  
-#ifdef USE_CGM
-	  BC_Types[ibc].cgm_plane_handle = NULL;
-#endif
-          BC_Types[ibc].max_DFlt = 4;
-	  SPF_DBL_VEC(endofstring(echo_string), 4,  BC_Types[ibc].BC_Data_Float);
+		EH(-1, "CGM not supported, SM_PLANE_BC");
 
           break;
 
@@ -2721,51 +2703,6 @@ rd_bc_specs(FILE *ifp,
 
          break;
 	  
-#ifdef USE_CGM
-	case MESH_CONSTRAINT_BC:
-
-	  /* Read the CGM topology to use for the mesh constraint (SM_EDGE, for example). */
-	  if ( fscanf(ifp, "%80s", input ) != 1 )
-	    {
-	      sr = SPF(err_msg, "Cannot find CGM bounding topolgy for %s on %sID=%d.\n",
-		       BC_Types[ibc].desc->name1, BC_Types[ibc].Set_Type, BC_Types[ibc].BC_ID);
-	      EH(-1, err_msg);
-	    }
-	  
-	  strip(input);
-	  stringup(input);
-
-	  SPF(endofstring(echo_string)," %s", input);
-	  
-	  /* Right now we expect to find SM_EDGE only. */
-	  if(!strcmp(input, "SM_EDGE"))
- 	    {
-	      if(fscanf(ifp, "%80s", input) != 1)
-		{
-		  sr = SPF(err_msg, "Could not find edge name for %s on %sID=%d\n",
-			   BC_Types[ibc].desc->name1, BC_Types[ibc].Set_Type,
-			   BC_Types[ibc].BC_ID);
-		  EH(-1, err_msg);
-		}
-	      else
-		{
-		  strip(input);
-		  strcpy(BC_Types[ibc].cgm_edge_name, input);
-		  BC_Types[ibc].cgm_edge_handle = NULL;
-
-		  SPF(endofstring(echo_string)," %s",BC_Types[ibc].cgm_edge_name);
-		}
-	    }
-	  else
-	    {
-	      sr = SPF(err_msg, "Unknown bounding topology %s for %s on %sID=%d.\n",
-			   input, BC_Types[ibc].desc->name1, BC_Types[ibc].Set_Type,
-			   BC_Types[ibc].BC_ID);
-	      EH(-1, err_msg);
-	    }
-
-	  break;
-#endif
 
 	  /*
 	   * Fall through for all cases which require two ( string and integer )

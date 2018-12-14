@@ -125,6 +125,7 @@ static char rcsid[] =
 int **elem_friends    = NULL;
 int *num_elem_friends = NULL;
 int num_shell_blocks  = 0;
+
 void
 init_shell_element_blocks(const Exo_DB *exo)
 {
@@ -4956,6 +4957,8 @@ double shell_saturation_pressure_curve(
   dbl Pcap = Patm-Pliq;
   dbl dPdP = -1.0;
 
+#define _USE_MATH_DEFINES  
+  
   /* Calculate capillary radius */
   dbl Rc    = 2*sigma*cos(theta/180.0*PI)/Pcap;
   dbl Rc_P  = -2*sigma*cos(theta/180.0*PI)/pow(Pcap,2)*dPdP;

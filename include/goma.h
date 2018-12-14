@@ -130,11 +130,6 @@
 #include "loca_const.h"
 #include "rf_element_storage_const.h" 
 
-#ifdef USE_CGM
-#include "gm_cgm_typedefs.h"
-#include "gm_cgm_c_interface.h"
-#include "gm_cgm_util.h"
-#endif
 
 #include "rf_node_const.h"
 #include "rf_pre_proc.h"

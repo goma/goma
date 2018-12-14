@@ -16,6 +16,9 @@
  * $Id: ac_particles.c,v 5.6 2009-04-24 23:42:32 hkmoffa Exp $
  */
 
+/* Needed to declare POSIX function drand48 */
+#define _XOPEN_SOURCE
+
 /* Standard include files */
 #include <stdio.h>
 #include <stdlib.h>
@@ -214,6 +217,8 @@ initialize_particles(const Exo_DB * exo,
   int i, j, el_index_begin, el_index_end, num_els, elem_id;
   char time_of_day[80];
   particle_t p;
+  dbl drand48(void);
+
 #ifdef PARALLEL
   int proc_index, left_over;
   int *number_to_create = 0, *local_number_created = 0, *number_created = 0;

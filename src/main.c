@@ -288,9 +288,6 @@ main(int argc, char **argv)
   log_msg("--------------");
   log_msg("GOMA begins...");
 
-#ifdef USE_CGM
-  cgm_initialize();
-#endif
   /*
    * Some initial stuff that only the master process does.
    */
@@ -512,9 +509,6 @@ main(int argc, char **argv)
    * geometry as we go (including possibly reading an ACIS .sat file).
    *
    */
-#ifdef USE_CGM
-  create_cgm_geometry();
-#endif
 
   /* Check to see if BRK File option exists and if so check if file exits */
   if (Brk_Flag == 1) {

@@ -25,12 +25,6 @@
 
 #include "std.h"		/* This needs to be here. */
 
-#ifdef USE_CGM
-#include "gm_cgm_c_interface.h"
-#endif
-
-
-
 #ifdef PARALLEL
 #ifndef MPI
 #define MPI			/* otherwise az_aztec.h trounces MPI_Request */
@@ -1730,50 +1724,6 @@ gradient_norm_err( double *x,
   
   return (error);
 }
-
-/***************************************************************************************/
-/***************************************************************************************/
-/***************************************************************************************/
-
-
-void
-cgm_based_initialization(double *x,
-			 int num_total_nodes)
-{
-#ifdef USE_CGM
-  int I, ie;
-  char err_msg[256];
-  double r[DIM], dist;
-  FaceHandle *face_handle;
-
-  if(cgm_get_face_by_name((char const *)(ls->sm_object_name), &face_handle))
-    {
-      sprintf(err_msg, "Could not find FACE named '%s'.\n", ls->sm_object_name);
-      EH(-1, err_msg);
-    }
-
-  for(I = 0; I < num_total_nodes; I++)
-    {
-      /* Get node coordinate. */
-      r[0] = Coor[0][I];
-      r[1] = Coor[1][I];
-      if(pd->Num_Dim == 3)
-	r[2] = Coor[2][I];
-      else
-	r[2] = 0.0;
-
-      /* Get index into solution vectorfor the FILL variable. */
-      cgm_face_get_closest_boundary(face_handle,
-				    r[0], r[1], r[2],
-				    &dist);
-      ie = Index_Solution(I, ls->var, 0, 0, -2);
-      x[ie] = dist;
-    }
-#else
-  EH(-1, "CGM not implemented.");
-#endif
-}
-
 
 /***************************************************************************************/
 /***************************************************************************************/

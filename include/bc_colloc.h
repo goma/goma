@@ -26,9 +26,6 @@
 #define EXTERN extern
 #endif
 
-#ifdef USE_CGM 
-#include "gm_cgm_typedefs.h"
-#endif
 
 EXTERN int apply_point_colloc_bc
 PROTO((double [],		/* resid_vector */
@@ -93,13 +90,6 @@ PROTO((const int ,		/* ielem_dim */
        const int ,		/* number of parameters from bc card  */
        double * ));		/* number of parameters from bc card  */
 
-#ifdef USE_CGM
-EXTERN void sm_fplane
-PROTO((const int ,		/* ielem_dim */
-       double *,		/* func */
-       double [],		/* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
-       PlaneHandle *));        /* pHdl - Handle to a VGI Plane object  */
-#endif
 
 EXTERN void fvelocity_profile
 PROTO((const int ,		/* var_flag */
