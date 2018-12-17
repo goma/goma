@@ -62,13 +62,6 @@ particle_s Particle_Move_Domain_Name;
 dbl Particle_Creation_Domain_Reals[MAX_DOMAIN_REAL_VALUES];
 dbl Particle_Move_Domain_Reals[MAX_DOMAIN_REAL_VALUES];
 dbl xi_boundary_tolerances[3] = { XI_BOUNDARY_TOLERANCE0, XI_BOUNDARY_TOLERANCE1, XI_BOUNDARY_TOLERANCE2 };
-#ifdef USE_CGM
-FaceHandle *Particle_Creation_Domain_FaceHdl;
-FaceHandle *Particle_Move_Domain_FaceHdl;
-VolumeHandle *Particle_Creation_Domain_VolumeHdl;
-VolumeHandle *Particle_Move_Domain_VolumeHdl;
-int (* cgm_dist_func)(char const *, double *, double *, double *);
-#endif
 
 int Particle_Number_PBCs;		/* Number of particle-related sideset BC's. */
 PBC_t *PBCs;			/* Particle boundary condition structures. */
@@ -223,10 +216,6 @@ initialize_particles(const Exo_DB * exo,
   int proc_index, left_over;
   int *number_to_create = 0, *local_number_created = 0, *number_created = 0;
   dbl *proc_volume_local = 0, *proc_volume = 0;
-#endif
-#ifdef USE_CGM
-  FILE *acis_fp;
-  BodyHandle * bodyHdl;
 #endif
 
   DPRINTF(stdout, "\nParticle initialization:\n"); fflush(stdout);
@@ -414,76 +403,8 @@ initialize_particles(const Exo_DB * exo,
 	       Particle_Move_Domain_Reals[2*i+1] < Particle_Creation_Domain_Reals[2*i+1])
 	      EH(-1, "Mismatch in BRICK bounds for Creation/Move.");
 	}
-#ifdef USE_CGM
-      if(Particle_Creation_Domain == ACIS_OBJECT)
-	{
-	  if(read_ACIS_file(Particle_Creation_Domain_Filename, bodyHdl) == -1)
-	    EH(-1, "Error reading ACIS file.");
-	  /* When getting the signed distance function, I'm assuming
-	   * FACE's are supplied for 2D problems and VOLUME's are
-	   * supplied for 3D problems. */
-	  if(mdim == 2)
-	    {
-	      if(cgm_get_face_by_name((char const *)Particle_Creation_Domain_Name, &Particle_Creation_Domain_FaceHdl))
-		{
-		  fprintf(stderr, "Could not find FACE named %s\n", Particle_Creation_Domain_Name);
-		  EH(-1, "Could not find FACE named Particle_Creation_Domain_Name.");
-		}
-	      cgm_dist_func = cgm_named_face_get_closest_boundary_keep;
-	    }
-	  else
-	    {
-	      if(cgm_get_volume_by_name((char const *)Particle_Creation_Domain_Name, &Particle_Creation_Domain_VolumeHdl))
-		{
-		  fprintf(stderr, "Could not find VOLUME named %s\n", Particle_Creation_Domain_Name);
-		  EH(-1, "Could not find VOLUME named Particle_Creation_Domain_Name.");
-		}
-	      cgm_dist_func = cgm_named_volume_get_closest_boundary_keep;
-	    }
-	  DPRINTF(stdout, "creation=%s, ", Particle_Creation_Domain_Name); fflush(stdout);
-	}
-#endif
     }
   
-#ifdef USE_CGM
-  if(Particle_Move_Domain == ACIS_OBJECT)
-    {
-      if(Particle_Creation_Domain == ACIS_OBJECT && Particle_Number > 0)
-	{
-	  if(strcmp(Particle_Creation_Domain_Filename, Particle_Move_Domain_Filename))
-	    if(read_ACIS_file(Particle_Move_Domain_Filename, bodyHdl) == -1)
-	      EH(-1, "Error reading ACIS file.");
-	}
-      else
-	{
-	  if(read_ACIS_file(Particle_Move_Domain_Filename, bodyHdl) == -1)
-	    EH(-1, "Error reading ACIS file.");
-	}
-      /* When getting the signed distance function, I'm assuming
-       * FACE's are supplied for 2D problems and VOLUME's are
-       * supplied for 3D problems.  If they get reassigned here
-       * it's not a problem... */
-      if(mdim == 2)
-	{
-	  if(cgm_get_face_by_name((char const *)Particle_Move_Domain_Name, &Particle_Move_Domain_FaceHdl))
-	    {
-	      fprintf(stderr, "Could not find FACE named %s\n", Particle_Move_Domain_Name);
-	      EH(-1, "Could not find FACE named Particle_Move_Domain_Name.");
-	    }
-	  cgm_dist_func = cgm_named_face_get_closest_boundary_keep;
-	}
-      else
-	{
-	  if(cgm_get_volume_by_name((char const *)Particle_Move_Domain_Name, &Particle_Move_Domain_VolumeHdl))
-	    {
-	      fprintf(stderr, "Could not find VOLUME named %s\n", Particle_Move_Domain_Name);
-	      EH(-1, "Could not find VOLUME named Particle_Creation_Domain_Name.");
-	    }
-	  cgm_dist_func = cgm_named_volume_get_closest_boundary_keep;
-	}
-      DPRINTF(stdout, "move=%s, ", Particle_Move_Domain_Name); fflush(stdout);
-    }
-#endif
   get_time(time_of_day);
   DPRINTF(stdout, "done at %s\n", time_of_day); fflush(stdout);
 
@@ -2156,19 +2077,6 @@ create_a_particle(particle_t * seed_p,
 	p->x[i] = MAX(p->x[i], Particle_Move_Domain_Reals[2*i]);
 	p->x[i] = MIN(p->x[i], Particle_Move_Domain_Reals[2*i+1]);
       }
-#ifdef USE_CGM
-  else if(Particle_Move_Domain == ACIS_OBJECT)
-    {
-      if(cgm_dist_func(Particle_Move_Domain_Name, p->x, &dist, x_boundary) == -1)
-	EH(-1, "Error from cgm_dist_func()");
-      if(dist < 0)
-	{
-	  fprintf(stderr, "Point (%g,%g,%g) restricted to (%g,%g,%g)\n",
-		  p->x[0], p->x[1], p->x[2], x_boundary[0], x_boundary[1], x_boundary[2]);
-	  memcpy(p->x, x_boundary, DIM * sizeof(dbl));
-	}
-    }
-#endif
   
   num_particles++;
   return p;
@@ -2224,14 +2132,6 @@ rejection_sample_a_particle(void)
 	    if(p.x[i] < Particle_Creation_Domain_Reals[2*i] || p.x[i] > Particle_Creation_Domain_Reals[2*i+1])
 	      rejection = 1;
 	}
-#ifdef USE_CGM
-      else if(Particle_Creation_Domain == ACIS_OBJECT)
-	{
-	  (*cgm_dist_func)(Particle_Creation_Domain_Name, p.x, &dist, closest_x);
-	  if(dist < 0) /* outside */
-	      rejection = 1;
-	}
-#endif	
     }
 
   if(!rejection)
@@ -2863,9 +2763,6 @@ initialize_surface_interactions(void)
   PBC_t *PBC;
   FILE *fp;
   int i;
-#ifdef USE_CGM
-  EdgeHandle *edge_handle;
-#endif
   char err_msg[128];
 
   Num_Impermeable_PBCs = 0;
@@ -2881,11 +2778,7 @@ initialize_surface_interactions(void)
 	case PBC_IMPERMEABLE:
 	  /* This is is sort of done "in reverse", so we just note it
 	   * and catch it later. */
-#ifdef USE_CGM
-	  Num_Impermeable_PBCs++;
-#else
-	  EH(-1, "Sorry, you must compile with USE_CGM to use the IMPERMEABLE PBC.");
-#endif
+	  EH(-1, "CGM not supported, IMPERMEABLE PBC.");
 	  /*
 	  fprintf(stderr, "PBC %d is IMPERMEABLE, Num_Impermeable_PBCs = %d\n", i, Num_Impermeable_PBCs);
 	  */
@@ -2901,102 +2794,6 @@ initialize_surface_interactions(void)
 	}
     }
 
-#ifdef USE_CGM
-  /* Now we need to tag those elements that are within the
-   * specified distance of any impermeable boundary.  We store the
-   * list of SS's that this element is within the specified
-   * distance from.  This is not the nicest algorithm but it's
-   * only done once (for now -- no moving boundaries) so who
-   * cares. */
-  if(Num_Impermeable_PBCs)
-    for(i = 0; i < static_exo->num_elems; i++)
-      {
-	element_particle_info[i].list_PBC_IMPERMEABLE = (int *)malloc(Num_Impermeable_PBCs * sizeof(int));
-	for(j = 0; j < Num_Impermeable_PBCs; j++)
-	  element_particle_info[i].list_PBC_IMPERMEABLE[j] = -1;
-	list_index = 0;
-	for(j = 0; j < 4; j++)
-	  {
-	    /* Unfortunately this needs to go in this inner loop
-	     * because I call the same function later and it will
-	     * overwrite the node_coord information... */
-	    load_element_node_coordinates(i);
-	    memcpy(point1, &(node_coord[j][0]), DIM * sizeof(dbl));
-	    /*
-	    fprintf(stderr, "\tPoint %d is at (%g,%g)\n", j, point1[0], point1[1]);
-	    */
-	    for(k = 0; k < Particle_Number_PBCs; k++)
-	      if(PBCs[k].type == PBC_IMPERMEABLE)
-		{
-		  PBC = &(PBCs[k]);
-		  SS_id = PBC->SS_id;
-		  distance_cutoff = PBC->real_data[0];
-
-		  if(cgm_get_edge_by_name(PBC->string_data, &edge_handle) == -1)
-		    {
-		      sprintf(err_msg, "Could not find edge named '%s' in initialze_surface_interactions().\n", PBC->string_data);
-		      EH(-1, err_msg);
-		    }
-
-		  if(cgm_edge_get_closest_point_trimmed(edge_handle,
-							point1[0], point1[1], point1[2],
-							&(closest_point[0]), &(closest_point[1]), &(closest_point[2]),
-							tangent, &dist) == -1)
-		    EH(-1, "Bad return from cgm_edge_get_closest_point_trimmed().");
-
-		  if(dist <= distance_cutoff)
-		    {
-		      found_PBC_id = 0;
-		      for(n = 0; n < list_index; n++)
-			if(element_particle_info[i].list_PBC_IMPERMEABLE[n] == k)
-			  found_PBC_id = 1;
-		      if(!found_PBC_id)
-			{
-			  element_particle_info[i].list_PBC_IMPERMEABLE[list_index++] = k;
-			}
-		    }
-		  continue;
-
-		  for(l = 0; l < static_exo->num_side_sets; l++)
-		    if(SS_id == static_exo->ss_id[l])
-		      {
-			for(m = 0; m < static_exo->ss_num_sides[l]; m++)
-			  {
-			    elem_id = static_exo->ss_elem_list[static_exo->ss_elem_index[l] + m];
-			    side_id = static_exo->ss_side_list[static_exo->ss_elem_index[l] + m];
-			    side_id--;	/* make it 0-based */
-			    load_element_node_coordinates(elem_id);
-			    memcpy(point2, &(node_coord[side_id][0]), DIM * sizeof(dbl));
-			    memcpy(point3, &(node_coord[(side_id+1)%4][0]), DIM * sizeof(dbl));
-			    /* Both test points are on the same SS, so
-			     * just take the best candidate distance... */
-			    dist = MIN(my_distance(point1, point2, DIM),
-				       my_distance(point1, point3, DIM));
-			    if(dist <= distance_cutoff)
-			      {
-				found_PBC_id = 0;
-				for(n = 0; n < list_index; n++)
-				  if(element_particle_info[i].list_PBC_IMPERMEABLE[n] == k)
-				    found_PBC_id = 1;
-				if(!found_PBC_id)
-				  {
-				    element_particle_info[i].list_PBC_IMPERMEABLE[list_index++] = k;
-				  }
-				break; /* out of m-loop */
-			      }
-			  } /* m */
-		      } /* l */
-	
-		} /* k */
-	  } /* j */
-	/*
-	printf("Element %d close PBC_id's: ", i);
-	for(j = 0; j < Num_Impermeable_PBCs; j++)
-	  fprintf(stderr, "%d ", element_particle_info[i].list_PBC_IMPERMEABLE[j]);
-	printf("\n");
-	*/
-      } /* i */
-#endif
 }
 
 
@@ -4724,21 +4521,6 @@ move_particle(particle_t * const p,
 	p->x[i] = MAX(p->x[i], Particle_Move_Domain_Reals[2*i]);
 	p->x[i] = MIN(p->x[i], Particle_Move_Domain_Reals[2*i+1]);
       }
-#ifdef USE_CGM
-  else if(Particle_Move_Domain == ACIS_OBJECT)
-    {
-      if(cgm_dist_func(Particle_Move_Domain_Name, p->x, &dist, x_boundary) == -1)
-	EH(-1, "Error from cgm_dist_func()");
-      if(dist < 0)
-	{
-	  /*
-	  fprintf(stderr, "Point (%g,%g,%g) restricted to (%g,%g,%g)\n",
-		  p->x[0], p->x[1], p->x[2], x_boundary[0], x_boundary[1], x_boundary[2]);
-	  */
-	  memcpy(p->x, x_boundary, DIM * sizeof(dbl));
-	}
-    }
-#endif
 
   *max_particle_dt = particle_dt;
   return return_value;
@@ -4773,146 +4555,6 @@ enforce_impermeable_PBCs(particle_t * const p,
 			 dbl * total_velocity,
 			 dbl particle_dt)
 {
-#ifdef USE_CGM
-  dbl tangent_velocity[DIM];	/* particle velocity tangent to boundary. */
-  dbl normal_velocity[DIM];     /* particle velocity normal to boundary. */
-  dbl normal_direction[DIM];	/* direction vector to boundary. */
-  dbl n_coeff;			/* coefficent of normal direction. */
-  dbl speed;			/* Current particle speed. */
-  dbl tangent[DIM], closest_point[DIM], dist, cutoff_dist, alpha, slow_factor;
-  int i, j, PBC_id, incoming, in_critical_region;
-  PBC_t *PBC;
-  EdgeHandle *edge_handle;
-  char err_msg[128];
-  
-  int debug_on = 0;
-
-  if(debug_on)
-    {
-      fprintf(stderr, "debugging for particle at (%g,%g), velocity (%g,%g)\n", p->x[0], p->x[1], total_velocity[0], total_velocity[1]);
-      fprintf(stderr, "PBC'ids for its element (%d) = ", p->owning_elem_id);
-      for(i = 0;i < Num_Impermeable_PBCs; i++)
-	fprintf(stderr, "%d ", element_particle_info[p->owning_elem_id].list_PBC_IMPERMEABLE[i]);
-      fprintf(stderr, "\n");
-    }
-
-  alpha = 0.4;
-  for(i = 0; i < Num_Impermeable_PBCs && (PBC_id = element_particle_info[p->owning_elem_id].list_PBC_IMPERMEABLE[i]) != -1; i++)
-    {
-      PBC = &PBCs[PBC_id];
-      cutoff_dist = PBC->real_data[0];
-      if(debug_on)
-	fprintf(stderr, "\tChecking edge named %s with distance %g\n", PBC->string_data, cutoff_dist);
-      if(cgm_get_edge_by_name(PBC->string_data, &edge_handle) == -1)
-	dump2(EXIT, p, "Could not find edge named '%s'.\n", PBC->string_data);
-
-      if(cgm_edge_get_closest_point_trimmed(edge_handle,
-					    p->x[0], p->x[1], p->x[2],
-					    &(closest_point[0]), &(closest_point[1]), &(closest_point[2]),
-					    tangent, &dist) == -1)
-	dump1(EXIT, p, "Bad return from cgm_edge_get_closest_point_trimmed().");
-
-      if(debug_on)
-	fprintf(stderr, "\tdist = %g\n", dist);
-      
-      if(dist < cutoff_dist)
-	{
-	  /*
-	    fprintf(stderr, "Distance to bdry %d '%s' = %g\n", PBC_id, PBC->string_data, dist);
-	  */
-	  /* Length of normal_direction = dist. */
-	  for(j = 0; j < DIM; j++)
-	    normal_direction[j] = closest_point[j] - p->x[j];
-	  if(debug_on)
-	    fprintf(stderr, "\tnormal_direction = (%g,%g)\n",
-		    normal_direction[0], normal_direction[1]);
-	  n_coeff = 0.0;
-	  for(j = 0; j < DIM; j++)
-	    {
-	      normal_direction[j] /= dist;
-	      n_coeff += normal_direction[j] * total_velocity[j];
-	    }
-	  if(debug_on)
-	    fprintf(stderr, "\tpost-normalization normal_direction = (%g,%g), n_coeff = %g\n",
-		    normal_direction[0], normal_direction[1], n_coeff);
-
-	  incoming = (n_coeff > 0.0); /* moving towards boundary. */
-	  in_critical_region = (dist < alpha * cutoff_dist);
-	
-	  if(debug_on)
-	    fprintf(stderr, "\tincoming = %d, in_critial_region = %d\n", incoming, in_critical_region);
-
-	  /*
-	    fprintf(stderr, "pre-total = (%g, %g), pos = (%g, %g), tangent = (%g, %g), normal = (%g, %g)\n",
-	    total_velocity[0], total_velocity[1],
-	    p->x[0], p->x[1],
-	    tangent_velocity[0], tangent_velocity[1],
-	    normal_velocity[0], normal_velocity[1]);
-	  */
-
-	  if(incoming || in_critical_region)
-	    {
-	      for(j = 0; j < DIM; j++)
-		{
-		  normal_velocity[j] = n_coeff * normal_direction[j];
-		  tangent_velocity[j] = total_velocity[j] - normal_velocity[j];
-		}
-
-	      /* If we were to jump right past the critical cutoff, hold us there. */
-	      if(dist - n_coeff * particle_dt < alpha * cutoff_dist ||
-		 in_critical_region)
-		{
-		  n_coeff = (dist - alpha * cutoff_dist) / particle_dt;
-		  for(j = 0; j < DIM; j++)
-		    normal_velocity[j] = n_coeff * normal_direction[j];
-		}
-	      else /* Otherwise try to slow down. */
-		{
-		  n_coeff = 0.0;
-		  slow_factor = (dist - alpha * cutoff_dist) / ((1.0 - alpha) * cutoff_dist);
-		  slow_factor = fabs(slow_factor);
-		  for(j = 0; j < DIM; j++)
-		    {
-		      normal_velocity[j] *= slow_factor;
-		      n_coeff += normal_velocity[j] * normal_velocity[j];
-		    }
-		  /* But if slowing down doesn't help, hold us there. */
-		  n_coeff = sqrt(n_coeff);
-		  if(dist - n_coeff * particle_dt < alpha * cutoff_dist)
-		    {
-		      n_coeff = (dist - alpha * cutoff_dist) / particle_dt;
-		      for(j = 0; j < DIM; j++)
-			normal_velocity[j] = n_coeff * normal_direction[j];
-		    }
-		}
-
-	      if(debug_on)
-		fprintf(stderr, "\tnormal_velocity*particle_dt = (%g,%g)\n",
-			normal_velocity[0]*particle_dt,
-			normal_velocity[1]*particle_dt);
-	      for(j = 0; j < DIM; j++)
-		total_velocity[j] = tangent_velocity[j] + normal_velocity[j];
-	    }
-	  else
-	    {
-	      /* For outgoing, do nothing, not even try to slow us down... */
-	      /*
-	      slow_factor = (dist - alpha * cutoff_dist) / ((1.0 - alpha) * cutoff_dist);
-	      slow_factor = fabs(slow_factor);
-	      for(j = 0; j < DIM; j++)
-		normal_velocity[j] *= slow_factor;
-	      */
-	    }
-
-	  /*
-	    fprintf(stderr, "post-total = (%g, %g), tangent = (%g, %g), normal = (%g, %g)\n",
-	    total_velocity[0], total_velocity[1],
-	    tangent_velocity[0], tangent_velocity[1],
-	    normal_velocity[0], normal_velocity[1]);
-	  */
-	}
-    }
-#endif
 }
 
 

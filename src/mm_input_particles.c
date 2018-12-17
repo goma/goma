@@ -387,7 +387,7 @@ rd_particle_specs(FILE *ifp, char *input)
 	}
       else if(!strncmp(s_tmp, "ACIS", 4))
 	{
-	  EH(-1, "CGM not support, ACIS.");
+	  EH(-1, "CGM not supported, ACIS");
 	}
       else
 	{
