@@ -556,7 +556,6 @@ MM_INC=	mm_as.h\
         mm_as_structs.h\
         mm_augc_util.h\
         mm_bc.h\
-        mm_cards.h\
         mm_chemkin.h\
         mm_dil_viscosity.h\
         mm_eh.h\

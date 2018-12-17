@@ -491,9 +491,6 @@ typedef enum datatype Edt;
  *  typedef shortcuts for structures defined later in other include files.
  */
 
-typedef struct Node_Struct     NODE_STRUCT;
-typedef struct Node_Var_Struct NODE_VAR_STRUCT;
-typedef struct Var_Struct      VAR_STRUCT;
 typedef struct Material_Properties MATRL_PROP_STRUCT;
 
 /***************************************************************************/

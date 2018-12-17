@@ -567,7 +567,6 @@ raven_landing()
       else
 	PBCs = NULL;
     }
-
     
 #ifdef DEBUG
   printf("P%d raven_landing done\n", ProcID);
