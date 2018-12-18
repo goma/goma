@@ -3517,7 +3517,7 @@ Hrenorm_simplemass( Exo_DB *exo,
           M0_set = 1;
         }
     }
-  else
+  else if (!M0_set)
     {
       M0 = find_LS_mass ( exo,
                           dpi,
@@ -3533,7 +3533,7 @@ Hrenorm_simplemass( Exo_DB *exo,
   exchange_dof ( cx, dpi, x, pg->imtrx );
 #endif
 
-  max_its = 10;
+  max_its = 20;
   Mold = M0;
   M = find_LS_mass ( exo,
                      dpi,
@@ -3548,6 +3548,7 @@ Hrenorm_simplemass( Exo_DB *exo,
       break;
     }
 
+    interface_size = 0;
     for( eb=0; eb< dpi->num_elem_blocks_global; eb++)
       {
         blk_id = dpi->eb_id_global[eb];
@@ -3568,8 +3569,6 @@ Hrenorm_simplemass( Exo_DB *exo,
                                                      0.0,
                                                      0 );
       }
-
-
 
     c = (M - Mold) / interface_size;
     for( I =0 ; I < num_total_nodes; I++)

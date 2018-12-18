@@ -401,17 +401,14 @@ EXTERN void press_poisson_segregated
  double ,                                          // current time
  double);                                          // time step
 
-EXTERN void PSPG_consistency_bc
-PROTO((double *,		/* func                                      */
-       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-       const dbl [DIM],		/* x_dot                                     */
-       const dbl ,		/* current time                              */
-       const dbl ,		/* dt - time step size                       */
-       const dbl ,		/* tt - time step parameter                  */
-       const dbl ,		/* h_elem_avg - global average element size  */
-       const dbl [DIM],		/* h - average element sizes                 */
-       const dbl ,		/* mu_avg - average element viscosity        */
-       const dbl ));		/* U_norm - global velocity norm             */
+EXTERN void
+PSPG_consistency_bc (double *func,
+		     double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+		     const dbl x_dot[DIM],
+		     const dbl time, /* current time  */
+		     const dbl dt, /* time step size */
+		     const dbl tt, /* time step parameter */
+		     const PG_DATA *pg_data);	/* U_norm - global velocity norm             */
 
 EXTERN void fapply_CA
 PROTO((double *,		/* func                                      */

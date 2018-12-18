@@ -746,6 +746,26 @@ matrix_fill(
     pg_data.mu_avg = element_viscosity();
     pg_data.rho_avg = density(NULL, time_value);
 
+    double mu = 0;
+    double rho = 0;
+    for (ip = 0; ip < num_local_nodes; ip ++)
+      {
+        find_nodal_stu(ip, ielem_type, &xi[0], &xi[1], &xi[2]);
+        setup_shop_at_point(ei[pg->imtrx]->ielem, xi, exo);
+        double gamma[DIM][DIM];
+        for ( int a=0; a<VIM; a++)
+          {
+            for ( int b=0; b<VIM; b++)
+              {
+                gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+              }
+          }
+        mu += viscosity(gn, gamma, NULL);
+        rho += density(NULL, time_value);
+      }
+    pg_data.mu_avg = mu / ((double) num_local_nodes);
+    pg_data.rho_avg = rho / ((double) num_local_nodes);
+
     if(pspg_local)
       {
 	h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
@@ -2372,7 +2392,7 @@ matrix_fill(
 	  
       if (call_int) {
 	err = apply_integrated_bc(x, resid_vector, delta_t, theta,
-				  pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+				  &pg_data,
 				  ielem, ielem_type, num_local_nodes, ielem_dim,
 				  iconnect_ptr, elem_side_bc, num_total_nodes,
 				  WEAK_INT_SURF, time_value, element_search_grid, exo);
@@ -2699,7 +2719,7 @@ matrix_fill(
 	if (call_int) 
 	  {
 	    err = apply_integrated_bc(x, resid_vector, delta_t, theta,
-				      pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+				      &pg_data,
 				      ielem, ielem_type, num_local_nodes, 
 				      ielem_dim, iconnect_ptr, elem_side_bc, 
 				      num_total_nodes, 

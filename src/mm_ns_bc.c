@@ -3688,11 +3688,11 @@ fvelo_slip_ls_heaviside(double func[MAX_PDIM],
   	}
     }
 
-  mu = viscosity(gn, gamma, d_mu);
+  //mu = viscosity(gn, gamma, d_mu);
 
   level_set_property(beta_negative, beta_positive, width, &beta, d_beta_dF);
-
-  betainv = mu/beta;
+  // betainv = mu/beta;
+  betainv = 1/beta;
 
   vs[0] = vsx;
   vs[1] = vsy;
@@ -7296,10 +7296,7 @@ PSPG_consistency_bc (double *func,
 		     const dbl time, /* current time  */
 		     const dbl dt, /* time step size */
 		     const dbl tt, /* time step parameter */
-		     const dbl h_elem_avg, /* global average element size */
-		     const dbl h[DIM], /* average element size */
-		     const dbl mu_avg, /* average element viscosity */
-		     const dbl U_norm)  /* global velocity norm */
+		     const PG_DATA *pg_data)  /* global velocity norm */
 /******************************************************************************
 *
 *  Function which calculates the missing pressure stabilization terms 
@@ -7368,7 +7365,18 @@ PSPG_consistency_bc (double *func,
   dbl d_div_tau_p_dvd[DIM][DIM][MDE];          /* derivative wrt vorticity dir */
   dbl d_div_tau_p_dp[DIM][MDE];                /* derivative wrt pressure dir */
   stress_eqn_pointer(v_s);
+
+  const dbl h_elem_avg = pg_data->h_elem_avg;
+  const dbl *hsquared = pg_data->hsquared;      	/* element size information for PSPG         */
+  const dbl U_norm = pg_data->U_norm;	                /* global velocity norm for PSPG calcs       */
+  const dbl mu_avg = pg_data->mu_avg;	                /* element viscosity for PSPG calculations   */
+  const dbl rho_avg = pg_data->rho_avg;                 /* element density for PSPG calculations   */
+  const dbl *v_avg = pg_data->v_avg;
   
+
+  dbl d_tau_pspg_dX[DIM][MDE];
+  dbl d_tau_pspg_dv[DIM][MDE];
+
   wim   = dim;
 
   if(pd->CoordinateSystem == SWIRLING ||
@@ -7393,14 +7401,155 @@ PSPG_consistency_bc (double *func,
      norm of the velocity */
   
   Re = rho * U_norm * h_elem / (2.0 * mu_avg);
-  
-  if (Re <= 3.0) 
+
+
+  int pspg_global;
+  int pspg_local;
+  if(PSPG == 1)
     {
-      tau_pspg = -PS_scaling * h_elem * h_elem / (12.0 * mu_avg);
+      pspg_global = TRUE;
+      pspg_local = FALSE;
     }
-  else if (Re > 3.0) 
+  /* This is the flag for the standard local PSPG */
+  else if(PSPG == 2)
     {
-      tau_pspg = -PS_scaling * h_elem / (2.0 * rho * U_norm);
+      pspg_global = FALSE;
+      pspg_local = TRUE;
+    }
+  else
+    {
+      return;
+    }
+  
+  if(pspg_global)
+    {
+
+      /* Now calculate the element Reynolds number based on a global
+       * norm of the velocity and determine tau_pspg discretely from Re
+       * The global version has no Jacobian dependencies
+       */
+      Re = rho * U_norm * h_elem / (2.0 * mu_avg);
+
+      if (Re <= 3.0)
+        {
+          tau_pspg = PS_scaling * h_elem * h_elem / (12.0 * mu_avg);
+        }
+      else if (Re > 3.0)
+        {
+          tau_pspg = PS_scaling * h_elem / (2.0 * rho * U_norm);
+        }
+    }
+  else if (pspg_local)
+    {
+      double hh_siz = 0.;
+      for ( p=0; p<dim; p++)
+        {
+          hh_siz += hsquared[p];
+        }
+      // Average value of h**2 in the element
+      hh_siz = hh_siz/ ((double )dim);
+
+      // Average value of v**2 in the element
+      double vv_speed = 0.0;
+      for ( a=0; a<wim; a++)
+        {
+          vv_speed += v_avg[a]*v_avg[a];
+        }
+
+      if ((mp->DensityModel == CONSTANT) && ((gn->ConstitutiveEquation == NEWTONIAN) && (mp->ViscosityModel == CONSTANT)))
+        {
+
+            // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
+            double tau_pspg1 = rho_avg*rho_avg*vv_speed/hh_siz + (9.0*mu_avg*mu_avg)/(hh_siz*hh_siz);
+            if (  pd->TimeIntegration != STEADY)
+              {
+                tau_pspg1 += 4.0/(dt*dt);
+              }
+            tau_pspg = PS_scaling/(rho_avg*sqrt(tau_pspg1));
+
+            // tau_pspg derivatives wrt v from vv_speed
+            if (pd->v[pg->imtrx][VELOCITY1] )
+              {
+                for ( b=0; b<dim; b++)
+                  {
+                    var = VELOCITY1+b;
+                    if ( pd->v[pg->imtrx][var] )
+                      {
+                        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                          {
+                            d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1;
+                            d_tau_pspg_dv[b][j] *= rho_avg*rho_avg/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
+                          }
+                      }
+                  }
+              }
+
+            // tau_pspg derivatives wrt mesh from hh_siz
+            if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
+              {
+                for ( b=0; b<dim; b++)
+                  {
+                    var = MESH_DISPLACEMENT1+b;
+                    if ( pd->v[pg->imtrx][var] )
+                      {
+                        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                          {
+                            d_tau_pspg_dX[b][j] = tau_pspg/tau_pspg1;
+                            d_tau_pspg_dX[b][j] *= (rho_avg*rho_avg*vv_speed + 18.0*mu_avg*mu_avg/hh_siz) / (hh_siz*hh_siz);
+                            d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
+
+                          }
+                      }
+                  }
+              }
+        }
+      else
+        {
+          double rho = pg_data->rho_avg;
+          double mu = pg_data->mu_avg;
+          // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
+          double tau_pspg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
+          if (  pd->TimeIntegration != STEADY)
+            {
+              tau_pspg1 += 4.0/(dt*dt);
+            }
+          tau_pspg = PS_scaling/(rho*sqrt(tau_pspg1));
+
+          // tau_pspg derivatives wrt v from vv_speed
+          if (pd->v[pg->imtrx][VELOCITY1] )
+            {
+              for ( b=0; b<dim; b++)
+                {
+                  var = VELOCITY1+b;
+                  if ( pd->v[pg->imtrx][var] )
+                    {
+                      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                        {
+                          d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1;
+                          d_tau_pspg_dv[b][j] *= 1/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
+                        }
+                    }
+                }
+            }
+
+          // tau_pspg derivatives wrt mesh from hh_siz
+          if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
+            {
+              for ( b=0; b<dim; b++)
+                {
+                  var = MESH_DISPLACEMENT1+b;
+                  if ( pd->v[pg->imtrx][var] )
+                    {
+                      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                        {
+                          d_tau_pspg_dX[b][j] = tau_pspg/tau_pspg1;
+                          d_tau_pspg_dX[b][j] *= (vv_speed + 18.0*(mu/rho)/hh_siz) / (hh_siz*hh_siz);
+                          d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
+                        }
+                    }
+                }
+            }
+        }
     }
   
   /* load up shearrate tensor based on velocity */
@@ -7507,6 +7656,10 @@ PSPG_consistency_bc (double *func,
 	      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 		d_func[0][var][j] += tau_pspg * bf[var]->phi[j] * rho *
 		    pd->etm[pg->imtrx][meqn][(LOG2_MASS)] * fv->snormal[a];
+		for (int b = 0; b < pd->Num_Dim; b++)
+		{
+		  d_func[0][var][j] += d_tau_pspg_dv[a][j]*momentum_residual[b] * fv->snormal[b];
+		}
 	      }
 	    }
 	  }
@@ -7519,7 +7672,8 @@ PSPG_consistency_bc (double *func,
 		  {
 		    meqn = R_MOMENTUM1 + b;
 		    d_func[0][var][j] -= rho * bf[var]->phi[j] * fv->grad_v[a][b] 
-		      * pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)] * fv->snormal[b] * tau_pspg;
+		      * pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)] * fv->snormal[b] * tau_pspg
+			+ momentum_residual[b] * fv->snormal[b] * d_tau_pspg_dX[a][j];
 		  }
 	}
       return;
@@ -7580,6 +7734,10 @@ PSPG_consistency_bc (double *func,
 		    }
 
 		  d_func[0][var][j] += pressure_stabilization;
+		  for (int p = 0; p < pd->Num_Dim; p++)
+		    {
+		      d_func[0][var][j] += d_tau_pspg_dv[b][j]* momentum_residual[p] * fv->snormal[p];
+		    }
 		}
 	    }
 	}
@@ -7837,6 +7995,10 @@ PSPG_consistency_bc (double *func,
 			}
 		    }
 		  d_func[0][var][j] += tau_pspg*pressure_stabilization;
+		  for (int p = 0; p < pd->Num_Dim; p++)
+		    {
+		      d_func[0][var][j] += d_tau_pspg_dX[b][j]* momentum_residual[p] * fv->snormal[p];
+		    }
 		}
 	    }
 	}
