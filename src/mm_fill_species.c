@@ -3520,6 +3520,9 @@ flory_huggins(double func[],
   double chi[MAX_CONC][MAX_CONC]; /* chi is the binary interaction parameter*/
   double mw_last=0, dmdv=0; /* Molecular weight of non-condensable and conversion factor */
 
+  memset(y_mass, 0, sizeof(double)*MAX_CONC);
+  memset(prod, 0, sizeof(double)*MAX_CONC);
+
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
@@ -6249,6 +6252,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
        EH(-1, "mass_flux_equil_mtc expects MAX_CONC >= 3");
        return;
      }
+     memset(prod, 0, sizeof(double)*MAX_CONC);
 
 /***************************** EXECUTION BEGINS *******************************/
 
@@ -6744,6 +6748,7 @@ act_coeff(dbl lngamma[MAX_CONC], dbl dlngamma_dC[MAX_CONC][MAX_CONC],
       memset(lngamma, 0,sizeof(double)*MAX_CONC);
       memset(dlngamma_dC, 0,sizeof(double)*MAX_CONC*MAX_CONC);
       memset(C, 0, sizeof(double)*MAX_CONC);
+      memset(prod, 0, sizeof(double)*MAX_CONC);
 
   if(mode==RAOULT)
     {

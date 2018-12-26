@@ -9539,12 +9539,15 @@ load_fv_grads(void)
 	  for (q = 0; q < VIM; q++)
             {
 	      fv->grad_n[p][q] = 0.0;
+	      fv_old->grad_n[p][q] = 0.0;
 	      for (r = 0; r < dim; r++)
 		{
 		  for (i = 0; i < dofs; i++)
 		    {
 		      fv->grad_n[p][q] +=
 			*(esp->n[r][i]) * bf[v]->grad_phi_e[i][r][p][q];
+		      fv_old->grad_n[p][q] +=
+			*(esp_old->n[r][i]) * bf[v]->grad_phi_e[i][r][p][q];
 		    }
 		}
 	    }
@@ -9557,6 +9560,7 @@ load_fv_grads(void)
 	  for (q = 0; q < VIM; q++ )
 	    {
 	      fv->grad_n[p][q] = 0.0;
+	      fv_old->grad_n[p][q] = 0.0;
 	    }
 	}
     }
@@ -9567,9 +9571,11 @@ load_fv_grads(void)
   if (pd->v[NORMAL1] || pd->v[SHELL_NORMAL1])
     {
       fv->div_n = 0.0;
+      fv_old->div_n = 0.0;
       for (p = 0 ; p < VIM; p++)
 	{
 	  fv->div_n += fv->grad_n[p][p];
+	  fv_old->div_n += fv_old->grad_n[p][p];
 	}
     }
   
@@ -17302,6 +17308,49 @@ continuous_surface_tension(double st, double csf[DIM][DIM],
   return(status);	
 }
 
+int
+continuous_surface_tension_old(double st, double csf[DIM][DIM], struct Level_Set_Interface *lsi_old)
+{
+  int    a, b;
+  int    status = 0;
+
+  int var;
+
+  var =  ls->var;
+
+  if (var != FILL) {
+    EH(-1, "Unknown fill variable");
+  }
+
+  /* Fetch the level set interface functions. */
+  load_lsi_old(ls->Length_Scale, lsi_old);
+
+  /* If we're not near the zero level set, then csf is a zero tensor. */
+  if ( ! lsi_old->near ) {
+    for ( a=0; a < VIM; a++)
+      {
+	for ( b=0; b < VIM; b++)
+	  {
+	    csf[a][b] = 0;
+	  }
+      }
+
+    return(status);
+  }
+
+  /* Calculate the CSF tensor. */
+  for ( a=0; a < VIM; a++)
+    {
+      for ( b=0; b < VIM; b++)
+	{
+ 	  csf[a][b] = st * lsi_old->delta *
+	    (((double)delta(a,b)) - lsi_old->normal[a] * lsi_old->normal[b]);
+	}
+    }
+
+  return status;
+}
+
 /*      routine for inverting isoparametric map
         finds cee,eta coordinates given the x,y coords
         and interpolates function
@@ -19268,6 +19317,16 @@ apply_distributed_sources ( int elem, double width,
 		case LS_CAP_DIV_S_N_BC:
 		  assemble_div_s_n_source ();
 		  break;
+		case LS_CAP_HYSING_BC:
+		  assemble_cap_hysing(dt, bc->BC_Data_Float[0]);
+		  break;
+		case LS_CAP_DENNER_DIFF_BC:
+		  if (pd->e[R_NORMAL1]) {
+		    assemble_cap_denner_diffusion_n(dt, bc->BC_Data_Float[0]);
+		  } else {
+		    assemble_cap_denner_diffusion(dt, bc->BC_Data_Float[0]);
+		  }
+		  break;
                 case LS_Q_BC:
                   assemble_q_source( bc->BC_Data_Float[0] );
                   break;
@@ -20293,9 +20352,647 @@ assemble_div_s_n_source ( )
   return(0);
 }
 
+int
+assemble_cap_hysing(double dt, double scale)
+{
+  int i,j,a,b,p,q, k,ii, ledof;
+  int eqn, peqn, var, pvar;
+  int dim, wim;
+
+  struct Level_Set_Interface lsi_old_struct;
+  struct Level_Set_Interface *lsi_old = &lsi_old_struct;
+
+  struct Basis_Functions *bfm;
+  dbl (* grad_phi_i_e_a ) [DIM] = NULL;
+
+  double wt, det_J, h3;
+
+  double csf[DIM][DIM];
+
+  double grad_s_v[DIM][DIM];
+  //  double grad_s_phi_i_e_a[DIM][DIM];
+  double d_grad_s_v_dv[DIM][DIM];
+
+  double source;
+  double diffusion;
+
+  eqn = R_MOMENTUM1;
+  if ( ! pd->e[eqn] )
+    {
+      return(0);
+    }
+
+  wt = fv->wt;
+  h3 = fv->h3;
+  if ( ls->on_sharp_surf ) /* sharp interface */
+    {
+      det_J = fv->sdet;
+    }
+  else              /* diffuse interface */
+    {
+      det_J = bf[eqn]->detJ;
+    }
+
+  dim   = pd->Num_Dim;
+  wim   = dim;
+  if (pd->CoordinateSystem == SWIRLING ||
+      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+    wim = wim+1;
+
+  memset( csf,          0, sizeof(double)*DIM*DIM);
+
+  continuous_surface_tension_old(mp->surface_tension, csf, lsi_old);
+
+  for ( p=0; p<VIM; p++) {
+    for ( q=0; q<VIM; q++) {
+      grad_s_v[p][q] = fv->grad_v[p][q];
+      for (k = 0; k < VIM; k++) {
+	grad_s_v[p][q] -= (lsi_old->normal[p] * lsi_old->normal[k]) * fv->grad_v[k][q];
+      }
+    }
+  }
+
+#ifdef COUPLED_FILL
+  /* finite difference calculation of path dependencies for
+     subelement integration
+  */
+  if ( ls->CalcSurfDependencies )
+    {
+      EH(-1, "Calc surf dependencies not implemented");
+
+    }
+#endif
+
+  /*
+   * Residuals ____________________________________________________________________________
+   */
+
+  if ( af->Assemble_Residual )
+    {
+
+      for( a=0; a<wim; a++ )
+	{
+	  eqn = R_MOMENTUM1 + a;
+	  peqn = upd->ep[eqn];
+	  bfm = bf[eqn];
+
+	  for (i = 0; i < ei->dof[eqn]; i++)
+	    {
+
+	      ledof = ei->lvdof_to_ledof[eqn][i];
+
+	      if (ei->active_interp_ledof[ledof])
+		{
+
+		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+
+		  grad_phi_i_e_a = bfm->grad_phi_e[i][a];
+
+		  source = 0.;
+
+		  for ( p=0; p<VIM; p++)
+		    {
+		      for ( q=0; q<VIM; q++)
+			{
+			  source += grad_phi_i_e_a[p][q] * csf[q][p];
+			}
+		    }
+
+		  source *= -det_J * wt * h3;
+		  source *= pd->etm[eqn][LOG2_SOURCE];
+
+		  diffusion = 0;
+		  /*
+		   * 			grad_v[a][b] = d v_b
+		   *				       -----
+		   *				       d x_a
+		   */
+		  for ( p=0; p<VIM; p++) {
+		    for ( q=0; q<VIM; q++) {
+		      diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * grad_s_v[p][q];
+		    }
+		  }
+
+		  diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi_old->delta * scale);
+
+		  lec->R[peqn][ii] += source + diffusion;
+		}
+	    }
+	}
+    }
+
+
+  /*
+   * Yacobian terms...
+   */
+
+  if( af->Assemble_Jacobian )
+    {
+      for( a=0; a<wim; a++ )
+	{
+	  eqn = R_MOMENTUM1 + a;
+	  peqn = upd->ep[eqn];
+	  bfm = bf[eqn];
+
+	  for (i = 0; i < ei->dof[eqn]; i++)
+	    {
+
+	      ledof = ei->lvdof_to_ledof[eqn][i];
+
+	      if (ei->active_interp_ledof[ledof])
+		{
+
+		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+
+		  grad_phi_i_e_a = bfm->grad_phi_e[i][a];
+
+		  var = VELOCITY1;
+		  if(pd->v[var])
+		    {
+		      for( b=0; b<VIM; b++)
+			{
+			  var = VELOCITY1 + b;
+			  pvar = upd->vp[var];
+
+			  for( j=0; j<ei->dof[var]; j++)
+			    {
+			      for (p = 0; p < VIM; p++) {
+				for (q = 0; q < VIM; q++) {
+				  d_grad_s_v_dv[p][q] = bf[var]->grad_phi_e[j][b][p][q];
+				  for (k = 0; k < VIM; k++) {
+				    d_grad_s_v_dv[p][q] -= lsi_old->normal[p] * lsi_old->normal[k] * bf[var]->grad_phi_e[j][b][k][q];
+				  }
+				}
+			      }
+
+			      diffusion = 0;
+
+			      for ( p=0; p<VIM; p++) {
+				for ( q=0; q<VIM; q++) {
+				  diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * d_grad_s_v_dv[p][q];
+				}
+			      }
+
+			      diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi_old->delta * scale);
+			      lec->J[peqn][pvar][ii][j] += diffusion;
+			    }
+			}
+		    }
+
+		  var = MESH_DISPLACEMENT1;
+		  if(pd->v[var])
+		    {
+		      EH(-1, "Jacobian terms for hysing capillary wrt mesh not implemented");
+		    }
+
+		}
+	    }
+	}
+    }
 
 
 
+  return 0;
+}
+
+int
+assemble_cap_denner_diffusion(double dt, double scale)
+{
+  int i,j,a,b,p,q, k,ii, ledof;
+  int eqn, peqn, var, pvar;
+  int dim, wim;
+
+  double wt, det_J, h3;
+
+  double csf[DIM][DIM];
+
+  double grad_s_v[DIM][DIM];
+  //  double grad_s_phi_i_e_a[DIM][DIM];
+  double d_grad_s_v_dv[DIM][DIM];
+  double d_grad_s_v_dF[DIM][DIM];
+  //  double d_grad_s_v_dn[DIM][DIM];
+
+  double diffusion;
+
+  eqn = R_MOMENTUM1;
+  if ( ! pd->e[eqn] )
+    {
+      return(0);
+    }
+
+  load_lsi( ls->Length_Scale );
+
+  wt = fv->wt;
+  h3 = fv->h3;
+  if ( ls->on_sharp_surf ) /* sharp interface */
+    {
+      det_J = fv->sdet;
+    }
+  else              /* diffuse interface */
+    {
+      det_J = bf[eqn]->detJ;
+    }
+
+  dim   = pd->Num_Dim;
+  wim   = dim;
+  if (pd->CoordinateSystem == SWIRLING ||
+      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+    wim = wim+1;
+
+  memset( csf,          0, sizeof(double)*DIM*DIM);
+
+  for ( p=0; p<VIM; p++) {
+    for ( q=0; q<VIM; q++) {
+      grad_s_v[p][q] = fv->grad_v[p][q];
+      for (k = 0; k < VIM; k++) {
+	grad_s_v[p][q] -= (lsi->normal[p] * lsi->normal[k]) * fv->grad_v[k][q];
+      }
+    }
+  }
+
+
+#ifdef COUPLED_FILL
+  /* finite difference calculation of path dependencies for
+     subelement integration
+  */
+  if ( ls->CalcSurfDependencies )
+    {
+      EH(-1, "Calc surf dependencies not implemented");
+    }
+#endif
+
+  /*
+   * Residuals ____________________________________________________________________________
+   */
+
+  if ( af->Assemble_Residual )
+    {
+
+      for( a=0; a<wim; a++ )
+	{
+	  eqn = R_MOMENTUM1 + a;
+	  peqn = upd->ep[eqn];
+
+	  for (i = 0; i < ei->dof[eqn]; i++)
+	    {
+
+	      ledof = ei->lvdof_to_ledof[eqn][i];
+
+	      if (ei->active_interp_ledof[ledof])
+		{
+
+		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+
+		  diffusion = 0;
+
+		  for ( p=0; p<VIM; p++) {
+		    for ( q=0; q<VIM; q++) {
+		      diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * grad_s_v[p][q];
+		    }
+		  }
+
+		  diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi->delta * scale);
+
+		  lec->R[peqn][ii] += diffusion;
+		}
+	    }
+	}
+    }
+
+
+  /*
+   * Yacobian terms...
+   */
+
+  if( af->Assemble_Jacobian )
+    {
+      for( a=0; a<wim; a++ )
+	{
+	  eqn = R_MOMENTUM1 + a;
+	  peqn = upd->ep[eqn];
+
+	  for (i = 0; i < ei->dof[eqn]; i++)
+	    {
+
+	      ledof = ei->lvdof_to_ledof[eqn][i];
+
+	      if (ei->active_interp_ledof[ledof])
+		{
+
+		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+
+		  var = LS ;
+		  if( pd->v[var] )
+		    {
+		      pvar = upd->vp[var];
+
+		      for( j=0; j<ei->dof[var]; j++)
+			{
+
+			  /* grouping lsi->delta into this now */
+			  for ( p=0; p<VIM; p++) {
+			    for ( q=0; q<VIM; q++) {
+			      d_grad_s_v_dF[p][q] = lsi->d_delta_dF[j] * fv->grad_v[p][q] + lsi->delta * fv->grad_v[p][q];
+			      for (k = 0; k < VIM; k++) {
+				d_grad_s_v_dF[p][q] -= lsi->d_delta_dF[j] * (lsi->normal[p] * lsi->normal[k]) * fv->grad_v[k][q];
+				d_grad_s_v_dF[p][q] -= lsi->delta * (lsi->d_normal_dF[p][j] * lsi->normal[k]) * fv->grad_v[k][q];
+				d_grad_s_v_dF[p][q] -= lsi->delta * (lsi->normal[p] * lsi->d_normal_dF[k][j]) * fv->grad_v[k][q];
+			      }
+			    }
+			  }
+
+			  diffusion = 0;
+
+			  for ( p=0; p<VIM; p++) {
+			    for ( q=0; q<VIM; q++) {
+			      diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * d_grad_s_v_dF[p][q];
+			    }
+			  }
+
+			  diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * scale);
+			  lec->J[peqn][pvar][ii][j] += diffusion;
+			}
+		    }
+
+
+		  var = VELOCITY1;
+		  if(pd->v[var])
+		    {
+		      for( b=0; b<VIM; b++)
+			{
+			  var = VELOCITY1 + b;
+			  pvar = upd->vp[var];
+
+			  for( j=0; j<ei->dof[var]; j++)
+			    {
+
+			      for (p = 0; p < VIM; p++) {
+				for (q = 0; q < VIM; q++) {
+				  d_grad_s_v_dv[p][q] = bf[var]->grad_phi_e[j][b][p][q];
+				  for (k = 0; k < VIM; k++) {
+				    d_grad_s_v_dv[p][q] -= lsi->normal[p] * lsi->normal[k] * bf[var]->grad_phi_e[j][b][k][q];
+				  }
+				}
+			      }
+
+			      diffusion = 0;
+
+			      for ( p=0; p<VIM; p++) {
+				for ( q=0; q<VIM; q++) {
+				  diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * d_grad_s_v_dv[p][q];
+				}
+			      }
+
+			      diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi->delta * scale);
+			      lec->J[peqn][pvar][ii][j] += diffusion;
+			    }
+			}
+		    }
+
+		  var = MESH_DISPLACEMENT1;
+		  if(pd->v[var])
+		    {
+		      EH(-1, "Jacobian terms for denner capillary diffusion wrt mesh not implemented");
+		    }
+
+		}
+	    }
+	}
+    }
+
+  return 0;
+}
+
+int
+assemble_cap_denner_diffusion_n(double dt, double scale)
+{
+  int i,j,a,b,p,q, k,ii, ledof;
+  int eqn, peqn, var, pvar;
+  int dim, wim;
+
+  double wt, det_J, h3;
+
+  double csf[DIM][DIM];
+
+  double grad_s_v[DIM][DIM];
+  //  double grad_s_phi_i_e_a[DIM][DIM];
+  double d_grad_s_v_dv[DIM][DIM];
+  double d_grad_s_v_dn[DIM][DIM];
+  //  double d_grad_s_v_dn[DIM][DIM];
+
+  double diffusion;
+
+  eqn = R_MOMENTUM1;
+  if ( ! pd->e[eqn] )
+    {
+      return(0);
+    }
+
+  load_lsi( ls->Length_Scale );
+
+  wt = fv->wt;
+  h3 = fv->h3;
+  if ( ls->on_sharp_surf ) /* sharp interface */
+    {
+      det_J = fv->sdet;
+    }
+  else              /* diffuse interface */
+    {
+      det_J = bf[eqn]->detJ;
+    }
+
+  dim   = pd->Num_Dim;
+  wim   = dim;
+  if (pd->CoordinateSystem == SWIRLING ||
+      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+    wim = wim+1;
+
+  memset( csf,          0, sizeof(double)*DIM*DIM);
+
+  for ( p=0; p<VIM; p++) {
+    for ( q=0; q<VIM; q++) {
+      grad_s_v[p][q] = fv->grad_v[p][q];
+      for (k = 0; k < VIM; k++) {
+	grad_s_v[p][q] -= (fv->n[p] * fv->n[k]) * fv->grad_v[k][q];
+      }
+    }
+  }
+
+
+#ifdef COUPLED_FILL
+  /* finite difference calculation of path dependencies for
+     subelement integration
+  */
+  if ( ls->CalcSurfDependencies )
+    {
+      EH(-1, "Calc surf dependencies not implemented");
+    }
+#endif
+
+  /*
+   * Residuals ____________________________________________________________________________
+   */
+
+  if ( af->Assemble_Residual )
+    {
+
+      for( a=0; a<wim; a++ )
+	{
+	  eqn = R_MOMENTUM1 + a;
+	  peqn = upd->ep[eqn];
+
+	  for (i = 0; i < ei->dof[eqn]; i++)
+	    {
+
+	      ledof = ei->lvdof_to_ledof[eqn][i];
+
+	      if (ei->active_interp_ledof[ledof])
+		{
+
+		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+
+		  diffusion = 0;
+
+		  for ( p=0; p<VIM; p++) {
+		    for ( q=0; q<VIM; q++) {
+		      diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * grad_s_v[p][q];
+		    }
+		  }
+
+		  diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi->delta * scale);
+
+		  lec->R[peqn][ii] += diffusion;
+		}
+	    }
+	}
+    }
+
+
+  /*
+   * Yacobian terms...
+   */
+
+  if( af->Assemble_Jacobian )
+    {
+      for( a=0; a<wim; a++ )
+	{
+	  eqn = R_MOMENTUM1 + a;
+	  peqn = upd->ep[eqn];
+
+	  for (i = 0; i < ei->dof[eqn]; i++)
+	    {
+
+	      ledof = ei->lvdof_to_ledof[eqn][i];
+
+	      if (ei->active_interp_ledof[ledof])
+		{
+
+		  ii = ei->lvdof_to_row_lvdof[eqn][i];
+
+		  var = LS ;
+		  if( pd->v[var] )
+		    {
+		      pvar = upd->vp[var];
+
+		      for( j=0; j<ei->dof[var]; j++)
+			{
+			  diffusion = 0;
+
+			  for ( p=0; p<VIM; p++) {
+			    for ( q=0; q<VIM; q++) {
+			      diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * grad_s_v[p][q];
+			    }
+			  }
+
+			  diffusion *= lsi->d_delta_dF[j];
+
+			  diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * scale);
+			  lec->J[peqn][pvar][ii][j] += diffusion;
+			}
+		    }
+
+
+		  var = VELOCITY1;
+		  if(pd->v[var])
+		    {
+		      for( b=0; b<wim; b++)
+			{
+			  var = VELOCITY1 + b;
+			  pvar = upd->vp[var];
+
+			  for( j=0; j<ei->dof[var]; j++)
+			    {
+
+			      for (p = 0; p < wim; p++) {
+				for (q = 0; q < wim; q++) {
+				  d_grad_s_v_dv[p][q] = bf[var]->grad_phi_e[j][b][p][q];
+				  for (k = 0; k < wim; k++) {
+				    d_grad_s_v_dv[p][q] -= fv->n[p] * fv->n[k] * bf[var]->grad_phi_e[j][b][k][q];
+				  }
+				}
+			      }
+
+			      diffusion = 0;
+
+			      for ( p=0; p<wim; p++) {
+				for ( q=0; q<wim; q++) {
+				  diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * d_grad_s_v_dv[p][q];
+				}
+			      }
+
+			      diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi->delta * scale);
+			      lec->J[peqn][pvar][ii][j] += diffusion;
+			    }
+			}
+		    }
+
+		  var = R_NORMAL1;
+		  if(pd->v[var])
+		    {
+		      for( b=0; b<VIM; b++)
+			{
+			  var = R_NORMAL1 + b;
+			  pvar = upd->vp[var];
+
+			  for( j=0; j<ei->dof[var]; j++)
+			    {
+			      for (p = 0; p < VIM; p++) {
+				for (q = 0; q < VIM; q++) {
+				  d_grad_s_v_dn[p][q] = 0;
+				  for (k = 0; k < VIM; k++) {
+				    d_grad_s_v_dn[p][q] -= bf[var]->phi[j] * fv->n[k] * fv->grad_v[k][q];
+				    d_grad_s_v_dn[p][q] -= fv->n[p] * bf[var]->phi[j] * fv->grad_v[k][q];
+				  }
+				}
+			      }
+
+			      diffusion = 0;
+
+			      for ( p=0; p<VIM; p++) {
+				for ( q=0; q<VIM; q++) {
+				  diffusion += bf[eqn]->grad_phi_e[i][a][p][q] * d_grad_s_v_dn[p][q];
+				}
+			      }
+
+			      diffusion *= -det_J * wt * h3 * (dt * mp->surface_tension * lsi->delta * scale);
+			      lec->J[peqn][pvar][ii][j] += diffusion;
+			    }
+			}
+		    }
+
+		  var = MESH_DISPLACEMENT1;
+		  if(pd->v[var])
+		    {
+		      EH(-1, "Jacobian terms for denner capillary diffusion wrt mesh not implemented");
+		    }
+
+		}
+	    }
+	}
+    }
+
+  return 0;
+}
 
 int
 assemble_curvature_with_normals_source ( )

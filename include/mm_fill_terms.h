@@ -326,7 +326,16 @@ EXTERN int assemble_div_n_source
 
 EXTERN int assemble_div_s_n_source
      PROTO (( void ));
-		
+
+EXTERN int
+assemble_cap_hysing(double dt, double scale);
+
+EXTERN int
+assemble_cap_denner_diffusion(double dt, double scale);
+
+EXTERN int
+assemble_cap_denner_diffusion_n(double dt, double scale);
+
 EXTERN void grad_vector_fv_fill
 PROTO (( double ***,
 		 double ( *)[DIM][DIM][DIM],

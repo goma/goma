@@ -387,6 +387,7 @@ typedef int MPI_Aint;
 #  define P0PRINTF if (ProcID == 0) printf
 #else
 #  define DPRINTF fprintf
+#  define DFPUTS fputs
 #  define P0PRINTF printf
 #  define DFPUTS fputs
 #endif

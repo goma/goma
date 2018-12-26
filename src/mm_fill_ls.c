@@ -6770,6 +6770,88 @@ load_lsi(const double width)
 
 }
 
+int
+load_lsi_old(const double width, struct Level_Set_Interface *lsi_old)
+{
+  double F_old = 0, alpha, *grad_F_old = NULL;
+  int a;
+
+  if (ls->var != FILL) {
+    EH(-1, "Unknown level set variable");
+  }
+
+  lsi_old->near  = FALSE;
+  lsi_old->alpha = 0.0;
+
+  lsi_old->H = 0.0;
+  lsi_old->delta = 0.0;
+
+  memset(lsi_old->normal, 0, sizeof(double)*DIM);
+
+  /* This is useful for calculating the above (and other) quantities. */
+  lsi_old->gfmag = 0.0;
+  lsi_old->gfmaginv = 0.0;
+
+  /* Check if we're in the mushy zone. */
+  lsi_old->alpha = 0.5 * width;
+  alpha      = lsi_old->alpha;
+
+  F_old = fv_old->F;
+  grad_F_old = fv_old->grad_F;
+
+  lsi_old->near  = ls->on_sharp_surf || fabs(F_old) < alpha;
+
+  /* Calculate the interfacial functions we want to know even if not in mushy zone. */
+
+  lsi_old->gfmag = 0.0;
+  for ( a=0; a < VIM; a++ )
+    {
+      lsi_old->normal[a] = grad_F_old[a];
+      lsi_old->gfmag    += grad_F_old[a] * grad_F_old[a];
+    }
+  lsi_old->gfmag = sqrt( lsi_old->gfmag );
+  lsi_old->gfmaginv     = ( lsi_old->gfmag == 0.0 ) ? 1.0 : 1.0 / lsi_old->gfmag;
+
+  for ( a=0; a < VIM; a++)
+    {
+      lsi_old->normal[a] *= lsi_old->gfmaginv;
+    }
+
+  /* If we're not in the mushy zone: */
+  if ( ls->on_sharp_surf )
+    {
+      lsi_old->H = ( ls->Elem_Sign < 0 ) ? 0.0 : 1.0 ;
+      lsi_old->delta = 1.;
+    }
+  else if ( ! lsi_old->near )
+    {
+      lsi_old->H = ( F_old < 0.0) ? 0.0 : 1.0 ;
+      lsi_old->delta = 0.;
+    }
+  else
+    {
+      lsi_old->H     = 0.5 * (1. + F_old / alpha + sin(M_PIE * F_old / alpha) / M_PIE);
+      lsi_old->delta = 0.5 * (1. + cos(M_PIE * F_old / alpha)) * lsi_old->gfmag / alpha;
+    }
+
+
+/**** Shield the operations below since they are very expensive relative to the previous
+      operations in the load_lsi routine. Add your variables as needed  ********/
+
+  if (pd->v[LUBP]  || pd->v[LUBP_2] || pd->v[SHELL_SAT_CLOSED] || pd->v[SHELL_PRESS_OPEN ] ||
+      pd->v[SHELL_PRESS_OPEN_2] || pd->v[SHELL_SAT_GASN] )
+    {
+      EH(-1, "No support for LUBP/SHELL_SAT/SHELL_PRESS");
+    } /* end of if pd->v[LUBP] || ... etc */
+
+/************ End of shielding **************************/
+
+  lsi_old->delta_max = lsi_old->gfmag/alpha;
+
+  return(0);
+
+}
+
 /******************************************************************************
  * load_lsi_shell_second: Special case of load_lsi forced to be written to circumvent
  * the shell-shell-friend situation encountered in multilayer shell stacks.  The
