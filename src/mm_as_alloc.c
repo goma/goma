@@ -1310,6 +1310,10 @@ assembly_alloc(Exo_DB *exo)
     esp->cur_strain = (dbl **) alloc_ptr_1(MDE);
   }
 
+  if(Num_Var_In_Type[imtrx][HEAVISIDE_EQN]) {
+    esp->Heaviside = (dbl **) alloc_ptr_1(MDE);
+  }
+
   } /* End of loop over matrices */
   /*
    * Action_Flags______________________________________________________________

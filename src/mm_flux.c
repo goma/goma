@@ -8066,6 +8066,16 @@ load_fv_sens(void)
       fv_sens->rho += *esp_old->rho[i] * bf[v]->phi[i];
     }
   }
+
+  v = HEAVISIDE_EQN;
+  fv_sens->rho = 0.;
+  if ( pd->v[pg->imtrx][v] ) {
+    dofs  = ei[pg->imtrx]->dof[v];
+    for ( i=0; i<dofs; i++) {
+      fv_sens->Heaviside += *esp_old->Heaviside[i] * bf[v]->phi[i];
+    }
+  }
+
   v = SHELL_PRESS_OPEN;
   fv_sens->sh_p_open = 0.;
   if ( pd->v[pg->imtrx][v] )

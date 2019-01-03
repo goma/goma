@@ -3543,6 +3543,7 @@ Hrenorm_simplemass( Exo_DB *exo,
                      num_total_unkns);
   DPRINTF(stderr,"\n\t\t Mass old %g, Mass new %g: \t", M0, M);
 
+  double prev_step = 1e6;
   for (i = 0; i < max_its; i++) {
     if (fabs(M - Mold) < 1e-7) {
       break;
@@ -3570,7 +3571,14 @@ Hrenorm_simplemass( Exo_DB *exo,
                                                      0 );
       }
 
-    c = (M - Mold) / interface_size;
+    c = (M - Mold) / 2*interface_size;
+    // try to avoid uncrontrollable iterations
+    // until an actual iteration scheme is implemented
+    while (fabs(c) > fabs(prev_step))
+      {
+        c *= 0.5;
+      }
+    prev_step = c;
     for( I =0 ; I < num_total_nodes; I++)
       {
         if ( (ie = Index_Solution( I, ls->var, 0,  0, -2, pg->imtrx)) != -1 )
@@ -3840,8 +3848,8 @@ find_LS_mass ( const Exo_DB *exo,
 				      dC,
 				      x,
 				      x,
-				      0.0,
-				      0.0,
+				      tran->delta_t,
+				      tran->time_value,
 				      0 );
 
      } 
@@ -6869,7 +6877,17 @@ load_lsi(const double width)
     }
   else
     {
-      lsi->H     = 0.5 * (1. + F / alpha + sin(M_PIE * F / alpha) / M_PIE);
+      if (pd->gv[HEAVISIDE_EQN])
+        {
+          // clamp heaviside
+          double Hmax = fmax(0, fv->Heaviside);
+          double Hmin = fmin(1.0, Hmax);
+          lsi->H = Hmin;
+        }
+      else
+        {
+          lsi->H     = 0.5 * (1. + F / alpha + sin(M_PIE * F / alpha) / M_PIE);
+        }
       lsi->delta = 0.5 * (1. + cos(M_PIE * F / alpha)) * lsi->gfmag / alpha;
     }
 
@@ -7241,14 +7259,22 @@ load_lsi_derivs()
 
           /* Derivative of the delta function. */
           lsi->d_delta_dF[j] = lsi->d_gfmag_dF[j] * lsi->gfmaginv;
-	  lsi->d_H_dF[j] = phi_j * lsi->gfmaginv;
+          lsi->d_H_dF[j] = phi_j * lsi->gfmaginv;
         }
     }
     
   /* If we're not in the mushy zone, all remaining derivs should be zero. */
   if ( ls->on_sharp_surf || ! lsi->near ) return(0);
   
-  lsi->dH = 0.5 * (1.0/alpha) * (1. + cos(M_PIE * F / alpha));
+  if (pd->gv[HEAVISIDE_EQN])
+    {
+      lsi->dH = 0.0;
+    }
+  else
+    {
+      lsi->dH = 0.5 * (1.0/alpha) * (1. + cos(M_PIE * F / alpha));
+    }
+
 
   /*
    * Derivatives w.r.t. FILL for non-zero alpha

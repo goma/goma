@@ -120,6 +120,9 @@ EXTERN void foam_pbe_co2_liquid_source(struct Species_Conservation_Terms *st,
 EXTERN int
 assemble_density();
 
+EXTERN int
+assemble_heaviside();
+
 EXTERN double PBEVolumeSource_rhoeqn(double time,
 				     double dt,
 				     double tt,

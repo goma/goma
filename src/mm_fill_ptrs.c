@@ -2077,6 +2077,13 @@ load_elem_dofptr(const int ielem,
 				      esp_dot->rho);
     }
 
+  eqn = R_HEAVISIDE_EQN;
+  if ( pd->e[pg->imtrx][eqn] )
+    {
+      load_varType_Interpolation_ptrs(eqn, esp->Heaviside, esp_old->Heaviside,
+                                      esp_dot->Heaviside);
+    }
+
   /*
    * External field variables
    * Warning - here the distinction between nodes and dof's gets
@@ -2917,6 +2924,13 @@ load_elem_dofptr_all(const int ielem,
       {
 	load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->rho, esp_old->rho,
 					esp_dot->rho);
+      }
+
+    eqn = R_HEAVISIDE_EQN;
+    if ( pd->e[imtrx][eqn] )
+      {
+        load_varType_Interpolation_ptrs_mat(imtrx, eqn, esp->Heaviside, esp_old->Heaviside,
+                                        esp_dot->Heaviside);
       }
 
   }

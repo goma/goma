@@ -539,6 +539,7 @@ struct Element_Variable_Pointers
   dbl *poynt[DIM][MDE];				/* Poynting Vector for light intensity */
   dbl *moment[MAX_MOMENTS][MDE];     	                /* moments */
   dbl *rho[MDE];
+  dbl *Heaviside[MDE];
 };
 
 /*___________________________________________________________________________*/
@@ -646,6 +647,7 @@ struct Element_Stiffness_Pointers
   dbl ***poynt;		      	 /* *v[DIM][MDE], velocity */
   dbl ***moment;	                 /* *moment[MAX_MOMENTS][MDE], moments */
   dbl **rho;
+  dbl **Heaviside;
 
 
   /*
@@ -1629,6 +1631,7 @@ struct Field_Variables
   dbl poynt[DIM];			/* Poynting Vector */
   dbl moment[MAX_MOMENTS];
   dbl rho;
+  dbl Heaviside;
 
   /*
    * Grads of scalars...
@@ -1668,6 +1671,7 @@ struct Field_Variables
   dbl grad_sh_l_curv_2[DIM];  /* Gradient of shell curvature_2 */
   dbl grad_sh_p_open[DIM];    /* Gradient of open porous shell pressure */
   dbl grad_sh_p_open_2[DIM];  /* Gradient of open porous shell pressure */
+  dbl grad_Heaviside[DIM];
 
   /*
    * Grads of vectors...
@@ -1963,6 +1967,7 @@ struct Diet_Field_Variables
   dbl poynt[DIM];			/* Poynting Vector */
   dbl moment[MAX_MOMENTS];
   dbl rho;
+  dbl Heaviside;
 
   /*  
    * Gradients... concentration is the only one we use in the

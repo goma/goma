@@ -2125,6 +2125,12 @@ load_variable (double *x_var,        /* variable value */
       *d_x_var = 1.;
       break;
 
+    case HEAVISIDE_EQN:
+      *x_var = fv->Heaviside;
+      var = HEAVISIDE_EQN;
+      *d_x_var = 1;
+      break;
+
       /* if variable type is a time derivative */
     case D_VEL1_DT:
       *x_var = fv_dot->v[0];

@@ -530,7 +530,8 @@ setup_pd()
 		  (ce == R_GRAD_S_V_DOT_N1) ||
 		  (ce == R_GRAD_S_V_DOT_N2) ||
 		  (ce == R_GRAD_S_V_DOT_N3) ||
-		  (ce == R_DENSITY_EQN))
+		  (ce == R_DENSITY_EQN) ||
+		  (ce == R_HEAVISIDE_EQN))
 	        {
 	      /* These equations have no term multipliers, but
 	       * something needs to be set to make the equation
