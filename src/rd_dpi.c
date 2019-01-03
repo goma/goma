@@ -751,15 +751,20 @@ rd_dpi(Dpi *d,
 	       d->num_node_sets_global,	-1, 
 	       si.ns_id_global,		d->ns_id_global);
 
-  get_variable(u, NC_INT, 1, 
-	       d->num_node_sets,	-1, 
-	       si.ns_index_global,	d->ns_index_global);
+  if (d->num_node_sets > 0)
+    {
+      get_variable(u, NC_INT, 1,
+		   d->num_node_sets,	-1,
+		   si.ns_index_global,	d->ns_index_global);
+    }
 
-
-  get_variable(u, NC_INT, 1, 
-	       d->len_ns_distfact_list,	-1, 
-	       si.ns_distfact_list_index_global, 
-	       d->ns_distfact_list_index_global);
+  if (d->len_ns_distfact_list > 0)
+    {
+      get_variable(u, NC_INT, 1,
+		   d->len_ns_distfact_list,	-1,
+		   si.ns_distfact_list_index_global,
+		   d->ns_distfact_list_index_global);
+    }
 
   get_variable(u, NC_INT, 1, 
 	       d->num_node_sets_global,		-1, 
@@ -769,11 +774,13 @@ rd_dpi(Dpi *d,
 	       d->num_node_sets_global,		-1, 
 	       si.ns_node_index_global,	d->ns_node_index_global);
 
-  get_variable(u, NC_INT, 1, 
-	       d->len_ns_node_list,	-1, 
-	       si.ns_node_list_index_global, 
-	       d->ns_node_list_index_global);
-
+  if (d->len_ns_node_list > 0)
+    {
+      get_variable(u, NC_INT, 1,
+		   d->len_ns_node_list,	-1,
+		   si.ns_node_list_index_global,
+		   d->ns_node_list_index_global);
+    }
 
 
   get_variable(u, NC_INT, 1, 
@@ -829,9 +836,12 @@ rd_dpi(Dpi *d,
   get_variable(u, NC_INT, 0, -1, -1, 
 	       si.ss_distfact_len_global, &(d->ss_distfact_len_global));
 
-  get_variable(u, NC_INT, 1, d->len_ss_distfact_list, -1, 
-	       si.ss_distfact_list_index_global, 
-	       d->ss_distfact_list_index_global);
+  if (d->len_ss_distfact_list > 0)
+    {
+      get_variable(u, NC_INT, 1, d->len_ss_distfact_list, -1,
+		   si.ss_distfact_list_index_global,
+		   d->ss_distfact_list_index_global);
+    }
 
   get_variable(u, NC_INT, 1, d->num_side_sets_global, -1, 
 	       si.ss_elem_index_global, d->ss_elem_index_global);
@@ -839,17 +849,21 @@ rd_dpi(Dpi *d,
   get_variable(u, NC_INT, 0, -1, -1, 
 	       si.ss_elem_len_global, &(d->ss_elem_len_global));
 
-  get_variable(u, NC_INT, 1, d->len_ss_elem_list, -1, 
-	       si.ss_elem_list_index_global, d->ss_elem_list_index_global);
-
+  if (d->len_ss_elem_list > 0)
+    {
+      get_variable(u, NC_INT, 1, d->len_ss_elem_list, -1,
+		   si.ss_elem_list_index_global, d->ss_elem_list_index_global);
+    }
   get_variable(u, NC_INT, 1, 
 	       d->num_side_sets_global,	-1, 
 	       si.ss_id_global,		d->ss_id_global);
 
-  get_variable(u, NC_INT, 1, 
-	       d->num_side_sets,	-1, 
-	       si.ss_index_global,	d->ss_index_global);
-
+  if (d->num_side_sets > 0)
+    {
+      get_variable(u, NC_INT, 1,
+		   d->num_side_sets,	-1,
+		   si.ss_index_global,	d->ss_index_global);
+    }
   get_variable(u, NC_INT, 1, 
 	       d->num_side_sets_global,		-1, 
 	       si.ss_num_distfacts_global,	d->ss_num_distfacts_global);
