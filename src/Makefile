@@ -169,7 +169,7 @@ LD_LIBRARY_PATH := $(GCC_LIB64):$(GCC_LIB):${LD_LIBRARY_PATH}
 # If built with build-goma-dependencies.sh, includes flags for SEACAS, UMFpack, and all other necessary
 # libraries and includes otherwise not listed below.
 
-TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-12.10.1-Built
+TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-12.12.1-Built
 
 include $(TRILINOS_TOP)/include/Makefile.export.Trilinos
 
