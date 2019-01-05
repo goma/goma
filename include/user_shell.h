@@ -9,6 +9,9 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
+
+#ifndef _USER_SHELL_H
+#define _USER_SHELL_H
  
 /*  
  *   add user components to Residual and Jacobian below
@@ -92,3 +95,4 @@
         }
     }
 
+#endif

@@ -990,7 +990,7 @@ print_code_version(void)
      * Print the code version to standard out
      */
 {
-  printf("%s\n", VERSION);
+  printf("%s\n", GOMA_VERSION);
 }
 
 void
@@ -1016,7 +1016,7 @@ echo_command_line( int argc, char *argv[], char *echo_file)
 	
 	SPF(echo_string,"Run Time : %s",  time_string);
 		
-	SPF(endofstring(echo_string),"Version : %s", VERSION);
+	SPF(endofstring(echo_string),"Version : %s", GOMA_VERSION);
 	
 	ECHO(echo_string,echo_file);
 	

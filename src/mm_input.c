@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 /*
  *$Id: mm_input.c,v 5.36 2010-06-29 22:23:42 prschun Exp $
@@ -20,9 +19,12 @@ static char rcsid[] =
 "$Id: mm_input.c,v 5.36 2010-06-29 22:23:42 prschun Exp $";
 #endif
 
+#define _XOPEN_SOURCE /* POSIX WEXITSTATUS */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h> /* strcasecmp and strncasecmp moved here for POSIX.1 */
 #include <math.h>
 #include <unistd.h>
 
@@ -11171,7 +11173,7 @@ translate_command_line( int argc,
 	      istr++;
 	      clc[*nclc]->type = PRINT_CODE_VERSION;
 	      print_code_version(); /* don't come back */
-	      log_msg("This is GOMA version %s", VERSION);
+	      log_msg("This is GOMA version %s", GOMA_VERSION);
 	      log_msg("GOMA ends normally.");
 	      echo_compiler_settings();
 	      exit(0);

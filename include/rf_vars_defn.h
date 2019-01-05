@@ -14,6 +14,9 @@
  *$Id: rf_vars_defn.h,v 5.2 2008-10-02 15:36:29 hkmoffa Exp $
  */
 
+#ifndef _RF_VARS_DEFN_H
+#define _RF_VARS_DEFN_H
+
 /*
  * Var_Info Array
  *
@@ -34,4 +37,4 @@ int Nodal_Vars_List_Length = 0;
 
 /*********************end of rf_vars_defn.h *********************************/
 
-
+#endif

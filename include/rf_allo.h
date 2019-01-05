@@ -23,6 +23,8 @@
 #undef EXTERN
 #endif
 
+#include <stdlib.h>
+
 #ifdef _RF_ALLO_C
 #define EXTERN
 #endif

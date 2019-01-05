@@ -25,6 +25,9 @@
  *       included in rf_io.h.
  */
 
+#ifndef _RF_IO_DEFN_H
+#define _RF_IO_DEFN_H
+
 #include <limits.h>
 #include "std.h"
 #include "rf_io_const.h"
@@ -122,3 +125,5 @@ char front_scratch_directory[MAX_FNL] = FRONT_SCRATCH_DIRECTORY;
 /******************************************************************************/
 /* end of rf_io_defn.h                                                        */
 /******************************************************************************/
+
+#endif

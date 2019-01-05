@@ -210,7 +210,6 @@ initialize_particles(const Exo_DB * exo,
   int i, j, el_index_begin, el_index_end, num_els, elem_id;
   char time_of_day[80];
   particle_t p;
-  dbl drand48(void);
 
 #ifdef PARALLEL
   int proc_index, left_over;

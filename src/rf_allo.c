@@ -1275,7 +1275,7 @@ alloc_copy_string_FL(const char *copyFrom, const char *filename,
 }
 
 void checkFinite(double tmp) {
-  if (! finite(tmp)) {
+  if (! isfinite(tmp)) {
     if(isnan(tmp)) {
       printf("ERROR: we have encountered a nan!\n");
     } else if (isinf(tmp) == 1) {
