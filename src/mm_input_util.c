@@ -535,7 +535,6 @@ variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input, "MOMENT2"))                     var = MOMENT2;
   else if (!strcmp(input, "MOMENT3"))                     var = MOMENT3;
   else if (!strcmp(input, "DENSITY_EQN"))                 var = DENSITY_EQN;
-  else if (!strcmp(input, "HEAVISIDE_EQN"))                 var = HEAVISIDE_EQN;
 
   /*
    * Kluge to break up large if block. Problems with HP compiler!

@@ -22,10 +22,11 @@ static char rcsid[] =
 #endif
 
 /* Standard include files */
-#include <math.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 /* GOMA include files */
 
@@ -7289,23 +7290,24 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
 }/* END of routine stress_no_v_dot_gradS_logc                                 */
 
 void
-PSPG_consistency_bc(double *func,
-                    double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                    const dbl x_dot[DIM],
-                    const dbl time,  /* current time  */
-                    const dbl dt,  /* time step size */
-                    const dbl tt,  /* time step parameter */
-                    const PG_DATA *pg_data)   /* global velocity norm */
+PSPG_consistency_bc (double *func,
+		     double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+		     const dbl x_dot[DIM],
+		     const dbl time, /* current time  */
+		     const dbl dt, /* time step size */
+		     const dbl tt, /* time step parameter */
+		     const PG_DATA *pg_data)  /* global velocity norm */
 /******************************************************************************
 *
-*  Function which calculates the missing pressure stabilization terms
+*  Function which calculates the missing pressure stabilization terms 
 *    for PSPG and adds it to the continuity equation
 *
 ******************************************************************************/
-
+     
 {
+  
 /* Local variables */
-
+  
   int j, var, a, b, q, p;
 
   /*
@@ -7320,9 +7322,9 @@ PSPG_consistency_bc(double *func,
   int w = 0;
   int v_s[MAX_MODES][DIM][DIM];
   const int v_g[DIM][DIM] =
-  { { VELOCITY_GRADIENT11, VELOCITY_GRADIENT12, VELOCITY_GRADIENT13 },
-    { VELOCITY_GRADIENT21, VELOCITY_GRADIENT22, VELOCITY_GRADIENT23 },
-    { VELOCITY_GRADIENT31, VELOCITY_GRADIENT32, VELOCITY_GRADIENT33 } };
+  { {  VELOCITY_GRADIENT11, VELOCITY_GRADIENT12, VELOCITY_GRADIENT13 },
+    {  VELOCITY_GRADIENT21, VELOCITY_GRADIENT22, VELOCITY_GRADIENT23 },
+    {  VELOCITY_GRADIENT31, VELOCITY_GRADIENT32, VELOCITY_GRADIENT33 } };
 
   dbl mass;
   dbl source_a;
@@ -7342,7 +7344,7 @@ PSPG_consistency_bc(double *func,
   dbl Re;
   dbl tau_pspg = 0;
 
-  dbl f[DIM];                           /* Body force. */
+  dbl f[DIM];				/* Body force. */
   MOMENTUM_SOURCE_DEPENDENCE_STRUCT df_struct;  /* Body force dependence */
   MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df = &df_struct;
 
@@ -7353,7 +7355,7 @@ PSPG_consistency_bc(double *func,
   VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
   VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
 
-  dbl gamma[DIM][DIM];          /* shrearrate tensor based on velocity */
+  dbl gamma[DIM][DIM];		/* shrearrate tensor based on velocity */
 
   dbl div_tau_p[DIM];                          /* divergence of the particle stress*/
   dbl d_div_tau_p_dgd[DIM][MDE];               /* derivative wrt shear_rate_invariant */
@@ -7362,55 +7364,54 @@ PSPG_consistency_bc(double *func,
   dbl d_div_tau_p_dmesh[DIM][DIM][MDE];        /* derivative wrt mesh */
   dbl d_div_tau_p_dvd[DIM][DIM][MDE];          /* derivative wrt vorticity dir */
   dbl d_div_tau_p_dp[DIM][MDE];                /* derivative wrt pressure dir */
-
   stress_eqn_pointer(v_s);
 
   const dbl h_elem_avg = pg_data->h_elem_avg;
-  const dbl *hsquared = pg_data->hsquared;              /* element size information for PSPG         */
-  const dbl U_norm = pg_data->U_norm;                   /* global velocity norm for PSPG calcs       */
-  const dbl mu_avg = pg_data->mu_avg;                   /* element viscosity for PSPG calculations   */
+  const dbl *hsquared = pg_data->hsquared;      	/* element size information for PSPG         */
+  const dbl U_norm = pg_data->U_norm;	                /* global velocity norm for PSPG calcs       */
+  const dbl mu_avg = pg_data->mu_avg;	                /* element viscosity for PSPG calculations   */
   const dbl rho_avg = pg_data->rho_avg;                 /* element density for PSPG calculations   */
   const dbl *v_avg = pg_data->v_avg;
-
+  
 
   dbl d_tau_pspg_dX[DIM][MDE];
   dbl d_tau_pspg_dv[DIM][MDE];
 
-  wim = dim;
+  wim   = dim;
 
-  if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
-    wim = wim + 1;
+  if(pd->CoordinateSystem == SWIRLING ||
+     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+    wim = wim+1;
 
 /*  h_elem = 0.;
-   for ( p=0; p<dim; p++)
+  for ( p=0; p<dim; p++)
     {
       h_elem += h[p];
     }
-   h_elem = sqrt(h_elem)/2.; */
+  h_elem = sqrt(h_elem)/2.; */
 
   h_elem = h_elem_avg;
-
+  
   /* Calculate a simple arithmetic average viscosity and density
      in the element                                              */
-
-  rho = mp->density;
-
-  /* Now calculate the element Reynolds number based on a global
+  
+  rho  = mp->density;
+  
+  /* Now calculate the element Reynolds number based on a global 
      norm of the velocity */
-
+  
   Re = rho * U_norm * h_elem / (2.0 * mu_avg);
 
 
   int pspg_global;
   int pspg_local;
-  if (PSPG == 1)
+  if(PSPG == 1)
     {
       pspg_global = TRUE;
       pspg_local = FALSE;
     }
   /* This is the flag for the standard local PSPG */
-  else if (PSPG == 2)
+  else if(PSPG == 2)
     {
       pspg_global = FALSE;
       pspg_local = TRUE;
@@ -7419,9 +7420,10 @@ PSPG_consistency_bc(double *func,
     {
       return;
     }
-
-  if (pspg_global)
+  
+  if(pspg_global)
     {
+
       /* Now calculate the element Reynolds number based on a global
        * norm of the velocity and determine tau_pspg discretely from Re
        * The global version has no Jacobian dependencies
@@ -7440,561 +7442,568 @@ PSPG_consistency_bc(double *func,
   else if (pspg_local)
     {
       double hh_siz = 0.;
-      for (p = 0; p < dim; p++)
+      for ( p=0; p<dim; p++)
         {
           hh_siz += hsquared[p];
         }
       // Average value of h**2 in the element
-      hh_siz = hh_siz / ((double )dim);
+      hh_siz = hh_siz/ ((double )dim);
 
       // Average value of v**2 in the element
       double vv_speed = 0.0;
-      for (a = 0; a < wim; a++)
+      for ( a=0; a<wim; a++)
         {
-          vv_speed += v_avg[a] * v_avg[a];
+          vv_speed += v_avg[a]*v_avg[a];
         }
 
       if ((mp->DensityModel == CONSTANT) && ((gn->ConstitutiveEquation == NEWTONIAN) && (mp->ViscosityModel == CONSTANT)))
         {
-          // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
-          double tau_pspg1 = rho_avg * rho_avg * vv_speed / hh_siz + (9.0 * mu_avg * mu_avg) / (hh_siz * hh_siz);
-          if (pd->TimeIntegration != STEADY)
-            {
-              tau_pspg1 += 4.0 / (dt * dt);
-            }
-          tau_pspg = PS_scaling / (rho_avg * sqrt(tau_pspg1));
 
-          // tau_pspg derivatives wrt v from vv_speed
-          if (pd->v[pg->imtrx][VELOCITY1])
-            {
-              for (b = 0; b < dim; b++)
-                {
-                  var = VELOCITY1 + b;
-                  if (pd->v[pg->imtrx][var])
-                    {
-                      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-                        {
-                          d_tau_pspg_dv[b][j] = -tau_pspg / tau_pspg1;
-                          d_tau_pspg_dv[b][j] *= rho_avg * rho_avg / hh_siz * v_avg[b] * pg_data->dv_dnode[b][j];
-                        }
-                    }
-                }
-            }
+            // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
+            double tau_pspg1 = rho_avg*rho_avg*vv_speed/hh_siz + (9.0*mu_avg*mu_avg)/(hh_siz*hh_siz);
+            if (  pd->TimeIntegration != STEADY)
+              {
+                tau_pspg1 += 4.0/(dt*dt);
+              }
+            tau_pspg = PS_scaling/(rho_avg*sqrt(tau_pspg1));
 
-          // tau_pspg derivatives wrt mesh from hh_siz
-          if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
-            {
-              for (b = 0; b < dim; b++)
-                {
-                  var = MESH_DISPLACEMENT1 + b;
-                  if (pd->v[pg->imtrx][var])
-                    {
-                      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-                        {
-                          d_tau_pspg_dX[b][j] = tau_pspg / tau_pspg1;
-                          d_tau_pspg_dX[b][j] *= (rho_avg * rho_avg * vv_speed + 18.0 * mu_avg * mu_avg / hh_siz) / (hh_siz * hh_siz);
-                          d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b] * pg_data->dhv_dxnode[b][j] / ((double)dim);
-                        }
-                    }
-                }
-            }
+            // tau_pspg derivatives wrt v from vv_speed
+            if (pd->v[pg->imtrx][VELOCITY1] )
+              {
+                for ( b=0; b<dim; b++)
+                  {
+                    var = VELOCITY1+b;
+                    if ( pd->v[pg->imtrx][var] )
+                      {
+                        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                          {
+                            d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1;
+                            d_tau_pspg_dv[b][j] *= rho_avg*rho_avg/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
+                          }
+                      }
+                  }
+              }
+
+            // tau_pspg derivatives wrt mesh from hh_siz
+            if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
+              {
+                for ( b=0; b<dim; b++)
+                  {
+                    var = MESH_DISPLACEMENT1+b;
+                    if ( pd->v[pg->imtrx][var] )
+                      {
+                        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                          {
+                            d_tau_pspg_dX[b][j] = tau_pspg/tau_pspg1;
+                            d_tau_pspg_dX[b][j] *= (rho_avg*rho_avg*vv_speed + 18.0*mu_avg*mu_avg/hh_siz) / (hh_siz*hh_siz);
+                            d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
+
+                          }
+                      }
+                  }
+              }
         }
       else
         {
           double rho = pg_data->rho_avg;
           double mu = pg_data->mu_avg;
           // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
-          double tau_pspg1 = vv_speed / hh_siz + (9.0 * mu / rho) / (hh_siz * hh_siz);
-          if (pd->TimeIntegration != STEADY)
+          double tau_pspg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
+          if (  pd->TimeIntegration != STEADY)
             {
-              tau_pspg1 += 4.0 / (dt * dt);
+              tau_pspg1 += 4.0/(dt*dt);
             }
-          tau_pspg = PS_scaling / (rho * sqrt(tau_pspg1));
+          tau_pspg = PS_scaling/(rho*sqrt(tau_pspg1));
 
           // tau_pspg derivatives wrt v from vv_speed
-          if (pd->v[pg->imtrx][VELOCITY1])
+          if (pd->v[pg->imtrx][VELOCITY1] )
             {
-              for (b = 0; b < dim; b++)
+              for ( b=0; b<dim; b++)
                 {
-                  var = VELOCITY1 + b;
-                  if (pd->v[pg->imtrx][var])
+                  var = VELOCITY1+b;
+                  if ( pd->v[pg->imtrx][var] )
                     {
-                      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+                      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
-                          d_tau_pspg_dv[b][j] = -tau_pspg / tau_pspg1;
-                          d_tau_pspg_dv[b][j] *= 1 / hh_siz * v_avg[b] * pg_data->dv_dnode[b][j];
+                          d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1;
+                          d_tau_pspg_dv[b][j] *= 1/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
                         }
                     }
                 }
             }
 
           // tau_pspg derivatives wrt mesh from hh_siz
-          if (pd->v[pg->imtrx][MESH_DISPLACEMENT1])
+          if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
             {
-              for (b = 0; b < dim; b++)
+              for ( b=0; b<dim; b++)
                 {
-                  var = MESH_DISPLACEMENT1 + b;
-                  if (pd->v[pg->imtrx][var])
+                  var = MESH_DISPLACEMENT1+b;
+                  if ( pd->v[pg->imtrx][var] )
                     {
-                      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+                      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                         {
-                          d_tau_pspg_dX[b][j] = tau_pspg / tau_pspg1;
-                          d_tau_pspg_dX[b][j] *= (vv_speed + 18.0 * (mu / rho) / hh_siz) / (hh_siz * hh_siz);
-                          d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b] * pg_data->dhv_dxnode[b][j] / ((double)dim);
+                          d_tau_pspg_dX[b][j] = tau_pspg/tau_pspg1;
+                          d_tau_pspg_dX[b][j] *= (vv_speed + 18.0*(mu/rho)/hh_siz) / (hh_siz*hh_siz);
+                          d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
                         }
                     }
                 }
             }
         }
     }
-
+  
   /* load up shearrate tensor based on velocity */
-  for (a = 0; a < VIM; a++)
+  for ( a=0; a<VIM; a++)
     {
-      for (b = 0; b < VIM; b++)
-        {
-          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
-        }
+      for ( b=0; b<VIM; b++)
+	{
+	  gamma[a][b] = fv->grad_v[a][b] +fv->grad_v[b][a];
+	}
     }
-
+  
   /* get viscosity for velocity second derivative/diffusion term in PSPG stuff */
   mu = viscosity(gn, gamma, d_mu);
 
-  for (a = 0; a < dim; a++)
-    {
-      if (pd->TimeIntegration != STEADY)
-        {
-          v_dot[a] = fv_dot->v[a];
-        }
-      else
-        {
-          v_dot[a] = 0.0;
-        }
+  for (a = 0; a < dim; a++) {
+    if (pd->TimeIntegration != STEADY) {
+      v_dot[a] = fv_dot->v[a];
+    } else {
+      v_dot[a] = 0.0;
     }
-
-  for (p = 0; p < wim; p++)
+  }
+  
+  for ( p=0; p<wim; p++)
     {
       div_s[p] = 0.;
     }
-
-  if (pd->v[pg->imtrx][POLYMER_STRESS11])
+  
+  if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
     {
-      for (p = 0; p < wim; p++)
-        {
-          for (mode = 0; mode < vn->modes; mode++)
-            {
-              div_s[p] += fv->div_S[mode][p];
-            }
-        }
+      for ( p=0; p<wim; p++)
+	{
+	  for ( mode=0; mode<vn->modes; mode++)
+	    {
+	      div_s[p] += fv->div_S[mode][p];
+	    }
+	}
     }
 
 
-  if (pd->v[pg->imtrx][VELOCITY_GRADIENT11])
+  if ( pd->v[pg->imtrx][VELOCITY_GRADIENT11] )
     {
-      for (p = 0; p < dim; p++)
-        {
-          div_G[p] = fv->div_G[p];
-        }
+      for ( p=0; p<dim; p++)
+	{
+	  div_G[p] = fv->div_G[p];
+	}
     }
   else
     {
-      for (p = 0; p < dim; p++)
-        {
-          div_G[p] = 0.;
-        }
+      for ( p=0; p<dim; p++)
+	{
+	  div_G[p] = 0.;
+	}
     }
-
-  memset(div_tau_p, 0, sizeof(double) * DIM);
-  memset(d_div_tau_p_dgd, 0, sizeof(double) * DIM * MDE);
-  memset(d_div_tau_p_dy, 0, sizeof(double) * DIM * MAX_CONC * MDE);
-  memset(d_div_tau_p_dv, 0, sizeof(double) * DIM * DIM * MDE);
-  memset(d_div_tau_p_dmesh, 0, sizeof(double) * DIM * DIM * MDE);
-  memset(d_div_tau_p_dvd, 0, sizeof(double) * DIM * DIM * MDE);
-  memset(d_div_tau_p_dp, 0, sizeof(double) * DIM * MDE);
-  if (cr->MassFluxModel == DM_SUSPENSION_BALANCE && PSPG)
+   
+  memset( div_tau_p, 0, sizeof(double) * DIM);
+  memset( d_div_tau_p_dgd, 0, sizeof(double) * DIM*MDE);
+  memset( d_div_tau_p_dy, 0, sizeof(double) * DIM*MAX_CONC*MDE);
+  memset( d_div_tau_p_dv, 0, sizeof(double) * DIM*DIM*MDE);
+  memset( d_div_tau_p_dmesh, 0, sizeof(double) * DIM*DIM*MDE);
+  memset( d_div_tau_p_dvd, 0, sizeof(double) * DIM*DIM*MDE);
+  memset( d_div_tau_p_dp, 0, sizeof(double) * DIM*MDE);
+  if( cr->MassFluxModel == DM_SUSPENSION_BALANCE && PSPG)
     {
       /* This is the divergence of the particle stress  */
-      divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
-                                 d_div_tau_p_dv, d_div_tau_p_dmesh, d_div_tau_p_dvd,
-                                 d_div_tau_p_dp, w);
+  divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
+				   d_div_tau_p_dv, d_div_tau_p_dmesh, d_div_tau_p_dvd, 
+				   d_div_tau_p_dp, w); 
     }
 
   /* get momentum source term */
   momentum_source_term(f, df, time);
-
-  for (a = 0; a < dim; a++)
+  
+  for ( a=0; a<dim; a++)
     {
       meqn = R_MOMENTUM1 + a;
-      momentum_residual[a] = rho * v_dot[a] * pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)]
-                             + fv->grad_P[a] * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)]
-                             - div_s[a] * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)]
-                             - div_tau_p[a] * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)]
-                             - mu * div_G[a] * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)]
-                             - f[a] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
-      for (b = 0; b < dim; b++)
-        {
-          momentum_residual[a] += rho * (fv->v[b] - x_dot[b]) * fv->grad_v[b][a]
-                                  * pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
-        }
+      momentum_residual[a] = rho*v_dot[a]  * pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)]
+	+ fv->grad_P[a] * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)]
+	  - div_s[a] * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)]
+	    - div_tau_p[a]  * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)]
+	     - mu * div_G[a]  * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)]
+	       - f[a] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
+      for ( b=0; b<dim; b++)
+	{
+	  momentum_residual[a] += rho* (fv->v[b]- x_dot[b]) * fv->grad_v[b][a] 
+	    * pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
+	}
     }
-
-
+  
+  
   /*  calculate pressure at current gauss point */
-  for (p = 0; p < pd->Num_Dim; p++)
-    {
-      *func += momentum_residual[p] * fv->snormal[p];
-    }
-  *func *= tau_pspg;
-
-  if (af->Assemble_LSA_Mass_Matrix)
+  for (p=0; p<pd->Num_Dim; p++){
+    *func +=  momentum_residual[p] * fv->snormal[p]; 
+  }
+  *func *= tau_pspg;  
+  
+  if(af->Assemble_LSA_Mass_Matrix)
     {
       for (a = 0; a < dim; a++)
         {
-          var = VELOCITY1 + a;
-          meqn = R_MOMENTUM1 + a;
-          if (pd->v[pg->imtrx][var])
-            {
-              if (pd->e[pg->imtrx][meqn] & T_MASS)
-                {
-                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      d_func[0][var][j] += tau_pspg * bf[var]->phi[j] * rho *
-                                           pd->etm[pg->imtrx][meqn][(LOG2_MASS)] * fv->snormal[a];
-                    }
-                }
-            }
+	  var = VELOCITY1 + a;
+	  meqn = R_MOMENTUM1 + a;
+	  if (pd->v[pg->imtrx][var]) {
+	    if (pd->e[pg->imtrx][meqn] & T_MASS) {
+	      for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+		d_func[0][var][j] += tau_pspg * bf[var]->phi[j] * rho *
+		    pd->etm[pg->imtrx][meqn][(LOG2_MASS)] * fv->snormal[a];
+		for (int b = 0; b < pd->Num_Dim; b++)
+		{
+		  d_func[0][var][j] += d_tau_pspg_dv[a][j]*momentum_residual[b] * fv->snormal[b];
+		}
+	      }
+	    }
+	  }
 
-          var = MESH_DISPLACEMENT1 + a;
-          if (pd->v[pg->imtrx][var])
-            if (pd->e[pg->imtrx][meqn] & T_ADVECTION)
-              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-                for (b = 0; b < pd->Num_Dim; b++)
-                  {
-                    meqn = R_MOMENTUM1 + b;
-                    d_func[0][var][j] -= rho * bf[var]->phi[j] * fv->grad_v[a][b]
-                                         * pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)] * fv->snormal[b] * tau_pspg;
-                  }
-        }
+	  var = MESH_DISPLACEMENT1 + a;
+	  if(pd->v[pg->imtrx][var])
+	    if(pd->e[pg->imtrx][meqn] & T_ADVECTION)
+	      for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+		for(b = 0; b < pd->Num_Dim; b++)
+		  {
+		    meqn = R_MOMENTUM1 + b;
+		    d_func[0][var][j] -= rho * bf[var]->phi[j] * fv->grad_v[a][b] 
+		      * pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)] * fv->snormal[b] * tau_pspg
+			+ momentum_residual[b] * fv->snormal[b] * d_tau_pspg_dX[a][j];
+		  }
+	}
       return;
     }
 
   if (af->Assemble_Jacobian)
     {
-      for (b = 0; b < dim; b++)
-        {
-          var = VELOCITY1 + b;
-          if (pd->v[pg->imtrx][var])
-            {
-              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-                {
-                  pressure_stabilization = 0.;
-                  for (a = 0; a < dim; a++)
-                    {
-                      meqn = R_MOMENTUM1 + a;
+      for ( b=0; b<dim; b++)
+	{
+	  var = VELOCITY1+b;
+	  if ( pd->v[pg->imtrx][var] )
+	    {
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  pressure_stabilization = 0.;
+		  for (a=0; a<dim; a++)
+		    {
+		      meqn = R_MOMENTUM1+a;
+		      
+		      mass = 0.;
+		      if ( pd->TimeIntegration != STEADY )
+			{
+			  if ( pd->e[pg->imtrx][meqn] & T_MASS )
+			    {
+			      mass += (1.+2.*tt) * bf[var]->phi[j]/dt * delta(a,b);
+			      mass *= rho *  pd->etm[pg->imtrx][meqn][(LOG2_MASS)]; 
+			    }
+			}
 
-                      mass = 0.;
-                      if (pd->TimeIntegration != STEADY)
-                        {
-                          if (pd->e[pg->imtrx][meqn] & T_MASS)
-                            {
-                              mass += (1. + 2. * tt) * bf[var]->phi[j] / dt * delta(a, b);
-                              mass *= rho * pd->etm[pg->imtrx][meqn][(LOG2_MASS)];
-                            }
-                        }
-
-                      diffusion = 0.;
-                      if (pd->e[pg->imtrx][meqn] & T_DIFFUSION)
-                        {
-                          diffusion -= d_mu->v[b][j] * div_G[a];
-                          diffusion -= d_div_tau_p_dv[a][b][j];
-                          diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-                        }
-
-                      advection_a = 0.;
-                      if (pd->e[pg->imtrx][meqn] & T_ADVECTION)
-                        {
-                          advection_a += bf[var]->phi[j] * fv->grad_v[b][a];
-                          for (p = 0; p < dim; p++)
-                            {
-                              advection_a += (fv->v[p] - x_dot[p]) * bf[var]->grad_phi_e[j][b][p][a];
-                            }
-                          advection_a *= rho * pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
-                        }
-
-
-                      source_a = 0.;
-                      if (pd->e[pg->imtrx][meqn] & T_SOURCE)
-                        {
-                          source_a -= df->v[a][b][j] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
-                        }
-
-                      pressure_stabilization +=
-                        tau_pspg * (mass + diffusion + advection_a + source_a) * fv->snormal[a];
-                    }
-
-                  d_func[0][var][j] += pressure_stabilization
-                                       + d_tau_pspg_dv[b][j] * momentum_residual[a] * fv->snormal[a];
-                }
-            }
-          var = MASS_FRACTION;
-          if (pd->v[pg->imtrx][var])
-            {
-              for (w = 0; w < pd->Num_Species_Eqn; w++)
-                {
-                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      pressure_stabilization = 0.;
-                      for (a = 0; a < dim; a++)
-                        {
-                          meqn = R_MOMENTUM1 + a;
-                          if (pd->e[pg->imtrx][meqn] & T_SOURCE)
-                            {
-                              pressure_stabilization = -tau_pspg * fv->snormal[a] * df->C[a][w][j]
-                                                       * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
-                            }
-
-                          if (pd->e[pg->imtrx][meqn] & T_DIFFUSION)
-                            {
-                              pressure_stabilization -= tau_pspg * fv->snormal[a] *
-                                                        (d_mu->C[w][j] * div_G[a] + d_div_tau_p_dy[a][w][j])
-                                                        * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-                            }
-                        }
-
-                      d_func[0][MAX_VARIABLE_TYPES + w][j] += pressure_stabilization;
-                    }
-                }
-            }
-
-          var = PRESSURE;
-          if (pd->v[pg->imtrx][var])
-            {
-              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-                {
-                  pressure_stabilization = 0.;
-                  for (a = 0; a < dim; a++)
-                    {
-                      meqn = R_MOMENTUM1 + a;
-                      if (pd->e[pg->imtrx][meqn] & T_DIFFUSION)
-                        {
-                          pressure_stabilization += tau_pspg * fv->snormal[a] * bf[var]->grad_phi[j] [a] *
-                                                    pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-                        }
-                    }
-                  d_func[0][var][j] += pressure_stabilization;
-                }
-            }
-
-          var = SHEAR_RATE;
-          if (cr->MassFluxModel == DM_SUSPENSION_BALANCE)
-            {
-              if (pd->v[pg->imtrx][var])
-                {
-                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      pressure_stabilization = 0.;
-                      for (a = 0; a < dim; a++)
-                        {
-                          meqn = R_MOMENTUM1 + a;
-                          if (pd->e[pg->imtrx][meqn] & T_DIFFUSION)
-                            {
-                              pressure_stabilization += tau_pspg * fv->snormal[a] * d_div_tau_p_dgd[a][j] *
-                                                        pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-                            }
-                        }
-                      d_func[0][var][j] += pressure_stabilization;
-                    }
-                }
-            }
-
-          var = POLYMER_STRESS11;
-          if (pd->v[pg->imtrx][var])
-            {
-              for (mode = 0; mode < vn->modes; mode++)
-                {
-                  for (p = 0; p < VIM; p++)
-                    {
-                      for (q = 0; q < VIM; q++)
-                        {
-                          var = v_s[mode][p][q];
-                          if (pd->v[pg->imtrx][var])
-                            {
-                              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-                                {
-                                  pressure_stabilization = 0.;
-                                  for (a = 0; a < dim; a++)
-                                    {
-                                      meqn = R_MOMENTUM1 + a;
-                                      if (pd->e[pg->imtrx][meqn] & T_DIFFUSION)
-                                        {
-                                          for (r = 0; r < dim; r++)
-                                            {
-                                              pressure_stabilization -=
-                                                (delta(p, r) * delta(a, q)) *
-                                                fv->snormal[a] * bf[var]->grad_phi[j] [r]
-                                                * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-                                            }
-                                          if (pd->CoordinateSystem != CARTESIAN)
-                                            {
-                                              for (r = 0; r < VIM; r++)
-                                                {
-                                                  for (s = 0; s < VIM; s++)
-                                                    {
-                                                      for (t = 0; t < VIM; t++)
-                                                        {
-                                                          pressure_stabilization -= fv->snormal[a] *
-                                                                                    bf[var]->phi[j] * delta(p, s) * delta(q, t) *
-                                                                                    (fv->grad_e[s][r][t] * delta(a, t) +
-                                                                                     fv->grad_e[t][s][a] * delta(r, s));
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                  pressure_stabilization *= tau_pspg;
-
-                                  d_func[0][var][j] += pressure_stabilization;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+		      diffusion = 0.;
+		      if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
+			{ 
+			  diffusion -= d_mu->v[b][j]*div_G[a];
+			  diffusion -= d_div_tau_p_dv[a][b][j];
+			  diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)] ; 
+			}
+		      
+		      advection_a = 0.;
+		      if ( pd->e[pg->imtrx][meqn] & T_ADVECTION )
+			{
+			  advection_a +=  bf[var]->phi[j] * fv->grad_v[b][a];
+			  for ( p=0; p<dim; p++)
+			    {
+			      advection_a += ( fv->v[p] - x_dot[p]) * bf[var]->grad_phi_e[j][b][p][a];
+			    }
+			  advection_a *= rho * pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)] ; 
+			}
 
 
-          /*
-           * J_c_G this term is only present for PSPG
-           */
-          var = VELOCITY_GRADIENT11;
-          if (pd->v[pg->imtrx][var])
-            {
-              for (p = 0; p < VIM; p++)
-                {
-                  for (q = 0; q < VIM; q++)
-                    {
-                      var = v_g[p][q];
-                      if (pd->v[pg->imtrx][var])
-                        {
-                          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-                            {
-                              pressure_stabilization = -fv->snormal[q] * bf[var]->grad_phi[j] [p]
-                                                       * pd->etm[pg->imtrx][R_MOMENTUM1 + q][(LOG2_DIFFUSION)];
+		      source_a = 0.;
+		      if ( pd->e[pg->imtrx][meqn] & T_SOURCE )
+			{
+			  source_a   -= df->v[a][b][j] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
+			}
+		      
+		      pressure_stabilization += 
+			tau_pspg * (mass + diffusion + advection_a + source_a) * fv->snormal[a];
+		    }
 
-                              if (pd->CoordinateSystem != CARTESIAN)
-                                {
-                                  for (r = 0; r < VIM; r++)
-                                    {
-                                      pressure_stabilization -=
-                                        fv->snormal[q] * bf[var]->phi[j] * fv->grad_e[p][r][q]
-                                        * pd->etm[pg->imtrx][R_MOMENTUM1 + a][(LOG2_DIFFUSION)];
-                                    }
-                                  for (a = 0; a < dim; a++)
-                                    {
-                                      pressure_stabilization -= fv->snormal[a] *
-                                                                bf[var]->phi[j] * fv->grad_e[q][p][a]
-                                                                * pd->etm[pg->imtrx][R_MOMENTUM1 + a][(LOG2_DIFFUSION)];
-                                    }
-                                }
+		  d_func[0][var][j] += pressure_stabilization;
+		  for (int p = 0; p < pd->Num_Dim; p++)
+		    {
+		      d_func[0][var][j] += d_tau_pspg_dv[b][j]* momentum_residual[p] * fv->snormal[p];
+		    }
+		}
+	    }
+	}
+      var = MASS_FRACTION;
+      if ( pd->v[pg->imtrx][var])
+	{
+	  for (w=0; w<pd->Num_Species_Eqn; w++) 
+	    {
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  pressure_stabilization = 0.;
+		  for (a=0; a<dim; a++)
+		    {
+		      meqn = R_MOMENTUM1 + a;
+		      if( pd->e[pg->imtrx][meqn] & T_SOURCE )
+			{
+			  pressure_stabilization = -tau_pspg * fv->snormal[a] * df->C[a][w][j]
+			    * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
+			}
+		      
+		      if( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
+			{
+			  pressure_stabilization -= tau_pspg * fv->snormal[a] * 
+			    (d_mu->C[w][j] * div_G[a] + d_div_tau_p_dy[a][w][j])
+			    * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+			}
+		    }
 
-                              pressure_stabilization *= mu * tau_pspg;
+		  d_func[0][MAX_VARIABLE_TYPES + w][j] += pressure_stabilization ;
+		}
 
-                              d_func[0][var][j] += pressure_stabilization;
-                            }
-                        }
-                    }
-                }
-            }
+	    }
+	}
+		     
+      var = PRESSURE;
+      if (pd->v[pg->imtrx][var]) 
+	{
+	  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	    {
+	      pressure_stabilization = 0.;
+	      for (a=0; a<dim; a++)
+		{
+		  meqn = R_MOMENTUM1 + a;
+		  if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
+		    { 
+		      pressure_stabilization += tau_pspg * fv->snormal[a] * bf[var]->grad_phi[j] [a] * 
+			pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+		    }
+		}
+	      d_func[0][var][j] += pressure_stabilization ;
+	    }
+	}
+      
+      var = SHEAR_RATE;
+      if( cr->MassFluxModel == DM_SUSPENSION_BALANCE)
+	{
+	  if (pd->v[pg->imtrx][var]) 
+	    {
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  pressure_stabilization = 0.;
+		  for (a=0; a<dim; a++)
+		    {
+		      meqn = R_MOMENTUM1 + a;
+		      if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
+			{ 
+			  pressure_stabilization += tau_pspg * fv->snormal[a] * d_div_tau_p_dgd[a][j] * 
+			    pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+			}
+		    }
+		  d_func[0][var][j] += pressure_stabilization ;
+		}
+	    }
+	}
 
-          for (b = 0; b < ei[pg->imtrx]->ielem_dim; b++)
-            {
-              var = MESH_DISPLACEMENT1 + b;
-              if (pd->v[pg->imtrx][var])
-                {
-                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      pressure_stabilization = 0.;
-                      for (a = 0; a < pd->Num_Dim; a++)
-                        {
-                          meqn = R_MOMENTUM1 + a;
-                          if (pd->e[pg->imtrx][meqn])
-                            {
-                              advection_a = 0.;
-                              if (pd->e[pg->imtrx][meqn] & T_ADVECTION)
-                                {
-                                  if (pd->TimeIntegration != STEADY)
-                                    {
-                                      advection_a = -rho * (1. + 2. * tt) * bf[var]->phi[j] / dt * fv->grad_v[b][a] *
-                                                    pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
-                                    }
-                                  for (p = 0; p < dim; p++)
-                                    {
-                                      advection_a +=
-                                        rho * (fv->v[p] - x_dot[p])
-                                        * fv->d_grad_v_dmesh[p][a] [b][j] *
-                                        pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
-                                    }
-                                }
-
-                              diffusion = 0.;
-                              if (pd->e[pg->imtrx][meqn] & T_DIFFUSION)
-                                {
-                                  diffusion -= (d_mu->X[b][j] * div_G[a]
-                                                + d_div_tau_p_dmesh[a][b][j]) *
-                                               pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-                                }
-
-                              pressure = 0.;
-                              var1 = PRESSURE;
-                              if (pd->v[pg->imtrx][var1])
-                                {
-                                  if (pd->e[pg->imtrx][meqn] & T_DIFFUSION)
-                                    {
-                                      pressure = fv->d_grad_P_dmesh[a] [b][j] * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-                                    }
-                                }
-
-                              stress = 0.;
-                              var1 = POLYMER_STRESS11;
-                              if (pd->v[pg->imtrx][var1])
-                                {
-                                  if (pd->e[pg->imtrx][meqn] & T_DIFFUSION)
-                                    {
-                                      for (mode = 0; mode < vn->modes; mode++)
-                                        {
-                                          stress -= fv->d_div_S_dmesh[mode][a] [b][j] * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-                                        }
-                                    }
-                                }
-
-                              velocity_gradient = 0.;
-                              var1 = VELOCITY_GRADIENT11;
-                              if (pd->v[pg->imtrx][var1])
-                                {
-                                  if (pd->e[pg->imtrx][meqn] & T_DIFFUSION)
-                                    {
-                                      velocity_gradient -= fv->d_div_G_dmesh[a] [b][j] * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
-                                    }
-                                }
+      var = POLYMER_STRESS11;
+      if (pd->v[pg->imtrx][var] )
+	{
+	  for ( mode=0; mode<vn->modes; mode++)
+	    {
+	      for ( p=0; p<VIM; p++)
+		{
+		  for ( q=0; q<VIM; q++)
+		    {
+		      var = v_s[mode][p][q];
+		      if ( pd->v[pg->imtrx][var] )
+			{
+			  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			    {
+			      pressure_stabilization = 0.;
+			      for ( a=0; a<dim; a++)
+				{
+				  meqn = R_MOMENTUM1 + a;
+				  if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
+				    { 
+				      for ( r=0; r<dim; r++)
+					{
+					  pressure_stabilization -= 
+					    (delta(p,r) * delta(a,q)) *
+					    fv->snormal[a] * bf[var]->grad_phi[j] [r]
+					    * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+					}
+				      if ( pd->CoordinateSystem != CARTESIAN )
+					{
+					  for ( r=0; r<VIM; r++)
+					    {
+					      for ( s=0; s<VIM; s++)
+						{
+						  for ( t=0; t<VIM; t++)
+						    { 
+						      pressure_stabilization -= fv->snormal[a] * 
+							bf[var]->phi[j] * delta(p,s) * delta(q,t) *
+							( fv->grad_e[s][r][t] * delta(a,t)  +
+							  fv->grad_e[t][s][a] * delta(r,s) );
+						    }
+						}
+					    }
+					}
+				    }
+				}
+			      pressure_stabilization *= tau_pspg;
+			  
+			      d_func[0][var][j] += pressure_stabilization;
+			    }
+			}
+		    }
+		}
+	    }
+	}
 
 
-                              source_a = 0.;
-                              if (pd->e[pg->imtrx][meqn] & T_SOURCE)
-                                {
-                                  source_a -= df->X[a][b][j] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
-                                }
+      /*
+       * J_c_G this term is only present for PSPG
+       */
+      var = VELOCITY_GRADIENT11;
+      if (pd->v[pg->imtrx][var] )
+	{
+	  for ( p=0; p<VIM; p++)
+	    {
+	      for ( q=0; q<VIM; q++)
+		{
+		  var = v_g[p][q];
+		  if ( pd->v[pg->imtrx][var] )
+		    {
+		      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+			{
+			  pressure_stabilization =  -fv->snormal[q] * bf[var]->grad_phi[j] [p]
+			    * pd->etm[pg->imtrx][R_MOMENTUM1 + q][(LOG2_DIFFUSION)];
 
-                              pressure_stabilization += momentum_residual[a] * fv->dsnormal_dx[a][b][j]
-                                                        + (advection_a + source_a + pressure + stress + velocity_gradient) * fv->snormal[a];
-                            }
-                        }
-                      d_func[0][var][j] += tau_pspg * pressure_stabilization
-                                           + d_tau_pspg_dX[b][j] * momentum_residual[a] * fv->snormal[a];
-                    }
-                }
-            }
-        }
+			  if ( pd->CoordinateSystem != CARTESIAN )
+			    {
+			      for ( r=0; r<VIM; r++)
+				{
+				  pressure_stabilization -= 
+				    fv->snormal[q] * bf[var]->phi[j]  *  fv->grad_e[p][r][q] 
+				      * pd->etm[pg->imtrx][R_MOMENTUM1 + a][(LOG2_DIFFUSION)];
+				}
+			      for ( a=0; a<dim; a++)
+				{
+				  pressure_stabilization -= fv->snormal[a] * 
+				    bf[var]->phi[j] *  fv->grad_e[q][p][a]
+				      * pd->etm[pg->imtrx][R_MOMENTUM1 + a][(LOG2_DIFFUSION)];
+				}
+			    }
+		      
+			  pressure_stabilization *= mu * tau_pspg;
+			  
+			  d_func[0][var][j] += pressure_stabilization;
+			}
+		    }
+		}
+	    }
+	}
+      
+      for (b=0; b<ei[pg->imtrx]->ielem_dim; b++)
+	{
+	  var = MESH_DISPLACEMENT1 + b;
+	  if (pd->v[pg->imtrx][var]) 
+	    {
+	      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		{
+		  pressure_stabilization = 0.;
+		  for (a=0; a<pd->Num_Dim; a++)
+		    {
+		      meqn = R_MOMENTUM1+a;
+		      if( pd->e[pg->imtrx][meqn])
+			{
+			  advection_a = 0.;
+			  if ( pd->e[pg->imtrx][meqn] & T_ADVECTION )
+			    {
+			      if ( pd->TimeIntegration != STEADY )
+				{
+				  advection_a = -rho * (1.+2.*tt) * bf[var]->phi[j]/dt * fv->grad_v[b][a] * 
+				    pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
+				}
+			      for ( p=0; p<dim; p++)
+				{
+				  advection_a += 
+				    rho * ( fv->v[p]-x_dot[p]) 
+				      * fv->d_grad_v_dmesh[p][a] [b][j] * 
+					pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
+				}
+			    }
+
+			  diffusion = 0.;
+			  if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
+			    {
+			      diffusion -= (d_mu->X[b][j]*div_G[a]
+					    + d_div_tau_p_dmesh[a][b][j])*
+				pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)] ; 
+			    }
+
+			  pressure = 0.;
+			  var1 = PRESSURE;
+			  if ( pd->v[pg->imtrx][var1] )
+			    {
+			      if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
+				{
+				  pressure = fv->d_grad_P_dmesh[a] [b][j] * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+				}
+			    }
+			  
+			  stress = 0.;
+			  var1 = POLYMER_STRESS11;
+			  if ( pd->v[pg->imtrx][var1])
+			    {
+			      if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
+				{
+				  for ( mode=0; mode<vn->modes; mode++)
+				    {
+				      stress -= fv->d_div_S_dmesh[mode][a] [b][j] * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+				    }
+				}
+			    }
+			  
+			  velocity_gradient = 0.;
+			  var1 = VELOCITY_GRADIENT11;
+			  if ( pd->v[pg->imtrx][var1])
+			    {
+			      if ( pd->e[pg->imtrx][meqn] & T_DIFFUSION )
+				{
+				  velocity_gradient -= fv->d_div_G_dmesh[a] [b][j] * pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+				}
+			    }
+			  
+
+			  source_a = 0.;
+			  if ( pd->e[pg->imtrx][meqn] & T_SOURCE )
+			    {
+			      source_a -= df->X[a][b][j] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
+			    }
+			  
+			  pressure_stabilization += momentum_residual[a] * fv->dsnormal_dx[a][b][j]
+			    + (advection_a + source_a + pressure + stress + velocity_gradient) * fv->snormal[a];
+			}
+		    }
+		  d_func[0][var][j] += tau_pspg*pressure_stabilization;
+		  for (int p = 0; p < pd->Num_Dim; p++)
+		    {
+		      d_func[0][var][j] += d_tau_pspg_dX[b][j]* momentum_residual[p] * fv->snormal[p];
+		    }
+		}
+	    }
+	}
     }
+
 } /* END of routine PSPG_consistency_bc                                      */
 /*****************************************************************************/
 /*****************************************************************************/

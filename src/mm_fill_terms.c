@@ -9141,14 +9141,6 @@ load_fv(void)
       stateVector[v] = fv->rho;
     }
 
-  if (pdgv[HEAVISIDE_EQN])
-    {
-      v = HEAVISIDE_EQN;
-      scalar_fv_fill(esp->Heaviside, esp_dot->Heaviside, esp_old->Heaviside, bf[v]->phi,
-                     ei[pd->mi[v]]->dof[v],
-                     &(fv->Heaviside), &(fv_dot->Heaviside), &(fv_old->Heaviside));
-      stateVector[v] = fv->Heaviside;
-    }
   /*
    * External...
    */
@@ -10993,29 +10985,6 @@ load_fv_grads(void)
       grad_scalar_fv_fill( esp->rho, bf[v]->grad_phi, dofs, fv->grad_rho);
     } else if ( zero_unused_grads &&  upd->vp[pg->imtrx][DENSITY_EQN] == -1 ) {
     for (p=0; p<VIM; p++) fv->grad_rho[p] = 0.0;
-  }
-
-#endif
-
-  if ( pd->gv[HEAVISIDE_EQN] )
-    {
-      v = HEAVISIDE_EQN;
-      dofs  = ei[pg->imtrx]->dof[v];
-#ifdef DO_NO_UNROLL
-      for ( p=0; p<VIM; p++)
-        {
-          fv->grad_Heaviside[p] = 0.0;
-
-	  for ( i=0; i<dofs; i++)
-	    {
-	      fv->grad_Heaviside[p] += *esp->Heaviside[i] * bf[v]->grad_phi[i] [p];
-	      fv_old->grad_Heaviside[p] += *esp_old->Heaviside[i] * bf[v]->grad_phi[i] [p]
-		}
-	}
-#else
-      grad_scalar_fv_fill( esp->Heaviside, bf[v]->grad_phi, dofs, fv->grad_Heaviside);
-    } else if ( zero_unused_grads &&  upd->vp[pg->imtrx][HEAVISIDE_EQN] == -1 ) {
-    for (p=0; p<VIM; p++) fv->grad_Heaviside[p] = 0.0;
   }
 
 #endif

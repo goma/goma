@@ -9138,8 +9138,6 @@ rd_eq_specs(FILE *ifp,
       ce = set_eqn(R_MOMENT3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "density")) {
       ce = set_eqn(R_DENSITY_EQN, mtrx_index0, pd_ptr);
-    } else if (!strcasecmp(ts, "heaviside")) {
-      ce = set_eqn(R_HEAVISIDE_EQN, mtrx_index0, pd_ptr);
 
     } else if (!strcasecmp(ts, "porous_sat"))  {
       ce = set_eqn(R_POR_LIQ_PRES, mtrx_index0, pd_ptr);
@@ -9739,8 +9737,6 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(MOMENT3, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "RHO_EQN")) {
       cv = set_var(DENSITY_EQN, mtrx_index0, pd_ptr);
-    } else if (!strcasecmp(ts, "HEAVISIDE_EQN")) {
-      cv = set_var(HEAVISIDE_EQN, mtrx_index0, pd_ptr);
     } else if (!strncasecmp(ts, "Sp", 2)) {
       if (!strcasecmp(ts, "Sp")) {
 	cv = SPECIES_UNK_0;
@@ -10015,7 +10011,6 @@ rd_eq_specs(FILE *ifp,
     case R_GRAD_S_V_DOT_N2:
     case R_GRAD_S_V_DOT_N3:
     case R_DENSITY_EQN:
-    case R_HEAVISIDE_EQN:
       /* In case this actually gets used for a boolean anywhere ... */
       pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)] = 1.0;
       break;

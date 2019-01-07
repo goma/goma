@@ -1200,7 +1200,6 @@ moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource)
 }
 
 
-
 int
 assemble_density() /*  time step size      */
 {
@@ -1266,7 +1265,7 @@ assemble_density() /*  time step size      */
 
     if (fv->c[species_BA_g] > PBE_FP_SMALL || fv->c[species_CO2_g] > PBE_FP_SMALL) {
       rho_bubble = (ref_press/(Rgas_const*fv->T)) *
-        (fv->c[species_CO2_g]*M_CO2 + fv->c[species_BA_g]*M_BA)/(fv->c[species_CO2_g] + fv->c[species_BA_g]);
+	(fv->c[species_CO2_g]*M_CO2 + fv->c[species_BA_g]*M_BA)/(fv->c[species_CO2_g] + fv->c[species_BA_g]);
     }
 
     double inv_mom_frac = 1/(1 + fv->moment[1]);
@@ -1275,31 +1274,31 @@ assemble_density() /*  time step size      */
     var = TEMPERATURE;
     if (pd->v[pg->imtrx][var] )
       {
-        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-          {
-            d_rho_dT[j] = (-rho_bubble)/fv->T * (fv->moment[1]*inv_mom_frac) * bf[var]->phi[j];
-          }
+	for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	  {
+	    d_rho_dT[j] = (-rho_bubble)/fv->T * (fv->moment[1]*inv_mom_frac) * bf[var]->phi[j];
+	  }
       }
 
     var = MOMENT1;
     if (pd->v[pg->imtrx][var] )
       {
-        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-          {
-            d_rho_dMOM[1][j] = (rho_bubble * inv_mom_frac * inv_mom_frac -
-                             rho_foam * inv_mom_frac * inv_mom_frac) * bf[var]->phi[j];
-          }
+	for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+	  {
+	    d_rho_dMOM[1][j] = (rho_bubble * inv_mom_frac * inv_mom_frac -
+			     rho_foam * inv_mom_frac * inv_mom_frac) * bf[var]->phi[j];
+	  }
       }
 
     var = MASS_FRACTION;
     if (pd->v[pg->imtrx][var])
       {
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
-          {
-            if (fv->c[species_BA_g] > PBE_FP_SMALL || fv->c[species_CO2_g] > PBE_FP_SMALL) {
-              d_rho_dC[species_BA_g][j] = (fv->moment[1]*inv_mom_frac) * bf[var]->phi[j] * (ref_press/(Rgas_const*fv->T)) *
-                ((M_BA - M_CO2)*fv->c[species_CO2_g])/
-                ((fv->c[species_CO2_g] + fv->c[species_BA_g]) * (fv->c[species_CO2_g] + fv->c[species_BA_g]));
+	for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+	  {
+	    if (fv->c[species_BA_g] > PBE_FP_SMALL || fv->c[species_CO2_g] > PBE_FP_SMALL) {
+	      d_rho_dC[species_BA_g][j] = (fv->moment[1]*inv_mom_frac) * bf[var]->phi[j] * (ref_press/(Rgas_const*fv->T)) *
+		((M_BA - M_CO2)*fv->c[species_CO2_g])/
+		((fv->c[species_CO2_g] + fv->c[species_BA_g]) * (fv->c[species_CO2_g] + fv->c[species_BA_g]));
 
 	      d_rho_dC[species_CO2_g][j] = (fv->moment[1]*inv_mom_frac) * bf[var]->phi[j] * (ref_press/(Rgas_const*fv->T)) *
 		((M_CO2-M_BA)*fv->c[species_BA_g])/
@@ -1321,11 +1320,11 @@ assemble_density() /*  time step size      */
   if ( af->Assemble_Residual )
     {
       if ( pd->e[pg->imtrx][eqn] )
-        {
-          for( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
-            {
+	{
+	  for( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
+	    {
 
-              wt_func = bf[eqn]->phi[i];
+	      wt_func = bf[eqn]->phi[i];
 
 	      source = 0.0;
 	      source += rho - fv->rho;
@@ -1343,10 +1342,10 @@ assemble_density() /*  time step size      */
     {
 
       if( pd->e[pg->imtrx][eqn] )
-        {
-          for( i=0; i<ei[pg->imtrx]->dof[eqn]; i++ )
-            {
-              wt_func = bf[eqn]->phi[i];
+	{
+	  for( i=0; i<ei[pg->imtrx]->dof[eqn]; i++ )
+	    {
+	      wt_func = bf[eqn]->phi[i];
 
 	      /* J_RHO_RHO */
 	      var = DENSITY_EQN;
@@ -1431,7 +1430,7 @@ assemble_density() /*  time step size      */
 		    }
 		}
 
-		    /*
+	      	    /*
 		     * J_e_d
 		     */
 	      for ( b=0; b<dim; b++)
@@ -1457,135 +1456,6 @@ assemble_density() /*  time step size      */
 			  lec->J[peqn][pvar][i][j] += source;
 			}
 
-
-		    }
-		}
-
-	    }
-	}
-    }
-  return(0);
-}
-
-
-int
-assemble_heaviside() /*  time step size      */
-{
-  int i,j;
-  int peqn, pvar;
-  int var;
-  int eqn;
-  int status=0;
-
-  double det_J;
-  double h3;			/* Volume element (scale factors). */
-  double wt_func;
-  double wt;
-
-  double source;
-
-  eqn = R_HEAVISIDE_EQN;
-
-  /*
-   * Bail out fast if there's nothing to do...
-   */
-
-  if ( ! pd->e[pg->imtrx][eqn] )
-    {
-      return(status);
-    }
-
-  peqn = upd->ep[pg->imtrx][eqn];
-
-  wt = fv->wt;
-
-  det_J = bf[eqn]->detJ;
-
-  h3 = fv->h3;
-
-  double alpha = ls->Length_Scale * 0.5;
-  double F = fv->F;
-  double Heaviside = 0;
-  double d_Heaviside_dF = 0;
-  if (fabs(F) < alpha)
-    {
-      Heaviside =  0.5 * (1. + F / alpha + sin(M_PI * F / alpha) / M_PI);
-      d_Heaviside_dF = 0.5 * (1/alpha + cos(M_PIE*F/alpha)/alpha);
-    }
-  else
-    {
-      Heaviside = ( F < 0.0) ? 0.0 : 1.0 ;
-    }
-  /*
-   * Residuals_________________________________________________________________
-   */
-
-  if ( af->Assemble_Residual )
-    {
-      if ( pd->e[pg->imtrx][eqn] )
-        {
-          for( i=0; i<ei[pg->imtrx]->dof[eqn]; i++)
-            {
-
-              wt_func = bf[eqn]->phi[i];
-
-	      source = 0.0;
-	      source += Heaviside - fv->Heaviside;
-	      source *= wt_func * det_J * h3 * wt;
-
-	      lec->R[peqn][i] += source;
-	    }
-	}
-    }
-  /*
-   * Jacobian terms_________________________________________________________________
-   */
-
-  if ( af->Assemble_Jacobian )
-    {
-
-      if( pd->e[pg->imtrx][eqn] )
-        {
-          for( i=0; i<ei[pg->imtrx]->dof[eqn]; i++ )
-            {
-              wt_func = bf[eqn]->phi[i];
-
-	      /* J_HEAVISIDE_HEAVISIDE */
-	      var = HEAVISIDE_EQN;
-
-	      if( pd->v[pg->imtrx][var] )
-		{
-		  pvar = upd->vp[pg->imtrx][var];
-
-		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
-		    {
-		      source = 0.0;
-		      source -= bf[var]->phi[j];
-		      source *= wt_func*det_J*wt*h3;
-
-		      lec->J[peqn][pvar][i][j] += source;
-
-		    }
-		}
-
-	      /*
-	       * J_HEAVISIDE_FILL
-	       */
-
-	      var = FILL;
-
-	      if( pd->v[pg->imtrx][var] )
-		{
-		  pvar = upd->vp[pg->imtrx][var];
-
-
-		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++ )
-		    {
-		      source = 0;
-		      source += bf[var]->phi[j] * d_Heaviside_dF;
-		      source *= wt_func*det_J*wt*h3;
-
-		      lec->J[peqn][pvar][i][j] += source;
 
 		    }
 		}

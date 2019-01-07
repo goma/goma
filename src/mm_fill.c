@@ -766,32 +766,6 @@ matrix_fill(
     pg_data.mu_avg = mu / ((double) num_local_nodes);
     pg_data.rho_avg = rho / ((double) num_local_nodes);
 
-    if (pg_data.mu_avg < 0)
-      {
-        printf("\nLocal viscosities muavg=%g mu=%g, nln=%g\n", pg_data.mu_avg, mu, ((double) num_local_nodes) );
-
-        for (ip = 0; ip < num_local_nodes; ip ++)
-          {
-            find_nodal_stu(ip, ielem_type, &xi[0], &xi[1], &xi[2]);
-            setup_shop_at_point(ei[pg->imtrx]->ielem, xi, exo);
-            double gamma[DIM][DIM];
-            for ( int a=0; a<VIM; a++)
-              {
-                for ( int b=0; b<VIM; b++)
-                  {
-                    gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
-                  }
-              }
-            mu = viscosity(gn, gamma, NULL);
-            rho = density(NULL, time_value);
-
-            printf("ip=%d, mu=%g, F=%g\n", ip, mu, fv->F);
-            double Hmax = fmax(0, fv->Heaviside);
-            double Hmin = fmin(1.0, Hmax);
-            printf("Heaviside %g, clamp %g\n", fv->Heaviside, Hmin);
-          }
-      }
-
     if(pspg_local)
       {
 	h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
@@ -2068,15 +2042,6 @@ matrix_fill(
 	  CHECKFINITE("assemble_density");
 #endif
 	}
-
-      if( pde[R_HEAVISIDE_EQN] )
-        {
-          err = assemble_heaviside();
-          EH( err, "assemble_heaviside");
-#ifdef CHECK_FINITE
-          CHECKFINITE("assemble_heaviside");
-#endif
-        }
 
 
       if( pde[R_FILL] )

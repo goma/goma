@@ -3889,12 +3889,7 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
 	  v = MASS_FRACTION;
 	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
-	case R_HEAVISIDE_EQN:
-	  v = FILL;
-	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
-	  v = HEAVISIDE_EQN;
-	  if(Num_Var_In_Type[imtrx][v])  eqn_var_mask[imtrx][e][v] = 1;
-	  break;
+
 
 	case R_SPECIES_UNK_0:
 	case R_SPECIES_UNK_1:
