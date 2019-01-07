@@ -8181,7 +8181,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  SpeciesSourceModel = FOAM_PMDI_10_H2O;
 	  model_read = 1;
 	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
-	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
 	  if ( fscanf(imp, "%lf %lf %lf %lf",
 		      &a0, &a1, &a2, &a3)  != 4 )
 	    {
@@ -8208,21 +8208,21 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  SpeciesSourceModel = FOAM_PMDI_10_CO2;
 	  model_read = 1;
 	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
-	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
 	}
       else if ( !strcmp(model_name, "FOAM_PMDI_10_CO2_LIQ") )
 	{
 	  SpeciesSourceModel = FOAM_PMDI_10_CO2_LIQ;
 	  model_read = 1;
 	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
-	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
 	}
       else if ( !strcmp(model_name, "FOAM_PMDI_10_CO2_GAS") )
 	{
 	  SpeciesSourceModel = FOAM_PMDI_10_CO2_GAS;
 	  model_read = 1;
 	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
-	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
 	}
       else if ( !strcmp(model_name, "FOAM_PMDI_10_H2O_DIVV") )
 	{
