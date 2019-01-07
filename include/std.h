@@ -560,5 +560,3 @@ extern int zero_detJ_global;
 #endif
 
 #endif
-
-#endif
