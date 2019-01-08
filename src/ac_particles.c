@@ -3495,7 +3495,7 @@ compute_particle_dt(particle_t * const p,
 
       max_force = fabs(forces[0]);
       for(i = 1; i < pdim; i++)
-	if(fabs(forces[i] > max_force))
+	if(fabs(forces[i]) > max_force)
 	  max_force = fabs(forces[i]);
 
       if(max_force > 0.0)
