@@ -6768,7 +6768,7 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 	  
 	  /* Add diffusion term */
 	  diffusion = 0.0;
-	  if ( pd->e[pg->imtrx][eqn] && T_DIFFUSION ) {
+	  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION ) {
 	    for ( a = 0; a < dim; a++) {
 	      diffusion += LubAux->dq_dp1[a][j] * grad_II_phi_j[a] * grad_II_phi_i[a];
 	      diffusion += LubAux->dq_dp2[a][j] * phi_j * grad_II_phi_i[a];
@@ -6796,7 +6796,7 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 
 	  /* Add diffusion term */
 	  diffusion = 0.0;
-	  if ( pd->e[pg->imtrx][eqn] && T_DIFFUSION ) {
+	  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION ) {
 	    for ( b = 0; b < dim; b++ ) {
 	      diffusion += LubAux->dq_dk[b][j] * grad_II_phi_i[b] * phi_j;
 	    }
@@ -6822,7 +6822,7 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 
 	  /* Add diffusion term */
 	  diffusion = 0.0;
-	  if ( pd->e[pg->imtrx][eqn] && T_DIFFUSION ) {
+	  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION ) {
 	    for ( b = 0; b < dim; b++ ) {
 	      diffusion += LubAux->dq_dk[b][j] * grad_II_phi_i[b] * phi_j;
 	    }
@@ -6851,7 +6851,7 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 
 	  /* Add diffusion term */
 	  diffusion = 0.0;
-	  if ( pd->e[pg->imtrx][eqn] && T_DIFFUSION ) {
+	  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION ) {
 	    for ( b = 0; b < dim; b++ ) {
 	      diffusion += LubAux->dq_df[b][j] * grad_II_phi_i[b];
 	    }
@@ -7633,7 +7633,7 @@ assemble_shell_energy(double time,	/* present time value */
 	
 	  /* Add diffusion term */
 	  diffusion = 0.0;
-	  if ( pd->e[pg->imtrx][eqn] && T_DIFFUSION ) {
+	  if ( pd->e[pg->imtrx][eqn] & T_DIFFUSION ) {
 	    for ( a = 0; a < dim; a++) {
 	      diffusion += H * k_eff *  grad_II_phi_i[a] * grad_II_phi_j[a];
 	    }

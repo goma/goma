@@ -77,6 +77,7 @@ extern void handle_ieee(void );
 #include "rf_solve_segregated.h"
 
 #ifdef FP_EXCEPT
+#define __USE_GNU
 #include <fenv.h>
 #endif
 

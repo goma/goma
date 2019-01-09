@@ -563,7 +563,7 @@ set_nodal_Dirichlet_BC(int inode, int ibc,
            }
         else if (boundary_condition->BC_relax == -1.0 ) 
         {
-	  if ((boundary_condition->BC_Name == F_DIODE_BC))
+	  if (boundary_condition->BC_Name == F_DIODE_BC)
 	    {
 	      EH(-1, "F_DIODE_BC has special needs. You need to comment this line out and follow instructions");
 	      /*real hack here for diode level-set.  Let liquid out, but not back in.  

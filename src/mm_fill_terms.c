@@ -2575,15 +2575,10 @@ assemble_momentum(dbl time,       /* current time */
   dbl wt_func;
 
   /* SUPG variables */
-  dbl h_elem=0, h_elem_inv=0;
-  dbl supg, d_wt_func;
+  dbl supg;
 
   const double *hsquared = pg_data->hsquared ;
-  const double *vcent = pg_data->v_avg; /* Average element velocity, which is the
-					   centroid velocity for Q2 and the average
-					   of the vertices for Q1. It comes from
-					   the routine "element_velocity." */
-
+  
   //Continuity stabilization
   dbl continuity_stabilization;
   dbl cont_gls;
@@ -2635,9 +2630,6 @@ assemble_momentum(dbl time,       /* current time */
   double tau_supg = 0;
   double d_tau_supg_dv[DIM][MDE];
   double d_tau_supg_dX[DIM][MDE];
-  double mu;
-  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
-  VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
 
 
   /*** Density ***/

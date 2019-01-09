@@ -3080,8 +3080,7 @@ foam_epoxy_viscosity(int species_fluor, int species_cur, dbl mu0,
 	  mp->d_FlowingLiquid_viscosity[MAX_VARIABLE_TYPES+species_cur] = 0.0;
 	}
 
-      if (mp->d_volumeFractionGas      && 
-	  mp->volumeFractionGas >= 0.0 && 
+      if (mp->volumeFractionGas >= 0.0 && 
 	  mp->volumeFractionGas <= 0.99 ) 
 	{
 	  dbl volFacDeriv = mu / ((1-cVolFrac) * (1-cVolFrac));

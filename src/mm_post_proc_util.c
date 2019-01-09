@@ -75,7 +75,7 @@ find_id_elem(const double x,	  /* x-coordinate */
   static char *yo = "find_id_elem";
 #endif
 
-  int element_no;		/*local element number */
+  int element_no = -1;		/*local element number */
   int i;			/*local element counters */
   dbl sum_xcoord, sum_ycoord, sum_zcoord; 
   dbl x_center, y_center, z_center; 

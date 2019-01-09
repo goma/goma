@@ -3285,7 +3285,7 @@ rd_track_specs(FILE *ifp,
   char *yo;
   
   int mn, iread;
-  int TPContType=0, TPBdyCondID, TPDataFltID, TPMatID, TPMatPropID, TPMatPropSIID;
+  int TPContType=0, TPBdyCondID=0, TPDataFltID, TPMatID, TPMatPropID, TPMatPropSIID;
   int id1, id2, id3, iflag, iCC, iTC;
   double range;
   double beg_angle = 0.0, end_angle = 0.0;
@@ -14918,7 +14918,7 @@ parse_press_datum_input(const char *input)
      *  For no units conversion, specify cgs.
      **********************************************************************/
 {
-  double value;
+  double value = 0;
   int numTok, units = 0;
   static const char yo[] = "parse_press_datum_input";
 

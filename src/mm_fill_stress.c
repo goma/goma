@@ -4391,7 +4391,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
 
      for(ibc=0; ibc<Num_BC; ibc++)
        { 
-	 if((BC_Types[ibc].BC_Name == TABLE_BC))
+	 if(BC_Types[ibc].BC_Name == TABLE_BC)
 	   {
 	     /*Loop over all side sets to find a match */
 	     for(ins=0; ins<exo->num_side_sets; ins++)

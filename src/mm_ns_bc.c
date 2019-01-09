@@ -598,7 +598,7 @@ if(lsi->near && 0) fprintf(stderr,"vn_ls %g %g %g %g\n",fv->x[0],penalty,factor,
       {
       var = ls->var;
       if((type == VELO_NORMAL_LS_BC || type == VELO_NORMAL_LS_PETROV_BC
-           || VELO_NORMAL_LS_COLLOC_BC)  && pd->v[pg->imtrx][var] )
+           || type == VELO_NORMAL_LS_COLLOC_BC)  && pd->v[pg->imtrx][var] )
 	{
 	  for( j=0; j<ei[pd->mi[var]]->dof[var]; j++)
 	    {
@@ -3672,21 +3672,18 @@ fvelo_slip_ls_heaviside(double func[MAX_PDIM],
       memset(d_beta_dF,0,MDE*sizeof(double));
      }
 #endif /* COUPLED_FILL */
-  dbl gamma[DIM][DIM];
-  dbl mu;
-  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
-  VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
-
-  /**
-     compute gammadot, viscosity
-  **/
-  for ( int i=0; i<VIM; i++)
-    {
-      for ( int j=0; j<VIM; j++)
-  	{
-  	  gamma[i][j] = fv->grad_v[i][j] + fv->grad_v[j][i];
-  	}
-    }
+//   dbl gamma[DIM][DIM];
+  
+//   /**
+//      compute gammadot, viscosity
+//   **/
+//   for ( int i=0; i<VIM; i++)
+//     {
+//       for ( int j=0; j<VIM; j++)
+//   	{
+//   	  gamma[i][j] = fv->grad_v[i][j] + fv->grad_v[j][i];
+//   	}
+//     }
 
   //mu = viscosity(gn, gamma, d_mu);
 
@@ -13937,10 +13934,10 @@ calculate_laser_flux ( const double p[],
 	    {
 	      q_laserpow = qlaser0+(q_laserpow-qlaser0)*(time-(t_deltpk+ispot*t_spot))/(t_deltst-t_deltpk);
 	    }
-	  if (time >= (t_deltst+ispot*t_spot) && time < (t_cutoff+ispot*t_spot))
-	    {
-	      q_laserpow = q_laserpow;
-	    }
+	  // if (time >= (t_deltst+ispot*t_spot) && time < (t_cutoff+ispot*t_spot))
+	  //   {
+	  //     q_laserpow = q_laserpow;
+	  //   }
 	  if (time >= (t_cutoff+ispot*t_spot) && time < (t_tapper+ispot*t_spot))
 	    {
 	      q_laserpow = q_laserpow+(base_qlaser-q_laserpow)*(time-(t_cutoff+ispot*t_spot))/(t_tapper-t_cutoff);
@@ -13967,10 +13964,10 @@ calculate_laser_flux ( const double p[],
 	{
 	  q_laserpow = qlaser0+(q_laserpow-qlaser0)*(time-t_deltpk)/(t_deltst-t_deltpk);
 	}
-      if (time >= t_deltst )
-	{
-	  q_laserpow = q_laserpow;
-	}
+  //     if (time >= t_deltst )
+	// {
+	//   q_laserpow = q_laserpow;
+	// }
     }
   else if(sw_trv_spt>1.9 && sw_trv_spt<2.1)
     { /* sinusoidal traveling weld */

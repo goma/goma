@@ -860,7 +860,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   if (POLYMER_TIME_CONST != -1 && pd->e[pg->imtrx][R_STRESS11] ) {
     mode = 0;
-    double lambda;
+    double lambda = 0;
     double mup = viscosity(ve[mode]->gn, gamma, NULL);
     if (ve[mode]->time_constModel == CONSTANT) {
       lambda = ve[mode]->time_const;
@@ -879,7 +879,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   if (PTT_XI != -1 && pd->e[pg->imtrx][R_STRESS11] ) {
     mode = 0;
-    double xi;
+    double xi = 0;
     double mup = viscosity(ve[mode]->gn, gamma, NULL);
     if (ve[mode]->xiModel == CONSTANT) {
       xi = ve[mode]->xi;
@@ -898,7 +898,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   if (PTT_EPSILON != -1 && pd->e[pg->imtrx][R_STRESS11] ) {
     mode = 0;
-    double eps;
+    double eps = 0;
     double mup = viscosity(ve[mode]->gn, gamma, NULL);
     if (ve[mode]->epsModel == CONSTANT) {
       eps = ve[mode]->eps;
@@ -917,7 +917,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   if (MOBILITY_PARAMETER != -1 && pd->e[pg->imtrx][R_STRESS11] ) {
     mode = 0;
-    double alpha;
+    double alpha = 0;
     double mup = viscosity(ve[mode]->gn, gamma, NULL);
     if (ve[mode]->alphaModel == CONSTANT) {
       alpha = ve[mode]->alpha;
