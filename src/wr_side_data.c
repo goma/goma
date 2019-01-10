@@ -24,6 +24,9 @@ static char rcsid[] =
 "$Id: wr_side_data.c,v 5.9 2010-07-01 17:28:20 ebenner Exp $";
 #endif
 
+/* Needed to declare POSIX function drand48 */
+#define _XOPEN_SOURCE
+
 #include <stdio.h>
 #include <math.h>
 #include <time.h>

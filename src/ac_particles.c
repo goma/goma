@@ -210,7 +210,6 @@ initialize_particles(const Exo_DB * exo,
   int i, j, el_index_begin, el_index_end, num_els, elem_id;
   char time_of_day[80];
   particle_t p;
-  dbl drand48(void);
 
 #ifdef PARALLEL
   int proc_index, left_over;
@@ -3495,7 +3494,7 @@ compute_particle_dt(particle_t * const p,
 
       max_force = fabs(forces[0]);
       for(i = 1; i < pdim; i++)
-	if(fabs(forces[i] > max_force))
+	if(fabs(forces[i]) > max_force)
 	  max_force = fabs(forces[i]);
 
       if(max_force > 0.0)

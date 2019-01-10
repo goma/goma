@@ -383,7 +383,6 @@ RF_INC= rf_allo.h\
         rf_fill_const.h\
         rf_io.h\
         rf_io_const.h\
-        rf_io_defn.h\
         rf_io_structs.h\
         rf_masks.h\
         rf_mp.h\
@@ -396,7 +395,6 @@ RF_INC= rf_allo.h\
         rf_solver_const.h\
         rf_util.h\
         rf_vars_const.h \
-        rf_vars_defn.h\
         rd_dpi.h\
         rd_exo.h\
         rd_mesh.h\
