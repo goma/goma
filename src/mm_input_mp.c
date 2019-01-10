@@ -28,6 +28,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>            /* for strcasecmp */
 
 #include <ctype.h>		/* for toupper(), isspace() */
 #include <math.h>

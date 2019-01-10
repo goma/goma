@@ -9286,7 +9286,7 @@ void fapply_moving_CA_sinh(
                       g_dca = hoff_C*hoff_R/pow(hoff_D,hoff_M)
                             *(1.0+hoff_M/hoff_D*(theta-theta_max+hoff_D));
                      }
-       		if(!finite(g_dca)) { g_dca = SGN(g_dca)*BIG_PENALTY; }
+       		if(!isfinite(g_dca)) { g_dca = SGN(g_dca)*BIG_PENALTY; }
 #else
 		ca_no = 1.0E+06; iter = 0; eps=10.*eps_tol;
 		while (iter <= iter_max && fabs(eps) > eps_tol)
@@ -9308,7 +9308,7 @@ void fapply_moving_CA_sinh(
 			eps = -(ca_no - 1.31*pow(ca_no,0.99)*A_dca-A_dca)/
 					(1.-1.31*0.99*A_dca/pow(ca_no,0.01));
 			ca_no += eps;
-			if(!finite(ca_no))
+			if(!isfinite(ca_no))
 			    {
 				ca_no = eps = DBL_MAX/10.;
 			    }
@@ -9564,8 +9564,8 @@ fprintf(stderr,"velocity  %g v_mesh %g dvmdt: %g node: %d\n",v,v_mesh,v_mesh_dt,
                         g_deriv_ss = hoff_C*hoff_R*hoff_M/pow(hoff_D,hoff_M+1.0)
                            /(-sintheta)*dnn_ss_ddpj;
                                      }
-       			if(!finite(g_deriv)) { g_deriv = SGN(g_deriv)*BIG_PENALTY; }
-       			if(!finite(g_deriv_ss)) { g_deriv_ss = SGN(g_deriv_ss)*BIG_PENALTY; }
+       			if(!isfinite(g_deriv)) { g_deriv = SGN(g_deriv)*BIG_PENALTY; }
+       			if(!isfinite(g_deriv_ss)) { g_deriv_ss = SGN(g_deriv_ss)*BIG_PENALTY; }
                         	dv_ddpj *= g_deriv;
                         	dv_ss_ddpj *= g_deriv_ss;
 #else
