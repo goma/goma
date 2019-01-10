@@ -12,7 +12,6 @@
  
 #ifndef _SL_AMESOS_INTERFACE_H
 #define _SL_AMESOS_INTERFACE_H
-#endif
 
 #ifdef EXTERN
 #undef EXTERN
@@ -60,6 +59,5 @@ construct_Epetra_CrsMatrix ( struct Aztec_Linear_Solver_System * );
 EXTERN void *
 construct_Epetra_CrsMatrix_ls ( int, int, int );
 
-
-
+#endif
 #endif
