@@ -1170,7 +1170,7 @@ dbl *te_out) /* te_out - return actual end time */
 	       * level set function.  For example, species  concentration and temperature.
 	       */
 	      if( ls->Num_Var_Init > 0 ) 
-		ls_var_initialization ( x[pg->imtrx], exo, dpi, cx[pg->imtrx] );
+		ls_var_initialization ( x, exo, dpi, cx);
 
 	      /* 	  DPRINTF(stderr, "Done with ls_var_initialization.\n"); */
 

@@ -1934,7 +1934,6 @@ rd_levelset_specs(FILE *ifp,
           /* OK.  Let us put the Variables initialized index by LS on the end of the original Var_init array. 
 	  *       This is why we add Num_Var_Init to the ls->Num_Var_Init to define index 
 	  */
-
           Var_init[index].var = 
             variable_string_to_int(input, "Initialize Keyword Error");
 

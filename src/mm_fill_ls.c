@@ -5441,7 +5441,7 @@ create_next_surf_or_subsurf( struct LS_Surf_List *list,
  */
 
 void
-ls_var_initialization ( double *u, Exo_DB *exo, Dpi *dpi, Comm_Ex *cx )
+ls_var_initialization ( double **u, Exo_DB *exo, Dpi *dpi, Comm_Ex **cx )
 {
   int n, k, ebi, ebj,mn;
   int block_temp, ielem, e_start, e_end;
@@ -5493,38 +5493,44 @@ ls_var_initialization ( double *u, Exo_DB *exo, Dpi *dpi, Comm_Ex *cx )
 
 	      for ( n=0; n<num_nodes; n++ ) /* local nodes */
 		{
-		  scalar_value_at_local_node ( ielem, ielem_type, n, LS, 0, u, exo );
-		  
+		  scalar_value_at_local_node ( ielem, ielem_type, n, LS, 0, u[pg->imtrx], exo );
 		  i = Proc_Elem_Connect[index++];
-		  nv = Nodes[i]->Nodal_Vars_Info[pg->imtrx];
 
-		  for( j=Num_Var_Init; j<ls->Num_Var_Init + Num_Var_Init; j++)
+		  for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
 		    {
 
-		      var = Var_init[j].var;
-		      
-		      nunks = get_nv_ndofs_modMF(nv, var);
+		      nv = Nodes[i]->Nodal_Vars_Info[imtrx];
 
-		      if( nunks > 0 && pd->i[pg->imtrx][var] )
-			{
-			  if ( nunks == 1 )
-			    {
-			      ie = Index_Solution(i, var, 
-				      Var_init[j].ktype, 0, mn, pg->imtrx);
+                      for( j=Num_Var_Init; j<ls->Num_Var_Init + Num_Var_Init; j++)
+                        {
 
-			      
-			      level_set_property( Var_init[j].init_val_minus, 
-						  Var_init[j].init_val_plus , 
-						  ls->Length_Scale, 
-						  (u + ie), 
-						  NULL );
+                          var = Var_init[j].var;
 
-			    }
-			  else
-			    {
-			      EH( -1, " Cannot initialized multiple degrees of freedom at a node \n");
-			    }
-			}
+
+
+                          nunks = get_nv_ndofs_modMF(nv, var);
+
+                          if( nunks > 0 && pd->i[imtrx][var] )
+                            {
+                              if ( nunks == 1 )
+                                {
+                                  ie = Index_Solution(i, var,
+                                          Var_init[j].ktype, 0, mn, imtrx);
+
+
+                                  level_set_property( Var_init[j].init_val_minus,
+                                                      Var_init[j].init_val_plus ,
+                                                      ls->Length_Scale,
+                                                      &(u[imtrx][ie]),
+                                                      NULL );
+
+                                }
+                              else
+                                {
+                                  EH( -1, " Cannot initialized multiple degrees of freedom at a node \n");
+                                }
+                            }
+                        }
 		    }
 		}
 	    }
@@ -5533,7 +5539,11 @@ ls_var_initialization ( double *u, Exo_DB *exo, Dpi *dpi, Comm_Ex *cx )
 
  safer_free((void **) &block_order);
 
- exchange_dof(cx, dpi, u, pg->imtrx);
+ for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+   {
+     exchange_dof(cx[imtrx], dpi, u[imtrx], imtrx);
+   }
+
    
 
 

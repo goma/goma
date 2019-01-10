@@ -217,10 +217,10 @@ PROTO (( struct LS_Surf *,
          int ));
 
 EXTERN void ls_var_initialization 
-PROTO (( double *, 
+PROTO (( double **,
 	 Exo_DB *, 
 	 Dpi *, 
-	 Comm_Ex * ));
+	 Comm_Ex ** ));
          
 
 EXTERN int level_set_interface

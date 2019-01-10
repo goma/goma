@@ -1945,7 +1945,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	   * level set function.  For example, species  concentration and temperature.
 	   */
 	  if( ls->Num_Var_Init > 0 ) 
-	    ls_var_initialization ( x, exo, dpi, cx[0] );
+	    ls_var_initialization ( &x, exo, dpi, cx );
 
 	  /* 	  DPRINTF(stderr, "Done with ls_var_initialization.\n"); */
 
