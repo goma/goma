@@ -54,6 +54,7 @@
 #include "mm_mp_const.h"
 
 #include "mm_fill_jac.h"
+#include "mm_fill_common.h"
 #include "mm_interface.h"
 
  
@@ -2789,6 +2790,7 @@ setup_shop_at_point(int ielem,
     }
 
   do_LSA_mods(LSA_VOLUME);
+  computeCommonMaterialProps_gp(tran->time_value);
 }
 
 
