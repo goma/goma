@@ -275,6 +275,7 @@ int EIG1 = -1;
 int EIG2 = -1;
 int EIG3 = -1;
 int GRAD_SH = -1;
+int LIFT_FORCE = -1;
 int GRAD_Y = -1;
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
@@ -2606,6 +2607,50 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       }
       }*/
 
+
+  if ( LIFT_FORCE != -1 ) {
+    index = 0;
+    dbl lift_coeff;
+    //dbl lift_force;
+    dbl mu0, h, radius_p;
+    dbl gamma_dot[DIM][DIM];
+    dbl gammadot = 0., lift_coeff2;
+    dbl d_gd_dv[DIM][MDE];
+    dbl d_gd_dmesh[DIM][MDE];
+    dbl *Y;
+
+    Y = fv->c;
+    
+    mu0 = gn->mu0; /* Viscosity */
+
+    memset(gamma_dot, 0, DIM*DIM*sizeof(dbl) );
+  
+    for( a=0; a<VIM; a++ )
+      {
+	for( b=0; b<VIM; b++)
+	  {
+	    gamma_dot[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	  }
+      }
+
+    calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
+
+    radius_p = mp->SBM_Lengths2[0][0];
+    
+    h = fv->external_field[0];
+    if (h < 1.e-4)
+      {
+	h = 1.e-4;
+      }
+    
+    lift_coeff = 3. * mu0 * gammadot * 1.2 / (4. * M_PIE * h);
+
+    local_post[LIFT_FORCE + index] = lift_coeff;
+    local_lumped[LIFT_FORCE + index] = 1.;
+    
+    index++;
+  } 
+  
   if (GRAD_SH != -1 && pd->v[SHEAR_RATE]) {
     index = 0;
     for (a=0; a < dim; a++)
@@ -6780,6 +6825,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Eigenvector2", &EIG2);
   iread = look_for_post_proc(ifp, "Eigenvector3", &EIG3);
   iread = look_for_post_proc(ifp, "Shear gradient", &GRAD_SH);
+  iread = look_for_post_proc(ifp, "Lift force", &LIFT_FORCE);
   iread = look_for_post_proc(ifp, "Concentration gradient", &GRAD_Y);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
 
@@ -9613,6 +9659,15 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       index_post++;
       }*/
 
+    if (LIFT_FORCE != -1)
+      {
+	LIFT_FORCE = index_post;
+	set_nv_tkud(rd, index, 0, 0, -2, "LIFT_FORCE","[1]",
+		    "Lift force", FALSE);
+	index++;
+	index_post++;
+      }
+    
    if (GRAD_SH != -1)
     {
       GRAD_SH = index_post;

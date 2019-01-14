@@ -591,6 +591,7 @@ extern int EIG2;              /* Eigenvector of rate-of-strain tensor  */
 extern int EIG3;              /* Eigenvector of rate-of-strain tensor  */
 extern int GRAD_Y;            /* Concentration gradient                  */
 extern int GRAD_SH;            /* Shear gradient                */
+extern int LIFT_FORCE;            /* Lift force                */
 
 extern int UNTRACKED_SPEC;		/*Untracked Species Concentration */
 
