@@ -18872,8 +18872,6 @@ double FoamVolumeSource(double time,
 	DENSITY_DEPENDENCE_STRUCT d_rho_struct;
 	DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
-	rho = density(d_rho, time);
-
 	wCO2 = -1;
 	wH2O = -1;
 	for (w = 0; w < pd->Num_Species; w++) {
@@ -19012,8 +19010,42 @@ double FoamVolumeSource(double time,
 	  }
 	}
 
+	double volF = mp->volumeFractionGas;
+	double       rho = rho_gas * volF + rho_liq * (1 - volF);
 	double inv_rho = 1/rho;
+	var = MASS_FRACTION;
+	if (vol > 0. && d_rho != NULL )
+	  {
+	    if (pd->v[pg->imtrx][var] )
+	      {
+		for (w = 0; w < pd->Num_Species; w++) {
+		  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+		    {
+		      d_rho->C[w][j] = (rho_gas * mp->d_volumeFractionGas[MAX_VARIABLE_TYPES+w] -
+					rho_liq *  mp->d_volumeFractionGas[MAX_VARIABLE_TYPES+w])  * bf[var]->phi[j];
+		    }
+		}
+	      }
+	  }
 
+        var = TEMPERATURE;
+        if(d_rho != NULL )
+          {
+            if (pd->v[pg->imtrx][var] )
+              {
+                for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                  {
+                    if (fv->T > 0) {
+                      d_rho->T[j] = (-rho_gas/fv->T * volF + rho_gas * mp->d_volumeFractionGas[var] -
+                                     rho_liq*mp->d_volumeFractionGas[var]) * bf[var]->phi[j];
+                    } else {
+                      d_rho->T[j] = (rho_gas * mp->d_volumeFractionGas[var] -
+                                     rho_liq*mp->d_volumeFractionGas[var]) * bf[var]->phi[j];
+                    }
+
+                  }
+              }
+          }
 	source = rho_dot;
 	for (a = 0; a < dim; a++) {
 	  source += fv->v[a] * grad_rho[a];
