@@ -743,6 +743,7 @@ matrix_fill(
     xi[1] = 0.0;
     xi[2] = 0.0;  
     (void) load_basis_functions(xi, bfd);
+    setup_shop_at_point(ielem, xi, exo);
     pg_data.mu_avg = element_viscosity();
     pg_data.rho_avg = density(NULL, time_value);
 
