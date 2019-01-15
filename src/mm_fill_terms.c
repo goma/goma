@@ -19014,7 +19014,7 @@ double FoamVolumeSource(double time,
 	double       rho = rho_gas * volF + rho_liq * (1 - volF);
 	double inv_rho = 1/rho;
 	var = MASS_FRACTION;
-	if (vol > 0. && d_rho != NULL )
+	if (volF > 0. && d_rho != NULL )
 	  {
 	    if (pd->v[pg->imtrx][var] )
 	      {
