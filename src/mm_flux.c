@@ -1117,7 +1117,6 @@ evaluate_flux(
 		      break;
 
 		    case SPECIES_FLUX:
-
                       for (a = 0; a < VIM; a++) {
 	                if ( cr->MassFluxModel == FICKIAN  ||
 	                     cr->MassFluxModel == STEFAN_MAXWELL  ||
@@ -1141,6 +1140,17 @@ evaluate_flux(
 	                    }
 	                else  if ( cr->MassFluxModel == DARCY )
 	                    { /* diffusion induced convection is zero */ }
+			else if ( cr->MassFluxModel == DM_SUSPENSION_BALANCE )
+			  {
+			    struct Species_Conservation_Terms st;
+			    zero_structure(&st, sizeof(struct Species_Conservation_Terms), 1);
+			    if ( Diffusivity() ) EH( -1, "Error in Diffusivity.");
+			    for ( w=0; w < pd->Num_Species_Eqn; w++)
+			      {
+				suspension_balance(&st, w);
+				local_q += fv->snormal[a] * st.diff_flux[w][a];
+			      }
+			  }
 	                else
 	                    { EH( -1, "Unimplemented mass flux constitutive relation."); }
                           local_qconv += (fv->snormal[a]*(fv->v[a]-x_dot[a])
