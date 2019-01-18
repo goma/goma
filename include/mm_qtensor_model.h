@@ -30,83 +30,83 @@
 EXTERN int assemble_vorticity_direction(void);
 
 EXTERN int hydro_qtensor_flux	/* mm_qtensor_model.c */
-PROTO((struct Species_Conservation_Terms *, /* st */
-       int ));			/* w - species number */
+(struct Species_Conservation_Terms *, /* st */
+       int );			/* w - species number */
 
 EXTERN int hydro_qtensor_flux_new /* mm_qtensor_model.c */
-PROTO((struct Species_Conservation_Terms *, /* st */
-       int ));			/* w - species number */
+(struct Species_Conservation_Terms *, /* st */
+       int );			/* w - species number */
 
 EXTERN dbl normalize_really_simple_vector /* mm_qtensor_model.c */
-PROTO((dbl *,			/* vector to normalize */
-       int ));			/* dimension */
+(dbl *,			/* vector to normalize */
+       int );			/* dimension */
 
 EXTERN dbl really_simple_vector_magnitude /*mm_qtensor_model.c */
-PROTO(( dbl *,
-	int ));
+( dbl *,
+	int );
 
 EXTERN void cross_really_simple_vectors	/* mm_qtensor_model.c */
-PROTO((const dbl *,		/* v1 */
+(const dbl *,		/* v1 */
        const dbl *,		/* v2 */
-       dbl *));			/* v3 = v2 x v1 */
+       dbl *);			/* v3 = v2 x v1 */
 
 EXTERN void compute_principle_directions /* mm_qtensor_model.c */
-PROTO((dbl *,			/* flow direction vector */
+(dbl *,			/* flow direction vector */
        dbl *,			/* normal direction vector */
        dbl *,			/* vorticity direction vector */
-       int ));			/* print toggle */
+       int );			/* print toggle */
 
 EXTERN void find_eigenvector	/* mm_qtensor_model.c */
-PROTO((dbl [3][3],			/* 3 x 3 matrix */
+(dbl [3][3],			/* 3 x 3 matrix */
        dbl ,			/* eigenvalue */
        dbl *,			/* eigenvector */
-       int ));			/* print toggle */
+       int );			/* print toggle */
 
 EXTERN void find_super_special_eigenvector /* mm_qtensor_model.c */
-PROTO((dbl [3][3],		/* tensor to diagonalize. */
+(dbl [3][3],		/* tensor to diagonalize. */
        dbl *,			/* eigenvector. */
        dbl *,			/* eigenvalue. */
-       int ));			/* print toggle */
+       int );			/* print toggle */
 
 EXTERN void diagonalize_symmetric_tensor /* mm_qtensor_model.c */
-PROTO((dbl [3][3],		/* tensor to diagonalize. */
+(dbl [3][3],		/* tensor to diagonalize. */
        dbl *,			/* flow direction vector. */
        dbl *,			/* norm direction vector. */
        dbl *,			/* vorticity direction vector. */
        dbl *,			/* eigenvalues */
-       int ));			/* print toggle */
+       int );			/* print toggle */
 
 EXTERN void diagonalize_rate_of_deformation_tensor /* mm_qtensor_model.c */
-PROTO((dbl [3][3],		/* tensor to diagonalize. */
+(dbl [3][3],		/* tensor to diagonalize. */
        dbl *,			/* flow direction vector. */
        dbl *,			/* norm direction vector. */
        dbl *,			/* vorticity direction vector. */
        dbl *,			/* eigenvalues */
-       int ));			/* print toggle */
+       int );			/* print toggle */
 
 EXTERN void compute_VQVt_directly /* mm_qtensor_model.c */
-PROTO((dbl [3][3],		/* rate of deformation tensor */
+(dbl [3][3],		/* rate of deformation tensor */
        dbl [3][3],		/* VQVt */
-       int ));			/* print toggle */
+       int );			/* print toggle */
 
 EXTERN void please_work		/* mm_qtensor_model.c */
-PROTO((dbl [3][3],		/* rate of deformation tensor */
+(dbl [3][3],		/* rate of deformation tensor */
        dbl *,			/* flow direction vector */
        dbl *,			/* normal direction vector */
        dbl *,			/* vorticity direction vector */
-       int ));			/* print toggle */
+       int );			/* print toggle */
 
 EXTERN void get_characteristic_eq_coeffs
-PROTO((dbl [3][3],		/* E, rate of deformation tensor */
+(dbl [3][3],		/* E, rate of deformation tensor */
        dbl *,			/* a0 */
        dbl *,			/* a1 */
-       dbl *));			/* a2 */
+       dbl *);			/* a2 */
 
 EXTERN void assemble_qtensor
-PROTO((dbl *));
+(dbl *);
 
 EXTERN void assemble_new_qtensor /* Ryan's qtensor */
-PROTO((dbl *));
+(dbl *);
 
 
 extern int MMH_ip;

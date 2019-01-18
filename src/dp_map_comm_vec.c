@@ -100,8 +100,8 @@ int *ptr_fill_node_send = NULL;
 int *list_fill_node_send = NULL;
 
 static void build_node_recv_indeces /* dp_map_comm_vec.c */
-PROTO((Exo_DB *,		/* exo */
-       Dpi *));			/* dpi */
+(Exo_DB *,		/* exo */
+       Dpi *);			/* dpi */
 
 static void
 build_fill_node_recv_indeces(int *, Exo_DB *, Dpi *);

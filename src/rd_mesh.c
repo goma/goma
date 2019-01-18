@@ -125,9 +125,9 @@ int *SS_Internal_Boundary = NULL;
 
 #ifdef HAVE_BRK
 extern int _brk_
-PROTO (( int,
+( int,
 		 char **,
-		 char ** ));
+		 char ** );
 #endif
 
 /**************************************************************************/

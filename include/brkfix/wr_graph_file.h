@@ -29,7 +29,7 @@
 #endif
 
 EXTERN void wr_graph_file			/* wr_graph_file.c */
-PROTO((char *,					/* gfn - graph file name */
+(char *,					/* gfn - graph file name */
        char *,					/* ifn - input file name */
        char *,					/* efn - .exoII file name */
        int,					/* number of elements */
@@ -42,7 +42,7 @@ PROTO((char *,					/* gfn - graph file name */
        int [],					/* mins, maxes, and scales */
        int *,					/* to find neighbors */
        int *,					/* for vertex weights */
-       int *));					/* for edge weights */
+       int *);					/* for edge weights */
 
 
 #endif /* _WR_GRAPH_FILE_H */

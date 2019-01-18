@@ -27,8 +27,8 @@
 #endif
 
 EXTERN int put_dirichlet_in_matrix
-PROTO((double [],		/* x - Solution vector                       */
-       const int));		/* num_total_nodes */
+(double [],		/* x - Solution vector                       */
+       const int);		/* num_total_nodes */
 
 
 #endif /* _BC_DIRICH_H */

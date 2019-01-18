@@ -28,6 +28,6 @@
 #endif
 
 EXTERN void pre_process		/* rf_pre_proc.c */
-PROTO((Exo_DB *exo));
+(Exo_DB *exo);
 
 #endif /* _RF_PRE_PROC_H */

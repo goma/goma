@@ -47,34 +47,34 @@ static char rcsid[] =
 
 /* Local function prototypes */
 static double jacobian_metric
-PROTO((Exo_DB *,		/* Exodus database structure */
+(Exo_DB *,		/* Exodus database structure */
        double *,		/* Solution vector */
-       int *));			/* proc_config array */
+       int *);			/* proc_config array */
 static double volume_metric
-PROTO((int *));			/* proc_config array */
+(int *);			/* proc_config array */
 static double angle_metric
-PROTO((Exo_DB *,		/* Exodus database structure */
+(Exo_DB *,		/* Exodus database structure */
        double *,		/* Solution vector */
-       int *));			/* proc_config array */
+       int *);			/* proc_config array */
 static double triangle_metric
-PROTO((Exo_DB *,		/* Exodus database structure */
+(Exo_DB *,		/* Exodus database structure */
        double *,		/* Solution vector */
-       int *));			/* proc_config array */
+       int *);			/* proc_config array */
 static void load_vertex_xy
-PROTO((Exo_DB *,		/* Exodus database structure */
+(Exo_DB *,		/* Exodus database structure */
        int,                     /* Element number */
        int,			/* Number of nodes to process */
        double *,		/* Solution vector */
-       double **));             /* Vertex coordinates */
+       double **);             /* Vertex coordinates */
 static double vertex_angle
-PROTO((double **,		/* Vertex coordinates */
+(double **,		/* Vertex coordinates */
        int,			/* Current vertex */
        int,			/* Number of perimeter nodes (4 or 8) */
-       int *));			/* Node numbering sense (CW=+1, CCW=-1) */ 
+       int *);			/* Node numbering sense (CW=+1, CCW=-1) */ 
 static double sidelength
-PROTO((int,			/* One vertex */
+(int,			/* One vertex */
        int,			/* Other vertex */
-       double **));		/* Vertex coordinates */
+       double **);		/* Vertex coordinates */
 
 int
 element_quality(Exo_DB *exo, double *x, int *proc_config)

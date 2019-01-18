@@ -100,10 +100,10 @@ static int first_linear_solver_call=TRUE;
 
 /* EDW: This function invokes LOCA bordering algorithms as needed. */
 extern int continuation_hook
-PROTO((double *, double *, void *, double, double));
+(double *, double *, void *, double, double);
 
 static int soln_sens		/* mm_sol_nonlinear.c                        */
-PROTO((double ,			/* lambda - parameter                        */
+(double ,			/* lambda - parameter                        */
        double [],		/* x - soln vector                           */
        double [],		/* xdot - dxdt predicted for new time step   */
        double ,			/* delta_s - step                            */
@@ -150,7 +150,7 @@ PROTO((double ,			/* lambda - parameter                        */
        double *,		/*  h_elem_avg  */
        double *,
        int,  			/* UMF_system_id */
-       char []));               /* calling purpose */
+       char []);               /* calling purpose */
 
 
 /*

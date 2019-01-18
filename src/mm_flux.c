@@ -58,10 +58,10 @@
 #include "goma.h"
 
 static int load_fv_sens
-PROTO(( void ));
+( void );
 
 static int load_fv_grads_sens
-PROTO(( void ));
+( void );
 
 /* evaluate_flux() -- sum up flux contributions along a sideset, print out
  *

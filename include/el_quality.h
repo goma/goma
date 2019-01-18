@@ -27,9 +27,9 @@
 #endif
 
 EXTERN int element_quality
-PROTO(( Exo_DB *,  		/* Exodus database structure */
+( Exo_DB *,  		/* Exodus database structure */
         double *,		/* Solution vector */
-        int *));		/* proc_config array */
+        int *);		/* proc_config array */
 
 
 #endif /* _EL_QUALITY_H */

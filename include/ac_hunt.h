@@ -27,8 +27,8 @@
 #endif
 
 EXTERN void hunt_problem
-PROTO((Comm_Ex *,		/* array of communications structures */
+(Comm_Ex *,		/* array of communications structures */
        Exo_DB *,		/* ptr to the finite element mesh database */
-       Dpi *));			/* distributed processing information */
+       Dpi *);			/* distributed processing information */
 
 #endif /* _AC_HUNT_H */

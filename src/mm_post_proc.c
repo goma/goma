@@ -304,7 +304,7 @@ double *u_post_proc = 0;       	/* user-provided values used in calculating
 
 static int calc_standard_fields	/* mm_post
 				   _proc.c                            */
-PROTO((double **,		/* post_proc_vect - rhs vector now called 
+(double **,		/* post_proc_vect - rhs vector now called 
 				 * post_proc_vect, accessed by 
 				 * post_proc_vect[VARIABLE_NAME]
 				 *               [I]
@@ -322,10 +322,10 @@ PROTO((double **,		/* post_proc_vect - rhs vector now called
        double,                  /* time */
        Exo_DB * const,
        double []
-       ));
+       );
 
 static int calc_zz_error_vel	/* mm_post_proc.c                            */
-PROTO((double [],		/* x - Soln vector for the current processor */
+(double [],		/* x - Soln vector for the current processor */
        double [],
        double [],
        double [],
@@ -335,17 +335,17 @@ PROTO((double [],		/* x - Soln vector for the current processor */
 				 * are indexed: [eb_indx][ev_indx][elem]     */
        Exo_DB * const,		/* exo                                       */
        Dpi * const,		/* dpi                                       */
-       int ));			/* compute_elem_size                         */
+       int );			/* compute_elem_size                         */
 
 static int abs_error_at_elem	/* mm_post_proc.c                            */
-PROTO((int ,			/* i_elem                                    */
+(int ,			/* i_elem                                    */
        double *** ,		/* tau_nodal_lsp                             */
        double * ,		/* gvec_elem                                 */
        double * ,		/* velocity_norm                             */
-       double * ));		/* ielem_area                                */
+       double * );		/* ielem_area                                */
 
 static int fill_lhs_lspatch	/* mm_post_proc.c                            */
-PROTO((double * ,		/* i_node_coords                             */
+(double * ,		/* i_node_coords                             */
        double * ,		/* wt_gp_loc                                 */
        double * ,		/* xgp_loc                                   */
        double * ,		/* ygp_loc                                   */
@@ -354,31 +354,31 @@ PROTO((double * ,		/* i_node_coords                             */
        int ,			/* max_terms                                 */
        double **,		/* s_lhs                                     */
        int ,			/* elem                                      */
-       double **** ));		/* tau_gp_ptch                               */
+       double **** );		/* tau_gp_ptch                               */
 
 static int calc_stream_fcn	/* mm_post_proc.c                            */
-PROTO((double [],		/* x                             soln vector */
+(double [],		/* x                             soln vector */
        double [4],		/* del_stream_fcn                            */
-       double [MAX_PDIM][MDE])); /* vel - array for local nodal velocity     *
+       double [MAX_PDIM][MDE]); /* vel - array for local nodal velocity     *
 				  * values which must be divergence free     */
 
 static int correct_stream_fcn   /* mm_post_proc.c                            */
-PROTO((int *,			/* kount - counter for element connectivity  */
+(int *,			/* kount - counter for element connectivity  */
        int ,			/* iel - current element number              */
        double [4],		/* del_stream_fcn - elemental side increments*
 				 * to stream function calculated by          *
 				 * calc_stream_fcn()                         */
        double [],		/* stream_fcn_vect                           */
-       int []));		/* listnd - count times node is accessed     */
+       int []);		/* listnd - count times node is accessed     */
 
 static int look_for_post_proc   /* mm_post_proc.c                            */
-PROTO((FILE *,			/* ifp - pointer to file                     */
+(FILE *,			/* ifp - pointer to file                     */
        char *,			/* search_string -                           */
-       int *));			/* flag_variable - integer flag for options  */
+       int *);			/* flag_variable - integer flag for options  */
 
 static int midsid 
-PROTO((double [],		/* stream_fcn_vect */
-       Exo_DB *));		/* exo */
+(double [],		/* stream_fcn_vect */
+       Exo_DB *);		/* exo */
 
 void
 sum_average_nodal(double **avg_count, double ** avg_sum, int global_node, double time);

@@ -83,37 +83,37 @@ static char rcsid[] =
 
 /******************** PROTOTYPES FOR STATIC FUNCTIONS ************************/
 int rd_image_to_mesh
-PROTO(( int ,                  /* Index of external field */
-        const Exo_DB *));      /* Exodus database */
+( int ,                  /* Index of external field */
+        const Exo_DB *);      /* Exodus database */
 
 int rd_image_to_mesh2
-PROTO(( int ,                  /* Index of external field */
-        const Exo_DB *));      /* Exodus database */
+( int ,                  /* Index of external field */
+        const Exo_DB *);      /* Exodus database */
 
 
 static void read_initial_guess	/* rf_util.c                                 */
-PROTO((double [],		/* u                                         */
+(double [],		/* u                                         */
        const int ,		/* np                                        */
        double [],		/* uAC                                       */
-       const int ));		/* nAC                                       */
+       const int );		/* nAC                                       */
 
 static void inject_nodal_vec
-PROTO((double [],		/* sol_vec - full dof vector for this proc   */
+(double [],		/* sol_vec - full dof vector for this proc   */
        const int ,		/* var_no - VELOCITY1, etc.                  */
        const int ,		/* k - species index                         */
        const int ,              /* idof - dof #                              */
        const int ,              /* matID - material index to scatter to      */
-       const double []));	/* nodal_vec - condensed node based vector   */
+       const double []);	/* nodal_vec - condensed node based vector   */
 
 static void init_structural_shell_coord
-PROTO((double []));             /* u[] - solution vector */
+(double []);             /* u[] - solution vector */
 
 static void init_shell_normal_unknowns
-PROTO((double [] ,              /* u[] - solution vector */
+(double [] ,              /* u[] - solution vector */
        const Exo_DB *,		/* Exodus database */
        const int,		/* Shell node set ID */
        double , 		/* Focal point X-coordinate */
-       double));		/* Focal point Y-coordinate */
+       double);		/* Focal point Y-coordinate */
 
 /*****************************************************************************/
 /*****************************************************************************/

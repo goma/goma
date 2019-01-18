@@ -31,7 +31,7 @@ static char rcsid[] = "$Id: sl_front_setup.c";
 #include "goma.h"
 #include "sl_rcm.h"
 
-extern void setup_front PROTO((Exo_DB *));
+extern void setup_front (Exo_DB *);
 
 void
 setup_front(Exo_DB *exo)

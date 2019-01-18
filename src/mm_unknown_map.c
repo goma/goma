@@ -184,10 +184,10 @@ struct Frontal_Solver_System *fss = NULL;
  * Prototypes declarations of static functions defined in this file.
  */
 static void set_interaction_masks 
-PROTO((Exo_DB *));
+(Exo_DB *);
 
 extern void setup_front
-PROTO((Exo_DB *));
+(Exo_DB *);
 
 /*****************************************************************************/
 /*****************************************************************************/

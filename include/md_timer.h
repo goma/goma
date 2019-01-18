@@ -27,16 +27,16 @@
 #endif
 
 EXTERN dbl ut		/* user time in seconds */
-PROTO((void));
+(void);
 
 EXTERN double ust		/* user + system time in seconds */
-PROTO((void));
+(void);
 
 EXTERN void get_date
-PROTO((char *));		/* string - fill in with mm/dd/yy */
+(char *);		/* string - fill in with mm/dd/yy */
 
 EXTERN void get_time
-PROTO((char *));		/* string - fill in with hh:mm:ss */
+(char *);		/* string - fill in with hh:mm:ss */
 
 #endif /* _MD_TIMER_H */
 

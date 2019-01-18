@@ -28,9 +28,9 @@
 
 
 EXTERN void computeCommonMaterialProps_gp
-PROTO((
+(
        const dbl time  //Current time (sec)
-));
+);
 
 
 #endif 

@@ -32,17 +32,17 @@
 #endif
 
 EXTERN int usr_heat_source_gen
-PROTO((dbl *,			/* h - volumetric heat source                */
+(dbl *,			/* h - volumetric heat source                */
        dbl [MDE],		/* dhdT - temperature dependence.            */
        dbl [DIM][MDE],		/* dhdX - spatial dependence.                */
        dbl [DIM][MDE],		/* dhdV - velocity dependence.               */
        dbl [MAX_CONC][MDE],	/* dhdC - concentration dependence.          */
        dbl [MDE],	        /* dhdVolt - voltabe dependence.          */
        dbl *,			/* param - user-defined parameter list       */
-       dbl ));			/* time */
+       dbl );			/* time */
 
 EXTERN int usr_viscosity_gen
-PROTO((dbl *,			/* mu - viscosity                            */
+(dbl *,			/* mu - viscosity                            */
        dbl [DIM][DIM],		/* gamma_dot - strain rate tensor            */
        dbl *,			/* d_mu_dgd - deriv of viscosity wrt strain  *
 				 * rate inv                                  */
@@ -51,6 +51,6 @@ PROTO((dbl *,			/* mu - viscosity                            */
        dbl [MDE],		/* d_mu_dT                                   */
        dbl [MDE],		/* d_mu_dp                                   */
        dbl [MAX_CONC][MDE],	/* d_mu_dC                                   */
-       dbl *param));		/* user-defined parameter list               */
+       dbl *param);		/* user-defined parameter list               */
 
 #endif /* _USER_MP_GEN_H */

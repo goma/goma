@@ -89,7 +89,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
   double *U_norm);
 
 EXTERN void numerical_jacobian	/* mm_numjac.c                               */
-PROTO((struct Aztec_Linear_Solver_System *, /* ams                           */
+(struct Aztec_Linear_Solver_System *, /* ams                           */
        double [],		/* x - soln vector for current processor     */
        double [],		/* resid_vector -for current processor       */
        double ,			/* delta_t - time step size                  */
@@ -117,11 +117,11 @@ PROTO((struct Aztec_Linear_Solver_System *, /* ams                           */
        Exo_DB *,		/* exo - ptr to whole fe mesh                */
        Dpi *,			/* dpi - any distributed processing info     */
        double *,
-       double *));
+       double *);
 
 #ifndef COUPLED_FILL
 EXTERN void numerical_jacobian_fill /* mm_numjac.c                           */
-PROTO((int [],			/* ijaf - column pointers into fill matrix   */
+(int [],			/* ijaf - column pointers into fill matrix   */
        double [],		/* afill - non-zero entries in fill matrix   */
        double [],		/* xf - fill Solution vector                 */
        double [],		/* rf - Residual vector for fill eqns        */
@@ -137,7 +137,7 @@ PROTO((int [],			/* ijaf - column pointers into fill matrix   */
 				 * rescaling                                 */
        int [],			/* node_to_fill - this is a map from the     */
        Exo_DB *,		/* exo - ptr to whole fe mesh                */
-       Dpi *));			/* dpi - ptr to parallel info                */
+       Dpi *);			/* dpi - ptr to parallel info                */
 #endif /* not COUPLED_FILL */
 extern double calc_numerical_delta(double);
 extern void   AF_assemble_Residual_Only(void);

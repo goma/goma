@@ -258,7 +258,7 @@ Node_Description *vnd;	/* for the varnode d'jour */
 #define CHACO
 #ifdef CHACO
 extern int interface
-PROTO((int,			/* nvtxs - number of vertices in full graph */
+(int,			/* nvtxs - number of vertices in full graph */
        int *,			/* start - start of edge list for ea vertex */
        int *,			/* adjacency - edge list data */
        int *,			/* vwgts - weights for all vertices */
@@ -279,33 +279,33 @@ PROTO((int,			/* nvtxs - number of vertices in full graph */
        int,			/* vmax - if so, coarsen down to ? vertices */
        int,			/* ndims - number of eigenvectors (2^d sets) */
        dbl,			/* eigtol - tolerance on eigenvectors */
-       long));			/* seed - for random graph mutations */ 
+       long);			/* seed - for random graph mutations */ 
 #endif
 
 extern int wr_mesh_exo		/* wr_exo.c */
-PROTO((Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
+(Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
        char *,			/* filename - where to write */
-       int));			/* verbosity - talk while writing */
+       int);			/* verbosity - talk while writing */
 
 extern void wr_resetup_exo	/* wr_exo.c */
-PROTO((Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
+(Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
        char *,			/* filename - where to write */
-       int ));			/* verbosity - 0 for quiet, more to talk */
+       int );			/* verbosity - 0 for quiet, more to talk */
 
 extern void wr_result_exo	/* wr_exo.c */
-PROTO((Exo_DB *,		/* exo */
+(Exo_DB *,		/* exo */
        char *,			/* filename - where to write */
-       int ));			/* verbosity - 0 for quiet, more to talk */
+       int );			/* verbosity - 0 for quiet, more to talk */
 
 extern int wr_dpi		/* wr_dpi.c */
-PROTO((Dpi *,			/* fantastic structure defd in "dpi.h" */
+(Dpi *,			/* fantastic structure defd in "dpi.h" */
        char *,			/* filename */
-       int ));			/* verbosity - how much to talk */
+       int );			/* verbosity - how much to talk */
 
 
 static int integer_compare	/* used internally by qsort() brk.c */
-PROTO((const void *, 
-       const void *));
+(const void *, 
+       const void *);
 
 int 
 brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)

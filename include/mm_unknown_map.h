@@ -22,22 +22,22 @@
 #define _MM_UNKNOWN_MAP_H
 
 EXTERN void setup_local_nodal_vars
-PROTO((Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
-       Dpi *));			/* dpi - ptr to parallel info                */
+(Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
+       Dpi *);			/* dpi - ptr to parallel info                */
 
 EXTERN void setup_external_nodal_vars
-PROTO((Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
+(Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
        Dpi *,                   /* dpi - ptr to parallel info                */
-       Comm_Ex **));
+       Comm_Ex **);
 
 EXTERN int find_MaxUnknownNode
-PROTO((void));
+(void);
 
 extern void print_vars_at_nodes(void);
 
 EXTERN void set_unknown_map
-PROTO((Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
-       Dpi *));			/* dpi - ptr to parallel info                */
+(Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
+       Dpi *);			/* dpi - ptr to parallel info                */
 
 extern int Index_Solution(
  const int,                     /* Global Node Number                        */

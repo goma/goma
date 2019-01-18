@@ -72,55 +72,55 @@
  */
 
 extern void sl_init 
-PROTO ((unsigned int,		/* option flag */
+(unsigned int,		/* option flag */
 	struct Aztec_Linear_Solver_System *[],
 	Exo_DB *,		/* all the mesh information */
 	Dpi *,			/* all the distributed processing information */
-	Comm_Ex []));		/* after initialization, on a per proc basis */
+	Comm_Ex []);		/* after initialization, on a per proc basis */
 
 
 extern void sl_free
-PROTO((unsigned int ,		/* option_mask                               */
-       struct Aztec_Linear_Solver_System *[]));	/* ams                       */
+(unsigned int ,		/* option_mask                               */
+       struct Aztec_Linear_Solver_System *[]);	/* ams                       */
 
 extern void free_ams
-PROTO((struct Aztec_Linear_Solver_System *)); /* ptr to ONE such system */
+(struct Aztec_Linear_Solver_System *); /* ptr to ONE such system */
 
 extern void set_aztec_options_params 
-PROTO(( int [],			/* options */
-	double [] ));		/* params */
+( int [],			/* options */
+	double [] );		/* params */
 
 extern void dump_aztec_status 
-PROTO (( double [] ));		/* status - filled by AZ_solve() */
+( double [] );		/* status - filled by AZ_solve() */
 
 extern void hide_external
-PROTO((int ,			/* n - order of the original system     (in) */
+(int ,			/* n - order of the original system     (in) */
        int ,			/* m - order of the truncated system    (in) */
        int *,			/* ija - original column pointers       (in) */
        int *,			/* ijas - save ija area                      */
-       double *));		/* a - original nonzero matrix values   (in) */
+       double *);		/* a - original nonzero matrix values   (in) */
 
 extern void show_external
-PROTO((int ,			/* n - order of the original system     (in) */
+(int ,			/* n - order of the original system     (in) */
        int ,			/* m - order of the truncated system    (in) */
        int *,			/* ija - original column pointers       (in) */
        int *,			/* ijas - save ija area                      */
-       double *));		/* a - original nonzero matrix values   (in) */
+       double *);		/* a - original nonzero matrix values   (in) */
 
 extern int cmsr_ma28		/* sl_ma28.c                                 */
-PROTO((const int ,		/* n - order of matrix system                */
+(const int ,		/* n - order of matrix system                */
        const int ,		/* nnz - nominal number of nonzeroes in a    */
        double [],		/* a - vector of nonzeroes in a matrix       */
        int [],			/* ija - column numbers nonzero entries      */
        double [],		/* x - space for solution vector             */
-       double []));		/* b - right hand side vector                */
+       double []);		/* b - right hand side vector                */
 
 extern void row_scaling		/* sl_matrix_util.c                          */
-PROTO((const int ,		/* N                                         */
+(const int ,		/* N                                         */
        double [],		/* a                                         */
        int [],			/* ija                                       */
        double [],		/* b                                         */
-       double []));		/* scale                                     */
+       double []);		/* scale                                     */
 
 /*****************************************************************************/
 
@@ -129,35 +129,35 @@ PROTO((const int ,		/* N                                         */
  */
 
 extern void luf			/* sl_lu_fill.c */
-PROTO((const int,		/* N - order of matrix */
+(const int,		/* N - order of matrix */
        const int ,		/* NExt - number of external unknowns */
        const int ,		/* M - number of nonzero matrix entries in a */
        double [],		/* a - nonzero matrix values */
        int [],			/* ija - column ptrs, nonzero matrix values */
        double [],		/* x - RHS on input, solution vector on out */
-       const int ));		/* factor_flag - what to do */
+       const int );		/* factor_flag - what to do */
 
 extern void aztec_stringer      /* Called after AZ_solve(...) */
-PROTO((int,                     /* status[AZ_why] */
+(int,                     /* status[AZ_why] */
        double,                  /* status[AZ_its] */
-       char *));                /* status string  */
+       char *);                /* status string  */
 
 extern void solve_NxN_system
-PROTO((dbl *,			/* A */ 
+(dbl *,			/* A */ 
        dbl *,                   /* b */
        dbl *,                   /* x */
        const int,               /* rank (<= row_size) */
-       const int));             /* row_size (A's 2nd dimension is row_size) */
+       const int);             /* row_size (A's 2nd dimension is row_size) */
 
 #if defined(ENABLE_AMESOS) && defined(TRILINOS)
 /* Use prototype in sl_amesos_interface.h */
 #else
 extern void amesos_solve_msr
-PROTO((char *,
+(char *,
        struct Aztec_Linear_Solver_System *,
        double *,
        double *,
-       int ));
+       int );
 #endif
 
 /*****************************************************************************/

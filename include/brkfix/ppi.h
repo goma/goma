@@ -34,7 +34,7 @@ const char filter[]="sed -e 's/#.*$//' -e '/^[ 	]*$/d' -e 's/[ 	]*$//'";
 #endif
 
 EXTERN void brk_pre_process
-PROTO((char *));		/* input filename */
+(char *);		/* input filename */
 
 #endif /* _PPI_H */
 

@@ -32,10 +32,10 @@
 extern int Chemkin_Needed;
 
 #ifdef USE_CHEMKIN
-extern int ck_decide_vol_chem    PROTO ((CPC_VOLDOMAIN_STRUCT *));
-extern int chemkin_mat_prop_init PROTO ((MATRL_PROP_STRUCT *, int,
-				 	 PROBLEM_DESCRIPTION_STRUCT *));
-extern void chemkin_initialize_mp PROTO((void));
+extern int ck_decide_vol_chem    (CPC_VOLDOMAIN_STRUCT *);
+extern int chemkin_mat_prop_init (MATRL_PROP_STRUCT *, int,
+				 	 PROBLEM_DESCRIPTION_STRUCT *);
+extern void chemkin_initialize_mp (void);
 
 /*
  * externals in the mm_placid.c file
@@ -64,7 +64,7 @@ extern int placid(int, int, double, double[], double, double ,
 /**************************************************************************/
 
 #else
-extern void chemkin_not_linked PROTO ((char *errString));
+extern void chemkin_not_linked (char *errString);
 #endif
 
 

@@ -27,7 +27,7 @@ int w;
 
 #ifdef HAVE_FRONT
 extern int mf_setup
-PROTO((int *,			/* nelem_glob */
+(int *,			/* nelem_glob */
        int *,			/* neqn_glob */
        int *,			/* mxdofel */
        int *,			/* nfullsum */
@@ -39,7 +39,7 @@ PROTO((int *,			/* nelem_glob */
        int *,			/* loc_dof */
        int *,			/* constraint */
        const char *,		/* cname */
-       int *));			/* allocated */
+       int *);			/* allocated */
 #endif
 
 /*

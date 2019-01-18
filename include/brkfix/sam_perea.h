@@ -29,7 +29,7 @@
 #endif
 
 EXTERN void assess_weights	/* sam_perea.c */
-PROTO((Exo_DB *,		/* to find out num nodes, elems, etc. */
+(Exo_DB *,		/* to find out num nodes, elems, etc. */
        Bevm ***,		/* mult - basic eqnvar multiplicity */
        int ***,			/* evd - eqnvar dependency */
        int *,			/* ebl - elemblock list */
@@ -46,6 +46,6 @@ PROTO((Exo_DB *,		/* to find out num nodes, elems, etc. */
        int *,			/* var_node_names - forea node-node interxtn */
        int *,			/* nnz_contribute - number non zeroes into A */
        int *,			/* nat_contribute - num assembed terms for A */
-       int *));			/* ccs_contribute - comm cost sum this int.*/
+       int *);			/* ccs_contribute - comm cost sum this int.*/
 
 #endif /* _SAM_PEREA_H */

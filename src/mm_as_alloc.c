@@ -44,21 +44,21 @@
 #include "goma.h"
 
 static void init_Viscoelastic_Nonmodal
-PROTO((struct Viscoelastic_Nonmodal *));
+(struct Viscoelastic_Nonmodal *);
 
 static void init_Viscoelastic_Constitutive
-PROTO((struct Viscoelastic_Constitutive *));
+(struct Viscoelastic_Constitutive *);
 
-static void init_Generalized_Newtonian PROTO((GEN_NEWT_STRUCT *));
+static void init_Generalized_Newtonian (GEN_NEWT_STRUCT *);
 
 static void init_Elastic_Constitutive
-PROTO((struct Elastic_Constitutive *));
+(struct Elastic_Constitutive *);
 
 static void init_Viscoplastic_Constitutive
-PROTO((struct Viscoplastic_Constitutive *));
+(struct Viscoplastic_Constitutive *);
 
 static int shape_list
-PROTO((Exo_DB *));
+(Exo_DB *);
 
 
 // Definitions and initializations of global pointers

@@ -26,15 +26,15 @@
 #endif
 
 EXTERN void exchange_dof
-PROTO((Comm_Ex *,		/* cx - ptr to communications exchange info */
+(Comm_Ex *,		/* cx - ptr to communications exchange info */
        Dpi *,			/* dpi - distributed processing info */
        double *,/* x - local processor dof-based vector */
-       int));		
+       int);		
 
 
 EXTERN void exchange_node
-PROTO((Comm_Ex *cx,		/* cx - ptr to communications exchange info */
+(Comm_Ex *cx,		/* cx - ptr to communications exchange info */
        Dpi *d,			/* dpi - distributed processing info */
-       double *a));		/* x - local processor node-based vector */
+       double *a);		/* x - local processor node-based vector */
 
 #endif /* _DP_COMM_H */

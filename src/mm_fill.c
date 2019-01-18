@@ -84,12 +84,12 @@
 double mm_fill_total;
 
 static void load_lec 
-PROTO(( Exo_DB*,                 /* Exodus database pointer */
+( Exo_DB*,                 /* Exodus database pointer */
 	int ,                    /* element number we are working on */
 	struct Aztec_Linear_Solver_System *,
 	double [],		/* Solution vector */
 	double [],		/* Residual vector */
-	double *));              /* element stiffness Matrix for frontal solver*/
+	double *);              /* element stiffness Matrix for frontal solver*/
 static void zero_lec(void);
 
 

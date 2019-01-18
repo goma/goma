@@ -150,13 +150,13 @@ static int get_variable_call_count = 0;
  */
 
 static void get_variable
-PROTO((const int netcdf_unit,
+(const int netcdf_unit,
        const nc_type netcdf_type,
        const int num_dimensions,
        const int dimension_val_1,
        const int dimension_val_2,
        const int variable_identifier,
-       void *variable_address));
+       void *variable_address);
 
 /**********************************************************************/
 /**********************************************************************/

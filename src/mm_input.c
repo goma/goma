@@ -59,7 +59,7 @@ static char rcsid[] =
 #include "goma.h"
 
 extern void print_code_version	/* main.c -  */
-PROTO((void ));
+(void );
 
 /*
  * Hey! This is the *one* place where these are defined. All other locations
@@ -165,8 +165,8 @@ static char current_mat_file_name[MAX_FNL];
  *    rd_eq_specs()			void		read_input_file	
  *
  */
-static double parse_press_datum_input PROTO((const char *));
-static void read_MAT_line PROTO((FILE *, int, char *));
+static double parse_press_datum_input (const char *);
+static void read_MAT_line (FILE *, int, char *);
 
 /*
  *	Read the input file for FEM reacting flow code

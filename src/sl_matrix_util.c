@@ -411,9 +411,9 @@ pmax_matrix_norm ( int N,
 /* EXTERNAL FUNCTIONS and PROTOTYPES */
 extern double
 gmax_double
-   PROTO (( double,              /* var  */
+   ( double,              /* var  */
             int,                 /* me   */
-            int  ));             /* dim  */
+            int  );             /* dim  */
 
 
   row_max = 0.0;

@@ -29,7 +29,7 @@
 
 
 EXTERN int apply_integrated_curve_bc
-PROTO((double [],		/* x - soln vector for the current processor */
+(double [],		/* x - soln vector for the current processor */
        double [],		/* resid_vector - for the current processor  */
        const double ,		/* delta_t - current time step size          */
        const double ,		/* theta - parameter to vary time integration 
@@ -45,10 +45,10 @@ PROTO((double [],		/* x - soln vector for the current processor */
        const int ,		/* num_total_nodes */
        const int ,		/* bc_application - flag indicating whether 
 				 * to integrate strong or weak BC's          */
-       const Exo_DB *));	/* exo - ptr to FE database                  */
+       const Exo_DB *);	/* exo - ptr to FE database                  */
 
 EXTERN int apply_point_colloc_edge_bc
-PROTO((double [],		/* x - Soln vector                           */
+(double [],		/* x - Soln vector                           */
        double [],		/* x_old - Soln vector, previous timestep    */
        double [],		/* x_older - Soln vector, previous2 timestep */
        double [],		/* xdot - current solution                   */
@@ -71,6 +71,6 @@ PROTO((double [],		/* x - Soln vector                           */
 				 * list to keep track of nodes at which solid 
 				 * contributions have been transfered to 
 				 * liquid (fluid-solid boundaries)           */
-       const double));		/* time_value                                */
+       const double);		/* time_value                                */
 
 #endif /* _BC_CURVE_H */

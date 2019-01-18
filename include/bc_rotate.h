@@ -26,7 +26,7 @@
 #endif
 
 EXTERN int apply_rotated_bc
-PROTO((double [],		/* resid_vector                              */
+(double [],		/* resid_vector                              */
        struct elem_side_bc_struct *[], /* first_elem_side_BC_array
 					* An array of pointers to the first 
 					* surface integral defined for each 
@@ -39,18 +39,18 @@ PROTO((double [],		/* resid_vector                              */
        const int ,		/* ielem_dim                                 */
        const int ,		/* iconnect_ptr                              */
        const int ,		/* num_total_nodes                           */
-       const Exo_DB *));	/* exo - ptr to FE database                  */
+       const Exo_DB *);	/* exo - ptr to FE database                  */
 
 EXTERN void rotate_mesh_eqn
-PROTO((const int ,		/* id - Elemental stiffness matrix row index */
+(const int ,		/* id - Elemental stiffness matrix row index */
        const int ,		/* I - Global node number                    */
        const int ,		/* iconnect_ptr - Pointer to beginning of 
 				 * connectivity list for the current element */
        const int ,		/* dim - physical dim of problem             */
-       struct Aztec_Linear_Solver_System *));
+       struct Aztec_Linear_Solver_System *);
 
 EXTERN void rotate_res_jac_mesh
-PROTO((int ,			/* irow_index - Elemental stiffness matrix   *
+(int ,			/* irow_index - Elemental stiffness matrix   *
 				 * row index                                 */
        int ,			/* Global node number                   */
        int ,			/* Pointer to beginning of connectivity list
@@ -69,10 +69,10 @@ PROTO((int ,			/* irow_index - Elemental stiffness matrix   *
 					     * surface tangent vector 1 or 2 *
 					     * component-i wrt 
 					     * displacement-j at node-k      */
-       double ));		/* sign - of tangent vector                  */
+       double );		/* sign - of tangent vector                  */
 
 EXTERN void rotate_res_jac_mom
-PROTO((int ,			/* irow_index - Elemental stiffness matrix   *
+(int ,			/* irow_index - Elemental stiffness matrix   *
 				 * row index                                 */
        int ,			/* I - Global node number                    */
        int ,  		        /* iconnect_ptr - Pointer to beginning of    *
@@ -93,34 +93,34 @@ PROTO((int ,			/* irow_index - Elemental stiffness matrix   *
        /* Array of derivatives ([i][j][k]) of surface
 	  tangent vector 1 or 2: component-i
 	  wrt displacement-j at node-k         */
-       double  ));		/* sign - of tangent vector                  */
+       double  );		/* sign - of tangent vector                  */
 
 EXTERN void rotate_momentum_eqn
-PROTO((const int ,		/* id - Elemental stiffness matrix row index */
+(const int ,		/* id - Elemental stiffness matrix row index */
        const int ,		/* I - Global node number                    */
        const int ,		/* iconnect_ptr - Pointer to beginning of 
 				 * connectivity list for the current element */
        const int ,		/* dim - physical dim of problem             */
-       struct Aztec_Linear_Solver_System *));	
+       struct Aztec_Linear_Solver_System *);	
 
 EXTERN void calculate_all_rotation_vectors
-PROTO((Exo_DB *,		/* exo - ptr to the whole FE mesh */
-       double []));		/* x - Soln vector */
+(Exo_DB *,		/* exo - ptr to the whole FE mesh */
+       double []);		/* x - Soln vector */
 
 EXTERN void calculate_2D_rotation_vectors
-PROTO((Exo_DB *,		/* exo - ptr to the whole FE mesh */
-       double []));		/* x - Soln vector */
+(Exo_DB *,		/* exo - ptr to the whole FE mesh */
+       double []);		/* x - Soln vector */
 
 									
 EXTERN void append_vectors
-PROTO (( int , 
+( int , 
 		 int ,
 		 int ,
 		 int *,
-		 ROTATION_VECTORS_STRUCT ** ));
+		 ROTATION_VECTORS_STRUCT ** );
 
 EXTERN void get_ss_element_list
-PROTO((const int ,		/* ss_id1 - side set number for elementlist */
+(const int ,		/* ss_id1 - side set number for elementlist */
        const int ,		/* ss_id2 - side set number for elementlist */
        const int ,		/* ss_id3 - side set number for elementlist */
        int *,			/* num_elem - length of element list        */
@@ -128,10 +128,10 @@ PROTO((const int ,		/* ss_id1 - side set number for elementlist */
        int *,			/* ss_ptr - ss_index in EXODUS II db        */
        const int ,		/* eq - number of vector equation type      */
        const int ,		/* irc - counter of rotation conditions     */
-       const Exo_DB *));	/* exo - the mesh */
+       const Exo_DB *);	/* exo - the mesh */
 
 EXTERN int set_pointers_to_vectors
-PROTO((struct Rotation_Vectors **, /* normal                                 */
+(struct Rotation_Vectors **, /* normal                                 */
        struct Rotation_Vectors **, /* tangent1                               */
        struct Rotation_Vectors **, /* tangent2                               */
        struct Rotation_Vectors **, /* normal2                                */
@@ -143,14 +143,14 @@ PROTO((struct Rotation_Vectors **, /* normal                                 */
        const int ,		/* I - global node number                    */
        const int ,		/* eq - number of vector equation type       */
        const int ,		/* dim - dimensions                          */
-       const int ));		/* irc - counter for rotation Specs          */
+       const int );		/* irc - counter for rotation Specs          */
 
 
 EXTERN void rotate_eqns_at_node_2D
-PROTO(( int ,
+( int ,
 		int ,
 		int ,
-		struct Aztec_Linear_Solver_System *));
+		struct Aztec_Linear_Solver_System *);
 
 #ifdef STATIC
 
@@ -159,7 +159,7 @@ PROTO(( int ,
  */
 
 static void rotate_res_jac_mesh
-PROTO((const int ,		/* irow_index - Elemental stiffness row      */
+(const int ,		/* irow_index - Elemental stiffness row      */
        const int ,		/* I - Global node number                    */
        const int ,		/* iconnect_ptr - Pointer to beginning of 
 				 * connectivity list for the current element */
@@ -177,10 +177,10 @@ PROTO((const int ,		/* irow_index - Elemental stiffness row      */
 				   * ([i][j][k]) of surface tangent vector 
 				   * 1 or 2: component-i wrt displacement-j
 				   * at node-k                               */
-       const double sign));	/* sign of tangent vector                    */
+       const double sign);	/* sign of tangent vector                    */
 
 static void rotate_res_jac_mom
-PROTO((const int ,		/* irow_index - Elemental stiffness row      */
+(const int ,		/* irow_index - Elemental stiffness row      */
        const int ,		/* I - Global node number                    */
        const int ,		/* iconnect_ptr - Pointer to beginning of 
 				 * connectivity list for the current element */
@@ -199,11 +199,11 @@ PROTO((const int ,		/* irow_index - Elemental stiffness row      */
 				  * ([i][j][k]) of surface tangent vector 1 or
 				  * 2: component-i wrt displacement-j at 
 				  * node-k                                   */
-       const double sign));	/* sign of tangent vector                    */
+       const double sign);	/* sign of tangent vector                    */
 
 
 static void load_element_indices
-PROTO((const Exo_DB *,		/* exo - ptr to FE db                        */
+(const Exo_DB *,		/* exo - ptr to FE db                        */
        const int ,		/* mn - material number                      */
        const int ,		/* ielem - element index number              */
        int *,			/* iconnect_ptr                              */
@@ -211,7 +211,7 @@ PROTO((const Exo_DB *,		/* exo - ptr to FE db                        */
        int *,			/* ip_total                                  */
        int *,			/* num_local_nodes                           */
        int *,			/* ielem_dim                                 */
-       int *));			/* dim                                       */
+       int *);			/* dim                                       */
 
 #endif
 

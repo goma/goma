@@ -28,12 +28,12 @@
 #endif
 
 EXTERN void lu
-PROTO((const int ,		/* N                                         */
+(const int ,		/* N                                         */
        const int ,		/* NExt                                      */
        const int ,		/* M                                         */
        double [],		/* a                                         */
        int [],			/* ija                                       */
        double [],		/* x                                         */
-       const int ));		/* factor_flag                               */
+       const int );		/* factor_flag                               */
 
 #endif /* _SL_LU_H */

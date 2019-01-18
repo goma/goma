@@ -76,47 +76,47 @@
 
 /*
 static int interface_on_side 
-PROTO(( double isoval,      
+( double isoval,      
 	int ielem_type,      
 	int id_side ));        
 */
 static void retrieve_node_coordinates
-PROTO(( int ,
+( int ,
 	double *,
 	double *,
-	double ** ));
+	double ** );
 
 static struct LS_Surf_List * create_surfs_from_ns
-PROTO (( int, 
+( int, 
          double *,
-         Exo_DB * ));
+         Exo_DB * );
 
 static struct LS_Surf_List * create_surfs_from_ss
-PROTO (( int, 
+( int, 
          double *,
-         Exo_DB * ));
+         Exo_DB * );
          
 static struct LS_Surf_List * create_surfs_from_iso
-PROTO (( int, 
+( int, 
          double,
          double *,
-         Exo_DB * ));
+         Exo_DB * );
                   
 static void initialize_sign
-PROTO (( int,
+( int,
          double *,
-         Exo_DB * ));
+         Exo_DB * );
 
 static double initial_level_set
-PROTO((double ,
+(double ,
        double ,
-       double   ));
+       double   );
 
 static double gradient_norm_err
-PROTO(( dbl *,
+( dbl *,
         Exo_DB *,
         Dpi *,
-        dbl  ));
+        dbl  );
 
 static int
 Hrenorm_simplemass( Exo_DB *exo,
@@ -131,7 +131,7 @@ Hrenorm_simplemass( Exo_DB *exo,
 
          
 static int Hrenorm_constrain
-PROTO(( Exo_DB *,
+( Exo_DB *,
         Comm_Ex *,
 	Dpi *,
 	double      [],
@@ -139,155 +139,155 @@ PROTO(( Exo_DB *,
 	int           ,
 	int           ,
 	int,
-        double ));
+        double );
 
 static double find_LS_mass
-PROTO(( const Exo_DB *,
+( const Exo_DB *,
 	const Dpi    *,
 	const double *,
 	double       *,
 	double      [],
-	int ));
+	int );
 
 static void find_quad_facets
-PROTO (( struct LS_Surf_List *,
+( struct LS_Surf_List *,
          int, 
          double,
 	 int *,
-         Exo_DB * ));
+         Exo_DB * );
 
 
 static int stash_node_displacements
-PROTO (( double **,
+( double **,
 		 int , 
 		 double *, 
-		 Exo_DB * ));
+		 Exo_DB * );
                   
 
 static int unique_surf
-PROTO (( struct LS_Surf_List *,
-         struct LS_Surf * ));
+( struct LS_Surf_List *,
+         struct LS_Surf * );
 
 
 static int point_on_ca_boundary
-PROTO (( int,
-         Exo_DB * ));
+( int,
+         Exo_DB * );
 
 static void find_intersections
-PROTO((  struct LS_Surf_List *,
+(  struct LS_Surf_List *,
 	 int,
          double,
-         Exo_DB * ));
+         Exo_DB * );
 
 static int knockout_point
-PROTO(( double [DIM],
+( double [DIM],
 		double [DIM], 
-		double  ));
+		double  );
 
 static struct LS_Surf_List *create_surfs_from_arc 
-PROTO(( double [DIM], 
+( double [DIM], 
 		double , 
 		double [DIM], 
-		double  ));
+		double  );
 
 static double find_arc_region_sign 
-PROTO(( struct LS_Surf_Arc_Data *,
-		double * ));
+( struct LS_Surf_Arc_Data *,
+		double * );
 
 static void compute_link_level_set
-PROTO (( double *, 
+( double *, 
          double *,
          double,
          int,
          double,
          double *,
          double *,
-         Integ_Elem * ));
+         Integ_Elem * );
 
 static struct LS_Surf * next_surf_or_subsurf
-PROTO (( struct LS_Surf_List *,
-         int  * ));
+( struct LS_Surf_List *,
+         int  * );
 
 static struct LS_Surf * create_next_surf_or_subsurf
-PROTO (( struct LS_Surf_List *, 
+( struct LS_Surf_List *, 
          int,
-         int ));
+         int );
 
 static double distance
-PROTO (( double *, 
-         double * ));
+( double *, 
+         double * );
 		 
 #ifdef PARALLEL
 static void  ddd_add_surf
-PROTO((  DDD , 
-	 struct LS_Surf * ));
+(  DDD , 
+	 struct LS_Surf * );
 #endif
 
 
 
 static int interface_in_grid
-PROTO(( SGRID * ));
+( SGRID * );
 
 static void divide_shape_fcn_tree 
-PROTO (( NTREE *,
-	 int ));
+( NTREE *,
+	 int );
 
 static void compute_shape_fcn_values 
-PROTO(( NTREE * )) ;
+( NTREE * ) ;
 
 static void gather_subtree_coords 
-PROTO (( NTREE *, 
+( NTREE *, 
 	 double *,
-	 double ( * )[DIM] ));
+	 double ( * )[DIM] );
 
 static void load_subtree_coords
-PROTO (( int, 
+( int, 
 	 NTREE *, 
-	 double (*)[DIM] ));
+	 double (*)[DIM] );
 
 /*
 static void print_shape_fcn_tree
-PROTO (( NTREE *)) ;
+( NTREE *)) ;
 */
 
 static void find_grid_LS_value
-PROTO (( SGRID * ));
+( SGRID * );
 
 
 static int current_elem_xfem_state
-PROTO (( int [],
+( int [],
          int *,
          double [],
-         const Exo_DB *));
+         const Exo_DB *);
 
 static double scalar_value_at_local_node 
-PROTO (( int ,
+( int ,
 	 int ,
 	 int ,
 	 int ,
 	 int ,
 	 double *,
-	 Exo_DB * )) ;
+	 Exo_DB * ) ;
 	 
 /*
 static double element_average
-PROTO(( int,
+( int,
 		double [],
 		const Exo_DB* ,
-		int ));
+		int );
 */
 
 static int vertex_on_element_boundary
-PROTO(( double [DIM],
+( double [DIM],
 		double *,
-		int * ));
+		int * );
 
 static void copy_distance_function
-PROTO(( double *,
-		double ** ));
+( double *,
+		double ** );
 
 static double determine_adc_probability 
-PROTO (( struct Boundary_Condition *,
+( struct Boundary_Condition *,
 		 int,
 		 Exo_DB *,
 		 double *,
@@ -295,65 +295,65 @@ PROTO (( struct Boundary_Condition *,
 		 int ,
 		 int *,
 		 double,
-		 double * ));
+		 double * );
 		 
 static void apply_adc_to_ss
-PROTO(( Exo_DB *, 
+( Exo_DB *, 
 		double *,  
 		int , 
-	    double  ));
+	    double  );
 
 
 static void apply_adc_to_elem
-PROTO ((Exo_DB *,
+(Exo_DB *,
 		double *,
 		int ,
 		int ,
 		int ,
 		int *,
 		double, 
-		double ));
+		double );
 
 static double determine_nearest_distance 
-PROTO(( Exo_DB *,
+( Exo_DB *,
 		double *,
 		int ,
-		int * ));
+		int * );
 		
 static int check_alignment 
-PROTO (( double ));
+( double );
 
 static struct LS_Surf *closest_other_surf
-PROTO(( struct LS_Surf_List *,
+( struct LS_Surf_List *,
 		double *,
 		Exo_DB *,
-		struct LS_Surf * ));
+		struct LS_Surf * );
 		
 static double find_adc_node
-PROTO(( int , 
+( int , 
 		  double *,
 		  Exo_DB *,
 		  struct LS_Surf *,
 		  double *,
-		  int  *  ));
+		  int  *  );
 		  
 static void apply_adc_function
-PROTO(( double *,
+( double *,
 		Exo_DB *,
 		double *,
 		double , 
-		double  ));
+		double  );
 		
 static int is_LS_spurious 
-PROTO(( Exo_DB* ,
+( Exo_DB* ,
 		double *,
 		int ,
 		double ,
-		double * ));		
+		double * );		
 static void purge_spurious_LS 
-PROTO(( double *,
+( double *,
 		Exo_DB *,
-		int ) );
+		int );
 
 #define GRADIENT TRUE
 #define STREAMWISE FALSE
@@ -1281,9 +1281,9 @@ assemble_level_correct(double afill[],	/* Jacobian matrix for fill equation  */
 
 #if 0
   extern dbl vec_dot
-  PROTO((const int n1,
+  (const int n1,
 	 dbl *v1,
-	 dbl *v2));
+	 dbl *v2);
 #endif
 
   dbl alpha = 0.5*ls->Length_Scale;
@@ -5606,7 +5606,7 @@ scalar_value_at_local_node ( int ielem,
 
 /*
 static double find_LS_value_on_side
-PROTO(( int ielem_type ,
+( int ielem_type ,
 	int id_side,
 	double s,
 	double t,  

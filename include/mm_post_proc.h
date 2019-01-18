@@ -43,7 +43,7 @@ EXTERN void post_process_global(double *x,	 /* Solution vector for the current p
 				double time);
 
 EXTERN void post_process_nodal  /* mm_post_proc.c                            */
-PROTO((double [],               /* x                                         */
+(double [],               /* x                                         */
        double **,               /* x_sens_p                                  */
        double [],               /* x_old                                     */
        double [],               /* xdot                                      */
@@ -58,10 +58,10 @@ PROTO((double [],               /* x                                         */
        Dpi *,                   /* dpi - ptr to distrib inf                  */
        RESULTS_DESCRIPTION_STRUCT *,  /* exodus description of variables   */
        char [],  /* exodus filename   */
-       int )); /* matrix offset */
+       int ); /* matrix offset */
 
 EXTERN void post_process_elem   /* mm_post_proc.c                            */
-PROTO((double [],               /* x - soln vector                           */
+(double [],               /* x - soln vector                           */
        double [],               /* x_old - soln vector at previous time step */
        double [],               /* xdot - time derivative of soln vector     */
        double [],               /* xdot_old                                  */
@@ -78,67 +78,67 @@ PROTO((double [],               /* x - soln vector                           */
        const double ,           /* delta_t                                   */
        Exo_DB * const,          /* exo                                       */
        Dpi * const,             /* dpi                                       */
-       struct Results_Description *));
+       struct Results_Description *);
 
 EXTERN void rd_post_process_specs /* mm_post_proc.c                          */
-PROTO((FILE *,                  /* ifp - input file pointer (strm to input)  */
-       char *));                /* input - latest buffer of read values      */
+(FILE *,                  /* ifp - input file pointer (strm to input)  */
+       char *);                /* input - latest buffer of read values      */
 
 EXTERN int load_nodal_tkn       /* mm_post_proc.c                            */
-PROTO((struct Results_Description *, /* rd                                   */
+(struct Results_Description *, /* rd                                   */
        int *,                   /* tnv                                       */
-       int *));                 /* tnv_post                                  */
+       int *);                 /* tnv_post                                  */
 
 EXTERN int load_elem_tkn        /* mm_post_proc.c                            */
-PROTO((struct Results_Description *, /* rd                                   */
+(struct Results_Description *, /* rd                                   */
        const Exo_DB *,           /* Exodus II database struct */
       int ,                     /* tev                                       */
-      int *));                  /* tev_post                                  */
+      int *);                  /* tev_post                                  */
 
 EXTERN int find_id_edge         /* mm_post_proc.c */
-PROTO((const int ,              /* ielem */
+(const int ,              /* ielem */
        const int ,              /* num_nodes_on_edge */
        const int [],            /* local_edge_node_list */
        int [],                  /* id_local_elem_coord */
        int *,                   /* param_dir - direction of parametric
                                  * edge curve */
-       const Exo_DB *));        /* exo */
+       const Exo_DB *);        /* exo */
 
 EXTERN int find_id_edge_TET         /* mm_post_proc.c */
-PROTO((const int ,              /* ielem */
+(const int ,              /* ielem */
        const int ,              /* num_nodes_on_edge */
        const int [],            /* local_edge_node_list */
        int [],                  /* id_local_elem_coord */
        int *,                   /* param_dir - direction of parametric
                                  * edge curve */
-       const Exo_DB *));        /* exo */
+       const Exo_DB *);        /* exo */
 
 EXTERN int count_nodes_on_SS    /* mm_post_proc.c                            */
-PROTO((const int ,              /* ss_id - SS id of Primary Side Set         */
+(const int ,              /* ss_id - SS id of Primary Side Set         */
        const int ,              /* ss_id2 - SS id of 2nd Side Set for edges  */
        const int ,              /* ss_id3 - SS id of 3rd Side Set for vtces  */
        const int ,              /* iconnect_ptr                              */
        const int ,              /* ielem                                     */
        const int ,              /* num_local_nodes                           */
        int [MDE],               /* local_ss_node_list                        */
-       int [MDE]));             /* local_elem_node_id                        */
+       int [MDE]);             /* local_elem_node_id                        */
 
 extern int find_id_elem		/* mm_post_proc_util.c */
-PROTO((const dbl ,		/* x_coordinate */
+(const dbl ,		/* x_coordinate */
        const dbl ,		/* y_coordinate */
        const dbl ,		/* z_coordinate */
        dbl [],          /*  solution vector  */
        const Exo_DB *,
        const int,      /*Starting element for contiguous search */
-       const int));    /*ending element for contiguous search */
+       const int);    /*ending element for contiguous search */
 
 extern int invert_isoparametric_map   /*mm_post_proc_util.c */
-PROTO (( int *,              /* Current element id */
+( int *,              /* Current element id */
         const dbl [],              /* x_coordinate */
         dbl [],                  /* s isoparametric coordinate (output)*/
         const Exo_DB *,
         dbl [],                 /*  x - solution vector  */
-	int *));		/*  velocity basis fcns  */
+	int *);		/*  velocity basis fcns  */
 
 
 extern int elem_order_for_nodal_connect(int *, const Exo_DB *);

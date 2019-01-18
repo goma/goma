@@ -88,17 +88,17 @@ static char rcsid[] = "$Id: exo_conn.c,v 5.3 2009-11-13 23:20:07 prschun Exp $";
  */
 
 static int int_intersect
-PROTO((int *,			/* a - first integer list	        (in) */
+(int *,			/* a - first integer list	        (in) */
        int *,			/* b - second integer list              (in) */
        const int ,		/* len_a - length of 1st integer list   (in) */
        const int ,		/* len_b - length of 2nd  integer list  (in) */
        int *,			/* ia - indeces intersections, 1st list (out)*/
-       int *));			/* ib - indeces intersections, 2nd list (out)*/
+       int *);			/* ib - indeces intersections, 2nd list (out)*/
 
 static int sides2nodes
-PROTO((const int ,		/* face - face number 0,1,...,num_faces-1    */
+(const int ,		/* face - face number 0,1,...,num_faces-1    */
        const int ,		/* shape - one of LINE_SEGMENT, etc.         */
-       int *));			/* local_indeces - gets filled w/ right ones */
+       int *);			/* local_indeces - gets filled w/ right ones */
 
 /*
  * From the PATRAN/EXODUS convention, generate a list of the GOMA id_sides
@@ -130,17 +130,17 @@ Spfrtn sr;
  * Prototype declarations of functions defined in this file.
  */
 static int get_num_faces	/* exo_conn.c */
-PROTO((char *));		/* elem_type */
+(char *);		/* elem_type */
 
 #if FALSE /* ................just for demo and debugging...................*/
 static void demo_elem_node_conn
-PROTO((Exo_DB *));		/* exo - pntr to EXODUS II FE database */
+(Exo_DB *);		/* exo - pntr to EXODUS II FE database */
 
 extern void demo_node_elem_conn
-PROTO((Exo_DB *));		/* exo - pntr to EXODUS II FE database */
+(Exo_DB *);		/* exo - pntr to EXODUS II FE database */
 
 static void demo_elem_elem_conn
-PROTO((Exo_DB *));		/* exo - pntr to EXODUS II FE database */
+(Exo_DB *);		/* exo - pntr to EXODUS II FE database */
 #endif
 
 /*

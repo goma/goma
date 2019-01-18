@@ -27,7 +27,7 @@
 #endif
 
 EXTERN double calc_error
-PROTO((double ***pixdata, 
+(double ***pixdata, 
        int pixsize[], 
        double resolution[],
        double pixorigin[],
@@ -35,7 +35,7 @@ PROTO((double ***pixdata,
        Exo_DB *exo, 
        int ipix_blkid,
        int si,
-       int N_ext));
+       int N_ext);
 
 EXTERN int find_xi (int elem_id,                /*known element id number*/
 		    const double x[DIM],        /*x,y,z coordinates of data point*/

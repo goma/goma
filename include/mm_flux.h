@@ -28,7 +28,7 @@
 
 
 EXTERN double evaluate_flux	/* mm_flux.c                                 */
-PROTO((const Exo_DB *,		/* exo - ptr to basic exodus ii mesh info    */
+(const Exo_DB *,		/* exo - ptr to basic exodus ii mesh info    */
        const Dpi *,             /* distributed processing info */
        const int ,		/* side_set_id - which SSID to evaluate flux */
        const int ,		/* quantity - HEAT_FLUX, FORCE_NORMAL, etc.  */
@@ -42,11 +42,11 @@ PROTO((const Exo_DB *,		/* exo - ptr to basic exodus ii mesh info    */
              double [],         /* J_AC - augmenting condition sensititives */
        const double ,		/* delta_t - time-step size                  */
        const double ,              /* time_value - current time                 */
-       const int ));            /* print flag                                */
+       const int );            /* print flag                                */
 
 
 EXTERN double evaluate_global_flux
-PROTO((const Exo_DB *,
+(const Exo_DB *,
        const Dpi *,
        const int,
        const int,
@@ -55,10 +55,10 @@ PROTO((const Exo_DB *,
        double *,
        const double [],
        const double,
-       const int ));
+       const int );
 
 EXTERN double evaluate_flux_sens        /* mm_flux.c                                 */
-PROTO((const Exo_DB *,          /* exo - ptr to basic exodus ii mesh info    */
+(const Exo_DB *,          /* exo - ptr to basic exodus ii mesh info    */
        const Dpi *,             /* distributed processing info */
        const int ,              /* side_set_id - which SSID to evaluate flux */
        const int ,              /* quantity - HEAT_FLUX, FORCE_NORMAL, etc.  */
@@ -77,10 +77,10 @@ PROTO((const Exo_DB *,          /* exo - ptr to basic exodus ii mesh info    */
        double **,               /* x_sens_p - sensitivity vector     */
        const double ,           /* delta_t - time-step size                  */
        const dbl ,              /* time_value - current time                 */
-       const int ));            /* print flag                                */
+       const int );            /* print flag                                */
 
 EXTERN double evaluate_volume_integral 
-PROTO((const Exo_DB *,
+(const Exo_DB *,
        const Dpi *,
        const int,
        const char *,
@@ -94,10 +94,10 @@ PROTO((const Exo_DB *,
        const double [],
        const double,
        const double,  
-       const int ));
+       const int );
 
 EXTERN int compute_volume_integrand
-PROTO((const int,
+(const int,
        const int,
        const int,
        const double *,
@@ -108,91 +108,91 @@ PROTO((const int,
        const double,
        const double,
        double [],
-       const Exo_DB *));
+       const Exo_DB *);
 
 EXTERN void compute_surface_integrand
-PROTO((const int,
+(const int,
        int,
        const int,
        const double *,
        double *,
-       double [] ));
+       double [] );
 
 EXTERN int adaptive_weight
-PROTO((double *, 
+(double *, 
        const int,
        const int,
        const double *,
        const double,
        const int,
-       const int ));
+       const int );
 
 EXTERN int solve_quadratic
-PROTO((const double,
+(const double,
        const double, 
        const double, 
-       double * ));
+       double * );
 
 #ifndef NO_CHEBYSHEV_PLEASE
 EXTERN int chebyshev_coeff_2DQ
-PROTO((const int ,
+(const int ,
        const double *,
        double [][2],
        int ,
        double *,
        double *,
        int *,
-       const int * ));
+       const int * );
 
 EXTERN void heaviside_chev_moments_2DQ
-PROTO (( const int,
+( const int,
 		 const int, 
 		 double *, 
 		 const double *,
 		 const int,
-		 const double * ));
+		 const double * );
 EXTERN void surfdet_chev_coeff_2DQ
-PROTO (( const int ,
+( const int ,
 		 const double *,
 		 const double *,
 		 double *,
 		 const int,
 		 const int,
-		 const double *  ));
+		 const double *  );
 
 EXTERN void delta_chev_moments_2DQ
-PROTO (( const int,
+( const int,
 		 double *, 
 		 const double *,
 		 const double *,
 		 const int,
-		 const double * ));
+		 const double * );
 
 #endif
 
 EXTERN int interface_crossing_1DQ
-PROTO((const double *,
-       double [2]));
+(const double *,
+       double [2]);
 
 EXTERN int interface_crossing_2DQ
-PROTO((const double *,
+(const double *,
        double [][2],
        int *,
        int *,
-       double [][MAX_PDIM] ));
+       double [][MAX_PDIM] );
 
 EXTERN void interface_inclination_2DQ
-PROTO(( const double *,
+( const double *,
 	const int ,
 	double *,
 	const int *,
-	double [][2] ));
+	double [][2] );
 
 EXTERN int interface_crossing_3DL
-PROTO (( const double *,
+( const double *,
 	 double [][2],
 	 int *,
-	 double [][MAX_PDIM] ));
+	 double [][MAX_PDIM] );
 
 
 

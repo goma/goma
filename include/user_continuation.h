@@ -32,25 +32,25 @@
 #endif
 
 EXTERN void update_user_parameter
-PROTO((double,			/* PARAMETER VALUE */
+(double,			/* PARAMETER VALUE */
        double*,                 /* UNKNOWN VECTOR */
        double*,                 /* UNKNOWN_DOT VECTOR */
        double*,                 /* x_AC VECTOR */
        Comm_Ex *,		/* cx  - array of communications structures */
        Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 EXTERN void update_user_TP_parameter
-PROTO((double,			/* PARAMETER VALUE */
+(double,			/* PARAMETER VALUE */
        double*,                 /* UNKNOWN VECTOR */
        double*,                 /* UNKNOWN_DOT VECTOR */
        double*,                 /* x_AC VECTOR */
        Comm_Ex *,		/* cx  - array of communications structures */
        Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 EXTERN int do_user_update
-PROTO((int,			/* Ptr to function number */
+(int,			/* Ptr to function number */
        int,			/* First update call (first param) */
        int,			/* First update call (second param) */
        int,			/* Type */
@@ -62,6 +62,6 @@ PROTO((int,			/* Ptr to function number */
        double,			/* Value */
        Comm_Ex *,		/* cx  - array of communications structures */
        Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 #endif /* _USER_CONTINUATION_H */

@@ -35,28 +35,28 @@ extern Comm_Ex **cx;
  */
 
 EXTERN void solve_problem
-PROTO((Exo_DB *,		/* exo - ptr to finite element mesh database */
+(Exo_DB *,		/* exo - ptr to finite element mesh database */
        Dpi *,  			/* dpi - ptr to distributed processing info */
-       dbl *));			/* te_out - return actual end time */
+       dbl *);			/* te_out - return actual end time */
 
 EXTERN int anneal_mesh		/* rf_solve.c */
-PROTO(( double [],		/* x - solution vector */
+( double [],		/* x - solution vector */
 	int ,			/* tev - number elem results */
 	int ,			/* tev_post - xtra elem res */
 	double *,               /* global variable values */
 	struct Results_Description  *,	/* rd - info about results */
 	double ,		/* time_value  */
 	Exo_DB *,		/* exo - entire mesh desc. */
-	Dpi *));		/* dpi - distr proc info */
+	Dpi *);		/* dpi - distr proc info */
 
 EXTERN int anneal_mesh_with_external_field   /* rf_solve.c */
-PROTO((const Exo_DB * ));                    /* *exo  */
+(const Exo_DB * );                    /* *exo  */
 
 #ifdef LIBRARY_MODE
 EXTERN int load_export_vars     /* rf_solve.c */
-PROTO((const int,               /* num_nodes */
+(const int,               /* num_nodes */
        dbl [],                  /* x - solution vector */
-       dbl *));                /* x_pp - post processing varibale vector */
+       dbl *);                /* x_pp - post processing varibale vector */
 #endif
 
 /*
@@ -64,12 +64,12 @@ PROTO((const int,               /* num_nodes */
  */
 
 EXTERN int setup_problem
-PROTO((Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+(Exo_DB *,		/* exo - ptr to finite element mesh database */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 EXTERN int free_problem
-PROTO((Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+(Exo_DB *,		/* exo - ptr to finite element mesh database */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 void
 predict_solution(int N, double delta_t, double delta_t_old,

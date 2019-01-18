@@ -27,18 +27,18 @@
 #endif
 
 EXTERN void noahs_raven			/* dp_vif.c */
-PROTO((void ));
+(void );
 
 EXTERN void noahs_ark			/* dp_vif.c */
-PROTO((void ));
+(void );
 
 EXTERN void noahs_dove			/* dp_vif.c */
-PROTO((void ));
+(void );
 
 EXTERN void raven_landing		/* dp_vif.c */
-PROTO((void ));
+(void );
 
 EXTERN void ark_landing			/* dp_vif.c */
-PROTO((void ));
+(void );
 
 #endif /* _DP_VIF_H */

@@ -98,19 +98,6 @@
 #define FALSE   0
 #endif
 
-#ifndef HAVE_PROTOTYPES
-#if defined(__STDC__) || defined(__GNUC__) || defined(__cplusplus) || defined(c_plusplus)
-#define  HAVE_PROTOTYPES
-#endif
-#endif
-
-#undef PROTO
-#ifdef HAVE_PROTOTYPES
-#define PROTO(x) x
-#else
-#define PROTO(x) ()
-#endif     
-
 /*
  * sprintf() returns different types on different machines...
  */

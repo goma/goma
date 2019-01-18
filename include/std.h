@@ -58,27 +58,6 @@
 #define VERSION "6.0.0"
 #endif
 
-/*****************************************************************************/
-/*
- *                  PROTOTYPES SECTION
- *
- *        Define the availability of prototypes. 
- */
-
-#ifndef HAVE_PROTOTYPES
-# if defined(__STDC__) || defined(__GNUC__) || defined(__cplusplus) || defined(c_plusplus)
-#     define	HAVE_PROTOTYPES
-# endif
-#endif
-
-#undef PROTO
-
-#ifdef HAVE_PROTOTYPES 
-#   define	PROTO(x)	x
-#else
-#   define	PROTO(x)	()
-#endif
-
 /***********************************************************************************/
 /*
  *                   MACHINE NAME SECTION

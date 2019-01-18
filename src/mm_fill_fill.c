@@ -80,7 +80,7 @@
 
 
 static int neighbor_fill
-PROTO((Exo_DB *,                /* exo                                       */
+(Exo_DB *,                /* exo                                       */
        dbl [],                  /* x                                         */
        int ,                    /* current_elem                              */
        int ,                    /* neighbor_elem                             */
@@ -91,10 +91,10 @@ PROTO((Exo_DB *,                /* exo                                       */
        int ,                    /* ielem_type                                */
        int ,                    /* ielem_type_fill                           */
        int [],                  /* node_to_fill                              */
-       dbl [][DIM]));           /* x_n                                       */
+       dbl [][DIM]);           /* x_n                                       */
 
 static int neighbor_species
-PROTO((Exo_DB *,                /* exo - ptr to exodus ii mesh information   */
+(Exo_DB *,                /* exo - ptr to exodus ii mesh information   */
        Dpi *,
        dbl [],                  /* x                                         */
        int ,                    /* current_elem                              */
@@ -107,7 +107,7 @@ PROTO((Exo_DB *,                /* exo - ptr to exodus ii mesh information   */
        int ,                    /* ielem_type_fill                           */
        int ,
        dbl **,                /* x_n                                       */
-       dg_neighbor_type *));
+       dg_neighbor_type *);
 
 
 

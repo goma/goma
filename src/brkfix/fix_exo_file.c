@@ -69,7 +69,7 @@ int *ebl;			/* element block list */
  */
 
 static void setup_exo_res_desc	/* fix.c */
-PROTO((Exo_DB *));		/* exo - ptr to database */
+(Exo_DB *);		/* exo - ptr to database */
 
 
 int

@@ -28,8 +28,8 @@
 #endif
 
 EXTERN int wr_dpi
-PROTO((Dpi *,			/* fantastic structure defd in "dpi.h" */
+(Dpi *,			/* fantastic structure defd in "dpi.h" */
        char *,			/* filename */
-       int ));			/* verbosity - how much to talk */
+       int );			/* verbosity - how much to talk */
 
 #endif /* _WR_DPI_H */

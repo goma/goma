@@ -28,10 +28,10 @@
 #endif
 
 EXTERN double user_post
-PROTO((dbl *));			/* param - ptr to user-defined list          */
+(dbl *);			/* param - ptr to user-defined list          */
 
 EXTERN int usr_ptracking
-PROTO((FILE * ,			/*  jfp - filename for output                */
+(FILE * ,			/*  jfp - filename for output                */
        const int ,		/*  part_id - particle id - starts at 1      */
        const double [],		/*  part_x - current particle coords         */
        const double [],		/*  part_v - current particle velocity       */
@@ -39,6 +39,6 @@ PROTO((FILE * ,			/*  jfp - filename for output                */
        const double [],		/*  part_vold - past velocity                */
        const int ,		/*  heading - flag for writing headings      */
        const double ,		/*  time_value - porticle time               */
-       const double ));		/*  time_step - time step                    */
+       const double );		/*  time_step - time step                    */
 
 #endif /* _USER_POST_H */

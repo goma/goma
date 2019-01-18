@@ -56,17 +56,17 @@ static char rcsid[] = "$Id: mm_numjac.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $"
 #include "goma.h"
 
 static void piksr2		/* mm_numjac.c                               */
-PROTO((int ,			/* n                                         */
+(int ,			/* n                                         */
        int [],			/* arr                                       */
        int [],			/* brr                                       */
-       dbl []));		/* crr                                       */
+       dbl []);		/* crr                                       */
 
 #ifdef FORWARD_DIFF_NUMJAC
 static void compute_numerical_jacobian_errors
-PROTO((dbl,			/* analytic value */
+(dbl,			/* analytic value */
        dbl,			/* numerical value */
        dbl [],			/* absolute error */
-       dbl []));		/* relative error */
+       dbl []);		/* relative error */
 #endif
 
 typedef struct {

@@ -36,7 +36,7 @@
  * Function declarations of static functions defined here.
  */
 
-static int proc_ident PROTO((const void *, const void *));
+static int proc_ident (const void *, const void *);
 
 /*
  * Count up the total number of node-node interactions in a mesh. Include

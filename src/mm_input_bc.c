@@ -108,10 +108,10 @@ Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
  */
 
 static int BC_consistency 
-PROTO((struct Boundary_Condition *));	/* BC_Type                           */
+(struct Boundary_Condition *);	/* BC_Type                           */
 
 static int detect_BC
-PROTO (( int, int )) ; 
+( int, int ) ; 
 
 /*
  *	This file is a break-off from the very large file mm_input.c.

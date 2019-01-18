@@ -29,7 +29,7 @@
 #endif
 
 EXTERN void write_coords
-PROTO((char *,			/* filename */
-       Exo_DB *));		/* EXODUS II database */
+(char *,			/* filename */
+       Exo_DB *);		/* EXODUS II database */
 
 #endif /* _WR_COORDS_H */

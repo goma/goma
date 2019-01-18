@@ -50,7 +50,7 @@ EXTERN int LSA_number_wave_numbers; /* length of LSA_wave_numbers */
 EXTERN int LSA_current_wave_number; /* index of current LSA_wave_number */
 
 EXTERN int solve_stability_problem /* ac_solve.c */
-PROTO((struct Aztec_Linear_Solver_System *,           
+(struct Aztec_Linear_Solver_System *,           
        double [],               /* x - Value of the solution vector */
        double ,                 /* delta_t - time step size */
        double ,                 /* theta - parm to vary time integration
@@ -72,10 +72,10 @@ PROTO((struct Aztec_Linear_Solver_System *,
        double *,                /* gvec */
        double,                  /* time_value */
        Exo_DB *,                /* ptr to finite element mesh database */
-       Dpi *));                 /* distributed processing information */
+       Dpi *);                 /* distributed processing information */
 
 EXTERN int solve_full_stability_problem /* ac_solve.c */
-PROTO((struct Aztec_Linear_Solver_System *,           
+(struct Aztec_Linear_Solver_System *,           
        double [],               /* x - Value of the solution vector */
        double ,                 /* delta_t - time step size */
        double ,                 /* theta - parm to vary time integration
@@ -97,10 +97,10 @@ PROTO((struct Aztec_Linear_Solver_System *,
        double *,                /* gvec */
        double,                  /* time_value */
        Exo_DB *,                /* ptr to finite element mesh database */
-       Dpi *));                 /* distributed processing information */
+       Dpi *);                 /* distributed processing information */
 
 EXTERN int solve_3D_of_2D_stability_problem /* ac_solve.c */
-PROTO((struct Aztec_Linear_Solver_System *,           
+(struct Aztec_Linear_Solver_System *,           
        double [],               /* x - Value of the solution vector */
        double ,                 /* delta_t - time step size */
        double ,                 /* theta - parm to vary time integration
@@ -122,27 +122,27 @@ PROTO((struct Aztec_Linear_Solver_System *,
        double *,                /* gvec */
        double,                  /* time_value */
        Exo_DB *,                /* ptr to finite element mesh database */
-       Dpi *));                 /* distributed processing information */
+       Dpi *);                 /* distributed processing information */
 
 EXTERN void output_stability_matrices
-PROTO((double *,
+(double *,
        double *,
        int *,
        int,
        int,
-       int));
+       int);
 
 EXTERN void compare_mass_matrices
-PROTO((double *,
+(double *,
        double *,
        double *,
        int *,
-       int));
+       int);
 
 extern void eggroll_init         /* replacement for sl_eggrollinit.c */
-PROTO((int ,                    /* Number of equations */
+(int ,                    /* Number of equations */
        int ,                    /* Number of non-zeroes */
        int *,                   /* Info for eigenvalue extraction */
-       dbl *));                 /* Info for eigenvalue extraction */
+       dbl *);                 /* Info for eigenvalue extraction */
 
 #endif /* _AC_STABILITY_H */

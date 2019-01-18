@@ -28,11 +28,11 @@
 #endif
 
 EXTERN double shape		/* rf_shape.c                                */
-PROTO((const double ,		/* s - quadrature point coordinates          */
+(const double ,		/* s - quadrature point coordinates          */
        const double ,		/* t                                         */
        const double ,		/* u                                         */
        const int ,		/* Ielem_type - element type                 */
        const int ,		/* Iquant - desired quantity (phi, phi_s, ...*/
-       const int ));		/* Inode - current element node              */
+       const int );		/* Inode - current element node              */
 
 #endif /* _RF_SHAPE_H */

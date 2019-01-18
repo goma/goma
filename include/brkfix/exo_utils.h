@@ -29,33 +29,33 @@
 #endif
 
 EXTERN void zero_base
-PROTO((Exo_DB *));		/* E - ptr to EXODUS II FE db                */
+(Exo_DB *);		/* E - ptr to EXODUS II FE db                */
 
 EXTERN void one_base
-PROTO((Exo_DB *));		/* E - ptr to EXODUS II FE db                */
+(Exo_DB *);		/* E - ptr to EXODUS II FE db                */
 
 #if 0
 EXTERN Element_shape type2shape
-PROTO((const Element_type ));
+(const Element_type );
 #endif
 
 EXTERN int find_element_friends  // Outputs number of friends found
-PROTO(( Exo_DB *,   // Exodus database
+( Exo_DB *,   // Exodus database
 	int,        // Element of which I want to find friends
-	int * ));   // (out) List of elements who are friends
+	int * );   // (out) List of elements who are friends
 
 EXTERN int find_local_node_number
-PROTO(( Exo_DB *,   // Exodus database
+( Exo_DB *,   // Exodus database
 	int,        // Element to inspect
-	int ));     // Global node number
+	int );     // Global node number
 
 EXTERN void find_edge_connected_nodes
-PROTO(( int,        // Local node number
-	int * ));   // Three edge-connected nodes
+( int,        // Local node number
+	int * );   // Three edge-connected nodes
 
 EXTERN int is_node_in_element
-PROTO(( Exo_DB *,   // Exodus database
+( Exo_DB *,   // Exodus database
 	int,        // Node number
-	int ));     // Element number
+	int );     // Element number
 
 #endif /* _EXO_UTILS_H */

@@ -29,12 +29,12 @@
 #endif
 
 EXTERN void rd_input
-PROTO((char *,			/* filename for input */
+(char *,			/* filename for input */
        Exo_DB *,		/* EXODUS II finite element database */
        Bevm ****,		/* basic eqnvar multiplicity */
        int ****,		/* eqnvar dependencies */
        int ****,		/* local node/dof existences */
-       int **));		/* number of basic eqnvars in ea eb */
+       int **);		/* number of basic eqnvars in ea eb */
 
 #endif /* _RD_IN_H */
 

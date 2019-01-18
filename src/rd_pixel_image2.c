@@ -75,16 +75,16 @@
 int first_time_fopen2 = TRUE;
 
 static double bi_interp
-PROTO ((double xg, double yg, 
+(double xg, double yg, 
 	double resolution[],
 	double ***pixdata,
-	int pixsize[]));
+	int pixsize[]);
 
 static double tri_interp
-PROTO ((double xg, double yg, double zg, 
+(double xg, double yg, double zg, 
 	double resolution[],
 	double ***pixdata,
-	int pixsize[]));
+	int pixsize[]);
 
 /*** Begin program *************************************************************/
 int

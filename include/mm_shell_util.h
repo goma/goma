@@ -23,54 +23,54 @@ extern int *num_elem_friends;
 extern int num_shell_blocks;
 
 EXTERN void init_shell_element_blocks
-PROTO((const Exo_DB *exo));      /* ExodusII database struct pointer */
+(const Exo_DB *exo);      /* ExodusII database struct pointer */
 
 EXTERN int is_shell_element_type
-PROTO((const int elem_type));   /* Element type index */
+(const int elem_type);   /* Element type index */
 
 EXTERN int is_shell_element
-PROTO((const int elem,          /* Element index */
-       const Exo_DB *exo));     /* ExodusII database struct pointer */
+(const int elem,          /* Element index */
+       const Exo_DB *exo);     /* ExodusII database struct pointer */
 
 EXTERN int is_shell_block
-PROTO((const int block_id,      /* Element block ID */
-       const Exo_DB *exo));     /* ExodusII database struct pointer */
+(const int block_id,      /* Element block ID */
+       const Exo_DB *exo);     /* ExodusII database struct pointer */
 
 EXTERN int solve_2x2            /* Solves A*x = b */
-PROTO((double a[DIM][DIM],
+(double a[DIM][DIM],
        double b[DIM],
-       double x[DIM]));
+       double x[DIM]);
 
 EXTERN int solve_3x3            /* Solves A*x = b */
-PROTO((double a[DIM][DIM],
+(double a[DIM][DIM],
        double b[DIM],
-       double x[DIM]));
+       double x[DIM]);
 
 EXTERN int find_stu_from_xyz    /* Inverts isoparametrix map to get xi */
-PROTO((const int,               /* Element of interest */
+(const int,               /* Element of interest */
        const double[DIM],       /* xyz coords in */
        double[DIM],             /* stu coords out */
-       const Exo_DB *exo));	   /* Ptr to Exodus structure */
+       const Exo_DB *exo);	   /* Ptr to Exodus structure */
 
 EXTERN int bulk_side_id_and_stu /* Determines bulk elem side shared by shell */
-PROTO((const int,		/* Bulk element number */
+(const int,		/* Bulk element number */
        const int,		/* Shell element number */
        const double[DIM],	/* Shell stu coords in */
        double[DIM],		/* Bulk stu coords out */
-       const Exo_DB *exo));	   /* Ptr to Exodus structure */
+       const Exo_DB *exo);	   /* Ptr to Exodus structure */
 
 EXTERN int load_neighbor_var_data  /* Creates neighbor assembly structures */
-PROTO((int el1,			   /* Local element number */
+(int el1,			   /* Local element number */
        int el2,			   /* Neighbor element number */
        int *ndofs,		   /* Neighbor variable DOF's */
        int *dof_map,               /* Shell-bulk local DOF conversion */
        int ndofptr[MAX_VARIABLE_TYPES][MDE],	/* neighbor dof pointer arrays	*/
        const int id_side,          /* id_side for bulk BC's */
        double xi[DIM],		   /* Local element stu coords */
-       const Exo_DB *exo));	   /* Ptr to Exodus structure */
+       const Exo_DB *exo);	   /* Ptr to Exodus structure */
 
 EXTERN int find_stu_on_shell    /* Converts bulk stu to shell stu */
-PROTO((const int bulk_elem,     /* Bulk element number */
+(const int bulk_elem,     /* Bulk element number */
        const int id_side,       /* Bulk element side ID (Exo/Patran) */
        const int shell_elem,    /* Shell element number */
        const int bulk_dim,      /* 2D or 3D bulk element */
@@ -78,63 +78,63 @@ PROTO((const int bulk_elem,     /* Bulk element number */
        const double t,          /* Bulk xi[1] */
        const double u,          /* Bulk xi[2] */
        double xi2[DIM],         /* Shell stu coords */
-       const Exo_DB *exo));       
+       const Exo_DB *exo);       
 
 EXTERN int find_stu_on_bulk     /* Converts shell stu to bulk stu */
-PROTO((const int id_side,       /* Bulk element side ID (Exo/Patran) */
+(const int id_side,       /* Bulk element side ID (Exo/Patran) */
        const int bulk_dim,      /* 2D or 3D bulk element */
        const double s,          /* Shell xi[0] */
        const double t,          /* Shell xi[1] */
-       double xi2[DIM]));       /* Bulk stu coords */
+       double xi2[DIM]);       /* Bulk stu coords */
 
 EXTERN int shell_normal_div_s   /* Loads shell normal surface divergence */
-PROTO((double *div_s_nv,	/* Surface divergence of normal (scalar) */
+(double *div_s_nv,	/* Surface divergence of normal (scalar) */
        double d_div_s_nv_dnv[DIM][MDE],     /* Self-sensitivities */
-       double d_div_s_nv_dmesh[DIM][MDE])); /* Mesh sensitivities */
+       double d_div_s_nv_dmesh[DIM][MDE]); /* Mesh sensitivities */
 
 EXTERN void lubrication_shell_initialize
-PROTO((
+(
        int *n_dof,           // Degrees of freedom
        int *dof_map,         // Map of DOFs
        int id_side,          // Side ID
        double xi[DIM],       // Local STU coordinates
        const Exo_DB *exo,    // Exodus database
        int use_def           // Use deformed normal anyway
-       ));
+       );
 
 EXTERN void Inn
-PROTO((
+(
        double v[DIM],        // Input vector
        double w[DIM]         // Rotated output vector
-       ));
+       );
 
 EXTERN void ShellRotate
-PROTO((
+(
        double v[DIM],                 // Input vector
        double dv_dmx[DIM][DIM][MDE],  // Input vector mesh sensitivity
        double w[DIM],                 // Rotated output vector
        double dw_dmx[DIM][DIM][MDE],  // Rotated output vector mesh sensitivity
        int ndof                       // Number of DOFs for mesh equations
-       ));
+       );
 
 EXTERN void calculate_lub_q_v
-PROTO((
+(
        const int EQN, 
        double time,
        double dt,
        double xi[DIM],
        const Exo_DB *exo
-     ));
+     );
 
 EXTERN void calculate_lub_q_v_old
-PROTO((
+(
        double time_old,
        double dt_old,
        double xi[DIM],
        const Exo_DB *exo
-     ));
+     );
 EXTERN void ShellBF
-PROTO((
+(
        int ev,                     // Equation or variable to fetch basis functions
        int ii,                     // Integer for which DOF to fetch
        double *phi_i,
@@ -143,24 +143,24 @@ PROTO((
        double d_gradII_phi_i_dx[DIM][DIM][MDE],
        int ndof,
        int *dof_map         // Map of DOFs
-       ));
+       );
 
 EXTERN double shell_saturation_pressure_curve
-PROTO((
+(
        double P,
        double *dSdP,
        double *dSdP_P
-       ));
+       );
 
 
 EXTERN void calculate_lub_q_v_nonnewtonian
-PROTO((
+(
        double time,
        double dt
-     ));
+     );
 
 EXTERN void calculate_lub_q_v_nonnewtonian_sens
-PROTO((  double mu,
+(  double mu,
          double H,
          double veloU[DIM],
          double veloL[DIM],
@@ -173,6 +173,6 @@ PROTO((  double mu,
          double shear_bot_minus,
          double eps_top,
          double eps_bot  
-     ));
+     );
 
 #endif /* _MM_FILL_SHELL_H */

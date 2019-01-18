@@ -92,23 +92,23 @@ double pressure_datum_value = 0.0; /* value of the pressure datum */
 /** P R O T O   D E F I N I T I O N S   O  F   S T AT I C   F U N C T IO N S **/
 
 static int 
-set_nodal_Dirichlet_BC PROTO (( 
+set_nodal_Dirichlet_BC ( 
 			       int 		        inode,
 			       int                        ibc,
 			       struct Boundary_Condition *boundary_condition,
 			       double		        x[],
 			       double                     xdot[],
 			       int
-			       ));
+			       );
 
 static void
-setup_Elem_BC PROTO ((  struct elem_side_bc_struct **elem_side_bc, 
+setup_Elem_BC (  struct elem_side_bc_struct **elem_side_bc, 
     			struct Boundary_Condition  *bc_type, 
     			int ibc, int num_nodes_on_side,  int ielem, int *,
-			Exo_DB *exo));
+			Exo_DB *exo);
 
 static struct elem_edge_bc_struct *setup_Elem_Edge_BC	/* mm_bc.c */
-PROTO ((struct elem_edge_bc_struct **,			/* elem_edge_bc */
+(struct elem_edge_bc_struct **,			/* elem_edge_bc */
 	struct Boundary_Condition  *,			/* bc_type */
 	int ,						/* ibc */
 	int ,						/* num_nodes_on_edge */
@@ -117,14 +117,14 @@ PROTO ((struct elem_edge_bc_struct **,			/* elem_edge_bc */
 	int ,						/* ielem */
 	int [],						/* local_edge_node_list
 							 */
-	Exo_DB *));					/* exo */
+	Exo_DB *);					/* exo */
 
 static int 
-same_side     PROTO ((  int [], int [], int ));
+same_side     (  int [], int [], int );
 
 static void 
-print_Elem_Surf_BC PROTO (( int ielem, struct elem_side_bc_struct *elem_side_bc
-			    ));
+print_Elem_Surf_BC ( int ielem, struct elem_side_bc_struct *elem_side_bc
+			    );
 static void elem_side_matrl_list(struct elem_side_bc_struct *);
 static void vcrr_determination(struct elem_side_bc_struct *,
 			       struct Boundary_Condition *, int, int);

@@ -85,31 +85,31 @@ static char rcsid[] = "$Id: mm_fill_util.c,v 5.24 2010-02-26 21:40:14 prschun Ex
 
 static int
 find_MSR_problem_graph
-PROTO((int *[],                 /* ija - column pointer array                */
+(int *[],                 /* ija - column pointer array                */
        int ,                    /* itotal_nodes - number of nodes this
                                  * processor is resposible for               */
-       Exo_DB *));              /* exo - ptr to FE EXODUS II database        */
+       Exo_DB *);              /* exo - ptr to FE EXODUS II database        */
 
 static int
 find_problem_graph_fill
-PROTO((int *[],                 /* ija - column pointer array                */
+(int *[],                 /* ija - column pointer array                */
        int ,                    /* itotal_nodes - number of nodes this
                                  * processor is resposible for               */
        int ,                    /* max_neigh_elem - maximum number of elements
                                  * containing a given node                   */
        int [],                  /* node_to_fill                              */
-       Exo_DB *));              /* exo - ptr to FE EXODUS II database        */
+       Exo_DB *);              /* exo - ptr to FE EXODUS II database        */
 
 static int
 find_VBR_problem_graph 
-PROTO ((   int *[], 
+(   int *[], 
 	   int *[],
 	   int *[],
 	   int *[],
 	   int *[],
 	   int  ,
 	   int  ,
-	   Exo_DB * ));
+	   Exo_DB * );
 
 /*****************************************************************************/
 /*****************************************************************************/

@@ -44,34 +44,34 @@
 extern char Err_Msg[MAX_CHAR_ERR_MSG];
 
 EXTERN void eh
-PROTO((const int ,	       	/* error_flag                                */
+(const int ,	       	/* error_flag                                */
        const char * const,      /* file                                      */
        const int ,	       	/* line                                      */
-       const char * const));	/* message                                   */
+       const char * const);	/* message                                   */
       
 EXTERN void wh
-PROTO((const int ,	       	/* error_flag                                */
+(const int ,	       	/* error_flag                                */
        const char * const,      /* file                                      */
        const int ,	       	/* line                                      */
        const char * const,      /* message                                   */
-       int * const));		/* iw                                        */
+       int * const);		/* iw                                        */
       
 extern void aborth(const int, const char * const, const int,
 		   const char * const);
 
 EXTERN void save_place		/* mm_eh.c                                   */
-PROTO((const int ,		/* severity                                  */
+(const int ,		/* severity                                  */
        const char * const,	/* routine_name                              */
        const char * const,	/* file_name                                 */
-       const int ));		/* line_number                               */
+       const int );		/* line_number                               */
 
 EXTERN void logprintf		/* mm_eh.c                                   */
-PROTO((const char *,		/* format                                    */
-       ... ));			/* var args */
+(const char *,		/* format                                    */
+       ... );			/* var args */
 	   
 	   
 EXTERN void smooth_stop_with_msg
-PROTO((const char *  msg));
+(const char *  msg);
 
 
 

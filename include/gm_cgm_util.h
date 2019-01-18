@@ -28,17 +28,17 @@
 #include "gm_cgm_typedefs.h"
 
 EXTERN void print_edge_info
-PROTO((void));
+(void);
 
 EXTERN void cgm_initialize
-PROTO((void));
+(void);
 
 EXTERN void create_cgm_geometry
-PROTO((void));
+(void);
 
 EXTERN int read_ACIS_file
-PROTO((char *fname,		/* name of file to read from. */
-       BodyHandle *));		/* CGM body to put it in. */
+(char *fname,		/* name of file to read from. */
+       BodyHandle *);		/* CGM body to put it in. */
 
 #define MAX_CGM_INPUT_STRING_LENGTH 40000
 

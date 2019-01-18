@@ -181,15 +181,15 @@ extern int Particle_Number_PBCs;
 extern PBC_t *PBCs;
 
 EXTERN void initialize_particles
-PROTO((const Exo_DB *,
+(const Exo_DB *,
        dbl * const,
        dbl * const,
        dbl * const,
        dbl * const,
-       dbl * const));
+       dbl * const);
 
 EXTERN int compute_particles
-PROTO((const Exo_DB *,
+(const Exo_DB *,
        dbl * const,
        dbl * const,
        dbl * const,
@@ -197,17 +197,17 @@ PROTO((const Exo_DB *,
        dbl * const,
        const dbl,
        const dbl,
-       const int));
+       const int);
 
 EXTERN void rd_particle_specs	/* mm_input_particles.c */
-PROTO((FILE *,
-       char *));
+(FILE *,
+       char *);
 
 EXTERN void backup_particles
-PROTO((void));
+(void);
 
 EXTERN void restore_particles
-PROTO((void));
+(void);
 
 #endif /* _AC_PARTICLES_H */
 

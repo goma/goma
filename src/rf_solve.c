@@ -51,7 +51,7 @@ static char rcsid[] = "$Id: rf_solve.c,v 5.21 2010-03-17 22:23:54 hkmoffa Exp $"
 
 #ifdef HAVE_FRONT
 extern int mf_setup
-PROTO((int *,			/* nelem_glob */
+(int *,			/* nelem_glob */
        int *,			/* neqn_glob */
        int *,			/* mxdofel */
        int *,			/* nfullsum */
@@ -63,7 +63,7 @@ PROTO((int *,			/* nelem_glob */
        int *,			/* loc_dof */
        int *,			/* constraint */
        const char *,		/* cname */
-       int *));			/* allocated */
+       int *);			/* allocated */
 #endif
 
 /*
@@ -83,7 +83,7 @@ int w;
  */
 
 void predict_solution
-PROTO((int ,			/* N */
+(int ,			/* N */
        double ,			/* delta_t */
        double ,			/* delta_t_old */
        double ,			/* delta_t_older */
@@ -94,32 +94,32 @@ PROTO((int ,			/* N */
        double  [],		/* x_oldest */
        double  [],		/* xdot */
        double  [],	        /* xdot_old */
-       double  []));		/* xdot_older */
+       double  []);		/* xdot_older */
 
 static void predict_solution_newmark
-PROTO((int ,			/* N */
+(int ,			/* N */
        double ,			/* delta_t */
        double  [],		/* x */
        double  [],		/* x_old */
        double  [],		/* xdot */
-       double  []));	        /* xdot_old */
+       double  []);	        /* xdot_old */
 
 static int discard_previous_time_step
-PROTO (( int, 
+( int, 
 		 double *,
 		 double *,
 		 double *,
 		 double *,
 		 double *,
 		 double *, 
-		 double *));
+		 double *);
 
 
 static void shift_nodal_values
-PROTO(( int,
+( int,
 		double,
 		double *,
-		int ));
+		int );
 
 extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
 			double *W, double *WORK, int *LWORK, int *INFO,

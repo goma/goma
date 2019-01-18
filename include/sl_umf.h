@@ -27,7 +27,7 @@
 #endif
 
 extern int SL_UMF
-PROTO (( int,
+( int,
 	 int *,
 	 int *,
 	 int *,
@@ -37,7 +37,7 @@ PROTO (( int,
 	 int *,
 	 double *,
 	 double *,
-	 double *  ));
+	 double *  );
 
 struct UMF_Linear_Solver_System
 {

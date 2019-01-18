@@ -33,7 +33,7 @@
 #include "dg_utils.h"
 
 extern int matrix_fill_full
-PROTO((struct Aztec_Linear_Solver_System *,
+(struct Aztec_Linear_Solver_System *,
        double [],   /* x - Solution vector                       */	
        double [],   /* resid_vector - Residual vector            */
        double [],   /* x_old -  previous last time step          */	
@@ -51,11 +51,11 @@ PROTO((struct Aztec_Linear_Solver_System *,
        dbl *,       /* h_elem_avg - global average element size  for PSPG */
        dbl *,       /* U_norm - global average velocity for PSPG */
        dbl *,
-       dg_neighbor_type *));     /* estifm - element stiffness Matrix for frontal solver */
+       dg_neighbor_type *);     /* estifm - element stiffness Matrix for frontal solver */
 
 
 EXTERN void matrix_fill
-PROTO((struct Aztec_Linear_Solver_System *,	
+(struct Aztec_Linear_Solver_System *,	
        double [],		/* x - Solution vector                       */
        double [],		/* resid_vector - Residual vector            */
        double [],		/* x_old -  previous last time step          */
@@ -86,17 +86,17 @@ PROTO((struct Aztec_Linear_Solver_System *,
        dbl *,			/* estifm - element stiffness Matrix for 
 				 * frontal solver                            */
        int ,
-       dg_neighbor_type *));                  /* zeroCA */
+       dg_neighbor_type *);                  /* zeroCA */
 
 EXTERN void checkfinite
-PROTO((const char * const,      /* file                                      */
+(const char * const,      /* file                                      */
        const int ,	       	/* line                                      */
-       const char * const));	/* message                                   */
+       const char * const);	/* message                                   */
 
 EXTERN int load_pf_constraint
-PROTO((double pf_constraint,
+(double pf_constraint,
        double d_pf_lm[][MDE],
-       double d_lm_pf[][MDE]));
+       double d_lm_pf[][MDE]);
 
 
        

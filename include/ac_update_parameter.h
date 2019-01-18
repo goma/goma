@@ -27,7 +27,7 @@
 #endif
 
 EXTERN void update_parameterC
-PROTO((int,                     /* CONDITION NUMBER */
+(int,                     /* CONDITION NUMBER */
        double, 			/* PARAMETER VALUE */
        double*, 		/* UNKNOWN VECTOR */
        double*, 		/* UNKNOWN_DOT VECTOR */
@@ -35,10 +35,10 @@ PROTO((int,                     /* CONDITION NUMBER */
        double, 			/* STEP */
        Comm_Ex *,		/* cx  - array of communications structures */
        Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 EXTERN void update_parameterTP
-PROTO((int,                     /* CONDITION NUMBER */
+(int,                     /* CONDITION NUMBER */
        double, 			/* PARAMETER VALUE */
        double*, 		/* UNKNOWN VECTOR */
        double*, 		/* UNKNOWN_DOT VECTOR */
@@ -46,10 +46,10 @@ PROTO((int,                     /* CONDITION NUMBER */
        double, 			/* STEP */
        Comm_Ex *,		/* cx  - array of communications structures */
        Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 EXTERN void update_parameterHC
-PROTO((int,                     /* HC ID */
+(int,                     /* HC ID */
        double, 			/* PARAMETER VALUE */
        double*, 		/* UNKNOWN VECTOR */
        double*, 		/* UNKNOWN_DOT VECTOR */
@@ -57,10 +57,10 @@ PROTO((int,                     /* HC ID */
        double, 			/* STEP */
        Comm_Ex *,		/* cx  - array of communications structures */
        Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 EXTERN void update_parameterS
-PROTO(( double, 		/* PARAMETER VALUE */
+( double, 		/* PARAMETER VALUE */
         double* , 		/* UNKNOWN VECTOR */
      	double* ,		/* UNKNOWN_DOT VECTOR */
 	  int ,			/*  type of sensitivity variable(BC or MT) */
@@ -69,44 +69,44 @@ PROTO(( double, 		/* PARAMETER VALUE */
 	  int ,			/* data float id or matl prop id */
 	  Comm_Ex *,		/* array of communications structures */
 	  Exo_DB *,		/* ptr to the finite element mesh database */
-	  Dpi *));		/* distributed processing information */
+	  Dpi *);		/* distributed processing information */
 
 EXTERN void update_BC_parameter
-PROTO((double, 			/* PARAMETER VALUE */
+(double, 			/* PARAMETER VALUE */
        int,     		/* BCID */
        int,     		/* DFID */
        Comm_Ex *,		/* cx  - array of communications structures */
        Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 EXTERN void update_AC_parameter
-PROTO((double, 			/* PARAMETER VALUE */
+(double, 			/* PARAMETER VALUE */
        int,     		/* BCID */
        int,     		/* DFID */
        Comm_Ex *,		/* cx  - array of communications structures */
        Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 EXTERN void update_MT_parameter
-PROTO((double, 			/* PARAMETER VALUE */
+(double, 			/* PARAMETER VALUE */
        int, 			/* Material number index */
        int,     		/* Material property tag */
        int,     		/* Material property tag subindex */
        Comm_Ex *,		/* cx  - array of communications structures */
        Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 EXTERN void update_UM_parameter
-PROTO((double,                  /* PARAMETER VALUE */
+(double,                  /* PARAMETER VALUE */
        int,                     /* Material number index */
        int,     		/* Material property tag */
        int,     		/* Material property tag subindex */
        Comm_Ex *,               /* cx  - array of communications structures */
        Exo_DB *,                /* exo - ptr to finite element mesh database */
-       Dpi *));                 /* dpi - ptr to distributed processing info */
+       Dpi *);                 /* dpi - ptr to distributed processing info */
 
 EXTERN void retrieve_parameterS
-PROTO((	double* , /* PARAMETER VALUE */
+(	double* , /* PARAMETER VALUE */
         double* , 	 /* UNKNOWN VECTOR */
      	double* ,  /* UNKNOWN_DOT VECTOR */
 	  int ,/*  type of sensitivity variable(BC or MT) */
@@ -115,39 +115,39 @@ PROTO((	double* , /* PARAMETER VALUE */
 	  int ,		/* matl prop id for UM */
 	  Comm_Ex *,	 /* array of communications structures */
 	  Exo_DB *,	 /* ptr to the finite element mesh database */
-	  Dpi *));	 /* distributed processing information */
+	  Dpi *);	 /* distributed processing information */
 
 EXTERN void retrieve_BC_parameter
-PROTO((double*, 			/* PARAMETER VALUE */
+(double*, 			/* PARAMETER VALUE */
        int,     		/* BCID */
        int,     		/* DFID */
        Comm_Ex *,		/* cx  - array of communications structures */
        Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 EXTERN void retrieve_MT_parameter
-PROTO((double*, 			/* PARAMETER VALUE */
+(double*, 			/* PARAMETER VALUE */
        int, 			/* Material number index */
        int,     		/* Material property tag */
        Comm_Ex *,		/* cx  - array of communications structures */
        Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 EXTERN void retrieve_AC_parameter
-PROTO((double*, 			/* PARAMETER VALUE */
+(double*, 			/* PARAMETER VALUE */
        int,     		/* BCID */
        int,     		/* DFID */
        Comm_Ex *,		/* cx  - array of communications structures */
        Exo_DB *,		/* exo - ptr to finite element mesh database */
-       Dpi *));			/* dpi - ptr to distributed processing info */
+       Dpi *);			/* dpi - ptr to distributed processing info */
 
 EXTERN void retrieve_UM_parameter
-PROTO((double*,                  /* PARAMETER VALUE */
+(double*,                  /* PARAMETER VALUE */
        int,                     /* Material number index */
        int,     		/* Material property tag */
        int,     		/* Material property tag subindex */
        Comm_Ex *,               /* cx  - array of communications structures */
        Exo_DB *,                /* exo - ptr to finite element mesh database */
-       Dpi *));                 /* dpi - ptr to distributed processing info */
+       Dpi *);                 /* dpi - ptr to distributed processing info */
 
 #endif /* _AC_UPDATE_PARAMETER_H */

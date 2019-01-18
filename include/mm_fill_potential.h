@@ -30,17 +30,17 @@
 #endif
 
 EXTERN int assemble_Enorm
-PROTO((void));
+(void);
 
 EXTERN int assemble_potential
-PROTO((double ,			/* time - present time value                 */
+(double ,			/* time - present time value                 */
        double ,			/* tt - parameter to vary time integration 
 				 * from explicit (tt = 1) to 
 				 * implicit (tt = 0)                         */
-       double ));		/* dt - current time step size               */
+       double );		/* dt - current time step size               */
 
 EXTERN void current_BV_surf	/* mm_fill_potential.c                       */
-PROTO((double [],		/* func                                      */
+(double [],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        int ,			/* wspec - species number of this BC         */
        double ,			/* nu - stoichiometric coefficient           */
@@ -51,11 +51,11 @@ PROTO((double [],		/* func                                      */
        double ,			/* V - electrode potential                   */
        double ,			/* U0 - electrolyte open-circuit potential   */
        double ,			/* dt - current value of the time step       */
-       double ));      		/* tt - parameter to vary time integration   */
+       double );      		/* tt - parameter to vary time integration   */
 
 
 EXTERN void current_ORR_surf    /* mm_fill_potential.c                       */
-PROTO((double [],               /* func                                      */
+(double [],               /* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        int ,          /* wspec - species number of this boundary condition   */
        double ,       /* ai0 - product of interfacial area by                */
@@ -68,10 +68,10 @@ PROTO((double [],               /* func                                      */
        double ,       /* U0 - open-circuit potential (V)                     */
        double ,       /* beta - reaction order                               */
        double ,       /* dt - current value of the time step                 */
-       double ));     /* tt - parameter to vary time integration             */
+       double );     /* tt - parameter to vary time integration             */
 
 EXTERN void current_HOR_surf    /* mm_fill_potential.c                       */
-PROTO((double [],               /* func                                      */
+(double [],               /* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        int ,          /* wspec - species number of this boundary condition   */
        double ,       /* ai0 - product of interfacial area by                */
@@ -85,30 +85,30 @@ PROTO((double [],               /* func                                      */
        double ,       /* beta - reaction order                               */
        double ,       /* V - electrode potential (V)                         */
        double ,       /* dt - current value of the time step                 */
-       double ));     /* tt - parameter to vary time integration             */
+       double );     /* tt - parameter to vary time integration             */
 
 EXTERN void surface_charge_surf
-PROTO((double *,
+(double *,
        double [DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE],
-       const double));      /* sigma - value of surface charge, 0 indicates 
+       const double);      /* sigma - value of surface charge, 0 indicates 
 			      electroneutrality */
 
 EXTERN int assemble_electric_field
-PROTO((void));      /* Least square equation of Efield = grad voltage */
+(void);      /* Least square equation of Efield = grad voltage */
 
 EXTERN void apply_potential_grad_bc
-PROTO((double [],               /* func                                      */
+(double [],               /* func                                      */
        double [][MAX_VARIABLE_TYPES+MAX_CONC][MDE], /* d_func                */
        struct Boundary_Condition *,/* BC_Type                             */
        const double,		/* time_value	*/
-       const double ));                  /* time_step */
+       const double );                  /* time_step */
 
 EXTERN double electrical_conductivity
-PROTO((double [MDE],               /* dkdT                         */
+(double [MDE],               /* dkdT                         */
        double [MDE],			/*dkdV			*/
        double [MAX_CONC][MDE],		/*dkdC			*/
        double [DIM][MDE],		/*dkdX			*/
        const double,		/* time	*/
-       const double ));                  /* time_step */
+       const double );                  /* time_step */
 
 #endif /* _MM_FILL_POTENTIAL_H */

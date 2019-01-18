@@ -32,7 +32,7 @@
 #endif
 
 EXTERN void user_aug_cond_residuals
-PROTO((int ,			/* nAC                                       */
+(int ,			/* nAC                                       */
        double *,		/* x                                         */
        double *,		/* xdot                                      */
        double ,			/* delta_t                                   */
@@ -47,10 +47,10 @@ PROTO((int ,			/* nAC                                       */
        double **,		/* dAC                                       */
        Exo_DB *,		/* exo                                       */
        Dpi *,			/* dpi                                       */
-       Comm_Ex *));		/* cx                                        */
+       Comm_Ex *);		/* cx                                        */
 
 EXTERN void user_aug_cond_volume_residuals 
-PROTO((
+(
        const int iAC, 
        const double * const x, 
        const double * const xdot,
@@ -63,7 +63,7 @@ PROTO((
        const int numProcUnknowns,
        const Exo_DB * const exo,
        const Dpi * const dpi,
-       const Comm_Ex * const cx));
+       const Comm_Ex * const cx);
 
 
 #endif /* _USER_AC_H */

@@ -31,14 +31,14 @@ extern void
 setup_nodal_comm_map(Exo_DB *, Dpi *, Comm_Ex **);
 
 EXTERN void setup_dof_comm_map
-PROTO((Exo_DB *,		/* exo - ptr to FE database */
+(Exo_DB *,		/* exo - ptr to FE database */
        Dpi *,			/* dpi - ptr to distrib proc db */
-       Comm_Ex **cx));		/* array of structures, one for ea neighbor */
+       Comm_Ex **cx);		/* array of structures, one for ea neighbor */
 
 EXTERN void setup_fill_comm_map
-PROTO((Exo_DB *,		/* exo - ptr to FE database */
+(Exo_DB *,		/* exo - ptr to FE database */
        Dpi *,			/* dpi - ptr to distrib proc db */
-       Comm_Ex *cx));		/* array of structures, one for ea neighbor */
+       Comm_Ex *cx);		/* array of structures, one for ea neighbor */
 
 extern void output_comm_stats(Dpi *, Comm_Ex **);
 

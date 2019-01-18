@@ -49,10 +49,10 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		    const Exo_DB *exo);
 
 EXTERN void apply_table_wic_bc
-PROTO((double [],               /* func                                      */
+(double [],               /* func                                      */
        double [][MAX_VARIABLE_TYPES+MAX_CONC][MDE], /* d_func                */
        struct Boundary_Condition *,/* BC_Type                             */
-       double ));                  /* time_value */
+       double );                  /* time_value */
 
 
 #ifdef STATIC

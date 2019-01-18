@@ -26,29 +26,29 @@
 #endif
 
 EXTERN void build_elem_node	/* exo_conn.c */
-PROTO((Exo_DB *));		/* exo - ptr to EXODUS II database struct */
+(Exo_DB *);		/* exo - ptr to EXODUS II database struct */
 
 EXTERN void build_node_elem	/* exo_conn.c */
-PROTO((Exo_DB *));		/* exo - ptr to EXODUS II database struct */
+(Exo_DB *);		/* exo - ptr to EXODUS II database struct */
 
 EXTERN void build_node_node	/* exo_conn.c */
-PROTO((Exo_DB *));		/* exo - ptr to EXODUS II database struct */
+(Exo_DB *);		/* exo - ptr to EXODUS II database struct */
 
 EXTERN void build_elem_elem	/* exo_conn.c */
-PROTO((Exo_DB *));		/* exo - ptr to EXODUS II database struct */
+(Exo_DB *);		/* exo - ptr to EXODUS II database struct */
 
 EXTERN int build_side_node_list
-PROTO((int ,			/* elem - the element number */
+(int ,			/* elem - the element number */
        int ,			/* face - the face number */
        Exo_DB *,		/* exo - ptr to whole mesh structure FE db*/
-       int *));			/* snl - node list for this side (out) */
+       int *);			/* snl - node list for this side (out) */
 
 
 EXTERN int get_exterior_faces
-PROTO(( int,
+( int,
 	int *,
 	const Exo_DB *,
-	const Dpi * ));
+	const Dpi * );
 
 void
 brk_build_node_node(Exo_DB *exo);

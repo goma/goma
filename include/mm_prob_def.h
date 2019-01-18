@@ -31,6 +31,6 @@
 #endif
 
 EXTERN int setup_pd		/* mm_prob_def.c */
-PROTO((void ));			/* nada. */
+(void );			/* nada. */
 
 #endif /* _MM_PROB_DEF_H */

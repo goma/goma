@@ -32,9 +32,9 @@
 #endif
 
 EXTERN double user_surf_object
-PROTO((int *,
+(int *,
        dbl *,    	/* param - ptr to user-defined list          */
-       dbl *));		
+       dbl *);		
 
 
 #endif /* _USER_PRE_H */

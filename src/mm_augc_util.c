@@ -64,37 +64,37 @@
 
 static int
 estimate_bAC
-PROTO(( int ,
+( int ,
         double [],
         double **,
         int ,
         Comm_Ex *,
-        MF_Args * ));
+        MF_Args * );
 
 #ifdef NOT_USED
 static int
 estimate_dAC_LSvel
-PROTO(( int ,
+( int ,
         double [],
         double **,
         int ,
         Comm_Ex *,
-        MF_Args * ));
+        MF_Args * );
 #endif
 
 static int
 estimate_dAC_ALC
-PROTO(( int ,
+( int ,
         double [],
         double **,
         int ,
         Comm_Ex *,
-        MF_Args * ));
+        MF_Args * );
 
 
 static double getPositionAC
-PROTO((struct AC_Information *augc, double *cAC_iAC, double *soln, Exo_DB *exo
-));
+(struct AC_Information *augc, double *cAC_iAC, double *soln, Exo_DB *exo
+);
 
 /*
 

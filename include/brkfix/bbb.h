@@ -29,42 +29,42 @@
 #endif
 
 EXTERN void build_big_bones	/* bbb.c */
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
+(Exo_DB *,		/* EXODUS info from representative polylith */
        Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
+       Exo_DB *);		/* ptr to monolithic EXODUS II database */
 
 EXTERN void build_global_conn	/* bbb.c */
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
+(Exo_DB *,		/* EXODUS info from representative polylith */
        Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
+       Exo_DB *);		/* ptr to monolithic EXODUS II database */
 
 EXTERN void build_global_attr	/* bbb.c */
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
+(Exo_DB *,		/* EXODUS info from representative polylith */
        Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
+       Exo_DB *);		/* ptr to monolithic EXODUS II database */
 
 EXTERN void build_global_coords	/* bbb.c */
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
+(Exo_DB *,		/* EXODUS info from representative polylith */
        Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
+       Exo_DB *);		/* ptr to monolithic EXODUS II database */
 
 EXTERN void build_global_ns	/* bbb.c */
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
+(Exo_DB *,		/* EXODUS info from representative polylith */
        Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
+       Exo_DB *);		/* ptr to monolithic EXODUS II database */
 
 EXTERN void build_global_ss	/* bbb.c */
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
+(Exo_DB *,		/* EXODUS info from representative polylith */
        Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
+       Exo_DB *);		/* ptr to monolithic EXODUS II database */
 
 EXTERN void build_global_res	/* bbb.c */
-PROTO((Exo_DB *,		/* EXODUS info from representative polylith */
+(Exo_DB *,		/* EXODUS info from representative polylith */
        Dpi    *,		/* distributed processing info from polylith */
-       Exo_DB *));		/* ptr to monolithic EXODUS II database */
+       Exo_DB *);		/* ptr to monolithic EXODUS II database */
 
 EXTERN void mononame		/* bbb.c */
-PROTO((char *,			/* in  - string to be mono-sized "a_b.c" */
-       char *));		/* out - result string "a.c"  */
+(char *,			/* in  - string to be mono-sized "a_b.c" */
+       char *);		/* out - result string "a.c"  */
 
 #endif /* _BBB_H */
