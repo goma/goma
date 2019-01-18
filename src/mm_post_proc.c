@@ -7368,7 +7368,11 @@ rd_post_process_specs(FILE *ifp,
       look_for(ifp, "DATA", input, '=');
 
       save_position = ftell(ifp);
-      fgets(data_line_buffer, MAX_CHAR_IN_INPUT, ifp);
+      char * fgetsret = fgets(data_line_buffer, MAX_CHAR_IN_INPUT, ifp);
+      if (fgetsret == NULL)
+      {
+        EH(-1, "Error reading post processing line for DATA");
+      }
       fseek(ifp, save_position, SEEK_SET);
 
       /*
@@ -8115,7 +8119,12 @@ rd_post_process_specs(FILE *ifp,
         {
           look_for(ifp, "AVERAGE", input, '=');
           save_position = ftell(ifp);
-          fgets(data_line_buffer, MAX_CHAR_IN_INPUT, ifp);
+          char * fgetsret = fgets(data_line_buffer, MAX_CHAR_IN_INPUT, ifp);
+          if (fgetsret == NULL)
+          {
+            EH(-1, "Error reading post processing line in Averages");
+          }
+
           fseek(ifp, save_position, SEEK_SET);
 
           pp_average[i]->type = -1;

@@ -21,6 +21,10 @@
 #define EXTERN /* do nothing */
 #endif
 
+#include "std.h"
+#include "exo_struct.h"
+#include "dpi.h"
+
 #ifndef _AC_STABILITY_C
 #define EXTERN extern
 #endif

@@ -464,7 +464,8 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	  if ( x->node_map_exists )
 	    {
 	      x->node_map = (int *) smalloc(x->num_nodes * si);
-	      status      = ex_get_node_num_map(x->exoid, x->node_map);
+	      status = ex_get_id_map(x->exoid, EX_NODE_MAP, x->node_map);
+
 	      EH(status, "ex_get_node_num_map");
 	    }
 	}
@@ -474,7 +475,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	  if ( x->elem_map_exists )
 	    {
 	      x->elem_map = (int *) smalloc(x->num_elems * si);
-	      status      = ex_get_elem_num_map(x->exoid, x->elem_map);
+	      status      = ex_get_id_map(x->exoid, EX_ELEM_MAP, x->elem_map);
 	      EH(status, "ex_get_elem_num_map");
 	    }
 	  if ( x->elem_order_map_exists )
@@ -519,8 +520,8 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
           /*
 	   *  Read the element block ID's from the exodus file
 	   */
-	  status = ex_get_elem_blk_ids(x->exoid, x->eb_id);
-	  EH(status, "ex_get_elem_blk_ids");
+	  status = ex_get_ids(x->exoid, EX_ELEM_BLOCK, x->eb_id);
+	  EH(status, "ex_get_ids elem_blk_ids");
 
 	  /*
 	   *  For each element block, specified by the id
@@ -530,13 +531,16 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	   */
 	  for ( i=0; i<x->num_elem_blocks; i++)
 	    {
-	      status = ex_get_elem_block(x->exoid, 
-					 x->eb_id[i], 
-					 x->eb_elem_type[i],
-					 &x->eb_num_elems[i],
-					 &x->eb_num_nodes_per_elem[i],
-					 &x->eb_num_attr[i]);
-	      EH(status, "ex_get_elem_blocks");
+	      status = ex_get_block(x->exoid,
+				    EX_ELEM_BLOCK,
+				    x->eb_id[i],
+				    x->eb_elem_type[i],
+				    &x->eb_num_elems[i],
+				    &x->eb_num_nodes_per_elem[i],
+				    0,
+				    0,
+				    &x->eb_num_attr[i]);
+	      EH(status, "ex_get_block elem");
 
 	      /*
 	       *  Fill in the information in the current
@@ -574,9 +578,9 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 		    (int *) smalloc( x->eb_num_elems[i] * 
 				     x->eb_num_nodes_per_elem[i] * si);
 
-		  status = ex_get_elem_conn(x->exoid, 
-					    x->eb_id[i], 
-					    x->eb_conn[i]);
+		  status = ex_get_conn(x->exoid, EX_ELEM_BLOCK,
+				       x->eb_id[i],
+				       x->eb_conn[i], 0, 0);
 		  EH(status, "ex_get_elem_conn");
 
 		  /* Build the element - element block index map */
@@ -589,9 +593,9 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 		{
 		  x->eb_attr[i] = (dbl *) 
 		    smalloc(x->eb_num_elems[i] * x->eb_num_attr[i] * sd);
-		  status = ex_get_elem_attr(x->exoid, x->eb_id[i], 
-					    x->eb_attr[i]);
-		  EH(status, "ex_get_elem_attr");
+		  status = ex_get_attr(x->exoid, EX_ELEM_BLOCK, x->eb_id[i],
+				       x->eb_attr[i]);
+		  EH(status, "ex_get_attr elem");
 		}
 	  
 	      x->eb_ptr[i+1] = x->eb_ptr[i] + x->eb_num_elems[i];
@@ -619,13 +623,19 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	  if ( x->ns_distfact_len > 0 )
 	    {
 	      x->ns_distfact_list = (dbl *) smalloc(x->ns_distfact_len * sd);
-	      status = ex_get_concat_node_sets(x->exoid, x->ns_id, 
-					       x->ns_num_nodes,
-					       x->ns_num_distfacts,
-					       x->ns_node_index,
-					       x->ns_distfact_index,
-					       x->ns_node_list,
-					       x->ns_distfact_list);
+
+	      ex_set_specs ns_specs;
+	      ns_specs.sets_ids = x->ns_id;
+	      ns_specs.num_entries_per_set = x->ns_num_nodes;
+	      ns_specs.num_dist_per_set    = x->ns_num_distfacts;
+	      ns_specs.sets_entry_index    = x->ns_node_index;
+	      ns_specs.sets_dist_index     = x->ns_distfact_index;
+	      ns_specs.sets_entry_list     = x->ns_node_list;
+	      ns_specs.sets_extra_list     = NULL;
+	      ns_specs.sets_dist_fact      = x->ns_distfact_list;
+
+	      status = ex_get_concat_sets(x->exoid, EX_NODE_SET,
+					  &ns_specs);
 	      EH(status, "ex_get_concat_node_sets");
 	    }
 	}
@@ -659,14 +669,19 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	      x->ss_distfact_list = (dbl *) smalloc(x->ss_distfact_len * sd);
 	    }	    
 
-	  status = ex_get_concat_side_sets(x->exoid, x->ss_id, 
-					   x->ss_num_sides,
-					   x->ss_num_distfacts,
-					   x->ss_elem_index,
-					   x->ss_distfact_index,
-					   x->ss_elem_list,
-					   x->ss_side_list,
-					   x->ss_distfact_list);
+	  ex_set_specs ss_specs;
+	  ss_specs.sets_ids = x->ss_id;
+	  ss_specs.num_entries_per_set = x->ss_num_sides;
+	  ss_specs.num_dist_per_set    = x->ss_num_distfacts;
+	  ss_specs.sets_entry_index    = x->ss_elem_index;
+	  ss_specs.sets_dist_index     = x->ss_distfact_index;
+	  ss_specs.sets_entry_list     = x->ss_elem_list;
+	  ss_specs.sets_extra_list     = x->ss_side_list;
+	  ss_specs.sets_dist_fact      = x->ss_distfact_list;
+
+	  status = ex_get_concat_sets(x->exoid, EX_SIDE_SET,
+				      &ss_specs);
+
 	  EH(status, "ex_get_concat_side_sets");
 
 	  /*
@@ -900,14 +915,14 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
        * of these problems...
        */
 
-      status = ex_get_var_param(x->exoid, "g", &x->num_glob_vars);
-      EH(status, "ex_get_var_param(g)");
+      status = ex_get_variable_param(x->exoid, EX_GLOBAL, &x->num_glob_vars);
+      EH(status, "ex_get_variable_param global");
 
-      status = ex_get_var_param(x->exoid, "e", &x->num_elem_vars);
-      EH(status, "ex_get_var_param(e)");
+      status = ex_get_variable_param(x->exoid, EX_ELEM_BLOCK, &x->num_elem_vars);
+      EH(status, "ex_get_variable_param elem");
 
-      status = ex_get_var_param(x->exoid, "n", &x->num_node_vars);
-      EH(status, "ex_get_var_param(n)");
+      status = ex_get_variable_param(x->exoid, EX_NODAL, &x->num_node_vars);
+      EH(status, "ex_get_variable_param nodal");
 
       /*
        * Get the names of the results variables: global, element and nodal.
@@ -920,9 +935,9 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	    {
 	      x->glob_var_names[i] = (char *) smalloc((MAX_STR_LENGTH+1) * sc);
 	    }
-	  status = ex_get_var_names(x->exoid, "g", x->num_glob_vars,
-				    x->glob_var_names);
-	  EH(status, "ex_get_var_names(g)");
+	  status = ex_get_variable_names(x->exoid, EX_GLOBAL, x->num_glob_vars,
+					 x->glob_var_names);
+	  EH(status, "ex_get_variable_names global");
 	}
 
       if ( x->num_elem_vars > 0 )
@@ -932,9 +947,9 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	    {
 	      x->elem_var_names[i] = (char *) smalloc((MAX_STR_LENGTH+1) * sc);
 	    }
-	  status = ex_get_var_names(x->exoid, "e", x->num_elem_vars,
-				    x->elem_var_names);
-	  EH(status, "ex_get_var_names(e)");
+	  status = ex_get_variable_names(x->exoid, EX_ELEM_BLOCK, x->num_elem_vars,
+					 x->elem_var_names);
+	  EH(status, "ex_get_variable_names elem_block");
 	}
 
       if ( x->num_node_vars > 0 )
@@ -944,9 +959,9 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	    {
 	      x->node_var_names[i] = (char *) smalloc((MAX_STR_LENGTH+1) * sc);
 	    }
-	  status = ex_get_var_names(x->exoid, "n", x->num_node_vars,
+	  status = ex_get_variable_names(x->exoid, EX_NODAL, x->num_node_vars,
 				    x->node_var_names);
-	  EH(status, "ex_get_var_names(n)");
+	  EH(status, "ex_get_variable_names nodal");
 	}
 
       /*
@@ -969,9 +984,9 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	  x->elem_var_tab = (int *) smalloc(x->num_elem_vars * 
 					    x->num_elem_blocks * si);
 
-	  status = ex_get_elem_var_tab(x->exoid, x->num_elem_blocks,
-				       x->num_elem_vars, x->elem_var_tab);
-	  EH(status, "ex_get_elem_var_tab");
+	  status = ex_get_truth_table(x->exoid, EX_ELEM_BLOCK, x->num_elem_blocks,
+				      x->num_elem_vars, x->elem_var_tab);
+	  EH(status, "ex_get_truth_table elem");
 	}
       x->state |= EXODB_STATE_RES0;
     }
@@ -1078,9 +1093,9 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 		{
 		  nodal_var_index = x->nv_indeces[j];
 		  
-		  status = ex_get_nodal_var(x->exoid, time_index, 
-					    nodal_var_index, x->num_nodes, 
-					    x->nv[i][j]);
+		  status = ex_get_var(x->exoid, time_index, EX_NODAL,
+				      nodal_var_index, 1, x->num_nodes,
+				      x->nv[i][j]);
 		  EH(status, "ex_get_nodal_var");
 		}
 	    }
@@ -1119,9 +1134,9 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	  for ( i=0; i<x->num_gv_time_indeces; i++)
 	    {
 	      time_index = x->gv_time_indeces[i];
-	      status = ex_get_glob_vars(x->exoid, time_index, 
-					x->num_glob_vars,
-					x->gv[i]);
+	      status = ex_get_var(x->exoid, time_index, EX_GLOBAL, 1, 1,
+				  x->num_glob_vars,
+				  x->gv[i]);
 	      EH(status, "ex_get_glob_vars");
 	    }
 
@@ -1172,10 +1187,11 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
 		      if ( x->elem_var_tab[index] != 0 )
 			{
-			  status = ex_get_elem_var(x->exoid, time_index, k+1,
-						   x->eb_id[j], 
-						   x->eb_num_elems[j],
-						   x->ev[i][index]);
+			  status = ex_get_var(x->exoid, time_index, EX_ELEM_BLOCK,
+					      k+1,
+					      x->eb_id[j],
+					      x->eb_num_elems[j],
+					      x->ev[i][index]);
 			  if ( status < 0 )
 			    {
 			      sr = sprintf(err_msg,  "ex_get_elem_var() bad rtn: time %d, elemvar %d, EB ID %d",

@@ -85,11 +85,10 @@ static Spfrtn sr;		/* sprintf() return type, whatever it is. */
 /***********************************************************************/
 /***********************************************************************/
 /***********************************************************************/
-
 int 
 wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
-	    char *filename,	/* where to write */
-	    int verbosity)	/* how much to tell while writing */
+            char *filename,	/* where to write */
+            int verbosity)	/* how much to tell while writing */
 {
 #ifdef DEBUG
   char *yo = "wr_nodal_results_exo: ";
@@ -128,7 +127,7 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
   x->cmode = EX_CLOBBER;
   x->exoid = ex_create(filename, x->cmode, &x->comp_wordsize, 
-		       &x->io_wordsize);
+                       &x->io_wordsize);
   EH(x->exoid, "ex_create");
       
   if ( verbosity > 1 )
@@ -150,13 +149,13 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
       fprintf(stderr, "ex_put_init() call...\n");
     }
   status = ex_put_init(x->exoid,
-		       x->title, 
-		       x->num_dim, 
-		       x->num_nodes,
-		       x->num_elems, 
-		       x->num_elem_blocks, 
-		       x->num_node_sets,
-		       x->num_side_sets);
+                       x->title, 
+                       x->num_dim, 
+                       x->num_nodes,
+                       x->num_elems, 
+                       x->num_elem_blocks, 
+                       x->num_node_sets,
+                       x->num_side_sets);
 
   EH(status, "ex_put_init");
 
@@ -217,30 +216,30 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
   if ( x->num_nodes > 0 )
     {
       if ( verbosity > 0 )
-	{
-	  fprintf(stderr, "ex_put_node_num_map()...\n");
-	}
+        {
+          fprintf(stderr, "ex_put_node_num_map()...\n");
+        }
       if ( x->node_map_exists )
-	{
-	  status = ex_put_node_num_map(x->exoid, x->node_map);
-	  EH(status, "ex_put_node_num_map");
-	}
+        {
+          status = ex_put_id_map(x->exoid, EX_NODE_MAP, x->node_map);
+          EH(status, "ex_put_id_map node");
+        }
     }
 
   if ( x->num_elems > 0 )
     {
       
       if ( x->elem_map_exists )
-	{
-	  status = ex_put_elem_num_map(x->exoid, x->elem_map);	
-	  EH(status, "ex_put_elem_num_map");
-	}
+        {
+          status = ex_put_id_map(x->exoid, EX_ELEM_MAP, x->elem_map);
+          EH(status, "ex_put_id_map elem");
+        }
 
       if ( x->elem_order_map_exists )
-	{
-	  status = ex_put_map(x->exoid, x->elem_order_map);
-	  EH(status, "ex_put_map");
-	}
+        {
+          status = ex_put_map(x->exoid, x->elem_order_map);
+          EH(status, "ex_put_map");
+        }
     }
 
   /*
@@ -250,33 +249,33 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
   if ( x->num_elem_blocks > 0 )
     {
       for ( i=0; i<x->num_elem_blocks; i++)
-	{
-	  if ( verbosity > 0 )
-	    {
-	      fprintf(stderr, "ex_put_elem_block()...\n");
-	    }
-	  status = ex_put_elem_block(x->exoid, 
-				     x->eb_id[i], 
-				     x->eb_elem_type[i],
-				     x->eb_num_elems[i],
-				     x->eb_num_nodes_per_elem[i],
-				     x->eb_num_attr[i]);
-	  EH(status, "ex_put_elem_blocks");
+        {
+          if ( verbosity > 0 )
+            {
+              fprintf(stderr, "ex_put_elem_block()...\n");
+            }
+          status = ex_put_block(x->exoid, EX_ELEM_BLOCK,
+                                x->eb_id[i],
+                                x->eb_elem_type[i],
+                                x->eb_num_elems[i],
+                                x->eb_num_nodes_per_elem[i], 0, 0,
+                                x->eb_num_attr[i]);
+          EH(status, "ex_put_blocks elem");
 
-	  if ( (x->eb_num_elems[i] * x->eb_num_nodes_per_elem[i]) > 0 )
-	    {
-	      status = ex_put_elem_conn(x->exoid, 
-					x->eb_id[i], 
-					x->eb_conn[i]);
-	      EH(status, "ex_put_elem_conn");
-	    }
+          if ( (x->eb_num_elems[i] * x->eb_num_nodes_per_elem[i]) > 0 )
+            {
+              status = ex_put_conn(x->exoid, EX_ELEM_BLOCK,
+                                   x->eb_id[i],
+                                   x->eb_conn[i], 0, 0);
+              EH(status, "ex_put_conn elem");
+            }
 
-	  if ( (x->eb_num_elems[i]*x->eb_num_attr[i]) > 0 )
-	    {
-	      status = ex_put_elem_attr(x->exoid, x->eb_id[i], x->eb_attr[i]);
-	      EH(status, "ex_put_elem_attr");
-	    }
-	}
+          if ( (x->eb_num_elems[i]*x->eb_num_attr[i]) > 0 )
+            {
+              status = ex_put_attr(x->exoid, EX_ELEM_BLOCK, x->eb_id[i], x->eb_attr[i]);
+              EH(status, "ex_put_attr elem");
+            }
+        }
     }
 
   /*
@@ -286,17 +285,23 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
   if ( x->num_node_sets > 0 )
     {
       if ( verbosity > 0 )
-	{
-	  fprintf(stderr, "ex_put_concat_node_sets()...\n");
-	}
-      status = ex_put_concat_node_sets(x->exoid, x->ns_id, 
-				       x->ns_num_nodes,
-				       x->ns_num_distfacts,
-				       x->ns_node_index,
-				       x->ns_distfact_index,
-				       x->ns_node_list,
-				       x->ns_distfact_list);
-      EH(status, "ex_put_concat_node_sets");
+        {
+          fprintf(stderr, "ex_put_concat_sets() node sets...\n");
+        }
+
+      ex_set_specs ns_specs;
+
+      ns_specs.sets_ids            = x->ns_id;
+      ns_specs.num_entries_per_set = x->ns_num_nodes;
+      ns_specs.num_dist_per_set    = x->ns_num_distfacts;
+      ns_specs.sets_entry_index    = x->ns_node_index;
+      ns_specs.sets_dist_index     = x->ns_distfact_index;
+      ns_specs.sets_entry_list     = x->ns_node_list;
+      ns_specs.sets_extra_list     = NULL;
+      ns_specs.sets_dist_fact      = x->ns_distfact_list;
+
+      status = ex_put_concat_sets(x->exoid, EX_NODE_SET, &ns_specs);
+      EH(status, "ex_put_concat_sets node_sets");
     }
 
 
@@ -307,18 +312,23 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
   if ( x->num_side_sets > 0 ) 
     {
       if ( verbosity > 0 )
-	{
-	  fprintf(stderr, "ex_put_concat_side_sets()...\n");
-	}
-      status = ex_put_concat_side_sets(x->exoid, x->ss_id, 
-				       x->ss_num_sides,
-				       x->ss_num_distfacts,
-				       x->ss_elem_index,
-				       x->ss_distfact_index,
-				       x->ss_elem_list,
-				       x->ss_side_list,
-				       x->ss_distfact_list);
-      EH(status, "ex_put_concat_side_sets");
+        {
+          fprintf(stderr, "ex_put_concat_sets() side sets...\n");
+        }
+
+      ex_set_specs ss_specs;
+      ss_specs.sets_ids            = x->ss_id;
+      ss_specs.num_entries_per_set = x->ss_num_sides;
+      ss_specs.num_dist_per_set    = x->ss_num_distfacts;
+      ss_specs.sets_entry_index    = x->ss_elem_index;
+      ss_specs.sets_dist_index     = x->ss_distfact_index;
+      ss_specs.sets_entry_list     = x->ss_elem_list;
+      ss_specs.sets_extra_list     = x->ss_side_list;
+      ss_specs.sets_dist_fact      = x->ss_distfact_list;
+
+      status = ex_put_concat_sets(x->exoid, EX_SIDE_SET, &ss_specs);
+
+      EH(status, "ex_put_concat_sets side_sets");
     }
 
 
@@ -345,11 +355,11 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
     {
 
       if ( verbosity > 0 )
-	{
-	  fprintf(stderr, "ex_put_prop_names(nodesets)...\n");
-	}
+        {
+          fprintf(stderr, "ex_put_prop_names(nodesets)...\n");
+        }
       status = ex_put_prop_names(x->exoid, EX_NODE_SET, x->ns_num_props - 1,
-				 &(x->ns_prop_name[1]) );
+                                 &(x->ns_prop_name[1]) );
       EH(status, "ex_put_prop_names(EX_NODE_SET)");
 
       /* 
@@ -363,15 +373,15 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
        */
 
       for ( i=1; i<x->ns_num_props; i++)
-	{
-	  if( strcmp( x->ns_prop_name[i] , "ID" ) !=0 )
-	    {
-	      status = ex_put_prop_array(x->exoid, EX_NODE_SET, 
-					 x->ns_prop_name[i],
-					 x->ns_prop[i]);
-	      EH(status, "ex_put_prop_array(EX_NODE_SET)");
-	    }
-	}
+        {
+          if( strcmp( x->ns_prop_name[i] , "ID" ) !=0 )
+            {
+              status = ex_put_prop_array(x->exoid, EX_NODE_SET, 
+                                         x->ns_prop_name[i],
+                                         x->ns_prop[i]);
+              EH(status, "ex_put_prop_array(EX_NODE_SET)");
+            }
+        }
       
     }
       
@@ -388,24 +398,24 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
        */
 
       if ( verbosity > 0 )
-	{
-	  fprintf(stderr, "ex_put_prop_names(sidesets)...\n");
-	}
+        {
+          fprintf(stderr, "ex_put_prop_names(sidesets)...\n");
+        }
       status = ex_put_prop_names(x->exoid, EX_SIDE_SET, x->ss_num_props - 1,
-				 &(x->ss_prop_name[1]));
+                                 &(x->ss_prop_name[1]));
       EH(status, "ex_get_prop_names(EX_SIDE_SET)");
-	  
+          
       for ( i=1; i<x->ss_num_props; i++)
-	{
-	  if( strcmp( x->ss_prop_name[i] , "ID" ) !=0 )
-	    {
+        {
+          if( strcmp( x->ss_prop_name[i] , "ID" ) !=0 )
+            {
 
-	      status = ex_put_prop_array(x->exoid, EX_SIDE_SET, 
-					 x->ss_prop_name[i],
-					 x->ss_prop[i]);
-	      EH(status, "ex_put_prop_array(EX_SIDE_SET)");
-	    }
-	}
+              status = ex_put_prop_array(x->exoid, EX_SIDE_SET, 
+                                         x->ss_prop_name[i],
+                                         x->ss_prop[i]);
+              EH(status, "ex_put_prop_array(EX_SIDE_SET)");
+            }
+        }
     }
       
   /*
@@ -416,26 +426,26 @@ wr_mesh_exo(Exo_DB *x,		/* def'd in exo_struct.h */
     {
 
       if ( verbosity > 0 )
-	{
-	  fprintf(stderr, "ex_put_prop_names(elemblocks)...\n");
-	}
+        {
+          fprintf(stderr, "ex_put_prop_names(elemblocks)...\n");
+        }
 
       status = ex_put_prop_names(x->exoid, EX_ELEM_BLOCK, x->eb_num_props - 1,
-				 &(x->eb_prop_name[1]) );
+                                 &(x->eb_prop_name[1]) );
       EH(status, "ex_put_prop_names(EX_ELEM_BLOCK)");
 
       for ( i=1; i<x->eb_num_props; i++)
-	{
-	  if( strcmp( x->ss_prop_name[i] , "ID" ) !=0 )
-	    {
+        {
+          if( strcmp( x->ss_prop_name[i] , "ID" ) !=0 )
+            {
 
-	      status = ex_put_prop_array(x->exoid, EX_ELEM_BLOCK, 
-					 x->eb_prop_name[i],
-					 x->eb_prop[i]);
-	      EH(status, "ex_put_prop_array(EX_ELEM_BLOCK)");
-	    }
-	}
-	
+              status = ex_put_prop_array(x->exoid, EX_ELEM_BLOCK, 
+                                         x->eb_prop_name[i],
+                                         x->eb_prop[i]);
+              EH(status, "ex_put_prop_array(EX_ELEM_BLOCK)");
+            }
+        }
+        
     }
       
   status = ex_close(x->exoid);
@@ -513,22 +523,22 @@ static int file_is_readable(const char *filename)
 
 void
 wr_result_prelim_exo(struct Results_Description *rd, 
-		     Exo_DB *exo,
-		     char *filename,
-		     double ***gvec_elem )
+                     Exo_DB *exo,
+                     char *filename,
+                     double ***gvec_elem )
 {
   int i, error;
   int filename_exists;		/* boolean */
 
   int	num_vars;		/* number of var_type variables to be written */
   char	*var_names[MAX_NNV];	/* NOTE: this array must be sized to be the 
-				   greatest value of MAX_NNV, MAX_NEV, MAX_NGV,
-				   etc. It is reused for each of these variable
-				   types. Currently (8/13/98), MAX_NNV is the 
-				   largest value @ 100 of them all - RRL   */
+                                   greatest value of MAX_NNV, MAX_NEV, MAX_NGV,
+                                   etc. It is reused for each of these variable
+                                   types. Currently (8/13/98), MAX_NNV is the 
+                                   largest value @ 100 of them all - RRL   */
 
   char	*gvar_names[MAX_NGV];	
-				/* array containing num_vars variable names */
+                                /* array containing num_vars variable names */
 
 #ifdef DEBUG  
   static char *yo="wr_result_prelim_exo: ";
@@ -574,7 +584,7 @@ wr_result_prelim_exo(struct Results_Description *rd,
       exo->io_wordsize = 8;
 #ifdef DEBUG
       fprintf(stderr, "%s: \"%s\" does not exist, going for double\n", yo, 
-	      filename);
+              filename);
 #endif
     }
 
@@ -591,17 +601,17 @@ wr_result_prelim_exo(struct Results_Description *rd,
     {
 #ifdef DEBUG
       fprintf(stderr, "P_%d at barrier < ex_open in wr_result_prelim_exo()\n", 
-	      ProcID);
+              ProcID);
 #endif
 
       exo->exoid = ex_open(filename, exo->cmode, &exo->comp_wordsize, 
-			   &exo->io_wordsize, &exo->version);
+                           &exo->io_wordsize, &exo->version);
       EH(exo->exoid, "ex_open");
     }
   else
     {
       exo->exoid = ex_create(filename, exo->cmode, &exo->comp_wordsize, 
-			   &exo->io_wordsize);
+                           &exo->io_wordsize);
       EH(exo->exoid, "ex_create");
     }
 
@@ -615,34 +625,34 @@ wr_result_prelim_exo(struct Results_Description *rd,
   if ( rd->ngv > 0 )
     {
       num_vars = rd->ngv;
-      error = ex_put_var_param(exo->exoid, "g", num_vars);
-      EH(error, "ex_put_var_param(g)");
+      error = ex_put_variable_param(exo->exoid, EX_GLOBAL, num_vars);
+      EH(error, "ex_put_variable_param global");
       for ( i=0; i<rd->ngv; i++)
-	{
-	 gvar_names[i] = rd->gvname[i];
-	}
-      error = ex_put_var_names(exo->exoid, "g", num_vars, gvar_names);
-      EH(error, "ex_put_var_names(g)");
+        {
+         gvar_names[i] = rd->gvname[i];
+        }
+      error = ex_put_variable_names(exo->exoid, EX_GLOBAL, num_vars, gvar_names);
+      EH(error, "ex_put_variable_names global");
     }
       
   /* -------------------- Element Variables -------------------------- */
   if ( rd->nev > 0 )
     {
       num_vars = rd->nev;
-      error = ex_put_var_param(exo->exoid, "e", num_vars);
-      EH(error, "ex_put_var_param(e)");
+      error = ex_put_variable_param(exo->exoid, EX_ELEM_BLOCK, num_vars);
+      EH(error, "ex_put_variable_param elem block");
       for ( i=0; i<rd->nev; i++)
-	{
-	  var_names[i] = rd->evname[i];
+        {
+          var_names[i] = rd->evname[i];
 #ifdef DEBUG
-	  printf("%s: elem var_name[%d] = %s\n", yo, i, var_names[i]);
+          printf("%s: elem var_name[%d] = %s\n", yo, i, var_names[i]);
 #endif
-	}
+        }
 #ifdef DEBUG
       printf("%s: varnames loaded\n", yo);
 #endif
-      error = ex_put_var_names(exo->exoid, "e", num_vars, var_names);
-      EH(error, "ex_put_var_names(e)");
+      error = ex_put_variable_names(exo->exoid, EX_ELEM_BLOCK, num_vars, var_names);
+      EH(error, "ex_put_variable_names elem block");
 
       /* Create truth table at this time - saves mucho cycles later
          Also malloc the gvec_elem final dim. Easier to do right
@@ -655,20 +665,20 @@ wr_result_prelim_exo(struct Results_Description *rd,
   if ( rd->nnv > 0 )
     {
       num_vars = rd->nnv;
-      error = ex_put_var_param(exo->exoid, "n", num_vars);
-      EH(error, "ex_put_var_param(n)");
+      error = ex_put_variable_param(exo->exoid, EX_NODAL, num_vars);
+      EH(error, "ex_put_variable_param EX_NODAL");
       for ( i=0; i<rd->nnv; i++)
-	{
-	  var_names[i] = rd->nvname[i];
+        {
+          var_names[i] = rd->nvname[i];
 #ifdef DEBUG
-	  printf("%s: nodal var_name[%d] = %s\n", yo, i, var_names[i]);
+          printf("%s: nodal var_name[%d] = %s\n", yo, i, var_names[i]);
 #endif
-	}
+        }
 #ifdef DEBUG
       printf("%s: varnames loaded\n", yo);
 #endif
-      error = ex_put_var_names(exo->exoid, "n", num_vars, var_names);
-      EH(error, "ex_put_var_names(n)");
+      error = ex_put_variable_names(exo->exoid, EX_NODAL, num_vars, var_names);
+      EH(error, "ex_put_variable_names nodal");
     }
 
   error = ex_close(exo->exoid);
@@ -793,21 +803,21 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
   if ( rd[0]->ngv > 0 )
     {
       num_vars = rd[0]->ngv;
-      error = ex_put_var_param(exo->exoid, "g", num_vars);
-      EH(error, "ex_put_var_param(g)");
+      error = ex_put_variable_param(exo->exoid, EX_GLOBAL, num_vars);
+      EH(error, "ex_put_variable_param global");
       for ( i=0; i<rd[0]->ngv; i++)
         {
          gvar_names[i] = rd[0]->gvname[i];
         }
-      error = ex_put_var_names(exo->exoid, "g", num_vars, gvar_names);
-      EH(error, "ex_put_var_names(g)");
+      error = ex_put_variable_names(exo->exoid, EX_GLOBAL, num_vars, gvar_names);
+      EH(error, "ex_put_variable_names global");
     }
 
   /* -------------------- Element Variables -------------------------- */
   if ( total_nev > 0 )
     {
-      error = ex_put_var_param(exo->exoid, "e", total_nev);
-      EH(error, "ex_put_var_param(e)");
+      error = ex_put_variable_param(exo->exoid, EX_ELEM_BLOCK, total_nev);
+      EH(error, "ex_put_variable_param elem block");
       pg->imtrx = 0;
       int count = 0;
       i = 0;
@@ -817,10 +827,10 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
           pg->imtrx++;
         }
 
-	if (pg->imtrx >= upd->Total_Num_Matrices) {
-	  EH(-1, "Error counting element variables");
-	  return;
-	}
+        if (pg->imtrx >= upd->Total_Num_Matrices) {
+          EH(-1, "Error counting element variables");
+          return;
+        }
 
         var_names[count] = rd[pg->imtrx]->evname[i];
 #ifdef DEBUG
@@ -832,8 +842,8 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
 #ifdef DEBUG
       printf("%s: varnames loaded\n", yo);
 #endif
-      error = ex_put_var_names(exo->exoid, "e", total_nev, var_names);
-      EH(error, "ex_put_var_names(e)");
+      error = ex_put_variable_names(exo->exoid, EX_ELEM_BLOCK,  total_nev, var_names);
+      EH(error, "ex_put_variable_names elem block");
 
       /* Create truth table at this time - saves mucho cycles later
          Also malloc the gvec_elem final dim. Easier to do right
@@ -845,8 +855,8 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
   /* -------------------- Nodal Variables -------------------------- */
   if ( total_nnv > 0 )
     {
-      error = ex_put_var_param(exo->exoid, "n", total_nnv);
-      EH(error, "ex_put_var_param(n)");
+      error = ex_put_variable_param(exo->exoid, EX_NODAL, total_nnv);
+      EH(error, "ex_put_variable_param EX_NODAL");
       pg->imtrx = 0;
       int count = 0;
       i = 0;
@@ -856,10 +866,10 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
           pg->imtrx++;
         }
 
-	if (pg->imtrx >= upd->Total_Num_Matrices) {
-	  EH(-1, "Error counting nodal variables");
-	  return;
-	}
+        if (pg->imtrx >= upd->Total_Num_Matrices) {
+          EH(-1, "Error counting nodal variables");
+          return;
+        }
 
         var_names[count] = rd[pg->imtrx]->nvname[i];
   #ifdef DEBUG
@@ -871,8 +881,8 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
 #ifdef DEBUG
       printf("%s: varnames loaded\n", yo);
 #endif
-      error = ex_put_var_names(exo->exoid, "n", total_nnv, var_names);
-      EH(error, "ex_put_var_names(n)");
+      error = ex_put_variable_names(exo->exoid, EX_NODAL, total_nnv, var_names);
+      EH(error, "ex_put_variable_names nodal");
     }
 
   error = ex_close(exo->exoid);
@@ -883,7 +893,7 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
 
 void 
 wr_nodal_result_exo(Exo_DB *exo, char *filename, double vector[],
-		    int variable_index, int time_step, double time_value)
+                    int variable_index, int time_step, double time_value)
 
      /*****************************************************************
       * write_nodal_result_exo() 
@@ -901,19 +911,19 @@ wr_nodal_result_exo(Exo_DB *exo, char *filename, double vector[],
   exo->cmode = EX_WRITE;
   exo->io_wordsize = 0;		/* query */
   exo->exoid = ex_open(filename, exo->cmode, &exo->comp_wordsize, 
-		       &exo->io_wordsize, &exo->version);
+                       &exo->io_wordsize, &exo->version);
   if (exo->exoid < 0)
     {
       sr = sprintf(err_msg, 
-		   "ex_open() = %d on \"%s\" failure @ step %d, time = %g",
-		   exo->exoid, filename, time_step, time_value);
+                   "ex_open() = %d on \"%s\" failure @ step %d, time = %g",
+                   exo->exoid, filename, time_step, time_value);
       EH(-1, err_msg);
     }
   error      = ex_put_time(exo->exoid, time_step, &time_value);
   EH(error, "ex_put_time");
-  error      = ex_put_nodal_var(exo->exoid, time_step, variable_index, 
+  error      = ex_put_var(exo->exoid, time_step, EX_NODAL, variable_index, 1,
 				exo->num_nodes, vector);
-  EH(error, "ex_put_nodal_var");
+  EH(error, "ex_put_var nodal");
   error      = ex_close(exo->exoid);
   return;
 }
@@ -923,9 +933,9 @@ wr_nodal_result_exo(Exo_DB *exo, char *filename, double vector[],
 
 void 
 wr_elem_result_exo(Exo_DB *exo, const char *filename, double ***vector, 
-		   const int variable_index, const int time_step,
-		   const double time_value, 
-		   struct Results_Description *rd)
+                   const int variable_index, const int time_step,
+                   const double time_value, 
+                   struct Results_Description *rd)
 {
   int error, i;
   double local_time_value=time_value;
@@ -939,7 +949,7 @@ wr_elem_result_exo(Exo_DB *exo, const char *filename, double ***vector,
 
   exo->io_wordsize = 0;		/* query */
   exo->exoid = ex_open(filename, exo->cmode, &exo->comp_wordsize, 
-		       &exo->io_wordsize, &exo->version);
+                       &exo->io_wordsize, &exo->version);
   EH(exo->exoid, "ex_open");
 
 #ifdef DEBUG
@@ -957,22 +967,22 @@ wr_elem_result_exo(Exo_DB *exo, const char *filename, double ***vector,
     if (exo->elem_var_tab_exists == TRUE) {
       /* Only write out vals if this variable exists for the block */
       if (exo->elem_var_tab[i*rd->nev + variable_index] == 1) {
-	error = ex_put_elem_var(exo->exoid, time_step, variable_index+1,
-				exo->eb_id[i], exo->eb_num_elems[i],
-				vector[i][variable_index]);
-	EH(error, "ex_put_elem_var");
+        error = ex_put_var(exo->exoid, time_step, EX_ELEM_BLOCK, variable_index+1,
+                           exo->eb_id[i], exo->eb_num_elems[i],
+                           vector[i][variable_index]);
+	      EH(error, "ex_put_var elem");
       }
     }
     else {
       /* write it anyway (not really recommended from a performance viewpoint) */
-      error      = ex_put_elem_var ( exo->exoid,
-				     time_step, 
-				     variable_index+1, /* Convert to 1 based for 
-							  exodus */
-				     exo->eb_id[i],
-				     exo->eb_num_elems[i],
-				     vector[i][variable_index] );
-      EH(error, "ex_put_elem_var");
+      error      = ex_put_var ( exo->exoid,
+                                time_step, EX_ELEM_BLOCK,
+                                variable_index+1, /* Convert to 1 based for
+                                          exodus */
+                                exo->eb_id[i],
+                                exo->eb_num_elems[i],
+                                vector[i][variable_index] );
+      EH(error, "ex_put_var elem");
     }
   }
 
@@ -985,10 +995,10 @@ wr_elem_result_exo(Exo_DB *exo, const char *filename, double ***vector,
 
 void
 wr_global_result_exo( Exo_DB *exo, 
-		      const char *filename, 
-		      const int time_step, 
-		      const int ngv, 
-		      double u[] )
+                      const char *filename, 
+                      const int time_step, 
+                      const int ngv, 
+                      double u[] )
 {
      /*****************************************************************
       * write_global_result_exo() 
@@ -1015,14 +1025,14 @@ wr_global_result_exo( Exo_DB *exo,
   exo->cmode = EX_WRITE;
   exo->io_wordsize = 0;		/* query */
   exo->exoid = ex_open(filename, exo->cmode, &exo->comp_wordsize, 
-		       &exo->io_wordsize, &exo->version);
+                       &exo->io_wordsize, &exo->version);
   if (exo->exoid < 0) {
     EH(-1,"wr_nodal_result_exo: could not open the output file");
   }
 
-  error = ex_put_glob_vars ( exo->exoid, time_step, ngv, u );
+  error = ex_put_var( exo->exoid, time_step, EX_GLOBAL, 1, 0, ngv, u );
 
-  EH(error, "ex_put_glob_vars");
+  EH(error, "ex_put_var glob_vars");
 
   error = ex_close( exo->exoid);
 
@@ -1046,7 +1056,7 @@ wr_global_result_exo( Exo_DB *exo,
  */
 void
 create_truth_table(struct Results_Description *rd, Exo_DB *exo,
-		   double ***gvec_elem )
+                   double ***gvec_elem )
 {
   char err_msg[MAX_CHAR_IN_INPUT], if_ev;
   int   i, j, eb_indx, ev_indx, mat_num, error, check, iii;
@@ -1095,23 +1105,23 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
            {
             if ( pd_glob[mat_num]->v[imtrx][j] != V_NOTHING ) 
               {
-	       if ( pd_glob[mat_num]->i[imtrx][j] == I_P0 ) 
+               if ( pd_glob[mat_num]->i[imtrx][j] == I_P0 ) 
                  {
-	          if ( Num_Var_In_Type[imtrx][j] > 1 ) 
+                  if ( Num_Var_In_Type[imtrx][j] > 1 ) 
                     {
-	             fprintf(stderr,
-		             "%s: Too many components in variable type for element variable %s (%s)\n",
-		             yo,
-		             Exo_Var_Names[j].name2,
-		             Exo_Var_Names[j].name1 );
-	             exit (-1);
-	            }
-	          if ( exo->truth_table_existance_key[j - V_FIRST] == 0 ) 
+                     fprintf(stderr,
+                             "%s: Too many components in variable type for element variable %s (%s)\n",
+                             yo,
+                             Exo_Var_Names[j].name2,
+                             Exo_Var_Names[j].name1 );
+                     exit (-1);
+                    }
+                  if ( exo->truth_table_existance_key[j - V_FIRST] == 0 ) 
                     {
-	             /* We just found a candidate for an element variable */
-	             tev += Num_Var_In_Type[imtrx][j];
-	             exo->truth_table_existance_key[j - V_FIRST] = 1;
-	            }
+                     /* We just found a candidate for an element variable */
+                     tev += Num_Var_In_Type[imtrx][j];
+                     exo->truth_table_existance_key[j - V_FIRST] = 1;
+                    }
                  }
               }
            }
@@ -1126,7 +1136,7 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
            tev++;
            if (ERROR_ZZ_VEL_ELSIZE  != -1) 
              {
-	      tev++;	
+              tev++;	
              }
           }
         if (ERROR_ZZ_Q != -1 && Num_Var_In_Type[imtrx][R_ENERGY]) 
@@ -1134,14 +1144,14 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
            tev++;
            if (ERROR_ZZ_Q_ELSIZE  != -1) 
              {
-	      tev++;	
+              tev++;	
              }
           }
        }
     check = 0;
     for ( i = 0; i < upd->Num_Mat; i++ ) {
       if( pd_glob[i]->MeshMotion == LAGRANGIAN ||
-	  pd_glob[i]->MeshMotion == DYNAMIC_LAGRANGIAN) check = 1;
+          pd_glob[i]->MeshMotion == DYNAMIC_LAGRANGIAN) check = 1;
     }
 
     for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
@@ -1151,7 +1161,7 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
            tev++;
            if (ERROR_ZZ_P_ELSIZE  != -1) 
              {
-	      tev++;	
+              tev++;	
              }
           }
        }
@@ -1163,30 +1173,30 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
     eb_ptr = Element_Blocks + eb_indx;
     ip_total = elem_info(NQUAD, eb_ptr->Elem_Type);
     if((mp->PorousMediaType == POROUS_UNSATURATED ||
-	mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
-	mp->PorousMediaType == POROUS_TWO_PHASE) &&
+        mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
+        mp->PorousMediaType == POROUS_TWO_PHASE) &&
        mp->SaturationModel == TANH_HYST &&
        !if_ev)
       {
-	for ( j = 0; j < ip_total; j++) {
-	  if(SAT_CURVE_TYPE != -1) tev++; /*For Sat curve type */
-	  if(CAP_PRESS_SWITCH != -1) tev++; /*For saturation switch */
-	  if(SAT_QP_SWITCH != -1) tev++; /*for cap press switch point*/
-	}
-	if_ev = TRUE;
+        for ( j = 0; j < ip_total; j++) {
+          if(SAT_CURVE_TYPE != -1) tev++; /*For Sat curve type */
+          if(CAP_PRESS_SWITCH != -1) tev++; /*For saturation switch */
+          if(SAT_QP_SWITCH != -1) tev++; /*for cap press switch point*/
+        }
+        if_ev = TRUE;
       }
   }
 
   /* Sanity check */
   if ( tev != rd->nev ) {
     sr = sprintf(err_msg, 
-		 "%s: Elem var count mismatch: tev(%d)<>rd->nev(%d)!?",
-		 yo, tev, rd->nev);
+                 "%s: Elem var count mismatch: tev(%d)<>rd->nev(%d)!?",
+                 yo, tev, rd->nev);
     EH(-1, err_msg);
     /*
     fprintf(stderr,
-	    "%s: Disagreement over number of element variables\n",
-	    yo );
+            "%s: Disagreement over number of element variables\n",
+            yo );
     exit (-1);    
     */
   }
@@ -1206,38 +1216,38 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
               found_match = FALSE;
               if ( pd_glob[mat_num]->v[imtrx][j] != V_NOTHING ) 
                 {
-	         if ( pd_glob[mat_num]->i[imtrx][j] == I_P0 ) 
+                 if ( pd_glob[mat_num]->i[imtrx][j] == I_P0 ) 
                    {
-	            if ( Num_Var_In_Type[imtrx][j] > 1 ) 
+                    if ( Num_Var_In_Type[imtrx][j] > 1 ) 
                       {
-	               fprintf(stderr,
-		               "%s: Too many components in variable type for element variable %s (%s)\n",
-		               yo,
-		               Exo_Var_Names[j].name2,
-		               Exo_Var_Names[j].name1 );
-	               exit (-1);
-	              }
-	            /* We just found a candidate for an element variable */
-	            exo->elem_var_tab[i++] = 1;
-	            found_match = TRUE;
-	            ev_indx++;
-	            /* malloc the entry for this block by number of elems for this block 
-	               but - only if the variable exists for this block! (by the truth table) */
-	            if ( has_been_called == 0 ) 
+                       fprintf(stderr,
+                               "%s: Too many components in variable type for element variable %s (%s)\n",
+                               yo,
+                               Exo_Var_Names[j].name2,
+                               Exo_Var_Names[j].name1 );
+                       exit (-1);
+                      }
+                    /* We just found a candidate for an element variable */
+                    exo->elem_var_tab[i++] = 1;
+                    found_match = TRUE;
+                    ev_indx++;
+                    /* malloc the entry for this block by number of elems for this block 
+                       but - only if the variable exists for this block! (by the truth table) */
+                    if ( has_been_called == 0 ) 
                       {
-	               /* NOTE: this final array dim is only to be malloc'd once; when a user 
-	                  is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
-	                  and hence create_truth_table, which would realloc this dim of gvec_elem.
-	                  this test will prevent that. - RRL */
-	               asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-		              exo->eb_num_elems[eb_indx] );
-	              }
-	           }
+                       /* NOTE: this final array dim is only to be malloc'd once; when a user 
+                          is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
+                          and hence create_truth_table, which would realloc this dim of gvec_elem.
+                          this test will prevent that. - RRL */
+                       asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+                              exo->eb_num_elems[eb_indx] );
+                      }
+                   }
                 }
               if ( found_match == FALSE && exo->truth_table_existance_key[j - V_FIRST] == 1 ) 
                 {
-	         exo->elem_var_tab[i++] = 0;
-	         ev_indx++;
+                 exo->elem_var_tab[i++] = 0;
+                 ev_indx++;
                 }
              }
          }
@@ -1252,31 +1262,31 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
              exo->elem_var_tab[i++] = 1;   
              ev_indx++;
              /* malloc the entry for this block by number of elems for this block 
-	        but - only if the variable exists for this block! (by the truth table) */
+                but - only if the variable exists for this block! (by the truth table) */
              if ( has_been_called == 0 ) 
                {
-	        /* NOTE: this final array dim is only to be malloc'd once; when a user 
-	           is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
-	           and hence create_truth_table, which would realloc this dim of gvec_elem.
-	           this test will prevent that. - RRL */
-	        asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-	               exo->eb_num_elems[eb_indx] );
+                /* NOTE: this final array dim is only to be malloc'd once; when a user 
+                   is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
+                   and hence create_truth_table, which would realloc this dim of gvec_elem.
+                   this test will prevent that. - RRL */
+                asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+                       exo->eb_num_elems[eb_indx] );
                }
              if (ERROR_ZZ_VEL_ELSIZE  != -1) 
                {
-	        exo->elem_var_tab[i++] = 1;   
-	        ev_indx++;
-	        /* malloc the entry for this block by number of elems for this block 
-	           but - only if the variable exists for this block! (by the truth table) */
-	        if ( has_been_called == 0 ) 
+                exo->elem_var_tab[i++] = 1;   
+                ev_indx++;
+                /* malloc the entry for this block by number of elems for this block 
+                   but - only if the variable exists for this block! (by the truth table) */
+                if ( has_been_called == 0 ) 
                   {
-	           /* NOTE: this final array dim is only to be malloc'd once; when a user 
-	              is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
-	              and hence create_truth_table, which would realloc this dim of gvec_elem.
-	              this test will prevent that. - RRL */
-	           asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-		          exo->eb_num_elems[eb_indx] );
-	          }
+                   /* NOTE: this final array dim is only to be malloc'd once; when a user 
+                      is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
+                      and hence create_truth_table, which would realloc this dim of gvec_elem.
+                      this test will prevent that. - RRL */
+                   asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+                          exo->eb_num_elems[eb_indx] );
+                  }
                }
             }
 
@@ -1285,31 +1295,31 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
              exo->elem_var_tab[i++] = 1;   
              ev_indx++;
              /* malloc the entry for this block by number of elems for this block 
-	        but - only if the variable exists for this block! (by the truth table) */
+                but - only if the variable exists for this block! (by the truth table) */
              if ( has_been_called == 0 ) 
                {
-	        /* NOTE: this final array dim is only to be malloc'd once; when a user 
-	           is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
-	           and hence create_truth_table, which would realloc this dim of gvec_elem.
-	           this test will prevent that. - RRL */
-	        asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-	               exo->eb_num_elems[eb_indx] );
+                /* NOTE: this final array dim is only to be malloc'd once; when a user 
+                   is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
+                   and hence create_truth_table, which would realloc this dim of gvec_elem.
+                   this test will prevent that. - RRL */
+                asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+                       exo->eb_num_elems[eb_indx] );
                }
              if (ERROR_ZZ_Q_ELSIZE  != -1) 
                {
-	        exo->elem_var_tab[i++] = 1;   
-	        ev_indx++;
-	        /* malloc the entry for this block by number of elems for this block 
-	           but - only if the variable exists for this block! (by the truth table) */
-	        if ( has_been_called == 0 ) 
+                exo->elem_var_tab[i++] = 1;   
+                ev_indx++;
+                /* malloc the entry for this block by number of elems for this block 
+                   but - only if the variable exists for this block! (by the truth table) */
+                if ( has_been_called == 0 ) 
                   {
-	           /* NOTE: this final array dim is only to be malloc'd once; when a user 
-	              is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
-	              and hence create_truth_table, which would realloc this dim of gvec_elem.
-	              this test will prevent that. - RRL */
-	           asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-		          exo->eb_num_elems[eb_indx] );
-	          }
+                   /* NOTE: this final array dim is only to be malloc'd once; when a user 
+                      is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
+                      and hence create_truth_table, which would realloc this dim of gvec_elem.
+                      this test will prevent that. - RRL */
+                   asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+                          exo->eb_num_elems[eb_indx] );
+                  }
                }
             }
          }
@@ -1317,7 +1327,7 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
       for ( iii = 0; iii < upd->Num_Mat; iii++ ) 
          {
           if( pd_glob[iii]->MeshMotion == LAGRANGIAN ||
-	      pd_glob[iii]->MeshMotion == DYNAMIC_LAGRANGIAN) check = 1;
+              pd_glob[iii]->MeshMotion == DYNAMIC_LAGRANGIAN) check = 1;
          }
 
       for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
@@ -1327,76 +1337,76 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
              exo->elem_var_tab[i++] = 1;   
              ev_indx++;
              /* malloc the entry for this block by number of elems for this block 
-	        but - only if the variable exists for this block! (by the truth table) */
+                but - only if the variable exists for this block! (by the truth table) */
              if ( has_been_called == 0 ) 
                {
-	        /* NOTE: this final array dim is only to be malloc'd once; when a user 
-	           is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
-	           and hence create_truth_table, which would realloc this dim of gvec_elem.
-	           this test will prevent that. - RRL */
-	        asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-	               exo->eb_num_elems[eb_indx] );
+                /* NOTE: this final array dim is only to be malloc'd once; when a user 
+                   is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
+                   and hence create_truth_table, which would realloc this dim of gvec_elem.
+                   this test will prevent that. - RRL */
+                asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+                       exo->eb_num_elems[eb_indx] );
                }
              if (ERROR_ZZ_P_ELSIZE  != -1) 
                {
-	        exo->elem_var_tab[i++] = 1;   
-	        ev_indx++;
-	        /* malloc the entry for this block by number of elems for this block 
-	           but - only if the variable exists for this block! (by the truth table) */
-	        if ( has_been_called == 0 ) 
+                exo->elem_var_tab[i++] = 1;   
+                ev_indx++;
+                /* malloc the entry for this block by number of elems for this block 
+                   but - only if the variable exists for this block! (by the truth table) */
+                if ( has_been_called == 0 ) 
                   {
-	           /* NOTE: this final array dim is only to be malloc'd once; when a user 
-	              is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
-	              and hence create_truth_table, which would realloc this dim of gvec_elem.
-	              this test will prevent that. - RRL */
-	           asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-		          exo->eb_num_elems[eb_indx] );
-	           has_been_called++;
-	          }
+                   /* NOTE: this final array dim is only to be malloc'd once; when a user 
+                      is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
+                      and hence create_truth_table, which would realloc this dim of gvec_elem.
+                      this test will prevent that. - RRL */
+                   asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+                          exo->eb_num_elems[eb_indx] );
+                   has_been_called++;
+                  }
                }
             }
          }
       /*Now finally the saturation hysteresis variables */
       if(SAT_CURVE_TYPE != -1 || CAP_PRESS_SWITCH != -1 || SAT_QP_SWITCH != -1)
         {
-	 eb_ptr = Element_Blocks + eb_indx;
-	 ip_total = elem_info(NQUAD, eb_ptr->Elem_Type);
-	 for(j=0; j < ip_total; j++)
-	    {
-	     /*Note that we will set these for all 3 var types because you
-	      *will never see them individually. 
-	      */
-	     exo->elem_var_tab[i++] = 1;
-	     ev_indx++;
-	     if ( has_been_called == 0 ) 
-	       {
-		 asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-		      exo->eb_num_elems[eb_indx] );
-	       }
-	     exo->elem_var_tab[i++] = 1;
-	     ev_indx++;
-	     if ( has_been_called == 0 ) 
-	       {
-		 asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-		      exo->eb_num_elems[eb_indx] );
-	       }
-	     exo->elem_var_tab[i++] = 1;
-	     ev_indx++;
-	     if ( has_been_called == 0 ) 
-	       {
-		 asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-		      exo->eb_num_elems[eb_indx] );
-	       }
-	    }
+         eb_ptr = Element_Blocks + eb_indx;
+         ip_total = elem_info(NQUAD, eb_ptr->Elem_Type);
+         for(j=0; j < ip_total; j++)
+            {
+             /*Note that we will set these for all 3 var types because you
+              *will never see them individually. 
+              */
+             exo->elem_var_tab[i++] = 1;
+             ev_indx++;
+             if ( has_been_called == 0 ) 
+               {
+                 asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+                      exo->eb_num_elems[eb_indx] );
+               }
+             exo->elem_var_tab[i++] = 1;
+             ev_indx++;
+             if ( has_been_called == 0 ) 
+               {
+                 asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+                      exo->eb_num_elems[eb_indx] );
+               }
+             exo->elem_var_tab[i++] = 1;
+             ev_indx++;
+             if ( has_been_called == 0 ) 
+               {
+                 asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+                      exo->eb_num_elems[eb_indx] );
+               }
+            }
         }
      }
 
   /* write out table */
-  error      = ex_put_elem_var_tab ( exo->exoid,
-				     exo->num_elem_blocks,
-				     rd->nev,
-				     exo->elem_var_tab );
-  EH(error, "ex_put_elem_var_tab");
+  error      = ex_put_truth_table ( exo->exoid, EX_ELEM_BLOCK,
+				    exo->num_elem_blocks,
+				    rd->nev,
+				    exo->elem_var_tab );
+  EH(error, "ex_put_truth_table EX_ELEM_BLOCK");
 
   /* Now set truth table exists flag */
   exo->elem_var_tab_exists = TRUE;
@@ -1755,11 +1765,11 @@ create_truth_table_segregated(struct Results_Description **rd, Exo_DB *exo,
      }
 
   /* write out table */
-  error      = ex_put_elem_var_tab ( exo->exoid,
-                                     exo->num_elem_blocks,
-                                     total_nev,
-                                     exo->elem_var_tab );
-  EH(error, "ex_put_elem_var_tab");
+  error      = ex_put_truth_table ( exo->exoid, EX_ELEM_BLOCK,
+				    exo->num_elem_blocks,
+				    total_nev,
+				    exo->elem_var_tab );
+  EH(error, "ex_put_truth_table EX_ELEM_BLOCK");
 
   /* Now set truth table exists flag */
   exo->elem_var_tab_exists = TRUE;
@@ -1811,18 +1821,18 @@ add_qa_stamp(Exo_DB *exo)
   for (i=0; i<exo->num_qa_rec; i++)
     {
       for (j=0; j<4; j++)
-	{
-	  Q[i][j] = (char *) smalloc(LEN_QA_RECORD*sizeof(char));
+        {
+          Q[i][j] = (char *) smalloc(LEN_QA_RECORD*sizeof(char));
 
-	  /*
-	   * Initialize to null terminators...
-	   */
+          /*
+           * Initialize to null terminators...
+           */
 
-	  for (k=0; k<LEN_QA_RECORD; k++)
-	    {
-	      Q[i][j][k] = '\0';
-	    }
-	}
+          for (k=0; k<LEN_QA_RECORD; k++)
+            {
+              Q[i][j][k] = '\0';
+            }
+        }
     }
 
   /*
@@ -1832,9 +1842,9 @@ add_qa_stamp(Exo_DB *exo)
   for ( i=0; i<exo->num_qa_rec-1; i++)
     {
       for ( j=0; j<4; j++)
-	{
-	  strcpy(Q[i][j], exo->qa_record[i][j]);
-	}
+        {
+          strcpy(Q[i][j], exo->qa_record[i][j]);
+        }
     }
 
   /*
@@ -1844,9 +1854,9 @@ add_qa_stamp(Exo_DB *exo)
   for ( j=0; j<4; j++)
     {
       for ( k=0; k<MAX_STR_LENGTH; k++)
-	{
-	  Q[n][j][k] = '\0';
-	}
+        {
+          Q[n][j][k] = '\0';
+        }
     }
 
   /*
@@ -1865,9 +1875,9 @@ add_qa_stamp(Exo_DB *exo)
   for ( i=0; i<n; i++)
     {
       for ( j=0; j<4; j++)
-	{
-	  safer_free((void **)&(exo->qa_record[i][j]));
-	}
+        {
+          safer_free((void **)&(exo->qa_record[i][j]));
+        }
     }
 
   if ( n > 0 )
@@ -1948,9 +1958,9 @@ add_info_stamp(Exo_DB *exo)
   for ( i=n; i<exo->num_info; i++)
     {
       for ( k=0; k<MAX_LINE_LENGTH; k++)
-	{
-	  I[i][k] = '\0';
-	}
+        {
+          I[i][k] = '\0';
+        }
     }
 
   /*
@@ -1985,12 +1995,12 @@ add_info_stamp(Exo_DB *exo)
        * null.
        */
       while (*a != NULL && 
-	     ((strlen(buf) + strlen(*a) + 2) < MAX_LINE_LENGTH) )
-	{
-	  strcat(buf, *a);
-	  strcat(buf, " ");
-	  a++;
-	}
+             ((strlen(buf) + strlen(*a) + 2) < MAX_LINE_LENGTH) )
+        {
+          strcat(buf, *a);
+          strcat(buf, " ");
+          a++;
+        }
     }
 
   strcpy(I[n+1], buf);
@@ -2009,7 +2019,10 @@ add_info_stamp(Exo_DB *exo)
 
   if ( ProcID < 8 )		/* too much I/O overhead for many procs */
     {
-      getcwd(buf, MAX_LINE_LENGTH+1);
+      char * cwderr = getcwd(buf, MAX_LINE_LENGTH+1);
+      if (cwderr == NULL) {
+        strcpy(buf, ".");
+      }
     }
   else
     {
@@ -2069,8 +2082,8 @@ add_info_stamp(Exo_DB *exo)
 
 void 
 wr_resetup_exo(Exo_DB *exo,
-	       char *filename,
-	       int verbosity)
+               char *filename,
+               int verbosity)
 {
   int error;
   int i;
@@ -2089,7 +2102,7 @@ wr_resetup_exo(Exo_DB *exo,
   exo->io_wordsize   = 0;	/* i.e., query */
   exo->comp_wordsize = sizeof(dbl);
   exo->exoid         = ex_open(filename, exo->cmode, &exo->comp_wordsize, 
-			       &exo->io_wordsize, &exo->version);
+                               &exo->io_wordsize, &exo->version);
 
 #ifdef DEBUG
   fprintf(stderr, "\t\tfilename    = \"%s\"\n", filename);
@@ -2103,45 +2116,45 @@ wr_resetup_exo(Exo_DB *exo,
 
   if ( exo->num_glob_vars > 0 )
     {
-      status = ex_put_var_param(exo->exoid, "g", exo->num_glob_vars);
-      EH(status, "ex_put_var_param(g)");
-      status = ex_put_var_names(exo->exoid, "g", exo->num_glob_vars,
+      status = ex_put_variable_param(exo->exoid, EX_GLOBAL, exo->num_glob_vars);
+      EH(status, "ex_put_variable_param global");
+      status = ex_put_variable_names(exo->exoid, EX_GLOBAL, exo->num_glob_vars,
 				exo->glob_var_names);
-      EH(status, "ex_put_var_names(g)");
+      EH(status, "ex_put_variable_names global");
     }
 
   if ( exo->num_elem_vars > 0 )
     {
-      status = ex_put_var_param(exo->exoid, "e", exo->num_elem_vars);
-      EH(status, "ex_put_var_param(e)");
-      status = ex_put_var_names(exo->exoid, "e", 
-				exo->num_elem_vars,
-				exo->elem_var_names);
-      EH(status, "ex_put_var_names(e)");
-      status = ex_put_elem_var_tab(exo->exoid, 
+      status = ex_put_variable_param(exo->exoid, EX_ELEM_BLOCK, exo->num_elem_vars);
+      EH(status, "ex_put_variable_param elem block");
+      status = ex_put_variable_names(exo->exoid, EX_ELEM_BLOCK,
+				     exo->num_elem_vars,
+				     exo->elem_var_names);
+      EH(status, "ex_put_variable_names elem block");
+      status = ex_put_truth_table(exo->exoid, EX_ELEM_BLOCK,
 				   exo->num_elem_blocks,
 				   exo->num_elem_vars, 
 				   exo->elem_var_tab);
-      EH(status, "ex_put_elem_var_tab");
+      EH(status, "ex_put_truth_table elem block");
     }
 
   if ( exo->num_node_vars > 0 )
     {
-      status = ex_put_var_param(exo->exoid, "n", exo->num_node_vars);
-      EH(status, "ex_put_var_param(n)");
-      status = ex_put_var_names(exo->exoid, "n", 
+      status = ex_put_variable_param(exo->exoid, EX_NODAL, exo->num_node_vars);
+      EH(status, "ex_put_variable_param nodal");
+      status = ex_put_variable_names(exo->exoid, EX_NODAL,
 				exo->num_node_vars,
 				exo->node_var_names);
-      EH(status, "ex_put_var_names(n)");
+      EH(status, "ex_put_variable_names nodal");
     }
 
   if ( exo->num_times > 0 )
     {
       for ( i=0; i<exo->num_times; i++)
-	{
-	  status = ex_put_time(exo->exoid, i+1, &(exo->time_vals[i]));
-	  EH(status, "ex_put_times");
-	}
+        {
+          status = ex_put_time(exo->exoid, i+1, &(exo->time_vals[i]));
+          EH(status, "ex_put_times");
+        }
     }
 
   error      = ex_close(exo->exoid);
@@ -2152,8 +2165,8 @@ wr_resetup_exo(Exo_DB *exo,
 
 void 
 wr_result_exo(Exo_DB *exo,
-	      char *filename,
-	      int verbosity)
+              char *filename,
+              int verbosity)
 {
   int i;
   int index;
@@ -2175,10 +2188,10 @@ wr_result_exo(Exo_DB *exo,
   exo->io_wordsize   = 0;	/* i.e., query */
   exo->comp_wordsize = sizeof(dbl);
   exo->exoid         = ex_open(filename, 
-			       exo->cmode, 
-			       &exo->comp_wordsize, 
-			       &exo->io_wordsize, 
-			       &exo->version);
+                               exo->cmode, 
+                               &exo->comp_wordsize, 
+                               &exo->io_wordsize, 
+                               &exo->version);
 
 #ifdef DEBUG
   fprintf(stderr, "\t\tfilename    = \"%s\"\n", filename);
@@ -2198,13 +2211,13 @@ wr_result_exo(Exo_DB *exo,
       fprintf(stderr, "\t\tnev         = %d\n", exo->num_elem_vars);
       fprintf(stderr, "\t\tevt:        =   \n");
       for ( i=0; i<exo->num_elem_blocks; i++)
-	{
-	  for ( j=0; j<exo->num_elem_vars; j++)
-	    {
-	      fprintf(stderr, "block index %d, elem var index %d is %d\n",
-		      i, j, exo->elem_var_tab[i*(exo->num_elem_vars)+j]);
-	    }
-	}
+        {
+          for ( j=0; j<exo->num_elem_vars; j++)
+            {
+              fprintf(stderr, "block index %d, elem var index %d is %d\n",
+                      i, j, exo->elem_var_tab[i*(exo->num_elem_vars)+j]);
+            }
+        }
 #endif
 
       /*
@@ -2212,39 +2225,39 @@ wr_result_exo(Exo_DB *exo,
        *
 
       status = ex_put_elem_var_tab(exo->exoid, 
-				   exo->num_elem_blocks,
-				   exo->num_elem_vars, 
-				   exo->elem_var_tab);
+                                   exo->num_elem_blocks,
+                                   exo->num_elem_vars, 
+                                   exo->elem_var_tab);
       EH(status, "ex_put_elem_var_tab");
       */
 
       for ( i=0; i<exo->num_ev_time_indeces; i++)
-	{
-	  time_index = exo->ev_time_indeces[i];
-	  
-	  for ( j=0; j<exo->num_elem_blocks; j++)
-	    {
-	      for ( k=0; k<exo->num_elem_vars; k++)
-		{
-		  index = j * exo->num_elem_vars + k;
-		  
-		  if ( exo->elem_var_tab[index] != 0 )
-		    {
-		      status = ex_put_elem_var(exo->exoid, time_index, k+1,
-					       exo->eb_id[j], 
-					       exo->eb_num_elems[j],
-					       &(exo->ev[i][index][0]));
-		      if ( status < 0 )
-			{
-			  sprintf(err_msg, 
-                                  "ex_put_elem_var() bad rtn: time %d, elemvar %d, EB ID %d",
-                                  time_index, k+1, exo->eb_id[j]);
-			  EH(-1, err_msg);
-			}
-		    }
-		}
-	    }
-	}
+        {
+          time_index = exo->ev_time_indeces[i];
+          
+          for ( j=0; j<exo->num_elem_blocks; j++)
+            {
+              for ( k=0; k<exo->num_elem_vars; k++)
+                {
+                  index = j * exo->num_elem_vars + k;
+                  
+                  if ( exo->elem_var_tab[index] != 0 )
+                    {
+                      status = ex_put_var(exo->exoid, time_index, EX_ELEM_BLOCK, k+1,
+                      exo->eb_id[j],
+                      exo->eb_num_elems[j],
+                      &(exo->ev[i][index][0]));
+                      if ( status < 0 )
+                        {
+                          sprintf(err_msg, 
+                                                    "ex_put_var() elem bad rtn: time %d, elemvar %d, EB ID %d",
+                                                    time_index, k+1, exo->eb_id[j]);
+                          EH(-1, err_msg);
+                        }
+                    }
+                }
+            }
+        }
     }
 
   /*
@@ -2254,18 +2267,18 @@ wr_result_exo(Exo_DB *exo,
   if ( exo->num_node_vars > 0 )
     {
       for ( i=0; i<exo->num_nv_time_indeces; i++)
-	{
-	  time_index = exo->nv_time_indeces[i];
+        {
+          time_index = exo->nv_time_indeces[i];
 
-	  for ( j = 0; j < exo->num_nv_indeces; j++)
-	    {
-	      status = ex_put_nodal_var(exo->exoid, time_index, 
-					exo->nv_indeces[j],
-					exo->num_nodes, 
-					&(exo->nv[i][j][0]));
-	      EH(status, "ex_put_nodal_var");
-	    }
-	}
+          for ( j = 0; j < exo->num_nv_indeces; j++)
+            {
+              status = ex_put_var(exo->exoid, time_index, EX_NODAL,
+                exo->nv_indeces[j], 1,
+                exo->num_nodes,
+                &(exo->nv[i][j][0]));
+              EH(status, "ex_put_var nodal");
+            }
+        }
     }
 
   status = ex_close(exo->exoid);

@@ -82,6 +82,12 @@
 				       /* a command line sent to system() */
 #endif
 
+#ifndef MAX_SYSTEM_COMMAND_LENGTH
+#define MAX_SYSTEM_COMMAND_LENGTH	(1280) /* maximum number of characters in */
+/* a system command for aprepro */
+#endif
+
+
 #define INPUT_FILE               1 /* command for reading from alternate input file */
 #define NO_DISPLAY               2 /* command for eliminating output to screen */
 #define APREPRO                  3 /* command to system call aprepro */

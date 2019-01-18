@@ -2253,15 +2253,15 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
    * Get the number of nodal variables in the file, and allocate
    * space for storage of their names.
    */
-  error = ex_get_var_param(exoid, "n", &num_vars);
-  EH(error, "ex_get_var_param");
-  error = ex_get_var_param(exoid, "e", &num_elem_vars);
-  EH(error, "ex_get_var_param for e");
+  error = ex_get_variable_param(exoid, EX_NODAL, &num_vars);
+  EH(error, "ex_get_variable_param nodal");
+  error = ex_get_variable_param(exoid, EX_ELEM_BLOCK, &num_elem_vars);
+  EH(error, "ex_get_var_param elem");
   
   /* First extract all nodal variable names in exoII database */
   if (num_vars > 0) {
     var_names = alloc_VecFixedStrings(num_vars, (MAX_STR_LENGTH+1));
-    error = ex_get_var_names(exoid, "n", num_vars, var_names);
+    error = ex_get_variable_names(exoid, EX_NODAL, num_vars, var_names);
     EH(error, "ex_get_var_names");
     for (i = 0; i < num_vars; i++) strip(var_names[i]);
   } else {
@@ -2353,8 +2353,8 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
 	DPRINTF(stdout,
 		"\n Cannot find external fields in exoII database, setting to null");
       } else {
-	error = ex_get_nodal_var(exoid, time_step, vdex, num_nodes,
-			         efv->ext_fld_ndl_val[variable_no]);
+	error = ex_get_var(exoid, time_step, EX_NODAL, vdex, 1, num_nodes,
+                     efv->ext_fld_ndl_val[variable_no]);
 	EH(error, "ex_get_nodal_var"); 
       }        
     }
@@ -2484,15 +2484,15 @@ rd_trans_vectors_from_exoII(double u[], const char *file_nm,
    * Get the number of nodal variables in the file, and allocate
    * space for storage of their names.
    */
-  error = ex_get_var_param(exoid, "n", &num_vars);
-  EH(error, "ex_get_var_param");
-  error = ex_get_var_param(exoid, "e", &num_elem_vars);
-  EH(error, "ex_get_var_param for e");
+  error = ex_get_variable_param(exoid, EX_NODAL, &num_vars);
+  EH(error, "ex_get_variable_param nodal");
+  error = ex_get_variable_param(exoid, EX_ELEM_BLOCK, &num_elem_vars);
+  EH(error, "ex_get_variable_param elem");
   
   /* First extract all nodal variable names in exoII database */
   if (num_vars > 0) {
     var_names = alloc_VecFixedStrings(num_vars, (MAX_STR_LENGTH+1));
-    error = ex_get_var_names(exoid, "n", num_vars, var_names);
+    error = ex_get_variable_names(exoid, EX_NODAL, num_vars, var_names);
     EH(error, "ex_get_var_names");
     for (i = 0; i < num_vars; i++) strip(var_names[i]);
   } else {
@@ -2525,8 +2525,8 @@ rd_trans_vectors_from_exoII(double u[], const char *file_nm,
 	DPRINTF(stdout,
 		"\n Cannot find external fields in exoII database, setting to null");
       } else {
-	error = ex_get_nodal_var(exoid, time_step_lower, vdex, num_nodes, val_low);
-        error = ex_get_nodal_var(exoid, time_step_higher, vdex, num_nodes, val_high);
+	error = ex_get_var(exoid, time_step_lower, EX_NODAL, vdex, 1, num_nodes, val_low);
+  error = ex_get_var(exoid, time_step_higher, EX_NODAL, vdex, 1, num_nodes, val_high);
 	EH(error, "ex_get_nodal_var");
 
         for (k=0; k<num_nodes; k++){
@@ -2594,8 +2594,8 @@ rd_exoII_nv(double *u, int varType, int mn, MATRL_PROP_STRUCT *matrl,
     status = vdex;
     DPRINTF(stdout,"Nodal variable %s found in exoII database - reading.\n", 
 	    exo_var_name);
-    error = ex_get_nodal_var(exoII_id, time_step, vdex, num_nodes, variable);
-    EH(error, "ex_get_nodal_var");
+    error = ex_get_var(exoII_id, time_step, EX_NODAL, vdex, 1, num_nodes, variable);
+    EH(error, "ex_get_var nodal");
     inject_nodal_vec(u, varType, spec, 0, mn, variable);
     safer_free((void **) &variable);
   }
@@ -2638,8 +2638,8 @@ rd_exoII_ev(double *u, int varType, int mn, MATRL_PROP_STRUCT *matrl,
     status = vdex;
     DPRINTF(stdout,"Nodal variable %s found in exoII database - reading.\n", 
 	    exo_var_name);
-    error = ex_get_nodal_var(exoII_id, time_step, vdex, num_nodes, variable);
-    EH(error, "ex_get_nodal_var");
+    error = ex_get_var(exoII_id, time_step, EX_NODAL, vdex, 1, num_nodes, variable);
+    EH(error, "ex_get_var nodal");
     inject_nodal_vec(u, varType, spec, 0, mn, variable);
     safer_free((void **) &variable);
   }
@@ -2730,7 +2730,7 @@ rd_globals_from_exoII(double u[], const char *file_nm, const int start, const in
 		      &num_elem_blk, &num_node_sets, &num_side_sets);
   EH(error, "ex_get_init for efv or init guess");
 
-  error = ex_get_var_param( exoid, "g", &num_global_vars );
+  error = ex_get_variable_param( exoid, EX_GLOBAL, &num_global_vars );
 
   if( num_global_vars > start ) /* This catches both no global vars and no augmenting values to be read */
     {
@@ -2744,8 +2744,8 @@ rd_globals_from_exoII(double u[], const char *file_nm, const int start, const in
       error = ex_inquire(exoid, EX_INQ_TIME, &time_step, &ret_float, ret_char);
       EH(error, "ex_inquire");
 
-      error = ex_get_glob_vars( exoid, time_step, num_global_vars, global_vars );
-      EH(error, "ex_get_glob_vars");
+      error = ex_get_var( exoid, time_step, EX_GLOBAL, 1, 1, num_global_vars, global_vars );
+      EH(error, "ex_get_var global");
 
       /* 
        *  Read only the global vars that are there.  No more, no less

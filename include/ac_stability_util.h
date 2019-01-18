@@ -27,6 +27,11 @@
 #define EXTERN extern
 #endif
 
+#include "dp_types.h"
+#include "exo_struct.h"
+#include "dpi.h"
+#include "rf_io_structs.h"
+
 EXTERN void do_LSA_mods
 (int);
 

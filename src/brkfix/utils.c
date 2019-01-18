@@ -535,8 +535,8 @@ get_filename_num_procs(const char *basename)
    *  Ok, delete the temporary file
    */
   sprintf(string_system_command, "/bin/rm -f %s", fixXXXXXX );
-  system(string_system_command);
-
+  int err = system(string_system_command);
+  EH(err, "Error running /bin/rm -f ");
 
   return val;
 }

@@ -21,6 +21,7 @@
 #ifndef _EXO_STRUCT_H
 #define	_EXO_STRUCT_H 1
 
+#include "std.h"
 #include "netcdf.h"
 #include "exodusII.h"
 

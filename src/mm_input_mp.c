@@ -261,7 +261,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
      *      this problem.
      **************************************************************************/
 { /*start*/
-  char err_msg[MAX_CHAR_IN_INPUT];
+  char err_msg[MAX_CHAR_ERR_MSG];
   int	i, j, var;
   int imtrx;
   static const char yo[] = "rd_mp_specs";
@@ -2289,7 +2289,10 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       else if ( !strcmp(model_name, "SUPG") )
 	{
 	  mat_ptr->Mwt_funcModel = SUPG;
-	  fscanf(imp, "%lg",&(mat_ptr->Mwt_func));
+	  if (fscanf(imp, "%lg",&(mat_ptr->Mwt_func)) != -1)
+          {
+	    EH(-1, "Could not read SUPG value for Momentum Weight Function");
+          }
 	  SPF(endofstring(es)," %.4g", mat_ptr->Mwt_func );
 	} 
       else  
@@ -2316,7 +2319,10 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   if ( !strcmp(model_name, "SUPG") )
     {
       mat_ptr->Momentwt_funcModel = SUPG;
-      fscanf(imp, "%lg",&(mat_ptr->Momentwt_func));
+      if (fscanf(imp, "%lg",&(mat_ptr->Momentwt_func)) != 1)
+      {
+        EH(-1, "Could not read SUPG value for Moment Weight Function");
+      }
       SPF(endofstring(es),"SUPG %.4g", mat_ptr->Mwt_func );
     }
   else
@@ -3455,7 +3461,10 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       else if ( !strcmp(model_name, "SUPG") )
 	{
 	  mat_ptr->Ewt_funcModel = SUPG;
-	  fscanf(imp, "%lg",&(mat_ptr->Ewt_func));
+	  if (fscanf(imp, "%lg",&(mat_ptr->Ewt_func)) != 1)
+          {
+	    EH(-1, "Could not read SUPG value for Energy Weight Function");
+          }
 	  SPF(endofstring(es)," %.4g", mat_ptr->Ewt_func );
 	} 
       else  
@@ -5203,7 +5212,10 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       else if (!strcmp(model_name, "SUPG")) 
 	{
 	  mat_ptr->Porous_wt_funcModel = SUPG;
-	  fscanf(imp, "%lg",&(mat_ptr->Porous_wt_func));
+	  if (fscanf(imp, "%lg",&(mat_ptr->Porous_wt_func)) != 1)
+          {
+	    EH(-1, "Could not read SUPG value for Porous Weight Function");
+          }
 	  SPF(endofstring(es)," %.4g", mat_ptr->Porous_wt_func);
 	} 
       else 
@@ -5874,11 +5886,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     {
       mat_ptr->Spwt_funcModel = GALERKIN;
       mat_ptr->Spwt_func = 0.;
-    } 
+    }
   else if ( !strcmp(model_name, "SUPG") )
     {
       mat_ptr->Spwt_funcModel = SUPG;
-      fscanf(imp, "%lg",&(mat_ptr->Spwt_func));
+      if (fscanf(imp, "%lg",&(mat_ptr->Spwt_func)) != -1)
+      {
+        EH(-1, "Could not read SUPG value for Species Weight Function");
+      }
     } 
   else 
     {

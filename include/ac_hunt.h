@@ -26,6 +26,9 @@
 #define EXTERN extern
 #endif
 
+#include "dp_types.h"
+#include "exo_struct.h"
+#include "dpi.h"
 EXTERN void hunt_problem
 (Comm_Ex *,		/* array of communications structures */
        Exo_DB *,		/* ptr to the finite element mesh database */

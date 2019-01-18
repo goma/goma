@@ -2595,7 +2595,10 @@ rd_levelset_specs(FILE *ifp,
 	  EH(-1,"The Level Set Search Option : GRID_SEARCH is not functioning at this time.\n");
 
           ls->Search_Option = GRID_SEARCH;
-          fscanf(ifp,"%d", &(ls->Grid_Search_Depth));
+          if (fscanf(ifp,"%d", &(ls->Grid_Search_Depth)) != 1)
+          {
+            ls->Grid_Search_Depth = 0;
+          }
 
 	  SPF(endofstring(echo_string)," %d",ls->Grid_Search_Depth);
         }
@@ -7023,7 +7026,10 @@ rd_solver_specs(FILE *ifp,
 	  EH(-1, "Error reading variable type for Ignore Dependency");
 	}
       /* look for optional flag to apply this card in a symmetric manner */
-      fscanf(ifp, "%d",&symmetric_flag);
+      if (fscanf(ifp, "%d",&symmetric_flag) != 1)
+      {
+        symmetric_flag = 0;
+      }
       
       if ( !strcmp(input, "all") || !strcmp(input, "ALL") )
         {
@@ -8726,7 +8732,6 @@ rd_eq_specs(FILE *ifp,
           EH( -1, "Expected to read 1 int for \"MATRIX\"  ");
          }
 
-       fscanf(ifp,"%d",&mtrx_index1);
        mtrx_index0 = mtrx_index1 - 1;
        
        SPF(echo_string,"MATRIX = %d", mtrx_index1); ECHO(echo_string,echo_file);
@@ -12173,7 +12178,7 @@ translate_command_line( int argc,
 		    }
 		  strcat(command_line_ap," ");
 		}
-	      sprintf(aprepro_command, command_line_ap);
+	      strcpy(aprepro_command, command_line_ap);
 	      strcpy_rtn = strcpy(clc[*nclc]->string, command_line_ap);
 	    } /*end of else if list */
 
@@ -14657,8 +14662,8 @@ scan_table_columns( int k,
 {
 	int Num_Pnts = table->tablelength;
 	int err_stat = 0;
-	
-	err_msg = "";
+
+	err_msg[0] = '\0';
 	
 	if( table->columns == 2)
 	{

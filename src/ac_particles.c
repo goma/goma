@@ -5646,7 +5646,10 @@ load_restart_file(void)
 	  continue;		/* probable EOF */
       if(fscanf(fp, "%lf %d", &p.time, &p.owning_elem_id) != 2)
 	continue;		/* probable EOF */
-      fgets(garbage, 254, fp);
+      char * fgetsret = fgets(garbage, 254, fp);
+      if (fgetsret == NULL) {
+        EH(-1, "Error reading line in particle restart file");
+      }
       if(get_element_xi_newton(p.owning_elem_id, p.x, p.xi) == -1)
 	EH(-1, "Could not place particle from restart.");
       load_field_variables_at_xi(p.owning_elem_id, p.xi);

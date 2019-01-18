@@ -29,6 +29,11 @@
 #define EXTERN /* do nothing */
 #endif
 
+#include "std.h"
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "stdio.h"
+
 #ifndef _AC_PARTICLES_C
 #define EXTERN extern
 #endif

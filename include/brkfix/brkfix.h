@@ -22,11 +22,12 @@
 #define FILENAME_MAX_ACK		1024
 #endif
 
+#include "rf_io_const.h"
+
 #define LINE_BUFFER_LENGTH		1024
 
 #define MAX_CHAR_ERR_MSG		1024
 #define MAX_NEIGHBOR_NODES		1000
-#define MAX_SYSTEM_COMMAND_LENGTH	1024
 #define MAX_ADJOINING_SETS		10
 
 

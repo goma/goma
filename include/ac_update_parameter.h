@@ -13,6 +13,10 @@
 #ifndef _AC_UPDATE_PARAMETER_H
 #define _AC_UPDATE_PARAMETER_H
 
+#include "dp_types.h"
+#include "exo_struct.h"
+#include "dpi.h"
+
 #ifdef EXTERN
 #undef EXTERN
 #endif

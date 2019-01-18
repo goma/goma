@@ -266,13 +266,13 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 	   * Get the number of nodal variables in the file, and allocate
 	   * space for storage of their names.
 	   */
-	  error = ex_get_var_param(exoid, "e", &num_vars);
+	  error = ex_get_variable_param(exoid, EX_ELEM_BLOCK, &num_vars);
 	  EH(error, "ex_get_var_param");
   
 	  /* First extract all nodal variable names in exoII database */
 	  if (num_vars > 0) {
 	    var_names = alloc_VecFixedStrings(num_vars, (MAX_STR_LENGTH+1));
-	    error = ex_get_var_names(exoid, "e", num_vars, var_names);
+	    error = ex_get_variable_names(exoid, EX_ELEM_BLOCK, num_vars, var_names);
 	    EH(error, "ex_get_var_names");
 	    for (i = 0; i < num_vars; i++) strip(var_names[i]);
 	  } else {
@@ -294,10 +294,10 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 		  if(!strcasecmp(appended_name,var_names[j]))
 		    {
 		      /*Found variable so load it into element storage */
-		      error  = ex_get_elem_var(exoid, time_step, j+1, 
-					       eb_ptr->Elem_Blk_Id,
-					       eb_ptr->Num_Elems_In_Block,
-					       ev_tmp);
+		      error  = ex_get_var(exoid, time_step, EX_ELEM_BLOCK, j+1,
+					  eb_ptr->Elem_Blk_Id,
+					  eb_ptr->Num_Elems_In_Block,
+					  ev_tmp);
 		      ifound = 1;
 		    }
 		}
@@ -321,10 +321,10 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 		  if(!strcasecmp(appended_name,var_names[j]))
 		    {
 		      /*Found variable so load it into element storage */
-		      error  = ex_get_elem_var(exoid, time_step, j+1, 
-					       eb_ptr->Elem_Blk_Id,
-					       eb_ptr->Num_Elems_In_Block,
-					       ev_tmp);
+		      error  = ex_get_var(exoid, time_step, EX_ELEM_BLOCK, j+1,
+					  eb_ptr->Elem_Blk_Id,
+					  eb_ptr->Num_Elems_In_Block,
+					  ev_tmp);
 		      ifound = 1;
 		    }
 		}
@@ -347,10 +347,10 @@ set_init_Element_Storage(ELEM_BLK_STRUCT *eb_ptr, int mn)
 		  if(!strcasecmp(appended_name,var_names[j]))
 		    {
 		      /*Found variable so load it into element storage */
-		      error  = ex_get_elem_var(exoid, time_step, j+1, 
-					       eb_ptr->Elem_Blk_Id,
-					       eb_ptr->Num_Elems_In_Block,
-					       ev_tmp);
+		      error  = ex_get_var(exoid, time_step, EX_ELEM_BLOCK, j+1,
+					  eb_ptr->Elem_Blk_Id,
+					  eb_ptr->Num_Elems_In_Block,
+					  ev_tmp);
 		      ifound = 1;
 		    }
 		}

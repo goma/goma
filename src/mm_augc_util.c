@@ -680,7 +680,7 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
     if(ibc == APREPRO_AC_BCID)	{
 #ifndef tflop
       FILE *jfp=NULL;
-      char cmd_str[80];
+      char cmd_str[MAX_SYSTEM_COMMAND_LENGTH];
       double temp,lambda_user;
       int ibc_user,idf_user,count;
   
@@ -690,7 +690,8 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
       sprintf(cmd_str,"%s %s %s %s %s %s %.20g","bcdiff.pl"
 	      ,"-p",augc[iAC].Params_File,"-i",Input_File,
 	      augc[iAC].AP_param,lambda);
-      system(cmd_str);
+      int err = system(cmd_str);
+      EH(err, "Error could not create process for bcdiff.pl");
  
       augc[iAC].DataFlt[0] = lambda;
 
