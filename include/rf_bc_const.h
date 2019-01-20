@@ -1000,6 +1000,7 @@
 #define SHELL_TFMP_FREE_LIQ_BC    777000041
 #define SHELL_TFMP_NUM_DIFF_BC    777000042
 
+#define RESTIME_BC        788000030
 
 /* Vectors used for rotations */
 #define ROT_NONE -1

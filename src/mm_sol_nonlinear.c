@@ -1928,8 +1928,8 @@ EH(-1,"version not compiled with frontal solver");
       Norm_new = Norm[0][1];
 
       /* fail if we didn't get a finite solution */
-      if (!finite(Norm[1][0]) || !finite(Norm[1][1]) || !finite(Norm[1][2]) ||
-          !finite(Norm[0][0]) || !finite(Norm[0][1]) || !finite(Norm[0][2])) {
+      if (0 && (!finite(Norm[1][0]) || !finite(Norm[1][1]) || !finite(Norm[1][2]) ||
+          !finite(Norm[0][0]) || !finite(Norm[0][1]) || !finite(Norm[0][2]))) {
         return_value = -1;
         goto free_and_clear;
       }

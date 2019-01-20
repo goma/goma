@@ -2083,6 +2083,11 @@ load_variable (double *x_var,        /* variable value */
       var = LIGHT_INTD;
       *d_x_var = 1.;
       break;
+    case RESTIME:
+      *x_var = fv->restime;
+      var = RESTIME;
+      *d_x_var = 1.;
+      break;  
     case MASS_FRACTION:
       *x_var = fv->c[wspec];
       var = MASS_FRACTION;

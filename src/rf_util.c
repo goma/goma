@@ -846,6 +846,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
     Err_norm      += ecp[LIGHT_INTP];
     Err_norm      += ecp[LIGHT_INTM];
     Err_norm      += ecp[LIGHT_INTD];
+/*    Err_norm      += ecp[RESTIME];  */
 /*    Err_norm      += ecp[EXT_VELOCITY];  */
     Err_norm      += ecp[TFMP_PRES];
     Err_norm      += ecp[TFMP_SAT];
@@ -870,6 +871,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
     num_unknowns += ncp[LIGHT_INTP];
     num_unknowns += ncp[LIGHT_INTM];
     num_unknowns += ncp[LIGHT_INTD];
+/*    num_unknowns += ncp[RESTIME];  */
 /*    num_unknowns += ncp[EXT_VELOCITY];  */
     num_unknowns += ncp[TFMP_PRES];
     num_unknowns += ncp[TFMP_SAT];
@@ -967,7 +969,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
   e_F = ecp[FILL] + ecp[PHASE1];
   e_ap = ecp[ACOUS_PREAL] + ecp[ACOUS_PIMAG] + ecp[ACOUS_REYN_STRESS];
   e_extv = ecp[EXT_VELOCITY];
-  e_int = ecp[LIGHT_INTP] + ecp[LIGHT_INTM] + ecp[LIGHT_INTD];
+  e_int = ecp[LIGHT_INTP] + ecp[LIGHT_INTM] + ecp[LIGHT_INTD]; /*!  + ecp[RESTIME];  */
 
   e_d = sqrt(e_d*scaling);
   e_v = sqrt(e_v*scaling);
@@ -1019,7 +1021,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stderr, ", %7.1e", e_F); }
         if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ", %7.1e", e_ap); }
         if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ", %7.1e", e_extv); }
-	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] ){ DPRINTF(stderr, ", %7.1e", e_int); }
+	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD]){ DPRINTF(stderr, ", %7.1e", e_int); }
 	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
         if(nAC > 0){ DPRINTF(stderr, ", %7.1e", e_AC); }
         DPRINTF(stderr, "]\n");
@@ -1068,7 +1070,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
         if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stderr, ", %7.1e", e_F); }
         if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ", %7.1e", e_ap); }
         if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ", %7.1e", e_extv); }
-	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD]){ DPRINTF(stderr, ", %7.1e", e_int); }
+	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] ){ DPRINTF(stderr, ", %7.1e", e_int); }
 	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] ||  ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
         if(nAC > 0){ DPRINTF(stderr, ", %7.1e", e_AC); }
         DPRINTF(stderr, "]\n");

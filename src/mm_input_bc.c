@@ -700,6 +700,7 @@ rd_bc_specs(FILE *ifp,
 	case INTP_BC:
 	case INTM_BC:
 	case INTD_BC:
+	case RESTIME_BC:
 	case API_BC:
         case SH_USER_BC:
         case SH_LUBP_BC:

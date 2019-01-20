@@ -1977,6 +1977,67 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       ECHO(es,echo_file);
     }
 
+/*
+ * For now, apply thixotrophy to just the shear-thinning models although
+ * it should be general for all
+ */
+  
+  if (ConstitutiveEquation == POWER_LAW || 
+      ConstitutiveEquation == POWERLAW_SUSPENSION || 
+      ConstitutiveEquation == CARREAU || 
+      ConstitutiveEquation == CARREAU_SUSPENSION || 
+      ConstitutiveEquation == BINGHAM ||
+      ConstitutiveEquation == BINGHAM_WLF ||
+      ConstitutiveEquation == CARREAU_WLF ||
+      ConstitutiveEquation == SUSPENSION ||
+      ConstitutiveEquation == EPOXY ||
+      ConstitutiveEquation == SYLGARD ||
+      ConstitutiveEquation == FILLED_EPOXY ||
+      ConstitutiveEquation == THERMAL ||
+      ConstitutiveEquation == CURE ||
+      ConstitutiveEquation == HERSCHEL_BULKLEY ||
+      ConstitutiveEquation == CARREAU_WLF_CONC_PL ||
+      ConstitutiveEquation == CARREAU_WLF_CONC_EXP ||
+      ConstitutiveEquation == BOND ||
+      ConstitutiveEquation == FOAM_EPOXY)
+    {
+      model_read = look_for_mat_prop(imp, "Thixotropic Factor", 
+				     &(gn_glob[mn]->thixoModel), 
+				     &(gn_glob[mn]->thixo_factor), NO_USER, NULL,
+				     model_name, 
+				     SCALAR_INPUT, &NO_SPECIES,es);
+      
+     if (model_read == -1 && !strcmp(model_name, "LEVEL_SET") )
+	{
+	  gn_glob[mn]->thixoModel = LEVEL_SET;
+
+	  num_const = read_constants(imp, &(gn_glob[mn]->u_thixo_factor), 0);
+
+	  if ( num_const < 3) 
+	    {
+	      sr = sprintf(err_msg, 
+			   "Matl %s expected at least 3 constants for %s %s model.\n",
+			   pd_glob[mn]->MaterialName, 
+			   "Thixotropic Factor", "LEVEL_SET");
+	      EH(-1, err_msg);
+	    }
+
+	  gn_glob[mn]->len_u_thixo = num_const;
+	  SPF_DBL_VEC(endofstring(es), num_const, gn_glob[mn]->u_thixo_factor  );
+
+	  if ( gn_glob[mn]->u_thixo_factor[2] == 0.0 ) gn_glob[mn]->u_thixo_factor[2] = ls->Length_Scale/2.0;
+
+	}
+     else
+       {
+	 gn_glob[mn]->thixoModel = CONSTANT;
+/*	 gn_glob[mn]->thixo_factor = 0.0;  */
+	 WH(model_read, "Defaulting Thixotropic Factor to Zero");
+       }
+
+      ECHO(es,echo_file);
+
+    }
 
   if(ConstitutiveEquation == SUSPENSION || 
      ConstitutiveEquation == POWERLAW_SUSPENSION || 
