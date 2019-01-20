@@ -956,8 +956,7 @@ rd_bc_specs(FILE *ifp,
 	   * (CGM) entities
 	   */
         case SM_PLANE_BC:           /* Solid Model PLANE BC */
-		EH(-1, "CGM not supported, SM_PLANE_BC");
-
+	  EH(-1, "CGM not supported, SM_PLANE_BC");
           break;
 
 	/*

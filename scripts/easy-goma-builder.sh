@@ -191,9 +191,9 @@ rm -rf ../build
 mkdir -p ../build
 cd ../build
 
-echo "Easy-Goma-Builder v 1.0: BUILD VARIABLES ARE AS FOLLOWS -DCMAKE_Fortran_COMPILER=$FORT_COMP -DCMAKE_C_COMPILER=$C_COMP -DCMAKE_CXX_COMPILER=$CXX_COMP -Dgoma_LIBS=${GOMA_LIBS} -Dgoma_MPI_DIR=${MPI_BASE_DIR} -Dgoma_MPI_LIB=$MPI_LIB -Dgoma_User_Flags=$User_Flags -Dgoma_SYS_LIB=$SYS_LIB -Dgoma_Trilinos_DIR=$GOMA_LIBS/trilinos-12.10.1-Built" | tee -a ../scripts/easygomabuild.txt
+echo "Easy-Goma-Builder v 1.0: BUILD VARIABLES ARE AS FOLLOWS -DCMAKE_Fortran_COMPILER=$FORT_COMP -DCMAKE_C_COMPILER=$C_COMP -DCMAKE_CXX_COMPILER=$CXX_COMP -Dgoma_LIBS=${GOMA_LIBS} -Dgoma_MPI_DIR=${MPI_BASE_DIR} -Dgoma_MPI_LIB=$MPI_LIB -Dgoma_User_Flags=$User_Flags -Dgoma_SYS_LIB=$SYS_LIB -Dgoma_Trilinos_DIR=$GOMA_LIBS/trilinos-12.12.1-Built" | tee -a ../scripts/easygomabuild.txt
 
-cmake .. -DCMAKE_Fortran_COMPILER="$FORT_COMP" -DCMAKE_C_COMPILER="$C_COMP" -DCMAKE_CXX_COMPILER="$CXX_COMP" -Dgoma_LIBS=${GOMA_LIBS} -Dgoma_MPI_DIR=${MPI_BASE_DIR} -Dgoma_MPI_LIB="$MPI_LIB" -Dgoma_User_Flags="$User_Flags" -Dgoma_SYS_LIB="$SYS_LIB" -Dgoma_Trilinos_DIR="$GOMA_LIBS/trilinos-12.10.1-Built" | tee -a ../scripts/easygomabuild.txt
+cmake .. -DCMAKE_Fortran_COMPILER="$FORT_COMP" -DCMAKE_C_COMPILER="$C_COMP" -DCMAKE_CXX_COMPILER="$CXX_COMP" -Dgoma_LIBS=${GOMA_LIBS} -Dgoma_MPI_DIR=${MPI_BASE_DIR} -Dgoma_MPI_LIB="$MPI_LIB" -Dgoma_User_Flags="$User_Flags" -Dgoma_SYS_LIB="$SYS_LIB" -Dgoma_Trilinos_DIR="$GOMA_LIBS/trilinos-12.12.1-Built" | tee -a ../scripts/easygomabuild.txt
 
 if make -j ${USED_MAKE_JOBS} 2>&1 && [ -f goma ] | tee -a ../scripts/easygomabuild.txt; then
     mkdir -p ../bin
@@ -205,7 +205,7 @@ if make -j ${USED_MAKE_JOBS} 2>&1 && [ -f goma ] | tee -a ../scripts/easygomabui
     echo $(readlink --canonicalize "`dirname $0`/../bin/goma")
     echo
     echo "It's probably necessary that you run:"
-    echo "export PATH=\$PATH:$GOMA_LIBS/trilinos-12.10.1-Built/bin"
+    echo "export PATH=\$PATH:$GOMA_LIBS/trilinos-12.12.1-Built/bin"
     echo "before running Goma"
     echo
     if [ "$BUILD_MPI" == "true" ]; then

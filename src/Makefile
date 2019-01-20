@@ -169,7 +169,7 @@ LD_LIBRARY_PATH := $(GCC_LIB64):$(GCC_LIB):${LD_LIBRARY_PATH}
 # If built with build-goma-dependencies.sh, includes flags for SEACAS, UMFpack, and all other necessary
 # libraries and includes otherwise not listed below.
 
-TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-12.10.1-Built
+TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-12.12.1-Built
 
 include $(TRILINOS_TOP)/include/Makefile.export.Trilinos
 
@@ -383,7 +383,6 @@ RF_INC= rf_allo.h\
         rf_fill_const.h\
         rf_io.h\
         rf_io_const.h\
-        rf_io_defn.h\
         rf_io_structs.h\
         rf_masks.h\
         rf_mp.h\
@@ -396,7 +395,6 @@ RF_INC= rf_allo.h\
         rf_solver_const.h\
         rf_util.h\
         rf_vars_const.h \
-        rf_vars_defn.h\
         rd_dpi.h\
         rd_exo.h\
         rd_mesh.h\
@@ -556,7 +554,6 @@ MM_INC=	mm_as.h\
         mm_as_structs.h\
         mm_augc_util.h\
         mm_bc.h\
-        mm_cards.h\
         mm_chemkin.h\
         mm_dil_viscosity.h\
         mm_eh.h\

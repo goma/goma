@@ -25,6 +25,7 @@ static char rcsid[] =
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h> /* strcasecmp and strncasecmp moved here for POSIX.1 */
 #include <math.h>
 
 /* GOMA include files */

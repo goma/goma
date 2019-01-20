@@ -18,6 +18,8 @@
  * Revised: 1997/04/10 13:26 MDT pasacki@sandia.gov
  */
 
+#define _XOPEN_SOURCE 500 /* POSIX mkstemp */
+
 #define _UTILS_C
 
 #include <stdio.h>

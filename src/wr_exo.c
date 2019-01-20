@@ -1254,7 +1254,7 @@ add_qa_stamp(Exo_DB *exo)
    */
 
   strcpy(Q[n][0], "GOMA");
-  strcpy(Q[n][1], VERSION); /* def'd in std.h for now */
+  strcpy(Q[n][1], GOMA_VERSION); /* def'd in std.h for now */
   get_date(Q[n][2]);
   get_time(Q[n][3]);
 

@@ -19,6 +19,7 @@
 #define _RF_GOMA_H
 
 #include <ctype.h>
+#include <stdlib.h> /* WEXITSTATUS */
 
 /* If we're using autoconf, then include the config.h file. */
 #ifdef HAVE_CONFIG_H
@@ -36,10 +37,10 @@
 #define HAVE_AZTEC 1
 /* Trilinos now seems to define these */
 #ifndef GOMA_HAVE_BLAS
-  #define GOMA_HAVE_BLAS 1
+#define GOMA_HAVE_BLAS 1
 #endif
 #ifndef GOMA_HAVE_LAPACK
-  #define GOMA_HAVE_LAPACK 1
+#define GOMA_HAVE_LAPACK 1
 #endif
 #define HAVE_Y12M 1
 
@@ -54,14 +55,14 @@
 
 #endif /* HAVE_CONFIG_H */
 
-#ifndef VERSION
-
-  #ifdef GIT_VERSION
-    #define VERSION GIT_VERSION
+#ifndef GOMA_VERSION                      /* 1) VERSION must be a keyword, won't work with it */
+  #ifdef GIT_VERSION                      /* 2) needed all of this to convet GIT_VERSION to the proper string */
+    #define STRINGCON_(x) #x
+    #define STRINGCON(x) STRINGCON_(x)
+    #define GOMA_VERSION STRINGCON(GIT_VERSION)
   #else
-    #define VERSION "6.0.0"
+    #define GOMA_VERSION "6.0.0"
   #endif
-
 #endif
 
 /*****************************************************************************/
@@ -491,9 +492,6 @@ typedef enum datatype Edt;
  *  typedef shortcuts for structures defined later in other include files.
  */
 
-typedef struct Node_Struct     NODE_STRUCT;
-typedef struct Node_Var_Struct NODE_VAR_STRUCT;
-typedef struct Var_Struct      VAR_STRUCT;
 typedef struct Material_Properties MATRL_PROP_STRUCT;
 
 /***************************************************************************/
@@ -551,14 +549,14 @@ extern int zero_detJ_global;
  * (Eric Benner 8/6/09)
  */ 
 
-#ifndef VERSION
-
-  #ifdef GIT_VERSION
-    #define VERSION GIT_VERSION
+#ifndef GOMA_VERSION                      /* 1) VERSION must be a keyword, won't work with it */
+  #ifdef GIT_VERSION                      /* 2) needed all of this to convet GIT_VERSION to the proper string */
+    #define STRINGCON_(x) #x
+    #define STRINGCON(x) STRINGCON_(x)
+    #define GOMA_VERSION STRINGCON(GIT_VERSION)
   #else
-    #define VERSION "6.0.0"
+    #define GOMA_VERSION "6.0.0"
   #endif
-
 #endif
 
 #endif
