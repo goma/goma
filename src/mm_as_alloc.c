@@ -1276,6 +1276,10 @@ assembly_alloc(Exo_DB *exo)
     esp->tfmp_sat = (dbl **) alloc_ptr_1(MDE);
   }
 
+  if (Num_Var_In_Type[RESTIME] ) {
+    esp->restime = (dbl **) alloc_ptr_1(MDE);
+  }  
+
   if(Num_Var_In_Type[SHELL_SHEAR_TOP]) {
     esp->sh_shear_top = (dbl **) alloc_ptr_1(MDE);
   }

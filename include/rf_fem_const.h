@@ -445,6 +445,7 @@
 #define LIGHT_INTD            184 /*  Light Intensity - Scattering Dispersion-RBS*/
 #define TFMP_SAT              185 /*  Thin-Film Multi-Phase Saturation */
 #define TFMP_PRES             186 /*  Thin-Film Multi-Phase Lubrication Pressure */
+#define RESTIME               187  /*  Residence Time Function */ 
 /*
  * define a variable to hold an external field which will be 
  * held fixed in the problem but parametered by the basis functions
@@ -805,7 +806,8 @@
 #define R_LIGHT_INTD            184 /*  Light Intensity - Scattering Dispersion*/
 #define R_TFMP_MASS             185 /*  Thin-Film Multi-Phase Mass Equation */
 #define R_TFMP_BOUND            186 /*  Thin-Film Multi-Phase Boundary Motion Equation */
-#define V_LAST		        187
+#define R_RESTIME               187 /*  Resdience Time Function */
+#define V_LAST		        188
 
 
 /* MMH
