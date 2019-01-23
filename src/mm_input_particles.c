@@ -387,18 +387,7 @@ rd_particle_specs(FILE *ifp, char *input)
 	}
       else if(!strncmp(s_tmp, "ACIS", 4))
 	{
-#ifdef USE_CGM
-	  Particle_Creation_Domain = ACIS_OBJECT;
-	  if(fscanf(ifp, "%s", Particle_Creation_Domain_Filename) != 1)
-	    EH(-1, "Error reading filename on Particle creation domain card.");
-	  if(fscanf(ifp, "%s", Particle_Creation_Domain_Name) != 1)
-	    EH(-1, "Error reading geometry name on Particle creation domain card.");
-	  printf("Setting Particle_Creation_Domain = ACIS,\n");
-	  printf("        Particle_Creation_Domain_Filename = %s,\n", Particle_Creation_Domain_Filename);
-	  printf("        Particle_Creation_Domain_Name = %s\n", Particle_Creation_Domain_Name);
-#else
-	  EH(-1, "Need the CGM library to use ACIS for Particle creation domain card.");
-#endif
+	  EH(-1, "CGM not supported, ACIS");
 	}
       else
 	{
@@ -429,18 +418,7 @@ rd_particle_specs(FILE *ifp, char *input)
 	}
       else if(!strncmp(s_tmp, "ACIS", 4))
 	{
-#ifdef USE_CGM
-	  Particle_Move_Domain = ACIS_OBJECT;
-	  if(fscanf(ifp, "%s", Particle_Move_Domain_Filename) != 1)
-	    EH(-1, "Error reading filename on Particle move domain card.");
-	  if(fscanf(ifp, "%s", Particle_Move_Domain_Name) != 1)
-	    EH(-1, "Error reading geometry name on Particle move domain card.");
-	  printf("Setting Particle_Move_Domain = ACIS,\n");
-	  printf("        Particle_Move_Domain_Filename = %s,\n", Particle_Move_Domain_Filename);
-	  printf("        Particle_Move_Domain_Name = %s\n", Particle_Move_Domain_Name);
-#else
 	  EH(-1, "Need the CGM library to use ACIS for Particle creation domain card.");
-#endif
 	}
       else
 	{

@@ -58,8 +58,9 @@ char Err_Msg[MAX_CHAR_ERR_MSG];
  */
 
 static FILE *log_strm=NULL;
+#ifdef ENABLE_LOGGING
 static char log_filename[MAX_FNL] = DEFAULT_GOMA_LOG_FILENAME;
-
+#endif
 /*
  * Global variable helps to put the brakes on a parallel train wreck, but
  * only if you take time to broadcast it...
@@ -160,10 +161,12 @@ save_place(const int severity,
 void 
 logprintf(const char *format, ... )
 {
-  int n;
   time_t now;
   static char time_format[] = "%b %d %T";
   static char time_result[TIME_STRING_SIZE];
+#ifdef ENABLE_LOGGING
+  int n;
+
   static char new_format[1024];
 
   static char old_buffer[1024];	/* For legacy help... */
@@ -294,6 +297,26 @@ logprintf(const char *format, ... )
     }
 
   return;
+
+#else
+  time(&now);
+
+  (void) strftime(time_result, TIME_STRING_SIZE,
+                  time_format, localtime(&now));
+  if ( current_severity < 0 )
+    {
+      fprintf(log_strm, "%s ", time_result);
+      fprintf(log_strm, "GOMA terminates abnormally.\n");
+
+
+#ifdef PARALLEL
+      DPRINTF(stderr, "\nAbnormal termination -- see log file for details.\n");
+#endif
+      exit(current_severity);
+    }
+
+  return;
+#endif
 }
 
 

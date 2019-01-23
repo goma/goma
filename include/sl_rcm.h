@@ -21,7 +21,6 @@
 
 #ifndef _RCM_H
 #define _RCM_H
-#endif
 
 #define UPPER_CASE		/* Solaris, HP/UX, Linux, IRIX, janus, ... */
 
@@ -116,4 +115,4 @@
 #endif
 
 #endif
-
+#endif

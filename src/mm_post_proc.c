@@ -25,6 +25,7 @@ static char rcsid[] =
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h> /* strcasecmp and strncasecmp moved here for POSIX.1 */
 #include <math.h>
 
 /* GOMA include files */
@@ -138,6 +139,8 @@ int DARCY_VELOCITY_LIQ = -1;    /* Darcy velocity vectors for flow in a
 				 * saturated or unsaturated medium */
 int DENSITY = -1;	       	/* density function at vertex and midside 
 				 * nodes, e.g. for particle settling etc. */
+
+int HEAVISIDE = -1;
 int DIELECTROPHORETIC_FIELD = -1;
                                 /* Dielectrophoretic force vectors. */
 int DIELECTROPHORETIC_FIELD_NORM = -1;
@@ -269,6 +272,7 @@ int TFMP_INV_PECLET = -1;
 int TFMP_KRG    = -1;
 int LOG_CONF_MAP = -1;
 int VELO_SPEED = -1;
+int GIES_CRIT = -1;
 
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
@@ -805,22 +809,42 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[DENSITY] = 1.;
   }
 
-
   if (MEAN_SHEAR != -1 && pd->e[R_MOMENTUM1] ){
-    for (a = 0; a < dim; a++) {       
-      for (b = 0; b < dim; b++) {
-	Dsh[a][b] = 0.5 * (fv->grad_v[a][b] + fv->grad_v[b][a]);
+    for (a = 0; a < VIM; a++) {       
+      for (b = 0; b < VIM; b++) {
+	Dsh[a][b] = (fv->grad_v[a][b] + fv->grad_v[b][a]);
       }
     }
     /* find second invariant of strain-rate */
     Dnn = 0.0;
-    for (a = 0; a < dim; a++) {
-      for (b = 0; b < dim; b++) {
-	Dnn += 0.5 * (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+	Dnn += (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
       }
     }
-    local_post[MEAN_SHEAR] = 4. * pow(fabs(Dnn), 0.5);
+    local_post[MEAN_SHEAR] = sqrt(2.*fabs(Dnn));
     local_lumped[MEAN_SHEAR] = 1.;
+  }
+
+  if (GIES_CRIT != -1 && pd->e[R_MOMENTUM1] ){
+    dbl Dvt[DIM][DIM], Domega;
+    for (a = 0; a < VIM; a++) {       
+      for (b = 0; b < VIM; b++) {
+	Dsh[a][b] = 0.5 * (fv->grad_v[a][b] + fv->grad_v[b][a]);
+	Dvt[a][b] = 0.5 * (fv->grad_v[a][b] - fv->grad_v[b][a]);
+      }
+    }
+    /* find second invariant of strain-rate */
+    Dnn = 0.0; Domega = 0.0;
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+	Dnn += 0.5 * (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
+	Domega += 0.5 * (Dvt[a][b] * Dvt[a][b] - Dvt[a][a] * Dvt[b][b]);
+      }
+    }
+    local_post[GIES_CRIT] = (sqrt(fabs(Dnn))-sqrt(fabs(Domega)))/
+			(DBL_SMALL+sqrt(fabs(Dnn))+sqrt(fabs(Domega)));
+    local_lumped[GIES_CRIT] = 1.;
   }
 
   if (VELO_SPEED != -1 && pd->e[R_MOMENTUM1] ){
@@ -2591,6 +2615,14 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       }     
     } // Loop over modes
   }
+
+  if (HEAVISIDE != -1) {
+    load_lsi(ls->Length_Scale);
+
+    local_post[HEAVISIDE] = lsi->H;
+    local_lumped[HEAVISIDE] = 1.;
+  }
+
 
   if (USER_POST != -1) {
       /* calculate a user-specified post-processing variable */
@@ -6671,7 +6703,9 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Error ZZ pressure", &ERROR_ZZ_P);
   iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &LOG_CONF_MAP);
   iread = look_for_post_proc(ifp, "Velocity Magnitude", &VELO_SPEED);
+  iread = look_for_post_proc(ifp, "Giesekus Criterion", &GIES_CRIT);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
+  iread = look_for_post_proc(ifp, "Heaviside", &HEAVISIDE);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -8609,6 +8643,24 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       MEAN_SHEAR = -1;
     }
 
+   if (GIES_CRIT != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "GIESEKUS","[1]", "Giesekus Criterion",
+		   FALSE);
+       index++;
+       if (GIES_CRIT == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       GIES_CRIT = index_post;
+       index_post++;
+    }
+  else
+    {
+      GIES_CRIT = -1;
+    }
+
    if (VELO_SPEED != -1 && Num_Var_In_Type[R_MOMENTUM1])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "VELO_SPEED","[1]", "Velocity Magnitude",
@@ -9798,6 +9850,25 @@ index_post, index_post_export);
     {
       CURL_V = -1;
     }
+
+  if (HEAVISIDE != -1 && (Num_Var_In_Type[R_MOMENTUM1] || check ))
+    {
+      set_nv_tkud(rd, index, 0, 0, -2, "HEAVISIDE","[1]",
+		  "Heaviside level set", FALSE);
+      index++;
+      if (HEAVISIDE == 2)
+	{
+	  Export_XP_ID[index_post_export] = index_post;
+	  index_post_export++;
+	}
+      HEAVISIDE = index_post;
+      index_post++;
+    }
+  else
+    {
+      HEAVISIDE = -1;
+    }
+
 
   if (USER_POST != -1)
     {

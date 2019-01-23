@@ -165,9 +165,6 @@ noahs_raven()
   ddd_add_member(n, &TFMP_LIQ_VELO, 1, MPI_INT);
   ddd_add_member(n, &TFMP_INV_PECLET, 1, MPI_INT);
   ddd_add_member(n, &TFMP_KRG, 1, MPI_INT);
-#ifdef USE_CGM
-  ddd_add_member(n, &cgm_input_string_length, 1, MPI_INT);
-#endif
 
   ddd_set_commit(n);
  
@@ -570,11 +567,7 @@ raven_landing()
       else
 	PBCs = NULL;
     }
-  
-#ifdef USE_CGM
-  memset(&cgm_input_string, 0, (cgm_input_string_length+1) * sizeof(char));
-#endif
-
+    
 #ifdef DEBUG
   printf("P%d raven_landing done\n", ProcID);
 #endif
@@ -915,9 +908,6 @@ noahs_ark()
   /*
    * rd_geometry_specs line ... No, really, it was smarter to do it this way.
    */
-#ifdef USE_CGM
-  ddd_add_member(n, &cgm_input_string, cgm_input_string_length, MPI_CHAR);
-#endif
 
   /*
    * Boundary Conditions.
@@ -958,9 +948,6 @@ noahs_ark()
 
       ddd_add_member(n, &BC_Types[i].BC_relax, 1, MPI_DOUBLE);            
       ddd_add_member(n, &BC_Types[i].table_index, 1, MPI_INT);         
-#ifdef USE_CGM
-      ddd_add_member(n, BC_Types[i].cgm_edge_name, 256, MPI_CHAR);
-#endif
     }
 
 #ifdef DEBUG
@@ -2507,6 +2494,7 @@ noahs_ark()
   ddd_add_member(n, &PP_FlowingLiquid_Viscosity, 1, MPI_INT);
   ddd_add_member(n, &PP_VolumeFractionGas, 1, MPI_INT);
   ddd_add_member(n, &DENSITY, 1, MPI_INT);
+  ddd_add_member(n, &HEAVISIDE, 1, MPI_INT);
   ddd_add_member(n, &NS_RESIDUALS, 1, MPI_INT);
   ddd_add_member(n, &MM_RESIDUALS, 1, MPI_INT);
   ddd_add_member(n, &FLUXLINES, 1, MPI_INT);
@@ -2555,12 +2543,7 @@ noahs_ark()
   ddd_add_member(n, &UNTRACKED_SPEC, 1, MPI_INT);
   ddd_add_member(n, &LOG_CONF_MAP, 1, MPI_INT);
   ddd_add_member(n, &VELO_SPEED, 1, MPI_INT);
-
-  if ( len_u_post_proc > 0 )
-    {
-      ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);
-    }
-
+  ddd_add_member(n, &GIES_CRIT, 1, MPI_INT);
   ddd_add_member(n, &EXTERNAL_POST, 1, MPI_INT);
   ddd_add_member(n, &SURFACE_VECTORS, 1, MPI_INT);
   ddd_add_member(n, &SHELL_NORMALS, 1, MPI_INT);

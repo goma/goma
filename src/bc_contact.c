@@ -1673,6 +1673,16 @@ assemble_embedded_bc (
         case LS_CAP_DIV_S_N_BC:
           assemble_div_s_n_source ();
           break;
+	case LS_CAP_HYSING_BC:
+	  assemble_cap_hysing(dt, bc->BC_Data_Float[0]);
+	  break;
+	case LS_CAP_DENNER_DIFF_BC:
+	  if (pd->e[R_NORMAL1]) {
+	    assemble_cap_denner_diffusion_n(dt, bc->BC_Data_Float[0]);
+	  } else {
+	    assemble_cap_denner_diffusion(dt, bc->BC_Data_Float[0]);
+	  }
+	  break;
         case LS_CAP_CURVE_BC:
           if( pd->e[R_NORMAL1] )
             assemble_curvature_with_normals_source () ;

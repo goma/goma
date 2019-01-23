@@ -456,6 +456,7 @@ extern int DARCY_VELOCITY_LIQ;  /* Darcy velocity vectors for flow in a
 				 * saturated or unsaturated medium */
 extern int DENSITY;		/* density function at vertex and midside 
 				 * nodes, e.g. for particle settling etc. */
+extern int HEAVISIDE;
 extern int DIELECTROPHORETIC_FIELD;
                                 /* Dielectrophoretic force vectors. */
 extern int DIELECTROPHORETIC_FIELD_NORM;
@@ -592,6 +593,7 @@ extern int TFMP_LIQ_VELO;
 extern int TFMP_INV_PECLET;
 extern int TFMP_KRG;
 extern int VELO_SPEED;              /* i.e., velocity magnitude */
+extern int GIES_CRIT;              /* Giesekus Flow Character */
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *

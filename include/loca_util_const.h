@@ -31,6 +31,9 @@ static char *cvs_utilconsth_id =
  *      rf_util.c.
  */
 
+#ifndef _LOCA_UTIL_CONST_H
+#define _LOCA_UTIL_CONST_H
+
 /*****************************************************************************/
 /*     EXTERN STATEMENTS FOR GLOBAL FUNCTIONS IN rf_util.c                   */
 /*****************************************************************************/
@@ -47,3 +50,4 @@ extern double  null_vector_resid(double r_val, double i_val,
                                  double *r_vec, double *i_vec, int mm_flag);
 extern void    sort_by_real(int nconv, int ncv, int ldv, double *d, double *v);
 
+#endif

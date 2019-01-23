@@ -1854,11 +1854,10 @@ EH(-1,"version not compiled with frontal solver");
 	  if (sAC[j][j] == 0.0) { 
 	    sAC[j][j] = 1.0e-20;
 	  }
-	  if (j != nAC) { 
-	    dumAC = 1.0/sAC[j][j];
-	    for (i=j+1;i<nAC;i++) {
-	      sAC[i][j] *= dumAC;
-	    } 
+
+	  dumAC = 1.0/sAC[j][j];
+	  for (i=j+1;i<nAC;i++) {
+	    sAC[i][j] *= dumAC;
 	  }
 	}
 	iiAC = -1;
@@ -1929,8 +1928,8 @@ EH(-1,"version not compiled with frontal solver");
       Norm_new = Norm[0][1];
 
       /* fail if we didn't get a finite solution */
-      if (!finite(Norm[1][0]) || !finite(Norm[1][1]) || !finite(Norm[1][2]) ||
-          !finite(Norm[0][0]) || !finite(Norm[0][1]) || !finite(Norm[0][2])) {
+      if (!isfinite(Norm[1][0]) || !isfinite(Norm[1][1]) || !isfinite(Norm[1][2]) ||
+          !isfinite(Norm[0][0]) || !isfinite(Norm[0][1]) || !isfinite(Norm[0][2])) {
         return_value = -1;
         goto free_and_clear;
       }
@@ -3401,12 +3400,6 @@ soln_sens ( double lambda,  /*  parameter */
 
   double fd_factor=FD_FACTOR;	/*  finite difference step */
 
-#ifdef LOG_HUNTING_PLEASE
-  int		log_hunt = TRUE;
-#else
-  int		log_hunt = FALSE;
-#endif
-  int  log_capable[nHC];
   /*
   static int first_soln_sens_linear_solver_call = 1;
   */
@@ -3415,16 +3408,6 @@ soln_sens ( double lambda,  /*  parameter */
 				  * matrix_fill's. */
 
   exchange_dof(cx, dpi, x);
-
-  for(iHC=0 ; iHC < nHC ; iHC++)
-    {
-    if(log_hunt &&  
-       hunt[iHC].BegParameterValue > 0 && hunt[iHC].EndParameterValue > 0 
-       && hunt[iHC].BegParameterValue != hunt[iHC].EndParameterValue)
-         { log_capable[iHC] = TRUE;  }
-    else
-         {log_capable[iHC] = FALSE;  }
-    }
 
   /*
    *
@@ -3452,18 +3435,20 @@ soln_sens ( double lambda,  /*  parameter */
 		break;
 		case HUN_FIRST:
 		for (iHC=0;iHC<nHC;iHC++)
-			{
-             if(log_capable[iHC])
+		  {
+                   if( hunt[iHC].ramp ==2 )
                     {
-                       hunt_val = hunt[iHC].BegParameterValue*
-   pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,lambda_tmp);
-                    }  else  {
-			hunt_val = hunt[iHC].BegParameterValue + lambda_tmp*
+                     hunt_val = hunt[iHC].BegParameterValue*
+                                pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,lambda_tmp);
+                    }  
+                   else  
+                    {
+		     hunt_val = hunt[iHC].BegParameterValue + lambda_tmp*
 				(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
                     }
-			update_parameterHC(iHC, hunt_val, x, xdot, NULL, 1.0, cx, exo,dpi);
-			}
-		break;
+		   update_parameterHC(iHC, hunt_val, x, xdot, NULL, 1.0, cx, exo,dpi);
+	           }
+		 break;
 		}
 	}
 	else
@@ -3503,17 +3488,19 @@ soln_sens ( double lambda,  /*  parameter */
 		break;
 		case HUN_FIRST:
 		for (iHC=0;iHC<nHC;iHC++)
-			{
-             if(log_capable[iHC])
-                    {
-                       hunt_val = hunt[iHC].BegParameterValue*
-   pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,lambda_tmp);
-                    }  else  {
-			hunt_val = hunt[iHC].BegParameterValue + lambda_tmp*
+		  {
+                   if(hunt[iHC].ramp == 2)
+                     {
+                      hunt_val = hunt[iHC].BegParameterValue*
+                    pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,lambda_tmp);
+                     }  
+                   else  
+                     {
+		      hunt_val = hunt[iHC].BegParameterValue + lambda_tmp*
 				(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
-                    }
-			update_parameterHC(iHC, hunt_val, x, xdot, NULL, 1.0, cx, exo,dpi);
-			}
+                     }
+		    update_parameterHC(iHC, hunt_val, x, xdot, NULL, 1.0, cx, exo,dpi);
+		  }
 		break;
 		}
 	}
@@ -3557,17 +3544,20 @@ soln_sens ( double lambda,  /*  parameter */
 		break;
 		case HUN_FIRST:
 		for (iHC=0;iHC<nHC;iHC++)
-			{
-             if(log_capable[iHC])
+		  {
+                   if( hunt[iHC].ramp == 2 )
                     {
-                       hunt_val = hunt[iHC].BegParameterValue*
-   pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,lambda);
-                    }  else  {
-			hunt_val = hunt[iHC].BegParameterValue + lambda*
-		(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
+                      hunt_val = hunt[iHC].BegParameterValue*
+                      pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,lambda);
+                    }  
+
+                   else  
+                    {
+		      hunt_val = hunt[iHC].BegParameterValue + lambda*
+		           (hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
                     }
-			update_parameterHC(iHC, hunt_val, x, xdot, NULL, 1.0, cx, exo,dpi);
-			}
+		   update_parameterHC(iHC, hunt_val, x, xdot, NULL, 1.0, cx, exo,dpi);
+		  }
 		break;
 		}
 	}
