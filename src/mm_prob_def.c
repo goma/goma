@@ -423,6 +423,7 @@ setup_pd()
 		  (ce == R_LIGHT_INTP)   ||
 		  (ce == R_LIGHT_INTM)   ||
 		  (ce == R_LIGHT_INTD)   ||
+		  (ce == R_RESTIME)   ||  
 		  (ce == R_SHELL_FILMP) ||
                   (ce == R_SHELL_FILMH) ||
                   (ce == R_SHELL_PARTC) || 

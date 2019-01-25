@@ -955,6 +955,10 @@ struct Generalized_Newtonian
   int DilViscModel;
   //! This is the constant used for the dilational viscosity 
   dbl DilVisc0;
+  dbl thixo_factor;
+  int thixoModel;
+  int len_u_thixo;
+  dbl *u_thixo_factor;
 };
 typedef struct Generalized_Newtonian GEN_NEWT_STRUCT;
 

@@ -1204,7 +1204,16 @@ noahs_ark()
       ddd_add_member(n, &eqm->wt_vol,      1, MPI_DOUBLE);
       ddd_add_member(n, &eqm->wt_ang,      1, MPI_DOUBLE);
       ddd_add_member(n, &eqm->wt_tri,      1, MPI_DOUBLE);
+      ddd_add_member(n, &eqm->eq_jac,      1, MPI_DOUBLE);
+      ddd_add_member(n, &eqm->eq_vol,      1, MPI_DOUBLE);
+      ddd_add_member(n, &eqm->eq_ang,      1, MPI_DOUBLE);
+      ddd_add_member(n, &eqm->eq_tri,      1, MPI_DOUBLE);
+      ddd_add_member(n, &eqm->eq_avg,      1, MPI_DOUBLE);
+      ddd_add_member(n, &eqm->eq_low,      1, MPI_DOUBLE);
       ddd_add_member(n, &eqm->eq_tol,      1, MPI_DOUBLE);
+      ddd_add_member(n, &eqm->vol_sum,      1, MPI_DOUBLE);
+      ddd_add_member(n, &eqm->vol_low,      1, MPI_DOUBLE);
+      ddd_add_member(n, &eqm->vol_count,    1, MPI_INT);
       ddd_add_member(n, &eqm->tol_type,    1, MPI_INT);
     }
 
@@ -1878,8 +1887,11 @@ noahs_ark()
       ddd_add_member(n, &gn_glob[i]->len_u_nexp, 1, MPI_INT);
       ddd_add_member(n, &gn_glob[i]->len_u_muinf, 1, MPI_INT);
       ddd_add_member(n, &gn_glob[i]->len_u_aexp, 1, MPI_INT);
+      ddd_add_member(n, &gn_glob[i]->len_u_atexp, 1, MPI_INT);
       ddd_add_member(n, &gn_glob[i]->len_u_wlfc2, 1, MPI_INT);
+      ddd_add_member(n, &gn_glob[i]->len_u_tau_y, 1, MPI_INT);
       ddd_add_member(n, &gn_glob[i]->len_u_lam, 1, MPI_INT);
+      ddd_add_member(n, &gn_glob[i]->len_u_thixo, 1, MPI_INT);
  
       ddd_add_member(n, &mp_glob[i]->len_u_surface_tension, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_u_thermal_conductivity, 1, MPI_INT);
@@ -2246,6 +2258,14 @@ noahs_ark()
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->lamModel, 1, MPI_INT);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->aexp, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->aexpModel, 1, MPI_INT);
+	  ddd_add_member(n, &ve_glob[i][mode]->gn->atexp, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &ve_glob[i][mode]->gn->atexpModel, 1, MPI_INT);
+	  ddd_add_member(n, &ve_glob[i][mode]->gn->tau_y, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &ve_glob[i][mode]->gn->tau_yModel, 1, MPI_INT);
+	  ddd_add_member(n, &ve_glob[i][mode]->gn->fexp, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &ve_glob[i][mode]->gn->fexpModel, 1, MPI_INT);
+	  ddd_add_member(n, &ve_glob[i][mode]->gn->thixo_factor, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &ve_glob[i][mode]->gn->thixoModel, 1, MPI_INT);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->maxpack, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->maxpackModel, 1, MPI_INT);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->sus_species_no, 1, MPI_INT);
@@ -2264,6 +2284,8 @@ noahs_ark()
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->pexp, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->qexp, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &ve_glob[i][mode]->gn->diff, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &ve_glob[i][mode]->gn->DilVisc0, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &ve_glob[i][mode]->gn->DilViscModel, 1, MPI_INT);
 
 	  ddd_add_member(n, &ve_glob[i][mode]->time_const, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &ve_glob[i][mode]->time_constModel, 1, MPI_INT);
@@ -2319,6 +2341,10 @@ noahs_ark()
       ddd_add_member(n, &gn_glob[i]->pexp, 1, MPI_DOUBLE);
       ddd_add_member(n, &gn_glob[i]->qexp, 1, MPI_DOUBLE);
       ddd_add_member(n, &gn_glob[i]->diff, 1, MPI_DOUBLE);
+      ddd_add_member(n, &gn_glob[i]->DilVisc0, 1, MPI_DOUBLE);
+      ddd_add_member(n, &gn_glob[i]->DilViscModel, 1, MPI_INT);
+      ddd_add_member(n, &gn_glob[i]->thixo_factor, 1, MPI_DOUBLE);
+      ddd_add_member(n, &gn_glob[i]->thixoModel, 1, MPI_INT);
 
 
       /*
@@ -2547,6 +2573,7 @@ noahs_ark()
   ddd_add_member(n, &EXTERNAL_POST, 1, MPI_INT);
   ddd_add_member(n, &SURFACE_VECTORS, 1, MPI_INT);
   ddd_add_member(n, &SHELL_NORMALS, 1, MPI_INT);
+  ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
 
   if ( nn_post_fluxes > 0 )
     {
@@ -2943,6 +2970,9 @@ ark_landing()
       dalloc( gn_glob[i]->len_u_tau_y,
  	      gn_glob[i]->    u_tau_y);
  
+      dalloc( gn_glob[i]->len_u_thixo,
+ 	      gn_glob[i]->    u_thixo_factor);
+ 
       dalloc( m->len_u_FlowingLiquid_viscosity,
 	      m->    u_FlowingLiquid_viscosity);
 
@@ -3322,6 +3352,9 @@ noahs_dove()
 
     crdv( gn_glob[i]->len_u_tau_y,
  	  gn_glob[i]->    u_tau_y);
+ 
+    crdv( gn_glob[i]->len_u_thixo,
+ 	  gn_glob[i]->    u_thixo_factor);
  
     crdv( m->len_u_FlowingLiquid_viscosity,
 	  m->    u_FlowingLiquid_viscosity);
