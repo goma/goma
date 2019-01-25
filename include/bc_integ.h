@@ -32,10 +32,7 @@ PROTO((double [],		/* x - Soln vector                           */
        const double ,		/* delta_t - current time step size          */
        const double ,		/* theta - parameter (0 to 1) to vary time 
 				 * integration (implicit=0, explicit=1)      */
-       const double ,		/* h_elem_avg - global average element size  */
-       const double [DIM],	/* h - average element size                  */
-       const double ,		/* mu_avg - average element viscosity        */
-       const double ,		/* U_norm - global velocity norm             */
+       const PG_DATA *,
        const int ,		/* ielem - element number                    */
        const int ,		/* ielem_type - element type                 */
        const int ,		/* num_local_nodes -                         */
