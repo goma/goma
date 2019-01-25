@@ -3077,7 +3077,6 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	  
       else /* not converged or unsuccessful time step */
       {
-/*fprintf(stderr,"conv succ %d %d %d\n",converged, success_dt,no_relax_retry);*/
         if(relax_bit && ((n-nt) < no_relax_retry)  ) {
 	     success_dt = TRUE;
              if(inewton == -1)        {

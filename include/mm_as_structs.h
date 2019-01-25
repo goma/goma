@@ -532,6 +532,7 @@ struct Element_Variable_Pointers
   dbl *poynt[DIM][MDE];				/* Poynting Vector for light intensity */
   dbl *tfmp_pres[MDE];                    /* thin-film multi-phase lubrication pressure */
   dbl *tfmp_sat[MDE];                  /* thin-film multi-phase saturation */
+  dbl *restime[MDE];                  /* residence time function field */
 };
 
 /*___________________________________________________________________________*/
@@ -638,6 +639,7 @@ struct Element_Stiffness_Pointers
   dbl ***poynt;		      	 /* *v[DIM][MDE], velocity */
   dbl **tfmp_pres;                    /*  thin-film multi-phase lubrication pressure */
   dbl **tfmp_sat;                  /* thin-film multi-phase saturation */
+  dbl **restime;                  /* Residence Time Function Field */
 
   /*
    * These are for debugging purposes...
@@ -1586,6 +1588,7 @@ struct Field_Variables
   dbl poynt[DIM];			/* Poynting Vector */
   dbl tfmp_pres;                    /* thin-film multi-phase lubrication pressure */
   dbl tfmp_sat;                  /* thin-film multi-phase saturation */
+  dbl restime;                  /* residence time function field */
 
 
   /*
@@ -1626,6 +1629,7 @@ struct Field_Variables
   dbl grad_sh_p_open_2[DIM];  /* Gradient of open porous shell pressure */
   dbl grad_tfmp_pres[DIM];   /* Gradient of the thin-film multi-phase lubrication pressure */
   dbl grad_tfmp_sat[DIM];   /* Gradient of the thin-film multi-phase lubrication saturation */
+  dbl grad_restime[DIM];   /* Gradient of the residence time function */
 
   /*
    * Grads of vectors...
@@ -1788,6 +1792,7 @@ struct Field_Variables
   dbl d_grad_sh_p_open_2_dmesh[DIM] [DIM][MDE];
   dbl d_max_strain_dmesh[DIM][MDE];
   dbl d_cur_strain_dmesh[DIM][MDE];
+  dbl d_grad_restime_dmesh[DIM] [DIM][MDE];
  /*
   * Values at surfaces for integrated boundary conditions 
   */ 
@@ -1919,6 +1924,7 @@ struct Diet_Field_Variables
   dbl poynt[DIM];			/* Poynting Vector */
   dbl tfmp_pres;           /* thin-film multi-phase lubrication pressure */
   dbl tfmp_sat;         /* thin-film multi-phase saturation */
+  dbl restime;         /* residence time field */
   /*  
    * Grads of scalars... concentration is the only one we need in the
    * old form for VOF/Taylor-Galerkin stuff.
@@ -1943,6 +1949,7 @@ struct Diet_Field_Variables
   /* Material tensors used at old time values */
   dbl strain[DIM][DIM];         /* Strain tensor */
   dbl volume_change;            /* Volume change */
+  dbl grad_restime[DIM];       /* Gradient of the Residence time field */
 
 };
 
@@ -2743,6 +2750,7 @@ struct stress_dependence
   double g[DIM][DIM][DIM][DIM][MDE];
   double S[DIM][DIM][MAX_MODES][DIM][DIM][MDE];
   double pf[DIM][DIM][MAX_PHASE_FUNC][MDE];
+  double degrade[DIM][DIM][MDE];
 };
 typedef struct stress_dependence STRESS_DEPENDENCE_STRUCT;
 
@@ -2793,6 +2801,7 @@ struct viscosity_dependence
   double nn[MDE];          /* bond concentration dependence */
   double gd;               /* strain rate dependence */
   double pf[MAX_PHASE_FUNC][MDE];  /* phase function */
+  double degrade[MDE];           /* amount of degradation */
 };
 typedef struct viscosity_dependence VISCOSITY_DEPENDENCE_STRUCT;
 
