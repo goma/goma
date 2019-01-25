@@ -39,7 +39,7 @@ GOMA_LIBS = /home/goma/production/$(ARCH)
 
 # MPI install location, used for include, lib, and bin directories
 
-MPI_TOP = /usr/bin/openmpi-1.6.3
+MPI_TOP = /usr/bin/openmpi-2.1.1
 
 # GCC_TOP is the corresponding location of the gcc compilers and libs that are
 # used by the MPI compilers
@@ -141,7 +141,7 @@ DEFINES ?= -Dlinux \
 GOMA_MPI_INC ?= -isystem $(MPI_TOP)/include
 
 # MPI libraries
-GOMA_MPI_LIB ?= -L$(MPI_TOP)/lib  -lmpi  -lmpi_f77
+GOMA_MPI_LIB ?= -L$(MPI_TOP)/lib  -lmpi  -lmpi_mpifh
 
 # For MPI, the libraries need to be explicitly set in the path:
 GCC_LIB = $(GCC_TOP)/lib
@@ -154,12 +154,13 @@ LD_LIBRARY_PATH := $(GCC_LIB64):$(GCC_LIB):${LD_LIBRARY_PATH}
 # If built with build-goma-dependencies.sh, includes flags for SEACAS, UMFpack, and all other necessary
 # libraries and includes otherwise not listed below.
 
-TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-11.8.1-Built
+TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-12.12.1-Built
 
 include $(TRILINOS_TOP)/include/Makefile.export.Trilinos
 
 # Trilinos includes and libraries
-TRILINOS_INC ?= $(subst -I, -isystem, $(Trilinos_INCLUDE_DIRS) $(Trilinos_TPL_INCLUDE_DIRS))
+TRILINOS_INC_REMOVE_USR_INCLUDE = $(subst -I/usr/include, ,  $(Trilinos_INCLUDE_DIRS) $(Trilinos_TPL_INCLUDE_DIRS))
+TRILINOS_INC ?= $(subst -I, -isystem, $(TRILINOS_INC_REMOVE_USR_INCLUDE))
 TRILINOS_LIB ?= $(Trilinos_LIBRARY_DIRS) $(Trilinos_TPL_LIBRARY_DIRS) \
 		$(Trilinos_LIBRARIES) $(Trilinos_TPL_LIBRARIES)
 
