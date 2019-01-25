@@ -1907,6 +1907,12 @@ load_elem_dofptr(const int ielem,
 				    esp_dot->poynt[2]);
   }
 
+  eqn = R_RESTIME;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->restime, esp_old->restime,
+				    esp_dot->restime);
+  }  
+
   eqn = R_SHELL_SHEAR_TOP;
   if (upd->ep[eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->sh_shear_top, esp_old->sh_shear_top, esp_dot->sh_shear_top);

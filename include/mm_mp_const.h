@@ -65,7 +65,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  ACOUSTIC    15      /* Acoustic energy density coupled to NS */
 #define HS_FOAM 16   /* fluorinert */
 #define VISC_ACOUSTIC 17   /* heat generation by acoustics */
-#define INGBER 18   /* heat generation by acoustics */
+#define INGBER 18   
 #define GRAV_VIBRATIONAL 19   /* momentum source for gravity + vibration */
 #define MELT             20  /* Lubrication source term model*/
 #define EM_DISS         21   /* heat generation by EM waves */

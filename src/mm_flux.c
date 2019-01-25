@@ -8201,6 +8201,17 @@ load_fv_sens(void)
 	}
     }
 
+  v = RESTIME;
+  fv_sens->restime = 0.;
+  if ( pd->v[v] )
+    {
+      dofs  = ei->dof[v];
+      for ( i=0; i<dofs; i++)
+	{
+	  fv_sens->restime += *esp_old->restime[i] * bf[v]->phi[i];
+	}
+    } 
+
   v = SHELL_PRESS_OPEN;
   fv_sens->sh_p_open = 0.;
   if ( pd->v[v] )
