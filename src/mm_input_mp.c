@@ -2289,7 +2289,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       else if ( !strcmp(model_name, "SUPG") )
 	{
 	  mat_ptr->Mwt_funcModel = SUPG;
-	  if (fscanf(imp, "%lg",&(mat_ptr->Mwt_func)) != -1)
+	  if (fscanf(imp, "%lg",&(mat_ptr->Mwt_func)) != 1)
           {
 	    EH(-1, "Could not read SUPG value for Momentum Weight Function");
           }
@@ -5890,7 +5890,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
   else if ( !strcmp(model_name, "SUPG") )
     {
       mat_ptr->Spwt_funcModel = SUPG;
-      if (fscanf(imp, "%lg",&(mat_ptr->Spwt_func)) != -1)
+      if (fscanf(imp, "%lg",&(mat_ptr->Spwt_func)) != 1)
       {
         EH(-1, "Could not read SUPG value for Species Weight Function");
       }
