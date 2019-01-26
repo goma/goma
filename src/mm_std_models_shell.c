@@ -96,6 +96,9 @@ height_function_model (double *H_U,
  double H_dot, H_init, H_delta, H_low, x_0, Length, r;
  double R, origin[3], dir_angle[3], t, axis_pt[3], dist, cos_denom;
 
+ dH_L_dX[0] = 0.0;
+ dH_L_dX[1] = 0.0;
+ dH_L_dX[2] = 0.0;
 
  if(pd->TimeIntegration == STEADY) time = 0.;
 
