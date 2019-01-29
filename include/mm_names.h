@@ -390,6 +390,7 @@ SINGLE_PHASE, DVI_SINGLE_PHASE_DB},
   { "INTP", "INTP_BC", DIRICHLET, INTP_BC, R_LIGHT_INTP, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "INTM", "INTM_BC", DIRICHLET, INTM_BC, R_LIGHT_INTM, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "INTD", "INTD_BC", DIRICHLET, INTD_BC, R_LIGHT_INTD, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "RESTIME", "RESTIME_BC", DIRICHLET, RESTIME_BC, R_RESTIME, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,  
   { "LIGHTP_TRANS", "LIGHTP_TRANS_BC", WEAK_INT_SURF, LIGHTP_TRANS_BC, R_LIGHT_INTP, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "LIGHTM_TRANS", "LIGHTM_TRANS_BC", WEAK_INT_SURF, LIGHTM_TRANS_BC, R_LIGHT_INTM, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "LIGHTD_TRANS", "LIGHTD_TRANS_BC", WEAK_INT_SURF, LIGHTD_TRANS_BC, R_LIGHT_INTD, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
@@ -1023,6 +1024,7 @@ struct Equation_Names EQ_Name[] = {
     { "R_LIGHT_INTD", "LIGHT_INTD", R_LIGHT_INTD},  /*   184  */
     { "R_TFMP_MASS", "TFMP_MASS", R_TFMP_MASS},     /*   185  */
     { "R_TFMP_BOUND", "TFMP_BOUND", R_TFMP_BOUND},     /*   186  */
+    { "R_RESTIME", "RESTIME", R_RESTIME},     /*   187  */
 
     /*
      *  Note -> these entries must remain until we get rid
@@ -1031,7 +1033,7 @@ struct Equation_Names EQ_Name[] = {
      *          are species in the problem
      */
 
-    { "R_Y0", "Y0", V_LAST + 0} ,                    /* 187 */
+    { "R_Y0", "Y0", V_LAST + 0} ,                    /* 188 */
     { "R_Y1", "Y1", V_LAST + 1} ,
     { "R_Y2", "Y2", V_LAST + 2} ,
     { "R_Y3", "Y3", V_LAST + 3} ,
@@ -1041,7 +1043,7 @@ struct Equation_Names EQ_Name[] = {
     { "R_Y7", "Y7", V_LAST + 7} ,
     { "R_Y8", "Y8", V_LAST + 8} ,
     { "R_Y9", "Y9", V_LAST + 9} ,                    
-    { "R_Y10", "Y10", V_LAST + 10} ,                 /* 197 */
+    { "R_Y10", "Y10", V_LAST + 10} ,                 /* 198 */
     { "R_Y11", "Y11", V_LAST + 11} ,                   
     { "R_Y12", "Y12", V_LAST + 12} ,                  
     { "R_Y13", "Y13", V_LAST + 13} ,                  
@@ -1051,7 +1053,7 @@ struct Equation_Names EQ_Name[] = {
     { "R_Y17", "Y17", V_LAST + 17} ,                 
     { "R_Y18", "Y18", V_LAST + 18} ,                   
     { "R_Y19", "Y19", V_LAST + 19} ,                 
-    { "R_Y20", "Y20", V_LAST + 20} ,                 /* 207 */  
+    { "R_Y20", "Y20", V_LAST + 20} ,                 /* 208 */  
     { "R_Y21", "Y21", V_LAST + 21} ,
     { "R_Y22", "Y22", V_LAST + 22} ,
     { "R_Y23", "Y23", V_LAST + 23} ,
@@ -1060,21 +1062,21 @@ struct Equation_Names EQ_Name[] = {
     { "R_Y26", "Y26", V_LAST + 26} ,
     { "R_Y27", "Y27", V_LAST + 27} ,   
     { "R_Y28", "Y28", V_LAST + 28} ,
-    { "R_Y29", "Y29", V_LAST + 29} ,                 /* 216 */
+    { "R_Y29", "Y29", V_LAST + 29} ,                 /* 217 */
 
     /*
      * Add extra equation names for vector fields that can be rotated
      */
     
-    { "R_MOM_NORMAL",  "DN",  R_MOM_NORMAL } ,       /* 217 */
+    { "R_MOM_NORMAL",  "DN",  R_MOM_NORMAL } ,       /* 218 */
     { "R_MOM_TANG1",   "DT1", R_MOM_TANG1 } ,
     { "R_MOM_TANG2",   "DT2", R_MOM_TANG2 } ,
     { "R_MESH_NORMAL", "VN",  R_MESH_NORMAL } ,
     { "R_MESH_TANG1",  "VT1", R_MESH_TANG1 } ,
-    { "R_MESH_TANG2",  "VT2", R_MESH_TANG2 } ,       /* 227 */
+    { "R_MESH_TANG2",  "VT2", R_MESH_TANG2 } ,       /* 228 */
     { "R_SOLID_NORMAL", "SN",  R_SOLID_NORMAL } ,
     { "R_SOLID_TANG1",  "ST1", R_SOLID_TANG1 } ,
-    { "R_SOLID_TANG2",  "ST2", R_SOLID_TANG2 }         /* 225 */
+    { "R_SOLID_TANG2",  "ST2", R_SOLID_TANG2 }         /* 226 */
 };
 int Num_EQ_Names = sizeof(EQ_Name) / sizeof(struct Equation_Names);  
 
@@ -1297,9 +1299,10 @@ struct Equation_Names Var_Name[] =  {
     { "LIGHT_INTD", "INTD", LIGHT_INTD},                     /* 184 */
     { "TFMP_SAT", "SAT", TFMP_SAT},                     /* 185 */
     { "TFMP_PRES", "PRES", TFMP_PRES},                     /* 186 */
+    { "RESTIME", "RESTIME", RESTIME},                     /* 187 */
 
     { "MESH_POSITION1", "X",  MESH_POSITION1 } ,
-    { "MESH_POSITION2", "Y",  MESH_POSITION2 } ,	/* 188 */
+    { "MESH_POSITION2", "Y",  MESH_POSITION2 } ,	/* 189 */
     { "MESH_POSITION3", "Z",  MESH_POSITION3 } ,
 
     { "VEL_NORM",       "VN", VEL_NORM } ,
@@ -1313,14 +1316,14 @@ struct Equation_Names Var_Name[] =  {
 
     { "D_X1_DT",   "XDOT", D_X1_DT } ,
     { "D_X2_DT",   "YDOT", D_X2_DT } ,
-    { "D_X3_DT",   "ZDOT", D_X3_DT } ,			/* 199 */
+    { "D_X3_DT",   "ZDOT", D_X3_DT } ,			/* 200 */
     { "D_S_DT",    "SDOT", D_S_DT } ,
 
     { "D_P_DT",    "PDOT", D_P_DT } ,
 
     { "SOLID_POSITION1", "X_RS",  SOLID_POSITION1 } ,  
     { "SOLID_POSITION2", "Y_RS",  SOLID_POSITION2 } ,
-    { "SOLID_POSITION3", "Z_RS",  SOLID_POSITION3 } 	/* 204 */
+    { "SOLID_POSITION3", "Z_RS",  SOLID_POSITION3 } 	/* 205 */
 };
 
 int Num_Var_Names = sizeof(Var_Name) / sizeof(struct Equation_Names);  
@@ -1541,6 +1544,7 @@ struct Equation_Names Exo_Var_Names[] =
   { "Dispersive Scattering Intensity", "INTD", LIGHT_INTD },
   { "Thin Film Multiphase Lubrication Pressure", "TFMP_PRES", TFMP_PRES },
   { "Thin Film Multiphase Saturation", "TFMP_SAT", TFMP_SAT },
+  { "Residence Time Function", "RST", RESTIME },
 };
 
 int Num_Exo_Var_Names = sizeof(Exo_Var_Names) / sizeof(struct Equation_Names);  
@@ -1812,6 +1816,7 @@ struct Equation_Names Var_Units[] =
   { "Dispersive Intensity", "[1]", LIGHT_INTD},
   { "Thin Film Multiphase Lubrication Pressure", "[1]", TFMP_PRES},
   { "Thin Film Multiphase Saturation", "[1]", TFMP_SAT},
+  { "Residence Time Function", "[1]", RESTIME},  
 };
 
 int Num_Var_Units = sizeof(Var_Units) / sizeof(struct Equation_Names);  

@@ -1720,6 +1720,17 @@ matrix_fill(
 #endif
 	}
 
+      if( pde[R_RESTIME] )
+	{
+          err = assemble_poynting(time_value, theta, delta_t, &pg_data, 
+				  R_RESTIME, RESTIME);
+	  EH( err, "assemble_poynting");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_poynting"); 
+	  if (err) return -1;
+#endif
+	}  
+
       if( pde[R_POR_SINK_MASS] )
 	{
 	  err = assemble_pore_sink_mass(time_value, theta, delta_t);
@@ -2467,7 +2478,7 @@ matrix_fill(
 	  
       if (call_int) {
 	err = apply_integrated_bc(x, resid_vector, delta_t, theta,
-				  pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+				  &pg_data,
 				  ielem, ielem_type, num_local_nodes, ielem_dim,
 				  iconnect_ptr, elem_side_bc, num_total_nodes,
 				  WEAK_INT_SURF, time_value, element_search_grid, exo);
@@ -2800,7 +2811,7 @@ matrix_fill(
 	if (call_int) 
 	  {
 	    err = apply_integrated_bc(x, resid_vector, delta_t, theta,
-				      pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+				      &pg_data,
 				      ielem, ielem_type, num_local_nodes, 
 				      ielem_dim, iconnect_ptr, elem_side_bc, 
 				      num_total_nodes, 
@@ -3936,7 +3947,7 @@ matrix_fill_stress(
 	  
       if (call_int) {
 	err = apply_integrated_bc(x, resid_vector, delta_t, theta,
-				  pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+				  &pg_data,
 				  ielem, ielem_type, num_local_nodes, ielem_dim,
 				  iconnect_ptr, elem_side_bc, num_total_nodes,
 				  WEAK_INT_SURF, time_value, element_search_grid, exo);
@@ -4245,7 +4256,7 @@ matrix_fill_stress(
 	if (call_int) 
 	  {
 	    err = apply_integrated_bc(x, resid_vector, delta_t, theta,
-				      pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+				      &pg_data,
 				      ielem, ielem_type, num_local_nodes, 
 				      ielem_dim, iconnect_ptr, elem_side_bc, 
 				      num_total_nodes, 

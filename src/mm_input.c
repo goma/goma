@@ -8241,6 +8241,8 @@ rd_eq_specs(FILE *ifp,
       ce = set_eqn(R_TFMP_MASS, pd_ptr);
    } else if (!strcasecmp(ts, "tfmp_bound"))  {
       ce = set_eqn(R_TFMP_BOUND, pd_ptr);
+    } else if (!strcasecmp(ts, "restime")) {
+      ce = set_eqn(R_RESTIME, pd_ptr);  
 
     } else if (!strcasecmp(ts, "porous_sat"))  {
       ce = set_eqn(R_POR_LIQ_PRES, pd_ptr);
@@ -8839,6 +8841,8 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(TFMP_PRES, pd_ptr);
     } else if (!strcasecmp(ts, "TFMP_SAT")) {
       cv = set_var(TFMP_SAT, pd_ptr);
+    } else if (!strcasecmp(ts, "RESTIME")) {
+      cv = set_var(RESTIME, pd_ptr);  
 
     } else if (!strncasecmp(ts, "Sp", 2)) {
       if (!strcasecmp(ts, "Sp")) {
@@ -9499,6 +9503,7 @@ rd_eq_specs(FILE *ifp,
     case R_LIGHT_INTP:
     case R_LIGHT_INTM:
     case R_LIGHT_INTD:
+    case R_RESTIME:  
 
 	if ( fscanf(ifp, "%lf %lf %lf %lf %lf", 
 		    &(pd_ptr->etm[ce][(LOG2_MASS)]),

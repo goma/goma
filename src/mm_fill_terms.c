@@ -3226,6 +3226,39 @@ assemble_momentum(dbl time,       /* current time */
 		    }
 		}
 
+	      /*
+	       * J_m_degrade
+	       */
+
+
+	      if ( pdv[RESTIME] )
+		{
+		  var = RESTIME;
+		  pvar = upd->vp[var];
+		  for ( j=0; j<ei->dof[var]; j++)
+		    {
+		      phi_j = bf[var]->phi[j];
+
+		      diffusion = 0.;
+		      if ( diffusion_on)
+			{
+			  for ( p=0; p<VIM; p++)
+			    {
+			      for ( q=0; q<VIM; q++)
+				{
+				  diffusion +=  grad_phi_i_e_a[p][q] *
+				    d_Pi->degrade[q][p][j];
+				}
+			    }
+			  diffusion *= - d_area ;
+			  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			}
+
+		      lec->J[peqn][pvar][ii][j] +=
+			diffusion;
+		    }
+		}  
+
 #ifdef COUPLED_FILL
 	      /* 
 	       * J_m_F
@@ -8134,6 +8167,12 @@ load_fv(void)
                    &(fv->poynt[2]), &(fv_dot->poynt[2]), &(fv_old->poynt[2]));
     stateVector[LIGHT_INTD] = fv->poynt[2];
   } 
+  if ( pdv[RESTIME] ) {
+    v = RESTIME    ;
+    scalar_fv_fill(esp->restime, esp_dot->restime, esp_old->restime, bf[v]->phi, ei->dof[v],
+                   &(fv->restime), &(fv_dot->restime), &(fv_old->restime));
+    stateVector[RESTIME] = fv->restime;
+  }   
   /*
    *	Porous sink mass
    */
@@ -10712,7 +10751,29 @@ load_fv_grads(void)
     }
 #endif
 
-  
+  if ( pd->v[RESTIME] )
+    {
+      v = RESTIME;
+      dofs  = ei->dof[v];
+#ifdef DO_NO_UNROLL
+      for ( p=0; p<VIM; p++)
+	{
+	  fv->grad_restime[p] = 0.0;
+          fv_old->grad_restime[p] = 0.0;
+	  for ( i=0; i<dofs; i++)
+	    {
+	      fv->grad_restime[p] += *esp->restime[i] * bf[v]->grad_phi[i] [p];
+	      fv_old->grad_restime[p] += *esp_old->restime[i] * bf[v]->grad_phi[i] [p]
+	    }
+	}
+#else
+      grad_scalar_fv_fill( esp->restime, bf[v]->grad_phi, dofs, fv->grad_restime);
+    } else if ( zero_unused_grads &&  upd->vp[RESTIME] == -1 ) {
+      for (p=0; p<VIM; p++) fv->grad_restime[p] = 0.0;
+    }
+#endif
+
+
  /*
   * External 
   */
@@ -12093,6 +12154,33 @@ if ( pd->v[LIGHT_INTD] )
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[2][0][0][0]),0, siz);
     }
+
+if ( pd->v[RESTIME] )
+    {
+      v = RESTIME;
+      bfv = bf[v];
+      vdofs  = ei->dof[v];
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_restime_dmesh[0][0][0]),0, siz);
+      for ( i=0; i<vdofs; i++)
+	{
+	  T_i = *esp->restime[i];
+	  for (p = 0; p < dimNonSym; p++)
+	    {
+	      for (b = 0; b < dim; b++)
+		{
+		  for (j = 0; j < mdofs; j++)
+		    {
+		      fv->d_grad_restime_dmesh[p] [b][j] +=
+ 			T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
+		    }
+		}
+	    }
+	}
+    } else   if ( upd->vp[RESTIME] != -1  ){
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_restime_dmesh[0][0][0]),0, siz);
+    }  
 
 if ( pd->v[SHELL_LUB_CURV] )
     {
@@ -14767,10 +14855,15 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 {
   int dim = pd->Num_Dim;
   int var, i, j, a, w, var_offset;
-  double k, Tref, tmp;
+  double k, Tref, tmp, temp;
   struct Level_Set_Data *ls_old;
 
   int i_therm_cond;
+
+  if ( pd->e[TEMPERATURE] )
+      {temp = fv->T;}
+  else
+      {temp = upd->Process_Temperature;}
 
   k =0.;
 
@@ -14831,7 +14924,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
   else if (mp->ConductivityModel == THERMAL_HEAT )
     {
       Tref = mp->u_thermal_conductivity[4];
-      tmp = fv->T - Tref;
+      tmp = temp - Tref;
       mp->thermal_conductivity = mp->u_thermal_conductivity[0] +
 		tmp*(mp->u_thermal_conductivity[1] + 
 		tmp*(mp->u_thermal_conductivity[2] + 
@@ -14973,10 +15066,14 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
 {
   int dim = pd->Num_Dim;
   int var, i, j, a, w, var_offset;
-  double Cp, T_offset;
+  double Cp, T_offset, temp;
   struct Level_Set_Data *ls_old;
 
 
+  if ( pd->e[TEMPERATURE] )
+      {temp = fv->T;}
+  else
+      {temp = upd->Process_Temperature;}
 
   Cp =0.;
 
@@ -15048,9 +15145,9 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
     {
       T_offset = mp->u_heat_capacity[4];
       mp->heat_capacity = mp->u_heat_capacity[0] +
-			mp->u_heat_capacity[1]*(fv->T+T_offset) +
-			mp->u_heat_capacity[2]*SQUARE(fv->T+T_offset) +
-			mp->u_heat_capacity[3]/SQUARE(fv->T+T_offset);
+			mp->u_heat_capacity[1]*(temp+T_offset) +
+			mp->u_heat_capacity[2]*SQUARE(temp+T_offset) +
+			mp->u_heat_capacity[3]/SQUARE(temp+T_offset);
       Cp    = mp->heat_capacity;
       var = TEMPERATURE;
       if ( d_Cp != NULL && pd->v[var] )
@@ -15058,8 +15155,8 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
 	      d_Cp->T[j] = ( mp->u_heat_capacity[1] +
-			2.*(fv->T+T_offset)*mp->u_heat_capacity[2]
-			- 2.*mp->u_heat_capacity[3]/(SQUARE(fv->T+T_offset)*(fv->T+T_offset)))
+			2.*(temp+T_offset)*mp->u_heat_capacity[2]
+			- 2.*mp->u_heat_capacity[3]/(SQUARE(temp+T_offset)*(temp+T_offset)))
 			*bf[var]->phi[j];
 	    }
 	}
@@ -16555,13 +16652,18 @@ void
 apply_table_mp( double *func, struct Data_Table *table)
 {
   int i;
-  double interp_val,var1[1],slope;
+  double interp_val,var1[1],slope,temp;
+
+  if ( pd->e[TEMPERATURE] )
+      {temp = fv->T;}
+  else
+      {temp = upd->Process_Temperature;}
 
   for(i=0;i<table->columns-1;i++) 
   {
     if(strcmp(table->t_name[i], "TEMPERATURE")==0)
     {
-      var1[i]=fv->T;
+      var1[i]=temp;
     }
     else if(strcmp(table->t_name[i], "MASS_FRACTION")==0)
     {
@@ -24511,6 +24613,22 @@ assemble_p_source ( double pressure, const int bcflag )
             }
         }
 
+      var = RESTIME;
+      if (pd->v[var] )
+        {
+
+          for (p=0; p<pd->Num_Dim; p++)
+            {
+              for (q=0; q<pd->Num_Dim; q++)
+                { 
+                  for (j=0; j<ei->dof[var]; j++)
+                    {
+                      d_force[p][var][j] -= pressure*lsi->normal[q]*d_Pi->degrade[p][q][j];
+                    }
+                }
+            }
+        }  
+
       var = ls->var;
       if (pd->v[var] )
         {
@@ -27762,7 +27880,7 @@ fluid_stress( double Pi[DIM][DIM],
   /*  shift function */
   dbl at = 0.0;
   dbl d_at_dT[MDE];
-  dbl wlf_denom;
+  dbl wlf_denom, temp;
   dbl mu_over_mu_num = 0.0;
 
   /* solvent viscosity and derivatives */
@@ -27815,6 +27933,10 @@ fluid_stress( double Pi[DIM][DIM],
 
   int eqn = R_MOMENTUM1;
 
+  if ( pd->e[TEMPERATURE] )
+      {temp = fv->T;}
+  else
+      {temp = upd->Process_Temperature;}
  
   dim   = pd->Num_Dim;
   wim   = dim;
@@ -28005,6 +28127,15 @@ fluid_stress( double Pi[DIM][DIM],
 	    }
 	}
 
+      var = RESTIME;
+      if ( d_Pi != NULL && pd->v[var] )
+	{
+	  for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      d_mu->degrade[j] = mu_num * d_mus->degrade[j];
+	    }
+	}  
+
 #ifdef COUPLED_FILL
       var = FILL;
       if ( d_Pi != NULL && pd->v[var] )
@@ -28050,10 +28181,10 @@ fluid_stress( double Pi[DIM][DIM],
 	    }
 	  else if(vn->shiftModel == MODIFIED_WLF)
 	    {
-	      wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
+	      wlf_denom = vn->shift[1] + temp - mp->reference[TEMPERATURE];
 	      if(wlf_denom != 0.)
 		{
-		  at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
+		  at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-temp)/wlf_denom);
 		  for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
 		    {
 		      d_at_dT[j]= -at*vn->shift[0]*vn->shift[1]
@@ -28124,6 +28255,15 @@ fluid_stress( double Pi[DIM][DIM],
                   d_mu->nn[j] += mu_num * at * d_mup->nn[j];
                 }
             }
+
+          var = RESTIME;
+          if ( d_Pi != NULL && pd->v[var] )
+            {
+              for ( j=0; j<ei->dof[var]; j++)
+                {
+                  d_mu->degrade[j] += mu_num * at * d_mup->degrade[j];
+                }
+            }  
 
 #ifdef COUPLED_FILL
           var = FILL;
@@ -28273,6 +28413,42 @@ fluid_stress( double Pi[DIM][DIM],
 	    }
         }
     }
+
+  var = RESTIME;
+  if ( d_Pi != NULL && pd->v[var] )
+    {
+      for ( p=0; p<VIM; p++)
+        {
+          for ( q=0; q<VIM; q++)
+            {
+              for ( j=0; j<ei->dof[var]; j++)
+                {
+                  d_Pi->degrade[p][q][j] = d_mu->degrade[j] * gamma[p][q];
+                }
+            }
+        }
+      if (!kappaWipesMu) {
+	for (p = 0; p < VIM; p++) {
+	  for (j = 0; j < ei->dof[var]; j++) {
+	    d_Pi->degrade[p][p][j] -= (d_mu->degrade[j]/3.0 ) * gamma[p][p];
+	  }
+	}
+      }
+      if ( pd->v[POLYMER_STRESS11] )
+        {
+          for ( p=0; p<VIM; p++)
+            {
+              for ( q=0; q<VIM; q++)
+                {
+                  for ( j=0; j<ei->dof[var]; j++)
+                    {
+                      d_Pi->degrade[p][q][j] -= evss_f * ( d_mu->degrade[j] - d_mus->degrade[j] )* gamma_cont[p][q];
+                    }
+                }
+	    }
+        }
+    }
+ 
 
 #ifdef COUPLED_FILL
   var = FILL;
@@ -28908,6 +29084,40 @@ fluid_stress_conf( double Pi[DIM][DIM],
 	    }
 	}
     }
+
+  var = RESTIME;
+  if(d_Pi!=NULL && pd->v[var])
+    {
+      for(p=0; p<VIM; p++)
+        {
+          for(q=0; q<VIM; q++)
+            {
+	      for(j=0; j<ei->dof[var]; j++)
+                {
+		  d_Pi->degrade[p][q][j] = d_mus->degrade[j]*gamma[p][q];
+
+		  if(pd->v[POLYMER_STRESS11])
+		    {
+		      for(mode=0; mode<vn->modes; mode++)
+			{
+			  // Polymer viscosity
+			  mup = viscosity(ve[mode]->gn, gamma, d_mup);
+			  // Polymer time constant
+			  lambda = 0.0;
+			  if(ve[mode]->time_constModel == CONSTANT)
+			    {
+			      lambda = ve[mode]->time_const;
+			    }
+
+			  d_Pi->degrade[p][q][j] += d_mup->degrade[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->degrade[p][q][j] += d_mup->degrade[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
+			}		      
+		    }
+		}
+	    }
+	}
+    }  
 
 #ifdef COUPLED_FILL
   var = FILL;
@@ -33376,9 +33586,10 @@ assemble_poynting(double time,	/* present time value */
 		  const int py_var )
 {
   int err, eqn, var, peqn, pvar, dim, p, b, w, i, j, status, light_eqn = 0;
+  int petrov = 0, Beers_Law = 0;
 
-  dbl P;		                /* Light Intensity	*/
-  dbl grad_P, Psign = 0;		/* grad intensity */
+  dbl P=0;		                /* Light Intensity	*/
+  dbl grad_P=0, Psign = 0;		/* grad intensity */
 
   dbl alpha;				/* Acoustic Absorption */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_alpha_struct; 
@@ -33437,9 +33648,11 @@ assemble_poynting(double time,	/* present time value */
   /*
  *    Radiative transfer equation variables - connect to input file someday
  */
-  double svect[3]={0.,-1.,0.};
+  double svect[DIM]={0.,-1.,0.};
+  double v_grad[DIM]={0.,0.,0.};
   double mucos=1.0;
-  double diff_const=1.0E-8;
+  double diff_const=1.0E-4;
+  double time_source=0., d_time_source=0.;
 
   /*
    * Bail out fast if there's nothing to do...
@@ -33496,18 +33709,38 @@ assemble_poynting(double time,	/* present time value */
     case R_LIGHT_INTD:
          light_eqn = 2;
          Psign = 0.;
-         mucos = 0.;
          break;
+    case R_RESTIME:
+         petrov = 1;
+         break;  
     default:
          EH(-1,"light intensity equation");
          break;
    }
-  P = fv->poynt[light_eqn];
-  grad_P = 0.;
-  for(i=0 ; i<dim ; i++)
-     {
-      grad_P += svect[i]*fv->grad_poynt[light_eqn][i];
-     }
+  if(py_eqn >= R_LIGHT_INTP && py_eqn <= R_LIGHT_INTD)
+    {
+     Beers_Law = 1;
+     P = fv->poynt[light_eqn];
+     grad_P = 0.;
+     for(i=0 ; i<dim ; i++)
+        {
+         v_grad[i] = fv->grad_poynt[light_eqn][i];
+         grad_P += svect[i]*v_grad[i];
+        }
+    }
+  else
+   {
+     Beers_Law = 0;
+     P = fv->restime;
+     for(i=0 ; i<dim ; i++)
+        {
+         v_grad[i] = fv->grad_restime[i];
+        }
+     if(pd->e[R_ENERGY] && (fv->T > upd->Process_Temperature))
+          {time_source = fv->T-upd->Process_Temperature; d_time_source=1.;}
+     else
+          {time_source = 0.; d_time_source = 0.;}
+   }
   /*
    * Residuals___________________________________________________________
    */
@@ -33520,7 +33753,6 @@ assemble_poynting(double time,	/* present time value */
       for ( i=0; i<ei->dof[eqn]; i++)
 	{
 	  
-#if 1
           /* this is an optimization for xfem */
 	  if ( xfem != NULL )
             {
@@ -33529,21 +33761,25 @@ assemble_poynting(double time,	/* present time value */
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      if ( extended_dof && !xfem_active ) continue;
             }
-#endif
 	  phi_i = bf[eqn]->phi[i];
-          wt_func = 0;
-	  for(p=0; p<dim; p++)
-            { wt_func += h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p]; }
+          if(petrov)
+            {
+             wt_func = 0.0;
+	     for(p=0; p<dim; p++)
+                 { wt_func += h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p]; }
+            }
+          else
+            { wt_func = phi_i; }
 
 	  advection = 0.;
-	  source = -1.;
-	  if ( pd->e[eqn] & T_ADVECTION )
+	  if ( (pd->e[eqn] & T_ADVECTION) && !Beers_Law )
 	    {
+	      source = -time_source;
 	      for ( p=0; p<dim; p++)
 		{
 		  grad_phi_i[p] = bf[var]->grad_phi[i][p];
-		  advection += wt_func*vconv[p]*fv->grad_poynt[light_eqn][p];
-	          advection += diff_const*grad_phi_i[p]*fv->grad_poynt[light_eqn][p];
+		  advection += wt_func*vconv[p]*v_grad[p];
+	          advection += diff_const*grad_phi_i[p]*v_grad[p];
 		}
 	      advection += wt_func*source;
 
@@ -33552,7 +33788,7 @@ assemble_poynting(double time,	/* present time value */
 	      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 	    }
 	  diffusion = 0.;
-	  if ( pd->e[eqn] & T_DIFFUSION )
+	  if ( (pd->e[eqn] & T_DIFFUSION) && Beers_Law)
 	    {
 
 	      diffusion += phi_i*(mucos*grad_P + Psign*alpha*P);
@@ -33576,7 +33812,6 @@ assemble_poynting(double time,	/* present time value */
       peqn = upd->ep[eqn];
       for ( i=0; i<ei->dof[eqn]; i++)
 	{
-#if 1
           /* this is an optimization for xfem */
 	  if ( xfem != NULL )
             {
@@ -33585,18 +33820,22 @@ assemble_poynting(double time,	/* present time value */
                       &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      if ( extended_dof && !xfem_active ) continue;
             }
-#endif
 	  phi_i = bf[eqn]->phi[i];
-          wt_func = 0;
-	  for(p=0; p<dim; p++)
-             { wt_func += h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p]; }
-          for ( p=0; p<VIM; p++)
-		    { grad_phi_i[p] = bf[eqn]->grad_phi[i][p];}
+          if(petrov)
+            {
+             wt_func = 0;
+	     for(p=0; p<dim; p++)
+                 { wt_func += h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p]; }
+            }
+          else
+            { wt_func = phi_i; }
 
 	  /*
 	   * Set up some preliminaries that are needed for the (a,i)
 	   * equation for bunches of (b,j) column variables...
 	   */
+	 for ( p=0; p<dim; p++)
+		{ grad_phi_i[p] = bf[var]->grad_phi[i][p];}
 
 	  /*
 	   * J_e_ap
@@ -33615,7 +33854,7 @@ assemble_poynting(double time,	/* present time value */
 		    }
 
 	          advection = 0.;
-	          if ( pd->e[eqn] & T_ADVECTION )
+	          if ( (pd->e[eqn] & T_ADVECTION) && !Beers_Law )
 	            {
 	             for ( p=0; p<dim; p++)
 		        {
@@ -33628,7 +33867,7 @@ assemble_poynting(double time,	/* present time value */
 	             advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 	            }
 		  diffusion = 0.;
-		  if ( pd->e[eqn] & T_DIFFUSION )
+	          if ((pd->e[eqn] & T_DIFFUSION) && Beers_Law)
 		    {
 		      for ( p=0; p<VIM; p++)
 			{
@@ -33659,7 +33898,15 @@ assemble_poynting(double time,	/* present time value */
 		      grad_phi_j[p] = bf[var]->grad_phi[j][p];
 		    }
 
-		  if ( pd->e[eqn] & T_DIFFUSION )
+	          if ((pd->e[eqn] & T_ADVECTION) && !Beers_Law )
+                    {
+	              advection = -wt_func*d_time_source*phi_j;
+
+	              advection *= det_J * wt;
+	              advection *= h3;
+	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+                    }
+	          if ((pd->e[eqn] & T_DIFFUSION) && Beers_Law)
 		    {
 		      diffusion = phi_i*d_alpha->T[j]*P;
 		      diffusion *= det_J * wt;
@@ -33667,7 +33914,7 @@ assemble_poynting(double time,	/* present time value */
 		      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += diffusion;
+		  lec->J[peqn][pvar][i][j] += diffusion + advection;
 		}
 	    }
 
@@ -33688,6 +33935,18 @@ assemble_poynting(double time,	/* present time value */
 
 		      d_det_J_dmeshbj = bf[eqn]->d_det_J_dm[b][j];
 
+	                if ( (pd->e[eqn] & T_ADVECTION) && !Beers_Law )
+	                   {
+	                    for ( p=0; p<dim; p++)
+		              {
+		               advection += wt_func*vconv[p]*fv->d_grad_restime_dmesh[p][b][j];
+		               advection += wt_func*d_vconv->X[p][b][j]*v_grad[p];
+	                       advection += diff_const*grad_phi_i[p]*fv->d_grad_restime_dmesh[p][b][j];
+		              }
+	                     advection *= det_J * wt;
+	                     advection *= h3;
+	                     advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+	                   }
 			  /*
 			   * multiple parts:
 			   * 	diff_a = Int(...d(grad_phi_i)/dmesh.q h3 |Jv|)
@@ -33695,7 +33954,7 @@ assemble_poynting(double time,	/* present time value */
 			   *	diff_c = Int(...grad_phi_i.q h3 d(|Jv|)/dmesh)
 			   *	diff_d = Int(...grad_phi_i.q dh3/dmesh |Jv|  )
 			   */
-                      if ( pd->e[eqn] & T_DIFFUSION )
+	              if ((pd->e[eqn] & T_DIFFUSION) && Beers_Law)
 		        {
                           diff_b = 0.;
                           for ( p=0; p<VIM; p++)
@@ -33736,7 +33995,7 @@ assemble_poynting(double time,	/* present time value */
 		    {
 		      phi_j = bf[var]->phi[j];
 
-		      if ( pd->e[eqn] & T_DIFFUSION )
+		      if ((pd->e[eqn] & T_DIFFUSION) && Beers_Law)
 			{
 			  diffusion = phi_i*Psign*d_alpha->C[w][j]*P;
 			  diffusion *= det_J * wt;
@@ -33762,26 +34021,26 @@ assemble_poynting(double time,	/* present time value */
 		    phi_j = bf[var]->phi[j];
 
                     advection = 0; advection_b = 0;
-	            if ( pd->e[eqn] & T_ADVECTION )
+	            if ((pd->e[eqn] & T_ADVECTION) && !Beers_Law )
 	               {
 	                for ( p=0; p<dim; p++)
 		         {
-		          advection += phi_i*phi_j*fv->grad_poynt[light_eqn][p];
+		          advection += wt_func*phi_j*v_grad[p];
 		         }
 
 	                advection *= det_J * wt;
 	                advection *= h3;
 	                advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+
 			d_wt_func = h_elem_inv*d_vconv->v[b][b][j]*grad_phi_i[b]
 			  + h_elem_inv_deriv * vconv[b] * grad_phi_i[b];
 
 			for(p=0;p<dim;p++)
 			 {
-		            advection_b += vconv[p]*fv->grad_poynt[light_eqn][p];
+		            advection_b += vconv[p]*v_grad[p];
 			 }
 
-			advection_b *=  d_wt_func;
-			advection_b *= - det_J * wt;
+			advection_b *=  d_wt_func*det_J * wt;
 			advection_b *= h3;
 			advection_b *= pd->etm[eqn][(LOG2_ADVECTION)];
 
