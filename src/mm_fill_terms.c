@@ -33835,7 +33835,7 @@ assemble_poynting(double time,	/* present time value */
 	   * equation for bunches of (b,j) column variables...
 	   */
 	 for ( p=0; p<dim; p++)
-		{ grad_phi_i[p] = bf[var]->grad_phi[i][p];}
+		{ grad_phi_i[p] = bf[eqn]->grad_phi[i][p];}
 
 	  /*
 	   * J_e_ap
