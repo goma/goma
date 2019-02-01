@@ -156,7 +156,7 @@ endif
 GOMA_MPI_INC ?= -isystem $(MPI_TOP)/include
 
 # MPI libraries
-GOMA_MPI_LIB ?= -L$(MPI_TOP)/lib  -lmpi  -lmpi_f77
+GOMA_MPI_LIB ?= -L$(MPI_TOP)/lib  -lmpi  -lmpi_mpifh
 
 # For MPI, the libraries need to be explicitly set in the path:
 GCC_LIB = $(GCC_TOP)/lib
