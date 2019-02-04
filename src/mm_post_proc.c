@@ -8631,7 +8631,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 
    if (HEAVISIDE != -1 && ls != NULL && Num_Var_In_Type[pg->imtrx][R_FILL])
      {
-       set_nv_tkud(rd, index, 0, 0, -2, "Heaviside","[1]", "Heaviside", FALSE);
+       set_nv_tkud(rd, index, 0, 0, -2, "HEAVISIDE","[1]", "HEAVISIDE", FALSE);
        index++;
        if (HEAVISIDE == 2)
          {
