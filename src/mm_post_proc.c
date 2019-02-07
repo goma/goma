@@ -8645,7 +8645,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 
    if (GIES_CRIT != -1 && Num_Var_In_Type[R_MOMENTUM1])
      {
-       set_nv_tkud(rd, index, 0, 0, -2, "GIESEKUS","[1]", "Giesekus Criterion",
+       set_nv_tkud(rd, index, 0, 0, -2, "GIES","[1]", "Giesekus Criterion",
 		   FALSE);
        index++;
        if (GIES_CRIT == 2)
