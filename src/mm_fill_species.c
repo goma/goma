@@ -386,6 +386,9 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 	}
 	
     }
+
+  load_lsi(ls->Length_Scale);
+  double Heaviside = 1 - lsi->H;
   /* end Petrov-Galerkin addition */
 
 
@@ -701,7 +704,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		   *  in the local element residual vector.
 		   */
 		  lec->R[MAX_PROB_VAR + w][ii] += 
-		    mass + advection +  diffusion + source;
+		    Heaviside*(mass + advection + source) +  diffusion;
 		  
 		}   /* if active_dofs */
 	      
@@ -1031,7 +1034,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				}
 			      
 			      lec->J[MAX_PROB_VAR + w][MAX_PROB_VAR + w1][ii][j] += 
-				mass + advection + diffusion + source;
+				Heaviside*(mass + advection + source) + diffusion;
 			    }
 			}
 		    }
