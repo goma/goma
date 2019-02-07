@@ -187,11 +187,8 @@ static void transferGPDerivatives(const dbl multFac,
  *
  *******************************************************************************/
 double
-dil_viscosity(GEN_NEWT_STRUCT *gn_local,
-	      dbl gamma[DIM][DIM],
-	      const dbl muValue,
-	      const VISCOSITY_DEPENDENCE_STRUCT *d_mu,
-	      DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu) {
+dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEPENDENCE_STRUCT *d_mu, DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu)
+{
 
   int  w, j, var;
   dbl kappa = 0.0;
@@ -279,7 +276,7 @@ dil_viscosity(GEN_NEWT_STRUCT *gn_local,
        * and make sure it isn't zero. Here we restrict volF to being greater than
        * 1.0E-4.
        */
-      double volF = mp->volumeFractionGas;
+      double volF;
       if (mp->volumeFractionGas < 1.0E-4) {
 	volF = 1.0E-4;
       } else if (mp->volumeFractionGas < 1.0) {
@@ -365,6 +362,9 @@ dil_viscosity(GEN_NEWT_STRUCT *gn_local,
 
       }
 
+      ls_modulate_dilviscosity(&kappa, 0, ls->Length_Scale, mp->mp2nd->viscositymask[0],
+          mp->mp2nd->viscositymask[1], d_dilMu);
+
     } else {
       EH(-1, "unsupported Kappa Option");
     }
@@ -391,3 +391,83 @@ dil_viscosity(GEN_NEWT_STRUCT *gn_local,
   return(kappa);
 }
 
+int
+ls_modulate_dilviscosity ( double *kappa1,
+                        double  kappa2,
+                        double width,
+                        double pm_minus,
+                        double pm_plus,
+                        DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu)
+{
+  double factor;
+  int i,a, w, var;
+
+  if ( d_dilMu == NULL )
+    {
+      *kappa1 = ls_modulate_property( *kappa1, kappa2, width, pm_minus, pm_plus, NULL, &factor);
+      return(1);
+    }
+
+  *kappa1 = ls_modulate_property( *kappa1, kappa2, width, pm_minus, pm_plus, d_dilMu->F, &factor);
+
+  d_dilMu->gd *= factor;
+
+  if ( pd->v[pg->imtrx][var=TEMPERATURE ] )
+    {
+      for(i=0; i<ei[pg->imtrx]->dof[var]; i++)
+        {
+          d_dilMu->T[i] *= factor;
+        }
+    }
+
+  if ( pd->v[pg->imtrx][var=MASS_FRACTION ] )
+    {
+      for ( w=0; w<pd->Num_Species_Eqn; w++)
+        {
+          for( i=0; i<ei[pg->imtrx]->dof[var]; i++)
+            {
+              d_dilMu->C[w][i] *= factor;
+            }
+        }
+    }
+
+  if( pd->v[pg->imtrx][var=VELOCITY1] )
+    {
+      for( a=0; a<pd->Num_Dim; a++ )
+        {
+          for( i=0; i<ei[pg->imtrx]->dof[var]; i++ )
+            {
+              d_dilMu->v[a][i] *= factor;
+            }
+        }
+    }
+
+  if( pd->v[pg->imtrx][var=MESH_DISPLACEMENT1] )
+    {
+      for( a=0; a<pd->Num_Dim; a++ )
+        {
+          for( i=0; i<ei[pg->imtrx]->dof[var]; i++ )
+            {
+              d_dilMu->X [a][i] *= factor;
+            }
+        }
+    }
+
+  if( pd->v[pg->imtrx][var=PRESSURE] )
+    {
+      for( i=0; i<ei[pg->imtrx]->dof[var]; i++ )
+        {
+          d_dilMu->P[i] *= factor;
+        }
+    }
+
+  if ( pd->v[pg->imtrx][var=BOND_EVOLUTION] )
+    {
+      for( i=0 ; i<ei[pg->imtrx]->dof[var]; i++)
+        {
+          d_dilMu->nn[i] *= factor;
+        }
+    }
+  return ( 1 );
+
+}

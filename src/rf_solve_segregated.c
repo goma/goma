@@ -1291,6 +1291,17 @@ dbl *te_out) /* te_out - return actual end time */
 				theta, time1, NULL, exo, dpi);
       nprint++;
     }
+
+    // Save x into older saves
+    for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+      {
+        exchange_dof(cx[imtrx], dpi, x[imtrx], imtrx);
+        dcopy1(numProcUnknowns[imtrx], x[imtrx], x_old[imtrx]);
+        dcopy1(numProcUnknowns[imtrx], x[imtrx], x_older[imtrx]);
+        dcopy1(numProcUnknowns[imtrx], x[imtrx], x_oldest[imtrx]);
+      }
+
+
     /*******************************************************************
      *  TOP OF THE TIME STEP LOOP -> Loop over time steps whether
      *                               they be successful or not
@@ -1554,11 +1565,14 @@ dbl *te_out) /* te_out - return actual end time */
 	  */
 	  if (err == -1) {
 	    converged = FALSE;
-	    /* Copy previous solution values if failed timestep */
-	    for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-	      dcopy1(numProcUnknowns[imtrx], x_old[imtrx], x[imtrx]);
-	    }
 	  }
+	  if (!converged)
+            {
+              /* Copy previous solution values if failed timestep */
+              for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+                  dcopy1(numProcUnknowns[imtrx], x_old[imtrx], x[imtrx]);
+                }
+            }
 	  inewton = err;
 	  evpl_glob[0]->update_flag = 0; /*See get_evp_stress_tensor for description */
 	  af->Sat_hyst_reevaluate = FALSE; /*See load_saturation for description*/

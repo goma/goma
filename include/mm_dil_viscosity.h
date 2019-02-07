@@ -27,11 +27,15 @@
 #endif
 
 
-EXTERN double dil_viscosity		        /* mm_dil_viscosity.c                */
-(struct Generalized_Newtonian *gn_local,  /* gn_local                          */
-       dbl gamma[DIM][DIM],	        	/* gamma - strain rate tensor    */
-       const dbl mu,
-       const VISCOSITY_DEPENDENCE_STRUCT *d_mu, /* d_mu - viscosity dependence       */
-       DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu);/* d_dilMu - dil_viscosity dependence */
+EXTERN double dil_viscosity                        /* mm_dil_viscosity.c                */
+    (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEPENDENCE_STRUCT *d_mu, DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu);/* d_dilMu - dil_viscosity dependence */
+
+int
+ls_modulate_dilviscosity ( double *kappa1,
+                           double  kappa2,
+                           double width,
+                           double pm_minus,
+                           double pm_plus,
+                           DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu);
 
 #endif /* _MM_DIL_VISCOSITY_H */

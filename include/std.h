@@ -202,6 +202,10 @@
 #define DBL_SMALL 1.0E-298
 #endif
 
+#ifndef DBL_SEMI_SMALL
+#define DBL_SEMI_SMALL 1.0E-32
+#endif
+
 #ifdef sgi
 #ifdef jkc_pg
 #include <limits.h>

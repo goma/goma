@@ -29141,7 +29141,7 @@ fluid_stress( double Pi[DIM][DIM],
    * Calculate the dilational viscosity, if necessary
    */
   if (mp->DilationalViscosityModel != DILVISCM_KAPPAWIPESMU) {
-    kappa = dil_viscosity(gn, gamma, mu, d_mu, d_dilMu);
+    kappa = dil_viscosity (gn, mu, d_mu, d_dilMu);
     dilmuMult = mp->dilationalViscosityMultiplier;
     //kappa = 0.0;
     kappaWipesMu = 0;
