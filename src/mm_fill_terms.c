@@ -33752,7 +33752,7 @@ assemble_poynting(double time,	/* present time value */
             if(pd->e[R_ENERGY] && (fv->T > upd->Process_Temperature))
                  {
                   time_source = exp(mp->Rst_func*(fv->T-upd->Process_Temperature)); 
-                  d_time_source=1.;
+                  d_time_source=mp->Rst_func*time_source;
                  }
             break;
         default:
