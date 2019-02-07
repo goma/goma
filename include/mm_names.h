@@ -1300,7 +1300,7 @@ struct Equation_Names Var_Name[] =  {
     { "LIGHT_INTD", "INTD", LIGHT_INTD},                     /* 184 */
     { "TFMP_SAT", "SAT", TFMP_SAT},                     /* 185 */
     { "TFMP_PRES", "PRES", TFMP_PRES},                     /* 186 */
-    { "RESTIME", "RESTIME", RESTIME},                     /* 187 */
+    { "RESTIME", "RST", RESTIME},                     /* 187 */
 
     { "MESH_POSITION1", "X",  MESH_POSITION1 } ,
     { "MESH_POSITION2", "Y",  MESH_POSITION2 } ,	/* 189 */

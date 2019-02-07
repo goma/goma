@@ -161,6 +161,8 @@ struct Material_Properties
   int thermal_conductivity_tableid;
   int Ewt_funcModel;
   dbl Ewt_func;
+  int Rst_funcModel;
+  dbl Rst_func;
   int thermal_cond_external_field;
 
   dbl electrical_conductivity;	/* Yeah, you could make this a tensor... */

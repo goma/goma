@@ -8841,7 +8841,7 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(TFMP_PRES, pd_ptr);
     } else if (!strcasecmp(ts, "TFMP_SAT")) {
       cv = set_var(TFMP_SAT, pd_ptr);
-    } else if (!strcasecmp(ts, "RESTIME")) {
+    } else if (!strcasecmp(ts, "RST")) {
       cv = set_var(RESTIME, pd_ptr);  
 
     } else if (!strncasecmp(ts, "Sp", 2)) {

@@ -30586,7 +30586,6 @@ calc_pspg( dbl pspg[DIM],
 	{
 	  usr_FlowingLiquidViscosity(mp->u_FlowingLiquid_viscosity);
 	  var = TEMPERATURE;
-
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
 	      dvis_dT[j]= mp->d_FlowingLiquid_viscosity[var]*bf[var]->phi[j];
@@ -33651,7 +33650,7 @@ assemble_poynting(double time,	/* present time value */
   double svect[DIM]={0.,-1.,0.};
   double v_grad[DIM]={0.,0.,0.};
   double mucos=1.0;
-  double diff_const=1.0E-4;
+  double diff_const=1./LITTLE_PENALTY;
   double time_source=0., d_time_source=0.;
 
   /*
@@ -33736,10 +33735,30 @@ assemble_poynting(double time,	/* present time value */
         {
          v_grad[i] = fv->grad_restime[i];
         }
-     if(pd->e[R_ENERGY] && (fv->T > upd->Process_Temperature))
-          {time_source = fv->T-upd->Process_Temperature; d_time_source=1.;}
-     else
-          {time_source = 0.; d_time_source = 0.;}
+     time_source = 0.; d_time_source = 0.;
+     switch(mp->Rst_funcModel)
+       {
+        case CONSTANT:
+            time_source = mp->Rst_func; d_time_source = 0.;
+            break;
+        case LINEAR_TIMETEMP:
+            if(pd->e[R_ENERGY] && (fv->T > upd->Process_Temperature))
+                 {
+                  time_source = mp->Rst_func*(fv->T-upd->Process_Temperature); 
+                  d_time_source = mp->Rst_func;
+                 }
+            break;
+        case EXPONENTIAL_TIMETEMP:
+            if(pd->e[R_ENERGY] && (fv->T > upd->Process_Temperature))
+                 {
+                  time_source = exp(mp->Rst_func*(fv->T-upd->Process_Temperature)); 
+                  d_time_source=mp->Rst_func*time_source;
+                 }
+            break;
+        default:
+            EH(-1,"Residence Time Weight Function");
+            break;
+        }
    }
   /*
    * Residuals___________________________________________________________

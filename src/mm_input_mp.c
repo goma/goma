@@ -2032,7 +2032,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
      else
        {
 	 gn_glob[mn]->thixoModel = CONSTANT;
-/*	 gn_glob[mn]->thixo_factor = 0.0;  */
+	 fprintf(stderr,"MAT %d Thixotropic Factor = %g\n",mn, gn_glob[mn]->thixo_factor);
 	 WH(model_read, "Defaulting Thixotropic Factor to Zero");
        }
 
@@ -3327,6 +3327,44 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       SPF(es, "\t(%s = %s)",search_string,"GALERKIN");
     }
 
+  ECHO(es, echo_file);
+
+  strcpy(search_string,"Residence Time Weight Function");
+  model_read = look_for_mat_prop(imp, search_string, 
+				 &(mat_ptr->Rst_funcModel), 
+				 &(mat_ptr->Rst_func), NO_USER, NULL,
+				 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+  if( model_read == -1)
+    {
+      if ( !strcmp(model_name, "LINEAR_TIMETEMP") )
+	{
+	  mat_ptr->Rst_funcModel = LINEAR_TIMETEMP;
+	  mat_ptr->Rst_func = 1.;
+	} 
+      else if ( !strcmp(model_name, "EXPONENTIAL_TIMETEMP") )
+	{
+	  int err;
+	  mat_ptr->Rst_funcModel = EXPONENTIAL_TIMETEMP;
+	  err = fscanf(imp, "%lg",&(mat_ptr->Rst_func));
+	  if (err != 1) {
+	    EH(-1, "Expected to read one double for Residence Time Weight Function");
+	  }
+	  SPF(endofstring(es)," %.4g", mat_ptr->Rst_func );
+	} 
+      else  
+	{
+          mat_ptr->Rst_funcModel = CONSTANT;
+          mat_ptr->Rst_func = 1.;
+          fprintf(stderr,"MAT %d Residence Time Weight Fcn = 1\n",mat_ptr->MatID);
+	  WH(model_read, "Defaulting Residence Fcn to Constant");
+	}
+    }
+  else
+    {
+      mat_ptr->Rst_funcModel = CONSTANT;
+      mat_ptr->Rst_func = 1.;
+      SPF(es, "\t(%s = %s)",search_string,"CONSTANT");
+    }
   ECHO(es, echo_file);
 
   /* 
