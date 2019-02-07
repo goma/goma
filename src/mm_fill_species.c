@@ -704,7 +704,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		   *  in the local element residual vector.
 		   */
 		  lec->R[MAX_PROB_VAR + w][ii] += 
-		    Heaviside*(mass + advection + source) +  diffusion;
+		    Heaviside*(mass + advection) + source +  diffusion;
 		  
 		}   /* if active_dofs */
 	      
@@ -1034,7 +1034,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				}
 			      
 			      lec->J[MAX_PROB_VAR + w][MAX_PROB_VAR + w1][ii][j] += 
-				Heaviside*(mass + advection + source) + diffusion;
+				Heaviside*(mass + advection ) + source + diffusion;
 			    }
 			}
 		    }
