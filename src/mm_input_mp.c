@@ -6634,29 +6634,6 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 						       it is changed to species number of input property
 						       by look_for_mat_prop */
 		 
-		 model_read = look_for_mat_prop(imp, "Normal Stress Viscosity Coefficient", 
-						mat_ptr->NSCoeffType, 
-						mat_ptr->NSCoeff, 
-						mat_ptr->u_nscoeff, NULL,
-						model_name, SCALAR_INPUT, &species_no, es);
-	   
-		 /*if (model_read == -1 && !strcmp(model_name, "CONSTANT"))
-		   {
-		     mat_ptr->NSCoeffType[species_no] = CONSTANT;
-		     num_const = read_constants(imp, mat_ptr->u_nscoeff, species_no);
-		     mat_ptr->len_u_nscoeff[species_no] = num_const;
-		     SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_nscoeff[species_no]);
-		   }
-		 else
-		   {
-		     sr = sprintf(err_msg, 
-				  "Material %s - unrecognized model for %s \"%s\" ???\n",
-				  pd_glob[mn]->MaterialName, "Normal Stress Viscosity Coefficient", model_name);
-		     EH(model_read, err_msg);
-		     }*/
-
-		 species_no = mat_ptr->Num_Species;
-		 
 		 model_read = look_for_mat_prop(imp, "Suspension Balance Length Scales",
 						mat_ptr->SBM_Type,
 						mat_ptr->SBM_Lengths,

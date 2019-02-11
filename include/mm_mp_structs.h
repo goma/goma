@@ -365,7 +365,6 @@ struct Material_Properties
   int FickDiffType[MAX_CONC]  ;
   int CurvDiffType[MAX_CONC]  ;
   int QTensorDiffType[MAX_CONC] ;
-  int NSCoeffType[MAX_CONC] ;
   int len_u_gadiffusivity[MAX_CONC];            /*this is currently defined for MPI*/ 
   int len_u_mdiffusivity[MAX_CONC];             /*this is currently defined for MPI*/ 
   int len_u_fdiffusivity[MAX_CONC];             
@@ -383,7 +382,6 @@ struct Material_Properties
   dbl *u_fdiffusivity[MAX_CONC] ;
   dbl g_diffusivity[MAX_CONC] ;                 /* hindered settling function */
   dbl SBM_Lengths[MAX_CONC] ;                 /* hindered settling function */
-  dbl NSCoeff[MAX_CONC] ;
   dbl *u_nscoeff[MAX_CONC] ;
   dbl *u_gdiffusivity[MAX_CONC] ;               /*this is currently defined for MPI*/
   dbl *SBM_Lengths2[MAX_CONC] ;               /*this is currently defined for MPI*/ 

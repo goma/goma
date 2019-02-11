@@ -6928,7 +6928,6 @@ flow_n_dot_T_gradv_sic(double func[DIM],
 {
   int i, j, var, p, q;
   int a, b;
-  double press;
 
   /*
    * Variables for vicosity and derivative
@@ -6940,14 +6939,6 @@ flow_n_dot_T_gradv_sic(double func[DIM],
 
   if(af->Assemble_LSA_Mass_Matrix)
     return;
-
-
-	if(iflag != -1)
-	{press = fv->P;}
-	else
-	{press = pdatum;}
-
-
 
   /**
 	compute gammadot, viscosity

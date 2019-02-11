@@ -1933,7 +1933,6 @@ noahs_ark()
       ddd_add_member(n, mp_glob[i]->f_diffusivity, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->g_diffusivity, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->SBM_Lengths, MAX_CONC, MPI_DOUBLE);
-      ddd_add_member(n, mp_glob[i]->NSCoeff, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->cur_diffusivity, MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->q_diffusivity[0][0], MAX_CONC * DIM,
 		     MPI_DOUBLE);
@@ -1979,7 +1978,6 @@ noahs_ark()
       ddd_add_member(n, mp_glob[i]->MuDiffType,   MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->GravDiffType, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->SBM_Type, MAX_CONC, MPI_INT);
-      ddd_add_member(n, mp_glob[i]->NSCoeffType, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->FickDiffType, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->CurvDiffType, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->QTensorDiffType, MAX_CONC, MPI_INT);

@@ -4619,7 +4619,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     }
   
   /* Migrate this input deck later */
-  Kn = mp->NSCoeff[w];
+  Kn = 0.75;
   
   
   /* This is the particle pressure */
