@@ -82,7 +82,7 @@ int first_time = TRUE;
           routines called: (sparse1.3 package is used)
     --------------------------------------------------------------------
 */
-
+#ifdef HAVE_SPARSE
 void
 lu(const int N,
    const int NExt,
@@ -211,6 +211,19 @@ lu(const int N,
 /*  spDestroy(matrix);*/
 
 } /* END of routine lu */
+#else // HAVE_SPARSE
+void
+lu(const int N,
+   const int NExt,
+   const int  M,
+   double  a[],
+   int  ija[],
+   double x[],
+   const int factor_flag)
+{
+  EH(-1, "Goma not configured with sparse support");
+}
+#endif // HAVE_SPARSE
 /*****************************************************************************/
 /* END of file sl_lu.c */
 /*****************************************************************************/
