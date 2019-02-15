@@ -259,6 +259,10 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
 	xa[iAC] = mp_glob[mn]->light_absorption;
 	break;
       
+      case TAGC_EXTINCTION_INDEX: 
+	xa[iAC] = mp_glob[mn]->extinction_index;
+	break;
+      
       case TAGC_ELECTRICAL_CONDUCTIVITY: 
 	xa[iAC] = mp_glob[mn]->electrical_conductivity;
 	break;
@@ -1012,6 +1016,10 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
       
       case TAGC_LIGHT_ABSORPTION: 
 	mp_glob[mn]->light_absorption = lambda;
+	break;
+      
+      case TAGC_EXTINCTION_INDEX: 
+	mp_glob[mn]->extinction_index = lambda;
 	break;
       
       case TAGC_ELECTRICAL_CONDUCTIVITY: 

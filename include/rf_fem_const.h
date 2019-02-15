@@ -446,6 +446,18 @@
 #define TFMP_SAT              185 /*  Thin-Film Multi-Phase Saturation */
 #define TFMP_PRES             186 /*  Thin-Film Multi-Phase Lubrication Pressure */
 #define RESTIME               187  /*  Residence Time Function */ 
+#define EM_E1_REAL            188 /*  EM wave variables */
+#define EM_E2_REAL            189 
+#define EM_E3_REAL            190 
+#define EM_E1_IMAG            191 /*  EM wave variables */
+#define EM_E2_IMAG            192
+#define EM_E3_IMAG            193 
+#define EM_H1_REAL            194 /*  EM wave variables */
+#define EM_H2_REAL            195 
+#define EM_H3_REAL            196 
+#define EM_H1_IMAG            197 /*  EM wave variables */
+#define EM_H2_IMAG            199
+#define EM_H3_IMAG            200 
 /*
  * define a variable to hold an external field which will be 
  * held fixed in the problem but parametered by the basis functions
@@ -807,7 +819,19 @@
 #define R_TFMP_MASS             185 /*  Thin-Film Multi-Phase Mass Equation */
 #define R_TFMP_BOUND            186 /*  Thin-Film Multi-Phase Boundary Motion Equation */
 #define R_RESTIME               187 /*  Resdience Time Function */
-#define V_LAST		        188
+#define R_EM_E1_REAL            188 /*  EM wave variables */
+#define R_EM_E2_REAL            189 
+#define R_EM_E3_REAL            190 
+#define R_EM_E1_IMAG            191 /*  EM wave variables */
+#define R_EM_E2_IMAG            192
+#define R_EM_E3_IMAG            193 
+#define R_EM_H1_REAL            194 /*  EM wave variables */
+#define R_EM_H2_REAL            195 
+#define R_EM_H3_REAL            196 
+#define R_EM_H1_IMAG            197 /*  EM wave variables */
+#define R_EM_H2_IMAG            198
+#define R_EM_H3_IMAG            199 
+#define V_LAST		        200
 
 
 /* MMH
