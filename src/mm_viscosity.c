@@ -3528,8 +3528,9 @@ flowing_liquid_viscosity(VISCOSITY_DEPENDENCE_STRUCT *d_flow_vis)
 {
 
   int err;
-  int var;
-  int j;
+  int var, var_offset, vdofs;
+  int j, a, w;
+  int dim = ei->ielem_dim;
 
   double flow_vis = 0.;
 
@@ -3564,15 +3565,55 @@ flowing_liquid_viscosity(VISCOSITY_DEPENDENCE_STRUCT *d_flow_vis)
   else if (mp->FlowingLiquidViscosityModel == USER)
      {
       (void) usr_FlowingLiquidViscosity(mp->u_FlowingLiquid_viscosity);
-      var = TEMPERATURE;
+      flow_vis = mp->FlowingLiquid_viscosity;
+      mp_old->FlowingLiquid_viscosity = flow_vis;
 
       if (d_flow_vis != NULL)
         {
-         for ( j=0; j<ei->dof[var]; j++)
+	 if (pd->v[TEMPERATURE] )
+          {
+           var = TEMPERATURE;
+           for ( j=0; j<ei->dof[var]; j++)
             {
              d_flow_vis->T[j]= mp->d_FlowingLiquid_viscosity[var]*bf[var]->phi[j];
             }
-        }
+          }
+	 if (pd->v[VELOCITY1] )
+	   {
+	    var = VELOCITY1;
+	    vdofs = ei->dof[var];
+	    for ( a=0; a<dim; a++)
+	      {
+	       for ( j=0; j<vdofs; j++)
+		  {
+		   d_flow_vis->v[a][j] = mp->d_FlowingLiquid_viscosity[var+a]*bf[var]->phi[j];
+		  }
+	      }
+	   }
+         if (pd->v[MESH_DISPLACEMENT1])
+          {
+	   var = MESH_DISPLACEMENT1;
+	   for ( a=0; a<dim; a++)
+	      {
+               for ( j=0; j<ei->dof[var]; j++)
+                {
+                d_flow_vis->X[a][j]= mp->d_FlowingLiquid_viscosity[var+a]*bf[var]->phi[j];
+                }
+              }
+          }
+	 if (pd->v[MASS_FRACTION] )
+	    {
+	     for ( w=0; w<pd->Num_Species_Eqn; w++)
+	       {
+		var	     = MASS_FRACTION;
+		var_offset = MAX_VARIABLE_TYPES + w;
+		for ( j=0; j<ei->dof[var]; j++)
+		  {
+		   d_flow_vis->C[w][j] =mp->d_FlowingLiquid_viscosity[var_offset]*bf[var]->phi[j];
+		  }
+	       }
+	    }
+	}
      }
 
   else

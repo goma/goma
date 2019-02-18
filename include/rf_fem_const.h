@@ -119,6 +119,9 @@
 #define FSI_SHELL_ONLY_MESH      8
 #define FSI_SHELL_ONLY_UNDEF     9
 
+/* Residence time kernel functions */
+#define LINEAR_TIMETEMP        111
+#define EXPONENTIAL_TIMETEMP   112
 
 /****************************************************************************/
 /****************************************************************************/
