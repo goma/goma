@@ -1969,7 +1969,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
   mom_rotate_ss    = (int *)realloc(mom_rotate_ss, num_mom_rotate * sizeof(int));
   }
 
-if( mesh_rotate_node >0 || mom_rotate_node > 0 )
+if( mesh_rotate_node != NULL || mom_rotate_node != NULL )
   {
 	int ebi=0;
 	

@@ -5176,11 +5176,13 @@ restore_particles()
   int i, j, num_particles_in_elem;
   particle_t *p;
 
+  num_particles_in_elem = 0;
   /* First free all the old particles. */
   for(i = 0; i < static_exo->num_elems; i++)
     while((p = element_particle_list_head[i]))
       {
 	remove_from_element_particle_list(p, i);
+	num_particles_in_elem++;
 	free(p);
       }
 
@@ -5188,7 +5190,6 @@ restore_particles()
   num_particles = 0;
   for(i = 0; i < static_exo->num_elems; i++)
     {
-      num_particles_in_elem = sizeof(backup_element_particle_list_head[i])/sizeof(particle_t);
       for(j = 0; j < num_particles_in_elem; j++)
 	p = create_a_particle(&backup_element_particle_list_head[i][j], i);
     }
