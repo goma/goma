@@ -533,6 +533,10 @@ struct Element_Variable_Pointers
   dbl *tfmp_pres[MDE];                    /* thin-film multi-phase lubrication pressure */
   dbl *tfmp_sat[MDE];                  /* thin-film multi-phase saturation */
   dbl *restime[MDE];                  /* residence time function field */
+  dbl *em_er[DIM][MDE];				/* EMwave Electric Field real part */
+  dbl *em_ei[DIM][MDE];				/* EMwave Electric Field imag part */
+  dbl *em_hr[DIM][MDE];				/* EMwave Magnetic Field real part */
+  dbl *em_hi[DIM][MDE];				/* EMwave Magnetic Field imag part */
 };
 
 /*___________________________________________________________________________*/
@@ -640,6 +644,10 @@ struct Element_Stiffness_Pointers
   dbl **tfmp_pres;                    /*  thin-film multi-phase lubrication pressure */
   dbl **tfmp_sat;                  /* thin-film multi-phase saturation */
   dbl **restime;                  /* Residence Time Function Field */
+  dbl ***em_er;		      	 /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_ei;		      	 /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_hr;		      	 /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_hi;		      	 /* *em_xx[DIM][MDE], em_wave*/
 
   /*
    * These are for debugging purposes...
@@ -1589,6 +1597,10 @@ struct Field_Variables
   dbl tfmp_pres;                    /* thin-film multi-phase lubrication pressure */
   dbl tfmp_sat;                  /* thin-film multi-phase saturation */
   dbl restime;                  /* residence time function field */
+  dbl em_er[DIM];		/* EM Electric Field Vector (real)*/	
+  dbl em_ei[DIM];		/* EM Electric Field Vector (imag)*/	
+  dbl em_hr[DIM];		/* EM Magnetic Field Vector (real)*/	
+  dbl em_hi[DIM];		/* EM Magnetic Field Vector (imag)*/	
 
 
   /*
@@ -1663,6 +1675,10 @@ struct Field_Variables
   dbl div_s_n;                   /* Surface divergence of LS normal field */
   dbl surfCurvatureDyadic[DIM][DIM]; /* Surface Curvature dyadic = b = - (I - n n ) grad(n) */
   dbl grad_poynt[DIM][DIM];		/* Gradient of Poynting.  d (P_i) / d (x_j) */
+  dbl grad_em_er[DIM][DIM];		/* Gradient of EM Efield (real) */
+  dbl grad_em_ei[DIM][DIM];		/* Gradient of EM Efield (imag) */
+  dbl grad_em_hr[DIM][DIM];		/* Gradient of EM Hfield (real) */
+  dbl grad_em_hi[DIM][DIM];		/* Gradient of EM Hfield (imag) */
 
   /* these gradients of tensors are complete for Cartesian coordinates,
    * and currently work for axisymmetic coordinates, in context,
@@ -1718,6 +1734,10 @@ struct Field_Variables
   dbl d_grad_ext_v_dmesh[DIM] [DIM][MDE];
   dbl d_grad_E_field_dmesh[DIM][DIM] [DIM][MDE];
   dbl d_grad_poynt_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_em_er_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_em_ei_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_em_hr_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_em_hi_dmesh[DIM][DIM] [DIM][MDE];
 
   dbl d_grad_v_dmesh[DIM][DIM] [DIM][MDE];
   dbl d_div_v_dmesh[DIM][MDE];
@@ -1925,6 +1945,10 @@ struct Diet_Field_Variables
   dbl tfmp_pres;           /* thin-film multi-phase lubrication pressure */
   dbl tfmp_sat;         /* thin-film multi-phase saturation */
   dbl restime;         /* residence time field */
+  dbl em_er[DIM];			/* EM wave Fields */
+  dbl em_ei[DIM];			/* EM wave Fields */
+  dbl em_hr[DIM];			/* EM wave Fields */
+  dbl em_hi[DIM];			/* EM wave Fields */
   /*  
    * Grads of scalars... concentration is the only one we need in the
    * old form for VOF/Taylor-Galerkin stuff.

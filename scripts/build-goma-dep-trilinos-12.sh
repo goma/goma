@@ -212,8 +212,13 @@ fi
 
 ARCHIVE_NAMES=("arpack96.tar.gz" \
 "patch.tar.gz" \
+<<<<<<< Updated upstream
 "hdf5-1.8.20.tar.gz" \
 "netcdf-4.4.1.1.tar.gz" \
+=======
+"hdf5-1.8.19.tar.gz" \
+"netcdf-4.3.3.1.tar.gz" \
+>>>>>>> Stashed changes
 "parmetis-4.0.3.tar.gz" \
 "sparse.tar.gz" \
 "superlu_dist-5.1.3.tar.gz" \
@@ -240,8 +245,13 @@ ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 
 ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
+<<<<<<< Updated upstream
 "https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.20.tar.gz" \
 "ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.4.1.1.tar.gz" \
+=======
+"http://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8/hdf5-1.8.19/src/hdf5-1.8.19.tar.gz" \
+"ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.3.3.1.tar.gz" \
+>>>>>>> Stashed changes
 "http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz" \
 "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
 "http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v5.1.3" \
@@ -255,8 +265,13 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 # When in reality it isn't
 ARCHIVE_DIR_NAMES=("ARPACK" \
 "FAKE_DIR_FOR_ARPACK_PATCH" \
+<<<<<<< Updated upstream
 "hdf5-1.8.20" \
 "netcdf-4.4.1.1" \
+=======
+"hdf5-1.8.19" \
+"netcdf-4.3.3.1" \
+>>>>>>> Stashed changes
 "parmetis-4.0.3" \
 "sparse" \
 "superlu_dist-5.1.3" \
@@ -932,10 +947,11 @@ cd $GOMA_LIB
 #continue_check
 
 #netcdf
-if [ -e netcdf-4.4.1.1/lib/libnetcdf.a ]
+if [ -e netcdf-4.3.3.1/lib/libnetcdf.a ]
 then
     echo "netcdf already built"
 else
+<<<<<<< Updated upstream
     if ! [ -e netcdf-4.4.1.1/.goma-extracted ]
     then
 	mv netcdf-4.4.1.1 tmpdir
@@ -944,6 +960,12 @@ else
 	touch netcdf-4.4.1.1/.goma-extracted
     fi
     cd $GOMA_LIB/netcdf-4.4.1.1/src
+=======
+    mv netcdf-4.3.3.1 tmpdir
+    mkdir netcdf-4.3.3.1
+    mv tmpdir netcdf-4.3.3.1/src
+    cd $GOMA_LIB/netcdf-4.3.3.1/src
+>>>>>>> Stashed changes
     cd include
     echo "$NETCDF_PATCH" > netcdf.patch
     patch -f --ignore-whitespace netcdf.h < netcdf.patch
@@ -952,6 +974,7 @@ else
 #    export LDFLAGS=-L$GOMA_LIB/hdf5-1.8.20/lib
     echo $CPPFLAGS
     echo $LDFLAGS
+<<<<<<< Updated upstream
 
     CC=${MPI_C_COMPILER} CFLAGS="-I${GOMA_LIB}/hdf5-1.8.20/include" \
       CPP="${MPI_C_COMPILER} -E" \
@@ -962,6 +985,11 @@ else
       --enable-shared=off \
       --disable-dap
 
+=======
+    CC=${MPI_C_COMPILER} CFLAGS="-I${GOMA_LIB}/hdf5-1.8.19/include" CPP="${MPI_C_COMPILER} -E" \
+    CPPFLAGS="-I${GOMA_LIB}/hdf5-1.8.19/include" LDFLAGS="-L${GOMA_LIB}/hdf5-1.8.19/lib" \
+    ./configure --prefix=$GOMA_LIB/netcdf-4.3.3.1 --enable-shared=off --disable-dap --enable-parallel-tests
+>>>>>>> Stashed changes
     make -j$MAKE_JOBS
     make install
     cd ../..
@@ -1373,9 +1401,9 @@ else
 -D Trilinos_ENABLE_TESTS:BOOL=ON \
 -D Trilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON \
 -D Trilinos_ENABLE_SECONDARY_STABLE_CODE:BOOL=ON \
-      -D Netcdf_LIBRARY_DIRS:PATH="$GOMA_LIB/netcdf-4.4.1.1/lib" \
+      -D Netcdf_LIBRARY_DIRS:PATH="$GOMA_LIB/netcdf-4.3.3.1/lib" \
       -D TPL_ENABLE_Netcdf:BOOL=ON \
-      -D TPL_Netcdf_INCLUDE_DIRS:PATH="$GOMA_LIB/netcdf-4.4.1.1/include" \
+      -D TPL_Netcdf_INCLUDE_DIRS:PATH="$GOMA_LIB/netcdf-4.3.3.1/include" \
       -D Matio_LIBRARY_DIRS:PATH=$GOMA_LIB/matio-1.5.10/lib \
       -D Matio_INCLUDE_DIRS:PATH=$GOMA_LIB/matio-1.5.10/include \
 -D TPL_ENABLE_MPI:BOOL=ON \

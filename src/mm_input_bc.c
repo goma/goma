@@ -714,6 +714,18 @@ rd_bc_specs(FILE *ifp,
         case SHELL_OPEN_PRESS_2_BC:
         case SH_GAMMA1_BC:
 	case SHELL_TFMP_PRES_BC:
+	case EM_E1R_BC:
+	case EM_E1I_BC:
+	case EM_E2R_BC:
+	case EM_E2I_BC:
+	case EM_E3R_BC:
+	case EM_E3I_BC:
+	case EM_H1R_BC:
+	case EM_H1I_BC:
+	case EM_H2R_BC:
+	case EM_H2I_BC:
+	case EM_H3R_BC:
+	case EM_H3I_BC:
   
 	    if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1) {
 	      sprintf(err_msg, "%s: Expected 1 flt for %s.",
