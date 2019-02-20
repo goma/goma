@@ -1332,12 +1332,19 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 				    bc->BC_Data_Float[0], time_value, delta_t, theta);
 	  }
 	  break;
-	    
+
 	case YFLUX_BC:
 	  if (iapply) {
 	    mass_flux_surf_bc(func, d_func, bc->BC_Data_Int[0],
 			      bc->BC_Data_Float[0], bc->BC_Data_Float[1], 
 			      delta_t, theta);
+	  }
+	  break;
+
+	case YFLUX_ETCH_BC:
+	  if (iapply) {
+	    mass_flux_surf_etch(func, d_func, bc->BC_Data_Int[0],
+			        bc->BC_Data_Int[1], time_value, delta_t, theta);
 	  }
 	  break;
 
