@@ -6818,6 +6818,7 @@ act_coeff(dbl lngamma[MAX_CONC], dbl dlngamma_dC[MAX_CONC][MAX_CONC],
       memset(df1_dc, 0,sizeof(double)*MAX_CONC*MAX_CONC);
       memset(df2_dc, 0,sizeof(double)*MAX_CONC*MAX_CONC);
       memset(df3_dc, 0,sizeof(double)*MAX_CONC*MAX_CONC);
+      memset(dv_dw, 0,sizeof(double)*MAX_CONC*MAX_CONC);
       memset(d2f1_dc2, 0,sizeof(double)*MAX_CONC*MAX_CONC*MAX_CONC);
       memset(d2f2_dc2, 0,sizeof(double)*MAX_CONC*MAX_CONC*MAX_CONC);
       memset(d2f3_dc2, 0,sizeof(double)*MAX_CONC*MAX_CONC*MAX_CONC);
