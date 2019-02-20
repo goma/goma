@@ -137,7 +137,7 @@ struct Element_Indices {
 				 *   e.g., Proc_Elem_Connect[iconnect_ptr + i]
 				 */
   int ielem;			/*
-				 *  The id of the current element 
+				 *  The id of the current element
 				 */
   int ielem_dim;		/* is this a 2d or 3d problem */
   int ielem_type;		/* what kind of element */
@@ -159,13 +159,13 @@ struct Element_Indices {
 
   /*
    * A note about the order of variable descriptions:
-   *     
+   *
    *       They are ordered wrt Var Type first
-   *          matID next -> current matID is always first however   
-   *                        and after that matID order is unspecified. 
+   *          matID next -> current matID is always first however
+   *                        and after that matID order is unspecified.
    *             species number or idof next. (these are grouped together).
-   */ 
-  
+   */
+
   int Num_Lvdesc;               /* Number of local variable descriptions in the
 				 * element, whether they are interpolated in
 				 * the element or just exist on the sides
@@ -185,12 +185,12 @@ struct Element_Indices {
 				 * interpolation.
 				 *
 				 *  MallocSize = MAX_VARIABLE_TYPES + MAX_CONC
-				 *  actualSize = MAX_VARIABLE_TYPES + Max_Num_Species 
+				 *  actualSize = MAX_VARIABLE_TYPES + Max_Num_Species
 				 */
   int **Lvdesc_to_ledof;        /* Mapping between the (local variable description
 				 * number, local variable description
 				 * dof index) pair to the local element dof index,
-				 * ledof. 
+				 * ledof.
 				 *   MallocSize = [MAX_LOCAL_VAR_DESC][MDE]
 				 *   ActualSize = [Num_lvdesc][Lvdesc_Numdof[i_vdesc]]
 				 */
@@ -232,10 +232,10 @@ struct Element_Indices {
 				 *   MallocSize = [MAX_LOCAL_VAR_DESC][MDE]
 				 *   ActualSize = [Num_Lvdesc][Lvdesc_Numdof[i_vdesc]]
 				 */
-  int *Lvdesc_to_MFSubvar;      /*  For variable types with subvar indeces 
-				 *  ie Mass Fraction ,   
+  int *Lvdesc_to_MFSubvar;      /*  For variable types with subvar indeces
+				 *  ie Mass Fraction ,
 				 *  we need another variable to describe the
-				 *  subvariable index (i.e., the species 
+				 *  subvariable index (i.e., the species
 				 *  number) corresponding to the current
 				 *  variable description.
 				 *   MallocSize = [MAX_LOCAL_VAR_DESC]
@@ -266,19 +266,19 @@ struct Element_Indices {
   int **lvdof_to_lvdesc;        /* Mapping between the local variable index and
 				 * a variable_type pair to the corresponding
 				 * local variable description index.
-				 *   MallocSize 
+				 *   MallocSize
 				 * = [MAX_VARIABLE_TYPES+MAX_CONC][MDE]
-				 *   ActualSize 
-				 *     = [MAX_VARIABLE_TYPES+Max_Species] 
+				 *   ActualSize
+				 *     = [MAX_VARIABLE_TYPES+Max_Species]
 				 *       [ei->dof[v]]
 				 */
   int **lvdof_to_lvdesc_dof;    /*  Mapping between the local variable index and
 				 *  a variable_type pair to the corresponding
 				 *  dof number of the local variable description
 				 *  index.
-				 *   MallocSize 
+				 *   MallocSize
 				 * = [MAX_VARIABLE_TYPES+MAX_CONC][MDE]
-				 *   ActualSize 
+				 *   ActualSize
 				 *     = [MAX_VARIABLE_TYPES+Max_Species]
 				 *       [ei->dof[v]]
 				 */
@@ -291,7 +291,7 @@ struct Element_Indices {
                                 /*  Pointer to the variable description
 				 *  structure corresponding to the lvdesc index.
 				 *   MallocSize = [MAX_LOCAL_VAR_DESC]
-				 *   ActualSize  = [Num_Lvdesc]	
+				 *   ActualSize  = [Num_Lvdesc]
 				 */
   int *VDindex_to_Lvdesc;       /*  Index pointing from the variable description
 				 *  index to the current local variable description
@@ -300,7 +300,7 @@ struct Element_Indices {
 
   int *owningElementForColVar;   /* Indicator of who owns the column variable type.
 				  * We separate and distinguish all columns in the
-				  * local jacobian, according to whether they refer to 
+				  * local jacobian, according to whether they refer to
 				  * equations that belong to the parent, the child,
 				  * or the owning element.
 				  *   [MAX_VARIABLE_TYPES+MAX_CONC]
@@ -321,15 +321,15 @@ struct Element_Indices {
 				  *           variable using this element Parent's basis functions.
 				  */
 
-  struct Element_Indices *owningElement_ei_ptr[MAX_VARIABLE_TYPES]; 
+  struct Element_Indices *owningElement_ei_ptr[MAX_VARIABLE_TYPES];
                                  /* Pointer to the Element_Indices struct that contains
 				  * the info for the element. The element number is the
 				  * listed in owningElementForColVar[].
 				  */
-								       
+
 
   /*******************************************************/
-  /* Slated to be AXED: */     
+  /* Slated to be AXED: */
 
   int *dof;			/* Number of dof's in the element's nodes for each
 				 * variable type (both, active and inactive)
@@ -337,30 +337,30 @@ struct Element_Indices {
   int *dof_ext;			/* Number of dof's in the elem for each external
 				 * fixed variable
 				 *   Length = MAX_EXTERNAL_TYPES */
-  int **Baby_Dolphin;		/* Offset for the local variable in the 
+  int **Baby_Dolphin;		/* Offset for the local variable in the
 				 * solution vector in cases where there are
 				 * discontinuous variables and multiple dofs
 				 * of the same variable type at the same node.
 				 * Note: doesn't take into account multiple
 				 *       subvariable types for mass fractions.
 				 *   Size = [MAX_VARIABLE_TYPES][MDE] */
-  int **dof_list;		/* list of local nodes for ea dof in the elem 
+  int **dof_list;		/* list of local nodes for ea dof in the elem
     			 	 *      Size [MAX_VARIABLE_TYPES][MDE] */
   int **gnn_list;		/* list of global node numbers for ea dof
-    				 *      Size [MAX_VARIABLE_TYPES][MDE] */ 
-  int **gun_list;		/* list of global unknown numbers for ea dof 
+    				 *      Size [MAX_VARIABLE_TYPES][MDE] */
+  int **gun_list;		/* list of global unknown numbers for ea dof
     				 *      Size [MAX_VARIABLE_TYPES][MDE] */
   int **ln_to_dof;       	/* Mapping between the (variable type, local
 				 * element node) pair to the local variable
 				 * degree of freedom in the element pertaining
-				 * to the active interpolation of that 
+				 * to the active interpolation of that
 				 * variable within the element
-			         *   MallocSize 
+			         *   MallocSize
 				 *     = [MAX_VARIABLE_TYPES][MDE]
-				 *   ActualSize 
+				 *   ActualSize
 				 *     = [MAX_VARIABLE_TYPES][num_local_nodes] */
   int **ln_to_first_dof;	/* list of local dof numbers for the first
-				 * dof at ea local node 
+				 * dof at ea local node
 				 *      Size [MAX_VARIABLE_TYPES][MDE] */
   int *active_interp_ledof;     /* This variable is equal to one if this
                                  * ledof is part of an active interpolation
@@ -381,12 +381,12 @@ struct Element_Indices {
 				 * this field need only contain valid information
 				 * for active degrees of freedom in the
 				 * element.
-				 * (This field replaces the old field, 
+				 * (This field replaces the old field,
 				 *  first_active_dof).
 				 * size [MAX_VARIABLE_TYPES][MDE] */
   int **lvdof_to_ledof;         /*  Mapping between the local variable dof
 				 *  number
-			         *  the local element dof number, ledof    
+			         *  the local element dof number, ledof
 				 *      Size [MAX_VARIABLE_TYPES][MDE] */
 
     /*******************************************************/
@@ -394,7 +394,7 @@ struct Element_Indices {
   int *owned_ledof;             /*  This is a boolean variable indicating
 				 *  whether
 	                         *  this local element dof is owned by the
-				 *   processor or not. 
+				 *   processor or not.
     				 *      Size [MDE * MAX_PROB_VAR] */
   int *ieqn_ledof;              /*  Processor equation number for the local
 				 *  element  dof. Note, a dof will have
@@ -414,7 +414,7 @@ struct Element_Indices {
 				 *  material ID.
 				 *      Size [MDE * MAX_PROB_VAR] */
   int **MFsubvar_Offset;        /*  For variable types with subvar indeces,
-				 *  ie Mass Fraction,   
+				 *  ie Mass Fraction,
 				 *  we need another variable to describe the
 				 *  offset of each of the subvariables wrt
 				 *  the base subvar=0 index for the current
@@ -422,9 +422,9 @@ struct Element_Indices {
 				 *  mass fraction variable type.
 				 *      Size [MAX_CONC] [MDE]
 				 */
-  int linkedEIelems[MAX_ELEMENT_INDICES_RELATED]; /* List of elements ids that 
+  int linkedEIelems[MAX_ELEMENT_INDICES_RELATED]; /* List of elements ids that
 						   * are slaves to this element */
-                             
+
 };
 
 
@@ -530,14 +530,17 @@ struct Element_Variable_Pointers
   dbl *sh_cross_shear[MDE];                   /* Cross stream shear stress */
   dbl *max_strain[MDE];                       /* Maximum Von Mises strain */
   dbl *cur_strain[MDE];                       /* Von Mises strain */
-  dbl *poynt[DIM][MDE];				/* Poynting Vector for light intensity */
-  dbl *tfmp_pres[MDE];                    /* thin-film multi-phase lubrication pressure */
-  dbl *tfmp_sat[MDE];                  /* thin-film multi-phase saturation */
+  dbl *poynt[DIM][MDE];		              /* Poynting Vector for light intensity */
+  dbl *tfmp_pres[MDE];                        /* thin-film multi-phase lubrication pressure */
+  dbl *tfmp_sat[MDE];                         /* thin-film multi-phase saturation */
   dbl *restime[MDE];                  /* residence time function field */
   dbl *em_er[DIM][MDE];				/* EMwave Electric Field real part */
   dbl *em_ei[DIM][MDE];				/* EMwave Electric Field imag part */
   dbl *em_hr[DIM][MDE];				/* EMwave Magnetic Field real part */
   dbl *em_hi[DIM][MDE];				/* EMwave Magnetic Field imag part */
+  dbl *sh_sat_1[MDE];                         /* Porous shell saturation layer 1 */
+  dbl *sh_sat_2[MDE];                         /* Porous shell saturation layer 2 */
+  dbl *sh_sat_3[MDE];                         /* Porous shell saturation layer 3 */
 };
 
 /*___________________________________________________________________________*/
@@ -642,13 +645,16 @@ struct Element_Stiffness_Pointers
   dbl **max_strain;              /* max_strain[MDE], maximum Von Mises strain */
   dbl **cur_strain;              /* cur_strain[MDE], Von Mises strain */
   dbl ***poynt;		      	 /* *v[DIM][MDE], velocity */
-  dbl **tfmp_pres;                    /*  thin-film multi-phase lubrication pressure */
-  dbl **tfmp_sat;                  /* thin-film multi-phase saturation */
+  dbl **tfmp_pres;               /*  thin-film multi-phase lubrication pressure */
+  dbl **tfmp_sat;                /* thin-film multi-phase saturation */
   dbl **restime;                  /* Residence Time Function Field */
   dbl ***em_er;		      	 /* *em_xx[DIM][MDE], em_wave*/
   dbl ***em_ei;		      	 /* *em_xx[DIM][MDE], em_wave*/
   dbl ***em_hr;		      	 /* *em_xx[DIM][MDE], em_wave*/
   dbl ***em_hi;		      	 /* *em_xx[DIM][MDE], em_wave*/
+  dbl **sh_sat_1;                /* Porous shell saturation layer 1 */
+  dbl **sh_sat_2;                /* Porous shell saturation layer 2 */
+  dbl **sh_sat_3;                /* Porous shell saturation layer 3 */
 
   /*
    * These are for debugging purposes...
@@ -919,6 +925,7 @@ struct Problem_Description
   int   VolumeIntegral;         /* Augmenting volume integral */
   int   LSVelocityIntegral;     /* Augmenting sevel set velocity integral flag */
   int   Num_Porous_Eqn;         /* number of porous media Equations */
+  int   Num_Porous_Shell_Eqn;   /* number of porous media shell Equations */
   int   Do_Surf_Geometry;       /* Problem needs a bundle of surface geometry defined on it */
 };
 typedef struct Problem_Description PROBLEM_DESCRIPTION_STRUCT;
@@ -1602,6 +1609,9 @@ struct Field_Variables
   dbl em_ei[DIM];		/* EM Electric Field Vector (imag)*/	
   dbl em_hr[DIM];		/* EM Magnetic Field Vector (real)*/	
   dbl em_hi[DIM];		/* EM Magnetic Field Vector (imag)*/	
+  dbl sh_sat_1;                /* Porous shell saturation layer 1 */
+  dbl sh_sat_2;                /* Porous shell saturation layer 2 */
+  dbl sh_sat_3;                /* Porous shell saturation layer 3 */
 
   /*
    * Grads of scalars...
@@ -1642,6 +1652,9 @@ struct Field_Variables
   dbl grad_tfmp_pres[DIM];   /* Gradient of the thin-film multi-phase lubrication pressure */
   dbl grad_tfmp_sat[DIM];   /* Gradient of the thin-film multi-phase lubrication saturation */
   dbl grad_restime[DIM];   /* Gradient of the residence time function */
+  dbl grad_sh_sat_1[DIM];     /* Gradient of porous shell saturation layer 1 */
+  dbl grad_sh_sat_2[DIM];     /* Gradient of porous shell saturation layer 2 */
+  dbl grad_sh_sat_3[DIM];     /* Gradient of porous shell saturation layer 3 */
 
   /*
    * Grads of vectors...
@@ -1953,7 +1966,11 @@ struct Diet_Field_Variables
   dbl em_ei[DIM];			/* EM wave Fields */
   dbl em_hr[DIM];			/* EM wave Fields */
   dbl em_hi[DIM];			/* EM wave Fields */
-  /*  
+  dbl sh_sat_1;                /* Porous shell saturation layer 1 */
+  dbl sh_sat_2;                /* Porous shell saturation layer 2 */
+  dbl sh_sat_3;                /* Porous shell saturation layer 3 */
+
+  /*
    * Grads of scalars... concentration is the only one we need in the
    * old form for VOF/Taylor-Galerkin stuff.
    */
@@ -1967,7 +1984,7 @@ struct Diet_Field_Variables
   dbl grad_T[DIM];              /* Gradient of porous  temperature variable. */
   dbl grad_d[DIM][DIM];	        /* Gradient of mesh displacement. */
   dbl grad_d_rs[DIM][DIM];	/* Gradient of solid displacement. */
-  
+
   dbl grad_tfmp_pres[DIM];       /* Gradient of the thin-film multi-phase lubrication pressure */
   dbl grad_tfmp_sat[DIM];       /* Gradient of the thin-film multi-phase lubrication saturation */
 
@@ -2297,6 +2314,29 @@ struct Porous_Media_Terms {
   dbl d_pi_supg_dpmv[MDE][MAX_PMV][MDE];
   dbl   conv_flux_supg[MAX_PMV];
   dbl d_conv_flux_supg_dpmv[MAX_PMV][MAX_PMV][MDE];
+};
+
+/************************************************************************/
+/************************************************************************/
+/************************************************************************/
+/*
+ *  Structure used to store additional nodal variables
+ *  used in hysteretic porous media equations
+ *
+ *
+ */
+struct Porous_Media_Variables_Hysteresis {
+
+/*  Each member has dimension of [MAX_POR_SHELL][NUM_NODES]  */
+
+    int *curve_type[MAX_POR_SHELL]; /*Draining = 1, imbibition = 0*/
+    int *curve_type_old[MAX_POR_SHELL];
+    int *curve_switch[MAX_POR_SHELL]; /*Trigger to switch the curves */
+    int *num_switch[MAX_POR_SHELL];   /*Number of curve switch on each node*/
+    double *sat_switch[MAX_POR_SHELL]       /*Saturation value at switch point*/;
+    double *cap_pres_switch[MAX_POR_SHELL]; /*Capillary pressure value at switch point*/
+    double *sat_min_imbibe[MAX_POR_SHELL];  /* Minimum saturation value of imbibition curve*/
+    double *sat_max_drain[MAX_POR_SHELL];   /* Maximum saturation value of draining curve*/
 };
 
 /******************************************************************************/

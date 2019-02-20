@@ -945,7 +945,7 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
     }
 
     /* Finally pick up all of the element-level-storage continuation
-     * variables, e.g. for saturation hysteresis function 
+     * variables, e.g. for saturation hysteresis function
      */
     mat_num = Matilda[eb_indx];
     mp = mp_glob[mat_num];
@@ -954,7 +954,7 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
     if((mp->PorousMediaType == POROUS_UNSATURATED ||
 	mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
 	mp->PorousMediaType == POROUS_TWO_PHASE) &&
-       mp->SaturationModel == TANH_HYST &&
+        mp->SaturationModel == TANH_HYST &&
        !if_ev)
       {
 	for ( j = 0; j < ip_total; j++) {
@@ -968,7 +968,7 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
 
   /* Sanity check */
   if ( tev != rd->nev ) {
-    sr = sprintf(err_msg, 
+    sr = sprintf(err_msg,
 		 "%s: Elem var count mismatch: tev(%d)<>rd->nev(%d)!?",
 		 yo, tev, rd->nev);
     EH(-1, err_msg);
@@ -979,7 +979,7 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
     exit (-1);    
     */
   }
-  
+
   /* Now do the real loop and populate the truth table */
   i = 0;
   for ( eb_indx = 0; eb_indx < exo->num_elem_blocks; eb_indx++ ) {
@@ -1003,10 +1003,10 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
 	  exo->elem_var_tab[i++] = 1;
 	  found_match = TRUE;
 	  ev_indx++;
-	  /* malloc the entry for this block by number of elems for this block 
+	  /* malloc the entry for this block by number of elems for this block
 	     but - only if the variable exists for this block! (by the truth table) */
 	  if ( has_been_called == 0 ) {
-	    /* NOTE: this final array dim is only to be malloc'd once; when a user 
+	    /* NOTE: this final array dim is only to be malloc'd once; when a user
 	       is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
 	       and hence create_truth_table, which would realloc this dim of gvec_elem.
 	       this test will prevent that. - RRL */
@@ -1021,17 +1021,17 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
       }
     }
 
-    /* Now pick up all the post processing variables for this block 
+    /* Now pick up all the post processing variables for this block
        - yes, for now they must
        each be listed separately and painfully */
 
     if (ERROR_ZZ_VEL != -1 && Num_Var_In_Type[R_MOMENTUM1]) {
-      exo->elem_var_tab[i++] = 1;   
+      exo->elem_var_tab[i++] = 1;
       ev_indx++;
-      /* malloc the entry for this block by number of elems for this block 
+      /* malloc the entry for this block by number of elems for this block
 	 but - only if the variable exists for this block! (by the truth table) */
       if ( has_been_called == 0 ) {
-	/* NOTE: this final array dim is only to be malloc'd once; when a user 
+	/* NOTE: this final array dim is only to be malloc'd once; when a user
 	   is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
 	   and hence create_truth_table, which would realloc this dim of gvec_elem.
 	   this test will prevent that. - RRL */
@@ -1039,12 +1039,12 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
 	       exo->eb_num_elems[eb_indx] );
       }
       if (ERROR_ZZ_VEL_ELSIZE  != -1) {
-	exo->elem_var_tab[i++] = 1;   
+	exo->elem_var_tab[i++] = 1;
 	ev_indx++;
-	/* malloc the entry for this block by number of elems for this block 
+	/* malloc the entry for this block by number of elems for this block
 	   but - only if the variable exists for this block! (by the truth table) */
 	if ( has_been_called == 0 ) {
-	  /* NOTE: this final array dim is only to be malloc'd once; when a user 
+	  /* NOTE: this final array dim is only to be malloc'd once; when a user
 	     is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
 	     and hence create_truth_table, which would realloc this dim of gvec_elem.
 	     this test will prevent that. - RRL */
@@ -1055,12 +1055,12 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
     }
 
     if (ERROR_ZZ_Q != -1 && Num_Var_In_Type[R_ENERGY]) {
-      exo->elem_var_tab[i++] = 1;   
+      exo->elem_var_tab[i++] = 1;
       ev_indx++;
-      /* malloc the entry for this block by number of elems for this block 
+      /* malloc the entry for this block by number of elems for this block
 	 but - only if the variable exists for this block! (by the truth table) */
       if ( has_been_called == 0 ) {
-	/* NOTE: this final array dim is only to be malloc'd once; when a user 
+	/* NOTE: this final array dim is only to be malloc'd once; when a user
 	   is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
 	   and hence create_truth_table, which would realloc this dim of gvec_elem.
 	   this test will prevent that. - RRL */
@@ -1068,12 +1068,12 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
 	       exo->eb_num_elems[eb_indx] );
       }
       if (ERROR_ZZ_Q_ELSIZE  != -1) {
-	exo->elem_var_tab[i++] = 1;   
+	exo->elem_var_tab[i++] = 1;
 	ev_indx++;
-	/* malloc the entry for this block by number of elems for this block 
+	/* malloc the entry for this block by number of elems for this block
 	   but - only if the variable exists for this block! (by the truth table) */
 	if ( has_been_called == 0 ) {
-	  /* NOTE: this final array dim is only to be malloc'd once; when a user 
+	  /* NOTE: this final array dim is only to be malloc'd once; when a user
 	     is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
 	     and hence create_truth_table, which would realloc this dim of gvec_elem.
 	     this test will prevent that. - RRL */
@@ -1090,12 +1090,12 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
     }
 
     if (ERROR_ZZ_P != -1 && (Num_Var_In_Type[R_MOMENTUM1] || check)) {
-      exo->elem_var_tab[i++] = 1;   
+      exo->elem_var_tab[i++] = 1;
       ev_indx++;
-      /* malloc the entry for this block by number of elems for this block 
+      /* malloc the entry for this block by number of elems for this block
 	 but - only if the variable exists for this block! (by the truth table) */
       if ( has_been_called == 0 ) {
-	/* NOTE: this final array dim is only to be malloc'd once; when a user 
+	/* NOTE: this final array dim is only to be malloc'd once; when a user
 	   is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
 	   and hence create_truth_table, which would realloc this dim of gvec_elem.
 	   this test will prevent that. - RRL */
@@ -1103,12 +1103,12 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
 	       exo->eb_num_elems[eb_indx] );
       }
       if (ERROR_ZZ_P_ELSIZE  != -1) {
-	exo->elem_var_tab[i++] = 1;   
+	exo->elem_var_tab[i++] = 1;
 	ev_indx++;
-	/* malloc the entry for this block by number of elems for this block 
+	/* malloc the entry for this block by number of elems for this block
 	   but - only if the variable exists for this block! (by the truth table) */
 	if ( has_been_called == 0 ) {
-	  /* NOTE: this final array dim is only to be malloc'd once; when a user 
+	  /* NOTE: this final array dim is only to be malloc'd once; when a user
 	     is annealing the mesh, anneal mesh calls wr_result_prelim_exo again,
 	     and hence create_truth_table, which would realloc this dim of gvec_elem.
 	     this test will prevent that. - RRL */
@@ -1124,33 +1124,39 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
        {
 	 eb_ptr = Element_Blocks + eb_indx;
 	 ip_total = elem_info(NQUAD, eb_ptr->Elem_Type);
-	 for(j=0; j < ip_total; j++)
-	   {
-	     /*Note that we will set these for all 3 var types because you
-	      *will never see them individually. 
-	      */
-	     exo->elem_var_tab[i++] = 1;
-	     ev_indx++;
-	     if ( has_been_called == 0 ) 
-	       {
-		 asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-		      exo->eb_num_elems[eb_indx] );
-	       }
-	     exo->elem_var_tab[i++] = 1;
-	     ev_indx++;
-	     if ( has_been_called == 0 ) 
-	       {
-		 asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-		      exo->eb_num_elems[eb_indx] );
-	       }
-	     exo->elem_var_tab[i++] = 1;
-	     ev_indx++;
-	     if ( has_been_called == 0 ) 
-	       {
-		 asdv ( &gvec_elem[eb_indx][ev_indx - 1],
-		      exo->eb_num_elems[eb_indx] );
-	       }
-	   }
+         if((mp->PorousMediaType == POROUS_UNSATURATED ||
+	     mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
+	     mp->PorousMediaType == POROUS_TWO_PHASE) &&
+             mp->SaturationModel == TANH_HYST )
+           {
+	    for(j=0; j < ip_total; j++)
+	      {
+	      /*Note that we will set these for all 3 var types because you
+	       *will never see them individually.
+	       */
+	       exo->elem_var_tab[i++] = 1;
+	       ev_indx++;
+	       if ( has_been_called == 0 )
+	         {
+		  asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+		         exo->eb_num_elems[eb_indx] );
+	         }
+	       exo->elem_var_tab[i++] = 1;
+	       ev_indx++;
+	       if ( has_been_called == 0 )
+	         {
+		  asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+		         exo->eb_num_elems[eb_indx] );
+	         }
+	       exo->elem_var_tab[i++] = 1;
+	       ev_indx++;
+	       if ( has_been_called == 0 )
+	         {
+		  asdv ( &gvec_elem[eb_indx][ev_indx - 1],
+		         exo->eb_num_elems[eb_indx] );
+	         }
+              } /* End of loop over Gauss points*/
+	   } /* End of if TANH_HYST*/
        }
   }
 
@@ -1173,7 +1179,7 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
  * Notes:    [1] A new QA record is created that is slightly larger that the
  *		 old one. The old information is transcribed and a new record
  *		 is added that reflects this analysis.
- *		
+ *
  *	     [2] New records are not added if there are at least 4 QA records
  *		 already accumulated. The threshhold varies according to the
  *		 C preprocessor symbol MAX_QA.

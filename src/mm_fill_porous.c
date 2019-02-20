@@ -87,6 +87,7 @@
 *  porous_vapor_equil_bc            void
 *  load_permeability                double
 *  load_saturation                  double
+*  load_cap_pres                    double
 *  load_enthalpy                    void
 *  load_gas_conc                    void
 *  load_gas_conc_flat               void
@@ -869,7 +870,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
              source = 0.0;
              if(pd->e[eqn] && T_SOURCE)
                {
-                source += phi_i * MassSource;
+                source += phi_i * mp->density * MassSource;
                 source *= wt_total * pd->etm[eqn][(LOG2_SOURCE)];
                }
 
@@ -924,7 +925,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
                 source = 0.0;
                 if (pd->e[eqn] && T_SOURCE) 
                   {
-                   source +=  phi_i * d_MassSource[var][j];
+                   source +=  phi_i * mp->density * d_MassSource[var][j];
                    source *=  wt_total * pd->etm[eqn][LOG2_SOURCE];
                   }
 
@@ -947,13 +948,55 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
                 source = 0.0;
                 if (pd->e[eqn] && T_SOURCE)
                   {
-                   source += phi_i * d_MassSource[var][j];
+                   source += phi_i * mp->density * d_MassSource[var][j];
                    source *= wt_total * pd->etm[eqn][(LOG2_SOURCE)];
                   }
 
                 lec->J[peqn][pvar][i][j] += source;
                }
            }
+
+         /*
+          * J_sink_mass_d_shell_press_open
+          *  derivative of residual pieces w.r.t. the shell porous open pressure
+          */
+
+         var = SHELL_PRESS_OPEN;
+         if (pd->v[var])
+           {
+            pvar = upd->vp[var];
+            for ( j=0; j<ei->dof[var]; j++)
+               {
+
+                source = 0.0;
+                if (pd->e[eqn] && T_SOURCE)
+                  {
+                   source += phi_i * mp->density * d_MassSource[var][j];
+                   source *= wt_total * pd->etm[eqn][(LOG2_SOURCE)];
+                  }
+
+                lec->J[peqn][pvar][i][j] += source;
+               }
+           }
+
+         var = SHELL_SAT_1;
+         if (pd->v[var])
+           {
+            pvar = upd->vp[var];
+            for ( j=0; j<ei->dof[var]; j++)
+               {
+
+                source = 0.0;
+                if (pd->e[eqn] && T_SOURCE)
+                  {
+                   source += phi_i * mp->density * d_MassSource[var][j];
+                   source *= wt_total * pd->etm[eqn][(LOG2_SOURCE)];
+                  }
+
+               	lec->J[peqn][pvar][i][j] += source;
+               }
+           }
+
 
          /*
           * J_sink_mass_d_mesh
@@ -1089,7 +1132,7 @@ load_porous_properties(void)
 	siz = MTV*sizeof(double);
 	memset(mp->d_porosity, 0, siz);
 	}
-	
+
   if (mp->PorosityModel == CONSTANT)
     {
       porosity = mp->porosity;
@@ -6010,6 +6053,8 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
     /* PRS Old 7/21/04:  con_b=0.5-mp->u_saturation[0]/2.0-(mp->u_saturation[1])/2.0; */
     con_c=mp->u_saturation[2];
     con_d=mp->u_saturation[3];
+//    con_a=mp->u_saturation[0];
+//    con_b=mp->u_saturation[1];
     con_a = (mp->u_saturation[0] + tanh(con_c))/(1. + tanh(con_c));
     con_b = (1. - mp->u_saturation[0])/(1. + tanh(con_c));
 
@@ -6658,6 +6703,942 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
 /*****************************************************************************/
 /*****************************************************************************/
 
+double
+load_cap_pres(int ipore, int ilnode, int ignode, double saturation)
+
+    /*************************************************************************
+     * load_cap_pres -- calculate capillary pressure  in a porous
+     *                    media from the unknowns used in the problem
+     *
+     *  input:   Assume that load_fv and load_fv_grads and load_fv_mesh_derivs
+     *  -----    have all been called already, so unknowns and their
+     *           sensitivies are known at this gauss point.
+     *
+     *  output:  calculates the saturation and its first and second
+     *  -----    derivatives with respect to all the problem unknowns
+     *           For transient calculations, the saturation at the
+     *           old time step must be recalculated as well, in order
+     *           to be used in the capacitance term.
+     *
+     *      mp->cap_pres
+     *      mp->d_cap_pres
+     *      mp->d_d_cap_pres
+     *	    mp_old->cap_pres
+     ************************************************************************/
+{
+  double con_a, con_b, con_c, con_d;
+  double sat_min, sat_max;
+  double sat_norm, sat_clip, d_sat_norm_d_saturation, d_sat_clip_d_saturation;
+  double cap_pres = 0.0;
+  double mexp, nexp, n_inv, m_inv;
+  double brack_in, d_brack_in_d_sat_norm, d_d_brack_in_d_sat_norm;
+
+  int i_ext_field;
+  double val_ext_field;
+  double sat_min_1, sat_max_1, sat_min_2, sat_max_2;
+  double con_c_1, nexp_1, con_c_2, nexp_2;
+
+
+  int draining_curve, draining_curve_old;
+  int switch_now;
+  double cap_pres_switch, sat_switch, sat_norm_switch;
+  double brack_in_inv, sat_min_wet, sat_max_dry;
+
+  /*
+   *  Find which model is used for saturation and calculate:
+   *    1)  The capillary pressure, mp->cap_pres,
+   *    2)  The sensitivity of saturation to all concentrations, porosity
+   *        and temperature
+   *          i.e., the first derivative of saturation w.r.t. each variable
+   *           put this in mp->d_cap_pres[var]
+   *    3)  The second derivatives of saturation w.r.t. each variable,
+   *        including cross-terms, put this in mp->d_d_cap_pres[var][var]
+   *        The second derivative is needed for sensitivity of fluxes
+   *        which depend on the first derivative of capillary pressure
+   */
+
+  /**********************************************************************
+   *                   ATANH MODEL FOR CAPILLARY PRESSURE
+   **********************************************************************/
+  if (mp->PorousShellCapPresModel[ipore] == ATANH) {
+    /*
+     * FOR ATANH EQUATION
+     *  mp->u_saturation[0] is the irreduceable water saturation
+     *  mp->u_saturation[1] is the irreduceable air saturation
+     *  mp->u_saturation[2] is shift factor
+     *  mp->u_saturation[3] is multiplier in tanh function
+     */
+//    sat_min = mp->u_cap_pres[0];
+//    sat_max = mp->u_cap_pres[1];
+//    con_c = mp->u_cap_pres[2];
+//    con_d = mp->u_cap_pres[3];
+
+    /* Normalized saturation - should be between -1 to +1 */
+//    sat_norm = (2.0 * saturation - sat_max - sat_min) / (sat_max - sat_min);
+//    d_sat_norm_d_saturation = 2.0/(sat_max - sat_min);
+
+    con_a = mp->u_PorousShellCapPres[ipore][0];
+    con_b = mp->u_PorousShellCapPres[ipore][1];
+    con_c = mp->u_PorousShellCapPres[ipore][2];
+    con_d = mp->u_PorousShellCapPres[ipore][3];
+
+    sat_norm = (con_a - saturation)/con_b;
+    d_sat_norm_d_saturation = -1.0/con_b;
+
+
+    /* Clip if necessary */
+    if (sat_norm <= -0.995) {
+      sat_clip = -0.995;
+      d_sat_clip_d_saturation = 0.0;
+    }else if (sat_norm >= 0.995) {
+      sat_clip = 0.995;
+      d_sat_clip_d_saturation = 0.0;
+    } else {
+      sat_clip = sat_norm;
+      d_sat_clip_d_saturation = d_sat_norm_d_saturation;
+    }
+//    cap_pres = mp->cap_pres = con_c - con_d * atanh(sat_clip);
+   cap_pres = mp->cap_pres = con_d/(con_c - atanh(sat_clip));
+
+    /*
+     *  Calculate the first derivative of the capillary pressure
+     *  wrt to the dependent variables in the problem
+     *  -> Note we need these terms even for a residual
+     *     calculation
+     *
+     *   *** NOTE ---- this model as it is only works for porous shell
+     *                 saturation formulations
+     *
+     */
+//    mp->d_cap_pres[SHELL_SAT_1] = -con_d/(1.0 - sat_clip * sat_clip) * d_sat_clip_d_saturation;
+
+    switch (ipore)
+     {
+      case 0:
+        mp->d_cap_pres[SHELL_SAT_1] = con_d / ((con_c - atanh(sat_clip)) * (con_c - atanh(sat_clip)))
+                                            / (1.0 - (sat_clip * sat_clip)) * d_sat_clip_d_saturation;
+        break;
+
+      case 1:
+        mp->d_cap_pres[SHELL_SAT_2] = con_d / ((con_c - atanh(sat_clip)) * (con_c - atanh(sat_clip)))
+                                            / (1.0 - (sat_clip * sat_clip)) * d_sat_clip_d_saturation;
+        break;
+
+      case 2:
+        mp->d_cap_pres[SHELL_SAT_3] = con_d / ((con_c - atanh(sat_clip)) * (con_c - atanh(sat_clip)))
+                                            / (1.0 - (sat_clip * sat_clip)) * d_sat_clip_d_saturation;
+        break;
+
+      default:
+        EH(-1, "Not valid porous shell index");
+        break;
+     }
+  } else if (mp->PorousShellCapPresModel[ipore] == SINH) {
+    /*
+     * FOR SINH EQUATION
+     *  mp->u_saturation[0] is the irreducable water saturation
+     *  mp->u_saturation[1] is the irreduceable air saturation
+     *  mp->u_saturation[2] is shift factor
+     *  mp->u_saturation[3] is multiplier in tanh function
+     */
+
+    sat_min = mp->u_PorousShellCapPres[ipore][0];
+    sat_max = mp->u_PorousShellCapPres[ipore][1];
+    con_c = mp->u_PorousShellCapPres[ipore][2];
+    con_d = mp->u_PorousShellCapPres[ipore][3];
+
+    /* Normalized saturation - should be between -6 to +6 */
+    sat_norm = (12.0 * saturation - 6.0 * (sat_max + sat_min)) / (sat_max - sat_min);
+    d_sat_norm_d_saturation = 12.0/(sat_max - sat_min);
+
+
+    /* Clip if necessary */
+//    if (saturation <= 0.0) {
+//      sat_clip = -6.0;
+//      d_sat_clip_d_saturation = 0.0;
+//    }else if (saturation >= 0.995) {
+//      sat_clip = 6.0;
+//      d_sat_clip_d_saturation = 0.0;
+//    } else {
+      sat_clip = sat_norm;
+      d_sat_clip_d_saturation = d_sat_norm_d_saturation;
+//    }
+    cap_pres = con_c - con_d * sinh(sat_clip);
+
+    /*
+     *  Calculate the first derivative of the capillary pressure
+     *  wrt to the dependent variables in the problem
+     *  -> Note we need these terms even for a residual
+     *     calculation
+     *
+     *   *** NOTE ---- this model as it is only works for porous shell
+     *                 saturation formulations
+     *
+     */
+
+    switch (ipore)
+     {
+      case 0:
+        mp->d_cap_pres[SHELL_SAT_1] = -con_d * cosh(sat_clip) * d_sat_clip_d_saturation;
+        break;
+
+      case 1:
+        mp->d_cap_pres[SHELL_SAT_2] = -con_d * cosh(sat_clip) * d_sat_clip_d_saturation;
+        break;
+
+      case 2:
+        mp->d_cap_pres[SHELL_SAT_3] = -con_d * cosh(sat_clip) * d_sat_clip_d_saturation;
+        break;
+
+      default:
+        EH(-1, "Not valid porous shell index");
+        break;
+     }
+  } else if (mp->PorousShellCapPresModel[ipore] == VAN_GENUCHTEN) {
+    /*
+     * FOR VAN_GENUCHTEN EQUATION
+     *  mp->u_saturation[0] is the irreducable water saturation
+     *  mp->u_saturation[1] is the irreduceable air saturation
+     *  mp->u_saturation[2] is entry pressure
+     *  mp->u_saturation[3] is exponent n
+     */
+
+    sat_min = mp->u_PorousShellCapPres[ipore][0];
+    sat_max = mp->u_PorousShellCapPres[ipore][1];
+    con_c = mp->u_PorousShellCapPres[ipore][2];
+    nexp = mp->u_PorousShellCapPres[ipore][3];
+
+    n_inv = 1.0/nexp;
+    mexp = 1.0 - n_inv;
+    m_inv = -1.0/mexp;
+
+
+    /* Normalized saturation - should be between 0 to 1 */
+    sat_norm = (saturation - sat_min) / (sat_max - sat_min);
+    d_sat_norm_d_saturation = 1.0/(sat_max - sat_min);
+
+
+    brack_in = pow(sat_norm, m_inv) - 1.0;
+    d_brack_in_d_sat_norm = m_inv * pow(sat_norm, (m_inv - 1.0));
+    d_d_brack_in_d_sat_norm = m_inv * (m_inv - 1.0) * pow(sat_norm, (m_inv - 2.0));
+
+    cap_pres = con_c * pow(brack_in, n_inv);
+
+    /*
+     *  Calculate the first derivative of the capillary pressure
+     *  wrt to the dependent variables in the problem
+     *  -> Note we need these terms even for a residual
+     *     calculation
+     *
+     *   *** NOTE ---- this model as it is only works for porous shell
+     *                 saturation formulations
+     *
+     */
+
+    switch (ipore)
+     {
+      case 0:
+        mp->d_cap_pres[SHELL_SAT_1] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                      * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+        mp->d_d_cap_pres[SHELL_SAT_1][SHELL_SAT_1] =   n_inv * (n_inv - 1.0) * con_c * pow(brack_in, (n_inv - 2.0))
+                                                     * d_brack_in_d_sat_norm * d_brack_in_d_sat_norm
+                                                     * d_sat_norm_d_saturation * d_sat_norm_d_saturation
+                                                     + n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                                     * d_d_brack_in_d_sat_norm
+                                                     * d_sat_norm_d_saturation * d_sat_norm_d_saturation;
+        break;
+
+      case 1:
+        mp->d_cap_pres[SHELL_SAT_2] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                      * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+        mp->d_d_cap_pres[SHELL_SAT_2][SHELL_SAT_2] =   n_inv * (n_inv - 1.0) * con_c * pow(brack_in, (n_inv - 2.0))
+                                                     * d_brack_in_d_sat_norm * d_brack_in_d_sat_norm
+                                                     * d_sat_norm_d_saturation * d_sat_norm_d_saturation
+                                                     + n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                                     * d_d_brack_in_d_sat_norm
+                                                     * d_sat_norm_d_saturation * d_sat_norm_d_saturation;
+        break;
+
+      case 2:
+        mp->d_cap_pres[SHELL_SAT_3] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                      * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+        mp->d_d_cap_pres[SHELL_SAT_3][SHELL_SAT_3] =   n_inv * (n_inv - 1.0) * con_c * pow(brack_in, (n_inv - 2.0))
+                                                     * d_brack_in_d_sat_norm * d_brack_in_d_sat_norm
+                                                     * d_sat_norm_d_saturation * d_sat_norm_d_saturation
+                                                     + n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                                     * d_d_brack_in_d_sat_norm
+                                                     * d_sat_norm_d_saturation * d_sat_norm_d_saturation;
+
+        break;
+
+      default:
+        EH(-1, "Not valid porous shell index");
+        break;
+     }
+
+  } else if (mp->PorousShellCapPresModel[ipore] == VAN_GENUCHTEN_EXTERNAL) {
+    /*
+     * FOR VAN_GENUCHTEN EXTERNAL EQUATION
+     *  mp->u_saturation[0] is the irreducable water saturation for curve 1
+     *  mp->u_saturation[1] is the irreduceable air saturation for curve 1
+     *  mp->u_saturation[2] is entry pressure for curve 1
+     *  mp->u_saturation[3] is exponent n for curve 1
+     *
+     *  mp->u_saturation[4] is the irreducable water saturation for curve 2
+     *  mp->u_saturation[5] is the irreduceable air saturation for curve 2
+     *  mp->u_saturation[6] is entry pressure for curve 2
+     *  mp->u_saturation[7] is exponent n for curve 2
+     *
+     */
+
+    i_ext_field = mp->por_shell_cap_pres_ext_field_index[ipore];
+    /* Here I assume the external field value ranges from 0 to 1 */
+    val_ext_field = *evp->external_field[i_ext_field][ilnode];
+
+    sat_min_1 = mp->u_PorousShellCapPres[ipore][0];
+    sat_max_1 = mp->u_PorousShellCapPres[ipore][1];
+    con_c_1 = mp->u_PorousShellCapPres[ipore][2];
+    nexp_1 = mp->u_PorousShellCapPres[ipore][3];
+
+    sat_min_2 = mp->u_PorousShellCapPres[ipore][4];
+    sat_max_2 = mp->u_PorousShellCapPres[ipore][5];
+    con_c_2 = mp->u_PorousShellCapPres[ipore][6];
+    nexp_2 = mp->u_PorousShellCapPres[ipore][7];
+
+    /* Interpolate the fitting parameters with external field value */
+    sat_min = sat_min_1 + val_ext_field * (sat_min_2 - sat_min_1);
+    sat_max = sat_max_1 + val_ext_field * (sat_max_2 - sat_max_1);
+    con_c   = con_c_1   + val_ext_field * (con_c_2   - con_c_1);
+    nexp    = nexp_1    + val_ext_field * (nexp_2    - nexp_1);
+
+    n_inv = 1.0/nexp;
+    mexp = 1.0 - n_inv;
+    m_inv = -1.0/mexp;
+
+
+    /* Normalized saturation - should be between 0 to 1 */
+    sat_norm = (saturation - sat_min) / (sat_max - sat_min);
+    d_sat_norm_d_saturation = 1.0/(sat_max - sat_min);
+
+
+    brack_in = pow(sat_norm, m_inv) - 1.0;
+    d_brack_in_d_sat_norm = m_inv * pow(sat_norm, (m_inv - 1.0));
+
+    cap_pres = con_c * pow(brack_in, n_inv);
+
+    /*
+     *  Calculate the first derivative of the capillary pressure
+     *  wrt to the dependent variables in the problem
+     *  -> Note we need these terms even for a residual
+     *     calculation
+     *
+     *   *** NOTE ---- this model as it is only works for porous shell
+     *                 saturation formulations
+     *
+     */
+
+    switch (ipore)
+     {
+      case 0:
+        mp->d_cap_pres[SHELL_SAT_1] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                      * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+        break;
+
+      case 1:
+        mp->d_cap_pres[SHELL_SAT_2] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                      * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+        break;
+
+      case 2:
+        mp->d_cap_pres[SHELL_SAT_3] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                      * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+        break;
+
+      default:
+        EH(-1, "Not valid porous shell index");
+        break;
+     }
+  } else if (mp->PorousShellCapPresModel[ipore] == VAN_GENUCHTEN_HYST) {
+    /*
+     * FOR VAN_GENUCHTEN_HYST EQUATION
+     *  mp->u_saturation[0] is the irreducable water saturation for wetting curve
+     *  mp->u_saturation[1] is the irreduceable air saturation for wetting curve
+     *  mp->u_saturation[2] is entry pressure for wetting curve
+     *  mp->u_saturation[3] is exponent n for wetting curve
+     *
+     *  mp->u_saturation[4] is the irreducable water saturation for draining curve
+     *  mp->u_saturation[5] is the irreduceable air saturation for draining curve
+     *  mp->u_saturation[6] is entry pressure for draining curve
+     *  mp->u_saturation[7] is exponent n for draining curve
+     *
+     *  Other input
+     *  mp->u_saturation[8] Initial saturation curve for the material, viz.
+     *                      if 1.0 then on the draining curve, and 0.0 then
+     *                      on the wetting curve.
+     *  mp->u_saturation[9] is Liquid_inventory_rate threshold for curve switching
+     */
+
+   /* Quality check of global node number ignode*/
+    if (ignode < 0)
+      {
+       if (ipore == 0)
+         {
+          ignode = ei->gnn_list[SHELL_SAT_1][ilnode];
+         }
+       else if (ipore == 1)
+         {
+          ignode = ei->gnn_list[SHELL_SAT_2][ilnode];
+         }
+       else if (ipore == 2)
+         {
+          ignode = ei->gnn_list[SHELL_SAT_3][ilnode];
+         }
+       else
+         {
+          EH(-1,"Something's wrong here!");
+         }
+      }
+
+   /* First, see if we are switching */
+    switch_now = pmv_hyst->curve_switch[ipore][ignode];
+
+   /* Get the minimum and maximum saturation for the scanning curves */
+    sat_min_wet = pmv_hyst->sat_min_imbibe[ipore][ignode];
+    sat_max_dry = pmv_hyst->sat_max_drain[ipore][ignode];
+
+   /* Find out whether on draining or wetting curve */
+    draining_curve     = pmv_hyst->curve_type[ipore][ignode];
+    draining_curve_old = pmv_hyst->curve_type_old[ipore][ignode];
+
+
+   /* If we are not switching */
+    if (switch_now == 0)
+      {
+       if (draining_curve == 1) /* Stay on main draining curve */
+         {
+          sat_min = mp->u_PorousShellCapPres[ipore][4];
+          sat_max = sat_max_dry;
+          con_c = mp->u_PorousShellCapPres[ipore][6];
+          nexp = mp->u_PorousShellCapPres[ipore][7];
+
+          n_inv = 1.0/nexp;
+          mexp = 1.0 - n_inv;
+          m_inv = -1.0/mexp;
+
+          /* Normalized saturation - should be between 0 to 1 */
+          sat_norm = (saturation - sat_min) / (sat_max - sat_min);
+          d_sat_norm_d_saturation = 1.0/(sat_max - sat_min);
+
+          brack_in = pow(sat_norm, m_inv) - 1.0;
+          d_brack_in_d_sat_norm = m_inv * pow(sat_norm, (m_inv - 1.0));
+
+          /* Evaluate capillary pressure and its sensitivities */
+          cap_pres = con_c * pow(brack_in, n_inv);
+
+          switch (ipore)
+            {
+             case 0:
+               mp->d_cap_pres[SHELL_SAT_1] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                             * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+             break;
+
+             case 1:
+               mp->d_cap_pres[SHELL_SAT_2] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                             * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+             break;
+
+             case 2:
+               mp->d_cap_pres[SHELL_SAT_3] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                            * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+             break;
+
+             default:
+                EH(-1, "Not valid porous shell index");
+             break;
+            }
+
+         }
+       else if (draining_curve == 0) /* Stay on main wetting curve */
+         {
+          sat_min = sat_min_wet;
+          sat_max = mp->u_PorousShellCapPres[ipore][1];
+          con_c = mp->u_PorousShellCapPres[ipore][2];
+          nexp = mp->u_PorousShellCapPres[ipore][3];
+
+          n_inv = 1.0/nexp;
+          mexp = 1.0 - n_inv;
+          m_inv = -1.0/mexp;
+
+          /* Normalized saturation - should be between 0 to 1 */
+          sat_norm = (saturation - sat_min) / (sat_max - sat_min);
+          d_sat_norm_d_saturation = 1.0/(sat_max - sat_min);
+
+          brack_in = pow(sat_norm, m_inv) - 1.0;
+          d_brack_in_d_sat_norm = m_inv * pow(sat_norm, (m_inv - 1.0));
+
+          /* Evaluate capillary pressure and its sensitivities */
+          cap_pres = con_c * pow(brack_in, n_inv);
+          switch (ipore)
+            {
+             case 0:
+               mp->d_cap_pres[SHELL_SAT_1] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                             * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+             break;
+
+             case 1:
+               mp->d_cap_pres[SHELL_SAT_2] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                             * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+             break;
+
+             case 2:
+               mp->d_cap_pres[SHELL_SAT_3] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                            * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+             break;
+
+             default:
+                EH(-1, "Not valid porous shell index");
+             break;
+            }
+         }
+       else
+         {
+          EH(-1, "Either we are on draining curve or wetting curve!");
+         }
+      }
+    else if (switch_now == 1)  /* We are switching */
+      {
+       if ( (draining_curve == 1) && (draining_curve_old == 0) ) /* Wetting going to draining */
+         {
+          /* Get all parameters from draining curve */
+          sat_min = mp->u_PorousShellCapPres[ipore][4];
+          sat_max = mp->u_PorousShellCapPres[ipore][5];
+          con_c = mp->u_PorousShellCapPres[ipore][6];
+          nexp = mp->u_PorousShellCapPres[ipore][7];
+
+          n_inv = 1.0/nexp;
+          mexp = 1.0 - n_inv;
+          m_inv = -1.0/mexp;
+
+          /* Get the saturation and capillary pressure at switching or reversal point */
+          sat_switch      = pmv_hyst->sat_switch[ipore][ignode];
+          cap_pres_switch = pmv_hyst->cap_pres_switch[ipore][ignode];
+
+          /* Calculate normalized saturation at reversal point */
+          brack_in_inv = pow((cap_pres_switch/con_c), nexp) + 1.0;
+          sat_norm_switch = pow(brack_in_inv, (-mexp));
+
+          /* Quality check */
+          if ( (sat_norm_switch > 1.0) || (sat_norm_switch < 0.0) )
+            {
+             EH(-1, "Invalid value of normalized saturation at switching point");
+            }
+
+          /* Calculate sat_max for the scanning draining curve */
+          sat_max_dry = (1.0/sat_norm_switch) * (sat_switch - sat_min * (1.0 - sat_norm_switch));
+
+          /* More quality check */
+          if (sat_max_dry > sat_max)
+            {
+             EH(-1, "Invalid value of maximum saturation at the scanning drying curve");
+            }
+          /* Update sat_max_dry in pmv_hyst structure*/
+          pmv_hyst->sat_max_drain[ipore][ignode] = sat_max_dry;
+
+          /* Calculate normalized saturation based on newly calculated sat_max_dry */
+          sat_norm = (saturation - sat_min) / (sat_max_dry - sat_min);
+          d_sat_norm_d_saturation = 1.0/(sat_max_dry - sat_min);
+
+
+          brack_in = pow(sat_norm, m_inv) - 1.0;
+          d_brack_in_d_sat_norm = m_inv * pow(sat_norm, (m_inv - 1.0));
+
+          /* Evaluate capillary pressure and its sensitivities */
+          cap_pres = con_c * pow(brack_in, n_inv);
+
+          switch (ipore)
+            {
+             case 0:
+               mp->d_cap_pres[SHELL_SAT_1] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                             * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+             break;
+
+             case 1:
+               mp->d_cap_pres[SHELL_SAT_2] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                             * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+             break;
+
+             case 2:
+               mp->d_cap_pres[SHELL_SAT_3] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                            * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+             break;
+
+             default:
+                EH(-1, "Not valid porous shell index");
+             break;
+            }
+         }
+       else if ( (draining_curve == 0) && (draining_curve_old == 1) ) /* draining going to wetting */
+         {
+          /* Get all parameters from wetting curve */
+          sat_min = mp->u_PorousShellCapPres[ipore][0];
+          sat_max = mp->u_PorousShellCapPres[ipore][1];
+          con_c = mp->u_PorousShellCapPres[ipore][2];
+          nexp = mp->u_PorousShellCapPres[ipore][3];
+
+          n_inv = 1.0/nexp;
+          mexp = 1.0 - n_inv;
+          m_inv = -1.0/mexp;
+
+          /* Get the saturation and capillary pressure at switching or reversal point */
+          sat_switch      = pmv_hyst->sat_switch[ipore][ignode];
+          cap_pres_switch = pmv_hyst->cap_pres_switch[ipore][ignode];
+
+
+          /* Calculate normalized saturation at reversal point */
+          brack_in_inv = pow((cap_pres_switch/con_c), nexp) + 1.0;
+          sat_norm_switch = pow(brack_in_inv, (-mexp));
+
+          /* Quality check */
+          if ( (sat_norm_switch > 1.0) || (sat_norm_switch < 0.0) )
+            {
+             EH(-1, "Invalid value of normalized saturation at switching point");
+            }
+
+          /* Calculate sat_min for the scanning wetting curve */
+          sat_min_wet = (sat_switch - sat_max * sat_norm_switch)/(1.0 - sat_norm_switch);
+
+          /* More quality check */
+          if (sat_min_wet < sat_min)
+            {
+             EH(-1, "Invalid value of minimum saturation at the scanning wetting curve");
+            }
+          /* Update sat_min_wet in pmv_hyst structure*/
+          pmv_hyst->sat_min_imbibe[ipore][ignode] = sat_min_wet;
+
+          /* Calculate normalized saturation based on newly calculated sat_min_wet */
+          sat_norm = (saturation - sat_min_wet) / (sat_max - sat_min_wet);
+          d_sat_norm_d_saturation = 1.0/(sat_max - sat_min_wet);
+
+
+          brack_in = pow(sat_norm, m_inv) - 1.0;
+          d_brack_in_d_sat_norm = m_inv * pow(sat_norm, (m_inv - 1.0));
+
+          /* Evaluate capillary pressure and its sensitivities */
+          cap_pres = con_c * pow(brack_in, n_inv);
+          switch (ipore)
+            {
+             case 0:
+               mp->d_cap_pres[SHELL_SAT_1] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                             * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+             break;
+
+             case 1:
+               mp->d_cap_pres[SHELL_SAT_2] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                             * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+             break;
+
+             case 2:
+               mp->d_cap_pres[SHELL_SAT_3] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                            * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+             break;
+
+             default:
+                EH(-1, "Not valid porous shell index");
+             break;
+            }
+         }
+      }
+  } else if (mp->PorousShellCapPresModel[ipore] == VAN_GENUCHTEN_HYST_EXT) {
+    /*
+     * FOR VAN_GENUCHTEN_HYST_EXT EQUATION
+     *  mp->u_saturation[0] is the irreducable water saturation for wetting curve 1
+     *  mp->u_saturation[1] is the irreduceable air saturation for wetting curve 1
+     *  mp->u_saturation[2] is entry pressure for wetting curve 1
+     *  mp->u_saturation[3] is exponent n for wetting curve 1
+     *
+     *  mp->u_saturation[4] is the irreducable water saturation for draining curve 1
+     *  mp->u_saturation[5] is the irreduceable air saturation for draining curve 1
+     *  mp->u_saturation[6] is entry pressure for draining curve 1
+     *  mp->u_saturation[7] is exponent n for draining curve 1
+     *
+     *  mp->u_saturation[8] is the irreducable water saturation for wetting curve 2
+     *  mp->u_saturation[9] is the irreduceable air saturation for wetting curve 2
+     *  mp->u_saturation[10] is entry pressure for wetting curve 2
+     *  mp->u_saturation[11] is exponent n for wetting curve 2
+     *
+     *  mp->u_saturation[12] is the irreducable water saturation for draining curve 2
+     *  mp->u_saturation[13] is the irreduceable air saturation for draining curve 2
+     *  mp->u_saturation[14] is entry pressure for draining curve 2
+     *  mp->u_saturation[15] is exponent n for draining curve 2
+
+     *  Other input
+     *  mp->u_saturation[16] Initial saturation curve for the material, viz.
+     *                       if 1.0 then on the draining curve, and 0.0 then
+     *                       on the wetting curve.
+     *  mp->u_saturation[17] is Liquid_inventory_rate threshold for curve switching
+     */
+
+   /* Quality check of global node number ignode*/
+    if (ignode < 0)
+      {
+       if (ipore == 0)
+         {
+          ignode = ei->gnn_list[SHELL_SAT_1][ilnode];
+         }
+       else if (ipore == 1)
+         {
+          ignode = ei->gnn_list[SHELL_SAT_2][ilnode];
+         }
+       else if (ipore == 2)
+         {
+          ignode = ei->gnn_list[SHELL_SAT_3][ilnode];
+         }
+       else
+         {
+          EH(-1,"Something's wrong here!");
+         }
+      }
+
+   /* First, see if we are switching */
+    switch_now = pmv_hyst->curve_switch[ipore][ignode];
+
+
+    i_ext_field = mp->por_shell_cap_pres_ext_field_index[ipore];
+    /* Here I assume the external field value ranges from 0 to 1 */
+    val_ext_field = *evp->external_field[i_ext_field][ilnode];
+
+   /* Get the minimum and maximum saturation for the scanning curves */
+    sat_min_wet = pmv_hyst->sat_min_imbibe[ipore][ignode];
+    sat_max_dry = pmv_hyst->sat_max_drain[ipore][ignode];
+
+   /* Find out whether on draining or wetting curve */
+    draining_curve     = pmv_hyst->curve_type[ipore][ignode];
+    draining_curve_old = pmv_hyst->curve_type_old[ipore][ignode];
+
+
+   /* If we are not switching */
+    if (switch_now == 0)
+      {
+       if (draining_curve == 1) /* Stay on main draining curve */
+         {
+
+          /* Get parameters from draining curve 1*/
+          sat_min_1 = mp->u_PorousShellCapPres[ipore][4];
+          con_c_1 = mp->u_PorousShellCapPres[ipore][6];
+          nexp_1 = mp->u_PorousShellCapPres[ipore][7];
+
+          /* Get parameters from draining curve 2*/
+          sat_min_2 = mp->u_PorousShellCapPres[ipore][12];
+          con_c_2 = mp->u_PorousShellCapPres[ipore][14];
+          nexp_2 = mp->u_PorousShellCapPres[ipore][15];
+
+          /* Interpolate the fitting parameters with external field value */
+          sat_min = sat_min_1 + val_ext_field * (sat_min_2 - sat_min_1);
+          con_c   = con_c_1   + val_ext_field * (con_c_2   - con_c_1);
+          nexp    = nexp_1    + val_ext_field * (nexp_2    - nexp_1);
+
+          sat_max = sat_max_dry;
+
+          n_inv = 1.0/nexp;
+          mexp = 1.0 - n_inv;
+          m_inv = -1.0/mexp;
+
+          /* Normalized saturation - should be between 0 to 1 */
+          sat_norm = (saturation - sat_min) / (sat_max - sat_min);
+          d_sat_norm_d_saturation = 1.0/(sat_max - sat_min);
+
+          brack_in = pow(sat_norm, m_inv) - 1.0;
+          d_brack_in_d_sat_norm = m_inv * pow(sat_norm, (m_inv - 1.0));
+
+          /* Evaluate capillary pressure and its sensitivities */
+          cap_pres = con_c * pow(brack_in, n_inv);
+          mp->d_cap_pres[SHELL_SAT_1] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                       * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+         }
+       else if (draining_curve == 0) /* Stay on main wetting curve */
+         {
+          sat_min = sat_min_wet;
+
+          /* Get parameters from wetting curve 1*/
+          sat_max_1 = mp->u_PorousShellCapPres[ipore][1];
+          con_c_1 = mp->u_PorousShellCapPres[ipore][2];
+          nexp_1 = mp->u_PorousShellCapPres[ipore][3];
+
+          /* Get parameters from wetting curve 2*/
+          sat_max_2 = mp->u_PorousShellCapPres[ipore][9];
+          con_c_2 = mp->u_PorousShellCapPres[ipore][10];
+          nexp_2 = mp->u_PorousShellCapPres[ipore][11];
+
+          /* Interpolate the fitting parameters with external field value */
+          sat_max = sat_max_1 + val_ext_field * (sat_max_2 - sat_max_1);
+          con_c   = con_c_1   + val_ext_field * (con_c_2   - con_c_1);
+          nexp    = nexp_1    + val_ext_field * (nexp_2    - nexp_1);
+
+
+          n_inv = 1.0/nexp;
+          mexp = 1.0 - n_inv;
+          m_inv = -1.0/mexp;
+
+          /* Normalized saturation - should be between 0 to 1 */
+          sat_norm = (saturation - sat_min) / (sat_max - sat_min);
+          d_sat_norm_d_saturation = 1.0/(sat_max - sat_min);
+
+          brack_in = pow(sat_norm, m_inv) - 1.0;
+          d_brack_in_d_sat_norm = m_inv * pow(sat_norm, (m_inv - 1.0));
+
+          /* Evaluate capillary pressure and its sensitivities */
+          cap_pres = con_c * pow(brack_in, n_inv);
+          mp->d_cap_pres[SHELL_SAT_1] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                        * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+         }
+       else
+         {
+          EH(-1, "Either we are on draining curve or wetting curve!");
+         }
+      }
+    else if (switch_now == 1)  /* We are switching */
+      {
+       if ( (draining_curve == 1) && (draining_curve_old == 0) ) /* Wetting going to draining */
+         {
+          /* Get all parameters from draining curve 1 */
+          sat_min_1 = mp->u_PorousShellCapPres[ipore][4];
+          sat_max_1 = mp->u_PorousShellCapPres[ipore][5];
+          con_c_1 = mp->u_PorousShellCapPres[ipore][6];
+          nexp_1 = mp->u_PorousShellCapPres[ipore][7];
+
+          /* Get all parameters from draining curve 2 */
+          sat_min_2 = mp->u_PorousShellCapPres[ipore][12];
+          sat_max_2 = mp->u_PorousShellCapPres[ipore][13];
+          con_c_2 = mp->u_PorousShellCapPres[ipore][14];
+          nexp_2 = mp->u_PorousShellCapPres[ipore][15];
+
+          /* Interpolate the fitting parameters with external field value */
+          sat_min = sat_min_1 + val_ext_field * (sat_min_2 - sat_min_1);
+          sat_max = sat_max_1 + val_ext_field * (sat_max_2 - sat_max_1);
+          con_c   = con_c_1   + val_ext_field * (con_c_2   - con_c_1);
+          nexp    = nexp_1    + val_ext_field * (nexp_2    - nexp_1);
+
+
+          n_inv = 1.0/nexp;
+          mexp = 1.0 - n_inv;
+          m_inv = -1.0/mexp;
+
+          /* Get the saturation and capillary pressure at switching or reversal point */
+          sat_switch      = pmv_hyst->sat_switch[ipore][ignode];
+          cap_pres_switch = pmv_hyst->cap_pres_switch[ipore][ignode];
+
+          /* Calculate normalized saturation at reversal point */
+          brack_in_inv = pow((cap_pres_switch/con_c), nexp) + 1.0;
+          sat_norm_switch = pow(brack_in_inv, (-mexp));
+
+          /* Quality check */
+          if ( (sat_norm_switch > 1.0) || (sat_norm_switch < 0.0) )
+            {
+             EH(-1, "Invalid value of normalized saturation at switching point");
+            }
+
+          /* Calculate sat_max for the scanning draining curve */
+          sat_max_dry = (1.0/sat_norm_switch) * (sat_switch - sat_min * (1.0 - sat_norm_switch));
+
+          /* More quality check */
+          if (sat_max_dry > sat_max)
+            {
+             EH(-1, "Invalid value of maximum saturation at the scanning drying curve");
+            }
+          /* Update sat_max_dry in element storage structure*/
+          pmv_hyst->sat_max_drain[ipore][ignode] = sat_max_dry;
+
+          /* Calculate normalized saturation based on newly calculated sat_max_dry */
+          sat_norm = (saturation - sat_min) / (sat_max_dry - sat_min);
+          d_sat_norm_d_saturation = 1.0/(sat_max_dry - sat_min);
+
+
+          brack_in = pow(sat_norm, m_inv) - 1.0;
+          d_brack_in_d_sat_norm = m_inv * pow(sat_norm, (m_inv - 1.0));
+
+          /* Evaluate capillary pressure and its sensitivities */
+          cap_pres = con_c * pow(brack_in, n_inv);
+          mp->d_cap_pres[SHELL_SAT_1] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                        * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+         }
+       else if ( (draining_curve == 0) && (draining_curve_old == 1) ) /* draining going to wetting */
+         {
+          /* Get all parameters from wetting curve 1 */
+          sat_min_1 = mp->u_PorousShellCapPres[ipore][0];
+          sat_max_1 = mp->u_PorousShellCapPres[ipore][1];
+          con_c_1 = mp->u_PorousShellCapPres[ipore][2];
+          nexp_1 = mp->u_PorousShellCapPres[ipore][3];
+
+          /* Get all parameters from wetting curve 2 */
+          sat_min_2 = mp->u_PorousShellCapPres[ipore][8];
+          sat_max_2 = mp->u_PorousShellCapPres[ipore][9];
+          con_c_2 = mp->u_PorousShellCapPres[ipore][10];
+          nexp_2 = mp->u_PorousShellCapPres[ipore][11];
+
+          /* Interpolate the fitting parameters with external field value */
+          sat_min = sat_min_1 + val_ext_field * (sat_min_2 - sat_min_1);
+          sat_max = sat_max_1 + val_ext_field * (sat_max_2 - sat_max_1);
+          con_c   = con_c_1   + val_ext_field * (con_c_2   - con_c_1);
+          nexp    = nexp_1    + val_ext_field * (nexp_2    - nexp_1);
+
+          n_inv = 1.0/nexp;
+          mexp = 1.0 - n_inv;
+          m_inv = -1.0/mexp;
+
+          /* Get the saturation and capillary pressure at switching or reversal point */
+          sat_switch      = pmv_hyst->sat_switch[ipore][ignode];
+          cap_pres_switch = pmv_hyst->cap_pres_switch[ipore][ignode];
+
+          /* Calculate normalized saturation at reversal point */
+          brack_in_inv = pow((cap_pres_switch/con_c), nexp) + 1.0;
+          sat_norm_switch = pow(brack_in_inv, (-mexp));
+
+          /* Quality check */
+          if ( (sat_norm_switch > 1.0) || (sat_norm_switch < 0.0) )
+            {
+             EH(-1, "Invalid value of normalized saturation at switching point");
+            }
+
+          /* Calculate sat_min for the scanning wetting curve */
+          sat_min_wet = (sat_switch - sat_max * sat_norm_switch)/(1.0 - sat_norm_switch);
+
+          /* More quality check */
+          if (sat_min_wet < sat_min)
+            {
+             EH(-1, "Invalid value of minimum saturation at the scanning wetting curve");
+            }
+          /* Update sat_min_wet in element storage structure*/
+          pmv_hyst->sat_min_imbibe[ipore][ignode] = sat_min_wet;
+
+          /* Calculate normalized saturation based on newly calculated sat_min_wet */
+          sat_norm = (saturation - sat_min_wet) / (sat_max - sat_min_wet);
+          d_sat_norm_d_saturation = 1.0/(sat_max - sat_min_wet);
+
+
+          brack_in = pow(sat_norm, m_inv) - 1.0;
+          d_brack_in_d_sat_norm = m_inv * pow(sat_norm, (m_inv - 1.0));
+
+          /* Evaluate capillary pressure and its sensitivities */
+          cap_pres = con_c * pow(brack_in, n_inv);
+          mp->d_cap_pres[SHELL_SAT_1] = n_inv * con_c * pow(brack_in, (n_inv - 1.0))
+                                        * d_brack_in_d_sat_norm * d_sat_norm_d_saturation;
+         }
+      }
+    else
+      {
+       EH(-1, "To switch or not to switch; that is the question");
+      }
+ } else
+    {
+      EH(-1, "No models for capillary pressure");
+    }
+  return cap_pres;
+}  /* end   load_cap_pres  */
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+
+
 void
 load_gas_conc(double porosity, double cap_pres, double d_cap_pres[2])
 
@@ -6666,12 +7647,12 @@ load_gas_conc(double porosity, double cap_pres, double d_cap_pres[2])
      *  media from the unknowns used in the problem.  USES KELVIN EQUATION.
      *  see load_gas_conc_flat for flat interface vapor pressure 
      *
-     *  input:   
-     *  -----     
-     *           
+     *  input:
+     *  -----
      *
-     *  output:  
-     *  -----    
+     *
+     *  output:
+     *  -----
      *   Calculates the gas phase concentrations and its first
      *   and second derivatives with respect to all the problem unknowns
      *      pmv->gas_density_solvents[w]
@@ -8396,6 +9377,11 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
           {
 	   mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] = 0.0;
           }
+
+        if (pd->e[R_SHELL_SAT_1])
+          {
+	   mp->d_rel_liq_perm[SHELL_SAT_1] = 0.0;
+          }
       }
     /*
      *  Clip the relative permeability at one -> it can never be
@@ -8415,6 +9401,11 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
         else if (pd->e[R_SHELL_SAT_OPEN_2])
           {
 	   mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] = 0.0;
+          }
+
+        if (pd->e[R_SHELL_SAT_1])
+          {
+	   mp->d_rel_liq_perm[SHELL_SAT_1] = 0.0;
           }
       }
     else
@@ -8443,6 +9434,7 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
             {
 	     mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] = 0.0;
             }
+
 	} else {
 	  mp->d_rel_liq_perm[POR_LIQ_PRES] =
 	      d_s_eff * rel_liq_perm * mp->d_saturation[POR_LIQ_PRES] *
@@ -8458,6 +9450,13 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
 	     mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] = d_s_eff * rel_liq_perm * mp->d_saturation[SHELL_PRESS_OPEN_2] *
 	                                            (0.5 / s_eff + 2. * factor2 * factor / ((1.0 - factor) * s_eff * a1)  );
             }
+
+          if (pd->e[R_SHELL_SAT_1])
+            {
+	     mp->d_rel_liq_perm[SHELL_SAT_1] = d_s_eff * rel_liq_perm *
+	                                       (0.5 / s_eff + 2. * factor2 * factor / ((1.0 - factor) * s_eff * a1)  );
+            }
+
 	}
 	if (pd->e[R_POR_GAS_PRES]) {
 	  if (a1 == 0.0) {
@@ -8599,6 +9598,12 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
        {
         mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] = 0.0;
        }
+
+     if (pd->e[R_SHELL_SAT_1])
+       {
+        mp->d_rel_liq_perm[SHELL_SAT_1] = 0.0;
+       }
+
   }
   else if (mp->RelLiqPermModel == VAN_GENUCHTEN_EXTERNAL) {
     /*
@@ -8639,6 +9644,11 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
           {
 	   mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] = 0.0;
           }
+
+        if (pd->e[R_SHELL_SAT_1])
+          {
+	   mp->d_rel_liq_perm[SHELL_SAT_1] = 0.0;
+          }
        }
     /*
      *  Clip the relative permeability at one -> it can never be
@@ -8658,6 +9668,10 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
         else if (pd->e[R_SHELL_SAT_OPEN_2])
           {
 	   mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] = 0.0;
+          }
+        if (pd->e[R_SHELL_SAT_1])
+          {
+	   mp->d_rel_liq_perm[SHELL_SAT_1] = 0.0;
           }
        }
      else
@@ -8703,6 +9717,12 @@ load_liq_perm(double porosity, double cap_pres, double saturation,
               else if (pd->e[R_SHELL_SAT_OPEN_2])
                 {
 	         mp->d_rel_liq_perm[SHELL_PRESS_OPEN_2] = d_s_eff * rel_liq_perm * mp->d_saturation[SHELL_PRESS_OPEN_2] *
+	         (0.5 / s_eff + 2. * factor2 * factor / ((1.0 - factor) * s_eff * a1)  );
+                }
+
+              if (pd->e[R_SHELL_SAT_1])
+                {
+	         mp->d_rel_liq_perm[SHELL_SAT_1] = d_s_eff * rel_liq_perm *
 	         (0.5 / s_eff + 2. * factor2 * factor / ((1.0 - factor) * s_eff * a1)  );
                 }
 	     }
@@ -11193,9 +12213,12 @@ evaluate_sat_hyst_criterion(int ip,
 			    dbl dt)
 {
   const int i_pl = 0;
-  dbl liq_inv_dot, cap_press;
+  dbl liq_inv_dot = 0.0, cap_press = 0.0;
 
-  pmt->Inventory_solvent[i_pl] = pmv->bulk_density[i_pl];
+  if (pmt != NULL)
+    {
+     pmt->Inventory_solvent[i_pl] = pmv->bulk_density[i_pl];
+    }
 
   if (pd->TimeIntegration != STEADY) {
     /* 
@@ -11222,12 +12245,12 @@ evaluate_sat_hyst_criterion(int ip,
      * already.   Vice Versa if it is less than zero
      */
 
-    if(!pd->v[SHELL_PRESS_OPEN])
+    if(pd->v[POR_LIQ_PRES])
       {
 	liq_inv_dot = fv_dot->p_liq;
 	cap_press = fv->p_gas - fv->p_liq;
       }
-    else
+    else if (pd->v[SHELL_PRESS_OPEN])
       {
 	liq_inv_dot = fv_dot->sh_p_open;
 	cap_press = - fv->sh_p_open;
@@ -11243,43 +12266,53 @@ evaluate_sat_hyst_criterion(int ip,
      *level.
      */
 
-    if(liq_inv_dot > 0.0 && 
+    if(liq_inv_dot > 0.0 &&
        Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] == 0.0)
       {
 	/* We were on a wetting curve, and will remain so */
       }
-    else if (liq_inv_dot <= 0.0 && 
+    else if (liq_inv_dot <= 0.0 &&
 	     Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] == 1.0)
       {
 	/* We were on a drying/draining curve, and will remain so */
       }
-    else if (liq_inv_dot > 0.0 && 
+    else if (liq_inv_dot > 0.0 &&
 	     Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] == 1.0)
       {
-	/* We were on a drying/draining curve but now may potentially switch to a wetting curve */
-	if(fabs(liq_inv_dot) > mp->u_saturation[9] && 
-	   mp->saturation <= 0.9999 )
-	  {
-	    Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] = 0.0;
-	    Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].Sat_QP_tn[ip] = mp->saturation;
-	    Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].p_cap_QP[ip] = cap_press;
-	  }
+        /* We were on a drying/draining curve but now may potentially switch to a wetting curve */
+
+        if ( (pd->v[POR_LIQ_PRES]) || (pd->v[SHELL_PRESS_OPEN]) )
+          {
+	   if(fabs(liq_inv_dot) > mp->u_saturation[9] &&
+	      mp->saturation <= 0.9999 )
+	     {
+	      Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] = 0.0;
+	      Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].Sat_QP_tn[ip] = mp->saturation;
+	      Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].p_cap_QP[ip] = cap_press;
+	     }
+          }
       }
     else if (liq_inv_dot <= 0.0 && 
 	     Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] == 0.0)
       {
 	/* We were on a wetting curve but now may potentially switch to a drying curve */
-	if(fabs(liq_inv_dot) > mp->u_saturation[9])
-	  {
-	    Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] = 1.0;
-	    Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].Sat_QP_tn[ip] = mp->saturation;
-	    Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].p_cap_QP[ip] = cap_press;
-	  }
+
+        if ( (pd->v[POR_LIQ_PRES]) || (pd->v[SHELL_PRESS_OPEN]) )
+          {
+
+	   if(fabs(liq_inv_dot) > mp->u_saturation[9])
+	     {
+	      Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].sat_curve_type[ip] = 1.0;
+	      Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].Sat_QP_tn[ip] = mp->saturation;
+	      Element_Blocks[ei->elem_blk_index].ElemStorage[ielem].p_cap_QP[ip] = cap_press;
+	     }
+          }
       }
   }
 
   return(1);
 }
+
 
 /*****************************************************************************/
 double
@@ -11297,10 +12330,32 @@ por_mass_source_model( double d_MassSource[MAX_VARIABLE_TYPES + MAX_CONC][MDE] )
   int b, j, var;
   double phi_j;
   double MassSource = 0.0;
+
+  double sat_min;
+  double width, alpha;
+  double sat_center, sat_normalized;
+  double Hside = 0.0;
+  double dHside_dS = 0.0;
   double tau = 0.0;
   double sink_mass_max = 0.0, nexp = 0.0;
+  double sink_mass_clip = fv->sink_mass;
+
+  double saturation = 0.0;
 
   int dim = pd->Num_Dim;
+
+
+  /* Get saturation based on the formulation used*/
+
+  if (pd->v[SHELL_SAT_1]) /* Saturation formulation */
+    {
+     saturation = fv->sh_sat_1;
+    }
+  else if ( (pd->v[SHELL_PRESS_OPEN]) ||
+            (pd->v[POR_LIQ_PRES]) )
+    {
+     saturation = mp->saturation;
+    }
 
 
   /*** Calculate MassSource based on the selected models ***/
@@ -11310,7 +12365,7 @@ por_mass_source_model( double d_MassSource[MAX_VARIABLE_TYPES + MAX_CONC][MDE] )
 
      case LINEAR:
 
-       if(mp->saturation >= mp->u_porous_sink_constants[6])
+       if(saturation >= mp->u_porous_sink_constants[6])
          {
           tau = mp->u_porous_sink_constants[0];
          }
@@ -11322,7 +12377,7 @@ por_mass_source_model( double d_MassSource[MAX_VARIABLE_TYPES + MAX_CONC][MDE] )
        sink_mass_max = mp->u_porous_sink_constants[1];
 
        MassSource = -tau * mp->u_porous_sink_constants[2] * (sink_mass_max - fv->sink_mass)
-                    * mp->saturation/sink_mass_max/fv->volume_change ;
+                    * saturation/sink_mass_max/fv->volume_change ;
 
       /* Again, I don't think this term belongs, contrary to the paper from which
          it came.   Disappears with application of the Reynolds Transport theorem */
@@ -11340,20 +12395,48 @@ por_mass_source_model( double d_MassSource[MAX_VARIABLE_TYPES + MAX_CONC][MDE] )
 
      case POWER_LAW:
 
-       if(mp->saturation >= mp->u_porous_sink_constants[3])
+       /* Evaluate heaviside function based on minimum saturation */
+       sat_min = mp->u_porous_sink_constants[3];
+       width = mp->u_porous_sink_constants[4];
+       alpha = 0.5 * width;
+       sat_center = sat_min - alpha;
+       sat_normalized = saturation - sat_center;
+
+       if (saturation >= sat_min)
          {
-          tau = mp->u_porous_sink_constants[0];
+          Hside = 1.0;
+          dHside_dS = 0.0;
          }
-       else
+       else if (saturation <= (sat_min - width) )
          {
-          tau = 0.;
+          Hside = 0.0;
+          dHside_dS = 0.0;
+         }
+	else
+         {
+          Hside = 0.5 * (1. + sat_normalized / alpha
+                  + sin(M_PIE * sat_normalized / alpha ) / M_PIE);
+          dHside_dS = 0.5 * (1.0/alpha + cos(M_PIE * sat_normalized/alpha)/alpha );
          }
 
+       tau = mp->u_porous_sink_constants[0];
        sink_mass_max = mp->u_porous_sink_constants[1];
        nexp = mp->u_porous_sink_constants[2];
 
-       MassSource = -tau * pow ( ((sink_mass_max - fv->sink_mass)/sink_mass_max), nexp )
-                    * mp->saturation/mp->density;
+       if (fv->sink_mass < sink_mass_max)
+         {
+          sink_mass_clip = fv->sink_mass;
+         }
+       else
+         {
+          sink_mass_clip = sink_mass_max;
+         }
+
+
+       MassSource = -tau * pow ( ((sink_mass_max - sink_mass_clip)/sink_mass_max), nexp )
+                    * saturation/mp->density;
+
+       MassSource *= Hside;
 
 
      break;
@@ -11381,7 +12464,7 @@ por_mass_source_model( double d_MassSource[MAX_VARIABLE_TYPES + MAX_CONC][MDE] )
               phi_j = bf[var]->phi[j];
 
               d_MassSource[var][j] = tau * mp->u_porous_sink_constants[2] * phi_j *
-                                     mp->saturation/sink_mass_max/fv->volume_change ;
+                                     saturation/sink_mass_max/fv->volume_change ;
              }
          }
 
@@ -11418,7 +12501,7 @@ por_mass_source_model( double d_MassSource[MAX_VARIABLE_TYPES + MAX_CONC][MDE] )
               for ( j=0; j<ei->dof[var]; j++)
                  {
                   d_MassSource[var][j] = fv->d_volume_change_dx[b][j] * tau * mp->u_porous_sink_constants[2] *
-                                         (sink_mass_max - fv->sink_mass) * mp->saturation/sink_mass_max/
+                                         (sink_mass_max - fv->sink_mass) * saturation/sink_mass_max/
                                          fv->volume_change/fv->volume_change ;
 
                   /*see comment on residual equation above about this term not belonging */
@@ -11448,10 +12531,8 @@ por_mass_source_model( double d_MassSource[MAX_VARIABLE_TYPES + MAX_CONC][MDE] )
           for ( j=0; j<ei->dof[var]; j++)
              {
               phi_j = bf[var]->phi[j];
-
-              d_MassSource[var][j] = tau * pow( ((sink_mass_max - fv->sink_mass)/sink_mass_max), (nexp - 1.0) )
-                                     * (phi_j/sink_mass_max) * mp->saturation/mp->density ;
-
+              d_MassSource[var][j] = Hside * tau * nexp * pow( ((sink_mass_max - sink_mass_clip)/sink_mass_max), (nexp - 1.0) )
+                                     * (phi_j/sink_mass_max) * saturation/mp->density ;
              }
          }
 
@@ -11462,11 +12543,44 @@ por_mass_source_model( double d_MassSource[MAX_VARIABLE_TYPES + MAX_CONC][MDE] )
              {
               phi_j = bf[var]->phi[j];
 
-              d_MassSource[var][j] = -tau * pow ( ((sink_mass_max - fv->sink_mass)/sink_mass_max), nexp )
-                                     * mp->d_saturation[var]/mp->density;
+              d_MassSource[var][j]  = -Hside * tau * pow ( ((sink_mass_max - sink_mass_clip)/sink_mass_max), nexp )
+                                      * mp->d_saturation[var]/mp->density * phi_j
+                                      - dHside_dS * mp->d_saturation[var] * phi_j * tau *
+                                      pow ( ((sink_mass_max - sink_mass_clip)/sink_mass_max), nexp ) * saturation/mp->density;
 
              }
          }
+
+       var = SHELL_PRESS_OPEN;
+       if(pd->v[var])
+         {
+          for ( j=0; j<ei->dof[var]; j++)
+             {
+              phi_j = bf[var]->phi[j];
+
+              d_MassSource[var][j] = -Hside * tau * pow ( ((sink_mass_max - sink_mass_clip)/sink_mass_max), nexp )
+                                     * mp->d_saturation[var]/mp->density * phi_j
+                                     - dHside_dS * mp->d_saturation[var] * phi_j * tau *
+                                     pow ( ((sink_mass_max - sink_mass_clip)/sink_mass_max), nexp ) * saturation/mp->density;
+             }
+         }
+
+
+       var = SHELL_SAT_1;
+       if(pd->v[var])
+         {
+          for ( j=0; j<ei->dof[var]; j++)
+             {
+              phi_j = bf[var]->phi[j];
+
+              d_MassSource[var][j] = -Hside * tau * pow ( ((sink_mass_max - sink_mass_clip)/sink_mass_max), nexp )
+                                     * 1.0/mp->density * phi_j
+                                     - dHside_dS * phi_j * tau *
+                                     pow ( ((sink_mass_max - sink_mass_clip)/sink_mass_max), nexp ) * saturation/mp->density;
+
+             }
+         }
+
      break;
     }
 

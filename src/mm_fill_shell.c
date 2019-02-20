@@ -11293,7 +11293,7 @@ assemble_porous_shell_open(
   // Load porous medium parameters
   dbl phi = mp->porosity;                         // Porosity
   dbl H =  porous_shell_closed_height_model();    // Pore height (vertical)
-  dbl kappa = porous_shell_cross_perm_model();    // Pores cross permeability
+  dbl kappa = porous_shell_cross_perm_model(0);    // Pores cross permeability
 
   // Load field variables - PRS NOTE: NEED cross BC for integrating the two (set-up-shop)
   //  dbl P = fv->sh_p_open;                          // Porous pressure
@@ -12050,7 +12050,7 @@ assemble_porous_shell_open_2(
   // Load porous medium parameters
   dbl phi = mp->porosity;                         // Porosity
   dbl H =  porous_shell_closed_height_model();    // Pore height (vertical)
-  dbl kappa = porous_shell_cross_perm_model();    // Pores cross permeability
+  dbl kappa = porous_shell_cross_perm_model(0);    // Pores cross permeability
 
 
   // Load field variables - PRS NOTE: NEED cross BC for integrating the two (set-up-shop)
@@ -12459,6 +12459,540 @@ assemble_porous_shell_open_2(
 
 } // End of assemble_porous_shell_open_2
 
+/*****************************************************************************/
+/***assemble_porous_shell_saturation******************************************/
+/*  _______________________________________________________________________  */
+
+/* assemble_porous_shell_saturation -- Assemble terms (Residual & Jacobian) for a
+ *                                     structured porous shell equation for open
+ *                                     pores - same formulation as assemble_porous_
+ *                                     shell_open except it uses saturation as primary
+ *                                     variable
+ *
+ * Created:     Thursday August 30, 2018 tjiptowi@unm.edu
+ *
+ */
+/*ARGSUSED*/
+int
+assemble_porous_shell_saturation(
+			         dbl tt,                     // Time integration form
+			         dbl dt,                     // Time step size
+			         dbl xi[DIM],                // Current coordinates
+			         const Exo_DB *exo           // ExoII handle
+                                )
+{
+
+  /* --- Initialization -----------------------------------------------------*/
+
+  // Initialize output status function
+  int status = 0;
+
+  // Bail out of function if there is nothing to do
+  if (
+      (!pd->e[R_SHELL_SAT_1]) &&
+      (!pd->e[R_SHELL_SAT_2]) &&
+      (!pd->e[R_SHELL_SAT_3])
+     ) return(status);
+
+  // Variable definitions
+  int eqn, peqn, var, pvar;                       // Equation / variables
+  int i, j, a, b, ipore, jpore;                   // Counter variables
+  dbl phi_i, grad_phi_i[DIM], gradII_phi_i[DIM];  // Basis functions (i)
+  dbl d_gradII_phi_i_dmesh[DIM][DIM][MDE];
+  dbl phi_j, grad_phi_j[DIM], gradII_phi_j[DIM];  // Basis functions (j)
+  dbl d_gradII_phi_j_dmesh[DIM][DIM][MDE];
+  dbl mass, diff, sour;                           // Residual terms
+
+  // Bookkeeping arrays
+  int porous_shell_eqn[MAX_POR_SHELL];
+  porous_shell_eqn[0] = R_SHELL_SAT_1;
+  porous_shell_eqn[1] = R_SHELL_SAT_2;
+  porous_shell_eqn[2] = R_SHELL_SAT_3;
+
+  int porous_shell_var[MAX_POR_SHELL];
+  porous_shell_var[0] = SHELL_SAT_1;
+  porous_shell_var[1] = SHELL_SAT_2;
+  porous_shell_var[2] = SHELL_SAT_3;
+
+  //Group saturation values at nodes and Gauss point
+  dbl sat_nodes[MAX_POR_SHELL][MDE] = {{0.0}};
+  dbl sat_dot_nodes[MAX_POR_SHELL][MDE] = {{0.0}};
+  dbl sat_gauss[MAX_POR_SHELL] = {0.0};
+  dbl grad_sat_gauss[MAX_POR_SHELL][DIM] = {{0.0}};
+  dbl grad_II_sat_gauss[MAX_POR_SHELL][DIM] = {{0.0}};
+  dbl sat_dot_gauss[MAX_POR_SHELL] = {0.0};
+  for (ipore = 0; ipore < pd->Num_Porous_Shell_Eqn; ipore++)
+     {
+      var = porous_shell_var[ipore];
+      if (pd->v[var])
+        {
+         for ( j = 0; j < ei->dof[var]; j++)
+            {
+             switch (ipore)
+               {
+                case 0:
+                  sat_nodes[ipore][j]     = *esp->sh_sat_1[j];
+                  sat_dot_nodes[ipore][j] = *esp_dot->sh_sat_1[j];
+                  break;
+                case 1:
+                  sat_nodes[ipore][j]     = *esp->sh_sat_2[j];
+                  sat_dot_nodes[ipore][j] = *esp_dot->sh_sat_2[j];
+                  break;
+                case 2:
+                  sat_nodes[ipore][j]     = *esp->sh_sat_3[j];
+                  sat_dot_nodes[ipore][j] = *esp_dot->sh_sat_3[j];
+                  break;
+               }
+            }
+         switch (ipore)
+            {
+             case 0:
+                sat_gauss[ipore] = fv->sh_sat_1;
+                sat_dot_gauss[ipore] = fv_dot->sh_sat_1;
+                break;
+             case 1:
+                sat_gauss[ipore] = fv->sh_sat_2;
+                sat_dot_gauss[ipore] = fv_dot->sh_sat_2;
+                break;
+             case 2:
+                sat_gauss[ipore] = fv->sh_sat_3;
+                sat_dot_gauss[ipore] = fv_dot->sh_sat_3;
+                break;
+
+            }
+         for (a = 0; a < DIM; a++)
+            {
+             switch (ipore)
+               {
+                case 0:
+                  grad_sat_gauss[ipore][a] = fv->grad_sh_sat_1[a];
+                  break;
+                case 1:
+                  grad_sat_gauss[ipore][a] = fv->grad_sh_sat_2[a];
+                  break;
+                case 2:
+                  grad_sat_gauss[ipore][a] = fv->grad_sh_sat_3[a];
+                  break;
+               }
+            }
+         Inn(grad_sat_gauss[ipore], grad_II_sat_gauss[ipore]);
+        }
+     }
+
+  // Setup lubrication
+  int *n_dof = NULL;
+  int dof_map[MDE];
+  dbl wt_old = fv->wt;
+  n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+
+  // Unpack FEM variables from global structures
+  dbl wt = fv->wt;                                // Gauss point weight
+  dbl h3 = fv->h3;                                // Differential volume element
+  dbl det_J = fv->sdet;                           // Jacobian of transformation
+  dbl dA = det_J * wt * h3;
+
+  /* Equation term multipliers*/
+  dbl etm_mass[MAX_POR_SHELL] = {0.0}, etm_diff[MAX_POR_SHELL] = {0.0}, etm_sour[MAX_POR_SHELL] = {0.0};
+  for (ipore = 0; ipore < pd->Num_Porous_Shell_Eqn; ipore++)
+     {
+      eqn = porous_shell_eqn[ipore];
+      if (pd->e[eqn])
+        {
+         etm_mass[ipore] = pd->etm[eqn][(LOG2_MASS)];
+         etm_diff[ipore] = pd->etm[eqn][(LOG2_DIFFUSION)];
+         etm_sour[ipore] = pd->etm[eqn][(LOG2_SOURCE)];
+        }
+     }
+
+
+  // Load porous medium parameters
+  dbl   phi[MAX_POR_SHELL] = {0.0};               // Porosity
+  dbl     H[MAX_POR_SHELL] = {0.0};               // Pore height (vertical)
+  for (ipore = 0; ipore < pd->Num_Porous_Shell_Eqn; ipore++)
+     {
+      var = porous_shell_var[ipore];
+      if (pd->v[var])
+        {
+         phi[ipore] = porous_shell_porosity_model(ipore);
+         H[ipore] = porous_shell_height_model(ipore);
+         porous_shell_permeability_model(ipore);
+        }
+     }
+
+  /* --- Calculate equation components ---------------------------------------*/
+
+
+  /* With saturation formulation, capillary pressure has to be evaluated from
+   * capillary pressure - saturation curve. This is problematic in computing
+   * capillary pressure gradient in diffusion term viz. having to evaluate
+   * second derivative of capillary pressure w.r.t. saturation, i.e. d^2_cap_pres/d_S^2
+   * to evaluate for Jacobian.
+   *
+   * I propose to do this instead: Use the curve to evaluate capillary pressure at the nodes
+   * then use basis functions of the saturation DOF to compute gradient at the Gauss point
+   * That way we only require first derivative to compute the Jacobian.
+   *
+   */
+  dbl cap_pres[MAX_POR_SHELL][MDE] = {{0.0}};
+  dbl d_cap_pres_dS[MAX_POR_SHELL][MDE] = {{0.0}};
+  dbl grad_p[MAX_POR_SHELL][DIM] = {{0.0}};
+  dbl grad_II_p[MAX_POR_SHELL][DIM] = {{0.0}};
+  for (ipore = 0; ipore < pd->Num_Porous_Shell_Eqn; ipore++)
+     {
+      var = porous_shell_var[ipore];
+      if (pd->v[var])
+        {
+         /* Old method */
+         for (j = 0; j < ei->dof[var]; j++)
+            {
+             cap_pres[ipore][j] = load_cap_pres(ipore, j, -1, sat_nodes[ipore][j]);
+             d_cap_pres_dS[ipore][j] = mp->d_cap_pres[var];
+            }
+         for (a = 0; a < DIM; a++)
+            {
+             for (j = 0; j < ei->dof[var]; j++)
+                {
+                 grad_p[ipore][a] += cap_pres[ipore][j] * bf[var]->grad_phi[j][a];
+                }
+            }
+         Inn(grad_p[ipore], grad_II_p[ipore]);
+        }
+     }
+
+  /* Assemble each component of the equation */
+
+  dbl E_MASS[MAX_POR_SHELL][MDE] = {{0.0}}, E_MASS_S[MAX_POR_SHELL][MDE] = {{0.0}};
+
+  int mass_lump = 1;
+
+  for (ipore = 0; ipore < pd->Num_Porous_Shell_Eqn; ipore++)
+     {
+      var = porous_shell_var[ipore];
+      if (pd->v[var])
+        {
+         for ( j = 0; j < ei->dof[var]; j++)
+            {
+             if (mass_lump)
+               {
+                E_MASS[ipore][j] = H[ipore] * phi[ipore] * sat_dot_nodes[ipore][j];
+                E_MASS_S[ipore][j]  = H[ipore] * phi[ipore] * (1 + 2.0 * tt)/dt;
+               }
+             else
+               {
+                E_MASS[ipore][j] = H[ipore] * phi[ipore] * sat_dot_gauss[ipore];
+                E_MASS_S[ipore][j]  = H[ipore] * phi[ipore] * bf[var]->phi[j] * (1 + 2.0 * tt)/dt;
+               }
+            }
+        }
+     }
+
+
+  // Load relative permeability as a function of saturation
+  dbl rel_liq_perm[MAX_POR_SHELL] = {0.0};
+
+  for (ipore = 0; ipore < pd->Num_Porous_Shell_Eqn; ipore++)
+     {
+      var = porous_shell_var[ipore];
+      if (pd->v[var])
+        {
+         rel_liq_perm[ipore] = porous_shell_rel_perm_model(ipore, sat_gauss[ipore]);
+        }
+     }
+
+  // Calculate DIFFUSION terms
+  dbl E_DIFF[MAX_POR_SHELL][DIM] = {{0.0}};
+  dbl E_DIFF_S[MAX_POR_SHELL][DIM][DIM]  = {{{0.0}}};
+  dbl E_DIFF_S2[MAX_POR_SHELL][DIM][DIM] = {{{0.0}}};
+
+  for (ipore = 0; ipore < pd->Num_Porous_Shell_Eqn; ipore++)
+     {
+      var = porous_shell_var[ipore];
+      if (pd->v[var])
+        {
+         if (mp->PorousShellPermeabilityModel[ipore] == ORTHOTROPIC)
+           {
+            for ( a = 0; a < DIM; a++)
+               {
+                for ( b = 0; b < DIM; b++)
+                   {
+                    E_DIFF[ipore][a]      += H[ipore] * mp->PorousShellPermTensor[ipore][a][b] * rel_liq_perm[ipore] *
+                                             (grad_II_p[ipore][b] + mp->momentum_source[b]) ;
+                    E_DIFF_S[ipore][a][b] += H[ipore] * mp->PorousShellPermTensor[ipore][a][b] * rel_liq_perm[ipore];
+                    E_DIFF_S2[ipore][a][b] += H[ipore] * mp->PorousShellPermTensor[ipore][a][b] * mp->d_PorousShellRelPerm[ipore][var] *
+                                          (grad_II_p[ipore][b] + mp->momentum_source[b]);
+                   }
+               }
+           }
+         else
+           {
+            for ( a = 0; a < DIM; a++)
+               {
+                E_DIFF[ipore][a]      += H[ipore] * mp->PorousShellPermeability[ipore] * rel_liq_perm[ipore]
+                                         * (grad_II_p[ipore][a] + mp->momentum_source[a]) ;
+
+                for ( b = 0; b < DIM; b++)
+                   {
+                    E_DIFF_S[ipore][a][b]  += H[ipore] * mp->PorousShellPermeability[ipore] * delta(a,b) * rel_liq_perm[ipore];
+                    E_DIFF_S2[ipore][a][b] += H[ipore] * mp->PorousShellPermeability[ipore] * delta(a,b) * mp->d_PorousShellRelPerm[ipore][var]
+                                              * (grad_II_p[ipore][b] + mp->momentum_source[b]);
+                   }
+                }
+           }
+        }
+     }
+
+
+  // Calculate SOURCE term from adjacent porous shells
+  dbl E_SOUR[MAX_POR_SHELL][MDE] = {{0.0}};
+  dbl E_SOUR_S[MAX_POR_SHELL][MAX_POR_SHELL][MDE] = {{{0.0}}};
+
+
+  if (pd->Num_Porous_Shell_Eqn > 1)
+    {
+
+     dbl j_1_2[MDE] = {0.0};  // Flux between porous layers 1 and 2
+     dbl j_2_3[MDE] = {0.0};  // Flux between porous layers 2 and 3
+
+     dbl dj_1_2[MAX_POR_SHELL][MDE] = {{0.0}};  // Sensitivity of the flux between porous layers 1 and 2
+     dbl dj_2_3[MAX_POR_SHELL][MDE] = {{0.0}};  // Sensitivity of the flux between porous layers 2 and 3
+
+     /* Calculate the fluxes and their sensitivities */
+     porous_shell_open_source_model(j_1_2, j_2_3, dj_1_2, dj_2_3);
+
+     /* Store the interlayer fluxes and the sensitivities */
+
+     for ( j = 0; j < ei->dof[SHELL_SAT_1]; j++)
+        {
+         E_SOUR[0][j]  = -j_1_2[j];
+         E_SOUR[1][j]  =  j_1_2[j];
+
+         E_SOUR_S[0][0][j]  = -dj_1_2[0][j];
+         E_SOUR_S[0][1][j]  = -dj_1_2[1][j];
+
+         E_SOUR_S[1][0][j]  =  dj_1_2[0][j];
+         E_SOUR_S[1][1][j]  =  dj_1_2[1][j];
+
+         if (pd->Num_Porous_Shell_Eqn > 2)
+           {
+            E_SOUR[1][j] +=  j_2_3[j];
+            E_SOUR[2][j]  = -j_2_3[j];
+
+            E_SOUR_S[1][1][j] +=  dj_2_3[1][j];
+            E_SOUR_S[1][2][j]  =  dj_2_3[2][j];
+
+
+            E_SOUR_S[2][1][j]  = -dj_2_3[1][j];
+            E_SOUR_S[2][2][j]  = -dj_2_3[2][j];
+           }
+        }
+    }
+
+  // Load sink terms due to adsorption and its sensitivities
+  // Right now it only applies to first porous shell layer - SHELL_SAT_1
+  dbl E_SINK = 0.0, E_SINK_S[MDE], E_SINK_SINK[MDE];
+  dbl d_MassSource[MAX_VARIABLE_TYPES + MAX_CONC][MDE];
+  memset(E_SINK_S,  0.0, sizeof(double) * MDE);
+  memset(E_SINK_SINK,  0.0, sizeof(double) * MDE);
+  memset(d_MassSource,  0.0, sizeof(double) * (MAX_VARIABLE_TYPES + MAX_CONC) * MDE);
+
+  if (pd->e[R_POR_SINK_MASS])
+    {
+     E_SINK = por_mass_source_model(d_MassSource);
+
+     /* Load sensitivities w.r.t. shell porous open */
+     for (j = 0; j < ei->dof[SHELL_SAT_1]; j++)
+        {
+         E_SINK_S[j] = d_MassSource[SHELL_SAT_1][j];
+        }
+
+     /* Load sensitivities w.r.t. pore sink mass */
+     for (j = 0; j < ei->dof[POR_SINK_MASS]; j++)
+        {
+         E_SINK_SINK[j] = d_MassSource[POR_SINK_MASS][j];
+        }
+    }
+
+
+  /* --- Assemble residuals --------------------------------------------------*/
+
+  // Assemble residual contribution to this equation
+
+ /* Loop over porous shell layer equations*/
+  for (ipore = 0; ipore < pd->Num_Porous_Shell_Eqn; ipore++)
+     {
+      eqn = porous_shell_eqn[ipore];
+      if ( (af->Assemble_Residual) && pd->e[eqn] )
+        {
+         peqn = upd->ep[eqn];
+
+         // Loop over DOF (i)
+         for ( i = 0; i < ei->dof[eqn]; i++)
+            {
+
+             // Load basis functions
+             ShellBF( eqn, i, &phi_i, grad_phi_i, gradII_phi_i, d_gradII_phi_i_dmesh,
+                      n_dof[MESH_DISPLACEMENT1], dof_map );
+
+             // Assemble mass term
+             mass = 0.0;
+             if ( T_MASS )
+               {
+	        mass += E_MASS[ipore][i] * phi_i;
+               }
+             mass *= dA * etm_mass[ipore];
+
+             // Assemble diffusion term
+             diff = 0.0;
+             if ( T_DIFFUSION )
+               {
+	        for ( a = 0; a < DIM; a++)
+                   {
+	            diff -= E_DIFF[ipore][a] * gradII_phi_i[a];
+	           }
+               }
+             diff *= dA * etm_diff[ipore];
+
+             // Assemble source term
+             sour = 0.0;
+             if ( T_SOURCE )
+               {
+	        sour += E_SOUR[ipore][i] * phi_i;
+                if (ipore == 0)
+                  {
+                   sour -= E_SINK * phi_i;
+                  }
+               }
+             sour *= dA * etm_sour[ipore];
+
+             // Assemble full residual
+             lec->R[peqn][i] += mass + diff + sour;
+            }  // End of loop over DOF (i)
+        } // End of residual assembly of R_SHELL_SAT_1
+    } // End of loop over porous shell layers
+
+  /* --- Assemble Jacobian --------------------------------------------------*/
+
+ /* Loop over porous shell layer equations*/
+  for (ipore = 0; ipore < pd->Num_Porous_Shell_Eqn; ipore++)
+     {
+      eqn = porous_shell_eqn[ipore];
+      if ( (af->Assemble_Jacobian) && (pd->e[eqn]) )
+        {
+         peqn = upd->ep[eqn];
+
+         // Loop over DOF (i)
+         for ( i = 0; i < ei->dof[eqn]; i++)
+            {
+
+             // Load basis functions
+             ShellBF( eqn, i, &phi_i, grad_phi_i, gradII_phi_i, d_gradII_phi_i_dmesh,
+                      n_dof[MESH_DISPLACEMENT1], dof_map );
+
+
+
+             // Assemble sensitivities for porous shell saturation variables
+             for (jpore = 0; jpore < pd->Num_Porous_Shell_Eqn; jpore++)
+                {
+                 var = porous_shell_var[jpore];
+
+                 if (pd->v[var])
+                   {
+  	            pvar = upd->vp[var];
+
+  	            // Loop over DOF (j)
+  	            for ( j = 0; j < ei->dof[var]; j++)
+                       {
+
+	                // Load basis functions
+	                ShellBF( var, j, &phi_j, grad_phi_j, gradII_phi_j,
+                                 d_gradII_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
+
+	                // Assemble mass term
+	                mass = 0.0;
+	                if ( (T_MASS) && (ipore == jpore) )
+                          {
+                           if (mass_lump)
+                             {
+	                      mass += E_MASS_S[ipore][i] * phi_i * delta(i,j);
+                             }
+                           else
+                             {
+                              mass += H[ipore] * phi[ipore] * phi_j * (1 + 2.0 * tt)/dt * phi_i;
+                             }
+	                  }
+	                mass *= dA * etm_mass[ipore];
+
+	                // Assemble diffusion term
+	                diff = 0.0;
+	                if ( (T_DIFFUSION) && (ipore == jpore) )
+                          {
+	                   for ( a = 0; a < DIM; a++)
+                              {
+	                       for ( b = 0; b < DIM; b++)
+                                  {
+		                   diff -= E_DIFF_S[ipore][a][b] * gradII_phi_i[a] * gradII_phi_j[b] * d_cap_pres_dS[ipore][j];
+                                   diff -= E_DIFF_S2[ipore][a][b] * gradII_phi_i[a] * phi_j;
+	                          }
+	                      }
+	                  }
+	                diff *= dA * etm_diff[ipore];
+
+	                // Assemble source term
+	                sour = 0.0;
+	                if ( (T_SOURCE) && (ipore == jpore) )
+                          {
+	                   sour += E_SOUR_S[ipore][jpore][j] * phi_i;
+                           sour -= E_SINK_S[j] * phi_i;
+	                  }
+	               sour *= dA * etm_sour[ipore];
+
+	               // Assemble full Jacobian
+	               lec->J[peqn][pvar][i][j] += mass + diff + sour;
+	              } // End of loop over DOF (j)
+
+                   } // End of SHELL_SAT_1 sensitivities
+
+                } // End of loop over porous shell saturation variables
+
+
+             var = POR_SINK_MASS;
+             if ( (pd->v[var]) && (ipore == 0) )
+               {
+                pvar = upd->vp[var];
+
+                // Loop over DOF (j)
+                for ( j = 0; j < ei->dof[var]; j++)
+                   {
+
+                    // Assemble source term
+                    sour = 0.0;
+                    if ( T_SOURCE )
+                      {
+                       sour -= E_SINK_SINK[j] * phi_i;
+                      }
+                    sour *= dA * etm_sour[ipore];
+
+                    // Assemble full Jacobian
+                    lec->J[peqn][pvar][i][j] += sour;
+
+                   } // End of loop over DOF (j)
+
+               } // End of POR_SINK_MASS sensitivities
+
+            } // End of loop over DOF (i)
+
+        } // End of Jacobian assembly of R_SHELL_SAT_1
+
+    } // End of loop over porous shell layers
+
+  // Finalize and exit
+  fv->wt = wt_old;
+  safe_free((void *) n_dof);
+  return(status);
+
+} // End of assemble_porous_shell_saturation
+
 
 /* End of file mm_fill_shell.c */
 
@@ -12483,7 +13017,7 @@ shell_lubr_solid_struct_bc(double func[DIM],
 {
   int  j, jvar, p, var;
   int *n_dof = NULL;
-                                                                                
+
   /* Unpack variables from structures for local convenience. */
 
   /*
@@ -12492,7 +13026,7 @@ shell_lubr_solid_struct_bc(double func[DIM],
   int dof_map[MDE];
   n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
   lubrication_shell_initialize(n_dof, dof_map, id_side, xi, exo, 1);
-                                                                                
+
   /* Assemble the residual equation */
   /* Here, variables from the remote elements are used. */
   if (af->Assemble_Residual)
@@ -12500,9 +13034,9 @@ shell_lubr_solid_struct_bc(double func[DIM],
       for(p=0; p<pd->Num_Dim; p++)
 	{
 	  func[p] -= scale*fv->snormal[p]*fv->lubp;
-	}                    
+	}
     }
-  
+
   /* Assemble the Jacobian terms */
   /* Here, variables from the remote elements are used. */
   if (af->Assemble_Jacobian)
@@ -12528,8 +13062,8 @@ shell_lubr_solid_struct_bc(double func[DIM],
       /*dfunc/dp */
       /* you need to really check this out. We are only on the solid-continuum
        * element and you are taking sensitivities wrt lubp, on the friend
-       * shell element. pd[var] is negative here, so we pull a fast one with 
-       * upd.  
+       * shell element. pd[var] is negative here, so we pull a fast one with
+       * upd.
        */
       var = LUBP;
       if (upd->vp[var] != -1)
@@ -12601,27 +13135,27 @@ assemble_shell_deltah(double time,	/* present time value */
 /***assemble_lubrication_curvature********************************************/
 /*  _______________________________________________________________________  */
 
-/* assemble_lubrication_Curvature -- Calculates the curvature of the level 
- *                                   set field for a lubricaiton field.  
+/* assemble_lubrication_Curvature -- Calculates the curvature of the level
+ *                                   set field for a lubricaiton field.
  *
  * Created:     October 19, 2010 sarober@sandia.gov
  *
  */
 int
 assemble_lubrication_curvature(
-			       double time,              /* present time value */ 
+			       double time,              /* present time value */
 			       double tt,   	         /* parameter to vary time integration  */
 			       double dt,                /* current time step size */
 			       const PG_DATA *pg_data,   /* Element scales */
 			       double xi[DIM],           /* Local stu coordinates */
 			       const Exo_DB *exo)  {     /* Exodus database */
 
-  /* --- Initialization -----------------------------------------------------*/    
-  
+  /* --- Initialization -----------------------------------------------------*/
+
   /* Variable definitions */
-  int eqn = R_SHELL_LUB_CURV;                    
+  int eqn = R_SHELL_LUB_CURV;
   int peqn, var, pvar;
-  int status = 0;                                
+  int status = 0;
   int i, j, k, a, jj, b;
   dbl phi_i, grad_phi_i[DIM], grad_II_phi_i[DIM], d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
   dbl phi_j, grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
@@ -12722,9 +13256,9 @@ assemble_lubrication_curvature(
     }
 
   }
-    
+
   /* Prepare weighting for artificial diffusion term */
-  const dbl *hsquared = pg_data->hsquared;  
+  const dbl *hsquared = pg_data->hsquared;
 
   /* --- Residual assembly --------------------------------------------------*/
   if (af->Assemble_Residual) {
@@ -12733,7 +13267,7 @@ assemble_lubrication_curvature(
 
     /* Loop over DOFs (i) */
     for ( i=0; i<ei->dof[eqn]; i++) {
-      
+
       /* Prepare basis funcitons (i) */
       ShellBF( eqn, i, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
 
@@ -12776,7 +13310,7 @@ assemble_lubrication_curvature(
 
     /* Loop over DOFs (i) */
     for ( i=0; i<ei->dof[eqn]; i++) {
-      
+
       /* Prepare basis funcitons (i) */
       ShellBF( eqn, i, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
 
@@ -12788,10 +13322,9 @@ assemble_lubrication_curvature(
 
 	/* Loop over DOFs (j) */
 	for ( j = 0; j < ei->dof[var]; j++ ) {
-      
+
 	  /* Prepare basis funcitons (j) */
-	  ShellBF( var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  	  
+	  ShellBF( var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
 	  /* Assemble mass term */
 	  mass = 0.0;
 	  if ( T_MASS ) {
@@ -12799,7 +13332,7 @@ assemble_lubrication_curvature(
 	    if ( i == j ) mass += phi_i;
 	  }
 	  mass *= det_J * wt * h3 * pd->etm[eqn][(LOG2_MASS)];
-      
+
 	  /* Assemble diffusion terms */
 	  diff = 0.0;
 	  if ( T_DIFFUSION ) {
@@ -12808,7 +13341,7 @@ assemble_lubrication_curvature(
 	    }
 	  }
 	  diff *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
-	  
+
 	  /* Assemble jacobian */
 	  lec->J[peqn][pvar][i][j] += mass + diff;
 
@@ -12823,19 +13356,19 @@ assemble_lubrication_curvature(
 			   mp->FSIModel == FSI_MESH_UNDEF
 			   )) {
 	pvar = upd->vp[var];
-	
+
 	/*** Loop over dimensions of mesh displacement ***/
 	for ( b = 0; b < DIM; b++) {
 	  var = MESH_DISPLACEMENT1 + b;
 	  pvar = upd->vp[var];
-	  
+
 	  /* Loop over DOFs (j) */
 	  for ( j = 0; j < ei->dof[var]; j++ ) {
 	    jj = dof_map[j];
-	    
+
 	    /* Prepare basis funcitons (j) */
 	    ShellBF( var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	    
+
 	    /* Assemble mass term */
 	    mass = 0.0;
 	    if ( T_MASS ) {
@@ -12853,7 +13386,7 @@ assemble_lubrication_curvature(
 	      }
 	    }
 	    diff *= wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
-	    
+
 	    /* Assemble divergence terms */
 	    div = 0.0;
 	    if ( T_DIVERGENCE ) {
@@ -12864,23 +13397,23 @@ assemble_lubrication_curvature(
 	      }
 	    }
 	    div *= wt * h3 * pd->etm[eqn][(LOG2_DIVERGENCE)];
-	    
+
 	    /* Assemble jacobian */
 	    lec->J[peqn][pvar][i][jj] += mass + diff + div;
-	    
+
 	  } // End of loop over DOFs (j)
 	} // End of loop over mesh dimensions
       } // End of DMX assembly
-      
-      
+
+
       /*** FILL ***/
       var = FILL;
       if ( pd->v[var] ) {
 	pvar = upd->vp[var];
-	
+
 	/* Loop over DOFs (j) */
 	for ( j = 0; j < ei->dof[var]; j++ ) {
-	  
+
 	  /* Assemble divergence terms */
 	  div = 0.0;
 	  if ( T_DIVERGENCE ) {
@@ -12889,7 +13422,7 @@ assemble_lubrication_curvature(
 	    }
 	  }
 	  div *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIVERGENCE)];
-	  
+
 	  /* Assemble jacobian */
 	  lec->J[peqn][pvar][i][j] += div;
 
@@ -12898,7 +13431,7 @@ assemble_lubrication_curvature(
 
     } // End of loop over DOFs (i)
   } // End of jacobian assembly
-  
+
   /* Clean up */
   fv->wt = wt_old;
   safe_free((void *) n_dof);
@@ -12918,19 +13451,19 @@ assemble_lubrication_curvature(
  */
 int
 assemble_lubrication_curvature_2(
-				 double time,              /* present time value */ 
+				 double time,              /* present time value */
 				 double tt,   	         /* parameter to vary time integration  */
 				 double dt,                /* current time step size */
 				 const PG_DATA *pg_data,   /* Element scales */
 				 double xi[DIM],           /* Local stu coordinates */
 				 const Exo_DB *exo)  {     /* Exodus database */
 
-  /* --- Initialization -----------------------------------------------------*/    
-  
+  /* --- Initialization -----------------------------------------------------*/
+
   /* Variable definitions */
-  int eqn = R_SHELL_LUB_CURV_2;                    
+  int eqn = R_SHELL_LUB_CURV_2;
   int peqn, var, pvar;
-  int status = 0;                                
+  int status = 0;
   int i, j, k, a, jj, b;
   dbl phi_i, grad_phi_i[DIM], grad_II_phi_i[DIM], d_grad_II_phi_i_dmesh[DIM][DIM][MDE];
   dbl phi_j, grad_phi_j[DIM], grad_II_phi_j[DIM], d_grad_II_phi_j_dmesh[DIM][DIM][MDE];
@@ -12959,7 +13492,7 @@ assemble_lubrication_curvature_2(
   /* Load level set fields */
 
   ls_old = ls;
-  if(pfd != NULL) ls = pfd->ls[0];   
+  if(pfd != NULL) ls = pfd->ls[0];
   load_lsi( ls->Length_Scale );
   load_lsi_derivs();
   ls = ls_old;
@@ -13037,9 +13570,9 @@ assemble_lubrication_curvature_2(
     }
 
   }
-    
+
   /* Prepare weighting for artificial diffusion term */
-  const dbl *hsquared = pg_data->hsquared;  
+  const dbl *hsquared = pg_data->hsquared;
 
   /* --- Residual assembly --------------------------------------------------*/
   if (af->Assemble_Residual) {
@@ -13048,7 +13581,7 @@ assemble_lubrication_curvature_2(
 
     /* Loop over DOFs (i) */
     for ( i=0; i<ei->dof[eqn]; i++) {
-      
+
       /* Prepare basis funcitons (i) */
       ShellBF( eqn, i, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
 
@@ -13091,7 +13624,7 @@ assemble_lubrication_curvature_2(
 
     /* Loop over DOFs (i) */
     for ( i=0; i<ei->dof[eqn]; i++) {
-      
+
       /* Prepare basis funcitons (i) */
       ShellBF( eqn, i, &phi_i, grad_phi_i, grad_II_phi_i, d_grad_II_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
 
@@ -13103,10 +13636,10 @@ assemble_lubrication_curvature_2(
 
 	/* Loop over DOFs (j) */
 	for ( j = 0; j < ei->dof[var]; j++ ) {
-      
+
 	  /* Prepare basis funcitons (j) */
 	  ShellBF( var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	  	  
+
 	  /* Assemble mass term */
 	  mass = 0.0;
 	  if ( T_MASS ) {
@@ -13114,7 +13647,7 @@ assemble_lubrication_curvature_2(
 	    if ( i == j ) mass += phi_i;
 	  }
 	  mass *= det_J * wt * h3 * pd->etm[eqn][(LOG2_MASS)];
-      
+
 	  /* Assemble diffusion terms */
 	  diff = 0.0;
 	  if ( T_DIFFUSION ) {
@@ -13123,7 +13656,7 @@ assemble_lubrication_curvature_2(
 	    }
 	  }
 	  diff *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
-	  
+
 	  /* Assemble jacobian */
 	  lec->J[peqn][pvar][i][j] += mass + diff;
 
@@ -13138,19 +13671,19 @@ assemble_lubrication_curvature_2(
 			   mp->FSIModel == FSI_MESH_UNDEF
 			   )) {
 	pvar = upd->vp[var];
-	
+
 	/*** Loop over dimensions of mesh displacement ***/
 	for ( b = 0; b < DIM; b++) {
 	  var = MESH_DISPLACEMENT1 + b;
 	  pvar = upd->vp[var];
-	  
+
 	  /* Loop over DOFs (j) */
 	  for ( j = 0; j < ei->dof[var]; j++ ) {
 	    jj = dof_map[j];
-	    
+
 	    /* Prepare basis funcitons (j) */
 	    ShellBF( var, j, &phi_j, grad_phi_j, grad_II_phi_j, d_grad_II_phi_j_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map );
-	    
+
 	    /* Assemble mass term */
 	    mass = 0.0;
 	    if ( T_MASS ) {
@@ -13168,7 +13701,7 @@ assemble_lubrication_curvature_2(
 	      }
 	    }
 	    diff *= wt * h3 * pd->etm[eqn][(LOG2_DIFFUSION)];
-	    
+
 	    /* Assemble divergence terms */
 	    div = 0.0;
 	    if ( T_DIVERGENCE ) {
@@ -13179,23 +13712,23 @@ assemble_lubrication_curvature_2(
 	      }
 	    }
 	    div *= wt * h3 * pd->etm[eqn][(LOG2_DIVERGENCE)];
-	    
+
 	    /* Assemble jacobian */
 	    lec->J[peqn][pvar][i][jj] += mass + diff + div;
-	    
+
 	  } // End of loop over DOFs (j)
 	} // End of loop over mesh dimensions
       } // End of DMX assembly
-      
-      
+
+
       /*** PHASE1 ***/
       var = PHASE1;
       if ( pd->v[var] ) {
 	pvar = upd->vp[var];
-	
+
 	/* Loop over DOFs (j) */
 	for ( j = 0; j < ei->dof[var]; j++ ) {
-	  
+
 	  /* Assemble divergence terms */
 	  div = 0.0;
 	  if ( T_DIVERGENCE ) {
@@ -13204,7 +13737,7 @@ assemble_lubrication_curvature_2(
 	    }
 	  }
 	  div *= det_J * wt * h3 * pd->etm[eqn][(LOG2_DIVERGENCE)];
-	  
+
 	  /* Assemble jacobian */
 	  lec->J[peqn][pvar][i][j] += div;
 
@@ -13213,7 +13746,7 @@ assemble_lubrication_curvature_2(
 
     } // End of loop over DOFs (i)
   } // End of jacobian assembly
-  
+
   /* Clean up */
   fv->wt = wt_old;
   safe_free((void *) n_dof);

@@ -1871,6 +1871,22 @@ load_elem_dofptr(const int ielem,
   if (upd->ep[eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->sh_p_open_2, esp_old->sh_p_open_2, esp_dot->sh_p_open_2);
   }
+
+  eqn = R_SHELL_SAT_1;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->sh_sat_1, esp_old->sh_sat_1, esp_dot->sh_sat_1);
+  }
+
+  eqn = R_SHELL_SAT_2;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->sh_sat_2, esp_old->sh_sat_2, esp_dot->sh_sat_2);
+  }
+
+  eqn = R_SHELL_SAT_3;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->sh_sat_3, esp_old->sh_sat_3, esp_dot->sh_sat_3);
+  }
+
   eqn = R_SHELL_ENERGY;
   if (upd->ep[eqn] >= 0) {
     load_varType_Interpolation_ptrs(eqn, esp->sh_t, esp_old->sh_t, esp_dot->sh_t);

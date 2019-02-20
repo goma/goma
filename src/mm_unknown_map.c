@@ -2869,6 +2869,8 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = SHELL_PRESS_OPEN_2;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = POR_SINK_MASS;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           break;
 
 	case R_SHELL_SAT_OPEN_2:
@@ -2880,6 +2882,35 @@ set_interaction_masks(Exo_DB *exo)
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = SHELL_PRESS_OPEN_2;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+
+	case R_SHELL_SAT_1:
+          v = SHELL_SAT_1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_SAT_2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_SAT_3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = POR_SINK_MASS;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+
+	case R_SHELL_SAT_2:
+          v = SHELL_SAT_1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_SAT_2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_SAT_3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+
+	case R_SHELL_SAT_3:
+          v = SHELL_SAT_1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_SAT_2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_SAT_3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           break;
 
 	case R_SHELL_ENERGY:
@@ -2991,6 +3022,10 @@ set_interaction_masks(Exo_DB *exo)
           v = POR_LIQ_PRES;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = POR_GAS_PRES;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v =SHELL_PRESS_OPEN;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v =SHELL_SAT_1;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
 	  break;

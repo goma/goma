@@ -187,6 +187,10 @@ int SAT_QP_SWITCH = -1; 	/* Value of sat. function at hysteretic
 				 * swtch point */
 int CAP_PRESS_SWITCH = -1; 	/* Value of cap. press function at hysteretic
 				 * swtch point */
+int NUM_CURVE_SWITCH = -1;      /* Number of hysteretic curve switch */
+int SAT_HYST_MIN = -1; 	        /* Minimum saturation value for scanning imbibition curve */
+int SAT_HYST_MAX = -1; 	        /* Maximum saturation value for scanning draining curve */
+
 int EVP_DEF_GRAD_TENSOR = -1;
 int EXTERNAL_POST = -1;		/* external field variables read from other
 				 * files */
@@ -262,6 +266,8 @@ int LUB_VELO_FIELD_2 = -1;
 int DISJ_PRESS = -1;
 int SH_SAT_OPEN = -1;
 int SH_SAT_OPEN_2 = -1;
+int SH_CAP_PRES = -1;
+int SH_PORE_FLUX = -1;
 int SH_STRESS_TENSOR = -1;
 int SH_TANG = -1;
 int PP_LAME_MU = -1;
@@ -2756,6 +2762,77 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[SH_SAT_OPEN_2] = 1.0;
   } /* end of SH_SAT_OPEN_2 */
 
+  if ( (SH_CAP_PRES != -1) && pd->e[R_SHELL_SAT_1] ) {
+
+    double shell_cap_pressure_nodal[MDE] = {0.0};
+    double shell_cap_pressure = 0.0;
+
+    for (j = 0; j < ei->dof[SHELL_SAT_1]; j++)
+       {
+        shell_cap_pressure_nodal[j] = load_cap_pres(0, j, -1, *esp->sh_sat_1[j]);
+        shell_cap_pressure += shell_cap_pressure_nodal[j] * bf[SHELL_SAT_1]->phi[j];
+       }
+
+    /* Post capillary pressure */
+    local_post[SH_CAP_PRES] = shell_cap_pressure;
+    local_lumped[SH_CAP_PRES] = 1.0;
+
+    if (pd->e[R_SHELL_SAT_2])
+     {
+      shell_cap_pressure = 0.0;
+      for (j = 0; j < ei->dof[SHELL_SAT_2]; j++)
+         {
+          shell_cap_pressure_nodal[j] = load_cap_pres(1, j, -1, *esp->sh_sat_2[j]);
+          shell_cap_pressure += shell_cap_pressure_nodal[j] * bf[SHELL_SAT_2]->phi[j];
+         }
+
+      /* Post capillary pressure */
+      local_post[SH_CAP_PRES+1] = shell_cap_pressure;
+      local_lumped[SH_CAP_PRES+1] = 1.0;
+     }
+
+    if (pd->e[R_SHELL_SAT_3])
+     {
+      shell_cap_pressure = 0.0;
+      for (j = 0; j < ei->dof[SHELL_SAT_3]; j++)
+         {
+          shell_cap_pressure_nodal[j] = load_cap_pres(2, j, -1, *esp->sh_sat_3[j]);
+          shell_cap_pressure += shell_cap_pressure_nodal[j] * bf[SHELL_SAT_3]->phi[j];
+         }
+
+      /* Post capillary pressure */
+      local_post[SH_CAP_PRES+2] = shell_cap_pressure;
+      local_lumped[SH_CAP_PRES+2] = 1.0;
+     }
+
+  } /* end of SH_CAP_PRES */
+
+  if ( (SH_PORE_FLUX != -1) && pd->e[R_SHELL_SAT_1] && pd->e[R_SHELL_SAT_2] ) {
+
+    double j_1_2_nodal[MDE] = {0.0}, j_2_3_nodal[MDE] = {0.0};
+    double j_1_2 = 0.0, j_2_3 = 0.0;
+
+    /* Calculate the fluxes and their sensitivities */
+    porous_shell_open_source_model(j_1_2_nodal, j_2_3_nodal, NULL, NULL);
+
+    for (j = 0; j < ei->dof[SHELL_SAT_3]; j++)
+       {
+        j_1_2 += j_1_2_nodal[j] * bf[SHELL_SAT_1]->phi[j];
+        j_2_3 += j_2_3_nodal[j] * bf[SHELL_SAT_3]->phi[j];
+       }
+
+    /* Post flux between porous shell layers 1 and 2 */
+    local_post[SH_PORE_FLUX]   = j_1_2;
+    local_lumped[SH_PORE_FLUX] = 1.0;
+
+    if (pd->e[R_SHELL_SAT_3])
+     {
+      /* Post flux between porous shell layers 2 and 3 */
+      local_post[SH_PORE_FLUX+1]   = j_2_3;
+      local_lumped[SH_PORE_FLUX+1] = 1.0;
+     }
+  } /* end of SH_PORE_FLUX */
+
   if (REL_LIQ_PERM != -1 &&
       (mp->PorousMediaType == POROUS_UNSATURATED ||
        mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
@@ -4976,7 +5053,7 @@ post_process_elem(double x[], /* soln vector */
      SAT_QP_SWITCH != -1)
     {
       ev_indx_tmp = ev_indx;
-      if(Num_Var_In_Type[R_POR_LIQ_PRES] || 
+      if(Num_Var_In_Type[R_POR_LIQ_PRES] ||
 	 Num_Var_In_Type[R_SHELL_SAT_OPEN] ||
 	 Num_Var_In_Type[R_SHELL_SAT_OPEN_2])
 	{
@@ -4991,38 +5068,38 @@ post_process_elem(double x[], /* soln vector */
 		mp->PorousMediaType == POROUS_TWO_PHASE) &&
 	       mp->SaturationModel == TANH_HYST)
 	      {
-		for ( ip = 0; ip < ip_total; ip++) 
+		for ( ip = 0; ip < ip_total; ip++)
 		  {
 		    for(ielem=0; ielem < eb_ptr->Num_Elems_In_Block; ielem++)
 		      {
-			gvec_elem[eb_indx][ev_indx][ielem] += 
+			gvec_elem[eb_indx][ev_indx][ielem] +=
 			  eb_ptr->ElemStorage[ielem].sat_curve_type[ip];
 		      }
 		    ev_indx++;
 		  }
-		for ( ip = 0; ip < ip_total; ip++) 
+		for ( ip = 0; ip < ip_total; ip++)
 		  {
 		    for(ielem=0; ielem < eb_ptr->Num_Elems_In_Block; ielem++)
 		      {
-			gvec_elem[eb_indx][ev_indx][ielem] += 
+			gvec_elem[eb_indx][ev_indx][ielem] +=
 			  eb_ptr->ElemStorage[ielem].Sat_QP_tn[ip];
 		      }
 		    ev_indx++;
 		  }
-		for ( ip = 0; ip < ip_total; ip++) 
+		for ( ip = 0; ip < ip_total; ip++)
 		  {
 		    for(ielem=0; ielem < eb_ptr->Num_Elems_In_Block; ielem++)
 		      {
-			gvec_elem[eb_indx][ev_indx][ielem] += 
+			gvec_elem[eb_indx][ev_indx][ielem] +=
 			  eb_ptr->ElemStorage[ielem].p_cap_QP[ip];
 		      }
 		    ev_indx++;
 		  }
 	      }
-	  }
+	  }/*End of loop over element block */
 	}
     }
-      
+
   for (i = 0; i < Num_Elem_Post_Proc_Var; i++) {
     /*
      * When we're parallel, this will write out results for boundary
@@ -7201,6 +7278,8 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Disjoining Pressure", &DISJ_PRESS);
   iread = look_for_post_proc(ifp, "Porous Shell Open Saturation", &SH_SAT_OPEN);
   iread = look_for_post_proc(ifp, "Porous Shell Open Saturation 2", &SH_SAT_OPEN_2);
+  iread = look_for_post_proc(ifp, "Porous Shell Capillary Pressure", &SH_CAP_PRES);
+  iread = look_for_post_proc(ifp, "Porous Shell Inter Layer Flux", &SH_PORE_FLUX);
   iread = look_for_post_proc(ifp, "Shell Stress Tensor", &SH_STRESS_TENSOR);
   iread = look_for_post_proc(ifp, "Shell Tangents", &SH_TANG);
   iread = look_for_post_proc(ifp, "Lame MU", &PP_LAME_MU);
@@ -10999,6 +11078,68 @@ index_post, index_post_export);
       SH_SAT_OPEN_2 = -1;
     }
 
+
+  if (SH_CAP_PRES != -1  && Num_Var_In_Type[R_SHELL_SAT_1])
+    {
+      if (SH_CAP_PRES == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      SH_CAP_PRES = index_post;
+      sprintf(nm, "SH_CAP_PRES_1");
+      sprintf(ds, "Porous Shell Capillary Pressure Layer 1");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+      if (Num_Var_In_Type[R_SHELL_SAT_2])
+        {
+         sprintf(nm, "SH_CAP_PRES_2");
+         sprintf(ds, "Porous Shell Capillary Pressure Layer 2");
+         set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+         index++;
+         index_post++;
+        }
+      if (Num_Var_In_Type[R_SHELL_SAT_3])
+        {
+         sprintf(nm, "SH_CAP_PRES_3");
+         sprintf(ds, "Porous Shell Capillary Pressure Layer 3");
+         set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+         index++;
+         index_post++;
+        }
+    }
+  else
+    {
+      SH_CAP_PRES = -1;
+    }
+
+  if (SH_PORE_FLUX != -1  && Num_Var_In_Type[R_SHELL_SAT_1] && Num_Var_In_Type[R_SHELL_SAT_2])
+    {
+      if (SH_PORE_FLUX == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      SH_PORE_FLUX = index_post;
+      sprintf(nm, "SH_PORE_FLUX_1_2");
+      sprintf(ds, "Porous Shell Flux Between Layers 1 and 2");
+      set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+      index++;
+      index_post++;
+
+      if (Num_Var_In_Type[R_SHELL_SAT_3])
+        {
+         sprintf(nm, "SH_PORE_FLUX_2_3");
+         sprintf(ds, "Porous Shell Flux Between Layers 2 and 3");
+         set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+         index++;
+         index_post++;
+        }
+    }
+  else
+    {
+      SH_PORE_FLUX = -1;
+    }
+
   if (SH_STRESS_TENSOR != -1  && (Num_Var_In_Type[R_SHELL_NORMAL1] && Num_Var_In_Type[R_SHELL_NORMAL2]
                               &&  Num_Var_In_Type[R_SHELL_NORMAL3] && Num_Var_In_Type[R_MESH1]) )
     {
@@ -11672,10 +11813,10 @@ load_elem_tkn (struct Results_Description *rd,
 
  /* Now, if necessary, cycle through and look for Hysteretic saturation models
   * which require more element variables (viz. corresponding to the total number
-  * of Gauss points) for restart capability 
+  * of Gauss points) for restart capability
   */
 
-  /* For now assume that if one block contains the element variablies 
+  /* For now assume that if one block contains the element variables
    * for saturation hysteresis, then they all do.  This is inefficient but
    * to fix you need to make tev_post a element_block dependent array.
    */
@@ -11692,7 +11833,7 @@ load_elem_tkn (struct Results_Description *rd,
 	mp->PorousMediaType == POROUS_SHELL_UNSATURATED ||
 	mp->PorousMediaType == POROUS_TWO_PHASE) &&
         mp->SaturationModel == TANH_HYST &&
-       !ipost)
+        !ipost)
       {
 	ipost = TRUE;
 
@@ -11725,7 +11866,7 @@ load_elem_tkn (struct Results_Description *rd,
 	    index++;
 	    index_post++;
 	}
-	
+
       }
   }
 
@@ -11733,7 +11874,7 @@ load_elem_tkn (struct Results_Description *rd,
   rd->nev = index;
   *tev_post = index - tev;
   Num_Elem_Post_Proc_Var = index_post;
-  
+
   if ((TIME_DERIVATIVES != -1 && pd->TimeIntegration == TRANSIENT) 
       && index_post != (*tev_post - tev))
     WH(-1, "Bad elem post process variable count ");

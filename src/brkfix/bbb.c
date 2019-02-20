@@ -543,7 +543,13 @@ build_big_bones(Exo_DB *p,	/* EXODUS info from representative polylith */
 					m->num_elem_blocks * si);
       for ( i=0; i<(m->num_elem_vars*m->num_elem_blocks); i++)
 	{
-	  m->elem_var_tab[i] = d->elem_var_tab_global[i];
+         /*
+          *As of now DPI struct does not contain
+          *elem_var_tab_global for some reason.
+          *Comment and turn on all elem_var_tab in monolith file for now
+          */
+//        m->elem_var_tab[i] = d->elem_var_tab_global[i];
+          m->elem_var_tab[i] = 1; // The easy hack
 	}
     }
 

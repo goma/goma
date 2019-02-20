@@ -419,6 +419,10 @@ SINGLE_PHASE, DVI_SINGLE_PHASE_DB},
 
   { "SHELL_OPEN_PRESS_2", "SHELL_OPEN_PRESS_2_BC", DIRICHLET, SHELL_OPEN_PRESS_2_BC, R_SHELL_SAT_OPEN_2, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB},
 
+  { "SHELL_SAT_1", "SHELL_SAT_1_BC", DIRICHLET, SHELL_SAT_1_BC, R_SHELL_SAT_1, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB},
+  { "SHELL_SAT_2", "SHELL_SAT_2_BC", DIRICHLET, SHELL_SAT_2_BC, R_SHELL_SAT_2, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB},
+  { "SHELL_SAT_3", "SHELL_SAT_3_BC", DIRICHLET, SHELL_SAT_3_BC, R_SHELL_SAT_3, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB},
+
   {  "F", "F_BC", DIRICHLET, F_BC, R_FILL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},SINGLE_PHASE, DVI_SINGLE_PHASE_DB },
   {  "F_DIODE", "F_DIODE_BC", DIRICHLET, F_DIODE_BC, R_FILL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},SINGLE_PHASE, DVI_SINGLE_PHASE_DB },
   {  "H", "H_BC", DIRICHLET, H_BC, R_CURVATURE, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -892,7 +896,7 @@ struct Equation_Names EQ_Name[] = {
     { "R_MASS_SURF", "S",  R_MASS_SURF } ,
     { "R_PRESSURE",  "P",  R_PRESSURE } ,       /* 9 */
 
-    { "R_STRESS11", "S11", R_STRESS11 } ,        
+    { "R_STRESS11", "S11", R_STRESS11 } ,
     { "R_STRESS12", "S12", R_STRESS12 } ,
     { "R_STRESS22", "S22", R_STRESS22 } ,
     { "R_STRESS13", "S13", R_STRESS13 } ,
@@ -904,7 +908,7 @@ struct Equation_Names EQ_Name[] = {
     { "R_SOLID3",   "DMZ_RS", R_SOLID3 } ,
 
     { "R_GRADIENT11", "G11", R_GRADIENT11 } ,   /* 19 */
-    { "R_GRADIENT12", "G12", R_GRADIENT12 } ,      
+    { "R_GRADIENT12", "G12", R_GRADIENT12 } ,
     { "R_GRADIENT21", "G21", R_GRADIENT21 } ,
     { "R_GRADIENT22", "G22", R_GRADIENT22 } ,
     { "R_GRADIENT13", "G13", R_GRADIENT13 } ,
@@ -915,7 +919,7 @@ struct Equation_Names EQ_Name[] = {
 
     { "R_POTENTIAL",  "V",  R_POTENTIAL } ,
     { "R_FILL",       "F",  R_FILL } ,          /* 29 */
-    { "R_SHEAR_RATE", "SH", R_SHEAR_RATE } ,      
+    { "R_SHEAR_RATE", "SH", R_SHEAR_RATE } ,
 
     { "R_PMOMENTUM1", "PVX", R_PMOMENTUM1 } ,
     { "R_PMOMENTUM2", "PVY", R_PMOMENTUM2 } ,
@@ -928,101 +932,101 @@ struct Equation_Names EQ_Name[] = {
     { "R_STRESS23_1", "S23_1", R_STRESS23_1 } ,
     { "R_STRESS33_1", "S33_1", R_STRESS33_1 } , /* 39 */
 
-    { "R_STRESS11_2", "S11_2", R_STRESS11_2 } ,    
+    { "R_STRESS11_2", "S11_2", R_STRESS11_2 } ,
     { "R_STRESS12_2", "S12_2", R_STRESS12_2 } ,
-    { "R_STRESS22_2", "S22_2", R_STRESS22_2 } , 
+    { "R_STRESS22_2", "S22_2", R_STRESS22_2 } ,
     { "R_STRESS13_2", "S13_2", R_STRESS13_2 } ,
     { "R_STRESS23_2", "S23_2", R_STRESS23_2 } ,
-    { "R_STRESS33_2", "S33_2", R_STRESS33_2 } , 
+    { "R_STRESS33_2", "S33_2", R_STRESS33_2 } ,
 
     { "R_STRESS11_3", "S11_3", R_STRESS11_3 } ,
     { "R_STRESS12_3", "S12_3", R_STRESS12_3 } ,
-    { "R_STRESS22_3", "S22_3", R_STRESS22_3 } , 
+    { "R_STRESS22_3", "S22_3", R_STRESS22_3 } ,
     { "R_STRESS13_3", "S13_3", R_STRESS13_3 } , /* 49 */
-    { "R_STRESS23_3", "S23_3", R_STRESS23_3 } ,   
-    { "R_STRESS33_3", "S33_3", R_STRESS33_3 } , 
+    { "R_STRESS23_3", "S23_3", R_STRESS23_3 } ,
+    { "R_STRESS33_3", "S33_3", R_STRESS33_3 } ,
 
     { "R_STRESS11_4", "S11_4", R_STRESS11_4 } ,
     { "R_STRESS12_4", "S12_4", R_STRESS12_4 } ,
-    { "R_STRESS22_4", "S22_4", R_STRESS22_4 } , 
+    { "R_STRESS22_4", "S22_4", R_STRESS22_4 } ,
     { "R_STRESS13_4", "S13_4", R_STRESS13_4 } ,
     { "R_STRESS23_4", "S23_4", R_STRESS23_4 } ,
-    { "R_STRESS33_4", "S33_4", R_STRESS33_4 } , 
+    { "R_STRESS33_4", "S33_4", R_STRESS33_4 } ,
 
     { "R_STRESS11_5", "S11_5", R_STRESS11_5 } ,
     { "R_STRESS12_5", "S12_5", R_STRESS12_5 } , /* 59 */
-    { "R_STRESS22_5", "S22_5", R_STRESS22_5 } ,   
+    { "R_STRESS22_5", "S22_5", R_STRESS22_5 } ,
     { "R_STRESS13_5", "S13_5", R_STRESS13_5 } ,
     { "R_STRESS23_5", "S23_5", R_STRESS23_5 } ,
-    { "R_STRESS33_5", "S33_5", R_STRESS33_5 } , 
+    { "R_STRESS33_5", "S33_5", R_STRESS33_5 } ,
 
     { "R_STRESS11_6", "S11_6", R_STRESS11_6 } ,
     { "R_STRESS12_6", "S12_6", R_STRESS12_6 } ,
-    { "R_STRESS22_6", "S22_6", R_STRESS22_6 } , 
+    { "R_STRESS22_6", "S22_6", R_STRESS22_6 } ,
     { "R_STRESS13_6", "S13_6", R_STRESS13_6 } ,
     { "R_STRESS23_6", "S23_6", R_STRESS23_6 } ,
     { "R_STRESS33_6", "S33_6", R_STRESS33_6 } , /* 69 */
 
-    { "R_STRESS11_7", "S11_7", R_STRESS11_7 } ,  
-    { "R_STRESS12_7", "S12_7", R_STRESS12_7 } ,  
-    { "R_STRESS22_7", "S22_7", R_STRESS22_7 } , 
+    { "R_STRESS11_7", "S11_7", R_STRESS11_7 } ,
+    { "R_STRESS12_7", "S12_7", R_STRESS12_7 } ,
+    { "R_STRESS22_7", "S22_7", R_STRESS22_7 } ,
     { "R_STRESS13_7", "S13_7", R_STRESS13_7 } ,
     { "R_STRESS23_7", "S23_7", R_STRESS23_7 } ,
     { "R_STRESS33_7", "S33_7", R_STRESS33_7 } , /* 75 */
 
-    { "R_Species_0",   "Sp_0",   SPECIES_UNK_0  } ,  
-    { "R_Species_1",   "Sp_1",   SPECIES_UNK_1  } ,  
-    { "R_Species_2",   "Sp_2",   SPECIES_UNK_2  } ,  
+    { "R_Species_0",   "Sp_0",   SPECIES_UNK_0  } ,
+    { "R_Species_1",   "Sp_1",   SPECIES_UNK_1  } ,
+    { "R_Species_2",   "Sp_2",   SPECIES_UNK_2  } ,
     { "R_Species_3",   "Sp_3",   SPECIES_UNK_3  } ,  /* 79 */
-    { "R_Species_4",   "Sp_4",   SPECIES_UNK_4  } ,  
-    { "R_Species_5",   "Sp_5",   SPECIES_UNK_5  } , 
-    { "R_Species_6",   "Sp_6",   SPECIES_UNK_6  } ,  
-    { "R_Species_7",   "Sp_7",   SPECIES_UNK_7  } ,  
-    { "R_Species_8",   "Sp_8",   SPECIES_UNK_8  } ,  
-    { "R_Species_9",   "Sp_9",   SPECIES_UNK_9  } , 
-    { "R_Species_10",  "Sp_10",  SPECIES_UNK_10 } , 
-    { "R_Species_11",  "Sp_11",  SPECIES_UNK_11 } , 
-    { "R_Species_12",  "Sp_12",  SPECIES_UNK_12 } ,  
+    { "R_Species_4",   "Sp_4",   SPECIES_UNK_4  } ,
+    { "R_Species_5",   "Sp_5",   SPECIES_UNK_5  } ,
+    { "R_Species_6",   "Sp_6",   SPECIES_UNK_6  } ,
+    { "R_Species_7",   "Sp_7",   SPECIES_UNK_7  } ,
+    { "R_Species_8",   "Sp_8",   SPECIES_UNK_8  } ,
+    { "R_Species_9",   "Sp_9",   SPECIES_UNK_9  } ,
+    { "R_Species_10",  "Sp_10",  SPECIES_UNK_10 } ,
+    { "R_Species_11",  "Sp_11",  SPECIES_UNK_11 } ,
+    { "R_Species_12",  "Sp_12",  SPECIES_UNK_12 } ,
     { "R_Species_13",  "Sp_13",  SPECIES_UNK_13 } , /* 89 */
-    { "R_Species_14",  "Sp_14",  SPECIES_UNK_14 } ,  
-    { "R_Species_15",  "Sp_15",  SPECIES_UNK_15 } ,  
-    { "R_Species_16",  "Sp_16",  SPECIES_UNK_16 } , 
-    { "R_Species_17",  "Sp_17",  SPECIES_UNK_17 } ,  
-    { "R_Species_18",  "Sp_18",  SPECIES_UNK_18 } ,  
-    { "R_Species_19",  "Sp_19",  SPECIES_UNK_19 } ,  
-    { "R_Species_20",  "Sp_20",  SPECIES_UNK_20 } ,  
-    { "R_Species_21",  "Sp_21",  SPECIES_UNK_21 } ,  
-    { "R_Species_22",  "Sp_22",  SPECIES_UNK_22 } ,  
+    { "R_Species_14",  "Sp_14",  SPECIES_UNK_14 } ,
+    { "R_Species_15",  "Sp_15",  SPECIES_UNK_15 } ,
+    { "R_Species_16",  "Sp_16",  SPECIES_UNK_16 } ,
+    { "R_Species_17",  "Sp_17",  SPECIES_UNK_17 } ,
+    { "R_Species_18",  "Sp_18",  SPECIES_UNK_18 } ,
+    { "R_Species_19",  "Sp_19",  SPECIES_UNK_19 } ,
+    { "R_Species_20",  "Sp_20",  SPECIES_UNK_20 } ,
+    { "R_Species_21",  "Sp_21",  SPECIES_UNK_21 } ,
+    { "R_Species_22",  "Sp_22",  SPECIES_UNK_22 } ,
     { "R_Species_23",  "Sp_23",  SPECIES_UNK_23 } , /* 99 */
-    { "R_Species_24",  "Sp_24",  SPECIES_UNK_24 } ,  
-    { "R_Species_25",  "Sp_25",  SPECIES_UNK_25 } ,  
-    { "R_Species_26",  "Sp_26",  SPECIES_UNK_26 } ,  
-    { "R_Species_27",  "Sp_27",  SPECIES_UNK_27 } ,  
-    { "R_Species_28",  "Sp_28",  SPECIES_UNK_28 } ,  
+    { "R_Species_24",  "Sp_24",  SPECIES_UNK_24 } ,
+    { "R_Species_25",  "Sp_25",  SPECIES_UNK_25 } ,
+    { "R_Species_26",  "Sp_26",  SPECIES_UNK_26 } ,
+    { "R_Species_27",  "Sp_27",  SPECIES_UNK_27 } ,
+    { "R_Species_28",  "Sp_28",  SPECIES_UNK_28 } ,
     { "R_Species_29",  "Sp_29",  SPECIES_UNK_29 } ,  /* 105 */
 
-    { "R_VolFracPh_0",  "VFP_0", VOLF_PHASE_0   } ,  
-    { "R_VolFracPh_1",  "VFP_1", VOLF_PHASE_1   } , 
-    { "R_VolFracPh_2",  "VFP_2", VOLF_PHASE_2   } , 
+    { "R_VolFracPh_0",  "VFP_0", VOLF_PHASE_0   } ,
+    { "R_VolFracPh_1",  "VFP_1", VOLF_PHASE_1   } ,
+    { "R_VolFracPh_2",  "VFP_2", VOLF_PHASE_2   } ,
     { "R_VolFracPh_3",  "VFP_3", VOLF_PHASE_3   } ,  /* 109 */
-    { "R_VolFracPh_4",  "VFP_4", VOLF_PHASE_4   } ,  
-    
-    { "R_POR_LIQ_PRES",   "P_LIQ", POR_LIQ_PRES   } ,  
-    { "R_POR_GAS_PRES",   "P_GAS", POR_GAS_PRES   } ,  
-    { "R_POR_POROSITY",   "P_POR", POR_POROSITY   } ,  
-    { "R_POR_ENERGY",     "P_TEMP", POR_TEMP      } , 
+    { "R_VolFracPh_4",  "VFP_4", VOLF_PHASE_4   } ,
+
+    { "R_POR_LIQ_PRES",   "P_LIQ", POR_LIQ_PRES   } ,
+    { "R_POR_GAS_PRES",   "P_GAS", POR_GAS_PRES   } ,
+    { "R_POR_POROSITY",   "P_POR", POR_POROSITY   } ,
+    { "R_POR_ENERGY",     "P_TEMP", POR_TEMP      } ,
     { "R_POR_SATURATION", "P_SAT", POR_SATURATION } ,
 
     { "R_POR_SINK_MASS", "P_SINK_MASS", POR_SINK_MASS},  /*116 */
 
-    { "R_VORT_DIR1",   "VDX",     R_VORT_DIR1 } ,    
-    { "R_VORT_DIR2",   "VDY",     R_VORT_DIR2 } ,
-    { "R_VORT_DIR3",   "VDZ",     R_VORT_DIR3 } ,
+    { "R_VORT_DIR1",   "VDX",     R_VORT_DIR1 } ,
+    { "R_VORT_DIR2",   "VDX",     R_VORT_DIR1 } ,
+    { "R_VORT_DIR3",   "VDX",     R_VORT_DIR1 } ,
     { "R_VORT_LAMBDA", "VLAMBDA", R_VORT_LAMBDA } ,  /* 120 */
 
-    { "R_CURVATURE", "H",    R_CURVATURE},   
+    { "R_CURVATURE", "H",    R_CURVATURE},
 
-    { "R_LAGR_MULT1",   "LM1", R_LAGR_MULT1 }, 
+    { "R_LAGR_MULT1",   "LM1", R_LAGR_MULT1 },
     { "R_LAGR_MULT2",   "LM2", R_LAGR_MULT2 },
     { "R_LAGR_MULT3",   "LM3", R_LAGR_MULT3 },
 
@@ -1031,30 +1035,30 @@ struct Equation_Names EQ_Name[] = {
     { "R_SURF_CHARGE", "QS", R_SURF_CHARGE} ,
 
     { "R_EXT_VELOCITY", "V_EXT", R_EXT_VELOCITY},
-    
+
     { "R_EFIELD1", "E1", R_EFIELD1},
     { "R_EFIELD2", "E2", R_EFIELD2},
     { "R_EFIELD3", "E3", R_EFIELD3},                /* 130 */
 
-    { "R_ENORM", "ENORM", R_ENORM }, 
+    { "R_ENORM", "ENORM", R_ENORM },
 
-    { "R_NORMAL1", "N1", R_NORMAL1 },  
-    { "R_NORMAL2", "N2", R_NORMAL2 },  
-    { "R_NORMAL3", "N3", R_NORMAL3 },  
+    { "R_NORMAL1", "N1", R_NORMAL1 },
+    { "R_NORMAL2", "N2", R_NORMAL2 },
+    { "R_NORMAL3", "N3", R_NORMAL3 },
 
-    { "R_SHELL_CURVATURE", "K", R_SHELL_CURVATURE}, 
-    { "R_SHELL_CURVATURE2", "K2", R_SHELL_CURVATURE2}, 
+    { "R_SHELL_CURVATURE", "K", R_SHELL_CURVATURE},
+    { "R_SHELL_CURVATURE2", "K2", R_SHELL_CURVATURE2},
     { "R_SHELL_TENSION", "TENS", R_SHELL_TENSION},
-    { "R_SHELL_X", "SH_X", R_SHELL_X},                
+    { "R_SHELL_X", "SH_X", R_SHELL_X},
     { "R_SHELL_Y", "SH_Y", R_SHELL_Y},
-    { "R_SHELL_USER", "SH_U", R_SHELL_USER},        
-    { "R_PHASE1", "F1", R_PHASE1},                  /* 141 */  
-    { "R_PHASE2", "F2", R_PHASE2},  
-    { "R_PHASE3", "F3", R_PHASE3},  
-    { "R_PHASE4", "F4", R_PHASE4},  
-    { "R_PHASE5", "F5", R_PHASE5}, 
+    { "R_SHELL_USER", "SH_U", R_SHELL_USER},
+    { "R_PHASE1", "F1", R_PHASE1},                  /* 141 */
+    { "R_PHASE2", "F2", R_PHASE2},
+    { "R_PHASE3", "F3", R_PHASE3},
+    { "R_PHASE4", "F4", R_PHASE4},
+    { "R_PHASE5", "F5", R_PHASE5},
     { "R_SHELL_ANGLE1", "SH_ANG1", R_SHELL_ANGLE1},
-    { "R_SHELL_ANGLE2", "SH_ANG2", R_SHELL_ANGLE2},  
+    { "R_SHELL_ANGLE2", "SH_ANG2", R_SHELL_ANGLE2},
 
     { "R_SHELL_SURF_DIV_V", "SH_DIV_V", R_SHELL_SURF_DIV_V},
     { "R_SHELL_SURF_CURV", "SH_CURV", R_SHELL_SURF_CURV},
@@ -1067,7 +1071,7 @@ struct Equation_Names EQ_Name[] = {
     { "R_SHELL_DIFF_FLUX", "SH_J", R_SHELL_DIFF_FLUX},   /* 156 */
     { "R_SHELL_DIFF_CURVATURE", "SH_KD", R_SHELL_DIFF_CURVATURE},
     { "R_SHELL_NORMAL1", "SH_NX", R_SHELL_NORMAL1},
-    { "R_SHELL_NORMAL2", "SH_NY", R_SHELL_NORMAL2},      
+    { "R_SHELL_NORMAL2", "SH_NY", R_SHELL_NORMAL2},
     { "R_SHELL_NORMAL3", "SH_NZ", R_SHELL_NORMAL3},      /* 160 */
     { "R_ACOUS_REYN_STRESS", "ACOUS_REYN_STRESS", R_ACOUS_REYN_STRESS},
     { "R_SHELL_BDYVELO", "SHELL_BDYVELO", R_SHELL_BDYVELO},
@@ -1075,7 +1079,7 @@ struct Equation_Names EQ_Name[] = {
     { "R_LUBP", "LUBP", R_LUBP},
     { "R_SHELL_FILMP", "SHELL_FILMP", R_SHELL_FILMP},
     { "R_SHELL_FILMH", "SHELL_FILMH", R_SHELL_FILMH},
-    { "R_SHELL_PARTC", "SHELL_PARTC", R_SHELL_PARTC},   
+    { "R_SHELL_PARTC", "SHELL_PARTC", R_SHELL_PARTC},
     { "R_SHELL_SAT_CLOSED", "SHELL_SAT_CLOSED", R_SHELL_SAT_CLOSED},   /*  168 - SAR  */
     { "R_SHELL_SAT_OPEN", "SHELL_PRESS_OPEN", R_SHELL_SAT_OPEN},   /*  169 - SAR  */
     { "R_SHELL_ENERGY", "SH_T", R_SHELL_ENERGY},   /*  170 - PRS  */
@@ -1096,6 +1100,9 @@ struct Equation_Names EQ_Name[] = {
     { "R_TFMP_MASS", "TFMP_MASS", R_TFMP_MASS},     /*   185  */
     { "R_TFMP_BOUND", "TFMP_BOUND", R_TFMP_BOUND},     /*   186  */
     { "R_RESTIME", "RESTIME", R_RESTIME},     /*   187  */
+    { "R_SHELL_SAT_1", "SHELL_SAT_1", R_SHELL_SAT_1},     /*   188  */
+    { "R_SHELL_SAT_2", "SHELL_SAT_2", R_SHELL_SAT_2},     /*   189  */
+    { "R_SHELL_SAT_3", "SHELL_SAT_3", R_SHELL_SAT_3},     /*   190  */
 
     { "R_EM_E1_REAL", "EM_E1_REAL", R_EM_E1_REAL},
     { "R_EM_E1_IMAG", "EM_E1_IMAG", R_EM_E1_IMAG},
@@ -1115,7 +1122,6 @@ struct Equation_Names EQ_Name[] = {
      *          There must be at least as many of these as there
      *          are species in the problem
      */
-
     { "R_Y0", "Y0", V_LAST + 0} ,                    /* 200 */
     { "R_Y1", "Y1", V_LAST + 1} ,
     { "R_Y2", "Y2", V_LAST + 2} ,
@@ -1125,33 +1131,32 @@ struct Equation_Names EQ_Name[] = {
     { "R_Y6", "Y6", V_LAST + 6} ,
     { "R_Y7", "Y7", V_LAST + 7} ,
     { "R_Y8", "Y8", V_LAST + 8} ,
-    { "R_Y9", "Y9", V_LAST + 9} ,                    
-    { "R_Y10", "Y10", V_LAST + 10} ,                 /* 210 */
-    { "R_Y11", "Y11", V_LAST + 11} ,                   
-    { "R_Y12", "Y12", V_LAST + 12} ,                  
-    { "R_Y13", "Y13", V_LAST + 13} ,                  
-    { "R_Y14", "Y14", V_LAST + 14} ,                 
-    { "R_Y15", "Y15", V_LAST + 15} ,                  
-    { "R_Y16", "Y16", V_LAST + 16} ,                  
-    { "R_Y17", "Y17", V_LAST + 17} ,                 
-    { "R_Y18", "Y18", V_LAST + 18} ,                   
-    { "R_Y19", "Y19", V_LAST + 19} ,                 
-    { "R_Y20", "Y20", V_LAST + 20} ,                 /* 220 */  
+    { "R_Y9", "Y9", V_LAST + 9} ,
+    { "R_Y10", "Y10", V_LAST + 10} ,                 /* 201 */
+    { "R_Y11", "Y11", V_LAST + 11} ,
+    { "R_Y12", "Y12", V_LAST + 12} ,
+    { "R_Y13", "Y13", V_LAST + 13} ,
+    { "R_Y14", "Y14", V_LAST + 14} ,
+    { "R_Y15", "Y15", V_LAST + 15} ,
+    { "R_Y16", "Y16", V_LAST + 16} ,
+    { "R_Y17", "Y17", V_LAST + 17} ,
+    { "R_Y18", "Y18", V_LAST + 18} ,
+    { "R_Y19", "Y19", V_LAST + 19} ,
+    { "R_Y20", "Y20", V_LAST + 20} ,                 /* 211 */
     { "R_Y21", "Y21", V_LAST + 21} ,
     { "R_Y22", "Y22", V_LAST + 22} ,
     { "R_Y23", "Y23", V_LAST + 23} ,
     { "R_Y24", "Y24", V_LAST + 24} ,
     { "R_Y25", "Y25", V_LAST + 25} ,
     { "R_Y26", "Y26", V_LAST + 26} ,
-    { "R_Y27", "Y27", V_LAST + 27} ,   
+    { "R_Y27", "Y27", V_LAST + 27} ,
     { "R_Y28", "Y28", V_LAST + 28} ,
     { "R_Y29", "Y29", V_LAST + 29} ,                 /* 229 */
 
     /*
      * Add extra equation names for vector fields that can be rotated
      */
-    
-    { "R_MOM_NORMAL",  "DN",  R_MOM_NORMAL } ,       /* 230 */
+    { "R_MOM_NORMAL", "DN", R_MOM_NORMAL } , /* 230 */
     { "R_MOM_TANG1",   "DT1", R_MOM_TANG1 } ,
     { "R_MOM_TANG2",   "DT2", R_MOM_TANG2 } ,
     { "R_MESH_NORMAL", "VN",  R_MESH_NORMAL } ,
@@ -1161,13 +1166,13 @@ struct Equation_Names EQ_Name[] = {
     { "R_SOLID_TANG1",  "ST1", R_SOLID_TANG1 } ,
     { "R_SOLID_TANG2",  "ST2", R_SOLID_TANG2 }         /* 238 */
 };
-int Num_EQ_Names = sizeof(EQ_Name) / sizeof(struct Equation_Names);  
+int Num_EQ_Names = sizeof(EQ_Name) / sizeof(struct Equation_Names);
 
-/* structure to control input of variable names 
+/* structure to control input of variable names
  * using values in rf_fem_const.h */
 
 struct Equation_Names Var_Name[] =  {
-    { "VELOCITY1",          "VX",  VELOCITY1 } ,	/* 0 */   
+    { "VELOCITY1",          "VX",  VELOCITY1 } ,	/* 0 */
     { "VELOCITY2",          "VY",  VELOCITY2 } ,
     { "VELOCITY3",          "VZ",  VELOCITY3 } ,
     { "TEMPERATURE",        "T",  TEMPERATURE } ,
@@ -1188,7 +1193,7 @@ struct Equation_Names Var_Name[] =  {
     { "SOLID_DISPLACEMENT1", "DMX_RS", SOLID_DISPLACEMENT1 } ,
     { "SOLID_DISPLACEMENT2", "DMY_RS", SOLID_DISPLACEMENT2 } ,
     { "SOLID_DISPLACEMENT3", "DMZ_RS", SOLID_DISPLACEMENT3 } ,
-		    
+
     { "VELOCITY_GRADIENT11", "G11", VELOCITY_GRADIENT11 } , /* 19 */
     { "VELOCITY_GRADIENT12", "G12", VELOCITY_GRADIENT12 } ,
     { "VELOCITY_GRADIENT21", "G21", VELOCITY_GRADIENT21 } ,
@@ -1253,65 +1258,65 @@ struct Equation_Names Var_Name[] =  {
     { "POLYMER_STRESS22_7", "S22_7", POLYMER_STRESS22_7 } ,
     { "POLYMER_STRESS13_7", "S13_7", POLYMER_STRESS13_7 } ,
     { "POLYMER_STRESS23_7", "S23_7", POLYMER_STRESS23_7 } ,
-    { "POLYMER_STRESS33_7", "S33_7", POLYMER_STRESS33_7 } ,  /* 75 */  
+    { "POLYMER_STRESS33_7", "S33_7", POLYMER_STRESS33_7 } ,  /* 75 */
 
-    { "Species_Conc_0",   "Sp_0",   SPECIES_UNK_0  } ,  
-    { "Species_Conc_1",   "Sp_1",   SPECIES_UNK_1  } ,  
-    { "Species_Conc_2",   "Sp_2",   SPECIES_UNK_2  } ,  
+    { "Species_Conc_0",   "Sp_0",   SPECIES_UNK_0  } ,
+    { "Species_Conc_1",   "Sp_1",   SPECIES_UNK_1  } ,
+    { "Species_Conc_2",   "Sp_2",   SPECIES_UNK_2  } ,
     { "Species_Conc_3",   "Sp_3",   SPECIES_UNK_3  } ,	/* 79 */
-    { "Species_Conc_4",   "Sp_4",   SPECIES_UNK_4  } ,  
-    { "Species_Conc_5",   "Sp_5",   SPECIES_UNK_5  } , 
-    { "Species_Conc_6",   "Sp_6",   SPECIES_UNK_6  } ,  
-    { "Species_Conc_7",   "Sp_7",   SPECIES_UNK_7  } ,  
-    { "Species_Conc_8",   "Sp_8",   SPECIES_UNK_8  } ,  
-    { "Species_Conc_9",   "Sp_9",   SPECIES_UNK_9  } , 
-    { "Species_Conc_10",  "Sp_10",  SPECIES_UNK_10 } , 
-    { "Species_Conc_11",  "Sp_11",  SPECIES_UNK_11 } , 
-    { "Species_Conc_12",  "Sp_12",  SPECIES_UNK_12 } ,  
+    { "Species_Conc_4",   "Sp_4",   SPECIES_UNK_4  } ,
+    { "Species_Conc_5",   "Sp_5",   SPECIES_UNK_5  } ,
+    { "Species_Conc_6",   "Sp_6",   SPECIES_UNK_6  } ,
+    { "Species_Conc_7",   "Sp_7",   SPECIES_UNK_7  } ,
+    { "Species_Conc_8",   "Sp_8",   SPECIES_UNK_8  } ,
+    { "Species_Conc_9",   "Sp_9",   SPECIES_UNK_9  } ,
+    { "Species_Conc_10",  "Sp_10",  SPECIES_UNK_10 } ,
+    { "Species_Conc_11",  "Sp_11",  SPECIES_UNK_11 } ,
+    { "Species_Conc_12",  "Sp_12",  SPECIES_UNK_12 } ,
     { "Species_Conc_13",  "Sp_13",  SPECIES_UNK_13 } ,	/* 89 */
-    { "Species_Conc_14",  "Sp_14",  SPECIES_UNK_14 } ,  
-    { "Species_Conc_15",  "Sp_15",  SPECIES_UNK_15 } ,  
-    { "Species_Conc_16",  "Sp_16",  SPECIES_UNK_16 } , 
-    { "Species_Conc_17",  "Sp_17",  SPECIES_UNK_17 } ,  
-    { "Species_Conc_18",  "Sp_18",  SPECIES_UNK_18 } ,  
-    { "Species_Conc_19",  "Sp_19",  SPECIES_UNK_19 } ,  
-    { "Species_Conc_20",  "Sp_20",  SPECIES_UNK_20 } ,  
-    { "Species_Conc_21",  "Sp_21",  SPECIES_UNK_21 } ,  
-    { "Species_Conc_22",  "Sp_22",  SPECIES_UNK_22 } ,  
+    { "Species_Conc_14",  "Sp_14",  SPECIES_UNK_14 } ,
+    { "Species_Conc_15",  "Sp_15",  SPECIES_UNK_15 } ,
+    { "Species_Conc_16",  "Sp_16",  SPECIES_UNK_16 } ,
+    { "Species_Conc_17",  "Sp_17",  SPECIES_UNK_17 } ,
+    { "Species_Conc_18",  "Sp_18",  SPECIES_UNK_18 } ,
+    { "Species_Conc_19",  "Sp_19",  SPECIES_UNK_19 } ,
+    { "Species_Conc_20",  "Sp_20",  SPECIES_UNK_20 } ,
+    { "Species_Conc_21",  "Sp_21",  SPECIES_UNK_21 } ,
+    { "Species_Conc_22",  "Sp_22",  SPECIES_UNK_22 } ,
     { "Species_Conc_23",  "Sp_23",  SPECIES_UNK_23 } ,	/* 99 */
-    { "Species_Conc_24",  "Sp_24",  SPECIES_UNK_24 } ,  
-    { "Species_Conc_25",  "Sp_25",  SPECIES_UNK_25 } ,  
-    { "Species_Conc_26",  "Sp_26",  SPECIES_UNK_26 } ,  
-    { "Species_Conc_27",  "Sp_27",  SPECIES_UNK_27 } ,  
-    { "Species_Conc_28",  "Sp_28",  SPECIES_UNK_28 } ,  
+    { "Species_Conc_24",  "Sp_24",  SPECIES_UNK_24 } ,
+    { "Species_Conc_25",  "Sp_25",  SPECIES_UNK_25 } ,
+    { "Species_Conc_26",  "Sp_26",  SPECIES_UNK_26 } ,
+    { "Species_Conc_27",  "Sp_27",  SPECIES_UNK_27 } ,
+    { "Species_Conc_28",  "Sp_28",  SPECIES_UNK_28 } ,
     { "Species_Conc_29",  "Sp_29",  SPECIES_UNK_29 } ,	/* 105 */
-    
-    { "VolFracPh_0",  "VFP_0", VOLF_PHASE_0   } ,  
-    { "VolFracPh_1",  "VFP_1", VOLF_PHASE_1   } , 
-    { "VolFracPh_2",  "VFP_2", VOLF_PHASE_2   } , 
-    { "VolFracPh_3",  "VFP_3", VOLF_PHASE_3   } ,  	/* 109 */
-    { "VolFracPh_4",  "VFP_4", VOLF_PHASE_4   } ,  
-    
-    { "POR_LIQ_PRES",   "P_LIQ", POR_LIQ_PRES   } ,  
-    { "POR_GAS_PRES",   "P_GAS", POR_GAS_PRES   } ,           
-    { "POR_POROSITY",    "P_POR", POR_POROSITY   } ,  
-    { "POR_TEMP",       "P_TEMP", POR_TEMP  } ,  
+
+    { "VolFracPh_0",  "VFP_0", VOLF_PHASE_0   } ,
+    { "VolFracPh_1",  "VFP_1", VOLF_PHASE_1   } ,
+    { "VolFracPh_2",  "VFP_2", VOLF_PHASE_2   } ,
+    { "VolFracPh_3",  "VFP_3", VOLF_PHASE_3   } ,  /* 109 */
+    { "VolFracPh_4",  "VFP_4", VOLF_PHASE_4   } ,
+
+    { "POR_LIQ_PRES",   "P_LIQ", POR_LIQ_PRES   } ,
+    { "POR_GAS_PRES",   "P_GAS", POR_GAS_PRES   } ,
+    { "POR_POROSITY",    "P_POR", POR_POROSITY   } ,
+    { "POR_TEMP",       "P_TEMP", POR_TEMP  } ,
     { "POR_SATURATION",  "P_SAT", POR_SATURATION } ,
 
-    { "POR_SINK_MASS", "SINK_MASS", POR_SINK_MASS} , 
-  
-    { "VORT_DIR1",   "VDX",  VORT_DIR1 } ,         
+    { "POR_SINK_MASS", "SINK_MASS", POR_SINK_MASS} ,
+
+    { "VORT_DIR1",   "VDX",  VORT_DIR1 } ,
     { "VORT_DIR2",   "VDY",  VORT_DIR2 } ,
-    { "VORT_DIR3",   "VDZ",  VORT_DIR3 } , 
+    { "VORT_DIR3",   "VDZ",  VORT_DIR3 } ,
     { "VORT_LAMBDA", "VLAMBDA",  VORT_LAMBDA } ,	/* 120 */
 
-    { "CURVATURE", "H", CURVATURE},       
+    { "CURVATURE", "H", CURVATURE},
 
-    { "LAGR_MULT1",   "LM1",  LAGR_MULT1 } ,         
+    { "LAGR_MULT1",   "LM1",  LAGR_MULT1 } ,
     { "LAGR_MULT2",   "LM2",  LAGR_MULT2 } ,
-    { "LAGR_MULT3",   "LM3",  LAGR_MULT3 } , 
+    { "LAGR_MULT3",   "LM3",  LAGR_MULT3 } ,
 
-    { "BOND_EVOLUTION",   "NN",  BOND_EVOLUTION } ,  
+    { "BOND_EVOLUTION",   "NN",  BOND_EVOLUTION } ,
 
     { "SURF_CHARGE", "QS", SURF_CHARGE } ,
 
@@ -1321,16 +1326,16 @@ struct Equation_Names Var_Name[] =  {
     { "EFIELD2", "E2", EFIELD2},
     { "EFIELD3", "E3", EFIELD3},			/* 130 */
 
-    { "ENORM", "ENORM", ENORM }, 
+    { "ENORM", "ENORM", ENORM },
 
-    { "NORMAL1", "N1", NORMAL1 },  
-    { "NORMAL2", "N2", NORMAL2 },  
-    { "NORMAL3", "N3", NORMAL3 },  
- 
-    { "SHELL_CURVATURE", "K", SHELL_CURVATURE}, 
-    { "SHELL_CURVATURE2", "K2", SHELL_CURVATURE2}, 
+    { "NORMAL1", "N1", NORMAL1 },
+    { "NORMAL2", "N2", NORMAL2 },
+    { "NORMAL3", "N3", NORMAL3 },
+
+    { "SHELL_CURVATURE", "K", SHELL_CURVATURE},
+    { "SHELL_CURVATURE2", "K2", SHELL_CURVATURE2},
     { "SHELL_TENSION", "TENS", SHELL_TENSION},
-    { "SHELL_X", "SH_X", SHELL_X},                 
+    { "SHELL_X", "SH_X", SHELL_X},
     { "SHELL_Y", "SH_Y", SHELL_Y},
     { "SHELL_USER", "SH_U", SHELL_USER},
 
@@ -1339,7 +1344,7 @@ struct Equation_Names Var_Name[] =  {
     { "PHASE3", "F3", PHASE3},
     { "PHASE4", "F4", PHASE4},
     { "PHASE5", "F5", PHASE5},
-    
+
     { "SHELL_ANGLE1", "SH_ANG1", SHELL_ANGLE1},
     { "SHELL_ANGLE2", "SH_ANG2", SHELL_ANGLE2},
 
@@ -1354,7 +1359,7 @@ struct Equation_Names Var_Name[] =  {
     { "SHELL_DIFF_FLUX", "SH_J", R_SHELL_DIFF_FLUX},
     { "SHELL_DIFF_CURVATURE", "SH_KD", R_SHELL_DIFF_CURVATURE},
     { "SHELL_NORMAL1", "SH_NX", R_SHELL_NORMAL1},
-    { "SHELL_NORMAL2", "SH_NY", R_SHELL_NORMAL2},	
+    { "SHELL_NORMAL2", "SH_NY", R_SHELL_NORMAL2},
     { "SHELL_NORMAL3", "SH_NZ", R_SHELL_NORMAL3},	/* 160 */
     { "ACOUS_REYN_STRESS", "ARS", ACOUS_REYN_STRESS},
     { "SHELL_BDYVELO", "SH_BV", SHELL_BDYVELO},
@@ -1383,6 +1388,9 @@ struct Equation_Names Var_Name[] =  {
     { "TFMP_SAT", "SAT", TFMP_SAT},                     /* 185 */
     { "TFMP_PRES", "PRES", TFMP_PRES},                     /* 186 */
     { "RESTIME", "RST", RESTIME},                     /* 187 */
+    { "SHELL_SAT_1", "SH_SAT_1", SHELL_SAT_1},            /* 188 */
+    { "SHELL_SAT_2", "SH_SAT_2", SHELL_SAT_2},            /* 189 */
+    { "SHELL_SAT_3", "SH_SAT_3", SHELL_SAT_3},            /* 190 */
 
     { "EM_E1_REAL", "E1R", EM_E1_REAL},
     { "EM_E1_IMAG", "E1I", EM_E1_IMAG},
@@ -1398,7 +1406,7 @@ struct Equation_Names Var_Name[] =  {
     { "EM_H3_IMAG", "H3I", EM_H3_IMAG},
 
     { "MESH_POSITION1", "X",  MESH_POSITION1 } ,
-    { "MESH_POSITION2", "Y",  MESH_POSITION2 } ,	/* 189 */
+    { "MESH_POSITION2", "Y",  MESH_POSITION2 } ,	/* 192 */
     { "MESH_POSITION3", "Z",  MESH_POSITION3 } ,
 
     { "VEL_NORM",       "VN", VEL_NORM } ,
@@ -1412,19 +1420,19 @@ struct Equation_Names Var_Name[] =  {
 
     { "D_X1_DT",   "XDOT", D_X1_DT } ,
     { "D_X2_DT",   "YDOT", D_X2_DT } ,
-    { "D_X3_DT",   "ZDOT", D_X3_DT } ,			/* 200 */
+    { "D_X3_DT",   "ZDOT", D_X3_DT } ,			/* 203 */
     { "D_S_DT",    "SDOT", D_S_DT } ,
 
     { "D_P_DT",    "PDOT", D_P_DT } ,
 
-    { "SOLID_POSITION1", "X_RS",  SOLID_POSITION1 } ,  
+    { "SOLID_POSITION1", "X_RS",  SOLID_POSITION1 } ,
     { "SOLID_POSITION2", "Y_RS",  SOLID_POSITION2 } ,
-    { "SOLID_POSITION3", "Z_RS",  SOLID_POSITION3 } 	/* 205 */
+    { "SOLID_POSITION3", "Z_RS",  SOLID_POSITION3 } 	/* 208 */
 };
 
-int Num_Var_Names = sizeof(Var_Name) / sizeof(struct Equation_Names);  
+int Num_Var_Names = sizeof(Var_Name) / sizeof(struct Equation_Names);
 
-struct Equation_Names Exo_Var_Names[] = 
+struct Equation_Names Exo_Var_Names[] =
 {
   { "Velocity, x component",           "VX",     VELOCITY1 } ,
   { "Velocity, y component",           "VY",     VELOCITY2 } ,
@@ -1447,7 +1455,7 @@ struct Equation_Names Exo_Var_Names[] =
   { "SOLID displacement, x component", "DMX_RS", SOLID_DISPLACEMENT1 } ,
   { "SOLID displacement, y component", "DMY_RS", SOLID_DISPLACEMENT2 } ,
   { "SOLID displacement, z component", "DMZ_RS", SOLID_DISPLACEMENT3 } ,
-		    
+
   { "Velocity Gradient, xx component", "G11",    VELOCITY_GRADIENT11 } ,
   { "Velocity Gradient, xy component", "G12",    VELOCITY_GRADIENT12 } ,
   { "Velocity Gradient, xz component", "G13",    VELOCITY_GRADIENT13 } ,
@@ -1512,52 +1520,52 @@ struct Equation_Names Exo_Var_Names[] =
   { "Polymer stress component 22 mode 7", "S22_7", POLYMER_STRESS22_7 } ,
   { "Polymer stress component 13 mode 7", "S13_7", POLYMER_STRESS13_7 } ,
   { "Polymer stress component 23 mode 7", "S23_7", POLYMER_STRESS23_7 } ,
-  { "Polymer stress component 33 mode 7", "S33_7", POLYMER_STRESS33_7 } ,   /*76*/ 
+  { "Polymer stress component 33 mode 7", "S33_7", POLYMER_STRESS33_7 } ,   /*76*/
 
-  { "species concentration comp 0",   "Sp_0",   SPECIES_UNK_0  } ,  
-  { "species concentration comp 1",   "Sp_1",   SPECIES_UNK_1  } ,  
-  { "species concentration comp 2",   "Sp_2",   SPECIES_UNK_2  } ,  
-  { "species concentration comp 3",   "Sp_3",   SPECIES_UNK_3  } ,  
-  { "species concentration comp 4",   "Sp_4",   SPECIES_UNK_4  } ,  
-  { "species concentration comp 5",   "Sp_5",   SPECIES_UNK_5  } , 
-  { "species concentration comp 6",   "Sp_6",   SPECIES_UNK_6  } ,  
-  { "species concentration comp 7",   "Sp_7",   SPECIES_UNK_7  } ,  
-  { "species concentration comp 8",   "Sp_8",   SPECIES_UNK_8  } ,  
-  { "species concentration comp 9",   "Sp_9",   SPECIES_UNK_9  } , 
-  { "species concentration comp 10",  "Sp_10",  SPECIES_UNK_10 } , 
-  { "species concentration comp 11",  "Sp_11",  SPECIES_UNK_11 } , 
-  { "species concentration comp 12",  "Sp_12",  SPECIES_UNK_12 } ,  
-  { "species concentration comp 13",  "Sp_13",  SPECIES_UNK_13 } , 
-  { "species concentration comp 14",  "Sp_14",  SPECIES_UNK_14 } ,  
-  { "species concentration comp 15",  "Sp_15",  SPECIES_UNK_15 } ,  
-  { "species concentration comp 16",  "Sp_16",  SPECIES_UNK_16 } , 
-  { "species concentration comp 17",  "Sp_17",  SPECIES_UNK_17 } ,  
-  { "species concentration comp 18",  "Sp_18",  SPECIES_UNK_18 } ,  
-  { "species concentration comp 19",  "Sp_19",  SPECIES_UNK_19 } ,  
-  { "species concentration comp 20",  "Sp_20",  SPECIES_UNK_20 } ,  
-  { "species concentration comp 21",  "Sp_21",  SPECIES_UNK_21 } ,  
-  { "species concentration comp 22",  "Sp_22",  SPECIES_UNK_22 } ,  
-  { "species concentration comp 23",  "Sp_23",  SPECIES_UNK_23 } , 
-  { "species concentration comp 24",  "Sp_24",  SPECIES_UNK_24 } ,  
-  { "species concentration comp 25",  "Sp_25",  SPECIES_UNK_25 } ,  
-  { "species concentration comp 26",  "Sp_26",  SPECIES_UNK_26 } ,  
-  { "species concentration comp 27",  "Sp_27",  SPECIES_UNK_27 } ,  
-  { "species concentration comp 28",  "Sp_28",  SPECIES_UNK_28 } ,  
+  { "species concentration comp 0",   "Sp_0",   SPECIES_UNK_0  } ,
+  { "species concentration comp 1",   "Sp_1",   SPECIES_UNK_1  } ,
+  { "species concentration comp 2",   "Sp_2",   SPECIES_UNK_2  } ,
+  { "species concentration comp 3",   "Sp_3",   SPECIES_UNK_3  } ,
+  { "species concentration comp 4",   "Sp_4",   SPECIES_UNK_4  } ,
+  { "species concentration comp 5",   "Sp_5",   SPECIES_UNK_5  } ,
+  { "species concentration comp 6",   "Sp_6",   SPECIES_UNK_6  } ,
+  { "species concentration comp 7",   "Sp_7",   SPECIES_UNK_7  } ,
+  { "species concentration comp 8",   "Sp_8",   SPECIES_UNK_8  } ,
+  { "species concentration comp 9",   "Sp_9",   SPECIES_UNK_9  } ,
+  { "species concentration comp 10",  "Sp_10",  SPECIES_UNK_10 } ,
+  { "species concentration comp 11",  "Sp_11",  SPECIES_UNK_11 } ,
+  { "species concentration comp 12",  "Sp_12",  SPECIES_UNK_12 } ,
+  { "species concentration comp 13",  "Sp_13",  SPECIES_UNK_13 } ,
+  { "species concentration comp 14",  "Sp_14",  SPECIES_UNK_14 } ,
+  { "species concentration comp 15",  "Sp_15",  SPECIES_UNK_15 } ,
+  { "species concentration comp 16",  "Sp_16",  SPECIES_UNK_16 } ,
+  { "species concentration comp 17",  "Sp_17",  SPECIES_UNK_17 } ,
+  { "species concentration comp 18",  "Sp_18",  SPECIES_UNK_18 } ,
+  { "species concentration comp 19",  "Sp_19",  SPECIES_UNK_19 } ,
+  { "species concentration comp 20",  "Sp_20",  SPECIES_UNK_20 } ,
+  { "species concentration comp 21",  "Sp_21",  SPECIES_UNK_21 } ,
+  { "species concentration comp 22",  "Sp_22",  SPECIES_UNK_22 } ,
+  { "species concentration comp 23",  "Sp_23",  SPECIES_UNK_23 } ,
+  { "species concentration comp 24",  "Sp_24",  SPECIES_UNK_24 } ,
+  { "species concentration comp 25",  "Sp_25",  SPECIES_UNK_25 } ,
+  { "species concentration comp 26",  "Sp_26",  SPECIES_UNK_26 } ,
+  { "species concentration comp 27",  "Sp_27",  SPECIES_UNK_27 } ,
+  { "species concentration comp 28",  "Sp_28",  SPECIES_UNK_28 } ,
   { "species concentration comp 29",  "Sp_29",  SPECIES_UNK_29 } ,  /*106*/
-  
-  { "VolFracPh_0",  "VFP_0", VOLF_PHASE_0   } ,  
-  { "VolFracPh_1",  "VFP_1", VOLF_PHASE_1   } , 
-  { "VolFracPh_2",  "VFP_2", VOLF_PHASE_2   } , 
-  { "VolFracPh_3",  "VFP_3", VOLF_PHASE_3   } ,  
-  { "VolFracPh_4",  "VFP_4", VOLF_PHASE_4   } ,  
-    
-  { "Liquid phase pressue, porous",   "P_LIQ", POR_LIQ_PRES   } ,  
-  { "Gas phase pressure, porous",   "P_GAS", POR_GAS_PRES   } ,           
-  { "Porosity of medium, porous",    "P_POR", POR_POROSITY   } ,  
-  { "Temperature, porous", "P_TEMP", POR_TEMP } ,  
+
+  { "VolFracPh_0",  "VFP_0", VOLF_PHASE_0   } ,
+  { "VolFracPh_1",  "VFP_1", VOLF_PHASE_1   } ,
+  { "VolFracPh_2",  "VFP_2", VOLF_PHASE_2   } ,
+  { "VolFracPh_3",  "VFP_3", VOLF_PHASE_3   } ,
+  { "VolFracPh_4",  "VFP_4", VOLF_PHASE_4   } ,
+
+  { "Liquid phase pressue, porous",   "P_LIQ", POR_LIQ_PRES   } ,
+  { "Gas phase pressure, porous",   "P_GAS", POR_GAS_PRES   } ,
+  { "Porosity of medium, porous",    "P_POR", POR_POROSITY   } ,
+  { "Temperature, porous", "P_TEMP", POR_TEMP } ,
   { "Saturation of medium, porous",  "P_SAT", POR_SATURATION } ,  /*116*/
 
-  { "Sink mass accumulation, porous", "SINK_MASS", POR_SINK_MASS}, 
+  { "Sink mass accumulation, porous", "SINK_MASS", POR_SINK_MASS},
 
   { "Vorticity direction, x component", "VDX", VORT_DIR1 } ,
   { "Vorticity direction, y component", "VDY", VORT_DIR2 } ,
@@ -1597,7 +1605,7 @@ struct Equation_Names Exo_Var_Names[] =
   { "Third  phase function", "F3", PHASE3},
   { "Fourth phase function", "F4", PHASE4},
   { "Fifth  phase function", "F5", PHASE5},
-  
+
   { "Shell element orientation angle, theta", "SH_ANG1", SHELL_ANGLE1},
   { "Shell element orientation angle, phi", "SH_ANG2", SHELL_ANGLE2},
 
@@ -1620,7 +1628,7 @@ struct Equation_Names Exo_Var_Names[] =
   { "Lubrication Pressure", "LUBP", LUBP},
   { "Shell Film Pressure", "SH_FP", SHELL_FILMP},
   { "Shell Film Thickness","SH_FH", SHELL_FILMH},
-  { "Shell Particles Concentration", "SH_PC", SHELL_PARTC}, 
+  { "Shell Particles Concentration", "SH_PC", SHELL_PARTC},
   { "Structured Porous Shell Saturation - Closed Cells", "SH_SAT_CLOSED", SHELL_SAT_CLOSED },
   { "Structured Porous Shell Pressure - Open Cells", "SH_P_OPEN", SHELL_PRESS_OPEN },
   { "Shell Temperature", "SH_TEMP", SHELL_TEMPERATURE },
@@ -1641,9 +1649,12 @@ struct Equation_Names Exo_Var_Names[] =
   { "Thin Film Multiphase Lubrication Pressure", "TFMP_PRES", TFMP_PRES },
   { "Thin Film Multiphase Saturation", "TFMP_SAT", TFMP_SAT },
   { "Residence Time Function", "RST", RESTIME },
+  { "Porous Shell Saturation Layer 1", "SH_SAT_1", SHELL_SAT_1 },
+  { "Porous Shell Saturation Layer 2", "SH_SAT_2", SHELL_SAT_2 },
+  { "Porous Shell Saturation Layer 3", "SH_SAT_3", SHELL_SAT_3 },
 };
 
-int Num_Exo_Var_Names = sizeof(Exo_Var_Names) / sizeof(struct Equation_Names);  
+int Num_Exo_Var_Names = sizeof(Exo_Var_Names) / sizeof(struct Equation_Names);
 struct Equation_Names Post_Var_Name[] = 
 {
   {"STREAM", "stream", -1 },
@@ -1698,9 +1709,9 @@ struct Equation_Names Post_Var_Name[] =
   {"POYNTING_VECTORS", "POYNTING_VECTORS", -1},
 };
 
-int Num_Post_Var_Names = sizeof(Post_Var_Name) / sizeof(struct Equation_Names);  
+int Num_Post_Var_Names = sizeof(Post_Var_Name) / sizeof(struct Equation_Names);
 
-struct Equation_Names Var_Units[] = 
+struct Equation_Names Var_Units[] =
 {
   { "Velocity, x component",           "[1]",     VELOCITY1 } ,
   { "Velocity, y component",           "[1]",     VELOCITY2 } ,
@@ -1723,7 +1734,7 @@ struct Equation_Names Var_Units[] =
   { "SOLID displacement, x component", "[1]",    SOLID_DISPLACEMENT1 } ,
   { "SOLID displacement, y component", "[1]",    SOLID_DISPLACEMENT2 } ,
   { "SOLID displacement, z component", "[1]",    SOLID_DISPLACEMENT3 } ,
-		    
+
   { "Velocity Gradient, xx component", "[1]",     VELOCITY_GRADIENT11 } ,
   { "Velocity Gradient, xy component", "[1]",     VELOCITY_GRADIENT12 } ,
   { "Velocity Gradient, xz component", "[1]",     VELOCITY_GRADIENT13 } ,
@@ -1788,52 +1799,52 @@ struct Equation_Names Var_Units[] =
   { "Polymer stress component 22 mode 7", "[1]",   POLYMER_STRESS22_7 } ,
   { "Polymer stress component 13 mode 7", "[1]",   POLYMER_STRESS13_7 } ,
   { "Polymer stress component 23 mode 7", "[1]",   POLYMER_STRESS23_7 } ,
-  { "Polymer stress component 33 mode 7", "[1]",   POLYMER_STRESS33_7 } ,   /*76*/ 
+  { "Polymer stress component 33 mode 7", "[1]",   POLYMER_STRESS33_7 } ,   /*76*/
 
-  { "species concentration comp 0",   "[1]",     SPECIES_UNK_0  } ,  
-  { "species concentration comp 1",   "[1]",     SPECIES_UNK_1  } ,  
-  { "species concentration comp 2",   "[1]",     SPECIES_UNK_2  } ,  
-  { "species concentration comp 3",   "[1]",     SPECIES_UNK_3  } ,  
-  { "species concentration comp 4",   "[1]",     SPECIES_UNK_4  } ,  
-  { "species concentration comp 5",   "[1]",     SPECIES_UNK_5  } , 
-  { "species concentration comp 6",   "[1]",     SPECIES_UNK_6  } ,  
-  { "species concentration comp 7",   "[1]",     SPECIES_UNK_7  } ,  
-  { "species concentration comp 8",   "[1]",     SPECIES_UNK_8  } ,  
-  { "species concentration comp 9",   "[1]",     SPECIES_UNK_9  } , 
-  { "species concentration comp 10",  "[1]",     SPECIES_UNK_10 } , 
-  { "species concentration comp 11",  "[1]",     SPECIES_UNK_11 } , 
-  { "species concentration comp 12",  "[1]",     SPECIES_UNK_12 } ,  
-  { "species concentration comp 13",  "[1]",     SPECIES_UNK_13 } , 
-  { "species concentration comp 14",  "[1]",     SPECIES_UNK_14 } ,  
-  { "species concentration comp 15",  "[1]",     SPECIES_UNK_15 } ,  
-  { "species concentration comp 16",  "[1]",     SPECIES_UNK_16 } , 
-  { "species concentration comp 17",  "[1]",     SPECIES_UNK_17 } ,  
-  { "species concentration comp 18",  "[1]",     SPECIES_UNK_18 } ,  
-  { "species concentration comp 19",  "[1]",     SPECIES_UNK_19 } ,  
-  { "species concentration comp 20",  "[1]",     SPECIES_UNK_20 } ,  
-  { "species concentration comp 21",  "[1]",     SPECIES_UNK_21 } ,  
-  { "species concentration comp 22",  "[1]",     SPECIES_UNK_22 } ,  
-  { "species concentration comp 23",  "[1]",     SPECIES_UNK_23 } , 
-  { "species concentration comp 24",  "[1]",     SPECIES_UNK_24 } ,  
-  { "species concentration comp 25",  "[1]",     SPECIES_UNK_25 } ,  
-  { "species concentration comp 26",  "[1]",     SPECIES_UNK_26 } ,  
-  { "species concentration comp 27",  "[1]",     SPECIES_UNK_27 } ,  
-  { "species concentration comp 28",  "[1]",     SPECIES_UNK_28 } ,  
-  { "species concentration comp 29",  "[1]",     SPECIES_UNK_29 } ,  
-  
-  { "VolFracPh_0",  "[1]",   VOLF_PHASE_0   } ,  
-  { "VolFracPh_1",  "[1]",   VOLF_PHASE_1   } , 
-  { "VolFracPh_2",  "[1]",   VOLF_PHASE_2   } , 
-  { "VolFracPh_3",  "[1]",   VOLF_PHASE_3   } ,  
-  { "VolFracPh_4",  "[1]",   VOLF_PHASE_4   } ,  
-    
-  { "Liquid phase pressue, porous",   "[1]",   POR_LIQ_PRES   } ,  
-  { "Gas phase pressure, porous",   "[1]",   POR_GAS_PRES   } ,           
-  { "Porosity of medium, porous",    "[1]",   POR_POROSITY   } ,  
-  { "Temperature, porous",    "[1]",   POR_TEMP   } ,  
+  { "species concentration comp 0",   "[1]",     SPECIES_UNK_0  } ,
+  { "species concentration comp 1",   "[1]",     SPECIES_UNK_1  } ,
+  { "species concentration comp 2",   "[1]",     SPECIES_UNK_2  } ,
+  { "species concentration comp 3",   "[1]",     SPECIES_UNK_3  } ,
+  { "species concentration comp 4",   "[1]",     SPECIES_UNK_4  } ,
+  { "species concentration comp 5",   "[1]",     SPECIES_UNK_5  } ,
+  { "species concentration comp 6",   "[1]",     SPECIES_UNK_6  } ,
+  { "species concentration comp 7",   "[1]",     SPECIES_UNK_7  } ,
+  { "species concentration comp 8",   "[1]",     SPECIES_UNK_8  } ,
+  { "species concentration comp 9",   "[1]",     SPECIES_UNK_9  } ,
+  { "species concentration comp 10",  "[1]",     SPECIES_UNK_10 } ,
+  { "species concentration comp 11",  "[1]",     SPECIES_UNK_11 } ,
+  { "species concentration comp 12",  "[1]",     SPECIES_UNK_12 } ,
+  { "species concentration comp 13",  "[1]",     SPECIES_UNK_13 } ,
+  { "species concentration comp 14",  "[1]",     SPECIES_UNK_14 } ,
+  { "species concentration comp 15",  "[1]",     SPECIES_UNK_15 } ,
+  { "species concentration comp 16",  "[1]",     SPECIES_UNK_16 } ,
+  { "species concentration comp 17",  "[1]",     SPECIES_UNK_17 } ,
+  { "species concentration comp 18",  "[1]",     SPECIES_UNK_18 } ,
+  { "species concentration comp 19",  "[1]",     SPECIES_UNK_19 } ,
+  { "species concentration comp 20",  "[1]",     SPECIES_UNK_20 } ,
+  { "species concentration comp 21",  "[1]",     SPECIES_UNK_21 } ,
+  { "species concentration comp 22",  "[1]",     SPECIES_UNK_22 } ,
+  { "species concentration comp 23",  "[1]",     SPECIES_UNK_23 } ,
+  { "species concentration comp 24",  "[1]",     SPECIES_UNK_24 } ,
+  { "species concentration comp 25",  "[1]",     SPECIES_UNK_25 } ,
+  { "species concentration comp 26",  "[1]",     SPECIES_UNK_26 } ,
+  { "species concentration comp 27",  "[1]",     SPECIES_UNK_27 } ,
+  { "species concentration comp 28",  "[1]",     SPECIES_UNK_28 } ,
+  { "species concentration comp 29",  "[1]",     SPECIES_UNK_29 } ,
+
+  { "VolFracPh_0",  "[1]",   VOLF_PHASE_0   } ,
+  { "VolFracPh_1",  "[1]",   VOLF_PHASE_1   } ,
+  { "VolFracPh_2",  "[1]",   VOLF_PHASE_2   } ,
+  { "VolFracPh_3",  "[1]",   VOLF_PHASE_3   } ,
+  { "VolFracPh_4",  "[1]",   VOLF_PHASE_4   } ,
+
+  { "Liquid phase pressue, porous",   "[1]",   POR_LIQ_PRES   } ,
+  { "Gas phase pressure, porous",   "[1]",   POR_GAS_PRES   } ,
+  { "Porosity of medium, porous",    "[1]",   POR_POROSITY   } ,
+  { "Temperature, porous",    "[1]",   POR_TEMP   } ,
   { "Saturation of medium, porous",  "[1]",   POR_SATURATION } ,  /*116*/
 
-  { "Sink mass accumulation, porous", "[1]", POR_SINK_MASS }, 
+  { "Sink mass accumulation, porous", "[1]", POR_SINK_MASS },
 
   { "Vorticity direction, x component", "[1]",  VORT_DIR1 } ,
   { "Vorticity direction, y component", "[1]",  VORT_DIR2 } ,
@@ -1874,7 +1885,7 @@ struct Equation_Names Var_Units[] =
   { "Third  phase function", "[1]", PHASE3},
   { "Fourth phase function", "[1]", PHASE4},
   { "Fifth  phase function", "[1]", PHASE5},
-  
+
   { "Shell element orientation angle, theta", "[1]", SHELL_ANGLE1},
   { "Shell element orientation angle, phi", "[1]", SHELL_ANGLE2},
 
@@ -1893,7 +1904,7 @@ struct Equation_Names Var_Units[] =
   { "Shell normal vector, Z component", "[1]", SHELL_NORMAL3},
   { "Acoustic Reynolds Stress", "[1]", ACOUS_REYN_STRESS},
   { "Acoustic Boundary Velocity", "[1]", SHELL_BDYVELO},
-  { "Shell Lubrication Pressure", "[1]", SHELL_LUBP}, 
+  { "Shell Lubrication Pressure", "[1]", SHELL_LUBP},
   { "Lubrication Pressure", "[1]", LUBP},
   { "Shell Film Pressure", "[1]", SHELL_FILMP},
   { "Shell Film Thickness", "[1]", SHELL_FILMH},
@@ -1918,6 +1929,9 @@ struct Equation_Names Var_Units[] =
   { "Thin Film Multiphase Lubrication Pressure", "[1]", TFMP_PRES},
   { "Thin Film Multiphase Saturation", "[1]", TFMP_SAT},
   { "Residence Time Function", "[1]", RESTIME},  
+  { "Porous Shell Saturation Layer 1", "[1]", SHELL_SAT_1},
+  { "Porous Shell Saturation Layer 2", "[1]", SHELL_SAT_2},
+  { "Porous Shell Saturation Layer 3", "[1]", SHELL_SAT_3},
 };
 
 int Num_Var_Units = sizeof(Var_Units) / sizeof(struct Equation_Names);  
@@ -1945,7 +1959,7 @@ int num_new_BC_Desc;
 int num_BC_Tables;
 
 struct Data_Table *BC_Tables[MAX_BC_TABLES];
-				
+
 int num_MP_Tables;
 
 struct Data_Table *MP_Tables[MAX_MP_TABLES];
@@ -1953,9 +1967,9 @@ struct Data_Table *MP_Tables[MAX_MP_TABLES];
 int num_ext_Tables;
 
 struct Data_Table *ext_Tables[MAX_EXT_TABLES];
-				
+
 int num_AC_Tables;
 
 struct Data_Table *AC_Tables[MAX_AC_TABLES];
-				
+
 #endif

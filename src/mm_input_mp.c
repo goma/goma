@@ -245,10 +245,10 @@ look_for_optional_string(FILE *ifp,
 
 void
 rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
-    
+
     /***************************************************************************
      *
-     * rd_mp_specs -- read material properties specifications 
+     * rd_mp_specs -- read material properties specifications
      *
      * Comments:
      *
@@ -264,16 +264,17 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 { /*start*/
   char err_msg[MAX_CHAR_ERR_MSG];
   int	i, j, var;
+  int ipore;
   static const char yo[] = "rd_mp_specs";
   struct Elastic_Constitutive  *dum_ptr;
-  
+
   int ConstitutiveEquation;
   int LameLambdaModel;
   dbl a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10;
   dbl v0[DIM];
   int i0;
   /* dummy variable to hold modal data before it is put into the ve struct */
-  dbl *modal_data;   
+  dbl *modal_data;
   int DiffusionConstitutiveEquation = -1;
   int PorousDiffusionConstitutiveEquation = -1;
   int ElasticConstitutiveEquation = -1;
@@ -289,7 +290,8 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 					      below) 052901 */
   int iread;
   int num_const, species_no;
-  int porous_no;
+  int porous_no, porous_shell_no;
+  int PorousShellOn;
   int mm; /* modal counter */
   int ii, jj, n_dij, k, n_species;   /* KSC: 7/98 */ 
   dbl dij, E, T0;                    /* KSC: 7/98, 9/04 */ 
@@ -305,7 +307,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   PROBLEM_DESCRIPTION_STRUCT *pd_ptr = pd_glob[mn];
 
   /*  fpos_t file_position; position in file at start of search */
-  
+
   char  model_name[MAX_CHAR_IN_INPUT];
   char  *s;		   /* used to tokenize optional input string. */
   char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
@@ -332,8 +334,10 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
    *  in the future.
    */
   mat_ptr->Num_Species_Eqn =  pd_glob[mn]->Num_Species_Eqn;
-  mat_ptr->Num_Species     =  pd_glob[mn]->Num_Species;  
+  mat_ptr->Num_Species     =  pd_glob[mn]->Num_Species;
   mat_ptr->Num_Porous_Eqn  =  pd_glob[mn]->Num_Porous_Eqn;
+  mat_ptr->Num_Porous_Shell_Eqn  =  pd_glob[mn]->Num_Porous_Shell_Eqn;
+
 
   /*
    *  Intialize to good default behavior
@@ -4321,25 +4325,47 @@ ECHO("\n----Acoustic Properties\n", echo_file);
   mat_ptr->por_shell_closed_height_ext_field_index = -1;
   mat_ptr->por_shell_closed_radius_ext_field_index = -1;
 
+  /* This initialization is for porous shell equations */
+  for (i = 0; i < MAX_POR_SHELL; i++)
+     {
+      mat_ptr->por_shell_porosity_ext_field_index[i] = -1;
+      mat_ptr->por_shell_height_ext_field_index[i] = -1;
+      mat_ptr->por_shell_permeability_ext_field_index[i] = -1;
+      mat_ptr->por_shell_rel_perm_ext_field_index[i] = -1;
+      mat_ptr->por_shell_cap_pres_ext_field_index[i] = -1;
+      mat_ptr->por_shell_cap_pres_hyst_curve_type_ext_field_index[i] = -1;
+      mat_ptr->por_shell_cap_pres_hyst_num_switch_ext_field_index[i] = -1;
+     }
+
+  if ( (pd_glob[mn]->e[R_SHELL_SAT_1]) ||
+       (pd_glob[mn]->e[R_SHELL_SAT_2]) ||
+       (pd_glob[mn]->e[R_SHELL_SAT_3]) )
+    {
+     PorousShellOn = 1;
+    }
+  else
+    {
+     PorousShellOn = 0;
+    }
   /*
    * Porous Section 1:  Microstructure Properties.  These are inputs
    * that are really a function of solid skeleton phase, and also some very
    * specific Darcy-law constants (e.g. permeabilities) that are only accessible
-   * experimentally, in some cases. 
+   * experimentally, in some cases.
    *
-   * Also imput here is the compressibility of the solvent liquid phase, which is
+   * Also input here is the compressibility of the solvent liquid phase, which is
    * taken to be constant regardless of composition.  This compressibility is required
    * for numerical stability on impregnation problems.
-   *    
+   *
    * Microstructure stuff ************************************
    */
 
   strcpy(search_string, "Media Type");
-  model_read = look_for_mat_prop(imp, search_string, 
-				 &(mat_ptr->PorousMediaType), 
+  model_read = look_for_mat_prop(imp, search_string,
+				 &(mat_ptr->PorousMediaType),
 				 &(a0), NO_USER, NULL, model_name, NO_INPUT,
 				 &NO_SPECIES,es);
-  if ( model_read == -1 && 
+  if ( model_read == -1 &&
        ( !strcmp(model_name, "CONTINUOUS") ||
 	 !strcmp(model_name, "NONE")         )  )
     {
@@ -4347,7 +4373,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       /*consistency checks */
       if( pd_glob[mn]->e[R_POR_LIQ_PRES])
 	{
-	  SPF(err_msg,"CONTINUOS model for %s cannot be used with porous equation\n",search_string);
+	  SPF(err_msg,"CONTINUOUS model for %s cannot be used with porous equation\n",search_string);
 	  EH(-1,err_msg);
 	}
     }
@@ -4370,7 +4396,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  EH(-1,"You cannot run a two-phase porous media simulation without selecting both the porous_liq and porous_gas equations");
 	}
     }
-  else if ( model_read == -1 &&  
+  else if ( model_read == -1 &&
 	    ( !strcmp(model_name, "POROUS_UNSATURATED") || 
 	      !strcmp(model_name, "POROUS_PART_SAT") ) )
     {
@@ -4389,9 +4415,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     {
       mat_ptr->PorousMediaType = POROUS_SHELL_UNSATURATED;
       mat_ptr->i_ys = 0;
-      if( !pd_glob[mn]->e[R_SHELL_SAT_OPEN] && !pd_glob[mn]->e[R_SHELL_SAT_OPEN_2] )
+      if(   !pd_glob[mn]->e[R_SHELL_SAT_OPEN]
+         && !pd_glob[mn]->e[R_SHELL_SAT_OPEN_2]
+         && !pd_glob[mn]->e[R_SHELL_SAT_1]
+         && !pd_glob[mn]->e[R_SHELL_SAT_2]
+         && !pd_glob[mn]->e[R_SHELL_SAT_3]
+        )
 	{
-	  EH(-1,"You cannot run a porous shell media simulation without selecting the sh_sat_open equation");
+	  EH(-1,"You cannot run a porous shell media simulation without selecting the porous shell equation(s)");
 	}
     }
   else if ( (model_read == -1) && (strncmp(model_name," ",1) == 0) )
@@ -4411,39 +4442,43 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       SPF(err_msg,"Incorrect syntax or model choice for %s\n", search_string);
       EH(-1,err_msg);
     }
-  
+
   ECHO(es,echo_file);
 
-  if ( mat_ptr->PorousMediaType != CONTINUOUS )
+  if ( ( mat_ptr->PorousMediaType != CONTINUOUS ) &&
+       (!PorousShellOn)  ) /* This only applies to continuum porous media equations */
     {
-      /* create a list of the porous media equations 
-	 active in this material                     */      
+      /* create a list of the porous media equations
+	 active in this material                     */
       i = 0;
-      
-      for( j=0; j< MAX_POROUS_NUM; j++ ) 
+
+      for( j=0; j< MAX_POROUS_NUM; j++ )
         {
-	  if( pd_glob[mn]->e[R_POR_LIQ_PRES+j] ) 
+	  if( pd_glob[mn]->e[R_POR_LIQ_PRES+j] )
             {
               mat_ptr->Porous_Eqn[i] = R_POR_LIQ_PRES + j;
               i++;
             }
         }
-      if(pd_glob[mn]->e[R_SHELL_SAT_OPEN]) 
+      if(pd_glob[mn]->e[R_SHELL_SAT_OPEN])
 	{
 	  mat_ptr->Porous_Eqn[i] = R_SHELL_SAT_OPEN;
 	  i++;
 	}
 
-      if(pd_glob[mn]->e[R_SHELL_SAT_OPEN_2]) 
+      if(pd_glob[mn]->e[R_SHELL_SAT_OPEN_2])
 	{
 	  mat_ptr->Porous_Eqn[i] = R_SHELL_SAT_OPEN_2;
 	  i++;
 	}
 
+
       if( i != pd_glob[mn]->Num_Porous_Eqn )
         {
 	  EH(-1,"Possible duplicate porous media equations");
         }
+
+
       strcpy(search_string, "Porosity");
       model_read = look_for_mat_prop(imp, search_string, 
 				     &(mat_ptr->PorosityModel), 
@@ -4522,14 +4557,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
       /* Print out Porous Media Equation numbers used by Code */
 
-      SPF(es, "\n(Active Porous Equations: pl = %d, pg = %d, porosity = %d, pe = %d)\n", 
+      SPF(es, "\n(Active Porous Equations: pl = %d, pg = %d, porosity = %d, pe = %d)\n",
 	  pd_glob[mn]->e[R_POR_LIQ_PRES], 
 	  pd_glob[mn]->e[R_POR_GAS_PRES],
 	  pd_glob[mn]->e[R_POR_POROSITY],
 	  pd_glob[mn]->e[R_POR_ENERGY]);
 
       ECHO(es,echo_file);
-      
+
       /* Porous (rock) compressibility */
 
       strcpy(search_string, "Porous Compressibility");
@@ -4571,7 +4606,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
         }
 
       ECHO(es,echo_file);
- 
+
       strcpy(search_string, "Permeability");
       model_read = look_for_mat_prop(imp, search_string, 
 				     &(mat_ptr->PermeabilityModel), 
@@ -4627,39 +4662,39 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "PSD_SEXP");
 	      EH(-1, err_msg);
 	    }
-	  mat_ptr->len_u_permeability = num_const;	  
+	  mat_ptr->len_u_permeability = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_permeability);
 	}
       else if (model_read == -1 && !strcmp(model_name, "SOLIDIFICATION") )
 	{
 	  mat_ptr->PermeabilityModel = SOLIDIFICATION;
-	  num_const = read_constants(imp, &(mat_ptr->u_permeability), 
+	  num_const = read_constants(imp, &(mat_ptr->u_permeability),
 				     NO_SPECIES);
-	  if ( num_const < 1) 
+	  if ( num_const < 1)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 		   "Matl %s expected at least 1 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Permeability", 
+			   pd_glob[mn]->MaterialName,
+			   "Permeability",
 			   "SOLIDIFICATION");
 	      EH(-1, err_msg);
 	    }
 
-	  mat_ptr->len_u_permeability = num_const;	  
+	  mat_ptr->len_u_permeability = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_permeability);
 	}
       else if (model_read == -1 && !strcmp(model_name, "TENSOR") )
 	{
 	  mat_ptr->PermeabilityModel = K_TENSOR;
-	  num_const = read_constants(imp, &(mat_ptr->u_permeability), 
+	  num_const = read_constants(imp, &(mat_ptr->u_permeability),
 				     NO_SPECIES);
 	  if(pd_glob[mn]->Num_Dim == 3) EH(-1,"Tensor Permeability only 2D for now");
-	  if ( num_const < 4) 
+	  if ( num_const < 4)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 		   "Matl %s expected at least 4 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Permeability", 
+			   pd_glob[mn]->MaterialName,
+			   "Permeability",
 			   "TENSOR");
 	      EH(-1, err_msg);
 	    }
@@ -4670,20 +4705,20 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  mat_ptr->perm_tensor[0][1]  = mat_ptr->u_permeability[3];
 	  mat_ptr->permeability       = mat_ptr->u_permeability[0];
 
-	  mat_ptr->len_u_permeability = num_const;	  	  
+	  mat_ptr->len_u_permeability = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_permeability);
 	}
       else if (model_read == -1 && !strcmp(model_name, "KOZENY_CARMAN") )
 	{
 	  mat_ptr->PermeabilityModel = KOZENY_CARMAN;
-	  num_const = read_constants(imp, &(mat_ptr->u_permeability), 
+	  num_const = read_constants(imp, &(mat_ptr->u_permeability),
 				     NO_SPECIES);
-	  if ( num_const < 2) 
+	  if ( num_const < 2)
 	    {
 	      EH(-1,"expected 2 constants for KOZENY_CARMAN perm model");
 
 	    }
-	  mat_ptr->len_u_permeability = num_const;	  	  
+	  mat_ptr->len_u_permeability = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_permeability);
 	}
       else if (model_read == -1 && !strcmp(model_name, "SINK_MASS_PERM") )
@@ -4691,27 +4726,27 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  if(!pd_glob[mn]->e[R_POR_SINK_MASS]) EH(-1, "SINK_MASS_PERM model not permitted without sink eqn");
 
 	  mat_ptr->PermeabilityModel = SINK_MASS_PERM;
-	  num_const = read_constants(imp, &(mat_ptr->u_permeability), 
+	  num_const = read_constants(imp, &(mat_ptr->u_permeability),
 				     NO_SPECIES);
-	  if ( num_const < 4) 
+	  if ( num_const < 4)
 	    {
 	      EH(-1,"expected 4 constants for SINK_MASS_PERM perm model");
 
 	    }
-	  mat_ptr->len_u_permeability = num_const;	  	  
+	  mat_ptr->len_u_permeability = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_permeability);
 	}
       else if (model_read == -1 && !strcmp(model_name, "ORTHOTROPIC") )
 	{
 	  mat_ptr->PermeabilityModel = ORTHOTROPIC;
-	  num_const = read_constants(imp, &(mat_ptr->u_permeability), 
+	  num_const = read_constants(imp, &(mat_ptr->u_permeability),
 				     NO_SPECIES);
-	  if ( num_const < 12) 
+	  if ( num_const < 12)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 		   "Matl %s expected at least 12 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Permeability", 
+			   pd_glob[mn]->MaterialName,
+			   "Permeability",
 			   "ORTHOTROPIC");
 	      EH(-1, err_msg);
 	    }
@@ -4719,10 +4754,10 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  memset(mat_ptr->perm_tensor, 0, sizeof(double)*DIM*DIM); /*these are loaded up later */
 	  mat_ptr->permeability       = mat_ptr->u_permeability[0]; /*just in case */
 
-	  mat_ptr->len_u_permeability = num_const;	  	  
+	  mat_ptr->len_u_permeability = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_permeability);
 	}
-      
+
       else if (model_read == -1 && !strcmp(model_name, "KC_TENSOR") )
 	{
 	  mat_ptr->PermeabilityModel = KC_TENSOR;
@@ -4746,7 +4781,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       else if (model_read == -1 && !strcmp(model_name, "SM_TENSOR") )
 	{
 	  mat_ptr->PermeabilityModel = SM_TENSOR;
-	  num_const = read_constants(imp, &(mat_ptr->u_permeability), 
+	  num_const = read_constants(imp, &(mat_ptr->u_permeability),
 				     NO_SPECIES);
 	  if ( num_const < 15) 
 	    {
@@ -4765,7 +4800,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       else if (model_read == -1 && !strcmp(model_name, "SHELL_CYLINDER_SQUARE") )
 	{
 	  mat_ptr->PermeabilityModel = SHELL_CYLINDER_SQUARE;
-	  num_const = read_constants(imp, &(mat_ptr->u_permeability), 
+	  num_const = read_constants(imp, &(mat_ptr->u_permeability),
 				     NO_SPECIES);
 
 	  memset(mat_ptr->perm_tensor, 0, sizeof(double)*DIM*DIM); /*these are loaded up later */
@@ -4822,9 +4857,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->PorousLiqCompress = 0.;
 
       strcpy(search_string, "Liquid phase compressibility");
-      model_read = look_for_mat_prop(imp,search_string , 
-				     &(mat_ptr->PorousLiquidCompressModel), 
-				     &(mat_ptr->PorousLiqCompress), 
+      model_read = look_for_mat_prop(imp,search_string ,
+				     &(mat_ptr->PorousLiquidCompressModel),
+				     &(mat_ptr->PorousLiqCompress),
 				     NO_USER, NULL,
 				     model_name, SCALAR_INPUT, &NO_SPECIES,es);
 
@@ -4835,13 +4870,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        */
       strcpy(search_string, "Liquid phase reference pressure");
       mat_ptr->PorousLiqRefPress = 0.;
-      model_read = look_for_mat_prop(imp, search_string , 
-				     &(mat_ptr->PorousLiqRefPressModel), 
-				     &(mat_ptr->PorousLiqRefPress), 
+      model_read = look_for_mat_prop(imp, search_string ,
+				     &(mat_ptr->PorousLiqRefPressModel),
+				     &(mat_ptr->PorousLiqRefPress),
 				     NO_USER, NULL,
 				     model_name, SCALAR_INPUT, &NO_SPECIES,es);
       ECHO(es,echo_file);
-    } /*end of if(mat_ptr->PorousMediaType != CONTINUOUS) */
+    } /*end of if( (mat_ptr->PorousMediaType != CONTINUOUS) && (!PorousShellOn) */
+
 
   /*
    * Read in the special Brinkman Equation Parameters:
@@ -4851,20 +4887,20 @@ ECHO("\n----Acoustic Properties\n", echo_file);
    */
   if (mat_ptr->PorousMediaType == POROUS_BRINKMAN) {
     strcpy(search_string, "FlowingLiquid Viscosity");
-    model_read = look_for_mat_prop(imp, search_string, 
+    model_read = look_for_mat_prop(imp, search_string,
 				   &(mat_ptr->FlowingLiquidViscosityModel),
-				   &(mat_ptr->FlowingLiquid_viscosity), 
+				   &(mat_ptr->FlowingLiquid_viscosity),
 				   &(mat_ptr->u_FlowingLiquid_viscosity),
 				   &(mat_ptr->len_u_FlowingLiquid_viscosity),
-				   model_name, SCALAR_INPUT, 
+				   model_name, SCALAR_INPUT,
 				   &NO_SPECIES,es);
 
     if (!strcmp(model_name, "MOLTEN_GLASS")) {
       mat_ptr->FlowingLiquidViscosityModel = MOLTEN_GLASS;
-      num_const = read_constants(imp, &(mat_ptr->u_FlowingLiquid_viscosity), 
+      num_const = read_constants(imp, &(mat_ptr->u_FlowingLiquid_viscosity),
 				 NO_SPECIES);
       if (num_const < 3) {
-	sprintf(err_msg, 
+	sprintf(err_msg,
 		"Matl %s (conc %d) needs at least 3 constants for %s %s model.\n",
 		pd_glob[mn]->MaterialName, species_no,
 		search_string, "MOLTEN GLASS");
@@ -4875,10 +4911,10 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
     } else if (!strcmp(model_name, "EPOXY")) {
       mat_ptr->FlowingLiquidViscosityModel = EPOXY;
-      num_const = read_constants(imp, &(mat_ptr->u_FlowingLiquid_viscosity), 
+      num_const = read_constants(imp, &(mat_ptr->u_FlowingLiquid_viscosity),
 				 NO_SPECIES);
       if (num_const < 6) {
-	sprintf(err_msg, 
+	sprintf(err_msg,
 		"Matl %s (conc %d) needs at least 6 constants for %s %s model.\n",
 		pd_glob[mn]->MaterialName, species_no,
 		search_string, "EPOXY");
@@ -4968,11 +5004,12 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
   }
 
-  if ( mat_ptr->PorousMediaType == POROUS_UNSATURATED || 
-       mat_ptr->PorousMediaType == POROUS_TWO_PHASE ||
-       mat_ptr->PorousMediaType == POROUS_SHELL_UNSATURATED)
+  if ( (mat_ptr->PorousMediaType == POROUS_UNSATURATED ||
+        mat_ptr->PorousMediaType == POROUS_TWO_PHASE ||
+        mat_ptr->PorousMediaType == POROUS_SHELL_UNSATURATED ) &&
+        (!PorousShellOn))
     {
-      model_read = look_for_mat_prop(imp, "Capillary Network Stress", 
+      model_read = look_for_mat_prop(imp, "Capillary Network Stress",
 				     &(mat_ptr->CapStress), 
 				     &(a0), NO_USER, NULL, model_name, NO_INPUT,
 				     &NO_SPECIES,es);
@@ -4995,23 +5032,23 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       else EH(-1, "Error getting Capillary Network Stress");
 
       ECHO(es,echo_file);
-  
-      model_read = look_for_mat_prop(imp, "Rel Gas Permeability", 
-				     &(mat_ptr->RelGasPermModel), 
-				     &(mat_ptr->rel_gas_perm), 
+
+      model_read = look_for_mat_prop(imp, "Rel Gas Permeability",
+				     &(mat_ptr->RelGasPermModel),
+				     &(mat_ptr->rel_gas_perm),
 				     NO_USER, NULL,
 				     model_name, SCALAR_INPUT, &NO_SPECIES,es);
       if (model_read == -1 && !strcmp(model_name, "SUM_TO_ONE") )
 	{
 	  mat_ptr->RelGasPermModel = SUM_TO_ONE;
-	  num_const = read_constants(imp, &(mat_ptr->u_rel_gas_perm), 
+	  num_const = read_constants(imp, &(mat_ptr->u_rel_gas_perm),
 				     NO_SPECIES);
-	  if ( num_const < 1) 
+	  if ( num_const < 1)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 		   "Matl %s expected at least 1 constant for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Rel Gas Permeability", 
+			   pd_glob[mn]->MaterialName,
+			   "Rel Gas Permeability",
 			   "SUM_TO_ONE");
 	      EH(-1, err_msg);
 	    }
@@ -5025,9 +5062,9 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
       ECHO(es,echo_file);
 
-      model_read = look_for_mat_prop(imp, "Rel Liq Permeability", 
-				     &(mat_ptr->RelLiqPermModel), 
-				     &(mat_ptr->rel_liq_perm), 
+      model_read = look_for_mat_prop(imp, "Rel Liq Permeability",
+				     &(mat_ptr->RelLiqPermModel),
+				     &(mat_ptr->rel_liq_perm),
 				     NO_USER, NULL,
 				     model_name, SCALAR_INPUT, &NO_SPECIES,es);
       if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN") )
@@ -5035,29 +5072,29 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  mat_ptr->RelLiqPermModel = VAN_GENUCHTEN;
 	  num_const = read_constants(imp, &(mat_ptr->u_rel_liq_perm),
 				     NO_SPECIES);
-	  if ( num_const < 4) 
+	  if ( num_const < 4)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 		   "Matl %s expected at least 4 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Rel Liq Permeability", 
+			   pd_glob[mn]->MaterialName,
+			   "Rel Liq Permeability",
 			   "VAN_GENUCHTEN");
 	      EH(-1, err_msg);
 	    }
 	  mat_ptr->len_u_rel_liq_perm = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_rel_liq_perm); 
+	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_rel_liq_perm);
 	}
       else if (model_read == -1 && !strcmp(model_name, "PSD_VOL") )
 	{
 	  mat_ptr->RelLiqPermModel = PSD_VOL;
-	  num_const = read_constants(imp, &(mat_ptr->u_rel_liq_perm), 
+	  num_const = read_constants(imp, &(mat_ptr->u_rel_liq_perm),
 				     NO_SPECIES);
-	  if ( num_const < 1) 
+	  if ( num_const < 1)
 	    {
-	      sr = sprintf(err_msg, 
+	      sr = sprintf(err_msg,
 		   "Matl %s expected at least 1 constant for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Rel Liq Permeability", 
+			   pd_glob[mn]->MaterialName,
+			   "Rel Liq Permeability",
 			   "PSD_VOL");
 	      EH(-1, err_msg);
 	    }
@@ -5174,174 +5211,176 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
       ECHO(es,echo_file);
 
-      model_read = look_for_mat_proptable(imp, "Saturation",
-				     &(mat_ptr->SaturationModel), 
-				     &(mat_ptr->saturation), 
-				     &(mat_ptr->u_saturation),
-				     &(mat_ptr->len_u_saturation),
-                                     &(mat_ptr->saturation_tableid),
-                                     model_name, SCALAR_INPUT, &NO_SPECIES,es);
 
-      if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN") )
-	{
-	  mat_ptr->SaturationModel = VAN_GENUCHTEN;
-	  num_const = read_constants(imp, &(mat_ptr->u_saturation), 
+      /* Read in Saturation */
+          model_read = look_for_mat_proptable(imp, "Saturation",
+				              &(mat_ptr->SaturationModel),
+				              &(mat_ptr->saturation),
+				              &(mat_ptr->u_saturation),
+				              &(mat_ptr->len_u_saturation),
+                                              &(mat_ptr->saturation_tableid),
+                                              model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+         if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN") )
+	   {
+	    mat_ptr->SaturationModel = VAN_GENUCHTEN;
+	    num_const = read_constants(imp, &(mat_ptr->u_saturation),
 				     NO_SPECIES);
-	  if ( num_const < 4) 
-	    {
-	      sr = sprintf(err_msg, 
-		   "Matl %s expected at least 4 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Saturation", 
+	    if ( num_const < 4)
+	      {
+	       sr = sprintf(err_msg,
+		    "Matl %s expected at least 4 constants for %s %s model.\n",
+			   pd_glob[mn]->MaterialName,
+			   "Saturation",
 			   "VAN_GENUCHTEN");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_saturation = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
-	}
-      else if (model_read == -1 && !strcmp(model_name, "PSD_VOL") )
-	{
-	  mat_ptr->SaturationModel = PSD_VOL;
-	  num_const = read_constants(imp, &(mat_ptr->u_saturation), 
-				     NO_SPECIES);
-	  if ( num_const < 4) 
-	    {
-	      sr = sprintf(err_msg, 
+	       EH(-1, err_msg);
+	      }
+	    mat_ptr->len_u_saturation = num_const;
+	    SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation);
+	   }
+         else if (model_read == -1 && !strcmp(model_name, "PSD_VOL") )
+	   {
+	    mat_ptr->SaturationModel = PSD_VOL;
+	    num_const = read_constants(imp, &(mat_ptr->u_saturation),
+				       NO_SPECIES);
+	    if ( num_const < 4)
+	      {
+	       sr = sprintf(err_msg,
 		   "Matl %s expected at least 4 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Saturation", 
+			   pd_glob[mn]->MaterialName,
+			   "Saturation",
 			   "PSD_VOL");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_saturation = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
-	}
-      else if (model_read == -1 && !strcmp(model_name, "PSD_WEXP") )
-	{
-	  mat_ptr->SaturationModel = PSD_WEXP;
-	  num_const = read_constants(imp, &(mat_ptr->u_saturation), 
+	       EH(-1, err_msg);
+	      }
+	    mat_ptr->len_u_saturation = num_const;
+	    SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation);
+	   }
+         else if (model_read == -1 && !strcmp(model_name, "PSD_WEXP") )
+	   {
+	    mat_ptr->SaturationModel = PSD_WEXP;
+	    num_const = read_constants(imp, &(mat_ptr->u_saturation),
 				     NO_SPECIES);
-	  if ( num_const < 4) 
-	    {
-	      sr = sprintf(err_msg, 
+	    if ( num_const < 4)
+	      {
+	       sr = sprintf(err_msg,
 		   "Matl %s expected at least 4 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Saturation", 
+			   pd_glob[mn]->MaterialName,
+			   "Saturation",
 			   "PSD_WEXP");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_saturation = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
-	}
-      else if (model_read == -1 && !strcmp(model_name, "PSD_SEXP") )
-	{
-	  mat_ptr->SaturationModel = PSD_SEXP;
-	  num_const = read_constants(imp, &(mat_ptr->u_saturation), 
+	       EH(-1, err_msg);
+	      }
+	    mat_ptr->len_u_saturation = num_const;
+	    SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation);
+	   }
+         else if (model_read == -1 && !strcmp(model_name, "PSD_SEXP") )
+	   {
+	    mat_ptr->SaturationModel = PSD_SEXP;
+	    num_const = read_constants(imp, &(mat_ptr->u_saturation),
 				     NO_SPECIES);
-	  if ( num_const < 4) 
-	    {
-	      sr = sprintf(err_msg, 
+	    if ( num_const < 4)
+	      {
+	       sr = sprintf(err_msg,
 		   "Matl %s expected at least 4 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Saturation", 
+			   pd_glob[mn]->MaterialName,
+			   "Saturation",
 			   "PSD_SEXP");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_saturation = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
-	}
-      else if (model_read == -1 && !strcmp(model_name, "TANH") )
-	{
-	  mat_ptr->SaturationModel = TANH;
-	  num_const = read_constants(imp, &(mat_ptr->u_saturation), 
+	       EH(-1, err_msg);
+	      }
+	    mat_ptr->len_u_saturation = num_const;
+	    SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
+	   }
+         else if (model_read == -1 && !strcmp(model_name, "TANH") )
+	   {
+	    mat_ptr->SaturationModel = TANH;
+	    num_const = read_constants(imp, &(mat_ptr->u_saturation), 
 				     NO_SPECIES);
-	  if ( num_const < 4) 
-	    {
-	      sr = sprintf(err_msg, 
+	    if ( num_const < 4) 
+	      {
+	       sr = sprintf(err_msg, 
 		   "Matl %s expected at least 4 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Saturation", 
 			   "TANH");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_saturation = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
-	}
-      else if (model_read == -1 && !strcmp(model_name, "SHELL_TANH") )
-	{
-	  mat_ptr->SaturationModel = SHELL_TANH;
-	  num_const = read_constants(imp, &(mat_ptr->u_saturation), 
+	       EH(-1, err_msg);
+	      }
+	    mat_ptr->len_u_saturation = num_const;
+	    SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation);
+	   }
+         else if (model_read == -1 && !strcmp(model_name, "SHELL_TANH") )
+	   {
+	    mat_ptr->SaturationModel = SHELL_TANH;
+	    num_const = read_constants(imp, &(mat_ptr->u_saturation),
 				     NO_SPECIES);
-	  if ( num_const < 4) 
-	    {
-	      sr = sprintf(err_msg, 
+	    if ( num_const < 4)
+	      {
+	       sr = sprintf(err_msg,
 		   "Matl %s expected at least 4 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Saturation", 
+			   pd_glob[mn]->MaterialName,
+			   "Saturation",
 			   "SHELL_TANH");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_saturation = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
-	}
-      else if (model_read == -1 && !strcmp(model_name, "TANH_EXTERNAL") )
-	{
-	  if ( fscanf(imp,"%s", input ) !=  1 )
-	    {
-	      EH(-1,"Expecting trailing keyword for TANH EXTERNAL_FIELD model.\n");
-	    }
-	  ii=0;
-	  for ( j=0; j<efv->Num_external_field; j++)
-	    {
-	      if (!strcmp(efv->name[j], input))
-		{ 
-		  ii=1;
-                  mat_ptr->SAT_external_field_index = j;
-		}
-	    }
-	  if( ii==0 )
-	    {
-	      EH(-1,"Must activate external fields to use this TANH_EXTERNAL model");
-	    }
-	  mat_ptr->SaturationModel = TANH_EXTERNAL;
-	  num_const = read_constants(imp, &(mat_ptr->u_saturation), 
-				     NO_SPECIES);
-	  if ( num_const < 8) 
-	    {
-	      sr = sprintf(err_msg, 
+	       EH(-1, err_msg);
+	      }
+	    mat_ptr->len_u_saturation = num_const;
+	    SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
+	   }
+         else if (model_read == -1 && !strcmp(model_name, "TANH_EXTERNAL") )
+	   {
+	    if ( fscanf(imp,"%s", input ) !=  1 )
+	      {
+	       EH(-1,"Expecting trailing keyword for TANH EXTERNAL_FIELD model.\n");
+	      }
+	    ii = 0;
+	    for ( j=0; j<efv->Num_external_field; j++)
+	       {
+	        if (!strcmp(efv->name[j], input))
+		  {
+		   ii = 1;
+                   mat_ptr->SAT_external_field_index = j;
+		  }
+	       }
+	    if( ii==0 )
+	      {
+	       EH(-1,"Must activate external fields to use this TANH_EXTERNAL model");
+	      }
+	    mat_ptr->SaturationModel = TANH_EXTERNAL;
+	    num_const = read_constants(imp, &(mat_ptr->u_saturation),
+				       NO_SPECIES);
+	    if ( num_const < 8)
+	      {
+	       sr = sprintf(err_msg,
 		   "Matl %s expected at least 8 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
-			   "Saturation", 
+			   pd_glob[mn]->MaterialName,
+			   "Saturation",
 			   "TANH_EXTERNAL");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_saturation = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
-	}
-      else if (model_read == -1 && !strcmp(model_name, "TANH_HYST") )
-	{
-	  mat_ptr->SaturationModel = TANH_HYST;
-	  num_const = read_constants(imp, &(mat_ptr->u_saturation), 
-				     NO_SPECIES);
-	  if ( num_const < 10) 
-	    {
-	      sr = sprintf(err_msg, 
-		   "Matl %s expected at least 10 constants for %s %s model.\n",
-			   pd_glob[mn]->MaterialName, 
+	       EH(-1, err_msg);
+	      }
+	    mat_ptr->len_u_saturation = num_const;
+	    SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation);
+	   }
+         else if (model_read == -1 && !strcmp(model_name, "TANH_HYST") )
+	   {
+	    mat_ptr->SaturationModel = TANH_HYST;
+	    num_const = read_constants(imp, &(mat_ptr->u_saturation),
+				       NO_SPECIES);
+	    if ( num_const < 10)
+	      {
+	        sr = sprintf(err_msg,
+		           "Matl %s expected at least 10 constants for %s %s model.\n",
+			   pd_glob[mn]->MaterialName,
 			   "Saturation", 
 			   "TANH_HYST");
-	      EH(-1, err_msg);
-	    }
-	  mat_ptr->len_u_saturation = num_const;
-	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
+	        EH(-1, err_msg);
+	      }
+	    mat_ptr->len_u_saturation = num_const;
+	     SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
 
-	  /*initialize Gauss point structure */
-	}
-      else
-	{
-	  EH(model_read, "Saturation");
-	}
-      ECHO(es,echo_file);   
+	   }
+         else
+	   {
+	    EH(model_read, "Saturation");
+	   }
+         ECHO(es,echo_file);
+
 
       if (pd_glob[mn]->e[R_POR_ENERGY]) {
       /*
@@ -5362,14 +5401,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
 
       ECHO(es,echo_file);
-      
+
       /*
        * Specific heat of solid matrix
        */
       mat_ptr->specific_heat = 1.;
-      model_read = look_for_mat_prop(imp, "Matrix Specific Heat", 
-				     &(mat_ptr->PorousSpecificHeatModel), 
-				     &(mat_ptr->matrix_density), 
+      model_read = look_for_mat_prop(imp, "Matrix Specific Heat",
+				     &(mat_ptr->PorousSpecificHeatModel),
+				     &(mat_ptr->matrix_density),
 				     NO_USER, NULL,
 				     model_name, SCALAR_INPUT, &NO_SPECIES,es);
 
@@ -5393,16 +5432,17 @@ ECHO("\n----Acoustic Properties\n", echo_file);
    * will want the liquid-phase components to be looped when we add multicomponent
    * porous liquid capability. Possibly also you will loop over base gas phase
    * components (which will usually be air, with all other components in the gas
-   * coming from the liquid 
+   * coming from the liquid
    */
 
   /* TAB here. just like to comment in passing that this whole porous media input section is
    * an unpleasant mess and needs fixing.  November 2005 */
 
   if (mat_ptr->PorousMediaType != CONTINUOUS &&
-      mat_ptr->PorousMediaType != POROUS_BRINKMAN) 
+      mat_ptr->PorousMediaType != POROUS_BRINKMAN &&
+      (!PorousShellOn))
     {
-      
+
     /*
      *   Porous Weight Function:
      *
@@ -5410,17 +5450,17 @@ ECHO("\n----Acoustic Properties\n", echo_file);
      *    To follow the theory of Brooks and Hughes, the weighting function
      *    value should be set equal to 1.0 
      */
-      model_read = look_for_mat_prop(imp, "Porous Weight Function", 
-				   &(mat_ptr->Porous_wt_funcModel), 
+      model_read = look_for_mat_prop(imp, "Porous Weight Function",
+				   &(mat_ptr->Porous_wt_funcModel),
 				   &(mat_ptr->Porous_wt_func), NO_USER, NULL,
 				   model_name, SCALAR_INPUT, &NO_SPECIES,es);
-      
-      if (!strcmp(model_name, "GALERKIN")) 
+
+      if (!strcmp(model_name, "GALERKIN"))
 	{
 	  mat_ptr->Porous_wt_funcModel = GALERKIN;
 	  mat_ptr->Porous_wt_func = 0.0;
-	} 
-      else if (!strcmp(model_name, "SUPG")) 
+	}
+      else if (!strcmp(model_name, "SUPG"))
 	{
 	  int err;
 	  mat_ptr->Porous_wt_funcModel = SUPG;
@@ -5429,17 +5469,17 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    EH(-1, "Expected to read one double for Porous Weight Function SUPG");
 	  }
 	  SPF(endofstring(es)," %.4g", mat_ptr->Porous_wt_func);
-	} 
-      else 
+	}
+      else
 	{
 	  mat_ptr->Porous_wt_funcModel = GALERKIN;
 	  mat_ptr->Porous_wt_func = 0.0;
-	  
+
 	  SPF(es,"\t(%s = %s)","Porous Weight Function", "GALERKIN"); 
 	}
       ECHO(es,echo_file);
-    
-  
+
+
     /*
      *   Porous Mass Lumping:
      *
@@ -5449,46 +5489,46 @@ ECHO("\n----Acoustic Properties\n", echo_file);
      *
      *    Note, the combination of Mass Lumping and SUPG has
      *    been shown to exhibit monotone behavior. Also note that
-     *    mass lumping is only useful for partially saturated flows. 
+     *    mass lumping is only useful for partially saturated flows.
      */
-  
+
   mat_ptr->Porous_Mass_Lump = FALSE;
-  model_read = look_for_mat_prop(imp, "Porous Mass Lumping", 
-				   &(mat_ptr->Porous_wt_funcModel), 
+  model_read = look_for_mat_prop(imp, "Porous Mass Lumping",
+				   &(mat_ptr->Porous_wt_funcModel),
 				   &(mat_ptr->Porous_wt_func), NO_USER, NULL,
 				   model_name, SCALAR_INPUT, &NO_SPECIES,es);
-    
+
   if(mat_ptr->PorousMediaType != POROUS_SATURATED &&
      mat_ptr->PorousMediaType != POROUS_SHELL_UNSATURATED)
     {
-      if (!strcasecmp(model_name, "yes") || 
-	  !strcasecmp(model_name, "true")) 
+      if (!strcasecmp(model_name, "yes") ||
+	  !strcasecmp(model_name, "true"))
 	{
 	  mat_ptr->Porous_Mass_Lump = TRUE;
 	}
       else if (!strcasecmp(model_name, "no") ||
-	       !strcasecmp(model_name, "false")) 
+	       !strcasecmp(model_name, "false"))
 	{
 	  mat_ptr->Porous_Mass_Lump = FALSE;
-	} 
-      else 
+	}
+      else
 	{
 	  EH(-1,"Porous Mass Lumping must be set to TRUE, YES, FALSE, or NO!");
 	  mat_ptr->Porous_Mass_Lump = FALSE;
 	}
     }
     /* Jim Simmons: make sure this consistency check is added to new parse code */
-  if(mat_ptr->Porous_Mass_Lump == TRUE &&  
+  if(mat_ptr->Porous_Mass_Lump == TRUE &&
      mat_ptr->PorousMediaType == POROUS_SATURATED)
     {
       EH(-1,"Mass Lumping is NOT implemented for POROUS_SATURATED problems. Turn to FALSE");
     }
-    
+
   ECHO(es,echo_file);
 
     /*
      * set porous number equal to max number of porous media phases
-     * it is changed to the porous phase number of input property by 
+     * it is changed to the porous phase number of input property by
      * look_for_mat_prop
      */
   porous_no = mat_ptr->Num_Porous_Eqn;
@@ -5497,36 +5537,36 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     /*
      *   Porous Time Integration
      */
-  model_read = look_for_mat_prop(imp, "Porous Time Integration", 
-				   &(PorousTimeIntegration), 
-				   &(a0), NO_USER, NULL, 
-				   model_name, NO_INPUT,  
+  model_read = look_for_mat_prop(imp, "Porous Time Integration",
+				   &(PorousTimeIntegration),
+				   &(a0), NO_USER, NULL,
+				   model_name, NO_INPUT,
 				   &porous_no,es);
-  if (model_read == -1 && !strcmp(model_name, "STANDARD") ) 
+  if (model_read == -1 && !strcmp(model_name, "STANDARD") )
     {
       mat_ptr->PorousTimeIntegration[porous_no] = STANDARD;
-    } else if (model_read == -1 && 
-	       !strcmp(model_name, "TAYLOR_GALERKIN")) 
+    } else if (model_read == -1 &&
+	       !strcmp(model_name, "TAYLOR_GALERKIN"))
     {
       mat_ptr->PorousTimeIntegration[porous_no] = TAYLOR_GALERKIN;
     }
-  else if (model_read == -1 && 
-	   !strcmp(model_name, "TAYLOR_GALERKIN_EXP")) 
+  else if (model_read == -1 &&
+	   !strcmp(model_name, "TAYLOR_GALERKIN_EXP"))
     {
       mat_ptr->PorousTimeIntegration[porous_no] = TAYLOR_GALERKIN_EXP;
     }
-  else 
+  else
     {
       mat_ptr->PorousTimeIntegration[porous_no] = STANDARD;
       SPF(es,"\t(%s = %s)", "Porous Time Integration", "STANDARD");
     }
   ECHO(es,echo_file);
 
-      
+
       /*
        * Porous Section 3:  Species Dependent properties are finally input
        * here.  Remember that really each porous media equation is a species balance
-       * across all phases. Hence you will notice we split out the phases where 
+       * across all phases. Hence you will notice we split out the phases where
        * appropriate in separate card inputs, and loop someday over the species in
        * each base phase.     This is kind of confusing but eventually after specifying
        * the phase diffusion transport constitutive equation types, we then loop
@@ -5534,30 +5574,30 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        * one liquid solvent, but it can exist in 2 phases, hence the Liquid and Gas
        * qualifiers.   In the Gas, there is only one base component and it is insoluble
        * in liquid (e.g. air).  The finaly section here deals with specific properties
-       * of air. 
+       * of air.
        */
-      
-      
-    if (pd_glob[mn]->Num_Porous_Eqn > 0) 
+
+
+    if (pd_glob[mn]->Num_Porous_Eqn > 0)
       {
-	
+
 	  /*
 	   * Hey! If it's in there, then it should be fine. To avoid the ordering
 	   * complaints, let's rewind the mat file and start looking from the
 	   * beginning.
 	   */
 	rewind(imp);
-	  
+
 	  /* Important Note from PRS: When we start allowing multicomponent (nonideal)
 	   * diffusion in the liquid phase and in the gas phase, we will need to make this
 	   * two cards (one for liquid and one for gas).  I could think of wanting to do
 	   * Stephan-Maxwell in the gas, and fickian only in the liquid, with, of course,
-	   * the microstructure tortuosity corrections. For now leave this be.  05/29/01 
-	   */ 
-	
-	model_read = look_for_mat_prop(imp, "Porous Diffusion Constitutive Equation", 
-				       &(PorousDiffusionConstitutiveEquation), 
-				       &(a0), NO_USER, NULL, model_name, NO_INPUT, 
+	   * the microstructure tortuosity corrections. For now leave this be.  05/29/01
+	   */
+
+	model_read = look_for_mat_prop(imp, "Porous Diffusion Constitutive Equation",
+				       &(PorousDiffusionConstitutiveEquation),
+				       &(a0), NO_USER, NULL, model_name, NO_INPUT,
 				       &NO_SPECIES,es);
 	if ( !strcmp(model_name, "DARCY") )
 	  {
@@ -5581,40 +5621,40 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		    "If still bad - check orderings in the mat file!");
 	    EH(-1,err_msg);
 	  }
-	  
+
 	pd_glob[mn]->PorousFluxModel = PorousDiffusionConstitutiveEquation;
 	cr_glob[mn]->PorousFluxModel = PorousDiffusionConstitutiveEquation;
-	ECHO(es,echo_file);	
+	ECHO(es,echo_file);
       }
 
-      
+
     /*
  ***************************************************************************
  *  LOOP OVER THE SPECIES THAT can be present in gas and liquid phases.
  * These come from the base liquid composition as we are assuming the
- *  base gas phase components,  e.g. air, are insoluble in the liquid phase. 
+ *  base gas phase components,  e.g. air, are insoluble in the liquid phase.
  * As of 05/29/01 we only  allow single component
- * and so this is a loop of 1 to 1.   Change will be made here for multicomponent. 
+ * and so this is a loop of 1 to 1.   Change will be made here for multicomponent.
  **************************************************************************
  */
 
     ECHO("\n----Species Transport Properties \n",echo_file);
-      
-    Num_liquid_phase_components = 1;  /* Put this in the porous structure and read in 
-					 * when you expand to more than one component 
+
+    Num_liquid_phase_components = 1;  /* Put this in the porous structure and read in
+					 * when you expand to more than one component
 					 */
     for (j = 0; j< Num_liquid_phase_components; j++)
-      { 
+      {
 	/* N.B. porous_no is the species number, really.  Should be zero in
-	   * all cases, until we go multicomponent.  Name should be changed. 
+	   * all cases, until we go multicomponent.  Name should be changed.
 	   * For now this card will be the vapor diffusivity value of the primary
 	   * liquid solvent component.    It is also assumed to be binary
 	   * diffusion.  However, this should also have a Porous Liquid Diffusivity
 	   * counterpart for the same species to account for the diffusion model
-	   * in the liquid phase. 
-	   * PRS 052901 
+	   * in the liquid phase.
+	   * PRS 052901
 	   */
-	  
+
 	if ( mat_ptr->PorousMediaType != POROUS_SATURATED)
 	  {
 	    model_read = look_for_porous_prop( imp, "Porous Gas Diffusivity", mat_ptr,
@@ -5626,76 +5666,76 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      /*
 	       * Postprocess unique Porous Diffusivity models
 	       */
-	    if (model_read == -1) 
+	    if (model_read == -1)
 	      {
 		EH(-1,
 		   "Porous Gas Diffusivity: Bad Card syntax or need another set of porous mat cards?");
-	      } 
-	    else if (model_read == 0) 
+	      }
+	    else if (model_read == 0)
 	      {
 		if (!strcmp(model_name, "POROUS")) {
 		  mat_ptr->PorousDiffusivityModel[porous_no] = POROUS;
 		  num_const = mat_ptr->len_u_porous_diffusivity[porous_no];
-		  if (num_const < 5) 
+		  if (num_const < 5)
 		    {
-		      sprintf(err_msg, 
+		      sprintf(err_msg,
 			      "Matl %s (eqn %d) needs at least 5 constants for %s %s model.\n",
 			    pd_glob[mn]->MaterialName, porous_no,
 			    "Porous Gas Diffusivity", "POROUS");
 		      EH(-1, err_msg);
 		    }
 		}
-		
+
 	      } /* End of if (model_read == 0) */
 
 	    ECHO(es,echo_file);
-	      
-	      
+
+
 	      /*
 	       *  Porous Latent Heat of Vaporization Section
 	       *
 	       * set porous number equal to max number of porous media phases
-	       * it is changed to the porous phase number of input properly by 
+	       * it is changed to the porous phase number of input properly by
 	       * look_for_mat_prop
 	       */
 	    porous_no = mat_ptr->Num_Porous_Eqn;
-	    model_read = look_for_mat_prop(imp, "Porous Latent Heat Vaporization", 
-					   mat_ptr->PorousLatentHeatVapModel, 
-					   mat_ptr->porous_latent_heat_vap, 
-					     NO_USER, NULL, model_name, 
+	    model_read = look_for_mat_prop(imp, "Porous Latent Heat Vaporization",
+					   mat_ptr->PorousLatentHeatVapModel,
+					   mat_ptr->porous_latent_heat_vap,
+					     NO_USER, NULL, model_name,
 					     SCALAR_INPUT, &porous_no,es);
 	    EH(model_read, "Porous Latent Heat Vaporization");
 	    ECHO(es,echo_file);
-	      
+
 	      /*
 	       *  Porous Latent Heat of Fusion Section
 	       *
 	       * set porous number equal to max number of porous media phases
-	       * it is changed to the porous phase number of input property by 
+	       * it is changed to the porous phase number of input property by
 	       * look_for_mat_prop
 	       */
 	    porous_no = mat_ptr->Num_Porous_Eqn;
-	    model_read = look_for_mat_prop(imp, "Porous Latent Heat Fusion", 
-					   mat_ptr->PorousLatentHeatFusionModel, 
-					   mat_ptr->porous_latent_heat_fusion, 
-					   NO_USER, NULL, model_name, 
+	    model_read = look_for_mat_prop(imp, "Porous Latent Heat Fusion",
+					   mat_ptr->PorousLatentHeatFusionModel,
+					   mat_ptr->porous_latent_heat_fusion,
+					   NO_USER, NULL, model_name,
 					     SCALAR_INPUT, &porous_no,es);
 	    EH(model_read, "Porous Latent Heat Fusion");
 	    ECHO(es,echo_file);
-	      
-	      
+
+
 	      /*
 	       *  Vapor Pressure Section
 	       *
 	       * set porous number equal to max number of porous media phases
-	       * it is changed to the porous phase number of input property by 
+	       * it is changed to the porous phase number of input property by
 	       * look_for_mat_prop
 	       */
 	    porous_no = mat_ptr->Num_Porous_Eqn;
-	    model_read = look_for_mat_prop(imp, "Porous Vapor Pressure", 
-					   mat_ptr->PorousVaporPressureModel, 
-					   mat_ptr->porous_vapor_pressure, 
-					   NO_USER, NULL, model_name, 
+	    model_read = look_for_mat_prop(imp, "Porous Vapor Pressure",
+					   mat_ptr->PorousVaporPressureModel,
+					   mat_ptr->porous_vapor_pressure,
+					   NO_USER, NULL, model_name,
 					   SCALAR_INPUT, &porous_no,es);
 
 	    if ( model_read == -1 && (!strcmp(model_name, "KELVIN") ||
@@ -5703,14 +5743,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      {
 		if (!strcmp(model_name, "KELVIN")) mat_ptr->PorousVaporPressureModel[porous_no] = KELVIN;
 		if (!strcmp(model_name, "FLAT")) mat_ptr->PorousVaporPressureModel[porous_no] = FLAT;
-		  
-		if ( mat_ptr->PorousMediaType == POROUS_TWO_PHASE) 
+
+		if ( mat_ptr->PorousMediaType == POROUS_TWO_PHASE)
 		  {
-		    num_const = read_constants(imp, mat_ptr->u_porous_vapor_pressure, 
+		    num_const = read_constants(imp, mat_ptr->u_porous_vapor_pressure,
 						 porous_no);
-		    if ( num_const < 5) 
+		    if ( num_const < 5)
 		      {
-			sprintf(err_msg, 
+			sprintf(err_msg,
 				"Matl %s (%s, conc %d) needs 5 constants for %s %s model.\n",
 				pd_glob[mn]->MaterialName, "porous 2-phase", porous_no,
 				"Porous Vapor Pressure", "KELVIN or FLAT");
@@ -5718,26 +5758,26 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		      }
 		    mat_ptr->len_u_porous_vapor_pressure[porous_no] = num_const;
 		    SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_porous_vapor_pressure[porous_no]);
-		  } 
+		  }
 		else if ( mat_ptr->PorousMediaType == POROUS_UNSATURATED)
 		  {
-		    num_const = read_constants(imp, mat_ptr->u_porous_vapor_pressure, 
+		    num_const = read_constants(imp, mat_ptr->u_porous_vapor_pressure,
 						 porous_no);
-		    if ( num_const < 5) 
+		    if ( num_const < 5)
 		      {
-			sprintf(err_msg, 
+			sprintf(err_msg,
 				"Matl %s (%s, conc %d) needs 5 constants for %s %s model.\n",
-				pd_glob[mn]->MaterialName, "porous unsaturated", 
+				pd_glob[mn]->MaterialName, "porous unsaturated",
 				porous_no,
 				  "Porous Vapor Pressure", "KELVIN OR FLAT");
 			EH(-1, err_msg);
 		      }
 		    mat_ptr->len_u_porous_vapor_pressure[porous_no] = num_const;
 		      SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_porous_vapor_pressure[porous_no]);
-		    } 
-		else 
+		    }
+		else
 		  {
-		    sprintf(err_msg, 
+		    sprintf(err_msg,
 			      "%s model invalid in matl %s unless %s is \"%s\" or \"%s\"\n",
 			      "KELVIN or FLAT", pd_glob[mn]->MaterialName, "Media Type",
 			      "POROUS_TWO_PHASE", "POROUS_UNSATURATED");
@@ -5759,43 +5799,44 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      }
 	    ECHO(es,echo_file);
 	    }  /*end if(!POROUS_SATURATED) */
-	  
+
 	  /*
 	   *  Porous Liquid Volume Expansion Section
 	   *
 	   * set porous number equal to max number of porous media phases
-	   * it is changed to the porous phase number of input property  by 
+	   * it is changed to the porous phase number of input property  by
 	   *  look_for_mat_prop
-	   * 
+	   *
 	   * PRS (052901): This is a phase property that is component dependent.  You need to
 	   * add the Porous Gas Volume Expansion card for the gas phase as well, when
-	   * you go multicomponent. 
-	   */ 
+	   * you go multicomponent.
+	   */
 	if ( mat_ptr->PorousMediaType != POROUS_SHELL_UNSATURATED ) {
-	  model_read = look_for_porous_prop( imp, "Porous Liquid Volume Expansion", mat_ptr,  
-					     mat_ptr->PorVolExpModel, 
-					     mat_ptr->porous_vol_expansion, 
-					     NO_USER, NULL, model_name, 
+	  model_read = look_for_porous_prop( imp, "Porous Liquid Volume Expansion", mat_ptr,
+					     mat_ptr->PorVolExpModel,
+					     mat_ptr->porous_vol_expansion,
+					     NO_USER, NULL, model_name,
 					     SCALAR_INPUT, &porous_no,es );
 	  EH(model_read, "Porous Liquid Volume Expansion");
 	  ECHO(es,echo_file);
 	}
-	  
+
       } /* End for(j=0;j<Num_liquid_phase_components; j++) */
-      
+
+
       /*Final porous input stage */
-      
-    Num_insoluble_gas_phase_components = 1;  /* Put this in the porous structure and read in 
-						* when you expand to more than one component 
+
+    Num_insoluble_gas_phase_components = 1;  /* Put this in the porous structure and read in
+						* when you expand to more than one component
 						*/
-      /*These cards are needed if there in all gas/liquid flow cases, 
+      /*These cards are needed if there in all gas/liquid flow cases,
        * viz. TWO_PHASE and UNSATURATED.  In the Unsaturated case this
        * card is used to set the external CONSTANT ambient pressure*/
-	if(mat_ptr->PorousMediaType != CONTINUOUS && 
+	if(mat_ptr->PorousMediaType != CONTINUOUS &&
 	   mat_ptr->PorousMediaType != POROUS_SATURATED )
 	  {
 	    for (j = 0; j< Num_insoluble_gas_phase_components; j++)
-	      { 
+	      {
 		/*
 		 *  Insoluble Porous Gas phase component  Section
 		 *  This supplants old way of using the Vapor Pressure
@@ -5803,21 +5844,21 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		 *  cards for the ideal gas model (viz. MW, Universal Gas Const, T)
 		 *
 		 */
-		model_read = look_for_mat_prop(imp, "Porous Gas Constants", 
-					       &(mat_ptr->PorousGasConstantsModel), 
-					       &(mat_ptr->porous_gas_constants), 
-					       NO_USER, NULL, model_name, 
+		model_read = look_for_mat_prop(imp, "Porous Gas Constants",
+					       &(mat_ptr->PorousGasConstantsModel),
+					       &(mat_ptr->porous_gas_constants),
+					       NO_USER, NULL, model_name,
 					       SCALAR_INPUT, &NO_SPECIES,es);
-			
+
 		if ( model_read == -1 && !strcmp(model_name, "IDEAL_GAS") )
 		  {
 		    mat_ptr->PorousGasConstantsModel = IDEAL_GAS;
-				
-		    num_const = read_constants(imp, &(mat_ptr->u_porous_gas_constants), 
+
+		    num_const = read_constants(imp, &(mat_ptr->u_porous_gas_constants),
 										   NO_SPECIES);
-		    if ( num_const < 4 ) 
+		    if ( num_const < 4 )
 		      {
-			sr = sprintf(err_msg, 
+			sr = sprintf(err_msg,
 				     "Matl %s (conc %d) needs 4 constants for %s %s model.\n",
 				     pd_glob[mn]->MaterialName,
 				     0,
@@ -5826,7 +5867,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		      }
 		    mat_ptr->len_u_porous_gas_constants = num_const;
 		    SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_porous_gas_constants);
-		  } 
+		  }
 		else if (!strcmp(model_name, "CONSTANT") )
 		  {
 		    EH(-1,"Ironically we don't allow a CONSTANT model for Porous Gas Constants.  Try IDEAL_GAS");
@@ -5838,46 +5879,693 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		ECHO(es,echo_file);
 	      }
 	  }
+    }  /*if ( mat_ptr->PorousMediaType != CONTINUOUS && != POROUS_BRINKMAN)*/
+
+	  /*
+	   *  Porous Shell Section
+	   *
+	   */
+
+  if ( ( mat_ptr->PorousMediaType == POROUS_SHELL_UNSATURATED ) &&
+       (PorousShellOn)  ) /* This only applies to porous shell  equations */
+    {
+
+      /* create a list of the porous media equations
+         active in this material                     */
+      i = 0;
+
+      if(pd_glob[mn]->e[R_SHELL_SAT_1])
+        {
+          mat_ptr->Porous_Shell_Eqn[i] = R_SHELL_SAT_1;
+          i++;
+	}
+
+      if(pd_glob[mn]->e[R_SHELL_SAT_2])
+        {
+          mat_ptr->Porous_Shell_Eqn[i] = R_SHELL_SAT_2;
+          i++;
+	}
+
+      if(pd_glob[mn]->e[R_SHELL_SAT_3])
+        {
+          mat_ptr->Porous_Shell_Eqn[i] = R_SHELL_SAT_3;
+          i++;
+	}
+
+
+      if( i != pd_glob[mn]->Num_Porous_Shell_Eqn )
+        {
+          EH(-1,"Number of porous shell equations do not add up");
+        }
+
+/***************************************************************************
+ *  LOOP OVER THE POROUS SHELL LAYERS.
+ **************************************************************************/
+
+     /* Initialize porous shell no with maximum number of porous shell layers read from pd */
+
+     for (ipore = 0; ipore < pd_glob[mn]->Num_Porous_Shell_Eqn; ipore++)
+        {
+
+/******************
+ *                *
+ * Read porosity  *
+ *                *
+*******************/
+         porous_shell_no = pd_glob[mn]->Num_Porous_Shell_Eqn;
+         strcpy(search_string, "Porosity");
+         model_read = look_for_mat_prop(imp, search_string,
+                                     mat_ptr->PorousShellPorosityModel,
+                                     mat_ptr->PorousShellPorosity,
+                                     NO_USER, NULL, model_name,
+                                     SCALAR_INPUT, &porous_shell_no,es);
+
+         if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD") )
+           {
+            if ( fscanf(imp,"%s", input ) !=  1 )
+              {
+               EH(-1,"Expecting trailing keyword for Porosity EXTERNAL_FIELD model.\n");
+              }
+            ii=0;
+            for ( j=0; j<efv->Num_external_field; j++)
+              {
+               if (!strcmp(efv->name[j], input) )
+                {
+                  ii=1;
+                  mat_ptr->por_shell_porosity_ext_field_index[ipore] = j;
+                }
+              }
+            if( ii==0 )
+              {
+               EH(-1,"Cannot match the name with that in the external field file");
+              }
+            mat_ptr->PorousShellPorosityModel[ipore] = EXTERNAL_FIELD;
+
+            /* pick up scale factor for property */
+            num_const = read_constants(imp, mat_ptr->u_PorousShellPorosity,
+                                       porous_shell_no);
+            mat_ptr->len_u_PorousShellPorosity[ipore] = num_const;
+            if ( num_const < 1)
+              {
+               sr = sprintf(err_msg,
+                    "Matl %s expected at least 1 constant for %s %s model.\n",
+                    pd_glob[mn]->MaterialName,
+                    "Porosity",
+                    "EXTERNAL_FIELD");
+               EH(-1, err_msg);
+              }
+           }
+         else
+           {
+            EH(model_read, "Porosity: Is card missing?");
+           }
+
+         if (porous_shell_no != ipore)
+           {
+            EH(-1, "Incomplete number of Porosity card");
+           }
+
+         ECHO(es,echo_file);
+
+/***************
+ *             *
+ * Read height *
+ *             *
+****************/
+         porous_shell_no = pd_glob[mn]->Num_Porous_Shell_Eqn;
+         strcpy(search_string, "Porous Shell Height");
+         model_read = look_for_mat_prop(imp, search_string,
+                                     mat_ptr->PorousShellHeightModel,
+                                     mat_ptr->PorousShellHeight,
+                                     NO_USER, NULL, model_name,
+                                     SCALAR_INPUT, &porous_shell_no,es);
+         if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD") )
+           {
+            if ( fscanf(imp,"%s", input ) !=  1 )
+              {
+               EH(-1,"Expecting trailing keyword for Porous Shell Height EXTERNAL_FIELD model.\n");
+              }
+            ii=0;
+            for ( j=0; j<efv->Num_external_field; j++)
+              {
+               if (!strcmp(efv->name[j], input) )
+                {
+                  ii=1;
+                  mat_ptr->por_shell_height_ext_field_index[ipore] = j;
+                }
+              }
+            if( ii==0 )
+              {
+               EH(-1,"Cannot match the name with that in the external field file");
+              }
+            mat_ptr->PorousShellHeightModel[ipore] = EXTERNAL_FIELD;
+
+            /* pick up scale factor for property */
+            num_const = read_constants(imp, mat_ptr->u_PorousShellHeight,
+                                       porous_shell_no);
+            mat_ptr->len_u_PorousShellHeight[ipore] = num_const;
+            if ( num_const < 1)
+              {
+               sr = sprintf(err_msg,
+                    "Matl %s expected at least 1 constant for %s %s model.\n",
+                    pd_glob[mn]->MaterialName,
+                    "Porous Shell Height",
+                    "EXTERNAL_FIELD");
+               EH(-1, err_msg);
+              }
+           }
+         else
+           {
+            EH(model_read, "Porous Shell Height: Is card missing?");
+           }
+
+         if (porous_shell_no != ipore)
+           {
+            EH(-1, "Incomplete number of Porous Shell Height card");
+           }
+         ECHO(es,echo_file);
+
+/*********************
+ *                   *
+ * Read permeability *
+ *                   *
+ *********************/
+         porous_shell_no = pd_glob[mn]->Num_Porous_Shell_Eqn;
+         strcpy(search_string, "Permeability");
+         model_read = look_for_mat_prop(imp, search_string,
+                                     mat_ptr->PorousShellPermeabilityModel,
+                                     mat_ptr->PorousShellPermeability,
+                                     NO_USER, NULL, model_name,
+                                     SCALAR_INPUT, &porous_shell_no,es);
+         if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD") )
+           {
+            if ( fscanf(imp,"%s", input ) !=  1 )
+              {
+               EH(-1,"Expecting trailing keyword for Permeability EXTERNAL_FIELD model.\n");
+              }
+            ii=0;
+            for ( j=0; j<efv->Num_external_field; j++)
+              {
+               if (!strcmp(efv->name[j], input) )
+                {
+                  ii=1;
+                  mat_ptr->por_shell_permeability_ext_field_index[ipore] = j;
+                }
+              }
+            if( ii==0 )
+              {
+               EH(-1,"Cannot match the name with that in the external field file");
+              }
+            mat_ptr->PorousShellPermeabilityModel[ipore] = EXTERNAL_FIELD;
+
+            /* pick up scale factor for property */
+            num_const = read_constants(imp, mat_ptr->u_PorousShellPermeability,
+                                       porous_shell_no);
+            mat_ptr->len_u_PorousShellPermeability[ipore] = num_const;
+            if ( num_const < 1)
+              {
+               sr = sprintf(err_msg,
+                    "Matl %s expected at least 1 constant for %s %s model.\n",
+                    pd_glob[mn]->MaterialName,
+                    "Permeability",
+                    "EXTERNAL_FIELD");
+               EH(-1, err_msg);
+              }
+           }
+         else if (model_read == -1 && !strcmp(model_name, "ORTHOTROPIC") )
+           {
+            mat_ptr->PorousShellPermeabilityModel[ipore] = ORTHOTROPIC;
+            num_const = read_constants(imp, mat_ptr->u_PorousShellPermeability,
+                                       porous_shell_no);
+            if ( num_const < 12)
+              {
+               sr = sprintf(err_msg,
+                           "Matl %s expected at least 12 constants for %s %s model.\n",
+                           pd_glob[mn]->MaterialName,
+                           "Permeability",
+                           "ORTHOTROPIC");
+               EH(-1, err_msg);
+              }
+
+            memset(mat_ptr->PorousShellPermTensor[ipore], 0, sizeof(double)*DIM*DIM); /*these are loaded up later */
+            mat_ptr->PorousShellPermeability[ipore] = mat_ptr->u_PorousShellPermeability[ipore][0]; /*just in case */
+
+            mat_ptr->len_u_PorousShellPermeability[ipore] = num_const;
+           }
+         else
+           {
+            EH(model_read, "Permeability: Is card missing?");
+           }
+
+         if (porous_shell_no != ipore)
+           {
+            EH(-1, "Incomplete number of Permeability card");
+           }
+         ECHO(es,echo_file);
+
+/******************************
+ *                            *
+ * Read relative permeability *
+ *                            *
+ * ****************************/
+         porous_shell_no = pd_glob[mn]->Num_Porous_Shell_Eqn;
+         strcpy(search_string, "Rel Liq Permeability");
+         model_read = look_for_mat_prop(imp, search_string,
+                                     mat_ptr->PorousShellRelPermModel,
+                                     mat_ptr->PorousShellRelPerm,
+                                     NO_USER, NULL, model_name,
+                                     SCALAR_INPUT, &porous_shell_no,es);
+         if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD") )
+           {
+            if ( fscanf(imp,"%s", input ) !=  1 )
+              {
+               EH(-1,"Expecting trailing keyword for Rel Liq Permeability EXTERNAL_FIELD model.\n");
+              }
+            ii=0;
+            for ( j=0; j<efv->Num_external_field; j++)
+              {
+               if (!strcmp(efv->name[j], input) )
+                {
+                  ii=1;
+                  mat_ptr->por_shell_rel_perm_ext_field_index[ipore] = j;
+                }
+              }
+            if( ii==0 )
+              {
+               EH(-1,"Cannot match the name with that in the external field file");
+              }
+            mat_ptr->PorousShellRelPermModel[ipore] = EXTERNAL_FIELD;
+            /* pick up scale factor for property */
+            num_const = read_constants(imp, mat_ptr->u_PorousShellRelPerm,
+                                       porous_shell_no);
+            mat_ptr->len_u_PorousShellRelPerm[ipore] = num_const;
+            if ( num_const < 1)
+              {
+               sr = sprintf(err_msg,
+                    "Matl %s expected at least 1 constant for %s %s model.\n",
+                    pd_glob[mn]->MaterialName,
+                    "Permeability",
+                    "EXTERNAL_FIELD");
+               EH(-1, err_msg);
+              }
+           }
+         else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN") )
+           {
+            mat_ptr->PorousShellRelPermModel[ipore] = VAN_GENUCHTEN;
+            num_const = read_constants(imp, mat_ptr->u_PorousShellRelPerm,
+                                       porous_shell_no);
+            if ( num_const < 4)
+              {
+               sr = sprintf(err_msg,
+                           "Matl %s expected at least 4 constants for %s %s model.\n",
+                           pd_glob[mn]->MaterialName,
+                           "Rel Liq Permeability",
+                           "VAN_GENUCHTEN");
+               EH(-1, err_msg);
+              }
+            mat_ptr->len_u_PorousShellRelPerm[ipore] = num_const;
+           }
+         else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN_EXTERNAL") )
+           {
+            if ( fscanf(imp,"%s", input ) !=  1 )
+              {
+               EH(-1,"Expecting trailing keyword for Rel Liq Permeability VAN_GENUCHTEN_EXTERNAL model.\n");
+              }
+            ii=0;
+            for ( j=0; j<efv->Num_external_field; j++)
+              {
+               if (!strcmp(efv->name[j], input) )
+                {
+                  ii=1;
+                  mat_ptr->por_shell_rel_perm_ext_field_index[ipore] = j;
+                }
+              }
+            if( ii==0 )
+              {
+               EH(-1,"Cannot match the name with that in the external field file");
+              }
+            mat_ptr->PorousShellRelPermModel[ipore] = VAN_GENUCHTEN_EXTERNAL;
+            num_const = read_constants(imp, mat_ptr->u_PorousShellRelPerm,
+                                       porous_shell_no);
+            if ( num_const < 5)
+              {
+               sr = sprintf(err_msg,
+                            "Matl %s expected at least 5 constants for %s %s model.\n",
+                             pd_glob[mn]->MaterialName,
+                             "Rel Liq Permeability",
+                             "VAN_GENUCHTEN_EXTERNAL");
+               EH(-1, err_msg);
+              }
+            mat_ptr->len_u_PorousShellRelPerm[ipore] = num_const;
+           }
+         else
+           {
+            EH(model_read, "Rel Liq Permeability: Is card missing?");
+           }
+
+         if (porous_shell_no != ipore)
+           {
+            EH(-1, "Incomplete number of Rel Liq Permeability card");
+           }
+         ECHO(es,echo_file);
+
+/***************************
+ *                         *
+ * Read cross permeability *
+ *                         *
+ ***************************/
+         porous_shell_no = pd_glob[mn]->Num_Porous_Shell_Eqn;
+         strcpy(search_string, "Porous Shell Cross Permeability");
+         model_read = look_for_mat_prop(imp, search_string,
+                                     mat_ptr->PorousShellCrossPermeabilityModel,
+                                     mat_ptr->PorousShellCrossPermeability,
+                                     NO_USER, NULL, model_name,
+                                     SCALAR_INPUT, &porous_shell_no,es);
+         if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD") )
+           {
+            if ( fscanf(imp,"%s", input ) !=  1 )
+              {
+               EH(-1,"Expecting trailing keyword for Porous Shell Cross Permeability EXTERNAL_FIELD model.\n");
+              }
+            ii=0;
+            for ( j=0; j<efv->Num_external_field; j++)
+              {
+               if (!strcmp(efv->name[j], input) )
+                {
+                  ii=1;
+                  mat_ptr->por_shell_cross_permeability_ext_field_index[ipore] = j;
+                }
+              }
+            if( ii==0 )
+              {
+               EH(-1,"Cannot match the name with that in the external field file");
+              }
+            mat_ptr->PorousShellCrossPermeabilityModel[ipore] = EXTERNAL_FIELD;
+
+            /* pick up scale factor for property */
+            num_const = read_constants(imp, mat_ptr->u_PorousShellCrossPermeability,
+                                       porous_shell_no);
+            mat_ptr->len_u_PorousShellCrossPermeability[ipore] = num_const;
+            if ( num_const < 1)
+              {
+               sr = sprintf(err_msg,
+                    "Matl %s expected at least 1 constant for %s %s model.\n",
+                    pd_glob[mn]->MaterialName,
+                    "Porous Shell Cross Permeability",
+                    "EXTERNAL_FIELD");
+               EH(-1, err_msg);
+              }
+           }
+         else
+           {
+            EH(model_read, "Porous Shell Cross Permeability: Is card missing?");
+           }
+
+         if (porous_shell_no != ipore)
+           {
+            EH(-1, "Incomplete number of Porous Shell Cross Permeability card");
+           }
+         ECHO(es,echo_file);
+
+
+
+/***************************
+ *                         *
+ * Read capillary pressure *
+ *                         *
+ ***************************/
+         porous_shell_no = pd_glob[mn]->Num_Porous_Shell_Eqn;
+         strcpy(search_string, "Capillary Pressure");
+         model_read = look_for_mat_prop(imp, search_string,
+                                     mat_ptr->PorousShellCapPresModel,
+                                     mat_ptr->PorousShellCapPres,
+                                     NO_USER, NULL, model_name,
+                                     SCALAR_INPUT, &porous_shell_no,es);
+
+         if (model_read == -1 && !strcmp(model_name, "ATANH") )
+           {
+            mat_ptr->PorousShellCapPresModel[ipore] = ATANH;
+            num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres,
+                                       porous_shell_no);
+            if ( num_const < 4)
+              {
+               sr = sprintf(err_msg,
+                            "Matl %s expected at least 4 constants for %s %s model.\n",
+                            pd_glob[mn]->MaterialName,
+                            "Capillary Pressure",
+                            "ATANH");
+               EH(-1, err_msg);
+              }
+            mat_ptr->len_u_PorousShellCapPres[ipore] = num_const;
+           }
+         else if (model_read == -1 && !strcmp(model_name, "SINH") )
+           {
+            mat_ptr->PorousShellCapPresModel[ipore] = SINH;
+            num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres,
+                                       porous_shell_no);
+            if ( num_const < 4)
+              {
+               sr = sprintf(err_msg,
+                            "Matl %s expected at least 4 constants for %s %s model.\n",
+                            pd_glob[mn]->MaterialName,
+                            "Capillary Pressure",
+                            "SINH");
+               EH(-1, err_msg);
+              }
+            mat_ptr->len_u_PorousShellCapPres[ipore] = num_const;
+           }
+         else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN") )
+           {
+            mat_ptr->PorousShellCapPresModel[ipore] = VAN_GENUCHTEN;
+            num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres,
+                                       porous_shell_no);
+            if ( num_const < 4)
+              {
+               sr = sprintf(err_msg,
+                            "Matl %s expected at least 4 constants for %s %s model.\n",
+                            pd_glob[mn]->MaterialName,
+                            "Capillary Pressure",
+                            "VAN_GENUCHTEN");
+               EH(-1, err_msg);
+              }
+            mat_ptr->len_u_PorousShellCapPres[ipore] = num_const;
+           }
+         else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN_EXTERNAL") )
+           {
+            if ( fscanf(imp,"%s", input ) !=  1 )
+              {
+               EH(-1,"Expecting trailing keyword for Capillary Pressure VAN_GENUCHTEN_EXTERNAL model.\n");
+              }
+            ii=0;
+            for ( j=0; j<efv->Num_external_field; j++)
+              {
+               if (!strcmp(efv->name[j], input) )
+                {
+                  ii=1;
+                  mat_ptr->por_shell_cap_pres_ext_field_index[ipore] = j;
+                }
+              }
+            if( ii==0 )
+              {
+               EH(-1,"Cannot match the name with that in the external field file");
+              }
+            mat_ptr->PorousShellCapPresModel[ipore] = VAN_GENUCHTEN_EXTERNAL;
+            num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres,
+                                       porous_shell_no);
+            if ( num_const < 8)
+              {
+               sr = sprintf(err_msg,
+                            "Matl %s expected at least 8 constants for %s %s model.\n",
+                            pd_glob[mn]->MaterialName,
+                            "Capillary Pressure",
+                            "VAN_GENUCHTEN_EXTERNAL");
+               EH(-1, err_msg);
+              }
+            mat_ptr->len_u_PorousShellCapPres[ipore] = num_const;
+           }
+         else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN_HYST") )
+           {
+            mat_ptr->PorousShellCapPresModel[ipore] = VAN_GENUCHTEN_HYST;
+            num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres,
+                                       porous_shell_no);
+            if ( num_const < 10)
+              {
+               sr = sprintf(err_msg,
+                            "Matl %s expected at least 10 constants for %s %s model.\n",
+                            pd_glob[mn]->MaterialName,
+                            "Capillary Pressure",
+                            "VAN_GENUCHTEN_HYST");
+               EH(-1, err_msg);
+              }
+            mat_ptr->len_u_PorousShellCapPres[ipore] = num_const;
+
+              /* New change in 2021, use external field to store history of the curve.
+               * For now, use fixed names of the field
+               */
+              if ( efv->ev )
+                {
+                  for (i = 0; i < efv->Num_external_field; i++)
+                    {
+
+                      /* Search for number of curve switches */
+                      if(!strcmp(efv->name[i], "NUM_SWITCH_1"))
+                        {
+                          mat_ptr->por_shell_cap_pres_hyst_num_switch_ext_field_index[0] = i;
+                        }
+
+                      if(!strcmp(efv->name[i], "NUM_SWITCH_2"))
+                        {
+                          mat_ptr->por_shell_cap_pres_hyst_num_switch_ext_field_index[1] = i;
+                        }
+
+                      if(!strcmp(efv->name[i], "NUM_SWITCH_3"))
+                        {
+                          mat_ptr->por_shell_cap_pres_hyst_num_switch_ext_field_index[2] = i;
+                        }
+
+
+                      /* Search for curve type - drainage or imbibition */
+                      if(!strcmp(efv->name[i], "CURVE_TYPE_1"))
+                        {
+                          mat_ptr->por_shell_cap_pres_hyst_curve_type_ext_field_index[0] = i;
+                        }
+                      if(!strcmp(efv->name[i], "CURVE_TYPE_2"))
+                        {
+                          mat_ptr->por_shell_cap_pres_hyst_curve_type_ext_field_index[1] = i;
+                        }
+                      if(!strcmp(efv->name[i], "CURVE_TYPE_3"))
+                        {
+                          mat_ptr->por_shell_cap_pres_hyst_curve_type_ext_field_index[2] = i;
+                        }
+                    }
+                }
+              else
+                {
+                  EH(-1," You need external fields to use VAN_GENUCHTEN_HYST");
+                }
+
+
+           }
+         else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN_HYST_EXT") )
+           {
+            if ( fscanf(imp,"%s", input ) !=  1 )
+              {
+               EH(-1,"Expecting trailing keyword for Capillary Pressure VAN_GENUCHTEN_HYST_EXT model.\n");
+              }
+            ii=0;
+            for ( j=0; j<efv->Num_external_field; j++)
+              {
+               if (!strcmp(efv->name[j], input) )
+                {
+                  ii=1;
+                  mat_ptr->por_shell_cap_pres_ext_field_index[ipore] = j;
+                }
+              }
+            if( ii==0 )
+              {
+               EH(-1,"Cannot match the name with that in the external field file");
+              }
+
+            mat_ptr->PorousShellCapPresModel[ipore] = VAN_GENUCHTEN_HYST_EXT;
+            num_const = read_constants(imp, mat_ptr->u_PorousShellCapPres,
+                                       porous_shell_no);
+            if ( num_const < 18)
+              {
+               sr = sprintf(err_msg,
+                            "Matl %s expected at least 18 constants for %s %s model.\n",
+                            pd_glob[mn]->MaterialName,
+                            "Capillary Pressure",
+                            "VAN_GENUCHTEN_HYST_EXT");
+               EH(-1, err_msg);
+              }
+            mat_ptr->len_u_PorousShellCapPres[ipore] = num_const;
+           }
+         else
+           {
+            EH(model_read, "Capillary Pressure: Is card missing?");
+           }
+         if (porous_shell_no != ipore)
+           {
+            EH(-1, "Incomplete number of Capillary Pressure card");
+           }
+         ECHO(es,echo_file);
+
+        } /* End of loop over porous shell layers*/
+
+    /*
+     *   Porous Mass Lumping:
+     *
+     *    This is where you specify whether you want to use
+     *    Mass Lumping of the time derivative or whether you
+     *    want to use a consistent time derivative treatment.
+     *    By default, mass lumping is always TRUE
+     *
+     */
+
+     model_read = look_for_mat_prop(imp, "Porous Mass Lumping",
+                                    NULL,
+                                    NULL, NO_USER, NULL,
+                                    model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+     if (!strcasecmp(model_name, "yes") ||
+          !strcasecmp(model_name, "true"))
+       {
+        mat_ptr->Porous_Mass_Lump = TRUE;
+       }
+     else if (!strcasecmp(model_name, "no") ||
+              !strcasecmp(model_name, "false"))
+       {
+        mat_ptr->Porous_Mass_Lump = FALSE;
+       }
+     else
+       {
+        mat_ptr->Porous_Mass_Lump = TRUE;
+       }
+
+
+    } /*end of if( (mat_ptr->PorousMediaType == POROUS_SHELL_UNSATURATED) &&
+                   (!PorousShellOn) ) */
+
       /* Special constants for sink models formulation -- PRS 8/19/05 */
       if(pd_glob[mn]->e[R_POR_SINK_MASS])
       {
-	model_read = look_for_mat_prop(imp, "Sink Adsorption Rate Data", 
+	model_read = look_for_mat_prop(imp, "Sink Adsorption Rate Data",
 				       &(mat_ptr->PorousSinkConstantsModel),
-				       &(mat_ptr->porous_sink_constants), 
-				       NO_USER, NULL, model_name, 
+				       &(mat_ptr->porous_sink_constants),
+				       NO_USER, NULL, model_name,
 				       SCALAR_INPUT, &NO_SPECIES, es);
 	if ( model_read == -1 && !strcmp(model_name, "LINEAR") )
 	  {
 	    mat_ptr->PorousSinkConstantsModel = LINEAR;
-			  
-	    num_const = read_constants(imp, &(mat_ptr->u_porous_sink_constants), 
+
+	    num_const = read_constants(imp, &(mat_ptr->u_porous_sink_constants),
 										 NO_SPECIES);
-	    if ( num_const < 8 ) 
+	    if ( num_const < 8 )
 	      {
-		sr = sprintf(err_msg, 
+		sr = sprintf(err_msg,
 			     "Matl %s needs 8 constants for %s %s model.\n",
 			     pd_glob[mn]->MaterialName,
 			     "Sink Adsorption Rate Data", "LINEAR");
 		EH(-1, err_msg);
 	      }
 	    mat_ptr->len_u_porous_sink_constants = num_const;
-	  } 
+	  }
 	else if ( model_read == -1 && !strcmp(model_name, "POWER_LAW") )
 	  {
 	    mat_ptr->PorousSinkConstantsModel = POWER_LAW;
-			  
-	    num_const = read_constants(imp, &(mat_ptr->u_porous_sink_constants), 
+
+	    num_const = read_constants(imp, &(mat_ptr->u_porous_sink_constants),
 										 NO_SPECIES);
-	    if ( num_const < 4 ) 
+	    if ( num_const < 4 )
 	      {
-		sr = sprintf(err_msg, 
+		sr = sprintf(err_msg,
 			     "Matl %s needs 4 constants for %s %s model.\n",
 			     pd_glob[mn]->MaterialName,
 			     "Sink Adsorption Rate Data", "POWER_LAW");
 		EH(-1, err_msg);
 	      }
 	    mat_ptr->len_u_porous_sink_constants = num_const;
-	  } 
+	  }
 	else if (!strcmp(model_name, "CONSTANT") )
 	  {
 	    EH(-1,"Ironically we don't allow a CONSTANT model for Sink Adsorption Rate Data.  Try LINEAR");
@@ -5886,21 +6574,22 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  {
 	    EH(model_read, "Sink Adsorption Rate Data");
 	  }
+        ECHO(es,echo_file);
       }
 
-    }  /*if ( mat_ptr->PorousMediaType != CONTINUOUS && != POROUS_BRINKMAN)*/
+
   /*
    * *****************Species Stuff*******************************
    */
-  
+
   /* Check for Boundary Condition which require constants from the
-   * materials file. 
-   * Molecular Weight, Specific and Molar Volumes are required when 
-   * VL_POLY_BC or YFLUX_EQUIL_BC is specified.  
+   * materials file.
+   * Molecular Weight, Specific and Molar Volumes are required when
+   * VL_POLY_BC or YFLUX_EQUIL_BC is specified.
    * Instead of reading the constants from the BC card itself, they
-   * are specified in the material's file.  
+   * are specified in the material's file.
    * read_bc_mp != -1 indicates that some mat prop is needed for BC card.
-   * ACSun 8/21/98 
+   * ACSun 8/21/98
    */
 
 
@@ -9722,17 +10411,12 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 /*added by DSB 7/13; some post proc routines for 2D/shell problems
 					get confused if there are shell elements and no FSI model is specified.
 					Need to check that this doesn't break anything.*/  
-
-  if ( pd_glob[mn]->e[R_LUBP]
-       || pd_glob[mn]->e[R_LUBP_2]
-       || pd_glob[mn]->e[R_SHELL_FILMP]
-       || pd_glob[mn]->e[R_SHELL_SAT_OPEN]
-       ||  pd_glob[mn]->e[R_SHELL_SAT_OPEN_2]
-       || (pd_glob[mn]->e[R_SHELL_NORMAL1] &&
-           pd_glob[mn]->e[R_SHELL_NORMAL2] &&
-           pd_glob[mn]->e[R_SHELL_NORMAL3])
-       || (pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND])
-     ) {
+  if ( pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
+       pd_glob[mn]->e[R_SHELL_FILMP] ||
+       pd_glob[mn]->e[R_SHELL_SAT_OPEN] || pd_glob[mn]->e[R_SHELL_SAT_OPEN_2] ||
+       pd_glob[mn]->e[R_SHELL_SAT_1] ||
+       (pd_glob[mn]->e[R_SHELL_NORMAL1] && pd_glob[mn]->e[R_SHELL_NORMAL2] && pd_glob[mn]->e[R_SHELL_NORMAL3]) ||
+       pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) {
 
     model_read = look_for_mat_prop(imp, "FSI Deformation Model",
 				   &(mat_ptr->FSIModel),
@@ -9782,8 +10466,8 @@ ECHO("\n----Acoustic Properties\n", echo_file);
    * Added by SAR 2010-03-01
    */
   
-  if(pd_glob[mn]->e[R_SHELL_SAT_CLOSED] || 
-     pd_glob[mn]->e[R_SHELL_SAT_OPEN]   || 
+  if(pd_glob[mn]->e[R_SHELL_SAT_CLOSED] ||
+     pd_glob[mn]->e[R_SHELL_SAT_OPEN]   ||
      pd_glob[mn]->e[R_SHELL_SAT_OPEN_2])   {
     
     // Structured shell porosity

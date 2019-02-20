@@ -7320,11 +7320,11 @@ rd_matl_blk_specs(FILE *ifp,
   }
 
   SPF(echo_string,"%s = %d","Number of Materials",  upd->Num_Mat); ECHO(echo_string,echo_input_file);
-       
+
   upd->Max_Num_Species_Eqn = -123456789; /* initialize */
   upd->Max_Num_Species     = -123456789; /* initialize */
   upd->Max_Num_Porous_Eqn  = -123456789; /* initialize */
-  
+
   Num_Interpolations = 0; 	/* Initialize counter (cf rf_fem.h) */
 
   for ( i=0; i<MAX_INTERPOLATIONS; i++)
@@ -7766,6 +7766,7 @@ rd_eq_specs(FILE *ifp,
   pd_ptr->Num_Species_Eqn = numBulkSpec;
   pd_ptr->Num_Species     = numBulkSpec;
   pd_ptr->Num_Porous_Eqn  = 0;
+  pd_ptr->Num_Porous_Shell_Eqn  = 0;
 
   SPF(echo_string,"%s = %d", "Number of bulk species", numBulkSpec); ECHO(echo_string, echo_file);
 
@@ -8183,6 +8184,15 @@ rd_eq_specs(FILE *ifp,
     } else if (!strcasecmp(ts, "shell_sat_open_2")) {
       ce = set_eqn(R_SHELL_SAT_OPEN_2, pd_ptr);
       pd_ptr->Num_Porous_Eqn++;
+    } else if (!strcasecmp(ts, "shell_sat_1")) {
+      ce = set_eqn(R_SHELL_SAT_1, pd_ptr);
+      pd_ptr->Num_Porous_Shell_Eqn++;
+    } else if (!strcasecmp(ts, "shell_sat_2")) {
+      ce = set_eqn(R_SHELL_SAT_2, pd_ptr);
+      pd_ptr->Num_Porous_Shell_Eqn++;
+    } else if (!strcasecmp(ts, "shell_sat_3")) {
+      ce = set_eqn(R_SHELL_SAT_3, pd_ptr);
+      pd_ptr->Num_Porous_Shell_Eqn++;
     } else if (!strcasecmp(ts, "shell_energy")) {
       ce = set_eqn(R_SHELL_ENERGY, pd_ptr);
     } else if (!strcasecmp(ts, "shell_deltah")) {
@@ -8810,6 +8820,12 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(SHELL_PRESS_OPEN, pd_ptr);
     } else if (!strcasecmp(ts, "SH_P_OPEN_2")) {
       cv = set_var(SHELL_PRESS_OPEN_2, pd_ptr);
+    } else if (!strcasecmp(ts, "SH_SAT_1")) {
+      cv = set_var(SHELL_SAT_1, pd_ptr);
+    } else if (!strcasecmp(ts, "SH_SAT_2")) {
+      cv = set_var(SHELL_SAT_2, pd_ptr);
+    } else if (!strcasecmp(ts, "SH_SAT_3")) {
+      cv = set_var(SHELL_SAT_3, pd_ptr);
     } else if (!strcasecmp(ts, "SH_T")) {
       cv = set_var(SHELL_TEMPERATURE, pd_ptr);
     } else if (!strcasecmp(ts, "SH_DH")) {
@@ -9420,6 +9436,9 @@ rd_eq_specs(FILE *ifp,
         break;
     case R_SHELL_SAT_OPEN:
     case R_SHELL_SAT_OPEN_2:
+    case R_SHELL_SAT_1:
+    case R_SHELL_SAT_2:
+    case R_SHELL_SAT_3:
         if ( fscanf(ifp, "%lf %lf %lf", 
                     &(pd_ptr->etm[ce][(LOG2_MASS)]),
                     &(pd_ptr->etm[ce][(LOG2_DIFFUSION)]),

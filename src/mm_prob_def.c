@@ -212,7 +212,10 @@ setup_pd()
 	    }
 	  else if(
 		  (ce == R_SHELL_SAT_OPEN) ||
-		  (ce == R_SHELL_SAT_OPEN_2)
+		  (ce == R_SHELL_SAT_OPEN_2) ||
+		  (ce == R_SHELL_SAT_1) ||
+		  (ce == R_SHELL_SAT_2) ||
+		  (ce == R_SHELL_SAT_3)
 		  )
 	    {
 	      if ( pd_glob[mn]->etm[ce][(LOG2_MASS)] != 0. )

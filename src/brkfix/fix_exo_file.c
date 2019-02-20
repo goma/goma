@@ -613,9 +613,15 @@ setup_exo_res_desc(Exo_DB *exo)
    * Element variables...
    */
 
-  if ( ! ( exo->state & EXODB_STATE_ELVA ) )
+
+  if ( exo->num_elem_vars > 0 )
     {
-      alloc_exo_ev(exo, 1);
+     exo->num_ev_time_indeces = 1;
+
+     if ( ! ( exo->state & EXODB_STATE_ELVA ) )
+       {
+        alloc_exo_ev(exo, 1);
+       }
     }
 
   return;

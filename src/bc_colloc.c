@@ -2482,6 +2482,21 @@ load_variable (double *x_var,        /* variable value */
       var = SHELL_PRESS_OPEN_2;
       *d_x_var = 1.;
       break;
+    case SHELL_SAT_1:
+      *x_var = fv->sh_sat_1;
+      var = SHELL_SAT_1;
+      *d_x_var = 1.;
+      break;
+    case SHELL_SAT_2:
+      *x_var = fv->sh_sat_2;
+      var = SHELL_SAT_2;
+      *d_x_var = 1.;
+      break;
+    case SHELL_SAT_3:
+      *x_var = fv->sh_sat_3;
+      var = SHELL_SAT_3;
+      *d_x_var = 1.;
+      break;
     case SHELL_TEMPERATURE:
       *x_var = fv->sh_t;
       var = SHELL_TEMPERATURE;
