@@ -17688,16 +17688,17 @@ quad_isomap_invert( const double x1,
  	switch(dim)
  	{
  	case 3:
-         	for( i=0; i<elem_nodes; i++)
-                		{
-                 	coord[2][i] = z[itp[i]];
-                 	}
+          for( i=0; i<elem_nodes; i++)
+            {
+              coord[2][i] = z[itp[i]];
+            }
+          /* fall through */
  	case 2:
          	for( i=0; i<elem_nodes; i++)
-                		{
-                 	coord[0][i] = x[itp[i]];
-                 	coord[1][i] = y[itp[i]];
-                 	}
+                  {
+                    coord[0][i] = x[itp[i]];
+                    coord[1][i] = y[itp[i]];
+                  }
  		break;
  	}
  
@@ -17707,26 +17708,27 @@ quad_isomap_invert( const double x1,
  	switch(dim)
  	{
  	case 3:
-         	for( i=0; i<elem_nodes ; i++)
-                 	{
-                 	jac[0][2] += coord[0][i]*phig[i];
-                 	jac[1][2] += coord[1][i]*phig[i];
-                 	jac[2][0] += coord[2][i]*phic[i];
-                 	jac[2][1] += coord[2][i]*phie[i];
-                 	jac[2][2] += coord[2][i]*phig[i];
-                 	xpt[2] += coord[2][i]*phi[i];
-                 	}
+          for( i=0; i<elem_nodes ; i++)
+            {
+              jac[0][2] += coord[0][i]*phig[i];
+              jac[1][2] += coord[1][i]*phig[i];
+              jac[2][0] += coord[2][i]*phic[i];
+              jac[2][1] += coord[2][i]*phie[i];
+              jac[2][2] += coord[2][i]*phig[i];
+              xpt[2] += coord[2][i]*phi[i];
+            }
+           /* fall through */
  	case 2:
-         	for( i=0; i<elem_nodes ; i++)
-                 	{
-                 	jac[0][0] += coord[0][i]*phic[i];
-                 	jac[0][1] += coord[0][i]*phie[i];
-                 	jac[1][0] += coord[1][i]*phic[i];
-                 	jac[1][1] += coord[1][i]*phie[i];
-                 	xpt[0] += coord[0][i]*phi[i];
-                 	xpt[1] += coord[1][i]*phi[i];
-                 	}
- 		break;
+          for( i=0; i<elem_nodes ; i++)
+          {
+            jac[0][0] += coord[0][i]*phic[i];
+            jac[0][1] += coord[0][i]*phie[i];
+            jac[1][0] += coord[1][i]*phic[i];
+            jac[1][1] += coord[1][i]*phie[i];
+            xpt[0] += coord[0][i]*phi[i];
+            xpt[1] += coord[1][i]*phi[i];
+          }
+          break;
  	}
  
  
@@ -17927,6 +17929,7 @@ quad_isomap_invert( const double x1,
  				{
  				case 3:
                 			pg += pp[i]*phig[i];
+                			/* fall through */
  				case 2:
                 			pc += pp[i]*phic[i];
                 			pe += pp[i]*phie[i];

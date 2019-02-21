@@ -53,7 +53,6 @@ brk_pre_process(char *fn)
   int prefix_len;
 
   int i;
-  int j;
   int k;
   char * str1;
   char * str2;
@@ -104,7 +103,7 @@ brk_pre_process(char *fn)
       str1[0] = in_buffer[0];
       while( strcmp( str1, blank_string ) == 0 ||
              strcmp( str1, "\t" ) == 0 ) {  /* strip leading blanks and tabs */
-         for( i=0; i < ( strlen( in_buffer ) - 1 ) ; i++ ) {
+         for( size_t i=0; i < ( strlen( in_buffer ) - 1 ) ; i++ ) {
              in_buffer[i] = in_buffer[i+1];
              str1[0] = in_buffer[i];
              str2[0] = in_buffer[i+1];
@@ -115,7 +114,7 @@ brk_pre_process(char *fn)
       }
     /* process the line if it is not a blank line and not a comment line */
       if( strcmp( str1, "\n" ) != 0 && strcmp ( str1, "#" ) != 0 ) {
-        for( j=0; j < strlen( in_buffer ); j++ ) {
+        for( size_t j=0; j < strlen( in_buffer ); j++ ) {
           str1[0] = in_buffer[j];
           if( strcmp( str1, "#" ) != 0 ) {    /* not a comment line */
             if( strcmp( str1, "\n" ) != 0 ) { /* not a newline */
