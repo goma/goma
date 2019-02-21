@@ -172,13 +172,22 @@ PROTO((dbl ,              /* time                                            */
        double ));         /* T -- electrolyte temperature                    */
 
 EXTERN void mass_flux_surf_NI    /* mm_fill_species.c - RSL 5/28/02    */
-PROTO((dbl [MAX_CONC],    /* mass_flux                                 */
+PROTO((dbl [MAX_CONC],           /* mass_flux                          */
        dbl [MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC], /* d_mass_flux     */
        dbl ,              /* time                                      */
        int ,              /* wspec -- species number                   */
        int ,              /* flag -- output option                     */
        double ,           /* PHI_E -- electrode potential              */
        double ));         /* T -- electrolyte temperature              */
+
+EXTERN void mass_flux_surf_etch    /* mm_fill_species.c    */
+PROTO((dbl [DIM],         /* func                                      */
+       dbl [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func        */
+       const int,         /* wspec -- species number                   */
+       const int,         /* etching plane                             */
+       const double,      /* time                                      */
+       const double,      /* dt, current value of the time step        */
+       const double ));   /* tt, parameter to vary time integration    */
 
 EXTERN void mass_flux_surf_const  /* mm_fill_species.c - RSL 6/28/00   */
 PROTO((dbl [MAX_CONC],    /* mass_flux                                 */
