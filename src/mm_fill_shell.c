@@ -7272,6 +7272,7 @@ assemble_shell_energy(double time,	/* present time value */
   dbl wt;
 
   memset(gradII_Hside, 0, sizeof(double)*DIM);
+  memset(gradII_Hside_F, 0, sizeof(double)*DIM*MDE);
 
   /*   static char yo[] = "assemble_shell_energy";*/
   status = 0;

@@ -423,7 +423,7 @@ check_parallel_error_FL(char *errstring, char *file_name, int lineno)
                  MPI_INT, MPI_LOR, MPI_COMM_WORLD);
   if (parallel_err_global) { 
     DPRINTF(stderr, "PARALLEL ERROR: ");
-    if (!errstring) DPRINTF(stderr, "%s", errstring);
+    if (errstring) DPRINTF(stderr, "%s", errstring);
     DPRINTF(stderr,
 	    " check previous output for cause of error: %s line %d",
 	    file_name, lineno);

@@ -2806,6 +2806,7 @@ if( *converged )
   if (Linear_Solver == AZTEC) ams->status[AZ_its] = total_ls_its;
   LOCA_UMF_ID = UMF_system_id;
 
+free_and_clear:  
 /*
  * If using LOCA, there may be another resolve after exiting the
  * nonlinear solver, so defer restoring external matrix rows
@@ -2822,8 +2823,6 @@ if( *converged )
           dofs_hidden = FALSE;
         }
     }
-
-free_and_clear:
 
   safe_free( (void *) delta_x);
   safe_free( (void *) res_p);

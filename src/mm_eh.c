@@ -56,9 +56,8 @@ char Err_Msg[MAX_CHAR_ERR_MSG];
  *       sequence and time is important, so a /var/adm/log format
  *       is used.
  */
-
-static FILE *log_strm=NULL;
 #ifdef ENABLE_LOGGING
+static FILE *log_strm=NULL;
 static char log_filename[MAX_FNL] = DEFAULT_GOMA_LOG_FILENAME;
 #endif
 /*
@@ -305,17 +304,10 @@ logprintf(const char *format, ... )
                   time_format, localtime(&now));
   if ( current_severity < 0 )
     {
-      fprintf(log_strm, "%s ", time_result);
-      fprintf(log_strm, "GOMA terminates abnormally.\n");
-
-
-#ifdef PARALLEL
+      DPRINTF(stderr, "%s ", time_result);
       DPRINTF(stderr, "\nAbnormal termination -- see log file for details.\n");
-#endif
       exit(current_severity);
     }
-
-  return;
 #endif
 }
 
