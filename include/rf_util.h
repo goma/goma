@@ -265,6 +265,11 @@ extern int init_pmv_hyst
 PROTO(( const Exo_DB *                  /* exo - ptr to finite element mesh database */
      ));
 
+extern int advance_etch_area_ext_field
+PROTO((const int time_step,             /* Time step number in current pass */
+       const int nn,                    /* Number of nodes on this proc */
+       const dbl delta_t,               /* Time step size */
+       dbl *x ));                       /* Solution at current time step */
 
 extern void read_porosity_data
 PROTO((

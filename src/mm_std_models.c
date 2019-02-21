@@ -74,15 +74,15 @@ static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun E
 * calc_KOH_Si_etch_rate_100  double
 ******************************************************************************/
 /*
- * This file contains all implemented models for material properties and 
- * source terms, and may eventually include constitutive equations.  Examples 
- * are the Boussinesq model for momentum source, Joule heating and viscous 
- * dissipation for heat source, etc.  As user-defined subroutines are built in 
- * user_mp.c that are fairly standard and widely used they should be migrated 
- * to this file and altered appropriately.  
+ * This file contains all implemented models for material properties and
+ * source terms, and may eventually include constitutive equations.  Examples
+ * are the Boussinesq model for momentum source, Joule heating and viscous
+ * dissipation for heat source, etc.  As user-defined subroutines are built in
+ * user_mp.c that are fairly standard and widely used they should be migrated
+ * to this file and altered appropriately.
 ******************************************************************************/
 /*
- * Boussinesq Momentum Source Model 
+ * Boussinesq Momentum Source Model
  */
 
 /*
@@ -91,7 +91,7 @@ static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun E
  * ----------------------------------------------------------------------------
  * This routine is responsible for filling up the following forces and sensitivities
  * at the current gauss point:
- *     intput:  
+ *     input:
  *
  *     output:  f[a]          - body force in direction [a]
  *              df            - dependence of body force, where:
@@ -103,7 +103,7 @@ static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun E
  *
  *     input:  jxb = 1  add JXB lorentz term to momentum source
  *             jxb = 0  don't add JXB lorentz term
- *             N.B. Right now J field and B field have to come in as external 
+ *             N.B. Right now J field and B field have to come in as external
  *                  nodal fields using the "External Nodal Field" cards.
  *
  *	       hydrostatic = TRUE  -- add in the hydrostatic component so that
@@ -113,10 +113,10 @@ static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun E
  *
  *			     FALSE -- subtract off the hydrostatic pressure head
  *				      so that the body force term appears as
- *				      
+ *
  *				         rho * g * ( -beta * ( T - T_ref ) )
- *				      
- *   NB: The user need only supply f, dfdT, dfdC, etc. 
+ *
+ *   NB: The user need only supply f, dfdT, dfdC, etc.
  *       The mp struct is loaded up for you.
  *
  *       The FALSE hydrostatic option is often useful if buoyant forces are
@@ -129,7 +129,7 @@ static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun E
  * ----------------------------------------------------------------------------
  */
 
-int 
+int
 bouss_momentum_source(dbl f[DIM], /* Body force. */
 		      MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df,
 		      int jxb,	/* Flag for turning on and off jxb */
@@ -152,11 +152,11 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
   /* Begin Execution */
 
   /**********************************************************/
-  
+
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  T = fv->T;                                       
+  T = fv->T;
   for(i=0; i<pd->Num_Species_Eqn; i++) C[i] = fv->c[i];
 
   /* Next, if jxb is to be computed, load up J and B vectors */
@@ -168,7 +168,7 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
 	  B[a] = J[a] = 0.;
           B_I[a] = J_I[a] = 0.;
 	}
-      
+
       for (a = 0; a < efv->Num_external_field; a++)
 	{
 	  if(!strcmp(efv->name[a], "JX_REAL"))
@@ -314,11 +314,11 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
 	}
     }
 
-  /*components of gravity vector for input card */ 
+  /*components of gravity vector for input card */
   g[0] = mp->momentum_source[0];
   g[1] = mp->momentum_source[1];
   g[2] = mp->momentum_source[2];
-  
+
 
   /**********************************************************/
   /* Temperature piece */
@@ -326,7 +326,7 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
     {
       for(a = 0; a<DIM; a++)
 	{
-	  eqn   = R_MOMENTUM1+a;			
+	  eqn   = R_MOMENTUM1+a;
 	  if ( pd->e[eqn] & T_SOURCE )
 	    {
 	      if ( hydrostatic )
@@ -335,8 +335,8 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
 		   * This ought to be equivalent to the previous model.
 		   * All nonzero initialization is here now.
 		   */
-		  f[a] +=  mp->density * mp->momentum_source[a] 
-		    * ( 1  -  mp->Volume_Expansion 
+		  f[a] +=  mp->density * mp->momentum_source[a]
+		    * ( 1  -  mp->Volume_Expansion
 			* ( T - mp->reference[TEMPERATURE]));
 		}
 	      else
@@ -346,8 +346,8 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
 		   * has been subtracted from the pressure field. Now you're
 		   * solving for P_prime!
 		   */
-		  f[a] +=  mp->density * mp->momentum_source[a] 
-		    * (    -  mp->Volume_Expansion 
+		  f[a] +=  mp->density * mp->momentum_source[a]
+		    * (    -  mp->Volume_Expansion
 			   * ( T - mp->reference[TEMPERATURE]));
 		}
 	    }
@@ -359,12 +359,22 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
     {
       for(a = 0; a<DIM; a++)
 	{
-	  for(w = 0; w<pd->Num_Species_Eqn; w++)
+          if (hydrostatic)
+            {
+             f[a] = g[a] * mp->density;
+            }
+
+	  for(w = 0; w < pd->Num_Species_Eqn; w++)
 	    {
-	      eqn   = R_MOMENTUM1+a;			
+	      eqn   = R_MOMENTUM1+a;
 	      if ( pd->e[eqn] & T_SOURCE )
 		{
-		  f[a] += - g[a] * mp->density * mp->species_vol_expansion[w] 
+		  f[a] += - g[a] * mp->density * mp->species_vol_expansion[w]
+                                 * (C[w] - mp->reference_concn[w]);
+		}
+	      else if ( pd->e[R_LUBP] )
+		{
+		  f[a] += - g[a] * mp->density * mp->species_vol_expansion[w]
                                  * (C[w] - mp->reference_concn[w]);
 		}
 	    }
@@ -377,7 +387,7 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
       /* NOTE Cludge  to stirring force only */
       for(a = 0; a<3; a++)
 	{
-          eqn   = R_MOMENTUM1+a;			
+          eqn   = R_MOMENTUM1+a;
 	  for(b = 0; b<3; b++)
 	    {
 	      for(c = 0; c<3; c++)
@@ -391,7 +401,7 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
 		       */
 		      f[a] += 0.5*(mp->u_momentum_source[0] *
 				   permute(a+1,b+1,c+1) *
-                                   J[b]*B[c] + 
+                                   J[b]*B[c] +
 				   mp->u_momentum_source[0] *
 				   permute(a+1,b+1,c+1) *
                                    J_I[b]*B_I[c]);
@@ -408,7 +418,7 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
     {
       for(a = 0; a<DIM; a++)
 	{
-	  eqn   = R_MOMENTUM1+a;			
+	  eqn   = R_MOMENTUM1+a;
 	  if ( pd->e[eqn] & T_SOURCE )
 	    {
 	      for (j=0; j<ei->dof[var]; j++)
@@ -424,7 +434,7 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
       var = MASS_FRACTION;
       for(a = 0; a<DIM; a++)
 	{
-	  eqn   = R_MOMENTUM1+a;			
+	  eqn   = R_MOMENTUM1+a;
 	  if ( pd->e[eqn] & T_SOURCE )
 	    {
 	      for(w = 0; w<pd->Num_Species_Eqn; w++)
@@ -435,6 +445,17 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
 		    }
 		}
 	    }
+	  else if ( pd->e[R_LUBP])
+	    {
+	      for(w = 0; w < pd->Num_Species_Eqn; w++)
+		{
+		  for (j = 0; j < ei->dof[var]; j++)
+		    {
+		      df->C[a][w][j] += - g[a] * mp->density * mp->species_vol_expansion[w] * bf[var]->phi[j];
+		    }
+		}
+	    }
+
 	}
     }
 
@@ -442,9 +463,8 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
 }
 
 
-
 /*
- * EHD Polarization Source Model 
+ * EHD Polarization Source Model
  */
 
 /*
@@ -453,7 +473,7 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
  * ----------------------------------------------------------------------------
  * This routine is responsible for filling up the following forces and sensitivities
  * at the current gauss point:
- *     intput:  
+ *     intput:
  *
  *     output:  f[a]          - body force in direction [a]
  *              df            - dependence of body force, where:
@@ -464,7 +484,7 @@ bouss_momentum_source(dbl f[DIM], /* Body force. */
  * ----------------------------------------------------------------------------
  */
 
-int 
+int
 EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
 		        MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df )
 {
@@ -479,11 +499,11 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
   dim   = pd->Num_Dim;
 
   /**********************************************************/
-  
+
   /***********Load up convenient local variables*************/
   /*NB This ought to be done once for all fields at gauss pt*/
 
-  for(a=0; a<DIM; a++)Efield[a] = fv->E_field[a];		   
+  for(a=0; a<DIM; a++)Efield[a] = fv->E_field[a];
 
   /*components of whatever (charge density?) from input card */
   g[0] = mp->momentum_source[0];
@@ -491,7 +511,7 @@ EHD_POLARIZATION_source(dbl f[DIM], /* Body force. */
   /**********************************************************/
   for(a = 0; a<dim; a++)
     {
-      eqn   = R_MOMENTUM1+a;			
+      eqn   = R_MOMENTUM1+a;
 
       for(b = 0; b<dim; b++)
 	{
@@ -6806,9 +6826,123 @@ cal_current_density (double x[],           /* global nodal solution vector  */
 /*****************************************************************************/
 #endif
 
+int
+etching_KOH_source(int wspec,   /* Current species number */
+                   double *param )   /* pointer to source model parameter list */
+/******************************************************************************
+*
+*  A function that calculate source (or sink) terms in species equation (shell only for now)
+*
+*  Output:
+*     mp->species_source[w]-------  Source/sink rate of species number w
+*     mp->d_species_source[var] --- Sesntivity of the source/sink of species w
+*                                   w.r.t. variables var
+*
+*  Right now, it works, ONLY AND IF ONLY you use the following:
+*
+*  Species type = SPECIES_DENSITY
+*  Concentration Units: CGS, i.e. g/cm^3
+*
+*  Species ordering:
+*                   0: H2O - water
+*                   1: KOH - potassium hydroxide
+*                   2: H2 - hydrogen
+*                   3: Silicon hydroxyl byproducts
+
+*
+*  Kristianto Tjiptowidjojo (10/2018)
+*
+******************************************************************************/
+{
+  double etch_rate = 0.0;
+  double d_etch_rate_d_C[2] = {0.0};
+
+  /* Bulk density of crystalline silicon (g/cm^3) */
+  double rho_bulk_Si = 2.3290;
+
+  /* Molecular weight in mole/g */
+  double MW_H2O = 18.01528;
+  double MW_OH = 17.008;
+  double MW_Si = 28.0855;
+  double MW_H2 = (2.0 * 1.00794);
+  double MW_SiO2OH2 = (28.0855 + 2.0*15.9994 + 2.0*17.008);
+
+  /* Get mass concentration of each species
+     Mass concentration unit is g/cm^3 */
+  double rho_H2O = fv->c[0];
+  double rho_KOH = fv->c[1];
+
+  /* Area fraction, read from external field when available */
+  double a_frac = 1.0;
+  int i_ext_field = -1;
+  if ((efv->ev) &&
+      (mp->SpeciesSourceModel[wspec] == ETCHING_KOH_EXT))
+    {
+     i_ext_field = mp->species_source_external_field_index;
+     if (i_ext_field < 0) EH(-1, "Trouble getting external field index in ETCHING_KOH_EXT");
+     a_frac = fv->external_field[i_ext_field];
+    }
+
+  /* Right now it only handles KOH wet etching on plane 100 of crystalline silicon*/
+  etch_rate = calc_KOH_Si_etch_rate_100(rho_H2O, rho_KOH, d_etch_rate_d_C);
+
+  /* Export it to mp->species_source, depending on their stochiometric coefficient */
+  switch (wspec)
+    {
+     case 0: /* Water */
+       mp->species_source[wspec] = a_frac *  2.0 * rho_bulk_Si/MW_Si * MW_H2O * etch_rate;
+       break;
+
+     case 1: /* OH */
+       mp->species_source[wspec] = a_frac *  2.0 * rho_bulk_Si/MW_Si * MW_OH * etch_rate;
+       break;
+
+     case 2: /* H2 */
+       mp->species_source[wspec] = a_frac * -2.0 * rho_bulk_Si/MW_Si * MW_H2 * etch_rate;
+       break;
+
+     case 3: /* SiO2OH2 */
+       mp->species_source[wspec] = a_frac * -1.0 * rho_bulk_Si/MW_Si * MW_SiO2OH2 * etch_rate;
+       break;
+    }
+
+
+  /* Export sensitivity to mp->d_species_source */
+  switch (wspec)
+    {
+     case 0: /* Water */
+       mp->d_species_source[MAX_VARIABLE_TYPES+0] = a_frac *  2.0 * rho_bulk_Si/MW_Si * MW_H2O * d_etch_rate_d_C[0];
+       mp->d_species_source[MAX_VARIABLE_TYPES+1] = a_frac *  2.0 * rho_bulk_Si/MW_Si * MW_H2O * d_etch_rate_d_C[1];
+       break;
+
+     case 1: /* KOH */
+       mp->d_species_source[MAX_VARIABLE_TYPES+0] = a_frac *  2.0 * rho_bulk_Si/MW_Si * MW_OH * d_etch_rate_d_C[0];
+       mp->d_species_source[MAX_VARIABLE_TYPES+1] = a_frac *  2.0 * rho_bulk_Si/MW_Si * MW_OH * d_etch_rate_d_C[1];
+       break;
+
+     case 2: /* H2 */
+       mp->d_species_source[MAX_VARIABLE_TYPES+0] = a_frac * -2.0 * rho_bulk_Si/MW_Si * MW_H2 * d_etch_rate_d_C[0];
+       mp->d_species_source[MAX_VARIABLE_TYPES+1] = a_frac * -2.0 * rho_bulk_Si/MW_Si * MW_H2 * d_etch_rate_d_C[1];
+       break;
+
+     case 3: /* SiO2OH2 */
+       mp->d_species_source[MAX_VARIABLE_TYPES+0] = a_frac * -1.0 * rho_bulk_Si/MW_Si * MW_SiO2OH2 * d_etch_rate_d_C[0];
+       mp->d_species_source[MAX_VARIABLE_TYPES+1] = a_frac * -1.0 * rho_bulk_Si/MW_Si * MW_SiO2OH2 * d_etch_rate_d_C[1];
+       break;
+       }
+
+  mp->d_species_source[MAX_VARIABLE_TYPES+2] = 0.0;
+  mp->d_species_source[MAX_VARIABLE_TYPES+3] = 0.0;
+
+  return 0;
+
+} /* END of calc_KOH_Si_etch_rate_100 */
+
 double
-calc_KOH_Si_etch_rate_100( double d_etch_rate_d_C[MAX_CONC] ) /* Sensitivity of etch rate w.r.t.
-                                                                 concentration of each species*/
+calc_KOH_Si_etch_rate_100(double rho_H2O,             /* Concentration of water */
+                          double rho_KOH,             /* Concentration of KOH */
+                          double d_etch_rate_d_C[2] ) /* Sensitivity of etch rate w.r.t.
+                                                        concentration of water, and KOH */
 /******************************************************************************
 *
 *  A function that outputs KOH wet etch rate of silicon surface (100 plane for now)
@@ -6862,11 +6996,6 @@ calc_KOH_Si_etch_rate_100( double d_etch_rate_d_C[MAX_CONC] ) /* Sensitivity of 
   /* Rate constant in (micron/hr) (mole/liter)^-4.25  */
   double k0 = 2480.0;
 
-  /* Get mass concentration of each species
-     Mass concentration unit is g/cm^3 */
-  double rho_H2O = fv->c[0];
-  double rho_KOH = fv->c[1];
-
   /* Molecular weight in mole/g */
   double MW_H2O = 18.01528;
   double MW_KOH = 56.1056;
@@ -6875,23 +7004,76 @@ calc_KOH_Si_etch_rate_100( double d_etch_rate_d_C[MAX_CONC] ) /* Sensitivity of 
   double C_H2O = rho_H2O * 1000.0/MW_H2O;
   double C_KOH = rho_KOH * 1000.0/MW_KOH;
 
+  /* Evaluate heaviside function based on minimum concentration */
+  double Hside = 1.0;
+  double dHside_drho_KOH = 0.0;
+  double rho_KOH_min = 1.0e-6;
+  double rho_KOH_max = 1.0e-4;
+  double width = rho_KOH_max - rho_KOH_min;
+  double alpha = 0.5 * width;
+  double rho_KOH_center = rho_KOH_max - alpha;
+  double rho_KOH_normalized = rho_KOH - rho_KOH_center;
+
+  if (rho_KOH >= rho_KOH_max)
+    {
+     Hside = 1.0;
+     dHside_drho_KOH = 0.0;
+    }
+  else if (rho_KOH <= rho_KOH_min )
+    {
+     Hside = 0.0;
+     dHside_drho_KOH = 0.0;
+    }
+  else
+    {
+     Hside = 0.5 * (1. + rho_KOH_normalized / alpha
+             + sin(M_PIE * rho_KOH_normalized / alpha ) / M_PIE);
+     dHside_drho_KOH = 0.5 * (1.0/alpha + cos(M_PIE * rho_KOH_normalized/alpha)/alpha );
+    }
+
+
   /* Calculate etch rate (micron/hr) */
-  etch_rate = k0 * pow(C_H2O, 4.0) * pow(C_KOH, 0.25 )
-              * exp(-E_a/k_B/T);
+  if ( rho_KOH > rho_KOH_min)
+    {
+     etch_rate = Hside * k0 * pow(C_H2O, 4.0) * pow(C_KOH, 0.25 )
+                       * exp(-E_a/k_B/T);
+    }
+  else
+    {
+     etch_rate = 0.0;
+    }
 
   /* Convert to cm/s */
   etch_rate = etch_rate / 1.0e4 / 3600.0;
 
   /* Calculate sensitivity of etch rate w.r.t. concentration */
-  d_etch_rate_d_H2O = 4.0 * k0 * pow(C_H2O, 3.0) * pow(C_KOH, 0.25 )
-                      * exp(-E_a/k_B/T)/(1.0e4 * 3600.0) * (1000.0/MW_H2O);
 
-  d_etch_rate_d_KOH = 0.25 * k0 * pow(C_H2O, 4.0)/ pow(C_KOH, 0.75 )
-                      * exp(-E_a/k_B/T)/(1.0e4 * 3600.0) * (1000.0/MW_KOH);
+  if (d_etch_rate_d_C != NULL)
+    {
+     if ( rho_KOH > rho_KOH_min)
+       {
 
-  /* Export the etch rate and its sensitivities */
-  d_etch_rate_d_C[0] = d_etch_rate_d_H2O;
-  d_etch_rate_d_C[1] = d_etch_rate_d_KOH;
+        d_etch_rate_d_H2O = Hside * 4.0 * k0 * pow(C_H2O, 3.0) * pow(C_KOH, 0.25 )
+                            * exp(-E_a/k_B/T)/(1.0e4 * 3600.0) * (1000.0/MW_H2O);
 
+        d_etch_rate_d_KOH = Hside * 0.25 * k0 * pow(C_H2O, 4.0)/ pow(C_KOH, 0.75 )
+                            * exp(-E_a/k_B/T)/(1.0e4 * 3600.0) * (1000.0/MW_KOH);
+
+        d_etch_rate_d_KOH += k0 * pow(C_H2O, 4.0) * pow(C_KOH, 0.25 ) * exp(-E_a/k_B/T)
+                             / 1.0e4 / 3600.0 * dHside_drho_KOH;
+        }
+     else
+        {
+         d_etch_rate_d_H2O = 0.0;
+         d_etch_rate_d_KOH = 0.0;
+        }
+
+
+     /* Export the etch rate and its sensitivities */
+     d_etch_rate_d_C[0] = d_etch_rate_d_H2O;
+     d_etch_rate_d_C[1] = d_etch_rate_d_KOH;
+
+    } /* End of if calculating Jacobian entries */
   return etch_rate;
+
 } /* END of calc_KOH_Si_etch_rate_100 */

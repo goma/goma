@@ -3449,7 +3449,7 @@ interp_ev_to_nodes(const Exo_DB *exo, dbl *ev_tmp, int iev)
 	  if ( pd->Num_Dim > 2 ) h_siz *= hsquared[2];
 
 	  h_siz = sqrt( h_siz );
-	  
+
 	  h_siz_sum += h_siz;
 
           sum += libio->xev_in[n+el]*h_siz;
@@ -3463,11 +3463,11 @@ interp_ev_to_nodes(const Exo_DB *exo, dbl *ev_tmp, int iev)
   /* Done */
   return;
 }
-                                                                                
+
 int
 advance_porosity_ev(const int time_step, const int nn,
                     dbl *x, dbl *base_p_por, dbl *base_p_liq)
-                                                                                
+
 /*
  * Function updates the external field corresponding to imported nodal
  * porosity at each time step (after the first) according to the
@@ -3492,20 +3492,20 @@ advance_porosity_ev(const int time_step, const int nn,
   double cr, por0, delta;
   int i, n, mn, i_por_ev;
   int eq = POR_LIQ_PRES;
-                                                                                
+
   /* Bail out if update not needed */
   if (time_step == previous_step) return 0;
   previous_step = time_step;
   if (time_step == 0) return 0;
-                                                                                
+
   /* check for valid porosity external field index */
   i_por_ev = efv->ev_porous_index;
   EH(i_por_ev, "Porosity external field not found!");
-                                                                                
+
   /* Loop over nodes in problem */
   for (n=0; n<nn; n++)
     {
-                                                                                
+
   /*
    * Get block number and DOF index for porous liquid pressure at node
    * EDW note: This will only work for nodes along an element block
@@ -3513,7 +3513,7 @@ advance_porosity_ev(const int time_step, const int nn,
    */
       mn = first_matID_at_node(n);
        i = Index_Solution(n, eq, 0, 0, -1);
-                                                                                
+
   /* Proceed if eq is active at node */
       if (i > -1)
         {
@@ -3532,7 +3532,7 @@ advance_porosity_ev(const int time_step, const int nn,
 int
 advance_porosity_goma_first(const int time_step, const int nn,
                             dbl *x, dbl *base_p_por, dbl *base_p_liq)
-                                                                                
+
 /*
  * Function updates the external field corresponding to imported nodal
  * porosity at each time step (after the first) according to the
@@ -3557,20 +3557,20 @@ advance_porosity_goma_first(const int time_step, const int nn,
   double cr, por0, delta;
   int i, n, mn, i_por_ev;
   int eq = POR_LIQ_PRES;
-                                                                                
+
   /* Bail out if update not needed */
   if (time_step == previous_step) return 0;
   previous_step = time_step;
   if (time_step == 0) return 0;
-                                                                                
+
   /* check for valid porosity external field index */
   i_por_ev = efv->ev_porous_index;
   EH(i_por_ev, "Porosity external field not found!");
-                                                                                
+
   /* Loop over nodes in problem */
   for (n=0; n<nn; n++)
     {
-                                                                                                                              
+
   /*
    * Get block number and DOF index for porous liquid pressure at node
    * EDW note: This will only work for nodes along an element block
@@ -3578,7 +3578,7 @@ advance_porosity_goma_first(const int time_step, const int nn,
    */
       mn = first_matID_at_node(n);
        i = Index_Solution(n, eq, 0, 0, -1);
-                                                                                
+
   /* Proceed if eq is active at node */
       if (i > -1)
         {
@@ -3594,18 +3594,18 @@ advance_porosity_goma_first(const int time_step, const int nn,
 
 
 int
-advance_porosity_jas_leads(const int time_step, 
-			   double current_gtime , 
+advance_porosity_jas_leads(const int time_step,
+			   double current_gtime ,
 			   dbl starting_gtime,
-			   dbl animas_time_step, 
+			   dbl animas_time_step,
 			   const int nn,
-			   dbl *p_por_final, 
+			   dbl *p_por_final,
 			   dbl *p_por_dot )
 {
   int i, n, mn, i_por_ev;
   int eq = POR_LIQ_PRES;
- 
-                                                                                
+
+
   /* check for valid porosity external field index */
   i_por_ev = efv->ev_porous_index;
   EH(i_por_ev, "Porosity external field not found!");
@@ -3624,13 +3624,13 @@ advance_porosity_jas_leads(const int time_step,
 int
 init_pmv_hyst( const Exo_DB *exo )
 
-/*
+/**********************************************************************
  * Function to initiate porous media variables hysteresis structure
  * containing history of curve switching and other nodal quantities
- *
  * This update is done here on a node-by-node basis, rather than
  * doing at assembly time.
- */
+ ***********************************************************************/
+
 {
   int i_num_switch_ext_field, i_curve_type_ext_field;
 
@@ -3693,6 +3693,75 @@ init_pmv_hyst( const Exo_DB *exo )
   return 0;
 }
 
+
+/**********************************************************************
+ * Function updates the external field corresponding to imported nodal
+ * etch area  at each time step (after the first) according to the
+ * following relation:
+ *
+ *              n+1              n                     n+1    n
+ *    (etch_area)    = (etch_area)  - etch_rate   * [ t    - t  ]
+ * where:
+ *        etch rate = Rate of etching in CGS unit
+ *        t = time
+ *       n+1 = current
+ *         n = first in current Goma call
+ *
+ * This update is done here on a node-by-node basis, rather than
+ * doing at assembly time.
+ ***********************************************************************/
+advance_etch_area_ext_field(const int time_step, const int nn,
+                            const dbl delta_t, dbl *x)
+{
+  int i_etch_area = -1, i_etch_depth = -1;
+  int n, i_H2O, i_KOH;
+  double rho_H2O, rho_KOH;
+  double etch_area_old, etch_depth_old, etch_area, etch_depth;
+  double etch_rate;
+
+  i_etch_area = efv->ev_etch_area;
+  i_etch_depth = efv->ev_etch_depth;
+
+  /* Loop over nodes in problem */
+  for (n=0; n<nn; n++)
+    {
+  /*
+   * Load up concentration field - g/cm^3
+   */
+     i_H2O = Index_Solution (n, MASS_FRACTION, 0, 0, -1);
+     i_KOH = Index_Solution (n, MASS_FRACTION, 1, 0, -1);
+     rho_H2O = x[i_H2O];
+     rho_KOH = x[i_KOH];
+
+  /*
+   * Load up etch area and depth from external field
+   */
+     etch_area_old = efv->ext_fld_ndl_val[i_etch_area][n];
+     etch_depth_old = efv->ext_fld_ndl_val[i_etch_depth][n];
+
+  /*
+   * Calculate etch rate
+   */
+     etch_rate = calc_KOH_Si_etch_rate_100(rho_H2O, rho_KOH, NULL);
+
+
+  /*
+   * Update etch area and depth
+   */
+     etch_area = etch_area_old - etch_rate * delta_t /(350.0 * 1.0e-7 ) / sqrt(2.0);
+     etch_depth = etch_depth_old + etch_rate * delta_t;
+
+     if (etch_area < 0.0)
+       {
+        etch_area = 0.0;
+        etch_depth = etch_depth_old;
+       }
+     efv->ext_fld_ndl_val[i_etch_area][n] = etch_area;
+     efv->ext_fld_ndl_val[i_etch_depth][n] = etch_depth;
+
+    } /* End of loop over nodes */
+  return 0;
+} /* End of advance_etch_area_ext_field */
 
 /****************************************************************************/
 /****************************************************************************/

@@ -34,7 +34,7 @@ PROTO((double func[DIM],
        const double dt,       /* current time step size */
        double xi[DIM],        /* Local stu coords */
        const Exo_DB *exo));   /* ExodusII database struct pointer */
-       
+
 EXTERN void lub_static_pressure
 PROTO((double func[DIM],
        double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
@@ -43,6 +43,15 @@ PROTO((double func[DIM],
        const double dt,       /* current time step size */
        double xi[DIM],        /* Local stu coords */
        const Exo_DB *exo));   /* ExodusII database struct pointer */
+
+EXTERN void lub_press_hydro
+PROTO((double *func,
+       double d_func[MAX_VARIABLE_TYPES + MAX_CONC],
+       const double delta_p_x,    /* Pressure variation in x direction */
+       const double delta_p_y,    /* Pressure variation in y direction */
+       const double delta_p_z,    /* Pressure variation in z direction */
+       const double p_0));        /* Pressure datum */
+
 
 EXTERN void shell_n_dot_flow_bc_film
 PROTO((double func[DIM],
