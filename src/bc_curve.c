@@ -865,7 +865,7 @@ apply_point_colloc_edge_bc (
 		      {
 			EH(-1,"CA_EDGE_CURVE cannot be used with shared edges.");
 		      }
-
+                    break;
 		  case CA_EDGE_BC:
 		    /*
 		     * need surface vectors

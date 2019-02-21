@@ -5168,6 +5168,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	    EH(-1,"Jacobian entries for II_GAMMA_DOT Volume integral not implemented.");
 	  }
       }
+      break;
 
     case I_SPECIES_MASS:
       {

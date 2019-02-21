@@ -3292,6 +3292,7 @@ apply_table_bc( double *func,
     case PRESSURE:
       *func = fv->P - interp_val;
       d_func[var] = 1.0;
+      break;
     case POLYMER_STRESS11:
       *func = fv->S[0][0][0] - interp_val;
       d_func[var] = 1.0;

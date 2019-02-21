@@ -909,7 +909,7 @@ assemble_fill(double tt,
 
 		          }
 	                  advection *= pd->etm[eqn][(LOG2_ADVECTION)];
-
+                          break;
 
 			case FILL_WEIGHT_G:  /* Plain ol' Galerkin */
 
