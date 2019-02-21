@@ -539,6 +539,18 @@
 #define INTP_BC        1053
 #define INTM_BC        1054
 #define INTD_BC        1055
+#define EM_E1R_BC      1056
+#define EM_E2R_BC      1057
+#define EM_E3R_BC      1058
+#define EM_E1I_BC      1059
+#define EM_E2I_BC      1060
+#define EM_E3I_BC      1061
+#define EM_H1R_BC      1062
+#define EM_H2R_BC      1063
+#define EM_H3R_BC      1064
+#define EM_H1I_BC      1065
+#define EM_H2I_BC      1066
+#define EM_H3I_BC      1067
 
 
 /* pressure */

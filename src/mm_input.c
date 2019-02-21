@@ -6816,7 +6816,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
 /* For non-LOCA continuation, this card does not apply */
     default:
       fprintf(stdout, "LSA not available for continuation without LOCA!");
-      Linear_Stability = LSA_NONE;
+      Linear_Stability = LSA_NONE;  
       break;
     }
   }
@@ -8244,6 +8244,30 @@ rd_eq_specs(FILE *ifp,
       ce = set_eqn(R_TFMP_BOUND, pd_ptr);
     } else if (!strcasecmp(ts, "restime")) {
       ce = set_eqn(R_RESTIME, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e1_real")) {
+      ce = set_eqn(R_EM_E1_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e1_imag")) {
+      ce = set_eqn(R_EM_E1_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e2_real")) {
+      ce = set_eqn(R_EM_E2_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e2_imag")) {
+      ce = set_eqn(R_EM_E2_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e3_real")) {
+      ce = set_eqn(R_EM_E3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e3_imag")) {
+      ce = set_eqn(R_EM_E3_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h1_real")) {
+      ce = set_eqn(R_EM_H1_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h1_imag")) {
+      ce = set_eqn(R_EM_H1_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h2_real")) {
+      ce = set_eqn(R_EM_H2_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h2_imag")) {
+      ce = set_eqn(R_EM_H2_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h3_real")) {
+      ce = set_eqn(R_EM_H3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h3_imag")) {
+      ce = set_eqn(R_EM_H3_IMAG, pd_ptr);  
 
     } else if (!strcasecmp(ts, "porous_sat"))  {
       ce = set_eqn(R_POR_LIQ_PRES, pd_ptr);
@@ -8844,6 +8868,30 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(TFMP_SAT, pd_ptr);
     } else if (!strcasecmp(ts, "RST")) {
       cv = set_var(RESTIME, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E1_REAL")) {
+      cv = set_var(EM_E1_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E1_IMAG")) {
+      cv = set_var(EM_E1_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E2_REAL")) {
+      cv = set_var(EM_E2_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E2_IMAG")) {
+      cv = set_var(EM_E2_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E3_REAL")) {
+      cv = set_var(EM_E3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E3_IMAG")) {
+      cv = set_var(EM_E3_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H1_REAL")) {
+      cv = set_var(EM_H1_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H1_IMAG")) {
+      cv = set_var(EM_H1_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H2_REAL")) {
+      cv = set_var(EM_H2_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H2_IMAG")) {
+      cv = set_var(EM_H2_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H3_REAL")) {
+      cv = set_var(EM_H3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H3_IMAG")) {
+      cv = set_var(EM_H3_IMAG, pd_ptr);  
 
     } else if (!strncasecmp(ts, "Sp", 2)) {
       if (!strcasecmp(ts, "Sp")) {
@@ -9505,6 +9553,18 @@ rd_eq_specs(FILE *ifp,
     case R_LIGHT_INTM:
     case R_LIGHT_INTD:
     case R_RESTIME:  
+    case R_EM_E1_REAL:
+    case R_EM_E1_IMAG:
+    case R_EM_E2_REAL:
+    case R_EM_E2_IMAG:
+    case R_EM_E3_REAL:
+    case R_EM_E3_IMAG:
+    case R_EM_H1_REAL:
+    case R_EM_H1_IMAG:
+    case R_EM_H2_REAL:
+    case R_EM_H2_IMAG:
+    case R_EM_H3_REAL:
+    case R_EM_H3_IMAG:
 
 	if ( fscanf(ifp, "%lf %lf %lf %lf %lf", 
 		    &(pd_ptr->etm[ce][(LOG2_MASS)]),

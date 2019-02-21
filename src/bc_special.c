@@ -428,7 +428,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
   			  jflag = -1;
 			  for(p=0;p<MAX_CA-1;p++)
 			    {
- 			      if(CA_id[p] != -1 && CA_id[p+1] == -1) {jflag=p+1;}
+ 			      if((CA_id[p] != -1) && CA_id[p+1] == -1) {jflag=p+1;}
 			    }
 			  if (jcnt == -1)
 			    {

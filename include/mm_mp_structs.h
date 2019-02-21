@@ -205,6 +205,9 @@ struct Material_Properties
   int wave_numberModel;	     /* CONSTANT */
   int wave_number_tableid;
 
+  dbl acoustic_ksquared_sign;     /* Sign of wavenumber squared -- captures imaginary wavenumbers */
+  int Ksquared_SignModel;	     /* CONSTANT */
+
   dbl acoustic_absorption;
   dbl d_acoustic_absorption[MAX_VARIABLE_TYPES + MAX_CONC];
   int len_u_acoustic_absorption;
@@ -225,6 +228,13 @@ struct Material_Properties
   dbl *u_light_absorption;
   int Light_AbsorptionModel;
   int light_absorption_tableid;
+ 
+  dbl extinction_index;
+  dbl d_extinction_index[MAX_VARIABLE_TYPES + MAX_CONC];
+  int len_u_extinction_index;
+  dbl *u_extinction_index;
+  int Extinction_IndexModel;
+  int extinction_index_tableid;
  
   int VoltageFormulation;   /* Used to select k for potential equation
                              * Permittivity or conductivity (default) */
@@ -1205,6 +1215,11 @@ struct Second_LS_Phase_Properties
   int lightabsorptionmask[2];
   dbl lightabsorption_phase[MAX_PHASE_FUNC];
   
+  int ExtinctionIndexModel;
+  dbl extinctionindex;
+  int extinctionindexmask[2];
+  dbl extinctionindex_phase[MAX_PHASE_FUNC];
+
   int SpeciesSourceModel[MAX_CONC];
   dbl speciessource[MAX_CONC];
   int speciessourcemask[2][MAX_CONC];;
