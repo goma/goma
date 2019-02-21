@@ -458,6 +458,21 @@ rd_bc_specs(FILE *ifp,
 	case SHELL_TFMP_NUM_DIFF_BC:
 	  break;
 
+	  /* Fall through for all cases which requires a single integer value
+	   * as data input
+	   */
+        case MOVING_PLANE_ETCH_BC:
+
+	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1)
+            {
+	      sr = sprintf(err_msg, "%s: Expected 1 int for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+            }
+	  SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_Data_Int[0]);
+
+	  break;
+
 	  /* Fall through for all cases which require a single floating point
 	   * value as data input and one additional optional parameter
 	   */
@@ -793,6 +808,21 @@ rd_bc_specs(FILE *ifp,
 
           break;
 
+	  /* Fall through for all cases which requires two integer values
+	   * as data input
+	   */
+        case YFLUX_ETCH_BC:
+
+	  if (fscanf(ifp, "%d %d", &BC_Types[ibc].BC_Data_Int[0],
+                                   &BC_Types[ibc].BC_Data_Int[1]) != 2)
+            {
+	      sr = sprintf(err_msg, "%s: Expected 2 int for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+            }
+	  SPF(endofstring(echo_string), " %d %d", BC_Types[ibc].BC_Data_Int[0], BC_Types[ibc].BC_Data_Int[1]);
+          BC_Types[ibc].species_eq = BC_Types[ibc].BC_Data_Int[0];
+	  break;
 
 	  /* 
 	   * Fall through for all cases which require three floating point

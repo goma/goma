@@ -78,6 +78,7 @@ static char rcsid[] =
 *       NAME			TYPE			CALLED BY
 *  -----------------------------------------------------------------
 *  fvelo_normal_bc                      void
+*  fmesh_etch_bc                        void
 *  sdc_stefan_flow                      void
 *  sdc_stefan_volume_flow               void
 *  mass_flux_surface                  double
@@ -615,7 +616,101 @@ if(lsi->near && 0) fprintf(stderr,"vn_ls %g %g %g %g\n",fv->x[0],penalty,factor,
 /*****************************************************************************/
 /*****************************************************************************/
 /****************************************************************************/
-void 
+
+void
+fmesh_etch_bc(double *func,
+              double d_func[MAX_VARIABLE_TYPES + MAX_CONC],
+              const int etch_plane,  /* Etch plane */
+              const int id,   /* Local node ID */
+              const dbl x_dot[MAX_PDIM], /* Mesh velocity */
+              const dbl tt,   /* parameter to vary time integration from
+                                 explicit (tt = 1) to implicit (tt = 0) */
+              const dbl dt)   /* current value of the time step */
+     /***********************************************************************
+      *
+      * fmesh_etch_bc():
+      *
+      *  Function which evaluates the expression specifying the
+      *  boundary normal motion  at a quadrature point on a side
+      *  of an element due to etching reaction.
+      *
+      *         func =  - etch_rate + n . xdot
+      *
+      *  The boundary conditions MOVING_PLANE_ETCH_BC
+      *  employ this function. vnormal is typically dictated by current surface
+      *  orientation as well as surface chemistry.
+      *
+      *  Note: this function initially is cloned from fvelo_normal_bc
+      *
+      * Input:
+      *
+      *  etch_plane = specified on the bc card as the first integer
+      *
+      *
+      * Output:
+      *
+      *  func[0] = value of the function mentioned above
+      *  d_func[0][varType][lvardof] =
+      *              Derivate of func[0] wrt
+      *              the variable type, varType, and the local variable
+      *              degree of freedom, lvardof, corresponding to that
+      *              variable type.
+      *
+      *   Author: Kristianto Tjiptowidjojo    (02/27/2017)
+      ********************************************************************/
+{
+  int a, b, w;
+  int dim = pd->Num_Dim;
+  int var;
+
+  double etch_rate = 0.0;
+  double d_etch_rate_d_C[MAX_CONC] = {0.0};
+
+
+  /* Right now we only consider KOH wet etching of silicon at 100 plane */
+  if (etch_plane == 100)
+    {
+     /* Get etch rate */
+     etch_rate = calc_KOH_Si_etch_rate_100(d_etch_rate_d_C);
+    }
+
+  /* Set the residual */
+  for (a = 0; a < dim; a++)
+     {
+      *func += fv->snormal[a] * x_dot[a];
+     }
+  *func -= etch_rate;
+
+    /***** NOW FIND SENSITIVITIES *****/
+
+  /* Mesh sensitivities */
+  for (b = 0; b < dim; b++)
+     {
+      var = MESH_DISPLACEMENT1 + b;
+      for (a = 0; a < dim; a++)
+         {
+          d_func[var] += fv->dsnormal_dx[a][b][id] * x_dot[a];
+          d_func[var] += fv->snormal[a] * (1.0 + 2.0*tt)/dt * delta(a,b);
+         }
+     }
+
+  /* Concentration sensitivities */
+  var = MASS_FRACTION;
+  if (pd->v[var])
+    {
+     for (w = 0; w<pd->Num_Species_Eqn; w++)
+        {
+         d_func[MAX_VARIABLE_TYPES + w] -= d_etch_rate_d_C[w];
+        }
+    }
+
+  return;
+} /* END of routine fmesh_etch_bc */
+/*****************************************************************************/
+/*****************************************************************************/
+/****************************************************************************/
+
+void
 fvelo_tangential_ls_bc(double func[DIM],
 		double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 		const double vtangent, /* vtangent velocity */
