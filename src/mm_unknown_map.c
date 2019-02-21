@@ -1895,6 +1895,7 @@ set_interaction_masks(Exo_DB *exo)
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = SHELL_NORMAL3;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
 
 	case R_MASS_SURF:
 	  v = VELOCITY1;

@@ -7325,8 +7325,10 @@ rd_post_process_specs(FILE *ifp,
 			  break;
 			case 5:
 			  EH(-1,"sensitivities to UF not done");
+			  break;
 			case 6:
 			  EH(-1,"sensitivities to AN not done");
+			  break;
 			}
 		      if(id1 == pp_fluxes_sens[i]->sens_id &&
 			 id2 == pp_fluxes_sens[i]->sens_flt &&
@@ -7787,8 +7789,10 @@ rd_post_process_specs(FILE *ifp,
 			  break;
 			case 5:
 			  EH(-1,"sensitivities to UF not done");
+			  break;
 			case 6:
 			  EH(-1,"sensitivities to AN not done");
+			  break;
 			}
 		      if(id1 == pp_data_sens[i]->sens_id &&
 			 id2 == pp_data_sens[i]->sens_flt &&
