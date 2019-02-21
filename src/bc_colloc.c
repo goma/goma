@@ -396,6 +396,11 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	    }
 	    break;
 
+	    case MOVING_PLANE_ETCH_BC:
+	      fmesh_etch_bc (&func, d_func,
+		      BC_Types[bc_input_id].BC_Data_Int[0], id, x_dot, theta, delta_t);
+	    break;
+
 	    case MESH_CONSTRAINT_BC:
 	      fmesh_constraint(&func, d_func, bc_input_id);
 	      break;
@@ -2083,6 +2088,11 @@ load_variable (double *x_var,        /* variable value */
       var = LIGHT_INTD;
       *d_x_var = 1.;
       break;
+    case RESTIME:
+      *x_var = fv->restime;
+      var = RESTIME;
+      *d_x_var = 1.;
+      break;  
     case MASS_FRACTION:
       *x_var = fv->c[wspec];
       var = MASS_FRACTION;
@@ -3282,6 +3292,7 @@ apply_table_bc( double *func,
     case PRESSURE:
       *func = fv->P - interp_val;
       d_func[var] = 1.0;
+      break;
     case POLYMER_STRESS11:
       *func = fv->S[0][0][0] - interp_val;
       d_func[var] = 1.0;

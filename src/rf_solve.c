@@ -3077,7 +3077,6 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	  
       else /* not converged or unsuccessful time step */
       {
-/*fprintf(stderr,"conv succ %d %d %d\n",converged, success_dt,no_relax_retry);*/
         if(relax_bit && ((n-nt) < no_relax_retry)  ) {
 	     success_dt = TRUE;
              if(inewton == -1)        {
@@ -3202,7 +3201,6 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
   } /* end of if steady else transient */
   
  free_and_clear:
-
 
 /* If exporting variables to another code, save them now! */
 #ifdef LIBRARY_MODE

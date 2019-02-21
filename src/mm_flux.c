@@ -5168,6 +5168,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	    EH(-1,"Jacobian entries for II_GAMMA_DOT Volume integral not implemented.");
 	  }
       }
+      break;
 
     case I_SPECIES_MASS:
       {
@@ -8200,6 +8201,17 @@ load_fv_sens(void)
 	  fv_sens->poynt[2] += *esp_old->poynt[2][i] * bf[v]->phi[i];
 	}
     }
+
+  v = RESTIME;
+  fv_sens->restime = 0.;
+  if ( pd->v[v] )
+    {
+      dofs  = ei->dof[v];
+      for ( i=0; i<dofs; i++)
+	{
+	  fv_sens->restime += *esp_old->restime[i] * bf[v]->phi[i];
+	}
+    } 
 
   v = SHELL_PRESS_OPEN;
   fv_sens->sh_p_open = 0.;

@@ -145,11 +145,11 @@ struct BC_descriptions  BC_Desc[] =
   { "PLANEY", "PLANEY_BC",   COLLOCATE_SURF, PLANEY_BC,  R_MESH2, SCALAR, NO_ROT,  {0, 0, 0, 0, 0, 1, 1, 1, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "PLANEZ", "PLANEZ_BC",   COLLOCATE_SURF, PLANEZ_BC,  R_MESH3, SCALAR, NO_ROT,  {0, 0, 0, 0, 0, 1, 1, 1, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "MOVING_PLANE",  "MOVING_PLANE_BC",    COLLOCATE_SURF, MOVING_PLANE_BC, R_MESH_NORMAL, SCALAR, R_MESH1, {0, 0, 0, 0, 0, 1, 1, 1, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "MOVING_PLANE_ETCH",  "MOVING_PLANE_ETCH_BC",    COLLOCATE_SURF, MOVING_PLANE_ETCH_BC, R_MESH_NORMAL, SCALAR, R_MESH1, {0, 0, 0, 0, 0, 1, 1, 1, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "MESH_CONSTRAINT",  "MESH_CONSTRAINT_BC",  COLLOCATE_SURF, MESH_CONSTRAINT_BC,  R_MESH_NORMAL, SCALAR, R_MESH1, {0, 0, 0, 0, 0, 1, 1, 1, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB },
   { "FILLET",  "FILLET_BC",    COLLOCATE_SURF, FILLET_BC, R_MESH_NORMAL, SCALAR, R_MESH1, {0, 0, 0, 0, 0, 1, 1, 1, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "DOUBLE_RAD",  "DOUBLE_RAD_BC",    COLLOCATE_SURF, DOUBLE_RAD_BC, R_MESH_NORMAL, SCALAR, R_MESH1, {0, 0, 0, 0, 0, 1, 1, 1, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "ROLL_FLUID",  "ROLL_FLUID_BC",    COLLOCATE_SURF, ROLL_FLUID_BC, R_MESH_NORMAL, SCALAR, R_MESH1, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
-
   { "P", "P_BC", DIRICHLET, P_BC, R_PRESSURE, SCALAR, NO_ROT, {0, 0, 0, 0, 0, 0, 0, 0, 0, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
 
   { "PSPG", "PSPG_BC", WEAK_INT_SURF, PSPG_BC, R_PRESSURE, SCALAR, NO_ROT, {1,1,1,1,1,1,1,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,0} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
@@ -391,6 +391,7 @@ SINGLE_PHASE, DVI_SINGLE_PHASE_DB},
   { "INTP", "INTP_BC", DIRICHLET, INTP_BC, R_LIGHT_INTP, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "INTM", "INTM_BC", DIRICHLET, INTM_BC, R_LIGHT_INTM, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "INTD", "INTD_BC", DIRICHLET, INTD_BC, R_LIGHT_INTD, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "RESTIME", "RESTIME_BC", DIRICHLET, RESTIME_BC, R_RESTIME, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,  
   { "LIGHTP_TRANS", "LIGHTP_TRANS_BC", WEAK_INT_SURF, LIGHTP_TRANS_BC, R_LIGHT_INTP, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "LIGHTM_TRANS", "LIGHTM_TRANS_BC", WEAK_INT_SURF, LIGHTM_TRANS_BC, R_LIGHT_INTM, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "LIGHTD_TRANS", "LIGHTD_TRANS_BC", WEAK_INT_SURF, LIGHTD_TRANS_BC, R_LIGHT_INTD, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
@@ -402,6 +403,18 @@ SINGLE_PHASE, DVI_SINGLE_PHASE_DB},
   { "API_NOBC", "API_NOBC_BC", WEAK_INT_SURF, API_NOBC_BC, R_ACOUS_PIMAG, SCALAR, NO_ROT, {0,0,0,1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "APR_VELOCITY", "APR_VELOCITY_BC", WEAK_INT_SURF, APR_VELOCITY_BC, R_ACOUS_PREAL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "API_VELOCITY", "API_VELOCITY_BC", WEAK_INT_SURF, API_VELOCITY_BC, R_ACOUS_PIMAG, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_E1R", "EM_E1R_BC", DIRICHLET, EM_E1R_BC, R_EM_E1_REAL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_E2R", "EM_E2R_BC", DIRICHLET, EM_E2R_BC, R_EM_E2_REAL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_E3R", "EM_E3R_BC", DIRICHLET, EM_E3R_BC, R_EM_E3_REAL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_E1I", "EM_E1I_BC", DIRICHLET, EM_E1I_BC, R_EM_E1_IMAG, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_E2I", "EM_E2I_BC", DIRICHLET, EM_E2I_BC, R_EM_E2_IMAG, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_E3I", "EM_E3I_BC", DIRICHLET, EM_E3I_BC, R_EM_E3_IMAG, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_H1R", "EM_H1R_BC", DIRICHLET, EM_H1R_BC, R_EM_H1_REAL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_H2R", "EM_H2R_BC", DIRICHLET, EM_H2R_BC, R_EM_H2_REAL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_H3R", "EM_H3R_BC", DIRICHLET, EM_H3R_BC, R_EM_H3_REAL, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_H1I", "EM_H1I_BC", DIRICHLET, EM_H1I_BC, R_EM_H1_IMAG, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_H2I", "EM_H2I_BC", DIRICHLET, EM_H2I_BC, R_EM_H2_IMAG, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "EM_H3I", "EM_H3I_BC", DIRICHLET, EM_H3I_BC, R_EM_H3_IMAG, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
 
   { "NN", "NN_BC", DIRICHLET, NN_BC, R_BOND_EVOLUTION, SCALAR, NO_ROT, {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1} , SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "T", "T_BC", DIRICHLET, T_BC, R_ENERGY, SCALAR, NO_ROT, {0, 0, 0, 1, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
@@ -522,6 +535,7 @@ SINGLE_PHASE, DVI_SINGLE_PHASE_DB},
   { "YFLUX_CONST", "YFLUX_CONST_BC", WEAK_INT_SURF, YFLUX_CONST_BC, R_MASS, SCALAR, NO_ROT, {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "YFLUX_USER",  "YFLUX_USER_BC",  WEAK_INT_SURF, YFLUX_USER_BC, R_MASS, SCALAR, NO_ROT, {1, 1, 1, 1, 1, 1, 1, 1, 0, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "YFLUX_ALLOY",  "YFLUX_ALLOY_BC",  WEAK_INT_SURF, YFLUX_ALLOY_BC, R_MASS, SCALAR, NO_ROT, {1, 1, 1, 1, 1, 1, 1, 1, 0, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
+  { "YFLUX_ETCH", "YFLUX_ETCH_BC", STRONG_INT_SURF, YFLUX_ETCH_BC, R_MASS, SCALAR, NO_ROT, {1, 1, 1, 1, 1, 1, 1, 1, 0, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "YUSER", "YUSER_BC", STRONG_INT_SURF, YUSER_BC, R_MASS, SCALAR, NO_ROT, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "FCD_CONC_GRAD","FCD_CONC_GRAD_BC", WEAK_INT_SURF, FICK_CHRGD_SURF_GRAD_BC,  R_MASS, SCALAR, NO_ROT, {0, 0, 0, 1, 1, 1, 1, 1, 0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  0,0,1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
   { "SURFACE_CHARGE", "SURFACE_CHARGE_BC", STRONG_INT_SURF, SURFACE_CHARGE_BC, R_MASS, SCALAR, NO_ROT, {1, 1, 1, 1, 1, 1, 1, 1, 1, 1}, SINGLE_PHASE, DVI_SINGLE_PHASE_DB } ,
@@ -1024,7 +1038,20 @@ struct Equation_Names EQ_Name[] = {
     { "R_LIGHT_INTD", "LIGHT_INTD", R_LIGHT_INTD},  /*   184  */
     { "R_TFMP_MASS", "TFMP_MASS", R_TFMP_MASS},     /*   185  */
     { "R_TFMP_BOUND", "TFMP_BOUND", R_TFMP_BOUND},     /*   186  */
+    { "R_RESTIME", "RESTIME", R_RESTIME},     /*   187  */
 
+    { "R_EM_E1_REAL", "EM_E1_REAL", R_EM_E1_REAL},
+    { "R_EM_E1_IMAG", "EM_E1_IMAG", R_EM_E1_IMAG},
+    { "R_EM_E2_REAL", "EM_E2_REAL", R_EM_E2_REAL},
+    { "R_EM_E2_IMAG", "EM_E2_IMAG", R_EM_E2_IMAG}, /*   191  */
+    { "R_EM_E3_REAL", "EM_E3_REAL", R_EM_E3_REAL},
+    { "R_EM_E3_IMAG", "EM_E3_IMAG", R_EM_E3_IMAG},
+    { "R_EM_H1_REAL", "EM_H1_REAL", R_EM_H1_REAL},
+    { "R_EM_H1_IMAG", "EM_H1_IMAG", R_EM_H1_IMAG},
+    { "R_EM_H2_REAL", "EM_H2_REAL", R_EM_H2_REAL},/*   196  */
+    { "R_EM_H2_IMAG", "EM_H2_IMAG", R_EM_H2_IMAG},
+    { "R_EM_H3_REAL", "EM_H3_REAL", R_EM_H3_REAL},
+    { "R_EM_H3_IMAG", "EM_H3_IMAG", R_EM_H3_IMAG},/*   199  */
     /*
      *  Note -> these entries must remain until we get rid
      *          of putting the species unknowns after V_LAST
@@ -1032,7 +1059,7 @@ struct Equation_Names EQ_Name[] = {
      *          are species in the problem
      */
 
-    { "R_Y0", "Y0", V_LAST + 0} ,                    /* 187 */
+    { "R_Y0", "Y0", V_LAST + 0} ,                    /* 200 */
     { "R_Y1", "Y1", V_LAST + 1} ,
     { "R_Y2", "Y2", V_LAST + 2} ,
     { "R_Y3", "Y3", V_LAST + 3} ,
@@ -1042,7 +1069,7 @@ struct Equation_Names EQ_Name[] = {
     { "R_Y7", "Y7", V_LAST + 7} ,
     { "R_Y8", "Y8", V_LAST + 8} ,
     { "R_Y9", "Y9", V_LAST + 9} ,                    
-    { "R_Y10", "Y10", V_LAST + 10} ,                 /* 197 */
+    { "R_Y10", "Y10", V_LAST + 10} ,                 /* 210 */
     { "R_Y11", "Y11", V_LAST + 11} ,                   
     { "R_Y12", "Y12", V_LAST + 12} ,                  
     { "R_Y13", "Y13", V_LAST + 13} ,                  
@@ -1052,7 +1079,7 @@ struct Equation_Names EQ_Name[] = {
     { "R_Y17", "Y17", V_LAST + 17} ,                 
     { "R_Y18", "Y18", V_LAST + 18} ,                   
     { "R_Y19", "Y19", V_LAST + 19} ,                 
-    { "R_Y20", "Y20", V_LAST + 20} ,                 /* 207 */  
+    { "R_Y20", "Y20", V_LAST + 20} ,                 /* 220 */  
     { "R_Y21", "Y21", V_LAST + 21} ,
     { "R_Y22", "Y22", V_LAST + 22} ,
     { "R_Y23", "Y23", V_LAST + 23} ,
@@ -1061,21 +1088,21 @@ struct Equation_Names EQ_Name[] = {
     { "R_Y26", "Y26", V_LAST + 26} ,
     { "R_Y27", "Y27", V_LAST + 27} ,   
     { "R_Y28", "Y28", V_LAST + 28} ,
-    { "R_Y29", "Y29", V_LAST + 29} ,                 /* 216 */
+    { "R_Y29", "Y29", V_LAST + 29} ,                 /* 229 */
 
     /*
      * Add extra equation names for vector fields that can be rotated
      */
     
-    { "R_MOM_NORMAL",  "DN",  R_MOM_NORMAL } ,       /* 217 */
+    { "R_MOM_NORMAL",  "DN",  R_MOM_NORMAL } ,       /* 230 */
     { "R_MOM_TANG1",   "DT1", R_MOM_TANG1 } ,
     { "R_MOM_TANG2",   "DT2", R_MOM_TANG2 } ,
     { "R_MESH_NORMAL", "VN",  R_MESH_NORMAL } ,
     { "R_MESH_TANG1",  "VT1", R_MESH_TANG1 } ,
-    { "R_MESH_TANG2",  "VT2", R_MESH_TANG2 } ,       /* 227 */
+    { "R_MESH_TANG2",  "VT2", R_MESH_TANG2 } ,       /* 235 */
     { "R_SOLID_NORMAL", "SN",  R_SOLID_NORMAL } ,
     { "R_SOLID_TANG1",  "ST1", R_SOLID_TANG1 } ,
-    { "R_SOLID_TANG2",  "ST2", R_SOLID_TANG2 }         /* 225 */
+    { "R_SOLID_TANG2",  "ST2", R_SOLID_TANG2 }         /* 238 */
 };
 int Num_EQ_Names = sizeof(EQ_Name) / sizeof(struct Equation_Names);  
 
@@ -1298,9 +1325,23 @@ struct Equation_Names Var_Name[] =  {
     { "LIGHT_INTD", "INTD", LIGHT_INTD},                     /* 184 */
     { "TFMP_SAT", "SAT", TFMP_SAT},                     /* 185 */
     { "TFMP_PRES", "PRES", TFMP_PRES},                     /* 186 */
+    { "RESTIME", "RST", RESTIME},                     /* 187 */
+
+    { "EM_E1_REAL", "E1R", EM_E1_REAL},
+    { "EM_E1_IMAG", "E1I", EM_E1_IMAG},
+    { "EM_E2_REAL", "E2R", EM_E2_REAL},
+    { "EM_E2_IMAG", "E2I", EM_E2_IMAG},
+    { "EM_E3_REAL", "E3R", EM_E3_REAL},
+    { "EM_E3_IMAG", "E3I", EM_E3_IMAG},
+    { "EM_H1_REAL", "H1R", EM_H1_REAL},
+    { "EM_H1_IMAG", "H1I", EM_H1_IMAG},
+    { "EM_H2_REAL", "H2R", EM_H2_REAL},
+    { "EM_H2_IMAG", "H2I", EM_H2_IMAG},
+    { "EM_H3_REAL", "H3R", EM_H3_REAL},
+    { "EM_H3_IMAG", "H3I", EM_H3_IMAG},
 
     { "MESH_POSITION1", "X",  MESH_POSITION1 } ,
-    { "MESH_POSITION2", "Y",  MESH_POSITION2 } ,	/* 188 */
+    { "MESH_POSITION2", "Y",  MESH_POSITION2 } ,	/* 189 */
     { "MESH_POSITION3", "Z",  MESH_POSITION3 } ,
 
     { "VEL_NORM",       "VN", VEL_NORM } ,
@@ -1314,14 +1355,14 @@ struct Equation_Names Var_Name[] =  {
 
     { "D_X1_DT",   "XDOT", D_X1_DT } ,
     { "D_X2_DT",   "YDOT", D_X2_DT } ,
-    { "D_X3_DT",   "ZDOT", D_X3_DT } ,			/* 199 */
+    { "D_X3_DT",   "ZDOT", D_X3_DT } ,			/* 200 */
     { "D_S_DT",    "SDOT", D_S_DT } ,
 
     { "D_P_DT",    "PDOT", D_P_DT } ,
 
     { "SOLID_POSITION1", "X_RS",  SOLID_POSITION1 } ,  
     { "SOLID_POSITION2", "Y_RS",  SOLID_POSITION2 } ,
-    { "SOLID_POSITION3", "Z_RS",  SOLID_POSITION3 } 	/* 204 */
+    { "SOLID_POSITION3", "Z_RS",  SOLID_POSITION3 } 	/* 205 */
 };
 
 int Num_Var_Names = sizeof(Var_Name) / sizeof(struct Equation_Names);  
@@ -1542,6 +1583,7 @@ struct Equation_Names Exo_Var_Names[] =
   { "Dispersive Scattering Intensity", "INTD", LIGHT_INTD },
   { "Thin Film Multiphase Lubrication Pressure", "TFMP_PRES", TFMP_PRES },
   { "Thin Film Multiphase Saturation", "TFMP_SAT", TFMP_SAT },
+  { "Residence Time Function", "RST", RESTIME },
 };
 
 int Num_Exo_Var_Names = sizeof(Exo_Var_Names) / sizeof(struct Equation_Names);  
@@ -1813,6 +1855,7 @@ struct Equation_Names Var_Units[] =
   { "Dispersive Intensity", "[1]", LIGHT_INTD},
   { "Thin Film Multiphase Lubrication Pressure", "[1]", TFMP_PRES},
   { "Thin Film Multiphase Saturation", "[1]", TFMP_SAT},
+  { "Residence Time Function", "[1]", RESTIME},  
 };
 
 int Num_Var_Units = sizeof(Var_Units) / sizeof(struct Equation_Names);  

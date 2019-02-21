@@ -60,9 +60,9 @@ static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun E
 *
 *       NAME            TYPE            CALLED_BY
 *    ------------             ---------               --------------
-* hydro_flux                          
+* hydro_flux
 * suspension_balance
-* epoxy_dea_species_source 
+* epoxy_dea_species_source
 * epoxy_species_source
 * foam_epoxy_species_source
 * epoxy_heat_source
@@ -70,7 +70,7 @@ static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun E
 * bouss_and_jxb           int          assemble_momentum
 * joule_heat_source       int          assemble_energy
 * visc_diss_heat_source       int          assemble_energy
-*    
+* calc_KOH_Si_etch_rate_100  double
 ******************************************************************************/
 /*
  * This file contains all implemented models for material properties and 
@@ -6788,3 +6788,93 @@ cal_current_density (double x[],           /* global nodal solution vector  */
 } /* END of routine cal_current_density */
 /*****************************************************************************/
 #endif
+
+double
+calc_KOH_Si_etch_rate_100( double d_etch_rate_d_C[MAX_CONC] ) /* Sensitivity of etch rate w.r.t.
+                                                                 concentration of each species*/
+/******************************************************************************
+*
+*  A function that outputs KOH wet etch rate of silicon surface (100 plane for now)
+*  based on kinetic model proposed by
+*
+*   Seidel, H., et al."Anisotropic etching of crystalline silicon in alkaline solutions I.
+*                      Orientation dependence and behavior of passivation layers."
+*   Journal of the electrochemical society 137.11 (1990): 3612-3626.
+*
+*
+*  Kinetic model is listed in Equation A-1
+*
+*  etch_rate = k0 * conc_H2O^4 * conc_KOH^0.25 * exp(-Ea/Kb T)
+*
+*  UNITS:
+*
+*  Kinetic models used above required units as follow:
+*
+*  Etch rate: micron/hour
+*  Rate constant k0: (micron/hr) (mole/liter)^-4.25
+*  Species concentration: mole/liter
+*
+*  Right now, unit conversion is handled automatically, ONLY AND IF ONLY
+*  you use the following:
+*
+*  Species type = SPECIES_DENSITY
+*  Concentration Units: CGS, i.e. g/cm^3
+*  Species ordering:
+*                   0: H2O - water
+*                   1: KOH - potassium hydroxide
+*                   2: H2 - hydrogen
+*                   3: Silicon hydroxyl byproducts
+*  Temperature: From Process Temperature card in general specification
+*
+*  Kristianto Tjiptowidjojo (5/2017)
+*
+*
+******************************************************************************/
+{
+  double etch_rate, d_etch_rate_d_H2O, d_etch_rate_d_KOH;
+
+  /* Boltzmann constant in eV/K */
+  double k_B = 8.6173305e-5;
+
+  /* Activation energy in eV */
+  double E_a = 0.595;
+
+  /* Temperature in K */
+  double T = upd->Process_Temperature;
+
+  /* Rate constant in (micron/hr) (mole/liter)^-4.25  */
+  double k0 = 2480.0;
+
+  /* Get mass concentration of each species
+     Mass concentration unit is g/cm^3 */
+  double rho_H2O = fv->c[0];
+  double rho_KOH = fv->c[1];
+
+  /* Molecular weight in mole/g */
+  double MW_H2O = 18.01528;
+  double MW_KOH = 56.1056;
+
+  /* Mole concentration in mol/liter */
+  double C_H2O = rho_H2O * 1000.0/MW_H2O;
+  double C_KOH = rho_KOH * 1000.0/MW_KOH;
+
+  /* Calculate etch rate (micron/hr) */
+  etch_rate = k0 * pow(C_H2O, 4.0) * pow(C_KOH, 0.25 )
+              * exp(-E_a/k_B/T);
+
+  /* Convert to cm/s */
+  etch_rate = etch_rate / 1.0e4 / 3600.0;
+
+  /* Calculate sensitivity of etch rate w.r.t. concentration */
+  d_etch_rate_d_H2O = 4.0 * k0 * pow(C_H2O, 3.0) * pow(C_KOH, 0.25 )
+                      * exp(-E_a/k_B/T)/(1.0e4 * 3600.0) * (1000.0/MW_H2O);
+
+  d_etch_rate_d_KOH = 0.25 * k0 * pow(C_H2O, 4.0)/ pow(C_KOH, 0.75 )
+                      * exp(-E_a/k_B/T)/(1.0e4 * 3600.0) * (1000.0/MW_KOH);
+
+  /* Export the etch rate and its sensitivities */
+  d_etch_rate_d_C[0] = d_etch_rate_d_H2O;
+  d_etch_rate_d_C[1] = d_etch_rate_d_KOH;
+
+  return etch_rate;
+} /* END of calc_KOH_Si_etch_rate_100 */

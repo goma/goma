@@ -105,6 +105,7 @@ extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
 *  acoustic_absorption
 *  light_absorption
 *  refractive_index
+*  extinction_index
 *  momentum_source_term         int
 *
 *  ls_modulate_momentumsource
@@ -3225,6 +3226,39 @@ assemble_momentum(dbl time,       /* current time */
 			diffusion;
 		    }
 		}
+
+	      /*
+	       * J_m_degrade
+	       */
+
+
+	      if ( pdv[RESTIME] )
+		{
+		  var = RESTIME;
+		  pvar = upd->vp[var];
+		  for ( j=0; j<ei->dof[var]; j++)
+		    {
+		      phi_j = bf[var]->phi[j];
+
+		      diffusion = 0.;
+		      if ( diffusion_on)
+			{
+			  for ( p=0; p<VIM; p++)
+			    {
+			      for ( q=0; q<VIM; q++)
+				{
+				  diffusion +=  grad_phi_i_e_a[p][q] *
+				    d_Pi->degrade[q][p][j];
+				}
+			    }
+			  diffusion *= - d_area ;
+			  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			}
+
+		      lec->J[peqn][pvar][ii][j] +=
+			diffusion;
+		    }
+		}  
 
 #ifdef COUPLED_FILL
 	      /* 
@@ -8134,6 +8168,12 @@ load_fv(void)
                    &(fv->poynt[2]), &(fv_dot->poynt[2]), &(fv_old->poynt[2]));
     stateVector[LIGHT_INTD] = fv->poynt[2];
   } 
+  if ( pdv[RESTIME] ) {
+    v = RESTIME    ;
+    scalar_fv_fill(esp->restime, esp_dot->restime, esp_old->restime, bf[v]->phi, ei->dof[v],
+                   &(fv->restime), &(fv_dot->restime), &(fv_old->restime));
+    stateVector[RESTIME] = fv->restime;
+  }   
   /*
    *	Porous sink mass
    */
@@ -8844,7 +8884,101 @@ load_fv(void)
       stateVector[v] = fv->tfmp_sat;
     } 
 
+  /*
+   * EM Wave Vectors...
+   */
+  if (pdv[EM_E1_REAL] || pdv[EM_E2_REAL] || pdv[EM_E3_REAL]) 
+  {
+  for ( p=0; p<DIM; p++)
+    {
+      v = EM_E1_REAL + p;
+      fv->em_er[p] = 0.0; fv_old->em_er[p]=0.0;fv_dot->em_er[p]=0.0;
+      if ( pdv[v] )
+	{
+	  dofs     = ei->dof[v];
+	  for ( i=0; i<dofs; i++)
+	    {
+	      fv->em_er[p] += *esp->em_er[p][i] * bf[v]->phi[i];
+
+	      if ( pd->TimeIntegration != STEADY )
+		{
+		  fv_old->em_er[p] += *esp_old->em_er[p][i] * bf[v]->phi[i];
+		  fv_dot->em_er[p] += *esp_dot->em_er[p][i] * bf[v]->phi[i];
+		}
+	    }
+	 }
+      }
+    }
   
+  if (pdv[EM_E1_IMAG] || pdv[EM_E2_IMAG] || pdv[EM_E3_IMAG]) 
+  {
+  for ( p=0; p<DIM; p++)
+    {
+      v = EM_E1_IMAG + p;
+      fv->em_ei[p] = 0.0; fv_old->em_ei[p]=0.0;fv_dot->em_ei[p]=0.0;
+      if ( pdv[v] )
+	{
+	  dofs     = ei->dof[v];
+	  for ( i=0; i<dofs; i++)
+	    {
+	      fv->em_ei[p] += *esp->em_ei[p][i] * bf[v]->phi[i];
+
+	      if ( pd->TimeIntegration != STEADY )
+		{
+		  fv_old->em_ei[p] += *esp_old->em_ei[p][i] * bf[v]->phi[i];
+		  fv_dot->em_ei[p] += *esp_dot->em_ei[p][i] * bf[v]->phi[i];
+		}
+	    }
+	 }
+      }
+    }
+
+  if (pdv[EM_H1_REAL] || pdv[EM_H2_REAL] || pdv[EM_H3_REAL]) 
+  {
+  for ( p=0; p<DIM; p++)
+    {
+      v = EM_H1_REAL + p;
+      fv->em_hr[p] = 0.0; fv_old->em_hr[p]=0.0;fv_dot->em_hr[p]=0.0;
+      if ( pdv[v] )
+	{
+	  dofs     = ei->dof[v];
+	  for ( i=0; i<dofs; i++)
+	    {
+	      fv->em_hr[p] += *esp->em_hr[p][i] * bf[v]->phi[i];
+
+	      if ( pd->TimeIntegration != STEADY )
+		{
+		  fv_old->em_hr[p] += *esp_old->em_hr[p][i] * bf[v]->phi[i];
+		  fv_dot->em_hr[p] += *esp_dot->em_hr[p][i] * bf[v]->phi[i];
+		}
+	    }
+	 }
+      }
+    }
+
+  if (pdv[EM_H1_IMAG] || pdv[EM_H2_IMAG] || pdv[EM_H3_IMAG]) 
+  {
+  for ( p=0; p<DIM; p++)
+    {
+      v = EM_H1_IMAG + p;
+      fv->em_hi[p] = 0.0; fv_old->em_hi[p]=0.0;fv_dot->em_hi[p]=0.0;
+      if ( pdv[v] )
+	{
+	  dofs     = ei->dof[v];
+	  for ( i=0; i<dofs; i++)
+	    {
+	      fv->em_hi[p] += *esp->em_hi[p][i] * bf[v]->phi[i];
+
+	      if ( pd->TimeIntegration != STEADY )
+		{
+		  fv_old->em_hi[p] += *esp_old->em_hi[p][i] * bf[v]->phi[i];
+		  fv_dot->em_hi[p] += *esp_dot->em_hi[p][i] * bf[v]->phi[i];
+		}
+	    }
+	 }
+      }
+    }
+
   /*
    * External...
    */
@@ -10712,7 +10846,152 @@ load_fv_grads(void)
     }
 #endif
 
-  
+  if ( pd->v[RESTIME] )
+    {
+      v = RESTIME;
+      dofs  = ei->dof[v];
+#ifdef DO_NO_UNROLL
+      for ( p=0; p<VIM; p++)
+	{
+	  fv->grad_restime[p] = 0.0;
+          fv_old->grad_restime[p] = 0.0;
+	  for ( i=0; i<dofs; i++)
+	    {
+	      fv->grad_restime[p] += *esp->restime[i] * bf[v]->grad_phi[i] [p];
+	      fv_old->grad_restime[p] += *esp_old->restime[i] * bf[v]->grad_phi[i] [p]
+	    }
+	}
+#else
+      grad_scalar_fv_fill( esp->restime, bf[v]->grad_phi, dofs, fv->grad_restime);
+    } else if ( zero_unused_grads &&  upd->vp[RESTIME] == -1 ) {
+      for (p=0; p<VIM; p++) fv->grad_restime[p] = 0.0;
+    }
+#endif
+
+
+  /*
+   * EM Wave Vector Gradients
+   */
+  if (pd->v[EM_E1_REAL] || pd->v[EM_E2_REAL] || pd->v[EM_E3_REAL]) 
+    {
+      dofs = ei->dof[EM_E1_REAL];
+      v = EM_E1_REAL;
+
+      for ( p=0; p<DIM; p++)
+	{
+	  for ( q=0; q<DIM; q++)
+	    {
+	      for (r = 0; r < wim; r++)
+		{
+		  for ( i=0; i<dofs; i++)
+		    {
+		      fv->grad_em_er[p][q] += 
+			*esp->em_er[r][i] * bf[v]->grad_phi_e[i][r] [p][q];
+		    }
+		}
+	    }
+	}
+    } else if ( zero_unused_grads && upd->vp[EM_E1_REAL] == -1
+           && upd->vp[EM_E2_REAL] == -1 &&  upd->vp[EM_E3_REAL] == -1 ) {
+      for ( p=0; p<DIM; p++)
+	{
+	  for ( q=0; q<DIM; q++)
+	    {
+	      fv->grad_em_er[p][q] = 0.0;
+	    }
+	}
+
+    }
+  if (pd->v[EM_E1_IMAG] || pd->v[EM_E2_IMAG] || pd->v[EM_E3_IMAG]) 
+    {
+      dofs = ei->dof[EM_E1_IMAG];
+      v = EM_E1_IMAG;
+
+      for ( p=0; p<DIM; p++)
+	{
+	  for ( q=0; q<DIM; q++)
+	    {
+	      for (r = 0; r < wim; r++)
+		{
+		  for ( i=0; i<dofs; i++)
+		    {
+		      fv->grad_em_ei[p][q] += 
+			*esp->em_ei[r][i] * bf[v]->grad_phi_e[i][r] [p][q];
+		    }
+		}
+	    }
+	}
+    } else if ( zero_unused_grads && upd->vp[EM_E1_IMAG] == -1
+           && upd->vp[EM_E2_IMAG] == -1 &&  upd->vp[EM_E3_IMAG] == -1 ) {
+      for ( p=0; p<DIM; p++)
+	{
+	  for ( q=0; q<DIM; q++)
+	    {
+	      fv->grad_em_ei[p][q] = 0.0;
+	    }
+	}
+
+    }
+  if (pd->v[EM_H1_REAL] || pd->v[EM_H2_REAL] || pd->v[EM_H3_REAL]) 
+    {
+      dofs = ei->dof[EM_H1_REAL];
+      v = EM_H1_REAL;
+
+      for ( p=0; p<DIM; p++)
+	{
+	  for ( q=0; q<DIM; q++)
+	    {
+	      for (r = 0; r < wim; r++)
+		{
+		  for ( i=0; i<dofs; i++)
+		    {
+		      fv->grad_em_hr[p][q] += 
+			*esp->em_hr[r][i] * bf[v]->grad_phi_e[i][r] [p][q];
+		    }
+		}
+	    }
+	}
+    } else if ( zero_unused_grads && upd->vp[EM_H1_REAL] == -1
+           && upd->vp[EM_H2_REAL] == -1 &&  upd->vp[EM_H3_REAL] == -1 ) {
+      for ( p=0; p<DIM; p++)
+	{
+	  for ( q=0; q<DIM; q++)
+	    {
+	      fv->grad_em_hr[p][q] = 0.0;
+	    }
+	}
+
+    }
+  if (pd->v[EM_H1_IMAG] || pd->v[EM_H2_IMAG] || pd->v[EM_H3_IMAG]) 
+    {
+      dofs = ei->dof[EM_H1_IMAG];
+      v = EM_H1_IMAG;
+
+      for ( p=0; p<DIM; p++)
+	{
+	  for ( q=0; q<DIM; q++)
+	    {
+	      for (r = 0; r < wim; r++)
+		{
+		  for ( i=0; i<dofs; i++)
+		    {
+		      fv->grad_em_hi[p][q] += 
+			*esp->em_hi[r][i] * bf[v]->grad_phi_e[i][r] [p][q];
+		    }
+		}
+	    }
+	}
+    } else if ( zero_unused_grads && upd->vp[EM_H1_IMAG] == -1
+           && upd->vp[EM_H2_IMAG] == -1 &&  upd->vp[EM_H3_IMAG] == -1 ) {
+      for ( p=0; p<DIM; p++)
+	{
+	  for ( q=0; q<DIM; q++)
+	    {
+	      fv->grad_em_hi[p][q] = 0.0;
+	    }
+	}
+
+    }
  /*
   * External 
   */
@@ -10871,6 +11150,7 @@ load_fv_mesh_derivs(int okToZero)
 #endif
 
   dbl T_i, v_ri, P_i, d_ri, F_i, d_dot_ri;
+  dbl em_er_ri, em_ei_ri, em_hr_ri, em_hi_ri;
 
   struct Basis_Functions *bfm, *bfv;	/* For mesh variables. */
   
@@ -12094,6 +12374,33 @@ if ( pd->v[LIGHT_INTD] )
       memset(&(fv->d_grad_poynt_dmesh[2][0][0][0]),0, siz);
     }
 
+if ( pd->v[RESTIME] )
+    {
+      v = RESTIME;
+      bfv = bf[v];
+      vdofs  = ei->dof[v];
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_restime_dmesh[0][0][0]),0, siz);
+      for ( i=0; i<vdofs; i++)
+	{
+	  T_i = *esp->restime[i];
+	  for (p = 0; p < dimNonSym; p++)
+	    {
+	      for (b = 0; b < dim; b++)
+		{
+		  for (j = 0; j < mdofs; j++)
+		    {
+		      fv->d_grad_restime_dmesh[p] [b][j] +=
+ 			T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
+		    }
+		}
+	    }
+	}
+    } else   if ( upd->vp[RESTIME] != -1  ){
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_restime_dmesh[0][0][0]),0, siz);
+    }  
+
 if ( pd->v[SHELL_LUB_CURV] )
     {
       v = SHELL_LUB_CURV;
@@ -13210,7 +13517,378 @@ if ( pd->v[SHELL_LUB_CURV_2] )
 	siz = sizeof(double)*DIM*VIM*DIM*MDE;
 	memset(fv->d_grad_E_field_dmesh,0, siz);
       }
+
+  /*
+   * d( grad(em_er))/dmesh
+   */      
+  if (pd->v[EM_E1_REAL] || pd->v[EM_E2_REAL] || pd->v[EM_E3_REAL]) 
+    {
+      v = EM_E1_REAL;
+      bfv = bf[v];
+      vdofs = ei->dof[v];
       
+#ifdef DO_NO_UNROLL
+      siz = sizeof(double)*DIM*VIM*DIM*MDE;
+      memset(fv->d_grad_em_er_dmesh,0, siz);
+	  
+      for (r = 0; r < wim; r++)
+	{
+	  for (i = 0; i < vdofs; i++)
+	    {  
+	      em_er_ri = *esp->em_er[r][i];  
+	      for (p = 0; p < VIM; p++)
+		{
+		  for (q = 0; q < VIM; q++)
+		    {	  
+		      for (b = 0; b < dim; b++)
+			{
+			  for (j = 0; j < mdofs; j++)
+			    {					  
+			      fv->d_grad_em_er_dmesh[p][q] [b][j] +=
+				em_er_ri * bfv->d_grad_phi_e_dmesh[i][r] [p][q] [b][j];
+			    }
+			}
+		    }
+		}
+	    }
+	}
+#else
+	  
+      em_er_ri = *esp->em_er[0][0];	  
+	  
+      for (b = 0; b < dim; b++)
+	{
+	  for (j = 0; j < mdofs; j++)
+	    {
+	      fv->d_grad_em_er_dmesh[0][0] [b][j] = 0.0; 
+	      fv->d_grad_em_er_dmesh[1][1] [b][j] = 0.0; 
+	      fv->d_grad_em_er_dmesh[1][0] [b][j] = 0.0; 
+	      fv->d_grad_em_er_dmesh[0][1] [b][j] = 0.0;
+	      if (VIMis3)
+		{
+		  fv->d_grad_em_er_dmesh[2][2] [b][j] = 0.0;
+		  fv->d_grad_em_er_dmesh[2][0] [b][j] = 0.0;
+		  fv->d_grad_em_er_dmesh[2][1] [b][j] = 0.0;
+		  fv->d_grad_em_er_dmesh[0][2] [b][j] = 0.0;
+		  fv->d_grad_em_er_dmesh[1][2] [b][j] = 0.0;
+		}
+	    }
+	}
+      
+      for (r = 0; r < wim; r++)
+	{
+	  for (i = 0; i < vdofs; i++)
+	    {
+	      em_er_ri = *esp->em_er[r][i];
+	      for (b = 0; b < dim; b++)
+		{
+		  for (j = 0; j < mdofs; j++)
+		    {
+		      fv->d_grad_em_er_dmesh[0][0] [b][j] += em_er_ri * bfv->d_grad_phi_e_dmesh[i][r] [0][0] [b][j]; 
+		      fv->d_grad_em_er_dmesh[1][1] [b][j] += em_er_ri * bfv->d_grad_phi_e_dmesh[i][r] [1][1] [b][j]; 
+		      fv->d_grad_em_er_dmesh[1][0] [b][j] += em_er_ri * bfv->d_grad_phi_e_dmesh[i][r] [1][0] [b][j]; 
+		      fv->d_grad_em_er_dmesh[0][1] [b][j] += em_er_ri * bfv->d_grad_phi_e_dmesh[i][r] [0][1] [b][j]; 
+		      
+		      if (VIMis3) 
+			{
+			  fv->d_grad_em_er_dmesh[2][2] [b][j] += em_er_ri * bfv->d_grad_phi_e_dmesh[i][r] [2][2] [b][j];
+			  fv->d_grad_em_er_dmesh[2][0] [b][j] += em_er_ri * bfv->d_grad_phi_e_dmesh[i][r] [2][0] [b][j];
+			  fv->d_grad_em_er_dmesh[2][1] [b][j] += em_er_ri * bfv->d_grad_phi_e_dmesh[i][r] [2][1] [b][j];
+			  fv->d_grad_em_er_dmesh[0][2] [b][j] += em_er_ri * bfv->d_grad_phi_e_dmesh[i][r] [0][2] [b][j];
+			  fv->d_grad_em_er_dmesh[1][2] [b][j] += em_er_ri * bfv->d_grad_phi_e_dmesh[i][r] [1][2] [b][j];
+			}
+		    }
+		}
+			  
+	    }
+	}	 
+#endif
+
+    } else if (upd->vp[EM_E1_REAL] == -1 && upd->vp[EM_E2_REAL] == -1 &&  
+                upd->vp[EM_E3_REAL] == -1 && okToZero) 
+      {
+	siz = sizeof(double)*DIM*DIM*DIM*MDE;
+	memset(fv->d_grad_em_er_dmesh, 0, siz);
+      }
+      
+  /*
+   * d( grad(em_ei))/dmesh
+   */      
+  if (pd->v[EM_E1_IMAG] || pd->v[EM_E2_IMAG] || pd->v[EM_E3_IMAG]) 
+    {
+      v = EM_E1_IMAG;
+      bfv = bf[v];
+      vdofs = ei->dof[v];
+      
+#ifdef DO_NO_UNROLL
+      siz = sizeof(double)*DIM*VIM*DIM*MDE;
+      memset(fv->d_grad_em_ei_dmesh,0, siz);
+	  
+      for (r = 0; r < wim; r++)
+	{
+	  for (i = 0; i < vdofs; i++)
+	    {  
+	      em_ei_ri = *esp->em_ei[r][i];  
+	      for (p = 0; p < VIM; p++)
+		{
+		  for (q = 0; q < VIM; q++)
+		    {	  
+		      for (b = 0; b < dim; b++)
+			{
+			  for (j = 0; j < mdofs; j++)
+			    {					  
+			      fv->d_grad_em_ei_dmesh[p][q] [b][j] +=
+				em_ei_ri * bfv->d_grad_phi_e_dmesh[i][r] [p][q] [b][j];
+			    }
+			}
+		    }
+		}
+	    }
+	}
+#else
+	  
+      em_ei_ri = *esp->em_ei[0][0];	  
+	  
+      for (b = 0; b < dim; b++)
+	{
+	  for (j = 0; j < mdofs; j++)
+	    {
+	      fv->d_grad_em_ei_dmesh[0][0] [b][j] = 0.0; 
+	      fv->d_grad_em_ei_dmesh[1][1] [b][j] = 0.0; 
+	      fv->d_grad_em_ei_dmesh[1][0] [b][j] = 0.0; 
+	      fv->d_grad_em_ei_dmesh[0][1] [b][j] = 0.0;
+	      if (VIMis3)
+		{
+		  fv->d_grad_em_ei_dmesh[2][2] [b][j] = 0.0;
+		  fv->d_grad_em_ei_dmesh[2][0] [b][j] = 0.0;
+		  fv->d_grad_em_ei_dmesh[2][1] [b][j] = 0.0;
+		  fv->d_grad_em_ei_dmesh[0][2] [b][j] = 0.0;
+		  fv->d_grad_em_ei_dmesh[1][2] [b][j] = 0.0;
+		}
+	    }
+	}
+      
+      for (r = 0; r < wim; r++)
+	{
+	  for (i = 0; i < vdofs; i++)
+	    {
+	      em_ei_ri = *esp->em_ei[r][i];
+	      for (b = 0; b < dim; b++)
+		{
+		  for (j = 0; j < mdofs; j++)
+		    {
+		      fv->d_grad_em_ei_dmesh[0][0] [b][j] += em_ei_ri * bfv->d_grad_phi_e_dmesh[i][r] [0][0] [b][j]; 
+		      fv->d_grad_em_ei_dmesh[1][1] [b][j] += em_ei_ri * bfv->d_grad_phi_e_dmesh[i][r] [1][1] [b][j]; 
+		      fv->d_grad_em_ei_dmesh[1][0] [b][j] += em_ei_ri * bfv->d_grad_phi_e_dmesh[i][r] [1][0] [b][j]; 
+		      fv->d_grad_em_ei_dmesh[0][1] [b][j] += em_ei_ri * bfv->d_grad_phi_e_dmesh[i][r] [0][1] [b][j]; 
+		      
+		      if (VIMis3) 
+			{
+			  fv->d_grad_em_ei_dmesh[2][2] [b][j] += em_ei_ri * bfv->d_grad_phi_e_dmesh[i][r] [2][2] [b][j];
+			  fv->d_grad_em_ei_dmesh[2][0] [b][j] += em_ei_ri * bfv->d_grad_phi_e_dmesh[i][r] [2][0] [b][j];
+			  fv->d_grad_em_ei_dmesh[2][1] [b][j] += em_ei_ri * bfv->d_grad_phi_e_dmesh[i][r] [2][1] [b][j];
+			  fv->d_grad_em_ei_dmesh[0][2] [b][j] += em_ei_ri * bfv->d_grad_phi_e_dmesh[i][r] [0][2] [b][j];
+			  fv->d_grad_em_ei_dmesh[1][2] [b][j] += em_ei_ri * bfv->d_grad_phi_e_dmesh[i][r] [1][2] [b][j];
+			}
+		    }
+		}
+			  
+	    }
+	}	 
+#endif
+
+    } else if (upd->vp[EM_E1_IMAG] == -1 && upd->vp[EM_E2_IMAG] == -1 &&  
+                upd->vp[EM_E3_IMAG] == -1 && okToZero) 
+      {
+	siz = sizeof(double)*DIM*DIM*DIM*MDE;
+	memset(fv->d_grad_em_ei_dmesh, 0, siz);
+      }
+
+  /*
+   * d( grad(em_hr))/dmesh
+   */      
+  if (pd->v[EM_H1_REAL] || pd->v[EM_H2_REAL] || pd->v[EM_H3_REAL]) 
+    {
+      v = EM_H1_REAL;
+      bfv = bf[v];
+      vdofs = ei->dof[v];
+      
+#ifdef DO_NO_UNROLL
+      siz = sizeof(double)*DIM*VIM*DIM*MDE;
+      memset(fv->d_grad_em_hr_dmesh,0, siz);
+	  
+      for (r = 0; r < wim; r++)
+	{
+	  for (i = 0; i < vdofs; i++)
+	    {  
+	      em_hr_ri = *esp->em_hr[r][i];  
+	      for (p = 0; p < VIM; p++)
+		{
+		  for (q = 0; q < VIM; q++)
+		    {	  
+		      for (b = 0; b < dim; b++)
+			{
+			  for (j = 0; j < mdofs; j++)
+			    {					  
+			      fv->d_grad_em_hr_dmesh[p][q] [b][j] +=
+				em_hr_ri * bfv->d_grad_phi_e_dmesh[i][r] [p][q] [b][j];
+			    }
+			}
+		    }
+		}
+	    }
+	}
+#else
+	  
+      em_hr_ri = *esp->em_hr[0][0];	  
+	  
+      for (b = 0; b < dim; b++)
+	{
+	  for (j = 0; j < mdofs; j++)
+	    {
+	      fv->d_grad_em_hr_dmesh[0][0] [b][j] = 0.0; 
+	      fv->d_grad_em_hr_dmesh[1][1] [b][j] = 0.0; 
+	      fv->d_grad_em_hr_dmesh[1][0] [b][j] = 0.0; 
+	      fv->d_grad_em_hr_dmesh[0][1] [b][j] = 0.0;
+	      if (VIMis3)
+		{
+		  fv->d_grad_em_hr_dmesh[2][2] [b][j] = 0.0;
+		  fv->d_grad_em_hr_dmesh[2][0] [b][j] = 0.0;
+		  fv->d_grad_em_hr_dmesh[2][1] [b][j] = 0.0;
+		  fv->d_grad_em_hr_dmesh[0][2] [b][j] = 0.0;
+		  fv->d_grad_em_hr_dmesh[1][2] [b][j] = 0.0;
+		}
+	    }
+	}
+      
+      for (r = 0; r < wim; r++)
+	{
+	  for (i = 0; i < vdofs; i++)
+	    {
+	      em_hr_ri = *esp->em_hr[r][i];
+	      for (b = 0; b < dim; b++)
+		{
+		  for (j = 0; j < mdofs; j++)
+		    {
+		      fv->d_grad_em_hr_dmesh[0][0] [b][j] += em_hr_ri * bfv->d_grad_phi_e_dmesh[i][r] [0][0] [b][j]; 
+		      fv->d_grad_em_hr_dmesh[1][1] [b][j] += em_hr_ri * bfv->d_grad_phi_e_dmesh[i][r] [1][1] [b][j]; 
+		      fv->d_grad_em_hr_dmesh[1][0] [b][j] += em_hr_ri * bfv->d_grad_phi_e_dmesh[i][r] [1][0] [b][j]; 
+		      fv->d_grad_em_hr_dmesh[0][1] [b][j] += em_hr_ri * bfv->d_grad_phi_e_dmesh[i][r] [0][1] [b][j]; 
+		      
+		      if (VIMis3) 
+			{
+			  fv->d_grad_em_hr_dmesh[2][2] [b][j] += em_hr_ri * bfv->d_grad_phi_e_dmesh[i][r] [2][2] [b][j];
+			  fv->d_grad_em_hr_dmesh[2][0] [b][j] += em_hr_ri * bfv->d_grad_phi_e_dmesh[i][r] [2][0] [b][j];
+			  fv->d_grad_em_hr_dmesh[2][1] [b][j] += em_hr_ri * bfv->d_grad_phi_e_dmesh[i][r] [2][1] [b][j];
+			  fv->d_grad_em_hr_dmesh[0][2] [b][j] += em_hr_ri * bfv->d_grad_phi_e_dmesh[i][r] [0][2] [b][j];
+			  fv->d_grad_em_hr_dmesh[1][2] [b][j] += em_hr_ri * bfv->d_grad_phi_e_dmesh[i][r] [1][2] [b][j];
+			}
+		    }
+		}
+			  
+	    }
+	}	 
+#endif
+
+    } else if (upd->vp[EM_H1_REAL] == -1 && upd->vp[EM_H2_REAL] == -1 &&  
+                upd->vp[EM_H3_REAL] == -1 && okToZero) 
+      {
+	siz = sizeof(double)*DIM*DIM*DIM*MDE;
+	memset(fv->d_grad_em_hr_dmesh, 0, siz);
+      }
+      
+  /*
+   * d( grad(em_hi))/dmesh
+   */      
+  if (pd->v[EM_H1_IMAG] || pd->v[EM_H2_IMAG] || pd->v[EM_H3_IMAG]) 
+    {
+      v = EM_H1_IMAG;
+      bfv = bf[v];
+      vdofs = ei->dof[v];
+      
+#ifdef DO_NO_UNROLL
+      siz = sizeof(double)*DIM*VIM*DIM*MDE;
+      memset(fv->d_grad_em_hi_dmesh,0, siz);
+	  
+      for (r = 0; r < wim; r++)
+	{
+	  for (i = 0; i < vdofs; i++)
+	    {  
+	      em_hi_ri = *esp->em_hi[r][i];  
+	      for (p = 0; p < VIM; p++)
+		{
+		  for (q = 0; q < VIM; q++)
+		    {	  
+		      for (b = 0; b < dim; b++)
+			{
+			  for (j = 0; j < mdofs; j++)
+			    {					  
+			      fv->d_grad_em_hi_dmesh[p][q] [b][j] +=
+				em_hi_ri * bfv->d_grad_phi_e_dmesh[i][r] [p][q] [b][j];
+			    }
+			}
+		    }
+		}
+	    }
+	}
+#else
+	  
+      em_hi_ri = *esp->em_hi[0][0];	  
+	  
+      for (b = 0; b < dim; b++)
+	{
+	  for (j = 0; j < mdofs; j++)
+	    {
+	      fv->d_grad_em_hi_dmesh[0][0] [b][j] = 0.0; 
+	      fv->d_grad_em_hi_dmesh[1][1] [b][j] = 0.0; 
+	      fv->d_grad_em_hi_dmesh[1][0] [b][j] = 0.0; 
+	      fv->d_grad_em_hi_dmesh[0][1] [b][j] = 0.0;
+	      if (VIMis3)
+		{
+		  fv->d_grad_em_hi_dmesh[2][2] [b][j] = 0.0;
+		  fv->d_grad_em_hi_dmesh[2][0] [b][j] = 0.0;
+		  fv->d_grad_em_hi_dmesh[2][1] [b][j] = 0.0;
+		  fv->d_grad_em_hi_dmesh[0][2] [b][j] = 0.0;
+		  fv->d_grad_em_hi_dmesh[1][2] [b][j] = 0.0;
+		}
+	    }
+	}
+      
+      for (r = 0; r < wim; r++)
+	{
+	  for (i = 0; i < vdofs; i++)
+	    {
+	      em_hi_ri = *esp->em_hi[r][i];
+	      for (b = 0; b < dim; b++)
+		{
+		  for (j = 0; j < mdofs; j++)
+		    {
+		      fv->d_grad_em_hi_dmesh[0][0] [b][j] += em_hi_ri * bfv->d_grad_phi_e_dmesh[i][r] [0][0] [b][j]; 
+		      fv->d_grad_em_hi_dmesh[1][1] [b][j] += em_hi_ri * bfv->d_grad_phi_e_dmesh[i][r] [1][1] [b][j]; 
+		      fv->d_grad_em_hi_dmesh[1][0] [b][j] += em_hi_ri * bfv->d_grad_phi_e_dmesh[i][r] [1][0] [b][j]; 
+		      fv->d_grad_em_hi_dmesh[0][1] [b][j] += em_hi_ri * bfv->d_grad_phi_e_dmesh[i][r] [0][1] [b][j]; 
+		      
+		      if (VIMis3) 
+			{
+			  fv->d_grad_em_hi_dmesh[2][2] [b][j] += em_hi_ri * bfv->d_grad_phi_e_dmesh[i][r] [2][2] [b][j];
+			  fv->d_grad_em_hi_dmesh[2][0] [b][j] += em_hi_ri * bfv->d_grad_phi_e_dmesh[i][r] [2][0] [b][j];
+			  fv->d_grad_em_hi_dmesh[2][1] [b][j] += em_hi_ri * bfv->d_grad_phi_e_dmesh[i][r] [2][1] [b][j];
+			  fv->d_grad_em_hi_dmesh[0][2] [b][j] += em_hi_ri * bfv->d_grad_phi_e_dmesh[i][r] [0][2] [b][j];
+			  fv->d_grad_em_hi_dmesh[1][2] [b][j] += em_hi_ri * bfv->d_grad_phi_e_dmesh[i][r] [1][2] [b][j];
+			}
+		    }
+		}
+			  
+	    }
+	}	 
+#endif
+
+    } else if (upd->vp[EM_H1_IMAG] == -1 && upd->vp[EM_H2_IMAG] == -1 &&  
+                upd->vp[EM_H3_IMAG] == -1 && okToZero) 
+      {
+	siz = sizeof(double)*DIM*DIM*DIM*MDE;
+	memset(fv->d_grad_em_hi_dmesh, 0, siz);
+      }
   /*
    * d( grad(d) )/dmesh
    * d( grad(d_dot)/dmesh
@@ -14767,10 +15445,15 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
 {
   int dim = pd->Num_Dim;
   int var, i, j, a, w, var_offset;
-  double k, Tref, tmp;
+  double k, Tref, tmp, temp;
   struct Level_Set_Data *ls_old;
 
   int i_therm_cond;
+
+  if ( pd->e[TEMPERATURE] )
+      {temp = fv->T;}
+  else
+      {temp = upd->Process_Temperature;}
 
   k =0.;
 
@@ -14831,7 +15514,7 @@ conductivity( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
   else if (mp->ConductivityModel == THERMAL_HEAT )
     {
       Tref = mp->u_thermal_conductivity[4];
-      tmp = fv->T - Tref;
+      tmp = temp - Tref;
       mp->thermal_conductivity = mp->u_thermal_conductivity[0] +
 		tmp*(mp->u_thermal_conductivity[1] + 
 		tmp*(mp->u_thermal_conductivity[2] + 
@@ -14973,10 +15656,14 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
 {
   int dim = pd->Num_Dim;
   int var, i, j, a, w, var_offset;
-  double Cp, T_offset;
+  double Cp, T_offset, temp;
   struct Level_Set_Data *ls_old;
 
 
+  if ( pd->e[TEMPERATURE] )
+      {temp = fv->T;}
+  else
+      {temp = upd->Process_Temperature;}
 
   Cp =0.;
 
@@ -15048,9 +15735,9 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
     {
       T_offset = mp->u_heat_capacity[4];
       mp->heat_capacity = mp->u_heat_capacity[0] +
-			mp->u_heat_capacity[1]*(fv->T+T_offset) +
-			mp->u_heat_capacity[2]*SQUARE(fv->T+T_offset) +
-			mp->u_heat_capacity[3]/SQUARE(fv->T+T_offset);
+			mp->u_heat_capacity[1]*(temp+T_offset) +
+			mp->u_heat_capacity[2]*SQUARE(temp+T_offset) +
+			mp->u_heat_capacity[3]/SQUARE(temp+T_offset);
       Cp    = mp->heat_capacity;
       var = TEMPERATURE;
       if ( d_Cp != NULL && pd->v[var] )
@@ -15058,8 +15745,8 @@ heat_capacity( HEAT_CAPACITY_DEPENDENCE_STRUCT *d_Cp,
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
 	      d_Cp->T[j] = ( mp->u_heat_capacity[1] +
-			2.*(fv->T+T_offset)*mp->u_heat_capacity[2]
-			- 2.*mp->u_heat_capacity[3]/(SQUARE(fv->T+T_offset)*(fv->T+T_offset)))
+			2.*(temp+T_offset)*mp->u_heat_capacity[2]
+			- 2.*mp->u_heat_capacity[3]/(SQUARE(temp+T_offset)*(temp+T_offset)))
 			*bf[var]->phi[j];
 	    }
 	}
@@ -16110,6 +16797,188 @@ refractive_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_n,
 }
 /*********************************************************************************/
 /*********************************************************************************/
+double 
+extinction_index( CONDUCTIVITY_DEPENDENCE_STRUCT *d_k,
+	      dbl time )
+
+     
+    /**************************************************************************
+     *
+     * extinction index
+     *
+     *   Calculate the extinction index and its derivatives wrt to nodal dofs
+     *   at the local gauss point
+     *
+     * Output
+     * -----
+     *    dbl d_k->T[j]    -> derivative of ext. index wrt the jth
+     *                          Temperature unknown in an element
+     *    dbl d_k->C[k][j] -> derivative of ext. index wrt the jth
+     *                          species unknown of ktype, k, in the element.
+     *    dbl d_k->X[a][j] -> derivative of ext. index wrt the jth
+     *                          mesh displacement in the ath direction.
+     *    dbl d_k->F[j]    -> derivative of ext. index wrt the jth
+     *                          FILL unknown in an element
+     *
+     *  Return
+     * --------
+     *    Actual value of the extinction index
+     ***************************************************************************/
+
+{
+  int dim = pd->Num_Dim;
+  int var, i, j, a, w, var_offset;
+  double k=0;
+  struct Level_Set_Data *ls_old;
+
+  if ( d_k != NULL )
+    {
+      memset( d_k->T, 0, sizeof(double)*MDE);
+      memset( d_k->X, 0, sizeof(double)*DIM*MDE);
+      memset( d_k->C, 0, sizeof(double)*MAX_CONC*MDE);
+      memset( d_k->F, 0, sizeof(double)*MDE);
+    }
+
+  if(mp->Extinction_IndexModel == USER )
+    {
+
+         mp->extinction_index = mp->u_extinction_index[0];
+         mp->d_extinction_index[TEMPERATURE] = 0;
+      for ( a=0 ; a<DIM ; a++)
+        {
+         mp->d_extinction_index[MESH_DISPLACEMENT1+a] = 0;
+        }
+      for ( a=0 ; a<pd->Num_Species_Eqn ; a++)
+        {
+         mp->d_extinction_index[MAX_VARIABLE_TYPES+a] = mp->u_extinction_index[a+1];
+         mp->extinction_index += mp->u_extinction_index[a+1]*fv->c[a];
+        }
+      k   = mp->extinction_index;
+
+      var = TEMPERATURE;
+      if( pd->v[TEMPERATURE] && d_k != NULL )
+	{
+
+	  for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      d_k->T[j]= mp->d_extinction_index[var]*bf[var]->phi[j];
+	    }
+	}
+
+      if (pd->v[MESH_DISPLACEMENT1] && d_k != NULL )
+	{
+	  for ( a=0; a<dim; a++)
+	    {
+	      var = MESH_DISPLACEMENT1 + a;
+	      for ( j=0; j<ei->dof[var]; j++)
+		{
+		  d_k->X[a][j] =mp->d_extinction_index[var]*bf[var]->phi[j];
+		}
+	    }
+	}
+
+      if (pd->v[MASS_FRACTION] && d_k != NULL)
+	{
+	  for ( w=0; w<pd->Num_Species_Eqn; w++)
+	    {
+	      var = MASS_FRACTION;
+	      var_offset = MAX_VARIABLE_TYPES + w;
+	      for ( j=0; j<ei->dof[var]; j++)
+		{
+		  d_k->C[w][j] =mp->d_extinction_index[var_offset]*bf[var]->phi[j];
+		}
+	    }
+	}
+    }
+  else if (mp->Extinction_IndexModel == CONSTANT )
+    {
+      k    = mp->extinction_index;
+    }
+  else if (mp->Extinction_IndexModel == TABLE )
+    {
+      struct  Data_Table *table_local; 
+      table_local = MP_Tables[mp->extinction_index_tableid];
+      apply_table_mp( &mp->extinction_index, table_local );
+      k    = mp->extinction_index;
+
+      if ( d_k != NULL )
+        {
+          for(i=0;i<table_local->columns-1;i++)
+	    {
+	      var = table_local->t_index[i];
+	      /* currently only set up to vary w.r.t. temperature */
+	      switch (var)
+	        {
+	        case TEMPERATURE:
+	          for ( j=0; j<ei->dof[var]; j++)
+		    {
+		      d_k->T[j]= table_local->slope[i]*bf[var]->phi[j];
+		    }
+	          break;
+	        default:
+		      EH(-1, "Variable function not yet implemented in material property table");
+	        }
+	    }
+        }
+    }
+  else if(mp->Extinction_IndexModel == LEVEL_SET )
+    {
+      ls_transport_property( mp->u_extinction_index[0], 
+			     mp->u_extinction_index[1], 
+			     mp->u_extinction_index[2], 
+			     &mp->extinction_index,
+			     &mp->d_extinction_index[FILL] );
+
+      k = mp->extinction_index;
+
+      var = FILL;
+      if( pd->v[var] && d_k != NULL )
+	{
+
+	  for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      d_k->F[j] = mp->d_extinction_index[var]*bf[var]->phi[j];
+	    }
+	}
+
+    }
+  else
+    {
+      EH(-1,"Unrecognized extinction index model");
+    }
+
+  if( ls != NULL && 
+      mp->Extinction_IndexModel != LEVEL_SET &&
+      mp->Extinction_IndexModel != LS_QUADRATIC &&
+      mp->mp2nd != NULL &&
+      mp->mp2nd->ExtinctionIndexModel == CONSTANT )  /* Only Newtonian constitutive equation allowed for 2nd phase */
+    {
+	/* kludge for solidification tracking with phase function 0 */
+      if(pfd != NULL && pd->e[R_EXT_VELOCITY])
+	{
+	ls_old = ls;
+	ls = pfd->ls[0];
+        k = ls_modulate_thermalconductivity( k,
+				  mp->mp2nd->extinctionindex_phase[0],
+				  ls->Length_Scale,
+				  (double) mp->mp2nd->extinctionindexmask[0],
+				  (double) mp->mp2nd->extinctionindexmask[1],
+				  d_k );
+	ls = ls_old;
+	}
+      k = ls_modulate_thermalconductivity( k,
+				  mp->mp2nd->extinctionindex,
+				  ls->Length_Scale,
+				  (double) mp->mp2nd->extinctionindexmask[0],
+				  (double) mp->mp2nd->extinctionindexmask[1],
+				  d_k );
+
+    }
+
+  return(k);
+}
+/*********************************************************************************/
+/*********************************************************************************/
 /******************************************************************************
  * momentum_source_term(): Computes the body force term for the momentum balance.
  *
@@ -16555,13 +17424,18 @@ void
 apply_table_mp( double *func, struct Data_Table *table)
 {
   int i;
-  double interp_val,var1[1],slope;
+  double interp_val,var1[1],slope,temp;
+
+  if ( pd->e[TEMPERATURE] )
+      {temp = fv->T;}
+  else
+      {temp = upd->Process_Temperature;}
 
   for(i=0;i<table->columns-1;i++) 
   {
     if(strcmp(table->t_name[i], "TEMPERATURE")==0)
     {
-      var1[i]=fv->T;
+      var1[i]=temp;
     }
     else if(strcmp(table->t_name[i], "MASS_FRACTION")==0)
     {
@@ -17586,16 +18460,17 @@ quad_isomap_invert( const double x1,
  	switch(dim)
  	{
  	case 3:
-         	for( i=0; i<elem_nodes; i++)
-                		{
-                 	coord[2][i] = z[itp[i]];
-                 	}
+          for( i=0; i<elem_nodes; i++)
+            {
+              coord[2][i] = z[itp[i]];
+            }
+          /* fall through */
  	case 2:
          	for( i=0; i<elem_nodes; i++)
-                		{
-                 	coord[0][i] = x[itp[i]];
-                 	coord[1][i] = y[itp[i]];
-                 	}
+                  {
+                    coord[0][i] = x[itp[i]];
+                    coord[1][i] = y[itp[i]];
+                  }
  		break;
  	}
  
@@ -17605,26 +18480,27 @@ quad_isomap_invert( const double x1,
  	switch(dim)
  	{
  	case 3:
-         	for( i=0; i<elem_nodes ; i++)
-                 	{
-                 	jac[0][2] += coord[0][i]*phig[i];
-                 	jac[1][2] += coord[1][i]*phig[i];
-                 	jac[2][0] += coord[2][i]*phic[i];
-                 	jac[2][1] += coord[2][i]*phie[i];
-                 	jac[2][2] += coord[2][i]*phig[i];
-                 	xpt[2] += coord[2][i]*phi[i];
-                 	}
+          for( i=0; i<elem_nodes ; i++)
+            {
+              jac[0][2] += coord[0][i]*phig[i];
+              jac[1][2] += coord[1][i]*phig[i];
+              jac[2][0] += coord[2][i]*phic[i];
+              jac[2][1] += coord[2][i]*phie[i];
+              jac[2][2] += coord[2][i]*phig[i];
+              xpt[2] += coord[2][i]*phi[i];
+            }
+           /* fall through */
  	case 2:
-         	for( i=0; i<elem_nodes ; i++)
-                 	{
-                 	jac[0][0] += coord[0][i]*phic[i];
-                 	jac[0][1] += coord[0][i]*phie[i];
-                 	jac[1][0] += coord[1][i]*phic[i];
-                 	jac[1][1] += coord[1][i]*phie[i];
-                 	xpt[0] += coord[0][i]*phi[i];
-                 	xpt[1] += coord[1][i]*phi[i];
-                 	}
- 		break;
+          for( i=0; i<elem_nodes ; i++)
+          {
+            jac[0][0] += coord[0][i]*phic[i];
+            jac[0][1] += coord[0][i]*phie[i];
+            jac[1][0] += coord[1][i]*phic[i];
+            jac[1][1] += coord[1][i]*phie[i];
+            xpt[0] += coord[0][i]*phi[i];
+            xpt[1] += coord[1][i]*phi[i];
+          }
+          break;
  	}
  
  
@@ -17825,6 +18701,7 @@ quad_isomap_invert( const double x1,
  				{
  				case 3:
                 			pg += pp[i]*phig[i];
+                			/* fall through */
  				case 2:
                 			pc += pp[i]*phic[i];
                 			pe += pp[i]*phie[i];
@@ -24511,6 +25388,22 @@ assemble_p_source ( double pressure, const int bcflag )
             }
         }
 
+      var = RESTIME;
+      if (pd->v[var] )
+        {
+
+          for (p=0; p<pd->Num_Dim; p++)
+            {
+              for (q=0; q<pd->Num_Dim; q++)
+                { 
+                  for (j=0; j<ei->dof[var]; j++)
+                    {
+                      d_force[p][var][j] -= pressure*lsi->normal[q]*d_Pi->degrade[p][q][j];
+                    }
+                }
+            }
+        }  
+
       var = ls->var;
       if (pd->v[var] )
         {
@@ -27762,7 +28655,7 @@ fluid_stress( double Pi[DIM][DIM],
   /*  shift function */
   dbl at = 0.0;
   dbl d_at_dT[MDE];
-  dbl wlf_denom;
+  dbl wlf_denom, temp;
   dbl mu_over_mu_num = 0.0;
 
   /* solvent viscosity and derivatives */
@@ -27815,6 +28708,10 @@ fluid_stress( double Pi[DIM][DIM],
 
   int eqn = R_MOMENTUM1;
 
+  if ( pd->e[TEMPERATURE] )
+      {temp = fv->T;}
+  else
+      {temp = upd->Process_Temperature;}
  
   dim   = pd->Num_Dim;
   wim   = dim;
@@ -28005,6 +28902,15 @@ fluid_stress( double Pi[DIM][DIM],
 	    }
 	}
 
+      var = RESTIME;
+      if ( d_Pi != NULL && pd->v[var] )
+	{
+	  for ( j=0; j<ei->dof[var]; j++)
+	    {
+	      d_mu->degrade[j] = mu_num * d_mus->degrade[j];
+	    }
+	}  
+
 #ifdef COUPLED_FILL
       var = FILL;
       if ( d_Pi != NULL && pd->v[var] )
@@ -28050,10 +28956,10 @@ fluid_stress( double Pi[DIM][DIM],
 	    }
 	  else if(vn->shiftModel == MODIFIED_WLF)
 	    {
-	      wlf_denom = vn->shift[1] + fv->T - mp->reference[TEMPERATURE];
+	      wlf_denom = vn->shift[1] + temp - mp->reference[TEMPERATURE];
 	      if(wlf_denom != 0.)
 		{
-		  at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-fv->T)/wlf_denom);
+		  at=exp(vn->shift[0]*(mp->reference[TEMPERATURE]-temp)/wlf_denom);
 		  for( j=0 ; j<ei->dof[TEMPERATURE] ; j++)
 		    {
 		      d_at_dT[j]= -at*vn->shift[0]*vn->shift[1]
@@ -28124,6 +29030,15 @@ fluid_stress( double Pi[DIM][DIM],
                   d_mu->nn[j] += mu_num * at * d_mup->nn[j];
                 }
             }
+
+          var = RESTIME;
+          if ( d_Pi != NULL && pd->v[var] )
+            {
+              for ( j=0; j<ei->dof[var]; j++)
+                {
+                  d_mu->degrade[j] += mu_num * at * d_mup->degrade[j];
+                }
+            }  
 
 #ifdef COUPLED_FILL
           var = FILL;
@@ -28273,6 +29188,42 @@ fluid_stress( double Pi[DIM][DIM],
 	    }
         }
     }
+
+  var = RESTIME;
+  if ( d_Pi != NULL && pd->v[var] )
+    {
+      for ( p=0; p<VIM; p++)
+        {
+          for ( q=0; q<VIM; q++)
+            {
+              for ( j=0; j<ei->dof[var]; j++)
+                {
+                  d_Pi->degrade[p][q][j] = d_mu->degrade[j] * gamma[p][q];
+                }
+            }
+        }
+      if (!kappaWipesMu) {
+	for (p = 0; p < VIM; p++) {
+	  for (j = 0; j < ei->dof[var]; j++) {
+	    d_Pi->degrade[p][p][j] -= (d_mu->degrade[j]/3.0 ) * gamma[p][p];
+	  }
+	}
+      }
+      if ( pd->v[POLYMER_STRESS11] )
+        {
+          for ( p=0; p<VIM; p++)
+            {
+              for ( q=0; q<VIM; q++)
+                {
+                  for ( j=0; j<ei->dof[var]; j++)
+                    {
+                      d_Pi->degrade[p][q][j] -= evss_f * ( d_mu->degrade[j] - d_mus->degrade[j] )* gamma_cont[p][q];
+                    }
+                }
+	    }
+        }
+    }
+ 
 
 #ifdef COUPLED_FILL
   var = FILL;
@@ -28908,6 +29859,40 @@ fluid_stress_conf( double Pi[DIM][DIM],
 	    }
 	}
     }
+
+  var = RESTIME;
+  if(d_Pi!=NULL && pd->v[var])
+    {
+      for(p=0; p<VIM; p++)
+        {
+          for(q=0; q<VIM; q++)
+            {
+	      for(j=0; j<ei->dof[var]; j++)
+                {
+		  d_Pi->degrade[p][q][j] = d_mus->degrade[j]*gamma[p][q];
+
+		  if(pd->v[POLYMER_STRESS11])
+		    {
+		      for(mode=0; mode<vn->modes; mode++)
+			{
+			  // Polymer viscosity
+			  mup = viscosity(ve[mode]->gn, gamma, d_mup);
+			  // Polymer time constant
+			  lambda = 0.0;
+			  if(ve[mode]->time_constModel == CONSTANT)
+			    {
+			      lambda = ve[mode]->time_const;
+			    }
+
+			  d_Pi->degrade[p][q][j] += d_mup->degrade[j]*(gamma[p][q]-gamma_cont[p][q]);
+			  // Log-conformation tensor stress
+			  d_Pi->degrade[p][q][j] += d_mup->degrade[j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
+			}		      
+		    }
+		}
+	    }
+	}
+    }  
 
 #ifdef COUPLED_FILL
   var = FILL;
@@ -30376,7 +31361,6 @@ calc_pspg( dbl pspg[DIM],
 	{
 	  usr_FlowingLiquidViscosity(mp->u_FlowingLiquid_viscosity);
 	  var = TEMPERATURE;
-
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
 	      dvis_dT[j]= mp->d_FlowingLiquid_viscosity[var]*bf[var]->phi[j];
@@ -31741,6 +32725,7 @@ assemble_acoustic(double time,	/* present time value */
   dbl k;				/* Acoustic wave number. */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; 
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
+  dbl ksqr_sign;				/* Sign of wavenumber squared */
 
   dbl alpha;				/* Acoustic Absorption */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_alpha_struct; 
@@ -31815,6 +32800,8 @@ assemble_acoustic(double time,	/* present time value */
 
   alpha = acoustic_absorption( d_alpha, time );
 
+  ksqr_sign = mp->acoustic_ksquared_sign;
+
   acoustic_flux( q, d_q, time, ac_eqn, ac_var );
 
   if( ac_eqn == R_ACOUS_PREAL )
@@ -31877,7 +32864,7 @@ assemble_acoustic(double time,	/* present time value */
 	  source = 0.;
 	  if ( pd->e[eqn] & T_SOURCE )
 	    {
-	      source -= phi_i * (k/R)*P * det_J * wt;
+	      source -= phi_i * (ksqr_sign*k/R)*P * det_J * wt;
 	      source *= h3;
 	      source *= pd->etm[eqn][(LOG2_SOURCE)];
 	    }
@@ -31952,7 +32939,7 @@ assemble_acoustic(double time,	/* present time value */
 		  source = 0.;
 		  if ( pd->e[eqn] & T_SOURCE )
 		    {
-		      source -= phi_i * (k/R)*phi_j*det_J*wt;
+		      source -= phi_i * (ksqr_sign*k/R)*phi_j*det_J*wt;
 		      source *= h3;
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
@@ -32018,7 +33005,7 @@ assemble_acoustic(double time,	/* present time value */
 		  source = 0.;
 		  if ( pd->e[eqn] & T_SOURCE )
 		    {
-		      source -= phi_i * (R*d_k->T[j]-k*d_R->T[j])/(R*R)*P* det_J*wt;
+		      source -= phi_i * ksqr_sign*(R*d_k->T[j]-k*d_R->T[j])/(R*R)*P* det_J*wt;
 		      source *= h3;
 		      source *= pd->etm[eqn][(LOG2_SOURCE)];
 		    }
@@ -32107,9 +33094,9 @@ assemble_acoustic(double time,	/* present time value */
 
 		      if ( pd->e[eqn] & T_SOURCE )
 			{
-	      		  source -= phi_i * P*((k/R) * (d_det_J_dmeshbj*h3 +
+	      		  source -= phi_i * P*((ksqr_sign*k/R) * (d_det_J_dmeshbj*h3 +
 						det_J*dh3dmesh_bj) +
-					(R*d_k->X[b][j]-k*d_R->X[b][j])/(R*R)* 
+					ksqr_sign*(R*d_k->X[b][j]-k*d_R->X[b][j])/(R*R)* 
 					det_J *h3) * wt;
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
 			}
@@ -32157,7 +33144,7 @@ assemble_acoustic(double time,	/* present time value */
 		      source = 0.;
 		      if ( pd->e[eqn] & T_SOURCE )
 			{
-		          source -= phi_i * (R*d_k->C[w][j]-k*d_R->C[w][j])/(R*R)
+		          source -= phi_i * ksqr_sign*(R*d_k->C[w][j]-k*d_R->C[w][j])/(R*R)
 					*P* det_J*wt;
 			  source *= h3;
 			  source *= pd->etm[eqn][(LOG2_SOURCE)];
@@ -33376,9 +34363,10 @@ assemble_poynting(double time,	/* present time value */
 		  const int py_var )
 {
   int err, eqn, var, peqn, pvar, dim, p, b, w, i, j, status, light_eqn = 0;
+  int petrov = 0, Beers_Law = 0;
 
-  dbl P;		                /* Light Intensity	*/
-  dbl grad_P, Psign = 0;		/* grad intensity */
+  dbl P=0;		                /* Light Intensity	*/
+  dbl grad_P=0, Psign = 0;		/* grad intensity */
 
   dbl alpha;				/* Acoustic Absorption */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_alpha_struct; 
@@ -33437,9 +34425,11 @@ assemble_poynting(double time,	/* present time value */
   /*
  *    Radiative transfer equation variables - connect to input file someday
  */
-  double svect[3]={0.,-1.,0.};
+  double svect[DIM]={0.,-1.,0.};
+  double v_grad[DIM]={0.,0.,0.};
   double mucos=1.0;
-  double diff_const=1.0E-8;
+  double diff_const=1./LITTLE_PENALTY;
+  double time_source=0., d_time_source=0.;
 
   /*
    * Bail out fast if there's nothing to do...
@@ -33496,18 +34486,58 @@ assemble_poynting(double time,	/* present time value */
     case R_LIGHT_INTD:
          light_eqn = 2;
          Psign = 0.;
-         mucos = 0.;
          break;
+    case R_RESTIME:
+         petrov = 1;
+         break;  
     default:
          EH(-1,"light intensity equation");
          break;
    }
-  P = fv->poynt[light_eqn];
-  grad_P = 0.;
-  for(i=0 ; i<dim ; i++)
-     {
-      grad_P += svect[i]*fv->grad_poynt[light_eqn][i];
-     }
+  if(py_eqn >= R_LIGHT_INTP && py_eqn <= R_LIGHT_INTD)
+    {
+     Beers_Law = 1;
+     P = fv->poynt[light_eqn];
+     grad_P = 0.;
+     for(i=0 ; i<dim ; i++)
+        {
+         v_grad[i] = fv->grad_poynt[light_eqn][i];
+         grad_P += svect[i]*v_grad[i];
+        }
+    }
+  else
+   {
+     Beers_Law = 0;
+     P = fv->restime;
+     for(i=0 ; i<dim ; i++)
+        {
+         v_grad[i] = fv->grad_restime[i];
+        }
+     time_source = 0.; d_time_source = 0.;
+     switch(mp->Rst_funcModel)
+       {
+        case CONSTANT:
+            time_source = mp->Rst_func; d_time_source = 0.;
+            break;
+        case LINEAR_TIMETEMP:
+            if(pd->e[R_ENERGY] && (fv->T > upd->Process_Temperature))
+                 {
+                  time_source = mp->Rst_func*(fv->T-upd->Process_Temperature); 
+                  d_time_source = mp->Rst_func;
+                 }
+            break;
+        case EXPONENTIAL_TIMETEMP:
+            if(pd->e[R_ENERGY] && (fv->T > upd->Process_Temperature))
+                 {
+                  time_source = exp(mp->Rst_func*(fv->T-upd->Process_Temperature)); 
+                  d_time_source=mp->Rst_func*time_source;
+                 }
+            break;
+        default:
+            EH(-1,"Residence Time Weight Function");
+            break;
+        }
+   }
   /*
    * Residuals___________________________________________________________
    */
@@ -33520,7 +34550,6 @@ assemble_poynting(double time,	/* present time value */
       for ( i=0; i<ei->dof[eqn]; i++)
 	{
 	  
-#if 1
           /* this is an optimization for xfem */
 	  if ( xfem != NULL )
             {
@@ -33529,21 +34558,25 @@ assemble_poynting(double time,	/* present time value */
                               &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      if ( extended_dof && !xfem_active ) continue;
             }
-#endif
 	  phi_i = bf[eqn]->phi[i];
-          wt_func = 0;
-	  for(p=0; p<dim; p++)
-            { wt_func += h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p]; }
+          if(petrov)
+            {
+             wt_func = 0.0;
+	     for(p=0; p<dim; p++)
+                 { wt_func += h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p]; }
+            }
+          else
+            { wt_func = phi_i; }
 
 	  advection = 0.;
-	  source = -1.;
-	  if ( pd->e[eqn] & T_ADVECTION )
+	  if ( (pd->e[eqn] & T_ADVECTION) && !Beers_Law )
 	    {
+	      source = -time_source;
 	      for ( p=0; p<dim; p++)
 		{
 		  grad_phi_i[p] = bf[var]->grad_phi[i][p];
-		  advection += wt_func*vconv[p]*fv->grad_poynt[light_eqn][p];
-	          advection += diff_const*grad_phi_i[p]*fv->grad_poynt[light_eqn][p];
+		  advection += wt_func*vconv[p]*v_grad[p];
+	          advection += diff_const*grad_phi_i[p]*v_grad[p];
 		}
 	      advection += wt_func*source;
 
@@ -33552,7 +34585,7 @@ assemble_poynting(double time,	/* present time value */
 	      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 	    }
 	  diffusion = 0.;
-	  if ( pd->e[eqn] & T_DIFFUSION )
+	  if ( (pd->e[eqn] & T_DIFFUSION) && Beers_Law)
 	    {
 
 	      diffusion += phi_i*(mucos*grad_P + Psign*alpha*P);
@@ -33576,7 +34609,6 @@ assemble_poynting(double time,	/* present time value */
       peqn = upd->ep[eqn];
       for ( i=0; i<ei->dof[eqn]; i++)
 	{
-#if 1
           /* this is an optimization for xfem */
 	  if ( xfem != NULL )
             {
@@ -33585,18 +34617,22 @@ assemble_poynting(double time,	/* present time value */
                       &xfem_active, &extended_dof, &base_interp, &base_dof );
 	      if ( extended_dof && !xfem_active ) continue;
             }
-#endif
 	  phi_i = bf[eqn]->phi[i];
-          wt_func = 0;
-	  for(p=0; p<dim; p++)
-             { wt_func += h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p]; }
-          for ( p=0; p<VIM; p++)
-		    { grad_phi_i[p] = bf[eqn]->grad_phi[i][p];}
+          if(petrov)
+            {
+             wt_func = 0;
+	     for(p=0; p<dim; p++)
+                 { wt_func += h_elem_inv*vconv[p]*bf[eqn]->grad_phi[i][p]; }
+            }
+          else
+            { wt_func = phi_i; }
 
 	  /*
 	   * Set up some preliminaries that are needed for the (a,i)
 	   * equation for bunches of (b,j) column variables...
 	   */
+	 for ( p=0; p<dim; p++)
+		{ grad_phi_i[p] = bf[eqn]->grad_phi[i][p];}
 
 	  /*
 	   * J_e_ap
@@ -33615,7 +34651,7 @@ assemble_poynting(double time,	/* present time value */
 		    }
 
 	          advection = 0.;
-	          if ( pd->e[eqn] & T_ADVECTION )
+	          if ( (pd->e[eqn] & T_ADVECTION) && !Beers_Law )
 	            {
 	             for ( p=0; p<dim; p++)
 		        {
@@ -33628,7 +34664,7 @@ assemble_poynting(double time,	/* present time value */
 	             advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 	            }
 		  diffusion = 0.;
-		  if ( pd->e[eqn] & T_DIFFUSION )
+	          if ((pd->e[eqn] & T_DIFFUSION) && Beers_Law)
 		    {
 		      for ( p=0; p<VIM; p++)
 			{
@@ -33659,7 +34695,15 @@ assemble_poynting(double time,	/* present time value */
 		      grad_phi_j[p] = bf[var]->grad_phi[j][p];
 		    }
 
-		  if ( pd->e[eqn] & T_DIFFUSION )
+	          if ((pd->e[eqn] & T_ADVECTION) && !Beers_Law )
+                    {
+	              advection = -wt_func*d_time_source*phi_j;
+
+	              advection *= det_J * wt;
+	              advection *= h3;
+	              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+                    }
+	          if ((pd->e[eqn] & T_DIFFUSION) && Beers_Law)
 		    {
 		      diffusion = phi_i*d_alpha->T[j]*P;
 		      diffusion *= det_J * wt;
@@ -33667,7 +34711,7 @@ assemble_poynting(double time,	/* present time value */
 		      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 		    }
 
-		  lec->J[peqn][pvar][i][j] += diffusion;
+		  lec->J[peqn][pvar][i][j] += diffusion + advection;
 		}
 	    }
 
@@ -33688,6 +34732,18 @@ assemble_poynting(double time,	/* present time value */
 
 		      d_det_J_dmeshbj = bf[eqn]->d_det_J_dm[b][j];
 
+	                if ( (pd->e[eqn] & T_ADVECTION) && !Beers_Law )
+	                   {
+	                    for ( p=0; p<dim; p++)
+		              {
+		               advection += wt_func*vconv[p]*fv->d_grad_restime_dmesh[p][b][j];
+		               advection += wt_func*d_vconv->X[p][b][j]*v_grad[p];
+	                       advection += diff_const*grad_phi_i[p]*fv->d_grad_restime_dmesh[p][b][j];
+		              }
+	                     advection *= det_J * wt;
+	                     advection *= h3;
+	                     advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+	                   }
 			  /*
 			   * multiple parts:
 			   * 	diff_a = Int(...d(grad_phi_i)/dmesh.q h3 |Jv|)
@@ -33695,7 +34751,7 @@ assemble_poynting(double time,	/* present time value */
 			   *	diff_c = Int(...grad_phi_i.q h3 d(|Jv|)/dmesh)
 			   *	diff_d = Int(...grad_phi_i.q dh3/dmesh |Jv|  )
 			   */
-                      if ( pd->e[eqn] & T_DIFFUSION )
+	              if ((pd->e[eqn] & T_DIFFUSION) && Beers_Law)
 		        {
                           diff_b = 0.;
                           for ( p=0; p<VIM; p++)
@@ -33736,7 +34792,7 @@ assemble_poynting(double time,	/* present time value */
 		    {
 		      phi_j = bf[var]->phi[j];
 
-		      if ( pd->e[eqn] & T_DIFFUSION )
+		      if ((pd->e[eqn] & T_DIFFUSION) && Beers_Law)
 			{
 			  diffusion = phi_i*Psign*d_alpha->C[w][j]*P;
 			  diffusion *= det_J * wt;
@@ -33762,26 +34818,26 @@ assemble_poynting(double time,	/* present time value */
 		    phi_j = bf[var]->phi[j];
 
                     advection = 0; advection_b = 0;
-	            if ( pd->e[eqn] & T_ADVECTION )
+	            if ((pd->e[eqn] & T_ADVECTION) && !Beers_Law )
 	               {
 	                for ( p=0; p<dim; p++)
 		         {
-		          advection += phi_i*phi_j*fv->grad_poynt[light_eqn][p];
+		          advection += wt_func*phi_j*v_grad[p];
 		         }
 
 	                advection *= det_J * wt;
 	                advection *= h3;
 	                advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+
 			d_wt_func = h_elem_inv*d_vconv->v[b][b][j]*grad_phi_i[b]
 			  + h_elem_inv_deriv * vconv[b] * grad_phi_i[b];
 
 			for(p=0;p<dim;p++)
 			 {
-		            advection_b += vconv[p]*fv->grad_poynt[light_eqn][p];
+		            advection_b += vconv[p]*v_grad[p];
 			 }
 
-			advection_b *=  d_wt_func;
-			advection_b *= - det_J * wt;
+			advection_b *=  d_wt_func*det_J * wt;
 			advection_b *= h3;
 			advection_b *= pd->etm[eqn][(LOG2_ADVECTION)];
 
@@ -33795,3 +34851,493 @@ assemble_poynting(double time,	/* present time value */
 
   return(status);
 } /* end of assemble_poynting */
+/*  _______________________________________________________________________  */
+
+/* assemble_emwave -- assemble terms (Residual &| Jacobian) for EM harmonic
+ *				wave equations
+ *
+ * in:
+ * 	ei -- pointer to Element Indeces	structure
+ *	pd -- pointer to Problem Description	structure
+ *	af -- pointer to Action Flag		structure
+ *	bf -- pointer to Basis Function		structure
+ *	fv -- pointer to Field Variable		structure
+ *  fv_old -- pointer to old Diet Field Variable	structure
+ *  fv_dot -- pointer to dot Diet Field Variable	structure
+ *	cr -- pointer to Constitutive Relation	structure
+ *	md -- pointer to Mesh Derivative	structure
+ *	me -- pointer to Material Entity	structure
+ *
+ * out:
+ *	a   -- gets loaded up with proper contribution 
+ *	lec -- gets loaded up with local contributions to resid, Jacobian
+ * 	r   -- residual RHS vector
+ *
+ * Created:	Thu October 26, 2018 - Robert Secor
+ *
+ * Note: currently we do a "double load" into the addresses in the global
+ *       "a" matrix and resid vector held in "esp", as well as into the
+ *       local accumulators in "lec".
+ *
+ */
+
+int
+assemble_emwave(double time,	/* present time value */
+		  double tt,	/* parameter to vary time integration from 
+				 * explicit (tt = 1) to implicit (tt = 0) */
+		  double dt,	/* current time step size */
+		  const PG_DATA *pg_data,
+		  const int em_eqn,	/* emwave eqn id and var id	*/
+		  const int em_var,
+		  const int em_conjvar )
+{
+  int eqn, var, peqn, pvar, dim, p, q, b, w, i, j, status;
+  int conj_var = 0, dir=0;			/* identity of conjugate variable  */
+
+  dbl EMF = 0, EMF_conj = 0;		/* acoustic pressure	*/
+  dbl omega, emf_coeff=0, conj_coeff=0;
+  dbl emf_coeff_dn=0, conj_coeff_dn=0;
+  dbl emf_coeff_dk=0, conj_coeff_dk=0;
+  dbl mag_permeability=1.4e-07;
+  dbl cross_field[DIM];
+
+  dbl n;				/* Refractive index. */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_n_struct; 
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_n = &d_n_struct;
+
+  dbl k;				/* Acoustic wave number. */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; 
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
+
+  dbl advection;			/* For terms and their derivatives */
+
+  dbl diffusion;
+  dbl diff_a, diff_b, diff_c, diff_d;
+
+  /*
+   * Galerkin weighting functions for i-th energy residuals
+   * and some of their derivatives...
+   */
+
+  dbl phi_i;
+  dbl grad_phi_i[DIM], grad_phi_j[DIM];
+
+  /*
+   * Interpolation functions for variables and some of their derivatives.
+   */
+
+  dbl phi_j;
+
+  dbl h3;			/* Volume element (scale factors). */
+  dbl dh3dmesh_bj;		/* Sensitivity to (b,j) mesh dof. */
+
+  dbl det_J;
+
+  dbl d_det_J_dmeshbj;			/* for specified (b,j) mesh dof */
+  dbl dgrad_phi_i_dmesh[DIM];		/* ditto.  */
+  dbl wt;
+
+  /* initialize grad_phi_i */
+  for (i = 0; i < DIM; i++) {
+    grad_phi_i[i] = 0;
+  }
+
+  /*   static char yo[] = "assemble_acoustic";*/
+  status = 0;
+  /*
+   * Unpack variables from structures for local convenience...
+   */
+  dim   = pd->Num_Dim;
+  eqn   = em_eqn;
+  /*
+   * Bail out fast if there's nothing to do...
+   */
+  if ( ! pd->e[eqn] )
+    {
+      return(status);
+    }
+
+  wt = fv->wt;				/* Gauss point weight. */
+  h3 = fv->h3;			/* Differential volume element. */
+  det_J = bf[eqn]->detJ;		/* Really, ought to be mesh eqn. */
+
+  /*
+   * Material property constants, etc. Any variations at this Gauss point
+   * are calculated with user-defined subroutine options.
+   *
+   * Properties to consider here are R and k. R and k we will allow to vary 
+   * with temperature, spatial coordinates, and species concentration.
+   */
+
+  omega = upd->Acoustic_Frequency;
+  n = refractive_index( d_n, time );
+
+  k = extinction_index( d_k, time );
+
+  switch(em_var)
+   {
+    case EM_E1_REAL:
+         EMF = fv->em_er[0];  EMF_conj = fv->em_ei[0]; dir=0;
+         break;
+    case EM_E1_IMAG:
+         EMF = fv->em_ei[0];  EMF_conj = fv->em_er[0]; dir=0;
+         break;
+    case EM_E2_REAL:
+         EMF = fv->em_er[1];  EMF_conj = fv->em_ei[1]; dir=1;
+         break;
+    case EM_E2_IMAG:
+         EMF = fv->em_ei[1];  EMF_conj = fv->em_er[1]; dir=1;
+         break;
+    case EM_E3_REAL:
+         EMF = fv->em_er[2];  EMF_conj = fv->em_ei[2]; dir=2;
+         break;
+    case EM_E3_IMAG:
+         EMF = fv->em_ei[2];  EMF_conj = fv->em_er[2]; dir=2;
+         break;
+    case EM_H1_REAL:
+         EMF = fv->em_hr[0];  EMF_conj = fv->em_hi[0]; dir=0;
+         break;
+    case EM_H1_IMAG:
+         EMF = fv->em_hi[0];  EMF_conj = fv->em_hr[0]; dir=0;
+         break;
+    case EM_H2_REAL:
+         EMF = fv->em_hr[1];  EMF_conj = fv->em_hi[1]; dir=1;
+         break;
+    case EM_H2_IMAG:
+         EMF = fv->em_hi[1];  EMF_conj = fv->em_hr[1]; dir=1;
+         break;
+    case EM_H3_REAL:
+         EMF = fv->em_hr[2];  EMF_conj = fv->em_hi[2]; dir=2;
+         break;
+    case EM_H3_IMAG:
+         EMF = fv->em_hi[2];  EMF_conj = fv->em_hr[2]; dir=2;
+         break;
+    default:
+         EH(-1,"Invalid EM variable name.\n");
+   }
+  switch(em_var)
+   {
+    case EM_E1_REAL:
+    case EM_E2_REAL:
+    case EM_E3_REAL:
+         emf_coeff = -2*omega*mp->permittivity*n*k;
+         conj_coeff = -omega*mp->permittivity*(SQUARE(n)-SQUARE(k));
+         emf_coeff_dn = -2*omega*mp->permittivity*k;
+         emf_coeff_dk = -2*omega*mp->permittivity*n;
+         conj_coeff_dn = -omega*mp->permittivity*2*n;
+         conj_coeff_dk = omega*mp->permittivity*2*k;
+	 for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_hr[p];}
+         break;
+    case EM_E1_IMAG:
+    case EM_E2_IMAG:
+    case EM_E3_IMAG:
+         emf_coeff = 2*omega*mp->permittivity*n*k;
+         conj_coeff = -omega*mp->permittivity*(SQUARE(n)-SQUARE(k));
+         emf_coeff_dn = 2*omega*mp->permittivity*k;
+         emf_coeff_dk = 2*omega*mp->permittivity*n;
+         conj_coeff_dn = -omega*mp->permittivity*2*n;
+         conj_coeff_dk = omega*mp->permittivity*2*k;
+	 for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_hi[p];}
+         break;
+    case EM_H1_REAL:
+    case EM_H2_REAL:
+    case EM_H3_REAL:
+         emf_coeff = 0;
+         conj_coeff = -omega*mag_permeability;
+         emf_coeff_dn = 0; emf_coeff_dk = 0; conj_coeff_dn = 0; conj_coeff_dk = 0;
+	 for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_er[p];}
+         break;
+    case EM_H1_IMAG:
+    case EM_H2_IMAG:
+    case EM_H3_IMAG:
+         emf_coeff = 0;
+         conj_coeff = omega*mag_permeability;
+         emf_coeff_dn = 0; emf_coeff_dk = 0; conj_coeff_dn = 0; conj_coeff_dk = 0;
+	 for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_ei[p];}
+         break;
+    }
+  /*
+   * Residuals___________________________________________________________
+   */
+
+  if ( af->Assemble_Residual )
+    {
+      eqn = em_eqn;
+      peqn = upd->ep[eqn];
+      var = em_var;
+      for ( i=0; i<ei->dof[eqn]; i++)
+	{
+	  
+          /* this is an optimization for xfem */
+	  if ( xfem != NULL )
+            {
+	      int xfem_active, extended_dof, base_interp, base_dof;
+	      xfem_dof_state( i, pd->i[eqn], ei->ielem_shape,
+                              &xfem_active, &extended_dof, &base_interp, &base_dof );
+	      if ( extended_dof && !xfem_active ) continue;
+            }
+	  phi_i = bf[eqn]->phi[i];
+
+	  advection = 0.;
+	  if ( pd->e[eqn] & T_ADVECTION )
+	    {
+              advection += phi_i * (emf_coeff*EMF+conj_coeff*EMF_conj) * det_J*wt;
+	      advection *= h3;
+	      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+	    }
+
+	  diffusion = 0.;
+	  if ( pd->e[eqn] & T_DIFFUSION )
+	    {
+	      for ( p=0; p<VIM; p++)
+		{
+		  grad_phi_i[p] = bf[eqn]->grad_phi[i] [p];
+		}
+
+	      for ( p=0; p<VIM; p++)
+		{
+	        for ( q=0; q<VIM; p++)
+		  {
+		  diffusion -= permute(p,q,dir)*bf[eqn]->grad_phi[i][p]*cross_field[q];
+		  }
+		}
+	      diffusion *= det_J * wt;
+	      diffusion *= h3;
+	      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+	    }
+
+	  lec->R[peqn][i] += advection +  diffusion;
+
+
+	}
+    }
+
+
+  /*
+   * Jacobian terms...
+   */
+
+  if ( af->Assemble_Jacobian )
+    {
+      eqn   = em_eqn;
+      peqn = upd->ep[eqn];
+      for ( i=0; i<ei->dof[eqn]; i++)
+	{
+#if 1
+          /* this is an optimization for xfem */
+	  if ( xfem != NULL )
+            {
+	      int xfem_active, extended_dof, base_interp, base_dof;
+	      xfem_dof_state( i, pd->i[eqn], ei->ielem_shape,
+                              &xfem_active, &extended_dof, &base_interp, &base_dof );
+	      if ( extended_dof && !xfem_active ) continue;
+            }
+#endif
+	  phi_i = bf[eqn]->phi[i];
+
+	  /*
+	   * Set up some preliminaries that are needed for the (a,i)
+	   * equation for bunches of (b,j) column variables...
+	   */
+
+	  for ( p=0; p<VIM; p++)
+	    {
+	      grad_phi_i[p] = bf[eqn]->grad_phi[i][p];
+	    }
+
+	  /*
+	   * J_e_ap
+	   */
+	  var = em_var;
+	  if ( pd->v[var] )
+	    {
+	      pvar = upd->vp[var];
+	      for ( j=0; j<ei->dof[var]; j++)
+		{
+		  phi_j = bf[var]->phi[j];
+
+		  advection = 0.;
+	          if ( pd->e[eqn] & T_ADVECTION )
+	            {
+                     advection += phi_i * emf_coeff*phi_j * det_J*wt;
+	             advection *= h3;
+	             advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+	            }
+
+		  lec->J[peqn][pvar][i][j] += advection;
+		}
+	    }
+	/*
+	 *  Conjugate pressure variable
+	 */
+	  var = conj_var;
+	  if ( pd->v[var] )
+	    {
+	      pvar = upd->vp[var];
+	      for ( j=0; j<ei->dof[var]; j++)
+		{
+		  phi_j = bf[var]->phi[j];
+
+		  advection = 0.;
+		  if ( pd->e[eqn] & T_ADVECTION )
+		    {
+                      advection += phi_i * conj_coeff*phi_j * det_J*wt;
+		      advection *= h3;
+		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		    }
+	          diffusion = 0.;
+	          if ( pd->e[eqn] & T_DIFFUSION )
+	            {
+	              for ( p=0; p<VIM; p++)
+		        {
+		         grad_phi_i[p] = bf[eqn]->grad_phi[i] [p];
+		        }
+
+	          for ( p=0; p<VIM; p++)
+		    {
+	             for ( q=0; q<VIM; p++)
+		       {
+		         diffusion -= permute(p,q,dir)*bf[eqn]->grad_phi[i][p]*grad_phi_j[q];
+		       }
+		    }
+	      diffusion *= det_J * wt;
+	      diffusion *= h3;
+	      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+	    }
+		  lec->J[peqn][pvar][i][j] += advection + diffusion;
+		}
+	    }
+	  /*
+	   * J_e_T
+	   */
+	  var = TEMPERATURE;
+	  if ( pd->v[var] )
+	    {
+	      pvar = upd->vp[var];
+	      for ( j=0; j<ei->dof[var]; j++)
+		{
+		  phi_j = bf[var]->phi[j];
+
+		  advection = 0.;
+		  if ( pd->e[eqn] & T_ADVECTION )
+		    {
+                      advection += phi_i * (EMF*(emf_coeff_dn*d_n->T[j]+emf_coeff_dk*d_k->T[j])
+                               +EMF_conj*(conj_coeff_dn*d_n->T[j]+conj_coeff_dk*d_k->T[j])) * det_J*wt;
+		      advection *= h3;
+		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		    }
+
+		  lec->J[peqn][pvar][i][j] += advection;
+		}
+	    }
+
+	  /*
+	   * J_e_d
+	   */
+	  for ( b=0; b<dim; b++)
+	    {
+	      var = MESH_DISPLACEMENT1+b;
+	      if ( pd->v[var] )
+		{
+		  pvar = upd->vp[var];
+		  for ( j=0; j<ei->dof[var]; j++)
+		    {
+		      phi_j = bf[var]->phi[j];
+
+		      dh3dmesh_bj = fv->dh3dq[b] * bf[var]->phi[j];
+
+		      d_det_J_dmeshbj = bf[eqn]->d_det_J_dm[b][j];
+
+		      advection = 0.;
+		  if ( pd->e[eqn] & T_ADVECTION )
+		    {
+                      advection += phi_i * (EMF*(emf_coeff_dn*d_n->X[b][j]+emf_coeff_dk*d_k->X[b][j])
+                          +EMF_conj*(conj_coeff_dn*d_n->X[b][j]+conj_coeff_dk*d_k->X[b][j])) * det_J*h3*wt;
+                      advection += phi_i*(emf_coeff*EMF+conj_coeff*EMF_conj) * 
+                                        (d_det_J_dmeshbj*h3 + det_J*dh3dmesh_bj)*wt;
+		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		    }
+
+			  /*
+			   * multiple parts:
+			   * 	diff_a = Int(...d(grad_phi_i)/dmesh.q h3 |Jv|)
+			   *	diff_b = Int(...grad_phi_i.d(q)/dmesh h3 |Jv|)
+			   *	diff_c = Int(...grad_phi_i.q h3 d(|Jv|)/dmesh)
+			   *	diff_d = Int(...grad_phi_i.q dh3/dmesh |Jv|  )
+			   */
+		      diffusion = 0.;
+                      if ( pd->e[eqn] & T_DIFFUSION )
+		        {
+                          diff_a = 0.;
+			  for ( p=0; p<dim; p++)
+			    {
+			      dgrad_phi_i_dmesh[p]
+				= bf[eqn]->d_grad_phi_dmesh[i][p] [b][j];
+
+			      diff_a += dgrad_phi_i_dmesh[p] ;
+			    }
+			  diff_a *= det_J * h3 * wt;
+
+                          diff_b = 0.;
+                          for ( p=0; p<VIM; p++)
+			    {
+			      diff_b +=  grad_phi_i[p];
+			    }
+		          diff_b *= det_J * h3 * wt;
+
+			  diff_c = 0.;
+			  for ( p=0; p<dim; p++)
+			    {
+			      diff_c += grad_phi_i[p] ;
+			    }
+			  diff_c *= d_det_J_dmeshbj * h3 * wt;
+
+			  diff_d = 0.;
+			  for ( p=0; p<dim; p++)
+			    {
+			      diff_d += grad_phi_i[p] ;
+			    }
+			  diff_d *= det_J * dh3dmesh_bj * wt;
+
+			  diffusion = diff_a + diff_b + diff_c + diff_d;
+
+			  diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+			}
+
+
+		      lec->J[peqn][pvar][i][j] += advection + diffusion;
+		    }
+		}
+	    }
+
+	  /*
+	   * J_e_c
+	   */
+	  var = MASS_FRACTION;
+	  if ( pd->e[eqn] && pd->v[var] )
+	    {
+	      for ( w=0; w<pd->Num_Species_Eqn; w++)
+		{
+		  for ( j=0; j<ei->dof[var]; j++)
+		    {
+		      phi_j = bf[var]->phi[j];
+
+		      advection = 0.;
+		  if ( pd->e[eqn] & T_ADVECTION )
+		    {
+                      advection += phi_i * (EMF*(emf_coeff_dn*d_n->C[w][j]+emf_coeff_dk*d_k->C[w][j])
+                               +EMF_conj*(conj_coeff_dn*d_n->C[w][j]+conj_coeff_dk*d_k->C[w][j])) * det_J*wt;
+		      advection *= h3;
+		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+		    }
+
+		      lec->J[peqn][MAX_PROB_VAR + w][i][j] += advection;
+		    }
+		}
+	    }
+
+	}
+    }
+
+  return(status);
+} /* end of assemble_acoustic */

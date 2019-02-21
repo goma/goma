@@ -670,6 +670,77 @@ viscosity(struct Generalized_Newtonian *gn_local,
                                  d_mu, mp->mp2nd->ViscosityModel );
       EH(err, "ls_modulate_viscosity");
     }
+  if(DOUBLE_NONZERO(gn_local->thixo_factor))
+    { 
+     dbl thixotropic = 0;
+     dbl thixo_time = 0;
+     thixotropic = (1.+gn_local->thixo_factor*fv->restime+thixo_time*tran->time_value);
+     if ( d_mu != NULL )
+       {
+       d_mu->gd *= thixotropic;
+       if ( pd->v[var=BOND_EVOLUTION] )
+         {
+          for( i=0 ; i<ei->dof[var]; i++)
+	    {
+	     d_mu->nn[i] *= thixotropic;
+	    }
+         }
+       var = RESTIME;
+       if (pd->v[var] )
+        {
+         for ( j=0; j<ei->dof[var]; j++)
+	   {
+	     d_mu->degrade[j] = mu*gn_local->thixo_factor*bf[var]->phi[j];
+	   }
+        }
+       var = TEMPERATURE;
+       if (pd->v[var] )
+        {
+         for ( j=0; j<ei->dof[var]; j++)
+	   {
+	     d_mu->T[j] *= thixotropic;
+	   }
+        }
+       if (pd->e[R_MESH1] )
+        {
+         for ( i=0; i<VIM; i++)
+	   {
+	    for ( j=0; j< ei->dof[R_MESH1]; j++)
+	       {
+		  d_mu->X [i][j] *= thixotropic;
+	       }
+	   }
+        }
+       if (pd->e[R_MOMENTUM1] )
+        {
+         for ( a=0; a<VIM; a++)
+           {
+            for ( i=0; i < ei->dof[VELOCITY1]; i++)
+	      {
+	          d_mu->v[a][i] *= thixotropic;
+	      }
+	   }
+	}
+       if ( pd->v[var=MASS_FRACTION ] )
+        {
+         for ( w=0; w<pd->Num_Species_Eqn; w++)
+	   {
+	    for( i=0; i<ei->dof[var]; i++) 
+	      {
+	       d_mu->C[w][i] *= thixotropic;
+	      }
+	   }
+        }
+       if( pd->v[var=PRESSURE] )
+       {
+        for( i=0; i<ei->dof[var]; i++ )
+	  {
+	   d_mu->P[i] *= thixotropic;
+	  }
+       }
+      }
+     mu *= thixotropic;
+    }
   return(mu);
 }
 
@@ -3457,8 +3528,9 @@ flowing_liquid_viscosity(VISCOSITY_DEPENDENCE_STRUCT *d_flow_vis)
 {
 
   int err;
-  int var;
-  int j;
+  int var, var_offset, vdofs;
+  int j, a, w;
+  int dim = ei->ielem_dim;
 
   double flow_vis = 0.;
 
@@ -3493,15 +3565,55 @@ flowing_liquid_viscosity(VISCOSITY_DEPENDENCE_STRUCT *d_flow_vis)
   else if (mp->FlowingLiquidViscosityModel == USER)
      {
       (void) usr_FlowingLiquidViscosity(mp->u_FlowingLiquid_viscosity);
-      var = TEMPERATURE;
+      flow_vis = mp->FlowingLiquid_viscosity;
+      mp_old->FlowingLiquid_viscosity = flow_vis;
 
       if (d_flow_vis != NULL)
         {
-         for ( j=0; j<ei->dof[var]; j++)
+	 if (pd->v[TEMPERATURE] )
+          {
+           var = TEMPERATURE;
+           for ( j=0; j<ei->dof[var]; j++)
             {
              d_flow_vis->T[j]= mp->d_FlowingLiquid_viscosity[var]*bf[var]->phi[j];
             }
-        }
+          }
+	 if (pd->v[VELOCITY1] )
+	   {
+	    var = VELOCITY1;
+	    vdofs = ei->dof[var];
+	    for ( a=0; a<dim; a++)
+	      {
+	       for ( j=0; j<vdofs; j++)
+		  {
+		   d_flow_vis->v[a][j] = mp->d_FlowingLiquid_viscosity[var+a]*bf[var]->phi[j];
+		  }
+	      }
+	   }
+         if (pd->v[MESH_DISPLACEMENT1])
+          {
+	   var = MESH_DISPLACEMENT1;
+	   for ( a=0; a<dim; a++)
+	      {
+               for ( j=0; j<ei->dof[var]; j++)
+                {
+                d_flow_vis->X[a][j]= mp->d_FlowingLiquid_viscosity[var+a]*bf[var]->phi[j];
+                }
+              }
+          }
+	 if (pd->v[MASS_FRACTION] )
+	    {
+	     for ( w=0; w<pd->Num_Species_Eqn; w++)
+	       {
+		var	     = MASS_FRACTION;
+		var_offset = MAX_VARIABLE_TYPES + w;
+		for ( j=0; j<ei->dof[var]; j++)
+		  {
+		   d_flow_vis->C[w][j] =mp->d_FlowingLiquid_viscosity[var_offset]*bf[var]->phi[j];
+		  }
+	       }
+	    }
+	}
      }
 
   else

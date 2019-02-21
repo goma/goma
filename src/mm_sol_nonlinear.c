@@ -1705,7 +1705,7 @@ EH(-1,"version not compiled with frontal solver");
               scaling_max = 1.;
 
 	      if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");
-#ifdef HAVE_FRONT  
+#ifdef HAVE_FRONT
               err = mf_solve_lineqn(&mf_resolve, /* re_solve                 */
                                     bAC[0], /* rhs                           */
                                     1, /* nrhs                               */
@@ -1750,6 +1750,9 @@ EH(-1,"version not compiled with frontal solver");
 	      dcopy1(NumUnknowns, &tAC[0], &wAC[iAC][0]);
 	      strcpy(stringer_AC, " f ");
 	      break;
+#else
+              EH(-1, "Front solver is not enabled.");
+              break;
 #endif /* HAVE_FRONT */
 	  default:
 	      EH(-1, "That linear solver package is not implemented.");
@@ -2806,6 +2809,7 @@ if( *converged )
   if (Linear_Solver == AZTEC) ams->status[AZ_its] = total_ls_its;
   LOCA_UMF_ID = UMF_system_id;
 
+free_and_clear:  
 /*
  * If using LOCA, there may be another resolve after exiting the
  * nonlinear solver, so defer restoring external matrix rows
@@ -2822,8 +2826,6 @@ if( *converged )
           dofs_hidden = FALSE;
         }
     }
-
-free_and_clear:
 
   safe_free( (void *) delta_x);
   safe_free( (void *) res_p);

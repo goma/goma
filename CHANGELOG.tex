@@ -239,7 +239,7 @@ reconstruction.
 
 Capability: Boundary condition for hydrostatic pressure
 Developer: D. Hariprasad, December 2014
-Description: Specifies pressure as P = P_0 + rho*g*x where rho is a vairable density and the user specifies P_0.
+Description: Specifies pressure as P = P_0 + rho*g*x where rho is a variable density and the user specifies P_0.
 Example:  BC = FLOW_PRESSURE_VAR NS 1 0
 
 Capability: Galerkin least-squares continuity stabilization 
@@ -379,6 +379,25 @@ file as MS11, MS12, and so forth.
 Example:
 Post Processing Specifications
 Map Log-Conf Stress = yes
+
+Capability: Moving plane boundary condition due to etch reaction at surface
+Developer: Kristianto Tjiptowidjojo
+Date: February 20, 2019
+Description: It is mesh boundary condition akin to MOVING_PLANE but tied
+             to species equation to advance the rate of propagation.
+             Right now, it is hardwired to wet etching KOH reaction with CGS unit.
+Usage: BC = MOVING_PLANE_ETCH SS <sset> <etch plane>
+Example:
+        BC = MOVING_PLANE_ETCH SS 53 100
+
+Capability: Species flux boundary condition due to etch reaction at surface
+Developer: Kristianto Tjiptowidjojo
+Date: February 20, 2019
+Description: It is species flux condition at surface
+             Right now, it is hardwired to CGS unit.
+Usage: BC = YFLUX_ETCH SS <sset> <species number> <etch plane>
+Example:
+        BC = YFLUX_ETCH SS 53 0 100
 
 \end{alltt}
 %***************************************************

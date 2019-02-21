@@ -1720,6 +1720,149 @@ matrix_fill(
 #endif
 	}
 
+      if( pde[R_RESTIME] )
+	{
+          err = assemble_poynting(time_value, theta, delta_t, &pg_data, 
+				  R_RESTIME, RESTIME);
+	  EH( err, "assemble_poynting");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_poynting"); 
+	  if (err) return -1;
+#endif
+	}  
+
+      if( pde[R_EM_E1_REAL] )
+	{
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
+				  R_EM_E1_REAL, EM_E1_REAL, EM_E1_IMAG);
+	  EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_emwave"); 
+	  if (err) return -1;
+#endif
+	}
+
+      if( pde[R_EM_E2_REAL] )
+	{
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
+				  R_EM_E2_REAL, EM_E2_REAL, EM_E2_IMAG);
+	  EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_emwave"); 
+	  if (err) return -1;
+#endif
+	}
+
+      if( pde[R_EM_E3_REAL] )
+	{
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
+				  R_EM_E3_REAL, EM_E3_REAL, EM_E3_IMAG);
+	  EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_emwave"); 
+	  if (err) return -1;
+#endif
+	}
+
+      if( pde[R_EM_E1_IMAG] )
+	{
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
+				  R_EM_E1_IMAG, EM_E1_REAL, EM_E1_IMAG);
+	  EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_emwave"); 
+	  if (err) return -1;
+#endif
+	}
+
+      if( pde[R_EM_E2_IMAG] )
+	{
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
+				  R_EM_E2_IMAG, EM_E2_REAL, EM_E2_IMAG);
+	  EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_emwave"); 
+	  if (err) return -1;
+#endif
+	}
+
+      if( pde[R_EM_E3_IMAG] )
+	{
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
+				  R_EM_E3_IMAG, EM_E3_REAL, EM_E3_IMAG);
+	  EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_emwave"); 
+	  if (err) return -1;
+#endif
+	}
+
+      if( pde[R_EM_H1_REAL] )
+	{
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
+				  R_EM_H1_REAL, EM_H1_REAL, EM_H1_IMAG);
+	  EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_emwave"); 
+	  if (err) return -1;
+#endif
+	}
+
+      if( pde[R_EM_H2_REAL] )
+	{
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
+				  R_EM_H2_REAL, EM_H2_REAL, EM_H2_IMAG);
+	  EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_emwave"); 
+	  if (err) return -1;
+#endif
+	}
+
+      if( pde[R_EM_H3_REAL] )
+	{
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
+				  R_EM_H3_REAL, EM_H3_REAL, EM_H3_IMAG);
+	  EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_emwave"); 
+	  if (err) return -1;
+#endif
+	}
+
+      if( pde[R_EM_H1_IMAG] )
+	{
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
+				  R_EM_H1_IMAG, EM_H1_REAL, EM_H1_IMAG);
+	  EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_emwave"); 
+	  if (err) return -1;
+#endif
+	}
+
+      if( pde[R_EM_H2_IMAG] )
+	{
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
+				  R_EM_H2_IMAG, EM_H2_REAL, EM_H2_IMAG);
+	  EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_emwave"); 
+	  if (err) return -1;
+#endif
+	}
+
+      if( pde[R_EM_H3_IMAG] )
+	{
+          err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
+				  R_EM_H3_IMAG, EM_H3_REAL, EM_H3_IMAG);
+	  EH( err, "assemble_emwave");
+#ifdef CHECK_FINITE
+	  err = CHECKFINITE("assemble_emwave"); 
+	  if (err) return -1;
+#endif
+	}
+
       if( pde[R_POR_SINK_MASS] )
 	{
 	  err = assemble_pore_sink_mass(time_value, theta, delta_t);
@@ -2467,7 +2610,7 @@ matrix_fill(
 	  
       if (call_int) {
 	err = apply_integrated_bc(x, resid_vector, delta_t, theta,
-				  pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+				  &pg_data,
 				  ielem, ielem_type, num_local_nodes, ielem_dim,
 				  iconnect_ptr, elem_side_bc, num_total_nodes,
 				  WEAK_INT_SURF, time_value, element_search_grid, exo);
@@ -2800,7 +2943,7 @@ matrix_fill(
 	if (call_int) 
 	  {
 	    err = apply_integrated_bc(x, resid_vector, delta_t, theta,
-				      pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+				      &pg_data,
 				      ielem, ielem_type, num_local_nodes, 
 				      ielem_dim, iconnect_ptr, elem_side_bc, 
 				      num_total_nodes, 
@@ -3936,7 +4079,7 @@ matrix_fill_stress(
 	  
       if (call_int) {
 	err = apply_integrated_bc(x, resid_vector, delta_t, theta,
-				  pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+				  &pg_data,
 				  ielem, ielem_type, num_local_nodes, ielem_dim,
 				  iconnect_ptr, elem_side_bc, num_total_nodes,
 				  WEAK_INT_SURF, time_value, element_search_grid, exo);
@@ -4245,7 +4388,7 @@ matrix_fill_stress(
 	if (call_int) 
 	  {
 	    err = apply_integrated_bc(x, resid_vector, delta_t, theta,
-				      pg_data.h_elem_avg, pg_data.h, pg_data.mu_avg, pg_data.U_norm,
+				      &pg_data,
 				      ielem, ielem_type, num_local_nodes, 
 				      ielem_dim, iconnect_ptr, elem_side_bc, 
 				      num_total_nodes, 

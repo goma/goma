@@ -259,6 +259,10 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
 	xa[iAC] = mp_glob[mn]->light_absorption;
 	break;
       
+      case TAGC_EXTINCTION_INDEX: 
+	xa[iAC] = mp_glob[mn]->extinction_index;
+	break;
+      
       case TAGC_ELECTRICAL_CONDUCTIVITY: 
 	xa[iAC] = mp_glob[mn]->electrical_conductivity;
 	break;
@@ -716,6 +720,10 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
         xa[iAC] = mp_glob[mn]->u_lubsource_function_constants[2];
         break;
 
+      case TAGC_HEAT_SOURCE_0:
+        xa[iAC] = mp_glob[mn]->u_heat_source[0];
+        break;
+
       default: 
 	printf("\n\t Error: Invalid Material Property Tag %d\n", augc[iAC].MPID);
 	exit(0);
@@ -1008,6 +1016,10 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
       
       case TAGC_LIGHT_ABSORPTION: 
 	mp_glob[mn]->light_absorption = lambda;
+	break;
+      
+      case TAGC_EXTINCTION_INDEX: 
+	mp_glob[mn]->extinction_index = lambda;
 	break;
       
       case TAGC_ELECTRICAL_CONDUCTIVITY: 
@@ -1448,6 +1460,10 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
 
       case TAGC_LUB_SOURCE_2:
         mp_glob[mn]->u_lubsource_function_constants[2] = lambda;
+        break;
+
+      case TAGC_HEAT_SOURCE_0:
+        mp_glob[mn]->u_heat_source[0] = lambda;
         break;
 
       default: 

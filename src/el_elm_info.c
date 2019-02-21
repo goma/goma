@@ -1276,7 +1276,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           return( ( n < 2 ) ? 2 : 0 );
       default:
           EH(-1, "Unrecognized line segment interpolation.");
+          break;
       }
+      break;
 
       /*
        * Two dimensional triangles...
@@ -1288,6 +1290,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           return( ( n < 3 ) ? 1 : 0 );
       case I_Q2:                /* 6 node, 1 dof/node, Lagrangian quadratic */
         EH(-1, "no quadratic triangles available yet");
+        return (-1);
       case I_Q2_LSA:
           return( ( n < 6 ) ? 1 : 0 );
       case I_P0:                /* 1 node, 1 dof/node, piecewise constant */
@@ -1296,7 +1299,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           return( ( n == 0 ) ? 3 : 0 );
       default:
           EH(-1, "node_interp_info: Unrecognized triangle interpolation.");
+          break;
       }
+      break;
 
       /*
        * Two dimensional quadrilaterals...
@@ -1364,7 +1369,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 7 ) ? 1 : 0 );
           default:
               EH( -1, "node_interp_info: unrecognized element type ");
+              break;
           }
+          break;
       case I_P0_G:              /* 1 node, 2 dof/node, extended piecewise constant */
       case I_P0_XV:
           switch (Element_Type) {
@@ -1382,7 +1389,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 7 ) ? 2 : 0 );
           default:
               EH( -1, "node_interp_info: unrecognized element type ");
+              break;
           }
+          break;
       case I_P1:                /* 1 node, 3 dof/node, piecewise linear */
       case I_P1_GP:
       case I_P1_GN:
@@ -1401,7 +1410,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 7 ) ? 3 : 0 );
           default:
               EH(-1, "node_intero_info: unrecognized element type ");
+              break;
           }
+          break;
       case I_P1_G:              /* 1 node, 6 dof/node, piecewise linear */
       case I_P1_XV:
           switch (Element_Type) {
@@ -1419,7 +1430,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 7 ) ? 6 : 0 );
           default:
               EH(-1, "node_intero_info: unrecognized element type ");
+              break;
           }
+          break;
       case I_H3:                /* 4 node, 4 dof/node, Hermite bicubic */
           return( ( n < 4 ) ? 4 : 0 );
       case I_Q3:                /* 16 node, 1 dof/node, Lagrangian bicubic */
@@ -1436,7 +1449,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           default:
               EH(-1,
                  "PQ1 interpolation not implemented for this Element Type.");
+              break;
           }
+          break;
       case I_PQ2:
           switch(Element_Type) {
           case BIQUAD_QUAD:
@@ -1446,10 +1461,14 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           default:
               EH(-1,
                  "PQ2 interpolation not implemented for this Element Type.");
+              break;
           }
+          break;
       default:
           EH(-1, "Unrecognized quadrilateral interpolation.");
+          break;
       }
+      break;
 
       /*
        * Three dimensional tetrahedrons...
@@ -1468,7 +1487,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           return( ( n == 0 ) ? 4 : 0 );
       default:
           EH(-1, "Unrecognized tetrahedron interpolation.");
+          break;
       }
+      break;
 
       /*
        * Three dimensional prisms...
@@ -1485,7 +1506,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           return( ( n == 15 ) ? 4 : 0 );
       default:
           EH(-1, "Unrecognized prism interpolation.");
+          break;
       }
+      break;
 
       /*
        * Three dimensional hexahedrons...
@@ -1526,7 +1549,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 20 ) ? 1 : 0 );/* centroid node */
           default:
               EH(-1, "Unrecognized hexahedron interpolation.");
+              break;
           }
+          break;
       case I_P0_G:              
       case I_P0_XV:             /* 1 node, 2 dof/node, piecewise constant */
           switch (Element_Type) {
@@ -1538,7 +1563,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 20 ) ? 2 : 0 );/* centroid node */
           default:
               EH(-1, "Unrecognized hexahedron interpolation.");
+              break;
           }
+          break;
       case I_P1:                /* 1 node, 4 dof/node, piecewise linear */
       case I_P1_GP:
       case I_P1_GN:
@@ -1551,7 +1578,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 20 ) ? 4 : 0 ); /* centroid node */
           default:
               EH(-1, "Unrecognized hexahedron interpolation.");
+              break;
           }
+          break;
       case I_PQ1:
           switch (Element_Type) {
           case TRILINEAR_HEX:
@@ -1564,7 +1593,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 20 ) ? 8 : 0 );
           default:
               EH(-1,"PQ1 interpolation not implemented for this Element Type.");
+              break;
           }
+          break;
       case I_PQ2:
           switch (Element_Type) {
           case TRIQUAD_HEX:
@@ -1572,14 +1603,19 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 20 ) ? 27 : 0 );
           default:
               EH(-1,"PQ2 interpolation not implemented for this Element Type.");
+              break;
           }
+          break;
       case I_H3:                /* 8 node, 8 dof/node, Hermite tricubic */
           return( ( n < 8 ) ? 8 : 0 );
       default:
           EH(-1, "Unrecognized hexahedron interpolation.");
+          break;
       }
+      break;
   default:
       EH(-1, "Bad element shape.");
+      break;
   }
   EH(-1, "node_interp_info: We should not be here.");
   return (-1);
@@ -1768,7 +1804,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized line segment interpolation.");
+          break;
         }
+        break;
     case SHELL:
       switch ( interpolation )
         {
@@ -1813,7 +1851,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized SHELL interpolation.");
+          break;
         }
+        break;
 
       /*
        * Two dimensional triangles...
@@ -1840,7 +1880,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized triangle interpolation.");
+          break;
         }
+        break;
 
       /*
        * Two dimensional quadrilaterals...
@@ -1917,7 +1959,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized quadrilateral interpolation.");
+          break;
         }
+        break;
 
       /*
        * Three dimensional tetrahedrons...
@@ -1941,7 +1985,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized tetrahedron interpolation.");
+          break;
         }
+        break;
 
       /*
        * Three dimensional prisms...
@@ -1965,7 +2011,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized prism interpolation.");
+          break;
         }
+        break;
 
 
       /*
@@ -2021,7 +2069,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized hexahedron interpolation.");
+          break;
         }
+        break;
 
     default:
       EH(-1, "Bad element shape.");
