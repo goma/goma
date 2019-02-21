@@ -210,5 +210,7 @@ PROTO((dbl,                     /* Current time */
 				 * explicit (tt = 1) to implicit (tt = 0) */
        double ));		/* dt - current time step size */
 
+EXTERN double calc_KOH_Si_etch_rate_100 /* mm_std_models.c */
+PROTO(( double [MAX_CONC] ));        /* Sensitivities of etch rate w.r.t. concentration */
 
 #endif /* _MM_STD_MODELS_H */
