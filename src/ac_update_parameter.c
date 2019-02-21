@@ -1014,7 +1014,13 @@ update_MT_parameter(double lambda, /* Parameter value */
       break;
 
     case TAGC_ACOUSTIC_WAVELENGTH:
-      upd->Acoustic_Frequency = 2.*M_PIE*c_mm/lambda;
+/* assume si_mm for now - it would be nice if Goma knew 
+ * what unit system was being used
+ */
+      if(1)
+         { upd->Acoustic_Frequency = 2.*M_PIE*c_mm/lambda;}
+      else
+         { upd->Acoustic_Frequency = 2.*M_PIE*c_m/lambda;}
       break;
 
     default: 
@@ -1835,7 +1841,13 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
       break;
 
     case TAGC_ACOUSTIC_WAVELENGTH:
-      *lambda = 2.*M_PIE*c_mm/upd->Acoustic_Frequency;
+/* assume si_mm for now - it would be nice if Goma knew 
+ * what unit system was being used
+ */
+      if(1)
+         { *lambda = 2.*M_PIE*c_mm/upd->Acoustic_Frequency;}
+      else
+         { *lambda = 2.*M_PIE*c_m/upd->Acoustic_Frequency;}
       break;
 
     default: 

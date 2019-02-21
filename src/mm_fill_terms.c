@@ -34892,9 +34892,9 @@ assemble_emwave(double time,	/* present time value */
   int conj_var = 0, dir=0;			/* identity of conjugate variable  */
 
   dbl EMF = 0, EMF_conj = 0;		/* acoustic pressure	*/
-  dbl omega, emf_coeff, conj_coeff;
-  dbl emf_coeff_dn, conj_coeff_dn;
-  dbl emf_coeff_dk, conj_coeff_dk;
+  dbl omega, emf_coeff=0, conj_coeff=0;
+  dbl emf_coeff_dn=0, conj_coeff_dn=0;
+  dbl emf_coeff_dk=0, conj_coeff_dk=0;
   dbl mag_permeability=1.4e-07;
   dbl cross_field[DIM];
 
@@ -34906,13 +34906,10 @@ assemble_emwave(double time,	/* present time value */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; 
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
 
-  dbl mass;		         	/* For terms and their derivatives */
-
   dbl advection;			/* For terms and their derivatives */
 
   dbl diffusion;
   dbl diff_a, diff_b, diff_c, diff_d;
-  dbl source;
 
   /*
    * Galerkin weighting functions for i-th energy residuals
@@ -35078,8 +35075,6 @@ assemble_emwave(double time,	/* present time value */
             }
 	  phi_i = bf[eqn]->phi[i];
 
-	  mass = 0.;
-
 	  advection = 0.;
 	  if ( pd->e[eqn] & T_ADVECTION )
 	    {
@@ -35158,8 +35153,6 @@ assemble_emwave(double time,	/* present time value */
 		{
 		  phi_j = bf[var]->phi[j];
 
-		  mass = 0.;
-
 		  advection = 0.;
 	          if ( pd->e[eqn] & T_ADVECTION )
 	            {
@@ -35222,8 +35215,6 @@ assemble_emwave(double time,	/* present time value */
 		{
 		  phi_j = bf[var]->phi[j];
 
-		  mass = 0.;
-
 		  advection = 0.;
 		  if ( pd->e[eqn] & T_ADVECTION )
 		    {
@@ -35253,8 +35244,6 @@ assemble_emwave(double time,	/* present time value */
 		      dh3dmesh_bj = fv->dh3dq[b] * bf[var]->phi[j];
 
 		      d_det_J_dmeshbj = bf[eqn]->d_det_J_dm[b][j];
-
-		      mass = 0.;
 
 		      advection = 0.;
 		  if ( pd->e[eqn] & T_ADVECTION )
@@ -35329,8 +35318,6 @@ assemble_emwave(double time,	/* present time value */
 		  for ( j=0; j<ei->dof[var]; j++)
 		    {
 		      phi_j = bf[var]->phi[j];
-
-		      mass = 0.;
 
 		      advection = 0.;
 		  if ( pd->e[eqn] & T_ADVECTION )

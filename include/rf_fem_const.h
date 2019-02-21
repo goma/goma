@@ -459,8 +459,8 @@
 #define EM_H2_REAL            195 
 #define EM_H3_REAL            196 
 #define EM_H1_IMAG            197 /*  EM wave variables */
-#define EM_H2_IMAG            199
-#define EM_H3_IMAG            200 
+#define EM_H2_IMAG            198
+#define EM_H3_IMAG            199
 /*
  * define a variable to hold an external field which will be 
  * held fixed in the problem but parametered by the basis functions
