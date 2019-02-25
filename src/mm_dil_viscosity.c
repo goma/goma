@@ -362,8 +362,12 @@ dil_viscosity (GEN_NEWT_STRUCT *gn_local, const dbl muValue, const VISCOSITY_DEP
 
       }
 
-      ls_modulate_dilviscosity(&kappa, 0, ls->Length_Scale, mp->mp2nd->viscositymask[0],
-          mp->mp2nd->viscositymask[1], d_dilMu);
+      if (ls != NULL)
+        {
+          ls_modulate_dilviscosity(&kappa, 0, ls->Length_Scale, mp->mp2nd->viscositymask[0],
+                                   mp->mp2nd->viscositymask[1], d_dilMu);
+        }
+
 
     } else {
       EH(-1, "unsupported Kappa Option");

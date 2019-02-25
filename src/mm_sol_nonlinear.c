@@ -2829,6 +2829,7 @@ if( *converged )
  * until the next linear solver call.
  */
 
+free_and_clear:
   if ( Num_Proc > 1 && strcmp( Matrix_Format, "msr" ) == 0 )
     {
       if (Continuation != LOCA && dofs_hidden)
@@ -2840,7 +2841,6 @@ if( *converged )
         }
     }
 
-free_and_clear:
 
   safe_free( (void *) delta_x);
   safe_free( (void *) res_p);

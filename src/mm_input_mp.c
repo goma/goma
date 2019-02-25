@@ -8191,6 +8191,42 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  mat_ptr->u_species_source[species_no][11] = a11;  /* En/R */
 	  SPF_DBL_VEC(endofstring(es), 12,  mat_ptr->u_species_source[species_no]);
 	}
+      else if ( !strcmp(model_name, "FOAM_PMDI_10_RXN_DIVV") )
+        {
+          SpeciesSourceModel = FOAM_PMDI_10_RXN;
+          model_read = 1;
+          mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
+          if ( fscanf(imp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
+                      &a0, &a1, &a2, &a3, &a4, &a5, &a6, &a7, &a8, &a9, &a10, &a11)  != 12 )
+            {
+              sr = sprintf(err_msg,
+                           "Matl %s needs 12 constants for %s %s model.\n",
+                           pd_glob[mn]->MaterialName,
+                           "Species Source", "FOAM_PMDI_10_RXN");
+              EH(-1, err_msg);
+            }
+
+          mat_ptr->u_species_source[species_no] = (dbl *)
+              array_alloc(1,12,sizeof(dbl));
+
+          mat_ptr->len_u_species_source[species_no] = 12;
+
+          mat_ptr->u_species_source[species_no][0] = a0;  /* k0 */
+          mat_ptr->u_species_source[species_no][1] = a1;  /* w */
+          mat_ptr->u_species_source[species_no][2] = a2;  /* Beta */
+          mat_ptr->u_species_source[species_no][3] = a3;  /* C_1 */
+          mat_ptr->u_species_source[species_no][4] = a4;  /* C_2 */
+          mat_ptr->u_species_source[species_no][5] = a5;  /* m */
+          mat_ptr->u_species_source[species_no][6] = a6;  /* n */
+          mat_ptr->u_species_source[species_no][7] = a7;  /* b */
+          mat_ptr->u_species_source[species_no][8] = a8;  /* T_g0 */
+          mat_ptr->u_species_source[species_no][9] = a9;  /* T_ginf */
+          mat_ptr->u_species_source[species_no][10] = a10;  /* A */
+          mat_ptr->u_species_source[species_no][11] = a11;  /* En/R */
+          mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+
+          SPF_DBL_VEC(endofstring(es), 12,  mat_ptr->u_species_source[species_no]);
+        }
       else if ( !strcmp(model_name, "FOAM_PMDI_10_H2O") )
 	{
 	  SpeciesSourceModel = FOAM_PMDI_10_H2O;
