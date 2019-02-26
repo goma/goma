@@ -251,10 +251,11 @@ F_WARN_FLAGS ?=
 FFLAGS = $(CCFLAGS) $(F_WARN_FLAGS) $(DEFINES) $(INCLUDES)
 
 # C compiler flags
-CFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(VERSION) $(INCLUDES)
+CSTD ?= -std=gnu99
+CFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(VERSION) $(INCLUDES) $(CSTD)
 
 # C++ compiler flags
-CXXSTD ?= 
+CXXSTD ?= -std=c++11
 CXXFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(INCLUDES) -Wno-deprecated $(CXXSTD)
 
 # linker flags
