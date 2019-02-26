@@ -1301,7 +1301,7 @@ else
 
     if [[ "$CC_NAME" == "gnu" ]]; then
         GCC_VERSION=$(gcc -dumpversion)
-        if [[ $GCC_VERSION -ge 8 ]]; then
+        if [[ "$GCC_VERSION" = $(echo -e "$GCC_VERSION\n8\n" | sort -V |tail -n1) ]]; then
             echo "GCC 8 or higher found"
             echo "$MUMPS_GCC_8_PATCH" > makepatch.inc
             cd src
