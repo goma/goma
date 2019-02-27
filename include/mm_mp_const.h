@@ -71,6 +71,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define EM_DISS         21   /* heat generation by EM waves */
 
 
+/* Switch for one of the the suspension balance model inputs */
+extern int SBM_LENGTHS;
 
 /* MMH */
 /* #define  SUSPENSION_PM xxx Defiend below. */
