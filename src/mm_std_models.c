@@ -4629,9 +4629,18 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
   d_pp2_dy2 = 2.*Kn/maxpack2*comp +  4.*Kn*y_norm/maxpack*comp1 + Kn*y_norm*y_norm*comp2;
 
-  radius_p = mp->SBM_Lengths2[w][0];
-  L_char = mp->SBM_Lengths2[w][1];
-  U_max = mp->SBM_Lengths2[w][2];
+  if(SBM_LENGTHS)
+    {
+      radius_p = mp->SBM_Lengths2[w][0];
+      L_char = mp->SBM_Lengths2[w][1];
+      U_max = mp->SBM_Lengths2[w][2];
+    }
+  else
+    {
+      radius_p = 0.;
+      L_char = 1.;
+      U_max = 1.;
+    }
   
   gamma_nl = radius_p * U_max / (L_char * L_char);
   

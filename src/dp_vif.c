@@ -2586,6 +2586,7 @@ noahs_ark()
   ddd_add_member(n, &VON_MISES_STRESS, 1, MPI_INT);
   ddd_add_member(n, &UNTRACKED_SPEC, 1, MPI_INT);
   ddd_add_member(n, &LOG_CONF_MAP, 1, MPI_INT);
+  ddd_add_member(n, &SBM_LENGTHS, 1, MPI_INT);
   ddd_add_member(n, &VELO_SPEED, 1, MPI_INT);
   ddd_add_member(n, &GIES_CRIT, 1, MPI_INT);
   ddd_add_member(n, &J_FLUX, 1, MPI_INT);
