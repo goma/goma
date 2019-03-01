@@ -181,6 +181,7 @@ if which cmake ; then
 	-D${PROJECT_NAME}_User_F_Flags=${User_F_Flags} \
 	-D${PROJECT_NAME}_User_LD_Flags=${User_LD_Flags} \
 	-D${PROJECT_NAME}_User_Flags=${User_Flags} \
+        -D${PROJECT_NAME}_User_Define="${User_Define}" \
     -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} ${GOMADIR}
 
     echo
