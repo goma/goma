@@ -293,7 +293,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
    * does, then it would probably like to know what the correct output
    * filename is.  Kinda like camping: Leave with what you came in
    * with.  */
-  strncpy(save_ExoFileOut, ExoFileOut, MAX_FNL);
+  strncpy(save_ExoFileOut, ExoFileOut, MAX_FNL-1);
 
   /* Write results to file (exoII format)
    */
