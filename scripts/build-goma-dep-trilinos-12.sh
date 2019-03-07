@@ -219,7 +219,7 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 "superlu_dist-5.1.3.tar.gz" \
 "y12m.tar.gz" \
 "Trilinos-trilinos-release-12-12-1.tar.gz" \
-"MUMPS_5.1.1.tar.gz" \
+"MUMPS_5.1.2.tar.gz" \
 "SuiteSparse-4.5.5.tar.gz" \
 "matio-1.5.10.tar.gz")
 
@@ -234,7 +234,7 @@ ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "fdee368cba0e95cb0143b6d47915e7a1" \
 "SKIP" \
 "ecd4606fa332212433c98bf950a69cc7" \
-"f15c6b5dd8c71b1241004cd19818259d" \
+"6ac4f52380ce4d74126be2d7c530e533" \
 "0a5b38af0016f009409a9606d2f1b555" \
 "d3b6e9d24a04c56036ef57e8010c80f1")
 
@@ -247,7 +247,7 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v5.1.3" \
 "http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz\\&filename=y12m%2Fy12m.f" \
 "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz" \
-"http://mumps.enseeiht.fr/MUMPS_5.1.1.tar.gz" \
+"http://mumps.enseeiht.fr/MUMPS_5.1.2.tar.gz" \
 "http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.5.5.tar.gz" \
 "http://superb-dca2.dl.sourceforge.net/project/matio/matio/1.5.10/matio-1.5.10.tar.gz")
 
@@ -262,7 +262,7 @@ ARCHIVE_DIR_NAMES=("ARPACK" \
 "superlu_dist-5.1.3" \
 "y12m" \
 "Trilinos-trilinos-release-12-12-1" \
-"MUMPS_5.1.1" \
+"MUMPS_5.1.2" \
 "SuiteSparse" \
 "matio-1.5.10")
 
@@ -589,7 +589,56 @@ export OWNER
 export MPI_BASE_DIR
 export MAKE_JOBS
 
-
+read -d '' MUMPS_GCC_8_PATCH << "EOF"
+--- ../../tars/MUMPS_5.1.2/src/dtype3_root.F	2017-10-02 01:37:23.000000000 -0600
++++ dtype3_root.F	2019-02-25 13:21:00.729147069 -0700
+@@ -805,8 +805,8 @@
+       END SUBROUTINE DMUMPS_INIT_ROOT_ANA
+       SUBROUTINE DMUMPS_INIT_ROOT_FAC( N, root, FILS, IROOT,
+      &                                 KEEP, INFO )
++      USE DMUMPS_STRUC_DEF
+       IMPLICIT NONE
+-      INCLUDE 'dmumps_root.h'
+       TYPE ( DMUMPS_ROOT_STRUC ):: root
+       INTEGER N, IROOT, INFO(40), KEEP(500)
+       INTEGER FILS( N )
+--- ../../tars/MUMPS_5.1.2/src/ctype3_root.F	2017-10-02 01:37:24.000000000 -0600
++++ ctype3_root.F	2019-02-25 13:20:42.136928144 -0700
+@@ -805,8 +805,8 @@
+       END SUBROUTINE CMUMPS_INIT_ROOT_ANA
+       SUBROUTINE CMUMPS_INIT_ROOT_FAC( N, root, FILS, IROOT,
+      &                                 KEEP, INFO )
++      USE DMUMPS_STRUC_DEF
+       IMPLICIT NONE
+-      INCLUDE 'cmumps_root.h'
+       TYPE ( CMUMPS_ROOT_STRUC ):: root
+       INTEGER N, IROOT, INFO(40), KEEP(500)
+       INTEGER FILS( N )
+--- ../../tars/MUMPS_5.1.2/src/ztype3_root.F	2017-10-02 01:37:25.000000000 -0600
++++ ztype3_root.F	2019-02-25 13:21:54.169776465 -0700
+@@ -805,8 +805,8 @@
+       END SUBROUTINE ZMUMPS_INIT_ROOT_ANA
+       SUBROUTINE ZMUMPS_INIT_ROOT_FAC( N, root, FILS, IROOT,
+      &                                 KEEP, INFO )
++      USE DMUMPS_STRUC_DEF
+       IMPLICIT NONE
+-      INCLUDE 'zmumps_root.h'
+       TYPE ( ZMUMPS_ROOT_STRUC ):: root
+       INTEGER N, IROOT, INFO(40), KEEP(500)
+       INTEGER FILS( N )
+--- ../../tars/MUMPS_5.1.2/src/stype3_root.F	2017-10-02 01:37:23.000000000 -0600
++++ stype3_root.F	2019-02-25 13:21:36.213564965 -0700
+@@ -805,8 +805,8 @@
+       END SUBROUTINE SMUMPS_INIT_ROOT_ANA
+       SUBROUTINE SMUMPS_INIT_ROOT_FAC( N, root, FILS, IROOT,
+      &                                 KEEP, INFO )
++      USE DMUMPS_STRUC_DEF
+       IMPLICIT NONE
+-      INCLUDE 'smumps_root.h'
+       TYPE ( SMUMPS_ROOT_STRUC ):: root
+       INTEGER N, IROOT, INFO(40), KEEP(500)
+       INTEGER FILS( N )
+EOF
 
 read -d '' MUMPS_PATCH << "EOF"
 5a6,8
@@ -1244,11 +1293,22 @@ EOF
 fi
 
 # make mumps
-cd $GOMA_LIB/MUMPS_5.1.1
+cd $GOMA_LIB/MUMPS_5.1.2
 if [ -e lib/libdmumps.a ]
 then
     echo "MUMPS already built"
 else
+
+    if [[ "$CC_NAME" == "gnu" ]]; then
+        GCC_VERSION=$(gcc -dumpversion)
+        if [[ "$GCC_VERSION" = $(echo -e "$GCC_VERSION\n8\n" | sort -V |tail -n1) ]]; then
+            echo "GCC 8 or higher found"
+            echo "$MUMPS_GCC_8_PATCH" > makepatch.inc
+            cd src
+            patch -p0 < ../makepatch.inc
+            cd $GOMA_LIB/MUMPS_5.1.2
+        fi
+    fi
     cat > Makefile.inc <<EOF
 # Begin orderings
 #LSCOTCHDIR = /usr/lib
@@ -1303,9 +1363,9 @@ LIBOTHERS =
 CDEFS   = -DAdd_
 
 #Begin Optimized options
-OPTF    = -O  -DALLOW_NON_INIT
-OPTL    = -O
-OPTC    = -O
+OPTF    = -O2  -DALLOW_NON_INIT
+OPTL    = -O2
+OPTC    = -O2
 #End Optimized options
 INCS = \$(INCPAR)
 LIBS = \$(LIBPAR)
@@ -1415,8 +1475,8 @@ else
   -D y12m_LIBRARY_DIRS:PATH=$GOMA_LIB/y12m \
 -D TPL_ENABLE_MUMPS:BOOL=ON \
   -D MUMPS_LIBRARY_NAMES:STRING="dmumps;mumps_common;pord;$BLACS_LIBRARY_NAME" \
-  -D MUMPS_LIBRARY_DIRS:PATH="$GOMA_LIB/MUMPS_5.1.1/lib;$GOMA_LIB/MUMPS_5.1.1/PORD/lib;$SCALAPACK_LIBRARY_DIR" \
-  -D MUMPS_INCLUDE_DIRS:PATH="$GOMA_LIB/MUMPS_5.1.1/include;$GOMA_LIB/MUMPS_5.1.1/PORD/include" \
+  -D MUMPS_LIBRARY_DIRS:PATH="$GOMA_LIB/MUMPS_5.1.2/lib;$GOMA_LIB/MUMPS_5.1.2/PORD/lib;$SCALAPACK_LIBRARY_DIR" \
+  -D MUMPS_INCLUDE_DIRS:PATH="$GOMA_LIB/MUMPS_5.1.2/include;$GOMA_LIB/MUMPS_5.1.2/PORD/include" \
   -D CMAKE_CXX_FLAGS:STRING="-DMUMPS_5_0 $BLAS_FLAGS $COMPILER_FLAG_MPI" \
   -D Amesos_ENABLE_SCALAPACK:BOOL=ON \
   -D SCALAPACK_INCLUDE_DIRS:FILEPATH="${SCALAPACK_INCLUDE_DIR}" \

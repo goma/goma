@@ -324,7 +324,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
    *  problem structure
    */
   (void) strncpy(mat_ptr->Material_Name, pd_glob[mn]->MaterialName,
-		 sizeof(CK_NAME));
+         MAX_MATLNAME);
 
   /*
    *  Copy the number of species and species equations into the material
