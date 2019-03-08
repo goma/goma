@@ -29205,7 +29205,7 @@ fluid_stress( double Pi[DIM][DIM],
       if (!kappaWipesMu) {
 	for (p = 0; p < VIM; p++) {
 	  for (j = 0; j < ei->dof[var]; j++) {
-	    d_Pi->degrade[p][p][j] -= (d_mu->degrade[j]/3.0 ) * gamma[p][p];
+	    d_Pi->degrade[p][p][j] -= (d_mu->degrade[j]/3.0 -0.5 * d_dilMu->degrade[j]) * gamma[p][p];
 	  }
 	}
       }
@@ -35096,7 +35096,7 @@ assemble_emwave(double time,	/* present time value */
 
 	      for ( p=0; p<VIM; p++)
 		{
-	        for ( q=0; q<VIM; p++)
+	        for ( q=0; q<VIM; q++)
 		  {
 		  diffusion -= permute(p,q,dir)*bf[eqn]->grad_phi[i][p]*cross_field[q];
 		  }
