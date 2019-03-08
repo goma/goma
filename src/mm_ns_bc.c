@@ -9046,7 +9046,7 @@ evaluate_gibbs_criterion(
   pos[1] = y_pos - fv->x[1];
   if(pd->Num_Dim == 3)
     {
-      pos[2] += x_pos - fv->x[2];
+      pos[2] = x_pos - fv->x[2];
     }
   
   /* 2D only for now */

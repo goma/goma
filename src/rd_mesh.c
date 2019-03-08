@@ -1819,7 +1819,7 @@ get_prefix(char *prefix_string,
     }
   else				/* did not find a dot */
     {
-      strncpy(prefix_string, input_string, len);
+      strncpy(prefix_string, input_string, len-1);
       return len;
     }
 
