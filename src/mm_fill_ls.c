@@ -3927,7 +3927,7 @@ print_ls_interface( double *x,
   FILE *outfile = NULL;
   int status = 0;
 
-  strncpy(output_filenm, filenm, MAX_FNL);
+  strncpy(output_filenm, filenm, MAX_FNL-1);
   multiname(output_filenm, ProcID, Num_Proc);
 
   if (print_all_times) {

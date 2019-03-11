@@ -69,7 +69,7 @@ struct Material_Properties
 			    * >= 0, and consistent across all processors,
 			    * unique, and equal to the index into the global
 			    * array of Material property structures */
-  CK_NAME Material_Name;   /* Character string name for the material */
+  char Material_Name[MAX_MATLNAME];   /* Character string name for the material */
   int Num_Matrl_Elem_Blk;  /* Number of element blocks comprising this 
                             * material                                     */
 			      
