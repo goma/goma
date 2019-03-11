@@ -210,7 +210,9 @@ if [ "$ASKED_USER_ANYTHING" == "true" ]; then
 fi
 
 HDF5_VERSION="1.10.5"
+HDF5_MD5="7c19d6b81ee2a3ba7d36f6922b2f90d3"
 NETCDF_VERSION="c-4.6.3"
+NETCDF_MD5="ef0b4d24f2c5a2a424c769cbb91fa45f"
 
 ARCHIVE_NAMES=("arpack96.tar.gz" \
 "patch.tar.gz" \
@@ -229,8 +231,8 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 #meaning each y12m tar has a unique MD5SUM.
 ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "14830d758f195f272b8594a493501fa2" \
-"7f2d3fd67106968eb45d133f5a22150f" \
-"503a2d6b6035d116ed53b1d80c811bda" \
+"${HDF5_MD5}" \
+"${NETCDF_MD5}" \
 "f69c479586bf6bb7aff6a9bc0c739628" \
 "1566d914d1035ac17b73fe9bc0eed02a" \
 "fdee368cba0e95cb0143b6d47915e7a1" \
