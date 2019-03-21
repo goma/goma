@@ -41,8 +41,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include <rpc/types.h>
-#include <rpc/xdr.h>
 
 #include "std.h"
 #include "md_timer.h"
@@ -62,6 +60,8 @@
 #include "md_timer.h"
 
 #ifdef MATRIX_DUMP
+#include <rpc/types.h>
+#include <rpc/xdr.h>
 /*********************** R O U T I N E S  I N   T H I S   F I L E *************
 *
 *       NAME                            TYPE            CALLED_BY

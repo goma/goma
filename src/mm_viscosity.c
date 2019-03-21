@@ -2583,7 +2583,14 @@ foam_pmdi10_viscosity(int species,    /* species number for cure equation */
 
   if(alpha < alpha_g)
     {
-      ratio = (alpha_g_pow - pow(alpha, A))/alpha_g_pow;
+      if (fabs(alpha) > 1e-8)
+	{
+	  ratio = (alpha_g_pow - pow(alpha, A))/alpha_g_pow;
+	}
+      else
+	{
+	  ratio = 1.0;
+	}
     }
   else /* do something special at the gel point */
     {
@@ -2645,7 +2652,7 @@ foam_pmdi10_viscosity(int species,    /* species number for cure equation */
   }
   if(pd->gv[var])
     {
-      if(alpha < alpha_g)
+      if(alpha < alpha_g && alpha > 1e-8)
 	{
 	  deriv = (-A*pow(alpha, A-1)/alpha_g_pow)*(-B)*(1/ratio) ;
 	  for (w = 0; w < pd->Num_Species; w++) {

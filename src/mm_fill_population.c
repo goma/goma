@@ -485,13 +485,13 @@ int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
 
 	if (w == wCO2Liq) {
 	  double CO2_max = 4.4e-4;
-	  double mf = fv->c[wCO2Liq] * M_CO2 / rho_liq;
+      double mf = fv_old->c[wCO2Liq] * M_CO2 / rho_liq;
 	  double dmfdC = M_CO2 / rho_liq;
 
 	  if (mf > CO2_max) {
 	    growth_rate[wCO2Liq] = G0 * (mf - CO2_max) / CO2_max;
 	    for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-	      d_growth_rate_dc[wCO2Liq][j] = G0 * dmfdC * bf[var]->phi[j] / CO2_max;
+          d_growth_rate_dc[wCO2Liq][j] = 0; //G0 * dmfdC * bf[var]->phi[j] / CO2_max;
 	    }
 
 	    for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
