@@ -31,7 +31,7 @@
 #define _NODESC_H
 
 
-#define MAX_EQNVARS			16
+#include "dpi.h" /* MAX_EQNVARS */
 
 #define MAX_NODE_KINDS			32
 

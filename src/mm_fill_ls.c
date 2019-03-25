@@ -2920,7 +2920,7 @@ ddd_add_surf( DDD pkg,
 	ddd_add_member( pkg, &(s->d), 1, MPI_DOUBLE);
 	ddd_add_member( pkg, &(s->sign), 1, MPI_DOUBLE);
       }
-      
+      break;
     case LS_SURF_FACET :
       {
         struct LS_Surf_Facet_Data *s = (struct LS_Surf_Facet_Data *) surf->data;
@@ -3927,7 +3927,7 @@ print_ls_interface( double *x,
   FILE *outfile = NULL;
   int status = 0;
 
-  strncpy(output_filenm, filenm, MAX_FNL);
+  strncpy(output_filenm, filenm, MAX_FNL-1);
   multiname(output_filenm, ProcID, Num_Proc);
 
   if (print_all_times) {
@@ -8255,6 +8255,7 @@ divide_shape_fcn_tree ( NTREE *parent,
 	{
 	case 3:
 	  xi_m[2] = (parent->xi[0][2] + parent->xi[4][2])/2.0;
+	  /* fall through */
 	case 2:
 	  xi_m[0] = (parent->xi[0][0] + parent->xi[1][0])/2.0;
 	  xi_m[1] = (parent->xi[1][1] + parent->xi[2][1])/2.0;

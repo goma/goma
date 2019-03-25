@@ -4539,6 +4539,168 @@ mass_flux_surf_user_bc(double func[DIM],
 /****************************************************************************/
 
 void
+mass_flux_surf_etch(double func[DIM],
+                    double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                    const int wspec,
+                    const int etch_plane,
+                    const double time,
+                    const double dt,
+                    const double tt )
+
+/******************************************************************************
+*
+*  Function which calculates the surface integral for mass flux resulting from
+*  etching reaction
+*
+*  Right now, it only handles KOH wet etching on crystalline silicon surface plane 100
+*  It also assumes a species ordering as follows:
+*                   0: H2O - water
+*                   1: KOH - potassium hydroxide
+*                   2: H2 - hydrogen
+*                   3: Silicon hydroxyl byproducts
+*
+*  Flux units are given in CGS
+*
+*  Functions called:
+*  calc_KOH_Si_etch_rate_100  -- calculates etch rate based on local concentration
+*
+*  Kristianto Tjiptowidjojo (5/2017)
+*  ----------------------------------------------------------------------------
+*
+******************************************************************************/
+{
+
+  int j_id, w1;
+  int kdir, var;
+  int err = 0;
+  int dim = pd->Num_Dim;
+  double phi_j;
+
+  double mass_flux[MAX_CONC] = {0.0};
+  double d_mass_flux[MAX_CONC][MAX_VARIABLE_TYPES + MAX_CONC] = {{0.0}};
+
+  struct Species_Conservation_Terms s_terms;
+  /* Use fake values for this since we do not need the SUPG term */
+  double h[DIM] = {1.0, 1.0, 1.0};
+
+  double etch_rate = 0.0;
+  double d_etch_rate_d_C[MAX_CONC] = {0.0};
+
+  /* Bulk density of crystalline silicon (g/cm^3) */
+  double rho_bulk_Si = 2.3290;
+
+  /* Molecular weight in mole/g */
+  double MW_H2O = 18.01528;
+  double MW_OH = 17.008;
+  double MW_Si = 28.0855;
+  double MW_H2 = (2.0 * 1.00794);
+  double MW_SiO2OH2 = (28.0855 + 2.0*15.9994 + 2.0*17.008);
+
+  /*
+   *  Initialize the Species_Conservation_Terms temporary structure
+   *  before filling it up
+   */
+  zero_structure(&s_terms, sizeof(struct Species_Conservation_Terms), 1);
+  err = get_continuous_species_terms(&s_terms, time, tt, dt, h);
+  EH(err, "get_continuous_species_terms");
+
+ /* Right now it only handles KOH wet etching on plane 100 of crystalline silicon*/
+  if (etch_plane == 100)
+    {
+     /* Get etch rate */
+     etch_rate = calc_KOH_Si_etch_rate_100(d_etch_rate_d_C);
+
+     /* Export it to mass_flux array, depending on their stochiometric coefficient */
+     switch (wspec)
+       {
+        case 0: /* Water */
+           mass_flux[wspec] = 2.0 * rho_bulk_Si/MW_Si * MW_H2O * etch_rate;
+           break;
+
+        case 1: /* OH */
+           mass_flux[wspec] = 2.0 * rho_bulk_Si/MW_Si * MW_OH * etch_rate;
+           break;
+
+        case 2: /* H2 */
+           mass_flux[wspec] = -2.0 * rho_bulk_Si/MW_Si * MW_H2 * etch_rate;
+           break;
+
+        case 3: /* SiO2OH2 */
+           mass_flux[wspec] = -1.0 * rho_bulk_Si/MW_Si * MW_SiO2OH2 * etch_rate;
+           break;
+       }
+
+     /* Export sensitivity of mass flux array */
+     switch (wspec)
+       {
+        case 0: /* Water */
+           d_mass_flux[wspec][MAX_VARIABLE_TYPES+0] = 2.0 * rho_bulk_Si/MW_Si * MW_H2O * d_etch_rate_d_C[0];
+           d_mass_flux[wspec][MAX_VARIABLE_TYPES+1] = 2.0 * rho_bulk_Si/MW_Si * MW_H2O * d_etch_rate_d_C[1];
+           break;
+
+        case 1: /* KOH */
+           d_mass_flux[wspec][MAX_VARIABLE_TYPES+0] = 2.0 * rho_bulk_Si/MW_Si * MW_OH * d_etch_rate_d_C[0];
+           d_mass_flux[wspec][MAX_VARIABLE_TYPES+1] = 2.0 * rho_bulk_Si/MW_Si * MW_OH * d_etch_rate_d_C[1];
+           break;
+
+        case 2: /* H2 */
+           d_mass_flux[wspec][MAX_VARIABLE_TYPES+0] = -2.0 * rho_bulk_Si/MW_Si * MW_H2 * d_etch_rate_d_C[0];
+           d_mass_flux[wspec][MAX_VARIABLE_TYPES+1] = -2.0 * rho_bulk_Si/MW_Si * MW_H2 * d_etch_rate_d_C[1];
+           break;
+
+        case 3: /* SiO2OH2 */
+           d_mass_flux[wspec][MAX_VARIABLE_TYPES+0] = -1.0 * rho_bulk_Si/MW_Si * MW_SiO2OH2 * d_etch_rate_d_C[0];
+           d_mass_flux[wspec][MAX_VARIABLE_TYPES+1] = -1.0 * rho_bulk_Si/MW_Si * MW_SiO2OH2 * d_etch_rate_d_C[1];
+           break;
+       }
+
+     d_mass_flux[wspec][MAX_VARIABLE_TYPES+2] = 0.0;
+     d_mass_flux[wspec][MAX_VARIABLE_TYPES+3] = 0.0;
+    }
+
+
+  /* Load up func and d_func and return to apply_integrated BC */
+
+  if (af->Assemble_Residual )
+    {
+     for (kdir = 0; kdir < dim; kdir++)
+        {
+          *func += s_terms.diff_flux[wspec][kdir] * fv->snormal[kdir];
+        }
+
+     *func -= mass_flux[wspec];
+    }
+
+  if (af->Assemble_Jacobian )
+    {
+      /* sum the contributions to the global stiffness matrix  for Species*/
+
+      /*
+       * J_s_c
+       */
+      var=MASS_FRACTION;
+      for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+	phi_j = bf[var]->phi[j_id];
+	for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++ )
+	  {
+           for (kdir = 0; kdir < dim; kdir++)
+              {
+               d_func[0][MAX_VARIABLE_TYPES + w1][j_id] +=
+               s_terms.d_diff_flux_dc[wspec][kdir] [w1][j_id] * fv->snormal[kdir];
+              }
+	   d_func[0][MAX_VARIABLE_TYPES + w1][j_id] -=
+	   d_mass_flux[wspec][MAX_VARIABLE_TYPES + w1] * phi_j;
+	  }
+      }
+ 
+    } /* End of if Assemble_Jacobian */
+  return;
+} /* END of routine mass_flux_surf_etch_bc                                   */
+
+/*****************************************************************************/
+/****************************************************************************/
+
+void
 mass_flux_alloy_surf(double func[DIM],
 		     double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 		     const int wspec,
@@ -6818,6 +6980,7 @@ act_coeff(dbl lngamma[MAX_CONC], dbl dlngamma_dC[MAX_CONC][MAX_CONC],
       memset(df1_dc, 0,sizeof(double)*MAX_CONC*MAX_CONC);
       memset(df2_dc, 0,sizeof(double)*MAX_CONC*MAX_CONC);
       memset(df3_dc, 0,sizeof(double)*MAX_CONC*MAX_CONC);
+      memset(dv_dw, 0,sizeof(double)*MAX_CONC*MAX_CONC);
       memset(d2f1_dc2, 0,sizeof(double)*MAX_CONC*MAX_CONC*MAX_CONC);
       memset(d2f2_dc2, 0,sizeof(double)*MAX_CONC*MAX_CONC*MAX_CONC);
       memset(d2f3_dc2, 0,sizeof(double)*MAX_CONC*MAX_CONC*MAX_CONC);

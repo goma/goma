@@ -523,6 +523,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_ACOUSTIC_ABSORPTION       	   3020
 #define TAGC_REFRACTIVE_INDEX       	   3030
 #define TAGC_LIGHT_ABSORPTION       	   3040
+#define TAGC_EXTINCTION_INDEX       	   3050
 
 
  /* 
@@ -699,4 +700,11 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_LUB_SOURCE_2                  7048
 
 #define TAGC_HEAT_SOURCE_0                 7050
+
+/*  Problem Description Parameters   */
+
+#define TAGC_ACOUSTIC_FREQ		   8010
+#define TAGC_PROCESS_TEMP		   8011
+#define TAGC_ACOUSTIC_WAVELENGTH	   8012
+
 #endif

@@ -1590,6 +1590,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->SurfaceDiffusionCoeffProjectionEqn, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->thermal_conductivity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Ewt_func, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->Rst_func, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Mwt_func, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->viscosity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->dilationalViscosity, 1, MPI_DOUBLE);
@@ -1628,12 +1629,15 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->acoustic_impedance,1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->wave_number,1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->acoustic_absorption,1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->acoustic_ksquared_sign,1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->refractive_index,1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->light_absorption,1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->extinction_index,1, MPI_DOUBLE);
 
       ddd_add_member(n, &mp_glob[i]->CapStress, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->ConductivityModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Ewt_funcModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->Rst_funcModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Mwt_funcModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->CurrentSourceModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->HeightUFunctionModel, 1, MPI_INT);
@@ -1795,6 +1799,8 @@ noahs_ark()
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->d_light_absorption,
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
+      ddd_add_member(n, mp_glob[i]->d_extinction_index,
+		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
       ddd_add_member(n, mp_glob[i]->d_permittivity,
 		     MAX_VARIABLE_TYPES + MAX_CONC, MPI_DOUBLE);
 
@@ -1908,6 +1914,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->len_u_acoustic_absorption, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_u_refractive_index, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_u_light_absorption, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_u_extinction_index, 1, MPI_INT);
 
       ddd_add_member(n, &mp_glob[i]->thermal_conductivity_tableid, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->acoustic_impedance_tableid, 1, MPI_INT);
@@ -1915,6 +1922,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->acoustic_absorption_tableid, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->refractive_index_tableid, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->light_absorption_tableid, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->extinction_index_tableid, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->viscosity_tableid, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->dilationalViscosity_tableid, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->heat_capacity_tableid, 1, MPI_INT);
@@ -2204,6 +2212,10 @@ noahs_ark()
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->LightAbsorptionModel, 1, MPI_INT);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->lightabsorption, 1, MPI_DOUBLE);
 	  ddd_add_member(n, &mp_glob[i]->mp2nd->lightabsorptionmask[0], 2, MPI_INT);
+
+	  ddd_add_member(n, &mp_glob[i]->mp2nd->ExtinctionIndexModel, 1, MPI_INT);
+	  ddd_add_member(n, &mp_glob[i]->mp2nd->extinctionindex, 1, MPI_DOUBLE);
+	  ddd_add_member(n, &mp_glob[i]->mp2nd->extinctionindexmask[0], 2, MPI_INT);
 	}
 
       /*
@@ -3006,6 +3018,9 @@ ark_landing()
       dalloc( m->len_u_light_absorption,
               m->    u_light_absorption);
 
+      dalloc( m->len_u_extinction_index,
+              m->    u_extinction_index);
+
       dalloc( m->len_tfmp_density_const,
               m->    tfmp_density_const);
       dalloc( m->len_tfmp_viscosity_const,
@@ -3388,6 +3403,9 @@ noahs_dove()
 
     crdv( m->len_u_light_absorption,
 	  m->    u_light_absorption);
+
+    crdv( m->len_u_extinction_index,
+	  m->    u_extinction_index);
 
     crdv( m->len_tfmp_density_const,
 	  m->    tfmp_density_const);

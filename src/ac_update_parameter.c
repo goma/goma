@@ -512,6 +512,7 @@ update_MT_parameter(double lambda, /* Parameter value */
                     Exo_DB *exo,   /* ptr to the finite element mesh database */
                     Dpi *dpi)      /* distributed processing information */
 {
+    double c_mm = 2.998E+11, c_m = 2.998E+8;
 
     switch (mpr) {
 
@@ -541,6 +542,10 @@ update_MT_parameter(double lambda, /* Parameter value */
       
     case TAGC_LIGHT_ABSORPTION: 
       mp_glob[mn]->light_absorption = lambda;
+      break;
+      
+    case TAGC_EXTINCTION_INDEX: 
+      mp_glob[mn]->extinction_index = lambda;
       break;
       
     case TAGC_ELECTRICAL_CONDUCTIVITY: 
@@ -1000,6 +1005,24 @@ update_MT_parameter(double lambda, /* Parameter value */
       mp_glob[mn]->u_heat_source[0] = lambda;
       break;
 
+    case TAGC_ACOUSTIC_FREQ:
+      upd->Acoustic_Frequency = lambda;
+      break;
+
+    case TAGC_PROCESS_TEMP:
+      upd->Process_Temperature = lambda;
+      break;
+
+    case TAGC_ACOUSTIC_WAVELENGTH:
+/* assume si_mm for now - it would be nice if Goma knew 
+ * what unit system was being used
+ */
+      if(1)
+         { upd->Acoustic_Frequency = 2.*M_PIE*c_mm/lambda;}
+      else
+         { upd->Acoustic_Frequency = 2.*M_PIE*c_m/lambda;}
+      break;
+
     default: 
       printf("\n\t Error: Invalid Material Property Tag %d\n", mpr);
       exit(0);
@@ -1324,6 +1347,7 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
                     Exo_DB *exo,   /* ptr to the finite element mesh database */
                     Dpi *dpi)      /* distributed processing information */
 {
+    double c_mm = 2.998E+11, c_m = 2.998E+8;
 
     switch (mpr) {
 
@@ -1353,6 +1377,10 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
       
     case TAGC_LIGHT_ABSORPTION: 
       *lambda = mp_glob[mn]->light_absorption;
+      break;
+      
+    case TAGC_EXTINCTION_INDEX: 
+      *lambda = mp_glob[mn]->extinction_index;
       break;
       
     case TAGC_ELECTRICAL_CONDUCTIVITY: 
@@ -1802,6 +1830,24 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
 
     case TAGC_HEAT_SOURCE_0:
       *lambda = mp_glob[mn]->u_heat_source[0];
+      break;
+
+    case TAGC_ACOUSTIC_FREQ:
+      *lambda = upd->Acoustic_Frequency;
+      break;
+
+    case TAGC_PROCESS_TEMP:
+      *lambda = upd->Process_Temperature;
+      break;
+
+    case TAGC_ACOUSTIC_WAVELENGTH:
+/* assume si_mm for now - it would be nice if Goma knew 
+ * what unit system was being used
+ */
+      if(1)
+         { *lambda = 2.*M_PIE*c_mm/upd->Acoustic_Frequency;}
+      else
+         { *lambda = 2.*M_PIE*c_m/upd->Acoustic_Frequency;}
       break;
 
     default: 

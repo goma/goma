@@ -3202,7 +3202,6 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
   
  free_and_clear:
 
-
 /* If exporting variables to another code, save them now! */
 #ifdef LIBRARY_MODE
   callnum++;

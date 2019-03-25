@@ -156,7 +156,7 @@ endif
 GOMA_MPI_INC ?= -isystem $(MPI_TOP)/include
 
 # MPI libraries
-GOMA_MPI_LIB ?= -L$(MPI_TOP)/lib  -lmpi  -lmpi_f77
+GOMA_MPI_LIB ?= -L$(MPI_TOP)/lib  -lmpi  -lmpi_mpifh
 
 # For MPI, the libraries need to be explicitly set in the path:
 GCC_LIB = $(GCC_TOP)/lib
@@ -251,10 +251,11 @@ F_WARN_FLAGS ?=
 FFLAGS = $(CCFLAGS) $(F_WARN_FLAGS) $(DEFINES) $(INCLUDES)
 
 # C compiler flags
-CFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(VERSION) $(INCLUDES)
+CSTD ?= -std=gnu99
+CFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(VERSION) $(INCLUDES) $(CSTD)
 
 # C++ compiler flags
-CXXSTD ?= 
+CXXSTD ?= -std=c++11
 CXXFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(INCLUDES) -Wno-deprecated $(CXXSTD)
 
 # linker flags

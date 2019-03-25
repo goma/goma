@@ -7325,8 +7325,10 @@ rd_post_process_specs(FILE *ifp,
 			  break;
 			case 5:
 			  EH(-1,"sensitivities to UF not done");
+			  break;
 			case 6:
 			  EH(-1,"sensitivities to AN not done");
+			  break;
 			}
 		      if(id1 == pp_fluxes_sens[i]->sens_id &&
 			 id2 == pp_fluxes_sens[i]->sens_flt &&
@@ -7787,8 +7789,10 @@ rd_post_process_specs(FILE *ifp,
 			  break;
 			case 5:
 			  EH(-1,"sensitivities to UF not done");
+			  break;
 			case 6:
 			  EH(-1,"sensitivities to AN not done");
+			  break;
 			}
 		      if(id1 == pp_data_sens[i]->sens_id &&
 			 id2 == pp_data_sens[i]->sens_flt &&
@@ -8645,7 +8649,7 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 
    if (GIES_CRIT != -1 && Num_Var_In_Type[R_MOMENTUM1])
      {
-       set_nv_tkud(rd, index, 0, 0, -2, "GIESEKUS","[1]", "Giesekus Criterion",
+       set_nv_tkud(rd, index, 0, 0, -2, "GIES","[1]", "Giesekus Criterion",
 		   FALSE);
        index++;
        if (GIES_CRIT == 2)

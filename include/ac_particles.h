@@ -196,12 +196,5 @@ PROTO((const Exo_DB *,
 EXTERN void rd_particle_specs	/* mm_input_particles.c */
 PROTO((FILE *,
        char *));
-
-EXTERN void backup_particles
-PROTO((void));
-
-EXTERN void restore_particles
-PROTO((void));
-
 #endif /* _AC_PARTICLES_H */
 

@@ -48,6 +48,18 @@ PROTO((double [DIM],		/* func                                      */
        const double ,		/* interface zone shift                */
        const double ));		/* gas leak angle (degrees)            */
 
+EXTERN void fmesh_etch_bc
+PROTO((double *,            /* func                                      */
+       double [MAX_VARIABLE_TYPES + MAX_CONC], /* d_func           */
+       const int,               /* Etch plane                 */
+       const int,               /* Local node ID                 */
+       const double [MAX_PDIM], /* Mesh velocity */
+       const double ,           /* tt - parameter to vary time integration 
+                                 * from explicit (tt = 1) to 
+                                 * implicit (tt = 0)                         */
+       const double ));         /* dt - current value of the time step       */
+
+
 EXTERN void fvelo_tangential_ls_bc
 PROTO((double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
@@ -400,10 +412,7 @@ PROTO((double *,		/* func                                      */
        const dbl ,		/* current time                              */
        const dbl ,		/* dt - time step size                       */
        const dbl ,		/* tt - time step parameter                  */
-       const dbl ,		/* h_elem_avg - global average element size  */
-       const dbl [DIM],		/* h - average element sizes                 */
-       const dbl ,		/* mu_avg - average element viscosity        */
-       const dbl ));		/* U_norm - global velocity norm             */
+       const PG_DATA *pg_data));
 
 EXTERN void fapply_CA
 PROTO((double *,		/* func                                      */
