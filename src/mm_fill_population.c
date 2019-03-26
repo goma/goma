@@ -2090,6 +2090,22 @@ assemble_moments(double time,	/* present time value */
 
     double sspg = mp->MomentSSPG_func;
 
+    double Heaviside = 1;
+
+    if (ls != NULL)
+    {
+      if (mp->MomentLevelSetDiffusionOnly == DIFF_POSITIVE)
+      {
+        load_lsi(ls->Length_Scale);
+        Heaviside = 1 - lsi->H;
+      }
+      else if (mp->MomentLevelSetDiffusionOnly == DIFF_NEGATIVE)
+      {
+        load_lsi(ls->Length_Scale);
+        Heaviside = lsi->H;
+      }
+    }
+
 
     /*
    * Residuals___________________________________________________________
@@ -2180,7 +2196,7 @@ assemble_moments(double time,	/* present time value */
                 }
 
                 lec->R[peqn][i] +=
-                        mass + advection + source + diffusion;
+                        Heaviside*(mass + advection) + source + diffusion;
 
             }
         }
@@ -2329,7 +2345,7 @@ assemble_moments(double time,	/* present time value */
                                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                             }
 
-                            lec->J[peqn][pvar][i][j] += mass + advection + source + diffusion;
+                            lec->J[peqn][pvar][i][j] += Heaviside*(mass + advection) + source + diffusion;
                         }
                     }
                 }
@@ -2397,7 +2413,7 @@ assemble_moments(double time,	/* present time value */
                                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                             }
 
-                            lec->J[peqn][pvar][i][j] += mass + advection + source;
+                            lec->J[peqn][pvar][i][j] += Heaviside*(mass + advection) + source;
 
                         }
                     }
@@ -2546,7 +2562,7 @@ assemble_moments(double time,	/* present time value */
                                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
                             }
 
-                            lec->J[peqn][pvar][i][j] += mass + advection + source;
+                            lec->J[peqn][pvar][i][j] += Heaviside*(mass + advection) + source;
                         }
                     }
                 }

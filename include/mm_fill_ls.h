@@ -246,6 +246,14 @@ EXTERN int level_set_property
 	double *,              /* *pp           */
 	double [MDE]);        /*  d_pp_dF[MDE] */
                      
+
+EXTERN int level_set_property_offset
+( const double,          /*  p0           */
+        const double,          /*  p1           */
+        const double,          /*  width        */
+        double *,              /* *pp           */
+        double [MDE]);        /*  d_pp_dF[MDE] */
+
 EXTERN int ls_transport_property
 ( const double,          /*  p0           */
 	const double,          /*  p1           */
@@ -354,6 +362,9 @@ EXTERN void zero_lsi_derivs
 ( void);
 
 EXTERN int load_lsi
+( const double );       /* width */
+
+EXTERN int load_lsi_offset
 ( const double );       /* width */
 
 EXTERN int load_lsi_adjmatr

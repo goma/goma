@@ -387,8 +387,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 	
     }
 
-  load_lsi(ls->Length_Scale);
-  double Heaviside = 1 - lsi->H;
+
   /* end Petrov-Galerkin addition */
 
 
@@ -435,6 +434,22 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
        */
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
+
+        double Heaviside = 1;
+
+        if (ls != NULL)
+        {
+          if (mp->SpeciesOnlyDiffusion[w] == DIFF_POSITIVE)
+          {
+            load_lsi(ls->Length_Scale);
+            Heaviside = 1 - lsi->H;
+          }
+          else if (mp->SpeciesOnlyDiffusion[w] == DIFF_NEGATIVE)
+          {
+            load_lsi(ls->Length_Scale);
+            Heaviside = lsi->H;
+          }
+        }
 
 	  double supg_tau = 0.0;
 
@@ -735,6 +750,21 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
       for ( w=0; w<pd->Num_Species_Eqn; w++)
 	{
 	  double supg_tau = 0.0;
+          double Heaviside = 1;
+
+          if (ls != NULL)
+          {
+            if (mp->SpeciesOnlyDiffusion[w] == DIFF_POSITIVE)
+            {
+              load_lsi(ls->Length_Scale);
+              Heaviside = 1 - lsi->H;
+            }
+            else if (mp->SpeciesOnlyDiffusion[w] == DIFF_NEGATIVE)
+            {
+              load_lsi(ls->Length_Scale);
+              Heaviside = lsi->H;
+            }
+          }
 
 	  if (supg!=0.)
 	    {

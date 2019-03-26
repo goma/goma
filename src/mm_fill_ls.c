@@ -4240,7 +4240,7 @@ print_surf_list ( struct LS_Surf_List *list,
   static FILE *g = NULL;
   struct LS_Surf *surf = list->start;
   int j, level;
-  char filename1[80], filename2[80], err_msg[80];
+  char filename1[80], filename2[80], err_msg[MAX_CHAR_ERR_MSG];
 
 #ifdef PARALLEL
   if( Num_Proc > 1 )

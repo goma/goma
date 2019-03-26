@@ -320,9 +320,19 @@ struct Material_Properties
   int MomentSSPG_funcModel;
   dbl MomentSSPG_func;
 
+  int MomentDiffusivityModel;
+  dbl MomentDiffusivity;
+
+  int MomentSecondLevelSetDiffusivityModel;
+  dbl MomentSecondLevelSetDiffusivity;
+
+  int MomentLevelSetDiffusionOnly;
+
   dbl diffusivity[MAX_CONC];
   int DiffusivityModel[MAX_CONC];
   int diffusivity_tableid[MAX_CONC];
+  double SpeciesSecondLevelSetDiffusivity[MAX_CONC];
+  int SpeciesOnlyDiffusion[MAX_CONC];         /* STANDARD or TAYLOR_GALERKIN */
   int SpeciesTimeIntegration[MAX_CONC];         /* STANDARD or TAYLOR_GALERKIN */
   int FreeVolSolvent[MAX_CONC];	/* Solvent identity array for multi-C FV*/
   int len_u_diffusivity[MAX_CONC];

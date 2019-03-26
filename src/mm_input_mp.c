@@ -327,7 +327,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   
   char  model_name[MAX_CHAR_IN_INPUT];
   char  *s;		   /* used to tokenize optional input string. */
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char search_string[MAX_CHAR_IN_INPUT];
   char *es = echo_string;
 
@@ -2351,6 +2351,43 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
                                  &(mat_ptr->MomentSSPG_funcModel),
                                  &(mat_ptr->MomentSSPG_func), NO_USER, NULL,
                                  model_name, SCALAR_INPUT, &NO_SPECIES,es);
+  ECHO(es,echo_file);
+
+  model_read = look_for_mat_prop(imp, "Moment Diffusivity",
+                                 &(mat_ptr->MomentDiffusivityModel),
+                                 &(mat_ptr->MomentDiffusivity), NO_USER, NULL,
+                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+  ECHO(es,echo_file);
+
+  model_read = look_for_mat_prop(imp, "Moment Second Level Set Diffusivity",
+                                 &(mat_ptr->MomentSecondLevelSetDiffusivityModel),
+                                 &(mat_ptr->MomentSecondLevelSetDiffusivity), NO_USER, NULL,
+                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+  ECHO(es,echo_file);
+
+
+  model_read = look_for_mat_prop(imp, "Moment Level Set Diffusion Only",
+                                 &(mat_ptr->MomentLevelSetDiffusionOnly),
+                                 &(a0), NO_USER, NULL,
+                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+  if ( !strcmp(model_name, "POSITIVE") )
+    {
+      mat_ptr->MomentLevelSetDiffusionOnly = DIFF_POSITIVE;
+      SPF(endofstring(es),"POSITIVE");
+    }
+  else if ( !strcmp(model_name, "NEGATIVE"))
+  {
+    mat_ptr->MomentLevelSetDiffusionOnly = DIFF_NEGATIVE;
+    SPF(endofstring(es),"POSITIVE");
+  }
+  else
+    {
+    mat_ptr->MomentLevelSetDiffusionOnly = DIFF_OFF;
+    SPF(endofstring(es),"OFF");
+    }
+
   ECHO(es,echo_file);
 
   /*
@@ -6957,6 +6994,45 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        } /*end of if(DiffusionConstitutiveEquation != STEFAN_MAXWELL && 
 	   DiffusionConstitutiveEquation != STEFAN_MAXWELL_CHARGED &&
 	   DiffusionConstitutiveEquation != STEFAN_MAXWELL_VOLUME) */
+
+     species_no = mat_ptr->Num_Species; /* set species number equal to max number of species
+                                           it is changed to species number of input property
+                                           by look_for_mat_prop */
+
+     int SpeciesSecondLevelSetDiffusivity;
+     model_read = look_for_mat_prop(imp, "Species Second Level Set Diffusivity",
+                                    &(SpeciesSecondLevelSetDiffusivity),
+                                    mat_ptr->SpeciesSecondLevelSetDiffusivity, NO_USER, NULL,
+                                    model_name, NO_INPUT,
+                                    &species_no, es);
+
+     ECHO(es,echo_file);
+
+     species_no = mat_ptr->Num_Species; /* set species number equal to max number of species
+                                           it is changed to species number of input property
+                                           by look_for_mat_prop */
+
+     int SpeciesOnlyDiffusion;
+     model_read = look_for_mat_prop(imp, "Species Level Set Diffusion Only",
+                                    &(SpeciesOnlyDiffusion),
+                                    &(a0), NO_USER, NULL,
+                                    model_name, NO_INPUT,
+                                    &species_no, es);
+
+     mat_ptr->SpeciesOnlyDiffusion[species_no] = DIFF_OFF;
+     if (model_read == -1 && !strcmp(model_name, "POSITIVE") )
+       {
+         mat_ptr->SpeciesOnlyDiffusion[species_no] = DIFF_POSITIVE;
+       }
+     else if (model_read == -1 &&  !strcmp(model_name, "NEGATIVE") )
+       {
+         mat_ptr->SpeciesOnlyDiffusion[species_no] = DIFF_NEGATIVE;
+       }
+     else
+       {
+         WH(-1, "Unknown value for species only diffusion defaulting to off");
+       }
+     ECHO(es,echo_file);
      
      
      species_no = mat_ptr->Num_Species; /* set species number equal to max number of species

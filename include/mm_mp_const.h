@@ -415,6 +415,11 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 /* surface tension laws */
 #define DILATION 3
 
+/* species only diffusion choices */
+#define DIFF_OFF 0
+#define DIFF_POSITIVE 10
+#define DIFF_NEGATIVE 11
+
 /* Species Time Integration choices */
 #define STANDARD  0
 #define TAYLOR_GALERKIN	1

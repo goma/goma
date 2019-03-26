@@ -726,7 +726,7 @@ rd_file_specs(FILE *ifp,
   int foundMappingFile;
   int foundBrkFile;
   
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;
   
  
@@ -873,7 +873,7 @@ rd_genl_specs(FILE *ifp,
   char StringToSearch[]="Pixel"; /*used in strstr call below*/
 
   static const char yo[] = "rd_genl_specs";
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;
   char ftype[MAX_CHAR_IN_INPUT];
 
@@ -1432,7 +1432,7 @@ void
 rd_timeint_specs(FILE *ifp,
 		 char *input )
 {
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;
 
   int mn, iread, i;
@@ -1860,7 +1860,7 @@ void
 rd_levelset_specs(FILE *ifp,
 		  char *input )
 {
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;
 
   int iread, i;
@@ -3291,7 +3291,7 @@ rd_track_specs(FILE *ifp,
   int id1, id2, id3, iflag, iCC, iTC;
   double range;
   double beg_angle = 0.0, end_angle = 0.0;
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;
   
   yo = "rd_track_specs";
@@ -4731,7 +4731,7 @@ rd_hunt_specs(FILE *ifp,
   static const char yo[] = "rd_hunt_specs";
   double range, range_0;
   int iread;
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;
 
   if ((Continuation != HUN_ZEROTH) && (Continuation != HUN_FIRST)
@@ -4989,7 +4989,7 @@ rd_ac_specs(FILE *ifp,
 	    char *input)
 {
   char err_msg[MAX_CHAR_IN_INPUT];
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;
 
   int iAC;
@@ -5990,7 +5990,7 @@ rd_solver_specs(FILE *ifp,
 		char *input )
 {
   char *c;
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;
 
   char def_form[MAX_CHAR_IN_INPUT]= " (%s = %s) %s";
@@ -7110,7 +7110,7 @@ rd_eigen_specs(FILE *ifp,
   int i;
   int iread;
   char copy_of_input[MAX_CHAR_IN_INPUT];
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;
   /*  */
 
@@ -8028,7 +8028,7 @@ rd_matl_blk_specs(FILE *ifp,
   char MatFile[MAX_FNL];	/* Raw material database file. */
   char TmpMatFile[MAX_FNL];	/* Temporary copy of mat db after APREPRO. */
 
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_input_file = Echo_Input_File;
   char echo_mat_file[MAX_FNL]="\0";
 
@@ -8385,7 +8385,7 @@ rd_eq_specs(FILE *ifp,
 
   char	tscs[MAX_CS_KEYWORD_LENGTH] = "\0";
 
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;
 
   static char yo[] = "rd_eq_specs";
@@ -14135,7 +14135,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
   double p,p2=0.0,p3,p4=0.0;
   int  i,j,k, Num_Pnts,ibegin,iend;
   int table_dim=0;
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";	
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;
 
   
@@ -15005,7 +15005,7 @@ static void read_MAT_line(FILE *ifp, int mn, char *input)
   int numTok, i;
   TOKEN_STRUCT tok;
   char *yo = "read_MAT_line";
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;
 
   /*
@@ -15095,7 +15095,7 @@ read_surface_objects ( FILE* ifp,
   int iread;
   char name[10];
   struct LS_Surf *surf;
-  char echo_string[MAX_CHAR_IN_INPUT]="\0";
+  char echo_string[MAX_CHAR_ECHO_INPUT]="\0";
   char *echo_file = Echo_Input_File;
 
   while( num_surf > 0 )

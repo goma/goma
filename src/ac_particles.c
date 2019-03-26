@@ -5495,60 +5495,6 @@ couple_to_continuum()
 #endif
 }
 
-
-/*
- * This routine can be called from elsewhere to backup the current
- * particle states.  Used for redoing a timestep.  What should I do
- * about output???
- */
-void
-backup_particles()
-{
-  int i, num_particles_in_elem = 0;
-  particle_t *p;
-
-  /* Get the number of particles in each element for the allocation
-   * next... */
-  for(i = 0; i < static_exo->num_elems; i++)
-    {
-      for(p = element_particle_list_head[i]; p; p = p->next)
-	num_particles_in_elem++;
-      if(backup_element_particle_list_head[i])
-	free(backup_element_particle_list_head[i]);
-      backup_element_particle_list_head[i] = (particle_t *)calloc((unsigned)num_particles_in_elem, sizeof(particle_t));
-      for(p = element_particle_list_head[i]; p; p = p->next)
-	memcpy(&backup_element_particle_list_head[i][--num_particles_in_elem], p, sizeof(particle_t));
-    }
-}
-
-/*
- * Restores a backup made with backup_particles.  Used for redoing a
- * timestep. */
-void
-restore_particles()
-{
-  int i, j, num_particles_in_elem;
-  particle_t *p;
-
-  /* First free all the old particles. */
-  for(i = 0; i < static_exo->num_elems; i++)
-    while((p = element_particle_list_head[i]))
-      {
-	remove_from_element_particle_list(p, i);
-	free(p);
-      }
-
-  /* Now put all the new ones back in. */
-  num_particles = 0;
-  for(i = 0; i < static_exo->num_elems; i++)
-    {
-      num_particles_in_elem = sizeof(backup_element_particle_list_head[i])/sizeof(particle_t);
-      for(j = 0; j < num_particles_in_elem; j++)
-	p = create_a_particle(&backup_element_particle_list_head[i][j], i);
-    }
-}
-
-
 /*
  * This routine is used to test the integrity of the element<->element
  * map.  It pretends to move a particle from the centroid of the

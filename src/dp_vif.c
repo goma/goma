@@ -1576,9 +1576,26 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->FlowingLiquid_viscosity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Inertia_coefficient, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Spwt_func, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->SpSSPG_funcModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->SpSSPG_func, 1, MPI_DOUBLE);
+
       ddd_add_member(n, &mp_glob[i]->Porous_wt_func, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Volume_Expansion, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->current_source, 1, MPI_DOUBLE);
+
+      ddd_add_member(n, &mp_glob[i]->Momentwt_funcModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->Momentwt_func, 1, MPI_DOUBLE);
+
+
+      ddd_add_member(n, &mp_glob[i]->MomentSSPG_funcModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->MomentSSPG_func, 1, MPI_DOUBLE);
+
+      ddd_add_member(n, &mp_glob[i]->MomentSecondLevelSetDiffusivityModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->MomentSecondLevelSetDiffusivity, 1, MPI_DOUBLE);
+
+      ddd_add_member(n, &mp_glob[i]->MomentLevelSetDiffusionOnly, 1, MPI_INT);
+
+
       ddd_add_member(n, &mp_glob[i]->moment_source, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->density, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->electrical_conductivity, 1, MPI_DOUBLE);
@@ -1958,6 +1975,10 @@ noahs_ark()
       ddd_add_member(n, mp_glob[i]->SpecVolExpModel, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->SpeciesSourceModel, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->SpeciesTimeIntegration, MAX_CONC, MPI_INT);
+      ddd_add_member(n, mp_glob[i]->SpeciesOnlyDiffusion, MAX_CONC, MPI_INT);
+
+      ddd_add_member(n, mp_glob[i]->SpeciesSecondLevelSetDiffusivity, MAX_CONC, MPI_DOUBLE);
+
       ddd_add_member(n, mp_glob[i]->FreeVolSolvent, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->VaporPressureModel, MAX_CONC, MPI_INT);
       ddd_add_member(n, mp_glob[i]->AdvectiveScalingModel, MAX_CONC, MPI_INT);

@@ -34,7 +34,6 @@ static char rcsid[] = "$Id: sl_lu.c,v 5.2 2007-12-07 17:14:37 hkmoffa Exp $";
 
 /* #define DUMP_CMSR_MATRIX */
 
-static int call=0;
 
 int first_time = TRUE;
 
@@ -83,6 +82,9 @@ int first_time = TRUE;
     --------------------------------------------------------------------
 */
 #ifdef HAVE_SPARSE
+
+static int call=0;
+
 void
 lu(const int N,
    const int NExt,

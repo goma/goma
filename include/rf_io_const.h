@@ -49,6 +49,11 @@
 #define MAX_CHAR_IN_INPUT	256 /* How many characters in input line? */
 #endif
 
+
+#ifndef MAX_CHAR_ECHO_INPUT
+#define MAX_CHAR_ECHO_INPUT 1024
+#endif
+
 #ifndef MAX_INFO
 #define MAX_INFO	101	/* maximum number of "info" records */
 #endif
