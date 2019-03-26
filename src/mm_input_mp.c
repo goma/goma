@@ -612,6 +612,20 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density );
     }
+  else if (model_read == -1 && !strcmp(model_name, "MOMENT_BASED") )
+    {
+      mat_ptr->DensityModel = DENSITY_MOMENT_BASED;
+      num_const = read_constants(imp, &(mat_ptr->u_density), 0);
+      if (num_const < 2)
+    {
+      sprintf(err_msg,
+          "Material %s - expected at least 2 constants for %s %s model.\n",
+          pd_glob[mn]->MaterialName, "Density", "FOAM_PMDI_10");
+      EH(-1, err_msg);
+    }
+      mat_ptr->len_u_density = num_const;
+      SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density );
+    }
   else if (model_read == -1 && !strcmp(model_name, "FOAM_CONC") )
     {
       mat_ptr->DensityModel = DENSITY_FOAM_CONC;
@@ -8715,6 +8729,24 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  }
 	mat_ptr->len_u_moment_source = num_const;
 	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_moment_source);
+      }
+    if ( !strcmp(model_name, "CONSTANT_GROWTH") )
+      {
+    mat_ptr->MomentSourceModel = MOMENT_CONSTANT_GROWTH;
+    model_read = 1;
+    num_const = read_constants(imp, &(mat_ptr->u_moment_source), NO_SPECIES);
+
+    /* Requires growth rate and coalescence rate constants */
+    if ( num_const < 3 )
+      {
+        sr = sprintf(err_msg,
+             "Matl %s needs 3 constants for %s %s model.\n",
+             pd_glob[mn]->MaterialName,
+             "Moment Source", "CONSTANT_GROWTH");
+        EH(-1, err_msg);
+      }
+    mat_ptr->len_u_moment_source = num_const;
+    SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_moment_source);
       }
     else if ( !strcmp(model_name, "FOAM_PBE") )
       {

@@ -264,6 +264,22 @@ EXTERN double ls_modulate_property
 	 double [MDE],
 	 double * );
 
+double
+ls_modulate_property_offset ( double p1,
+                       double p2,
+                       double width,
+                       double pm_minus,
+                       double pm_plus,
+                       double dpdF[MDE],
+                       double *factor );
+
+EXTERN int level_set_property_offset
+( const double,          /*  p0           */
+        const double,          /*  p1           */
+        const double,          /*  width        */
+        double *,              /* *pp           */
+        double [MDE]);
+
 EXTERN int is_xfem_interp
 ( const int);		/* interp type */
 

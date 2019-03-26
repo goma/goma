@@ -199,6 +199,11 @@ static void calculateVolumeFractionGasPhase(const dbl time) {
 	mp->d_volumeFractionGas[MAX_VARIABLE_TYPES+wCO2] = d_phi_dC;
       }
     }
+  else if (mp->DensityModel == DENSITY_MOMENT_BASED)
+    {
+    mp->volumeFractionGas = (fv->moment[1] / (1 + fv->moment[1]));
+    mp->d_volumeFractionGas[MOMENT1] = 1 / ((1 + fv->moment[1])* (1 + fv->moment[1]));
+    }
 }
 
 /*
@@ -216,6 +221,7 @@ void computeCommonMaterialProps_gp(const dbl time)
       mp->DensityModel == DENSITY_FOAM_CONC ||
       mp->DensityModel == DENSITY_FOAM_TIME ||
       mp->DensityModel == DENSITY_FOAM_TIME_TEMP ||
+          mp->DensityModel == DENSITY_MOMENT_BASED ||
       mp->DensityModel == DENSITY_FOAM_PMDI_10) {
     calculateVolumeFractionGasPhase(time);
   }

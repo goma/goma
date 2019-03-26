@@ -159,6 +159,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define DENSITY_FOAM_PBE 34
 #define DENSITY_FOAM_PBE_EQN 35
 #define DENSITY_FOAM_PMDI_10 20
+#define DENSITY_MOMENT_BASED 21
 /**********************************************************************************/
 
 /*
@@ -255,6 +256,8 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define FOAM_PMDI_10_CO2              43
 #define FOAM_PMDI_10_CO2_LIQ              44
 #define FOAM_PMDI_10_CO2_GAS              45
+
+#define MOMENT_CONSTANT_GROWTH 50
 
 /*
  *  Heat source modeling

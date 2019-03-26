@@ -5982,6 +5982,74 @@ level_set_property(const double p0,
   return(0);
 }
 
+int
+level_set_property_offset(const double p0,
+                   const double p1,
+                   const double width,
+                   double *pp,
+                   double d_pp_dF[MDE])
+{
+  int    var, j;
+  int    do_deriv;
+
+  /* See if we need to bother with derivatives. */
+  do_deriv = d_pp_dF != NULL;
+
+  /* Fetch the level set interfacial functions. */
+  load_lsi_offset(width);
+
+  /* Calculate the material property. */
+  if ( ls->Elem_Sign == -1 ) *pp = p0;
+  else if ( ls->Elem_Sign == 1 ) *pp = p1;
+  else *pp = p0 + (p1 - p0) * lsi->H;
+
+  if ( ls->Elem_Sign != 0 && do_deriv )
+    {
+      var = ls->var;
+      for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
+        {
+          d_pp_dF[j] = 0.;
+        }
+    }
+
+  /* Bail out if we don't need derivatives or if we're not in the mushy zone. */
+  if ( ! do_deriv || ! lsi->near || ls->Elem_Sign != 0 ) return(0);
+
+#ifdef COUPLED_FILL
+  load_lsi_derivs();
+
+  /* Calculate the deriviatives of the material property w.r.t. FILL. */
+  var = ls->var;
+  for ( j=0; j < ei[pg->imtrx]->dof[var]; j++ )
+    {
+      /* Calculate the Jacobian terms. */
+      d_pp_dF[j] = (p1 - p0) * lsi->d_H_dF[j];
+    }
+
+#endif /* COUPLED_FILL */
+
+#if 0
+  /*
+   * NB: H(F) doesn't not (currently) depend on grad_F and hence pp
+   *     does not depend on MESH_DISPLACEMENTs.  I'll leave this here
+   *     just in case....  Hence the 'if 0'
+   */
+
+  if ( ! pd->v[pg->imtrx][MESH_DISPLACEMENT1] ) return(0);
+
+  for ( b=0; b < VIM; b++ )
+    {
+      var = MESH_DISPLACEMENT1 + b;
+      for ( j=0; j < ei[pg->imtrx]->dof[var]; j++)
+        {
+          d_pp_dmesh[b][j] = (p1 - p0) * lsi->d_H_dmesh[b][j];
+        }
+    }
+#endif /* 0 */
+
+  return(0);
+}
+
 /******************************************************************************
  *
  * ls_transport_property() : Almost identical in function to level_set_property.
@@ -6979,6 +7047,159 @@ load_lsi(const double width)
 
 }
 
+int
+load_lsi_offset(const double width)
+{
+  double F = 0, alpha, *grad_F = NULL;
+  int a, b;
+  int i, j, k;
+
+  /* Zero things out. */
+  zero_lsi();
+
+  /* Check if we're in the mushy zone. */
+  lsi->alpha = 0.5 * width;
+  alpha      = lsi->alpha;
+
+  copy_distance_function( &F, &grad_F );
+
+  // add offset
+  F += 2*alpha;
+
+  lsi->near  = ls->on_sharp_surf || fabs(F) < alpha;
+
+
+
+  /* Calculate the interfacial functions we want to know even if not in mushy zone. */
+
+  lsi->gfmag = 0.0;
+  for ( a=0; a < VIM; a++ )
+    {
+      lsi->normal[a] = grad_F[a];
+      lsi->gfmag    += grad_F[a] * grad_F[a];
+    }
+  lsi->gfmag = sqrt( lsi->gfmag );
+  lsi->gfmaginv     = ( lsi->gfmag == 0.0 ) ? 1.0 : 1.0 / lsi->gfmag;
+
+  for ( a=0; a < VIM; a++)
+    {
+      lsi->normal[a] *= lsi->gfmaginv;
+    }
+
+  /* If we're not in the mushy zone: */
+  if ( ls->on_sharp_surf )
+    {
+      /*lsi->H = ( F < 0.0) ? 0.0 : 1.0 ;*/
+      lsi->H = ( ls->Elem_Sign < 0 ) ? 0.0 : 1.0 ;
+      lsi->delta = 1.;
+    }
+  else if ( ! lsi->near )
+    {
+      lsi->H = ( F < 0.0) ? 0.0 : 1.0 ;
+      lsi->delta = 0.;
+    }
+  else
+    {
+      lsi->H     = 0.5 * (1. + F / alpha + sin(M_PIE * F / alpha) / M_PIE);
+      lsi->delta = 0.5 * (1. + cos(M_PIE * F / alpha)) * lsi->gfmag / alpha;
+    }
+
+
+/**** Shield the operations below since they are very expensive relative to the previous
+      operations in the load_lsi routine. Add your variables as needed  ********/
+
+  if (pd->v[pg->imtrx][LUBP]  || pd->v[pg->imtrx][LUBP_2] || pd->v[pg->imtrx][SHELL_SAT_CLOSED] || pd->v[pg->imtrx][SHELL_PRESS_OPEN ] ||
+      pd->v[pg->imtrx][SHELL_PRESS_OPEN_2] || pd->v[pg->imtrx][SHELL_SAT_GASN] )
+    {
+
+      /* Evaluate heaviside using FEM basis functions */
+      double Hni, d_Hni_dF, Fi;
+      int eqn = R_FILL;
+      lsi->Hn = 0.0;
+      memset(lsi->gradHn, 0.0, sizeof(double)*DIM);
+      memset(lsi->d_Hn_dF, 0.0, sizeof(double)*MDE);
+      memset(lsi->d_gradHn_dF, 0.0, sizeof(double)*DIM*MDE);
+      memset(lsi->d_Hn_dmesh, 0.0, sizeof(double)*DIM*MDE);
+      memset(lsi->d_gradHn_dmesh, 0.0, sizeof(double)*DIM*DIM*MDE);
+
+      if(pd->v[pg->imtrx][LUBP] || pd->v[pg->imtrx][SHELL_SAT_CLOSED] || pd->v[pg->imtrx][SHELL_PRESS_OPEN ] || pd->v[pg->imtrx][SHELL_SAT_GASN] )
+        {
+          for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i++ ) {
+            Fi = *esp->F[i];
+            if ( fabs(Fi) > lsi->alpha ) {
+              Hni = ( Fi < 0.0 ) ? 0.0 : 1.0;
+              d_Hni_dF = 0.0;
+            } else {
+              Hni      = 0.5 * (1.0 + Fi/lsi->alpha + sin(M_PIE*Fi/lsi->alpha)/M_PIE);
+              d_Hni_dF = 0.5 * (1/lsi->alpha + cos(M_PIE*Fi/lsi->alpha)/lsi->alpha);
+            }
+            lsi->Hn         += Hni      * bf[eqn]->phi[i];
+            lsi->d_Hn_dF[i] += d_Hni_dF * bf[eqn]->phi[i];
+            if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
+              for ( b = 0; b < DIM; b++ ) {
+                for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
+                  lsi->d_Hn_dmesh[b][k] += Hni * bf[eqn]->phi[i] * bf[MESH_DISPLACEMENT1]->phi[k];
+                }
+              }
+            }
+            for ( j = 0; j < VIM; j++ ) {
+              lsi->gradHn[j]         += Hni      * bf[eqn]->grad_phi[i][j];
+              lsi->d_gradHn_dF[j][i] += d_Hni_dF * bf[eqn]->grad_phi[i][j];
+              if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
+                for ( b = 0; b < DIM; b++ ) {
+                  for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
+                    lsi->d_gradHn_dmesh[j][b][k] += Hni * bf[eqn]->d_grad_phi_dmesh[i][j][b][k];
+                  }
+                }
+              }
+            }
+          }
+        }
+      else if (pd->v[pg->imtrx][LUBP_2] || pd->v[pg->imtrx][SHELL_PRESS_OPEN_2])
+        {
+          eqn = R_PHASE1;
+          for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i++ ) {
+            Fi = *esp->pF[0][i];
+            if ( fabs(Fi) > lsi->alpha ) {
+              Hni = ( Fi < 0.0 ) ? 0.0 : 1.0;
+              d_Hni_dF = 0.0;
+            } else {
+              Hni      = 0.5 * (1.0 + Fi/lsi->alpha + sin(M_PIE*Fi/lsi->alpha)/M_PIE);
+              d_Hni_dF = 0.5 * (1/lsi->alpha + cos(M_PIE*Fi/lsi->alpha)/lsi->alpha);
+            }
+            lsi->Hn         += Hni      * bf[eqn]->phi[i];
+            lsi->d_Hn_dF[i] += d_Hni_dF * bf[eqn]->phi[i];
+            if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
+              for ( b = 0; b < DIM; b++ ) {
+                for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
+                  lsi->d_Hn_dmesh[b][k] += Hni * bf[eqn]->phi[i] * bf[MESH_DISPLACEMENT1]->phi[k];
+                }
+              }
+            }
+            for ( j = 0; j < VIM; j++ ) {
+              lsi->gradHn[j]         += Hni      * bf[eqn]->grad_phi[i][j];
+              lsi->d_gradHn_dF[j][i] += d_Hni_dF * bf[eqn]->grad_phi[i][j];
+              if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
+                for ( b = 0; b < DIM; b++ ) {
+                  for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
+                    lsi->d_gradHn_dmesh[j][b][k] += Hni * bf[eqn]->d_grad_phi_dmesh[i][j][b][k];
+                  }
+                }
+              }
+            }
+          }
+        }
+
+    } /* end of if pd->v[pg->imtrx][LUBP] || ... etc */
+
+/************ End of shielding **************************/
+
+  lsi->delta_max = lsi->gfmag/alpha;
+
+  return(0);
+
+}
+
 /******************************************************************************
  * load_lsi_shell_second: Special case of load_lsi forced to be written to circumvent
  * the shell-shell-friend situation encountered in multilayer shell stacks.  The 
@@ -7408,6 +7629,31 @@ ls_modulate_property ( double p1,
   level_set_property( p_minus, p_plus, width, &p, dpdF );
 
   
+  if ( ls->Elem_Sign == -1 ) *factor = pm_plus;
+  else if ( ls->Elem_Sign == 1 ) *factor = pm_minus;
+  else *factor = pm_plus*(1.0 - lsi->H) + pm_minus*lsi->H;
+
+  return( p );
+}
+
+
+double
+ls_modulate_property_offset ( double p1,
+                       double p2,
+                       double width,
+                       double pm_minus,
+                       double pm_plus,
+                       double dpdF[MDE],
+                       double *factor )
+{
+  double p_plus,p_minus, p;
+
+  p_minus = p1 * pm_plus + p2*pm_minus;
+  p_plus  = p1 * pm_minus + p2*pm_plus;
+
+  level_set_property_offset( p_minus, p_plus, width, &p, dpdF );
+
+
   if ( ls->Elem_Sign == -1 ) *factor = pm_plus;
   else if ( ls->Elem_Sign == 1 ) *factor = pm_minus;
   else *factor = pm_plus*(1.0 - lsi->H) + pm_minus*lsi->H;

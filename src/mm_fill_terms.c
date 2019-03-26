@@ -5055,6 +5055,7 @@ assemble_continuity(dbl time_value,   /* current time */
                        mp->DensityModel == DENSITY_FOAM_CONC || 
                        mp->DensityModel == DENSITY_FOAM_TIME ||
                        mp->DensityModel == DENSITY_FOAM_TIME_TEMP ||
+                       mp->DensityModel == DENSITY_MOMENT_BASED ||
 		       mp->DensityModel == DENSITY_FOAM_PMDI_10)
                     {
                       /* These density models locally permit a time and spatially varying
@@ -14620,6 +14621,52 @@ density(DENSITY_DEPENDENCE_STRUCT *d_rho, double time)
 	}
 
     }
+
+  else if (mp->DensityModel == DENSITY_MOMENT_BASED)
+  {
+      int var, j;
+      int w;
+      double volF = mp->volumeFractionGas;
+
+      double rho_gas = mp->u_density[0];
+      double rho_liq = mp->u_density[1];
+
+      rho = rho_gas * volF + rho_liq * (1 - volF);
+
+      /* Now do sensitivies */
+
+      var = MASS_FRACTION;
+      if (vol > 0. && d_rho != NULL )
+      {
+          if (pd->v[pg->imtrx][var] )
+          {
+              for (w = 0; w < pd->Num_Species; w++) {
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                  {
+                      d_rho->C[w][j] = 0;
+                  }
+              }
+          }
+      }
+
+      var = TEMPERATURE;
+      if(d_rho != NULL )
+      {
+          if (pd->v[pg->imtrx][var] )
+          {
+              for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+              {
+                  if (fv->T > 0) {
+                      d_rho->T[j] = 0;
+                  } else {
+                      d_rho->T[j] = 0;
+                  }
+
+              }
+          }
+      }
+
+  }
   else if (mp->DensityModel == SUSPENSION) {
     species = (int) mp->u_density[0];
     rho_f   = mp->u_density[1];
@@ -16629,7 +16676,8 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
                 mp->DensityModel == DENSITY_FOAM_PBE ||
                 mp->DensityModel == DENSITY_FOAM ||
 		mp->DensityModel == DENSITY_FOAM_TIME ||
-		mp->DensityModel == DENSITY_FOAM_TIME_TEMP)
+        mp->DensityModel == DENSITY_FOAM_TIME_TEMP ||
+                mp->DensityModel == DENSITY_MOMENT_BASED)
 	{
 	  DENSITY_DEPENDENCE_STRUCT d_rho_struct;  /* density dependence */
 	  DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
@@ -19113,6 +19161,123 @@ double FoamVolumeSource(double time,
 
       }
     }
+  else if (mp->DensityModel == DENSITY_MOMENT_BASED)
+  {
+      if (pd->gv[MOMENT1]) {
+          DENSITY_DEPENDENCE_STRUCT d_rho_struct;
+          DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+
+          rho = density(d_rho, time);
+
+          double rho_gas = mp->u_density[0];
+          double rho_liq = mp->u_density[1];
+
+          double nu = 0;
+
+          double nu_dot = 0;
+
+          double grad_nu[DIM];
+
+          nu = fv->moment[1];
+
+          nu_dot = fv_dot->moment[1];
+          for (a = 0; a < dim; a++) {
+              grad_nu[a] = fv->grad_moment[1][a];
+          }
+
+          double inv1 = 1 / ( 1+ nu);
+          double inv2 = inv1*inv1;
+
+
+          //double volF = nu * inv1;
+          //double d_volF_dC = (d_nu_dC) * inv2;
+          //double d_volF_dT = (d_nu_dT) * inv2;
+
+          double volF_dot = (nu_dot) * inv2;
+
+          double grad_volF[DIM];
+          for (a = 0; a < dim; a++) {
+              grad_volF[a] =  (grad_nu[a]) * inv2;
+          }
+
+          //double rho = rho_gas * volF + rho_liq * (1 - volF);
+          double rho_dot = rho_gas * volF_dot - rho_liq * volF_dot;
+
+          double grad_rho[DIM];
+          double d_grad_rho_dT[DIM][MDE];
+
+          for (a = 0; a < dim; a++) {
+              grad_rho[a] = rho_gas * grad_volF[a] + rho_liq * (grad_volF[a]);
+              if (af->Assemble_Jacobian) {
+                  var = TEMPERATURE;
+                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                      if (fv->T > 0) {
+                          d_grad_rho_dT[a][j] += -(rho_gas/fv->T)*bf[var]->phi[j]*grad_volF[a];
+                      }
+                  }
+              }
+          }
+
+          double inv_rho = 1/rho;
+
+          source = rho_dot;
+          for (a = 0; a < dim; a++) {
+              source += fv->v[a] * grad_rho[a];
+          }
+          source *= inv_rho;
+
+          if (af->Assemble_Jacobian)
+          {
+              var = TEMPERATURE;
+              if(pd->v[pg->imtrx][var] )
+              {
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                  {
+                      source_a = 0;
+                      source_b = 0;
+                      for (a = 0; a < dim; a++) {
+                          source_b += fv->v[a] * d_grad_rho_dT[a][j];
+                      }
+                      source_c = inv_rho*d_rho->T[j] * source;
+
+                      dFVS_dT[j] = inv_rho * (source_a + source_b) + source_c;
+                  }
+              }
+
+              var = VELOCITY1;
+              if(pd->v[pg->imtrx][var] )
+              {
+                  for( a=0; a<dim; a++)
+                  {
+                      var = VELOCITY1+a;
+                      for( j=0; pd->v[pg->imtrx][var] && j<ei[pg->imtrx]->dof[var]; j++)
+                      {
+                          dFVS_dv[a][j] = inv_rho * (bf[var]->phi[j] * grad_rho[a]);
+                      }
+                  }
+              }
+
+              var = MASS_FRACTION;
+              if(pd->v[pg->imtrx][var])
+              {
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                  {
+                      dFVS_dC[0][j] = 0;
+                  }
+              }
+              var = FILL;
+              if(pd->v[pg->imtrx][var])
+              {
+                  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                  {
+                      source_c = inv_rho*d_rho->F[j] * source;
+
+                      dFVS_dF[j] = source_c;
+                  }
+              }
+          }
+      }
+  }
 
 
 
@@ -31389,14 +31554,14 @@ calc_pspg( dbl pspg[DIM],
 	  }
 	  
       source = 0.;
-      if ( pd->e[pg->imtrx][meqn] & LOG2_SOURCE )
+      if ( pd->e[pg->imtrx][meqn] & T_SOURCE )
 	  {
 		  source = -f[a];
 		  source *= pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
 	  }
 	  
       porous = 0.;
-      if ( pd->e[pg->imtrx][meqn] & LOG2_POROUS_BRINK )
+      if ( pd->e[pg->imtrx][meqn] & T_POROUS_BRINK )
 	  {
 		  porous = v[a]*(rho_t*sc*speed/sqrt(per)+vis/per);
 		  porous *= pd->etm[pg->imtrx][meqn][(LOG2_POROUS_BRINK)];

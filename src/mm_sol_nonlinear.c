@@ -2319,7 +2319,7 @@ EH(-1,"version not compiled with frontal solver");
       
       *converged = ((Norm[0][2] < Epsilon[pg->imtrx][0] && Norm[2][2] < Epsilon[pg->imtrx][0]) &&
 		    ((Norm_r[0][2] + Norm_r[1][2]) < Epsilon[pg->imtrx][2]) &&
-		    (continuation_converged));
+                    (continuation_converged));
 
       /********************************************************************
        *

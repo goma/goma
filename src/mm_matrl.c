@@ -604,6 +604,45 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 	}
 
     }
+  else if (matrl->DensityModel == DENSITY_MOMENT_BASED)
+  {
+      int var;
+      int w;
+      double volF = matrl->volumeFractionGas;
+
+      double rho_gas = matrl->u_density[0];
+      double rho_liq = matrl->u_density[1];
+
+      rho = rho_gas * volF + rho_liq * (1 - volF);
+
+      /* Now do sensitivies */
+
+      var = MASS_FRACTION;
+      if (volF > 0. && doJac)
+      {
+          if (pd->v[pg->imtrx][var] )
+          {
+              for (w = 0; w < pd->Num_Species; w++) {
+                  double drhodC = 0;
+                  propertyJac_addEnd(densityJac, MASS_FRACTION,
+                                     matID, w, drhodC, rho);
+              }
+          }
+      }
+
+      var = TEMPERATURE;
+      if(volF > 0. && doJac)
+      {
+          if (pd->v[pg->imtrx][var] )
+          {
+              double drhoDT;
+              drhoDT = 0;
+              propertyJac_addEnd(densityJac, TEMPERATURE, matID, 0,
+                                 drhoDT, rho);
+          }
+      }
+
+  }
   else if (matrl->DensityModel == LEVEL_SET)
     {
     double *param = matrl->u_density;
