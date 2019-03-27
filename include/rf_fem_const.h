@@ -53,6 +53,7 @@
 				 * for now.  This is 2D mesh, but 3D
 				 * velocities, in normal Cartesian
 				 * coordinates.  Lucky number 7! */
+#define CARTESIAN_2pt5D     8
 
 /* Integration mapping parameters */
 #define ISOPARAMETRIC	1

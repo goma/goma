@@ -113,6 +113,12 @@ setup_pd()
 	EH(-1, "Achtung!  You cannot combine the PROJECTED_CARTESIAN coordinate system with a 3D mesh.");
       VIM = 3;
     }
+  else if(CoordinateSystem == CARTESIAN_2pt5D)
+    {
+      if(pd_glob[0]->Num_Dim == 3)
+	EH(-1, "Whoa!  3D mesh for 2-1/2D Calculation.");
+      VIM = 3;
+    }
   else
     {
       VIM = Num_Dim;

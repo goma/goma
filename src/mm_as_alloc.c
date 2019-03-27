@@ -984,10 +984,12 @@ assembly_alloc(Exo_DB *exo)
   wim = dim;
   if(pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
      pd_glob[0]->CoordinateSystem == SWIRLING ||
+     pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D ||
      pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN)
     vim = vim + 1;
   if(pd_glob[0]->CoordinateSystem == SWIRLING ||
-     pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim + 1;
 
   /*

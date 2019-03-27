@@ -7642,6 +7642,10 @@ rd_eq_specs(FILE *ifp,
     {
       CoordinateSystem = PROJECTED_CARTESIAN;
     }
+  else if ( !strcasecmp(tscs, "CARTESIAN_2pt5D") )
+    {
+      CoordinateSystem = CARTESIAN_2pt5D;
+    }
   else
     {
       EH(-1,"Unknown coordinate system.\n");
@@ -9186,7 +9190,8 @@ rd_eq_specs(FILE *ifp,
 
       /* add a little consistency check for any 3D or cylindrical problems */
       if ((pd_ptr->CoordinateSystem != CARTESIAN &&
-	   pd_ptr->CoordinateSystem != PROJECTED_CARTESIAN))
+	   pd_ptr->CoordinateSystem != PROJECTED_CARTESIAN &&
+	   pd_ptr->CoordinateSystem != CARTESIAN_2pt5D))
 	{
 	  //  EH(-1,"Shell capability only avaible for 2D Cartesian systems");
           printf("WARNING: Shell Capability is experimental for non 2D Cartesian systems\n");

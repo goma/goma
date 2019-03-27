@@ -2940,7 +2940,9 @@ apply_surface_viscosity(double cfunc[MDE][DIM],
   }
   // Calculate the number of velocity dimensions
   int wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN) 
+  if (pd->CoordinateSystem == SWIRLING || 
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D) 
     {
       wim = 3;
     }
@@ -4407,7 +4409,9 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 
   // Calculate the number of velocity dimensions
   wim   = dim;
-  if (pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN) 
+  if (pd->CoordinateSystem == SWIRLING || 
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D) 
     {
       wim = 3;
     }
