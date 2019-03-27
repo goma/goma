@@ -31435,14 +31435,14 @@ calc_pspg( dbl pspg[DIM],
 	  }
 	  
       source = 0.;
-      if ( pd->e[meqn] & LOG2_SOURCE )
+      if ( pd->e[meqn] & T_SOURCE )
 	  {
 		  source = -f[a];
 		  source *= pd->etm[meqn][(LOG2_SOURCE)];
 	  }
 	  
       porous = 0.;
-      if ( pd->e[meqn] & LOG2_POROUS_BRINK )
+      if ( pd->e[meqn] & T_POROUS_BRINK )
 	  {
 		  porous = v[a]*(rho_t*sc*speed/sqrt(per)+vis/per);
 		  porous *= pd->etm[meqn][(LOG2_POROUS_BRINK)];
