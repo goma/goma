@@ -239,7 +239,8 @@ initialize_particles(const Exo_DB * exo,
   /* Get the appropriate dimension for the coordinate, velocity loops... */
   pdim = pd_glob[0]->Num_Dim;
   if(pd_glob[0]->CoordinateSystem == SWIRLING ||
-     pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D)
     pdim = pdim + 1;
   
   /* Get mesh dimension */

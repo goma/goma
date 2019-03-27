@@ -6123,7 +6123,8 @@ assemble_phase_function ( double time_value,
   wim = dim;
 
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   wt = fv->wt;

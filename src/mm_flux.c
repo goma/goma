@@ -265,7 +265,8 @@ evaluate_flux(
   dim   = pd_glob[0]->Num_Dim;
   WIM = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     WIM = WIM+1;
 
   /* load eqn and variable number in tensor form */
@@ -1351,7 +1352,8 @@ evaluate_flux(
  		      break;
 
 		    case TORQUE:
-		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN)
+		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+		         pd->CoordinateSystem == CARTESIAN_2pt5D)
 			EH(-1, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
 		      if(pd->CoordinateSystem == SWIRLING || 
@@ -1962,7 +1964,8 @@ evaluate_flux(
                       memset( Mag_imag,0, sizeof(double)*DIM);
                       memset( E_real,0, sizeof(double)*DIM);
                       memset( E_imag,0, sizeof(double)*DIM);
-		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN)
+		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+		         pd->CoordinateSystem == CARTESIAN_2pt5D)
 			EH(-1, "POYNTING has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
 		      if(pd->CoordinateSystem == SWIRLING || 
@@ -4903,7 +4906,8 @@ compute_volume_integrand(const int quantity, const int elem,
 
   WIM = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     WIM = WIM+1;
 
   switch ( quantity )
@@ -6314,7 +6318,8 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   dim   = pd_glob[0]->Num_Dim;
   WIM = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     WIM = WIM+1;
   /* load eqn and variable number in tensor form */
   err = stress_eqn_pointer(v_s);
@@ -7053,7 +7058,8 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                 break;
 
 	      case TORQUE:
-		if(pd->CoordinateSystem == PROJECTED_CARTESIAN)
+		if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+		   pd->CoordinateSystem == CARTESIAN_2pt5D)
 		  EH(-1, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
 		if(pd->CoordinateSystem == SWIRLING || 
@@ -8436,7 +8442,8 @@ load_fv_sens(void)
   
   velodim = dim;		/* Later, this might include v_theta... */
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     velodim = dim + 1;		/* Later is Now!  Woo!!! */
 
   /*
@@ -8849,7 +8856,8 @@ load_fv_grads_sens(void)
   status = 0;
   WIM = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     WIM = WIM+1;
 
   /*

@@ -2240,7 +2240,8 @@ load_bf_mesh_derivs(void)
       pd->CoordinateSystem == CYLINDRICAL ||
       pd->CoordinateSystem == PROJECTED_CARTESIAN) {
     wim = dim;
-  } else if (pd->CoordinateSystem == SWIRLING) {
+  } else if (pd->CoordinateSystem == SWIRLING ||
+             pd->CoordinateSystem == CARTESIAN_2pt5D) {
     wim = 3;
   } else {
     /* MMH: What makes it here??? */

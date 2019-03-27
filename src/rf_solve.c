@@ -896,6 +896,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       /*
        *  Determine if we should use this time as the initial time in the simulation
        */
+#ifndef ALLOW_NEGATIVE_TIMES_PLEASE
       if (TimeIntegration != STEADY)
 	{
 	  if (tran->init_time < 0.0)  
@@ -904,6 +905,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	      DPRINTF(stdout, "\n Initial Simulation Time Has been set to %g\n", timeValueRead);
 	    }
 	}
+#endif
     }
 
   if(Conformation_Flag == 1) // If mapping is needed for log-conformation tensor
@@ -3078,7 +3080,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       else /* not converged or unsuccessful time step */
       {
         if(relax_bit && ((n-nt) < no_relax_retry)  ) {
-	     success_dt = TRUE;
+	      /*success_dt = TRUE;  */
              if(inewton == -1)        {
  	DPRINTF(stderr,"\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
                   if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
@@ -3095,7 +3097,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
                          damp_factor1 *= 0.5;
                          DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
                       }
-                  }   else  {
+                  }   else if(!converged)  {
         DPRINTF(stderr,"\nHmm... could not converge on first step\n Let's try some more iterations\n");
                     dcopy1(numProcUnknowns, x,x_old);
                     if (nAC > 0) { dcopy1(nAC, x_AC,       x_AC_old); }
@@ -3114,7 +3116,25 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
                           damp_factor1 = MIN(damp_factor1,1.0);
                           DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
                        }
-                   }
+                   }   else {
+fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_dt);
+	DPRINTF(stderr,"\n\tlast time step failed, dt *= %g for next try!\n",
+		tran->time_step_decelerator);
+	      
+	delta_t *= tran->time_step_decelerator;
+	tran->delta_t  = delta_t;
+	tran->delta_t_avg = 0.25*(delta_t+delta_t_old+delta_t_older
+					+delta_t_oldest);
+	time1 = time + delta_t;
+        tran->time_value = time1;
+	evpl_glob[0]->update_flag = 2;
+	af->Sat_hyst_reevaluate = 0;
+
+        /* if specified with "Steps of constant delta_t after failure"
+           use a constant delta_t to help the painful recovery
+         */
+        failed_recently_countdown = tran->const_dt_after_failure;
+			}
            } else if(converged && delta_t < tran->resolved_delta_t_min/tran->time_step_decelerator)
                    {
 	DPRINTF(stderr,"\n\tminimum resolved step limit! - not converged\n");
