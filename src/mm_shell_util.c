@@ -573,16 +573,16 @@ init_shell_element_blocks(const Exo_DB *exo)
 	    pd->i[MESH_DISPLACEMENT3] = PDParent->i[MESH_DISPLACEMENT3];
 	  }
 	}
-	
+
       }
     }
 
   safe_free(mnList);
   safe_free(eb_Used);
   safe_free(eb_ProcessingOrder);
-  
+
   return;
-  
+
 } /* init_shell_element_blocks() */
 
 /******************************************************************************
@@ -592,9 +592,10 @@ int
 is_shell_element_type(const int elem_itype)
 {
   /* These two element types apply to 2D problems and now 3D problems */
-  return (elem_itype == LINEAR_BAR || elem_itype == QUAD_BAR 
+  return (elem_itype == LINEAR_BAR || elem_itype == QUAD_BAR
 	  || elem_itype == BILINEAR_SHELL || elem_itype == BIQUAD_SHELL
-	  || elem_itype == BILINEAR_TRISHELL );
+          || elem_itype == BILINEAR_TRISHELL
+          || elem_itype == P0_SHELL || elem_itype == P1_SHELL );
 }
 
 /******************************************************************************
@@ -625,7 +626,7 @@ is_shell_block(const int block_id, const Exo_DB *exo)
       fprintf(stderr,"While looking for block_id %d\n",block_id);
       EH(-1, "Invalid block id");
     }
-	
+
   return is_shell_element_type(exo->eb_elem_itype[eb_index]);
 }
 
@@ -692,7 +693,7 @@ find_stu_from_xyz(const int elem, const double xg[DIM],
   const double nm_tol = 1.0e-6;
   const int max_iter  = 5;
   const int el1 = ei->ielem;
-  
+
   dim = ei->ielem_dim;
 
   DSPRINTF("\t        dim = %d\n",dim);
@@ -764,12 +765,12 @@ find_stu_from_xyz(const int elem, const double xg[DIM],
 	  for(k = 0; k < pd->Num_Dim; k++)
 	    J[j][k] = dxstu[j][k];
 	}
-      
+
       DSPRINTF("R = \n\t[");
       for (j = 0; j < pd->Num_Dim; j++) DSPRINTF(" %g ",R[j]);
       DSPRINTF("]\n");
-	
-      
+
+
       DSPRINTF("J = \n");
       for (j = 0; j < pd->Num_Dim; j++)
 	{
@@ -778,7 +779,7 @@ find_stu_from_xyz(const int elem, const double xg[DIM],
 	    DSPRINTF(" %g ",J[j][k]);
 	  DSPRINTF("]\n");
 	}
-      
+
       DSPRINTF("\t\tsolve for dxi\n");
       /* Solve for dxi */
       if (pd->Num_Dim == 2)
@@ -806,7 +807,7 @@ find_stu_from_xyz(const int elem, const double xg[DIM],
       DSPRINTF("\t\tcheck convergence\n");
       /* Check for convergence */
       if (dnorm < nm_tol && rnorm < nm_tol) break;
-	 
+
     }
   /* Bottom of search iteration loop */
 
@@ -819,7 +820,7 @@ find_stu_from_xyz(const int elem, const double xg[DIM],
 
   /* Check for a sensible solution */
   sane = 1;
-  for (i = 0; i < dim; i++) 
+  for (i = 0; i < dim; i++)
     {
       if (xi[i] < -1.0 || xi[i] > 1.0) sane = 0;
     }
@@ -832,7 +833,7 @@ find_stu_from_xyz(const int elem, const double xg[DIM],
   else
     return 1;
 }
-		  
+
 /*
  * solve_2x2 - analytical solution of a system of two equations
  * NOTE: The matrix/vectors have dimension DIM
@@ -844,7 +845,7 @@ solve_2x2(double a[DIM][DIM], double b[DIM], double x[DIM])
 
   det  = a[0][0]*a[1][1] - a[0][1]*a[1][0];
   if(fabs(det) < 1.0e-12) return -1;
-  
+
   deti = 1.0 / det;
 
   x[0] = deti * ( a[1][1] * b[0] - a[0][1] * b[1] );
@@ -866,9 +867,9 @@ solve_3x3(double a[DIM][DIM], double b[DIM], double x[DIM])
     + a[0][0] * ( a[1][1]*a[2][2] - a[1][2]*a[2][1])
     - a[0][1] * ( a[1][0]*a[2][2] - a[1][2]*a[2][0])
     + a[0][2] * ( a[1][0]*a[2][1] - a[1][1]*a[2][0]);
-  
+
   if(fabs(det) < 1.0e-12) return -1;
-  
+
   deti = 1.0 / det;
 
   /*
@@ -876,7 +877,7 @@ solve_3x3(double a[DIM][DIM], double b[DIM], double x[DIM])
    * divided by the determinant.
    */
 
-  x[0] = 
+  x[0] =
     +(a[1][1]*a[2][2] - a[1][2]*a[2][1]) * b[0]
     -(a[0][1]*a[2][2] - a[0][2]*a[2][1]) * b[1]
     +(a[0][1]*a[1][2] - a[0][2]*a[1][1]) * b[2] ;
@@ -885,12 +886,12 @@ solve_3x3(double a[DIM][DIM], double b[DIM], double x[DIM])
     -(a[1][0]*a[2][2] - a[1][2]*a[2][0]) * b[0]
     +(a[0][0]*a[2][2] - a[0][2]*a[2][0]) * b[1]
     -(a[0][0]*a[1][2] - a[0][2]*a[1][0]) * b[2];
-  
+
   x[2] =
     +(a[1][0]*a[2][1] - a[1][1]*a[2][0]) * b[0]
     -(a[0][0]*a[2][1] - a[0][1]*a[2][0]) * b[1]
     +(a[0][0]*a[1][1] - a[0][1]*a[1][0]) * b[2];
-  
+
   x[0] *= deti;
   x[1] *= deti;
   x[2] *= deti;
@@ -912,7 +913,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
       *      return    side id of the bulk element
       *
       * PRS: as of 11-30-2011 I certify to the best of my ability that this routine
-      * is now correct.     Famous last words.  See me if you want to have my model to 
+      * is now correct.     Famous last words.  See me if you want to have my model to
       * check it yourself.
       */
 {
