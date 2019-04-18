@@ -3028,7 +3028,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
  				     NULL, x, xdot, delta_t_old, time, 1);
  	  }
 
-#if 1
+#if 0
         for (i = 0; i < exo->num_nodes; i++) {
   if (efv->ev  && nt > 1 ) {
     int ef;
