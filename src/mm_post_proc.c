@@ -2647,7 +2647,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   eqn = pd->ProjectionVar;  
   det_J = bf[eqn]->detJ;
 
-  if ( ielem_type == BILINEAR_SHELL || ielem_type == BIQUAD_SHELL || ielem_type == BILINEAR_TRISHELL ) {
+  if ( ielem_type == BILINEAR_SHELL || ielem_type == BIQUAD_SHELL || ielem_type == BILINEAR_TRISHELL ||
+       ielem_type == P0_SHELL || ielem_type == P1_SHELL) {
     int *n_dof = NULL;
     int dof_map[MDE];
     n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
