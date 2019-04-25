@@ -15134,7 +15134,7 @@ assemble_shell_mesh(double time,   /* Time */
   double dP_load_dmesh[DIM][MDE], dP_load_dnormal[DIM][MDE];
   double dPcap_dh;
   double dPcap_dS[MDE];
-  double dProll_dx[MDE];
+
   if (pd->e[R_TFMP_MASS]) {
     memset (dh_dmesh, 0.0, sizeof(double)*DIM*MDE);
     memset (dh_dnormal, 0.0, sizeof(double)*DIM*MDE);
