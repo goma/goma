@@ -623,7 +623,55 @@ elem_info(const int info,
     }
     break;
 
-     
+  case P1_SHELL:                  /* linear discontinuous on shell */
+    switch( info ){               /* select type of information required */
+    case NNODES:                  /* number of nodes */
+      answer = 3;
+      break;
+    case NQUAD:                   /* number of quadrature points */
+      answer = 4;
+      break;
+    case NDIM:                    /* number of physical dimensions */
+      answer = 2;
+      break;
+    case NQUAD_SURF:            /* number of surface quad points */
+      answer = 1;
+      break;
+    case NQUAD_EDGE:            /* number of edge quad points */
+      answer = 1;
+      break;
+    default:
+      fprintf(stderr, "Unknown quantity\n");
+      answer = -1;
+      break;
+    }
+    break;
+
+  case P0_SHELL:                   /* constant discontinuous on shell */
+    switch( info ){               /* select type of information required */
+    case NNODES:                  /* number of nodes */
+      answer = 1;
+      break;
+    case NQUAD:                   /* number of quadrature points */
+      answer = 1;
+      break;
+    case NDIM:                    /* number of physical dimensions */
+      answer = 2;
+      break;
+    case NQUAD_SURF:            /* number of surface quad points */
+      answer = 1;
+      break;
+    case NQUAD_EDGE:            /* number of edge quad points */
+      answer = 1;
+      break;
+    default:
+      fprintf(stderr, "Unknown quantity\n");
+      answer = -1;
+      break;
+    }
+    break;
+
+
   default:
     fprintf(stderr, "Element itype = %d\n", ielem_type);
     fprintf(stderr, "Unknown or unimplemented element type.\n");
@@ -1654,7 +1702,7 @@ type2shape(const int element_type)
     shape = QUADRILATERAL;
     break;
   case TRILINEAR_HEX:
-  case C_TRILINEAR_HEX:                 
+  case C_TRILINEAR_HEX:
   case S_TRIQUAD_HEX:
   case TRIQUAD_HEX:
   case P0_HEX:
@@ -1667,6 +1715,8 @@ type2shape(const int element_type)
     break;
   case BILINEAR_SHELL:
   case BIQUAD_SHELL:
+  case P1_SHELL:
+  case P0_SHELL:
     shape = SHELL;
     break;
   case BILINEAR_TRISHELL:
@@ -2134,7 +2184,7 @@ find_stu(const int   iquad,     /* current GQ index  */
   // static double one_third = 3.333333333333333e-01;
   static double one_half  = 0.5;
   static double one_sixth = 1.666666666666667e-01;
-  
+
   switch( ielem_type ){                 /* select element */
 
   case LINEAR_TRI:                   /* linear triangle */
@@ -2203,8 +2253,9 @@ find_stu(const int   iquad,     /* current GQ index  */
     }
     */
     break;
-    
+
   case P0_QUAD:                         /* constant discontinuous on quadrilateral */
+  case P0_SHELL:                        /* constant discontinuous on shell */
   case P0_HEX:                          /* constant discontinuous on hexahedron */
     *s = 0.0;
     *t = 0.0;
@@ -2214,6 +2265,7 @@ find_stu(const int   iquad,     /* current GQ index  */
   case BILINEAR_QUAD:                   /* bilinear quadrilateral */
   case C_BILINEAR_QUAD:              /* bilinear quadrilateral with additional centroid node */
   case P1_QUAD:                         /* linear discontinuous on quadrilateral */
+  case P1_SHELL:                        /* linear discontinuous on shell */
     *s = (iquad%2 == 0) ? Ftemp1 : -Ftemp1;
     *t = (iquad < 2)    ? Ftemp1 : -Ftemp1;
     *u = 0.0;
@@ -2239,7 +2291,7 @@ find_stu(const int   iquad,     /* current GQ index  */
     break;
 
  /* biquadratic quadrilateral for level set */
-  case   BIQUAD_QUAD_LS:                    
+  case   BIQUAD_QUAD_LS:
     if (iquad%5 == 0)
       *s = quad5_1;
     else if ( (iquad-1)%5 == 0)
@@ -2605,7 +2657,9 @@ find_surf_st(const int iquad,           /* current GQ index */
   switch( ielem_type ){                 /* select element */
 
   case P0_QUAD:                         /*constant discontinuous quadrilateral */
+  case P0_SHELL:                        /*constant discontinuous shell */
   case P1_QUAD:                         /*linear discontinuous quadrilateral */
+  case P1_SHELL:                        /*linear discontinuous shell */
     switch( iquad ){
         case 0: xi[i_s] = *s =  0.; break;
     }
@@ -3606,9 +3660,11 @@ Gq_weight(const int iquad,               /* current GQ index */
     else
       weight = tri8/2.0;
     break;
-    
+
   case P0_QUAD:                         /* constant discontinuous on quadrilateral */
+  case P0_SHELL:                        /* constant discontinuous on shell */
   case P1_QUAD:                         /* linear discontinuous on quadrilateral */
+  case P1_SHELL:                        /* linear discontinuous on shell */
   case P0_HEX:                          /* constant discontinuous on hexahedron */
   case BILINEAR_QUAD:                   /* bilinear quadrilateral */
   case BILINEAR_SHELL:                  /* Bilinear shell */
@@ -3619,7 +3675,7 @@ Gq_weight(const int iquad,               /* current GQ index */
   case S_BIQUAD_QUAD:                   /* biquadratic serendipity quadrilateral */
   case   BIQUAD_QUAD:                   /* biquadratic quadrilateral */
   case   BIQUAD_SHELL:                  /* biquadratic shell */
- 
+
     if (iquad%3 == 0)
       weight_s = ftemp1;
     else if ( (iquad-1)%3 == 0)
@@ -3775,10 +3831,12 @@ Gq_surf_weight(const int iquad,               /* current GQ index  */
         case 4: weight = 0.5*quad5_1;  break;
     }
     break;
-            
+
   case P0_QUAD:                         /* constant discontinuous on quadrilateral */
+  case P0_SHELL:                        /* constant discontinuous on shell */
   case P0_HEX:                          /* constant discontinuous on hexahedron */
   case P1_QUAD:                         /* linear discontinuous on quadrilateral */
+  case P1_SHELL:                        /* linear discontinuous on shell */
   case P1_HEX:                          /* linear discontinuous on hexahedron */
   case BILINEAR_QUAD:                   /* bilinear quadrilateral */
   case C_BILINEAR_QUAD:                 /* bilinear quadrilateral with additional centroid node */
@@ -4171,7 +4229,9 @@ load_surf_st( int ielem_type,
     {
       /* all the quadrilateral elements */
     case P0_QUAD:
+    case P0_SHELL:
     case P1_QUAD:
+    case P1_SHELL:
     case BILINEAR_QUAD:
     case C_BILINEAR_QUAD:
     case S_BIQUAD_QUAD:

@@ -7991,7 +7991,8 @@ PSPG_consistency_bc (double *func,
   wim   = dim;
 
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
     /* This is the flag for the standard global PSPG */
@@ -10044,7 +10045,9 @@ fapply_ST(
 
 	     if(pd->CoordinateSystem == CYLINDRICAL ||
                 pd->CoordinateSystem == SWIRLING ||
-		pd->CoordinateSystem == PROJECTED_CARTESIAN) {
+		pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+		pd->CoordinateSystem == CARTESIAN_2pt5D) 
+              {
 	       var = MESH_DISPLACEMENT2;
 	       if (pd->v[var])
 		 {

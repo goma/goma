@@ -1418,6 +1418,7 @@ load_elem_dofptr(const int ielem,
   }
   else if ((pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
             pd_glob[0]->CoordinateSystem == SWIRLING ||
+            pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D ||
 	    pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) && upd->ep[R_MESH1] >= 0) {
     dofs = ei->dof[R_MESH1];
     for (i = 0; i < dofs; i++) {
@@ -1476,6 +1477,7 @@ load_elem_dofptr(const int ielem,
   }
   else if((pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
            pd_glob[0]->CoordinateSystem == SWIRLING ||
+           pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D ||
 	   pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) && upd->ep[R_SOLID1] >= 0) {
     dofs = ei->dof[R_SOLID1];
     for ( i=0; i<dofs; i++) {
@@ -1527,6 +1529,7 @@ load_elem_dofptr(const int ielem,
   }
   else if((pd_glob[0] ->CoordinateSystem == CYLINDRICAL ||
 	   pd_glob[0]->CoordinateSystem == SWIRLING    ||
+	   pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D    ||
 	   pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN ) &&
 	  upd->ep[R_NORMAL1] >= 0) {
     dofs = ei->dof[R_NORMAL1];
@@ -1672,6 +1675,7 @@ load_elem_dofptr(const int ielem,
   }
   else if((pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
            pd_glob[0]->CoordinateSystem == SWIRLING ||
+           pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D ||
 	   pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) &&
 	  upd->ep[R_PMOMENTUM1] >= 0) {
     dofs = ei->dof[R_PMOMENTUM1];
@@ -2027,6 +2031,7 @@ load_elem_dofptr(const int ielem,
     }
     if((pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
 	pd_glob[0]->CoordinateSystem == SWIRLING ||
+	pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D ||
 	pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) ) {
       if( upd->ep[R_STRESS33] == -1 )
 	  EH(-1,"Hey,the STRESS33 is needed in CYLINDRICAL VE problems!");
