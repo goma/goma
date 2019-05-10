@@ -185,7 +185,8 @@ int assemble_porous_transport(double time, /* present time valuel; KSC          
 
   wim = dim;
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
 
@@ -8947,7 +8948,8 @@ load_MandE_flux(double porosity, double cap_pres, double saturation,
   if(pd->CoordinateSystem == CARTESIAN ||
        pd->CoordinateSystem == CYLINDRICAL ||
        pd->CoordinateSystem == SWIRLING ||
-       pd->CoordinateSystem == PROJECTED_CARTESIAN) 
+       pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+       pd->CoordinateSystem == CARTESIAN_2pt5D) 
       {
 	WIM = pd->Num_Dim;
       } else {
@@ -9465,7 +9467,8 @@ calc_darcy_velocity()
   if(pd->CoordinateSystem == CARTESIAN ||
      pd->CoordinateSystem == CYLINDRICAL ||
      pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN) 
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D) 
     {
       WIM = pd->Num_Dim;
     } else {

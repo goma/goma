@@ -208,7 +208,8 @@ int load_coordinate_scales(const int c, struct Field_Variables *f)
    */
 
   if (c == CARTESIAN ||
-      c == PROJECTED_CARTESIAN)
+      c == PROJECTED_CARTESIAN ||
+      c == CARTESIAN_2pt5D)
     {
       return (status);
     }
@@ -2487,7 +2488,8 @@ get_supg_stuff(dbl *supg_term,
    * (non LSA situation).
    */
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     velodim = dim + 1; /* Later is Now!  Woo!!! */
   
   for ( p=0; p<velodim; p++)

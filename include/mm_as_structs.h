@@ -2842,6 +2842,7 @@ struct dilViscosity_dependence
   double nn[MDE];          /* bond concentration dependence */
   double gd;               /* strain rate dependence */
   double pf[MAX_PHASE_FUNC][MDE];  /* phase function */
+  double degrade[MDE];           /* amount of degradation */
 };
 typedef struct dilViscosity_dependence DILVISCOSITY_DEPENDENCE_STRUCT;
 

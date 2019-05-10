@@ -3927,7 +3927,7 @@ print_ls_interface( double *x,
   FILE *outfile = NULL;
   int status = 0;
 
-  strncpy(output_filenm, filenm, MAX_FNL);
+  strncpy(output_filenm, filenm, MAX_FNL-1);
   multiname(output_filenm, ProcID, Num_Proc);
 
   if (print_all_times) {
@@ -10340,7 +10340,8 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
       wim = dim;
 
       if (pd->CoordinateSystem == SWIRLING ||
-          pd->CoordinateSystem == PROJECTED_CARTESIAN)
+          pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+          pd->CoordinateSystem == CARTESIAN_2pt5D)
         wim = wim+1;
 
       if (ls->var != NULL)
@@ -10439,7 +10440,8 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
       wim = dim;
 
       if (pd->CoordinateSystem == SWIRLING ||
-          pd->CoordinateSystem == PROJECTED_CARTESIAN)
+          pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+          pd->CoordinateSystem == CARTESIAN_2pt5D)
         wim = wim+1;
 
       if ( pd->v[ls->var] )

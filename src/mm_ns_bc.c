@@ -6695,6 +6695,22 @@ flow_n_dot_T_nobc(double func[DIM],
 	    }
 	}
 
+      var = RESTIME;
+      if (pd->v[var] )
+	{
+
+	  for (p=0; p<pd->Num_Dim; p++)
+	    {
+	      for (q=0; q<pd->Num_Dim; q++)
+		{
+		  for (j=0; j<ei->dof[var]; j++)
+		    {
+		      d_func[p][var][j] += fv->snormal[q]*d_Pi->degrade[p][q][j];
+		    }
+		}
+	    }
+	}
+
       var = FILL;
       if (pd->v[var] )
 	{
@@ -8107,7 +8123,8 @@ PSPG_consistency_bc (double *func,
   wim   = dim;
 
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
     /* This is the flag for the standard global PSPG */
@@ -9162,7 +9179,7 @@ evaluate_gibbs_criterion(
   pos[1] = y_pos - fv->x[1];
   if(pd->Num_Dim == 3)
     {
-      pos[2] += x_pos - fv->x[2];
+      pos[2] = x_pos - fv->x[2];
     }
   
   /* 2D only for now */
@@ -10160,7 +10177,9 @@ fapply_ST(
 
 	     if(pd->CoordinateSystem == CYLINDRICAL ||
                 pd->CoordinateSystem == SWIRLING ||
-		pd->CoordinateSystem == PROJECTED_CARTESIAN) {
+		pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+		pd->CoordinateSystem == CARTESIAN_2pt5D) 
+              {
 	       var = MESH_DISPLACEMENT2;
 	       if (pd->v[var])
 		 {
@@ -14135,7 +14154,7 @@ acoustic_plane_transmission(double func[DIM],
     return;
 
   if(bc_type == APR_PLANE_TRANS_BC || bc_type == API_PLANE_TRANS_BC )
-		imped_inv = 1./bdy_impedance/sqrt(cos(2.*bdy_absorption));
+		imped_inv = 1./bdy_impedance;
   if(bc_type == APR_VELOCITY_BC || bc_type == API_VELOCITY_BC )
 			normal_velo = bdy_impedance;
 
@@ -14153,14 +14172,14 @@ acoustic_plane_transmission(double func[DIM],
 	{
 	  for( j=0; j<ei->dof[var]; j++)
 	    {
-		  d_func[0][var][j] = imped_inv * bf[var]->phi[j]*cos(bdy_absorption);
+		  d_func[0][var][j] = imped_inv * bf[var]->phi[j];
 	    }
 	}
       	if ( pd->v[conj_var] )
 	{
 	  for( j=0; j<ei->dof[conj_var]; j++)
 	    {
-		  d_func[0][conj_var][j] = imped_inv * bf[var]->phi[j]*sin(bdy_absorption);
+		  d_func[0][conj_var][j] = imped_inv * bf[var]->phi[j]*bdy_absorption;
 	    }
 	}
 	break;
@@ -14169,14 +14188,14 @@ acoustic_plane_transmission(double func[DIM],
 	{
 	  for( j=0; j<ei->dof[var]; j++)
 	    {
-		  d_func[0][var][j] = -imped_inv * bf[var]->phi[j]*cos(bdy_absorption);
+		  d_func[0][var][j] = -imped_inv * bf[var]->phi[j];
 	    }
 	}
       	if ( pd->v[conj_var] )
 	{
 	  for( j=0; j<ei->dof[conj_var]; j++)
 	    {
-		  d_func[0][conj_var][j] = imped_inv * bf[var]->phi[j]*sin(bdy_absorption);
+		  d_func[0][conj_var][j] = -imped_inv * bf[var]->phi[j]*bdy_absorption;
 	    }
 	}
 	break;
@@ -14188,13 +14207,13 @@ acoustic_plane_transmission(double func[DIM],
     switch (bc_type) {
 	case APR_PLANE_TRANS_BC:
   		*func = imped_inv *
-  			((fv->api-2.*bdy_incident_imag)*cos(bdy_absorption)
-                         +(fv->apr-2.*bdy_incident_real)*sin(bdy_absorption));
+  			((fv->api-2.*bdy_incident_imag)
+                         -bdy_absorption*(fv->apr-2.*bdy_incident_real));
 		break;
 	case API_PLANE_TRANS_BC:
   		*func = imped_inv *
-  			(-(fv->apr-2.*bdy_incident_real)*cos(bdy_absorption)
-                         +(fv->api-2.*bdy_incident_imag)*sin(bdy_absorption));
+  			(-(fv->apr-2.*bdy_incident_real)
+                         -bdy_absorption*(fv->api-2.*bdy_incident_imag));
 		break;
 	case APR_VELOCITY_BC:
 		if( blk_id == -1 || blk_id == ei->elem_blk_id) *func = -normal_velo;

@@ -672,9 +672,12 @@ viscosity(struct Generalized_Newtonian *gn_local,
     }
   if(DOUBLE_NONZERO(gn_local->thixo_factor))
     { 
-     dbl thixotropic = 0;
+     dbl thixotropic = 1;
      dbl thixo_time = 0;
-     thixotropic = (1.+gn_local->thixo_factor*fv->restime+thixo_time*tran->time_value);
+     if(fv->restime > 0.)
+	{ thixotropic += gn_local->thixo_factor*fv->restime; }
+     if(tran->time_value > 0.)
+	{ thixotropic += thixo_time*tran->time_value; }
      if ( d_mu != NULL )
        {
        d_mu->gd *= thixotropic;
@@ -686,7 +689,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
 	    }
          }
        var = RESTIME;
-       if (pd->v[var] )
+       if (pd->v[var] && fv->restime>0.)
         {
          for ( j=0; j<ei->dof[var]; j++)
 	   {

@@ -1237,6 +1237,7 @@ int i;
 	pre_factor = 6.*qflow/(gap*gap*gap);
         switch (pd->CoordinateSystem) {
           case CARTESIAN:
+          case CARTESIAN_2pt5D:
 	       pre_factor = 6.*qflow/(gap*gap*gap);
                break;
           case CYLINDRICAL:
@@ -1285,6 +1286,7 @@ int i;
 
        switch (pd->CoordinateSystem) {
           case CARTESIAN:
+          case CARTESIAN_2pt5D:
                switch (velo_condition) {
                   case U_PARABOLA_BC:
                       *func = pre_factor*(fv->x[1]-coord1)*(coord2-fv->x[1]);
@@ -1357,6 +1359,7 @@ int i;
             {pl_index = p[3];}
        switch (pd->CoordinateSystem) {
           case CARTESIAN:
+          case CARTESIAN_2pt5D:
                expon = 1.+1./pl_index;
 	       pre_factor = (2.*pl_index+1.)/(pl_index +1.)*qflow/pow(gap,expon+1.);
                switch (velo_condition) {
@@ -2600,7 +2603,9 @@ load_variable (double *x_var,        /* variable value */
       for(b=0 ; b<pd->Num_Dim ; b++)	{
           *x_var += SQUARE(fv->v[b]);
           }
-      if(pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      if(pd->CoordinateSystem == SWIRLING || 
+         pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+         pd->CoordinateSystem == CARTESIAN_2pt5D)
           { *x_var += SQUARE(fv->v[pd->Num_Dim]);  }
       *x_var = sqrt(*x_var);
       var = VELOCITY1;
@@ -2608,7 +2613,9 @@ load_variable (double *x_var,        /* variable value */
       for(b=0 ; b<pd->Num_Dim ; b++)	{
           d_vect_var[b] += fv->v[b]*(*d_x_var);
           }
-      if(pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      if(pd->CoordinateSystem == SWIRLING || 
+         pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+         pd->CoordinateSystem == CARTESIAN_2pt5D)
           { d_vect_var[pd->Num_Dim] += fv->v[pd->Num_Dim]*(*d_x_var);  }
       break;
 
