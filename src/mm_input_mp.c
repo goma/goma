@@ -1198,6 +1198,56 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     }
   }
   
+  /* check for shell moment tensor calculator model */
+  if(pd_glob[mn]->e[R_MESH1] && pd_glob[mn]->e[R_SHELL_CURVATURE]) {
+    char input[MAX_CHAR_IN_INPUT] = "zilch\0";
+    strcpy(search_string, "Shell Moment Tensor Model");
+    model_read = look_for_optional(imp,
+               search_string,
+               input,
+               '=');
+
+    if(model_read == 1) {
+      if (fscanf(imp, "%s", model_name) != 1) {
+        sr = sprintf(err_msg,
+         "Error reading model name string in material file, property %s",
+         search_string);
+        EH(-1, err_msg);
+      }
+
+      SPF(es, "%s = %s", search_string, model_name);
+      if (model_read == 1 && !strcmp(model_name, "EXPANDED") ) {
+        model_read = 1;
+        mat_ptr->shell_moment_tensor_model = SMT_EXPANDED;
+        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
+        //NO_SPECIES);
+
+        if (num_const != 0) {
+          EH(-1, "EXPANDED Shell Moment Tensor Model takes no other input parameters");
+        }
+      }
+
+      if (model_read == 1 && !strcmp(model_name, "SIMPLE") ) {
+        model_read = 1;
+        mat_ptr->shell_moment_tensor_model = SMT_SIMPLE;
+        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
+        //NO_SPECIES);
+
+        if (num_const != 0) {
+          EH(-1, "SIMPLE Shell Moment Tensor Model takes no other input parameters");
+        }
+      }
+
+      else {
+        // default is simple
+        mat_ptr->shell_tangent_model = SMT_SIMPLE;
+        SPF(es, "%s = %s", search_string, "SIMPLE");
+      }
+
+      ECHO(es, echo_file);
+    }
+  }
+
   model_read = look_for_mat_prop(imp, "Stress Free Solvent Vol Frac", 
 				 &(LameLambdaModel), 
 				 &(elc_glob[mn]->Strss_fr_sol_vol_frac), 

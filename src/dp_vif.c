@@ -1866,6 +1866,8 @@ noahs_ark()
 
       ddd_add_member(n, &mp_glob[i]->shell_tangent_model, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_shell_tangent_seed_vec_const, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->shell_moment_tensor_model, 1, MPI_INT);
+
 
 
       /*

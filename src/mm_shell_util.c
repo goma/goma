@@ -2777,9 +2777,6 @@ shell_stress_tensor  (
 
 /****************************************************************************/
 
-enum shell_moment_tensor_kind{dtheta1_ds_is_K0, expanded};
-enum shell_moment_tensor_kind my_smt_kind = dtheta1_ds_is_K0;
-
 void
 shell_moment_tensor  (
                       dbl M[DIM][DIM],
@@ -3143,14 +3140,16 @@ shell_moment_tensor  (
 
   /******* SHELL MOMENT TENSOR AND THEIR SENSITIVITIES **********/
 
+  int my_smt_kind = mp->shell_moment_tensor_model;
+
   switch(my_smt_kind) {
-    case dtheta1_ds_is_K0:
+    case SMT_SIMPLE:
       M[0][0] = -D * ( K0 + nu*K1 );
       M[0][1] = -0.5 * D * (1.0 - nu) * ( K0 + K1 );
       M[1][0] = -0.5 * D * (1.0 - nu) * ( K0 + K1 );
       M[1][1] = -D * ( nu*K0 + K1 );
       break;
-    case expanded:
+    case SMT_EXPANDED:
       M[0][0] = D * (K0 * du_ds +  dK0_ds * u + nu * (K1 * dv_dt + dK1_dt * v) );
       M[0][1] = 0.5 * D * (1.0 - nu) * (K0 * du_dt + dK0_dt * u + K1 * dv_ds + dK1_ds * v );
       M[1][0] = 0.5 * D * (1.0 - nu) * (K0 * du_dt + dK0_dt * u + K1 * dv_ds + dK1_ds * v );
@@ -3167,13 +3166,13 @@ shell_moment_tensor  (
       for (j = 0; j < ei->dof[var]; j++)
         {
           switch(my_smt_kind) {
-            case dtheta1_ds_is_K0:
+            case SMT_SIMPLE:
               dM_dx[0][0][b][j] = 0.0;
               dM_dx[0][1][b][j] = 0.0;
               dM_dx[1][0][b][j] = 0.0;
               dM_dx[1][1][b][j] = 0.0;
               break;
-            case expanded:
+            case SMT_EXPANDED:
               dM_dx[0][0][b][j] = D * (K0 * d_du_ds_dx[b][j] + d_dK0_ds_dx[b][j] * u + dK0_ds * d_u_dx[b][j] +
                                       (K1 * d_dv_dt_dx[b][j] + d_dK1_dt_dx[b][j] * v + dK1_dt * d_v_dx[b][j]) * nu );
 
@@ -3195,7 +3194,7 @@ shell_moment_tensor  (
     var = SHELL_NORMAL1 + b;
       for (j = 0; j < ei->dof[var]; j++) {
         switch(my_smt_kind) {
-          case dtheta1_ds_is_K0:
+          case SMT_SIMPLE:
             dM_dnormal[0][0][b][j] = 0.0;
 
             dM_dnormal[0][1][b][j] = 0.0;
@@ -3205,7 +3204,7 @@ shell_moment_tensor  (
             dM_dnormal[1][1][b][j] = 0.0;
 
             break;
-          case expanded:
+          case SMT_EXPANDED:
             dM_dnormal[0][0][b][j] = D * (K0 * d_du_ds_dnormal[b][j] + d_dK0_ds_dnormal[b][j] * u + dK0_ds * d_u_dnormal[b][j] +
                                          (K1 * d_dv_dt_dnormal[b][j] + d_dK1_dt_dnormal[b][j] * v + dK1_dt * d_v_dnormal[b][j]) * nu );
 
@@ -3227,13 +3226,13 @@ shell_moment_tensor  (
      {
       phi_j = bf[var]->phi[j];
       switch(my_smt_kind) {
-        case dtheta1_ds_is_K0:
+        case SMT_SIMPLE:
           dM_dcurv0[0][0][j] = -D * (phi_j );
           dM_dcurv0[0][1][j] = -0.5 * D * (1.0 - nu) * (phi_j);
           dM_dcurv0[1][0][j] = -0.5 * D * (1.0 - nu) * (phi_j);
           dM_dcurv0[1][1][j] = -D * (phi_j) * nu;
           break;
-        case expanded:
+        case SMT_EXPANDED:
           dM_dcurv0[0][0][j] = D * (phi_j * du_ds +  d_dK0_ds_dcurv0[j] * u );
           dM_dcurv0[0][1][j] = 0.5 * D * (1.0 - nu) * (phi_j * du_dt + d_dK0_dt_dcurv0[j] * u);
           dM_dcurv0[1][0][j] = 0.5 * D * (1.0 - nu) * (phi_j * du_dt + d_dK0_dt_dcurv0[j] * u);
@@ -3247,13 +3246,13 @@ shell_moment_tensor  (
      {
       phi_j = bf[var]->phi[j];
       switch(my_smt_kind) {
-        case dtheta1_ds_is_K0:
+        case SMT_SIMPLE:
           dM_dcurv1[0][0][j] = -D * (phi_j) * nu;
           dM_dcurv1[0][1][j] = -0.5 * D * (1.0 - nu) * (phi_j);
           dM_dcurv1[1][0][j] = -0.5 * D * (1.0 - nu) * (phi_j);
           dM_dcurv1[1][1][j] = -D * (phi_j);
           break;
-        case expanded:
+        case SMT_EXPANDED:
           dM_dcurv1[0][0][j] = D * (phi_j * dv_dt +  d_dK1_dt_dcurv1[j] * v ) * nu;
           dM_dcurv1[0][1][j] = 0.5 * D * (1.0 - nu) * (phi_j * dv_ds + d_dK1_ds_dcurv1[j] * v);
           dM_dcurv1[1][0][j] = 0.5 * D * (1.0 - nu) * (phi_j * dv_ds + d_dK1_ds_dcurv1[j] * v);

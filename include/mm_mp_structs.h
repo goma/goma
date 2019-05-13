@@ -887,6 +887,8 @@ struct Material_Properties
   int len_shell_tangent_seed_vec_const;
   dbl *shell_tangent_seed_vec_const;
 
+  int shell_moment_tensor_model;
+
   int table_index;
 
   
