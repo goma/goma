@@ -114,6 +114,121 @@
 /******************************************************************************/
 /******************************************************************************/
 
+struct SUPG_terms {
+  dbl supg_tau;
+  dbl d_supg_tau_dv[DIM][MDE];
+  dbl d_supg_tau_dX[DIM][MDE];
+};
+
+void get_supg_tau(struct SUPG_terms *supg_terms,
+                  int dim,
+                  dbl diffusivity,
+                  PG_DATA *pg_data)
+{
+  double vnorm = 0;
+
+  for (int i = 0; i < VIM; i++) {
+    vnorm += fv->v[i]*fv->v[i];
+  }
+  vnorm = sqrt(vnorm);
+
+  double hk = 0;
+  for (int i = 0; i < dim; i++) {
+    hk += sqrt(pg_data->hsquared[i]);
+  }
+
+  hk /= (double) dim;
+
+  double D = diffusivity;
+
+  double hk_dX[DIM][MDE];
+  for (int a = 0; a < dim; a++)
+    {
+      for (int j = 0; j < ei->dof[MESH_DISPLACEMENT1+a]; j++)
+        {
+          double tmp = 0;
+          for (int b = 0; b < dim; b++)
+            {
+              tmp += (2*pg_data->hhv[b][a] * pg_data->dhv_dxnode[b][j])/(2*sqrt(pg_data->hsquared[b]));
+            }
+          hk_dX[a][j] = tmp/dim;
+        }
+    }
+
+  double Pek = 0.5 * vnorm * hk / D;
+
+  double eta = Pek;
+  double eta_dX[DIM][MDE];
+  double eta_dV[DIM][MDE];
+  if (Pek > 1) {
+    eta = 1;
+    for (int i = 0; i < DIM; i++)
+    {
+      for (int j = 0; j < MDE; j++)
+      {
+        eta_dX[i][j] = 0;
+        eta_dV[i][j] = 0;
+      }
+    }
+  }
+  else
+  {
+    for (int i = 0; i < DIM; i++)
+    {
+      for (int j = 0; j < MDE; j++)
+      {
+        if (pd->e[VELOCITY1+i])
+        {
+          eta_dV[i][j] = 0.5 * 0.5 * hk * fv->v[i]*bf[VELOCITY1+i]->phi[j] / (vnorm*D);
+
+        }
+
+        if (pd->e[MESH_DISPLACEMENT1+i])
+        {
+          eta_dX[i][j] = 0.5 * vnorm * hk_dX[i][j] / D;
+
+        }
+      }
+    }
+  }
+
+  if (vnorm > 0) {
+    supg_terms->supg_tau = 0.5 * hk * eta / vnorm;
+
+    for (int a = 0; a < VIM; a++)
+      {
+        int var = VELOCITY1 + a;
+        for (int j = 0; j < ei->dof[var]; j++)
+          {
+            supg_terms->d_supg_tau_dv[a][j] = 0.5*hk*eta*fv->v[a]*bf[var]->phi[j] /
+                (- vnorm*vnorm*vnorm) + 0.5 * hk * eta_dV[a][j] / vnorm;
+          }
+
+        var = MESH_DISPLACEMENT1 + a;
+        for (int j = 0; j < ei->dof[var]; j++)
+          {
+            supg_terms->d_supg_tau_dX[a][j] = 0.5 * hk_dX[a][j] * eta / vnorm + 0.5 * hk * eta_dX[a][j] / vnorm;
+          }
+      }
+
+
+  } else {
+    supg_terms->supg_tau = 0;
+    for (int i = 0; i < DIM; i++)
+      {
+        for (int j = 0; j < MDE; j++)
+          {
+            supg_terms->d_supg_tau_dv[i][j] = 0.0;
+          }
+        for (int j = 0; j < MDE; j++)
+          {
+            supg_terms->d_supg_tau_dX[i][j] = 0.0;
+          }
+      }
+  }
+
+}
+
 /* assemble_mass_transport() -- assemble terms (Residual &| Jacobian) for mass
  *                              conservation eqns
  *
@@ -193,14 +308,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			double tt, /* parameter to vary time integration from 
 				    * explicit (tt = 1) to implicit (tt = 0) */
 			double dt, /* current time step size */
-			dbl h[DIM], /* element sizes, not scale factors.     */
-			dbl hh[DIM][DIM],
-			dbl dh_dxnode[DIM][MDE],
-			dbl vcent[DIM],	/* average element velocity, which is
-					 * the centroid velocity for Q2 and 
-					 * the average of the vertices for Q1.
-					 * From routine "element_velocity."  */
-			dbl dvc_dnode[DIM][MDE])
+                        PG_DATA *pg_data)
 {
   int var, ii,  pvar, ledof;
   const int eqn = R_MASS;
@@ -251,6 +359,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
   dbl x[MAX_CONC];            /* mole fraction */
 
   struct Species_Conservation_Terms s_terms;
+  memset(&s_terms, 0, sizeof(struct Species_Conservation_Terms));
 
   dbl mass;		         	/* For terms and their derivatives */
 
@@ -273,11 +382,11 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
    * and some of their derivatives...
    */
 
-  dbl wt_func;
+  dbl wt_func = 0;
 
   /* SUPG variables */
-  dbl h_elem=0, h_elem_inv=0, h_elem_deriv=0;
-  dbl supg=0, d_wt_func;
+  dbl h_elem=0, h_elem_deriv=0;
+  dbl supg=0, d_wt_func = 0;
 
   /*
    * Interpolation functions for variables and some of their derivatives.
@@ -358,8 +467,8 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
    */
   rho  = density(d_rho, time);
 
-  double supg_tau = 0.;
-  double d_supg_tau_dv[DIM][MDE];
+
+  struct SUPG_terms supg_terms;
 
   if( mp->Spwt_funcModel == GALERKIN)
     {
@@ -369,10 +478,6 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
     {
       supg = mp->Spwt_func;
     }
-
-
-
-  /* end Petrov-Galerkin addition */
 
   /************************************************************************/
   /*                       START OF SPECIES ASSEMBLE                      */
@@ -391,67 +496,39 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
        *       a continuous medium 
        * ---------------------------------------------------------------------
        */
-      err = get_continuous_species_terms(&s_terms, time, tt, dt, h);
+      err = get_continuous_species_terms(&s_terms, time, tt, dt, pg_data->hsquared);
       EH(err,"problem in getting the species terms");
       
 /*    } */   /* end of if CONTINUOUS */
 
-  /*
-   * Residuals_________________________________________________________________
-   */
-  if ( af->Assemble_Residual )
+  for ( w=0; w<pd->Num_Species_Eqn; w++)
     {
-      var = MASS_FRACTION;
-      /* 
-       *  Store the species eqn type (which is keyed to the Variable
-       *  type in a temporary variable).
-       */
-      species_eqn_type = mp->Species_Var_Type;
+
+      if (supg != 0.) {
+        dbl D = 1e-6;
+        if (mp->DiffusivityModel[w] == CONSTANT) {
+          D = mp->diffusivity[w];
+        }
+        get_supg_tau(&supg_terms, dim, D, pg_data);
+      }
 
       /*
-       *   START loop over species equations. The outer loop is over
-       *   the species number
+       * Residuals_________________________________________________________________
        */
-      for ( w=0; w<pd->Num_Species_Eqn; w++)
-	{
-	  if(supg!=0.)
-	    {
-	      int a;
-	      double vnorm = 0;
+      if ( af->Assemble_Residual )
+        {
+          var = MASS_FRACTION;
+          /*
+           *  Store the species eqn type (which is keyed to the Variable
+           *  type in a temporary variable).
+           */
+          species_eqn_type = mp->Species_Var_Type;
 
-	      for (a = 0; a < VIM; a++) {
-		vnorm += fv->v[a]*fv->v[a];
-	      }
-	      vnorm = sqrt(vnorm);
+          /*
+           *   START loop over species equations. The outer loop is over
+           *   the species number
+           */
 
-	      double hk = 0;
-	      for (a = 0; a < dim; a++) {
-		hk += sqrt(h[a]);
-	      }
-
-	      double D = mp->diffusivity[w];
-
-	      if ((D <= 0) || (mp->DiffusivityModel[w] != CONSTANT)) {
-		// if numerical diffusion is off use 1e-6 for Peclet number
-		D = 1e-6;
-	      }
-
-	      hk /= (double) dim;
-
-	      double Pek = 0.5 * vnorm * hk / D;
-
-	      double eta = Pek;
-	      if (Pek > 1) {
-		eta = 1;
-	      }
-
-	      if (vnorm > 0) {
-		supg_tau = 0.5 * hk * eta / vnorm;
-	      } else {
-		supg_tau = 0;
-	      }
-
-	    }
 	  /*
 	   *  Calculate the coef_rho term based upon the value of
 	   *  species_eqn_type.
@@ -520,7 +597,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		    {
 		      for(p=0; p<dim; p++)
 			{
-			  wt_func += supg * supg_tau * fv->v[p] * bf[eqn]->grad_phi[i][p];
+                          wt_func += supg * supg_terms.supg_tau * fv->v[p] * bf[eqn]->grad_phi[i][p];
 			}
 		    }
 
@@ -675,86 +752,29 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		}   /* if active_dofs */
 	      
 	    } /* end of loop over equations */
-	} /* end of loop over species */
-    } /* end of assemble residuals */
+        } /* end of assemble residuals */
   
-  
-  /*
-   * Jacobian terms...
-   */
-  
-  if ( af->Assemble_Jacobian )
-    {      
+
       /*
-       *         START loop over the rows corresponding to difference
-       *	 species conservation equations
-       *             w = row Species ktype
-       *             i = node (i.e., dof) where species conservation
-       *                 equation is located.
+       * Jacobian terms...
        */
-      /*
-       *  Store the species eqn type (which is keyed to the Variable
-       *  type in a temporary variable). 
-       */
-      species_eqn_type = mp->Species_Var_Type;
+
+      if ( af->Assemble_Jacobian )
+        {
+          /*
+           *         START loop over the rows corresponding to difference
+           *	 species conservation equations
+           *             w = row Species ktype
+           *             i = node (i.e., dof) where species conservation
+           *                 equation is located.
+           */
+          /*
+           *  Store the species eqn type (which is keyed to the Variable
+           *  type in a temporary variable).
+           */
+          species_eqn_type = mp->Species_Var_Type;
       
-      for ( w=0; w<pd->Num_Species_Eqn; w++)
-	{
-	  if(supg!=0.)
-	    {
-	      double vnorm = 0;
 
-	      for (a = 0; a < VIM; a++) {
-		vnorm += fv->v[a]*fv->v[a];
-	      }
-	      vnorm = sqrt(vnorm);
-
-	      double hk = 0;
-	      for (a = 0; a < dim; a++) {
-		hk += sqrt(h[a]);
-	      }
-
-	      double D = mp->diffusivity[w];
-
-	      if ((D <= 0) || (mp->DiffusivityModel[w] != CONSTANT)) {
-		// if numerical diffusion is off use 1e-6 for Peclet number
-		D = 1e-6;
-	      }
-
-	      hk /= (double) dim;
-
-	      double Pek = 0.5 * vnorm * hk / D;
-
-	      double eta = Pek;
-	      if (Pek > 1) {
-		eta = 1;
-	      }
-
-	      if (vnorm > 0) {
-		supg_tau = 0.5 * hk * eta / vnorm;
-
-		for (a = 0; a < VIM; a++)
-		  {
-		    var = VELOCITY1 + a;
-		    for (j = 0; j < ei->dof[var]; j++)
-		      {
-			d_supg_tau_dv[a][j] = - 0.5*hk*eta*fv->v[a]*bf[var]->phi[j] / (pow(vnorm, 3));
-		      }
-		  }
-
-
-	      } else {
-		supg_tau = 0;
-		for (i = 0; i < DIM; i++)
-		  {
-		    for (j = 0; j < MDE; j++)
-		      {
-			d_supg_tau_dv[i][j] = 0.0;
-		      }
-		  }
-	      }
-
-	    }
 	  /*
 	   *  Calculate the coef_rho term based upon the value of
 	   *  species_eqn_type.
@@ -813,7 +833,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		    {
 		      for(p=0; p<dim; p++)
 			{
-			  wt_func += supg * supg_tau * fv->v[p] * bf[eqn]->grad_phi[i][p];
+                          wt_func += supg * supg_terms.supg_tau * fv->v[p] * bf[eqn]->grad_phi[i][p];
 			}
 		    }
 		  /*
@@ -1032,14 +1052,14 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 
 			      d_wt_func = 0.;
 
-			      if(supg != 0.)
-				{
-				  for( p=0; p<dim; p++ )
-				    {
-				      d_wt_func += supg *
-					d_supg_tau_dv[b][j] * fv->v[p]*bf[eqn]->grad_phi[i][p];
-				    }
-				}
+                              if(supg != 0.)
+                                {
+                                  d_wt_func = supg * supg_terms.supg_tau * phi_j * bf[eqn]->grad_phi[i][b];
+                                  for( p=0; p<dim; p++ )
+                                    {
+                                      d_wt_func += supg * supg_terms.d_supg_tau_dv[b][j] * fv->v[p]* bf[eqn]->grad_phi[i][p];
+                                    }
+                                }
 			      
 			      mass = 0.;
 
@@ -1211,15 +1231,18 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      
 			      dh3dmesh_bj = fv->dh3dq[b] * bf[var]->phi[j];
 			      
-			      if(supg!=0.)
-				{
-				  h_elem_deriv = 0.;
-				  for( q=0; q<dim; q++ )
-				    {
-				      h_elem_deriv += 
-					hh[q][b]*vcent[q]*vcent[q]*dh_dxnode[q][j]*h_elem_inv/4.;
-				    } 
-				}
+
+                              d_wt_func = 0.;
+
+                              if(supg != 0.)
+                                {
+                                  for( p=0; p<dim; p++ )
+                                    {
+                                      d_wt_func += supg *
+                                        (supg_terms.d_supg_tau_dX[b][j] * fv->v[p] * bf[eqn]->grad_phi[i][p]
+                                         + supg_terms.supg_tau * fv->v[p] * bf[eqn]->d_grad_phi_dmesh[i][p][b][j]);
+                                    }
+                                }
 			      
 			      mass = 0.;
 			      if ( pd->TimeIntegration != STEADY )
@@ -1245,9 +1268,9 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
                                           mass *= (epsilon*small_c);
                                          }
 
-				      mass *= - wt_func *
+                                      mass *= - (d_wt_func * h3 * det_J + wt_func *
 					( h3 * d_det_J_dmeshbj 
-					  + dh3dmesh_bj * det_J ) * wt;
+                                          + dh3dmesh_bj * det_J )) * wt;
 				      mass *= pd->etm[eqn][(LOG2_MASS)];
 				    }
 				}
@@ -1332,7 +1355,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				      advection_c = 0.;
 				      for ( p=0; p<VIM; p++)
 					{
-					  advection_c += s_terms.taylor_flux[w][p];;
+                                          advection_c += s_terms.taylor_flux[w][p];
 					}
 				      advection_c *= - coeff_rho * s_terms.taylor_flux_wt[i]*dt/2.;
 				      advection_b += advection_c;
@@ -1344,13 +1367,8 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				  advection_f = 0.;
 				  if(supg != 0.)
 				    {
-				      d_wt_func = 0.;
 				      for( p=0; p<dim; p++ )
-					{
-					  d_wt_func += supg 
-					    * (h_elem*fv->v[p]* bf[eqn]->d_grad_phi_dmesh[i][p] [b][j]
-					       +  h_elem_deriv * fv->v[p]*bf[eqn]->grad_phi[i] [p] );
-					  
+					{ 
 					  advection_f += s_terms.conv_flux[w][p];
 					}
 				      advection_f *= -d_wt_func * coeff_rho * h3 * det_J * wt;
@@ -1451,8 +1469,8 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
                                       source -= x[w]*sumrm/sumxm;
                                      }
 
-				  source *= ( h3 * d_det_J_dmeshbj + dh3dmesh_bj * det_J )
-				    * wt * wt_func;
+                                  source *= (d_wt_func * h3 * det_J + wt_func * ( h3 * d_det_J_dmeshbj + dh3dmesh_bj * det_J ))
+                                    * wt;
 				  source += s_terms.d_MassSource_dmesh[w][b][j]*det_J*h3*wt*wt_func;
 
                                   if (mp->SpeciesSourceModel[w]  == ELECTRODE_KINETICS ||
@@ -1846,9 +1864,9 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			      
 
 		}     /* if active_dofs */
-	    }				/* for (i) .... */
-	}				/* for (w) ... */
-    }					/* if ( assemble Jacobian ) */
+            }				/* for (i) .... */
+        }					/* if ( assemble Jacobian ) */
+    }				/* for (w) ... */
   
   return(status);
   

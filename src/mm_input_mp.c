@@ -70,8 +70,6 @@
 
 #define stringup(a) { char *p; for( p=a; *p != '\0'; *p=toupper(*p), p++); }
 
-int SBM_LENGTHS = 1;
-
 extern Spfrtn sr; /* External declaration for the sprintf return variable,sr
 		   *  sr is defined in mm_input.c */
 
@@ -6861,7 +6859,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 						model_name, SCALAR_INPUT, &species_no, es);
 
 		 mat_ptr->SBM_Type[species_no] = CONSTANT;
-		 SBM_LENGTHS = 1;
+                 mat_ptr->SBM_Length_enabled = 1;
 		 if (model_read == -1 && !strcmp(model_name, "INPUT"))
 		   {
 		     num_const = read_constants(imp, mat_ptr->SBM_Lengths2, species_no);
@@ -6879,7 +6877,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		   }
 		 else
 		   {
-		     SBM_LENGTHS = 0;
+                     mat_ptr->SBM_Length_enabled = 0;
 		   }		 
 	       }
 	     else if (!strcmp(model_name, "FREE_VOL") ) 

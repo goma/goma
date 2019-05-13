@@ -1707,6 +1707,8 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->Light_AbsorptionModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Shell_User_ParModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->PermittivityModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->SBM_Length_enabled, 1, MPI_INT);
+
 
       /* External field indeces PRS 10-1-2013 (shutdown times) */
 
@@ -2586,7 +2588,6 @@ noahs_ark()
   ddd_add_member(n, &VON_MISES_STRESS, 1, MPI_INT);
   ddd_add_member(n, &UNTRACKED_SPEC, 1, MPI_INT);
   ddd_add_member(n, &LOG_CONF_MAP, 1, MPI_INT);
-  ddd_add_member(n, &SBM_LENGTHS, 1, MPI_INT);
   ddd_add_member(n, &VELO_SPEED, 1, MPI_INT);
   ddd_add_member(n, &GIES_CRIT, 1, MPI_INT);
   ddd_add_member(n, &J_FLUX, 1, MPI_INT);

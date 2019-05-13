@@ -3846,7 +3846,6 @@ suspension_balance(struct Species_Conservation_Terms *st,
   dbl d_div_tau_p_dy[DIM][MAX_CONC][MDE];      /* derivative wrt concentration */
   dbl d_div_tau_p_dv[DIM][DIM][MDE];           /* derivative wrt velocity */
   dbl d_div_tau_p_dmesh[DIM][DIM][MDE];        /* derivative wrt mesh */
-  dbl d_div_tau_p_dG[DIM][DIM][DIM][MDE];          /* derivative wrt velocity gradient G */
   dbl d_div_tau_p_dp[DIM][MDE];                /* derivative wrt pressure */
 
   dbl d_gd_dv[DIM][MDE];        /* derivative of strain rate invariant 
@@ -3984,12 +3983,11 @@ suspension_balance(struct Species_Conservation_Terms *st,
   memset( d_div_tau_p_dy, 0, sizeof(double) * DIM*MAX_CONC*MDE);
   memset( d_div_tau_p_dv, 0, sizeof(double) * DIM*DIM*MDE);
   memset( d_div_tau_p_dmesh, 0, sizeof(double) * DIM*DIM*MDE);
-  memset( d_div_tau_p_dG, 0, sizeof(double) * DIM*DIM*DIM*MDE);
   memset( d_div_tau_p_dp, 0, sizeof(double) * DIM*MDE);
   
   /* This is the divergence of the particle stress  */
   divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
-				   d_div_tau_p_dv, d_div_tau_p_dmesh, d_div_tau_p_dG,d_div_tau_p_dp, w);
+                                   d_div_tau_p_dv, d_div_tau_p_dmesh, d_div_tau_p_dp, w);
 
   
   /* this is the hindered settling term that modifies the flux */
@@ -4469,7 +4467,6 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 			   dbl d_div_tau_p_dy[DIM][MAX_CONC][MDE],/* derivative wrt concentration */
 			   dbl d_div_tau_p_dv[DIM][DIM][MDE],       /* derivative wrt velocity */
 			   dbl d_div_tau_p_dmesh[DIM][DIM][MDE],       /* derivative wrt mesh */
-			   dbl d_div_tau_p_dG[DIM][DIM][DIM][MDE],       /* derivative wrt velocity gradient G */
 			   dbl d_div_tau_p_dp[DIM][MDE],       /* derivative wrt pressure */
 			   int w)                            /* species number */
 {
@@ -4629,7 +4626,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
   d_pp2_dy2 = 2.*Kn/maxpack2*comp +  4.*Kn*y_norm/maxpack*comp1 + Kn*y_norm*y_norm*comp2;
 
-  if(SBM_LENGTHS)
+  if(mp->SBM_Length_enabled)
     {
       radius_p = mp->SBM_Lengths2[w][0];
       L_char = mp->SBM_Lengths2[w][1];
@@ -4658,7 +4655,6 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     {
       memset(d_div_tau_p_dgd, 0, DIM*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dv, 0, DIM*DIM*MDE*sizeof(dbl) );
-      memset(d_div_tau_p_dG,0, DIM*DIM*DIM*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dy, 0, DIM*MAX_CONC*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dmesh, 0, DIM*DIM*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dp, 0, DIM*MDE*sizeof(dbl) );

@@ -8111,7 +8111,6 @@ PSPG_consistency_bc (double *func,
   dbl d_div_tau_p_dy[DIM][MAX_CONC][MDE];      /* derivative wrt concentration */
   dbl d_div_tau_p_dv[DIM][DIM][MDE];           /* derivative wrt velocity */
   dbl d_div_tau_p_dmesh[DIM][DIM][MDE];        /* derivative wrt mesh */
-  dbl d_div_tau_p_dG[DIM][DIM][DIM][MDE];          /* derivative wrt velocity gradient G */
   dbl d_div_tau_p_dp[DIM][MDE];                /* derivative wrt pressure dir */
 
   stress_eqn_pointer(v_s);
@@ -8305,13 +8304,12 @@ PSPG_consistency_bc (double *func,
   memset( d_div_tau_p_dy, 0, sizeof(double) * DIM*MAX_CONC*MDE);
   memset( d_div_tau_p_dv, 0, sizeof(double) * DIM*DIM*MDE);
   memset( d_div_tau_p_dmesh, 0, sizeof(double) * DIM*DIM*MDE);
-  memset( d_div_tau_p_dG, 0, sizeof(double) * DIM*DIM*DIM*MDE);
   memset( d_div_tau_p_dp, 0, sizeof(double) * DIM*MDE);
   if( cr->MassFluxModel == DM_SUSPENSION_BALANCE && PSPG)
     {
       /* This is the divergence of the particle stress  */
   divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
-				   d_div_tau_p_dv, d_div_tau_p_dmesh, d_div_tau_p_dG, 
+                                   d_div_tau_p_dv, d_div_tau_p_dmesh,
 				   d_div_tau_p_dp, w); 
     }
 

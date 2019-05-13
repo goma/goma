@@ -299,6 +299,7 @@ struct Material_Properties
                                    * also in this structure. */
   PROPERTYJAC_STRUCT *DensityJac; /* When necessary, this includes the derivatives
                                    * of the density wrt the state variables */
+  int SBM_Length_enabled;
 
   int DensityModel;                             /* Model type: for types, see mm_mp_const.h  */
   int len_u_density;                            /* Constants for user-defined density model*/
