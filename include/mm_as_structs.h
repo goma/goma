@@ -30,6 +30,7 @@
 #ifndef _MM_AS_STRUCTS_H
 #define _MM_AS_STRUCTS_H
 
+#include "std.h"
 #include "el_elm.h"
 #include "mm_mp_const.h"
 #include "rf_bc_const.h"
@@ -2970,6 +2971,12 @@ struct Petrov_Galerkin_Data {
 
 typedef struct Petrov_Galerkin_Data PG_DATA;
 
+
+struct SUPG_terms {
+  dbl supg_tau;
+  dbl d_supg_tau_dv[DIM][MDE];
+  dbl d_supg_tau_dX[DIM][MDE];
+};
 
 /*
  * Auxiliaries Variables used in calculating flow rate and average velocity
