@@ -32,7 +32,7 @@ elif [ -d "/usr/lib/openmpi" ] ; then
 else
     MPI_BASE_DIR="BUILD"
 fi
-if which mpiicc &> /dev/null; then
+if which mpicc &> /dev/null; then
     MPI_BASE_DIR="BUILD"
 fi
 
