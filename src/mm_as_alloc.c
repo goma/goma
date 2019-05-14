@@ -984,10 +984,12 @@ assembly_alloc(Exo_DB *exo)
   wim = dim;
   if(pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
      pd_glob[0]->CoordinateSystem == SWIRLING ||
+     pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D ||
      pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN)
     vim = vim + 1;
   if(pd_glob[0]->CoordinateSystem == SWIRLING ||
-     pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim + 1;
 
   /*
@@ -1267,6 +1269,19 @@ assembly_alloc(Exo_DB *exo)
   /* Poynting Vector  */
   if (Num_Var_In_Type[LIGHT_INTP] || Num_Var_In_Type[LIGHT_INTM] || Num_Var_In_Type[LIGHT_INTD]) {
     esp->poynt = (dbl ***) alloc_ptr_2(vim, MDE);
+  }
+  /* EM_wave components  */
+  if (Num_Var_In_Type[EM_E1_REAL] || Num_Var_In_Type[EM_E2_REAL] || Num_Var_In_Type[EM_E3_REAL]) {
+    esp->em_er = (dbl ***) alloc_ptr_2(vim, MDE);
+  }
+  if (Num_Var_In_Type[EM_E1_IMAG] || Num_Var_In_Type[EM_E2_IMAG] || Num_Var_In_Type[EM_E3_IMAG]) {
+    esp->em_ei = (dbl ***) alloc_ptr_2(vim, MDE);
+  }
+  if (Num_Var_In_Type[EM_H1_REAL] || Num_Var_In_Type[EM_H2_REAL] || Num_Var_In_Type[EM_H3_REAL]) {
+    esp->em_hr = (dbl ***) alloc_ptr_2(vim, MDE);
+  }
+  if (Num_Var_In_Type[EM_H1_IMAG] || Num_Var_In_Type[EM_H2_IMAG] || Num_Var_In_Type[EM_H3_IMAG]) {
+    esp->em_hi = (dbl ***) alloc_ptr_2(vim, MDE);
   }
 
   if(Num_Var_In_Type[TFMP_PRES]) {

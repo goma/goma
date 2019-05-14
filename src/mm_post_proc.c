@@ -1892,6 +1892,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
        */
     if (pd->CoordinateSystem == SWIRLING ||
 	pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	pd->CoordinateSystem == CARTESIAN_2pt5D ||
 	dim == 3) {
       for (j = 0; j < VIM; j++) {
 	local_post[CURL_V + j] = fv->curl_v[j];
@@ -2646,7 +2647,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   eqn = pd->ProjectionVar;  
   det_J = bf[eqn]->detJ;
 
-  if ( ielem_type == BILINEAR_SHELL || ielem_type == BIQUAD_SHELL || ielem_type == BILINEAR_TRISHELL ) {
+  if ( ielem_type == BILINEAR_SHELL || ielem_type == BIQUAD_SHELL || ielem_type == BILINEAR_TRISHELL ||
+       ielem_type == P0_SHELL || ielem_type == P1_SHELL) {
     int *n_dof = NULL;
     int dof_map[MDE];
     n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
@@ -6346,7 +6348,8 @@ calc_stream_fcn(double x[],				/* soln vector */
    }
  }
 
- if (pd->CoordinateSystem == CARTESIAN) {
+ if (pd->CoordinateSystem == CARTESIAN || 
+     pd->CoordinateSystem == CARTESIAN_2pt5D) {
    if (pd_glob[0]->i[R_MOMENTUM1] == I_Q1) {
      WH(-1, "Stream function with Q1 mapping may not be accurate ");
 
@@ -9811,6 +9814,7 @@ index_post, index_post_export);
      {
        if(pd->CoordinateSystem == SWIRLING ||
 	  pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	  pd->CoordinateSystem == CARTESIAN_2pt5D ||
 	  Num_Dim == 3)
 	 {
            if (CURL_V == 2)

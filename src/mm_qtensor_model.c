@@ -532,7 +532,8 @@ assemble_new_qtensor(dbl *el_length) /* 2 x approximate element length scales */
   if(pd->e[R_MESH1]) EH(-1, "assemble_qtensor is not deformable mesh friendly.");
   if (pd->Num_Dim == 3) EH(-1, "qtensor not ready for 3D problems yet!");
   if (pd->CoordinateSystem != CARTESIAN
-   && pd->CoordinateSystem != PROJECTED_CARTESIAN)
+   && pd->CoordinateSystem != PROJECTED_CARTESIAN
+   && pd->CoordinateSystem != CARTESIAN_2pt5D)
     EH(-1, "Qtensor requires CARTESIAN coordinates for now!");
 
   /* Do some initializations */
@@ -786,7 +787,8 @@ assemble_vorticity_direction()
   dim = pd->Num_Dim;
   WIM  = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     WIM = WIM+1;
 
   wt = fv->wt;                 /* Numerical integration weight */
@@ -1088,7 +1090,8 @@ assemble_vorticity_direction()
 		  }
 		memset(hq, 0,DIM*DIM*sizeof(double));
 		if( pd->CoordinateSystem == CARTESIAN 
-		    || pd->CoordinateSystem == PROJECTED_CARTESIAN )
+		    || pd->CoordinateSystem == PROJECTED_CARTESIAN 
+		    || pd->CoordinateSystem == CARTESIAN_2pt5D )
 		  { /* Do nothing. Everything stays 1. */
 		  }
 		else if ( pd->CoordinateSystem == CYLINDRICAL 
@@ -1143,7 +1146,9 @@ assemble_vorticity_direction()
 		  }
 		memset(grad_e, 0, sizeof(double)*DIM*DIM*DIM);
 	
-		if( pd->CoordinateSystem != CARTESIAN )
+		if( pd->CoordinateSystem != CARTESIAN 
+		    && pd->CoordinateSystem != PROJECTED_CARTESIAN 
+		    && pd->CoordinateSystem != CARTESIAN_2pt5D )
 		  {
 		    for ( q=0; q<VIM; q++)
 		      {
@@ -1163,7 +1168,9 @@ assemble_vorticity_direction()
 		      }
 		  }
 
-		if(pd->CoordinateSystem != CARTESIAN)
+		if( pd->CoordinateSystem != CARTESIAN 
+		    && pd->CoordinateSystem != PROJECTED_CARTESIAN 
+		    && pd->CoordinateSystem != CARTESIAN_2pt5D )
 		  {
 		    for ( k=0; k<dofs; k++)
 		      {

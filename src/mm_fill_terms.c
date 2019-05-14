@@ -2548,7 +2548,8 @@ assemble_momentum(dbl time,       /* current time */
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   wt = fv->wt;
@@ -4565,7 +4566,8 @@ assemble_continuity(dbl time_value,   /* current time */
   dim   = pd->Num_Dim;
   wim   = dim;
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
   
   if (pd->v[POLYMER_STRESS11])
@@ -6992,7 +6994,8 @@ assemble_ls_momentum_source(void)
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
     
   /*
@@ -7209,7 +7212,8 @@ apply_ls_momentum_source(void)
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
 
@@ -8394,7 +8398,8 @@ load_fv(void)
   /* Change here in case the 3rd velocity component is non-zero
    * (non LSA situation). */
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     velodim = dim + 1; /* Later is Now!  Woo!!! */
 
   /*
@@ -9194,7 +9199,8 @@ load_fv_grads(void)
 
   int wim = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN) {
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D) {
     wim = wim+1;
   }
 
@@ -9856,7 +9862,7 @@ load_fv_grads(void)
   if (pd->v[VELOCITY1])
     {
       fv->div_v = fv->grad_v[0][0] + fv->grad_v[1][1];
-      if (VIM == 3)
+      if (VIM == 3  && pd->CoordinateSystem != CARTESIAN_2pt5D)
 	{
 	  fv->div_v += fv->grad_v[2][2];
 	}
@@ -11184,7 +11190,8 @@ load_fv_mesh_derivs(int okToZero)
       wim = pd->Num_Dim;
     }
   else if ( (pd->CoordinateSystem == SWIRLING) ||
-	    (pd->CoordinateSystem == PROJECTED_CARTESIAN) )
+	    (pd->CoordinateSystem == PROJECTED_CARTESIAN) ||
+	    (pd->CoordinateSystem == CARTESIAN_2pt5D) )
     {
       wim = 3;
     }
@@ -17103,7 +17110,9 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
     }
   else if (mp->MomentumSourceModel == CONSTANT )
     {
-      for ( a=0; a<dim; a++)
+     int force_dim = dim;
+      if (pd->CoordinateSystem == CARTESIAN_2pt5D) { force_dim = 3;}
+      for ( a=0; a<force_dim; a++)
 	{
 	  eqn   = R_MOMENTUM1+a;			
 	  if ( pd->e[eqn] & T_SOURCE )
@@ -20355,7 +20364,8 @@ assemble_pf_capillary (double *pf_surf_tens )
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
 
@@ -20522,7 +20532,8 @@ assemble_csf_tensor ( void )
 	dim   = pd->Num_Dim;
 	wim   = dim;
 	if (pd->CoordinateSystem == SWIRLING ||
-		pd->CoordinateSystem == PROJECTED_CARTESIAN)
+		pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+		pd->CoordinateSystem == CARTESIAN_2pt5D)
 		wim = wim+1;
 	
 	memset( csf,          0, sizeof(double)*DIM*DIM);
@@ -20812,7 +20823,8 @@ assemble_div_n_source ( )
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;	
 
 #ifdef COUPLED_FILL
@@ -21046,7 +21058,8 @@ assemble_div_s_n_source ( )
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;	
 
 #ifdef COUPLED_FILL
@@ -21273,7 +21286,8 @@ assemble_cap_hysing(double dt, double scale)
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   memset( csf,          0, sizeof(double)*DIM*DIM);
@@ -21473,7 +21487,8 @@ assemble_cap_denner_diffusion(double dt, double scale)
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   memset( csf,          0, sizeof(double)*DIM*DIM);
@@ -21681,7 +21696,8 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   memset( csf,          0, sizeof(double)*DIM*DIM);
@@ -21909,7 +21925,8 @@ assemble_curvature_with_normals_source ( )
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;	
 
   /*
@@ -22109,7 +22126,8 @@ assemble_curvature_source ( )
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   memset( dfdH, 0, DIM*MDE*sizeof(double) );
@@ -23551,7 +23569,8 @@ assemble_ls_yflux_source ( int wspec,	/* species number of this boundary conditi
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
    
   Y_w = fv->c[wspec];
@@ -23843,7 +23862,8 @@ assemble_cont_vel_source ( double *xi, Exo_DB *exo )
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   /*
@@ -24063,7 +24083,8 @@ assemble_extv_kinematic ( dbl tt,		/* parameter to vary time integration from
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   wt = fv->wt;
@@ -24793,7 +24814,8 @@ assemble_eik_kinematic ( dbl tt,		/* parameter to vary time integration from
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   wt = fv->wt;
@@ -25310,7 +25332,8 @@ assemble_p_source ( double pressure, const int bcflag )
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   memset( force, 0, MAX_PDIM*sizeof(double));
@@ -26139,7 +26162,8 @@ assemble_precoil_source (const double p[])
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   /* Mike Kanouff's curve-fit for ablation pressure in Pascals               */
@@ -26407,7 +26431,8 @@ assemble_uvw_source ( int eqn, double val )
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   /*
@@ -26702,7 +26727,8 @@ assemble_uvw_source ( int eqn, double val )
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   /*
@@ -27073,7 +27099,8 @@ assemble_extension_velocity_path_dependence(void)
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   wt = fv->wt;
@@ -27175,7 +27202,8 @@ assemble_fill_path_dependence ( void )
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   wt = fv->wt;
@@ -27617,7 +27645,8 @@ assemble_momentum_path_dependence(dbl time,       /* currentt time step */
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   wt = fv->wt;
@@ -28051,7 +28080,8 @@ assemble_continuity_path_dependence (dbl time_value,
 	dim   = pd->Num_Dim;
 	wim   = dim;
 	if(pd->CoordinateSystem == SWIRLING ||
-	   pd->CoordinateSystem == PROJECTED_CARTESIAN)
+	   pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	   pd->CoordinateSystem == CARTESIAN_2pt5D)
 		wim = wim+1;
 	
 	wt = fv->wt;
@@ -28504,7 +28534,8 @@ assemble_LM_source ( double *xi,
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   pass = ( (Do_Overlap && oAC >= 0) ? 2 : 1);
@@ -28716,7 +28747,8 @@ fluid_stress( double Pi[DIM][DIM],
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   if( pd->v[POLYMER_STRESS11] )
@@ -29205,7 +29237,7 @@ fluid_stress( double Pi[DIM][DIM],
       if (!kappaWipesMu) {
 	for (p = 0; p < VIM; p++) {
 	  for (j = 0; j < ei->dof[var]; j++) {
-	    d_Pi->degrade[p][p][j] -= (d_mu->degrade[j]/3.0 ) * gamma[p][p];
+	    d_Pi->degrade[p][p][j] -= (d_mu->degrade[j]/3.0 -0.5 * d_dilMu->degrade[j]) * gamma[p][p];
 	  }
 	}
       }
@@ -29656,7 +29688,8 @@ fluid_stress_conf( double Pi[DIM][DIM],
   dim   = pd->Num_Dim;
   wim   = dim;
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     {
       wim = wim+1;
     }
@@ -30240,7 +30273,8 @@ heat_flux( double q[DIM],
 
   wim = dim;
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN) wim = wim+1;
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D) wim = wim+1;
 
   if ( d_q == NULL ) d_k = NULL;
   
@@ -30456,7 +30490,8 @@ double heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   dim   = pd->Num_Dim;
   wim = dim;
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN) wim = wim+1;
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D) wim = wim+1;
 
   /* initialize Heat Source sensitivities */
   if ( d_h != NULL )
@@ -31088,7 +31123,8 @@ calc_pspg( dbl pspg[DIM],
   dim   = pd->Num_Dim;
   wim   = dim;
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN) wim = wim+1;
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D) wim = wim+1;
 
   /* initialize */
   for ( a=0; a<DIM; a++ ) pspg[a] = 0.;
@@ -31435,14 +31471,14 @@ calc_pspg( dbl pspg[DIM],
 	  }
 	  
       source = 0.;
-      if ( pd->e[meqn] & LOG2_SOURCE )
+      if ( pd->e[meqn] & T_SOURCE )
 	  {
 		  source = -f[a];
 		  source *= pd->etm[meqn][(LOG2_SOURCE)];
 	  }
 	  
       porous = 0.;
-      if ( pd->e[meqn] & LOG2_POROUS_BRINK )
+      if ( pd->e[meqn] & T_POROUS_BRINK )
 	  {
 		  porous = v[a]*(rho_t*sc*speed/sqrt(per)+vis/per);
 		  porous *= pd->etm[meqn][(LOG2_POROUS_BRINK)];
@@ -31810,7 +31846,8 @@ calc_cont_gls( dbl *cont_gls,
   dim = pd->Num_Dim;
   wim=dim;
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   tau_cont = 0;
@@ -32033,7 +32070,8 @@ assemble_ls_latent_heat_source ( double iso_therm,
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   /*
@@ -33631,7 +33669,8 @@ acoustic_flux( double q[DIM],
 
   wim = dim;
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN) wim = wim+1;
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D) wim = wim+1;
 
   if ( d_q == NULL ) {d_R = NULL;   d_k = NULL;}
   
@@ -33800,7 +33839,8 @@ assemble_ars_source ( double ars_jump, double grad_jump )
   dim   = pd->Num_Dim;
   wim   = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 /* local force caused by Acoustic Reynolds Stress jump at interface	*/
 
@@ -35096,7 +35136,7 @@ assemble_emwave(double time,	/* present time value */
 
 	      for ( p=0; p<VIM; p++)
 		{
-	        for ( q=0; q<VIM; p++)
+	        for ( q=0; q<VIM; q++)
 		  {
 		  diffusion -= permute(p,q,dir)*bf[eqn]->grad_phi[i][p]*cross_field[q];
 		  }

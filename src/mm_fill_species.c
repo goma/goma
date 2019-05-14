@@ -10109,7 +10109,8 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
   int species;			/* Species number for the particle phase. */
   int wim   = pd->Num_Dim;    /* wim is the number of velocity unknowns */
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
   if (mp->DensityModel == SUSPENSION_PM)
