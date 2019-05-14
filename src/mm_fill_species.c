@@ -313,7 +313,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
   int var, ii,  pvar, ledof;
   const int eqn = R_MASS;
   const int dim = pd->Num_Dim;
-  int a, p, b, q, w, w1, i, j, status, c;
+  int p, b, q, w, w1, i, j, status, c;
   /*
    *    species_eqn_type:
    *        This is a temp variable that gets set at the top
@@ -385,7 +385,6 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
   dbl wt_func = 0;
 
   /* SUPG variables */
-  dbl h_elem=0, h_elem_deriv=0;
   dbl supg=0, d_wt_func = 0;
 
   /*
