@@ -60,6 +60,9 @@
 #define SUBPARAMETRIC	2
 #define SUPERPARAMETRIC	3 
 
+/* shell tangent computation selection is ISOPARAMETRIC or SEEDED */
+#define SEEDED          2
+
 /* Viscoelastic Constitutive equation weight functions */
 #define GALERKIN        1
 #define SUPG            2

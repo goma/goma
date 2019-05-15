@@ -1837,8 +1837,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
     //if (TFMP_GAS_VELO != -1) {
     //if ( Krd != 0.0 && mag_gradII_S >= 1.e-10 ) {
-    if ( Krl != 0.0 && mag_gradII_P != 0.0) {
-      local_post[TFMP_INV_PECLET] = (D*Krd*mag_gradII_S)/(Krl*h*h*h/12.0/mu_l*mag_gradII_P);
+    if ( Krd != 0.0 && mag_gradII_S != 0.0) {
+      local_post[TFMP_INV_PECLET] = (Krl*h*h*h/12.0/mu_l*mag_gradII_P)/(D*Krd*mag_gradII_S);
     } else {
       local_post[TFMP_INV_PECLET] = 0.0;
     }
@@ -2500,12 +2500,10 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   if ( (SH_TANG != -1) && pd->e[R_SHELL_NORMAL1] && pd->e[R_SHELL_NORMAL2]
       && pd->e[R_SHELL_NORMAL3] && pd->e[R_MESH1] ) {
 
-     dbl t0[DIM];
-     dbl t1[DIM];
+    dbl t0[DIM];
+    dbl t1[DIM];
 
-     shell_tangents(t0, t1, NULL, NULL);
-
-//     shell_tangents_seeded(t0, t1, NULL, NULL);
+    shell_tangents(t0, t1, NULL, NULL, NULL, NULL);
 
     /* Post tangents and curvatures */
 
@@ -10723,7 +10721,7 @@ index_post, index_post_export);
         }
       TFMP_INV_PECLET = index_post;
       sprintf(nm, "TFMP_INV_PECLET");
-      sprintf(ds, "TFMP Local Peclet Number");
+      sprintf(ds, "TFMP Inverted Local Peclet Number");
       set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
       index++;
       index_post++;

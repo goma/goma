@@ -99,6 +99,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TFMP_TRIANGULAR               301
 #define TFMP_HEXAGONAL                302
 
+// types of shell moment tensor calculation
+#define SMT_SIMPLE                    310
+#define SMT_EXPANDED                  311
+
 /*
  * Options for k in potential equation
  * (electrical conductivity or permittivity)

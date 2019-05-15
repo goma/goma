@@ -1868,6 +1868,10 @@ struct Field_Variables
   dbl SM_matrix_inv[DIM*MAX_CONC][DIM*MAX_CONC];  /* inverse of S-M flux-equation coff. matrix */ 
   dbl giant_C_matrix[MAX_CONC][MDE][DIM*MAX_CONC][DIM*MAX_CONC]; /* matrix used to compute
       Jacobians in mm_fill_potential.c -- RSL 3/31/00 */
+
+  dbl d_grad_tfmp_pres_dmesh[DIM][DIM][MDE];
+  dbl d_grad_tfmp_sat_dmesh[DIM][DIM][MDE];
+  
 };
 
 /*
