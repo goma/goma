@@ -12335,20 +12335,20 @@ if ( pd->v[LIGHT_INTM] )
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[1][0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
-	{
-	  T_i = *esp->poynt[1][i];
-	  for (p = 0; p < dimNonSym; p++)
-	    {
-	      for (b = 0; b < dim; b++)
-		{
-		  for (j = 0; j < mdofs; j++)
+	  {
+	    T_i = *esp->poynt[1][i];
+	    for (p = 0; p < dimNonSym; p++)
+	      {
+		for (b = 0; b < dim; b++)
 		    {
-		      fv->d_grad_poynt_dmesh[1][p] [b][j] +=
- 			T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
+		      for (j = 0; j < mdofs; j++)
+			{
+			  fv->d_grad_poynt_dmesh[1][p] [b][j] +=
+		      T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j];
+			}
 		    }
-		}
-	    }
-	}
+	      }
+	  }
     } else   if ( upd->vp[LIGHT_INTM] != -1  ){
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[1][0][0][0]),0, siz);
@@ -12362,23 +12362,77 @@ if ( pd->v[LIGHT_INTD] )
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[2][0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
-	{
-	  T_i = *esp->poynt[2][i];
-	  for (p = 0; p < dimNonSym; p++)
-	    {
-	      for (b = 0; b < dim; b++)
-		{
-		  for (j = 0; j < mdofs; j++)
-		    {
-		      fv->d_grad_poynt_dmesh[2][p] [b][j] +=
- 			T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
-		    }
-		}
-	    }
-	}
+        {
+          T_i = *esp->poynt[2][i];
+          for (p = 0; p < dimNonSym; p++)
+            {
+              for (b = 0; b < dim; b++)
+                {
+                  for (j = 0; j < mdofs; j++)
+                    {
+                      fv->d_grad_poynt_dmesh[2][p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j];
+                    }
+                }
+            }
+        }
     } else   if ( upd->vp[LIGHT_INTD] != -1  ){
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[2][0][0][0]),0, siz);
+    }
+
+if ( pd->v[TFMP_PRES] )
+    {
+      v = TFMP_PRES;
+      bfv = bf[v];
+      vdofs  = ei->dof[v];
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_tfmp_pres_dmesh[0][0][0]),0, siz);
+      for ( i=0; i<vdofs; i++)
+        {
+          T_i = *esp->tfmp_pres[i];
+          for (p = 0; p < dimNonSym; p++)
+            {
+              for (b = 0; b < dim; b++)
+                {
+                  for (j = 0; j < mdofs; j++)
+                    {
+                      fv->d_grad_tfmp_pres_dmesh[p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
+                    }
+                }
+            }
+        }
+    } else   if ( upd->vp[TFMP_PRES] != -1  ){
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_tfmp_pres_dmesh[0][0][0]),0, siz);
+    }
+  
+if ( pd->v[TFMP_SAT] )
+    {
+      v = TFMP_SAT;
+      bfv = bf[v];
+      vdofs  = ei->dof[v];
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_tfmp_sat_dmesh[0][0][0]),0, siz);
+      for ( i=0; i<vdofs; i++)
+        {
+          T_i = *esp->tfmp_sat[i];
+          for (p = 0; p < dimNonSym; p++)
+            {
+              for (b = 0; b < dim; b++)
+                {
+                  for (j = 0; j < mdofs; j++)
+                    {
+                      fv->d_grad_tfmp_sat_dmesh[p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
+                    }
+                }
+            }
+        }
+    } else   if ( upd->vp[TFMP_PRES] != -1  ){
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_tfmp_pres_dmesh[0][0][0]),0, siz);
     }
 
 if ( pd->v[RESTIME] )
@@ -12389,20 +12443,20 @@ if ( pd->v[RESTIME] )
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_restime_dmesh[0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
-	{
-	  T_i = *esp->restime[i];
-	  for (p = 0; p < dimNonSym; p++)
-	    {
-	      for (b = 0; b < dim; b++)
-		{
-		  for (j = 0; j < mdofs; j++)
-		    {
-		      fv->d_grad_restime_dmesh[p] [b][j] +=
- 			T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
-		    }
-		}
-	    }
-	}
+        {
+          T_i = *esp->restime[i];
+          for (p = 0; p < dimNonSym; p++)
+            {
+              for (b = 0; b < dim; b++)
+                {
+                  for (j = 0; j < mdofs; j++)
+                    {
+                      fv->d_grad_restime_dmesh[p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
+                    }
+                }
+            }
+        }
     } else   if ( upd->vp[RESTIME] != -1  ){
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_restime_dmesh[0][0][0]),0, siz);

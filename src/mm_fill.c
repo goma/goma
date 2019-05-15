@@ -2212,7 +2212,7 @@ matrix_fill(
 
       if ( pde[R_MESH1] && pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2] && pde[R_SHELL_NORMAL3])
         {
-         err = assemble_shell_mesh(xi, exo);
+	  err = assemble_shell_mesh(time_value, theta, delta_t, xi, exo);
          EH( err, "assemble_shell_mesh");
 #ifdef CHECK_FINITE
          err = CHECKFINITE("assemble_shell_mesh"); 

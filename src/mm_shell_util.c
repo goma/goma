@@ -87,6 +87,7 @@ static char rcsid[] =
  *  shell_normal_div_s()         int
  *  shell_determinant_and_normal() int
  *  shell_tangents               void
+ *  shell_tangents_isoparametric void
  *  shell_tangents_seeded        void
  *  calculate_lub_q_v()          void
  *  calculate_lub_q_v_old()      void
@@ -2240,6 +2241,44 @@ shell_determinant_and_normal(
 
 void
 shell_tangents(
+	       dbl t0[DIM],
+	       dbl t1[DIM],
+	       dbl dt0_dx[DIM][DIM][MDE],
+	       dbl dt1_dx[DIM][DIM][MDE],
+	       dbl dt0_dnormal[DIM][DIM][MDE],
+	       dbl dt1_dnormal[DIM][DIM][MDE]
+	       )
+/******************************************************************************
+ *
+ * shell_tangents()
+ *
+ *    Wrapper routine to select which function is used to calculate shell
+ *    tangents and curvatures and their sensitivities.
+ *
+ *    t0 = dx/ds normalized
+ *    t1 = dx/dt normalized
+ *
+ * Andrew Cochrane <acochrane@gmail.com>
+ *
+ ******************************************************************************/
+{
+  switch (mp->shell_tangent_model) {
+  case ISOPARAMETRIC:
+    shell_tangents_isoparametric(t0, t1, dt0_dx, dt1_dx);
+    break;
+  case SEEDED:
+    shell_tangents_seeded(t0, t1, dt0_dnormal, dt1_dnormal);
+    break;
+  default:
+    shell_tangents_isoparametric(t0, t1, dt0_dx, dt1_dx);
+    break;
+  }
+  return;
+}
+
+
+void
+shell_tangents_isoparametric(
                dbl t0[DIM],
                dbl t1[DIM],
                dbl dt0_dx[DIM][DIM][MDE],
@@ -2247,7 +2286,7 @@ shell_tangents(
               )
 /******************************************************************************
  *
- * shell_tangents()
+ * shell_tangents_isoparametric()
  *
  *    Routine to calculate shell tangents and curvatures with their sensitivities
  *    Here, we use isoparametric coordinates s and t to form tangent vectors
@@ -2386,9 +2425,9 @@ shell_tangents_seeded(
 
   /********* SEED *************/
 
-   seed[0] = 0.0;
-   seed[1] = 1.0;
-   seed[2] = 0.0;
+   seed[0] = mp->shell_tangent_seed_vec_const[0];
+   seed[1] = mp->shell_tangent_seed_vec_const[1];
+   seed[2] = mp->shell_tangent_seed_vec_const[2];
 
 
   /******** NORMAL . SEED ******/
@@ -2565,12 +2604,7 @@ shell_stress_tensor  (
   memset(dt0_dnormal, 0.0, sizeof(double)*DIM*DIM*MDE);
   memset(dt1_dnormal, 0.0, sizeof(double)*DIM*DIM*MDE);
 
-
-  shell_tangents(t0, t1, dt0_dx, dt1_dx);
-
-//  shell_tangents_seeded(t0, t1, dt0_dnormal, dt1_dnormal);
-
-
+  shell_tangents(t0, t1, dt0_dx, dt1_dx, dt0_dnormal, dt1_dnormal);
 
   /******* SHELL DISPLACEMENTS AND THEIR SENSITIVITIES **********/
 
@@ -2841,11 +2875,7 @@ shell_moment_tensor  (
   memset(dt0_dnormal, 0.0, sizeof(double)*DIM*DIM*MDE);
   memset(dt1_dnormal, 0.0, sizeof(double)*DIM*DIM*MDE);
 
-
-  shell_tangents(t0, t1, dt0_dx, dt1_dx);
-
-//  shell_tangents_seeded(t0, t1, dt0_dnormal, dt1_dnormal);
-
+  shell_tangents(t0, t1, dt0_dx, dt1_dx, dt0_dnormal, dt1_dnormal);
 
   /******* SHELL DISPLACEMENTS AND THEIR SENSITIVITIES **********/
 
@@ -3110,71 +3140,125 @@ shell_moment_tensor  (
 
   /******* SHELL MOMENT TENSOR AND THEIR SENSITIVITIES **********/
 
-  M[0][0] = D * (K0 * du_ds +  dK0_ds * u + nu * (K1 * dv_dt + dK1_dt * v) );
-  M[0][1] = 0.5 * D * (1.0 - nu) * (K0 * du_dt + dK0_dt * u + K1 * dv_ds + dK1_ds * v );
-  M[1][0] = 0.5 * D * (1.0 - nu) * (K0 * du_dt + dK0_dt * u + K1 * dv_ds + dK1_ds * v );
-  M[1][1] = D * ( nu * (K0 * du_ds +  dK0_ds * u) + K1 * dv_dt + dK1_dt * v );
+  int my_smt_kind = mp->shell_moment_tensor_model;
+
+  switch(my_smt_kind) {
+    case SMT_SIMPLE:
+      M[0][0] = -D * ( K0 + nu*K1 );
+      M[0][1] = -0.5 * D * (1.0 - nu) * ( K0 + K1 );
+      M[1][0] = -0.5 * D * (1.0 - nu) * ( K0 + K1 );
+      M[1][1] = -D * ( nu*K0 + K1 );
+      break;
+    case SMT_EXPANDED:
+      M[0][0] = D * (K0 * du_ds +  dK0_ds * u + nu * (K1 * dv_dt + dK1_dt * v) );
+      M[0][1] = 0.5 * D * (1.0 - nu) * (K0 * du_dt + dK0_dt * u + K1 * dv_ds + dK1_ds * v );
+      M[1][0] = 0.5 * D * (1.0 - nu) * (K0 * du_dt + dK0_dt * u + K1 * dv_ds + dK1_ds * v );
+      M[1][1] = D * ( nu * (K0 * du_ds +  dK0_ds * u) + K1 * dv_dt + dK1_dt * v );
+      break;
+  }
+
+
 
   for (b = 0; b < dim; b++)
      {
       var = MESH_DISPLACEMENT1 + b;
 
       for (j = 0; j < ei->dof[var]; j++)
-         {
-          dM_dx[0][0][b][j] = D * (K0 * d_du_ds_dx[b][j] + d_dK0_ds_dx[b][j] * u + dK0_ds * d_u_dx[b][j] +
-                                  (K1 * d_dv_dt_dx[b][j] + d_dK1_dt_dx[b][j] * v + dK1_dt * d_v_dx[b][j]) * nu );
+        {
+          switch(my_smt_kind) {
+            case SMT_SIMPLE:
+              dM_dx[0][0][b][j] = 0.0;
+              dM_dx[0][1][b][j] = 0.0;
+              dM_dx[1][0][b][j] = 0.0;
+              dM_dx[1][1][b][j] = 0.0;
+              break;
+            case SMT_EXPANDED:
+              dM_dx[0][0][b][j] = D * (K0 * d_du_ds_dx[b][j] + d_dK0_ds_dx[b][j] * u + dK0_ds * d_u_dx[b][j] +
+                                      (K1 * d_dv_dt_dx[b][j] + d_dK1_dt_dx[b][j] * v + dK1_dt * d_v_dx[b][j]) * nu );
 
-          dM_dx[0][1][b][j] = 0.5 * D * (1.0 - nu) * (K0 * d_du_dt_dx[b][j] + d_dK0_dt_dx[b][j] * u + dK0_dt * d_u_dx[b][j] +
-                                                      K1 * d_dv_ds_dx[b][j] + d_dK1_ds_dx[b][j] * v + dK1_ds * d_v_dx[b][j] );
+              dM_dx[0][1][b][j] = 0.5 * D * (1.0 - nu) * (K0 * d_du_dt_dx[b][j] + d_dK0_dt_dx[b][j] * u + dK0_dt * d_u_dx[b][j] +
+                                                          K1 * d_dv_ds_dx[b][j] + d_dK1_ds_dx[b][j] * v + dK1_ds * d_v_dx[b][j] );
 
-          dM_dx[1][0][b][j] = 0.5 * D * (1.0 - nu) * (K0 * d_du_dt_dx[b][j] + d_dK0_dt_dx[b][j] * u + dK0_dt * d_u_dx[b][j] +
-                                                      K1 * d_dv_ds_dx[b][j] + d_dK1_ds_dx[b][j] * v + dK1_ds * d_v_dx[b][j] );
+              dM_dx[1][0][b][j] = 0.5 * D * (1.0 - nu) * (K0 * d_du_dt_dx[b][j] + d_dK0_dt_dx[b][j] * u + dK0_dt * d_u_dx[b][j] +
+                                                          K1 * d_dv_ds_dx[b][j] + d_dK1_ds_dx[b][j] * v + dK1_ds * d_v_dx[b][j] );
 
-          dM_dx[1][1][b][j] = D * ( (K0 * d_du_ds_dx[b][j] + d_dK0_ds_dx[b][j] * u + dK0_ds * d_u_dx[b][j] ) * nu  +
-                                     K1 * d_dv_dt_dx[b][j] + d_dK1_dt_dx[b][j] * v + dK1_dt * d_v_dx[b][j] );
-         }
+              dM_dx[1][1][b][j] = D * ( (K0 * d_du_ds_dx[b][j] + d_dK0_ds_dx[b][j] * u + dK0_ds * d_u_dx[b][j] ) * nu  +
+                                         K1 * d_dv_dt_dx[b][j] + d_dK1_dt_dx[b][j] * v + dK1_dt * d_v_dx[b][j] );
+
+              break;
+          }
+        }
      }
 
-  for (b = 0; b < dim; b++)
-     {
-      var = SHELL_NORMAL1 + b;
+  for (b = 0; b < dim; b++) {
+    var = SHELL_NORMAL1 + b;
+      for (j = 0; j < ei->dof[var]; j++) {
+        switch(my_smt_kind) {
+          case SMT_SIMPLE:
+            dM_dnormal[0][0][b][j] = 0.0;
 
-      for (j = 0; j < ei->dof[var]; j++)
-         {
-          dM_dnormal[0][0][b][j] = D * (K0 * d_du_ds_dnormal[b][j] + d_dK0_ds_dnormal[b][j] * u + dK0_ds * d_u_dnormal[b][j] +
-                                       (K1 * d_dv_dt_dnormal[b][j] + d_dK1_dt_dnormal[b][j] * v + dK1_dt * d_v_dnormal[b][j]) * nu );
+            dM_dnormal[0][1][b][j] = 0.0;
 
-          dM_dnormal[0][1][b][j] = 0.5 * D * (1.0 - nu) * (K0 * d_du_dt_dnormal[b][j] + d_dK0_dt_dnormal[b][j] * u + dK0_dt * d_u_dnormal[b][j] +
-                                                           K1 * d_dv_ds_dnormal[b][j] + d_dK1_ds_dnormal[b][j] * v + dK1_ds * d_v_dnormal[b][j] );
+            dM_dnormal[1][0][b][j] = 0.0;
 
-          dM_dnormal[1][0][b][j] = 0.5 * D * (1.0 - nu) * (K0 * d_du_dt_dnormal[b][j] + d_dK0_dt_dnormal[b][j] * u + dK0_dt * d_u_dnormal[b][j] +
-                                                           K1 * d_dv_ds_dnormal[b][j] + d_dK1_ds_dnormal[b][j] * v + dK1_ds * d_v_dnormal[b][j] );
+            dM_dnormal[1][1][b][j] = 0.0;
 
-          dM_dnormal[1][1][b][j] = D * ( (K0 * d_du_ds_dnormal[b][j] + d_dK0_ds_dnormal[b][j] * u + dK0_ds * d_u_dnormal[b][j]) * nu  +
-                                          K1 * d_dv_dt_dnormal[b][j] + d_dK1_dt_dnormal[b][j] * v + dK1_dt * d_v_dnormal[b][j]  );
-         }
-     }
+            break;
+          case SMT_EXPANDED:
+            dM_dnormal[0][0][b][j] = D * (K0 * d_du_ds_dnormal[b][j] + d_dK0_ds_dnormal[b][j] * u + dK0_ds * d_u_dnormal[b][j] +
+                                         (K1 * d_dv_dt_dnormal[b][j] + d_dK1_dt_dnormal[b][j] * v + dK1_dt * d_v_dnormal[b][j]) * nu );
+
+            dM_dnormal[0][1][b][j] = 0.5 * D * (1.0 - nu) * (K0 * d_du_dt_dnormal[b][j] + d_dK0_dt_dnormal[b][j] * u + dK0_dt * d_u_dnormal[b][j] +
+                                                             K1 * d_dv_ds_dnormal[b][j] + d_dK1_ds_dnormal[b][j] * v + dK1_ds * d_v_dnormal[b][j] );
+
+            dM_dnormal[1][0][b][j] = 0.5 * D * (1.0 - nu) * (K0 * d_du_dt_dnormal[b][j] + d_dK0_dt_dnormal[b][j] * u + dK0_dt * d_u_dnormal[b][j] +
+                                                             K1 * d_dv_ds_dnormal[b][j] + d_dK1_ds_dnormal[b][j] * v + dK1_ds * d_v_dnormal[b][j] );
+
+            dM_dnormal[1][1][b][j] = D * ( (K0 * d_du_ds_dnormal[b][j] + d_dK0_ds_dnormal[b][j] * u + dK0_ds * d_u_dnormal[b][j]) * nu  +
+                                            K1 * d_dv_dt_dnormal[b][j] + d_dK1_dt_dnormal[b][j] * v + dK1_dt * d_v_dnormal[b][j]  );
+            break;
+        }
+      }
+    }
 
   var = SHELL_CURVATURE;
   for (j = 0; j < ei->dof[var]; j++)
      {
       phi_j = bf[var]->phi[j];
-
-      dM_dcurv0[0][0][j] = D * (phi_j * du_ds +  d_dK0_ds_dcurv0[j] * u );
-      dM_dcurv0[0][1][j] = 0.5 * D * (1.0 - nu) * (phi_j * du_dt + d_dK0_dt_dcurv0[j] * u);
-      dM_dcurv0[1][0][j] = 0.5 * D * (1.0 - nu) * (phi_j * du_dt + d_dK0_dt_dcurv0[j] * u);
-      dM_dcurv0[1][1][j] = D * (phi_j * du_ds +  d_dK0_ds_dcurv0[j] * u ) * nu;
+      switch(my_smt_kind) {
+        case SMT_SIMPLE:
+          dM_dcurv0[0][0][j] = -D * (phi_j );
+          dM_dcurv0[0][1][j] = -0.5 * D * (1.0 - nu) * (phi_j);
+          dM_dcurv0[1][0][j] = -0.5 * D * (1.0 - nu) * (phi_j);
+          dM_dcurv0[1][1][j] = -D * (phi_j) * nu;
+          break;
+        case SMT_EXPANDED:
+          dM_dcurv0[0][0][j] = D * (phi_j * du_ds +  d_dK0_ds_dcurv0[j] * u );
+          dM_dcurv0[0][1][j] = 0.5 * D * (1.0 - nu) * (phi_j * du_dt + d_dK0_dt_dcurv0[j] * u);
+          dM_dcurv0[1][0][j] = 0.5 * D * (1.0 - nu) * (phi_j * du_dt + d_dK0_dt_dcurv0[j] * u);
+          dM_dcurv0[1][1][j] = D * (phi_j * du_ds +  d_dK0_ds_dcurv0[j] * u ) * nu;
+          break;
+      }
      }
 
   var = SHELL_CURVATURE2;
   for (j = 0; j < ei->dof[var]; j++)
      {
       phi_j = bf[var]->phi[j];
-
-      dM_dcurv1[0][0][j] = D * (phi_j * dv_dt +  d_dK1_dt_dcurv1[j] * v ) * nu;
-      dM_dcurv1[0][1][j] = 0.5 * D * (1.0 - nu) * (phi_j * dv_ds + d_dK1_ds_dcurv1[j] * v);
-      dM_dcurv1[1][0][j] = 0.5 * D * (1.0 - nu) * (phi_j * dv_ds + d_dK1_ds_dcurv1[j] * v);
-      dM_dcurv1[1][1][j] = D * (phi_j * dv_dt +  d_dK1_dt_dcurv1[j] * v );
+      switch(my_smt_kind) {
+        case SMT_SIMPLE:
+          dM_dcurv1[0][0][j] = -D * (phi_j) * nu;
+          dM_dcurv1[0][1][j] = -0.5 * D * (1.0 - nu) * (phi_j);
+          dM_dcurv1[1][0][j] = -0.5 * D * (1.0 - nu) * (phi_j);
+          dM_dcurv1[1][1][j] = -D * (phi_j);
+          break;
+        case SMT_EXPANDED:
+          dM_dcurv1[0][0][j] = D * (phi_j * dv_dt +  d_dK1_dt_dcurv1[j] * v ) * nu;
+          dM_dcurv1[0][1][j] = 0.5 * D * (1.0 - nu) * (phi_j * dv_ds + d_dK1_ds_dcurv1[j] * v);
+          dM_dcurv1[1][0][j] = 0.5 * D * (1.0 - nu) * (phi_j * dv_ds + d_dK1_ds_dcurv1[j] * v);
+          dM_dcurv1[1][1][j] = D * (phi_j * dv_dt +  d_dK1_dt_dcurv1[j] * v );
+          break;
+      }
      }
 
 } /* End of shell_moment_tensor */
@@ -3284,6 +3368,11 @@ lubrication_shell_initialize (
     n_dof[MESH_DISPLACEMENT1] = ei->dof[MESH_DISPLACEMENT1];
     n_dof[MESH_DISPLACEMENT2] = ei->dof[MESH_DISPLACEMENT2];
     n_dof[MESH_DISPLACEMENT3] = ei->dof[MESH_DISPLACEMENT3];
+    if (pd->e[R_SHELL_NORMAL1]) {
+      n_dof[SHELL_NORMAL1] = ei->dof[SHELL_NORMAL1];
+      n_dof[SHELL_NORMAL2] = ei->dof[SHELL_NORMAL2];
+      n_dof[SHELL_NORMAL3] = ei->dof[SHELL_NORMAL3];
+    }
 
     /* Populate a trivial dof_map array */
     for (i = 0; i < ei->dof[pd->ShapeVar]; i++)

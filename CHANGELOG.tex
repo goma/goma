@@ -840,30 +840,64 @@ With this capability one can read in a pixel field generated from any drawing to
 
 Capability:  Maximum-through-time history of von Mises strain in mesh
 Developer(s):  Scott A. Roberts, sarober  Date:  4/12/2012
-Brief Description:  Calculates the maximum von Mises strain that has been experienced at any given material point.  This was designed to be used for FAUX_PLASTICITY, and will soon be required for its use.
+Brief Description:  Calculates the maximum von Mises strain that has been experienced
+at any given material point.  This was designed to be used for FAUX_PLASTICITY, and will
+soon be required for its use.
 Example:  
 EQ = max_strain       Q1 MAX_STRAIN    Q1 1               1
 
-Capability: Documentation and testing of element quality specifications (rd_elem_quality_specs in mm_input.c)
+Capability: Documentation and testing of element quality specifications
+(rd_elem_quality_specs in mm_input.c)
 Developers: Randy Lober (circa 1998)
-Description: These capabilities are used to ouput and possibly deploy in solution control of element quality during free and moving boundary ALE calculations.  They have really never been used, but the idea wass for adaptivity.  
-The issue here is that there use is NOT documented.    Should they be?  Or should they be deprecated.   The cards are:
+Description: These capabilities are used to ouput and possibly deploy in solution
+control of element quality during free and moving boundary ALE calculations.  They have
+really never been used, but the idea wass for adaptivity.  
+The issue here is that there use is NOT documented.    Should they be?  Or should they be
+deprecated.   The cards are:
 Jacobian quality weight= yes | TRUE
 Volume change quality weight=
 Angle quality weight=
 Triangle quality weight=
 Element quality tolerance type=
 
-Capability: TFMP: Thin film multiphase flow model [equations, variables, boundary conditions, post processing]
+Capability: TFMP: Thin film multiphase flow model [equations, variables, boundary
+conditions, post processing]
 Developers: Andrew Cochrane, July 2017
-Description: Multiphase model for disperse and separated gas-liquid lubrication flow with gas dissolution.
+Description: Multiphase model for disperse and separated gas-liquid lubrication flow with
+gas dissolution.
 \end{alltt}
 \begin{align*}
  \frac{\partial Sh}{\partial t} + \bm{\nabla \cdot} (\bm{\bar{v_l}}h) &= 0 \\
  \frac{\partial \rho_g(1-S)h}{\partial t} + \bm {\nabla} \cdot (\bm{\bar{v_g}}\rho_gh) + J &= 0
 \end{align*}
 
+\begin{alltt}
+Capability: Coupled Shell-Membrane and TFMP model [equations, variables, boundary
+conditions, post processing]
+Developers: Andrew Cochrane and Kristitanto Tjiptowidjojo, October 2017
+Description: Membrane equations based on Pranckh dissertation and Soedel book, more info
+in Cochrane dissertation.
 
+A quasi-static steady-state model for the web structure develops under the application of
+total force balance. The tangential force balance equations comprise extension stress,
+shear of the web and bending moment stress
+\end{alltt}
+\begin{subequations}
+\begin{align*}
+&\boldsymbol{\nabla}_\mathrm{II} \cdot \boldsymbol{N}_1& & + \kappa_1  \boldsymbol{\nabla}_\mathrm{II} \cdot \boldsymbol{M}_1& &= 0\\
+&\boldsymbol{\nabla}_\mathrm{II} \cdot \boldsymbol{N}_2& & + \kappa_2  \boldsymbol{\nabla}_\mathrm{II} \cdot \boldsymbol{M}_2& &= 0\\
+&\text{Extension and}&     &\text{Bending moments about}& \nonumber&\\
+&\text{web-plane shear}&   &\text{axes in the web-plane}& \nonumber&
+\end{align*}
+\end{subequations}
+\begin{alltt}
+The normal force balance equation contains components that arise from extension around
+a curve, bending moments and applied pressure.
+\end{alltt}
+\begin{align*}
+&\kappa_1 N_{11} + \kappa_2 N_{22}&  & - \boldsymbol{\nabla}_\mathrm{II} \cdot \boldsymbol{M}_1 - \boldsymbol{\nabla}_\mathrm{II} \cdot \boldsymbol{M}_2&  &+ F& = 0 \label{eq:3dshell_normal_balance}\\
+&\text{Curved extension}&         &\text{Bending moments}&                                                                                              &\text{Applied pressure}& \nonumber
+\end{align*}
 
 \end{document}
 

@@ -325,7 +325,10 @@ PROTO((double [DIM],             /* Local stu coords */
        const Exo_DB *exo));      /* ExodusII database struct pointer */
 
 EXTERN int assemble_shell_mesh
-PROTO((double [DIM],             /* Local stu coords */
+PROTO((double,                   /* Time */
+       double,                   /* theta or tt*/
+       double,                   /* dt */
+       double [DIM],             /* Local stu coords */
        const Exo_DB *exo ));     /* ExodusII database struct pointer */
 
 

@@ -81,4 +81,11 @@ PROTO((
        double *
        ));
 
+EXTERN double rolling_pressure
+PROTO((
+       double,
+       double*,
+       double
+       ));
+
 #endif /* _MM_STD_MODELS_H */

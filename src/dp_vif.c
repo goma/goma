@@ -1,4 +1,5 @@
 /************************************************************************ *
+
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
@@ -1863,7 +1864,12 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->tfmp_drop_lattice_model, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->len_tfmp_drop_lattice_const, 1, MPI_INT);
 
-     
+      ddd_add_member(n, &mp_glob[i]->shell_tangent_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->len_shell_tangent_seed_vec_const, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->shell_moment_tensor_model, 1, MPI_INT);
+
+
+
       /*
        * Loop over user-defined constants lists of lengths.
        *
@@ -3034,7 +3040,10 @@ ark_landing()
               m->    tfmp_dissolution_const);
       dalloc( m->len_tfmp_drop_lattice_const,
               m->    tfmp_drop_lattice_const);
-	    
+
+      dalloc (m->len_shell_tangent_seed_vec_const,
+              m->shell_tangent_seed_vec_const);
+
       /*
        * User defined material property lists for each species...
        *     HKM -> Changed this to number of species, not
@@ -3419,6 +3428,9 @@ noahs_dove()
 
     crdv( m->len_tfmp_drop_lattice_const,
 	  m->    tfmp_drop_lattice_const);
+
+    crdv( m->len_shell_tangent_seed_vec_const,
+	  m->    shell_tangent_seed_vec_const);
 
     /*
      *  Add species names
