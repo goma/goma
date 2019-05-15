@@ -16384,7 +16384,6 @@ assemble_shell_tfmp(double time,   /* Time */
     eqn = R_TFMP_MASS;
     peqn = upd->ep[eqn];
     etm_mass_eqn = pd->etm[eqn][(LOG2_MASS)];      //
-    etm_adv_eqn = pd->etm[eqn][(LOG2_ADVECTION)];  //
                                                    //
     etm_diff_eqn = pd->etm[eqn][(LOG2_DIFFUSION)]; //
                                                    //
@@ -16405,12 +16404,6 @@ assemble_shell_tfmp(double time,   /* Time */
 	mass *= dA*etm_mass_eqn;
       }
       
-      /* Assemble advection term */
-      adv = 0.0;
-      if ( T_ADVECTION ) {
-	adv += 0.0;
-      	adv *= dA * etm_adv_eqn;
-      }
       /* Assemble diffusion term */
       diff = 0.0;
       gradP_dot_gradphi_i = 0.0;
@@ -16430,7 +16423,7 @@ assemble_shell_tfmp(double time,   /* Time */
 
       	diff *= dA*etm_diff_eqn;
       }
-      lec->R[peqn][i] += (mass + adv + diff);
+      lec->R[peqn][i] += (mass + diff);
     } // end of loop over i for eqn = R_TFMP_MASS
 
     /* Assemble the gas volume conservation equation */
@@ -16438,7 +16431,6 @@ assemble_shell_tfmp(double time,   /* Time */
     peqn = upd->ep[eqn];
     etm_mass_eqn = pd->etm[eqn][(LOG2_MASS)]; //
     etm_adv_eqn = pd->etm[eqn][(LOG2_ADVECTION)]; //
-    //    etm_diff_eqn = pd->etm[eqn][(LOG2_DIFFUSION)]; //
     etm_source_eqn = pd->etm[eqn][(LOG2_SOURCE)]; //
 
     /* Loop over DOF (i) */
@@ -16503,13 +16495,8 @@ assemble_shell_tfmp(double time,   /* Time */
 	  adv += phi_i*clip_strength*(1.0-S)*(1.0-S)*dh_dtime;
 	}
       }
-      /* Assemble diffusion term */
-      diff = 0.0;
-   
-      if( T_DIFFUSION ) {
-
-      }
-
+      
+      /* Assemble source term */
       source = 0.0;
       if ( T_SOURCE ) {
 	source += phi_i*J;
@@ -16520,7 +16507,6 @@ assemble_shell_tfmp(double time,   /* Time */
 
       mass *= dA * etm_mass_eqn;
       adv *= dA * etm_adv_eqn;
-      //diff *= dA * etm_diff_eqn;
       source *= dA * etm_source_eqn;
       
       lec->R[peqn][i] += mass + adv + source;
@@ -16536,7 +16522,6 @@ assemble_shell_tfmp(double time,   /* Time */
   if (af->Assemble_Jacobian) /* eqn = R_TFMP_MASS */ {
     peqn = upd->ep[eqn];
     etm_mass_eqn = pd->etm[eqn][(LOG2_MASS)];
-    etm_adv_eqn = pd->etm[eqn][(LOG2_ADVECTION)];
     etm_diff_eqn = pd->etm[eqn][(LOG2_DIFFUSION)];
     // Loop over DOF (i)
     for ( i = 0; i < ei->dof[eqn]; i++) { 					     
@@ -16556,12 +16541,7 @@ assemble_shell_tfmp(double time,   /* Time */
 	  mass = 0.0;
 	  if ( T_MASS ) {
 	  }
-	  // Assemble advection term
-	  adv = 0.0;
-
-	  if ( T_ADVECTION ) {
-	    
-	  }
+	  
 	  // Assemble diffusion term
 	  diff = 0.0;
 	  gradphi_i_dot_gradphi_j = 0.0;
@@ -16574,7 +16554,7 @@ assemble_shell_tfmp(double time,   /* Time */
 	  diff *= etm_diff_eqn;
 	  
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += dA*(mass + adv + diff);
+	  lec->J[peqn][pvar][i][j] += dA*(mass + diff);
 	  
 	} // End of loop over DOF (j)
 	  
@@ -16603,15 +16583,6 @@ assemble_shell_tfmp(double time,   /* Time */
 	    mass *= etm_mass_eqn;
 	  }
 
-	  
-	  // Assemble advection term
-	  adv = 0.0;
-
-	  if ( T_ADVECTION ) {
-	    adv += 0.0;
-	    
-	    adv *= etm_adv_eqn;
-	  }
 	  // Assemble diffusion term
 	  diff = 0.0;
 	  gradP_dot_gradphi_i = 0.0;
@@ -16633,7 +16604,7 @@ assemble_shell_tfmp(double time,   /* Time */
 	    diff *= etm_diff_eqn;
 	  }
 	  // Assemble full Jacobian
-	  lec->J[peqn][pvar][i][j] += dA*(mass + adv + diff);
+	  lec->J[peqn][pvar][i][j] += dA*(mass + diff);
       	} // End of loop over DOF (j)
       }// End of R_TFMP_MASS sensitivities to TFMP_SAT
 
@@ -16676,17 +16647,7 @@ assemble_shell_tfmp(double time,   /* Time */
 
 		mass *= etm_mass_eqn;
 	      }
-	      
 
-	      // Assemble advection term
-	      adv = 0.0;
-
-	      if ( T_ADVECTION ) {
-
-		adv += 0.0;
-
-	      }
-	      adv *= etm_adv_eqn;
 	      // Assemble diffusion term
 	      diff = 0.0;
 	      gradP_dot_gradphi_i = 0.0;
@@ -16735,7 +16696,7 @@ assemble_shell_tfmp(double time,   /* Time */
 	      diff *= etm_diff_eqn;
 
 	      // Assemble full Jacobian
-	      lec->J[peqn][pvar][i][j] += mass + adv + diff;
+	      lec->J[peqn][pvar][i][j] += mass + diff;
 
 	    } // End of loop over DOF (j)
 	  
@@ -16766,14 +16727,7 @@ assemble_shell_tfmp(double time,   /* Time */
 		mass += phi_i*S*d2h_dtime_dnormal[l][j];
 		mass *= etm_mass_eqn;
 	      }
-	      //mass *= dA * etm_mass_eqn;
-	      // Assemble advection term
-	      adv = 0.0;
-
-	      if ( T_ADVECTION ) {
-		adv += 0.0;
-		adv *= etm_adv_eqn;
-	      }
+	      
 	      // Assemble diffusion term
 	      diff = 0.0;
 	      gradP_dot_gradphi_i = 0.0;
@@ -16790,7 +16744,7 @@ assemble_shell_tfmp(double time,   /* Time */
 	      diff *= etm_diff_eqn;
 
 	      // Assemble full Jacobian
-	      lec->J[peqn][pvar][i][j] += dA*(mass + adv + diff);	  
+	      lec->J[peqn][pvar][i][j] += dA*(mass + diff);	  
 	    } // End of loop over DOF (j)
 	  
 	  }// End of R_TFMP_MASS sensitivities to SHELL_NORMAL
@@ -16809,8 +16763,7 @@ assemble_shell_tfmp(double time,   /* Time */
     peqn = upd->ep[eqn];
     etm_mass_eqn = pd->etm[eqn][(LOG2_MASS)];
     etm_adv_eqn = pd->etm[eqn][(LOG2_ADVECTION)];
-    //etm_diff_eqn = pd->etm[eqn][(LOG2_DIFFUSION)];
-    etm_source_eqn = pd->etm[eqn][(LOG2_SOURCE)]; //
+    etm_source_eqn = pd->etm[eqn][(LOG2_SOURCE)];
     // Loop over DOF (i)
     for ( i = 0; i < ei->dof[eqn]; i++) { 
       // Load basis functions
@@ -16879,10 +16832,6 @@ assemble_shell_tfmp(double time,   /* Time */
 	      adv = 0.0;
 	    }
 	    adv *= etm_adv_eqn;
-	  }
-	  // Assemble diffusion term
-	  diff = 0.0;
-	  if ( T_DIFFUSION ) {
 	  }
 
 	  source = 0.0;
@@ -16966,12 +16915,7 @@ assemble_shell_tfmp(double time,   /* Time */
 	    }
 	    adv *= etm_adv_eqn;
 	  }
-	  // Assemble diffusion term
-	  diff = 0.0;
-	  if ( T_DIFFUSION ) {
-
-	  }
-
+	  
 	  // Assemble source term
 	  source = 0.0;
 	  if ( T_SOURCE ) {
@@ -17143,12 +17087,8 @@ assemble_shell_tfmp(double time,   /* Time */
 	      adv *= etm_adv_eqn;
 	    }
 	    
-	    // Assemble diffusion term
-	    diff = 0.0;
-	    if ( T_DIFFUSION ) {
-	    }
-	    diff *= etm_diff_eqn;
-
+	    // Assemble source term
+	    
 	    source = 0.0;
 	    if ( T_SOURCE ) {
 	      source += phi_i*dJ_dh*dh_dmesh[l][j]
@@ -17237,11 +17177,7 @@ assemble_shell_tfmp(double time,   /* Time */
 	      }
 	      adv *= etm_adv_eqn;
 	    }
-	    // Assemble diffusion term
-	    diff = 0.0;
-	    if ( T_DIFFUSION ) {
-	    }
-	    diff *= etm_diff_eqn;
+	    // Assemble source term
 
 	    source = 0.0;
 	    if ( T_SOURCE ) {
