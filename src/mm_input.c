@@ -10928,6 +10928,7 @@ set_mp_to_unity(const int mn)
       m->FickDiffType[w]=CONSTANT;
       m->CurvDiffType[w]=CONSTANT;
       m->GravDiffType[w]=CONSTANT;
+      m->NSCoeffType[w]=CONSTANT;
       m->QTensorDiffType[w] = NO_MODEL;
       m->gam_diffusivity[w]=0.;
       m->mu_diffusivity[w]=0.;

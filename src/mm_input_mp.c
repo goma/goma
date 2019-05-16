@@ -6949,6 +6949,39 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		   }
 
 		 ECHO(es,echo_file);
+
+		 
+		 species_no = mat_ptr->Num_Species; /* set species number equal to max number of species
+						       it is changed to species number of input property
+						       by look_for_mat_prop */
+		 
+		 model_read = look_for_mat_prop(imp, "Suspension Balance Length Scales",
+						mat_ptr->SBM_Type,
+						mat_ptr->SBM_Lengths,
+						mat_ptr->SBM_Lengths2, NULL,
+						model_name, SCALAR_INPUT, &species_no, es);
+
+		 mat_ptr->SBM_Type[species_no] = CONSTANT;
+                 mat_ptr->SBM_Length_enabled = 1;
+		 if (model_read == -1 && !strcmp(model_name, "INPUT"))
+		   {
+		     num_const = read_constants(imp, mat_ptr->SBM_Lengths2, species_no);
+		     if ( num_const < 3) 
+		       {
+			 sr = sprintf(err_msg, 
+				      "Matl %s %s needs 3 constants: particle radius, characteristic length scale, and max velocity.\n",
+				      pd_glob[mn]->MaterialName, "Suspension Balance Length Scales");
+			 EH(-1, err_msg);
+		       }
+		     mat_ptr->len_SBM_Lengths2[species_no] = num_const;
+		     SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->SBM_Lengths2[species_no]);
+
+		     ECHO(es,echo_file);		     
+		   }
+		 else
+		   {
+                     mat_ptr->SBM_Length_enabled = 0;
+		   }		 
 	       }
 	     else if (!strcmp(model_name, "FREE_VOL") ) 
 	       {

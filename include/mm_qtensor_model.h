@@ -62,11 +62,16 @@ PROTO((dbl [3][3],			/* 3 x 3 matrix */
        dbl *,			/* eigenvector */
        int ));			/* print toggle */
 
-EXTERN void find_super_special_eigenvector /* mm_qtensor_model.c */
-PROTO((dbl [3][3],		/* tensor to diagonalize. */
-       dbl *,			/* eigenvector. */
-       dbl *,			/* eigenvalue. */
-       int ));			/* print toggle */
+EXTERN void find_super_special_eigenvector(dbl [DIM][DIM], /* mm_qtensor_model.c, tensor to diagonalize */
+					   dbl *,  /* eigenvector of vorticity */
+					   dbl *,   /* eigenvector corresponding to largest eigenvalue */
+					   dbl *,   /* eigenvector corresponding to smallest eigenvalue */
+					   dbl *,   /* eigenvector corresponding to middle eigenvalue */
+					   dbl *,  /* eigenvalue of vorticity direction */
+					   int);   /* print toggle  */
+
+EXTERN void find_eigenvalues_eigenvectors(dbl [3][3], dbl *, dbl *, dbl *,
+					  dbl *, dbl *, dbl *);  /* mm_qtensor_model.c */
 
 EXTERN void diagonalize_symmetric_tensor /* mm_qtensor_model.c */
 PROTO((dbl [3][3],		/* tensor to diagonalize. */
@@ -101,6 +106,9 @@ PROTO((dbl [3][3],		/* E, rate of deformation tensor */
        dbl *,			/* a0 */
        dbl *,			/* a1 */
        dbl *));			/* a2 */
+
+EXTERN int bias_eigenvector_to(dbl *,    /* eigenvector  */
+			       dbl *);    /* reference vector */
 
 EXTERN void assemble_qtensor
 PROTO((dbl *));

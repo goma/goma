@@ -120,9 +120,13 @@ PROTO((dbl [DIM],               /* divergence of the stress*/
        dbl [DIM][MAX_CONC][MDE],/* derivative wrt concentration */
        dbl [DIM][DIM][MDE],     /* derivative wrt velocity */
        dbl [DIM][DIM][MDE],     /* derivative wrt mesh */
-       dbl [DIM][DIM][MDE],     /* derivative wrt vorticity direction */
        dbl [DIM][MDE],          /* derivative wrt pressure */
        int ));	                /* species number */
+
+EXTERN void rotate_tensor (double [DIM][DIM],              /* mm_std_models.c, A           */
+			   double [DIM][DIM],              /* A_prime (rotated tensor)     */
+		           double [DIM][DIM],              /* R (orthogonal matrix)        */
+			   int);                  /* dir = 0 or dir = 1, rotation direction */
 
 EXTERN int antoine_psat		/* mm_std_models.c                           */
 PROTO((int ,			/* species_no                                */

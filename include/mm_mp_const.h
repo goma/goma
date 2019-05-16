@@ -71,7 +71,6 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define EM_DISS         21   /* heat generation by EM waves */
 
 
-
 /* MMH */
 /* #define  SUSPENSION_PM xxx Defiend below. */
 

@@ -153,7 +153,7 @@ endif
 # MPI
 # -----------
 # MPI includes
-GOMA_MPI_INC ?= -isystem $(MPI_TOP)/include
+GOMA_MPI_INC ?= -I $(MPI_TOP)/include
 
 # MPI libraries
 GOMA_MPI_LIB ?= -L$(MPI_TOP)/lib  -lmpi  -lmpi_mpifh
