@@ -9575,25 +9575,26 @@ load_fv_grads(void)
   if (pd->v[VELOCITY1])
     {
       dofs  = ei->dof[VELOCITY1];
-      v = VELOCITY1;  
-#ifdef DO_NO_UNROLL	  
+      v = VELOCITY1;
       for (p = 0; p < VIM; p++)
 	{
 	  for (q = 0; q < VIM; q++)
 	    {
 	      fv->grad_v[p][q] = 0.0;
+	      fv_old->grad_v[p][q] = 0.0;
 	      for (r = 0; r < wim; r++)
 		{
 		  for (i = 0; i < dofs; i++)
 		    {
-		      fv->grad_v[p][q] += (*esp->v[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];	      
+		      fv->grad_v[p][q] += (*esp->v[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];
+		      if ( pd->TimeIntegration != STEADY )
+			{
+			  fv_old->grad_v[p][q] += (*esp_old->v[r][i]) * bf[v]->grad_phi_e[i][r][p][q];
+			}
 		    }
 		}
 	    }
 	}
-#else
-      grad_vector_fv_fill(esp->v, bf[v]->grad_phi_e, dofs, fv->grad_v);
-#endif
     } 
   else if (zero_unused_grads && upd->vp[VELOCITY1] == -1) 
     {
@@ -10319,7 +10320,8 @@ load_fv_grads(void)
 	  }
   } else if ( zero_unused_grads && upd->vp[VORT_DIR1] == -1 ) 
 	   fv->div_vd = 0.0;
-
+  
+  
 /*
  * grad_sh_K
  * Gradient of curvature in structural shell
@@ -12335,20 +12337,20 @@ if ( pd->v[LIGHT_INTM] )
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[1][0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
-	{
-	  T_i = *esp->poynt[1][i];
-	  for (p = 0; p < dimNonSym; p++)
-	    {
-	      for (b = 0; b < dim; b++)
-		{
-		  for (j = 0; j < mdofs; j++)
+	  {
+	    T_i = *esp->poynt[1][i];
+	    for (p = 0; p < dimNonSym; p++)
+	      {
+		for (b = 0; b < dim; b++)
 		    {
-		      fv->d_grad_poynt_dmesh[1][p] [b][j] +=
- 			T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
+		      for (j = 0; j < mdofs; j++)
+			{
+			  fv->d_grad_poynt_dmesh[1][p] [b][j] +=
+		      T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j];
+			}
 		    }
-		}
-	    }
-	}
+	      }
+	  }
     } else   if ( upd->vp[LIGHT_INTM] != -1  ){
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[1][0][0][0]),0, siz);
@@ -12362,23 +12364,77 @@ if ( pd->v[LIGHT_INTD] )
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[2][0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
-	{
-	  T_i = *esp->poynt[2][i];
-	  for (p = 0; p < dimNonSym; p++)
-	    {
-	      for (b = 0; b < dim; b++)
-		{
-		  for (j = 0; j < mdofs; j++)
-		    {
-		      fv->d_grad_poynt_dmesh[2][p] [b][j] +=
- 			T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
-		    }
-		}
-	    }
-	}
+        {
+          T_i = *esp->poynt[2][i];
+          for (p = 0; p < dimNonSym; p++)
+            {
+              for (b = 0; b < dim; b++)
+                {
+                  for (j = 0; j < mdofs; j++)
+                    {
+                      fv->d_grad_poynt_dmesh[2][p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j];
+                    }
+                }
+            }
+        }
     } else   if ( upd->vp[LIGHT_INTD] != -1  ){
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[2][0][0][0]),0, siz);
+    }
+
+if ( pd->v[TFMP_PRES] )
+    {
+      v = TFMP_PRES;
+      bfv = bf[v];
+      vdofs  = ei->dof[v];
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_tfmp_pres_dmesh[0][0][0]),0, siz);
+      for ( i=0; i<vdofs; i++)
+        {
+          T_i = *esp->tfmp_pres[i];
+          for (p = 0; p < dimNonSym; p++)
+            {
+              for (b = 0; b < dim; b++)
+                {
+                  for (j = 0; j < mdofs; j++)
+                    {
+                      fv->d_grad_tfmp_pres_dmesh[p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
+                    }
+                }
+            }
+        }
+    } else   if ( upd->vp[TFMP_PRES] != -1  ){
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_tfmp_pres_dmesh[0][0][0]),0, siz);
+    }
+  
+if ( pd->v[TFMP_SAT] )
+    {
+      v = TFMP_SAT;
+      bfv = bf[v];
+      vdofs  = ei->dof[v];
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_tfmp_sat_dmesh[0][0][0]),0, siz);
+      for ( i=0; i<vdofs; i++)
+        {
+          T_i = *esp->tfmp_sat[i];
+          for (p = 0; p < dimNonSym; p++)
+            {
+              for (b = 0; b < dim; b++)
+                {
+                  for (j = 0; j < mdofs; j++)
+                    {
+                      fv->d_grad_tfmp_sat_dmesh[p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
+                    }
+                }
+            }
+        }
+    } else   if ( upd->vp[TFMP_PRES] != -1  ){
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_tfmp_pres_dmesh[0][0][0]),0, siz);
     }
 
 if ( pd->v[RESTIME] )
@@ -12389,20 +12445,20 @@ if ( pd->v[RESTIME] )
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_restime_dmesh[0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
-	{
-	  T_i = *esp->restime[i];
-	  for (p = 0; p < dimNonSym; p++)
-	    {
-	      for (b = 0; b < dim; b++)
-		{
-		  for (j = 0; j < mdofs; j++)
-		    {
-		      fv->d_grad_restime_dmesh[p] [b][j] +=
- 			T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
-		    }
-		}
-	    }
-	}
+        {
+          T_i = *esp->restime[i];
+          for (p = 0; p < dimNonSym; p++)
+            {
+              for (b = 0; b < dim; b++)
+                {
+                  for (j = 0; j < mdofs; j++)
+                    {
+                      fv->d_grad_restime_dmesh[p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
+                    }
+                }
+            }
+        }
     } else   if ( upd->vp[RESTIME] != -1  ){
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_restime_dmesh[0][0][0]),0, siz);
@@ -29529,7 +29585,7 @@ fluid_stress( double Pi[DIM][DIM],
         }
     }
 
-  if ( d_Pi != NULL && pd->v[VELOCITY_GRADIENT11] )
+  if ( d_Pi != NULL && pd->v[VELOCITY_GRADIENT11] && pd->v[POLYMER_STRESS11])
     {
       for ( p=0; p<VIM; p++)
         {

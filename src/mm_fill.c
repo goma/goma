@@ -1605,8 +1605,7 @@ matrix_fill(
 
       if (pde[R_MASS]) 
         {	
-          err = assemble_mass_transport(time_value, theta, delta_t, pg_data.hsquared,
-					pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
+          err = assemble_mass_transport(time_value, theta, delta_t, &pg_data);
 	  EH( err, "assemble_mass_transport");	  
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_mass_transport"); 
@@ -2212,7 +2211,7 @@ matrix_fill(
 
       if ( pde[R_MESH1] && pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2] && pde[R_SHELL_NORMAL3])
         {
-         err = assemble_shell_mesh(xi, exo);
+	  err = assemble_shell_mesh(time_value, theta, delta_t, xi, exo);
          EH( err, "assemble_shell_mesh");
 #ifdef CHECK_FINITE
          err = CHECKFINITE("assemble_shell_mesh"); 

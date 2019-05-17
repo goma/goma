@@ -1977,7 +1977,7 @@ suspension_viscosity(int species, /* species for solid volume fraction track */
      this may be too low and I will have to adjust it.
      */
 
-  if ( nexp > 0.0 || ( C > 0.0 && C < 0.90 * maxpack)  )
+  if ( nexp > 0.0 || ( C > 0.0 && C < 0.98 * maxpack)  )
     {    
 
       mu = mu0*pow( 1.0 - C/maxpack, nexp );
@@ -2017,9 +2017,9 @@ suspension_viscosity(int species, /* species for solid volume fraction track */
       mp_old->viscosity = mu_old;
     }
 
-  else if ( C >=  0.90 *maxpack )
+  else if ( C >=  0.98 *maxpack )
     {
-      mu = mu0*pow( 0.10, nexp );
+      mu = mu0*pow( 0.02, nexp );
       mu_old = mu;
       mp->viscosity = mu;
       mp_old->viscosity = mu_old;

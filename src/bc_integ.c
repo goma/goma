@@ -1081,6 +1081,13 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			     bc->BC_Data_Int[0]);
 	  break;
 
+
+	case FLOW_GRADV_SIC_BC:
+	  flow_n_dot_T_gradv_sic(func, d_func,
+			     bc->BC_Data_Float[0],
+			     bc->BC_Data_Int[0]);
+	  break;
+	  
         case STRESS_DEVELOPED_BC:
           if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
             {

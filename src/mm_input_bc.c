@@ -504,6 +504,7 @@ rd_bc_specs(FILE *ifp,
 	case FLOW_PRESSURE_VAR_BC:
         case FLOW_STRESSNOBC_BC:
         case FLOW_GRADV_BC:
+	case FLOW_GRADV_SIC_BC:
 	case FILL_INLET_BC:
         case FILL_CA_BC:
 	case SHARP_CA_2D_BC:

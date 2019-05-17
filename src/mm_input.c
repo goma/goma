@@ -10928,6 +10928,7 @@ set_mp_to_unity(const int mn)
       m->FickDiffType[w]=CONSTANT;
       m->CurvDiffType[w]=CONSTANT;
       m->GravDiffType[w]=CONSTANT;
+      m->NSCoeffType[w]=CONSTANT;
       m->QTensorDiffType[w] = NO_MODEL;
       m->gam_diffusivity[w]=0.;
       m->mu_diffusivity[w]=0.;
@@ -13245,6 +13246,10 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 		EH(-1,err_msg);
 	      }
 	  }
+	else if (strcmp( line, "LINEAR_TIME") == 0) {
+	  strcpy( table->t_name[i],"LINEAR_TIME");
+	  table->t_index[i] = LINEAR_TIME;
+	}
 	else if( (strcmp( line, "CAP_PRES") == 0) )
 	  {
 	    if( (strcmp( table->f_name, "Saturation") != 0) ) 
