@@ -317,6 +317,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
 	  /* Replicate basic mesh info */
 	  one_base(exo);
 	  wr_mesh_exo(exo, ExoFileOut, 0);
+	  zero_base(exo);
 	  wr_result_prelim_exo(rd, exo, ExoFileOut, NULL);
 	  /* Update exo file for distributed problem info 
 	   */
@@ -338,7 +339,6 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
 			       resid_vector, 1, &time_value, delta_t, 0.0,
                                NULL, exo, dpi, rd, ExoFileOut);
 	  }
-	  zero_base(exo);
 	  printf(" recorded.\n");
 	}
     }
