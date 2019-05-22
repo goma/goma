@@ -9731,9 +9731,10 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        || (pd_glob[mn]->e[R_SHELL_NORMAL1] &&
            pd_glob[mn]->e[R_SHELL_NORMAL2] &&
            pd_glob[mn]->e[R_SHELL_NORMAL3])
-       || (  (pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) &&
-          (pd_glob[mn]->e[R_SHELL_TENSION] && pd_glob[mn]->e[R_SHELL_CURVATURE])
-             )
+       || (pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND])
+//       || (  (pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) &&
+//          (pd_glob[mn]->e[R_SHELL_TENSION] && pd_glob[mn]->e[R_SHELL_CURVATURE])
+//            )
      ) {
 
     model_read = look_for_mat_prop(imp, "FSI Deformation Model",
@@ -10433,7 +10434,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
   }
 
   /* check for roller-web gap thickness model */
-  if(pd_glob[mn]->e[R_MESH1] && pd_glob[mn]->e[R_TFMP_BOUND]) {
+  if(pd_glob[mn]->e[R_TFMP_BOUND]) {
     char input[MAX_CHAR_IN_INPUT] = "zilch\0";
     strcpy(search_string, "Elastohydrodynamic Lubrication Gap Model");
     model_read = look_for_optional(imp,
@@ -10554,7 +10555,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
   }
 
   /* check for 2d bar integration kind */
-  if(pd_glob[mn]->e[R_MESH1] && pd_glob[mn]->e[R_TFMP_BOUND]) {
+  if(pd_glob[mn]->e[R_TFMP_BOUND]) {
     char input[MAX_CHAR_IN_INPUT] = "zilch\0";
     strcpy(search_string, "Elastohydrodynamic Lubrication Shell Integration Kind");
     model_read = look_for_optional(imp,
@@ -10594,7 +10595,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       }
 
       else {
-        // default is S
+        // default is XY
         mat_ptr->ehl_integration_kind = SIK_XY;
         SPF(es, "%s = %s", search_string, "XY");
       }
