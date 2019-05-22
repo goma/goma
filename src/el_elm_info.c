@@ -2568,23 +2568,7 @@ find_surf_st(const int iquad,           /* current GQ index */
     return;
   }  
   *t = 0.; /* to avoid uninitialized memory read later */
-  /* catch if BAR..
-     Why does call from bc_integ use pd->Num_Dim?
-     dim should be dimension of reference element, yeah? */
-  if (ielem_type == LINEAR_BAR || ielem_type == QUAD_BAR) {
-    switch (iside) {
-      case 1:
-      xi[0] = -1.;
-      break;
-    case 2:
-      xi[0] = 1.;
-      break;
-    default:
-      EH(-1,"Illegal side number for 1-D element");
-      break;
-    }
-    return;
-  }
+
 /* first calculate local coordinates on the n-dimensional surface of the element 
  * then translate them to the n+1 dimensional elemental coords */
   switch (dim){

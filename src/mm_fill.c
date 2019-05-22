@@ -2257,14 +2257,14 @@ matrix_fill(
 #endif
 	}
       if(!pde[R_TFMP_MASS] && pde[R_TFMP_BOUND])
-  {
-    err = assemble_shell_lubrication( time_value, theta, delta_t, xi, exo );
-    EH( err, "assemble_shell_lubrication");
+      {
+        err = assemble_shell_lubrication( time_value, theta, delta_t, xi, exo );
+        EH( err, "assemble_shell_lubrication");
 #ifdef CHECK_FINITE
-    err = CHECKFINITE("assemble_shell_lubrication");
-    if (err) {
-      return -1;
-    }
+        err = CHECKFINITE("assemble_shell_lubrication");
+        if (err) {
+          return -1;
+        }
 #endif
 
     if (neg_lub_height) {

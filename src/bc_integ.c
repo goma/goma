@@ -224,7 +224,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
         if ( ls != NULL ) ls->Elem_Sign = 0;
 	/* find the quadrature point locations (s, t) for current ip */
 	find_surf_st(ip, ielem_type, elem_side_bc->id_side,
-		     pd->Num_Dim, xi, &s, &t, &u);
+                     ei->ielem_dim, xi, &s, &t, &u);
         /* find the quadrature weight for current surface ip */
         wt = Gq_surf_weight(ip, ielem_type);
       } 

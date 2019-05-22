@@ -9723,15 +9723,18 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 					get confused if there are shell elements and no FSI model is specified.
 					Need to check that this doesn't break anything.*/  
 
-  if ( pd_glob[mn]->e[R_LUBP] || pd_glob[mn]->e[R_LUBP_2] ||
-       pd_glob[mn]->e[R_SHELL_FILMP] ||
-       pd_glob[mn]->e[R_SHELL_SAT_OPEN] || pd_glob[mn]->e[R_SHELL_SAT_OPEN_2] ||
-       (pd_glob[mn]->e[R_SHELL_NORMAL1] && pd_glob[mn]->e[R_SHELL_NORMAL2] && pd_glob[mn]->e[R_SHELL_NORMAL3]) ||
-//       ((pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) && pd_glob[mn]->e[R_MESH1]) ||
-       (  (pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND])
-           && (pd_glob[mn]->e[R_SHELL_TENSION] && pd_glob[mn]->e[R_SHELL_CURVATURE])
-       )
-     ){
+  if ( pd_glob[mn]->e[R_LUBP]
+       || pd_glob[mn]->e[R_LUBP_2]
+       || pd_glob[mn]->e[R_SHELL_FILMP]
+       || pd_glob[mn]->e[R_SHELL_SAT_OPEN]
+       ||  pd_glob[mn]->e[R_SHELL_SAT_OPEN_2]
+       || (pd_glob[mn]->e[R_SHELL_NORMAL1] &&
+           pd_glob[mn]->e[R_SHELL_NORMAL2] &&
+           pd_glob[mn]->e[R_SHELL_NORMAL3])
+       || (  (pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) &&
+          (pd_glob[mn]->e[R_SHELL_TENSION] && pd_glob[mn]->e[R_SHELL_CURVATURE])
+             )
+     ) {
 
     model_read = look_for_mat_prop(imp, "FSI Deformation Model",
 				   &(mat_ptr->FSIModel),

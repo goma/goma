@@ -16519,8 +16519,9 @@ assemble_shell_mesh(double time,   /* Time */
  * assemble_shell_tfmp - Assembles the residual and Jacobian equations for
  *                       thin film multiphase flow.
  *
- *           0 = d_dt(S h) + div(h v_l)
+ *           0 = d_dt(S h) + div(h v_l) + div(Sh(u_a +u_b)/2)
  *           0 = d_dt(rho_g (1-S) h) + div(rho_g h v_g) + J
+ *                + div(rho_g(1-S)h(u_a - u_b)/2)
  *                      
  *
  * Returns
@@ -16540,6 +16541,8 @@ assemble_shell_mesh(double time,   /* Time */
  * 9 September 2016 - AC change gas mass balance to compressible gas
  *
  * 31 May 2017 - Prepare for inclusion in repository 
+ * 22 May 2019 - AC switch-out some inline calculation stuff for functions
+ *               in shell_tfmp_util.c, couple to inextensible shells
  ******************************************************************************/
 
 
@@ -16749,19 +16752,16 @@ assemble_shell_tfmp(double time,   /* Time */
   }
 
   /* Use the velocity function model */
-  double veloU[DIM], veloL[DIM], veloAVG[DIM], veloDIFF[DIM];
-  double veloAVG_dot_gradphi_i, veloAVG_dot_gradphi_j,
-      veloDIFF_dot_gradh, veloDIFF_dot_gradphi_j;
+  double veloU[DIM], veloL[DIM], veloAVG[DIM];
+  double veloAVG_dot_gradphi_i, veloAVG_dot_gradphi_j;
   //double spd;
   //spd = velocity_function_model(veloU, veloL, time, delta_t);
   velocity_function_model(veloU, veloL, time, delta_t);
 
   for (k=0; k<DIM; k++) {
     veloAVG[k] = (veloU[k] + veloL[k])/2.;
-    veloDIFF[k] = (veloU[k] - veloL[k]);
   }
   //while 2d applies
-  veloDIFF[2] = 0.0;
   veloAVG[2] = 0.0;
 
   // gas dissolution model
@@ -16797,8 +16797,6 @@ assemble_shell_tfmp(double time,   /* Time */
   double dveloAVG_dot_gradh_dmesh;
   double dveloAVG_dot_gradh_dnormal;
   double dveloAVG_dot_gradS_dmesh;
-  double dveloDIFF_dot_gradh_dmesh;
-  double dveloDIFF_dot_gradh_dnormal;
   double veloAVG_dot_gradh;
   double veloAVG_dot_gradS;
 
@@ -16824,9 +16822,11 @@ assemble_shell_tfmp(double time,   /* Time */
               d_gradII_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
       gradP_dot_gradphi_i = 0.0;
       veloAVG_dot_gradphi_i = 0.0;
+      gradS_dot_gradphi_i = 0.0;
       for (int k = 0; k<DIM; k++) {
         gradP_dot_gradphi_i += gradII_P[k]*gradII_phi_i[k];
         veloAVG_dot_gradphi_i += veloAVG[k]*gradII_phi_i[k];
+        gradS_dot_gradphi_i += gradII_S[k]*gradII_phi_i[k];
       }
       /* Assemble mass term */
       mass = 0.0;
@@ -16906,12 +16906,10 @@ assemble_shell_tfmp(double time,   /* Time */
               d_gradII_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
       gradP_dot_gradphi_i = 0.0;
       veloAVG_dot_gradphi_i = 0.0;
-      veloDIFF_dot_gradh = 0.0;
       gradP_dot_gradh = 0.0;
       for ( k = 0; k<DIM; k++) {
         gradP_dot_gradphi_i += gradII_P[k]*gradII_phi_i[k];
         veloAVG_dot_gradphi_i += veloAVG[k]*gradII_phi_i[k];
-        veloDIFF_dot_gradh += veloDIFF[k]*gradII_h[k];
         gradP_dot_gradh += gradII_P[k]*gradII_h[k];
       }
       // Assemble mass term
@@ -17324,7 +17322,6 @@ assemble_shell_tfmp(double time,   /* Time */
               veloAVG_dot_gradphi_i = 0.0;
               veloAVG_dot_gradS = 0.0;
               dveloAVG_dot_gradh_dnormal = 0.0;
-              dveloDIFF_dot_gradh_dnormal = 0.0;
               gradP_dot_gradphi_i = 0.0;
               gradS_dot_gradphi_i = 0.0;
               for (k = 0; k<DIM; k++){
@@ -18020,7 +18017,7 @@ assemble_shell_tfmp(double time,   /* Time */
  * assemble_shell_lubrication - Assembles the residual and Jacobian equations for
  *                       thin film flow.
  *
- *           0 = d_dt(S h) + div(h v_l)
+ *           0 = d_dt(S h) + div(h v_l) + div(h(u_a + u_b)/2)
  *
  *
  *
@@ -18117,28 +18114,6 @@ assemble_shell_lubrication(double time,   /* Time */
           dgradII_P_dmesh[0][k][i] = csigrad[0]*(-1.0)/det_J/det_J*d_det_J_dmeshkj[k][i];
         }
       }
-
-      /*
-      var = MESH_DISPLACEMENT1;
-      grad = gradII_x;
-      memset(grad, 0.0, sizeof(double)*DIM);
-      memset (csigrad, 0.0, sizeof(double)*DIM);
-      for (int i=0; i<ei->dof[var]; i++) {
-        int node = ei->dof_list[R_MESH1][i];
-        int index = Proc_Elem_Connect[Proc_Connect_Ptr[ei->ielem] +node];
-        csigrad[0] += (Coor[0][index] + *esp->d[0][i])*bf[var]->dphidxi[i][0];
-      }
-
-      grad[0] = csigrad[0]/det_J;
-
-
-      for (int i=0; i<ei->dof[var]; i++) {
-        for (int k=0; k<DIM; k++) {
-          dgradII_x_dmesh[0][k][i] = csigrad[0]*(-1.0f)/det_J/det_J*d_det_J_dmeshkj[k][i]
-                                    + delta(0,k)*bf[var]->dphidxi[i][0]/det_J;
-        }
-      }
-      */
     }
   }
 
@@ -18166,8 +18141,7 @@ assemble_shell_lubrication(double time,   /* Time */
   double gradII_h[DIM];
   double d_gradIIh_dmesh[DIM][DIM][MDE];
   double d_gradIIh_dnormal[DIM][DIM][MDE];
-  if (h < 0.0) { // bug out
-    //EH(-1, "Cannot have negative gap thicknesses!");
+  if (h < 0.0) { // bug out if negative gap thickness
     neg_lub_height = TRUE;
     return 2;
   }
@@ -18188,17 +18162,14 @@ assemble_shell_lubrication(double time,   /* Time */
   }
 
   /* Use the velocity function model */
-  double veloU[DIM], veloL[DIM], veloAVG[DIM];//, veloDIFF[DIM];
-  double veloAVG_dot_gradphi_i;//, veloDIFF_dot_gradh, veloDIFF_dot_gradphi_j;
-  //double spd;
-  //spd = velocity_function_model(veloU, veloL, time, delta_t);
+  double veloU[DIM], veloL[DIM], veloAVG[DIM];
+  double veloAVG_dot_gradphi_i;
   velocity_function_model(veloU, veloL, time, delta_t);
 
   for (int k=0; k<DIM; k++) {
     veloAVG[k] = (veloU[k] + veloL[k])/2.;
-    //veloDIFF[k] = (veloU[k] - veloL[k]);
   }
-  //veloDIFF[2] = 0.0;
+
   veloAVG[2] = 0.0;
 
   double phi_i, grad_phi_i[DIM], gradII_phi_i[DIM]; // Basis funcitons (i)
@@ -18221,9 +18192,9 @@ assemble_shell_lubrication(double time,   /* Time */
   eqn = R_TFMP_BOUND;
   peqn = upd->ep[eqn];
 
-  etm_mass_eqn = pd->etm[eqn][(LOG2_MASS)]; //
-  etm_adv_eqn = pd->etm[eqn][(LOG2_ADVECTION)]; //
-  etm_source_eqn = pd->etm[eqn][(LOG2_SOURCE)]; //
+  etm_mass_eqn = pd->etm[eqn][(LOG2_MASS)];
+  etm_adv_eqn = pd->etm[eqn][(LOG2_ADVECTION)];
+  etm_source_eqn = pd->etm[eqn][(LOG2_SOURCE)];
 
   if ( af->Assemble_Residual ) {
     if (peqn == -1) {
@@ -18241,13 +18212,11 @@ assemble_shell_lubrication(double time,   /* Time */
       gradP_dot_gradphi_i = 0.0;
       veloAVG_dot_gradphi_i = 0.0;
       veloAVG_dot_gradh = 0.0;
-      //veloDIFF_dot_gradh = 0.0;
 
       for (int k = 0; k<DIM; k++) {
         gradP_dot_gradphi_i += gradII_P[k]*gradII_phi_i[k];
         veloAVG_dot_gradphi_i += veloAVG[k]*gradII_phi_i[k];
         veloAVG_dot_gradh += veloAVG[k]*gradII_h[k];
-        //veloDIFF_dot_gradh += veloDIFF[k]*gradII_h[k];
       }
 
       if (etm_mass_eqn > 0) {
@@ -18257,24 +18226,12 @@ assemble_shell_lubrication(double time,   /* Time */
       if (etm_adv_eqn > 0) {
         adv += gradP_dot_gradphi_i*h*h*h/12.0/mu_l;
         adv *= dA;
-        //adv = h;
-        //adv = gradII_h[0];
-        //adv = fv->x[0];
-        //adv = test;
-        //adv = gradP_dot_gradphi_i;
-        //adv = dA;
+
       }
       if (etm_source_eqn > 0) {
         source += veloAVG_dot_gradh*phi_i;
-        //source += -0.5*veloDIFF_dot_gradh*phi_i;
         source *= dA;
 
-//        source = gradII_h[0];
-
-        //source = veloAVG_dot_gradh;
-        //source = h;
-        //source = 1.0*gradII_h[0];
-        //source = test;
       }
       lec->R[peqn][i] += mass + adv + source;
     }
@@ -18312,9 +18269,7 @@ assemble_shell_lubrication(double time,   /* Time */
           dgradP_dmesh_lj_dot_gradphi_i = 0.0;
           gradP_dot_dgradh_dmesh_lj = 0.0;
           veloAVG_dot_d_gradh_dmesh_lj = 0.0;
-          //veloDIFF_dot_d_gradh_dmesh_lj = 0.0;
           veloAVG_dot_gradh = 0.0;
-          //veloDIFF_dot_gradh = 0.0;
           for (int k = 0; k<DIM; k++) {
             gradP_dot_gradphi_i += gradII_P[k]*gradII_phi_i[k];
             dgradP_dmesh_lj_dot_gradh += dgradII_P_dmesh[k][l][j]*gradII_h[k];
@@ -18322,9 +18277,7 @@ assemble_shell_lubrication(double time,   /* Time */
             dgradP_dmesh_lj_dot_gradphi_i += dgradII_P_dmesh[k][l][j]*gradII_phi_i[k];
             gradP_dot_dgradh_dmesh_lj += gradII_P[k]*d_gradIIh_dmesh[k][l][j];
             veloAVG_dot_d_gradh_dmesh_lj += veloAVG[k]*d_gradIIh_dmesh[k][l][j];
-            //veloDIFF_dot_d_gradh_dmesh_lj += veloDIFF[k]*d_gradIIh_dmesh[k][l][j];
             veloAVG_dot_gradh += veloAVG[k]*gradII_h[k];
-            //veloDIFF_dot_gradh += veloDIFF[k]*gradII_h[k];
           }
 
           if (etm_mass_eqn > 0) {
@@ -18341,13 +18294,6 @@ assemble_shell_lubrication(double time,   /* Time */
                    *h3*wt*det_J;
             adv += gradP_dot_gradphi_i*h*h*h/12.0/mu_l
                    *wt*h3*d_det_J_dmeshkj[l][j];
-
-            //adv = dh_dmesh[l][j];
-            //adv = d_gradIIh_dmesh[0][l][j];
-            //adv = delta(0,l)*bf[MESH_DISPLACEMENT1+l]->phi[j];
-            //adv = (gradP_dot_dgrad_phi_i_dmesh_lj + dgradP_dmesh_lj_dot_gradphi_i);
-            //adv = dtest_dmesh[l][j];
-            //adv = wt*h3*d_det_J_dmeshkj[l][j];
           }
           if (etm_source_eqn > 0) {
             source += veloAVG_dot_d_gradh_dmesh_lj*phi_i
@@ -18355,17 +18301,6 @@ assemble_shell_lubrication(double time,   /* Time */
             source += veloAVG_dot_gradh*phi_i
                       *wt*h3*d_det_J_dmeshkj[l][j];
 
-//            source = d_gradIIh_dmesh[0][l][j];
-
-            //source += -0.5f*veloDIFF_dot_d_gradh_dmesh_lj*phi_i
-            //          *wt*h3*det_J;
-            //source += -0.5f*veloDIFF_dot_gradh*phi_i
-            //          *wt*h3*d_det_J_dmeshkj[l][j];
-
-            //source = veloAVG_dot_d_gradh_dmesh_lj;
-            //source = dh_dmesh[l][j];
-            //source = d_gradIIh_dmesh[0][l][j];
-            //source = dtest_dmesh[l][j];
           }
           if (fpclassify(adv)!= fp_type && adv != 0.0) {
             EH(-1, "adv is not normal");
@@ -18381,12 +18316,10 @@ assemble_shell_lubrication(double time,   /* Time */
           mass = adv = source = 0.0;
           gradP_dot_gradphi_i = 0.0;
           veloAVG_dot_dgradh_dnormal_lj= 0.0;
-          //veloDIFF_dot_d_gradh_dnormal_lj= 0.0f;
 
           for (int k = 0; k<DIM; k++) {
             gradP_dot_gradphi_i += gradII_P[k]*gradII_phi_i[k];
             veloAVG_dot_dgradh_dnormal_lj += veloAVG[k]*d_gradIIh_dnormal[k][l][j];
-            //veloDIFF_dot_d_gradh_dnormal_lj += veloDIFF[k]*d_gradIIh_dnormal[k][l][j];
           }
 
 
@@ -18397,15 +18330,9 @@ assemble_shell_lubrication(double time,   /* Time */
           if (etm_adv_eqn > 0) {
             adv += gradP_dot_gradphi_i*3.0*h*h*dh_dnormal[l][j]/12.0/mu_l;
             adv *= dA;
-            //adv = dh_dnormal[l][j];
           }
           if (etm_source_eqn > 0) {
             source += veloAVG_dot_dgradh_dnormal_lj*phi_i;
-            //source += -0.5*veloDIFF_dot_d_gradh_dnormal_lj*phi_i;
-            source *= dA;
-            //source += veloAVG_dot_dgradh_dnormal_lj;
-            //source += dh_dnormal[l][j];
-            //source = d_gradIIh_dnormal[0][l][j];
           }
           lec->J[peqn][pvar][i][j] += mass + adv + source;
         }

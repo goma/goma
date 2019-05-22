@@ -179,7 +179,7 @@ shell_n_dot_flow_bc_confined(double func[DIM],
 
             for (ii=0; ii<pd->Num_Dim; ii++)
               {
-               d_func[0][var][j] += -LubAux->dq_dp1[ii][j] * grad_II_phi_j[ii] * bound_normal[ii];
+               d_func[0][var][j] += LubAux->dq_dp1[ii][j] * grad_II_phi_j[ii] * bound_normal[ii];
               }
            }
       }
@@ -190,10 +190,10 @@ shell_n_dot_flow_bc_confined(double func[DIM],
 
   /* Calculate the residual contribution        */
 
-  func[0] = flowrate;
+  func[0] = - flowrate;
   for (ii = 0; ii < pd->Num_Dim; ii++)
     {
-      func[0] +=  -LubAux->q[ii] * bound_normal[ii];
+      func[0] +=  LubAux->q[ii] * bound_normal[ii];
     }
 
   /* clean-up */

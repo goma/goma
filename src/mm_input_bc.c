@@ -3886,21 +3886,23 @@ BC_consistency( struct Boundary_Condition *BC_Type)
         default:
           // This boundary condition uses a side on a shell element in 2D. This is 
 	  // a node set consisting of one node. Therefore, it's ok.
-          if (BC_Type->desc->BC_Name != SH_GAMMA1_DERIV_SYMM_BC && 
-              BC_Type->desc->BC_Name != SH_GAMMA2_DERIV_SYMM_BC &&
-							BC_Type->desc->BC_Name != SHELL_TFMP_FREE_LIQ_BC &&
-							BC_Type->desc->BC_Name != SHELL_TFMP_FREE_GAS_BC &&
-							BC_Type->desc->BC_Name != SHELL_TFMP_GRAD_S_BC &&
-							BC_Type->desc->BC_Name != GRAD_LUB_PRESS_BC &&
-              BC_Type->desc->BC_Name != SH_SDET_BC &&
-              BC_Type->desc->BC_Name != SH_MESH2_WEAK_BC &&
-              BC_Type->desc->BC_Name != SHELL_LUBRICATION_OUTFLOW_BC )
-            {
+          switch (BC_Type->desc->BC_Name) {
+            case SH_GAMMA1_DERIV_SYMM_BC:
+            case SH_GAMMA2_DERIV_SYMM_BC:
+            case SHELL_TFMP_FREE_LIQ_BC:
+            case SHELL_TFMP_FREE_GAS_BC:
+            case SHELL_TFMP_GRAD_S_BC:
+            case GRAD_LUB_PRESS_BC:
+            case SH_SDET_BC:
+            case SH_MESH2_WEAK_BC:
+            case SHELL_LUBRICATION_OUTFLOW_BC:
+              break;
+            default:
               sprintf(err_msg, "%s %s %d\n\t\t %s", "BC Consistency error detected. ",
                       BC_Type->desc->name1, BC_Type->BC_ID, " BC is not applicable to node sets ");
               EH(-1,err_msg);
               break;
-            }
+          }
         }
     }
 

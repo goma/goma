@@ -1015,25 +1015,6 @@ h_elem_siz(dbl hsquared[DIM], dbl hh[DIM][DIM],
     }
   }
   
-  // bar2
-/*
-  if (ei->ielem_dim == 1) {
-    memset(hsquared, 0.0, sizeof(double)*DIM);
-    memset(p1, 0.0, sizeof(double)*DIM);
-    p1[0] = xnode[0][0] - xnode[0][1]; // exodus puts the edge nodes first
-    if (pd->Num_Dim > 1) {
-      p1[1] = xnode[1][0] - xnode[1][1];
-    }
-    if (pd->Num_Dim > 2) {
-      p1[2] = xnode[2][0] - xnode[2][1];
-    }
-    hsquared[0] = p1[0]*p1[0] + p1[1]*p1[1] + p1[2]*p1[2] ;
-    //TODO: deal with hh and dhh_dxnode
-    //  This should be fine until we're using SUPG in 1D
-    return;
-  }
-  */
-
   if (dim == 2) {
     /*
      * Calculate the midpoint positions on each of the faces
