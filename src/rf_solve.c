@@ -43,6 +43,8 @@ static char rcsid[] = "$Id: rf_solve.c,v 5.21 2010-03-17 22:23:54 hkmoffa Exp $"
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
 
+#include "brkfix/fix.h"
+
 #define _RF_SOLVE_C
 #include "goma.h"
 #include "el_quality.h"
@@ -3622,7 +3624,6 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
 
   FILE *anneal_dat;
 
-
   int numProcUnknowns = NumUnknowns + NumExtUnknowns;
 
   asdv(&x_file, numProcUnknowns);
@@ -3827,12 +3828,15 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
       wr_global_result_exo( exo, afilename, 1, rd->ngv, glob_vars_val );
     }
 
-  anneal_dat = fopen("anneal.dat", "w");
+  if (Num_Proc == 1) {
 
-  (void) write_ascii_soln(x_file, NULL, numProcUnknowns,
-		          x, 0, 0.0, anneal_dat);
+    anneal_dat = fopen("anneal.dat", "w");
 
-  fclose(anneal_dat);
+    (void) write_ascii_soln(x_file, NULL, numProcUnknowns,
+                            x, 0, 0.0, anneal_dat);
+
+    fclose(anneal_dat);
+  }
 
   /*
    * Return internal EXODUS II data to 0 based node and element numbers
@@ -3840,6 +3844,11 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
    */
 
   zero_base(exo);
+
+  if (ProcID == 0 &&  Brk_Flag == 1 && Num_Proc > 1) {
+    strcpy(afilename, anneal_file);
+    fix_exo_file(Num_Proc, afilename);
+  }
 	  
   /*
    * Free up any temporarily allocated memory.
