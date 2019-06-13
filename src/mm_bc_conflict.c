@@ -1975,7 +1975,7 @@ if( mesh_rotate_node != NULL || mom_rotate_node != NULL )
 	
 		while( !Use_2D_Rotation_Vectors && ebi < exo->num_elem_blocks )
 		{
-			Use_2D_Rotation_Vectors = ( exo->eb_elem_itype[ebi] == LINEAR_TRI );		
+			Use_2D_Rotation_Vectors = ( exo->eb_elem_itype[ebi] == LINEAR_TRI || exo->eb_elem_itype[ebi] == QUAD_TRI);
 
 			ebi++;	
 		}
