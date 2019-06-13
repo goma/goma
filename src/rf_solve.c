@@ -3817,15 +3817,14 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
 
   /* Now pick up the element variables */
   for (i = 0; i < tev; i++) {
-    wr_elem_result_exo(exo, anneal_file, gvec_elem, i, 1,
+    wr_elem_result_exo(exo, afilename, gvec_elem, i, 1,
 		       time_value, rd);
   }
 
   /* And finally the global variables */
-
   if( rd->ngv > 0  )
     {
-      wr_global_result_exo( exo, anneal_file, 1, rd->ngv, glob_vars_val );
+      wr_global_result_exo( exo, afilename, 1, rd->ngv, glob_vars_val );
     }
 
   anneal_dat = fopen("anneal.dat", "w");
