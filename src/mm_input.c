@@ -1393,56 +1393,61 @@ rd_timeint_specs(FILE *ifp,
   tran->fix_freq = 0;
 
   if(pd_glob[0]->TimeIntegration != STEADY) {
+    double delta_t0;
+    double delta_t_min;
+    double delta_t_max;
+    int max_time_steps;
+    double time_max;
 
     look_for(ifp,"delta_t",input,'=');
-    if (fscanf (ifp,"%le",&Delta_t0) != 1)
+    if (fscanf (ifp,"%le",&delta_t0) != 1)
       {
 	EH( -1, "error reading delta_t");
       }
-    tran->Delta_t0 = Delta_t0;
+    tran->Delta_t0 = delta_t0;
 
     SPF(echo_string,"%s = %.4g","delta_t",tran->Delta_t0); ECHO(echo_string, echo_file);
     
     look_for(ifp,"Maximum number of time steps",input,'=');
-    if (fscanf (ifp,"%d",&MaxTimeSteps) != 1)
+    if (fscanf (ifp,"%d",&max_time_steps) != 1)
       {
 	EH( -1, "error reading max time steps");
       }
-    tran->MaxTimeSteps = MaxTimeSteps; 
+    tran->MaxTimeSteps = max_time_steps;
 
     SPF(echo_string,"%s = %d", "Maximum number of time steps", tran->MaxTimeSteps); ECHO(echo_string, echo_file);
   
     look_for(ifp,"Maximum time",input,'=');
-    if ( fscanf(ifp,"%le",&TimeMax) != 1)
+    if ( fscanf(ifp,"%le",&time_max) != 1)
       {
 	EH( -1, "error reading maximum time");
       }
-    tran->TimeMax = TimeMax; 
+    tran->TimeMax = time_max;
 
     SPF(echo_string,"%s = %.4g","Maximum time",tran->TimeMax); ECHO(echo_string, echo_file);
 
     look_for(ifp,"Minimum time step",input,'=');
-    if ( fscanf(ifp,"%le",&Delta_t_min) != 1)
+    if ( fscanf(ifp,"%le",&delta_t_min) != 1)
       {
 	EH( -1, "error reading minimum time step");
       }
-    tran->Delta_t_min = Delta_t_min; 
+    tran->Delta_t_min = delta_t_min;
 
     SPF(echo_string,"%s = %.4g","Minimum time step",tran->Delta_t_min); ECHO(echo_string, echo_file);
 
-    Delta_t_max = 1.e12;
+    delta_t_max = 1.e12;
     iread = look_for_optional(ifp,"Maximum time step",input,'=');
     if (iread == 1) {   
-      if ( fscanf(ifp,"%le",&Delta_t_max) != 1)
+      if ( fscanf(ifp,"%le",&delta_t_max) != 1)
 	{
 	  EH( -1, "error reading Maximum time step");
 	}
       
-      SPF(echo_string,"%s = %.4g","Maximum time step", Delta_t_max); ECHO(echo_string, echo_file);
+      SPF(echo_string,"%s = %.4g","Maximum time step", delta_t_max); ECHO(echo_string, echo_file);
 
     }
 	
-	tran->Delta_t_max = Delta_t_max;
+        tran->Delta_t_max = delta_t_max;
 
     look_for(ifp,"Time step parameter",input,'=');
     if ( fscanf(ifp,"%le",&(tran->theta) ) != 1)
@@ -1503,7 +1508,7 @@ rd_timeint_specs(FILE *ifp,
       SPF(echo_string,"%s = %d %.4g","Printing Frequency",print_freq,print_delt ); ECHO(echo_string, echo_file);
 
       print_delt2 = -print_delt;
-      print_delt2_time = TimeMax;
+      print_delt2_time = time_max;
       iread = look_for_optional(ifp,"Second frequency time",input,'=');
       if (iread == 1) 
 	  {   
@@ -1593,7 +1598,7 @@ rd_timeint_specs(FILE *ifp,
 	  EH( -1, "error reading Initial Time");
 	}
       SPF(echo_string,"%s = %.4g","Initial Time",tran->init_time); ECHO(echo_string, echo_file);
-      if( (TimeMax - tran->init_time) <= 0.0 ) {
+      if( (time_max - tran->init_time) <= 0.0 ) {
       	EH( -1, "Your maximum time is less than or equal to your initial time!"); // a condition which may result in NAN's in the esp_dot struct
       }
     }

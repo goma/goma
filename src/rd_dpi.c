@@ -1394,6 +1394,7 @@ free_dpi_uni(Dpi *d)
   safer_free((void **) &(d->ptr_set_membership));
   safer_free((void **) &(d->set_membership));
   safer_free((void **) &(d->ss_index_global));
+  free(d->ss_internal_global);
   return;
 }
 
