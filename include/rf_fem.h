@@ -141,11 +141,6 @@ int  exp_subcycle;      /* Subcycling frequency for Fill equation            */
 int  Use_Level_Set;     /* Global switch to turn on level set computations   */
 int  Use_Phase_Field;   /* Global switch to turn on phase-field computations   */
 		
-int  MaxTimeSteps;      /* Maximum number of time steps in transient soution */
-double  Delta_t0;	/* Initial time step                                 */
-double  Delta_t_min;    /* Minimum time step size                            */
-double  Delta_t_max;    /* Maximum time step size                            */
-double  TimeMax;	/* Time at which to end integration                  */
 /* double  theta;  */   /* Time step parameter: theta = 0. => Backward Euler
 			                        theta = 1. => Forward  Euler */
 
