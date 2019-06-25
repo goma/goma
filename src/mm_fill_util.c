@@ -5331,7 +5331,8 @@ void get_supg_tau(struct SUPG_terms *supg_terms,
                   dbl diffusivity,
                   PG_DATA *pg_data,
                   double dt,
-                  int shakib)
+                  int shakib,
+                  int interp_eqn)
 {
 
   if (shakib) {
@@ -5342,7 +5343,7 @@ void get_supg_tau(struct SUPG_terms *supg_terms,
       for (int j = 0; j < DIM; j++) {
         G[i][j] = 0;
         for (int k = 0; k < DIM; k++) {
-          G[i][j] += bf[VELOCITY1]->B[k][i] * bf[VELOCITY1]->B[k][j];
+          G[i][j] += bf[interp_eqn]->B[k][i] * bf[interp_eqn]->B[k][j];
         }
       }
     }

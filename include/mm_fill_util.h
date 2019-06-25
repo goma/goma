@@ -232,6 +232,7 @@ EXTERN void get_supg_tau(struct SUPG_terms *supg_terms,
                          dbl diffusivity,
                          PG_DATA *pg_data,
                          double dt,
-                         int shakib);
+                         int shakib,
+                         int interp_eqn);
 
 #endif /* _MM_FILL_UTIL_H */

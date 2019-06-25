@@ -5,6 +5,7 @@ enable_language(C)
 enable_language(CXX)
 enable_language(Fortran)
 
+set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 
 set(PROJECT_NAME goma)
@@ -450,6 +451,20 @@ set(GOMA_SOURCES
     src/wr_exo.c
     src/wr_side_data.c
     src/wr_soln.c)
+
+# Set a default build type for single-configuration
+# CMake generators if no build type is set.
+IF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE Release)
+ENDIF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+
+# Select flags.
+SET(CMAKE_CXX_FLAGS "-Wall -Wextra -Wshadow")
+SET(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG")
+SET(CMAKE_CXX_FLAGS_DEBUG  "-O0 -ggdb3")
+SET(CMAKE_C_FLAGS "-Wall -Wextra -Wshadow")
+SET(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG")
+SET(CMAKE_C_FLAGS_DEBUG  "-O0 -ggdb3")
 
 add_executable(${PROJECT_NAME} ${GOMA_INCLUDES} ${GOMA_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE include ${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
