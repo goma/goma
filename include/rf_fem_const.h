@@ -95,12 +95,14 @@
 #define EQM_WTMIN         10
 
 /* Fill Weight Function options */
-#define FILL_WEIGHT_G         1
-#define FILL_WEIGHT_TG        2
-#define FILL_WEIGHT_SUPG      3
-#define FILL_WEIGHT_GLS       4
-#define FILL_WEIGHT_SC        5
-#define FILL_WEIGHT_EXPLICIT  6
+#define FILL_WEIGHT_G           1
+#define FILL_WEIGHT_TG          2
+#define FILL_WEIGHT_SUPG        3
+#define FILL_WEIGHT_GLS         4
+#define FILL_WEIGHT_SC          5
+#define FILL_WEIGHT_EXPLICIT    6
+#define FILL_WEIGHT_SUPG_SHAKIB 7
+#define FILL_WEIGHT_SUPG_GP     8
 
 /* Fill Equation options */
 #define FILL_EQN_ADVECT   1

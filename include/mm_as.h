@@ -22,6 +22,8 @@
 #ifndef _MM_AS_H
 #define _MM_AS_H
 
+#include "mm_as_structs.h"
+
 extern struct Element_Indices			**ei;
 extern struct Element_Indices		       **eiRelated;
 extern struct Element_Stiffness_Pointers	*esp;

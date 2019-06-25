@@ -2635,6 +2635,8 @@ struct Level_Set_Data { int    var;
 						int    PSPP_filter;
 						int    Sat_Hyst_Renorm_Lockout;
                         int ghost_stress;
+                        int Toure_Penalty;
+
                       };
 
 /*
@@ -3028,6 +3030,13 @@ struct Lubrication_Auxiliaries
 };
 
 typedef struct Lubrication_Auxiliaries LUBRICATION_AUXILIARIES_STRUCT;
+
+
+struct SUPG_terms {
+  dbl supg_tau;
+  dbl d_supg_tau_dv[DIM][MDE];
+  dbl d_supg_tau_dX[DIM][MDE];
+};
 
 
 /******************************************************************************/

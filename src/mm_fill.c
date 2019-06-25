@@ -1029,6 +1029,11 @@ matrix_fill(
 
   if( pde[R_FILL] )  /* No need to do this loop if there is no LS/FILL variable OK */
     {
+      struct LS_Mass_Lumped_Penalty mass_lumped_penalty;
+      if (ls != NULL && ls->Toure_Penalty) {
+        assemble_ls_mass_lumped_penalty(&mass_lumped_penalty, ip_total, ielem_type, &pg_data);
+      }
+
       for (ip = 0; ip < ip_total; ip++)
 	{
 	  MMH_ip = ip;
@@ -1159,7 +1164,7 @@ matrix_fill(
 	    }
 	  else if(  tran->Fill_Equation == FILL_EQN_ADVECT )
 	    {
-	      err = assemble_fill(theta, delta_t, pg_data.hsquared, pg_data.hh, pg_data.dh_dxnode, R_FILL, xi, exo, time_value);
+              err = assemble_fill(theta, delta_t, &pg_data, R_FILL, xi, exo, time_value, &mass_lumped_penalty);
 	      EH( err, "assemble_fill");
 #ifdef CHECK_FINITE
 	      CHECKFINITE("assemble_fill");
@@ -1168,8 +1173,7 @@ matrix_fill(
 		{
 		  ls_old = ls;
 		  ls = pfd->ls[0]; 
-		  err = assemble_fill(theta, delta_t, pg_data.hsquared, pg_data.hh, 
-				      pg_data.dh_dxnode, R_PHASE1, xi, exo, time_value);
+                  err = assemble_fill(theta, delta_t, &pg_data, R_PHASE1, xi, exo, time_value, &mass_lumped_penalty);
 		  ls = ls_old; /*Make things right again */
 		  EH( err, "assemble_fill");
 #ifdef CHECK_FINITE

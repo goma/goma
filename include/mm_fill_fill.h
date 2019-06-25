@@ -36,6 +36,12 @@
 
 #include "dg_utils.h"
 
+struct LS_Mass_Lumped_Penalty {
+  dbl penalty[MDE];
+  dbl d_penalty[MDE][MDE];
+  dbl inv_grad_F[MDE];
+};
+
 EXTERN int integrate_explicit_eqn
 (struct Aztec_Linear_Solver_System *, /* ams - cf "sl_util_structs.h"  */
        double [],		/* rf - residual for fill equation only      */
@@ -106,17 +112,15 @@ EXTERN int assemble_fill_fake
 
 
 #ifdef COUPLED_FILL
-EXTERN int assemble_fill
-(double ,                      /* tt                   */
-       double ,                      /* dt                   */
-       double [],                    /* hsquared[DIM]        */
-       double [][DIM],               /* hh[DIM][DIM]         */
-       double [][MDE],               /* dh_dxnode[DIM][MDE]  */
-       const int,                    /* equation -  */
-       double [DIM],                 /* xi - coordinates */
-       Exo_DB * const,               /* Exodus database */
-       double                        /* Time */
-       );
+EXTERN int assemble_fill(double tt,
+                         double dt,
+                         PG_DATA *pg_data,
+                         const int applied_eqn,
+                         double xi[DIM],
+                         Exo_DB *exo,
+                         double time,
+                         struct LS_Mass_Lumped_Penalty *penalty
+                         );
 
 EXTERN int assemble_fill_ext_v
 (double ,			/* tt - parameter varies time integration from 
@@ -459,5 +463,8 @@ EXTERN int assemble_pf_constraint
 		double *,
 		double * );
 
+EXTERN void assemble_ls_mass_lumped_penalty(
+    struct LS_Mass_Lumped_Penalty *mass_lumped_penalty, int ip_total,
+    int ielem_type, PG_DATA *pg_data);
 
 #endif /* _MM_FILL_FILL_H */

@@ -55,6 +55,8 @@ static char rcsid[] =
 #include "sl_util_structs.h"
 #include "mm_input.h"
 
+#include <string.h>
+
 #define _MM_INPUT_C
 #include "goma.h"
 
@@ -1754,14 +1756,20 @@ rd_timeint_specs(FILE *ifp,
 	  {
 	    tran->Fill_Weight_Fcn = FILL_WEIGHT_EXPLICIT;
 	  }
+        else if ( strcmp( input, "SUPG_GP") == 0 )
+          {
+            tran->Fill_Weight_Fcn = FILL_WEIGHT_SUPG_GP;
+          }
+        else if ( strcmp( input, "SUPG_SHAKIB") == 0 )
+          {
+            tran->Fill_Weight_Fcn = FILL_WEIGHT_SUPG_SHAKIB;
+          }
 	else
 	  {
 	    EH(-1, "Fill Weight Function not known.\n");
 	  }
 	SPF(echo_string,eoformat,"Fill Weight Function",input);ECHO(echo_string, echo_file);
       }
-
-    /* Default to advection equation for fill/level set */
 
     tran->Fill_Equation = FILL_EQN_ADVECT; 
     strcpy(input,"Advection");
@@ -2751,6 +2759,35 @@ rd_levelset_specs(FILE *ifp,
             ECHO(echo_string,echo_file);
 
           }
+
+
+        ls->Toure_Penalty = FALSE;
+
+        iread = look_for_optional(ifp,"Level Set Toure Penalty",input,'=');
+        if (iread == 1)
+        {
+          if (fscanf(ifp, "%s", input ) != 1 )
+          {
+            EH(-1, "Error reading Level Set Toure Penalty flag.");
+          }
+          strip(input);
+          stringup(input);
+
+          if ((strcmp(input,"ON") == 0) || (strcmp(input,"YES") == 0 ))
+          {
+            ls->Toure_Penalty = TRUE;
+          }
+          else if ((strcmp(input,"OFF") == 0) || (strcmp(input,"NO") == 0 ))
+          {
+            ls ->Toure_Penalty = FALSE;
+          }
+          else
+          {
+            EH(-1, "Error unknown value for Level Set Toure Penalty");
+          }
+          SPF(echo_string,"%s = %s", "Level Set Toure Penalty", input);
+          ECHO(echo_string,echo_file);
+        }
 
     }  /* if ( ls != NULL ) */
 

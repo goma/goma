@@ -27,6 +27,9 @@
 #define EXTERN extern
 #endif
 
+#include "el_elm.h"
+#include "mm_as_structs.h"
+
 EXTERN int beer_belly
 (void);
 
@@ -223,5 +226,12 @@ extern void set_solid_inertia(void);
 
 extern int fill_variable_vector(int inode, int ivec_varType[], int ivec_matID[]);
 
+
+EXTERN void get_supg_tau(struct SUPG_terms *supg_terms,
+                         int dim,
+                         dbl diffusivity,
+                         PG_DATA *pg_data,
+                         double dt,
+                         int shakib);
 
 #endif /* _MM_FILL_UTIL_H */

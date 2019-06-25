@@ -5326,3 +5326,168 @@ calc_tensor_invariant( dbl T[DIM][DIM],        // Original tensor
 
 }  // End of calc_tensor_invariants()
 			
+void get_supg_tau(struct SUPG_terms *supg_terms,
+                  int dim,
+                  dbl diffusivity,
+                  PG_DATA *pg_data,
+                  double dt,
+                  int shakib)
+{
+
+  if (shakib) {
+
+    double G[DIM][DIM];
+
+    for (int i = 0; i < DIM; i++) {
+      for (int j = 0; j < DIM; j++) {
+        G[i][j] = 0;
+        for (int k = 0; k < DIM; k++) {
+          G[i][j] += bf[VELOCITY1]->B[k][i] * bf[VELOCITY1]->B[k][j];
+        }
+      }
+    }
+
+    double v_d_gv = 0;
+    for (int i = 0; i < dim; i++) {
+      for (int j = 0; j < dim; j++) {
+        v_d_gv += fv->v[i] * G[i][j] * fv->v[j];
+      }
+    }
+
+    double d_v_d_gv[DIM][MDE];
+    for (int a = 0; a < dim; a++) {
+      for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
+        d_v_d_gv[a][k] = 0.0;
+        for (int i = 0; i < dim; i++) {
+          for (int j = 0; j < dim; j++) {
+            d_v_d_gv[a][k] += delta(a,i)*bf[VELOCITY1+a]->phi[k] * G[i][j] * fv->v[j] +
+                delta(a,j)*fv->v[i] * G[i][j] * bf[VELOCITY1+a]->phi[k];
+          }
+        }
+      }
+    }
+
+
+    double beta = 2/sqrt(15);
+    supg_terms->supg_tau = beta / (sqrt(4/(dt*dt) + v_d_gv));
+
+    for (int a = 0; a < dim; a++) {
+      for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
+        supg_terms->d_supg_tau_dv[a][k] = - 0.5 * d_v_d_gv[a][k] * (1/(4/(dt*dt) + v_d_gv)) * supg_terms->supg_tau;
+      }
+    }
+
+    for (int a = 0; a < dim; a++) {
+      if (pd->e[pg->imtrx][MESH_DISPLACEMENT1+a])
+      {
+        EH(-1, "Mesh displacement derivatives not implemented for shakib supg_tau");
+      }
+    }
+
+  } else {
+
+    double vnorm = 0;
+
+    for (int i = 0; i < VIM; i++) {
+      vnorm += fv->v[i]*fv->v[i];
+    }
+    vnorm = sqrt(vnorm);
+
+    double hk = 0;
+    for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
+      hk += pg_data->hsquared[a];
+    }
+    /* This is the size of the element */
+    hk = sqrt(hk / ((double)ei[pg->imtrx]->ielem_dim));
+
+
+    double D = diffusivity;
+
+    double hk_dX[DIM][MDE];
+    for (int a = 0; a < dim; a++)
+    {
+      for (int j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1+a]; j++)
+      {
+        double tmp = 0;
+        for (int b = 0; b < dim; b++)
+        {
+          tmp += (2*pg_data->hhv[b][a] * pg_data->dhv_dxnode[b][j])/(2*sqrt(pg_data->hsquared[b]));
+        }
+        hk_dX[a][j] = tmp/dim;
+      }
+    }
+
+    double Pek = 0.5 * vnorm * hk / D;
+
+    double eta = Pek;
+    double eta_dX[DIM][MDE];
+    double eta_dV[DIM][MDE];
+    if (Pek > 1) {
+      eta = 1;
+      for (int i = 0; i < DIM; i++)
+      {
+        for (int j = 0; j < MDE; j++)
+        {
+          eta_dX[i][j] = 0;
+          eta_dV[i][j] = 0;
+        }
+      }
+    }
+    else
+    {
+      for (int i = 0; i < DIM; i++)
+      {
+        for (int j = 0; j < MDE; j++)
+        {
+          if (pd->e[pg->imtrx][VELOCITY1+i])
+          {
+            eta_dV[i][j] = 0.5 * 0.5 * hk * fv->v[i]*bf[VELOCITY1+i]->phi[j] / (vnorm*D);
+
+          }
+
+          if (pd->e[pg->imtrx][MESH_DISPLACEMENT1+i])
+          {
+            eta_dX[i][j] = 0.5 * vnorm * hk_dX[i][j] / D;
+
+          }
+        }
+      }
+    }
+
+    if (vnorm > 0) {
+      supg_terms->supg_tau = 0.5 * hk * eta / vnorm;
+
+      for (int a = 0; a < VIM; a++)
+      {
+        int var = VELOCITY1 + a;
+        for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+        {
+          supg_terms->d_supg_tau_dv[a][j] = 0.5*hk*eta*fv->v[a]*bf[var]->phi[j] /
+              (- vnorm*vnorm*vnorm) + 0.5 * hk * eta_dV[a][j] / vnorm;
+        }
+
+        var = MESH_DISPLACEMENT1 + a;
+        for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+        {
+          supg_terms->d_supg_tau_dX[a][j] = 0.5 * hk_dX[a][j] * eta / vnorm + 0.5 * hk * eta_dX[a][j] / vnorm;
+        }
+      }
+
+
+    } else {
+      supg_terms->supg_tau = 0;
+      for (int i = 0; i < DIM; i++)
+      {
+        for (int j = 0; j < MDE; j++)
+        {
+          supg_terms->d_supg_tau_dv[i][j] = 0.0;
+        }
+        for (int j = 0; j < MDE; j++)
+        {
+          supg_terms->d_supg_tau_dX[i][j] = 0.0;
+        }
+      }
+    }
+  }
+
+}
