@@ -144,6 +144,13 @@ EXTERN int elem_on_isosurface
         int,
         double );
 
+EXTERN int
+elem_near_isosurface ( int elem,
+                     double x[],
+                     const Exo_DB* exo,
+                     int isovar,
+                     double isoval );
+
 EXTERN int current_elem_on_isosurface
 ( int,
         double );

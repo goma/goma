@@ -11,3 +11,4 @@ goma
 .project
 /TAGS
 /.settings/
+/CMakeLists.txt.user

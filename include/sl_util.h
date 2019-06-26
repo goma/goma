@@ -43,6 +43,7 @@
 #define HUYGENS_C                       7
 #define SM_OBJECT                       8
 #define HUYGENS_MASS_ITER               9
+#define SMOLIANSKI_ONLY                 10
 
 #define LS_SURF_POINT                   0
 #define LS_SURF_PLANE                   1

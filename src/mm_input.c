@@ -2321,6 +2321,90 @@ rd_levelset_specs(FILE *ifp,
                   ls->Mass_Sign  = I_POS_FILL;
                 }
             }
+          else if  ( strcmp( input,"Smolianski_Only_Mass_Negative") == 0 )
+            {
+              ls->Renorm_Method = SMOLIANSKI_ONLY;
+
+              strcat(echo_string, "Smolianski_Only_Mass_Negative");
+
+              if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
+                {
+                  char *s = endofstring(echo_string);
+
+                  ls->Mass_Sign = I_MASS_NEGATIVE_FILL;
+                  ls->Mass_Value = ls->Mass_Value;
+
+                  SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
+                }
+              else
+                {
+                  ls->Mass_Value = 0.0;
+                  ls->Mass_Sign  = I_MASS_NEGATIVE_FILL;
+                }
+            }
+          else if  ( strcmp( input,"Smolianski_Only_Mass_Positive") == 0 )
+            {
+              ls->Renorm_Method = SMOLIANSKI_ONLY;
+
+              strcat(echo_string, "Smolianski_Only_Mass_Positive");
+
+              if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
+                {
+                  char *s = endofstring(echo_string);
+
+                  ls->Mass_Sign = I_MASS_POSITIVE_FILL;
+                  ls->Mass_Value = ls->Mass_Value;
+
+                  SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
+                }
+              else
+                {
+                  ls->Mass_Value = 0.0;
+                  ls->Mass_Sign  = I_MASS_POSITIVE_FILL;
+                }
+            }
+          else if  ( strcmp( input,"Smolianski_Only_Negative") == 0 )
+            {
+              ls->Renorm_Method = SMOLIANSKI_ONLY;
+
+              strcat(echo_string, "Smolianski_Only_Negative");
+
+              if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
+                {
+                  char *s = endofstring(echo_string);
+
+                  ls->Mass_Sign = I_NEG_FILL;
+                  ls->Mass_Value = ls->Mass_Value;
+
+                  SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
+                }
+              else
+                {
+                  ls->Mass_Value = 0.0;
+                  ls->Mass_Sign  = I_NEG_FILL;
+                }
+            }
+          else if  ( strcmp( input,"Smolianski_Only_Positive") == 0 )
+            {
+              ls->Renorm_Method = SMOLIANSKI_ONLY;
+
+              strcat(echo_string, "Smolianski_Only_Positive");
+
+              if( fscanf( ifp,"%lf", &(ls->Mass_Value)) == 1)
+                {
+                  char *s = endofstring(echo_string);
+
+                  ls->Mass_Sign = I_POS_FILL;
+                  ls->Mass_Value = ls->Mass_Value;
+
+                  SPF(s," %.4g",ls->Mass_Sign*ls->Mass_Value);
+                }
+              else
+                {
+                  ls->Mass_Value = 0.0;
+                  ls->Mass_Sign  = I_POS_FILL;
+                }
+            }
           else if  ( ( strcmp( input,"None") == 0 ) ||  (strcmp( input,"No") == 0) )
             {
               ls->Renorm_Method = FALSE;
@@ -2786,6 +2870,34 @@ rd_levelset_specs(FILE *ifp,
             EH(-1, "Error unknown value for Level Set Toure Penalty");
           }
           SPF(echo_string,"%s = %s", "Level Set Toure Penalty", input);
+          ECHO(echo_string,echo_file);
+        }
+
+        ls->Huygens_Freeze_Nodes = FALSE;
+
+        iread = look_for_optional(ifp,"Huygens Freeze Nodes",input,'=');
+        if (iread == 1)
+        {
+          if (fscanf(ifp, "%s", input ) != 1 )
+          {
+            EH(-1, "Error reading Huygens Freeze Nodes flag.");
+          }
+          strip(input);
+          stringup(input);
+
+          if ((strcmp(input,"ON") == 0) || (strcmp(input,"YES") == 0 ))
+          {
+            ls->Toure_Penalty = TRUE;
+          }
+          else if ((strcmp(input,"OFF") == 0) || (strcmp(input,"NO") == 0 ))
+          {
+            ls ->Toure_Penalty = FALSE;
+          }
+          else
+          {
+            EH(-1, "Error unknown value for Huygens Freeze Nodes");
+          }
+          SPF(echo_string,"%s = %s", "Huygens Freeze Nodes", input);
           ECHO(echo_string,echo_file);
         }
 
