@@ -1589,13 +1589,13 @@ void surf_based_initialization(double *x, double *delta_x, double *xdot,
         closest->closest_point->distance *= sign;
       }
 
-      if (ls != NULL && ls->Huygens_Freeze_Nodes) {
+      if (ls != NULL && ls->Huygens_Freeze_Nodes && fabs(time) > 0) {
 
         int node_is_frozen = 0;
         for (int ielem = exo->node_elem_pntr[I];
              ielem < exo->node_elem_pntr[I + 1]; ielem++) {
           int elem = exo->node_elem_list[ielem];
-          if (elem_near_isosurface(elem, x, exo, ls->var, 0)) {
+          if (elem_on_isosurface(elem, x, exo, ls->var, 0)) {
             node_is_frozen = 1;
           }
         }
@@ -2731,7 +2731,7 @@ int elem_near_isosurface(int elem, double x[], const Exo_DB *exo, int isovar,
 
     f[i] = x[Index_Solution(I, isovar, 0, 0, -2, pg->imtrx)] - isoval;
 
-    if (f[i] < (h_elem * 0.5)) {
+    if (fabs(f[i]) < (h_elem * 0.5)) {
       return (TRUE);
     }
   }
@@ -3073,9 +3073,6 @@ static int Hrenorm_smolianksi_only(Exo_DB *exo, Comm_Ex *cx, Dpi *dpi,
   } else if (!M0_set) {
     M0 = find_LS_mass(exo, dpi, NULL, dC, x, num_total_unkns);
   }
-
-  surf_based_initialization(x, NULL, NULL, exo, num_total_nodes, list, time, 0.,
-                            0.);
 #ifdef PARALLEL
   exchange_dof(cx, dpi, x, pg->imtrx);
 #endif
@@ -3310,7 +3307,7 @@ static double find_LS_mass(const Exo_DB *exo, const Dpi *dpi,
     if (pd_glob[mn]->e[pg->imtrx][ls->var])
       M += evaluate_volume_integral(exo, dpi, ls->Mass_Sign, NULL, blk_id, 0,
                                     NULL, params, num_params, dC, x, x, 0.0,
-                                    0.0, 0);
+                                    tran->time_value, 0);
   }
 
   return (M);

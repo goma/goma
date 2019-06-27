@@ -2887,17 +2887,45 @@ rd_levelset_specs(FILE *ifp,
 
           if ((strcmp(input,"ON") == 0) || (strcmp(input,"YES") == 0 ))
           {
-            ls->Toure_Penalty = TRUE;
+            ls->Huygens_Freeze_Nodes = TRUE;
           }
           else if ((strcmp(input,"OFF") == 0) || (strcmp(input,"NO") == 0 ))
           {
-            ls ->Toure_Penalty = FALSE;
+            ls ->Huygens_Freeze_Nodes = FALSE;
           }
           else
           {
             EH(-1, "Error unknown value for Huygens Freeze Nodes");
           }
           SPF(echo_string,"%s = %s", "Huygens Freeze Nodes", input);
+          ECHO(echo_string,echo_file);
+        }
+
+        ls->Enable_Div_Term = FALSE;
+
+        iread = look_for_optional(ifp,"Level Set Enable Div Term",input,'=');
+        if (iread == 1)
+        {
+          if (fscanf(ifp, "%s", input ) != 1 )
+          {
+            EH(-1, "Error reading Level Set Enable Div Term flag.");
+          }
+          strip(input);
+          stringup(input);
+
+          if ((strcmp(input,"ON") == 0) || (strcmp(input,"YES") == 0 ))
+          {
+            ls->Enable_Div_Term = TRUE;
+          }
+          else if ((strcmp(input,"OFF") == 0) || (strcmp(input,"NO") == 0 ))
+          {
+            ls ->Enable_Div_Term = FALSE;
+          }
+          else
+          {
+            EH(-1, "Error unknown value for Level Set Enable Div Term");
+          }
+          SPF(echo_string,"%s = %s", "Level Set Enable Div Term", input);
           ECHO(echo_string,echo_file);
         }
 

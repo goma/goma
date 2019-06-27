@@ -966,5 +966,8 @@ void dvzdr_zero_deriv_bc
        const double );		/* vnormal - normal velocity                 */
   
   
-
+void
+ls_wall_angle_bc(double func[DIM],
+                double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                const double angle);
 #endif /* _MM_NS_BC_H */

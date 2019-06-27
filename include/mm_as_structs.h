@@ -2637,6 +2637,7 @@ struct Level_Set_Data { int    var;
                         int ghost_stress;
                         int Toure_Penalty;
                         int Huygens_Freeze_Nodes;
+                                              int Enable_Div_Term;
                       };
 
 /*

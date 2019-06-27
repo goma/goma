@@ -15257,4 +15257,43 @@ qside_light_jump(double func[DIM],
     }
 
 }
+
+void
+ls_wall_angle_bc(double func[DIM],
+                double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                const double angle) /* angle in radians */
+{
+  int j, kdir, var, p;
+  const double cos_angle = cos(angle);
+
+  /* Calculate the residual contribution	*/
+  func[0] = -cos_angle;
+  for (kdir = 0; kdir < pd->Num_Dim; kdir++)
+    {
+      func[0] += fv->grad_F[kdir] * fv->snormal[kdir];
+    }
+
+  if (af->Assemble_Jacobian) {
+
+    for (kdir=0; kdir<pd->Num_Dim; kdir++) {
+
+      for (p=0; p<pd->Num_Dim; p++) {
+        var = MESH_DISPLACEMENT1 + p;
+        if (pd->gv[var]) {
+          for ( j=0; j<ei[pd->mi[var]]->dof[var]; j++) {
+            d_func[0][var][j] += fv->grad_F[kdir] * fv->dsnormal_dx[kdir][p][j] +
+                fv->d_grad_F_dmesh[kdir][p][j] * fv->snormal[kdir];
+          }
+        }
+      }
+
+      var = FILL;
+      if (pd->v[pg->imtrx][var]) {
+        for ( j=0; j<ei[pd->mi[var]]->dof[var]; j++) {
+          d_func[0][var][j] += bf[var]->grad_phi[j][kdir] * fv->snormal[kdir];
+        }
+      }
+    } /* for: kdir */
+  } /* end of if Assemble_Jacobian */
+}
 /****************************************************************************/

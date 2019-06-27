@@ -536,6 +536,9 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  ls_attach_bc( func, d_func, bc->BC_Data_Float[0] );
 	  break;
 		
+        case LS_WALL_ANGLE_BC:
+          ls_wall_angle_bc(func, d_func, bc->BC_Data_Float[0]);
+          break;
 
  	case KIN_DISPLACEMENT_PETROV_BC:
 	case KIN_DISPLACEMENT_BC:

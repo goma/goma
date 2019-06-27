@@ -538,6 +538,11 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
         for (int a = 0; a < dim; a++) {
           advection += fv->v[a] * fv->grad_F[a];
         }
+
+        if (ls != NULL && ls->Enable_Div_Term) {
+          advection += fv->F * fv->div_v;
+        }
+
         advection *= wt_func;
       } break;
       default:
@@ -687,7 +692,11 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
             mass = (phi_j * (1. + 2. * tt) * dtinv) * wt_func;
             advection = 0;
             for (int a = 0; a < dim; a++) {
-              advection += fv->v[a] * bf[eqn]->grad_phi[j][a];
+              advection += fv->v[a] * bf[var]->grad_phi[j][a];
+            }
+
+            if (ls != NULL && ls->Enable_Div_Term) {
+              advection += bf[var]->phi[j] * fv->div_v;
             }
             advection *= wt_func;
           } break;

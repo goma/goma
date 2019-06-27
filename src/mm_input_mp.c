@@ -7064,6 +7064,30 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
      ECHO(es,echo_file);
 
+
+     model_read = look_for_mat_prop(imp, "Species Enable Div Term",
+                                    &(SpeciesTimeIntegration),
+                                    &(a0), NO_USER, NULL,
+                                    model_name, NO_INPUT,
+                                    &species_no, es);
+     if (model_read == -1 && !strcmp(model_name, "on") )
+       {
+          mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+       }
+     else if (model_read == -1 &&  !strcmp(model_name, "yes") )
+       {
+          mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
+       }
+     else
+       {
+         mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 0;
+         SPF(es, "\t(%s = %s)", "Species Enable Div Term","off");
+       }
+
+     ECHO(es,echo_file);
+
+
+
      /* initialize to good default behavior */
      mat_ptr->AdvectiveScalingModel[species_no] = CONSTANT; 
      mat_ptr->AdvectiveScaling[species_no] = 1.0; 
