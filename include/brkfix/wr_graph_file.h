@@ -13,18 +13,18 @@
 /* wr_graph_file.h - prototype declarations for wr_graph_file.c
  */
 
-#ifndef _WR_GRAPH_FILE_H
-#define _WR_GRAPH_FILE_H
+#ifndef GOMA_WR_GRAPH_FILE_H
+#define GOMA_WR_GRAPH_FILE_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _WR_GRAPH_FILE_C
+#ifdef GOMA_WR_GRAPH_FILE_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _WR_GRAPH_FILE_C
+#ifndef GOMA_WR_GRAPH_FILE_C
 #define EXTERN extern
 #endif
 
@@ -45,4 +45,4 @@ EXTERN void wr_graph_file			/* wr_graph_file.c */
        int *);					/* for edge weights */
 
 
-#endif /* _WR_GRAPH_FILE_H */
+#endif /* GOMA_WR_GRAPH_FILE_H */

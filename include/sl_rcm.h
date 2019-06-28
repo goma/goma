@@ -19,8 +19,8 @@
  *
  */
 
-#ifndef _RCM_H
-#define _RCM_H
+#ifndef GOMA_SL_RCM_H
+#define GOMA_SL_RCM_H
 #endif
 
 #define UPPER_CASE		/* Solaris, HP/UX, Linux, IRIX, janus, ... */

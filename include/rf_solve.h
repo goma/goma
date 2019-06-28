@@ -10,18 +10,18 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _RF_SOLVE_H
-#define _RF_SOLVE_H
+#ifndef GOMA_RF_SOLVE_H
+#define GOMA_RF_SOLVE_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _RF_SOLVE_C
+#ifdef GOMA_RF_SOLVE_C
 #define EXTERN
 #endif
 
-#ifndef _RF_SOLVE_C
+#ifndef GOMA_RF_SOLVE_C
 #define EXTERN extern
 #endif
 
@@ -92,4 +92,4 @@ extern int create_periodic_acs(Exo_DB *);
  */
 extern void print_code_version(void);
 extern void echo_command_line( int, char *[], char *);
-#endif /* _RF_SOLVE_H */
+#endif /* GOMA_RF_SOLVE_H */

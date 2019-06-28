@@ -84,13 +84,11 @@
  * Revised:  1998/01/20 15:06 MST pasacki@sandia.gov
  */
 
-#define _BRK_C
+#define GOMA_BRK_C
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
-#define _INCLUDE_POSIX_SOURCE	/* needed for HP-UX */
 
 #include <stdio.h>
 

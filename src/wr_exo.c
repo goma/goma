@@ -75,7 +75,7 @@ static int has_been_called=0;
 #include "rf_mp.h"		/* are we serial or parallel? */
 #include "rf_io_structs.h"	/* for Results_Description */
 
-#define _WR_EXO_C
+#define GOMA_WR_EXO_C
 #include "goma.h"
 
 extern char **Argv;		/* global shadow of argv, def'd in main.c */

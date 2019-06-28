@@ -13,18 +13,18 @@
 /* sam_perea.h - prototype declarations for sam_perea.c
  */
 
-#ifndef _SAM_PEREA_H
-#define _SAM_PEREA_H
+#ifndef GOMA_SAM_PEREA_H
+#define GOMA_SAM_PEREA_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _SAM_PEREA_C
+#ifdef GOMA_SAM_PEREA_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _SAM_PEREA_C
+#ifndef GOMA_SAM_PEREA_C
 #define EXTERN extern
 #endif
 
@@ -48,4 +48,4 @@ EXTERN void assess_weights	/* sam_perea.c */
        int *,			/* nat_contribute - num assembed terms for A */
        int *);			/* ccs_contribute - comm cost sum this int.*/
 
-#endif /* _SAM_PEREA_H */
+#endif /* GOMA_SAM_PEREA_H */

@@ -10,19 +10,19 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _RD_DPI_H
-#define _RD_DPI_H
+#ifndef GOMA_RD_DPI_H
+#define GOMA_RD_DPI_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _RD_DPI_C
+#ifdef GOMA_RD_DPI_C
 #define EXTERN
 #
 #endif
 
-#ifndef _RD_DPI_C
+#ifndef GOMA_RD_DPI_C
 #define EXTERN extern
 #endif
 
@@ -66,4 +66,4 @@ void
 exo_dpi_clone(Exo_DB *exo, 
 	      Dpi *dpi);
 
-#endif /* _RD_DPI_H */
+#endif /* GOMA_RD_DPI_H */

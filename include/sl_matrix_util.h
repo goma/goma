@@ -15,19 +15,19 @@
  * $Id: sl_matrix_util.h,v 5.1 2007-09-18 18:53:48 prschun Exp $ 
  */
 
-#ifndef _SL_MATRIX_UTIL_H
-#define _SL_MATRIX_UTIL_H
+#ifndef GOMA_SL_MATRIX_UTIL_H
+#define GOMA_SL_MATRIX_UTIL_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _SL_MATRIX_UTIL_C
+#ifdef GOMA_SL_MATRIX_UTIL_C
 #define EXTERN
 #
 #endif
 
-#ifndef _SL_MATRIX_UTIL_C
+#ifndef GOMA_SL_MATRIX_UTIL_C
 #define EXTERN extern
 #endif
 
@@ -117,4 +117,4 @@ extern void matrix_dump_vbr(struct Aztec_Linear_Solver_System *,
 			    Exo_DB *, Dpi *, double *);
 #endif
 
-#endif /* _SL_MATRIX_UTIL_H */
+#endif /* GOMA_SL_MATRIX_UTIL_H */

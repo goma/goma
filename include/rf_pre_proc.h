@@ -11,23 +11,23 @@
 \************************************************************************/
  
 
-#ifndef _RF_PRE_PROC_H
-#define _RF_PRE_PROC_H
+#ifndef GOMA_RF_PRE_PROC_H
+#define GOMA_RF_PRE_PROC_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _RF_PRE_PROC_C
+#ifdef GOMA_RF_PRE_PROC_C
 #define EXTERN
 #
 #endif
 
-#ifndef _RF_PRE_PROC_C
+#ifndef GOMA_RF_PRE_PROC_C
 #define EXTERN extern
 #endif
 
 EXTERN void pre_process		/* rf_pre_proc.c */
 (Exo_DB *exo);
 
-#endif /* _RF_PRE_PROC_H */
+#endif /* GOMA_RF_PRE_PROC_H */

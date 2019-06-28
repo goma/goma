@@ -55,7 +55,7 @@
  * Modified: 1998/12/18 09:57 MST pasacki@sandia.gov
  */
 
-#define _RD_EXO_C
+#define GOMA_RD_EXO_C
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

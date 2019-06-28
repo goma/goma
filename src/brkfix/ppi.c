@@ -26,7 +26,7 @@
  * Revised:
  */
 
-#define _PPI_C
+#define GOMA_PPI_C
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

@@ -22,7 +22,7 @@
  * Revised:
  */
 
-#define _RD_IN_C
+#define GOMA_RD_IN_C
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

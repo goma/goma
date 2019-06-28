@@ -10,8 +10,8 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _RF_MASKS_CONST_H_
-#define _RF_MASKS_CONST_H_
+#ifndef GOMA_RF_MASKS_CONST_H_
+#define GOMA_RF_MASKS_CONST_H_
 
 
 /*

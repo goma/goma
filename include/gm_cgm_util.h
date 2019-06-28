@@ -10,18 +10,18 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _GM_CGM_UTIL_H
-#define _GM_CGM_UTIL_H
+#ifndef GOMA_GM_CGM_UTIL_H
+#define GOMA_GM_CGM_UTIL_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _GM_CGM_UTIL_C
+#ifdef GOMA_GM_CGM_UTIL_C
 #define EXTERN /* nothing */
 #endif
 
-#ifndef _GM_CGM_UTIL_C
+#ifndef GOMA_GM_CGM_UTIL_C
 #define EXTERN extern /* nothing */
 #endif
 

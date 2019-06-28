@@ -81,7 +81,7 @@ extern void handle_ieee(void );
 #include <fenv.h>
 #endif
 
-#define _MAIN_C
+#define GOMA_MAIN_C
 #include "goma.h"
 
 /*

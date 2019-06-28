@@ -66,7 +66,7 @@
  * Revised:
  */
 
-#define _SAM_PEREA_C
+#define GOMA_SAM_PEREA_C
 
 #include <stdio.h>
 

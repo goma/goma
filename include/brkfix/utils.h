@@ -13,18 +13,18 @@
 /* utils.h - prototype declarations for utils.c
  */
 
-#ifndef _UTILS_H
-#define _UTILS_H
+#ifndef GOMA_UTILS_H
+#define GOMA_UTILS_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _UTILS_C
+#ifdef GOMA_UTILS_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _UTILS_C
+#ifndef GOMA_UTILS_C
 #define EXTERN extern
 #endif
 
@@ -99,4 +99,4 @@ EXTERN int get_min_val_index	/* utils.c */
 EXTERN int is_shell_type 
 (char *elem_type);       // String that is the element type from exo
 
-#endif /* _UTILS_H */
+#endif /* GOMA_UTILS_H */

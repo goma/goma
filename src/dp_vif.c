@@ -75,7 +75,7 @@ static char rcsid[] = "$Id: dp_vif.c,v 5.24 2010-07-21 16:39:26 hkmoffa Exp $";
 
 #include "rf_solver.h"
 
-#define _DP_VIF_C
+#define GOMA_DP_VIF_C
 #include "goma.h"
 
 #ifndef CDIM

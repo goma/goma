@@ -15,8 +15,8 @@
  *$Id: std.h,v 5.3 2010-07-01 17:29:33 ebenner Exp $
  */
 
-#ifndef _RF_GOMA_H
-#define _RF_GOMA_H
+#ifndef GOMA_RF_GOMA_H
+#define GOMA_RF_GOMA_H
 
 #include <ctype.h>
 
@@ -506,7 +506,7 @@ extern int zero_detJ_global;
 #endif
 
 #if ( defined (linux) && defined (COMPILER_64BIT) )
-/* This ifndef was extracted from _RF_GOMA_H ifndef because of goma failures
+/* This ifndef was extracted from GOMA_RF_GOMA_H ifndef because of goma failures
  * when compiled with 64-bit gnu compilers 4.1+. (It may be a trilinos 9
  * versus 6 issue.)  This is not needed if goma is compiled with autoconf.
  * (Eric Benner 8/6/09)

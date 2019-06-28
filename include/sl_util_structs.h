@@ -27,8 +27,8 @@
  * Modified:
  */
 
-#ifndef _SL_UTIL_STRUCTS_H
-#define _SL_UTIL_STRUCTS_H
+#ifndef GOMA_SL_UTIL_STRUCTS_H
+#define GOMA_SL_UTIL_STRUCTS_H
 
 #include <stdio.h>
 

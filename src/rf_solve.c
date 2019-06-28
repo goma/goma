@@ -45,7 +45,7 @@ static char rcsid[] = "$Id: rf_solve.c,v 5.21 2010-03-17 22:23:54 hkmoffa Exp $"
 
 #include "rf_solve_segregated.h"
 
-#define _RF_SOLVE_C
+#define GOMA_RF_SOLVE_C
 #include "goma.h"
 #include "el_quality.h"
 

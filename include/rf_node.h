@@ -14,8 +14,8 @@
  *$Id: rf_node.h,v 5.1 2007-09-18 18:53:47 prschun Exp $
  */
 
-#ifndef _RF_NODE_H
-#define _RF_NODE_H
+#ifndef GOMA_RF_NODE_H
+#define GOMA_RF_NODE_H
 
 #include "rf_node_const.h"
 

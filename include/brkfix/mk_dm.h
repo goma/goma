@@ -13,18 +13,18 @@
 /* mk_dm.h - prototype declarations for mk_dm.c
  */
 
-#ifndef _MK_DM_H
-#define _MK_DM_H
+#ifndef GOMA_MK_DM_H
+#define GOMA_MK_DM_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MK_DM_C
+#ifdef GOMA_MK_DM_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MK_DM_C
+#ifndef GOMA_MK_DM_C
 #define EXTERN extern
 #endif
 
@@ -39,4 +39,4 @@ EXTERN void make_goma_dofmap	/* mk_dm.c */
        Node_Description **,	/* pnd - pointer array to node descriptions */
        int *);			/* nkn - actual number of node descriptions */
 
-#endif /* _MK_DM_H */
+#endif /* GOMA_MK_DM_H */

@@ -19,8 +19,8 @@
  * Revision history is gone.
  */
 
-#ifndef _RF_UTIL_H
-#define _RF_UTIL_H
+#ifndef GOMA_RF_UTIL_H
+#define GOMA_RF_UTIL_H
 
 #if 0
 extern void scatter_double_vector

@@ -27,7 +27,7 @@
 #include "sl_aztecoo_interface.h"
 
 #include "sl_stratimikos_interface.h"
-#define _DG_UTILS_C
+#define GOMA_DG_UTILS_C
 
 #include "dg_utils.h"
 

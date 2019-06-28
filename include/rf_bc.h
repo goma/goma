@@ -15,8 +15,8 @@
  *$Id: rf_bc.h,v 5.2 2007-09-18 18:53:46 prschun Exp $
  */
 
-#ifndef _RF_BC_H
-#define _RF_BC_H
+#ifndef GOMA_RF_BC_H
+#define GOMA_RF_BC_H
 
 
 /*

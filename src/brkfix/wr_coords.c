@@ -22,7 +22,7 @@
  * Revised:
  */
 
-#define _WR_COORDS_C
+#define GOMA_WR_COORDS_C
 
 #include <stdio.h>
 #include <stdlib.h>

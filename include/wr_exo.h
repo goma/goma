@@ -11,19 +11,19 @@
 \************************************************************************/
  
 
-#ifndef _WR_EXO_H
-#define _WR_EXO_H
+#ifndef GOMA_WR_EXO_H
+#define GOMA_WR_EXO_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _WR_EXO_C
+#ifdef GOMA_WR_EXO_C
 #define EXTERN
 #
 #endif
 
-#ifndef _WR_EXO_C
+#ifndef GOMA_WR_EXO_C
 #define EXTERN extern
 #endif
 
@@ -103,4 +103,4 @@ extern void wr_result_exo	/* wr_exo.c */
        int );			/* verbosity - 0 for quiet, more to talk */
 
 
-#endif /* _WR_EXO_H */
+#endif /* GOMA_WR_EXO_H */

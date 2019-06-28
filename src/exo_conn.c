@@ -80,7 +80,7 @@ static char rcsid[] = "$Id: exo_conn.c,v 5.3 2009-11-13 23:20:07 prschun Exp $";
 #include "rf_vars_const.h"
 #include "mm_as_structs.h"
 
-#define _EXO_CONN_C
+#define GOMA_EXO_CONN_C
 #include "goma.h"
 
 /*

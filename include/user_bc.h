@@ -11,8 +11,8 @@
 \************************************************************************/
  
 
-#ifndef _USER_BC_H
-#define _USER_BC_H
+#ifndef GOMA_USER_BC_H
+#define GOMA_USER_BC_H
 
 EXTERN dbl velo_vary_fnc
 (const int ,		/* velo_condition                            */
@@ -197,4 +197,4 @@ extern void mass_flux_user_surf
        double [MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC],
        const int, const double [], const double);
 
-#endif /* _USER_BC_H */
+#endif /* GOMA_USER_BC_H */

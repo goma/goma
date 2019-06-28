@@ -56,7 +56,7 @@ static const char rcs_id[] = "$Id: ac_update_parameter.c,v 5.3 2008-12-19 22:54:
 
 #include "sl_util.h"		/* defines sl_init() */
 
-#define _RF_UPDATE_PARAMETER_C
+#define GOMA_RF_UPDATE_PARAMETER_C
 #include "user_continuation.h"
 #include "goma.h"
 

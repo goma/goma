@@ -16,18 +16,18 @@
  * Revised:1999/04/27 14:10 MDT pasacki@sandia.gov
  */
 
-#ifndef _DP_UTILS_H
-#define _DP_UTILS_H
+#ifndef GOMA_DP_UTILS_H
+#define GOMA_DP_UTILS_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _DP_UTILS_C
+#ifdef GOMA_DP_UTILS_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _DP_UTILS_C
+#ifndef GOMA_DP_UTILS_C
 #define EXTERN extern
 #endif
 

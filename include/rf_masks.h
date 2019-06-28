@@ -15,8 +15,8 @@
  *$Id: rf_masks.h,v 5.1 2007-09-18 18:53:46 prschun Exp $
  */
 
-#ifndef _RF_MASKS_H
-#define _RF_MASKS_H
+#ifndef GOMA_RF_MASKS_H
+#define GOMA_RF_MASKS_H
 
 #ifndef MAX_TOTAL_BCS_POWER
 #define MAX_TOTAL_BCS_POWER  8

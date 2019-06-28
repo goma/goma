@@ -17,11 +17,11 @@
 #undef EXTERN
 #endif
 
-#ifdef _DP_COMM_C
+#ifdef GOMA_DP_COMM_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _DP_COMM_C
+#ifndef GOMA_DP_COMM_C
 #define EXTERN extern
 #endif
 
@@ -37,4 +37,4 @@ EXTERN void exchange_node
        Dpi *d,			/* dpi - distributed processing info */
        double *a);		/* x - local processor node-based vector */
 
-#endif /* _DP_COMM_H */
+#endif /* GOMA_DP_COMM_H */

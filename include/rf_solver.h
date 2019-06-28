@@ -15,8 +15,8 @@
  *$Id: rf_solver.h,v 5.1 2007-09-18 18:53:47 prschun Exp $
  */
 
-#ifndef _RF_SOLVER_H
-#define _RF_SOLVER_H
+#ifndef GOMA_RF_SOLVER_H
+#define GOMA_RF_SOLVER_H
 
 #include "rf_fem_const.h" /* MAX_NUM_MATRICES */
 #include "rf_io_const.h"	/* for definition of MAX_CHAR_IN_INPUT */

@@ -10,19 +10,19 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _RD_EXO_H
-#define _RD_EXO_H
+#ifndef GOMA_RD_EXO_H
+#define GOMA_RD_EXO_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _RD_EXO_C
+#ifdef GOMA_RD_EXO_C
 #define EXTERN
 #
 #endif
 
-#ifndef _RD_EXO_C
+#ifndef GOMA_RD_EXO_C
 #define EXTERN extern
 #endif
 
@@ -77,4 +77,4 @@ EXTERN void alloc_exo_nv	/* rd_exo.c -- get mem big nodevar results */
        const int ,		/* num_timeplanes */
        const int );		/* num_nodal_vars */
 
-#endif /* _RD_EXO_H */
+#endif /* GOMA_RD_EXO_H */

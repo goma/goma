@@ -10,19 +10,19 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _EL_ELM_INFO_H
-#define _EL_ELM_INFO_H
+#ifndef GOMA_EL_ELM_INFO_H
+#define GOMA_EL_ELM_INFO_H
 
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _EL_ELM_INFO_C
+#ifdef GOMA_EL_ELM_INFO_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _EL_ELM_INFO_C
+#ifndef GOMA_EL_ELM_INFO_C
 #define EXTERN extern
 #endif
 
@@ -131,4 +131,4 @@ EXTERN int load_surf_st
 	double,                /* s  */
 	double );             /* t  */ 
 
-#endif /* _EL_ELM_INFO_H */
+#endif /* GOMA_EL_ELM_INFO_H */

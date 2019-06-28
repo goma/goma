@@ -27,8 +27,8 @@
  * $Id: sl_util.h,v 5.1 2007-09-18 18:53:48 prschun Exp $
  */
 
-#ifndef _SL_UTIL_H
-#define _SL_UTIL_H
+#ifndef GOMA_SL_UTIL_H
+#define GOMA_SL_UTIL_H
 
 /*
  *  Definitions of Constants for use in mm_fill_fill routines

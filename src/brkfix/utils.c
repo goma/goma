@@ -18,7 +18,7 @@
  * Revised: 1997/04/10 13:26 MDT pasacki@sandia.gov
  */
 
-#define _UTILS_C
+#define GOMA_UTILS_C
 
 #include <stdio.h>
 #include <stdlib.h>

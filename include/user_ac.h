@@ -15,19 +15,19 @@
  * $Id: user_ac.h,v 5.2 2009-02-13 20:22:57 hkmoffa Exp $
  */
 
-#ifndef _USER_AC_H
-#define _USER_AC_H
+#ifndef GOMA_USER_AC_H
+#define GOMA_USER_AC_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _USER_AC_C
+#ifdef GOMA_USER_AC_C
 #define EXTERN
 #
 #endif
 
-#ifndef _USER_AC_C
+#ifndef GOMA_USER_AC_C
 #define EXTERN extern
 #endif
 
@@ -66,4 +66,4 @@ EXTERN void user_aug_cond_volume_residuals
        const Comm_Ex * const cx);
 
 
-#endif /* _USER_AC_H */
+#endif /* GOMA_USER_AC_H */

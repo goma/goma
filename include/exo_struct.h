@@ -18,15 +18,15 @@
  * Fri Apr 14 10:33 MDT 1995 pasacki@sandia.gov
  */
 
-#ifndef _EXO_STRUCT_H
-#define	_EXO_STRUCT_H 1
+#ifndef GOMA_EXO_STRUCT_H
+#define	GOMA_EXO_STRUCT_H 1
 
 #include "std.h"
 #include "netcdf.h"
 #include "exodusII.h"
 
-#ifndef _FLT_TYPEDEF
-#define _FLT_TYPEDEF
+#ifndef GOMA_FLT_TYPEDEF
+#define GOMA_FLT_TYPEDEF
 typedef float flt;
 #endif
 
@@ -462,4 +462,4 @@ typedef struct Exodus_Database Exo_DB;
  */
 extern Exo_DB *EXO_ptr;
 
-#endif /* _EXO_STRUCT_H */
+#endif /* GOMA_EXO_STRUCT_H */

@@ -21,7 +21,8 @@
  *
  */
 
-#ifndef _H_RF_FEM
+#ifndef GOMA_H_RF_FEM
+#define GOMA_H_RF_FEM
 
 #include "rf_fem_const.h"	/* In case you have not already done so. */
 /*   max number of Interface Sources */
@@ -383,6 +384,5 @@ extern int  ***idv;    	    /* Integer variable name, nodal dof, node. */
 extern char ***dofname;	    /* Names of variables. */
 extern char ***resname;	    /* Names of residual equations. */
 
-#define _H_RF_FEM
 
 #endif

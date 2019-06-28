@@ -30,7 +30,7 @@
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
 
-#define _RF_SOLVE_SEGREGATED_C
+#define GOMA_RF_SOLVE_SEGREGATED_C
 #include "rf_solve_segregated.h"
 #include "goma.h"
 #include "mm_solve_linear_segregated.h"

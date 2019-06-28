@@ -36,7 +36,7 @@ static char rcsid[] =
 
 #include "mm_eh.h"
 
-#define _EL_ELM_INFO_C
+#define GOMA_EL_ELM_INFO_C
 #include "goma.h"
 
 

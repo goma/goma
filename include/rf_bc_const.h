@@ -59,8 +59,8 @@
  *
  */
 
-#ifndef _RF_BC_CONST_H
-#define _RF_BC_CONST_H
+#ifndef GOMA_RF_BC_CONST_H
+#define GOMA_RF_BC_CONST_H
 
 #include "rf_fem_const.h"	/* To know about MAX_VARIABLE_TYPES */
 #include "exo_struct.h"		/* To know about Exo_DB type. */

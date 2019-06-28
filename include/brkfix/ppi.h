@@ -13,22 +13,22 @@
 /* ppi.h - prototype declarations for ppi.c
  */
 
-#ifndef _PPI_H
-#define _PPI_H
+#ifndef GOMA_PPI_H
+#define GOMA_PPI_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _PPI_C
+#ifdef GOMA_PPI_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _PPI_C
+#ifndef GOMA_PPI_C
 #define EXTERN extern
 #endif
 
-#ifdef _PPI_C
+#ifdef GOMA_PPI_C
 const char filter[]="sed -e 's/#.*$//' -e '/^[ 	]*$/d' -e 's/[ 	]*$//'";
 #define TEMP_PREFIX	"tmp."
 #endif
@@ -36,6 +36,6 @@ const char filter[]="sed -e 's/#.*$//' -e '/^[ 	]*$/d' -e 's/[ 	]*$//'";
 EXTERN void brk_pre_process
 (char *);		/* input filename */
 
-#endif /* _PPI_H */
+#endif /* GOMA_PPI_H */
 
 

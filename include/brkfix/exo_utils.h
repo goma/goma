@@ -13,18 +13,18 @@
 /* exo_utils.h - prototype declarations for exo_utils.c
  */
 
-#ifndef _EXO_UTILS_H
-#define _EXO_UTILS_H
+#ifndef GOMA_EXO_UTILS_H
+#define GOMA_EXO_UTILS_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _EXO_UTILS_C
+#ifdef GOMA_EXO_UTILS_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _EXO_UTILS_C
+#ifndef GOMA_EXO_UTILS_C
 #define EXTERN extern
 #endif
 
@@ -58,4 +58,4 @@ EXTERN int is_node_in_element
 	int,        // Node number
 	int );     // Element number
 
-#endif /* _EXO_UTILS_H */
+#endif /* GOMA_EXO_UTILS_H */

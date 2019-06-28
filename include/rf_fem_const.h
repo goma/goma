@@ -30,8 +30,8 @@
  * already been included...
  */
 
-#ifndef _FEM_CONST_H
-#define _FEM_CONST_H
+#ifndef GOMA_RF_FEM_CONST_H
+#define GOMA_RF_FEM_CONST_H
 
 /* Generic Logicals */
 #ifndef TRUE

@@ -10,8 +10,8 @@
 * This software is distributed under the GNU General Public License.	  *
 \************************************************************************/
 
-#ifndef _SL_AMESOS_INTERFACE_CC
-#define _SL_AMESOS_INTERFACE_CC
+#ifndef GOMA_SL_AMESOS_INTERFACE_CC
+#define GOMA_SL_AMESOS_INTERFACE_CC
 #endif
 
 /* This removes the entire file if Amesos & Trilinos are not defined */

@@ -66,7 +66,7 @@ static char rcsid[] = "$Id: dp_map_comm_vec.c,v 5.1 2007-09-18 18:53:41 prschun 
 #include "mpi.h"
 #endif
 
-#define _DP_MAP_COMM_VEC_C
+#define GOMA_DP_MAP_COMM_VEC_C
 #include "goma.h"
 
 /*

@@ -50,7 +50,7 @@ static char rcsid[] = "$Id: user_mp_gen.c,v 5.2 2010-04-05 16:49:21 prschun Exp 
 
 #include "mm_eh.h"
 
-#define _USER_MP_GEN_C
+#define GOMA_USER_MP_GEN_C
 #include "goma.h"
 
 

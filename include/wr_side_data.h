@@ -15,19 +15,19 @@
  */
 
 
-#ifndef _WR_SIDE_DATA_H
-#define _WR_SIDE_DATA_H
+#ifndef GOMA_WR_SIDE_DATA_H
+#define GOMA_WR_SIDE_DATA_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _WR_SIDE_DATA_C
+#ifdef GOMA_WR_SIDE_DATA_C
 #define EXTERN
 #
 #endif
 
-#ifndef _WR_SIDE_DATA_C
+#ifndef GOMA_WR_SIDE_DATA_C
 #define EXTERN extern
 #endif
 
@@ -53,4 +53,4 @@ EXTERN int psid2nn
 EXTERN int nsid2nn
 ( int );
 
-#endif /* _WR_SIDE_DATA_H */
+#endif /* GOMA_WR_SIDE_DATA_H */

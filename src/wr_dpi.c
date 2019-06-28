@@ -29,7 +29,7 @@
  * Revised: 1997/05/18 12:54 MDT pasacki@sandia.gov
  */
 
-#define _WR_DPI_C
+#define GOMA_WR_DPI_C
 
 #ifdef _HAVE_CONFIG_H
 #include <config.h>

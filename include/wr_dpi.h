@@ -11,19 +11,19 @@
 \************************************************************************/
  
 
-#ifndef _WR_DPI_H
-#define _WR_DPI_H
+#ifndef GOMA_WR_DPI_H
+#define GOMA_WR_DPI_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _WR_DPI_C
+#ifdef GOMA_WR_DPI_C
 #define EXTERN
 #
 #endif
 
-#ifndef _WR_DPI_C
+#ifndef GOMA_WR_DPI_C
 #define EXTERN extern
 #endif
 
@@ -32,4 +32,4 @@ EXTERN int wr_dpi
        char *,			/* filename */
        int );			/* verbosity - how much to talk */
 
-#endif /* _WR_DPI_H */
+#endif /* GOMA_WR_DPI_H */

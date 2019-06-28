@@ -15,8 +15,8 @@
  * Created: 1997/04/12 10:19 MDT pasacki@sandia.gov
  */
 
-#ifndef _BRKFIX_STD_H
-#define _BRKFIX_STD_H
+#ifndef GOMA_BRKFIX_STD_H
+#define GOMA_BRKFIX_STD_H
 
 #ifndef FILENAME_MAX_ACK
 #define FILENAME_MAX_ACK		1024
@@ -120,8 +120,8 @@
 
 #define STRCPY_RTN_IS_STRING
 
-#ifndef _FLT_TYPEDEF
-#define _FLT_TYPEDEF
+#ifndef GOMA_FLT_TYPEDEF
+#define GOMA_FLT_TYPEDEF
 typedef float flt;
 #endif
 

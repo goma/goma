@@ -39,7 +39,7 @@ static char rcsid[] = "$Id: sl_matrix_util.c,v 5.2 2007-12-07 17:14:37 hkmoffa E
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
 
-#define _SL_MATRIX_UTIL_C
+#define GOMA_SL_MATRIX_UTIL_C
 #include "goma.h"
 
 /* canine_chaos() - return useful information about the matrix problem

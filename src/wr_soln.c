@@ -16,7 +16,7 @@
 
 
 #include "wr_soln.h"
-#define _WR_SOLN_C
+#define GOMA_WR_SOLN_C
 #include "goma.h"
 
 /***********************************************************************/

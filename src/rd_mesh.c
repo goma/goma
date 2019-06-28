@@ -62,7 +62,7 @@ static char rcsid[] = "$Id: rd_mesh.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $";
 #include "mm_as.h"
 #include "mm_eh.h"
 
-#define _RD_MESH_C
+#define GOMA_RD_MESH_C
 #include "goma.h"
 
 /*

@@ -14,8 +14,8 @@
  *$Id: rf_node_const.h,v 5.2 2007-09-18 18:53:47 prschun Exp $
  */
 
-#ifndef _NODE_CONST_H_
-#define _NODE_CONST_H_
+#ifndef GOMA_NODE_CONST_H_
+#define GOMA_NODE_CONST_H_
 
 #include "exo_struct.h"
 #include "rf_vars_const.h"

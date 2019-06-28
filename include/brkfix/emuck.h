@@ -15,8 +15,8 @@
  * $Header: /projects/seataf/CVS/ACCESS/analysis/goma/brkfix/emuck.h,v 1.1 1999-08-30 16:17:50 pasacki Exp $
  */
 
-#ifndef _EMUCK_H
-#define _EMUCK_H
+#ifndef GOMA_EMUCK_H
+#define GOMA_EMUCK_H
 
 extern void assign_elem_ownership
 (const Exo_DB *,		/* monolith FE db w/ connectivity       (in) */

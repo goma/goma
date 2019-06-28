@@ -10,18 +10,18 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _EXO_CONN_H
-#define _EXO_CONN_H
+#ifndef GOMA_EXO_CONN_H
+#define GOMA_EXO_CONN_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _EXO_CONN_C
+#ifdef GOMA_EXO_CONN_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _EXO_CONN_C
+#ifndef GOMA_EXO_CONN_C
 #define EXTERN extern
 #endif
 
@@ -52,4 +52,4 @@ EXTERN int get_exterior_faces
 
 void
 brk_build_node_node(Exo_DB *exo);
-#endif /* _EXO_CONN_H */
+#endif /* GOMA_EXO_CONN_H */

@@ -10,7 +10,7 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#define _GM_CGM_UTIL_C
+#define GOMA_GM_CGM_UTIL_C
 
 #include <stdlib.h>
 #include <stdio.h>

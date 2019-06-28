@@ -47,7 +47,7 @@ static char rcsid[] = "$Id: dp_utils.c,v 5.1 2007-09-18 18:53:41 prschun Exp $";
 #include "rf_mp.h"
 #include "rf_io_const.h"
 
-#define _DP_UTILS_C
+#define GOMA_DP_UTILS_C
 #include "goma.h"
 
 static char mpistringbuffer[80];

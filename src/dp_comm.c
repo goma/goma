@@ -37,7 +37,7 @@ static char rcsid[] = "$Id: dp_comm.c,v 5.1 2007-09-18 18:53:41 prschun Exp $";
 #include "dp_types.h"
 */
 
-#define _DP_COMM_C
+#define GOMA_DP_COMM_C
 #include "goma.h"
 
 /********************************************************************/

@@ -19,8 +19,8 @@
  *
  *    $Id: rf_vars_const.h,v 5.1 2007-09-18 18:53:47 prschun Exp $
  */
-#ifndef _RF_VARS_CONST_H_
-#define _RF_VARS_CONST_H_
+#ifndef GOMA_RF_VARS_CONST_H_
+#define GOMA_RF_VARS_CONST_H_
 
 #include "rf_fem_const.h"
 

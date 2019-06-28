@@ -11,19 +11,19 @@
 \************************************************************************/
  
 
-#ifndef _USER_MP_H
-#define _USER_MP_H
+#ifndef GOMA_USER_MP_H
+#define GOMA_USER_MP_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _USER_MP_C
+#ifdef GOMA_USER_MP_C
 #define EXTERN
 #
 #endif
 
-#ifndef _USER_MP_C
+#ifndef GOMA_USER_MP_C
 #define EXTERN extern
 #endif
 
@@ -106,4 +106,4 @@ EXTERN int usr_permeability
 EXTERN int usr_yield_stress
 (dbl *, dbl);		/* param - ptr to user-defined parm list, time*/
 
-#endif /* _USER_MP_H */
+#endif /* GOMA_USER_MP_H */

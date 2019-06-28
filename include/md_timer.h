@@ -10,19 +10,19 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _MD_TIMER_H
-#define _MD_TIMER_H
+#ifndef GOMA_MD_TIMER_H
+#define GOMA_MD_TIMER_H
 
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MD_TIMER_C
+#ifdef GOMA_MD_TIMER_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MD_TIMER_C
+#ifndef GOMA_MD_TIMER_C
 #define EXTERN extern
 #endif
 
@@ -38,7 +38,7 @@ EXTERN void get_date
 EXTERN void get_time
 (char *);		/* string - fill in with hh:mm:ss */
 
-#endif /* _MD_TIMER_H */
+#endif /* GOMA_MD_TIMER_H */
 
 
 

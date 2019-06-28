@@ -26,19 +26,19 @@
 	IDG SEPT 28 1997
 */
 
-#ifndef _SL_AUXUTIL_H
-#define _SL_AUXUTIL_H
+#ifndef GOMA_SL_AUXUTIL_H
+#define GOMA_SL_AUXUTIL_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _SL_AUXUTIL_C
+#ifdef GOMA_SL_AUXUTIL_C
 #define EXTERN
 #
 #endif
 
-#ifndef _SL_AUXUTIL_C
+#ifndef GOMA_SL_AUXUTIL_C
 #define EXTERN extern
 #endif
 

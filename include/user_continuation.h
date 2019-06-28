@@ -15,19 +15,19 @@
  * $Id: user_continuation.h,v 5.1 2007-09-18 18:53:48 prschun Exp $
  */
 
-#ifndef _USER_CONTINUATION_H
-#define _USER_CONTINUATION_H
+#ifndef GOMA_USER_CONTINUATION_H
+#define GOMA_USER_CONTINUATION_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _USER_CONTINUATION_C
+#ifdef GOMA_USER_CONTINUATION_C
 #define EXTERN
 #
 #endif
 
-#ifndef _USER_CONTINUATION_C
+#ifndef GOMA_USER_CONTINUATION_C
 #define EXTERN extern
 #endif
 
@@ -64,4 +64,4 @@ EXTERN int do_user_update
        Exo_DB *,		/* exo - ptr to finite element mesh database */
        Dpi *);			/* dpi - ptr to distributed processing info */
 
-#endif /* _USER_CONTINUATION_H */
+#endif /* GOMA_USER_CONTINUATION_H */

@@ -15,8 +15,8 @@
  *$Id: el_elm.h,v 5.3 2009-11-13 23:20:07 prschun Exp $
  */
 
-#ifndef _EL_ELM_H
-#define _EL_ELM_H
+#ifndef GOMA_EL_ELM_H
+#define GOMA_EL_ELM_H
 
 #include "rf_fem_const.h"
 

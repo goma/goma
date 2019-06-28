@@ -11,19 +11,19 @@
 \************************************************************************/
  
 
-#ifndef _RF_SHAPE_H
-#define _RF_SHAPE_H
+#ifndef GOMA_RF_SHAPE_H
+#define GOMA_RF_SHAPE_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _RF_SHAPE_C
+#ifdef GOMA_RF_SHAPE_C
 #define EXTERN
 #
 #endif
 
-#ifndef _RF_SHAPE_C
+#ifndef GOMA_RF_SHAPE_C
 #define EXTERN extern
 #endif
 
@@ -35,4 +35,4 @@ EXTERN double shape		/* rf_shape.c                                */
        const int ,		/* Iquant - desired quantity (phi, phi_s, ...*/
        const int );		/* Inode - current element node              */
 
-#endif /* _RF_SHAPE_H */
+#endif /* GOMA_RF_SHAPE_H */

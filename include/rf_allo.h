@@ -16,18 +16,18 @@
  */
 
 
-#ifndef _RF_ALLO_H
-#define _RF_ALLO_H
+#ifndef GOMA_RF_ALLO_H
+#define GOMA_RF_ALLO_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _RF_ALLO_C
+#ifdef GOMA_RF_ALLO_C
 #define EXTERN
 #endif
 
-#ifndef _RF_ALLO_C
+#ifndef GOMA_RF_ALLO_C
 #define EXTERN extern
 #endif
 

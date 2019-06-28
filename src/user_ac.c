@@ -46,7 +46,7 @@
 
 #include "mm_flux.h"
 
-#define _USER_AC_C
+#define GOMA_USER_AC_C
 #include "goma.h"
 
 /****************************************************************************/

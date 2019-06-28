@@ -27,7 +27,7 @@ static char rcsid[] =
 
 #include "az_aztec.h"
 
-#define _EL_QUALITY_C
+#define GOMA_EL_QUALITY_C
 #include "goma.h"
 #include "el_quality.h"
 

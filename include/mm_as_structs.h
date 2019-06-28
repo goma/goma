@@ -53,11 +53,11 @@
                       /* Cartesian problems too if third */
                       /* component is set =0.*/
 
-#ifndef _CK_NAME_DEF
+#ifndef GOMA_CK_NAME_DEF
+#define GOMA_CK_NAME_DEF
 typedef char CK_NAME[64]; /* Typedefs for common names used for naming
                              domains and species */
 typedef char CK_NAME_STR[64];
-#define _CK_NAME_DEF
 #endif
 
 /*____________________________________________________________________________*/

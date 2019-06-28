@@ -10,15 +10,15 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _SL_AMESOS_INTERFACE_H
-#define _SL_AMESOS_INTERFACE_H
+#ifndef GOMA_SL_AMESOS_INTERFACE_H
+#define GOMA_SL_AMESOS_INTERFACE_H
 #endif
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _SL_AMESOS_INTERFACE_CC
+#ifdef GOMA_SL_AMESOS_INTERFACE_CC
 #define EXTERN extern "C"
 #else
 #define EXTERN extern

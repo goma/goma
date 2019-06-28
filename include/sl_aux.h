@@ -16,8 +16,8 @@
  * Randy Lober 9/98.
  */
 
-#ifndef _SL_AUX_H
-#define _SL_AUX_H
+#ifndef GOMA_SL_AUX_H
+#define GOMA_SL_AUX_H
 
 /*
  * Function prototypes used in sl_aux.c

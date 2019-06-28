@@ -11,19 +11,19 @@
 \************************************************************************/
  
 
-#ifndef _USER_POST_H
-#define _USER_POST_H
+#ifndef GOMA_USER_POST_H
+#define GOMA_USER_POST_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _USER_POST_C
+#ifdef GOMA_USER_POST_C
 #define EXTERN
 #
 #endif
 
-#ifndef _USER_POST_C
+#ifndef GOMA_USER_POST_C
 #define EXTERN extern
 #endif
 
@@ -41,4 +41,4 @@ EXTERN int usr_ptracking
        const double ,		/*  time_value - porticle time               */
        const double );		/*  time_step - time step                    */
 
-#endif /* _USER_POST_H */
+#endif /* GOMA_USER_POST_H */

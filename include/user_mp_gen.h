@@ -15,19 +15,19 @@
  * $Id: user_mp_gen.h,v 5.2 2010-04-05 16:46:05 prschun Exp $
  */
 
-#ifndef _USER_MP_GEN_H
-#define _USER_MP_GEN_H
+#ifndef GOMA_USER_MP_GEN_H
+#define GOMA_USER_MP_GEN_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _USER_MP_GEN_C
+#ifdef GOMA_USER_MP_GEN_C
 #define EXTERN
 #
 #endif
 
-#ifndef _USER_MP_GEN_C
+#ifndef GOMA_USER_MP_GEN_C
 #define EXTERN extern
 #endif
 
@@ -53,4 +53,4 @@ EXTERN int usr_viscosity_gen
        dbl [MAX_CONC][MDE],	/* d_mu_dC                                   */
        dbl *param);		/* user-defined parameter list               */
 
-#endif /* _USER_MP_GEN_H */
+#endif /* GOMA_USER_MP_GEN_H */

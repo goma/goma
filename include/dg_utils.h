@@ -18,11 +18,11 @@
 #undef EXTERN
 #endif
 
-#ifdef _DG_UTILS_C
+#ifdef GOMA_DG_UTILS_C
 #define EXTERN
 #endif
 
-#ifndef _DG_UTILS_C
+#ifndef GOMA_DG_UTILS_C
 #define EXTERN extern
 #endif
 

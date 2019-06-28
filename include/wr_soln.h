@@ -11,8 +11,8 @@
 \************************************************************************/
  
 
-#ifndef _WR_SOLN_H
-#define _WR_SOLN_H
+#ifndef GOMA_WR_SOLN_H
+#define GOMA_WR_SOLN_H
 
 #include "std.h"
 #include "rf_io_structs.h"

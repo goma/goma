@@ -22,8 +22,8 @@
  *   - Jan 12, 2000, MMH rearranging and cleaning.
  */
 
-#ifndef _SL_EGGROLL_DEF_H
-#define _SL_EGGROLL_DEF_H
+#ifndef GOMA_SL_EGGROLL_DEF_H
+#define GOMA_SL_EGGROLL_DEF_H
 
 #ifndef PI
 #define PI     M_PI

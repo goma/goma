@@ -171,8 +171,8 @@
  *
  */
 
-#ifndef _RF_FILL_CONST_H
-#define _RF_FILL_CONST_H
+#ifndef GOMA_RF_FILL_CONST_H
+#define GOMA_RF_FILL_CONST_H
 
 #ifndef EXTERN
 #define EXTERN extern

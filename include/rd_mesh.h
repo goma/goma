@@ -10,19 +10,19 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _RD_MESH_H
-#define _RD_MESH_H
+#ifndef GOMA_RD_MESH_H
+#define GOMA_RD_MESH_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _RD_MESH_C
+#ifdef GOMA_RD_MESH_C
 #define EXTERN
 #
 #endif
 
-#ifndef _RD_MESH_C
+#ifndef GOMA_RD_MESH_C
 #define EXTERN extern
 #endif
 
@@ -120,4 +120,4 @@ EXTERN void integer_sort		/* rd_mesh.c */
 EXTERN int map_mat_index	/* rd_mesh.c                                 */
 ( const int );		/* ebid - element block ID                   */
 
-#endif /* _RD_MESH_H */
+#endif /* GOMA_RD_MESH_H */

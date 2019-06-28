@@ -10,18 +10,18 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _DP_MAP_COMM_VEC_H
-#define _DP_MAP_COMM_VEC_H
+#ifndef GOMA_DP_MAP_COMM_VEC_H
+#define GOMA_DP_MAP_COMM_VEC_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _DP_MAP_COMM_VEC_C
+#ifdef GOMA_DP_MAP_COMM_VEC_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _DP_MAP_COMM_VEC_C
+#ifndef GOMA_DP_MAP_COMM_VEC_C
 #define EXTERN extern
 #endif
 
@@ -43,4 +43,4 @@ EXTERN void setup_fill_comm_map
 extern void output_comm_stats(Dpi *, Comm_Ex **);
 
 
-#endif /* _DP_MAP_COMM_VEC_H */
+#endif /* GOMA_DP_MAP_COMM_VEC_H */

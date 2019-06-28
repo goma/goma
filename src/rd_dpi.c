@@ -58,7 +58,7 @@
  * Revised: 1998/12/16 14:21 MST pasacki@sandia.gov
  */
 
-#define _RD_DPI_C
+#define GOMA_RD_DPI_C
 
 #ifdef HAVE_CONFIG_H
 #include <config.h>

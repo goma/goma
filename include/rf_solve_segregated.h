@@ -10,18 +10,18 @@
  * This software is distributed under the GNU General Public License.      *
  \************************************************************************/
 
-#ifndef _RF_SOLVE_SEGREGATED_H
-#define _RF_SOLVE_SEGREGATED_H
+#ifndef GOMA_RF_SOLVE_SEGREGATED_H
+#define GOMA_RF_SOLVE_SEGREGATED_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _RF_SOLVE_SEGREGATED_C
+#ifdef GOMA_RF_SOLVE_SEGREGATED_C
 #define EXTERN
 #endif
 
-#ifndef _RF_SOLVE_SEGREGATED_C
+#ifndef GOMA_RF_SOLVE_SEGREGATED_C
 #define EXTERN extern
 #endif
 
@@ -40,4 +40,4 @@ EXTERN void predict_solution_u_star(int N, dbl delta_t, dbl delta_t_old, dbl del
     dbl theta_arg, dbl **x, dbl **x_old, dbl **x_older,
     dbl **x_oldest);
 
-#endif /* _RF_SOLVE_H */
+#endif /* GOMA_RF_SOLVE_H */
