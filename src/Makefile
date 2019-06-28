@@ -793,7 +793,7 @@ install: $(BIN_DIR)/$(TARGET) $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB)
 		echo "Making $(PREFIX_BIN)";\
 		mkdir -p $(PREFIX_BIN);\
 	fi;\
-	echo "Installing $(TARGET) in $(PREFIX_BIN)...";\
+	echo "Installing $(BIN_DIR)/$(TARGET) in $(PREFIX_BIN)...";\
 	$(INSTALL) $(INSTFLAGS) $(BIN_DIR)/$(TARGET) $(PREFIX_BIN);\
 	if [ ! -d $(PREFIX_LIB) ]; then\
 		echo "Making $(PREFIX_LIB)";\
