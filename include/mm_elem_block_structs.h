@@ -17,6 +17,7 @@
 #ifndef _MM_ELEM_BLOCK_STRUCTS_H
 #define _MM_ELEM_BLOCK_STRUCTS_H
 
+#include "std.h"
 #include "rf_element_storage_struct.h"
 
 /*****************************************************************************/
