@@ -409,20 +409,71 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
   tau_gls = 1. / sqrt((2. / dt) * (2. / dt) +
                       (2. * vmag_old / h_elem) * (2. * vmag_old / h_elem));
 
+  if (ls != NULL && ls->Semi_Implicit_Integration &&
+      (Fill_Weight_Fcn == FILL_WEIGHT_SUPG_SHAKIB ||
+       Fill_Weight_Fcn == FILL_WEIGHT_SUPG_GP)) {
+    F_dot = (fv->F - fv_old->F) / dt;
+    v_dot_DF = 0;
+    for (int a = 0; a < VIM; a++) {
+      v_dot_DF += (0.5 * (fv->v[a] + fv_old->v[a])) *
+                  (0.5 * (fv->grad_F[a] + fv_old->grad_F[a]));
+    }
+
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+      v_dot_Dphi[i] = 0;
+      for (int a = 0; a < VIM; a++) {
+        v_dot_Dphi[i] +=
+            (0.5 * (fv->v[a] + fv_old->v[a])) * bf[eqn]->grad_phi[i][a];
+      }
+    }
+  } else if (ls != NULL && !ls->Semi_Implicit_Integration &&
+             (Fill_Weight_Fcn == FILL_WEIGHT_SUPG_SHAKIB ||
+              Fill_Weight_Fcn == FILL_WEIGHT_SUPG_GP)) {
+    F_dot = fv_dot->F;
+    v_dot_DF = 0;
+    for (int a = 0; a < VIM; a++) {
+      v_dot_DF += fv->v[a] * fv->grad_F[a];
+    }
+
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+      v_dot_Dphi[i] = 0;
+      for (int a = 0; a < VIM; a++) {
+        v_dot_Dphi[i] += fv->v[a] * bf[eqn]->grad_phi[i][a];
+      }
+    }
+  } else if (ls!= NULL && ls->Semi_Implicit_Integration) {
+    EH(-1, "Error Level Set Semi-Implicit Time Integration can only be used "
+           "with SUPG_GP and SUPG_SHAKIB");
+    return -1;
+  }
+
   double p_e = 0;
   double d_p_e[MDE];
-  double d_F_norm[MDE];
+  double d_inv_F_norm[MDE];
   double inv_F_norm = 0;
   if (ls->Toure_Penalty) {
     for (int i = 0; i < ei[pg->imtrx]->dof[R_FILL]; i++) {
       p_e += mass_lumped_penalty->penalty[i] * bf[R_FILL]->phi[i];
+      if (ls->Semi_Implicit_Integration)
+      {
+        p_e += mass_lumped_penalty->penalty_old[i] * bf[R_FILL]->phi[i];
+      }
     }
+    if (ls->Semi_Implicit_Integration) {
+      p_e *= 0.5;
+    }
+
     for (int k = 0; k < ei[pg->imtrx]->dof[R_FILL]; k++) {
       d_p_e[k] = 0;
       for (int i = 0; i < ei[pg->imtrx]->dof[R_FILL]; i++) {
         d_p_e[k] += mass_lumped_penalty->d_penalty[i][k] * bf[R_FILL]->phi[i];
       }
+      if (ls->Semi_Implicit_Integration) {
+        d_p_e[k] *= 0.5;
+      }
     }
+
+
     double F_norm = 0;
     for (int i = 0; i < dim; i++) {
       F_norm += fv->grad_F[i] * fv->grad_F[i];
@@ -430,10 +481,11 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
     F_norm = sqrt(F_norm);
     inv_F_norm = 1 / (F_norm + 1e-32);
     for (int j = 0; j < ei[pg->imtrx]->dof[eqn]; j++) {
-      d_F_norm[j] = 0;
+      d_inv_F_norm[j] = 0;
       for (int i = 0; i < dim; i++) {
-        d_F_norm[j] += fv->grad_F[i] * bf[eqn]->grad_phi[j][i] * inv_F_norm;
+        d_inv_F_norm[j] += 2 * fv->grad_F[i] * bf[eqn]->grad_phi[j][i];
       }
+      d_inv_F_norm[j] *= -0.5 * inv_F_norm * inv_F_norm * inv_F_norm;
     }
   }
 
@@ -527,17 +579,10 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
         break;
       case FILL_WEIGHT_SUPG_GP:
       case FILL_WEIGHT_SUPG_SHAKIB: {
-        dbl wt_func = bf[eqn]->phi[i];
-        for (int a = 0; a < dim; a++) {
-          wt_func +=
-              supg_terms.supg_tau * fv->v[a] * bf[eqn]->grad_phi[i][a];
-        }
+        dbl wt_func = bf[eqn]->phi[i] + supg_terms.supg_tau * v_dot_Dphi[i];
 
-        mass = fv_dot->F * wt_func;
-        advection = 0;
-        for (int a = 0; a < dim; a++) {
-          advection += fv->v[a] * fv->grad_F[a];
-        }
+        mass = F_dot * wt_func;
+        advection = v_dot_DF;
 
         if (ls != NULL && ls->Enable_Div_Term) {
           advection += fv->F * fv->div_v;
@@ -684,21 +729,23 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
 
           case FILL_WEIGHT_SUPG_GP:
           case FILL_WEIGHT_SUPG_SHAKIB: {
-            dbl wt_func = bf[eqn]->phi[i];
-            for (int a = 0; a < dim; a++) {
-              wt_func +=
-                  supg_terms.supg_tau * fv->v[a] * bf[eqn]->grad_phi[i][a];
-            }
-            mass = (phi_j * (1. + 2. * tt) * dtinv) * wt_func;
-            advection = 0;
-            for (int a = 0; a < dim; a++) {
-              advection += fv->v[a] * bf[var]->grad_phi[j][a];
-            }
+            dbl wt_func = bf[eqn]->phi[i] + supg_terms.supg_tau * v_dot_Dphi[i];
+            if (ls->Semi_Implicit_Integration) {
+              mass = (phi_j) / dt * wt_func;
+              advection = 0.5*v_dot_Dphi[j] * wt_func;
+            } else {
 
-            if (ls != NULL && ls->Enable_Div_Term) {
-              advection += bf[var]->phi[j] * fv->div_v;
+              mass = (phi_j * (1. + 2. * tt) * dtinv) * wt_func;
+              advection = 0;
+              for (int a = 0; a < dim; a++) {
+                advection += fv->v[a] * bf[var]->grad_phi[j][a];
+              }
+
+              if (ls != NULL && ls->Enable_Div_Term) {
+                advection += bf[var]->phi[j] * fv->div_v;
+              }
+              advection *= wt_func;
             }
-            advection *= wt_func;
           } break;
           default:
 
@@ -709,21 +756,21 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
           dbl source = 0;
           if (ls != NULL && ls->Toure_Penalty) {
             for (int a = 0; a < dim; a++) {
-              source += d_p_e[j] * fv->grad_F[a] * inv_F_norm *
+              source += p_e * fv->grad_F[a] * d_inv_F_norm[j] *
                         bf[eqn]->grad_phi[i][a];
               source += p_e * bf[eqn]->grad_phi[j][a] * inv_F_norm *
                         bf[eqn]->grad_phi[i][a];
-              dbl d_inv_F_norm =
-                  -0.5 * inv_F_norm * inv_F_norm * inv_F_norm * d_F_norm[j];
-              source +=
-                  p_e * fv->grad_F[a] * d_inv_F_norm * bf[eqn]->grad_phi[i][a];
+              source += d_p_e[j] * fv->grad_F[a] * inv_F_norm *
+                        bf[eqn]->grad_phi[i][a];
+//              source +=
+//                  fv->grad_F[a] * d_inv_F_norm * bf[eqn]->grad_phi[i][a];
             }
           }
 
           mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
           advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
-          lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
+          lec->J[peqn][pvar][i][j] += (mass + advection + source) * wt * h3 * det_J;
 
         } /* for: FILL DoFs */
 
@@ -794,10 +841,10 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
 
               dbl d_wt_func = 0;
               for (int a = 0; a < dim; a++) {
-                d_wt_func +=
-                    supg_terms.supg_tau * bf[eqn]->phi[j] * bf[eqn]->grad_phi[i][a] +
-                    supg_terms.d_supg_tau_dv[b][j]  * fv->v[a] * bf[eqn]->grad_phi[i][a];
-
+                d_wt_func += supg_terms.supg_tau * bf[eqn]->phi[j] *
+                                 bf[eqn]->grad_phi[i][a] +
+                             supg_terms.d_supg_tau_dv[b][j] * fv->v[a] *
+                                 bf[eqn]->grad_phi[i][a];
               }
               mass = fv_dot->F * d_wt_func;
               advection = 0;
@@ -805,7 +852,7 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
                 advection += fv->v[a] * bf[eqn]->grad_phi[j][a];
               }
               advection *= d_wt_func;
-              advection +=  bf[var]->phi[j] * bf[eqn]->grad_phi[j][b] * wt_func;
+              advection += bf[var]->phi[j] * bf[eqn]->grad_phi[j][b] * wt_func;
             } break;
 
             default:
@@ -6199,9 +6246,12 @@ void assemble_ls_mass_lumped_penalty(
   dbl MM[MDE];
   dbl rhs[MDE];
   dbl d_rhs[MDE][MDE];
+  dbl rhs_old[MDE];
+
   for (int i = 0; i < MDE; i++) {
     MM[i] = 0;
     rhs[i] = 0;
+    rhs_old[i] = 0;
     for (int k = 0; k < MDE; k++) {
       d_rhs[i][k] = 0;
     }
@@ -6246,6 +6296,12 @@ void assemble_ls_mass_lumped_penalty(
     F_norm = sqrt(F_norm);
     double inv_F_norm = 1 / F_norm;
 
+    double F_norm_old = 0;
+    for (int i = 0; i < dim; i++) {
+      F_norm_old += fv_old->grad_F[i] * fv_old->grad_F[i];
+    }
+    F_norm_old = sqrt(F_norm_old);
+
     double d_F_norm[MDE];
     for (int j = 0; j < ei[pg->imtrx]->dof[eqn]; j++) {
       d_F_norm[j] = 0;
@@ -6268,9 +6324,13 @@ void assemble_ls_mass_lumped_penalty(
     vnorm = sqrt(vnorm);
 
     double lambda = 0.8 * h_elem * h_elem * vnorm * 0.5;
+
     for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
       rhs[i] += fv->wt * bf[eqn]->detJ * fv->h3 * lambda * bf[eqn]->phi[i] *
                 (F_norm - 1);
+
+      rhs_old[i] += fv->wt * bf[eqn]->detJ * fv->h3 * lambda * bf[eqn]->phi[i] *
+                (F_norm_old - 1);
       //        rhs[i] += fv->wt * bf[R_FILL]->detJ * bf[R_FILL]->phi[i] *
       //        (eikonal_norm - 1);
       //      rhs[i] +=
@@ -6301,6 +6361,7 @@ void assemble_ls_mass_lumped_penalty(
 
     for (int i = 0; i < ei[pg->imtrx]->dof[R_FILL]; i++) {
       mass_lumped_penalty->penalty[i] = rhs[i] / MM[i];
+      mass_lumped_penalty->penalty_old[i] = rhs_old[i] / MM[i];
       for (int k = 0; k < ei[pg->imtrx]->dof[R_FILL]; k++) {
         mass_lumped_penalty->d_penalty[i][k] = d_rhs[i][k] / MM[i];
       }

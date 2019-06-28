@@ -38,6 +38,7 @@
 
 struct LS_Mass_Lumped_Penalty {
   dbl penalty[MDE];
+  dbl penalty_old[MDE];
   dbl d_penalty[MDE][MDE];
   dbl inv_grad_F[MDE];
 };

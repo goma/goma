@@ -1500,6 +1500,7 @@ noahs_ark()
       ddd_add_member(n, &ls->ghost_stress, 1, MPI_INT);
       ddd_add_member(n, &ls->Toure_Penalty, 1, MPI_INT);
       ddd_add_member(n, &ls->Huygens_Freeze_Nodes, 1, MPI_INT);
+      ddd_add_member(n, &ls->Semi_Implicit_Integration, 1, MPI_INT);
     }
 
   if ( pfd != NULL )

@@ -120,7 +120,7 @@ static char default_string[MAX_CHAR_IN_INPUT] = "(default)";
 
 Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
 
-int	run_aprepro=0;
+static int	run_aprepro=0;
 
 static char current_mat_file_name[MAX_FNL];
 
@@ -2926,6 +2926,34 @@ rd_levelset_specs(FILE *ifp,
             EH(-1, "Error unknown value for Level Set Enable Div Term");
           }
           SPF(echo_string,"%s = %s", "Level Set Enable Div Term", input);
+          ECHO(echo_string,echo_file);
+        }
+
+        ls->Semi_Implicit_Integration = FALSE;
+
+        iread = look_for_optional(ifp,"Level Set Semi-Implicit Time Integration",input,'=');
+        if (iread == 1)
+        {
+          if (fscanf(ifp, "%s", input ) != 1 )
+          {
+            EH(-1, "Error reading Level Set Semi-Implicit Time Integration.");
+          }
+          strip(input);
+          stringup(input);
+
+          if ((strcmp(input,"ON") == 0) || (strcmp(input,"YES") == 0 ))
+          {
+            ls->Semi_Implicit_Integration = TRUE;
+          }
+          else if ((strcmp(input,"OFF") == 0) || (strcmp(input,"NO") == 0 ))
+          {
+            ls ->Semi_Implicit_Integration = FALSE;
+          }
+          else
+          {
+            EH(-1, "Error unknown value for Level Set Semi-Implicit Time Integration");
+          }
+          SPF(echo_string,"%s = %s", "Level Set Semi-Implicit Time Integration", input);
           ECHO(echo_string,echo_file);
         }
 
