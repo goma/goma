@@ -15,18 +15,18 @@
  *$Id: mm_fill_ls.h,v 5.5 2008-03-18 19:01:58 hkmoffa Exp $
  */
 
-#ifndef _MM_FILL_LS_H
-#define _MM_FILL_LS_H
+#ifndef GOMA_MM_FILL_LS_H
+#define GOMA_MM_FILL_LS_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_LS_C
+#ifdef GOMA_MM_FILL_LS_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_LS_C
+#ifndef GOMA_MM_FILL_LS_C
 #define EXTERN extern
 #endif
 
@@ -766,4 +766,4 @@ EXTERN struct LS_Surf * resolve_ls_adc
 
 
 
-#endif /* ifndef _MM_FILL_LS_H */
+#endif /* ifndef GOMA_MM_FILL_LS_H */

@@ -11,18 +11,18 @@
 \************************************************************************/
  
 
-#ifndef _MM_FILL_TERMS_H
-#define _MM_FILL_TERMS_H
+#ifndef GOMA_MM_FILL_TERMS_H
+#define GOMA_MM_FILL_TERMS_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_TERMS_C
+#ifdef GOMA_MM_FILL_TERMS_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_TERMS_C
+#ifndef GOMA_MM_FILL_TERMS_C
 #define EXTERN extern
 #endif
 
@@ -551,4 +551,4 @@ EXTERN int assemble_max_strain
 EXTERN int assemble_cur_strain
 ( void );
 
-#endif /* _MM_FILL_TERMS_H */
+#endif /* GOMA_MM_FILL_TERMS_H */

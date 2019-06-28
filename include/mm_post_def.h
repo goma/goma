@@ -17,8 +17,8 @@
  *        of functions defined in mm_post_proc.c
  */
 
-#ifndef _MM_POST_DEF_H
-#define _MM_POST_DEF_H
+#ifndef GOMA_MM_POST_DEF_H
+#define GOMA_MM_POST_DEF_H
 
 /*
  *  These Define parameters help us parse the force and flux calculation
@@ -115,7 +115,7 @@
 #define I_MASS_POSITIVE_FILL  40
 
 
-#ifdef _MM_POST_PROC_C
+#ifdef GOMA_MM_POST_PROC_C
 struct Post_Processing_Flux_Names
 {
   char  *name;          /* flux string */
@@ -615,4 +615,4 @@ extern int MOMENT_SOURCES;
  *       post-processing variable in load_nodal_tkn
  */
 
-#endif /* _MM_POST_DEF_H */
+#endif /* GOMA_MM_POST_DEF_H */

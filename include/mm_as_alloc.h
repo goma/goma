@@ -10,18 +10,18 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _MM_AS_ALLOC_H
-#define _MM_AS_ALLOC_H
+#ifndef GOMA_MM_AS_ALLOC_H
+#define GOMA_MM_AS_ALLOC_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_AS_ALLOC_C
+#ifdef GOMA_MM_AS_ALLOC_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_AS_ALLOC_C
+#ifndef GOMA_MM_AS_ALLOC_C
 #define EXTERN extern
 #endif
 
@@ -82,4 +82,4 @@ EXTERN int bf_mp_init
 EXTERN void bf_reset
 (void);
 
-#endif /* _MM_AS_ALLOC_H */
+#endif /* GOMA_MM_AS_ALLOC_H */

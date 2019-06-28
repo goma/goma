@@ -69,7 +69,7 @@
 #include "md_timer.h"
 #include "rd_pixel_image.h"
 
-#define _MM_FILL_C
+#define GOMA_MM_FILL_C
 #include "goma.h"
 #include "mm_fill_fill.h" //Last 3 just for get_side_info()
 int first_time_fopen2 = TRUE;

@@ -42,7 +42,7 @@ static char rcsid[] = "$Id: mm_prob_def.c,v 5.7 2010-04-07 22:27:00 prschun Exp 
 #include "mm_post_proc.h"
 #include "mm_eh.h"
 
-#define _MM_PROB_DEF_C
+#define GOMA_MM_PROB_DEF_C
 #include "goma.h"
 
 /* 

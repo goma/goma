@@ -11,18 +11,18 @@
 \************************************************************************/
  
 
-#ifndef _MM_FILL_SOLID_H
-#define _MM_FILL_SOLID_H
+#ifndef GOMA_MM_FILL_SOLID_H
+#define GOMA_MM_FILL_SOLID_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_SOLID_C
+#ifdef GOMA_MM_FILL_SOLID_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_SOLID_C
+#ifndef GOMA_MM_FILL_SOLID_C
 #define EXTERN extern
 #endif
 
@@ -271,4 +271,4 @@ EXTERN void friction_n_dot_f_bc /* mm_fill_solid.c                         */
        const double[] ,			/* parameter_list*/
        const int );			/* number of parameters  */
  
-#endif /* _MM_FILL_SOLID_H */
+#endif /* GOMA_MM_FILL_SOLID_H */

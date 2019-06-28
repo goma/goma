@@ -50,7 +50,7 @@
 
 #define eps(i,j,k)   ( (i-j)*(j-k)*(k-i)/2 )
 
-#define _MM_SHELL_BC_C
+#define GOMA_MM_SHELL_BC_C
 #include "goma.h"
 
 /*

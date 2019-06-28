@@ -25,8 +25,8 @@
    Current Owner : Robert A. Kerr
 ****************************************************************************/
 
-#ifndef _MM_CGM_TYPEDEFS_H
-#define _MM_CGM_TYPEDEFS_H
+#ifndef GOMA_MM_CGM_TYPEDEFS_H
+#define GOMA_MM_CGM_TYPEDEFS_H
 
 /******************** BEGIN STANDARD INCLUDES   ****************************/
 /******************** END STANDARD INCLUDES     ****************************/

@@ -69,7 +69,7 @@ static char rcsid[] =
 
 #include "exo_struct.h"		/* defn of Exo_DB */
 
-#define _MM_MORE_UTILS_C
+#define GOMA_MM_MORE_UTILS_C
 #include "goma.h"
 
 /* cnt_nodal_vars -- count total number of unknown nodal point variables

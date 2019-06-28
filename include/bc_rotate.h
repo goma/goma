@@ -10,18 +10,18 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _BC_ROTATE_H
-#define _BC_ROTATE_H
+#ifndef GOMA_BC_ROTATE_H
+#define GOMA_BC_ROTATE_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _BC_ROTATE_C
+#ifdef GOMA_BC_ROTATE_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _BC_ROTATE_C
+#ifndef GOMA_BC_ROTATE_C
 #define EXTERN extern
 #endif
 
@@ -215,4 +215,4 @@ static void load_element_indices
 
 #endif
 
-#endif /* _BC_ROTATE_H */
+#endif /* GOMA_BC_ROTATE_H */

@@ -11,19 +11,19 @@
 \************************************************************************/
  
 
-#ifndef _MM_FILL_UTIL_H
-#define _MM_FILL_UTIL_H
+#ifndef GOMA_MM_FILL_UTIL_H
+#define GOMA_MM_FILL_UTIL_H
 
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_UTIL_C
+#ifdef GOMA_MM_FILL_UTIL_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_UTIL_C
+#ifndef GOMA_MM_FILL_UTIL_C
 #define EXTERN extern
 #endif
 
@@ -235,4 +235,4 @@ EXTERN void get_supg_tau(struct SUPG_terms *supg_terms,
                          int shakib,
                          int interp_eqn);
 
-#endif /* _MM_FILL_UTIL_H */
+#endif /* GOMA_MM_FILL_UTIL_H */

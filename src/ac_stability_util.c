@@ -50,7 +50,7 @@ static char rcsid[] = "$Id: ac_stability_util.c,v 5.6 2010-04-07 22:27:00 prschu
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
 
-#define _AC_STABILITY_UTIL_C
+#define GOMA_AC_STABILITY_UTIL_C
 #include "goma.h"
 #include "mm_species.h"
 #include "rf_allo.h"

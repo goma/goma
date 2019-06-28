@@ -33,7 +33,7 @@
 
 #include "mm_fill_terms.h"
 /* GOMA include files */
-#define _MM_FILL_POPULATION_C
+#define GOMA_MM_FILL_POPULATION_C
 
 #include "mm_fill_population.h"
 #include "sl_aux.h"

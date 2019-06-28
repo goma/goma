@@ -11,19 +11,19 @@
 \************************************************************************/
  
 
-#ifndef _AC_STABILITY_UTIL_H
-#define _AC_STABILITY_UTIL_H
+#ifndef GOMA_AC_STABILITY_UTIL_H
+#define GOMA_AC_STABILITY_UTIL_H
 
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _AC_STABILITY_UTIL_C
+#ifdef GOMA_AC_STABILITY_UTIL_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _AC_STABILITY_UTIL_C
+#ifndef GOMA_AC_STABILITY_UTIL_C
 #define EXTERN extern
 #endif
 
@@ -56,4 +56,4 @@ EXTERN void get_eigen_outfile_name
 EXTERN int do_loca
 (Comm_Ex *, Exo_DB *, Dpi *);
 
-#endif /* _AC_STABILITY_UTIL_H */
+#endif /* GOMA_AC_STABILITY_UTIL_H */

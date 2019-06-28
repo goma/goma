@@ -54,7 +54,7 @@
 #include "mm_fill_terms.h"
 #include "mm_fill_porous.h"
 
-#define _MM_FILL_POROUS_C
+#define GOMA_MM_FILL_POROUS_C
 #include "sl_aux.h"
 #include "goma.h"
 

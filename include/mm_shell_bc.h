@@ -11,18 +11,18 @@
 \************************************************************************/
  
 
-#ifndef _MM_SHELL_BC_H
-#define _MM_SHELL_BC_H
+#ifndef GOMA_MM_SHELL_BC_H
+#define GOMA_MM_SHELL_BC_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_SHELL_BC_C
+#ifdef GOMA_MM_SHELL_BC_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_SHELL_BC_C
+#ifndef GOMA_MM_SHELL_BC_C
 #define EXTERN extern
 #endif
 

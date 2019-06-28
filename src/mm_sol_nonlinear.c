@@ -54,7 +54,7 @@ static char rcsid[] =
 #include "sl_stratimikos_interface.h"
 
 #include "dg_utils.h"
-#define _MM_SOL_NONLINEAR_C
+#define GOMA_MM_SOL_NONLINEAR_C
 #include "goma.h"
 
 /*

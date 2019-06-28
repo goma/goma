@@ -52,7 +52,7 @@ static char rcsid[] = "$Id: mm_numjac.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $"
 #include "sl_util.h"
 #include "mm_qp_storage.h"
 
-#define _MM_NUMJAC_C
+#define GOMA_MM_NUMJAC_C
 #include "goma.h"
 
 static void piksr2		/* mm_numjac.c                               */

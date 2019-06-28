@@ -33,7 +33,7 @@
 
 #include "dpi.h"
  
-#define _BC_COLLOC_C
+#define GOMA_BC_COLLOC_C
 #include "goma.h"
 
 #ifdef USE_CGM

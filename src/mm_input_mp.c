@@ -58,7 +58,7 @@
 #include "sl_util_structs.h"
 
 
-#define _MM_INPUT_C
+#define GOMA_MM_INPUT_C
 #include "goma.h"
 
 

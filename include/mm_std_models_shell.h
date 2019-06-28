@@ -10,19 +10,19 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _MM_STD_MODELS_SHELL_H
-#define _MM_STD_MODELS_SHELL_H
+#ifndef GOMA_MM_STD_MODELS_SHELL_H
+#define GOMA_MM_STD_MODELS_SHELL_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_STD_MODELS_SHELL_C
+#ifdef GOMA_MM_STD_MODELS_SHELL_C
 #define EXTERN
 #
 #endif
 
-#ifndef _MM_STD_MODELS_SHELL_C
+#ifndef GOMA_MM_STD_MODELS_SHELL_C
 #define EXTERN extern
 #endif
 
@@ -80,4 +80,4 @@ EXTERN void dynamic_contact_angle_model
        double *
        );
 
-#endif /* _MM_STD_MODELS_H */
+#endif /* GOMA_MM_STD_MODELS_H */

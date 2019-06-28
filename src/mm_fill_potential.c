@@ -46,7 +46,7 @@
 #include "mm_mp_structs.h"
 
 
-#define _MM_FILL_POTENTIAL_C
+#define GOMA_MM_FILL_POTENTIAL_C
 #include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ***********************

@@ -18,8 +18,8 @@
  * $Id: mm_unknown_map.h,v 5.1 2007-09-18 18:53:46 prschun Exp $
  */
 
-#ifndef _MM_UNKNOWN_MAP_H
-#define _MM_UNKNOWN_MAP_H
+#ifndef GOMA_MM_UNKNOWN_MAP_H
+#define GOMA_MM_UNKNOWN_MAP_H
 
 EXTERN void setup_local_nodal_vars
 (Exo_DB *,		/* exo - ptr to FE EXODUS II database        */

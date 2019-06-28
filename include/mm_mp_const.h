@@ -10,8 +10,8 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _MM_MP_CONST_H
-#define _MM_MP_CONST_H
+#ifndef GOMA_MM_MP_CONST_H
+#define GOMA_MM_MP_CONST_H
 
 #ifndef MAX_NUMBER_MATLS
 #define MAX_NUMBER_MATLS  9     /* maximum number of materials allowed */

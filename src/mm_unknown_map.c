@@ -65,7 +65,7 @@ static char rcsid[] =
 #include "mm_eh.h"
 #include "exo_struct.h"
 
-#define _MM_UNKNOWN_MAP_C
+#define GOMA_MM_UNKNOWN_MAP_C
 #include "goma.h"
 
 #ifdef PARALLEL

@@ -59,7 +59,7 @@
 #include "mm_fill_terms.h"
 #include "mm_fill_species.h"
 
-#define _MM_FILL_SPECIES_C
+#define GOMA_MM_FILL_SPECIES_C
 #include "sl_aux.h"
 #include "goma.h"
 

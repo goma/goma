@@ -10,18 +10,18 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _BC_SPECIAL_H
-#define _BC_SPECIAL_H
+#ifndef GOMA_BC_SPECIAL_H
+#define GOMA_BC_SPECIAL_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _BC_SPECIAL_C
+#ifdef GOMA_BC_SPECIAL_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _BC_SPECIAL_C
+#ifndef GOMA_BC_SPECIAL_C
 #define EXTERN extern
 #endif
 
@@ -121,4 +121,4 @@ EXTERN void assemble_sharp_integrated_bc
         double,
         int);
 
-#endif /* _BC_SPECIAL_H */
+#endif /* GOMA_BC_SPECIAL_H */

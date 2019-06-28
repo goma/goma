@@ -11,18 +11,18 @@
 \************************************************************************/
  
 
-#ifndef _MM_NS_BC_H
-#define _MM_NS_BC_H
+#ifndef GOMA_MM_NS_BC_H
+#define GOMA_MM_NS_BC_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_NS_BC_C
+#ifdef GOMA_MM_NS_BC_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_NS_BC_C
+#ifndef GOMA_MM_NS_BC_C
 #define EXTERN extern
 #endif
 
@@ -970,4 +970,4 @@ void
 ls_wall_angle_bc(double func[DIM],
                 double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                 const double angle);
-#endif /* _MM_NS_BC_H */
+#endif /* GOMA_MM_NS_BC_H */

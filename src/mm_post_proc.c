@@ -70,7 +70,7 @@ static char rcsid[] =
 
 #include "usr_print.h"
 
-#define _MM_POST_PROC_C
+#define GOMA_MM_POST_PROC_C
 #include "goma.h"
 #include "mm_post_def.h"
 #include "mm_fill_common.h"

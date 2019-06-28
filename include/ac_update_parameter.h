@@ -10,8 +10,8 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _AC_UPDATE_PARAMETER_H
-#define _AC_UPDATE_PARAMETER_H
+#ifndef GOMA_AC_UPDATE_PARAMETER_H
+#define GOMA_AC_UPDATE_PARAMETER_H
 
 #include "dp_types.h"
 #include "exo_struct.h"
@@ -21,12 +21,12 @@
 #undef EXTERN
 #endif
 
-#ifdef _AC_UPDATE_PARAMETER_C
+#ifdef GOMA_AC_UPDATE_PARAMETER_C
 #define EXTERN
 #
 #endif
 
-#ifndef _AC_UPDATE_PARAMETER_C
+#ifndef GOMA_AC_UPDATE_PARAMETER_C
 #define EXTERN extern
 #endif
 
@@ -154,4 +154,4 @@ EXTERN void retrieve_UM_parameter
        Exo_DB *,                /* exo - ptr to finite element mesh database */
        Dpi *);                 /* dpi - ptr to distributed processing info */
 
-#endif /* _AC_UPDATE_PARAMETER_H */
+#endif /* GOMA_AC_UPDATE_PARAMETER_H */

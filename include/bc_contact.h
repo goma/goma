@@ -10,19 +10,19 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _BC_CONTACT_H
-#define _BC_CONTACT_H
+#ifndef GOMA_BC_CONTACT_H
+#define GOMA_BC_CONTACT_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _BC_CONTACT_C
+#ifdef GOMA_BC_CONTACT_C
 #define EXTERN
 #
 #endif
 
-#ifndef _BC_CONTACT_C
+#ifndef GOMA_BC_CONTACT_C
 #define EXTERN extern
 #endif
 
@@ -217,4 +217,4 @@ EXTERN int assemble_embedded_bc
 	Exo_DB *,
 	double [DIM] );
 
-#endif /* _BC_CONTACT_H */
+#endif /* GOMA_BC_CONTACT_H */

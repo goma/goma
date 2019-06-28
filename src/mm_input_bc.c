@@ -54,7 +54,7 @@ static char rcsid[] =
 #include "sl_util_structs.h"
 #include "mm_input.h"
 
-#define _MM_INPUT_BC_C
+#define GOMA_MM_INPUT_BC_C
 #include "goma.h"
 
 /*

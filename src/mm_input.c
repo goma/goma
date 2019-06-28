@@ -57,7 +57,7 @@ static char rcsid[] =
 
 #include <string.h>
 
-#define _MM_INPUT_C
+#define GOMA_MM_INPUT_C
 #include "goma.h"
 
 extern void print_code_version	/* main.c -  */

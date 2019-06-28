@@ -45,8 +45,8 @@
  * which is easily added by adding a new dimension [MAX_CONC]
  */
 
-#ifndef _MM_MP_STRUCTS_H
-#define _MM_MP_STRUCTS_H
+#ifndef GOMA_MM_MP_STRUCTS_H
+#define GOMA_MM_MP_STRUCTS_H
 
 #include "mm_elem_block_structs.h"
 

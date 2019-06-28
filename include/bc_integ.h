@@ -10,19 +10,19 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _BC_INTEG_H
-#define _BC_INTEG_H
+#ifndef GOMA_BC_INTEG_H
+#define GOMA_BC_INTEG_H
 
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _BC_INTEG_C
+#ifdef GOMA_BC_INTEG_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _BC_INTEG_C
+#ifndef GOMA_BC_INTEG_C
 #define EXTERN extern
 #endif
 
@@ -64,4 +64,4 @@ EXTERN void apply_table_wic_bc
 
 #endif
 
-#endif /* _BC_INTEG_H */
+#endif /* GOMA_BC_INTEG_H */

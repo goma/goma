@@ -29,7 +29,7 @@ static char rcsid[] = "$Id: mm_eh.c,v 5.3 2008-01-11 00:47:14 hkmoffa Exp $";
 #include "rf_mp.h"
 #include "mm_eh.h"
 
-#define _MM_EH_C
+#define GOMA_MM_EH_C
 #include "goma.h"
 
 /*

@@ -18,14 +18,14 @@
  * Copyright (C) 2001 Sandia National Laboratories
  */
 
-#ifndef _AC_PARTICLES_H
-#define _AC_PARTICLES_H
+#ifndef GOMA_AC_PARTICLES_H
+#define GOMA_AC_PARTICLES_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _AC_PARTICLES_C
+#ifdef GOMA_AC_PARTICLES_C
 #define EXTERN /* do nothing */
 #endif
 
@@ -34,7 +34,7 @@
 #include "exo_struct.h"
 #include "stdio.h"
 
-#ifndef _AC_PARTICLES_C
+#ifndef GOMA_AC_PARTICLES_C
 #define EXTERN extern
 #endif
 
@@ -214,5 +214,5 @@ EXTERN void backup_particles
 EXTERN void restore_particles
 (void);
 
-#endif /* _AC_PARTICLES_H */
+#endif /* GOMA_AC_PARTICLES_H */
 

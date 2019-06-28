@@ -10,20 +10,20 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _BC_CURVE_H
-#define _BC_CURVE_H
+#ifndef GOMA_BC_CURVE_H
+#define GOMA_BC_CURVE_H
 
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _BC_CURVE_C
+#ifdef GOMA_BC_CURVE_C
 #define EXTERN
 #
 #endif
 
-#ifndef _BC_CURVE_C
+#ifndef GOMA_BC_CURVE_C
 #define EXTERN extern
 #endif
 
@@ -73,4 +73,4 @@ EXTERN int apply_point_colloc_edge_bc
 				 * liquid (fluid-solid boundaries)           */
        const double);		/* time_value                                */
 
-#endif /* _BC_CURVE_H */
+#endif /* GOMA_BC_CURVE_H */

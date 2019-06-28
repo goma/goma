@@ -10,19 +10,19 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _BC_COLLOC_H
-#define _BC_COLLOC_H
+#ifndef GOMA_BC_COLLOC_H
+#define GOMA_BC_COLLOC_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _BC_COLLOC_C
+#ifdef GOMA_BC_COLLOC_C
 #define EXTERN
 #
 #endif
 
-#ifndef _BC_COLLOC_C
+#ifndef GOMA_BC_COLLOC_C
 #define EXTERN extern
 #endif
 
@@ -168,4 +168,4 @@ EXTERN double interpolate_table_sat
 (struct Data_Table *,	/* table                                     */
        double [3]);	      	/* slope                                     */
 
-#endif /* _BC_COLLOC_H */
+#endif /* GOMA_BC_COLLOC_H */

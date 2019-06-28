@@ -42,7 +42,7 @@
 #include "mm_as.h"
 #include "mm_as_const.h"
 
-#define _MM_BC_C
+#define GOMA_MM_BC_C
 #include "goma.h"
 
 

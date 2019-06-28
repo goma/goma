@@ -15,8 +15,8 @@
  *$Id: mm_fill_shell.h,v 5.9 2010-04-07 22:27:00 prschun Exp $
  */
 
-#ifndef _MM_FILL_SHELL_H
-#define _MM_FILL_SHELL_H
+#ifndef GOMA_MM_FILL_SHELL_H
+#define GOMA_MM_FILL_SHELL_H
 
 extern int InShellElementWithParentElementCoverage;
 extern int ShellElementParentElementCoverageForVariable[MAX_VARIABLE_TYPES];
@@ -307,4 +307,4 @@ EXTERN int assemble_lubrication_power_law
 
 EXTERN int load_lsi_shell_second
 ( const double );       /* width */
-#endif /* _MM_FILL_SHELL_H */
+#endif /* GOMA_MM_FILL_SHELL_H */

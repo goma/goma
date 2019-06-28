@@ -21,8 +21,8 @@
  * $Name: not supported by cvs2svn $
  *====================================================================*/
 
-#ifndef _MM_CHEMKIN_H
-#define _MM_CHEMKIN_H
+#ifndef GOMA_MM_CHEMKIN_H
+#define GOMA_MM_CHEMKIN_H
 
 #ifdef USE_CHEMKIN
 #include "cpc_defs.h"

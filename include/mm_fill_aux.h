@@ -15,18 +15,18 @@
  */
  
 
-#ifndef _MM_FILL_AUX_H
-#define _MM_FILL_AUX_H
+#ifndef GOMA_MM_FILL_AUX_H
+#define GOMA_MM_FILL_AUX_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_AUX_C
+#ifdef GOMA_MM_FILL_AUX_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_AUX_C
+#ifndef GOMA_MM_FILL_AUX_C
 #define EXTERN extern
 #endif
 
@@ -132,4 +132,4 @@ EXTERN void calc_CL_normal
 
 	const Exo_DB *);
 
-#endif /* _MM_FILL_AUX_H */
+#endif /* GOMA_MM_FILL_AUX_H */

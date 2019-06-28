@@ -10,18 +10,18 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _MM_BC_H
-#define _MM_BC_H
+#ifndef GOMA_MM_BC_H
+#define GOMA_MM_BC_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_BC_C
+#ifdef GOMA_MM_BC_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_BC_C
+#ifndef GOMA_MM_BC_C
 #define EXTERN extern
 #endif
 
@@ -111,4 +111,4 @@ extern int search_bc_dup_list(const int, int *);
 extern void set_up_BC_connectivity(void);
 
 int exchange_bc_info(void);
-#endif /* _MM_BC_H */
+#endif /* GOMA_MM_BC_H */

@@ -10,19 +10,19 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _MM_VISCOSITY_H
-#define _MM_VISCOSITY_H
+#ifndef GOMA_MM_VISCOSITY_H
+#define GOMA_MM_VISCOSITY_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_VISCOSITY_C
+#ifdef GOMA_MM_VISCOSITY_C
 #define EXTERN
 #
 #endif
 
-#ifndef _MM_VISCOSITY_C
+#ifndef GOMA_MM_VISCOSITY_C
 #define EXTERN extern
 #endif
 
@@ -162,4 +162,4 @@ EXTERN void copy_pF_to_F
 ( int  );
 
 
-#endif /* _MM_VISCOSITY_H */
+#endif /* GOMA_MM_VISCOSITY_H */

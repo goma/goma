@@ -50,7 +50,7 @@
 #include "mm_eh.h"
 
 
-#define _BC_CURVE_C
+#define GOMA_BC_CURVE_C
 #include "goma.h"
 
 /*

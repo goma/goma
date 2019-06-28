@@ -11,18 +11,18 @@
 \************************************************************************/
  
 
-#ifndef _MM_FLUX_H
-#define _MM_FLUX_H
+#ifndef GOMA_MM_FLUX_H
+#define GOMA_MM_FLUX_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FLUX_C
+#ifdef GOMA_MM_FLUX_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FLUX_C
+#ifndef GOMA_MM_FLUX_C
 #define EXTERN extern
 #endif
 
@@ -198,8 +198,8 @@ EXTERN int interface_crossing_3DL
 
 /*  Chebyshev Polynomial data structure  */
 
-#ifdef _MM_FLUX_C
-#ifndef _MM_POST_PROC_UTIL_C
+#ifdef GOMA_MM_FLUX_C
+#ifndef GOMA_MM_POST_PROC_UTIL_C
 #define MAX_CHEV  5
 
 struct Chebyshev_Polynomial
@@ -241,7 +241,7 @@ struct Chebyshev_Polynomial chevpoly[3] = {
 }
 };
 #endif
-#endif /* _MM_FLUX_C */
+#endif /* GOMA_MM_FLUX_C */
 
 
-#endif /* _MM_FLUX_H */
+#endif /* GOMA_MM_FLUX_H */

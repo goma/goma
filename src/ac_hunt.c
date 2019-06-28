@@ -19,7 +19,7 @@
 #include <math.h>
 #include <string.h>
 
-#define _AC_HUNT_C
+#define GOMA_AC_HUNT_C
 #include "goma.h"
 
 #ifdef HAVE_FRONT

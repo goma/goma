@@ -52,7 +52,7 @@ static char rcsid[] = "$Id: mm_std_models_shell.c,v 5.31 2010-07-30 20:48:38 prs
 
 #include "mm_std_models_shell.h"
 
-#define _MM_STD_MODELS_SHELL_C
+#define GOMA_MM_STD_MODELS_SHELL_C
 #include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************

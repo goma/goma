@@ -15,18 +15,18 @@
  *$Id: mm_eh.h,v 5.2 2007-09-18 18:53:42 prschun Exp $
  */
 
-#ifndef _MM_EH_H
-#define _MM_EH_H
+#ifndef GOMA_MM_EH_H
+#define GOMA_MM_EH_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_EH_C
+#ifdef GOMA_MM_EH_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_EH_C
+#ifndef GOMA_MM_EH_C
 #define EXTERN extern
 #endif
 

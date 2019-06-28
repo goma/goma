@@ -14,8 +14,8 @@
  *$Id: mm_shell_util.h,v 5.2 2010-05-21 21:40:35 sarober Exp $
  */
 
-#ifndef _MM_SHELL_UTIL_H
-#define _MM_SHELL_UTIL_H
+#ifndef GOMA_MM_SHELL_UTIL_H
+#define GOMA_MM_SHELL_UTIL_H
 
 
 extern int **elem_friends;
@@ -175,4 +175,4 @@ EXTERN void calculate_lub_q_v_nonnewtonian_sens
          double eps_bot  
      );
 
-#endif /* _MM_FILL_SHELL_H */
+#endif /* GOMA_MM_FILL_SHELL_H */

@@ -49,7 +49,7 @@ extern	dbl *p0;		/* Defined in mm_as_alloc.c */
 
 #include "mm_eh.h"
 
-#define _MM_FILL_PTRS_C
+#define GOMA_MM_FILL_PTRS_C
 #include "goma.h"
 
 /***********************************************************************/

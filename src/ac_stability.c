@@ -31,7 +31,7 @@ static char rcsid[] = "$Id: ac_stability.c,v 5.1 2007-09-18 18:53:40 prschun Exp
 #include <math.h>
 #include <string.h>
 
-#define _AC_STABILITY_C
+#define GOMA_AC_STABILITY_C
 #include "sl_eggroll.h"
 #include "goma.h"
 

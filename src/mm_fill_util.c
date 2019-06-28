@@ -55,7 +55,7 @@ static char rcsid[] = "$Id: mm_fill_util.c,v 5.24 2010-02-26 21:40:14 prschun Ex
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
 
-#define _MM_FILL_UTIL_C
+#define GOMA_MM_FILL_UTIL_C
 #include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E *************************

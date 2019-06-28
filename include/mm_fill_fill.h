@@ -19,18 +19,18 @@
  *$Id: mm_fill_fill.h,v 5.3 2008-11-04 20:12:05 hkmoffa Exp $
  */
 
-#ifndef _MM_FILL_FILL_H
-#define _MM_FILL_FILL_H
+#ifndef GOMA_MM_FILL_FILL_H
+#define GOMA_MM_FILL_FILL_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_FILL_C
+#ifdef GOMA_MM_FILL_FILL_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_FILL_C
+#ifndef GOMA_MM_FILL_FILL_C
 #define EXTERN extern
 #endif
 
@@ -467,4 +467,4 @@ EXTERN void assemble_ls_mass_lumped_penalty(
     struct LS_Mass_Lumped_Penalty *mass_lumped_penalty, int ip_total,
     int ielem_type, PG_DATA *pg_data);
 
-#endif /* _MM_FILL_FILL_H */
+#endif /* GOMA_MM_FILL_FILL_H */

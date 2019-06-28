@@ -15,18 +15,18 @@
  */
 
 
-#ifndef _MM_FILL_H
-#define _MM_FILL_H
+#ifndef GOMA_MM_FILL_H
+#define GOMA_MM_FILL_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_C
+#ifdef GOMA_MM_FILL_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_C
+#ifndef GOMA_MM_FILL_C
 #define EXTERN extern
 #endif
 
@@ -106,4 +106,4 @@ EXTERN int load_pf_constraint
 #define CHECKFINITE(MESSAGE)	{}
 #endif
 
-#endif /* _MM_FILL_H */
+#endif /* GOMA_MM_FILL_H */

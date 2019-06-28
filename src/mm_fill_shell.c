@@ -55,7 +55,7 @@ static char rcsid[] =
 #include "mm_std_models_shell.h"
 #include "mm_std_models.h"
 
-#define _MM_FILL_SHELL_C
+#define GOMA_MM_FILL_SHELL_C
 #include "goma.h"
 
 /*

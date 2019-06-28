@@ -11,18 +11,18 @@
 \************************************************************************/
  
 
-#ifndef _MM_FILL_STRESS_H
-#define _MM_FILL_STRESS_H
+#ifndef GOMA_MM_FILL_STRESS_H
+#define GOMA_MM_FILL_STRESS_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_STRESS_C
+#ifdef GOMA_MM_FILL_STRESS_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_STRESS_C
+#ifndef GOMA_MM_FILL_STRESS_C
 #define EXTERN extern
 #endif
 
@@ -189,4 +189,4 @@ EXTERN void
 compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
 		   dbl exp_s[DIM][DIM],
 		   dbl d_exp_s_ds[DIM][DIM][DIM][DIM]);
-#endif /* _MM_FILL_STRESS_H */
+#endif /* GOMA_MM_FILL_STRESS_H */

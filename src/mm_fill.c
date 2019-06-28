@@ -67,7 +67,7 @@
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
 
-#define _MM_FILL_C
+#define GOMA_MM_FILL_C
 #include "goma.h"
 
 #include "mm_fill_fill.h"

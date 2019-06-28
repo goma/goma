@@ -52,7 +52,7 @@
 #include "loca_const.h"
 
 
-#define _MM_AUGC_UTIL_C
+#define GOMA_MM_AUGC_UTIL_C
 #include "goma.h"
 
 #include "sl_eggroll.h"

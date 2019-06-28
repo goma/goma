@@ -26,8 +26,8 @@
  * actually defined
  */
 
-#ifndef _MM_AS_STRUCTS_H
-#define _MM_AS_STRUCTS_H
+#ifndef GOMA_MM_AS_STRUCTS_H
+#define GOMA_MM_AS_STRUCTS_H
 
 #include "el_elm.h"
 #include "mm_elem_block_structs.h"
@@ -3118,4 +3118,4 @@ struct SUPG_terms {
 /******************************************************************************/
 /******************************************************************************/
 /******************************************************************************/
-#endif /* _MM_AS_STRUCTS_H */
+#endif /* GOMA_MM_AS_STRUCTS_H */

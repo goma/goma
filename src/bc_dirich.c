@@ -46,7 +46,7 @@
 
 #include "mm_eh.h"
 
-#define _BC_DIRICH_C
+#define GOMA_BC_DIRICH_C
 #include "goma.h"
 
 /************************************************************************************/

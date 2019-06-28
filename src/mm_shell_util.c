@@ -52,7 +52,7 @@ static char rcsid[] =
 #include "sl_util.h"
 #include "mm_fill_shell.h"
 #include "mm_std_models_shell.h"
-#define _MM_SHELL_UTIL_C
+#define GOMA_MM_SHELL_UTIL_C
 #include "goma.h"
 
 #include <limits.h>

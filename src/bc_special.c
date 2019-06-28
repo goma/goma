@@ -58,7 +58,7 @@
 #include "mm_fill_jac.h"
 #include "mm_fill_species.h"
 
-#define _BC_SPECIAL_C
+#define GOMA_BC_SPECIAL_C
 #include "goma.h"
 
 /*

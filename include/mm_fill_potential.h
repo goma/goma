@@ -14,18 +14,18 @@
  * mm_fill_potential.h -- prototype declarations for mm_fill_potential.c
  */
 
-#ifndef _MM_FILL_POTENTIAL_H
-#define _MM_FILL_POTENTIAL_H
+#ifndef GOMA_MM_FILL_POTENTIAL_H
+#define GOMA_MM_FILL_POTENTIAL_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_POTENTIAL_C
+#ifdef GOMA_MM_FILL_POTENTIAL_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_POTENTIAL_C
+#ifndef GOMA_MM_FILL_POTENTIAL_C
 #define EXTERN extern
 #endif
 
@@ -111,4 +111,4 @@ EXTERN double electrical_conductivity
        const double,		/* time	*/
        const double );                  /* time_step */
 
-#endif /* _MM_FILL_POTENTIAL_H */
+#endif /* GOMA_MM_FILL_POTENTIAL_H */

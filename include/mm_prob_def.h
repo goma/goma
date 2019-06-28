@@ -14,23 +14,23 @@
  * mm_prob_def.h -- prototype declarations for mm_prob_def.c
  */
 
-#ifndef _MM_PROB_DEF_H
-#define _MM_PROB_DEF_H
+#ifndef GOMA_MM_PROB_DEF_H
+#define GOMA_MM_PROB_DEF_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_PROB_DEF_C
+#ifdef GOMA_MM_PROB_DEF_C
 #define EXTERN
 #
 #endif
 
-#ifndef _MM_PROB_DEF_C
+#ifndef GOMA_MM_PROB_DEF_C
 #define EXTERN extern
 #endif
 
 EXTERN int setup_pd		/* mm_prob_def.c */
 (void );			/* nada. */
 
-#endif /* _MM_PROB_DEF_H */
+#endif /* GOMA_MM_PROB_DEF_H */

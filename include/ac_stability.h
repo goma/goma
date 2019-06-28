@@ -10,14 +10,14 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _AC_STABILITY_H
-#define _AC_STABILITY_H
+#ifndef GOMA_AC_STABILITY_H
+#define GOMA_AC_STABILITY_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _AC_STABILITY_C
+#ifdef GOMA_AC_STABILITY_C
 #define EXTERN /* do nothing */
 #endif
 
@@ -25,7 +25,7 @@
 #include "exo_struct.h"
 #include "dpi.h"
 
-#ifndef _AC_STABILITY_C
+#ifndef GOMA_AC_STABILITY_C
 #define EXTERN extern
 #endif
 
@@ -149,4 +149,4 @@ extern void eggroll_init         /* replacement for sl_eggrollinit.c */
        int *,                   /* Info for eigenvalue extraction */
        dbl *);                 /* Info for eigenvalue extraction */
 
-#endif /* _AC_STABILITY_H */
+#endif /* GOMA_AC_STABILITY_H */

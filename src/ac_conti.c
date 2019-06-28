@@ -19,7 +19,7 @@
 #include <math.h>
 #include <string.h>
 
-#define _AC_CONTI_C
+#define GOMA_AC_CONTI_C
 #include "goma.h"
 
 int w;

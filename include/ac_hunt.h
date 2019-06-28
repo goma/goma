@@ -10,19 +10,19 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _AC_HUNT_H
-#define _AC_HUNT_H
+#ifndef GOMA_AC_HUNT_H
+#define GOMA_AC_HUNT_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _AC_HUNT_C
+#ifdef GOMA_AC_HUNT_C
 #define EXTERN
 #
 #endif
 
-#ifndef _AC_HUNT_C
+#ifndef GOMA_AC_HUNT_C
 #define EXTERN extern
 #endif
 
@@ -34,4 +34,4 @@ EXTERN void hunt_problem
        Exo_DB *,		/* ptr to the finite element mesh database */
        Dpi *);			/* distributed processing information */
 
-#endif /* _AC_HUNT_H */
+#endif /* GOMA_AC_HUNT_H */

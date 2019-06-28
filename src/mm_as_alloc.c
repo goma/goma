@@ -40,7 +40,7 @@
 
 #include "mm_mp_structs.h"
 
-#define _MM_AS_ALLOC_C
+#define GOMA_MM_AS_ALLOC_C
 #include "goma.h"
 
 static void init_Viscoelastic_Nonmodal

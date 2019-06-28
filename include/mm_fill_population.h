@@ -22,11 +22,11 @@
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_POPULATION_C
+#ifdef GOMA_MM_FILL_POPULATION_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_POPULATION_C
+#ifndef GOMA_MM_FILL_POPULATION_C
 #define EXTERN extern
 #endif
 

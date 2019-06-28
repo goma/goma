@@ -10,19 +10,19 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _BC_DIRICH_H
-#define _BC_DIRICH_H
+#ifndef GOMA_BC_DIRICH_H
+#define GOMA_BC_DIRICH_H
 
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _BC_DIRICH_C
+#ifdef GOMA_BC_DIRICH_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _BC_DIRICH_C
+#ifndef GOMA_BC_DIRICH_C
 #define EXTERN extern
 #endif
 
@@ -31,4 +31,4 @@ EXTERN int put_dirichlet_in_matrix
        const int);		/* num_total_nodes */
 
 
-#endif /* _BC_DIRICH_H */
+#endif /* GOMA_BC_DIRICH_H */

@@ -49,7 +49,7 @@
 
 #include "mm_eh.h"
 
-#define _MM_DIL_VISCOSITY_C
+#define GOMA_MM_DIL_VISCOSITY_C
 /* Contains mm_dil_viscosity.h */
 #include "goma.h"
 #include "mm_dil_viscosity.h"

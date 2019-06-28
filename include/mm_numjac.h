@@ -14,19 +14,19 @@
  * mm_numjac.h -- prototype declarations for mm_numjac.c
  */
 
-#ifndef _MM_NUMJAC_H
-#define _MM_NUMJAC_H
+#ifndef GOMA_MM_NUMJAC_H
+#define GOMA_MM_NUMJAC_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_NUMJAC_C
+#ifdef GOMA_MM_NUMJAC_C
 #define EXTERN
 #
 #endif
 
-#ifndef _MM_NUMJAC_C
+#ifndef GOMA_MM_NUMJAC_C
 #define EXTERN extern
 #endif
 
@@ -143,4 +143,4 @@ extern double calc_numerical_delta(double);
 extern void   AF_assemble_Residual_Only(void);
 extern void   AF_restore_Jacobian_Flag(void);
 
-#endif /* _MM_NUMJAC_H */
+#endif /* GOMA_MM_NUMJAC_H */

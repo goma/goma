@@ -25,8 +25,8 @@
    Current Owner : Robert A. Kerr
 ****************************************************************************/
 
-#ifndef _MM_CGM_C_INTERFACE_H
-#define _MM_CGM_C_INTERFACE_H
+#ifndef GOMA_MM_CGM_C_INTERFACE_H
+#define GOMA_MM_CGM_C_INTERFACE_H
 
 #ifdef USE_CGM
 

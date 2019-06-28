@@ -10,8 +10,8 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _MM_SPECIES_H
-#define _MM_SPECIES_H
+#ifndef GOMA_MM_SPECIES_H
+#define GOMA_MM_SPECIES_H
 
 
 extern int normalize_species_fractions (double [], const int);

@@ -10,18 +10,18 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _MM_STD_MODELS_H
-#define _MM_STD_MODELS_H
+#ifndef GOMA_MM_STD_MODELS_H
+#define GOMA_MM_STD_MODELS_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_STD_MODELS_C
+#ifdef GOMA_MM_STD_MODELS_C
 #define EXTERN
 #endif
 
-#ifndef _MM_STD_MODELS_C
+#ifndef GOMA_MM_STD_MODELS_C
 #define EXTERN extern
 #endif
 
@@ -245,4 +245,4 @@ EXTERN int assemble_bond_evolution /* mm_std_models.c */
        double );		/* dt - current time step size */
 
 
-#endif /* _MM_STD_MODELS_H */
+#endif /* GOMA_MM_STD_MODELS_H */

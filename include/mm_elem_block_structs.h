@@ -14,8 +14,8 @@
  *$Id: mm_elem_block_structs.h,v 5.1 2007-09-18 18:53:42 prschun Exp $
  */
 
-#ifndef _MM_ELEM_BLOCK_STRUCTS_H
-#define _MM_ELEM_BLOCK_STRUCTS_H
+#ifndef GOMA_MM_ELEM_BLOCK_STRUCTS_H
+#define GOMA_MM_ELEM_BLOCK_STRUCTS_H
 
 #include "std.h"
 #include "rf_element_storage_struct.h"

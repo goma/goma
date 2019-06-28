@@ -49,7 +49,7 @@ static char rcsid[] = "$Id: mm_fill_solid.c,v 5.13 2010-01-10 23:00:17 hkmoffa E
 
 #include "mm_eh.h"
 
-#define _MM_FILL_SOLID_C
+#define GOMA_MM_FILL_SOLID_C
 #include "goma.h"
 
 

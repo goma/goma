@@ -54,7 +54,7 @@
 #include "mm_std_models_shell.h"
 #include "mm_std_models.h"
 #include "mm_fill_common.h"
-#define _MM_FLUX_C
+#define GOMA_MM_FLUX_C
 #include "goma.h"
 
 static int load_fv_sens

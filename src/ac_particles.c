@@ -23,7 +23,7 @@
 #include <math.h>
 
 /* GOMA include files */
-#define _AC_PARTICLES_C
+#define GOMA_AC_PARTICLES_C
 #include "goma.h"
 
 

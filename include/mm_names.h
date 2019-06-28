@@ -95,8 +95,8 @@
  *   int DV_Index_Default;
  * } 
  */
-#ifndef _MM_NAMES_H
-#define _MM_NAMES_H
+#ifndef GOMA_MM_NAMES_H
+#define GOMA_MM_NAMES_H
 
 #include "rf_bc_const.h"	/* just in case it has not yet been included */
 

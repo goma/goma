@@ -52,7 +52,7 @@ static char rcsid[] = "$Id: mm_qtensor_model.c,v 5.2 2009-05-20 15:31:33 hkmoffa
 #include "mm_fill_species.h"
 #include "mm_std_models.h"
 
-#define _MM_QTENSOR_MODEL_C
+#define GOMA_MM_QTENSOR_MODEL_C
 #include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************

@@ -51,7 +51,7 @@
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
 
-#define _MM_FILL_STRESS_C
+#define GOMA_MM_FILL_STRESS_C
 #include "goma.h"
 
 

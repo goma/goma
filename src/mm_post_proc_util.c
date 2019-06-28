@@ -45,8 +45,8 @@
 #include "mm_eh.h"
 #include "mm_post_def.h"
 
-#define _MM_FLUX_C
-#define _MM_POST_PROC_UTIL_C
+#define GOMA_MM_FLUX_C
+#define GOMA_MM_POST_PROC_UTIL_C
 #include "goma.h"
 
 

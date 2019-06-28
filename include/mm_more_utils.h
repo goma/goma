@@ -14,18 +14,18 @@
  * mm_more_utils.h -- prototype declarations for mm_more_utils.c
  */
 
-#ifndef _MM_MORE_UTILS_H
-#define _MM_MORE_UTILS_H
+#ifndef GOMA_MM_MORE_UTILS_H
+#define GOMA_MM_MORE_UTILS_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_MORE_UTILS_C
+#ifdef GOMA_MM_MORE_UTILS_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_MORE_UTILS_C
+#ifndef GOMA_MM_MORE_UTILS_C
 #define EXTERN extern
 #endif
 
@@ -117,4 +117,4 @@ EXTERN void elements_attached_to_NS
 		int ,
 		Exo_DB * ) ;
 
-#endif /* _MM_MORE_UTILS_H */
+#endif /* GOMA_MM_MORE_UTILS_H */

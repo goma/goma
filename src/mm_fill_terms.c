@@ -26,7 +26,7 @@
 #include <math.h>
 
 /* GOMA include files */
-#define _MM_FILL_TERMS_C
+#define GOMA_MM_FILL_TERMS_C
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"

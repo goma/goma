@@ -56,7 +56,7 @@
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
 
-#define _MM_FILL_PTHINGS_C
+#define GOMA_MM_FILL_PTHINGS_C
 #include "goma.h"
 
 

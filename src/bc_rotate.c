@@ -58,7 +58,7 @@
 struct Rotation_Vectors ****rotation = NULL;
 int dup_blks_list[MAX_MAT_PER_SS+1];
 
-#define _BC_ROTATE_C
+#define GOMA_BC_ROTATE_C
 #include "goma.h"
 
 #include "sl_epetra_interface.h"

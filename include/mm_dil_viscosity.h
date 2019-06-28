@@ -14,13 +14,13 @@
  * $Id: mm_dil_viscosity.h,v 5.3 2008-03-13 01:12:31 hkmoffa Exp $
  */
 
-#ifndef _MM_DIL_VISCOSITY_H
-#define _MM_DIL_VISCOSITY_H
+#ifndef GOMA_MM_DIL_VISCOSITY_H
+#define GOMA_MM_DIL_VISCOSITY_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
-#ifdef _MM_DIL_VISCOSITY_C
+#ifdef GOMA_MM_DIL_VISCOSITY_C
 #define EXTERN
 #else
 #define EXTERN extern
@@ -38,4 +38,4 @@ ls_modulate_dilviscosity ( double *kappa1,
                            double pm_plus,
                            DILVISCOSITY_DEPENDENCE_STRUCT *d_dilMu);
 
-#endif /* _MM_DIL_VISCOSITY_H */
+#endif /* GOMA_MM_DIL_VISCOSITY_H */

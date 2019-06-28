@@ -19,8 +19,8 @@
  * 	files "mm_as_const.h" and "mm_as_structs.h"
  */
 
-#ifndef _MM_AS_H
-#define _MM_AS_H
+#ifndef GOMA_MM_AS_H
+#define GOMA_MM_AS_H
 
 #include "mm_as_structs.h"
 
@@ -77,4 +77,4 @@ extern struct Phase_Function_Data               *pfd;
 extern struct Lubrication_Auxiliaries           *LubAux;
 extern struct Lubrication_Auxiliaries           *LubAux_old;
 
-#endif /* _MM_AS_H */
+#endif /* GOMA_MM_AS_H */

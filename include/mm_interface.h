@@ -14,8 +14,8 @@
  *$Id: mm_interface.h,v 5.2 2007-09-18 18:53:45 prschun Exp $
  */
 
-#ifndef _MM_INTERFACE_H_
-#define _MM_INTERFACE_H_
+#ifndef GOMA_MM_INTERFACE_H_
+#define GOMA_MM_INTERFACE_H_
 
 /*
  *  Interface_Source Structure

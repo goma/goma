@@ -15,18 +15,18 @@
  *$Id: mm_fill_species.h,v 5.5 2008-11-06 15:53:44 hkmoffa Exp $
  */
 
-#ifndef _MM_FILL_SPECIES_H
-#define _MM_FILL_SPECIES_H
+#ifndef GOMA_MM_FILL_SPECIES_H
+#define GOMA_MM_FILL_SPECIES_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_SPECIES_C
+#ifdef GOMA_MM_FILL_SPECIES_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_SPECIES_C
+#ifndef GOMA_MM_FILL_SPECIES_C
 #define EXTERN extern
 #endif
 
@@ -627,4 +627,4 @@ EXTERN void fickian_charged_gradient_bc
 	int ,	/* species number of this boundary condition */
 	double );/* Value for normal surface gradient component       */
 		
-#endif /* _MM_FILL_SPECIES_H */
+#endif /* GOMA_MM_FILL_SPECIES_H */
