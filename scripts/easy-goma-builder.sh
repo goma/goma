@@ -128,6 +128,7 @@ export MPI_NAME
 export MATH_LIBRARIES
 export MATH_PATH
 export INTEL_PARALLEL_STUDIO_ROOT
+export GOMA_LIBS=$(readlink --canonicalize ${GOMA_LIB})
 
 if [ "$CXX11" = "true" ]; then
     echo "Starting TPL build..."
@@ -137,8 +138,7 @@ if [ "$CXX11" = "true" ]; then
         thank_user Easy Goma Builder script
         exit 0
     fi
-    # In case cmake was built in the build-goma-deps script add it to the path. This won't do anything if cmake is already installed because it appends it to the end.
-    export PATH="$PATH:$GOMA_LIB/cmake-2.8.12.2/bin"
+    export PATH="$GOMA_LIBS/cmake-3.9.5/bin:$PATH"
 else
     echo "Your compiler does not support c++11 and thus is not supported by this script at this time"
     thank_user Easy Goma Builder script
@@ -186,7 +186,6 @@ if [ "$MATH_LIBRARIES" == "intel" ] && [ "$CC_NAME" == "gnu" ]; then
     User_Flags="-O1 -I${MKLROOT}/include/intel64/ilp64 -m64 -I${MKLROOT}/include"
 fi
 
-export GOMA_LIBS=`readlink --canonicalize ${GOMA_LIB}`
 rm -rf ../build
 mkdir -p ../build
 cd ../build
