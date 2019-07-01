@@ -1320,26 +1320,26 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
   else
     {
       if (Debug_Flag && ProcID == 0) {
-	fprintf(stderr,"MaxTimeSteps: %d \tTimeMax: %f\n",MaxTimeSteps,TimeMax);
+        fprintf(stderr,"MaxTimeSteps: %d \tTimeMax: %f\n",tran->MaxTimeSteps,tran->TimeMax);
 	fprintf(stderr,"solving transient problem\n");
       }
     
     /*
      *  Transfer information from the Transient_Information structure to local variables
      */
-    Delta_t0     = tran->Delta_t0;
-    Delta_t_min  = tran->Delta_t_min;
-    Delta_t_max  = tran->Delta_t_max;
-    MaxTimeSteps = tran->MaxTimeSteps;
-    TimeMax      = tran->TimeMax;
+    double delta_t0     = tran->Delta_t0;
+    double delta_t_min  = tran->Delta_t_min;
+    double delta_t_max  = tran->Delta_t_max;
+    double max_time_steps = tran->MaxTimeSteps;
+    double time_max      = tran->TimeMax;
     eps          = tran->eps;
 #ifndef COUPLED_FILL
     exp_subcycle = tran->exp_subcycle;
 #endif /* not COUPLED_FILL */   
 
     // Determine if we are using a constant time step or not
-    if (Delta_t0 < 0.0 ) {
-      Delta_t0	    = -Delta_t0;
+    if (delta_t0 < 0.0 ) {
+      delta_t0	    = -delta_t0;
       const_delta_t = 1;
     }  else {
       const_delta_t = 0;
@@ -1374,9 +1374,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
     time   = time1 = tran->init_time; /* Allow non-zero initial time */
     tran->time_value = tran->time_value_old = time1;
-    tran->delta_t_old = Delta_t0;
-    if (Delta_t0 > Delta_t_max) Delta_t0 = Delta_t_max;
-    delta_t = delta_t_old = delta_t_older = Delta_t0;
+    tran->delta_t_old = delta_t0;
+    if (delta_t0 > delta_t_max) delta_t0 = delta_t_max;
+    delta_t = delta_t_old = delta_t_older = delta_t0;
     tran->delta_t = delta_t;    /*Load this up for use in load_fv_mesh_derivs */
     tran->delta_t_avg = delta_t;    
 
@@ -1583,7 +1583,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
      *  TOP OF THE TIME STEP LOOP -> Loop over time steps whether
      *                               they be successful or not
      *******************************************************************/
-    for (n = 0; n < MaxTimeSteps; n++)
+    for (n = 0; n < max_time_steps; n++)
       {
       /*
        * Calculate the absolute time for the current step, time1
@@ -1592,9 +1592,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 #ifdef LIBRARY_MODE
       delta_t_save = delta_t;
 #endif
-      if (time1 > TimeMax) { 
+      if (time1 > time_max) {
 	DPRINTF(stderr, "\t\tLAST TIME STEP!\n"); 
-	time1 = TimeMax;
+        time1 = time_max;
 	delta_t = time1 - time;
 	tran->delta_t = delta_t;
 	tran->delta_t_avg = 0.25*(delta_t+delta_t_old+delta_t_older
@@ -2474,9 +2474,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
           delta_t_new = delta_t;
           failed_recently_countdown--;
 	  } 
-       else if (delta_t_new > Delta_t_max) 
+       else if (delta_t_new > delta_t_max)
           {
-	  delta_t_new = Delta_t_max;
+          delta_t_new = delta_t_max;
           } 
        else if ( delta_t_new < tran->resolved_delta_t_min ) 
           {
@@ -2563,7 +2563,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      }
 	   }
 
-	if (time1 >= (ROUND_TO_ONE * TimeMax)) i_print = 1;
+        if (time1 >= (ROUND_TO_ONE * time_max)) i_print = 1;
 
 	/* Dump out user specified information to separate file.
 	 */
@@ -2779,7 +2779,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
                       discard_previous_time_step(numProcUnknowns, x, x_old,x_older,
                                       x_oldest, xdot,xdot_old,xdot_older);
                       last_renorm_nt = nt;
-                      if ( delta_t_new > fabs(Delta_t0) )
+                      if ( delta_t_new > fabs(delta_t0) )
                               delta_t_new *= tran->time_step_decelerator;
                         }
 
@@ -2810,7 +2810,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 					/* like a restart */
 					discard_previous_time_step(numProcUnknowns, x, x_old,x_older,x_oldest, xdot,xdot_old,xdot_older);
 					last_renorm_nt = nt;
-					if ( delta_t_new > fabs(Delta_t0) ) delta_t_new *= tran->time_step_decelerator;
+                                        if ( delta_t_new > fabs(delta_t0) ) delta_t_new *= tran->time_step_decelerator;
 				}
 
 					break;
@@ -2858,7 +2858,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 			discard_previous_time_step(numProcUnknowns, x, x_old,x_older,
 						   x_oldest, xdot,xdot_old,xdot_older);
 			last_renorm_nt = nt;
-			if ( delta_t_new > fabs(Delta_t0) ) 
+                        if ( delta_t_new > fabs(delta_t0) )
 			  delta_t_new *= tran->time_step_decelerator;
 		      }
 		    break;
@@ -3057,7 +3057,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
      }
 #endif
 
-	if (time1 >= (ROUND_TO_ONE * TimeMax))  
+        if (time1 >= (ROUND_TO_ONE * time_max))
           {
 	  DPRINTF(stderr,"\t\tout of time!\n");
      	  if (Anneal_Mesh)
@@ -3197,8 +3197,8 @@ fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_
 #endif /* not COUPLED_FILL */
       }
       
-      if (delta_t <= Delta_t_min) {
-	DPRINTF(stderr,"\n\tdelta_t = %e < %e\n\n",delta_t, Delta_t_min);
+      if (delta_t <= delta_t_min) {
+        DPRINTF(stderr,"\n\tdelta_t = %e < %e\n\n",delta_t, delta_t_min);
 	
 	DPRINTF(stderr,"time step too small, I'm giving up!\n");
 	break;
