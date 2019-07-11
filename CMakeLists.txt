@@ -36,6 +36,7 @@ cmake_policy(VERSION 2.8)
 enable_language(Fortran)
 
 ### This tells goma where to compile to, and the prefix of every variable
+project(goma)
 set(PROJECT_NAME goma)
 include(${CMAKE_SOURCE_DIR}/cmake/CMakeScripts.cmake)
 
@@ -44,6 +45,8 @@ option(${PROJECT_NAME}_CXX11_STD "Unless you have an older compiler, or you used
 option(${PROJECT_NAME}_Create_Run_Script "This will create rungoma, a script which runs goma with all nessisary settings" ON)
 
 
+set(${PROJECT_NAME}_C_STD "-std=gnu99" CACHE STRING "Change flag for the C std")
+set(${PROJECT_NAME}_EXTRA_C_FLAGS "${${PROJECT_NAME}_EXTRA_C_FLAGS} ${${PROJECT_NAME}_C_STD}")
 if(${PROJECT_NAME}_CXX11_STD)
   set(${PROJECT_NAME}_EXTRA_CXX_FLAGS "${${PROJECT_NAME}_EXTRA_CXX_FLAGS} -std=c++11")
 endif()
