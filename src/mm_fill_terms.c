@@ -11137,7 +11137,7 @@ load_fv_mesh_derivs(int okToZero)
   int wim;                      /* Number of components in the velocity vector */
   int dimNonSym;                /* # of dimensions that don't have symmetry */
   int dim;                      /* # dimensions in the physical mesh */
-  int siz;
+  unsigned int siz;
   int mode;                     /* modal counter */
   int transient_run, discontinuous_porous_media;
  

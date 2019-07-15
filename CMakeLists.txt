@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 3.10)
 cmake_policy(VERSION 3.10)
 
+project(goma)
+
 enable_language(C)
 enable_language(CXX)
 enable_language(Fortran)
