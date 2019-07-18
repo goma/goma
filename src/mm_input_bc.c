@@ -172,9 +172,6 @@ rd_bc_specs(FILE *ifp,
 
   struct Rotation_Specs *rot;
 
-#ifdef USE_CGM
-  PlaneHandle* planeHdl;
-#endif
 
   /*
    * Initialize...
@@ -461,6 +458,21 @@ rd_bc_specs(FILE *ifp,
 	case SHELL_TFMP_NUM_DIFF_BC:
 	  break;
 
+	  /* Fall through for all cases which requires a single integer value
+	   * as data input
+	   */
+        case MOVING_PLANE_ETCH_BC:
+
+	  if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1)
+            {
+	      sr = sprintf(err_msg, "%s: Expected 1 int for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+            }
+	  SPF(endofstring(echo_string), " %d", BC_Types[ibc].BC_Data_Int[0]);
+
+	  break;
+
 	  /* Fall through for all cases which require a single floating point
 	   * value as data input and one additional optional parameter
 	   */
@@ -492,6 +504,7 @@ rd_bc_specs(FILE *ifp,
 	case FLOW_PRESSURE_VAR_BC:
         case FLOW_STRESSNOBC_BC:
         case FLOW_GRADV_BC:
+	case FLOW_GRADV_SIC_BC:
 	case FILL_INLET_BC:
         case FILL_CA_BC:
 	case SHARP_CA_2D_BC:
@@ -504,6 +517,8 @@ rd_bc_specs(FILE *ifp,
         case LS_W_BC:
         case LS_Q_BC:
         case LS_FLOW_PRESSURE_BC:
+	case LS_CAP_HYSING_BC:
+	case LS_CAP_DENNER_DIFF_BC:
  	case SH_FLUID_STRESS_BC:
 	case SH_LUBP_SOLID_BC:
 	case SH_LUBP_SOLID_RS_BC:
@@ -701,6 +716,7 @@ rd_bc_specs(FILE *ifp,
 	case INTP_BC:
 	case INTM_BC:
 	case INTD_BC:
+	case RESTIME_BC:
 	case API_BC:
         case SH_USER_BC:
         case SH_LUBP_BC:
@@ -714,6 +730,18 @@ rd_bc_specs(FILE *ifp,
         case SHELL_OPEN_PRESS_2_BC:
         case SH_GAMMA1_BC:
 	case SHELL_TFMP_PRES_BC:
+	case EM_E1R_BC:
+	case EM_E1I_BC:
+	case EM_E2R_BC:
+	case EM_E2I_BC:
+	case EM_E3R_BC:
+	case EM_E3I_BC:
+	case EM_H1R_BC:
+	case EM_H1I_BC:
+	case EM_H2R_BC:
+	case EM_H2I_BC:
+	case EM_H3R_BC:
+	case EM_H3I_BC:
   
 	    if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1) {
 	      sprintf(err_msg, "%s: Expected 1 flt for %s.",
@@ -781,6 +809,21 @@ rd_bc_specs(FILE *ifp,
 
           break;
 
+	  /* Fall through for all cases which requires two integer values
+	   * as data input
+	   */
+        case YFLUX_ETCH_BC:
+
+	  if (fscanf(ifp, "%d %d", &BC_Types[ibc].BC_Data_Int[0],
+                                   &BC_Types[ibc].BC_Data_Int[1]) != 2)
+            {
+	      sr = sprintf(err_msg, "%s: Expected 2 int for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+            }
+	  SPF(endofstring(echo_string), " %d %d", BC_Types[ibc].BC_Data_Int[0], BC_Types[ibc].BC_Data_Int[1]);
+          BC_Types[ibc].species_eq = BC_Types[ibc].BC_Data_Int[0];
+	  break;
 
 	  /* 
 	   * Fall through for all cases which require three floating point
@@ -788,9 +831,8 @@ rd_bc_specs(FILE *ifp,
 	   */
 	case LS_ADC_OLD_BC:
 	case LS_ADC_BC:
-	
-		srand( (long ) ut() );  /* Seed the random number generator  when LS_ADC is used */
-	
+	  srand( (long ) ut() );  /* Seed the random number generator  when LS_ADC is used */
+          /* fall through */
 	case FORCE_BC: 
 	case FORCE_SIC_BC: 
 	case FORCE_RS_BC: 
@@ -956,23 +998,7 @@ rd_bc_specs(FILE *ifp,
 	   * (CGM) entities
 	   */
         case SM_PLANE_BC:           /* Solid Model PLANE BC */
-	  if ( fscanf(ifp, "%lf %lf %lf %lf",
-		      &BC_Types[ibc].BC_Data_Float[0],
-		      &BC_Types[ibc].BC_Data_Float[1],
-		      &BC_Types[ibc].BC_Data_Float[2],
-		      &BC_Types[ibc].BC_Data_Float[3]) != 4)
-	    {
-	      sr = sprintf(err_msg, "%s: Expected 4 flts for %s.",
-			   yo, BC_Types[ibc].desc->name1);
-	      EH(-1, err_msg);
-	    }
-	  
-#ifdef USE_CGM
-	  BC_Types[ibc].cgm_plane_handle = NULL;
-#endif
-          BC_Types[ibc].max_DFlt = 4;
-	  SPF_DBL_VEC(endofstring(echo_string), 4,  BC_Types[ibc].BC_Data_Float);
-
+	  EH(-1, "CGM not supported, SM_PLANE_BC");
           break;
 
 	/*
@@ -2789,51 +2815,6 @@ rd_bc_specs(FILE *ifp,
 
          break;
 	  
-#ifdef USE_CGM
-	case MESH_CONSTRAINT_BC:
-
-	  /* Read the CGM topology to use for the mesh constraint (SM_EDGE, for example). */
-	  if ( fscanf(ifp, "%80s", input ) != 1 )
-	    {
-	      sr = SPF(err_msg, "Cannot find CGM bounding topolgy for %s on %sID=%d.\n",
-		       BC_Types[ibc].desc->name1, BC_Types[ibc].Set_Type, BC_Types[ibc].BC_ID);
-	      EH(-1, err_msg);
-	    }
-	  
-	  strip(input);
-	  stringup(input);
-
-	  SPF(endofstring(echo_string)," %s", input);
-	  
-	  /* Right now we expect to find SM_EDGE only. */
-	  if(!strcmp(input, "SM_EDGE"))
- 	    {
-	      if(fscanf(ifp, "%80s", input) != 1)
-		{
-		  sr = SPF(err_msg, "Could not find edge name for %s on %sID=%d\n",
-			   BC_Types[ibc].desc->name1, BC_Types[ibc].Set_Type,
-			   BC_Types[ibc].BC_ID);
-		  EH(-1, err_msg);
-		}
-	      else
-		{
-		  strip(input);
-		  strcpy(BC_Types[ibc].cgm_edge_name, input);
-		  BC_Types[ibc].cgm_edge_handle = NULL;
-
-		  SPF(endofstring(echo_string)," %s",BC_Types[ibc].cgm_edge_name);
-		}
-	    }
-	  else
-	    {
-	      sr = SPF(err_msg, "Unknown bounding topology %s for %s on %sID=%d.\n",
-			   input, BC_Types[ibc].desc->name1, BC_Types[ibc].Set_Type,
-			   BC_Types[ibc].BC_ID);
-	      EH(-1, err_msg);
-	    }
-
-	  break;
-#endif
 
 	  /*
 	   * Fall through for all cases which require two ( string and integer )

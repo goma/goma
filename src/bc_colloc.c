@@ -36,9 +36,6 @@
 #define _BC_COLLOC_C
 #include "goma.h"
 
-#ifdef USE_CGM
-#include "gm_cgm_c_interface.h"
-#endif
 
 
 /*******************************************************************************/
@@ -384,18 +381,6 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 		f_roll_fluid(ielem_dim, &func, d_func, 
 		       BC_Types[bc_input_id].u_BC,BC_Types[bc_input_id].len_u_BC, xsurf);
 		break;
-#ifdef USE_CGM
-	    case SM_PLANE_BC:       /* Solid Model PLANE BC */
-	      /* I took out the plane generation at the BC level.  It
-		 has been delayed.  The intention is that it will be
-		 created on it's first call, and then just referred to 
-		 thereafter. MMH */
-	      /* 	      sm_fplane (ielem_dim, &func, d_func, */
-	      /* 			 BC_Types[bc_input_id].CGM_plane_handle); */
-	      EH(-1, "CGM::bc_colloc.c:320 not implemented yet");
-	      
-	      break;
-#endif
 	    case MOVING_PLANE_BC:
 	    {
 	      double t = time_intermediate;
@@ -409,6 +394,11 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	      if (af->Assemble_LSA_Mass_Matrix)
 		  EH(-1, "LSA is not currently compatible with MOVING_PLANE_BC");
 	    }
+	    break;
+
+	    case MOVING_PLANE_ETCH_BC:
+	      fmesh_etch_bc (&func, d_func,
+		      BC_Types[bc_input_id].BC_Data_Int[0], id, x_dot, theta, delta_t);
 	    break;
 
 	    case MESH_CONSTRAINT_BC:
@@ -1190,17 +1180,6 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac, dthick_dV,dthick_dP);
 } /* END of routine f_roll_fluid                                                   */
 /*****************************************************************************/
 
-#ifdef USE_CGM
-void 
-sm_fplane (int ielem_dim,
-           double *func,
-           double d_func[], /* dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
-           PlaneHandle *pHdl)	    /*  Handle to a CGM  Plane object   */
-{    
-  EH(-1,"CGM bc_colloc.c:643 not implemented yet");
-  return;
-} /* END of routine sm_fplane                                                */
-#endif
 
 /*****************************************************************************/
 
@@ -1258,9 +1237,11 @@ int i;
 	pre_factor = 6.*qflow/(gap*gap*gap);
         switch (pd->CoordinateSystem) {
           case CARTESIAN:
+          case CARTESIAN_2pt5D:
 	       pre_factor = 6.*qflow/(gap*gap*gap);
                break;
           case CYLINDRICAL:
+          case SWIRLING:
                switch (velo_condition) {
                   case U_PARABOLA_BC:
                       if(coord1 <= DBL_SMALL)
@@ -1305,6 +1286,7 @@ int i;
 
        switch (pd->CoordinateSystem) {
           case CARTESIAN:
+          case CARTESIAN_2pt5D:
                switch (velo_condition) {
                   case U_PARABOLA_BC:
                       *func = pre_factor*(fv->x[1]-coord1)*(coord2-fv->x[1]);
@@ -1330,7 +1312,9 @@ int i;
                   default:
                       *func =0.; 
                   }
+               break;
           case CYLINDRICAL:
+          case SWIRLING:
                switch (velo_condition) {
                   case U_PARABOLA_BC:
                       if(coord1 <= DBL_SMALL)
@@ -1364,7 +1348,6 @@ int i;
                   default:
                       *func =0.; 
                   }
-
                break;
           }
      }
@@ -1376,6 +1359,7 @@ int i;
             {pl_index = p[3];}
        switch (pd->CoordinateSystem) {
           case CARTESIAN:
+          case CARTESIAN_2pt5D:
                expon = 1.+1./pl_index;
 	       pre_factor = (2.*pl_index+1.)/(pl_index +1.)*qflow/pow(gap,expon+1.);
                switch (velo_condition) {
@@ -1406,7 +1390,9 @@ int i;
                   default:
                       *func =0.; 
                   }
+               break;
           case CYLINDRICAL:
+          case SWIRLING:
                expon = 1.+1./pl_index;
                switch (velo_condition) {
                   case U_PARABOLA_BC:
@@ -1776,316 +1762,7 @@ fmesh_constraint(double *func,
 		 double d_func[],
 		 const int bc_input_id)
 {
-#ifdef USE_CGM
-  char err_msg[MAX_CHAR_ERR_MSG];
-  EdgeHandle *edgeHandle;
-  double coordinates[DIM];
-  double tangent_vector[DIM];
-  double distance;
-  double xmb, ymb, tx, ty;
-  double dddx, dddy, xval, yval;
-  double denom;
-  int print_stuff;
-  int y_is_func, case_val;
-
-  if(af->Assemble_LSA_Mass_Matrix)
-    return;
-
-  if(ei->ielem == 45 || ei->ielem == 38)
-    print_stuff = 1;
-  print_stuff = 0;
-
-  edgeHandle = BC_Types[bc_input_id].cgm_edge_handle;
-  /* On first call, edgeHandle will purposely be NULL. */
-  if(edgeHandle == NULL)
-    {
-      if(cgm_get_edge_by_name(BC_Types[bc_input_id].cgm_edge_name,
-			      &(BC_Types[bc_input_id].cgm_edge_handle)))
-	{
-	  sprintf(err_msg, "Did not find edge named \"%s\" for MESH_CONSTRAINT BC.",
-		  BC_Types[bc_input_id].cgm_edge_name);
-	  EH(-1, err_msg);
-	}
-      edgeHandle = BC_Types[bc_input_id].cgm_edge_handle;
-    }
-  
-  /* Not mine to uncomment
-  for(i=0;i<=600;i++)
-    {
-      tx = -5.0 + ((double)i/600.0)*30.0;
-      ty = 0.0;
-      cgm_edge_get_closest_point_trimmed(edgeHandle,
-					 tx,
-					 ty,
-					 0.0,
-					 &coordinates[0],
-					 &coordinates[1],
-					 &coordinates[2],
-					 tangent_vector,
-					 &distance);
-      fprintf(stderr, "% 16.9g % 16.9g % 16.9g % 16.9g\n", coordinates[0], coordinates[1], tangent_vector[0], tangent_vector[1]);
-    }
-  for(i=0;i<=100;i++)
-    {
-      tx = 25.0-((double)i/100.0)*10.0;
-      ty = ((double)i/100.0)*10.0;
-      cgm_edge_get_closest_point_trimmed(edgeHandle,
-					 tx,
-					 ty,
-					 0.0,
-					 &coordinates[0],
-					 &coordinates[1],
-					 &coordinates[2],
-					 tangent_vector,
-					 &distance);
-      fprintf(stderr, "% 16.9g % 16.9g % 16.9g % 16.9g\n", coordinates[0], coordinates[1], tangent_vector[0], tangent_vector[1]);
-    }
-  for(i=0;i<=100;i++)
-    {
-      tx = 20.0-((double)i/100.0)*10.0;
-      ty = ((double)i/100.0)*10.0;
-      cgm_edge_get_closest_point_trimmed(edgeHandle,
-					 tx,
-					 ty,
-					 0.0,
-					 &coordinates[0],
-					 &coordinates[1],
-					 &coordinates[2],
-					 tangent_vector,
-					 &distance);
-      fprintf(stderr, "% 16.9g % 16.9g % 16.9g % 16.9g\n", coordinates[0], coordinates[1], tangent_vector[0], tangent_vector[1]);
-    }
-  exit(-1);
-  */ /* end of not mine to uncomment */
-
-  cgm_edge_get_closest_point_trimmed(edgeHandle,
-				     fv->x[0],
-				     fv->x[1],
-				     0.0,
-				     &coordinates[0],
-				     &coordinates[1],
-				     &coordinates[2],
-				     tangent_vector,
-				     &distance);
-
-  xmb = fv->x[0] - coordinates[0];
-  ymb = fv->x[1] - coordinates[1];
-  tx = tangent_vector[0];
-  ty = tangent_vector[1];
-  xval = coordinates[0];
-  yval = coordinates[1];
-
-  if(print_stuff)
-    {
-      fprintf(stderr, "x_m = (% 16.9g, % 16.9g), x_b = (% 16.9g, % 16.9g), d = % 16.9g.\n",
-	      fv->x[0], fv->x[1], coordinates[0], coordinates[1], distance);
-      fprintf(stderr, "\t->d = (% 16.9g, % 16.9g)\n",
-	      fv->d[0], fv->d[1]);
-      fprintf(stderr, "\ttx = % 16.9g, ty = % 16.9g\n", tx, ty);
-      fprintf(stderr, "\txmb = % 16.9g, ymb = % 16.9g\n", xmb, ymb);
-    }
-  
-  case_val = 4;			/* 4 seems to be the best. */
-  switch(case_val)
-    {
-      case 1:			/* Split Dirichlet, only tangent */
-      y_is_func = sqrt(2.0)*fabs(tx) > 1;
-      *func = y_is_func ? -ymb : -xmb;
-      if(af->Assemble_Jacobian)
-	{
-	  if(y_is_func)
-	    {
-	      if(print_stuff) fprintf(stderr, "\ty=f(x)\n");
-	      d_func[MESH_DISPLACEMENT1] = ty/tx;
-	      d_func[MESH_DISPLACEMENT2] = -1.0;
-	    }
-	  else
-	    {
-	      if(print_stuff) fprintf(stderr, "\tx=g(y)\n");
-	      d_func[MESH_DISPLACEMENT1] = -1.0;
-	      d_func[MESH_DISPLACEMENT2] = tx/ty;
-	    }
-	}
-      break;
-
-      case 2: case 3:		/* Split Dirichlet, fixed and variable finite difference */
-      y_is_func = sqrt(2.0)*fabs(tx) > 1;
-      *func = y_is_func ? -ymb : -xmb;
-      if(af->Assemble_Jacobian)
-	{
-	  if(case_val == 2)
-	    denom = 1.0e-7;
-	  else
-	    denom = 1.0e-2 * distance;
-	  cgm_edge_get_closest_point_trimmed(edgeHandle,
-					     fv->x[0] + denom,
-					     fv->x[1],
-					     0.0,
-					     &coordinates[0],
-					     &coordinates[1],
-					     &coordinates[2],
-					     tangent_vector,
-					     &distance);
-	  if(y_is_func)
-	    {
-	      if(print_stuff) fprintf(stderr, "\ty=f(x)\n");
-	      if(denom != 0.0)
-		dddx = (coordinates[1] - yval)/denom;
-	      else
-		dddx = 1.0;	/* anything...  */
-	    }
-	  else
-	    {
-	      if(print_stuff) fprintf(stderr, "\tx=g(y)\n");
-	      dddx = -1.0;
-	    }
-	  d_func[MESH_DISPLACEMENT1] = dddx;
-
-	  cgm_edge_get_closest_point_trimmed(edgeHandle,
-					     fv->x[0],
-					     fv->x[1] + denom,
-					     0.0,
-					     &coordinates[0],
-					     &coordinates[1],
-					     &coordinates[2],
-					     tangent_vector,
-					     &distance);
-	  if(y_is_func)
-	    dddy = -1.0;
-	  else
-	    if(denom != 0.0)
-	      dddy = (coordinates[0] - xval)/denom;
-	    else
-	      dddy = 1.0;	/* anything...  */
-	  d_func[MESH_DISPLACEMENT2] = dddy;
-	}
-      break;
-
-    case 4:			/* n . (xmb,ymb) = 0, tangent only  */
-      *func = ty * xmb - tx * ymb;
-      if(af->Assemble_Jacobian)
-	{
-	  d_func[MESH_DISPLACEMENT1] = ty;
-	  d_func[MESH_DISPLACEMENT2] = -tx;
-	}
-      break;
-
-      case 5: case 6:		/* n . (xmb, ymb) = 0, fixed and variable finite difference */
-      *func = ty * xmb - tx * ymb;
-      if(af->Assemble_Jacobian)
-	{
-	  if(case_val == 6)
-	    denom = 1.0e-2 * distance;
-	  else
-	    denom = 1.0e-7;
-	  cgm_edge_get_closest_point_trimmed(edgeHandle,
-					     fv->x[0] + denom,
-					     fv->x[1],
-					     0.0,
-					     &coordinates[0],
-					     &coordinates[1],
-					     &coordinates[2],
-					     tangent_vector,
-					     &distance);
-	  if(denom != 0.0)
-	    dddx = ((tangent_vector[1] * (fv->x[0] + denom - coordinates[0]) 
-		     - tangent_vector[0] * (fv->x[1] - coordinates[1])) - *func) / denom;
-	  else
-	    dddx = 1.0;		/* anything...  */
-
-	  cgm_edge_get_closest_point_trimmed(edgeHandle,
-					     fv->x[0],
-					     fv->x[1] + denom,
-					     0.0,
-					     &coordinates[0],
-					     &coordinates[1],
-					     &coordinates[2],
-					     tangent_vector,
-					     &distance);
-	  if(denom != 0.0)
-	    dddy = ((tangent_vector[1] * (fv->x[0] - coordinates[0]) 
-		     - tangent_vector[0] * (fv->x[1] + denom - coordinates[1])) - *func) / denom;
-	  else
-	    dddy = 1.0;		/* anything...  */
-	  d_func[MESH_DISPLACEMENT1] = dddx;
-	  d_func[MESH_DISPLACEMENT2] = dddy;
-	}
-      break;
-
-    case 7:			/* distance = 0, tangent only  */
-      *func = distance;
-      if(af->Assemble_Jacobian)
-	{
-	  if(distance != 0.0)
-	    {
-	      d_func[MESH_DISPLACEMENT1] = (xmb * (1.0 - tx * tx) - ymb * tx * ty) / distance;
-	      d_func[MESH_DISPLACEMENT2] = (ymb * (1.0 - ty * ty) - xmb * tx * ty) / distance;
-	    }
-	  else
-	    d_func[MESH_DISPLACEMENT1] = d_func[MESH_DISPLACEMENT2] = 0.0; /* keep them zero. */
-	}
-      break;
-
-    case 8: case 9:		/* distance = 0, fixed and variable finite difference  */
-      *func = distance;
-      if(af->Assemble_Jacobian)
-	{
-	  if(case_val == 8)
-	    denom = 1.0e-7;
-	  else
-	    denom = 1.0e-2 * distance;
-
-	  cgm_edge_get_closest_point_trimmed(edgeHandle,
-					     fv->x[0] + denom,
-					     fv->x[1],
-					     0.0,
-					     &coordinates[0],
-					     &coordinates[1],
-					     &coordinates[2],
-					     tangent_vector,
-					     &dddx);
-	  dddx -= distance;
-	  if(distance != 0.0)
-	    dddx /= denom;
-	  else
-	    dddx = 0.0;
-	  d_func[MESH_DISPLACEMENT1] = dddx;
-
-	  cgm_edge_get_closest_point_trimmed(edgeHandle,
-					     fv->x[0],
-					     fv->x[1] + denom,
-					     0.0,
-					     &coordinates[0],
-					     &coordinates[1],
-					     &coordinates[2],
-					     tangent_vector,
-					     &dddy);
-	  dddy -= distance;
-	  if(distance != 0.0)
-	    dddy /= denom;
-	  else
-	    dddy = 0.0;
-	  d_func[MESH_DISPLACEMENT2] = dddy;
-	}
-      break;
-
-    case 10:			/* distance^2 = 0, tangent only  */
-      *func = distance * distance;
-      if(af->Assemble_Jacobian)
-	{
-	  d_func[MESH_DISPLACEMENT1] = 2.0 * (xmb * (1.0 - tx * tx) - ymb * tx * ty);
-	  d_func[MESH_DISPLACEMENT2] = 2.0 * (ymb * (1.0 - ty * ty) - xmb * tx * ty);
-	}
-      break;
-    }
-
-  if(print_stuff)
-    fprintf(stderr, "\t*func = % 16.9g, d/dx = % 16.9g, d/dy = % 16.9g\n",
-	    *func, d_func[MESH_DISPLACEMENT1], d_func[MESH_DISPLACEMENT2]);
-  return;
-#else
-  EH(-1, "Sorry, I wasn't compiled with the CGM so I couldn't possibly figure out how to do this.\nZai Jian!");  
-#endif
+  EH(-1, "CGM not supported, MESH_CONSTRAINT_BC");
 /*#endif  */
 
 } /* END of routine fmesh_constraint                                   */
@@ -2414,6 +2091,11 @@ load_variable (double *x_var,        /* variable value */
       var = LIGHT_INTD;
       *d_x_var = 1.;
       break;
+    case RESTIME:
+      *x_var = fv->restime;
+      var = RESTIME;
+      *d_x_var = 1.;
+      break;  
     case MASS_FRACTION:
       *x_var = fv->c[wspec];
       var = MASS_FRACTION;
@@ -2921,7 +2603,9 @@ load_variable (double *x_var,        /* variable value */
       for(b=0 ; b<pd->Num_Dim ; b++)	{
           *x_var += SQUARE(fv->v[b]);
           }
-      if(pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      if(pd->CoordinateSystem == SWIRLING || 
+         pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+         pd->CoordinateSystem == CARTESIAN_2pt5D)
           { *x_var += SQUARE(fv->v[pd->Num_Dim]);  }
       *x_var = sqrt(*x_var);
       var = VELOCITY1;
@@ -2929,7 +2613,9 @@ load_variable (double *x_var,        /* variable value */
       for(b=0 ; b<pd->Num_Dim ; b++)	{
           d_vect_var[b] += fv->v[b]*(*d_x_var);
           }
-      if(pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      if(pd->CoordinateSystem == SWIRLING || 
+         pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+         pd->CoordinateSystem == CARTESIAN_2pt5D)
           { d_vect_var[pd->Num_Dim] += fv->v[pd->Num_Dim]*(*d_x_var);  }
       break;
 
@@ -3613,6 +3299,7 @@ apply_table_bc( double *func,
     case PRESSURE:
       *func = fv->P - interp_val;
       d_func[var] = 1.0;
+      break;
     case POLYMER_STRESS11:
       *func = fv->S[0][0][0] - interp_val;
       d_func[var] = 1.0;

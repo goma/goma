@@ -254,10 +254,11 @@ rd_particle_specs(FILE *ifp, char *input)
 
   if(look_for_optional(ifp, "Restart file", input, '=') == 1)
     {
-      if(!fgets(s_tmp, MAX_PARTICLE_FILENAME_LENGTH, ifp))
+      char file_name_temp[MAX_PARTICLE_FILENAME_LENGTH];
+      if(!fgets(file_name_temp, MAX_PARTICLE_FILENAME_LENGTH, ifp))
 	EH(-1, "Error reading Restart file card.");
-      strip(s_tmp);
-      strncpy(Particle_Restart_Filename, s_tmp, strlen(s_tmp) - 1);
+      strip(file_name_temp);
+      strncpy(Particle_Restart_Filename, file_name_temp, MAX_PARTICLE_FILENAME_LENGTH);
       printf("Restart file = %s\n", Particle_Restart_Filename);
     }
   else
@@ -387,18 +388,7 @@ rd_particle_specs(FILE *ifp, char *input)
 	}
       else if(!strncmp(s_tmp, "ACIS", 4))
 	{
-#ifdef USE_CGM
-	  Particle_Creation_Domain = ACIS_OBJECT;
-	  if(fscanf(ifp, "%s", Particle_Creation_Domain_Filename) != 1)
-	    EH(-1, "Error reading filename on Particle creation domain card.");
-	  if(fscanf(ifp, "%s", Particle_Creation_Domain_Name) != 1)
-	    EH(-1, "Error reading geometry name on Particle creation domain card.");
-	  printf("Setting Particle_Creation_Domain = ACIS,\n");
-	  printf("        Particle_Creation_Domain_Filename = %s,\n", Particle_Creation_Domain_Filename);
-	  printf("        Particle_Creation_Domain_Name = %s\n", Particle_Creation_Domain_Name);
-#else
-	  EH(-1, "Need the CGM library to use ACIS for Particle creation domain card.");
-#endif
+	  EH(-1, "CGM not supported, ACIS");
 	}
       else
 	{
@@ -429,18 +419,7 @@ rd_particle_specs(FILE *ifp, char *input)
 	}
       else if(!strncmp(s_tmp, "ACIS", 4))
 	{
-#ifdef USE_CGM
-	  Particle_Move_Domain = ACIS_OBJECT;
-	  if(fscanf(ifp, "%s", Particle_Move_Domain_Filename) != 1)
-	    EH(-1, "Error reading filename on Particle move domain card.");
-	  if(fscanf(ifp, "%s", Particle_Move_Domain_Name) != 1)
-	    EH(-1, "Error reading geometry name on Particle move domain card.");
-	  printf("Setting Particle_Move_Domain = ACIS,\n");
-	  printf("        Particle_Move_Domain_Filename = %s,\n", Particle_Move_Domain_Filename);
-	  printf("        Particle_Move_Domain_Name = %s\n", Particle_Move_Domain_Name);
-#else
 	  EH(-1, "Need the CGM library to use ACIS for Particle creation domain card.");
-#endif
 	}
       else
 	{
@@ -459,12 +438,13 @@ rd_particle_specs(FILE *ifp, char *input)
    * will be ignored here. */
   if(look_for_optional(ifp, "Full output stride", input, '=') == 1)
     {
+      char file_name_temp[MAX_PARTICLE_FILENAME_LENGTH];
       if(fscanf(ifp, "%d", &Particle_Full_Output_Stride) != 1)
 	EH(-1, "Problem reading Full output stride card.");
-      if(!fgets(s_tmp, MAX_PARTICLE_FILENAME_LENGTH, ifp))
+      if(!fgets(file_name_temp, MAX_PARTICLE_FILENAME_LENGTH, ifp))
 	EH(-1, "Problem reading Full output stride card.");
-      strip(s_tmp);
-      strncpy(Particle_Full_Output_Filename, s_tmp, strlen(s_tmp) - 1);
+      strip(file_name_temp);
+      strncpy(Particle_Full_Output_Filename, file_name_temp, MAX_PARTICLE_FILENAME_LENGTH);
       printf("Setting full output every %d steps to file %s\n", Particle_Full_Output_Stride, Particle_Full_Output_Filename);
     }
   else
@@ -512,7 +492,7 @@ rd_particle_specs(FILE *ifp, char *input)
       
       if(!fgets(s_tmp, SLEN-1, ifp))
 	EH(-1, "Error reading sample variables and filename.");
-      strncpy(s_tmp_save, s_tmp, SLEN-1);
+      strncpy(s_tmp_save, s_tmp, SLEN);
       Particle_Number_Output_Variables[i] = 0;
 
       s_ptr1 = strtok(s_tmp, " \t\n");

@@ -96,6 +96,9 @@ height_function_model (double *H_U,
  double H_dot, H_init, H_delta, H_low, x_0, Length, r;
  double R, origin[3], dir_angle[3], t, axis_pt[3], dist, cos_denom;
 
+ dH_L_dX[0] = 0.0;
+ dH_L_dX[1] = 0.0;
+ dH_L_dX[2] = 0.0;
 
  if(pd->TimeIntegration == STEADY) time = 0.;
 
@@ -399,7 +402,21 @@ height_function_model (double *H_U,
      *dH_U_dp = 0.;
      *dH_U_ddh = 1.0;
    }
+ else if(mp->HeightUFunctionModel == TABLE) {
+   struct Data_Table *table_local;
+   table_local = MP_Tables[mp->heightU_function_constants_tableid];
 
+
+   if ( !strcmp(table_local->t_name[0], "LINEAR_TIME") ) {
+     dbl time_local[1];
+     time_local[0] = time;
+
+     *H_U = interpolate_table( table_local, time_local, dH_U_dtime, NULL);
+     dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.0;
+
+
+   }
+ }
  else
    {
      EH(-1,"Not a supported height-function model");
@@ -1523,5 +1540,3 @@ void dynamic_contact_angle_model(
   return;
 }
 /*** END OF dynamic_contact_angle_model ***/
-
-/* END of file mm_std_models_shell.c */

@@ -113,6 +113,12 @@ setup_pd()
 	EH(-1, "Achtung!  You cannot combine the PROJECTED_CARTESIAN coordinate system with a 3D mesh.");
       VIM = 3;
     }
+  else if(CoordinateSystem == CARTESIAN_2pt5D)
+    {
+      if(pd_glob[0]->Num_Dim == 3)
+	EH(-1, "Whoa!  3D mesh for 2-1/2D Calculation.");
+      VIM = 3;
+    }
   else
     {
       VIM = Num_Dim;
@@ -423,6 +429,19 @@ setup_pd()
 		  (ce == R_LIGHT_INTP)   ||
 		  (ce == R_LIGHT_INTM)   ||
 		  (ce == R_LIGHT_INTD)   ||
+		  (ce == R_RESTIME)   ||  
+		  (ce == R_EM_E1_REAL)  ||
+		  (ce == R_EM_E2_REAL)  ||
+		  (ce == R_EM_E3_REAL)  ||
+		  (ce == R_EM_E1_IMAG)  ||
+		  (ce == R_EM_E2_IMAG)  ||
+		  (ce == R_EM_E3_IMAG)  ||
+		  (ce == R_EM_H1_REAL)  ||
+		  (ce == R_EM_H2_REAL)  ||
+		  (ce == R_EM_H3_REAL)  ||
+		  (ce == R_EM_H1_IMAG)  ||
+		  (ce == R_EM_H2_IMAG)  ||
+		  (ce == R_EM_H3_IMAG)  ||
 		  (ce == R_SHELL_FILMP) ||
                   (ce == R_SHELL_FILMH) ||
                   (ce == R_SHELL_PARTC) || 

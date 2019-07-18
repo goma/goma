@@ -209,17 +209,21 @@ if [ "$ASKED_USER_ANYTHING" == "true" ]; then
     confirm Goma dependency script
 fi
 
+HDF5_VERSION="1.10.5"
+HDF5_MD5="7c19d6b81ee2a3ba7d36f6922b2f90d3"
+NETCDF_VERSION="c-4.6.3"
+NETCDF_MD5="ef0b4d24f2c5a2a424c769cbb91fa45f"
 
 ARCHIVE_NAMES=("arpack96.tar.gz" \
 "patch.tar.gz" \
-"hdf5-1.8.20.tar.gz" \
-"netcdf-4.4.1.1.tar.gz" \
+"hdf5-${HDF5_VERSION}.tar.gz" \
+"netcdf-${NETCDF_VERSION}.tar.gz" \
 "parmetis-4.0.3.tar.gz" \
 "sparse.tar.gz" \
 "superlu_dist-5.1.3.tar.gz" \
 "y12m.tar.gz" \
 "Trilinos-trilinos-release-12-12-1.tar.gz" \
-"MUMPS_5.1.1.tar.gz" \
+"MUMPS_5.1.2.tar.gz" \
 "SuiteSparse-4.5.5.tar.gz" \
 "matio-1.5.10.tar.gz")
 
@@ -227,27 +231,27 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 #meaning each y12m tar has a unique MD5SUM.
 ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "14830d758f195f272b8594a493501fa2" \
-"7f2d3fd67106968eb45d133f5a22150f" \
-"503a2d6b6035d116ed53b1d80c811bda" \
+"${HDF5_MD5}" \
+"${NETCDF_MD5}" \
 "f69c479586bf6bb7aff6a9bc0c739628" \
 "1566d914d1035ac17b73fe9bc0eed02a" \
 "fdee368cba0e95cb0143b6d47915e7a1" \
 "SKIP" \
 "ecd4606fa332212433c98bf950a69cc7" \
-"f15c6b5dd8c71b1241004cd19818259d" \
+"6ac4f52380ce4d74126be2d7c530e533" \
 "0a5b38af0016f009409a9606d2f1b555" \
 "d3b6e9d24a04c56036ef57e8010c80f1")
 
 ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
-"https://support.hdfgroup.org/ftp/HDF5/current18/src/hdf5-1.8.20.tar.gz" \
-"ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-4.4.1.1.tar.gz" \
+"https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.bz2" \
+"ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-${NETCDF_VERSION}.tar.gz" \
 "http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz" \
 "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
 "http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v5.1.3" \
 "http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz\\&filename=y12m%2Fy12m.f" \
 "https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz" \
-"http://mumps.enseeiht.fr/MUMPS_5.1.1.tar.gz" \
+"http://mumps.enseeiht.fr/MUMPS_5.1.2.tar.gz" \
 "http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.5.5.tar.gz" \
 "http://superb-dca2.dl.sourceforge.net/project/matio/matio/1.5.10/matio-1.5.10.tar.gz")
 
@@ -255,14 +259,14 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 # When in reality it isn't
 ARCHIVE_DIR_NAMES=("ARPACK" \
 "FAKE_DIR_FOR_ARPACK_PATCH" \
-"hdf5-1.8.20" \
-"netcdf-4.4.1.1" \
+"hdf5-${HDF5_VERSION}" \
+"netcdf-${NETCDF_VERSION}" \
 "parmetis-4.0.3" \
 "sparse" \
 "superlu_dist-5.1.3" \
 "y12m" \
 "Trilinos-trilinos-release-12-12-1" \
-"MUMPS_5.1.1" \
+"MUMPS_5.1.2" \
 "SuiteSparse" \
 "matio-1.5.10")
 
@@ -589,7 +593,56 @@ export OWNER
 export MPI_BASE_DIR
 export MAKE_JOBS
 
-
+read -d '' MUMPS_GCC_8_PATCH << "EOF"
+--- ../../tars/MUMPS_5.1.2/src/dtype3_root.F	2017-10-02 01:37:23.000000000 -0600
++++ dtype3_root.F	2019-02-25 13:21:00.729147069 -0700
+@@ -805,8 +805,8 @@
+       END SUBROUTINE DMUMPS_INIT_ROOT_ANA
+       SUBROUTINE DMUMPS_INIT_ROOT_FAC( N, root, FILS, IROOT,
+      &                                 KEEP, INFO )
++      USE DMUMPS_STRUC_DEF
+       IMPLICIT NONE
+-      INCLUDE 'dmumps_root.h'
+       TYPE ( DMUMPS_ROOT_STRUC ):: root
+       INTEGER N, IROOT, INFO(40), KEEP(500)
+       INTEGER FILS( N )
+--- ../../tars/MUMPS_5.1.2/src/ctype3_root.F	2017-10-02 01:37:24.000000000 -0600
++++ ctype3_root.F	2019-02-25 13:20:42.136928144 -0700
+@@ -805,8 +805,8 @@
+       END SUBROUTINE CMUMPS_INIT_ROOT_ANA
+       SUBROUTINE CMUMPS_INIT_ROOT_FAC( N, root, FILS, IROOT,
+      &                                 KEEP, INFO )
++      USE DMUMPS_STRUC_DEF
+       IMPLICIT NONE
+-      INCLUDE 'cmumps_root.h'
+       TYPE ( CMUMPS_ROOT_STRUC ):: root
+       INTEGER N, IROOT, INFO(40), KEEP(500)
+       INTEGER FILS( N )
+--- ../../tars/MUMPS_5.1.2/src/ztype3_root.F	2017-10-02 01:37:25.000000000 -0600
++++ ztype3_root.F	2019-02-25 13:21:54.169776465 -0700
+@@ -805,8 +805,8 @@
+       END SUBROUTINE ZMUMPS_INIT_ROOT_ANA
+       SUBROUTINE ZMUMPS_INIT_ROOT_FAC( N, root, FILS, IROOT,
+      &                                 KEEP, INFO )
++      USE DMUMPS_STRUC_DEF
+       IMPLICIT NONE
+-      INCLUDE 'zmumps_root.h'
+       TYPE ( ZMUMPS_ROOT_STRUC ):: root
+       INTEGER N, IROOT, INFO(40), KEEP(500)
+       INTEGER FILS( N )
+--- ../../tars/MUMPS_5.1.2/src/stype3_root.F	2017-10-02 01:37:23.000000000 -0600
++++ stype3_root.F	2019-02-25 13:21:36.213564965 -0700
+@@ -805,8 +805,8 @@
+       END SUBROUTINE SMUMPS_INIT_ROOT_ANA
+       SUBROUTINE SMUMPS_INIT_ROOT_FAC( N, root, FILS, IROOT,
+      &                                 KEEP, INFO )
++      USE DMUMPS_STRUC_DEF
+       IMPLICIT NONE
+-      INCLUDE 'smumps_root.h'
+       TYPE ( SMUMPS_ROOT_STRUC ):: root
+       INTEGER N, IROOT, INFO(40), KEEP(500)
+       INTEGER FILS( N )
+EOF
 
 read -d '' MUMPS_PATCH << "EOF"
 5a6,8
@@ -638,22 +691,6 @@ read -d '' MUMPS_PATCH << "EOF"
 ---
 > LIBBLAS = -L$(BLAS_LIBRARY_DIR) $(BLAS_LIBRARY_NAME_ARG)
 EOF
-
-read -d '' NETCDF_PATCH << "EOF"
-229c229
-< #define NC_MAX_DIMS	1024
----
-> #define NC_MAX_DIMS	65536
-231c231
-< #define NC_MAX_VARS	8192
----
-> #define NC_MAX_VARS	524288
-233c233
-< #define NC_MAX_VAR_DIMS	1024 /**< max per variable dimensions */
----
-> #define NC_MAX_VAR_DIMS	8 /**< max per variable dimensions */
-EOF
-
 
 read -d '' BLAS_PATCH << "EOF"
 18c18
@@ -829,7 +866,7 @@ for i in ${ARCHIVE_NAMES[@]}; do
     echo "Check for $i at ${ARCHIVE_URLS[count]}"
     if ! [ -f $i ]
     then
-        wget ${ARCHIVE_URLS[count]} -O $i
+        wget "${ARCHIVE_URLS[count]}" -O $i
         mychecksum $i $count
     else
         mychecksum $i $count
@@ -848,7 +885,6 @@ for i in ${ARCHIVE_NAMES[@]}; do
     cd tars
 done
 
-#continue_check
 export CXX=${SYSTEM_CXX}
 
 if [ "$build_cmake" == "false" ] ; then
@@ -884,30 +920,27 @@ else
     echo "Using custom mpi: $mpi"
 fi
 
-#continue_check
-
 cd $GOMA_LIB
 
 #hdf5
-if [ -e hdf5-1.8.20/lib/libhdf5.a ]
+if [ -e hdf5-${HDF5_VERSION}/lib/libhdf5.a ]
 then
     echo "hdf5 already built"
 else
-    if ! [ -e hdf5-1.8.20/.goma-extracted ]
+    if ! [ -e hdf5-${HDF5_VERSION}/.goma-extracted ]
     then
-	mv hdf5-1.8.20 tmpdir
-	mkdir hdf5-1.8.20
-	mv tmpdir hdf5-1.8.20/src
-	touch hdf5-1.8.20/.goma-extracted
+	mv hdf5-${HDF5_VERSION} tmpdir
+	mkdir hdf5-${HDF5_VERSION}
+	mv tmpdir hdf5-${HDF5_VERSION}/src
+	touch hdf5-${HDF5_VERSION}/.goma-extracted
     fi
 
-    cd hdf5-1.8.20/src
-    CC="$MPI_C_COMPILER" CPP="$MPI_C_COMPILER -E" AR=${ARCHIVER} ./configure --enable-shared=off --prefix=$GOMA_LIB/hdf5-1.8.20 --enable-parallel
+    cd hdf5-${HDF5_VERSION}/src
+    CC="$MPI_C_COMPILER" CPP="$MPI_C_COMPILER -E" AR=${ARCHIVER} ./configure --enable-shared=off --prefix=$GOMA_LIB/hdf5-${HDF5_VERSION} --enable-parallel
     make -j$MAKE_JOBS
     make install
     cd ../..
 fi
-#continue_check
 cd $GOMA_LIB
 
 #matio
@@ -915,7 +948,7 @@ if [ -e matio-1.5.10/lib/libmatio.a ]
 then
     echo "matio already built"
 else
-    if ! [ -e matio-1.5.10/.goma-extracted]
+    if ! [ -e matio-1.5.10/.goma-extracted ]
     then
 	mv matio-1.5.10 tmpdir
 	mkdir matio-1.5.10
@@ -923,42 +956,37 @@ else
 	touch matio-1.5.10/.goma-extracted
     fi
     cd matio-1.5.10/src
-    CC=${MPI_C_COMPILER} LD=${MPI_CXX_COMPILER} AR=${ARCHIVER} LIBS="-ldl" ./configure --with-hdf5=${GOMA_LIB}/hdf5-1.8.20 --prefix=${GOMA_LIB}/matio-1.5.10 --enable-shared=off
+    CC=${MPI_C_COMPILER} LD=${MPI_CXX_COMPILER} AR=${ARCHIVER} LIBS="-ldl" ./configure --with-hdf5=${GOMA_LIB}/hdf5-${HDF5_VERSION} --prefix=${GOMA_LIB}/matio-1.5.10 --enable-shared=off
     make -j$MAKE_JOBS
     make install
 fi
 cd $GOMA_LIB
 
-#continue_check
+echo $PWD
 
 #netcdf
-if [ -e netcdf-4.4.1.1/lib/libnetcdf.a ]
+if [ -e netcdf-${NETCDF_VERSION}/lib/libnetcdf.a ]
 then
     echo "netcdf already built"
 else
-    if ! [ -e netcdf-4.4.1.1/.goma-extracted ]
+    if ! [ -e netcdf-${NETCDF_VERSION}/.goma-extracted ]
     then
-	mv netcdf-4.4.1.1 tmpdir
-	mkdir netcdf-4.4.1.1
-	mv tmpdir netcdf-4.4.1.1/src
-	touch netcdf-4.4.1.1/.goma-extracted
+	mv netcdf-${NETCDF_VERSION} tmpdir
+	mkdir netcdf-${NETCDF_VERSION}
+	mv tmpdir netcdf-${NETCDF_VERSION}/src
+	touch netcdf-${NETCDF_VERSION}/.goma-extracted
     fi
-    cd $GOMA_LIB/netcdf-4.4.1.1/src
-    cd include
-    echo "$NETCDF_PATCH" > netcdf.patch
-    patch -f --ignore-whitespace netcdf.h < netcdf.patch
-    cd ..
-    export CPPFLAGS=-I$GOMA_LIB/hdf5-1.8.20/include
-#    export LDFLAGS=-L$GOMA_LIB/hdf5-1.8.20/lib
+    cd $GOMA_LIB/netcdf-${NETCDF_VERSION}/src
+    export CPPFLAGS=-I$GOMA_LIB/hdf5-${HDF5_VERSION}/include
     echo $CPPFLAGS
     echo $LDFLAGS
 
-    CC=${MPI_C_COMPILER} CFLAGS="-I${GOMA_LIB}/hdf5-1.8.20/include" \
+    CC=${MPI_C_COMPILER} CFLAGS="-I${GOMA_LIB}/hdf5-${HDF5_VERSION}/include" \
       CPP="${MPI_C_COMPILER} -E" \
-      CPPFLAGS="-I${GOMA_LIB}/hdf5-1.8.20/include" \
-      LDFLAGS="-L${GOMA_LIB}/hdf5-1.8.20/lib" \
+      CPPFLAGS="-I${GOMA_LIB}/hdf5-${HDF5_VERSION}/include" \
+      LDFLAGS="-L${GOMA_LIB}/hdf5-${HDF5_VERSION}/lib" \
       ./configure \
-      --prefix=$GOMA_LIB/netcdf-4.4.1.1 \
+      --prefix=$GOMA_LIB/netcdf-${NETCDF_VERSION} \
       --enable-shared=off \
       --disable-dap
 
@@ -966,8 +994,6 @@ else
     make install
     cd ../..
 fi
-
-#continue_check
 
  #make BLAS
 if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
@@ -985,7 +1011,6 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     rm -f "$GOMA_LIB/._BLAS-3.7.1"
     export LD_LIBRARY_PATH="${GOMA_LIB}/BLAS-3.7.1:$LD_LIBRARY_PATH"
 fi
-#continue_check
 
 #parmetis patch
 read -d '' PARMETIS_PATCH << "EOF"
@@ -1166,7 +1191,6 @@ EOF
     patch SuiteSparse_config.mk < SuiteSparse_config.patch
     cd ..
     echo ${MPI_C_COMPILER}
-#    continue_check
     if [ -z "${BLAS_FLAGS}" ]; then
         make static AUTOCC="no" CC="${MPI_C_COMPILER}" \
              CXX="${MPI_CXX_COMPILER}" \
@@ -1244,11 +1268,22 @@ EOF
 fi
 
 # make mumps
-cd $GOMA_LIB/MUMPS_5.1.1
+cd $GOMA_LIB/MUMPS_5.1.2
 if [ -e lib/libdmumps.a ]
 then
     echo "MUMPS already built"
 else
+
+    if [[ "$CC_NAME" == "gnu" ]]; then
+        GCC_VERSION=$(gcc -dumpversion)
+        if [[ "$GCC_VERSION" = $(echo -e "$GCC_VERSION\n8\n" | sort -V |tail -n1) ]]; then
+            echo "GCC 8 or higher found"
+            echo "$MUMPS_GCC_8_PATCH" > makepatch.inc
+            cd src
+            patch -p0 < ../makepatch.inc
+            cd $GOMA_LIB/MUMPS_5.1.2
+        fi
+    fi
     cat > Makefile.inc <<EOF
 # Begin orderings
 #LSCOTCHDIR = /usr/lib
@@ -1303,9 +1338,9 @@ LIBOTHERS =
 CDEFS   = -DAdd_
 
 #Begin Optimized options
-OPTF    = -O  -DALLOW_NON_INIT
-OPTL    = -O
-OPTC    = -O
+OPTF    = -O2  -DALLOW_NON_INIT
+OPTL    = -O2
+OPTC    = -O2
 #End Optimized options
 INCS = \$(INCPAR)
 LIBS = \$(LIBPAR)
@@ -1317,7 +1352,6 @@ EOF
         #TODO: Find if CC_NAME or MATH_LIBRARIES affects this
         echo -e $("$MUMPS_MAKE_PATCH") > examples/Makefile.patch
         patch -f examples/Makefile < examples/Makefile.patch
-        #continue_check
     fi
     make -j$MAKE_JOBS
 fi
@@ -1331,7 +1365,7 @@ rm -f CMakeCache.txt
 
 MPI_LIBS="-lmpi ${MPI_FORTRAN_LIB}"
 
-HDF5_LIBS="-L${GOMA_LIB}/hdf5-1.8.20/lib -lhdf5_hl -lhdf5 -lz -ldl"
+HDF5_LIBS="-L${GOMA_LIB}/hdf5-${HDF5_VERSION}/lib -lhdf5_hl -lhdf5 -lz -ldl"
 # Install directory
 TRILINOS_INSTALL=$GOMA_LIB/trilinos-12.12.1-Built
 
@@ -1373,9 +1407,9 @@ else
 -D Trilinos_ENABLE_TESTS:BOOL=ON \
 -D Trilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON \
 -D Trilinos_ENABLE_SECONDARY_STABLE_CODE:BOOL=ON \
-      -D Netcdf_LIBRARY_DIRS:PATH="$GOMA_LIB/netcdf-4.4.1.1/lib" \
+      -D Netcdf_LIBRARY_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/lib" \
       -D TPL_ENABLE_Netcdf:BOOL=ON \
-      -D TPL_Netcdf_INCLUDE_DIRS:PATH="$GOMA_LIB/netcdf-4.4.1.1/include" \
+      -D TPL_Netcdf_INCLUDE_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/include" \
       -D Matio_LIBRARY_DIRS:PATH=$GOMA_LIB/matio-1.5.10/lib \
       -D Matio_INCLUDE_DIRS:PATH=$GOMA_LIB/matio-1.5.10/include \
 -D TPL_ENABLE_MPI:BOOL=ON \
@@ -1415,8 +1449,8 @@ else
   -D y12m_LIBRARY_DIRS:PATH=$GOMA_LIB/y12m \
 -D TPL_ENABLE_MUMPS:BOOL=ON \
   -D MUMPS_LIBRARY_NAMES:STRING="dmumps;mumps_common;pord;$BLACS_LIBRARY_NAME" \
-  -D MUMPS_LIBRARY_DIRS:PATH="$GOMA_LIB/MUMPS_5.1.1/lib;$GOMA_LIB/MUMPS_5.1.1/PORD/lib;$SCALAPACK_LIBRARY_DIR" \
-  -D MUMPS_INCLUDE_DIRS:PATH="$GOMA_LIB/MUMPS_5.1.1/include;$GOMA_LIB/MUMPS_5.1.1/PORD/include" \
+  -D MUMPS_LIBRARY_DIRS:PATH="$GOMA_LIB/MUMPS_5.1.2/lib;$GOMA_LIB/MUMPS_5.1.2/PORD/lib;$SCALAPACK_LIBRARY_DIR" \
+  -D MUMPS_INCLUDE_DIRS:PATH="$GOMA_LIB/MUMPS_5.1.2/include;$GOMA_LIB/MUMPS_5.1.2/PORD/include" \
   -D CMAKE_CXX_FLAGS:STRING="-DMUMPS_5_0 $BLAS_FLAGS $COMPILER_FLAG_MPI" \
   -D Amesos_ENABLE_SCALAPACK:BOOL=ON \
   -D SCALAPACK_INCLUDE_DIRS:FILEPATH="${SCALAPACK_INCLUDE_DIR}" \
@@ -1435,7 +1469,6 @@ else
 $EXTRA_ARGS \
 $GOMA_LIB/Trilinos-trilinos-release-12-12-1
 
-#    continue_check
     make -j$MAKE_JOBS
     make install
 fi

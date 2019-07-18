@@ -1969,13 +1969,13 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
   mom_rotate_ss    = (int *)realloc(mom_rotate_ss, num_mom_rotate * sizeof(int));
   }
 
-if( mesh_rotate_node >0 || mom_rotate_node > 0 )
+if( mesh_rotate_node != NULL || mom_rotate_node != NULL )
   {
 	int ebi=0;
 	
 		while( !Use_2D_Rotation_Vectors && ebi < exo->num_elem_blocks )
 		{
-			Use_2D_Rotation_Vectors = ( exo->eb_elem_itype[ebi] == LINEAR_TRI );		
+			Use_2D_Rotation_Vectors = ( exo->eb_elem_itype[ebi] == LINEAR_TRI || exo->eb_elem_itype[ebi] == QUAD_TRI);
 
 			ebi++;	
 		}

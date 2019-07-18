@@ -25,6 +25,7 @@ static char rcsid[] =
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h> /* strcasecmp and strncasecmp moved here for POSIX.1 */
 #include <math.h>
 
 /* GOMA include files */
@@ -55,6 +56,7 @@ static char rcsid[] =
 #include "mm_as.h"
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
+#include "mm_qtensor_model.h"
 
 #include "mm_eh.h"
 #include "mm_more_utils.h"
@@ -138,6 +140,8 @@ int DARCY_VELOCITY_LIQ = -1;    /* Darcy velocity vectors for flow in a
 				 * saturated or unsaturated medium */
 int DENSITY = -1;	       	/* density function at vertex and midside 
 				 * nodes, e.g. for particle settling etc. */
+
+int HEAVISIDE = -1;
 int DIELECTROPHORETIC_FIELD = -1;
                                 /* Dielectrophoretic force vectors. */
 int DIELECTROPHORETIC_FIELD_NORM = -1;
@@ -268,7 +272,15 @@ int TFMP_LIQ_VELO = -1;
 int TFMP_INV_PECLET = -1;
 int TFMP_KRG    = -1;
 int LOG_CONF_MAP = -1;
-
+int VELO_SPEED = -1;
+int GIES_CRIT = -1;
+int J_FLUX = -1;
+int EIG = -1;
+int EIG1 = -1;
+int EIG2 = -1;
+int EIG3 = -1;
+int GRAD_SH = -1;
+int GRAD_Y = -1;
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -518,7 +530,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   double dTT_dcur_strain[MAX_PDIM][MAX_PDIM][MDE];
 
   /*  double elast_modulus;	*/
-  double speed, stream_grad;
+  double speed, stream_grad, velo_sqrd;
   double vconv[MAX_PDIM]; /*Calculated convection velocity */
   double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
@@ -804,22 +816,51 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[DENSITY] = 1.;
   }
 
-
   if (MEAN_SHEAR != -1 && pd->e[R_MOMENTUM1] ){
-    for (a = 0; a < dim; a++) {       
-      for (b = 0; b < dim; b++) {
-	Dsh[a][b] = 0.5 * (fv->grad_v[a][b] + fv->grad_v[b][a]);
+    for (a = 0; a < VIM; a++) {       
+      for (b = 0; b < VIM; b++) {
+	Dsh[a][b] = (fv->grad_v[a][b] + fv->grad_v[b][a]);
       }
     }
     /* find second invariant of strain-rate */
     Dnn = 0.0;
-    for (a = 0; a < dim; a++) {
-      for (b = 0; b < dim; b++) {
-	Dnn += 0.5 * (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+	Dnn += (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
       }
     }
-    local_post[MEAN_SHEAR] = 4. * pow(fabs(Dnn), 0.5);
+    local_post[MEAN_SHEAR] = sqrt(2.*fabs(Dnn));
     local_lumped[MEAN_SHEAR] = 1.;
+  }
+
+  if (GIES_CRIT != -1 && pd->e[R_MOMENTUM1] ){
+    dbl Dvt[DIM][DIM], Domega;
+    for (a = 0; a < VIM; a++) {       
+      for (b = 0; b < VIM; b++) {
+	Dsh[a][b] = 0.5 * (fv->grad_v[a][b] + fv->grad_v[b][a]);
+	Dvt[a][b] = 0.5 * (fv->grad_v[a][b] - fv->grad_v[b][a]);
+      }
+    }
+    /* find second invariant of strain-rate */
+    Dnn = 0.0; Domega = 0.0;
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+	Dnn += 0.5 * (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
+	Domega += 0.5 * (Dvt[a][b] * Dvt[a][b] - Dvt[a][a] * Dvt[b][b]);
+      }
+    }
+    local_post[GIES_CRIT] = (sqrt(fabs(Dnn))-sqrt(fabs(Domega)))/
+			(DBL_SMALL+sqrt(fabs(Dnn))+sqrt(fabs(Domega)));
+    local_lumped[GIES_CRIT] = 1.;
+  }
+
+  if (VELO_SPEED != -1 && pd->e[R_MOMENTUM1] ){
+    velo_sqrd = 0.;
+    for (a = 0; a < VIM; a++) {       
+	velo_sqrd += SQUARE(fv->v[a]);
+        }
+    local_post[VELO_SPEED] = sqrt(velo_sqrd);
+    local_lumped[VELO_SPEED] = 1.;
   }
 
   if (PRESSURE_CONT != -1 && (pd->v[PRESSURE] || pd->v[TFMP_PRES]) &&
@@ -1796,8 +1837,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
     //if (TFMP_GAS_VELO != -1) {
     //if ( Krd != 0.0 && mag_gradII_S >= 1.e-10 ) {
-    if ( Krl != 0.0 && mag_gradII_P != 0.0) {
-      local_post[TFMP_INV_PECLET] = (D*Krd*mag_gradII_S)/(Krl*h*h*h/12.0/mu_l*mag_gradII_P);
+    if ( Krd != 0.0 && mag_gradII_S != 0.0) {
+      local_post[TFMP_INV_PECLET] = (Krl*h*h*h/12.0/mu_l*mag_gradII_P)/(D*Krd*mag_gradII_S);
     } else {
       local_post[TFMP_INV_PECLET] = 0.0;
     }
@@ -1858,6 +1899,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
        */
     if (pd->CoordinateSystem == SWIRLING ||
 	pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	pd->CoordinateSystem == CARTESIAN_2pt5D ||
 	dim == 3) {
       for (j = 0; j < VIM; j++) {
 	local_post[CURL_V + j] = fv->curl_v[j];
@@ -2458,12 +2500,10 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   if ( (SH_TANG != -1) && pd->e[R_SHELL_NORMAL1] && pd->e[R_SHELL_NORMAL2]
       && pd->e[R_SHELL_NORMAL3] && pd->e[R_MESH1] ) {
 
-     dbl t0[DIM];
-     dbl t1[DIM];
+    dbl t0[DIM];
+    dbl t1[DIM];
 
-     shell_tangents(t0, t1, NULL, NULL);
-
-//     shell_tangents_seeded(t0, t1, NULL, NULL);
+    shell_tangents(t0, t1, NULL, NULL, NULL, NULL);
 
     /* Post tangents and curvatures */
 
@@ -2582,6 +2622,120 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     } // Loop over modes
   }
 
+  if (HEAVISIDE != -1) {
+    load_lsi(ls->Length_Scale);
+
+    local_post[HEAVISIDE] = lsi->H;
+    local_lumped[HEAVISIDE] = 1.;
+  }
+
+  /*if (cr->MassFluxModel == DM_SUSPENSION_BALANCE ) {
+    index = 0;
+    int w = 0;
+    for (a = 0; a < dim; a++)
+      {
+	hs[a] = 0.;
+      }
+    
+    err = get_continuous_species_terms(&s_terms, time, theta, delta_t, hs);
+    for (a=0; a < dim; a++)
+      {
+	local_post[J_FLUX + index] = s_terms.diff_flux[w][a];
+	local_lumped[J_FLUX + index] = 1.;
+	index++;
+      }
+      }*/
+  
+  if (GRAD_SH != -1 && pd->v[SHEAR_RATE]) {
+    index = 0;
+    for (a=0; a < dim; a++)
+      {
+	local_post[GRAD_SH + index] = fv->grad_SH[a];
+	local_lumped[GRAD_SH + index] = 1.;
+	index++;
+      }
+  }
+
+  if (GRAD_Y != -1 && pd->v[MASS_FRACTION]) {
+    index = 0;
+    for (a=0; a < dim; a++)
+      {
+	local_post[GRAD_Y + index] = fv->grad_c[0][a];
+	local_lumped[GRAD_Y + index] = 1.;
+	index++;
+      }
+  }
+
+  if ( EIG1 != -1 ) {
+    index = 0;
+    dbl v1[DIM];
+    dbl v2[DIM], v3[DIM];
+    dbl e1 = 0., e2 = 0., e3 = 0.;
+    dbl gamma_dot[DIM][DIM], eigen[3];
+    dbl v_bias[DIM], vy_bias[DIM], vort_bias[DIM];
+    
+    memset(v1, 0, DIM*sizeof(dbl));
+    memset(v2, 0, DIM*sizeof(dbl));
+    memset(v3, 0, DIM*sizeof(dbl));
+    memset(v_bias, 0, DIM*sizeof(dbl));
+    memset(vort_bias, 0, DIM*sizeof(dbl));
+    memset(vy_bias, 0, DIM*sizeof(dbl));
+    memset(gamma_dot, 0, DIM*DIM*sizeof(dbl));
+    
+    for (a=0; a < dim; a++)
+      {
+	for (b=0; b < dim; b++)
+	  {
+	    gamma_dot[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	  }
+      }
+    
+    find_eigenvalues_eigenvectors( gamma_dot, &e1, &e2, &e3, v1, v2, v3 );
+    eigen[0] = e1;
+    eigen[1] = e2;
+    eigen[2] = e3;
+
+    v_bias[0] = 1.;
+    vy_bias[1] = 1.;
+    vort_bias[2] = 1.;
+
+    bias_eigenvector_to(v1, v_bias);
+    bias_eigenvector_to(v2, vy_bias);
+    bias_eigenvector_to(v3, vort_bias);
+   
+    for ( a = 0; a < DIM; a++)
+      {
+	local_post[EIG + index] = eigen[a];
+	local_lumped[EIG + index] = 1.;
+	index++;
+      }
+
+    index = 0;
+    for ( a = 0; a < DIM; a++)
+      {
+	local_post[EIG1 + index] = v1[a];
+	local_lumped[EIG1 + index] = 1.;
+	index++;
+      }
+
+    index = 0;
+    for ( a = 0; a < DIM; a++)
+      {
+	local_post[EIG2 + index] = v2[a];
+	local_lumped[EIG2 + index] = 1.;
+	index++;
+      }
+
+    index = 0;
+    for ( a = 0; a < DIM; a++)
+      {
+	local_post[EIG3 + index] = v3[a];
+	local_lumped[EIG3 + index] = 1.;
+	index++;
+      }
+  }
+
+  
   if (USER_POST != -1) {
       /* calculate a user-specified post-processing variable */
       
@@ -2604,7 +2758,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   eqn = pd->ProjectionVar;  
   det_J = bf[eqn]->detJ;
 
-  if ( ielem_type == BILINEAR_SHELL || ielem_type == BIQUAD_SHELL || ielem_type == BILINEAR_TRISHELL ) {
+  if ( ielem_type == BILINEAR_SHELL || ielem_type == BIQUAD_SHELL || ielem_type == BILINEAR_TRISHELL ||
+       ielem_type == P0_SHELL || ielem_type == P1_SHELL) {
     int *n_dof = NULL;
     int dof_map[MDE];
     n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
@@ -6304,7 +6459,8 @@ calc_stream_fcn(double x[],				/* soln vector */
    }
  }
 
- if (pd->CoordinateSystem == CARTESIAN) {
+ if (pd->CoordinateSystem == CARTESIAN || 
+     pd->CoordinateSystem == CARTESIAN_2pt5D) {
    if (pd_glob[0]->i[R_MOMENTUM1] == I_Q1) {
      WH(-1, "Stream function with Q1 mapping may not be accurate ");
 
@@ -6660,7 +6816,17 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Error ZZ heat flux", &ERROR_ZZ_Q);
   iread = look_for_post_proc(ifp, "Error ZZ pressure", &ERROR_ZZ_P);
   iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &LOG_CONF_MAP);
+  iread = look_for_post_proc(ifp, "Velocity Magnitude", &VELO_SPEED);
+  iread = look_for_post_proc(ifp, "Giesekus Criterion", &GIES_CRIT);
+  iread = look_for_post_proc(ifp, "Particle stress flux", &J_FLUX);
+  iread = look_for_post_proc(ifp, "Eigenvalues", &EIG);
+  iread = look_for_post_proc(ifp, "Eigenvector1", &EIG1);
+  iread = look_for_post_proc(ifp, "Eigenvector2", &EIG2);
+  iread = look_for_post_proc(ifp, "Eigenvector3", &EIG3);
+  iread = look_for_post_proc(ifp, "Shear gradient", &GRAD_SH);
+  iread = look_for_post_proc(ifp, "Concentration gradient", &GRAD_Y);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
+  iread = look_for_post_proc(ifp, "Heaviside", &HEAVISIDE);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -7280,8 +7446,10 @@ rd_post_process_specs(FILE *ifp,
 			  break;
 			case 5:
 			  EH(-1,"sensitivities to UF not done");
+			  break;
 			case 6:
 			  EH(-1,"sensitivities to AN not done");
+			  break;
 			}
 		      if(id1 == pp_fluxes_sens[i]->sens_id &&
 			 id2 == pp_fluxes_sens[i]->sens_flt &&
@@ -7742,8 +7910,10 @@ rd_post_process_specs(FILE *ifp,
 			  break;
 			case 5:
 			  EH(-1,"sensitivities to UF not done");
+			  break;
 			case 6:
 			  EH(-1,"sensitivities to AN not done");
+			  break;
 			}
 		      if(id1 == pp_data_sens[i]->sens_id &&
 			 id2 == pp_data_sens[i]->sens_flt &&
@@ -8596,6 +8766,42 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
   else
     {
       MEAN_SHEAR = -1;
+    }
+
+   if (GIES_CRIT != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "GIES","[1]", "Giesekus Criterion",
+		   FALSE);
+       index++;
+       if (GIES_CRIT == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       GIES_CRIT = index_post;
+       index_post++;
+    }
+  else
+    {
+      GIES_CRIT = -1;
+    }
+
+   if (VELO_SPEED != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "VELO_SPEED","[1]", "Velocity Magnitude",
+		   FALSE);
+       index++;
+       if (VELO_SPEED == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       VELO_SPEED = index_post;
+       index_post++;
+    }
+  else
+    {
+      VELO_SPEED = -1;
     }
 
    check = 0;
@@ -9474,6 +9680,136 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       LOG_CONF_MAP = -1;
     }
 
+    /*if (J_FLUX != -1)
+    {
+      J_FLUX = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "J1","[1]",
+                  "particle flux x", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "J2","[1]",
+                  "particle flux y", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "J3","[1]",
+                  "particle flux z", FALSE);
+      index++;
+      index_post++;
+      }*/
+    
+   if (GRAD_SH != -1)
+    {
+      GRAD_SH = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_SH0","[1]",
+                  "Shear gradient x", FALSE);
+      index++;
+      index_post++;
+      
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_SH1","[1]",
+                  "Shear gradient y", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_SH2","[1]",
+                  "Shear gradient z", FALSE);
+      index++;
+      index_post++;
+    }
+
+   if (GRAD_Y != -1)
+    {
+      GRAD_Y = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_Y0","[1]",
+                  "Concentration gradient x", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_Y1","[1]",
+                  "Concentration gradient y", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_Y2","[1]",
+                  "Concentration gradient z", FALSE);
+      index++;
+      index_post++;
+    }
+
+  if (EIG != -1)
+    {
+      EIG = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN0","[1]",
+                  "First eigenvalue", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN1","[1]",
+                  "Second eigenvalue", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN2","[1]",
+                  "Third eigenvalue", FALSE);
+      index++;
+      index_post++;
+    }
+
+   if (EIG1 != -1)
+    {
+      EIG1 = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN0_0","[1]",
+                  "First eigenvector x", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN0_1","[1]",
+                   "First eigenvector y", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN0_2","[1]",
+                  "First eigenvector z", FALSE);
+      index++;
+      index_post++;
+    }
+
+   if (EIG2 != -1)
+    {
+      EIG2 = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN1_0","[1]",
+                  "Second eigenvector x", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN1_1","[1]",
+                   "Second eigenvector y", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN1_2","[1]",
+                  "Second eigenvector z", FALSE);
+      index++;
+      index_post++;
+    }
+   
+   if (EIG3 != -1)
+    {
+      EIG3 = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN2_0","[1]",
+                  "Third eigenvector x", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN2_1","[1]",
+                   "Third eigenvector y", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN2_2","[1]",
+                  "Third eigenvector z", FALSE);
+      index++;
+      index_post++;
+    }
+    
+
+    
   /*
    * Porous flow post-processing setup section
    */
@@ -9726,6 +10062,7 @@ index_post, index_post_export);
      {
        if(pd->CoordinateSystem == SWIRLING ||
 	  pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	  pd->CoordinateSystem == CARTESIAN_2pt5D ||
 	  Num_Dim == 3)
 	 {
            if (CURL_V == 2)
@@ -9769,6 +10106,25 @@ index_post, index_post_export);
     {
       CURL_V = -1;
     }
+
+  if (HEAVISIDE != -1 && (Num_Var_In_Type[R_MOMENTUM1] || check ))
+    {
+      set_nv_tkud(rd, index, 0, 0, -2, "HEAVISIDE","[1]",
+		  "Heaviside level set", FALSE);
+      index++;
+      if (HEAVISIDE == 2)
+	{
+	  Export_XP_ID[index_post_export] = index_post;
+	  index_post_export++;
+	}
+      HEAVISIDE = index_post;
+      index_post++;
+    }
+  else
+    {
+      HEAVISIDE = -1;
+    }
+
 
   if (USER_POST != -1)
     {
@@ -10365,7 +10721,7 @@ index_post, index_post_export);
         }
       TFMP_INV_PECLET = index_post;
       sprintf(nm, "TFMP_INV_PECLET");
-      sprintf(ds, "TFMP Local Peclet Number");
+      sprintf(ds, "TFMP Inverted Local Peclet Number");
       set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
       index++;
       index_post++;

@@ -550,6 +550,19 @@ modify_fv_mesh_derivs_for_LSA_3D_of_2D(void)
 	}
     }
 
+  v = RESTIME;
+  if (pd->v[v])
+    {
+      for (b=0; b<dim; b++)
+	{
+	  for (j=0; j<mdof; j++)
+	    {
+	      fv->d_grad_restime_dmesh[p][b][j] =
+		  - fv->grad_restime[b] * bfx->grad_phi[j][2];
+	    }
+	}
+    }  
+
   v = ACOUS_REYN_STRESS;
   if (pd->v[v])
     {

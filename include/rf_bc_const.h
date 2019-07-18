@@ -66,9 +66,6 @@
 #include "exo_struct.h"		/* To know about Exo_DB type. */
 #include "dpi.h"		/* To know about Dpi type. */
 
-#ifdef USE_CGM
-#include "gm_cgm_typedefs.h"    /* Typedefs for the CGM C Interface */
-#endif
 
 #ifndef EXTERN
 #define EXTERN extern
@@ -542,6 +539,18 @@
 #define INTP_BC        1053
 #define INTM_BC        1054
 #define INTD_BC        1055
+#define EM_E1R_BC      1056
+#define EM_E2R_BC      1057
+#define EM_E3R_BC      1058
+#define EM_E1I_BC      1059
+#define EM_E2I_BC      1060
+#define EM_E3I_BC      1061
+#define EM_H1R_BC      1062
+#define EM_H2R_BC      1063
+#define EM_H3R_BC      1064
+#define EM_H1I_BC      1065
+#define EM_H2I_BC      1066
+#define EM_H3I_BC      1067
 
 
 /* pressure */
@@ -607,6 +616,7 @@
 #define YFLUX_ALLOY_BC 24200000
 #define YFLUX_BV2_BC    24130000  /* RSL 3/9/01 */
 #define YFLUX_NI_BC    24120000  /* RSL 3/9/01 */
+#define YFLUX_ETCH_BC    24111111
 #define RAOULT  24300000
 #define FLORY   24700000
 #define FLORY_CC   24800000
@@ -703,6 +713,7 @@
 #define ROLL_FLUID_BC  961124500
 #define TENSION_SHEET_BC 96210200
 #define MOVING_PLANE_BC  96110000
+#define MOVING_PLANE_ETCH_BC  96115000
 #define SM_PLANE_BC 961200000        /* Solid Model PLANE BC */
 #define MESH_CONSTRAINT_BC 961300000
 #define KINEMATIC_BC  962000000
@@ -729,6 +740,7 @@
 #define HYDROSTATIC_SYMM_BC  963600000
 #define FLOW_STRESSNOBC_BC  963700000
 #define FLOW_GRADV_BC  963800000
+#define FLOW_GRADV_SIC_BC 963800001
 #define SHEET_ENDSLOPE_BC 963900000
 #define CA_BC  964000000
 #define CA_MOMENTUM_BC  964000008
@@ -904,6 +916,8 @@
 #define LS_CAP_DIV_S_N_BC     47002005
 #define LS_ADC_BC		      47002009
 #define LS_ADC_OLD_BC		  47002007
+#define LS_CAP_HYSING_BC             47002010
+#define LS_CAP_DENNER_DIFF_BC             47002011
 
 /* surface normal dirichlet bc's */
 #define N1_BC                 47002100
@@ -1004,6 +1018,7 @@
 #define SHELL_TFMP_FREE_LIQ_BC    777000041
 #define SHELL_TFMP_NUM_DIFF_BC    777000042
 
+#define RESTIME_BC        788000030
 
 /* Vectors used for rotations */
 #define ROT_NONE -1
@@ -1246,16 +1261,6 @@ struct Boundary_Condition {
                                  *  0 - no
                                  *  1 - Yes, hanging off of node info structure
                                  *  2 - Yes, hanging off of side  */
-#ifdef USE_CGM
-  /* CGM handles.  There's probably a more generic way to do this, but
-   * for now here you go... We need the strings because the assignment
-   * of the handle pointers is delayed until well after input is read
-   * in to allow for multiple processors to get their own handles...
-   */
-  char cgm_edge_name[255];
-  EdgeHandle *cgm_edge_handle;
-  PlaneHandle *cgm_plane_handle;
-#endif
 };
 typedef struct Boundary_Condition BOUNDARY_CONDITION_STRUCT;
 

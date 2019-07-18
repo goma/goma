@@ -244,10 +244,11 @@ void EpetraCreateGomaProblemGraph(struct Aztec_Linear_Solver_System *ams, Exo_DB
 
   ams->npu = num_internal_dofs + num_boundary_dofs;
   ams->npu_plus = num_universe_dofs;
+  int total_unknowns = gsum_Int(num_internal_dofs + num_boundary_dofs);
 
   delete[] dblColGIDs;
 
-  DPRINTF(stderr, "\n%-30s= %d\n", "Number of unknowns", num_universe_dofs);
+  DPRINTF(stderr, "\n%-30s= %d\n", "Number of unknowns", total_unknowns);
   DPRINTF(stderr, "\n%-30s= %d\n", "Number of matrix nonzeroes", nnz);
 }
 

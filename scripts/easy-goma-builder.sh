@@ -128,6 +128,7 @@ export MPI_NAME
 export MATH_LIBRARIES
 export MATH_PATH
 export INTEL_PARALLEL_STUDIO_ROOT
+export GOMA_LIBS=$(readlink --canonicalize ${GOMA_LIB})
 
 if [ "$CXX11" = "true" ]; then
     echo "Starting TPL build..."
@@ -137,8 +138,7 @@ if [ "$CXX11" = "true" ]; then
         thank_user Easy Goma Builder script
         exit 0
     fi
-    # In case cmake was built in the build-goma-deps script add it to the path. This won't do anything if cmake is already installed because it appends it to the end.
-    export PATH="$PATH:$GOMA_LIB/cmake-2.8.12.2/bin"
+    export PATH="$GOMA_LIBS/cmake-3.9.5/bin:$PATH"
 else
     echo "Your compiler does not support c++11 and thus is not supported by this script at this time"
     thank_user Easy Goma Builder script
@@ -186,14 +186,13 @@ if [ "$MATH_LIBRARIES" == "intel" ] && [ "$CC_NAME" == "gnu" ]; then
     User_Flags="-O1 -I${MKLROOT}/include/intel64/ilp64 -m64 -I${MKLROOT}/include"
 fi
 
-export GOMA_LIBS=`readlink --canonicalize ${GOMA_LIB}`
 rm -rf ../build
 mkdir -p ../build
 cd ../build
 
-echo "Easy-Goma-Builder v 1.0: BUILD VARIABLES ARE AS FOLLOWS -DCMAKE_Fortran_COMPILER=$FORT_COMP -DCMAKE_C_COMPILER=$C_COMP -DCMAKE_CXX_COMPILER=$CXX_COMP -Dgoma_LIBS=${GOMA_LIBS} -Dgoma_MPI_DIR=${MPI_BASE_DIR} -Dgoma_MPI_LIB=$MPI_LIB -Dgoma_User_Flags=$User_Flags -Dgoma_SYS_LIB=$SYS_LIB -Dgoma_Trilinos_DIR=$GOMA_LIBS/trilinos-12.10.1-Built" | tee -a ../scripts/easygomabuild.txt
+echo "Easy-Goma-Builder v 1.0: BUILD VARIABLES ARE AS FOLLOWS -DCMAKE_Fortran_COMPILER=$FORT_COMP -DCMAKE_C_COMPILER=$C_COMP -DCMAKE_CXX_COMPILER=$CXX_COMP -Dgoma_LIBS=${GOMA_LIBS} -Dgoma_MPI_DIR=${MPI_BASE_DIR} -Dgoma_MPI_LIB=$MPI_LIB -Dgoma_User_Flags=$User_Flags -Dgoma_SYS_LIB=$SYS_LIB -Dgoma_Trilinos_DIR=$GOMA_LIBS/trilinos-12.12.1-Built" | tee -a ../scripts/easygomabuild.txt
 
-cmake .. -DCMAKE_Fortran_COMPILER="$FORT_COMP" -DCMAKE_C_COMPILER="$C_COMP" -DCMAKE_CXX_COMPILER="$CXX_COMP" -Dgoma_LIBS=${GOMA_LIBS} -Dgoma_MPI_DIR=${MPI_BASE_DIR} -Dgoma_MPI_LIB="$MPI_LIB" -Dgoma_User_Flags="$User_Flags" -Dgoma_SYS_LIB="$SYS_LIB" -Dgoma_Trilinos_DIR="$GOMA_LIBS/trilinos-12.10.1-Built" | tee -a ../scripts/easygomabuild.txt
+cmake .. -DCMAKE_Fortran_COMPILER="$FORT_COMP" -DCMAKE_C_COMPILER="$C_COMP" -DCMAKE_CXX_COMPILER="$CXX_COMP" -Dgoma_LIBS=${GOMA_LIBS} -Dgoma_MPI_DIR=${MPI_BASE_DIR} -Dgoma_MPI_LIB="$MPI_LIB" -Dgoma_User_Flags="$User_Flags" -Dgoma_SYS_LIB="$SYS_LIB" -Dgoma_Trilinos_DIR="$GOMA_LIBS/trilinos-12.12.1-Built" | tee -a ../scripts/easygomabuild.txt
 
 if make -j ${USED_MAKE_JOBS} 2>&1 && [ -f goma ] | tee -a ../scripts/easygomabuild.txt; then
     mkdir -p ../bin
@@ -205,7 +204,7 @@ if make -j ${USED_MAKE_JOBS} 2>&1 && [ -f goma ] | tee -a ../scripts/easygomabui
     echo $(readlink --canonicalize "`dirname $0`/../bin/goma")
     echo
     echo "It's probably necessary that you run:"
-    echo "export PATH=\$PATH:$GOMA_LIBS/trilinos-12.10.1-Built/bin"
+    echo "export PATH=\$PATH:$GOMA_LIBS/trilinos-12.12.1-Built/bin"
     echo "before running Goma"
     echo
     if [ "$BUILD_MPI" == "true" ]; then

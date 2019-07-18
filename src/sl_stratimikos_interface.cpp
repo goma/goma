@@ -11,9 +11,9 @@
 #include "Teuchos_StandardCatchMacros.hpp"
 
 #ifdef HAVE_MPI
-#  include "Epetra_MpiComm.h"
+#include "Epetra_MpiComm.h"
 #else
-#  include "Epetra_SerialComm.h"
+#include "Epetra_SerialComm.h"
 #endif
 
 #include "Epetra_Map.h"

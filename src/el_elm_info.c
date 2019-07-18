@@ -623,7 +623,55 @@ elem_info(const int info,
     }
     break;
 
-     
+  case P1_SHELL:                  /* linear discontinuous on shell */
+    switch( info ){               /* select type of information required */
+    case NNODES:                  /* number of nodes */
+      answer = 3;
+      break;
+    case NQUAD:                   /* number of quadrature points */
+      answer = 4;
+      break;
+    case NDIM:                    /* number of physical dimensions */
+      answer = 2;
+      break;
+    case NQUAD_SURF:            /* number of surface quad points */
+      answer = 1;
+      break;
+    case NQUAD_EDGE:            /* number of edge quad points */
+      answer = 1;
+      break;
+    default:
+      fprintf(stderr, "Unknown quantity\n");
+      answer = -1;
+      break;
+    }
+    break;
+
+  case P0_SHELL:                   /* constant discontinuous on shell */
+    switch( info ){               /* select type of information required */
+    case NNODES:                  /* number of nodes */
+      answer = 1;
+      break;
+    case NQUAD:                   /* number of quadrature points */
+      answer = 1;
+      break;
+    case NDIM:                    /* number of physical dimensions */
+      answer = 2;
+      break;
+    case NQUAD_SURF:            /* number of surface quad points */
+      answer = 1;
+      break;
+    case NQUAD_EDGE:            /* number of edge quad points */
+      answer = 1;
+      break;
+    default:
+      fprintf(stderr, "Unknown quantity\n");
+      answer = -1;
+      break;
+    }
+    break;
+
+
   default:
     fprintf(stderr, "Element itype = %d\n", ielem_type);
     fprintf(stderr, "Unknown or unimplemented element type.\n");
@@ -1276,7 +1324,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           return( ( n < 2 ) ? 2 : 0 );
       default:
           EH(-1, "Unrecognized line segment interpolation.");
+          break;
       }
+      break;
 
       /*
        * Two dimensional triangles...
@@ -1287,7 +1337,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
       case I_Q1:                /* 3 node, 1 dof/node, Lagrangian linear */
           return( ( n < 3 ) ? 1 : 0 );
       case I_Q2:                /* 6 node, 1 dof/node, Lagrangian quadratic */
-        EH(-1, "no quadratic triangles available yet");
+        return( ( n < 6 ) ? 1 : 0 );
       case I_Q2_LSA:
           return( ( n < 6 ) ? 1 : 0 );
       case I_P0:                /* 1 node, 1 dof/node, piecewise constant */
@@ -1296,7 +1346,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           return( ( n == 0 ) ? 3 : 0 );
       default:
           EH(-1, "node_interp_info: Unrecognized triangle interpolation.");
+          break;
       }
+      break;
 
       /*
        * Two dimensional quadrilaterals...
@@ -1364,7 +1416,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 7 ) ? 1 : 0 );
           default:
               EH( -1, "node_interp_info: unrecognized element type ");
+              break;
           }
+          break;
       case I_P0_G:              /* 1 node, 2 dof/node, extended piecewise constant */
       case I_P0_XV:
           switch (Element_Type) {
@@ -1382,7 +1436,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 7 ) ? 2 : 0 );
           default:
               EH( -1, "node_interp_info: unrecognized element type ");
+              break;
           }
+          break;
       case I_P1:                /* 1 node, 3 dof/node, piecewise linear */
       case I_P1_GP:
       case I_P1_GN:
@@ -1401,7 +1457,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 7 ) ? 3 : 0 );
           default:
               EH(-1, "node_intero_info: unrecognized element type ");
+              break;
           }
+          break;
       case I_P1_G:              /* 1 node, 6 dof/node, piecewise linear */
       case I_P1_XV:
           switch (Element_Type) {
@@ -1419,7 +1477,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 7 ) ? 6 : 0 );
           default:
               EH(-1, "node_intero_info: unrecognized element type ");
+              break;
           }
+          break;
       case I_H3:                /* 4 node, 4 dof/node, Hermite bicubic */
           return( ( n < 4 ) ? 4 : 0 );
       case I_Q3:                /* 16 node, 1 dof/node, Lagrangian bicubic */
@@ -1436,7 +1496,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           default:
               EH(-1,
                  "PQ1 interpolation not implemented for this Element Type.");
+              break;
           }
+          break;
       case I_PQ2:
           switch(Element_Type) {
           case BIQUAD_QUAD:
@@ -1446,10 +1508,14 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           default:
               EH(-1,
                  "PQ2 interpolation not implemented for this Element Type.");
+              break;
           }
+          break;
       default:
           EH(-1, "Unrecognized quadrilateral interpolation.");
+          break;
       }
+      break;
 
       /*
        * Three dimensional tetrahedrons...
@@ -1468,7 +1534,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           return( ( n == 0 ) ? 4 : 0 );
       default:
           EH(-1, "Unrecognized tetrahedron interpolation.");
+          break;
       }
+      break;
 
       /*
        * Three dimensional prisms...
@@ -1485,7 +1553,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           return( ( n == 15 ) ? 4 : 0 );
       default:
           EH(-1, "Unrecognized prism interpolation.");
+          break;
       }
+      break;
 
       /*
        * Three dimensional hexahedrons...
@@ -1526,7 +1596,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 20 ) ? 1 : 0 );/* centroid node */
           default:
               EH(-1, "Unrecognized hexahedron interpolation.");
+              break;
           }
+          break;
       case I_P0_G:              
       case I_P0_XV:             /* 1 node, 2 dof/node, piecewise constant */
           switch (Element_Type) {
@@ -1538,7 +1610,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 20 ) ? 2 : 0 );/* centroid node */
           default:
               EH(-1, "Unrecognized hexahedron interpolation.");
+              break;
           }
+          break;
       case I_P1:                /* 1 node, 4 dof/node, piecewise linear */
       case I_P1_GP:
       case I_P1_GN:
@@ -1551,7 +1625,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 20 ) ? 4 : 0 ); /* centroid node */
           default:
               EH(-1, "Unrecognized hexahedron interpolation.");
+              break;
           }
+          break;
       case I_PQ1:
           switch (Element_Type) {
           case TRILINEAR_HEX:
@@ -1564,7 +1640,9 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 20 ) ? 8 : 0 );
           default:
               EH(-1,"PQ1 interpolation not implemented for this Element Type.");
+              break;
           }
+          break;
       case I_PQ2:
           switch (Element_Type) {
           case TRIQUAD_HEX:
@@ -1572,14 +1650,19 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               return( ( n == 20 ) ? 27 : 0 );
           default:
               EH(-1,"PQ2 interpolation not implemented for this Element Type.");
+              break;
           }
+          break;
       case I_H3:                /* 8 node, 8 dof/node, Hermite tricubic */
           return( ( n < 8 ) ? 8 : 0 );
       default:
           EH(-1, "Unrecognized hexahedron interpolation.");
+          break;
       }
+      break;
   default:
       EH(-1, "Bad element shape.");
+      break;
   }
   EH(-1, "node_interp_info: We should not be here.");
   return (-1);
@@ -1618,7 +1701,7 @@ type2shape(const int element_type)
     shape = QUADRILATERAL;
     break;
   case TRILINEAR_HEX:
-  case C_TRILINEAR_HEX:                 
+  case C_TRILINEAR_HEX:
   case S_TRIQUAD_HEX:
   case TRIQUAD_HEX:
   case P0_HEX:
@@ -1631,6 +1714,8 @@ type2shape(const int element_type)
     break;
   case BILINEAR_SHELL:
   case BIQUAD_SHELL:
+  case P1_SHELL:
+  case P0_SHELL:
     shape = SHELL;
     break;
   case BILINEAR_TRISHELL:
@@ -1768,7 +1853,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized line segment interpolation.");
+          break;
         }
+        break;
     case SHELL:
       switch ( interpolation )
         {
@@ -1813,7 +1900,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized SHELL interpolation.");
+          break;
         }
+        break;
 
       /*
        * Two dimensional triangles...
@@ -1840,7 +1929,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized triangle interpolation.");
+          break;
         }
+        break;
 
       /*
        * Two dimensional quadrilaterals...
@@ -1917,7 +2008,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized quadrilateral interpolation.");
+          break;
         }
+        break;
 
       /*
        * Three dimensional tetrahedrons...
@@ -1941,7 +2034,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized tetrahedron interpolation.");
+          break;
         }
+        break;
 
       /*
        * Three dimensional prisms...
@@ -1965,7 +2060,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized prism interpolation.");
+          break;
         }
+        break;
 
 
       /*
@@ -2021,7 +2118,9 @@ getdofs(const int element_shape, const int interpolation)
 
         default:
           EH(-1, "Unrecognized hexahedron interpolation.");
+          break;
         }
+        break;
 
     default:
       EH(-1, "Bad element shape.");
@@ -2084,7 +2183,7 @@ find_stu(const int   iquad,     /* current GQ index  */
   // static double one_third = 3.333333333333333e-01;
   static double one_half  = 0.5;
   static double one_sixth = 1.666666666666667e-01;
-  
+
   switch( ielem_type ){                 /* select element */
 
   case LINEAR_TRI:                   /* linear triangle */
@@ -2153,8 +2252,9 @@ find_stu(const int   iquad,     /* current GQ index  */
     }
     */
     break;
-    
+
   case P0_QUAD:                         /* constant discontinuous on quadrilateral */
+  case P0_SHELL:                        /* constant discontinuous on shell */
   case P0_HEX:                          /* constant discontinuous on hexahedron */
     *s = 0.0;
     *t = 0.0;
@@ -2164,6 +2264,7 @@ find_stu(const int   iquad,     /* current GQ index  */
   case BILINEAR_QUAD:                   /* bilinear quadrilateral */
   case C_BILINEAR_QUAD:              /* bilinear quadrilateral with additional centroid node */
   case P1_QUAD:                         /* linear discontinuous on quadrilateral */
+  case P1_SHELL:                        /* linear discontinuous on shell */
     *s = (iquad%2 == 0) ? Ftemp1 : -Ftemp1;
     *t = (iquad < 2)    ? Ftemp1 : -Ftemp1;
     *u = 0.0;
@@ -2189,7 +2290,7 @@ find_stu(const int   iquad,     /* current GQ index  */
     break;
 
  /* biquadratic quadrilateral for level set */
-  case   BIQUAD_QUAD_LS:                    
+  case   BIQUAD_QUAD_LS:
     if (iquad%5 == 0)
       *s = quad5_1;
     else if ( (iquad-1)%5 == 0)
@@ -2555,7 +2656,9 @@ find_surf_st(const int iquad,           /* current GQ index */
   switch( ielem_type ){                 /* select element */
 
   case P0_QUAD:                         /*constant discontinuous quadrilateral */
+  case P0_SHELL:                        /*constant discontinuous shell */
   case P1_QUAD:                         /*linear discontinuous quadrilateral */
+  case P1_SHELL:                        /*linear discontinuous shell */
     switch( iquad ){
         case 0: xi[i_s] = *s =  0.; break;
     }
@@ -3556,9 +3659,11 @@ Gq_weight(const int iquad,               /* current GQ index */
     else
       weight = tri8/2.0;
     break;
-    
+
   case P0_QUAD:                         /* constant discontinuous on quadrilateral */
+  case P0_SHELL:                        /* constant discontinuous on shell */
   case P1_QUAD:                         /* linear discontinuous on quadrilateral */
+  case P1_SHELL:                        /* linear discontinuous on shell */
   case P0_HEX:                          /* constant discontinuous on hexahedron */
   case BILINEAR_QUAD:                   /* bilinear quadrilateral */
   case BILINEAR_SHELL:                  /* Bilinear shell */
@@ -3569,7 +3674,7 @@ Gq_weight(const int iquad,               /* current GQ index */
   case S_BIQUAD_QUAD:                   /* biquadratic serendipity quadrilateral */
   case   BIQUAD_QUAD:                   /* biquadratic quadrilateral */
   case   BIQUAD_SHELL:                  /* biquadratic shell */
- 
+
     if (iquad%3 == 0)
       weight_s = ftemp1;
     else if ( (iquad-1)%3 == 0)
@@ -3725,10 +3830,12 @@ Gq_surf_weight(const int iquad,               /* current GQ index  */
         case 4: weight = 0.5*quad5_1;  break;
     }
     break;
-            
+
   case P0_QUAD:                         /* constant discontinuous on quadrilateral */
+  case P0_SHELL:                        /* constant discontinuous on shell */
   case P0_HEX:                          /* constant discontinuous on hexahedron */
   case P1_QUAD:                         /* linear discontinuous on quadrilateral */
+  case P1_SHELL:                        /* linear discontinuous on shell */
   case P1_HEX:                          /* linear discontinuous on hexahedron */
   case BILINEAR_QUAD:                   /* bilinear quadrilateral */
   case C_BILINEAR_QUAD:                 /* bilinear quadrilateral with additional centroid node */
@@ -3965,7 +4072,7 @@ get_type(char string[],         /* EXODUS name of parent element  */
       }
     }
 
-  else if (strncmp(string, "TRI3", 4) == 0)
+  else if (strncmp(string, "TRI", 3) == 0)
     {  /* select element shape */
       switch (nodes){              /* select number of nodes in this element */
       case 3:
@@ -3981,6 +4088,9 @@ get_type(char string[],         /* EXODUS name of parent element  */
 	  EH(-1,err_msg);
 	}
 	break;
+	case 6:
+	  answer = QUAD_TRI;
+	  break;
       default:
 	sprintf(err_msg,"TRIANGLE element with %d nodes not implemented.\n", nodes);
 	EH(-1,err_msg);
@@ -4121,7 +4231,9 @@ load_surf_st( int ielem_type,
     {
       /* all the quadrilateral elements */
     case P0_QUAD:
+    case P0_SHELL:
     case P1_QUAD:
+    case P1_SHELL:
     case BILINEAR_QUAD:
     case C_BILINEAR_QUAD:
     case S_BIQUAD_QUAD:

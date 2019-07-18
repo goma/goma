@@ -30,6 +30,7 @@
 #ifndef _MM_AS_STRUCTS_H
 #define _MM_AS_STRUCTS_H
 
+#include "std.h"
 #include "el_elm.h"
 #include "mm_mp_const.h"
 #include "rf_bc_const.h"
@@ -532,6 +533,11 @@ struct Element_Variable_Pointers
   dbl *poynt[DIM][MDE];				/* Poynting Vector for light intensity */
   dbl *tfmp_pres[MDE];                    /* thin-film multi-phase lubrication pressure */
   dbl *tfmp_sat[MDE];                  /* thin-film multi-phase saturation */
+  dbl *restime[MDE];                  /* residence time function field */
+  dbl *em_er[DIM][MDE];				/* EMwave Electric Field real part */
+  dbl *em_ei[DIM][MDE];				/* EMwave Electric Field imag part */
+  dbl *em_hr[DIM][MDE];				/* EMwave Magnetic Field real part */
+  dbl *em_hi[DIM][MDE];				/* EMwave Magnetic Field imag part */
 };
 
 /*___________________________________________________________________________*/
@@ -638,6 +644,11 @@ struct Element_Stiffness_Pointers
   dbl ***poynt;		      	 /* *v[DIM][MDE], velocity */
   dbl **tfmp_pres;                    /*  thin-film multi-phase lubrication pressure */
   dbl **tfmp_sat;                  /* thin-film multi-phase saturation */
+  dbl **restime;                  /* Residence Time Function Field */
+  dbl ***em_er;		      	 /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_ei;		      	 /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_hr;		      	 /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_hi;		      	 /* *em_xx[DIM][MDE], em_wave*/
 
   /*
    * These are for debugging purposes...
@@ -1586,7 +1597,11 @@ struct Field_Variables
   dbl poynt[DIM];			/* Poynting Vector */
   dbl tfmp_pres;                    /* thin-film multi-phase lubrication pressure */
   dbl tfmp_sat;                  /* thin-film multi-phase saturation */
-
+  dbl restime;                  /* residence time function field */
+  dbl em_er[DIM];		/* EM Electric Field Vector (real)*/	
+  dbl em_ei[DIM];		/* EM Electric Field Vector (imag)*/	
+  dbl em_hr[DIM];		/* EM Magnetic Field Vector (real)*/	
+  dbl em_hi[DIM];		/* EM Magnetic Field Vector (imag)*/	
 
   /*
    * Grads of scalars...
@@ -1626,6 +1641,7 @@ struct Field_Variables
   dbl grad_sh_p_open_2[DIM];  /* Gradient of open porous shell pressure */
   dbl grad_tfmp_pres[DIM];   /* Gradient of the thin-film multi-phase lubrication pressure */
   dbl grad_tfmp_sat[DIM];   /* Gradient of the thin-film multi-phase lubrication saturation */
+  dbl grad_restime[DIM];   /* Gradient of the residence time function */
 
   /*
    * Grads of vectors...
@@ -1659,6 +1675,10 @@ struct Field_Variables
   dbl div_s_n;                   /* Surface divergence of LS normal field */
   dbl surfCurvatureDyadic[DIM][DIM]; /* Surface Curvature dyadic = b = - (I - n n ) grad(n) */
   dbl grad_poynt[DIM][DIM];		/* Gradient of Poynting.  d (P_i) / d (x_j) */
+  dbl grad_em_er[DIM][DIM];		/* Gradient of EM Efield (real) */
+  dbl grad_em_ei[DIM][DIM];		/* Gradient of EM Efield (imag) */
+  dbl grad_em_hr[DIM][DIM];		/* Gradient of EM Hfield (real) */
+  dbl grad_em_hi[DIM][DIM];		/* Gradient of EM Hfield (imag) */
 
   /* these gradients of tensors are complete for Cartesian coordinates,
    * and currently work for axisymmetic coordinates, in context,
@@ -1714,6 +1734,10 @@ struct Field_Variables
   dbl d_grad_ext_v_dmesh[DIM] [DIM][MDE];
   dbl d_grad_E_field_dmesh[DIM][DIM] [DIM][MDE];
   dbl d_grad_poynt_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_em_er_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_em_ei_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_em_hr_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_em_hi_dmesh[DIM][DIM] [DIM][MDE];
 
   dbl d_grad_v_dmesh[DIM][DIM] [DIM][MDE];
   dbl d_div_v_dmesh[DIM][MDE];
@@ -1788,6 +1812,7 @@ struct Field_Variables
   dbl d_grad_sh_p_open_2_dmesh[DIM] [DIM][MDE];
   dbl d_max_strain_dmesh[DIM][MDE];
   dbl d_cur_strain_dmesh[DIM][MDE];
+  dbl d_grad_restime_dmesh[DIM] [DIM][MDE];
  /*
   * Values at surfaces for integrated boundary conditions 
   */ 
@@ -1843,6 +1868,10 @@ struct Field_Variables
   dbl SM_matrix_inv[DIM*MAX_CONC][DIM*MAX_CONC];  /* inverse of S-M flux-equation coff. matrix */ 
   dbl giant_C_matrix[MAX_CONC][MDE][DIM*MAX_CONC][DIM*MAX_CONC]; /* matrix used to compute
       Jacobians in mm_fill_potential.c -- RSL 3/31/00 */
+
+  dbl d_grad_tfmp_pres_dmesh[DIM][DIM][MDE];
+  dbl d_grad_tfmp_sat_dmesh[DIM][DIM][MDE];
+  
 };
 
 /*
@@ -1919,6 +1948,11 @@ struct Diet_Field_Variables
   dbl poynt[DIM];			/* Poynting Vector */
   dbl tfmp_pres;           /* thin-film multi-phase lubrication pressure */
   dbl tfmp_sat;         /* thin-film multi-phase saturation */
+  dbl restime;         /* residence time field */
+  dbl em_er[DIM];			/* EM wave Fields */
+  dbl em_ei[DIM];			/* EM wave Fields */
+  dbl em_hr[DIM];			/* EM wave Fields */
+  dbl em_hi[DIM];			/* EM wave Fields */
   /*  
    * Grads of scalars... concentration is the only one we need in the
    * old form for VOF/Taylor-Galerkin stuff.
@@ -1937,9 +1971,15 @@ struct Diet_Field_Variables
   dbl grad_tfmp_pres[DIM];       /* Gradient of the thin-film multi-phase lubrication pressure */
   dbl grad_tfmp_sat[DIM];       /* Gradient of the thin-film multi-phase lubrication saturation */
 
+  dbl grad_n[DIM][DIM];         /* Normal to level set function OR shell normal */
+  dbl div_n;                    /* Divergence of LS normal field */
+
   /* Material tensors used at old time values */
   dbl strain[DIM][DIM];         /* Strain tensor */
   dbl volume_change;            /* Volume change */
+  dbl grad_restime[DIM];       /* Gradient of the Residence time field */
+
+  dbl grad_v[DIM][DIM];         /* Velocity gradient */
 
 };
 
@@ -2740,6 +2780,7 @@ struct stress_dependence
   double g[DIM][DIM][DIM][DIM][MDE];
   double S[DIM][DIM][MAX_MODES][DIM][DIM][MDE];
   double pf[DIM][DIM][MAX_PHASE_FUNC][MDE];
+  double degrade[DIM][DIM][MDE];
 };
 typedef struct stress_dependence STRESS_DEPENDENCE_STRUCT;
 
@@ -2790,6 +2831,7 @@ struct viscosity_dependence
   double nn[MDE];          /* bond concentration dependence */
   double gd;               /* strain rate dependence */
   double pf[MAX_PHASE_FUNC][MDE];  /* phase function */
+  double degrade[MDE];           /* amount of degradation */
 };
 typedef struct viscosity_dependence VISCOSITY_DEPENDENCE_STRUCT;
 
@@ -2805,6 +2847,7 @@ struct dilViscosity_dependence
   double nn[MDE];          /* bond concentration dependence */
   double gd;               /* strain rate dependence */
   double pf[MAX_PHASE_FUNC][MDE];  /* phase function */
+  double degrade[MDE];           /* amount of degradation */
 };
 typedef struct dilViscosity_dependence DILVISCOSITY_DEPENDENCE_STRUCT;
 
@@ -2932,6 +2975,12 @@ struct Petrov_Galerkin_Data {
 
 typedef struct Petrov_Galerkin_Data PG_DATA;
 
+
+struct SUPG_terms {
+  dbl supg_tau;
+  dbl d_supg_tau_dv[DIM][MDE];
+  dbl d_supg_tau_dX[DIM][MDE];
+};
 
 /*
  * Auxiliaries Variables used in calculating flow rate and average velocity

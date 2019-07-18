@@ -51,6 +51,7 @@ static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun E
 #include "mm_eh.h"
 
 #include "mm_fill_species.h"
+#include "mm_qtensor_model.h"
 #include "mm_std_models.h"
 
 #define _MM_STD_MODELS_C
@@ -60,9 +61,9 @@ static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun E
 *
 *       NAME            TYPE            CALLED_BY
 *    ------------             ---------               --------------
-* hydro_flux                          
+* hydro_flux
 * suspension_balance
-* epoxy_dea_species_source 
+* epoxy_dea_species_source
 * epoxy_species_source
 * foam_epoxy_species_source
 * epoxy_heat_source
@@ -70,7 +71,7 @@ static char rcsid[] = "$Id: mm_std_models.c,v 5.31 2010-07-30 20:48:38 prschun E
 * bouss_and_jxb           int          assemble_momentum
 * joule_heat_source       int          assemble_energy
 * visc_diss_heat_source       int          assemble_energy
-*    
+* calc_KOH_Si_etch_rate_100  double
 ******************************************************************************/
 /*
  * This file contains all implemented models for material properties and 
@@ -3836,7 +3837,7 @@ suspension_balance(struct Species_Conservation_Terms *st,
   dbl f, maxpack, rzexp = 0;
   dbl df_dy, df_dmu;
   dbl M;  /* hindrance function */
-  dbl dM_dy, dM_dmu;
+  dbl dM_dy, dM_dmu, gammadot = 0.;
   
   dbl c_term, mu_term, g_term, d_term;
   
@@ -3845,12 +3846,15 @@ suspension_balance(struct Species_Conservation_Terms *st,
   dbl d_div_tau_p_dy[DIM][MAX_CONC][MDE];      /* derivative wrt concentration */
   dbl d_div_tau_p_dv[DIM][DIM][MDE];           /* derivative wrt velocity */
   dbl d_div_tau_p_dmesh[DIM][DIM][MDE];        /* derivative wrt mesh */
-  dbl d_div_tau_p_dvd[DIM][DIM][MDE];          /* derivative wrt vorticity dir */
   dbl d_div_tau_p_dp[DIM][MDE];                /* derivative wrt pressure */
+
+  dbl d_gd_dv[DIM][MDE];        /* derivative of strain rate invariant 
+				   wrt velocity */ 
+  dbl d_gd_dmesh[DIM][MDE];     /* derivative of strain rate invariant 
+				   wrt mesh */
   
   dbl df_dmu0 = 0.0, dmu0_dcure = 0.0, dmu0_dT = 0.0;
   dbl del_rho = 0.0;
-
   
   /* Set up some convenient local variables and pointers */
   Y = fv->c;
@@ -3871,6 +3875,8 @@ suspension_balance(struct Species_Conservation_Terms *st,
 	  gamma_dot[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
 	}
     }
+
+  calc_shearrate(&gammadot, gamma_dot, d_gd_dv, d_gd_dmesh);
   
   mu = viscosity(gn, gamma_dot, d_mu);
   
@@ -3949,9 +3955,21 @@ suspension_balance(struct Species_Conservation_Terms *st,
   if (Y[w] >= maxpack) Y[w]=maxpack;
   if (mp->GravDiffType[w] == RICHARDSON_ZAKI )
     {
-      f = pow(1.-Y[w],rzexp)/mu;
-      df_dmu =  -f/mu; 
-      df_dy = -rzexp*f/(1.-Y[w]);
+      if(Y[w]/maxpack < 0.95)
+	{
+	  f = pow(1.-Y[w],rzexp)/mu0;
+	  f *= (1.-Y[w]/maxpack);
+	  //df_dmu =  -f/mu;
+	  df_dmu = 0.;
+	  df_dy = -rzexp*f/(1.-Y[w]);
+	  df_dy += -pow(1. - Y[w], rzexp)/(mu0 * maxpack);
+	}
+      else
+	{
+	  f = 0.;
+	  df_dmu = 0.;
+	  df_dy = 0.;
+	}
     }
   else
     {
@@ -3965,19 +3983,18 @@ suspension_balance(struct Species_Conservation_Terms *st,
   memset( d_div_tau_p_dy, 0, sizeof(double) * DIM*MAX_CONC*MDE);
   memset( d_div_tau_p_dv, 0, sizeof(double) * DIM*DIM*MDE);
   memset( d_div_tau_p_dmesh, 0, sizeof(double) * DIM*DIM*MDE);
-  memset( d_div_tau_p_dvd, 0, sizeof(double) * DIM*DIM*MDE);
   memset( d_div_tau_p_dp, 0, sizeof(double) * DIM*MDE);
   
   /* This is the divergence of the particle stress  */
   divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
-				   d_div_tau_p_dv, d_div_tau_p_dmesh, d_div_tau_p_dvd,d_div_tau_p_dp, w);
+                                   d_div_tau_p_dv, d_div_tau_p_dmesh, d_div_tau_p_dp, w);
 
-  
   
   /* this is the hindered settling term that modifies the flux */
   M = Dg*f;
   dM_dy = Dg * df_dy;
-  dM_dmu = Dg * df_dmu;
+  //dM_dmu = Dg * df_dmu;
+  dM_dmu = 0.;
   
   /* assemble residual */
   for ( a=0; a<dim; a++)
@@ -3995,6 +4012,7 @@ suspension_balance(struct Species_Conservation_Terms *st,
 	{
 	  for ( j=0; j<ei->dof[var]; j++)
 	    {
+	      
 	      c_term = -dM_dy*bf[var]->phi[j]*div_tau_p[a];
 	      
 	      c_term += -M*d_div_tau_p_dy[a][w][j];
@@ -4089,27 +4107,6 @@ suspension_balance(struct Species_Conservation_Terms *st,
 		}
 	    }
 	}
-	  
-      var = VORT_DIR1;
-      memset(st->d_diff_flux_dvd, 0, MAX_CONC*DIM*DIM*MDE*sizeof(dbl));
-      
-      if(pd->v[var])
-	{
-	  for ( a=0; a<VIM; a++)   
-	    {
-	      for( p=0; p<VIM; p++ )
-		{
-		  for( j=0;  j<ei->dof[var]; j++)
-		    {
-		      c_term = -M*d_div_tau_p_dvd[a][p][j];
-		      
-		      mu_term = 0.;
-		      
-		      st->d_diff_flux_dvd[w][a][p][j] = c_term + mu_term;
-		    }
-		}
-	    }
-	} 
 
       var = MESH_DISPLACEMENT1;
       memset(st->d_diff_flux_dmesh, 0, MAX_CONC*DIM*DIM*MDE*sizeof(dbl));
@@ -4134,55 +4131,8 @@ suspension_balance(struct Species_Conservation_Terms *st,
 		}
 	    }
 	}
-    }
 
-     /*  var = VELOCITY_GRADIENT11; */
-/*       if ( pd->v[var] ) */
-/* 	{ */
-/* 	  for ( a=0; a<dim; a++) */
-/* 	    {		       */
-/* 	      for ( c=0; c<VIM; c++) */
-/* 		{ */
-/* 		  for ( d=0; d<VIM; d++) */
-/* 		    { */
-/* 		      var = v_g[c][d]; */
-/* 		      if ( pd->v[var] ) */
-/* 			{ */
-/* 			  for ( j=0; j<ei->dof[var]; j++) */
-/* 			    { */
-/* 			      mu_term = 0.; */
-/* 			      c_term = -Y[w]*M*d_div_tau_p_dgd[a][c][d][j]; */
-/* 			      phi_j = bf[var]->phi[j]; */
-/* 			      for ( p=0; p<VIM; p++) */
-/* 				{		       */
-/* 				  for ( q=0; q<VIM; q++) */
-/* 				    {		       */
-/* 				      mu_term += -Y[w]*M*mu*bf[var]->grad_phi[j] [a] */
-/* 					*(delta(q,d)*delta(p,c)+delta(q,c)*delta(p,d)); */
-				      
-/* 				      if ( pd->CoordinateSystem != CARTESIAN ) */
-/* 					{ */
-/* 					  for ( r=0; r<VIM; r++) */
-/* 					    { */
-/* 					      mu_term -= -Y[w]*M*mu* (delta(q,d)*delta(p,c)+delta(q,c)*delta(p,d)) */
-/* 						* phi_j  *  (fv->grad_e[p][r][q]+fv->grad_e[q][p][r]); */
-/* 					    } */
-/* 					} */
-/* 				      for ( r=0; r<VIM; r++) */
-/* 					{ */
-/* 					  mu_term -= (delta(b,d)*delta(a,c)+delta(b,c)*delta(a,d)) */
-/* 					    * phi_j *  fv->grad_e[b][a][r]; */
-/* 					} */
-/* 				    } */
-/* 				} */
-/* 			      st->d_diff_flux_dG[w][a][c][d][j] = c_term  +  mu_term; */
-/* 			    } */
-			  
-/* 			} */
-/* 		    } */
-/* 		} */
-/* 	    } */
-/* 	} */
+    }  /* End Jacobian */
 
 
   return(status);
@@ -4234,6 +4184,12 @@ particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress */
   dbl d_qtensor_dvd[DIM][DIM][DIM][MDE];
   dbl vort_dir_local[DIM], tmp;
   int print=0;
+
+  dbl v1[DIM], v2[DIM], v3[DIM];
+
+  memset(v1, 0, DIM * sizeof(double));
+  memset(v2, 0, DIM * sizeof(double));
+  memset(v3, 0, DIM * sizeof(double));
   
   Y = fv->c;
   dim = pd->Num_Dim;
@@ -4319,7 +4275,7 @@ particle_stress(dbl tau_p[DIM][DIM],                     /* particle stress */
 	{
 	  vort_dir_local[a] = 0.0;
 	}
-      find_super_special_eigenvector(gamma_dot, vort_dir_local, &tmp, print);
+      find_super_special_eigenvector(gamma_dot, vort_dir_local, v1, v2, v3, &tmp, print);
       
       for ( a=0; a<VIM; a++)
 	{
@@ -4511,15 +4467,13 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 			   dbl d_div_tau_p_dy[DIM][MAX_CONC][MDE],/* derivative wrt concentration */
 			   dbl d_div_tau_p_dv[DIM][DIM][MDE],       /* derivative wrt velocity */
 			   dbl d_div_tau_p_dmesh[DIM][DIM][MDE],       /* derivative wrt mesh */
-			   dbl d_div_tau_p_dvd[DIM][DIM][MDE],       /* derivative wrt vorticity direction */
 			   dbl d_div_tau_p_dp[DIM][MDE],       /* derivative wrt pressure */
 			   int w)                            /* species number */
 {
   /*local variables */
-  int a, j, p, q, b, var;
+  int a, j, p, b, var;
   int status=1;
   int dim, wim, dofs;
-  int print=0;
   
   dbl gammadot, *grad_gd, gamma_dot[DIM][DIM];
   dbl mu0;
@@ -4534,38 +4488,33 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
   
   dbl qtensor[DIM][DIM];
-  dbl div_qtensor[DIM];
-  dbl d_qtensor_dvd[DIM][DIM][DIM][MDE];
-  
-  dbl vort_dir_local[DIM], tmp;
-  
-  dbl div_phi_j_e_b;
-  dbl d_div_q_dvd[DIM][DIM][MDE];
-  dbl d_div_q_dmesh[DIM][DIM][MDE];
-  
-  dbl (* grad_phi_e)[DIM][DIM][DIM]= NULL;
 
   dbl maxpack, maxpack2, Kn;
   dbl pp,  d_pp_dy, d_pp2_dy2;
   dbl comp, comp1, comp2 = 0, y_norm;
+  dbl gamma_nl;
+
+  dbl vort_dir_local[DIM];
+  int print = 0;
+  dbl v1[DIM],v2[DIM],v3[DIM],tmp=0.;
+  dbl Q_prime[DIM][DIM],R[DIM][DIM];
+  dbl radius_p, L_char, U_max;
+  dbl v_bias[DIM], vort_bias[DIM], vy_bias[DIM];
+  
   Y = fv->c;
   grad_Y = fv->grad_c;
   grad_gd = fv->grad_SH;
   gammadot = fv->SH;
+
+  if (gammadot < 1.e-10)
+    {
+      gammadot = 1.e-10;
+    }
   
- 
   dim = pd->Num_Dim;
   wim   = dim;
   if(pd->CoordinateSystem == SWIRLING) wim = wim+1;
 
-  /* Compute gamma_dot[][] */
-  
- /*  if(!pd->e[VORT_DIR1]) */
-/*     { */
-/*       EH(-1, "Cannot use this QTENSOR model without the VORT_DIR{1,2,3} equations/variables active!"); */
-/*       exit(-1); */
-/*     } */
-  
   /* Compute gammadot, grad(gammadot), gamma_dot[][], d_gd_dG, and d_grad_gd_dG */
   
   memset(gamma_dot, 0, DIM*DIM*sizeof(dbl) );
@@ -4574,7 +4523,7 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     {
       for( b=0; b<VIM; b++)
 	{
-	  gamma_dot[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	  gamma_dot[a][b] = fv_old->grad_v[a][b] + fv_old->grad_v[b][a];
 	}
     }
   
@@ -4588,117 +4537,56 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
       grad_mu[a] +=dmu_dY[w] * fv->grad_c[w][a];
     }
   
-  if( cr->MassFluxModel == HYDRODYNAMIC_QTENSOR_OLD)
+  /* assume a diagonal Q tensor */
+  memset(qtensor,  0, DIM*DIM*sizeof(dbl) );
+  for ( a=0; a<DIM; a++)
     {
-      /* Get Q tensor */
-      for ( a=0; a<VIM; a++)
-	{
-	  vort_dir_local[a] = 0.0;
-	}
-      find_super_special_eigenvector(gamma_dot, vort_dir_local, &tmp, print);
-      
-      for ( a=0; a<VIM; a++)
-	{
-	  for ( b=0; b<VIM; b++)
-	    {
-	      qtensor[a][b] = (dbl)delta(a,b) -
-		0.5 * vort_dir_local[a] * vort_dir_local[b];
-	    }
-	}
-      EH(-1, "This qtensor model not currently functional.");
+      qtensor[a][a] = mp->u_qdiffusivity[w][a];
     }
-  else if( cr->MassFluxModel == HYDRODYNAMIC_QTENSOR) 
-    {
-      /* Get Q tensor */
-      for ( a=0; a<VIM; a++)
-	{
-	  div_qtensor[a]=-0.5*fv->vd[a]*fv->div_vd;
-	  
-	  for ( b=0; b<VIM; b++)
-	    {
-	      qtensor[a][b] = (dbl)delta(a,b) -
-		0.5 * fv->vd[a] * fv->vd[b];
-	      div_qtensor[a] -= 0.5*fv->vd[b] * fv->grad_vd[b][a];
-	    }
-	}
-      
-      var = VORT_DIR1;
-      memset(d_qtensor_dvd, 0, DIM*DIM*DIM*MDE*sizeof(dbl));
-      for(p = 0; p < DIM; p++)
-	{
-	  for(q = 0; q < DIM; q++)
-	    {
-	      for(b = 0; b < DIM; b++)
-		{
-		  for(j = 0; j < ei->dof[var]; j++)
-		    {
-		      d_qtensor_dvd[p][q][b][j]=-0.5*bf[var]->phi[j]*
-			(fv->vd[q]*delta(p,b)+fv->vd[p]*delta(q,b));
-		    }
-		}
-	    }
-	}
-      
-      memset(d_div_q_dvd, 0, DIM*DIM*MDE*sizeof(dbl));
-      for(a = 0; a < DIM; a++)
-	{
-	  for(b = 0; b < DIM; b++)
-	    {
-	      for(j = 0; j < ei->dof[var]; j++)
-		{
-		  div_phi_j_e_b = 0.;
-		  for ( p=0; p<VIM; p++)
-		    {
-		      div_phi_j_e_b += 
-			bf[var]->grad_phi_e[j][b] [p][p];
-		    }
-		  
-		  d_div_q_dvd[a][b][j] = -0.5*(bf[var]->phi[j]*delta(a,b)*fv->div_vd +
-					       fv->vd[a]*div_phi_j_e_b);
-		  for ( p=0; p<VIM; p++)
-		    {
-		      d_div_q_dvd[a][b][j] -= 0.5*bf[var]->phi[j]* delta(p,b)*fv->grad_vd[p][a] +
-			0.5*fv->vd[p] * bf[var]->grad_phi_e[j][b] [p][a];
-		    }
-		}
-	    }
-	}
-      
-      var = MESH_DISPLACEMENT1;
-      memset(d_div_q_dmesh, 0, DIM*DIM*MDE*sizeof(dbl));
-      for ( a=0; a<VIM; a++)
-	{
-	  for(j = 0; j < ei->dof[var]; j++)
-	    {
-	      for ( p=0; p<VIM; p++)
-		{
-		  d_div_q_dmesh[a][p][j]=-0.5*fv->vd[a]*fv->d_div_vd_dmesh[p][j]*0.;
-		  for ( b=0; b<VIM; b++)
-		    {
-		      d_div_q_dmesh[a][p][j] -= 0.5*fv->vd[b] * fv->d_grad_vd_dmesh[b][a][p][j];
-		    }
-		}
-	    }
-	}
-	
-    }
-  else
-    {
-      /* assume a diagonal Q tensor */
-      memset(qtensor,  0, DIM*DIM*sizeof(dbl) );
-      for ( a=0; a<VIM; a++)
-	{
-	  qtensor[a][a] = mp->u_qdiffusivity[w][a];
-	  div_qtensor[a]=0.;
-	}
-      memset(d_div_q_dmesh, 0, DIM*DIM*MDE*sizeof(dbl));
-      memset(d_div_q_dvd, 0, DIM*DIM*MDE*sizeof(dbl));
-      memset(d_qtensor_dvd, 0, DIM*DIM*DIM*MDE*sizeof(dbl));
 
+  /* Solve for the eigenvalues of gamma_dot   */
+  
+  for ( a=0; a<VIM; a++)
+    {
+      vort_dir_local[a] = 0.0;
+    }
+  find_super_special_eigenvector(gamma_dot, vort_dir_local, v1, v2, v3, &tmp, print);
+
+  memset(v_bias, 0, DIM*sizeof(dbl));
+  memset(vort_bias, 0, DIM*sizeof(dbl));
+  memset(vy_bias, 0, DIM*sizeof(dbl));
+    
+  v_bias[0] = 1.;
+  vy_bias[1] = 1.;
+  vort_bias[2] = 1.;
+  
+  bias_eigenvector_to(v1, v_bias);
+  bias_eigenvector_to(v2, vy_bias);
+  
+  v3[0] = v2[1] * v1[2] - v2[2] * v1[1];
+  v3[1] = v2[2] * v1[0] - v2[0] * v1[2];
+  v3[2] = v2[0] * v1[1] - v2[1] * v1[0];
+
+  memset(Q_prime, 0, sizeof(dbl)*DIM*DIM);
+
+  Q_prime[0][0] = (qtensor[0][0]+qtensor[1][1]) / 2.;
+  Q_prime[0][2] = (-qtensor[0][0]+qtensor[1][1]) / 2.;
+  Q_prime[1][1] = qtensor[2][2];
+  Q_prime[2][0] = (-qtensor[0][0]+qtensor[1][1]) / 2.;
+  Q_prime[2][2] = (qtensor[0][0] + qtensor[1][1]) / 2.;
+
+  memset(R, 0, DIM*DIM*sizeof(dbl));
+
+  for (a=0; a < DIM; a++)
+    {
+      R[a][0] = v2[a];
+      R[a][1] = v3[a];
+      R[a][2] = v1[a];
     }
   
-
-      
+  memset(qtensor, 0, DIM*DIM*sizeof(dbl));
+  rotate_tensor(Q_prime, qtensor, R, 0);
+  
   if(gn->ConstitutiveEquation == SUSPENSION
      || gn->ConstitutiveEquation == CARREAU_SUSPENSION
      || gn->ConstitutiveEquation == POWERLAW_SUSPENSION
@@ -4715,11 +4603,11 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
   y_norm = Y[w]/maxpack;
   maxpack2 = maxpack*maxpack;
-  if(y_norm < 1.0)
+  if(y_norm < 0.95)
     {
       comp = pow((1.-y_norm),-2.);
       comp1 = 2./maxpack*pow((1.-y_norm),-3.);
-      comp2 = -6.0/maxpack2*pow((1.-y_norm),-4.);
+      comp2 = 6.0/maxpack2*pow((1.-y_norm),-4.);
     }
   else
     {
@@ -4737,16 +4625,29 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   d_pp_dy = 2.*Kn*y_norm/maxpack*comp + Kn*y_norm*y_norm*comp1;
   
   d_pp2_dy2 = 2.*Kn/maxpack2*comp +  4.*Kn*y_norm/maxpack*comp1 + Kn*y_norm*y_norm*comp2;
+
+  if(mp->SBM_Length_enabled)
+    {
+      radius_p = mp->SBM_Lengths2[w][0];
+      L_char = mp->SBM_Lengths2[w][1];
+      U_max = mp->SBM_Lengths2[w][2];
+    }
+  else
+    {
+      radius_p = 0.;
+      L_char = 1.;
+      U_max = 1.;
+    }
+  
+  gamma_nl = radius_p * U_max / (L_char * L_char);
   
   memset(div_tau_p, 0, DIM*sizeof(dbl));
-  dbl cp =0;
   
   for ( a=0; a<wim; a++)
     {
-      div_tau_p[a] += mu0*(pp*div_qtensor[a]*gammadot)+(grad_Y[w][a]*fv->P+Y[w]*fv->grad_P[a])*cp;
       for ( b=0; b<wim; b++)
 	{
-	  div_tau_p[a] += mu0*qtensor[a][b]*(pp*grad_gd[b]+gammadot*d_pp_dy*grad_Y[w][b])+ gamma_dot[a][b]*grad_mu[b];
+	  div_tau_p[a] += mu0*qtensor[a][b]*(pp*grad_gd[b]+(gammadot+gamma_nl)*d_pp_dy*grad_Y[w][b]);
 	}
     }
   
@@ -4754,75 +4655,10 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
     {
       memset(d_div_tau_p_dgd, 0, DIM*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dv, 0, DIM*DIM*MDE*sizeof(dbl) );
-      memset(d_div_tau_p_dvd,0, DIM*DIM*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dy, 0, DIM*MAX_CONC*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dmesh, 0, DIM*DIM*MDE*sizeof(dbl) );
       memset(d_div_tau_p_dp, 0, DIM*MDE*sizeof(dbl) );
-      
-      var = VELOCITY1;
-      grad_phi_e =bf[var]->grad_phi_e;
-      if(pd->v[var])
-	{
-	  for ( a=0; a<wim; a++)
-	    {
-	      for ( p=0; p<dim; p++)
-		{
-		  for( j=0; j<ei->dof[var];j++)
-		    {
-		      for ( b=0; b<wim; b++)
-			{
-			  d_div_tau_p_dv[a][p][j] = (grad_phi_e[j][p][a][b] + grad_phi_e[j][p][a][b])*grad_mu[b];
-			}
-		    }
-		}
-	    }
-	}
-      
-      var = VORT_DIR1;
-      if(pd->v[var])
-	{
-	  for ( a=0; a<wim; a++)
-	    {
-	      for ( p=0; p<dim; p++)
-		{
-		  for( j=0; j<ei->dof[var];j++)
-		    {
-		      d_div_tau_p_dvd[a][p][j] += mu0*(pp*d_div_q_dvd[a][p][j]*gammadot);
-		      
-		      for ( b=0; b<wim; b++)
-			{
-			  d_div_tau_p_dvd[a][p][j]+= mu0*d_qtensor_dvd[a][b][p][j]*
-			    (pp*grad_gd[b]+gammadot*d_pp_dy*grad_Y[w][b]);
-			}
-		    }
-		}
-	    }
-	}
-      
-      
-      /*       var = VELOCITY_GRADIENT11; */
-      /*       if(pd->v[var]) */
-      /* 	{ */
-      /* 	  dofs = ei->dof[var]; */
-      /* 	  for ( a=0; a<wim; a++) */
-      /* 	    { */
-      /* 	      for ( p=0; p<VIM; p++) */
-      /* 		{ */
-      /* 		  for ( q=0; q<VIM; q++) */
-      /* 		    { */
-      /* 		      for( j=0; j<dofs;j++) */
-      /* 			{ */
-      /* 			  d_div_tau_p_dg[a][p][q][j] += mu0*pp*gd_inv* */
-      /* 			    (bf[var]->phi[j]*(fv->grad_G[a][p][q] + fv->grad_G[a][q][p])  */
-      /* 			     + bf[var]->grad_phi[j] [a]* gamma_dot_g[p][q] */
-      /* 			     - 0.5*grad_gd[a]*bf[var]->phi[j]*gamma_dot_g[p][q]*gd_inv2); */
-      /* 			} */
-      /* 		    } */
-      /* 		} */
-      /* 	    } */
-      /* 	} */
-      
-      
+            
       var = MASS_FRACTION;
       if(pd->v[var])
 	{
@@ -4830,32 +4666,13 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 	  for ( a=0; a<wim; a++)
 	    {
 	      for( j=0; j<dofs;j++)
-		{
-		  d_div_tau_p_dy[a][w][j] += mu0*(d_pp_dy*bf[var]->phi[j]*div_qtensor[a]*gammadot)
-		    +(bf[var]->grad_phi[j][a]*fv->P+bf[var]->phi[j]*fv->grad_P[a])*cp;
-		  
+		{ 
 		  for ( b=0; b<wim; b++)
 		    {
 		      d_div_tau_p_dy[a][w][j] += mu0*qtensor[a][b]*(d_pp_dy*bf[var]->phi[j]*grad_gd[b] 
-								    +gammadot*d_pp2_dy2*bf[var]->phi[j]*grad_Y[w][b]
-								    +gammadot*d_pp_dy*bf[var]->grad_phi[j][b])
-			+ gamma_dot[a][b]*dmu_dY[w] * bf[var]->grad_phi[j][b];
-		      
+								    +(gammadot+gamma_nl)*d_pp2_dy2*bf[var]->phi[j]*grad_Y[w][b]
+								    +(gammadot+gamma_nl)*d_pp_dy*bf[var]->grad_phi[j][b]);
 		    }
-		}
-	    }
-	}
-      
-      var = PRESSURE;
-      if(pd->v[var])
-	{
-	  dofs = ei->dof[var];
-	  for ( a=0; a<wim; a++)
-	    {
-	      for( j=0; j<dofs;j++)
-		{
-		  d_div_tau_p_dp[a][j] +=(grad_Y[w][a]*bf[var]->phi[j]+Y[w]*bf[var]->grad_phi[j][a])*cp;
-		  
 		}
 	    }
 	}
@@ -4868,10 +4685,9 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 	    {
 	      for( j=0; j<dofs;j++)
 		{
-		  d_div_tau_p_dgd[a][j] = mu0*(pp*div_qtensor[a]*bf[var]->phi[j]);
 		  for ( b=0; b<wim; b++)
 		    {
-		      d_div_tau_p_dgd[a][j] +=mu0*qtensor[a][b]*(pp*bf[var]->grad_phi[j][b]+bf[var]->phi[j]*d_pp_dy*grad_Y[w][b]);
+		      d_div_tau_p_dgd[a][j] += mu0*qtensor[a][b]*(pp*bf[var]->grad_phi[j][b]+bf[var]->phi[j]*d_pp_dy*grad_Y[w][b]);
 		    }
 		}
 	    }
@@ -4888,14 +4704,10 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
 		{
 		  for ( a=0; a<wim; a++)
 		    {
-		      d_div_tau_p_dmesh[a][p][j] += mu0*(pp* d_div_q_dmesh[a][p][j]*gammadot);
 		      for ( b=0; b<wim; b++)
 			{
 			  d_div_tau_p_dmesh[a][p][j] += mu0*qtensor[a][b]*(pp*fv->d_grad_SH_dmesh[b][p][j]
-									   +gammadot*d_pp_dy*fv->d_grad_c_dmesh[b][w][p][j])+
-			    (fv->d_grad_v_dmesh[b][a][p][j]+ fv->d_grad_v_dmesh[a][b][p][j])*grad_mu[b]
-			    +  gamma_dot[a][b]*dmu_dY[w] * fv->d_grad_c_dmesh[w][b][p][j];
-			  
+									   +(gammadot+gamma_nl)*d_pp_dy*fv->d_grad_c_dmesh[b][w][p][j]);
 			}
 		    }
 		}
@@ -4908,6 +4720,87 @@ divergence_particle_stress(dbl div_tau_p[DIM],               /* divergence of th
   
 }
 
+void rotate_tensor(double A[DIM][DIM], double A_prime[DIM][DIM],
+		   double R0[DIM][DIM], int dir)
+{
+    
+  /* Rotates a tensor from A to A_prime using the orthogonal tensor R */
+  /* dir = 0 : A_prime = R * A * Rt */
+  /* dir = 1 : A_prime = Rt * A * R */
+
+  double R[DIM][DIM];
+  double Rt[DIM][DIM];
+  double R_tmp[DIM][DIM];
+  double R_dot_A[DIM][DIM];
+  int i,j,k;
+
+  memset(R, 0, sizeof(dbl)*DIM*DIM);
+  memset(R_tmp, 0, sizeof(dbl)*DIM*DIM);
+  memset(A_prime, 0, sizeof(dbl)*DIM*DIM);
+  memset(R_dot_A, 0, sizeof(dbl)*DIM*DIM);
+
+  for (i=0; i < DIM; i++)
+    {
+      for (j=0; j < DIM; j++)
+	{
+	  R[i][j] = R0[i][j];
+	}
+    }
+  
+  if (dir == 1)
+    {
+      for (i=0; i < DIM; i++)
+	{
+	  for (j=0; j < DIM; j++)
+	    {
+	      R_tmp[i][j] = R[i][j];
+	      Rt[i][j] = R[i][j];
+	    }
+	}
+      for (i=0; i < DIM; i++)
+	{
+	  for (j=0; j < DIM; j++)
+	    {
+	      R[i][j] = R_tmp[j][i];
+	    }
+	}
+    }
+  else
+    {
+      for (i=0; i < DIM; i++)
+	{
+	  for (j=0; j < DIM; j++)
+	    {
+	      Rt[i][j] = R[j][i];
+	    }
+	}
+    }
+
+  for (i=0; i < DIM; i++)
+    {
+      for (j=0; j < DIM; j++)
+	{
+	  R_dot_A[i][j] = 0;
+	  for (k=0; k < DIM; k++)
+	    {
+	      R_dot_A[i][j] += R[i][k] * A[k][j];
+	    }
+	}
+    }
+
+  for (i=0; i < DIM; i++)
+    {
+      for (j=0; j < DIM; j++)
+	{
+	  A_prime[i][j] = 0;
+	  for (k=0; k < DIM; k++)
+	    {
+	      A_prime[i][j] += R_dot_A[i][k] * Rt[k][j];
+	    }
+	}
+    }
+      
+}
 
 /******************************************************************************
 *
@@ -6788,3 +6681,93 @@ cal_current_density (double x[],           /* global nodal solution vector  */
 } /* END of routine cal_current_density */
 /*****************************************************************************/
 #endif
+
+double
+calc_KOH_Si_etch_rate_100( double d_etch_rate_d_C[MAX_CONC] ) /* Sensitivity of etch rate w.r.t.
+                                                                 concentration of each species*/
+/******************************************************************************
+*
+*  A function that outputs KOH wet etch rate of silicon surface (100 plane for now)
+*  based on kinetic model proposed by
+*
+*   Seidel, H., et al."Anisotropic etching of crystalline silicon in alkaline solutions I.
+*                      Orientation dependence and behavior of passivation layers."
+*   Journal of the electrochemical society 137.11 (1990): 3612-3626.
+*
+*
+*  Kinetic model is listed in Equation A-1
+*
+*  etch_rate = k0 * conc_H2O^4 * conc_KOH^0.25 * exp(-Ea/Kb T)
+*
+*  UNITS:
+*
+*  Kinetic models used above required units as follow:
+*
+*  Etch rate: micron/hour
+*  Rate constant k0: (micron/hr) (mole/liter)^-4.25
+*  Species concentration: mole/liter
+*
+*  Right now, unit conversion is handled automatically, ONLY AND IF ONLY
+*  you use the following:
+*
+*  Species type = SPECIES_DENSITY
+*  Concentration Units: CGS, i.e. g/cm^3
+*  Species ordering:
+*                   0: H2O - water
+*                   1: KOH - potassium hydroxide
+*                   2: H2 - hydrogen
+*                   3: Silicon hydroxyl byproducts
+*  Temperature: From Process Temperature card in general specification
+*
+*  Kristianto Tjiptowidjojo (5/2017)
+*
+*
+******************************************************************************/
+{
+  double etch_rate, d_etch_rate_d_H2O, d_etch_rate_d_KOH;
+
+  /* Boltzmann constant in eV/K */
+  double k_B = 8.6173305e-5;
+
+  /* Activation energy in eV */
+  double E_a = 0.595;
+
+  /* Temperature in K */
+  double T = upd->Process_Temperature;
+
+  /* Rate constant in (micron/hr) (mole/liter)^-4.25  */
+  double k0 = 2480.0;
+
+  /* Get mass concentration of each species
+     Mass concentration unit is g/cm^3 */
+  double rho_H2O = fv->c[0];
+  double rho_KOH = fv->c[1];
+
+  /* Molecular weight in mole/g */
+  double MW_H2O = 18.01528;
+  double MW_KOH = 56.1056;
+
+  /* Mole concentration in mol/liter */
+  double C_H2O = rho_H2O * 1000.0/MW_H2O;
+  double C_KOH = rho_KOH * 1000.0/MW_KOH;
+
+  /* Calculate etch rate (micron/hr) */
+  etch_rate = k0 * pow(C_H2O, 4.0) * pow(C_KOH, 0.25 )
+              * exp(-E_a/k_B/T);
+
+  /* Convert to cm/s */
+  etch_rate = etch_rate / 1.0e4 / 3600.0;
+
+  /* Calculate sensitivity of etch rate w.r.t. concentration */
+  d_etch_rate_d_H2O = 4.0 * k0 * pow(C_H2O, 3.0) * pow(C_KOH, 0.25 )
+                      * exp(-E_a/k_B/T)/(1.0e4 * 3600.0) * (1000.0/MW_H2O);
+
+  d_etch_rate_d_KOH = 0.25 * k0 * pow(C_H2O, 4.0)/ pow(C_KOH, 0.75 )
+                      * exp(-E_a/k_B/T)/(1.0e4 * 3600.0) * (1000.0/MW_KOH);
+
+  /* Export the etch rate and its sensitivities */
+  d_etch_rate_d_C[0] = d_etch_rate_d_H2O;
+  d_etch_rate_d_C[1] = d_etch_rate_d_KOH;
+
+  return etch_rate;
+} /* END of calc_KOH_Si_etch_rate_100 */

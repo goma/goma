@@ -24,11 +24,11 @@ typedef
 enum type_elem {BILINEAR_QUAD = 0,
 		C_BILINEAR_QUAD, /* 5-node quad.  4 corner nodes + centroid node*/
 		S_BIQUAD_QUAD,
-		BIQUAD_QUAD,	     
-		BIQUAD_QUAD_LS,	/* uses higher order integration */     
+		BIQUAD_QUAD,
+		BIQUAD_QUAD_LS,	/* uses higher order integration */
 		P1_QUAD,	/* added 94/03/15 pas */
 		P0_QUAD,	/* added 98/02/09 rrr */
-		
+
 		TRILINEAR_HEX,
 		C_TRILINEAR_HEX, /* 9 node hex.  8 corner nodes + centroid node */
 		S_TRIQUAD_HEX,
@@ -48,10 +48,12 @@ enum type_elem {BILINEAR_QUAD = 0,
 		BILINEAR_SHELL,  /* 2D, linear elements for 3D shells */
 		BIQUAD_SHELL,    /* 2D, quadratic elements for 3D shells */
 		BILINEAR_TRISHELL,  /* 2D, linear triangular elements for 3D shells */
-} 
+                P1_SHELL,	/* 2D, discontinuous linear elements for 3D shells  */
+                P0_SHELL	/* 2D, discontinuous constant elements for 3D shells */
+}
 Type_Elem;
 
-/* 
+/*
  * Define element shapes...
  * Element_Shape	LINE_SEGMENT	(1D)
  *

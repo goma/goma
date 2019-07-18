@@ -65,11 +65,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  ACOUSTIC    15      /* Acoustic energy density coupled to NS */
 #define HS_FOAM 16   /* fluorinert */
 #define VISC_ACOUSTIC 17   /* heat generation by acoustics */
-#define INGBER 18   /* heat generation by acoustics */
+#define INGBER 18   
 #define GRAV_VIBRATIONAL 19   /* momentum source for gravity + vibration */
 #define MELT             20  /* Lubrication source term model*/
 #define EM_DISS         21   /* heat generation by EM waves */
-
 
 
 /* MMH */
@@ -99,6 +98,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TFMP_SQUARE                   300
 #define TFMP_TRIANGULAR               301
 #define TFMP_HEXAGONAL                302
+
+// types of shell moment tensor calculation
+#define SMT_SIMPLE                    310
+#define SMT_EXPANDED                  311
 
 /*
  * Options for k in potential equation
@@ -523,6 +526,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_ACOUSTIC_ABSORPTION       	   3020
 #define TAGC_REFRACTIVE_INDEX       	   3030
 #define TAGC_LIGHT_ABSORPTION       	   3040
+#define TAGC_EXTINCTION_INDEX       	   3050
 
 
  /* 
@@ -697,5 +701,13 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_LUB_SOURCE_0                  7046
 #define TAGC_LUB_SOURCE_1                  7047
 #define TAGC_LUB_SOURCE_2                  7048
+
+#define TAGC_HEAT_SOURCE_0                 7050
+
+/*  Problem Description Parameters   */
+
+#define TAGC_ACOUSTIC_FREQ		   8010
+#define TAGC_PROCESS_TEMP		   8011
+#define TAGC_ACOUSTIC_WAVELENGTH	   8012
 
 #endif

@@ -1418,6 +1418,7 @@ load_elem_dofptr(const int ielem,
   }
   else if ((pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
             pd_glob[0]->CoordinateSystem == SWIRLING ||
+            pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D ||
 	    pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) && upd->ep[R_MESH1] >= 0) {
     dofs = ei->dof[R_MESH1];
     for (i = 0; i < dofs; i++) {
@@ -1476,6 +1477,7 @@ load_elem_dofptr(const int ielem,
   }
   else if((pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
            pd_glob[0]->CoordinateSystem == SWIRLING ||
+           pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D ||
 	   pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) && upd->ep[R_SOLID1] >= 0) {
     dofs = ei->dof[R_SOLID1];
     for ( i=0; i<dofs; i++) {
@@ -1527,6 +1529,7 @@ load_elem_dofptr(const int ielem,
   }
   else if((pd_glob[0] ->CoordinateSystem == CYLINDRICAL ||
 	   pd_glob[0]->CoordinateSystem == SWIRLING    ||
+	   pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D    ||
 	   pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN ) &&
 	  upd->ep[R_NORMAL1] >= 0) {
     dofs = ei->dof[R_NORMAL1];
@@ -1672,6 +1675,7 @@ load_elem_dofptr(const int ielem,
   }
   else if((pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
            pd_glob[0]->CoordinateSystem == SWIRLING ||
+           pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D ||
 	   pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) &&
 	  upd->ep[R_PMOMENTUM1] >= 0) {
     dofs = ei->dof[R_PMOMENTUM1];
@@ -1906,6 +1910,72 @@ load_elem_dofptr(const int ielem,
     load_varType_Interpolation_ptrs(eqn, esp->poynt[2], esp_old->poynt[2],
 				    esp_dot->poynt[2]);
   }
+  eqn = R_EM_E1_REAL;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_er[0], esp_old->em_er[0],
+				    esp_dot->em_er[0]);
+  }
+  eqn = R_EM_E1_IMAG;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_ei[0], esp_old->em_ei[0],
+				    esp_dot->em_ei[0]);
+  }
+  eqn = R_EM_E2_REAL;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_er[1], esp_old->em_er[1],
+				    esp_dot->em_er[1]);
+  }
+  eqn = R_EM_E2_IMAG;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_ei[1], esp_old->em_ei[1],
+				    esp_dot->em_ei[1]);
+  }
+  eqn = R_EM_E3_REAL;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_er[2], esp_old->em_er[2],
+				    esp_dot->em_er[2]);
+  }
+  eqn = R_EM_E3_IMAG;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_ei[2], esp_old->em_ei[2],
+				    esp_dot->em_ei[2]);
+  }
+  eqn = R_EM_H1_REAL;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_hr[0], esp_old->em_hr[0],
+				    esp_dot->em_hr[0]);
+  }
+  eqn = R_EM_H1_IMAG;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_hi[0], esp_old->em_hi[0],
+				    esp_dot->em_hi[0]);
+  }
+  eqn = R_EM_H2_REAL;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_hr[1], esp_old->em_hr[1],
+				    esp_dot->em_hr[1]);
+  }
+  eqn = R_EM_H2_IMAG;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_hi[1], esp_old->em_hi[1],
+				    esp_dot->em_hi[1]);
+  }
+  eqn = R_EM_H3_REAL;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_hr[2], esp_old->em_hr[2],
+				    esp_dot->em_hr[2]);
+  }
+  eqn = R_EM_H3_IMAG;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->em_hi[2], esp_old->em_hi[2],
+				    esp_dot->em_hi[2]);
+  }
+
+  eqn = R_RESTIME;
+  if (upd->ep[eqn] >= 0) {
+    load_varType_Interpolation_ptrs(eqn, esp->restime, esp_old->restime,
+				    esp_dot->restime);
+  }  
 
   eqn = R_SHELL_SHEAR_TOP;
   if (upd->ep[eqn] >= 0) {
@@ -1961,6 +2031,7 @@ load_elem_dofptr(const int ielem,
     }
     if((pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
 	pd_glob[0]->CoordinateSystem == SWIRLING ||
+	pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D ||
 	pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) ) {
       if( upd->ep[R_STRESS33] == -1 )
 	  EH(-1,"Hey,the STRESS33 is needed in CYLINDRICAL VE problems!");

@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "spmatrix.h"
+#include "spMatrix.h"
 #include "spConfig.h"
 
 #include "std.h"

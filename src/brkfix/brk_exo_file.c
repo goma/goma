@@ -560,9 +560,6 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
   char *tmp;			/* char pointer junkyard of no interest */
 
-  extern char *optarg;
-  extern int   optind;
-
   Spfrtn sr=0;
 
 #ifdef CHACO

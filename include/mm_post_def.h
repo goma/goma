@@ -456,6 +456,7 @@ extern int DARCY_VELOCITY_LIQ;  /* Darcy velocity vectors for flow in a
 				 * saturated or unsaturated medium */
 extern int DENSITY;		/* density function at vertex and midside 
 				 * nodes, e.g. for particle settling etc. */
+extern int HEAVISIDE;
 extern int DIELECTROPHORETIC_FIELD;
                                 /* Dielectrophoretic force vectors. */
 extern int DIELECTROPHORETIC_FIELD_NORM;
@@ -584,6 +585,13 @@ extern int PP_LAME_LAMBDA;     /* Lame LAMBDA coefficient for solid/mesh */
 extern int VON_MISES_STRAIN;
 extern int VON_MISES_STRESS;
 extern int LOG_CONF_MAP;      /* Map log-conformation tensor to stress */
+extern int J_FLUX;            /* Particle stress flux                  */
+extern int EIG;               /* Eigenvalues of rate-of-strain tensor  */
+extern int EIG1;              /* Eigenvector of rate-of-strain tensor  */
+extern int EIG2;              /* Eigenvector of rate-of-strain tensor  */
+extern int EIG3;              /* Eigenvector of rate-of-strain tensor  */
+extern int GRAD_Y;            /* Concentration gradient                  */
+extern int GRAD_SH;            /* Shear gradient                */
 
 extern int UNTRACKED_SPEC;		/*Untracked Species Concentration */
 
@@ -591,6 +599,8 @@ extern int TFMP_GAS_VELO;
 extern int TFMP_LIQ_VELO;
 extern int TFMP_INV_PECLET;
 extern int TFMP_KRG;
+extern int VELO_SPEED;              /* i.e., velocity magnitude */
+extern int GIES_CRIT;              /* Giesekus Flow Character */
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *

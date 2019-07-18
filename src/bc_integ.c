@@ -74,10 +74,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		    const double delta_t, /* current time step size                       */
 		    const double theta,	/* parameter (0 to 1) to vary time integration
 					 *  ( implicit - 0 to explicit - 1)             */
-		    const double h_elem_avg, /* global average element size */
-		    const double h[DIM],     /* average element size */
-		    const double mu_avg,     /* average element viscosity */
-		    const double U_norm,     /* global velocity norm */
+		    const PG_DATA *pg_data,
 		    const int ielem,       /* element number */
 		    const int ielem_type,  /* element type */
 		    const int num_local_nodes,
@@ -1092,6 +1089,13 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			     bc->BC_Data_Int[0]);
 	  break;
 
+
+	case FLOW_GRADV_SIC_BC:
+	  flow_n_dot_T_gradv_sic(func, d_func,
+			     bc->BC_Data_Float[0],
+			     bc->BC_Data_Int[0]);
+	  break;
+	  
         case STRESS_DEVELOPED_BC:
           if (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
             {
@@ -1343,12 +1347,19 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 				    bc->BC_Data_Float[0], time_value, delta_t, theta);
 	  }
 	  break;
-	    
+
 	case YFLUX_BC:
 	  if (iapply) {
 	    mass_flux_surf_bc(func, d_func, bc->BC_Data_Int[0],
 			      bc->BC_Data_Float[0], bc->BC_Data_Float[1], 
 			      delta_t, theta);
+	  }
+	  break;
+
+	case YFLUX_ETCH_BC:
+	  if (iapply) {
+	    mass_flux_surf_etch(func, d_func, bc->BC_Data_Int[0],
+			        bc->BC_Data_Int[1], time_value, delta_t, theta);
 	  }
 	  break;
 
@@ -1504,7 +1515,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	case YFLUX_SUS_BC:
 	  sus_mass_flux_surf_bc (func, d_func,
 				 bc->BC_Data_Int[0], 
-				 time_value, delta_t, theta, h);
+				 time_value, delta_t, theta, pg_data->h);
 	  break;
 
 	case YFLUX_CONST_BC:
@@ -1762,7 +1773,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	       "You don't have PSPG turned on and you trying to apply a PSPG boundary condition");
 	  }
 	  PSPG_consistency_bc(func, d_func,  x_dot, time_value, delta_t,
-			      theta, h_elem_avg, h, mu_avg, U_norm);
+			      theta, pg_data);
 	  break;
                          
 	case FILL_CA_BC:

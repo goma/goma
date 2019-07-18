@@ -92,10 +92,6 @@ PROTO(( double *,
         double  ,
 	int    ));
 
-EXTERN void cgm_based_initialization 
-PROTO (( double *,
-         int));
-
 EXTERN void surf_based_initialization 
 PROTO (( double *,
          double *,
@@ -339,6 +335,9 @@ PROTO(( void));
 
 EXTERN int load_lsi
 PROTO(( const double ));       /* width */
+
+EXTERN int
+load_lsi_old(const double width, struct Level_Set_Interface *lsi_old);
 
 EXTERN int load_lsi_adjmatr
 PROTO(( const double ));      /* width */

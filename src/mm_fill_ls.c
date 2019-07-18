@@ -25,12 +25,6 @@
 
 #include "std.h"		/* This needs to be here. */
 
-#ifdef USE_CGM
-#include "gm_cgm_c_interface.h"
-#endif
-
-
-
 #ifdef PARALLEL
 #ifndef MPI
 #define MPI			/* otherwise az_aztec.h trounces MPI_Request */
@@ -1735,50 +1729,6 @@ gradient_norm_err( double *x,
 /***************************************************************************************/
 /***************************************************************************************/
 
-
-void
-cgm_based_initialization(double *x,
-			 int num_total_nodes)
-{
-#ifdef USE_CGM
-  int I, ie;
-  char err_msg[256];
-  double r[DIM], dist;
-  FaceHandle *face_handle;
-
-  if(cgm_get_face_by_name((char const *)(ls->sm_object_name), &face_handle))
-    {
-      sprintf(err_msg, "Could not find FACE named '%s'.\n", ls->sm_object_name);
-      EH(-1, err_msg);
-    }
-
-  for(I = 0; I < num_total_nodes; I++)
-    {
-      /* Get node coordinate. */
-      r[0] = Coor[0][I];
-      r[1] = Coor[1][I];
-      if(pd->Num_Dim == 3)
-	r[2] = Coor[2][I];
-      else
-	r[2] = 0.0;
-
-      /* Get index into solution vectorfor the FILL variable. */
-      cgm_face_get_closest_boundary(face_handle,
-				    r[0], r[1], r[2],
-				    &dist);
-      ie = Index_Solution(I, ls->var, 0, 0, -2);
-      x[ie] = dist;
-    }
-#else
-  EH(-1, "CGM not implemented.");
-#endif
-}
-
-
-/***************************************************************************************/
-/***************************************************************************************/
-/***************************************************************************************/
-
 void
 surf_based_initialization ( double *x,
                             double *delta_x,
@@ -2970,7 +2920,7 @@ ddd_add_surf( DDD pkg,
 	ddd_add_member( pkg, &(s->d), 1, MPI_DOUBLE);
 	ddd_add_member( pkg, &(s->sign), 1, MPI_DOUBLE);
       }
-      
+      break;
     case LS_SURF_FACET :
       {
         struct LS_Surf_Facet_Data *s = (struct LS_Surf_Facet_Data *) surf->data;
@@ -3977,7 +3927,7 @@ print_ls_interface( double *x,
   FILE *outfile = NULL;
   int status = 0;
 
-  strncpy(output_filenm, filenm, MAX_FNL);
+  strncpy(output_filenm, filenm, MAX_FNL-1);
   multiname(output_filenm, ProcID, Num_Proc);
 
   if (print_all_times) {
@@ -6814,7 +6764,92 @@ load_lsi(const double width)
 
 /************ End of shielding **************************/
 
-  lsi->delta_max = lsi->gfmag/alpha;
+  if (fabs(alpha) > 1e-15)
+    {
+      lsi->delta_max = lsi->gfmag/alpha;
+    }
+
+  return(0);
+
+}
+
+int
+load_lsi_old(const double width, struct Level_Set_Interface *lsi_old)
+{
+  double F_old = 0, alpha, *grad_F_old = NULL;
+  int a;
+
+  if (ls->var != FILL) {
+    EH(-1, "Unknown level set variable");
+  }
+
+  lsi_old->near  = FALSE;
+  lsi_old->alpha = 0.0;
+
+  lsi_old->H = 0.0;
+  lsi_old->delta = 0.0;
+
+  memset(lsi_old->normal, 0, sizeof(double)*DIM);
+
+  /* This is useful for calculating the above (and other) quantities. */
+  lsi_old->gfmag = 0.0;
+  lsi_old->gfmaginv = 0.0;
+
+  /* Check if we're in the mushy zone. */
+  lsi_old->alpha = 0.5 * width;
+  alpha      = lsi_old->alpha;
+
+  F_old = fv_old->F;
+  grad_F_old = fv_old->grad_F;
+
+  lsi_old->near  = ls->on_sharp_surf || fabs(F_old) < alpha;
+
+  /* Calculate the interfacial functions we want to know even if not in mushy zone. */
+
+  lsi_old->gfmag = 0.0;
+  for ( a=0; a < VIM; a++ )
+    {
+      lsi_old->normal[a] = grad_F_old[a];
+      lsi_old->gfmag    += grad_F_old[a] * grad_F_old[a];
+    }
+  lsi_old->gfmag = sqrt( lsi_old->gfmag );
+  lsi_old->gfmaginv     = ( lsi_old->gfmag == 0.0 ) ? 1.0 : 1.0 / lsi_old->gfmag;
+
+  for ( a=0; a < VIM; a++)
+    {
+      lsi_old->normal[a] *= lsi_old->gfmaginv;
+    }
+
+  /* If we're not in the mushy zone: */
+  if ( ls->on_sharp_surf )
+    {
+      lsi_old->H = ( ls->Elem_Sign < 0 ) ? 0.0 : 1.0 ;
+      lsi_old->delta = 1.;
+    }
+  else if ( ! lsi_old->near )
+    {
+      lsi_old->H = ( F_old < 0.0) ? 0.0 : 1.0 ;
+      lsi_old->delta = 0.;
+    }
+  else
+    {
+      lsi_old->H     = 0.5 * (1. + F_old / alpha + sin(M_PIE * F_old / alpha) / M_PIE);
+      lsi_old->delta = 0.5 * (1. + cos(M_PIE * F_old / alpha)) * lsi_old->gfmag / alpha;
+    }
+
+
+/**** Shield the operations below since they are very expensive relative to the previous
+      operations in the load_lsi routine. Add your variables as needed  ********/
+
+  if (pd->v[LUBP]  || pd->v[LUBP_2] || pd->v[SHELL_SAT_CLOSED] || pd->v[SHELL_PRESS_OPEN ] ||
+      pd->v[SHELL_PRESS_OPEN_2] || pd->v[SHELL_SAT_GASN] )
+    {
+      EH(-1, "No support for LUBP/SHELL_SAT/SHELL_PRESS");
+    } /* end of if pd->v[LUBP] || ... etc */
+
+/************ End of shielding **************************/
+
+  lsi_old->delta_max = lsi_old->gfmag/alpha;
 
   return(0);
 
@@ -8220,6 +8255,7 @@ divide_shape_fcn_tree ( NTREE *parent,
 	{
 	case 3:
 	  xi_m[2] = (parent->xi[0][2] + parent->xi[4][2])/2.0;
+	  /* fall through */
 	case 2:
 	  xi_m[0] = (parent->xi[0][0] + parent->xi[1][0])/2.0;
 	  xi_m[1] = (parent->xi[1][1] + parent->xi[2][1])/2.0;
@@ -10304,7 +10340,8 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
       wim = dim;
 
       if (pd->CoordinateSystem == SWIRLING ||
-          pd->CoordinateSystem == PROJECTED_CARTESIAN)
+          pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+          pd->CoordinateSystem == CARTESIAN_2pt5D)
         wim = wim+1;
 
       if (ls->var != NULL)
@@ -10403,7 +10440,8 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
       wim = dim;
 
       if (pd->CoordinateSystem == SWIRLING ||
-          pd->CoordinateSystem == PROJECTED_CARTESIAN)
+          pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+          pd->CoordinateSystem == CARTESIAN_2pt5D)
         wim = wim+1;
 
       if ( pd->v[ls->var] )
@@ -10970,6 +11008,7 @@ build_integ_element( Integ_Elem * e, double isoval, int ielem_type,
             double nodes[6][DIM];
 	    int side_ids[3];
 
+	    memset(side_crossing, 0, sizeof(int)*4);
 
             /* determine what we are going to do with this element (set job) */
             

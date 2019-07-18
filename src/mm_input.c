@@ -9,7 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
 
 /*
  *$Id: mm_input.c,v 5.36 2010-06-29 22:23:42 prschun Exp $
@@ -20,9 +19,12 @@ static char rcsid[] =
 "$Id: mm_input.c,v 5.36 2010-06-29 22:23:42 prschun Exp $";
 #endif
 
+#define _XOPEN_SOURCE /* POSIX WEXITSTATUS */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <strings.h> /* strcasecmp and strncasecmp moved here for POSIX.1 */
 #include <math.h>
 #include <unistd.h>
 
@@ -234,12 +236,8 @@ read_input_file(struct Command_line_command **clc,
 
       rd_eigen_specs(ifp, input);
 
-#ifdef USE_CGM
-      rd_geometry_specs(ifp, input);
-#else
       if(look_for_optional(ifp, "Geometry Specifications", input, '=') == 1)
- 	  EH(-1, "CGM not installed, there should be no Geometry Specifications section.");
-#endif
+ 	  EH(-1, "CGM not supported, there should be no Geometry Specifications section.");
 
       rd_particle_specs(ifp, input);
 
@@ -1395,56 +1393,61 @@ rd_timeint_specs(FILE *ifp,
   tran->fix_freq = 0;
 
   if(pd_glob[0]->TimeIntegration != STEADY) {
+    double delta_t0;
+    double delta_t_min;
+    double delta_t_max;
+    int max_time_steps;
+    double time_max;
 
     look_for(ifp,"delta_t",input,'=');
-    if (fscanf (ifp,"%le",&Delta_t0) != 1)
+    if (fscanf (ifp,"%le",&delta_t0) != 1)
       {
 	EH( -1, "error reading delta_t");
       }
-    tran->Delta_t0 = Delta_t0;
+    tran->Delta_t0 = delta_t0;
 
     SPF(echo_string,"%s = %.4g","delta_t",tran->Delta_t0); ECHO(echo_string, echo_file);
     
     look_for(ifp,"Maximum number of time steps",input,'=');
-    if (fscanf (ifp,"%d",&MaxTimeSteps) != 1)
+    if (fscanf (ifp,"%d",&max_time_steps) != 1)
       {
 	EH( -1, "error reading max time steps");
       }
-    tran->MaxTimeSteps = MaxTimeSteps; 
+    tran->MaxTimeSteps = max_time_steps;
 
     SPF(echo_string,"%s = %d", "Maximum number of time steps", tran->MaxTimeSteps); ECHO(echo_string, echo_file);
   
     look_for(ifp,"Maximum time",input,'=');
-    if ( fscanf(ifp,"%le",&TimeMax) != 1)
+    if ( fscanf(ifp,"%le",&time_max) != 1)
       {
 	EH( -1, "error reading maximum time");
       }
-    tran->TimeMax = TimeMax; 
+    tran->TimeMax = time_max;
 
     SPF(echo_string,"%s = %.4g","Maximum time",tran->TimeMax); ECHO(echo_string, echo_file);
 
     look_for(ifp,"Minimum time step",input,'=');
-    if ( fscanf(ifp,"%le",&Delta_t_min) != 1)
+    if ( fscanf(ifp,"%le",&delta_t_min) != 1)
       {
 	EH( -1, "error reading minimum time step");
       }
-    tran->Delta_t_min = Delta_t_min; 
+    tran->Delta_t_min = delta_t_min;
 
     SPF(echo_string,"%s = %.4g","Minimum time step",tran->Delta_t_min); ECHO(echo_string, echo_file);
 
-    Delta_t_max = 1.e12;
+    delta_t_max = 1.e12;
     iread = look_for_optional(ifp,"Maximum time step",input,'=');
     if (iread == 1) {   
-      if ( fscanf(ifp,"%le",&Delta_t_max) != 1)
+      if ( fscanf(ifp,"%le",&delta_t_max) != 1)
 	{
 	  EH( -1, "error reading Maximum time step");
 	}
       
-      SPF(echo_string,"%s = %.4g","Maximum time step", Delta_t_max); ECHO(echo_string, echo_file);
+      SPF(echo_string,"%s = %.4g","Maximum time step", delta_t_max); ECHO(echo_string, echo_file);
 
     }
 	
-	tran->Delta_t_max = Delta_t_max;
+        tran->Delta_t_max = delta_t_max;
 
     look_for(ifp,"Time step parameter",input,'=');
     if ( fscanf(ifp,"%le",&(tran->theta) ) != 1)
@@ -1505,7 +1508,7 @@ rd_timeint_specs(FILE *ifp,
       SPF(echo_string,"%s = %d %.4g","Printing Frequency",print_freq,print_delt ); ECHO(echo_string, echo_file);
 
       print_delt2 = -print_delt;
-      print_delt2_time = TimeMax;
+      print_delt2_time = time_max;
       iread = look_for_optional(ifp,"Second frequency time",input,'=');
       if (iread == 1) 
 	  {   
@@ -1595,7 +1598,7 @@ rd_timeint_specs(FILE *ifp,
 	  EH( -1, "error reading Initial Time");
 	}
       SPF(echo_string,"%s = %.4g","Initial Time",tran->init_time); ECHO(echo_string, echo_file);
-      if( (TimeMax - tran->init_time) <= 0.0 ) {
+      if( (time_max - tran->init_time) <= 0.0 ) {
       	EH( -1, "Your maximum time is less than or equal to your initial time!"); // a condition which may result in NAN's in the esp_dot struct
       }
     }
@@ -1902,36 +1905,7 @@ rd_levelset_specs(FILE *ifp,
             }
           else if(!strcmp(input, "SM_object"))
 	      {
-#ifdef USE_CGM
-              ls->Init_Method = SM_OBJECT;
-              /* Get SM_object type... */
-              if(fscanf(ifp, "%s", temp_string) != 1 ||
-                 !strlen(temp_string))
-                EH(-1, "Error reading SM_object type.");
-
-              if(strcmp(temp_string, "FACE") && strcmp(temp_string, "BODY"))
-                {
-                  sprintf(err_msg, "SM_object type '%s' not known.\nLegal SM_object types are: FACE, and BODY.\n", temp_string);
-                  EH(-1, err_msg);
-                }
-              ls->sm_object_type = (char *)malloc((strlen(temp_string)+1) * sizeof(char));
-              strcpy(ls->sm_object_type, temp_string);
-
-              /* Get SM_object name...*/
-              if(fscanf(ifp, "%s", temp_string) != 1 ||
-                 !strlen(temp_string))
-                {
-                  sprintf(err_msg, "Error reading SM_object %s's name.\n",
-                          ls->sm_object_type);
-                  EH(-1, err_msg);
-                }
-              ls->sm_object_name = (char *)malloc((strlen(temp_string)+1) * sizeof(char));
-              strcpy(ls->sm_object_name, temp_string);
-
-	      ECHO("This is TAB. No one every uses the SM_OBJECT option so I didn't bother to include it in the ECHO file.", echo_file);
-#else
-	      EH(-1, "Tsk-tsk, attempted to use SM_object level set initialization method without compiling in the CGM library.");
-#endif		
+	      EH(-1, "CGM not supported, SM_object");
             }
           else
             WH(-1, "Level Set Initialization method undefined");
@@ -3828,6 +3802,7 @@ rd_track_specs(FILE *ifp,
                             cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_0
                               + cpcc[iCC].coeff_1
                               * pow(EndParameterValue, cpcc[iCC].coeff_2);
+                            /* fall through */
                           default:
                             fprintf(stderr, "%s:\tCC[%d] flag must be 0, 1, or 2\n",
                                     yo, iCC+1);
@@ -4609,6 +4584,13 @@ rd_hunt_specs(FILE *ifp,
       }
 	  
 	  ECHO(echo_string,echo_file);
+          if(hunt[iHC].ramp == 2 && 
+             ((hunt[iHC].BegParameterValue == hunt[iHC].EndParameterValue) ||
+             (hunt[iHC].BegParameterValue<0 || hunt[iHC].EndParameterValue<0)))
+             {
+              hunt[iHC].ramp = 0;  
+              fprintf(stderr, "%s:\tImproper Log ramp for hunting condition %d\n", yo, iHC);
+             }
   }
 
 /* This section is required for backward compatibility - EDW */
@@ -6839,7 +6821,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
 /* For non-LOCA continuation, this card does not apply */
     default:
       fprintf(stdout, "LSA not available for continuation without LOCA!");
-      Linear_Stability = LSA_NONE;
+      Linear_Stability = LSA_NONE;  
       break;
     }
   }
@@ -7267,398 +7249,6 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
 }  /* End of rd_eigen_specs */
 
 
-#ifdef USE_CGM
-/* This little routine allows us to concatenate a bunch of input lines
- * into one big string for easy transport later.  It takes care of
- * sizes, etc. */
-static void
-cgm_strcat(char *add_me)
-{
-  static const char y0[] = "cgm_strcat";
-
-  if(strlen(cgm_input_string) + strlen(add_me) + 2 >
-     MAX_CGM_INPUT_STRING_LENGTH)
-    EH(-1, "Exceeded MAX_CGM_INPUT_STRING_LENGTH in the Geometry Specifications section.");
-  strcat(cgm_input_string, add_me);
-  strcat(cgm_input_string, " ");
-}
-
-/* This little routine allows us to concatenate an int to the same cgm_input_string...
- */
-static void
-cgm_strcat_int(int add_me)
-{
-  static const char y0[] = "cgm_strcat_int";
-  char tmp_s[80];
-
-  sprintf(tmp_s, "%d ", add_me);
-  if(strlen(cgm_input_string) + strlen(tmp_s) + 1 >
-     MAX_CGM_INPUT_STRING_LENGTH)
-    EH(-1, "Exceeded MAX_CGM_INPUT_STRING_LENGTH in the Geometry Specifications section.");
-  strcat(cgm_input_string, tmp_s);
-}
-
-/* This little routine allows us to concatenate a dbl to the same cgm_input_string...
- */
-void cgm_strcat_dbl(dbl add_me)
-{
-  static const char y0[] = "cgm_strcat_dbl";
-  char tmp_s[80];
-
-  sprintf(tmp_s, "%f ", add_me);
-  if(strlen(cgm_input_string) + strlen(tmp_s) + 1 >
-     MAX_CGM_INPUT_STRING_LENGTH)
-    EH(-1, "Exceeded MAX_CGM_INPUT_STRING_LENGTH in the Geometry Specifications section.");
-  strcat(cgm_input_string, tmp_s);
-}
-
-/* rd_geometry_specs -- read input file for geometry specifications.
- * This function reads a list of vertices, edges, etc.  It checks them
- * for syntax here, and then concatenates everything into one big
- * string for easy transport later.
- *
- * WARNING: Any change to input "structure" here must be reflected in
- * the code that diassembles the noah's ark string cgm_input_string,
- * see create_cgm_geometry() in gm_cgm_util.c...
- *
- * 08/19/2002 It was getting very confusing allowing both 2D and 3D
- * point specifications so I changed everything to be 3D pts.  Use z=0
- * for 2D...
- */
-void
-rd_geometry_specs(FILE *ifp,
-                  char *input)
-{
-  char err_msg[MAX_CHAR_IN_INPUT];
-  static const char yo[] = "rd_geometry_specs";
-  char geometry_name[80], edge_type[80], face_type[80],
-    body_type[80], sat_name[MAX_FNL], tmp_s[80];
-  dbl coordinate;
-  int i, j, iread, num_vertices, num_edges, num_edges_in_thing, num_verts_in_thing,
-    num_faces, num_bodies, num_faces_in_body;
-  int diag_output = 0;
-
-  /* Output diagnostics as we go? */
-  if(Iout > 0)
-    diag_output = 1;
-  fprintf(stdout, "\n--- Geometry specifications ---\n");
-
-  memset(cgm_input_string, 0, MAX_CGM_INPUT_STRING_LENGTH*sizeof(char));
-  
-  if(look_for_optional(ifp, "Geometry Specifications", input, '=') != 1)
-    {
-      cgm_strcat(" ");		/* otherwise sending a 0-length string causes problems in dp_vif.c */
-      cgm_input_string_length = strlen(cgm_input_string);
-      return;
-    }
-  
-  cgm_exported_filename[0]=0;
-  if(look_for_optional(ifp, "Exported geometry file", input, '=') == 1)
-    {
-      if(fscanf(ifp, "%s", cgm_exported_filename) != 1 || !strlen(cgm_exported_filename))
-	EH(-1, "Error reading exported geometry file specification.");
-      fprintf(stdout, "Will export created geometry = YES (filename = \"%s\")\n",
-	      cgm_exported_filename);
-    }
-  else
-    fprintf(stdout, "Will export created geometry = NO\n");
-
-  /* Let's read an ACIS file, if it's there */
-  if(look_for_optional(ifp, "ACIS file", input, '=') == 1)
-    {
-      cgm_strcat("ACIS");
-      sat_name[0]=0;
-      if(fscanf(ifp, "%s", sat_name) != 1 ||
-	 !strlen(sat_name))
-	EH(-1, "Error reading ACIS file specification.");
-      if(diag_output)
-	fprintf(stdout, "Will read ACIS file = YES (filename = \"%s\")\n", sat_name);
-      cgm_strcat(sat_name);
-    }
-  else
-    if(diag_output)
-      fprintf(stdout, "Will read ACIS file = NO\n");
-  
-  /* Count the number of Vertices */
-  num_vertices = count_list(ifp, "VERTEX", input, '=', "END OF VERTEX");
-  fprintf(stdout, "Number of VERTEX entries = %d\n", num_vertices);
-  cgm_strcat_int(num_vertices);
-
-  /* Read all the vertices */
-  for(i = 0; i < num_vertices; i++)
-    {
-      look_for(ifp, "VERTEX", input, '=');
-      if(fscanf(ifp, "%s", geometry_name) != 1)
-	EH(-1, "error reading vertex name");
-      if(diag_output)
-	fprintf(stdout, "  Reading VERTEX named %s\n", geometry_name);
-      
-      cgm_strcat(geometry_name);
-      add_me_to_export(geometry_name);
-
-      /* Read the coordinates. */
-      for(j = 0; j < 3; j++)
-	{
-	  if(fscanf(ifp, "%lf", &coordinate) != 1)
-	    {
-	      sprintf(err_msg, "Error reading in 3 coordinates of VERTEX named \"%s\" (use z=0 for 2D).\n",
-		      geometry_name);
-	      EH(-1, err_msg);
-	    }
-	  cgm_strcat_dbl(coordinate);
-	}
-    }
-
-  /* Count the number of edges */
-  num_edges = count_list(ifp, "EDGE", input, '=', "END OF EDGE");
-  fprintf(stdout, "Number of EDGE entries = %d\n", num_edges);
-  cgm_strcat_int(num_edges);
-
-  /*
-   * Read all the edges
-   * When reading the center point of an elliptical edge, or the top
-   * point of a parabolic edge, or the intermediate points for a spline
-   * edge, the dimensionality of the point is assumed to be the same as
-   * the dimensionaity of the vertices constructed in this input file.
-   *
-   * Is there a possibility that one problem can have 2D as well as 3D
-   * vertices? If so, then this routine needs to be reworked.
-   */
-  for(i = 0; i < num_edges; i++)
-    {
-      look_for(ifp, "EDGE", input, '=');
-      /* Read the name */
-      if (fscanf(ifp, "%s", geometry_name) != 1)
-	EH(-1, "Error reading EDGE name.");
-      cgm_strcat(geometry_name);
-      add_me_to_export(geometry_name);
-      if(diag_output)
-	fprintf(stdout, "  Reading EDGE named %s\n", geometry_name);
-
-      /* Read the edge type */
-      if (fscanf(ifp, "%s", edge_type) != 1)
-	{
-	  sprintf(err_msg, "Error reading edge type for EDGE %s\n", geometry_name);
-	  EH(-1, err_msg);
-	}
-      cgm_strcat(edge_type);
-
-      /* Read in the names of the two end vertices, if the edge type
-       * is not composite. */
-      if(strcmp(edge_type, "COMPOSITE"))
-	{
-	  if(fscanf(ifp, "%s", geometry_name) != 1)
-	    EH(-1, "Error reading in vertex name in EDGE command.");
-	  cgm_strcat(geometry_name);
-	  if(fscanf(ifp, "%s", geometry_name) != 1)
-	    EH(-1, "Error reading in vertex name in EDGE command.");
-	  cgm_strcat(geometry_name);
-	}
-
-      if(!strcmp(edge_type, "STRAIGHT"))
-	{
-	  /* No extra junk to write. */
-	}
-      else if(!strcmp(edge_type, "ELLIPSE"))
-	{
-	  /* Read center point. */
-	  for(j = 0; j < 3; j++)
-	    {
-	      if(fscanf(ifp, "%lf", &coordinate) != 1)
-		EH(-1, "Error reading coordinate for the center point of ELLIPSE (use z=0 for 2D).\n");
-	      cgm_strcat_dbl(coordinate);
-	    }
-	  if(fscanf(ifp, "%s", geometry_name) != 1 ||
-	     (!strcmp(geometry_name, "FORWARD") &&
-	      !strcmp(geometry_name, "REVERSED")))
-	    EH(-1, "Error reading edge sense for an ELLIPSE.");
-	  cgm_strcat(geometry_name);
-	}
-      else if(!strcmp(edge_type, "PARABOLA"))
-	{
-	  /* Read center point. */
-	  for(j = 0; j < 3; j++)
-	    {
-	      if(fscanf(ifp, "%lf", &coordinate) != 1)
-		EH(-1, "Error reading center point for PARABOLA (use z=0 for 2D).");
-	      cgm_strcat_dbl(coordinate);
-	    }
-	  if(fscanf(ifp, "%s", geometry_name) != 1 ||
-	     (!strcmp(geometry_name, "FORWARD") &&
-	      !strcmp(geometry_name, "REVERSED")))
-	    EH(-1, "Error reading edge sense for an ELLIPSE.");
-	  cgm_strcat(geometry_name);
-	}
-      else if(!strcmp(edge_type, "SPLINE"))
-	{
-	  /* Hmmm, why is this empty? */
-	  EH(-1, "I don't know if SPLINE edges are enabled...");
-	}
-      else if(!strcmp(edge_type, "COMPOSITE"))
-	{
-	  /* Read the number of edges the composite edge is comprised
-	     of. */
-	  if(fscanf(ifp, "%d", &num_edges_in_thing) != 1 ||
-	     num_edges_in_thing < 1)
-	    EH(-1, "Error reading number of edges in COMPOSITE edge.");
-	  cgm_strcat_int(num_edges_in_thing);
-	  for(j = 0; j < num_edges_in_thing; j++)
-	    {
-	      if(fscanf(ifp, "%s", geometry_name) != 1)
-		EH(-1, "Error reading in edge name in COMPOSITE edge.");
-	      cgm_strcat(geometry_name);
-	    }
-	}
-      else
-	EH(-1, "Legal EDGE types are: STRAIGHT, ELLIPSE, PARABOLA, and COMPOPSITE.");
-    }
-  
-  num_faces = count_list(ifp, "FACE", input, '=', "END OF FACE");
-  fprintf(stdout, "Number of FACE entries = %d\n", num_faces);
-  cgm_strcat_int(num_faces);
-
-  for(i = 0; i < num_faces; i++)
-    {
-      look_for(ifp, "FACE", input, '=');
-
-      /* Read the name */
-      if(fscanf(ifp, "%s", geometry_name) != 1)
-	EH(-1, "Error reading FACE name.");
-      cgm_strcat(geometry_name);
-      add_me_to_export(geometry_name);
-      if(diag_output)
-	fprintf(stdout, "  Reading FACE named %s\n", geometry_name);
-
-      /* Read the face type */
-      if(fscanf(ifp, "%s", face_type) != 1)
-	EH( -1, "Error reading FACE type.");
-      cgm_strcat(face_type);
-
-      /* Depending on the face type, read the relevant
-         data. Construct the CGM face. */ 
-      if(!strcmp(face_type, "PLANE"))
-	{
-	  /* Read the number of edges that make up the face */
-	  if(fscanf(ifp, "%d", &num_edges_in_thing) != 1)
-	    EH(-1, "Error reading number of edges in FACE.");
-	  cgm_strcat_int(num_edges_in_thing);
-
-	  /* Read the names of edges that bound the face */
-	  for(j = 0; j < num_edges_in_thing; j++)
-	    {
-	      if(fscanf(ifp, "%s", geometry_name) != 1)
-		EH(-1, "Error reading in edge name for PLANE FACE.");
-	      cgm_strcat(geometry_name);
-	    }
-	}
-      else if(!strcmp(face_type, "POLY"))
-	{
-	  /* Read the number of vertices that make up the face */
-	  if(fscanf(ifp, "%d", &num_verts_in_thing) != 1)
-	    EH(-1, "Error reading number of edges in FACE.");
-
-	  cgm_strcat_int(num_verts_in_thing);
-
-	  /* Read the coordinates of vertices that bound the face */
-	  for(j = 0; j < 3 * num_verts_in_thing; j++)
-	    {
-	      if(fscanf(ifp, "%lf", &coordinate) != 1)
-		EH(-1, "Error reading in coordinates for POLY FACE.");
-	      cgm_strcat_dbl(coordinate);
-	    }
-	}
-      else if(!strcmp(face_type, "POLY_VERT"))
-	{
-	  /* Read the number of vertices that make up the face */
-	  if(fscanf(ifp, "%d", &num_verts_in_thing) != 1)
-	    EH(-1, "Error reading number of edges in FACE.");
-
-	  cgm_strcat_int(num_verts_in_thing);
-
-	  /* Read the names of the vertices that bound the face */
-	  for(j = 0; j < num_verts_in_thing; j++)
-	    {
-	      if(fscanf(ifp, "%s", geometry_name) != 1)
-		EH(-1, "Error reading in vertex names for POLY_VERT FACE.");
-	      cgm_strcat(geometry_name);
-	    }
-	}
-      else if(!strcmp(face_type, "DISK"))
-	{
-	  /* Read the number of vertices that make up the face */
-	  for(j = 0; j< 3; j++)
-	    {
-	      if(fscanf(ifp, "%lf", &coordinate) != 1)
-		EH(-1, "Error reading coordinate for DISK FACE.");
-	      cgm_strcat_dbl(coordinate);
-	    }
-	}
-      else
-	EH(-1, "Legal FACE types are: PLANE, POLY, POLY_VERT, and DISK.");
-    }
-
-  /* Count the number of BODY's */
-  num_bodies = count_list(ifp, "BODY", input, '=', "END OF BODY");
-  fprintf(stdout, "Number of BODY entries = %d\n", num_bodies);
-  cgm_strcat_int(num_bodies);
-
-  /* Read all the bodies */
-  for(i = 0; i < num_bodies; i++)
-    {
-      look_for(ifp, "BODY", input, '=');
-
-      /* Read the body name */
-      if(fscanf(ifp, "%s", geometry_name) != 1)
-	EH(-1, "Error reading in BODY name.");
-      cgm_strcat(geometry_name);
-      add_me_to_export(geometry_name);
-      if(diag_output)
-	fprintf(stdout, "  Reading BODY named %s\n", geometry_name);
-
-      /* Read the body type (this includes boolean operations such
-	 as SUBTRACT */
-      if(fscanf(ifp, "%s", body_type) != 1)
-	EH(-1, "Error reading in type of BODY.");
-      cgm_strcat(body_type);
-
-      if(!strcmp(body_type, "SINGLE_FACE"))
-	{
-	  /* Read the name of single face that bounds the body. */
-	  if(fscanf(ifp, "%s", geometry_name) != 1)
-	    EH(-1, "Error reading name of face for SINGLE_FACE body.");
-	  cgm_strcat(geometry_name);
-	}
-      else if(!strcmp(body_type, "MULTI_FACE"))
-	{
-	  /* Read the number of faces in the multi-face body. */
-	  if(fscanf(ifp, "%d", &num_faces_in_body) != 1)
-	    EH(-1, "Error reading in number of faces in MULTI_FACE body.");
-	  cgm_strcat_int(num_faces_in_body);
-	  for(j = 0; j < num_faces_in_body; j++)
-	    {
-	      if(fscanf(ifp, "%s", geometry_name) != 1)
-		EH(-1, "Error reading in name of face for MULTI_FACE body.");
-	      cgm_strcat(geometry_name);
-	    }
-	}
-      else if(!strcmp(body_type, "SUBTRACT"))
-	{
-	  if(fscanf(ifp, "%s", geometry_name) != 1)
-	    EH(-1, "Error reading name of body for a SUBTRACT body.");
-	  cgm_strcat(geometry_name);
-	  if(fscanf(ifp, "%s", geometry_name) != 1)
-	    EH(-1, "Error reading name of body for a SUBTRACT body.");
-	  cgm_strcat(geometry_name);
-	}
-      else
-	EH(-1, "Legal BODY types are: SINGLE_FACE, MULTI_FACE, and SUBTRACT.");
-    }
-  if(diag_output)
-    fprintf(stdout, "\ncgm_input_string =\n%s\n", cgm_input_string);
-  cgm_input_string_length = strlen(cgm_input_string);
-}
-/* rd_geometry_specs -- read input file for geometry specifications */
-#endif
 
 /*****************************************************************************/
 /*  NOTE:  rd_bc_specs has been moved to file mm_input_bc.c!                 */
@@ -8056,6 +7646,10 @@ rd_eq_specs(FILE *ifp,
   else if ( !strcasecmp(tscs, "PROJECTED_CARTESIAN") )
     {
       CoordinateSystem = PROJECTED_CARTESIAN;
+    }
+  else if ( !strcasecmp(tscs, "CARTESIAN_2pt5D") )
+    {
+      CoordinateSystem = CARTESIAN_2pt5D;
     }
   else
     {
@@ -8657,6 +8251,32 @@ rd_eq_specs(FILE *ifp,
       ce = set_eqn(R_TFMP_MASS, pd_ptr);
    } else if (!strcasecmp(ts, "tfmp_bound"))  {
       ce = set_eqn(R_TFMP_BOUND, pd_ptr);
+    } else if (!strcasecmp(ts, "restime")) {
+      ce = set_eqn(R_RESTIME, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e1_real")) {
+      ce = set_eqn(R_EM_E1_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e1_imag")) {
+      ce = set_eqn(R_EM_E1_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e2_real")) {
+      ce = set_eqn(R_EM_E2_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e2_imag")) {
+      ce = set_eqn(R_EM_E2_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e3_real")) {
+      ce = set_eqn(R_EM_E3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e3_imag")) {
+      ce = set_eqn(R_EM_E3_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h1_real")) {
+      ce = set_eqn(R_EM_H1_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h1_imag")) {
+      ce = set_eqn(R_EM_H1_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h2_real")) {
+      ce = set_eqn(R_EM_H2_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h2_imag")) {
+      ce = set_eqn(R_EM_H2_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h3_real")) {
+      ce = set_eqn(R_EM_H3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h3_imag")) {
+      ce = set_eqn(R_EM_H3_IMAG, pd_ptr);  
 
     } else if (!strcasecmp(ts, "porous_sat"))  {
       ce = set_eqn(R_POR_LIQ_PRES, pd_ptr);
@@ -9255,6 +8875,32 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(TFMP_PRES, pd_ptr);
     } else if (!strcasecmp(ts, "TFMP_SAT")) {
       cv = set_var(TFMP_SAT, pd_ptr);
+    } else if (!strcasecmp(ts, "RST")) {
+      cv = set_var(RESTIME, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E1_REAL")) {
+      cv = set_var(EM_E1_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E1_IMAG")) {
+      cv = set_var(EM_E1_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E2_REAL")) {
+      cv = set_var(EM_E2_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E2_IMAG")) {
+      cv = set_var(EM_E2_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E3_REAL")) {
+      cv = set_var(EM_E3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E3_IMAG")) {
+      cv = set_var(EM_E3_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H1_REAL")) {
+      cv = set_var(EM_H1_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H1_IMAG")) {
+      cv = set_var(EM_H1_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H2_REAL")) {
+      cv = set_var(EM_H2_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H2_IMAG")) {
+      cv = set_var(EM_H2_IMAG, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H3_REAL")) {
+      cv = set_var(EM_H3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H3_IMAG")) {
+      cv = set_var(EM_H3_IMAG, pd_ptr);  
 
     } else if (!strncasecmp(ts, "Sp", 2)) {
       if (!strcasecmp(ts, "Sp")) {
@@ -9549,7 +9195,8 @@ rd_eq_specs(FILE *ifp,
 
       /* add a little consistency check for any 3D or cylindrical problems */
       if ((pd_ptr->CoordinateSystem != CARTESIAN &&
-	   pd_ptr->CoordinateSystem != PROJECTED_CARTESIAN))
+	   pd_ptr->CoordinateSystem != PROJECTED_CARTESIAN &&
+	   pd_ptr->CoordinateSystem != CARTESIAN_2pt5D))
 	{
 	  //  EH(-1,"Shell capability only avaible for 2D Cartesian systems");
           printf("WARNING: Shell Capability is experimental for non 2D Cartesian systems\n");
@@ -9915,6 +9562,19 @@ rd_eq_specs(FILE *ifp,
     case R_LIGHT_INTP:
     case R_LIGHT_INTM:
     case R_LIGHT_INTD:
+    case R_RESTIME:  
+    case R_EM_E1_REAL:
+    case R_EM_E1_IMAG:
+    case R_EM_E2_REAL:
+    case R_EM_E2_IMAG:
+    case R_EM_E3_REAL:
+    case R_EM_E3_IMAG:
+    case R_EM_H1_REAL:
+    case R_EM_H1_IMAG:
+    case R_EM_H2_REAL:
+    case R_EM_H2_IMAG:
+    case R_EM_H3_REAL:
+    case R_EM_H3_IMAG:
 
 	if ( fscanf(ifp, "%lf %lf %lf %lf %lf", 
 		    &(pd_ptr->etm[ce][(LOG2_MASS)]),
@@ -11273,6 +10933,7 @@ set_mp_to_unity(const int mn)
       m->FickDiffType[w]=CONSTANT;
       m->CurvDiffType[w]=CONSTANT;
       m->GravDiffType[w]=CONSTANT;
+      m->NSCoeffType[w]=CONSTANT;
       m->QTensorDiffType[w] = NO_MODEL;
       m->gam_diffusivity[w]=0.;
       m->mu_diffusivity[w]=0.;
@@ -11589,7 +11250,7 @@ translate_command_line( int argc,
 	      istr++;
 	      clc[*nclc]->type = PRINT_CODE_VERSION;
 	      print_code_version(); /* don't come back */
-	      log_msg("This is GOMA version %s", VERSION);
+	      log_msg("This is GOMA version %s", GOMA_VERSION);
 	      log_msg("GOMA ends normally.");
 	      echo_compiler_settings();
 	      exit(0);
@@ -13398,14 +13059,6 @@ setup_gd_table_BC(
     {
       BC_Type->table->interp_method = QUAD_GP;
     }
-#ifdef USE_CGM
-  /*
-   * If the Interpolation Method is "SM_EDGE" (this is defined in mm_cgm_typedefs.h) then
-   * a CompositeEdge is used to specify the "table" BC
-   */
-  else if(!strcmp(input, "SM_EDGE"))
-    EH(-1, "The SM_EDGE \"table\" interpolation method has been removed because it was silly.");
-#endif
   else
     {
       sr = sprintf(err_msg, "Unknown interpolation method for %s on %sID=%d.\n",
@@ -13598,6 +13251,10 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 		EH(-1,err_msg);
 	      }
 	  }
+	else if (strcmp( line, "LINEAR_TIME") == 0) {
+	  strcpy( table->t_name[i],"LINEAR_TIME");
+	  table->t_index[i] = LINEAR_TIME;
+	}
 	else if( (strcmp( line, "CAP_PRES") == 0) )
 	  {
 	    if( (strcmp( table->f_name, "Saturation") != 0) ) 
@@ -13890,6 +13547,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
  	{
  	case 3:
    		table->t3 = (double *) smalloc( sizeof(double)*Num_Pnts );
+   		/* fall through */
  	case 2:
  	case 1:
    		table->t2 = (double *) smalloc( sizeof(double)*Num_Pnts );
@@ -14577,14 +14235,6 @@ echo_compiler_settings()
   fprintf(echo_file, "%-30s= %s\n", "COUPLED_FILL", "yes");
 #else 
   fprintf(echo_file, "%-30s= %s\n", "COUPLED_FILL", "no");
-#endif
-
-  fprintf(echo_file, "%-30s= %s\n", "USE_CGM",
-	  /* Just to bug PKN ... */
-#ifdef USE_CGM
-	  "yes");
-#else
-          "no");
 #endif
 
 #ifdef DEBUG

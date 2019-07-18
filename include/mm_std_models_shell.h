@@ -19,13 +19,11 @@
 
 #ifdef _MM_STD_MODELS_SHELL_C
 #define EXTERN
-#
 #endif
 
 #ifndef _MM_STD_MODELS_SHELL_C
 #define EXTERN extern
 #endif
-
 
 EXTERN double height_function_model /* mm_std_models_shell.c                */
 PROTO((dbl *,
@@ -81,6 +79,13 @@ PROTO((
        double,
        double *,
        double *
+       ));
+
+EXTERN double rolling_pressure
+PROTO((
+       double,
+       double*,
+       double
        ));
 
 #endif /* _MM_STD_MODELS_H */
