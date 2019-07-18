@@ -3109,11 +3109,11 @@ struct Lubrication_Auxiliaries {
 
 typedef struct Lubrication_Auxiliaries LUBRICATION_AUXILIARIES_STRUCT;
 
-struct SUPG_terms {
+typedef struct {
   dbl supg_tau;
   dbl d_supg_tau_dv[DIM][MDE];
   dbl d_supg_tau_dX[DIM][MDE];
-};
+} SUPG_terms;
 
 /******************************************************************************/
 /******************************************************************************/

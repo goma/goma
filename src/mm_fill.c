@@ -1615,8 +1615,7 @@ matrix_fill(
 
       if (pde[R_MASS]) 
         {	
-          err = assemble_mass_transport(time_value, theta, delta_t, pg_data.hsquared,
-					pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
+          err = assemble_mass_transport(time_value, theta, delta_t, &pg_data);
 	  EH( err, "assemble_mass_transport");	  
 #ifdef CHECK_FINITE
 	  CHECKFINITE("assemble_mass_transport");	

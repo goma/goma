@@ -199,7 +199,7 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
                    [MDE]; /* deriv of solid rel velo w.r.t. real-solid displ */
 
   /* Alternative newer SUPG style */
-  struct SUPG_terms supg_terms;
+  SUPG_terms supg_terms;
 
   double vmag_old, tau_gls;
   double h_elem;
@@ -384,7 +384,7 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
 
   if (Fill_Weight_Fcn == FILL_WEIGHT_SUPG_SHAKIB ||
       Fill_Weight_Fcn == FILL_WEIGHT_SUPG_GP) {
-    get_supg_tau(&supg_terms, dim, 0, pg_data, dt,
+    supg_tau(&supg_terms, dim, 0, pg_data, dt,
                  Fill_Weight_Fcn == FILL_WEIGHT_SUPG_SHAKIB, R_FILL);
   }
 
