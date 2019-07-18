@@ -314,6 +314,10 @@ struct Material_Properties
   int SpSSPG_funcModel;
   dbl SpSSPG_func;
 
+  int SpYZbeta_funcModel;
+  dbl SpYZbeta_func;
+  dbl SpYZbeta_value;
+
   int Momentwt_funcModel;
   dbl Momentwt_func;
 

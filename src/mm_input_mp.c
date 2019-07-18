@@ -5960,6 +5960,50 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                                  model_name, SCALAR_INPUT, &NO_SPECIES,es);
   ECHO(es,echo_file);
 
+  model_read = look_for_mat_prop(imp, "Species YZbeta Function",
+                                 &(mat_ptr->SpYZbeta_funcModel),
+                                 &(mat_ptr->SpYZbeta_func), NO_USER, NULL,
+                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
+  if ( !strcmp(model_name, "ONE") )
+    {
+      mat_ptr->SpYZbeta_funcModel = YZBETA_ONE;
+      if (fscanf(imp, "%lg",&(mat_ptr->SpYZbeta_func)) != 1)
+      {
+        EH(-1, "Could not read Scale for Species YZbeta Function YZBETA_ONE");
+      }
+    }
+  else if ( !strcmp(model_name, "TWO") )
+    {
+      mat_ptr->SpYZbeta_funcModel = YZBETA_TWO;
+      if (fscanf(imp, "%lg",&(mat_ptr->SpYZbeta_func)) != 1)
+      {
+        EH(-1, "Could not read Scale for Species YZbeta Function YZBETA_TWO");
+      }
+    }
+  else if ( !strcmp(model_name, "MIXED") )
+    {
+      mat_ptr->SpYZbeta_funcModel = YZBETA_MIXED;
+      if (fscanf(imp, "%lg",&(mat_ptr->SpYZbeta_func)) != 1)
+      {
+        EH(-1, "Could not read Scale for Species YZbeta Function YZBETA_MIXED");
+      }
+    }
+  else if ( !strcmp(model_name, "CUSTOM") )
+    {
+      mat_ptr->SpYZbeta_funcModel = YZBETA_CUSTOM;
+      if (fscanf(imp, "%lg %lg",&(mat_ptr->SpYZbeta_func), &(mat_ptr->SpYZbeta_value)) != 2)
+      {
+        EH(-1, "Could not read Scale and beta value for Species YZbeta Function YZBETA_CUSTOM");
+      }
+    }
+  else
+    {
+      mat_ptr->SpYZbeta_funcModel = YZBETA_NONE;
+      mat_ptr->SpYZbeta_func = 0.;
+      SPF(es,"\t(%s = %s)", "Species YZbeta Function", "YZBETA_NONE");
+    }
+  ECHO(es,echo_file);
+
 
 
   /*

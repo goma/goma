@@ -769,7 +769,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 	  }
 	  
       if (Debug_Flag < 0 && Debug_Flag != -4 && 
-          (Debug_Flag != -5 || inewton >= Max_Newton_Steps-1) )
+          (Debug_Flag != -5 || inewton >= Max_Newton_Steps-1))
 	{
 	  /* Former block 0 in mm_fill.c. Here is some initialization */
 	  num_total_nodes = dpi->num_universe_nodes;
