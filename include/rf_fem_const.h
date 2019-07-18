@@ -63,6 +63,12 @@
 #define GALERKIN        1
 #define SUPG            2
 
+#define YZBETA_NONE     0
+#define YZBETA_ONE      1
+#define YZBETA_TWO      2
+#define YZBETA_MIXED    3
+#define YZBETA_CUSTOM   4
+
 /* Viscoelastic Constitutive equation formulation */
 #define EVSS_G          1  /* Rajagopalan's formulation */
 #define EVSS_F          2  /* Fortin's formulation */

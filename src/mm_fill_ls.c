@@ -2447,8 +2447,7 @@ static void ddd_add_surf(DDD pkg, struct LS_Surf *surf) {
     ddd_add_member(pkg, s->n, 3, MPI_DOUBLE);
     ddd_add_member(pkg, &(s->d), 1, MPI_DOUBLE);
     ddd_add_member(pkg, &(s->sign), 1, MPI_DOUBLE);
-  }
-
+  } break;
   case LS_SURF_FACET: {
     struct LS_Surf_Facet_Data *s = (struct LS_Surf_Facet_Data *)surf->data;
 

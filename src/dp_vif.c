@@ -1499,6 +1499,8 @@ noahs_ark()
       ddd_add_member(n, &ls->SubcyclesAfterRenorm, 1,  MPI_INT);
       ddd_add_member(n, &ls->ghost_stress, 1, MPI_INT);
       ddd_add_member(n, &ls->Toure_Penalty, 1, MPI_INT);
+      ddd_add_member(n, &ls->YZbeta, 1, MPI_INT);
+      ddd_add_member(n, &ls->YZbeta_scale, 1, MPI_DOUBLE);
       ddd_add_member(n, &ls->Huygens_Freeze_Nodes, 1, MPI_INT);
       ddd_add_member(n, &ls->Semi_Implicit_Integration, 1, MPI_INT);
     }
@@ -1579,8 +1581,13 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->FlowingLiquid_viscosity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Inertia_coefficient, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Spwt_func, 1, MPI_DOUBLE);
+
       ddd_add_member(n, &mp_glob[i]->SpSSPG_funcModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->SpSSPG_func, 1, MPI_DOUBLE);
+
+      ddd_add_member(n, &mp_glob[i]->SpYZbeta_funcModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->SpYZbeta_func, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->SpYZbeta_value, 1, MPI_DOUBLE);
 
       ddd_add_member(n, &mp_glob[i]->Porous_wt_func, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->Volume_Expansion, 1, MPI_DOUBLE);
@@ -2578,6 +2585,7 @@ noahs_ark()
   ddd_add_member(n, &HEAVISIDE, 1, MPI_INT);
   ddd_add_member(n, &RHO_DOT, 1, MPI_INT);
   ddd_add_member(n, &MOMENT_SOURCES, 1, MPI_INT);
+  ddd_add_member(n, &YZBETA, 1, MPI_INT);
 
   if ( len_u_post_proc > 0 )
     {

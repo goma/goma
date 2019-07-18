@@ -462,7 +462,7 @@ free_problem(Exo_DB *exo,     /* ptr to the finite element mesh database */
   /*
    * Free up the First_Elem_Side_BC_Array array 
    */
-  free_Surf_BC(First_Elem_Side_BC_Array, exo, dpi);			      
+    free_Surf_BC(First_Elem_Side_BC_Array, exo);
   free_Edge_BC(First_Elem_Edge_BC_Array, exo, dpi);
   return 0;
 }

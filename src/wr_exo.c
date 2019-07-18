@@ -2164,9 +2164,7 @@ wr_resetup_exo(Exo_DB *exo,
 
 
 void 
-wr_result_exo(Exo_DB *exo,
-              char *filename,
-              int verbosity)
+wr_result_exo(Exo_DB *exo, char *filename)
 {
   int i;
   int index;

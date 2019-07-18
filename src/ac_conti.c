@@ -873,10 +873,9 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 #ifdef DEBUG
 	      DPRINTF(stderr, "%s: write_solution call WIS\n", yo);
 #endif
-	      write_solution(ExoFileOut, resid_vector, x, x_sens_p,
-			     x_old, xdot, xdot_old, tev, tev_post, NULL, rd, 
-			     gindex, p_gsize, gvec, gvec_elem, &nprint, 
-			     delta_s, theta, path1, NULL, exo, dpi);
+            write_solution(ExoFileOut, resid_vector, x, x_sens_p,
+                           x_old, xdot, xdot_old, tev, tev_post, NULL, rd, gvec, gvec_elem, &nprint,
+                           delta_s, theta, path1, NULL, exo, dpi);
 #ifdef DEBUG
 	      fprintf(stderr, "%s: write_solution end call WIS\n", yo);
 #endif
@@ -1176,10 +1175,10 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	    DPRINTF(stdout, "%s:  error writing ASCII soln file\n", yo);
 	  }
 	  if (Write_Intermediate_Solutions == 0 ) {
-	    write_solution(ExoFileOut, resid_vector, x, x_sens_p, 
-			   x_old, xdot, xdot_old, tev, tev_post, NULL,
-			   rd, gindex, p_gsize, gvec, gvec_elem, &nprint,
-			   delta_s, theta, path1, NULL, exo, dpi);
+          write_solution(ExoFileOut, resid_vector, x, x_sens_p,
+                         x_old, xdot, xdot_old, tev, tev_post, NULL,
+                         rd, gvec, gvec_elem, &nprint,
+                         delta_s, theta, path1, NULL, exo, dpi);
 	    nprint++;
 	  }
 	}

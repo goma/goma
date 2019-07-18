@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
+#include <float.h>
 
 /* GOMA include files */
 
@@ -113,6 +114,7 @@
 *******************************************************************************/
 /******************************************************************************/
 /******************************************************************************/
+
 
 /* assemble_mass_transport() -- assemble terms (Residual &| Jacobian) for mass
  *                              conservation eqns
@@ -383,6 +385,41 @@ int assemble_mass_transport(
     }
     supg_tau(&supg_terms, dim,  diffusivity, pg_data, dt, 0, eqn);
 
+    dbl k_dc = 0;
+    dbl d_k_dc[MDE] = {0};
+    if (mp->SpYZbeta_funcModel != YZBETA_NONE) {
+      dbl strong_residual = 0;
+      strong_residual = fv_dot_old->c[w];
+      for (int p = 0; p < VIM; p++) {
+        strong_residual += fv->v[p] * fv_old->grad_c[w][p];
+      }
+      //strong_residual -= s_terms.MassSource[w];
+      dbl h_elem = 0;
+      for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
+        h_elem += pg_data->hsquared[a];
+      }
+      /* This is the size of the element */
+      h_elem = sqrt(h_elem  / ((double)ei[pg->imtrx]->ielem_dim));
+
+      dbl inner = 0;
+      for (int i = 0; i < dim; i++) {
+        inner += fv_old->grad_c[w][i] * fv_old->grad_c[w][i];
+      }
+
+      dbl yzbeta = 0;
+
+      dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
+      dbl dc1 = fabs(strong_residual) * inv_sqrt_inner * h_elem * 0.5;
+      dbl dc2 = fabs(strong_residual) * h_elem * h_elem * 0.25;
+
+      //dc1 = fmin(supg_terms.supg_tau,dc1);//0.5*(dc1 + dc2);
+      yzbeta = fmin(supg_terms.supg_tau, 0.5*(dc1+dc2));//0.5*(dc1 + dc2);
+      for (int k = 0; k <  ei[pg->imtrx]->dof[eqn]; k++) {
+        d_k_dc[k] = 0;
+      }
+
+      k_dc = yzbeta;
+    }
 
     /*
      * Residuals_________________________________________________________________
@@ -586,6 +623,12 @@ int assemble_mass_transport(
             diffusion *= h3 * det_J * wt;
             diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
           }
+
+          dbl discontinuity_capturing = 0;
+          for (p = 0; p < VIM; p++) {
+            discontinuity_capturing += k_dc * fv->grad_c[w][p] * grad_phi_i[p];
+          }
+          discontinuity_capturing *= -h3 * det_J * wt;
           /*
            * HKM -> Note the addition of a species molecular weight
            *        term is currently done in the source term
@@ -617,7 +660,7 @@ int assemble_mass_transport(
            *  in the local element residual vector.
            */
           lec->R[MAX_PROB_VAR + w][ii] +=
-              Heaviside * (mass + advection) + source + diffusion;
+              Heaviside * (mass + advection) + source + diffusion + discontinuity_capturing;
 
         } /* if active_dofs */
 
@@ -868,6 +911,13 @@ int assemble_mass_transport(
                   diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
                 }
 
+                dbl discontinuity_capturing = 0;
+                for (p = 0; p < VIM; p++) {
+                  discontinuity_capturing += k_dc * bf[eqn]->grad_phi[j][p] * grad_phi_i[p];
+                  discontinuity_capturing += d_k_dc[j] * fv->grad_c[w][p] * grad_phi_i[p];
+                }
+                discontinuity_capturing *= -h3 * det_J * wt;
+
                 source = 0.;
                 if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
                   source += s_terms.d_MassSource_dc[w][w1][j];
@@ -895,7 +945,7 @@ int assemble_mass_transport(
                 }
 
                 lec->J[MAX_PROB_VAR + w][MAX_PROB_VAR + w1][ii][j] +=
-                    Heaviside * (mass + advection) + source + diffusion;
+                    Heaviside * (mass + advection) + source + diffusion + discontinuity_capturing;
               }
             }
           }

@@ -7833,6 +7833,16 @@ load_fv(void)
     scalar_fv_fill(esp->F, esp_dot->F, esp_old->F, bf[v]->phi, ei[pd->mi[v]]->dof[v],
                    &(fv->F), &(fv_dot->F), &(fv_old->F));
     stateVector[v] = fv->F;
+    fv_dot_old->F = 0;
+    for (int i = 0; i < ei[pd->mi[v]]->dof[v]; i++) {
+      if (upd->Total_Num_Matrices > 1) {
+        fv_dot_old->F += *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot +
+                                  esp_dot->F[i]) * bf[v]->phi[i];
+      } else {
+        fv_dot_old->F +=  *(xdot_old_static - xdot_static +
+                                  esp_dot->F[i]) * bf[v]->phi[i];
+      }
+    }
   } /*else if (upd->vp[pg->imtrx][v] == -1) {
       fv->F = fv_old->F = fv_dot->F = 0.;
       } */
@@ -8902,6 +8912,12 @@ load_fv(void)
 	  scalar_fv_fill(esp->c[w], esp_dot->c[w], esp_old->c[w], 
 			 bf[v]->phi, ei[pd->mi[v]]->dof[v],
 			 &(fv->c[w]), &(fv_dot->c[w]), &(fv_old->c[w]));
+          fv_dot_old->c[w] = 0;
+          for (int i = 0; i < ei[pd->mi[v]]->dof[v]; i++) {
+            fv_dot_old->c[w] +=
+              *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot + esp_dot->c[w][i]) *
+              bf[v]->phi[i];
+          }
 	  stateVector[SPECIES_UNK_0+w] = fv->c[w];
 	}
       }
