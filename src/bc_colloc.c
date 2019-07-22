@@ -764,51 +764,113 @@ f_fillet (const int ielem_dim,
         const int num_const)           /* number of passed parameters   */
 {    
 /**************************** EXECUTION BEGINS *******************************/
-  double xpt, ypt, theta1, theta2, rad, xcen , ycen, alpha;
-  double theta;
+  double pt[DIM], side_th[2], rad, center[DIM], alpha, theta_mid, theta_avg, tmp;
+  double theta, siderad=-1., circ[DIM]={0.,0.,0.}, dsign, beta, cham_ang=-1., cham_rotn=0.;
+  int iside=0, chamfer=0, i, dim=2;
 
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
-  if(num_const != 5)
-       EH(-1,"Need 5 parameters for 2D fillet geometry bc!\n");
+  if(num_const <= 5)
+       EH(-1,"Need at least 5 parameters for 2D fillet geometry bc!\n");
 
-  xpt=p[0];
-  ypt=p[1];
-  theta1=p[2];
-  theta2=p[3];
+  pt[0]=p[0];
+  pt[1]=p[1];
+  side_th[0]=p[2];
+  side_th[1]=p[3];
   rad=p[4];
+  if(num_const >= 7)
+	{
+  	  siderad=p[5];
+  	  iside = ((int)p[6]);
+	}
+  if(num_const >= 8)
+	{ chamfer = ((int)p[7]); }
+  if(num_const >= 9)
+	{ cham_ang = p[8]; }
+  if(ielem_dim > dim)
+       WH(-1,"FILLET_BC: Only z-invariant geometry available for now.\n");
 
-  alpha = 0.5*(theta2-theta1);
-  xcen = xpt + (rad/sin(alpha))*cos(theta1+alpha);
-  ycen = ypt + (rad/sin(alpha))*sin(theta1+alpha);
+  /**  find center of die face  **/
+
+  alpha = 0.5*(side_th[1]-side_th[0]);
+  theta_avg = 0.5*(side_th[1]+side_th[0]);
+  if(iside)
+          {
+	  dsign = ((double)(3-2*iside));
+          beta = side_th[2-iside] - dsign*asin((rad-siderad*cos(2.*alpha))/(rad+siderad));
+	  for(i=0 ; i<dim ; i++)
+		{
+		circ[i] = pt[i] + dsign*siderad*sin(side_th[iside-1]-0.5*M_PIE*i);
+          	center[i] = circ[i] + (rad+siderad)*cos(beta-0.5*M_PIE*i);
+		}
+          }    
+  else
+	  { 
+	  for(i=0 ; i<dim ; i++)
+		{ center[i] = pt[i] + (rad/sin(alpha))*cos(theta_avg-0.5*M_PIE*i); }
+	  }
+
+
 
   /**   compute angle of point on curve from arc center **/
 
-  theta = atan2(fv->x[1]-ycen,fv->x[0]-xcen);
-  theta = theta > theta2-1.5*M_PIE ? theta : theta + 2*M_PIE;
+  theta = atan2(fv->x[1]-center[1],fv->x[0]-center[0]);
+  theta = theta > side_th[1]-1.5*M_PIE ? theta : theta + 2*M_PIE;
+  theta_mid = atan2(center[1] - pt[1],center[0] - pt[0]);
+  if(cham_ang > 0)
+	{ cham_rotn = cham_ang - (theta_mid + 0.5*M_PIE);}
 
   /**  use different f depending on theta  **/
 
-  if( (theta1-0.5*M_PIE) <= theta && theta <= (theta1+alpha))
+  if( (side_th[0]-0.5*M_PIE+cham_rotn) <= theta && theta <= theta_avg)
      {
-      *func = (fv->x[1]-ypt)*cos(theta1) - (fv->x[0]-xpt)*sin(theta1);
-      d_func[MESH_DISPLACEMENT1] =  -sin(theta1);
-      d_func[MESH_DISPLACEMENT2] =  cos(theta1);
+       if( iside == 1)
+          {
+           *func = SQUARE(fv->x[0]-circ[0])+SQUARE(fv->x[1]-circ[1])-SQUARE(siderad);
+           d_func[MESH_DISPLACEMENT1] =  2.*(fv->x[0]-circ[0]);
+           d_func[MESH_DISPLACEMENT2] =  2.*(fv->x[1]-circ[1]);
+          }
+	else
+          {
+           *func = (fv->x[1]-pt[1])*cos(side_th[0]) - (fv->x[0]-pt[0])*sin(side_th[0]);
+           d_func[MESH_DISPLACEMENT1] =  -sin(side_th[0]);
+           d_func[MESH_DISPLACEMENT2] =  cos(side_th[0]);
+          }
 
      }
-  else if ( (theta1+alpha) <= theta && (theta - 0.5*M_PIE) <= theta2)
+  else if ( theta_avg <= theta && (theta - 0.5*M_PIE) <= (side_th[1]+cham_rotn))
      {
-      *func = (fv->x[1]-ypt)*cos(theta2) - (fv->x[0]-xpt)*sin(theta2);
-      d_func[MESH_DISPLACEMENT1] = -sin(theta2);
-      d_func[MESH_DISPLACEMENT2] = cos(theta2);
+       if( iside == 2)
+          {
+           *func = SQUARE(fv->x[0]-circ[0])+SQUARE(fv->x[1]-circ[1])-SQUARE(siderad);
+           d_func[MESH_DISPLACEMENT1] =  2.*(fv->x[0]-circ[0]);
+           d_func[MESH_DISPLACEMENT2] =  2.*(fv->x[1]-circ[1]);
+          }
+	else
+          {
+           *func = (fv->x[1]-pt[1])*cos(side_th[1]) - (fv->x[0]-pt[0])*sin(side_th[1]);
+           d_func[MESH_DISPLACEMENT1] = -sin(side_th[1]);
+           d_func[MESH_DISPLACEMENT2] = cos(side_th[1]);
+          }
 
      }
   else
      {
-      *func = SQUARE(fv->x[0]-xcen)+SQUARE(fv->x[1]-ycen)-SQUARE(rad);
-      d_func[MESH_DISPLACEMENT1] = 2.*(fv->x[0]-xcen);
-      d_func[MESH_DISPLACEMENT2] = 2.*(fv->x[1]-ycen);
+       if( chamfer)
+          {
+	   tmp = theta_mid+cham_rotn;
+           *func = (fv->x[1]-center[1]+rad*sin(alpha)*sin(tmp))*sin(tmp) 
+		+ (fv->x[0]-center[0]+rad*sin(alpha)*cos(tmp))*cos(tmp);
+           d_func[MESH_DISPLACEMENT1] = cos(tmp);
+           d_func[MESH_DISPLACEMENT2] = sin(tmp);
+          }
+	else
+          {
+           *func = SQUARE(fv->x[0]-center[0])+SQUARE(fv->x[1]-center[1])-SQUARE(rad);
+           d_func[MESH_DISPLACEMENT1] = 2.*(fv->x[0]-center[0]);
+           d_func[MESH_DISPLACEMENT2] = 2.*(fv->x[1]-center[1]);
+          }
 
      }
 

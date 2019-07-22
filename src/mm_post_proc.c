@@ -829,7 +829,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	Dnn += (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
       }
     }
-    local_post[MEAN_SHEAR] = sqrt(2.*fabs(Dnn));
+    local_post[MEAN_SHEAR] = sqrt(0.5*fabs(Dnn));
     local_lumped[MEAN_SHEAR] = 1.;
   }
 
@@ -4101,6 +4101,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
       if(nn_particles > 0)
 	{
+          double orig_coord[3];
 	  /* 1) Search Element Database and find originating element
 	    id for each particle */
 
@@ -4110,6 +4111,8 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
           for (i = 0; i < nn_particles; i++) {
 
+	  	for(j=0;j<p_dim;j++)
+	        	{orig_coord[j] = pp_particles[i]->coord[j];}
           if(p_dim == 2)
                 {
                 pp_particles[i]->coord[2] = 0.;
@@ -4300,7 +4303,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
         for( j = 0 ; j < p_dim ; j++)
         {
-        if(fabs(pp_particles[i]->xi_coord[j]) > 2.)
+        if(fabs(pp_particles[i]->xi_coord[j]) > 2.0)
                 {
                 fprintf(stderr,"particle %d has exited the domain\n",i);
         fprintf(stderr,"element = %d\n",pp_particles[i]->Current_element_id);
@@ -4491,6 +4494,8 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
         fflush(jfp);
 	fclose(jfp);
+	for(j=0;j<p_dim;j++)
+	        {pp_particles[i]->coord[j] = orig_coord[j];}
           }  /*  particle counter */
         fprintf(stderr,"  Done tracing %d particles...  \n", nn_particles);
         }
