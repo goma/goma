@@ -817,19 +817,16 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   }
 
   if (MEAN_SHEAR != -1 && pd->e[R_MOMENTUM1] ){
+    double gammadot;
     for (a = 0; a < VIM; a++) {       
       for (b = 0; b < VIM; b++) {
-	Dsh[a][b] = (fv->grad_v[a][b] + fv->grad_v[b][a]);
+	Dsh[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+        }
       }
-    }
     /* find second invariant of strain-rate */
-    Dnn = 0.0;
-    for (a = 0; a < VIM; a++) {
-      for (b = 0; b < VIM; b++) {
-	Dnn += (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
-      }
-    }
-    local_post[MEAN_SHEAR] = sqrt(0.5*fabs(Dnn));
+    calc_shearrate(&gammadot, Dsh, NULL, NULL);
+
+    local_post[MEAN_SHEAR] = gammadot;
     local_lumped[MEAN_SHEAR] = 1.;
   }
 
@@ -842,15 +839,10 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       }
     }
     /* find second invariant of strain-rate */
-    Dnn = 0.0; Domega = 0.0;
-    for (a = 0; a < VIM; a++) {
-      for (b = 0; b < VIM; b++) {
-	Dnn += 0.5 * (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
-	Domega += 0.5 * (Dvt[a][b] * Dvt[a][b] - Dvt[a][a] * Dvt[b][b]);
-      }
-    }
-    local_post[GIES_CRIT] = (sqrt(fabs(Dnn))-sqrt(fabs(Domega)))/
-			(DBL_SMALL+sqrt(fabs(Dnn))+sqrt(fabs(Domega)));
+    calc_shearrate(&Dnn, Dsh, NULL, NULL);
+    calc_shearrate(&Domega, Dvt, NULL, NULL);
+    local_post[GIES_CRIT] = (Dnn-Domega)/
+			(DBL_SMALL+Dnn+Domega);
     local_lumped[GIES_CRIT] = 1.;
   }
 

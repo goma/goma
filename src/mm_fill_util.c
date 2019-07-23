@@ -4933,8 +4933,8 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
 
   /* Zero out sensitivities */
 
-  memset(d_gd_dv, 0, sizeof(double)*DIM*MDE);
-  memset(d_gd_dmesh, 0, sizeof(double)*DIM*MDE);
+  if(d_gd_dv != NULL) memset(d_gd_dv, 0, sizeof(double)*DIM*MDE);
+  if(d_gd_dmesh != NULL) memset(d_gd_dmesh, 0, sizeof(double)*DIM*MDE);
 
 
   *gammadot = 0.;
@@ -4953,7 +4953,7 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
   v = VELOCITY1;
   vdofs = ei->dof[v];
   
-  if ( pd->e[R_MESH1] )
+  if ( pd->e[R_MESH1] && (d_gd_dmesh != NULL || d_gd_dv != NULL))
     {
       mdofs = ei->dof[R_MESH1];
     }
@@ -4978,7 +4978,7 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
    * d( gamma_dot )/dmesh
    */
   
-  if ( pd->e[R_MESH1] )
+  if ( pd->e[R_MESH1] && d_gd_dmesh != NULL)
     {
       
       for ( p=0; p<VIM; p++)
@@ -5029,7 +5029,7 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
    * d( gammadot )/dv
    */
   
-  if(*gammadot != 0.)
+  if(*gammadot != 0. && d_gd_dv != NULL)
     {
       for ( a=0; a<VIM; a++)
 	{
