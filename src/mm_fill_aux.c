@@ -1090,7 +1090,7 @@ h_elem_siz(dbl hsquared[DIM], dbl hh[DIM][DIM],
     /*
      * Use a constant for now between local nodes 1 and 2 
      */
-    WH(-1,"Beware that SUPG for trishells is held constant so you need a uniform, non-stretchnig grid");
+    WH(-1,"\nBeware that SUPG for trishells/tetrahedrons is held constant so...\nYou need a uniform, non-stretching grid\n");
 
     hsquared[0]=hsquared[1]=hsquared[2] = pow((xnode[0][0] - xnode[0][1]), 2) + pow((xnode[1][0] - xnode[1][1]), 2) + pow((xnode[2][0] - xnode[2][1]), 2);
 

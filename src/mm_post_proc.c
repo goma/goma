@@ -817,19 +817,16 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   }
 
   if (MEAN_SHEAR != -1 && pd->e[R_MOMENTUM1] ){
+    double gammadot;
     for (a = 0; a < VIM; a++) {       
       for (b = 0; b < VIM; b++) {
-	Dsh[a][b] = (fv->grad_v[a][b] + fv->grad_v[b][a]);
+	Dsh[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+        }
       }
-    }
     /* find second invariant of strain-rate */
-    Dnn = 0.0;
-    for (a = 0; a < VIM; a++) {
-      for (b = 0; b < VIM; b++) {
-	Dnn += (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
-      }
-    }
-    local_post[MEAN_SHEAR] = sqrt(2.*fabs(Dnn));
+    calc_shearrate(&gammadot, Dsh, NULL, NULL);
+
+    local_post[MEAN_SHEAR] = gammadot;
     local_lumped[MEAN_SHEAR] = 1.;
   }
 
@@ -842,15 +839,10 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       }
     }
     /* find second invariant of strain-rate */
-    Dnn = 0.0; Domega = 0.0;
-    for (a = 0; a < VIM; a++) {
-      for (b = 0; b < VIM; b++) {
-	Dnn += 0.5 * (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
-	Domega += 0.5 * (Dvt[a][b] * Dvt[a][b] - Dvt[a][a] * Dvt[b][b]);
-      }
-    }
-    local_post[GIES_CRIT] = (sqrt(fabs(Dnn))-sqrt(fabs(Domega)))/
-			(DBL_SMALL+sqrt(fabs(Dnn))+sqrt(fabs(Domega)));
+    calc_shearrate(&Dnn, Dsh, NULL, NULL);
+    calc_shearrate(&Domega, Dvt, NULL, NULL);
+    local_post[GIES_CRIT] = (Dnn-Domega)/
+			(DBL_SMALL+Dnn+Domega);
     local_lumped[GIES_CRIT] = 1.;
   }
 
@@ -4101,6 +4093,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
       if(nn_particles > 0)
 	{
+          double orig_coord[3];
 	  /* 1) Search Element Database and find originating element
 	    id for each particle */
 
@@ -4110,6 +4103,8 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
           for (i = 0; i < nn_particles; i++) {
 
+	  	for(j=0;j<p_dim;j++)
+	        	{orig_coord[j] = pp_particles[i]->coord[j];}
           if(p_dim == 2)
                 {
                 pp_particles[i]->coord[2] = 0.;
@@ -4300,7 +4295,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
         for( j = 0 ; j < p_dim ; j++)
         {
-        if(fabs(pp_particles[i]->xi_coord[j]) > 2.)
+        if(fabs(pp_particles[i]->xi_coord[j]) > 2.0)
                 {
                 fprintf(stderr,"particle %d has exited the domain\n",i);
         fprintf(stderr,"element = %d\n",pp_particles[i]->Current_element_id);
@@ -4491,6 +4486,8 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
         fflush(jfp);
 	fclose(jfp);
+	for(j=0;j<p_dim;j++)
+	        {pp_particles[i]->coord[j] = orig_coord[j];}
           }  /*  particle counter */
         fprintf(stderr,"  Done tracing %d particles...  \n", nn_particles);
         }
