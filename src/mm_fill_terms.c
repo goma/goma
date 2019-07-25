@@ -8902,6 +8902,12 @@ load_fv(void)
 	  scalar_fv_fill(esp->c[w], esp_dot->c[w], esp_old->c[w], 
 			 bf[v]->phi, ei[pd->mi[v]]->dof[v],
 			 &(fv->c[w]), &(fv_dot->c[w]), &(fv_old->c[w]));
+          fv_dot_old->c[w] = 0;
+          for (int i = 0; i < ei[pd->mi[v]]->dof[v]; i++) {
+            fv_dot_old->c[w] +=
+              *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot + esp_dot->c[w][i]) *
+              bf[v]->phi[i];
+          }
 	  stateVector[SPECIES_UNK_0+w] = fv->c[w];
 	}
       }

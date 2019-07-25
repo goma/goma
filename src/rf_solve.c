@@ -1083,11 +1083,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     if (Write_Intermediate_Solutions == 0) {
       nprint = 0;
 
-      write_solution(ExoFileOut, resid_vector, x, x_sens_p, 
-		     x_old, xdot, xdot_old, tev, tev_post, gv, 
-		     rd, gindex, p_gsize, gvec, gvec_elem, 
-		     &nprint, delta_t, theta, time1, x_pp, 
-		     exo, dpi);
+        write_solution(ExoFileOut, resid_vector, x, x_sens_p,
+                       x_old, xdot, xdot_old, tev, tev_post, gv,
+                       rd, gvec, gvec_elem,
+                       &nprint, delta_t, theta, time1, x_pp,
+                       exo, dpi);
     } /* end of if Write Intermediate Solutions */
 
     /* Print out values of extra unknowns from augmenting conditions */
@@ -1565,10 +1565,10 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	    DPRINTF(stderr,"%s:  error writing ASCII soln file\n", yo);
       }
       (void) write_solution(ExoFileOut, resid_vector, x, x_sens_p,
-			    x_old, xdot, xdot_old, tev, tev_post, gv,
-			    rd, gindex, p_gsize, gvec, gvec_elem,
-			    &nprint, delta_t, theta, time, x_pp,
-			    exo, dpi);
+                            x_old, xdot, xdot_old, tev, tev_post, gv,
+                            rd, gvec, gvec_elem,
+                            &nprint, delta_t, theta, time, x_pp,
+                            exo, dpi);
       nprint++;
     }
 
@@ -2629,10 +2629,10 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
                                    delta_t, theta, x_pp, exo, dpi, rd, NULL);
               }
 #else
-	    write_solution(ExoFileOut, resid_vector, x, x_sens_p,
-			   x_old, xdot, xdot_old, tev, tev_post, gv,
-			   rd, gindex, p_gsize, gvec, gvec_elem,
-			   &nprint, delta_t, theta, time, x_pp, exo, dpi);
+          write_solution(ExoFileOut, resid_vector, x, x_sens_p,
+                         x_old, xdot, xdot_old, tev, tev_post, gv,
+                         rd, gvec, gvec_elem,
+                         &nprint, delta_t, theta, time, x_pp, exo, dpi);
 	    nprint++;
 #endif
 

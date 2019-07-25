@@ -917,9 +917,9 @@ dbl *te_out) /* te_out - return actual end time */
           }
 
 
-          write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot,
-                                    xdot_old, tev, tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t,
-                                    theta, time1, NULL, exo, dpi);
+            write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot,
+                                      xdot_old, tev_post, gv, rd, gvec, &nprint, delta_t,
+                                      theta, time1, NULL, exo, dpi);
 
 
 
@@ -1286,9 +1286,9 @@ dbl *te_out) /* te_out - return actual end time */
     last_renorm_nt = 0;
 
     if (Write_Initial_Solution) {
-      write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot,
-				xdot_old, tev, tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t,
-				theta, time1, NULL, exo, dpi);
+        write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot,
+                                  xdot_old, tev_post, gv, rd, gvec, &nprint, delta_t,
+                                  theta, time1, NULL, exo, dpi);
       nprint++;
     }
 
@@ -1803,9 +1803,9 @@ dbl *te_out) /* te_out - return actual end time */
         error = 0;
         if (i_print) {
           if (Write_Intermediate_Solutions == 0) {
-            write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot,
-                    xdot_old, tev, tev_post, gv, rd, gvec, gvec_elem, &nprint, delta_t,
-                    theta, time1, NULL, exo, dpi);
+              write_solution_segregated(ExoFileOut, resid_vector, x, x_old, xdot,
+                                        xdot_old, tev_post, gv, rd, gvec, &nprint, delta_t,
+                                        theta, time1, NULL, exo, dpi);
             nprint++;
           }
 

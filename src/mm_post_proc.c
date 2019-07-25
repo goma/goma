@@ -269,6 +269,8 @@ int LOG_CONF_MAP = -1;
 int HEAVISIDE = -1;
 int RHO_DOT = -1;
 int MOMENT_SOURCES = -1;
+int YZBETA = -1;
+
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
 double *u_post_proc = 0;       	/* user-provided values used in calculating 
@@ -1046,6 +1048,69 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
             }
         }
       free(d_msource);
+    }
+
+  if (YZBETA != -1 && pd->v[pg->imtrx][MASS_FRACTION])
+    {
+      struct Petrov_Galerkin_Data pg_data;
+      h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pd->e[pg->imtrx][R_MESH1]);
+      struct Species_Conservation_Terms s_terms;
+      zero_structure(&s_terms, sizeof(struct Species_Conservation_Terms), 1);
+      err = get_continuous_species_terms(&s_terms, time, theta, delta_t, pg_data.hsquared);
+
+      dbl h_elem = 0;
+      for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
+        h_elem += pg_data.hsquared[a];
+      }
+      dbl supg = 0;
+      if (mp->Spwt_funcModel == GALERKIN) {
+        supg = 0.;
+      } else if (mp->Spwt_funcModel == SUPG) {
+        supg = mp->Spwt_func;
+      }
+
+
+
+      /* This is the size of the element */
+      h_elem = sqrt(h_elem / ((double)ei[pg->imtrx]->ielem_dim));
+
+      for (int w = 0; w < pd->Num_Species_Eqn; w++) {
+        SUPG_terms supg_terms;
+        double diffusivity = 0;
+        if (mp->DiffusivityModel[w] == CONSTANT) {
+          diffusivity =  mp->diffusivity[w];
+        }
+        supg_tau(&supg_terms, dim,  diffusivity, &pg_data, delta_t, 0, eqn);
+
+        dbl strong_residual = 0;
+        strong_residual = fv_dot->c[w];
+        for (int p = 0; p < VIM; p++) {
+          strong_residual += fv->v[p] * fv->grad_c[w][p];
+        }
+        //strong_residual -= s_terms.MassSource[w];
+        dbl h_elem = 0;
+        for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
+          h_elem += pg_data.hsquared[a];
+        }
+        /* This is the size of the element */
+        h_elem = sqrt(h_elem  / ((double)ei[pg->imtrx]->ielem_dim));
+
+        dbl inner = 0;
+        for (int i = 0; i < dim; i++) {
+          inner += fv->grad_c[w][i] * fv->grad_c[w][i];
+        }
+
+        dbl yzbeta = 0;
+
+        dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
+        dbl dc1 = fabs(strong_residual) * inv_sqrt_inner * h_elem * 0.5;
+        dbl dc2 = fabs(strong_residual) * h_elem * h_elem * 0.25;
+        yzbeta = 0.5*(dc1 + dc2);
+
+        local_post[YZBETA + w] = fabs(strong_residual);//fmin(dc1, supg_terms.supg_tau);//yzbeta;//supg_terms.supg_tau;//fmin(supg_terms.supg_tau, 0.5*(dc1 + dc2));
+        local_lumped[YZBETA + w] = 1.;
+      }
+
     }
 
   if (FIRST_INVAR_STRAIN != -1 && pd->e[pg->imtrx][R_MESH1]) {
@@ -6674,6 +6739,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &LOG_CONF_MAP);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
   iread = look_for_post_proc(ifp, "Moment Sources", &MOMENT_SOURCES);
+  iread = look_for_post_proc(ifp, "YZbeta Species", &YZBETA);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -8832,6 +8898,21 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
               index++;
               index_post++;
             }
+        }
+    }
+
+  if (YZBETA != -1 && Num_Var_In_Type[pg->imtrx][MASS_FRACTION])
+    {
+      YZBETA = index_post;
+      for (int w = 0; w < pd->Num_Species_Eqn; w++)
+        {
+          sprintf(species_name, "YZBETA_%d", w);
+          sprintf(species_desc, "YZbeta %d",
+                  w);
+          set_nv_tkud(rd, index, 0, 0, -2, species_name, "[1]",
+                      species_desc, FALSE);
+          index++;
+          index_post++;
         }
     }
 

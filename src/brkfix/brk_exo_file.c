@@ -290,10 +290,8 @@ extern void wr_resetup_exo	/* wr_exo.c */
        char *,			/* filename - where to write */
        int );			/* verbosity - 0 for quiet, more to talk */
 
-extern void wr_result_exo	/* wr_exo.c */
-(Exo_DB *,		/* exo */
-       char *,			/* filename - where to write */
-       int );			/* verbosity - 0 for quiet, more to talk */
+extern void wr_result_exo    /* wr_exo.c */
+        (Exo_DB *exo, char *filename);			/* verbosity - 0 for quiet, more to talk */
 
 extern int wr_dpi		/* wr_dpi.c */
 (Dpi *,			/* fantastic structure defd in "dpi.h" */
@@ -4328,8 +4326,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	      /*
 	       * Write out results.
 	       */
-	      
-	      wr_result_exo(E, E->path, 0);
+
+            wr_result_exo(E, E->path);
 	    }
 
 	  free_exo_nv(E);
@@ -4415,8 +4413,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	      /*
 	       * Write out results.
 	       */
-	      
-	      wr_result_exo(E, E->path, 0);
+
+            wr_result_exo(E, E->path);
 	    }
 
 	  free_exo_ev(E);
@@ -4844,7 +4842,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       one_base(mono);
       wr_mesh_exo(mono, out_augplot_file_name, 0);
       wr_resetup_exo(mono, out_augplot_file_name, 0);
-      wr_result_exo(mono, out_augplot_file_name, 0);
+      wr_result_exo(mono, out_augplot_file_name);
       zero_base(mono);
 
       free_exo_ev(mono);

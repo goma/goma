@@ -222,21 +222,17 @@ EXTERN void supg_tau_gauss_point(SUPG_terms *supg_terms, int dim,
 EXTERN void supg_tau(SUPG_terms *supg_terms, int dim, dbl diffusivity,
                      PG_DATA *pg_data, double dt, int shakib, int interp_eqn);
 
-EXTERN dbl yzbeta(dbl scale, int dim, dbl Y, dbl Z, dbl beta, dbl u, dbl grad_u[DIM],
-                  dbl h_elem);
 
-EXTERN dbl yzbeta_model(int model, dbl scale, dbl beta, int dim, dbl Y, dbl Z,
-                        dbl u, dbl grad_u[DIM], dbl h_elem);
+EXTERN dbl yzbeta(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
+                       dbl u, dbl d_u[MDE], dbl grad_u[DIM],
+                       dbl d_grad_u[MDE][DIM], dbl h_elem, int interp_eqn,
+                       dbl deriv[MDE]);
 
-EXTERN void yzbeta_derivative(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE],
-                              dbl beta, dbl u, dbl d_u[MDE], dbl grad_u[DIM],
-                              dbl d_grad_u[MDE][DIM], dbl h_elem,
-                              int interp_eqn, dbl deriv[MDE]);
+EXTERN dbl yzbeta_model(int model, dbl scale, dbl beta, int dim,
+                         dbl Y, dbl Z, dbl d_Z[MDE], dbl u,
+                         dbl d_u[MDE], dbl grad_u[DIM],
+                         dbl d_grad_u[MDE][DIM], dbl h_elem,
+                         int interp_eqn, dbl deriv[MDE]);
 
-EXTERN void yzbeta_model_derivative(int model, dbl scale, dbl beta, int dim,
-                                    dbl Y, dbl Z, dbl d_Z[MDE], dbl u,
-                                    dbl d_u[MDE], dbl grad_u[DIM],
-                                    dbl d_grad_u[MDE][DIM], dbl h_elem,
-                                    int interp_eqn, dbl deriv[MDE]);
 
 #endif /* GOMA_MM_FILL_UTIL_H */

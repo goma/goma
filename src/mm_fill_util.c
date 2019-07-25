@@ -102,6 +102,8 @@ find_problem_graph_fill(int *[], /* ija - column pointer array                */
 static int find_VBR_problem_graph(int *[], int *[], int *[], int *[], int *[],
                                   int, int, Exo_DB *);
 
+static const dbl DIFFUSION_EPSILON = 1e-8;
+
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
@@ -5308,113 +5310,135 @@ void supg_tau(SUPG_terms *supg_terms, int dim, dbl diffusivity,
   }
 }
 
-dbl yzbeta(dbl scale, int dim, dbl Y, dbl Z, dbl beta, dbl u, dbl grad_u[DIM],
-           dbl h_elem) {
-  dbl Y_inv = 1.0 / Y;
+dbl yzbeta1(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
+                       dbl u, dbl d_u[MDE], dbl grad_u[DIM],
+                       dbl d_grad_u[MDE][DIM], dbl h_elem, int interp_eqn,
+                       dbl deriv[MDE]) {
 
+  static const dbl EPSILON = 1e-10;
+  dbl Y_inv = 1.0 / Y;
+  dbl resid_scale = Y_inv * Z + EPSILON;
   dbl inner = 0;
   for (int i = 0; i < dim; i++) {
-    inner += Y_inv * grad_u[i] * Y_inv * grad_u[i];
+    inner += Y_inv * Y_inv * grad_u[i] * grad_u[i];
   }
-  inner += DBL_EPSILON;
+  for (int i = 0; i < MDE; i++) {
+    deriv[i] = 0;
+  }
+  return 1 * fabs(Z) * (1.0/(sqrt(inner+1e-12))) * h_elem * 0.5;
 
-  dbl tmp = Y_inv * u + DBL_EPSILON;
-
-
-  dbl q = 0.5;
-  return 1.0 / pow(inner,q); //1.0 / sqrt(inner);
-  //return scale * fabs(Y_inv * Z) * pow(DBL_EPSILON + inner, beta / 2.0 - 1) *
-  //       pow(fabs(DBL_EPSILON + Y_inv * u), 1 - beta) * pow(h_elem / 2.0, beta);
 }
 
-void yzbeta_derivative(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
+dbl yzbeta2(dbl scale, dbl Y, dbl Z, dbl d_Z[MDE], dbl deriv[MDE], dbl h_elem, int interp_eqn)
+{
+  static const dbl EPSILON = 1e-10;
+  for (int k = 0; k < ei[pg->imtrx]->dof[interp_eqn]; k++) {
+    deriv[k] = 0;
+  }
+  dbl yzbeta = 1.0 * fabs(Z) * h_elem * h_elem * 0.025;
+  return yzbeta;
+}
+
+dbl yzbeta(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
                        dbl u, dbl d_u[MDE], dbl grad_u[DIM],
                        dbl d_grad_u[MDE][DIM], dbl h_elem, int interp_eqn,
                        dbl deriv[MDE]) {
   dbl Y_inv = 1.0 / Y;
+
+  dbl gradunit[DIM];
+  dbl grad_u_norm = 0;
+
+  for (int i = 0; i < dim; i++) {
+    grad_u_norm  += grad_u[i] * grad_u[i];
+  }
+  grad_u_norm = sqrt(grad_u_norm) + DBL_EPSILON;
+  dbl inv_grad_u_norm = 1 / grad_u_norm;
 
   for (int j = 0; j < ei[pd->mi[interp_eqn]]->dof[interp_eqn]; j++) {
     dbl inner = 0;
     for (int i = 0; i < dim; i++) {
       inner += Y_inv * grad_u[i] * Y_inv * grad_u[i];
     }
-    inner += DBL_EPSILON;
+    inner += DIFFUSION_EPSILON;
 
     dbl d_inner = 0;
     for (int i = 0; i < dim; i++) {
       d_inner += 2 * Y_inv * d_grad_u[j][i] * Y_inv * grad_u[i];
     }
 
-    deriv[j] = scale * fabs(Y_inv * Z) *
-               pow(DBL_EPSILON + inner, beta / 2.0 - 1) *
-               (1-beta) * d_u[j] * pow(fabs(DBL_EPSILON + Y_inv), - beta) *
-               pow(h_elem / 2.0, beta);
 
-    deriv[j] +=
-        scale * fabs(Y_inv * Z) * (d_inner * (beta/2.0 -1)) * pow(DBL_EPSILON + inner, beta / 2.0 - 2) *
-        pow(fabs(DBL_EPSILON + Y_inv * u), 1 - beta) * pow(h_elem / 2.0, beta);
+    dbl scalar_part = Y_inv * u + DIFFUSION_EPSILON;
 
-    deriv[j] += scale * (fabs(Y_inv * Z) / (Z + DBL_EPSILON)) * d_Z[j] *
-                pow(DBL_EPSILON + inner, beta / 2.0 - 1) *
-                pow(fabs(DBL_EPSILON + Y_inv * u), 1 - beta) *
-                pow(h_elem / 2.0, beta);
+    dbl p = 1-beta;
+    dbl q = (beta/2.0 - 1);
 
-    dbl tmp = Y_inv * u + DBL_EPSILON;
-    dbl q = 0.5;
-    deriv[j] = -q*d_inner*(1.0/pow(inner,q+1));//-0.5 * d_inner * (1.0 / (sqrt(inner) * sqrt(inner) * sqrt(inner)));
+
+    dbl d_grad_u_norm = 0;
+    for (int i = 0; i < dim; i++) {
+      d_grad_u_norm += bf[interp_eqn]->grad_phi[j][i] * grad_u[i];
+    }
+    d_grad_u_norm *= inv_grad_u_norm;
+
+    dbl d_inv_grad_u_norm = - inv_grad_u_norm * inv_grad_u_norm * d_grad_u_norm;
+
+    for (int i = 0; i < dim; i++) {
+      gradunit[i] = grad_u[i] * inv_grad_u_norm;
+    }
+
+    dbl h_dc = 0;
+    for (int i = 0; i < ei[pd->mi[interp_eqn]]->dof[interp_eqn]; i++) {
+      for (int j =0; j < dim; j++) {
+        h_dc += fabs(gradunit[j] * d_grad_u[i][j]);
+      }
+    }
+
+    //h_dc = 2 / h_dc;
+
+    dbl d_h_dc = 0;
+
+
+    //deriv[j] = (Z+DIFFUSION_EPSILON) / (fabs(Z+DIFFUSION_EPSILON)) * d_Z[j] * pow(inner,q);
+    //deriv[j] += fabs(Z+DIFFUSION_EPSILON) * d_inner * q * pow(inner, q-1);
+
+    deriv[j] = d_inv_grad_u_norm;
   }
+  return inv_grad_u_norm;
 }
 
-dbl yzbeta_model(int model, dbl scale, dbl beta, int dim, dbl Y, dbl Z, dbl u,
-                 dbl grad_u[DIM], dbl h_elem) {
-  switch (model) {
-  case YZBETA_ONE:
-    return yzbeta(scale, dim, Y, Z, 1.0, u, grad_u, h_elem);
-  case YZBETA_TWO:
-    return yzbeta(scale, dim, Y, Z, 2.0, u, grad_u, h_elem);
-  case YZBETA_MIXED:
-    return 0.5 *
-           (yzbeta(scale, dim, Y, Z, 1.0, u, grad_u, h_elem) +
-            yzbeta(scale, dim, Y, Z, 2.0, u, grad_u, h_elem));
-  case YZBETA_CUSTOM:
-    return yzbeta(scale, dim, Y, Z, beta, u, grad_u, h_elem);
-  default:
-    EH(-1, "Unknown YZBETA Model");
-    return -1;
-  }
-}
 
-
-void yzbeta_model_derivative(int model, dbl scale, dbl beta, int dim, dbl Y,
+dbl yzbeta_model(int model, dbl scale, dbl beta, int dim, dbl Y,
                              dbl Z, dbl d_Z[MDE], dbl u, dbl d_u[MDE],
                              dbl grad_u[DIM], dbl d_grad_u[MDE][DIM],
                              dbl h_elem, int interp_eqn, dbl deriv[MDE]) {
+  dbl dc = 0;
   switch (model) {
   case YZBETA_ONE:
-    yzbeta_derivative(scale, dim, Y, Z, d_Z, 1.0, u, d_u, grad_u, d_grad_u,
+    dc = yzbeta1(scale, dim, Y, Z, d_Z, 1.0, u, d_u, grad_u, d_grad_u,
                       h_elem, interp_eqn, deriv);
     break;
   case YZBETA_TWO:
-    yzbeta_derivative(scale, dim, Y, Z, d_Z, 2.0, u, d_u, grad_u, d_grad_u,
-                      h_elem, interp_eqn, deriv);
+    dc = yzbeta2(scale, Y, Z, d_Z, deriv, h_elem, interp_eqn);
     break;
   case YZBETA_MIXED: {
     dbl deriv1[MDE];
     dbl deriv2[MDE];
-    yzbeta_derivative(scale, dim, Y, Z, d_Z, 1.0, u, d_u, grad_u, d_grad_u,
-                      h_elem, interp_eqn, deriv1);
-    yzbeta_derivative(scale, dim, Y, Z, d_Z, 2.0, u, d_u, grad_u, d_grad_u,
-                      h_elem, interp_eqn, deriv2);
+    dbl dc1, dc2;
+    dc1 = yzbeta1(scale, dim, Y, Z, d_Z, 1.0, u, d_u, grad_u, d_grad_u,
+                    h_elem, interp_eqn, deriv);
+    dc2 = yzbeta2(scale, Y, Z, d_Z, deriv, h_elem, interp_eqn);
     for (int j = 0; j < ei[pd->mi[interp_eqn]]->dof[interp_eqn]; j++) {
       deriv[j] = 0.5 * (deriv1[j] + deriv2[j]);
     }
+    dc = 0.5 * (dc1 + dc2);
   } break;
   case YZBETA_CUSTOM:
-    yzbeta_derivative(scale, dim, Y, Z, d_Z, beta, u, d_u, grad_u, d_grad_u,
+    dc = yzbeta(scale, dim, Y, Z, d_Z, beta, u, d_u, grad_u, d_grad_u,
                       h_elem, interp_eqn, deriv);
     break;
   default:
     EH(-1, "Unknown YZBETA Model");
     break;
   }
+
+  return dc;
 }
