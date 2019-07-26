@@ -116,27 +116,6 @@
 /******************************************************************************/
 
 
-static dbl max_kdc;
-
-void zero_max_kdc() {
-  max_kdc = 0;
-}
-
-dbl get_max_kdc() {
-  return max_kdc;
-}
-
-static dbl max_kdc1;
-
-void zero_max_kdc1() {
-  max_kdc1 = 0;
-}
-
-dbl get_max_kdc1() {
-  return max_kdc1;
-}
-
-
 /* assemble_mass_transport() -- assemble terms (Residual &| Jacobian) for mass
  *                              conservation eqns
  *
@@ -434,19 +413,12 @@ int assemble_mass_transport(
       dbl dc2 = fabs(strong_residual) * h_elem * h_elem * 0.25;
 
       //dc1 = fmin(supg_terms.supg_tau,dc1);//0.5*(dc1 + dc2);
-      yzbeta = fmin(supg_terms.supg_tau,0.5*(dc1+dc2));//0.5*(dc1 + dc2);
+      yzbeta = fmin(supg_terms.supg_tau, 0.5*(dc1+dc2));//0.5*(dc1 + dc2);
       for (int k = 0; k <  ei[pg->imtrx]->dof[eqn]; k++) {
         d_k_dc[k] = 0;
       }
 
       k_dc = yzbeta;
-      if (dc2 > max_kdc) {
-        max_kdc = yzbeta;
-      }
-      if (dc1 > max_kdc1) {
-        max_kdc1 = dc1;
-      }
-
     }
 
     /*

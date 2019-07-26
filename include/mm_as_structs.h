@@ -2706,6 +2706,8 @@ struct Level_Set_Data {
   int Huygens_Freeze_Nodes;
   int Enable_Div_Term;
   int Semi_Implicit_Integration;
+  int YZbeta;
+  dbl YZbeta_scale;
 };
 
 /*

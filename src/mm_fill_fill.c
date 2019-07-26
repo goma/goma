@@ -489,6 +489,42 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
     }
   }
 
+  dbl k_dc = 0;
+  dbl d_k_dc[MDE] = {0};
+  if (ls->YZbeta != YZBETA_NONE) {
+    dbl strong_residual = 0;
+    strong_residual = fv_dot_old->F;
+    for (int p = 0; p < VIM; p++) {
+      strong_residual += fv->v[p] * fv_old->grad_F[p];
+    }
+    //strong_residual -= s_terms.MassSource[w];
+    dbl h_elem = 0;
+    for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
+      h_elem += pg_data->hsquared[a];
+    }
+    /* This is the size of the element */
+    h_elem = sqrt(h_elem  / ((double)ei[pg->imtrx]->ielem_dim));
+
+    dbl inner = 0;
+    for (int i = 0; i < dim; i++) {
+      inner += fv_old->grad_F[i] * fv_old->grad_F[i];
+    }
+
+    dbl yzbeta = 0;
+
+    dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
+    dbl dc1 = fabs(strong_residual) * inv_sqrt_inner * h_elem * 0.5;
+    dbl dc2 = fabs(strong_residual) * h_elem * h_elem * 0.25;
+
+    //dc1 = fmin(supg_terms.supg_tau,dc1);//0.5*(dc1 + dc2);
+    yzbeta = fmin(supg_terms.supg_tau,0.5*(dc1+dc2));//0.5*(dc1 + dc2);
+    for (int k = 0; k <  ei[pg->imtrx]->dof[eqn]; k++) {
+      d_k_dc[k] = 0;
+    }
+
+    k_dc = yzbeta;
+  }
+
   /**********************************************************************
    **********************************************************************
    ** Residuals
@@ -597,6 +633,11 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
       mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
       advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
+      dbl discontinuity_capturing = 0;
+      for (int a = 0; a < dim; a++) {
+        discontinuity_capturing += k_dc * fv->grad_F[a] * bf[eqn]->grad_phi[i][a];
+      }
+
       if (ls != NULL && ls->Toure_Penalty) {
         source = 0;
         for (int a = 0; a < dim; a++) {
@@ -611,7 +652,7 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
       /* hang on to the integrand (without the "dV") for use below. */
       rmp[i] = mass + advection;
 
-      lec->R[peqn][i] += (mass + advection + source) * wt * det_J * h3;
+      lec->R[peqn][i] += (mass + advection + source + discontinuity_capturing) * wt * det_J * h3;
     }
   }
 
@@ -770,7 +811,12 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
           mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
           advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
-          lec->J[peqn][pvar][i][j] += (mass + advection + source) * wt * h3 * det_J;
+          dbl discontinuity_capturing = 0;
+          for (int a = 0; a < dim; a++) {
+            discontinuity_capturing += k_dc * bf[var]->grad_phi[j][a] * bf[eqn]->grad_phi[i][a];
+          }
+
+          lec->J[peqn][pvar][i][j] += (mass + advection + source + discontinuity_capturing) * wt * h3 * det_J;
 
         } /* for: FILL DoFs */
 

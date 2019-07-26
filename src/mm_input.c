@@ -2957,6 +2957,43 @@ rd_levelset_specs(FILE *ifp,
           ECHO(echo_string,echo_file);
         }
 
+
+        ls->YZbeta = YZBETA_NONE;
+        ls->YZbeta_scale = 0;
+
+        iread = look_for_optional(ifp,"Level Set YZbeta",input,'=');
+        if (iread == 1)
+        {
+          dbl scale;
+          if (fscanf(ifp, "%s %lg", input, &scale) != 2 )
+          {
+            EH(-1, "Error reading Level Set YZbeta flag.");
+          }
+          strip(input);
+          stringup(input);
+
+          if ((strcmp(input,"ONE") == 0))
+          {
+            ls->YZbeta = YZBETA_ONE;
+          }
+          else if ((strcmp(input,"TWO") == 0))
+          {
+            ls->YZbeta = YZBETA_TWO;
+          }
+          else if ((strcmp(input,"MIXED") == 0))
+          {
+            ls->YZbeta = YZBETA_MIXED;
+          }
+          else
+          {
+            EH(-1, "Error unknown value for Level Set Toure Penalty");
+          }
+          ls->YZbeta_scale = scale;
+          SPF(echo_string,"%s = %s %g", "Level Set YZbeta", input, scale);
+          ECHO(echo_string,echo_file);
+        }
+
+
     }  /* if ( ls != NULL ) */
 
 

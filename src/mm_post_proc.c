@@ -1107,7 +1107,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
         dbl dc2 = fabs(strong_residual) * h_elem * h_elem * 0.25;
         yzbeta = 0.5*(dc1 + dc2);
 
-        local_post[YZBETA + w] = fabs(strong_residual);//fmin(dc1, supg_terms.supg_tau);//yzbeta;//supg_terms.supg_tau;//fmin(supg_terms.supg_tau, 0.5*(dc1 + dc2));
+        local_post[YZBETA + w] = 0.5*(dc1+dc2);//fmin(dc1, supg_terms.supg_tau);//yzbeta;//supg_terms.supg_tau;//fmin(supg_terms.supg_tau, 0.5*(dc1 + dc2));
         local_lumped[YZBETA + w] = 1.;
       }
 
