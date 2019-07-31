@@ -6545,7 +6545,7 @@ stress_no_v_dot_gradS(double func[MAX_MODES][6],
      }
 
   /*  Time-temperature shift factor  */
-   if ( pd->e[TEMPERATURE])
+   if ( pd->e[pg->imtrx][TEMPERATURE])
      {
       if (vn->shiftModel == CONSTANT)
         {
