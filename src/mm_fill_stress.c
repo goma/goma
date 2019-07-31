@@ -1602,7 +1602,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 /* end Petrov-Galerkin addition */
 
       /*  shift factor  */
-   if( pd->e[TEMPERATURE])
+   if( pd->e[pg->imtrx][TEMPERATURE])
       {
       if(vn->shiftModel == CONSTANT)
         {
@@ -2678,7 +2678,7 @@ assemble_stress_log_conf(dbl tt,
     }
 
   //Shift factor
-  if(pd->e[TEMPERATURE])
+  if(pd->e[pg->imtrx][TEMPERATURE])
     {
       if(vn->shiftModel == CONSTANT)
         {
