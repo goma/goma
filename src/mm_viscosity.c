@@ -797,7 +797,11 @@ power_law_viscosity(struct Generalized_Newtonian *gn_local,
 
   val = pow( gammadot+offset, nexp-2.);
 
-  d_mu->gd = mu0*(nexp - 1.0)*val;
+
+  if (d_mu != NULL)
+    {
+     d_mu->gd = mu0*(nexp - 1.0)*val;
+    }
 
   if ( d_mu != NULL && pd->e[R_MESH1] )
     {
