@@ -2368,7 +2368,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[VON_MISES_STRESS] = 1.;
   }
 
-  if (LOG_CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] && (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)) {
+  if (LOG_CONF_MAP != -1 && pd->v[pg->imtrx][POLYMER_STRESS11] && (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_LAGGED)) {
     index = 0;
     VISCOSITY_DEPENDENCE_STRUCT d_mup_struct;
     VISCOSITY_DEPENDENCE_STRUCT *d_mup = &d_mup_struct;

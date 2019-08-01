@@ -2466,17 +2466,13 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	{
 	  vn_glob[mn]->evssModel = EVSS_L;
 	}
-      else if ( !strcmp(model_name, "EVSS_GRADV") )
-        {
-          vn_glob[mn]->evssModel = EVSS_GRADV;
-        }
       else if ( !strcmp(model_name, "LOG_CONF") )
 	{
 	  vn_glob[mn]->evssModel = LOG_CONF;
 	}
-      else if ( !strcmp(model_name, "LOG_CONF_GRADV") )
+      else if ( !strcmp(model_name, "LOG_CONF_LAGGED") )
         {
-          vn_glob[mn]->evssModel = LOG_CONF_GRADV;
+          vn_glob[mn]->evssModel = LOG_CONF_LAGGED;
         }
       else
 	{
