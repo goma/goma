@@ -1671,25 +1671,71 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
       /* get polymer viscosity */
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
 
+      double d_alpha_dF[MDE];
       /* get Geisekus mobility parameter */
-      alpha = ve[mode]->alpha;
+      if (ve[mode]->alphaModel == CONSTANT) {
+        alpha = ve[mode]->alpha;
+      } else if (ls != NULL && ve[mode]->alphaModel == VE_LEVEL_SET) {
+        double pos_alpha = ve[mode]->pos_ls.alpha;
+        double neg_alpha = ve[mode]->alpha;
+        double width     = ls->Length_Scale;
+        int err = level_set_property(neg_alpha, pos_alpha, width, &alpha, d_alpha_dF);
+        EH(err, "level_set_property() failed for mobility parameter.");
+      } else {
+        EH(-1, "Unknown mobility parameter model");
+      }
 
+      double d_lambda_dF[MDE];
       /* get time constant */
-      if(ve[mode]->time_constModel == CONSTANT)
-        {
-          lambda = ve[mode]->time_const;
-        }
-      else if(ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW)
-        {
-          lambda = mup/ve[mode]->time_const;
-        }
+      if (ve[mode]->time_constModel == CONSTANT) {
+        lambda = ve[mode]->time_const;
+      } else if (ve[mode]->time_constModel == CARREAU || ve[mode]->time_constModel == POWER_LAW) {
+        lambda = mup/ve[mode]->time_const;
+      } else if (ls != NULL && ve[mode]->time_constModel == VE_LEVEL_SET) {
+        double pos_lambda = ve[mode]->pos_ls.time_const;
+        double neg_lambda = ve[mode]->time_const;
+        double width     = ls->Length_Scale;
+        int err = level_set_property(neg_lambda, pos_lambda, width, &lambda, d_lambda_dF);
+        EH(err, "level_set_property() failed for polymer time constant.");
+      }
 
-      ucwt = 1.0 - ve[mode]->xi / 2.0 ;
-      lcwt = ve[mode]->xi / 2.0 ;
+      double xi = 0;;
+      double d_xi_dF[MDE];
+      if (ve[mode]->xiModel == CONSTANT) {
+        xi = ve[mode]->xi;
+      } else if (ls != NULL && ve[mode]->xiModel == VE_LEVEL_SET) {
+        double pos_xi = ve[mode]->pos_ls.xi;
+        double neg_xi = ve[mode]->xi;
+        double width     = ls->Length_Scale;
+        int err = level_set_property(neg_xi, pos_xi, width, &xi, d_xi_dF);
+        EH(err, "level_set_property() failed for ptt xi parameter.");
+      } else {
+        EH(-1, "Unknown PTT Xi parameter model");
+      }
 
-      eps = ve[mode]->eps;
 
-      Z = exp( eps*lambda*trace/mup ); dZ_dtrace = Z*eps*lambda/mup ;
+      ucwt = 1.0 - xi / 2.0 ;
+      lcwt = xi / 2.0 ;
+
+      eps = 0;
+      double d_eps_dF[MDE];
+      if (ve[mode]->epsModel == CONSTANT) {
+        eps = ve[mode]->eps;
+      } else if (ls != NULL && ve[mode]->epsModel == VE_LEVEL_SET) {
+        double pos_eps = ve[mode]->pos_ls.eps;
+        double neg_eps = ve[mode]->eps;
+        double width     = ls->Length_Scale;
+        int err = level_set_property(neg_eps, pos_eps, width, &eps, d_eps_dF);
+        EH(err, "level_set_property() failed for ptt epsilon parameter.");
+      } else {
+        EH(-1, "Unknown PTT Epsilon parameter model");
+      }
+
+      if (fabs(lambda) < 1e-15) {
+        Z = 1.0; dZ_dtrace = 0;
+      } else {
+        Z = exp( eps*lambda*trace/mup ); dZ_dtrace = Z*eps*lambda/mup ;
+      }
 
       /* get tensor dot products for future use */
 
