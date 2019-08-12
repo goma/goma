@@ -1690,6 +1690,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	EH(err, "level_set_property() failed for polymer time constant.");
       }
 
+      xi = 0;
       if (ve[mode]->xiModel == CONSTANT) {
 	xi = ve[mode]->xi;
       } else if (ls != NULL && ve[mode]->xiModel == VE_LEVEL_SET) {
