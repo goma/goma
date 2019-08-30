@@ -183,7 +183,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			// pass through for BC's that don't have side sets
       if (BC_Types[bc_input_id].BC_Name == SH_GAMMA1_DERIV_SYMM_BC ||
           BC_Types[bc_input_id].BC_Name == SH_GAMMA2_DERIV_SYMM_BC ||
-					BC_Types[bc_input_id].BC_Name == SHELL_TFMP_GRAD_S_BC )
+          BC_Types[bc_input_id].BC_Name == SHELL_TFMP_GRAD_S_BC )
 	{
 	  continue;
 	}

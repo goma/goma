@@ -22,7 +22,7 @@
 
 enum clipping_kind my_clipping_kind = restorative;
 
-void load_viscosity_model
+void load_tfmp_viscosity_model
 ( double *mu_l,
   double *mu_g
 ) {
@@ -221,7 +221,6 @@ void load_gas_dissolution_model(
 
     trans_diss = pi/4.0;
     sqrtPI = sqrt(pi);
-// this seems altogether wrong, lets mulligan
 
     if (S < 1.0 && S > 0.0 ) {
 
@@ -236,10 +235,6 @@ void load_gas_dissolution_model(
         fS = 4.0/lambda*sqrt(1.0-S);
         dfS_dS = -4.0/lambda/2.0/sqrt(1.0-S);
 
-        // booby traps feh!
-        //fS = 1.0;
-        //dfS_dS = 0.0;
-
         if (Vd/lambda/lambda/h >= 1.0) { // Length is maxed for lattice defined by
           // Vd and lambda
           L = lambda/sqrt(2.0);
@@ -247,41 +242,14 @@ void load_gas_dissolution_model(
         } else {
           L = lambda/sqrt(2.0)*(1.0 - sqrt((1.0-Vd/lambda/lambda/h)/2.0));
           dL_dh = lambda/2.0/sqrt(2.0*(1.0-Vd/lambda/lambda/h))*Vd/lambda/lambda/h/h;
-          // more traps!
-          //L = lambda/sqrt(2.0);
-          //dL_dh = 0.0;
+
         }
       }
 
-/*
-    if (S < 1.0 && S > 0.0 ) {
-      // if S is high enough that the drops are in contact
-      // use the diamond gas pocket model
-      if (S > trans_diss) {
-        Ai_Vt = 4.0/lambda*sqrt(1.0-S);
-        d_Ai_Vt_dS =
-
-      // otherwise assume the drops are still cylindrical
-      // and gas roams free, like the wild buffalo
-      } else {
-        Ai_Vt = 2.0*sqrtPI/lambda*sqrt(S);
-      }
-    }
-*/
       //Concentration of gas at interface moles/cm^3
       bg = (fv->tfmp_pres - Patm)*Hgls;
       dbg_dP = Hgls;
 
-
-      // debugging dJ_dS
-      /*
-        fS = 1.0;
-        dfS_dS = 0.0;
-        L = lambda/sqrt(2.0);
-        dL_dh = 0.0;
-        bg = 1.0;
-        dbg_dP = 0.0;
-        */
       // Dissolution Term
       *J = h*Dgl*Mg*bg*fS/L;
       *dJ_dP = h*Dgl*Mg*dbg_dP*fS/L;
@@ -317,7 +285,7 @@ void load_gas_dissolution_model(
 
     *J = 0.0;
     *dJ_dP = 0.0;
-    *dJ_dS = 0.0; // why was this 1?
+    *dJ_dS = 0.0;
     *dJ_dh = 0.0;
 
   }
@@ -561,13 +529,7 @@ void h0_minus_ndotd (
   memset (d2h_dtime_dnormal, 0.0, sizeof(double)*DIM*MDE);
   //memset (d_gradIIh_dmesh, 0.0, sizeof(double)*DIM*DIM*MDE);
   memset (d_gradIIh_dnormal, 0.0, sizeof(double)*DIM*DIM*MDE);
-/*
-  gradII_h[0] = grad_normal[0][0];
-  d_gradIIh_dmesh[0][0][0] = d_grad_n_dmesh[0][0][0][0];
-  d_gradIIh_dmesh[0][0][1] = d_grad_n_dmesh[0][0][0][1];
-  d_gradIIh_dmesh[0][1][0] = d_grad_n_dmesh[0][0][1][0];
-  d_gradIIh_dmesh[0][1][1] = d_grad_n_dmesh[0][0][1][1];
-*/
+
   // Setup Height function model and sensitivities to mesh motion, and normal
   switch ( mp->FSIModel ) {
     case FSI_SHELL_ONLY_MESH:
@@ -577,27 +539,14 @@ void h0_minus_ndotd (
           WH(-1, "negative h in load_displacement_coupling_model()");
         }
         for (l = 0; l<DIM; l++) { // gradient direction l
-          //(1)
-          //gradII_h[l] -= h_sign*grad_normal[k][l];
-          //(2)
-          //gradII_h[l] -= h_sign*fv->d[k];
-          //(3)
-          //gradII_h[l] -= h_sign*grad_normal[k][l]*fv->d[k];
-          //(4)
-          //gradII_h[l] -= h_sign*grad_disp[k][l];
-          //(5)
-          //gradII_h[l] -= h_sign*fv->n[k]*grad_disp[k][l];
 
-          // (3) + (5)
           gradII_h[l] -= h_sign*grad_normal[k][l]*fv->d[k];
           gradII_h[l] -= h_sign*fv->n[k]*grad_disp[k][l];
 
-          //gradII_h[k] -= normal[l]*gradII_disp[k][l] + fv->d[l]*gradII_n[k][l];
-          //gradII_h[l] = 1.0;
         }
         if (pd->TimeIntegration == TRANSIENT ) {
           *(dh_dtime) -= h_sign*(fv->n[k] * fv_dot->d[k] + fv_dot->n[k] * fv->d[k]);
-          //*(dh_dtime) -= h_sign*(fv_dot->d[k]);
+
           for (l = 0; l<DIM; l++) { // gradient direction l
             for (i = 0; i<ei->dof[MESH_DISPLACEMENT1]; i++) {
               d2h_dtime_dmesh[k][i] -= h_sign*fv->n[l]*delta(l,k)*bf[MESH_DISPLACEMENT1]->phi[i]*(1.0f+2.0f*tt)/delta_t;
@@ -624,43 +573,19 @@ void h0_minus_ndotd (
         for (l = 0; l<DIM; l++){ // gradient direction l
           for (i = 0; i<ei->dof[MESH_DISPLACEMENT1]; i++){ // element degree of freedom i
             for (int m = 0; m<DIM; m++) { // sensitivity to displacement m
-                // klmi -> mkli
-              //(1)
-              //d_gradIIh_dmesh[l][m][i] -= h_sign*d_grad_n_dmesh[k][l][m][i];
-              //(2)
-              //d_gradIIh_dmesh[l][m][i] -= h_sign*delta(m,k)*bf[MESH_DISPLACEMENT1]->phi[i];
-              //(3)
-              //d_gradIIh_dmesh[l][m][i] -= h_sign*d_grad_n_dmesh[k][l][m][i]*fv->d[k]
-              //                          + h_sign*grad_normal[k][l]*delta(m,k)*bf[MESH_DISPLACEMENT1]->phi[i];
-              //(4)
-              //d_gradIIh_dmesh[l][m][i] -= h_sign*d_grad_d_dmesh[k][l][m][i];
-              //(5)
-              //d_gradIIh_dmesh[l][m][i] -= h_sign*fv->n[k]*d_grad_d_dmesh[k][l][m][i];
 
-              // (3) + (5)
               d_gradIIh_dmesh[l][m][i] -= h_sign*d_grad_n_dmesh[k][l][m][i]*fv->d[k]
                                         + h_sign*grad_normal[k][l]*delta(m,k)*bf[MESH_DISPLACEMENT1]->phi[i];
               d_gradIIh_dmesh[l][m][i] -= h_sign*fv->n[k]*d_grad_d_dmesh[k][l][m][i];
 
-              //d_gradIIh_dmesh[k][l][i] += -h_sign*fv->n[l]*dgradII_disp_dmesh[k][k][l][i]
-              //                         + -h_sign*dgrad_disp_dmesh[k][k][l][i]*dgradII_n_dmesh[k][k][l][i];
-              //eqn = R_SHELL_NORMAL1;
+
               eqn = R_MESH1;
-              //var = MESH_DISPLACEMENT1;
+
               ShellBF(eqn, i, &phi_i, grad_phi_i, gradII_phi_i, d_gradII_phi_i_dmesh, n_dof[MESH_DISPLACEMENT1], dof_map);
 
-              //(1)
-              //d_gradIIh_dnormal[l][m][i] -= h_sign*gradII_phi_i[l]*delta(m,k);
-              //(3)
-              //d_gradIIh_dnormal[l][m][i] -= h_sign*gradII_phi_i[l]*delta(m,k)*fv->d[k];
-              //(5)
-              //d_gradIIh_dnormal[l][m][i] -= h_sign*phi_i*grad_disp[k][l]*delta(k,m);
-              // (3) + (5)
+
               d_gradIIh_dnormal[l][m][i] -= h_sign*gradII_phi_i[l]*delta(m,k)*fv->d[k];
               d_gradIIh_dnormal[l][m][i] -= h_sign*phi_i*grad_disp[k][l]*delta(k,m);
-
-              //d_gradIIh_dnormal[k][l][i] += -h_sign*bf[MESH_DISPLACEMENT1]->phi[i]*gradII_disp[k][l]
-              //                           + -h_sign*fv->d[l]*gradII_phi_i[l];
             }
           }
         }
@@ -669,7 +594,6 @@ void h0_minus_ndotd (
     default:
       break;
   }
- //gradII_h[0] = 1.0;
 }
 
 void rmesh_minus_rroller (
@@ -1068,10 +992,6 @@ void load_roller_normal_into_fv() {
                           + unnormalized_n[1]*unnormalized_n[1]);
   fv->snormal[0] = unnormalized_n[0]/mag_unnormalized_n;
   fv->snormal[1] = unnormalized_n[1]/mag_unnormalized_n;
-
-  //fv->dsnormal_dx[a][b][j]
-  // a: normal[a]
-  // b,j: dx[b][j]
 
   for (int j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++) {
     fv->dsnormal_dx[0][0][j] = 1./mag_unnormalized_n

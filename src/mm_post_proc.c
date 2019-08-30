@@ -1597,7 +1597,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     // need pure phase viscosities
     double mu_l, mu_g;
 
-    load_viscosity_model(
+    load_tfmp_viscosity_model(
       &mu_l, &mu_g
     );
 
@@ -1706,7 +1706,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     // need pure phase viscosities
     double mu_l, mu_g;
 
-    load_viscosity_model(
+    load_tfmp_viscosity_model(
       &mu_l, &mu_g
     );
 

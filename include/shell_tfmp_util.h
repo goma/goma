@@ -19,10 +19,10 @@ EXTERN enum clipping_kind my_clipping_kind;
 // OUTPUTS:
 //  mu_l = constant liquid viscosity
 //  mu_g = constant gas viscosity
-EXTERN void load_viscosity_model
-PROTO((double*,
+EXTERN void load_tfmp_viscosity_model
+(double*,
        double*
-));
+);
 
 // load_gas_density_model(&Patm, &rho_g, &drho_g_dP)
 // OUTPUTS:

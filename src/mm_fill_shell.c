@@ -14931,8 +14931,6 @@ assemble_shell_normal( double xi[DIM],   /* Local stu coordinates */
   shell_determinant_and_normal(ei->ielem, ei->iconnect_ptr, ei->num_local_nodes,
                                  ei->ielem_dim, 1);
   if (mp->ehl_normal_method == NCM_PRIMITIVE_S_ROLLER) {
-    //WH(-1, "If you're going to use the 'primitive_s_roller' normal type, "
-    //       "you better have a roller defined in the upper height function model!")
     load_roller_normal_into_fv();
   }
 
@@ -16563,24 +16561,15 @@ assemble_shell_tfmp(double time,   /* Time */
   dbl etm_mass_eqn, etm_adv_eqn, etm_diff_eqn, etm_source_eqn;
   int eqn;
 
-
-  /*
-  // check for mass term in steady state
-  if (pd->TimeIntegration == STEADY &&
-      (pd->etm[R_TFMP_MASS][(LOG2_MASS)] == 1 || pd->etm[R_TFMP_BOUND][(LOG2_MASS)] == 1)
-  ) {
-    EH(-1, "You should turn the mass term off if you're running steady state\n");
-  }
-  */
   if (pd->TimeIntegration == STEADY) {
     // don't divide by 0
-        delta_t = 1.0;
+    delta_t = 1.0;
   }
 
   // need pure phase viscosities
   double mu_l, mu_g;
 
-  load_viscosity_model(
+  load_tfmp_viscosity_model(
     &mu_l, &mu_g
   );
   
@@ -16636,7 +16625,6 @@ assemble_shell_tfmp(double time,   /* Time */
   dbl dgradII_S_dmesh[DIM][DIM][MDE];
 
   double gradII_dx[DIM];
-  //double dgradII_dx_dmesh[DIM][DIM][MDE];
 
   ShellRotate(fv->grad_tfmp_pres, fv->d_grad_tfmp_pres_dmesh, gradII_P, dgradII_P_dmesh, n_dof[MESH_DISPLACEMENT1]);
   ShellRotate(fv->grad_tfmp_sat, fv->d_grad_tfmp_sat_dmesh, gradII_S, dgradII_S_dmesh, n_dof[MESH_DISPLACEMENT1]);
@@ -16690,14 +16678,6 @@ assemble_shell_tfmp(double time,   /* Time */
 
       grad[0] = csigrad[0]/det_J;
 
-      /*
-      for (i=0; i<ei->dof[var]; i++) {
-        for (int k=0; k<DIM; k++) {
-          dgradII_dx_dmesh[0][k][i] = csigrad[0]*(-1.0f)/det_J/det_J*d_det_J_dmeshkj[k][i]
-                                    + delta(0,k)*bf[var]->dphidxi[i][0]/det_J;
-        }
-      }
-      */
     }
   }
 
@@ -16754,8 +16734,6 @@ assemble_shell_tfmp(double time,   /* Time */
   /* Use the velocity function model */
   double veloU[DIM], veloL[DIM], veloAVG[DIM];
   double veloAVG_dot_gradphi_i, veloAVG_dot_gradphi_j;
-  //double spd;
-  //spd = velocity_function_model(veloU, veloL, time, delta_t);
   velocity_function_model(veloU, veloL, time, delta_t);
 
   for (k=0; k<DIM; k++) {
@@ -16778,7 +16756,6 @@ assemble_shell_tfmp(double time,   /* Time */
 
   int mass_lumping = mp->tfmp_mass_lump;
 
-  //dbl clip_strength = mp->tfmp_clip_strength;
   if (mp->tfmp_density_model == CONSTANT) {
     rho_g = 1.0;
     drho_g_dP = 0.0;
@@ -16854,12 +16831,11 @@ assemble_shell_tfmp(double time,   /* Time */
 
         // transverse plate motion terms
         // avg plate motion
-        // ibp
-        //adv += S*veloAVG_dot_gradphi_i;
-        // not ibp
         adv += phi_i*S*veloAVG_dot_gradh;
         adv += phi_i*h*veloAVG_dot_gradS;
+
         // this term needed if not in shell surface coords
+        // no cases for which have been attempted
         // (i.e. if (mp->ehl_integration_kind == SIK_XY))
         //adv += h*S*div(veloAVG)
 
@@ -16877,9 +16853,9 @@ assemble_shell_tfmp(double time,   /* Time */
         diff *= dA*etm_diff_eqn;
       }
         ////////////////////////////////////////////////
-/* These /// blocks are for clipping methods, they were commented out to
- * help identify issues with other parts of the code. They can probably be
- * added back in now.
+    /* These /// blocks are for clipping methods, they were commented out to
+     * help identify issues with other parts of the code. They can probably be
+     * added back in now.
         if (S >= 1.0 && my_clipping_kind == var_swap) {
           mass = adv = diff = 0.0;
           //mass += phi_i*fv_dot->tfmp_sat;
@@ -16888,7 +16864,7 @@ assemble_shell_tfmp(double time,   /* Time */
           adv *= etm_adv_eqn;
         }
         ////////////////////////////////////////////////
-        */
+     */
 
       lec->R[peqn][i] += mass + adv + diff;
     } // end of loop over i for eqn = R_TFMP_MASS
@@ -16926,9 +16902,9 @@ assemble_shell_tfmp(double time,   /* Time */
           mass += -phi_i*rho_g*h*fv_dot->tfmp_sat;
         }
 
-        // spurious oscillation correction eqn
-        // Again, the spurious oscillation correction terms can be added
-        // back now because the rest of the code seems to be working well
+        // spurious oscillation correction (clipping) eqn
+        // Again, the spurious oscillation correction terms can be debugged
+        // now because the rest of the code seems to be working well
       /*
         if (S > 1.0 && my_clipping_kind == restorative) {
           mass = 0.0;
@@ -16979,17 +16955,11 @@ assemble_shell_tfmp(double time,   /* Time */
 
       source = 0.0;
       if ( T_SOURCE ) {
-        // AMCTODO: this is still broken =(
-        //source += phi_i*J;
-        source += J;
-
-        //source = gradII_P[0];
+        source += phi_i*J;
       }
-     /*
       if (S >= 1.0 || etm_source_eqn == 0) {
-				source = 0.0;
+        source = 0.0;
       }
-     */
      /*
       ////////////////////////////////////////////////
       if (S >= 1.0 && my_clipping_kind == var_swap) {
@@ -17006,28 +16976,12 @@ assemble_shell_tfmp(double time,   /* Time */
       adv *= dA * etm_adv_eqn;
       source *= dA * etm_source_eqn;
 
-      // These are for tracing back problems with calculating h
-     /*
-      int fp_type = FP_NORMAL;
-
-      if (fpclassify(mass)!= fp_type && mass != 0.0) {
-        EH(-1, "mass term is not normal");
-      }
-      if (fpclassify(adv)!= fp_type && adv != 0.0) {
-        EH(-1, "adv term is not normal");
-      }
-      if (fpclassify(source)!= fp_type && source != 0.0) {
-        EH(-1, "source term is not normal");
-      }
-     */
       lec->R[peqn][i] += mass + adv + source;
     } //End of loop over i for eqn = R_TFMP_BOUND
   } // End of if (af->Assemble_Residual)
 
   /* Assemble sensitivities of R_TFMP_MASS to TFMP_PRES, TFMP_SAT,
      MESH_DISPLACEMENT and SHELL_NORMAL */
-  
-
 
   if (af->Assemble_Jacobian) {
     eqn = R_TFMP_MASS;
@@ -17073,7 +17027,7 @@ assemble_shell_tfmp(double time,   /* Time */
         diff = 0.0;
         if ( T_DIFFUSION ) {
         }
-        /*
+     /*
       ////////////////////////////////////////////////
       if (S >= 1.0 && my_clipping_kind == var_swap) {
         mass = adv = diff = source = 0.0;
@@ -17129,11 +17083,8 @@ assemble_shell_tfmp(double time,   /* Time */
           // pressure driven term
           adv += h*h*h*phi_j/12.0/mu_l*dKrl_dS*gradP_dot_gradphi_i;
           // plate motion terms
-          // transverse plate motion terms
+
           // avg plate motion
-          // ibp
-          //adv += veloAVG_dot_gradphi_i*h*phi_j;
-          // not ibp
           adv += phi_i*phi_j*veloAVG_dot_gradh;
           adv += phi_i*h*veloAVG_dot_gradphi_j;
 
@@ -17154,7 +17105,7 @@ assemble_shell_tfmp(double time,   /* Time */
         }
         diff *= etm_diff_eqn;
 
-        /*
+     /*
       ////////////////////////////////////////////////
       if (S >= 1.0f && my_clipping_kind == var_swap) {
         mass = adv = diff = source = 0.0;
@@ -17249,18 +17200,8 @@ assemble_shell_tfmp(double time,   /* Time */
                      *wt*h3*fv->dsurfdet_dx[l][j];
 
               // plate motion terms
-              // avg plate motion
-              /*
-            // ibp
-                  adv += dh_dmesh[l][j]*S*veloAVG_dot_gradphi_i
-                      * wt*h3*det_J;
-                  adv += h*S*dveloAVG_dot_gradphi_i_dmesh
-                      * wt*h3*det_J;
-                  adv += h*S*veloAVG_dot_gradphi_i
-                      * wt*h3*d_det_J_dmeshkj[l][j];
-           */
-              // not ibp
 
+              // avg plate motion
               adv += phi_i*S*dveloAVG_dot_gradh_dmesh
                      * wt*h3*det_J;
               adv += phi_i*S*veloAVG_dot_gradh
@@ -17354,10 +17295,8 @@ assemble_shell_tfmp(double time,   /* Time */
                 adv += 3.0*h*h/12.0/mu_l*dh_dnormal[l][j]*Krl*gradP_dot_gradphi_i;
 
                 // plate motion terms
+
                 // avg plate motion
-                // ibp
-                //adv += dh_dnormal[l][j]*S*veloAVG_dot_gradphi_i;
-                // not ibp
                 adv += phi_i*S*dveloAVG_dot_gradh_dnormal;
                 adv += phi_i*dh_dnormal[l][j]*veloAVG_dot_gradS;
 
@@ -17489,11 +17428,11 @@ assemble_shell_tfmp(double time,   /* Time */
             source += phi_i*phi_j*dJ_dP;
 
             source *= dA;
-           /*
+
             if (S > 1.0) {
               source = 0.0;
             }
-           */
+
             source *= etm_source_eqn;
           }
 
@@ -17601,14 +17540,11 @@ assemble_shell_tfmp(double time,   /* Time */
 	  source = 0.0;
           source = 0.0;
           if ( T_SOURCE ) {
-            //source += phi_i*phi_j*dJ_dS;
-            source += phi_j*dJ_dS;
+            source += phi_i*phi_j*dJ_dS;
 
-           /*
-             if (S >= 1.0 || etm_source_eqn == 0) {
-               source = 0.0;
-             }
-           */
+            if (S >= 1.0 || etm_source_eqn == 0) {
+              source = 0.0;
+            }
 
             source *= dA;
             source *= etm_source_eqn;
@@ -17769,7 +17705,7 @@ assemble_shell_tfmp(double time,   /* Time */
               }
 
               if (S >= 1.0f && my_clipping_kind == continuity) {
-                adv = 0.0f;
+                adv = 0.0;
 
 
                 // h*h*h/12.0f/mu_l*gradP_dot_gradphi_i;
@@ -17818,12 +17754,9 @@ assemble_shell_tfmp(double time,   /* Time */
               source += phi_i*J
                 * wt*h3*d_det_J_dmeshkj[l][j];
 
-             /*
               if (S >= 1.0 || etm_source_eqn == 0) {
                 source = 0.0;
               }
-             */
-
               source *= etm_source_eqn;
             }
 
@@ -17917,11 +17850,11 @@ assemble_shell_tfmp(double time,   /* Time */
                 }
               }
               if (S >= 1.0f &&  my_clipping_kind == continuity) {
-                mass = 0.0f;
+                mass = 0.0;
                 mass += phi_i*d2h_dtime_dnormal[l][j];
               }
               if (S >= 1.0 && my_clipping_kind == constant_sat) {
-                mass = 0.0f;
+                mass = 0.0;
               }
              */
 
@@ -17946,18 +17879,18 @@ assemble_shell_tfmp(double time,   /* Time */
                 adv += phi_i*clip_strength*(1.0-S)*(1.0-S)*d2h_dtime_dnormal[l][j];
               }
 
-              if (S >= 1.0f &&  my_clipping_kind == continuity) {
-                adv = 0.0f;
+              if (S >= 1.0 &&  my_clipping_kind == continuity) {
+                adv = 0.0;
 
-                // h*h*h/12.0f/mu_l*gradP_dot_gradphi_i;
-                //adv += 3.0f*h*h*dh_dnormal[l][j]/12.0f/mu_l*gradP_dot_gradphi_i;
+                // h*h*h/12.0/mu_l*gradP_dot_gradphi_i;
+                //adv += 3.0*h*h*dh_dnormal[l][j]/12.0f/mu_l*gradP_dot_gradphi_i;
 
                 // -phi_i*h*h/4.0f/mu_l*grad_P_dot_gradh;
-                adv += -2.0f*h*dh_dnormal[l][j]/4.0f/mu_l*gradP_dot_gradh;
-                adv += -h*h/4.0f/mu_l*gradP_dot_dgradh_dnormal_lj;
+                adv += -2.0*h*dh_dnormal[l][j]/4.0/mu_l*gradP_dot_gradh;
+                adv += -h*h/4.0/mu_l*gradP_dot_dgradh_dnormal_lj;
               }
               if (S >= 1.0 && my_clipping_kind == constant_sat) {
-                adv = 0.0f;
+                adv = 0.0;
               }
              */
 
@@ -17970,11 +17903,9 @@ assemble_shell_tfmp(double time,   /* Time */
             if ( T_SOURCE ) {
               source += phi_i*dJ_dh*dh_dnormal[l][j];
 
-             /*
               if (S >= 1.0 || etm_source_eqn == 0) {
                 source = 0.0;
               }
-             */
 
               source *= dA;
               source *= etm_source_eqn;
@@ -17982,14 +17913,14 @@ assemble_shell_tfmp(double time,   /* Time */
 
            /*
             ////////////////////////////////////////////////
-            if (S >= 1.0f && my_clipping_kind == var_swap) {
-              mass = adv = diff = source = 0.0f;
+            if (S >= 1.0 && my_clipping_kind == var_swap) {
+              mass = adv = diff = source = 0.0;
               mass += phi_i*d2h_dtime_dnormal[l][j];
               mass *= etm_mass_eqn;
 
-              adv += 3.0f*h*h*dh_dnormal[l][j]/12.0f/mu_l*gradP_dot_gradphi_i;
+              adv += 3.0*h*h*dh_dnormal[l][j]/12.0/mu_l*gradP_dot_gradphi_i;
               adv += dh_dnormal[l][j]*veloAVG_dot_gradphi_i;
-              adv += -phi_i/2.0f*dveloDIFF_dot_gradh_dnormal;
+              adv += -phi_i/2.0*dveloDIFF_dot_gradh_dnormal;
             }
             ////////////////////////////////////////////////
            */
@@ -18049,7 +17980,7 @@ assemble_shell_lubrication(double time,   /* Time */
   // need pure phase viscosities
   double mu_l, mu_g;
 
-  load_viscosity_model(
+  load_tfmp_viscosity_model(
     &mu_l, &mu_g
   );
 
@@ -18088,8 +18019,6 @@ assemble_shell_lubrication(double time,   /* Time */
   // load pressure gradient
   double gradII_P[DIM];
   double dgradII_P_dmesh[DIM][DIM][MDE];
-  //double gradII_x[DIM];
-  //double dgradII_x_dmesh[DIM][DIM][MDE];
   double csigrad[DIM];
   memset(dgradII_P_dmesh , 0.0, sizeof(double)*DIM*DIM*MDE);
   if (mp->ehl_integration_kind == SIK_S){

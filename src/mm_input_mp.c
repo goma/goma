@@ -9732,9 +9732,6 @@ ECHO("\n----Acoustic Properties\n", echo_file);
            pd_glob[mn]->e[R_SHELL_NORMAL2] &&
            pd_glob[mn]->e[R_SHELL_NORMAL3])
        || (pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND])
-//       || (  (pd_glob[mn]->e[R_TFMP_MASS] || pd_glob[mn]->e[R_TFMP_BOUND]) &&
-//          (pd_glob[mn]->e[R_SHELL_TENSION] && pd_glob[mn]->e[R_SHELL_CURVATURE])
-//            )
      ) {
 
     model_read = look_for_mat_prop(imp, "FSI Deformation Model",
@@ -10454,23 +10451,13 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       if (model_read == 1 && !strcmp(model_name, "NDOTD") ) {
         model_read = 1;
         mat_ptr->ehl_gap_model = GM_NDOTD;
-        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
-        //NO_SPECIES);
 
-//        if (num_const != 0) {
-//          EH(-1, "NDOTD Elastohydrodynamic Lubrication Gap Model takes no other input parameters");
-//        }
       } else
 
       if (model_read == 1 && !strcmp(model_name, "RADIAL") ) {
         model_read = 1;
         mat_ptr->ehl_gap_model = GM_RADIAL;
-        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
-        //NO_SPECIES);
 
-//        if (num_const != 0) {
-//          EH(-1, "RADIAL Elastohydrodynamic Lubrication Gap Model takes no other input parameters");
-//        }
       }
 
       else {
@@ -10505,43 +10492,23 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       if (model_read == 1 && !strcmp(model_name, "MAPPING") ) {
         model_read = 1;
         mat_ptr->ehl_normal_method = NCM_MAPPING;
-        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
-        //NO_SPECIES);
 
-//        if (num_const != 0) {
-//          EH(-1, "MAPPING Elastohydrodynamic Lubrication Normal Calculation Method takes no other input parameters");
-//        }
       } else
 
       if (model_read == 1 && !strcmp(model_name, "SIK_S_WEB") ) {
         model_read = 1;
         mat_ptr->ehl_normal_method = NCM_PRIMITIVE_S_WEB;
-        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
-        //NO_SPECIES);
 
-//        if (num_const != 0) {
-//          EH(-1, "SIK_S_WEB Elastohydrodynamic Lubrication Normal Calculation Method takes no other input parameters");
-//        }
       } else
       if (model_read == 1 && !strcmp(model_name, "SIK_S_ROLLER") ) {
         model_read = 1;
         mat_ptr->ehl_normal_method = NCM_PRIMITIVE_S_ROLLER;
-        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
-        //NO_SPECIES);
 
-//        if (num_const != 0) {
-//          EH(-1, "SIK_S_ROLLER Elastohydrodynamic Lubrication Normal Calculation Method takes no other input parameters");
-//        }
       } else
       if (model_read == 1 && !strcmp(model_name, "SIK_XY") ) {
         model_read = 1;
         mat_ptr->ehl_normal_method = NCM_PRIMITIVE_XY;
-        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
-        //NO_SPECIES);
 
-//        if (num_const != 0) {
-//          EH(-1, "SIK_XY Elastohydrodynamic Lubrication Normal Calculation Method takes no other input parameters");
-//        }
       }
 
       else {
@@ -10575,23 +10542,13 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       if (model_read == 1 && !strcmp(model_name, "S") ) {
         model_read = 1;
         mat_ptr->ehl_integration_kind = SIK_S;
-        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
-        //NO_SPECIES);
 
-//        if (num_const != 0) {
-//          EH(-1, "S Elastohydrodynamic Lubrication Shell Integration Kind takes no other input parameters");
-//        }
       } else
 
       if (model_read == 1 && !strcmp(model_name, "XY") ) {
         model_read = 1;
         mat_ptr->ehl_integration_kind = SIK_XY;
-        //	num_const = read_constants(imp, &(mat_ptr->shell_tangent_seed_vec),
-        //NO_SPECIES);
 
-//        if (num_const != 0) {
-//          EH(-1, "XY Elastohydrodynamic Lubrication Shell Integration Kind takes no other input parameters");
-//        }
       }
 
       else {

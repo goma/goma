@@ -2111,23 +2111,7 @@ EH(-1,"version not compiled with frontal solver");
 	for (i = 0; i < NumUnknowns; i++) {
 	  xdot[i] -= damp_factor * var_damp[idv[i][0]] * delta_x[i] * (1.0 + 2 * theta) / delta_t;
 	}
-	exchange_dof(cx, dpi, xdot);	
-
-  /*
-  // clip saturation
-	if (pd->v[TFMP_SAT]) {
-		for (i=0; i<num_total_nodes; i++) {
-			j = Index_Solution(i,R_TFMP_MASS, 0, 0, -1);
-
-			if (x[j] > 0.999 ) {
-				x[j] = 1.0;
-			}
-      if (x[j] < 0.0001) {
-        x[j] = 0.0;
-      }
-		}
-	}
-  */
+        exchange_dof(cx, dpi, xdot);
 		
 	/* Now go back and correct all those dofs in solid regions undergoing newmark-beta
 	 * transient scheme */

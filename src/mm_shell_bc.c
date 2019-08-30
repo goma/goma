@@ -1637,7 +1637,7 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
   // need pure phase viscosities
   double mu_l, mu_g;
 
-  load_viscosity_model(
+  load_tfmp_viscosity_model(
     &mu_l, &mu_g
   );
 
@@ -1656,29 +1656,12 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
   double h = gap->h;
   double dh_dmesh[DIM][MDE];
   double dh_dnormal[DIM][MDE];
-  //double dh_dtime = gap->dh_dtime;
-  //double d2h_dtime_dmesh[DIM][MDE];
-  //double d2h_dtime_dnormal[DIM][MDE];
-  //double gradII_h[DIM];
-  //double d_gradIIh_dmesh[DIM][DIM][MDE];
-  //double d_gradIIh_dnormal[DIM][DIM][MDE];
 
   for (int k=0; k<DIM; k++) {
-    //gradII_h[k] = gap->gradII_h[k];
     for (int i=0; i<MDE; i++) {
       dh_dmesh[k][i] = gap->dh_dmesh[k][i];
       dh_dnormal[k][i] = gap->dh_dnormal[k][i];
-      //d2h_dtime_dmesh[k][i] = gap->d2h_dtime_dmesh[k][i];
-      //d2h_dtime_dnormal[k][i] = gap->d2h_dtime_dnormal[k][i];
     }
-    /*
-    for (int l=0; l<DIM; l++){
-      for (int i=0; i<MDE; i++){
-        d_gradIIh_dmesh[k][l][i] = gap->d_gradIIh_dmesh[k][l][i];
-        d_gradIIh_dnormal[k][l][i] = gap->d_gradIIh_dnormal[k][l][i];
-      }
-    }
-    */
   }
 
   /* Use the velocity function model */
@@ -1738,9 +1721,6 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
     // Pressure gradient driven
     func[0] += -h*h*h/12.0/mu_l*Krl*gradII_P[k]*bound_normal[k];
   }
-  // Gap Velocity driven
-  //func[0] += h*S*n_dot_v_avg;
-
 
   double n_dot_grad_P, n_dot_phi_j;
   double d_gradII_phi_j_dmesh[DIM][DIM][MDE];
@@ -1759,8 +1739,6 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
         if (S <= 1.0 ){
           // Pressure gradient driven
           d_func[0][var][j] += n_dot_phi_j*(-h*h*h/12.0/mu_l*Krl);
-          // Gap Velocity driven
-          //d_func[0][var][j] += 0.0;
         }
       }
     }
@@ -1776,8 +1754,6 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
         if (S <= 1.0 ){
           // Pressure gradient driven
           d_func[0][var][j] += n_dot_grad_P	*(-h*h/12.0/mu_l*dKrl_dS*phi_j*h);
-          // Gap Velocity driven
-          //d_func[0][var][j] += h*phi_j*n_dot_v_avg;
         }
       }
     }
@@ -1800,15 +1776,8 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
             d_func[0][var][j] += -3.0*h*h*dh_dmesh[l][j]/12.0/mu_l*Krl*gradIIP_dot_bound_normal;
             d_func[0][var][j] += -h*h*h/12.0/mu_l*Krl*dgradIIP_dmesh_dot_bound_normal;
             d_func[0][var][j] += -h*h*h/12.0/mu_l*Krl*gradIIP_dot_dbound_normal_dmesh;
-            // Gap Velocity driven
-            //d_func[0][var][j] += dh_dmesh[l][j]*S*n_dot_v_avg;
           }
-          //d_func[0][var][j] = dgradII_P_dmesh[0][l][j];
-          //d_func[0][var][j] = dh_dmesh[l][j];
-          //d_func[0][var][j] = d_det_J_dmeshkj[l][j];
-          //d_func[0][var][j] = 0.0;
-
-	      }
+        }
       }
     }
 
@@ -1825,8 +1794,6 @@ shell_n_dot_liq_velo_bc_tfmp(double func[DIM],
           if (S <= 1.0 ){
             // Pressure gradient driven
             d_func[0][var][j] += -3.0*h*h*dh_dnormal[l][j]/12.0/mu_l*Krl*gradIIP_dot_bound_normal;
-            // Gap Velocity driven
-            //d_func[0][var][j] += dh_dnormal[l][j]*S*n_dot_v_avg;
           }
         }
       }	
@@ -2310,7 +2277,7 @@ shell_n_dot_gas_velo_bc_tfmp(double func[DIM],
   // need pure phase viscosities
   double mu_l, mu_g;
 
-  load_viscosity_model(
+  load_tfmp_viscosity_model(
     &mu_l, &mu_g
   );
   
@@ -2510,7 +2477,7 @@ shell_lubrication_outflow(
   // need pure phase viscosities
   double mu_l, mu_g;
 
-  load_viscosity_model(
+  load_tfmp_viscosity_model(
     &mu_l, &mu_g
   );
   /*
