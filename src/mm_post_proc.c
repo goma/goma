@@ -79,7 +79,8 @@ static char rcsid[] =
 
 #include "mm_std_models_shell.h"
 #include "mm_std_models.h"
-
+#include "shell_tfmp_struct.h"
+#include "shell_tfmp_util.h"
 /*
  * Global variable definitions.
  * This is the 1 place these variables are defined. If you need them
@@ -1594,20 +1595,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     /* Gather necessary values (S, h, Krg, gradII_P)*/
 
     // need pure phase viscosities
-    double mu_l = 0.01; //    [g/cm/s]
-    double mu_g = 186e-6; //  [g/cm/s] air
+    double mu_l, mu_g;
 
-    switch(mp->tfmp_viscosity_model){
-    case CONSTANT:
-      mu_g = mp->tfmp_viscosity_const[0];
-      if (mp->len_tfmp_viscosity_const == 2) {
-	mu_l = mp->tfmp_viscosity_const[1];
-      }
-      break;
-    default:
-      // viscosity of air and water, as defined above
-      break;
-    }
+    load_tfmp_viscosity_model(
+      &mu_l, &mu_g
+    );
 
     
     double S = fv->tfmp_sat;
@@ -1617,66 +1609,52 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     double h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
 			      dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
 
-    dbl Krl;// = S*S/2.0*(3.0 - S);
-    dbl Krg;// = (1.0-S)*(1.0-S)*(1.0-S) + 3.0/2.0*mu_g/mu_l*S*(1.0-S)*(2.0-S);
+    double dh_dtime = dH_U_dtime - dH_L_dtime;
+    double gradII_h[DIM];
+	  for (k = 0; k<DIM; k++) {
+      gradII_h[k] = dH_U_dX[k] - dH_L_dX[k];
+    }
+    double dh_dmesh[DIM][MDE];
+    double dh_dnormal[DIM][MDE];
+    double d2h_dtime_dmesh[DIM][MDE];
+    double d2h_dtime_dnormal[DIM][MDE];
+    double d_gradIIh_dmesh[DIM][DIM][MDE];
+    double d_gradIIh_dnormal[DIM][DIM][MDE];
 
-    
-    // try shifted-scaled rel perms
-    
-      // gas transition
-    dbl Scg, alphag, Scl, alphal;
-    switch (mp->tfmp_rel_perm_model) {
-    case PIECEWISE:
-      Scg = mp->tfmp_rel_perm_const[0];
-      alphag = mp->tfmp_rel_perm_const[1];
-      Scl = mp->tfmp_rel_perm_const[2];
-      alphal = mp->tfmp_rel_perm_const[3];
-      break;
-    default:
-      Scg = 0.78;
-      alphag = 0.1;
-      Scl = 0.78;
-      alphal = 0.1;
-      break;
-    }
-    
-    dbl mg = -1./2./alphag;
-    dbl cg = -mg*(Scg + alphag);
-    dbl ml = 1./2./alphal;
-    dbl cl = -ml*(Scl - alphal);
-  
-    if ( S <= Scg - alphag) {
-      Krg = 1.0;
-      //dKrg_dS = 0.0;
-    } else if ( S > Scg - alphag && S < Scg + alphag ) {
-      Krg = mg*S + cg;
-      //dKrg_dS = mg;
-    } else {
-      Krg = 0.0;
-      //dKrg_dS = 0.0;
-    }
-    
-    // liquid transition
-    
-    if ( S <= Scl - alphal) {
-      Krl = 0.0;
-      //dKrl_dS = 0.0;
-    } else if ( S > Scl - alphal && S < Scl + alphal ) {
-      Krl = ml*S + cl;
-      //dKrl_dS = ml;
-      
-    } else { // S > 1.0
-      Krl = 1.0 ;
-      //dKrl_dS = 0.0;
-    }
-    
+    // dh_dtime is not used here
+    double tt = 1.0;
 
-    dbl grad_P[DIM], gradII_P[DIM];
-    for (k = 0; k<DIM; k++) {
-      grad_P[k] = fv->grad_tfmp_pres[k];
-    }
+    load_displacement_coupling_model(
+      tt,
+      delta_t,
+      &h,
+      &dh_dtime,
+      gradII_h,
+      dh_dmesh,
+      dh_dnormal,
+      d2h_dtime_dmesh,
+      d2h_dtime_dnormal,
+      d_gradIIh_dmesh,
+      d_gradIIh_dnormal,
+      n_dof,
+      dof_map
+    );
+    //  rel perms
+    double Krl, dKrl_dS, Krg, dKrg_dS;
+    load_relative_permeability_model(S, &Krl, &dKrl_dS, &Krg, &dKrg_dS);
+    
+    /* Use the velocity function model */
+    double veloU[DIM], veloL[DIM], veloAVG[DIM];
 
-    Inn(grad_P, gradII_P);
+    velocity_function_model(veloU, veloL, time, delta_t);
+
+    for (k=0; k<DIM; k++) {
+      veloAVG[k] = (veloU[k] + veloL[k])/2.;
+    }
+    veloAVG[2] = 0.0;
+
+    double gradII_P[DIM];
+    Inn(fv->grad_tfmp_pres, gradII_P);
     
     /* Calculate Velocity */
     for (k = 0; k<DIM; k++) {
@@ -1684,19 +1662,19 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       v_g[k] = -h*h/12.0/mu_g*Krg*gradII_P[k];
     }
     if (TFMP_GAS_VELO != -1) {
-      local_post[TFMP_GAS_VELO] = v_g[0];
+      local_post[TFMP_GAS_VELO] = v_g[0] + veloAVG[0];
       local_lumped[TFMP_GAS_VELO] += 1;
-      local_post[TFMP_GAS_VELO + 1] = v_g[1];
+      local_post[TFMP_GAS_VELO + 1] = v_g[1] + veloAVG[1];
       local_lumped[TFMP_GAS_VELO + 1] += 1;
-      local_post[TFMP_GAS_VELO + 2] = v_g[2];
+      local_post[TFMP_GAS_VELO + 2] = v_g[2] + veloAVG[2];
       local_lumped[TFMP_GAS_VELO + 2] += 1;
     }
     if (TFMP_LIQ_VELO != -1) {
-      local_post[TFMP_LIQ_VELO] = v_l[0];
+      local_post[TFMP_LIQ_VELO] = v_l[0] + veloAVG[0];
       local_lumped[TFMP_LIQ_VELO] += 1;
-      local_post[TFMP_LIQ_VELO + 1] = v_l[1];
+      local_post[TFMP_LIQ_VELO + 1] = v_l[1] + veloAVG[1];
       local_lumped[TFMP_LIQ_VELO + 1] += 1;
-      local_post[TFMP_LIQ_VELO + 2] = v_l[2];
+      local_post[TFMP_LIQ_VELO + 2] = v_l[2] + veloAVG[2];
       local_lumped[TFMP_LIQ_VELO + 2] += 1;
     }
     if (TFMP_KRG != -1) {
@@ -1726,18 +1704,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     /* Gather necessary values (S, h, Krg, gradII_P)*/
 
     // need pure phase viscosities
-    double mu_l = 0.01; //    [g/cm/s]
+    double mu_l, mu_g;
 
-    switch(mp->tfmp_viscosity_model){
-    case CONSTANT:
-      if (mp->len_tfmp_viscosity_const == 2) {
-	mu_l = mp->tfmp_viscosity_const[1];
-      }
-      break;
-    default:
-      // viscosity of water, as defined above
-      break;
-    }
+    load_tfmp_viscosity_model(
+      &mu_l, &mu_g
+    );
 
     
     double S = fv->tfmp_sat;
@@ -1747,74 +1718,50 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     double h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
 			      dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
 
-    dbl Krl;// = S*S/2.0*(3.0 - S);
-
-    // split rel perms
-    dbl Scl, alphal;
-
-    switch (mp->tfmp_rel_perm_model) {
-    case PIECEWISE:
-      Scl = mp->tfmp_rel_perm_const[2];
-      alphal = mp->tfmp_rel_perm_const[3];
-      break;
-    default:
-      Scl = 0.78;
-      alphal = 0.1;
-      break;
-    }
-
-    // liquid transition
-    dbl ml = 1./2./alphal;
-    dbl cl = -ml*(Scl - alphal);
-
-    if ( S <= Scl - alphal) {
-      Krl = 0.0;
-    } else if ( S > Scl - alphal && S < Scl + alphal ) {
-      Krl = ml*S + cl;
-    } else { // S > 1.0
-      Krl = 1.0 ;
-    }
-    dbl D, Scd, betad, md, cd, Krd;
-    switch (mp->tfmp_diff_model) {
-    case CONSTANT:
-      D = mp->tfmp_diff_const[0];
-      Krd = 0.0;
-      break;
-      //  case EXPONENTIAL:
-      //D = 3.16e-22*exp(34.53877639491068*S);
-      //dD_dS = 3.16e-22*34.53877639491068*exp(34.53877639491068*S);
-      //break;
-    case PIECEWISE:
-      D = mp->tfmp_diff_const[0];
-      // diffusion transition
-      Scd = mp->tfmp_diff_const[1];
-      betad = mp->tfmp_diff_const[2];
-      md = 1.f/2.f/betad;
-      cd = -md*(Scd - betad);
-
-      if ( S < Scd - betad) {
-	Krd = 0.0;
-      } else { // ( S >= Scd - betad) { // && S <= Scd + betad ) {
-	Krd = md*S + cd;
+    double dh_dtime = dH_U_dtime - dH_L_dtime;
+      double gradII_h[DIM];
+      for (k = 0; k<DIM; k++) {
+        gradII_h[k] = dH_U_dX[k] - dH_L_dX[k];
       }
-      break;
-      
-    default:
-      D = 0.0;
-      Krd = 0.0;
-      break;
-    }
-    
-    dbl grad_P[DIM], gradII_P[DIM];
-    dbl grad_S[DIM], gradII_S[DIM];
 
-    for (k = 0; k<DIM; k++) {
-      grad_P[k] = fv->grad_tfmp_pres[k];
-      grad_S[k] = fv->grad_tfmp_sat[k];
-    }
+      double dh_dmesh[DIM][MDE];
+      double dh_dnormal[DIM][MDE];
+      double d2h_dtime_dmesh[DIM][MDE];
+      double d2h_dtime_dnormal[DIM][MDE];
+      double d_gradIIh_dmesh[DIM][DIM][MDE];
+      double d_gradIIh_dnormal[DIM][DIM][MDE];
 
-    Inn(grad_P, gradII_P);
-    Inn(grad_S, gradII_S);
+      // dh_dtime is not used here
+      double tt = 1.0;
+
+      load_displacement_coupling_model(
+        tt,
+        delta_t,
+        &h,
+        &dh_dtime,
+        gradII_h,
+        dh_dmesh,
+        dh_dnormal,
+        d2h_dtime_dmesh,
+        d2h_dtime_dnormal,
+        d_gradIIh_dmesh,
+        d_gradIIh_dnormal,
+        n_dof,
+        dof_map
+      );
+
+    //Artificial diffusion constant
+    double D, Krd, dKrd_dS;
+    load_molecular_diffusion_model(S, &D, &Krd, &dKrd_dS);
+
+    //  rel perms
+    double Krl, dKrl_dS, Krg, dKrg_dS;
+    load_relative_permeability_model(S, &Krl, &dKrl_dS, &Krg, &dKrg_dS);
+
+    double gradII_P[DIM], gradII_S[DIM];
+
+    Inn(fv->grad_tfmp_pres, gradII_P);
+    Inn(fv->grad_tfmp_sat, gradII_S);
 
     dbl mag_gradII_P = 0.0;
     dbl mag_gradII_S = 0.0;
@@ -2128,7 +2075,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
         local_lumped[PRINCIPAL_REAL_STRESS+2] = 1.;
     } /* end of PRINCIPAL_REAL_STRESS */
 
-  if ( LUB_HEIGHT != -1 && (pd->e[R_LUBP] || pd->e[R_SHELL_FILMP] || pd->e[R_TFMP_MASS] ) ) {
+  if ( LUB_HEIGHT != -1 && (pd->e[R_LUBP] || pd->e[R_SHELL_FILMP] || pd->e[R_TFMP_MASS]  || pd->e[R_TFMP_BOUND]) ) {
     double H_U, dH_U_dtime, H_L, dH_L_dtime;
     double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
     
@@ -2139,7 +2086,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
     
-    if (pd->e[R_LUBP] || pd->e[R_TFMP_MASS])
+    if (pd->e[R_LUBP])
       {	 
 	local_post[LUB_HEIGHT] = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
 						       dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
@@ -2147,7 +2094,19 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     else if (pd->e[R_SHELL_FILMP])
       {
 	local_post[LUB_HEIGHT] = fv->sh_fh; 
-      }
+    } else if (pd->e[R_TFMP_MASS] || pd->e[R_TFMP_BOUND]) {
+      double tt = 1.0;
+      GAP_STRUCT gap_v;
+      GAP_STRUCT *gap = &gap_v;
+      gap->time = time;
+      gap->tt = tt;
+      gap->delta_t = delta_t;
+      gap->n_dof = n_dof;
+      gap->dof_map = dof_map;
+      load_gap_model(gap);
+
+      local_post[LUB_HEIGHT] = gap->h;
+    }
     
     switch ( mp->FSIModel ) {
     case FSI_MESH_CONTINUUM:
@@ -2159,13 +2118,41 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	}
       break;
     case FSI_SHELL_ONLY_MESH:
-      if ( (pd->e[R_SHELL_NORMAL1]) && (pd->e[R_SHELL_NORMAL2]) && (pd->e[R_SHELL_NORMAL3]) )
+      if ( ( (pd->e[R_SHELL_NORMAL1]) && (pd->e[R_SHELL_NORMAL2]) && (pd->e[R_SHELL_NORMAL3]) ) ||
+      (pd->e[R_MESH1] && pd->e[R_SHELL_NORMAL1] && (pd->e[R_SHELL_NORMAL2]) && pd->e[R_LUBP]) )
         {
-         for(a=0;a<dim; a++)
-            {
-             local_post[LUB_HEIGHT] -= fv->n[a] * fv->d[a];
-            }
+          double dh_dmesh[DIM][MDE];
+          double dh_dnormal[DIM][MDE];
+          double d2h_dtime_dmesh[DIM][MDE];
+          double d2h_dtime_dnormal[DIM][MDE];
+          double d_gradIIh_dmesh[DIM][DIM][MDE];
+          double d_gradIIh_dnormal[DIM][DIM][MDE];
+
+          // dh_dtime not used here
+          double tt = 1.0;
+          double dh_dtime = 1.0;
+          double gradII_h[DIM];
+
+          load_displacement_coupling_model(
+            tt,
+            delta_t,
+            &(local_post[LUB_HEIGHT]),
+            &dh_dtime,
+            gradII_h,
+            dh_dmesh,
+            dh_dnormal,
+            d2h_dtime_dmesh,
+            d2h_dtime_dnormal,
+            d_gradIIh_dmesh,
+            d_gradIIh_dnormal,
+            n_dof,
+            dof_map
+          );
         }
+      else if (pd->e[R_TFMP_BOUND]) {
+        // do nothing:
+        // the normal_dot_displacement is taken care of in load_gap_model
+      }
       else
         {
          for(a=0;a<dim; a++)
@@ -10299,7 +10286,8 @@ index_post, index_post_export);
       PRINCIPAL_REAL_STRESS = -1;
     }
 
-  if (LUB_HEIGHT != -1  && (Num_Var_In_Type[R_LUBP] || Num_Var_In_Type[R_SHELL_FILMP] || Num_Var_In_Type[R_TFMP_MASS]) )
+  if (LUB_HEIGHT != -1  &&  (Num_Var_In_Type[R_LUBP] || Num_Var_In_Type[R_SHELL_FILMP] ||
+                            Num_Var_In_Type[R_TFMP_MASS] || Num_Var_In_Type[R_TFMP_BOUND]) )
     {
       if (LUB_HEIGHT == 2)
         {
@@ -11319,8 +11307,9 @@ find_id_edge (const int ielem,			/* 0-based element number */
 		in local_ss_node_list - might be necessary */
 
     for (i = 0; i < num_nodes_on_edge; i++) {
-       if ((id_local_elem_coord[i] = in_list (local_edge_node_list[i], 0, 
-		   num_local_nodes, &(exo->node_list[iconnect_ptr])) ) == -1) {
+      id_local_elem_coord[i] = in_list (local_edge_node_list[i], 0, 
+		    num_local_nodes, &(exo->node_list[iconnect_ptr]));
+      if ((id_local_elem_coord[i]) == -1) {
 	 EH(-1,"find_id_edge ERROR: side set nodal map error\n");
        }
     }
@@ -11430,8 +11419,19 @@ find_id_edge (const int ielem,			/* 0-based element number */
        }
        break;
    case 1:
-     EH(-1,"Can't have edges in 1D");
-       break;
+    /* On a 1D element, edges are points, in ExoII structures, they are
+     * certainly nodes. 
+     * * * */
+    sum = shape(1.0, 0.0, 0.0, ielem_type, PSI, id_local_elem_coord[0]);
+    if (sum > 0.999) {
+      *param_dir = 0;
+      return 2; // These edge numbers have to match cases in find_surf_st
+    } else {
+      *param_dir = 0;
+      return 1; // node number
+    }
+    /*EH(-1,"Can't have edges in 1D");*/
+      break;
 
     } /* END switch ielem_dim */
 

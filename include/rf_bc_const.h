@@ -817,6 +817,9 @@
 #define SH_S11_WEAK_BC      970000016
 #define SH_S22_WEAK_BC      970000017
 
+#define SH_SDET_BC          970000020
+#define SH_MESH2_WEAK_BC    970000021
+
 
 /* Shell variables that are not structural shells */
 #define SH_GAMMA1_BC            980000001
@@ -1011,11 +1014,16 @@
 #define SHELL_OPEN_PRESS_2_BC 777000023
 #define LUB_STATIC_BC 777000024
 
-#define SHELL_TFMP_PRES_BC        777000030
-#define SHELL_TFMP_FREE_LIQ_BC    777000041
-#define SHELL_TFMP_NUM_DIFF_BC    777000042
+#define SHELL_TFMP_PRES_BC            777000030
+#define SHELL_TFMP_SAT_BC             777000031
+#define SHELL_TFMP_GRAD_S_BC          777000034
+#define SHELL_TFMP_FREE_LIQ_BC        777000041
+#define SHELL_TFMP_NUM_DIFF_BC        777000042
+#define SHELL_TFMP_AVG_PLATE_VELO_BC  777000043
+#define SHELL_TFMP_FREE_GAS_BC        777000044
 
 #define RESTIME_BC        788000030
+#define SHELL_LUBRICATION_OUTFLOW_BC  777000050
 
 /* Vectors used for rotations */
 #define ROT_NONE -1

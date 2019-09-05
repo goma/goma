@@ -2320,7 +2320,8 @@ set_interaction_masks(Exo_DB *exo)
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = SHELL_NORMAL3;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-
+          v = TFMP_PRES;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           break;
 	  
         case R_SHELL_CURVATURE2:
@@ -2381,11 +2382,11 @@ set_interaction_masks(Exo_DB *exo)
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = MESH_DISPLACEMENT3;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-		  v = VELOCITY1;
+                  v = VELOCITY1;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-	      v = VELOCITY2;
+              v = VELOCITY2;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-	      v = VELOCITY3;
+              v = VELOCITY3;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	      v = PRESSURE;
 	      if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
@@ -3749,7 +3750,11 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = SHELL_NORMAL3;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-	  break;
+          v = SHELL_CURVATURE;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_TENSION;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
 
 	case R_SPECIES_UNK_0:
 	case R_SPECIES_UNK_1:

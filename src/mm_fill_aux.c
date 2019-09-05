@@ -995,7 +995,8 @@ h_elem_siz(dbl hsquared[DIM], dbl hh[DIM][DIM],
    */
 
   if (mp->FSIModel == FSI_MESH_CONTINUUM ||
-      mp->FSIModel == FSI_REALSOLID_CONTINUUM) DeformingMeshShell = 1;
+      mp->FSIModel == FSI_REALSOLID_CONTINUUM ||
+      mp->FSIModel == FSI_SHELL_ONLY_MESH) DeformingMeshShell = 1;
 
   j = Proc_Connect_Ptr[ei->ielem];
   for (p = 0; p < dim; p++) {
@@ -1283,7 +1284,6 @@ global_h_elem_siz(dbl x[], dbl x_old[], dbl xdot[], dbl resid_vector[],
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
-
 void
 
 surface_determinant_and_normal(
@@ -1360,15 +1360,17 @@ surface_determinant_and_normal(
   if (ielem_surf_dim == 0)
     {
       /*
-       *  This code should be considered to be untested. It worked for one case.
+       *  This code should be considered to be untested. It worked for two cases.
        */
       // ok we fill up snormal
       shell_determinant_and_normal(ei->ielem, ei->iconnect_ptr, ei->num_local_nodes,
 				   ei->ielem_dim, 1);
       if (id_side == 1) {
-	signID = -1.0;
+	      signID = -1.0;
+      } else if (id_side == 2) {
+        signID = 1.0;
       } else {
-	signID = 0.0;
+	      signID = 0.0;
       }
       /*
        * We turn the normal into a tangent and then assign it back, multiplying by the signID
@@ -1377,7 +1379,7 @@ surface_determinant_and_normal(
        *
        *  In 2D n x t = k, these vectors satisfy the rh rule.
        */
-   
+
       tmp =   fv->snormal[0];
       fv->snormal[0] = - signID *  fv->snormal[1]; 
       fv->snormal[1] =   signID *  tmp; 
@@ -1388,18 +1390,19 @@ surface_determinant_and_normal(
 	  ldof = ei->ln_to_dof[ShapeVar][i];
 	  if (ldof >= 0)
 	    {
-	      if (Dolphin[inode][MESH_DISPLACEMENT1] > 0 )
-		{
-                  for (a = 0; a < dim; a++)
-                    {
-		      tmp =  fv->dsnormal_dx[0][a][ldof];
-		      fv->dsnormal_dx[0][a][ldof] = - signID * fv->dsnormal_dx[1][a][ldof];
-		      fv->dsnormal_dx[1][a][ldof] =   signID * tmp;
-                    }
-		}
-	    }
-	}
-
+              if (Dolphin[inode][MESH_DISPLACEMENT1] > 0 )
+              {
+                for (a = 0; a < dim; a++)
+                {
+                  tmp =  fv->dsnormal_dx[0][a][ldof];
+                  fv->dsnormal_dx[0][a][ldof] = - signID * fv->dsnormal_dx[1][a][ldof];
+                  fv->dsnormal_dx[1][a][ldof] =   signID * tmp;
+                }
+              }
+            }
+        }
+      fv->sdet = 1.0;
+      memset(fv->dsurfdet_dx, 0.0, sizeof(double)*DIM*MDE);
       return;
     }
 

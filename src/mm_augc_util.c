@@ -628,52 +628,100 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
         xa[iAC] = mp_glob[mn]->u_heightL_function_constants[7];
         break;
 
-      case TAGC_LUB_VELO_U0:
+      case TAGC_U_LUB_VELO_U0:
         xa[iAC] = mp_glob[mn]->u_veloU_function_constants[0];
         break;
 
-      case TAGC_LUB_VELO_U1:
+      case TAGC_U_LUB_VELO_U1:
         xa[iAC] = mp_glob[mn]->u_veloU_function_constants[1];
         break;
 
-      case TAGC_LUB_VELO_U2:
+      case TAGC_U_LUB_VELO_U2:
         xa[iAC] = mp_glob[mn]->u_veloU_function_constants[2];
         break;
 
-      case TAGC_LUB_VELO_U3:
+      case TAGC_U_LUB_VELO_U3:
         xa[iAC] = mp_glob[mn]->u_veloU_function_constants[3];
         break;
 
-      case TAGC_LUB_VELO_U4:
+      case TAGC_U_LUB_VELO_U4:
         xa[iAC] = mp_glob[mn]->u_veloU_function_constants[4];
         break;
 
-      case TAGC_LUB_VELO_U5:
+      case TAGC_U_LUB_VELO_U5:
         xa[iAC] = mp_glob[mn]->u_veloU_function_constants[5];
         break;
 
-      case TAGC_LUB_VELO_L0:
+      case TAGC_U_LUB_VELO_L0:
         xa[iAC] = mp_glob[mn]->u_veloL_function_constants[0];
         break;
 
-      case TAGC_LUB_VELO_L1:
+      case TAGC_U_LUB_VELO_L1:
         xa[iAC] = mp_glob[mn]->u_veloL_function_constants[1];
         break;
 
-      case TAGC_LUB_VELO_L2:
+      case TAGC_U_LUB_VELO_L2:
         xa[iAC] = mp_glob[mn]->u_veloL_function_constants[2];
         break;
 
-      case TAGC_LUB_VELO_L3:
+      case TAGC_U_LUB_VELO_L3:
         xa[iAC] = mp_glob[mn]->u_veloL_function_constants[3];
         break;
 
-      case TAGC_LUB_VELO_L4:
+      case TAGC_U_LUB_VELO_L4:
         xa[iAC] = mp_glob[mn]->u_veloL_function_constants[4];
         break;
 
-      case TAGC_LUB_VELO_L5:
+      case TAGC_U_LUB_VELO_L5:
         xa[iAC] = mp_glob[mn]->u_veloL_function_constants[5];
+        break;
+
+      case TAGC_LUB_VELO_U0:
+        xa[iAC] = mp_glob[mn]->veloU[0];
+        break;
+
+      case TAGC_LUB_VELO_U1:
+        xa[iAC] = mp_glob[mn]->veloU[1];
+        break;
+
+      case TAGC_LUB_VELO_U2:
+        xa[iAC] = mp_glob[mn]->veloU[2];
+        break;
+
+      case TAGC_LUB_VELO_U3:
+        xa[iAC] = mp_glob[mn]->veloU[3];
+        break;
+
+      case TAGC_LUB_VELO_U4:
+        xa[iAC] = mp_glob[mn]->veloU[4];
+        break;
+
+      case TAGC_LUB_VELO_U5:
+        xa[iAC] = mp_glob[mn]->veloU[5];
+        break;
+
+      case TAGC_LUB_VELO_L0:
+        xa[iAC] = mp_glob[mn]->veloL[0];
+        break;
+
+      case TAGC_LUB_VELO_L1:
+        xa[iAC] = mp_glob[mn]->veloL[1];
+        break;
+
+      case TAGC_LUB_VELO_L2:
+        xa[iAC] = mp_glob[mn]->veloL[2];
+        break;
+
+      case TAGC_LUB_VELO_L3:
+        xa[iAC] = mp_glob[mn]->veloL[3];
+        break;
+
+      case TAGC_LUB_VELO_L4:
+        xa[iAC] = mp_glob[mn]->veloL[4];
+        break;
+
+      case TAGC_LUB_VELO_L5:
+        xa[iAC] = mp_glob[mn]->veloL[5];
         break;
 
       case TAGC_LUB_DCA_U0:
@@ -1370,53 +1418,102 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
         mp_glob[mn]->u_heightL_function_constants[7] = lambda;
         break;
 
-      case TAGC_LUB_VELO_U0:
+      case TAGC_U_LUB_VELO_U0:
         mp_glob[mn]->u_veloU_function_constants[0] = lambda;
         break;
 
-      case TAGC_LUB_VELO_U1:
+      case TAGC_U_LUB_VELO_U1:
         mp_glob[mn]->u_veloU_function_constants[1] = lambda;
         break;
 
-      case TAGC_LUB_VELO_U2:
+      case TAGC_U_LUB_VELO_U2:
         mp_glob[mn]->u_veloU_function_constants[2] = lambda;
         break;
 
-      case TAGC_LUB_VELO_U3:
+      case TAGC_U_LUB_VELO_U3:
         mp_glob[mn]->u_veloU_function_constants[3] = lambda;
         break;
 
-      case TAGC_LUB_VELO_U4:
+      case TAGC_U_LUB_VELO_U4:
         mp_glob[mn]->u_veloU_function_constants[4] = lambda;
         break;
 
-      case TAGC_LUB_VELO_U5:
+      case TAGC_U_LUB_VELO_U5:
         mp_glob[mn]->u_veloU_function_constants[5] = lambda;
         break;
 
-      case TAGC_LUB_VELO_L0:
+      case TAGC_U_LUB_VELO_L0:
         mp_glob[mn]->u_veloL_function_constants[0] = lambda;
         break;
 
-      case TAGC_LUB_VELO_L1:
+      case TAGC_U_LUB_VELO_L1:
         mp_glob[mn]->u_veloL_function_constants[1] = lambda;
         break;
 
-      case TAGC_LUB_VELO_L2:
+      case TAGC_U_LUB_VELO_L2:
         mp_glob[mn]->u_veloL_function_constants[2] = lambda;
         break;
 
-      case TAGC_LUB_VELO_L3:
+      case TAGC_U_LUB_VELO_L3:
         mp_glob[mn]->u_veloL_function_constants[3] = lambda;
         break;
 
-      case TAGC_LUB_VELO_L4:
+      case TAGC_U_LUB_VELO_L4:
         mp_glob[mn]->u_veloL_function_constants[4] = lambda;
         break;
 
-      case TAGC_LUB_VELO_L5:
+      case TAGC_U_LUB_VELO_L5:
         mp_glob[mn]->u_veloL_function_constants[5] = lambda;
         break;
+
+      case TAGC_LUB_VELO_U0:
+        mp_glob[mn]->veloU[0] = lambda;
+        break;
+
+      case TAGC_LUB_VELO_U1:
+        mp_glob[mn]->veloU[1] = lambda;
+        break;
+
+      case TAGC_LUB_VELO_U2:
+        mp_glob[mn]->veloU[2] = lambda;
+        break;
+
+      case TAGC_LUB_VELO_U3:
+        mp_glob[mn]->veloU[3] = lambda;
+        break;
+
+      case TAGC_LUB_VELO_U4:
+        mp_glob[mn]->veloU[4] = lambda;
+        break;
+
+      case TAGC_LUB_VELO_U5:
+        mp_glob[mn]->veloU[5] = lambda;
+        break;
+
+      case TAGC_LUB_VELO_L0:
+        mp_glob[mn]->veloL[0] = lambda;
+        break;
+
+      case TAGC_LUB_VELO_L1:
+        mp_glob[mn]->veloL[1] = lambda;
+        break;
+
+      case TAGC_LUB_VELO_L2:
+        mp_glob[mn]->veloL[2] = lambda;
+        break;
+
+      case TAGC_LUB_VELO_L3:
+        mp_glob[mn]->veloL[3] = lambda;
+        break;
+
+      case TAGC_LUB_VELO_L4:
+        mp_glob[mn]->veloL[4] = lambda;
+        break;
+
+      case TAGC_LUB_VELO_L5:
+        mp_glob[mn]->veloL[5] = lambda;
+        break;
+
 
       case TAGC_LUB_DCA_U0:
         mp_glob[mn]->u_dcaU_function_constants[0] = lambda;
