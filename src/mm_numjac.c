@@ -52,7 +52,6 @@ static char rcsid[] = "$Id: mm_numjac.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $"
 
 #include "sl_util.h"
 #include "mm_qp_storage.h"
-#include <assert.h>
 #define _MM_NUMJAC_C
 #include "goma.h"
 
@@ -77,7 +76,6 @@ typedef struct {
 
 typedef struct {
   int num_colors;
-  int *colidx;
   int *column_color;
   int *colptr;
   int *rowptr;
@@ -242,7 +240,6 @@ Coloring* find_coloring(struct Aztec_Linear_Solver_System *ams,
   }
 
   coloring->num_colors = num_colors;
-  //  coloring->colidx = calloc(num_colors+1, sizeof(int));
   coloring->column_color = column_color;
 #ifdef DEBUG_FD_COLORING
   t2 = MPI_Wtime();
@@ -281,6 +278,13 @@ Coloring* find_coloring(struct Aztec_Linear_Solver_System *ams,
   coloring->nnz = nnz;
   free(has_row);
   return coloring;
+}
+
+void free_coloring(Coloring *coloring) {
+  free(coloring->colptr);
+  free(coloring->rowidx);
+  free(coloring->column_color);
+  free(coloring);
 }
 
 void
@@ -363,7 +367,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
   double *resid_vector_save;
   int numProcUnknowns = NumUnknowns + NumExtUnknowns;
   // assuming we are only computing coloring once, and that the matrix does not change
-  static Coloring *coloring = NULL;
+  Coloring *coloring = NULL;
 
   if(strcmp(Matrix_Format, "msr"))
     EH(-1, "Cannot compute numerical jacobian values for non-MSR formats.");
@@ -438,11 +442,8 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
   /* copy x vector */
   memcpy(x_1, x, numProcUnknowns*(sizeof(double)));
 
-  // Coloring is a static variable, assuming there will only ever be one matrix
   // Coloring is made the default as the cost of coloring is small
-  if (coloring == NULL) {
-    coloring = find_coloring(ams, numProcUnknowns, num_total_nodes, exo, dpi);
-  }
+  coloring = find_coloring(ams, numProcUnknowns, num_total_nodes, exo, dpi);
 
   /*
    *  now calculate analytical and numerical jacobians at perturbed values
@@ -657,6 +658,7 @@ numerical_jacobian_compute_stress(struct Aztec_Linear_Solver_System *ams,
   free(dx_col);
   memcpy(resid_vector, resid_vector_save, numProcUnknowns*(sizeof(double)));
   free(resid_vector_save);
+  free_coloring(coloring);
   /* free arrays to hold jacobian and vector values */
   safe_free( (void *) irow) ;
   safe_free( (void *) jcolumn) ;
