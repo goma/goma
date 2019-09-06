@@ -138,7 +138,7 @@ if [ "$CXX11" = "true" ]; then
         thank_user Easy Goma Builder script
         exit 0
     fi
-    export PATH="$GOMA_LIBS/cmake-3.9.5/bin:$PATH"
+    export PATH="$GOMA_LIBS/cmake-3.15.3/bin:$PATH"
 else
     echo "Your compiler does not support c++11 and thus is not supported by this script at this time"
     thank_user Easy Goma Builder script
@@ -149,14 +149,14 @@ fi
 
 if [ "$MPI_NAME" == "open" ]; then
     if [ "$MPI_BASE_DIR" == "BUILD" ]; then
-        export PATH="`readlink --canonicalize ${GOMA_LIB}`/openmpi-2.1.1/bin:$PATH"
-        export LD_LIBRARY_PATH="`readlink --canonicalize ${GOMA_LIB}`/openmpi-2.1.1/lib:$LD_LIBRARY_PATH"
+        export PATH="`readlink --canonicalize ${GOMA_LIB}`/openmpi-4.0.1/bin:$PATH"
+        export LD_LIBRARY_PATH="`readlink --canonicalize ${GOMA_LIB}`/openmpi-4.0.1/lib:$LD_LIBRARY_PATH"
         BUILD_MPI="true"
         # This lets you at least compile openMPI with intel compiler, but this still breaks some unit tests
         if [ "$CC_NAME" == "intel" ]; then
-            MPI_LIB="-L`readlink --canonicalize ${GOMA_LIB}`/openmpi-2.1.1/lib -lmpi -lmpi_mpifh -lifcore"
+            MPI_LIB="-L`readlink --canonicalize ${GOMA_LIB}`/openmpi-4.0.1/lib -lmpi -lmpi_mpifh -lifcore"
         else
-            MPI_LIB="-L`readlink --canonicalize ${GOMA_LIB}`/openmpi-2.1.1/lib -lmpi -lmpi_mpifh"
+            MPI_LIB="-L`readlink --canonicalize ${GOMA_LIB}`/openmpi-4.0.1/lib -lmpi -lmpi_mpifh"
         fi
     else
         MPI_LIB="-L${MPI_BASE_DIR}/lib -lmpi -lmpi_mpifh"
@@ -190,9 +190,9 @@ rm -rf ../build
 mkdir -p ../build
 cd ../build
 
-echo "Easy-Goma-Builder v 1.0: BUILD VARIABLES ARE AS FOLLOWS -DCMAKE_Fortran_COMPILER=$FORT_COMP -DCMAKE_C_COMPILER=$C_COMP -DCMAKE_CXX_COMPILER=$CXX_COMP -Dgoma_LIBS=${GOMA_LIBS} -Dgoma_MPI_DIR=${MPI_BASE_DIR} -Dgoma_MPI_LIB=$MPI_LIB -Dgoma_User_Flags=$User_Flags -Dgoma_SYS_LIB=$SYS_LIB -Dgoma_Trilinos_DIR=$GOMA_LIBS/trilinos-12.12.1-Built" | tee -a ../scripts/easygomabuild.txt
+echo "Easy-Goma-Builder v 1.0: BUILD VARIABLES ARE AS FOLLOWS -DCMAKE_Fortran_COMPILER=$FORT_COMP -DCMAKE_C_COMPILER=$C_COMP -DCMAKE_CXX_COMPILER=$CXX_COMP -Dgoma_LIBS=${GOMA_LIBS} -Dgoma_MPI_DIR=${MPI_BASE_DIR} -Dgoma_MPI_LIB=$MPI_LIB -Dgoma_User_Flags=$User_Flags -Dgoma_SYS_LIB=$SYS_LIB -Dgoma_Trilinos_DIR=$GOMA_LIBS/trilinos-12.14.1" | tee -a ../scripts/easygomabuild.txt
 
-cmake .. -DCMAKE_Fortran_COMPILER="$FORT_COMP" -DCMAKE_C_COMPILER="$C_COMP" -DCMAKE_CXX_COMPILER="$CXX_COMP" -Dgoma_LIBS=${GOMA_LIBS} -Dgoma_MPI_DIR=${MPI_BASE_DIR} -Dgoma_MPI_LIB="$MPI_LIB" -Dgoma_User_Flags="$User_Flags" -Dgoma_SYS_LIB="$SYS_LIB" -Dgoma_Trilinos_DIR="$GOMA_LIBS/trilinos-12.12.1-Built" | tee -a ../scripts/easygomabuild.txt
+cmake .. -DCMAKE_Fortran_COMPILER="$FORT_COMP" -DCMAKE_C_COMPILER="$C_COMP" -DCMAKE_CXX_COMPILER="$CXX_COMP" -Dgoma_LIBS=${GOMA_LIBS} -Dgoma_MPI_DIR=${MPI_BASE_DIR} -Dgoma_MPI_LIB="$MPI_LIB" -Dgoma_User_Flags="$User_Flags" -Dgoma_SYS_LIB="$SYS_LIB" -Dgoma_Trilinos_DIR="$GOMA_LIBS/trilinos-12.14.1" | tee -a ../scripts/easygomabuild.txt
 
 if make -j ${USED_MAKE_JOBS} 2>&1 && [ -f goma ] | tee -a ../scripts/easygomabuild.txt; then
     mkdir -p ../bin
@@ -204,15 +204,15 @@ if make -j ${USED_MAKE_JOBS} 2>&1 && [ -f goma ] | tee -a ../scripts/easygomabui
     echo $(readlink --canonicalize "`dirname $0`/../bin/goma")
     echo
     echo "It's probably necessary that you run:"
-    echo "export PATH=\$PATH:$GOMA_LIBS/trilinos-12.12.1-Built/bin"
+    echo "export PATH=\$PATH:$GOMA_LIBS/trilinos-12.14.1/bin"
     echo "before running Goma"
     echo
     if [ "$BUILD_MPI" == "true" ]; then
         # It's important that openMPI comes first in the path or it will be overridden by intel
         echo "You have built MPI instead of using a native version"
         echo "You will need to run"
-        echo "export LD_LIBRARY_PATH=$GOMA_LIBS/openmpi-2.1.1/lib:\$LD_LIBRARY_PATH"
-        echo "export PATH=$GOMA_LIBS/openmpi-2.1.1/bin:\$PATH"
+        echo "export LD_LIBRARY_PATH=$GOMA_LIBS/openmpi-4.0.1/lib:\$LD_LIBRARY_PATH"
+        echo "export PATH=$GOMA_LIBS/openmpi-4.0.1/bin:\$PATH"
         echo
         echo "before running Goma."
     fi
