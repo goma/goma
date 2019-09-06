@@ -282,7 +282,7 @@ Coloring* find_coloring(struct Aztec_Linear_Solver_System *ams,
 
 void free_coloring(Coloring *coloring) {
   free(coloring->colptr);
-  free(coloring->rowidx);
+  free(coloring->rowptr);
   free(coloring->column_color);
   free(coloring);
 }
