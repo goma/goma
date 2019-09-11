@@ -717,16 +717,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_LUB_VELO_U0                   17026
 #define TAGC_LUB_VELO_U1                   17027
 #define TAGC_LUB_VELO_U2                   17028
-#define TAGC_LUB_VELO_U3                   17029
-#define TAGC_LUB_VELO_U4                   17030
-#define TAGC_LUB_VELO_U5                   17031
 
 #define TAGC_LUB_VELO_L0                   17032
 #define TAGC_LUB_VELO_L1                   17033
 #define TAGC_LUB_VELO_L2                   17034
-#define TAGC_LUB_VELO_L3                   17035
-#define TAGC_LUB_VELO_L4                   17036
-#define TAGC_LUB_VELO_L5                   17037
 
 #define TAGC_LUB_DCA_U0                    7038
 #define TAGC_LUB_DCA_U1                    7039
