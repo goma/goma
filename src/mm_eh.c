@@ -43,7 +43,7 @@ print_stacktrace(void)
   size_t size;
   char **stack_strings;
 
-  size = backtrace(array, 20);
+  size = backtrace(bt_array, 20);
   stack_strings = backtrace_symbols(bt_array, size);
 
   printf("Obtained %zd stack frames from Proc %d.\n", size, ProcID);
@@ -52,7 +52,7 @@ print_stacktrace(void)
      printf("%s\n", stack_strings[i]);
   }
 
-  free (strings);
+  free (stack_strings);
 }
 #endif
 
@@ -101,7 +101,7 @@ eh(const int error_flag, const char *file,
   if (error_flag == -1) { 
      log_msg("GOMA ends with an error condition.");
 #ifdef PRINT_STACK_TRACE_ON_EH
-    print_trace();
+    print_stacktrace();
 #endif
 #ifndef PARALLEL
     fprintf(stderr,"ERROR EXIT: %s:%d: %s\n", file, line, message); 
