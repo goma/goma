@@ -36,6 +36,8 @@ static char rcsid[] = "$Id: mm_eh.c,v 5.3 2008-01-11 00:47:14 hkmoffa Exp $";
 #include <execinfo.h>
 
 /* Obtain a backtrace and print it to stdout. */
+/* https://www.gnu.org/software/libc/manual/html_node/Backtraces.html */
+/* compile with -rdynamic */
 static void
 print_stacktrace(void)
 {
