@@ -3757,6 +3757,12 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
   wr_mesh_exo(exo, afilename, 0);
 
   /*
+   * Return internal EXODUS II data to 0 based node and element numbers
+   * for convenience.
+   */
+  zero_base(exo);
+
+  /*
    * Grab back the undisplaced coordinates that were originally read.
    */
 
@@ -3817,7 +3823,7 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
 
   /* Now pick up the element variables */
   for (i = 0; i < tev; i++) {
-    wr_elem_result_exo(exo, anneal_file, gvec_elem, i, 1,
+    wr_elem_result_exo(exo, afilename, gvec_elem, i, 1,
 		       time_value, rd);
   }
 
@@ -3825,22 +3831,18 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
 
   if( rd->ngv > 0  )
     {
-      wr_global_result_exo( exo, anneal_file, 1, rd->ngv, glob_vars_val );
+      wr_global_result_exo( exo, afilename, 1, rd->ngv, glob_vars_val );
     }
 
-  anneal_dat = fopen("anneal.dat", "w");
+  if ( Num_Proc == 1) {
+    anneal_dat = fopen("anneal.dat", "w");
 
-  (void) write_ascii_soln(x_file, NULL, numProcUnknowns,
-		          x, 0, 0.0, anneal_dat);
+    (void) write_ascii_soln(x_file, NULL, numProcUnknowns,
+                            x, 0, 0.0, anneal_dat);
 
-  fclose(anneal_dat);
+    fclose(anneal_dat);
+  }
 
-  /*
-   * Return internal EXODUS II data to 0 based node and element numbers
-   * for convenience.
-   */
-
-  zero_base(exo);
 	  
   /*
    * Free up any temporarily allocated memory.
