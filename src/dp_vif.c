@@ -1563,6 +1563,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->density, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->electrical_conductivity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->permittivity, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->magnetic_permeability,1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->VoltageFormulation, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->heat_capacity, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->heat_source, 1, MPI_DOUBLE);

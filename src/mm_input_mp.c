@@ -8272,6 +8272,16 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->len_u_heat_source = num_const;
       SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heat_source);
     }
+  else if ( !strcmp(model_name, "EM_VECTOR_DISS") )
+    {
+      HeatSourceModel = EM_VECTOR_DISS;
+      model_read = 1;
+      mat_ptr->HeatSourceModel = HeatSourceModel;
+      num_const = read_constants(imp, &(mat_ptr->u_heat_source),
+                                     NO_SPECIES);
+      mat_ptr->len_u_heat_source = num_const;
+      SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heat_source);
+    }
   else
     {
       if(model_read == -1)

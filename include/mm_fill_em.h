@@ -52,15 +52,15 @@ EXTERN int apply_em_farfield_direct_vec/* mm_fill_em.c                          
 (double [DIM],     // func
   double [DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE] , // d_func
   double [DIM] ,   // xi
-  const int,
-  double*);// bc_name
+  const int, // bc_name
+  double*);
 
 EXTERN int apply_em_sommerfeld_vec/* mm_fill_em.c                           */
 (double [DIM],     // func
   double [DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE] , // d_func
   double [DIM] ,   // xi
-  const int,
-  double*);// bc_name
+  const int, // bc_name
+  double*);
 
 EXTERN int apply_em_free_vec/* mm_fill_em.c                           */
 (double [DIM],     // func
@@ -68,18 +68,38 @@ EXTERN int apply_em_free_vec/* mm_fill_em.c                           */
   double [DIM] ,   // xi
   const int);// bc_name
 
+EXTERN int apply_ewave_planewave_vec/* mm_fill_em.c                           */
+(double [DIM],     // func
+  double [DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE] , // d_func
+  double [DIM],   // xi
+  const int, // bc_name
+  double*);
+
+EXTERN int apply_ewave_curlcurl_farfield_vec/* mm_fill_em.c                           */
+(double [DIM],     // func
+  double [DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE] , // d_func
+  double [DIM],   // xi
+  double time,    // present time
+  const int, // bc_name
+  double*);
+
+EXTERN int apply_ewave_2D/* mm_fill_em.c                           */
+(double [DIM],     // func
+  double [DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE] , // d_func
+  double [DIM] ,   // xi
+  const int); // bc_name
 
 EXTERN void calc_emwave_stabilization_term
 (struct emwave_stabilization*,
  double);
 
-int apply_ewave_planewave_vec(double func[DIM],
-                              double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                              double xi[DIM], /* Local stu coordinates */
-                              const int bc_name,
-                              double *bc_data);
+int assemble_ewave_curlcurl(double time, // present time
+                   double tt,   // time integration method parameter
+                   double dt,   // current time step size
+                   const int em_eqn, // eqn id
+                   const int em_var); //  variable id - should match me_eqn
 
-int assemble_ewave_tensor_bf(double time, // present time
+int assemble_ewave_laplacian(double time, // present time
                    double tt,   // time integration method parameter
                    double dt,   // current time step size
                    const int em_eqn, // eqn id
