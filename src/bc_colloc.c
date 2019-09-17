@@ -2165,7 +2165,68 @@ load_variable (double *x_var,        /* variable value */
       *x_var = fv->restime;
       var = RESTIME;
       *d_x_var = 1.;
-      break;  
+      break;
+    case EM_E1_REAL:
+      *x_var = fv->em_er[0];
+      var = EM_E1_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_E2_REAL:
+      *x_var = fv->em_er[1];
+      var = EM_E2_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_E3_REAL:
+      *x_var = fv->em_er[2];
+      var = EM_E3_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_E1_IMAG:
+      *x_var = fv->em_ei[0];
+      var = EM_E1_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_E2_IMAG:
+      *x_var = fv->em_ei[1];
+      var = EM_E2_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_E3_IMAG:
+      *x_var = fv->em_ei[2];
+      var = EM_E3_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_H1_REAL:
+      *x_var = fv->em_hr[0];
+      var = EM_H1_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_H2_REAL:
+      *x_var = fv->em_hr[1];
+      var = EM_H2_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_H3_REAL:
+      *x_var = fv->em_hr[2];
+      var = EM_H3_REAL;
+      *d_x_var = 1.;
+      break;
+    case EM_H1_IMAG:
+      *x_var = fv->em_hi[0];
+      var = EM_H1_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_H2_IMAG:
+      *x_var = fv->em_hi[1];
+      var = EM_H2_IMAG;
+      *d_x_var = 1.;
+      break;
+    case EM_H3_IMAG:
+      *x_var = fv->em_hi[2];
+      var = EM_H3_IMAG;
+      *d_x_var = 1.;
+      break;
+
     case MASS_FRACTION:
       *x_var = fv->c[wspec];
       var = MASS_FRACTION;
@@ -2830,6 +2891,10 @@ bc_eqn_index(int id,               /* local node number                 */
     else if (ieqn == R_MOMENTUM1) ieqn += kdir;
     else if (ieqn == R_SOLID1)    ieqn += kdir;
     else if (ieqn == R_LAGR_MULT1)ieqn += kdir;
+    else if (ieqn == R_EM_H1_REAL)ieqn += kdir;// AMC: These vector bcs are not rotated..
+    else if (ieqn == R_EM_H1_IMAG)ieqn += kdir;
+    else if (ieqn == R_EM_E1_REAL)ieqn += kdir;
+    else if (ieqn == R_EM_E1_IMAG)ieqn += kdir;
     else EH(-1,"Can't have a rotated vector BC!");
   }
 

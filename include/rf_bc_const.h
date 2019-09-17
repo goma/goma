@@ -539,6 +539,7 @@
 #define INTP_BC        1053
 #define INTM_BC        1054
 #define INTD_BC        1055
+
 #define EM_E1R_BC      1056
 #define EM_E2R_BC      1057
 #define EM_E3R_BC      1058
@@ -551,7 +552,20 @@
 #define EM_H1I_BC      1065
 #define EM_H2I_BC      1066
 #define EM_H3I_BC      1067
+#define EM_ER_FARFIELD_DIRECT_BC  1068
+#define EM_EI_FARFIELD_DIRECT_BC  1069
+#define EM_HR_FARFIELD_DIRECT_BC  1070
+#define EM_HI_FARFIELD_DIRECT_BC  1071
 
+#define EM_ER_FREE_BC  1072
+#define EM_EI_FREE_BC  1073
+#define EM_HR_FREE_BC  1074
+#define EM_HI_FREE_BC  1075
+
+#define EM_ER_SOMMERFELD_BC 1084
+#define EM_EI_SOMMERFELD_BC 1085
+#define EM_HR_SOMMERFELD_BC 1086
+#define EM_HI_SOMMERFELD_BC 1087
 
 /* pressure */
 

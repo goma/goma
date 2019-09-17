@@ -459,6 +459,10 @@ rd_bc_specs(FILE *ifp,
 	case SHELL_TFMP_GRAD_S_BC:
 	case SHELL_TFMP_FREE_GAS_BC:
         case SHELL_LUBRICATION_OUTFLOW_BC:
+        case EM_ER_FREE_BC:
+        case EM_EI_FREE_BC:
+        case EM_HR_FREE_BC:
+        case EM_HI_FREE_BC:
 
 	  break;
 
@@ -1562,6 +1566,11 @@ rd_bc_specs(FILE *ifp,
 	case BLAKE_DIRICH_ROLL_BC:
 	case HOFFMAN_DIRICH_ROLL_BC:
 	case COX_DIRICH_ROLL_BC:
+        case EM_ER_FARFIELD_DIRECT_BC:
+        case EM_EI_FARFIELD_DIRECT_BC:
+        case EM_HR_FARFIELD_DIRECT_BC:
+        case EM_HI_FARFIELD_DIRECT_BC:
+
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],   
 		      &BC_Types[ibc].BC_Data_Float[1],   
@@ -1645,6 +1654,10 @@ rd_bc_specs(FILE *ifp,
         case SHIK_DIRICHLET_BC:
 		case SHIK_DIRICH_ROLL_BC:
 		case HYSTERESIS_WETTING_BC: 
+        case EM_ER_SOMMERFELD_BC:
+        case EM_EI_SOMMERFELD_BC:
+        case EM_HR_SOMMERFELD_BC:
+        case EM_HI_SOMMERFELD_BC:
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],   
 		      &BC_Types[ibc].BC_Data_Float[1],   
@@ -1851,7 +1864,7 @@ rd_bc_specs(FILE *ifp,
         case KIN_CHEM_BC:
 	case CURRENT_USER_BC:
 	case CURRENT_USER_SIC_BC:
-	case VOLT_USER_BC:
+        case VOLT_USER_BC:
 	  num_const = read_constants(ifp, &(BC_Types[ibc].u_BC), NO_SPECIES);
  
 	  if ( num_const < 0 )

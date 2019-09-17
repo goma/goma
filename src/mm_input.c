@@ -1,4 +1,4 @@
-/************************************************************************ *
+﻿/************************************************************************ *
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
 *                                                                         *
@@ -8255,26 +8255,26 @@ rd_eq_specs(FILE *ifp,
       ce = set_eqn(R_RESTIME, pd_ptr);  
     } else if (!strcasecmp(ts, "em_e1_real")) {
       ce = set_eqn(R_EM_E1_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "em_e1_imag")) {
-      ce = set_eqn(R_EM_E1_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_e2_real")) {
       ce = set_eqn(R_EM_E2_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "em_e2_imag")) {
-      ce = set_eqn(R_EM_E2_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_e3_real")) {
       ce = set_eqn(R_EM_E3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_e1_imag")) {
+      ce = set_eqn(R_EM_E1_IMAG, pd_ptr);
+    } else if (!strcasecmp(ts, "em_e2_imag")) {
+      ce = set_eqn(R_EM_E2_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "em_e3_imag")) {
       ce = set_eqn(R_EM_E3_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_h1_real")) {
       ce = set_eqn(R_EM_H1_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "em_h1_imag")) {
-      ce = set_eqn(R_EM_H1_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_h2_real")) {
       ce = set_eqn(R_EM_H2_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "em_h2_imag")) {
-      ce = set_eqn(R_EM_H2_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "em_h3_real")) {
       ce = set_eqn(R_EM_H3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "em_h1_imag")) {
+      ce = set_eqn(R_EM_H1_IMAG, pd_ptr);
+    } else if (!strcasecmp(ts, "em_h2_imag")) {
+      ce = set_eqn(R_EM_H2_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "em_h3_imag")) {
       ce = set_eqn(R_EM_H3_IMAG, pd_ptr);  
 
@@ -8879,26 +8879,26 @@ rd_eq_specs(FILE *ifp,
       cv = set_var(RESTIME, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_E1_REAL")) {
       cv = set_var(EM_E1_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "EM_E1_IMAG")) {
-      cv = set_var(EM_E1_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_E2_REAL")) {
       cv = set_var(EM_E2_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "EM_E2_IMAG")) {
-      cv = set_var(EM_E2_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_E3_REAL")) {
       cv = set_var(EM_E3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_E1_IMAG")) {
+      cv = set_var(EM_E1_IMAG, pd_ptr);
+    } else if (!strcasecmp(ts, "EM_E2_IMAG")) {
+      cv = set_var(EM_E2_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "EM_E3_IMAG")) {
       cv = set_var(EM_E3_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_H1_REAL")) {
       cv = set_var(EM_H1_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "EM_H1_IMAG")) {
-      cv = set_var(EM_H1_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_H2_REAL")) {
       cv = set_var(EM_H2_REAL, pd_ptr);  
-    } else if (!strcasecmp(ts, "EM_H2_IMAG")) {
-      cv = set_var(EM_H2_IMAG, pd_ptr);  
     } else if (!strcasecmp(ts, "EM_H3_REAL")) {
       cv = set_var(EM_H3_REAL, pd_ptr);  
+    } else if (!strcasecmp(ts, "EM_H1_IMAG")) {
+      cv = set_var(EM_H1_IMAG, pd_ptr);
+    } else if (!strcasecmp(ts, "EM_H2_IMAG")) {
+      cv = set_var(EM_H2_IMAG, pd_ptr);
     } else if (!strcasecmp(ts, "EM_H3_IMAG")) {
       cv = set_var(EM_H3_IMAG, pd_ptr);  
 
@@ -9564,16 +9564,16 @@ rd_eq_specs(FILE *ifp,
     case R_LIGHT_INTD:
     case R_RESTIME:  
     case R_EM_E1_REAL:
-    case R_EM_E1_IMAG:
     case R_EM_E2_REAL:
-    case R_EM_E2_IMAG:
     case R_EM_E3_REAL:
+    case R_EM_E1_IMAG:
+    case R_EM_E2_IMAG:
     case R_EM_E3_IMAG:
     case R_EM_H1_REAL:
-    case R_EM_H1_IMAG:
     case R_EM_H2_REAL:
-    case R_EM_H2_IMAG:
     case R_EM_H3_REAL:
+    case R_EM_H1_IMAG:
+    case R_EM_H2_IMAG:
     case R_EM_H3_IMAG:
 
 	if ( fscanf(ifp, "%lf %lf %lf %lf %lf", 
