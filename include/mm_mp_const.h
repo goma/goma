@@ -258,6 +258,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define FOAM_PMDI_10_CO2_GAS              45
 
 #define MOMENT_CONSTANT_GROWTH 50
+#define MOMENT_SIZE_DEPENDENT_COALESCENCE 51
 
 /*
  *  Heat source modeling
