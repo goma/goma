@@ -2683,8 +2683,9 @@ if( *converged )
 
    */
 
+/*  only if converged */
 
-  if (Continuation > 0) {
+  if (Continuation > 0  &&  *converged) {
 
     switch (Continuation) {
     case  ALC_FIRST:
