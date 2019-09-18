@@ -34988,13 +34988,14 @@ assemble_emwave(double time,	/* present time value */
 		  const int em_conjvar )
 {
   int eqn, var, peqn, pvar, dim, p, q, b, w, i, j, status;
-  int conj_var = 0, dir=0;			/* identity of conjugate variable  */
+  int dir=0;			/* identity of conjugate variable  */
 
   dbl EMF = 0, EMF_conj = 0;		/* acoustic pressure	*/
   dbl omega, emf_coeff=0, conj_coeff=0;
   dbl emf_coeff_dn=0, conj_coeff_dn=0;
   dbl emf_coeff_dk=0, conj_coeff_dk=0;
   dbl mag_permeability=1.4e-07;
+  int cross_field_var;
   dbl cross_field[DIM];
 
   dbl n;				/* Refractive index. */
@@ -35016,7 +35017,7 @@ assemble_emwave(double time,	/* present time value */
    */
 
   dbl phi_i;
-  dbl grad_phi_i[DIM], grad_phi_j[DIM];
+  dbl grad_phi_i[DIM];
 
   /*
    * Interpolation functions for variables and some of their derivatives.
@@ -35116,12 +35117,13 @@ assemble_emwave(double time,	/* present time value */
     case EM_E1_REAL:
     case EM_E2_REAL:
     case EM_E3_REAL:
-         emf_coeff = -2*omega*mp->permittivity*n*k;
-         conj_coeff = -omega*mp->permittivity*(SQUARE(n)-SQUARE(k));
-         emf_coeff_dn = -2*omega*mp->permittivity*k;
-         emf_coeff_dk = -2*omega*mp->permittivity*n;
-         conj_coeff_dn = -omega*mp->permittivity*2*n;
+         emf_coeff = 2*omega*mp->permittivity*n*k;
+         conj_coeff = omega*mp->permittivity*(SQUARE(n)-SQUARE(k));
+         emf_coeff_dn = 2*omega*mp->permittivity*k;
+         emf_coeff_dk = 2*omega*mp->permittivity*n;
+         conj_coeff_dn = omega*mp->permittivity*2*n;
          conj_coeff_dk = omega*mp->permittivity*2*k;
+         cross_field_var = EM_H1_REAL;
 	 for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_hr[p];}
          break;
     case EM_E1_IMAG:
@@ -35133,6 +35135,7 @@ assemble_emwave(double time,	/* present time value */
          emf_coeff_dk = 2*omega*mp->permittivity*n;
          conj_coeff_dn = -omega*mp->permittivity*2*n;
          conj_coeff_dk = omega*mp->permittivity*2*k;
+         cross_field_var = EM_H1_IMAG;
 	 for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_hi[p];}
          break;
     case EM_H1_REAL:
@@ -35141,6 +35144,7 @@ assemble_emwave(double time,	/* present time value */
          emf_coeff = 0;
          conj_coeff = -omega*mag_permeability;
          emf_coeff_dn = 0; emf_coeff_dk = 0; conj_coeff_dn = 0; conj_coeff_dk = 0;
+         cross_field_var = EM_E1_REAL;
 	 for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_er[p];}
          break;
     case EM_H1_IMAG:
@@ -35149,6 +35153,7 @@ assemble_emwave(double time,	/* present time value */
          emf_coeff = 0;
          conj_coeff = omega*mag_permeability;
          emf_coeff_dn = 0; emf_coeff_dk = 0; conj_coeff_dn = 0; conj_coeff_dk = 0;
+         cross_field_var = EM_E1_IMAG;
 	 for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_ei[p];}
          break;
     }
@@ -35177,9 +35182,11 @@ assemble_emwave(double time,	/* present time value */
 	  advection = 0.;
 	  if ( pd->e[eqn] & T_ADVECTION )
 	    {
-              advection += phi_i * (emf_coeff*EMF+conj_coeff*EMF_conj) * det_J*wt;
-	      advection *= h3;
-	      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+              advection += emf_coeff*EMF;
+              advection += conj_coeff*EMF_conj;
+              advection *= phi_i*h3;
+              advection *= det_J*wt;
+              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 	    }
 
 	  diffusion = 0.;
@@ -35190,19 +35197,18 @@ assemble_emwave(double time,	/* present time value */
 		  grad_phi_i[p] = bf[eqn]->grad_phi[i] [p];
 		}
 
-	      for ( p=0; p<VIM; p++)
-		{
-	        for ( q=0; q<VIM; q++)
-		  {
-		  diffusion -= permute(p,q,dir)*bf[eqn]->grad_phi[i][p]*cross_field[q];
-		  }
-		}
+              for ( p=0; p<VIM; p++) {
+                for ( q=0; q<VIM; q++) {
+                  diffusion -= permute(p,q,dir)*grad_phi_i[p]*cross_field[q];
+                }
+              }
+
 	      diffusion *= det_J * wt;
 	      diffusion *= h3;
 	      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 	    }
 
-	  lec->R[peqn][i] += advection +  diffusion;
+          lec->R[peqn][i] += advection +  diffusion;
 
 
 	}
@@ -35213,96 +35219,103 @@ assemble_emwave(double time,	/* present time value */
    * Jacobian terms...
    */
 
-  if ( af->Assemble_Jacobian )
-    {
-      eqn   = em_eqn;
-      peqn = upd->ep[eqn];
-      for ( i=0; i<ei->dof[eqn]; i++)
-	{
-#if 1
-          /* this is an optimization for xfem */
-	  if ( xfem != NULL )
-            {
-	      int xfem_active, extended_dof, base_interp, base_dof;
-	      xfem_dof_state( i, pd->i[eqn], ei->ielem_shape,
-                              &xfem_active, &extended_dof, &base_interp, &base_dof );
-	      if ( extended_dof && !xfem_active ) continue;
+  if ( af->Assemble_Jacobian ) {
+    eqn   = em_eqn;
+    peqn = upd->ep[eqn];
+    for ( i=0; i<ei->dof[eqn]; i++) {
+
+      // this is an optimization for xfem
+      if ( xfem != NULL ) {
+        int xfem_active, extended_dof, base_interp, base_dof;
+        xfem_dof_state( i, pd->i[eqn], ei->ielem_shape,
+                        &xfem_active, &extended_dof, &base_interp, &base_dof );
+        if ( extended_dof && !xfem_active ) continue;
+      }
+
+      phi_i = bf[eqn]->phi[i];
+
+      /*
+       * Set up some preliminaries that are needed for the (a,i)
+       * equation for bunches of (b,j) column variables...
+       */
+
+      for ( p=0; p<VIM; p++) {
+        grad_phi_i[p] = bf[eqn]->grad_phi[i][p];
+      }
+
+      /*
+       * EMF
+       */
+      var = em_var;
+      if ( pd->v[var] ) {
+        pvar = upd->vp[var];
+        for ( j=0; j<ei->dof[var]; j++) {
+          phi_j = bf[var]->phi[j];
+
+          advection = 0.;
+          if ( pd->e[eqn] & T_ADVECTION ) {
+            advection += phi_i * emf_coeff*phi_j * det_J*wt;
+            advection *= h3;
+            advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+          }
+
+          lec->J[peqn][pvar][i][j] += advection;
+        }
+      }
+      /*
+       *  EMF_conj
+       */
+      var = em_conjvar;
+      if ( pd->v[var] ) {
+        pvar = upd->vp[var];
+        for ( j=0; j<ei->dof[var]; j++) {
+          phi_j = bf[var]->phi[j];
+
+          advection = 0.;
+          if ( pd->e[eqn] & T_ADVECTION ) {
+            advection += phi_i * conj_coeff*phi_j * det_J*wt;
+            advection *= h3;
+            advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+          }
+
+          lec->J[peqn][pvar][i][j] += advection;
+        }
+      }
+      /*
+       *  cross_field
+       */
+      for ( b=0; b<dim; b++) {
+        var = cross_field_var + b;
+        if ( pd->v[var] ) {
+          pvar = upd->vp[var];
+          for ( j=0; j<ei->dof[var]; j++) {
+            // for a cross product, this isn't quite right
+            // but it will work as along as all scalar
+            // components of the vector field have the
+            // same basis functions
+            phi_j = bf[var]->phi[j];
+
+            diffusion = 0.;
+            if ( pd->e[eqn] & T_DIFFUSION ) {
+              for ( p=0; p<VIM; p++) {
+                grad_phi_i[p] = bf[eqn]->grad_phi[i] [p];
+              }
+
+              for ( p=0; p<VIM; p++) {
+                for ( q=0; q<VIM; q++) {
+                  diffusion -= permute(p,q,dir)*grad_phi_i[p]*delta(q,b)*phi_j;
+                }
+              }
+
+              diffusion *= det_J * wt;
+              diffusion *= h3;
+              diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+
+              lec->J[peqn][pvar][i][j] += diffusion;
             }
-#endif
-	  phi_i = bf[eqn]->phi[i];
-
-	  /*
-	   * Set up some preliminaries that are needed for the (a,i)
-	   * equation for bunches of (b,j) column variables...
-	   */
-
-	  for ( p=0; p<VIM; p++)
-	    {
-	      grad_phi_i[p] = bf[eqn]->grad_phi[i][p];
-	    }
-
-	  /*
-	   * J_e_ap
-	   */
-	  var = em_var;
-	  if ( pd->v[var] )
-	    {
-	      pvar = upd->vp[var];
-	      for ( j=0; j<ei->dof[var]; j++)
-		{
-		  phi_j = bf[var]->phi[j];
-
-		  advection = 0.;
-	          if ( pd->e[eqn] & T_ADVECTION )
-	            {
-                     advection += phi_i * emf_coeff*phi_j * det_J*wt;
-	             advection *= h3;
-	             advection *= pd->etm[eqn][(LOG2_ADVECTION)];
-	            }
-
-		  lec->J[peqn][pvar][i][j] += advection;
-		}
-	    }
-	/*
-	 *  Conjugate pressure variable
-	 */
-	  var = conj_var;
-	  if ( pd->v[var] )
-	    {
-	      pvar = upd->vp[var];
-	      for ( j=0; j<ei->dof[var]; j++)
-		{
-		  phi_j = bf[var]->phi[j];
-
-		  advection = 0.;
-		  if ( pd->e[eqn] & T_ADVECTION )
-		    {
-                      advection += phi_i * conj_coeff*phi_j * det_J*wt;
-		      advection *= h3;
-		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
-		    }
-	          diffusion = 0.;
-	          if ( pd->e[eqn] & T_DIFFUSION )
-	            {
-	              for ( p=0; p<VIM; p++)
-		        {
-		         grad_phi_i[p] = bf[eqn]->grad_phi[i] [p];
-		        }
-
-	          for ( p=0; p<VIM; p++)
-		    {
-	             for ( q=0; q<VIM; p++)
-		       {
-		         diffusion -= permute(p,q,dir)*bf[eqn]->grad_phi[i][p]*grad_phi_j[q];
-		       }
-		    }
-	      diffusion *= det_J * wt;
-	      diffusion *= h3;
-	      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
-	    }
-		  lec->J[peqn][pvar][i][j] += advection + diffusion;
-		}
-	    }
+          }
+        }
+      }
 	  /*
 	   * J_e_T
 	   */
