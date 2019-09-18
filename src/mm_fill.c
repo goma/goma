@@ -1766,7 +1766,7 @@ matrix_fill(
       if( pde[R_EM_E1_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
-				  R_EM_E1_IMAG, EM_E1_REAL, EM_E1_IMAG);
+                                  R_EM_E1_IMAG, EM_E1_IMAG, EM_E1_REAL);
 	  EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
@@ -1777,7 +1777,7 @@ matrix_fill(
       if( pde[R_EM_E2_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
-				  R_EM_E2_IMAG, EM_E2_REAL, EM_E2_IMAG);
+                                  R_EM_E2_IMAG, EM_E2_IMAG, EM_E2_REAL);
 	  EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
@@ -1788,7 +1788,7 @@ matrix_fill(
       if( pde[R_EM_E3_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
-				  R_EM_E3_IMAG, EM_E3_REAL, EM_E3_IMAG);
+                                  R_EM_E3_IMAG, EM_E3_IMAG, EM_E3_REAL);
 	  EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
@@ -1832,7 +1832,7 @@ matrix_fill(
       if( pde[R_EM_H1_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
-				  R_EM_H1_IMAG, EM_H1_REAL, EM_H1_IMAG);
+                                  R_EM_H1_IMAG, EM_H1_IMAG, EM_H1_REAL);
 	  EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
@@ -1843,7 +1843,7 @@ matrix_fill(
       if( pde[R_EM_H2_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
-				  R_EM_H2_IMAG, EM_H2_REAL, EM_H2_IMAG);
+                                  R_EM_H2_IMAG, EM_H2_IMAG, EM_H2_REAL);
 	  EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
@@ -1854,7 +1854,7 @@ matrix_fill(
       if( pde[R_EM_H3_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
-				  R_EM_H3_IMAG, EM_H3_REAL, EM_H3_IMAG);
+                                  R_EM_H3_IMAG, EM_H3_IMAG, EM_H3_REAL);
 	  EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
