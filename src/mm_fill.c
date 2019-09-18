@@ -2173,7 +2173,31 @@ matrix_fill(
 #endif
         }
 
-      if  ( (pde[R_SHELL_DIFF_CURVATURE] || pde[R_SHELL_NORMAL1]) && !(pde[R_SHELL_NORMAL3]) )
+      /* Web structure with both sh_K and sh_tens: */
+      if( pde[R_SHELL_CURVATURE] && pde[R_SHELL_TENSION] &&
+          (mp->FSIModel == FSI_SHELL_ONLY || mp->FSIModel == FSI_SHELL_ONLY_MESH )
+        )
+        {
+          err = assemble_shell_web_structure(time_value, theta, delta_t, wt, xi, exo);
+          EH( err, "assemble_shell_web_structure");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_shell_web_structure");
+          if (err) return -1;
+#endif
+          if(pde[R_MESH1])
+            {
+              err = assemble_shell_web_coordinates(time_value, theta, delta_t, wt, xi,
+                                               exo);
+              EH( err, "assemble_shell_web_coordinates");
+#ifdef CHECK_FINITE
+              err = CHECKFINITE("assemble_shell_web_coordinates");
+              if (err) return -1;
+#endif
+            }
+        }
+
+      if  ( (pde[R_SHELL_DIFF_CURVATURE] || pde[R_SHELL_NORMAL1]) && !(pde[R_SHELL_NORMAL3])
+            && !(pde[R_SHELL_CURVATURE]) )
         {
           if (!pde[R_SHELL_NORMAL1] || !pde[R_SHELL_NORMAL2]) {
 	    EH(-1, 
@@ -2187,7 +2211,8 @@ matrix_fill(
 #endif
         }
 
-      if (pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2] && pde[R_SHELL_NORMAL3])
+      if( (pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2] && pde[R_SHELL_NORMAL3])
+      ||   (pde[R_MESH1] && pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2]))
         {
 
           err = assemble_shell_normal(xi, exo);
@@ -2209,7 +2234,7 @@ matrix_fill(
 
         }
 
-      if ( pde[R_MESH1] && pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2] && pde[R_SHELL_NORMAL3])
+      if ( (pde[R_MESH1] && pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2] && pde[R_SHELL_NORMAL3]))
         {
 	  err = assemble_shell_mesh(time_value, theta, delta_t, xi, exo);
          EH( err, "assemble_shell_mesh");
@@ -2231,7 +2256,22 @@ matrix_fill(
 	  }
 #endif
 	}
+      if(!pde[R_TFMP_MASS] && pde[R_TFMP_BOUND])
+      {
+        err = assemble_shell_lubrication( time_value, theta, delta_t, xi, exo );
+        EH( err, "assemble_shell_lubrication");
+#ifdef CHECK_FINITE
+        err = CHECKFINITE("assemble_shell_lubrication");
+        if (err) {
+          return -1;
+        }
+#endif
 
+    if (neg_lub_height) {
+      WH(-1, "returning from matrix fill because neg_lub_height after assemble_shell_lubrication");
+      return -1;
+    }
+  }
       if( pde[R_MOMENTUM1] )
 	{
           err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
@@ -2504,7 +2544,7 @@ matrix_fill(
 	}
       ls = ls_old;
     }
-  
+
 
   /**************************************************************************/
   /*                          BLOCK 2'                                      */
@@ -2615,7 +2655,7 @@ matrix_fill(
 				  WEAK_INT_SURF, time_value, element_search_grid, exo);
 	EH(err, " apply_integrated_bc");
 #ifdef CHECK_FINITE
-	err = CHECKFINITE("apply_integrated_bc"); 
+	err = CHECKFINITE("apply_integrated_bc");
 	if (err) return -1;
 #endif
 	if (neg_elem_volume) return -1;
@@ -2710,8 +2750,11 @@ matrix_fill(
    *  are we ever going to need a condition like this?  Probably not, because
    *  integrals over a point in 3D are zero... unless it's a singular point
    *  for now we'll assume this can't happen
+	 *  
+	 * 	Found one - In a 1D shell, the point represents the element edge, for 
+	 *  which a boundary term needs to be added to the element integral.
    **************************************************************************/
-  
+	
   /******************************************************************************/
   /**************************************************************************
    *                          BLOCK 6 - Weak Shifty Boundary Conditions

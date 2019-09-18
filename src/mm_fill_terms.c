@@ -12337,20 +12337,20 @@ if ( pd->v[LIGHT_INTM] )
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[1][0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
-	  {
-	    T_i = *esp->poynt[1][i];
-	    for (p = 0; p < dimNonSym; p++)
-	      {
-		for (b = 0; b < dim; b++)
-		    {
-		      for (j = 0; j < mdofs; j++)
-			{
-			  fv->d_grad_poynt_dmesh[1][p] [b][j] +=
-		      T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j];
-			}
-		    }
-	      }
-	  }
+      {
+        T_i = *esp->poynt[1][i];
+        for (p = 0; p < dimNonSym; p++)
+        {
+          for (b = 0; b < dim; b++)
+          {
+            for (j = 0; j < mdofs; j++)
+            {
+              fv->d_grad_poynt_dmesh[1][p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j];
+            }
+          }
+        }
+      }
     } else   if ( upd->vp[LIGHT_INTM] != -1  ){
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[1][0][0][0]),0, siz);
@@ -12364,20 +12364,20 @@ if ( pd->v[LIGHT_INTD] )
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[2][0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
+      {
+        T_i = *esp->poynt[2][i];
+        for (p = 0; p < dimNonSym; p++)
         {
-          T_i = *esp->poynt[2][i];
-          for (p = 0; p < dimNonSym; p++)
+          for (b = 0; b < dim; b++)
+          {
+            for (j = 0; j < mdofs; j++)
             {
-              for (b = 0; b < dim; b++)
-                {
-                  for (j = 0; j < mdofs; j++)
-                    {
-                      fv->d_grad_poynt_dmesh[2][p] [b][j] +=
+              fv->d_grad_poynt_dmesh[2][p] [b][j] +=
                   T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j];
-                    }
-                }
             }
+          }
         }
+      }
     } else   if ( upd->vp[LIGHT_INTD] != -1  ){
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[2][0][0][0]),0, siz);
@@ -31331,7 +31331,7 @@ calc_pspg( dbl pspg[DIM],
 	}
 
       // tau_pspg derivatives wrt mesh from hh_siz
-      if ( d_pspg != NULL && pd->v[MESH_DISPLACEMENT1] )
+      if ( d_pspg != NULL && pd->v[MESH_DISPLACEMENT1] && pspg_local)
 	{
 	  for ( b=0; b<dim; b++)
 	    {

@@ -1870,6 +1870,9 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->len_shell_tangent_seed_vec_const, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->shell_moment_tensor_model, 1, MPI_INT);
 
+      ddd_add_member(n, &mp_glob[i]->ehl_gap_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->ehl_normal_method, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->ehl_integration_kind, 1, MPI_INT);
 
 
       /*

@@ -176,6 +176,7 @@ PROTO((
        double xi[DIM],
        const Exo_DB *exo
      ));
+
 EXTERN void ShellBF
 PROTO((
        int ev,                     // Equation or variable to fetch basis functions
@@ -186,6 +187,20 @@ PROTO((
        double d_gradII_phi_i_dx[DIM][DIM][MDE],
        int ndof,
        int *dof_map         // Map of DOFs
+       ));
+
+EXTERN void ShellBF_2d_bar
+PROTO((
+       int ev,                     // Equation or variable to fetch basis functions
+       int ii,                     // Integer for which DOF to fetch
+       double gradII_phi_i[DIM],
+       double d_gradII_phi_i_dx[DIM][DIM][MDE]
+       ));
+
+EXTERN void detJ_2d_bar
+PROTO((
+       double *det_J,                     // Equation or variable to fetch basis functions
+       double d_det_J_dmesh[][MDE]                    // Integer for which DOF to fetch
        ));
 
 EXTERN double shell_saturation_pressure_curve

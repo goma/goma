@@ -909,52 +909,76 @@ update_MT_parameter(double lambda, /* Parameter value */
       mp_glob[mn]->u_heightL_function_constants[7] = lambda;
       break;
 
-    case TAGC_LUB_VELO_U0:
+    case TAGC_U_LUB_VELO_U0:
       mp_glob[mn]->u_veloU_function_constants[0] = lambda;
       break;
 
-    case TAGC_LUB_VELO_U1:
+    case TAGC_U_LUB_VELO_U1:
       mp_glob[mn]->u_veloU_function_constants[1] = lambda;
       break;
 
-    case TAGC_LUB_VELO_U2:
+    case TAGC_U_LUB_VELO_U2:
       mp_glob[mn]->u_veloU_function_constants[2] = lambda;
       break;
 
-    case TAGC_LUB_VELO_U3:
+    case TAGC_U_LUB_VELO_U3:
       mp_glob[mn]->u_veloU_function_constants[3] = lambda;
       break;
 
-    case TAGC_LUB_VELO_U4:
+    case TAGC_U_LUB_VELO_U4:
       mp_glob[mn]->u_veloU_function_constants[4] = lambda;
       break;
 
-    case TAGC_LUB_VELO_U5:
+    case TAGC_U_LUB_VELO_U5:
       mp_glob[mn]->u_veloU_function_constants[5] = lambda;
       break;
 
-    case TAGC_LUB_VELO_L0:
+    case TAGC_U_LUB_VELO_L0:
       mp_glob[mn]->u_veloL_function_constants[0] = lambda;
       break;
 
-    case TAGC_LUB_VELO_L1:
+    case TAGC_U_LUB_VELO_L1:
       mp_glob[mn]->u_veloL_function_constants[1] = lambda;
       break;
 
-    case TAGC_LUB_VELO_L2:
+    case TAGC_U_LUB_VELO_L2:
       mp_glob[mn]->u_veloL_function_constants[2] = lambda;
       break;
 
-    case TAGC_LUB_VELO_L3:
+    case TAGC_U_LUB_VELO_L3:
       mp_glob[mn]->u_veloL_function_constants[3] = lambda;
       break;
 
-    case TAGC_LUB_VELO_L4:
+    case TAGC_U_LUB_VELO_L4:
       mp_glob[mn]->u_veloL_function_constants[4] = lambda;
       break;
 
-    case TAGC_LUB_VELO_L5:
+    case TAGC_U_LUB_VELO_L5:
       mp_glob[mn]->u_veloL_function_constants[5] = lambda;
+      break;
+
+    case TAGC_LUB_VELO_U0:
+      mp_glob[mn]->veloU[0] = lambda;
+      break;
+
+    case TAGC_LUB_VELO_U1:
+      mp_glob[mn]->veloU[1] = lambda;
+      break;
+
+    case TAGC_LUB_VELO_U2:
+      mp_glob[mn]->veloU[2] = lambda;
+      break;
+
+    case TAGC_LUB_VELO_L0:
+      mp_glob[mn]->veloL[0] = lambda;
+      break;
+
+    case TAGC_LUB_VELO_L1:
+      mp_glob[mn]->veloL[1] = lambda;
+      break;
+
+    case TAGC_LUB_VELO_L2:
+      mp_glob[mn]->veloL[2] = lambda;
       break;
 
     case TAGC_LUB_DCA_U0:
@@ -1021,6 +1045,43 @@ update_MT_parameter(double lambda, /* Parameter value */
          { upd->Acoustic_Frequency = 2.*M_PIE*c_mm/lambda;}
       else
          { upd->Acoustic_Frequency = 2.*M_PIE*c_m/lambda;}
+    case TAGC_TFMP_REL_PERM_0:
+      mp_glob[mn]->tfmp_rel_perm_const[0] = lambda;
+      break;
+
+    case TAGC_TFMP_REL_PERM_1:
+      mp_glob[mn]->tfmp_rel_perm_const[1] = lambda;
+      break;
+
+    case TAGC_TFMP_REL_PERM_2:
+      mp_glob[mn]->tfmp_rel_perm_const[2] = lambda;
+      break;
+
+    case TAGC_TFMP_REL_PERM_3:
+      mp_glob[mn]->tfmp_rel_perm_const[3] = lambda;
+      break;
+
+    case TAGC_TFMP_DENSITY_0:
+      mp_glob[mn]->tfmp_density_const[0] = lambda;
+      break;
+
+    case TAGC_TFMP_DENSITY_1:
+      mp_glob[mn]->tfmp_density_const[1] = lambda;
+      break;
+
+    case TAGC_TFMP_DENSITY_2:
+      mp_glob[mn]->tfmp_density_const[2] = lambda;
+      break;
+
+    case TAGC_TFMP_DENSITY_3:
+      mp_glob[mn]->tfmp_density_const[3] = lambda;
+      break;
+
+    case TAGC_TFMP_VISCOSITY_0:
+      mp_glob[mn]->tfmp_viscosity_const[0] = lambda;
+      break;
+    case TAGC_TFMP_VISCOSITY_1:
+      mp_glob[mn]->tfmp_viscosity_const[1] = lambda;
       break;
 
     default: 
@@ -1736,52 +1797,76 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
       *lambda = mp_glob[mn]->u_heightL_function_constants[7];
       break;
 
-    case TAGC_LUB_VELO_U0:
+    case TAGC_U_LUB_VELO_U0:
       *lambda = mp_glob[mn]->u_veloU_function_constants[0];
       break;
 
-    case TAGC_LUB_VELO_U1:
+    case TAGC_U_LUB_VELO_U1:
       *lambda = mp_glob[mn]->u_veloU_function_constants[1];
       break;
 
-    case TAGC_LUB_VELO_U2:
+    case TAGC_U_LUB_VELO_U2:
       *lambda = mp_glob[mn]->u_veloU_function_constants[2];
       break;
 
-    case TAGC_LUB_VELO_U3:
+    case TAGC_U_LUB_VELO_U3:
       *lambda = mp_glob[mn]->u_veloU_function_constants[3];
       break;
 
-    case TAGC_LUB_VELO_U4:
+    case TAGC_U_LUB_VELO_U4:
       *lambda = mp_glob[mn]->u_veloU_function_constants[4];
       break;
 
-    case TAGC_LUB_VELO_U5:
+    case TAGC_U_LUB_VELO_U5:
       *lambda = mp_glob[mn]->u_veloU_function_constants[5];
       break;
 
-    case TAGC_LUB_VELO_L0:
+    case TAGC_U_LUB_VELO_L0:
       *lambda = mp_glob[mn]->u_veloL_function_constants[0];
       break;
 
-    case TAGC_LUB_VELO_L1:
+    case TAGC_U_LUB_VELO_L1:
       *lambda = mp_glob[mn]->u_veloL_function_constants[1];
       break;
 
-    case TAGC_LUB_VELO_L2:
+    case TAGC_U_LUB_VELO_L2:
       *lambda = mp_glob[mn]->u_veloL_function_constants[2];
       break;
 
-    case TAGC_LUB_VELO_L3:
+    case TAGC_U_LUB_VELO_L3:
       *lambda = mp_glob[mn]->u_veloL_function_constants[3];
       break;
 
-    case TAGC_LUB_VELO_L4:
+    case TAGC_U_LUB_VELO_L4:
       *lambda = mp_glob[mn]->u_veloL_function_constants[4];
       break;
 
-    case TAGC_LUB_VELO_L5:
+    case TAGC_U_LUB_VELO_L5:
       *lambda = mp_glob[mn]->u_veloL_function_constants[5];
+      break;
+
+    case TAGC_LUB_VELO_U0:
+      *lambda = mp_glob[mn]->veloU[0];
+      break;
+
+    case TAGC_LUB_VELO_U1:
+      *lambda = mp_glob[mn]->veloU[1];
+      break;
+
+    case TAGC_LUB_VELO_U2:
+      *lambda = mp_glob[mn]->veloU[2];
+      break;
+
+    case TAGC_LUB_VELO_L0:
+      *lambda = mp_glob[mn]->veloL[0];
+      break;
+
+    case TAGC_LUB_VELO_L1:
+      *lambda = mp_glob[mn]->veloL[1];
+      break;
+
+    case TAGC_LUB_VELO_L2:
+      *lambda = mp_glob[mn]->veloL[2];
       break;
 
     case TAGC_LUB_DCA_U0:
@@ -1848,6 +1933,38 @@ retrieve_MT_parameter(double *lambda, /* Parameter value */
          { *lambda = 2.*M_PIE*c_mm/upd->Acoustic_Frequency;}
       else
          { *lambda = 2.*M_PIE*c_m/upd->Acoustic_Frequency;}
+      break;
+
+    case TAGC_TFMP_REL_PERM_0:
+      *lambda = mp_glob[mn]->tfmp_rel_perm_const[0];
+      break;
+
+    case TAGC_TFMP_REL_PERM_1:
+      *lambda = mp_glob[mn]->tfmp_rel_perm_const[1];
+      break;
+
+    case TAGC_TFMP_REL_PERM_2:
+      *lambda = mp_glob[mn]->tfmp_rel_perm_const[2];
+      break;
+
+    case TAGC_TFMP_REL_PERM_3:
+      *lambda = mp_glob[mn]->tfmp_rel_perm_const[3];
+      break;
+
+    case TAGC_TFMP_DENSITY_0:
+      *lambda = mp_glob[mn]->tfmp_density_const[0];
+      break;
+
+    case TAGC_TFMP_DENSITY_1:
+      *lambda = mp_glob[mn]->tfmp_density_const[1];
+      break;
+
+    case TAGC_TFMP_DENSITY_2:
+      *lambda = mp_glob[mn]->tfmp_density_const[2];
+      break;
+
+    case TAGC_TFMP_DENSITY_3:
+      *lambda = mp_glob[mn]->tfmp_density_const[3];
       break;
 
     default: 

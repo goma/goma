@@ -2700,6 +2700,11 @@ find_surf_st(const int iquad,           /* current GQ index */
     }
     break;
 
+  case LINEAR_BAR:
+  case QUAD_BAR:
+    // empty case so we don't get EH, switch on dim is enough
+    break;
+
   case TRILINEAR_HEX:                   /* trilinear hexahedron */
   case C_TRILINEAR_HEX:                 /* trilinear hexahedron with additional centroid node */
     switch( iquad ){

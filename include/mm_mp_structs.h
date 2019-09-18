@@ -898,6 +898,11 @@ struct Material_Properties
 
   int shell_moment_tensor_model;
 
+  // Elastohydrodynamic Lubrication
+  int ehl_gap_model;
+  int ehl_normal_method;
+  int ehl_integration_kind;
+
   int table_index;
 
   

@@ -52,6 +52,7 @@ static char rcsid[] =
 #include "sl_util.h"
 #include "mm_fill_shell.h"
 #include "mm_std_models_shell.h"
+#include "shell_tfmp_util.h"
 #define _MM_SHELL_UTIL_C
 #include "goma.h"
 
@@ -2127,8 +2128,8 @@ shell_determinant_and_normal(
         }
     }
 
-  if ( ielem_surf_dim == 1 )
-    {
+  if ( ielem_surf_dim == 1 ) {
+
       /* N.B. NEXT Stage of Change: Correct Mapbf->J for 1D case in beer_belly */
       //EH(-1, "you should not be here until mapbf->J in beerbelly is corrected for 1D case");
       /* calculate surface determinant using the coordinate scale factors
@@ -2179,6 +2180,19 @@ shell_determinant_and_normal(
                 }
             }
         }
+
+      if (mp->ehl_integration_kind == SIK_S) {
+        double det_J;
+        double d_det_J_dmeshkj[DIM][MDE];
+        memset(d_det_J_dmeshkj, 0.0, sizeof(double)*DIM*MDE);
+        detJ_2d_bar(&det_J, d_det_J_dmeshkj);
+        fv->sdet = det_J;
+        for (int k=0; k<DIM; k++) {
+          for (int j=0; j<ei->dof[MESH_DISPLACEMENT1]; j++) {
+            fv->dsurfdet_dx[k][j] = d_det_J_dmeshkj[k][j];
+          }
+        }
+      }
     }
   else if ( ielem_surf_dim == 2 )
     {
@@ -3275,7 +3289,8 @@ lubrication_shell_initialize (
 			      )
 /******************************************************************************
  * 
- * lubrication_shell_initialize()
+ * 
+ * 
  *
  *    Routine to set up all of the necessary shell normals and heights for
  *    lubrication shells.  Ideally, anything that needs to be done in multiple 
@@ -3602,13 +3617,13 @@ ShellRotate (
   /* Initialize vectors */
   memset(w,      0.0, sizeof(double)*DIM);
   memset(dw_dmx, 0.0, sizeof(double)*DIM*DIM*MDE);
-
+  int ldim = pd->Num_Dim;
   /* Rotate vector and calculate mesh sensitivity */
-  for ( i = 0; i < DIM; i++) {
-    for ( j = 0; j < DIM; j++) {
+  for ( i = 0; i < ldim; i++) {
+    for ( j = 0; j < ldim; j++) {
       w[i] += v[j] * delta(i,j);
       w[i] -= v[j] * fv->snormal[i] * fv->snormal[j];
-      for ( k = 0; k < DIM; k++) {
+      for ( k = 0; k < ldim; k++) {
 	for ( l = 0; l < ndof; l++) {
 	  dw_dmx[i][k][l] += dv_dmx[j][k][l] * delta(i,j);
 	  dw_dmx[i][k][l] -= dv_dmx[j][k][l] * fv->snormal[i]           * fv->snormal[j];
@@ -5168,23 +5183,29 @@ ShellBF (
  *
  ******************************************************************************/
 {
-
   /* Variable definitions */
   int i, j, k, jk;
   double d_grad_phi_i_dx[DIM][DIM][MDE];
 
+
   /* Basis function */
   *phi_i = bf[ev]->phi[ii];
 
+  // check if bar2 problem on s_integration
+  if (pd->Num_Dim == 2 && mp->ehl_integration_kind == SIK_S) {
+    ShellBF_2d_bar(ev, ii, gradII_phi_i, d_gradII_phi_i_dx);
+    return;
+  }
+
   /* Grad of basis function */
-  for ( i = 0; i < DIM; i++) {
+  for ( i = 0; i < pd->Num_Dim; i++) {
     grad_phi_i[i] = bf[ev]->grad_phi[ii][i];
   }
 
   /* Mesh derivatives of basis function grad */
   memset(d_grad_phi_i_dx, 0.0, sizeof(double)*DIM*DIM*MDE);
-  for ( i = 0; i < DIM; i++) {
-    for ( j = 0; j < DIM; j++) {
+  for ( i = 0; i < pd->Num_Dim; i++) {
+    for ( j = 0; j < pd->Num_Dim; j++) {
       for ( k = 0; k < ei->dof[MESH_DISPLACEMENT1]; k++) {
 	jk = dof_map[k];
 	d_grad_phi_i_dx[i][j][jk] = bf[ev]->d_grad_phi_dmesh[ii][i][j][k];
