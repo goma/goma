@@ -216,6 +216,15 @@ fvelo_slip_bc(double func[MAX_PDIM],
 	      const double tt,   /* parameter in time stepping alg           */
 	      const double dt);   /* current time step value                  */
 
+void
+fvelo_slip_power_bc(double func[MAX_PDIM],
+		    double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+		    const int type,    /* whether rotational or not */
+		    const int max_float,    /* Max float number from input file */
+		    double bc_float[MAX_BC_FLOAT_DATA],
+		    const double tt,   /* parameter in time stepping alg           */
+		    const double dt);
+
 int
 exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */);
 
