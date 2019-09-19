@@ -36,6 +36,8 @@ static char rcsid[] = "$Id: mm_eh.c,v 5.3 2008-01-11 00:47:14 hkmoffa Exp $";
 #include <execinfo.h>
 
 /* Obtain a backtrace and print it to stdout. */
+/* https://www.gnu.org/software/libc/manual/html_node/Backtraces.html */
+/* compile with -rdynamic */
 static void
 print_stacktrace(void)
 {
@@ -43,7 +45,7 @@ print_stacktrace(void)
   size_t size;
   char **stack_strings;
 
-  size = backtrace(array, 20);
+  size = backtrace(bt_array, 20);
   stack_strings = backtrace_symbols(bt_array, size);
 
   printf("Obtained %zd stack frames from Proc %d.\n", size, ProcID);
@@ -52,7 +54,7 @@ print_stacktrace(void)
      printf("%s\n", stack_strings[i]);
   }
 
-  free (strings);
+  free (stack_strings);
 }
 #endif
 
@@ -101,7 +103,7 @@ eh(const int error_flag, const char *file,
   if (error_flag == -1) { 
      log_msg("GOMA ends with an error condition.");
 #ifdef PRINT_STACK_TRACE_ON_EH
-    print_trace();
+    print_stacktrace();
 #endif
 #ifndef PARALLEL
     fprintf(stderr,"ERROR EXIT: %s:%d: %s\n", file, line, message); 

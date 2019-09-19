@@ -98,7 +98,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
  *
  ****************************************************************************/
 {
-  int ip, w, i, I, ibc, k, j, id, icount, ss_index, mn, lnn;
+  int ip, w, i, I, ibc, k, j, id, icount, ss_index, is_ns, mn, lnn;
   int iapply, matID_apply, id_side, i_basis = -1, skip_other_side;
   int new_way = FALSE, ledof, mn_first;
   int eqn, ieqn, var, pvar, p, q, index_eq, ldof_eqn, lvdesc, jlv;
@@ -224,9 +224,9 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
         if ( ls != NULL ) ls->Elem_Sign = 0;
 	/* find the quadrature point locations (s, t) for current ip */
 	find_surf_st(ip, ielem_type, elem_side_bc->id_side,
-		     pd->Num_Dim, xi, &s, &t, &u);
+                     ei->ielem_dim, xi, &s, &t, &u);
         /* find the quadrature weight for current surface ip */
-        wt = Gq_surf_weight(ip, ielem_type);  
+        wt = Gq_surf_weight(ip, ielem_type);
       } 
     
     err = load_basis_functions(xi, bfd);
@@ -355,9 +355,10 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
       bc = BC_Types + bc_input_id;
       bc_desc = bc->desc;
 
-      if ((ss_index = 
-	   in_list(bc->BC_ID, 0, exo->num_side_sets,
-		   &(ss_to_blks[0][0]))) == -1) {
+      ss_index = in_list(bc->BC_ID, 0, exo->num_side_sets,
+                         &(ss_to_blks[0][0]));
+      is_ns = strcmp(BC_Types[bc_input_id].Set_Type, "NS");
+      if (ss_index == -1 && is_ns != 0) {
 	sprintf(Err_Msg, "Could not find BC_ID %d in ss_to_blks",
 	        BC_Types[bc_input_id].BC_ID);
 	EH(-1, Err_Msg);
@@ -378,7 +379,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                      interface_id = icount;
                      }
                 }
-          if (is) 
+          if (is)
             {
 	     for (icount = 0; icount < mp->Num_Species; icount++)  {
                     is[interface_id].Processed[icount] = FALSE;
@@ -389,8 +390,10 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
       }
       iapply = 0;
       skip_other_side = FALSE;
-      if (ei->elem_blk_id == ss_to_blks[1][ss_index]) {
-	iapply = 1;
+      if (is_ns != 0) {
+        if (ei->elem_blk_id == ss_to_blks[1][ss_index]) {
+          iapply = 1;
+        }
       }
 
       /*
@@ -398,8 +401,10 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
        *  other words, if the side set is an external side set, we will
        *  apply the boundary condition no matter what.
        */
-      if (SS_Internal_Boundary[ss_index] == -1) {
-	iapply = 1;
+      if (SS_Internal_Boundary != NULL ) {
+        if (SS_Internal_Boundary[ss_index] == -1) {
+          iapply = 1;
+        }
       }
 	
       /*  check to see if this bc is an integrated bc and thus to be handled
@@ -1212,26 +1217,39 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
             break;
 
 	case SHELL_TFMP_FREE_LIQ_BC:
-	  shell_n_dot_liq_velo_bc_tfmp(func, d_func, 0.0, 
-				       time_value, delta_t,
-				       xi, exo);
-	  surface_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes,
-					 ielem_dim - 1,
-					 (int) elem_side_bc->id_side,
-					 (int) elem_side_bc->num_nodes_on_side,
-					 (elem_side_bc->local_elem_node_id) );
+          if (pd->e[R_TFMP_MASS]) {
+            shell_n_dot_liq_velo_bc_tfmp(func, d_func, 0.0,
+                                         time_value, delta_t,
+                                         xi, exo);
+
+            surface_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes,
+                   ielem_dim - 1,
+                   (int) elem_side_bc->id_side,
+                   (int) elem_side_bc->num_nodes_on_side,
+                 (elem_side_bc->local_elem_node_id) );
+          }
+
 	  break;
 	case SHELL_TFMP_NUM_DIFF_BC:
 	  shell_num_diff_bc_tfmp(func, d_func, 
-				       time_value, delta_t,
-				       xi, exo);
+                                 time_value, delta_t,
+                                 xi, exo);
 	  surface_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes,
 					 ielem_dim - 1,
 					 (int) elem_side_bc->id_side,
 					 (int) elem_side_bc->num_nodes_on_side,
 					 (elem_side_bc->local_elem_node_id) );
 	  break;
-
+        case SHELL_LUBRICATION_OUTFLOW_BC:
+            shell_lubrication_outflow(func, d_func,
+                                      time_value, delta_t,
+                                      xi, exo);
+            surface_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes,
+                                           ielem_dim - 1,
+                                           (int) elem_side_bc->id_side,
+                                           (int) elem_side_bc->num_nodes_on_side,
+                                           (elem_side_bc->local_elem_node_id) );
+            break;
 
         case SH_S11_WEAK_BC:
         case SH_S22_WEAK_BC:
@@ -1242,6 +1260,43 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                   bc->BC_Data_Float[2]);
 
             break;
+	case SHELL_TFMP_AVG_PLATE_VELO_BC:
+          shell_tfmp_avg_plate_velo_liq(func, d_func,
+                                        time_value,
+                                        delta_t,
+                                        xi,
+                                        exo);
+          surface_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes,
+                                         ielem_dim - 1,
+                                         (int) elem_side_bc->id_side,
+                                         (int) elem_side_bc->num_nodes_on_side,
+                                         (elem_side_bc->local_elem_node_id) );
+          break;
+
+	case SHELL_TFMP_FREE_GAS_BC:
+	  shell_n_dot_gas_velo_bc_tfmp(func, d_func, 0.0, 
+				       time_value, delta_t,
+				       xi, exo);
+          surface_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes,
+					 ielem_dim - 1,
+					 (int) elem_side_bc->id_side,
+					 (int) elem_side_bc->num_nodes_on_side,
+					 (elem_side_bc->local_elem_node_id) );
+
+	  break;
+	case SHELL_TFMP_GRAD_S_BC:
+          shell_tfmp_n_dot_grad_s(func, d_func,
+                                  time_value,
+                                  delta_t,
+                                  xi,
+                                                                                                                exo);
+          surface_determinant_and_normal(ielem, iconnect_ptr, num_local_nodes,
+                                         ielem_dim - 1,
+                                         (int) elem_side_bc->id_side,
+                                         (int) elem_side_bc->num_nodes_on_side,
+                                         (elem_side_bc->local_elem_node_id) );
+          break;
+
 
 	case HYDROSTATIC_SYMM_BC:
 	  EH(-1, "HYDROSTATIC_SYMM is no longer supported.");
@@ -1994,6 +2049,16 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  }
 	  break;
 
+        case SH_SDET_BC:
+          apply_sdet(func, d_func, xi, exo);
+
+          break;
+        case SH_MESH2_WEAK_BC:
+          apply_sh_weak(func, d_func, xi, exo,
+                       BC_Types[bc_input_id].BC_Data_Float[0]);
+
+          break;
+
 	default:
 	  sprintf(Err_Msg, "Integrated BC %s not found", bc_desc->name1);
 	  EH(-1, Err_Msg);
@@ -2290,7 +2355,10 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		  && bc->BC_Name != POR_LIQ_FLUX_FILL_BC 
 		  && bc->BC_Name != DARCY_LUB_BC
 		  && bc->BC_Name != SHELL_TFMP_FREE_LIQ_BC
-		  && bc->BC_Name != SHELL_TFMP_NUM_DIFF_BC) {
+		  && bc->BC_Name != SHELL_TFMP_NUM_DIFF_BC
+                  && bc->BC_Name != SH_SDET_BC
+                  && bc->BC_Name != SH_MESH2_WEAK_BC
+                  && bc->BC_Name != SHELL_LUBRICATION_OUTFLOW_BC ) {
 		weight *= pd->etm[eqn][(LOG2_BOUNDARY)];
 	      }
 
