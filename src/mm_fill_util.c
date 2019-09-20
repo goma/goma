@@ -4962,13 +4962,15 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
 	}
     }
   
-  *gammadot  =  sqrt(*gammadot/2.); 
+  *gammadot  =  sqrt(0.5*fabs(*gammadot)); 
   
   /* get stuff for Jacobian entries */
   v = VELOCITY1;
   vdofs = ei->dof[v];
   
-  if ( pd->e[R_MESH1] && (d_gd_dmesh != NULL || d_gd_dv != NULL))
+  if ( d_gd_dmesh != NULL || d_gd_dv != NULL)
+  {
+  if ( pd->e[R_MESH1] )
     {
       mdofs = ei->dof[R_MESH1];
     }
@@ -4988,6 +4990,7 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
 	    }
 	}
     }
+  }
   
   /*
    * d( gamma_dot )/dmesh

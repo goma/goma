@@ -765,7 +765,8 @@ f_fillet (const int ielem_dim,
 {    
 /**************************** EXECUTION BEGINS *******************************/
   double pt[DIM], side_th[2], rad, center[DIM], alpha, theta_mid, theta_avg, tmp;
-  double theta, siderad=-1., circ[DIM]={0.,0.,0.}, dsign, beta, cham_ang=-1., cham_rotn=0.;
+  double theta, siderad=-1., circ[DIM]={0.,0.,0.}, dsign, beta, theta_side[2];
+  double cham_ang=-1., cham_rotn=0., gamma=0.;
   int iside=0, chamfer=0, i, dim=2;
 
   if(af->Assemble_LSA_Mass_Matrix)
@@ -818,12 +819,19 @@ f_fillet (const int ielem_dim,
   theta = atan2(fv->x[1]-center[1],fv->x[0]-center[0]);
   theta = theta > side_th[1]-1.5*M_PIE ? theta : theta + 2*M_PIE;
   theta_mid = atan2(center[1] - pt[1],center[0] - pt[0]);
+  theta_side[0] = side_th[0]-0.5*M_PIE;
+  theta_side[1] = side_th[1];
+  if(iside == 1) theta_side[0] = beta - M_PIE; 
+  if(iside == 2) theta_side[1] = beta + 0.5*M_PIE;
   if(cham_ang > 0)
-	{ cham_rotn = cham_ang - (theta_mid + 0.5*M_PIE);}
+	{
+          cham_rotn = cham_ang - (theta_mid + 0.5*M_PIE);
+          gamma = atan(-2.*cos(alpha)*sin(cham_rotn)/cos(alpha+cham_rotn));
+        }
 
   /**  use different f depending on theta  **/
 
-  if( (side_th[0]-0.5*M_PIE+cham_rotn) <= theta && theta <= theta_avg)
+  if( (theta_side[0]-gamma) <= theta && theta <= theta_avg)
      {
        if( iside == 1)
           {
@@ -839,7 +847,7 @@ f_fillet (const int ielem_dim,
           }
 
      }
-  else if ( theta_avg <= theta && (theta - 0.5*M_PIE) <= (side_th[1]+cham_rotn))
+  else if ( theta_avg <= theta && (theta - 0.5*M_PIE) <= (theta_side[1]+0*gamma))
      {
        if( iside == 2)
           {
@@ -860,8 +868,8 @@ f_fillet (const int ielem_dim,
        if( chamfer)
           {
 	   tmp = theta_mid+cham_rotn;
-           *func = (fv->x[1]-center[1]+rad*sin(alpha)*sin(tmp))*sin(tmp) 
-		+ (fv->x[0]-center[0]+rad*sin(alpha)*cos(tmp))*cos(tmp);
+           *func = (fv->x[1]-center[1])*sin(tmp)+(fv->x[0]-center[0])*cos(tmp)
+                     +rad*sin(alpha-cham_rotn);
            d_func[MESH_DISPLACEMENT1] = cos(tmp);
            d_func[MESH_DISPLACEMENT2] = sin(tmp);
           }
