@@ -8892,97 +8892,86 @@ load_fv(void)
   /*
    * EM Wave Vectors...
    */
-  if (pdv[EM_E1_REAL] || pdv[EM_E2_REAL] || pdv[EM_E3_REAL]) 
-  {
-  for ( p=0; p<DIM; p++)
-    {
-      v = EM_E1_REAL + p;
-      fv->em_er[p] = 0.0; fv_old->em_er[p]=0.0;fv_dot->em_er[p]=0.0;
-      if ( pdv[v] )
-	{
-	  dofs     = ei->dof[v];
-	  for ( i=0; i<dofs; i++)
-	    {
-	      fv->em_er[p] += *esp->em_er[p][i] * bf[v]->phi[i];
+  if (pdv[EM_E1_REAL] || pdv[EM_E2_REAL] || pdv[EM_E3_REAL]) {
+  for ( p=0; p<DIM; p++) {
+    v = EM_E1_REAL + p;
+    fv->em_er[p] = 0.0;
+    fv_old->em_er[p]=0.0;
+    fv_dot->em_er[p]=0.0;
 
-	      if ( pd->TimeIntegration != STEADY )
-		{
-		  fv_old->em_er[p] += *esp_old->em_er[p][i] * bf[v]->phi[i];
-		  fv_dot->em_er[p] += *esp_dot->em_er[p][i] * bf[v]->phi[i];
-		}
-	    }
-	 }
+    if ( pdv[v] ) {
+      dofs     = ei->dof[v];
+      for ( i=0; i<dofs; i++) {
+        fv->em_er[p] += *esp->em_er[p][i] * bf[v]->phi[i];
+
+        if ( pd->TimeIntegration != STEADY ) {
+          fv_old->em_er[p] += *esp_old->em_er[p][i] * bf[v]->phi[i];
+          fv_dot->em_er[p] += *esp_dot->em_er[p][i] * bf[v]->phi[i];
+        }
       }
+     }
     }
+  }
   
-  if (pdv[EM_E1_IMAG] || pdv[EM_E2_IMAG] || pdv[EM_E3_IMAG]) 
-  {
-  for ( p=0; p<DIM; p++)
-    {
+  if (pdv[EM_E1_IMAG] || pdv[EM_E2_IMAG] || pdv[EM_E3_IMAG]) {
+    for ( p=0; p<DIM; p++) {
       v = EM_E1_IMAG + p;
-      fv->em_ei[p] = 0.0; fv_old->em_ei[p]=0.0;fv_dot->em_ei[p]=0.0;
-      if ( pdv[v] )
-	{
-	  dofs     = ei->dof[v];
-	  for ( i=0; i<dofs; i++)
-	    {
-	      fv->em_ei[p] += *esp->em_ei[p][i] * bf[v]->phi[i];
+      fv->em_ei[p] = 0.0;
+      fv_old->em_ei[p]=0.0;
+      fv_dot->em_ei[p]=0.0;
+      if ( pdv[v] ) {
+        dofs     = ei->dof[v];
+        for ( i=0; i<dofs; i++) {
+          fv->em_ei[p] += *esp->em_ei[p][i] * bf[v]->phi[i];
 
-	      if ( pd->TimeIntegration != STEADY )
-		{
-		  fv_old->em_ei[p] += *esp_old->em_ei[p][i] * bf[v]->phi[i];
-		  fv_dot->em_ei[p] += *esp_dot->em_ei[p][i] * bf[v]->phi[i];
-		}
-	    }
-	 }
+          if ( pd->TimeIntegration != STEADY ) {
+            fv_old->em_ei[p] += *esp_old->em_ei[p][i] * bf[v]->phi[i];
+            fv_dot->em_ei[p] += *esp_dot->em_ei[p][i] * bf[v]->phi[i];
+          }
+        }
       }
     }
+  }
 
-  if (pdv[EM_H1_REAL] || pdv[EM_H2_REAL] || pdv[EM_H3_REAL]) 
-  {
-  for ( p=0; p<DIM; p++)
-    {
+  if (pdv[EM_H1_REAL] || pdv[EM_H2_REAL] || pdv[EM_H3_REAL]) {
+    for ( p=0; p<DIM; p++) {
       v = EM_H1_REAL + p;
-      fv->em_hr[p] = 0.0; fv_old->em_hr[p]=0.0;fv_dot->em_hr[p]=0.0;
-      if ( pdv[v] )
-	{
-	  dofs     = ei->dof[v];
-	  for ( i=0; i<dofs; i++)
-	    {
-	      fv->em_hr[p] += *esp->em_hr[p][i] * bf[v]->phi[i];
+      fv->em_hr[p] = 0.0;
+      fv_old->em_hr[p]=0.0;
+      fv_dot->em_hr[p]=0.0;
+      if ( pdv[v] ) {
+        dofs     = ei->dof[v];
+        for ( i=0; i<dofs; i++) {
+          fv->em_hr[p] += *esp->em_hr[p][i] * bf[v]->phi[i];
 
-	      if ( pd->TimeIntegration != STEADY )
-		{
-		  fv_old->em_hr[p] += *esp_old->em_hr[p][i] * bf[v]->phi[i];
-		  fv_dot->em_hr[p] += *esp_dot->em_hr[p][i] * bf[v]->phi[i];
-		}
-	    }
-	 }
+          if ( pd->TimeIntegration != STEADY ) {
+            fv_old->em_hr[p] += *esp_old->em_hr[p][i] * bf[v]->phi[i];
+            fv_dot->em_hr[p] += *esp_dot->em_hr[p][i] * bf[v]->phi[i];
+          }
+        }
       }
     }
+  }
 
-  if (pdv[EM_H1_IMAG] || pdv[EM_H2_IMAG] || pdv[EM_H3_IMAG]) 
-  {
-  for ( p=0; p<DIM; p++)
-    {
+  if (pdv[EM_H1_IMAG] || pdv[EM_H2_IMAG] || pdv[EM_H3_IMAG]) {
+    for ( p=0; p<DIM; p++) {
       v = EM_H1_IMAG + p;
-      fv->em_hi[p] = 0.0; fv_old->em_hi[p]=0.0;fv_dot->em_hi[p]=0.0;
-      if ( pdv[v] )
-	{
-	  dofs     = ei->dof[v];
-	  for ( i=0; i<dofs; i++)
-	    {
-	      fv->em_hi[p] += *esp->em_hi[p][i] * bf[v]->phi[i];
+      fv->em_hi[p] = 0.0;
+      fv_old->em_hi[p]=0.0;
+      fv_dot->em_hi[p]=0.0;
+      if ( pdv[v] ) {
+        dofs     = ei->dof[v];
+        for ( i=0; i<dofs; i++) {
+          fv->em_hi[p] += *esp->em_hi[p][i] * bf[v]->phi[i];
 
-	      if ( pd->TimeIntegration != STEADY )
-		{
-		  fv_old->em_hi[p] += *esp_old->em_hi[p][i] * bf[v]->phi[i];
-		  fv_dot->em_hi[p] += *esp_dot->em_hi[p][i] * bf[v]->phi[i];
-		}
-	    }
-	 }
+          if ( pd->TimeIntegration != STEADY ) {
+            fv_old->em_hi[p] += *esp_old->em_hi[p][i] * bf[v]->phi[i];
+            fv_dot->em_hi[p] += *esp_dot->em_hi[p][i] * bf[v]->phi[i];
+          }
+        }
       }
     }
+  }
 
   /*
    * External...
@@ -35067,9 +35056,9 @@ assemble_emwave(double time,	/* present time value */
    */
 
   omega = upd->Acoustic_Frequency;
-  n = refractive_index( d_n, time );
+  n = 1.1;//refractive_index( d_n, time );
 
-  k = extinction_index( d_k, time );
+  k = 1;//extinction_index( d_k, time );
 
   switch(em_var)
    {
