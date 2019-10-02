@@ -505,6 +505,7 @@ MM_SRC= mm_as_alloc.c\
         mm_eh.c\
         mm_fill.c\
         mm_fill_aux.c\
+        mm_fill_em.c\
         mm_fill_fill.c\
 	mm_fill_ls.c \
         mm_fill_interface.c\
@@ -562,6 +563,7 @@ MM_INC=	mm_as.h\
         mm_elem_block_structs.h\
         mm_fill.h\
         mm_fill_aux.h\
+        mm_fill_em.h\
         mm_fill_fill.h\
         mm_fill_jac.h\
         mm_fill_porous.h\

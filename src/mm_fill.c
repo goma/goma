@@ -54,6 +54,7 @@
 #include "mm_fill_fill.h"
 #include "mm_fill_stress.h"
 #include "mm_fill_shell.h"
+#include "mm_fill_em.h"
 
 #include "exo_struct.h"
 #include "dpi.h"
