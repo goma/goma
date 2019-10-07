@@ -183,12 +183,12 @@ assemble_emwave(double time,	/* present time value */
   k = extinction_index( d_k, time );
 
   // Compute complex impedance
-  complex refractive_index, rel_permittivity,
+  complex cpx_refractive_index, cpx_rel_permittivity,
       cpx_permittivity;//, impedance;
 
-  refractive_index = n + I*k;
-  rel_permittivity = SQUARE(refractive_index);
-  cpx_permittivity = rel_permittivity*mp->permittivity;
+  cpx_refractive_index = n + I*k;
+  cpx_rel_permittivity = SQUARE(cpx_refractive_index);
+  cpx_permittivity = cpx_rel_permittivity*mp->permittivity;
 
   //impedance = csqrt(mag_permeability/rel_permittivity);
 
