@@ -11,8 +11,6 @@ Changes in version 6.1
 * MUMPS is now supported through Amesos
 * An experimental build script to build library dependencies is available under `scripts/`
 
-
-
 ## Build Instructions
 
 ### Get the Goma source code
@@ -41,15 +39,27 @@ The [scripts README](scripts/README.md) gives a more specific list of minimum re
 
 ### Build Everything
 
-Simply use these commands:
+To build third party libraries (TPLs):
 
 `cd goma/scripts`
 
-`./easy-goma-builder.sh`
+`./build-goma-dep-trilinos-12.sh [-j NUM_PROCS] GOMA_TPL_INSTALL_DIRECTORY`
 
-and then follow the on-screen instructions to build Goma.
+Where `-j NUM_PROCS` is optional to run the build with multiple processors and
+`GOMA_TPL_INSTALL_DIRECTORY` is where you would like the third party libraries
+to be installed.
 
-If this does not work, or you need something more specific (like a debugging version of Goma, or one that works without c++11 support), please follow the [manual build instructions](manualbuild.md)
+Add the openmpi `bin` directory to your `PATH`, the trilinos `bin` directory to
+your path, and the openmpi `lib` directory to your `LD_LIBRARY_PATH`
+See [scripts/README.md](scripts/README.md) for more details on setting paths.
+
+Finaly to build goma copy the `settings.mk-example` to `settings.mk` edit
+`GOMA_LIBS` to point to your TPL directory, and make sure the trilinos and
+openmpi paths/versions are correct.
+
+Then to build goma run:
+
+`make`
 
 ### Run the tutorial
 

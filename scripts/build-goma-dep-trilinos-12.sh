@@ -222,9 +222,9 @@ TRILINOS_MD5="de912cca43c2ca3b74aa08528ac39dbd"
 MUMPS_VERSION="5.2.1"
 MUMPS_MD5="a4d43b459dc46db984503fbd8526fa69"
 
-OPENMPI_VERSION="4.0.1"
-OPENMPI_MD5="c72d9eb908a0f60e3155698a646cde38"
-OPENMPI_ARCHIVE_URL="https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-$OPENMPI_VERSION.tar.gz"
+OPENMPI_VERSION="4.0.2"
+OPENMPI_MD5="2fdfb4d31cfe1363d8bb5e7488e57cdf"
+OPENMPI_ARCHIVE_URL="https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-$OPENMPI_VERSION.tar.bz2"
 OPENMPI_EXTRA_CONFIGURE_FLAGS="--enable-mpi1-compatibility"
 
 CMAKE_VERSION="3.15.3"

@@ -23,7 +23,7 @@ They will build the following packages and libraries
 * SuiteSparse
 * Trilinos w/SEACAS
 
-`build-goma-dep-trilinos-12.sh`: This script builds Trilinos 12.10.1
+`build-goma-dep-trilinos-12.sh`: This script builds Trilinos 12.14.1
  with support for c++11 and expects gcc to be version 4.8.1 or greater.
 
 Dependencies for these scripts are:
@@ -40,22 +40,17 @@ Dependencies for these scripts are:
 ## Environment Variables
 OpenMPI should be added to the path and library path:
 
-    export LD_LIBRARY_PATH="/[path to gomalibs]/openmpi-1.6.4/lib:$LD_LIBRARY_PATH"
-    export PATH="/[path to gomalibs]/openmpi-1.6.4/bin:$PATH"
+    export LD_LIBRARY_PATH="/[path to gomalibs]/openmpi-4.0.2/lib:$LD_LIBRARY_PATH"
+    export PATH="/[path to gomalibs]/openmpi-4.0.2/bin:$PATH"
 
 SEACAS tools from Trilinos (e.g. aprepro and blot) should be added to
 your path
 
-    export PATH="/[path to gomalibs]/trilinos-12.10.1-Build/bin:$PATH"  
+    export PATH="/[path to gomalibs]/trilinos-12.14.1/bin:$PATH"  
 
 ## settings.mk
 
 Copy settings.mk-example to settings.mk and adjust `GOMA_LIBS` to point to the location where the libraries were built. If the build script was not used, locations for all the libraries referenced in  (examples available in the main goma directory).
-
-If Trilinos was built with c++11, **declare the CXXSTD** in your settings.mk:
-
-    CXXSTD=-std=c++11
-
 
 ## Goma Dependencies build script usage
 
