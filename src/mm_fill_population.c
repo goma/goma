@@ -42,6 +42,41 @@ extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
                         double *W, double *WORK, int *LWORK, int *INFO,
                         int len_jobz, int len_uplo);
 
+void moments_set_lognormal(int mom_index_1, int mom_index_2, int n_moments, double *moments, double *log_norm_moments) {
+  int i = mom_index_1;
+  int j = mom_index_2;
+
+  double mu = (j/(i*j-i*i))*log(moments[i]/moments[0]) + (i/(i*j-j*j))*log(moments[j]/moments[0]);
+
+  double sigma_var = ((2.0/(j*j))*log(moments[j]/moments[0]) - (2.0/(i*j))*log(moments[i]/moments[0]))/(1.0-i/j);
+
+  if (sigma_var < 0) {
+    sigma_var = 0;
+  }
+
+  for (int k = 0; k < n_moments; k++) {
+    log_norm_moments[k] = moments[0] * exp(k*mu + 0.5 * k*k * sigma_var);
+  }
+}
+
+void moment_correction_wright(double *moments, int n_moments, double *moments_corrected) {
+  // Marchisio, Daniele L., and Rodney O. Fox. Computational Models for
+  // Polydisperse Particulate and Multiphase Systems, Cambridge University
+  // Press, 2013. ProQuest Ebook Central,
+  // http://ebookcentral.proquest.com/lib/unm/detail.action?docID=1139558.
+
+
+  double m1[n_moments];
+  double m2[n_moments];
+
+  moments_set_lognormal(1, 3, n_moments, moments, m1);
+  moments_set_lognormal(2, 3, n_moments, moments, m2);
+
+  for (int k = 0; k < n_moments; k++) {
+    moments_corrected[k] = 0.5 * ( m1[k] + m2[k] );
+  }
+}
+
 static void compute_nodes_weights(int N, double Jac[N + 1][N + 1],
                                   double *weights, double *nodes,
                                   double *moments) {
@@ -243,7 +278,12 @@ void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
   }
 
   if (bmin < 0) {
-    EH(-1, "Moments in adaptive_wheeler are not realizable");
+    fprintf(stderr, "Moments %.30e %.30e %.30e %.30e are not realizable\n", moments[0], moments[1], moments[2], moments[3]);
+    double moments_tmp[2*N];
+    moment_correction_wright(moments, 2*N, moments_tmp);
+    for (int k = 0; k < (2*N); k++) {
+      moments[k] = moments_tmp[k];
+    }
   }
 
   for (int n1 = (*n_out); n1 > 0; n1--) {
