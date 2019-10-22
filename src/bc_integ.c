@@ -58,7 +58,8 @@
 #include "mm_fill_util.h"
 #include "mm_fill_potential.h"
 #include "mm_qp_storage.h"
-#include "mm_shell_bc.h" 
+#include "mm_shell_bc.h"
+#include "mm_fill_em.h"
 
 
 #include "mm_eh.h"
@@ -1749,7 +1750,15 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                       bc->BC_Data_Float[1], bc->BC_Data_Float[2],
                       bc->BC_Data_Float[3], bc->BC_Data_Int[0]);
 	    break;
-
+        case EM_ER_FARFIELD_DIRECT_BC:
+        case EM_EI_FARFIELD_DIRECT_BC:
+            apply_em_farfield_direct
+                (func,
+                 d_func,
+                 xi,
+                 (int) bc->BC_Name
+                );
+            break;
 	case LIGHTP_TRANS_BC:
 	case LIGHTM_TRANS_BC:
 	case LIGHTD_TRANS_BC:

@@ -58,6 +58,7 @@
 #include "mm_fill_em.h"
 #include "mm_fill_util.h"
 
+
 /*  _______________________________________________________________________  */
 
 /* assemble_emwave -- assemble terms (Residual &| Jacobian) for EM harmonic
@@ -186,7 +187,7 @@ assemble_emwave(double time,	/* present time value */
   complex cpx_refractive_index, cpx_rel_permittivity,
       cpx_permittivity;//, impedance;
 
-  cpx_refractive_index = n + I*k;
+  cpx_refractive_index = n + _Complex_I*k;
   cpx_rel_permittivity = SQUARE(cpx_refractive_index);
   cpx_permittivity = cpx_rel_permittivity*mp->permittivity;
 
@@ -575,3 +576,186 @@ assemble_emwave(double time,	/* present time value */
 
   return(status);
 } /* end of assemble_em */
+
+int apply_em_farfield_direct(double func[DIM],
+                double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                double xi[DIM],        /* Local stu coordinates */
+                const int bc_name) {
+  /***********************************************************************
+   *
+   * apply_em_farfield_direct():
+   *
+   *  Function which evaluates the expression specifying the
+   *  a plane-wave directly incident (parallel to normal) on
+   *  the boundary.
+   *
+   *  n_bound CROSS E = -n_bound CROSS E
+   *                  * ( eta_2 * kappa_2)
+   *                  / ( omega * mu_2 )
+   *                  * ( 1 - 2*I)
+   *
+   *   func = -
+   *
+   *
+   *  The boundary condition EM_DIRECT_BC employs this
+   *  function.
+   *
+   *
+   * Input:
+   *
+   *  em_eqn   = which equation is this applied to
+   *  em_var   = which variable is this value sensitive to
+   *
+   * Output:
+   *
+   *  func[0] = value of the function mentioned above
+   *  d_func[0][varType][lvardof] =
+   *              Derivate of func[0] wrt
+   *              the variable type, varType, and the local variable
+   *              degree of freedom, lvardof, corresponding to that
+   *              variable type.
+   *
+   *   Author: Andrew Cochrane (10/9/2019)
+   *
+   ********************************************************************/
+
+  int var;
+  dbl mag_permeability=1.4e-07;
+  double n1, n2;				/* Refractive index */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_n1_struct;
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_n1 = &d_n1_struct;
+
+  double k1, k2;				/* Extinction Coefficient */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_k1_struct;
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k1 = &d_k1_struct;
+
+  complex normal[DIM]; // Surface Normal Vector
+
+  complex E1[DIM];
+
+  // Need material properties for both sides of interface
+
+  // use mp for inside (subscript 1) ..
+
+  //omega = upd->Acoustic_Frequency;
+  n1 = refractive_index( d_n1, 0.0 );
+
+  k1 = extinction_index( d_k1, 0.0 );
+  // Compute complex impedance
+  complex cpx_refractive_index1, cpx_rel_permittivity1,
+      cpx_permittivity1, impedance1;
+
+  cpx_refractive_index1 = n1 + _Complex_I*k1;
+  cpx_rel_permittivity1 = SQUARE(cpx_refractive_index1);
+  cpx_permittivity1 = cpx_rel_permittivity1*mp->permittivity;
+
+  impedance1 = csqrt(mag_permeability/cpx_permittivity1);
+
+  // TODO: use BC input for outside (subscript 2)
+  n2 = 1.000293; // air (wikipedia 2019)
+  k2 = 0;
+  // Compute complex impedance
+  complex cpx_refractive_index2, cpx_rel_permittivity2,
+      cpx_permittivity2, impedance2;
+
+  cpx_refractive_index2 = n2 + _Complex_I*k2;
+  cpx_rel_permittivity2 = SQUARE(cpx_refractive_index2);
+  cpx_permittivity2 = cpx_rel_permittivity2*mp->permittivity;
+
+  impedance2 = csqrt(mag_permeability/cpx_permittivity2);
+
+  // need Surface Normal vector
+  for (int i=0; i<DIM; i++) {
+    normal[i] = fv->snormal[i];
+  }
+
+  // Use field in computational domain
+  for (int i=0; i<DIM; i++) {
+    E1[i] = fv->em_er[i] + _Complex_I*fv->em_ei[i];
+  }
+
+  complex Gamma, tau, incident[DIM];
+  Gamma = (impedance2 - impedance1)/(impedance2 + impedance1);
+  tau = (2.0*impedance2)/(impedance2 + impedance1);
+
+  incident[0] = 10.0;
+  incident[1] = 0.0;
+  incident[2] = 0.0;
+
+  complex cpx_func[DIM], normal_cross_incident[DIM];
+  double real, imag;
+
+  complex_cross_vectors(normal,E1,cpx_func);
+  complex_cross_vectors(normal,incident,normal_cross_incident);
+  for (int i=0; i<DIM; i++) {
+    cpx_func[i] = cpx_func[i]*tau/(1+Gamma) + normal_cross_incident[i];
+  }
+
+  switch(bc_name) {
+    case EM_ER_FARFIELD_DIRECT_BC:
+      for (int i=0; i<DIM; i++) {
+        func[i] = creal(cpx_func[i]);
+      }
+      //eqn = R_EM_H1_REAL;
+      var = EM_E1_REAL;
+      real = 1.0;
+      imag = 0.0;
+      break;
+    case EM_EI_FARFIELD_DIRECT_BC:
+      for (int i=0; i<DIM; i++) {
+        func[i] = cimag(cpx_func[i]);
+      }
+      //eqn = R_EM_H1_IMAG;
+      var = EM_E1_IMAG;
+      real = 0.0;
+      imag = 1.0;
+      break;
+  }
+
+  if(af->Assemble_Jacobian) {
+    if (pd->v[var]) {
+      for (int b=0; b<pd->Num_Dim; b++) {
+        for (int p=0; p<pd->Num_Dim; p++) { // the p-th component
+                                            // of the residual
+          for (int q=0; q<pd->Num_Dim; q++) { // the q-th component
+                                              // of variable1
+            for (int r=0; r<pd->Num_Dim; r++) { // the r-th component
+                                                // of variable2
+              for (int j=0; j<ei->dof[var]; j++ ) { // the j-th basis func
+                d_func[p][var][j] += real*creal(tau/(1+Gamma)
+                                       *permute(p,q,r)*normal[q]
+                                       *delta(r,b)*bf[var]->phi[j])
+                                     + imag*cimag(tau/(1+Gamma)
+                                       *permute(p,q,r)*normal[q]
+                                       *delta(r,b)*bf[var]->phi[j]);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return 0;
+} // end of apply_em_direct
+
+/* Cross the first two complex[DIM] vectors and return their
+ * cross product.
+ */
+void
+complex_cross_vectors(const complex *v0, /* v0 */
+                      const complex *v1, /* v1 */
+                      complex *v2) /* v2 = v0 x v1 */
+{
+  int i, j, k;
+
+  memset(v2, 0, DIM * sizeof(complex));
+  for(i = 0; i < DIM; i++)
+    for(j = 0; j < DIM; j++)
+      for(k = 0; k < DIM; k++)
+        v2[k] += permute(i,j,k) * v0[i] * v1[j];
+} // end of complex_cross_vectors
+
+
+#undef I
+
+

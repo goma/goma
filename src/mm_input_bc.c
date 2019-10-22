@@ -1784,6 +1784,8 @@ rd_bc_specs(FILE *ifp,
 	case CURRENT_USER_BC:
 	case CURRENT_USER_SIC_BC:
 	case VOLT_USER_BC:
+        case EM_ER_FARFIELD_DIRECT_BC:
+        case EM_EI_FARFIELD_DIRECT_BC:
 	  num_const = read_constants(ifp, &(BC_Types[ibc].u_BC), NO_SPECIES);
  
 	  if ( num_const < 0 )

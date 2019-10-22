@@ -551,6 +551,8 @@
 #define EM_H1I_BC      1065
 #define EM_H2I_BC      1066
 #define EM_H3I_BC      1067
+#define EM_ER_FARFIELD_DIRECT_BC  1068
+#define EM_EI_FARFIELD_DIRECT_BC  1069
 
 
 /* pressure */
