@@ -228,6 +228,7 @@ int STRAIN_TENSOR = -1;		/* strain tensor for mesh deformation  */
 int STREAM = -1;	       	/* stream function*/
 int STREAM_NORMAL_STRESS = -1;	/* streamwise normal stress function*/
 int STREAM_SHEAR_STRESS = -1;	/* streamwise shear stress function*/
+int STREAM_TENSION = -1;	/* streamwise tension - (Ttt-Tnn)/R*/
 int STRESS_CONT = -1;	        /* stress at vertex & midside nodes*/
 int STRESS_TENSOR = -1;		/* stress tensor for mesh deformation 
 				 * (Lagrangian pressure) */
@@ -506,7 +507,6 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   dbl wt;
   dbl n[MAX_CONC][DIM];        /* Diffusion flux vector. */
   dbl qc[DIM];                 /* Conduction flux vector. */
-  dbl Dsh[DIM][DIM];
   int err, ldof, ldof_right, ileft, iright, midside, checkPorous;
   /*  int first_porous_var = POR_LAST - MAX_POROUS_NUM + 1;*/
   /*  int SPECIES = MAX_VARIABLE_TYPES; */
@@ -689,6 +689,35 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_post[STREAM_SHEAR_STRESS] = Tnt;
     local_lumped[STREAM_SHEAR_STRESS] = 1.;
   }
+  if (STREAM_TENSION != -1 && pd->e[R_MOMENTUM1]) {
+    speed = 0.;
+    stream_grad = 0.;
+
+    for ( a=0; a<VIM; a++)
+      {
+	for ( b=0; b<VIM; b++)
+	  {
+	    gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	  }
+      }
+    for ( a=0; a<dim; a++)
+      { speed += fv->v[a] * fv->v[a]; }
+    for ( a=0; a<dim; a++)
+      {
+	for ( b=0; b<dim; b++)
+	  {
+	    /* (2*vv-Iv):gamma */
+	    stream_grad += (2.*fv->v[a]*fv->v[b]-delta(a,b)*speed)*gamma[a][b];
+	  }
+      }
+    if (speed > 0.0) {
+      Ttt = mp->viscosity* stream_grad / sqrt(speed)/sqrt(speed);
+    } else {
+      Ttt = 0.0;
+    }
+    local_post[STREAM_TENSION] = Ttt;
+    local_lumped[STREAM_TENSION] = 1.;
+  }
 
   if (DIV_VELOCITY != -1 && pd->e[PRESSURE]) {
     Dnn = 0.;
@@ -818,32 +847,33 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   }
 
   if (MEAN_SHEAR != -1 && pd->e[R_MOMENTUM1] ){
-    double gammadot;
+    double gammadot, gamma[DIM][DIM];
     for (a = 0; a < VIM; a++) {       
       for (b = 0; b < VIM; b++) {
-	Dsh[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	  gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
         }
       }
     /* find second invariant of strain-rate */
-    calc_shearrate(&gammadot, Dsh, NULL, NULL);
+    calc_shearrate(&gammadot, gamma, NULL, NULL);
 
     local_post[MEAN_SHEAR] = gammadot;
     local_lumped[MEAN_SHEAR] = 1.;
   }
 
   if (GIES_CRIT != -1 && pd->e[R_MOMENTUM1] ){
-    dbl Dvt[DIM][DIM], Domega;
+    double gammadot, gamma[DIM][DIM];
+    double vorticity, omega[DIM][DIM];
     for (a = 0; a < VIM; a++) {       
       for (b = 0; b < VIM; b++) {
-	Dsh[a][b] = 0.5 * (fv->grad_v[a][b] + fv->grad_v[b][a]);
-	Dvt[a][b] = 0.5 * (fv->grad_v[a][b] - fv->grad_v[b][a]);
+	gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	omega[a][b] = fv->grad_v[a][b] - fv->grad_v[b][a];
       }
     }
     /* find second invariant of strain-rate */
-    calc_shearrate(&Dnn, Dsh, NULL, NULL);
-    calc_shearrate(&Domega, Dvt, NULL, NULL);
-    local_post[GIES_CRIT] = (Dnn-Domega)/
-			(DBL_SMALL+Dnn+Domega);
+    calc_shearrate(&gammadot, gamma, NULL, NULL);
+    calc_shearrate(&vorticity, omega, NULL, NULL);
+    local_post[GIES_CRIT] = (gammadot - vorticity)/
+			(DBL_SMALL + gammadot + vorticity);
     local_lumped[GIES_CRIT] = 1.;
   }
 
@@ -4155,7 +4185,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
         for( j = 0 ; j < p_dim ; j++)
         {
-	if(fabs(pp_particles[i]->xi_coord[j]) > 1.1)
+	if(fabs(pp_particles[i]->xi_coord[j]) > 2.0)
                 {
         fprintf(stderr,"particle %d - initial pt outside the domain\n",i);
         fprintf(stderr,"isoparametric coords  %g %g %g \n"

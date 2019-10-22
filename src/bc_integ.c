@@ -706,7 +706,15 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			bc->BC_Data_Float,
 			(int) bc->BC_Data_Int[0],
 			xsurf, theta, delta_t);
-	  break;  
+	  break;
+	case VELO_SLIP_POWER_CARD_BC:
+	case VELO_SLIP_POWER_BC:
+	  fvelo_slip_power_bc(func, d_func,
+			      (int) bc->BC_Name,
+			      (int) bc->max_DFlt,
+			      bc->BC_Data_Float,
+			      theta, delta_t);
+	break;
 
 	case AIR_FILM_BC:
 	case AIR_FILM_ROT_BC:

@@ -772,17 +772,7 @@ evaluate_flux(
 				}
 			    }
                           if(profile_flag & 1)
-                             {
-   				gamma_dot = 0.;
-   				for ( a=0; a<WIM; a++)
-     				   {
-       					for ( b=0; b<WIM; b++)
-         				  {
-           				   gamma_dot +=  gamma[a][b] * gamma[b][a];
-         				  }
-     				   }
-   				gamma_dot  =  sqrt(gamma_dot/2.);
-                             }
+                             { calc_shearrate(&gamma_dot, gamma, NULL, NULL); }
    if(profile_flag & 2)
       {
   			memset( TT, 0, sizeof(dbl)*DIM*DIM);
@@ -2131,15 +2121,7 @@ evaluate_flux(
 			load_lsi(ls->Length_Scale );
                        if(profile_flag & 1)
                        {
-			gamma_dot = 0.;
-   			for ( a=0; a<VIM; a++)
-     			   {
-       				for ( b=0; b<VIM; b++)
-       				  {
-       				   gamma_dot +=  gamma[a][b] * gamma[b][a];
-       				  }
-     			   }
-   			gamma_dot  =  sqrt(gamma_dot/2.);
+                        calc_shearrate(&gamma_dot, gamma, NULL, NULL); 
         if(ls->SubElemIntegration)
         	{
         	elem_sign_org = ls->Elem_Sign;
