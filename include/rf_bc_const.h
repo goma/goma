@@ -553,7 +553,8 @@
 #define EM_H3I_BC      1067
 #define EM_ER_FARFIELD_DIRECT_BC  1068
 #define EM_EI_FARFIELD_DIRECT_BC  1069
-
+#define EM_HR_FARFIELD_DIRECT_BC  1070
+#define EM_HI_FARFIELD_DIRECT_BC  1071
 
 /* pressure */
 

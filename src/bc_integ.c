@@ -1752,6 +1752,8 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	    break;
         case EM_ER_FARFIELD_DIRECT_BC:
         case EM_EI_FARFIELD_DIRECT_BC:
+        case EM_HR_FARFIELD_DIRECT_BC:
+        case EM_HI_FARFIELD_DIRECT_BC:
             apply_em_farfield_direct
                 (func,
                  d_func,

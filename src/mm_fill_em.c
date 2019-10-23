@@ -682,19 +682,41 @@ int apply_em_farfield_direct(double func[DIM],
   incident[1] = 0.0;
   incident[2] = 0.0;
 
-  complex cpx_func[DIM], normal_cross_incident[DIM];
+  complex cpx_func[DIM];
   double real, imag;
 
-  complex_cross_vectors(normal,E1,cpx_func);
-  complex_cross_vectors(normal,incident,normal_cross_incident);
-  for (int i=0; i<DIM; i++) {
-    cpx_func[i] = cpx_func[i]*tau/(1+Gamma) + normal_cross_incident[i];
+  switch(bc_name) {
+    case EM_ER_FARFIELD_DIRECT_BC:
+    case EM_EI_FARFIELD_DIRECT_BC:
+      //complex_cross_vectors(normal,E1,cpx_func);
+      //complex_cross_vectors(normal,incident,normal_cross_incident);
+      for (int p=0; p<DIM; p++) {
+        for (int q=0; q<DIM; q++) {
+          for (int r=0; r<DIM; r++) {
+            cpx_func[p] = permute(p,q,r)
+                          *(
+                            tau/(1+Gamma)*normal[q]*E1[r]
+                          + normal[q]*incident[r]
+                            );
+          }
+        }
+      }
+      break;
+
+    case EM_HR_FARFIELD_DIRECT_BC:
+    case EM_HI_FARFIELD_DIRECT_BC:
+      for (int p=0; p<DIM; p++) {
+        cpx_func[p] = -E1[p]/impedance2*tau/(1+Gamma)
+                      -incident[p]/impedance2;
+      }
+      break;
+
   }
 
   switch(bc_name) {
     case EM_ER_FARFIELD_DIRECT_BC:
-      for (int i=0; i<DIM; i++) {
-        func[i] = creal(cpx_func[i]);
+      for (int p=0; p<DIM; p++) {
+        func[p] = creal(cpx_func[p]);
       }
       //eqn = R_EM_H1_REAL;
       var = EM_E1_REAL;
@@ -702,37 +724,78 @@ int apply_em_farfield_direct(double func[DIM],
       imag = 0.0;
       break;
     case EM_EI_FARFIELD_DIRECT_BC:
-      for (int i=0; i<DIM; i++) {
-        func[i] = cimag(cpx_func[i]);
+      for (int p=0; p<DIM; p++) {
+        func[p] = cimag(cpx_func[p]);
       }
       //eqn = R_EM_H1_IMAG;
       var = EM_E1_IMAG;
       real = 0.0;
       imag = 1.0;
       break;
+    case EM_HR_FARFIELD_DIRECT_BC:
+      for (int p=0; p<DIM; p++) {
+        func[p] = creal(cpx_func[p]);
+      }
+      //eqn = R_EM_E1_REAL;
+      var = EM_H1_REAL;
+      real = 1.0;
+      imag = 0.0;
+      break;
+    case EM_HI_FARFIELD_DIRECT_BC:
+      for (int p=0; p<DIM; p++) {
+        func[p] = cimag(cpx_func[p]);
+      }
+      //eqn = R_EM_E1_IMAG;
+      var = EM_H1_IMAG;
+      real = 0.0;
+      imag = 1.0;
+      break;
   }
 
   if(af->Assemble_Jacobian) {
-    if (pd->v[var]) {
-      for (int b=0; b<pd->Num_Dim; b++) {
-        for (int p=0; p<pd->Num_Dim; p++) { // the p-th component
-                                            // of the residual
-          for (int q=0; q<pd->Num_Dim; q++) { // the q-th component
-                                              // of variable1
-            for (int r=0; r<pd->Num_Dim; r++) { // the r-th component
-                                                // of variable2
-              for (int j=0; j<ei->dof[var]; j++ ) { // the j-th basis func
-                d_func[p][var][j] += real*creal(tau/(1+Gamma)
-                                       *permute(p,q,r)*normal[q]
-                                       *delta(r,b)*bf[var]->phi[j])
-                                     + imag*cimag(tau/(1+Gamma)
-                                       *permute(p,q,r)*normal[q]
-                                       *delta(r,b)*bf[var]->phi[j]);
+    switch(bc_name) {
+      case EM_ER_FARFIELD_DIRECT_BC:
+      case EM_EI_FARFIELD_DIRECT_BC:
+        for (int g=0; g<pd->Num_Dim; g++){
+          int gvar = var + g;
+          for (int p=0; p<pd->Num_Dim; p++) { // the p-th component
+                                              // of the residual
+            for (int q=0; q<pd->Num_Dim; q++) { // the q-th component
+                                                // of variable1
+              for (int r=0; r<pd->Num_Dim; r++) { // the r-th component
+                                                  // of variable2
+                for (int j=0; j<pd->Num_Dim; j++) {
+                  d_func[p][gvar][j] = real*creal(permute(p,q,r)
+                                                   *tau/(1+Gamma)
+                                                   *normal[q]
+                                                   *delta(q,g)
+                                                   *bf[gvar]->phi[j])
+                                     +  imag*cimag(permute(p,q,r)
+                                                   *tau/(1+Gamma)
+                                                   *normal[q]
+                                                   *delta(q,g)
+                                                   *bf[gvar]->phi[j]);
+                }
               }
             }
           }
         }
-      }
+        break;
+      case EM_HR_FARFIELD_DIRECT_BC:
+      case EM_HI_FARFIELD_DIRECT_BC:
+        for (int g=0; g<pd->Num_Dim; g++) {
+          int gvar = var + g;
+
+          if (pd->v[gvar]) {
+            for (int p=0; p<DIM; p++) {
+              for (int j=0; j<ei->dof[var];j++) {
+                d_func[p][gvar][j] = - real*creal(bf[gvar]->phi[j]/impedance2/(1+Gamma)*tau)
+                                     - imag*cimag(bf[gvar]->phi[j]/impedance2/(1+Gamma)*tau);
+              }
+            }
+          }
+        }
+        break;
     }
   }
   return 0;
