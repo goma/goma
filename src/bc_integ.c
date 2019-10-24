@@ -1758,7 +1758,8 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                 (func,
                  d_func,
                  xi,
-                 (int) bc->BC_Name
+                 (int) bc->BC_Name,
+                 bc->BC_Data_Float
                 );
             break;
 	case LIGHTP_TRANS_BC:

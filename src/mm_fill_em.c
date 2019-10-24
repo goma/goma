@@ -580,7 +580,8 @@ assemble_emwave(double time,	/* present time value */
 int apply_em_farfield_direct(double func[DIM],
                 double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                 double xi[DIM],        /* Local stu coordinates */
-                const int bc_name) {
+                const int bc_name,
+                double *bc_data) {
   /***********************************************************************
    *
    * apply_em_farfield_direct():
@@ -652,8 +653,10 @@ int apply_em_farfield_direct(double func[DIM],
   impedance1 = csqrt(mag_permeability/cpx_permittivity1);
 
   // TODO: use BC input for outside (subscript 2)
-  n2 = 1.000293; // air (wikipedia 2019)
-  k2 = 0;
+  ns = bc_data[0];
+  k2 = bc_data[1];
+  //n2 = 1.000293; // air (wikipedia 2019)
+  //k2 = 0;
   // Compute complex impedance
   complex cpx_refractive_index2, cpx_rel_permittivity2,
       cpx_permittivity2, impedance2;
@@ -678,9 +681,9 @@ int apply_em_farfield_direct(double func[DIM],
   Gamma = (impedance2 - impedance1)/(impedance2 + impedance1);
   tau = (2.0*impedance2)/(impedance2 + impedance1);
 
-  incident[0] = 10.0;
-  incident[1] = 0.0;
-  incident[2] = 0.0;
+  incident[0] = bc_data[2] + _Complex_I*bc_data[5];
+  incident[1] = bc_data[3] + _Complex_I*bc_data[6];
+  incident[2] = bc_data[4] + _Complex_I*bc_data[7];
 
   complex cpx_func[DIM];
   double real, imag;
@@ -803,6 +806,7 @@ int apply_em_farfield_direct(double func[DIM],
 
 /* Cross the first two complex[DIM] vectors and return their
  * cross product.
+ * TODO: create a return struct that contains sensitivities to input
  */
 void
 complex_cross_vectors(const complex *v0, /* v0 */

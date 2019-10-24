@@ -41,10 +41,11 @@ EXTERN int assemble_emwave/* mm_fill_em.c                           */
        const int );
 
 EXTERN int apply_em_farfield_direct/* mm_fill_em.c                           */
-( double [DIM],     // func
+(double [DIM],     // func
   double [DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE] , // d_func
   double [DIM] ,   // xi
-  const int );// bc_name
+  const int,
+  double *bc_data);// bc_name
 
 EXTERN void complex_cross_vectors(const complex [DIM],
                                   const complex [DIM],
