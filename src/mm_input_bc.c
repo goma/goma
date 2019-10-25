@@ -1494,6 +1494,10 @@ rd_bc_specs(FILE *ifp,
 	case BLAKE_DIRICH_ROLL_BC:
 	case HOFFMAN_DIRICH_ROLL_BC:
 	case COX_DIRICH_ROLL_BC:
+        case EM_ER_FARFIELD_DIRECT_BC:
+        case EM_EI_FARFIELD_DIRECT_BC:
+        case EM_HR_FARFIELD_DIRECT_BC:
+        case EM_HI_FARFIELD_DIRECT_BC:
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],   
 		      &BC_Types[ibc].BC_Data_Float[1],   
@@ -1783,11 +1787,7 @@ rd_bc_specs(FILE *ifp,
         case KIN_CHEM_BC:
 	case CURRENT_USER_BC:
 	case CURRENT_USER_SIC_BC:
-	case VOLT_USER_BC:
-        case EM_ER_FARFIELD_DIRECT_BC:
-        case EM_EI_FARFIELD_DIRECT_BC:
-        case EM_HR_FARFIELD_DIRECT_BC:
-        case EM_HI_FARFIELD_DIRECT_BC:
+        case VOLT_USER_BC:
 	  num_const = read_constants(ifp, &(BC_Types[ibc].u_BC), NO_SPECIES);
  
 	  if ( num_const < 0 )

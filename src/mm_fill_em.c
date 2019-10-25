@@ -653,7 +653,7 @@ int apply_em_farfield_direct(double func[DIM],
   impedance1 = csqrt(mag_permeability/cpx_permittivity1);
 
   // TODO: use BC input for outside (subscript 2)
-  ns = bc_data[0];
+  n2 = bc_data[0];
   k2 = bc_data[1];
   //n2 = 1.000293; // air (wikipedia 2019)
   //k2 = 0;
