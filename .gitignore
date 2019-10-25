@@ -1,5 +1,6 @@
 /bin/
 /build/
+/build*/
 /lib/
 /settings.mk
 /.settings/

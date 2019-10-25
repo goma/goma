@@ -1368,15 +1368,13 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
 
 
   /* Initialize rotation variables and lists */
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-    mesh_rotate_node = calloc(upd->Total_Num_Matrices, sizeof(int *));
-    mesh_rotate_ss = calloc(upd->Total_Num_Matrices, sizeof(int *));
-    num_mesh_rotate = calloc(upd->Total_Num_Matrices, sizeof(int));
-    mom_rotate_node = calloc(upd->Total_Num_Matrices, sizeof(int *));
-    mom_rotate_ss = calloc(upd->Total_Num_Matrices, sizeof(int *));
-    num_mom_rotate = calloc(upd->Total_Num_Matrices, sizeof(int));
-  }
-   
+  mesh_rotate_node = calloc(upd->Total_Num_Matrices, sizeof(int *));
+  mesh_rotate_ss = calloc(upd->Total_Num_Matrices, sizeof(int *));
+  num_mesh_rotate = calloc(upd->Total_Num_Matrices, sizeof(int));
+  mom_rotate_node = calloc(upd->Total_Num_Matrices, sizeof(int *));
+  mom_rotate_ss = calloc(upd->Total_Num_Matrices, sizeof(int *));
+  num_mom_rotate = calloc(upd->Total_Num_Matrices, sizeof(int));
+
   if (Num_ROT == 0) check_for_bc_conflicts2D(exo, dpi);
   if (Num_ROT > 0)  check_for_bc_conflicts3D(exo, dpi);
 

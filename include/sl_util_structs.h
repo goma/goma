@@ -66,8 +66,10 @@ struct Matrix_Data {
   double *x;                 /* Solution vector */
   double *x_old;             /* Solution vector , previous last time step */
   double *x_older;           /* Solution vector , previous prev time step */
+  double *x_oldest;
   double *xdot;                      /* xdot of current solution                  */
   double *xdot_old;          /* xdot_old of current solution              */
+  double *xdot_older;
   double *x_update;             /* last update vector */
   double *resid_vector;              /* Residual vector */
   double *scale;

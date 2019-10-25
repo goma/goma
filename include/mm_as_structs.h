@@ -862,8 +862,15 @@ struct Problem_Graph {
 
   /* Temporarily make some things global */
   struct Matrix_Data *matrices;
+  struct Matrix_Data *sub_step_solutions;
+  int num_sub_time_steps[MAX_NUM_MATRICES];
+  double delta_t_fraction[MAX_NUM_MATRICES];
 
   int time_step_control_disabled[MAX_NUM_MATRICES];
+  double matrix_subcycle_fraction[MAX_NUM_MATRICES];
+  double sub_delta_t[MAX_NUM_MATRICES];
+  double sub_delta_t_old[MAX_NUM_MATRICES];
+  double sub_delta_t_older[MAX_NUM_MATRICES];
 };
 typedef struct Problem_Graph PROBLEM_GRAPH_STRUCT;
 /*____________________________________________________________________________*/

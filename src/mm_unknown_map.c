@@ -581,6 +581,7 @@ setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
          }
       safer_free((void **) &(tmp_nodal_vars[imtrx]));
      }
+  free(tmp_nodal_vars);
 
   /*
    *  When in debug mode, print out a complete listing of variables at

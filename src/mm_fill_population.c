@@ -192,6 +192,9 @@ void wheeler_algorithm(int N, double *moments, double *weights, double *nodes) {
 
 void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
                       double *weights, double *nodes, int *n_out) {
+  if (2*N > MAX_MOMENTS) {
+    EH(-1, "adaptive wheeler error 2*N > MAX_MOMENTS");
+  }
   double cutoff = 0;
   *n_out = N;
   if (moments[0] < 0) {
@@ -211,11 +214,11 @@ void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
     return;
   }
 
-  double nu[2*N];
   double ind = N;
-  double a[N];
-  double b[N];
-  double sig[2*N+1][2*N+1];
+  double nu[MAX_MOMENTS] = {0.0};
+  double a[MAX_MOMENTS] = {0.0};
+  double b[MAX_MOMENTS] = {0.0};
+  double sig[MAX_MOMENTS+1][MAX_MOMENTS+1] = {{0.0}};
 
   for (int i = 0; i < 2*N; i++) {
     nu[i] = moments[i];

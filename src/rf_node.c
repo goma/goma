@@ -313,6 +313,8 @@ free_nodes (void)
     for (k = 0; k < upd->Total_Num_Matrices; k++) {
       safer_free((void **) &(node_ptr->DBC[k]));
     }
+    free(node_ptr->First_Unknown);
+    free(node_ptr->Nodal_Vars_Info);
     free(node_ptr->DBC);
   }
   /*

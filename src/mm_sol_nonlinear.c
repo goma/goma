@@ -654,20 +654,20 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
   if ( TimeIntegration == STEADY )
     {
 
-      DPRINTF(stderr, "\n\n");
-      DPRINTF(stderr, 
+      DPRINTF(stdout, "\n\n");
+      DPRINTF(stdout,
 	      "               R e s i d u a l         C o r r e c t i o n\n");
     }
   else
     {
 
-      DPRINTF(stderr, 
+      DPRINTF(stdout,
 "\n    N e w t o n  C o n v e r g e n c e  - I m p l i c i t   T i m e   S t e p\n");
     }
 
-  DPRINTF(stderr, 
+  DPRINTF(stdout,
 "\n  ToD    itn   L_oo    L_1     L_2     L_oo    L_1     L_2   lis  asm/slv (sec)\n");
-  DPRINTF(stderr, 
+  DPRINTF(stdout,
 "-------- --- ------- ------- ------- ------- ------- ------- --- ---------------\n");
 
   /*********************************************************************************
@@ -697,15 +697,15 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 
       if ( inewton < 10 )
 	{
-	  DPRINTF(stderr,"%s [%d] ", ctod, inewton );
+          DPRINTF(stdout,"%s [%d] ", ctod, inewton );
 	}
       else if ( inewton < 100 )
 	{
-	  DPRINTF(stderr,"%s %d] ", ctod, inewton );
+          DPRINTF(stdout,"%s %d] ", ctod, inewton );
 	}
       else
 	{
-	  DPRINTF(stderr,"%s %d ", ctod, inewton );	  
+          DPRINTF(stdout,"%s %d ", ctod, inewton );
 	}
       
       /*
@@ -789,7 +789,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 			     Debug_Flag, time_value, exo, dpi,
 			     &h_elem_avg, &U_norm);
 
-	  DPRINTF(stderr,"%s: numerical Jacobian done....\n", yo);
+          DPRINTF(stdout,"%s: numerical Jacobian done....\n", yo);
 	  P0PRINTF("\n-done\n\n");
 	  exit(0);
 	}
@@ -1241,7 +1241,7 @@ EH(-1,"version not compiled with frontal solver");
       log_msg("%-38s = %23.16e", "residual norm (L_1)", Norm[0][1]);
       log_msg("%-38s = %23.16e", "residual norm (L_2)", Norm[0][2]);
 
-      DPRINTF(stderr, "%7.1e %7.1e %7.1e ",  Norm[0][0], Norm[0][1], Norm[0][2]);
+      DPRINTF(stdout, "%7.1e %7.1e %7.1e ",  Norm[0][0], Norm[0][1], Norm[0][2]);
 		  
 	  if( inewton > 0 && Norm[0][2] < Epsilon[pg->imtrx][0] && Norm[2][2] < Epsilon[pg->imtrx][0] )
 	  {
@@ -2437,69 +2437,69 @@ skip_solve:
    if(Epsilon[pg->imtrx][2] > 1)
    {
      if ( !(*converged) || (  Linear_Solver == FRONT ) || inewton == 0 ) {
-	   DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
+           DPRINTF(stdout, "%7.1e %7.1e %7.1e %s ",
 			   Norm[1][0], Norm[1][1], Norm[1][2], stringer);
      }
      else {
 #ifdef SKIP_LAST_SOLVE
-	   DPRINTF(stderr, "%23c %s ",' ', " ns");			
+           DPRINTF(stdout, "%23c %s ",' ', " ns");
 #else
-	   DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
+           DPRINTF(stdout, "%7.1e %7.1e %7.1e %s ",
 			   Norm[1][0], Norm[1][1], Norm[1][2], stringer);
 #endif
      }
    }
    else
    {
-	   DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
+           DPRINTF(stdout, "%7.1e %7.1e %7.1e %s ",
 			   Norm_r[0][0], Norm_r[0][1], Norm_r[0][2], stringer);
    }
 	
 	
 	if ( Linear_Solver != FRONT )
 	{
-	  DPRINTF(stderr, "%7.1e/%7.1e\n", (a_end-a_start), (s_end-s_start));
+          DPRINTF(stdout, "%7.1e/%7.1e\n", (a_end-a_start), (s_end-s_start));
 	}
       else
 	{
 	  asmslv_time = ( asmslv_end - asmslv_start );
 	  slv_time    = ( asmslv_time - mm_fill_total );
-	  DPRINTF(stderr, "%7.1e/%7.1e\n", mm_fill_total, slv_time);
+          DPRINTF(stdout, "%7.1e/%7.1e\n", mm_fill_total, slv_time);
 	}
 	
 	if( Write_Intermediate_Solutions || (Iout == 1 ) ) {
 		if (dofname_r[0] != '\0') {
-         fprintf(stderr, "L_oo cause: R->(%s)", dofname_r);
+         fprintf(stdout, "L_oo cause: R->(%s)", dofname_r);
 	}
 	if (dofname_x[0] != '\0') {
-         fprintf(stderr, "DelX->(%s)\n", dofname_x);
+         fprintf(stdout, "DelX->(%s)\n", dofname_x);
 	}
 }
 
         /* print damping factor and/or viscosity sens message here */
-        if (print_damp_factor) DPRINTF(stderr, " Invoking damping factor %f\n", damp_factor);
-        if (print_visc_sens) DPRINTF(stderr, " Invoking Viscosity Sensitivities\n");
+        if (print_damp_factor) DPRINTF(stdout, " Invoking damping factor %f\n", damp_factor);
+        if (print_visc_sens) DPRINTF(stdout, " Invoking Viscosity Sensitivities\n");
 
 	if (nAC > 0) {
-	DPRINTF(stderr, "          AC ");
-	DPRINTF(stderr, "%7.1e %7.1e %7.1e ", Norm[2][0],
+        DPRINTF(stdout, "          AC ");
+        DPRINTF(stdout, "%7.1e %7.1e %7.1e ", Norm[2][0],
 			Norm[2][1], Norm[2][2]);
 	if(Epsilon[pg->imtrx][2] > 1) {
 	  if ( !(*converged)  || (  Linear_Solver == FRONT ) || inewton == 0	) {
-		DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]);
+                DPRINTF(stdout, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]);
 	  }
 	else {
 #ifdef SKIP_LAST_SOLVE
-		DPRINTF(stderr, "%23c %s ",' ', " 0 ");	
+                DPRINTF(stdout, "%23c %s ",' ', " 0 ");
 #else
-		DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]);
+                DPRINTF(stdout, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]);
 #endif
 	}	
 	} else {
-		DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm_r[1][0], 
+                DPRINTF(stdout, "%7.1e %7.1e %7.1e     ", Norm_r[1][0],
 				Norm_r[1][1], Norm_r[1][2]);
 	}
-	DPRINTF(stderr, "%7.1e/%7.1e\n", (ac_end-ac_start), (sc_end-sc_start)); 
+        DPRINTF(stdout, "%7.1e/%7.1e\n", (ac_end-ac_start), (sc_end-sc_start));
       }
 
       inewton++;
@@ -2530,11 +2530,11 @@ skip_solve:
 
   if (! *converged) {
     if (Debug_Flag) { 
-      DPRINTF(stderr, "\n%s:  Newton iteration FAILED.\n", yo);
+      DPRINTF(stdout, "\n%s:  Newton iteration FAILED.\n", yo);
     }
   } else {
     if (Debug_Flag) {
-      DPRINTF(stderr,
+      DPRINTF(stdout,
 	      "\n%s:  Newton iteration CONVERGED.\n", yo);
     }
   }
@@ -2546,7 +2546,7 @@ skip_solve:
       Norm[4][1] = L1_norm (x, NumUnknowns[pg->imtrx])/((double)NumUnknowns[pg->imtrx]);
       Norm[4][2] = L2_norm (x, NumUnknowns[pg->imtrx])/sqrt((double)NumUnknowns[pg->imtrx]);
 
-      DPRINTF(stderr, "scaled solution norms  %13.6e %13.6e %13.6e \n", 
+      DPRINTF(stdout, "scaled solution norms  %13.6e %13.6e %13.6e \n",
 	      Norm[4][0], Norm[4][1], Norm[4][2]);
 
 
@@ -3836,9 +3836,9 @@ soln_sens ( double lambda,  /*  parameter */
                 MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
   time_local = time_global;
 #endif
-  fflush(stderr);
+  fflush(stdout);
   sens_caller[ strlen(sens_caller) ] = '\0';
-  DPRINTF(stderr,"\n\n%s resolve time:  %7.1e\n", sens_caller, time_local );
+  DPRINTF(stdout,"\n\n%s resolve time:  %7.1e\n", sens_caller, time_local );
   sens_caller[0] = '\0';
 
 	return(err);
