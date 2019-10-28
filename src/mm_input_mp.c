@@ -7572,6 +7572,139 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        }
 
   /*
+   * Moment Properties
+   */
+
+  if (pd_glob[mn]->gv[MOMENT0]) {
+    ECHO("\n----Moment Properties\n",echo_file);
+
+    model_read =
+    look_for_mat_prop(imp, "Moment Growth Kernel",
+                          &(mat_ptr->moment_growth_model),
+                          &(mat_ptr->moment_growth_scale),
+                          NULL,
+                          NULL,
+                          model_name, SCALAR_INPUT, &NO_SPECIES,es);
+    if ( !strcmp(model_name, "VISCOSITY_SCALED") )
+    {
+      model_read = 1;
+      mat_ptr->moment_growth_model = VISCOSITY_SCALED_GROWTH_RATE;
+      if ( fscanf(imp, "%lf",
+                  &a0)
+          != 1 )
+      {
+        sr = sprintf(err_msg,
+                           "Matl %s needs 1 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName,
+                     "Moment Growth Kernel", "VISCOSITY_SCALED" );
+        EH(-1, err_msg);
+      }
+      mat_ptr->moment_growth_scale = a0;
+      SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_growth_scale));
+    }
+    else if ( !strcmp(model_name, "VISCOSITY_PRESSURE_SCALED") )
+    {
+      model_read = 1;
+      mat_ptr->moment_growth_model = VISCOSITY_PRESSURE_GROWTH_RATE;
+      if ( fscanf(imp, "%lf %lf",
+                 &a0, &a1)
+          != 2 )
+      {
+        sr = sprintf(err_msg,
+                     "Matl %s needs 2 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName,
+                     "Moment Growth Kernel", "VISCOSITY_PRESSURE_SCALED" );
+        EH(-1, err_msg);
+      }
+      mat_ptr->moment_growth_scale = a0;
+      mat_ptr->moment_growth_reference_pressure = a1;
+      SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_growth_scale));
+    }
+    else
+    {
+      if(model_read == -1)
+      {
+        EH(model_read, "Moment Growth Kernel invalid");
+      }
+      EH(model_read, "Moment Growth Kernel");
+    }
+
+    ECHO(es,echo_file);
+
+    model_read =
+        look_for_mat_prop(imp, "Moment Coalescence Kernel",
+                          &(mat_ptr->moment_coalescence_model),
+                          &(mat_ptr->moment_coalescence_scale),
+                          NULL,
+                          NULL,
+                          model_name, SCALAR_INPUT, &NO_SPECIES,es);
+    if ( !strcmp(model_name, "ADDITION") )
+    {
+      model_read = 1;
+      mat_ptr->moment_coalescence_model = ADDITION_COALESCENCE;
+      if ( fscanf(imp, "%lf",
+                 &a0)
+          != 1 )
+      {
+        sr = sprintf(err_msg,
+                     "Matl %s needs 1 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName,
+                     "Moment Coalescence Kernel", "ADDITION_COALESCENCE" );
+        EH(-1, err_msg);
+      }
+      mat_ptr->moment_coalescence_scale = a0;
+      SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_coalescence_scale));
+    }
+    else if ( !strcmp(model_name, "VISCOSITY_SCALED_ADDITION") )
+    {
+      model_read = 1;
+      mat_ptr->moment_coalescence_model = VISCOSITY_SCALED_COALESCENCE;
+      if ( fscanf(imp, "%lf",
+                 &a0)
+          != 1 )
+      {
+        sr = sprintf(err_msg,
+                     "Matl %s needs 1 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName,
+                     "Moment Coalescence Kernel", "VISCOSITY_SCALED_ADDITION" );
+        EH(-1, err_msg);
+      }
+      mat_ptr->moment_coalescence_scale = a0;
+      SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_coalescence_scale));
+    }
+    else if ( !strcmp(model_name, "VISCOSITY_ADDITION_BUBBLE_RATIO") )
+    {
+      model_read = 1;
+      mat_ptr->moment_coalescence_model = VISCOSITY_BUBBLE_RATIO_COALESCENCE;
+      if ( fscanf(imp, "%lf",
+                 &a0)
+          != 1 )
+      {
+        sr = sprintf(err_msg,
+                     "Matl %s needs 1 constants for %s %s model.\n",
+                     pd_glob[mn]->MaterialName,
+                     "Moment Coalescence Kernel", "VISCOSITY_ADDITION_BUBBLE_RATIO" );
+        EH(-1, err_msg);
+      }
+      mat_ptr->moment_coalescence_scale = a0;
+      SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_coalescence_scale));
+    }
+    else
+    {
+      if(model_read == -1)
+      {
+        EH(model_read, "Moment Coalescence Kernel invalid");
+      }
+      EH(model_read, "Moment Coalescence Kernel");
+    }
+
+    ECHO(es,echo_file);
+
+  }
+
+
+
+  /*
    * Source Terms
    */
 

@@ -48,6 +48,16 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  CAP_PRES          7
 #define  FAUX_PLASTIC      16
 
+/* Moment Property Models */
+// growth rate
+#define VISCOSITY_SCALED_GROWTH_RATE 4
+#define VISCOSITY_PRESSURE_GROWTH_RATE 5
+
+// coalescence
+#define ADDITION_COALESCENCE 4
+#define VISCOSITY_SCALED_COALESCENCE 5
+#define VISCOSITY_BUBBLE_RATIO_COALESCENCE 6
+
 /* Source term models */
 #define  BOUSS          3       /* Boussinesq including rho*g*beta hydrostatic
 				 * component */

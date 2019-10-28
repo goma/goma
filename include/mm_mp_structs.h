@@ -592,6 +592,13 @@ struct Material_Properties
   int PorousMolecularWeightModel[MAX_PMV];
   dbl d_porous_molecular_weight[MAX_PMV][MAX_VARIABLE_TYPES + MAX_CONC];
 
+  int moment_growth_model;
+  dbl moment_growth_scale;
+  dbl moment_growth_reference_pressure;
+
+  int moment_coalescence_model;
+  dbl moment_coalescence_scale;
+
   /*
    * Source terms...
    */

@@ -10953,6 +10953,7 @@ rd_eq_specs(FILE *ifp,
 
   } /* End of loop over matrices */
 
+  set_matrix_index_and_global_v();
 
   /*
    *  Part 6 --

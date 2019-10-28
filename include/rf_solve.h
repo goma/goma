@@ -72,6 +72,9 @@ EXTERN int free_problem
        Dpi *);			/* dpi - ptr to distributed processing info */
 
 void
+set_matrix_index_and_global_v(void);
+
+void
 predict_solution(int N, double delta_t, double delta_t_old,
 		 double delta_t_older, double theta_arg, double x[],
 		 double x_old[], double x_older[], double x_oldest[],

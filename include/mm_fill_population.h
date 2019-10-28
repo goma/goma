@@ -117,12 +117,19 @@ EXTERN void foam_pbe_co2_liquid_source(struct Species_Conservation_Terms *st,
 				       double tt,
 				       double dt);
 
-EXTERN int
-assemble_density();
+EXTERN int assemble_density(void);
 
 EXTERN double PBEVolumeSource_rhoeqn(double time,
 				     double dt,
 				     double tt,
 				     double dFVS_drho[MDE]);
+
+
+int growth_rate_model(int species_index, double *nodes, double *weights,
+                      int n_nodes, int n_moments, double *growth_rate,
+                      struct moment_growth_rate *MGR);
+
+int coalescence_kernel_model(double *nodes, double *weights, int n_nodes,
+                      int n_moments, struct moment_growth_rate *MGR);
 
 #endif /* MM_FILL_POPULATION_H */

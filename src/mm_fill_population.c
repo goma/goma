@@ -42,29 +42,33 @@ extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
                         double *W, double *WORK, int *LWORK, int *INFO,
                         int len_jobz, int len_uplo);
 
-void moments_set_lognormal(int mom_index_1, int mom_index_2, int n_moments, double *moments, double *log_norm_moments) {
+void moments_set_lognormal(int mom_index_1, int mom_index_2, int n_moments,
+                           double *moments, double *log_norm_moments) {
   int i = mom_index_1;
   int j = mom_index_2;
 
-  double mu = (j/(i*j-i*i))*log(moments[i]/moments[0]) + (i/(i*j-j*j))*log(moments[j]/moments[0]);
+  double mu = (j / (i * j - i * i)) * log(moments[i] / moments[0]) +
+              (i / (i * j - j * j)) * log(moments[j] / moments[0]);
 
-  double sigma_var = ((2.0/(j*j))*log(moments[j]/moments[0]) - (2.0/(i*j))*log(moments[i]/moments[0]))/(1.0-i/j);
+  double sigma_var = ((2.0 / (j * j)) * log(moments[j] / moments[0]) -
+                      (2.0 / (i * j)) * log(moments[i] / moments[0])) /
+                     (1.0 - i / j);
 
   if (sigma_var < 0) {
     sigma_var = 0;
   }
 
   for (int k = 0; k < n_moments; k++) {
-    log_norm_moments[k] = moments[0] * exp(k*mu + 0.5 * k*k * sigma_var);
+    log_norm_moments[k] = moments[0] * exp(k * mu + 0.5 * k * k * sigma_var);
   }
 }
 
-void moment_correction_wright(double *moments, int n_moments, double *moments_corrected) {
+void moment_correction_wright(double *moments, int n_moments,
+                              double *moments_corrected) {
   // Marchisio, Daniele L., and Rodney O. Fox. Computational Models for
   // Polydisperse Particulate and Multiphase Systems, Cambridge University
   // Press, 2013. ProQuest Ebook Central,
   // http://ebookcentral.proquest.com/lib/unm/detail.action?docID=1139558.
-
 
   double m1[n_moments];
   double m2[n_moments];
@@ -73,7 +77,7 @@ void moment_correction_wright(double *moments, int n_moments, double *moments_co
   moments_set_lognormal(2, 3, n_moments, moments, m2);
 
   for (int k = 0; k < n_moments; k++) {
-    moments_corrected[k] = 0.5 * ( m1[k] + m2[k] );
+    moments_corrected[k] = 0.5 * (m1[k] + m2[k]);
   }
 }
 
@@ -192,7 +196,7 @@ void wheeler_algorithm(int N, double *moments, double *weights, double *nodes) {
 
 void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
                       double *weights, double *nodes, int *n_out) {
-  if (2*N > MAX_MOMENTS) {
+  if (2 * N > MAX_MOMENTS) {
     EH(-1, "adaptive wheeler error 2*N > MAX_MOMENTS");
   }
   double cutoff = 0;
@@ -218,27 +222,28 @@ void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
   double nu[MAX_MOMENTS] = {0.0};
   double a[MAX_MOMENTS] = {0.0};
   double b[MAX_MOMENTS] = {0.0};
-  double sig[MAX_MOMENTS+1][MAX_MOMENTS+1] = {{0.0}};
+  double sig[MAX_MOMENTS + 1][MAX_MOMENTS + 1] = {{0.0}};
 
-  for (int i = 0; i < 2*N; i++) {
+  for (int i = 0; i < 2 * N; i++) {
     nu[i] = moments[i];
   }
 
-  for (int i = 1; i < 2*N+1; i++) {
-    sig[1][i] = nu[i-1];
+  for (int i = 1; i < 2 * N + 1; i++) {
+    sig[1][i] = nu[i - 1];
   }
   a[0] = nu[1] / nu[0];
   b[0] = 0;
   for (int k = 2; k < ind + 1; k++) {
     for (int j = 0; j < (2 * ind - k + 2); j++) {
-      sig[k][j] = sig[k-1][j+1] - a[k-2] * sig[k-1][j] -b[k-2] * sig[k-2][j];
+      sig[k][j] = sig[k - 1][j + 1] - a[k - 2] * sig[k - 1][j] -
+                  b[k - 2] * sig[k - 2][j];
     }
-    a[k-1] = sig[k][k+1] / sig[k][k] - sig[k-1][k] / sig[k-1][k-1];
-    b[k-1] = sig[k][k] / sig[k-1][k-1];
+    a[k - 1] = sig[k][k + 1] / sig[k][k] - sig[k - 1][k] / sig[k - 1][k - 1];
+    b[k - 1] = sig[k][k] / sig[k - 1][k - 1];
   }
   for (int k = ind; k > 1; k--) {
     if (sig[k][k] <= cutoff) {
-      *n_out = k-1;
+      *n_out = k - 1;
       if (*n_out == 1) {
         weights[0] = moments[0];
         nodes[0] = moments[1] / moments[0];
@@ -253,24 +258,25 @@ void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
     weights[i] = 0;
     nodes[i] = 0;
   }
-  for (int i = 0; i < 2*(*n_out) + 1; i++) {
-    for (int j = 0; j < 2*(*n_out) + 1; j++) {
+  for (int i = 0; i < 2 * (*n_out) + 1; i++) {
+    for (int j = 0; j < 2 * (*n_out) + 1; j++) {
       sig[i][j] = 0;
     }
   }
 
-  for (int i = 1; i < 2*N+1; i++) {
-    sig[1][i] = nu[i-1];
+  for (int i = 1; i < 2 * N + 1; i++) {
+    sig[1][i] = nu[i - 1];
   }
   a[0] = nu[1] / nu[0];
   b[0] = 0;
 
   for (int k = 2; k < (*n_out + 1); k++) {
     for (int j = k; j < (2 * (*n_out) - k + 2); j++) {
-      sig[k][j] = sig[k-1][j+1] - a[k-2] * sig[k-1][j] -b[k-2] * sig[k-2][j];
+      sig[k][j] = sig[k - 1][j + 1] - a[k - 2] * sig[k - 1][j] -
+                  b[k - 2] * sig[k - 2][j];
     }
-    a[k-1] = sig[k][k+1] / sig[k][k] - sig[k-1][k] / sig[k-1][k-1];
-    b[k-1] = sig[k][k] / sig[k-1][k-1];
+    a[k - 1] = sig[k][k + 1] / sig[k][k] - sig[k - 1][k] / sig[k - 1][k - 1];
+    b[k - 1] = sig[k][k] / sig[k - 1][k - 1];
   }
 
   double bmin = 1e128;
@@ -281,10 +287,11 @@ void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
   }
 
   if (bmin < 0) {
-    fprintf(stderr, "Moments %.30e %.30e %.30e %.30e are not realizable\n", moments[0], moments[1], moments[2], moments[3]);
-    double moments_tmp[2*N];
-    moment_correction_wright(moments, 2*N, moments_tmp);
-    for (int k = 0; k < (2*N); k++) {
+    fprintf(stderr, "Moments %.30e %.30e %.30e %.30e are not realizable\n",
+            moments[0], moments[1], moments[2], moments[3]);
+    double moments_tmp[2 * N];
+    moment_correction_wright(moments, 2 * N, moments_tmp);
+    for (int k = 0; k < (2 * N); k++) {
       moments[k] = moments_tmp[k];
     }
   }
@@ -297,20 +304,19 @@ void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
       return;
     }
 
-    double z[n1*n1];
+    double z[n1 * n1];
     memset(z, 0.0, sizeof(double) * n1 * n1);
-    for (int i = 0; i < n1-1; i++) {
-      z[i*n1 + i] = a[i];
-      double tmp = sqrt(b[i+1]);
-      z[(i+1) * n1 + i] = tmp;
-      z[i*n1 + i + 1] = tmp;
+    for (int i = 0; i < n1 - 1; i++) {
+      z[i * n1 + i] = a[i];
+      double tmp = sqrt(b[i + 1]);
+      z[(i + 1) * n1 + i] = tmp;
+      z[i * n1 + i + 1] = tmp;
     }
-    z[(n1-1) * n1 + n1-1] = a[n1-1];
-
+    z[(n1 - 1) * n1 + n1 - 1] = a[n1 - 1];
 
     int LDA = n1;
     int INFO;
-    int LWORK=20;
+    int LWORK = 20;
     double WORK[LWORK];
     double eigenvalues[n1];
     dsyev_("V", "U", &n1, z, &LDA, eigenvalues, WORK, &LWORK, &INFO, 1, 1);
@@ -329,7 +335,7 @@ void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
 
     double dab[n1];
     double mab[n1];
-    for (int i = n1-1; i > 0; i--) {
+    for (int i = n1 - 1; i > 0; i--) {
       dab[i] = fabs(nodes[i] - nodes[0]);
       mab[i] = fabs(nodes[i] - nodes[0]);
       for (int k = 1; k < i; k++) {
@@ -371,7 +377,8 @@ void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
       maxmab = 1;
     }
 
-    if (((minweight / maxweight) > rmin[n1-1]) && ((mindab / maxmab) > eabs)) {
+    if (((minweight / maxweight) > rmin[n1 - 1]) &&
+        ((mindab / maxmab) > eabs)) {
       return;
     }
   }
@@ -390,50 +397,50 @@ int get_foam_pbe_indices(int *index_W, int *index_OH, int *index_BA_l,
   /* find equation that has extent of reaction */
   for (w = 0; w < pd->Num_Species_Eqn; w++) {
     switch (mp->SpeciesSourceModel[w]) {
-      case FOAM_PBE_WATER:
-        if (species_W == -1) {
-          species_W = w;
-        } else {
-          EH(-1, "Error expected only one FOAM_PBE_WATER species");
-        }
-        break;
-      case FOAM_PBE_OH:
-        if (species_OH == -1) {
-          species_OH = w;
-        } else {
-          EH(-1, "Error expected only one FOAM_PBE_OH species");
-        }
-        break;
-      case FOAM_PBE_BA_L:
-        if (species_BA_l == -1) {
-          species_BA_l = w;
-        } else {
-          EH(-1, "Error expected only one FOAM_PBE_BA_L species");
-        }
-        break;
-      case FOAM_PBE_BA_G:
-        if (species_BA_g == -1) {
-          species_BA_g = w;
-        } else {
-          EH(-1, "Error expected only one FOAM_PBE_BA_G species");
-        }
-        break;
-      case FOAM_PBE_CO2_L:
-        if (species_CO2_l == -1) {
-          species_CO2_l = w;
-        } else {
-          EH(-1, "Error expected only one FOAM_PBE_CO2_L species");
-        }
-        break;
-      case FOAM_PBE_CO2_G:
-        if (species_CO2_g == -1) {
-          species_CO2_g = w;
-        } else {
-          EH(-1, "Error expected only one FOAM_PBE_CO2_G species");
-        }
-        break;
-      default:
-        break;
+    case FOAM_PBE_WATER:
+      if (species_W == -1) {
+        species_W = w;
+      } else {
+        EH(-1, "Error expected only one FOAM_PBE_WATER species");
+      }
+      break;
+    case FOAM_PBE_OH:
+      if (species_OH == -1) {
+        species_OH = w;
+      } else {
+        EH(-1, "Error expected only one FOAM_PBE_OH species");
+      }
+      break;
+    case FOAM_PBE_BA_L:
+      if (species_BA_l == -1) {
+        species_BA_l = w;
+      } else {
+        EH(-1, "Error expected only one FOAM_PBE_BA_L species");
+      }
+      break;
+    case FOAM_PBE_BA_G:
+      if (species_BA_g == -1) {
+        species_BA_g = w;
+      } else {
+        EH(-1, "Error expected only one FOAM_PBE_BA_G species");
+      }
+      break;
+    case FOAM_PBE_CO2_L:
+      if (species_CO2_l == -1) {
+        species_CO2_l = w;
+      } else {
+        EH(-1, "Error expected only one FOAM_PBE_CO2_L species");
+      }
+      break;
+    case FOAM_PBE_CO2_G:
+      if (species_CO2_g == -1) {
+        species_CO2_g = w;
+      } else {
+        EH(-1, "Error expected only one FOAM_PBE_CO2_G species");
+      }
+      break;
+    default:
+      break;
     }
   }
 
@@ -494,11 +501,11 @@ int get_foam_pbe_indices(int *index_W, int *index_OH, int *index_BA_l,
   return 0;
 }
 
-double foam_pbe_heat_source(
-    HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
-    double tt, /* parameter to vary time integration from
-                * explicit (tt = 1) to implicit (tt = 0) */
-    double dt) /* current time step size */
+double
+foam_pbe_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
+                     double tt, /* parameter to vary time integration from
+                                 * explicit (tt = 1) to implicit (tt = 0) */
+                     double dt) /* current time step size */
 {
   int species_W = -1;
   int species_OH = -1;
@@ -514,7 +521,8 @@ double foam_pbe_heat_source(
 
   err = get_foam_pbe_indices(&species_W, &species_OH, &species_BA_l, NULL, NULL,
                              NULL);
-  if (err) return 0;
+  if (err)
+    return 0;
 
   double C0_OH = mp->u_species_source[species_OH][0];
   double Delta_H_OH = mp->u_species_source[species_OH][3];
@@ -557,7 +565,8 @@ int foam_pbe_growth_rate(double growth_rate[MAX_CONC],
   err = get_foam_pbe_indices(NULL, NULL, &species_BA_l, NULL, &species_CO2_l,
                              NULL);
 
-  if (err) return -1;
+  if (err)
+    return -1;
 
   for (w = 0; w < MAX_CONC; w++) {
     growth_rate[w] = 0;
@@ -664,17 +673,17 @@ int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
   wH2O = -1;
   for (w = 0; w < pd->Num_Species; w++) {
     switch (mp->SpeciesSourceModel[w]) {
-      case FOAM_PMDI_10_CO2_LIQ:
-        wCO2Liq = w;
-        break;
-      case FOAM_PMDI_10_CO2_GAS:
-        wCO2Gas = w;
-        break;
-      case FOAM_PMDI_10_H2O:
-        wH2O = w;
-        break;
-      default:
-        break;
+    case FOAM_PMDI_10_CO2_LIQ:
+      wCO2Liq = w;
+      break;
+    case FOAM_PMDI_10_CO2_GAS:
+      wCO2Gas = w;
+      break;
+    case FOAM_PMDI_10_H2O:
+      wH2O = w;
+      break;
+    default:
+      break;
     }
   }
 
@@ -716,13 +725,13 @@ int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
       if (w == wCO2Liq) {
         double CO2_max = 4.4e-4;
         double mf = fv_old->c[wCO2Liq] * M_CO2 / rho_liq;
-        //double dmfdC = M_CO2 / rho_liq;
+        // double dmfdC = M_CO2 / rho_liq;
 
         if (mf > CO2_max) {
           growth_rate[wCO2Liq] = G0 * (mf - CO2_max) / CO2_max;
           for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
             d_growth_rate_dc[wCO2Liq][j] =
-                0;  // G0 * dmfdC * bf[var]->phi[j] / CO2_max;
+                0; // G0 * dmfdC * bf[var]->phi[j] / CO2_max;
           }
 
           for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
@@ -801,7 +810,8 @@ void foam_pbe_conversion_water(struct Species_Conservation_Terms *st,
 
   int err;
   err = get_foam_pbe_indices(&species_W, &species_OH, NULL, NULL, NULL, NULL);
-  if (err) return;
+  if (err)
+    return;
 
   double A_W = mp->u_species_source[species_W][1];
   double E_W = mp->u_species_source[species_W][2];
@@ -847,7 +857,8 @@ void foam_pbe_conversion_OH(struct Species_Conservation_Terms *st, double time,
 
   int err;
   err = get_foam_pbe_indices(&species_W, &species_OH, NULL, NULL, NULL, NULL);
-  if (err) return;
+  if (err)
+    return;
 
   double A_OH = mp->u_species_source[species_OH][1];
   double E_OH = mp->u_species_source[species_OH][2];
@@ -916,7 +927,8 @@ void foam_pbe_ba_gas_source(struct Species_Conservation_Terms *st, double time,
 
   err = get_foam_pbe_indices(NULL, NULL, &species_BA_l, &species_BA_g,
                              &species_CO2_l, NULL);
-  if (err) return;
+  if (err)
+    return;
 
   MGR = calloc(sizeof(struct moment_growth_rate), 1);
   err = get_moment_growth_rate_term(MGR);
@@ -965,7 +977,8 @@ void foam_pbe_ba_liquid_source(struct Species_Conservation_Terms *st,
 
   err = get_foam_pbe_indices(NULL, NULL, &species_BA_l, NULL, &species_CO2_l,
                              NULL);
-  if (err) return;
+  if (err)
+    return;
 
   MGR = calloc(sizeof(struct moment_growth_rate), 1);
   err = get_moment_growth_rate_term(MGR);
@@ -1017,7 +1030,8 @@ void foam_pbe_co2_gas_source(struct Species_Conservation_Terms *st, double time,
 
   err = get_foam_pbe_indices(&species_W, NULL, &species_BA_l, NULL,
                              &species_CO2_l, &species_CO2_g);
-  if (err) return;
+  if (err)
+    return;
 
   MGR = calloc(sizeof(struct moment_growth_rate), 1);
   err = get_moment_growth_rate_term(MGR);
@@ -1068,7 +1082,8 @@ void foam_pbe_co2_liquid_source(struct Species_Conservation_Terms *st,
 
   err = get_foam_pbe_indices(&species_W, NULL, &species_BA_l, NULL,
                              &species_CO2_l, NULL);
-  if (err) return;
+  if (err)
+    return;
 
   MGR = calloc(sizeof(struct moment_growth_rate), 1);
   err = get_moment_growth_rate_term(MGR);
@@ -1111,8 +1126,106 @@ void foam_pbe_co2_liquid_source(struct Species_Conservation_Terms *st,
   free(MGR);
 }
 
+int growth_rate_model(int species_index, double *nodes, double *weights,
+                      int n_nodes, int n_moments, double *growth_rate,
+                      struct moment_growth_rate *MGR) {
+
+  double gamma[DIM][DIM];
+  for (int a = 0; a < VIM; a++) {
+    for (int b = 0; b < VIM; b++) {
+      gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+    }
+  }
+
+  double mu = viscosity(gn, gamma, NULL);
+
+  double eta0 = mp->FlowingLiquid_viscosity;
+  double scale = 0;
+
+  for (int k = 0; k < n_moments; k++) {
+    MGR->G[species_index][k] = 0;
+    for (int alpha = 0; alpha < n_nodes; alpha++) {
+      switch (mp->moment_growth_model) {
+      case CONSTANT:
+        scale = mp->moment_growth_scale;
+        break;
+      case VISCOSITY_SCALED_GROWTH_RATE:
+        scale = mp->moment_growth_scale * (eta0 / mu);
+        break;
+      case VISCOSITY_PRESSURE_GROWTH_RATE: {
+        double inv_pressure = 1.0 / (fv->P - mp->moment_growth_reference_pressure);
+        scale =
+            mp->moment_growth_scale * (eta0 / mu) * inv_pressure * inv_pressure;
+      } break;
+      default:
+        EH(-1, "Unknown growth kernel");
+        return -1;
+      }
+
+      double coeff =
+          k * weights[alpha] * pow(fmax(nodes[alpha], PBE_FP_SMALL), k - 1);
+      MGR->G[species_index][k] += scale * coeff * growth_rate[species_index];
+    }
+  }
+  return 0;
+}
+
+int coalescence_kernel_model(double *nodes, double *weights, int n_nodes,
+                      int n_moments, struct moment_growth_rate *MGR) {
+
+  double gamma[DIM][DIM];
+  for (int a = 0; a < VIM; a++) {
+    for (int b = 0; b < VIM; b++) {
+      gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+    }
+  }
+
+  double mu = viscosity(gn, gamma, NULL);
+
+  double eta0 = mp->FlowingLiquid_viscosity;
+  for (int k = 0; k < n_moments; k++) {
+    MGR->S[k] = 0;
+    for (int alpha = 0; alpha < n_nodes; alpha++) {
+      for (int beta = 0; beta < n_nodes; beta++) {
+        double coalescence_kernel;
+
+        switch (mp->moment_coalescence_model) {
+        case CONSTANT:
+          coalescence_kernel = mp->moment_coalescence_scale;
+          break;
+        case ADDITION_COALESCENCE:
+          coalescence_kernel =
+              mp->moment_coalescence_scale * (nodes[alpha] + nodes[beta]);
+          break;
+        case VISCOSITY_SCALED_COALESCENCE:
+          coalescence_kernel = mp->moment_coalescence_scale * (eta0 / mu) *
+                               (nodes[alpha] + nodes[beta]);
+          break;
+        case VISCOSITY_BUBBLE_RATIO_COALESCENCE:
+          coalescence_kernel = mp->moment_coalescence_scale * (eta0 / mu) *
+                               (nodes[alpha] + nodes[beta]) *
+                               (nodes[alpha] / (nodes[beta] + 1e-32));
+          break;
+        default:
+          EH(-1, "Unknown coalescence kernel");
+          return -1;
+        }
+        double wa = weights[alpha];
+        double wb = weights[beta];
+        double na = nodes[alpha];
+        double nb = nodes[beta];
+        MGR->S[k] += wa * wb * (pow(na + nb, k) - pow(na, k) - pow(nb, k)) *
+                     coalescence_kernel;
+      }
+      MGR->S[k] *= 0.5;
+    }
+  }
+
+  return 0;
+}
+
 int get_moment_growth_rate_term(struct moment_growth_rate *MGR) {
-  int nnodes = 2;  // currently hardcoded for 2 Nodes (4 Moments)
+  int nnodes = 2; // currently hardcoded for 2 Nodes (4 Moments)
   double weights[nnodes], nodes[nnodes];
   double growth_rate[MAX_CONC];
   double d_growth_rate_dc[MAX_CONC][MDE];
@@ -1129,211 +1242,163 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR) {
 
   /* Get quad weights and nodes */
   int nnodes_out;
-  adaptive_wheeler(nnodes, fv_old->moment, rmin, eabs, weights, nodes, &nnodes_out);
+  adaptive_wheeler(nnodes, fv_old->moment, rmin, eabs, weights, nodes,
+                   &nnodes_out);
 
   switch (mp->MomentSourceModel) {
-    case FOAM_PBE: {
-      int species_BA_l;
-      int species_CO2_l;
-      int species_OH;
-      int err;
-      int w, j;
+  case FOAM_PBE: {
+    int species_BA_l;
+    int species_CO2_l;
+    int species_OH;
+    int err;
+    int w, j;
 
-      for (w = 0; w < MAX_CONC; w++) {
-        for (j = 0; j < MDE; j++) {
-          growth_rate[w] = 0.0;
-          d_growth_rate_dc[w][j] = 0.0;
-          d_growth_rate_dT[w][j] = 0.0;
-        }
+    for (w = 0; w < MAX_CONC; w++) {
+      for (j = 0; j < MDE; j++) {
+        growth_rate[w] = 0.0;
+        d_growth_rate_dc[w][j] = 0.0;
+        d_growth_rate_dT[w][j] = 0.0;
       }
+    }
 
-      err = get_foam_pbe_indices(NULL, &species_OH, &species_BA_l, NULL,
-                                 &species_CO2_l, NULL);
-      if (err) return err;
+    err = get_foam_pbe_indices(NULL, &species_OH, &species_BA_l, NULL,
+                               &species_CO2_l, NULL);
+    if (err)
+      return err;
 
-      double gelling_point = mp->u_species_source[species_OH][5];
-      if (fv->c[species_OH] > gelling_point) {
-        return 0;
-      }
-
-      foam_pbe_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
-
-      // currently only compute G_wi terms for CO2_l and BA_l
-
-      MGR->G[species_BA_l][0] = 0;
-      MGR->G[species_CO2_l][0] = 0;
-      for (int k = 1; k < 2 * nnodes_out; k++) {
-        for (int alpha = 0; alpha < nnodes_out; alpha++) {
-          // special handling of pow to avoid FP exceptions
-          double coeff =
-              k * weights[alpha] * pow(fmax(nodes[alpha], PBE_FP_SMALL), k - 1);
-          MGR->G[species_BA_l][k] = coeff * growth_rate[species_BA_l];
-          MGR->G[species_CO2_l][k] = coeff * growth_rate[species_CO2_l];
-          if (af->Assemble_Jacobian) {
-            if (pd->v[pg->imtrx][MASS_FRACTION]) {
-              for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
-                MGR->d_G_dC[species_BA_l][k][j] =
-                    coeff * d_growth_rate_dc[species_BA_l][j];
-                MGR->d_G_dC[species_CO2_l][k][j] =
-                    coeff * d_growth_rate_dc[species_CO2_l][j];
-              }
-            }
-
-            if (pd->v[pg->imtrx][TEMPERATURE]) {
-              for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
-                MGR->d_G_dT[species_BA_l][k][j] =
-                    coeff * d_growth_rate_dT[species_BA_l][j];
-                MGR->d_G_dT[species_CO2_l][k][j] =
-                    coeff * d_growth_rate_dT[species_CO2_l][j];
-              }
-            }
-          }
-        }
-      }
+    double gelling_point = mp->u_species_source[species_OH][5];
+    if (fv->c[species_OH] > gelling_point) {
       return 0;
     }
-    case FOAM_PMDI_10: {
-      int wCO2Liq;
-      int wCO2Gas;
-      int wH2O;
-      int w;
-      int j;
 
-      wCO2Liq = -1;
-      wCO2Gas = -1;
-      wH2O = -1;
-      for (w = 0; w < pd->Num_Species; w++) {
-        switch (mp->SpeciesSourceModel[w]) {
-          case FOAM_PMDI_10_CO2_LIQ:
-            wCO2Liq = w;
-            break;
-          case FOAM_PMDI_10_CO2_GAS:
-            wCO2Gas = w;
-            break;
-          case FOAM_PMDI_10_H2O:
-            wH2O = w;
-            break;
-          default:
-            break;
-        }
-      }
+    foam_pbe_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
 
-      if (wCO2Liq == -1) {
-        EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
-        return -1;
-      } else if (wH2O == -1) {
-        EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
-        return -1;
-      } else if (wCO2Gas == -1) {
-        EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
-        return -1;
-      }
+    // currently only compute G_wi terms for CO2_l and BA_l
 
-      double gamma[DIM][DIM];
-      for (int a = 0; a < VIM; a++) {
-        for (int b = 0; b < VIM; b++) {
-          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
-        }
-      }
-
-      double mu = viscosity(gn, gamma, NULL);
-
-      double eta0 = mp->FlowingLiquid_viscosity;
-
-      // Coalescence rate
-      double Beta0 = (eta0 / mu) * mp->u_moment_source[1];
-
-      foam_pmdi_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
-
-      // currently only compute G_wi terms for CO2_l and BA_l
-      MGR->G[wCO2Liq][0] = 0;
-      for (int k = 0; k < 2 * nnodes; k++) {
-        MGR->S[k] = 0;
-        MGR->G[wCO2Liq][k] = 0;
-        for (int alpha = 0; alpha < nnodes_out; alpha++) {
-          // special handling of pow to avoid FP exceptions
-          double coeff =
-              k * weights[alpha] * pow(fmax(nodes[alpha], PBE_FP_SMALL), k - 1);
-          MGR->G[wCO2Liq][k] += (eta0 / mu) * coeff * growth_rate[wCO2Liq];
-
-          for (int beta = 0; beta < nnodes_out; beta++) {
-            double coalescence_kernel = Beta0 * (nodes[alpha] + nodes[beta]) *
-                                             fmin(1e5,(nodes[alpha] / (nodes[beta] + 1e-32)));
-            double wa = weights[alpha];
-            double wb = weights[beta];
-            double na = nodes[alpha];
-            double nb = nodes[beta];
-            MGR->S[k] += wa * wb * (pow(na + nb, k) - pow(na, k) - pow(nb, k)) *
-                         coalescence_kernel;
+    MGR->G[species_BA_l][0] = 0;
+    MGR->G[species_CO2_l][0] = 0;
+    for (int k = 1; k < 2 * nnodes_out; k++) {
+      for (int alpha = 0; alpha < nnodes_out; alpha++) {
+        // special handling of pow to avoid FP exceptions
+        double coeff =
+            k * weights[alpha] * pow(fmax(nodes[alpha], PBE_FP_SMALL), k - 1);
+        MGR->G[species_BA_l][k] = coeff * growth_rate[species_BA_l];
+        MGR->G[species_CO2_l][k] = coeff * growth_rate[species_CO2_l];
+        if (af->Assemble_Jacobian) {
+          if (pd->v[pg->imtrx][MASS_FRACTION]) {
+            for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
+              MGR->d_G_dC[species_BA_l][k][j] =
+                  coeff * d_growth_rate_dc[species_BA_l][j];
+              MGR->d_G_dC[species_CO2_l][k][j] =
+                  coeff * d_growth_rate_dc[species_CO2_l][j];
+            }
           }
 
-          if (af->Assemble_Jacobian) {
-            if (pd->v[pg->imtrx][MASS_FRACTION]) {
-              for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
-                MGR->d_G_dC[wCO2Liq][k][j] =
-                    coeff * d_growth_rate_dc[wCO2Liq][j];
-              }
-            }
-
-            if (pd->v[pg->imtrx][TEMPERATURE]) {
-              for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
-                MGR->d_G_dT[wCO2Liq][k][j] =
-                    coeff * d_growth_rate_dT[wCO2Liq][j];
-              }
+          if (pd->v[pg->imtrx][TEMPERATURE]) {
+            for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+              MGR->d_G_dT[species_BA_l][k][j] =
+                  coeff * d_growth_rate_dT[species_BA_l][j];
+              MGR->d_G_dT[species_CO2_l][k][j] =
+                  coeff * d_growth_rate_dT[species_CO2_l][j];
             }
           }
         }
-        MGR->S[k] *= 0.5;
       }
-      return 0;
     }
-    case MOMENT_CONSTANT_GROWTH:
-      MGR->G[0][0] = 0;
-      for (int k = 0; k < 2 * nnodes; k++) {
-        MGR->S[k] = 0;
-        MGR->G[0][k] = 0;
-        for (int alpha = 0; alpha < nnodes_out; alpha++) {
-          double G = 0;
-          double Beta = 0;
-          if (tran->time_value > mp->u_moment_source[2]) {
-            G = mp->u_moment_source[0];
-            Beta = mp->u_moment_source[1];
-          }
-          // special handling of pow to avoid FP exceptions
-          double coeff =
-              k * weights[alpha] * pow(fmax(nodes[alpha], PBE_FP_SMALL), k - 1);
-          MGR->G[0][k] += coeff * G;
+    return 0;
+  }
+  case FOAM_PMDI_10: {
+    int wCO2Liq;
+    int wCO2Gas;
+    int wH2O;
+    int w;
+    int j;
 
-          for (int beta = 0; beta < nnodes_out; beta++) {
-            double coalescence_kernel = Beta * (nodes[alpha] + nodes[beta]);
-            double wa = weights[alpha];
-            double wb = weights[beta];
-            double na = nodes[alpha];
-            double nb = nodes[beta];
-            MGR->S[k] += wa * wb * (pow(na + nb, k) - pow(na, k) - pow(nb, k)) *
-                         coalescence_kernel;
-          }
-
-          if (af->Assemble_Jacobian) {
-            if (pd->v[pg->imtrx][MASS_FRACTION]) {
-              for (int j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
-                MGR->d_G_dC[0][k][j] = 0;
-              }
-            }
-
-            if (pd->v[pg->imtrx][TEMPERATURE]) {
-              for (int j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
-                MGR->d_G_dT[0][k][j] = 0;
-              }
-            }
-          }
-        }
-        MGR->S[k] *= 0.5;
+    wCO2Liq = -1;
+    wCO2Gas = -1;
+    wH2O = -1;
+    for (w = 0; w < pd->Num_Species; w++) {
+      switch (mp->SpeciesSourceModel[w]) {
+      case FOAM_PMDI_10_CO2_LIQ:
+        wCO2Liq = w;
+        break;
+      case FOAM_PMDI_10_CO2_GAS:
+        wCO2Gas = w;
+        break;
+      case FOAM_PMDI_10_H2O:
+        wH2O = w;
+        break;
+      default:
+        break;
       }
-      return 0;
-    default:
-      EH(-1, "Unknown moment source model");
+    }
+
+    if (wCO2Liq == -1) {
+      EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
       return -1;
+    } else if (wH2O == -1) {
+      EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+      return -1;
+    } else if (wCO2Gas == -1) {
+      EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
+      return -1;
+    }
+
+    foam_pmdi_growth_rate(growth_rate, d_growth_rate_dc, d_growth_rate_dT);
+
+    growth_rate_model(wCO2Liq, nodes, weights, nnodes_out, 2 * nnodes,
+                      growth_rate, MGR);
+
+    coalescence_kernel_model(nodes, weights, nnodes_out, 2 * nnodes, MGR);
+    return 0;
+  }
+  case MOMENT_CONSTANT_GROWTH:
+    MGR->G[0][0] = 0;
+    for (int k = 0; k < 2 * nnodes; k++) {
+      MGR->S[k] = 0;
+      MGR->G[0][k] = 0;
+      for (int alpha = 0; alpha < nnodes_out; alpha++) {
+        double G = 0;
+        double Beta = 0;
+        if (tran->time_value > mp->u_moment_source[2]) {
+          G = mp->u_moment_source[0];
+          Beta = mp->u_moment_source[1];
+        }
+        // special handling of pow to avoid FP exceptions
+        double coeff =
+            k * weights[alpha] * pow(fmax(nodes[alpha], PBE_FP_SMALL), k - 1);
+        MGR->G[0][k] += coeff * G;
+
+        for (int beta = 0; beta < nnodes_out; beta++) {
+          double coalescence_kernel = Beta * (nodes[alpha] + nodes[beta]);
+          double wa = weights[alpha];
+          double wb = weights[beta];
+          double na = nodes[alpha];
+          double nb = nodes[beta];
+          MGR->S[k] += wa * wb * (pow(na + nb, k) - pow(na, k) - pow(nb, k)) *
+                       coalescence_kernel;
+        }
+
+        if (af->Assemble_Jacobian) {
+          if (pd->v[pg->imtrx][MASS_FRACTION]) {
+            for (int j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
+              MGR->d_G_dC[0][k][j] = 0;
+            }
+          }
+
+          if (pd->v[pg->imtrx][TEMPERATURE]) {
+            for (int j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+              MGR->d_G_dT[0][k][j] = 0;
+            }
+          }
+        }
+      }
+      MGR->S[k] *= 0.5;
+    }
+    return 0;
+  default:
+    EH(-1, "Unknown moment source model");
+    return -1;
   }
   return -1;
 }
@@ -1341,151 +1406,152 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR) {
 int moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource) {
   struct moment_growth_rate *MGR = NULL;
   switch (mp->MomentSourceModel) {
-    case CONSTANT: {
-      for (int i = 0; i < MAX_MOMENTS; i++) {
-        msource[i] = mp->moment_source;
-      }
-    } break;
-    case FOAM_PBE: {
-      int species_BA_l;
-      int species_CO2_l;
-      int err = 0;
-      int j;
-      double H = 1;
+  case CONSTANT: {
+    for (int i = 0; i < MAX_MOMENTS; i++) {
+      msource[i] = mp->moment_source;
+    }
+  } break;
+  case FOAM_PBE: {
+    int species_BA_l;
+    int species_CO2_l;
+    int err = 0;
+    int j;
+    double H = 1;
 
-      if (ls != NULL) {
-        load_lsi(ls->Length_Scale);
-        H = 1 - lsi->H;
-      }
+    if (ls != NULL) {
+      load_lsi(ls->Length_Scale);
+      H = 1 - lsi->H;
+    }
 
-      struct moment_growth_rate *MGR = NULL;
+    struct moment_growth_rate *MGR = NULL;
 
-      err = get_foam_pbe_indices(NULL, NULL, &species_BA_l, NULL,
-                                 &species_CO2_l, NULL);
-      if (err) return err;
+    err = get_foam_pbe_indices(NULL, NULL, &species_BA_l, NULL, &species_CO2_l,
+                               NULL);
+    if (err)
+      return err;
 
-      MGR = calloc(sizeof(struct moment_growth_rate), 1);
-      if (H > PBE_FP_SMALL) {
-        err = get_moment_growth_rate_term(MGR);
-      }
-
-      if (err) {
-        free(MGR);
-        return err;
-      }
-
-      for (int mom = 0; mom < MAX_MOMENTS; mom++) {
-        msource[mom] =
-            H * (MGR->G[species_BA_l][mom] + MGR->G[species_CO2_l][mom]);
-        if (pd->v[pg->imtrx][MASS_FRACTION]) {
-          for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
-            d_msource->C[mom][species_BA_l][j] =
-                H * MGR->d_G_dC[species_BA_l][mom][j];
-            d_msource->C[mom][species_CO2_l][j] =
-                H * MGR->d_G_dC[species_CO2_l][mom][j];
-          }
-        }
-
-        if (pd->v[pg->imtrx][TEMPERATURE]) {
-          for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
-            d_msource->T[mom][j] = H * (MGR->d_G_dT[species_BA_l][mom][j] +
-                                        MGR->d_G_dT[species_CO2_l][mom][j]);
-          }
-        }
-      }
-      free(MGR);
-    } break;
-    case FOAM_PMDI_10: {
-      int wCO2Liq;
-      int wCO2Gas;
-      int wH2O;
-      int w;
-      int j;
-
-      wCO2Liq = -1;
-      wCO2Gas = -1;
-      wH2O = -1;
-      for (w = 0; w < pd->Num_Species; w++) {
-        switch (mp->SpeciesSourceModel[w]) {
-          case FOAM_PMDI_10_CO2_LIQ:
-            wCO2Liq = w;
-            break;
-          case FOAM_PMDI_10_CO2_GAS:
-            wCO2Gas = w;
-            break;
-          case FOAM_PMDI_10_H2O:
-            wH2O = w;
-            break;
-          default:
-            break;
-        }
-      }
-
-      if (wCO2Liq == -1) {
-        EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
-        return -1;
-      } else if (wH2O == -1) {
-        EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
-        return -1;
-      } else if (wCO2Gas == -1) {
-        EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
-        return -1;
-      }
-
-      double H = 1;
-
-      if (ls != NULL) {
-        load_lsi(ls->Length_Scale);
-        H = 1 - lsi->H;
-      }
-      int err = 0;
-      MGR = calloc(sizeof(struct moment_growth_rate), 1);
+    MGR = calloc(sizeof(struct moment_growth_rate), 1);
+    if (H > PBE_FP_SMALL) {
       err = get_moment_growth_rate_term(MGR);
+    }
 
-      if (err) {
-        free(MGR);
-        return err;
-      }
+    if (err) {
+      free(MGR);
+      return err;
+    }
 
-      for (int mom = 0; mom < MAX_MOMENTS; mom++) {
-        msource[mom] = H * (MGR->G[wCO2Liq][mom] + MGR->S[mom]);
-        if (pd->v[pg->imtrx][MASS_FRACTION]) {
-          for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
-            d_msource->C[mom][wCO2Liq][j] = H * MGR->d_G_dC[wCO2Liq][mom][j];
-          }
+    for (int mom = 0; mom < MAX_MOMENTS; mom++) {
+      msource[mom] =
+          H * (MGR->G[species_BA_l][mom] + MGR->G[species_CO2_l][mom]);
+      if (pd->v[pg->imtrx][MASS_FRACTION]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
+          d_msource->C[mom][species_BA_l][j] =
+              H * MGR->d_G_dC[species_BA_l][mom][j];
+          d_msource->C[mom][species_CO2_l][j] =
+              H * MGR->d_G_dC[species_CO2_l][mom][j];
         }
       }
-      free(MGR);
-    } break;
-    case MOMENT_CONSTANT_GROWTH: {
-      double H = 1;
 
-      if (ls != NULL) {
-        load_lsi(ls->Length_Scale);
-        H = 1 - lsi->H;
-      }
-      int err = 0;
-      MGR = calloc(sizeof(struct moment_growth_rate), 1);
-      err = get_moment_growth_rate_term(MGR);
-
-      if (err) {
-        free(MGR);
-        return err;
-      }
-
-      for (int mom = 0; mom < MAX_MOMENTS; mom++) {
-        msource[mom] = H * (MGR->G[0][mom] + MGR->S[mom]);
-        if (pd->v[pg->imtrx][MASS_FRACTION]) {
-          for (int j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
-            d_msource->C[mom][0][j] = H * MGR->d_G_dC[0][mom][j];
-          }
+      if (pd->v[pg->imtrx][TEMPERATURE]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[TEMPERATURE]; j++) {
+          d_msource->T[mom][j] = H * (MGR->d_G_dT[species_BA_l][mom][j] +
+                                      MGR->d_G_dT[species_CO2_l][mom][j]);
         }
       }
+    }
+    free(MGR);
+  } break;
+  case FOAM_PMDI_10: {
+    int wCO2Liq;
+    int wCO2Gas;
+    int wH2O;
+    int w;
+    int j;
+
+    wCO2Liq = -1;
+    wCO2Gas = -1;
+    wH2O = -1;
+    for (w = 0; w < pd->Num_Species; w++) {
+      switch (mp->SpeciesSourceModel[w]) {
+      case FOAM_PMDI_10_CO2_LIQ:
+        wCO2Liq = w;
+        break;
+      case FOAM_PMDI_10_CO2_GAS:
+        wCO2Gas = w;
+        break;
+      case FOAM_PMDI_10_H2O:
+        wH2O = w;
+        break;
+      default:
+        break;
+      }
+    }
+
+    if (wCO2Liq == -1) {
+      EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
+      return -1;
+    } else if (wH2O == -1) {
+      EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+      return -1;
+    } else if (wCO2Gas == -1) {
+      EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
+      return -1;
+    }
+
+    double H = 1;
+
+    if (ls != NULL) {
+      load_lsi(ls->Length_Scale);
+      H = 1 - lsi->H;
+    }
+    int err = 0;
+    MGR = calloc(sizeof(struct moment_growth_rate), 1);
+    err = get_moment_growth_rate_term(MGR);
+
+    if (err) {
       free(MGR);
-    } break;
-    default:
-      EH(-1, "Unknown moment source model");
-      break;
+      return err;
+    }
+
+    for (int mom = 0; mom < MAX_MOMENTS; mom++) {
+      msource[mom] = H * (MGR->G[wCO2Liq][mom] + MGR->S[mom]);
+      if (pd->v[pg->imtrx][MASS_FRACTION]) {
+        for (j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
+          d_msource->C[mom][wCO2Liq][j] = H * MGR->d_G_dC[wCO2Liq][mom][j];
+        }
+      }
+    }
+    free(MGR);
+  } break;
+  case MOMENT_CONSTANT_GROWTH: {
+    double H = 1;
+
+    if (ls != NULL) {
+      load_lsi(ls->Length_Scale);
+      H = 1 - lsi->H;
+    }
+    int err = 0;
+    MGR = calloc(sizeof(struct moment_growth_rate), 1);
+    err = get_moment_growth_rate_term(MGR);
+
+    if (err) {
+      free(MGR);
+      return err;
+    }
+
+    for (int mom = 0; mom < MAX_MOMENTS; mom++) {
+      msource[mom] = H * (MGR->G[0][mom] + MGR->S[mom]);
+      if (pd->v[pg->imtrx][MASS_FRACTION]) {
+        for (int j = 0; j < ei[pg->imtrx]->dof[MASS_FRACTION]; j++) {
+          d_msource->C[mom][0][j] = H * MGR->d_G_dC[0][mom][j];
+        }
+      }
+    }
+    free(MGR);
+  } break;
+  default:
+    EH(-1, "Unknown moment source model");
+    break;
   }
 
   return 0;
@@ -1543,7 +1609,8 @@ int assemble_density() /*  time step size      */
     int err;
     err = get_foam_pbe_indices(NULL, NULL, &species_BA_l, &species_BA_g,
                                &species_CO2_l, &species_CO2_g);
-    if (err) return 0;
+    if (err)
+      return 0;
 
     double M_BA = mp->u_species_source[species_BA_l][0];
     double M_CO2 = mp->u_species_source[species_CO2_l][0];
@@ -1792,7 +1859,8 @@ double PBEVolumeSource(double time, double dt, double tt,
 
   err = get_foam_pbe_indices(NULL, NULL, &species_BA_l, &species_BA_g,
                              &species_CO2_l, &species_CO2_g);
-  if (err) return 0;
+  if (err)
+    return 0;
 
   double M_BA = mp->u_species_source[species_BA_l][0];
   double M_CO2 = mp->u_species_source[species_CO2_l][0];
@@ -2280,7 +2348,8 @@ int assemble_moments(double time, /* present time value */
           int xfem_active, extended_dof, base_interp, base_dof;
           xfem_dof_state(i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                          &xfem_active, &extended_dof, &base_interp, &base_dof);
-          if (extended_dof && !xfem_active) continue;
+          if (extended_dof && !xfem_active)
+            continue;
         }
 #endif
 
@@ -2343,7 +2412,8 @@ int assemble_moments(double time, /* present time value */
           int xfem_active, extended_dof, base_interp, base_dof;
           xfem_dof_state(i, pd->i[pg->imtrx][eqn], ei[pg->imtrx]->ielem_shape,
                          &xfem_active, &extended_dof, &base_interp, &base_dof);
-          if (extended_dof && !xfem_active) continue;
+          if (extended_dof && !xfem_active)
+            continue;
         }
 #endif
         wt_func = bf[eqn]->phi[i];

@@ -162,7 +162,7 @@ associate_bc_to_matrix(void)
   }
 }
 
-static void
+void
 set_matrix_index_and_global_v(void)
 {
   int mn;
@@ -441,8 +441,6 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * Setup some structures for solving problems with shell elements.
    */
   init_shell_element_blocks(exo);
-
-  set_matrix_index_and_global_v();
 
   /* Communicate non-shared but needed BC information */
   exchange_bc_info();
