@@ -1492,6 +1492,14 @@ void solve_problem_segregated(
                                        pg->sub_step_solutions[pg->imtrx].xdot,
                                        exo, dpi);
 
+                exchange_dof(cx[pg->imtrx], dpi,
+                             pg->sub_step_solutions[pg->imtrx].x, pg->imtrx);
+
+
+                exchange_dof(cx[pg->imtrx], dpi,
+                             pg->sub_step_solutions[pg->imtrx].xdot, pg->imtrx);
+
+
                 if (ProcID == 0) {
                   if (theta == 0.0)
                     strcpy(tspstring, "(BE)");
@@ -1655,6 +1663,24 @@ void solve_problem_segregated(
                 dcopy1(numProcUnknowns[pg->imtrx],
                        pg->sub_step_solutions[pg->imtrx].x,
                        pg->sub_step_solutions[pg->imtrx].x_old);
+
+                exchange_dof(cx[pg->imtrx], dpi,
+                             pg->sub_step_solutions[pg->imtrx].x, pg->imtrx);
+
+                exchange_dof(cx[pg->imtrx], dpi,
+                             pg->sub_step_solutions[pg->imtrx].x_old,
+                             pg->imtrx);
+
+                exchange_dof(cx[pg->imtrx], dpi,
+                             pg->sub_step_solutions[pg->imtrx].x_older,
+                             pg->imtrx);
+
+                exchange_dof(cx[pg->imtrx], dpi,
+                             pg->sub_step_solutions[pg->imtrx].xdot, pg->imtrx);
+
+                exchange_dof(cx[pg->imtrx], dpi,
+                             pg->sub_step_solutions[pg->imtrx].xdot_old,
+                             pg->imtrx);
               }
               dcopy1(numProcUnknowns[pg->imtrx],
                      pg->sub_step_solutions[pg->imtrx].x, x[pg->imtrx]);
@@ -2070,7 +2096,7 @@ void solve_problem_segregated(
           if (ls != NULL && tran->Courant_Limit != 0.) {
             double Courant_dt;
             Courant_dt =
-                tran->Courant_Limit *
+                tran->Courant_Limit * pg->matrix_subcycle_count[Fill_Matrix] *
                 Courant_Time_Step(x[pg->imtrx], x_old[pg->imtrx],
                                   x_older[pg->imtrx], xdot[pg->imtrx],
                                   xdot_old[pg->imtrx], resid_vector[pg->imtrx],

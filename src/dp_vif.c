@@ -1158,6 +1158,7 @@ noahs_ark()
 
   ddd_add_member(n, pg->time_step_control_disabled, MAX_NUM_MATRICES, MPI_INT);
   ddd_add_member(n, pg->matrix_subcycle_count, MAX_NUM_MATRICES, MPI_INT);
+  ddd_add_member(n, upd->matrix_index, MAX_EQNS, MPI_INT);
 
 
   for (i = 0; i < upd->Num_Mat; i++)
@@ -1170,6 +1171,8 @@ noahs_ark()
         ddd_add_member(n, pd_glob[i]->w[imtrx], MAX_EQNS, MPI_INT);
         ddd_add_member(n, pd_glob[i]->i[imtrx], MAX_EQNS, MPI_INT);
         ddd_add_member(n, pd_glob[i]->m[imtrx], MAX_EQNS, MPI_INT);
+        ddd_add_member(n, pd_glob[i]->gv, MAX_EQNS, MPI_INT);
+        ddd_add_member(n, pd_glob[i]->mi, MAX_EQNS, MPI_INT);
 
         ddd_add_member(n, &pd_glob[i]->etm[imtrx][0][0], MAX_EQNS*MAX_TERM_TYPES, 
 		     MPI_DOUBLE);
@@ -1685,6 +1688,7 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->moment_coalescence_scale, 1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->moment_growth_model, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->moment_growth_scale, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->moment_growth_reference_pressure, 1, MPI_DOUBLE);
 
       ddd_add_member(n, &mp_glob[i]->CapStress, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->ConductivityModel, 1, MPI_INT);
