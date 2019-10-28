@@ -1681,6 +1681,11 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->refractive_index,1, MPI_DOUBLE);
       ddd_add_member(n, &mp_glob[i]->light_absorption,1, MPI_DOUBLE);
 
+      ddd_add_member(n, &mp_glob[i]->moment_coalescence_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->moment_coalescence_scale, 1, MPI_DOUBLE);
+      ddd_add_member(n, &mp_glob[i]->moment_growth_model, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->moment_growth_scale, 1, MPI_DOUBLE);
+
       ddd_add_member(n, &mp_glob[i]->CapStress, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->ConductivityModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->Ewt_funcModel, 1, MPI_INT);
