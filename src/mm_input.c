@@ -9001,39 +9001,33 @@ rd_eq_specs(FILE *ifp,
       strcpy(Stratimikos_File[imtrx], "stratimikos.xml");
     }
 
-    iread = look_forward_optional_until(ifp, "Normalized Residual Tolerance", "MATRIX",  input, '=');
-    if (iread == 1)
-      {
-	if (fscanf(ifp, "%le", &Epsilon[imtrx][0]) != 1)
-	  {
-	    EH( -1, "error reading Normalized (Newton) Correction Tolerance");
-	  }
-	SPF(echo_string,"%s = %.4g matrix %d", "Normalized Residual Tolerance", Epsilon[imtrx][0], mtrx_index1); ECHO(echo_string,echo_file);
+    iread = look_forward_optional_until(ifp, "Normalized Residual Tolerance",
+                                        "MATRIX", input, '=');
+    if (iread == 1) {
+      if (fscanf(ifp, "%le", &Epsilon[imtrx][0]) != 1) {
+        EH(-1, "error reading Normalized (Newton) Correction Tolerance");
+      }
+      SPF(echo_string, "%s = %.4g matrix %d", "Normalized Residual Tolerance",
+          Epsilon[imtrx][0], mtrx_index1);
+      ECHO(echo_string, echo_file);
+    }
+
+    iread = look_forward_optional_until(ifp, "Matrix Subcycle Count", "MATRIX",
+                                        input, '=');
+    if (iread == 1) {
+      if (fscanf(ifp, "%d", &(pg->matrix_subcycle_count[imtrx])) != 1) {
+        EH(-1, "error reading Matrix Subcycle Count");
       }
 
-    iread = look_forward_optional_until(ifp, "Matrix Subcycle Fraction", "MATRIX",  input, '=');
-    if (iread == 1)
-      {
-	if (fscanf(ifp, "%le", &(pg->matrix_subcycle_fraction[imtrx])) != 1)
-	  {
-        EH( -1, "error reading Matrix Subcycle Fraction");
-	  }
-
-      if (pg->matrix_subcycle_fraction[imtrx] > 0.5 || pg->matrix_subcycle_fraction[imtrx] <= 0) {
-        EH(-1, "Expected Matrix Subcycle Fraction to be (0,0.5]");
-      } else {
-        // verify we have a reasonable fraction
-        double val = 1.0 / pg->matrix_subcycle_fraction[imtrx];
-        double integer_val = floor(val);
-        if (fabs(val-integer_val) > 1e-5) {
-          EH(-1, "Expected Matrix Subcycle Fraction to be able to sum up to near 1.0");
-        }
+      if (pg->matrix_subcycle_count[imtrx] <= 0) {
+        EH(-1, "Expected Matrix Subcycle Count to be > 0");
       }
 
-    SPF(echo_string,"%s = %.4g matrix %d", "Matrix Subcycle Fraction", Epsilon[imtrx][0], mtrx_index1); ECHO(echo_string,echo_file);
-      }
-    else {
-      pg->matrix_subcycle_fraction[imtrx] = 1.0;
+      SPF(echo_string, "%s = %d", "Matrix Subcycle Count",
+          pg->matrix_subcycle_count[imtrx]);
+      ECHO(echo_string, echo_file);
+    } else {
+      pg->matrix_subcycle_count[imtrx] = 1.0;
     }
 
     iread = look_forward_optional_until(ifp, "Normalized Correction Tolerance", "MATRIX",  input, '=');

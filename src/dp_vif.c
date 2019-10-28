@@ -1157,7 +1157,7 @@ noahs_ark()
   ddd_add_member(n, &upd->Light_Cosmu, 1, MPI_DOUBLE);            
 
   ddd_add_member(n, pg->time_step_control_disabled, MAX_NUM_MATRICES, MPI_INT);
-  ddd_add_member(n, pg->matrix_subcycle_fraction, MAX_NUM_MATRICES, MPI_DOUBLE);
+  ddd_add_member(n, pg->matrix_subcycle_count, MAX_NUM_MATRICES, MPI_INT);
 
 
   for (i = 0; i < upd->Num_Mat; i++)
