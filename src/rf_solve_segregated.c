@@ -1590,7 +1590,7 @@ void solve_problem_segregated(
 
                 DPRINTF(
                     stdout,
-                    "\n--------------------- SOLVING MATRIX %d sub_time_step "
+                    "\n--------------------- SOLVING MATRIX %d sub time step "
                     "%d/%d "
                     "--------------------\n\n",
                     pg->imtrx + 1, sub_time_step + 1,
@@ -1855,7 +1855,7 @@ void solve_problem_segregated(
 
               if (ProcID == 0 && upd->SegregatedSubcycles == 1 &&
                   renorm_subcycle_count <= 1) {
-                printf("\n===================== SOLVING MATRIX %d "
+                printf("\n========================== SOLVING MATRIX %d "
                        "===========================\n\n",
                        pg->imtrx + 1);
               } else if (ProcID == 0 && (upd->SegregatedSubcycles > 1 ||
@@ -1863,8 +1863,8 @@ void solve_problem_segregated(
                 int num_subcycles =
                     MAX(upd->SegregatedSubcycles, renorm_subcycle_count);
                 printf(
-                    "\n===================== SOLVING MATRIX %d Subcycle %d/%d "
-                    "===========================\n\n",
+                    "\n================== SOLVING MATRIX %d Subcycle %d/%d "
+                    "===================\n\n",
                     pg->imtrx + 1, subcycle + 1, num_subcycles);
               }
 
