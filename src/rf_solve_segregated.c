@@ -1615,6 +1615,17 @@ void solve_problem_segregated(
                     x_AC_dot[pg->imtrx], time1, NULL, NULL, NULL, NULL,
                     dg_neighbor_data);
 
+                if (err == -1) {
+                  converged = FALSE;
+                }
+                if (!converged) {
+                  /* Copy previous solution values if failed timestep */
+                  for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+                    dcopy1(numProcUnknowns[imtrx], pg->sub_step_solutions[imtrx].x_old, pg->sub_step_solutions[imtrx].x);
+                  }
+                  break;
+                }
+
                 if (pd_glob[0]->v[pg->imtrx][MOMENT0] ||
                     pd_glob[0]->v[pg->imtrx][MOMENT1] ||
                     pd_glob[0]->v[pg->imtrx][MOMENT2] ||
@@ -1640,6 +1651,8 @@ void solve_problem_segregated(
 
                   P0PRINTF("Floored %d moment values\n", global_floored);
                 }
+
+
 
                 sub_time += pg->sub_delta_t[pg->imtrx];
                 // change delta t's as this time step may have changed the
@@ -1691,6 +1704,7 @@ void solve_problem_segregated(
                         (x[pg->imtrx][i] - x_old[pg->imtrx][i]) -
                     (2.0 * theta) * xdot_old[pg->imtrx][i];
               }
+
 
             } else {
               /*
