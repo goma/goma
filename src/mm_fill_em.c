@@ -106,7 +106,7 @@ assemble_emwave(double time,	/* present time value */
   dbl omega, emf_coeff=0, conj_coeff=0;
   dbl emf_coeff_dn=0, conj_coeff_dn=0;
   dbl emf_coeff_dk=0, conj_coeff_dk=0;
-  dbl mag_permeability=1.4e-07;
+  dbl mag_permeability=12.57e-07;  // H/m
   int cross_field_var;
   dbl cross_field[DIM];
 
@@ -187,7 +187,7 @@ assemble_emwave(double time,	/* present time value */
   complex cpx_refractive_index, cpx_rel_permittivity,
       cpx_permittivity;//, impedance;
 
-  cpx_refractive_index = n + _Complex_I*k;
+  cpx_refractive_index = n - _Complex_I*k; // k > 0 is extinction
   cpx_rel_permittivity = SQUARE(cpx_refractive_index);
   cpx_permittivity = cpx_rel_permittivity*mp->permittivity;
 
@@ -241,22 +241,24 @@ assemble_emwave(double time,	/* present time value */
     case EM_E2_REAL:
     case EM_E3_REAL:
          emf_coeff = omega*cimag(cpx_permittivity);
-         conj_coeff = omega*creal(cpx_permittivity);
+         conj_coeff = -omega*creal(cpx_permittivity);
          emf_coeff_dn = omega*cimag(cpx_permittivity)/n;
          emf_coeff_dk = omega*cimag(cpx_permittivity)/k;
-         conj_coeff_dn = omega*creal(cpx_permittivity)/n;
-         conj_coeff_dk = omega*creal(cpx_permittivity)/k;
+         conj_coeff_dn = -omega*creal(cpx_permittivity)/n;
+         conj_coeff_dk = -omega*creal(cpx_permittivity)/k;
          cross_field_var = EM_H1_REAL;
-         for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_hr[p];}
+         for ( p=0; p<VIM; p++) {
+           cross_field[p] = fv->em_hr[p];
+         }
          break;
     case EM_E1_IMAG:
     case EM_E2_IMAG:
     case EM_E3_IMAG:
          emf_coeff = omega*cimag(cpx_permittivity);
-         conj_coeff = -omega*creal(cpx_permittivity);
+         conj_coeff = omega*creal(cpx_permittivity);
          emf_coeff_dn = omega*cimag(cpx_permittivity)/n;
          emf_coeff_dk = omega*cimag(cpx_permittivity)/k;
-         conj_coeff_dn = -omega*creal(cpx_permittivity)/n;
+         conj_coeff_dn = omega*creal(cpx_permittivity)/n;
          conj_coeff_dk = omega*creal(cpx_permittivity)/k;
          cross_field_var = EM_H1_IMAG;
          for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_hi[p];}
@@ -621,7 +623,7 @@ int apply_em_farfield_direct(double func[DIM],
    ********************************************************************/
 
   int var;
-  dbl mag_permeability=1.4e-07;
+  dbl mag_permeability=12.57e-07; // H/m
   double n1, n2;				/* Refractive index */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_n1_struct;
   CONDUCTIVITY_DEPENDENCE_STRUCT *d_n1 = &d_n1_struct;
@@ -646,7 +648,7 @@ int apply_em_farfield_direct(double func[DIM],
   complex cpx_refractive_index1, cpx_rel_permittivity1,
       cpx_permittivity1, impedance1;
 
-  cpx_refractive_index1 = n1 + _Complex_I*k1;
+  cpx_refractive_index1 = n1 - _Complex_I*k1;
   cpx_rel_permittivity1 = SQUARE(cpx_refractive_index1);
   cpx_permittivity1 = cpx_rel_permittivity1*mp->permittivity;
 
@@ -661,7 +663,7 @@ int apply_em_farfield_direct(double func[DIM],
   complex cpx_refractive_index2, cpx_rel_permittivity2,
       cpx_permittivity2, impedance2;
 
-  cpx_refractive_index2 = n2 + _Complex_I*k2;
+  cpx_refractive_index2 = n2 - _Complex_I*k2;
   cpx_rel_permittivity2 = SQUARE(cpx_refractive_index2);
   cpx_permittivity2 = cpx_rel_permittivity2*mp->permittivity;
 
@@ -753,6 +755,12 @@ int apply_em_farfield_direct(double func[DIM],
       real = 0.0;
       imag = 1.0;
       break;
+    default:
+      var = 0;
+      real = 0;
+      imag = 0;
+      EH(-1, "Must call apply_em_farfield_direct with an applicable BC_NAME");
+
   }
 
   if(af->Assemble_Jacobian) {
