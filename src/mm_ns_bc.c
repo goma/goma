@@ -139,6 +139,9 @@ static double slip_coefficient ( const double,
                                  const double,
                                  const double);
 
+extern FSUB_TYPE dgemv_(char *TRANS, int *M, int *N, double *alpha, double *A, int *LDA,
+                        double *X, int *INCX, double *beta, int *Y, int *INCY);
+
 /* 
  *  Applies end slope nat'l SHEET_ENDSLOPE boundary condition on TENSION_SHEET boundary condition 
  */
@@ -3829,6 +3832,172 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
 
 } /* END of routine fvelo_slip_bc  */
 
+void
+fvelo_slip_power_bc(double func[MAX_PDIM],
+		    double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+		    const int type,    /* whether rotational or not */
+		    const int max_float,    /* Max float number from input file */
+		    double bc_float[MAX_BC_FLOAT_DATA],
+		    const double tt,   /* parameter in time stepping alg           */
+		    const double dt)   /* current time step value                  */
+
+     /*************************************************************************
+      *
+      *   n . T = beta * ( t . (v - vs) )^m
+      *
+      *   Where t is a tangent in the wall direction
+      *
+      ************************************************************************/
+{
+  double beta = bc_float[0];   /* Navier slip coefficient from input deck */
+  /* velocity components of solid surface on
+   * which slip condition is applied */
+  double vsx = bc_float[1];
+  double vsy = bc_float[2];
+  double vsz = bc_float[3];
+  double expon = bc_float[4];
+  int j, var, jvar, p;
+  double phi_j, vs[MAX_PDIM];
+  double betainv;		/* inverse of slip coefficient */
+  double vslip[MAX_PDIM];
+  double tangent_dot_vslip = 0.0;
+  double tangent[MAX_PDIM];
+
+  if(af->Assemble_LSA_Mass_Matrix)
+    return;
+
+  vs[0] = vsx;
+  vs[1] = vsy;
+  vs[2] = vsz;
+
+  int constant_tangent = FALSE;
+
+  if (max_float == 8)
+    {
+      tangent[0] = bc_float[5];
+      tangent[1] = bc_float[6];
+      tangent[2] = bc_float[7];
+      constant_tangent = TRUE;
+    }
+  else if (pd->Num_Dim == 3 && type == VELO_SLIP_POWER_BC)
+    {
+      EH(-1, "Must provide constant tangent for VELO_SLIP_POWER");
+    }
+  else
+    {
+      tangent[0] = fv->stangent[0][0];
+      tangent[1] = fv->stangent[0][1];
+      tangent[2] = 0.0;
+    }
+
+  if (beta != 0.)
+    {
+      betainv = 1./beta;
+    }
+  else
+    {
+      betainv = 0.;
+    }
+
+
+  memset(vslip, 0, sizeof(double)*MAX_PDIM);
+  for (p = 0; p < pd->Num_Dim; p++)
+    {
+      vslip[p] = (fv->v[p] - vs[p]);
+    }
+
+  /* Calculate the residual contribution. */
+  for ( p=0 ; p < pd->Num_Dim ; p++ )
+    {
+      tangent_dot_vslip += tangent[p] * vslip[p];
+    }
+
+  double tdotv_power = pow(tangent_dot_vslip, expon);
+
+  if (type == VELO_SLIP_POWER_BC)
+    {
+      // tangential compoment only
+      func[0] = -betainv * tdotv_power;
+
+      if (af->Assemble_Jacobian)
+        {
+
+          for (jvar=0; jvar<pd->Num_Dim; jvar++)
+            {
+              var = VELOCITY1 + jvar;
+              if (pd->v[var])
+                {
+                  for (j=0; j<ei->dof[var]; j++)
+                    {
+                      phi_j = bf[var]->phi[j];
+
+                      /* Main dependence of the velocity on velocity unknowns */
+                      if (fabs(tangent_dot_vslip) > 1e-15)
+                        {
+                          d_func[0][var][j] += -betainv * expon * tangent[jvar] * phi_j * tdotv_power / tangent_dot_vslip;
+                        }
+                    }
+                }
+            }
+
+          /* Mesh motion Jacobian entries   */
+          if (constant_tangent == FALSE)
+            {
+              for (jvar=0; jvar<ei->ielem_dim; jvar++)
+                {
+                  var = MESH_DISPLACEMENT1 + jvar;
+                  if (pd->v[var])
+                    {
+                      for ( j=0; j<ei->dof[var]; j++)
+                        {
+                          for (p = 0; p < pd->Num_Dim; p++)
+                            {
+                              if (fabs(tangent_dot_vslip) > 0)
+                                {
+                                  d_func[0][var][j] += -betainv * expon * fv->dstangent_dx[0][p][jvar][j] * vslip[p] * tdotv_power / tangent_dot_vslip;;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+  else if (type == VELO_SLIP_POWER_CARD_BC)
+    {
+      double vslip_expon[MAX_PDIM];
+      for (p = 0; p < VIM; p++)
+        {
+          vslip_expon[p] = pow(vslip[p], expon);
+          func[p] = -betainv * vslip_expon[p];
+        }
+      if (af->Assemble_Jacobian)
+        {
+          for (jvar=0; jvar<pd->Num_Dim; jvar++)
+            {
+              var = VELOCITY1 + jvar;
+              if (pd->v[var])
+                {
+                  for (j=0; j<ei->dof[var]; j++)
+                    {
+                      phi_j = bf[var]->phi[j];
+                      /* Main dependence of the velocity on velocity unknowns */
+                      if (fabs(vslip[jvar]) > 0)
+                        {
+                          d_func[jvar][var][j] += -betainv * expon * phi_j * vslip_expon[jvar] / vslip[jvar];
+                        }
+                    }
+                }
+            }
+        }
+    }
+  else
+    {
+      EH(-1, "Unknown type for fvelo_slip_power_bc");
+    }
+
+  return;
+}
 /**
  * Exchanges coordinates for the reference node needed for calculation
  * in fvelo_slip_bc()
