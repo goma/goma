@@ -2883,11 +2883,11 @@ bc_eqn_index(int id,               /* local node number                 */
     else if (ieqn == R_MOMENTUM1) ieqn += kdir;
     else if (ieqn == R_SOLID1)    ieqn += kdir;
     else if (ieqn == R_LAGR_MULT1)ieqn += kdir;
-    else if (ieqn == R_EM_H1_REAL)ieqn += kdir;
+    else if (ieqn == R_EM_H1_REAL)ieqn += kdir;// AMC: These vector bcs are not rotated..
     else if (ieqn == R_EM_H1_IMAG)ieqn += kdir;
     else if (ieqn == R_EM_E1_REAL)ieqn += kdir;
     else if (ieqn == R_EM_E1_IMAG)ieqn += kdir;
-    else EH(-1,"Can't have a rotated vector BC!"); // My vector bc is not rotated..
+    else EH(-1,"Can't have a rotated vector BC!");
   }
 
   /*
