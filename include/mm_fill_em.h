@@ -40,7 +40,13 @@ EXTERN int assemble_emwave/* mm_fill_em.c                           */
        const int ,/*  Light intensity eqn id and var id     */
        const int );
 
-EXTERN int apply_em_farfield_direct/* mm_fill_em.c                           */
+EXTERN int apply_em_farfield_direct_vec/* mm_fill_em.c                           */
+(double [DIM],     // func
+  double [DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE] , // d_func
+  double [DIM] ,   // xi
+  const int,
+  double *bc_data);// bc_name
+EXTERN int apply_em_farfield_direct_scalar/* mm_fill_em.c                           */
 (double [DIM],     // func
   double [DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE] , // d_func
   double [DIM] ,   // xi

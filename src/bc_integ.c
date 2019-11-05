@@ -1754,7 +1754,27 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
         case EM_EI_FARFIELD_DIRECT_BC:
         case EM_HR_FARFIELD_DIRECT_BC:
         case EM_HI_FARFIELD_DIRECT_BC:
-            apply_em_farfield_direct
+            apply_em_farfield_direct_vec
+                (func,
+                 d_func,
+                 xi,
+                 (int) bc->BC_Name,
+                 bc->BC_Data_Float
+                );
+            break;
+        case EM_E1R_FARFIELD_DIRECT_BC:
+        case EM_E2R_FARFIELD_DIRECT_BC:
+        case EM_E3R_FARFIELD_DIRECT_BC:
+        case EM_E1I_FARFIELD_DIRECT_BC:
+        case EM_E2I_FARFIELD_DIRECT_BC:
+        case EM_E3I_FARFIELD_DIRECT_BC:
+        case EM_H1R_FARFIELD_DIRECT_BC:
+        case EM_H2R_FARFIELD_DIRECT_BC:
+        case EM_H3R_FARFIELD_DIRECT_BC:
+        case EM_H1I_FARFIELD_DIRECT_BC:
+        case EM_H2I_FARFIELD_DIRECT_BC:
+        case EM_H3I_FARFIELD_DIRECT_BC:
+            apply_em_farfield_direct_scalar
                 (func,
                  d_func,
                  xi,

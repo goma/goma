@@ -1498,6 +1498,19 @@ rd_bc_specs(FILE *ifp,
         case EM_EI_FARFIELD_DIRECT_BC:
         case EM_HR_FARFIELD_DIRECT_BC:
         case EM_HI_FARFIELD_DIRECT_BC:
+
+        case EM_E1R_FARFIELD_DIRECT_BC:
+        case EM_E1I_FARFIELD_DIRECT_BC:
+        case EM_H1R_FARFIELD_DIRECT_BC:
+        case EM_H1I_FARFIELD_DIRECT_BC:
+        case EM_E2R_FARFIELD_DIRECT_BC:
+        case EM_E2I_FARFIELD_DIRECT_BC:
+        case EM_H2R_FARFIELD_DIRECT_BC:
+        case EM_H2I_FARFIELD_DIRECT_BC:
+        case EM_E3R_FARFIELD_DIRECT_BC:
+        case EM_E3I_FARFIELD_DIRECT_BC:
+        case EM_H3R_FARFIELD_DIRECT_BC:
+        case EM_H3I_FARFIELD_DIRECT_BC:
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],   
 		      &BC_Types[ibc].BC_Data_Float[1],   
