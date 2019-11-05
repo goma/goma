@@ -324,6 +324,9 @@ struct Material_Properties
   int MomentSSPG_funcModel;
   dbl MomentSSPG_func;
 
+  int MomentShock_funcModel;
+  dbl MomentShock_func;
+
   int MomentDiffusivityModel;
   dbl MomentDiffusivity;
 

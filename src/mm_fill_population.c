@@ -1137,9 +1137,52 @@ int growth_rate_model(int species_index, double *nodes, double *weights,
     }
   }
 
-  double mu = viscosity(gn, gamma, NULL);
+  dbl mu0 = gn->mu0;
+  dbl alpha_g = gn->gelpoint;
+  dbl A = gn->cureaexp;
+  dbl B = gn->curebexp;
+  dbl norm_E = gn->atexp;
+  dbl alpha = fv->c[gn->cure_species_no];
+  dbl ratio = 0;
+  dbl alpha_g_pow = pow(alpha_g,A);
 
-  double eta0 = mp->FlowingLiquid_viscosity;
+  if(alpha < alpha_g)
+  {
+    if (fabs(alpha) > 1e-8)
+    {
+      ratio = (alpha_g_pow - pow(alpha, A))/alpha_g_pow;
+    }
+    else
+    {
+      ratio = 1.0;
+    }
+  }
+  else /* do something special at the gel point */
+  {
+    ratio = 1e8;
+  }
+
+  dbl T = upd->Process_Temperature;
+  if ( pd->gv[TEMPERATURE] )
+  {
+    T = fv->T;
+  }
+
+  dbl muL = 0;
+  if(T <= 0.)
+  {
+    muL = mu0  * pow (ratio, -B );
+  }
+  else
+  {
+    muL = mu0 * exp(-norm_E/T) * pow(ratio, -B);
+  }
+
+  dbl volF = (fv_old->moment[1] / (1 + fv_old->moment[1]));
+
+  dbl mu = muL * exp(volF / (1- volF));
+  double eta0 = muL;
+
   double scale = 0;
 
   for (int k = 0; k < n_moments; k++) {
@@ -1172,17 +1215,52 @@ int growth_rate_model(int species_index, double *nodes, double *weights,
 
 int coalescence_kernel_model(double *nodes, double *weights, int n_nodes,
                       int n_moments, struct moment_growth_rate *MGR) {
+  dbl mu0 = gn->mu0;
+  dbl alpha_g = gn->gelpoint;
+  dbl A = gn->cureaexp;
+  dbl B = gn->curebexp;
+  dbl norm_E = gn->atexp;
+  dbl alpha = fv->c[gn->cure_species_no];
+  dbl ratio = 0;
+  dbl alpha_g_pow = pow(alpha_g,A);
 
-  double gamma[DIM][DIM];
-  for (int a = 0; a < VIM; a++) {
-    for (int b = 0; b < VIM; b++) {
-      gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+  if(alpha < alpha_g)
+  {
+    if (fabs(alpha) > 1e-8)
+    {
+      ratio = (alpha_g_pow - pow(alpha, A))/alpha_g_pow;
+    }
+    else
+    {
+      ratio = 1.0;
     }
   }
+  else /* do something special at the gel point */
+  {
+    ratio = 1e8;
+  }
 
-  double mu = viscosity(gn, gamma, NULL);
+  dbl T = upd->Process_Temperature;
+  if ( pd->gv[TEMPERATURE] )
+  {
+    T = fv->T;
+  }
 
-  double eta0 = mp->FlowingLiquid_viscosity;
+  dbl muL = 0;
+  if(T <= 0.)
+  {
+    muL = mu0  * pow (ratio, -B );
+  }
+  else
+  {
+    muL = mu0 * exp(-norm_E/T) * pow(ratio, -B);
+  }
+
+  dbl volF = (fv_old->moment[1] / (1 + fv_old->moment[1]));
+
+  dbl mu = muL * exp(volF / (1- volF));
+  double eta0 = muL;
+
   for (int k = 0; k < n_moments; k++) {
     MGR->S[k] = 0;
     for (int alpha = 0; alpha < n_nodes; alpha++) {
@@ -2321,6 +2399,51 @@ int assemble_moments(double time, /* present time value */
     }
   }
 
+
+  dbl k_dc[MAX_MOMENTS] = {0};
+  dbl d_k_dc[MAX_MOMENTS][MDE] = {{0}};
+  if (mp->MomentShock_funcModel != YZBETA_NONE) {
+    for (int mom = 0; mom < MAX_MOMENTS; mom++) {
+      eqn = R_MOMENT0 + mom;
+      peqn = upd->ep[pg->imtrx][eqn];
+      if (peqn > -1) {
+        dbl strong_residual = 0;
+        strong_residual = fv_dot_old->moment[mom];
+        for (int p = 0; p < VIM; p++) {
+          strong_residual += fv->v[p] * fv_old->grad_moment[mom][p];
+        }
+        strong_residual -= msource[mom];
+        dbl h_elem = 0;
+        for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
+          h_elem += pg_data->hsquared[a];
+        }
+        /* This is the size of the element */
+        h_elem = sqrt(h_elem  / ((double)ei[pg->imtrx]->ielem_dim));
+
+        dbl inner = 0;
+        for (int i = 0; i < dim; i++) {
+          inner += fv_old->grad_moment[mom][i] * fv_old->grad_moment[mom][i];
+        }
+
+        dbl yzbeta = 0;
+
+        dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
+        //dbl dc1 = fabs(strong_residual) * inv_sqrt_inner * h_elem * 0.5;
+        dbl dc2 = fabs(strong_residual) * h_elem * h_elem * 0.25;
+
+        //dc1 = fmin(supg_terms.supg_tau,dc1);//0.5*(dc1 + dc2);
+        //yzbeta = fmin(supg_tau, 0.5*(dc1+dc2));//0.5*(dc1 + dc2);
+        yzbeta = fmin(supg_tau, dc2);
+        for (int k = 0; k <  ei[pg->imtrx]->dof[eqn]; k++) {
+          d_k_dc[mom][k] = 0;
+        }
+
+        k_dc[mom] = yzbeta;
+      }
+    }
+
+  }
+
   /*
    * Residuals___________________________________________________________
    */
@@ -2385,6 +2508,13 @@ int assemble_moments(double time, /* present time value */
           diffusion *= pd->etm[pg->imtrx][eqn][(LOG2_DIFFUSION)];
         }
 
+        dbl discontinuity_capturing = 0;
+        for (int a = 0; a < dim; a++) {
+          discontinuity_capturing += k_dc[mom] * fv->grad_moment[mom][a] * bf[eqn]->grad_phi[i][a];
+        }
+        discontinuity_capturing *= -det_J * wt * h3;
+
+
         source = 0.;
         if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
           source += wt_func * msource[mom] * det_J * wt;
@@ -2392,7 +2522,7 @@ int assemble_moments(double time, /* present time value */
           source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
         }
 
-        lec->R[peqn][i] += Heaviside * (mass + advection) + source + diffusion;
+        lec->R[peqn][i] += Heaviside * (mass + advection) + source + diffusion + discontinuity_capturing;
       }
     }
   }
@@ -2509,15 +2639,23 @@ int assemble_moments(double time, /* present time value */
                 }
               }
 
+              dbl discontinuity_capturing = 0;
+              if (mom == b) {
+                for (int a = 0; a < dim; a++) {
+                  discontinuity_capturing += k_dc[mom] * bf[eqn]->grad_phi[j][a] * bf[eqn]->grad_phi[i][a];
+                }
+              }
+              discontinuity_capturing *= -det_J * wt * h3;
+
               source = 0.;
               if (pd->e[pg->imtrx][eqn] & T_SOURCE) {
-                // source += wt_func * d_msource->moment[b][j] * det_J * wt;
+                //source += wt_func * d_msource->moment[b][j] * det_J * wt;
                 source *= h3;
                 source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
               }
 
               lec->J[peqn][pvar][i][j] +=
-                  Heaviside * (mass + advection) + source + diffusion;
+                  Heaviside * (mass + advection) + source + diffusion + discontinuity_capturing;
             }
           }
         }

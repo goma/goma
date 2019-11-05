@@ -1358,6 +1358,8 @@ void solve_problem_segregated(
        *******************************************************************/
       for (n = 0; n < MaxTimeSteps; n++) {
 
+        tran->step = n;
+
         for (int subcycle = 0; subcycle < upd->SegregatedSubcycles ||
                                subcycle < renorm_subcycle_count;
              subcycle++) {
@@ -1620,9 +1622,7 @@ void solve_problem_segregated(
                 }
                 if (!converged) {
                   /* Copy previous solution values if failed timestep */
-                  for (int imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
-                    dcopy1(numProcUnknowns[imtrx], pg->sub_step_solutions[imtrx].x_old, pg->sub_step_solutions[imtrx].x);
-                  }
+                  dcopy1(numProcUnknowns[pg->imtrx], pg->sub_step_solutions[pg->imtrx].x_old, pg->sub_step_solutions[pg->imtrx].x);
                   break;
                 }
 

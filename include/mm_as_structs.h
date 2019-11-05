@@ -1043,6 +1043,7 @@ struct Transient_Information {
   /*
    * Contains constants used for transient analysis
    */
+  int step;
   int MaxSteadyStateSteps;
   int MaxTimeSteps;
 #ifndef COUPLED_FILL
@@ -2019,6 +2020,7 @@ struct Diet_Field_Variables {
   /* Material tensors used at old time values */
   dbl strain[DIM][DIM]; /* Strain tensor */
   dbl volume_change;    /* Volume change */
+  dbl grad_moment[MAX_MOMENTS][DIM];
 };
 
 struct Rotation_Vectors {

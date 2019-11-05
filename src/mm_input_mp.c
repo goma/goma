@@ -2324,72 +2324,6 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   ECHO(es, echo_file);
 
-
-  model_read = look_for_mat_prop(imp, "Moment Weight Function",
-                                 &(mat_ptr->Momentwt_funcModel),
-                                 &(mat_ptr->Momentwt_func), NO_USER, NULL,
-                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
-
-  if ( !strcmp(model_name, "SUPG") )
-    {
-      mat_ptr->Momentwt_funcModel = SUPG;
-      if (fscanf(imp, "%lg",&(mat_ptr->Momentwt_func)) != 1)
-      {
-        EH(-1, "Could not read SUPG value for Moment Weight Function");
-      }
-      SPF(endofstring(es),"SUPG %.4g", mat_ptr->Mwt_func );
-    }
-  else
-    {
-      mat_ptr->Momentwt_funcModel = GALERKIN;
-      mat_ptr->Momentwt_func = 0.;
-      SPF(es,"\t(%s = %s)", "Moment Weight Function", "GALERKIN");
-    }
-  ECHO(es,echo_file);
-
-  model_read = look_for_mat_prop(imp, "Moment SSPG Function",
-                                 &(mat_ptr->MomentSSPG_funcModel),
-                                 &(mat_ptr->MomentSSPG_func), NO_USER, NULL,
-                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
-  ECHO(es,echo_file);
-
-  model_read = look_for_mat_prop(imp, "Moment Diffusivity",
-                                 &(mat_ptr->MomentDiffusivityModel),
-                                 &(mat_ptr->MomentDiffusivity), NO_USER, NULL,
-                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
-  ECHO(es,echo_file);
-
-  model_read = look_for_mat_prop(imp, "Moment Second Level Set Diffusivity",
-                                 &(mat_ptr->MomentSecondLevelSetDiffusivityModel),
-                                 &(mat_ptr->MomentSecondLevelSetDiffusivity), NO_USER, NULL,
-                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
-
-  ECHO(es,echo_file);
-
-
-  model_read = look_for_mat_prop(imp, "Moment Level Set Diffusion Only",
-                                 &(mat_ptr->MomentLevelSetDiffusionOnly),
-                                 &(a0), NO_USER, NULL,
-                                 model_name, SCALAR_INPUT, &NO_SPECIES,es);
-
-  if ( !strcmp(model_name, "POSITIVE") )
-    {
-      mat_ptr->MomentLevelSetDiffusionOnly = DIFF_POSITIVE;
-      SPF(endofstring(es),"POSITIVE");
-    }
-  else if ( !strcmp(model_name, "NEGATIVE"))
-  {
-    mat_ptr->MomentLevelSetDiffusionOnly = DIFF_NEGATIVE;
-    SPF(endofstring(es),"POSITIVE");
-  }
-  else
-    {
-    mat_ptr->MomentLevelSetDiffusionOnly = DIFF_OFF;
-    SPF(endofstring(es),"OFF");
-    }
-
-  ECHO(es,echo_file);
-
   /*
    *  Polymer Constitutive Equation
    *
@@ -7577,6 +7511,94 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
   if (pd_glob[mn]->gv[MOMENT0]) {
     ECHO("\n----Moment Properties\n",echo_file);
+
+
+    model_read = look_for_mat_prop(imp, "Moment Weight Function",
+                                   &(mat_ptr->Momentwt_funcModel),
+                                   &(mat_ptr->Momentwt_func), NO_USER, NULL,
+                                   model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+    if ( !strcmp(model_name, "SUPG") )
+    {
+      mat_ptr->Momentwt_funcModel = SUPG;
+      if (fscanf(imp, "%lg",&(mat_ptr->Momentwt_func)) != 1)
+      {
+        EH(-1, "Could not read SUPG value for Moment Weight Function");
+      }
+      SPF(endofstring(es),"SUPG %.4g", mat_ptr->Mwt_func );
+    }
+    else
+    {
+      mat_ptr->Momentwt_funcModel = GALERKIN;
+      mat_ptr->Momentwt_func = 0.;
+      SPF(es,"\t(%s = %s)", "Moment Weight Function", "GALERKIN");
+    }
+    ECHO(es,echo_file);
+
+    model_read = look_for_mat_prop(imp, "Moment SSPG Function",
+                                   &(mat_ptr->MomentSSPG_funcModel),
+                                   &(mat_ptr->MomentSSPG_func), NO_USER, NULL,
+                                   model_name, SCALAR_INPUT, &NO_SPECIES,es);
+    ECHO(es,echo_file);
+
+    model_read = look_for_mat_prop(imp, "Moment Diffusivity",
+                                   &(mat_ptr->MomentDiffusivityModel),
+                                   &(mat_ptr->MomentDiffusivity), NO_USER, NULL,
+                                   model_name, SCALAR_INPUT, &NO_SPECIES,es);
+    ECHO(es,echo_file);
+
+    model_read = look_for_mat_prop(imp, "Moment Second Level Set Diffusivity",
+                                   &(mat_ptr->MomentSecondLevelSetDiffusivityModel),
+                                   &(mat_ptr->MomentSecondLevelSetDiffusivity), NO_USER, NULL,
+                                   model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+    ECHO(es,echo_file);
+
+
+    model_read = look_for_mat_prop(imp, "Moment Level Set Diffusion Only",
+                                   &(mat_ptr->MomentLevelSetDiffusionOnly),
+                                   &(a0), NO_USER, NULL,
+                                   model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+    if ( !strcmp(model_name, "POSITIVE") )
+    {
+      mat_ptr->MomentLevelSetDiffusionOnly = DIFF_POSITIVE;
+      SPF(endofstring(es),"POSITIVE");
+    }
+    else if ( !strcmp(model_name, "NEGATIVE"))
+    {
+      mat_ptr->MomentLevelSetDiffusionOnly = DIFF_NEGATIVE;
+      SPF(endofstring(es),"POSITIVE");
+    }
+    else
+    {
+      mat_ptr->MomentLevelSetDiffusionOnly = DIFF_OFF;
+      SPF(endofstring(es),"OFF");
+    }
+
+    ECHO(es,echo_file);
+
+    model_read = look_for_mat_prop(imp, "Moment Shock Function",
+                                   &(mat_ptr->MomentShock_funcModel),
+                                   &(mat_ptr->MomentShock_func), NO_USER, NULL,
+                                   model_name, SCALAR_INPUT, &NO_SPECIES,es);
+
+    if ( !strcmp(model_name, "YZBETA") )
+    {
+      mat_ptr->MomentShock_funcModel = YZBETA_MIXED;
+      if (fscanf(imp, "%lg",&(mat_ptr->MomentShock_func)) != 1)
+      {
+        EH(-1, "Could not read YZbeta value for Moment Shock Function");
+      }
+      SPF(endofstring(es),"YZBETA %.4g", mat_ptr->Mwt_func );
+    }
+    else
+    {
+      mat_ptr->MomentShock_funcModel = YZBETA_NONE;
+      mat_ptr->MomentShock_func = 0.;
+      SPF(es,"\t(%s = %s)", "Moment Shock Function", "NONE");
+    }
+    ECHO(es,echo_file);
 
     model_read =
     look_for_mat_prop(imp, "Moment Growth Kernel",

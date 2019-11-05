@@ -9139,6 +9139,17 @@ load_fv(void)
 	{
 	  scalar_fv_fill(esp->moment[p], esp_dot->moment[p], esp_old->moment[p], bf[v]->phi, ei[pd->mi[v]]->dof[v],
 			 &(fv->moment[p]), &(fv_dot->moment[p]), &(fv_old->moment[p]));
+
+          fv_dot_old->moment[p] = 0;
+          for (int i = 0; i < ei[pd->mi[v]]->dof[v]; i++) {
+            if (upd->Total_Num_Matrices > 1) {
+              fv_dot_old->moment[p] += *(pg->matrices[pd->mi[v]].xdot_old - pg->matrices[pd->mi[v]].xdot +
+                                 esp_dot->moment[p][i]) * bf[v]->phi[i];
+            } else {
+              fv_dot_old->moment[p] +=  *(xdot_old_static - xdot_static +
+                                 esp_dot->moment[p][i]) * bf[v]->phi[i];
+            }
+          }
 	}
     }
 
@@ -10965,11 +10976,15 @@ load_fv_grads(void)
 
 	  for (p = 0; p < VIM; p++)
 	    {
-	      fv->grad_moment[r][p] = 0.0;
+              fv->grad_moment[r][p] = 0.0;
+              fv_old->grad_moment[r][p] = 0.0;
+
 
 	      for ( i=0; i<dofs; i++)
 		{
-		  fv->grad_moment[r][p] += *esp->moment[r][i] * bf[v]->grad_phi[i] [p];
+                  fv->grad_moment[r][p] += *esp->moment[r][i] * bf[v]->grad_phi[i] [p];
+                  fv_old->grad_moment[r][p] += *esp_old->moment[r][i] * bf[v]->grad_phi[i] [p];
+
 		}
 	    }
 	}

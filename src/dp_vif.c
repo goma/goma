@@ -1604,6 +1604,10 @@ noahs_ark()
       ddd_add_member(n, &mp_glob[i]->MomentSSPG_funcModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->MomentSSPG_func, 1, MPI_DOUBLE);
 
+
+      ddd_add_member(n, &mp_glob[i]->MomentShock_funcModel, 1, MPI_INT);
+      ddd_add_member(n, &mp_glob[i]->MomentShock_func, 1, MPI_DOUBLE);
+
       ddd_add_member(n, &mp_glob[i]->MomentSecondLevelSetDiffusivityModel, 1, MPI_INT);
       ddd_add_member(n, &mp_glob[i]->MomentSecondLevelSetDiffusivity, 1, MPI_DOUBLE);
 
