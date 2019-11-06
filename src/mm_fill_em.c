@@ -700,8 +700,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
   Gamma = (impedance2 - impedance1)/(impedance2 + impedance1);
   tau = (2.0*impedance2)/(impedance2 + impedance1);
 
-  complex reduction_factor;
-
+  double complex reduction_factor;
 
   switch (bc_name) {
     case EM_ER_FARFIELD_DIRECT_BC:
@@ -713,6 +712,8 @@ int apply_em_farfield_direct_vec(double func[DIM],
       reduction_factor = tau/(1-Gamma);
       break;
   }
+
+  //reduction_factor = 1.0;
 
   incidentE[0] = bc_data[2] + _Complex_I*bc_data[5];
   incidentE[1] = bc_data[3] + _Complex_I*bc_data[6];
@@ -730,37 +731,45 @@ int apply_em_farfield_direct_vec(double func[DIM],
 
   // construct normal cross products and sensitivities
   // assuming normal is purely real.
-  double Re_n_x_E[DIM] = {0.0},
-      Im_n_x_E[DIM] = {0.0},
-      Re_n_x_H[DIM] = {0.0},
-      Im_n_x_H[DIM] = {0.0},
-      d_dERb_Re_n_x_E[DIM][DIM][MDE] = {0.0},
-      d_dEIb_Im_n_x_E[DIM][DIM][MDE] = {0.0},
-      d_dHRb_Re_n_x_H[DIM][DIM][MDE] = {0.0},
-      d_dHIb_Im_n_x_H[DIM][DIM][MDE] = {0.0};
+  double Re_n_x_E[DIM] = {0.0};
+  double Im_n_x_E[DIM] = {0.0};
+  double Re_n_x_H[DIM] = {0.0};
+  double Im_n_x_H[DIM] = {0.0};
+  double d_dERb_Re_n_x_E[DIM][DIM][MDE] = {{{0.0}}};
+  double d_dEIb_Im_n_x_E[DIM][DIM][MDE] = {{{0.0}}};
+  double d_dHRb_Re_n_x_H[DIM][DIM][MDE] = {{{0.0}}};
+  double d_dHIb_Im_n_x_H[DIM][DIM][MDE] = {{{0.0}}};
 
   for (int p=0; p<pd->Num_Dim; p++) {
-    for (int q=0; q<DIM; q++) {
-      for (int r=0; r<DIM; r++) {
-        Re_n_x_E[p] += permute(p,q,r)*normal[q]*creal(E1[r]);
-        Im_n_x_E[p] += permute(p,q,r)*normal[q]*cimag(E1[r]);
-        Re_n_x_H[p] += permute(p,q,r)*normal[q]*creal(H1[r]);
-        Im_n_x_H[p] += permute(p,q,r)*normal[q]*cimag(H1[r]);
+    for (int q=0; q<pd->Num_Dim; q++) {
+      for (int r=0; r<pd->Num_Dim; r++) {
+        Re_n_x_E[p] += permute(p,q,r)*normal[q]*fv->em_er[r];
+        Im_n_x_E[p] += permute(p,q,r)*normal[q]*fv->em_ei[r];
+        Re_n_x_H[p] += permute(p,q,r)*normal[q]*fv->em_hr[r];
+        Im_n_x_H[p] += permute(p,q,r)*normal[q]*fv->em_hi[r];
         // assuming all variables have same degrees of freedom
-
         for (int b=0; b<ei->dof[EM_E1_REAL]; b++) {
           double phi_b = bf[EM_E1_REAL]->phi[b];
           d_dERb_Re_n_x_E[p][r][b] += permute(p,q,r)
-                                     *creal(normal[q])
+                                     *normal[q]
                                      *phi_b;
+        }
+        for (int b=0; b<ei->dof[EM_E1_IMAG]; b++) {
+          double phi_b = bf[EM_E1_REAL]->phi[b];
           d_dEIb_Im_n_x_E[p][r][b] += permute(p,q,r)
-                                     *cimag(normal[q])
+                                     *normal[q]
                                      *phi_b;
+        }
+        for (int b=0; b<ei->dof[EM_H1_REAL]; b++) {
+          double phi_b = bf[EM_H1_REAL]->phi[b];
           d_dHRb_Re_n_x_H[p][r][b] += permute(p,q,r)
-                                     *creal(normal[q])
+                                     *normal[q]
                                      *phi_b;
+        }
+        for (int b=0; b<ei->dof[EM_H1_IMAG]; b++) {
+          double phi_b = bf[EM_H1_IMAG]->phi[b];
           d_dHIb_Im_n_x_H[p][r][b] += permute(p,q,r)
-                                     *cimag(normal[q])
+                                     *normal[q]
                                      *phi_b;
 
         }
@@ -768,64 +777,39 @@ int apply_em_farfield_direct_vec(double func[DIM],
     }
   }
 
-
-              //double pmt = permute(p,q,r);
-              double h1r = creal(incidentH[0]);
-              double h2r = creal(incidentH[1]);
-              double h3r = creal(incidentH[2]);
-              double h1i = cimag(incidentH[0]);
-              double h2i = cimag(incidentH[1]);
-              double h3i = cimag(incidentH[2]);
-
-              double e1r = creal(incidentE[0]);
-              double e2r = creal(incidentE[1]);
-              double e3r = creal(incidentE[2]);
-              double e1i = cimag(incidentE[0]);
-              double e2i = cimag(incidentE[1]);
-              double e3i = cimag(incidentE[2]);
-
-              double n1r = creal(normal[0]);
-              double n2r = creal(normal[1]);
-              double n3r = creal(normal[2]);
-              double n1i = cimag(normal[0]);
-              double n2i = cimag(normal[1]);
-              double n3i = cimag(normal[2]);
-
-
-
   complex cpx_func[DIM] = {0.0};
 
   double real, imag;
   switch(bc_name) {
     case EM_ER_FARFIELD_DIRECT_BC:
-      for (int p=0; p<DIM; p++) {
-        cpx_func[p] = Re_n_x_E[p]*reduction_factor;
-      }
-      break;
     case EM_EI_FARFIELD_DIRECT_BC:
       for (int p=0; p<DIM; p++) {
-        cpx_func[p] = Im_n_x_E[p]*reduction_factor;
+        cpx_func[p] = (Re_n_x_E[p]+ _Complex_I*Im_n_x_E[p])
+                      *reduction_factor;
+      }
+      for (int p=0; p<pd->Num_Dim; p++) {
+        for (int q=0; q<DIM; q++) {
+          for (int r=0; r<DIM; r++) {
+            cpx_func[p] += normal[q]*incidentE[r];
+          }
+        }
       }
       break;
     case EM_HR_FARFIELD_DIRECT_BC:
-      for (int p=0; p<DIM; p++) {
-        cpx_func[p] = Re_n_x_H[p]*reduction_factor;
-      }
-      break;
     case EM_HI_FARFIELD_DIRECT_BC:
       for (int p=0; p<DIM; p++) {
-        cpx_func[p] = Im_n_x_H[p]*reduction_factor;
+        cpx_func[p] = (Re_n_x_H[p] + _Complex_I*Im_n_x_H[p])
+                      *reduction_factor;
+      }
+      for (int p=0; p<pd->Num_Dim; p++) {
+        for (int q=0; q<DIM; q++) {
+          for (int r=0; r<DIM; r++) {
+            //cpx_func[p] += normal[q]*incidentH[r];
+          }
+        }
       }
       break;
   }
-      /* debugging
-  double r0 = creal(cpx_func[0]);
-  double r1 = creal(cpx_func[1]);
-  double r2 = creal(cpx_func[2]);
-  double i0 = cimag(cpx_func[0]);
-  double i1 = cimag(cpx_func[1]);
-  double i2 = cimag(cpx_func[2]);
-*/
 
   switch(bc_name) {
     case EM_ER_FARFIELD_DIRECT_BC:
@@ -833,11 +817,6 @@ int apply_em_farfield_direct_vec(double func[DIM],
       for (int p=0; p<DIM; p++) {
         func[p] = creal(cpx_func[p]);
       }
-  /*
-      for (int p=0; p<pd->Num_Dim; p++) {
-        func[p] += Re_n_x_E[p];
-      }
-*/
       //eqn = R_EM_H*_REAL;
       var = EM_E1_REAL;
       real = 1.0;
@@ -848,14 +827,21 @@ int apply_em_farfield_direct_vec(double func[DIM],
         func[p] = cimag(cpx_func[p]);
       }
       //eqn = R_EM_H*_IMAG;
-      var = EM_E1_IMAG;
+      var = EM_E1_REAL;
       real = 0.0;
       imag = 1.0;
       break;
     case EM_HR_FARFIELD_DIRECT_BC:
+
       for (int p=0; p<DIM; p++) {
         func[p] = creal(cpx_func[p]);
       }
+
+/*
+      for (int p=0; p<DIM; p++) {
+        func[p] = Im_n_x_H[p];
+      }
+      */
       //eqn = R_EM_E*_REAL;
       var = EM_H1_REAL;
       real = 1.0;
@@ -866,7 +852,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
         func[p] = cimag(cpx_func[p]);
       }
       //eqn = R_EM_E*_IMAG;
-      var = EM_H1_IMAG;
+      var = EM_H1_REAL;
       real = 0.0;
       imag = 1.0;
       break;
@@ -890,21 +876,24 @@ int apply_em_farfield_direct_vec(double func[DIM],
             switch (bc_name){
               case EM_ER_FARFIELD_DIRECT_BC:
                 d_func[p][gvar][j] += d_dERb_Re_n_x_E[p][g][j]*creal(reduction_factor);
-                d_func[p][gvar][j] -= d_dEIb_Im_n_x_E[p][g][j]*cimag(reduction_factor);
+                d_func[p][gvar+3][j] -= d_dEIb_Im_n_x_E[p][g][j]*cimag(reduction_factor);
                 break;
 
               case EM_EI_FARFIELD_DIRECT_BC:
-                d_func[p][gvar][j] += d_dEIb_Im_n_x_E[p][g][j]*creal(reduction_factor);
                 d_func[p][gvar][j] += d_dERb_Re_n_x_E[p][g][j]*cimag(reduction_factor);
+                d_func[p][gvar+3][j] += d_dEIb_Im_n_x_E[p][g][j]*creal(reduction_factor);
                 break;
 
               case EM_HR_FARFIELD_DIRECT_BC:
                 d_func[p][gvar][j] += d_dHRb_Re_n_x_H[p][g][j]*creal(reduction_factor);
-                d_func[p][gvar][j] -= d_dHIb_Im_n_x_H[p][g][j]*cimag(reduction_factor);
+                d_func[p][gvar+3][j] -= d_dHIb_Im_n_x_H[p][g][j]*cimag(reduction_factor);
+                //d_func[p][gvar][j] += d_dHRb_Re_n_x_H[p][g][j];
+                //d_func[p][gvar+3][j] += d_dERb_Re_n_x_E[p][g][j];
                 break;
+
               case EM_HI_FARFIELD_DIRECT_BC:
-                d_func[p][gvar][j] += d_dHIb_Im_n_x_H[p][g][j]*creal(reduction_factor);
                 d_func[p][gvar][j] += d_dHRb_Re_n_x_H[p][g][j]*cimag(reduction_factor);
+                d_func[p][gvar+3][j] += d_dHIb_Im_n_x_H[p][g][j]*creal(reduction_factor);
                 break;
 
             }
@@ -945,6 +934,27 @@ int apply_em_farfield_direct_vec(double func[DIM],
       }
     }
 */
+/*
+double h1r = creal(incidentH[0]);
+double h2r = creal(incidentH[1]);
+double h3r = creal(incidentH[2]);
+double h1i = cimag(incidentH[0]);
+double h2i = cimag(incidentH[1]);
+double h3i = cimag(incidentH[2]);
+
+double e1r = creal(incidentE[0]);
+double e2r = creal(incidentE[1]);
+double e3r = creal(incidentE[2]);
+double e1i = cimag(incidentE[0]);
+double e2i = cimag(incidentE[1]);
+double e3i = cimag(incidentE[2]);
+
+double n1r = creal(normal[0]);
+double n2r = creal(normal[1]);
+double n3r = creal(normal[2]);
+double n1i = cimag(normal[0]);
+double n2i = cimag(normal[1]);
+double n3i = cimag(normal[2]);
 
   /*
     switch(bc_name) {
