@@ -7530,6 +7530,7 @@ static void divide_shape_fcn_tree(NTREE *parent, int max_level) {
     switch (parent->dim) {
     case 3:
       xi_m[2] = (parent->xi[0][2] + parent->xi[4][2]) / 2.0;
+      /* fall through */
     case 2:
       xi_m[0] = (parent->xi[0][0] + parent->xi[1][0]) / 2.0;
       xi_m[1] = (parent->xi[1][1] + parent->xi[2][1]) / 2.0;
@@ -7539,7 +7540,7 @@ static void divide_shape_fcn_tree(NTREE *parent, int max_level) {
 
     parent->num_subtrees = num_subtrees;
 
-    parent->subtrees = (NTREE **)smalloc(num_subtrees * sizeof(NTREE *));
+    parent->subtrees = (NTREE **)smalloc(num_subtrees * (int) sizeof(NTREE *));
 
     gather_subtree_coords(parent, xi_m, subtree_xi);
 
@@ -7557,9 +7558,9 @@ static void divide_shape_fcn_tree(NTREE *parent, int max_level) {
       parent->subtrees[index]->subtrees = NULL;
 
       parent->subtrees[index]->xi =
-          (double(*)[DIM])smalloc(num_verts * sizeof(double) * DIM);
+          (double(*)[DIM])smalloc(num_verts * (int) sizeof(double) * DIM);
       parent->subtrees[index]->phi =
-          (double(*)[MDE])smalloc(num_verts * sizeof(double) * MDE);
+          (double(*)[MDE])smalloc(num_verts * (int) sizeof(double) * MDE);
 
       load_subtree_coords(index, parent->subtrees[index], subtree_xi);
 

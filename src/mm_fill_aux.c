@@ -13,11 +13,6 @@
 /* mm_fill_aux -- auxiliary routines useful during assembly of R, J
  *
  */
-
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_fill_aux.c,v 5.13 2010-07-21 16:39:26 hkmoffa Exp $";
-#endif
-
 #include <stdlib.h>
 #include <math.h>
 #include <stdio.h>

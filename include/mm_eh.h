@@ -89,7 +89,7 @@ EXTERN void smooth_stop_with_msg
  */
 
 #define     EH(IERR, MESSAGE)	eh(IERR, __FILE__, __LINE__, MESSAGE)
-#define	    WH(IERR, MESSAGE)	{static int iw=0; if (iw == 0) wh(IERR, __FILE__, __LINE__, MESSAGE, &iw);}
+#define	    WH(IERR, MESSAGE)	do {static int iw=0; if (iw == 0) wh(IERR, __FILE__, __LINE__, MESSAGE, &iw);} while (0)
 #define     ABORTH(IERR, MESSAGE) aborth(IERR, __FILE__, __LINE__, MESSAGE)
 
 #define GOMA_ERR	(-1)	/* definitely print; definitely exit */

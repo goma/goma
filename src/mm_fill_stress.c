@@ -1377,14 +1377,13 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
   dbl source1;
   dbl source_a=0, source_b=0, source_c=0;
   int err;
-  dbl alpha;     /* This is the Geisekus mobility parameter */
-  dbl d_alpha_dF[MDE];
+  dbl alpha = 0;     /* This is the Geisekus mobility parameter */
   dbl lambda=0;    /* polymer relaxation constant */
   dbl d_lambda_dF[MDE];
   double xi;
   double d_xi_dF[MDE];
   dbl ucwt, lcwt; /* Upper convected derviative weight, Lower convected derivative weight */
-  dbl eps;       /* This is the PTT elongation parameter */
+  dbl eps = 0;       /* This is the PTT elongation parameter */
   double d_eps_dF[MDE];
   /*
    * 
@@ -2577,7 +2576,8 @@ assemble_stress_log_conf(dbl tt,
 		     dbl dvc_dnode[DIM][MDE])
 {
   int dim, p, q, a, b, w;
-  int eqn, siz;
+  int eqn;
+  size_t siz;
 
   int i, j, status, mode;
   dbl v[DIM];
@@ -4259,7 +4259,7 @@ load_modal_pointers(int ve_mode, /* mode number */
   int a,b,p,q;			/* indeces for dimensions */
   int j;			/* indeces for dofs */
   int var;
-  int siz;
+  size_t siz;
 
   siz = sizeof(double)*DIM*DIM*DIM*DIM*MDE;
   memset(d_grad_s_dm,0,siz);
@@ -4377,8 +4377,8 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
   dbl rhs;
   double ss, tt, uu;			/* Gaussian quadrature point locations  */
   double xi[DIM];             /* Local element coordinates of Gauss point. */
-  dbl vdotn, vdotn_avg;
-  dbl vdotn_norm;
+  dbl vdotn, vdotn_avg = 0;
+  dbl vdotn_norm = 0;
   double wt;                  /* Quadrature weights units - ergs/(sec*cm*K) = g*cm/(sec^3*K)     */
 
   dbl *phi_v=NULL;
@@ -4412,7 +4412,7 @@ assemble_surface_stress (Exo_DB *exo,	/* ptr to basic exodus ii mesh information
   /*  x_neighbor = (double **) array_alloc(2, ip_total, DIM, sizeof(double)); */
   /*  manually allocate space to correct (seeming) misalignment for HPUX */
 
-   x_neighbor = (double **) smalloc( ip_total*sizeof(double*) );
+  x_neighbor = (double **) smalloc( ip_total* (int) sizeof(double*) );
      for( i=0; i<DIM; i++ )
       {
         x_neighbor[i] = ( double * ) smalloc( DIM * sizeof(double) );
@@ -5765,10 +5765,10 @@ compute_exp_s(double s[DIM][DIM],
   int INFO;
   int LWORK = 20;
   double WORK[LWORK];
-  memset(WORK, 0, sizeof(double)*LWORK);
+  memset(WORK, 0, sizeof(double)* (size_t) LWORK);
 
   double A[VIM*VIM];
-  memset(A, 0.0, sizeof(double)*VIM*VIM);
+  memset(A, 0.0, sizeof(double)* (size_t) (VIM*VIM));
 
   // convert to column major
   for (i = 0; i < VIM; i++) {

@@ -864,7 +864,8 @@ apply_point_colloc_edge_bc (
 		    if( elem_edge_bc->shared )
 		      {
 			EH(-1,"CA_EDGE_CURVE cannot be used with shared edges.");
-		      }
+                      }
+                      /* fall through */
 
 		  case CA_EDGE_BC:
 		    /*

@@ -49,7 +49,7 @@
  * 
  *		[3] Term multipliers can be obtained via...
  *
- * 			f_em = pd->etm[R_ENERGY][ilog2i(T_MASS)]
+ * 			f_em = pd->etm[R_ENERGY][LOG2_MASS]
  *
  *				
  *

@@ -96,8 +96,6 @@ Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
 #define SCALAR_INPUT 1
 #define VECTOR_INPUT 3
 
-#define stringup(a) { char *p; for( p=a; *p != '\0'; *p=toupper(*p), p++); }
-
 /*************** R O U T I N E S   I N   T H E   F I L E ***********************
  *
  *    NAME				TYPE		CALLED_BY
@@ -787,7 +785,8 @@ rd_bc_specs(FILE *ifp,
 	case LS_ADC_OLD_BC:
 	case LS_ADC_BC:
 	
-		srand( (long ) ut() );  /* Seed the random number generator  when LS_ADC is used */
+                srand( (long ) ut() );  /* Seed the random number generator  when LS_ADC is used */
+                /* fall through */
 	
 	case FORCE_BC: 
 	case FORCE_SIC_BC: 

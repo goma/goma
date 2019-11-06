@@ -74,7 +74,6 @@ setup_pd()
   int   imtrx;                  /* Current matrix number */
   int	ce;			/* Current equation. */
   int   v;			/* Current variable. */
-  /* extern int ilog2i(); */
   int status;
 
   int kkSurf=10000;		/* Legacy variables made ridiculously large */

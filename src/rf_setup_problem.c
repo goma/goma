@@ -105,8 +105,10 @@ set_bc_equation(void)
         case SOLID_TANG2:
         case SOLID_POSITION1:
           BC_Types[ibc].equation = R_SOLID1;
+          break;
         case SOLID_POSITION2:
           BC_Types[ibc].equation = R_SOLID2;
+          break;
         case SOLID_POSITION3:
           BC_Types[ibc].equation = R_SOLID3;
           break;

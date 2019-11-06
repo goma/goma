@@ -815,13 +815,13 @@ alloc_First_Elem_BC (struct elem_side_bc_struct ****First_Elem_Side_BC_Array,
   int imtrx;
 
 #ifdef DEBUG
-  printf ("alloc_First_Elem_BC: size of (struct elem_side_bc_struct) = %d\n",
+  printf ("alloc_First_Elem_BC: size of (struct elem_side_bc_struct) = %lu\n",
 	  sizeof(struct elem_side_bc_struct));
 #endif
-  int sz_side = sizeof (struct elem_side_bc_struct ***); 
-  int sz_edge = sizeof (struct elem_edge_bc_struct ***);
-  *First_Elem_Side_BC_Array = malloc(sz_side * upd->Total_Num_Matrices);
-  *First_Elem_Edge_BC_Array = malloc(sz_edge * upd->Total_Num_Matrices);
+  size_t sz_side = sizeof (struct elem_side_bc_struct ***);
+  size_t sz_edge = sizeof (struct elem_edge_bc_struct ***);
+  *First_Elem_Side_BC_Array = malloc(sz_side * (size_t) upd->Total_Num_Matrices);
+  *First_Elem_Edge_BC_Array = malloc(sz_edge * (size_t) upd->Total_Num_Matrices);
 
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
     (*First_Elem_Side_BC_Array)[imtrx] = (struct elem_side_bc_struct **)
@@ -920,7 +920,6 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
   BOUNDARY_CONDITION_STRUCT *bc, *bc2;
   char err_msg[MAX_CHAR_IN_INPUT];
   static char *yo = "set_up_Surf_BC";
-  int imtrx;
   
 #ifdef DEBUG_BC
   extern int ProcID, Dim;
@@ -1368,12 +1367,12 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
 
 
   /* Initialize rotation variables and lists */
-  mesh_rotate_node = calloc(upd->Total_Num_Matrices, sizeof(int *));
-  mesh_rotate_ss = calloc(upd->Total_Num_Matrices, sizeof(int *));
-  num_mesh_rotate = calloc(upd->Total_Num_Matrices, sizeof(int));
-  mom_rotate_node = calloc(upd->Total_Num_Matrices, sizeof(int *));
-  mom_rotate_ss = calloc(upd->Total_Num_Matrices, sizeof(int *));
-  num_mom_rotate = calloc(upd->Total_Num_Matrices, sizeof(int));
+  mesh_rotate_node = calloc((size_t) upd->Total_Num_Matrices, sizeof(int *));
+  mesh_rotate_ss = calloc((size_t) upd->Total_Num_Matrices, sizeof(int *));
+  num_mesh_rotate = calloc((size_t) upd->Total_Num_Matrices, sizeof(int));
+  mom_rotate_node = calloc((size_t) upd->Total_Num_Matrices, sizeof(int *));
+  mom_rotate_ss = calloc((size_t) upd->Total_Num_Matrices, sizeof(int *));
+  num_mom_rotate = calloc((size_t) upd->Total_Num_Matrices, sizeof(int));
 
   if (Num_ROT == 0) check_for_bc_conflicts2D(exo, dpi);
   if (Num_ROT > 0)  check_for_bc_conflicts3D(exo, dpi);
@@ -2187,7 +2186,6 @@ setup_Elem_BC(struct elem_side_bc_struct **elem_side_bc,
       *  is formulated as a linked list.
       *********************************************************************/
 {
-  int 		i;
   int 		id_local_elem_coord[num_nodes_on_side];
   struct elem_side_bc_struct *side = *elem_side_bc;
   char err_msg[MAX_CHAR_IN_INPUT];
@@ -2204,7 +2202,7 @@ setup_Elem_BC(struct elem_side_bc_struct **elem_side_bc,
     side->BC_applied = bc_type->BC_Name;
     side->local_node_id = alloc_int_1(num_nodes_on_side, INT_NOINIT);
     side->local_elem_node_id = alloc_int_1(num_nodes_on_side, INT_NOINIT);
-    for (i = 0; i < num_nodes_on_side ; i++) {
+    for (int i = 0; i < num_nodes_on_side ; i++) {
       side->local_node_id[i] = local_ss_node_list[i];
       side->local_elem_node_id[i] = id_local_elem_coord[i];
     }
@@ -2476,7 +2474,7 @@ find_id_side(const int ielem,			/* element index number */
       for (i = 0, sum = 0.0; i < num_nodes_on_side; i++)
 	sum += shape( 0.0, 0.0,-1.0, ielem_type, PSI, id_local_elem_coord[i]);
       if (sum > 0.999) return (5);
-
+      /* fall through */
     case 2:
       /* newly added for triangles */
       for (i = 0, sum = 0.0; i < num_nodes_on_side; i++)

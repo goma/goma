@@ -1694,59 +1694,7 @@ EH(-1,"version not compiled with frontal solver");
               EH(-1, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
             }
             break;
-
-	  case FRONT:
-
-	      mf_resolve =1;
-              scaling_max = 1.;
-
-	      if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");
-#ifdef HAVE_FRONT  
-              err = mf_solve_lineqn(&mf_resolve, /* re_solve                 */
-                                    bAC[0], /* rhs                           */
-                                    1, /* nrhs                               */
-                                    fss->ncod, /* nsetbc                      */
-                                    fss->bc, /* bcvalue                       */
-                                    &smallpiv, /* smallpiv                   */
-                                    &singpiv, /* singpiv                     */
-                                    &iautopiv, /* iautopiv                   */
-				    &iscale, /* iscale                       */
-                                    matrix_fill, /* element matrix fill fnc  */
-				    tAC, /* lhs                              */
-				    &scaling_max, /* scaling max             */
-				    scale,
-				    ams,
-				    x,
-				    resid_vector,
-				    x_old,
-				    x_older,
-				    xdot,
-                                    xdot_old,
-                                    x_update,
-                                    &delta_t,
-                                    &theta,
-                                    First_Elem_Side_BC_Array[pg->imtrx],
-                                    &time_value,
-                                    exo,
-                                    dpi,
-                                    &num_total_nodes,
-                                    &h_elem_avg,
-                                    &U_norm);
-	      /*
-	       * Free memory allocated above
-	       */
-	      global_qp_storage_destroy();
-
-	      if( neg_elem_volume ) err = -1;
-	      if (err == -1) {
-                return_value = -1;
-                goto free_and_clear;
-              }
-
-	      dcopy1(NumUnknowns[pg->imtrx], &tAC[0], &wAC[iAC][0]);
-	      strcpy(stringer_AC, " f ");
-	      break;
-#endif /* HAVE_FRONT */
+          case FRONT:
 	  default:
 	      EH(-1, "That linear solver package is not implemented.");
 	      break;

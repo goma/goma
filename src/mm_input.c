@@ -129,8 +129,6 @@ static char current_mat_file_name[MAX_FNL];
 #define SCALAR_INPUT 1
 #define VECTOR_INPUT 3
 
-#define stringup(a) { char *p; for( p=a; *p != '\0'; *p=toupper(*p), p++); }
-
 /*************** R O U T I N E S   I N   T H E   F I L E ***********************
  *
  *    NAME				TYPE		CALLED_BY
@@ -4358,6 +4356,7 @@ rd_track_specs(FILE *ifp,
                             cpcc[iCC].End_CC_Value = cpcc[iCC].coeff_0
                               + cpcc[iCC].coeff_1
                               * pow(EndParameterValue, cpcc[iCC].coeff_2);
+                            /* fall through */
                           default:
                             fprintf(stderr, "%s:\tCC[%d] flag must be 0, 1, or 2\n",
                                     yo, iCC+1);
@@ -14448,6 +14447,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
  	{
  	case 3:
    		table->t3 = (double *) smalloc( sizeof(double)*Num_Pnts );
+                /* fall through */
  	case 2:
  	case 1:
    		table->t2 = (double *) smalloc( sizeof(double)*Num_Pnts );

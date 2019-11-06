@@ -37,8 +37,6 @@ extern void gather_double_vector
 
 #endif
 
-extern int ilog2i (unsigned int);
-
 extern int countmap_vardofs	/* rf_util.c */
 (const int ,	       	/* variable - VELOCITY1, etc.            (in) */
        const int ,	       	/* num_nodes                             (in) */

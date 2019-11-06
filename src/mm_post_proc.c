@@ -1062,12 +1062,12 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
         h_elem += pg_data.hsquared[a];
       }
-      dbl supg = 0;
-      if (mp->Spwt_funcModel == GALERKIN) {
-        supg = 0.;
-      } else if (mp->Spwt_funcModel == SUPG) {
-        supg = mp->Spwt_func;
-      }
+//      dbl supg = 0;
+//      if (mp->Spwt_funcModel == GALERKIN) {
+//        supg = 0.;
+//      } else if (mp->Spwt_funcModel == SUPG) {
+//        supg = mp->Spwt_func;
+//      }
 
 
 
@@ -1080,7 +1080,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
         if (mp->DiffusivityModel[w] == CONSTANT) {
           diffusivity =  mp->diffusivity[w];
         }
-        supg_tau(&supg_terms, dim,  diffusivity, &pg_data, delta_t, 0, eqn);
+        supg_tau(&supg_terms, dim,  diffusivity, &pg_data, delta_t, 0, MASS_FRACTION);
 
         dbl strong_residual = 0;
         strong_residual = fv_dot->c[w];
@@ -1100,12 +1100,12 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
           inner += fv->grad_c[w][i] * fv->grad_c[w][i];
         }
 
-        dbl yzbeta = 0;
+//        dbl yzbeta = 0;
 
         dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
         dbl dc1 = fabs(strong_residual) * inv_sqrt_inner * h_elem * 0.5;
         dbl dc2 = fabs(strong_residual) * h_elem * h_elem * 0.25;
-        yzbeta = 0.5*(dc1 + dc2);
+//        yzbeta = 0.5*(dc1 + dc2);
 
         local_post[YZBETA + w] = 0.5*(dc1+dc2);//fmin(dc1, supg_terms.supg_tau);//yzbeta;//supg_terms.supg_tau;//fmin(supg_terms.supg_tau, 0.5*(dc1 + dc2));
         local_lumped[YZBETA + w] = 1.;
@@ -2783,6 +2783,7 @@ sum_average_nodal(double **avg_count, double ** avg_sum, int global_node, double
                 double rho = density(NULL, time);
                 avg_sum[i][global_node] += rho;
               }
+            break;
             case AVG_HEAVISIDE:
               {
                 load_lsi(ls->Length_Scale);
@@ -7346,8 +7347,10 @@ rd_post_process_specs(FILE *ifp,
 			  break;
 			case 5:
 			  EH(-1,"sensitivities to UF not done");
+                          break;
 			case 6:
 			  EH(-1,"sensitivities to AN not done");
+                          break;
 			}
 		      if(id1 == pp_fluxes_sens[i]->sens_id &&
 			 id2 == pp_fluxes_sens[i]->sens_flt &&
@@ -7807,8 +7810,10 @@ rd_post_process_specs(FILE *ifp,
 			  break;
 			case 5:
 			  EH(-1,"sensitivities to UF not done");
+                          break;
 			case 6:
 			  EH(-1,"sensitivities to AN not done");
+                          break;
 			}
 		      if(id1 == pp_data_sens[i]->sens_id &&
 			 id2 == pp_data_sens[i]->sens_flt &&

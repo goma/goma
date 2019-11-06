@@ -5089,7 +5089,7 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
 	id = (int) elem_side_bc->local_elem_node_id[i];
 	I = Proc_Elem_Connect[iconnect_ptr + id];
 	ldof  = ei[pg->imtrx]->ln_to_dof[eqn][id];
-	if (Dolphin[I][VELOCITY1] > 0 ) {
+        if (Dolphin[pg->imtrx][I][VELOCITY1] > 0 ) {
 	  
 	  /* 
 	   *  Evaluate sensitivity to displacements d()/dx 
@@ -5160,7 +5160,7 @@ apply_repulsion_roll (double cfunc[MDE][DIM],
     id = (int) elem_side_bc->local_elem_node_id[i];
     I = Proc_Elem_Connect[iconnect_ptr + id];
     ldof  = ei[pg->imtrx]->ln_to_dof[eqn][id];
-    if (Dolphin[I][VELOCITY1] > 0 ) {
+    if (Dolphin[pg->imtrx][I][VELOCITY1] > 0 ) {
       
       for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
 	{  
@@ -5290,7 +5290,7 @@ apply_repulsion_user (double cfunc[MDE][DIM],
 	id = (int) elem_side_bc->local_elem_node_id[i];
 	I = Proc_Elem_Connect[iconnect_ptr + id];
 	ldof  = ei[pg->imtrx]->ln_to_dof[eqn][id];
-	if (Dolphin[I][VELOCITY1] > 0 ) {
+        if (Dolphin[pg->imtrx][I][VELOCITY1] > 0 ) {
 	  
 	  /* 
 	   *  Evaluate sensitivity to displacements d()/dx 
@@ -5361,7 +5361,7 @@ apply_repulsion_user (double cfunc[MDE][DIM],
     id = (int) elem_side_bc->local_elem_node_id[i];
     I = Proc_Elem_Connect[iconnect_ptr + id];
     ldof  = ei[pg->imtrx]->ln_to_dof[eqn][id];
-    if (Dolphin[I][VELOCITY1] > 0 ) {
+    if (Dolphin[pg->imtrx][I][VELOCITY1] > 0 ) {
       
       for (a=0; a<ei[pg->imtrx]->ielem_dim; a++)
 	{  
@@ -8480,7 +8480,7 @@ evaluate_gibbs_criterion(
      
 {
   int p;
-  dbl actual_angle, dot_prod, pos[3];
+  dbl actual_angle, dot_prod, pos[3] = {0,0,0};
   
 /***************************** EXECUTION BEGINS ******************************/
 
@@ -8854,6 +8854,7 @@ void fapply_moving_CA_sinh(
 	{
 	case VELO_THETA_COX_BC:
 	reciprocal_slip = 1./velocity_pre_exponential;
+        /* fall through */
 	case VELO_THETA_SHIK_BC:
   	theta_max = M_PIE*theta_max_degrees/180.;
 	thetaeq = equilibrium_contact_angle * (M_PIE/180);

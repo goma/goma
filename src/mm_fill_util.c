@@ -5315,9 +5315,9 @@ dbl yzbeta1(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
                        dbl d_grad_u[MDE][DIM], dbl h_elem, int interp_eqn,
                        dbl deriv[MDE]) {
 
-  static const dbl EPSILON = 1e-10;
+//  static const dbl EPSILON = 1e-10;
   dbl Y_inv = 1.0 / Y;
-  dbl resid_scale = Y_inv * Z + EPSILON;
+//  dbl resid_scale = Y_inv * Z + EPSILON;
   dbl inner = 0;
   for (int i = 0; i < dim; i++) {
     inner += Y_inv * Y_inv * grad_u[i] * grad_u[i];
@@ -5331,7 +5331,7 @@ dbl yzbeta1(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
 
 dbl yzbeta2(dbl scale, dbl Y, dbl Z, dbl d_Z[MDE], dbl deriv[MDE], dbl h_elem, int interp_eqn)
 {
-  static const dbl EPSILON = 1e-10;
+//  static const dbl EPSILON = 1e-10;
   for (int k = 0; k < ei[pg->imtrx]->dof[interp_eqn]; k++) {
     deriv[k] = 0;
   }
@@ -5367,10 +5367,10 @@ dbl yzbeta(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
     }
 
 
-    dbl scalar_part = Y_inv * u + DIFFUSION_EPSILON;
+//    dbl scalar_part = Y_inv * u + DIFFUSION_EPSILON;
 
-    dbl p = 1-beta;
-    dbl q = (beta/2.0 - 1);
+//    dbl p = 1-beta;
+//    dbl q = (beta/2.0 - 1);
 
 
     dbl d_grad_u_norm = 0;
@@ -5394,7 +5394,7 @@ dbl yzbeta(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
 
     //h_dc = 2 / h_dc;
 
-    dbl d_h_dc = 0;
+//    dbl d_h_dc = 0;
 
 
     //deriv[j] = (Z+DIFFUSION_EPSILON) / (fabs(Z+DIFFUSION_EPSILON)) * d_Z[j] * pow(inner,q);
@@ -5420,8 +5420,8 @@ dbl yzbeta_model(int model, dbl scale, dbl beta, int dim, dbl Y,
     dc = yzbeta2(scale, Y, Z, d_Z, deriv, h_elem, interp_eqn);
     break;
   case YZBETA_MIXED: {
-    dbl deriv1[MDE];
-    dbl deriv2[MDE];
+    dbl deriv1[MDE] = {0};
+    dbl deriv2[MDE] = {0};
     dbl dc1, dc2;
     dc1 = yzbeta1(scale, dim, Y, Z, d_Z, 1.0, u, d_u, grad_u, d_grad_u,
                     h_elem, interp_eqn, deriv);

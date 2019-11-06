@@ -2660,7 +2660,7 @@ handle_surface_interaction(particle_t * p,
     {
     case PBC_IMPERMEABLE:
       fprintf(stderr, "PARTICLE ACTUALLY REACHED IMPERMEABLE BOUNDARY\n");
-      /* And follow through to be deleted "normally". */
+      /* fall through */ /* And follow through to be deleted "normally". */
     case PBC_OUTFLOW:
     case PBC_SOURCE:		/* this is not quite right, but oh well... */
     case PBC_FREESTREAM_SOURCE:	/* this is not quite right, but oh well... */

@@ -883,8 +883,8 @@ rotate_mesh_eqn (
               int global_col;
 
               J = rot->d_vector_J[j];
-              if (Dolphin[I][MESH_DISPLACEMENT1] > 0  &&
-                  Dolphin[J][MESH_DISPLACEMENT1] > 0 ) {
+              if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0  &&
+                  Dolphin[pg->imtrx][J][MESH_DISPLACEMENT1] > 0 ) {
                 /*
                  * find entry in global matrix - note that the sensitivities of the
                  * rotation vector may be in a different element than the current

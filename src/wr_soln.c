@@ -202,7 +202,7 @@ write_solution_segregated(char output_file[], double **resid_vector, double **x,
   }
 
   offset = 0;
-  if (tev_post > 0) {
+  if (tev_post != NULL) {
     for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
 
       step = (*nprint) + 1;

@@ -103,7 +103,7 @@ brk_pre_process(char *fn)
       str1[0] = in_buffer[0];
       while( strcmp( str1, blank_string ) == 0 ||
              strcmp( str1, "\t" ) == 0 ) {  /* strip leading blanks and tabs */
-         for( i=0; i < ( strlen( in_buffer ) - 1 ) ; i++ ) {
+        for( i=0; i < ( (int) strlen( in_buffer ) - 1 ) ; i++ ) {
              in_buffer[i] = in_buffer[i+1];
              str1[0] = in_buffer[i];
              str2[0] = in_buffer[i+1];
@@ -114,7 +114,7 @@ brk_pre_process(char *fn)
       }
     /* process the line if it is not a blank line and not a comment line */
       if( strcmp( str1, "\n" ) != 0 && strcmp ( str1, "#" ) != 0 ) {
-        for( j=0; j < strlen( in_buffer ); j++ ) {
+        for( j=0; j < (int) strlen( in_buffer ); j++ ) {
           str1[0] = in_buffer[j];
           if( strcmp( str1, "#" ) != 0 ) {    /* not a comment line */
             if( strcmp( str1, "\n" ) != 0 ) { /* not a newline */
@@ -133,7 +133,7 @@ brk_pre_process(char *fn)
             break;
           }
         }
-        i = strlen( buffer ) - 2 ;  /* extra offset for the newline */
+        i = (int) strlen( buffer ) - 2 ;  /* extra offset for the newline */
         str1[0] = buffer[ i ];
         while( strcmp( str1, blank_string ) == 0 ) { /* strip trailing blanks */
            buffer[i] = '\n';

@@ -67,8 +67,6 @@
 #define SCALAR_INPUT 1
 #define VECTOR_INPUT 3
 
-#define stringup(a) { char *p; for( p=a; *p != '\0'; *p=toupper(*p), p++); }
-
 extern Spfrtn sr; /* External declaration for the sprintf return variable,sr
 		   *  sr is defined in mm_input.c */
 

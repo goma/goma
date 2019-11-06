@@ -189,8 +189,8 @@
 
 #define delta(m,n)	((m) == (n) ? 1 : 0 ) /* Kroenecker delta */
 #define permute(i,j,k) ( ((i)-(j))*((j)-(k))*((k)-(i))/2 ) /* Permutation symbol (epsilon) */
-#define stringup(a) { char *p; for( p=a; *p != '\0'; *p=toupper(*p), p++); }
-#define stringlow(a) { char *p; for( p=a; *p != '\0'; *p=tolower(*p), p++); }
+#define stringup(a) do { char *p; for( p=a; *p != '\0'; *p= (char) toupper(*p), p++); } while (0)
+#define stringlow(a) do { char *p; for( p=a; *p != '\0'; *p=tolower(*p), p++); } while (0)
 #define endofstring(a) strchr(a,'\0')
 /*
  * Comparisons against zero should be done using this double value

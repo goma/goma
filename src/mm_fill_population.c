@@ -90,10 +90,10 @@ static void compute_nodes_weights(int N, double Jac[N + 1][N + 1],
   int INFO;
   int LWORK = 20;
   double WORK[LWORK];
-  memset(WORK, 0, sizeof(double) * LWORK);
+  memset(WORK, 0, sizeof(double) * (size_t) LWORK);
 
   double A[N * N];
-  memset(A, 0.0, sizeof(double) * N * N);
+  memset(A, 0.0, sizeof(double) * (size_t) (N * N));
 
   // convert to column major
   for (i = 0; i < N; i++) {
@@ -218,7 +218,7 @@ void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
     return;
   }
 
-  double ind = N;
+  int ind = N;
   double nu[MAX_MOMENTS] = {0.0};
   double a[MAX_MOMENTS] = {0.0};
   double b[MAX_MOMENTS] = {0.0};
@@ -305,7 +305,7 @@ void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
     }
 
     double z[n1 * n1];
-    memset(z, 0.0, sizeof(double) * n1 * n1);
+    memset(z, 0.0, sizeof(double) * (size_t) (n1 * n1));
     for (int i = 0; i < n1 - 1; i++) {
       z[i * n1 + i] = a[i];
       double tmp = sqrt(b[i + 1]);
@@ -1130,12 +1130,12 @@ int growth_rate_model(int species_index, double *nodes, double *weights,
                       int n_nodes, int n_moments, double *growth_rate,
                       struct moment_growth_rate *MGR) {
 
-  double gamma[DIM][DIM];
-  for (int a = 0; a < VIM; a++) {
-    for (int b = 0; b < VIM; b++) {
-      gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
-    }
-  }
+//  double gamma[DIM][DIM];
+//  for (int a = 0; a < VIM; a++) {
+//    for (int b = 0; b < VIM; b++) {
+//      gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+//    }
+//  }
 
   dbl mu0 = gn->mu0;
   dbl alpha_g = gn->gelpoint;
@@ -1196,7 +1196,7 @@ int growth_rate_model(int species_index, double *nodes, double *weights,
         scale = mp->moment_growth_scale * (eta0 / mu);
         break;
       case VISCOSITY_PRESSURE_GROWTH_RATE: {
-        double inv_pressure = 1.0 / (fv->P - mp->moment_growth_reference_pressure);
+        double inv_pressure = 1.0 / (fv_old->P - mp->moment_growth_reference_pressure);
         scale =
             mp->moment_growth_scale * (eta0 / mu) * inv_pressure * inv_pressure;
       } break;
@@ -1390,7 +1390,6 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR) {
     int wCO2Gas;
     int wH2O;
     int w;
-    int j;
 
     wCO2Liq = -1;
     wCO2Gas = -1;
@@ -1478,7 +1477,6 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR) {
     EH(-1, "Unknown moment source model");
     return -1;
   }
-  return -1;
 }
 
 int moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource) {
@@ -2401,7 +2399,7 @@ int assemble_moments(double time, /* present time value */
 
 
   dbl k_dc[MAX_MOMENTS] = {0};
-  dbl d_k_dc[MAX_MOMENTS][MDE] = {{0}};
+//  dbl d_k_dc[MAX_MOMENTS][MDE] = {{0}};
   if (mp->MomentShock_funcModel != YZBETA_NONE) {
     for (int mom = 0; mom < MAX_MOMENTS; mom++) {
       eqn = R_MOMENT0 + mom;
@@ -2427,16 +2425,16 @@ int assemble_moments(double time, /* present time value */
 
         dbl yzbeta = 0;
 
-        dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
+//        dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
         //dbl dc1 = fabs(strong_residual) * inv_sqrt_inner * h_elem * 0.5;
         dbl dc2 = fabs(strong_residual) * h_elem * h_elem * 0.25;
 
         //dc1 = fmin(supg_terms.supg_tau,dc1);//0.5*(dc1 + dc2);
         //yzbeta = fmin(supg_tau, 0.5*(dc1+dc2));//0.5*(dc1 + dc2);
         yzbeta = fmin(supg_tau, dc2);
-        for (int k = 0; k <  ei[pg->imtrx]->dof[eqn]; k++) {
-          d_k_dc[mom][k] = 0;
-        }
+//        for (int k = 0; k <  ei[pg->imtrx]->dof[eqn]; k++) {
+//          d_k_dc[mom][k] = 0;
+//        }
 
         k_dc[mom] = yzbeta;
       }

@@ -2145,7 +2145,6 @@ joule_heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time )
   dbl dkdX[DIM][MDE];   	       	/* Spatial derivatives of t.c. */
   int j;
   double h = 0.;
-  dbl scale = 1.0;
 
   dim   = pd->Num_Dim;
 
@@ -2230,12 +2229,15 @@ joule_heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time )
   
   /* Load current density */
   dbl J[DIM];
-  char err_msg[MAX_CHAR_IN_INPUT];
   if ( mp->len_u_heat_source == 0 ) {
     for ( a = 0; a < dim; a++) {
       J[a] = fv->grad_V[a];
     }
   } else if ( mp->len_u_heat_source == 1 ) {
+#if MAX_EXTERNAL_FIELD < 3
+    EH(-1, "User Joule Heating source expected MAX_EXTERNAL_FIELD >= 3");
+#else
+    char err_msg[MAX_CHAR_IN_INPUT];
     b = (int) mp->u_heat_source[0];
     sprintf(err_msg, 
 	    "Joule heating using external fields %s %s %s.\n",
@@ -2244,9 +2246,14 @@ joule_heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time )
     for ( a = 0; a < dim; a++) {
       J[a] = fv->external_field[a+b]/k;
     }
+#endif
   } else if ( mp->len_u_heat_source == 2 ) {
+#if MAX_EXTERNAL_FIELD < 3
+    EH(-1, "User Joule Heating source expected MAX_EXTERNAL_FIELD >= 3");
+#else
+    char err_msg[MAX_CHAR_IN_INPUT];
     b = (int) mp->u_heat_source[0];
-    scale = mp->u_heat_source[1];
+    dbl scale = mp->u_heat_source[1];
     sprintf(err_msg, 
 	    "Joule heating using external fields %s %s %s, with J scaled by %e.\n",
 	    efv->name[a+0],efv->name[a+1],efv->name[a+2],scale);
@@ -2254,6 +2261,7 @@ joule_heat_source( HEAT_SOURCE_DEPENDENCE_STRUCT *d_h, dbl time )
     for ( a = 0; a < dim; a++) {
       J[a] = scale*fv->external_field[a+b]/k;
     }
+#endif
   } else {
     EH(-1,"Woah, not sure you have the right inputs to the Joule heating source");
   }

@@ -9,16 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
-
-/*
- *$Id: rf_util.c,v 5.19 2010-05-27 21:03:25 prschun Exp $
- */
-
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: rf_util.c,v 5.19 2010-05-27 21:03:25 prschun Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -182,22 +172,6 @@ gather_double_vector(const int n,
 }
 #endif
 
-int
-ilog2i( unsigned int n )
-
-{
-/* LOCAL VARIABLES */
-	int i = 0;
-	unsigned int n1 = n;
-
-		while(n1 >>= 1) ++i;
-
-		if(1 <<i != n)
-			return(-1);
-		else
-			return(i);
-
-} /* END of routine ilog2i */
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
@@ -1503,7 +1477,6 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
   default:
     DPRINTF(stderr, "%s:  unknown Guess_Flag\n", yo);
     exit(-1);
-    break;
   }
   /***********************************************************************/
   /*       PHASE 1a -> initializations of AC variables from input file   */

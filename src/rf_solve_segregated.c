@@ -212,7 +212,7 @@ void solve_problem_segregated(
    * Local variables
    */
   int good_mesh;
-  int error, err;
+  int error, err = 0;
   static double **gvec = NULL;
   static double ****gvec_elem = NULL;
   static struct Results_Description **rd;
@@ -1525,14 +1525,7 @@ void solve_problem_segregated(
                  * And its derivatives at the old time, time.
                  */
                 if (upd->SegregatedSolve && pg->imtrx == 0) {
-                  predict_solution_u_star(
-                      numProcUnknowns[pg->imtrx], pg->sub_delta_t[pg->imtrx],
-                      pg->sub_delta_t_old[pg->imtrx],
-                      pg->sub_delta_t_older[pg->imtrx], theta,
-                      pg->sub_step_solutions[pg->imtrx].x,
-                      pg->sub_step_solutions[pg->imtrx].x_old,
-                      pg->sub_step_solutions[pg->imtrx].x_older,
-                      pg->sub_step_solutions[pg->imtrx].x_oldest);
+                  EH(-1, "Segregated pressure not supported with sub time stepping");
                 } else {
                   predict_solution(
                       numProcUnknowns[pg->imtrx], pg->sub_delta_t[pg->imtrx],

@@ -320,8 +320,8 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
     x_old = fv_old->x;
   }
   if (eqn == R_PHASE1) {
-    memset(v, 0, sizeof(double) * VIM);
-    memset(v_old, 0, sizeof(double) * VIM);
+    memset(v, 0, sizeof(double) * (size_t) VIM);
+    memset(v_old, 0, sizeof(double) * (size_t) VIM);
   }
 
   v_dot_DF = 0.0;
@@ -337,7 +337,7 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
       v_dot_DF += v_rel[a] * grad_F[a]; /* v.grad(F) */
     }
   } else if (pd->TimeIntegration != STEADY &&
-             pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
+             (pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] != 0) &&
              pd->MeshMotion ==
                  TOTAL_ALE) /*This is the Eulerian solid-mech case */
   {
@@ -490,7 +490,7 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
   }
 
   dbl k_dc = 0;
-  dbl d_k_dc[MDE] = {0};
+  //dbl d_k_dc[MDE] = {0};
   if (ls->YZbeta != YZBETA_NONE) {
     dbl strong_residual = 0;
     strong_residual = fv_dot_old->F;
@@ -518,9 +518,9 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
 
     //dc1 = fmin(supg_terms.supg_tau,dc1);//0.5*(dc1 + dc2);
     yzbeta = fmin(supg_terms.supg_tau,0.5*(dc1+dc2));//0.5*(dc1 + dc2);
-    for (int k = 0; k <  ei[pg->imtrx]->dof[eqn]; k++) {
-      d_k_dc[k] = 0;
-    }
+//    for (int k = 0; k <  ei[pg->imtrx]->dof[eqn]; k++) {
+//      d_k_dc[k] = 0;
+//    }
 
     k_dc = yzbeta;
   }

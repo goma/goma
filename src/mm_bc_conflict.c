@@ -9,15 +9,6 @@
 *                                                                         *
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
- 
-
-/*
- *$Id: mm_bc_conflict.c,v 5.7 2009-01-12 16:41:48 hkmoffa Exp $
- */
-
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_bc_conflict.c,v 5.7 2009-01-12 16:41:48 hkmoffa Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -323,9 +314,9 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
   action   = -1;
   i_delete = -1;
 
-  BC_dup_nodes = malloc(sizeof(int *) * upd->Total_Num_Matrices);
-  BC_dup_list = malloc(sizeof(int ***) * upd->Total_Num_Matrices);
-  BC_dup_ptr = malloc(sizeof(int) * upd->Total_Num_Matrices);
+  BC_dup_nodes = malloc(sizeof(int *) * (size_t) upd->Total_Num_Matrices);
+  BC_dup_list = malloc(sizeof(int ***) * (size_t) upd->Total_Num_Matrices);
+  BC_dup_ptr = malloc(sizeof(int) * (size_t) upd->Total_Num_Matrices);
 
 /*****************************************************************************/
 /*                              BLOCK 3                                      */
@@ -352,7 +343,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
 
   if (ProcID == 0 )
     {
-      matrix_used_BC = calloc(Num_BC, sizeof(int));
+      matrix_used_BC = calloc((size_t) Num_BC, sizeof(int));
     }
 
   for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
@@ -1958,13 +1949,13 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
     }
 
     if ( num_bc_nodes > 0 ) {
-      mesh_rotate_node[pg->imtrx] = (int *)realloc(mesh_rotate_node[pg->imtrx], num_mesh_rotate[pg->imtrx] * sizeof(int));
-      mesh_rotate_ss[pg->imtrx]   = (int *)realloc(mesh_rotate_ss[pg->imtrx], num_mesh_rotate[pg->imtrx] * sizeof(int));
-      mom_rotate_node[pg->imtrx]  = (int *)realloc(mom_rotate_node[pg->imtrx], num_mom_rotate[pg->imtrx] * sizeof(int));
-      mom_rotate_ss[pg->imtrx]    = (int *)realloc(mom_rotate_ss[pg->imtrx], num_mom_rotate[pg->imtrx] * sizeof(int));
+      mesh_rotate_node[pg->imtrx] = (int *)realloc(mesh_rotate_node[pg->imtrx], (size_t) num_mesh_rotate[pg->imtrx] * sizeof(int));
+      mesh_rotate_ss[pg->imtrx]   = (int *)realloc(mesh_rotate_ss[pg->imtrx], (size_t) num_mesh_rotate[pg->imtrx] * sizeof(int));
+      mom_rotate_node[pg->imtrx]  = (int *)realloc(mom_rotate_node[pg->imtrx], (size_t) num_mom_rotate[pg->imtrx] * sizeof(int));
+      mom_rotate_ss[pg->imtrx]    = (int *)realloc(mom_rotate_ss[pg->imtrx], (size_t) num_mom_rotate[pg->imtrx] * sizeof(int));
     }
 
-    if( mesh_rotate_node[pg->imtrx] >0 || mom_rotate_node[pg->imtrx] > 0 )
+    if( mesh_rotate_node[pg->imtrx] != NULL || mom_rotate_node[pg->imtrx] != NULL)
       {
 	int ebi=0;
 	
@@ -2094,9 +2085,9 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
     }
   }
 
-  BC_dup_nodes = malloc(sizeof(int *) * upd->Total_Num_Matrices);
-  BC_dup_list = malloc(sizeof(int ***) * upd->Total_Num_Matrices);
-  BC_dup_ptr = malloc(sizeof(int) * upd->Total_Num_Matrices);
+  BC_dup_nodes = malloc(sizeof(int *) * (size_t) upd->Total_Num_Matrices);
+  BC_dup_list = malloc(sizeof(int ***) * (size_t) upd->Total_Num_Matrices);
+  BC_dup_ptr = malloc(sizeof(int) * (size_t) upd->Total_Num_Matrices);
 
   for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
 
