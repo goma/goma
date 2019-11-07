@@ -29,5 +29,14 @@ default: all
 
 tags:
 	find . -name "*.[ch]" -exec etags -a '{}' \;
-	find . -name "*.cpp" -exec etags -a '{}' \;
-	find . -name "*.C" -exec etags -a '{}' \;
+
+compile_commands.json:
+	${MAKE} -C src realclean
+	bear ${MAKE} -C src all
+
+cppcheck: compile_commands.json
+	cppcheck --enable=all --project=compile_commands.json
+
+realclean:
+	rm -f compile_commands.json
+	cd src && ${MAKE} $@
