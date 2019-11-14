@@ -13635,14 +13635,14 @@ calculate_vapor_cool ( const double p[],
     {
       theta=0.;
       evap_loss   = 0.;
-      d_evap_loss = 0.;
+      // d_evap_loss = 0.;
     } 
   else 
     {
       evap_loss = q_scale*( vapor_c0 + vapor_c1 * theta + vapor_c2 * pow(theta,2.0) 
 			    + vapor_c3 * pow(theta,3.0));                         
-      d_evap_loss =  q_scale*(vapor_c1 + 2.* vapor_c2 * theta +
-			      3.* vapor_c3 * pow(theta,2.0));
+      /* d_evap_loss =  q_scale*(vapor_c1 + 2.* vapor_c2 * theta +
+			      3.* vapor_c3 * pow(theta,2.0)); */
     }
 
   return(evap_loss);

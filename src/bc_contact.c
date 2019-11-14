@@ -1076,7 +1076,7 @@ Lagrange_mult_equation(double func[DIM],
   DeformingMesh = pd->e[pg->imtrx][R_MESH1]; /* Use to catch bad references to moving */
 				  /* mesh which isn't. */
 
-  h_elem_avg = 0.03;
+  /* h_elem_avg = 0.03; */
   if(DeformingMesh) 
     {
       A = 0.;

@@ -820,7 +820,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
     {
       passdown.file = fopen(Soln_OutFile, "w");
       if (passdown.file == NULL) {
-        DPRINTF(stderr, "%s:  opening soln file for writing\n", yo);
+        DPRINTF(stdout, "%s:  opening soln file for writing\n", yo);
         EH(-1, "\t");
       }
     }
@@ -963,7 +963,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
           con.general_info.nv_restart = TRUE;
           if (Num_Proc > 1)
             multiname(loca_in->NV_exoII_infile, ProcID, Num_Proc);
-          DPRINTF(stderr, "Reading previous null vector ...\n");
+          DPRINTF(stdout, "Reading previous null vector ...\n");
           err = rd_vectors_from_exoII(con.turning_point_info.nv,
 				      loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead);
           if (err != 0)
@@ -983,7 +983,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
 	array_alloc (1, con.general_info.numUnks, sizeof(double));
       if (Num_Proc > 1)
         multiname(loca_in->NV_exoII_infile, ProcID, Num_Proc);
-      DPRINTF(stderr, "Reading previous null vector ...\n");
+      DPRINTF(stdout, "Reading previous null vector ...\n");
       err = rd_vectors_from_exoII(con.pitchfork_info.psi,
                                   loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead);
       if (err != 0)
@@ -1022,11 +1022,11 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
                              con.general_info.numUnks, sizeof(double));
 
   /* Load y_vec and z_vec from these files */
-      DPRINTF(stderr, "Reading previous null vector (real part) ...\n");
+      DPRINTF(stdout, "Reading previous null vector (real part) ...\n");
       err = rd_vectors_from_exoII(con.hopf_info.y_vec, 
 				  loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead);
       if (err != 0) EH(-1, "do_loca: error reading real part of null vector");
-      DPRINTF(stderr, "Reading previous null vector (imaginary part) ...\n");
+      DPRINTF(stdout, "Reading previous null vector (imaginary part) ...\n");
       err = rd_vectors_from_exoII(con.hopf_info.z_vec, 
 				  loca_in->NV_imag_infile, 0, 0, INT_MAX, &timeValueRead);
       if (err != 0) EH(-1, "do_loca: error reading imag. part of null vector");
@@ -1099,7 +1099,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   /* Check starting mesh element quality if requested */
     if (nEQM > 0)
       {
-        DPRINTF(stderr, "\nINITIAL ELEMENT QUALITY CHECK---\n");
+        DPRINTF(stdout, "\nINITIAL ELEMENT QUALITY CHECK---\n");
         element_quality(exo, x, ams[0]->proc_config);
       }
 
@@ -1359,28 +1359,28 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 
 /* show continuation type */
   if (ProcID == 0) {
-    fprintf(stderr, "\n\t----------------------------------");
+    fprintf(stdout, "\n\t----------------------------------");
     switch (passdown.method) {
       case ZERO_ORDER_CONTINUATION:
-	DPRINTF (stderr, "\n\tZero order continuation:");
+	DPRINTF (stdout, "\n\tZero order continuation:");
 	break;
       case FIRST_ORDER_CONTINUATION:
-	DPRINTF (stderr, "\n\tFirst order continuation:");
+	DPRINTF (stdout, "\n\tFirst order continuation:");
 	break;
       case ARC_LENGTH_CONTINUATION:
-	DPRINTF (stderr, "\n\tArc length continuation:");
+	DPRINTF (stdout, "\n\tArc length continuation:");
 	break;
       case TURNING_POINT_CONTINUATION:
-	DPRINTF (stderr, "\n\tTurning point continuation:");
+	DPRINTF (stdout, "\n\tTurning point continuation:");
 	break;
       case PITCHFORK_CONTINUATION:
-	DPRINTF (stderr, "\n\tPitchfork continuation:");
+	DPRINTF (stdout, "\n\tPitchfork continuation:");
 	break;
       case HOPF_CONTINUATION:
-	DPRINTF (stderr, "\n\tHopf continuation:");
+	DPRINTF (stdout, "\n\tHopf continuation:");
 	break;
       case LOCA_LSA_ONLY:
-        DPRINTF (stderr, "\n\tLinear stability analysis:\n");
+        DPRINTF (stdout, "\n\tLinear stability analysis:\n");
 	break;
       default:
 	DPRINTF (stderr, "%s: Bad Continuation, %d\n", yo, passdown.method);
@@ -1392,17 +1392,17 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
     if (passdown.method != LOCA_LSA_ONLY)
       {
         nCC = cpcc[0].nCC;
-        DPRINTF (stderr, "\n\tStep number: %4d of %4d (max)",
+        DPRINTF (stdout, "\n\tStep number: %4d of %4d (max)",
 			      step_num+1, cont->MaxPathSteps);
         if (nCC > 1 || nUC > 0)
           {
             theta = (lambda - cont->BegParameterValue)
                   / (cont->EndParameterValue - cont->BegParameterValue);
-            DPRINTF (stderr, "\n\tAttempting solution at: theta = %g", theta);
+            DPRINTF (stdout, "\n\tAttempting solution at: theta = %g", theta);
           }
         else
           {
-            DPRINTF (stderr, "\n\tAttempting solution at:");
+            DPRINTF (stdout, "\n\tAttempting solution at:");
           }
         if (cont->upType == 5 && nUC > 0)
           {
@@ -1410,19 +1410,19 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
               {
                 switch(cpuc[iUC].Type) {
                   case 1:		/* BC */
-    	            DPRINTF (stderr, "\n\tBCID=%3d DFID=%5d",
+    	            DPRINTF (stdout, "\n\tBCID=%3d DFID=%5d",
                              cpuc[iUC].BCID, cpuc[iUC].DFID);
     	            break;
                   case 2:		/* MT */
-    	            DPRINTF (stderr, "\n\tMTID=%3d MPID=%5d",
+    	            DPRINTF (stdout, "\n\tMTID=%3d MPID=%5d",
                              cpuc[iUC].MTID, cpuc[iUC].MPID);
   	            break;
                   case 3:		/* AC */
-     	            DPRINTF (stderr, "\n\tACID=%3d DFID=%5d",
+     	            DPRINTF (stdout, "\n\tACID=%3d DFID=%5d",
                              cpuc[iUC].BCID, cpuc[iUC].DFID);
      	            break;
                   case 4:		/* UM */
-      	            DPRINTF (stderr, "\n\tMTID=%3d MPID=%5d FLOAT=%3d",
+      	            DPRINTF (stdout, "\n\tMTID=%3d MPID=%5d FLOAT=%3d",
                              cpuc[iUC].MTID, cpuc[iUC].MPID, cpuc[iUC].MDID);
 	            break;
                   case 5:               /* UF */
@@ -1433,7 +1433,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 	            exit(-1);
 	            break;
                 }
-                DPRINTF(stderr, " Parameter= %10.6e delta_s= %10.6e",
+                DPRINTF(stdout, " Parameter= %10.6e delta_s= %10.6e",
                         cpuc[iUC].value, cpuc[iUC].value-cpuc[iUC].old_value);
               }
           }
@@ -1443,25 +1443,25 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
               {
                 switch(cpcc[iCC].Type) {
                   case 1:		/* BC */
-    	            DPRINTF (stderr, "\n\tBCID=%3d DFID=%5d",
+    	            DPRINTF (stdout, "\n\tBCID=%3d DFID=%5d",
                              cpcc[iCC].BCID, cpcc[iCC].DFID);
     	            break;
                   case 2:		/* MT */
-    	            DPRINTF (stderr, "\n\tMTID=%3d MPID=%5d",
+    	            DPRINTF (stdout, "\n\tMTID=%3d MPID=%5d",
                              cpcc[iCC].MTID, cpcc[iCC].MPID);
   	            break;
                   case 3:		/* AC */
-     	            DPRINTF (stderr, "\n\tACID=%3d DFID=%5d",
+     	            DPRINTF (stdout, "\n\tACID=%3d DFID=%5d",
                              cpcc[iCC].BCID, cpcc[iCC].DFID);
      	            break;
                   case 4:		/* UM */
-      	            DPRINTF (stderr, "\n\tMTID=%3d MPID=%5d FLOAT=%3d",
+      	            DPRINTF (stdout, "\n\tMTID=%3d MPID=%5d FLOAT=%3d",
                              cpcc[iCC].MTID, cpcc[iCC].MPID, cpcc[iCC].MDID);
 	            break;
                   case 5:               /* UF */
 	            break;
                   case 6:               /* AN */
-                    if (iCC == 0) DPRINTF (stderr, "\n\tAngular");
+                    if (iCC == 0) DPRINTF (stdout, "\n\tAngular");
 	            break;
                   default:
 	            DPRINTF (stderr, "%s: Bad condition type, %d\n",
@@ -1469,7 +1469,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 	            exit(-1);
 	            break;
                  }
-               DPRINTF(stderr, " Parameter= %10.6e delta_s= %10.6e",
+               DPRINTF(stdout, " Parameter= %10.6e delta_s= %10.6e",
  /*                    cpcc[iCC].value, cpcc[iCC].ratio * delta_s); */
                        cpcc[iCC].value, cpcc[iCC].value - cpcc[iCC].old_value);
               }
@@ -1575,21 +1575,21 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 
         if (nAC > 0)
           {
-            DPRINTF(stderr, "\n------------------------------\n");
-            DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
-            DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+            DPRINTF(stdout, "\n------------------------------\n");
+            DPRINTF(stdout, "Augmenting Conditions:    %4d\n", nAC);
+            DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
             for (iAC = 0; iAC < nAC; iAC++)
              {
               if (augc[iAC].Type == AC_USERBC)
                {
-                DPRINTF(stderr, "\tBC[%4d] DF[%4d] = %10.6e\n",
+                DPRINTF(stdout, "\tBC[%4d] DF[%4d] = %10.6e\n",
                         augc[iAC].BCID, augc[iAC].DFID, passdown.x_AC[iAC]);
                }
               else if (augc[iAC].Type == AC_USERMAT ||
                        augc[iAC].Type == AC_FLUX_MAT )
                {
-                DPRINTF(stderr, "\n New MT[%4d] MP[%4d] = %10.6e\n",
+                DPRINTF(stdout, "\n New MT[%4d] MP[%4d] = %10.6e\n",
                         augc[iAC].MTID, augc[iAC].MPID, passdown.x_AC[iAC]);
                }
               else if(augc[iAC].Type == AC_VOLUME)
@@ -1602,7 +1602,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
                 }
                 evol_local = evol_global;
 #endif
-                DPRINTF(stderr, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n",
+                DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n",
                         augc[iAC].MTID, augc[iAC].VOLID, evol_local,
                         passdown.x_AC[iAC]);
                }
@@ -1616,13 +1616,13 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
                 }
                 evol_local = evol_global;
 #endif
-                DPRINTF(stderr, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
+                DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
                         augc[iAC].MTID, augc[iAC].VOLID, evol_local,
                         passdown.x_AC[iAC]);
                }
               else if(augc[iAC].Type == AC_FLUX)
                {
-                DPRINTF(stderr, "\tBC[%4d] DF[%4d]=%10.6e\n",
+                DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n",
                         augc[iAC].BCID, augc[iAC].DFID, passdown.x_AC[iAC]);
                }
              }
@@ -2366,11 +2366,11 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
       else ams->val = jacobian_matrix;
       if (passdown.do_3D_of_2D)
         {
-          DPRINTF (stderr, "Assembling LSA Jacobian pass %d ...\n", i+1);
+          DPRINTF (stdout, "Assembling LSA Jacobian pass %d ...\n", i+1);
         }
       else if (passdown.LSA_flag)
         {
-          DPRINTF (stderr, "Assembling LSA Jacobian ...\n");
+          DPRINTF (stdout, "Assembling LSA Jacobian ...\n");
         }
 
   for (j=0; j<NZeros+1; j++) ams->val[j] = 0.0;
@@ -2443,11 +2443,11 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
       else ams->val = passdown.mass_matrix;
       if (passdown.do_3D_of_2D)
         {
-          DPRINTF (stderr, "Assembling LSA Mass matrix pass %d ...\n", i+1);
+          DPRINTF (stdout, "Assembling LSA Mass matrix pass %d ...\n", i+1);
         }
       else if (passdown.LSA_flag)
         {
-          DPRINTF (stderr, "Assembling LSA Mass matrix ...\n");
+          DPRINTF (stdout, "Assembling LSA Mass matrix ...\n");
         }
 
   for(j=0; j<NZeros+1; j++) ams->val[j] = 0.0;
@@ -3474,7 +3474,7 @@ void solution_output_conwrap(int num_soln_flag,
             {
               LSA_current_wave_number = i;
               LSA_3D_of_2D_wave_number = LSA_wave_numbers[i];
-              DPRINTF (stderr, "\n\t3D of 2D LSA -- Wavenumber %d of %d:   %g\n",
+              DPRINTF (stdout, "\n\t3D of 2D LSA -- Wavenumber %d of %d:   %g\n",
                        LSA_current_wave_number + 1, LSA_number_wave_numbers,
                        LSA_3D_of_2D_wave_number);
             }
@@ -3592,7 +3592,7 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
 
   if (Debug_Flag > 1)
     {
-      DPRINTF(stderr, "Mode %d eigenvector recorded\n", j);
+      DPRINTF(stdout, "Mode %d eigenvector recorded\n", j);
     }
 
   /* Save current step_num for next call */

@@ -336,7 +336,7 @@ main(int argc, char **argv)
       ptmp = legal_notice;
       while ( strcmp(*ptmp, LAST_LEGAL_STRING) != 0 )
 	{
-	  fprintf(stderr, "%s", *ptmp++);
+	  fprintf(stdout, "%s", *ptmp++);
 	}
     }
 
@@ -969,13 +969,13 @@ main(int argc, char **argv)
 
 #ifdef PARALLEL
   total_time = ( MPI_Wtime() - time_start )/ 60. ;
-  DPRINTF(stderr, "\nProc 0 runtime: %10.2f Minutes.\n\n",total_time);
+  DPRINTF(stdout, "\nProc 0 runtime: %10.2f Minutes.\n\n",total_time);
   MPI_Finalize();
 #endif  
 #ifndef PARALLEL
   (void)time(&now);
   total_time = (double)(now) - time_start;
-  fprintf(stderr, "\nProc 0 runtime: %10.2f Minutes.\n\n",total_time/60);
+  fprintf(stdout, "\nProc 0 runtime: %10.2f Minutes.\n\n",total_time/60);
 #endif  
   fflush(stdout);
   fflush(stderr);

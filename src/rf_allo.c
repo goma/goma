@@ -1057,10 +1057,10 @@ realloc_ptr_1_FL(void ***list_hndl, const int new_num_ptrs,
     }
     if (old_num_ptrs > 0) {
       (void) memcpy(array, *list_hndl, bytenum);
-      if (new_num_ptrs > old_num_ptrs) {
-        bytenum = (new_num_ptrs - old_num_ptrs) * sizeof(void *);
-        (void) memset(array + old_num_ptrs, 0, bytenum);
-      }
+    }
+    if (new_num_ptrs > old_num_ptrs) {
+      bytenum = (new_num_ptrs - old_num_ptrs) * sizeof(void *);
+      (void) memset(array + old_num_ptrs, 0, bytenum);
     }
     safe_free(*list_hndl);
     *list_hndl = array;
