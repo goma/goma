@@ -2279,71 +2279,47 @@ EH(-1,"version not compiled with frontal solver");
        *    WRITE OUT THE INTERMEDIATE SOLUTION AT EACH NEWTON ITERATION
        *
        ********************************************************************/
-      
-      if (Write_Intermediate_Solutions) {
+
+	  if (Write_Intermediate_Solutions) {
 	if (TimeIntegration == STEADY) {
 	  time_value = (double) *nprint+1.;
 	}
-        dbl time_inter = time_value+inewton;
-
-
-        char outfile[MAX_FNL];
-
-        sprintf(outfile, "intermediate%d_%g.exoII", pg->imtrx,  time_value);
-
-        if( Num_Proc > 1 )
-            multiname(outfile, ProcID, Num_Proc);
-
-        if (inewton == 0) {
-
-          one_base(exo);		/* cause node numbers, etc. to start at 1 */
-
-          wr_mesh_exo(exo, outfile, 0);
-
-          zero_base(exo);
-
-          wr_result_prelim_exo(rd,
-                               exo,
-                                 outfile,
-                               gvec_elem );
-        }
-
 
 	/* First nodal vars */
 	for (i = 0; i <  rd->TotalNVSolnOutput; i++) {
 	  extract_nodal_vec(x, rd->nvtype[i], rd->nvkind[i], 
-                            rd->nvmatID[i], gvec, exo, FALSE, time_inter);
-          wr_nodal_result_exo(exo, outfile, gvec, i+1,
-                              inewton+1, time_inter);
+			    rd->nvmatID[i], gvec, exo, FALSE, time_value);
+	  wr_nodal_result_exo(exo, ExoFileOut, gvec, i+1, 
+			      *nprint+1, time_value);
 	}
 	/* Add additional user-specified post processing variables */
 	if (rd->TotalNVPostOutput > 0) {
 	  post_process_nodal(x, x_sens_p, x_old, xdot, xdot_old, 
-                             resid_vector, inewton+1, &time_inter,
-                             delta_t, theta, NULL, exo, dpi, rd, outfile, 0);
+			     resid_vector, *nprint+1, &time_value,
+			     delta_t, theta, NULL, exo, dpi, rd, ExoFileOut, pg->imtrx);
 	}
 	/* Write out time derivatives if requested */
 	if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
 	  for (i = 0; i < rd->TotalNVSolnOutput; i++) {
 	    i_post = rd->TotalNVSolnOutput + rd->TotalNVPostOutput + i;
 	    extract_nodal_vec(xdot, rd->nvtype[i_post], rd->nvkind[i_post],
-                              rd->nvmatID[i_post], gvec, exo, TRUE, time_inter);
-            wr_nodal_result_exo(exo, outfile, gvec, i_post+1,
-                                inewton+1, time_inter);
+			      rd->nvmatID[i_post], gvec, exo, TRUE, time_value);
+	    wr_nodal_result_exo(exo, ExoFileOut, gvec, i_post+1, 
+				*nprint+1, time_value);
 	  }
 	}
 
 	/* Now element vars */
 	for (i = 0; i < tev; i++) {
 	  extract_elem_vec(x, i, rd->evtype[i], gvec_elem, exo);
-          wr_elem_result_exo(exo, outfile, gvec_elem, i,
-                             inewton+1, time_inter , rd);
+	  wr_elem_result_exo(exo, ExoFileOut, gvec_elem, i, 
+			     *nprint+1, time_value , rd);
 	}
 	/* Add additional user-specified post processing variables */
 	if (tev_post > 0) {
 	  post_process_elem(x, x_old, xdot, xdot_old, resid_vector, tev, 
-                            tev_post, gvec_elem, inewton+1,
-                            &time_inter, delta_t, exo, dpi, rd);
+			    tev_post, gvec_elem, *nprint+1,
+			    &time_value, delta_t, exo, dpi, rd);
 
 	  /* Write out time derivatives if requested */
 	  if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
