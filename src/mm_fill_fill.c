@@ -451,7 +451,7 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
   double d_p_e[MDE];
   double d_inv_F_norm[MDE];
   double inv_F_norm = 0;
-  if (ls->Toure_Penalty) {
+  if (ls != NULL && ls->Toure_Penalty) {
     for (int i = 0; i < ei[pg->imtrx]->dof[R_FILL]; i++) {
       p_e += mass_lumped_penalty->penalty[i] * bf[R_FILL]->phi[i];
       if (ls->Semi_Implicit_Integration)
@@ -491,7 +491,7 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
 
   dbl k_dc = 0;
   //dbl d_k_dc[MDE] = {0};
-  if (ls->YZbeta != YZBETA_NONE) {
+  if (ls != NULL && ls->YZbeta != YZBETA_NONE) {
     dbl strong_residual = 0;
     strong_residual = fv_dot_old->F;
     for (int p = 0; p < VIM; p++) {
@@ -771,7 +771,7 @@ int assemble_fill(double tt, double dt, PG_DATA *pg_data, const int applied_eqn,
           case FILL_WEIGHT_SUPG_GP:
           case FILL_WEIGHT_SUPG_SHAKIB: {
             dbl wt_func = bf[eqn]->phi[i] + supg_terms.supg_tau * v_dot_Dphi[i];
-            if (ls->Semi_Implicit_Integration) {
+            if (ls != NULL && ls->Semi_Implicit_Integration) {
               mass = (phi_j) / dt * wt_func;
               advection = 0.5*v_dot_Dphi[j] * wt_func;
             } else {

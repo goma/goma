@@ -48,6 +48,7 @@
 #ifndef GOMA_MM_MP_STRUCTS_H
 #define GOMA_MM_MP_STRUCTS_H
 
+#include "rf_fem_const.h"
 #include "mm_elem_block_structs.h"
 
 /*
@@ -326,6 +327,7 @@ struct Material_Properties
 
   int MomentShock_funcModel;
   dbl MomentShock_func;
+  dbl MomentShock_Ref[MAX_MOMENTS];
 
   int MomentDiffusivityModel;
   dbl MomentDiffusivity;

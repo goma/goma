@@ -2485,7 +2485,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
      *  check to make sure that unknowns are defined at this node,
      *  otherwise don't add anything to this node
      */
-    ldof = ei[pd->mi[pd->ProjectionVar]]->ln_to_dof[eqn][i];
+    ldof = ei[upd->matrix_index[pd->ProjectionVar]]->ln_to_dof[eqn][i];
     if (ldof >= 0) {
       phi_i = bf[eqn]->phi[ldof];
       for (var = 0; var < rd->TotalNVPostOutput; var++) {

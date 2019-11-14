@@ -1179,6 +1179,9 @@ int growth_rate_model(int species_index, double *nodes, double *weights,
   }
 
   dbl volF = (fv_old->moment[1] / (1 + fv_old->moment[1]));
+  if (volF > 0.98) {
+    volF = 0.98;
+  }
 
   dbl mu = muL * exp(volF / (1- volF));
   double eta0 = muL;
@@ -1257,6 +1260,10 @@ int coalescence_kernel_model(double *nodes, double *weights, int n_nodes,
   }
 
   dbl volF = (fv_old->moment[1] / (1 + fv_old->moment[1]));
+
+  if (volF > 0.98) {
+    volF = 0.98;
+  }
 
   dbl mu = muL * exp(volF / (1- volF));
   double eta0 = muL;
@@ -2410,7 +2417,7 @@ int assemble_moments(double time, /* present time value */
         for (int p = 0; p < VIM; p++) {
           strong_residual += fv->v[p] * fv_old->grad_moment[mom][p];
         }
-        strong_residual -= msource[mom];
+        //strong_residual -= msource[mom];
         dbl h_elem = 0;
         for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
           h_elem += pg_data->hsquared[a];
@@ -2419,19 +2426,25 @@ int assemble_moments(double time, /* present time value */
         h_elem = sqrt(h_elem  / ((double)ei[pg->imtrx]->ielem_dim));
 
         dbl inner = 0;
+        dbl Yinv = 1.0 / mp->MomentShock_Ref[mom];
         for (int i = 0; i < dim; i++) {
-          inner += fv_old->grad_moment[mom][i] * fv_old->grad_moment[mom][i];
+          inner += Yinv*fv_old->grad_moment[mom][i] * fv_old->grad_moment[mom][i];
         }
 
         dbl yzbeta = 0;
 
-//        dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
-        //dbl dc1 = fabs(strong_residual) * inv_sqrt_inner * h_elem * 0.5;
-        dbl dc2 = fabs(strong_residual) * h_elem * h_elem * 0.25;
 
+
+
+        dbl dc2 = fabs(Yinv*strong_residual) * h_elem * h_elem * 0.25;
+        dbl dc1 = dc2;
+        if (0 && ls != NULL && fabs(fv->F) < (ls->Length_Scale * 0.5)) {
+          dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
+          dc1 = fabs(Yinv*strong_residual) * inv_sqrt_inner * h_elem * 0.5;
+        }
         //dc1 = fmin(supg_terms.supg_tau,dc1);//0.5*(dc1 + dc2);
         //yzbeta = fmin(supg_tau, 0.5*(dc1+dc2));//0.5*(dc1 + dc2);
-        yzbeta = fmin(supg_tau, dc2);
+        yzbeta = fmin(supg_tau, 0.5*(dc1+dc2));
 //        for (int k = 0; k <  ei[pg->imtrx]->dof[eqn]; k++) {
 //          d_k_dc[mom][k] = 0;
 //        }

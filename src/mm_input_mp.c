@@ -7584,10 +7584,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     if ( !strcmp(model_name, "YZBETA") )
     {
       mat_ptr->MomentShock_funcModel = YZBETA_MIXED;
-      if (fscanf(imp, "%lg",&(mat_ptr->MomentShock_func)) != 1)
+      if (fscanf(imp, "%lg %lg %lg %lg %lg",&(mat_ptr->MomentShock_func), &a0, &a1, &a2, &a3) != 5)
       {
-        EH(-1, "Could not read YZbeta value for Moment Shock Function");
+        EH(-1, "Could not read YZbeta value for Moment Shock Function, expected 5 values");
       }
+      mat_ptr->MomentShock_Ref[0] = a0;
+      mat_ptr->MomentShock_Ref[1] = a1;
+      mat_ptr->MomentShock_Ref[2] = a2;
+      mat_ptr->MomentShock_Ref[3] = a3;
       SPF(endofstring(es),"YZBETA %.4g", mat_ptr->Mwt_func );
     }
     else

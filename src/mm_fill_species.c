@@ -408,12 +408,17 @@ int assemble_mass_transport(
 
       dbl yzbeta = 0;
 
-      dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
-      dbl dc1 = fabs(strong_residual) * inv_sqrt_inner * h_elem * 0.5;
+
+
       dbl dc2 = fabs(strong_residual) * h_elem * h_elem * 0.25;
 
+      dbl dc1 = dc2;
+      if (ls != NULL && fabs(fv->F) < (0.5*ls->Length_Scale)) {
+        dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
+        dc1 = fabs(strong_residual) * inv_sqrt_inner * h_elem * 0.5;
+      }
       //dc1 = fmin(supg_terms.supg_tau,dc1);//0.5*(dc1 + dc2);
-      yzbeta = fmin(supg_terms.supg_tau, 0.5*(dc1+dc2));//0.5*(dc1 + dc2);
+      yzbeta = fmin(supg_terms.supg_tau, 0.5*(dc1 + dc2));//0.5*(dc1 + dc2);
       for (int k = 0; k <  ei[pg->imtrx]->dof[eqn]; k++) {
         d_k_dc[k] = 0;
       }

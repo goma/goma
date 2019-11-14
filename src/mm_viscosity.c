@@ -2615,6 +2615,10 @@ foam_pmdi10_viscosity(int species,    /* species number for cure equation */
 
   volF = mp->volumeFractionGas;
 
+  if (volF > 0.98) {
+    volF = 0.98;
+  }
+
   mu = muL * exp(volF / (1- volF));
   mp->viscosity = mu;
   mp->FlowingLiquid_viscosity = muL;

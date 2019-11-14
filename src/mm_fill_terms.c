@@ -4907,6 +4907,12 @@ assemble_continuity(dbl time_value,   /* current time */
 	  
   advection_etm = pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
   source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
+
+
+  dbl ls_disable_pspg = 1;
+  if (ls != NULL && (fabs(fv->F) < ls->Length_Scale)) {
+    ls_disable_pspg = 0;
+  }
 	  
 
   if (af->Assemble_Residual)
@@ -5181,8 +5187,8 @@ assemble_continuity(dbl time_value,   /* current time */
 	   */
 
 	  pressure_stabilization = 0.0;
-	  if (PSPG)
-	    {
+          if (PSPG)
+            {
 	      for ( a=0; a<wim; a++)
 		{
 		  meqn = R_MOMENTUM1+a;
@@ -5191,7 +5197,7 @@ assemble_continuity(dbl time_value,   /* current time */
 		      pressure_stabilization += grad_phi[i][a] * pspg[a];
 		    }
 		}
-	      pressure_stabilization *= d_area;
+              pressure_stabilization *= d_area * ls_disable_pspg;
 	    }
 
 	  h_flux = 0.0;
@@ -5348,7 +5354,7 @@ assemble_continuity(dbl time_value,   /* current time */
 				  pressure_stabilization += grad_phi[i][a] * d_pspg->v[a][b][j];
 				}
 			    }
-			  pressure_stabilization *= d_area;
+                          pressure_stabilization *= d_area * ls_disable_pspg;
 			}
 				  
 		      J[j] += advection + source + pressure_stabilization + h_flux; 
@@ -5390,7 +5396,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			  pressure_stabilization += grad_phi[i][a] * d_pspg->T[a][j];
 			}
 		    }
-		  pressure_stabilization *= d_area;
+                  pressure_stabilization *= d_area * ls_disable_pspg;
 		      
 		  lec->J[peqn][pvar][i][j] += pressure_stabilization;
 		}
@@ -5504,7 +5510,7 @@ assemble_continuity(dbl time_value,   /* current time */
 			      pressure_stabilization += grad_phi[i][a] * d_pspg->P[a][j];
 			    }
 			}
-		      pressure_stabilization *= d_area;
+                      pressure_stabilization *= d_area * ls_disable_pspg;
 		      
 		    }
 		  J[j] += advection  + source + pressure_stabilization;
@@ -5545,7 +5551,7 @@ assemble_continuity(dbl time_value,   /* current time */
 					}
 				    }
 				  
-				  pressure_stabilization *=  h3 * det_J * wt;
+                                  pressure_stabilization *=  h3 * det_J * wt * ls_disable_pspg;
 			      
 				  lec->J[peqn][pvar][i][j] += pressure_stabilization;
 				}
@@ -5582,7 +5588,7 @@ assemble_continuity(dbl time_value,   /* current time */
 				      pressure_stabilization += grad_phi[i][a] * d_pspg->g[a][p][q][j];
 				    }
 				}
-			      pressure_stabilization *=  h3 * det_J * wt;
+                              pressure_stabilization *=  h3 * det_J * wt * ls_disable_pspg;
 			      
 			      lec->J[peqn][pvar][i][j] += pressure_stabilization;   
 			      
@@ -5793,6 +5799,7 @@ assemble_continuity(dbl time_value,   /* current time */
 				    + bf[eqn]->d_grad_phi_dmesh[i][a][b][j] * pspg[a] * wt  * h3 * det_J;
 				}
 			    }
+                            pressure_stabilization *= ls_disable_pspg;
 			}
 
 		      /*lec->J[peqn][pvar][i][j] += advection  + source + pressure_stabilization +  h_flux + mass ; */
@@ -5893,7 +5900,7 @@ assemble_continuity(dbl time_value,   /* current time */
 				  pressure_stabilization += grad_phi[i][a] * d_pspg->C[a][w][j];
 				}
 			    }
-			  pressure_stabilization *= h3 * det_J * wt;
+                          pressure_stabilization *= h3 * det_J * wt * ls_disable_pspg;
 			}
 		      
 		      /* The fluid phase is not incompressible in the
@@ -8535,7 +8542,7 @@ load_fv(void)
     else  /* Zero these only if not using mesh displacements: */
     {
       v            = pd->ShapeVar;
-      dofs         = ei[pd->mi[v]]->dof[v];
+      dofs         = ei[upd->matrix_index[v]]->dof[v];
 
       fv->d[p]     = 0.0;
       fv_old->d[p] = 0.0;
@@ -8545,8 +8552,8 @@ load_fv(void)
       fv->x[p]     = 0.;
       for (i = 0; i < dofs; i++)
       {
-        node = ei[pd->mi[v]]->dof_list[v][i];
-        index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[pd->mi[v]]->ielem] +node];
+        node = ei[upd->matrix_index[v]]->dof_list[v][i];
+        index = Proc_Elem_Connect[Proc_Connect_Ptr[ei[upd->matrix_index[v]]->ielem] +node];
         fv->x[p] +=  ( Coor[p][index] ) * bf[v]->phi[i];
       }
       fv_old->x[p] = fv->x[p]; /* Fixed grid stays fixed thru time. */
@@ -11221,7 +11228,7 @@ load_fv_mesh_derivs(int okToZero)
     }
 
 
-  mdofs = ei[pd->mi[R_MESH1]]->dof[R_MESH1];
+  mdofs = ei[upd->matrix_index[R_MESH1]]->dof[R_MESH1];
 
   bfm = bf[R_MESH1];
   

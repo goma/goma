@@ -1888,7 +1888,11 @@ EH(-1,"version not compiled with frontal solver");
 	/* Compute rate_of_convergence.  Really what we want
 	   here is dln(norm)/dnorm   FIGURE IT OUT! */
 	/* Rate_above_tolerance = (pow(Norm_old, 1.8) > Norm_new); */
-	Rate_above_tolerance = ((log10(Norm_new)/log10(Norm_old)) >
+        double tolerance_value = 0;
+        if (Norm_new > 1e-16) {
+          tolerance_value = (log10(Norm_new)/log10(Norm_old));
+        }
+        Rate_above_tolerance = (tolerance_value >
 				convergence_rate_tolerance);
       }
       
