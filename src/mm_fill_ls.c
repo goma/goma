@@ -3967,6 +3967,47 @@ static void find_intersections(struct LS_Surf_List *list, int isovar,
     }
     break;
 
+  case TETRAHEDRON:
+
+    switch (pd->i[pg->imtrx][isovar]) {
+
+    case I_Q1: /* trilinear hex */
+    {
+      int links[6][2] = {{0, 1}, {0, 2}, {0, 3}, {1, 2}, {1,3}, {2,3}};
+
+      for (link = 0; link < 6; link++) {
+
+        i = links[link][0];
+        j = links[link][1];
+        I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+        J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j];
+
+        find_nodal_stu(i, ei[pg->imtrx]->ielem_type, xi, xi + 1, xi + 2);
+        find_nodal_stu(j, ei[pg->imtrx]->ielem_type, yi, yi + 1, yi + 2);
+
+        if (find_link_intersection(xi, yi, isovar, isoval, NULL) == TRUE) {
+          /* check if crossing is on an edge with a ca condition */
+          inflection = FALSE; /* innocent till proven guilty */
+          if (ls->Contact_Inflection && point_on_ca_boundary(I, exo) &&
+              point_on_ca_boundary(J, exo))
+            inflection = TRUE;
+          map_local_coordinates(xi, x);
+          surf = create_surf_point(x, ei[pg->imtrx]->ielem, xi, inflection);
+          if (unique_surf(list, surf)) {
+            append_surf(list, surf);
+          } else {
+            safe_free(surf);
+          }
+        }
+      }
+    } break;
+    default:
+      EH(-1, "Huygens renormalization not implemented for this interpolation "
+             "on TRIs");
+      break;
+    }
+    break;
+
   default:
     EH(-1, "Huygens renormalization not implemented for this element shape");
     break;

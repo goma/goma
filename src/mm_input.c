@@ -2803,8 +2803,13 @@ rd_levelset_specs(FILE *ifp,
 		
 		if ((strcmp(input,"ON") == 0) || (strcmp(input,"YES") == 0 ))
 		{
-			ls->PSPP_filter = TRUE;
-		}
+                        ls->PSPP_filter = TRUE;
+                        SPF(echo_string,"%s = %s", "Level Set PSPP filtering", "yes"); ECHO(echo_string,echo_file);
+
+                } else {
+                  SPF(echo_string,"%s = %s", "Level Set PSPP filtering", "no"); ECHO(echo_string,echo_file);
+
+                }
 	}
 
         ls->ghost_stress = LS_OFF;

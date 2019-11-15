@@ -1008,7 +1008,31 @@ h_elem_siz(dbl hsquared[DIM], dbl hh[DIM][DIM],
     }
   }
   
-  if (dim == 2) {
+  if (dim == 2 && (elem_shape == TRIANGLE)) {
+    WH(-1,"Beware that SUPG for trishells is held constant so you need a uniform, non-stretchnig grid");
+
+    hsquared[0]=hsquared[1]=hsquared[2] = pow((xnode[0][0] - xnode[0][1]), 2) + pow((xnode[1][0] - xnode[1][1]),2);
+
+
+    if (af->Assemble_Jacobian) {
+      memset((void *)dhh_dxnode, 0, dim*MDE*sizeof(double));
+      if (DeformingMesh || DeformingMeshShell) {
+        dhh_dxnode[0][0] = -0.0;
+        dhh_dxnode[0][1] =  0.0;
+        dhh_dxnode[0][2] =  0.0;
+
+        dhh_dxnode[1][0] =  0.0;
+        dhh_dxnode[1][1] =  0.0;
+        dhh_dxnode[1][2] = -0.0;
+
+        dhh_dxnode[2][0] =  0.0;
+        dhh_dxnode[2][1] =  0.0;
+        dhh_dxnode[2][2] = -0.0;
+
+      }
+    }
+  }
+  else if (dim == 2) {
     /*
      * Calculate the midpoint positions on each of the faces
      */

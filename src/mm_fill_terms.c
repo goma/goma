@@ -18874,8 +18874,8 @@ double FoamVolumeSource(double time,
 	//double rho = rho_gas * volF + rho_liq * (1 - volF);
 	double rho_dot = rho_gas * volF_dot - rho_liq * volF_dot;
 
-	double grad_rho[DIM];
-	double d_grad_rho_dT[DIM][MDE];
+        double grad_rho[DIM] = {0.0};
+        double d_grad_rho_dT[DIM][MDE] = {{0.0}};
 
 	for (a = 0; a < dim; a++) {
 	  grad_rho[a] = rho_gas * grad_volF[a] + rho_liq * (grad_volF[a]);
@@ -19244,8 +19244,8 @@ double FoamVolumeSource(double time,
           //double rho = rho_gas * volF + rho_liq * (1 - volF);
           double rho_dot = rho_gas * volF_dot - rho_liq * volF_dot;
 
-          double grad_rho[DIM];
-          double d_grad_rho_dT[DIM][MDE];
+          double grad_rho[DIM] = {0.0};
+          double d_grad_rho_dT[DIM][MDE] = {{0.0}};
 
           for (a = 0; a < dim; a++) {
               grad_rho[a] = rho_gas * grad_volF[a] + rho_liq * (grad_volF[a]);
@@ -31312,7 +31312,7 @@ calc_pspg( dbl pspg[DIM],
 	  hh_siz += hsquared[p];
 	}
       // Average value of h**2 in the element
-      hh_siz = hh_siz/ ((double )dim);
+        hh_siz = sqrt(hh_siz/ ((double )dim));
 
       // Average value of v**2 in the element 
       vv_speed = 0.0;
