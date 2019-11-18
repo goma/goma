@@ -4910,9 +4910,9 @@ assemble_continuity(dbl time_value,   /* current time */
 
 
   dbl ls_disable_pspg = 1;
-  if (ls != NULL && (fabs(fv->F) < ls->Length_Scale)) {
-    ls_disable_pspg = 0;
-  }
+//  if (ls != NULL && (fabs(fv->F) < ls->Length_Scale)) {
+//    ls_disable_pspg = 0;
+//  }
 	  
 
   if (af->Assemble_Residual)
