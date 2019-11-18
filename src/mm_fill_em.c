@@ -188,7 +188,7 @@ assemble_emwave(double time,	/* present time value */
   complex cpx_refractive_index, cpx_rel_permittivity,
       cpx_permittivity;//, impedance;
 
-  cpx_refractive_index = n - _Complex_I*k; // k > 0 is extinction
+  cpx_refractive_index = n + _Complex_I*k; // k > 0 is extinction
   cpx_rel_permittivity = SQUARE(cpx_refractive_index);
   cpx_permittivity = cpx_rel_permittivity*mp->permittivity;
 
@@ -241,12 +241,12 @@ assemble_emwave(double time,	/* present time value */
     case EM_E1_REAL:
     case EM_E2_REAL:
     case EM_E3_REAL:
-         emf_coeff = omega*cimag(cpx_permittivity);
+         emf_coeff = -omega*cimag(cpx_permittivity);
          conj_coeff = -omega*creal(cpx_permittivity);
          //emf_coeff = 0;
          //conj_coeff = 0;
-         emf_coeff_dn = omega*cimag(cpx_permittivity)/n;
-         emf_coeff_dk = omega*cimag(cpx_permittivity)/k;
+         emf_coeff_dn = -omega*cimag(cpx_permittivity)/n;
+         emf_coeff_dk = -omega*cimag(cpx_permittivity)/k;
          conj_coeff_dn = -omega*creal(cpx_permittivity)/n;
          conj_coeff_dk = -omega*creal(cpx_permittivity)/k;
          cross_field_var = EM_H1_REAL;
@@ -257,12 +257,12 @@ assemble_emwave(double time,	/* present time value */
     case EM_E1_IMAG:
     case EM_E2_IMAG:
     case EM_E3_IMAG:
-         emf_coeff = omega*cimag(cpx_permittivity);
+         emf_coeff = -omega*cimag(cpx_permittivity);
          conj_coeff = omega*creal(cpx_permittivity);
          //emf_coeff = 0;
          //conj_coeff = 0;
-         emf_coeff_dn = omega*cimag(cpx_permittivity)/n;
-         emf_coeff_dk = omega*cimag(cpx_permittivity)/k;
+         emf_coeff_dn = -omega*cimag(cpx_permittivity)/n;
+         emf_coeff_dk = -omega*cimag(cpx_permittivity)/k;
          conj_coeff_dn = omega*creal(cpx_permittivity)/n;
          conj_coeff_dk = omega*creal(cpx_permittivity)/k;
          cross_field_var = EM_H1_IMAG;
@@ -1070,7 +1070,7 @@ int apply_em_farfield_direct_scalar(double func[DIM],
   complex cpx_refractive_index1, cpx_rel_permittivity1,
       cpx_permittivity1, impedance1;
 
-  cpx_refractive_index1 = n1 - _Complex_I*k1;
+  cpx_refractive_index1 = n1 + _Complex_I*k1;
   cpx_rel_permittivity1 = SQUARE(cpx_refractive_index1);
   cpx_permittivity1 = cpx_rel_permittivity1*mp->permittivity;
 
@@ -1085,7 +1085,7 @@ int apply_em_farfield_direct_scalar(double func[DIM],
   complex cpx_refractive_index2, cpx_rel_permittivity2,
       cpx_permittivity2, impedance2;
 
-  cpx_refractive_index2 = n2 - _Complex_I*k2;
+  cpx_refractive_index2 = n2 + _Complex_I*k2;
   cpx_rel_permittivity2 = SQUARE(cpx_refractive_index2);
   cpx_permittivity2 = cpx_rel_permittivity2*mp->permittivity;
 
