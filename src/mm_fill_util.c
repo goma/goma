@@ -4323,7 +4323,7 @@ double newshape(const double xi[],    /* local coordinates    */
     break;
   case TETRAHEDRON:
     if (interpolation == I_Q1 || interpolation == I_Q1_D) {
-      value = shape(s, t, u, TRILINEAR_TET, Iquant, Inode);
+      value = shape(s, t, u, LINEAR_TET, Iquant, Inode);
     } else if (interpolation == I_P0) {
       // Shape function for peicewise constant interpolation
       switch (Iquant) {

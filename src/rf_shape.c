@@ -482,7 +482,7 @@ shape (const double s,		/* quadrature point coordinates */
     }
     break;
 
-  case TRILINEAR_TET:
+  case LINEAR_TET:
     switch (Iquant) {     /* select quantity */
     case PSI:           /* shape function */
       switch( Inode ) { /* select specific shape function */
@@ -541,7 +541,7 @@ shape (const double s,		/* quadrature point coordinates */
 
     }
     
-    break;  /*Case Trilinear_tet */
+    break;  /*Case LINEAR_TET */
 
 
   

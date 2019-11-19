@@ -2548,7 +2548,7 @@ find_id_side_BC(const int ielem,		/* element index number */
   ielem_type = Elem_Type(exo, ielem);
 
   /* If we're working with tetrahedral elements, re-work the side id */
-  if ( ielem_type == TRILINEAR_TET ) {
+  if ( ielem_type == LINEAR_TET ) {
     iss = BC_Types[ibc].Set_Index;
     sideid = find_id_side_SS(ielem, iss, exo);
   }

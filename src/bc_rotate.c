@@ -2079,7 +2079,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 	int current_id; 
 
 	current_id = in_list(ROT_Types[irc].ss_id[0], 0, exo->num_side_sets, exo->ss_id);
-	if ( ei[pg->imtrx]->ielem_type == TRILINEAR_TET ) id_side = find_id_side_SS(ei[pg->imtrx]->ielem, current_id, exo);
+	if ( ei[pg->imtrx]->ielem_type == LINEAR_TET ) id_side = find_id_side_SS(ei[pg->imtrx]->ielem, current_id, exo);
 
 	/* find EDGE info for primary edge */
 	if (ROT_Types[irc].type == CURVE || ROT_Types[irc].type == VERTEX) {
@@ -2095,7 +2095,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 				     local_edge_node_list, edge_elem_node_id, 
 				     &param_dir, exo);
 
-	      if ( ei[pg->imtrx]->ielem_type == TRILINEAR_TET ) id_edge = find_id_edge_TET(ielem, num_nodes_on_edge, 
+	      if ( ei[pg->imtrx]->ielem_type == LINEAR_TET ) id_edge = find_id_edge_TET(ielem, num_nodes_on_edge, 
 				     local_edge_node_list, edge_elem_node_id, 
 				     &param_dir, exo);
 	    }
@@ -2232,7 +2232,7 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
 		/* Find LINE_TANGENT along EDGE */
 		if (line_tangent != NULL || binormal != NULL) {
 		  
-		  if ( ei[pg->imtrx]->ielem_type == TRILINEAR_TET )
+		  if ( ei[pg->imtrx]->ielem_type == LINEAR_TET )
 		    {
 		     calc_unseeded_edge_tangents_TET (line_tangent, 
 					       ei[pg->imtrx]->iconnect_ptr, dim,  
@@ -2472,7 +2472,7 @@ calculate_2D_rotation_vectors (Exo_DB *exo,		/* the mesh */
 							
 			  id_side = find_id_side( elem, num_nodes_on_side, gnn_side_list, local_node_side_list, exo) ;
 
-			  if ( ei[pg->imtrx]->ielem_type == TRILINEAR_TET ) id_side = find_id_side_SS(ei[pg->imtrx]->ielem, iss, exo);
+			  if ( ei[pg->imtrx]->ielem_type == LINEAR_TET ) id_side = find_id_side_SS(ei[pg->imtrx]->ielem, iss, exo);
 			  /*find_surf_center_st (Elem_Type(exo, elem) , id_side, pd->Num_Dim, xi, &s, &t);	*/						
 							
 			  num_local_nodes = elem_info(NNODES, Elem_Type(exo, elem) );

@@ -365,7 +365,7 @@ evaluate_flux(
 				      id_local_elem_coord, exo);
 
 	      /* Calculates the ID side correctly for tets */
-	      if ( ielem_type == TRILINEAR_TET ) id_side = find_id_side_SS(ei[pg->imtrx]->ielem, current_id, exo);
+	      if ( ielem_type == LINEAR_TET ) id_side = find_id_side_SS(ei[pg->imtrx]->ielem, current_id, exo);
 
 		  if( ls != NULL && ielem_dim == 2  &&
 			(quantity == POS_LS_FLUX || quantity == NEG_LS_FLUX ||
@@ -6268,7 +6268,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 				  id_local_elem_coord, exo);
 
 	      /* Calculates the ID side correctly for tets */
-	      if ( ielem_type == TRILINEAR_TET ) id_side = find_id_side_SS(ei[pg->imtrx]->ielem,
+	      if ( ielem_type == LINEAR_TET ) id_side = find_id_side_SS(ei[pg->imtrx]->ielem,
  current_id, exo);
 
 		  if( ls != NULL && ielem_dim == 2  &&

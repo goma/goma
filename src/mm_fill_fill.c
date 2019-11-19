@@ -4985,7 +4985,7 @@ int get_side_info(const int ielem_type,
     }
     break;
 
-  case TRILINEAR_TET: /* tri-linear tetrahedron */
+  case LINEAR_TET: /* tri-linear tetrahedron */
     *nodes_per_side = 3;
     switch (id_side) {
     case 1:

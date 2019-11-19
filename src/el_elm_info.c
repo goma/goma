@@ -468,7 +468,7 @@ elem_info(const int info,
     }
     break;
 
-  case TRILINEAR_TET:                /* linear tetrahedron */
+  case LINEAR_TET:                /* linear tetrahedron */
     switch( info ){               /* select type of information required */
     case NNODES:                  /* number of nodes */
       answer = 4;
@@ -1649,7 +1649,7 @@ type2shape(const int element_type)
   case BILINEAR_TRISHELL:
     shape = TRISHELL;
     break;
-  case TRILINEAR_TET:
+  case LINEAR_TET:
     shape = TETRAHEDRON;
     break;
   default:
@@ -2310,7 +2310,7 @@ find_stu(const int   iquad,     /* current GQ index  */
     *u = 0.0;
     break;
 
-  case TRILINEAR_TET:
+  case LINEAR_TET:
 
     switch (iquad ) 
       {
@@ -2642,7 +2642,7 @@ find_surf_st(const int iquad,           /* current GQ index */
     }
     break;
 
-  case TRILINEAR_TET:
+  case LINEAR_TET:
     
     /* 
      * I'm not sure where the original code came from, especially with
@@ -2985,7 +2985,7 @@ find_surf_center_st (
 	case LINEAR_TRI:
 	case QUAD_TRI:   
 	case QUAD6_TRI:
-	case TRILINEAR_TET:
+        case LINEAR_TET:
         case BILINEAR_TRISHELL:
 	switch (dim)
 	  {
@@ -3057,7 +3057,7 @@ find_surf_center_st (
   case LINEAR_TRI:
   case QUAD_TRI:   
   case QUAD6_TRI:
-  case TRILINEAR_TET:
+  case LINEAR_TET:
   case BILINEAR_TRISHELL:
 	break;
   default:
@@ -3271,7 +3271,7 @@ find_nodal_stu (const int inode,           /* current node index */
       EH(-1, "Trying to get nodal local stu for BIQUAD at illegal node");
     }
     break;
-  case TRILINEAR_TET:  /* trilinear tetrahedron */
+  case LINEAR_TET:  /* trilinear tetrahedron */
     switch ( inode ) {
     case 0:
       *s = *t = *u = 0.;
@@ -3633,7 +3633,7 @@ Gq_weight(const int iquad,               /* current GQ index */
     weight = weight_s*weight_t;
     break;
 
-  case TRILINEAR_TET:
+  case LINEAR_TET:
     if (iquad == 0)
       weight = wltet_1;
     else 
@@ -3774,7 +3774,7 @@ Gq_surf_weight(const int iquad,               /* current GQ index  */
     }
     break;
 
-  case TRILINEAR_TET:
+  case LINEAR_TET:
     switch ( iquad ) {
     case 0: weight = -0.281250000000000; break;
     case 1: weight =  0.260416666666667; break;
@@ -4014,7 +4014,7 @@ get_type(char string[],         /* EXODUS name of parent element  */
     {  /* select element shape */
       switch (nodes){              /* select number of nodes in this element */
       case 4:                      /* bilinear quadralateral */
-	answer = TRILINEAR_TET;
+        answer = LINEAR_TET;
 	break;
       default:
 	sprintf(err_msg,"TET element with %d nodes not implemented.\n", nodes);
