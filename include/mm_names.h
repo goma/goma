@@ -969,8 +969,8 @@ struct Equation_Names EQ_Name[] = {
     { "R_POR_SINK_MASS", "P_SINK_MASS", POR_SINK_MASS},  /*116 */
 
     { "R_VORT_DIR1",   "VDX",     R_VORT_DIR1 } ,    
-    { "R_VORT_DIR2",   "VDX",     R_VORT_DIR1 } ,
-    { "R_VORT_DIR3",   "VDX",     R_VORT_DIR1 } ,
+    { "R_VORT_DIR2",   "VDY",     R_VORT_DIR2 } ,
+    { "R_VORT_DIR3",   "VDZ",     R_VORT_DIR3 } ,
     { "R_VORT_LAMBDA", "VLAMBDA", R_VORT_LAMBDA } ,  /* 120 */
 
     { "R_CURVATURE", "H",    R_CURVATURE},   
@@ -1602,6 +1602,7 @@ struct Equation_Names Post_Var_Name[] =
   {"STREAM", "stream", -1 },
   {"STREAM_NORMAL_STRESS", "STREAM_NORMAL_STRESS", -1},
   {"STREAM_SHEAR_STRESS", "STREAM_SHEAR_STRESS", -1},
+  {"STREAM_TENSION", "STREAM_TENSION", -1},
   {"CROSS_STREAM_SHEAR", "CROSS_STREAM_SHEAR", -1},
   {"MEAN_SHEAR", "MEAN_SHEAR", -1},
   {"PRESSURE_CONT", "PRESSURE_CONT", -1},
@@ -1644,6 +1645,9 @@ struct Equation_Names Post_Var_Name[] =
   {"LUB_HEIGHT", "LUB_HEIGHT", -1},
   {"VELO_SPEED", "VELO_SPEED", -1},
   {"GIES_CRIT", "GIES_CRIT", -1},
+  {"HELICITY", "HELICITY", -1},
+  {"LAMB_VECTOR", "LAMB_VECTOR", -1},
+  {"Q_FCN", "Q_FCN", -1},
 };
 
 int Num_Post_Var_Names = sizeof(Post_Var_Name) / sizeof(struct Equation_Names);  
