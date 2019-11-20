@@ -164,8 +164,11 @@ logprintf(const char *format, ... )
 #ifndef ENABLE_LOGGING
   if ( current_severity < 0 )
     {
-      DPRINTF(stderr, "\nAbnormal termination in logprintf -- enable logging for details.\n");
-
+      va_list va;
+      va_start(va, format);
+      vfprintf(stderr, format, va);
+      va_end(va);
+      DPRINTF(stderr, "\nAbnormal termination in logprintf\n");
       exit(current_severity);
     }
   return;

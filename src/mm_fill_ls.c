@@ -6133,6 +6133,9 @@ int load_lsi(const double width) {
 
   /************ End of shielding **************************/
 
+  if (fabs(alpha) < 1e-32) {
+    alpha = 1e-32;
+  }
   lsi->delta_max = lsi->gfmag / alpha;
 
   return (0);
