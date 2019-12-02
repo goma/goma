@@ -110,6 +110,10 @@ assemble_emwave(double time,	/* present time value */
   dbl mag_permeability=12.57e-07;  // H/m
   int cross_field_var;
   dbl cross_field[DIM];
+  dbl stabilization_coefficient;
+  int stabilization_field_var;
+  dbl grad_stabilization_field[DIM][DIM];
+
 
   dbl n;				/* Refractive index. */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_n_struct;
@@ -253,6 +257,13 @@ assemble_emwave(double time,	/* present time value */
          for ( p=0; p<VIM; p++) {
            cross_field[p] = fv->em_hr[p];
          }
+         stabilization_coefficient = 1.0;
+         stabilization_field_var = EM_H1_REAL;
+         for ( p=0; p<VIM; p++) {
+           for ( q=0; q<VIM; q++) {
+             grad_stabilization_field[p][q] = fv->grad_em_hr[p][q];
+           }
+         }
          break;
     case EM_E1_IMAG:
     case EM_E2_IMAG:
@@ -266,7 +277,16 @@ assemble_emwave(double time,	/* present time value */
          conj_coeff_dn = omega*creal(cpx_permittivity)/n;
          conj_coeff_dk = omega*creal(cpx_permittivity)/k;
          cross_field_var = EM_H1_IMAG;
-         for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_hi[p];}
+         for ( p=0; p<VIM; p++) {
+           cross_field[p] = fv->em_hi[p];
+         }
+         stabilization_coefficient = 1.0;
+         stabilization_field_var = EM_H1_IMAG;
+         for ( p=0; p<VIM; p++) {
+           for ( q=0; q<VIM; q++) {
+             grad_stabilization_field[p][q] = fv->grad_em_hi[p][q];
+           }
+         }
          break;
     case EM_H1_REAL:
     case EM_H2_REAL:
@@ -276,7 +296,16 @@ assemble_emwave(double time,	/* present time value */
          //conj_coeff = 0;
          emf_coeff_dn = 0; emf_coeff_dk = 0; conj_coeff_dn = 0; conj_coeff_dk = 0;
          cross_field_var = EM_E1_REAL;
-         for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_er[p];}
+         for ( p=0; p<VIM; p++) {
+           cross_field[p] = fv->em_er[p];
+         }
+         stabilization_coefficient = 0.0;
+         stabilization_field_var = EM_E1_REAL;
+         for ( p=0; p<VIM; p++) {
+           for ( q=0; q<VIM; q++) {
+             grad_stabilization_field[p][q] = 0.0;
+           }
+         }
          break;
     case EM_H1_IMAG:
     case EM_H2_IMAG:
@@ -286,7 +315,16 @@ assemble_emwave(double time,	/* present time value */
          //conj_coeff = 0;
          emf_coeff_dn = 0; emf_coeff_dk = 0; conj_coeff_dn = 0; conj_coeff_dk = 0;
          cross_field_var = EM_E1_IMAG;
-         for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_ei[p];}
+         for ( p=0; p<VIM; p++) {
+           cross_field[p] = fv->em_ei[p];
+         }
+         stabilization_coefficient = 0.0;
+         stabilization_field_var = EM_E1_IMAG;
+         for ( p=0; p<VIM; p++) {
+           for ( q=0; q<VIM; q++) {
+             grad_stabilization_field[p][q] = 0.0;
+           }
+         }
          break;
     default:
       EH(-1, "assemble_emwave must be called with a usable em_var\n");
@@ -337,6 +375,15 @@ assemble_emwave(double time,	/* present time value */
                   diffusion -= permute(p,q,dir)*grad_phi_i[p]*cross_field[q];
                 }
               }
+
+              double div_stabilization_field = 0.0;
+
+              for (p=0; p<VIM; p++) {
+                div_stabilization_field += grad_stabilization_field[p][p];
+              }
+
+              diffusion += stabilization_coefficient*phi_i
+                  *div_stabilization_field;
 
               diffusion *= det_J * wt;
               diffusion *= h3;
@@ -441,6 +488,32 @@ assemble_emwave(double time,	/* present time value */
                   diffusion -= permute(p,q,dir)*grad_phi_i[p]*delta(q,b)*phi_j;
                 }
               }
+
+              diffusion *= det_J * wt;
+              diffusion *= h3;
+              diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+
+              lec->J[peqn][pvar][i][j] += diffusion;
+            }
+          }
+        }
+      }
+      /*
+       *  stabilization field
+       */
+      for ( b=0; b<dim; b++) {
+        var = stabilization_field_var + b;
+        if ( pd->v[var] ) {
+          pvar = upd->vp[var];
+          for ( j=0; j<ei->dof[var]; j++) {
+            diffusion = 0.;
+            if ( pd->e[eqn] & T_DIFFUSION ) {
+              for ( p=0; p<VIM; p++) {
+                grad_phi_i[p] = bf[eqn]->grad_phi[i] [p];
+              }
+
+              diffusion += stabilization_coefficient*phi_i
+                  *bf[var]->grad_phi[j][b];
 
               diffusion *= det_J * wt;
               diffusion *= h3;
