@@ -257,11 +257,11 @@ assemble_emwave(double time,	/* present time value */
          for ( p=0; p<VIM; p++) {
            cross_field[p] = fv->em_hr[p];
          }
-         stabilization_coefficient = 1.0;
-         stabilization_field_var = EM_H1_REAL;
+         stabilization_coefficient = 0;
+         stabilization_field_var = EM_E1_REAL;
          for ( p=0; p<VIM; p++) {
            for ( q=0; q<VIM; q++) {
-             grad_stabilization_field[p][q] = fv->grad_em_hr[p][q];
+             grad_stabilization_field[p][q] = fv->grad_em_er[p][q];
            }
          }
          break;
@@ -280,11 +280,11 @@ assemble_emwave(double time,	/* present time value */
          for ( p=0; p<VIM; p++) {
            cross_field[p] = fv->em_hi[p];
          }
-         stabilization_coefficient = 1.0;
-         stabilization_field_var = EM_H1_IMAG;
+         stabilization_coefficient = 0;
+         stabilization_field_var = EM_E1_IMAG;
          for ( p=0; p<VIM; p++) {
            for ( q=0; q<VIM; q++) {
-             grad_stabilization_field[p][q] = fv->grad_em_hi[p][q];
+             grad_stabilization_field[p][q] = fv->grad_em_ei[p][q];
            }
          }
          break;
@@ -299,11 +299,11 @@ assemble_emwave(double time,	/* present time value */
          for ( p=0; p<VIM; p++) {
            cross_field[p] = fv->em_er[p];
          }
-         stabilization_coefficient = 0.0;
-         stabilization_field_var = EM_E1_REAL;
+         stabilization_coefficient = 1.0;
+         stabilization_field_var = EM_H1_REAL;
          for ( p=0; p<VIM; p++) {
            for ( q=0; q<VIM; q++) {
-             grad_stabilization_field[p][q] = 0.0;
+             grad_stabilization_field[p][q] = fv->grad_em_hr[p][q];
            }
          }
          break;
@@ -318,11 +318,11 @@ assemble_emwave(double time,	/* present time value */
          for ( p=0; p<VIM; p++) {
            cross_field[p] = fv->em_ei[p];
          }
-         stabilization_coefficient = 0.0;
-         stabilization_field_var = EM_E1_IMAG;
+         stabilization_coefficient = 1.0;
+         stabilization_field_var = EM_H1_IMAG;
          for ( p=0; p<VIM; p++) {
            for ( q=0; q<VIM; q++) {
-             grad_stabilization_field[p][q] = 0.0;
+             grad_stabilization_field[p][q] = fv->grad_em_hi[p][q];
            }
          }
          break;
@@ -377,6 +377,7 @@ assemble_emwave(double time,	/* present time value */
               }
 
               double div_stabilization_field = 0.0;
+
 
               for (p=0; p<VIM; p++) {
                 div_stabilization_field += grad_stabilization_field[p][p];
@@ -489,6 +490,9 @@ assemble_emwave(double time,	/* present time value */
                 }
               }
 
+              diffusion += stabilization_coefficient*phi_i
+                  *bf[var]->grad_phi[j][b];
+
               diffusion *= det_J * wt;
               diffusion *= h3;
               diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
@@ -500,7 +504,7 @@ assemble_emwave(double time,	/* present time value */
       }
       /*
        *  stabilization field
-       */
+       *
       for ( b=0; b<dim; b++) {
         var = stabilization_field_var + b;
         if ( pd->v[var] ) {
@@ -508,10 +512,6 @@ assemble_emwave(double time,	/* present time value */
           for ( j=0; j<ei->dof[var]; j++) {
             diffusion = 0.;
             if ( pd->e[eqn] & T_DIFFUSION ) {
-              for ( p=0; p<VIM; p++) {
-                grad_phi_i[p] = bf[eqn]->grad_phi[i] [p];
-              }
-
               diffusion += stabilization_coefficient*phi_i
                   *bf[var]->grad_phi[j][b];
 

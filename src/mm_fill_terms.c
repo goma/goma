@@ -10874,20 +10874,8 @@ load_fv_grads(void)
       dofs = ei->dof[EM_E1_REAL];
       v = EM_E1_REAL;
 
-      for ( p=0; p<DIM; p++)
-	{
-	  for ( q=0; q<DIM; q++)
-	    {
-	      for (r = 0; r < wim; r++)
-		{
-		  for ( i=0; i<dofs; i++)
-		    {
-		      fv->grad_em_er[p][q] += 
-			*esp->em_er[r][i] * bf[v]->grad_phi_e[i][r] [p][q];
-		    }
-		}
-	    }
-	}
+      grad_vector_fv_fill(esp->em_er, bf[v]->grad_phi_e, dofs, fv->grad_em_er);
+
     } else if ( zero_unused_grads && upd->vp[EM_E1_REAL] == -1
            && upd->vp[EM_E2_REAL] == -1 &&  upd->vp[EM_E3_REAL] == -1 ) {
       for ( p=0; p<DIM; p++)
@@ -10904,20 +10892,8 @@ load_fv_grads(void)
       dofs = ei->dof[EM_E1_IMAG];
       v = EM_E1_IMAG;
 
-      for ( p=0; p<DIM; p++)
-	{
-	  for ( q=0; q<DIM; q++)
-	    {
-	      for (r = 0; r < wim; r++)
-		{
-		  for ( i=0; i<dofs; i++)
-		    {
-		      fv->grad_em_ei[p][q] += 
-			*esp->em_ei[r][i] * bf[v]->grad_phi_e[i][r] [p][q];
-		    }
-		}
-	    }
-	}
+      grad_vector_fv_fill(esp->em_ei, bf[v]->grad_phi_e, dofs, fv->grad_em_ei);
+
     } else if ( zero_unused_grads && upd->vp[EM_E1_IMAG] == -1
            && upd->vp[EM_E2_IMAG] == -1 &&  upd->vp[EM_E3_IMAG] == -1 ) {
       for ( p=0; p<DIM; p++)
@@ -10934,20 +10910,8 @@ load_fv_grads(void)
       dofs = ei->dof[EM_H1_REAL];
       v = EM_H1_REAL;
 
-      for ( p=0; p<DIM; p++)
-	{
-	  for ( q=0; q<DIM; q++)
-	    {
-	      for (r = 0; r < wim; r++)
-		{
-		  for ( i=0; i<dofs; i++)
-		    {
-		      fv->grad_em_hr[p][q] += 
-			*esp->em_hr[r][i] * bf[v]->grad_phi_e[i][r] [p][q];
-		    }
-		}
-	    }
-	}
+      grad_vector_fv_fill(esp->em_hr, bf[v]->grad_phi_e, dofs, fv->grad_em_hr);
+
     } else if ( zero_unused_grads && upd->vp[EM_H1_REAL] == -1
            && upd->vp[EM_H2_REAL] == -1 &&  upd->vp[EM_H3_REAL] == -1 ) {
       for ( p=0; p<DIM; p++)
@@ -10964,20 +10928,8 @@ load_fv_grads(void)
       dofs = ei->dof[EM_H1_IMAG];
       v = EM_H1_IMAG;
 
-      for ( p=0; p<DIM; p++)
-	{
-	  for ( q=0; q<DIM; q++)
-	    {
-	      for (r = 0; r < wim; r++)
-		{
-		  for ( i=0; i<dofs; i++)
-		    {
-		      fv->grad_em_hi[p][q] += 
-			*esp->em_hi[r][i] * bf[v]->grad_phi_e[i][r] [p][q];
-		    }
-		}
-	    }
-	}
+      grad_vector_fv_fill(esp->em_hi, bf[v]->grad_phi_e, dofs, fv->grad_em_hi);
+
     } else if ( zero_unused_grads && upd->vp[EM_H1_IMAG] == -1
            && upd->vp[EM_H2_IMAG] == -1 &&  upd->vp[EM_H3_IMAG] == -1 ) {
       for ( p=0; p<DIM; p++)
