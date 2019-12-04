@@ -50,7 +50,7 @@
 #include "mm_eh.h"
 
 
-#define _BC_CURVE_C
+#define GOMA_BC_CURVE_C
 #include "goma.h"
 
 /*
@@ -210,7 +210,7 @@ apply_integrated_curve_bc(
         if( neg_elem_volume ) return(status);
       }
     
-    if (TimeIntegration != STEADY && pd->e[MESH_DISPLACEMENT1]) {
+    if (TimeIntegration != STEADY && pd->e[pg->imtrx][MESH_DISPLACEMENT1]) {
       for (icount = 0; icount < ielem_dim; icount++) {
 	x_dot[icount] = fv_dot->x[icount];
 	/* calculate surface position for wall repulsion/no penetration condition */
@@ -331,7 +331,7 @@ apply_integrated_curve_bc(
 		for(p=0;p<ielem_dim;p++)
 		  {
 		  fsnormal[p]=fv->snormal[p];
-		  for(k=0;k<ei->dof[MESH_DISPLACEMENT1];k++)
+		  for(k=0;k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
 		    {
 		    for(q=0;q<ielem_dim;q++)
 		      {
@@ -345,7 +345,7 @@ apply_integrated_curve_bc(
 			for(p=0;p<ielem_dim;p++){
 			  ssnormal[p]=BC_Types[bc_input_id].BC_Data_Float[p+1];
 			  for (q=0;q<ielem_dim;q++){
-			    for (k = 0; k<ei->dof[MESH_DISPLACEMENT1];k++){
+			    for (k = 0; k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++){
 			      dssnormal_dx[q][p][k] = 0.;
 			    }
 			  }
@@ -368,7 +368,7 @@ apply_integrated_curve_bc(
 			    ssnormal[p]=fv->snormal[p];
 			    for (q=0;q<ielem_dim;q++)
 			      {
-				for (k = 0; k<ei->dof[MESH_DISPLACEMENT1];k++)
+				for (k = 0; k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
 				  {
 				    dssnormal_dx[q][p][k] = fv->dsnormal_dx[q][p][k];
 				  }
@@ -409,7 +409,7 @@ apply_integrated_curve_bc(
 		    fsnormal[p]=fv->snormal[p];
 		    for (q=0;q<ielem_dim;q++)
 		      {
-		      for (k = 0; k<ei->dof[MESH_DISPLACEMENT1];k++)
+		      for (k = 0; k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
 			{
 			  dfsnormal_dx[q][p][k] = fv->dsnormal_dx[q][p][k];
 			}
@@ -499,7 +499,7 @@ apply_integrated_curve_bc(
 		   * (i.e. no other overriding Dirichlet conditions,
 		   * And find the global unknown number for applying this condition
 		   */
-		  index_eq = bc_eqn_index(id, I, bc_input_id, ei->mn,
+		  index_eq = bc_eqn_index(id, I, bc_input_id, ei[pg->imtrx]->mn,
 					  p, &eqn, &matID_apply, &vd);
 		  if (index_eq >= 0)
 		    {
@@ -510,11 +510,11 @@ apply_integrated_curve_bc(
 		       * this boundary condition on. If the unknown doesn't
 		       * exist, skip calculation.
 		       */
-		      ldof_eqn = ei->ln_to_dof[eqn][id];
+		      ldof_eqn = ei[pg->imtrx]->ln_to_dof[eqn][id];
 		      if (ldof_eqn >= 0) {
 
 		      if (BC_Types[bc_input_id].desc->i_apply == SINGLE_PHASE || 
-			  pd->e[eqn]) {
+			  pd->e[pg->imtrx][eqn]) {
 			phi_i = bf[eqn]->phi[ldof_eqn];
 			weight *= phi_i;
 		      }
@@ -526,11 +526,11 @@ apply_integrated_curve_bc(
 			 */
 			for( mn = 0; mn < upd->Num_Mat; mn++)
 			{
-			  if (pd_glob[mn]->e[eqn] &&
+			  if (pd_glob[mn]->e[pg->imtrx][eqn] &&
 			      (eb_in_matrl(BC_Types[bc_input_id].BC_Data_Int[0], mn) ||
 			       eb_in_matrl(BC_Types[bc_input_id].BC_Data_Int[1], mn)   ) )
 			  {
-			    type = pd_glob[mn]->w[eqn];
+			    type = pd_glob[mn]->w[pg->imtrx][eqn];
 			    if (bfi[type] == NULL) EH(-1,"Illegal cross basis func");
 			    /* note that here, we don't have the ln_to_dof array for the adjacent 
 			       material - for now assume that ldof_eqn = id */
@@ -546,14 +546,14 @@ apply_integrated_curve_bc(
 		      if (BC_Types[bc_input_id].desc->method == STRONG_INT_EDGE) weight *= BIG_PENALTY;
 		      if (BC_Types[bc_input_id].desc->method == WEAK_INT_EDGE) 
 			{
-			  weight *= pd->etm[eqn][(LOG2_BOUNDARY)];
+			  weight *= pd->etm[pg->imtrx][eqn][(LOG2_BOUNDARY)];
 			}
 
 		      if( BC_Types[bc_input_id].BC_Name == KINEMATIC_EDGE_BC ) weight *= BIG_PENALTY;
 
 		      /* if doing a weak BC - add into local element contribution also */
 
-		      ieqn = upd->ep[eqn];
+		      ieqn = upd->ep[pg->imtrx][eqn];
 		      if (eqn == R_MASS) ieqn = MAX_PROB_VAR 
 					   + BC_Types[bc_input_id].species_eq;
 		      lec->R[ieqn][ldof_eqn] += weight * fv->edge_det * func[p];
@@ -576,10 +576,10 @@ apply_integrated_curve_bc(
 			  for (q=0; q<pd->Num_Dim; q++)
 			    {
 			      var = MESH_DISPLACEMENT1 + q;
-			      if (pd->v[var])
+			      if (pd->v[pg->imtrx][var])
 				{
-				  pvar = upd->vp[var];
-				  for ( j=0; j<ei->dof[var]; j++)
+				  pvar = upd->vp[pg->imtrx][var];
+				  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				    {
 				      lec->J[ieqn][pvar] [ldof_eqn][j] += weight * func[p] * 
 					fv->dedgedet_dx[q][j];
@@ -591,12 +591,12 @@ apply_integrated_curve_bc(
 
 			for (var=0; var < MAX_VARIABLE_TYPES; var++)
 			  {
-			    if (pd->v[var] && BC_Types[bc_input_id].desc->sens[var])
+			    if (pd->v[pg->imtrx][var] && BC_Types[bc_input_id].desc->sens[var])
 			      {
-				pvar = upd->vp[var];
+				pvar = upd->vp[pg->imtrx][var];
 				if (var != MASS_FRACTION)
 				  {
-				    for ( j=0; j<ei->dof[var]; j++)
+				    for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				      {
 					lec->J[ieqn][pvar] [ldof_eqn][j] += weight * fv->edge_det
 					    * (d_func[p][var][j] + d_func_ss[p][var][j]);
@@ -606,7 +606,7 @@ apply_integrated_curve_bc(
 				  {
 				    for (w=0; w<pd->Num_Species_Eqn; w++)
 				      {
-					for ( j=0; j<ei->dof[var]; j++)
+					for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					  {
 					    lec->J[ieqn][MAX_PROB_VAR + w] [ldof_eqn][j] += 
 						weight * fv->edge_det * d_func[p][MAX_VARIABLE_TYPES + w][j];
@@ -780,7 +780,7 @@ apply_point_colloc_edge_bc (
 	     *  Dirichlet conditions,
 	     * And find the global unknown number for applying this condition
 	     */
-	    index_eq = bc_eqn_index(id, I, bc_input_id, ei->mn,
+	    index_eq = bc_eqn_index(id, I, bc_input_id, ei[pg->imtrx]->mn,
 				    0, &eqn, &matID_apply, &vd);
 	    if (index_eq >= 0)
 	      {
@@ -789,7 +789,7 @@ apply_point_colloc_edge_bc (
 		memset( d_func_ss,0,MAX_PDIM*(MAX_VARIABLE_TYPES + MAX_CONC)*MDE*sizeof(double) );
 
 
-		ldof_eqn = ei->ln_to_dof[eqn][id];
+		ldof_eqn = ei[pg->imtrx]->ln_to_dof[eqn][id];
 		
 /*
  * Here's a RECIPE for adding new boundary conditions so you don't have any
@@ -864,8 +864,8 @@ apply_point_colloc_edge_bc (
 		    if( elem_edge_bc->shared )
 		      {
 			EH(-1,"CA_EDGE_CURVE cannot be used with shared edges.");
-		      }
-                    /* fall through */
+                      }
+                      /* fall through */
 		  case CA_EDGE_BC:
 		    /*
 		     * need surface vectors
@@ -898,7 +898,7 @@ apply_point_colloc_edge_bc (
 		    /* Free surface normal */
 		    for(p=0;p<ielem_dim;p++){
 		      fsnormal[p]=fv->snormal[p];
-		      for(k=0;k<ei->dof[MESH_DISPLACEMENT1];k++){
+		      for(k=0;k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++){
 			for(q=0;q<ielem_dim;q++){
 			  dfsnormal_dx[q][p][k] = fv->dsnormal_dx[q][p][k]; 
 			}
@@ -911,7 +911,7 @@ apply_point_colloc_edge_bc (
 			for(p=0;p<ielem_dim;p++){
 			  ssnormal[p]=BC_Types[bc_input_id].BC_Data_Float[p+1];
 			  for (q=0;q<ielem_dim;q++){
-			    for (k = 0; k<ei->dof[MESH_DISPLACEMENT1];k++){
+			    for (k = 0; k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++){
 			      dssnormal_dx[q][p][k] = 0.;
 			    }
 			  }
@@ -943,7 +943,7 @@ apply_point_colloc_edge_bc (
 			    ssnormal[p]=fv->snormal[p];
 			    for (q=0;q<ielem_dim;q++)
 			      {
-				for (k = 0; k<ei->dof[MESH_DISPLACEMENT1];k++)
+				for (k = 0; k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
 				  {
 				    dssnormal_dx[q][p][k] = fv->dsnormal_dx[q][p][k];
 				  }
@@ -989,7 +989,7 @@ apply_point_colloc_edge_bc (
 		    /* Free surface normal */
 		    for(p=0;p<ielem_dim;p++){
 		      fsnormal[p]=fv->snormal[p];
-		      for(k=0;k<ei->dof[MESH_DISPLACEMENT1];k++){
+		      for(k=0;k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++){
 			for(q=0;q<ielem_dim;q++){
 			  dfsnormal_dx[q][p][k] = fv->dsnormal_dx[q][p][k]; 
 			}
@@ -1001,7 +1001,7 @@ apply_point_colloc_edge_bc (
 		    for(p=0;p<ielem_dim;p++){
 		      ssnormal[p]=(double) BC_Types[bc_input_id].u_BC[p+1];
 		      for (q=0;q<ielem_dim;q++){
-			for (k = 0; k<ei->dof[MESH_DISPLACEMENT1];k++){
+			for (k = 0; k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++){
 			  dssnormal_dx[q][p][k] = 0.;
 			}
 		      }
@@ -1024,12 +1024,12 @@ apply_point_colloc_edge_bc (
 			  /* fix contact point where it sits right now */
 			  for(p=0;p<ielem_dim;p++)
 			    {
-			      k = Index_Solution(I, MESH_DISPLACEMENT1+p, 0, 0, -2);
-			      ldof_eqn = ei->ln_to_first_dof[MESH_DISPLACEMENT1+p][id];
+			      k = Index_Solution(I, MESH_DISPLACEMENT1+p, 0, 0, -2, pg->imtrx);
+			      ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[MESH_DISPLACEMENT1+p][id];
 			      lec->R[MESH_DISPLACEMENT1 + p][ldof_eqn] = 0.; 
 			      d_func[p][MESH_DISPLACEMENT1+p][id] = 1.;
 			      
-	                      eqn = upd->ep[MESH_DISPLACEMENT1 + p];
+	                      eqn = upd->ep[pg->imtrx][MESH_DISPLACEMENT1 + p];
 			      zero_lec_row(lec->J,eqn,ldof_eqn);
 			      lec->J[eqn][eqn][ldof_eqn][ldof_eqn] 
 				= DIRICHLET_PENALTY; 
@@ -1132,7 +1132,7 @@ apply_point_colloc_edge_bc (
       /******************************************************************************/
 	      for (p=0; p<BC_Types[bc_input_id].desc->vector; p++)
 		{
-		  ieqn = upd->ep[eqn];
+		  ieqn = upd->ep[pg->imtrx][eqn];
 		  if (eqn == R_MASS) ieqn = MAX_PROB_VAR 
 				       + BC_Types[bc_input_id].species_eq;
 		  lec->R[ieqn][ldof_eqn] += BIG_PENALTY * func[p];
@@ -1147,7 +1147,7 @@ apply_point_colloc_edge_bc (
 		if (af->Assemble_Jacobian) {
 		  for (var=0; var < MAX_VARIABLE_TYPES; var++)
 		    {
-		      if (pd->v[var] && BC_Types[bc_input_id].desc->sens[var])
+		      if (pd->v[pg->imtrx][var] && BC_Types[bc_input_id].desc->sens[var])
 			{
 			  if (var != MASS_FRACTION)
 			    {
@@ -1155,10 +1155,10 @@ apply_point_colloc_edge_bc (
 			       * this routine determines the entry in the jacobian matrix which
 			       * corresponds to this BC equation and this unknown
 			       */
-			      for ( j=0; j<ei->dof[var]; j++)
+			      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				{
-				  pvar = upd->vp[var];
-				  ldof_eqn = ei->ln_to_first_dof[eqn][id];
+				  pvar = upd->vp[pg->imtrx][var];
+				  ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][id];
 				  lec->J[ieqn][pvar] [ldof_eqn][j] += BIG_PENALTY * ( d_func[p][var][j] +
 										      d_func_ss[p][var][j] );
 				}
@@ -1167,10 +1167,10 @@ apply_point_colloc_edge_bc (
 			    {
 			      for (w=0; w<pd->Num_Species_Eqn; w++)
 				{
-				  for ( j=0; j<ei->dof[var]; j++)
+				  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				    {
-				      // pvar = upd->vp[MAX_PROB_VAR + w];
-				      ldof_eqn = ei->ln_to_first_dof[eqn][id];
+				      // pvar = upd->vp[pg->imtrx][MAX_PROB_VAR + w];
+				      ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][id];
 				      lec->J[ieqn][MAX_PROB_VAR + w] [ldof_eqn][j] += BIG_PENALTY * d_func[p][MAX_VARIABLE_TYPES + w][j];
 				    }
 				} /* end of loop over species */   

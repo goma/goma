@@ -15,12 +15,14 @@
  * Created: 1997/04/12 10:19 MDT pasacki@sandia.gov
  */
 
-#ifndef _BRKFIX_STD_H
-#define _BRKFIX_STD_H
+#ifndef GOMA_BRKFIX_STD_H
+#define GOMA_BRKFIX_STD_H
 
 #ifndef FILENAME_MAX_ACK
 #define FILENAME_MAX_ACK		1024
 #endif
+
+#include "rf_io_const.h"
 
 #define LINE_BUFFER_LENGTH		1024
 #ifndef MAX_CHAR_ERR_MSG
@@ -28,7 +30,6 @@
 #endif
 #define MAX_NEIGHBOR_NODES		1000
 #ifndef MAX_SYSTEM_COMMAND_LENGTH
-#define MAX_SYSTEM_COMMAND_LENGTH	1024
 #endif
 #define MAX_ADJOINING_SETS		10
 
@@ -101,19 +102,6 @@
 #define FALSE   0
 #endif
 
-#ifndef HAVE_PROTOTYPES
-#if defined(__STDC__) || defined(__GNUC__) || defined(__cplusplus) || defined(c_plusplus)
-#define  HAVE_PROTOTYPES
-#endif
-#endif
-
-#undef PROTO
-#ifdef HAVE_PROTOTYPES
-#define PROTO(x) x
-#else
-#define PROTO(x) ()
-#endif     
-
 /*
  * sprintf() returns different types on different machines...
  */
@@ -135,8 +123,8 @@
 
 #define STRCPY_RTN_IS_STRING
 
-#ifndef _FLT_TYPEDEF
-#define _FLT_TYPEDEF
+#ifndef GOMA_FLT_TYPEDEF
+#define GOMA_FLT_TYPEDEF
 typedef float flt;
 #endif
 

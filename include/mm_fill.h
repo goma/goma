@@ -15,23 +15,25 @@
  */
 
 
-#ifndef _MM_FILL_H
-#define _MM_FILL_H
+#ifndef GOMA_MM_FILL_H
+#define GOMA_MM_FILL_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_C
+#ifdef GOMA_MM_FILL_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_C
+#ifndef GOMA_MM_FILL_C
 #define EXTERN extern
 #endif
 
+#include "dg_utils.h"
+
 extern int matrix_fill_full
-PROTO((struct Aztec_Linear_Solver_System *,
+(struct Aztec_Linear_Solver_System *,
        double [],   /* x - Solution vector                       */	
        double [],   /* resid_vector - Residual vector            */
        double [],   /* x_old -  previous last time step          */	
@@ -48,11 +50,11 @@ PROTO((struct Aztec_Linear_Solver_System *,
        int *,	    /* num_total_nodes - Number of nodes that proc owns */
        dbl *,       /* h_elem_avg - global average element size  for PSPG */
        dbl *,       /* U_norm - global average velocity for PSPG */
-       dbl *));     /* estifm - element stiffness Matrix for frontal solver */
+       dbl *);
 
 
 EXTERN int matrix_fill
-PROTO((struct Aztec_Linear_Solver_System *,	
+(struct Aztec_Linear_Solver_System *,	
        double [],		/* x - Solution vector                       */
        double [],		/* resid_vector - Residual vector            */
        double [],		/* x_old -  previous last time step          */
@@ -82,10 +84,10 @@ PROTO((struct Aztec_Linear_Solver_System *,
        dbl *,			/* U_norm - global average velocity for PSPG */
        dbl *,			/* estifm - element stiffness Matrix for 
 				 * frontal solver                            */
-       int ));                  /* zeroCA */
+       int );
 
 EXTERN int matrix_fill_stress
-PROTO((struct Aztec_Linear_Solver_System *,    
+(struct Aztec_Linear_Solver_System *,    
        double [],               /* x - Solution vector                       */
        double [],               /* resid_vector - Residual vector            */
        double [],               /* x_old -  previous last time step          */
@@ -115,17 +117,17 @@ PROTO((struct Aztec_Linear_Solver_System *,
        dbl *,                   /* U_norm - global average velocity for PSPG */
        dbl *,                   /* estifm - element stiffness Matrix for 
                                  * frontal solver                            */
-       int ));                  /* zeroCA */
+       int );                  /* zeroCA */
 
 EXTERN int checkfinite
-PROTO((const char * const,      /* file                                      */
-       const int ,	       	/* line                                      */
-       const char * const));	/* message                                   */
+       (const char * file,
+        const int line,	       	/* line                                      */
+       const char * message);	/* message                                   */
 
 EXTERN int load_pf_constraint
-PROTO((double pf_constraint,
+(double pf_constraint,
        double d_pf_lm[][MDE],
-       double d_lm_pf[][MDE]));
+       double d_lm_pf[][MDE]);
 
 
        
@@ -135,4 +137,4 @@ PROTO((double pf_constraint,
 #define CHECKFINITE(MESSAGE)	0
 #endif
 
-#endif /* _MM_FILL_H */
+#endif /* GOMA_MM_FILL_H */

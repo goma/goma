@@ -29,7 +29,7 @@
  * Revised: 1997/05/18 12:54 MDT pasacki@sandia.gov
  */
 
-#define _WR_DPI_C
+#define GOMA_WR_DPI_C
 
 #ifdef _HAVE_CONFIG_H
 #include <config.h>
@@ -104,13 +104,13 @@ static char rcsid[] = "$Id: wr_dpi.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
  */
 
 static void define_dimension
-PROTO((const int ,		/* unit */
+(const int ,		/* unit */
        const char *,		/* string */
        const int ,		/* value */
-       int *));			/* identifier */
+       int *);			/* identifier */
 
 static void define_variable
-PROTO((const int ,		/* netcdf_unit */
+(const int ,		/* netcdf_unit */
        const char *,		/* name_string */
        const nc_type ,		/* netcdf_type */
        const int ,		/* num_dimensions (less than 3 for now) */
@@ -118,16 +118,16 @@ PROTO((const int ,		/* netcdf_unit */
        const int ,		/* dimension_id_2 */
        const int ,		/* dimension_val_1 */
        const int ,		/* dimension_val_2 */
-       int *));			/* identifier */
+       int *);			/* identifier */
 
 static void put_variable
-PROTO((const int ,		/* netcdf_unit */
+(const int ,		/* netcdf_unit */
        const nc_type ,		/* netcdf_type */
        const int ,		/* num_dimensions */
        const int ,		/* dimension_val_1 */
        const int ,		/* dimension_val_2 */
        const int ,		/* variable_identifier */
-       const void *));		/* variable_address */
+       const void *);		/* variable_address */
 
 int
 wr_dpi(Dpi *d,

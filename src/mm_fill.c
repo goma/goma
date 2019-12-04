@@ -54,7 +54,7 @@
 #include "mm_fill_fill.h"
 #include "mm_fill_stress.h"
 #include "mm_fill_shell.h"
-
+#include "mm_fill_population.h"
 #include "exo_struct.h"
 #include "dpi.h"
 
@@ -67,7 +67,7 @@
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
 
-#define _MM_FILL_C
+#define GOMA_MM_FILL_C
 #include "goma.h"
 
 #include "mm_fill_fill.h"
@@ -84,12 +84,12 @@
 double mm_fill_total;
 
 static void load_lec 
-PROTO(( Exo_DB*,                 /* Exodus database pointer */
+( Exo_DB*,                 /* Exodus database pointer */
 	int ,                    /* element number we are working on */
 	struct Aztec_Linear_Solver_System *,
 	double [],		/* Solution vector */
 	double [],		/* Residual vector */
-	double *));              /* element stiffness Matrix for frontal solver*/
+	double *);              /* element stiffness Matrix for frontal solver*/
 static void zero_lec(void);
 
 
@@ -130,8 +130,7 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
 		     int *ptr_num_total_nodes,
 		     dbl *ptr_h_elem_avg,
 		     dbl *ptr_U_norm,
-		     dbl *estifm)
-
+                     dbl *estifm)
 {
   int ielem=0, e_start=0, e_end=0, ebn=0 ;
   char yo[] = "matrix_fill_full";
@@ -200,7 +199,7 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
     err = matrix_fill(ams, x, resid_vector, x_old, x_older, xdot, xdot_old, x_update,
 		      ptr_delta_t, ptr_theta, first_elem_side_BC_array,
 		      ptr_time_value, exo, dpi, &ielem, ptr_num_total_nodes,
-		      ptr_h_elem_avg, ptr_U_norm, estifm, 0);
+                ptr_h_elem_avg, ptr_U_norm, estifm, 0);
 
     if (err) break;
   
@@ -306,7 +305,7 @@ matrix_fill(
 	    dbl *ptr_h_elem_avg,          /* global average element size for PSPG */
 	    dbl *ptr_U_norm    ,          /* global average velocity for PSPG */
 	    dbl *estifm,                 /* element stiffness Matrix for frontal solver*/
-	    int zeroCA)                   /* boolean to zero zeroCA */
+            int zeroCA)
 
      /******************************************************************************
   Function which fills the FEM stiffness matrices and the right-hand side.
@@ -551,15 +550,14 @@ matrix_fill(
    * a bona fide zero value so that references to undefined variables
    * give a zero by default...
    */
-
-  
   err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 
 			 resid_vector, 0);
   EH(err, "load_elem_dofptr");
 
+
   err = bf_mp_init(pd);
-  mn = ei->mn;
-  pde = (int*) pd->e;
+  mn = ei[pg->imtrx]->mn;
+  pde = (int*) pd->e[pg->imtrx];
 
   
   for ( mode=0; mode<vn->modes; mode++)
@@ -576,25 +574,25 @@ matrix_fill(
   
   discontinuous_mass = 0;
 
-  if(pd->i[MASS_FRACTION]==I_P1)
+  if(pd->i[pg->imtrx][MASS_FRACTION]==I_P1)
     {
       if (pd->Num_Dim == 2) ielem_type_mass = P1_QUAD;
       if (pd->Num_Dim == 3) ielem_type_mass = P1_HEX;
       discontinuous_mass = 1;
     }
-  else if(pd->i[MASS_FRACTION]==I_P0)
+  else if(pd->i[pg->imtrx][MASS_FRACTION]==I_P0)
     {
       if (pd->Num_Dim == 2) ielem_type_mass = P0_QUAD;
       if (pd->Num_Dim == 3) ielem_type_mass = P0_HEX;
       discontinuous_mass = 1;
     }
-  else if(pd->i[MASS_FRACTION]==I_PQ1)
+  else if(pd->i[pg->imtrx][MASS_FRACTION]==I_PQ1)
     {
       if (pd->Num_Dim == 2) ielem_type_mass = BILINEAR_QUAD;
       if (pd->Num_Dim == 3) EH(-1,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
       discontinuous_mass = 1;
     }
-  else if(pd->i[MASS_FRACTION]==I_PQ2)
+  else if(pd->i[pg->imtrx][MASS_FRACTION]==I_PQ2)
     {
       if (pd->Num_Dim == 2) ielem_type_mass = BIQUAD_QUAD;
       if (pd->Num_Dim == 3) EH(-1,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
@@ -607,32 +605,32 @@ matrix_fill(
   
   discontinuous_stress = 0;
   
-  if(pd->i[POLYMER_STRESS11]==I_P1)
+  if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_P1)
     {
       discontinuous_stress = 1;
     }
-  else if(pd->i[POLYMER_STRESS11]==I_P0)
+  else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_P0)
     {
       discontinuous_stress = 1;
     }
-  else if(pd->i[POLYMER_STRESS11]==I_PQ1)
+  else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_PQ1)
     {
       if (pd->Num_Dim == 3) EH(-1,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
     }
-  else if(pd->i[POLYMER_STRESS11]==I_PQ2)
+  else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_PQ2)
     {
       if (pd->Num_Dim == 3) EH(-1,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
     }
 
-  ielem_type      = ei->ielem_type;  /* element type */
+  ielem_type      = ei[pg->imtrx]->ielem_type;  /* element type */
   
-  num_local_nodes = ei->num_local_nodes; /* number of local  basis functions */
+  num_local_nodes = ei[pg->imtrx]->num_local_nodes; /* number of local  basis functions */
   
-  ielem_dim       = ei->ielem_dim; /* physical dimension  of this element */
+  ielem_dim       = ei[pg->imtrx]->ielem_dim; /* physical dimension  of this element */
   
-  iconnect_ptr    = ei->iconnect_ptr; /* find pointer to beginning  of this element's connectivity list */
+  iconnect_ptr    = ei[pg->imtrx]->iconnect_ptr; /* find pointer to beginning  of this element's connectivity list */
   
 
 #ifdef DEBUG
@@ -642,7 +640,7 @@ matrix_fill(
 #endif /* DEBUG */
 
   /* subgrid or subelement integration setup */
-  if( pd->v[FILL] && ls != NULL && ls->Integration_Depth > 0 &&
+  if( pd->gv[FILL] && ls != NULL && ls->Integration_Depth > 0 &&
       ls->elem_overlap_state )
     {
       Subgrid_Int.active = TRUE;
@@ -652,17 +650,17 @@ matrix_fill(
          it recursive divides element to create small subelements and then
          creates subgrid integration points */
       Subgrid_Int.ip_total = get_subelement_integration_pts ( &Subgrid_Int.s, &Subgrid_Int.wt, &Subgrid_Int.ip_sign, 0., -2, 0 );
-      /*DPRINTF(stderr,"DEBUG ielem=%d, ip_total=%d\n",ei->ielem,Subgrid_Int.ip_total);*/
+      /*DPRINTF(stderr,"DEBUG ielem=%d, ip_total=%d\n",ei[pg->imtrx]->ielem,Subgrid_Int.ip_total);*/
 #else
       Subgrid_Int.ip_total = get_subgrid_integration_pts ( Subgrid_Tree, &element_search_grid,
 							   &Subgrid_Int.s, &Subgrid_Int.wt, ls->Length_Scale );
-      /*DPRINTF(stderr,"DEBUG ielem=%d, ip_total=%d\n",ei->ielem,Subgrid_Int.ip_total);*/
+      /*DPRINTF(stderr,"DEBUG ielem=%d, ip_total=%d\n",ei[pg->imtrx]->ielem,Subgrid_Int.ip_total);*/
 #endif
 #if 0
       print_subgrid_integration_pts ( Subgrid_Int.s, Subgrid_Int.wt, Subgrid_Int.ip_total );
 #endif
     }
-  else if( pd->v[FILL] && ls != NULL &&
+  else if( pd->gv[FILL] && ls != NULL &&
            ls->SubElemIntegration && 
 	   ls->elem_overlap_state )
     {
@@ -685,7 +683,7 @@ matrix_fill(
       print_subgrid_integration_pts ( Subgrid_Int.s, Subgrid_Int.wt, Subgrid_Int.ip_total );
 #endif
     }
-  else if( pd->v[FILL] && ls != NULL && ls->AdaptIntegration && ls->elem_overlap_state )
+  else if( pd->gv[FILL] && ls != NULL && ls->AdaptIntegration && ls->elem_overlap_state )
     {Subgrid_Int.active = TRUE;}
   else
     {
@@ -748,13 +746,34 @@ matrix_fill(
 	}
     }
 
-  if (PSPG && pde[R_PRESSURE] && pde[R_MOMENTUM1]) {
+  if ((PSPG || (mp->Mwt_funcModel == SUPG)) && pde[R_PRESSURE] && pde[R_MOMENTUM1]) {
     xi[0] = 0.0;
     xi[1] = 0.0;
     xi[2] = 0.0;  
     (void) load_basis_functions(xi, bfd);
+    setup_shop_at_point(ielem, xi, exo);
     pg_data.mu_avg = element_viscosity();
     pg_data.rho_avg = density(NULL, time_value);
+
+    double mu = 0;
+    double rho = 0;
+    for (ip = 0; ip < num_local_nodes; ip ++)
+      {
+        find_nodal_stu(ip, ielem_type, &xi[0], &xi[1], &xi[2]);
+        setup_shop_at_point(ei[pg->imtrx]->ielem, xi, exo);
+        double gamma[DIM][DIM];
+        for ( int a=0; a<VIM; a++)
+          {
+            for ( int b=0; b<VIM; b++)
+              {
+                gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+              }
+          }
+        mu += viscosity(gn, gamma, NULL);
+        rho += density(NULL, time_value);
+      }
+    pg_data.mu_avg = mu / ((double) num_local_nodes);
+    pg_data.rho_avg = rho / ((double) num_local_nodes);
 
     if(pspg_local)
       {
@@ -779,7 +798,7 @@ matrix_fill(
       }
     }
 
-  if(pde[FILL] || pde[PHASE1])      /* UMR fix for non-FILL problems */
+  if(pd->gv[FILL] || pd->gv[PHASE1])      /* UMR fix for non-FILL problems */
     {
       if(ls != NULL)
 	{
@@ -791,17 +810,22 @@ matrix_fill(
    * The current SUPG model requires a value for the element's size and the
    * average velocity. Evaluate this here.
    */
-  if ((vn->wt_funcModel == SUPG && pde[R_STRESS11] && pde[R_MOMENTUM1]) || 
+  if ((mp->Momentwt_funcModel == SUPG && (pde[R_MOMENT0] ||
+                                          pde[R_MOMENT1] ||
+                                          pde[R_MOMENT2] ||
+                                          pde[R_MOMENT3])
+                                          && pd->gv[R_MOMENTUM1]) ||
+      (vn->wt_funcModel == SUPG && pde[R_STRESS11] && pd->gv[R_MOMENTUM1]) ||
       (mp->Spwt_funcModel == SUPG && pde[R_MASS] &&
-       (pde[R_MOMENTUM1] || pde[R_MESH1])) ||
+       (pd->gv[R_MOMENTUM1] || pd->gv[R_MESH1])) ||
       (mp->Mwt_funcModel == SUPG && pde[R_MOMENTUM1]) ||
       (mp->Ewt_funcModel == SUPG && pde[R_ENERGY] &&
-       (pde[R_MOMENTUM1] || pde[R_MESH1])) ||
+       (pd->gv[R_MOMENTUM1] || pd->gv[R_MESH1])) ||
       (mp->Ewt_funcModel == SUPG && pde[R_SHELL_ENERGY] &&
        (pde[R_LUBP] )) ||
       ((pde[R_FILL]) && ((tran->Fill_Weight_Fcn == FILL_WEIGHT_SUPG) || (tran->Fill_Weight_Fcn == FILL_WEIGHT_EXPLICIT))))
     {
-      h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pde[R_MESH1]);
+      h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pd->gv[R_MESH1]);
       element_velocity(pg_data.v_avg, pg_data.dv_dnode, exo);
     }
   
@@ -850,12 +874,12 @@ matrix_fill(
 	{
 	  for(b=0; b < pd->Num_Dim; b++)
 	    {
-	      for (i = 0; i < ei->dof[R_LAGR_MULT1 + b]; i++) {
+	      for (i = 0; i < ei[pg->imtrx]->dof[R_LAGR_MULT1 + b]; i++) {
 		if(af->Assemble_Residual)
 		  {
-		    lm_dof = ei->gun_list[R_LAGR_MULT1 + b][i];
-		    eqn = upd->ep[R_LAGR_MULT1 + b];
-		    var = upd->vp[LAGR_MULT1 + b];
+		    lm_dof = ei[pg->imtrx]->gun_list[R_LAGR_MULT1 + b][i];
+		    eqn = upd->ep[pg->imtrx][R_LAGR_MULT1 + b];
+		    var = upd->vp[pg->imtrx][LAGR_MULT1 + b];
 		    lec->R[eqn][i] = x[lm_dof];
 		  }
        
@@ -874,11 +898,11 @@ matrix_fill(
 	{
 	  for(b=0; b < pd->Num_Dim; b++)
 	    {
-	      for (i = 0; i < ei->dof[R_LAGR_MULT1 + b]; i++) {
+	      for (i = 0; i < ei[pg->imtrx]->dof[R_LAGR_MULT1 + b]; i++) {
 		if(af->Assemble_Residual)
 		  {
-		    eqn = upd->ep[R_LAGR_MULT1 + b];
-		    var = upd->vp[LAGR_MULT1 + b];
+		    eqn = upd->ep[pg->imtrx][R_LAGR_MULT1 + b];
+		    var = upd->vp[pg->imtrx][LAGR_MULT1 + b];
 		    lec->R[eqn][i] = 0.;
 		  }
        
@@ -908,21 +932,21 @@ matrix_fill(
 
   if (pde[R_SOLID1])
     {
-      if (pd->etm[R_SOLID1][(LOG2_MASS)]) EH(-1,"Cannot do real inertia for TALE yet. Remove this line if trying to perform EULERIAN solid mechanics");
+      if (pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)]) EH(-1,"Cannot do real inertia for TALE yet. Remove this line if trying to perform EULERIAN solid mechanics");
       eqn = R_SOLID1;
       if (pd->TimeIntegration != STEADY && 
-	  pd->etm[R_SOLID1][(LOG2_MASS)] &&
+	  pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
 	  !ls->elem_overlap_state &&
 	  *esp->F[0] >= 0.0)
 	{
-	  for (i = 0; i < ei->dof[eqn]; i++)
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 	      make_trivial = TRUE;
-	      if ( (pd->i[eqn] == I_Q1) || (pd->i[eqn] == I_Q2 ) )
+	      if ( (pd->i[pg->imtrx][eqn] == I_Q1) || (pd->i[pg->imtrx][eqn] == I_Q2 ) )
 		{
 		  /* check all neighboring elements to see if any 
 		     span the interface */
-		  I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+		  I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
 		  for (j = exo->node_elem_pntr[I]; j < 
 			 exo->node_elem_pntr[I+1]; j++)
 		    {
@@ -941,11 +965,11 @@ matrix_fill(
 	      assemble_rs = FALSE;
 	      for (b=0; b < pd->Num_Dim; b++)
 		{
-		  for (i = 0; i < ei->dof[R_SOLID1 + b]; i++) {
+		  for (i = 0; i < ei[pg->imtrx]->dof[R_SOLID1 + b]; i++) {
 		    if(af->Assemble_Residual)
 		      {
-			eqn = upd->ep[R_SOLID1 + b];
-			var = upd->vp[R_SOLID1 + b];
+			eqn = upd->ep[pg->imtrx][R_SOLID1 + b];
+			var = upd->vp[pg->imtrx][R_SOLID1 + b];
 			lec->R[eqn][i] = 0.;
 		      }
 			     
@@ -984,7 +1008,7 @@ matrix_fill(
     {
       if (PSPP == 1)
 	{
-	  err = assemble_projection_stabilization(exo); 
+	  err = assemble_projection_stabilization(exo, time_value);
 	  EH(err, "assemble_projection_stabilization");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_projection_stabilization"); 
@@ -1001,6 +1025,15 @@ matrix_fill(
 	  if (err) return -1;
 #endif
 	}
+
+      if (PSPP == 3)
+        {
+          err = assemble_projection_time_stabilization(exo, time_value, theta, delta_t);
+          EH(err, "assemble_projection_stabilization");
+#ifdef CHECK_FINITE
+          CHECKFINITE("assemble_projection_stabilization");
+#endif
+        }
     }
 
   /******************************************************************************/
@@ -1017,6 +1050,11 @@ matrix_fill(
 
   if( pde[R_FILL] )  /* No need to do this loop if there is no LS/FILL variable OK */
     {
+      struct LS_Mass_Lumped_Penalty mass_lumped_penalty;
+      if (ls != NULL && ls->Toure_Penalty) {
+        assemble_ls_mass_lumped_penalty(&mass_lumped_penalty, ip_total, ielem_type, &pg_data);
+      }
+
       for (ip = 0; ip < ip_total; ip++)
 	{
 	  MMH_ip = ip;
@@ -1075,7 +1113,8 @@ matrix_fill(
 
 	  err = load_fv();
 	  EH( err, "load_fv");
-       
+
+
 	  /*
 	   * Here, load in the final part of the necessary basis function
 	   * information derivatives in the physical space coordinates.
@@ -1094,7 +1133,8 @@ matrix_fill(
 	   * we really need this information...
 	   */
       
-	  if ( pde[R_MESH1] )
+          
+          if (pd->gv[R_MESH1])
 	    {
 	      err = load_bf_mesh_derivs(); 
 	      EH( err, "load_bf_mesh_derivs");
@@ -1107,7 +1147,9 @@ matrix_fill(
 	  err = load_fv_grads();
 	  EH( err, "load_fv_grads");	  
             
-	  if ( pde[R_MESH1] )
+
+
+          if (pd->gv[R_MESH1])
 	    {
 	      err = load_fv_mesh_derivs(1);
 	      EH( err, "load_fv_mesh_derivs");
@@ -1145,7 +1187,8 @@ matrix_fill(
 	    }
 	  else if(  tran->Fill_Equation == FILL_EQN_ADVECT )
 	    {
-	      err = assemble_fill(theta, delta_t, pg_data.hsquared, pg_data.hh, pg_data.dh_dxnode, R_FILL, xi, exo, time_value);
+              //err = assemble_fill(theta, delta_t, &pg_data, R_FILL, xi, exo, time_value, &mass_lumped_penalty);
+              err = assemble_fill(theta, delta_t, pg_data.hsquared, pg_data.hh, pg_data.dh_dxnode, R_FILL, xi, exo, time_value);
 	      EH( err, "assemble_fill");
 #ifdef CHECK_FINITE
 	      err = CHECKFINITE("assemble_fill"); 
@@ -1155,8 +1198,8 @@ matrix_fill(
 		{
 		  ls_old = ls;
 		  ls = pfd->ls[0]; 
-		  err = assemble_fill(theta, delta_t, pg_data.hsquared, pg_data.hh, 
-				      pg_data.dh_dxnode, R_PHASE1, xi, exo, time_value);
+                  //err = assemble_fill(theta, delta_t, &pg_data, R_PHASE1, xi, exo, time_value, &mass_lumped_penalty);
+                  err = assemble_fill(theta, delta_t, pg_data.hsquared, pg_data.hh, pg_data.dh_dxnode, R_FILL, xi, exo, time_value);
 		  ls = ls_old; /*Make things right again */
 		  EH( err, "assemble_fill");
 #ifdef CHECK_FINITE
@@ -1227,10 +1270,10 @@ matrix_fill(
 
       if ( xfem != NULL ) 
 	{
-	  for(i=0 ; i<ei->num_local_nodes ; i++)	{ls_F[i]=*esp->F[i];}
+	  for(i=0 ; i<ei[pg->imtrx]->num_local_nodes ; i++)	{ls_F[i]=*esp->F[i];}
 	  i=adaptive_weight(ad_wtpos, ip_total, ielem_dim, ls_F, ls->Length_Scale, 2, ielem_type);
 	  WH(i,"problem with adaptive weight routine");
-	  for(i=0 ; i<ei->num_local_nodes ; i++)	{ls_F[i]=-ls_F[i];}
+	  for(i=0 ; i<ei[pg->imtrx]->num_local_nodes ; i++)	{ls_F[i]=-ls_F[i];}
 	  i=adaptive_weight(ad_wtneg, ip_total, ielem_dim, ls_F, ls->Length_Scale, 2, ielem_type);
 	  WH(i,"problem with adaptive weight routine");
 	  ip_total = 2*elem_info(NQUAD, ielem_type); 
@@ -1355,6 +1398,7 @@ matrix_fill(
        */
 
       err = load_basis_functions(xi, bfd);
+
       EH( err, "problem from load_basis_functions");
 
       /*
@@ -1381,7 +1425,7 @@ matrix_fill(
        */
       err = load_fv();
       EH( err, "load_fv");
-       
+
       /*
        * Here, load in the final part of the necessary basis function
        * information derivatives in the physical space coordinates.
@@ -1400,7 +1444,7 @@ matrix_fill(
        * we really need this information...
        */
       
-      if (pde[R_MESH1] || pd->v[R_MESH1])
+      if (pd->gv[R_MESH1])
 	{
 	  err = load_bf_mesh_derivs(); 
 	  EH( err, "load_bf_mesh_derivs");
@@ -1411,9 +1455,10 @@ matrix_fill(
        * Gauss point.
        */
       err = load_fv_grads();
-      EH( err, "load_fv_grads");	  
-            
-      if ( pde[R_MESH1] ||  pd->v[R_MESH1])
+      EH( err, "load_fv_grads");
+
+
+      if (pd->gv[R_MESH1])
 	{
 	  err = load_fv_mesh_derivs(1);
 	  EH( err, "load_fv_mesh_derivs");
@@ -1516,17 +1561,19 @@ matrix_fill(
       else if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
         {
           err = assemble_stress_log_conf(theta, delta_t, pg_data.hsquared,
-                                     pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
+                                                     pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
+
+          EH(err, "assemble_stress_log_conf");
 	  if (err) return -1;
           err = segregate_stress_update( x_update );
-          EH(err, "assemble_stress_log_conf");
+          EH(err, "assemble_stress_update");
 #ifdef CHECK_FINITE
           err = CHECKFINITE("assemble_stress_log_conf");
           if (err) return -1;
 #endif
         }
 
-      
+
       if (pde[R_SHEAR_RATE])
 	{
 	  err = assemble_invariant(theta, delta_t);
@@ -2274,8 +2321,8 @@ matrix_fill(
   }
       if( pde[R_MOMENTUM1] )
 	{
-          err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
-          EH( err, "assemble_momentum");
+            err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
+            EH( err, "assemble_momentum");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_momentum"); 
 	  if (err) return -1;
@@ -2291,6 +2338,27 @@ matrix_fill(
 	  if (err) return -1;
 #endif
 	}
+
+      if( pde[R_MOMENT0] ||
+	  pde[R_MOMENT1] ||
+	  pde[R_MOMENT2] ||
+	  pde[R_MOMENT3] )
+	{
+	  err = assemble_moments(time_value, theta, delta_t, &pg_data);
+          EH( err, "assemble_moments");
+#ifdef CHECK_FINITE
+	  CHECKFINITE("assemble_moments");
+#endif
+	}
+      if( pde[R_DENSITY_EQN] )
+	{
+	  err = assemble_density();
+          EH( err, "assemble_density");
+#ifdef CHECK_FINITE
+	  CHECKFINITE("assemble_density");
+#endif
+	}
+
 
       if( pde[R_FILL] )
 	{
@@ -2341,8 +2409,8 @@ matrix_fill(
 
       if( pde[R_PRESSURE] )
 	{
-	  err = assemble_continuity(time_value, theta, delta_t, &pg_data);
-	  EH( err, "assemble_continuity");
+            err = assemble_continuity(time_value, theta, delta_t, &pg_data);
+            EH( err, "assemble_continuity");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_continuity"); 
 	  if (err) return -1;
@@ -2451,7 +2519,7 @@ matrix_fill(
     }
   /* END  for (ip = 0; ip < ip_total; ip++)                               */  
 
-  if ( pde[R_LEVEL_SET] && ls != NULL )
+  if ( pd->gv[R_LEVEL_SET] && ls != NULL )
     apply_embedded_colloc_bc( ielem, x, delta_t, theta, time_value,
                               exo, dpi );
 
@@ -2466,7 +2534,7 @@ matrix_fill(
   /*First apply BCS to embedded primary level-set surface. */
   if (ls != NULL )
     {
-      if ( pde[ls->var] && ls->elem_overlap_state )
+      if ( pd->gv[ls->var] && ls->elem_overlap_state )
 	{
 	  if ( ls->Length_Scale == 0. || Do_Overlap )
 	    {
@@ -2499,7 +2567,7 @@ matrix_fill(
       if (pfd->ls[0]->Evolution == LS_EVOLVE_SLAVE)
 
 	{
-	  if ( pde[ls->var] && ls->elem_overlap_state )
+	  if ( pd->gv[ls->var] && ls->elem_overlap_state )
 	    {
 	      if ( ls->Length_Scale == 0. || Do_Overlap )
 		{
@@ -2523,7 +2591,7 @@ matrix_fill(
 		}
 	    }
 	}
-      else if( pde[R_PHASE1] && !pde[R_FILL] )
+      else if( pd->gv[R_PHASE1] && !pd->gv[R_FILL] )
 	{
 	  apply_distributed_sources ( ielem, ls->Length_Scale,
 				      x, exo,
@@ -2531,9 +2599,9 @@ matrix_fill(
 				      &pg_data,
 				      -1, NULL, NULL, NULL );
 	}
-      else if (pde[R_PHASE1] && pde[R_EXT_VELOCITY])
+      else if (pd->gv[R_PHASE1] && pd->gv[R_EXT_VELOCITY])
 	{
-	  if ( pde[ls->var] && ls->elem_overlap_state )
+	  if ( pd->gv[ls->var] && ls->elem_overlap_state )
 	    {
 	      apply_embedded_bc( ielem, x, delta_t, theta, time_value, &pg_data, -1, NULL, NULL, NULL, exo );
 #ifdef CHECK_FINITE
@@ -2560,24 +2628,30 @@ matrix_fill(
     {
       int neighbor;  
       int index, face;
-	      
-      for (face = 0; face < ei->num_sides; face++)
-	{
-		  
-	  index = exo->elem_elem_pntr[ielem] + face;
-	  neighbor = exo->elem_elem_list[index];
-		  
-	  id_side = face + 1;
-		  
-	  err = assemble_surface_species(exo, x, delta_t, theta,
-					 ielem_type, ielem_type_mass, id_side, 
-					 neighbor, ielem, num_local_nodes);
-	  EH( err, "assemble_surface_species"); 
+
+      for (face = 0; face < ei[pg->imtrx]->num_sides; face++)
+      {
+
+        index = exo->elem_elem_pntr[ielem] + face;
+        neighbor = exo->elem_elem_list[index];
+
+        if (Num_Proc > 1 && exo->elem_elem_list[index] == -1 &&
+            dpi->elem_elem_list_global[index] != -1
+            && proc_to_neighbor(dpi->elem_elem_proc_global[index], dpi) != -1) {
+          neighbor = -2; // set flag for using dg_neighbor_data when we have a parallel neighbor
+        }
+
+        id_side = face + 1;
+
+        err = assemble_surface_species(exo, x, delta_t, theta,
+                                       ielem_type, ielem_type_mass, id_side,
+                                       neighbor, ielem, num_local_nodes);
+        EH( err, "assemble_surface_species");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_surface_species"); 
 	  if (err) return -1;
 #endif
-	}
+      }
     } 
 
   if (discontinuous_stress)
@@ -2588,7 +2662,12 @@ matrix_fill(
       var = 4*MDE*(MAX_PROB_VAR+MAX_CONC)*MDE;
       memset(lec->J_stress_neighbor, 0, sizeof(double)*var); 
 
-      for (face = 0; face < ei->num_sides; face++)
+      if (Num_Proc > 1) {
+        EH(-1, "Discontinuous Galerkin for stress not implemented in parallel");
+        return -1;
+      }
+
+      for (face = 0; face < ei[pg->imtrx]->num_sides; face++)
 	{
 		  
 	  index = exo->elem_elem_pntr[ielem] + face;
@@ -2701,8 +2780,8 @@ matrix_fill(
    * be added back in (i.e. if transport equations is integrated by parts twice)
    * Do this before rotating mesh or momentum equations
    **************************************************************************/
-  if (First_Elem_Edge_BC_Array[ielem] != NULL) {
-    elem_edge_bc = First_Elem_Edge_BC_Array[ielem];
+  if (First_Elem_Edge_BC_Array[pg->imtrx][ielem] != NULL) {
+    elem_edge_bc = First_Elem_Edge_BC_Array[pg->imtrx][ielem];
       
     /******************************************************************************/
     do {  /* begining of do while construct 
@@ -2818,9 +2897,9 @@ matrix_fill(
 	 */
 	I = Proc_Elem_Connect[iconnect_ptr + i]; 
 	if (I < (dpi->num_internal_nodes + dpi->num_boundary_nodes)) {
-	  if (in_list(I, 0, num_mom_rotate, mom_rotate_node) != -1) 
+	  if (in_list(I, 0, num_mom_rotate[pg->imtrx], mom_rotate_node[pg->imtrx]) != -1) 
 	    call_rotate = 1;
-	  if (in_list(I, 0, num_mesh_rotate, mesh_rotate_node) != -1)
+	  if (in_list(I, 0, num_mesh_rotate[pg->imtrx], mesh_rotate_node[pg->imtrx]) != -1)
 	    call_rotate = 1;
 	}
       }
@@ -2853,8 +2932,8 @@ matrix_fill(
       
     /* determine if rotation is needed */
     for (i = 0; i < num_local_nodes; i++) {
-      id_mesh = ei->ln_to_dof[MESH_DISPLACEMENT1][i];
-      id_mom  = ei->ln_to_dof[VELOCITY1][i];
+      id_mesh = ei[pg->imtrx]->ln_to_dof[MESH_DISPLACEMENT1][i];
+      id_mom  = ei[pg->imtrx]->ln_to_dof[VELOCITY1][i];
       /*
        *  To address a particular residual equation, map the local
        *   elemental node number i into a global index I
@@ -2995,7 +3074,7 @@ matrix_fill(
 	    err = CHECKFINITE("apply_integrated_bc"); 
 	    if (err) return -1;
 #endif
-	    /*printf("Element: %d, ID_side: %d \n", ei->ielem, elem_side_bc->id_side );
+	    /*printf("Element: %d, ID_side: %d \n", ei[pg->imtrx]->ielem, elem_side_bc->id_side );
 	      for(i3=0; i3< (int)  elem_side_bc->num_nodes_on_side; i3++)
 	      {
 	      id3 = (int) elem_side_bc->local_elem_node_id[i3]; I3 =  I = Proc_Elem_Connect[iconnect_ptr + id3];
@@ -3075,9 +3154,9 @@ matrix_fill(
   /******************************************************************************/
   
   /******************************************************************************/
-  if (First_Elem_Edge_BC_Array[ielem] != NULL) {
+  if (First_Elem_Edge_BC_Array[pg->imtrx][ielem] != NULL) {
     /******************************************************************************/
-    elem_edge_bc = First_Elem_Edge_BC_Array[ielem];
+    elem_edge_bc = First_Elem_Edge_BC_Array[pg->imtrx][ielem];
       
     /****************************************************************************/
     do {  /* begining of do while construct */
@@ -3171,12 +3250,12 @@ matrix_fill(
 	  if(node->DBSH_SLOPE_X == 1)
 	    {
 	      eqn = R_MESH1;
-	      lec->R[upd->ep[eqn]][i] = 1.0*BIG_PENALTY;
+	      lec->R[upd->ep[pg->imtrx][eqn]][i] = 1.0*BIG_PENALTY;
 	    }
 	  if(node->DBSH_SLOPE_Y == 1)
 	    {
 	      eqn = R_MESH2;
-	      lec->R[upd->ep[eqn]][i] = 0.0*BIG_PENALTY;
+	      lec->R[upd->ep[pg->imtrx][eqn]][i] = 0.0*BIG_PENALTY;
 	    }
 	}
     }
@@ -3192,8 +3271,8 @@ matrix_fill(
      * system equivalent to the identity problem, "I x = 0". */
     for(i = 0; i < MDE; i++)
       {
-	eqn = upd->ep[R_MOMENTUM3];
-	var = upd->vp[VELOCITY3];
+	eqn = upd->ep[pg->imtrx][R_MOMENTUM3];
+	var = upd->vp[pg->imtrx][VELOCITY3];
 	zero_lec_row(lec->J, eqn, i);
 	zero_lec_column(lec->J, var, i);
 	lec->J[eqn][var][i][i] = 1.0;
@@ -3219,14 +3298,14 @@ matrix_fill(
       int peqn, pvar;
       for (eqn = V_FIRST; eqn < V_LAST;  eqn++)
         {
-          peqn = upd->ep[eqn];
+          peqn = upd->ep[pg->imtrx][eqn];
           if ( peqn != -1 && eqn != R_FILL )
             {
               var = FILL;
-              pvar = upd->vp[var];
-              for (i = 0; i < ei->dof[eqn]; i++)
+              pvar = upd->vp[pg->imtrx][var];
+              for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
                 {
-                  for (j = 0; j < ei->dof[var]; j++)
+                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                     {
                       lec->J[peqn][pvar][i][j] = 0.;
                       /*
@@ -3243,14 +3322,14 @@ matrix_fill(
       int peqn, pvar;
       for (eqn = V_FIRST; eqn < V_LAST;  eqn++)
         {
-          peqn = upd->ep[eqn];
+          peqn = upd->ep[pg->imtrx][eqn];
           if ( peqn != -1 && eqn != R_PHASE1 )
             {
               var = PHASE1;
-              pvar = upd->vp[var];
-              for (i = 0; i < ei->dof[eqn]; i++)
+              pvar = upd->vp[pg->imtrx][var];
+              for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
                 {
-                  for (j = 0; j < ei->dof[var]; j++)
+                  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
                     {
                       lec->J[peqn][pvar][i][j] = 0.;
                     }
@@ -3276,7 +3355,7 @@ matrix_fill(
 	  {
 	    if(BC_Types[bc_input_id].desc->method == STRONG_INT_SURF ) {
 				
-	      printf("\nElement: %d, ID_side: %d\n", ei->ielem,  elem_side_bc->id_side);
+	      printf("\nElement: %d, ID_side: %d\n", ei[pg->imtrx]->ielem,  elem_side_bc->id_side);
 				
 	      for( i=0; i < (int) elem_side_bc->num_nodes_on_side; i++)
 		{	
@@ -3285,7 +3364,7 @@ matrix_fill(
 					
 		  for(eqn=0; eqn < 2; eqn++)
 		    {
-		      if( id != ei->ln_to_first_dof[eqn][id] ) { printf("Error found elem: %d, I:%d, eqn %d\n",  ei->ielem, I, eqn); }
+		      if( id != ei[pg->imtrx]->ln_to_first_dof[eqn][id] ) { printf("Error found elem: %d, I:%d, eqn %d\n",  ei[pg->imtrx]->ielem, I, eqn); }
 		      printf("%d \t", I );
 		      for( var=0; var< 2; var++) 
 			{
@@ -3482,8 +3561,6 @@ matrix_fill_stress(
   int local_node_list_fs[MDE]; /* list to keep track of nodes at which solid contributions
 				  have been transfered to liquid (fluid-solid boundaries)*/
 
-  int discontinuous_mass; /* flag that tells you if you are doing Discontinuous Galerkin 
-			     for the species equations */
   int discontinuous_stress; /* flag that tells you if you are doing Discontinuous Galerkin 
 			       for the species equations */
   int ielem_type_mass = -1;	/* flag to give discontinuous interpolation type */
@@ -3569,7 +3646,7 @@ matrix_fill_stress(
   EH(err, "load_elem_dofptr");
 
   err = bf_mp_init(pd);
-  mn = ei->mn;
+  mn = ei[pg->imtrx]->mn;
   pde = (int*) pd->e;
 
   
@@ -3585,65 +3662,34 @@ matrix_fill_stress(
      every element is different */
 
   
-  discontinuous_mass = 0;
-
-  if(pd->i[MASS_FRACTION]==I_P1)
-    {
-      if (pd->Num_Dim == 2) ielem_type_mass = P1_QUAD;
-      if (pd->Num_Dim == 3) ielem_type_mass = P1_HEX;
-      discontinuous_mass = 1;
-    }
-  else if(pd->i[MASS_FRACTION]==I_P0)
-    {
-      if (pd->Num_Dim == 2) ielem_type_mass = P0_QUAD;
-      if (pd->Num_Dim == 3) ielem_type_mass = P0_HEX;
-      discontinuous_mass = 1;
-    }
-  else if(pd->i[MASS_FRACTION]==I_PQ1)
-    {
-      if (pd->Num_Dim == 2) ielem_type_mass = BILINEAR_QUAD;
-      if (pd->Num_Dim == 3) EH(-1,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
-      discontinuous_mass = 1;
-    }
-  else if(pd->i[MASS_FRACTION]==I_PQ2)
-    {
-      if (pd->Num_Dim == 2) ielem_type_mass = BIQUAD_QUAD;
-      if (pd->Num_Dim == 3) EH(-1,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
-      discontinuous_mass = 1;
-    }
-  else
-    {
-      ielem_type_mass = ielem_type;
-    }
-  
   discontinuous_stress = 0;
   
-  if(pd->i[POLYMER_STRESS11]==I_P1)
+  if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_P1)
     {
       discontinuous_stress = 1;
     }
-  else if(pd->i[POLYMER_STRESS11]==I_P0)
+  else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_P0)
     {
       discontinuous_stress = 1;
     }
-  else if(pd->i[POLYMER_STRESS11]==I_PQ1)
+  else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_PQ1)
     {
       if (pd->Num_Dim == 3) EH(-1,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
     }
-  else if(pd->i[POLYMER_STRESS11]==I_PQ2)
+  else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_PQ2)
     {
       if (pd->Num_Dim == 3) EH(-1,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
     }
 
-  ielem_type      = ei->ielem_type;  /* element type */
+  ielem_type      = ei[pg->imtrx]->ielem_type;  /* element type */
   
-  num_local_nodes = ei->num_local_nodes; /* number of local  basis functions */
+  num_local_nodes = ei[pg->imtrx]->num_local_nodes; /* number of local  basis functions */
   
-  ielem_dim       = ei->ielem_dim; /* physical dimension  of this element */
+  ielem_dim       = ei[pg->imtrx]->ielem_dim; /* physical dimension  of this element */
   
-  iconnect_ptr    = ei->iconnect_ptr; /* find pointer to beginning  of this element's connectivity list */
+  iconnect_ptr    = ei[pg->imtrx]->iconnect_ptr; /* find pointer to beginning  of this element's connectivity list */
   
 
 #ifdef DEBUG
@@ -3775,12 +3821,12 @@ matrix_fill_stress(
 	{
 	  for(b=0; b < pd->Num_Dim; b++)
 	    {
-	      for (i = 0; i < ei->dof[R_LAGR_MULT1 + b]; i++) {
+	      for (i = 0; i < ei[pg->imtrx]->dof[R_LAGR_MULT1 + b]; i++) {
 		if(af->Assemble_Residual)
 		  {
-		    lm_dof = ei->gun_list[R_LAGR_MULT1 + b][i];
-		    eqn = upd->ep[R_LAGR_MULT1 + b];
-		    var = upd->vp[LAGR_MULT1 + b];
+		    lm_dof = ei[pg->imtrx]->gun_list[R_LAGR_MULT1 + b][i];
+		    eqn = upd->ep[pg->imtrx][R_LAGR_MULT1 + b];
+		    var = upd->vp[pg->imtrx][LAGR_MULT1 + b];
 		    lec->R[eqn][i] = x[lm_dof];
 		  }
        
@@ -3799,11 +3845,11 @@ matrix_fill_stress(
 	{
 	  for(b=0; b < pd->Num_Dim; b++)
 	    {
-	      for (i = 0; i < ei->dof[R_LAGR_MULT1 + b]; i++) {
+	      for (i = 0; i < ei[pg->imtrx]->dof[R_LAGR_MULT1 + b]; i++) {
 		if(af->Assemble_Residual)
 		  {
-		    eqn = upd->ep[R_LAGR_MULT1 + b];
-		    var = upd->vp[LAGR_MULT1 + b];
+		    eqn = upd->ep[pg->imtrx][R_LAGR_MULT1 + b];
+		    var = upd->vp[pg->imtrx][LAGR_MULT1 + b];
 		    lec->R[eqn][i] = 0.;
 		  }
        
@@ -3832,21 +3878,21 @@ matrix_fill_stress(
 
   if (pde[R_SOLID1])
     {
-      if (pd->etm[R_SOLID1][(LOG2_MASS)]) EH(-1,"Cannot do real inertia for TALE yet. Remove this line if trying to perform EULERIAN solid mechanics");
+      if (pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)]) EH(-1,"Cannot do real inertia for TALE yet. Remove this line if trying to perform EULERIAN solid mechanics");
       eqn = R_SOLID1;
       if (pd->TimeIntegration != STEADY && 
-	  pd->etm[R_SOLID1][(LOG2_MASS)] &&
+	  pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
 	  !ls->elem_overlap_state &&
 	  *esp->F[0] >= 0.0)
 	{
-	  for (i = 0; i < ei->dof[eqn]; i++)
+	  for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
 	    {
 	      make_trivial = TRUE;
-	      if ( (pd->i[eqn] == I_Q1) || (pd->i[eqn] == I_Q2 ) )
+	      if ( (pd->i[pg->imtrx][eqn] == I_Q1) || (pd->i[pg->imtrx][eqn] == I_Q2 ) )
 		{
 		  /* check all neighboring elements to see if any 
 		     span the interface */
-		  I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+		  I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
 		  for (j = exo->node_elem_pntr[I]; j < 
 			 exo->node_elem_pntr[I+1]; j++)
 		    {
@@ -3863,11 +3909,11 @@ matrix_fill_stress(
 	    {
 	      for (b=0; b < pd->Num_Dim; b++)
 		{
-		  for (i = 0; i < ei->dof[R_SOLID1 + b]; i++) {
+		  for (i = 0; i < ei[pg->imtrx]->dof[R_SOLID1 + b]; i++) {
 		    if(af->Assemble_Residual)
 		      {
-			eqn = upd->ep[R_SOLID1 + b];
-			var = upd->vp[R_SOLID1 + b];
+			eqn = upd->ep[pg->imtrx][R_SOLID1 + b];
+			var = upd->vp[pg->imtrx][R_SOLID1 + b];
 			lec->R[eqn][i] = 0.;
 		      }
 			     
@@ -3901,30 +3947,6 @@ matrix_fill_stress(
        load_nodal_shell_porous_properties(theta, delta_t, R_SHELL_SAT_OPEN_2);
     }
   }
-
-  if (pde[R_PRESSURE])
-    {
-      if (PSPP == 1)
-	{
-	  err = assemble_projection_stabilization(exo); 
-	  EH(err, "assemble_projection_stabilization");
-#ifdef CHECK_FINITE
-	  err = CHECKFINITE("assemble_projection_stabilization"); 
-	  if (err) return -1;
-#endif
-	}
-	  
-      if (PSPP == 2)
-	{
-	  err = assemble_PPPS_generalized(exo); 
-	  EH(err, "assemble_PPPS_generalized");
-#ifdef CHECK_FINITE
-	  err = CHECKFINITE("assemble_PPPS_generalized"); 
-	  if (err) return -1;
-#endif
-	}
-    }
-
 
   ip_total = elem_info(NQUAD, ielem_type);
   
@@ -4025,33 +4047,6 @@ matrix_fill_stress(
   /*             For Discontinuous Galerkin implementations                 */
   /**************************************************************************/
          
-  /* Loop over all the surface Quadrature integration points */
-        
-	  
-  if (discontinuous_mass)
-    {
-      int neighbor;  
-      int index, face;
-	      
-      for (face = 0; face < ei->num_sides; face++)
-	{
-		  
-	  index = exo->elem_elem_pntr[ielem] + face;
-	  neighbor = exo->elem_elem_list[index];
-		  
-	  id_side = face + 1;
-		  
-	  err = assemble_surface_species(exo, x, delta_t, theta,
-					 ielem_type, ielem_type_mass, id_side, 
-					 neighbor, ielem, num_local_nodes);
-	  EH( err, "assemble_surface_species"); 
-#ifdef CHECK_FINITE
-	  err = CHECKFINITE("assemble_surface_species"); 
-	  if (err) return -1;
-#endif
-	}
-    } 
-
   if (discontinuous_stress)
     {      
       int neighbor;  
@@ -4060,7 +4055,7 @@ matrix_fill_stress(
       var = 4*MDE*(MAX_PROB_VAR+MAX_CONC)*MDE;
       memset(lec->J_stress_neighbor, 0, sizeof(double)*var); 
 
-      for (face = 0; face < ei->num_sides; face++)
+      for (face = 0; face < ei[pg->imtrx]->num_sides; face++)
 	{
 		  
 	  index = exo->elem_elem_pntr[ielem] + face;
@@ -4173,8 +4168,8 @@ matrix_fill_stress(
    * be added back in (i.e. if transport equations is integrated by parts twice)
    * Do this before rotating mesh or momentum equations
    **************************************************************************/
-  if (First_Elem_Edge_BC_Array[ielem] != NULL) {
-    elem_edge_bc = First_Elem_Edge_BC_Array[ielem];
+  if (First_Elem_Edge_BC_Array[pg->imtrx][ielem] != NULL) {
+    elem_edge_bc = First_Elem_Edge_BC_Array[pg->imtrx][ielem];
       
     /******************************************************************************/
     do {  /* begining of do while construct 
@@ -4278,9 +4273,9 @@ matrix_fill_stress(
 	 */
 	I = Proc_Elem_Connect[iconnect_ptr + i]; 
 	if (I < (dpi->num_internal_nodes + dpi->num_boundary_nodes)) {
-	  if (in_list(I, 0, num_mom_rotate, mom_rotate_node) != -1) 
+	  if (in_list(I, 0, num_mom_rotate[pg->imtrx], mom_rotate_node[pg->imtrx]) != -1) 
 	    call_rotate = 1;
-	  if (in_list(I, 0, num_mesh_rotate, mesh_rotate_node) != -1)
+	  if (in_list(I, 0, num_mesh_rotate[pg->imtrx], mesh_rotate_node[pg->imtrx]) != -1)
 	    call_rotate = 1;
 	}
       }
@@ -4313,8 +4308,8 @@ matrix_fill_stress(
       
     /* determine if rotation is needed */
     for (i = 0; i < num_local_nodes; i++) {
-      id_mesh = ei->ln_to_dof[MESH_DISPLACEMENT1][i];
-      id_mom  = ei->ln_to_dof[VELOCITY1][i];
+      id_mesh = ei[pg->imtrx]->ln_to_dof[MESH_DISPLACEMENT1][i];
+      id_mom  = ei[pg->imtrx]->ln_to_dof[VELOCITY1][i];
       /*
        *  To address a particular residual equation, map the local
        *   elemental node number i into a global index I
@@ -4440,7 +4435,7 @@ matrix_fill_stress(
 	    err = CHECKFINITE("apply_integrated_bc"); 
 	    if (err) return -1;
 #endif
-	    /*printf("Element: %d, ID_side: %d \n", ei->ielem, elem_side_bc->id_side );
+	    /*printf("Element: %d, ID_side: %d \n", ei[pg->imtrx]->ielem, elem_side_bc->id_side );
 	      for(i3=0; i3< (int)  elem_side_bc->num_nodes_on_side; i3++)
 	      {
 	      id3 = (int) elem_side_bc->local_elem_node_id[i3]; I3 =  I = Proc_Elem_Connect[iconnect_ptr + id3];
@@ -4520,9 +4515,9 @@ matrix_fill_stress(
   /******************************************************************************/
   
   /******************************************************************************/
-  if (First_Elem_Edge_BC_Array[ielem] != NULL) {
+  if (First_Elem_Edge_BC_Array[pg->imtrx][ielem] != NULL) {
     /******************************************************************************/
-    elem_edge_bc = First_Elem_Edge_BC_Array[ielem];
+    elem_edge_bc = First_Elem_Edge_BC_Array[pg->imtrx][ielem];
       
     /****************************************************************************/
     do {  /* begining of do while construct */
@@ -4616,12 +4611,12 @@ matrix_fill_stress(
 	  if(node->DBSH_SLOPE_X == 1)
 	    {
 	      eqn = R_MESH1;
-	      lec->R[upd->ep[eqn]][i] = 1.0*BIG_PENALTY;
+	      lec->R[upd->ep[pg->imtrx][eqn]][i] = 1.0*BIG_PENALTY;
 	    }
 	  if(node->DBSH_SLOPE_Y == 1)
 	    {
 	      eqn = R_MESH2;
-	      lec->R[upd->ep[eqn]][i] = 0.0*BIG_PENALTY;
+	      lec->R[upd->ep[pg->imtrx][eqn]][i] = 0.0*BIG_PENALTY;
 	    }
 	}
     }
@@ -4637,8 +4632,8 @@ matrix_fill_stress(
      * system equivalent to the identity problem, "I x = 0". */
     for(i = 0; i < MDE; i++)
       {
-	eqn = upd->ep[R_MOMENTUM3];
-	var = upd->vp[VELOCITY3];
+	eqn = upd->ep[pg->imtrx][R_MOMENTUM3];
+	var = upd->vp[pg->imtrx][VELOCITY3];
 	zero_lec_row(lec->J, eqn, i);
 	zero_lec_column(lec->J, var, i);
 	lec->J[eqn][var][i][i] = 1.0;
@@ -4766,15 +4761,15 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
   lec_it++;
 
   sprintf(lec_name, "lec_dump_%d_%d.txt",
-	  DPI_ptr->elem_index_global[ei->ielem], ProcID);
+	  DPI_ptr->elem_index_global[ei[pg->imtrx]->ielem], ProcID);
   sprintf(ler_name,"ler_dump_%d_%d.txt",
-	  DPI_ptr->elem_index_global[ei->ielem], ProcID );
+	  DPI_ptr->elem_index_global[ei[pg->imtrx]->ielem], ProcID );
   llll = fopen(lec_name, "a");
   rrrr = fopen(ler_name, "a");
   fprintf(rrrr, "------------------------------------------------------\n");
-  fprintf(rrrr, "local element = %d, Proc = %d\n", ei->ielem, ProcID);
+  fprintf(rrrr, "local element = %d, Proc = %d\n", ei[pg->imtrx]->ielem, ProcID);
   fprintf(rrrr, "lec_it = %d\n", lec_it);
-  fprintf(rrrr, "global element = %d\n", DPI_ptr->elem_index_global[ei->ielem]);
+  fprintf(rrrr, "global element = %d\n", DPI_ptr->elem_index_global[ei[pg->imtrx]->ielem]);
   fprintf(rrrr, "\nGlobal_NN Proc_NN  Equation    idof    Proc_SolnNum     ResidValue\n");
 #endif
 
@@ -4785,7 +4780,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
       memset(estifm, 0, sizeof(double)*fss->ncn[ielem]*fss->ncn[ielem]);
       ivar = 0; 
       ieqn = 0; 
-      for (i = 0; i < ei->num_local_nodes; i++) { 
+      for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) { 
 	for (j = 0; j < (MAX_VARIABLE_TYPES);  j++) { 
 	  kt = 1;
 	  /*
@@ -4797,38 +4792,38 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 	    kt = upd->Max_Num_Species_Eqn;
 	  }
 	  for (w = 0 ; w < kt; w++) {
-	    peqn = upd->ep[j];		      
+	    peqn = upd->ep[pg->imtrx][j];		      
 	    if (peqn != -1) {
 	      if (j == MASS_FRACTION) peqn = MAX_PROB_VAR + w;
-	      idof = ei->ln_to_first_dof[j][i];
-	      I = Proc_Elem_Connect[ei->iconnect_ptr + i];
-              if (Dolphin[I][j] > 0) {
-		I = ei->gnn_list[j][idof];
-		nv = Nodes[I]->Nodal_Vars_Info;
+	      idof = ei[pg->imtrx]->ln_to_first_dof[j][i];
+	      I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
+              if (Dolphin[pg->imtrx][I][j] > 0) {
+		I = ei[pg->imtrx]->gnn_list[j][idof];
+		nv = Nodes[I]->Nodal_Vars_Info[pg->imtrx];
 		iunks = get_nv_ndofs_modMF(nv, j);
 	      }
 	      if (idof != -1) {
 		for (n = 0; n < iunks; n++) { 
 		  ivar = 0; 
-		  for (l = 0; l < ei->num_local_nodes; l++) { 
+		  for (l = 0; l < ei[pg->imtrx]->num_local_nodes; l++) { 
 		    for (k = 0; k < (MAX_VARIABLE_TYPES) ; k++) { 	  
 		      kt1 = 1;
 		      if (k == MASS_FRACTION) kt1 = upd->Max_Num_Species_Eqn;
 		      for (w1 = 0 ; w1 < kt1; w1++) {
-			pvar = upd->vp[k]; 
+			pvar = upd->vp[pg->imtrx][k]; 
 			if (k == MASS_FRACTION) pvar = MAX_PROB_VAR + w1;
 			if (pvar != -1) {
 
-			  if (ei->owningElementForColVar[k] != ielem) {
-			    if (ei->owningElementForColVar[k] != -1) {
+			  if (ei[pg->imtrx]->owningElementForColVar[k] != ielem) {
+			    if (ei[pg->imtrx]->owningElementForColVar[k] != -1) {
 			      EH(-1, "Frontal solver can't handle Shell element jacobians\n");
 			    }
 			  }
-			  ldof = ei->ln_to_first_dof[k][l];
-			  J = Proc_Elem_Connect[ei->iconnect_ptr + l];
-			  if (Dolphin[J][k] > 0) {
-			    J = ei->gnn_list[k][ldof];
-			    nv = Nodes[J]->Nodal_Vars_Info;
+			  ldof = ei[pg->imtrx]->ln_to_first_dof[k][l];
+			  J = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + l];
+			  if (Dolphin[pg->imtrx][J][k] > 0) {
+			    J = ei[pg->imtrx]->gnn_list[k][ldof];
+			    nv = Nodes[J]->Nodal_Vars_Info[pg->imtrx];
 			    nunks = get_nv_ndofs_modMF(nv, k);
 			  }
 			  if (ldof != -1) {	      
@@ -4858,20 +4853,20 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
       if (vn->dg_J_model == FULL_DG) {
 	ivar = 0; 
 	ieqn = 0;
-	for (i = 0; i < ei->num_local_nodes; i++) { 
+	for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++) { 
 	  for (j = 0; j < MAX_VARIABLE_TYPES;  j++) { 
 	    kt = 1;
 	    if (j == MASS_FRACTION) kt = upd->Max_Num_Species_Eqn;
 	    for (w = 0 ; w < kt; w++) {
-	      peqn = upd->ep[j];
+	      peqn = upd->ep[pg->imtrx][j];
 	      if (peqn != -1) {
 		if (j == MASS_FRACTION) peqn = MAX_PROB_VAR + w;
-		idof = ei->ln_to_first_dof[j][i];
-		I =  Proc_Elem_Connect[ei->iconnect_ptr + i];
+		idof = ei[pg->imtrx]->ln_to_first_dof[j][i];
+		I =  Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
 		if (idof != -1) {
-		  I = ei->gnn_list[j][idof];
+		  I = ei[pg->imtrx]->gnn_list[j][idof];
 		}
-	        nv = Nodes[I]->Nodal_Vars_Info;
+	        nv = Nodes[I]->Nodal_Vars_Info[pg->imtrx];
 		iunks = get_nv_ndofs_modMF(nv, j);
 		if (idof != -1) { 
 		  for (n = 0; n < iunks; n++) { 
@@ -4879,7 +4874,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 		        (j >= POLYMER_STRESS11_1 && j <= POLYMER_STRESS33_7))
 		      {
 			ivar = fss->ncn_base[ielem]; 
-			for (face = 0; face < ei->num_sides; face ++) {
+			for (face = 0; face < ei[pg->imtrx]->num_sides; face ++) {
 			  /* load the neighbor pointer */
 			  index = exo->elem_elem_pntr[ielem] + face;		      
 			  /* load the neighbor element number */
@@ -4895,16 +4890,16 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 				kt1 = upd->Max_Num_Species_Eqn;
 			      }    
 			      for (w1 = 0 ; w1 < kt1; w1++) {
-				pvar = upd->vp[k]; 
+				pvar = upd->vp[pg->imtrx][k]; 
 				if (k == MASS_FRACTION) pvar = MAX_PROB_VAR + w1;
 				if (pvar != -1) {
-				  if (ei->owningElementForColVar[k] != ielem) {
-				    if (ei->owningElementForColVar[k] != -1) {
+				  if (ei[pg->imtrx]->owningElementForColVar[k] != ielem) {
+				    if (ei[pg->imtrx]->owningElementForColVar[k] != -1) {
 				      EH(-1, "Frontal solver can't handle Shell element jacobians\n");
 				    }
 				  }
-				  ldof = ei->ln_to_first_dof[k][l];
-				  nv = Nodes[J]->Nodal_Vars_Info;
+				  ldof = ei[pg->imtrx]->ln_to_first_dof[k][l];
+				  nv = Nodes[J]->Nodal_Vars_Info[pg->imtrx];
 				  nunks = get_nv_ndofs_modMF(nv, k);
 				  if (ldof != -1) {
 				    for (m = 0; m < nunks; m++ )  { 
@@ -4941,18 +4936,18 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
      * since Randy says it is needed for frontal solver
      */
     for (e = V_FIRST; e < V_LAST; e++) {
-      pe = upd->ep[e];
+      pe = upd->ep[pg->imtrx][e];
       if (pe != -1) {
 	if (e == R_MASS) {
 	  for (ke = 0; ke < upd->Max_Num_Species_Eqn; ke++) {
-	    dofs = ei->dof[e];
+	    dofs = ei[pg->imtrx]->dof[e];
 	    for (i = 0; i < dofs; i++) {
-	      ledof = ei->lvdof_to_ledof[e][i];
-	      je_new = ei->ieqn_ledof[ledof] + ke;
-	      gnn   = ei->gnn_list[e][i];
-	      nvdof = ei->Baby_Dolphin[e][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[e][i];
+	      je_new = ei[pg->imtrx]->ieqn_ledof[ledof] + ke;
+	      gnn   = ei[pg->imtrx]->gnn_list[e][i];
+	      nvdof = ei[pg->imtrx]->Baby_Dolphin[e][i];
 	      ie = Index_Solution(gnn, e, ke, nvdof,
-				  ei->matID_ledof[ledof]);
+				  ei[pg->imtrx]->matID_ledof[ledof], pg->imtrx);
 	      if (je_new != ie) {
 		if (ie != je_new) {
 		  fprintf(stderr, "Oh fiddlesticks: ie = %d, je_new = %d\n",
@@ -4964,10 +4959,10 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 	    }
 	  }
 	} else {
-	  dofs = ei->dof[e];
+	  dofs = ei[pg->imtrx]->dof[e];
 	  for (i = 0; i < dofs; i++) {
-	    ledof = ei->lvdof_to_ledof[e][i];
-	    ie = ei->ieqn_ledof[ledof];
+	    ledof = ei[pg->imtrx]->lvdof_to_ledof[e][i];
+	    ie = ei[pg->imtrx]->ieqn_ledof[ledof];
 	    resid_vector[ie] += lec->R[pe][i];
 	  }
 	}
@@ -4981,12 +4976,12 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
       int   *ija = ams->bindx;
 	  
       for (e = V_FIRST; e < V_LAST; e++) {
-	pe = upd->ep[e];
+	pe = upd->ep[pg->imtrx][e];
 	if (pe != -1) {
 	  if (e == R_MASS) {
 	    for (ke = 0; ke < upd->Max_Num_Species_Eqn; ke++) {
 	      pe = MAX_PROB_VAR + ke;
-	      dofs = ei->dof[e];
+	      dofs = ei[pg->imtrx]->dof[e];
 	      for (i = 0; i < dofs; i++) {
                 /*
 		 * Check to see whether this dof is on a
@@ -4994,13 +4989,13 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 		 * there is no need to fill in the processor
 		 * residual and Jacobian row for this variable.
                  */
-		ledof = ei->lvdof_to_ledof[e][i];
-		if (ei->owned_ledof[ledof]) {
-		  gnn   = ei->gnn_list[e][i];
-		  nvdof = ei->Baby_Dolphin[e][i];
-		  je_new = ei->ieqn_ledof[ledof] + ke;
+		ledof = ei[pg->imtrx]->lvdof_to_ledof[e][i];
+		if (ei[pg->imtrx]->owned_ledof[ledof]) {
+		  gnn   = ei[pg->imtrx]->gnn_list[e][i];
+		  nvdof = ei[pg->imtrx]->Baby_Dolphin[e][i];
+		  je_new = ei[pg->imtrx]->ieqn_ledof[ledof] + ke;
 		  ie = Index_Solution(gnn, e, ke, nvdof,
-				      ei->matID_ledof[ledof]);
+				      ei[pg->imtrx]->matID_ledof[ledof], pg->imtrx);
   
 		  resid_vector[ie] += lec->R[MAX_PROB_VAR + ke][i];
 #ifdef DEBUG_LEC
@@ -5016,12 +5011,12 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 
 		  if (af->Assemble_Jacobian) {
 		    for (v=V_FIRST; v<V_LAST; v++) {
-		      pv = upd->vp[v];
-		      if (pv != -1 && (Inter_Mask[e][v])) {
-			ei_ptr = ei;
-			if (ei->owningElementForColVar[v] != ielem) {
-			  if (ei->owningElementForColVar[v] != -1) {
-			    ei_ptr = ei->owningElement_ei_ptr[v];
+		      pv = upd->vp[pg->imtrx][v];
+		      if (pv != -1 && (Inter_Mask[pg->imtrx][e][v])) {
+			ei_ptr = ei[pg->imtrx];
+			if (ei[pg->imtrx]->owningElementForColVar[v] != ielem) {
+			  if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
+			    ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
 			    if (ei_ptr == 0) {
 			      printf("ei_ptr == 0\n");
 			      exit(-1);
@@ -5036,7 +5031,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			      je_new = ei_ptr->ieqn_ledof[ledof] + kv;
 			      je = Index_Solution(ei_ptr->gnn_list[v][j], v, 
 						  kv, ei_ptr->Baby_Dolphin[v][j],
-						  ei_ptr->matID_ledof[ledof]);
+						  ei_ptr->matID_ledof[ledof], pg->imtrx);
 			      if (je != je_new) {
 				/*
 				 * HKM -> another special case. Until we delineate
@@ -5066,14 +5061,14 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			    }
 			  }
 			} else {
-			  pv = upd->vp[v];
+			  pv = upd->vp[pg->imtrx][v];
 			  kv = 0;
 			  for (j = 0; j < ei_ptr->dof[v]; j++) {
 			    ledof = ei_ptr->lvdof_to_ledof[v][j];
 			    je_new = ei_ptr->ieqn_ledof[ledof];
 			    je = Index_Solution(ei_ptr->gnn_list[v][j], v, 
 						kv, ei_ptr->Baby_Dolphin[v][j],
-						ei_ptr->matID_ledof[ledof]);
+						ei_ptr->matID_ledof[ledof], pg->imtrx);
 			    if (je != je_new) {
 			      fprintf(stderr, "Oh fiddlesticks: je = %d, je_new = %d\n",
 				      je, je_new);
@@ -5103,8 +5098,8 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 	      }
 	    }
 	  } else {
-	    pe = upd->ep[e];
-	    dofs = ei->dof[e];
+	    pe = upd->ep[pg->imtrx][e];
+	    dofs = ei[pg->imtrx]->dof[e];
 	    for (i = 0; i < dofs; i++) {
 	      /*
 	       * Check to see whether this dof is on a
@@ -5112,9 +5107,9 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 	       * there is no need to fill in the processor
 	       * residual and Jacobian row for this variable.
 	       */
-	      ledof = ei->lvdof_to_ledof[e][i];
-	      if (ei->owned_ledof[ledof]) {
-		ie = ei->gun_list[e][i];
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[e][i];
+	      if (ei[pg->imtrx]->owned_ledof[ledof]) {
+		ie = ei[pg->imtrx]->gun_list[e][i];
 		resid_vector[ie] += lec->R[pe][i];
 #ifdef DEBUG_LEC
 		{
@@ -5130,14 +5125,14 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 
 		if (af->Assemble_Jacobian) {
 		  for (v = V_FIRST; v < V_LAST; v++) {
-		    pv = upd->vp[v];
-		    if (pv != -1 && (Inter_Mask[e][v])) {
+		    pv = upd->vp[pg->imtrx][v];
+		    if (pv != -1 && (Inter_Mask[pg->imtrx][e][v])) {
 		      if (v == MASS_FRACTION) {
 	       
-			ei_ptr = ei;
-			if (ei->owningElementForColVar[v] != ielem) {
-			  if (ei->owningElementForColVar[v] != -1) {
-			    ei_ptr = ei->owningElement_ei_ptr[v];		
+			ei_ptr = ei[pg->imtrx];
+			if (ei[pg->imtrx]->owningElementForColVar[v] != ielem) {
+			  if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
+			    ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];		
 			    if (ei_ptr == 0) {
 			      EH(-1, "ei_ptr == 0\n");
 			      exit(-1);
@@ -5152,7 +5147,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			    je_new = ei_ptr->ieqn_ledof[ledof] + kv;
 			    je = Index_Solution(ei_ptr->gnn_list[v][j], v, 
 						kv, ei_ptr->Baby_Dolphin[v][j],
-						ei_ptr->matID_ledof[ledof]);
+						ei_ptr->matID_ledof[ledof], pg->imtrx);
 			    if (je != je_new) {
 			      /*
 			       * HKM -> another special case. Until we delineate
@@ -5160,7 +5155,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			       *        dofs, je_new will be wrong here. je
 			       *        is correct.
 			       */
-			      if (Nodes[ei->gnn_list[v][j]]->Mat_List.Length < 2) {
+			      if (Nodes[ei[pg->imtrx]->gnn_list[v][j]]->Mat_List.Length < 2) {
 			      }
 			    }
 			    EH(je, "Bad var index.");
@@ -5183,10 +5178,10 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 		      } else {
 			kv = 0;
 			// NEW IMPLEMENTATION
-			ei_ptr = ei;
-			if (ei->owningElementForColVar[v] != ielem) {
-			  if (ei->owningElementForColVar[v] != -1) {
-			    ei_ptr = ei->owningElement_ei_ptr[v];
+			ei_ptr = ei[pg->imtrx];
+			if (ei[pg->imtrx]->owningElementForColVar[v] != ielem) {
+			  if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
+			    ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
 			    if (ei_ptr == 0) {
 			      EH(-1, "ei slave pointer is null");
 			      exit(-1);
@@ -5198,7 +5193,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			  je_new = ei_ptr->ieqn_ledof[ledof];
 			  je = Index_Solution(ei_ptr->gnn_list[v][j], v, 
 					      kv, ei_ptr->Baby_Dolphin[v][j],
-					      ei_ptr->matID_ledof[ledof]);
+					      ei_ptr->matID_ledof[ledof], pg->imtrx);
 			  if (je != je_new) {
 			    fprintf(stderr,
 				    "Oh fiddlesticks: je = %d, je_new = %d\n",
@@ -5246,17 +5241,17 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 	int lec_row, lec_col;
 	double *a_ptr;
 
-	for (i = 0; i < ei->num_local_nodes; i++)
+	for (i = 0; i < ei[pg->imtrx]->num_local_nodes; i++)
 	  {
 	    /* I is the global row block index, also global node number */
-	    I = Proc_Elem_Connect[ei->iconnect_ptr + i];
+	    I = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
 	    /* if I is an external node to this processor, skip all this stuff */
 	    if (I < ams->npn)
 	      {
 		row_dofs = rpntr[I+1] - rpntr[I];
 		for (e = V_FIRST; e < V_LAST; e++)
 		  {
-		    pe = upd->ep[e];
+		    pe = upd->ep[pg->imtrx][e];
 		    if (pe != -1)
 		      {
 			if (e == R_MASS)
@@ -5264,9 +5259,9 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			    for (ke = 0; ke < upd->Max_Num_Species_Eqn; ke++ )
 			      {
 				pe = MAX_PROB_VAR + ke;
-				blk_row = Local_Offset[I][e] + ke*Dolphin[I][e];
-				lec_row = ei->ln_to_first_dof[e][i];
-				for (idofs = 0; idofs < Dolphin[I][e]; idofs++)
+				blk_row = Local_Offset[pg->imtrx][I][e] + ke*Dolphin[pg->imtrx][I][e];
+				lec_row = ei[pg->imtrx]->ln_to_first_dof[e][i];
+				for (idofs = 0; idofs < Dolphin[pg->imtrx][I][e]; idofs++)
 				  {
 				    *(resid_vector + rpntr[I] + blk_row + idofs) += lec->R[pe][lec_row +idofs];
 
@@ -5274,14 +5269,14 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 				      {
 					for (v = V_FIRST; v < V_LAST; v++)
 					  {
-					    pv = upd->vp[v];
-					    if ((pv != -1) && (Inter_Mask[e][v])) 
+					    pv = upd->vp[pg->imtrx][v];
+					    if ((pv != -1) && (Inter_Mask[pg->imtrx][e][v])) 
 					      {
 						// NEW
-						ei_ptr = ei;
-						if (ei->owningElementForColVar[v] != ielem) {
-						  if (ei->owningElementForColVar[v] != -1) {
-						    ei_ptr = ei->owningElement_ei_ptr[v];
+						ei_ptr = ei[pg->imtrx];
+						if (ei[pg->imtrx]->owningElementForColVar[v] != ielem) {
+						  if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
+						    ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
 						    if (ei_ptr == 0) {
 						      EH(-1,"ei_ptr == 0\n");
 						      exit(-1);
@@ -5300,9 +5295,9 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 							for (kv = 0; kv < upd->Max_Num_Species_Eqn; kv++) 
 							  {
 							    pv = MAX_PROB_VAR + kv;
-							    blk_col = Local_Offset[J][v] + kv*Dolphin[J][v];
+							    blk_col = Local_Offset[pg->imtrx][J][v] + kv*Dolphin[pg->imtrx][J][v];
 							    lec_col = ei_ptr->ln_to_first_dof[v][j];  
-							    for (jdofs = 0; jdofs < Dolphin[J][v]; jdofs++) 
+							    for (jdofs = 0; jdofs < Dolphin[pg->imtrx][J][v]; jdofs++) 
 							      {		      
 								*(a_ptr + row_dofs*( blk_col + jdofs ) + blk_row + idofs )
 								  += lec->J[pe][pv][ lec_row + idofs ][ lec_col + jdofs ];
@@ -5311,9 +5306,9 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 						      }  
 						    else
 						      {
-							blk_col = Local_Offset[J][v];
+							blk_col = Local_Offset[pg->imtrx][J][v];
 							lec_col = ei_ptr->ln_to_first_dof[v][j];	      
-							for (jdofs = 0; jdofs < Dolphin[J][v]; jdofs++) 
+							for (jdofs = 0; jdofs < Dolphin[pg->imtrx][J][v]; jdofs++) 
 							  {			  
 							    *(a_ptr + row_dofs*(blk_col + jdofs) + blk_row + idofs)
 							      += lec->J[pe][pv][lec_row + idofs][lec_col + jdofs];
@@ -5327,23 +5322,23 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 				  }
 			      }
 			  } else {
-			    blk_row = Local_Offset[I][e];
-			    lec_row = ei->ln_to_first_dof[e][i];
-			    for (idofs = 0; idofs < Dolphin[I][e]; idofs++)
+			    blk_row = Local_Offset[pg->imtrx][I][e];
+			    lec_row = ei[pg->imtrx]->ln_to_first_dof[e][i];
+			    for (idofs = 0; idofs < Dolphin[pg->imtrx][I][e]; idofs++)
 			      {
 				*(resid_vector + rpntr[I] + blk_row + idofs) += lec->R[pe][lec_row +idofs];
 				if (af->Assemble_Jacobian)
 				  {
 				    for (v = V_FIRST; v < V_LAST; v++) 
 				      {
-					pv = upd->vp[v];
-					if ((pv != -1) && (Inter_Mask[e][v]))
+					pv = upd->vp[pg->imtrx][v];
+					if ((pv != -1) && (Inter_Mask[pg->imtrx][e][v]))
 					  {
 					    // NEW
-					    ei_ptr = ei;
-					    if (ei->owningElementForColVar[v] != ielem) {
-					      if (ei->owningElementForColVar[v] != -1) {
-						ei_ptr = ei->owningElement_ei_ptr[v];
+					    ei_ptr = ei[pg->imtrx];
+					    if (ei[pg->imtrx]->owningElementForColVar[v] != ielem) {
+					      if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
+						ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
 						if (ei_ptr == 0) {
 						  printf("ei_ptr == 0\n");
 						  exit(-1);
@@ -5362,9 +5357,9 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 						    for (kv = 0; kv < upd->Max_Num_Species_Eqn; kv++) 
 						      {
 							pv = MAX_PROB_VAR + kv;
-							blk_col = Local_Offset[J][v] + kv*Dolphin[J][v];
+							blk_col = Local_Offset[pg->imtrx][J][v] + kv*Dolphin[pg->imtrx][J][v];
 							lec_col = ei_ptr->ln_to_first_dof[v][j];
-							for (jdofs = 0; jdofs < Dolphin[J][v]; jdofs++) 
+							for (jdofs = 0; jdofs < Dolphin[pg->imtrx][J][v]; jdofs++) 
 							  {			  
 							    *(a_ptr + row_dofs*( blk_col + jdofs) + blk_row + idofs)
 							      += lec->J[pe][pv][ lec_row + idofs ][ lec_col + jdofs ];
@@ -5377,7 +5372,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 						     *  contiguous within the solution vector.
 						     *  Find the local offset first
 						     */
-						    blk_col = Local_Offset[J][v];
+						    blk_col = Local_Offset[pg->imtrx][J][v];
 						    /*  For the current node, j, find the index for the 
 						     *  first dof of type v in the LESM.
 						     */
@@ -5385,7 +5380,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 						    /*  Dolphin contains the number of dofs of type v at the 
 						     *  global node J
 						     */
-						    for (jdofs = 0; jdofs < Dolphin[J][v]; jdofs++) 
+						    for (jdofs = 0; jdofs < Dolphin[pg->imtrx][J][v]; jdofs++) 
 						      {		      
 							*(a_ptr + row_dofs*( blk_col + jdofs ) + blk_row + idofs )
 							  += lec->J[pe][pv][ lec_row + idofs ][ lec_col + jdofs ];
@@ -5435,7 +5430,7 @@ checkfinite(const char *file, const int line, const char *message)
   int j = 0;
   int all_finite = TRUE;
   struct Element_Indices *ei_ptr;
-  int ielem = ei->ielem;
+  int ielem = ei[pg->imtrx]->ielem;
   /*   fprintf(stdout,"Hi. We are in checkfinite.");  */
   /*   if ( !isfinite(x/y)) */
   /*     { */
@@ -5447,10 +5442,10 @@ checkfinite(const char *file, const int line, const char *message)
   /*     } */
   for (eqn = V_FIRST; eqn < V_LAST; eqn++)
     {
-      peqn = upd->ep[eqn];
+      peqn = upd->ep[pg->imtrx][eqn];
       if (peqn != -1)
         {
-          for (i = 0; i < ei->dof[eqn]; i++)
+          for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++)
             {
               j = finite(lec->R[peqn][i]);
               if (!j) {
@@ -5461,13 +5456,13 @@ checkfinite(const char *file, const int line, const char *message)
               }
               for (var = V_FIRST; var < V_LAST;  var++)
                 {
-                  pvar = upd->vp[var];
+                  pvar = upd->vp[pg->imtrx][var];
                   if (pvar != -1)
                     {
-		      ei_ptr = ei;
-		      if (ei->owningElementForColVar[var] != ielem) {
-			if (ei->owningElementForColVar[var] != -1) {
-			  ei_ptr = ei->owningElement_ei_ptr[var];
+		      ei_ptr = ei[pg->imtrx];
+		      if (ei[pg->imtrx]->owningElementForColVar[var] != ielem) {
+			if (ei[pg->imtrx]->owningElementForColVar[var] != -1) {
+			  ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[var];
 			}
 		      }
                       for (j = 0; j < ei_ptr->dof[var]; j++)
@@ -5513,14 +5508,14 @@ int load_pf_constraint(double pf_constraint,
   for (i = 0; i < pfd->num_phase_funcs; i++ )
     {
       var = PHASE1 + i;
-      if (pd->v[var])
+      if (pd->v[pg->imtrx][var])
 	{
-	  for (j = 0; j < ei->dof[var]; j++)
+	  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	    {
-	      ledof = ei->lvdof_to_ledof[var][j];
-	      if (ei->owned_ledof[ledof])
+	      ledof = ei[pg->imtrx]->lvdof_to_ledof[var][j];
+	      if (ei[pg->imtrx]->owned_ledof[ledof])
 		{
-		  ie = ei->gun_list[var][j];
+		  ie = ei[pg->imtrx]->gun_list[var][j];
 		  pfd->jac_info->d_pf_lm[ie] += d_pf_lm[i][j];
 		  pfd->jac_info->d_lm_pf[ie] += d_lm_pf[i][j];
 		}

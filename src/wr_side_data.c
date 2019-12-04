@@ -186,15 +186,15 @@ ns_data_print(pp_Data * p,
 
     for (j = 0; j < Proc_NS_Count[nsp]; j++) {
       node = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-      if (node < num_internal_dofs + num_boundary_dofs ) {
-        idx = Index_Solution(node, MESH_DISPLACEMENT1, 0, 0, -1);
+      if (node < num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx] ) {
+        idx = Index_Solution(node, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
         if (idx == -1) {
           x_pos = Coor[0][node];
           WH(idx, "Mesh variable not found.  May get undeformed coords.");
         } else {
           x_pos = Coor[0][node] + x[idx];
         }
-        idy = Index_Solution(node, MESH_DISPLACEMENT2, 0, 0, -1);
+        idy = Index_Solution(node, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);
         if (idy == -1) {
           y_pos = Coor[1][node];
         } else {
@@ -202,7 +202,7 @@ ns_data_print(pp_Data * p,
         }
         z_pos = 0.;
         if(pd->Num_Dim == 3) {
-          idz = Index_Solution(node, MESH_DISPLACEMENT3, 0, 0, -1);
+          idz = Index_Solution(node, MESH_DISPLACEMENT3, 0, 0, -1, pg->imtrx);
           if (idz == -1) {
 	    z_pos = Coor[2][node];
           }  else{
@@ -210,11 +210,11 @@ ns_data_print(pp_Data * p,
           }
         }
         if (quantity == MASS_FRACTION) {
-          id_var = Index_Solution(node, quantity, species_id, 0, mat_num);
+          id_var = Index_Solution(node, quantity, species_id, 0, mat_num, pg->imtrx);
         } else if (quantity < 0) {
           id_var = -1;
         } else {
-          id_var = Index_Solution(node, quantity, 0, 0, mat_num);
+          id_var = Index_Solution(node, quantity, 0, 0, mat_num, pg->imtrx);
         }
 
 	/*
@@ -236,7 +236,7 @@ ns_data_print(pp_Data * p,
 	     *  If we have an element based interpolation, let's calculate the interpolated value
 	     */
 	    if (quantity == PRESSURE) {
-	      if ((pd->i[PRESSURE] == I_P1) || ( (pd->i[PRESSURE] > I_PQ1) && (pd->i[PRESSURE] < I_Q2_HVG) )) {
+	      if ((pd->i[pg->imtrx][PRESSURE] == I_P1) || ( (pd->i[pg->imtrx][PRESSURE] > I_PQ1) && (pd->i[pg->imtrx][PRESSURE] < I_Q2_HVG) )) {
 		doPressure = 1;
 	      }
 	    }
@@ -287,7 +287,7 @@ ns_data_print(pp_Data * p,
 	      {elem_ct = 1;}
 	    else
 	      {WH(-1,"block id doesn't match first element");}
-	    for (face=0 ; face<ei->num_sides ; face++)
+	    for (face=0 ; face<ei[pg->imtrx]->num_sides ; face++)
 	      {
 		ielem = exo->elem_elem_list[exo->elem_elem_pntr[elem_list[0]]+face];
 		if (ielem != -1)
@@ -333,7 +333,7 @@ ns_data_print(pp_Data * p,
 		 * With the side names, we can find the normal vector.
 		 * Again, assume the sides live on the same element.
 		 */
-		load_ei(elem_list[ielem], exo, 0);
+		load_ei(elem_list[ielem], exo, 0, pg->imtrx);
 
 		/*
 		 * We abuse the argument list under the conditions that
@@ -355,7 +355,7 @@ ns_data_print(pp_Data * p,
 		 * What are the local coordinates of the nodes in a quadrilateral?
 		 */
 
-		find_nodal_stu(local_node[ielem], ei->ielem_type, xi, xi+1, xi+2);
+		find_nodal_stu(local_node[ielem], ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
 
 		err = load_basis_functions(xi, bfd);
 
@@ -380,13 +380,13 @@ ns_data_print(pp_Data * p,
 
 		/* First, one side... */
 
-		get_side_info(ei->ielem_type, local_side[0]+1, &num_nodes_on_side, 
+		get_side_info(ei[pg->imtrx]->ielem_type, local_side[0]+1, &num_nodes_on_side, 
 			      side_nodes);
 
 		surface_determinant_and_normal(elem_list[ielem], 
 					       exo->elem_node_pntr[elem_list[ielem]],
-					       ei->num_local_nodes,  
-					       ei->ielem_dim-1, 
+					       ei[pg->imtrx]->num_local_nodes,  
+					       ei[pg->imtrx]->ielem_dim-1, 
 					       local_side[0]+1, 
 					       num_nodes_on_side,
 					       side_nodes);
@@ -396,13 +396,13 @@ ns_data_print(pp_Data * p,
 
 		/* Second, the adjacent side of the quad... */
 
-		get_side_info(ei->ielem_type, local_side[1]+1, &num_nodes_on_side, 
+		get_side_info(ei[pg->imtrx]->ielem_type, local_side[1]+1, &num_nodes_on_side, 
 			      side_nodes);
 
 		surface_determinant_and_normal(elem_list[ielem], 
 					       exo->elem_node_pntr[elem_list[ielem]],
-					       ei->num_local_nodes,  
-					       ei->ielem_dim-1, 
+					       ei[pg->imtrx]->num_local_nodes,  
+					       ei[pg->imtrx]->ielem_dim-1, 
 					       local_side[1]+1, 
 					       num_nodes_on_side,
 					       side_nodes);
@@ -445,29 +445,29 @@ ns_data_print(pp_Data * p,
 	  }
 	else if ( strncasecmp(qtity_str, "speed", 5 ) == 0 )
 	  {
-            id_var = Index_Solution(node, VELOCITY1, 0, 0, mat_num);
+            id_var = Index_Solution(node, VELOCITY1, 0, 0, mat_num, pg->imtrx);
 	    ordinate = SQUARE(x[id_var]);
-            id_var = Index_Solution(node, VELOCITY2, 0, 0, mat_num);
+            id_var = Index_Solution(node, VELOCITY2, 0, 0, mat_num, pg->imtrx);
 	    ordinate += SQUARE(x[id_var]);
-            id_var = Index_Solution(node, VELOCITY3, 0, 0, mat_num);
+            id_var = Index_Solution(node, VELOCITY3, 0, 0, mat_num, pg->imtrx);
 	    ordinate += SQUARE(x[id_var]);
 	    ordinate = sqrt(ordinate);
 	    iprint = 1;
 	  }
         else if ( strncasecmp(qtity_str, "ac_pres", 7 ) == 0 )
           {
-            id_var = Index_Solution(node, ACOUS_PREAL, 0, 0, mat_num);
+            id_var = Index_Solution(node, ACOUS_PREAL, 0, 0, mat_num, pg->imtrx);
             ordinate = SQUARE(x[id_var]);
-            id_var = Index_Solution(node, ACOUS_PIMAG, 0, 0, mat_num);
+            id_var = Index_Solution(node, ACOUS_PIMAG, 0, 0, mat_num, pg->imtrx);
             ordinate += SQUARE(x[id_var]);
             ordinate = sqrt(ordinate);
             iprint = 1;
           }
         else if ( strncasecmp(qtity_str, "light_comp", 10 ) == 0 )
           {
-            id_var = Index_Solution(node, LIGHT_INTP, 0, 0, mat_num);
+            id_var = Index_Solution(node, LIGHT_INTP, 0, 0, mat_num, pg->imtrx);
             ordinate = x[id_var];
-            id_var = Index_Solution(node, LIGHT_INTM, 0, 0, mat_num);
+            id_var = Index_Solution(node, LIGHT_INTM, 0, 0, mat_num, pg->imtrx);
             ordinate += x[id_var];
             iprint = 1;
           }
@@ -496,9 +496,9 @@ ns_data_print(pp_Data * p,
 	    EH(local_node[0], "Can not find node in elem node connectivity!?! ");
 	    local_node[0] -= exo->elem_node_pntr[elem_list[0]];
 
-		load_ei(elem_list[0], exo, 0);
+		load_ei(elem_list[0], exo, 0, pg->imtrx);
 
-		find_nodal_stu(local_node[0], ei->ielem_type, xi, xi+1, xi+2);
+		find_nodal_stu(local_node[0], ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
 		err = load_basis_functions(xi, bfd);
 
 		EH( err, "problem from load_basis_functions");
@@ -521,7 +521,7 @@ ns_data_print(pp_Data * p,
           }
         else if ( strncasecmp(qtity_str, "external_field", 14 ) == 0 )
           {
-            id_var = Index_Solution(node, MASS_FRACTION, species_id, 0, mat_num);
+            id_var = Index_Solution(node, MASS_FRACTION, species_id, 0, mat_num, pg->imtrx);
             ordinate = efv->ext_fld_ndl_val[species_id][node];
             iprint = 1;
           }
@@ -534,7 +534,7 @@ ns_data_print(pp_Data * p,
                     ordinate = density_tot;
 	            for(wspec = 0 ; wspec < pd->Num_Species_Eqn ; wspec++)
 		        {
-            	          id_var = Index_Solution(node, MASS_FRACTION, wspec, 0, mat_num);
+            	          id_var = Index_Solution(node, MASS_FRACTION, wspec, 0, mat_num, pg->imtrx);
             	          ordinate -= x[id_var]*mp_glob[mat_num]->molecular_weight[wspec];
 		        }
             	     ordinate /= mp_glob[mat_num]->molecular_weight[pd->Num_Species_Eqn];
@@ -544,7 +544,7 @@ ns_data_print(pp_Data * p,
                     ordinate = density_tot;
 	            for(wspec = 0 ; wspec < pd->Num_Species_Eqn ; wspec++)
 		        {
-            	          id_var = Index_Solution(node, MASS_FRACTION, wspec, 0, mat_num);
+            	          id_var = Index_Solution(node, MASS_FRACTION, wspec, 0, mat_num, pg->imtrx);
             	          ordinate -= x[id_var];
 		        }
                break;
@@ -553,7 +553,7 @@ ns_data_print(pp_Data * p,
                     ordinate = 1.0;
 	            for(wspec = 0 ; wspec < pd->Num_Species_Eqn ; wspec++)
 		        {
-            	          id_var = Index_Solution(node, MASS_FRACTION, wspec, 0, mat_num);
+            	          id_var = Index_Solution(node, MASS_FRACTION, wspec, 0, mat_num, pg->imtrx);
             	          ordinate -= x[id_var];
 		        }
                break;
@@ -695,15 +695,15 @@ ns_data_sens_print(const struct Post_Processing_Data_Sens *p,
 
     for (j = 0; j < Proc_NS_Count[nsp]; j++) {
       node = Proc_NS_List[Proc_NS_Pointers[nsp]+j];
-      if( node < num_internal_dofs + num_boundary_dofs ) {
-        idx = Index_Solution (node, MESH_DISPLACEMENT1, 0, 0, -1);
+      if( node < num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx] ) {
+        idx = Index_Solution (node, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
         if (idx == -1) {
 	  x_pos = Coor[0][node];
           WH(idx, "Mesh variable not found.  May get undeformed coords.");
         } else {
 	  x_pos = Coor[0][node] + x[idx];
         }
-        idy = Index_Solution (node, MESH_DISPLACEMENT2, 0, 0, -1);
+        idy = Index_Solution (node, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx);
         if (idy == -1) {
 	  y_pos = Coor[1][node];
         } else {
@@ -711,7 +711,7 @@ ns_data_sens_print(const struct Post_Processing_Data_Sens *p,
         }
         z_pos = 0.;
         if (pd->Num_Dim == 3) {
-	  idz = Index_Solution(node, MESH_DISPLACEMENT3, 0, 0, -1);
+	  idz = Index_Solution(node, MESH_DISPLACEMENT3, 0, 0, -1, pg->imtrx);
 	  if (idz == -1) {
 	    z_pos = Coor[2][node];
 	  } else {
@@ -719,9 +719,9 @@ ns_data_sens_print(const struct Post_Processing_Data_Sens *p,
 	  }
         }
         if(quantity == MASS_FRACTION) {
-	  id_var = Index_Solution(node, quantity, species_id, 0, mat_id);
+	  id_var = Index_Solution(node, quantity, species_id, 0, mat_id, pg->imtrx);
         } else {
-	  id_var = Index_Solution(node, quantity, 0, 0, mat_id);
+	  id_var = Index_Solution(node, quantity, 0, 0, mat_id, pg->imtrx);
         }
         WH(id_var,
 	   "Requested print variable is not defined at all nodes. May get 0.");

@@ -66,7 +66,7 @@
  * Revised:
  */
 
-#define _SAM_PEREA_C
+#define GOMA_SAM_PEREA_C
 
 #include <stdio.h>
 
@@ -83,9 +83,9 @@
 #include "brkfix/sam_perea.h"
 
 extern int fence_post		/* utils.c */
-PROTO((int ,			/* val    - integer whose category we seek */
+(int ,			/* val    - integer whose category we seek */
        int *,			/* array  - where to look  */
-       int ));			/* length - how far to search in array */
+       int );			/* length - how far to search in array */
 
 void
 assess_weights(Exo_DB *x, 

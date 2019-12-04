@@ -19,7 +19,7 @@
 #include <math.h>
 #include <string.h>
 
-#define _AC_CONTI_C
+#define GOMA_AC_CONTI_C
 #include "goma.h"
 #include "brk_utils.h"
 int w;
@@ -28,7 +28,7 @@ int w;
 
 #ifdef HAVE_FRONT
 extern int mf_setup
-PROTO((int *,			/* nelem_glob */
+(int *,			/* nelem_glob */
        int *,			/* neqn_glob */
        int *,			/* mxdofel */
        int *,			/* nfullsum */
@@ -40,7 +40,7 @@ PROTO((int *,			/* nelem_glob */
        int *,			/* loc_dof */
        int *,			/* constraint */
        const char *,		/* cname */
-       int *));			/* allocated */
+       int *);			/* allocated */
 #endif
 
 /*
@@ -145,7 +145,8 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
    * Other local variables
    */
   int	        error, err, is_steady_state, inewton;
-  int 		*gindex = NULL, gsize;
+  int 		*gindex = NULL;
+  int gsize;
   int		*p_gsize=NULL;
   double	*gvec=NULL;
   double        ***gvec_elem=NULL;
@@ -329,7 +330,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
    */
   num_total_nodes = dpi->num_universe_nodes;
 
-  numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
   /* allocate memory for Volume Constraint Jacobian */
   if ( nAC > 0)
@@ -499,7 +500,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
 
        err = mf_setup(&exo->num_elems,
-		     &NumUnknowns,
+		     &NumUnknowns[pg->imtrx], 
 		     &max_unk_elem,
 		     &three,
 		     &one,
@@ -570,8 +571,8 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
        * An attic to store external dofs column names is needed when
        * running in parallel.
        */
-      alloc_extern_ija_buffer(num_universe_dofs,
-			      num_internal_dofs+num_boundary_dofs,
+      alloc_extern_ija_buffer(num_universe_dofs[pg->imtrx], 
+			      num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx], 
 			      ija, &ija_attic);
       /*
        * Any necessary one time initialization of the linear
@@ -593,11 +594,11 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
       ams[JAC]->npn      = dpi->num_internal_nodes + dpi->num_boundary_nodes;
       ams[JAC]->npn_plus = dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes;
 
-      ams[JAC]->npu      = num_internal_dofs+num_boundary_dofs;
-      ams[JAC]->npu_plus = num_universe_dofs;
+      ams[JAC]->npu      = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
+      ams[JAC]->npu_plus = num_universe_dofs[pg->imtrx];
 
-      ams[JAC]->nnz = ija[num_internal_dofs+num_boundary_dofs] - 1;
-      ams[JAC]->nnz_plus = ija[num_universe_dofs];
+      ams[JAC]->nnz = ija[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]] - 1;
+      ams[JAC]->nnz_plus = ija[num_universe_dofs[pg->imtrx]];
     }
   else if(  strcmp( Matrix_Format, "vbr" ) == 0)
     {
@@ -648,7 +649,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
   find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-  exchange_dof(cx, dpi, x);
+  exchange_dof(cx, dpi, x, pg->imtrx);
 
   dcopy1(numProcUnknowns,x,x_old);
   dcopy1(numProcUnknowns,x_old,x_older);
@@ -737,7 +738,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
        */
       if(alqALC == -1)
 	{
-	  dcopy1(NumUnknowns,x_old,x);
+	  dcopy1(NumUnknowns[pg->imtrx],x_old,x);
 
 	  switch (Continuation)
 	    {
@@ -747,10 +748,10 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	      switch (aldALC)
 		{
 		case -1:
-		  v1add(NumUnknowns, &x[0], -delta_s, &x_sens[0]);
+		  v1add(NumUnknowns[pg->imtrx], &x[0], -delta_s, &x_sens[0]);
 		  break;
 		case +1:
-		  v1add(NumUnknowns, &x[0], +delta_s, &x_sens[0]);
+		  v1add(NumUnknowns[pg->imtrx], &x[0], +delta_s, &x_sens[0]);
 		  break;
 		default:
 		  DPRINTF(stderr, "%s: Bad aldALC, %d\n", yo, aldALC);
@@ -770,7 +771,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
       find_and_set_Dirichlet (x, xdot, exo, dpi);
 
-      exchange_dof(cx, dpi, x);
+      exchange_dof(cx, dpi, x, pg->imtrx);
 
       if (ProcID == 0)
 	{
@@ -853,41 +854,43 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 #ifdef DEBUG
 	DPRINTF(stderr, "%s: starting solve_nonlinear_problem\n", yo);
 #endif
-	err = solve_nonlinear_problem(ams[JAC],
-				      x,
-				      delta_t,
-				      theta,
-				      x_old,
-				      x_older,
-				      xdot,
-				      xdot_old,
-				      resid_vector,
-				      x_update,
-				      scale,
-				      &converged,
-				      &nprint,
-				      tev,
-				      tev_post,
-				      gv,
-				      rd,
-				      gindex,
-				      p_gsize,
-				      gvec,
-				      gvec_elem,
-				      path1,
-				      exo,
-				      dpi,
-				      cx,
-				      0,
-				      &path_step_reform,
-				      is_steady_state,
-				      x_AC,
- 				      x_AC_dot,
-				      path1,
-				      resid_vector_sens,
-				      x_sens_temp,
-				      x_sens_p,
-                                      NULL);
+                err = solve_nonlinear_problem(ams[JAC],
+                                        x,
+                                        delta_t,
+                                        theta,
+                                        x_old,
+                                        x_older,
+                                        xdot,
+                                        xdot_old,
+                                        resid_vector,
+                                        x_update,
+                                        scale,
+                                        &converged,
+                                        &nprint,
+                                        tev,
+                                        tev_post,
+                                        NULL,
+                                        rd,
+                                        gindex,
+                                        p_gsize,
+                                        gvec,
+                                        gvec_elem,
+                                        path1,
+                                        exo,
+                                        dpi,
+                                        cx,
+                                        0,
+                                        &path_step_reform,
+                                        is_steady_state,
+                                        x_AC,
+                                        x_AC_dot,
+                                        path1,
+                                        resid_vector_sens,
+                                        x_sens_temp,
+                                        x_sens_p,
+                                        NULL,
+                                        NULL);
+
 
 #ifdef DEBUG
 	fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
@@ -902,10 +905,10 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 #ifdef DEBUG
 	      DPRINTF(stderr, "%s: write_solution call WIS\n", yo);
 #endif
-	      write_solution(ExoFileOut, resid_vector, x, x_sens_p,
+            write_solution(ExoFileOut, resid_vector, x, x_sens_p,
 			     x_old, xdot, xdot_old, tev, tev_post, gv, rd,
-			     gindex, p_gsize, gvec, gvec_elem, &nprint,
-			     delta_s, theta, path1, NULL, exo, dpi);
+			     gvec, gvec_elem, &nprint,
+                           delta_s, theta, path1, NULL, exo, dpi);
 #ifdef DEBUG
 	      fprintf(stderr, "%s: write_solution end call WIS\n", yo);
 #endif
@@ -1140,7 +1143,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	     */
 	    find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-            exchange_dof(cx, dpi, x);
+            exchange_dof(cx, dpi, x, pg->imtrx);
 
 	    /*    Should be doing first order prediction on ACs
 	     *    but for now, just reset the AC variables
@@ -1210,8 +1213,8 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	  if (Write_Intermediate_Solutions == 0 ) {
 	    write_solution(ExoFileOut, resid_vector, x, x_sens_p,
 			   x_old, xdot, xdot_old, tev, tev_post, gv,
-			   rd, gindex, p_gsize, gvec, gvec_elem, &nprint,
-			   delta_s, theta, path1, NULL, exo, dpi);
+                         rd, gvec, gvec_elem, &nprint,
+                         delta_s, theta, path1, NULL, exo, dpi);
 	    nprint++;
 	  }
 	}

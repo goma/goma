@@ -52,7 +52,7 @@
 #include "loca_const.h"
 
 
-#define _MM_AUGC_UTIL_C
+#define GOMA_MM_AUGC_UTIL_C
 #include "goma.h"
 
 #include "sl_eggroll.h"
@@ -64,37 +64,37 @@
 
 static int
 estimate_bAC
-PROTO(( int ,
+( int ,
         double [],
         double **,
         int ,
         Comm_Ex *,
-        MF_Args * ));
+        MF_Args * );
 
 #ifdef NOT_USED
 static int
 estimate_dAC_LSvel
-PROTO(( int ,
+( int ,
         double [],
         double **,
         int ,
         Comm_Ex *,
-        MF_Args * ));
+        MF_Args * );
 #endif
 
 static int
 estimate_dAC_ALC
-PROTO(( int ,
+( int ,
         double [],
         double **,
         int ,
         Comm_Ex *,
-        MF_Args * ));
+        MF_Args * );
 
 
 static double getPositionAC
-PROTO((struct AC_Information *augc, double *cAC_iAC, double *soln, Exo_DB *exo
-));
+(struct AC_Information *augc, double *cAC_iAC, double *soln, Exo_DB *exo
+);
 
 /*
 
@@ -1633,7 +1633,7 @@ user_aug_cond(int iAC,
 			     mf_args->num_total_nodes,
 			     mf_args->h_elem_avg,
 			     mf_args->U_norm,
-			     mf_args->estifm);
+                             mf_args->estifm);
 
       if (err == -1) return(err);
       /*  */
@@ -1666,7 +1666,7 @@ user_aug_cond(int iAC,
 			     mf_args->num_total_nodes,
 			     mf_args->h_elem_avg,
 			     mf_args->U_norm,
-			     mf_args->estifm);
+                             mf_args->estifm);
 	  
       if (err == -1) return(err);
       /*  */
@@ -2127,7 +2127,7 @@ alc_aug_cond (int iAC,
   alceq_p = dp_ds * (lambda - lambda_old);
 
   /* Solution contribution:  dx_ds * (x - x_old) with scale factor */
-  for (i=0; i<NumUnknowns; i++)
+  for (i=0; i<NumUnknowns[pg->imtrx]; i++)
     {
       alceq_s += sv[i] * sv[i] * dx[i] * (x[i] - x_old[i]);
     }
@@ -2148,7 +2148,7 @@ alc_aug_cond (int iAC,
   estimate_bAC(iAC, x_AC, bAC, numProcUnknowns, cx, mf_args);
 
   /* cAC is solution sensitivity from LOCA */
-  for (i=0; i<NumUnknowns; i++)
+  for (i=0; i<NumUnknowns[pg->imtrx]; i++)
     {
       cAC[iAC][i] =  dx[i] * sv[i] * sv[i];
     }
@@ -2291,7 +2291,7 @@ overlap_aug_cond ( int ija[],
                     }
 
     /* Find the appropriate side and point elem_side_bc to it */
-                  elem_side_bc = First_Elem_Side_BC_Array[ielem];
+                  elem_side_bc = First_Elem_Side_BC_Array[pg->imtrx][ielem];
                   jside = elem_side_bc->id_side;
                   if (iside != jside)
                     {
@@ -2312,11 +2312,11 @@ overlap_aug_cond ( int ija[],
 					   h,
 					   mu_avg,
 					   *mf_args->U_norm,
-					   First_Elem_Side_BC_Array,
+					   First_Elem_Side_BC_Array[pg->imtrx],
 					   ielem,
-					   ei->ielem_type,
-					   ei->num_local_nodes,
-					   ei->ielem_dim,
+					   ei[pg->imtrx]->ielem_type,
+					   ei[pg->imtrx]->num_local_nodes,
+					   ei[pg->imtrx]->ielem_dim,
 					   Proc_Connect_Ptr[ielem],
 					   elem_side_bc,
 					   *mf_args->num_total_nodes,
@@ -2412,7 +2412,7 @@ overlap_aug_cond ( int ija[],
             {
               int call_contact;
               int ibc, bc_input_id, bct;
-              elem_side_bc = First_Elem_Side_BC_Array[ielem];
+              elem_side_bc = First_Elem_Side_BC_Array[pg->imtrx][ielem];
 
               load_elem_dofptr(ielem, exo, x_static, x_old_static,
                                 xdot_static, xdot_old_static,
@@ -2439,11 +2439,11 @@ overlap_aug_cond ( int ija[],
                                                h,
                                                mu_avg,
                                               *mf_args->U_norm,
-                                               First_Elem_Side_BC_Array,
+                                               First_Elem_Side_BC_Array[pg->imtrx],
                                                ielem,
-                                               ei->ielem_type,
-                                               ei->num_local_nodes,
-                                               ei->ielem_dim,
+                                               ei[pg->imtrx]->ielem_type,
+                                               ei[pg->imtrx]->num_local_nodes,
+                                               ei[pg->imtrx]->ielem_dim,
                                                Proc_Connect_Ptr[ielem],
                                                elem_side_bc,
                                               *mf_args->num_total_nodes,
@@ -2466,14 +2466,14 @@ overlap_aug_cond ( int ija[],
 #if 0
    {
      int index;
-     int numProcUnknowns = NumUnknowns + NumExtUnknowns;
+     int numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
      for (jAC = 0; jAC < nAC; jAC++)
        {
          printf("jAC=%d, LM=%g, gAC=%g, dAC[%d][%d]=%g\n",jAC,augc[jAC].lm_value,gAC[jAC],jAC,jAC,dAC[jAC][jAC]);
          for ( index = 0; index<numProcUnknowns; index++)
            {
-             if (bAC[jAC][index] != 0. ) printf(" eqntype=%d, N=%d, bAC[jAC][%d]=%g\n",idv[index][0],idv[index][2],index,bAC[jAC][index]);
-             if (cAC[jAC][index] != 0. ) printf(" vartype=%d, N=%d, cAC[jAC][%d]=%g\n",idv[index][0],idv[index][2],index,cAC[jAC][index]);
+             if (bAC[jAC][index] != 0. ) printf(" eqntype=%d, N=%d, bAC[jAC][%d]=%g\n",idv[pg->imtrx][index][0],idv[pg->imtrx][index][2],index,bAC[jAC][index]);
+             if (cAC[jAC][index] != 0. ) printf(" vartype=%d, N=%d, cAC[jAC][%d]=%g\n",idv[pg->imtrx][index][0],idv[pg->imtrx][index][2],index,cAC[jAC][index]);
            }
        }
    }
@@ -2546,7 +2546,7 @@ estimate_bAC(  int iAC,
 			 mf_args->num_total_nodes,
 			 mf_args->h_elem_avg,
 			 mf_args->U_norm,
-			 mf_args->estifm);
+                         mf_args->estifm);
   
   if (err == -1) return(err);
 
@@ -2592,7 +2592,7 @@ estimate_bAC(  int iAC,
 			 mf_args->num_total_nodes,
 			 mf_args->h_elem_avg,
 			 mf_args->U_norm,
-			 mf_args->estifm);
+                         mf_args->estifm);
       
   if (err == -1) return(err);
 	  
@@ -3118,11 +3118,11 @@ std_lgr_cond ( int iAC,
 	    for( inode= 0, i=0; i<numProcUnknowns; i++) 
 	      {
 		int var, isDBC = -1;
-		vd = Index_Solution_Inv( i, &inode, NULL, &i_offset, NULL );
+		vd = Index_Solution_Inv( i, &inode, NULL, &i_offset, NULL, pg->imtrx );
 				  
 		var = vd->Variable_Type;
 				  
-		if (Nodes[inode]->DBC ) isDBC = Nodes[inode]->DBC[i_offset];
+		if (Nodes[inode]->DBC[pg->imtrx] ) isDBC = Nodes[inode]->DBC[pg->imtrx][i_offset];
 				  
 				  
 		if ( ( var >= VELOCITY1 && var <= VELOCITY3 ) &&      /* this stuff only gets added to velocity dofs */
@@ -3672,7 +3672,7 @@ create_periodic_acs(Exo_DB *exo)
        */
       count2 = 0;
       for ( i = 0; i < count1; i++ ) {
-        ie = Index_Solution(node_list1[i], var, 0, 0, -1);
+        ie = Index_Solution(node_list1[i], var, 0, 0, -1, pg->imtrx);
 	if ( ie >= 0 ) count2++;
       }
   
@@ -3705,10 +3705,10 @@ create_periodic_acs(Exo_DB *exo)
            *      so I am using the fluid_eb and solid_eb to hold the equation indices that are tied together
            *      by this augmenting condition
            */
-          ie = Index_Solution(node_list1[i], var, 0, 0, -1);
+          ie = Index_Solution(node_list1[i], var, 0, 0, -1, pg->imtrx);
 	  if ( ie == -1 ) continue;
 	  augc[ac_count].fluid_eb = ie;
-	  ie = Index_Solution(node_list2match[i], var, 0, 0, -1);
+	  ie = Index_Solution(node_list2match[i], var, 0, 0, -1, pg->imtrx);
           augc[ac_count].solid_eb = ie;
 	  /*
 	  fprintf(stderr,"ac_count=%d,node1=%d,node2=%d,ie1=%d,ie2=%d\n",
@@ -3809,7 +3809,7 @@ double getPositionAC(struct AC_Information *augc, double *cAC_iAC,
     RETN_COORD(node, &posNode[0], &posNode[1], &posNode[2]);
     // Now add in the displacements 
     //            ( we assume here no complications due to subparametric mapping)
-    i = Index_Solution(node, MESH_DISPLACEMENT1, 0, 0, -1);
+    i = Index_Solution(node, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
     if (i != -1) {
       posNode[0] += x[i];
       posNode[1] += x[i+1];

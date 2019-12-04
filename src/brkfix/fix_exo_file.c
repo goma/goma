@@ -69,7 +69,7 @@ int *ebl;			/* element block list */
  */
 
 static void setup_exo_res_desc	/* fix.c */
-PROTO((Exo_DB *));		/* exo - ptr to database */
+(Exo_DB *);		/* exo - ptr to database */
 
 
 int
@@ -477,7 +477,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 	      "About to wr_results at t=%d, mono->nv_time_indeces[0]=%d\n", 
 	      t, mono->nv_time_indeces[0]);
 #endif
-      wr_result_exo(mono, monolith_file_name, 0);
+      wr_result_exo(mono, monolith_file_name);
       
       if ( mono->num_glob_vars > 0 ) {
 	int status;

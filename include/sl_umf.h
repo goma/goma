@@ -11,23 +11,23 @@
 \************************************************************************/
  
 
-#ifndef _SL_UMF_H
-#define _SL_UMF_H
+#ifndef GOMA_SL_UMF_H
+#define GOMA_SL_UMF_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _SL_UMF_C
+#ifdef GOMA_SL_UMF_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _SL_UMF_C
+#ifndef GOMA_SL_UMF_C
 #define EXTERN extern
 #endif
 
 extern int SL_UMF
-PROTO (( int,
+( int,
 	 int *,
 	 int *,
 	 int *,
@@ -37,7 +37,7 @@ PROTO (( int,
 	 int *,
 	 double *,
 	 double *,
-	 double *  ));
+	 double *  );
 
 struct UMF_Linear_Solver_System
 {
@@ -47,6 +47,6 @@ struct UMF_Linear_Solver_System
         void *symbolic, *numeric;
 };
 
-#endif /* _SL_UMF_H */
+#endif /* GOMA_SL_UMF_H */
 
 

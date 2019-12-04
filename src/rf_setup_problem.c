@@ -60,6 +60,154 @@
 
 #include "dp_utils.h"
 
+static void
+associate_bc_to_matrix(void);
+
+static void
+set_bc_equation(void)
+{
+  int ibc;
+
+  for (ibc = 0; ibc < Num_BC; ibc++) {
+    /*
+     *  Create a couple of pointers to cut down on the
+     *  amount of indirect addressing
+     */
+    int eqn = (BC_Types[ibc].desc)->equation;
+    int set_eqn = BC_Types[ibc].equation;
+    if (set_eqn < 0 || set_eqn >= V_LAST) {
+      if (eqn >= V_FIRST && eqn < V_LAST) {
+        BC_Types[ibc].equation = eqn;
+      } else {
+        switch (eqn) {
+        case R_MESH_NORMAL:
+        case R_MESH_TANG1:
+        case R_MESH_TANG2:
+        case MESH_POSITION1:
+          BC_Types[ibc].equation = R_MESH1;
+          break;
+        case MESH_POSITION2:
+          BC_Types[ibc].equation = R_MESH2;
+          break;
+        case MESH_POSITION3:
+          BC_Types[ibc].equation = R_MESH3;
+          break;
+        case R_MOM_NORMAL:
+        case R_MOM_TANG1:
+        case R_MOM_TANG2:
+           BC_Types[ibc].equation = R_MOMENTUM1;
+          break;
+        case R_SOLID_NORMAL:
+        case R_SOLID_TANG1:
+        case R_SOLID_TANG2:
+        case SOLID_NORM:
+        case SOLID_TANG1:
+        case SOLID_TANG2:
+        case SOLID_POSITION1:
+          BC_Types[ibc].equation = R_SOLID1;
+          break;
+        case SOLID_POSITION2:
+          BC_Types[ibc].equation = R_SOLID2;
+          break;
+        case SOLID_POSITION3:
+          BC_Types[ibc].equation = R_SOLID3;
+          break;
+        default:
+          EH(-1, "Error in linking BC to equation");
+          break;
+        }
+      }
+    }
+  }
+}
+
+static void
+associate_bc_to_matrix(void)
+{
+  int ibc;
+  int imtrx;
+  int mn;
+
+  if (upd->Total_Num_Matrices == 1) {
+    /* Preserve legacy behavior */
+    for (ibc = 0; ibc < Num_BC; ibc++) {
+    
+      BC_Types[ibc].matrix = 0;
+      
+    }
+  } else {
+    for (ibc = 0; ibc < Num_BC; ibc++) {
+      /*
+       *  Create a couple of pointers to cut down on the
+       *  amount of indirect addressing
+       */
+      int eqn = BC_Types[ibc].equation;
+
+      BC_Types[ibc].matrix = -1;
+
+      if (eqn >= V_FIRST && eqn < V_LAST) {
+	for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+	  for (mn = 0; mn < upd->Num_Mat; mn++) {
+	    if (pd_glob[mn]->e[imtrx][eqn]) {
+	      BC_Types[ibc].matrix = imtrx;
+	    }
+	  }
+	}
+      }
+      if (BC_Types[ibc].matrix == -1) {
+	char errstr[512];
+	snprintf(errstr, 512, "Could not find matching matrix for BC #%d %s, BC will not be used", 
+		 ibc, (BC_Types[ibc].desc)->name1);
+	WH(-1, errstr);
+      }
+    }
+  }
+}
+
+void
+set_matrix_index_and_global_v(void)
+{
+  int mn;
+  int i;
+  int imtrx;
+
+  /* Initialize matrix indices */
+  for (mn = 0; mn < upd->Num_Mat; mn++) {
+    for ( i=0; i<MAX_VARIABLE_TYPES; i++) {
+      pd_glob[mn]->mi[i] = -1;
+      upd->matrix_index[i] = -1;
+    }
+  }
+
+  for (mn = 0; mn < upd->Num_Mat; mn++) {
+    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+      for ( i=0; i<MAX_VARIABLE_TYPES; i++) {
+        if (pd_glob[mn]->v[imtrx][i]) {
+          pd_glob[mn]->mi[i] = imtrx;
+          upd->matrix_index[i] = imtrx;
+        }
+      }
+    }
+  }
+
+  for (mn = 0; mn < upd->Num_Mat; mn++) {
+    for ( i=0; i<MAX_VARIABLE_TYPES; i++) {
+      pd_glob[mn]->gv[i] = 0;
+    }
+  }
+
+  for (mn = 0; mn < upd->Num_Mat; mn++) {
+    for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++) {
+      for ( i=0; i<MAX_VARIABLE_TYPES; i++) {
+        if (pd_glob[mn]->v[imtrx][i]) {
+          pd_glob[mn]->gv[i] = 1;
+        }
+      }
+    }
+  }
+}
+
+
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
@@ -130,6 +278,13 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    */
   determine_dvi_index();
 
+
+  set_bc_equation();
+
+  /* Link BCs to matrix by equation */
+  associate_bc_to_matrix();
+
+
   /*
    * Enumerate my own degrees of freedom on this processor.
    */
@@ -160,7 +315,7 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * Exchange my idea of what materials I have at each node with
    * my surrounding processors. Make sure we are all in sync
    */
-  setup_external_nodal_matrls(exo, dpi, cx);
+  setup_external_nodal_matrls(exo, dpi, cx[0]);
 
   /*
    * Exchange my idea of what degrees of freedom I have with my
@@ -269,13 +424,17 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    *  if necessary
    */
   if (Debug_Flag) {
-    print_setup_Surf_BC(First_Elem_Side_BC_Array);
+    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+      print_setup_Surf_BC(First_Elem_Side_BC_Array[pg->imtrx]);
+    }
   }
 
   /*
    *  Malloc structures of size Num_Var_Info_Records
    */
-  ei->VDindex_to_Lvdesc = alloc_int_1(Num_Var_Info_Records, -1);
+  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    ei[pg->imtrx]->VDindex_to_Lvdesc = alloc_int_1(Num_Var_Info_Records, -1);
+  }
   for (i = 0; i < MAX_ELEMENT_INDICES_RELATED; i++) {
     eiRelated[i]->VDindex_to_Lvdesc = alloc_int_1(Num_Var_Info_Records, -1);
   }
@@ -310,7 +469,7 @@ free_problem(Exo_DB *exo,     /* ptr to the finite element mesh database */
   /*
    * Free up the First_Elem_Side_BC_Array array 
    */
-  free_Surf_BC(First_Elem_Side_BC_Array, exo, dpi);			      
+    free_Surf_BC(First_Elem_Side_BC_Array, exo);
   free_Edge_BC(First_Elem_Edge_BC_Array, exo, dpi);
   return 0;
 }
@@ -318,7 +477,8 @@ free_problem(Exo_DB *exo,     /* ptr to the finite element mesh database */
 
 static void
 check_discontinuous_interp_type(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
-			        int var_type)
+			        int var_type,
+                                int imtrx)
      
     /********************************************************************
      *
@@ -329,8 +489,8 @@ check_discontinuous_interp_type(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
      *    the interface
      ********************************************************************/
 {
-  int *v_ptr = curr_pd->v;
-  int interp_type = curr_pd->i[var_type];
+  int *v_ptr = curr_pd->v[imtrx];
+  int interp_type = curr_pd->i[imtrx][var_type];
   if (v_ptr[var_type] & V_MATSPECIFIC) {
     switch (interp_type) {
     case I_NOTHING:
@@ -373,7 +533,8 @@ check_discontinuous_interp_type(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
 
 static void
 turn_on_discontinuous(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
-		      const int var_type)
+		      const int var_type,
+                      const int imtrx)
     
     /********************************************************************
      *
@@ -384,10 +545,10 @@ turn_on_discontinuous(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
      *    material boundaries.
      ********************************************************************/
 {
-  int *v_ptr = &(curr_pd->v[var_type]); 
+  int *v_ptr = &(curr_pd->v[imtrx][var_type]); 
   if ((*v_ptr) & (V_SOLNVECTOR)) {
     *v_ptr |= V_MATSPECIFIC;
-    check_discontinuous_interp_type(curr_pd, var_type);
+    check_discontinuous_interp_type(curr_pd, var_type, imtrx);
   }
 }
 /************************************************************************/
@@ -411,6 +572,7 @@ coordinate_discontinuous_variables(Exo_DB *exo,	Dpi *dpi)
      *******************************************************************/
 {
   int ibc, eqn_type, ss_index, side_index, k, node_num, imat;
+  int imtrx;
   int num_mat, mat_index, var_type, *ivec;
   UMI_LIST_STRUCT *curr_mat_list;
   NODE_INFO_STRUCT *node_ptr;
@@ -461,24 +623,34 @@ coordinate_discontinuous_variables(Exo_DB *exo,	Dpi *dpi)
 	       *  Now make sure that we have the discontinuous var turned
 	       *  on
 	       */
-	      for (imat = 0; imat < num_mat; imat++) {
-		mat_index= (curr_mat_list->List)[imat];
-		curr_pd = pd_glob[mat_index];
-                if (eqn_type == R_MOMENTUM1) {
-		  turn_on_discontinuous(curr_pd, R_MOMENTUM1);
-		  turn_on_discontinuous(curr_pd, R_MOMENTUM2);
-		  turn_on_discontinuous(curr_pd, R_MOMENTUM3);
-		  turn_on_discontinuous(curr_pd, PRESSURE);
-		} else if (eqn_type == R_SPECIES_UNK_0) {
-		  turn_on_discontinuous(curr_pd, R_MASS);	
-		  for (var_type = R_SPECIES_UNK_0;
-		       var_type < R_SPECIES_UNK_LAST; var_type++) {
-		    turn_on_discontinuous(curr_pd, var_type);
-		  }
-		} else {
-		  turn_on_discontinuous(curr_pd, eqn_type);
-		}
-	      }
+	      for (imat = 0; imat < num_mat; imat++) 
+                 {
+		  mat_index= (curr_mat_list->List)[imat];
+		  curr_pd = pd_glob[mat_index];
+                  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+                     {
+                      if (eqn_type == R_MOMENTUM1) 
+                        {
+		         turn_on_discontinuous(curr_pd, R_MOMENTUM1, imtrx);
+		         turn_on_discontinuous(curr_pd, R_MOMENTUM2, imtrx);
+		         turn_on_discontinuous(curr_pd, R_MOMENTUM3, imtrx);
+		         turn_on_discontinuous(curr_pd, PRESSURE, imtrx);
+                        }
+		      else if (eqn_type == R_SPECIES_UNK_0) 
+                        {
+		         turn_on_discontinuous(curr_pd, R_MASS, imtrx);	
+		         for (var_type = R_SPECIES_UNK_0;
+		              var_type < R_SPECIES_UNK_LAST; var_type++) 
+                            {
+		             turn_on_discontinuous(curr_pd, var_type, imtrx);
+		            }
+		        } 
+                      else 
+                        {
+		         turn_on_discontinuous(curr_pd, eqn_type, imtrx);
+		        }
+                     }
+	         }
 	    }
 	  }
 	}
@@ -494,26 +666,34 @@ coordinate_discontinuous_variables(Exo_DB *exo,	Dpi *dpi)
    */
 #ifdef PARALLEL
   ivec = alloc_int_1(V_LAST, 0);
-  for (imat = 0; imat < upd->Num_Mat; imat++) {
-    curr_pd = pd_glob[imat];
-    for (k = 0; k <  V_LAST; k++) {
-      ivec[k] = curr_pd->v[k];
-    }
-    ReduceBcast_BOR(ivec, V_LAST);
+  for (imat = 0; imat < upd->Num_Mat; imat++) 
+     {
+      curr_pd = pd_glob[imat];
+      for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+         {
+          for (k = 0; k <  V_LAST; k++) 
+             {
+              ivec[k] = curr_pd->v[imtrx][k];
+             }
+      ReduceBcast_BOR(ivec, V_LAST);
 #ifdef DEBUG_HKM
-    print_sync_start(TRUE);
-    for (k = 0; k < V_LAST; k++) {
-      if (curr_pd->v[k] != ivec[k]) {
-        printf("P_%d: v field for var_type %d changed from %d to %d\n",
-	       ProcID, k, curr_pd->v[k], ivec[k]);
-      }
-    }
-    print_sync_end(TRUE);
+      print_sync_start(TRUE);
+      for (k = 0; k < V_LAST; k++) 
+         {
+          if (curr_pd->v[pg->imtrx][k] != ivec[k]) 
+            {
+             printf("P_%d: v field for var_type %d changed from %d to %d\n",
+	            ProcID, k, curr_pd->v[pg->imtrx][k], ivec[k]);
+            }
+         }
+      print_sync_end(TRUE);
 #endif
-    for (k = 0; k < V_LAST; k++) {
-      curr_pd->v[k] = ivec[k];
-    }    
-  }
+          for (k = 0; k < V_LAST; k++) 
+             {
+              curr_pd->v[imtrx][k] = ivec[k];
+             }
+         }    
+     }
   safer_free((void **) &ivec);
 #endif
   

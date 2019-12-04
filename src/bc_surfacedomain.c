@@ -51,7 +51,7 @@
  
 #include "mm_eh.h"
 
-#define _BC_SURFACE_DOMAIN_C
+#define GOMA_BC_SURFACE_DOMAIN_C
 #include "goma.h"
 
 /*****************************************************************************/
@@ -133,7 +133,7 @@ mass_flux_sd_bc(double func[],
        * J_s_c
        */
       var=MASS_FRACTION;
-      for (j_id = 0; j_id < ei->dof[var]; j_id++) {
+      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) {
 	phi_j = bf[var]->phi[j_id];
 	
 	for (w1 = 0; w1 < pd->Num_Species_Eqn; w1++ )
@@ -160,8 +160,8 @@ mass_flux_sd_bc(double func[],
        * J_s_T
        */
       var=TEMPERATURE;
-      if (pd->v[var]){
-	for (j = 0; j < ei->dof[var]; j++) {
+      if (pd->v[pg->imtrx][var]){
+	for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
 	  j_id = j;
 	  phi_j = bf[var]->phi[j_id];
 	  
@@ -182,9 +182,9 @@ mass_flux_sd_bc(double func[],
       for (jvar = 0; jvar < dim; jvar++) 
 	{
 	  var=MESH_DISPLACEMENT1+jvar;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
-	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+	      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) 
 		{
 		  /*     d( )/dx        */
 		  /* additional terms due to convective flux */
@@ -203,9 +203,9 @@ mass_flux_sd_bc(double func[],
       for(jvar=0; jvar<dim; jvar++) 
 	{
 	  var = VELOCITY1 + jvar;
-	  if (pd->v[var])
+	  if (pd->v[pg->imtrx][var])
 	    {
-	      for (j_id = 0; j_id < ei->dof[var]; j_id++) 
+	      for (j_id = 0; j_id < ei[pg->imtrx]->dof[var]; j_id++) 
 		{
 		  phi_j = bf[var]->phi[j_id];
 		  d_func[0][var][j_id] += 

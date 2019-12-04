@@ -1,227 +1,41 @@
-###/************************************************************************ *
-###* Goma - Multiphysics finite element software                             *
-###* Sandia National Laboratories                                            *
-###*                                                                         *
-###* Copyright (c) 2016 Sandia Corporation.                                  *
-###*                                                                         *
-###* Under the terms of Contract DE-AC04-94AL85000 with Sandia Corporation,  *
-###* the U.S. Government retains certain rights in this software.            *
-###*                                                                         *
-###* This software is distributed under the GNU General Public License.      *
-###\************************************************************************/
-###
-### CMake file for Goma 6.1
-###########################
-###
-### If you are a developer on this project: Do not commit any files generated
-### by this script to the repository or everything will break in the future.
-###
-### Also reject any pull requests attempting to do the same.
-### It's just not worth debugging when everything falls apart 2 years later.
-###
+cmake_minimum_required (VERSION 3.10)
+cmake_policy(VERSION 3.10)
 
+project(goma)
 
-### CMake standards for this program:
-### Most variables follows this format ${PROJECT_NAME}_FOO_DATA
-### All arguments are in all caps (EG REQUIRED)
-### Endif() needs empty parenthesis
-### Comments should usually go before the code they explain
-
-
-### This tells cmake to work in the future when cmake updates.
-### 2.8.4 required for fully functional make debug
-cmake_minimum_required (VERSION 2.8)
-cmake_policy(VERSION 2.8)
-
+enable_language(C)
+enable_language(CXX)
 enable_language(Fortran)
 
-### This tells goma where to compile to, and the prefix of every variable
-project(goma)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 11)
+
 set(PROJECT_NAME goma)
-include(${CMAKE_SOURCE_DIR}/cmake/CMakeScripts.cmake)
 
-### Run "ccmake ." to change any options here after running "cmake ."
-option(${PROJECT_NAME}_CXX11_STD "Unless you have an older compiler, or you used the NoCXX11 library, keep this enabled" ON)
-option(${PROJECT_NAME}_Create_Run_Script "This will create rungoma, a script which runs goma with all nessisary settings" ON)
+SET(CMAKE_PREFIX_PATH ${Trilinos_PREFIX} ${CMAKE_PREFIX_PATH})
 
+# Get Trilinos as one entity
+FIND_PACKAGE(Trilinos REQUIRED)
 
-set(${PROJECT_NAME}_C_STD "-std=gnu99" CACHE STRING "Change flag for the C std")
-set(${PROJECT_NAME}_EXTRA_C_FLAGS "${${PROJECT_NAME}_EXTRA_C_FLAGS} ${${PROJECT_NAME}_C_STD}")
-if(${PROJECT_NAME}_CXX11_STD)
-  set(${PROJECT_NAME}_EXTRA_CXX_FLAGS "${${PROJECT_NAME}_EXTRA_CXX_FLAGS} -std=c++11")
-endif()
+# Echo trilinos build info just for fun
+MESSAGE("\nFound Trilinos!  Here are the details: ")
+MESSAGE("   Trilinos_DIR = ${Trilinos_DIR}")
+MESSAGE("   Trilinos_VERSION = ${Trilinos_VERSION}")
+# MESSAGE("   Trilinos_PACKAGE_LIST = ${Trilinos_PACKAGE_LIST}")
+# MESSAGE("   Trilinos_LIBRARIES = ${Trilinos_LIBRARIES}")
+MESSAGE("   Trilinos_INCLUDE_DIRS = ${Trilinos_INCLUDE_DIRS}")
+# MESSAGE("   Trilinos_LIBRARY_DIRS = ${Trilinos_LIBRARY_DIRS}")
+# MESSAGE("   Trilinos_TPL_LIST = ${Trilinos_TPL_LIST}")
+MESSAGE("   Trilinos_TPL_INCLUDE_DIRS = ${Trilinos_TPL_INCLUDE_DIRS}")
+# MESSAGE("   Trilinos_TPL_LIBRARIES = ${Trilinos_TPL_LIBRARIES}")
+# MESSAGE("   Trilinos_TPL_LIBRARY_DIRS = ${Trilinos_TPL_LIBRARY_DIRS}")
+# MESSAGE("   Trilinos_BUILD_SHARED_LIBS = ${Trilinos_BUILD_SHARED_LIBS}")
+message("Trilinos LD Flags = ${Trilinos_EXTRA_LD_FLAGS}")
+MESSAGE("End of Trilinos details\n")
 
-### If you ever want to add additional flags when running debug (other than -g which is automatically added)
-if (${CMAKE_BUILD_TYPE} MATCHES DEBUG)
-  set(${PROJECT_NAME}_EXTRA_C_FLAGS "${${PROJECT_NAME}_EXTRA_C_FLAGS} -Wall")
-  set(${PROJECT_NAME}_EXTRA_CXX_FLAGS "${${PROJECT_NAME}_EXTRA_CXX_FLAGS} -Wall")
-  set(${PROJECT_NAME}_EXTRA_F_FLAGS "${${PROJECT_NAME}_EXTRA_F_FLAGS}")
+set(MPI_C_COMPILER ${Trilinos_C_COMPILER})
+FIND_PACKAGE(MPI REQUIRED)
 
-else()
-  set(${PROJECT_NAME}_EXTRA_C_FLAGS "${${PROJECT_NAME}_EXTRA_C_FLAGS} -Wall")
-  set(${PROJECT_NAME}_EXTRA_CXX_FLAGS "${${PROJECT_NAME}_EXTRA_CXX_FLAGS} -Wall")
-  set(${PROJECT_NAME}_EXTRA_F_FLAGS "${${PROJECT_NAME}_EXTRA_F_FLAGS} ")
-endif()
-
-execute_process(COMMAND git describe --dirty --always --tags OUTPUT_VARIABLE GitVersion RESULT_VARIABLE IsGit)
-if(IsGit EQUAL 0)
-  string(REGEX REPLACE "\n$" "" GitVersion "${GitVersion}")
-else()
-  unset(GitVersion)
-endif()
-
-
-### These are all set here so you can modify them with ccmake. This works because they are set with the "CACHE" flag. The last input in set is the description you will see
-set(${PROJECT_NAME}_User_Define "-Dlinux"
-  "-DCOMPILER_64BIT"
-  "-DENABLE_AMESOS"
-  "-DTRILINOS"
-  "-DCHECK_FINITE"
-  "-DNO_CHEBYSHEV_PLEASE"
-  "-DMDE=27"
-  "-DMAX_PROB_VAR=15"
-  "-DMAX_EXTERNAL_FIELD=4"
-  "-DMAX_CONC=4"
-  "-DCOUPLED_FILL"
-  "-DPARALLEL"
-  "-DEIGEN_SERIAL" CACHE STRING "Enter or modify the compiler definitions. This is in addition to any options above.")
-
-set(${PROJECT_NAME}_User_Flags "" CACHE STRING "Enter any compiler flags you want to run on all three compilers. This is in addition to any options above.")
-set(${PROJECT_NAME}_User_C_Flags "" CACHE STRING "Enter any extra compiler flags you want for all C compilation.")
-set(${PROJECT_NAME}_User_CXX_Flags "" CACHE STRING "Enter any extra compiler flags you want for all C++ compilation.")
-set(${PROJECT_NAME}_User_F_Flags "" CACHE STRING "Enter any extra compiler flags you want for all Fortran compilation.")
-set(${PROJECT_NAME}_User_LD_Flags "" CACHE STRING "Enter any extra compiler flags you want when linking files and creating the Goma executable.")
-
-
-if("${${PROJECT_NAME}_LIBS}" STREQUAL "")
-  find_path(${PROJECT_NAME}_Trilinos_DIR NAMES lib/libamesos.a CACHE FILEPATH "Specify where you installed the Trilinos libraries.")
-  find_path(${PROJECT_NAME}_MPI_DIR NAMES bin/mpicc CACHE FILEPATH "Specify where you installed the MPI libraries.")
-  set(${PROJECT_NAME}_LIBS "${${PROJECT_NAME}_Trilinos_DIR}/.." CACHE FILEPATH "Specify where you want the Goma libraries to be temporarilly placed.")
-  set(${PROJECT_NAME}_Sparse_DIR "${${PROJECT_NAME}_LIBS}/sparse" CACHE FILEPATH "Specify where you installed the Sparse libraries.")
-  set(${PROJECT_NAME}_Arpack_DIR "${${PROJECT_NAME}_LIBS}/ARPACK" CACHE FILEPATH "Specify where you installed the Arpack libraries.")
-  set(${PROJECT_NAME}_SEACAS_DIR "${${PROJECT_NAME}_LIBS}/seacas" CACHE FILEPATH "If SEACAS is standalone, specify where it is installed.")
-else()
-  find_path(${PROJECT_NAME}_Trilinos_DIR NAMES lib/libamesos.a PATHS ${${PROJECT_NAME}_LIBS}/* CACHE FILEPATH "Specify where you installed the Trilinos libraries.")
-  find_path(${PROJECT_NAME}_MPI_DIR NAMES bin/mpicc PATHS ${${PROJECT_NAME}_LIBS}/* CACHE FILEPATH "Specify where you installed the MPI libraries.")
-  set(${PROJECT_NAME}_Sparse_DIR "${${PROJECT_NAME}_LIBS}/sparse" CACHE FILEPATH "Specify where you installed the Sparse libraries.")
-  set(${PROJECT_NAME}_Arpack_DIR "${${PROJECT_NAME}_LIBS}/ARPACK" CACHE FILEPATH "Specify where you installed the Arpack libraries.")
-  set(${PROJECT_NAME}_SEACAS_DIR "${${PROJECT_NAME}_LIBS}/seacas" CACHE FILEPATH "If SEACAS is standalone, specify where it is installed.")
-endif()
-
-
-
-
-### Finding the locations of Trilinos and MPI by looking for files inside their directories
-### This means that this cmake will work no matter what version of Trilinos is used.
-find_path(${PROJECT_NAME}_Trilinos_DIR NAMES bin/cth_pressure_map CACHE FILEPATH "Specify where you installed the Trilinos libraries.")
-find_path(${PROJECT_NAME}_MPI_DIR NAMES bin/mpicc CACHE FILEPATH "Specify where you installed the MPI libraries.")
-
-
-### Converting variable names from ones which are easy for people to read to ones which follow the CMAKE variable standards.
-### Also adding the flags defined by the variables
-set(${PROJECT_NAME}_MPI_TOP "${${PROJECT_NAME}_MPI_DIR}")
-set(${PROJECT_NAME}_TRILINOS_TOP "${${PROJECT_NAME}_Trilinos_DIR}")
-set(${PROJECT_NAME}_USER_DEFINE "${${PROJECT_NAME}_User_Define} ${${PROJECT_NAME}_EXTRA_DEFINE}")
-set(${PROJECT_NAME}_USER_FLAGS "${${PROJECT_NAME}_User_Flags} ${${PROJECT_NAME}_EXTRA_FLAGS}")
-set(${PROJECT_NAME}_USER_C_FLAGS "${${PROJECT_NAME}_User_C_Flags} ${${PROJECT_NAME}_EXTRA_C_FLAGS}")
-set(${PROJECT_NAME}_USER_CXX_FLAGS "${${PROJECT_NAME}_User_CXX_Flags} ${${PROJECT_NAME}_EXTRA_CXX_FLAGS}")
-set(${PROJECT_NAME}_USER_F_FLAGS "${${PROJECT_NAME}_User_F_Flags}")
-set(${PROJECT_NAME}_USER_LD_FLAGS "${${PROJECT_NAME}_User_LD_Flags}")
-
-
-
-### Setting other libraries (can be overridden by user). These all are set off of Trilinos by default (under the assumption you installed all your libraries in the same place).
-### This is done because find_path isn't great and it's best to avoid it whenever possible to make the program less likely to fail.
-
-set(${PROJECT_NAME}_Sparse_DIR "${${PROJECT_NAME}_Trilinos_DIR}/../sparse" CACHE FILEPATH "Specify where you installed the Sparse libraries.")
-set(${PROJECT_NAME}_Arpack_DIR "${${PROJECT_NAME}_Trilinos_DIR}/../ARPACK" CACHE FILEPATH "Specify where you installed the Arpack libraries.")
-set(${PROJECT_NAME}_SEACAS_DIR "${${PROJECT_NAME}_Trilinos_DIR}/../seacas" CACHE FILEPATH "If SEACAS is standalone, specify where it is installed.")
-set(${PROJECT_NAME}_LIBS "${${PROJECT_NAME}_Trilinos_DIR}/.." CACHE FILEPATH "Specify where you want the Goma libraries to be temporarilly placed.")
-set(${PROJECT_NAME}_Sparse_INCLUDE_DIR "${${PROJECT_NAME}_Trilinos_DIR}/../sparse/src" CACHE FILEPATH "Specify where you installed the Sparse libraries.")
-
-
-### Once again back to following standards. Also done so that some flags can be placed on the libraries.
-### People aren't going to be seeing these variable names anyway.
-set(${PROJECT_NAME}_SPARSE_LIB "-L${${PROJECT_NAME}_Sparse_DIR}/lib -lsparse")
-set(${PROJECT_NAME}_ARPACK_LIB "-L${${PROJECT_NAME}_Arpack_DIR}/lib -larpack")
-set(${PROJECT_NAME}_LIB_DIR ${${PROJECT_NAME}_LIBS})
-set(${PROJECT_NAME}_MPI_LIB "-L${${PROJECT_NAME}_MPI_TOP}/lib -lmpi -lmpi_mpifh" CACHE STRING "Specify the MPI libraries to link against. Both an MPI fortran and an MPI library are required.")
-set(${PROJECT_NAME}_FORTRAN_LIB "-lc -lgcc -lstdc++ -lgfortran" CACHE STRING "Specify the fortran and c compiler specific libraries")
-set(${PROJECT_NAME}_SYS_LIB "-lm -lz" CACHE STRING "Specify the system libraries to link against. Math libraries belong here.")
-
-
-### I really wish I could combine these two together but you can't. (set (Var EXISTS) doesn't work)
-### This will look for a standalone seacas directory.
-if(IS_DIRECTORY "${${PROJECT_NAME}_SEACAS_DIR}/")
-  set(${PROJECT_NAME}_FOUND_SEACAS ON)
-else()
-  set(${PROJECT_NAME}_FOUND_SEACAS OFF)
-endif()
-
-option(${PROJECT_NAME}_Standalone_SEACAS "This will build Goma using standalone SEACAS libraries, instead of the ones build with Trilinos." ${${PROJECT_NAME}_FOUND_SEACAS})
-
-if(${${PROJECT_NAME}_Standalone_SEACAS})
-  set(${PROJECT_NAME}_SEACAS_LIB "-L${${PROJECT_NAME}_SEACAS_DIR}/lib -lexoIIv2c -L${${PROJECT_NAME}_SEACAS_DIR}/lib -lnetcdf -lhdf5_hl -lhdf5 -lchaco")
-else()
-  set(${PROJECT_NAME}_SEACAS_LIB "")
-endif()
-
-
-### This is set so it can be used by the CMakeLists in src.
-set (${PROJECT_NAME}_HEADER_DIR "include")
-### This tells the program where to find the Goma source. It is names as such to separate it from ${${PROJECT_NAME}_PROJECT_SOURCE_DIR}
-set (${PROJECT_NAME}_SOURCE_FILES "src")
-
-
-
-
-message(STATUS "Adding ${PROJECT_NAME} files to Make")
-
-### Telling cmake where to find all the trilinos cmake files. These import all the libraries used by trilinos automatically
-set(Trilinos_PREFIX ${${PROJECT_NAME}_TRILINOS_TOP}/lib/cmake/Trilinos)
-set(CMAKE_PREFIX_PATH ${Trilinos_PREFIX} ${CMAKE_PREFIX_PATH})
-
-if (${${PROJECT_NAME}_Create_Run_Script})
-  if (${${PROJECT_NAME}_Standalone_SEACAS})
-    if(${CMAKE_BUILD_TYPE} MATCHES DEBUG)
-      install (CODE "execute_process(COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/cmake/debugscript ${CMAKE_INSTALL_PREFIX} ${${PROJECT_NAME}_MPI_TOP} ${${PROJECT_NAME}_SEACAS_DIR})" )
-    else()
-      install (CODE "execute_process(COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/cmake/runscript ${CMAKE_INSTALL_PREFIX} ${${PROJECT_NAME}_MPI_TOP} ${${PROJECT_NAME}_SEACAS_DIR})" )
-    endif()
-  else()
-    if(${CMAKE_BUILD_TYPE} MATCHES DEBUG)
-      install (CODE "execute_process(COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/cmake/debugscript ${CMAKE_INSTALL_PREFIX} ${${PROJECT_NAME}_MPI_TOP} ${${PROJECT_NAME}_TRILINOS_TOP})" )
-    else()
-      install (CODE "execute_process(COMMAND /bin/bash ${CMAKE_SOURCE_DIR}/cmake/runscript ${CMAKE_INSTALL_PREFIX} ${${PROJECT_NAME}_MPI_TOP} ${${PROJECT_NAME}_TRILINOS_TOP})" )
-    endif()
-  endif()
-endif()
-
-### The required flag will cause cmake to fail if it cannot find Trilinos. It's better that cmake breaks first before make breaks because
-### Make errors are more confusing and annoying to debug
-find_package(Trilinos)
-
-### ID10-t proofing the libraries.
-if(NOT ${Trilinos_FOUND})
-  ### I have no faith in humanity if they cannot figure this out
-  message(FATAL_ERROR "
-
-
-BEGIN ERROR MESSAGE:
--------------------------------------------------------
-Unable to locate Trilinos, please add your libraries to cmake-config.
-Or manually specify the trilinos path.
-
-
-The program will now exit.")
-endif()
-
-### Alert the user that everything is going okay.
-message("\nFound Trilinos version: ${Trilinos_VERSION}\n")
-
-# Avoid the "Too many open files" error when linking
-# Need to reverse so that proper linking order is preserved
-# after removal
 LIST(REVERSE Trilinos_LIBRARIES)
 LIST(REMOVE_DUPLICATES Trilinos_LIBRARIES)
 LIST(REVERSE Trilinos_LIBRARIES)
@@ -230,96 +44,438 @@ LIST(REVERSE Trilinos_TPL_LIBRARIES)
 LIST(REMOVE_DUPLICATES Trilinos_TPL_LIBRARIES)
 LIST(REVERSE Trilinos_TPL_LIBRARIES)
 
-option(${PROJECT_NAME}_Build_Stratimikos "If you have stratimikos and want support for it enable this. This modifies the definitions" ${Trilinos_Stratimikos_FOUND})
-if(${PROJECT_NAME}_Build_Stratimikos)
-  set(${PROJECT_NAME}_USER_DEFINE "${${PROJECT_NAME}_USER_DEFINE} -DHAVE_STRATIMIKOS")
-endif()
+SET(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
+SET(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
+SET(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
 
-### This uses the MPI compilers instead of the normal ones which allows for multithreaded operations
-set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
-set(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
-set(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
+include_directories(${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS} ${MPI_C_INCLUDE_PATH})
 
-### This adds the trilinos flags to the Link Directories operation
-set(LD_FLAGS "${Trilinos_EXTRA_LD_FLAGS}")
+set(GOMA_TPL_LIBRARIES "")
 
+find_library(ARPACK_LIBRARY NAMES arpack 
+    PATHS ${ARPACK_PREFIX}/lib /usr/lib64 /usr/lib /usr/local/lib64 /usr/local/lib)
 
-### These are the last called libs, and kept in a separate variable, to keep consistancy with the original makefile
-set(${PROJECT_NAME}_ENDING_LIBS "${${PROJECT_NAME}_FORTRAN_LIB} ${${PROJECT_NAME}_SYS_LIB}")
-
-
-### CMAKE Flags can be specified with CMAKE -DCMAKE_C_FLAGS or by editing the user flags.
-set(CMAKE_CXX_FLAGS   "${CMAKE_CXX_FLAGS} ${${PROJECT_NAME}_USER_FLAGS} ${${PROJECT_NAME}_USER_CXX_FLAGS}")
-if(GitVersion)
-  set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS} -DGIT_VERSION=\\\"${GitVersion}\\\" ${${PROJECT_NAME}_USER_FLAGS} ${${PROJECT_NAME}_USER_C_FLAGS}")
+if(ARPACK_LIBRARY)
+    message("Found ARPACK ${ARPACK_LIBRARY}")
+    set(ARPACK_FOUND YES)
+    set(GOMA_TPL_LIBRARIES "${GOMA_TPL_LIBRARIES} ${ARPACK_LIBRARY}")
+    string(STRIP ${GOMA_TPL_LIBRARIES} GOMA_TPL_LIBRARIES)
 else()
-  set(CMAKE_C_FLAGS  "${CMAKE_C_FLAGS}  ${${PROJECT_NAME}_USER_FLAGS} ${${PROJECT_NAME}_USER_C_FLAGS}")
-endif()
-set(CMAKE_Fortran_FLAGS  "${CMAKE_Fortran_FLAGS} ${${PROJECT_NAME}_USER_FLAGS} ${${PROJECT_NAME}_USER_F_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${${PROJECT_NAME}_LD_FLAGS} ${${PROJECT_NAME}_USER_FLAGS} ${${PROJECT_NAME}_USER_LD_FLAGS}")
-
-set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS}")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS}")
-set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS}")
-
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${CMAKE_C_FLAGS}")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${CMAKE_CXX_FLAGS}")
-set(CMAKE_Fortran_FLAGS_DEBUG "${CMAKE_Fortran_FLAGS_DEBUG} ${CMAKE_Fortran_FLAGS}")
-
-
-### Imports all necessary headers.
-include_directories(${CMAKE_SOURCE_DIR}/include)
-include_directories(SYSTEM ${${PROJECT_NAME}_MPI_TOP}/include)
-include_directories(SYSTEM ${${PROJECT_NAME}_TRILINOS_TOP}/include)
-include_directories(SYSTEM ${${PROJECT_NAME}_Sparse_INCLUDE_DIR})
-if(${${PROJECT_NAME}_Standalone_SEACAS})
-  include_directories(SYSTEM "${${PROJECT_NAME}_SEACAS_DIR}/include")
+    set(ARPACK_FOUND NO)
 endif()
 
-### Adds all definitions in the old Goma makefile. The equivalent of Make -D${USER_DEFINE} But this variable can also be customized to add any definitions specified by the user.
-add_definitions(${${PROJECT_NAME}_USER_DEFINE})
+option(COMPILER_64BIT "COMPILER_64BIT" ON)
+if(COMPILER_64BIT)
+    add_definitions(-DCOMPILER_64BIT)
+endif()
+option(ENABLE_AMESOS "ENABLE_AMESOS" ON)
+if(ENABLE_AMESOS)
+    add_definitions(-DENABLE_AMESOS)
+endif()
+option(TRILINOS "TRILINOS" ON)
+if(TRILINOS)
+    add_definitions(-DTRILINOS)
+endif()
+option(CHECK_FINITE "CHECK_FINITE" ON)
+if(CHECK_FINITE)
+    add_definitions(-DCHECK_FINITE)
+endif()
+option(NO_CHEBYSHEV_PLEASE "NO_CHEBYSHEV_PLEASE" ON)
+if(NO_CHEBYSHEV_PLEASE)
+    add_definitions(-DNO_CHEBYSHEV_PLEASE)
+endif()
+option(COUPLED_FILL "COUPLED_FILL" ON)
+if(COUPLED_FILL)
+    add_definitions(-DCOUPLED_FILL)
+endif()
+option(PARALLEL "PARALLEL" ON)
+if(PARALLEL)
+    add_definitions(-DPARALLEL)
+endif()
 
-include_directories(${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
-
-file(GLOB SOURCE_FILES
-  "src/*.cpp"
-  "src/*.c"
-  "src/*.F"
-  "src/*.C"
-  "src/brkfix/*.c"
-  "include/*.h"
-  "include/brkfix/*.h")
-
-
-add_executable("${PROJECT_NAME}d" EXCLUDE_FROM_ALL ${SOURCE_FILES})
-target_compile_options("${PROJECT_NAME}d" PUBLIC "-gdwarf")
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
-
-target_link_libraries("${PROJECT_NAME}d" ${${PROJECT_NAME}_SPARSE_LIB} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${${PROJECT_NAME}_ARPACK_LIB} ${Trilinos_EXTRA_LD_FLAGS} ${${PROJECT_NAME}_SEACAS_LIB})
-target_link_libraries(${PROJECT_NAME} ${${PROJECT_NAME}_SPARSE_LIB} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${${PROJECT_NAME}_ARPACK_LIB}  ${Trilinos_EXTRA_LD_FLAGS} ${${PROJECT_NAME}_SEACAS_LIB})
-
-message("Sparse: ${${PROJECT_NAME}_SPARSE_LIB}")
-message("Sparse include: ${${PROJECT_NAME}_Sparse_INCLUDE_DIR}")
-message("Trilinos: ${Trilinos_LIBRARIES}")
-message("Trilinos TPL: ${Trilinos_TPL_LIBRARIES}")
-message("Arpack: ${${PROJECT_NAME}_ARPACK_LIB}")
-message("Trilinos Extra:${Trilinos_EXTRA_LD_FLAGS}")
-message("Seacas: ${${PROJECT_NAME}_SEACAS_LIB}")
-
-### Install goma to $CMAKE_INSTALL_PREFIX/bin (by default /usr/local/bin). This can only be specified with -DCMAKE_INSTALL_PREFIX="LOCATION"
-if(${CMAKE_BUILD_TYPE} MATCHES DEBUG)
-  install(TARGETS "${PROJECT_NAME}d" DESTINATION bin)
+option(FP_EXCEPT "FP_EXCEPT" OFF)
+if(FP_EXCEPT)
+    add_definitions(-DFP_EXCEPT)
+endif()
+if (${ARPACK_FOUND})
+    option(EIGEN_SERIAL "EIGEN_SERIAL" ON)
+    option(EIGEN_PARALLEL "EIGEN_PARALLEL" OFF)
 else()
-  install(TARGETS ${PROJECT_NAME} DESTINATION bin)
+    option(EIGEN_SERIAL "EIGEN_SERIAL" OFF)
+    option(EIGEN_PARALLEL "EIGEN_PARALLEL" OFF)
+endif()
+if(EIGEN_PARALLEL)
+    if(NOT ${ARPACK_FOUND})
+        message(FATAL_ERROR "Cannot use EIGEN_PARALLEL without ARPACK Library")
+    endif()
+    add_definitions(-DEIGEN_PARALLEL)
+    if(EIGEN_SERIAL)
+        message(WARNING "Using EIGEN_PARALLEL instead of EIGEN_SERIAL")
+    endif()
+elseif(EIGEN_SERIAL)
+    if(NOT ${ARPACK_FOUND})
+        message(FATAL_ERROR "Cannot use EIGEN_SERIAL without ARPACK Library")
+    endif()
+    add_definitions(-DEIGEN_SERIAL)
 endif()
 
-### make uninstall support
-configure_file(
-  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
-  "${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake"
-  IMMEDIATE @ONLY)
+set(MDE "27" CACHE STRING "set MDE")
+add_definitions(-DMDE=${MDE})
+set(MAX_EXTERNAL_FIELD "4" CACHE STRING "set MAX_EXTERNAL_FIELD")
+add_definitions(-DMAX_EXTERNAL_FIELD=${MAX_EXTERNAL_FIELD})
+set(MAX_CONC "4" CACHE STRING "set MAX_CONC")
+add_definitions(-DMAX_CONC=${MAX_CONC})
+set(MAX_PROB_VAR "15" CACHE STRING "set MAX_PROB_VAR")
+add_definitions(-DMAX_PROB_VAR=${MAX_PROB_VAR})
 
-add_custom_target(uninstall COMMAND ${CMAKE_COMMAND} -P ${CMAKE_CURRENT_BINARY_DIR}/cmake/cmake_uninstall.cmake)
-add_custom_target(debug COMMAND /bin/bash -c echo "" COMMENT "Cmake does not support make debug. Please run:
-make gomad
-to build goma with debugging flags.")
+
+set(GOMA_INCLUDES
+    include/acconfig.h
+    include/ac_conti.h
+    include/ac_hunt.h
+    include/ac_particles.h
+    include/ac_stability.h
+    include/ac_stability_util.h
+    include/ac_update_parameter.h
+    include/bc_colloc.h
+    include/bc_contact.h
+    include/bc_curve.h
+    include/bc_dirich.h
+    include/bc_integ.h
+    include/bc_rotate.h
+    include/bc_special.h
+    include/bc_surfacedomain.h
+    include/brkfix/bbb.h
+    include/brkfix/brkfix.h
+    include/brkfix/brkfix_types.h
+    include/brkfix/brk.h
+    include/brkfix/emuck.h
+    include/brkfix/exo_utils.h
+    include/brkfix/fix.h
+    include/brkfix/mk_dm.h
+    include/brkfix/nodesc.h
+    include/brkfix/ppi.h
+    include/brkfix/rd_in.h
+    include/brkfix/sam_perea.h
+    include/brkfix/utils.h
+    include/brkfix/wr_coords.h
+    include/brkfix/wr_graph_file.h
+    include/brk_utils.h
+    include/dg_utils.h
+    include/dp_comm.h
+    include/dpi.h
+    include/dp_map_comm_vec.h
+    include/dp_types.h
+    include/dp_utils.h
+    include/dp_vif.h
+    include/el_elm.h
+    include/el_elm_info.h
+    include/el_geom.h
+    include/el_quality.h
+    include/exo_conn.h
+    include/exo_struct.h
+    include/gm_cgm_c_interface.h
+    include/gm_cgm_typedefs.h
+    include/gm_cgm_util.h
+    include/goma.h
+    include/loca_const.h
+    include/loca_util_const.h
+    include/md_timer.h
+    include/mm_as_alloc.h
+    include/mm_as_const.h
+    include/mm_as.h
+    include/mm_as_structs.h
+    include/mm_augc_util.h
+    include/mm_bc.h
+    include/mm_cards.h
+    include/mm_chemkin.h
+    include/mm_dil_viscosity.h
+    include/mm_distng_const.h
+    include/mm_eh.h
+    include/mm_elem_block.h
+    include/mm_elem_block_structs.h
+    include/mm_fill_aux.h
+    include/mm_fill_common.h
+    include/mm_fill_fill.h
+    include/mm_fill.h
+    include/mm_fill_jac.h
+    include/mm_fill_ls.h
+    include/mm_fill_population.h
+    include/mm_fill_porous.h
+    include/mm_fill_potential.h
+    include/mm_fill_pthings.h
+    include/mm_fill_ptrs.h
+    include/mm_fill_rs.h
+    include/mm_fill_shell.h
+    include/mm_fill_solid.h
+    include/mm_fill_species.h
+    include/mm_fill_stress.h
+    include/mm_fill_terms.h
+    include/mm_fill_util.h
+    include/mm_flux.h
+    include/mm_input.h
+    include/mm_interface.h
+    include/mm_more_utils.h
+    include/mm_mp_const.h
+    include/mm_mp.h
+    include/mm_mp_structs.h
+    include/mm_names.h
+    include/mm_ns_bc.h
+    include/mm_numjac.h
+    include/mm_post_def.h
+    include/mm_post_proc.h
+    include/mm_prob_def.h
+    include/mm_qp_storage.h
+    include/mm_qtensor_model.h
+    include/mm_shell_bc.h
+    include/mm_shell_util.h
+    include/mm_sol_nonlinear.h
+    include/mm_solve_linear_segregated.h
+    include/mm_species.h
+    include/mm_std_models.h
+    include/mm_std_models_shell.h
+    include/mm_unknown_map.h
+    include/mm_viscosity.h
+    include/rd_dpi.h
+    include/rd_exo.h
+    include/rd_mesh.h
+    include/rd_pixel_image.h
+    include/rf_allo.h
+    include/rf_bc_const.h
+    include/rf_bc.h
+    include/rf_element_storage_const.h
+    include/rf_element_storage_struct.h
+    include/rf_fem_const.h
+    include/rf_fem.h
+    include/rf_fill_const.h
+    include/rf_io_const.h
+    include/rf_io_defn.h
+    include/rf_io.h
+    include/rf_io_structs.h
+    include/rf_masks_const.h
+    include/rf_masks_globs.h
+    include/rf_masks.h
+    include/rf_mp.h
+    include/rf_node_const.h
+    include/rf_node.h
+    include/rf_pre_proc.h
+    include/rf_shape.h
+    include/rf_solve.h
+    include/rf_solver_const.h
+    include/rf_solver.h
+    include/rf_solve_segregated.h
+    include/rf_util.h
+    include/rf_vars_const.h
+    include/rf_vars_defn.h
+    include/sl_amesos_interface.h
+    include/sl_aux.h
+    include/sl_auxutil.h
+    include/sl_aztecoo_interface.h
+    include/sl_eggroll_def.h
+    include/sl_eggroll.h
+    include/sl_epetra_interface.h
+    include/sl_epetra_util.h
+    include/sl_lu.h
+    include/sl_matrix_util.h
+    include/sl_rcm.h
+    include/sl_stratimikos_interface.h
+    include/sl_umf.h
+    include/sl_util.h
+    include/sl_util_structs.h
+    include/spConfig.h
+    include/spDefs.h
+    include/spmatrix.h
+    include/std.h
+    include/user_ac.h
+    include/user_bc.h
+    include/user_continuation.h
+    include/user_mp_gen.h
+    include/user_mp.h
+    include/user_out_hkm.h
+    include/user_post.h
+    include/user_pre.h
+    include/user_shell.h
+    include/usr_print.h
+    include/wr_dpi.h
+    include/wr_exo.h
+    include/wr_side_data.h
+    include/wr_soln.h)
+
+set(GOMA_SOURCES
+    src/ac_conti.c
+    src/ac_display_parameter.c
+    src/ac_hunt.c
+    src/ac_loca_interface.c
+    src/ac_particles.c
+    src/ac_stability.c
+    src/ac_stability_util.c
+    src/ac_update_parameter.c
+    src/bc_colloc.c
+    src/bc_contact.c
+    src/bc_curve.c
+    src/bc_dirich.c
+    src/bc_integ.c
+    src/bc_rotate.c
+    src/bc_special.c
+    src/bc_surfacedomain.c
+    src/brkfix/bbb.c
+    src/brkfix/brk_exo_file.c
+    src/brkfix/emuck.c
+    src/brkfix/fix_exo_file.c
+    src/brkfix/mk_dm.c
+    src/brkfix/ppi.c
+    src/brkfix/rd_in.c
+    src/brkfix/sam_perea.c
+    src/brkfix/utils.c
+    src/brkfix/wr_coords.c
+    src/brkfix/wr_graph_file.c
+    src/brk_utils.c
+    src/dg_utils.c
+    src/dp_comm.c
+    src/dp_map_comm_vec.c
+    src/dp_utils.c
+    src/dp_vif.c
+    src/el_elm_info.c
+    src/el_quality.c
+    src/exo_conn.c
+    src/gm_cgm_c_interface.C
+    src/gm_cgm_util.c
+    src/loca_bord.c
+    src/loca_eigen_c2f.F
+    src/loca_eigen_cayley.F
+    src/loca_eigenvalue.c
+    src/loca_lib.c
+    src/loca_util.c
+    src/main.c
+    src/Makefile
+    src/md_ieee.c
+    src/md_timer.c
+    src/mm_as_alloc.c
+    src/mm_augc_util.c
+    src/mm_bc.c
+    src/mm_bc_conflict.c
+    src/mm_chemkin.c
+    src/mm_dil_viscosity.c
+    src/mm_eh.c
+    src/mm_fill_aux.c
+    src/mm_fill.c
+    src/mm_fill_common.c
+    src/mm_fill_fill.c
+    src/mm_fill_interface.c
+    src/mm_fill_jac.c
+    src/mm_fill_ls.c
+    src/mm_fill_population.c
+    src/mm_fill_porous.c
+    src/mm_fill_potential.c
+    src/mm_fill_pthings.c
+    src/mm_fill_ptrs.c
+    src/mm_fill_rs.c
+    src/mm_fill_shell.c
+    src/mm_fill_solid.c
+    src/mm_fill_species.c
+    src/mm_fill_stress.c
+    src/mm_fill_terms.c
+    src/mm_fill_util.c
+    src/mm_flux.c
+    src/mm_input_bc.c
+    src/mm_input.c
+    src/mm_input_mp.c
+    src/mm_input_particles.c
+    src/mm_input_util.c
+    src/mm_interface.c
+    src/mm_matrl.c
+    src/mm_more_utils.c
+    src/mm_ns_bc.c
+    src/mm_numjac.c
+    src/mm_placid.c
+    src/mm_porous_EOS.c
+    src/mm_post_proc.c
+    src/mm_post_proc_util.c
+    src/mm_prob_def.c
+    src/mm_propertyJac.c
+    src/mm_qp_storage.c
+    src/mm_qtensor_model.c
+    src/mm_shell_bc.c
+    src/mm_shell_util.c
+    src/mm_sol_nonlinear.c
+    src/mm_species.c
+    src/mm_std_models.c
+    src/mm_std_models_shell.c
+    src/mm_unknown_map.c
+    src/mm_viscosity.c
+    src/rd_dpi.c
+    src/rd_exo.c
+    src/rd_mesh.c
+    src/rd_pixel_image2.c
+    src/rd_pixel_image.c
+    src/rf_allo.c
+    src/rf_element_storage.c
+    src/rf_node.c
+    src/rf_node_vars.c
+    src/rf_pre_proc.c
+    src/rf_setup_problem.c
+    src/rf_shape.c
+    src/rf_solve.c
+    src/rf_solve_segregated.c
+    src/rf_util.c
+    src/rf_vars.c
+    src/sl_amesos_interface.C
+    src/sl_aux.c
+    src/sl_auxutil.c
+    src/sl_aztecoo_interface.cpp
+    src/sl_eggroll01.c
+    src/sl_eggroll02.c
+    src/sl_eggroll03.c
+    src/sl_eggroll04.c
+    src/sl_eggroll05.c
+    src/sl_eggrollutil.c
+    src/sl_eggrollwrap.c
+    src/sl_epetra_interface.cpp
+    src/sl_epetra_util.cpp
+    src/sl_front_setup.c
+    src/sl_leastsquares.C
+    src/sl_lu.c
+    src/sl_lu_fill.c
+    src/sl_lustat.c
+    src/sl_ma28.c
+    src/sl_matrix_dump.c
+    src/sl_matrix_util.c
+    src/sl_squash.c
+    src/sl_stratimikos_interface.cpp
+    src/sl_umf.c
+    src/sl_util.c
+    src/user_ac.c
+    src/user_bc.c
+    src/user_continuation.c
+    src/user_mp.c
+    src/user_mp_gen.c
+    src/user_out_hkm.c
+    src/user_post.c
+    src/user_pre.c
+    src/user_print.c
+    src/user_senkin.F
+    src/wr_dpi.c
+    src/wr_exo.c
+    src/wr_side_data.c
+    src/wr_soln.c)
+
+# Set a default build type for single-configuration
+# CMake generators if no build type is set.
+IF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+   SET(CMAKE_BUILD_TYPE Release)
+ENDIF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+set(GOMA_WARNINGS "-Wall -Wextra -Wno-unused-parameter" CACHE STRING "set warnings for goma C and CXX")
+set(GOMA_DEBUG_FLAGS "-O0 -ggdb3" CACHE STRING "set debug flags for goma C and CXX")
+set(GOMA_RELEASE_FLAGS "-O2 -DNDEBUG" CACHE STRING "set release flags for goma C and CXX")
+
+# Select flags.
+SET(CMAKE_CXX_FLAGS ${GOMA_WARNINGS})
+SET(CMAKE_CXX_FLAGS_RELEASE "${GOMA_RELEASE_FLAGS}")
+SET(CMAKE_CXX_FLAGS_DEBUG  "${GOMA_DEBUG_FLAGS}")
+SET(CMAKE_C_FLAGS ${GOMA_WARNINGS})
+SET(CMAKE_C_FLAGS_RELEASE "${GOMA_RELEASE_FLAGS}")
+SET(CMAKE_C_FLAGS_DEBUG  "${GOMA_DEBUG_FLAGS}")
+
+add_executable(${PROJECT_NAME} ${GOMA_INCLUDES} ${GOMA_SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE include ${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${Trilinos_EXTRA_LD_FLAGS} ${GOMA_TPL_LIBRARIES}) 

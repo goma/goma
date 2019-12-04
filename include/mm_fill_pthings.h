@@ -10,31 +10,31 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _MM_FILL_PTHINGS_H
-#define _MM_FILL_PTHINGS_H
+#ifndef GOMA_MM_FILL_PTHINGS_H
+#define GOMA_MM_FILL_PTHINGS_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_PTHINGS_C
+#ifdef GOMA_MM_FILL_PTHINGS_C
 #define EXTERN
 #
 #endif
 
-#ifndef _MM_FILL_PTHINGS_C
+#ifndef GOMA_MM_FILL_PTHINGS_C
 #define EXTERN extern
 #endif
 
 EXTERN int assemble_pmomentum
-PROTO((	double ,		/* time - present time value                 */
+(	double ,		/* time - present time value                 */
 	dbl ,			/* tt - parameter to vary time integration   *
 				 * from explicit (tt = 1) to                 *
 				 * implicit (tt = 0)                         */
-	dbl ));			/* dt - current time step size               */
+	dbl );			/* dt - current time step size               */
 
 EXTERN int MMH_assemble_continuity
-PROTO((double,                  /* time - present time value                 */
+(double,                  /* time - present time value                 */
        double,			/* parameter to vary time integration from 
 				 * explicit (tt = 1) to implicit (tt = 0)    */
        double,			/* current time step size */
@@ -47,13 +47,13 @@ PROTO((double,                  /* time - present time value                 */
        double [][MDE],		/* dh_dxnode - (DIM)(MDE)                    */
        double ,			/* U_norm - global velocity norm for PSPG    *
 				 * calculations                              */
-       double ));		/* mu_avg - element viscosity for PSPG calcs */
+       double );		/* mu_avg - element viscosity for PSPG calcs */
 
 EXTERN int pmomentum_source_term
-PROTO(( dbl [DIM],                   /* Body force */
+( dbl [DIM],                   /* Body force */
         dbl [DIM][MDE],              /* For temperature dependence */
         dbl [DIM][DIM][MDE],         /* For spatial dependence */
         dbl [DIM][MAX_CONC][MDE],    /* For concentration */
-        dbl [DIM][DIM][MDE] ));      /* For velocity dependence */
+        dbl [DIM][DIM][MDE] );      /* For velocity dependence */
 
-#endif /* _MM_FILL_PTHINGS_H */
+#endif /* GOMA_MM_FILL_PTHINGS_H */

@@ -43,13 +43,15 @@ static char rcsid[] = "$Id: rf_solve.c,v 5.21 2010-03-17 22:23:54 hkmoffa Exp $"
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
 
-#define _RF_SOLVE_C
+#include "rf_solve_segregated.h"
+
+#define GOMA_RF_SOLVE_C
 #include "goma.h"
 #include "el_quality.h"
 
 #ifdef HAVE_FRONT
 extern int mf_setup
-PROTO((int *,			/* nelem_glob */
+(int *,			/* nelem_glob */
        int *,			/* neqn_glob */
        int *,			/* mxdofel */
        int *,			/* nfullsum */
@@ -61,15 +63,15 @@ PROTO((int *,			/* nelem_glob */
        int *,			/* loc_dof */
        int *,			/* constraint */
        const char *,		/* cname */
-       int *));			/* allocated */
+       int *);			/* allocated */
 #endif
 
 /*
  * Global variables defined in this file.
  */
 
-struct elem_side_bc_struct **First_Elem_Side_BC_Array;
-struct elem_edge_bc_struct **First_Elem_Edge_BC_Array;
+struct elem_side_bc_struct ***First_Elem_Side_BC_Array;
+struct elem_edge_bc_struct ***First_Elem_Edge_BC_Array;
 
 #define ROUND_TO_ONE 0.9999999
 
@@ -80,8 +82,8 @@ int w;
  * Declarations of static functions defined in this file.
  */
 
-static void predict_solution
-PROTO((int ,			/* N */
+void predict_solution
+(int ,			/* N */
        double ,			/* delta_t */
        double ,			/* delta_t_old */
        double ,			/* delta_t_older */
@@ -92,34 +94,33 @@ PROTO((int ,			/* N */
        double  [],		/* x_oldest */
        double  [],		/* xdot */
        double  [],	        /* xdot_old */
-       double  []));		/* xdot_older */
+       double  []);		/* xdot_older */
 
 static void predict_solution_newmark
-PROTO((int ,			/* N */
+(int ,			/* N */
        double ,			/* delta_t */
        double  [],		/* x */
        double  [],		/* x_old */
        double  [],		/* xdot */
-       double  []));	        /* xdot_old */
+       double  []);	        /* xdot_old */
 
 static int discard_previous_time_step
-PROTO (( int, 
+( int, 
 		 double *,
 		 double *,
 		 double *,
 		 double *,
 		 double *,
 		 double *, 
-		 double *));
+		 double *);
 
 
 static void shift_nodal_values
-PROTO(( int,
+( int,
 		double,
 		double *,
-		int ));
+		int );
 
-// direct call to a fortran LAPACK eigenvalue routine
 extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
 			double *W, double *WORK, int *LWORK, int *INFO,
 			int len_jobz, int len_uplo);
@@ -183,7 +184,7 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
     for (mode=0; mode<vn_glob[mn]->modes; mode++)
     {
     ve[mode]  = ve_glob[mn][mode];
-  
+
     for (node = 0; node < num_total_nodes; node++) {
       memset(WORK, 0, sizeof(double)*LWORK);
       memset(A, 0.0, sizeof(double)*VIM*VIM);
@@ -191,12 +192,12 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
       for (a=0; a < 2; a++) {
         for (b=0; b < 2; b++) {
           v = v_s[mode][a][b];
-          s_idx[a][b] = Index_Solution(node, v, 0, 0, -2);
+          s_idx[a][b] = Index_Solution(node, v, 0, 0, -2, pg->imtrx);
         }
       }
 
       mup = viscosity(ve[mode]->gn, gamma_dot, d_mup);
-    
+
       if(ve[mode]->time_constModel == CONSTANT)
         {
 	  lambda = ve[mode]->time_const;
@@ -225,7 +226,7 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
 	  s[i][j] = (lambda/mup) * s[i][j] + (double)delta(i,j);
         }
       }
-    
+
       // convert to column major
       for (i = 0; i < VIM; i++) {
         for (j = 0; j < VIM; j++) {
@@ -261,7 +262,7 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
 
       /* matrix multiplication, the slow way */
       slow_square_dgemm(0, VIM, U, D, log_s);
-  
+
       // multiply by transpose
       slow_square_dgemm(1, VIM, log_s, U, D);
 
@@ -279,7 +280,6 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
     } /* Loop over modes */
   } /* Loop over materials */
 }
-
 
 void
 solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
@@ -481,26 +481,26 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   p_gsize = &gsize;
 
 #ifdef LIBRARY_MODE
-  fprintf(stderr, "  Commencing call #%3d from ANIMAS to solve_problem\n",
+  fprintf(stdout, "  Commencing call #%3d from ANIMAS to solve_problem\n",
           callnum);
   if (libio->animas_step != -1) last_call = FALSE;
 
   /* Determine if external porosity updates are required */
-  if (Num_Var_In_Type[POR_LIQ_PRES] && efv->ev_porous_index > -1)
+  if (Num_Var_In_Type[pg->imtrx][POR_LIQ_PRES] && efv->ev_porous_index > -1)
   {
     update_porosity = TRUE;
-    fprintf(stderr, " External porosity field %d will be updated.\n",
+    fprintf(stdout, " External porosity field %d will be updated.\n",
               efv->ev_porous_index);
   }
-  if (libio->goma_first == 1) fprintf(stderr, "  Goma goes first");
-  if (libio->goma_first == 0) fprintf(stderr, "  Goma goes second");
+  if (libio->goma_first == 1) fprintf(stdout, "  Goma goes first");
+  if (libio->goma_first == 0) fprintf(stdout, "  Goma goes second");
 
 #endif   
  
   if (Unlimited_Output && strlen(Soln_OutFile))  {
     file = fopen(Soln_OutFile, "w");
     if (file == NULL) {
-      fprintf(stderr, "%s:  opening soln file, %s, for writing\n", 
+      fprintf(stdout, "%s:  opening soln file, %s, for writing\n", 
 	      yo, Soln_OutFile);
       EH(-1, "Can not open solution file\n");
     }
@@ -683,6 +683,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   asdv(&gvec, Num_Node);
 
+
   /*
    * Allocate space and manipulate for all the nodes that this processor
    * is aware of...
@@ -690,11 +691,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   num_total_nodes = dpi->num_universe_nodes;
 
-  numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
 #ifdef DEBUG
   fprintf(stderr, "P_%d: numProcUnknowns = %d (%d+%d)\n",ProcID, numProcUnknowns, 
-	  NumUnknowns, NumExtUnknowns);
+	  NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx]);
 #endif /* DEBUG */
   
   asdv(&resid_vector, numProcUnknowns);
@@ -769,13 +770,24 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   
   node_to_fill = alloc_int_1(num_total_nodes, 0);
 
+  pg->matrices = malloc(sizeof(struct Matrix_Data));
+  pg->matrices[pg->imtrx].ams = ams[JAC];
+  pg->matrices[pg->imtrx].x = x;
+  pg->matrices[pg->imtrx].x_old = x_old;
+  pg->matrices[pg->imtrx].x_older = x_older;
+  pg->matrices[pg->imtrx].xdot = xdot;
+  pg->matrices[pg->imtrx].xdot_old = xdot_old;
+  pg->matrices[pg->imtrx].x_update = x_update;
+  pg->matrices[pg->imtrx].scale = scale;
+  pg->matrices[pg->imtrx].resid_vector = resid_vector;
+
   /* Allocate sparse matrix */
 
   if (strcmp(Matrix_Format, "epetra") == 0) {
     err = check_compatible_solver();
     EH(err, "Incompatible matrix solver for epetra, epetra supports amesos and aztecoo solvers.");
     check_parallel_error("Matrix format / Solver incompatibility");
-    ams[JAC]->RowMatrix = EpetraCreateRowMatrix(num_internal_dofs + num_boundary_dofs);
+    ams[JAC]->RowMatrix = EpetraCreateRowMatrix(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
     EpetraCreateGomaProblemGraph(ams[JAC], exo, dpi);
   } else if (strcmp(Matrix_Format, "msr") == 0) {
     log_msg("alloc_MSR_sparse_arrays...");
@@ -784,9 +796,9 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
      * An attic to store external dofs column names is needed when
      * running in parallel.
      */
-    alloc_extern_ija_buffer(num_universe_dofs,
-                            num_internal_dofs + num_boundary_dofs,
-                            ija, &ija_attic);
+    alloc_extern_ija_buffer(num_universe_dofs[pg->imtrx], 
+			    num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx], 
+			    ija, &ija_attic);
     /*
      * Any necessary one time initialization of the linear
      * solver package (Aztec).
@@ -810,11 +822,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     ams[JAC]->npn_plus = dpi->num_internal_nodes + dpi->num_boundary_nodes
         + dpi->num_external_nodes;
 
-    ams[JAC]->npu = num_internal_dofs + num_boundary_dofs;
-    ams[JAC]->npu_plus = num_universe_dofs;
+    ams[JAC]->npu      = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
+    ams[JAC]->npu_plus = num_universe_dofs[pg->imtrx];
 
-    ams[JAC]->nnz = ija[num_internal_dofs + num_boundary_dofs] - 1;
-    ams[JAC]->nnz_plus = ija[num_universe_dofs];
+    ams[JAC]->nnz = ija[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]] - 1;
+    ams[JAC]->nnz_plus = ija[num_universe_dofs[pg->imtrx]];
 
     ams[JAC]->RowMatrix = NULL;
 
@@ -891,7 +903,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   /* Set initial guess from an input exodus file or other method on the first call only */
   if (callnum == 1) 
     {
-      init_vec(x, cx, exo, dpi, x_AC, nAC, &timeValueRead);
+      init_vec(x, cx[0], exo, dpi, x_AC, nAC, &timeValueRead);
 
       /*
        *  Determine if we should use this time as the initial time in the simulation
@@ -924,7 +936,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   /* Load starting porous liquid pressures from solution vector */
       for (i=0; i<num_total_nodes; i++)
         {
-          j = Index_Solution(i, POR_LIQ_PRES, 0, 0, -1);
+          j = Index_Solution(i, POR_LIQ_PRES, 0, 0, -1, pg->imtrx);
           if (j > -1) base_p_liq[i] = x[j];
         }
     }
@@ -960,7 +972,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     matrix_systems_mask = 1;
       
     log_msg("sl_init()...");
-    sl_init(matrix_systems_mask, ams, exo, dpi, cx);
+    sl_init(matrix_systems_mask, ams, exo, dpi, cx[0]);
     if( nAC > 0  || 
 	nn_post_fluxes_sens > 0 ||
 	nn_post_data_sens > 0 ) ams[JAC]->options[AZ_keep_info] = 1;
@@ -1007,7 +1019,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       check_parallel_error("Front solver not allowed with nprocs>1");
 #endif /* PARALLEL */
 	  
-      err = mf_setup(&exo->num_elems, &NumUnknowns, 
+      err = mf_setup(&exo->num_elems, &NumUnknowns[pg->imtrx], 
 		     &max_unk_elem, 
 		     &three,
 		     &one,
@@ -1029,7 +1041,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       
     if (nEQM > 0)
       {
-        DPRINTF(stderr, "\nINITIAL ELEMENT QUALITY CHECK---\n");
+        DPRINTF(stdout, "\nINITIAL ELEMENT QUALITY CHECK---\n");
         good_mesh = element_quality(exo, x, ams[0]->proc_config);
       }
 
@@ -1038,10 +1050,10 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 				  resid_vector, x_update, scale,  
 				  &converged, &nprint, tev, tev_post, gv,
 				  rd, gindex, p_gsize, gvec, gvec_elem, 
-				  time1, exo, dpi, cx, 0, 
+				  time1, exo, dpi, cx[0], 0, 
 				  &time_step_reform, is_steady_state,
  				  x_AC, x_AC_dot, time1, resid_vector_sens,
-				  x_sens, x_sens_p, NULL);
+                                  x_sens, x_sens_p, NULL, NULL);
 
 #ifdef DEBUG
     fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
@@ -1073,31 +1085,31 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     if (Write_Intermediate_Solutions == 0) {
       nprint = 0;
 
-      write_solution(ExoFileOut, resid_vector, x, x_sens_p, 
-		     x_old, xdot, xdot_old, tev, tev_post, gv, 
-		     rd, gindex, p_gsize, gvec, gvec_elem, 
-		     &nprint, delta_t, theta, time1, x_pp, 
-		     exo, dpi);
+        write_solution(ExoFileOut, resid_vector, x, x_sens_p,
+                       x_old, xdot, xdot_old, tev, tev_post, gv,
+                       rd, gvec, gvec_elem,
+                       &nprint, delta_t, theta, time1, x_pp,
+                       exo, dpi);
     } /* end of if Write Intermediate Solutions */
 
     /* Print out values of extra unknowns from augmenting conditions */
     if (nAC > 0)
     {
-      DPRINTF(stderr, "\n------------------------------\n");
-      DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
-      DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+      DPRINTF(stdout, "\n------------------------------\n");
+      DPRINTF(stdout, "Augmenting Conditions:    %4d\n", nAC);
+      DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
       for(iAC = 0; iAC < nAC; iAC++)
       {
 	if(augc[iAC].Type == AC_USERBC)
 	{
-	  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", 
+	  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", 
 		  augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
 	}
       else if(augc[iAC].Type == AC_USERMAT ||
                 augc[iAC].Type == AC_FLUX_MAT )
 	{
-	  DPRINTF(stderr, "\tMT[%4d] MP[%4d]=% 10.6e\n", 
+	  DPRINTF(stdout, "\tMT[%4d] MP[%4d]=% 10.6e\n", 
 		  augc[iAC].MTID, augc[iAC].MPID, x_AC[iAC]);
 	}
 	else if(augc[iAC].Type == AC_VOLUME)
@@ -1111,7 +1123,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 	  evol_local = evol_global;
 	  }
 #endif /* PARALLEL */
-	  DPRINTF(stderr, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", 
+	  DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", 
 		  augc[iAC].MTID, augc[iAC].VOLID, evol_local, 
 		  x_AC[iAC]);
 	}
@@ -1134,13 +1146,13 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
 	  lsvel_local = lsvel_local / evol_local;
 
-	  DPRINTF(stderr, "\tMT[%4d] LSVEL phase[%4d]=%10.6e Param=%10.6e\n", 
+	  DPRINTF(stdout, "\tMT[%4d] LSVEL phase[%4d]=%10.6e Param=%10.6e\n", 
 		  augc[iAC].MTID, augc[iAC].LSPHASE, lsvel_local, 
 		  x_AC[iAC]);
 	}
 	else if(augc[iAC].Type == AC_FLUX)
 	{
-	  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=%10.6e\n", 
+	  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", 
 		  augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
 	}
       }
@@ -1205,11 +1217,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   		  double specmax[MAX_CONC],specmin[MAX_CONC],specavg, fraction;
  		  int eq_off = 0;
  
- 		  if(pd->e[R_ENERGY] )  eq_off++;
- 		  if(pd->e[R_MOMENTUM1] )  eq_off += pd->Num_Dim;
+ 		  if(pd->e[pg->imtrx][R_ENERGY] )  eq_off++;
+ 		  if(pd->e[pg->imtrx][R_MOMENTUM1] )  eq_off += pd->Num_Dim;
   		  inode = 0;
-  		  for(i=0 ; i < (num_internal_dofs+num_boundary_dofs); i++) {
-  			  vd = Index_Solution_Inv(i, &inode, NULL, &offset, &idof);
+  		  for(i=0 ; i < (num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]); i++) {
+  			  vd = Index_Solution_Inv(i, &inode, NULL, &offset, &idof, pg->imtrx);
   			  if( vd->Variable_Type == MASS_FRACTION )      {
   				if( i >= pd->Num_Species_Eqn + eq_off ) {
   		                  if (x[i] > specmax[offset-eq_off]) 
@@ -1222,17 +1234,17 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   		                  }
   		          }
   		  }
-  		  DPRINTF(stderr,"Species concentration minmax: %d \n",ProcID);
+  		  DPRINTF(stdout,"Species concentration minmax: %d \n",ProcID);
   	  	  for (i = 0; i < pd->Num_Species_Eqn; i++) {
-  			DPRINTF(stderr,"%d %g %g \n",i,specmin[i],specmax[i]);
+  			DPRINTF(stdout,"%d %g %g \n",i,specmin[i],specmax[i]);
   			}
   	  for (i = 0; i < nn_volume; i++) {
   		if(pp_volume[i]->volume_type == I_SURF_SPECIES) 
   			{
-          DPRINTF(stderr,"params %d %d %d\n",i,pp_volume[i]->num_params,pd->Num_Species);
+          DPRINTF(stdout,"params %d %d %d\n",i,pp_volume[i]->num_params,pd->Num_Species);
             		if(pp_volume[i]->num_params < pd->Num_Species+1)
                  		{
-         DPRINTF(stderr,"params %d %d\n",pp_volume[i]->num_params,pd->Num_Species);
+         DPRINTF(stdout,"params %d %d\n",pp_volume[i]->num_params,pd->Num_Species);
          WH(-1,"SURF_SPECIES parameters should number Num_Species+1");
                 		}
  			if( pp_volume[i]->species_no == -1 )
@@ -1247,7 +1259,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 					pp_volume[i]->params[pd->Num_Species] +=
 					  pp_volume[i]->params[idof]*specavg;
 					}
-DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]);
+DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]);
 				}
  			}
  		}	/* nn_volume loop	*/
@@ -1301,13 +1313,13 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
     if(Particle_Dynamics)
       {
 	/* If this was steady-state we need to ensure the fv_old* values are the same as fv. */
-	dcopy1(NumUnknowns, x, x_old);
-	dcopy1(NumUnknowns, x, x_older);
+	dcopy1(NumUnknowns[pg->imtrx], x, x_old);
+	dcopy1(NumUnknowns[pg->imtrx], x, x_older);
 	initialize_particles(exo, x, x_old, xdot, xdot_old, resid_vector);
 	for(n = 0; n < Particle_Max_Time_Steps; n++)
 	  {
 	    time = (n+1) * Particle_Output_Time_Step;
-	    DPRINTF(stderr, "\nComputing particles for time %g (%2.0f%% done)\n", time, (dbl)n/(dbl)Particle_Max_Time_Steps*100.0);
+	    DPRINTF(stdout, "\nComputing particles for time %g (%2.0f%% done)\n", time, (dbl)n/(dbl)Particle_Max_Time_Steps*100.0);
 	    err = compute_particles(exo, x, x_old, xdot, xdot_old, resid_vector, time, Particle_Output_Time_Step, n);
 	    EH(err, "Error performing particle calculations.");
 	  }
@@ -1406,7 +1418,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
      * they can be. That is, ask the processors that are supposed to
      * know...
      */
-    exchange_dof(cx, dpi, x);
+    exchange_dof(cx[0], dpi, x, 0);
 
     /*
      * Now copy the initial solution, x[], into the history solutions
@@ -1486,7 +1498,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	  max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
 	
       err = mf_setup(&exo->num_elems, 
-		     &NumUnknowns, 
+		     &NumUnknowns[pg->imtrx], 
 		     &max_unk_elem, 
 		     &three,
 		     &one,
@@ -1525,8 +1537,8 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
      * appropriate, but the other items are there now, too.
      * Do this only once if in library mode.
      */
-    if (callnum == 1) sl_init(matrix_systems_mask, ams, exo, dpi, cx);	
-      
+    if (callnum == 1) sl_init(matrix_systems_mask, ams, exo, dpi, cx[0]);	
+
     /*
      * make sure the Aztec was properly initialized
      */
@@ -1555,10 +1567,10 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	    DPRINTF(stderr,"%s:  error writing ASCII soln file\n", yo);
       }
       (void) write_solution(ExoFileOut, resid_vector, x, x_sens_p,
-			    x_old, xdot, xdot_old, tev, tev_post, gv,
-			    rd, gindex, p_gsize, gvec, gvec_elem,
-			    &nprint, delta_t, theta, time, x_pp,
-			    exo, dpi);
+                            x_old, xdot, xdot_old, tev, tev_post, gv,
+                            rd, gvec, gvec_elem,
+                            &nprint, delta_t, theta, time, x_pp,
+                            exo, dpi);
       nprint++;
     }
 
@@ -1575,7 +1587,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
     /* Initial element quality check (if requested) */
     if (nEQM > 0)
       {
-        DPRINTF(stderr, "\nINITIAL ELEMENT QUALITY CHECK---\n");
+        DPRINTF(stdout, "\nINITIAL ELEMENT QUALITY CHECK---\n");
         good_mesh = element_quality(exo, x, ams[0]->proc_config);
       }
 
@@ -1593,7 +1605,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       delta_t_save = delta_t;
 #endif
       if (time1 > time_max) {
-	DPRINTF(stderr, "\t\tLAST TIME STEP!\n"); 
+	DPRINTF(stdout, "\t\tLAST TIME STEP!\n"); 
         time1 = time_max;
 	delta_t = time1 - time;
 	tran->delta_t = delta_t;
@@ -1643,7 +1655,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	for (w=0; w<efv->Num_external_field; w++) {
 	  if (strcmp(efv->field_type[w], "transient") == 0)
 	    {
-	      err = rd_trans_vectors_from_exoII(x_old, efv->file_nm[w], w, n, &timeValueReadTrans, cx, dpi);
+	      err = rd_trans_vectors_from_exoII(x_old, efv->file_nm[w], w, n, &timeValueReadTrans, cx[0], dpi);
 	      if (err != 0) {
 		DPRINTF(stderr,
 			"%s: err from rd_trans_vectors_from_exoII\n",yo);
@@ -1711,7 +1723,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
        * Initial Start up (t=0) for the FILL/LEVEL_SET equations
        */
     
-      if (upd->ep[FILL] > -1  && nt == 0) 
+      if (upd->ep[pg->imtrx][FILL] > -1  && nt == 0) 
 	{ /*  Start of LS initialization */
 
 #ifndef COUPLED_FILL
@@ -1764,7 +1776,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		  
 		  if( first_elem != -1 )
 		    {
-                    load_ei(first_elem , exo, 0);
+                      load_ei(first_elem , exo, 0, pg->imtrx);
 
 		      Subgrid_Tree = create_shape_fcn_tree ( ls->Integration_Depth );
 		      DPRINTF(stdout,"\n\tSubgrid Integration of level set interface active.\n");
@@ -1787,7 +1799,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	  switch (eqntype) {
 	  case  PROJECT :
 
-	      DPRINTF(stderr,"\n\t Projection level set initialization \n");
+	      DPRINTF(stdout,"\n\t Projection level set initialization \n");
 #ifdef COUPLED_FILL
 	      EH(-1,"Use of \"PROJECT\" is obsolete.");
 #else /* COUPLED_FILL */
@@ -1795,20 +1807,20 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      err = integrate_explicit_eqn(ams[FIL], rf, xf, xf_old, xfdot, 
 					   xfdot_old, x, x_old, x_oldest,
 					   step_size, theta, &time2, 
-					   PROJECT, node_to_fill, exo, dpi, cx);
+					   PROJECT, node_to_fill, exo, dpi, cx[0]);
 #endif /* COUPLED_FILL */
 
 	      break;
 		       
 	  case EXO_READ :
 		      
-	      DPRINTF(stderr, "\t\t Level set read from exodus database \n");
+	      DPRINTF(stdout, "\t\t Level set read from exodus database \n");
 
 	      break;
 
 	  case SURFACES :
 
-	      DPRINTF(stderr, "\n\t\t Surface object level set initialization : ");
+	      DPRINTF(stdout, "\n\t\t Surface object level set initialization : ");
 
 	      /* parallel synchronization of initialization surfaces */
               if ( Num_Proc > 1 )
@@ -1832,7 +1844,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 		for( II=0; II < num_total_nodes; II++)
 		  {
-		    je =  Index_Solution(II, LS , 0, 0 , -1);
+		    je =  Index_Solution(II, LS , 0, 0 , -1, pg->imtrx);
 
 		    if( je != -1)
 		      {
@@ -1845,7 +1857,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      }
 #endif
 	      
-	      DPRINTF(stderr, "- done \n");
+	      DPRINTF(stdout, "- done \n");
 
 #ifndef COUPLED_FILL
 	      /*
@@ -1876,7 +1888,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      WH(-1,"Level Set Initialization method not found \n");
 	  } /* end of switch( eqntype )  */
 
-	exchange_dof(cx, dpi, x);
+          exchange_dof(cx[0], dpi, x, 0);
 
 	if (converged) 
 	{
@@ -1884,9 +1896,10 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 	  case HUYGENS :
 	  case HUYGENS_C :
+	  case HUYGENS_MASS_ITER:
             Renorm_Now =  ( ls->Force_Initial_Renorm || (ls->Renorm_Freq != 0 && ls->Renorm_Countdown == 0) );
 
-	    did_renorm = huygens_renormalization(x, num_total_nodes, exo, cx, dpi,  
+	    did_renorm = huygens_renormalization(x, num_total_nodes, exo, cx[0], dpi,  
 						 num_fill_unknowns, numProcUnknowns,  
 						 time1, Renorm_Now );
 	    
@@ -1914,12 +1927,12 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      int    num_steps = 15;
 	      
 	      put_fill_vector(num_total_nodes, x_old, xf, node_to_fill);
-	      exchange_dof(cx, dpi, x_old);
+	      exchange_dof(cx[0], dpi, x_old, 0);
 	      put_fill_vector(num_total_nodes, x_oldest, xf, node_to_fill);
-	      exchange_dof(cx, dpi, x_oldest);
+	      exchange_dof(cx[0], dpi, x_oldest, 0);
 	      correct_level_set(ams[FIL], xf, rf, x, x_old, x_oldest, node_to_fill,
 				num_total_nodes, num_fill_unknowns, step_size,
-				theta, num_steps, CORRECT, exo, dpi, cx);
+				theta, num_steps, CORRECT, exo, dpi, cx[0]);
 	    }
 #endif /* COUPLED_FILL */
 	    break;	
@@ -1934,7 +1947,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	   * level set function.  For example, species  concentration and temperature.
 	   */
 	  if( ls->Num_Var_Init > 0 ) 
-	    ls_var_initialization ( x, exo, dpi, cx );
+	    ls_var_initialization ( &x, exo, dpi, cx );
 
 	  /* 	  DPRINTF(stderr, "Done with ls_var_initialization.\n"); */
 
@@ -1991,17 +2004,17 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	    dcopy1(numProcUnknowns, x, x_old);
 	    dcopy1(numProcUnknowns, x, x_older);
 	    dcopy1(numProcUnknowns, x, x_oldest);
+          }
 
-	    exchange_dof(cx, dpi, x);
-	    exchange_dof(cx, dpi, x_old);
-	    exchange_dof(cx, dpi, x_oldest);
-	  }
+	exchange_dof(cx[0], dpi, x, 0);
+	exchange_dof(cx[0], dpi, x_old, 0);
+	exchange_dof(cx[0], dpi, x_oldest, 0);
 
 	}
 
 
       ls_old = ls;
-      if(upd->vp[PHASE1] > -1 && nt == 0 )
+      if(upd->vp[pg->imtrx][PHASE1] > -1 && nt == 0 )
 	{ /* Start of Phase Function initialization */
 		  
 		  
@@ -2009,7 +2022,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		  if (pfd != NULL)
 		  {
 			struct Level_Set_Data *ls_save =ls;			
-			if (upd->vp[PHASE1] > -1)
+			if (upd->vp[pg->imtrx][PHASE1] > -1)
 			  {
 			    switch (pfd->ls[0]->Evolution) {
 			    case LS_EVOLVE_ADVECT_EXPLICIT:
@@ -2041,7 +2054,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 			    switch (ls->Init_Method)
 			      {
 			      case SURFACES:
-				DPRINTF(stderr, "\n\t\t Surface object initialization for phase function: %d", i);
+				DPRINTF(stdout, "\n\t\t Surface object initialization for phase function: %d", i);
 
 				/* parallel synchronization of initialization surfaces */
 				if ( Num_Proc > 1 )
@@ -2054,7 +2067,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 							  ls->init_surf_list, 0., 0., 0. );
 				break;
 			      case EXO_READ:
-				DPRINTF(stderr, "\n\t\t Exodus file read initialization for phase function fields");	  
+				DPRINTF(stdout, "\n\t\t Exodus file read initialization for phase function fields");	  
 				break;
 			      } /* end of switch(ls->Init_Method ) */
 			  } /* end of i<pfd->num_phase_funcs */
@@ -2088,9 +2101,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	  dcopy1(numProcUnknowns, x, x_old);
 	  dcopy1(numProcUnknowns, x, x_older);
 	  dcopy1(numProcUnknowns, x, x_oldest);
-	  exchange_dof(cx, dpi, x);
-	  exchange_dof(cx, dpi, x_old);
-	  exchange_dof(cx, dpi, x_oldest);
+	  exchange_dof(cx[0], dpi, x, 0);
+	  exchange_dof(cx[0], dpi, x_old, 0);
+	  exchange_dof(cx[0], dpi, x_oldest, 0);
 
 	} /* end of phase function initialization */
 
@@ -2139,7 +2152,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 
 
-	DPRINTF(stderr, 
+	DPRINTF(stdout, 
 		"\n\tsubcycling on Fill equation:  dt_exp = %e\n",
 		delta_t_exp);
 	log_msg("fill subcycle step %d, time = %g", n_exp, time2);
@@ -2188,7 +2201,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 	  if ( ls == NULL || ls->Evolution == LS_EVOLVE_ADVECT_EXPLICIT )
 	    {
-	      DPRINTF(stderr,"\n\tsubcycling time step: %d  time = %e\n", 
+	      DPRINTF(stdout,"\n\tsubcycling time step: %d  time = %e\n", 
 		      n_exp, time2);
 
 
@@ -2202,17 +2215,17 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      err = integrate_explicit_eqn(ams[FIL], rf, xf, xf_old, xfdot,
 					   xfdot_old, tmp_x, tmp_x_old, tmp_xdot,
 					   delta_t_exp, _theta, &time2, ADVECT,
-					   node_to_fill,  exo, dpi, cx);
+					   node_to_fill,  exo, dpi, cx[0]);
 
 	      log_msg("fill subcycle step %d, time = %g", n_exp, time2);
 	    }
 	  else if ( ls->Evolution == LS_EVOLVE_SEMILAGRANGIAN )
 	    {
-	      DPRINTF(stderr,"\n\tsemi_lagrange time step: %d  time = %e\n", 
+	      DPRINTF(stdout,"\n\tsemi_lagrange time step: %d  time = %e\n", 
 		      n_exp, time2);
 
 	      semi_lagrange_step( num_total_nodes, numProcUnknowns, num_fill_unknowns, x, xf, xf_old,
-				  xfdot, xfdot_old, node_to_fill, delta_t_exp, theta, exo, dpi, cx) ;
+				  xfdot, xfdot_old, node_to_fill, delta_t_exp, theta, exo, dpi, cx[0]) ;
 
 	      log_msg("semi_lagrange step %d, time = %g", n_exp, time2);
 	    }
@@ -2224,11 +2237,11 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	   * and their derivatives
 	   */
 	  put_fill_vector(num_total_nodes, tmp_x, xf, node_to_fill);
-	  exchange_dof(cx, dpi, tmp_x);
+	  exchange_dof(cx[0], dpi, tmp_x, 0);
 	  put_fill_vector(num_total_nodes, tmp_x_old, xf, node_to_fill);
-	  exchange_dof(cx, dpi, tmp_x_old);
+	  exchange_dof(cx[0], dpi, tmp_x_old, 0);
 	  put_fill_vector(num_total_nodes, tmp_xdot, xfdot, node_to_fill);
-	  exchange_dof(cx, dpi, tmp_xdot);
+	  exchange_dof(cx[0], dpi, tmp_xdot, 0);
 
 	  dcopy1(num_fill_unknowns, xf, xf_old);
 
@@ -2256,7 +2269,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	    strcpy(tspstring, "(FE)");
 	else
 	    sprintf(tspstring, "(TSP %3.1f)", theta);
-	fprintf(stderr,
+	fprintf(stdout,
 		"\n=> Try for soln at t=%g with dt=%g [%d for %d] %s\n",
 		time1, delta_t, nt, n, tspstring);
 	log_msg("Predicting try at t=%g, dt=%g [%d for %d so far] %s",
@@ -2276,7 +2289,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       if(tran->solid_inertia)
 	{
 	  predict_solution_newmark(num_total_nodes, delta_t, x, x_old, xdot, xdot_old);
-	  exchange_dof(cx, dpi, tran->xdbl_dot);
+	  exchange_dof(cx[0], dpi, tran->xdbl_dot, 0);
 	}
 
 #ifdef LASER_RAYTRACE
@@ -2290,7 +2303,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
           num_facets = generate_facet_list(&point0, &point1, &owning_elem, x, exo);
           for ( facet = 0; facet < num_facets; ++facet )
             {
-              fprintf(stderr, "FACET %d: owning element = %d, First point = (%g,%g), Second point = (%g,%g)\n", 
+              fprintf(stdout, "FACET %d: owning element = %d, First point = (%g,%g), Second point = (%g,%g)\n", 
                       facet,owning_elem[facet],point0[facet][0],point0[facet][1],point1[facet][0],point1[facet][1]);
             }
 	}
@@ -2326,8 +2339,8 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
        * time, x[], exchange the degrees of freedom to update the
        * ghost node information.
        */
-      exchange_dof(cx, dpi, x);
-      exchange_dof(cx, dpi, xdot);
+      exchange_dof(cx[0], dpi, x, 0);
+      exchange_dof(cx[0], dpi, xdot, 0);
         
 #ifdef DEBUG
       if (nt == 0) {
@@ -2343,7 +2356,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 	for(iAC = 0; iAC < nAC; iAC++)
 	  {
-	    update_parameterAC(iAC, x, xdot, x_AC, cx, exo, dpi);
+	    update_parameterAC(iAC, x, xdot, x_AC, cx[0], exo, dpi);
  	    augc[iAC].tmp2 = x_AC_dot[iAC];
  	    augc[iAC].tmp3 = x_AC_old[iAC];
 	  }
@@ -2384,9 +2397,9 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
        *            be exchanged as well.
        */
 
-      exchange_dof(cx, dpi, x);
-      exchange_dof(cx, dpi, xdot);
-      if(tran->solid_inertia)  exchange_dof(cx, dpi, tran->xdbl_dot);
+      exchange_dof(cx[0], dpi, x, 0);
+      exchange_dof(cx[0], dpi, xdot, 0);
+      if(tran->solid_inertia)  exchange_dof(cx[0], dpi, tran->xdbl_dot, 0);
 
       /*
        * Save the predicted solution for the time step
@@ -2424,10 +2437,10 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 				    x_older, xdot, xdot_old, resid_vector,  
 				    x_update, scale, &converged, &nprint,
 				    tev, tev_post, gv, rd, gindex, p_gsize, 
-				    gvec, gvec_elem, time1, exo, dpi, cx, 
+				    gvec, gvec_elem, time1, exo, dpi, cx[0], 
 				    n, &time_step_reform, is_steady_state,
  				    x_AC, x_AC_dot, time1, resid_vector_sens,
-				    x_sens, x_sens_p, NULL);
+                                    x_sens, x_sens_p, NULL, NULL);
       if (err == -1) converged = FALSE;
       inewton = err;
       evpl_glob[0]->update_flag = 0; /*See get_evp_stress_tensor for description */
@@ -2445,8 +2458,8 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
        *        then xdot needs to be exchanged as well.
        */
 
-      exchange_dof(cx, dpi, x);
-      exchange_dof(cx, dpi, xdot);
+      exchange_dof(cx[0], dpi, x, 0);
+      exchange_dof(cx[0], dpi, xdot, 0);
 
       if (converged) af->Sat_hyst_reevaluate = TRUE;  /*see load_saturation */
 
@@ -2506,7 +2519,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
                                         resid_vector, ams[0]->proc_config, exo );
           if ( Courant_dt > 0. && Courant_dt < delta_t_new ) 
             {
-            DPRINTF(stderr,"\nCourant Limit requires dt <= %g\n",Courant_dt);
+            DPRINTF(stdout,"\nCourant Limit requires dt <= %g\n",Courant_dt);
             delta_t_new = Courant_dt;
             }
           }
@@ -2563,7 +2576,34 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      }
 	   }
 
-        if (time1 >= (ROUND_TO_ONE * time_max)) i_print = 1;
+        /* Check if steady state has been reached */
+        if (tran->march_to_steady_state && n > 0) {
+          /* for now check last two matrices */
+          int steady_state_reached = TRUE;
+          double max_distance = 0;
+
+          double distance = vector_distance(NumUnknowns[0], x, x_old);
+          if (distance > tran->steady_state_tolerance) {
+            steady_state_reached = FALSE;
+          }
+          max_distance = distance;
+
+        
+
+          if (ProcID == 0) {
+            printf("\nDelta x %g\n", max_distance);
+          }
+
+          if (steady_state_reached) {
+            if (ProcID == 0) {
+              printf("\n Steady state reached \n");
+            }
+            goto free_and_clear;
+          }
+        }
+
+
+	if (time1 >= (ROUND_TO_ONE * time_max)) i_print = 1;
 
 	/* Dump out user specified information to separate file.
 	 */
@@ -2620,10 +2660,10 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
                                    delta_t, theta, x_pp, exo, dpi, rd, NULL);
               }
 #else
-	    write_solution(ExoFileOut, resid_vector, x, x_sens_p,
-			   x_old, xdot, xdot_old, tev, tev_post, gv,
-			   rd, gindex, p_gsize, gvec, gvec_elem,
-			   &nprint, delta_t, theta, time, x_pp, exo, dpi);
+          write_solution(ExoFileOut, resid_vector, x, x_sens_p,
+                         x_old, xdot, xdot_old, tev, tev_post, gv,
+                         rd, gvec, gvec_elem,
+                         &nprint, delta_t, theta, time, x_pp, exo, dpi);
 	    nprint++;
 #endif
 
@@ -2635,36 +2675,36 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	  }
 	  /* Print out values of extra unknowns from augmenting conditions */
 	  if (nAC > 0) {
-	    DPRINTF(stderr, "\n------------------------------\n");
-	    DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
-	    DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+	    DPRINTF(stdout, "\n------------------------------\n");
+	    DPRINTF(stdout, "Augmenting Conditions:    %4d\n", nAC);
+	    DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
 	    for (iAC = 0; iAC < nAC; iAC++) {
 	      if (augc[iAC].Type == AC_USERBC) 
 		{
-		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
+		  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
 /* temporary printing */
 #if 0
                   if( (int)augc[iAC].DataFlt[1] == 6)
 			{
-		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 0, BC_Types[augc[iAC].DFID].BC_Data_Float[0]);
-		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 2, BC_Types[augc[iAC].DFID].BC_Data_Float[2]);
-		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 3, BC_Types[augc[iAC].DFID].BC_Data_Float[3]);
+		  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 0, BC_Types[augc[iAC].DFID].BC_Data_Float[0]);
+		  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 2, BC_Types[augc[iAC].DFID].BC_Data_Float[2]);
+		  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].DFID, 3, BC_Types[augc[iAC].DFID].BC_Data_Float[3]);
                   augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
-		  DPRINTF(stderr, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
+		  DPRINTF(stdout, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
 
 			}
                   if( (int)augc[iAC].DataFlt[1] == 61)
 			{
                   augc[iAC].DataFlt[5] += augc[iAC].DataFlt[6];
-		  DPRINTF(stderr, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
+		  DPRINTF(stdout, "\tAC[%4d] DF[%4d]=% 10.6e\n", iAC, 5, augc[iAC].DataFlt[5]);
 
 			}
 #endif
 		}
 	      else if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT)
 		{
-		  DPRINTF(stderr, "\tMT[%4d] MP[%4d]=% 10.6e\n", augc[iAC].MTID, augc[iAC].MPID, x_AC[iAC]);
+		  DPRINTF(stdout, "\tMT[%4d] MP[%4d]=% 10.6e\n", augc[iAC].MTID, augc[iAC].MPID, x_AC[iAC]);
 		}
 	      else if (augc[iAC].Type == AC_VOLUME)
 		{
@@ -2675,15 +2715,15 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		    evol_local = evol_global;
 		  }
 #endif
-		  DPRINTF(stderr, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID, augc[iAC].VOLID, evol_local, x_AC[iAC]);
+		  DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", augc[iAC].MTID, augc[iAC].VOLID, evol_local, x_AC[iAC]);
 		} 
 	      else if (augc[iAC].Type == AC_FLUX) 
 		{
-		  DPRINTF(stderr, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
+		  DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n", augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
 		}
 	      else if (augc[iAC].Type == AC_POSITION)
 		{
-		  DPRINTF(stderr, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n", 
+		  DPRINTF(stdout, "\tNodeSet[%4d]_Pos = %10.6e F_bal = %10.6e VC[%4d] Param=%10.6e\n", 
 			  augc[iAC].MTID, augc[iAC].evol, augc[iAC].lm_resid, augc[iAC].VOLID, x_AC[iAC]);
 		}
 	    }
@@ -2714,7 +2754,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      && (time_print > time)) 
             {
 	    delta_t_new = time_print - time;
-	    DPRINTF(stderr, 
+	    DPRINTF(stdout, 
 		    "reset delta_t = %g to maintain printing frequency\n"
 		    , delta_t_new);
 	    if (delta_t_new <= 0) 
@@ -2725,7 +2765,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	    if (delta_t_new != tran->print_delt) 
               {
 	      delta_t_new = tran->print_delt;
-	      DPRINTF(stderr, 
+	      DPRINTF(stdout, 
 		      "reset delta_t = %g to maintain printing frequency\n"
 		      , delta_t_new);
 	      if (delta_t_new <= 0) 
@@ -2770,7 +2810,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 #ifdef PARALLEL
 		    if (ls_adc_event) 
 		      {
-			exchange_dof( cx, dpi, x );
+			exchange_dof( cx[0], dpi, x , 0);
 		      }
 #endif
                   if ( ls_adc_event && tran->Restart_Time_Integ_After_Renorm )
@@ -2795,16 +2835,16 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 			
 			case HUYGENS:
 			case HUYGENS_C:
-				
+			case HUYGENS_MASS_ITER:
 				Renorm_Now = ( ls->Renorm_Freq != 0 && 
 					ls->Renorm_Countdown == 0 ) 
 					|| ls_adc_event == TRUE;
 				
 				did_renorm = huygens_renormalization(x, num_total_nodes,
-					 exo, cx, dpi, num_fill_unknowns, numProcUnknowns,
+					 exo, cx[0], dpi, num_fill_unknowns, numProcUnknowns,
 					  time2, Renorm_Now);
 				if ( did_renorm )
-					{ exchange_dof(cx, dpi, x);	}
+                                  { exchange_dof(cx[0], dpi, x, 0);	}
 				if ( did_renorm && tran->Restart_Time_Integ_After_Renorm )
 				{
 					/* like a restart */
@@ -2843,15 +2883,15 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 				
 		  case HUYGENS:
 		  case HUYGENS_C:
-					
+		  case HUYGENS_MASS_ITER:
 		    Renorm_Now = ( ls->Renorm_Freq != 0 && 
 				   ls->Renorm_Countdown == 0 );
 				
 		    did_renorm = huygens_renormalization(x, num_total_nodes, exo,
-							 cx, dpi, num_fill_unknowns, numProcUnknowns,
+							 cx[0], dpi, num_fill_unknowns, numProcUnknowns,
 							 time2, Renorm_Now);
 		    if ( did_renorm )
-		      { exchange_dof(cx, dpi, x); }
+		      { exchange_dof(cx[0], dpi, x, 0); }
 		    if ( did_renorm && tran->Restart_Time_Integ_After_Renorm )
 		      {
 			/* like a restart */
@@ -2951,11 +2991,11 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
  		  double specmax[MAX_CONC],specmin[MAX_CONC],specavg, fraction;
 		  int eq_off = 0;
 
-		  if(pd->e[R_ENERGY] )  eq_off++;
-		  if(pd->e[R_MOMENTUM1] )  eq_off += pd->Num_Dim;
+		  if(pd->e[pg->imtrx][R_ENERGY] )  eq_off++;
+		  if(pd->e[pg->imtrx][R_MOMENTUM1] )  eq_off += pd->Num_Dim;
  		  inode = 0;
- 		  for(i=0 ; i < (num_internal_dofs+num_boundary_dofs); i++) {
- 			  vd = Index_Solution_Inv(i, &inode, NULL, &offset, &idof);
+ 		  for(i=0 ; i < (num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]); i++) {
+ 			  vd = Index_Solution_Inv(i, &inode, NULL, &offset, &idof, pg->imtrx);
  			  if( vd->Variable_Type == MASS_FRACTION )      {
  				if( i >= pd->Num_Species_Eqn + eq_off ) {
  		                  if (x[i] > specmax[offset-eq_off]) 
@@ -2968,17 +3008,17 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
  		                  }
  		          }
  		  }
- 		  DPRINTF(stderr,"Species concentration minmax: %d \n",ProcID);
+ 		  DPRINTF(stdout,"Species concentration minmax: %d \n",ProcID);
  	  	  for (i = 0; i < pd->Num_Species_Eqn; i++) {
- 			DPRINTF(stderr,"%d %g %g \n",i,specmin[i],specmax[i]);
+ 			DPRINTF(stdout,"%d %g %g \n",i,specmin[i],specmax[i]);
  			}
  	  for (i = 0; i < nn_volume; i++) {
  		if(pp_volume[i]->volume_type == I_SURF_SPECIES) 
  			{
-         DPRINTF(stderr,"params %d %d %d\n",i,pp_volume[i]->num_params,pd->Num_Species);
+         DPRINTF(stdout,"params %d %d %d\n",i,pp_volume[i]->num_params,pd->Num_Species);
            		if(pp_volume[i]->num_params < pd->Num_Species+1)
                 		{
-         DPRINTF(stderr,"params %d %d\n",pp_volume[i]->num_params,pd->Num_Species);
+         DPRINTF(stdout,"params %d %d\n",pp_volume[i]->num_params,pd->Num_Species);
          WH(-1,"SURF_SPECIES parameters should number Num_Species+1");
                 		}
  			if( pp_volume[i]->species_no == -1 )
@@ -2993,7 +3033,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 					pp_volume[i]->params[pd->Num_Species] +=
 					  pp_volume[i]->params[idof]*specavg;
 					}
-				DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]);
+				DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]);
 				}
  			}
  		}	/* nn_volume loop	*/
@@ -3059,7 +3099,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
         if (time1 >= (ROUND_TO_ONE * time_max))
           {
-	  DPRINTF(stderr,"\t\tout of time!\n");
+	  DPRINTF(stdout,"\t\tout of time!\n");
      	  if (Anneal_Mesh)
 	    {
 	      /*
@@ -3082,7 +3122,7 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
         if(relax_bit && ((n-nt) < no_relax_retry)  ) {
 	      /*success_dt = TRUE;  */
              if(inewton == -1)        {
- 	DPRINTF(stderr,"\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
+ 	DPRINTF(stdout,"\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
                   if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
                      (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
                      (damp_factor3 <= 1. && damp_factor3 >= 0.))
@@ -3090,15 +3130,15 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
                          custom_tol1 *= 0.01;
                          custom_tol2 *= 0.01;
                          custom_tol3 *= 0.01;
-                         DPRINTF(stderr,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
+                         DPRINTF(stdout,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
                       }
                    else
                       {
                          damp_factor1 *= 0.5;
-                         DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
+                         DPRINTF(stdout,"  damping factor %g  \n",damp_factor1);
                       }
                   }   else if(!converged)  {
-        DPRINTF(stderr,"\nHmm... could not converge on first step\n Let's try some more iterations\n");
+        DPRINTF(stdout,"\nHmm... could not converge on first step\n Let's try some more iterations\n");
                     dcopy1(numProcUnknowns, x,x_old);
                     if (nAC > 0) { dcopy1(nAC, x_AC,       x_AC_old); }
                     if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
@@ -3108,13 +3148,13 @@ DPRINTF(stderr,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
                           custom_tol1 *= 100.;
                           custom_tol2 *= 100.;
                           custom_tol3 *= 100.;
-                          DPRINTF(stderr,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
+                          DPRINTF(stdout,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
                        }
                     else
                        {
                           damp_factor1 *= 2.0;
                           damp_factor1 = MIN(damp_factor1,1.0);
-                          DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
+                          DPRINTF(stdout,"  damping factor %g  \n",damp_factor1);
                        }
                    }   else {
 fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_dt);
@@ -3150,7 +3190,7 @@ fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_
 	time1 = time + delta_t;
         tran->time_value = time1;   
            } else  {
-	DPRINTF(stderr,"\n\tlast time step failed, dt *= %g for next try!\n",
+	DPRINTF(stdout,"\n\tlast time step failed, dt *= %g for next try!\n",
 		tran->time_step_decelerator);
 	      
 	delta_t *= tran->time_step_decelerator;
@@ -3171,9 +3211,9 @@ fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_
 #define DEBUG_SUBELEMENT_CONFIGURATION 0
 #if DEBUG_SUBELEMENT_CONFIGURATION
         if ( ls != NULL && ls->SubElemIntegration ) {
-	  DPRINTF(stderr,"predicted subelement configuration:\n");
+	  DPRINTF(stdout,"predicted subelement configuration:\n");
 	  subelement_mesh_output(x_pred, exo);
-	  DPRINTF(stderr,"failed solution subelement configuration:\n");
+	  DPRINTF(stdout,"failed solution subelement configuration:\n");
 	  subelement_mesh_output(x, exo);
 	}
 #endif
@@ -3190,9 +3230,9 @@ fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_
 	if (Explicit_Fill && nt) {
 	  /* restore original values for failed time step */
 	  put_fill_vector(num_total_nodes, x, xf_save, node_to_fill);
-	  exchange_dof(cx, dpi, x);
+	  exchange_dof(cx[0], dpi, x);
 	  put_fill_vector(num_total_nodes, x_old, xf_save, node_to_fill);
-	  exchange_dof(cx, dpi, x_old);
+	  exchange_dof(cx[0], dpi, x_old);
 	}
 #endif /* not COUPLED_FILL */
       }
@@ -3200,7 +3240,7 @@ fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_
       if (delta_t <= delta_t_min) {
         DPRINTF(stderr,"\n\tdelta_t = %e < %e\n\n",delta_t, delta_t_min);
 	
-	DPRINTF(stderr,"time step too small, I'm giving up!\n");
+	DPRINTF(stdout,"time step too small, I'm giving up!\n");
 	break;
       }
 
@@ -3326,7 +3366,7 @@ fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_
 
   safer_free((void **) &ve); 
 
-  if(num_universe_dofs != (num_internal_dofs + num_boundary_dofs) ) {
+  if(num_universe_dofs[pg->imtrx] != (num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]) ) {
     safer_free((void **) &ija_attic);
   }
 
@@ -3401,8 +3441,7 @@ free_shape_fcn_tree( Subgrid_Tree );
 /**************************************************************************/
 /**************************************************************************/
 
-static void
-
+void
 predict_solution(int N, double delta_t, double delta_t_old,
 		 double delta_t_older, double theta_arg, double x[],
 		 double x_old[], double x_older[], double x_oldest[],
@@ -3532,9 +3571,9 @@ predict_solution_newmark(int N, double delta_t,
 	mat_index= (curr_mat_list->List)[imat];
 	if(pd_glob[mat_index]->MeshMotion == DYNAMIC_LAGRANGIAN) 
 	  {
-	    for (a = 0; a < ei->ielem_dim; a++)
+	    for (a = 0; a < ei[pg->imtrx]->ielem_dim; a++)
 	      {
-		j = Index_Solution(i, R_MESH1 + a, 0, 0 , -1);
+		j = Index_Solution(i, R_MESH1 + a, 0, 0 , -1, pg->imtrx);
 		x[j] = x_old[j] + c1 * xdot_old[j]
 		  + c2 * tran->xdbl_dot_old[j];
 		xdot[j] = xdot_old[j] + c3*tran->xdbl_dot_old[j];
@@ -3596,6 +3635,7 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
   int num_nodes, rd_nnv_save, rd_nev_save;
   int p;
   int ielem;
+  int imtrx;
   int e_start, e_end;
   int *moved;
   /*  int num_local_nodes; */
@@ -3623,7 +3663,7 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
   FILE *anneal_dat;
 
 
-  int numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  int numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
   asdv(&x_file, numProcUnknowns);
 
@@ -3637,8 +3677,13 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
 
   displacement_somewhere = FALSE;
 
-  for(m = 0; m < upd->Num_Mat; m++)
-      displacement_somewhere |= ( pd_glob[m]->e[R_MESH1] );
+  for (m = 0; m < upd->Num_Mat; m++)
+     {
+       for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
+          {
+           displacement_somewhere |= ( pd_glob[m]->e[imtrx][R_MESH1] );
+          }
+     }
 
   if ( !displacement_somewhere ) 
   {
@@ -3678,12 +3723,12 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
     memset(d, 0, sizeof(double  )*DIM*MDE);
     memset(dofs, 0, sizeof(int)*DIM);
     
-    for(ln = 0; ln < ei->num_local_nodes; ln++)
+    for(ln = 0; ln < ei[pg->imtrx]->num_local_nodes; ln++)
     {
       double factor=1.0;
       double xi[3] = {0.0, 0.0, 0.0};
 	  
-      find_nodal_stu(ln, ei->ielem_type, xi, xi+1, xi+2);
+      find_nodal_stu(ln, ei[pg->imtrx]->ielem_type, xi, xi+1, xi+2);
 
       gnn = exo->elem_node_list[ exo->elem_node_pntr[ielem] + ln ] ;
 
@@ -3695,20 +3740,20 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
 	{
 	  var = MESH_DISPLACEMENT1 + p;
 		  
-	  for(i = 0; i < ei->dof[var]; i++)
+	  for(i = 0; i < ei[pg->imtrx]->dof[var]; i++)
 	  {
 	    phi[i] = newshape(xi, 
-			      ei->ielem_type, 
+			      ei[pg->imtrx]->ielem_type, 
 			      PSI, 
-			      ei->dof_list[var][i], 
-			      ei->ielem_shape,
-			      pd->i[var],
+			      ei[pg->imtrx]->dof_list[var][i], 
+			      ei[pg->imtrx]->ielem_shape,
+			      pd->i[pg->imtrx][var],
 			      i);
 	  }
 
-	  if( pd->v[var] )
+	  if( pd->v[pg->imtrx][var] )
 	  {
-	    for(j = 0; j < ei->dof[var]; j++)
+	    for(j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 	    {
 	      displacement[p] += *esp->d[p][j] * phi[j];
 	      *esp_old->d[p][j] = 0.0;
@@ -3973,7 +4018,7 @@ shift_nodal_values ( int var,
 	
 	for( I=0; I<num_total_nodes; I++ )
 	{
-		ie = Index_Solution(I, var, 0, 0, matID );
+		ie = Index_Solution(I, var, 0, 0, matID, pg->imtrx );
 		if( ie != -1 )
 		{
 			x[ie] += shift;
@@ -4033,14 +4078,14 @@ npost[i] = Export_XP_ID[i]; }
   for (i=0; i<Num_Export_XS; i++)
     {
       ivar = Export_XS_ID[i];
-      if (Num_Var_In_Type[ivar] == 0)
+      if (Num_Var_In_Type[pg->imtrx][ivar] == 0)
         {
           fprintf(stderr, "Inactive variable specified: ID = %d\n", ivar);
           return -1;
         }
       for (j=0; j<nodes; j++)
         {
-          k = Index_Solution(j, ivar, 0, 0, -1);
+          k = Index_Solution(j, ivar, 0, 0, -1, pg->imtrx);
           var = ( (k>=0) ? x[k] : 0.0);
           libio->xsoln[scount] = var;
           scount++;

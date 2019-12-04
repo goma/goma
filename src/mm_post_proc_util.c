@@ -45,8 +45,8 @@
 #include "mm_eh.h"
 #include "mm_post_def.h"
 
-#define _MM_FLUX_C
-#define _MM_POST_PROC_UTIL_C
+#define GOMA_MM_FLUX_C
+#define GOMA_MM_POST_PROC_UTIL_C
 #include "goma.h"
 
 
@@ -75,7 +75,7 @@ find_id_elem(const double x,	  /* x-coordinate */
   static char *yo = "find_id_elem";
 #endif
 
-  int element_no;		/*local element number */
+  int element_no = -1;		/*local element number */
   int i;			/*local element counters */
   dbl sum_xcoord, sum_ycoord, sum_zcoord; 
   dbl x_center, y_center, z_center; 
@@ -111,7 +111,7 @@ if(!mode)
 	for(id=0; id<num_local_nodes; id++)
 	  {
 	    I = exo->node_list[iconn_ptr + id];
-            i = Index_Solution(I, MESH_DISPLACEMENT1, 0, 0, -1);
+            i = Index_Solution(I, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx);
 	    if (i == -1 && pd_glob[mn]->IntegrationMap != SUBPARAMETRIC)
 		{
             	    sum_xcoord += Coor[0][I];
@@ -186,7 +186,7 @@ invert_isoparametric_map(  int *current_ielem,  /* initial element of search */
   double rot[MAX_PDIM][MAX_PDIM];	/*  isopar. coord rotation tensor */
 
   
-  dim    = ei->ielem_dim;
+  dim    = ei[pg->imtrx]->ielem_dim;
 
   if (xv == x_static) /* be the least disruptive possible */
     {
@@ -332,7 +332,7 @@ invert_isoparametric_map(  int *current_ielem,  /* initial element of search */
                 if(exo->elem_elem_list[b] == old_ielem)newface = a;
                 }
 
-        load_ei(*current_ielem, exo, 0);
+        load_ei(*current_ielem, exo, 0, pg->imtrx);
 
         if (xv == x_static) /* be the least disruptive possible */
           {
@@ -346,12 +346,12 @@ invert_isoparametric_map(  int *current_ielem,  /* initial element of search */
 
 
 /**  shouldn't have to change elem dimensions
-  dim    = ei->ielem_dim;
+  dim    = ei[pg->imtrx]->ielem_dim;
 
   for(b=0; b< Num_Basis_Functions; b++)
     {
       vi = VELOCITY1;
-      if(pd_glob[ei->mn]->i[vi] == bfd[b]->interpolation);
+      if(pd_glob[ei[pg->imtrx]->mn]->i[vi] == bfd[b]->interpolation);
          {
            velo_interp = b;
          }

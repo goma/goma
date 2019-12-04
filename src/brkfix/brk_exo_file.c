@@ -84,13 +84,11 @@
  * Revised:  1998/01/20 15:06 MST pasacki@sandia.gov
  */
 
-#define _BRK_C
+#define GOMA_BRK_C
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-
-#define _INCLUDE_POSIX_SOURCE	/* needed for HP-UX */
 
 #include <stdio.h>
 
@@ -258,7 +256,7 @@ Node_Description *vnd;	/* for the varnode d'jour */
 #define CHACO
 #ifdef CHACO
 extern int interface
-PROTO((int,			/* nvtxs - number of vertices in full graph */
+(int,			/* nvtxs - number of vertices in full graph */
        int *,			/* start - start of edge list for ea vertex */
        int *,			/* adjacency - edge list data */
        int *,			/* vwgts - weights for all vertices */
@@ -279,33 +277,31 @@ PROTO((int,			/* nvtxs - number of vertices in full graph */
        int,			/* vmax - if so, coarsen down to ? vertices */
        int,			/* ndims - number of eigenvectors (2^d sets) */
        dbl,			/* eigtol - tolerance on eigenvectors */
-       long));			/* seed - for random graph mutations */ 
+       long);			/* seed - for random graph mutations */ 
 #endif
 
 extern int wr_mesh_exo		/* wr_exo.c */
-PROTO((Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
+(Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
        char *,			/* filename - where to write */
-       int));			/* verbosity - talk while writing */
+       int);			/* verbosity - talk while writing */
 
 extern void wr_resetup_exo	/* wr_exo.c */
-PROTO((Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
+(Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
        char *,			/* filename - where to write */
-       int ));			/* verbosity - 0 for quiet, more to talk */
+       int );			/* verbosity - 0 for quiet, more to talk */
 
-extern void wr_result_exo	/* wr_exo.c */
-PROTO((Exo_DB *,		/* exo */
-       char *,			/* filename - where to write */
-       int ));			/* verbosity - 0 for quiet, more to talk */
+extern void wr_result_exo    /* wr_exo.c */
+        (Exo_DB *exo, char *filename);			/* verbosity - 0 for quiet, more to talk */
 
 extern int wr_dpi		/* wr_dpi.c */
-PROTO((Dpi *,			/* fantastic structure defd in "dpi.h" */
+(Dpi *,			/* fantastic structure defd in "dpi.h" */
        char *,			/* filename */
-       int ));			/* verbosity - how much to talk */
+       int );			/* verbosity - how much to talk */
 
 
 static int integer_compare	/* used internally by qsort() brk.c */
-PROTO((const void *, 
-       const void *));
+(const void *, 
+       const void *);
 
 int 
 brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
@@ -492,7 +488,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   int proc_ss_elem_len;
   int proc_ss_distfact_len;
   int *proc_ss_side_list;
-  int *psm;			/* ptrs to set memberships */
+  int *node_set_membership;			/* ptrs to set memberships */
 
   int *recv_proc_names;		/* from the standpoint of a proc */
 
@@ -509,7 +505,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   int size_proc_num_ss;
   int size_proc_ss_elem_list;
   int size_proc_ss_distfact_list;
-  int *sm;			/* set membership */
+  int *set_membership;			/* set membership */
   int start_nd;			/* start of nodes in the ns_nodelist */
   int start_el;			/* start of elements in the ss_elemlist */
   int start_df;			/* start of distfacts in the ns_distfactlist */
@@ -1354,13 +1350,13 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
    *	   External nodes are in the "other" set and connect to more than 
    *       one set.
    *
-   * (psm[node+1] -psm[node]) = 
+   * (node_set_membership[node+1] -node_set_membership[node]) =
    *    number of distinct sets to which me and my neighboring nodes belong
    *
-   * psm[node] = first spot in sm where this nodes neighbor set 
+   * node_set_membership[node] = first spot in sm where this nodes neighbor set
    *             membership begins
    *
-   * if ( psm[node+1] - psm[node] ) > 1, then this is more than an internal
+   * if ( node_set_membership[node+1] - node_set_membership[node] ) > 1, then this is more than an internal
    *                                     node, it's part of a boundary/external
    *                                     interaction.
    *
@@ -1368,9 +1364,9 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
    */
 
 
-  psm = (int *) smalloc((nn+1)*SZ_INT);
+  node_set_membership = (int *) smalloc((nn+1)*SZ_INT);
 
-  psm[0] = 0;
+  node_set_membership[0] = 0;
 
   for ( i=0; i<nn; i++)
     {
@@ -1410,7 +1406,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 #ifdef DEBUG
       fprintf(stderr, "\n");
 #endif      
-      psm[i+1] = num_sets;
+      node_set_membership[i+1] = num_sets;
     }
 
 
@@ -1420,14 +1416,14 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   
   for ( i=0; i<nn; i++)
     {
-      psm[i+1] += psm[i];
+      node_set_membership[i+1] += node_set_membership[i];
     }
 
-  len_sm = psm[nn];
+  len_sm = node_set_membership[nn];
 
-  sm = (int *) smalloc(len_sm*SZ_INT);
+  set_membership = (int *) smalloc(len_sm*SZ_INT);
 
-  INIT_IVEC(sm, UNDEFINED_SET_NAME, len_sm);
+  INIT_IVEC(set_membership, UNDEFINED_SET_NAME, len_sm);
 
   for ( i=0; i<nn; i++)
     {
@@ -1463,7 +1459,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       for ( k=0; k<num_sets; k++)
 	{
-	  sm[psm[i]+k] = setalogue[k];
+	  set_membership[node_set_membership[i]+k] = setalogue[k];
 	}
 
     }
@@ -1475,7 +1471,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
     {
       fprintf(stderr, "Sets associated with node (%d): ", node+1);
       
-      for ( j=psm[node]; j<psm[node+1]; j++)
+      for ( j=node_set_membership[node]; j<node_set_membership[node+1]; j++)
 	{
 	  fprintf(stderr, "%d ", sm[j]);
 	}
@@ -1487,7 +1483,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
    * Element ownership determination.
    */
 
-  assign_elem_ownership(mono, num_pieces, psm, sm, &element_owner, 
+  assign_elem_ownership(mono, num_pieces, node_set_membership, set_membership, &element_owner,
 			&element_owner_dist, &element_bnd_stat);
 
 #ifdef DEBUG
@@ -1687,7 +1683,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       for ( n=0; n<nn; n++ )
 	{
-	  nsets = psm[n+1]-psm[n];
+	  nsets = node_set_membership[n+1]-node_set_membership[n];
 
 	  if ( nsets == 1 )
 	    {
@@ -1713,7 +1709,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 		   * know that it is not s. Therefore the "+1" below.
 		   */
 		  
-		  where = in_list(s, 0, nsets, sm+psm[n]);
+		  where = in_list(s, 0, nsets, set_membership+node_set_membership[n]);
 		  
 		  if (  where != -1 ) 
 		    {
@@ -1764,7 +1760,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       for ( n=0; n<nn; n++ )
 	{
-	  nsets = psm[n+1]-psm[n];
+	  nsets = node_set_membership[n+1]-node_set_membership[n];
 
 	  if ( nsets == 1 )
 	    {
@@ -1790,7 +1786,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 		   * know that it is not s. Therefore the "+1" below.
 		   */
 		  
-		  where = in_list(s, 0, nsets, sm+psm[n]);
+		  where = in_list(s, 0, nsets, set_membership+node_set_membership[n]);
 		  
 		  if (  where != -1 ) 
 		    {
@@ -2012,9 +2008,9 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       for ( i=0; i<num_boundary_nodes; i++)
 	{
 	  node = boundary_nodes[i];
-	  for ( t=psm[node]+1; t<psm[node+1]; t++)
+	  for ( t=node_set_membership[node]+1; t<node_set_membership[node+1]; t++)
 	    {
-	      set_name = sm[t];
+	      set_name = set_membership[t];
 
 	      BULL(set_name, send_proc_names, num_send_procs);
 	    }
@@ -3643,7 +3639,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	{
 	  proc_psm[n] = count;
 	  node        = proc_nodes[n];
-	  count      += (psm[node+1]-psm[node]);
+	  count      += (node_set_membership[node+1]-node_set_membership[node]);
 	}
       proc_psm[num_universe_nodes] = count;
 
@@ -3656,7 +3652,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	  len  = proc_psm[n+1]-proc_psm[n];
 	  for ( i=0; i<len; i++)
 	    {
-	      proc_sm[proc_psm[n]+i] = sm[psm[node]+i];
+	      proc_sm[proc_psm[n]+i] = set_membership[node_set_membership[node]+i];
 	    }
 	}
 
@@ -4060,59 +4056,52 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	    }
 	}
 
-      D->ss_block_index_global = NULL;
-      D->ss_block_list_global = NULL;
-      if (mono->num_side_sets > 0)
-        {
-          D->ss_block_index_global =
-              calloc(mono->num_side_sets + 1, sizeof(int));
-          D->ss_block_list_global =
-              calloc(MAX_MAT_PER_SS * mono->num_side_sets, sizeof(int));
 
-          // populate list of blocks associated to side sets
 
-          int ss_block_index = 0;
-          int ss_id;
-          for (ss_id = 0; ss_id < mono->num_side_sets; ss_id++)
-            {
-              int ss_start = ss_block_index;
-              int elem_index;
-              for (elem_index = mono->ss_elem_index[ss_id];
-                   elem_index <
-                   (mono->ss_elem_index[ss_id] + mono->ss_num_sides[ss_id]);
-                   elem_index++)
-                {
-                  int elem = mono->ss_elem_list[elem_index];
-                  int block = find_elemblock_index(elem, mono);
-                  if (block == -1)
-                    {
-                      EH(-1, "Element block not found");
-                    }
+    D->ss_block_index_global = NULL;
+    D->ss_block_list_global = NULL;
+    if (mono->num_side_sets > 0) {
+        D->ss_block_index_global = calloc(mono->num_side_sets+1, sizeof(int));
+        D->ss_block_list_global = calloc(MAX_MAT_PER_SS * mono->num_side_sets, sizeof(int));
 
-                  // check if block is in array for ss already
-                  int known = 0;
-                  int i;
-                  for (i = ss_start; i < ss_block_index; i++)
-                    {
-                      if (D->ss_block_list_global[i] == block)
-                        {
-                          known = 1;
-                        }
-                    }
+        // populate list of blocks associated to side sets
 
-                  if (!known)
-                    {
-                      D->ss_block_list_global[ss_block_index] = block;
-                      ss_block_index++;
+        int ss_block_index = 0;
+        for (int ss_id = 0; ss_id < mono->num_side_sets; ss_id++) {
+            int ss_start = ss_block_index;
+            for (int elem_index = mono->ss_elem_index[ss_id];
+                 elem_index < (mono->ss_elem_index[ss_id] + mono->ss_num_sides[ss_id]);
+                 elem_index++) {
+                int elem = mono->ss_elem_list[elem_index];
+                int block = find_elemblock_index(elem, mono);
+                if (block == -1)
+                  {
+                    EH(-1, "Element block not found");
+                  }
+
+                // check if block is in array for ss already
+                int known = 0;
+                for (int i = ss_start; i < ss_block_index; i++) {
+                    if (D->ss_block_list_global[i] == block) {
+                        known = 1;
                     }
                 }
 
-              D->ss_block_index_global[ss_id] = ss_start;
-              D->ss_block_index_global[ss_id + 1] = ss_block_index;
-            }
-        }
+                if (!known) {
+                    D->ss_block_list_global[ss_block_index] = block;
+                    ss_block_index++;
+                }
 
-      D->ss_internal_global = ss_internal;
+            }
+
+            D->ss_block_index_global[ss_id] = ss_start;
+            D->ss_block_index_global[ss_id+1] = ss_block_index;
+        }
+    }
+
+
+    D->ss_internal_global = ss_internal;
+
 
 #ifdef DEBUG
       for ( i=0; i<mono->eb_num_props; i++)
@@ -4391,8 +4380,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	      /*
 	       * Write out results.
 	       */
-	      
-	      wr_result_exo(E, E->path, 0);
+
+            wr_result_exo(E, E->path);
 	    }
 
 	  free_exo_nv(E);
@@ -4478,8 +4467,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	      /*
 	       * Write out results.
 	       */
-	      
-	      wr_result_exo(E, E->path, 0);
+
+            wr_result_exo(E, E->path);
 	    }
 
 	  free_exo_ev(E);
@@ -4718,8 +4707,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	  mono->nv[0][index_ccs][i]  = sum_ccs;
 	  mono->nv[0][index_dofs][i] = node_dof0[i+1]-node_dof0[i];
 	  mono->nv[0][index_nknd][i] = node_kind[i];
-	  mono->nv[0][index_nscn][i] = psm[i+1]-psm[i];
-	  mono->nv[0][index_nown][i] = sm[psm[i]];
+	  mono->nv[0][index_nscn][i] = node_set_membership[i+1]-node_set_membership[i];
+	  mono->nv[0][index_nown][i] = set_membership[node_set_membership[i]];
 	}
       
       /*
@@ -4864,7 +4853,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	      for ( l=ep[i]; l<ep[i+1]; l++)
 		{
 		  node = nl[l];
-		  owner = sm[psm[node]];
+		  owner = set_membership[node_set_membership[node]];
 		  BULL(owner, element_procs, num_element_procs);
 		}
 
@@ -4907,7 +4896,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       one_base(mono);
       wr_mesh_exo(mono, out_augplot_file_name, 0);
       wr_resetup_exo(mono, out_augplot_file_name, 0);
-      wr_result_exo(mono, out_augplot_file_name, 0);
+      wr_result_exo(mono, out_augplot_file_name);
       zero_base(mono);
 
       free_exo_ev(mono);
@@ -4949,8 +4938,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   free(node_dof0);
   free(node_kind);
 
-  free(sm);
-  free(psm);
+  free(set_membership);
+  free(node_set_membership);
 
   for ( i=0; i<neb; i++)
     {

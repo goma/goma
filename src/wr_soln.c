@@ -16,7 +16,7 @@
 
 
 #include "wr_soln.h"
-#define _WR_SOLN_C
+#define GOMA_WR_SOLN_C
 #include "goma.h"
 
 /***********************************************************************/
@@ -24,31 +24,10 @@
 /***********************************************************************/
 
 void 
-write_solution(char output_file[], /* name EXODUS II file */
-	       double resid_vector[], /* Residual vector */
-	       double x[],	/* soln vector */
-	       double **x_sens_p, /* sensitivity vectors */
-	       double x_old[],	/* soln vector at previous time step */
-	       double xdot[],	/* dx/dt */
-	       double xdot_old[],/* dx/dt at previous time step */
-	       int tev,		/* total elem variables
-				   (normal) */
-	       int tev_post,	/* additional post process
-				   elem vars */
-	       double *gv,      /* global variable values */
-	       struct Results_Description  *rd, /* for post process vars
-						   (rf_io_structs.h) */
-	       int *gindex,
-	       int *p_gsize,
-	       double *gvec,
-	       double ***gvec_elem, /* array vars [eb_index][ev_index][elem] */
-	       int *nprint,	/* counter for time step number*/
-	       dbl delta_t,	/* time step size */
-	       dbl theta,  	/* time integration parameter */
-	       dbl time_value,	/* current time value */
-               dbl *x_pp,       /* post proc vars for export */
-	       Exo_DB *exo,
-	       Dpi *dpi)
+write_solution(char output_file[], double resid_vector[], double x[], double **x_sens_p, double x_old[], double xdot[],
+               double xdot_old[], int tev, int tev_post, double *gv, struct Results_Description *rd, double *gvec,
+               double ***gvec_elem, int *nprint, dbl delta_t, dbl theta, dbl time_value, dbl *x_pp, Exo_DB *exo,
+               Dpi *dpi)
     /*************************************************************************
      *
      * write_solution():
@@ -74,6 +53,7 @@ write_solution(char output_file[], /* name EXODUS II file */
     wr_nodal_result_exo(exo, output_file, gvec, i+1, step, time_value);
   }
 
+  /* Special case for global post processing, usually file output */
 #ifdef DEBUG
   fprintf(stderr, "%s: done with regular nodal vars; start global\n", yo);
 #endif
@@ -95,7 +75,7 @@ write_solution(char output_file[], /* name EXODUS II file */
 
     post_process_nodal(x, x_sens_p, x_old, xdot, xdot_old, resid_vector, 
 		       step, &time_value, delta_t, theta, x_pp,
-		       exo, dpi, rd, output_file);
+		       exo, dpi, rd, output_file, 0);
 #ifdef DEBUG
     fprintf(stderr, "%s: done w/ post_process_nodal\n", yo);
 #endif
@@ -113,6 +93,7 @@ write_solution(char output_file[], /* name EXODUS II file */
       }
     }
   }
+
 
   /* Now element quantities */
   for(i = 0; i < tev; i++) {
@@ -152,6 +133,136 @@ write_solution(char output_file[], /* name EXODUS II file */
 	}
       }
   }
+}
+
+
+void
+write_solution_segregated(char output_file[], double **resid_vector, double **x, double **x_old, double **xdot,
+                          double **xdot_old, int *tev_post, double *gv, struct Results_Description **rd,
+                          double **gvec, int *nprint, dbl delta_t, dbl theta, dbl time_value, dbl *x_pp,
+                          Exo_DB *exo, Dpi *dpi)
+{
+  int i, step=0;
+  int i_post;
+#ifdef DEBUG
+  static char *yo="write_solution";
+  fprintf(stderr, "%s: begins\n", yo);
+#endif
+
+  /* First nodal quantities */
+  int offset = 0;
+  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    /* Special case for global post processing, usually file output */
+    post_process_global(x[pg->imtrx], exo, dpi, time_value);
+
+    if (pg->imtrx > 0) {
+      offset += rd[pg->imtrx -1]->TotalNVSolnOutput + rd[pg->imtrx -1]->TotalNVPostOutput;
+      if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
+	offset += rd[pg->imtrx -1]->TotalNVSolnOutput;
+      }
+    }
+    for (i = 0; i < rd[pg->imtrx]->TotalNVSolnOutput; i++) {
+      extract_nodal_vec(x[pg->imtrx], rd[pg->imtrx]->nvtype[i], rd[pg->imtrx]->nvkind[i],
+          rd[pg->imtrx]->nvmatID[i], gvec[pg->imtrx], exo, FALSE, time_value);
+      step = (*nprint) + 1;
+      wr_nodal_result_exo(exo, output_file, gvec[pg->imtrx], offset + i + 1, step, time_value);
+    }
+  }
+
+#ifdef DEBUG
+  fprintf(stderr, "%s: done with regular nodal vars; start tnv_post\n", yo);
+#endif
+
+  /*
+   *  Add additional user-specified post processing variables
+   */
+  offset = 0;
+  for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+    if (pg->imtrx > 0) {
+      offset += rd[pg->imtrx -1]->TotalNVSolnOutput + rd[pg->imtrx -1]->TotalNVPostOutput;
+      if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
+	offset += rd[pg->imtrx -1]->TotalNVSolnOutput;
+      }
+    }
+    if (rd[pg->imtrx]->TotalNVPostOutput > 0) {
+      step = (*nprint) + 1;
+  #ifdef DEBUG
+      fprintf(stderr, "%s: start post_process_nodal\n", yo);
+  #endif
+
+      post_process_nodal(x[pg->imtrx], NULL, x_old[pg->imtrx], xdot[pg->imtrx],
+			 xdot_old[pg->imtrx], resid_vector[pg->imtrx], step, &time_value,
+			 delta_t, theta, x_pp, exo, dpi, rd[pg->imtrx], output_file, offset);
+  #ifdef DEBUG
+      fprintf(stderr, "%s: done w/ post_process_nodal\n", yo);
+  #endif
+
+      /*
+       *  Write out time derivatives if requested
+       */
+
+    }
+  }
+
+  offset = 0;
+  if (tev_post != NULL) {
+    for (pg->imtrx = 0; pg->imtrx < upd->Total_Num_Matrices; pg->imtrx++) {
+
+      step = (*nprint) + 1;
+
+      if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
+	if (pg->imtrx > 0) {
+	  offset += rd[pg->imtrx-1]->TotalNVSolnOutput + rd[pg->imtrx-1]->TotalNVPostOutput + rd[pg->imtrx-1]->TotalNVSolnOutput;
+	}
+	for (i = 0; i < rd[pg->imtrx]->TotalNVSolnOutput; i++) {
+	  i_post = rd[pg->imtrx]->TotalNVSolnOutput + rd[pg->imtrx]->TotalNVPostOutput + i;
+	  extract_nodal_vec(xdot[pg->imtrx], rd[pg->imtrx]->nvtype[i_post], rd[pg->imtrx]->nvkind[i_post],
+			    rd[pg->imtrx]->nvmatID[i], gvec[pg->imtrx], exo, TRUE, time_value);
+	  wr_nodal_result_exo(exo, output_file, gvec[pg->imtrx], offset + i_post + 1,
+			      *nprint+1, time_value);
+	}
+      }
+    }
+  }
+//
+  /* Now element quantities */
+//  for(i = 0; i < tev; i++) {
+//    extract_elem_vec(x, i, rd->evtype[i], gvec_elem, exo);
+//    step = (*nprint)+1;
+//    wr_elem_result_exo(exo, output_file, gvec_elem, i, step,
+//                       time_value, rd);
+//  }
+  /* Finally, global values */
+
+  wr_global_result_exo( exo, output_file, step, rd[0]->ngv, gv );
+
+#ifdef DEBUG
+  fprintf(stderr, "%s: done with regular element vars; start tev_post\n", yo);
+#endif
+
+  /* Add additional user-specified post processing variables */
+//  if (tev_post > 0) {
+//      step = (*nprint) + 1;
+//#ifdef DEBUG
+//      fprintf(stderr, "%s: start post_process_elem\n", yo);
+//#endif
+//
+//      post_process_elem(x, x_old, xdot, xdot_old, resid_vector, tev, tev_post,
+//                        gvec_elem, step, &time_value, delta_t, exo, dpi, rd);
+//#ifdef DEBUG
+//      fprintf(stderr, "%s: done w/ post_process_elem\n", yo);
+//#endif
+//
+//      /* Write out time derivatives if requested */
+//      if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
+//        for (i = 0; i < tev; i++) {
+//          i_post = tev_post + i;
+//          extract_elem_vec(xdot, i_post, rd->evtype[i_post], gvec_elem, exo);
+//          wr_elem_result_exo(exo, output_file, gvec_elem, i_post,
+//                             *nprint+1, time_value, rd);
+//        }
+//      }
+//  }
 }
 /*****************************************************************************/
 /*  END of file wr_soln.c  */

@@ -48,7 +48,7 @@
 #include "mm_mp.h"
 #include "mm_species.h"
 #include "mm_std_models.h"
-
+#include "mm_fill_population.h"
 #include "mm_eh.h"
 
 #include "mm_fill_jac.h"
@@ -458,12 +458,12 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
   if (densityJac == NULL) doJac = FALSE;
   if (doJac) {
     densityJac->Num_Terms = 0;
-    if (upd->vp[TEMPERATURE] != -1) {
+    if (upd->vp[pg->imtrx][TEMPERATURE] != -1) {
       num_dep = 1;
     } else {
       num_dep = 0;
     }
-    if (upd->vp[MASS_FRACTION] != -1 || upd->vp[SPECIES_UNK_0] != -1) {
+    if (upd->vp[pg->imtrx][MASS_FRACTION] != -1 || upd->vp[pg->imtrx][SPECIES_UNK_0] != -1) {
       num_dep += matrl->Num_Species;
     }
     propertyJac_realloc(&densityJac, num_dep);
@@ -559,6 +559,90 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 	}
     
     }
+  else if (matrl->DensityModel == DENSITY_FOAM_PMDI_10)
+    {
+      int var;
+      int w;
+      double volF = matrl->volumeFractionGas;
+
+      double M_CO2 = matrl->u_density[0];
+      double rho_liq = matrl->u_density[1];
+      double ref_press = matrl->u_density[2];
+      double Rgas_const = matrl->u_density[3];
+
+      double rho_gas = (ref_press * M_CO2 / (Rgas_const * fv->T));
+
+      rho = rho_gas * volF + rho_liq * (1 - volF);
+
+      /* Now do sensitivies */
+
+      var = MASS_FRACTION;
+      if (volF > 0. && doJac)
+	{
+	  if (pd->v[pg->imtrx][var] )
+	    {
+	      for (w = 0; w < pd->Num_Species; w++) {
+		double drhodC =  (rho_gas * mp->d_volumeFractionGas[MAX_VARIABLE_TYPES+w] -
+				  rho_liq *  mp->d_volumeFractionGas[MAX_VARIABLE_TYPES+w]);
+		propertyJac_addEnd(densityJac, MASS_FRACTION,
+				   matID, w, drhodC, rho);
+	      }
+	    }
+	}
+
+      var = TEMPERATURE;
+      if(volF > 0. && doJac)
+	{
+	  if (pd->v[pg->imtrx][var] )
+	    {
+	      double drhoDT;
+	      drhoDT = (rho_gas/fv->T * volF + rho_gas * mp->d_volumeFractionGas[var] -
+			rho_liq*mp->d_volumeFractionGas[var]);
+	      propertyJac_addEnd(densityJac, TEMPERATURE, matID, 0,
+				 drhoDT, rho);
+	    }
+	}
+
+    }
+  else if (matrl->DensityModel == DENSITY_MOMENT_BASED)
+  {
+      int var;
+      int w;
+      double volF = matrl->volumeFractionGas;
+
+      double rho_gas = matrl->u_density[0];
+      double rho_liq = matrl->u_density[1];
+
+      rho = rho_gas * volF + rho_liq * (1 - volF);
+
+      /* Now do sensitivies */
+
+      var = MASS_FRACTION;
+      if (volF > 0. && doJac)
+      {
+          if (pd->v[pg->imtrx][var] )
+          {
+              for (w = 0; w < pd->Num_Species; w++) {
+                  double drhodC = 0;
+                  propertyJac_addEnd(densityJac, MASS_FRACTION,
+                                     matID, w, drhodC, rho);
+              }
+          }
+      }
+
+      var = TEMPERATURE;
+      if(volF > 0. && doJac)
+      {
+          if (pd->v[pg->imtrx][var] )
+          {
+              double drhoDT;
+              drhoDT = 0;
+              propertyJac_addEnd(densityJac, TEMPERATURE, matID, 0,
+                                 drhoDT, rho);
+          }
+      }
+
+  }
   else if (matrl->DensityModel == LEVEL_SET)
     {
     double *param = matrl->u_density;
@@ -681,11 +765,11 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
     }
  
     if (doJac) {
-      if (pd->v[TEMPERATURE]) {
+      if (pd->v[pg->imtrx][TEMPERATURE]) {
 	propertyJac_addEnd(densityJac, TEMPERATURE, matID, 0,
 			   - rho / stateVector[TEMPERATURE], rho);
       }
-      if (pd->v[MASS_FRACTION]) {
+      if (pd->v[pg->imtrx][MASS_FRACTION]) {
 	switch (speciesVT) {
 	case SPECIES_MASS_FRACTION:
 	    for (w = 0; w < num_species - 1; w++) {
@@ -754,7 +838,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 
       if (doJac) 
 	{
-	  if(pd->v[TEMPERATURE]) 
+	  if(pd->v[pg->imtrx][TEMPERATURE]) 
 	  {
 	    for (w = 0; w < matrl->Num_Species_Eqn; w++) 
 	      {
@@ -764,7 +848,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 	    propertyJac_addEnd(densityJac, TEMPERATURE, matID, 0,
 			       drho_dT, rho);
 	  }
-	  if(pd->v[MASS_FRACTION]) 
+	  if(pd->v[pg->imtrx][MASS_FRACTION]) 
 	    {
 	      for (w = 0; w < matrl->Num_Species_Eqn; w++) {
 		drho_dc = -(matrl->specific_volume[w] - sv_p)*rho*rho ;
@@ -773,7 +857,66 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 	      }
 	    }
 	}
-  } else if (matrl->DensityModel == SOLVENT_POLYMER )
+
+    } else if (matrl->DensityModel == DENSITY_FOAM_PBE)
+    {
+      int species_BA_g;
+      int species_CO2_g;
+      int species_CO2_l;
+      int species_BA_l;
+      int err;
+      int var;
+      err = get_foam_pbe_indices(NULL, NULL, &species_BA_l, &species_BA_g, &species_CO2_l, &species_CO2_g);
+      if (err) return 0;
+
+      double M_BA = mp->u_species_source[species_BA_l][0];
+      double M_CO2 = mp->u_species_source[species_CO2_l][0];
+      double rho_bubble = 0;
+      double rho_foam = matrl->u_density[0];
+      double ref_press = matrl->u_density[1];
+      double Rgas_const = matrl->u_density[2];
+      double d_rho_dT = 0;
+      double d_rho_dM1 = 0;
+
+      if (fv->c[species_BA_g] > PBE_FP_SMALL || fv->c[species_CO2_g] > PBE_FP_SMALL) {
+	rho_bubble = (ref_press/(Rgas_const*fv->T)) *
+	  (fv->c[species_CO2_g]*M_CO2 + fv->c[species_BA_g]*M_BA)/(fv->c[species_CO2_g] + fv->c[species_BA_g]);
+      }
+
+      double inv_mom_frac = 1/(1 + fv->moment[1]);
+      rho = rho_bubble*(fv->moment[1]*inv_mom_frac) + rho_foam*inv_mom_frac;
+
+
+      if(doJac)
+	{
+	  var = TEMPERATURE;
+	  if (pd->v[pg->imtrx][var] )
+	    {
+	      d_rho_dT = (-rho)/fv->T;
+	      propertyJac_addEnd(densityJac, var, matID, 0, d_rho_dT, rho);
+	    }
+
+	  var = MOMENT1;
+	  if (pd->v[pg->imtrx][var] )
+	    {
+	      d_rho_dM1 = 2 * inv_mom_frac * inv_mom_frac;
+	      propertyJac_addEnd(densityJac, var, matID, 0, d_rho_dM1, rho);
+	    }
+	}
+    } else if (matrl->DensityModel == DENSITY_FOAM_PBE_EQN)
+    {
+      rho = fv->rho;
+
+      if(doJac)
+	{
+	  int var = DENSITY_EQN;
+	  if (pd->v[pg->imtrx][var])
+	    {
+	      propertyJac_addEnd(densityJac, var, matID, 0, 1, rho);
+	    }
+	}
+
+    } else if (matrl->DensityModel == SOLVENT_POLYMER )
 
     /* assume Amagat's law, no volume change upon
      * mixing. ACS

@@ -17,8 +17,8 @@
  *        of functions defined in mm_post_proc.c
  */
 
-#ifndef _MM_POST_DEF_H
-#define _MM_POST_DEF_H
+#ifndef GOMA_MM_POST_DEF_H
+#define GOMA_MM_POST_DEF_H
 
 /*
  *  These Define parameters help us parse the force and flux calculation
@@ -116,9 +116,12 @@
 #define I_KINETIC_ENERGY  38
 #define I_SHELL_VOLUME 39
 #define I_TFMP_FORCE    40
+#define I_MASS 41
+#define I_MASS_NEGATIVE_FILL  42
+#define I_MASS_POSITIVE_FILL  43
 
 
-#ifdef _MM_POST_PROC_C
+#ifdef GOMA_MM_POST_PROC_C
 struct Post_Processing_Flux_Names
 {
   char  *name;          /* flux string */
@@ -237,7 +240,10 @@ VOL_NAME_STRUCT pp_vol_names[] =
   { "SPECIES_SOURCE",    I_SPECIES_SOURCE},
   { "KINETIC_ENERGY",    I_KINETIC_ENERGY},
   { "SHELL_VOLUME",      I_SHELL_VOLUME},
-  { "TFMP_FORCE",        I_TFMP_FORCE}
+  { "TFMP_FORCE",        I_TFMP_FORCE},
+  { "MASS",              I_MASS},
+  { "MASS_NEGATIVE_FILL",              I_MASS_NEGATIVE_FILL},
+  { "MASS_POSITIVE_FILL",              I_MASS_POSITIVE_FILL}
 };
 
 int Num_Vol_Names = sizeof( pp_vol_names )/ sizeof( VOL_NAME_STRUCT );
@@ -390,6 +396,25 @@ struct Post_Processing_Global
 };
 
 typedef struct Post_Processing_Global pp_Global;
+
+typedef struct Post_Processing_Averages
+{
+  int type;
+  char type_name[MAX_VAR_NAME_LNGTH];
+  int species_index;
+  int index_post;
+  int index;
+  int non_variable_type;
+} pp_Average;
+
+enum AverageExtraTypes
+{
+  AVG_DENSITY,
+  AVG_HEAVISIDE,
+  AVG_VISCOSITY
+};
+
+
 /*
  * All of these variables are actually defined in mm_post_proc.c
  *
@@ -405,6 +430,7 @@ extern pp_Error         *pp_error_data;
 extern pp_Particles    **pp_particles;
 extern pp_Volume       **pp_volume;
 extern pp_Global       **pp_global;
+extern pp_Average      **pp_average;
 
 extern int nn_post_fluxes;
 extern int nn_post_fluxes_sens;
@@ -415,6 +441,7 @@ extern int nn_particles;
 extern int nn_volume;
 extern int ppvi_type;
 extern int nn_global;
+extern int nn_average;
 
 extern int Num_Nodal_Post_Proc_Var;
 extern int Num_Elem_Post_Proc_Var;
@@ -456,7 +483,11 @@ extern int DARCY_VELOCITY_LIQ;  /* Darcy velocity vectors for flow in a
 				 * saturated or unsaturated medium */
 extern int DENSITY;		/* density function at vertex and midside 
 				 * nodes, e.g. for particle settling etc. */
-extern int HEAVISIDE;
+extern int POLYMER_VISCOSITY;
+extern int POLYMER_TIME_CONST;
+extern int MOBILITY_PARAMETER;
+extern int PTT_XI;
+extern int PTT_EPSILON;
 extern int DIELECTROPHORETIC_FIELD;
                                 /* Dielectrophoretic force vectors. */
 extern int DIELECTROPHORETIC_FIELD_NORM;
@@ -590,9 +621,12 @@ extern int EIG;               /* Eigenvalues of rate-of-strain tensor  */
 extern int EIG1;              /* Eigenvector of rate-of-strain tensor  */
 extern int EIG2;              /* Eigenvector of rate-of-strain tensor  */
 extern int EIG3;              /* Eigenvector of rate-of-strain tensor  */
+extern int HEAVISIDE;
+extern int RHO_DOT;
+extern int MOMENT_SOURCES;
+extern int YZBETA;
 extern int GRAD_Y;            /* Concentration gradient                  */
 extern int GRAD_SH;            /* Shear gradient                */
-
 extern int UNTRACKED_SPEC;		/*Untracked Species Concentration */
 
 extern int TFMP_GAS_VELO;
@@ -610,4 +644,4 @@ extern int GIES_CRIT;              /* Giesekus Flow Character */
  *       post-processing variable in load_nodal_tkn
  */
 
-#endif /* _MM_POST_DEF_H */
+#endif /* GOMA_MM_POST_DEF_H */

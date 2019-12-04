@@ -10,23 +10,23 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _BC_SPECIAL_H
-#define _BC_SPECIAL_H
+#ifndef GOMA_BC_SPECIAL_H
+#define GOMA_BC_SPECIAL_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _BC_SPECIAL_C
+#ifdef GOMA_BC_SPECIAL_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _BC_SPECIAL_C
+#ifndef GOMA_BC_SPECIAL_C
 #define EXTERN extern
 #endif
 
 EXTERN int apply_special_bc
-PROTO((struct Aztec_Linear_Solver_System *,
+(struct Aztec_Linear_Solver_System *,
        double [],		/* x - soln vector                           */
        double [],		/* resid_vector - RHS                        */
        double [],		/* x_old - soln vector previous timestep     */
@@ -58,10 +58,10 @@ PROTO((struct Aztec_Linear_Solver_System *,
        int [],                   /* CA_fselem free surface element array */
        int [],                   /* CA_sselem solid surface element array */
        Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
-       double ));		/* time_value */
+       double );		/* time_value */
 
 EXTERN int apply_shell_grad_bc
-PROTO((double [],               /* x - Soln vector                           */
+(double [],               /* x - Soln vector                           */
        double [],               /* resid_vector -                            */
        const double ,           /* delta_t - current time step size          */
        const double ,           /* theta - parameter (0 to 1) to vary time 
@@ -81,10 +81,10 @@ PROTO((double [],               /* x - Soln vector                           */
        const int ,              /* bc_application - flag indicating whether 
                                  * to integrate strong or weak BC's          */
        const double ,           /* time_value                                */
-       const Exo_DB *));        /* exo - ptr to FE database                  */
+       const Exo_DB *);        /* exo - ptr to FE database                  */
 
 EXTERN int apply_sharp_integrated_bc 
-PROTO ((double [],           /* Solution vector for the current processor */
+(double [],           /* Solution vector for the current processor */
 	double [],     /* Residual vector for the current processor */
 	const double , /* current time */
 	const double , /* current time step size */
@@ -99,10 +99,10 @@ PROTO ((double [],           /* Solution vector for the current processor */
 	ELEM_SIDE_BC_STRUCT *,
 	                    /* Pointer to an element side boundary condition                                 * structure */
 	const int, 
-	const Exo_DB *));
+	const Exo_DB *);
         
 EXTERN void assemble_sharp_integrated_bc
-PROTO ((double [],           /* Solution vector for the current processor */
+(double [],           /* Solution vector for the current processor */
 	double [],/* Residual vector for the current processor */
 	const double , /* current time  */
 	const double , /* current time step size */
@@ -119,6 +119,6 @@ PROTO ((double [],           /* Solution vector for the current processor */
 	const Exo_DB *,
         double [DIM],
         double,
-        int));
+        int);
 
-#endif /* _BC_SPECIAL_H */
+#endif /* GOMA_BC_SPECIAL_H */

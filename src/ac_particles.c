@@ -26,7 +26,7 @@
 #include <math.h>
 
 /* GOMA include files */
-#define _AC_PARTICLES_C
+#define GOMA_AC_PARTICLES_C
 #include "goma.h"
 
 
@@ -246,7 +246,7 @@ initialize_particles(const Exo_DB * exo,
   /* Get mesh dimension */
   mdim = static_exo->num_dim;
 
-  if(pd_glob[0]->e[R_MESH1])
+  if(pd_glob[0]->e[pg->imtrx][R_MESH1])
     EH(-1, "Cannot couple particles and deformable mesh, yet.");
   if(mdim == 2)
     {
@@ -1687,15 +1687,15 @@ fill_element_volumes(const int e_begin,
 #endif
       this_volume = 0.0;
       load_element_information(i);
-      ip_total = elem_info(NQUAD, ei->ielem_type);
+      ip_total = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
       for(ip = 0; ip < ip_total; ip++)
 	{
-	  wt = Gq_weight(ip, ei->ielem_type);
+	  wt = Gq_weight(ip, ei[pg->imtrx]->ielem_type);
 	  if(pd_glob[0]->CoordinateSystem == CYLINDRICAL ||
 	     pd_glob[0]->CoordinateSystem == SWIRLING)
 	    wt *= 2.0*M_PIE;
 
-	  find_stu(ip, ei->ielem_type, &(xi[0]), &(xi[1]), &(xi[2]));
+	  find_stu(ip, ei[pg->imtrx]->ielem_type, &(xi[0]), &(xi[1]), &(xi[2]));
 
 	  /* Although I don't need to actually load_fv, and only need
 	   * to load_basis_function() (I think), this routine is
@@ -2565,7 +2565,7 @@ handle_surface_interaction(particle_t * p,
     {
     case PBC_IMPERMEABLE:
       fprintf(stderr, "PARTICLE ACTUALLY REACHED IMPERMEABLE BOUNDARY\n");
-      /* And follow through to be deleted "normally". */
+      /* fall through */ /* And follow through to be deleted "normally". */
       /* fall through */
     case PBC_OUTFLOW:
     case PBC_SOURCE:		/* this is not quite right, but oh well... */
@@ -2644,7 +2644,7 @@ generate_source_particles(const dbl tt,	/* parameter to vary time integration */
 		    local_ss_node_list = &(static_exo->ss_node_list[j][static_exo->ss_node_side_index[j][k]]);
 		    for(m = 0; m < num_nodes_on_side; m++)
 		      {
-			if((local_elem_node_id[m] = in_list(local_ss_node_list[m], 0, nodes_per_element, &(static_exo->elem_node_list[ei->iconnect_ptr]))) == -1)
+			if((local_elem_node_id[m] = in_list(local_ss_node_list[m], 0, nodes_per_element, &(static_exo->elem_node_list[ei[pg->imtrx]->iconnect_ptr]))) == -1)
 			  EH(-1, "Bad id_local_elem_coord lookup");
 		      }
 
@@ -2655,18 +2655,18 @@ generate_source_particles(const dbl tt,	/* parameter to vary time integration */
 		    
 		    /* First we want to get the inflow volume. */
 		    inflow_volume = 0.0;
-		    ip_total = elem_info(NQUAD_SURF, ei->ielem_type);
+		    ip_total = elem_info(NQUAD_SURF, ei[pg->imtrx]->ielem_type);
 		    for(ip_id = 0; ip_id < ip_total; ip_id++)
 		      {
 			/* I don't think I want it zero-based according to the comment in rf_bc_const.h */
-			find_surf_st(ip_id, ei->ielem_type, side_id + 1, pd->Num_Dim, xi, &s, &t, &u);
-			wt = Gq_surf_weight(ip_id, ei->ielem_type);
+			find_surf_st(ip_id, ei[pg->imtrx]->ielem_type, side_id + 1, pd->Num_Dim, xi, &s, &t, &u);
+			wt = Gq_surf_weight(ip_id, ei[pg->imtrx]->ielem_type);
 			if(pd->CoordinateSystem == CYLINDRICAL ||
 			   pd->CoordinateSystem == SWIRLING)
 			  wt *= 2.0*M_PIE;
 			load_field_variables_at_xi(elem_id, xi);
-			surface_determinant_and_normal(elem_id, ei->iconnect_ptr, ei->num_local_nodes, 
-						       ei->ielem_dim - 1, side_id + 1,
+			surface_determinant_and_normal(elem_id, ei[pg->imtrx]->iconnect_ptr, ei[pg->imtrx]->num_local_nodes, 
+						       ei[pg->imtrx]->ielem_dim - 1, side_id + 1,
 						       num_nodes_on_side, local_elem_node_id);
 			for(m = 0; m < mdim; m++)
 			  inflow_volume += -(fv->v[m] * fv->snormal[m]) * wt * fv->sdet; /* Normal is outward pointing. */
@@ -2823,12 +2823,12 @@ load_element_information(const int elem_id)
   
   /* Not sure if this call is necessary ... I don't know exactly what
    * element information I use laster on. */
-  ei->ielem = elem_id;
-  load_ei(ei->ielem, static_exo, 0);
+  ei[pg->imtrx]->ielem = elem_id;
+  load_ei(ei[pg->imtrx]->ielem, static_exo, 0, pg->imtrx);
 
   velo_interp = -1;
   for(i = 0; i < Num_Basis_Functions; i++)
-    if(pd_glob[ei->mn]->i[VELOCITY1] == bfd[i]->interpolation) velo_interp = i;
+    if(pd_glob[ei[pg->imtrx]->mn]->i[pg->imtrx][VELOCITY1] == bfd[i]->interpolation) velo_interp = i;
   if(velo_interp == -1)
     EH(-1, "Could not find velocity interpolation function.");
 
@@ -2853,12 +2853,12 @@ load_element_node_coordinates(const int elem_id)
   i = Proc_Connect_Ptr[elem_id];
   for(j = 0; j < mdim; j++)
     {
-      if(pd->e[R_MESH1])
+      if(pd->e[pg->imtrx][R_MESH1])
 	{
 	  var = MESH_DISPLACEMENT1 + j;
 	  for(k = 0; k < nodes_per_element; k++)
 	    {
-	      idof = ei->ln_to_dof[var][k];
+	      idof = ei[pg->imtrx]->ln_to_dof[var][k];
 	      node_index = Proc_Elem_Connect[i + k];
 	      node_coord[k][j] = Coor[j][node_index] + *esp->d[j][idof];
 	    }
@@ -3040,9 +3040,9 @@ load_field_variables_at_xi(const int elem_id,
   if(TimeIntegration == STEADY)
     {
       /* The fv_old structures don't even get filled if we're a STEADY run. */
-      if(pd->v[VELOCITY1])
+      if(pd->v[pg->imtrx][VELOCITY1])
 	memcpy(fv_old->v, fv->v, DIM * sizeof(dbl));
-      if(pd->v[ENORM])
+      if(pd->v[pg->imtrx][ENORM])
 	fv_old->Enorm = fv->Enorm;
     }
 
@@ -4716,9 +4716,9 @@ fill_my_fv_old()
 {
   int i, j, dofs;
   
-  if(pd->v[VOLTAGE])
+  if(pd->v[pg->imtrx][VOLTAGE])
     {
-      dofs  = ei->dof[VOLTAGE];
+      dofs  = ei[pg->imtrx]->dof[VOLTAGE];
       for(i = 0; i < VIM; i++)
 	{
 	  my_fv_old->grad_V[i] = 0.0;
@@ -4727,9 +4727,9 @@ fill_my_fv_old()
 	}
     }
 
-  if(pd->v[ENORM])
+  if(pd->v[pg->imtrx][ENORM])
     {
-      dofs  = ei->dof[ENORM];
+      dofs  = ei[pg->imtrx]->dof[ENORM];
       for(i = 0; i < VIM; i++)
 	{
 	  my_fv_old->grad_Enorm[i] = 0.0;
@@ -5094,7 +5094,7 @@ couple_to_continuum()
 		  fprintf(stderr, "PROC%d: \t\tstate = %d\n", ProcID, p->state);
 		}
 
-	      for(j = 0; j < ei->dof[source_eqn]; j++)
+	      for(j = 0; j < ei[pg->imtrx]->dof[source_eqn]; j++)
 		{
 		  element_particle_info[p->owning_elem_id].source_term[j] += source_mass * bf[source_eqn]->phi[j];
 		  total_particles += bf[source_eqn]->phi[j];

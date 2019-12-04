@@ -11,29 +11,29 @@
 \************************************************************************/
  
 
-#ifndef _MM_NS_BC_H
-#define _MM_NS_BC_H
+#ifndef GOMA_MM_NS_BC_H
+#define GOMA_MM_NS_BC_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_NS_BC_C
+#ifdef GOMA_MM_NS_BC_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_NS_BC_C
+#ifndef GOMA_MM_NS_BC_C
 #define EXTERN extern
 #endif
 
 
 EXTERN void ls_attach_bc
-PROTO((double [DIM],
+(double [DIM],
        double [DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE],
-       const double ));
+       const double );
 
 EXTERN void fvelo_normal_bc
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double ,		/* vnormal - normal velocity                 */
        const int,               /* contact flag */
@@ -46,10 +46,10 @@ PROTO((double [DIM],		/* func                                      */
        const int ,               /* bc id */
        const double ,		/* interface zone half-width           */
        const double ,		/* interface zone shift                */
-       const double ));		/* gas leak angle (degrees)            */
+       const double );		/* gas leak angle (degrees)            */
 
 EXTERN void fmesh_etch_bc
-PROTO((double *,            /* func                                      */
+(double *,            /* func                                      */
        double [MAX_VARIABLE_TYPES + MAX_CONC], /* d_func           */
        const int,               /* Etch plane                 */
        const int,               /* Local node ID                 */
@@ -57,11 +57,11 @@ PROTO((double *,            /* func                                      */
        const double ,           /* tt - parameter to vary time integration 
                                  * from explicit (tt = 1) to 
                                  * implicit (tt = 0)                         */
-       const double ));         /* dt - current value of the time step       */
+       const double );         /* dt - current value of the time step       */
 
 
 EXTERN void fvelo_tangential_ls_bc
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double ,		/* vtangent                 */
        const double [MAX_PDIM], /* x_dot - Bad name, says Phil! 
@@ -72,10 +72,10 @@ PROTO((double [DIM],		/* func                                      */
        const double ,		/* dt - current value of the time step       */
        const double ,		/* interface zone half-width           */
        const double ,		/* interface zone shift                */
-       const double ));		/* gas leak angle (degrees)            */
+       const double );		/* gas leak angle (degrees)            */
 
 EXTERN double sdc_stefan_flow
-PROTO((JACOBIAN_VAR_DESC_STRUCT *,    /*  *func_jac        */
+(JACOBIAN_VAR_DESC_STRUCT *,    /*  *func_jac        */
         BOUNDARY_CONDITION_STRUCT *,   /*  *bc              */
        int,                           /*  ip               */
        ELEM_SIDE_BC_STRUCT *,         /*  *elem_side_bc    */
@@ -83,58 +83,58 @@ PROTO((JACOBIAN_VAR_DESC_STRUCT *,    /*  *func_jac        */
        const double,                  /*  time               */
        const double,                  /*  tt               */
        const double,               /*  dt               */
-       const int ));               /*  interface_id               */
+       const int );               /*  interface_id               */
 
 EXTERN double sdc_stefan_volume_flow
-PROTO((JACOBIAN_VAR_DESC_STRUCT *,    /*  *func_jac        */
+(JACOBIAN_VAR_DESC_STRUCT *,    /*  *func_jac        */
        BOUNDARY_CONDITION_STRUCT *,   /*  *bc              */
        int,                           /*  ip               */
        ELEM_SIDE_BC_STRUCT *,         /*  *elem_side_bc    */
        const double [MAX_PDIM],       /*  x_dot[MAX_PDIM]  */
        const double,                  /*  tt               */
-       const double ));               /*  dt               */
+       const double );               /*  dt               */
 
 EXTERN double mass_flux_surface
-PROTO((JACOBIAN_VAR_DESC_STRUCT *,    /*  *func_jac        */
+(JACOBIAN_VAR_DESC_STRUCT *,    /*  *func_jac        */
        const double [MAX_PDIM],       /*  x_dot[MAX_PDIM]  */
        const double,                  /*  tt               */
-       const double ));               /*  dt               */
+       const double );               /*  dt               */
 
 extern double vol_flux_surface
-PROTO((JACOBIAN_VAR_DESC_STRUCT *,    /*  *func_jac        */
+(JACOBIAN_VAR_DESC_STRUCT *,    /*  *func_jac        */
        const double [MAX_PDIM],       /*  x_dot[MAX_PDIM]  */
        const double,                  /*  tt               */
-       const double ));               /*  dt               */
+       const double );               /*  dt               */
 
 EXTERN void fvelo_normal_edge_bc
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double ,		/* vnormal - normal velocity (speed)         */
        const double [MAX_PDIM],	/* x_dot - mesh velocity vector              */
        const double ,		/* tt - parameter to vary time integration 
 				 * from explicit (tt=1) to implicit (tt=0)   */
-       const double ));		/* dt - current value of the time step       */
+       const double );		/* dt - current value of the time step       */
 
 EXTERN void fvelo_normal_disc_bc
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double ,		/* vnormal - normal velocity (speed)         */
        const double [MAX_PDIM],	/* x_dot - mesh velocity vector              */
        const double ,		/* tt - parameter to vary time integration 
 				 * from explicit (tt=1) to implicit (tt=0)   */
-       const double ));		/* dt - current value of the time step       */
+       const double );		/* dt - current value of the time step       */
 
 EXTERN void fvelo_tangent_edge_bc
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        double *,		/* pvv - velocity of substrate               */
        const double [MAX_PDIM],	/* x_dot - mesh velocity vector              */
        const double ,		/* tt - parameter to vary time integration 
 				 * from explicit (tt=1) to implicit (tt=0)   */
-       const double ));		/* dt - current value of the time step       */
+       const double );		/* dt - current value of the time step       */
 
 EXTERN void fvelo_tangential_bc
-PROTO((double [],		/* func                                      */
+(double [],		/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
        double [],		/* x - Soln vector                           */
        const int ,		/* dcl_node - global node number of the 
@@ -158,10 +158,10 @@ PROTO((double [],		/* func                                      */
        const Exo_DB *exo,
        const double ,                   /* time_value  */
        const double[] ,                 /* parameter_list*/
-       const int ));                    /* number of parameters  */
+       const int );                    /* number of parameters  */
 
 EXTERN void fvelo_tangent_3d
-PROTO((double [],             /* func */
+(double [],             /* func */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],         /* dfunc */
        const double [],       /* free surface velocity x_dot */
        const double ,         /* specified tangential speed */
@@ -170,11 +170,11 @@ PROTO((double [],             /* func */
        const double ,         /* z-component of surface tangent */ 
        const double ,	      /* tt - parameter to vary time integration 
 				 * method from BE(0) to CN(1/2) to FE(1)     */
-       const double ));		/* dt - current value of the time step size  */
+       const double );		/* dt - current value of the time step size  */
 
 
 EXTERN void fvelo_tangential_solid_bc
-PROTO((double [],		/* func                                      */
+(double [],		/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
        double [],               /* solution vector x                         */
        double [],               /* time derivative of solution vector x      */
@@ -188,10 +188,10 @@ PROTO((double [],		/* func                                      */
        const double [MAX_PDIM], /* coordinates for surface gauss point       */
        const dbl ,		/* tt - parameter to vary time integration 
 				 * method from BE(0) to CN(1/2) to FE(1)     */
-       const dbl ));		/* dt - current value of the time step size  */
+       const dbl );		/* dt - current value of the time step size  */
 
 EXTERN void fvelo_normal_solid_bc
-PROTO((double [],		/* func                                      */
+(double [],		/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
        double [],               /* solution vector x                         */
        double [],               /* time derivative of solution vector x      */
@@ -201,7 +201,7 @@ PROTO((double [],		/* func                                      */
        const int ,		/* i_mat_fluid                               */
         const dbl ,		/* tt - parameter to vary time integration 
 				 * method from BE(0) to CN(1/2) to FE(1)     */
-       const dbl ));		/* dt - current value of the time step size  */
+       const dbl );		/* dt - current value of the time step size  */
 
 void
 fvelo_slip_bc(double func[MAX_PDIM],
@@ -228,6 +228,17 @@ fvelo_slip_power_bc(double func[MAX_PDIM],
 int
 exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */);
 
+EXTERN void
+fvelo_slip_ls_heaviside(double func[MAX_PDIM],
+			double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+			double width,
+			double beta_negative,
+			double beta_positive,
+			const double vsx,      /* velocity components of solid  */
+			const double vsy,	/* surface on which slip condition   */
+			const double vsz,	/* is applied           */
+			const double tt,
+                        const double dt);
 
 void
 fvelo_airfilm_bc(double func[MAX_PDIM],
@@ -242,7 +253,7 @@ fvelo_airfilm_bc(double func[MAX_PDIM],
 	      const double dt);   /* current time step value                  */
 
 EXTERN void fvelo_slip_level
-PROTO(( double [MAX_PDIM],	/* func                                      */
+( double [MAX_PDIM],	/* func                                      */
 	double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
         const int ,		/* type - whether rotational or not          */
 	double,                 /* width   */
@@ -255,16 +266,16 @@ PROTO(( double [MAX_PDIM],	/* func                                      */
 	const double ,          /* contact fraction*/
 	const double ,          /* time stabilization factor*/
         const double , 	        /* tt - parameter to vary time integration */
-        const double ));	/* dt - current value of the time step size  */	
+        const double );	/* dt - current value of the time step size  */	
 				   
 EXTERN void fvelo_slip_electrokinetic_bc
-PROTO(( double [MAX_PDIM],	/* func                                      */
+( double [MAX_PDIM],	/* func                                      */
 	double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
 	double ,	/* permitivity       */
-	double ));	/* zeta_potential    */
+	double );	/* zeta_potential    */
 
 EXTERN void fvelo_electrokinetic_3d
-PROTO((double [],             /* func */
+(double [],             /* func */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],         /* dfunc */
        const double [],       /* free surface velocity x_dot */
        const double ,         /* permitivity       */
@@ -273,34 +284,34 @@ PROTO((double [],             /* func */
        const double ,         /* y-component of surface tangent */
        const double ,         /* z-component of surface tangent */ 
        const double ,	      /* tt - parameter to vary time integration */
-       const double ));		/* dt - current value of the time step size  */	
+       const double );		/* dt - current value of the time step size  */	
 
 
 EXTERN void load_surface_tension
-PROTO((double [][MDE]));	/* dsigma_dx - dimensions [DIM][MDE] */
+(double [][MDE]);	/* dsigma_dx - dimensions [DIM][MDE] */
 
 EXTERN void elec_surf_stress
-PROTO((double [MDE][DIM],	/* cfunc                                     */
+(double [MDE][DIM],	/* cfunc                                     */
        double [MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_cfunc     */
        const int ,		/* id_side - ID of the side of the element   */
        struct elem_side_bc_struct *, /* elem_side_bc                         */
        const int ,		/* iconnect_ptr                              */
        const double,            /* Electric Permittivity                     */
        const double,          /* Equation term multiplier                  */
-       const int));          /* BC type                 */
+       const int);          /* BC type                 */
 
 EXTERN void fn_dot_T
-PROTO((double [MDE][DIM],	/* cfunc                                     */
+(double [MDE][DIM],	/* cfunc                                     */
        double [MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_cfunc     */
        const int ,		/* id_side - ID of the side of the element   */
        const double ,		/* sigma - surface tension                   */
        const double ,		/* pb - applied pressure                     */
        struct elem_side_bc_struct *, /* elem_side_bc                         */
        const int ,		/* iconnect_ptr                              */
-       double [DIM][MDE]));	/* dsigma_dx                               */
+       double [DIM][MDE]);	/* dsigma_dx                               */
 
 EXTERN void apply_repulsion
-PROTO((double cfunc[MDE][DIM],
+(double cfunc[MDE][DIM],
        double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
        const double ,		/* pr - coefficient for repulsion force to 
 				 * ensure no penetration of the solid boundary
@@ -310,10 +321,10 @@ PROTO((double cfunc[MDE][DIM],
        const double ,		/* "C" in Ax + By + Cz + D = 0 equation      */
        const double ,		/* "D" in Ax + By + Cz + D = 0 equation      */
        struct elem_side_bc_struct *, /* elem_side_bc */
-       const int ));		/* iconnect_ptr */
+       const int );		/* iconnect_ptr */
 
 EXTERN void apply_repulsion_roll
-PROTO((double cfunc[MDE][DIM],
+(double cfunc[MDE][DIM],
        double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
        double [],		/* Solution vector */
        const double ,		/* roll radius      */
@@ -327,10 +338,10 @@ PROTO((double cfunc[MDE][DIM],
        const double ,		/* exclusion scale    */
        const int ,		/* DCL node id    */
        struct elem_side_bc_struct *, /* elem_side_bc */
-       const int ));		/* iconnect_ptr */
+       const int );		/* iconnect_ptr */
 
 EXTERN void apply_repulsion_user
-PROTO((double cfunc[MDE][DIM],
+(double cfunc[MDE][DIM],
        double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
        const double ,		/* roll radius      */
        const double [3],		/* axis origin      */
@@ -341,10 +352,10 @@ PROTO((double cfunc[MDE][DIM],
        const double ,		/* inverse slip coefficient    */
        const double ,		/* omega - roll rotation rate    */
        struct elem_side_bc_struct *, /* elem_side_bc */
-       const int ));		/* iconnect_ptr */
+       const int );		/* iconnect_ptr */
 
 EXTERN void apply_repulsion_table
-PROTO((double cfunc[MDE][DIM],
+(double cfunc[MDE][DIM],
        double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
        double [],		/* Solution vector */
        const double ,		/* repulsion length scale      */
@@ -355,11 +366,11 @@ PROTO((double cfunc[MDE][DIM],
        const double [3],		/* wall velocity      */
        const int ,		/* DCL node id    */
        struct elem_side_bc_struct *, /* elem_side_bc */
-       const int ));		/* iconnect_ptr */
+       const int );		/* iconnect_ptr */
 
 
 EXTERN void apply_vapor_recoil
-PROTO((double cfunc[MDE][DIM],
+(double cfunc[MDE][DIM],
        double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
        const double ,		/* Boiling Temp                              */
        const double ,		/* Melting temp                              */
@@ -367,40 +378,58 @@ PROTO((double cfunc[MDE][DIM],
        const double ,		/* Pressure scale                            */
        const double ,    /* Temperature scale */
        struct elem_side_bc_struct *, /* elem_side_bc */
-       const int ));		/* iconnect_ptr */
+       const int );		/* iconnect_ptr */
 
 EXTERN void flow_n_dot_T_hydro
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double ,		/* a for pressure variation                  */
        const double ,		/* b for pressure variation                  */
        const double ,		/* c for pressure variation                  */
-       const double ));		/* d - pressure variation                    */
+       const double );		/* d - pressure variation                    */
 
 EXTERN void flow_n_dot_T_var_density
-PROTO((double [DIM],            /* func                                      */
+(double [DIM],            /* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],/* d_func            */
        const double,            /* a - reference pressure                  */
-       const double));          /* time - current time                       */
+       const double);          /* time - current time                       */
 
 #if 0
 /* deprecated March 2002 by TAB */
 EXTERN void hydrostatic_n_dot_T
-PROTO((double *,		/* func                                      */
-       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE])); /* d_func         */
+(double *,		/* func                                      */
+       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE]); /* d_func         */
 #endif
 
 EXTERN void flow_n_dot_T_nobc
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double ,		/* pdatum - pressure datum from input card   */
-       const int ));		/* iflag - 1 to use pdatum, otherwise use P  */
+       const int );		/* iflag - 1 to use pdatum, otherwise use P  */
 
 EXTERN void flow_n_dot_T_gradv
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double ,		/* pdatum - pressure datum from input card   */
-       const int ));		/* iflag - -1 to use pdatum, otherwise use P */
+       const int );		/* iflag - -1 to use pdatum, otherwise use P */
+
+EXTERN void flow_n_dot_T_segregated
+(double [DIM],		                            // func
+ double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE]); // d_func
+
+EXTERN void
+stress_no_v_dot_gradS(double func[MAX_MODES][6],
+                      double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                      const double dt,
+                      const double tt
+			   );
+
+EXTERN void
+stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
+                      double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                      const double dt,
+                      const double tt
+			   );
 
 EXTERN void flow_n_dot_T_gradv_sic(double [DIM],                  /* func  */
 				   double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],  /* d_func   */
@@ -408,28 +437,35 @@ EXTERN void flow_n_dot_T_gradv_sic(double [DIM],                  /* func  */
 				   const int);       /* iflag - -1 to use pdatum, otherwise use P */
 
 EXTERN void stress_no_v_dot_gradS
-PROTO((double [MAX_MODES][6],		/* func                                      */
+(double [MAX_MODES][6],		/* func                                      */
        double [MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double ,		/* Time step   */
-       const double ));		/* Time step parameter */
+       const double );		/* Time step parameter */
 
 EXTERN void stress_no_v_dot_gradS_logc
-PROTO((double [MAX_MODES][6],           /* func                                      */
+(double [MAX_MODES][6],           /* func                                      */
        double [MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double ,           /* Time step   */
-       const double ));         /* Time step parameter */
+       const double );         /* Time step parameter */
+       
+EXTERN void press_poisson_segregated
+(double * ,                                        // func 
+ double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], // d_func
+ double ,                                          // current time
+ double);                                          // time step
 
-EXTERN void PSPG_consistency_bc
-PROTO((double *,		/* func                                      */
-       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-       const dbl [DIM],		/* x_dot                                     */
-       const dbl ,		/* current time                              */
-       const dbl ,		/* dt - time step size                       */
-       const dbl ,		/* tt - time step parameter                  */
-       const PG_DATA *pg_data));
+EXTERN void
+PSPG_consistency_bc (double *func,
+		     double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+		     const dbl x_dot[DIM],
+		     const dbl time, /* current time  */
+		     const dbl dt, /* time step size */
+		     const dbl tt, /* time step parameter */
+		     const PG_DATA *pg_data);	/* U_norm - global velocity norm             */
+
 
 EXTERN void fapply_CA
-PROTO((double *,		/* func                                      */
+(double *,		/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func_ss   */
        const double [MAX_PDIM],	/* fsnormal - free surface normal components */
@@ -442,11 +478,11 @@ PROTO((double *,		/* func                                      */
 					  * normal derivatives 
 					  * ([i][j][k]) component i wrt 
 					  * displacement j at node k         */
-       const double  ));	/* contact_angle - Static or dynamic contact 
+       const double  );	/* contact_angle - Static or dynamic contact 
 				 * angle                                     */
 
 EXTERN void fapply_var_CA
-PROTO((double *,		/* func                                      */
+(double *,		/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func_ss   */
        const double [MAX_PDIM],	/* fsnormal - free surface normal components */
@@ -472,10 +508,10 @@ PROTO((double *,		/* func                                      */
        const double ,		/* tt - parameter varies to select the
 				 * time integration scheme from
 				 * BE(0) to CN(1/2) to FE(1)                 */
-       const double));		/* dt - current time step size               */
+       const double);		/* dt - current time step size               */
 
 EXTERN void fapply_var_CA_user
-PROTO((double *,		/* func                                      */
+(double *,		/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func_ss   */
        const double [MAX_PDIM],	/* fsnormal - free surface normal components */
@@ -502,10 +538,10 @@ PROTO((double *,		/* func                                      */
        const double ,		/* tt - parameter varies to select the
 				 * time integration scheme from
 				 * BE(0) to CN(1/2) to FE(1)                 */
-       const double));		/* dt - current time step size               */
+       const double);		/* dt - current time step size               */
 
 EXTERN int evaluate_gibbs_criterion
-PROTO((const double [MAX_PDIM], /* fsnormal - free surface normal vector     */
+(const double [MAX_PDIM], /* fsnormal - free surface normal vector     */
        const double [MAX_PDIM], /* ssnormal - solid surface normal vector    */
        int *ipin,		/* Flag indicates pinned or not        (out) */
        const double ,		/* contact_angle - Static or dynamic contact 
@@ -519,13 +555,13 @@ PROTO((const double [MAX_PDIM], /* fsnormal - free surface normal vector     */
        const double ,		/* sign_origy - original relative sign on the
 				 * y-position of contact line with specified
 				 * sharp edge                                */
-       const double));		/* sign_origz - original relative sign on the
+       const double);		/* sign_origz - original relative sign on the
 				 * z-position of contact line with specified 
 				 * sharp edge                                */
 
 
 EXTERN void fapply_moving_CA
-PROTO((double *,		/* func                                      */
+(double *,		/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func_ss   */
        const double [MAX_PDIM],	/* fsnormal - free surface normal components */
@@ -550,12 +586,12 @@ PROTO((double *,		/* func                                      */
 
        const double [MAX_PDIM],	/* xdot - Current mesh velocity vector       */
        const double ,		/* dt - current time step size               */
-       const double));		/* tt - parameter varies to select the
+       const double);		/* tt - parameter varies to select the
 				 * time integration scheme from
 				 * BE(0) to CN(1/2) to FE(1)                 */
 
 EXTERN void fapply_moving_CA_sinh
-PROTO((double *,		/* func */
+(double *,		/* func */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func_ss */
        const double [MAX_PDIM],	/* fsnormal - free surface normal components */
@@ -585,13 +621,13 @@ PROTO((double *,		/* func */
        const double ,		/* dcl_shearrate */
        const int ,		/* BC identifier */
        double [MAX_PDIM][MDE],          /* wall velo derivs     */
-       const int ));            /* local_node_number    */
+       const int );            /* local_node_number    */
 
 
 
 
 EXTERN void apply_ST
-PROTO((const int ,		/* irow_index - Row index for Elemental 
+(const int ,		/* irow_index - Row index for Elemental 
 				 * stiffness matrix                          */
        const int ,		/* I - Global node number                    */
        const int ,		/* iconnect_ptr - Pointer for element into 
@@ -618,11 +654,11 @@ PROTO((const int ,		/* irow_index - Row index for Elemental
 				 * velocity                                  */
        const int ,              /* vfixed - v-flag for fixing y-component of 
 				 * velocity                                  */
-       const int));		/* wfixed - w-flag for fixing z-component of 
+       const int);		/* wfixed - w-flag for fixing z-component of 
 				 * velocity                                  */
 
 EXTERN void fapply_ST
-PROTO((double [MAX_PDIM],	/* func                                      */
+(double [MAX_PDIM],	/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
        const double ,		/* tx - x-component surface tangent outflow  */
        const double ,		/* ty - y-component surface tangent outflow  */
@@ -630,41 +666,41 @@ PROTO((double [MAX_PDIM],	/* func                                      */
        const double ,		/* sigma - surface tension                   */
        const double ,           /* rcoord - r coord in axisym problems: used 
 				 * in r dr dz                                */
-       const int ));		/* id_side */
+       const int );		/* id_side */
 
 EXTERN void apply_ST_scalar
-PROTO((double [MAX_PDIM],	/* func                                      */
+(double [MAX_PDIM],	/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
        const int ,		/* id_side HKM -> useless                    */
        const double, 		/* sigma - surface tension                   */
-       const int ));		/* User added sign -> handles unresolved     *
+       const int );		/* User added sign -> handles unresolved     *
                                  * sign issues for this card                 */
 
 EXTERN void apply_ST_3D
-PROTO((double [MAX_PDIM],	/* func                                      */
+(double [MAX_PDIM],	/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
        const double ,		/* tx - x-component surface tangent outflow  */
        const double ,		/* ty - y-component surface tangent outflow  */
        const double ,		/* tz - z-component surface tangent outflow  */
-       const double ));		/* sigma - surface tension                   */
+       const double );		/* sigma - surface tension                   */
 
 EXTERN void apply_ST_scalar_3D
-PROTO((double [MAX_PDIM],	/* func                                      */
+(double [MAX_PDIM],	/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-       const double ));		/* sigma - surface tension                   */
+       const double );		/* sigma - surface tension                   */
 
 EXTERN void apply_CA_FILL
-PROTO((double [MAX_PDIM],	/* func                                      */
+(double [MAX_PDIM],	/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-       const double ));         /* contact angle                             */
+       const double );         /* contact angle                             */
 
 EXTERN void apply_sharp_ca
-PROTO((double [MAX_PDIM],	/* func                                      */
+(double [MAX_PDIM],	/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-       const double ));         /* contact angle                             */
+       const double );         /* contact angle                             */
 
 EXTERN void apply_wetting_velocity
-PROTO((	double [MAX_PDIM],
+(	double [MAX_PDIM],
 		double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], 
 		int ,
 		int ,
@@ -672,11 +708,11 @@ PROTO((	double [MAX_PDIM],
 		double [MAX_PDIM],
 		double, 
 		double ,
-		double  ));
+		double  );
 
 
 void apply_linear_wetting_sic
-PROTO(( double [MAX_PDIM],
+( double [MAX_PDIM],
 	double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], 
 	const double ,
 	const double ,
@@ -687,15 +723,15 @@ PROTO(( double [MAX_PDIM],
 	double ,
 	double ,
 	double ,
-	double ));
+	double );
 		
 EXTERN void apply_wetting_tension
-PROTO((double [MAX_PDIM],	/* func                                      */
+(double [MAX_PDIM],	/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
-       const double ));         /* wetting tension                           */
+       const double );         /* wetting tension                           */
 
 EXTERN void velocity_profile
-PROTO((const int ,		/* irow_index - Elemental stiffness matrix 
+(const int ,		/* irow_index - Elemental stiffness matrix 
 				 * row index                                 */
        const int ,		/* I - Global node number                    */
        const int ,		/* iconnect_ptr - pointer for this element 
@@ -715,33 +751,33 @@ PROTO((const int ,		/* irow_index - Elemental stiffness matrix
 					* the side of the element 	     */
        const double ,		/* a1 - parameters from input deck card      */
        const double ,		/* a2 - parameters from input deck card      */
-       const double ));		/* time - at which bc's are evaluated        */
+       const double );		/* time - at which bc's are evaluated        */
 
 EXTERN void ftmelt_bc
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double ,		/* a1 - function parameters from data card   */
        const double [MAX_PDIM],	/* x_dot -  mesh velocity vector             */
        const dbl ,		/* tt - parameter to vary time integration 
 				 * from explicit (tt = 1) to 
 				 * implicit (tt = 0)                         */
-       const dbl ));		/* dt - current value of the time step size  */
+       const dbl );		/* dt - current value of the time step size  */
 
 
 EXTERN void continuous_tangent_velocity
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-       const int ));		/* ielem_dim - physical dimension of the 
+       const int );		/* ielem_dim - physical dimension of the 
 				 * element, ie., 1, 2, 3                     */
 
 EXTERN void continuous_normal_velocity
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-       const int ));		/* ielem_dim - physical dimension of the 
+       const int );		/* ielem_dim - physical dimension of the 
 				 * element, ie., 1, 2, 3                     */
 
 EXTERN void discontinuous_velocity
-PROTO((double [DIM],		 /* func                                      */
+(double [DIM],		 /* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        double [MAX_PDIM],	 /* x_dot - mesh velocity vector              */
        const int ,		 /* mode - Evporation or dissolution          */
@@ -750,101 +786,101 @@ PROTO((double [DIM],		 /* func                                      */
        const dbl ,		 /* tt - parameter to vary time integration 
 				  * from explicit (tt = 1) to 
 				  * implicit (tt = 0)                         */
-       const dbl ));		 /* dt - current value of the time step size  */
+       const dbl );		 /* dt - current value of the time step size  */
 
 EXTERN void fnormal_stress_bc
-PROTO((double [DIM],		  /* func                                      */
+(double [DIM],		  /* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double ,		  /* stress_normal -             normal stress */
-       const dbl ));		  /* relax - relaxation parameters             */
+       const dbl );		  /* relax - relaxation parameters             */
 
 EXTERN void qside_directional
-PROTO((double [DIM],              /* func */
+(double [DIM],              /* func */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /*   d_func   */
        const double ,             /* value of qx  */
        const double ,             /* value of qy  */
-       const double ));           /* value of qz  */
+       const double );           /* value of qz  */
 EXTERN void qside_contact_resis
-PROTO((double [DIM],              /* func */
+(double [DIM],              /* func */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /*   d_func   */
        const int ,                /* value id_block_1  */
        const int ,                /* value id_block_2  */
-       const double ));           /* value Rinv  */
+       const double );           /* value Rinv  */
 
 EXTERN void qside_light_jump
-PROTO((double [DIM],              /* func */
+(double [DIM],              /* func */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /*   d_func   */
        const double,	/* Time                                      */
        const int,	/* bc_type */     
        const int ,                /* value id_block_1  */
        const int                 /* value id_block_2  */
-        ));           /* value Rinv  */
+        );           /* value Rinv  */
 
 EXTERN void qside_ls
-PROTO((double [DIM],              /* func */
+(double [DIM],              /* func */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /*  d_func */
        int ,                      /* no_LS_block_id */
        int ,                      /* LS_block_id */
        double ,                   /* Q_neg_side  */
-       double ));                 /* Q_pos_side  */
+       double );                 /* Q_pos_side  */
 
 EXTERN void q_velo_slip_bc	/* mm_fill_terms.c                           */
-PROTO((double [MAX_PDIM],	/* func                                      */
+(double [MAX_PDIM],	/* func                                      */
        double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func      */
        int,                     /* corresponding slip bc id                  */
        double [MAX_PDIM],       /* soln vector                               */
        const double [MAX_PDIM], /*gauss point coordinates                  */
        const double,
-       const double));
+       const double);
                
 EXTERN void qnobc_surf		/* mm_fill_terms.c                           */
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-       const double));          /* Time                                      */
+       const double);          /* Time                                      */
  
 EXTERN void potential_nobc_surf	
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-       const double));          /* Time                                      */
+       const double);          /* Time                                      */
 
 EXTERN void qlaser_surf		/* mm_fill_terms.c                           */
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double [],		/* p- parameters for the bc                  */
        const double [],		/* goma solution vector          	     */
-       const double));          /* Time                                      */
+       const double);          /* Time                                      */
 
 EXTERN void q_vapor		/* mm_fill_terms.c                           */
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double [],		/* p- parameters for the bc                  */
        const double [],		/* goma solution vector          	     */
-       const double));          /* Time                                      */
+       const double);          /* Time                                      */
 
 EXTERN double calculate_laser_flux
-PROTO(( const double [],
+( const double [],
         double,
         const double [],
 	double [],
 	int,
 	int,
-	double []));
+	double []);
 
 EXTERN double calculate_vapor_cool
-PROTO(( const double [],
+( const double [],
 	double,
-        double));
+        double);
 
 EXTERN void qrad_surf		/* mm_fill_terms.c                           */
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        double ,			/* heat_tran_coeff - (cgs units)             */
        double ,			/* T_c - bath temperature (Kelvin)	     */
        double ,			/* emissivity                                */
-       double ));		/* Boltzmann's constant                      */
+       double );		/* Boltzmann's constant                      */
 
 EXTERN void qrad_surf_repulse		/* mm_ns_bc.c                           */
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double ,			/* heat_tran_coeff - (cgs units)             */
        const double ,			/* T_c - bath temperature (Kelvin)	     */
@@ -856,10 +892,10 @@ PROTO((double [DIM],		/* func                                      */
        const double ,		/* repulsion length scale      */
        const double ,		/* repulsion exponent     */
        const double ,		/* repulsion coefficient     */
-       const double ));         /* Roll Temperature    */
+       const double );         /* Roll Temperature    */
 
 EXTERN void apply_sharp_wetting_velocity
-PROTO((	double [MAX_PDIM],
+(	double [MAX_PDIM],
 		double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], 
 		const int,
 		const double ,
@@ -867,11 +903,11 @@ PROTO((	double [MAX_PDIM],
 		const double ,
 		const double ,
 		const double ,
-		const double  ));
+		const double  );
 
 
 void apply_blake_wetting_velocity
-PROTO((	double [MAX_PDIM],
+(	double [MAX_PDIM],
 		double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], 
 		const int,
 		int ,
@@ -880,10 +916,10 @@ PROTO((	double [MAX_PDIM],
 		double ,
 		double ,
 		double ,
-		double  ));
+		double  );
                 
 void apply_blake_wetting_velocity_sic
-PROTO((	double [MAX_PDIM],
+(	double [MAX_PDIM],
 		double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], 
                 const double,
                 const double,
@@ -900,10 +936,10 @@ PROTO((	double [MAX_PDIM],
                 const int ,
 		const double ,
 		const double ,
-		const double ));
+		const double );
 
 EXTERN void acoustic_plane_transmission	
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double,	/* Time                                      */
        const int,	/* bc_type */     
@@ -911,37 +947,37 @@ PROTO((double [DIM],		/* func                                      */
        const double,    /*  boundary absorption	*/
        const double,    /*  boundary incident real*/
        const double,    /*  boundary incident imaginary	*/
-       const int ));	/* element block id */     
+       const int );	/* element block id */     
 
 EXTERN void light_transmission	
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double,	/* Time                                      */
        const int,	/* bc_type */     
        const double,    /*  boundary impedance	*/
        const double,    /*  boundary absorption	*/
        const double,    /*  boundary incident */
-       const int ));	/* element block id */     
+       const int );	/* element block id */     
 
 EXTERN void acoustic_nobc_surf	
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double,	/* Time                                      */
-       const int ));     /* bc_type */     
+       const int );     /* bc_type */     
 
 void sheet_tension 
-PROTO(( double [MDE][DIM],
+( double [MDE][DIM],
 	double [MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 	const int ,	/* ID of the side of the element             */
 	const double ,
 	struct elem_side_bc_struct *,
 	const int ,
         double [DIM],
-        const Exo_DB * ));
+        const Exo_DB * );
 
 
 void apply_SES 
-PROTO (( double [MAX_PDIM],
+( double [MAX_PDIM],
 	 double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 	 struct elem_side_bc_struct *,
 	 double ,
@@ -950,42 +986,45 @@ PROTO (( double [MAX_PDIM],
 	 double ,
 	 int, 
 	 int ,
-	 int ));
+	 int );
 
 
 void shear_to_shell 
-PROTO(( double [MDE][DIM],
+( double [MDE][DIM],
 		double [MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 		const int ,	/* ID of the side of the element */
 		double ,
 		struct elem_side_bc_struct *,
 		const int ,
 		double [DIM],
-		const Exo_DB *));
+		const Exo_DB *);
 		
 void apply_hysteresis_wetting_sic 
-PROTO((	double *, 			
+(	double *, 			
 		double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], 
 		double ,
 		double ,
-		double * ));
+		double * );
 
 void fgamma1_deriv_bc
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-       const double ));		/* vnormal - normal velocity                 */
+       const double );		/* vnormal - normal velocity                 */
   
 void fgamma2_deriv_bc
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
-       const double ));		/* vnormal - normal velocity                 */
+       const double );		/* vnormal - normal velocity                 */
 
 void dvzdr_zero_deriv_bc
-PROTO((double [DIM],		/* func                                      */
+(double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
        const double nwall[DIM],
-       const double ));		/* vnormal - normal velocity                 */
+       const double );		/* vnormal - normal velocity                 */
   
   
-
-#endif /* _MM_NS_BC_H */
+void
+ls_wall_angle_bc(double func[DIM],
+                double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                const double angle);
+#endif /* GOMA_MM_NS_BC_H */

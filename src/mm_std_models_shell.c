@@ -52,7 +52,7 @@ static char rcsid[] = "$Id: mm_std_models_shell.c,v 5.31 2010-07-30 20:48:38 prs
 
 #include "mm_std_models_shell.h"
 
-#define _MM_STD_MODELS_SHELL_C
+#define GOMA_MM_STD_MODELS_SHELL_C
 #include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************
@@ -461,7 +461,7 @@ height_function_model (double *H_U,
     dHext_dcsi = 0.0;
 
     // assume that the height field has the same dof as displacement
-    for (i=0; i< ei->dof[MESH_DISPLACEMENT1]; i++) {
+    for (i=0; i< ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; i++) {
       dHext_dcsi += mp->u_heightU_function_constants[3]
                       * *evp->external_field[mp->heightU_ext_field_index][i]
                       *bf[MESH_DISPLACEMENT1]->dphidxi[i][0];
@@ -1280,7 +1280,7 @@ disjoining_pressure_model (double H,                              /* Film thickn
 
  for (i = 0; i < DIM; i++)
     {
-     for (j = 0; j < ei->dof[SHELL_FILMH]; j++)
+     for (j = 0; j < ei[pg->imtrx]->dof[SHELL_FILMH]; j++)
         {
          dgrad_DisjPress_dH1[i][j] =  B * df_dH;
         }
@@ -1288,7 +1288,7 @@ disjoining_pressure_model (double H,                              /* Film thickn
 
  for (i = 0; i < DIM; i++)
     {
-     for (j = 0; j < ei->dof[SHELL_FILMH]; j++)
+     for (j = 0; j < ei[pg->imtrx]->dof[SHELL_FILMH]; j++)
         {
          dgrad_DisjPress_dH2[i][j] =   dB_dangle * df_dH * grad_angle[i]
                                       + B * d2f_dH2 * grad_II_H[i] ;

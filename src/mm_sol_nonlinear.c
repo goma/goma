@@ -53,7 +53,8 @@ static char rcsid[] =
 
 #include "sl_stratimikos_interface.h"
 
-#define _MM_SOL_NONLINEAR_C
+#include "dg_utils.h"
+#define GOMA_MM_SOL_NONLINEAR_C
 #include "goma.h"
 
 /*
@@ -99,10 +100,10 @@ static int first_linear_solver_call=TRUE;
 
 /* EDW: This function invokes LOCA bordering algorithms as needed. */
 extern int continuation_hook
-PROTO((double *, double *, void *, double, double));
+(double *, double *, void *, double, double);
 
 static int soln_sens		/* mm_sol_nonlinear.c                        */
-PROTO((double ,			/* lambda - parameter                        */
+(double ,			/* lambda - parameter                        */
        double [],		/* x - soln vector                           */
        double [],		/* xdot - dxdt predicted for new time step   */
        double ,			/* delta_s - step                            */
@@ -149,7 +150,7 @@ PROTO((double ,			/* lambda - parameter                        */
        double *,		/*  h_elem_avg  */
        double *,
        int,  			/* UMF_system_id */
-       char []));               /* calling purpose */
+       char []);               /* calling purpose */
 
 
 /*
@@ -261,8 +262,11 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 			    double *resid_vector_sens,
 			    double *x_sens,
 			    double **x_sens_p,	/*  solution sensitivities */
-                            void *con_ptr)   /* Identifies if called from LOCA */
+                            void *con_ptr,
+                            dg_neighbor_type *dg_neighbor_data)   /* Identifies if called from LOCA */
 {
+
+  static int prev_matrix = 0;
 
   double *a   = ams->val;	/* nonzero values of a CMSR matrix */
   int    *ija = ams->bindx;	/* column pointer array into matrix "a"*/
@@ -475,6 +479,11 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
   VARIABLE_DESCRIPTION_STRUCT *vd_eqn, *vd_var;
 #endif /* DEBUG_MMH */
 
+  if (pg->imtrx != prev_matrix) {
+    first_linear_solver_call = TRUE;
+    prev_matrix = pg->imtrx;
+  }
+
   /*
    * Begin executable statements...
    */
@@ -496,7 +505,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
     DPRINTF(stderr, "%s: max Newton itns = %d\n", 
 	    yo, Max_Newton_Steps);
     DPRINTF(stderr, "%s: convergence tol = %.1e %.1e \n",
-	    yo, Epsilon[0], Epsilon[2]);
+	    yo, Epsilon[pg->imtrx][0], Epsilon[pg->imtrx][2]);
   }
 
   /*
@@ -506,7 +515,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
    * watch out to use the bigger ija[] for assembly purposes, but the
    * smaller one for Aztec (after processing via hide_external()).
    */
-  numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
       if (strcmp(Matrix_Format, "msr") == 0) 
 	{
   local_order      = ams->npn;
@@ -526,14 +535,14 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
   GNumUnknowns = global_order;
 
   if (Debug_Flag) {
-    DPRINTF(stderr, "%s: NumUnknowns  = %d\n", yo, NumUnknowns);
+    DPRINTF(stderr, "%s: At matrix %d, NumUnknowns  = %d\n", yo, (pg->imtrx + 1), NumUnknowns[pg->imtrx]);
     DPRINTF(stderr, "%s: NZeros       = %d\n", yo, NZeros);
     DPRINTF(stderr, "%s: GNZeros      = %d\n", yo, GNZeros);
     DPRINTF(stderr, "%s: GNumUnknowns = %d\n", yo, GNumUnknowns);
   }      
 
   /*
-   *  matrix_stats (a, ija, NumUnknowns, &NZeros, &GNZeros, &GNumUnknowns);
+   *  matrix_stats (a, ija, NumUnknowns[pg->imtrx], &NZeros, &GNZeros, &GNumUnknowns);
    */
 #ifdef DEBUG
   fprintf(stderr, "P_%d: lo=%d, lo+=%d, lnnz=%d, lnnz+=%d\n", ProcID,
@@ -645,20 +654,20 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
   if ( TimeIntegration == STEADY )
     {
 
-      DPRINTF(stderr, "\n\n");
-      DPRINTF(stderr, 
+      DPRINTF(stdout, "\n\n");
+      DPRINTF(stdout,
 	      "               R e s i d u a l         C o r r e c t i o n\n");
     }
   else
     {
 
-      DPRINTF(stderr, 
+      DPRINTF(stdout,
 "\n    N e w t o n  C o n v e r g e n c e  - I m p l i c i t   T i m e   S t e p\n");
     }
 
-  DPRINTF(stderr, 
+  DPRINTF(stdout,
 "\n  ToD    itn   L_oo    L_1     L_2     L_oo    L_1     L_2   lis  asm/slv (sec)\n");
-  DPRINTF(stderr, 
+  DPRINTF(stdout,
 "-------- --- ------- ------- ------- ------- ------- ------- --- ---------------\n");
 
   /*********************************************************************************
@@ -688,15 +697,15 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 
       if ( inewton < 10 )
 	{
-	  DPRINTF(stderr,"%s [%d] ", ctod, inewton );
+          DPRINTF(stdout,"%s [%d] ", ctod, inewton );
 	}
       else if ( inewton < 100 )
 	{
-	  DPRINTF(stderr,"%s %d] ", ctod, inewton );
+          DPRINTF(stdout,"%s %d] ", ctod, inewton );
 	}
       else
 	{
-	  DPRINTF(stderr,"%s %d ", ctod, inewton );	  
+          DPRINTF(stdout,"%s %d ", ctod, inewton );
 	}
       
       /*
@@ -704,8 +713,8 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
        */
       if ( Num_Proc > 1 && strcmp( Matrix_Format, "msr" ) == 0 && dofs_hidden )
 	{
-          show_external(num_universe_dofs,
-                        (num_universe_dofs-num_external_dofs),
+          show_external(num_universe_dofs[pg->imtrx],
+                        (num_universe_dofs[pg->imtrx] - num_external_dofs[pg->imtrx]),
                         ija, ija_save, a);
 	}
 
@@ -748,7 +757,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 
 
       /* get global element size and velocity norm if needed for PSPG or Cont_GLS */
-	  if((PSPG && Num_Var_In_Type[PRESSURE]) || (Cont_GLS && Num_Var_In_Type[VELOCITY1]))
+	  if(pd_glob[0]->mi[VELOCITY1] == pg->imtrx && ((PSPG && Num_Var_In_Type[PRESSURE]) || (Cont_GLS && Num_Var_In_Type[VELOCITY1])))
 	  {
           h_elem_avg = global_h_elem_siz(x, x_old, xdot, resid_vector, exo, dpi);
 		  U_norm     = global_velocity_norm(x, exo, dpi);
@@ -759,8 +768,8 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 		  U_norm     = 0.;
 	  }
 	  
-      if (Debug_Flag < 0 && Debug_Flag != -4 && 
-          (Debug_Flag != -5 || inewton >= Max_Newton_Steps-1) )
+      if (Debug_Flag < 0 && Debug_Flag != -4 &&
+              (Debug_Flag != -5 || inewton >= Max_Newton_Steps-1))
 	{
 	  /* Former block 0 in mm_fill.c. Here is some initialization */
 	  num_total_nodes = dpi->num_universe_nodes;
@@ -776,11 +785,11 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 
 	  numerical_jacobian(ams, x, resid_vector, delta_t, theta, 
 			     x_old, x_older, xdot, xdot_old,x_update,
-			     num_total_nodes, First_Elem_Side_BC_Array, 
+			     num_total_nodes, First_Elem_Side_BC_Array[pg->imtrx], 
 			     Debug_Flag, time_value, exo, dpi,
 			     &h_elem_avg, &U_norm);
 
-	  DPRINTF(stderr,"%s: numerical Jacobian done....\n", yo);
+          DPRINTF(stdout,"%s: numerical Jacobian done....\n", yo);
 	  P0PRINTF("\n-done\n\n");
 	  exit(0);
 	}
@@ -827,7 +836,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 
 	  /* Initialize volume constraint, not the most efficient way. */
 
-	  numProcUnknowns = NumUnknowns + NumExtUnknowns;
+	  numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 	  if (nAC > 0) { 
 
 	    for (iAC = 0;iAC < nAC;iAC++) {
@@ -842,7 +851,11 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 
           /* Exchange dof before matrix fill so parallel information
              is properly communicated */
-          exchange_dof(cx,dpi, x);
+          exchange_dof(cx,dpi, x, pg->imtrx);
+
+          if (dg_neighbor_data != NULL) {
+            dg_communicate_neighbor_data(exo, dpi, dg_neighbor_data, upd, x, pg->imtrx, Nodes, vn_glob);
+          }
 
 	  if (Linear_Solver == FRONT)
 	    {
@@ -872,9 +885,9 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 		   */
 		  err = matrix_fill_full(ams, x, resid_vector, 
 					 x_old, x_older, xdot, xdot_old, x_update,
-					 &delta_t, &theta, First_Elem_Side_BC_Array, 
+					 &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], 
 					 &time_value, exo, dpi, &num_total_nodes,
-					 &h_elem_avg, &U_norm, NULL);
+                                         &h_elem_avg, &U_norm, NULL);
 		  a_end = ut();
 		}
 	
@@ -903,7 +916,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 								x_update,
 								&delta_t,
 								&theta,
-								First_Elem_Side_BC_Array,
+								First_Elem_Side_BC_Array[pg->imtrx],
 								&time_value,
 								exo,
 								dpi,
@@ -925,7 +938,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 	      /* Our friend Bob B. doesn't leaves resid vector untouched,
 		 so we have to scale it with his scaling that he now
 		 graciously supplies. */
-	        for(i=0; i< NumUnknowns; i++) resid_vector[i] /= scale[i]; 
+	        for(i=0; i< NumUnknowns[pg->imtrx]; i++) resid_vector[i] /= scale[i]; 
 
 #else /* HAVE_FRONT */
 EH(-1,"version not compiled with frontal solver");
@@ -939,7 +952,7 @@ EH(-1,"version not compiled with frontal solver");
 	      err = matrix_fill_full(ams, x, resid_vector, 
 				     x_old, x_older, xdot, xdot_old, x_update,
 				     &delta_t, &theta, 
-				     First_Elem_Side_BC_Array, 
+				     First_Elem_Side_BC_Array[pg->imtrx], 
 				     &time_value, exo, dpi,
 				     &num_total_nodes,
 				     &h_elem_avg, &U_norm, NULL);
@@ -947,13 +960,14 @@ EH(-1,"version not compiled with frontal solver");
               if( (vn->evssModel == LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
 		  && pd->v[POLYMER_STRESS11] && af->Assemble_Jacobian == TRUE)
                 {
-                  numerical_jacobian_compute_stress(ams, x, resid_vector, delta_t, theta, 
-                                     x_old, x_older, xdot, xdot_old,x_update,
-                                     num_total_nodes, First_Elem_Side_BC_Array, 
-                                     Debug_Flag, time_value, exo, dpi, 
-                                     &h_elem_avg, &U_norm);
+                  numerical_jacobian_compute_stress(ams, x, resid_vector, delta_t, theta,
+						    x_old, x_older, xdot, xdot_old,x_update,
+						    num_total_nodes, First_Elem_Side_BC_Array[pg->imtrx],
+						    Debug_Flag, time_value, exo, dpi,
+						    &h_elem_avg, &U_norm);
                 }
- 
+
+
 	      a_end = ut();
 	      if (err == -1) {
                 return_value = -1;
@@ -967,7 +981,7 @@ EH(-1,"version not compiled with frontal solver");
 	      if (!Norm_below_tolerance || !Rate_above_tolerance) {
 		row_sum_scaling_scale(ams, resid_vector, scale);
 	      } else {
-		vector_scaling(NumUnknowns, resid_vector, scale);
+		vector_scaling(NumUnknowns[pg->imtrx], resid_vector, scale);
 	      }
 #ifdef DEBUG_MMHX    
               {
@@ -975,24 +989,24 @@ EH(-1,"version not compiled with frontal solver");
                 int inode, i_Var_Desc, i_offset, idof_eqn, idof_var;
 	      /* This chunk of code will print out every entry of the
 	       * Jacobian matrix. */ 
-	      for (i = 0; i < NumUnknowns; i++) {
+	      for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
 		vd_eqn = Index_Solution_Inv(i, &inode, &i_Var_Desc,
-					    &i_offset, &idof_eqn);
+					    &i_offset, &idof_eqn, pg->imtrx);
 		vd_var = vd_eqn;
 		fprintf(stderr, "Eq=%d/%s,Node=%d Var=%d/%s,Node=%d Sens=%g Resid=%g\n",
-			i, vd_eqn->Var_Name[idof_eqn], idv[i][2],
-                        i, vd_var->Var_Name[idof_eqn], idv[i][2],
+			i, vd_eqn->Var_Name[idof_eqn], idv[pg->imtrx][i][2],
+                        i, vd_var->Var_Name[idof_eqn], idv[pg->imtrx][i][2],
                         a[i], resid_vector[i]);
 		for (j = ija[i]; j < ija[i+1]; j++) {
 		  vd_eqn = Index_Solution_Inv(i, &inode, &i_Var_Desc,
-					      &i_offset, &idof_eqn);
+					      &i_offset, &idof_eqn, pg->imtrx);
 		  vd_var = Index_Solution_Inv(ija[j], &inode, &i_Var_Desc,
-					      &i_offset, &idof_var);
+					      &i_offset, &idof_var, pg->imtrx);
 		  /*if (a[j] != 0.0) {*/
                   if (fabs(a[j]) > 1.e-12) {
 		    fprintf(stderr, "Eq=%d/%s,Node=%d Var=%d/%s,Node=%d Sens=%g\n",
-                            i, vd_eqn->Var_Name[idof_eqn], idv[i][2],
-                            ija[j], vd_var->Var_Name[idof_var], idv[ija[j]][2],
+                            i, vd_eqn->Var_Name[idof_eqn], idv[pg->imtrx][i][2],
+                            ija[j], vd_var->Var_Name[idof_var], idv[pg->imtrx][ija[j]][2],
                             a[j]);
 		  }
 		}
@@ -1006,11 +1020,11 @@ EH(-1,"version not compiled with frontal solver");
 	       * have a zero row sum. 
 	       */
 	      k = 0;
-	      for (i = 0; i < NumUnknowns; i++) {
+	      for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
 		row_sum = a[i];
 		abs_row_sum = fabs(a[i]);
 		vd_eqn = Index_Solution_Inv(i, &inode, &i_Var_Desc, 
-					    &i_offset, &idof_eqn);
+					    &i_offset, &idof_eqn, pg->imtrx);
 		for (j = ija[i]; j < ija[i+1]; j++) {
 		  row_sum += a[j];
 		  abs_row_sum += fabs(a[j]);
@@ -1056,7 +1070,7 @@ EH(-1,"version not compiled with frontal solver");
 	  mf_args.x_update = x_update;
 	  mf_args.delta_t = &delta_t;
 	  mf_args.theta_  = &theta;
-	  mf_args.first_elem_side_bc = First_Elem_Side_BC_Array;
+	  mf_args.first_elem_side_bc = First_Elem_Side_BC_Array[pg->imtrx];
 	  mf_args.time = &time_value;
 	  mf_args.exo  = exo;
 	  mf_args.dpi  = dpi;
@@ -1194,7 +1208,7 @@ EH(-1,"version not compiled with frontal solver");
 					on return from frontal solver */
 	  {
 	    for (iAC=0;iAC<nAC;iAC++) {
-	      for (j=0;j<NumUnknowns;j++) { 
+	      for (j=0;j<NumUnknowns[pg->imtrx];j++) { 
 		bAC[iAC][j] /= scale[j]; 
 	      }
 	    }
@@ -1220,20 +1234,20 @@ EH(-1,"version not compiled with frontal solver");
 
       print_damp_factor = FALSE;
       print_visc_sens = FALSE;
-      Norm[0][0] = Loo_norm(resid_vector, NumUnknowns, &num_unk_r, dofname_r);
-      Norm[0][1] = L1_norm (resid_vector, NumUnknowns);
-      Norm[0][2] = L2_norm (resid_vector, NumUnknowns);
+      Norm[0][0] = Loo_norm(resid_vector, NumUnknowns[pg->imtrx], &num_unk_r, dofname_r);
+      Norm[0][1] = L1_norm (resid_vector, NumUnknowns[pg->imtrx]);
+      Norm[0][2] = L2_norm (resid_vector, NumUnknowns[pg->imtrx]);
 
       log_msg("%-38s = %23.16e", "residual norm (L_oo)", Norm[0][0]);
       log_msg("%-38s = %23.16e", "residual norm (L_1)", Norm[0][1]);
       log_msg("%-38s = %23.16e", "residual norm (L_2)", Norm[0][2]);
 
-      DPRINTF(stderr, "%7.1e %7.1e %7.1e ",  Norm[0][0], Norm[0][1], Norm[0][2]);
+      DPRINTF(stdout, "%7.1e %7.1e %7.1e ",  Norm[0][0], Norm[0][1], Norm[0][2]);
 		  
-	  if( inewton > 0 && Norm[0][2] < Epsilon[0] && Norm[2][2] < Epsilon[0] )
+	  if( inewton > 0 && Norm[0][2] < Epsilon[pg->imtrx][0] && Norm[2][2] < Epsilon[pg->imtrx][0] )
 	  {
 #ifdef SKIP_LAST_SOLVE
-		*converged = Epsilon[2] > 1.0 ? TRUE : FALSE ;
+		*converged = Epsilon[pg->imtrx][2] > 1.0 ? TRUE : FALSE ;
 #endif
 	   }
       
@@ -1253,7 +1267,7 @@ EH(-1,"version not compiled with frontal solver");
        * step.
        */
       if (Num_Proc > 1 && strcmp( Matrix_Format, "msr" ) == 0 ) {
-	hide_external(num_universe_dofs, NumUnknowns, ija, ija_save, a);
+	hide_external(num_universe_dofs[pg->imtrx], NumUnknowns[pg->imtrx], ija, ija_save, a);
 	dofs_hidden = TRUE;
 #ifdef DEBUG
 	print_array(ija, ija[ija[0]-1], "ija_diet", type_int, ProcID);
@@ -1263,7 +1277,7 @@ EH(-1,"version not compiled with frontal solver");
 #ifdef DEBUG_JACOBIAN
       if (inewton < 1) {
 	if (strcmp(Matrix_Format, "msr") == 0) {
-	  print_msr_matrix(num_internal_dofs + num_boundary_dofs,
+	  print_msr_matrix(num_internal_dofs[pg->imtrx]  + num_boundary_dofs[pg->imtrx],
 			   ija, a, x);
 	  print_array(ija, ija[ija[0]-1], "ija", type_int, ProcID);
 	} else {
@@ -1315,11 +1329,11 @@ EH(-1,"version not compiled with frontal solver");
 	    Factor_Flag = 0;
 	  }
 	  matr_form = 1;
-
+	  
 	  UMF_system_id = SL_UMF(UMF_system_id,
 				 &first_linear_solver_call,
 				 &Factor_Flag, &matr_form,
-				 &NumUnknowns, &NZeros, &ija[0],
+				 &NumUnknowns[pg->imtrx], &NZeros, &ija[0],
 				 &ija[0], &a[0], &resid_vector[0],
 				 &delta_x[0]);
 
@@ -1338,13 +1352,13 @@ EH(-1,"version not compiled with frontal solver");
 	  if (strcmp(Matrix_Format, "msr")) {
 	    EH(-1,"ERROR: lu solver needs msr matrix format");
 	  }
-	  dcopy1(NumUnknowns, resid_vector, delta_x);
+	  dcopy1(NumUnknowns[pg->imtrx], resid_vector, delta_x);
 	  if (!Norm_below_tolerance || !Rate_above_tolerance) {
-	    lu (NumUnknowns, NumExtUnknowns, NZeros, 
+	    lu (NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx], NZeros, 
 		a, ija, delta_x, (first_linear_solver_call?1:2));
 	    first_linear_solver_call = FALSE;
 	  } else  {
-	    lu (NumUnknowns, NumExtUnknowns, NZeros, 
+	    lu (NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx], NZeros, 
 		a, ija, delta_x, 3);
 	    first_linear_solver_call = FALSE;
 	  }
@@ -1418,7 +1432,7 @@ EH(-1,"version not compiled with frontal solver");
 	       */
 	      
 	    print_array(ams->bindx, 
-			ams->bindx[num_internal_dofs+num_boundary_dofs],
+			ams->bindx[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx] ],
 			"ijA", type_int, ProcID);
 #endif /* DEBUG */
 	    if(!Norm_below_tolerance || !Rate_above_tolerance) {
@@ -1463,9 +1477,9 @@ EH(-1,"version not compiled with frontal solver");
       case AMESOS:
 
         if( strcmp( Matrix_Format,"msr" ) == 0 ) {
-          amesos_solve_msr( Amesos_Package, ams, delta_x, resid_vector, 1 );
+          amesos_solve_msr( Amesos_Package, ams, delta_x, resid_vector, 1 , pg->imtrx);
         } else if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
-          amesos_solve_epetra(Amesos_Package, ams, delta_x, resid_vector);
+          amesos_solve_epetra(Amesos_Package, ams, delta_x, resid_vector, pg->imtrx);
         } else {
           EH(-1," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
         }
@@ -1486,16 +1500,13 @@ EH(-1,"version not compiled with frontal solver");
       case STRATIMIKOS:
         if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
           int iterations;
-          int err = stratimikos_solve(ams, delta_x, resid_vector, &iterations, Stratimikos_File);
-          if (err) {
-	    EH(err, "Error in stratimikos solve");
-	    check_parallel_error("Error in solve - stratimikos");
+          int err = stratimikos_solve(ams, delta_x, resid_vector, &iterations, Stratimikos_File[pg->imtrx]);
+          if (err)
+          {
+          EH(err, "Error in stratimikos solve");
+          check_parallel_error("Error in solve - stratimikos");
           }
-	  if (iterations == -1) {
-	    strcpy(stringer, "err");
-	  } else {
-	    aztec_stringer(AZ_normal, iterations, &stringer[0]);
-	  }
+          aztec_stringer(AZ_normal, iterations, &stringer[0]);
         } else {
           EH(-1, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
         }
@@ -1507,7 +1518,7 @@ EH(-1,"version not compiled with frontal solver");
 	   * it is the first call or not.
 	   */
 #ifdef HARWELL	  
-	  err = cmsr_ma28(NumUnknowns, NZeros, a, ija, 
+	  err = cmsr_ma28(NumUnknowns[pg->imtrx], NZeros, a, ija, 
 			  delta_x, resid_vector);
 #else /* HARWELL */
 	  EH(-1, "That linear solver package is not implemented.");
@@ -1567,7 +1578,7 @@ EH(-1,"version not compiled with frontal solver");
 	      UMF_system_id = SL_UMF(UMF_system_id,
 				     &first_linear_solver_call,
 				     &Factor_Flag, &matr_form,
-				     &NumUnknowns, &NZeros, &ija[0],
+				     &NumUnknowns[pg->imtrx], &NZeros, &ija[0],
 				     &ija[0], &a[0], &bAC[iAC][0],
 				     &wAC[iAC][0]);
 #ifdef DEBUG_SL_UMF
@@ -1580,18 +1591,18 @@ EH(-1,"version not compiled with frontal solver");
 	      break;
 
 	  case SPARSE13a:
-	      dcopy1(NumUnknowns, &bAC[iAC][0], &tAC[0]);
-	      lu(NumUnknowns, NumExtUnknowns, NZeros, 
+	      dcopy1(NumUnknowns[pg->imtrx], &bAC[iAC][0], &tAC[0]);
+	      lu(NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx], NZeros, 
 		 a, ija, &tAC[0], 3);
-	      dcopy1(NumUnknowns, &tAC[0], &wAC[iAC][0]);
+	      dcopy1(NumUnknowns[pg->imtrx], &tAC[0], &wAC[iAC][0]);
 	      strcpy(stringer_AC, " 1 ");
 	      break;
 		  
 	  case AMESOS: 
             if( strcmp( Matrix_Format,"msr" ) == 0 ) {
-              amesos_solve_msr( Amesos_Package, ams, &wAC[iAC][0], &bAC[iAC][0], 0 );
+              amesos_solve_msr( Amesos_Package, ams, &wAC[iAC][0], &bAC[iAC][0], 0, pg->imtrx);
             } else if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
-              amesos_solve_epetra(Amesos_Package, ams, &wAC[iAC][0], &bAC[iAC][0]);
+              amesos_solve_epetra(Amesos_Package, ams, &wAC[iAC][0], &bAC[iAC][0], pg->imtrx);
             } else {
               EH(-1," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
             }
@@ -1634,7 +1645,7 @@ EH(-1,"version not compiled with frontal solver");
 		 */
 		
 		print_array(ams->bindx, 
-			    ams->bindx[num_internal_dofs+num_boundary_dofs],
+			    ams->bindx[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx] ],
 			    "ijA", type_int, ProcID);
 #endif /* DEBUG */
 		AZ_solve(&wAC[iAC][0], &bAC[iAC][0], ams->options, ams->params, 
@@ -1667,7 +1678,7 @@ EH(-1,"version not compiled with frontal solver");
 	      break;
 	  case MA28:
 #ifdef HARWELL    
-	      err = cmsr_ma28 (NumUnknowns, NZeros, a, ija, 
+	      err = cmsr_ma28 (NumUnknowns[pg->imtrx], NZeros, a, ija, 
 			       &wAC[iAC][0], &bAC[iAC][0]);
 #else /* HARWELL */
 	      EH(-1, "That linear solver package is not implemented.");
@@ -1684,76 +1695,7 @@ EH(-1,"version not compiled with frontal solver");
               EH(-1, "Sorry, only Epetra matrix formats are currently supported with the AztecOO solver suite\n");
             }
             break;
-          case STRATIMIKOS:
-            if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
-              int iterations;
-              int err = stratimikos_solve(ams, &wAC[iAC][0], &bAC[iAC][0], &iterations, Stratimikos_File);
-              EH(err, "Error in stratimikos solve");
-	      if (iterations == -1) {
-		strcpy(stringer, "err");
-	      } else {
-		aztec_stringer(AZ_normal, iterations, &stringer[0]);
-	      }
-            } else {
-              EH(-1, "Sorry, only Epetra matrix formats are currently supported with the Stratimikos interface\n");
-            }
-            break;
-
-	  case FRONT:
-
-	      mf_resolve =1;
-              scaling_max = 1.;
-
-	      if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");
-#ifdef HAVE_FRONT
-              err = mf_solve_lineqn(&mf_resolve, /* re_solve                 */
-                                    bAC[0], /* rhs                           */
-                                    1, /* nrhs                               */
-                                    fss->ncod, /* nsetbc                      */
-                                    fss->bc, /* bcvalue                       */
-                                    &smallpiv, /* smallpiv                   */
-                                    &singpiv, /* singpiv                     */
-                                    &iautopiv, /* iautopiv                   */
-				    &iscale, /* iscale                       */
-                                    matrix_fill, /* element matrix fill fnc  */
-				    tAC, /* lhs                              */
-				    &scaling_max, /* scaling max             */
-				    scale,
-				    ams,
-				    x,
-				    resid_vector,
-				    x_old,
-				    x_older,
-				    xdot,
-                                    xdot_old,
-                                    x_update,
-                                    &delta_t,
-                                    &theta,
-                                    First_Elem_Side_BC_Array,
-                                    &time_value,
-                                    exo,
-                                    dpi,
-                                    &num_total_nodes,
-                                    &h_elem_avg,
-                                    &U_norm);
-	      /*
-	       * Free memory allocated above
-	       */
-	      global_qp_storage_destroy();
-
-	      if( neg_elem_volume ) err = -1;
-	      if (err == -1) {
-                return_value = -1;
-                goto free_and_clear;
-              }
-
-	      dcopy1(NumUnknowns, &tAC[0], &wAC[iAC][0]);
-	      strcpy(stringer_AC, " f ");
-	      break;
-#else
-              EH(-1, "Front solver is not enabled.");
-              break;
-#endif /* HAVE_FRONT */
+          case FRONT:
 	  default:
 	      EH(-1, "That linear solver package is not implemented.");
 	      break;
@@ -1771,7 +1713,7 @@ EH(-1,"version not compiled with frontal solver");
 
 	for (iAC=0;iAC<nAC;iAC++) {
 	  for (jAC=0;jAC<nAC;jAC++) { 
-	    sAC[iAC][jAC] = dot_product(NumUnknowns, &cAC[iAC][0], &wAC[jAC][0]); 
+	    sAC[iAC][jAC] = dot_product(NumUnknowns[pg->imtrx], &cAC[iAC][0], &wAC[jAC][0]); 
 	  }
 	}
 
@@ -1797,7 +1739,7 @@ EH(-1,"version not compiled with frontal solver");
 	 *
 	 */
 	for (iAC=0;iAC<nAC;iAC++)
-	{ tAC[iAC] = dot_product(NumUnknowns, &cAC[iAC][0], &delta_x[0]); }
+	{ tAC[iAC] = dot_product(NumUnknowns[pg->imtrx], &cAC[iAC][0], &delta_x[0]); }
 #ifdef PARALLEL
         if( Num_Proc > 1 )
 	{
@@ -1862,6 +1804,7 @@ EH(-1,"version not compiled with frontal solver");
 	  for (i=j+1;i<nAC;i++) {
 	    sAC[i][j] *= dumAC;
 	  }
+
 	}
 	iiAC = -1;
 	for (i=0;i<nAC;i++) {
@@ -1882,7 +1825,7 @@ EH(-1,"version not compiled with frontal solver");
 
 	*/
 
-	for (i = 0;i < NumUnknowns;i++) {
+	for (i = 0;i < NumUnknowns[pg->imtrx];i++) {
 	  tAC[i] = 0.0;
 	  for (iAC = 0;iAC < nAC;iAC++) {
 	    tAC[i] += wAC[iAC][i]*yAC[iAC];
@@ -1896,7 +1839,7 @@ EH(-1,"version not compiled with frontal solver");
 	 *   UPDATE GOMA UNKNOWNS DUE TO CHANGES IN AUGMENTED CONDITIONS
 	 *
 	 */
-	for (i = 0;i < NumUnknowns;i++) {
+	for (i = 0;i < NumUnknowns[pg->imtrx];i++) {
 	  delta_x[i] -= tAC[i];
 	}
 	sc_end = ut();
@@ -1909,12 +1852,12 @@ EH(-1,"version not compiled with frontal solver");
        *         END OF AUGMENTED SYSTEM SOLVE SECTION
        **************************************************************************/
       
-      Norm[1][0] = Loo_norm(delta_x, NumUnknowns, &num_unk_x, dofname_x);
-      Norm[1][1] = L1_norm (delta_x, NumUnknowns);
-      Norm[1][2] = L2_norm (delta_x, NumUnknowns);
-      Norm_r[0][0] = Loo_norm_r(delta_x, x, NumUnknowns, &num_unk_x,dofname_nr);
-      Norm_r[0][1] = L1_norm_r (delta_x, x, NumUnknowns);
-      Norm_r[0][2] = L2_norm_r (delta_x, x, NumUnknowns);
+      Norm[1][0] = Loo_norm(delta_x, NumUnknowns[pg->imtrx], &num_unk_x, dofname_x);
+      Norm[1][1] = L1_norm (delta_x, NumUnknowns[pg->imtrx]);
+      Norm[1][2] = L2_norm (delta_x, NumUnknowns[pg->imtrx]);
+      Norm_r[0][0] = Loo_norm_r(delta_x, x, NumUnknowns[pg->imtrx], &num_unk_x,dofname_nr);
+      Norm_r[0][1] = L1_norm_r (delta_x, x, NumUnknowns[pg->imtrx]);
+      Norm_r[0][2] = L2_norm_r (delta_x, x, NumUnknowns[pg->imtrx]);
       
       if (nAC > 0) {
         Norm[3][0] = Loo_norm_1p(yAC, nAC, &num_unk_y, dofname_y);
@@ -1947,7 +1890,11 @@ EH(-1,"version not compiled with frontal solver");
 	/* Compute rate_of_convergence.  Really what we want
 	   here is dln(norm)/dnorm   FIGURE IT OUT! */
 	/* Rate_above_tolerance = (pow(Norm_old, 1.8) > Norm_new); */
-	Rate_above_tolerance = ((log10(Norm_new)/log10(Norm_old)) >
+        double tolerance_value = 0;
+        if (Norm_new > 1e-16) {
+          tolerance_value = (log10(Norm_new)/log10(Norm_old));
+        }
+        Rate_above_tolerance = (tolerance_value >
 				convergence_rate_tolerance);
       }
       
@@ -2008,7 +1955,7 @@ EH(-1,"version not compiled with frontal solver");
 
       if ( Write_Intermediate_Solutions && Unlimited_Output )
 	{
-	  error = wr_soln_vec(x, resid_vector, NumUnknowns, inewton);
+	  error = wr_soln_vec(x, resid_vector, NumUnknowns[pg->imtrx], inewton);
 	  EH (error, "problem from wr_soln_vec");
 	}
 
@@ -2103,15 +2050,15 @@ EH(-1,"version not compiled with frontal solver");
        *   UPDATE GOMA UNKNOWNS
        *
        *******************************************************************/
-      for (i = 0; i < NumUnknowns; i++) {
-	x[i] -= damp_factor * var_damp[idv[i][0]] * delta_x[i];
+      for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
+	x[i] -= damp_factor * var_damp[idv[pg->imtrx][i][0]] * delta_x[i];
       }
-      exchange_dof(cx, dpi, x);
+      exchange_dof(cx, dpi, x, pg->imtrx);
       if (pd->TimeIntegration != STEADY) {
-	for (i = 0; i < NumUnknowns; i++) {
-	  xdot[i] -= damp_factor * var_damp[idv[i][0]] * delta_x[i] * (1.0 + 2 * theta) / delta_t;
+	for (i = 0; i < NumUnknowns[pg->imtrx]; i++) {
+	  xdot[i] -= damp_factor * var_damp[idv[pg->imtrx][i][0]] * delta_x[i] * (1.0 + 2 * theta) / delta_t;
 	}
-        exchange_dof(cx, dpi, xdot);
+	exchange_dof(cx, dpi, xdot, pg->imtrx);	
 		
 	/* Now go back and correct all those dofs in solid regions undergoing newmark-beta
 	 * transient scheme */
@@ -2130,9 +2077,9 @@ EH(-1,"version not compiled with frontal solver");
 		    mat_index= (curr_mat_list->List)[imat];
 		    if(pd_glob[mat_index]->MeshMotion == DYNAMIC_LAGRANGIAN) 
 		      {
-			for (b = 0; b < ei->ielem_dim; b++)
+			for (b = 0; b < ei[pg->imtrx]->ielem_dim; b++)
 			  {
-			    j = Index_Solution(i, R_MESH1 + b, 0, 0 , -1);
+			    j = Index_Solution(i, R_MESH1 + b, 0, 0 , -1, pg->imtrx);
 			    xdot[j] = (x[j]-x_old[j]) * (gamma/beta) / delta_t
 			      +tran->xdbl_dot_old[j]*((1-gamma)-gamma*(1.-2.*beta)/2./beta)*delta_t
 			      +xdot_old[j]*(1.-gamma/beta);
@@ -2144,16 +2091,24 @@ EH(-1,"version not compiled with frontal solver");
 		      }
 		  }
 	      }
-	    exchange_dof(cx, dpi, xdot);
-	    exchange_dof(cx, dpi, tran->xdbl_dot);
+	    exchange_dof(cx, dpi, xdot, pg->imtrx);
+	    exchange_dof(cx, dpi, tran->xdbl_dot, pg->imtrx);
 	  }
           
 	/* Now go back and correct all those dofs that use XFEM */
 	if(xfem != NULL)
 	  {
-            xfem_correct( num_total_nodes, x, xdot, x_old, xdot_old, delta_x, theta, delta_t );
-	    exchange_dof(cx, dpi, x);
-	    exchange_dof(cx, dpi, xdot);
+	    if (upd->Total_Num_Matrices > 0) {
+	      if (pg->imtrx == ls->MatrixNum) {
+		xfem_correct( num_total_nodes, x, xdot, x_old, xdot_old, delta_x, theta, delta_t );
+	      } else {
+		xfem_correct( num_total_nodes, x, xdot, x_old, xdot_old, NULL, theta, delta_t );
+	      }
+	    } else {
+	      xfem_correct( num_total_nodes, x, xdot, x_old, xdot_old, delta_x, theta, delta_t );
+	    }
+	    exchange_dof(cx, dpi, x, pg->imtrx);
+	    exchange_dof(cx, dpi, xdot, pg->imtrx);
 	  }
       }
 
@@ -2163,8 +2118,8 @@ EH(-1,"version not compiled with frontal solver");
         {
           surf_based_initialization(x, delta_x, xdot, exo, num_total_nodes,
                                     ls->init_surf_list, time_value, theta, delta_t);
-          exchange_dof(cx, dpi, x);
-          exchange_dof(cx, dpi, xdot);
+          exchange_dof(cx, dpi, x, pg->imtrx);
+          exchange_dof(cx, dpi, xdot, pg->imtrx);
         }
       if (pfd != NULL)
 	{
@@ -2175,8 +2130,8 @@ EH(-1,"version not compiled with frontal solver");
             {
               surf_based_initialization(x, delta_x, xdot, exo, num_total_nodes,
                                         ls->init_surf_list, time_value, theta, delta_t);
-              exchange_dof(cx, dpi, x);
-              exchange_dof(cx, dpi, xdot);
+              exchange_dof(cx, dpi, x, pg->imtrx);
+              exchange_dof(cx, dpi, xdot, pg->imtrx);
             }
           ls = ls_old;
         }
@@ -2303,9 +2258,9 @@ EH(-1,"version not compiled with frontal solver");
        *         as required by LOCA)
        ********************************************************************/
       
-      *converged = ((Norm[0][2] < Epsilon[0] && Norm[2][2] < Epsilon[0]) &&
-		    ((Norm_r[0][2] + Norm_r[1][2]) < Epsilon[2]) &&
-		    (continuation_converged));
+      *converged = ((Norm[0][2] < Epsilon[pg->imtrx][0] && Norm[2][2] < Epsilon[pg->imtrx][0]) &&
+		    ((Norm_r[0][2] + Norm_r[1][2]) < Epsilon[pg->imtrx][2]) &&
+                    (continuation_converged));
 
       /********************************************************************
        *
@@ -2313,8 +2268,8 @@ EH(-1,"version not compiled with frontal solver");
        *    WRITE OUT THE INTERMEDIATE SOLUTION AT EACH NEWTON ITERATION
        *
        ********************************************************************/
-      
-      if (Write_Intermediate_Solutions) {
+
+	  if (Write_Intermediate_Solutions) {
 	if (TimeIntegration == STEADY) {
 	  time_value = (double) *nprint+1.;
 	}
@@ -2330,7 +2285,7 @@ EH(-1,"version not compiled with frontal solver");
 	if (rd->TotalNVPostOutput > 0) {
 	  post_process_nodal(x, x_sens_p, x_old, xdot, xdot_old, 
 			     resid_vector, *nprint+1, &time_value,
-			     delta_t, theta, NULL, exo, dpi, rd, ExoFileOut);
+			     delta_t, theta, NULL, exo, dpi, rd, ExoFileOut, pg->imtrx);
 	}
 	/* Write out time derivatives if requested */
 	if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
@@ -2388,80 +2343,80 @@ EH(-1,"version not compiled with frontal solver");
 	      ((Continuation != ALC_NONE)      ||
 	       (nn_post_fluxes_sens > 0) ||
 	       (nn_post_data_sens   > 0)    )) break;
-          show_external(num_universe_dofs, 
-		      (num_universe_dofs-num_external_dofs), 
+          show_external(num_universe_dofs[pg->imtrx], 
+		      (num_universe_dofs[pg->imtrx] - num_external_dofs[pg->imtrx]), 
 		      ija, ija_save, a);
 	  dofs_hidden = FALSE;
 	}
 	
 skip_solve:
 
-   if(Epsilon[2] > 1)
+   if(Epsilon[pg->imtrx][2] > 1)
    {
      if ( !(*converged) || (  Linear_Solver == FRONT ) || inewton == 0 ) {
-	   DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
+           DPRINTF(stdout, "%7.1e %7.1e %7.1e %s ",
 			   Norm[1][0], Norm[1][1], Norm[1][2], stringer);
      }
      else {
 #ifdef SKIP_LAST_SOLVE
-	   DPRINTF(stderr, "%23c %s ",' ', " ns");			
+           DPRINTF(stdout, "%23c %s ",' ', " ns");
 #else
-	   DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
+           DPRINTF(stdout, "%7.1e %7.1e %7.1e %s ",
 			   Norm[1][0], Norm[1][1], Norm[1][2], stringer);
 #endif
      }
    }
    else
    {
-	   DPRINTF(stderr, "%7.1e %7.1e %7.1e %s ",
+           DPRINTF(stdout, "%7.1e %7.1e %7.1e %s ",
 			   Norm_r[0][0], Norm_r[0][1], Norm_r[0][2], stringer);
    }
 	
 	
 	if ( Linear_Solver != FRONT )
 	{
-	  DPRINTF(stderr, "%7.1e/%7.1e\n", (a_end-a_start), (s_end-s_start));
+          DPRINTF(stdout, "%7.1e/%7.1e\n", (a_end-a_start), (s_end-s_start));
 	}
       else
 	{
 	  asmslv_time = ( asmslv_end - asmslv_start );
 	  slv_time    = ( asmslv_time - mm_fill_total );
-	  DPRINTF(stderr, "%7.1e/%7.1e\n", mm_fill_total, slv_time);
+          DPRINTF(stdout, "%7.1e/%7.1e\n", mm_fill_total, slv_time);
 	}
 	
 	if( Write_Intermediate_Solutions || (Iout == 1 ) ) {
 		if (dofname_r[0] != '\0') {
-         fprintf(stderr, "L_oo cause: R->(%s)", dofname_r);
+         fprintf(stdout, "L_oo cause: R->(%s)", dofname_r);
 	}
 	if (dofname_x[0] != '\0') {
-         fprintf(stderr, "DelX->(%s)\n", dofname_x);
+         fprintf(stdout, "DelX->(%s)\n", dofname_x);
 	}
 }
 
         /* print damping factor and/or viscosity sens message here */
-        if (print_damp_factor) DPRINTF(stderr, " Invoking damping factor %f\n", damp_factor);
-        if (print_visc_sens) DPRINTF(stderr, " Invoking Viscosity Sensitivities\n");
+        if (print_damp_factor) DPRINTF(stdout, " Invoking damping factor %f\n", damp_factor);
+        if (print_visc_sens) DPRINTF(stdout, " Invoking Viscosity Sensitivities\n");
 
 	if (nAC > 0) {
-	DPRINTF(stderr, "          AC ");
-	DPRINTF(stderr, "%7.1e %7.1e %7.1e ", Norm[2][0],
+        DPRINTF(stdout, "          AC ");
+        DPRINTF(stdout, "%7.1e %7.1e %7.1e ", Norm[2][0],
 			Norm[2][1], Norm[2][2]);
-	if(Epsilon[2] > 1) {
+	if(Epsilon[pg->imtrx][2] > 1) {
 	  if ( !(*converged)  || (  Linear_Solver == FRONT ) || inewton == 0	) {
-		DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]);
+                DPRINTF(stdout, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]);
 	  }
 	else {
 #ifdef SKIP_LAST_SOLVE
-		DPRINTF(stderr, "%23c %s ",' ', " 0 ");	
+                DPRINTF(stdout, "%23c %s ",' ', " 0 ");
 #else
-		DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]);
+                DPRINTF(stdout, "%7.1e %7.1e %7.1e     ", Norm[3][0], Norm[3][1], Norm[3][2]);
 #endif
 	}	
 	} else {
-		DPRINTF(stderr, "%7.1e %7.1e %7.1e     ", Norm_r[1][0], 
+                DPRINTF(stdout, "%7.1e %7.1e %7.1e     ", Norm_r[1][0],
 				Norm_r[1][1], Norm_r[1][2]);
 	}
-	DPRINTF(stderr, "%7.1e/%7.1e\n", (ac_end-ac_start), (sc_end-sc_start)); 
+        DPRINTF(stdout, "%7.1e/%7.1e\n", (ac_end-ac_start), (sc_end-sc_start));
       }
 
       inewton++;
@@ -2492,11 +2447,11 @@ skip_solve:
 
   if (! *converged) {
     if (Debug_Flag) { 
-      DPRINTF(stderr, "\n%s:  Newton iteration FAILED.\n", yo);
+      DPRINTF(stdout, "\n%s:  Newton iteration FAILED.\n", yo);
     }
   } else {
     if (Debug_Flag) {
-      DPRINTF(stderr,
+      DPRINTF(stdout,
 	      "\n%s:  Newton iteration CONVERGED.\n", yo);
     }
   }
@@ -2504,11 +2459,11 @@ skip_solve:
 /**
   *     Solution vector norms for detecting turning points
   */
-      Norm[4][0] = Loo_norm(x, NumUnknowns, &num_unk_x, dofname_x);
-      Norm[4][1] = L1_norm (x, NumUnknowns)/((double)NumUnknowns);
-      Norm[4][2] = L2_norm (x, NumUnknowns)/sqrt((double)NumUnknowns);
+      Norm[4][0] = Loo_norm(x, NumUnknowns[pg->imtrx], &num_unk_x, dofname_x);
+      Norm[4][1] = L1_norm (x, NumUnknowns[pg->imtrx])/((double)NumUnknowns[pg->imtrx]);
+      Norm[4][2] = L2_norm (x, NumUnknowns[pg->imtrx])/sqrt((double)NumUnknowns[pg->imtrx]);
 
-      DPRINTF(stderr, "scaled solution norms  %13.6e %13.6e %13.6e \n", 
+      DPRINTF(stdout, "scaled solution norms  %13.6e %13.6e %13.6e \n",
 	      Norm[4][0], Norm[4][1], Norm[4][2]);
 
   /*
@@ -2809,19 +2764,19 @@ if( *converged )
   if (Linear_Solver == AZTEC) ams->status[AZ_its] = total_ls_its;
   LOCA_UMF_ID = UMF_system_id;
 
-free_and_clear:  
 /*
  * If using LOCA, there may be another resolve after exiting the
  * nonlinear solver, so defer restoring external matrix rows
  * until the next linear solver call.
  */
 
+free_and_clear:
   if ( Num_Proc > 1 && strcmp( Matrix_Format, "msr" ) == 0 )
     {
       if (Continuation != LOCA && dofs_hidden)
         {
-          show_external(num_universe_dofs,
-                        (num_universe_dofs-num_external_dofs),
+          show_external(num_universe_dofs[pg->imtrx],
+                        (num_universe_dofs[pg->imtrx] - num_external_dofs[pg->imtrx] ),
                         ija, ija_save, a);
           dofs_hidden = FALSE;
         }
@@ -3409,7 +3364,7 @@ soln_sens ( double lambda,  /*  parameter */
 				  * system space, since it does its own
 				  * matrix_fill's. */
 
-  exchange_dof(cx, dpi, x);
+  exchange_dof(cx, dpi, x, pg->imtrx);
 
   /*
    *
@@ -3473,10 +3428,10 @@ soln_sens ( double lambda,  /*  parameter */
   err = matrix_fill_full(ams, x, res_p, 
 			 x_old, x_older, xdot, xdot_old, x_update, 
 			 &delta_t, &theta, 
-			 First_Elem_Side_BC_Array, 
+			 First_Elem_Side_BC_Array[pg->imtrx], 
 			 &time_value, exo, dpi,
 			 &num_total_nodes,
-			 &h_elem_avg, &U_norm, NULL);
+                         &h_elem_avg, &U_norm, NULL);
   if (err == -1) return(err);
 
   lambda_tmp = lambda-dlambda;
@@ -3526,10 +3481,10 @@ soln_sens ( double lambda,  /*  parameter */
   err = matrix_fill_full(ams, x, res_m, 
 			 x_old, x_older, xdot, xdot_old, x_update,
 			 &delta_t, &theta, 
-			 First_Elem_Side_BC_Array, 
+			 First_Elem_Side_BC_Array[pg->imtrx], 
 			 &time_value, exo, dpi,
 			 &num_total_nodes,
-			 &h_elem_avg, &U_norm, NULL);
+                         &h_elem_avg, &U_norm, NULL);
   
   if (err == -1) return(err);
 
@@ -3594,7 +3549,7 @@ soln_sens ( double lambda,  /*  parameter */
 
   if (Linear_Solver != FRONT) 	
     {
-      vector_scaling(NumUnknowns, resid_vector_sens, scale);
+      vector_scaling(NumUnknowns[pg->imtrx], resid_vector_sens, scale);
     }
 
   switch (Linear_Solver)
@@ -3632,7 +3587,7 @@ soln_sens ( double lambda,  /*  parameter */
 			     &first_soln_sens_linear_solver_call,
 			     */
 			     &first_linear_solver_call,
-			     &Factor_Flag, &matr_form, &NumUnknowns,
+			     &Factor_Flag, &matr_form, &NumUnknowns[pg->imtrx],
 			     &NZeros, &ija[0], &ija[0], &a[0],
 			     &resid_vector_sens[0], &x_sens[0]);
 #ifdef DEBUG_SL_UMF
@@ -3646,8 +3601,8 @@ soln_sens ( double lambda,  /*  parameter */
       break;
       
     case SPARSE13a:
-      dcopy1(NumUnknowns, resid_vector_sens, x_sens);
-	    lu(NumUnknowns, NumExtUnknowns, NZeros, 
+      dcopy1(NumUnknowns[pg->imtrx], resid_vector_sens, x_sens);
+	    lu(NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx], NZeros, 
 	       a, ija, x_sens, 3);
 	    first_linear_solver_call = FALSE;
       /* 
@@ -3659,9 +3614,9 @@ soln_sens ( double lambda,  /*  parameter */
 		
     case AMESOS:	
       if( strcmp( Matrix_Format,"msr" ) == 0 ) {
-        amesos_solve_msr( Amesos_Package, ams, x_sens, resid_vector_sens, 0 );
+        amesos_solve_msr( Amesos_Package, ams, x_sens, resid_vector_sens, 0, pg->imtrx);
       } else if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
-        amesos_solve_epetra(Amesos_Package, ams, x_sens, resid_vector_sens);
+        amesos_solve_epetra(Amesos_Package, ams, x_sens, resid_vector_sens, pg->imtrx);
       } else {
         EH(-1," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
       }
@@ -3705,7 +3660,7 @@ soln_sens ( double lambda,  /*  parameter */
 	       */
 	      
 	      print_array(ams->bindx, 
-			  ams->bindx[num_internal_dofs+num_boundary_dofs],
+			  ams->bindx[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx] ],
 			  "ijA", type_int, ProcID);
 #endif	      
 	      AZ_solve(x_sens, resid_vector_sens, ams->options, ams->params, 
@@ -3741,7 +3696,7 @@ soln_sens ( double lambda,  /*  parameter */
     case STRATIMIKOS:
       if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
         int iterations;
-        int err = stratimikos_solve(ams,  x_sens, resid_vector_sens, &iterations, Stratimikos_File);
+        int err = stratimikos_solve(ams,  x_sens, resid_vector_sens, &iterations, Stratimikos_File[pg->imtrx]);
         EH(err, "Error in stratimikos solve");
 	if (iterations == -1) {
 	  strcpy(stringer, "err");
@@ -3758,7 +3713,7 @@ soln_sens ( double lambda,  /*  parameter */
        * it is the first call or not.
        */
 #ifdef HARWELL	  
-      err = cmsr_ma28 (NumUnknowns, NZeros, a, ija, 
+      err = cmsr_ma28 (NumUnknowns[pg->imtrx], NZeros, a, ija, 
 		       x_sens, resid_vector_sens);
 #endif
 #ifndef HARWELL
@@ -3796,7 +3751,7 @@ soln_sens ( double lambda,  /*  parameter */
                                     x_update,
                                     &delta_t,
                                     &theta,
-                                    First_Elem_Side_BC_Array,
+                                    First_Elem_Side_BC_Array[pg->imtrx],
                                     &time_value,
                                     exo,
                                     dpi,
@@ -3826,7 +3781,7 @@ soln_sens ( double lambda,  /*  parameter */
 
   vchange_sign(numProcUnknowns, &x_sens[0]);
 
-  exchange_dof(cx, dpi, x_sens);
+  exchange_dof(cx, dpi, x_sens, pg->imtrx);
 
   a_end = ut();
 
@@ -3846,9 +3801,9 @@ soln_sens ( double lambda,  /*  parameter */
                 MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
   time_local = time_global;
 #endif
-  fflush(stderr);
+  fflush(stdout);
   sens_caller[ strlen(sens_caller) ] = '\0';
-  DPRINTF(stderr,"\n\n%s resolve time:  %7.1e\n", sens_caller, time_local );
+  DPRINTF(stdout,"\n\n%s resolve time:  %7.1e\n", sens_caller, time_local );
   sens_caller[0] = '\0';
 
 	return(err);

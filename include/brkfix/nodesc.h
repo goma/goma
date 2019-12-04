@@ -27,8 +27,8 @@
  * Revised:
  */
 
-#ifndef _NODESC_H
-#define _NODESC_H
+#ifndef GOMA_NODESC_H
+#define GOMA_NODESC_H
 
 
 #include "dpi.h" /* MAX_EQNVARS */

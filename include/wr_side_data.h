@@ -15,42 +15,42 @@
  */
 
 
-#ifndef _WR_SIDE_DATA_H
-#define _WR_SIDE_DATA_H
+#ifndef GOMA_WR_SIDE_DATA_H
+#define GOMA_WR_SIDE_DATA_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _WR_SIDE_DATA_C
+#ifdef GOMA_WR_SIDE_DATA_C
 #define EXTERN
 #
 #endif
 
-#ifndef _WR_SIDE_DATA_C
+#ifndef GOMA_WR_SIDE_DATA_C
 #define EXTERN extern
 #endif
 
 EXTERN int ns_data_print
-PROTO((pp_Data *,		/* post processing information */
+(pp_Data *,		/* post processing information */
        double [],		/* solution vector */
        const Exo_DB *,		/* handle to EXODUS II info */
        const double ,		/* current time */
-       const double ));		/* current time step size */
+       const double );		/* current time step size */
 
 EXTERN int ns_data_sens_print
-PROTO(( const struct Post_Processing_Data_Sens *,
+( const struct Post_Processing_Data_Sens *,
         const double [],	/* solution vector */
         double** ,		/* sensitivity vector */
-        const double ));	/* current time */
+        const double );	/* current time */
 
 EXTERN int match_nsid
-PROTO(( int ));
+( int );
 
 EXTERN int psid2nn
-PROTO(( int ));
+( int );
 
 EXTERN int nsid2nn
-PROTO(( int ));
+( int );
 
-#endif /* _WR_SIDE_DATA_H */
+#endif /* GOMA_WR_SIDE_DATA_H */

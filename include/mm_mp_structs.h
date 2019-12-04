@@ -45,9 +45,10 @@
  * which is easily added by adding a new dimension [MAX_CONC]
  */
 
-#ifndef _MM_MP_STRUCTS_H
-#define _MM_MP_STRUCTS_H
+#ifndef GOMA_MM_MP_STRUCTS_H
+#define GOMA_MM_MP_STRUCTS_H
 
+#include "rf_fem_const.h"
 #include "mm_elem_block_structs.h"
 
 /*
@@ -55,8 +56,8 @@
  * how big each of the "u_...." variables really is.
  */
 
-#ifndef _CK_NAME_DEF
-#define _CK_NAME_DEF
+#ifndef GOMA_CK_NAME_DEF
+#define GOMA_CK_NAME_DEF
 typedef char CK_NAME[64];       /* Typedefs for common names used for naming
                                    domains and species */
 typedef char CK_NAME_STR[64];
@@ -258,7 +259,7 @@ struct Material_Properties
   dbl *u_dilationalViscosity;
   dbl dilationalViscosityRatio;
   dbl d_dilationalViscosityRatio[MAX_VARIABLE_TYPES + MAX_CONC];
-
+  dbl dilationalViscosityMultiplier;
   //! Volume fraction of Gas for multiphase material models
   //!  (Currently there is one model, foam)
   dbl volumeFractionGas;
@@ -269,6 +270,7 @@ struct Material_Properties
   //! Integer representing the model for the dilationa viscosity
   int DilationalViscosityModel;
   int dilationalViscosity_tableid;
+
 
   int Mwt_funcModel;
   dbl Mwt_func;
@@ -318,13 +320,41 @@ struct Material_Properties
   dbl d_rho_dT[MDE];
   dbl d_rho_dC[MAX_CONC][MDE];
 
+  int PBE_BA_Type;
     
   int Spwt_funcModel;
   dbl Spwt_func;
 
+  int SpSSPG_funcModel;
+  dbl SpSSPG_func;
+
+  int SpYZbeta_funcModel;
+  dbl SpYZbeta_func;
+  dbl SpYZbeta_value;
+
+  int Momentwt_funcModel;
+  dbl Momentwt_func;
+
+  int MomentSSPG_funcModel;
+  dbl MomentSSPG_func;
+
+  int MomentShock_funcModel;
+  dbl MomentShock_func;
+  dbl MomentShock_Ref[MAX_MOMENTS];
+
+  int MomentDiffusivityModel;
+  dbl MomentDiffusivity;
+
+  int MomentSecondLevelSetDiffusivityModel;
+  dbl MomentSecondLevelSetDiffusivity;
+
+  int MomentLevelSetDiffusionOnly;
+
   dbl diffusivity[MAX_CONC];
   int DiffusivityModel[MAX_CONC];
   int diffusivity_tableid[MAX_CONC];
+  double SpeciesSecondLevelSetDiffusivity[MAX_CONC];
+  int SpeciesOnlyDiffusion[MAX_CONC];         /* STANDARD or TAYLOR_GALERKIN */
   int SpeciesTimeIntegration[MAX_CONC];         /* STANDARD or TAYLOR_GALERKIN */
   int FreeVolSolvent[MAX_CONC];	/* Solvent identity array for multi-C FV*/
   int len_u_diffusivity[MAX_CONC];
@@ -591,6 +621,13 @@ struct Material_Properties
   int PorousMolecularWeightModel[MAX_PMV];
   dbl d_porous_molecular_weight[MAX_PMV][MAX_VARIABLE_TYPES + MAX_CONC];
 
+  int moment_growth_model;
+  dbl moment_growth_scale;
+  dbl moment_growth_reference_pressure;
+
+  int moment_coalescence_model;
+  dbl moment_coalescence_scale;
+
   /*
    * Source terms...
    */
@@ -639,6 +676,12 @@ struct Material_Properties
   int CurrentSourceModel;
   int len_u_current_source;
   dbl *u_current_source;
+
+  dbl moment_source;
+  dbl d_moment_source[MAX_VARIABLE_TYPES + MAX_CONC];
+  int MomentSourceModel;
+  int len_u_moment_source;
+  dbl *u_moment_source;
 
   dbl heightU;
   dbl d_heightU[MAX_VARIABLE_TYPES + MAX_CONC];
@@ -932,7 +975,8 @@ struct Generalized_Newtonian
   int ConstitutiveEquation;
 
   dbl mu0;
-  int mu0Model;	
+  int mu0Model;
+  dbl pos_ls_mup;
   int len_u_mu0;
   dbl *u_mu0;
   dbl nexp;
@@ -999,6 +1043,17 @@ struct Generalized_Newtonian
 };
 typedef struct Generalized_Newtonian GEN_NEWT_STRUCT;
 
+struct Positive_LS_Viscoelastic_Properties
+{
+  double time_const;            /* relaxation constant */
+
+  double alpha;                 /* This is the Geisekus mobility parameter */
+
+  double xi;                    /* This is the PTT upper convected / lower convected weight parameter */
+
+  double eps;                   /* This is the PTT elongational parameter */
+};
+
 struct Viscoelastic_Constitutive
 {
   /* this struct contains the polymer viscosity
@@ -1017,6 +1072,8 @@ struct Viscoelastic_Constitutive
 
   dbl eps;                   /* This is the PTT elongational parameter */
   int epsModel;
+
+  struct Positive_LS_Viscoelastic_Properties pos_ls;
 };
 typedef struct  Viscoelastic_Constitutive VISC_CONST_STRUCT;
    
@@ -1249,6 +1306,8 @@ struct Second_LS_Phase_Properties
   dbl speciessource[MAX_CONC];
   int speciessourcemask[2][MAX_CONC];;
   dbl speciessource_phase[MAX_PHASE_FUNC][MAX_CONC];
+  int use_species_source_width[MAX_CONC];
+  dbl species_source_width[MAX_CONC];
 
   int FlowingLiquidViscosityModel;
   dbl FlowingLiquid_viscosity;

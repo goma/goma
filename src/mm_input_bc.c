@@ -54,7 +54,7 @@ static char rcsid[] =
 #include "sl_util_structs.h"
 #include "mm_input.h"
 
-#define _MM_INPUT_BC_C
+#define GOMA_MM_INPUT_BC_C
 #include "goma.h"
 
 /*
@@ -77,7 +77,6 @@ struct Rotation_Specs *ROT_Types;
 
 static Spfrtn sr;
 
-
 /*
  * What to look for each time...
  */
@@ -97,8 +96,6 @@ Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
 #define SCALAR_INPUT 1
 #define VECTOR_INPUT 3
 
-#define stringup(a) { char *p; for( p=a; *p != '\0'; *p=toupper(*p), p++); }
-
 /*************** R O U T I N E S   I N   T H E   F I L E ***********************
  *
  *    NAME				TYPE		CALLED_BY
@@ -109,10 +106,10 @@ Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
  */
 
 static int BC_consistency 
-PROTO((struct Boundary_Condition *));	/* BC_Type                           */
+(struct Boundary_Condition *);	/* BC_Type                           */
 
 static int detect_BC
-PROTO (( int, int )) ; 
+( int, int ) ; 
 
 /*
  *	This file is a break-off from the very large file mm_input.c.
@@ -540,6 +537,7 @@ rd_bc_specs(FILE *ifp,
         case SHELL_GRAD_FP_BC:
         case SHELL_GRAD_FH_BC:
         case SHELL_GRAD_PC_BC:
+        case LS_WALL_ANGLE_BC:
         case SH_SDET_BC:
         case SH_MESH2_WEAK_BC:
   
@@ -618,10 +616,14 @@ rd_bc_specs(FILE *ifp,
 	case DY_NOTHING_BC: 
 	case DZ_NOTHING_BC: 
 	case P_BC:
+	case P_STAR_BC:
 	case T_BC: 
 	case U_BC: 
 	case V_BC: 
-	case W_BC: 
+	case W_BC:
+	case U_STAR_BC:
+	case V_STAR_BC:
+	case W_STAR_BC:
 	case PU_BC:
 	case PV_BC:
 	case PW_BC:
@@ -1184,6 +1186,22 @@ rd_bc_specs(FILE *ifp,
 
 	  break;
 
+	case VELO_SLIP_LS_HEAVISIDE_BC:
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf",
+		      &BC_Types[ibc].BC_Data_Float[0],           // ls_width
+		      &BC_Types[ibc].BC_Data_Float[1],           // beta_negative
+		      &BC_Types[ibc].BC_Data_Float[2],           // beta_positive
+		      &BC_Types[ibc].BC_Data_Float[3],           // v_x
+		      &BC_Types[ibc].BC_Data_Float[4],           // v_y
+		      &BC_Types[ibc].BC_Data_Float[5]) != 6)     // v_z
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 6 flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+	    }
+
+	  SPF_DBL_VEC(endofstring(echo_string), 6,  BC_Types[ibc].BC_Data_Float);
+	  break;
 	  /*
 	   * Fall through for all cases which require five floating point
 	   * values as data input plus optional parameters 
@@ -2689,6 +2707,7 @@ rd_bc_specs(FILE *ifp,
 		   !strcmp(input, Var_Name[k].name2))
 		{
 		  BC_Types[ibc].BC_Data_Int[0] = Var_Name[k].Index;
+                  BC_Types[ibc].equation = EQ_Name[k].Index;
 		  eq_found = TRUE;
 		}
 	    }
@@ -2855,6 +2874,7 @@ rd_bc_specs(FILE *ifp,
 		{
 		  BC_Types[ibc].BC_Data_Int[0] = EQ_Name[k].Index;
 		  eq_found = TRUE;
+                  BC_Types[ibc].equation = EQ_Name[k].Index;
 		}
 	    }
 	  if ( ! eq_found )

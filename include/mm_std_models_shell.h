@@ -10,23 +10,23 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _MM_STD_MODELS_SHELL_H
-#define _MM_STD_MODELS_SHELL_H
+#ifndef GOMA_MM_STD_MODELS_SHELL_H
+#define GOMA_MM_STD_MODELS_SHELL_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_STD_MODELS_SHELL_C
+#ifdef GOMA_MM_STD_MODELS_SHELL_C
 #define EXTERN
 #endif
 
-#ifndef _MM_STD_MODELS_SHELL_C
+#ifndef GOMA_MM_STD_MODELS_SHELL_C
 #define EXTERN extern
 #endif
 
 EXTERN double height_function_model /* mm_std_models_shell.c                */
-PROTO((dbl *,
+(dbl *,
        dbl *,
        dbl *,
        dbl *,
@@ -34,58 +34,58 @@ PROTO((dbl *,
        dbl [DIM],
        dbl *,
        dbl *,
-       dbl, dbl));
+       dbl, dbl);
 
 EXTERN double velocity_function_model /* mm_std_models_shell.c                */
-PROTO((dbl [DIM],
+(dbl [DIM],
        dbl [DIM],
-       dbl , dbl ));
+       dbl , dbl );
 EXTERN double film_evaporation_model /* mm_std_models_shell.c                */
-PROTO((dbl,
+(dbl,
        dbl *,
        dbl ,
-       dbl * ));
+       dbl * );
 
 EXTERN double disjoining_pressure_model /* mm_std_models_shell.c                */
-PROTO((dbl,
+(dbl,
        dbl [DIM],
        dbl [DIM],
        dbl [DIM][MDE],
-       dbl [DIM][MDE] ));
+       dbl [DIM][MDE] );
 
 EXTERN double diffusion_coefficient_model /* mm_std_models_shell.c                */
-PROTO((dbl,
-       dbl *));
+(dbl,
+       dbl *);
 
 EXTERN int load_lubrication_momentum_source      /* mm_std_models_shell.c          */
-PROTO((dbl, dbl));
+(dbl, dbl);
 
 EXTERN double porous_shell_closed_porosity_model /* mm_std_models_shell.c          */
-PROTO((void));
+(void);
 
 EXTERN double porous_shell_closed_radius_model   /* mm_std_models_shell.c          */
-PROTO((void));
+(void);
 
 EXTERN double porous_shell_closed_height_model   /* mm_std_models_shell.c          */
-PROTO((void));
+(void);
 
 EXTERN double porous_shell_cross_perm_model     /* mm_std_models_shell.c          */
-PROTO((void));
+(void);
 
 EXTERN void dynamic_contact_angle_model
-PROTO((
+(
        double *,
        double *,
        double,
        double *,
        double *
-       ));
+       );
 
 EXTERN double rolling_pressure
-PROTO((
+(
        double,
        double*,
        double
-       ));
+       );
 
-#endif /* _MM_STD_MODELS_H */
+#endif /* GOMA_MM_STD_MODELS_H */

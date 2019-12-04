@@ -15,11 +15,6 @@
  *$Id: el_elm_info.c,v 5.6 2010-03-03 22:33:57 prschun Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: el_elm_info.c,v 5.6 2010-03-03 22:33:57 prschun Exp $";
-#endif
-
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -36,7 +31,7 @@ static char rcsid[] =
 
 #include "mm_eh.h"
 
-#define _EL_ELM_INFO_C
+#define GOMA_EL_ELM_INFO_C
 #include "goma.h"
 
 
@@ -473,13 +468,13 @@ elem_info(const int info,
     }
     break;
 
-  case TRILINEAR_TET:                /* linear tetrahedron */
+  case LINEAR_TET:                /* linear tetrahedron */
     switch( info ){               /* select type of information required */
     case NNODES:                  /* number of nodes */
       answer = 4;
       break;
     case NQUAD:                   /* number of quadrature points */
-      answer = 5;
+      answer = 4;
       break;
     case NDIM:                    /* number of physical dimensions */
       answer = 3;
@@ -752,14 +747,14 @@ node_info(const int  n,
    * This was such a useful exercise that we will save this info...
    */
 
-  ei->ielem_shape = Element_Shape;
+  ei[pg->imtrx]->ielem_shape = Element_Shape;
 
   /*
    * If the variable has no interpolation then it means
    * that it is not active and hence no contribution to 
    * degrees of freedom at this node.
    */
-  if ( pd->i[var] == I_NOTHING )
+  if ( pd->i[pg->imtrx][var] == I_NOTHING )
     {
       return(0);
     }
@@ -779,7 +774,7 @@ node_info(const int  n,
                                          way to leave a switch;
                                          break's are not needed */
     case LINE_SEGMENT:
-      switch ( pd->i[var] )
+      switch ( pd->i[pg->imtrx][var] )
         {
         case I_Q1:              /* 2 node, 1 dof/node, Lagrangian linear */
           return( ( n < 2 ) ? 1 : 0 );
@@ -803,7 +798,7 @@ node_info(const int  n,
           return( ( n < 2 ) ? 2 : 0 );
 
         default:
-          sprintf(err_msg,"Unrecognized line segment interpolation: %d.\n",pd->i[var]);
+          sprintf(err_msg,"Unrecognized line segment interpolation: %d.\n",pd->i[pg->imtrx][var]);
           EH(-1, err_msg);
         }
 
@@ -812,7 +807,7 @@ node_info(const int  n,
        */
     case TRIANGLE:
     case TRISHELL:
-      switch ( pd->i[var] )
+      switch ( pd->i[pg->imtrx][var] )
         {
         case I_Q1:              /* 3 node, 1 dof/node, Lagrangian linear */
           return( ( n < 3 ) ? 1 : 0 );
@@ -830,7 +825,7 @@ node_info(const int  n,
 /*        return( ( n == 6 ) ? 3 : 0 );*/
 
         default:
-          sprintf(err_msg,"Unrecognized triangle interpolation: %d.\n",pd->i[var]);
+          sprintf(err_msg,"Unrecognized triangle interpolation: %d.\n",pd->i[pg->imtrx][var]);
           EH(-1, err_msg);
         }
 
@@ -838,7 +833,7 @@ node_info(const int  n,
        * Two dimensional quadrilaterals...
        */
     case QUADRILATERAL:
-      switch ( pd->i[var] )
+      switch ( pd->i[pg->imtrx][var] )
         {
         case I_Q1:              /* 4 node, 1 dof/node, Lagrangian bilinear */
         case I_Q1_GP:
@@ -1026,7 +1021,7 @@ node_info(const int  n,
             }
 
         default:
-          sprintf(err_msg,"Unrecognized quadrilaterial interpolation: %d.\n",pd->i[var]);
+          sprintf(err_msg,"Unrecognized quadrilaterial interpolation: %d.\n",pd->i[pg->imtrx][var]);
           EH(-1, err_msg);
         }
 
@@ -1034,7 +1029,7 @@ node_info(const int  n,
        * Three dimensional tetrahedrons...
        */
     case TETRAHEDRON:
-      switch ( pd->i[var] )
+      switch ( pd->i[pg->imtrx][var] )
         {
         case I_Q1:              /* 4 node, 1 dof/node, Lagrangian linear */
           return( ( n < 4 ) ? 1 : 0 );
@@ -1060,7 +1055,7 @@ node_info(const int  n,
 /*        return( ( n == 10 ) ? 4 : 0 );*/
 
         default:
-          sprintf(err_msg,"Unrecognized tetradedron interpolation: %d.\n",pd->i[var]);
+          sprintf(err_msg,"Unrecognized tetradedron interpolation: %d.\n",pd->i[pg->imtrx][var]);
           EH(-1, err_msg);
         }
 
@@ -1068,7 +1063,7 @@ node_info(const int  n,
        * Three dimensional prisms...
        */
     case PRISM:
-      switch ( pd->i[var] )
+      switch ( pd->i[pg->imtrx][var] )
         {
         case I_Q1:              /* 6 node, 1 dof/node, Lagrangian linear */
           return( ( n < 6 ) ? 1 : 0 );
@@ -1085,7 +1080,7 @@ node_info(const int  n,
           return( ( n == 15 ) ? 4 : 0 );
 
         default:
-          sprintf(err_msg,"Unrecognized prism interpolation: %d.\n",pd->i[var]);
+          sprintf(err_msg,"Unrecognized prism interpolation: %d.\n",pd->i[pg->imtrx][var]);
           EH(-1, err_msg);
         }
 
@@ -1093,7 +1088,7 @@ node_info(const int  n,
        * Three dimensional hexahedrons...
        */
     case HEXAHEDRON:
-      switch ( pd->i[var] )
+      switch ( pd->i[pg->imtrx][var] )
         {
         case I_Q1:              /* 8 node, 1 dof/node, Lagrangian linear */
         case I_Q1_GP:
@@ -1204,7 +1199,7 @@ node_info(const int  n,
           return( ( n < 8 ) ? 8 : 0 );
 
         default:
-          sprintf(err_msg,"Unrecognized hexahedron interpolation: %d.\n",pd->i[var]);
+          sprintf(err_msg,"Unrecognized hexahedron interpolation: %d.\n",pd->i[pg->imtrx][var]);
           EH(-1, err_msg);
         }
 
@@ -1721,7 +1716,7 @@ type2shape(const int element_type)
   case BILINEAR_TRISHELL:
     shape = TRISHELL;
     break;
-  case TRILINEAR_TET:
+  case LINEAR_TET:
     shape = TETRAHEDRON;
     break;
   default:
@@ -2124,7 +2119,7 @@ getdofs(const int element_shape, const int interpolation)
 
     default:
       EH(-1, "Bad element shape.");
-      break;
+      return -1;
     }
   EH(-1, "We should not be here.");
   return (-1);
@@ -2391,16 +2386,37 @@ find_stu(const int   iquad,     /* current GQ index  */
     *u = 0.0;
     break;
 
-  case TRILINEAR_TET:
+  case LINEAR_TET:
+    //*s = *t = *u = 0.25;
+  { static const double alpha = 0.585410196624969;
+    static const double beta = .138196601125011;
+    switch (iquad) {
+    case 0:
+      *s = alpha;
+      *t = *u = beta;
+      break;
+    case 1:
+      *s = *u = beta;
+      *t = alpha;
+      break;
+    case 2:
+      *s = *t = beta;
+      *u = alpha;
+      break;
+    case 3:
+      *s = *t = *u = beta;
+      break;
+    }
+  }
 
-    switch (iquad ) 
+ /*   switch (iquad )
       {
       case 0: *s = *t = *u = 0.25; break;
       case 1: *s = one_sixth; *t = one_sixth; *u = one_sixth; break;
       case 2: *s = one_sixth; *t = one_sixth; *u = one_half ; break;
       case 3: *s = one_sixth; *t = one_half ; *u = one_sixth; break;
       case 4: *s = one_half ; *t = one_sixth; *u = one_sixth; break;
-      }
+      } */
     break;
       
   default:
@@ -2730,7 +2746,7 @@ find_surf_st(const int iquad,           /* current GQ index */
     }
     break;
 
-  case TRILINEAR_TET:
+  case LINEAR_TET:
     
     /* 
      * I'm not sure where the original code came from, especially with
@@ -3073,7 +3089,7 @@ find_surf_center_st (
 	case LINEAR_TRI:
 	case QUAD_TRI:   
 	case QUAD6_TRI:
-	case TRILINEAR_TET:
+        case LINEAR_TET:
         case BILINEAR_TRISHELL:
 	switch (dim)
 	  {
@@ -3145,7 +3161,7 @@ find_surf_center_st (
   case LINEAR_TRI:
   case QUAD_TRI:   
   case QUAD6_TRI:
-  case TRILINEAR_TET:
+  case LINEAR_TET:
   case BILINEAR_TRISHELL:
 	break;
   default:
@@ -3359,7 +3375,7 @@ find_nodal_stu (const int inode,           /* current node index */
       EH(-1, "Trying to get nodal local stu for BIQUAD at illegal node");
     }
     break;
-  case TRILINEAR_TET:  /* trilinear tetrahedron */
+  case LINEAR_TET:  /* trilinear tetrahedron */
     switch ( inode ) {
     case 0:
       *s = *t = *u = 0.;
@@ -3723,12 +3739,15 @@ Gq_weight(const int iquad,               /* current GQ index */
     weight = weight_s*weight_t;
     break;
 
-  case TRILINEAR_TET:
+  case LINEAR_TET:
+    //weight = 1.0/6.0;
+    weight = 1.0/24.0;
+    /*
     if (iquad == 0)
       weight = wltet_1;
     else 
       weight = wltet_2;
-    
+    */
     break;
 
 
@@ -3866,7 +3885,7 @@ Gq_surf_weight(const int iquad,               /* current GQ index  */
     }
     break;
 
-  case TRILINEAR_TET:
+  case LINEAR_TET:
     switch ( iquad ) {
     case 0: weight = -0.281250000000000; break;
     case 1: weight =  0.260416666666667; break;
@@ -4106,7 +4125,7 @@ get_type(char string[],         /* EXODUS name of parent element  */
     {  /* select element shape */
       switch (nodes){              /* select number of nodes in this element */
       case 4:                      /* bilinear quadralateral */
-	answer = TRILINEAR_TET;
+        answer = LINEAR_TET;
 	break;
       default:
 	sprintf(err_msg,"TET element with %d nodes not implemented.\n", nodes);

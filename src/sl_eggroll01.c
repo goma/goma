@@ -58,8 +58,8 @@ gevp_solver_rc(int nj,
 	       dbl *v1,
 	       dbl *v2)
 {
-  extern double drand48 PROTO((void));
-  extern void srand48 PROTO((long));
+  extern double drand48 (void);
+  extern void srand48 (long);
 
   static int i, j, k, ip, ir, mmm, n_shift, nev_want_to_get, 
     transformation;

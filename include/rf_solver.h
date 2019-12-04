@@ -15,9 +15,10 @@
  *$Id: rf_solver.h,v 5.1 2007-09-18 18:53:47 prschun Exp $
  */
 
-#ifndef _RF_SOLVER_H
-#define _RF_SOLVER_H
+#ifndef GOMA_RF_SOLVER_H
+#define GOMA_RF_SOLVER_H
 
+#include "rf_fem_const.h" /* MAX_NUM_MATRICES */
 #include "rf_io_const.h"	/* for definition of MAX_CHAR_IN_INPUT */
 #include "rf_solver_const.h"	/* for kinds of direct solvers */
 
@@ -84,7 +85,7 @@ String_line Amesos_Package;
 
 String_line AztecOO_Solver;
 
-String_line Stratimikos_File;
+String_line Stratimikos_File[MAX_NUM_MATRICES];
 
 /*
  * A new Aztec 2.0 option. There are more and difft options and our
@@ -129,7 +130,7 @@ double convergence_rate_tolerance; /* tolerance for jacobian reformation
 double modified_newt_norm_tol; /* tolerance for jacobian reformation 
                                        based on residual norm */
 
-double Epsilon[3];	/* Used for determining stopping criteria.     */
+double Epsilon[MAX_NUM_MATRICES][3];	/* Used for determining stopping criteria.     */
 
 int NZeros;             /* Number of nonzeros in this procs matrix     */
 

@@ -30,8 +30,8 @@
  * already been included...
  */
 
-#ifndef _FEM_CONST_H
-#define _FEM_CONST_H
+#ifndef GOMA_RF_FEM_CONST_H
+#define GOMA_RF_FEM_CONST_H
 
 /* Generic Logicals */
 #ifndef TRUE
@@ -67,12 +67,19 @@
 #define GALERKIN        1
 #define SUPG            2
 
+#define YZBETA_NONE     0
+#define YZBETA_ONE      1
+#define YZBETA_TWO      2
+#define YZBETA_MIXED    3
+#define YZBETA_CUSTOM   4
+
 /* Viscoelastic Constitutive equation formulation */
 #define EVSS_G          1  /* Rajagopalan's formulation */
 #define EVSS_F          2  /* Fortin's formulation */
 #define EVSS_L          3  /* Level set solid-fluid formulation */
 #define LOG_CONF        4  /* Log-conformation tensor formulation */
 #define EVSS_GRADV      5  /* Fortin's formulation using GradV instead of G */
+#define LOG_CONF_LAGGED 7
                            /* for stress constitutive equations */
 #define LOG_CONF_GRADV  6  /* Log-conformation tensor formulation using */
                            /* GradV instead of G for stress constitutive equations */
@@ -100,12 +107,14 @@
 #define EQM_WTMIN         10
 
 /* Fill Weight Function options */
-#define FILL_WEIGHT_G         1
-#define FILL_WEIGHT_TG        2
-#define FILL_WEIGHT_SUPG      3
-#define FILL_WEIGHT_GLS       4
-#define FILL_WEIGHT_SC        5
-#define FILL_WEIGHT_EXPLICIT  6
+#define FILL_WEIGHT_G           1
+#define FILL_WEIGHT_TG          2
+#define FILL_WEIGHT_SUPG        3
+#define FILL_WEIGHT_GLS         4
+#define FILL_WEIGHT_SC          5
+#define FILL_WEIGHT_EXPLICIT    6
+#define FILL_WEIGHT_SUPG_SHAKIB 7
+#define FILL_WEIGHT_SUPG_GP     8
 
 /* Fill Equation options */
 #define FILL_EQN_ADVECT   1
@@ -453,18 +462,23 @@
 #define TFMP_SAT              185 /*  Thin-Film Multi-Phase Saturation */
 #define TFMP_PRES             186 /*  Thin-Film Multi-Phase Lubrication Pressure */
 #define RESTIME               187  /*  Residence Time Function */ 
-#define EM_E1_REAL            188 /*  EM wave variables */
-#define EM_E2_REAL            189 
-#define EM_E3_REAL            190 
-#define EM_E1_IMAG            191 /*  EM wave variables */
-#define EM_E2_IMAG            192
-#define EM_E3_IMAG            193 
-#define EM_H1_REAL            194 /*  EM wave variables */
-#define EM_H2_REAL            195 
-#define EM_H3_REAL            196 
-#define EM_H1_IMAG            197 /*  EM wave variables */
-#define EM_H2_IMAG            198
-#define EM_H3_IMAG            199
+#define MOMENT0               188
+#define MOMENT1               189
+#define MOMENT2               190
+#define MOMENT3               191
+#define DENSITY_EQN           192
+#define EM_E1_REAL            193 /*  EM wave variables */
+#define EM_E2_REAL            194 
+#define EM_E3_REAL            195 
+#define EM_E1_IMAG            196 /*  EM wave variables */
+#define EM_E2_IMAG            197
+#define EM_E3_IMAG            198 
+#define EM_H1_REAL            199 /*  EM wave variables */
+#define EM_H2_REAL            200 
+#define EM_H3_REAL            201 
+#define EM_H1_IMAG            202 /*  EM wave variables */
+#define EM_H2_IMAG            203
+#define EM_H3_IMAG            204
 /*
  * define a variable to hold an external field which will be 
  * held fixed in the problem but parametered by the basis functions
@@ -826,19 +840,24 @@
 #define R_TFMP_MASS             185 /*  Thin-Film Multi-Phase Mass Equation */
 #define R_TFMP_BOUND            186 /*  Thin-Film Multi-Phase Boundary Motion Equation */
 #define R_RESTIME               187 /*  Resdience Time Function */
-#define R_EM_E1_REAL            188 /*  EM wave variables */
-#define R_EM_E2_REAL            189 
-#define R_EM_E3_REAL            190 
-#define R_EM_E1_IMAG            191 /*  EM wave variables */
-#define R_EM_E2_IMAG            192
-#define R_EM_E3_IMAG            193 
-#define R_EM_H1_REAL            194 /*  EM wave variables */
-#define R_EM_H2_REAL            195 
-#define R_EM_H3_REAL            196 
-#define R_EM_H1_IMAG            197 /*  EM wave variables */
-#define R_EM_H2_IMAG            198
-#define R_EM_H3_IMAG            199 
-#define V_LAST		        200
+#define R_MOMENT0               188
+#define R_MOMENT1               189
+#define R_MOMENT2               190
+#define R_MOMENT3               191
+#define R_DENSITY_EQN           192
+#define R_EM_E1_REAL            193 /*  EM wave variables */
+#define R_EM_E2_REAL            194 
+#define R_EM_E3_REAL            195 
+#define R_EM_E1_IMAG            196 /*  EM wave variables */
+#define R_EM_E2_IMAG            197
+#define R_EM_E3_IMAG            198 
+#define R_EM_H1_REAL            199 /*  EM wave variables */
+#define R_EM_H2_REAL            200 
+#define R_EM_H3_REAL            201 
+#define R_EM_H1_IMAG            202 /*  EM wave variables */
+#define R_EM_H2_IMAG            203
+#define R_EM_H3_IMAG            204 
+#define V_LAST		        205
 
 
 /* MMH
@@ -989,6 +1008,12 @@
 #ifndef MAX_ELEMENT_INDICES_RELATED 
 #define MAX_ELEMENT_INDICES_RELATED 2
 #endif
+
+#ifndef MAX_NUM_MATRICES 
+#define MAX_NUM_MATRICES 11          /* Maximum number of matrices to be solved in segregated solver fashion */
+#endif
+
+#define MAX_MOMENTS 4
 
 /*
  * Magic numbers for adaptive time step selection -- how much acceleration,

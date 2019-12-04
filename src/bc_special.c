@@ -396,7 +396,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 		{
  		  if (BC_Types[j].BC_Data_Int[0] == 1000000*I+1000000 
 		      && ((BC_Types[j].BC_Data_Int[2] == -1 && iapply) ||
-			  BC_Types[j].BC_Data_Int[2] == ei->elem_blk_id) )
+			  BC_Types[j].BC_Data_Int[2] == ei[pg->imtrx]->elem_blk_id) )
 		    {
  		      sum_normal = SQUARE(BC_Types[j].BC_Data_Float[1]) +
  			SQUARE(BC_Types[j].BC_Data_Float[2]) +
@@ -460,7 +460,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			for(p=0;p<ielem_dim;p++)
 			  {
 			    fsnormal[jcnt][p]=fv->snormal[p];
-			    for(k=0;k<ei->dof[MESH_DISPLACEMENT1];k++)
+			    for(k=0;k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
 			      {
 				for(q=0;q<ielem_dim;q++)
 				  {
@@ -481,7 +481,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 				ssnormal[jcnt][p]=BC_Types[j].BC_Data_Float[p+1];
 				for (q=0;q<ielem_dim;q++)
 				  {
-				    for (k = 0; k<ei->dof[MESH_DISPLACEMENT1];k++)
+				    for (k = 0; k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
 				      {
 					dssnormal_dx[jcnt][p][q][k] = 0.;
 				      }
@@ -541,7 +541,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			    ssnormal[jcnt][p]=-fv->snormal[p];
 			    for(q=0;q<ielem_dim;q++)
 			      {
-				for(k=0;k<ei->dof[MESH_DISPLACEMENT1];k++)
+				for(k=0;k<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];k++)
 				  {
 				    dssnormal_dx[jcnt][p][q][k] = -fv->dsnormal_dx[p][q][k]; 
 				  }
@@ -570,7 +570,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			    }
 
 	    /*   make sure we are in the free surface element, etc.  */
-		  load_ei(CA_fselem[jflag], exo, 0);
+		  load_ei(CA_fselem[jflag], exo, 0, pg->imtrx);
             /*
 	     * Load the field variable values at this node point
 	     */
@@ -657,14 +657,14 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
                                   /* fix contact point where it sits right now */
 				  for (p = 0; p < ielem_dim; p++) {
 				    k = Index_Solution(I, MESH_DISPLACEMENT1+p,
-						       0, 0, -1);
+						       0, 0, -1, pg->imtrx);
 				    if (!af->Assemble_LSA_Mass_Matrix) {
 				      if (af->Assemble_Jacobian) {
 					d_func[p][MESH_DISPLACEMENT1+p][id] = 1.;    
-					ldof_eqn = ei->ln_to_first_dof[MESH_DISPLACEMENT1+p][id];
+					ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[MESH_DISPLACEMENT1+p][id];
 					lec->R[MESH_DISPLACEMENT1 + p][ldof_eqn] = 0.; 
-					ldof_eqn = ei->ln_to_first_dof[MESH_DISPLACEMENT1+p][id];
-                                        eqn = upd->ep[MESH_DISPLACEMENT1 + p];
+					ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[MESH_DISPLACEMENT1+p][id];
+                                        eqn = upd->ep[pg->imtrx][MESH_DISPLACEMENT1 + p];
 					zero_lec_row(lec->J,eqn	,ldof_eqn);
 					lec->J[eqn][eqn][ldof_eqn][ldof_eqn] 
 					  = DIRICHLET_PENALTY; 
@@ -779,7 +779,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					wall_velocity =ssnrml[1]*velo[0] - ssnrml[0]*velo[1];
 					for (i2=0;i2<ielem_dim;i2++)
 					  {
-					    for (i3=0;i3<ei->dof[MESH_DISPLACEMENT1];i3++)
+					    for (i3=0;i3<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];i3++)
 					      {
 						dwall_velo_dx[i2][i3] += 
 						  dssnrml_dx[1][i2][i3]*velo[0] -
@@ -796,7 +796,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					   - ssnrml[0]*(fv->x[0]-BC_Types[i1].BC_Data_Float[2]));
 					for (i2=0;i2<ielem_dim;i2++)
 					  {
-					    for (i3=0;i3<ei->dof[MESH_DISPLACEMENT1];i3++)
+					    for (i3=0;i3<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];i3++)
 					      {
 						dwall_velo_dx[i2][i3] += 
 						  BC_Types[i1].BC_Data_Float[1]*
@@ -804,7 +804,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 						   - dssnrml_dx[0][i2][i3]*(fv->x[0]-BC_Types[i1].BC_Data_Float[2]));
 					      }
 					  }
-					for (i3=0;i3<ei->dof[MESH_DISPLACEMENT1];i3++)
+					for (i3=0;i3<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];i3++)
 					  {
 					    dwall_velo_dx[0][i3] += 
 					      BC_Types[i1].BC_Data_Float[1]*
@@ -825,7 +825,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					dvelo_dx[1][1] = dvelo_vary_fnc_d2(VVARY_BC, fv->x[0], fv->x[1], fv->x[2] , BC_Types[i1].u_BC, time_value);
 					for (i2=0;i2<ielem_dim;i2++)
 					  {
-					    for (i3=0;i3<ei->dof[MESH_DISPLACEMENT1];i3++)
+					    for (i3=0;i3<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];i3++)
 					      {
 						dwall_velo_dx[i2][i3] += 
 						  dssnrml_dx[1][i2][i3]*velo[0] -
@@ -846,7 +846,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					    velo[0] = sqrt(SQUARE(fv->x[0]-elc_glob[mn]->u_v_mesh_sfs[1]) +
 							   SQUARE(fv->x[1]-elc_glob[mn]->u_v_mesh_sfs[2]));
 					    wall_velocity = elc_glob[mn]->u_v_mesh_sfs[0]*velo[0];
-					    for (i3=0;i3<ei->dof[MESH_DISPLACEMENT1];i3++)
+					    for (i3=0;i3<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];i3++)
 					      {
 						dwall_velo_dx[0][i3] += 
 						  elc_glob[mn]->u_v_mesh_sfs[0]*
@@ -863,7 +863,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					    velo[0] = sqrt(SQUARE(fv->x[0]-elc_rs_glob[mn]->u_v_mesh_sfs[1]) +
 							   SQUARE(fv->x[1]-elc_rs_glob[mn]->u_v_mesh_sfs[2]));
 					    wall_velocity = elc_rs_glob[mn]->u_v_mesh_sfs[0]*velo[0];
-					    for (i3=0;i3<ei->dof[MESH_DISPLACEMENT1];i3++)
+					    for (i3=0;i3<ei[pg->imtrx]->dof[MESH_DISPLACEMENT1];i3++)
 					      {
 						dwall_velo_dx[0][i3] += 
 						  elc_rs_glob[mn]->u_v_mesh_sfs[0]*
@@ -925,7 +925,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			    }	/* if VELO_THETA bc		*/
 			  else EH(-1, "NO CA Condition applied ");
 #if 0
-		  load_ei(ielem, exo, 0);
+		  load_ei(ielem, exo, 0, pg->imtrx);
             /*
 	     * Load the field variable values at this node point
 	     */
@@ -1103,13 +1103,13 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			 BC_Types[j_bc_id].BC_Name == MOVING_CA_BC) ) {
 		      if(CA_fselem[jflag] != -1 && CA_sselem[jflag] != -1
 			 && CA_id[jflag] == j_bc_id) {
-			index_eq = bc_eqn_index(id, I, j_bc_id, ei->mn,
+			index_eq = bc_eqn_index(id, I, j_bc_id, ei[pg->imtrx]->mn,
 						p, &eqn, &matID_apply, &vd);
 		      } else {
 			index_eq = -1;
 		      }
 		    } else {
-		      index_eq = bc_eqn_index(id, I, j_bc_id, ei->mn,
+		      index_eq = bc_eqn_index(id, I, j_bc_id, ei[pg->imtrx]->mn,
 					      p, &eqn, &matID_apply, &vd);
 		    }
 	  
@@ -1138,9 +1138,9 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			if (eqn == R_MASS) {
 			  ieqn = MAX_PROB_EQN + BC_Types[bc_input_id].species_eq;
 			} else {
-			  ieqn = upd->ep[eqn];
+			  ieqn = upd->ep[pg->imtrx][eqn];
 			}
-			ldof_eqn = ei->ln_to_first_dof[eqn][id];
+			ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][id];
 			lec->R[ieqn][ldof_eqn] += weight * func[p];
 
 			/* 
@@ -1156,8 +1156,8 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 
 			  for (var=0; var < MAX_VARIABLE_TYPES; var++)
 			    {
-			      if (ei->dof[var] && (BC_Types[j_bc_id].desc->sens[var] || 1 ) && jflag != -1)
-				/*			    if (pd->v[var] && (BC_Types[j_bc_id].desc->sens[var] || 1 ) && jflag != -1) TAB 01-08-07 */
+			      if (ei[pg->imtrx]->dof[var] && (BC_Types[j_bc_id].desc->sens[var] || 1 ) && jflag != -1)
+				/*			    if (pd->v[pg->imtrx][var] && (BC_Types[j_bc_id].desc->sens[var] || 1 ) && jflag != -1) TAB 01-08-07 */
 				{
 				  if (var != MASS_FRACTION)
 				    {
@@ -1173,15 +1173,15 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 				            EH(-1, "Unexpected matrix format in apply_bc_special, use msr");
 				          }
 
-					  load_ei(CA_fselem[jflag], exo, 0);
+					  load_ei(CA_fselem[jflag], exo, 0, pg->imtrx);
 
 					  /* For nonlocal element information,
 					   * we do a direct injection into a 
 					   * through a. TABAER BEWARE!!!
 					   */
-					  for ( j=0; j<ei->dof[var]; j++)
+					  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					    {
-					      je     = ei->gun_list[var][j];
+					      je     = ei[pg->imtrx]->gun_list[var][j];
 					      EH(je, "Bad var index.");
 					      ja = (index_eq == je) ? index_eq :
 						in_list(je, ija[index_eq], ija[index_eq+1], ija);
@@ -1191,10 +1191,10 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					}
 				      else
 					{
-					  for ( j=0; j<ei->dof[var]; j++)
+					  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					    {
-					      pvar = upd->vp[var];
-					      ldof_eqn = ei->ln_to_first_dof[eqn][id];
+					      pvar = upd->vp[pg->imtrx][var];
+					      ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][id];
 					      lec->J[ieqn][pvar] [ldof_eqn][j] +=
 						weight * d_func[p][var][j];
 					    }
@@ -1204,7 +1204,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 				       *  is not the same as current element, reload some element info
 				       */
 				      if (jflag != -1 && CA_sselem[jflag] != -1 && 
-					  CA_sselem[jflag] != ei->ielem && 
+					  CA_sselem[jflag] != ei[pg->imtrx]->ielem && 
 					  Linear_Solver != FRONT && 
 					  CA_id[jflag] == j_bc_id && j_bc_id != -1)
 					{
@@ -1213,14 +1213,14 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
                                                 "Unexpected matrix format in apply_bc_special, use msr");
                                           }
 
-					  load_ei(CA_sselem[jflag], exo, 0);
+					  load_ei(CA_sselem[jflag], exo, 0, pg->imtrx);
 
 					  /* For nonlocal element information, we do a
 					   * direct injection into a through Jac_BC.
 					   */
-					  for (j = 0; j < ei->dof[var]; j++)
+					  for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
 					    {
-					      je     = ei->gun_list[var][j]; 
+					      je     = ei[pg->imtrx]->gun_list[var][j]; 
 					      EH(je, "Bad var index."); 
 					      ja = (index_eq == je) ? index_eq :
 						in_list(je, ija[index_eq], ija[index_eq+1], ija);
@@ -1230,29 +1230,29 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					}
 				      else
 					{
-					  for ( j=0; j<ei->dof[var]; j++)
+					  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					    {
-					      pvar = upd->vp[var];
-					      ldof_eqn = ei->ln_to_first_dof[eqn][id];
+					      pvar = upd->vp[pg->imtrx][var];
+					      ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][id];
 					      lec->J[ieqn][pvar] [ldof_eqn][j] +=
 						weight * d_func_ss[p][var][j]; 
 					    }
 					}
 				    
 				      /*    if changed elements, put element information back   */
-				      if (ielem != ei->ielem)
+				      if (ielem != ei[pg->imtrx]->ielem)
 					{
-					  load_ei(ielem, exo, 0);
+					  load_ei(ielem, exo, 0, pg->imtrx);
 					}
 				    }
 				  else  /* variable type is MASS_FRACTION */
 				    {
 				      for (w=0; w<pd->Num_Species_Eqn; w++)
 					{
-					  for ( j=0; j<ei->dof[var]; j++)
+					  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					    {
-					      //pvar = upd->vp[MAX_PROB_VAR + w];
-					      ldof_eqn = ei->ln_to_first_dof[eqn][id];
+					      //pvar = upd->vp[pg->imtrx][MAX_PROB_VAR + w];
+					      ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][id];
 					      lec->J[ieqn][MAX_PROB_VAR + w] [ldof_eqn][j] +=
 						weight * d_func[p][MAX_PROB_VAR + w][j];
 					    }
@@ -1351,7 +1351,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
   id_side = side->id_side;
   nbc = side->Num_BC;
   nodes_per_side = side->num_nodes_on_side;
-  elem1 = ei->ielem;
+  elem1 = ei[pg->imtrx]->ielem;
   eb1 = find_elemblock_index(ielem, exo);
   ebid1 = exo->eb_id[eb1];
   m1 = Matilda[eb1];
@@ -1361,7 +1361,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
   bulk_gnn_list = (int *)array_alloc (1, MAX_NODES_PER_SIDE, sizeof(int));
   for (i=0; i<MAX_VARIABLE_TYPES; i++)
     {
-      n_dof[i] = ei->dof[i];
+      n_dof[i] = ei[pg->imtrx]->dof[i];
     }
 
   /* Loop over friends of the current element */
@@ -1393,9 +1393,9 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
           shell_sv = pd_glob[m2]->ShapeVar;
 
           /* Store these node numbers in bulk_gnn_list */
-          for (i=0; i<ei->dof[shell_sv]; i++)
+          for (i=0; i<ei[pg->imtrx]->dof[shell_sv]; i++)
             {
-              bulk_gnn_list[i] = ei->gnn_list[shell_sv][i];
+              bulk_gnn_list[i] = ei[pg->imtrx]->gnn_list[shell_sv][i];
             }
 
           /* Assembly proceeds along SHELL element Gauss points */
@@ -1419,13 +1419,13 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
               /* Load surface determinant/normal data for bulk element side */
               err = get_side_info(ielem_type, id_side,
                                   &nodes_per_side, local_elem_node_id);
-              surface_determinant_and_normal(elem1, ei->iconnect_ptr,
+              surface_determinant_and_normal(elem1, ei[pg->imtrx]->iconnect_ptr,
                                              num_local_nodes, ielem_dim-1,
                                              id_side, nodes_per_side,
                                              local_elem_node_id);
 
               if (ielem_dim !=3) {
-		calc_surf_tangent(elem1, ei->iconnect_ptr, num_local_nodes,
+		calc_surf_tangent(elem1, ei[pg->imtrx]->iconnect_ptr, num_local_nodes,
 				  ielem_dim-1, nodes_per_side, local_elem_node_id);
 	      }
               for (i=0; i<ielem_dim; i++)
@@ -1435,10 +1435,10 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
               setup_shop_at_point(elem2, xi2, exo);
 
               /* Load mapping array gnn_map (shell DOF -> bulk DOF) */
-              for (i=0; i<ei->dof[shell_sv]; i++)
+              for (i=0; i<ei[pg->imtrx]->dof[shell_sv]; i++)
                 {
-                  node = ei->gnn_list[shell_sv][i];
-                  index = in_list(node, 0, ei->dof[shell_sv], bulk_gnn_list);
+                  node = ei[pg->imtrx]->gnn_list[shell_sv][i];
+                  index = in_list(node, 0, ei[pg->imtrx]->dof[shell_sv], bulk_gnn_list);
                   EH(index, "Mapping fault!");
                   gnn_map[i] = index;
 
@@ -1446,9 +1446,9 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
 
               /* This is for error checking */
               err = 0;
-              if (ei->num_local_nodes != nodes_per_side)
+              if (ei[pg->imtrx]->num_local_nodes != nodes_per_side)
                 EH(-1, "Node number mismatch between elements on this side!");
-              if (ei->num_local_nodes != ei->dof[pd->ShapeVar])
+              if (ei[pg->imtrx]->num_local_nodes != ei[pg->imtrx]->dof[pd->ShapeVar])
                 EH(-1, "Cannot handle current shell ShapeVar!");
 
               do_LSA_mods(LSA_SURFACE);
@@ -1541,8 +1541,8 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
                       /* Loop over applicable shell equations */
                       for (eqn = eind; eqn < (eind+evec); eqn++)
                         {
-                          pe = upd->ep[eqn];
-                          idof = ei->dof[eqn];
+                          pe = upd->ep[pg->imtrx][eqn];
+                          idof = ei[pg->imtrx]->dof[eqn];
                           for (i=0; i < idof; i++)
                             {
                               ib = gnn_map[i];
@@ -1553,7 +1553,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
                               /* Loop through and transfer sensitivities */
                               for (var=0; var<MAX_VARIABLE_TYPES; var++)
                                 {
-                                  pv = upd->vp[var];
+                                  pv = upd->vp[pg->imtrx][var];
                                   jdof = n_dof[var];
                                   for (j=0; j < jdof; j++)
                                     {
@@ -1561,7 +1561,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
 					local_j[pe][pv][i][j];
                                     }
                                 }  /* End of term transfer */
-                            }  /* End of ei->dof[eqn] loop */
+                            }  /* End of ei[pg->imtrx]->dof[eqn] loop */
                         }  /* End of eqn loop */
                     }  /* End of applicable BC if block */
                 }  /* End of loop over all BC's */
@@ -1848,7 +1848,7 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 	  for( p=0; p < bc_desc->vector; p++ )
 	    {
 		      
-	      index_eq = bc_eqn_index(id, I, bc_input_id, ei->mn,
+	      index_eq = bc_eqn_index(id, I, bc_input_id, ei[pg->imtrx]->mn,
 				      p, &eqn, &matID_apply, &vd);
 
 	      if( index_eq >= 0 )
@@ -1856,7 +1856,7 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 		  double phi_i;
 		  int ieqn ;
 
-		  if(  (ldof_eqn = ei->ln_to_first_dof[eqn][id]) != -1 )
+		  if(  (ldof_eqn = ei[pg->imtrx]->ln_to_first_dof[eqn][id]) != -1 )
 		    {
    
 		      phi_i = bf[eqn]->phi[ldof_eqn];
@@ -1871,7 +1871,7 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 			wt *= BIG_PENALTY;
 			      
 		      if (eqn == R_MASS) ieqn = MAX_PROB_EQN + bc->species_eq; 
-		      else ieqn = upd->ep[eqn];
+		      else ieqn = upd->ep[pg->imtrx][eqn];
 		      
 		      /* primary piece of path dependence from finite difference */
 		      if ( CalcPathDeps )
@@ -1879,10 +1879,10 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 			  if ( af->Assemble_Jacobian ) 
 			    {
 			      int var = LS;
-			      int pvar = upd->vp[var];
+			      int pvar = upd->vp[pg->imtrx][var];
 			      if ( pvar != -1 )
 			        {
-			          for ( j=0; j<ei->dof[var]; j++)
+			          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				    {
 				      lec->J[ieqn][pvar][ldof_eqn][j] += wt * func[p] * bf[var]->phi[j];
 				    }
@@ -1899,11 +1899,11 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 				  
 			      for( var = 0 ; var < MAX_VARIABLE_TYPES; var++)
 				{
-				  if ( (pvar = upd->vp[var]) != -1 )
+				  if ( (pvar = upd->vp[pg->imtrx][var]) != -1 )
 				    {
 				      if ( var != MASS_FRACTION )
 					{
-					  for ( j=0; j<ei->dof[var]; j++)
+					  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 					    {
 					      lec->J[ieqn][pvar][ldof_eqn][j] += 
 						wt*d_func[p][var][j];
@@ -1913,7 +1913,7 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 					{
 					  for( w=0; w<pd->Num_Species_Eqn; w++ )
 					    {
-					      for ( j=0; j<ei->dof[var]; j++)
+					      for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 						{
 						  lec->J[ieqn][MAX_PROB_VAR + w][ldof_eqn][j] += 
 						    wt * d_func[p][MAX_VARIABLE_TYPES + w][j];
@@ -1924,10 +1924,10 @@ assemble_sharp_integrated_bc( double x[],           /* Solution vector for the c
 				}
 			      /* last piece of path dependence */
 			      var = LS;
-			      pvar = upd->vp[var];
+			      pvar = upd->vp[pg->imtrx][var];
 			      if ( pvar != -1 && !ls->Ignore_F_deps )
 			        {
-			          for ( j=0; j<ei->dof[var]; j++)
+			          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 				    {
 				      lec->J[ieqn][pvar][ldof_eqn][j] += wt * func[p] * lsi->d_gfmag_dF[j] * lsi->gfmaginv;
 				    }

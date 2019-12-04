@@ -31,7 +31,7 @@ static char rcsid[] = "$Id: ac_stability.c,v 5.1 2007-09-18 18:53:40 prschun Exp
 #include <math.h>
 #include <string.h>
 
-#define _AC_STABILITY_C
+#define GOMA_AC_STABILITY_C
 #include "sl_eggroll.h"
 #include "goma.h"
 
@@ -102,8 +102,8 @@ solve_stability_problem(struct Aztec_Linear_Solver_System *ams,
    * amount (a few nodes with < 1% difference, say).  But this small
    * difference caused large errors in the eigenvalues (10%).  I fixed
    * this 11/28/00. */
-  dcopy1(NumUnknowns,x,x_old);
-  dcopy1(NumUnknowns,x,x_older);
+  dcopy1(NumUnknowns[pg->imtrx],x,x_old);
+  dcopy1(NumUnknowns[pg->imtrx],x,x_older);
 
   if(!(Linear_Stability == LSA_3D_OF_2D || Linear_Stability == LSA_3D_OF_2D_SAVE))
     res = solve_full_stability_problem(ams, x, delta_t, theta, resid_vector, 
@@ -164,11 +164,11 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
   int *ija = ams->bindx;	/* This structure is the same for ALL matrices... */
 
   /* Initialize... */
-  zero = calloc(NumUnknowns, sizeof(double));
-  init_vec_value(&zero[0], 0.0, NumUnknowns);
+  zero = calloc(NumUnknowns[pg->imtrx], sizeof(double));
+  init_vec_value(&zero[0], 0.0, NumUnknowns[pg->imtrx]);
 
-  scale = calloc(NumUnknowns, sizeof(double));
-  init_vec_value(scale, 0.0, NumUnknowns);
+  scale = calloc(NumUnknowns[pg->imtrx], sizeof(double));
+  init_vec_value(scale, 0.0, NumUnknowns[pg->imtrx]);
 
   mass_matrix = mass_matrix_tmpA = mass_matrix_tmpB = NULL;
   jacobian_matrix = NULL;
@@ -201,9 +201,9 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
   matrix_fill_full(ams, &x[0], &resid_vector[0], 
 		   x_old, x_older, xdot, xdot_old, x_update,
 		   &delta_t, &theta, 
-		   First_Elem_Side_BC_Array, 
+		   First_Elem_Side_BC_Array[pg->imtrx], 
 		   &time_value, exo, dpi, 
-		   &num_total_nodes, &zero[0], &zero[0], NULL);
+                   &num_total_nodes, &zero[0], &zero[0], NULL);
 
   /* This call will fill in scale[] with the proper row scales.  I
    * need to get this in terms of the Jacobian, and the apply it to
@@ -228,10 +228,10 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	{
 	  pd_glob[mn]->TimeIntegration = TRANSIENT;
 	  for(i = 0; i < MAX_EQNS; i++)
-	    if(pd_glob[mn]->e[i])
+	    if(pd_glob[mn]->e[pg->imtrx][i])
 	      {
-		pd_glob[mn]->e[i] |= T_MASS;
-		pd_glob[mn]->etm[i][LOG2_MASS] = 1.0;
+		pd_glob[mn]->e[pg->imtrx][i] |= T_MASS;
+		pd_glob[mn]->etm[pg->imtrx][i][LOG2_MASS] = 1.0;
 	      }
 	}
 
@@ -248,10 +248,10 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
       matrix_fill_full(ams, x, resid_vector, 
 		       x_old, x_older, xdot, xdot_old, x_update,
 		       &delta_t, &theta, 
-		       First_Elem_Side_BC_Array, 
+		       First_Elem_Side_BC_Array[pg->imtrx], 
 		       &time_value, exo, dpi, 
 		       &num_total_nodes, 
-		       &zero[0], &zero[0], NULL);
+                       &zero[0], &zero[0], NULL);
 
       printf("Assembling B_tmpB...\n");
       af->Assemble_Residual = TRUE;
@@ -264,10 +264,10 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
       matrix_fill_full(ams, x, resid_vector, 
 		       x_old, x_older, xdot, xdot_old, x_update,
 		       &delta_t, &theta, 
-		       First_Elem_Side_BC_Array, 
+		       First_Elem_Side_BC_Array[pg->imtrx], 
 		       &time_value, exo, dpi, 
 		       &num_total_nodes, 
-		       &zero[0], &zero[0], NULL);
+                       &zero[0], &zero[0], NULL);
       
       for(i = 0; i < NZeros+1; i++)
 	{
@@ -289,15 +289,15 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
       for(i = 0; i < MAX_EQNS; i++)
 	/* MMH: Note that there is apparently no support for
 	 * multiple species equations. */
-	if(pd_glob[mn]->e[i])
+	if(pd_glob[mn]->e[pg->imtrx][i])
 	  {
 	    /*
 	      printf("Equation %d is on.\n",i);
 	    */
-	    pd_glob[mn]->e[i] = T_MASS;
+	    pd_glob[mn]->e[pg->imtrx][i] = T_MASS;
 	    for (j=0;j<MAX_TERM_TYPES;j++)
-	      pd_glob[mn]->etm[i][j] = 0.0;
-	    pd_glob[mn]->etm[i][LOG2_MASS] = 1.0;
+	      pd_glob[mn]->etm[pg->imtrx][i][j] = 0.0;
+	    pd_glob[mn]->etm[pg->imtrx][i][LOG2_MASS] = 1.0;
 	  }
     }
 
@@ -315,9 +315,9 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
   tran->delta_t = 1.0;      /*for Newmark-Beta terms in Lagrangian Solid*/
   matrix_fill_full(ams, x, resid_vector, 
 		   x_old, x_older, xdot, xdot_old, x_update,
-		   &delta_t, &theta, First_Elem_Side_BC_Array, 
+		   &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], 
 		   &time_value, exo, dpi, &num_total_nodes, 
-		   &zero[0], &zero[0], NULL);
+                   &zero[0], &zero[0], NULL);
 
   /* MMH: Curious... Why NZeros + 1 ??? */
       /*
@@ -337,13 +337,13 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
       matrix_scaling(ams, mass_matrix_tmpA, -1.0, scale);
 
       compare_mass_matrices(jacobian_matrix, mass_matrix,
-			    mass_matrix_tmpA, ija, NumUnknowns);
+			    mass_matrix_tmpA, ija, NumUnknowns[pg->imtrx]);
     }
 
   /* Print jacobian and mass matrices */
   if(Linear_Stability == LSA_SAVE || eigen->Eigen_Matrix_Output)
     output_stability_matrices(mass_matrix, jacobian_matrix, ija,
-			      num_total_nodes, NumUnknowns, NZeros);
+			      num_total_nodes, NumUnknowns[pg->imtrx], NZeros);
   
   if(Linear_Stability != LSA_SAVE)
     {
@@ -353,7 +353,7 @@ solve_full_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	  istuff[i] = -1;
 	  dstuff[i] = -1.0;
 	}
-      eggroll_init(NumUnknowns, NZeros, &istuff[0], &dstuff[0]);
+      eggroll_init(NumUnknowns[pg->imtrx], NZeros, &istuff[0], &dstuff[0]);
       
       /* Call eggroll solver */
       eggrollwrap(istuff, dstuff, ija, jacobian_matrix, mass_matrix,
@@ -423,11 +423,11 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
   dbl ***etm_save;
 
   /* Initialize... */
-  zero = calloc(NumUnknowns, sizeof(double));
-  init_vec_value(&zero[0], 0.0, NumUnknowns);
+  zero = calloc(NumUnknowns[pg->imtrx], sizeof(double));
+  init_vec_value(&zero[0], 0.0, NumUnknowns[pg->imtrx]);
 
-  scale = calloc(NumUnknowns, sizeof(double));
-  init_vec_value(scale, 0.0, NumUnknowns);
+  scale = calloc(NumUnknowns[pg->imtrx], sizeof(double));
+  init_vec_value(scale, 0.0, NumUnknowns[pg->imtrx]);
 
   mass_matrix = mass_matrix_1 = mass_matrix_2 = mass_matrix_1_tmpA =
     mass_matrix_1_tmpB = mass_matrix_2_tmpA = mass_matrix_2_tmpB =
@@ -440,9 +440,9 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
   for(mn = 0; mn < upd->Num_Mat; mn++)
     for(i = 0; i < MAX_EQNS; i++)
       {
-	e_save[mn][i] = pd_glob[mn]->e[i];
+	e_save[mn][i] = pd_glob[mn]->e[pg->imtrx][i];
 	for(j = 0; j < MAX_TERM_TYPES; j++)
-	  etm_save[mn][i][j] = pd_glob[mn]->etm[i][j];
+	  etm_save[mn][i][j] = pd_glob[mn]->etm[pg->imtrx][i][j];
       }
 
   /* Allocate mass matrices */
@@ -473,7 +473,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
       printf("Solving for wave number %d out of %d.  WAVE NUMBER = %g\n", wn
 	     + 1, LSA_number_wave_numbers, LSA_3D_of_2D_wave_number); 
       
-      /* Get the original pd_glob[mn]->e[i] and pd_glob[mn]->etm[i][*] 
+      /* Get the original pd_glob[mn]->e[pg->imtrx][i] and pd_glob[mn]->etm[pg->imtrx][i][*] 
        * values back. */
       TimeIntegration = STEADY;
       theta = 0.0;
@@ -481,9 +481,9 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	for(i = 0; i < MAX_EQNS; i++)
 	  {
 	    pd_glob[mn]->TimeIntegration = STEADY;
-	    pd_glob[mn]->e[i] = e_save[mn][i];
+	    pd_glob[mn]->e[pg->imtrx][i] = e_save[mn][i];
 	    for(j = 0; j < MAX_TERM_TYPES; j++)
-	      pd_glob[mn]->etm[i][j] = etm_save[mn][i][j];
+	      pd_glob[mn]->etm[pg->imtrx][i][j] = etm_save[mn][i][j];
 	  }
       
       /* Jacobian matrix, pass 1 */
@@ -498,9 +498,9 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
       
       matrix_fill_full(ams, x, resid_vector, 
 		       x_old, x_older, xdot, xdot_old, x_update,
-		       &delta_t, &theta, First_Elem_Side_BC_Array, 
+		       &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx], 
 		       &time_value, exo, dpi, 
-		       &num_total_nodes, &zero[0], &zero[0], NULL);
+                       &num_total_nodes, &zero[0], &zero[0], NULL);
 
       /* Jacobian matrix, pass 2 */
       printf("Assembling J (pass 2)...\n");
@@ -515,9 +515,9 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
       matrix_fill_full(ams, x, resid_vector, 
 		       x_old, x_older, xdot, xdot_old, x_update,
 		       &delta_t, &theta, 
-		       First_Elem_Side_BC_Array, 
+		       First_Elem_Side_BC_Array[pg->imtrx], 
 		       &time_value, exo, dpi, 
-		       &num_total_nodes, &zero[0], &zero[0], NULL);
+                       &num_total_nodes, &zero[0], &zero[0], NULL);
 
       /* Add the two passes together to get the "real" Jacobian
        * matrix. */
@@ -540,7 +540,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
        * for all three...
        *
        * There is an order restriction.  We cannot recover the
-       * pd_glob[mn]->e[i] (and pd_glob[mn]->etm[i][*]) values AFTER
+       * pd_glob[mn]->e[imtrx][i] (and pd_glob[mn]->etm[imtrx][i][*]) values AFTER
        * we compute the mass matrix with my method, because we set
        * everything to 0 except the T_MASS-ish terms.  So we should
        * compute all of the Subtractionism matrices,
@@ -561,10 +561,10 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	{
 	  pd_glob[mn]->TimeIntegration = TRANSIENT;
 	  for(i = 0; i < MAX_EQNS; i++)
-	    if(pd_glob[mn]->e[i])
+	    if(pd_glob[mn]->e[pg->imtrx][i])
 	      {
-		pd_glob[mn]->e[i] |= T_MASS;
-		pd_glob[mn]->etm[i][LOG2_MASS] = 1.0;
+		pd_glob[mn]->e[pg->imtrx][i] |= T_MASS;
+		pd_glob[mn]->etm[pg->imtrx][i][LOG2_MASS] = 1.0;
 	      }
 	}
 
@@ -591,9 +591,9 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	  matrix_fill_full(ams, x, resid_vector, x_old,
 			   x_older, xdot, xdot_old,
 			   x_update, &delta_t, &theta,
-			   First_Elem_Side_BC_Array, &time_value, exo,
+			   First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo,
 			   dpi, &num_total_nodes, &zero[0], &zero[0],
-			   NULL);
+                           NULL);
 	  
 	  printf("Assembling B_tmpB (pass 1)...\n");
 	  LSA_3D_of_2D_pass = 1;
@@ -602,9 +602,9 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	  tran->delta_t = 1.0e+72;   /*for Newmark-Beta terms in Lagrangian Solid*/
 	  matrix_fill_full(ams, x, resid_vector, x_old,
 			   x_older, xdot, xdot_old, x_update,
-			   &delta_t, &theta, First_Elem_Side_BC_Array,
+			   &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx],
 			   &time_value, exo, dpi, &num_total_nodes,
-			   &zero[0], &zero[0], NULL);
+                           &zero[0], &zero[0], NULL);
 	  
 	  printf("Assembling B_tmpA (pass 2)...\n");
 	  LSA_3D_of_2D_pass = 2;
@@ -615,9 +615,9 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	  matrix_fill_full(ams, x, resid_vector, x_old,
 			   x_older, xdot, xdot_old,
 			   x_update, &delta_t, &theta,
-			   First_Elem_Side_BC_Array, &time_value, exo,
+			   First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo,
 			   dpi, &num_total_nodes, &zero[0], &zero[0],
-			   NULL);
+                           NULL);
 	  
 	  printf("Assembling B_tmpB (pass 2)...\n");
 	  LSA_3D_of_2D_pass = 2;
@@ -626,9 +626,9 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	  tran->delta_t = 1.0e+72;  /*for Newmark-Beta terms in Lagrangian Solid*/
 	  matrix_fill_full(ams, &x[0], &resid_vector[0], x_old,
 			   x_older, xdot, xdot_old, x_update,
-			   &delta_t, &theta, First_Elem_Side_BC_Array,
+			   &delta_t, &theta, First_Elem_Side_BC_Array[pg->imtrx],
 			   &time_value, exo, dpi, &num_total_nodes,
-			   &zero[0], &zero[0], NULL);
+                           &zero[0], &zero[0], NULL);
 
 	  /* Now construct the actual Subtractionism versions of each
 	   * pass.  These are stored in mass_matrix_[1,2]_tmpA. */
@@ -647,12 +647,12 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
       for(mn = 0; mn < upd->Num_Mat; mn++) 
 	{
 	  for(i = 0; i < MAX_EQNS; i++)
-	    if(pd_glob[mn]->e[i])
+	    if(pd_glob[mn]->e[pg->imtrx][i])
 	      {
-		pd_glob[mn]->e[i] = T_MASS;
+		pd_glob[mn]->e[pg->imtrx][i] = T_MASS;
 		for (j = 0; j < MAX_TERM_TYPES; j++)
-		  pd_glob[mn]->etm[i][j] = 0.0;
-		pd_glob[mn]->etm[i][LOG2_MASS] = 1.0;
+		  pd_glob[mn]->etm[pg->imtrx][i][j] = 0.0;
+		pd_glob[mn]->etm[pg->imtrx][i][LOG2_MASS] = 1.0;
 	      }
 	}
 
@@ -674,18 +674,18 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
       ams->val = mass_matrix_1;
       matrix_fill_full(ams, x, resid_vector, x_old, x_older,
 		       xdot, xdot_old, x_update, &delta_t, &theta,
-		       First_Elem_Side_BC_Array, &time_value, exo,
+		       First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo,
 		       dpi, &num_total_nodes, &zero[0], &zero[0],
-		       NULL);
+                       NULL);
 
       printf("Assembling B (pass 2)...\n"); 
       LSA_3D_of_2D_pass = 2;
       ams->val = mass_matrix_2;
       matrix_fill_full(ams, x, resid_vector, x_old, x_older,
 		       xdot, xdot_old, x_update, &delta_t, &theta,
-		       First_Elem_Side_BC_Array, &time_value, exo,
+		       First_Elem_Side_BC_Array[pg->imtrx], &time_value, exo,
 		       dpi, &num_total_nodes, &zero[0], &zero[0],
-		       NULL);
+                       NULL);
 
       /* Get my mass matrix by adding the two passes together (don't
        * forget the -! */
@@ -696,7 +696,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
        * doing one.  Otherwise, just scale the above mass_matrix... */
       if(LSA_COMPARE)
 	{
-	  for(i = 0; i < NumUnknowns; i++)
+	  for(i = 0; i < NumUnknowns[pg->imtrx]; i++)
 	    {
 	      mass_matrix_1_tmpA[i] /= scale[i];
 	      mass_matrix_2_tmpA[i] /= scale[i];
@@ -715,12 +715,12 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	  /* Compare 1st pass results. */
 	  printf("Comparing pass 1 of mass matrix with Subtractionism method...");
 	  compare_mass_matrices(jacobian_matrix, mass_matrix_1,
-				mass_matrix_1_tmpA, ija, NumUnknowns);
+				mass_matrix_1_tmpA, ija, NumUnknowns[pg->imtrx]);
 	  
 	  /* Comapre 2nd pass results. */
 	  printf("Comparing pass 2 of mass matrix with Subtractionism method...");
 	  compare_mass_matrices(jacobian_matrix, mass_matrix_2,
-				mass_matrix_2_tmpA, ija, NumUnknowns);
+				mass_matrix_2_tmpA, ija, NumUnknowns[pg->imtrx]);
 
 	  /* Get the sum of passes for Subtractionism method.  This
 	   * was already done above for my regular method. */
@@ -730,10 +730,10 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	  /* Compare sum of passes results. */
 	  printf("Comparing sum of passes of mass matrix with Subtractionism method...");
 	  compare_mass_matrices(jacobian_matrix, mass_matrix,
-				mass_matrix_1_tmpA, ija, NumUnknowns);
+				mass_matrix_1_tmpA, ija, NumUnknowns[pg->imtrx]);
 	}
       else
-	for(i = 0; i < NumUnknowns; i++)
+	for(i = 0; i < NumUnknowns[pg->imtrx]; i++)
 	  {
 	    mass_matrix[i] /= scale[i];
 	    for(j = ija[i]; j < ija[i+1]; j++)
@@ -743,7 +743,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
       /* Print Jacobian and mass matrices */
       if(Linear_Stability == LSA_3D_OF_2D_SAVE || eigen->Eigen_Matrix_Output)
 	output_stability_matrices(mass_matrix, jacobian_matrix, ija,
-				  num_total_nodes, NumUnknowns,
+				  num_total_nodes, NumUnknowns[pg->imtrx],
 				  NZeros);
       
       if(Linear_Stability != LSA_3D_OF_2D_SAVE)
@@ -755,7 +755,7 @@ solve_3D_of_2D_stability_problem(struct Aztec_Linear_Solver_System *ams,
 	      dstuff[i] = -1.0;
 	    }
 	  printf("Entering eggrollinit...\n"); fflush(stdout);
-	  eggroll_init(NumUnknowns, NZeros, &istuff[0], &dstuff[0]);
+	  eggroll_init(NumUnknowns[pg->imtrx], NZeros, &istuff[0], &dstuff[0]);
 	  
 	  /* Call eggroll solver */
 	  printf("Entering eggrollwrap...\n"); fflush(stdout);
@@ -895,21 +895,21 @@ void output_stability_matrices(double *mass_matrix,
     EH(-1, "Could not open variable listing output file.");
   for(i = 0; i < num_total_nodes; i++)
     {
-      if( (j = Index_Solution(i, VELOCITY1, 0, 0, -1)) > -1 )
+      if( (j = Index_Solution(i, VELOCITY1, 0, 0, -1, pg->imtrx)) > -1 )
 	fprintf(vars_file, "u %d\n", j);
-      if( (j = Index_Solution(i, VELOCITY2, 0, 0, -1)) > -1 )
+      if( (j = Index_Solution(i, VELOCITY2, 0, 0, -1, pg->imtrx)) > -1 )
 	fprintf(vars_file, "v %d\n", j);
-      if( (j = Index_Solution(i, VELOCITY3, 0, 0, -1)) > -1 )
+      if( (j = Index_Solution(i, VELOCITY3, 0, 0, -1, pg->imtrx)) > -1 )
 	fprintf(vars_file, "w %d\n", j);
-      if( (j = Index_Solution(i, MESH_DISPLACEMENT1, 0, 0, -1)) > -1 )
+      if( (j = Index_Solution(i, MESH_DISPLACEMENT1, 0, 0, -1, pg->imtrx)) > -1 )
 	fprintf(vars_file, "x %d\n", j);
-      if( (j = Index_Solution(i, MESH_DISPLACEMENT2, 0, 0, -1)) > -1 )
+      if( (j = Index_Solution(i, MESH_DISPLACEMENT2, 0, 0, -1, pg->imtrx)) > -1 )
 	fprintf(vars_file, "y %d\n", j);
-      if( (j = Index_Solution(i, PRESSURE, 0, 0, -1)) > -1 )
+      if( (j = Index_Solution(i, PRESSURE, 0, 0, -1, pg->imtrx)) > -1 )
 	fprintf(vars_file, "p %d\n", j);
-      if( (j = Index_Solution(i, PRESSURE, 0, 1, -1)) > -1 )
+      if( (j = Index_Solution(i, PRESSURE, 0, 1, -1, pg->imtrx)) > -1 )
 	fprintf(vars_file, "p %d\n", j);
-      if( (j = Index_Solution(i, PRESSURE, 0, 2, -1)) > -1 )
+      if( (j = Index_Solution(i, PRESSURE, 0, 2, -1, pg->imtrx)) > -1 )
 	fprintf(vars_file, "p %d\n", j);
     }
   fclose(vars_file);
@@ -959,15 +959,15 @@ void compare_mass_matrices(double *jacobian_matrix,
   k = 0;
   for(i = 0; i < NumUnknowns; i++)
     {
-      if(!Index_Solution_Inv(i, &inode, &i_Var_Desc, &i_offset, &idof))
+      if(!Index_Solution_Inv(i, &inode, &i_Var_Desc, &i_offset, &idof, pg->imtrx))
 	printf("Uh-oh! Error on Index_Solution_Inv for i = %d\n", i);
       for(j = ija[i]; j < ija[i+1]; j++)
 	{
 	  if(fabs(mass_matrix[j] - mass_matrix_cmp[j]) > 1e-6 * row_max_vector[i])
 	    {
 	      printf("\nRow %d (0-based), column %d (0-based)\n", i, j);
-	      printf("residual equation = %s\n", resname[i]);
-	      printf("unknown column = %s\n", dofname[ija[NumUnknowns + 1 + k]]);
+	      printf("residual equation = %s\n", resname[pg->imtrx][i]);
+	      printf("unknown column = %s\n", dofname[pg->imtrx][ija[NumUnknowns + 1 + k]]);
 	      printf("mass_matrix = %g, mass_matrix_cmp = %g, row_max = %g\n",
 		     mass_matrix[j], mass_matrix_cmp[j], row_max_vector[i]);
 	    }

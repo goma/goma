@@ -16,46 +16,46 @@
  * Revised:1999/04/27 14:10 MDT pasacki@sandia.gov
  */
 
-#ifndef _DP_UTILS_H
-#define _DP_UTILS_H
+#ifndef GOMA_DP_UTILS_H
+#define GOMA_DP_UTILS_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _DP_UTILS_C
+#ifdef GOMA_DP_UTILS_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _DP_UTILS_C
+#ifndef GOMA_DP_UTILS_C
 #define EXTERN extern
 #endif
 
 EXTERN DDD ddd_alloc
-PROTO((void));
+(void);
 
 EXTERN void ddd_add_member
-PROTO((DDD,			/* which collection? */
+(DDD,			/* which collection? */
        void *,			/* ptr new datachunk */
        int,			/* how many of type? */
-       MPI_Datatype));		/* what type? */
+       MPI_Datatype);		/* what type? */
 
 EXTERN void ddd_add_member2
-PROTO((void *,			/* address */
+(void *,			/* address */
        int ,			/* blockcount */
-       size_t ));		/* byte_size*/
+       size_t );		/* byte_size*/
 
 EXTERN void ddd_set_commit2
-PROTO((void));		
+(void);		
 
 EXTERN void ddd_set_commit 
-PROTO((DDD));
+(DDD);
 
 EXTERN void ddd_free 
-PROTO((DDD));
+(DDD);
 
 EXTERN char *type2string
-PROTO((MPI_Datatype ));		/* type - MPI data type MPI_INT, etc */
+(MPI_Datatype );		/* type - MPI data type MPI_INT, etc */
 
 extern int ProcWithMaxInt(const int, int *);
 #define check_parallel_error(arg1) \

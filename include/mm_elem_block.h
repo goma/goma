@@ -14,8 +14,8 @@
  *$Id: mm_elem_block.h,v 5.1 2007-09-18 18:53:42 prschun Exp $
  */
 
-#ifndef _MM_ELEM_BLOCK_H
-#define _MM_ELEM_BLOCK_H
+#ifndef GOMA_MM_ELEM_BLOCK_H
+#define GOMA_MM_ELEM_BLOCK_H
 
 #include "mm_elem_block_structs.h"
 

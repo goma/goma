@@ -199,14 +199,14 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
   e_start = exo->eb_ptr[ipix_blkid]; e_end = exo->eb_ptr[ipix_blkid+1];
   for (ielem = e_start; ielem < e_end; ielem++)
     {
-      load_ei(ielem, exo, 0);
+      load_ei(ielem, exo, 0, pg->imtrx);
       xsum=0.0;
       ysum=0.0;
       zsum=0.0;
       for (ilnode = 0; ilnode < exo->eb_num_nodes_per_elem[ipix_blkid]; ilnode++)
 	{
 	  // ignode = connectivity[ielem][ilnode] - 1;
-	  ignode = Proc_Elem_Connect[ei->iconnect_ptr + ilnode];
+	  ignode = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + ilnode];
 	  xsum+=Coor[0][ignode];
 	  ysum+=Coor[1][ignode];
 	  if(pd->Num_Dim == 3) zsum+=Coor[2][ignode];
@@ -281,28 +281,28 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
 
        /* Hold on, I may need load_elem_dofptr here.  and a call to bf_mp_init(pd) as in mm_fill.c */
       ielem = ElemID_data[i] - 1;
-      ei->ielem_type = Elem_Type(exo, ielem);
-      load_ei(ielem, exo, 0);
+      ei[pg->imtrx]->ielem_type = Elem_Type(exo, ielem);
+      load_ei(ielem, exo, 0, pg->imtrx);
 
-      if(ei->deforming_mesh) 
+      if(ei[pg->imtrx]->deforming_mesh) 
 	{
 	  if_deform = 1;
-	  ei->deforming_mesh = FALSE;
+	  ei[pg->imtrx]->deforming_mesh = FALSE;
 	}
 
       for ( ilnode = 0; ilnode < exo->eb_num_nodes_per_elem[ipix_blkid]; ilnode++)
          {
            // ignode = connectivity[ielem][ilnode] - 1;
-	   ignode = Proc_Elem_Connect[ei->iconnect_ptr + ilnode];
+	   ignode = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + ilnode];
 	   for(j=0; j<pd->Num_Dim; j++)
 	     {
 	       nodecoor[ilnode][j] = Coor[j][ignode];
 	     }
          }
 
-      find_xi(ielem, xyz_data[i], xi_data[i], ei->ielem_type, nodecoor, si, N_ext);
+      find_xi(ielem, xyz_data[i], xi_data[i], ei[pg->imtrx]->ielem_type, nodecoor, si, N_ext);
       /* Now undo the mess if needed  */
-      if(if_deform) ei->deforming_mesh = TRUE;
+      if(if_deform) ei[pg->imtrx]->deforming_mesh = TRUE;
      }
 
 
@@ -345,20 +345,20 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
   for (i = 0; i < txt_num_pts; i++)
     {
      ielem = ElemID_data[i] - 1;
-     err = load_ei(ielem, exo, 0);
+     err = load_ei(ielem, exo, 0, pg->imtrx);
       EH(err, "load_ei");
 
-     ei->ielem_type = Elem_Type(exo, ielem);
-     ielem_shape     = type2shape(ei->ielem_type);
+     ei[pg->imtrx]->ielem_type = Elem_Type(exo, ielem);
+     ielem_shape     = type2shape(ei[pg->imtrx]->ielem_type);
 
 
      for (ilnode = 0; ilnode < exo->eb_num_nodes_per_elem[ipix_blkid]; ilnode++)
        {
-	 ignode = Proc_Elem_Connect[ei->iconnect_ptr + ilnode];
+	 ignode = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + ilnode];
 	 i_map[icount] = i;
 	 j_map[icount] = ignode;
 	 //Note hardwired to be Q1 now. But this should come from input deck
-         bf_mat[icount] = newshape(xi_data[i], ei->ielem_type, PSI, 
+         bf_mat[icount] = newshape(xi_data[i], ei[pg->imtrx]->ielem_type, PSI, 
                                                      ilnode, ielem_shape, efv->i[N_ext], ilnode); 
 	 icount++;
        }
@@ -393,17 +393,16 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
   e_start = exo->eb_ptr[ipix_blkid]; e_end = exo->eb_ptr[ipix_blkid+1];
   for (ielem = e_start; ielem < e_end; ielem++)
     {
-      load_ei(ielem, exo, 0);
+      load_ei(ielem, exo, 0, pg->imtrx);
       for (ilnode = 0; ilnode < exo->eb_num_nodes_per_elem[ipix_blkid]; ilnode++)
 	{
-	  ignode = Proc_Elem_Connect[ei->iconnect_ptr + ilnode];
+	  ignode = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + ilnode];
 	  //printf(" node = %d, val = %f \n", i+1, x_fit[i]);
 	  nodal_var_vals[ignode]= (float) x_fit[ignode] ;
 	} // End of loop over all of the nodes (i)
     }
  
-  err = ex_put_var(exoin, time_step, EX_NODAL, 1, 1, exo->num_nodes, nodal_var_vals);
-
+   err = ex_put_var(exoin, time_step, EX_NODAL, 1, 1, exo->num_nodes, nodal_var_vals);
    /* Now allocate memory for external field variable array for use and populate */
    /* You need to do this even though you have writtenit to a file */
 
@@ -552,7 +551,7 @@ extern int find_xi( int elem_id,                /*known element id number*/
      EH( error, "beer_belly");
 
 
-    for (i=0; i<ei->ielem_dim; i++)
+    for (i=0; i<ei[pg->imtrx]->ielem_dim; i++)
       {
         x_intp[i] = 0.0;
         for (j=0; j<nodenum; j++)
@@ -566,20 +565,20 @@ extern int find_xi( int elem_id,                /*known element id number*/
         // the residual
       }
 
-    for (i=0; i<ei->ielem_dim; i++) {update[i]=0.0;}
-    for (i=0; i<ei->ielem_dim; i++)
+    for (i=0; i<ei[pg->imtrx]->ielem_dim; i++) {update[i]=0.0;}
+    for (i=0; i<ei[pg->imtrx]->ielem_dim; i++)
       {
-        for (j=0; j<ei->ielem_dim; j++)
+        for (j=0; j<ei[pg->imtrx]->ielem_dim; j++)
           {
             update[i] += bfd[si]->B[j][i]*R[j];
           }
       }
 
     norm = 0.0;
-    for (i=0; i<ei->ielem_dim ; i++) {norm += update[i]*update[i];}
+    for (i=0; i<ei[pg->imtrx]->ielem_dim ; i++) {norm += update[i]*update[i];}
     converged = (norm < 1.e-10);
 
-    for (i=0; i<ei->ielem_dim; i++)
+    for (i=0; i<ei[pg->imtrx]->ielem_dim; i++)
       {
         xi[i] += update[i];
       }

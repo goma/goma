@@ -10,24 +10,24 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifndef _RD_PIXEL_H
-#define _RD_PIXEL_H
+#ifndef GOMA_RD_PIXEL_H
+#define GOMA_RD_PIXEL_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _RD_PIXEL_C
+#ifdef GOMA_RD_PIXEL_C
 #define EXTERN
 #
 #endif
 
-#ifndef _RD_PIXEL_C
+#ifndef GOMA_RD_PIXEL_C
 #define EXTERN extern
 #endif
 
 EXTERN double calc_error
-PROTO((double ***pixdata, 
+(double ***pixdata, 
        int pixsize[], 
        double resolution[],
        double pixorigin[],
@@ -35,7 +35,7 @@ PROTO((double ***pixdata,
        Exo_DB *exo, 
        int ipix_blkid,
        int si,
-       int N_ext));
+       int N_ext);
 
 EXTERN int find_xi (int elem_id,                /*known element id number*/
 		    const double x[DIM],        /*x,y,z coordinates of data point*/
@@ -46,4 +46,4 @@ EXTERN int find_xi (int elem_id,                /*known element id number*/
 		    int N_ext);                    /*Interpolation index */
 
 
-#endif /* _RD_PIXEL_H */
+#endif /* GOMA_RD_PIXEL_H */

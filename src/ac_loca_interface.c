@@ -115,7 +115,7 @@ static char rcsid[] =
 
 #ifdef HAVE_FRONT
 extern int mf_setup
-PROTO((int *,                   /* nelem_glob */
+(int *,                   /* nelem_glob */
        int *,                   /* neqn_glob */
        int *,                   /* mxdofel */
        int *,                   /* nfullsum */
@@ -127,7 +127,7 @@ PROTO((int *,                   /* nelem_glob */
        int *,                   /* loc_dof */
        int *,                   /* constraint */
        const char *,            /* cname */
-       int *));                 /* allocated */
+       int *);                 /* allocated */
 #endif
 
 extern int do_loca (Comm_Ex *, Exo_DB *, Dpi *);
@@ -411,7 +411,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
    * is aware of...
    */
 
-  numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
   /* allocate memory for Volume Constraint Jacobian */
   if ( nAC > 0)
@@ -530,7 +530,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
         max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
 
        err = mf_setup(&exo->num_elems, 
-                     &NumUnknowns, 
+                     &NumUnknowns[pg->imtrx], 
                      &max_unk_elem, 
                      &three,
                      &one,
@@ -612,8 +612,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
        * An attic to store external dofs column names is needed when
        * running in parallel.
        */
-      alloc_extern_ija_buffer(num_universe_dofs, 
-                              num_internal_dofs+num_boundary_dofs, 
+      alloc_extern_ija_buffer(num_universe_dofs[pg->imtrx], 
+                              num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx], 
                               ija, &ija_attic);
       /*
        * Any necessary one time initialization of the linear
@@ -636,11 +636,11 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
       ams[JAC]->npn_plus = dpi->num_internal_nodes
                          + dpi->num_boundary_nodes + dpi->num_external_nodes;
 
-      ams[JAC]->npu      = num_internal_dofs+num_boundary_dofs;
-      ams[JAC]->npu_plus = num_universe_dofs;
+      ams[JAC]->npu      = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
+      ams[JAC]->npu_plus = num_universe_dofs[pg->imtrx];
 
-      ams[JAC]->nnz = ija[num_internal_dofs+num_boundary_dofs] - 1;
-      ams[JAC]->nnz_plus = ija[num_universe_dofs];
+      ams[JAC]->nnz = ija[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx] ] - 1;
+      ams[JAC]->nnz_plus = ija[num_universe_dofs[pg->imtrx] ];
     }
 
   /* Allocate sparse matrix (VBR format) */
@@ -711,7 +711,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   /* set boundary conditions on the initial conditions */
   nullify_dirichlet_bcs();
   find_and_set_Dirichlet(x, xdot, exo, dpi);
-  exchange_dof(cx, dpi, x);
+  exchange_dof(cx, dpi, x, pg->imtrx);
 
   /* 
    * Set passdown structure -- variables needed in the argument
@@ -740,7 +740,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   /* Create AZ_MATRIX version for VBR matrix format */
       if (strcmp(Matrix_Format, "vbr") == 0)
         {
-          passdown.mmat = AZ_matrix_create(NumUnknowns);
+          passdown.mmat = AZ_matrix_create(NumUnknowns[pg->imtrx]);
           AZ_set_VBR(passdown.mmat,
                      ams[JAC]->rpntr,
                      ams[JAC]->cpntr,
@@ -803,7 +803,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   /* This is required for VBR matrix-vector multiply calls: */
   if (strcmp(Matrix_Format, "vbr") == 0)
     {
-      passdown.amat = AZ_matrix_create(NumUnknowns);
+      passdown.amat = AZ_matrix_create(NumUnknowns[pg->imtrx]);
       AZ_set_VBR(passdown.amat,
                  passdown.ams->rpntr,
                  passdown.ams->cpntr,
@@ -821,7 +821,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
     {
       passdown.file = fopen(Soln_OutFile, "w");
       if (passdown.file == NULL) {
-        DPRINTF(stderr, "%s:  opening soln file for writing\n", yo);
+        DPRINTF(stdout, "%s:  opening soln file for writing\n", yo);
         EH(-1, "\t");
       }
     }
@@ -882,8 +882,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   
   con.general_info.param        = lambda;
   con.general_info.x            = passdown.x;
-  con.general_info.numUnks      = NumUnknowns + NumExtUnknowns;
-  con.general_info.numOwnedUnks = NumUnknowns;
+  con.general_info.numUnks      = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
+  con.general_info.numOwnedUnks = NumUnknowns[pg->imtrx];
   con.general_info.perturb      = loca_in->perturb;
   if (ProcID == 0)
     {
@@ -964,7 +964,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
           con.general_info.nv_restart = TRUE;
           if (Num_Proc > 1)
             multiname(loca_in->NV_exoII_infile, ProcID, Num_Proc);
-          DPRINTF(stderr, "Reading previous null vector ...\n");
+          DPRINTF(stdout, "Reading previous null vector ...\n");
           err = rd_vectors_from_exoII(con.turning_point_info.nv,
 				      loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead);
           if (err != 0)
@@ -984,7 +984,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
 	array_alloc (1, con.general_info.numUnks, sizeof(double));
       if (Num_Proc > 1)
         multiname(loca_in->NV_exoII_infile, ProcID, Num_Proc);
-      DPRINTF(stderr, "Reading previous null vector ...\n");
+      DPRINTF(stdout, "Reading previous null vector ...\n");
       err = rd_vectors_from_exoII(con.pitchfork_info.psi,
                                   loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead);
       if (err != 0)
@@ -1023,11 +1023,11 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
                              con.general_info.numUnks, sizeof(double));
 
   /* Load y_vec and z_vec from these files */
-      DPRINTF(stderr, "Reading previous null vector (real part) ...\n");
+      DPRINTF(stdout, "Reading previous null vector (real part) ...\n");
       err = rd_vectors_from_exoII(con.hopf_info.y_vec, 
 				  loca_in->NV_exoII_infile, 0, 0, INT_MAX, &timeValueRead);
       if (err != 0) EH(-1, "do_loca: error reading real part of null vector");
-      DPRINTF(stderr, "Reading previous null vector (imaginary part) ...\n");
+      DPRINTF(stdout, "Reading previous null vector (imaginary part) ...\n");
       err = rd_vectors_from_exoII(con.hopf_info.z_vec, 
 				  loca_in->NV_imag_infile, 0, 0, INT_MAX, &timeValueRead);
       if (err != 0) EH(-1, "do_loca: error reading imag. part of null vector");
@@ -1036,7 +1036,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
      VBR case was already handled above. */
       if (strcmp(Matrix_Format, "msr") == 0)
         {
-          passdown.amat = AZ_matrix_create(NumUnknowns);
+          passdown.amat = AZ_matrix_create(NumUnknowns[pg->imtrx]);
           AZ_set_MSR(passdown.amat, passdown.ams->bindx, passdown.ams->val,
                      passdown.ams->data_org, 0, NULL, AZ_LOCAL);
         }
@@ -1100,7 +1100,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   /* Check starting mesh element quality if requested */
     if (nEQM > 0)
       {
-        DPRINTF(stderr, "\nINITIAL ELEMENT QUALITY CHECK---\n");
+        DPRINTF(stdout, "\nINITIAL ELEMENT QUALITY CHECK---\n");
         element_quality(exo, x, ams[0]->proc_config);
       }
 
@@ -1108,7 +1108,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
 
   if (con.general_info.method == LOCA_LSA_ONLY)
     {
-      initialize_util_routines(NumUnknowns, NumUnknowns+NumExtUnknowns);
+      initialize_util_routines(NumUnknowns[pg->imtrx], NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx]);
       con.private_info.step_num = 0;
       err = nonlinear_solver_conwrap(x, (void *)&con, 0, 0.0, 0.0);
       solution_output_conwrap(1, x, 0.0, NULL, 0.0, NULL, 0.0, 0, err, &con);
@@ -1142,28 +1142,26 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
       *passdown.nprint = 0;
 
   /* Write the null vector to this file */
-      write_solution(loca_in->NV_exoII_outfile,
-                     passdown.resid_vector,
-                     con.private_info.x_tang,
-                     passdown.x_sens_p, 
-                     passdown.x_old,
-                     passdown.xdot,
-                     passdown.xdot_old,
-                     passdown.tev,
-                     passdown.tev_post,
-		     NULL,
-                     passdown.rd,
-                     passdown.gindex,
-                     passdown.gsize,
-                     passdown.gvec,
-                     passdown.gvec_elem,
-                     passdown.nprint, 
-                     0.0,
-                     passdown.theta,
-                     0.0,
-                     NULL,
-                     passdown.exo,
-                     passdown.dpi);
+        write_solution(loca_in->NV_exoII_outfile,
+                       passdown.resid_vector,
+                       con.private_info.x_tang,
+                       passdown.x_sens_p,
+                       passdown.x_old,
+                       passdown.xdot,
+                       passdown.xdot_old,
+                       passdown.tev,
+                       passdown.tev_post,
+                       NULL,
+                       passdown.rd,
+                       passdown.gvec,
+                       passdown.gvec_elem,
+                       passdown.nprint,
+                       0.0,
+                       passdown.theta,
+                       0.0,
+                       NULL,
+                       passdown.exo,
+                       passdown.dpi);
       zero_base(exo);
     }
 
@@ -1359,32 +1357,32 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 /* set up boundary conditions */
   nullify_dirichlet_bcs();
   find_and_set_Dirichlet (x, passdown.xdot, passdown.exo, passdown.dpi);
-  exchange_dof(passdown.cx, passdown.dpi, x);
+  exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
 
 /* show continuation type */
   if (ProcID == 0) {
-    fprintf(stderr, "\n\t----------------------------------");
+    fprintf(stdout, "\n\t----------------------------------");
     switch (passdown.method) {
       case ZERO_ORDER_CONTINUATION:
-	DPRINTF (stderr, "\n\tZero order continuation:");
+	DPRINTF (stdout, "\n\tZero order continuation:");
 	break;
       case FIRST_ORDER_CONTINUATION:
-	DPRINTF (stderr, "\n\tFirst order continuation:");
+	DPRINTF (stdout, "\n\tFirst order continuation:");
 	break;
       case ARC_LENGTH_CONTINUATION:
-	DPRINTF (stderr, "\n\tArc length continuation:");
+	DPRINTF (stdout, "\n\tArc length continuation:");
 	break;
       case TURNING_POINT_CONTINUATION:
-	DPRINTF (stderr, "\n\tTurning point continuation:");
+	DPRINTF (stdout, "\n\tTurning point continuation:");
 	break;
       case PITCHFORK_CONTINUATION:
-	DPRINTF (stderr, "\n\tPitchfork continuation:");
+	DPRINTF (stdout, "\n\tPitchfork continuation:");
 	break;
       case HOPF_CONTINUATION:
-	DPRINTF (stderr, "\n\tHopf continuation:");
+	DPRINTF (stdout, "\n\tHopf continuation:");
 	break;
       case LOCA_LSA_ONLY:
-        DPRINTF (stderr, "\n\tLinear stability analysis:\n");
+        DPRINTF (stdout, "\n\tLinear stability analysis:\n");
 	break;
       default:
 	DPRINTF (stderr, "%s: Bad Continuation, %d\n", yo, passdown.method);
@@ -1396,7 +1394,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
     if (passdown.method != LOCA_LSA_ONLY)
       {
         nCC = cpcc[0].nCC;
-        DPRINTF (stderr, "\n\tStep number: %4d of %4d (max)",
+        DPRINTF (stdout, "\n\tStep number: %4d of %4d (max)",
 			      step_num+1, cont->MaxPathSteps);
             theta = (lambda - cont->BegParameterValue)
                   / (cont->EndParameterValue - cont->BegParameterValue);
@@ -1406,7 +1404,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
           }
         else
           {
-            DPRINTF (stderr, "\n\tAttempting solution at:");
+            DPRINTF (stdout, "\n\tAttempting solution at:");
           }
         if (cont->upType == 5 && nUC > 0)
           {
@@ -1414,19 +1412,19 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
               {
                 switch(cpuc[iUC].Type) {
                   case 1:		/* BC */
-    	            DPRINTF (stderr, "\n\tBCID=%3d DFID=%5d",
+    	            DPRINTF (stdout, "\n\tBCID=%3d DFID=%5d",
                              cpuc[iUC].BCID, cpuc[iUC].DFID);
     	            break;
                   case 2:		/* MT */
-    	            DPRINTF (stderr, "\n\tMTID=%3d MPID=%5d",
+    	            DPRINTF (stdout, "\n\tMTID=%3d MPID=%5d",
                              cpuc[iUC].MTID, cpuc[iUC].MPID);
   	            break;
                   case 3:		/* AC */
-     	            DPRINTF (stderr, "\n\tACID=%3d DFID=%5d",
+     	            DPRINTF (stdout, "\n\tACID=%3d DFID=%5d",
                              cpuc[iUC].BCID, cpuc[iUC].DFID);
      	            break;
                   case 4:		/* UM */
-      	            DPRINTF (stderr, "\n\tMTID=%3d MPID=%5d FLOAT=%3d",
+      	            DPRINTF (stdout, "\n\tMTID=%3d MPID=%5d FLOAT=%3d",
                              cpuc[iUC].MTID, cpuc[iUC].MPID, cpuc[iUC].MDID);
 	            break;
                   case 5:               /* UF */
@@ -1437,7 +1435,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 	            exit(-1);
 	            break;
                 }
-                DPRINTF(stderr, " Parameter= %10.6e delta_s= %10.6e",
+                DPRINTF(stdout, " Parameter= %10.6e delta_s= %10.6e",
                         cpuc[iUC].value, cpuc[iUC].value-cpuc[iUC].old_value);
               }
           }
@@ -1447,25 +1445,25 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
               {
                 switch(cpcc[iCC].Type) {
                   case 1:		/* BC */
-    	            DPRINTF (stderr, "\n\tBCID=%3d DFID=%5d",
+    	            DPRINTF (stdout, "\n\tBCID=%3d DFID=%5d",
                              cpcc[iCC].BCID, cpcc[iCC].DFID);
     	            break;
                   case 2:		/* MT */
-    	            DPRINTF (stderr, "\n\tMTID=%3d MPID=%5d",
+    	            DPRINTF (stdout, "\n\tMTID=%3d MPID=%5d",
                              cpcc[iCC].MTID, cpcc[iCC].MPID);
   	            break;
                   case 3:		/* AC */
-     	            DPRINTF (stderr, "\n\tACID=%3d DFID=%5d",
+     	            DPRINTF (stdout, "\n\tACID=%3d DFID=%5d",
                              cpcc[iCC].BCID, cpcc[iCC].DFID);
      	            break;
                   case 4:		/* UM */
-      	            DPRINTF (stderr, "\n\tMTID=%3d MPID=%5d FLOAT=%3d",
+      	            DPRINTF (stdout, "\n\tMTID=%3d MPID=%5d FLOAT=%3d",
                              cpcc[iCC].MTID, cpcc[iCC].MPID, cpcc[iCC].MDID);
 	            break;
                   case 5:               /* UF */
 	            break;
                   case 6:               /* AN */
-                    if (iCC == 0) DPRINTF (stderr, "\n\tAngular");
+                    if (iCC == 0) DPRINTF (stdout, "\n\tAngular");
 	            break;
                   default:
 	            DPRINTF (stderr, "%s: Bad condition type, %d\n",
@@ -1473,7 +1471,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 	            exit(-1);
 	            break;
                  }
-               DPRINTF(stderr, " Parameter= %10.6e delta_s= %10.6e",
+               DPRINTF(stdout, " Parameter= %10.6e delta_s= %10.6e",
  /*                    cpcc[iCC].value, cpcc[iCC].ratio * delta_s); */
                        cpcc[iCC].value, cpcc[iCC].value - cpcc[iCC].old_value);
               }
@@ -1521,7 +1519,8 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 				  passdown.resid_vector_sens, 
 				  passdown.x_sens_temp,
 				  passdown.x_sens_p,
-				  con_ptr);
+                                  con_ptr,
+                                  NULL);
 
 #ifdef DEBUG
     fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
@@ -1542,28 +1541,26 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 #ifdef DEBUG
          DPRINTF(stderr, "%s: write_solution call WIS\n", yo);
 #endif
-         write_solution(ExoFileOut,
-			passdown.resid_vector,
-			x,
-			passdown.x_sens_p, 
-			passdown.x_old,
-			passdown.xdot,
-			passdown.xdot_old,
-			passdown.tev,
-			passdown.tev_post,
-			NULL,
-			passdown.rd,
-			passdown.gindex,
-			passdown.gsize,
-			passdown.gvec,
-			passdown.gvec_elem,
-			passdown.nprint, 
-			delta_s,
-			passdown.theta,
-			passdown.lambda,
-                        NULL,
-			passdown.exo,
-			passdown.dpi);
+            write_solution(ExoFileOut,
+                           passdown.resid_vector,
+                           x,
+                           passdown.x_sens_p,
+                           passdown.x_old,
+                           passdown.xdot,
+                           passdown.xdot_old,
+                           passdown.tev,
+                           passdown.tev_post,
+                           NULL,
+                           passdown.rd,
+                           passdown.gvec,
+                           passdown.gvec_elem,
+                           passdown.nprint,
+                           delta_s,
+                           passdown.theta,
+                           passdown.lambda,
+                           NULL,
+                           passdown.exo,
+                           passdown.dpi);
 #ifdef DEBUG
          DPRINTF(stderr, "%s: write_solution end call WIS\n", yo);
 #endif
@@ -1584,21 +1581,21 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 
         if (nAC > 0)
           {
-            DPRINTF(stderr, "\n------------------------------\n");
-            DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
-            DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+            DPRINTF(stdout, "\n------------------------------\n");
+            DPRINTF(stdout, "Augmenting Conditions:    %4d\n", nAC);
+            DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
             for (iAC = 0; iAC < nAC; iAC++)
              {
               if (augc[iAC].Type == AC_USERBC)
                {
-                DPRINTF(stderr, "\tBC[%4d] DF[%4d] = %10.6e\n",
+                DPRINTF(stdout, "\tBC[%4d] DF[%4d] = %10.6e\n",
                         augc[iAC].BCID, augc[iAC].DFID, passdown.x_AC[iAC]);
                }
               else if (augc[iAC].Type == AC_USERMAT ||
                        augc[iAC].Type == AC_FLUX_MAT )
                {
-                DPRINTF(stderr, "\n New MT[%4d] MP[%4d] = %10.6e\n",
+                DPRINTF(stdout, "\n New MT[%4d] MP[%4d] = %10.6e\n",
                         augc[iAC].MTID, augc[iAC].MPID, passdown.x_AC[iAC]);
                }
               else if(augc[iAC].Type == AC_VOLUME)
@@ -1611,7 +1608,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
                 }
                 evol_local = evol_global;
 #endif
-                DPRINTF(stderr, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n",
+                DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n",
                         augc[iAC].MTID, augc[iAC].VOLID, evol_local,
                         passdown.x_AC[iAC]);
                }
@@ -1625,13 +1622,13 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
                 }
                 evol_local = evol_global;
 #endif
-                DPRINTF(stderr, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
+                DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
                         augc[iAC].MTID, augc[iAC].VOLID, evol_local,
                         passdown.x_AC[iAC]);
                }
               else if(augc[iAC].Type == AC_FLUX)
                {
-                DPRINTF(stderr, "\tBC[%4d] DF[%4d]=%10.6e\n",
+                DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n",
                         augc[iAC].BCID, augc[iAC].DFID, passdown.x_AC[iAC]);
                }
              }
@@ -1755,7 +1752,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
   dbl U_norm    ;                        /* global average velocity for PSPG */
 #endif
 
-  int numUnks      = NumUnknowns + NumExtUnknowns;
+  int numUnks      = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
   double *xr=NULL;
 
 
@@ -1786,7 +1783,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
           matr_form = 1;
           LOCA_UMF_ID = SL_UMF(LOCA_UMF_ID,
                  &first_linear_solver_call, &Factor_Flag, &matr_form, 
-                 &NumUnknowns, &NZeros, &ija[0], &ija[0], &a[0],
+                 &NumUnknowns[pg->imtrx], &NZeros, &ija[0], &ija[0], &a[0],
                  &xr[0], &x[0]);
           /*  */
           first_linear_solver_call = FALSE;
@@ -1797,8 +1794,8 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
           if (strcmp(Matrix_Format, "msr"))
             EH(-1,"ERROR: lu solver needs msr matrix format");
 
-	  dcopy1(NumUnknowns, xr, x);
-          lu(NumUnknowns, NumExtUnknowns, NZeros, a, ija, x, 2);
+	  dcopy1(NumUnknowns[pg->imtrx], xr, x);
+          lu(NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx], NZeros, a, ija, x, 2);
           first_linear_solver_call = FALSE;
       /* 
        * Note that sl_lu has static variables to keep track of
@@ -1904,9 +1901,9 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
         case AMESOS:
 
              if( strcmp( Matrix_Format,"msr" ) == 0 ) {
-                 amesos_solve_msr( Amesos_Package, ams, x, xr, 1 );
+                 amesos_solve_msr( Amesos_Package, ams, x, xr, 1 , pg->imtrx);
              } else if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
-                 amesos_solve_epetra(Amesos_Package, ams, x, xr);
+                 amesos_solve_epetra(Amesos_Package, ams, x, xr, pg->imtrx);
              } else {
                  EH(-1," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
              }
@@ -1919,7 +1916,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
            * it is the first call or not.
            */
 #ifdef HARWELL    
-          error = cmsr_ma28 (NumUnknowns, NZeros, a, ija, x, xr);
+          error = cmsr_ma28 (NumUnknowns[pg->imtrx], NZeros, a, ija, x, xr);
 #endif
 #ifndef HARWELL
           EH(-1, "That linear solver package is not implemented.");
@@ -1942,7 +1939,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
           scaling_max = 1.0;
 
           /* get global element size and velocity norm if needed for PSPG or Cont_GLS */
-          if((PSPG && Num_Var_In_Type[PRESSURE]) || (Cont_GLS && Num_Var_In_Type[VELOCITY1]))
+          if((PSPG && Num_Var_In_Type[pg->imtrx][PRESSURE]) || (Cont_GLS && Num_Var_In_Type[pg->imtrx][VELOCITY1]))
             {
               h_elem_avg = global_h_elem_siz(x,
 					     passdown.x_old,
@@ -2023,10 +2020,10 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
 /* Backup old solutions if not previously done */
   if (passdown.method == FIRST_ORDER_CONTINUATION)
     {
-      dcopy1(NumUnknowns, passdown.x_older, passdown.x_oldest);
-      dcopy1(NumUnknowns, passdown.x_old, passdown.x_older);
-      dcopy1(NumUnknowns, passdown.x, passdown.x_old);
-      dcopy1(NumUnknowns, passdown.x_sens_temp, passdown.x_sens);
+      dcopy1(NumUnknowns[pg->imtrx], passdown.x_older, passdown.x_oldest);
+      dcopy1(NumUnknowns[pg->imtrx], passdown.x_old, passdown.x_older);
+      dcopy1(NumUnknowns[pg->imtrx], passdown.x, passdown.x_old);
+      dcopy1(NumUnknowns[pg->imtrx], passdown.x_sens_temp, passdown.x_sens);
     }
 
   safe_free( (void *) xr);
@@ -2061,7 +2058,7 @@ int komplex_linear_solver_conwrap(double *c, double *d,
 
   /* Declare Variables */
   struct Aztec_Linear_Solver_System *ams = &(passdown.ams[JAC]);
-  int numUnks      = NumUnknowns + NumExtUnknowns;
+  int numUnks      = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
   int i;
   int tmp_pre_calc;
   int why;
@@ -2102,7 +2099,7 @@ int komplex_linear_solver_conwrap(double *c, double *d,
   /* Apply scaling to the entire system */
   row_sum_scaling_scale(ams, c, passdown.scale);
   matrix_scaling(ams, passdown.mass_matrix, 1.0, passdown.scale);
-  vector_scaling(NumUnknowns, d, passdown.scale);
+  vector_scaling(NumUnknowns[pg->imtrx], d, passdown.scale);
 
   /*
    * Construct Elements of the Komplex Matrix:
@@ -2218,7 +2215,7 @@ void matrix_residual_fill_conwrap(double *x, double *rhs, int matflag)
     }
 
 /* Get global element size and velocity norm if needed for PSPG or Cont_GLS */
-  if((PSPG && Num_Var_In_Type[PRESSURE]) || (Cont_GLS && Num_Var_In_Type[VELOCITY1]))
+  if((PSPG && Num_Var_In_Type[pg->imtrx][PRESSURE]) || (Cont_GLS && Num_Var_In_Type[pg->imtrx][VELOCITY1]))
     {
       h_elem_avg = global_h_elem_siz(x,
 				     passdown.x_old,
@@ -2238,7 +2235,7 @@ void matrix_residual_fill_conwrap(double *x, double *rhs, int matflag)
 
   switch (matflag) {
     case RHS_ONLY:
-      init_vec_value(passdown.resid_vector, 0.0, NumUnknowns);
+      init_vec_value(passdown.resid_vector, 0.0, NumUnknowns[pg->imtrx]);
       af->Assemble_Residual = TRUE;
       af->Assemble_Jacobian = FALSE;
       passdown.num_res_fills++;
@@ -2250,7 +2247,7 @@ void matrix_residual_fill_conwrap(double *x, double *rhs, int matflag)
       passdown.num_mat_fills++;
       break;
     case RHS_MATRIX:
-      init_vec_value(passdown.resid_vector, 0.0, NumUnknowns);
+      init_vec_value(passdown.resid_vector, 0.0, NumUnknowns[pg->imtrx]);
       init_vec_value(ams->val, 0.0, NZeros);
       af->Assemble_Residual = TRUE;
       af->Assemble_Jacobian = TRUE;
@@ -2267,7 +2264,7 @@ void matrix_residual_fill_conwrap(double *x, double *rhs, int matflag)
 /* Remaining cases: perform requested fill */
   else {
 
-    exchange_dof(passdown.cx, passdown.dpi, x);
+    exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
 
     (void) matrix_fill_full(ams,
 			    x,
@@ -2279,14 +2276,14 @@ void matrix_residual_fill_conwrap(double *x, double *rhs, int matflag)
 			    passdown.x_update,
 			    &(passdown.delta_t),
 			    &(passdown.theta),
-			    First_Elem_Side_BC_Array,
+			    First_Elem_Side_BC_Array[pg->imtrx],
 			    &(passdown.time_value),
 			    passdown.exo,
 			    passdown.dpi,
 			    &(passdown.dpi->num_universe_nodes),
 			    &(h_elem_avg),
 			    &(U_norm),
-			    NULL);
+                            NULL);
   }
 
 /* Save unscaled matrix before the first resolve */
@@ -2321,11 +2318,11 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
   double h_elem_avg, U_norm;
 
 /* Initialize arrays */
-  zero = (double *) array_alloc(1, NumUnknowns, sizeof(double));
-  init_vec_value(&zero[0], 0.0, NumUnknowns);
+  zero = (double *) array_alloc(1, NumUnknowns[pg->imtrx], sizeof(double));
+  init_vec_value(&zero[0], 0.0, NumUnknowns[pg->imtrx]);
 
-  scale = (double *) array_alloc(1, NumUnknowns, sizeof(double));
-  init_vec_value(scale, 1.0, NumUnknowns);
+  scale = (double *) array_alloc(1, NumUnknowns[pg->imtrx], sizeof(double));
+  init_vec_value(scale, 1.0, NumUnknowns[pg->imtrx]);
 
 /* Initialize tmp_matrix array for 3D of 2D stability if needed */
   if (passdown.do_3D_of_2D)
@@ -2336,9 +2333,9 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
   else passes = 1;
 
 /* Resolve difference between x and x_old to get correct mass matrix terms */
-  exchange_dof(passdown.cx, passdown.dpi, x);
-  dcopy1(NumUnknowns, passdown.x, passdown.x_old);
-  dcopy1(NumUnknowns, passdown.x, passdown.x_older);
+  exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
+  dcopy1(NumUnknowns[pg->imtrx], passdown.x, passdown.x_old);
+  dcopy1(NumUnknowns[pg->imtrx], passdown.x, passdown.x_older);
 
   nnodes = passdown.dpi->num_universe_nodes;
 
@@ -2350,13 +2347,13 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
   for(mn = 0; mn < upd->Num_Mat; mn++)
     for(i = 0; i < MAX_EQNS; i++)
       {
-        e_save[mn][i] = pd_glob[mn]->e[i];
+        e_save[mn][i] = pd_glob[mn]->e[pg->imtrx][i];
         for(j = 0; j < MAX_TERM_TYPES; j++)
-          etm_save[mn][i][j] = pd_glob[mn]->etm[i][j];
+          etm_save[mn][i][j] = pd_glob[mn]->etm[pg->imtrx][i][j];
       }
 
 /* Get global element size and velocity norm if needed for PSPG or Cont_GLS */
-  if((PSPG && Num_Var_In_Type[PRESSURE]) || (Cont_GLS && Num_Var_In_Type[VELOCITY1]))
+  if((PSPG && Num_Var_In_Type[pg->imtrx][PRESSURE]) || (Cont_GLS && Num_Var_In_Type[pg->imtrx][VELOCITY1]))
     {
       h_elem_avg = global_h_elem_siz(x,
                                      passdown.x_old,
@@ -2387,11 +2384,11 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
       else ams->val = jacobian_matrix;
       if (passdown.do_3D_of_2D)
         {
-          DPRINTF (stderr, "Assembling LSA Jacobian pass %d ...\n", i+1);
+          DPRINTF (stdout, "Assembling LSA Jacobian pass %d ...\n", i+1);
         }
       else if (passdown.LSA_flag)
         {
-          DPRINTF (stderr, "Assembling LSA Jacobian ...\n");
+          DPRINTF (stdout, "Assembling LSA Jacobian ...\n");
         }
 
   for (j=0; j<NZeros+1; j++) ams->val[j] = 0.0;
@@ -2400,7 +2397,7 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
   af->Assemble_LSA_Jacobian_Matrix = TRUE;
   af->Assemble_LSA_Mass_Matrix = FALSE;
 
-  exchange_dof(passdown.cx, passdown.dpi, x);
+  exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
 
   (void) matrix_fill_full(ams,
                           x,
@@ -2412,7 +2409,7 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
                           passdown.x_update,
                           &(passdown.delta_t),
                           &(passdown.theta),
-                          First_Elem_Side_BC_Array,
+                          First_Elem_Side_BC_Array[pg->imtrx],
                           &(passdown.time_value),
                           passdown.exo,
                           passdown.dpi,
@@ -2446,11 +2443,11 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
     {
       pd_glob[mn]->TimeIntegration = TRANSIENT;
       for(i = 0; i < MAX_EQNS; i++)
-        if(pd_glob[mn]->e[i])
+        if(pd_glob[mn]->e[pg->imtrx][i])
           {
-            pd_glob[mn]->e[i] = T_MASS;
-            for (j=0; j<MAX_TERM_TYPES; j++) pd_glob[mn]->etm[i][j] = 0.0;
-            pd_glob[mn]->etm[i][LOG2_MASS] = 1.0;
+            pd_glob[mn]->e[pg->imtrx][i] = T_MASS;
+            for (j=0; j<MAX_TERM_TYPES; j++) pd_glob[mn]->etm[pg->imtrx][i][j] = 0.0;
+            pd_glob[mn]->etm[pg->imtrx][i][LOG2_MASS] = 1.0;
           }
     }
 
@@ -2464,11 +2461,11 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
       else ams->val = passdown.mass_matrix;
       if (passdown.do_3D_of_2D)
         {
-          DPRINTF (stderr, "Assembling LSA Mass matrix pass %d ...\n", i+1);
+          DPRINTF (stdout, "Assembling LSA Mass matrix pass %d ...\n", i+1);
         }
       else if (passdown.LSA_flag)
         {
-          DPRINTF (stderr, "Assembling LSA Mass matrix ...\n");
+          DPRINTF (stdout, "Assembling LSA Mass matrix ...\n");
         }
 
   for(j=0; j<NZeros+1; j++) ams->val[j] = 0.0;
@@ -2489,7 +2486,7 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
                           passdown.x_update,
                           &(passdown.delta_t),
                           &(passdown.theta),
-                          First_Elem_Side_BC_Array,
+                          First_Elem_Side_BC_Array[pg->imtrx],
                           &(passdown.time_value),
                           passdown.exo,
                           passdown.dpi,
@@ -2515,7 +2512,7 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
       matrix_scaling(ams, passdown.mass_matrix, 1.0, scale);
     }
   for (j=0; j<NZeros+1; j++) passdown.mass_matrix[j] *= -1.0;
-  dcopy1(NumUnknowns, scale, passdown.scale);
+  dcopy1(NumUnknowns[pg->imtrx], scale, passdown.scale);
 
   /* Restore original e and etm values */
   TimeIntegration = STEADY;
@@ -2524,9 +2521,9 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
     for(i = 0; i < MAX_EQNS; i++)
       {
         pd_glob[mn]->TimeIntegration = STEADY;
-        pd_glob[mn]->e[i] = e_save[mn][i];
+        pd_glob[mn]->e[pg->imtrx][i] = e_save[mn][i];
         for(j = 0; j < MAX_TERM_TYPES; j++)
-          pd_glob[mn]->etm[i][j] = etm_save[mn][i][j];
+          pd_glob[mn]->etm[pg->imtrx][i][j] = etm_save[mn][i][j];
       }
 
   /* Print matrices -- Careful, these can be big disk space hogs!! */
@@ -2534,7 +2531,7 @@ void mass_matrix_fill_conwrap(double *x, double *rhs)
     {
       if (!passdown.do_3D_of_2D) LSA_3D_of_2D_wave_number = -1.0;
       output_stability_matrices(passdown.mass_matrix, jacobian_matrix, ija,
-                                nnodes, NumUnknowns, NZeros);
+                                nnodes, NumUnknowns[pg->imtrx], NZeros);
     }
 
   /* Clean up */
@@ -2571,7 +2568,7 @@ void matvec_mult_conwrap(double *x, double *y)
   int          N, nzeros;
 
   /* exchange boundary info */
-  exchange_dof(passdown.cx, passdown.dpi, x);
+  exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
 
 /* First, handle MSR matrices */ 
   if( strcmp( Matrix_Format, "msr" ) == 0)
@@ -2640,7 +2637,7 @@ void mass_matvec_mult_conwrap(double *x, double *y)
   int          N,  nzeros;
 
   /* exchange boundary info */
-  exchange_dof(passdown.cx, passdown.dpi, x);
+  exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
 
 /* First, handle MSR matrices */ 
   if( strcmp( Matrix_Format, "msr" ) == 0)
@@ -2775,7 +2772,7 @@ void shifted_linear_solver_conwrap(double *x, double *y,
       matr_form = 1;
       stab_umf_id = SL_UMF(stab_umf_id,
 			   &first_linear_solver_call, &Factor_Flag, &matr_form, 
-			   &NumUnknowns, &NZeros, &ija[0], &ija[0], &a[0],
+             &NumUnknowns[pg->imtrx], &NZeros, &ija[0], &ija[0], &a[0],
 			   &x[0], &y[0]);
       /*  */
       first_linear_solver_call = FALSE;
@@ -2786,8 +2783,8 @@ void shifted_linear_solver_conwrap(double *x, double *y,
       if (strcmp(Matrix_Format, "msr"))
 	EH(-1,"ERROR: lu solver needs msr matrix format");
 
-      dcopy1(NumUnknowns, x, y);
-      lu(NumUnknowns, NumExtUnknowns, NZeros, a, ija, y, 2);
+        dcopy1(NumUnknowns[pg->imtrx], x, y);
+        lu(NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx], NZeros, a, ija, y, 2);
       first_linear_solver_call = FALSE;
       /* 
        * Note that sl_lu has static variables to keep track of
@@ -2798,7 +2795,7 @@ void shifted_linear_solver_conwrap(double *x, double *y,
       break;
     case AMESOS:
       if( strcmp( Matrix_Format,"msr" ) == 0 ) {
-	amesos_solve_msr( Amesos_Package, ams, y, x, 1 );
+	amesos_solve_msr( Amesos_Package, ams, y, x, 1, pg->imtrx );
       } else {
 	EH(-1," Sorry, only MSR  matrix format supported for loca eigenvalue");
       }
@@ -2933,7 +2930,7 @@ void shifted_linear_solver_conwrap(double *x, double *y,
        * it is the first call or not.
        */
 #ifdef HARWELL    
-      err = cmsr_ma28 (NumUnknowns, NZeros, a, ija, y, x);
+        err = cmsr_ma28 (NumUnknowns[pg->imtrx], NZeros, a, ija, y, x);
 #endif
 #ifndef HARWELL
       EH(-1, "That linear solver package is not implemented.");
@@ -3177,20 +3174,20 @@ void calc_scale_vec_conwrap(double *x, double *scale_vec, int numUnks)
 	    {
 
   /* Adjust nvd to allow for separate treatment of the three pressure vars */
-              if (pd_glob[i]->i[p] == ip1) passdown.nvd += 2;
+              if (pd_glob[i]->i[pg->imtrx][p] == ip1) passdown.nvd += 2;
 	    }
 
   /* Allocate arrays needed to calculate scale vector */
-          passdown.sv_index = (int *) array_alloc(1, NumUnknowns, sizeof(int));
+          passdown.sv_index = (int *) array_alloc(1, NumUnknowns[pg->imtrx], sizeof(int));
           passdown.sv_count = (double *) array_alloc(1, passdown.nvd, sizeof(double));
           init_vec_value(passdown.sv_count, 0.0, passdown.nvd);
 
   /* Loop over only this processor's owned unknowns */
-          for (iunk=0; iunk<NumUnknowns; iunk++)
+          for (iunk=0; iunk<NumUnknowns[pg->imtrx]; iunk++)
 	    {
 
   /* Get vd structure for this unknown */
-	      vdi = Index_Solution_Inv(iunk, NULL, &ivd, NULL, &idof);
+	      vdi = Index_Solution_Inv(iunk, NULL, &ivd, NULL, &idof, pg->imtrx);
 	      index = vdi->List_Index;
 
   /* P1: The second and third pressure vars are stored at the back of the array */
@@ -3222,7 +3219,7 @@ void calc_scale_vec_conwrap(double *x, double *scale_vec, int numUnks)
       init_vec_value(sv_sum, 0.0, passdown.nvd);
 
   /* Calculate the scale vector for the current x */
-      for (iunk=0; iunk<NumUnknowns; iunk++)
+      for (iunk=0; iunk<NumUnknowns[pg->imtrx]; iunk++)
         {
 
   /* Add each value to the appropriate index of sv_sum */
@@ -3246,7 +3243,7 @@ void calc_scale_vec_conwrap(double *x, double *scale_vec, int numUnks)
         }
 
   /* Assign average reciprocals to scale_vec */
-      for (iunk=0; iunk<NumUnknowns; iunk++)
+      for (iunk=0; iunk<NumUnknowns[pg->imtrx]; iunk++)
         {
           index = passdown.sv_index[iunk];
           scale_vec[iunk] = 1.0 / sv_sum[index];
@@ -3259,7 +3256,7 @@ void calc_scale_vec_conwrap(double *x, double *scale_vec, int numUnks)
   /* Otherwise, just set scale_vec to all ones */
   else
     {
-      for (i=0; i < NumUnknowns; i++) scale_vec[i] = 1.0;
+      for (i=0; i < NumUnknowns[pg->imtrx]; i++) scale_vec[i] = 1.0;
     }
 
   return;
@@ -3366,7 +3363,7 @@ void perturb_solution_conwrap(double *x, double *x_old,
 
 /* Determine is this is a mesh displacement variable */
  
-/* vdi = Index_Solution_Inv(i, NULL, NULL, NULL, NULL);
+/* vdi = Index_Solution_Inv(i, NULL, NULL, NULL, NULL, pg->imtrx);
    ivar = vdi->Variable_Type; */
 /* If so, don't perturb it! */
 /* EDW: This function is being disabled for now. */
@@ -3379,7 +3376,7 @@ void perturb_solution_conwrap(double *x, double *x_old,
 
   for (i=0; i<numOwnedUnks; i++) x[i] = x_old[i] + 1.0e-5 * x[i] / scale_vec[i];
 
-  exchange_dof(passdown.cx, passdown.dpi, x);
+  exchange_dof(passdown.cx, passdown.dpi, x, pg->imtrx);
 
 }
 /*****************************************************************************/
@@ -3430,7 +3427,7 @@ void solution_output_conwrap(int num_soln_flag,
     {
       error = write_ascii_soln (x,
 				passdown.resid_vector,
-				NumUnknowns,
+				NumUnknowns[pg->imtrx],
 				passdown.x_AC,
 				nAC,
 				param1,
@@ -3439,28 +3436,26 @@ void solution_output_conwrap(int num_soln_flag,
         DPRINTF(stdout, "%s:  error writing ASCII soln file\n", yo);
       if (Write_Intermediate_Solutions == 0 && Unlimited_Output)
         {
-          write_solution(ExoFileOut,
-			 passdown.resid_vector,
-			 x,
-			 passdown.x_sens_p, 
-			 passdown.x_old,
-			 passdown.xdot,
-			 passdown.xdot_old,
-			 passdown.tev,
-			 passdown.tev_post,
-			 NULL,
-			 passdown.rd,
-			 passdown.gindex,
-			 passdown.gsize,
-			 passdown.gvec,
-			 passdown.gvec_elem,
-			&n_print, 
-			 param1,
-			 passdown.theta,
-			 param1,
-                         NULL,
-			 passdown.exo,
-			 passdown.dpi);
+            write_solution(ExoFileOut,
+                           passdown.resid_vector,
+                           x,
+                           passdown.x_sens_p,
+                           passdown.x_old,
+                           passdown.xdot,
+                           passdown.xdot_old,
+                           passdown.tev,
+                           passdown.tev_post,
+                           NULL,
+                           passdown.rd,
+                           passdown.gvec,
+                           passdown.gvec_elem,
+                           &n_print,
+                           param1,
+                           passdown.theta,
+                           param1,
+                           NULL,
+                           passdown.exo,
+                           passdown.dpi);
           n_print++;
         }
     }
@@ -3472,10 +3467,10 @@ void solution_output_conwrap(int num_soln_flag,
    */
   if (passdown.method != FIRST_ORDER_CONTINUATION)
     {
-      dcopy1(NumUnknowns, passdown.x_older, passdown.x_oldest);
-      dcopy1(NumUnknowns, passdown.x_old, passdown.x_older);
-      dcopy1(NumUnknowns, passdown.x, passdown.x_old);
-      dcopy1(NumUnknowns, passdown.x_sens_temp, passdown.x_sens);
+      dcopy1(NumUnknowns[pg->imtrx], passdown.x_older, passdown.x_oldest);
+      dcopy1(NumUnknowns[pg->imtrx], passdown.x_old, passdown.x_older);
+      dcopy1(NumUnknowns[pg->imtrx], passdown.x, passdown.x_old);
+      dcopy1(NumUnknowns[pg->imtrx], passdown.x_sens_temp, passdown.x_sens);
     }
 
   /* If Eigenvalues requested using ARPACK, calculate them here */
@@ -3514,7 +3509,7 @@ void solution_output_conwrap(int num_soln_flag,
             {
               LSA_current_wave_number = i;
               LSA_3D_of_2D_wave_number = LSA_wave_numbers[i];
-              DPRINTF (stderr, "\n\t3D of 2D LSA -- Wavenumber %d of %d:   %g\n",
+              DPRINTF (stdout, "\n\t3D of 2D LSA -- Wavenumber %d of %d:   %g\n",
                        LSA_current_wave_number + 1, LSA_number_wave_numbers,
                        LSA_3D_of_2D_wave_number);
             }
@@ -3573,28 +3568,26 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
   get_eigen_outfile_name(efile, j, LSA_current_wave_number);
 
   /* Write the real vector using the real eigenvalue part as the time stamp */
-  write_solution(efile,
-                 passdown.resid_vector,
-                 xr,
-                 passdown.x_sens_p, 
-                 passdown.x_old,
-                 passdown.xdot,
-                 passdown.xdot_old,
-                 passdown.tev,
-                 passdown.tev_post,
-		 NULL,
-                 passdown.rd,
-                 passdown.gindex,
-                 passdown.gsize,
-                 passdown.gvec,
-                 passdown.gvec_elem,
-                &nprint,
-                 0.0,
-                 passdown.theta,
-                 evr,
-                 NULL,
-                 passdown.exo,
-                 passdown.dpi);
+    write_solution(efile,
+                   passdown.resid_vector,
+                   xr,
+                   passdown.x_sens_p,
+                   passdown.x_old,
+                   passdown.xdot,
+                   passdown.xdot_old,
+                   passdown.tev,
+                   passdown.tev_post,
+                   NULL,
+                   passdown.rd,
+                   passdown.gvec,
+                   passdown.gvec_elem,
+                   &nprint,
+                   0.0,
+                   passdown.theta,
+                   evr,
+                   NULL,
+                   passdown.exo,
+                   passdown.dpi);
 
   /* Write the imag vector using the imag eigenvalue part as the time stamp */
   if (num_soln_flag == 2)
@@ -3609,34 +3602,32 @@ void eigenvector_output_conwrap(int j, int num_soln_flag, double *xr, double evr
         {
           strcpy(efile, eigen->Eigen_Output_File);
           get_eigen_outfile_name(efile, j+1, LSA_current_wave_number);
-          write_solution(efile,
-                         passdown.resid_vector,
-                         xi,
-                         passdown.x_sens_p, 
-                         passdown.x_old,
-                         passdown.xdot,
-                         passdown.xdot_old,
-                         passdown.tev,
-                         passdown.tev_post,
-		         NULL,
-                         passdown.rd,
-                         passdown.gindex,
-                         passdown.gsize,
-                         passdown.gvec,
-                         passdown.gvec_elem,
-                        &nprint, 
-                         0.0,
-                         passdown.theta,
-                         evi,
-                 	 NULL,
-                         passdown.exo,
-                         passdown.dpi);
+            write_solution(efile,
+                           passdown.resid_vector,
+                           xi,
+                           passdown.x_sens_p,
+                           passdown.x_old,
+                           passdown.xdot,
+                           passdown.xdot_old,
+                           passdown.tev,
+                           passdown.tev_post,
+                           NULL,
+                           passdown.rd,
+                           passdown.gvec,
+                           passdown.gvec_elem,
+                           &nprint,
+                           0.0,
+                           passdown.theta,
+                           evi,
+                           NULL,
+                           passdown.exo,
+                           passdown.dpi);
         }
     }
 
   if (Debug_Flag > 1)
     {
-      DPRINTF(stderr, "Mode %d eigenvector recorded\n", j);
+      DPRINTF(stdout, "Mode %d eigenvector recorded\n", j);
     }
 
   /* Save current step_num for next call */

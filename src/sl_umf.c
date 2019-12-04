@@ -66,7 +66,7 @@
 #include <math.h>
 
 #include "umfpack.h"
-#define _SL_UMF_C
+#define GOMA_SL_UMF_C
 #include "goma.h"
 
 /* how many different linear systems might UMF be used for? */

@@ -19,13 +19,13 @@
 #include <math.h>
 #include <string.h>
 
-#define _AC_HUNT_C
+#define GOMA_AC_HUNT_C
 #include "goma.h"
 #include "brk_utils.h"
 
 #ifdef HAVE_FRONT
 extern int mf_setup
-PROTO((int *,			/* nelem_glob */
+(int *,			/* nelem_glob */
        int *,			/* neqn_glob */
        int *,			/* mxdofel */
        int *,			/* nfullsum */
@@ -37,7 +37,7 @@ PROTO((int *,			/* nelem_glob */
        int *,			/* loc_dof */
        int *,			/* constraint */
        const char *,		/* cname */
-       int *));			/* allocated */
+       int *);			/* allocated */
 #endif
 
 int w;
@@ -350,7 +350,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
   num_total_nodes = dpi->num_universe_nodes;
 
-  numProcUnknowns = NumUnknowns + NumExtUnknowns;
+  numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
   /* allocate memory for Volume Constraint Jacobian. ACS 2/99 */
 
@@ -546,7 +546,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     }
 
     err = mf_setup(&exo->num_elems,
-		   &NumUnknowns,
+		   &NumUnknowns[pg->imtrx], 
 		   &max_unk_elem,
 		   &three,
 		   &one,
@@ -606,8 +606,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
      * running in parallel.
      */
 
-    alloc_extern_ija_buffer(num_universe_dofs,
-			    num_internal_dofs+num_boundary_dofs,
+    alloc_extern_ija_buffer(num_universe_dofs[pg->imtrx], 
+			    num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx], 
 			    ija, &ija_attic);
     /*
      * Any necessary one time initialization of the linear
@@ -631,11 +631,11 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     ams[JAC]->npn      = dpi->num_internal_nodes + dpi->num_boundary_nodes;
     ams[JAC]->npn_plus = dpi->num_internal_nodes + dpi->num_boundary_nodes + dpi->num_external_nodes;
 
-    ams[JAC]->npu      = num_internal_dofs+num_boundary_dofs;
-    ams[JAC]->npu_plus = num_universe_dofs;
+    ams[JAC]->npu      = num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx];
+    ams[JAC]->npu_plus = num_universe_dofs[pg->imtrx];
 
-    ams[JAC]->nnz = ija[num_internal_dofs+num_boundary_dofs] - 1;
-    ams[JAC]->nnz_plus = ija[num_universe_dofs];
+    ams[JAC]->nnz = ija[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]] - 1;
+    ams[JAC]->nnz_plus = ija[num_universe_dofs[pg->imtrx]];
 
   }
   else if(  strcmp( Matrix_Format, "vbr" ) == 0)
@@ -687,7 +687,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
   find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-  exchange_dof(cx, dpi, x);
+  exchange_dof(cx, dpi, x, pg->imtrx);
 
   dcopy1(numProcUnknowns,x,x_old);
   dcopy1(numProcUnknowns,x_old,x_older);
@@ -833,7 +833,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
     find_and_set_Dirichlet (x, xdot, exo, dpi);
 
-    exchange_dof(cx, dpi, x);
+    exchange_dof(cx, dpi, x, pg->imtrx);
 
     if(ProcID ==0) {
       DPRINTF(stderr, "\n\t----------------------------------");
@@ -902,7 +902,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 				    resid_vector_sens,
 				    x_sens,
 				    x_sens_p,
-                                    NULL);
+                                    NULL,
+          NULL);
 
 #ifdef DEBUG
       fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
@@ -919,9 +920,9 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	  fprintf(stderr, "%s: write_solution call WIS\n", yo);
 #endif
 	  write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old,
-			 xdot, xdot_old, tev, tev_post, gv,  rd, gindex,
-			 p_gsize, gvec, gvec_elem, &nprint, delta_s[0],
- 			 theta, path1[0], NULL, exo, dpi);
+			 xdot, xdot_old, tev, tev_post, gv,  rd,
+			 gvec, gvec_elem, &nprint, delta_s[0],
+                       theta, path1[0], NULL, exo, dpi);
 #ifdef DEBUG
 	  fprintf(stderr, "%s: write_solution end call WIS\n", yo);
 #endif
@@ -1172,7 +1173,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
          */
         find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-        exchange_dof(cx, dpi, x);
+        exchange_dof(cx, dpi, x, pg->imtrx);
 
 	if (nAC > 0)
           {
@@ -1223,7 +1224,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
           */
          find_and_set_Dirichlet(x, xdot, exo, dpi);
 
-         exchange_dof(cx, dpi, x);
+         exchange_dof(cx, dpi, x, pg->imtrx);
 
 
  	if (nAC > 0)
@@ -1245,8 +1246,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
                    {
 	            if (Write_Intermediate_Solutions == 0) {
 	                 write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old,
-			        xdot, xdot_old, tev, tev_post, gv,  rd, gindex,
-			        p_gsize, gvec, gvec_elem, &nprint, delta_s[0],
+			        xdot, xdot_old, tev, tev_post, gv,  rd,
+			        gvec, gvec_elem, &nprint, delta_s[0],
  			        theta, custom_tol1, NULL, exo, dpi);
 	                 nprint++;
  	                 }
@@ -1263,8 +1264,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	            if (Write_Intermediate_Solutions == 0) {
  	DPRINTF(stderr,"  writing solution %g  \n",damp_factor1);
 	                 write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old,
-			        xdot, xdot_old, tev, tev_post, gv,  rd, gindex,
-			        p_gsize, gvec, gvec_elem, &nprint, delta_s[0],
+			        xdot, xdot_old, tev, tev_post, gv,  rd,
+			        gvec, gvec_elem, &nprint, delta_s[0],
  			        theta, damp_factor1, NULL, exo, dpi);
 	                 nprint++;
  	                 }
@@ -1349,8 +1350,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       if ( Write_Intermediate_Solutions == 0 ) {
 	write_solution(ExoFileOut, resid_vector, x, x_sens_p,
 		       x_old, xdot, xdot_old, tev, tev_post,  gv,
-		       rd, gindex, p_gsize, gvec, gvec_elem, &nprint,
- 		       delta_s[0], theta, path1[0], NULL, exo, dpi);
+                         rd, gvec, gvec_elem, &nprint,
+                         delta_s[0], theta, path1[0], NULL, exo, dpi);
 	nprint++;
       }
     }

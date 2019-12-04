@@ -46,7 +46,7 @@ static char rcsid[] = "$Id: user_post.c,v 5.1 2007-09-18 18:53:49 prschun Exp $"
 
 #include "mm_eh.h"
 #include "az_aztec.h"
-#define _USER_POST_C
+#define GOMA_USER_POST_C
 #include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************

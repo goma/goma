@@ -16,8 +16,8 @@
  */
 
 
-#ifndef _RF_ALLO_H
-#define _RF_ALLO_H
+#ifndef GOMA_RF_ALLO_H
+#define GOMA_RF_ALLO_H
 
 #ifdef EXTERN
 #undef EXTERN
@@ -25,12 +25,10 @@
 
 #include <stdlib.h>
 
-#ifdef _RF_ALLO_C
-#define EXTERN
-#endif
-
-#ifndef _RF_ALLO_C
+#ifndef GOMA_RF_ALLO_C
 #define EXTERN extern
+#else
+#define EXTERN
 #endif
 
 /*
@@ -88,16 +86,16 @@
  * Prototypes for functions in rf_allo.c
  */
 EXTERN double *array_alloc
-PROTO((int ,			/* numdim - number of dimensions */
-       ...  ));			/* all remaing varargs, last 2 are file:line */
+(int ,			/* numdim - number of dimensions */
+       ...  );			/* all remaing varargs, last 2 are file:line */
 
 EXTERN void *safe_malloc 
-PROTO(( const int ,		/* numbytes */
+( const int ,		/* numbytes */
 	const char *,		/* filename */
-	const int));		/* line */
+	const int);		/* line */
 
 EXTERN void safe_free
-PROTO(( void *));		/* ptr to block being freed */
+( void *);		/* ptr to block being freed */
 
 extern void safer_free(void **);
 extern int    *alloc_int_1_FL(const int, const int, const char *, const int);

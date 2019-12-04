@@ -11,26 +11,26 @@
 \************************************************************************/
  
 
-#ifndef _MM_FILL_COMMON_H
-#define _MM_FILL_COMMON_H
+#ifndef GOMA_MM_FILL_COMMON_H
+#define GOMA_MM_FILL_COMMON_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_FILL_COMMON_C
+#ifdef GOMA_MM_FILL_COMMON_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_FILL_COMMON_C
+#ifndef GOMA_MM_FILL_COMMON_C
 #define EXTERN extern
 #endif
 
 
 EXTERN void computeCommonMaterialProps_gp
-PROTO((
+(
        const dbl time  //Current time (sec)
-));
+);
 
 
 #endif 

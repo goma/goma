@@ -26,7 +26,7 @@
  * Revised:
  */
 
-#define _PPI_C
+#define GOMA_PPI_C
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -133,7 +133,7 @@ brk_pre_process(char *fn)
             break;
           }
         }
-        i = strlen( buffer ) - 2 ;  /* extra offset for the newline */
+        i = (int) strlen( buffer ) - 2 ;  /* extra offset for the newline */
         str1[0] = buffer[ i ];
         while( strcmp( str1, blank_string ) == 0 ) { /* strip trailing blanks */
            buffer[i] = '\n';

@@ -15,18 +15,18 @@
  *$Id: mm_eh.h,v 5.2 2007-09-18 18:53:42 prschun Exp $
  */
 
-#ifndef _MM_EH_H
-#define _MM_EH_H
+#ifndef GOMA_MM_EH_H
+#define GOMA_MM_EH_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _MM_EH_C
+#ifdef GOMA_MM_EH_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _MM_EH_C
+#ifndef GOMA_MM_EH_C
 #define EXTERN extern
 #endif
 
@@ -44,34 +44,34 @@
 extern char Err_Msg[MAX_CHAR_ERR_MSG];
 
 EXTERN void eh
-PROTO((const int ,	       	/* error_flag                                */
+(const int ,	       	/* error_flag                                */
        const char * const,      /* file                                      */
        const int ,	       	/* line                                      */
-       const char * const));	/* message                                   */
+       const char * const);	/* message                                   */
       
 EXTERN void wh
-PROTO((const int ,	       	/* error_flag                                */
+(const int ,	       	/* error_flag                                */
        const char * const,      /* file                                      */
        const int ,	       	/* line                                      */
        const char * const,      /* message                                   */
-       int * const));		/* iw                                        */
+       int * const);		/* iw                                        */
       
 extern void aborth(const int, const char * const, const int,
 		   const char * const);
 
 EXTERN void save_place		/* mm_eh.c                                   */
-PROTO((const int ,		/* severity                                  */
+(const int ,		/* severity                                  */
        const char * const,	/* routine_name                              */
        const char * const,	/* file_name                                 */
-       const int ));		/* line_number                               */
+       const int );		/* line_number                               */
 
 EXTERN void logprintf		/* mm_eh.c                                   */
-PROTO((const char *,		/* format                                    */
-       ... ));			/* var args */
+(const char *,		/* format                                    */
+       ... );			/* var args */
 	   
 	   
 EXTERN void smooth_stop_with_msg
-PROTO((const char *  msg));
+(const char *  msg);
 
 
 
@@ -89,7 +89,7 @@ PROTO((const char *  msg));
  */
 
 #define     EH(IERR, MESSAGE)	eh(IERR, __FILE__, __LINE__, MESSAGE)
-#define	    WH(IERR, MESSAGE)	{static int iw=0; if (iw == 0) wh(IERR, __FILE__, __LINE__, MESSAGE, &iw);}
+#define	    WH(IERR, MESSAGE)	do {static int iw=0; if (iw == 0) wh(IERR, __FILE__, __LINE__, MESSAGE, &iw);} while (0)
 #define     ABORTH(IERR, MESSAGE) aborth(IERR, __FILE__, __LINE__, MESSAGE)
 
 #define GOMA_ERR	(-1)	/* definitely print; definitely exit */

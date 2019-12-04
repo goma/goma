@@ -18,8 +18,8 @@
  *
  * $Id: mm_mp.h,v 5.3 2008-01-25 14:58:26 hkmoffa Exp $
  */
-#ifndef _MM_MP_H
-#define _MM_MP_H
+#ifndef GOMA_MM_MP_H
+#define GOMA_MM_MP_H
 
 #include "mm_mp_structs.h"
 

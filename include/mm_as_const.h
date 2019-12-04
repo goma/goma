@@ -49,15 +49,15 @@
  * 
  *		[3] Term multipliers can be obtained via...
  *
- * 			f_em = pd->etm[R_ENERGY][ilog2i(T_MASS)]
+ * 			f_em = pd->etm[R_ENERGY][LOG2_MASS]
  *
  *				
  *
  * Thus, here are flags for turning on terms in an equation:
  */
 
-#ifndef _MM_AS_CONST_H
-#define _MM_AS_CONST_H
+#ifndef GOMA_MM_AS_CONST_H
+#define GOMA_MM_AS_CONST_H
 
 #define LOG2_SOMETHING		(0) /* Yes, bother to assemble. */
 #define LOG2_MASS		(1) /* Mass matrix: d()/dt - v_mesh.grad() */

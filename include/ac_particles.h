@@ -18,18 +18,23 @@
  * Copyright (C) 2001 Sandia National Laboratories
  */
 
-#ifndef _AC_PARTICLES_H
-#define _AC_PARTICLES_H
+#ifndef GOMA_AC_PARTICLES_H
+#define GOMA_AC_PARTICLES_H
 
 #ifdef EXTERN
 #undef EXTERN
 #endif
 
-#ifdef _AC_PARTICLES_C
+#ifdef GOMA_AC_PARTICLES_C
 #define EXTERN /* do nothing */
 #endif
 
-#ifndef _AC_PARTICLES_C
+#include "std.h"
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "stdio.h"
+
+#ifndef GOMA_AC_PARTICLES_C
 #define EXTERN extern
 #endif
 
@@ -175,15 +180,15 @@ extern int Particle_Number_PBCs;
 extern PBC_t *PBCs;
 
 EXTERN void initialize_particles
-PROTO((const Exo_DB *,
+(const Exo_DB *,
        dbl * const,
        dbl * const,
        dbl * const,
        dbl * const,
-       dbl * const));
+       dbl * const);
 
 EXTERN int compute_particles
-PROTO((const Exo_DB *,
+(const Exo_DB *,
        dbl * const,
        dbl * const,
        dbl * const,
@@ -191,10 +196,10 @@ PROTO((const Exo_DB *,
        dbl * const,
        const dbl,
        const dbl,
-       const int));
+       const int);
 
 EXTERN void rd_particle_specs	/* mm_input_particles.c */
-PROTO((FILE *,
-       char *));
-#endif /* _AC_PARTICLES_H */
+(FILE *,
+       char *);
+#endif /* GOMA_AC_PARTICLES_H */
 

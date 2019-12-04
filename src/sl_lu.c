@@ -24,7 +24,7 @@ static char rcsid[] = "$Id: sl_lu.c,v 5.2 2007-12-07 17:14:37 hkmoffa Exp $";
 #include "spMatrix.h"
 #include "spConfig.h"
 
-#define _SL_LU_C
+#define GOMA_SL_LU_C
 #include "goma.h"
 
 /*
@@ -34,7 +34,6 @@ static char rcsid[] = "$Id: sl_lu.c,v 5.2 2007-12-07 17:14:37 hkmoffa Exp $";
 
 /* #define DUMP_CMSR_MATRIX */
 
-static int call=0;
 
 int first_time = TRUE;
 
@@ -82,6 +81,9 @@ int first_time = TRUE;
           routines called: (sparse1.3 package is used)
     --------------------------------------------------------------------
 */
+#ifdef HAVE_SPARSE
+
+static int call=0;
 
 void
 lu(const int N,
@@ -93,6 +95,7 @@ lu(const int N,
    const int factor_flag)
 {
   static char *matrix;
+  static int prev_matrix = 0;
   int  error, type;
   int j, i, n, k, nzeros, ija_col;
   static spREAL **element, *b;
@@ -100,6 +103,13 @@ lu(const int N,
   spREAL norm;
 #endif
 
+  if (pg->imtrx != prev_matrix) {
+    if (first_time == FALSE) {
+      spDestroy(matrix);
+    }
+    first_time = TRUE;
+    prev_matrix = pg->imtrx;
+  }
 
   call++;
 
@@ -174,7 +184,7 @@ lu(const int N,
 
 /*         spFileMatrix(matrix,"matrix_file","channel",0,1,1); */
 	error = spOrderAndFactor(matrix, b, (spREAL)-1, (spREAL)0, (int)1);
-	first_time = FALSE;
+		first_time = FALSE;
 
        } else {
 
@@ -203,6 +213,19 @@ lu(const int N,
 /*  spDestroy(matrix);*/
 
 } /* END of routine lu */
+#else // HAVE_SPARSE
+void
+lu(const int N,
+   const int NExt,
+   const int  M,
+   double  a[],
+   int  ija[],
+   double x[],
+   const int factor_flag)
+{
+  EH(-1, "Goma not configured with sparse support");
+}
+#endif // HAVE_SPARSE
 /*****************************************************************************/
 /* END of file sl_lu.c */
 /*****************************************************************************/

@@ -31,7 +31,7 @@ static char rcsid[] = "$Id: rf_shape.c,v 5.4 2010-04-06 15:32:46 hkmoffa Exp $";
 #include "mm_eh.h"
 #include "mm_as_structs.h"
 
-#define _RF_SHAPE_C
+#define GOMA_RF_SHAPE_C
 #include "goma.h"
 
 
@@ -482,7 +482,7 @@ shape (const double s,		/* quadrature point coordinates */
     }
     break;
 
-  case TRILINEAR_TET:
+  case LINEAR_TET:
     switch (Iquant) {     /* select quantity */
     case PSI:           /* shape function */
       switch( Inode ) { /* select specific shape function */
@@ -541,7 +541,7 @@ shape (const double s,		/* quadrature point coordinates */
 
     }
     
-    break;  /*Case Trilinear_tet */
+    break;  /*Case LINEAR_TET */
 
 
   

@@ -29,7 +29,7 @@ static char rcsid[] = "$Id: mm_eh.c,v 5.3 2008-01-11 00:47:14 hkmoffa Exp $";
 #include "rf_mp.h"
 #include "mm_eh.h"
 
-#define _MM_EH_C
+#define GOMA_MM_EH_C
 #include "goma.h"
 
 #ifdef PRINT_STACK_TRACE_ON_EH
@@ -191,10 +191,21 @@ save_place(const int severity,
 void 
 logprintf(const char *format, ... )
 {
+#ifndef ENABLE_LOGGING
+  if ( current_severity < 0 )
+    {
+      va_list va;
+      va_start(va, format);
+      vfprintf(stderr, format, va);
+      va_end(va);
+      DPRINTF(stderr, "\nAbnormal termination in logprintf\n");
+      exit(current_severity);
+    }
+  return;
+#else
   time_t now;
   static char time_format[] = "%b %d %T";
   static char time_result[TIME_STRING_SIZE];
-#ifdef ENABLE_LOGGING
   int n;
 
   static char new_format[1024];
@@ -212,6 +223,7 @@ logprintf(const char *format, ... )
    * to multiplex into separate files for each processor. Finally, you might
    * want to separate heavy debugging messages.
    */
+
 
   /*
    * Check for an open file output stream, open one if there isn't one yet...
@@ -327,18 +339,6 @@ logprintf(const char *format, ... )
     }
 
   return;
-
-#else
-  time(&now);
-
-  (void) strftime(time_result, TIME_STRING_SIZE,
-                  time_format, localtime(&now));
-  if ( current_severity < 0 )
-    {
-      DPRINTF(stderr, "%s ", time_result);
-      DPRINTF(stderr, "\nAbnormal termination -- see log file for details.\n");
-      exit(current_severity);
-    }
 #endif
 }
 
