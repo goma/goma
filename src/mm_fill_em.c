@@ -257,7 +257,7 @@ assemble_emwave(double time,	/* present time value */
          for ( p=0; p<VIM; p++) {
            cross_field[p] = fv->em_hr[p];
          }
-         stabilization_coefficient = 0;
+         stabilization_coefficient = 0.1;
          stabilization_field_var = EM_E1_REAL;
          for ( p=0; p<VIM; p++) {
            for ( q=0; q<VIM; q++) {
@@ -280,7 +280,7 @@ assemble_emwave(double time,	/* present time value */
          for ( p=0; p<VIM; p++) {
            cross_field[p] = fv->em_hi[p];
          }
-         stabilization_coefficient = 0;
+         stabilization_coefficient = 0.1;
          stabilization_field_var = EM_E1_IMAG;
          for ( p=0; p<VIM; p++) {
            for ( q=0; q<VIM; q++) {
@@ -299,7 +299,7 @@ assemble_emwave(double time,	/* present time value */
          for ( p=0; p<VIM; p++) {
            cross_field[p] = fv->em_er[p];
          }
-         stabilization_coefficient = 1.0;
+         stabilization_coefficient = 0.1;
          stabilization_field_var = EM_H1_REAL;
          for ( p=0; p<VIM; p++) {
            for ( q=0; q<VIM; q++) {
@@ -318,7 +318,7 @@ assemble_emwave(double time,	/* present time value */
          for ( p=0; p<VIM; p++) {
            cross_field[p] = fv->em_ei[p];
          }
-         stabilization_coefficient = 1.0;
+         stabilization_coefficient = 0.1;
          stabilization_field_var = EM_H1_IMAG;
          for ( p=0; p<VIM; p++) {
            for ( q=0; q<VIM; q++) {
@@ -490,8 +490,8 @@ assemble_emwave(double time,	/* present time value */
                 }
               }
 
-              diffusion += stabilization_coefficient*phi_i
-                  *bf[var]->grad_phi[j][b];
+              //diffusion += stabilization_coefficient*phi_i
+              //    *bf[var]->grad_phi[j][b];
 
               diffusion *= det_J * wt;
               diffusion *= h3;
@@ -504,7 +504,7 @@ assemble_emwave(double time,	/* present time value */
       }
       /*
        *  stabilization field
-       *
+       */
       for ( b=0; b<dim; b++) {
         var = stabilization_field_var + b;
         if ( pd->v[var] ) {
