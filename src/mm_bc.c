@@ -1489,7 +1489,7 @@ free_Edge_BC ( struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 	
 
 void
-setup_Point_BC (struct elem_side_bc_struct *First_Elem_Side_BC_Array[ ],
+setup_Point_BC (struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
 Exo_DB *exo, Dpi *dpi) {
   char err_msg[MAX_CHAR_IN_INPUT];
   //int i;
@@ -1560,7 +1560,7 @@ Exo_DB *exo, Dpi *dpi) {
                   exo->node_elem_pntr[
                   exo->ns_node_list[ins]]];
 
-          setup_Elem_BC (&First_Elem_Side_BC_Array[ielem],
+          setup_Elem_BC (&First_Elem_Side_BC_Array[BC_Types[ibc].matrix][ielem],
 				    &BC_Types[ibc],
 				    ibc, num_nodes_on_side,
 				    ielem,

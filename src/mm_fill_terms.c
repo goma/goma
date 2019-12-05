@@ -24562,7 +24562,7 @@ assemble_qvapor_source ( const double p[])
    
   /***************************** EXECUTION BEGINS *******************************/
   /* Lets CALCULATE LASER VAPOR HEAT LOSS  RARR */
-  qvaporloss=calculate_vapor_cool(p,d_evap_loss,0);
+  qvaporloss=calculate_vapor_cool(p,&d_evap_loss,0);
   
   flux = -qvaporloss;
   /* END CALCULATE Q VAPOR */
@@ -36582,7 +36582,7 @@ assemble_emwave(double time,	/* present time value */
   dbl emf_coeff_dn=0, conj_coeff_dn=0;
   dbl emf_coeff_dk=0, conj_coeff_dk=0;
   dbl mag_permeability=1.4e-07;
-  int cross_field_var;
+  int cross_field_var = 0;
   dbl cross_field[DIM];
 
   dbl n;				/* Refractive index. */

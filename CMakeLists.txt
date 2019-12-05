@@ -11,8 +11,9 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 
 set(PROJECT_NAME goma)
+list(APPEND CMAKE_MODULE_PATH "${goma_SOURCE_DIR}/cmake")
 
-SET(CMAKE_PREFIX_PATH ${Trilinos_PREFIX} ${CMAKE_PREFIX_PATH})
+set(CMAKE_PREFIX_PATH ${Trilinos_PREFIX} ${CMAKE_PREFIX_PATH})
 
 # Get Trilinos as one entity
 FIND_PACKAGE(Trilinos REQUIRED)
@@ -34,35 +35,35 @@ message("Trilinos LD Flags = ${Trilinos_EXTRA_LD_FLAGS}")
 MESSAGE("End of Trilinos details\n")
 
 set(MPI_C_COMPILER ${Trilinos_C_COMPILER})
-FIND_PACKAGE(MPI REQUIRED)
+find_package(MPI REQUIRED)
 
-LIST(REVERSE Trilinos_LIBRARIES)
-LIST(REMOVE_DUPLICATES Trilinos_LIBRARIES)
-LIST(REVERSE Trilinos_LIBRARIES)
+# Avoid linking to too many libraries by removing duplicates
+# reverse so that correct order for linking is preserved
+list(REVERSE Trilinos_LIBRARIES)
+list(REMOVE_DUPLICATES Trilinos_LIBRARIES)
+list(REVERSE Trilinos_LIBRARIES)
 
-LIST(REVERSE Trilinos_TPL_LIBRARIES)
-LIST(REMOVE_DUPLICATES Trilinos_TPL_LIBRARIES)
-LIST(REVERSE Trilinos_TPL_LIBRARIES)
+list(REVERSE Trilinos_TPL_LIBRARIES)
+list(REMOVE_DUPLICATES Trilinos_TPL_LIBRARIES)
+list(REVERSE Trilinos_TPL_LIBRARIES)
 
-SET(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
-SET(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
-SET(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
+set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
+set(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
+set(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
 
 include_directories(${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS} ${MPI_C_INCLUDE_PATH})
 
 set(GOMA_TPL_LIBRARIES "")
 
-find_library(ARPACK_LIBRARY NAMES arpack 
-    PATHS ${ARPACK_PREFIX}/lib /usr/lib64 /usr/lib /usr/local/lib64 /usr/local/lib)
+find_package(ARPACK)
 
-if(ARPACK_LIBRARY)
-    message("Found ARPACK ${ARPACK_LIBRARY}")
-    set(ARPACK_FOUND YES)
-    set(GOMA_TPL_LIBRARIES "${GOMA_TPL_LIBRARIES} ${ARPACK_LIBRARY}")
-    string(STRIP ${GOMA_TPL_LIBRARIES} GOMA_TPL_LIBRARIES)
-else()
-    set(ARPACK_FOUND NO)
+if(ARPACK_FOUND)
+  message("Using ARPACK ${ARPACK_LIBRARIES}")
+  set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${ARPACK_LIBRARIES})
 endif()
+
+find_package(Sparse REQUIRED)
+set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${Sparse_LIBRARIES})
 
 option(COMPILER_64BIT "COMPILER_64BIT" ON)
 if(COMPILER_64BIT)
@@ -97,7 +98,7 @@ option(FP_EXCEPT "FP_EXCEPT" OFF)
 if(FP_EXCEPT)
     add_definitions(-DFP_EXCEPT)
 endif()
-if (${ARPACK_FOUND})
+if (ARPACK_FOUND)
     option(EIGEN_SERIAL "EIGEN_SERIAL" ON)
     option(EIGEN_PARALLEL "EIGEN_PARALLEL" OFF)
 else()
@@ -105,7 +106,7 @@ else()
     option(EIGEN_PARALLEL "EIGEN_PARALLEL" OFF)
 endif()
 if(EIGEN_PARALLEL)
-    if(NOT ${ARPACK_FOUND})
+    if(NOT ARPACK_FOUND)
         message(FATAL_ERROR "Cannot use EIGEN_PARALLEL without ARPACK Library")
     endif()
     add_definitions(-DEIGEN_PARALLEL)
@@ -130,7 +131,6 @@ add_definitions(-DMAX_PROB_VAR=${MAX_PROB_VAR})
 
 
 set(GOMA_INCLUDES
-    include/acconfig.h
     include/ac_conti.h
     include/ac_hunt.h
     include/ac_particles.h
@@ -145,21 +145,7 @@ set(GOMA_INCLUDES
     include/bc_rotate.h
     include/bc_special.h
     include/bc_surfacedomain.h
-    include/brkfix/bbb.h
-    include/brkfix/brkfix.h
-    include/brkfix/brkfix_types.h
-    include/brkfix/brk.h
-    include/brkfix/emuck.h
-    include/brkfix/exo_utils.h
-    include/brkfix/fix.h
-    include/brkfix/mk_dm.h
-    include/brkfix/nodesc.h
-    include/brkfix/ppi.h
-    include/brkfix/rd_in.h
-    include/brkfix/sam_perea.h
-    include/brkfix/utils.h
-    include/brkfix/wr_coords.h
-    include/brkfix/wr_graph_file.h
+    include/brkfix/
     include/brk_utils.h
     include/dg_utils.h
     include/dp_comm.h
@@ -174,9 +160,6 @@ set(GOMA_INCLUDES
     include/el_quality.h
     include/exo_conn.h
     include/exo_struct.h
-    include/gm_cgm_c_interface.h
-    include/gm_cgm_typedefs.h
-    include/gm_cgm_util.h
     include/goma.h
     include/loca_const.h
     include/loca_util_const.h
@@ -187,10 +170,8 @@ set(GOMA_INCLUDES
     include/mm_as_structs.h
     include/mm_augc_util.h
     include/mm_bc.h
-    include/mm_cards.h
     include/mm_chemkin.h
     include/mm_dil_viscosity.h
-    include/mm_distng_const.h
     include/mm_eh.h
     include/mm_elem_block.h
     include/mm_elem_block_structs.h
@@ -249,11 +230,8 @@ set(GOMA_INCLUDES
     include/rf_fem.h
     include/rf_fill_const.h
     include/rf_io_const.h
-    include/rf_io_defn.h
     include/rf_io.h
     include/rf_io_structs.h
-    include/rf_masks_const.h
-    include/rf_masks_globs.h
     include/rf_masks.h
     include/rf_mp.h
     include/rf_node_const.h
@@ -266,7 +244,8 @@ set(GOMA_INCLUDES
     include/rf_solve_segregated.h
     include/rf_util.h
     include/rf_vars_const.h
-    include/rf_vars_defn.h
+    include/shell_tfmp_struct.h
+    include/shell_tfmp_util.h
     include/sl_amesos_interface.h
     include/sl_aux.h
     include/sl_auxutil.h
@@ -282,11 +261,7 @@ set(GOMA_INCLUDES
     include/sl_umf.h
     include/sl_util.h
     include/sl_util_structs.h
-    include/spConfig.h
-    include/spDefs.h
-    include/spmatrix.h
     include/std.h
-    include/user_ac.h
     include/user_bc.h
     include/user_continuation.h
     include/user_mp_gen.h
@@ -299,7 +274,22 @@ set(GOMA_INCLUDES
     include/wr_dpi.h
     include/wr_exo.h
     include/wr_side_data.h
-    include/wr_soln.h)
+    include/wr_soln.h
+    include/brkfix/bbb.h
+    include/brkfix/brkfix.h
+    include/brkfix/brkfix_types.h
+    include/brkfix/brk.h
+    include/brkfix/emuck.h
+    include/brkfix/exo_utils.h
+    include/brkfix/fix.h
+    include/brkfix/mk_dm.h
+    include/brkfix/nodesc.h
+    include/brkfix/ppi.h
+    include/brkfix/rd_in.h
+    include/brkfix/sam_perea.h
+    include/brkfix/utils.h
+    include/brkfix/wr_coords.h
+    include/brkfix/wr_graph_file.h)
 
 set(GOMA_SOURCES
     src/ac_conti.c
@@ -318,17 +308,7 @@ set(GOMA_SOURCES
     src/bc_rotate.c
     src/bc_special.c
     src/bc_surfacedomain.c
-    src/brkfix/bbb.c
-    src/brkfix/brk_exo_file.c
-    src/brkfix/emuck.c
-    src/brkfix/fix_exo_file.c
-    src/brkfix/mk_dm.c
-    src/brkfix/ppi.c
-    src/brkfix/rd_in.c
-    src/brkfix/sam_perea.c
-    src/brkfix/utils.c
-    src/brkfix/wr_coords.c
-    src/brkfix/wr_graph_file.c
+    src/brkfix/
     src/brk_utils.c
     src/dg_utils.c
     src/dp_comm.c
@@ -338,8 +318,6 @@ set(GOMA_SOURCES
     src/el_elm_info.c
     src/el_quality.c
     src/exo_conn.c
-    src/gm_cgm_c_interface.C
-    src/gm_cgm_util.c
     src/loca_bord.c
     src/loca_eigen_c2f.F
     src/loca_eigen_cayley.F
@@ -419,6 +397,7 @@ set(GOMA_SOURCES
     src/rf_solve_segregated.c
     src/rf_util.c
     src/rf_vars.c
+    src/shell_tfmp_util.c
     src/sl_amesos_interface.C
     src/sl_aux.c
     src/sl_auxutil.c
@@ -457,7 +436,18 @@ set(GOMA_SOURCES
     src/wr_dpi.c
     src/wr_exo.c
     src/wr_side_data.c
-    src/wr_soln.c)
+    src/wr_soln.c
+    src/brkfix/bbb.c
+    src/brkfix/brk_exo_file.c
+    src/brkfix/emuck.c
+    src/brkfix/fix_exo_file.c
+    src/brkfix/mk_dm.c
+    src/brkfix/ppi.c
+    src/brkfix/rd_in.c
+    src/brkfix/sam_perea.c
+    src/brkfix/utils.c
+    src/brkfix/wr_coords.c
+    src/brkfix/wr_graph_file.c)
 
 # Set a default build type for single-configuration
 # CMake generators if no build type is set.
@@ -477,5 +467,5 @@ SET(CMAKE_C_FLAGS_RELEASE "${GOMA_RELEASE_FLAGS}")
 SET(CMAKE_C_FLAGS_DEBUG  "${GOMA_DEBUG_FLAGS}")
 
 add_executable(${PROJECT_NAME} ${GOMA_INCLUDES} ${GOMA_SOURCES})
-target_include_directories(${PROJECT_NAME} PRIVATE include ${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE include ${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS} ${Sparse_INCLUDES})
 target_link_libraries(${PROJECT_NAME} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${Trilinos_EXTRA_LD_FLAGS} ${GOMA_TPL_LIBRARIES}) 

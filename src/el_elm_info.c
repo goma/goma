@@ -2171,13 +2171,8 @@ find_stu(const int   iquad,     /* current GQ index  */
   static const double Tri12= 0.636502499121399;
   static const double Tri13= 0.310352451033785;
   static const double Tri14= 0.053145049844816;
-
   static const double quad5_1 =  0.9061798459;
   static const double quad5_2 =  0.5384693101;
-
-  // static double one_third = 3.333333333333333e-01;
-  static double one_half  = 0.5;
-  static double one_sixth = 1.666666666666667e-01;
 
   switch( ielem_type ){                 /* select element */
 
@@ -3629,9 +3624,6 @@ Gq_weight(const int iquad,               /* current GQ index */
   static const double tri6 =   0.050844906370207;
   static const double tri7 =   0.116786275726379;
   static const double tri8 =   0.082851075618374;
-
-  static double wltet_1 = -1.333333333333333e-01;
-  static double wltet_2 =  7.500000000000000e-02;
 
   static const double quad5_1 = 0.23692688505618908751;
   static const double quad5_2 = 0.47862867049936646804;

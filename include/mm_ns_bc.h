@@ -868,7 +868,7 @@ EXTERN double calculate_laser_flux
 
 EXTERN double calculate_vapor_cool
 ( const double [],
-	double,
+        double *,
         double);
 
 EXTERN void qrad_surf		/* mm_fill_terms.c                           */

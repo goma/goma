@@ -14505,9 +14505,9 @@ acoustic_nobc_surf(double func[DIM],
 } /* END of routine acoustic_nobc_surf                                                */
 /****************************************************************************/
 /******************************************************************************/
-double 
+double
 calculate_vapor_cool ( const double p[],
-		       double d_evap_loss, 
+                       double *d_evap_loss,
                        double time )
 
 /*******************************************************************************
@@ -14562,15 +14562,14 @@ calculate_vapor_cool ( const double p[],
   /* evaporization related quantities */
   if (theta < 0.) 
     {
-      theta=0.;
       evap_loss   = 0.;
-      d_evap_loss = 0.;
+      *d_evap_loss = 0.;
     } 
   else 
     {
       evap_loss = q_scale*( vapor_c0 + vapor_c1 * theta + vapor_c2 * pow(theta,2.0) 
 			    + vapor_c3 * pow(theta,3.0));                         
-      d_evap_loss =  q_scale*(vapor_c1 + 2.* vapor_c2 * theta +
+      *d_evap_loss =  q_scale*(vapor_c1 + 2.* vapor_c2 * theta +
 			      3.* vapor_c3 * pow(theta,2.0));
     }
 
@@ -14600,7 +14599,7 @@ q_vapor ( double func[DIM],
   theta   = fv->T-T_boil;
 
   /* Lets CALCULATE LASER VAPOR HEAT LOSS  RARR */
-  qvaporloss=calculate_vapor_cool(p,d_evap_loss,time);
+  qvaporloss=calculate_vapor_cool(p,&d_evap_loss,time);
 
   /* Evaluate sensitivity to temperature  */  
   var=TEMPERATURE;

@@ -255,7 +255,9 @@ setup_pd()
 		  pd_glob[mn]->e[imtrx][ce] |= T_SOURCE;
 		}
 	    }
-	  else if (ce == R_BOND_EVOLUTION)
+          else if (ce == R_BOND_EVOLUTION ||
+                         (ce == R_TFMP_MASS) ||
+                         (ce == R_TFMP_BOUND))
 	    {
 	      if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_MASS)] != 0. )
 		{
@@ -355,6 +357,13 @@ setup_pd()
                    {
                     pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
                    }
+                }
+                else if(ce == R_SHELL_NORMAL3)
+                {
+                  if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_DIFFUSION)] != 0. )
+                  {
+                    pd_glob[mn]->e[imtrx][ce] |= T_DIFFUSION;
+                  }
                 }
 	      else if(ce == R_SHEAR_RATE )
 	        {
@@ -521,7 +530,7 @@ setup_pd()
 		   {
 		    pd_glob[mn]->e[imtrx][ce] |= T_ADVECTION;
 		   }
-	         if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_BOUNDARY)] != 0. )
+                 if ( pd_glob[mn]->etm[imtrx][ce][(LOG2_BOUNDARY)] != 0. )
 		   {
 		    pd_glob[mn]->e[imtrx][ce] |= T_BOUNDARY;
 		   }
