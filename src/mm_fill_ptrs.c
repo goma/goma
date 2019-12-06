@@ -2083,7 +2083,7 @@ load_elem_dofptr(const int ielem,
     }
 
   eqn = R_POR_ENERGY;
-  if ( pd->e[eqn] )
+  if ( pd->e[eqn] >= 0 )
     {
       load_varType_Interpolation_ptrs(eqn, esp->T, esp_old->T,
 				      esp_dot->T);
@@ -2096,14 +2096,14 @@ load_elem_dofptr(const int ielem,
     }
 
   eqn = R_TFMP_MASS;
-  if ( pd->e[eqn] )
+  if ( pd->e[eqn] >= 0 )
     {
       load_varType_Interpolation_ptrs(eqn, esp->tfmp_sat, esp_old->tfmp_sat,
 				      esp_dot->tfmp_sat);
     }
 
   eqn = R_TFMP_BOUND;
-  if ( pd->e[eqn] )
+  if ( pd->e[eqn] >= 0)
     {
       load_varType_Interpolation_ptrs(eqn, esp->tfmp_pres, esp_old->tfmp_pres,
 				      esp_dot->tfmp_pres);
