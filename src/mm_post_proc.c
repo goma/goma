@@ -283,6 +283,9 @@ int EIG2 = -1;
 int EIG3 = -1;
 int GRAD_SH = -1;
 int GRAD_Y = -1;
+int HELICITY = -1;
+int LAMB_VECTOR = -1;
+int Q_FCN = -1;		      
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -875,6 +878,20 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_post[GIES_CRIT] = (gammadot - vorticity)/
 			(DBL_SMALL + gammadot + vorticity);
     local_lumped[GIES_CRIT] = 1.;
+  }
+
+  if (Q_FCN != -1 && pd->e[R_MOMENTUM1] ){
+    double gammadot, del_v[DIM][DIM];
+    for (a = 0; a < VIM; a++) {       
+      for (b = 0; b < VIM; b++) {
+	  del_v[a][b] = fv->grad_v[a][b];
+        }
+      }
+    /* find second invariant of velocity gradient tensor */
+    calc_shearrate(&gammadot, del_v, NULL, NULL);
+
+    local_post[Q_FCN] = gammadot;
+    local_lumped[Q_FCN] = 1.;
   }
 
   if (VELO_SPEED != -1 && pd->e[R_MOMENTUM1] ){
@@ -1884,8 +1901,38 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     }
   }
 
-  /* calculate real-solid stress here !!  */
+  if (HELICITY != -1 && pd->e[R_MOMENTUM1]) {
+    /* MMH: Note that in the SWIRLING coordinate system, we really
+     * do have a 3-vector and not just a scalar.
+       *
+       * Same for PROJECTED_CARTESIAN, if VELOCITY3 can become
+       * non-zero. -MMH
+       */
+    if (pd->CoordinateSystem == SWIRLING ||
+	pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	pd->CoordinateSystem == CARTESIAN_2pt5D ||
+	dim == 3) {
+	local_post[HELICITY] = 0.0;
+        for (j = 0; j < VIM; j++) {
+	    local_post[HELICITY] += fv->v[j]*fv->curl_v[j];
+            }
+	local_lumped[HELICITY] = 1.0;
+        } 
+  }
 
+  if (LAMB_VECTOR != -1 && pd->e[R_MOMENTUM1]) {
+      for (j = 0; j < VIM; j++) {
+	local_post[LAMB_VECTOR + j] = 0;
+        for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+	     local_post[LAMB_VECTOR + j] += permute(a,b,j)*fv->curl_v[a]*fv->v[b];
+            }
+          }
+	local_lumped[LAMB_VECTOR + j] = 1.0;
+      }
+    }
+
+  /* calculate real-solid stress here !!  */
   if(REAL_STRESS_TENSOR != -1 && pd->e[R_SOLID1])
     {
       mu = elc_rs->lame_mu;
@@ -6788,6 +6835,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Stream Function", &STREAM);
   iread = look_for_post_proc(ifp, "Streamwise normal stress", &STREAM_NORMAL_STRESS);
   iread = look_for_post_proc(ifp, "Streamwise shear stress", &STREAM_SHEAR_STRESS);
+  iread = look_for_post_proc(ifp, "Streamwise Stress Difference", &STREAM_TENSION);
   iread = look_for_post_proc(ifp, "Mean shear rate", &MEAN_SHEAR);
   iread = look_for_post_proc(ifp, "Pressure contours", &PRESSURE_CONT);
   iread = look_for_post_proc(ifp, "Shell div_s_v contours", &SH_DIV_S_V_CONT);
@@ -6839,8 +6887,12 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Eigenvector3", &EIG3);
   iread = look_for_post_proc(ifp, "Shear gradient", &GRAD_SH);
   iread = look_for_post_proc(ifp, "Concentration gradient", &GRAD_Y);
+  iread = look_for_post_proc(ifp, "Vorticity Vector", &CURL_V);
+  iread = look_for_post_proc(ifp, "Helicity Value", &HELICITY);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
   iread = look_for_post_proc(ifp, "Heaviside", &HEAVISIDE);
+  iread = look_for_post_proc(ifp, "Lamb Vector", &LAMB_VECTOR);
+  iread = look_for_post_proc(ifp, "Q Function", &Q_FCN);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -6916,7 +6968,6 @@ rd_post_process_specs(FILE *ifp,
 			     &POROUS_SUPGVELOCITY);
   iread = look_for_post_proc(ifp, "Relative Liquid Permeability",
 			     &REL_LIQ_PERM);
-  iread = look_for_post_proc(ifp, "Vorticity Vector", &CURL_V);
 
   iread = look_for_post_proc(ifp, "TFMP_gas_velo", &TFMP_GAS_VELO);
   iread = look_for_post_proc(ifp, "TFMP_liq_velo", &TFMP_LIQ_VELO);
@@ -8635,6 +8686,23 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       STREAM_SHEAR_STRESS = -1;
     }
+   if (STREAM_TENSION != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "SSD","[1]",
+		   "Streamwise Stress Difference", FALSE);
+       index++;
+       if (STREAM_TENSION == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       STREAM_TENSION = index_post;
+       index_post++;
+    }
+  else
+    {
+      STREAM_TENSION = -1;
+    }
    if (DIV_VELOCITY != -1 && Num_Var_In_Type[PRESSURE])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "DIVV","[1]",
@@ -8799,6 +8867,25 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       GIES_CRIT = -1;
     }
+
+   if (Q_FCN != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "Q_FCN","[1]", "Q Function",
+		   FALSE);
+       index++;
+       if (Q_FCN == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       Q_FCN = index_post;
+       index_post++;
+    }
+  else
+    {
+      Q_FCN = -1;
+    }
+
 
    if (VELO_SPEED != -1 && Num_Var_In_Type[R_MOMENTUM1])
      {
@@ -10119,6 +10206,84 @@ index_post, index_post_export);
   else
     {
       CURL_V = -1;
+    }
+  /* RBS: Output the Lamb vector.
+   */
+  if (LAMB_VECTOR != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       if(pd->CoordinateSystem == SWIRLING ||
+	  pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	  pd->CoordinateSystem == CARTESIAN_2pt5D ||
+	  Num_Dim == 3)
+	 {
+           if (LAMB_VECTOR == 2)
+             {
+               EH(-1, "Post-processing vectors cannot be exported yet!");
+             }
+	   LAMB_VECTOR = index_post;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBX", "[1]",
+		       "x-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBY", "[1]",
+		       "y-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBZ", "[1]",
+		       "z-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+	 }
+       else if(Num_Dim == 2)
+	 {
+	   LAMB_VECTOR = index_post;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBX", "[1]",
+		       "x-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBY", "[1]",
+		       "y-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+           if (LAMB_VECTOR == 2)
+             {
+               Export_XP_ID[index_post_export] = index_post;
+               index_post_export++;
+             }
+	 }
+     }
+  else
+    {
+      LAMB_VECTOR = -1;
+    }
+  /* RBS: Helicity quantity (scalar)
+   */
+  if (HELICITY != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       if(pd->CoordinateSystem == SWIRLING ||
+	  pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	  pd->CoordinateSystem == CARTESIAN_2pt5D ||
+	  Num_Dim == 3)
+	 {
+           if (HELICITY == 2)
+             {
+               EH(-1, "Post-processing vectors cannot be exported yet!");
+             }
+	   HELICITY = index_post;
+	   set_nv_tkud(rd, index, 0, 0, -2, "HELIX", "[1]",
+		       "helicity scalar", FALSE);
+	   index++;
+	   index_post++;
+	 }
+       else
+	 {
+	   WH(-1,"Why are you asking for Helicity in a 1D or 2D problem?");
+	   HELICITY = -1;
+	 }
+     }
+  else
+    {
+      HELICITY = -1;
     }
 
   if (HEAVISIDE != -1 && (Num_Var_In_Type[R_MOMENTUM1] || check ))
