@@ -2300,7 +2300,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		   */
 
 		  for (mn = 0; mn < upd->Num_Mat; mn++) {
-		    if (pd_glob[mn]->e[eqn] &&
+                    if (pd_glob[mn]->e[pg->imtrx][eqn] &&
 			(eb_in_matrl(BC_Types[bc_input_id].BC_Data_Int[0], mn) ||
 			 eb_in_matrl(BC_Types[bc_input_id].BC_Data_Int[1], mn)))
 		      {
