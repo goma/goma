@@ -64,6 +64,7 @@ endif()
 
 find_package(Sparse REQUIRED)
 set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} ${Sparse_LIBRARIES})
+add_definitions(-DHAVE_SPARSE)
 
 option(COMPILER_64BIT "COMPILER_64BIT" ON)
 if(COMPILER_64BIT)

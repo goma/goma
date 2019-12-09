@@ -10355,6 +10355,7 @@ load_fv_grads(void)
       if (VIM == 3  && pd->CoordinateSystem != CARTESIAN_2pt5D)
       fv_old->div_v = 0.0;
       for(a=0; a<VIM; a++) {
+        fv->div_v += fv->grad_v[a][a];
 	  //if(segregated)
 	  fv_old->div_v += fv_old->grad_v[a][a];
 	}

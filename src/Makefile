@@ -116,6 +116,7 @@ DEFINES ?= -Dlinux \
            -DCOUPLED_FILL \
            -DPARALLEL \
            -DHAVE_STRATIMIKOS \
+           -DHAVE_SPARSE \
            -DEIGEN_SERIAL
 
 # Other defines:
