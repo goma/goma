@@ -114,6 +114,12 @@ assemble_emwave(double time,	/* present time value */
   int stabilization_field_var;
   dbl grad_stabilization_field[DIM][DIM];
 
+  struct emwave_stabilization em_stab;
+  em_stab.em_eqn = em_eqn;
+  em_stab.em_var = em_var;
+  em_stab.type = dphi_div; // enum supports phi_div, dphi_div,
+                           // divphi_div and phi_divsquared
+
 
   dbl n;				/* Refractive index. */
   CONDUCTIVITY_DEPENDENCE_STRUCT d_n_struct;
@@ -257,13 +263,8 @@ assemble_emwave(double time,	/* present time value */
          for ( p=0; p<VIM; p++) {
            cross_field[p] = fv->em_hr[p];
          }
-         stabilization_coefficient = 0.1;
-         stabilization_field_var = EM_E1_REAL;
-         for ( p=0; p<VIM; p++) {
-           for ( q=0; q<VIM; q++) {
-             grad_stabilization_field[p][q] = fv->grad_em_er[p][q];
-           }
-         }
+         em_stab.stabilization_field_var = EM_E1_REAL;
+         calc_emwave_stabilization_term(&em_stab, 100.0);
          break;
     case EM_E1_IMAG:
     case EM_E2_IMAG:
@@ -280,13 +281,8 @@ assemble_emwave(double time,	/* present time value */
          for ( p=0; p<VIM; p++) {
            cross_field[p] = fv->em_hi[p];
          }
-         stabilization_coefficient = 0.1;
-         stabilization_field_var = EM_E1_IMAG;
-         for ( p=0; p<VIM; p++) {
-           for ( q=0; q<VIM; q++) {
-             grad_stabilization_field[p][q] = fv->grad_em_ei[p][q];
-           }
-         }
+         em_stab.stabilization_field_var = EM_E1_IMAG;
+         calc_emwave_stabilization_term(&em_stab, 100.0);
          break;
     case EM_H1_REAL:
     case EM_H2_REAL:
@@ -299,13 +295,8 @@ assemble_emwave(double time,	/* present time value */
          for ( p=0; p<VIM; p++) {
            cross_field[p] = fv->em_er[p];
          }
-         stabilization_coefficient = 0.1;
-         stabilization_field_var = EM_H1_REAL;
-         for ( p=0; p<VIM; p++) {
-           for ( q=0; q<VIM; q++) {
-             grad_stabilization_field[p][q] = fv->grad_em_hr[p][q];
-           }
-         }
+         em_stab.stabilization_field_var = EM_H1_REAL;
+         calc_emwave_stabilization_term(&em_stab, 100.0);
          break;
     case EM_H1_IMAG:
     case EM_H2_IMAG:
@@ -318,13 +309,8 @@ assemble_emwave(double time,	/* present time value */
          for ( p=0; p<VIM; p++) {
            cross_field[p] = fv->em_ei[p];
          }
-         stabilization_coefficient = 0.1;
-         stabilization_field_var = EM_H1_IMAG;
-         for ( p=0; p<VIM; p++) {
-           for ( q=0; q<VIM; q++) {
-             grad_stabilization_field[p][q] = fv->grad_em_hi[p][q];
-           }
-         }
+         em_stab.stabilization_field_var = EM_H1_IMAG;
+         calc_emwave_stabilization_term(&em_stab, 100.0);
          break;
     default:
       EH(-1, "assemble_emwave must be called with a usable em_var\n");
@@ -376,22 +362,14 @@ assemble_emwave(double time,	/* present time value */
                 }
               }
 
-              double div_stabilization_field = 0.0;
-
-
-              for (p=0; p<VIM; p++) {
-                div_stabilization_field += grad_stabilization_field[p][p];
-              }
-
-              diffusion += stabilization_coefficient*phi_i
-                  *div_stabilization_field;
+              diffusion += em_stab.residual_term[i];
 
               diffusion *= det_J * wt;
               diffusion *= h3;
               diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
             }
 
-          lec->R[peqn][i] += advection +  diffusion;
+          lec->R[peqn][i] += advection + diffusion;
 
 
         }
@@ -506,14 +484,13 @@ assemble_emwave(double time,	/* present time value */
        *  stabilization field
        */
       for ( b=0; b<dim; b++) {
-        var = stabilization_field_var + b;
+        var = em_stab.stabilization_field_var + b;
         if ( pd->v[var] ) {
           pvar = upd->vp[var];
           for ( j=0; j<ei->dof[var]; j++) {
             diffusion = 0.;
             if ( pd->e[eqn] & T_DIFFUSION ) {
-              diffusion += stabilization_coefficient*phi_i
-                  *bf[var]->grad_phi[j][b];
+              diffusion += em_stab.jacobian_term[i][b][j];
 
               diffusion *= det_J * wt;
               diffusion *= h3;
@@ -1074,382 +1051,178 @@ int apply_em_farfield_direct_vec(double func[DIM],
   }*/
 
 
-int apply_em_farfield_direct_scalar(double func[DIM],
-                double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                double xi[DIM],        /* Local stu coordinates */
-                const int bc_name,
-                double *bc_data) {
-  /***********************************************************************
-   * TODO AMC: rewrite this description
-   * apply_em_farfield_direct():
-   *
-   *  Function which evaluates the expression specifying the
-   *  a plane-wave directly incident (parallel to normal) on
-   *  the boundary.
-   *
-   *  n_bound CROSS E = -n_bound CROSS E
-   *                  * ( eta_2 * kappa_2)
-   *                  / ( omega * mu_2 )
-   *                  * ( 1 - 2*I)
-   *
-   *   func = -
-   *
-   *
-   *  The boundary condition EM_DIRECT_BC employs this
-   *  function.
-   *
-   *
-   * Input:
-   *
-   *  em_eqn   = which equation is this applied to
-   *  em_var   = which variable is this value sensitive to
-   *
-   * Output:
-   *
-   *  func[0] = value of the function mentioned above
-   *  d_func[0][varType][lvardof] =
-   *              Derivate of func[0] wrt
-   *              the variable type, varType, and the local variable
-   *              degree of freedom, lvardof, corresponding to that
-   *              variable type.
-   *
-   *   Author: Andrew Cochrane (10/9/2019)
-   *
-   ********************************************************************/
-
-  int var;
-  dbl mag_permeability=12.57e-07; // H/m
-  double n1, n2;				/* Refractive index */
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_n1_struct;
-  CONDUCTIVITY_DEPENDENCE_STRUCT *d_n1 = &d_n1_struct;
-
-  double k1, k2;				/* Extinction Coefficient */
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_k1_struct;
-  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k1 = &d_k1_struct;
-
-  double complex normal[DIM]; // surface normal vector
-
-  double complex E1[DIM], H1[DIM]; // complex fields inside domain
-
-  // Need material properties for both sides of interface
-
-  // use mp for inside (subscript 1) ..
-
-  //omega = upd->Acoustic_Frequency;
-  n1 = refractive_index( d_n1, 0.0 );
-
-  k1 = extinction_index( d_k1, 0.0 );
-  // Compute complex impedance
-  complex cpx_refractive_index1, cpx_rel_permittivity1,
-      cpx_permittivity1, impedance1;
-
-  cpx_refractive_index1 = n1 + _Complex_I*k1;
-  cpx_rel_permittivity1 = SQUARE(cpx_refractive_index1);
-  cpx_permittivity1 = cpx_rel_permittivity1*mp->permittivity;
-
-  impedance1 = csqrt(mag_permeability/cpx_permittivity1);
-
-  // use BC input for outside (subscript 2)
-  n2 = bc_data[0];
-  k2 = bc_data[1];
-  //n2 = 1.000293; // air (wikipedia 2019)
-  //k2 = 0;
-  // Compute complex impedance
-  complex cpx_refractive_index2, cpx_rel_permittivity2,
-      cpx_permittivity2, impedance2;
-
-  cpx_refractive_index2 = n2 + _Complex_I*k2;
-  cpx_rel_permittivity2 = SQUARE(cpx_refractive_index2);
-  cpx_permittivity2 = cpx_rel_permittivity2*mp->permittivity;
-
-  impedance2 = csqrt(mag_permeability/cpx_permittivity2);
-
-  // need Surface Normal vector
-  for (int p=0; p<DIM; p++) {
-    normal[p] = fv->snormal[p];
-  }
-
-  // Use fields from computational domain
-  for (int p=0; p<DIM; p++) {
-    E1[p] = fv->em_er[p] + _Complex_I*(fv->em_ei[p]);
-    H1[p] = fv->em_hr[p] + _Complex_I*(fv->em_hi[p]);
-  }
-
-  double h11r = creal(H1[0]);
-  double h12r = creal(H1[1]);
-  double h13r = creal(H1[2]);
-  double h11i = cimag(H1[0]);
-  double h12i = cimag(H1[1]);
-  double h13i = cimag(H1[2]);
-
-  double e11r = creal(E1[0]);
-  double e12r = creal(E1[1]);
-  double e13r = creal(E1[2]);
-  double e11i = cimag(E1[0]);
-  double e12i = cimag(E1[1]);
-  double e13i = cimag(E1[2]);
+void
+calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
+                               double stabilization_coefficient
+                               ){
+  double grad_stabilization_field[DIM][DIM] = {{0.0}};
 
 
-  complex Gamma, tau, incidentE[DIM];
-  complex incidentH[DIM] = {0.0};
-  Gamma = (impedance2 - impedance1)/(impedance2 + impedance1);
-  tau = (2.0*impedance2)/(impedance2 + impedance1);
 
-  complex reduction_factor;
-
-  incidentE[0] = bc_data[2] + _Complex_I*bc_data[5];
-  incidentE[1] = bc_data[3] + _Complex_I*bc_data[6];
-  incidentE[2] = bc_data[4] + _Complex_I*bc_data[7];
-
-  for (int p=0; p<DIM; p++) {
-    for (int q=0; q<DIM; q++) {
-      for (int r=0; r<DIM; r++) { // minus comes from {k_hat = -normal}
-        incidentH[p] -= permute(p,q,r)*normal[q]*incidentE[r]/impedance2;
-      }
-    }
-  }
-
-/*
-              //double pmt = permute(p,q,r);
-              double h1r = creal(incidentH[0]);
-              double h2r = creal(incidentH[1]);
-              double h3r = creal(incidentH[2]);
-              double h1i = cimag(incidentH[0]);
-              double h2i = cimag(incidentH[1]);
-              double h3i = cimag(incidentH[2]);
-
-              double e1r = creal(incidentE[0]);
-              double e2r = creal(incidentE[1]);
-              double e3r = creal(incidentE[2]);
-              double e1i = cimag(incidentE[0]);
-              double e2i = cimag(incidentE[1]);
-              double e3i = cimag(incidentE[2]);
-
-              double n1r = creal(normal[0]);
-              double n2r = creal(normal[1]);
-              double n3r = creal(normal[2]);
-              double n1i = cimag(normal[0]);
-              double n2i = cimag(normal[1]);
-              double n3i = cimag(normal[2]);
-
-*/
-
-  complex cpx_func[DIM] = {0.0};
-
-  //double real, imag;
   /*
-  switch(bc_name) {
-    case EM_E1R_FARFIELD_DIRECT_BC:
-    case EM_E1I_FARFIELD_DIRECT_BC:
-      for (int p=0; p<DIM; p++) {
-        for (int q=0; q<DIM; q++) {
-          for (int r=0; r<DIM; r++) {
-            cpx_func[p] += permute(p,q,r)
-                          *(
-                            normal[q]*E1[r]*tau/(1.0 + Gamma)
-                          + normal[q]*incidentE[r]
-                            );
-
-//            double pmt = permute(p,q,r);
- //           double ner = creal(normal[q]*E1[r]*tau/(1.0 + Gamma));
-//            double nei = cimag(normal[q]*E1[r]*tau/(1.0 + Gamma));
-//            double net = creal(normal[2]*incidentE[0]);
-//            real = 1;
-
-          }
+   *
+   */
+  switch(em_stab->stabilization_field_var) {
+    case EM_E1_REAL:
+      for ( int p=0; p<VIM; p++) {
+        for ( int q=0; q<VIM; q++) {
+          grad_stabilization_field[p][q] = fv->grad_em_er[p][q];
         }
       }
       break;
-
-    case EM_H1R_FARFIELD_DIRECT_BC:
-    case EM_H1I_FARFIELD_DIRECT_BC:
-      for (int p=0; p<DIM; p++) {
-        for (int q=0; q<DIM; q++) {
-          for (int r=0; r<DIM; r++) {
-            cpx_func[p] += permute(p,q,r)
-                          *(
-                            normal[q]*H1[r]*tau/(1.0 - Gamma)
-                          - normal[q]*incidentH[r]
-                            );
-          }
+    case EM_E1_IMAG:
+      for ( int p=0; p<VIM; p++) {
+        for ( int q=0; q<VIM; q++) {
+          grad_stabilization_field[p][q] = fv->grad_em_ei[p][q];
+        }
+      }
+      break;
+    case EM_H1_REAL:
+      for ( int p=0; p<VIM; p++) {
+        for ( int q=0; q<VIM; q++) {
+          grad_stabilization_field[p][q] = fv->grad_em_hr[p][q];
+        }
+      }
+      break;
+    case EM_H1_IMAG:
+      for ( int p=0; p<VIM; p++) {
+        for ( int q=0; q<VIM; q++) {
+          grad_stabilization_field[p][q] = fv->grad_em_hi[p][q];
         }
       }
       break;
     default:
-      EH(-1, "Must call apply_em_farfield_direct with an applicable BC_NAME");
-      return -1;
+      EH(-1,"Cannot have unset stabilization_field_var");
       break;
   }
-*/
 
+  double div_stabilization_field;
 
-/*
-  double r0 = creal(cpx_func[0]);
-  double r1 = creal(cpx_func[1]);
-  double r2 = creal(cpx_func[2]);
-  double i0 = cimag(cpx_func[0]);
-  double i1 = cimag(cpx_func[1]);
-  double i2 = cimag(cpx_func[2]);
-*/
-  /*
-  switch(bc_name) {
-    case EM_ER_FARFIELD_DIRECT_BC:
-      for (int p=0; p<DIM; p++) {
-        func[p] = creal(cpx_func[p]);
+  switch(em_stab->type) {
+    case phi_div:
+
+      div_stabilization_field = 0.0;
+
+      for (int p=0; p<VIM; p++) {
+        div_stabilization_field += grad_stabilization_field[p][p];
       }
-      //eqn = R_EM_H*_REAL;
-      var = EM_E1_REAL;
-      real = 1.0;
-      imag = 0.0;
-      reduction_factor = tau/(1 + Gamma);
-      break;
-    case EM_EI_FARFIELD_DIRECT_BC:
-      for (int p=0; p<DIM; p++) {
-        func[p] = cimag(cpx_func[p]);
+
+      for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+        em_stab->residual_term[i] = bf[em_stab->em_eqn]->phi[i]
+                                    *stabilization_coefficient
+                                    *div_stabilization_field;
+        for (int b=0; b<DIM; b++){
+          for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+            em_stab->jacobian_term[i][b][j]
+                = bf[em_stab->em_eqn]->phi[i]
+                  *stabilization_coefficient
+                  *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
+          }
+        }
       }
-      //eqn = R_EM_H*_IMAG;
-      var = EM_E1_IMAG;
-      real = 0.0;
-      imag = 1.0;
-      reduction_factor = tau/(1 + Gamma);
       break;
-    case EM_HR_FARFIELD_DIRECT_BC:
-      for (int p=0; p<DIM; p++) {
-        func[p] = creal(cpx_func[p]);
+
+    case dphi_div:
+
+      div_stabilization_field = 0.0;
+
+      // need the index the corresponds to the x, y or z
+      // of the current residual
+      int cartesian_index = (em_stab->em_eqn - R_EM_E1_REAL)%3;
+
+      for (int p=0; p<VIM; p++) {
+        div_stabilization_field += grad_stabilization_field[p][p];
       }
-      //eqn = R_EM_E*_REAL;
-      var = EM_H1_REAL;
-      real = 1.0;
-      imag = 0.0;
-      reduction_factor = tau/(1 - Gamma);
-      break;
-    case EM_HI_FARFIELD_DIRECT_BC:
-      for (int p=0; p<DIM; p++) {
-        func[p] = cimag(cpx_func[p]);
+
+      for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+        em_stab->residual_term[i]
+            = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index]
+              *stabilization_coefficient
+              *div_stabilization_field;
+
+        for (int b=0; b<DIM; b++){
+          for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+            em_stab->jacobian_term[i][b][j]
+                = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index]
+                  *stabilization_coefficient
+                  *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
+          }
+        }
       }
-      //eqn = R_EM_E*_IMAG;
-      var = EM_H1_IMAG;
-      real = 0.0;
-      imag = 1.0;
-      reduction_factor = tau/(1 - Gamma);
       break;
+
+     case divphi_div:
+      div_stabilization_field = 0.0;
+
+      double div_phi[MDE] = {0.0};
+
+      for (int p=0; p<VIM; p++) {
+        div_stabilization_field += grad_stabilization_field[p][p];
+      }
+      for (int i=0; i<ei->dof[em_stab->em_eqn]; i++) {
+        for (int p=0; p<DIM; p++){
+          div_phi[i] += bf[em_stab->em_eqn]->grad_phi[i][p];
+        }
+      }
+
+      for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+        em_stab->residual_term[i]
+            = div_phi[i]
+              *stabilization_coefficient
+              *div_stabilization_field;
+
+        for (int b=0; b<DIM; b++){
+          for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+            em_stab->jacobian_term[i][b][j]
+                = div_phi[i]
+                  *stabilization_coefficient
+                  *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
+          }
+        }
+      }
+     break;
+
+    case phi_divsquared:
+      div_stabilization_field = 0.0;
+      for (int p=0; p<VIM; p++) {
+        div_stabilization_field += grad_stabilization_field[p][p];
+      }
+
+      for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+        em_stab->residual_term[i]
+            = bf[em_stab->em_eqn]->phi[i]
+              *stabilization_coefficient
+              *div_stabilization_field
+              *div_stabilization_field;
+        for (int b=0; b<DIM; b++){
+          for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+            em_stab->jacobian_term[i][b][j]
+                = bf[em_stab->em_eqn]->phi[i]
+                  *stabilization_coefficient
+                  *2.0
+                  *div_stabilization_field
+                  *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
+          }
+        }
+      }
+
+      break;
+    case none:
     default:
-      var = 0;
-      real = 0;
-      imag = 0;
-      reduction_factor = 0;
-      EH(-1, "Must call apply_em_farfield_direct with an applicable BC_NAME");
-      return -1;
-      break;
-  }
-*/
-  /*
-  switch (bc_name) {
-    case EM_ER_FARFIELD_DIRECT_BC:
-      func[0] = creal( normal[1]*E1[2] - normal[2]*E1[1]) );
-      func[1] = creal( normal[2]*E1[0] - normal[0]*E1[2]) );
-      func[2] = creal( normal[0]*E1[1] - normal[1]*E1[0]) );
-  }
-  */
-
-  /* residual for dimension p is sensitive variables gvar_j
-   * */
-/*
-  switch(bc_name) {
-    case EM_ER_FARFIELD_DIRECT_BC:
-      for (int p; p<pd->Num_Dim; p++){
-        func[p] = creal(E1[p]);
-      }
-      var = EM_E1_REAL;
-      break;
-    case EM_EI_FARFIELD_DIRECT_BC:
-      for (int p; p<pd->Num_Dim; p++){
-        func[p] = cimag(E1[p]);
-      }
-      var = EM_E1_IMAG;
-      break;
-    case EM_HR_FARFIELD_DIRECT_BC:
-      for (int p; p<pd->Num_Dim; p++){
-        func[p] = creal(H1[p]);
-      }
-      var = EM_H1_REAL;
-      break;
-    case EM_HI_FARFIELD_DIRECT_BC:
-      for (int p; p<pd->Num_Dim; p++){
-        func[p] = cimag(H1[p]);
-      }
-      var = EM_H1_IMAG;
-      break;
-  }*/
-
-  //for (int p=0; p<pd->Num_Dim; p++){
-    for (int q=0; q<pd->Num_Dim; q++){
-    //func[p] = creal(E1[p] + H1[p]) + cimag(E1[p]+ H1[p]);
-    func[0] += fv->em_er[q] + fv->em_ei[q] + fv->em_hr[q] + fv->em_hi[q];
-  }
-  //}
-
-  if(af->Assemble_Jacobian) {
-
-    for (int p=0; p<pd->Num_Dim; p++) {
-      for (int g=0; g<12; g++) {
-        int gvar = EM_E1_REAL + g;
-        for (int j=0; j<ei->dof[gvar]; j++) {
-          double phi_j = bf[gvar]->phi[j];
-
-            d_func[0][gvar][j] = phi_j;
-
-          /*
-          switch(bc_name) {
-            case EM_ER_FARFIELD_DIRECT_BC:
-            case EM_EI_FARFIELD_DIRECT_BC:
-            case EM_HR_FARFIELD_DIRECT_BC:
-            case EM_HI_FARFIELD_DIRECT_BC:
-              d_func[p][gvar][j] = phi_j;
-
-
-
-              break;
-          }
-          */
-
-        }
-      }
-    }
-
-  /*
-    switch(bc_name) {
-      case EM_ER_FARFIELD_DIRECT_BC:
-      case EM_EI_FARFIELD_DIRECT_BC:
-      case EM_HR_FARFIELD_DIRECT_BC:
-      case EM_HI_FARFIELD_DIRECT_BC:
-        for (int g=0; g<pd->Num_Dim; g++){
-          int gvar = var + g;
-          for (int j=0; j<ei->dof[gvar]; j++) {
-            double phi_j = bf[gvar]->phi[j];
-            for (int p=0; p<pd->Num_Dim; p++) {
-              for (int q=0; q<pd->Num_Dim; q++) {
-                //for (int r=0; r<pd->Num_Dim; r++) {
-                  d_func[p][gvar][j] += real*creal(permute(p,q,g)
-                                                   *reduction_factor
-                                                   *normal[q]
-                                                   *phi_j)
-                                     +  imag*cimag(permute(p,q,g)
-                                                   *reduction_factor
-                                                   *normal[q]
-                                                   *phi_j);
-                //}
-              }
-            }
+      for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+        em_stab->residual_term[i] = 0.0;
+        for (int b=0; b<DIM; b++){
+          for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+            em_stab->jacobian_term[i][b][j] = 0.0;
           }
         }
-        break;
+      }
 
-    }
-    */
+      break;
   }
-  return 0;
-} // end of apply_em_direct_scalar
+
+  return;
+}
 
 /* Cross the first two complex[DIM] vectors and return their
  * cross product.

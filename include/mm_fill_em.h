@@ -29,6 +29,17 @@
 #include <complex.h>
 #undef I
 
+enum stabilization_type{none, phi_div, dphi_div, divphi_div, phi_divsquared};
+
+struct emwave_stabilization {
+  enum stabilization_type type;
+  int em_eqn;
+  int em_var;
+  int stabilization_field_var;
+  double residual_term[MDE];
+  double jacobian_term[MDE][DIM][MDE];
+};
+
 EXTERN int assemble_emwave/* mm_fill_em.c                           */
       (double ,/* time - present time value         */
        double ,/* tt - parameter to vary time integration
@@ -46,15 +57,12 @@ EXTERN int apply_em_farfield_direct_vec/* mm_fill_em.c                          
   double [DIM] ,   // xi
   const int,
   double *bc_data);// bc_name
-EXTERN int apply_em_farfield_direct_scalar/* mm_fill_em.c                           */
-(double [DIM],     // func
-  double [DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE] , // d_func
-  double [DIM] ,   // xi
-  const int,
-  double *bc_data);// bc_name
+
 
 EXTERN void complex_cross_vectors(const complex [DIM],
                                   const complex [DIM],
                                   complex [DIM]);
+
+
 
 #endif /* GOMA_MM_FILL_EM_H */
