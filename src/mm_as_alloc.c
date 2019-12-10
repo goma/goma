@@ -2071,7 +2071,7 @@ shape_list(Exo_DB *exo)
         }
     }
 
-  if (N > 1) DPRINTF(stderr, "\nFound %d different element shapes.\n", N);
+  if (N > 1) DPRINTF(stdout, "\nFound %d different element shapes.\n", N);
   return N;
 }
 

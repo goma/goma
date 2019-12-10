@@ -853,7 +853,7 @@ void solve_problem_segregated(
               rd[pg->imtrx], NULL, NULL, gvec[pg->imtrx], gvec_elem[pg->imtrx],
               time1, exo, dpi, cx[pg->imtrx], 0, &time_step_reform,
               is_steady_state, x_AC[pg->imtrx], x_AC_dot[pg->imtrx], time1,
-              NULL, NULL, NULL, NULL, dg_neighbor_data);
+              NULL, NULL, NULL, NULL);
 
           if (err == -1)
             converged = FALSE;
@@ -862,13 +862,13 @@ void solve_problem_segregated(
             break;
 
           if (nAC > 0) {
-            DPRINTF(stderr, "\n------------------------------\n");
-            DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
-            DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+            DPRINTF(stdout, "\n------------------------------\n");
+            DPRINTF(stdout, "Augmenting Conditions:    %4d\n", nAC);
+            DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
             for (iAC = 0; iAC < nAC; iAC++) {
               if (augc[iAC].Type == AC_USERBC) {
-                DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID,
+                DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n", augc[iAC].BCID,
                         augc[iAC].DFID, x_AC[pg->imtrx][iAC]);
               }
               /*		  else if(augc[iAC].Type == AC_USERMAT ||
@@ -1005,9 +1005,9 @@ void solve_problem_segregated(
 
       int renorm_subcycle_count = 0;
       if (Debug_Flag && ProcID == 0) {
-        fprintf(stderr, "MaxTimeSteps: %d \tTimeMax: %f\n", tran->MaxTimeSteps,
+        fprintf(stdout, "MaxTimeSteps: %d \tTimeMax: %f\n", tran->MaxTimeSteps,
                 tran->TimeMax);
-        fprintf(stderr, "solving transient problem\n");
+        fprintf(stdout, "solving transient problem\n");
       }
 
       nt = 0;
@@ -1153,7 +1153,7 @@ void solve_problem_segregated(
             switch (eqntype) {
             case PROJECT:
 
-              DPRINTF(stderr, "\n\t Projection level set initialization \n");
+              DPRINTF(stdout, "\n\t Projection level set initialization \n");
 
               EH(-1, "Use of \"PROJECT\" is obsolete.");
 
@@ -1161,13 +1161,13 @@ void solve_problem_segregated(
 
             case EXO_READ:
 
-              DPRINTF(stderr, "\t\t Level set read from exodus database \n");
+              DPRINTF(stdout, "\t\t Level set read from exodus database \n");
 
               break;
 
             case SURFACES:
 
-              DPRINTF(stderr,
+              DPRINTF(stdout,
                       "\n\t\t Surface object level set initialization : ");
 
               /* parallel synchronization of initialization surfaces */
@@ -1181,7 +1181,7 @@ void solve_problem_segregated(
                                         num_total_nodes, ls->init_surf_list, 0.,
                                         0., 0.);
 
-              DPRINTF(stderr, "- done \n");
+              DPRINTF(stdout, "- done \n");
 
               break;
 
@@ -1368,7 +1368,7 @@ void solve_problem_segregated(
             time1 = time + delta_t;
 
             if (time1 > TimeMax) {
-              DPRINTF(stderr, "\t\tLAST TIME STEP!\n");
+              DPRINTF(stdout, "\t\tLAST TIME STEP!\n");
               time1 = TimeMax;
               delta_t = time1 - time;
               tran->delta_t = delta_t;
@@ -1603,8 +1603,7 @@ void solve_problem_segregated(
                     tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL, NULL,
                     gvec[pg->imtrx], gvec_elem[pg->imtrx], time1, exo, dpi,
                     cx[pg->imtrx], 0, &time_step_reform, 0, x_AC[pg->imtrx],
-                    x_AC_dot[pg->imtrx], time1, NULL, NULL, NULL, NULL,
-                    dg_neighbor_data);
+                    x_AC_dot[pg->imtrx], time1, NULL, NULL, NULL, NULL);
 
                 if (err == -1) {
                   converged = FALSE;
@@ -1882,8 +1881,7 @@ void solve_problem_segregated(
                   tev[pg->imtrx], tev_post[pg->imtrx], gv, rd[pg->imtrx], NULL,
                   NULL, gvec[pg->imtrx], gvec_elem[pg->imtrx], time1, exo, dpi,
                   cx[pg->imtrx], 0, &time_step_reform, 0, x_AC[pg->imtrx],
-                  x_AC_dot[pg->imtrx], time1, NULL, NULL, NULL, NULL,
-                  dg_neighbor_data);
+                  x_AC_dot[pg->imtrx], time1, NULL, NULL, NULL, NULL);
             } // sub-time loop if else
 
             if (pd_glob[0]->v[pg->imtrx][MOMENT0] ||
@@ -1942,13 +1940,13 @@ void solve_problem_segregated(
               }
 
               if (nAC > 0) {
-                DPRINTF(stderr, "\n------------------------------\n");
-                DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
-                DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+                DPRINTF(stdout, "\n------------------------------\n");
+                DPRINTF(stdout, "Augmenting Conditions:    %4d\n", nAC);
+                DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
                 for (iAC = 0; iAC < nAC; iAC++) {
                   if (augc[iAC].Type == AC_USERBC) {
-                    DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e\n",
+                    DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e\n",
                             augc[iAC].BCID, augc[iAC].DFID,
                             x_AC[pg->imtrx][iAC]);
                     /* temporary printing */
@@ -2092,7 +2090,7 @@ void solve_problem_segregated(
             /* fool algorithm into using delta_t = tran->resolved_delta_t_min */
             delta_t_new = tran->resolved_delta_t_min;
             success_dt = TRUE;
-            DPRINTF(stderr, "\n\tminimum resolved step limit!\n");
+            DPRINTF(stdout, "\n\tminimum resolved step limit!\n");
           }
 
           pg->imtrx = Fill_Matrix;
@@ -2105,7 +2103,7 @@ void solve_problem_segregated(
                                   xdot_old[pg->imtrx], resid_vector[pg->imtrx],
                                   ams[pg->imtrx]->proc_config, exo);
             if (Courant_dt > 0. && Courant_dt < delta_t_new) {
-              DPRINTF(stderr, "\nCourant Limit requires dt <= %g\n",
+              DPRINTF(stdout, "\nCourant Limit requires dt <= %g\n",
                       Courant_dt);
               delta_t_new = Courant_dt;
             }
@@ -2197,7 +2195,7 @@ void solve_problem_segregated(
             if ((time + 1.2 * delta_t_new >= time_print) &&
                 (time_print > time)) {
               delta_t_new = time_print - time;
-              DPRINTF(stderr,
+              DPRINTF(stdout,
                       "reset delta_t = %g to maintain printing frequency\n",
                       delta_t_new);
               if (delta_t_new <= 0)
@@ -2205,7 +2203,7 @@ void solve_problem_segregated(
             } else if (time >= time_print) {
               if (delta_t_new != tran->print_delt) {
                 delta_t_new = tran->print_delt;
-                DPRINTF(stderr,
+                DPRINTF(stdout,
                         "reset delta_t = %g to maintain printing frequency\n",
                         delta_t_new);
                 if (delta_t_new <= 0) {
@@ -2253,7 +2251,7 @@ void solve_problem_segregated(
               0.25 * (delta_t + delta_t_old + delta_t_older + delta_t_oldest);
 
           if (time1 >= (ROUND_TO_ONE * TimeMax)) {
-            DPRINTF(stderr, "\t\tout of time!\n");
+            DPRINTF(stdout, "\t\tout of time!\n");
             if (Anneal_Mesh) {
               /*
                * Transform the node point coordinates according to the
@@ -2410,7 +2408,7 @@ void solve_problem_segregated(
            * timestep*/
           if (relax_bit && nt == 0 && n < 15) {
             if (inewton == -1) {
-              DPRINTF(stderr,
+              DPRINTF(stdout,
                       "\nHmm... trouble on first step \n  Let's try some "
                       "more relaxation  \n");
               if ((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
@@ -2419,14 +2417,14 @@ void solve_problem_segregated(
                 custom_tol1 *= 0.01;
                 custom_tol2 *= 0.01;
                 custom_tol3 *= 0.01;
-                DPRINTF(stderr, "  custom tolerances %g %g %g  \n", custom_tol1,
+                DPRINTF(stdout, "  custom tolerances %g %g %g  \n", custom_tol1,
                         custom_tol2, custom_tol3);
               } else {
                 damp_factor1 *= 0.5;
-                DPRINTF(stderr, "  damping factor %g  \n", damp_factor1);
+                DPRINTF(stdout, "  damping factor %g  \n", damp_factor1);
               }
             } else {
-              DPRINTF(stderr,
+              DPRINTF(stdout,
                       "\nHmm... could not converge on first step\n Let's "
                       "try some more iterations\n");
               dcopy1(numProcUnknowns[pg->imtrx], x[pg->imtrx],
@@ -2438,17 +2436,17 @@ void solve_problem_segregated(
                 custom_tol1 *= 100.;
                 custom_tol2 *= 100.;
                 custom_tol3 *= 100.;
-                DPRINTF(stderr, "  custom tolerances %g %g %g  \n", custom_tol1,
+                DPRINTF(stdout, "  custom tolerances %g %g %g  \n", custom_tol1,
                         custom_tol2, custom_tol3);
               } else {
                 damp_factor1 *= 2.0;
                 damp_factor1 = MIN(damp_factor1, 1.0);
-                DPRINTF(stderr, "  damping factor %g  \n", damp_factor1);
+                DPRINTF(stdout, "  damping factor %g  \n", damp_factor1);
               }
             }
           } else if (delta_t <
                      tran->resolved_delta_t_min / tran->time_step_decelerator) {
-            DPRINTF(stderr, "\n\tminimum resolved step limit!\n");
+            DPRINTF(stdout, "\n\tminimum resolved step limit!\n");
             delta_t_oldest = delta_t_older;
             delta_t_older = delta_t_old;
             delta_t_old = delta_t;
@@ -2461,7 +2459,7 @@ void solve_problem_segregated(
             time1 = time + delta_t;
             tran->time_value = time1;
           } else {
-            DPRINTF(stderr,
+            DPRINTF(stdout,
                     "\n\tlast time step failed, dt *= %g for next try!\n",
                     tran->time_step_decelerator);
 
@@ -2482,9 +2480,9 @@ void solve_problem_segregated(
         }
 
         if (delta_t <= delta_t_min) {
-          DPRINTF(stderr, "\n\tdelta_t = %e < %e\n\n", delta_t, delta_t_min);
+          DPRINTF(stdout, "\n\tdelta_t = %e < %e\n\n", delta_t, delta_t_min);
 
-          DPRINTF(stderr, "time step too small, I'm giving up!\n");
+          DPRINTF(stdout, "time step too small, I'm giving up!\n");
           break;
         }
       } /* end of time step loop */

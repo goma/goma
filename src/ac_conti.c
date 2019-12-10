@@ -464,8 +464,8 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
   if (Debug_Flag && ProcID == 0)
     {
-      fprintf(stderr,"MaxPathSteps: %d \tlambdaEnd: %f\n", MaxPathSteps, lambdaEnd);
-      fprintf(stderr,"continuation in progress\n");
+      fprintf(stdout,"MaxPathSteps: %d \tlambdaEnd: %f\n", MaxPathSteps, lambdaEnd);
+      fprintf(stdout,"continuation in progress\n");
     }
 
   nprint = 0;
@@ -555,6 +555,16 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
    */
   update_parameterC(0, path1, x, xdot, x_AC, delta_s, cx, exo, dpi);
 
+  pg->matrices = malloc(sizeof(struct Matrix_Data));
+  pg->matrices[pg->imtrx].ams = ams[JAC];
+  pg->matrices[pg->imtrx].x = x;
+  pg->matrices[pg->imtrx].x_old = x_old;
+  pg->matrices[pg->imtrx].x_older = x_older;
+  pg->matrices[pg->imtrx].xdot = xdot;
+  pg->matrices[pg->imtrx].xdot_old = xdot_old;
+  pg->matrices[pg->imtrx].x_update = x_update;
+  pg->matrices[pg->imtrx].scale = scale;
+  pg->matrices[pg->imtrx].resid_vector = resid_vector;
 
   /* Allocate sparse matrix */
   if( strcmp( Matrix_Format, "msr" ) == 0)
@@ -677,7 +687,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
   ams[JAC]->options[AZ_keep_info] = 1;
 
-  DPRINTF(stderr, "\nINITIAL ELEMENT QUALITY CHECK---\n");
+  DPRINTF(stdout, "\nINITIAL ELEMENT QUALITY CHECK---\n");
   good_mesh = element_quality(exo, x, ams[0]->proc_config);
 
   /*
@@ -703,7 +713,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	case -1:			/* REDUCING PARAMETER DIRECTION */
 	  if (path1 <= lambdaEnd)
 	    {
-	      DPRINTF(stderr,"\n\t ******** LAST PATH STEP!\n");
+              DPRINTF(stdout,"\n\t ******** LAST PATH STEP!\n");
 	      alqALC = -1;
 	      path1 = lambdaEnd;
 	      delta_s = path-path1;
@@ -712,7 +722,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	case +1:			/* RISING PARAMETER DIRECTION */
 	  if (path1 >= lambdaEnd)
 	    {
-	      DPRINTF(stderr,"\n\t ******** LAST PATH STEP!\n");
+              DPRINTF(stdout,"\n\t ******** LAST PATH STEP!\n");
 	      alqALC = -1;
 	      path1 = lambdaEnd;
 	      delta_s = path1-path;
@@ -775,33 +785,33 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
       if (ProcID == 0)
 	{
-	  fprintf(stderr, "\n\t----------------------------------");
+          fprintf(stdout, "\n\t----------------------------------");
 	  switch (Continuation)
 	    {
 	    case ALC_ZEROTH:
-	      DPRINTF(stderr, "\n\tZero Order Continuation:");
+              DPRINTF(stdout, "\n\tZero Order Continuation:");
 	      break;
 	    case  ALC_FIRST:
-	      DPRINTF(stderr, "\n\tFirst Order Continuation:");
+              DPRINTF(stdout, "\n\tFirst Order Continuation:");
 	      break;
 	    default:
-	      DPRINTF(stderr, "%s: Bad Continuation, %d\n", yo, Continuation);
+              DPRINTF(stdout, "%s: Bad Continuation, %d\n", yo, Continuation);
               EH(-1,"\t");
 	      break;		/* duh */
 	    }
-	  DPRINTF(stderr, "\n\tStep number: %4d of %4d (max)", n+1, MaxPathSteps);
-	  DPRINTF(stderr, "\n\tAttempting solution at:");
+          DPRINTF(stdout, "\n\tStep number: %4d of %4d (max)", n+1, MaxPathSteps);
+          DPRINTF(stdout, "\n\tAttempting solution at:");
 	  switch (cont->upType)
 	    {
 	    case 1:		/* BC */
 	    case 3:		/* AC */
-	      DPRINTF(stderr, "\n\tBCID=%3d DFID=%5d", cont->upBCID, cont->upDFID);
+              DPRINTF(stdout, "\n\tBCID=%3d DFID=%5d", cont->upBCID, cont->upDFID);
 	      break;
 	    case 2:		/* MT */
-	      DPRINTF(stderr, "\n\tMTID=%3d MPID=%5d", cont->upMTID, cont->upMPID);
+              DPRINTF(stdout, "\n\tMTID=%3d MPID=%5d", cont->upMTID, cont->upMPID);
 	      break;
 	    case 4:		/* UM */
-	      DPRINTF(stderr, "\n\tMTID=%3d MPID=%5d MDID=%3d", cont->upMTID, cont->upMPID, cont->upMDID);
+              DPRINTF(stdout, "\n\tMTID=%3d MPID=%5d MDID=%3d", cont->upMTID, cont->upMPID, cont->upMDID);
 	      break;
 
 /* This case requires an inner switch block */
@@ -812,24 +822,24 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	            {
 	              case 1:		/* BC */
 	              case 3:		/* AC */
-	                DPRINTF(stderr, "\n\tBCID=%3d DFID=%5d",
+                        DPRINTF(stdout, "\n\tBCID=%3d DFID=%5d",
                                 cpuc[iUC].BCID, cpuc[iUC].DFID);
 	                break;
 	              case 2:		/* MT */
-	                DPRINTF(stderr, "\n\tMTID=%3d MPID=%5d",
+                        DPRINTF(stdout, "\n\tMTID=%3d MPID=%5d",
                                 cpuc[iUC].MTID, cpuc[iUC].MPID);
 	                break;
 	              case 4:		/* UM */
-	                DPRINTF(stderr, "\n\tMTID=%3d MPID=%5d MDID=%3d",
+                        DPRINTF(stdout, "\n\tMTID=%3d MPID=%5d MDID=%3d",
                           cpuc[iUC].MTID, cpuc[iUC].MPID, cpuc[iUC].MDID);
 	                break;
 	              default:
-	                DPRINTF(stderr, "%s: Bad user continuation type, %d\n",
+                        DPRINTF(stdout, "%s: Bad user continuation type, %d\n",
                                 yo, cont->upType);
                         EH(-1,"\t");
 	                break;
                     }
-	          DPRINTF(stderr, " Parameter= % 10.6e delta_s= %10.6e",
+                  DPRINTF(stdout, " Parameter= % 10.6e delta_s= %10.6e",
                     cpuc[iUC].value, (cpuc[iUC].value-cpuc[iUC].old_value) );
                 }
 	      break;
@@ -841,7 +851,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	    }
           if (cont->upType != 5)
             {
-	      DPRINTF(stderr, " Parameter= % 10.6e delta_s= %10.6e", path1, delta_s);
+              DPRINTF(stdout, " Parameter= % 10.6e delta_s= %10.6e", path1, delta_s);
             }
 	}
 #ifdef PARALLEL
@@ -869,7 +879,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
                                         &nprint,
                                         tev,
                                         tev_post,
-                                        NULL,
+                                        gv,
                                         rd,
                                         gindex,
                                         p_gsize,
@@ -888,9 +898,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
                                         resid_vector_sens,
                                         x_sens_temp,
                                         x_sens_p,
-                                        NULL,
-                                        NULL);
-
+                                      NULL);
 
 #ifdef DEBUG
 	fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
@@ -923,21 +931,21 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	     */
 	    if (nAC > 0)
 	      {
-		DPRINTF(stderr, "\n------------------------------\n");
-		DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
-		DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+                DPRINTF(stdout, "\n------------------------------\n");
+                DPRINTF(stdout, "Augmenting Conditions:    %4d\n", nAC);
+                DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
 		for (iAC = 0; iAC < nAC; iAC++)
                  {
 		  if (augc[iAC].Type == AC_USERBC)
                    {
-		    DPRINTF(stderr, "\tBC[%4d] DF[%4d] = %10.6e\n",
+                    DPRINTF(stdout, "\tBC[%4d] DF[%4d] = %10.6e\n",
 			    augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
                    }
                 else if (augc[iAC].Type == AC_USERMAT ||
                            augc[iAC].Type == AC_FLUX_MAT  )
                    {
-  		    DPRINTF(stderr, "\tMT[%4d] MP[%4d] = %10.6e\n",
+                    DPRINTF(stdout, "\tMT[%4d] MP[%4d] = %10.6e\n",
 			    augc[iAC].MTID, augc[iAC].MPID, x_AC[iAC]);
                    }
                   else if(augc[iAC].Type == AC_VOLUME)
@@ -950,7 +958,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
                     }
                     evol_local = evol_global;
 #endif
-                    DPRINTF(stderr, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n",
+                    DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n",
                             augc[iAC].MTID, augc[iAC].VOLID, evol_local,
                             x_AC[iAC]);
                    }
@@ -964,13 +972,13 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
                     }
                     evol_local = evol_global;
 #endif
-                    DPRINTF(stderr, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
+                    DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
                             augc[iAC].MTID, augc[iAC].VOLID, evol_local,
                             x_AC[iAC]);
                    }
                   else if(augc[iAC].Type == AC_FLUX)
                    {
-                    DPRINTF(stderr, "\tBC[%4d] DF[%4d]=%10.6e\n",
+                    DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n",
                             augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
                    }
                  }
@@ -1164,10 +1172,10 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
       nt++;
 
       if( Continuation == ALC_ZEROTH ) {
-        DPRINTF(stderr, "\n\tStep accepted, parameter = %10.6e\n", path1);
+        DPRINTF(stdout, "\n\tStep accepted, parameter = %10.6e\n", path1);
        }
       else {
-        DPRINTF(stderr, "\tStep accepted, parameter = %10.6e\n", path1);
+        DPRINTF(stdout, "\tStep accepted, parameter = %10.6e\n", path1);
        }
 
       /*
@@ -1323,7 +1331,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 
       if (alqALC == -1)
 	{
-	  DPRINTF(stderr,"\n\n\t I will continue no more!\n\t No more continuation for you!\n");
+          DPRINTF(stdout,"\n\n\t I will continue no more!\n\t No more continuation for you!\n");
 	  goto free_and_clear;
 	}
     } /* for(n = 0; n < MaxPathSteps; n++) */
@@ -1331,7 +1339,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   if(n == MaxPathSteps &&
      aldALC * (lambdaEnd - path) > 0)
     {
-      DPRINTF(stderr, "\n\tFailed to reach end of hunt in maximum number of successful steps (%d).\n\tSorry.\n",
+      DPRINTF(stdout, "\n\tFailed to reach end of hunt in maximum number of successful steps (%d).\n\tSorry.\n",
 	      MaxPathSteps);
       /*
       EH(-1,"\t");
@@ -1435,6 +1443,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   safer_free( (void **) &Local_Offset);
   safer_free( (void **) &Dolphin);
 
+  free(pg->matrices);
 
   if (file != NULL) fclose(file);
 

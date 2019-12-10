@@ -1052,9 +1052,8 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 				  rd, gindex, p_gsize, gvec, gvec_elem, 
 				  time1, exo, dpi, cx[0], 0, 
 				  &time_step_reform, is_steady_state,
- 				  x_AC, x_AC_dot, time1, resid_vector_sens,
-                                  x_sens, x_sens_p, NULL, NULL);
-
+                                  x_AC, x_AC_dot, time1, resid_vector_sens,
+                                    x_sens, x_sens_p, NULL);
 #ifdef DEBUG
     fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
 #endif /* DEBUG */
@@ -1332,8 +1331,8 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
   else
     {
       if (Debug_Flag && ProcID == 0) {
-        fprintf(stderr,"MaxTimeSteps: %d \tTimeMax: %f\n",tran->MaxTimeSteps,tran->TimeMax);
-	fprintf(stderr,"solving transient problem\n");
+        fprintf(stdout,"MaxTimeSteps: %d \tTimeMax: %f\n",tran->MaxTimeSteps,tran->TimeMax);
+        fprintf(stdout,"solving transient problem\n");
       }
     
     /*
@@ -2440,7 +2439,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 				    gvec, gvec_elem, time1, exo, dpi, cx[0], 
 				    n, &time_step_reform, is_steady_state,
  				    x_AC, x_AC_dot, time1, resid_vector_sens,
-                                    x_sens, x_sens_p, NULL, NULL);
+                                    x_sens, x_sens_p, NULL);
       if (err == -1) converged = FALSE;
       inewton = err;
       evpl_glob[0]->update_flag = 0; /*See get_evp_stress_tensor for description */

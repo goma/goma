@@ -981,102 +981,102 @@ time_step_control(const double delta_t,  const double delta_t_old,
   *success_dt = (Err_norm < beta * abs_eps);
     if( const_delta_t)
 	{
-        DPRINTF(stderr, "\nCONSTANT DELTA_T          [");
-        if(ncp[MESH_DISPLACEMENT1]){ DPRINTF(stderr, "%7.1e", e_d); }
-        if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stderr, ", %7.1e", e_v); }
-        if(ncp[TEMPERATURE]){ DPRINTF(stderr, ", %7.1e", e_T); }
+        DPRINTF(stdout, "\nCONSTANT DELTA_T          [");
+        if(ncp[MESH_DISPLACEMENT1]){ DPRINTF(stdout, "%7.1e", e_d); }
+        if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stdout, ", %7.1e", e_v); }
+        if(ncp[TEMPERATURE]){ DPRINTF(stdout, ", %7.1e", e_T); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES] 
 		|| ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS])
- 		{ DPRINTF(stderr, ", %7.1e", e_y); }
-        if(ncp[PRESSURE]){ DPRINTF(stderr, ", %7.1e", e_P); }
-        if(ncp[POLYMER_STRESS11]){ DPRINTF(stderr, ", %7.1e", e_S); }
-        if(ncp[VOLTAGE]){ DPRINTF(stderr, ", %7.1e", e_V); }
-        if(ncp[SURF_CHARGE]){ DPRINTF(stderr, ", %7.1e", e_qs); }
-        if(ncp[SHELL_CURVATURE]){ DPRINTF(stderr, ", %7.1e", e_shk); }
-        if(ncp[SHELL_TENSION]){ DPRINTF(stderr, ", %7.1e", e_sht); }
-        if(ncp[SHELL_X]){ DPRINTF(stderr, ", %7.1e", e_shd); }
-        if(ncp[SHELL_USER]){ DPRINTF(stderr, ", %7.1e", e_shu); }
-        if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stderr, ", %7.1e", e_F); }
-        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ", %7.1e", e_ap); }
-        if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ", %7.1e", e_extv); }
-	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stderr, ", %7.1e", e_int); }
-	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
-        if(nAC > 0){ DPRINTF(stderr, ", %7.1e", e_AC); }
-        DPRINTF(stderr, "]\n");
+                { DPRINTF(stdout, ", %7.1e", e_y); }
+        if(ncp[PRESSURE]){ DPRINTF(stdout, ", %7.1e", e_P); }
+        if(ncp[POLYMER_STRESS11]){ DPRINTF(stdout, ", %7.1e", e_S); }
+        if(ncp[VOLTAGE]){ DPRINTF(stdout, ", %7.1e", e_V); }
+        if(ncp[SURF_CHARGE]){ DPRINTF(stdout, ", %7.1e", e_qs); }
+        if(ncp[SHELL_CURVATURE]){ DPRINTF(stdout, ", %7.1e", e_shk); }
+        if(ncp[SHELL_TENSION]){ DPRINTF(stdout, ", %7.1e", e_sht); }
+        if(ncp[SHELL_X]){ DPRINTF(stdout, ", %7.1e", e_shd); }
+        if(ncp[SHELL_USER]){ DPRINTF(stdout, ", %7.1e", e_shu); }
+        if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stdout, ", %7.1e", e_F); }
+        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stdout, ", %7.1e", e_ap); }
+        if(ncp[EXT_VELOCITY]){ DPRINTF(stdout, ", %7.1e", e_extv); }
+        if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %7.1e", e_int); }
+        if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %7.1e", e_sh_lub); }
+        if(nAC > 0){ DPRINTF(stdout, ", %7.1e", e_AC); }
+        DPRINTF(stdout, "]\n");
       log_msg("Constant delta_t");
 	}
     else if (*success_dt) {
-        DPRINTF(stderr, "\nOK  %7.1e < %3g %7.1e [", Err_norm, beta, abs_eps);
-        if(ncp[MESH_DISPLACEMENT1]){ DPRINTF(stderr, "%7.1e", e_d); }
-        if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stderr, ", %7.1e", e_v); }
-        if(ncp[TEMPERATURE]){ DPRINTF(stderr, ", %7.1e", e_T); }
+        DPRINTF(stdout, "\nOK  %7.1e < %3g %7.1e [", Err_norm, beta, abs_eps);
+        if(ncp[MESH_DISPLACEMENT1]){ DPRINTF(stdout, "%7.1e", e_d); }
+        if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stdout, ", %7.1e", e_v); }
+        if(ncp[TEMPERATURE]){ DPRINTF(stdout, ", %7.1e", e_T); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES] 
 		|| ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS])
- 		{ DPRINTF(stderr, ", %7.1e", e_y); }
-        if(ncp[PRESSURE]){ DPRINTF(stderr, ", %7.1e", e_P); }
-        if(ncp[POLYMER_STRESS11]){ DPRINTF(stderr, ", %7.1e", e_S); }
-        if(ncp[VOLTAGE]){ DPRINTF(stderr, ", %7.1e", e_V); }
-        if(ncp[SURF_CHARGE]){ DPRINTF(stderr, ", %7.1e", e_qs); }
-        if(ncp[SHELL_CURVATURE]){ DPRINTF(stderr, ", %7.1e", e_shk); }
-        if(ncp[SHELL_TENSION]){ DPRINTF(stderr, ", %7.1e", e_sht); }
-        if(ncp[SHELL_X]){ DPRINTF(stderr, ", %7.1e", e_shd); }
-        if(ncp[SHELL_USER]){ DPRINTF(stderr, ", %7.1e", e_shu); }
-        if(ncp[FILL] || ncp[PHASE1]  ){ DPRINTF(stderr, ", %7.1e", e_F); }
-        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ", %7.1e", e_ap); }
-        if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ", %7.1e", e_extv); }
-	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stderr, ", %7.1e", e_int); }
-	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
-        if(nAC > 0){ DPRINTF(stderr, ", %7.1e", e_AC); }
-        DPRINTF(stderr, "]\n");
+                { DPRINTF(stdout, ", %7.1e", e_y); }
+        if(ncp[PRESSURE]){ DPRINTF(stdout, ", %7.1e", e_P); }
+        if(ncp[POLYMER_STRESS11]){ DPRINTF(stdout, ", %7.1e", e_S); }
+        if(ncp[VOLTAGE]){ DPRINTF(stdout, ", %7.1e", e_V); }
+        if(ncp[SURF_CHARGE]){ DPRINTF(stdout, ", %7.1e", e_qs); }
+        if(ncp[SHELL_CURVATURE]){ DPRINTF(stdout, ", %7.1e", e_shk); }
+        if(ncp[SHELL_TENSION]){ DPRINTF(stdout, ", %7.1e", e_sht); }
+        if(ncp[SHELL_X]){ DPRINTF(stdout, ", %7.1e", e_shd); }
+        if(ncp[SHELL_USER]){ DPRINTF(stdout, ", %7.1e", e_shu); }
+        if(ncp[FILL] || ncp[PHASE1]  ){ DPRINTF(stdout, ", %7.1e", e_F); }
+        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stdout, ", %7.1e", e_ap); }
+        if(ncp[EXT_VELOCITY]){ DPRINTF(stdout, ", %7.1e", e_extv); }
+        if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %7.1e", e_int); }
+        if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %7.1e", e_sh_lub); }
+        if(nAC > 0){ DPRINTF(stdout, ", %7.1e", e_AC); }
+        DPRINTF(stdout, "]\n");
       log_msg("Predictor was OK, %g < %g * %g", Err_norm, beta, eps);
     } else {
-        DPRINTF(stderr, "\nYUK %7.1e > %3g %7.1e [", Err_norm, beta, abs_eps);
-        if(ncp[MESH_DISPLACEMENT1]){ DPRINTF(stderr, "%7.1e", e_d); }
-        if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stderr, ", %7.1e", e_v); }
-        if(ncp[TEMPERATURE]){ DPRINTF(stderr, ", %7.1e", e_T); }
+        DPRINTF(stdout, "\nYUK %7.1e > %3g %7.1e [", Err_norm, beta, abs_eps);
+        if(ncp[MESH_DISPLACEMENT1]){ DPRINTF(stdout, "%7.1e", e_d); }
+        if(ncp[VELOCITY1] || ncp[PVELOCITY1]){ DPRINTF(stdout, ", %7.1e", e_v); }
+        if(ncp[TEMPERATURE]){ DPRINTF(stdout, ", %7.1e", e_T); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES]
  		 || ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS])
- 		{ DPRINTF(stderr, ", %7.1e", e_y); }
-        if(ncp[PRESSURE]){ DPRINTF(stderr, ", %7.1e", e_P); }
-        if(ncp[POLYMER_STRESS11]){ DPRINTF(stderr, ", %7.1e", e_S); }
-        if(ncp[VOLTAGE]){ DPRINTF(stderr, ", %7.1e", e_V); }
-        if(ncp[SURF_CHARGE]){ DPRINTF(stderr, ", %7.1e", e_qs); }
-        if(ncp[SHELL_CURVATURE]){ DPRINTF(stderr, ", %7.1e", e_shk); }
-        if(ncp[SHELL_TENSION]){ DPRINTF(stderr, ", %7.1e", e_sht); }
-        if(ncp[SHELL_X]){ DPRINTF(stderr, ", %7.1e", e_shd); }
-        if(ncp[SHELL_USER]){ DPRINTF(stderr, ", %7.1e", e_shu); }
-        if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stderr, ", %7.1e", e_F); }
-        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ", %7.1e", e_ap); }
-        if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ", %7.1e", e_extv); }
-	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stderr, ", %7.1e", e_int); }
-	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] ||  ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %7.1e", e_sh_lub); }
-        if(nAC > 0){ DPRINTF(stderr, ", %7.1e", e_AC); }
-        DPRINTF(stderr, "]\n");
+                { DPRINTF(stdout, ", %7.1e", e_y); }
+        if(ncp[PRESSURE]){ DPRINTF(stdout, ", %7.1e", e_P); }
+        if(ncp[POLYMER_STRESS11]){ DPRINTF(stdout, ", %7.1e", e_S); }
+        if(ncp[VOLTAGE]){ DPRINTF(stdout, ", %7.1e", e_V); }
+        if(ncp[SURF_CHARGE]){ DPRINTF(stdout, ", %7.1e", e_qs); }
+        if(ncp[SHELL_CURVATURE]){ DPRINTF(stdout, ", %7.1e", e_shk); }
+        if(ncp[SHELL_TENSION]){ DPRINTF(stdout, ", %7.1e", e_sht); }
+        if(ncp[SHELL_X]){ DPRINTF(stdout, ", %7.1e", e_shd); }
+        if(ncp[SHELL_USER]){ DPRINTF(stdout, ", %7.1e", e_shu); }
+        if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stdout, ", %7.1e", e_F); }
+        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stdout, ", %7.1e", e_ap); }
+        if(ncp[EXT_VELOCITY]){ DPRINTF(stdout, ", %7.1e", e_extv); }
+        if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %7.1e", e_int); }
+        if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] ||  ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %7.1e", e_sh_lub); }
+        if(nAC > 0){ DPRINTF(stdout, ", %7.1e", e_AC); }
+        DPRINTF(stdout, "]\n");
       log_msg("Predictor was YUK, %g > %g * %g", Err_norm, beta, eps);
     }
-  DPRINTF(stderr, "Predictor-corrector norm: [");
-        if(ncp[MESH_DISPLACEMENT1]){DPRINTF(stderr,"  %1d d  ",use_var_norm[0]); }
+  DPRINTF(stdout, "Predictor-corrector norm: [");
+        if(ncp[MESH_DISPLACEMENT1]){DPRINTF(stdout,"  %1d d  ",use_var_norm[0]); }
         if(ncp[VELOCITY1] || ncp[PVELOCITY1])
- 		{ DPRINTF(stderr, ",   %1d v  ", use_var_norm[1]); }
-        if(ncp[TEMPERATURE]){ DPRINTF(stderr, ",   %1d T  ", use_var_norm[2]); }
+                { DPRINTF(stdout, ",   %1d v  ", use_var_norm[1]); }
+        if(ncp[TEMPERATURE]){ DPRINTF(stdout, ",   %1d T  ", use_var_norm[2]); }
         if(ncp[MASS_FRACTION] || ncp[POR_LIQ_PRES] || ncp[POR_GAS_PRES] ||
  	    ncp[POR_POROSITY] || ncp[POR_SATURATION] || ncp[POR_SINK_MASS] )
- 		{ DPRINTF(stderr, ",   %1d y  ", use_var_norm[3]); }
-        if(ncp[PRESSURE]){ DPRINTF(stderr, ",   %1d P  ", use_var_norm[4]); }
-        if(ncp[POLYMER_STRESS11]){DPRINTF(stderr,",   %1d S  ",use_var_norm[5]); }
-        if(ncp[VOLTAGE]){ DPRINTF(stderr, ",   %1d V  ", use_var_norm[6]); }
-        if(ncp[SURF_CHARGE]){ DPRINTF(stderr, ",   %1d Q  ", 1); }
-        if(ncp[SHELL_CURVATURE]){ DPRINTF(stderr, ",   %1d K  ", 1); }
-        if(ncp[SHELL_TENSION]){ DPRINTF(stderr, ",   %1d ST ", 1); }
-        if(ncp[SHELL_X]){ DPRINTF(stderr, ",   %1d Sd ", 1); }
-        if(ncp[SHELL_USER]){ DPRINTF(stderr, ",   %1d Su ", 1); }
-        if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stderr, ",   %1d F  ", 1); }
-        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stderr, ",   %1d A  ", 1); }
-        if(ncp[EXT_VELOCITY]){ DPRINTF(stderr, ",   %1d Ev  ", 1); }
-	if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stderr, ", %1d INT", 1); }
-	if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stderr, ", %1d SHELL", 1); }
-        if(nAC > 0){ DPRINTF(stderr, ",   %1d AC ", use_var_norm[9]); }
-        DPRINTF(stderr, "]\n");
+                { DPRINTF(stdout, ",   %1d y  ", use_var_norm[3]); }
+        if(ncp[PRESSURE]){ DPRINTF(stdout, ",   %1d P  ", use_var_norm[4]); }
+        if(ncp[POLYMER_STRESS11]){DPRINTF(stdout,",   %1d S  ",use_var_norm[5]); }
+        if(ncp[VOLTAGE]){ DPRINTF(stdout, ",   %1d V  ", use_var_norm[6]); }
+        if(ncp[SURF_CHARGE]){ DPRINTF(stdout, ",   %1d Q  ", 1); }
+        if(ncp[SHELL_CURVATURE]){ DPRINTF(stdout, ",   %1d K  ", 1); }
+        if(ncp[SHELL_TENSION]){ DPRINTF(stdout, ",   %1d ST ", 1); }
+        if(ncp[SHELL_X]){ DPRINTF(stdout, ",   %1d Sd ", 1); }
+        if(ncp[SHELL_USER]){ DPRINTF(stdout, ",   %1d Su ", 1); }
+        if(ncp[FILL] || ncp[PHASE1] ){ DPRINTF(stdout, ",   %1d F  ", 1); }
+        if(ncp[ACOUS_PREAL] || ncp[ACOUS_PIMAG]){ DPRINTF(stdout, ",   %1d A  ", 1); }
+        if(ncp[EXT_VELOCITY]){ DPRINTF(stdout, ",   %1d Ev  ", 1); }
+        if(ncp[LIGHT_INTP] || ncp[LIGHT_INTM] || ncp[LIGHT_INTD] || ncp[RESTIME]){ DPRINTF(stdout, ", %1d INT", 1); }
+        if(ncp[LUBP] || ncp[LUBP_2] || ncp[SHELL_FILMP] || ncp[SHELL_TEMPERATURE] || ncp[SHELL_DELTAH] || ncp[SHELL_LUB_CURV] || ncp[SHELL_LUB_CURV_2] || ncp[SHELL_SAT_CLOSED] || ncp[SHELL_PRESS_OPEN] || ncp[SHELL_PRESS_OPEN_2]){ DPRINTF(stdout, ", %1d SHELL", 1); }
+        if(nAC > 0){ DPRINTF(stdout, ",   %1d AC ", use_var_norm[9]); }
+        DPRINTF(stdout, "]\n");
 
       
   log_msg("Predictor details:");
@@ -1517,7 +1517,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
     for (i = 0; i < Num_Var_Init; i++) {
       switch (Var_init[i].var) {
       case MASS_FRACTION :
-	DPRINTF(stderr,
+        DPRINTF(stdout,
 		"\tSetting %s number %d (variable [%d]) to %g\n", 
 		Var_Name[Var_init[i].var].name1, Var_init[i].ktype,
 		Var_init[i].var,  Var_init[i].init_val);
@@ -1529,7 +1529,7 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	retn = 1;
 	continue;
       default:
-	DPRINTF(stderr, "\tSetting %s (variable [%d]) to %g\n", 
+        DPRINTF(stdout, "\tSetting %s (variable [%d]) to %g\n",
 		Var_Name[Var_init[i].var].name1, Var_init[i].var, 
 		Var_init[i].init_val);
 	break;

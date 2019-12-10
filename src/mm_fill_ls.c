@@ -708,16 +708,16 @@ huygens_renormalization ( double *x,
   if (Renorm_Now || ls_err > tolerance) {
     /* Let's make a note of why we're renormalizing. */
     if (ls_err > tolerance) {
-      DPRINTF(stderr, "\n\t Gradient norm error exceeds tolerance: %g > %g",
+      DPRINTF(stdout, "\n\t Gradient norm error exceeds tolerance: %g > %g",
               ls_err, tolerance);
     }
     if (ls->Renorm_Countdown == 0) {
       DPRINTF(
-          stderr,
+          stdout,
           "\n\t Maximum number of steps without renormalization reached: %d",
           ls->Renorm_Freq);
     }
-    DPRINTF(stderr, "\n\t Huygens renormalization : ");
+    DPRINTF(stdout, "\n\t Huygens renormalization : ");
 
     /* this call cleanses the LS field of "droplets" that surround exactly one
      * node */
@@ -767,14 +767,14 @@ huygens_renormalization ( double *x,
 
     ls->Sat_Hyst_Renorm_Lockout = 4;
 
-    DPRINTF(stderr, "    done. \n");
+    DPRINTF(stdout, "    done. \n");
 
   } else if (ls->Renorm_Freq == 0) {
     status = 0;
-    DPRINTF(stderr, "\n\t Renormalization is disabled. \n");
+    DPRINTF(stdout, "\n\t Renormalization is disabled. \n");
   } else {
     status = 0;
-    DPRINTF(stderr, "\n\t Renormalization unnecessary ( %g < %g ). \n", ls_err,
+    DPRINTF(stdout, "\n\t Renormalization unnecessary ( %g < %g ). \n", ls_err,
             tolerance);
   }
 
@@ -2945,7 +2945,7 @@ static int Hrenorm_simplemass(Exo_DB *exo, Comm_Ex *cx, Dpi *dpi, double x[],
   max_its = 20;
   Mold = M0;
   M = find_LS_mass(exo, dpi, NULL, dC, x, num_total_unkns);
-  DPRINTF(stderr, "\n\t\t Mass old %g, Mass new %g: \t", M0, M);
+  DPRINTF(stdout, "\n\t\t Mass old %g, Mass new %g: \t", M0, M);
 
   for (i = 0; i < max_its; i++) {
     if (fabs(M - Mold) < 1e-7) {
@@ -2974,7 +2974,7 @@ static int Hrenorm_simplemass(Exo_DB *exo, Comm_Ex *cx, Dpi *dpi, double x[],
     Mold = M0;
     M = find_LS_mass(exo, dpi, NULL, dC, x, num_total_unkns);
 
-    DPRINTF(stderr, "\n\t\t iter %d, Additive value: %f, new mass %g \n\t\t", i,
+    DPRINTF(stdout, "\n\t\t iter %d, Additive value: %f, new mass %g \n\t\t", i,
             c, M);
   }
 
@@ -3040,7 +3040,7 @@ static int Hrenorm_smolianksi_only(Exo_DB *exo, Comm_Ex *cx, Dpi *dpi,
   max_its = 20;
   Mold = M0;
   M = find_LS_mass(exo, dpi, NULL, dC, x, num_total_unkns);
-  DPRINTF(stderr, "\n\t\t Mass old %g, Mass new %g: \t", M0, M);
+  DPRINTF(stdout, "\n\t\t Mass old %g, Mass new %g: \t", M0, M);
 
   for (i = 0; i < max_its; i++) {
     if (fabs(M - Mold) < 1e-7) {
@@ -3069,7 +3069,7 @@ static int Hrenorm_smolianksi_only(Exo_DB *exo, Comm_Ex *cx, Dpi *dpi,
     Mold = M0;
     M = find_LS_mass(exo, dpi, NULL, dC, x, num_total_unkns);
 
-    DPRINTF(stderr, "\n\t\t iter %d, Additive value: %f, new mass %g \n\t\t", i,
+    DPRINTF(stdout, "\n\t\t iter %d, Additive value: %f, new mass %g \n\t\t", i,
             c, M);
   }
 
@@ -3122,7 +3122,7 @@ static int Hrenorm_constrain(Exo_DB *exo, Comm_Ex *cx, Dpi *dpi, double x[],
   dalloc(num_ls_unkns, R);
   dalloc(num_ls_unkns, b);
 
-  DPRINTF(stderr, "\n\t\t Mass constraint iteration: \t");
+  DPRINTF(stdout, "\n\t\t Mass constraint iteration: \t");
 
   ie_map = (int *)smalloc(num_ls_unkns * sizeof(int));
 
@@ -3234,10 +3234,10 @@ static int Hrenorm_constrain(Exo_DB *exo, Comm_Ex *cx, Dpi *dpi, double x[],
     R_lamda = M - M0;
 
     max_its--;
-    DPRINTF(stderr, ". %e/%e ", M, M0);
+    DPRINTF(stdout, ". %e/%e ", M, M0);
   }
 
-  DPRINTF(stderr, "\n\t\t Multiplier value: %f \n\t\t", lamda);
+  DPRINTF(stdout, "\n\t\t Multiplier value: %f \n\t\t", lamda);
 
   safe_free(dC);
   safe_free(F);
@@ -4304,7 +4304,7 @@ int find_link_intersection(double *xi, double *yi, int isovar, double isoval,
 
   if (step >= MAX_STEP) {
     fprintf(
-        stderr,
+        stdout,
         "The maximum iteration count was exceeded in find_link_intersection!");
     return (FALSE);
   }
@@ -6016,11 +6016,11 @@ int load_lsi(const double width) {
      the previous operations in the load_lsi routine. Add your variables as
      needed  ********/
 
-  if (pd->v[pg->imtrx][LUBP] || pd->v[pg->imtrx][LUBP_2] ||
-      pd->v[pg->imtrx][SHELL_SAT_CLOSED] ||
-      pd->v[pg->imtrx][SHELL_PRESS_OPEN] ||
-      pd->v[pg->imtrx][SHELL_PRESS_OPEN_2] ||
-      pd->v[pg->imtrx][SHELL_SAT_GASN]) {
+  if (pd->gv[LUBP] || pd->gv[LUBP_2] ||
+      pd->gv[SHELL_SAT_CLOSED] ||
+      pd->gv[SHELL_PRESS_OPEN] ||
+      pd->gv[SHELL_PRESS_OPEN_2] ||
+      pd->gv[SHELL_SAT_GASN]) {
 
     /* Evaluate heaviside using FEM basis functions */
     double Hni, d_Hni_dF, Fi;
@@ -6034,106 +6034,97 @@ int load_lsi(const double width) {
     memset(lsi->d_gradHn_dF, 0.0, sizeof(double) * DIM * MDE);
     memset(lsi->d_Hn_dmesh, 0.0, sizeof(double) * DIM * MDE);
     memset(lsi->d_gradHn_dmesh, 0.0, sizeof(double) * DIM * DIM * MDE);
+    if(pd->gv[LUBP] || pd->gv[SHELL_SAT_CLOSED] || pd->gv[SHELL_PRESS_OPEN ] || pd->gv[SHELL_SAT_GASN] ) 
+      {
+	for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i++ ) {
+	  Fi = *esp->F[i];
+	  if ( fabs(Fi) > lsi->alpha ) {
+	    Hni = ( Fi < 0.0 ) ? 0.0 : 1.0;
+	    d_Hni_dF = 0.0;
+	  } else {
+	    Hni      = 0.5 * (1.0 + Fi/lsi->alpha + sin(M_PIE*Fi/lsi->alpha)/M_PIE);
+	    d_Hni_dF = 0.5 * (1/lsi->alpha + cos(M_PIE*Fi/lsi->alpha)/lsi->alpha);
+	  }
+	  lsi->Hn         += Hni      * bf[eqn]->phi[i];
+	  lsi->d_Hn_dF[i] += d_Hni_dF * bf[eqn]->phi[i];
+	  if (pd->gv[MESH_DISPLACEMENT1]) {
+	    for ( b = 0; b < DIM; b++ ) {
+	      for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
+		lsi->d_Hn_dmesh[b][k] += Hni * bf[eqn]->phi[i] * bf[MESH_DISPLACEMENT1]->phi[k];
+	      }
+	    }
+	  }
+	  for ( j = 0; j < VIM; j++ ) {
+	    lsi->gradHn[j]         += Hni      * bf[eqn]->grad_phi[i][j];
+	    lsi->d_gradHn_dF[j][i] += d_Hni_dF * bf[eqn]->grad_phi[i][j];
+	    if (pd->gv[MESH_DISPLACEMENT1]) {
+	      for ( b = 0; b < DIM; b++ ) {
+		for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
+		  lsi->d_gradHn_dmesh[j][b][k] += Hni * bf[eqn]->d_grad_phi_dmesh[i][j][b][k];
+		}
+	      }
+	    }
+	  }
 
-    if (pd->v[pg->imtrx][LUBP] || pd->v[pg->imtrx][SHELL_SAT_CLOSED] ||
-        pd->v[pg->imtrx][SHELL_PRESS_OPEN] ||
-        pd->v[pg->imtrx][SHELL_SAT_GASN]) {
-      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-        Fi = *esp->F[i];
-        if (fabs(Fi) > lsi->alpha) {
-          Hni = (Fi < 0.0) ? 0.0 : 1.0;
-          d_Hni_dF = 0.0;
-        } else {
-          Hni = 0.5 *
-                (1.0 + Fi / lsi->alpha + sin(M_PIE * Fi / lsi->alpha) / M_PIE);
-          d_Hni_dF = 0.5 * (1 / lsi->alpha +
-                            cos(M_PIE * Fi / lsi->alpha) / lsi->alpha);
-        }
-        lsi->Hn += Hni * bf[eqn]->phi[i];
-        lsi->d_Hn_dF[i] += d_Hni_dF * bf[eqn]->phi[i];
-        if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
-          for (b = 0; b < DIM; b++) {
-            for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
-              lsi->d_Hn_dmesh[b][k] +=
-                  Hni * bf[eqn]->phi[i] * bf[MESH_DISPLACEMENT1]->phi[k];
-            }
-          }
-        }
-        for (j = 0; j < VIM; j++) {
-          lsi->gradHn[j] += Hni * bf[eqn]->grad_phi[i][j];
-          lsi->d_gradHn_dF[j][i] += d_Hni_dF * bf[eqn]->grad_phi[i][j];
-          if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
-            for (b = 0; b < DIM; b++) {
-              for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
-                lsi->d_gradHn_dmesh[j][b][k] +=
-                    Hni * bf[eqn]->d_grad_phi_dmesh[i][j][b][k];
-              }
-            }
-          }
-
-	    Fi_old = *esp_old->F[i];
-	    if ( fabs(Fi_old) > lsi->alpha ) {
-	      Hni_old = ( Fi_old < 0.0 ) ? 0.0 : 1.0;
-	    } else {
-	      Hni_old  = 0.5 * (1.0 + Fi_old/lsi->alpha + sin(M_PIE*Fi_old/lsi->alpha)/M_PIE);
-            }
-	    lsi->Hn_old += Hni_old * bf[eqn]->phi[i];
-	    for ( j = 0; j < VIM; j++ ) {
-	      lsi->gradHn_old[j] += Hni_old * bf[eqn]->grad_phi[i][j];
-            }
-          }
+	  Fi_old = *esp_old->F[i];
+	  if ( fabs(Fi_old) > lsi->alpha ) {
+	    Hni_old = ( Fi_old < 0.0 ) ? 0.0 : 1.0;
+	  } else {
+	    Hni_old  = 0.5 * (1.0 + Fi_old/lsi->alpha + sin(M_PIE*Fi_old/lsi->alpha)/M_PIE);
+	  }
+	  lsi->Hn_old += Hni_old * bf[eqn]->phi[i];
+	  for ( j = 0; j < VIM; j++ ) {
+	    lsi->gradHn_old[j] += Hni_old * bf[eqn]->grad_phi[i][j];
+	  }
+	}
       }
-    } else if (pd->v[pg->imtrx][LUBP_2] ||
-               pd->v[pg->imtrx][SHELL_PRESS_OPEN_2]) {
-      eqn = R_PHASE1;
-      for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
-        Fi = *esp->pF[0][i];
-        if (fabs(Fi) > lsi->alpha) {
-          Hni = (Fi < 0.0) ? 0.0 : 1.0;
-          d_Hni_dF = 0.0;
-        } else {
-          Hni = 0.5 *
-                (1.0 + Fi / lsi->alpha + sin(M_PIE * Fi / lsi->alpha) / M_PIE);
-          d_Hni_dF = 0.5 * (1 / lsi->alpha +
-                            cos(M_PIE * Fi / lsi->alpha) / lsi->alpha);
-        }
-        lsi->Hn += Hni * bf[eqn]->phi[i];
-        lsi->d_Hn_dF[i] += d_Hni_dF * bf[eqn]->phi[i];
-        if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
-          for (b = 0; b < DIM; b++) {
-            for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
-              lsi->d_Hn_dmesh[b][k] +=
-                  Hni * bf[eqn]->phi[i] * bf[MESH_DISPLACEMENT1]->phi[k];
-            }
-          }
-        }
-        for (j = 0; j < VIM; j++) {
-          lsi->gradHn[j] += Hni * bf[eqn]->grad_phi[i][j];
-          lsi->d_gradHn_dF[j][i] += d_Hni_dF * bf[eqn]->grad_phi[i][j];
-          if (pd->v[pg->imtrx][MESH_DISPLACEMENT1]) {
-            for (b = 0; b < DIM; b++) {
-              for (k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++) {
-                lsi->d_gradHn_dmesh[j][b][k] +=
-                    Hni * bf[eqn]->d_grad_phi_dmesh[i][j][b][k];
-              }
-            }
-          }
-        }
+    else if (pd->gv[LUBP_2] || pd->gv[SHELL_PRESS_OPEN_2])
+      {
+	eqn = R_PHASE1;
+	for ( i = 0; i < ei[pg->imtrx]->dof[eqn]; i++ ) {
+	  Fi = *esp->pF[0][i];
+	  if ( fabs(Fi) > lsi->alpha ) {
+	    Hni = ( Fi < 0.0 ) ? 0.0 : 1.0;
+	    d_Hni_dF = 0.0;
+	  } else {
+	    Hni      = 0.5 * (1.0 + Fi/lsi->alpha + sin(M_PIE*Fi/lsi->alpha)/M_PIE);
+	    d_Hni_dF = 0.5 * (1/lsi->alpha + cos(M_PIE*Fi/lsi->alpha)/lsi->alpha);
+	  }
+	  lsi->Hn         += Hni      * bf[eqn]->phi[i];
+	  lsi->d_Hn_dF[i] += d_Hni_dF * bf[eqn]->phi[i];
+	  if (pd->gv[MESH_DISPLACEMENT1]) {
+	    for ( b = 0; b < DIM; b++ ) {
+	      for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
+		lsi->d_Hn_dmesh[b][k] += Hni * bf[eqn]->phi[i] * bf[MESH_DISPLACEMENT1]->phi[k];
+	      }
+	    }
+	  }
+	  for ( j = 0; j < VIM; j++ ) {
+	    lsi->gradHn[j]         += Hni      * bf[eqn]->grad_phi[i][j];
+	    lsi->d_gradHn_dF[j][i] += d_Hni_dF * bf[eqn]->grad_phi[i][j];
+	    if (pd->gv[MESH_DISPLACEMENT1]) {
+	      for ( b = 0; b < DIM; b++ ) {
+		for ( k = 0; k < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1]; k++ ) {
+		  lsi->d_gradHn_dmesh[j][b][k] += Hni * bf[eqn]->d_grad_phi_dmesh[i][j][b][k];
+		}
+	      }
+	    }
+	  }
 
-	    Fi_old = *esp_old->pF[0][i];
-	    if ( fabs(Fi_old) > lsi->alpha ) {
-	      Hni_old = ( Fi_old < 0.0 ) ? 0.0 : 1.0;
-	    } else {
-	      Hni_old  = 0.5 * (1.0 + Fi_old/lsi->alpha + sin(M_PIE*Fi_old/lsi->alpha)/M_PIE);
-            }
-	    lsi->Hn_old += Hni_old * bf[eqn]->phi[i];
-	    for ( j = 0; j < VIM; j++ ) {
-	      lsi->gradHn_old[j] += Hni_old * bf[eqn]->grad_phi[i][j];
-            }
-      }
-    }
-
-  } /* end of if pd->v[pg->imtrx][LUBP] || ... etc */
+	  Fi_old = *esp_old->pF[0][i];
+	  if ( fabs(Fi_old) > lsi->alpha ) {
+	    Hni_old = ( Fi_old < 0.0 ) ? 0.0 : 1.0;
+	  } else {
+	    Hni_old  = 0.5 * (1.0 + Fi_old/lsi->alpha + sin(M_PIE*Fi_old/lsi->alpha)/M_PIE);
+	  }
+	  lsi->Hn_old += Hni_old * bf[eqn]->phi[i];
+	  for ( j = 0; j < VIM; j++ ) {
+	    lsi->gradHn_old[j] += Hni_old * bf[eqn]->grad_phi[i][j];
+	  }
+	}
+      } 
+ 
+  } /* end of if pd->v[LUBP] || ... etc */
 
   /************ End of shielding **************************/
 

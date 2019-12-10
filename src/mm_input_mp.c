@@ -3735,12 +3735,11 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  }
 	  SPF(endofstring(es)," %.4g", mat_ptr->Rst_func );
 	} 
-      else  
+      else
 	{
           mat_ptr->Rst_funcModel = CONSTANT;
           mat_ptr->Rst_func = 1.;
-          fprintf(stderr,"MAT %d Residence Time Weight Fcn = 1\n",mat_ptr->MatID);
-	  WH(model_read, "Defaulting Residence Fcn to Constant");
+          SPF(endofstring(es),"CONSTANT %.4g", mat_ptr->Rst_func );
 	}
     }
   else
@@ -7604,10 +7603,6 @@ ECHO("\n----Acoustic Properties\n", echo_file);
      else if (model_read == -1 &&  !strcmp(model_name, "NEGATIVE") )
        {
          mat_ptr->SpeciesOnlyDiffusion[species_no] = DIFF_NEGATIVE;
-       }
-     else
-       {
-         WH(-1, "Unknown value for species only diffusion defaulting to off");
        }
      ECHO(es,echo_file);
      

@@ -1,5 +1,4 @@
 /bin/
-/build/
 /build*/
 /lib/
 /settings.mk
@@ -12,6 +11,7 @@ goma
 .cproject
 .project
 /TAGS
+/tags
 /.settings/
 cmake-config
 /CMakeLists.txt.user

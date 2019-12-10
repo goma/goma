@@ -262,8 +262,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 			    double *resid_vector_sens,
 			    double *x_sens,
 			    double **x_sens_p,	/*  solution sensitivities */
-                            void *con_ptr,
-                            dg_neighbor_type *dg_neighbor_data)   /* Identifies if called from LOCA */
+                            void *con_ptr)
 {
 
   static int prev_matrix = 0;
@@ -853,10 +852,6 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
              is properly communicated */
           exchange_dof(cx,dpi, x, pg->imtrx);
 
-          if (dg_neighbor_data != NULL) {
-            dg_communicate_neighbor_data(exo, dpi, dg_neighbor_data, upd, x, pg->imtrx, Nodes, vn_glob);
-          }
-
 	  if (Linear_Solver == FRONT)
 	    {
 	      zero	  = 0;
@@ -1275,13 +1270,13 @@ EH(-1,"version not compiled with frontal solver");
       }
 
 #ifdef DEBUG_JACOBIAN
-      if (inewton < 1) {
+      if (inewton < 2) {
 	if (strcmp(Matrix_Format, "msr") == 0) {
 	  print_msr_matrix(num_internal_dofs[pg->imtrx]  + num_boundary_dofs[pg->imtrx],
 			   ija, a, x);
 	  print_array(ija, ija[ija[0]-1], "ija", type_int, ProcID);
 	} else {
-	  print_vbr_matrix(ams, exo, dpi, Num_Unknowns_Node);
+	  print_vbr_matrix(ams, exo, dpi, NumUnknowns[pg->imtrx]);
 	}
       }
 #endif /* DEBUG_JACOBIAN */
@@ -2143,9 +2138,9 @@ EH(-1,"version not compiled with frontal solver");
        */
       if (nAC > 0) {
 	if (Debug_Flag > 0) {
-	  DPRINTF(stderr, "\n------------------------------\n");
-	  DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
-	  DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+          DPRINTF(stdout, "\n------------------------------\n");
+          DPRINTF(stdout, "Augmenting Conditions:    %4d\n", nAC);
+          DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
         }
 	for (iAC = 0;iAC < nAC;iAC++) {
 	  x_AC[iAC] -= damp_factor * yAC[iAC]; 
@@ -2163,51 +2158,51 @@ EH(-1,"version not compiled with frontal solver");
 	   */
 	  if (Debug_Flag > 0) {
 	    if (augc[iAC].Type == AC_USERBC) {	      
-	      DPRINTF(stderr, "\tBC[%4d] DF[%4d]=% 10.6e Update=% 10.6e\n", 
+              DPRINTF(stdout, "\tBC[%4d] DF[%4d]=% 10.6e Update=% 10.6e\n",
 		      augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC], 
 		      damp_factor*yAC[iAC]);	      
 	    } else {
               if (augc[iAC].Type == AC_USERMAT || augc[iAC].Type == AC_FLUX_MAT ) {
-		DPRINTF(stderr, "\tMT[%4d] MP[%4d]=% 10.6e Update=% 10.6e\n", 
+                DPRINTF(stdout, "\tMT[%4d] MP[%4d]=% 10.6e Update=% 10.6e\n",
 			augc[iAC].MTID, augc[iAC].MPID,
 			x_AC[iAC], damp_factor*yAC[iAC]);
 	      } else {
 		if (augc[iAC].Type == AC_VOLUME) {
-		  DPRINTF(stderr,
+                  DPRINTF(stdout,
 			  "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n", 
 			  augc[iAC].MTID, augc[iAC].VOLID,
 			  augc[iAC].evol, x_AC[iAC]);
 		} else {
 		  if (augc[iAC].Type == AC_FLUX) {
-		    DPRINTF(stderr,
+                    DPRINTF(stdout,
 			    "\tBC[%4d] DF[%4d]=% 10.6e Update=% 10.6e\n", 
 			    augc[iAC].BCID, augc[iAC].DFID,
 			    x_AC[iAC], damp_factor*yAC[iAC]);
 		  } else {
 		    if (augc[iAC].Type == AC_LGRM) {
-		      DPRINTF(stderr,
+                      DPRINTF(stdout,
 			      "\tAC[%d], Lagrange Multiplier=%10.6e Update=%10.6e\n",
 			      iAC, x_AC[iAC], damp_factor*yAC[iAC] );
 		    } else {
 		      if (augc[iAC].Type == AC_ARC_LENGTH) {
-		        DPRINTF(stderr,
+                        DPRINTF(stdout,
 			        "\tAC[%d], Arc Length Parameter=%10.6e Update=%10.6e\n",
 			        iAC, x_AC[iAC], damp_factor*yAC[iAC] );
                       } else {
                         if (augc[iAC].Type == AC_OVERLAP) {
-                          DPRINTF(stderr,
+                          DPRINTF(stdout,
                                   "\tAC[%d], Elem %d Side %d  Dim %d:  LM=%10.6e  Update=%10.6e\n",
                                   iAC, augc[iAC].lm_elem, augc[iAC].lm_side,
                                   augc[iAC].lm_dim, x_AC[iAC], damp_factor*yAC[iAC] );
                         } else {
                           if (augc[iAC].Type == AC_PERIODIC) {
-                            DPRINTF(stderr,
+                            DPRINTF(stdout,
                                     "\tAC[%d], Elem %d Side %d  Var %s:  LM=%10.6e  Update=%10.6e\n",
                                     iAC, augc[iAC].lm_elem, augc[iAC].lm_side,
                                     Var_Name[augc[iAC].VAR].name1, x_AC[iAC], damp_factor*yAC[iAC] );
                           } else {
 			    if (augc[iAC].Type == AC_POSITION) {
-			      DPRINTF(stderr,
+                              DPRINTF(stdout,
 				      "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n", 
 				      augc[iAC].MTID, augc[iAC].VOLID,
 				      augc[iAC].evol, x_AC[iAC]);

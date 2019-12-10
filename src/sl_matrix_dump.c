@@ -58,8 +58,10 @@
 #include "rf_util.h"
 #include "dp_utils.h"
 #include "md_timer.h"
+#include "sl_matrix_util.h"
 
 #ifdef MATRIX_DUMP
+#include "mm_as.h"
 #include <rpc/types.h>
 #include <rpc/xdr.h>
 
@@ -281,6 +283,7 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
   /*
    *   Decide on whether to dump out the matrix
    */
+  ams->Number_Jac_Dump = 1;
   if (ams->Number_Jac_Dump >= 0) {
     if (ams->Number_Jac_Dump < index) return;
   } else {
@@ -488,17 +491,17 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	*  Value of the beginning row number corresponding to the current
 	*  block row. This is also the equation # corresponding to the first
 	*  unknown at the node corresponding to the block row.
-	*  -> Let's compare against First_Unknown in the node structure
+        *  -> Let's compare against First_Unknown[pg->imtrx] in the node structure
 	*     to be sure everything is OK.
 	*/
-	ieqn_row = node->First_Unknown;
+        ieqn_row = node->First_Unknown[pg->imtrx];
 
 	/*
 	 *  m1 = number of rows in the current row block This is equal
 	 *  to num_unknonws_node, the number of unknowns located at the
 	 *  current node.
 	 */
-	num_unknowns_node = (int) node->Nodal_Vars_Info[imtrx]->Num_Unknowns;	
+	num_unknowns_node = (int) node->Nodal_Vars_Info[pg->imtrx]->Num_Unknowns;	
 
 	/*
 	*  Determine the total number of nonzero block columns for the 
@@ -527,7 +530,7 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	  nodeC = Nodes[jblk];
 	  gNodeS[j] = nodeC->Global_Node_Num;
 	  iorder[j] = j;
-	  n1 = nodeC->Nodal_Vars_Info[imtrx]->Num_Unknowns;
+	  n1 = nodeC->Nodal_Vars_Info[pg->imtrx]->Num_Unknowns;
 	  blkMatrix[j] = alloc_dbl_1(num_unknowns_node * n1, 0.0);
 	}
 
@@ -696,13 +699,13 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	   *  Calculate the equation number for the first unknown 
 	   *  in the current block column
 	   */
-	  ib1 = nodeC->First_Unknown;
+          ib1 = nodeC->First_Unknown[pg->imtrx];
 	  
 	  /*
 	   *   Calculate the number of columns in the current block column
 	   *   and cross check.
 	   */
-	  n1 = nodeC->Nodal_Vars_Info[imtrx]->Num_Unknowns;
+	  n1 = nodeC->Nodal_Vars_Info[pg->imtrx]->Num_Unknowns;
 
 	  /*
 	   *     Print out an ascii header information
@@ -757,7 +760,7 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	  *         Output the identity of first unknown at the current
           *         block column
 	  */
-	  ieqn = nodeC->First_Unknown;
+          ieqn = nodeC->First_Unknown[pg->imtrx];
   	  CHECK_XDR(xdr_int(xdrs, &ieqn));
 
 	  /*
@@ -1189,13 +1192,13 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	*  Value of the beginning row number corresponding to the current
 	*  block row. This is also the equation # corresponding to the first
 	*  unknown at the node corresponding to the block row.
-	*  -> Let's compare against First_Unknown in the node structure
+        *  -> Let's compare against First_Unknown[pg->imtrx] in the node structure
 	*     to be sure everything is OK.
 	*/
 	
 	ieqn_row = rpntr[iblk_row];
 #ifdef DEBUG_HKM
-	if (ieqn_row != node->First_Unknown) {
+        if (ieqn_row != node->First_Unknown[pg->imtrx]) {
 	  printf("my logic or node_struct is messed up\n");
 	  exit(-1);
 	}
@@ -1212,7 +1215,7 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	*  node struct
 	*/
 	
-	num_unknowns_node = (int) node->Nodal_Vars_Info[imtrx]->Num_Unknowns;
+	num_unknowns_node = (int) node->Nodal_Vars_Info[pg->imtrx]->Num_Unknowns;
 #ifdef DEBUG_HKM
 	if (m1 != num_unknowns_node) {
 	  fprintf(stderr,"%s logic error: m1 and ", yo);
@@ -1404,11 +1407,11 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	  
 	  n1 = ib2 - ib1;
 #ifdef DEBUG_HKM
-	  if ((int) nodeC->Nodal_Vars_Info[imtrx]->Num_Unknowns != n1) {
+	  if ((int) nodeC->Nodal_Vars_Info[pg->imtrx]->Num_Unknowns != n1) {
 	    fprintf(stderr,"%s Logic error\n", yo);
 	    fprintf(stderr,
 		    "num unknowns differ: %d %d \n",
-		    nodeC->Nodal_Vars_Info[imtrx]->Num_Unknowns, n1);
+		    nodeC->Nodal_Vars_Info[pg->imtrx]->Num_Unknowns, n1);
 	    exit (-1);
 	  }
 #endif
@@ -1462,7 +1465,7 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	  *         Output the identity of first unknown at the current
           *         block column
 	  */
-	  ieqn = nodeC->First_Unknown;
+          ieqn = nodeC->First_Unknown[pg->imtrx];
   	  CHECK_XDR(xdr_int(xdrs, &ieqn));
 
 	  /*

@@ -1401,7 +1401,7 @@ rd_genl_specs(FILE *ifp,
     else if ( strcmp(input,"yes") == 0 )
       {
 	Anneal_Mesh = TRUE;
-        fprintf(stderr, "Annealing mesh on output\n");
+        fprintf(stdout, "Annealing mesh on output\n");
       }
     else
       {

@@ -71,8 +71,7 @@ EXTERN int solve_nonlinear_problem
        double *,		/* resid_vector_sens                         */
        double *,		/* x_sens                                    */
        double **,  		/*  x_sens_p - solution sensitivities        */
-       void *,                   /* con_ptr pointer                           */
-       dg_neighbor_type *);
+     void *);                   /* con_ptr pointer                           */
 
 EXTERN double L2_norm		/* mm_sol_nonlinear.c */
 (double *,		/* vector */

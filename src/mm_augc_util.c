@@ -3450,7 +3450,7 @@ create_overlap_acs(Exo_DB *exo, int iAC)
     {
       augc[i].nAC = new_nAC;
     }
-  DPRINTF(stderr, "\tCreated %d new AC's for overlap algorithm.\n", new_ACs);
+  DPRINTF(stdout, "\tCreated %d new AC's for overlap algorithm.\n", new_ACs);
 
 
 /* Change nAC and return */

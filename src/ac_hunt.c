@@ -216,7 +216,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 #endif
       file = fopen(Soln_OutFile, "w");
       if (file == NULL)  {
-	DPRINTF(stderr, "%s:  opening soln file for writing\n", yo);
+        DPRINTF(stdout, "%s:  opening soln file for writing\n", yo);
         EH(-1, "\t");
       }
     }
@@ -471,8 +471,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     path[iHC] = path1[iHC] = lambda[iHC];
 
     if (Debug_Flag && ProcID == 0) {
-      fprintf(stderr,"MaxPathSteps: %d \tlambdaEnd: %f\n", MaxPathSteps, lambdaEnd[iHC]);
-      fprintf(stderr,"continuation in progress\n");
+      fprintf(stdout,"MaxPathSteps: %d \tlambdaEnd: %f\n", MaxPathSteps, lambdaEnd[iHC]);
+      fprintf(stdout,"continuation in progress\n");
     }
 
     if (hDelta_s0[iHC] > hDelta_s_max[iHC])
@@ -587,6 +587,16 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     x_sens_p = NULL;
   }
 
+  pg->matrices = malloc(sizeof(struct Matrix_Data));
+  pg->matrices[pg->imtrx].ams = ams[JAC];
+  pg->matrices[pg->imtrx].x = x;
+  pg->matrices[pg->imtrx].x_old = x_old;
+  pg->matrices[pg->imtrx].x_older = x_older;
+  pg->matrices[pg->imtrx].xdot = xdot;
+  pg->matrices[pg->imtrx].xdot_old = xdot_old;
+  pg->matrices[pg->imtrx].x_update = x_update;
+  pg->matrices[pg->imtrx].scale = scale;
+  pg->matrices[pg->imtrx].resid_vector = resid_vector;
 
 
   /* Allocate sparse matrix */
@@ -717,7 +727,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
       ams[JAC]->options[AZ_keep_info] = 1;
 
-    DPRINTF(stderr, "\nINITIAL ELEMENT QUALITY CHECK---\n");
+    DPRINTF(stdout, "\nINITIAL ELEMENT QUALITY CHECK---\n");
     good_mesh = element_quality(exo, x, ams[0]->proc_config);
 
   /*
@@ -811,7 +821,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
     if(alqALC == -1)
     {
-      DPRINTF(stderr,"\n\t ******** LAST PATH STEP!\n");
+      DPRINTF(stdout,"\n\t ******** LAST PATH STEP!\n");
       dcopy1(numProcUnknowns,x_old,x);
 
       switch (Continuation) {
@@ -836,29 +846,29 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     exchange_dof(cx, dpi, x, pg->imtrx);
 
     if(ProcID ==0) {
-      DPRINTF(stderr, "\n\t----------------------------------");
+      DPRINTF(stdout, "\n\t----------------------------------");
       switch (Continuation) {
       case HUN_ZEROTH:
-	  DPRINTF(stderr, "\n\tZero Order Hunting:");
+          DPRINTF(stdout, "\n\tZero Order Hunting:");
 	  break;
       case  HUN_FIRST:
-	  DPRINTF(stderr, "\n\tFirst Order Hunting:");
+          DPRINTF(stdout, "\n\tFirst Order Hunting:");
 	  break; }
-      DPRINTF(stderr, "\n\tStep number: %4d of %4d (max)", n+1, MaxPathSteps);
-      DPRINTF(stderr, "\n\tAttempting solution at: theta = %g ;  step = %g",hunt_par,dhunt_par);
+      DPRINTF(stdout, "\n\tStep number: %4d of %4d (max)", n+1, MaxPathSteps);
+      DPRINTF(stdout, "\n\tAttempting solution at: theta = %g ;  step = %g",hunt_par,dhunt_par);
       for (iHC=0;iHC<nHC;iHC++) {
 	switch (hunt[iHC].Type) {
 	case 1: /* BC */
-	    DPRINTF(stderr, "\n\tBCID=%3d DFID=%5d", hunt[iHC].BCID, hunt[iHC].DFID);
+            DPRINTF(stdout, "\n\tBCID=%3d DFID=%5d", hunt[iHC].BCID, hunt[iHC].DFID);
 	    break;
 	case 2: /* MT */
-	    DPRINTF(stderr, "\n\tMTID=%3d MPID=%5d", hunt[iHC].MTID+1, hunt[iHC].MPID);
+            DPRINTF(stdout, "\n\tMTID=%3d MPID=%5d", hunt[iHC].MTID+1, hunt[iHC].MPID);
 	    break;
  	case 3: /* AC */
- 	    DPRINTF(stderr, "\n\tACID=%3d DFID=%5d", hunt[iHC].BCID, hunt[iHC].DFID);
+            DPRINTF(stdout, "\n\tACID=%3d DFID=%5d", hunt[iHC].BCID, hunt[iHC].DFID);
  	    break;
 	}
-	DPRINTF(stderr, " Parameter= % 10.6e delta_s= %10.6e", path1[iHC], delta_s[iHC]);
+        DPRINTF(stdout, " Parameter= % 10.6e delta_s= %10.6e", path1[iHC], delta_s[iHC]);
       }
     }
 
@@ -902,8 +912,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 				    resid_vector_sens,
 				    x_sens,
 				    x_sens_p,
-                                    NULL,
-          NULL);
+                                    NULL);
 
 #ifdef DEBUG
       fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
@@ -936,21 +945,21 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	if (nAC > 0)
           {
 
-	    DPRINTF(stderr, "\n------------------------------\n");
-	    DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
-	    DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
+            DPRINTF(stdout, "\n------------------------------\n");
+            DPRINTF(stdout, "Augmenting Conditions:    %4d\n", nAC);
+            DPRINTF(stdout, "Number of extra unknowns: %4d\n\n", nAC);
 
             for (iAC = 0; iAC < nAC; iAC++)
              {
               if (augc[iAC].Type == AC_USERBC)
                {
-                DPRINTF(stderr, "\tAC[%4d] DF[%4d] = %10.6e\n",
+                DPRINTF(stdout, "\tAC[%4d] DF[%4d] = %10.6e\n",
                         augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
                }
               else if (augc[iAC].Type == AC_USERMAT  ||
                        augc[iAC].Type == AC_FLUX_MAT )
                {
-                DPRINTF(stderr, "\n MT[%4d] MP[%4d] = %10.6e\n",
+                DPRINTF(stdout, "\n MT[%4d] MP[%4d] = %10.6e\n",
                         augc[iAC].MTID, augc[iAC].MPID, x_AC[iAC]);
                }
               else if(augc[iAC].Type == AC_VOLUME)
@@ -963,7 +972,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
                 evol_local = evol_global;
                 }
 #endif
-                DPRINTF(stderr, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n",
+                DPRINTF(stdout, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n",
                         augc[iAC].MTID, augc[iAC].VOLID, evol_local,
                         x_AC[iAC]);
                }
@@ -977,13 +986,13 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
                 }
                 evol_local = evol_global;
 #endif
-                DPRINTF(stderr, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
+                DPRINTF(stdout, "\tMT[%4d] XY[%4d]=%10.6e Param=%10.6e\n",
                         augc[iAC].MTID, augc[iAC].VOLID, evol_local,
                         x_AC[iAC]);
                }
                else if(augc[iAC].Type == AC_FLUX)
                {
-                DPRINTF(stderr, "\tBC[%4d] DF[%4d]=%10.6e\n",
+                DPRINTF(stdout, "\tBC[%4d] DF[%4d]=%10.6e\n",
                         augc[iAC].BCID, augc[iAC].DFID, x_AC[iAC]);
                }
              }
@@ -1068,10 +1077,10 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       if (!converged) {
 
 	if (ni > Max_Newton_Steps/2) {
- 	  DPRINTF(stderr,"\n ************************************\n");
- 	  DPRINTF(stderr," W: Did not converge in Newton steps.\n");
- 	  DPRINTF(stderr,"    Find better initial guess.       \n");
- 	  DPRINTF(stderr," ************************************\n"); 
+          DPRINTF(stdout,"\n ************************************\n");
+          DPRINTF(stdout," W: Did not converge in Newton steps.\n");
+          DPRINTF(stdout,"    Find better initial guess.       \n");
+          DPRINTF(stdout," ************************************\n");
           goto free_and_clear;
  	  /*exit(0);  */
 	}
@@ -1113,12 +1122,12 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
 	alqALC = 1;
 
-	DPRINTF(stderr, "Decreasing step-length to %10.6e.\n", dhunt_par);
+        DPRINTF(stdout, "Decreasing step-length to %10.6e.\n", dhunt_par);
 
 	if (dhunt_par < dhunt_par_min) {
- 	  DPRINTF(stderr,"\n X: C step-length reduced below minimum.");
- 	  DPRINTF(stderr,"\n theta: %g ;  theta_min: %g",dhunt_par,dhunt_par_min);
- 	  DPRINTF(stderr,"\n    Program terminated.\n");
+          DPRINTF(stdout,"\n X: C step-length reduced below minimum.");
+          DPRINTF(stdout,"\n theta: %g ;  theta_min: %g",dhunt_par,dhunt_par_min);
+          DPRINTF(stdout,"\n    Program terminated.\n");
 	  /* This needs to have a return value of 0, indicating
 	     * success, for the continuation script to not treat this
 	     * as a failed command. */
@@ -1200,7 +1209,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
  	}
  	else if (inewton == -1)
  	{
- 	DPRINTF(stderr,"\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
+        DPRINTF(stdout,"\nHmm... trouble on first step \n  Let's try some more relaxation  \n");
  	      if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
  	         (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
         		 (damp_factor3 <= 1. && damp_factor3 >= 0.))
@@ -1208,12 +1217,12 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
  		custom_tol1 *= 0.01;
  		custom_tol2 *= 0.01;
  		custom_tol3 *= 0.01;
- 	DPRINTF(stderr,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
+        DPRINTF(stdout,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
  		}
  		else
  		{
  		damp_factor1 *= 0.5;
- 	DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
+        DPRINTF(stdout,"  damping factor %g  \n",damp_factor1);
  		}
 
  	    vcopy(numProcUnknowns, &x[0], 1.0, &x_old[0]);
@@ -1237,7 +1246,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
  	}
  	else
  	{
- 	DPRINTF(stderr,"\nHmm... could not converge on first step\n Let's try some more iterations\n");
+        DPRINTF(stdout,"\nHmm... could not converge on first step\n Let's try some more iterations\n");
  	      if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
  	         (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
         		 (damp_factor3 <= 1. && damp_factor3 >= 0.))
@@ -1255,14 +1264,14 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
  		custom_tol1 *= 100.;
  		custom_tol2 *= 100.;
  		custom_tol3 *= 100.;
- 	DPRINTF(stderr,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
+        DPRINTF(stdout,"  custom tolerances %g %g %g  \n",custom_tol1,custom_tol2,custom_tol3);
  		}
  		else
  		{
                 if(hunt[0].BCID == -1)
                    {
 	            if (Write_Intermediate_Solutions == 0) {
- 	DPRINTF(stderr,"  writing solution %g  \n",damp_factor1);
+        DPRINTF(stdout,"  writing solution %g  \n",damp_factor1);
 	                 write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old,
 			        xdot, xdot_old, tev, tev_post, gv,  rd,
 			        gvec, gvec_elem, &nprint, delta_s[0],
@@ -1272,7 +1281,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
  	         }
  		damp_factor1 *= 2.0;
 		damp_factor1 = MIN(damp_factor1,1.0);
- 	DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
+        DPRINTF(stdout,"  damping factor %g  \n",damp_factor1);
  		}
  	  }
 
@@ -1289,25 +1298,25 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     custom_tol2 = toler_org[1];
     custom_tol3 = toler_org[2];
     damp_factor1 = 1.0;
-    DPRINTF(stderr,
+    DPRINTF(stdout,
 	    "\n\tStep accepted, theta (proportion complete) = %10.6e\n",
 	    hunt_par);
     for (iHC=0;iHC<nHC;iHC++) {
       switch (hunt[iHC].Type) {
       case 1:		/* BC */
-	  DPRINTF(stderr, "\tStep accepted, BCID=%3d DFID=%5d",
+          DPRINTF(stdout, "\tStep accepted, BCID=%3d DFID=%5d",
 		  hunt[iHC].BCID, hunt[iHC].DFID);
 	  break;
       case 2:		/* MT */
-	  DPRINTF(stderr, "\tStep accepted, MTID=%3d MPID=%5d",
+          DPRINTF(stdout, "\tStep accepted, MTID=%3d MPID=%5d",
 		  hunt[iHC].MTID+1, hunt[iHC].MPID);
 	  break;
       case 3:		/* AC */
-	  DPRINTF(stderr, "\tStep accepted, ACID=%3d DFID=%5d",
+          DPRINTF(stdout, "\tStep accepted, ACID=%3d DFID=%5d",
  		  hunt[iHC].BCID, hunt[iHC].DFID);
  	  break;
       }
-      DPRINTF(stderr, " Parameter= % 10.6e\n", path1[iHC]);
+      DPRINTF(stdout, " Parameter= % 10.6e\n", path1[iHC]);
     }
 
     /*
@@ -1448,7 +1457,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     { alqALC = 1; }
 
     if (alqALC == 0) {
-      DPRINTF(stderr,"\n\n\t I will continue no more!\n\t No more continuation for you!\n");
+      DPRINTF(stdout,"\n\n\t I will continue no more!\n\t No more continuation for you!\n");
       goto free_and_clear;
     }
 
@@ -1573,6 +1582,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     }
 
   free(gv);
+  free(pg->matrices);
 
   return;
 

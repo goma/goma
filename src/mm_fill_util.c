@@ -3096,12 +3096,12 @@ Revised:	   1997/10/28 16:48 MST pasacki@sandia.gov
 #endif
 
   if (Fill) {
-    DPRINTF(stderr, "\n%-30s= %d\n", "Number of fill unknowns",
+    DPRINTF(stdout, "\n%-30s= %d\n", "Number of fill unknowns",
             num_total_fill_unknowns);
-    DPRINTF(stderr, "\n%-30s= %d\n", "Number of filmatrix nonzeroes", nnz);
+    DPRINTF(stdout, "\n%-30s= %d\n", "Number of filmatrix nonzeroes", nnz);
   } else {
-    DPRINTF(stderr, "\n%-30s= %d\n", "Number of unknowns", num_total_unknowns);
-    DPRINTF(stderr, "\n%-30s= %d\n", "Number of matrix nonzeroes", nnz);
+    DPRINTF(stdout, "\n%-30s= %d\n", "Number of unknowns", num_total_unknowns);
+    DPRINTF(stdout, "\n%-30s= %d\n", "Number of matrix nonzeroes", nnz);
   }
 
   *ptr_ija = ija;
@@ -3170,8 +3170,8 @@ void alloc_VBR_sparse_arrays(struct Aztec_Linear_Solver_System *ams,
       gsum_Int(num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx]);
   nnz_tmp = gsum_Int(nnz);
 
-  DPRINTF(stderr, "\n%-30s= %d\n", "Number of unknowns", dpi->num_dofs_global);
-  DPRINTF(stderr, "\n%-30s= %d\n", "Number of matrix nonzeroes", nnz_tmp);
+  DPRINTF(stdout, "\n%-30s= %d\n", "Number of unknowns", dpi->num_dofs_global);
+  DPRINTF(stdout, "\n%-30s= %d\n", "Number of matrix nonzeroes", nnz_tmp);
   return;
 }
 /*****************************************************************************/
@@ -4793,30 +4793,37 @@ extended_shape(const double xi[],    /* local coordinates    */
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-
-int calc_shearrate(dbl *gammadot,           /* strain rate invariant */
-                   dbl gamma_dot[DIM][DIM], /* strain rate tensor */
-                   dbl d_gd_dv[DIM][MDE], dbl d_gd_dmesh[DIM][MDE]) {
+int
+calc_shearrate(dbl *gammadot,	/* strain rate invariant */
+	       dbl gamma_dot[DIM][DIM], /* strain rate tensor */
+	       dbl d_gd_dv[DIM][MDE],
+	       dbl d_gd_dmesh[DIM][MDE])
+{
   int mdofs = 0;
   int p, q, a, b;
   int vdofs, i, j, v;
 
-  dbl grad_phi_e_gam[MDE][DIM][DIM][DIM]; /* transpose of grad(phi_i ea) tensor
-                                             + grad(phi_i ea) tensor */
-  dbl d_gamma_dot_dmesh[DIM][DIM][DIM][MDE]; /* d/dmesh(grad_v)T */
+  dbl grad_phi_e_gam[MDE][DIM] [DIM][DIM]; /* transpose of grad(phi_i ea) tensor
+					      + grad(phi_i ea) tensor */
+  dbl d_gamma_dot_dmesh [DIM][DIM] [DIM][MDE]; /* d/dmesh(grad_v)T */
 
   int status = 1;
+
 
   /* Zero out sensitivities */
 
   if(d_gd_dv != NULL) memset(d_gd_dv, 0, sizeof(double)*DIM*MDE);
   if(d_gd_dmesh != NULL) memset(d_gd_dmesh, 0, sizeof(double)*DIM*MDE);
 
+
   *gammadot = 0.;
   /* get gamma_dot invariant for viscosity calculations */
-  for (a = 0; a < VIM; a++) {
-    for (b = 0; b < VIM; b++) {
-      *gammadot += gamma_dot[a][b] * gamma_dot[b][a];
+  for ( a=0; a<VIM; a++)
+    {
+      for ( b=0; b<VIM; b++)
+	{
+	  *gammadot +=  gamma_dot[a][b] * gamma_dot[b][a];
+	}
     }
   
   *gammadot  =  sqrt(0.5*fabs(*gammadot)); 
@@ -4827,12 +4834,12 @@ int calc_shearrate(dbl *gammadot,           /* strain rate invariant */
   
   if ( d_gd_dmesh != NULL || d_gd_dv != NULL)
   {
-  if ( pd->e[pg->imtrx][R_MESH1] )
+  if ( pd->v[pg->imtrx][R_MESH1] )
     {
       mdofs = ei[pg->imtrx]->dof[R_MESH1];
     }
   
-   for ( p=0; p<VIM; p++)
+  for ( p=0; p<VIM; p++)
     {
       for ( q=0; q<VIM; q++)
 	{
@@ -4848,13 +4855,14 @@ int calc_shearrate(dbl *gammadot,           /* strain rate invariant */
 	}
     }
   }
-
+  
   /*
    * d( gamma_dot )/dmesh
    */
   
-  if ( pd->e[R_MESH1] && d_gd_dmesh != NULL)
-   {   
+  if ( pd->v[pg->imtrx][R_MESH1] && d_gd_dmesh != NULL)
+    {
+      
       for ( p=0; p<VIM; p++)
 	{
 	  for ( q=0; q<VIM; q++)
@@ -4898,7 +4906,7 @@ int calc_shearrate(dbl *gammadot,           /* strain rate invariant */
 	    }
 	}
     }
-
+  
   /*
    * d( gammadot )/dv
    */
@@ -4923,9 +4931,9 @@ int calc_shearrate(dbl *gammadot,           /* strain rate invariant */
 	    }
 	}
     }
-  }
-  return (status);
+  return(status);
 }
+
 /*************************************************************************/
 /*************************************************************************/
 /*************************************************************************/

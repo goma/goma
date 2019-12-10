@@ -594,6 +594,17 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
     }
   con_par_ptr = &lambda;
 
+  pg->matrices = malloc(sizeof(struct Matrix_Data));
+  pg->matrices[pg->imtrx].ams = ams[JAC];
+  pg->matrices[pg->imtrx].x = x;
+  pg->matrices[pg->imtrx].x_old = x_old;
+  pg->matrices[pg->imtrx].x_older = x_older;
+  pg->matrices[pg->imtrx].xdot = xdot;
+  pg->matrices[pg->imtrx].xdot_old = xdot_old;
+  pg->matrices[pg->imtrx].x_update = x_update;
+  pg->matrices[pg->imtrx].scale = scale;
+  pg->matrices[pg->imtrx].resid_vector = resid_vector;
+
   if (strcmp( Matrix_Format, "epetra") == 0) {
     EH(-1, "Error epetra Matrix format not currently supported with loca interface");
   }
@@ -1316,6 +1327,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   safer_free((void **) &con.hopf_info.y_vec);
   safer_free((void **) &con.hopf_info.z_vec);
 
+  free(pg->matrices);
+
   return nstep;
 } /**************** END of do_loca() *****************************************/
 
@@ -1400,7 +1413,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
                   / (cont->EndParameterValue - cont->BegParameterValue);
         if (nCC > 1 || nUC > 0)
           {
-            DPRINTF (stderr, "\n\tAttempting solution at: theta = %g", theta);
+            DPRINTF (stdout, "\n\tAttempting solution at: theta = %g", theta);
           }
         else
           {
@@ -1519,8 +1532,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 				  passdown.resid_vector_sens, 
 				  passdown.x_sens_temp,
 				  passdown.x_sens_p,
-                                  con_ptr,
-                                  NULL);
+                                  con_ptr);
 
 #ifdef DEBUG
     fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
@@ -1566,7 +1578,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 #endif
        }
 
-    DPRINTF(stderr,
+    DPRINTF(stdout,
             "\n\tStep accepted, theta (proportion complete) = %10.6e\n",
             theta);
 
@@ -3672,19 +3684,13 @@ static void print_final(double param, int step_num, int mat_fills,
   printf("\tNumber of steps            = %d\n", step_num+1);
   printf("\tNumber of Matrix fills     = %d\n", mat_fills);
   printf("\tNumber of Residual fills   = %d\n", res_fills);
-  fprintf(stderr,"\n"); 
-  fprintf(stderr,"CONTINUATION ROUTINE HAS FINISHED: \n");
-  fprintf(stderr,"\tEnding Parameter value     = %g\n", param);
-  fprintf(stderr,"\tNumber of steps            = %d\n", step_num+1);
-  fprintf(stderr,"\tNumber of Matrix fills     = %d\n", mat_fills);
-  fprintf(stderr,"\tNumber of Residual fills   = %d\n", res_fills);
   if (Linear_Solver == AZTEC)
        {
         printf("\tNumber of linear solve its = %d\n", linear_its);
-        fprintf(stderr,"\tNumber of linear solve its = %d\n", linear_its);
+        fprintf(stdout,"\tNumber of linear solve its = %d\n", linear_its);
         }
   printf("\n"); 
-  DPRINTF(stderr,"\n\n\t I will continue no more!\n\t No more continuation for you!\n");
+  DPRINTF(stdout,"\n\n\t I will continue no more!\n\t No more continuation for you!\n");
 
 }
 /*****************************************************************************/

@@ -766,9 +766,9 @@ dbl element_viscosity(void)
     }
   
   /* load something into fill variable */
-  //fv->F = .5;
+  fv->F = .5;
   
-  if( ls == NULL  ) fv->F = 0.5 ;
+  if( ls != NULL  ) fv->F = 0.0;
   
   fv->T = mp->reference[TEMPERATURE];
   for (i = 0; i < pd->Num_Species_Eqn; i++) 

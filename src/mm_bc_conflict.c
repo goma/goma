@@ -2491,7 +2491,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
              num_rot_nodes);
 #endif
 #ifdef PARALLEL
-    DPRINTF(stderr, "P_%d: rotating equations at %d nodes.\n", ProcID,
+    DPRINTF(stdout, "P_%d: rotating equations at %d nodes.\n", ProcID,
             num_rot_nodes);
 #endif
 
