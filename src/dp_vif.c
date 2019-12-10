@@ -2614,6 +2614,7 @@ noahs_ark()
   ddd_add_member(n, &STREAM, 1, MPI_INT);
   ddd_add_member(n, &STREAM_NORMAL_STRESS, 1, MPI_INT);
   ddd_add_member(n, &STREAM_SHEAR_STRESS, 1, MPI_INT);
+  ddd_add_member(n, &STREAM_TENSION, 1, MPI_INT);
   ddd_add_member(n, &MEAN_SHEAR, 1, MPI_INT);
   ddd_add_member(n, &PRESSURE_CONT, 1, MPI_INT);
   ddd_add_member(n, &SH_DIV_S_V_CONT, 1, MPI_INT);
@@ -2709,13 +2710,17 @@ noahs_ark()
   ddd_add_member(n, &EIG3, 1, MPI_INT);
   ddd_add_member(n, &GRAD_SH, 1, MPI_INT);
   ddd_add_member(n, &GRAD_Y, 1, MPI_INT);
+  ddd_add_member(n, &HELICITY, 1, MPI_INT);
   ddd_add_member(n, &EXTERNAL_POST, 1, MPI_INT);
   ddd_add_member(n, &SURFACE_VECTORS, 1, MPI_INT);
   ddd_add_member(n, &SHELL_NORMALS, 1, MPI_INT);
+  ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
   if ( len_u_post_proc > 0 )
     {
       ddd_add_member(n, u_post_proc, len_u_post_proc, MPI_DOUBLE);
-    }  ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
+    }  
+  ddd_add_member(n, &LAMB_VECTOR, 1, MPI_INT);
+  ddd_add_member(n, &Q_FCN, 1, MPI_INT);
 
   if ( nn_post_fluxes > 0 )
     {

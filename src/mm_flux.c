@@ -4887,7 +4887,7 @@ compute_volume_integrand(const int quantity, const int elem,
   double det = bf[pd->ShapeVar]->detJ * fv->h3;
   double det_J = bf[pd->ShapeVar]->detJ;
   double h3 = fv->h3;
-  int a, b, p, var,j, dim=pd->Num_Dim, gnn, matIndex, ledof, c, WIM;
+  int a, b, p, q, var,j, dim=pd->Num_Dim, gnn, matIndex, ledof, c, WIM;
   int *n_dof=NULL;
   int dof_map[MDE];
 
@@ -5002,28 +5002,91 @@ compute_volume_integrand(const int quantity, const int elem,
      {
       double vsq;
       vsq = 0;
-      for( a=0; a<dim;a++) vsq += fv->v[a]*fv->v[a];
-
-      *sum += vsq*weight*det;
+      for( a=0; a<dim;a++) vsq += SQUARE(fv->v[a]);
+      *sum += sqrt(vsq)*weight*det;
 
       if( J_AC != NULL )
 	{
+          double inv_vsqrt;
+          inv_vsqrt = 1./sqrt(vsq);
 	  for( p=0; p<dim; p++)
 	    {
 	      var = VELOCITY1 + p ;
 
 	      if( pd->v[pg->imtrx][var] )
 		{
-
 		  for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
 		    {
-		      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += weight * ( 2.0*fv->v[p]*bf[var]->phi[j] )*det;
+		      J_AC[ ei[pg->imtrx]->gun_list[var][j] ] += weight * ( inv_vsqrt*fv->v[p]*bf[var]->phi[j] )*det;
 		    }
 		}
 	    }
 	}
       }
       break;
+    case I_VORTICITY:
+     {
+      double vsq=0;
+      for( a=0; a<VIM;a++) vsq += fv->curl_v[a]*fv->curl_v[a];
+      *sum += sqrt(vsq)*weight*det;
+      }
+      break;
+
+    case I_HELICITY:
+     {
+      double vsq=0;
+      for( a=0; a<VIM;a++) vsq += SQUARE(fv->v[a]*fv->curl_v[a]);
+      *sum += sqrt(vsq)*weight*det;
+      }
+      break;
+
+    case I_LAMB_MAG:
+     {
+      double vsq=0, lamb_v[DIM] = {0.,0.,0.};
+      for( a=0; a<VIM;a++)
+        {
+         for( p=0; p<VIM;p++) {
+           for( q=0; q<VIM;q++) {
+            lamb_v[a] += permute(p,q,a)*fv->curl_v[p]*fv->v[q];
+            }
+           }
+        }
+      for( a=0; a<VIM;a++) vsq += lamb_v[a]*lamb_v[a];
+      *sum += sqrt(vsq)*weight*det;
+      }
+      break;
+
+    case I_GIESEKUS:
+     {
+      double gammadot, gamma[DIM][DIM];
+      double vorticity, omega[DIM][DIM];
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+          omega[a][b] = fv->grad_v[a][b] - fv->grad_v[b][a];
+          }
+        }
+    /* find second invariant of strain-rate */
+      calc_shearrate(&gammadot, gamma, NULL, NULL);
+      calc_shearrate(&vorticity, omega, NULL, NULL);
+      *sum += weight*det*(gammadot - vorticity)/
+                        (DBL_SMALL + gammadot + vorticity);
+      }
+      break;
+
+    case I_Q_FCN:
+     {
+      double gammadot, del_v[DIM][DIM];
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+          del_v[a][b] = fv->grad_v[a][b];
+          }
+        }
+      calc_shearrate(&gammadot, del_v, NULL, NULL);
+      *sum += weight*det*gammadot;
+      }
+      break;
+
     case I_DISSIP:
       {
 	int q;

@@ -114,12 +114,16 @@
 #define I_NEG_VOLPLANE  36
 #define I_SPECIES_SOURCE  37
 #define I_KINETIC_ENERGY  38
-#define I_SHELL_VOLUME 39
+#define I_SHELL_VOLUME  39
 #define I_TFMP_FORCE    40
 #define I_MASS 41
 #define I_MASS_NEGATIVE_FILL  42
 #define I_MASS_POSITIVE_FILL  43
-
+#define I_VORTICITY     44
+#define I_GIESEKUS      45
+#define I_LAMB_MAG      46
+#define I_HELICITY      47
+#define I_Q_FCN         48
 
 #ifdef GOMA_MM_POST_PROC_C
 struct Post_Processing_Flux_Names
@@ -234,16 +238,21 @@ VOL_NAME_STRUCT pp_vol_names[] =
   { "ELECTRIC_LOAD_Y",   I_ELOADY },
   { "ELECTRIC_LOAD_Z",   I_ELOADZ },
   { "SURFACE_TEMPERATURE",   I_SURF_TEMP },
-  { "VOL_PLANE",          I_VOLUME_PLANE },
-  { "POS_PLANE_FILL",   I_POS_VOLPLANE},
-  { "NEG_PLANE_FILL",   I_NEG_VOLPLANE},
+  { "VOL_PLANE",         I_VOLUME_PLANE },
+  { "POS_PLANE_FILL",    I_POS_VOLPLANE},
+  { "NEG_PLANE_FILL",    I_NEG_VOLPLANE},
   { "SPECIES_SOURCE",    I_SPECIES_SOURCE},
   { "KINETIC_ENERGY",    I_KINETIC_ENERGY},
   { "SHELL_VOLUME",      I_SHELL_VOLUME},
   { "TFMP_FORCE",        I_TFMP_FORCE},
   { "MASS",              I_MASS},
   { "MASS_NEGATIVE_FILL",              I_MASS_NEGATIVE_FILL},
-  { "MASS_POSITIVE_FILL",              I_MASS_POSITIVE_FILL}
+  { "MASS_POSITIVE_FILL",              I_MASS_POSITIVE_FILL},
+  { "VORTICITY",         I_VORTICITY},
+  { "GIESEKUS",          I_GIESEKUS},
+  { "LAMB_MAG",          I_LAMB_MAG},
+  { "HELICITY",          I_HELICITY},
+  { "Q_FCN",             I_Q_FCN}
 };
 
 int Num_Vol_Names = sizeof( pp_vol_names )/ sizeof( VOL_NAME_STRUCT );
@@ -567,6 +576,7 @@ extern int STRAIN_TENSOR;	/* strain tensor for mesh deformation  */
 extern int STREAM;		/* stream function*/
 extern int STREAM_NORMAL_STRESS; /* streamwise normal stress function*/
 extern int STREAM_SHEAR_STRESS; /* streamwise shear stress function*/
+extern int STREAM_TENSION;      /* streamwise Stress Difference*/
 extern int STRESS_CONT;	        /* stress at vertex & midside nodes*/
 extern int STRESS_TENSOR;	/* stress tensor for mesh deformation 
 				 * (Lagrangian pressure) */
@@ -635,6 +645,9 @@ extern int TFMP_INV_PECLET;
 extern int TFMP_KRG;
 extern int VELO_SPEED;              /* i.e., velocity magnitude */
 extern int GIES_CRIT;              /* Giesekus Flow Character */
+extern int HELICITY;              /* v dot vorticity  */
+extern int LAMB_VECTOR;           /* Lamb Vector = vorticity x v  */
+extern int Q_FCN;           /* 2nd invariant of grad_v  */
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *
