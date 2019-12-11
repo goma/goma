@@ -1218,14 +1218,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
 }
 /**************************************************************************/
 
-double *x_static;
-double *x_old_static;
-double *xdot_static;
-double *xdot_old_static;
-double *x_dbl_dot_static;
-double *x_dbl_dot_old_static;
-
-
 static void
 load_varType_Interpolation_ptrs(const int varType, double **esp_ptr,
 				double **esp_old_ptr, double **esp_dot_ptr)

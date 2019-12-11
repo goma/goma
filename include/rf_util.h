@@ -240,5 +240,10 @@ extern void read_porosity_data
 
 extern Strcpy_rtn strcpy_rtn;
 
+extern int
+rd_exoII_ev(double *u, int varType, int mn, MATRL_PROP_STRUCT *matrl, 
+	    char **var_names, int num_nodes, int num_vars, int exoII_id,
+	    int time_step, int spec);
+
 #endif
 

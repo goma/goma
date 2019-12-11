@@ -310,47 +310,6 @@ EXTERN void load_MandE_flux
 EXTERN void calc_darcy_velocity
 (void );
 
-EXTERN void load_gas_conc
-(double ,			/* porosity                                  */
-       double ,			/* cap_pres                                  */
-       double [2]);		/* d_cap_pres                                */
-
-EXTERN void load_gas_conc_flat
-(double ,			/* porosity                                  */
-       double ,			/* cap_pres                                  */
-       double [2]);		/* d_cap_pres                                */
-
-EXTERN void load_bulk_density
-(double ,			/* porosity                                  */
-       double ,			/* cap_pres                                  */
-       double ,			/* saturation                                */
-       double [2]);		/* d_cap_pres                                */
-
-EXTERN void load_liq_perm
-(double ,			/* porosity                                  */
-       double ,			/* cap_pres                                  */
-       double ,			/* saturation                                */
-       double [2]);		/* d_cap_pres                                */
-
-EXTERN void load_gas_perm
-(double ,			/* porosity                                  */
-       double ,			/* cap_pres                                  */
-       double ,			/* saturation                                */
-       double [2]);		/* d_cap_pres                                */
-
-EXTERN void load_gas_diff
-(double ,			/* porosity                                  */
-       double ,			/* cap_pres                                  */
-       double ,			/* saturation                                */
-       double [2],		/* d_cap_pres                                */
-       int );			/* species number                            */
-
-EXTERN void load_mass_flux
-(double ,			/* porosity                                  */
-       double ,			/* cap_pres                                  */
-       double ,			/* saturation                                */
-       double [2]);		/* d_cap_pres                                */
-
 EXTERN void porous_pressure
 (double *,		/* func                                      */
        double [],		/* d_func                                    */

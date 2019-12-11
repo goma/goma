@@ -5464,9 +5464,6 @@ load_saturation(double porosity, double cap_pres, double d_cap_pres[2])
   double alpha_drain = 0.0, beta_drain = 0.0, s_min, sat_switch, pc_switch, pc_switch_clip;
   double alpha_wet = 0.0, beta_wet = 0.0, s_max;
   int ip, mat_ielem;
-  extern int PRS_mat_ielem;
-
-
 
   /*
    *  Find which model is used for saturation and calculate:

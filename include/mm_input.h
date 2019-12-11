@@ -97,8 +97,6 @@ extern int count_list		/* mm_input.c                                */
        const char ,		/* ch_term                                   */
        const char *);		/* stringend                                 */
 
-extern int look_for_n_doubles(FILE *ifp, int n, double *buf);
-
 extern int look_for_optional	/* mm_input.c                                */
 (FILE *,			/* ifp                                       */
        const char *,		/* string                                    */

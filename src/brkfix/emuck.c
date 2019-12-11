@@ -15,8 +15,6 @@
  * $Header: /projects/seataf/CVS/ACCESS/analysis/goma/brkfix/emuck.c,v 1.2 2007-04-01 20:23:32 tabaer Exp $
  */
 
-#define GOMA_EMUCK_C
-
 #include <stdio.h>
 
 #include "goma.h"

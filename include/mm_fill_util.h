@@ -96,7 +96,7 @@ EXTERN void calc_unseeded_edge_tangents_TET(
 EXTERN void simple_normalize_vector(struct Rotation_Vectors *, /* vector */
                                     const int); /* dim                */
 
-EXTERN int load_bf_grad();
+EXTERN int load_bf_grad(void);
 
 EXTERN int load_bf_mesh_derivs(void);
 

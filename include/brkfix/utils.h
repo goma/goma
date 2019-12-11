@@ -40,11 +40,6 @@ EXTERN int count_node_node_interactions	/* utils.c */
        int *,			/* elem_ptr */
        int *);			/* node_list */
 
-EXTERN int fence_post		/* utils.c */
-(int ,			/* val    - integer whose category we seek */
-       int *,			/* array  - where to look  */
-       int );			/* length - how far to search in array */
-
 EXTERN int findex_mono		/* utils.c */
 (int ,			/* val - what integer value to seek */
        int *,			/* start - where to begin looking */
@@ -69,12 +64,6 @@ EXTERN void proc_sort		/* utils.c */
        int ,			/* len - node_list[0...len-1] */
        int ,			/* len_assignment */
        int *);		        /* assigment - how we will sort nodes */
-
-EXTERN void zero_base		/* utils.c */
-(Exo_DB *);		/* E - pointer to an EXODUS II database */
-
-EXTERN void one_base		/* utils.c */
-(Exo_DB *);		/* x = pointer to an EXODUS II FE database */
 
 EXTERN void isort		/* utils.c                                   */
 (const int ,		/* length                                    */

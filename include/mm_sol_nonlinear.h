@@ -27,8 +27,6 @@
 #define EXTERN extern
 #endif
 
-#include "dg_utils.h"
-
 EXTERN int solve_nonlinear_problem
 (struct Aztec_Linear_Solver_System *, /* ams - ptrs to Aztec linear    *
 					     * systems                       */

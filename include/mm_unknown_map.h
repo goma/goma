@@ -21,21 +21,21 @@
 #ifndef GOMA_MM_UNKNOWN_MAP_H
 #define GOMA_MM_UNKNOWN_MAP_H
 
-EXTERN void setup_local_nodal_vars
+extern void setup_local_nodal_vars
 (Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
        Dpi *);			/* dpi - ptr to parallel info                */
 
-EXTERN void setup_external_nodal_vars
+extern void setup_external_nodal_vars
 (Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
        Dpi *,                   /* dpi - ptr to parallel info                */
        Comm_Ex **);
 
-EXTERN int find_MaxUnknownNode
+extern int find_MaxUnknownNode
 (void);
 
 extern void print_vars_at_nodes(void);
 
-EXTERN void set_unknown_map
+extern void set_unknown_map
 (Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
        Dpi *);			/* dpi - ptr to parallel info                */
 

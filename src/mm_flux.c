@@ -4429,8 +4429,6 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
   int err=0;
   int mn, ip, ip_total;
   double sum = 0.0;
-  extern int PRS_mat_ielem;
-  extern int MMH_ip; 
 #ifdef PARALLEL
   double sum0=0.0;
   double delta_sum=0.0;

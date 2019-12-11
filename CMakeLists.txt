@@ -148,7 +148,6 @@ set(GOMA_INCLUDES
     include/bc_surfacedomain.h
     include/brkfix/
     include/brk_utils.h
-    include/dg_utils.h
     include/dp_comm.h
     include/dpi.h
     include/dp_map_comm_vec.h
@@ -311,7 +310,6 @@ set(GOMA_SOURCES
     src/bc_surfacedomain.c
     src/brkfix/
     src/brk_utils.c
-    src/dg_utils.c
     src/dp_comm.c
     src/dp_map_comm_vec.c
     src/dp_utils.c

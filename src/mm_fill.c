@@ -134,7 +134,6 @@ int matrix_fill_full(struct Aztec_Linear_Solver_System *ams,
 {
   int ielem=0, e_start=0, e_end=0, ebn=0 ;
   char yo[] = "matrix_fill_full";
-  extern int PRS_mat_ielem;
   int err, err_global;
   
 #define debug_subelement_decomposition 0
@@ -318,9 +317,6 @@ matrix_fill(
      ******************************************************************************/
 
 {
-  extern int MMH_ip;
-  extern int PRS_mat_ielem;
-
   double delta_t, theta, time_value, h_elem_avg;  /*see arg list */
   int ielem, num_total_nodes;
   
@@ -2635,10 +2631,8 @@ matrix_fill(
         index = exo->elem_elem_pntr[ielem] + face;
         neighbor = exo->elem_elem_list[index];
 
-        if (Num_Proc > 1 && exo->elem_elem_list[index] == -1 &&
-            dpi->elem_elem_list_global[index] != -1
-            && proc_to_neighbor(dpi->elem_elem_proc_global[index], dpi) != -1) {
-          neighbor = -2; // set flag for using dg_neighbor_data when we have a parallel neighbor
+        if (Num_Proc > 1 ) {
+          WH(-1, "DG doesn't seem to work in parallel");
         }
 
         id_side = face + 1;
@@ -3484,9 +3478,6 @@ matrix_fill_stress(
 	    int zeroCA)                   /* boolean to zero zeroCA */
 
 {
-  extern int MMH_ip;
-  extern int PRS_mat_ielem;
-
   double delta_t, theta, time_value;  /*see arg list */
   int ielem, num_total_nodes;
   

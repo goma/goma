@@ -48,6 +48,8 @@
 
 #include "exo_struct.h"
 
+#include "rd_pixel_image.h"
+
 #include "goma.h"
 
 
@@ -75,15 +77,6 @@
 ******************************************************************************/
 
 /******************** PROTOTYPES FOR STATIC FUNCTIONS ************************/
-int rd_image_to_mesh
-( int ,                  /* Index of external field */
-        const Exo_DB *);      /* Exodus database */
-
-int rd_image_to_mesh2
-( int ,                  /* Index of external field */
-        const Exo_DB *);      /* Exodus database */
-
-
 static void read_initial_guess	/* rf_util.c                                 */
 (double [],		/* u                                         */
        const int ,		/* np                                        */

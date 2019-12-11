@@ -60,9 +60,7 @@ static char rcsid[] =
 
 #include "mm_eh.h"
 #include "mm_more_utils.h"
-#define MM_POST_PROC_DEFINE
 #include "mm_post_proc.h"
-#undef MM_POST_PROC_DEFINE
 #include "mm_fill_ptrs.h"
 #include "mm_fill_population.h"
 
@@ -3560,7 +3558,6 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 #endif
 
   struct Porous_Media_Terms pm_terms;   /*added for POROUS_LIQUID_ACCUM_RATE*/
-  extern int PRS_mat_ielem;             /*Added for hysteretic saturation model */
 
   /* 
    * BEGINNING OF EXECUTABLE STATEMENTS

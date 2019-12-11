@@ -82,20 +82,6 @@ int w;
  * Declarations of static functions defined in this file.
  */
 
-void predict_solution
-(int ,			/* N */
-       double ,			/* delta_t */
-       double ,			/* delta_t_old */
-       double ,			/* delta_t_older */
-       double ,			/* theta */
-       double  [],		/* x */
-       double  [],		/* x_old */
-       double  [],		/* x_older */
-       double  [],		/* x_oldest */
-       double  [],		/* xdot */
-       double  [],	        /* xdot_old */
-       double  []);		/* xdot_older */
-
 static void predict_solution_newmark
 (int ,			/* N */
        double ,			/* delta_t */

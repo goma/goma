@@ -28,17 +28,6 @@
 #define EXTERN extern
 #endif
 
-EXTERN void zero_base
-(Exo_DB *);		/* E - ptr to EXODUS II FE db                */
-
-EXTERN void one_base
-(Exo_DB *);		/* E - ptr to EXODUS II FE db                */
-
-#if 0
-EXTERN Element_shape type2shape
-(const Element_type );
-#endif
-
 EXTERN int find_element_friends  // Outputs number of friends found
 ( Exo_DB *,   // Exodus database
 	int,        // Element of which I want to find friends

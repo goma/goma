@@ -57,7 +57,6 @@ static char rcsid[] =
 #include "shell_tfmp_util.h"
 #include "shell_tfmp_struct.h"
 
-#define _MM_FILL_SHELL_C
 #include "goma.h"
 
 

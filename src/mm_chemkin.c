@@ -54,7 +54,6 @@
 
 #include "mm_chemkin.h"
 
-#define GOMA_MM_INPUT_C
 #include "goma.h"
 
 /*****************************************************************************/

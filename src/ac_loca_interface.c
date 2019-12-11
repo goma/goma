@@ -130,9 +130,6 @@ extern int mf_setup
        int *);                 /* allocated */
 #endif
 
-extern int do_loca (Comm_Ex *, Exo_DB *, Dpi *);
-
-
 /* Define passdown structure: this structure is global to this file, and
  * provides a way to pass variables from the top solve_continuation routine
  * down to the various wrapper routines below, without passing through the

@@ -34,8 +34,6 @@
 #define EXTERN extern
 #endif
 
-#include "dg_utils.h"
-
 struct LS_Mass_Lumped_Penalty {
   dbl penalty[MDE];
   dbl penalty_old[MDE];

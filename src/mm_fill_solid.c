@@ -49,7 +49,7 @@ static char rcsid[] = "$Id: mm_fill_solid.c,v 5.13 2010-01-10 23:00:17 hkmoffa E
 
 #include "mm_eh.h"
 
-#define _MM_FILL_SOLID_C
+#define GOMA_MM_FILL_SOLID_C
 #include "goma.h"
 
 
@@ -3206,8 +3206,6 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
  int a=0, b, j, p, q, dim, var, w, v, dofs, err, mat_ielem;
  int SPECIES = MAX_VARIABLE_TYPES;
  dbl p_gas_star = 0.0;
- extern int PRS_mat_ielem;
-
 
   dbl thermexp;
   dbl speciesexp[MAX_CONC];

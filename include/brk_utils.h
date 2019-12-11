@@ -7,8 +7,8 @@ extern void check_for_brkfile(char* brkfile_name);
 
 extern void write_brk_file(char* brkfile_name, Exo_DB *exo);
 
-extern void call_brk();
+extern void call_brk(void);
 
-extern void fix_output();
+extern void fix_output(void);
 
 #endif

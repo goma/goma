@@ -28,7 +28,6 @@ static char rcsid[] = "$Id: sl_aux.c,v 5.1 2007-09-18 18:53:47 prschun Exp $";
 
 #define TINY 1.0e-20
 
-#define GOMA_SL_AUX_C
 #include "goma.h"
 
 /* The lu_decomp_backsub_driver function manages the access to the 

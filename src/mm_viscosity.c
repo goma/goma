@@ -48,7 +48,7 @@
 
 #include "mm_eh.h"
 
-#define _MM_VISCOSITY_C
+#define GOMA_MM_VISCOSITY_C
 #include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ***********************

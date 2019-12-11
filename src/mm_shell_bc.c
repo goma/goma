@@ -47,11 +47,10 @@
 #include "mm_qp_storage.h"
 
 #include "mm_eh.h"
-#include "shell_tfmp_util.h"
-
-#define eps(i,j,k)   ( (i-j)*(j-k)*(k-i)/2 )
 
 #define GOMA_MM_SHELL_BC_C
+#include "mm_shell_bc.h"
+#include "shell_tfmp_util.h"
 #include "goma.h"
 
 /*

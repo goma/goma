@@ -31,7 +31,6 @@
 #include "sl_epetra_util.h"
 
 #define GOMA_RF_SOLVE_SEGREGATED_C
-#include "dg_utils.h"
 #include "el_quality.h"
 #include "goma.h"
 #include "mm_solve_linear_segregated.h"
@@ -42,9 +41,6 @@ static int discard_previous_time_step(int num_unks, double *x, double *x_old,
                                       double *x_older, double *x_oldest,
                                       double *xdot, double *xdot_old,
                                       double *xdot_older);
-
-/* rf_solve.c */
-extern void initial_guess_stress_to_log_conf(double *x, int num_total_nodes);
 
 double vector_distance_squared(int size, double *vec1, double *vec2,
                                int ignore_pressure, int imtrx) {
@@ -750,18 +746,6 @@ void solve_problem_segregated(
           x_AC_dot_older[pg->imtrx] = NULL;
           x_AC_pred[pg->imtrx] = NULL;
         }
-      }
-    }
-
-    dg_neighbor_type *dg_neighbor_data = NULL;
-    if (Num_Proc > 1 && parallel_discontinuous_galerkin_enabled(pd_glob, upd)) {
-      dg_neighbor_data = calloc(1, sizeof(dg_neighbor_type));
-
-      err = setup_dg_neighbor_data(pd_glob, upd, exo, dpi, dg_neighbor_data);
-      check_parallel_error("Setup Discontinuous Galerkin Neighbor Data");
-
-      if (err) {
-        goto free_and_clear;
       }
     }
 

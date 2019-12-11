@@ -65,7 +65,7 @@
 #include "user_bc.h"
 
 
-#define _BC_INTEG_C
+#define GOMA_BC_INTEG_C
 #include "goma.h"
 
 int

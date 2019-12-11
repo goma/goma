@@ -53,7 +53,6 @@ static char rcsid[] =
 
 #include "sl_stratimikos_interface.h"
 
-#include "dg_utils.h"
 #define GOMA_MM_SOL_NONLINEAR_C
 #include "goma.h"
 
@@ -97,10 +96,6 @@ static int first_linear_solver_call=TRUE;
 
 #include "mm_eh.h"
 
-
-/* EDW: This function invokes LOCA bordering algorithms as needed. */
-extern int continuation_hook
-(double *, double *, void *, double, double);
 
 static int soln_sens		/* mm_sol_nonlinear.c                        */
 (double ,			/* lambda - parameter                        */

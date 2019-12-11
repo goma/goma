@@ -45,11 +45,6 @@
 #define GOMA_MM_BC_C
 #include "goma.h"
 
-
-#ifndef MAX_NODAL_BCS
-#define MAX_NODAL_BCS  35
-#endif
-
 /*
  * These two workhorse variables help get more specific information out
  * to the generic error handler. They're declared here so they may be used
@@ -2022,34 +2017,6 @@ set_up_Embedded_BC ()
   /*     WH(-1,"To add surface tension add 'BC = LS_CAPILLARY LS 0' in the input file.\n"); */
   /*   } */
 }
-/*****************************************************************************/
-
-#if 0
-static int **alloc_bc_list_node(void)
-    
-     /**************************************************************************
-      *
-      * alloc_bc_list_node():
-      *
-      *  This function allocates a vector of pointers to ints of
-      *  length (MAX_VARIABLE_TYPES +  MAX_CONC) and then populates
-      *  those pointers by allocating a vector of ints of length
-      *  MAX_NODAL_BCS. The resulting array looks like an integer
-      *  array of size:
-      *
-      * bc_list_node[MAX_VARIABLE_TYPES +  MAX_CONC][MAX_NODAL_BCS]
-      *
-      *  The elements of the array are initialized to the value of -1.
-      *************************************************************************/
-{
-  int eqn;
-  int **bc_list_node = (int **) alloc_ptr_1(MAX_VARIABLE_TYPES +  MAX_CONC);
-  for (eqn = 0; eqn < (MAX_VARIABLE_TYPES + MAX_CONC); eqn++) {
-    bc_list_node[eqn] = alloc_int_1(MAX_NODAL_BCS, -1);
-  }
-  return bc_list_node;
-}
-#endif
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/

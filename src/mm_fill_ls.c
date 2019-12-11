@@ -195,14 +195,13 @@ static void apply_adc_function(double *, Exo_DB *, double *, double, double);
 static int is_LS_spurious(Exo_DB *, double *, int, double, double *);
 static void purge_spurious_LS(double *, Exo_DB *, int);
 
-#define GRADIENT TRUE
-#define STREAMWISE FALSE
 #define EXPLICIT FALSE
 #define MAX_STEP 500
-#define BASE_ELEM_SIG_CROSS_TOL 1.e-12
 #define SUBELEM_SIG_CROSS_TOL 1.e-6
 
 #ifndef COUPLED_FILL
+#define GRADIENT TRUE
+#define STREAMWISE FALSE
 void semi_lagrange_step(const int num_total_nodes, int num_total_unknowns,
                         int num_fill_unknowns, double x[], double F[],
                         double F_old[], double Fdot[], double Fdot_old[],
@@ -2801,6 +2800,7 @@ int current_elem_on_isosurface(int isovar, double isoval) {
   return (FALSE);
 }
 /*
+#define BASE_ELEM_SIG_CROSS_TOL 1.e-12
 int
 significant_element_crossing ( int elem,
                                double x[],

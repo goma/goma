@@ -83,16 +83,6 @@ EXTERN int assemble_momentum_path_dependence
         double ,                /* dt, current time step size                */
 	const PG_DATA * );     /* PG data needed for continuity stabilization */
 
-EXTERN int assemble_continuity_path_dependence
-(dbl,                     /* time_value */
-       dbl ,			/* tt - to vary time integration from 
-				   explicit (tt = 1) to implicit (tt = 0)    */
-       dbl ,			/* dt - current time step size               */
-       const PG_DATA *);	/* d(v_avg)dvj for PSPG calcs */
-
-EXTERN int assemble_extension_velocity_path_dependence
-( );			/* no args */
-
 #if 0 
 EXTERN int assemble_continuity_path_dependence
 (double ,                 /* time_value                                */
@@ -361,15 +351,6 @@ assemble_cap_denner_diffusion(double dt, double scale);
 EXTERN int
 assemble_cap_denner_diffusion_n(double dt, double scale);
 
-EXTERN int
-assemble_cap_hysing(double dt, double scale);
-
-EXTERN int
-assemble_cap_denner_diffusion(double dt, double scale);
-
-EXTERN int
-assemble_cap_denner_diffusion_n(double dt, double scale);
-
 EXTERN void grad_vector_fv_fill
 ( double ***,
 		 double ( *)[DIM][DIM][DIM],
@@ -540,10 +521,6 @@ EXTERN void
 fluid_stress_conf( double Pi[DIM][DIM],
                    STRESS_DEPENDENCE_STRUCT *d_Pi);
 
-EXTERN void fluid_stress_conf
-( double [DIM][DIM],                      /* Pi[DIM][DIM] */
-         STRESS_DEPENDENCE_STRUCT * );          /* d_Pi         */
-
 EXTERN void heat_flux
 ( double [DIM],                      /* q[DIM] */
          HEAT_FLUX_DEPENDENCE_STRUCT *,          /* dq     */
@@ -558,15 +535,6 @@ EXTERN void acoustic_flux
 		 
 EXTERN int assemble_pf_capillary
 ( double * );
-
-EXTERN int assemble_qvapor_source 
-( const double []) ;
-
-EXTERN int assemble_qrad_source 
-(double,
-		double, 
-		double,
-		double);
 
 EXTERN double visc_diss_acoustic_source 
 (HEAT_SOURCE_DEPENDENCE_STRUCT *,

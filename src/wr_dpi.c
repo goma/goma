@@ -66,15 +66,6 @@ static char rcsid[] = "$Id: wr_dpi.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
  */
 
 
-
-#ifdef  NO_NETCDF_2
-#define NETCDF_3
-#endif
-
-#ifndef NO_NETCDF_2
-#define NETCDF_2
-#endif
-
 #ifndef NC_MAX_VAR_DIMS
 #define NC_MAX_VAR_DIMS		MAX_VAR_DIMS    
 #endif

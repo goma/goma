@@ -54,7 +54,6 @@ static char rcsid[] =
 #include "sl_util_structs.h"
 #include "mm_input.h"
 
-#define GOMA_MM_INPUT_BC_C
 #include "goma.h"
 
 /*
@@ -91,10 +90,10 @@ Strcpy_rtn strcpy_rtn;		/* Data type def'd in std.h */
 
 //static char current_mat_file_name[MAX_FNL];
 
-#define NO_USER  NULL
-#define NO_INPUT 0
-#define SCALAR_INPUT 1
-#define VECTOR_INPUT 3
+//  #define NO_USER  NULL
+//  #define NO_INPUT 0
+//  #define SCALAR_INPUT 1
+//  #define VECTOR_INPUT 3
 
 /*************** R O U T I N E S   I N   T H E   F I L E ***********************
  *

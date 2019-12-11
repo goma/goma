@@ -105,7 +105,7 @@ EXTERN void vector_scaling
        double []);		/* scale */
 
 int
-check_compatible_solver();
+check_compatible_solver(void);
 
 /*
  * Prototypes from sl_matrix_dump.c

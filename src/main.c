@@ -78,7 +78,6 @@ extern void handle_ieee(void );
 #include <fenv.h>
 #endif
 
-#define GOMA_MAIN_C
 #include "goma.h"
 
 /*
@@ -223,7 +222,6 @@ int Num_Proc = 1;
 int ProcID = 0;
 int Dim = -1;
 
-int unlink(const char *);
 int unlerr ;
 
 MPI_Request *Request = NULL;

@@ -284,13 +284,6 @@ ls_modulate_property_offset ( double p1,
                        double dpdF[MDE],
                        double *factor );
 
-EXTERN int level_set_property_offset
-( const double,          /*  p0           */
-        const double,          /*  p1           */
-        const double,          /*  width        */
-        double *,              /* *pp           */
-        double [MDE]);
-
 EXTERN int is_xfem_interp
 ( const int);		/* interp type */
 
@@ -559,12 +552,6 @@ EXTERN void map_subelement_stu
         Integ_Elem *,
         double * );
                     
-void subelement_J
-( Integ_Elem *,
-        double *,
-        double [DIM][DIM],
-        int );
-
 EXTERN double subelement_detJ
 ( Integ_Elem *,
         double *,
@@ -708,12 +695,6 @@ EXTERN int gather_surface_subgrid_integration_pts
 		double (*)[DIM], 
 		double *, 
 		int  );
-
-
-EXTERN void map_subelement_stu
-( double *,
-        Integ_Elem *,
-        double * );
 
 
 EXTERN void subelement_J

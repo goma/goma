@@ -26,6 +26,10 @@
 #define EXTERN extern
 #endif
 
+EXTERN int rd_image_to_mesh(int N_ext, Exo_DB *exo);
+
+EXTERN int rd_image_to_mesh2(int N_ext, Exo_DB *exo);
+
 EXTERN double calc_error
 (double ***pixdata, 
        int pixsize[], 

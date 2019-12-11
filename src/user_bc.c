@@ -57,19 +57,7 @@ static char rcsid[] =
  * Prototype declarations of functions defined in this file.
  */
 
-#ifdef EXTERN
-#undef EXTERN
-#endif
-
-#define EXTERN /* nothing */
-
 #include "user_bc.h"
-
-#ifdef EXTERN
-#undef EXTERN
-#endif
-
-#define EXTERN extern
 
 /*
  * Prototype declarations of functions not defined in this file.

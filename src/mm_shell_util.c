@@ -53,7 +53,8 @@ static char rcsid[] =
 #include "mm_fill_shell.h"
 #include "mm_std_models_shell.h"
 #include "shell_tfmp_util.h"
-#define _MM_SHELL_UTIL_C
+
+#include "mm_shell_util.h"
 #include "goma.h"
 
 #include <limits.h>
@@ -5062,8 +5063,6 @@ double shell_saturation_pressure_curve(
   dbl Pcap = Patm-Pliq;
   dbl dPdP = -1.0;
 
-#define _USE_MATH_DEFINES  
-  
   /* Calculate capillary radius */
   dbl Rc    = 2*sigma*cos(theta/180.0*PI)/Pcap;
   dbl Rc_P  = -2*sigma*cos(theta/180.0*PI)/pow(Pcap,2)*dPdP;

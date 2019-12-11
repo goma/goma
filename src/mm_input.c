@@ -55,15 +55,12 @@ static char rcsid[] =
 #include "mm_post_def.h"
 
 #include "sl_util_structs.h"
-#include "mm_input.h"
 
 #include <string.h>
 
 #define GOMA_MM_INPUT_C
+#include "mm_input.h"
 #include "goma.h"
-
-extern void print_code_version	/* main.c -  */
-(void );
 
 /*
  * Hey! This is the *one* place where these are defined. All other locations
@@ -127,8 +124,8 @@ static int	run_aprepro=0;
 
 static char current_mat_file_name[MAX_FNL];
 
-#define NO_USER  NULL
-#define NO_INPUT 0
+// #define NO_USER  NULL
+// #define NO_INPUT 0
 #define SCALAR_INPUT 1
 #define VECTOR_INPUT 3
 

@@ -58,7 +58,7 @@ static char rcsid[] =
 
 #define eps(i,j,k)   ( (i-j)*(j-k)*(k-i)/2 )
 
-#define _MM_NS_BC_C
+#define GOMA_MM_NS_BC_C
 #include "goma.h"
 
 /*

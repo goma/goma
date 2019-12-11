@@ -46,19 +46,14 @@
 #include "mm_as.h"
 
 #include "mm_eh.h"
-#include "mm_fill_stress.h"
 
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
 
 #define GOMA_MM_FILL_STRESS_C
+#include "mm_fill_stress.h"
 #include "goma.h"
 
-
-
-extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
-			double *W, double *WORK, int *LWORK, int *INFO,
-			int len_jobz, int len_uplo);
 
 extern struct Boundary_Condition *inlet_BC[MAX_VARIABLE_TYPES+MAX_CONC];
 

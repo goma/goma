@@ -1304,7 +1304,7 @@ struct Second_LS_Phase_Properties
 
   int SpeciesSourceModel[MAX_CONC];
   dbl speciessource[MAX_CONC];
-  int speciessourcemask[2][MAX_CONC];;
+  int speciessourcemask[2][MAX_CONC];
   dbl speciessource_phase[MAX_PHASE_FUNC][MAX_CONC];
   int use_species_source_width[MAX_CONC];
   dbl species_source_width[MAX_CONC];

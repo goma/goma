@@ -372,7 +372,6 @@ RF_SRC= rf_allo.c\
 	rf_solve_segregated.c\
         rf_util.c\
         rf_vars.c\
-	dg_utils.c\
         wr_dpi.c\
         wr_side_data.c\
         wr_soln.c\
@@ -405,7 +404,6 @@ RF_INC= rf_allo.h\
         rd_exo.h\
         rd_mesh.h\
 	rd_pixel_image.h\
-	dg_utils.h\
         wr_dpi.h\
         wr_exo.h\
         wr_side_data.h\

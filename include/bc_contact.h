@@ -195,15 +195,6 @@ EXTERN int lookup_active_dof
        int,					/* Current DOF */
        int);					/* Proc_Elem_Connect */
 
-EXTERN int assemble_qvapor_source
-( const double [] );
-
-EXTERN int assemble_qrad_source
-(double,
-        double,
-        double,
-        double );
-
 EXTERN int assemble_embedded_bc 
 ( int ,      /* element number */
 	double [],     /* Solution vector for the current processor    */

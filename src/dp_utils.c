@@ -416,7 +416,6 @@ check_parallel_error_FL(char *errstring, char *file_name, int lineno)
      *   this routine posts an error message and terminates GOMA.
      ********************************************************************/
 {
-  extern int parallel_err, parallel_err_global;
 #ifdef PARALLEL
 
   MPI_Allreduce(&parallel_err, &parallel_err_global, 1,

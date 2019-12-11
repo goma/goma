@@ -71,7 +71,7 @@
 
 #include "sl_util.h"
 
-#define _MM_FILL_FILL_C
+#define GOMA_MM_FILL_FILL_C
 #include "goma.h"
 
 /*

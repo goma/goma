@@ -92,8 +92,6 @@ extern double second_();
 #define MAX_ITRS 2
 #define MODE     6
 
-#define ORD_SYM  0  /* meaningless for this driver */
-#define GEN_SYM  1  /* meaningless for this driver */
 #define SHIFTI   3  /* Shift and Invert */
 #define CAYLEY   4  /* mode 4 in dnaupc, used for Cayley transform */
 

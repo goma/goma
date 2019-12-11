@@ -51,7 +51,7 @@
  
 #include "mm_eh.h"
 
-#define GOMA_BC_SURFACE_DOMAIN_C
+#include "bc_surfacedomain.h"
 #include "goma.h"
 
 /*****************************************************************************/

@@ -84,7 +84,6 @@
  * Revised:  1998/01/20 15:06 MST pasacki@sandia.gov
  */
 
-#define GOMA_BRK_C
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -279,25 +278,6 @@ extern int interface
        dbl,			/* eigtol - tolerance on eigenvectors */
        long);			/* seed - for random graph mutations */ 
 #endif
-
-extern int wr_mesh_exo		/* wr_exo.c */
-(Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
-       char *,			/* filename - where to write */
-       int);			/* verbosity - talk while writing */
-
-extern void wr_resetup_exo	/* wr_exo.c */
-(Exo_DB *,		/* exo - ptr to full ripe EXODUS II fe db */
-       char *,			/* filename - where to write */
-       int );			/* verbosity - 0 for quiet, more to talk */
-
-extern void wr_result_exo    /* wr_exo.c */
-        (Exo_DB *exo, char *filename);			/* verbosity - 0 for quiet, more to talk */
-
-extern int wr_dpi		/* wr_dpi.c */
-(Dpi *,			/* fantastic structure defd in "dpi.h" */
-       char *,			/* filename */
-       int );			/* verbosity - how much to talk */
-
 
 static int integer_compare	/* used internally by qsort() brk.c */
 (const void *, 

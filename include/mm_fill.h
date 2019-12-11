@@ -30,8 +30,6 @@
 #define EXTERN extern
 #endif
 
-#include "dg_utils.h"
-
 extern int matrix_fill_full
 (struct Aztec_Linear_Solver_System *,
        double [],   /* x - Solution vector                       */	

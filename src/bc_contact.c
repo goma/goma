@@ -60,7 +60,7 @@
  
 #include "mm_eh.h"
 
-#define GOMA_BC_INTEG_C
+#define GOMA_BC_CONTACT_C
 #include "goma.h"
 
 

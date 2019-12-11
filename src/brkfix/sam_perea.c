@@ -82,11 +82,6 @@
 #include "brkfix/brkfix_types.h"
 #include "brkfix/sam_perea.h"
 
-extern int fence_post		/* utils.c */
-(int ,			/* val    - integer whose category we seek */
-       int *,			/* array  - where to look  */
-       int );			/* length - how far to search in array */
-
 void
 assess_weights(Exo_DB *x, 
 	       Bevm ***mult,

@@ -43,7 +43,6 @@ static char rcsid[] = "$Id: mm_qtensor_model.c,v 5.2 2009-05-20 15:31:33 hkmoffa
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-#include "mm_qtensor_model.h"
 
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
@@ -54,6 +53,7 @@ static char rcsid[] = "$Id: mm_qtensor_model.c,v 5.2 2009-05-20 15:31:33 hkmoffa
 #include "mm_std_models.h"
 
 #define GOMA_MM_QTENSOR_MODEL_C
+#include "mm_qtensor_model.h"
 #include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************

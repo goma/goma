@@ -54,7 +54,6 @@ static char rcsid[] = "$Id: mm_fill_common.c,v 5.2 2008-03-22 00:55:49 hkmoffa E
 #include "mm_std_models.h"
 #include "mm_fill_common.h"
 
-#define GOMA_MM_STD_MODELS_C
 #include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************
