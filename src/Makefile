@@ -243,7 +243,7 @@ DEBUG_FLAGS ?= -g -gdwarf-2
 CCFLAGS ?= -O2
 
 # C/C++ warning flags
-C_WARN_FLAGS ?= -Wall -Wextra
+C_WARN_FLAGS ?= -Wall -Wextra -Wno-unused-parameter
 CXX_WARN_FLAGS ?= -Wall -Wextra
 
 # Fortran warning flags
