@@ -2166,7 +2166,8 @@ int load_bf_mesh_derivs(void) {
   int mdofs; /* degrees of freedom for mesh displacement */
   /* unknowns interpolated using bfm */
   int mn = ei[pg->imtrx]->mn;
-  dbl f, g[DIM], g2[DIM];     /* Temporary variables for convenience. */
+  dbl f, g[DIM] = {0};      /* Temporary variables for convenience. */
+  dbl g2[DIM] = {0};
   dbl phi_m[MDE], phi_l[MDE]; /* load shapefunctions into local variables */
 
   BASIS_FUNCTIONS_STRUCT *bfl; /* Basis function of current interest */

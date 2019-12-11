@@ -526,7 +526,7 @@ extern int find_xi( int elem_id,                /*known element id number*/
   int converged, inewton; /*flag for convergence and counter for iterations*/
 
   double R[DIM]; //residual vector
-  double update[DIM]; //update for xi[]
+  double update[DIM] = {0.0}; //update for xi[]
 
   double norm; //convergence norm
 

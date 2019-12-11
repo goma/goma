@@ -176,7 +176,7 @@ invert_isoparametric_map(  int *current_ielem,  /* initial element of search */
   int dim;			/*  problem dimension */
   int converged, inewton;  /*  convergence flag, iteration counter */
   double R[MAX_PDIM];		/* residual vector for invert */
-  double update[MAX_PDIM];	/* update vector for xi */
+  double update[MAX_PDIM] = {0};	/* update vector for xi */
   double norm;			/* convergence norm */
   double max_xi, tmp;		/*  element switching vars, flags  */
   int i_max_xi, face=0, newface=0, old_ielem ;
