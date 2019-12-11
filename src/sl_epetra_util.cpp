@@ -262,8 +262,8 @@ void EpetraCreateGomaProblemGraph(struct Aztec_Linear_Solver_System *ams, Exo_DB
  * @param x Solution vector
  * @param resid_vector residual vector
  */
-void EpetraLoadLec(Exo_DB *exo, int ielem, struct Aztec_Linear_Solver_System *ams,
-    double x[], double resid_vector[])
+void EpetraLoadLec(int ielem, struct Aztec_Linear_Solver_System *ams,
+                   double resid_vector[])
 {
   int e, v, i, j, pe, pv;
   int dofs;

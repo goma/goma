@@ -1354,7 +1354,7 @@ diffusion_coefficient_model (double mu,              /* Viscosity of the liquid 
 }
 /*****************************************************************************/
 double
-porous_shell_closed_porosity_model() {
+porous_shell_closed_porosity_model(void) {
 /******************************************************************************
 *
 *  This function computes the porosity of a structured porous shell based on 
@@ -1386,7 +1386,7 @@ porous_shell_closed_porosity_model() {
 
 /*****************************************************************************/
 double
-porous_shell_closed_radius_model() {
+porous_shell_closed_radius_model(void) {
 /******************************************************************************
 *
 *  This function computes the radius of a structured porous shell based on
@@ -1419,7 +1419,7 @@ porous_shell_closed_radius_model() {
 
 /*****************************************************************************/
 double
-porous_shell_closed_height_model() {       
+porous_shell_closed_height_model(void) {       
 /******************************************************************************
 *
 *  This function computes the height of a structured porous shell based on
@@ -1445,7 +1445,7 @@ porous_shell_closed_height_model() {
 /*****************************************************************************/
 
 double
-porous_shell_cross_perm_model() {
+porous_shell_cross_perm_model(void) {
 /******************************************************************************
 *
 *  This function computes the cross permeability  of an open porous shell based on

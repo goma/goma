@@ -421,14 +421,11 @@ static int
 proc_ident(const void *arg1, 
 	   const void *arg2)
 {
-  int *a;
-  int *b;
-  
+  const int *a = (const int *)arg1;
+  const int *b = (const int *)arg2;
   short proc_a;
   short proc_b;
 
-  a = (int *)arg1;
-  b = (int *)arg2;
 
   if ( *a > keep_len_assignment-1 )
     {

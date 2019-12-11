@@ -1105,7 +1105,7 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
                             {
                               if (enunks) 
                                 {
-                                  if ((v < MESH_DISPLACEMENT1) && (v > MESH_DISPLACEMENT3))
+                                  if ((v < MESH_DISPLACEMENT1) || (v > MESH_DISPLACEMENT3))
                                     {
                                       printf("Inconsistency unless mesh\n");
                                       exit(-1);
@@ -1186,7 +1186,7 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
                             {
                               if (enunks) 
                                 {
-                                  if ((v < MESH_DISPLACEMENT1) && (v > MESH_DISPLACEMENT3)) 
+                                  if ((v < MESH_DISPLACEMENT1) || (v > MESH_DISPLACEMENT3)) 
                                     {
                                       printf("Inconsistency unless mesh\n");
                                       exit(-1);
@@ -1307,11 +1307,11 @@ load_varType_Interpolation_ptrs_mat(int imtrx, const int varType, double **esp_p
 int 
 load_elem_dofptr(const int ielem,
 		 const Exo_DB * exo,
-		 dbl * const x,
-		 dbl * const x_old,
-		 dbl * const xdot,
-		 dbl * const xdot_old,
-		 dbl * const resid_vector,
+		 const dbl *x,
+		 const dbl *x_old,
+		 const dbl *xdot,
+		 const dbl *xdot_old,
+		 const dbl *resid_vector,
 		 const int early_return) /* if true we just get 
 					  * some of the element information for 
 					  * routines that need it like 

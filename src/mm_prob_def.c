@@ -67,7 +67,7 @@ static char rcsid[] = "$Id: mm_prob_def.c,v 5.7 2010-04-07 22:27:00 prschun Exp 
  */
 
 int 
-setup_pd()
+setup_pd(void)
 {
   int	i;
   int   mn;                     /* Current material number */

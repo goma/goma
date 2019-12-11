@@ -97,8 +97,8 @@ evaluate_flux(
 			  const int species_id, /* species identification */
 			  const char *filenm, /* File name pointer */
 			  const int profile_flag,  /*  flag for printing flux profiles  */
-			  const double x[],	/* solution vector */
-			  const double xdot[],	/* dx/dt vector */
+			  const dbl *x,	/* solution vector */
+			  const dbl *xdot,	/* dx/dt vector */
 			  double J_AC[], /* vector for augmenting condition sensitivities. 
 			  May be NULL */
 			  const double delta_t, /* time-step size */
@@ -343,12 +343,12 @@ evaluate_flux(
 
 
 	  err = load_elem_dofptr( elem_list[i], 
-				  (Exo_DB*) exo,
-				  (dbl *) x,
-				  (dbl *) x,
-				  (dbl *) xdot,
-				  (dbl *) xdot,
-				  (dbl *) x,
+				  exo,
+				  x,
+				  x,
+				  xdot,
+				  xdot,
+				  x,
 				  0);
 	  EH(err, "load_elem_dofptr");
 
@@ -4019,12 +4019,12 @@ evaluate_flux(
                       dpi->elem_owner[corner_elem] == ProcID)) {
 
 	  	   err = load_elem_dofptr( corner_elem, 
-				  (Exo_DB*) exo,
-				  (dbl *) x,
-				  (dbl *) x,
-				  (dbl *) xdot,
-				  (dbl *) xdot,
-				  (dbl *) x,
+				  exo,
+				  x,
+				  x,
+				  xdot,
+				  xdot,
+				  x,
 				  0);
 	  	   EH(err, "load_elem_dofptr");
 
@@ -4567,9 +4567,9 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 	  PRS_mat_ielem = ei[pg->imtrx]->ielem - exo->eb_ptr[find_elemblock_index(ei[pg->imtrx]->ielem, exo)]; 
 
 
-          err = load_elem_dofptr(elem, (Exo_DB*) exo,
-			         (dbl *) x, (dbl *) x, (dbl *) xdot,
-				 (dbl *) xdot, (dbl *) x, 0);
+          err = load_elem_dofptr(elem, exo,
+			         x, x, xdot,
+				 xdot, x, 0);
           EH(err, "load_elem_dofptr");
 
 	  err = bf_mp_init(pd);
@@ -6140,9 +6140,9 @@ evaluate_global_flux (const Exo_DB *exo,
 	  if (( num_exterior_faces = get_exterior_faces( elem, exterior_faces, exo, dpi ) ) > 0 ) /* and if it has exterior */
 	    {
 
-	      err = load_elem_dofptr(elem, (Exo_DB*) exo,
-				     (dbl *) x, (dbl *) x, (dbl *) x,
-				     (dbl *) x, (dbl *) x, 0);
+	      err = load_elem_dofptr(elem, exo,
+				     x, x, x,
+				     x, x, 0);
 	      EH(err, "load_elem_dofptr");
 	      
 	      elem_type = ei[pg->imtrx]->ielem_type;
@@ -6547,9 +6547,9 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	   * Yes, "x" gets recycled like garbage. Fortunately, this 
 	   * routine should not write onto "x"...
 	   */
-	  err = load_elem_dofptr(elem_list[i], (Exo_DB*) exo,
-				 (dbl *) x, (dbl *) &x_sens_p[vector_id][0],
-				 (dbl *) xdot, (dbl *) xdot, (dbl *) x, 0);
+	  err = load_elem_dofptr(elem_list[i], exo,
+				 x, x_sens_p[vector_id],
+				 xdot, xdot, x, 0);
 	  EH(err, "load_elem_dofptr");
 
 	  err = bf_mp_init(pd);
@@ -7729,12 +7729,12 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                       dpi->elem_owner[corner_elem] == ProcID)) {
 
 	  	   err = load_elem_dofptr( corner_elem, 
-				  (Exo_DB*) exo,
-				  (dbl *) x,
-				  (dbl *) &x_sens_p[vector_id][0],
-				  (dbl *) xdot,
-				  (dbl *) xdot,
-				  (dbl *) x,
+				  exo,
+				  x,
+				  x_sens_p[vector_id],
+				  xdot,
+				  xdot,
+				  x,
 				  0);
 	  	   EH(err, "load_elem_dofptr");
 

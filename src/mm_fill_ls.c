@@ -4496,7 +4496,7 @@ int unique_surf(struct LS_Surf_List *list, struct LS_Surf *surf)
   return unique;
 }
 
-struct LS_Surf_List *create_surf_list()
+struct LS_Surf_List *create_surf_list(void)
 /* surface list creator */
 {
   struct LS_Surf_List *list;
@@ -5234,7 +5234,7 @@ int ls_transport_property(const double p0, const double p1, const double width,
   return (0);
 }
 
-void determine_ls_elem_overlap_state() {
+void determine_ls_elem_overlap_state(void) {
   /* For level set problems we need to know the characteristics of all of this
    * element */
   /* ls->elem_overlap_state = 0 -> no crossing in element
@@ -5904,7 +5904,7 @@ void xfem_var_diff(int var, double *vdiff, double phidiff[MDE],
  *
  * Author: Pat Notz 10/29/01
  ******************************************************************************/
-void zero_lsi() {
+void zero_lsi(void) {
   /* Sanity checking. */
   if (lsi == NULL) {
     EH(-1, "lsi Level_Set_Interface structure is NULL.");
@@ -5927,7 +5927,7 @@ void zero_lsi() {
   lsi->gfmaginv = 0.0;
 }
 
-void zero_lsi_derivs() {
+void zero_lsi_derivs(void) {
   /* Sanity checking. */
   if (lsi == NULL) {
     EH(-1, "lsi Level_Set_Interface structure is NULL.");
@@ -6526,7 +6526,7 @@ static void copy_distance_function(double *F, double **grad_F) {
  *
  * Author: Pat Notz 10/29/01
  ******************************************************************************/
-int load_lsi_derivs() {
+int load_lsi_derivs(void) {
   double F = 0, phi_j, grad_phi_j[DIM], *grad_F = NULL;
   double alpha = lsi->alpha;
   int a, b, j, var;

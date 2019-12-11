@@ -280,8 +280,8 @@ extern int interface
 #endif
 
 static int integer_compare	/* used internally by qsort() brk.c */
-(const void *, 
-       const void *);
+( const void *, 
+  const void *);
 
 int 
 brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
@@ -4990,11 +4990,9 @@ static int
 integer_compare(const void *arg1, 
                 const void *arg2)
 {
-  int *a;
-  int *b;
-  
-  a = (int *)arg1;
-  b = (int *)arg2;
+  const int *a = (const int *)arg1;
+  const int *b = (const int *)arg2;
+
 
   /*
    * Primarily, sort according to the integer name of the owning processor.

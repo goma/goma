@@ -59,7 +59,6 @@
 
 static void  bf_mat_to_Epetra ( double *,
 				int *,
-				int *,
 				Epetra_CrsMatrix *,
 				int, 
 				int,
@@ -67,7 +66,6 @@ static void  bf_mat_to_Epetra ( double *,
 
 void
 trilinos_solve_ls(double *bf_mat_, 
-		  int *i_map_,
 		  int *j_map_,
 		  double *f_rhs_,
 		  double *x_,
@@ -102,7 +100,7 @@ trilinos_solve_ls(double *bf_mat_,
   if (NewMatrix) {
     if (!FirstRun) delete A;
     A = (Epetra_CrsMatrix * ) construct_Epetra_CrsMatrix_ls ( txt_num_pts, nnz_per_row, num_cols );  
-    bf_mat_to_Epetra( bf_mat_, i_map_, j_map_, A, txt_num_pts, nnz_per_row, num_cols);
+    bf_mat_to_Epetra( bf_mat_, j_map_, A, txt_num_pts, nnz_per_row, num_cols);
   }
 
   const Epetra_Map &map = (*A).RowMatrixRowMap();
@@ -162,7 +160,6 @@ trilinos_solve_ls(double *bf_mat_,
 }
 
 static void  bf_mat_to_Epetra ( double *bf_mat_,
-				int    *i_map_,
 				int    *j_map_,
 				Epetra_CrsMatrix *A,
 				int    txt_num_pts,

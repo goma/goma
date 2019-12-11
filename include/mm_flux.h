@@ -37,8 +37,8 @@ EXTERN double evaluate_flux	/* mm_flux.c                                 */
        const int ,		/* species_id - species identification       */
        const char *,		/* filenm - File name pointer                */
        const int ,              /* flux profile print control flag           */
-       const double [],		/* x - solution vector                       */
-       const double [],		/* xdot - dx/dt vector                       */
+       const double *,		/* x - solution vector                       */
+       const double *,		/* xdot - dx/dt vector                       */
              double [],         /* J_AC - augmenting condition sensititives */
        const double ,		/* delta_t - time-step size                  */
        const double ,              /* time_value - current time                 */

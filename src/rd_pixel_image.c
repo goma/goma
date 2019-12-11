@@ -369,7 +369,7 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
   int num_blk_nodes = exo->eb_num_nodes_per_elem[ipix_blkid] * exo->eb_num_elems[ipix_blkid];
 
  
-  trilinos_solve_ls(bf_mat, i_map, j_map, f_rhs, x_fit, Atranspose_f_rhs,  
+  trilinos_solve_ls(bf_mat, j_map, f_rhs, x_fit, Atranspose_f_rhs,  
 		    txt_num_pts, exo->eb_num_nodes_per_elem[ipix_blkid],  num_blk_nodes, 1);
  
 
@@ -408,7 +408,7 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
 
    efv->ext_fld_ndl_val[N_ext] = alloc_dbl_1(exo->num_nodes, 0.0);
    printf("rd_pix_image: Allocated field %d for %s at %p\n",
-	  N_ext, efv->name[N_ext], efv->ext_fld_ndl_val[N_ext]);
+	  N_ext, efv->name[N_ext], (void *) efv->ext_fld_ndl_val[N_ext]);
    for (i = 0; i < exo->num_nodes; i++)
     {
       efv->ext_fld_ndl_val[N_ext][i] = nodal_var_vals[i];

@@ -62,6 +62,9 @@ static char rcsid[] =
 #include "mm_input.h"
 #include "goma.h"
 
+static int 
+look_forward_optional_until(FILE *ifp, const char *string, char *untilstring, char input[],
+			    const char ch_term);
 /*
  * Hey! This is the *one* place where these are defined. All other locations
  * have a mm_mp_structs and mm_mp.h to declare what these are.
@@ -610,7 +613,7 @@ look_forward_optional(FILE *ifp, const char *string, char input[],
   return(status);
 }
 
-int 
+static int 
 look_forward_optional_until(FILE *ifp, const char *string, char *untilstring, char input[],
 			    const char ch_term)
    /***********************************************************************
@@ -7274,8 +7277,9 @@ rd_solver_specs(FILE *ifp,
       /* look for optional flag to apply this card in a symmetric manner */
       err = fscanf(ifp, "%d",&symmetric_flag);
 
-      errno = 0;
-      if ((err != 0 || err != 1) && (err == EOF && errno != 0)) {
+      if (err == 0) {
+        symmetric_flag = 0;
+      } else if (err != 1) {
 	EH(-1, "Error reading symmetric flag for Ignore Dependency");
       }
       
@@ -14963,7 +14967,7 @@ scan_table_columns( int k,
  */
 
 void 
-echo_compiler_settings()
+echo_compiler_settings(void)
 {
   FILE * echo_file;
   

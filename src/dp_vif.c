@@ -102,7 +102,7 @@ extern DDD Noahs_Ark;
  */
 
 void 
-noahs_raven()
+noahs_raven(void)
 {
 #ifdef PARALLEL
   DDD n;
@@ -186,7 +186,7 @@ noahs_raven()
  */
 
 void 
-raven_landing()
+raven_landing(void)
 {
   int i;
   int m;
@@ -595,7 +595,7 @@ raven_landing()
  */
 
 void 
-noahs_ark()
+noahs_ark(void)
 {
 #ifdef PARALLEL
   int i;
@@ -2850,7 +2850,7 @@ noahs_ark()
  */
 
 void
-ark_landing()
+ark_landing(void)
 {
   int i;
   int index;
@@ -3406,7 +3406,7 @@ ark_landing()
  */
 
 void 
-noahs_dove()
+noahs_dove(void)
 {
 #ifdef PARALLEL
   int i, j, k;

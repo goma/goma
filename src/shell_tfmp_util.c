@@ -978,7 +978,7 @@ void load_gap_model(GAP_STRUCT *gap) {
 
 }
 
-void load_roller_normal_into_fv() {
+void load_roller_normal_into_fv(void) {
   // I think this function relies on shell_determinant_and_normal
   // to init fv->snormal
 

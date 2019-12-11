@@ -243,7 +243,8 @@ DEBUG_FLAGS ?= -g -gdwarf-2
 CCFLAGS ?= -O2
 
 # C/C++ warning flags
-C_WARN_FLAGS ?= -Wall
+C_WARN_FLAGS ?= -Wall -Wextra
+CXX_WARN_FLAGS ?= -Wall -Wextra
 
 # Fortran warning flags
 F_WARN_FLAGS ?=
@@ -257,7 +258,7 @@ CFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(VERSION) $(INCLUDES) $(CSTD)
 
 # C++ compiler flags
 CXXSTD ?= -std=c++11
-CXXFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(INCLUDES) -Wno-deprecated $(CXXSTD)
+CXXFLAGS = $(CCFLAGS) $(CXX_WARN_FLAGS) $(DEFINES) $(INCLUDES) -Wno-deprecated $(CXXSTD)
 
 # linker flags
 LD_EXTRA_FLAGS ?=

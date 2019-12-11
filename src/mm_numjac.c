@@ -70,17 +70,25 @@ static void compute_numerical_jacobian_errors
 #endif
 
 typedef struct {
-  int a_val, b_val;
-  dbl c_val;
-} data_t;
-
-typedef struct {
   int num_colors;
   int *column_color;
   int *colptr;
   int *rowptr;
   int nnz;
 } Coloring;
+
+static Coloring* find_coloring(struct Aztec_Linear_Solver_System *ams,
+			int num_unknowns,
+			int num_total_nodes,
+			Exo_DB *exo,
+			Dpi *dpi);
+
+static void free_coloring(Coloring *coloring); 
+
+typedef struct {
+  int a_val, b_val;
+  dbl c_val;
+} data_t;
 
 typedef struct intLinkedList {
   int val;
@@ -130,7 +138,7 @@ static void free_int_linked_list(IntLinkedList *list)
    with the same color share no rows containing
    nonzeros in that column
 */
-Coloring* find_coloring(struct Aztec_Linear_Solver_System *ams,
+static Coloring* find_coloring(struct Aztec_Linear_Solver_System *ams,
 			int num_unknowns,
 			int num_total_nodes,
 			Exo_DB *exo,
@@ -280,7 +288,7 @@ Coloring* find_coloring(struct Aztec_Linear_Solver_System *ams,
   return coloring;
 }
 
-void free_coloring(Coloring *coloring) {
+static void free_coloring(Coloring *coloring) {
   free(coloring->colptr);
   free(coloring->rowptr);
   free(coloring->column_color);
@@ -1500,8 +1508,8 @@ intcompare(const void *left, const void *right)
 {
   register int left_a_val, right_a_val;
 
-  left_a_val = ((data_t *)left)->a_val;
-  right_a_val = ((data_t *)right)->a_val;
+  left_a_val = ((const data_t *)left)->a_val;
+  right_a_val = ((const data_t *)right)->a_val;
   if (left_a_val > right_a_val)
     return 1;
   else if (left_a_val < right_a_val)

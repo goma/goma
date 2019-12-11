@@ -3531,7 +3531,7 @@ Free_Vol_Theory_Diffusivity(int species_no,  /* current species number*/
  *
  */
 int 
-Generalized_Diffusivity()
+Generalized_Diffusivity(void)
 {
   int w, w1, err=0; /* return err != 0 to signal error */ 
   for( w=0; w<pd->Num_Species_Eqn; w++)

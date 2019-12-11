@@ -42,7 +42,24 @@ extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
                         double *W, double *WORK, int *LWORK, int *INFO,
                         int len_jobz, int len_uplo);
 
-void moments_set_lognormal(int mom_index_1, int mom_index_2, int n_moments,
+static void moments_set_lognormal(int mom_index_1, int mom_index_2, int n_moments,
+                           double *moments, double *log_norm_moments);
+
+static void moment_correction_wright(double *moments, int n_moments,
+                              double *moments_corrected);
+
+static void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
+                      double *weights, double *nodes, int *n_out); 
+
+static int foam_pbe_growth_rate(double growth_rate[MAX_CONC],
+                         double d_growth_rate_dc[MAX_CONC][MDE],
+                         double d_growth_rate_dT[MAX_CONC][MDE]);
+
+static int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
+                          double d_growth_rate_dc[MAX_CONC][MDE],
+                          double d_growth_rate_dT[MAX_CONC][MDE]); 
+
+static void moments_set_lognormal(int mom_index_1, int mom_index_2, int n_moments,
                            double *moments, double *log_norm_moments) {
   int i = mom_index_1;
   int j = mom_index_2;
@@ -63,7 +80,7 @@ void moments_set_lognormal(int mom_index_1, int mom_index_2, int n_moments,
   }
 }
 
-void moment_correction_wright(double *moments, int n_moments,
+static void moment_correction_wright(double *moments, int n_moments,
                               double *moments_corrected) {
   // Marchisio, Daniele L., and Rodney O. Fox. Computational Models for
   // Polydisperse Particulate and Multiphase Systems, Cambridge University
@@ -550,7 +567,7 @@ foam_pbe_heat_source(HEAT_SOURCE_DEPENDENCE_STRUCT *d_h,
   return (h);
 }
 
-int foam_pbe_growth_rate(double growth_rate[MAX_CONC],
+static int foam_pbe_growth_rate(double growth_rate[MAX_CONC],
                          double d_growth_rate_dc[MAX_CONC][MDE],
                          double d_growth_rate_dT[MAX_CONC][MDE]) {
   double G0, T0;
@@ -1640,7 +1657,7 @@ int moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource) {
   return 0;
 }
 
-int assemble_density() /*  time step size      */
+int assemble_density(void) /*  time step size      */
 {
   int i, j, a, b;
   int peqn, pvar;

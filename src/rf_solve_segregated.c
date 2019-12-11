@@ -42,6 +42,9 @@ static int discard_previous_time_step(int num_unks, double *x, double *x_old,
                                       double *xdot, double *xdot_old,
                                       double *xdot_older);
 
+static double vector_distance_vel(int size, double *vec1, double *vec2); 
+static double vector_distance_pres(int size, double *vec1, double *vec2);
+
 double vector_distance_squared(int size, double *vec1, double *vec2,
                                int ignore_pressure, int imtrx) {
   double distance_sq = 0;
@@ -83,7 +86,7 @@ double vector_distance(int size, double *vec1, double *vec2) {
   return sqrt(distance);
 }
 
-double vector_distance_vel(int size, double *vec1, double *vec2) {
+static double vector_distance_vel(int size, double *vec1, double *vec2) {
   double distance = 0;
 #ifdef PARALLEL
   double global_distance = 0;
@@ -104,7 +107,7 @@ double vector_distance_vel(int size, double *vec1, double *vec2) {
   return sqrt(distance);
 }
 
-double vector_distance_pres(int size, double *vec1, double *vec2) {
+static double vector_distance_pres(int size, double *vec1, double *vec2) {
   double distance = 0;
 #ifdef PARALLEL
   double global_distance = 0;

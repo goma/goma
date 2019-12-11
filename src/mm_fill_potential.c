@@ -1730,7 +1730,7 @@ current_HOR_surf(
 /*****************************************************************************/
 
 int
-assemble_Enorm()
+assemble_Enorm(void)
 {
   int dim, i, j, k;
   dbl wt, detJ, h3, wt_func;
@@ -1841,7 +1841,7 @@ assemble_Enorm()
 }
 
 int
-assemble_electric_field() /* Least square equation Efield = grad (voltage) */
+assemble_electric_field(void) /* Least square equation Efield = grad (voltage) */
 {
   int dim;
   int p, a;

@@ -2329,7 +2329,7 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
        */
       efv->ext_fld_ndl_val[variable_no] = alloc_dbl_1(num_nodes, 0.0); 
       printf("rd_vectors_from_exoII: Allocated field %d for %s at %p\n",
-	     variable_no, efv->name[variable_no], efv->ext_fld_ndl_val[variable_no]);
+	     variable_no, efv->name[variable_no], (void *) efv->ext_fld_ndl_val[variable_no]);
       vdex = -1;
 #ifdef REACTION_PRODUCT_EFV
       if (TimeIntegration != STEADY)	{
@@ -2506,7 +2506,7 @@ rd_trans_vectors_from_exoII(double u[], const char *file_nm,
       if( desired_time_step == 0)
 	{
 	  fprintf(stderr, "rd_trans_vectors_from_exoII: Into existing field %d for %s at %p\n",
-		  variable_no, efv->name[variable_no], efv->ext_fld_ndl_val[variable_no]);
+		  variable_no, efv->name[variable_no], (void *) efv->ext_fld_ndl_val[variable_no]);
 	}
       vdex = -1;
       for (i = 0; i < num_vars; i++) {

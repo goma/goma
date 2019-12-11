@@ -43,16 +43,15 @@ amesos_solve_epetra( char *choice,
 		     int imtrx );
 
 EXTERN void
-trilinos_solve_ls (double *,
-		   int *,
-		   int *,
-		   double *,
-		   double *,
-		   double *,
-		   int, 
-		   int, 
-		   int,
-		   int);
+trilinos_solve_ls(double *bf_mat_, 
+		  int *j_map_,
+		  double *f_rhs_,
+		  double *x_,
+		  double *Atranspose_f_,
+		  int txt_num_pts,
+		  int nnz_per_row, 
+		  int num_cols,
+		  int NewMatrix); 
 #endif
 
 EXTERN void *

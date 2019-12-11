@@ -166,6 +166,8 @@ extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
 *  assemble_ars_source          int
 *  visc_diss_acoustic_source    double
 ******************************************************************************/
+static int
+continuous_surface_tension_old(double st, double csf[DIM][DIM], struct Level_Set_Interface *lsi_old);
 
 /*  _______________________________________________________________________  */
 
@@ -6466,7 +6468,7 @@ assemble_volume(bool owner)
  */
 
 int
-assemble_curvature ( ) /*  time step size      */
+assemble_curvature (void) /*  time step size      */
 {
   int i,j,p,a;
   int peqn, pvar;
@@ -6729,7 +6731,7 @@ assemble_curvature ( ) /*  time step size      */
  */
 
 int
-assemble_div_normals (  ) /*  time step size      */
+assemble_div_normals(void) /*  time step size      */
 {
   int i,j,p,a;
   int peqn, pvar;
@@ -7109,7 +7111,7 @@ assemble_LSvelocity( bool owner, int ielem )
  *
  */
 int
-assemble_normals( )
+assemble_normals(void)
 {
 
   int i,j,p,a,b;
@@ -19060,7 +19062,7 @@ continuous_surface_tension(double st, double csf[DIM][DIM],
   return(status);	
 }
 
-int
+static int
 continuous_surface_tension_old(double st, double csf[DIM][DIM], struct Level_Set_Interface *lsi_old)
 {
   int    a, b;
@@ -22349,7 +22351,7 @@ assemble_csf_tensor ( void )
 
 
 int
-assemble_div_n_source ( )
+assemble_div_n_source(void)
 {
   int i, j, a, b, p, ii, ledof;
   int eqn, peqn, var, pvar;
@@ -22588,7 +22590,7 @@ assemble_div_n_source ( )
 
 
 int
-assemble_div_s_n_source ( )
+assemble_div_s_n_source(void)
 {
   int i,j,a,b,p,q, ii, ledof;
   int eqn, peqn, var, pvar;
@@ -23447,7 +23449,7 @@ assemble_cap_denner_diffusion_n(double dt, double scale)
 }
 
 int
-assemble_curvature_with_normals_source ( )
+assemble_curvature_with_normals_source(void)
 {
   int i, j, a, b, ii, ledof;
   int eqn, peqn, var, pvar;
@@ -23647,7 +23649,7 @@ assemble_curvature_with_normals_source ( )
 
 		  
 int
-assemble_curvature_source ( )
+assemble_curvature_source(void)
 {
   int i, j, a, b, ii, ledof;
   int eqn, peqn, var, pvar;
@@ -33903,7 +33905,7 @@ assemble_ls_latent_heat_source ( double iso_therm,
 }
 
 int
-assemble_max_strain ()   
+assemble_max_strain(void)   
 {
   /*****************************************************************************
    * assemble_max_strain ()
@@ -34105,7 +34107,7 @@ assemble_max_strain ()
 } // End of assemble_max_strain()
 
 int
-assemble_cur_strain ()   
+assemble_cur_strain(void)   
 {
   /*****************************************************************************
    * assemble_cur_strain ()

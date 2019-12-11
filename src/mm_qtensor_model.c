@@ -749,7 +749,7 @@ get_local_qtensor(double q[DIM][DIM])
  * always solved together.
  */
 int
-assemble_vorticity_direction()
+assemble_vorticity_direction(void)
 {
   int a, b, i, j, k, p, q, r;		/* iteration counters */
   int eqn, var, peqn, pvar;	/* equation/variable indices */

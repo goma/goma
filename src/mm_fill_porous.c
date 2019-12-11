@@ -858,14 +858,14 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
              mass = 0.0;
              if (pd->TimeIntegration != STEADY)
                {
-                if (pd->e[pg->imtrx][eqn] && T_MASS)
+                if (pd->e[pg->imtrx][eqn] & T_MASS)
                   {
                    mass +=  (sink_dot[i] * phi_i * wt_total * pd->etm[pg->imtrx][eqn][LOG2_MASS]);
                   }
                }
 
              source = 0.0;
-             if(pd->e[pg->imtrx][eqn] && T_SOURCE)
+             if(pd->e[pg->imtrx][eqn] & T_SOURCE)
                {
                 source += phi_i * MassSource;
                 source *= wt_total * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
@@ -912,7 +912,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
 
                 if (pd->TimeIntegration != STEADY) 
                   {
-                   if ( pd->e[pg->imtrx][eqn] && T_MASS )
+                   if ( pd->e[pg->imtrx][eqn] & T_MASS )
                      {
                       mass +=  delta(i,j) * (1 + 2. * tt)/ dt;
                       mass *=  phi_i * wt_total * pd->etm[pg->imtrx][eqn][LOG2_MASS];
@@ -920,7 +920,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
                   }
 
                 source = 0.0;
-                if (pd->e[pg->imtrx][eqn] && T_SOURCE) 
+                if (pd->e[pg->imtrx][eqn] & T_SOURCE) 
                   {
                    source +=  phi_i * d_MassSource[var][j];
                    source *=  wt_total * pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
@@ -943,7 +943,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
                {
 
                 source = 0.0;
-                if (pd->e[pg->imtrx][eqn] && T_SOURCE)
+                if (pd->e[pg->imtrx][eqn] & T_SOURCE)
                   {
                    source += phi_i * d_MassSource[var][j];
                    source *= wt_total * pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
@@ -977,7 +977,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
                     mass = 0.0;
                     if (pd->TimeIntegration != STEADY)
                       {
-                       if (pd->e[pg->imtrx][eqn] && T_MASS)
+                       if (pd->e[pg->imtrx][eqn] & T_MASS)
                          {
                           mass +=  sink_dot[i] * phi_i * pd->etm[pg->imtrx][eqn][LOG2_MASS] *
                                     (h3 * d_det_J_dmesh + dh3dmesh * det_J) * wt;
@@ -985,7 +985,7 @@ int assemble_pore_sink_mass(double time, /* present time valuel; KSC           *
                         }
 
                     source = 0.0;
-                    if (pd->e[pg->imtrx][eqn] && T_SOURCE)
+                    if (pd->e[pg->imtrx][eqn] & T_SOURCE)
                       {
                        source += phi_i * MassSource * (h3 * d_det_J_dmesh + dh3dmesh * det_J);
                        source += phi_i * d_MassSource[var][j] * h3 * det_J;
@@ -9445,7 +9445,7 @@ calc_grad_Ywg (int var, double *grad_Ywg)
 } /* end calc_grad_Ywg */
 /******************************************************************************/
 void
-calc_darcy_velocity()
+calc_darcy_velocity(void)
 {
   int a, b, j, w1, var, WIM;
   const int i_pl = 0, i_pg = 1, i_pore = 2;

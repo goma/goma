@@ -4305,7 +4305,7 @@ calculate_lub_q_v (
       dbl D_Q_DNORMAL[DIM][DIM][MDE], D_V_DNORMAL[DIM][DIM][MDE];
       memset(D_Q_DNORMAL, 0.0, sizeof(double)*DIM*DIM*MDE);
       memset(D_V_DNORMAL, 0.0, sizeof(double)*DIM*DIM*MDE);
-        if ( (pd->v[pg->imtrx][SHELL_NORMAL1]) && (pd->v[pg->imtrx][SHELL_NORMAL1]) && (pd->v[pg->imtrx][SHELL_NORMAL1]) ) {
+        if ( (pd->v[pg->imtrx][SHELL_NORMAL1]) && (pd->v[pg->imtrx][SHELL_NORMAL2]) && (pd->v[pg->imtrx][SHELL_NORMAL3]) ) {
           for ( i = 0; i < dim; i++) {
             for ( j = 0; j < dim; j++) {
               for ( k = 0; k < ei[pg->imtrx]->dof[SHELL_NORMAL1]; k++) {

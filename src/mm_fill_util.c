@@ -102,6 +102,15 @@ find_problem_graph_fill(int *[], /* ija - column pointer array                */
 static int find_VBR_problem_graph(int *[], int *[], int *[], int *[], int *[],
                                   int, int, Exo_DB *);
 
+static int var_if_interp_type_enabled(PROBLEM_DESCRIPTION_STRUCT *pd_ptr,
+                               int interp_type); 
+static dbl yzbeta1(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
+                       dbl u, dbl d_u[MDE], dbl grad_u[DIM],
+                       dbl d_grad_u[MDE][DIM], dbl h_elem, int interp_eqn,
+                       dbl deriv[MDE]); 
+
+static dbl yzbeta2(dbl scale, dbl Y, dbl Z, dbl d_Z[MDE], dbl deriv[MDE], dbl h_elem, int interp_eqn);
+
 static const dbl DIFFUSION_EPSILON = 1e-8;
 
 /*****************************************************************************/
@@ -1719,7 +1728,7 @@ void simple_normalize_vector(struct Rotation_Vectors *vector, const int dim) {
 /********************************************************************************/
 /********************************************************************************/
 
-int load_bf_grad()
+int load_bf_grad(void)
 
 /********************************************************************************
  *
@@ -4938,7 +4947,7 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
 /*************************************************************************/
 /*************************************************************************/
 
-int var_if_interp_type_enabled(PROBLEM_DESCRIPTION_STRUCT *pd_ptr,
+static int var_if_interp_type_enabled(PROBLEM_DESCRIPTION_STRUCT *pd_ptr,
                                int interp_type) {
   int imtrx;
   int var;
@@ -5076,7 +5085,7 @@ void determine_ProjectionVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
 /*************************************************************************/
 /*************************************************************************/
 
-void set_solid_inertia()
+void set_solid_inertia(void)
 /* Initializes tran->solid_inertia flag */
 {
   int mn;
@@ -5369,7 +5378,7 @@ void supg_tau(SUPG_terms *supg_terms, int dim, dbl diffusivity,
   }
 }
 
-dbl yzbeta1(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
+static dbl yzbeta1(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
                        dbl u, dbl d_u[MDE], dbl grad_u[DIM],
                        dbl d_grad_u[MDE][DIM], dbl h_elem, int interp_eqn,
                        dbl deriv[MDE]) {
@@ -5388,7 +5397,7 @@ dbl yzbeta1(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,
 
 }
 
-dbl yzbeta2(dbl scale, dbl Y, dbl Z, dbl d_Z[MDE], dbl deriv[MDE], dbl h_elem, int interp_eqn)
+static dbl yzbeta2(dbl scale, dbl Y, dbl Z, dbl d_Z[MDE], dbl deriv[MDE], dbl h_elem, int interp_eqn)
 {
 //  static const dbl EPSILON = 1e-10;
   for (int k = 0; k < ei[pg->imtrx]->dof[interp_eqn]; k++) {

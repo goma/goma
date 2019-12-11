@@ -8102,8 +8102,7 @@ compute_leak_velocity(double *vnorm,
 
       else if (!strcmp(fluxbc->desc->name1,"YFLUX_SULFIDATION")) 
 	{
-         if(fluxbc->BC_Data_Int[2] != ANNIHILATION_ELECTRONEUTRALITY && 
-            fluxbc->BC_Data_Int[2] != ANNIHILATION_ELECTRONEUTRALITY   )
+         if(fluxbc->BC_Data_Int[2] != ANNIHILATION_ELECTRONEUTRALITY)
           {
 	   if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {

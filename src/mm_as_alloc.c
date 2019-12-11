@@ -163,7 +163,7 @@ pd_alloc(void)
 
   if (Debug_Flag) {
     DPRINTF(stdout, "%s: Problem_Description @ %p has %ld bytes", 
-	    yo, pd_glob, (long int)sizeof(struct Problem_Description));
+	    yo, (void *) pd_glob, (long int)sizeof(struct Problem_Description));
   }
   if (upd == NULL) {
     status = -1;
@@ -186,7 +186,7 @@ pd_alloc(void)
 /****************************************************************************/
  
 int 
-efv_alloc()
+efv_alloc(void)
 {
   int sz;
   int status = 0;
@@ -201,7 +201,7 @@ efv_alloc()
   if ( Debug_Flag )
     {
       DPRINTF(stdout, "%s: External_Field_Variables @ %p has %d bytes", 
-	      yo, efv, sz);
+	      yo, (void *) efv, sz);
     }
 
   if ( efv == NULL )
@@ -257,7 +257,7 @@ mp_alloc(void)
    
   if (Debug_Flag) {
     DPRINTF(stdout, "%s: Material_Properties @ %p has %lu bytes", 
-	    yo, mp, (long unsigned int)sizeof(MATRL_PROP_STRUCT));
+	    yo, (void *) mp, (long unsigned int)sizeof(MATRL_PROP_STRUCT));
   }
   return 0;
 }
@@ -299,7 +299,7 @@ cr_alloc(void)
   if ( Debug_Flag )
     {
       DPRINTF(stdout, "%s: Constitutive_Relations @ %p has %d bytes", 
-	      yo, cr, sz);
+	      yo, (void *) cr, sz);
     }
 
   if ( cr_glob == NULL )
@@ -353,7 +353,7 @@ int gn_alloc(void)
   if ( Debug_Flag )
     {
       DPRINTF(stdout, "%s: Generalized_Newtonian @ %p has %d bytes", 
-	      yo, gn, sz);
+	      yo, (void *) gn, sz);
     }
 
   return(status);
@@ -413,7 +413,7 @@ int ve_alloc(void)
   if ( Debug_Flag )
     {
       DPRINTF(stdout, "%s: Viscoelastic_Constitutive @ %p has %d bytes", 
-	      yo, ve_glob, sz);
+	      yo, (void *) ve_glob, sz);
     }
 
   if ( ve_glob == NULL)
@@ -455,7 +455,7 @@ elc_alloc(void)
   if ( Debug_Flag )
     {
       DPRINTF(stdout, "%s: Elastic Constitutive @ %p has %d bytes", 
-	      yo, gn_glob, sz);
+	      yo, (void *) gn_glob, sz);
     }
 
   if ( elc_glob == NULL )
@@ -497,7 +497,7 @@ evp_alloc(void)
   if ( Debug_Flag )
     {
       DPRINTF(stdout, "%s: Viscoplastic Constitutive @ %p has %d bytes", 
-	      yo, gn_glob, sz);
+	      yo, (void *) gn_glob, sz);
     }
 
   if ( evpl_glob == NULL )
@@ -623,7 +623,7 @@ elc_rs_alloc(void)
   if ( Debug_Flag )
     {
       DPRINTF(stdout, "%s: Elastic Constitutive RS @ %p has %d bytes", 
-	      yo, gn_glob, sz);
+	      yo, (void *) gn_glob, sz);
     }
 
   if ( elc_rs_glob == NULL )
@@ -635,7 +635,7 @@ elc_rs_alloc(void)
   return(status);
 }
 
-int tran_alloc()
+int tran_alloc(void)
 {
   int sz;
   int status;
@@ -652,7 +652,7 @@ int tran_alloc()
   if ( Debug_Flag )
     {
       DPRINTF(stdout, "%s: Transient_Information @ %p has %d bytes", 
-              yo, tran, sz);
+              yo, (void *) tran, sz);
     }
 
   if ( tran == NULL )
@@ -673,7 +673,7 @@ int tran_alloc()
   if ( Debug_Flag )
     {
       P0PRINTF("%s: Element_Quality_Metrics @ %p has %d bytes", 
-	       yo, eqm, sz);
+	       yo, (void *) eqm, sz);
     }
 
   if ( eqm == NULL )
@@ -706,7 +706,7 @@ libio_alloc(void)
   if ( Debug_Flag )
     {
       DPRINTF(stdout, "%s: Library_IO @ %p has %d bytes", 
-              yo, libio, sz);
+              yo, (void *) libio, sz);
     }
 
   if ( libio == NULL )
@@ -740,7 +740,7 @@ eigen_alloc(void)
   if ( Debug_Flag )
     {
       DPRINTF(stdout, "%s: Eigensolver_Info @ %p has %d bytes", 
-              yo, eigen, sz);
+              yo, (void *) eigen, sz);
     }
 
   if ( eigen == NULL )
@@ -775,7 +775,7 @@ cont_alloc(void)
   if ( Debug_Flag )
     {
       DPRINTF(stdout, "%s: Continuation_Information @ %p has %d bytes", 
-              yo, cont, sz);
+              yo, (void *) cont, sz);
     }
 
   if ( cont == NULL )
@@ -791,7 +791,7 @@ cont_alloc(void)
 /*************************************************************************/
 /*************************************************************************/
 
-int loca_alloc()
+int loca_alloc(void)
 {
   int sz;
   int status;
@@ -808,7 +808,7 @@ int loca_alloc()
   if ( Debug_Flag )
     {
       DPRINTF(stdout, "%s: Loca_Input @ %p has %d bytes", 
-              yo, cont, sz);
+              yo, (void *) cont, sz);
     }
 
   if ( loca_in == NULL )
@@ -968,7 +968,7 @@ assembly_alloc(Exo_DB *exo)
   if ( Debug_Flag )
     {
       DPRINTF(stdout, "%s: Element_Variable_Pointers @ %p has %d bytes", 
-	      yo, esp_old, sz);
+	      yo, (void *) esp_old, sz);
     }
 
   if ( (esp_old == NULL) || (esp_dot == NULL) )
@@ -990,7 +990,7 @@ assembly_alloc(Exo_DB *exo)
   if ( Debug_Flag )
     {
       P0PRINTF("%s: Element_Stiffness_Pointers @ %p has %d bytes", 
-	       yo, esp, sz);
+	       yo, (void *) esp, sz);
     }
 
   /*
@@ -1347,7 +1347,7 @@ assembly_alloc(Exo_DB *exo)
    */
   af = alloc_struct_1(struct Action_Flags, 1);    
   if (Debug_Flag) {
-    P0PRINTF("%s: Action_Flags @ %p has %lu bytes", yo, af,
+    P0PRINTF("%s: Action_Flags @ %p has %lu bytes", yo, (void *) af,
 	     (long unsigned int)sizeof(struct Action_Flags));
   }
 
@@ -1492,7 +1492,7 @@ assembly_alloc(Exo_DB *exo)
   fv = alloc_struct_1(struct Field_Variables, 1);
   if (Debug_Flag) {
     DPRINTF(stdout, "%s: Field_Variables @ %p has %ld bytes", 
-	    yo, fv, (long int)sizeof(struct Field_Variables));
+	    yo, (void *) fv, (long int)sizeof(struct Field_Variables));
   }
   if (fv == NULL) {
     status = -1;
@@ -1502,8 +1502,8 @@ assembly_alloc(Exo_DB *exo)
 
   fv_sens = alloc_struct_1(struct Field_Variables, 1);
   if ( Debug_Flag ) {
-    DPRINTF(stdout, "%s: Field_Variables @ %p has %d bytes", 
-	    yo, fv, sz);
+    DPRINTF(stdout, "%s: Field_Variables Sensitivity @ %p has %lu bytes", 
+	    yo, (void *) fv_sens, sizeof(struct Field_Variables));
   }
   if ( fv_sens == NULL )
   {
@@ -1520,7 +1520,7 @@ assembly_alloc(Exo_DB *exo)
   fv_dot_dot_old  = alloc_struct_1(struct Diet_Field_Variables, 1);
   if (Debug_Flag) {
     DPRINTF(stdout, "%s: Diet_Field_Variables @ %p has %d bytes", 
-	    yo, fv_old, sz);
+	    yo, (void *) fv_old, sz);
   }
   if (fv_old == NULL) {
     status = -1;
@@ -1575,7 +1575,7 @@ assembly_alloc(Exo_DB *exo)
   lec = alloc_struct_1(struct Local_Element_Contributions, 1);
   if (Debug_Flag) {
     DPRINTF(stdout, "%s: Local_Element_Contributions @ %p has %ld bytes", 
-	    yo, lec, (long int)sizeof(struct Local_Element_Contributions));
+	    yo, (void *) lec, (long int)sizeof(struct Local_Element_Contributions));
   }
   if (lec == NULL) {
     status = -1;
@@ -1588,7 +1588,7 @@ assembly_alloc(Exo_DB *exo)
   LubAux = alloc_struct_1(struct Lubrication_Auxiliaries, 1);
   if (Debug_Flag) {
     DPRINTF(stdout, "%s: Lubrication_Auxiliaries @ %p has %ld bytes",
-            yo, LubAux, (long int)sizeof(struct Lubrication_Auxiliaries));
+            yo, (void *) LubAux, (long int)sizeof(struct Lubrication_Auxiliaries));
   }
   if (LubAux == NULL) {
     status = -1;
@@ -1599,7 +1599,7 @@ assembly_alloc(Exo_DB *exo)
   LubAux_old = alloc_struct_1(struct Lubrication_Auxiliaries, 1);
   if (Debug_Flag) {
     DPRINTF(stdout, "%s: Lubrication_Auxiliaries Old @ %p has %ld bytes",
-            yo, LubAux_old, (long int)sizeof(struct Lubrication_Auxiliaries));
+            yo, (void *) LubAux_old, (long int)sizeof(struct Lubrication_Auxiliaries));
   }
   if (LubAux_old == NULL) {
     status = -1;

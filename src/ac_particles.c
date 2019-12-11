@@ -4712,7 +4712,7 @@ dump_fcn(const char * const file_name,
  * assumes the proper element has already been loaded.
  */
 static void
-fill_my_fv_old()
+fill_my_fv_old(void)
 {
   int i, j, dofs;
   
@@ -4953,7 +4953,7 @@ add_to_do_list(particle_t * p)
  * presence.  It assumes that all particles contribute (irresepective
  * of possible p->state settings). */
 static void
-couple_to_continuum()
+couple_to_continuum(void)
 {
   dbl source_mass = 0.0, total_particles = 0.0;
   int source_eqn = -1;

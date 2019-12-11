@@ -158,7 +158,7 @@ do_LSA_mods(int mod_type)
  *
  * Author: Matt Hopkins, 12/18/00.  */
 void
-modify_basis_and_weight_functions_for_LSA_3D_of_2D()
+modify_basis_and_weight_functions_for_LSA_3D_of_2D(void)
 {
   int i, j, a, b, bf_index, var, mn;
   BASIS_FUNCTIONS_STRUCT *bf_ptr;

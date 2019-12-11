@@ -2693,7 +2693,7 @@ void mass_matvec_mult_conwrap(double *x, double *y)
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-void create_shifted_matrix_conwrap()
+void create_shifted_matrix_conwrap(void)
 /* Allocates a sets sparsity pointers for shifted matrix.
  * Only used by eigensolver
  */
@@ -2970,7 +2970,7 @@ void shifted_linear_solver_conwrap(double *x, double *y,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-void destroy_shifted_matrix_conwrap()
+void destroy_shifted_matrix_conwrap(void)
 {
 /* Just deallocate the matrix */
 #ifdef HAVE_ARPACK

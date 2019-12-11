@@ -156,7 +156,7 @@ write_brk_file(char* brkfile_name, Exo_DB *exo) {
 }
 
 void
-call_brk()
+call_brk(void)
 {
   int i;
 
@@ -182,7 +182,7 @@ call_brk()
 }
 
 void
-fix_output()
+fix_output(void)
 {
   if (Debug_Flag) {
     DPRINTF(stdout, "\nFixing exodus file pieces.\n");

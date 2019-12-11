@@ -178,6 +178,6 @@ EXTERN void load_gap_model
 (GAP_STRUCT*);
 
 EXTERN void load_roller_normal_into_fv
-();
+(void);
 
 #endif // _SHELL_TFMP_UTIL

@@ -1982,9 +1982,8 @@ Elem_Type(const Exo_DB *exo,
 static int
 integer_compare(const void *arg1, const void *arg2)
 {
-  int *a, *b;
-  a = (int *)(arg1);
-  b = (int *)(arg2);
+  const int *a = (const int *)(arg1);
+  const int *b = (const int *)(arg2);
   if (*a > *b) return  1;
   if (*a < *b) return -1;
   return(0);

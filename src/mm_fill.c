@@ -4765,7 +4765,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 #endif
 
   if (strcmp(Matrix_Format, "epetra") == 0) {
-    EpetraLoadLec(exo, ielem, ams, x, resid_vector);
+    EpetraLoadLec(ielem, ams, resid_vector);
   } else if (Linear_Solver == FRONT) {   /* Load up estifm in case a frontal solver is being used */
     if (af->Assemble_Jacobian) {
       memset(estifm, 0, sizeof(double)*fss->ncn[ielem]*fss->ncn[ielem]);

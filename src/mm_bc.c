@@ -1937,7 +1937,7 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 /*****************************************************************************/
 /*****************************************************************************/
 void
-set_up_Embedded_BC ()
+set_up_Embedded_BC (void)
 
      /*****************************************************************
       * this routine creates a list of bc's applied on level

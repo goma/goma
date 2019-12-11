@@ -167,5 +167,12 @@ EXTERN void put_lub_flux_in_film /* mm_shell_bc.c                    */
 				 * of nodes at which liquid contributions have
 				 * been transfered to solid (fluid-solid 
 				 * boundaries)                               */
+EXTERN void 
+shell_tfmp_avg_plate_velo_gas(double func[DIM],
+			     double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+			     const double time,     /* current time */
+			     const double delta_t,       /* current time step size */
+			     double xi[DIM],        /* Local stu coordinates */
+			     const Exo_DB *exo); 
 
 #endif

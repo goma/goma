@@ -51,11 +51,11 @@ EXTERN int load_ei              /* mm_fill_ptrs.c                            */
 EXTERN int load_elem_dofptr	/* mm_fill_ptrs.c                            */
 (const int,		/* element index                             */
        const Exo_DB *,		/* Exodus database pointer                   */
-       dbl * const,		/* x - unknown vector                        */
-       dbl * const,		/* x_old - unknown vector, previous timestep */
-       dbl * const,		/* xdot - difference approx to dx/dt         */
-       dbl * const,             /* xdot_old - time derivative at t = t_n     */
-       dbl * const,		/* resid_vector - residual RHS               */
+       const dbl *,		/* x - unknown vector                        */
+       const dbl *,		/* x_old - unknown vector, previous timestep */
+       const dbl *,		/* xdot - difference approx to dx/dt         */
+       const dbl *,             /* xdot_old - time derivative at t = t_n     */
+       const dbl *,		/* resid_vector - residual RHS               */
        const int );	       	/* if early_return is true we just get 
 				 * some of the element information for 
 				 * routines that need it like 

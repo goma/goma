@@ -3230,7 +3230,7 @@ print_array(const void *array,
 #if 0
 	  fprintf(f, "%s[%d] = %d\n", name, i, ((int *)array)[i]);
 #endif
-	  fprintf(f, "%d %d\n", i, ((int *)array)[i]);
+	  fprintf(f, "%d %d\n", i, ((const int *)array)[i]);
 	}
       break;
       
@@ -3240,7 +3240,7 @@ print_array(const void *array,
 #if 0
 	  fprintf(f, "%s[%d] = %g\n", name, i, ((double *)array)[i]);
 #endif
-	  fprintf(f, "%d %23.16e\n", i, ((double *)array)[i]);
+	  fprintf(f, "%d %23.16e\n", i, ((const double *)array)[i]);
 	}
       break;
       

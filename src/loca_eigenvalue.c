@@ -77,7 +77,7 @@ extern void cpdneupc_(MPI_Comm* comm, int* ivec, char* howmny, int* celect,
                        int* select);
 extern void cpdmout_  (MPI_Comm* comm, int* lout, int* m, int* n, double *A,
                       int* lda, int* idigit);
-extern double second_();
+extern double second_(void);
 
 
 #include <math.h>
