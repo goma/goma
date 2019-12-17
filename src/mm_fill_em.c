@@ -264,7 +264,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_hr[p];
          }
          em_stab.stabilization_field_var = EM_E1_REAL;
-         calc_emwave_stabilization_term(&em_stab, 100.0);
+         calc_emwave_stabilization_term(&em_stab, 1000.0);
          break;
     case EM_E1_IMAG:
     case EM_E2_IMAG:
@@ -282,7 +282,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_hi[p];
          }
          em_stab.stabilization_field_var = EM_E1_IMAG;
-         calc_emwave_stabilization_term(&em_stab, 100.0);
+         calc_emwave_stabilization_term(&em_stab, 1000.0);
          break;
     case EM_H1_REAL:
     case EM_H2_REAL:
@@ -296,7 +296,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_er[p];
          }
          em_stab.stabilization_field_var = EM_H1_REAL;
-         calc_emwave_stabilization_term(&em_stab, 100.0);
+         calc_emwave_stabilization_term(&em_stab, 1000.0);
          break;
     case EM_H1_IMAG:
     case EM_H2_IMAG:
@@ -310,7 +310,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_ei[p];
          }
          em_stab.stabilization_field_var = EM_H1_IMAG;
-         calc_emwave_stabilization_term(&em_stab, 100.0);
+         calc_emwave_stabilization_term(&em_stab, 1000.0);
          break;
     default:
       EH(-1, "assemble_emwave must be called with a usable em_var\n");
@@ -705,7 +705,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
   complex cpx_refractive_index1, cpx_rel_permittivity1,
       cpx_permittivity1, impedance1;
 
-  cpx_refractive_index1 = n1 - _Complex_I*k1;
+  cpx_refractive_index1 = n1 + _Complex_I*k1;
   cpx_rel_permittivity1 = SQUARE(cpx_refractive_index1);
   cpx_permittivity1 = cpx_rel_permittivity1*mp->permittivity;
 
@@ -720,7 +720,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
   complex cpx_refractive_index2, cpx_rel_permittivity2,
       cpx_permittivity2, impedance2;
 
-  cpx_refractive_index2 = n2 - _Complex_I*k2;
+  cpx_refractive_index2 = n2 + _Complex_I*k2;
   cpx_rel_permittivity2 = SQUARE(cpx_refractive_index2);
   cpx_permittivity2 = cpx_rel_permittivity2*mp->permittivity;
 
@@ -772,7 +772,6 @@ int apply_em_farfield_direct_vec(double func[DIM],
       break;
   }
 
-  //reduction_factor = 1.0;
 
   incidentE[0] = bc_data[2] + _Complex_I*bc_data[5];
   incidentE[1] = bc_data[3] + _Complex_I*bc_data[6];
@@ -780,11 +779,9 @@ int apply_em_farfield_direct_vec(double func[DIM],
 
   for (int p=0; p<DIM; p++) {
     for (int q=0; q<DIM; q++) {
-      for (int r=0; r<DIM; r++) { // minus comes from {k_hat = -normal}
-        incidentH[p] -= permute(p,q,r)*normal[q]*incidentE[r]/impedance2;
+      for (int r=0; r<DIM; r++) {
+        incidentH[p] += permute(p,q,r)*normal[q]*incidentE[r]/impedance2;
       }
-
-
     }
   }
 
@@ -843,7 +840,7 @@ int apply_em_farfield_direct_vec(double func[DIM],
     case EM_ER_FARFIELD_DIRECT_BC:
     case EM_EI_FARFIELD_DIRECT_BC:
       for (int p=0; p<DIM; p++) {
-        cpx_func[p] = (Re_n_x_E[p]+ _Complex_I*Im_n_x_E[p])
+        cpx_func[p] += (Re_n_x_E[p]+ _Complex_I*Im_n_x_E[p])
                       *reduction_factor;
       }
       for (int p=0; p<pd->Num_Dim; p++) {
@@ -857,13 +854,13 @@ int apply_em_farfield_direct_vec(double func[DIM],
     case EM_HR_FARFIELD_DIRECT_BC:
     case EM_HI_FARFIELD_DIRECT_BC:
       for (int p=0; p<DIM; p++) {
-        cpx_func[p] = (Re_n_x_H[p] + _Complex_I*Im_n_x_H[p])
+        cpx_func[p] += (Re_n_x_H[p] + _Complex_I*Im_n_x_H[p])
                       *reduction_factor;
       }
       for (int p=0; p<pd->Num_Dim; p++) {
         for (int q=0; q<DIM; q++) {
           for (int r=0; r<DIM; r++) {
-            cpx_func[p] += normal[q]*incidentH[r];
+            cpx_func[p] -= normal[q]*incidentH[r];
           }
         }
       }
