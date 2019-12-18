@@ -28,6 +28,8 @@ void gds_vector_add_constant(gds_vector *y, const double b);
 void gds_vector_axpy(const double alpha, const gds_vector *x, const double beta, gds_vector *y);
 void gds_vector_normalize(gds_vector *v);
 void gds_vector_cross(const gds_vector *v, const gds_vector *u, gds_vector *cross);
+void gds_vector_rotate_around_vector(gds_vector *rotated, const gds_vector *vec_to_rotate,
+                                     const gds_vector *axis, double angle_radians);
 double gds_vector_dot(const gds_vector *v, const gds_vector *u);
 void gds_vector_free(gds_vector *v);
 

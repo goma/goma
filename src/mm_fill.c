@@ -4348,35 +4348,35 @@ matrix_fill_stress(
     } /* end of loop over nodes */
   } /* end of if Num_ROT > 0 */
 
-  if (pde[R_MOMENTUM1] && goma_automatic_rotations.automatic_rotations ) {
-    int id_mesh, id_mom; /* local temporary things */
-    /* determine if rotation is needed */
-    for (i = 0; i < num_local_nodes; i++) {
-      id_mom  = ei[pg->imtrx]->ln_to_dof[VELOCITY1][i];
-      /*
-       *  To address a particular residual equation, map the local
-       *   elemental node number i into a global index I
-       *  You only have to rotate equations at nodes that you own?!?
-       */
-      I = Proc_Elem_Connect[iconnect_ptr + i];
-      if (I < (dpi->num_internal_nodes + dpi->num_boundary_nodes)) {
-
-
-        rotate_momentum = 0;
-
-        if (goma_automatic_rotations.rotation_nodes[I].n_normals && pde[R_MOMENTUM1]) {
-            rotate_momentum = 1;
-        }
-
-        if (rotate_momentum) {
-          /* Call momentum rotation routine */
-          /* MMH: See comment above for rotate_mesh_eqn. */
-          rotate_momentum_eqn(id_mom,  I, iconnect_ptr, ielem_dim,ams);
-        }
-      }
-    } /* end of loop over nodes */
-  } /* end of if Num_ROT > 0 */
-
+//  /*if (pde[R_MOMENTUM1] && goma_automatic_rotations.automatic_rotations ) {
+//    int id_mesh, id_mom; /* local temporary things */
+//    /* determine if rotation is needed */
+//    for (i = 0; i < num_local_nodes; i++) {
+//      id_mom  = ei[pg->imtrx]->ln_to_dof[VELOCITY1][i];
+//      /*
+//       *  To address a particular residual equation, map the local
+//       *   elemental node number i into a global index I
+//       *  You only have to rotate equations at nodes that you own?!?
+//       */
+//      I = Proc_Elem_Connect[iconnect_ptr + i];
+//      if (I < (dpi->num_internal_nodes + dpi->num_boundary_nodes)) {
+//
+//
+//        rotate_momentum = 0;
+//
+//        if (goma_automatic_rotations.rotation_nodes[I].n_normals && pde[R_MOMENTUM1]) {
+//            rotate_momentum = 1;
+//        }
+//
+//        if (rotate_momentum) {
+//          /* Call momentum rotation routine */
+//          /* MMH: See comment above for rotate_mesh_eqn. */
+//          rotate_momentum_eqn(id_mom,  I, iconnect_ptr, ielem_dim,ams);
+//        }
+//      }
+//    } /* end of loop over nodes */
+//  } /* end of if Num_ROT > 0 */
+//
   
   /******************************************************************************/
   /*                              BLOCK 9                                       */

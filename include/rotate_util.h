@@ -4,6 +4,7 @@
 #include "mm_eh.h"
 #include "rf_bc_const.h"
 #include "el_elm.h"
+#include "gds/gds_vector.h"
 
 #include <stdbool.h>
 
@@ -24,18 +25,14 @@ typedef enum {
 } goma_rotation_type_e;
 
 typedef struct {
-  double e[3];
-} goma_rotation_vector_s;
-
-typedef struct {
-  goma_rotation_vector_s normals[GOMA_MAX_NORMALS_PER_NODE];
-  goma_rotation_vector_s average_normals[GOMA_MAX_NORMALS_PER_NODE];
-  goma_rotation_vector_s tangent1s[GOMA_MAX_NORMALS_PER_NODE];
-  goma_rotation_vector_s tangent2s[GOMA_MAX_NORMALS_PER_NODE];
-  goma_rotation_vector_s rotated_coord[DIM];
-  int associate_direction[GOMA_MAX_NORMALS_PER_NODE];
+  gds_vector *normals[GOMA_MAX_NORMALS_PER_NODE];
+  gds_vector *average_normals[GOMA_MAX_NORMALS_PER_NODE];
+  gds_vector *tangent1s[GOMA_MAX_NORMALS_PER_NODE];
+  gds_vector *tangent2s[GOMA_MAX_NORMALS_PER_NODE];
+  gds_vector *rotated_coord[DIM];
+  unsigned int associate_direction[GOMA_MAX_NORMALS_PER_NODE];
   bool direction_is_associated[GOMA_MAX_NORMALS_PER_NODE];
-  int tangent1_seeddir[GOMA_MAX_NORMALS_PER_NODE];
+  unsigned int tangent1_seeddir[GOMA_MAX_NORMALS_PER_NODE];
   int element[GOMA_MAX_NORMALS_PER_NODE];
   int face[GOMA_MAX_NORMALS_PER_NODE];
   int n_normals;
@@ -62,4 +59,5 @@ goma_error set_rotation_types(Exo_DB *exo, goma_rotation_node_s *rotation);
 goma_error associate_directions(Exo_DB *exo, goma_rotation_node_s *rotation);
 goma_error set_average_normals_and_tangents(Exo_DB *exo, goma_rotation_node_s *rotation);
 goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rotation);
+goma_error free_rotations(Exo_DB *exo, goma_rotation_node_s **rotations);
 #endif

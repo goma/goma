@@ -668,6 +668,7 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 
 
   setup_rotated_bc_nodes(exo, BC_Types, Num_BC, x);
+//  free_rotations(exo, &goma_automatic_rotations.rotation_nodes);
   /*********************************************************************************
    *
    *                         Top of the Newton Iteration Loop

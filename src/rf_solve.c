@@ -3403,6 +3403,12 @@ fprintf(stderr,"should be not successful %d %d %d \n",inewton,converged,success_
 
     safer_free((void **) &gvec_elem);
     safer_free((void **) &rd);
+    for (int i = 0; i < num_total_nodes; i++) {
+      free(Local_Offset[0][i]);
+      free(Dolphin[0][i]);
+    }
+    free(Dolphin[0]);
+    free(Local_Offset[0]);
     safer_free((void **) &Local_Offset);
     safer_free((void **) &Dolphin);
   }
