@@ -57,6 +57,7 @@
 #include "mm_mp.h"
 
 #include "mm_fill_terms.h"
+#include "mm_fill_population.h"
 
 #define GOMA_MM_FILL_SPECIES_C
 #include "mm_fill_species.h"
@@ -396,6 +397,19 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
         get_supg_tau(&supg_terms, dim, D, pg_data);
       }
 
+      double Heaviside = 1;
+
+      if (ls != NULL) {
+        if (mp->SpeciesOnlyDiffusion[w] == DIFF_POSITIVE) {
+          load_lsi(ls->Length_Scale);
+          Heaviside = 1 - lsi->H;
+        } else if (mp->SpeciesOnlyDiffusion[w] == DIFF_NEGATIVE) {
+          load_lsi(ls->Length_Scale);
+          Heaviside = lsi->H;
+        }
+      }
+
+
       /*
        * Residuals_________________________________________________________________
        */
@@ -630,8 +644,8 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 		   *  Sum up all of the individual contributions and store it
 		   *  in the local element residual vector.
 		   */
-		  lec->R[MAX_PROB_VAR + w][ii] += 
-		    mass + advection +  diffusion + source;
+                  lec->R[MAX_PROB_VAR + w][ii] +=
+                        Heaviside*(mass + advection) +  diffusion + source;
 		  
 		}   /* if active_dofs */
 	      
@@ -907,8 +921,8 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				  source *= pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 				}
 			      
-			      lec->J[MAX_PROB_VAR + w][MAX_PROB_VAR + w1][ii][j] += 
-				mass + advection + diffusion + source;
+                              lec->J[MAX_PROB_VAR + w][MAX_PROB_VAR + w1][ii][j] +=
+                                    Heaviside*(mass + advection) + diffusion + source;
 			    }
 			}
 		    }
@@ -1060,7 +1074,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				}
 			      
 			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += 
-				advection+ diffusion + source;
+                                Heaviside*advection+ diffusion + source;
 			      
 			    }
 			}
@@ -1372,8 +1386,8 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				  source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
 				}
 			      
-			      lec->J[MAX_PROB_VAR + w][pvar][ii][j] += 
-				mass + advection + diffusion + source;
+                              lec->J[MAX_PROB_VAR + w][pvar][ii][j] +=
+                                    Heaviside*(mass + advection) + diffusion + source;
 			    }
 			}
 		    }
@@ -1465,9 +1479,9 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 
 			      source *= det_J*h3*wt*wt_func;
 			      source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
-			    }
-			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += mass + advection + diffusion + source;
+                            }
+
+                            lec->J[MAX_PROB_VAR + w][pvar][ii][j] += Heaviside*(mass + advection) + diffusion + source;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */	      
 		  var = LIGHT_INTP;
@@ -1581,9 +1595,9 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 
 			      source *= det_J*h3*wt*wt_func;
 			      source *= pd->etm[pg->imtrx][eqn][LOG2_SOURCE];
-			    }
-			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += mass + advection + diffusion + source;
+                            }
+
+                            lec->J[MAX_PROB_VAR + w][pvar][ii][j] += Heaviside * (mass + advection) + diffusion + source;
 			}  /* end of loop over j */
 		    }  /* end of var = VOLTAGE */
                 }
@@ -1667,7 +1681,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 				* mp->AdvectiveScaling[w];
 			    }
 			  
-			  lec->J[MAX_PROB_VAR + w][pvar][ii][j] += advection + diffusion + mass;
+                          lec->J[MAX_PROB_VAR + w][pvar][ii][j] += Heaviside * advection + diffusion + mass;
 			}		/* for(j) .... */
 		    }			/* if ( e[eqn], v[var]) .... */
 		  
@@ -11134,6 +11148,187 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	}
       }
 
+      else if (mp->SpeciesSourceModel[w] == FOAM_PBE_WATER) {
+        foam_pbe_conversion_water(st, time, tt, dt);
+      } else if (mp->SpeciesSourceModel[w] == FOAM_PBE_OH) {
+        foam_pbe_conversion_OH(st, time, tt, dt);
+      } else if (mp->SpeciesSourceModel[w] == FOAM_PBE_BA_G) {
+        foam_pbe_ba_gas_source(st, time, tt, dt);
+      } else if (mp->SpeciesSourceModel[w] == FOAM_PBE_BA_L) {
+        foam_pbe_ba_liquid_source(st, time, tt, dt);
+      } else if (mp->SpeciesSourceModel[w] == FOAM_PBE_CO2_G) {
+        foam_pbe_co2_gas_source(st, time, tt, dt);
+      } else if (mp->SpeciesSourceModel[w] == FOAM_PBE_CO2_L) {
+        foam_pbe_co2_liquid_source(st, time, tt, dt);
+      }
+      else if (mp->SpeciesSourceModel[w]  == FOAM_PMDI_10_RXN)
+      {
+        err = foam_pmdi10_rxn_species_source(w, mp->u_species_source[w], tt, dt);
+        st->MassSource[w] =  mp->species_source[w];
+
+        if ( af->Assemble_Jacobian )
+        {
+
+          var = MASS_FRACTION;
+          if (pd->v[pg->imtrx][MASS_FRACTION] )
+          {
+            // Just include the diagonal contribution here
+            var_offset = MAX_VARIABLE_TYPES + w;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+            {
+              st->d_MassSource_dc[w][w][j] = mp->d_species_source[var_offset]
+                                             *bf[var]->phi[j];
+            }
+          }
+
+          var = TEMPERATURE;
+          if (pd->v[pg->imtrx][var])
+          {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+            {
+              st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
+            }
+          }
+        }
+      }
+      else if (mp->SpeciesSourceModel[w]  == FOAM_PMDI_10_H2O)
+      {
+        for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
+        {
+          var_offset = MAX_VARIABLE_TYPES + w1;
+          mp->d_species_source[var_offset] = 0.0;
+        }
+
+        err = foam_pmdi10_h2o_species_source(w, mp->u_species_source[w], time, tt, dt);
+        st->MassSource[w] =  mp->species_source[w];
+
+        if ( af->Assemble_Jacobian )
+        {
+
+          var = MASS_FRACTION;
+          if (pd->v[pg->imtrx][MASS_FRACTION] )
+          {
+            for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
+            {
+              var_offset = MAX_VARIABLE_TYPES + w1;
+              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+              {
+                st->d_MassSource_dc[w][w1][j] = mp->d_species_source[var_offset]
+                                                *bf[var]->phi[j];
+              }
+            }
+          }
+
+          var = TEMPERATURE;
+          if (pd->v[pg->imtrx][var])
+          {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+            {
+              st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
+            }
+          }
+        }
+      }
+      else if (mp->SpeciesSourceModel[w]  == FOAM_PMDI_10_CO2)
+      {
+        err = foam_pmdi10_co2_species_source(w, mp->u_species_source[w], time, tt, dt);
+        st->MassSource[w] =  mp->species_source[w];
+
+        if ( af->Assemble_Jacobian )
+        {
+
+          var = MASS_FRACTION;
+          if (pd->v[pg->imtrx][MASS_FRACTION] )
+          {
+            for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
+            {
+              var_offset = MAX_VARIABLE_TYPES + w1;
+              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+              {
+                st->d_MassSource_dc[w][w1][j] = mp->d_species_source[var_offset]
+                                                *bf[var]->phi[j];
+              }
+            }
+          }
+
+          var = TEMPERATURE;
+          if (pd->v[pg->imtrx][var])
+          {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+            {
+              st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
+            }
+          }
+        }
+      }
+      else if (mp->SpeciesSourceModel[w]  == FOAM_PMDI_10_CO2_LIQ)
+      {
+        err = foam_pmdi10_co2_liq_species_source(w, st, mp->u_species_source[w], time, tt, dt);
+
+        st->MassSource[w] =  mp->species_source[w];
+
+        if ( af->Assemble_Jacobian )
+        {
+
+          var = MASS_FRACTION;
+          if (pd->v[pg->imtrx][MASS_FRACTION] )
+          {
+            for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
+            {
+              var_offset = MAX_VARIABLE_TYPES + w1;
+              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+              {
+                st->d_MassSource_dc[w][w1][j] = mp->d_species_source[var_offset]
+                                                *bf[var]->phi[j];
+              }
+            }
+          }
+
+          var = TEMPERATURE;
+          if (pd->v[pg->imtrx][var])
+          {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+            {
+              st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
+            }
+          }
+        }
+      }
+      else if (mp->SpeciesSourceModel[w]  == FOAM_PMDI_10_CO2_GAS)
+      {
+        err = foam_pmdi10_co2_gas_species_source(w, st, mp->u_species_source[w], time, tt, dt);
+
+        st->MassSource[w] =  mp->species_source[w];
+
+        if ( af->Assemble_Jacobian )
+        {
+
+          var = MASS_FRACTION;
+          if (pd->v[pg->imtrx][MASS_FRACTION] )
+          {
+            for ( w1=0; w1<pd->Num_Species_Eqn; w1++)
+            {
+              var_offset = MAX_VARIABLE_TYPES + w1;
+              for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+              {
+                st->d_MassSource_dc[w][w1][j] = mp->d_species_source[var_offset]
+                                                *bf[var]->phi[j];
+              }
+            }
+          }
+
+          var = TEMPERATURE;
+          if (pd->v[pg->imtrx][var])
+          {
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+            {
+              st->d_MassSource_dT[w][j] = mp->d_species_source[var] * bf[var]->phi[j];
+            }
+          }
+        }
+      }
+
+
       else if (mp->SpeciesSourceModel[w]  == CONSTANT )
       {
 	st->MassSource[w]    = mp->species_source[w];
@@ -11164,7 +11359,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	EH(-1,"Unrecognized species source model");
       }
 
-	if( ls != NULL ) ls_modulate_speciessource ( w,  st );
+      if( ls != NULL ) ls_modulate_speciessource ( w,  st );
 
     }
 
@@ -11199,10 +11394,8 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
                        }
                    }
                }
+               if( ls != NULL ) ls_modulate_speciessource ( w,  st );
            }
-		   
-		if( ls != NULL ) ls_modulate_speciessource ( w,  st );
-
        }
   }
     
@@ -13850,10 +14043,10 @@ ls_modulate_speciessource(int w,
 	
  if(  mp->mp2nd == NULL ||
       mp->mp2nd->SpeciesSourceModel[w] != CONSTANT ||
-      !(pd->e[pg->imtrx][R_MASS] & T_SOURCE) ) return(0);
+      (!pd->gv[R_MASS] || !(pd->e[upd->matrix_index[R_MASS]][R_MASS] & T_SOURCE)) ) return(0);
 	  
 /* kludge for solidification tracking with phase function 0 */
- if(pfd != NULL && pd->e[pg->imtrx][R_EXT_VELOCITY])
+ if(pfd != NULL && pd->gv[R_EXT_VELOCITY])
 	{
 	ls_old = ls;
 	ls = pfd->ls[0];
