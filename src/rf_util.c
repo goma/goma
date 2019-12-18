@@ -1908,7 +1908,7 @@ void init_shell_normal_unknowns(double x[], const Exo_DB *exo)
       ielem_type = Elem_Type(exo, ielem);
       load_ei(ielem, exo, 0, pg->imtrx);
       err = load_elem_dofptr(ielem, exo, x, x,
-                             x, x, x, 0);
+                             x, x, 0);
       EH(err, "Can't load elem_dofptr in shell normals initialization");
 
       ielem_dim       = elem_info(NDIM, ielem_type);

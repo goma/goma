@@ -3703,7 +3703,7 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
 
   for(ielem = e_start; ielem < e_end; ielem++)
   {
-    load_elem_dofptr(ielem, exo, x, x_file, x, x, x, 1);
+    load_elem_dofptr(ielem, exo, x, x_file, x, x, 1);
 
     memset(d, 0, sizeof(double  )*DIM*MDE);
     memset(dofs, 0, sizeof(int)*DIM);

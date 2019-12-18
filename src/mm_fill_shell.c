@@ -15665,7 +15665,7 @@ assemble_shell_mesh(double time,   /* Time */
   K2 = fv->sh_K2;
 
 
-  double h, H_U, dH_U_dtime, H_L, dH_L_dtime;
+  double h = 0.0, H_U, dH_U_dtime, H_L, dH_L_dtime;
   double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
   double dh_dtime;
 

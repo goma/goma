@@ -2227,8 +2227,7 @@ overlap_aug_cond ( int ija[],
           if ( elem_overlaps_interface(ielem, x, exo, ls->Length_Scale) )
             {
 	      load_elem_dofptr(ielem, exo, x_static, x_old_static,
-                               xdot_static, xdot_old_static,
-                               x_static, 0);
+                               xdot_static, xdot_old_static, 0);
 
       /* Assemble embedded BC's into gAC, bAC, and cAC */
               if ( ls->Length_Scale == 0. )
@@ -2286,8 +2285,7 @@ overlap_aug_cond ( int ija[],
                   if (ielem != jelem)
                     {
                       load_elem_dofptr(ielem, exo, x_static, x_old_static,
-                                       xdot_static, xdot_old_static,
-                                       x_static, 0);
+                                       xdot_static, xdot_old_static, 0);
                     }
 
     /* Find the appropriate side and point elem_side_bc to it */
@@ -2355,8 +2353,7 @@ overlap_aug_cond ( int ija[],
                   if (ielem >= 0 && ielem != jelem)
                     {
                       load_elem_dofptr(ielem, exo, x_static, x_old_static,
-                                       xdot_static, xdot_old_static,
-                                       x_static, 0);
+                                       xdot_static, xdot_old_static, 0);
                     }
                   if ( ielem >= 0 && current_elem_overlaps_interface(ls->Length_Scale) )
                     {
@@ -2415,8 +2412,7 @@ overlap_aug_cond ( int ija[],
               elem_side_bc = First_Elem_Side_BC_Array[pg->imtrx][ielem];
 
               load_elem_dofptr(ielem, exo, x_static, x_old_static,
-                                xdot_static, xdot_old_static,
-                                x_static, 0);
+                                xdot_static, xdot_old_static, 0);
               /*****************************************************************************/
               do {  /* begining of do while construct */
                 /* which loops over the sides of this element that have boundary

@@ -3250,8 +3250,7 @@ post_process_average(double x[],	 /* Solution vector for the current processor *
       evpl = evpl_glob[mn];
 
       err = load_elem_dofptr(ielem, exo, x, x_old,
-                             xdot, xdot_old,
-                             resid_vector, 0);
+                             xdot, xdot_old, 0);
       EH(err, "load_elem_dofptr");
 
       err = bf_mp_init(pd);
@@ -3845,8 +3844,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	       */
 	      
 	  
-	   err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old,
-				  resid_vector, 0);
+           err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 0);
 	   EH(err, "load_elem_dofptr");
 	   err = bf_mp_init(pd);
 	   EH(err, "bf_mp_init");
@@ -4049,9 +4047,9 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	   /*******************************************************************/
 
 	   for(i=0; i< num_elem_in_set; i++)
-	     {         
-	       err = load_elem_dofptr(elem_list[i], exo, x, x_old, xdot, 
-				      xdot_old, resid_vector, 0);      
+             {
+               err = load_elem_dofptr(elem_list[i], exo, x, x_old, xdot,
+                                      xdot_old, 0);
 	       err = bf_mp_init(pd);     
 	       EH(err, "load_elem_dofptr");
 	       iconnect_ptr    = ei[pg->imtrx]->iconnect_ptr;
@@ -4281,8 +4279,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 		*                    "a" matrix in its MSR format...
 		*/
 	    
-	       err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old,
-				      resid_vector, 0);
+	       err = load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 0);
 	    
 	       EH(err, "load_elem_dofptr");
 
@@ -5602,7 +5599,7 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
 	elem_id          = exo->node_elem_list[i_elem];
 
 	err = load_elem_dofptr(elem_id, exo, x, x_old, xdot, 
-			       xdot_old, resid_vector, 0);
+                               xdot_old, 0);
 	EH(err, "load_elem_dofptr");     
  
 	err = bf_mp_init(pd);
@@ -5887,8 +5884,7 @@ calc_zz_error_vel(double x[], /* Solution vector                       */
     /* Only employ element if it has been deemed worthy from above scoping loop */
 
     if (valid_elem_mask[i_elem] == 1) {
-      err = load_elem_dofptr(i_elem, exo, x, x_old, xdot, xdot_old,
-			     resid_vector, 0);
+      err = load_elem_dofptr(i_elem, exo, x, x_old, xdot, xdot_old, 0);
       EH(err, "load_elem_dofptr"); 
 
       err = bf_mp_init(pd);

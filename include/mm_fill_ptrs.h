@@ -48,19 +48,18 @@ EXTERN int load_ei              /* mm_fill_ptrs.c                            */
 				 * in master mode. If 1, this is a related ei
 				 * and we are in slave mode                  */
 
-EXTERN int load_elem_dofptr	/* mm_fill_ptrs.c                            */
-(const int,		/* element index                             */
-       const Exo_DB *,		/* Exodus database pointer                   */
-       const dbl *,		/* x - unknown vector                        */
-       const dbl *,		/* x_old - unknown vector, previous timestep */
-       const dbl *,		/* xdot - difference approx to dx/dt         */
-       const dbl *,             /* xdot_old - time derivative at t = t_n     */
-       const dbl *,		/* resid_vector - residual RHS               */
-       const int );	       	/* if early_return is true we just get 
-				 * some of the element information for 
-				 * routines that need it like 
-				 * global_h_elem_siz, but not all the 
-				 * computationally expensive pointers        */
+EXTERN int load_elem_dofptr /* mm_fill_ptrs.c                            */
+    (const int ielem,       /* element index                             */
+     const Exo_DB *exo,     /* Exodus database pointer                   */
+     dbl *x,                /* x - unknown vector                        */
+     dbl *x_old,            /* x_old - unknown vector, previous timestep */
+     dbl *xdot,             /* xdot - difference approx to dx/dt         */
+     dbl *xdot_old,         /* xdot_old - time derivative at t = t_n     */
+     const int);            /* if early_return is true we just get
+                             * some of the element information for
+                             * routines that need it like
+                             * global_h_elem_siz, but not all the
+                             * computationally expensive pointers        */
 
 int 
 load_elem_dofptr_all(const int ielem,

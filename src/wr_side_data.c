@@ -344,11 +344,11 @@ ns_data_print(pp_Data * p,
 		if (x == x_static) /* be the least disruptive possible */
 		  {
 		    err = load_elem_dofptr(elem_list[ielem], exo, x_static, x_old_static,
-					   xdot_static, xdot_old_static, x_static, 1);
+                                           xdot_static, xdot_old_static, 1);
 		  }
 		else
 		  {
-		    err = load_elem_dofptr(elem_list[ielem], exo, x, x, x, x, x, 1);
+                    err = load_elem_dofptr(elem_list[ielem], exo, x, x, x, x, 1);
 		  }
 
 		/*

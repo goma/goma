@@ -1307,11 +1307,10 @@ load_varType_Interpolation_ptrs_mat(int imtrx, const int varType, double **esp_p
 int 
 load_elem_dofptr(const int ielem,
 		 const Exo_DB * exo,
-		 const dbl *x,
-		 const dbl *x_old,
-		 const dbl *xdot,
-		 const dbl *xdot_old,
-		 const dbl *resid_vector,
+                 dbl *x,
+                 dbl *x_old,
+                 dbl *xdot,
+                 dbl *xdot_old,
 		 const int early_return) /* if true we just get 
 					  * some of the element information for 
 					  * routines that need it like 

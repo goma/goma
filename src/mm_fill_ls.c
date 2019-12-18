@@ -2068,7 +2068,7 @@ int stash_node_displacements(double **d, int num_total_nodes, double *x,
   e_end = exo->eb_ptr[exo->num_elem_blocks];
 
   for (ielem = e_start; ielem < e_end; ielem++) {
-    load_elem_dofptr(ielem, exo, x, x, x, x, x, 1);
+    load_elem_dofptr(ielem, exo, x, x, x, x, 1);
 
     for (ln = 0; ln < ei[pg->imtrx]->num_local_nodes; ln++) {
       double xi[3] = {0.0, 0.0, 0.0};
@@ -2222,7 +2222,7 @@ static struct LS_Surf_List *create_surfs_from_iso(int isovar, double isoval,
         if (elem_on_isosurface(e, x, exo, isovar, isoval)) {
 
           load_elem_dofptr(e, exo, x_static, x_old_static, xdot_static,
-                           xdot_old_static, x_static, 0);
+                           xdot_old_static, 0);
 
           bf_mp_init(pd);
 
@@ -4722,9 +4722,9 @@ static double scalar_value_at_local_node(int ielem, int ielem_type, int lnode,
   if (u == x_static) /* be the least disruptive possible */
   {
     load_elem_dofptr(ielem, exo, x_static, x_old_static, xdot_static,
-                     xdot_old_static, x_static, 0);
+                     xdot_old_static, 0);
   } else {
-    load_elem_dofptr(ielem, exo, u, u, u, u, u, 0);
+    load_elem_dofptr(ielem, exo, u, u, u, u, 0);
   }
 
   bf_mp_init(pd);
@@ -9148,7 +9148,7 @@ void get_subelement_descriptions(double x[], Exo_DB *exo,
         if (elem_on_isosurface(ielem, x, exo, ls->var, 0.)) {
 
           load_elem_dofptr(ielem, exo, x, x_old_static, xdot_static,
-                           xdot_old_static, x_static, 0);
+                           xdot_old_static, 0);
 
           e = create_integ_elements(0.);
 
@@ -9673,7 +9673,7 @@ double Courant_Time_Step(double x[], double x_old[], double x_older[],
         if (!overlaps_interface)
           continue;
 
-        load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, resid_vector, 0);
+        load_elem_dofptr(ielem, exo, x, x_old, xdot, xdot_old, 0);
 
         h_elem_siz(hsquared, hhv, dhv_dxnode, pd->e[pg->imtrx][R_MESH1]);
 
@@ -11497,7 +11497,7 @@ static double determine_adc_probability(struct Boundary_Condition *ls_adc,
   double value0;
   int a, i, ip, ip_total;
 
-  load_elem_dofptr(ielem, exo, x, x, x, x, x, 0);
+  load_elem_dofptr(ielem, exo, x, x, x, x, 0);
 
   value0 = *esp->F[local_elem_node_id[0]];
 
@@ -11632,7 +11632,7 @@ static void apply_adc_to_ss(Exo_DB *exo, double *x, int iss,
     get_side_info(ielem_type, side, &nodes_per_side, local_elem_node_id);
 
     if (apply_to_side[i] == TRUE) {
-      load_elem_dofptr(ielem, exo, x, x, x, x, x, 0);
+      load_elem_dofptr(ielem, exo, x, x, x, x, 0);
 
       if (start_sign == 123.0)
         start_sign = sign_of(*esp->F[local_elem_node_id[0]]);

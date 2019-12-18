@@ -2818,7 +2818,7 @@ load_element_information(const int elem_id)
   if(last_element_loaded == elem_id)
     return;
   err = load_elem_dofptr(elem_id, static_exo, static_x, static_x_old,
-			 static_xdot, static_xdot_old, static_resid_vector, 0);
+                         static_xdot, static_xdot_old, 0);
   EH(err, "Error from load_elem_dof_ptr()");
   
   /* Not sure if this call is necessary ... I don't know exactly what

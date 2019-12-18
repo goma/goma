@@ -2051,11 +2051,11 @@ calculate_all_rotation_vectors (Exo_DB *exo,		/* the mesh */
         if (x == x_static) /* be the least disruptive possible */
           {
             err = load_elem_dofptr(ielem, exo, x_static, x_old_static,
-                                   xdot_static, xdot_old_static, x_static, 0);
+                                   xdot_static, xdot_old_static, 0);
           }
         else
           {
-            err = load_elem_dofptr(ielem, exo, x, x, x, x, x, 0);
+            err = load_elem_dofptr(ielem, exo, x, x, x, x, 0);
           }
 	err = bf_mp_init(pd);
 
@@ -2447,10 +2447,10 @@ calculate_2D_rotation_vectors (Exo_DB *exo,		/* the mesh */
 		      elem = exo->ss_elem_list[exo->ss_elem_index[iss]+i];
 						
 		      if (x == x_static) 
-			err = load_elem_dofptr(elem, exo, x_static, x_old_static, xdot_static, xdot_old_static, x_static, 0);
+                        err = load_elem_dofptr(elem, exo, x_static, x_old_static, xdot_static, xdot_old_static, 0);
 		      else
 						
-			err = load_elem_dofptr(elem, exo, x, x, x, x, x, 0);
+                        err = load_elem_dofptr(elem, exo, x, x, x, x, 0);
 					
 		      if( SS_Internal_Boundary[iss] != -1 )
 			{

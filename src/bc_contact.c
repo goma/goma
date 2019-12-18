@@ -2713,8 +2713,7 @@ setup_shop_at_point(int ielem,
   if (ielem != ei[pg->imtrx]->ielem)
     {
       err = load_elem_dofptr(ielem, exo, x_static, x_old_static,
-                             xdot_static, xdot_old_static,
-		   	     x_static, 0);
+                             xdot_static, xdot_old_static, 0);
       EH(err, "load_elem_dofptr");
       
       err = bf_mp_init(pd);

@@ -5710,8 +5710,7 @@ int check_for_neg_elem_volume( int eb,
   /* now populate augc with elem number */
   for (e = e_start; e < e_end && !neg_elem_volume; e++)
     {
-      err = load_elem_dofptr(e, exo, x, x_old, xdot, xdot_old,
-                             resid_vector, 0);
+      err = load_elem_dofptr(e, exo, x, x_old, xdot, xdot_old, 0);
 
       ip_total = elem_info(NQUAD, ei[pg->imtrx]->ielem_type);
 

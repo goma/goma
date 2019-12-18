@@ -1571,7 +1571,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
 
   /* Cleanup: return to bulk element */
   err = load_elem_dofptr(elem1, exo, x_static, x_old_static,
-                         xdot_static, xdot_old_static, x_static, 0);
+                         xdot_static, xdot_old_static, 0);
   safe_free((void *) n_dof);
   safe_free((void *) bulk_gnn_list);
 

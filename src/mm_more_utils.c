@@ -1096,7 +1096,7 @@ get_new_coord(double *new_coord[DIM],
     {
       double displacement[DIM];
 
-      load_elem_dofptr(ielem, exo, x, x, x, x, x, 1);
+      load_elem_dofptr(ielem, exo, x, x, x, x, 1);
 
       for(ln = 0; ln < ei[pg->imtrx]->num_local_nodes; ln++)
 	{

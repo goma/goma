@@ -191,11 +191,11 @@ invert_isoparametric_map(  int *current_ielem,  /* initial element of search */
   if (xv == x_static) /* be the least disruptive possible */
     {
       err = load_elem_dofptr(*current_ielem, exo, x_static, x_old_static,
-                             xdot_static, xdot_old_static, x_static, 0);
+                             xdot_static, xdot_old_static, 0);
     }
   else
     {
-      err = load_elem_dofptr(*current_ielem, exo, xv, xv, xv, xv, xv, 0);
+      err = load_elem_dofptr(*current_ielem, exo, xv, xv, xv, xv, 0);
     }
 
   /* Initialize */
@@ -337,11 +337,11 @@ invert_isoparametric_map(  int *current_ielem,  /* initial element of search */
         if (xv == x_static) /* be the least disruptive possible */
           {
             err = load_elem_dofptr(*current_ielem, exo, x_static, x_old_static,
-                                   xdot_static, xdot_old_static, x_static, 0);
+                                   xdot_static, xdot_old_static, 0);
           }
         else
           {
-            err = load_elem_dofptr(*current_ielem, exo, xv, xv, xv, xv, xv, 0);
+            err = load_elem_dofptr(*current_ielem, exo, xv, xv, xv, xv, 0);
           }
 
 

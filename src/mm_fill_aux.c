@@ -1277,8 +1277,7 @@ global_h_elem_siz(dbl x[], dbl x_old[], dbl xdot[], dbl resid_vector[],
    */
   h = 0.0;
   for (e = 0; e < exo->num_elems; e++) {
-    (void) load_elem_dofptr(e, exo , x, x_old, xdot, xdot, 
-			    resid_vector, 1);
+    (void) load_elem_dofptr(e, exo , x, x_old, xdot, xdot, 1);
     if(ei[pg->imtrx]->ielem_dim != 1) h_elem_siz(hsquared, hhv, dhv_dxnode, 0);
     h_elem = 0.;
     for (p = 0; p < ei[pg->imtrx]->ielem_dim; p++) {

@@ -86,25 +86,23 @@ static int load_fv_grads_sens
  *   1/2002 - added sections on charged-species flux and electrical current, kschen 
  */
 
-double
-evaluate_flux(
-			  const Exo_DB *exo, /* ptr to basic exodus ii mesh information */
-			  const Dpi *dpi, /* distributed processing info */
-			  const int side_set_id, /* on which SSID to evaluate flux */
-			  const int quantity, /* to pick HEAT_FLUX, FORCE_NORMAL, etc. */
-			  const char *qtity_str, /* quantity string */
-			  const int blk_id,	/* material identification */
-			  const int species_id, /* species identification */
-			  const char *filenm, /* File name pointer */
-			  const int profile_flag,  /*  flag for printing flux profiles  */
-			  const dbl *x,	/* solution vector */
-			  const dbl *xdot,	/* dx/dt vector */
-			  double J_AC[], /* vector for augmenting condition sensitivities. 
-			  May be NULL */
-			  const double delta_t, /* time-step size */
-			  const dbl time_value, /* current time */
-			  const int print_flag)     /*  flag for printing results,1=print*/
-			  {
+double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh information */
+                     const Dpi *dpi,         /* distributed processing info */
+                     const int side_set_id,  /* on which SSID to evaluate flux */
+                     const int quantity,     /* to pick HEAT_FLUX, FORCE_NORMAL, etc. */
+                     const char *qtity_str,  /* quantity string */
+                     const int blk_id,       /* material identification */
+                     const int species_id,   /* species identification */
+                     const char *filenm,     /* File name pointer */
+                     const int profile_flag, /*  flag for printing flux profiles  */
+                     dbl *x,                 /* solution vector */
+                     dbl *xdot,              /* dx/dt vector */
+                     double J_AC[],          /* vector for augmenting condition sensitivities.
+                              May be NULL */
+                     const double delta_t,   /* time-step size */
+                     const dbl time_value,   /* current time */
+                     const int print_flag)   /*  flag for printing results,1=print*/
+{
   int j;			/* local index loop counter                 */
   int i, r;			/* Index for the local node number - row    */
   int ip = 0, a, b, c, p, w = -1;
@@ -348,7 +346,6 @@ evaluate_flux(
 				  x,
 				  xdot,
 				  xdot,
-				  x,
 				  0);
 	  EH(err, "load_elem_dofptr");
 
@@ -4024,7 +4021,6 @@ evaluate_flux(
 				  x,
 				  xdot,
 				  xdot,
-				  x,
 				  0);
 	  	   EH(err, "load_elem_dofptr");
 
@@ -4384,7 +4380,6 @@ evaluate_flux(
   return( local_flux + local_flux_conv );		/* failsafe default? */
 }
 
-
 /* evalutate_volume_integral - integrate a volumetric quantity and print out
  *
  * Author: T.A. Baer
@@ -4417,8 +4412,8 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 			 const double *params,
                          const int num_params,
 			 double *J_AC,   /* Pointer to AC sensitivity vector, may be NULL */
-			 const double x[],	/* solution vector */
-			 const double xdot[],	/* dx/dt vector */
+                         double x[],	/* solution vector */
+                         double xdot[],	/* dx/dt vector */
 			 const double delta_t, /* time-step size */
 			 const double time_value, /* current time */
 			 const int print_flag)     /*  flag for printing results,1=print*/
@@ -4569,7 +4564,7 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 
           err = load_elem_dofptr(elem, exo,
 			         x, x, xdot,
-				 xdot, x, 0);
+                                 xdot, 0);
           EH(err, "load_elem_dofptr");
 
 	  err = bf_mp_init(pd);
@@ -6096,8 +6091,8 @@ evaluate_global_flux (const Exo_DB *exo,
 		      const int blk_id,
 		      const int species_id,
 		      const double *params,
-		            double *J_AC, 
-		      const double x[],
+                            double *J_AC,
+                      double x[],
 		      const dbl time_value,
 		      const int print_flag )
 {
@@ -6142,7 +6137,7 @@ evaluate_global_flux (const Exo_DB *exo,
 
 	      err = load_elem_dofptr(elem, exo,
 				     x, x, x,
-				     x, x, 0);
+                                     x, 0);
 	      EH(err, "load_elem_dofptr");
 	      
 	      elem_type = ei[pg->imtrx]->ielem_type;
@@ -6328,8 +6323,8 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	      const int vector_id, /* sensitivity id */
 	      const char *filenm, /* File name pointer */
               const int profile_flag,  /*  flux sens print flag  */
-	      const double x[],	/* solution vector */
-	      const double xdot[],	/* solution vector */
+              double x[],	/* solution vector */
+              double xdot[],	/* solution vector */
 	      double **x_sens_p,	/* sensitivity vector */
 	      const double delta_t, /* time-step size */
               const double time_value, /* current time */
@@ -6549,7 +6544,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	   */
 	  err = load_elem_dofptr(elem_list[i], exo,
 				 x, x_sens_p[vector_id],
-				 xdot, xdot, x, 0);
+                                 xdot, xdot, 0);
 	  EH(err, "load_elem_dofptr");
 
 	  err = bf_mp_init(pd);
@@ -7734,7 +7729,6 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 				  x_sens_p[vector_id],
 				  xdot,
 				  xdot,
-				  x,
 				  0);
 	  	   EH(err, "load_elem_dofptr");
 
