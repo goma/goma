@@ -264,7 +264,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_hr[p];
          }
          em_stab.stabilization_field_var = EM_E1_REAL;
-         calc_emwave_stabilization_term(&em_stab, 1000.0);
+         calc_emwave_stabilization_term(&em_stab, 10.0);
          break;
     case EM_E1_IMAG:
     case EM_E2_IMAG:
@@ -282,7 +282,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_hi[p];
          }
          em_stab.stabilization_field_var = EM_E1_IMAG;
-         calc_emwave_stabilization_term(&em_stab, 1000.0);
+         calc_emwave_stabilization_term(&em_stab, 10.0);
          break;
     case EM_H1_REAL:
     case EM_H2_REAL:
@@ -296,7 +296,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_er[p];
          }
          em_stab.stabilization_field_var = EM_H1_REAL;
-         calc_emwave_stabilization_term(&em_stab, 1000.0);
+         calc_emwave_stabilization_term(&em_stab, 10.0);
          break;
     case EM_H1_IMAG:
     case EM_H2_IMAG:
@@ -310,7 +310,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_ei[p];
          }
          em_stab.stabilization_field_var = EM_H1_IMAG;
-         calc_emwave_stabilization_term(&em_stab, 1000.0);
+         calc_emwave_stabilization_term(&em_stab, 10.0);
          break;
     default:
       EH(-1, "assemble_emwave must be called with a usable em_var\n");
@@ -782,21 +782,22 @@ int apply_em_farfield_direct_vec(double func[DIM],
         Re_curl_H[p] += permute(p,q,r)*fv->grad_em_hr[r][q];
         Im_curl_H[p] += permute(p,q,r)*fv->grad_em_hi[r][q];
         // assuming all variables have same degrees of freedom
+
         for (int b=0; b<ei->dof[EM_E1_REAL]; b++) {
           d_dERb_Re_curl_E[p][r][b] += permute(p,q,r)
-                                     *bf[EM_E1_REAL]->grad_phi[b][r];
+                                     *bf[EM_E1_REAL + r]->grad_phi[b][q];
         }
         for (int b=0; b<ei->dof[EM_E1_IMAG]; b++) {
           d_dEIb_Im_curl_E[p][r][b] += permute(p,q,r)
-                                      *bf[EM_E1_IMAG]->grad_phi[b][r];
+                                      *bf[EM_E1_IMAG + r]->grad_phi[b][q];
         }
         for (int b=0; b<ei->dof[EM_H1_REAL]; b++) {
           d_dHRb_Re_curl_H[p][r][b] += permute(p,q,r)
-                                      *bf[EM_H1_REAL]->grad_phi[b][r];
+                                      *bf[EM_H1_REAL + r]->grad_phi[b][q];
         }
         for (int b=0; b<ei->dof[EM_H1_IMAG]; b++) {
           d_dHIb_Im_curl_H[p][r][b] += permute(p,q,r)
-                                      *bf[EM_H1_IMAG]->grad_phi[b][r];
+                                      *bf[EM_H1_IMAG + r]->grad_phi[b][q];
 
         }
       }
@@ -841,8 +842,14 @@ int apply_em_farfield_direct_vec(double func[DIM],
     case EM_ER_FARFIELD_DIRECT_BC:
 
       for (int p=0; p<DIM; p++) {
-        //func[p] = creal(cpx_func[p]);
-        func[p] = Re_curl_E[p];
+        func[p] = creal(cpx_func[p]);
+        //func[0] = fv->grad_em_er[1][2] - fv->grad_em_er[2][1];
+        /*
+        for(int q=0; q<DIM; q++) {
+          for (int r=0; r<DIM; r++){
+            func[p] += permute(p,q,r)*fv->grad_em_er[r][q];
+          }
+        }*/
       }
       //eqn = R_EM_H*_REAL;
       var = EM_E1_REAL;
@@ -894,7 +901,28 @@ int apply_em_farfield_direct_vec(double func[DIM],
   }
 
   if(af->Assemble_Jacobian) {
+/*
+    for (int j=0; j< ei->dof[EM_E2_REAL]; j++){
+          d_func[0][EM_E2_REAL][j] = -bf[EM_E2_REAL]->grad_phi[j][2];
+          d_func[0][EM_E3_REAL][j] =  bf[EM_E3_REAL]->grad_phi[j][1];
+                 0        1           -        1                  2
+                 0        2           +        2                  1
+                 p        r           +        r                  q
+    }
+  */
+    /*
+    for (int p=0; p<DIM; p++) {
 
+      //for (int q=0; q<DIM; q++) {
+        for (int r=0; r<DIM; r++) {
+          for (int j=0; j<ei->dof[EM_E1_REAL + r]; j++) {
+            d_func[p][EM_E1_REAL + r][j] += -d_dERb_Re_curl_E[p][r][j];
+          }
+        }
+      //}
+    }
+//    d_dERb_Re_curl_E[p][r][b]
+    */
     for (int p=0; p<pd->Num_Dim; p++) {
       //for (int q=0; q<pd->Num_Dim; q++) {
         for (int g=0; g<pd->Num_Dim; g++) {
@@ -904,24 +932,25 @@ int apply_em_farfield_direct_vec(double func[DIM],
               case EM_ER_FARFIELD_DIRECT_BC:
                 //d_func[p][gvar][j] += d_dERb_Re_curl_E[p][g][j]*creal(reduction_factor);
                 //d_func[p][gvar+3][j] -= d_dEIb_Im_curl_E[p][g][j]*cimag(reduction_factor);
-                d_func[p][gvar][j] += d_dERb_Re_curl_E[p][g][j];
+                d_func[p][gvar][j] += -d_dERb_Re_curl_E[p][g][j]*creal(reduction_factor);
+                d_func[p][gvar+3][j] += d_dERb_Re_curl_E[p][g][j]*cimag(reduction_factor);
                 break;
 
               case EM_EI_FARFIELD_DIRECT_BC:
-                d_func[p][gvar][j] += d_dERb_Re_curl_E[p][g][j]*cimag(reduction_factor);
-                d_func[p][gvar+3][j] += d_dEIb_Im_curl_E[p][g][j]*creal(reduction_factor);
+                d_func[p][gvar][j] += -d_dERb_Re_curl_E[p][g][j]*cimag(reduction_factor);
+                d_func[p][gvar+3][j] += -d_dEIb_Im_curl_E[p][g][j]*creal(reduction_factor);
                 break;
 
               case EM_HR_FARFIELD_DIRECT_BC:
-                d_func[p][gvar][j] += d_dHRb_Re_curl_H[p][g][j]*creal(reduction_factor);
-                d_func[p][gvar+3][j] -= d_dHIb_Im_curl_H[p][g][j]*cimag(reduction_factor);
+                d_func[p][gvar][j] += -d_dHRb_Re_curl_H[p][g][j]*creal(reduction_factor);
+                d_func[p][gvar+3][j] += d_dHIb_Im_curl_H[p][g][j]*cimag(reduction_factor);
                 //d_func[p][gvar][j] += d_dHRb_Re_n_x_H[p][g][j];
                 //d_func[p][gvar+3][j] += d_dERb_Re_n_x_E[p][g][j];
                 break;
 
               case EM_HI_FARFIELD_DIRECT_BC:
-                d_func[p][gvar][j] += d_dHRb_Re_curl_H[p][g][j]*cimag(reduction_factor);
-                d_func[p][gvar+3][j] += d_dHIb_Im_curl_H[p][g][j]*creal(reduction_factor);
+                d_func[p][gvar][j] += -d_dHRb_Re_curl_H[p][g][j]*cimag(reduction_factor);
+                d_func[p][gvar+3][j] += -d_dHIb_Im_curl_H[p][g][j]*creal(reduction_factor);
                 break;
 
             }
@@ -1073,7 +1102,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
 
       div_stabilization_field = 0.0;
 
-      // need the index the corresponds to the x, y or z
+      // need the index that corresponds to the x, y or z
       // of the current residual
       int cartesian_index = (em_stab->em_eqn - R_EM_E1_REAL)%3;
 
