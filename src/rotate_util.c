@@ -123,7 +123,8 @@ goma_error setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_typ
 
         if (x == x_static) /* be the least disruptive possible */
         {
-          err = load_elem_dofptr(ielem, exo, x_static, x_old_static, xdot_static, xdot_old_static, 0);
+          err =
+              load_elem_dofptr(ielem, exo, x_static, x_old_static, xdot_static, xdot_old_static, 0);
         } else {
           err = load_elem_dofptr(ielem, exo, x, x, x, x, 0);
         }
@@ -190,44 +191,47 @@ goma_error setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_typ
 
   error = set_rotation_types(exo, rotations);
   EH(error, "set_rotation_types");
-  error = associate_directions(exo, rotations);
-  EH(error, "associate_directions");
   error = set_average_normals_and_tangents(exo, rotations);
   EH(error, "set_average_normals_and_tangents");
+  error = associate_directions(exo, rotations);
+  EH(error, "associate_directions");
   error = set_rotated_coordinate_system(exo, rotations);
   EH(error, "set_rotated_coordinate_system");
+  error = set_face_normal_association(exo, rotations);
+  EH(error, "set_face_normal_association");
   FILE *normalscsv;
   normalscsv = fopen("normals.csv", "w");
 
-  fprintf(normalscsv, "n_normals,type,node,x,y,z,nx,ny,nz,dir,ax,ay,az,t1x,t1y,t1z,t2x,t2y,t2z,c1x,c1y,c1z,c2x,c2y,c2z,c3x,c3y,c3z\n");
+  fprintf(normalscsv, "n_normals,type,node,x,y,z,nx,ny,nz,dir,ax,ay,az,t1x,t1y,t1z,t2x,t2y,t2z,c1x,"
+                      "c1y,c1z,c2x,c2y,c2z,c3x,c3y,c3z,element,face,face_association\n");
   for (int i = 0; i < exo->num_nodes; i++) {
     for (int j = 0; j < rotations[i].n_normals; j++) {
-      fprintf(normalscsv, "%d,%d,%d,%g,%g,%g,%g,%g,%g,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g\n",
+      fprintf(normalscsv,
+              "%d,%d,%d,%g,%g,%g,%g,%g,%g,%d,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,%g,"
+              "%d,%d,%d\n",
               rotations[i].n_normals, rotations[i].type, i, exo->x_coord[i], exo->y_coord[i],
-              exo->z_coord[i],
-              gds_vector_get(rotations[i].normals[j],0),
-              gds_vector_get(rotations[i].normals[j],1),
-              gds_vector_get(rotations[i].normals[j],2),
-              rotations[i].associate_direction[j],
-              gds_vector_get(rotations[i].average_normals[j],0),
-              gds_vector_get(rotations[i].average_normals[j],1),
-              gds_vector_get(rotations[i].average_normals[j],2),
-              gds_vector_get(rotations[i].tangent1s[j],0),
-              gds_vector_get(rotations[i].tangent1s[j],1),
-              gds_vector_get(rotations[i].tangent1s[j],2),
-              gds_vector_get(rotations[i].tangent2s[j],0),
-              gds_vector_get(rotations[i].tangent2s[j],1),
-              gds_vector_get(rotations[i].tangent2s[j],2),
-              gds_vector_get(rotations[i].rotated_coord[0],0),
-              gds_vector_get(rotations[i].rotated_coord[0],1),
-              gds_vector_get(rotations[i].rotated_coord[0],2),
-              gds_vector_get(rotations[i].rotated_coord[1],0),
-              gds_vector_get(rotations[i].rotated_coord[1],1),
-              gds_vector_get(rotations[i].rotated_coord[1],2),
-              gds_vector_get(rotations[i].rotated_coord[2],0),
-              gds_vector_get(rotations[i].rotated_coord[2],1),
-              gds_vector_get(rotations[i].rotated_coord[2],2)
-              );
+              exo->z_coord[i], gds_vector_get(rotations[i].normals[j], 0),
+              gds_vector_get(rotations[i].normals[j], 1),
+              gds_vector_get(rotations[i].normals[j], 2), rotations[i].associate_direction[j],
+              gds_vector_get(rotations[i].average_normals[j], 0),
+              gds_vector_get(rotations[i].average_normals[j], 1),
+              gds_vector_get(rotations[i].average_normals[j], 2),
+              gds_vector_get(rotations[i].tangent1s[j], 0),
+              gds_vector_get(rotations[i].tangent1s[j], 1),
+              gds_vector_get(rotations[i].tangent1s[j], 2),
+              gds_vector_get(rotations[i].tangent2s[j], 0),
+              gds_vector_get(rotations[i].tangent2s[j], 1),
+              gds_vector_get(rotations[i].tangent2s[j], 2),
+              gds_vector_get(rotations[i].rotated_coord[0], 0),
+              gds_vector_get(rotations[i].rotated_coord[0], 1),
+              gds_vector_get(rotations[i].rotated_coord[0], 2),
+              gds_vector_get(rotations[i].rotated_coord[1], 0),
+              gds_vector_get(rotations[i].rotated_coord[1], 1),
+              gds_vector_get(rotations[i].rotated_coord[1], 2),
+              gds_vector_get(rotations[i].rotated_coord[2], 0),
+              gds_vector_get(rotations[i].rotated_coord[2], 1),
+              gds_vector_get(rotations[i].rotated_coord[2], 2), rotations[i].element[j],
+              rotations[i].face[j], rotations[i].face_cordinate_association[j]);
     }
   }
 
@@ -269,16 +273,13 @@ bool goma_rotation_node_type_corner(const goma_rotation_node_s *node) {
   // than a critical angle to both those to be a corner type
   for (int u_index = 0; u_index < node->n_normals; u_index++) {
     for (int v_index = u_index + 1; v_index < node->n_normals; v_index++) {
-      double uv_dot =
-          gds_vector_dot(node->normals[u_index], node->normals[v_index]);
+      double uv_dot = gds_vector_dot(node->normals[u_index], node->normals[v_index]);
       if (uv_dot < cos(critical_angle_radians)) {
         for (int w_index = 0; w_index < node->n_normals; w_index++) {
           if (w_index == u_index || w_index == v_index)
             continue;
-          double uw_dot =
-              gds_vector_dot(node->normals[u_index], node->normals[w_index]);
-          double vw_dot =
-              gds_vector_dot(node->normals[v_index], node->normals[w_index]);
+          double uw_dot = gds_vector_dot(node->normals[u_index], node->normals[w_index]);
+          double vw_dot = gds_vector_dot(node->normals[v_index], node->normals[w_index]);
           if (uw_dot < cos(critical_angle_radians) && vw_dot < cos(critical_angle_radians)) {
             return true;
           }
@@ -303,8 +304,7 @@ bool goma_rotation_node_type_edge(const goma_rotation_node_s *node) {
   // find another critical normal
   bool found = false;
   for (int u_index = 1; u_index < node->n_normals; u_index++) {
-    if (gds_vector_dot(critical_normal[0], node->normals[u_index]) <
-        cos(critical_angle_radians)) {
+    if (gds_vector_dot(critical_normal[0], node->normals[u_index]) < cos(critical_angle_radians)) {
       found = true;
       gds_vector_copy(critical_normal[1], node->normals[u_index]);
       break;
@@ -365,8 +365,8 @@ goma_error associate_directions(Exo_DB *exo, goma_rotation_node_s *rotation) {
             bool skip = false;
             for (int v_index = 0; v_index < u_index; v_index++) {
               if (rotation[i].associate_direction[v_index] == card) {
-                if (gds_vector_dot(rotation[i].normals[v_index],
-                                             rotation[i].normals[u_index]) <
+                if (gds_vector_dot(rotation[i].average_normals[v_index],
+                                   rotation[i].average_normals[u_index]) <
                     cos(critical_angle_radians)) {
                   skip = true;
                   break;
@@ -379,19 +379,14 @@ goma_error associate_directions(Exo_DB *exo, goma_rotation_node_s *rotation) {
           gds_vector *cvect = gds_vector_alloc(3);
           gds_vector_zero(cvect);
           gds_vector_set(cvect, card, 1.0);
-          double dot = fabs(gds_vector_dot(cvect, rotation[i].normals[u_index]));
-          if (dot > max_dot) {
+          double dot = fabs(gds_vector_dot(cvect, rotation[i].average_normals[u_index]));
+          if (dot > max_dot && fabs(max_dot - dot) > 1e-6) { // add tolerance
             best_dir = card;
             max_dot = dot;
           }
           gds_vector_free(cvect);
         }
         rotation[i].associate_direction[u_index] = best_dir;
-        for (unsigned int card = 0; card < DIM; card++) {
-          if (best_dir != card) {
-            rotation[i].tangent1_seeddir[u_index] = card;
-          }
-        }
         dir_set[best_dir] = true;
       }
 
@@ -439,46 +434,76 @@ goma_error associate_directions(Exo_DB *exo, goma_rotation_node_s *rotation) {
 goma_error set_average_normals_and_tangents(Exo_DB *exo, goma_rotation_node_s *rotation) {
   for (int i = 0; i < exo->num_nodes; i++) {
     if (rotation[i].n_normals > 0) {
-      for (unsigned int card = 0; card < DIM; card++) {
+      switch (rotation[i].type) {
+      case GOMA_ROTATION_SURFACE:
+      case GOMA_ROTATION_SINGLE: {
         gds_vector *average_normal = gds_vector_alloc(3);
         gds_vector_zero(average_normal);
-        int n_card_normals = 0;
         for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
-          if (rotation[i].associate_direction[u_index] == card) {
-            gds_vector_add(average_normal, rotation[i].normals[u_index]);
-            n_card_normals++;
-          }
+          gds_vector_add(average_normal, rotation[i].normals[u_index]);
         }
-
-        if (n_card_normals > 0) {
-          double invcount = 1.0 / n_card_normals;
-          gds_vector_scale(average_normal, invcount);
-          gds_vector_normalize(average_normal);
-          for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
-            if (rotation[i].associate_direction[u_index] == card) {
-              gds_vector_copy(rotation[i].average_normals[u_index], average_normal);
-            }
-          }
+        double invcount = 1.0 / rotation[i].n_normals;
+        gds_vector_scale(average_normal, invcount);
+        gds_vector_normalize(average_normal);
+        for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
+          gds_vector_copy(rotation[i].average_normals[u_index], average_normal);
         }
         gds_vector_free(average_normal);
-      }
-      for (unsigned int card = 0; card < DIM; card++) {
+      } break;
+      case GOMA_ROTATION_EDGE: {
+
         for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
-          if (rotation[i].associate_direction[u_index] == card) {
+          gds_vector_zero(rotation[i].average_normals[u_index]);
+          int count = 0;
+          for (int v_index = 0; v_index < rotation[i].n_normals; v_index++) {
+            if (gds_vector_dot(rotation[i].normals[u_index], rotation[i].normals[v_index]) >
+                cos(critical_angle_radians)) {
+              gds_vector_add(rotation[i].average_normals[u_index], rotation[i].normals[v_index]);
+              count++;
+            }
+          }
+          gds_vector_scale(rotation[i].average_normals[u_index], 1.0 / (double)count);
+        }
+      } break;
+      case GOMA_ROTATION_CORNER: {
+        if (rotation[i].n_normals != 3) {
+          EH(-1, "Corner case incorrect number of normals");
+          return GOMA_ERROR;
+        } else {
+          for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
+            gds_vector_copy(rotation[i].average_normals[u_index], rotation[i].normals[u_index]);
+          }
+        }
+      } break;
+      }
+
+        for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
+          int tcross_card = -1;
+          double min_card = 1e18;
+          for (unsigned int card = 0; card < DIM; card++) {
+            double dot = fabs(gds_vector_get(rotation[i].average_normals[u_index], card));
+            if (dot < min_card) {
+              min_card = dot;
+              tcross_card = (int) card;
+            }
+          }
+
+          assert(tcross_card != -1);
             gds_vector *tangent1 = rotation[i].tangent1s[u_index];
             gds_vector_zero(tangent1);
-            gds_vector_set(tangent1, rotation[i].tangent1_seeddir[u_index], 1.0);
+            gds_vector_set(tangent1, (unsigned int) tcross_card, 1.0);
             gds_vector *seed = gds_vector_alloc(3);
             gds_vector_copy(seed, tangent1);
-           /* First tanget defined by seed vector gives
-            *  t1 = tseed - n(tseed DOT n) normalized
-            */
+            /* First tanget defined by seed vector gives
+             *  t1 = tseed - n(tseed DOT n) normalized
+             */
             for (unsigned int p = 0; p < DIM; p++) {
               for (unsigned int q = 0; q < DIM; q++) {
                 double tangent_p = gds_vector_get(tangent1, p);
-                tangent_p -= gds_vector_get(rotation[i].average_normals[u_index],p) *
-                             gds_vector_get(rotation[i].average_normals[u_index],q) * gds_vector_get(seed,q);
-                gds_vector_set(tangent1,p,tangent_p);
+                tangent_p -= gds_vector_get(rotation[i].average_normals[u_index], p) *
+                             gds_vector_get(rotation[i].average_normals[u_index], q) *
+                             gds_vector_get(seed, q);
+                gds_vector_set(tangent1, p, tangent_p);
               }
             }
             gds_vector_normalize(tangent1);
@@ -487,10 +512,7 @@ goma_error set_average_normals_and_tangents(Exo_DB *exo, goma_rotation_node_s *r
             gds_vector_free(seed);
           }
         }
-      }
     }
-  }
-
 
   return GOMA_SUCCESS;
 }
@@ -499,20 +521,21 @@ goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rota
     if (rotation[i].n_normals > 0) {
       switch (rotation[i].type) {
       case GOMA_ROTATION_SURFACE:
-      case GOMA_ROTATION_SINGLE:
-      {
+      case GOMA_ROTATION_SINGLE: {
         // lets just brute force all permutations see best association
         unsigned int best_n = 0, best_t1 = 0, best_t2 = 0;
         double maximum = 0;
         for (unsigned int n_index = 0; n_index < DIM; n_index++) {
           for (unsigned int t1_index = 0; t1_index < DIM; t1_index++) {
-            if (n_index == t1_index) continue;
+            if (n_index == t1_index)
+              continue;
             for (unsigned int t2_index = 0; t2_index < DIM; t2_index++) {
-              if (t2_index == n_index || t2_index == t1_index) continue;
+              if (t2_index == n_index || t2_index == t1_index)
+                continue;
               double idot = fabs(gds_vector_get(rotation[i].average_normals[0], n_index));
               double jdot = fabs(gds_vector_get(rotation[i].tangent1s[0], t1_index));
               double kdot = fabs(gds_vector_get(rotation[i].tangent2s[0], t2_index));
-              double sum = idot+jdot+kdot;
+              double sum = idot + jdot + kdot;
               if (sum > maximum) {
                 maximum = sum;
                 best_n = n_index;
@@ -541,7 +564,7 @@ goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rota
         unsigned int n2_card = n1_card;
         for (int u_index = 1; u_index < rotation[i].n_normals; u_index++) {
           if (rotation[i].associate_direction[u_index] != n1_card) {
-            gds_vector_copy(n2,  rotation[i].average_normals[u_index]);
+            gds_vector_copy(n2, rotation[i].average_normals[u_index]);
             n2_card = rotation[i].associate_direction[u_index];
             break;
           }
@@ -557,8 +580,8 @@ goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rota
             break;
           }
         }
-        assert((unsigned int) o_card != n1_card);
-        assert((unsigned int) o_card != n2_card);
+        assert((unsigned int)o_card != n1_card);
+        assert((unsigned int)o_card != n2_card);
         assert(n1_card != n2_card);
         if (o_card == -1 || n1_card == n2_card) {
           return GOMA_ERROR;
@@ -569,10 +592,10 @@ goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rota
 
         // find angle to offset rotation
         dbl dot = gds_vector_dot(n1, n2);
-        const dbl ninety = 90*M_PI/180;
+        const dbl ninety = 90 * M_PI / 180;
 
         dbl angle = acos(dot);
-        dbl shift = 0.5*(angle - ninety);
+        dbl shift = 0.5 * (angle - ninety);
         gds_vector_rotate_around_vector(new_n1, n1, cross, shift);
         gds_vector_rotate_around_vector(new_n2, n2, cross, shift);
         gds_vector_normalize(new_n1);
@@ -614,9 +637,9 @@ goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rota
         gds_vector_cross(n1, new_n3, cross);
         gds_vector_normalize(cross);
 
-        if (gds_vector_dot(cross,n2) < 0) {
-          gds_vector_scale(cross, -1.0);
-        }
+        //if (gds_vector_dot(cross, n2) < 0) {
+        //  gds_vector_scale(cross, -1.0);
+        //}
         gds_vector_copy(new_n2, cross);
 
         gds_vector_copy(new_n1, n1);
@@ -636,3 +659,20 @@ goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rota
   return GOMA_SUCCESS;
 }
 
+goma_error set_face_normal_association(Exo_DB *exo, goma_rotation_node_s *rotation) {
+  for (int i = 0; i < exo->num_nodes; i++) {
+    for (int n_index = 0; n_index < rotation[i].n_normals; n_index++) {
+      unsigned int best = 0;
+      double max_dot = 0;
+      for (unsigned int cord = 0; cord < DIM; cord++) {
+        double dot = gds_vector_dot(rotation[i].normals[n_index], rotation[i].rotated_coord[cord]);
+        if (dot > max_dot) {
+          max_dot = dot;
+          best = cord;
+        }
+      }
+      rotation[i].face_cordinate_association[n_index] = best;
+    }
+  }
+  return GOMA_SUCCESS;
+}

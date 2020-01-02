@@ -58,7 +58,9 @@
 #include "mm_fill_util.h"
 #include "mm_fill_potential.h"
 #include "mm_qp_storage.h"
-#include "mm_shell_bc.h" 
+#include "mm_shell_bc.h"
+
+#include "rotate_util.h"
 
 
 #include "mm_eh.h"
@@ -2385,14 +2387,29 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		ieqn = MAX_PROB_EQN + bc->species_eq;
 	      } else {
 		ieqn = upd->ep[pg->imtrx][eqn];
-	      }
+                if (goma_automatic_rotations.automatic_rotations && (bc->desc->rotate != NO_ROT)) {
+                  int node = ei[pg->imtrx]->gnn_list[eqn][ldof_eqn];
+                  int n_index = -1;
+                  for (int i = 0; i < goma_automatic_rotations.rotation_nodes[node].n_normals; i++) {
+                    if (goma_automatic_rotations.rotation_nodes[node].element[i] == ei[pg->imtrx]->ielem &&
+                        goma_automatic_rotations.rotation_nodes[node].face[i] == elem_side_bc->id_side) {
+                      n_index = i;
+                      break;
+                    }
+                  }
+                  EH(n_index, "Rotations incorrectly setup");
+                  int rot_dir = (int) goma_automatic_rotations.rotation_nodes[I].face_cordinate_association[n_index];
+                  ieqn = upd->ep[pg->imtrx][eqn + rot_dir];
+                }
+              }
 
 	      /*
 	       *  Add the current contribution to the local element
 	       *  residual vector
 	       */
 	      if (ldof_eqn != -1) {
-		lec->R[ieqn][ldof_eqn] += weight * fv->sdet * func[p];
+                lec->R[ieqn][ldof_eqn] += weight * fv->sdet * func[p];
+
 		
 #ifdef DEBUG_BC
 		if (IFPD == NULL) IFPD = fopen("darcy.txt", "a");

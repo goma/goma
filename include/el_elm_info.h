@@ -110,10 +110,10 @@ EXTERN double Gq_edge_weight
        const int );            /* ielem_type - element type                 */
 
 EXTERN int in_list
-(const int ,		/* ivalue - what are we looking for          */
-       const int ,		/* i - where to start looking                */
-       const int ,		/* iend - where to stop looking              */
-       int *);			/* ivector - array in which to look          */
+(const int ivalue, /* ivalue - what are we looking for          */
+        const int i,      /* i - where to start looking                */
+        const int iend,   /* iend - where to stop looking              */
+        int *ivector);     /* ivector - array in which to look          */
 
 EXTERN int get_type
 (char [],			/* string - EXODUS name of parent element    */

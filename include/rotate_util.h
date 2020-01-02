@@ -35,6 +35,7 @@ typedef struct {
   unsigned int tangent1_seeddir[GOMA_MAX_NORMALS_PER_NODE];
   int element[GOMA_MAX_NORMALS_PER_NODE];
   int face[GOMA_MAX_NORMALS_PER_NODE];
+  unsigned int face_cordinate_association[GOMA_MAX_NORMALS_PER_NODE];
   int n_normals;
   goma_rotation_type_e type;
 } goma_rotation_node_s;
@@ -60,4 +61,5 @@ goma_error associate_directions(Exo_DB *exo, goma_rotation_node_s *rotation);
 goma_error set_average_normals_and_tangents(Exo_DB *exo, goma_rotation_node_s *rotation);
 goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rotation);
 goma_error free_rotations(Exo_DB *exo, goma_rotation_node_s **rotations);
+goma_error set_face_normal_association(Exo_DB *exo, goma_rotation_node_s *rotations);
 #endif

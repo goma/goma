@@ -215,4 +215,11 @@ static void load_element_indices
 
 #endif
 
+void
+rotate_momentum_auto (
+    int id,                             /* Elemental stiffness matrix row index */
+    int I,                              /* Global node number                   */
+    int dim,                            /* physical dim of problem              */
+    struct Aztec_Linear_Solver_System *ams );
+
 #endif /* GOMA_BC_ROTATE_H */
