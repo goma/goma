@@ -117,7 +117,7 @@ assemble_emwave(double time,	/* present time value */
   struct emwave_stabilization em_stab;
   em_stab.em_eqn = em_eqn;
   em_stab.em_var = em_var;
-  em_stab.type = dphi_div; // enum supports phi_div, dphi_div,
+  em_stab.type = dphi_divsquared; // enum supports phi_div, dphi_div,
                            // divphi_div and phi_divsquared
 
 
@@ -264,7 +264,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_hr[p];
          }
          em_stab.stabilization_field_var = EM_E1_REAL;
-         calc_emwave_stabilization_term(&em_stab, 10.0);
+         calc_emwave_stabilization_term(&em_stab, 0.0);
          break;
     case EM_E1_IMAG:
     case EM_E2_IMAG:
@@ -282,7 +282,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_hi[p];
          }
          em_stab.stabilization_field_var = EM_E1_IMAG;
-         calc_emwave_stabilization_term(&em_stab, 10.0);
+         calc_emwave_stabilization_term(&em_stab, 0.0);
          break;
     case EM_H1_REAL:
     case EM_H2_REAL:
@@ -296,7 +296,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_er[p];
          }
          em_stab.stabilization_field_var = EM_H1_REAL;
-         calc_emwave_stabilization_term(&em_stab, 10.0);
+         calc_emwave_stabilization_term(&em_stab, 1.0);
          break;
     case EM_H1_IMAG:
     case EM_H2_IMAG:
@@ -310,7 +310,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_ei[p];
          }
          em_stab.stabilization_field_var = EM_H1_IMAG;
-         calc_emwave_stabilization_term(&em_stab, 10.0);
+         calc_emwave_stabilization_term(&em_stab, 1.0);
          break;
     default:
       EH(-1, "assemble_emwave must be called with a usable em_var\n");
@@ -1031,49 +1031,97 @@ void
 calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
                                double stabilization_coefficient
                                ){
-  double grad_stabilization_field[DIM][DIM] = {{0.0}};
-
+  double complex grad_stabilization_field[DIM][DIM] = {{0.0}};
+  dbl mag_permeability=12.57e-07;  // H/m
 
 
   /*
    *
    */
-  switch(em_stab->stabilization_field_var) {
-    case EM_E1_REAL:
-      for ( int p=0; p<VIM; p++) {
-        for ( int q=0; q<VIM; q++) {
-          grad_stabilization_field[p][q] = fv->grad_em_er[p][q];
+  switch(em_stab->type) {
+    case none:
+      for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+        em_stab->residual_term[i] = 0.0;
+        for (int b=0; b<DIM; b++){
+          for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+            em_stab->jacobian_term[i][b][j]
+                = 0.0;
+          }
         }
       }
+      return;
       break;
-    case EM_E1_IMAG:
-      for ( int p=0; p<VIM; p++) {
-        for ( int q=0; q<VIM; q++) {
-          grad_stabilization_field[p][q] = fv->grad_em_ei[p][q];
-        }
+    case phi_div:
+    case dphi_div:
+    case divphi_div:
+      switch(em_stab->stabilization_field_var) {
+        case EM_E1_REAL:
+          for ( int p=0; p<VIM; p++) {
+            for ( int q=0; q<VIM; q++) {
+              grad_stabilization_field[p][q] = fv->grad_em_er[p][q];
+            }
+          }
+          break;
+        case EM_E1_IMAG:
+          for ( int p=0; p<VIM; p++) {
+            for ( int q=0; q<VIM; q++) {
+              grad_stabilization_field[p][q] = fv->grad_em_ei[p][q];
+            }
+          }
+          break;
+        case EM_H1_REAL:
+          for ( int p=0; p<VIM; p++) {
+            for ( int q=0; q<VIM; q++) {
+              grad_stabilization_field[p][q] = fv->grad_em_hr[p][q];
+            }
+          }
+          break;
+        case EM_H1_IMAG:
+          for ( int p=0; p<VIM; p++) {
+            for ( int q=0; q<VIM; q++) {
+              grad_stabilization_field[p][q] = fv->grad_em_hi[p][q];
+            }
+          }
+          break;
+        default:
+          EH(-1,"Cannot have unset stabilization_field_var");
+          break;
       }
       break;
-    case EM_H1_REAL:
-      for ( int p=0; p<VIM; p++) {
-        for ( int q=0; q<VIM; q++) {
-          grad_stabilization_field[p][q] = fv->grad_em_hr[p][q];
-        }
+
+    case phi_divsquared:
+    case dphi_divsquared:
+      switch(em_stab->stabilization_field_var){
+        case EM_H1_REAL:
+        case EM_H1_IMAG:
+          for ( int p=0; p<VIM; p++) {
+            for ( int q=0; q<VIM; q++) {
+              grad_stabilization_field[p][q] = fv->grad_em_er[p][q] + _Complex_I*fv->grad_em_ei[p][q];
+            }
+          }
+          break;
+        case EM_E1_REAL:
+        case EM_E1_IMAG:
+          for ( int p=0; p<VIM; p++) {
+            for ( int q=0; q<VIM; q++) {
+              grad_stabilization_field[p][q] = fv->grad_em_hr[p][q] + _Complex_I*fv->grad_em_hi[p][q];
+            }
+          }
+          break;
+        default:
+          EH(-1,"Must use the first EQN_VAR for a given 3-valued field, e.g. EM_E1_REAL");
       }
       break;
-    case EM_H1_IMAG:
-      for ( int p=0; p<VIM; p++) {
-        for ( int q=0; q<VIM; q++) {
-          grad_stabilization_field[p][q] = fv->grad_em_hi[p][q];
-        }
-      }
-      break;
+
     default:
-      EH(-1,"Cannot have unset stabilization_field_var");
+      //WH(-1,"Cannot use calc_emwave_stabilization without defining type in the struct");
+      //return -1;
       break;
+
   }
-
-  double div_stabilization_field;
-
+  int cartesian_index;
+  double complex div_stabilization_field;
+  double complex div_stabilization_field_squared;
   switch(em_stab->type) {
     case phi_div:
 
@@ -1083,19 +1131,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
         div_stabilization_field += grad_stabilization_field[p][p];
       }
 
-      for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
-        em_stab->residual_term[i] = bf[em_stab->em_eqn]->phi[i]
-                                    *stabilization_coefficient
-                                    *div_stabilization_field;
-        for (int b=0; b<DIM; b++){
-          for (int j=0; j<ei->dof[em_stab->em_var]; j++){
-            em_stab->jacobian_term[i][b][j]
-                = bf[em_stab->em_eqn]->phi[i]
-                  *stabilization_coefficient
-                  *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
-          }
-        }
-      }
+
       break;
 
     case dphi_div:
@@ -1104,7 +1140,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
 
       // need the index that corresponds to the x, y or z
       // of the current residual
-      int cartesian_index = (em_stab->em_eqn - R_EM_E1_REAL)%3;
+      cartesian_index = (em_stab->em_eqn - R_EM_E1_REAL)%3;
 
       for (int p=0; p<VIM; p++) {
         div_stabilization_field += grad_stabilization_field[p][p];
@@ -1114,7 +1150,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
         em_stab->residual_term[i]
             = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index]
               *stabilization_coefficient
-              *div_stabilization_field;
+              *creal(div_stabilization_field);
 
         for (int b=0; b<DIM; b++){
           for (int j=0; j<ei->dof[em_stab->em_var]; j++){
@@ -1145,7 +1181,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
         em_stab->residual_term[i]
             = div_phi[i]
               *stabilization_coefficient
-              *div_stabilization_field;
+              *creal(div_stabilization_field);
 
         for (int b=0; b<DIM; b++){
           for (int j=0; j<ei->dof[em_stab->em_var]; j++){
@@ -1160,28 +1196,186 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
 
     case phi_divsquared:
       div_stabilization_field = 0.0;
+
       for (int p=0; p<VIM; p++) {
         div_stabilization_field += grad_stabilization_field[p][p];
       }
-
-      for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
-        em_stab->residual_term[i]
-            = bf[em_stab->em_eqn]->phi[i]
-              *stabilization_coefficient
-              *div_stabilization_field
-              *div_stabilization_field;
-        for (int b=0; b<DIM; b++){
-          for (int j=0; j<ei->dof[em_stab->em_var]; j++){
-            em_stab->jacobian_term[i][b][j]
+      div_stabilization_field_squared = div_stabilization_field
+                                        *div_stabilization_field;
+      switch(em_stab->stabilization_field_var) {
+        case EM_E1_REAL:
+          for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+            em_stab->residual_term[i]
                 = bf[em_stab->em_eqn]->phi[i]
                   *stabilization_coefficient
-                  *2.0
-                  *div_stabilization_field
-                  *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
+                  *creal(div_stabilization_field_squared)
+                  *mp->permittivity;
+            for (int b=0; b<DIM; b++){
+              for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+                em_stab->jacobian_term[i][b][j]
+                    = bf[em_stab->em_eqn]->phi[i]
+                      *stabilization_coefficient
+                      *2.0
+                      *div_stabilization_field
+                      *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
+              }
+            }
           }
-        }
+        case EM_H1_REAL:
+          for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+            em_stab->residual_term[i]
+                = bf[em_stab->em_eqn]->phi[i]
+                  *stabilization_coefficient
+                  *creal(div_stabilization_field_squared)
+                  *mag_permeability;
+            for (int b=0; b<DIM; b++){
+              for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+                em_stab->jacobian_term[i][b][j]
+                    = bf[em_stab->em_eqn]->phi[i]
+                      *stabilization_coefficient
+                      *2.0
+                      *div_stabilization_field
+                      *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
+              }
+            }
+          }
+          break;
+        case EM_E1_IMAG:
+          for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+            em_stab->residual_term[i]
+                = bf[em_stab->em_eqn]->phi[i]
+                  *stabilization_coefficient
+                  *cimag(div_stabilization_field_squared)
+                  *mp->permittivity;
+            for (int b=0; b<DIM; b++){
+              for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+                em_stab->jacobian_term[i][b][j]
+                    = bf[em_stab->em_eqn]->phi[i]
+                      *stabilization_coefficient
+                      *2.0
+                      *div_stabilization_field
+                      *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
+              }
+            }
+          }
+        case EM_H1_IMAG:
+          for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+            em_stab->residual_term[i]
+                = bf[em_stab->em_eqn]->phi[i]
+                  *stabilization_coefficient
+                  *cimag(div_stabilization_field_squared)
+                  *mag_permeability;
+            for (int b=0; b<DIM; b++){
+              for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+                em_stab->jacobian_term[i][b][j]
+                    = bf[em_stab->em_eqn]->phi[i]
+                      *stabilization_coefficient
+                      *2.0
+                      *div_stabilization_field
+                      *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
+              }
+            }
+          }
+          break;
+        default:
+          EH(-1,"must set the stabilization field var with type==phi_divsquared");
+          return -1;
+          break;
       }
+      break;
 
+    case dphi_divsquared:
+      div_stabilization_field = 0.0;
+
+      // need the index that corresponds to the x, y or z
+      // of the current residual
+      cartesian_index = (em_stab->em_eqn - R_EM_E1_REAL)%3;
+
+      for (int p=0; p<VIM; p++) {
+        div_stabilization_field += grad_stabilization_field[p][p];
+      }
+      div_stabilization_field_squared = div_stabilization_field
+                                        *div_stabilization_field;
+      switch(em_stab->stabilization_field_var) {
+        case EM_E1_REAL:
+          for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+            em_stab->residual_term[i]
+                = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index]
+                  *stabilization_coefficient
+                  *creal(div_stabilization_field_squared)
+                  *mp->permittivity;
+            for (int b=0; b<DIM; b++){
+              for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+                em_stab->jacobian_term[i][b][j]
+                    = bf[em_stab->em_eqn]->phi[i]
+                      *stabilization_coefficient
+                      *2.0
+                      *div_stabilization_field
+                      *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
+              }
+            }
+          }
+        case EM_H1_REAL:
+          for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+            em_stab->residual_term[i]
+                = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index]
+                  *stabilization_coefficient
+                  *creal(div_stabilization_field_squared)
+                  *mag_permeability;
+            for (int b=0; b<DIM; b++){
+              for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+                em_stab->jacobian_term[i][b][j]
+                    = bf[em_stab->em_eqn]->phi[i]
+                      *stabilization_coefficient
+                      *2.0
+                      *div_stabilization_field
+                      *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
+              }
+            }
+          }
+          break;
+        case EM_E1_IMAG:
+          for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+            em_stab->residual_term[i]
+                = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index]
+                  *stabilization_coefficient
+                  *cimag(div_stabilization_field_squared)
+                  *mp->permittivity;
+            for (int b=0; b<DIM; b++){
+              for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+                em_stab->jacobian_term[i][b][j]
+                    = bf[em_stab->em_eqn]->phi[i]
+                      *stabilization_coefficient
+                      *2.0
+                      *div_stabilization_field
+                      *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
+              }
+            }
+          }
+        case EM_H1_IMAG:
+          for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
+            em_stab->residual_term[i]
+                = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index]
+                  *stabilization_coefficient
+                  *cimag(div_stabilization_field_squared)
+                  *mag_permeability;
+            for (int b=0; b<DIM; b++){
+              for (int j=0; j<ei->dof[em_stab->em_var]; j++){
+                em_stab->jacobian_term[i][b][j]
+                    = bf[em_stab->em_eqn]->phi[i]
+                      *stabilization_coefficient
+                      *2.0
+                      *div_stabilization_field
+                      *bf[em_stab->stabilization_field_var + b]->grad_phi[j][b];
+              }
+            }
+          }
+          break;
+        default:
+          EH(-1,"must set the stabilization field var with type==phi_divsquared");
+          return -1;
+          break;
+      }
       break;
     case none:
     default:

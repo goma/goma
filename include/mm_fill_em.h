@@ -29,7 +29,7 @@
 #include <complex.h>
 #undef I
 
-enum stabilization_type{none, phi_div, dphi_div, divphi_div, phi_divsquared};
+enum stabilization_type{none, phi_div, dphi_div, divphi_div, phi_divsquared, dphi_divsquared};
 
 struct emwave_stabilization {
   enum stabilization_type type;
