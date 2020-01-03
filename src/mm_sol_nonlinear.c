@@ -1294,6 +1294,8 @@ EH(-1,"version not compiled with frontal solver");
 	}
       }
 #endif /* MATRIX_DUMP */
+
+      fflush(stdout);
       /*************************************************************************
        *             SOLVE THE LINEAR SYSTEM
        *************************************************************************/

@@ -9,7 +9,7 @@
 #include <stdbool.h>
 
 #ifndef GOMA_MAX_NORMALS_PER_NODE
-#define GOMA_MAX_NORMALS_PER_NODE 6
+#define GOMA_MAX_NORMALS_PER_NODE 12
 #endif
 
 #ifndef GOMA_ROTATION_CRITICAL_ANGLE

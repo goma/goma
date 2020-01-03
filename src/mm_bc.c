@@ -2627,7 +2627,26 @@ find_id_side_BC(const int ielem,		/* element index number */
   /* If we're working with tetrahedral elements, re-work the side id */
   if ( ielem_type == LINEAR_TET ) {
     iss = BC_Types[ibc].Set_Index;
-    sideid = find_id_side_SS(ielem, iss, exo);
+    bool nodes[4] = {false,false,false,false};
+    for (int i = 0; i < 4; i++) {
+      int node_id = exo->elem_node_list[exo->elem_node_pntr[ielem]+i];
+      for (int j = 0; j < num_nodes_on_side; j++) {
+        if (node_id == local_ss_node_list[j]) {
+          nodes[i] = true;
+        }
+      }
+    }
+    if (nodes[0] && nodes[1] && nodes[3]) {
+      return 1;
+    } else if (nodes[1] && nodes[2] && nodes[3]) {
+      return 2;
+    } else if (nodes[0] && nodes[2] && nodes[3]) {
+      return 3;
+    } else if (nodes[0] && nodes[1] && nodes[2]) {
+      return 4;
+    } else {
+      EH(-1, "Unknown tet layout");
+    }
   }
 
   return(sideid);    
