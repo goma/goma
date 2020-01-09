@@ -2084,11 +2084,7 @@ add_info_stamp(Exo_DB *exo)
  * Revised: 
  */
 
-void 
-wr_resetup_exo(Exo_DB *exo,
-               char *filename,
-               int verbosity)
-{
+void wr_resetup_exo(Exo_DB *exo, char *filename) {
   int error;
   int i;
   int status;

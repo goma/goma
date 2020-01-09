@@ -313,7 +313,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 
   one_base(mono);
   wr_mesh_exo(mono, monolith_file_name, 0);
-  wr_resetup_exo(mono, monolith_file_name, 0);
+  wr_resetup_exo(mono, monolith_file_name);
   zero_base(mono);
 
   /*

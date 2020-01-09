@@ -800,8 +800,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       pnd[i] = (Node_Description *) smalloc(SZ_ND);
     }
 
-  make_goma_dofmap(mono, mult, evd, Lucky, num_basic_eqnvars,	     /* (in) */
-		   node_kind, node_dof0, pnd, &num_kinds_nodes);    /* (out) */
+    make_goma_dofmap(mono, mult, Lucky, num_basic_eqnvars,         /* (in) */
+                     node_kind, node_dof0, pnd, &num_kinds_nodes);    /* (out) */
 
 
   total_dofs       = node_dof0[nn];	/* right after the last node */
@@ -4221,7 +4221,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	}
 
       one_base(E);
-      wr_resetup_exo(E, E->path, 0);
+      wr_resetup_exo(E, E->path);
       zero_base(E);
 
 
@@ -4880,7 +4880,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       one_base(mono);
       wr_mesh_exo(mono, out_augplot_file_name, 0);
-      wr_resetup_exo(mono, out_augplot_file_name, 0);
+      wr_resetup_exo(mono, out_augplot_file_name);
       wr_result_exo(mono, out_augplot_file_name);
       zero_base(mono);
 

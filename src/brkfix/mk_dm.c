@@ -58,17 +58,8 @@
  * Function prototypes for functions defined in this file...
  */
 
-void 
-make_goma_dofmap(Exo_DB *x,
-		 Bevm ***mult,
-		 int ***evd,
-		 int ***Lucky,
-		 int *num_basic_eqnvars,
-		 int *node_kind, 
-		 int *node_dof0, 
-		 Node_Description **pnd,
-		 int *nkn)
-{
+void make_goma_dofmap(Exo_DB *x, Bevm ***mult, int ***Lucky, int *num_basic_eqnvars, int *node_kind,
+                      int *node_dof0, Node_Description **pnd, int *nkn) {
   int current_dof;
   int num_kinds_nodes;
   int d;
