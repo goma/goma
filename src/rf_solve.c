@@ -3868,7 +3868,7 @@ anneal_mesh(double x[], int tev, int tev_post, double *glob_vars_val,
   rd->nev = rd_nev_save;
 
   if( Num_Proc > 1 )
-      wr_dpi(dpi, afilename, 0);
+    wr_dpi(dpi, afilename);
 	      
   for (i = 0; i < rd->TotalNVSolnOutput; i++) {
     /* 

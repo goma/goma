@@ -200,7 +200,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 
       zero_base(poly);
 
-      rd_dpi(dpin, polylith_name, 0);
+      rd_dpi(dpin, polylith_name);
       free_dpi(dpin);
       free(dpin);
 
@@ -231,7 +231,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 				       EXODB_ACTION_RD_MESH + 
 				       EXODB_ACTION_RD_RES0 ));
   zero_base(poly);
-  rd_dpi(dpin, polylith_name, 0);
+  rd_dpi(dpin, polylith_name);
 
 
   mono = (Exo_DB *) smalloc(sizeof(Exo_DB));
@@ -279,7 +279,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 				       EXODB_ACTION_RD_MESH ) );
       zero_base(poly);
 
-      rd_dpi(dpin, polylith_name, 0);
+      rd_dpi(dpin, polylith_name);
 
       build_global_coords(poly, dpin, mono);
 
@@ -361,7 +361,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 					   EXODB_ACTION_RD_MESH +
 					   EXODB_ACTION_RD_RES0 ));
 	  zero_base(poly);
-	  rd_dpi(dpin, polylith_name, 0);
+          rd_dpi(dpin, polylith_name);
 	  
 	  /*
 	   * Now indicate what variables and time planes to read from the

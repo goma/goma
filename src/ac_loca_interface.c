@@ -1260,7 +1260,8 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
       one_base(exo);
       wr_mesh_exo(exo, loca_in->NV_exoII_outfile, 0);
       wr_result_prelim_exo(rd, exo, loca_in->NV_exoII_outfile, NULL);
-      if (Num_Proc > 1) wr_dpi(dpi, loca_in->NV_exoII_outfile, 0);
+      if (Num_Proc > 1)
+        wr_dpi(dpi, loca_in->NV_exoII_outfile);
       *passdown.nprint = 0;
 
   /* Write the null vector to this file */

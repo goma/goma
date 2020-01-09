@@ -106,20 +106,11 @@ static void define_variable
        const int ,		/* dimension_val_2 */
        int *);			/* identifier */
 
-static void put_variable
-(const int ,		/* netcdf_unit */
-       const nc_type ,		/* netcdf_type */
-       const int ,		/* num_dimensions */
-       const int ,		/* dimension_val_1 */
-       const int ,		/* dimension_val_2 */
-       const int ,		/* variable_identifier */
-       const void *);		/* variable_address */
+static void put_variable(const int netcdf_unit, const nc_type netcdf_type,
+                         const int variable_identifier,
+                         const void *variable_address);		/* variable_address */
 
-int
-wr_dpi(Dpi *d,
-       char *filename,
-       int verbosity)
-{
+int wr_dpi(Dpi *d, char *filename) {
   int err;
   int status;
   int u;			/* short hand for unit... */
@@ -148,35 +139,22 @@ wr_dpi(Dpi *d,
    * Open the file.
    */
 
-#ifdef NO_NETCDF_2
   err = nc_open(filename, NC_WRITE, &u);
   if ( err != NC_NOERR )
     {
       EH(-1, "nc_open() problem.");
     }
-#endif
-#ifndef NO_NETCDF_2
-  err = ncopen(filename, NC_WRITE);
-  EH(err, "ncopen() problem.");
-  u   = err;
-#endif
 
 
   /*
    * Go into define mode.
    */
 
-#ifdef NO_NETCDF_2
   err = nc_redef(u);
   if ( err != NC_NOERR )
     {
       EH(-1, "nc_redef() problem.");
     }
-#endif
-#ifndef NO_NETCDF_2
-  err = ncredef(u);
-  EH(err, "ncredef() problem.");
-#endif
 
   /*
    * Define each of the netCDF dimensions that will be needed to describe
@@ -606,17 +584,11 @@ wr_dpi(Dpi *d,
    * Leave define mode.
    */
 
-#ifdef NO_NETCDF_2
   err = nc_enddef(u);
   if ( err != NC_NOERR )
     {
       EH(-1, "nc_enddef() problem.");
     }
-#endif
-#ifndef NO_NETCDF_2
-  err = ncendef(u);
-  EH(err, "ncendef() problem.");
-#endif
 
   /*
    * Put variable values.
@@ -628,260 +600,153 @@ wr_dpi(Dpi *d,
    * If not, then you'll need to do that case by hand.
    */
 
-  put_variable(u, NC_CHAR, 2, 
-	       d->num_elem_blocks_global,	d->len_string,
-	       si.eb_elem_type_global, &(d->eb_elem_type_global[0][0]));
+    put_variable(u, NC_CHAR, si.eb_elem_type_global, &(d->eb_elem_type_global[0][0]));
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_elem_blocks_global,	-1, 
-	       si.eb_id_global,			d->eb_id_global);
+    put_variable(u, NC_INT, si.eb_id_global, d->eb_id_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_elem_blocks,		-1, 
-	       si.eb_index_global,		d->eb_index_global);
+    put_variable(u, NC_INT, si.eb_index_global, d->eb_index_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_elem_blocks_global,	-1, 
-	       si.eb_num_attr_global,		d->eb_num_attr_global);
+  put_variable(u, NC_INT, si.eb_num_attr_global, d->eb_num_attr_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_elem_blocks_global,	-1, 
-	       si.eb_num_elems_global,		d->eb_num_elems_global);
+  put_variable(u, NC_INT, si.eb_num_elems_global, d->eb_num_elems_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_elem_blocks_global,	-1, 
-	       si.eb_num_nodes_per_elem_global,	
-	       d->eb_num_nodes_per_elem_global);
+  put_variable(u, NC_INT, si.eb_num_nodes_per_elem_global, d->eb_num_nodes_per_elem_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_elem_blocks,		-1, 
-	       si.eb_num_private_elems,		d->eb_num_private_elems);
+  put_variable(u, NC_INT, si.eb_num_private_elems, d->eb_num_private_elems);
 
   if ( d->num_props_eb > 1 )
     {
-      put_variable(u, NC_INT, 2,
-		   d->num_props_eb, d->num_elem_blocks_global,
-		   si.eb_prop_global, &(d->eb_prop_global[0][0]));
+    put_variable(u, NC_INT, si.eb_prop_global, &(d->eb_prop_global[0][0]));
     }
 
   if ( d->num_elems > 0 )
     {
-      put_variable(u, NC_INT, 1, 
-		   d->num_elems, -1, 
-		   si.elem_index_global,	d->elem_index_global);
+    put_variable(u, NC_INT, si.elem_index_global, d->elem_index_global);
 
-      put_variable(u, NC_INT, 1, d->num_elems,	-1, si.elem_owner,
-		   d->elem_owner);
+    put_variable(u, NC_INT, si.elem_owner, d->elem_owner);
 
     }
 
   if ( d->len_elem_var_tab_global > 0 )
     {
 
-      put_variable(u, NC_INT, 1, 
-		   d->len_elem_var_tab_global,	-1, 
-		   si.elem_var_tab_global,	d->elem_var_tab_global);
+    put_variable(u, NC_INT, si.elem_var_tab_global, d->elem_var_tab_global);
     }
 
   if ( d->len_elem_elem_list > 0 )
     {
-      put_variable(u, NC_INT, 1, d->len_elem_elem_list,	-1, 
-		   si.elem_elem_list_global, d->elem_elem_list_global);
-      put_variable(u, NC_INT, 1, d->len_elem_elem_list,	-1, 
-		   si.elem_elem_face_global, d->elem_elem_face_global);
-      put_variable(u, NC_INT, 1, d->len_elem_elem_list,	-1, 
-		   si.elem_elem_twst_global, d->elem_elem_twst_global);
-      put_variable(u, NC_INT, 1, d->len_elem_elem_list,	-1, 
-		   si.elem_elem_proc_global, d->elem_elem_proc_global);
+    put_variable(u, NC_INT, si.elem_elem_list_global, d->elem_elem_list_global);
+    put_variable(u, NC_INT, si.elem_elem_face_global, d->elem_elem_face_global);
+    put_variable(u, NC_INT, si.elem_elem_twst_global, d->elem_elem_twst_global);
+      put_variable(u, NC_INT, si.elem_elem_proc_global, d->elem_elem_proc_global);
     }
 
-  put_variable(u, NC_INT, 2, 
-	       d->num_global_node_descriptions,	d->len_node_description, 
-	       si.global_node_description,&(d->global_node_description[0][0]));
-  
-  put_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.my_name,		&(d->my_name));
+    put_variable(u, NC_INT, si.global_node_description, &(d->global_node_description[0][0]));
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_neighbors,	-1, 
-	       si.neighbor,		d->neighbor);
+    put_variable(u, NC_INT, si.my_name, &(d->my_name));
+
+    put_variable(u, NC_INT, si.neighbor, d->neighbor);
 
   if ( d->num_nodes > 0 )
     {
-      put_variable(u, NC_INT, 1, 
-		   d->num_nodes,	-1, 
-		   si.node_index_global,	d->node_index_global);
+    put_variable(u, NC_INT, si.node_index_global, d->node_index_global);
     }
 
-  put_variable(u, NC_INT, 0, 
-	       -1, 	-1, 
-	       si.ns_distfact_len_global, &(d->ns_distfact_len_global));
+    put_variable(u, NC_INT, si.ns_distfact_len_global, &(d->ns_distfact_len_global));
 
-  put_variable(u, NC_INT, 0, 
-	       -1, 	-1, 
-	       si.ns_node_len_global, &(d->ns_node_len_global));
+    put_variable(u, NC_INT, si.ns_node_len_global, &(d->ns_node_len_global));
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_node_sets_global,	-1, 
-	       si.ns_id_global,		d->ns_id_global);
+    put_variable(u, NC_INT, si.ns_id_global, d->ns_id_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_node_sets,	-1, 
-	       si.ns_index_global,	d->ns_index_global);
+  put_variable(u, NC_INT, si.ns_index_global, d->ns_index_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->len_ns_distfact_list,	-1, 
-	       si.ns_distfact_list_index_global, 
-	       d->ns_distfact_list_index_global);
+  put_variable(u, NC_INT, si.ns_distfact_list_index_global, d->ns_distfact_list_index_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_node_sets_global,		-1, 
-	       si.ns_distfact_index_global,	d->ns_distfact_index_global);
+  put_variable(u, NC_INT, si.ns_distfact_index_global, d->ns_distfact_index_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_node_sets_global,		-1, 
-	       si.ns_node_index_global,	d->ns_node_index_global);
+  put_variable(u, NC_INT, si.ns_node_index_global, d->ns_node_index_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->len_ns_node_list,	-1, 
-	       si.ns_node_list_index_global, 
-	       d->ns_node_list_index_global);
+  put_variable(u, NC_INT, si.ns_node_list_index_global, d->ns_node_list_index_global);
 
+  put_variable(u, NC_INT, si.ns_num_distfacts_global, d->ns_num_distfacts_global);
 
-
-  put_variable(u, NC_INT, 1, 
-	       d->num_node_sets_global,		-1, 
-	       si.ns_num_distfacts_global,	d->ns_num_distfacts_global);
-
-  put_variable(u, NC_INT, 1, 
-	       d->num_node_sets_global,	-1, 
-	       si.ns_num_nodes_global,	d->ns_num_nodes_global);
+  put_variable(u, NC_INT, si.ns_num_nodes_global, d->ns_num_nodes_global);
 
   if ( d->num_props_ns > 1 )
     {
-      put_variable(u, NC_INT, 2,
-		   d->num_props_ns,		d->num_node_sets_global,
-		   si.ns_prop_global,	&(d->ns_prop_global[0][0]));
+    put_variable(u, NC_INT, si.ns_prop_global, &(d->ns_prop_global[0][0]));
     }
 
-  put_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.num_boundary_nodes,	&(d->num_boundary_nodes));
+    put_variable(u, NC_INT, si.num_boundary_nodes, &(d->num_boundary_nodes));
 
-  put_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.num_dofs_global,	&(d->num_dofs_global));
+    put_variable(u, NC_INT, si.num_dofs_global, &(d->num_dofs_global));
 
-  put_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.num_elems_global,	&(d->num_elems_global));
+    put_variable(u, NC_INT, si.num_elems_global, &(d->num_elems_global));
 
-  put_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.num_external_nodes,	&(d->num_external_nodes));
+  put_variable(u, NC_INT, si.num_external_nodes, &(d->num_external_nodes));
 
-  put_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.num_internal_nodes,	&(d->num_internal_nodes));
+  put_variable(u, NC_INT, si.num_internal_nodes, &(d->num_internal_nodes));
 
-  put_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.num_nodes_global,	&(d->num_nodes_global));
+  put_variable(u, NC_INT, si.num_nodes_global, &(d->num_nodes_global));
 
-  put_variable(u, NC_INT, 1, 
-	       d->len_ptr_set_membership,	-1, 
-	       si.ptr_set_membership,	d->ptr_set_membership);
+  put_variable(u, NC_INT, si.ptr_set_membership, d->ptr_set_membership);
 
-  put_variable(u, NC_INT, 1, 
-	       d->len_set_membership,	-1, 
-	       si.set_membership,	d->set_membership);
+  put_variable(u, NC_INT, si.set_membership, d->set_membership);
 
-  put_variable(u, NC_INT, 1, d->num_side_sets_global, -1, 
-	       si.ss_distfact_index_global, d->ss_distfact_index_global);
+  put_variable(u, NC_INT, si.ss_distfact_index_global, d->ss_distfact_index_global);
 
-  put_variable(u, NC_INT, 0, -1, -1, 
-	       si.ss_distfact_len_global, &(d->ss_distfact_len_global));
+  put_variable(u, NC_INT, si.ss_distfact_len_global, &(d->ss_distfact_len_global));
 
   if ( d->len_ss_distfact_list > 0 )
     {
-      put_variable(u, NC_INT, 1, d->len_ss_distfact_list, -1, 
-		   si.ss_distfact_list_index_global, 
-		   d->ss_distfact_list_index_global);
+    put_variable(u, NC_INT, si.ss_distfact_list_index_global, d->ss_distfact_list_index_global);
     }
 
-  put_variable(u, NC_INT, 1, d->num_side_sets_global, -1, 
-	       si.ss_elem_index_global, d->ss_elem_index_global);
+    put_variable(u, NC_INT, si.ss_elem_index_global, d->ss_elem_index_global);
 
-  put_variable(u, NC_INT, 0, -1, -1, 
-	       si.ss_elem_len_global, &(d->ss_elem_len_global));
+    put_variable(u, NC_INT, si.ss_elem_len_global, &(d->ss_elem_len_global));
 
   if ( d->len_ss_elem_list > 0 )
     {
-      put_variable(u, NC_INT, 1, d->len_ss_elem_list, -1, 
-		   si.ss_elem_list_index_global, d->ss_elem_list_index_global);
+    put_variable(u, NC_INT, si.ss_elem_list_index_global, d->ss_elem_list_index_global);
     }
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_side_sets_global,	-1, 
-	       si.ss_id_global,		d->ss_id_global);
+    put_variable(u, NC_INT, si.ss_id_global, d->ss_id_global);
 
   if ( d->num_side_sets > 0 )
     {
-      put_variable(u, NC_INT, 1, 
-		   d->num_side_sets,	-1, 
-		   si.ss_index_global,	d->ss_index_global);
+    put_variable(u, NC_INT, si.ss_index_global, d->ss_index_global);
     }
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_side_sets_global,		-1, 
-	       si.ss_num_distfacts_global,	d->ss_num_distfacts_global);
+    put_variable(u, NC_INT, si.ss_num_distfacts_global, d->ss_num_distfacts_global);
 
-  put_variable(u, NC_INT, 1, 
-	       d->num_side_sets_global,		-1, 
-	       si.ss_num_sides_global,		d->ss_num_sides_global);
+    put_variable(u, NC_INT, si.ss_num_sides_global, d->ss_num_sides_global);
 
   if ( d->num_props_ss > 1 )
     {
-      put_variable(u, NC_INT, 2,
-		   d->num_props_ss,		d->num_side_sets_global,
-		   si.ss_prop_global,		&(d->ss_prop_global[0][0]));
+    put_variable(u, NC_INT, si.ss_prop_global, &(d->ss_prop_global[0][0]));
     }
 
-  put_variable(u, NC_INT, 0, 
-	       -1,	-1, 
-	       si.undefined_basic_eqnvar_id, &(d->undefined_basic_eqnvar_id));
+    put_variable(u, NC_INT, si.undefined_basic_eqnvar_id, &(d->undefined_basic_eqnvar_id));
 
   if (d->num_side_sets_global > 0) {
 
-      put_variable(u, NC_INT, 1,
-                   d->num_side_sets_global, -1,
-                   si.ss_internal_global, d->ss_internal_global);
+    put_variable(u, NC_INT, si.ss_internal_global, d->ss_internal_global);
 
-      put_variable(u, NC_INT, 1,
-                   d->num_side_sets_global+1, -1,
-                   si.ss_block_index_global, d->ss_block_index_global);
+    put_variable(u, NC_INT, si.ss_block_index_global, d->ss_block_index_global);
 
-      put_variable(u, NC_INT, 1,
-                   d->ss_block_index_global[d->num_side_sets_global], -1,
-                   si.ss_block_list_global, d->ss_block_list_global);
+    put_variable(u, NC_INT, si.ss_block_list_global, d->ss_block_list_global);
   }
 
   /*
    * Close the file (flush buffers).
    */
 
-#ifdef NO_NETCDF_2
   err = nc_close(u);
   if ( err != NC_NOERR )
     {
       EH(-1, "nc_close() problem.");
     }
-#endif
-#ifndef NO_NETCDF_2
-  err = ncclose(u);
-  EH(err, "ncclose()");
-#endif
 
   return(status);
 }
@@ -919,7 +784,6 @@ define_dimension(const int unit,
       *identifier = -1;
       return;
     }
-#ifdef NO_NETCDF_2  
   err  = nc_def_dim(unit, string, value, identifier);
   if ( err != NC_NOERR )
     {
@@ -927,14 +791,6 @@ define_dimension(const int unit,
 		   value, *identifier);
       EH(-1, err_msg);
     }
-#endif
-#ifndef NO_NETCDF_2
-  err  = ncdimdef(unit, string, value);
-  sprintf(err_msg, "ncdimdef() on %s [<%d] rtn %d", string, 
-		 value, err);
-  EH(err, err_msg);
-  *identifier = err;
-#endif  
 
   return;
 }
@@ -965,16 +821,9 @@ define_variable(const int netcdf_unit,
 		int *identifier)
 {			    
   int err;
-  int i;
   char err_msg[MAX_CHAR_ERR_MSG];
 
-#ifdef NO_NETCDF_2
   int dim[NC_MAX_VAR_DIMS];
-#endif
-#ifndef NO_NETCDF_2
-  int  tim[NC_MAX_VAR_DIMS];			/* This is ludicrous... */
-  long dim[NC_MAX_VAR_DIMS];
-#endif
 
   if ( num_dimensions < 0 )
     {
@@ -1015,7 +864,6 @@ define_variable(const int netcdf_unit,
   dim[0] = MAX(dimension_id_1, 1);
   dim[1] = MAX(dimension_id_2, 1);
 
-#ifdef NO_NETCDF_2
   err    = nc_def_var(netcdf_unit, name_string, netcdf_type, num_dimensions, 
 		      dim, identifier);
   if ( err != NC_NOERR )
@@ -1024,39 +872,13 @@ define_variable(const int netcdf_unit,
 		   num_dimensions, *identifier);
       EH(-1, err_msg);
     }
-#endif
-#ifndef NO_NETCDF_2
-  for ( i=0; i<num_dimensions; i++ ) 
-    {
-      tim[i] = dim[i];
-    }
-
-  err    = ncvardef(netcdf_unit, name_string, netcdf_type, num_dimensions, 
-		    tim);
-  sprintf(err_msg, "ncvardef on %s (%d-D) id=%d", name_string, 
-		   num_dimensions, err);
-  EH(err, err_msg);
-  *identifier   = err;
-#endif
 
   return;
 }
 
-static void
-put_variable(const int netcdf_unit,
-	     const nc_type netcdf_type,
-	     const int num_dimensions,
-	     const int dimension_val_1,
-	     const int dimension_val_2,
-	     const int variable_identifier,
-	     const void *variable_address)
-{
+static void put_variable(const int netcdf_unit, const nc_type netcdf_type,
+                         const int variable_identifier, const void *variable_address) {
   int err;
-  int i;
-#ifndef NO_NETCDF_2
-  long count[NC_MAX_VAR_DIMS];
-  long start[NC_MAX_VAR_DIMS];
-#endif
   char err_msg[MAX_CHAR_ERR_MSG];
 
   /*
@@ -1069,7 +891,6 @@ put_variable(const int netcdf_unit,
       return;
     }
 
-#ifdef NO_NETCDF_2		/* pure netCDF 3 calls... */
   switch ( netcdf_type )
     {
     case NC_INT:
@@ -1108,74 +929,7 @@ put_variable(const int netcdf_unit,
       EH(-1, "Specified netCDF data type unrecognized or unimplemented.");
       break;
     }
-#endif
 
-#ifndef NO_NETCDF_2		/* backward compatibility mode to netcdf2 */
-  
-  if ( num_dimensions < 0 || num_dimensions > 2 )
-    {
-      sprintf(err_msg, "Bad or too large dimension value %d", 
-		   num_dimensions);
-      EH(-1, err_msg);
-    }
-
-  for ( i=0; i<num_dimensions; i++)
-    {
-      count[i] = 1;
-      start[i] = 0;
-    }
-
-  if ( num_dimensions > 0 )
-    {
-      if ( dimension_val_1 < 1 )
-	{
-	  /*
-	   * This is a case where you didn't really want to put any
-	   * variables here, right? I mean, really, a dimension of zero?
-	   */
-	  return;
-	  /*
-	  sprintf(err_msg, 
-	  "Data type %s (%d dimensional) has dimension values = %d %d",
-		       string_type(netcdf_type), num_dimensions, 
-		       dimension_val_1, dimension_val_2);
-	  EH(-1, err_msg);
-	  */
-	}
-      count[0] = dimension_val_1;
-    }
-
-  if ( num_dimensions > 1 ) 
-    {
-      if ( dimension_val_2 < 1 )
-	{
-	  /*
-	   * Another case of where you were not serious. Here a 2D array
-	   * has the second dimension of zero, so it is pretty darn flat.
-	   * So flat, in fact, that we're going to call it done and leave
-	   * right away.
-	   */
-	  return;
-	  /*
-	  sprintf(err_msg, 
-	  "Data type %s (%d dimensional) has dimension values = %d %d",
-		       string_type(netcdf_type), num_dimensions, 
-		       dimension_val_1, dimension_val_2);
-	  EH(-1, err_msg);
-	  */
-	}
-      count[1] = dimension_val_2;
-    }
-
-  /*
-   * If we've made it here, then presumably the dimensions have some meat
-   * to them.
-   */
-
-  err = ncvarput(netcdf_unit, variable_identifier, start, count, 
-		 variable_address);
-  EH(err, "ncvarput");
-#endif
 
   return;
 }

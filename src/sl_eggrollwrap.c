@@ -335,7 +335,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
 	  /* Update exo file for distributed problem info 
 	   */
 	  if (Num_Proc > 1) {
-	    wr_dpi(dpi, ExoFileOut, 0);
+            wr_dpi(dpi, ExoFileOut);
 	  }
 	  for (j = 0; j < tnv; j++) {
 	    extract_nodal_vec(&evect[i][0], rd->nvtype[j], rd->nvkind[j], 

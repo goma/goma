@@ -29,10 +29,8 @@
 #define EXTERN extern
 #endif
 
-EXTERN int rd_dpi		/* rd_dpi.c */
-(Dpi *,			/* fantastic structure defd in "dpi.h" */
-       char *,			/* fn - filename */
-       const int );		/* verbosity - how much to talk */
+EXTERN int rd_dpi       /* rd_dpi.c */
+    (Dpi *d, char *fn);		/* verbosity - how much to talk */
 
 EXTERN void getdid		/* rd_dpi.c */
 (int ,			/* netcdf_unit */

@@ -958,7 +958,7 @@ main(int argc, char **argv)
       error = MPI_Barrier(MPI_COMM_WORLD);
 #endif
 #endif
-      wr_dpi(DPI_ptr, ExoFileOut, 0);
+      wr_dpi(DPI_ptr, ExoFileOut);
     }
   }
 

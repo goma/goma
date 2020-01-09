@@ -4124,7 +4124,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       build_elem_elem_xtra(E);
 
-      wr_dpi(D, E->path, 0);
+      wr_dpi(D, E->path);
 
       /*
        * Back to our regularly schedule transcription of E->results data

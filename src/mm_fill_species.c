@@ -3189,15 +3189,13 @@ raoults_law(double func[],
 
    if(mp->VaporPressureModel[wspec] == ANTOINE )
      {
-       antoine_psat(wspec, mp->u_vapor_pressure[wspec],
-                    &psat[wspec], &dpsatdt[wspec]);
+     antoine_psat(mp->u_vapor_pressure[wspec], &psat[wspec], &dpsatdt[wspec]);
        mp->vapor_pressure[wspec] = psat[wspec];
      }
 
    else if(mp->VaporPressureModel[wspec] == RIEDEL )
      {
-       riedel_psat(wspec, mp->u_vapor_pressure[wspec],
-                   &psat[wspec], &dpsatdt[wspec]);
+       riedel_psat(mp->u_vapor_pressure[wspec], &psat[wspec], &dpsatdt[wspec]);
        mp->vapor_pressure[wspec] = psat[wspec];
      }
 
@@ -3452,12 +3450,10 @@ raoults_law_new(double func[],
    */
   if (liquidSide) {
     if (mp->VaporPressureModel[wspec] == ANTOINE) {
-      antoine_psat(wspec, mp->u_vapor_pressure[wspec],
-		   &psat_w, &dpsatdT_w);
+      antoine_psat(mp->u_vapor_pressure[wspec], &psat_w, &dpsatdT_w);
       mp->vapor_pressure[wspec] = psat_w;
     } else if (mp->VaporPressureModel[wspec] == RIEDEL) {
-      riedel_psat(wspec, mp->u_vapor_pressure[wspec],
-		  &psat_w, &dpsatdT_w);
+      riedel_psat(mp->u_vapor_pressure[wspec], &psat_w, &dpsatdT_w);
       mp->vapor_pressure[wspec] = psat_w;
     } else {
       psat_w = mp->vapor_pressure[wspec];
@@ -3574,15 +3570,13 @@ flory_huggins(double func[],
 
    if(mp->VaporPressureModel[wspec] == ANTOINE )
      {
-       antoine_psat(wspec, mp->u_vapor_pressure[wspec],
-                    &psat[wspec], &dpsatdt[wspec]);
+     antoine_psat(mp->u_vapor_pressure[wspec], &psat[wspec], &dpsatdt[wspec]);
        mp-> vapor_pressure[wspec] = psat[wspec];
      }
 
    else if(mp->VaporPressureModel[wspec] == RIEDEL )
      {
-       riedel_psat(wspec, mp->u_vapor_pressure[wspec],
-                   &psat[wspec], &dpsatdt[wspec]);
+       riedel_psat(mp->u_vapor_pressure[wspec], &psat[wspec], &dpsatdt[wspec]);
        mp-> vapor_pressure[wspec] = psat[wspec];
      }
 
@@ -6470,15 +6464,13 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 
   if(mp->VaporPressureModel[wspec] == ANTOINE )
      {
-       antoine_psat(wspec, mp->u_vapor_pressure[wspec],
-                    &psat[wspec], &dpsatdt[wspec]);
+    antoine_psat(mp->u_vapor_pressure[wspec], &psat[wspec], &dpsatdt[wspec]);
        mp-> vapor_pressure[wspec] = psat[wspec];
      }
 
   else if(mp->VaporPressureModel[wspec] == RIEDEL )
      {
-       riedel_psat(wspec, mp->u_vapor_pressure[wspec],
-                   &psat[wspec], &dpsatdt[wspec]);
+       riedel_psat(mp->u_vapor_pressure[wspec], &psat[wspec], &dpsatdt[wspec]);
        mp-> vapor_pressure[wspec] = psat[wspec];
      }
 
@@ -7789,15 +7781,13 @@ compute_leak_velocity(double *vnorm,
 	      
 	      if(mp->VaporPressureModel[wspec] == ANTOINE )
 		{
-		  antoine_psat(wspec, mp->u_vapor_pressure[wspec],
-			       &psat[wspec], &dpsatdt[wspec]);
+                antoine_psat(mp->u_vapor_pressure[wspec], &psat[wspec], &dpsatdt[wspec]);
 		  mp-> vapor_pressure[wspec] = psat[wspec];
 		}
 	      
 	      else if(mp->VaporPressureModel[wspec] == RIEDEL )
 		{
-		  riedel_psat(wspec, mp->u_vapor_pressure[wspec],
-			      &psat[wspec], &dpsatdt[wspec]);
+                  riedel_psat(mp->u_vapor_pressure[wspec], &psat[wspec], &dpsatdt[wspec]);
 		  mp-> vapor_pressure[wspec] = psat[wspec];
 		}
 		  
@@ -8621,15 +8611,13 @@ compute_leak_energy(double *enorm,
 	      
 	      if(mp->VaporPressureModel[wspec] == ANTOINE )
 		{
-		  antoine_psat(wspec, mp->u_vapor_pressure[wspec],
-			       &psat[wspec], &dpsatdt[wspec]);
+                antoine_psat(mp->u_vapor_pressure[wspec], &psat[wspec], &dpsatdt[wspec]);
 		  mp-> vapor_pressure[wspec] = psat[wspec];
 		}
 	      
 	      else if(mp->VaporPressureModel[wspec] == RIEDEL )
 		{
-		  riedel_psat(wspec, mp->u_vapor_pressure[wspec],
-			      &psat[wspec], &dpsatdt[wspec]);
+                  riedel_psat(mp->u_vapor_pressure[wspec], &psat[wspec], &dpsatdt[wspec]);
 		  mp-> vapor_pressure[wspec] = psat[wspec];
 		}
 		  

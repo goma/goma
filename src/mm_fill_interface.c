@@ -340,9 +340,9 @@ source_vle_prxn(INTERFACE_SOURCE_STRUCT *is, BOUNDARY_CONDITION_STRUCT *bc,
    * Find the vapor pressure
    */
   if        (mp_liq->VaporPressureModel[wspec] == ANTOINE) {
-    antoine_psat(wspec, mp_liq->u_vapor_pressure[wspec], &psat_w, &dpsatdT_w);
+    antoine_psat(mp_liq->u_vapor_pressure[wspec], &psat_w, &dpsatdT_w);
   } else if (mp_liq->VaporPressureModel[wspec] == RIEDEL) {
-    riedel_psat(wspec, mp_liq->u_vapor_pressure[wspec], &psat_w, &dpsatdT_w);
+    riedel_psat(mp_liq->u_vapor_pressure[wspec], &psat_w, &dpsatdT_w);
   } else {
     psat_w = mp_liq->vapor_pressure[wspec];
   }

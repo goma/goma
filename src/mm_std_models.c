@@ -5452,11 +5452,7 @@ void rotate_tensor(double A[DIM][DIM], double A_prime[DIM][DIM],
 *
 ******************************************************************************/
 
-int
-antoine_psat(int species_no,
-             double param[],
-             double *f,
-             double *dfdt)
+int antoine_psat(double param[], double *f, double *dfdt)
 
 {
   /*local variables */
@@ -5505,12 +5501,7 @@ return 0;
 *
 ******************************************************************************/
 
-int
-riedel_psat(int species_no,
-             double param[],
-             double *f,
-             double *dfdt)
-
+int riedel_psat(double param[], double *f, double *dfdt)
 {
   /*local variables */
 

@@ -79,10 +79,7 @@ static char rcsid[] = "$Id: rd_dpi.c,v 5.2 2008-05-08 21:18:21 hkmoffa Exp $";
 #endif
 #endif
 
-#define NO_NETCDF_2
-
 /* for pure netCDF 3 - but still not yet. */
-
 
 #include "netcdf.h"
 #include "exodusII.h"
@@ -114,13 +111,8 @@ static char rcsid[] = "$Id: rd_dpi.c,v 5.2 2008-05-08 21:18:21 hkmoffa Exp $";
 
 
 
-#ifdef  NO_NETCDF_2
 #define NETCDF_3
-#endif
 
-#ifndef NO_NETCDF_2
-#define NETCDF_2
-#endif
 
 #ifndef NC_MAX_VAR_DIMS
 #define NC_MAX_VAR_DIMS		MAX_VAR_DIMS    
@@ -161,11 +153,7 @@ static void get_variable
 /**********************************************************************/
 /**********************************************************************/
 
-int
-rd_dpi(Dpi *d,
-       char *fn,
-       const int verbosity)
-{
+int rd_dpi(Dpi *d, char *fn) {
   int err, len, status = 0, u;
   struct Shadow_Identifiers si;
   zeroStructures(&si, 1);
@@ -1288,7 +1276,7 @@ uni_dpi(Dpi *dpi,
 /* free_dpi() -- free internal dynamically allocated memory in a 
  *               Dpi struct
  *
- * During rd_dpi(), various arrays are allocated. To cleanly 
+ * During rd_dpi(), various arrays are allocated. To cleanly
  * free up this  memory, this routine can be used. Typically, 
  * if dpi is a (Dpi *), then
  *
@@ -1418,11 +1406,6 @@ get_variable(const int netcdf_unit,
              void *variable_address)
 {
   int err = 0;
-#ifndef NO_NETCDF_2
-  int i;
-  long count[NC_MAX_VAR_DIMS];
-  long start[NC_MAX_VAR_DIMS];
-#endif
   char err_msg[MAX_CHAR_ERR_MSG];
 
   get_variable_call_count++;
@@ -1437,7 +1420,6 @@ get_variable(const int netcdf_unit,
       return;
     }
 
-#ifdef NO_NETCDF_2		/* pure netCDF 3 calls... */
   switch ( netcdf_type )
     {
     case NC_INT:
@@ -1474,59 +1456,12 @@ get_variable(const int netcdf_unit,
       EH(-1, "Specified netCDF data type unrecognized or unimplemented.");
       break;
     }
-#endif
 
   if (err != NC_NOERR)
     {
       EH(-1, err_msg);
     }
 
-#ifndef NO_NETCDF_2		/* backward compatibility mode to netcdf2 */
-
-  if ( num_dimensions < 0 || num_dimensions > 2 )
-    {
-      sprintf(err_msg, "Bad or too large dimension value %d",
-              num_dimensions);
-      EH(-1, err_msg);
-    }
-
-  for ( i=0; i<num_dimensions; i++)
-    {
-      count[i] = 1;
-      start[i] = 0;
-    }
-
-  if ( num_dimensions > 0 )
-    {
-      if ( dimension_val_1 < 1 )
-        {
-          EH(-1, "Bad dimension specification.");
-        }
-      count[0] = dimension_val_1;
-    }
-
-  if ( num_dimensions > 1 )
-    {
-      if ( dimension_val_2 < 1 )
-        {
-          EH(-1, "Bad dimension specification.");
-        }
-      count[1] = dimension_val_2;
-    }
-
-  err = ncvarget(netcdf_unit, variable_identifier, start, count,
-                 variable_address);
-  if ( err < 0 )
-    {
-      sprintf(err_msg,
-              "get_variable (%d call), varid %d (%d dim %d,%d)\n",
-              get_variable_call_count,
-              variable_identifier, num_dimensions,
-              dimension_val_1, dimension_val_2);
-      EH(err, err_msg);
-    }
-
-#endif
 
   return;
 }

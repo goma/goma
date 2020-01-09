@@ -1019,7 +1019,8 @@ create_eigen_outfiles(Exo_DB *exo, Dpi *dpi,
           one_base(exo);
           wr_mesh_exo(exo, fname, 0);
           wr_result_prelim_exo(rd, exo, fname, NULL);
-          if (Num_Proc > 1) wr_dpi(dpi, fname, 0);
+          if (Num_Proc > 1)
+            wr_dpi(dpi, fname);
           zero_base(exo);
 
         }  /* End of wave number loop */

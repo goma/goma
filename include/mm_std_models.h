@@ -140,17 +140,11 @@ EXTERN void rotate_tensor (double [DIM][DIM],              /* mm_std_models.c, A
 		           double [DIM][DIM],              /* R (orthogonal matrix)        */
 			   int);                  /* dir = 0 or dir = 1, rotation direction */
 
-EXTERN int antoine_psat		/* mm_std_models.c                           */
-(int ,			/* species_no                                */
-       double [],		/* param                                     */
-       double *,		/* f                                         */
-       double *);		/* dfdt                                      */
+EXTERN int antoine_psat                        /* mm_std_models.c                           */
+    (double param[], double *f, double *dfdt);		/* dfdt                                      */
 
-EXTERN int riedel_psat		/* mm_std_models.c                           */
-(int ,			/* species_no                                */
-       double [],		/* param                                     */
-       double *,		/* f                                         */
-       double *);		/* dfdt                                      */
+EXTERN int riedel_psat                         /* mm_std_models.c                           */
+    (double param[], double *f, double *dfdt);		/* dfdt                                      */
 
 EXTERN int suspension_pm_fluid_momentum_source /* mm_std_models.c            */
 (dbl [DIM],		/* f - Body force.                           */

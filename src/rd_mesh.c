@@ -196,7 +196,7 @@ read_mesh_exoII(Exo_DB *exo,
     }
   else
     {
-      rd_dpi(dpi, ExoFile, 0);	/* local extra info for distributed 
+      rd_dpi(dpi, ExoFile);	/* local extra info for distributed
 				   processing kept here, too.
 				   some of this is stored in EXODUS names, 
 				   like the element number map, but some
