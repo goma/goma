@@ -629,12 +629,16 @@ goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rota
         gds_vector *new_n2 = gds_vector_alloc(3);
         gds_vector *new_n3 = gds_vector_alloc(3);
         n1 = rotation[i].average_normals[0];
+        n2 = rotation[i].average_normals[1];
+        n3 = rotation[i].average_normals[2];
+        bool found[DIM] = {true, false, false};
         unsigned int n1_card = rotation[i].associate_direction[0];
         unsigned int n2_card = n1_card;
         for (int j = 1; j < rotation[i].n_normals; j++) {
           if (rotation[i].associate_direction[j] != n1_card) {
             n2 = rotation[i].average_normals[j];
             n2_card = rotation[i].associate_direction[j];
+            found[1] = true;
             break;
           }
         }
@@ -644,11 +648,12 @@ goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rota
               && (rotation[i].associate_direction[j] != n2_card)) {
             n3 = rotation[i].average_normals[j];
             n3_card = rotation[i].associate_direction[j];
+            found[2] = true;
             break;
           }
         }
 
-        if (n1_card == n2_card || n1_card == n3_card || n2_card == n3_card) {
+        if (!found[0] || !found[1] || !found[2]) {
           EH(-1, "Could not associate 3 directions for corner node");
           return GOMA_ERROR;
         }

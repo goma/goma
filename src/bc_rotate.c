@@ -3326,14 +3326,13 @@ void rotate_momentum_auto(int id,  /* Elemental stiffness matrix row index */
 
 {
   /* LOCAL VARIABLES */
-  int eq, pvar, peq;
+  int pvar, peq;
   int n;
   int kdir, ldir;
   double rotated_resid[MDE];
   double rotated_jacobian_scalar[MAX_PDIM][MDE];
 
   /************************ EXECUTION BEGINS **********************************/
-  eq = VECT_EQ_MOM;
 
   if (goma_automatic_rotations.rotation_nodes[I].n_normals == 0) {
     return; // not a rotated node
