@@ -10,9 +10,6 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: user_post.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
-#endif
 
 /* Standard include files */
 

@@ -849,13 +849,6 @@ rotate_mesh_eqn (
 	      if (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 &&
 		  Dolphin[pg->imtrx][J][MESH_DISPLACEMENT1] > 0) { 
 		K = in_list(J, bpntr[I], bpntr[I+1], bindx);
-#ifdef DEBUG_HKM
-		if (K == -1) {
-		  fprintf(stderr,"Couldn't find proc blk_col %d in blk_row %d\n",
-			  J, I);
-		  EH(-1, "rotate_mesh_eqn ERROR: vbr matrix structure error");
-		}
-#endif
 		nv = Nodes[J]->Nodal_Vars_Info[pg->imtrx];
 		blk_col = get_nv_offset_idof(nv, var, 0, 0, NULL);
 		/*

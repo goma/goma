@@ -138,11 +138,6 @@ int load_coordinate_scales(const int c, struct Field_Variables *f)
   static int i_warning = 0;
   static int i_warning1 = 0;
 
-#ifdef DEBUG_HKM
-  if (ei[pg->imtrx]->ielem == 165) {
-   // printf("we are here\n");
-  }
-#endif
 
   status = 0;
 

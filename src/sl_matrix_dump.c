@@ -248,9 +248,6 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
   int    inode = 0;
   int    i_Var_Desc, i_offset, idof;
   double start_time;
-#ifdef DEBUG_HKM
-  int    dprint = 0; /* Flag to turn on various amounts of printing */
-#endif
 
   /*
   *   Increment the static index variable. Next time, the matrix
@@ -282,13 +279,6 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
   */
   
   sprintf(fname, "matrix.%03d", index);
-#ifdef DEBUG_HKM
-#ifdef PARALLEL
-  MPI_Barrier(MPI_COMM_WORLD);
-  printf("Proc_%d: at top of matrix_dump_msr\n", ProcID); fflush(stdout);
-  MPI_Barrier(MPI_COMM_WORLD);
-#endif
-#endif
   if (ProcID == 0) {
     
     /*
@@ -359,16 +349,6 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
    */
 
   sort2_int_int(num_owned_nodes+1, ordered_gnodes-1, ordered_index-1);
-#ifdef DEBUG_HKM
-  if (ordered_gnodes[num_owned_nodes] != gNum_Nodes) {
-    fprintf(stderr,"can't happen\n");
-    exit(-1);
-  }
-  if (ordered_index[num_owned_nodes] != num_owned_nodes) {
-    fprintf(stderr,"can't happen\n");
-    exit(-1);
-  }
-#endif
 
   /*
    * Initialize the umi column list
@@ -404,9 +384,6 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
   */
 
   do {
-#ifdef DEBUG_HKM
-     if (dprint) print_sync_start(FALSE);
-#endif
     /*
     *   Check to see if this processor has the global minimum node number.
     *   If it does, then we need to process the node
@@ -417,13 +394,6 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
       /*
       *  Open the output file on the current processor for appending
       */
-#ifdef DEBUG_HKM
-      if (dprint) {
-        printf(
-	    "\tProc %d: Writing global nodes starting at %d to file\n",
-	    ProcID, gNodeGlobalMin);
-      }
-#endif
       if ((fptr = fopen(fname, "ab")) == NULL) {
 	(void) fprintf(stderr,"Proc %d: Couldn't open %s: %s\n", ProcID, fname,
                        strerror(errno));
@@ -449,22 +419,10 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	/*
  	 *   Check to see if this processor actually owns that node
 	 */
-#ifdef DEBUG_HKM  
-	if (! node->Type.Owned) {
-	  printf("Error in logic or something\n");
-	  exit(-1);
-	}
-#endif
 	/*
 	 *    Calculate the block row number of the matrix
 	 */
 	iblk_row = oindex;
-#ifdef DEBUG_HKM
-	if (node->Proc_Node_Num != iblk_row) {
-	  printf("Screwed up Mesh structure\n");
-	  exit(-1);
-	}
-#endif
 	/* 
 	*  Value of the beginning row number corresponding to the current
 	*  block row. This is also the equation # corresponding to the first
@@ -548,16 +506,6 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	/*
 	 *   Print out Header information for the Current Block Row
 	 */
-#ifdef DEBUG_HKM
-	if (dprint > 2) {
-	  fprint_line(stdout, "=", 80);
-	  printf("Proc: %d Block Row: %d Local Row Number: %d"
-		 " Num Rows: %d\n", ProcID, iblk_row, ieqn_row,
-		 num_unknowns_node);
-	  printf("\t num_block_cols = %d\n", num_cols);
-	  fprint_line(stdout,"=", 80);
-	}
-#endif	
 	/*
 	*  Dump out Header information for the current block row
 	*/
@@ -608,14 +556,6 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	  vdT = Index_Solution_Inv(ieqn, &inode, &i_Var_Desc,
 		       	           &i_offset, &idof, pg->imtrx);
 	  nodeT = Nodes[inode];
-#ifdef DEBUG_HKM
-	  if (nodeT != node) {
-	    fprintf(stderr,"%s Logic error, Proc = %d\n", yo, ProcID);
-	    fprintf(stderr,"\t node and nodeT differ %d %d\n",
-		    node->Proc_Node_Num, nodeT->Proc_Node_Num);
-	    exit (-1);
-	  }
-#endif
 	  /*
 	   * Output specific information about the variable
 	   */
@@ -664,15 +604,6 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	   */
 	  
 	  nodeC = Nodes[jblk]; 
-#ifdef DEBUG_HKM
-	  if (nodeC->Global_Node_Num != gNodeS[icol]) {
-	    fprintf(stderr,"%s Logic error\n", yo);
-	    fprintf(stderr,
-		    "nodeC->Global_Node_Num and gNodeS[icol] differ: %d %d \n",
-		    nodeC->Global_Node_Num, gNodeS[icol]);
-	    exit(-1);
-	  }
-#endif  
 	  /*
 	   *  Calculate the equation number for the first unknown 
 	   *  in the current block column
@@ -689,22 +620,6 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	   *     Print out an ascii header information
 	   *     -> Mostly for debugging purposes.
 	   */
-#ifdef DEBUG_HKM 
-	  if (dprint > 3) {
-	    printf("\t Block Row: %d Block Column: %d"
-		   " Num Cols: %d\n", iblk_row, jblk, n1);
-	  }
-	  if (dprint > 5) {
-	    fprint_line(stdout, "-", 80);
-	    for (i = 0; i < num_unknowns_node; i++) {
-	      for (j = 0; j < n1; j++)
-		  printf("a[%d]: %e ", j*num_unknowns_node+i,
-			 a_blk[j*num_unknowns_node+i]);
-	      printf("\n");
-	    }
-	    fprint_line(stdout, "-", 80);
-	  }
-#endif
 	  /*
 	   *  Dump out the header information for the node corresponding to the
            *  block column.
@@ -748,15 +663,6 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
 	  for (i = 0; i < n1; i++) {
             vdT = Index_Solution_Inv(ieqn, &inode, &i_Var_Desc,
 		                     &i_offset, &idof, pg->imtrx);
-#ifdef DEBUG_HKM
-	    nodeT = Nodes[inode];
-	    if (nodeT != nodeC) {
-	      fprintf(stderr,"%s Logic error, Proc = %d\n", yo, ProcID);
-	      fprintf(stderr,"\t nodeC and nodeT differ %d %d\n",
-		      nodeC->Proc_Node_Num, nodeT->Proc_Node_Num);
-	      exit (-1);
-	    }
-#endif
 	    /*
 	     * Output specific information about the variable
 	     */
@@ -814,13 +720,6 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
        *  Close the output file on that processor, and thereby flush
        *  any buffered output
        */
-#ifdef DEBUG_HKM
-     if (dprint) {
-       printf(
- "\tProc = %d, Giving up control: gNodeLocalNext = %d, gNodeGlobalMin = %d\n",
-              ProcID, gNodeLocalNext, gNodeGlobalMin);
-     }
-#endif
       xdr_destroy(xdrs);
       CHECK_FCLOSE(fclose(fptr));
       
@@ -832,14 +731,6 @@ matrix_dump_msr(struct Aztec_Linear_Solver_System *ams,
     *  If there is, go to the top of the routine and start again.
     */
 
-#ifdef DEBUG_HKM
-    if (dprint) {
-      if (dprint > 1)
-	printf("\t\tProc = %d, gNodeLocalNext = %d\n", ProcID, 
-	       gNodeLocalNext);
-      print_sync_end(FALSE);
-    }
-#endif     
     gNodeGlobalMin = gmin_int(gNodeLocalNext);
   } while(gNodeGlobalMin <gNum_Nodes);
   
@@ -957,9 +848,6 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
   int    jblk, ieqn, ii, oindex, var_type, sub_type, ib1, ib2, itmp;
   int    inode = -1, i_Var_Desc = -1, i_offset = -1, idof = -1;
   double start_time;
-#ifdef DEBUG_HKM
-  int    dprint = 0; /* Flag to turn on various amounts of printing */
-#endif
 
   /*
   *   Increment the static index variable. Next time, the matrix
@@ -1065,16 +953,6 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
   */
 
   sort2_int_int(num_owned_nodes+1, ordered_gnodes-1, ordered_index-1);
-#ifdef DEBUG_HKM
-  if (ordered_gnodes[num_owned_nodes] != gNum_Nodes) {
-    fprintf(stderr,"can't happen\n");
-    exit(-1);
-  }
-  if (ordered_index[num_owned_nodes] != num_owned_nodes) {
-    fprintf(stderr,"can't happen\n");
-    exit(-1);
-  }
-#endif
 
   /*
   *  Description of the parallel algorithm:
@@ -1104,9 +982,6 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
   */
 
   do {
-#ifdef DEBUG_HKM
-     if (dprint) print_sync_start(FALSE);
-#endif
     /*
     *   Check to see if this processor has the global minimum node number.
     *   If it does, then we need to process the node
@@ -1117,13 +992,6 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
       /*
       *  Open the output file on the current processor for appending
       */
-#ifdef DEBUG_HKM
-      if (dprint) {
-        printf(
-	    "\tProc %d: Writing global nodes starting at %d to file\n",
-	    ProcID, gNodeGlobalMin);
-      }
-#endif
       if ((fptr = fopen(fname, "ab")) == NULL) {
 	(void) fprintf(stderr,"Proc %d: Couldn't open %s: %s\n", ProcID, fname,
                        strerror(errno));
@@ -1150,22 +1018,10 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	/*
  	 *   Check to see if this processor actually owns that node
 	 */
-#ifdef DEBUG_HKM  
-	if (! node->Type.Owned) {
-	  printf("Error in logic or something\n");
-	  exit(-1);
-	}
-#endif
 	/*
 	 *    Calculate the block row number of the matrix
 	 */
 	iblk_row = oindex;
-#ifdef DEBUG_HKM
-	if (node->Proc_Node_Num != iblk_row) {
-	  printf("Screwed up Mesh structure\n");
-	  exit(-1);
-	}
-#endif
 	/* 
 	*  Value of the beginning row number corresponding to the current
 	*  block row. This is also the equation # corresponding to the first
@@ -1175,12 +1031,6 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	*/
 	
 	ieqn_row = rpntr[iblk_row];
-#ifdef DEBUG_HKM
-        if (ieqn_row != node->First_Unknown[pg->imtrx]) {
-	  printf("my logic or node_struct is messed up\n");
-	  exit(-1);
-	}
-#endif
 	/*
 	*  m1 = number of rows in the current row block 
 	*/
@@ -1194,14 +1044,6 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	*/
 	
 	num_unknowns_node = (int) node->Nodal_Vars_Info[pg->imtrx]->Num_Unknowns;
-#ifdef DEBUG_HKM
-	if (m1 != num_unknowns_node) {
-	  fprintf(stderr,"%s logic error: m1 and ", yo);
-	  fprintf(stderr,"num_unknowns_node differ %d %d\n",
-	           m1, num_unknowns_node);
-	  exit(-1);
-	}
-#endif
 	/*
 	*   Calculate the starting index of current row block
 	*/
@@ -1242,16 +1084,6 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	/*
 	 *   Print out Header information for the Current Block Row
 	 */
-#ifdef DEBUG_HKM
-	if (dprint > 2) {
-	  fprint_line(stdout, "=", 80);
-	  (void) printf("Proc: %d Block Row: %d Local Row Number: %d"
-			" Num Rows: %d\n", ProcID, iblk_row, rpntr[iblk_row],
-			m1);
-	  (void) printf("\t num_block_cols = %d\n", num_cols);
-	  fprint_line(stdout, "=", 80);
-	}
-#endif	
 	/*
 	*  Dump out Header information for the current block row
 	*/
@@ -1302,14 +1134,6 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	  vdT = Index_Solution_Inv(ieqn, &inode, &i_Var_Desc,
 		       	           &i_offset, &idof, pg->imtrx);
 	  nodeT = Nodes[inode];
-#ifdef DEBUG_HKM
-	  if (nodeT != node) {
-	    fprintf(stderr,"%s Logic error, Proc = %d\n", yo, ProcID);
-	    fprintf(stderr,"\t node and nodeT differ %d %d\n",
-		    node->Proc_Node_Num, nodeT->Proc_Node_Num);
-	    exit (-1);
-	  }
-#endif
 	  /*
 	   * Output specific information about the variable
 	   */
@@ -1357,15 +1181,6 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	  */
 	  
 	  nodeC = Nodes[jblk]; 
-#ifdef DEBUG_HKM
-	  if (nodeC->Global_Node_Num != gNodeS[icol]) {
-	    (void) fprintf(stderr,"%s Logic error\n", yo);
-	    (void) fprintf(stderr,
-			   "nodeC->Global_Node_Num and gNodeS[icol] differ: %d %d \n",
-			   nodeC->Global_Node_Num, gNodeS[icol]);
-	    exit (-1);
-	  }
-#endif
 	  
 	  /*
 	  *  Calculate the equation number for the first unknown 
@@ -1384,34 +1199,10 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
 	  */
 	  
 	  n1 = ib2 - ib1;
-#ifdef DEBUG_HKM
-	  if ((int) nodeC->Nodal_Vars_Info[pg->imtrx]->Num_Unknowns != n1) {
-	    fprintf(stderr,"%s Logic error\n", yo);
-	    fprintf(stderr,
-		    "num unknowns differ: %d %d \n",
-		    nodeC->Nodal_Vars_Info[pg->imtrx]->Num_Unknowns, n1);
-	    exit (-1);
-	  }
-#endif
 	  /*
 	  *     Print out an ascii header information
 	  *     -> Mostly for debugging purposes.
 	  */
-#ifdef DEBUG_HKM 
-	  if (dprint > 3) {
-	    printf("\t Block Row: %d Block Column: %d"
-		   " Num Cols: %d\n", iblk_row, jblk, n1);
-	  }
-	  if (dprint > 5) {
-	    fprint_line(stdout,"-", 80);
-	    for (i = 0; i < m1; i++) {
-	      for (j = 0; j < n1; j++)
-		printf("a[%d]: %e ", ival+j*m1+i, a[ival+j*m1+i]);
-	      printf("\n");
-	    }
-	    fprint_line(stdout,"-", 80);
-	  }
-#endif
 	  /*
 	  *  Dump out the header information for the node corresponding to the
           *  block column.
@@ -1454,14 +1245,6 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
             vdT = Index_Solution_Inv(ieqn, &inode, &i_Var_Desc,
 		                     &i_offset, &idof, pg->imtrx);
 	    nodeT = Nodes[inode];
-#ifdef DEBUG_HKM
-	    if (nodeT != nodeC) {
-	      fprintf(stderr,"%s Logic error, Proc = %d\n", yo, ProcID);
-	      fprintf(stderr,"\t nodeC and nodeT differ %d %d\n",
-		      nodeC->Proc_Node_Num, nodeT->Proc_Node_Num);
-	      exit (-1);
-	    }
-#endif
 	    /*
 	     * Output specific information about the variable
 	     */
@@ -1516,13 +1299,6 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
       *  Close the output file on that processor, and thereby flush
       *  any buffered output
       */
-#ifdef DEBUG_HKM
-     if (dprint) {
-       printf(
- "\tProc = %d, Giving up control: gNodeLocalNext = %d, gNodeGlobalMin = %d\n",
-              ProcID, gNodeLocalNext, gNodeGlobalMin);
-     }
-#endif
       xdr_destroy(xdrs);
       CHECK_FCLOSE(fclose(fptr));
       
@@ -1534,14 +1310,6 @@ matrix_dump_vbr(struct Aztec_Linear_Solver_System *ams,
     *  If there is, go to the top of the routine and start again.
     */
 
-#ifdef DEBUG_HKM
-    if (dprint) {
-      if (dprint > 1)
-	 (void) printf("\t\tProc = %d, gNodeLocalNext = %d\n", ProcID, 
-		       gNodeLocalNext);
-      print_sync_end(FALSE);
-    }
-#endif     
     gNodeGlobalMin = gmin_int(gNodeLocalNext);
   } while(gNodeGlobalMin <gNum_Nodes);
   

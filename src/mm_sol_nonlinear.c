@@ -14,15 +14,6 @@
  * FLUX AND/OR DATA PARAMETER AND/OR CONTINUATION PARAMETER
  */
 
-/*
- *$Id: mm_sol_nonlinear.c,v 5.19 2010-07-21 21:03:04 sarober Exp $
- */
-
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: mm_sol_nonlinear.c,v 5.19 2010-07-21 21:03:04 sarober Exp $";
-#endif
-
 #include "mm_sol_nonlinear.h"
 
 #include <math.h>

@@ -42,9 +42,6 @@
 #endif
 
 #ifndef lint
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: wr_dpi.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
-#endif
 #endif
 
 /* #define NO_NETCDF_2		 for pure netCDF 3 -- still impure since

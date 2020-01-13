@@ -11,9 +11,6 @@
 \************************************************************************/
  
 
-#ifdef USE_RCSID
-static const char rcsid[] = "$Id: user_continuation.c,v 5.3 2008-03-22 00:55:51 hkmoffa Exp $";
-#endif
 
 /* GOMA include files */
 

@@ -74,9 +74,6 @@
 #include <string.h>
 
 #ifndef lint
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: rd_dpi.c,v 5.2 2008-05-08 21:18:21 hkmoffa Exp $";
-#endif
 #endif
 
 /* for pure netCDF 3 - but still not yet. */

@@ -392,11 +392,6 @@ get_nv_offset_idof(NODAL_VARS_STRUCT *nv, const int varType,
   int i, index, offset = -1, nfound;
   int num = nv->Num_Var_Desc_Per_Type[varType];
   VARIABLE_DESCRIPTION_STRUCT *vd;
-#ifdef DEBUG_HKM
-  if (idof >= num) {
-    EH(-1, "ERROR");
-  }
-#endif
   if (varType == MASS_FRACTION) {
     for (i = 0, nfound = 0; i < num; i++) {
       index = nv->Var_Type_Index[varType][i];

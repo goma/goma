@@ -14,9 +14,6 @@
  *$Id: mm_porous_EOS.c,v 5.0 2006-07-06 16:18:51 edwilke Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_porous_EOS.c,v 5.0 2006-07-06 16:18:51 edwilke Exp $";
-#endif
 
 /* GOMA include files */
 

@@ -3487,14 +3487,6 @@ get_porous_fully_sat_terms(struct Porous_Media_Terms *pmt,
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT *d_vconv = &d_vconv_struct;
 
   zero_structure(pmt , sizeof(struct Porous_Media_Terms), 1);
-#ifdef DEBUG_HKM
-  /*
-   * If we are not solving the por_liq_pres equation, doop!
-   */
-  if (! pd->v[pg->imtrx][POR_LIQ_PRES]) {
-    EH(-1,"We shouldn't be here if POR_LIQ_PRESS eqn isn't defined");
-  }
-#endif
   if(efv->ev_porous_decouple)
     {
       /*compute porosity using linear pressure expansion model, incremental

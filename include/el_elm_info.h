@@ -33,13 +33,6 @@ EXTERN int elem_info
 (const int ,		/* info                                      */
        const int );		/* ielem_type                                */
 
-#ifdef DEBUG_HKM
-EXTERN int node_info
-(const int  ,		/* n                                         */
-       const int  ,		/* Element_Type                              */
-       const int  ,		/* var                                       */
-       const int   );		/* I - global node number                    */
-#endif
 
 extern int dof_lnode_interp_type
 (const int ,              /* n                                         */

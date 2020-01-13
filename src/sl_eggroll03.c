@@ -76,9 +76,6 @@
 #include "sl_eggroll.h"
 #include "sl_umf.h"
 #include "std.h"
-#ifdef USE_RCSID
-static const char rcs_id[] = "$Id: sl_eggroll03.c,v 5.1 2007-09-18 18:53:47 prschun Exp $";
-#endif
 
 
 

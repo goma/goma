@@ -23,9 +23,6 @@
 #include "rf_fem.h"
 #include "rf_fem_const.h"
 #include "rf_pre_proc.h"
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: rf_pre_proc.c,v 5.1 2007-09-18 18:53:47 prschun Exp $";
-#endif
 
 #define GOMA_RF_PRE_PROC_C
 

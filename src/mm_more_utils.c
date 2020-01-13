@@ -15,10 +15,6 @@
  *$Id: mm_more_utils.c,v 5.3 2008-03-24 17:43:55 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: mm_more_utils.c,v 5.3 2008-03-24 17:43:55 hkmoffa Exp $";
-#endif
 
 /*
  *
@@ -701,9 +697,6 @@ extract_nodal_eb_vec(double sol_vec[], int var_no, int ktype, int matIndex,
   int lastSpeciesSum, iDof, j;
   MATRL_PROP_STRUCT *matrl;
   double rho;
-#ifdef DEBUG_HKM
-  int nunks, interpType;
-#endif
 
   /*
    * Find out the material number, mn, from the element block index
@@ -774,20 +767,6 @@ extract_nodal_eb_vec(double sol_vec[], int var_no, int ktype, int matIndex,
       /*
        * HKM -> Special compatibility section
        */
-#ifdef DEBUG_HKM
-      interpType = pd_glob[mn]->i[pg->imtrx][var_no];
-      nunks = node_info(i, ielem_type, var_no, I);
-      if (nunks > 1) {
-	if (interpType == I_P0 || interpType == I_P1) {
-	} else {
-	  if (((exo->eb_id[eb_index] + 1) % 2) == 0) {
-	    iDof = 0;
-	  } else {
-	    iDof = 1;
-	  }
-	}
-      }
-#endif
       if (lastSpeciesSum) {
 	index = Index_Solution(I, var_no, 0, iDof, matIndex, pg->imtrx);
 	if (index != -1) {

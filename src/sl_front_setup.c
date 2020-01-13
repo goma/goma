@@ -15,9 +15,6 @@
  *$Id: sl_front_setup.c,v 5.3 2009-01-12 16:41:49 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: sl_front_setup.c";
-#endif
 
 #include <stdio.h>
 #include <string.h>

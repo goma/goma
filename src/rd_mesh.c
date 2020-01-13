@@ -29,9 +29,6 @@
  */
 
 #ifndef lint
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: rd_mesh.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $";
-#endif
 #endif
 
 #include <stdlib.h>
@@ -1184,9 +1181,6 @@ ebID_to_ebIndex(const int ebid)
       return eb;
     }
   }
-#ifdef DEBUG_HKM
-  EH(-1, "problems");
-#endif
   return -1;
 }
 /****************************************************************************/

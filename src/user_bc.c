@@ -16,10 +16,6 @@
 
 /* Standard include files */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: user_bc.c,v 5.1 2010-04-05 15:05:19 hkmoffa Exp $";
-#endif
 
 #include <stdio.h>
 #include <math.h>

@@ -11860,14 +11860,6 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
   for ( i=0; i<n_species-1; i++)
     {
       x[i] = fv->c[i];
-#ifdef DEBUG_HKM
-      if (x[i] <= 0.0) {
-        fprintf(stderr,
-		"Stefan_Maxwell_diff_flux WARNING P_%d: x[%d] = %g\n",
-		ProcID, i, x[i]);
-	EH(-1, "Stefan_Maxwell_Diff_flux zero or neg species");
-      }
-#endif
       sumx += x[i]; 
     }
   x[n_species-1] = 1.0 - sumx;

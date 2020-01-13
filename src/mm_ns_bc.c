@@ -16,10 +16,6 @@
  */
 
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: mm_ns_bc.c,v 5.26 2010-07-21 16:39:27 hkmoffa Exp $";
-#endif
 
 /* Standard include files */
 

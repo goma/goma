@@ -596,15 +596,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
                * part of a valid element interpolation?
                */
               enunks = nunks;
-#ifdef DEBUG_HKM
-              if (elem == 165) {
-                if (v == 0) {
-                  // if (gnn == 319) {
-                  //printf("we are here2\n");
-                  //}
-                }
-              }
-#endif
               if (nunks) 
                 {
                   /*
@@ -622,13 +613,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
 	      
               if (enunks) 
                 {
-#ifdef DEBUG_HKM
-                  if (ei_ptr->ielem == 165) {
-                    //  if ( ei_ptr->ielem != elem) {
-                    // printf("we are here \n");
-                    // }
-                  }
-#endif
                   ei_ptr->owningElementForColVar[v] = elem;
                 }
               /*
@@ -967,13 +951,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
       fprintf(stderr,"ERROR ledof is greater than MDE*MAX_PROB_VAR\n");
       EH(-1, "INCREASE MDE or MAX_PROB_VAR!"); 
     }
-  /*
-    #ifdef DEBUG_HKM
-    if (ei_ptr->ielem == 6) {
-    print_ei_index_desc();
-    }
-    #endif
-  */
   /* 
    * Here we'll count up the dofs for the external variables, 
    * if any exist

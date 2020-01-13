@@ -14,9 +14,6 @@
  *$Id: mm_fill_common.c,v 5.2 2008-03-22 00:55:49 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_fill_common.c,v 5.2 2008-03-22 00:55:49 hkmoffa Exp $";
-#endif
 
 #include <math.h>
 

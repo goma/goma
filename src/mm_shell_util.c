@@ -1981,17 +1981,6 @@ shell_normal_div_s(dbl *div_s_nv, dbl d_div_s_nv_dnv[DIM][MDE],
             }
         }
     }
-#ifdef DEBUG_HKM
-  /*
-    for (p = 0; p < VIM; p++)
-    {
-    for (q = 0; q < VIM; q++)
-    {
-    printf("shell_normal_div_s: grad_nv[%d][%d] = %g\n", p, q, grad_nv[p][q]);
-    }
-    }
-  */
-#endif
   *div_s_nv = 0.0;
   memset(&(d_div_s_nv_dnv[0][0]), 0, DIM*MDE*sizeof(double) );
   for (p = 0; p < VIM; p++)
@@ -2036,9 +2025,6 @@ shell_normal_div_s(dbl *div_s_nv, dbl d_div_s_nv_dnv[DIM][MDE],
         }
     }
 
-#ifdef DEBUG_HKM
-  // printf("shell_normal_div_s: *div_s_nv = %g\n", *div_s_nv);
-#endif
   return 0;
 }
 

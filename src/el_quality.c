@@ -15,10 +15,6 @@
  *$Id: el_quality.c,v 5.5 2010-03-17 22:23:53 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: el_quality.c,v 5.5 2010-03-17 22:23:53 hkmoffa Exp $";
-#endif
 
 #include <math.h>
 #include <stdio.h>

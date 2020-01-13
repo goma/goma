@@ -18,9 +18,6 @@
  */
 
 #ifndef lint
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: sl_aux.c,v 5.1 2007-09-18 18:53:47 prschun Exp $";
-#endif
 #endif
 
 #include <stdio.h>

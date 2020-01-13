@@ -15,9 +15,6 @@
  *$Id: rf_shape.c,v 5.4 2010-04-06 15:32:46 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: rf_shape.c,v 5.4 2010-04-06 15:32:46 hkmoffa Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>

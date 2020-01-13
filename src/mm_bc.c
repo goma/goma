@@ -2099,11 +2099,6 @@ find_bc_unk_offset(struct Boundary_Condition *bc, int curr_mat,
    * If we haven't assigned ieqn by this point for rotated bc's
    * we have made an error
    */
-#ifdef DEBUG_HKM
-  if (ieqn >= MAX_VARIABLE_TYPES) {
-    EH(-1, "ERROR");
-  }
-#endif
   /*
    * If the equation has zero degrees of freedom at this node
    * return. Otherwise, get the number of variable description

@@ -670,11 +670,6 @@ time_step_control(const double delta_t,  const double delta_t_old,
     vd = Index_Solution_Inv(i, &inode, NULL, NULL, &idof, pg->imtrx);
     eqn = vd->Variable_Type;
 
-#ifdef DEBUG_HKM
-    if (eqn != idv[pg->imtrx][i][0]) {
-      EH(-1,"error in  Index_Solution_Inv mapping");
-    }
-#endif
   
     /* ignore corrections caused by changing side of interface */
     if ( ls!= NULL && xfem != NULL && ls->Length_Scale == 0.)
@@ -2918,12 +2913,6 @@ inject_nodal_vec(double sol_vec[], const int varType, const int k,
       for (j = 0; j < (int) nv->Num_Var_Desc_Per_Type[varType]; j++) {
         vindex = nv->Var_Type_Index[varType][j];
 	vd = nv->Var_Desc_List[vindex];
-#ifdef DEBUG_HKM
-	if (idof < 0 || idof > vd->Ndof) {
-          fprintf(stderr,"init_vec ERROR: bad idof\n");
-	  EH(-1, "init_vec bad idof");
-	}
-#endif
 	if (k == (int) vd->Subvar_Index) {
           index = (Nodes[i]->First_Unknown[pg->imtrx] +
 		   nv->Nodal_Offset[vindex] + idof);

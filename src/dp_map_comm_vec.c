@@ -29,9 +29,6 @@
  * Revised: 
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: dp_map_comm_vec.c,v 5.1 2007-09-18 18:53:41 prschun Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>

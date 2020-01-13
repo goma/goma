@@ -130,9 +130,6 @@ void **side_qp_storage_findalloc(const int storageType, const int iquad,
 {
   QP_STORAGE_STRUCT **qpsv;
   int ielem_type, nqp;
-#ifdef DEBUG_HKM
-  if (elem_side_bc == NULL) return NULL;
-#endif
   qpsv = elem_side_bc->Side_QP_Storage;
   /*
    * Check to see if we have malloced the vector of pointers for this

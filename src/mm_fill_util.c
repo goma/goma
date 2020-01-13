@@ -14,10 +14,6 @@
  *$Id: mm_fill_util.c,v 5.24 2010-02-26 21:40:14 prschun Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-    "$Id: mm_fill_util.c,v 5.24 2010-02-26 21:40:14 prschun Exp $";
-#endif
 
 /*
  * Added load_elem_dofptr stuff to setup elemental level indeces pointing
@@ -3016,9 +3012,7 @@ Revised:	   1997/10/28 16:48 MST pasacki@sandia.gov
     nnz = find_MSR_problem_graph(&ija_temp, itotal_nodes, exo);
   }
 
-#ifndef DEBUG_HKM
   if (Debug_Flag)
-#endif
   {
     printf("Processor %d nnz = %d\n", ProcID, nnz);
   }
@@ -5080,10 +5074,6 @@ void determine_ProjectionVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
     P0PRINTF("Warning: No suitable basis function was found for a Projection "
              "Operation\n");
   }
-#ifdef DEBUG_HKM
-  P0PRINTF("Projection Variable set to %d with interp type = %d\n",
-           pd_ptr->ProjectionVar, pd_ptr->i[pg->imtrx][pd_ptr->ProjectionVar]);
-#endif
 }
 
 /*************************************************************************/

@@ -5485,14 +5485,6 @@ load_neighbor_pointers( Exo_DB *exo,
 	 */
 	nv = Nodes[gnn]->Nodal_Vars_Info[pg->imtrx];
 	nunks = get_nv_ndofs_modMF(nv, v);
-#ifdef DEBUG_HKM
-	if (nunks != node_info(ln, etype, v, gnn)) {
-	  fprintf(stderr,"load_neighbor_pointers ERROR P_%d:", ProcID);
-	  fprintf(stderr,"old and new nunks differ: %d %d\n",
-		  nunks, node_info(ln, etype, v, gnn));
-	  EH(-1, "load_neighbor_pointers: nunks problem");
-	}
-#endif
 	dof[v] += nunks;
 	EH(nunks, "problem with nun for this var.");
 	      

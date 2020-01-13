@@ -14,9 +14,6 @@
  *$Id: mm_std_models_shell.c,v 5.31 2010-07-30 20:48:38 prschun Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_std_models_shell.c,v 5.31 2010-07-30 20:48:38 prschun Exp $";
-#endif
 
 #include <stdio.h>
 #include <string.h>

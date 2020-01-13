@@ -22,9 +22,6 @@
  * listed below. 
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: ac_stability.c,v 5.1 2007-09-18 18:53:40 prschun Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>

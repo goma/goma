@@ -10,26 +10,6 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
 
-/* 
- * ------------------------
- * | CVS File Information |
- * ------------------------
- * $RCSfile: md_ieee.c,v $
- * $Author: prschun $
- * $Date: 2007-09-18 18:53:42 $
- * $Revision: 5.1 $
- * $Name: not supported by cvs2svn $
- *====================================================================*/
-
-#ifdef USE_RCSID
-#ifndef lint
-static const char cvs_ieeehp_id[] =
-  "$Id: md_ieee.c,v 5.1 2007-09-18 18:53:42 prschun Exp $";
-#endif
-#endif
-
-
-
 #ifdef hpux
 /*
  * This file handles ieee floating point exceptions on the HP.  Files for
@@ -104,17 +84,9 @@ void handle_ieee (void)
    (void) printf("ieee: fp exceptions are ignored\n");
    (void) printf("ieee: Fast underflow mode is not enabled. IEEE-754 arithmetic\n");
 #else
-#ifdef DEBUG_HKM
-   extern void fpsetdefaults(void);   
-   fpsetdefaults();
-   (void) fpsetfastmode(0);
-   (void) printf("ieee: fp exceptions are set so that a core dump will occur\n");
-   (void) printf("ieee: Fast underflow mode is disabled\n");
-#else
    (void) fpsetfastmode(1);
    (void) printf("ieee: fp exceptions are ignored\n");
    (void) printf("ieee: Fast underflow mode is enabled\n");
-#endif
 #endif
 }
 /*****************************************************************************/

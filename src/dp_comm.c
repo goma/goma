@@ -16,9 +16,6 @@
 #include "dpi.h"
 #include "rf_allo.h"
 #include "rf_fem.h"
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: dp_comm.c,v 5.1 2007-09-18 18:53:41 prschun Exp $";
-#endif
 
 /* System Include files */
 

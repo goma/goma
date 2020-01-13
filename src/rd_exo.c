@@ -66,9 +66,6 @@
 #include <string.h>
 
 #ifndef lint
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: rd_exo.c,v 5.2 2008-05-02 19:07:57 hkmoffa Exp $";
-#endif
 #endif
 
 #include "rd_exo.h"

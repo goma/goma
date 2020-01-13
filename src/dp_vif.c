@@ -37,9 +37,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: dp_vif.c,v 5.24 2010-07-21 16:39:26 hkmoffa Exp $";
-#endif
 
 #include "dp_vif.h"
 

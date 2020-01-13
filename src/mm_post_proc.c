@@ -15,10 +15,6 @@
  *$Id: mm_post_proc.c,v 5.15 2010-07-21 16:39:27 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: mm_post_proc.c,v 5.15 2010-07-21 16:39:27 hkmoffa Exp $";
-#endif
 
 /* Standard include files */
 
@@ -3403,20 +3399,6 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       for (var = 0; var < rd->TotalNVPostOutput; var++) {
 	post_proc_vect[var][I] += local_post[var]   * phi_i * wt * det_J;
 	lumped_mass[var][I]    += local_lumped[var] * phi_i * wt * det_J;
-#ifdef DEBUG_HKM
-	Dnn = 1.0;
-	for (j = 0; j < ei[pg->imtrx]->num_local_nodes; j++) {
-	  if (ei[pg->imtrx]->ln_to_dof[eqn][j] >= 0) {
-	    phi_j = bf[eqn]->phi[ei[pg->imtrx]->ln_to_dof[eqn][j]];
-	    Dnn -= phi_j;
-	  }
-	}
-	if (fabs(Dnn) > 1.0E-4) {
-	  fprintf(stderr,
-		  "calc_standard_fields: basis functions don't sum to one\n");
-	  EH(-1,"calc_standard_fields - bs problem");
-	}
-#endif
       }
     } else {
       /*
@@ -3886,28 +3868,8 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
       listel[i]--;
     }
     if ((err = check_elem_order(listel, exo)) != 0) {
-#ifdef DEBUG_HKM
-      printf("post_process_nodal: exodus element map failed "
-	     "connectivity for streamfunction calculation test, %d\n",
-	     err);
-#endif
       err = elem_order_for_nodal_connect(listel, exo);
-#ifdef DEBUG_HKM
-      if (err == 0) {
-	printf("post_process_nodal: exodus element map now has good "
-	       "connectivity for streamfunction calculation\n");
-      } else {
-	printf("post_process_nodal: exodus element map again failed "
-	       "connectivity for streamfunction calculation test, %d\n",
-	       err);
-#endif
       }
-#ifdef DEBUG_HKM
-    } else {
-      printf("post_process_nodal: exodus element map has good "
-	     "connectivity for streamfunction calculation\n");
-    }
-#endif
     /*
      * Convert the mapping to 1 to Num_Internal_Elems basis
      */
@@ -12698,10 +12660,6 @@ check_elem_order(const int *listel, const Exo_DB *exo)
    */
   for (iorder = 0; iorder < exo->num_elems; iorder++) {
     if (!used_elem[iorder]) {
-#ifdef DEBUG_HKM
-      fprintf(stderr,"check_elem_order: Element Mapping is missing element %d\n",
-	      iorder);
-#endif
       nbreaks = -1;
     }
   }

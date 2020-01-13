@@ -59,11 +59,6 @@
  * Revised: 1998/04/14 08:05 MDT pasacki@sandia.gov
  */
 
-#ifdef USE_RCSID
-#ifndef lint
-static char rcsid[] = "$Id: exo_conn.c,v 5.3 2009-11-13 23:20:07 prschun Exp $";
-#endif
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>

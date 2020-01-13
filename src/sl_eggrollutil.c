@@ -14,9 +14,6 @@
  * $Id: sl_eggrollutil.c,v 5.1 2007-09-18 18:53:47 prschun Exp $
  */
 
-#ifdef USE_RCSID
-static const char rcs_id[] = "$Id: sl_eggrollutil.c,v 5.1 2007-09-18 18:53:47 prschun Exp $";
-#endif
 
 #include "std.h"
 #include "sl_eggroll.h"

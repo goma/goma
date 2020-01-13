@@ -14,9 +14,6 @@
  * $Id: mm_qtensor_model.c,v 5.2 2009-05-20 15:31:33 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_qtensor_model.c,v 5.2 2009-05-20 15:31:33 hkmoffa Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>

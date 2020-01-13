@@ -14,9 +14,6 @@
  * sundry boundary conditions that are
  * used in solid mechanics for mesh deformation in the global Jacobian & resid */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_fill_solid.c,v 5.13 2010-01-10 23:00:17 hkmoffa Exp $";
-#endif
 
 #include <math.h>
 #include <stdio.h>

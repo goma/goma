@@ -16,9 +16,6 @@
  *$Id: mm_numjac.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_numjac.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $";
-#endif
 
 /* Standard include files */
 #include <stdio.h>

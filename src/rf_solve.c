@@ -19,9 +19,6 @@
  * Revision history has goneaway from this place.
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: rf_solve.c,v 5.21 2010-03-17 22:23:54 hkmoffa Exp $";
-#endif
 
 #include "rf_solve.h"
 

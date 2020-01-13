@@ -276,26 +276,17 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    */
   setup_local_nodal_vars(exo, dpi);
 
-#ifdef DEBUG_HKM
-  printf("%s: Proc %d after setup_local_nodal_vars\n", yo, ProcID); fflush(stdout);
-#endif
   /*
    * setup communications patterns between ghost and owned
    * nodes.
    */
   setup_nodal_comm_map(exo, dpi, cx);
-#ifdef DEBUG_HKM
-  printf("%s: Proc %d after setup_nodal_comm_map\n", yo, ProcID); fflush(stdout);
-#endif
 
   /*
    * Find the global maximum number of unknowns located at any one
    * node on any processor
    */
   MaxVarPerNode = find_MaxUnknownNode();
-#ifdef DEBUG_HKM
-  printf("%s: Proc %d after find_MaxUnknownNode\n", yo, ProcID); fflush(stdout);
-#endif
   
   /*
    * Exchange my idea of what materials I have at each node with
@@ -310,9 +301,6 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * at that node.
    */
   setup_external_nodal_vars(exo, dpi, cx);
-#ifdef DEBUG_HKM
-  printf("%s: Proc %d after setup_external_nodal_vars\n", yo, ProcID); fflush(stdout);
-#endif
 
   /*
    * Finish setting the unknown map on this processor
@@ -324,9 +312,6 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * exchange the solution vector in as efficient a manner as
    * possible
    */
-#ifdef DEBUG_HKM
-  printf("P_%d: setup_dof_comm_map() begins...\n", ProcID); fflush(stdout);
-#endif
   log_msg("setup_dof_comm_map...");
   setup_dof_comm_map(exo, dpi, cx);
 
@@ -662,18 +647,6 @@ coordinate_discontinuous_variables(Exo_DB *exo,	Dpi *dpi)
               ivec[k] = curr_pd->v[imtrx][k];
              }
       ReduceBcast_BOR(ivec, V_LAST);
-#ifdef DEBUG_HKM
-      print_sync_start(TRUE);
-      for (k = 0; k < V_LAST; k++) 
-         {
-          if (curr_pd->v[pg->imtrx][k] != ivec[k]) 
-            {
-             printf("P_%d: v field for var_type %d changed from %d to %d\n",
-	            ProcID, k, curr_pd->v[pg->imtrx][k], ivec[k]);
-            }
-         }
-      print_sync_end(TRUE);
-#endif
           for (k = 0; k < V_LAST; k++) 
              {
               curr_pd->v[imtrx][k] = ivec[k];
@@ -1202,14 +1175,6 @@ bc_matrl_index(Exo_DB *exo)
       * For debug purposes, print out everything that we have found
       * out and decided about this bc on all of the processors.
       */
-#ifdef DEBUG_HKM
-     print_sync_start(FALSE);
-     bc_matrl_index_print(bc_ptr, bin_matrl, bin_matrl_elem,
-			  min_node_matrl, max_node_matrl,
-			  node_matrl_1, node_matrl_2, node_matrl_3,
-			  node_matrl_4, ibc);
-     print_sync_end(FALSE);
-#endif
 
      /*
       * MP Fix: We may not get the same results on all processors
@@ -1236,18 +1201,6 @@ bc_matrl_index(Exo_DB *exo)
 	       MPI_COMM_WORLD);
 
 
-#ifdef DEBUG_HKM
-     print_sync_start(FALSE);
-     if ( !ProcID ) {
-       printf("Final matrl_index's for ibc = %d:\n", ibc);
-       printf("\tBC_matrl_index_1 = %d\n",  bc_ptr->BC_matrl_index_1);
-       printf("\tBC_matrl_index_2 = %d\n",  bc_ptr->BC_matrl_index_2);
-       printf("\tBC_matrl_index_3 = %d\n",  bc_ptr->BC_matrl_index_3);
-       printf("\tBC_matrl_index_4 = %d\n",  bc_ptr->BC_matrl_index_4);
-       fflush(stdout);
-     }
-     print_sync_end(FALSE);
-#endif
 #endif
      
   }
@@ -1477,13 +1430,6 @@ setup_external_nodal_matrls(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
   }
   exchange_neighbor_proc_info(dpi->num_neighbors, np_base);
   
-#ifdef DEBUG_HKM
-  printf("P_%d at barrier after exchange in setup_external_nodal_matrls\n",
-	  ProcID); fflush(stdout);
-#ifdef PARALLEL
-  MPI_Barrier(MPI_COMM_WORLD);
-#endif
-#endif
 
   for (i = 0; i < dpi->num_external_nodes; i++) {
     node_num = dpi->num_internal_nodes + dpi->num_boundary_nodes + i;
@@ -1503,12 +1449,6 @@ setup_external_nodal_matrls(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
       }
     }   
   }
-#ifdef DEBUG_HKM
-  if ((k = find_MaxMatrlPerNode()) != max_Matrl) {
-    printf("ERROR! %d %d\n", max_Matrl, k);
-    exit (-1);
-  }
-#endif
 
   /*
    *  Free memory allocated in this routine
@@ -1522,13 +1462,6 @@ setup_external_nodal_matrls(Exo_DB *exo, Dpi *dpi, Comm_Ex *cx)
    *  every node
    */
 
-#ifdef DEBUG_HKM
-  printf("P_%d at barrier at end of setup_external_nodal_matrlx\n",
-	 ProcID); fflush(stdout);
-#ifdef PARALLEL
-  MPI_Barrier(MPI_COMM_WORLD);
-#endif
-#endif
 }
 /***************************************************************************/
 /***************************************************************************/

@@ -14,10 +14,6 @@
  *$Id: ac_loca_interface.c,v 5.8 2008-12-19 22:54:25 rbsecor Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: ac_loca_interface.c,v 5.8 2008-12-19 22:54:25 rbsecor Exp $";
-#endif
 
 /* DOCUMENTATION FOR CONTINUATION LIBRARY:    10/26/1999
  *    Andrew Salinger  Org. 9221, MS-1111, 845-3523

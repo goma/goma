@@ -15,9 +15,6 @@
  *		the a[] and ija[] vectors are trimmed down to size
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: sl_squash.c,v 5.1 2007-09-18 18:53:48 prschun Exp $";
-#endif
 
 /* static int first_time; */
 

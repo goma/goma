@@ -3370,9 +3370,6 @@ assemble_momentum(dbl time,       /* current time */
 
 		      /*lec->J[peqn][pvar][ii][j] += mass + advection + porous + diffusion + source;*/
 		      J[j] += mass + advection + porous + diffusion + source; 
-#ifdef DEBUG_HKM
-		      checkFinite(J[j]);
-#endif
 		    }
 		}
 
@@ -3455,9 +3452,6 @@ assemble_momentum(dbl time,       /* current time */
 
 			  /*lec->J[peqn][pvar][ii][j] += mass + advection + porous + diffusion + source;*/
 			  J[j] += mass + advection + porous;
-#ifdef DEBUG_HKM
-			  checkFinite(J[j]);
-#endif
 			}
 		    }
 		}
@@ -8634,11 +8628,6 @@ load_fv(void)
   
 
 
-#ifdef DEBUG_HKM
-  if (ei[upd->matrix_index[v]]->ielem == 165) {
-    //printf("load_fv: we are here\n");
-  }
-#endif
 
 
   for (p = 0; p < dim; p++)
@@ -11699,9 +11688,6 @@ load_fv_mesh_derivs(int okToZero)
   int mode;                     /* modal counter */
   int transient_run, discontinuous_porous_media;
  
-#ifdef DEBUG_HKM
-  int doExtra = 0;
-#endif
 
   dbl T_i, v_ri, P_i, d_ri, F_i, d_dot_ri;
   dbl em_er_ri, em_ei_ri, em_hr_ri, em_hi_ri;
@@ -14065,11 +14051,6 @@ if ( pd->gv[SHELL_LUB_CURV_2] )
     {
       if (pd->gv[NORMAL1]) v = NORMAL1;
       if (pd->gv[SHELL_NORMAL1]) v = SHELL_NORMAL1;
-#ifdef DEBUG_HKM
-      if (ei[pg->imtrx]->ielem == 165) {
-	//printf("we are here 165\n");
-      }
-#endif	  
       bfv = bf[v];
       vdofs     = ei[upd->matrix_index[v]]->dof[v];
       siz = sizeof(double)*DIM*DIM*DIM*MDE;

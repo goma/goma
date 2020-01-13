@@ -11,9 +11,6 @@
 \************************************************************************/
  
 
-#ifdef USE_RCSID
-static const char rcs_id[] = "$Id: ac_update_parameter.c,v 5.3 2008-12-19 22:54:25 rbsecor Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>

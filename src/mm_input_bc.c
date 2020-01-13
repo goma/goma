@@ -15,10 +15,6 @@
  *$Id: mm_input_bc.c,v 5.21 2010-07-21 16:39:27 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: mm_input_bc.c,v 5.21 2010-07-21 16:39:27 hkmoffa Exp $";
-#endif
 
 #include <stdlib.h>
 #include <stdio.h>

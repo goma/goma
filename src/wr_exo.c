@@ -50,9 +50,6 @@
 #include <unistd.h>		/* for getuid() */
 
 #ifndef lint
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: wr_exo.c,v 5.3 2008-05-02 19:07:58 hkmoffa Exp $";
-#endif
 #endif
 
 static int has_been_called=0;

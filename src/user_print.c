@@ -21,10 +21,6 @@
  * "$Id: user_print.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: user_print.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
-#endif
 
 
 
@@ -33,11 +29,6 @@ static char rcsid[] =
 
 
 
-#ifdef DEBUG_HKM
-#ifdef PARALLEL
-#include "mpi.h"
-#endif
-#endif
 
 #include "usr_print.h"
 
@@ -62,19 +53,6 @@ usr_print ( double *t,	            /* time value */
   /*
    * Put a hook in here to print out norms of the solution components
    */
-#ifdef DEBUG_HKM
-  printf("\tP_%d:  usr_print: Calling Norms routine\n", ProcID);
-  fflush(stdout);
-#ifdef PARALLEL
-  (void) MPI_Barrier(MPI_COMM_WORLD);
-#endif
-  /* usr_out_hkm(status, *t, dt, x); */
-#endif
-#ifdef DEBUG_HKM 
-#ifdef PARALLEL
-  (void) MPI_Barrier(MPI_COMM_WORLD);
-#endif
-#endif
 
   /*
    * Safety catch line -- comment out the line below if you can verify this

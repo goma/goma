@@ -145,11 +145,6 @@ apply_point_colloc_bc (
   /*          FOR NODES THAT LIE ON THE CURRENT SURFACE		             */
   /*   - INITIALIZATION THAT IS DEPENDENT ON THE LOCAL ELEMENT NODE NUMBER   */
   /***************************************************************************/
-#ifdef DEBUG_HKM
-  if (ei[pg->imtrx]->ielem == 1032) {
-  //  printf("we are here - 1032\n");
-  }
-#endif
  
   for (i = 0; i < (int) elem_side_bc->num_nodes_on_side; i++) {
     

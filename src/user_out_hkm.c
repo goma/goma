@@ -356,9 +356,6 @@ usr_out_hkm(int status, double time, double dt, double *soln)
 		       g_Tmin, iTmin, Tavg);
       }
 #ifdef PARALLEL
-#ifdef DEBUG_HKM
-      MPI_Barrier(MPI_COMM_WORLD);
-#endif
 #endif
       /*
        * Translate the solution from mass to mole fractions. Then,
@@ -374,9 +371,6 @@ usr_out_hkm(int status, double time, double dt, double *soln)
 	SOLN_TO_MOLES(soln, soln_mole, soln_lastSpecies,
 		      soln_mole_lastSpecies, matID_prop);
 #ifdef PARALLEL
-#ifdef DEBUG_HKM
-        MPI_Barrier(MPI_COMM_WORLD);
-#endif
 #endif
 	for (k = 0; k < matID_prop->Num_Species_Eqn; k++) {
 	  SOLN_VALUES(MASS_FRACTION, k, soln_mole, &Tmax, &g_Tmax,
@@ -397,9 +391,6 @@ usr_out_hkm(int status, double time, double dt, double *soln)
 	}
       }
 #ifdef PARALLEL
-#ifdef DEBUG_HKM
-      MPI_Barrier(MPI_COMM_WORLD);
-#endif
 #endif
       /*
      * Free Memory
@@ -537,15 +528,6 @@ static void SOLN_VALUES(int var_type, int sub_index, double soln[],
 	       *   so there are additional complications
 	       */
               ndof = 0;
-#ifdef DEBUG_HKM
-	      if (((EXO_ptr->eb_id[ebi] + 1) % 2) != 0) {
-		if (Dolphin[pg->imtrx][i][var_type] > 1) {
-		  if (Nodes[i]->DISC_BNDRY) {
-		    ndof = 1;
-		  }
-		}
-	      }
-#endif
 	      if ((i_eqn =
 		   Index_Solution(i, var_type, sub_index, ndof, mn, pg->imtrx)) >= 0) {
 		num_nodes_mn++;
@@ -640,13 +622,6 @@ static void SOLN_TO_MOLES(double soln[], double soln_mole[],
 			 DPI_ptr->num_boundary_nodes);
   mn = matID_prop->MatID;
   for (node = 0; node < num_owned_nodes; node++) {
-#ifdef DEBUG_HKM
-    if (Dolphin[pg->imtrx][node][MASS_FRACTION] > 1) {
-      ndof = mn;
-    } else {
-      ndof = 0;
-    }
-#endif
     if ((i_eqn =
 	 Index_Solution(node, MASS_FRACTION, 0, ndof, mn, pg->imtrx)) >= 0) { 
       for (k = 0, sumwt = 0.0; k < matID_prop->Num_Species_Eqn; k++) {
@@ -713,13 +688,6 @@ static void GET_SOLN_LASTSPECIES(double soln[], double soln_lastSpecies[],
   if (soln_lastSpecies == NULL) return;
   if (matID_prop->Num_Species_Eqn < matID_prop->Num_Species) {
     for (node = 0; node < num_owned_nodes; node++) {
-#ifdef DEBUG_HKM
-      if (Dolphin[pg->imtrx][node][MASS_FRACTION] > 1) {
-        ndof = mn;
-      } else {
-        ndof = 0;
-      }
-#endif
       if ((i_eqn =
 	   Index_Solution(node, MASS_FRACTION, 0, ndof, mn, pg->imtrx)) >= 0) {
 	soln_lastSpecies[i_eqn] = 1.0;
@@ -730,13 +698,6 @@ static void GET_SOLN_LASTSPECIES(double soln[], double soln_lastSpecies[],
     }
   } else {
     for (node = 0; node < num_owned_nodes; node++) {
-#ifdef DEBUG_HKM
-      if (Dolphin[pg->imtrx][node][MASS_FRACTION] > 1) {
-        ndof = mn;
-      } else {
-        ndof = 0;
-      }
-#endif
       if ((i_eqn =
 	   Index_Solution(node, MASS_FRACTION, 0, ndof, mn, pg->imtrx)) >= 0) {
 	soln_lastSpecies[i_eqn] = soln[i_eqn];

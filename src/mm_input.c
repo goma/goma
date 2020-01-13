@@ -14,10 +14,6 @@
  *$Id: mm_input.c,v 5.36 2010-06-29 22:23:42 prschun Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: mm_input.c,v 5.36 2010-06-29 22:23:42 prschun Exp $";
-#endif
 
 #define _XOPEN_SOURCE /* POSIX WEXITSTATUS */
 

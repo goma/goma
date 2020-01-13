@@ -16,10 +16,6 @@
  *$Id: mm_fill_shell.c,v 5.62 2010-07-30 21:14:52 prschun Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] =
-"$Id: mm_fill_shell.c,v 5.62 2010-07-30 21:14:52 prschun Exp $";
-#endif
 
 #include "mm_fill_shell.h"
 
@@ -2549,9 +2545,6 @@ assemble_shell_geometry(double time_value,  /* Time */
   int el0 = ei[pg->imtrx]->ielem;
   int el1 = -1;
   int nf;
-#ifdef DEBUG_HKM
-  struct Element_Indices *ei_ptr;
-#endif
   /*
    * Even though this routine assemble 3 shell equations, we will assume for
    * now that the basis functions are the same
@@ -2635,18 +2628,6 @@ assemble_shell_geometry(double time_value,  /* Time */
               lec->R[peqn][i] += diffusion * wt * h3;
             }
         }
-#ifdef DEBUG_HKM
-      /*
-       *   Here we assert a relationship that is important. the surface determinant, which is
-       *   calculated from the surface integral of the bulk parent element, is equal to the
-       *   determinant of the shell jacobian * h3 of the shell element. 
-       *   
-       */
-      if (fabs(det_J * h3 - fv->sdet) > 1.0E-9) {
-	printf("we have a problem: assertion on sdet\n");
-        exit(-1);
-      }
-#endif
       /* Now the shell normal vector (2 components) */
       for (p = 0; p < pd->Num_Dim; p++)
         {
@@ -2771,13 +2752,6 @@ assemble_shell_geometry(double time_value,  /* Time */
                   for (b = 0; b < pd->Num_Dim; b++)
                     {
                       var = MESH_DISPLACEMENT1 + b;
-#ifdef DEBUG_HKM
-		      ei_ptr = ((ei[pg->imtrx]->owningElement_ei_ptr[var]) ? (ei[pg->imtrx]->owningElement_ei_ptr[var]) : ei);
-		      if (n_dof[var] != ei_ptr->dof[var]) {
-			printf("found a logic error\n");
-			exit(-1);
-		      }
-#endif
 		      /*
 		       * Here, the unknown is defined on the remote element.
 		       * So get the DOF count from n_dof.
@@ -3408,12 +3382,6 @@ apply_surface_viscosity(double cfunc[MDE][DIM],
   int r, p;
 
   double phi_j, dotdotTmp;
-#ifdef DEBUG_HKM
-  double normFixed[3];
-  normFixed[0] = 1.0;
-  normFixed[1] = 0.0;
-  normFixed[2] = 0.0;
-#endif
 
   /*
    * Adjust values for a time ramp
@@ -5159,26 +5127,6 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	}
     }
 
-#ifdef DEBUG_HKM
-  double tester[3];
-  tester[0] = 0.0;
-  tester[1] = 0.0;
-  tester[2] = 0.0;
-  for (i = 0; i < VIM; i++)
-    {
-      for (k = 0; k < VIM; k++)
-	{
-	  for (nn = 0; nn < VIM; nn++)
-	    {
-	      tester[i] += permute(i,nn,k) *  fv->grad_v[nn][k];
-	    }
-	}
-      if (fabs(tester[i] - fv->curl_v[i]) > 1.0E-9) {
-	printf("WARNING %d: assertion on curl_v is wrong, permute grad [%d] = %g, curl_v[%d] = %g",
-               ProcID, i, tester[i], i, fv->curl_v[i]);
-      }
-    }
-#endif
 
     
   for (b = 0; b < dim; b++)
@@ -5373,21 +5321,6 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
 	}
 
 
-#ifdef DEBUG_HKM
-      /*
-       *   Here we assert a relationship that is important. the surface determinant, which is
-       *   calculated from the surface integral of the bulk parent element, is equal to the
-       *   determinant of the shell jacobian * h3 of the shell element. 
-       *   
-       */
-      if (fabs(det_J * h3 - fv->sdet) > 1.0E-9) {
-	printf("we have a problem: assertion on sdet\n");
-	exit(-1);
-      }
-      // if ( fabs(n_dot_curl_s_v) > 1.0E-15) {
-      //	printf("we should not be here for non-swirling flow\n");
-      // }
-#endif
       eqn = R_N_DOT_CURL_V;
       peqn = upd->ep[pg->imtrx][eqn];
 

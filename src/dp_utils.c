@@ -21,9 +21,6 @@
  * Revised:
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: dp_utils.c,v 5.1 2007-09-18 18:53:41 prschun Exp $";
-#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -53,61 +50,6 @@ int Proc_Config[AZ_PROC_SIZE];
 /************************************************************************/
 /************************************************************************/
 
-#ifdef DEBUG_HKM
-#ifdef USE_CHEMKIN
-static int ddd_size = 0;
-void
-binMPI(int blocksize, MPI_Datatype type)
-    
-    /*******************************************************************
-     *
-     * binMPI():
-     *
-     *  Routine to debug nasty MPI problems.
-     *
-     ********************************************************************/
-{
-  static int bins[400];
-  static int firsttime= TRUE;
-  int i, index, sum;
-  if (firsttime || blocksize == -2) {
-    firsttime = FALSE;
-    for (i = 0; i < 400; i++) {
-      bins[i] = 0;
-    }
-  }
-  if (blocksize == -2) return;
-  if (blocksize == -1) {
-    sum = 0;
-    cpc_mp_init(Num_Proc, 0, ProcID, NULL);    
-    cpc_print_sync_start(TRUE);
-    printf(" Proc %d  Type      Blocks of type\n", ProcID);
-    printf("-------------------------------------------------------------\n");
-    for (i = 0; i < 400; i++) {
-      if (bins[i] > 0) {
-         printf("%12d     %12d\n", i, bins[i]);
-         sum += bins[i];
-      }     
-    }
-    printf("-------------------------------------------------------------\n");
-    printf("            %12d\n", sum);
-    cpc_print_sync_end(TRUE);
-  } else {
-    index = (int)  type;
-    if (index <= 0 || index >= 400) {
-        printf("binMPI error, index = %d\n", index);
-        exit(-1);
-    }
-    if (blocksize <= 0) {
-        printf("binMPI error, blocksize = %d\n", blocksize);
-        exit(-1);
-    }
-    bins[index] += blocksize;
-  }
-  return;
-}
-#endif
-#endif
 /************************************************************************/
 /************************************************************************/
 /************************************************************************/
@@ -261,9 +203,6 @@ ddd_add_member(DDD p,
       sprintf(err_msg, 
 	      "attempt to add member %d type %s blockcount %d with a NULL address!",
 	      i, type2string(type), blockcount);
-#ifdef DEBUG_HKM
-      printf("%s\n", err_msg); fflush(stdout);
-#endif
       EH(-1, err_msg);
     }
 
@@ -297,12 +236,6 @@ ddd_add_member(DDD p,
 #endif
   p->num_members++;
 
-#ifdef DEBUG_HKM
-#ifdef USE_CHEMKIN
-  ddd_size += blockcount;
-  binMPI(blockcount, type);
-#endif
-#endif
   return;
 }
 /************************************************************************/

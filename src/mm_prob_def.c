@@ -21,9 +21,6 @@
 #include "mm_input.h"
 
 #ifndef lint
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_prob_def.c,v 5.7 2010-04-07 22:27:00 prschun Exp $";
-#endif
 #endif
 
 #include "el_geom.h"		/* Has info I'd like to replicate into the */

@@ -332,11 +332,6 @@ chemkin_initialize_mp(void)
   int initCKExtractGuts = TRUE;
   int infoproc = 0;
 #ifdef PARALLEL
-#ifdef DEBUG_HKM
-  printf("P_%d at barrier before cpc_initialize_mp()\n", ProcID);
-  fflush(stdout);
-  (void) MPI_Barrier(MPI_COMM_WORLD);
-#endif
 #endif
 #ifdef DEBUG_CPC_MP
   pl = 1;

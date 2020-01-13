@@ -1413,20 +1413,6 @@ assembly_alloc(Exo_DB *exo)
    * Now allocate and do some initialization of the fundamental basis functions
    */
 
-#ifdef DEBUG_HKM
-  fprintf(stderr, "sizeof(Basis_Functions)=%d\n", sz);
-
-  for (si = 0; si < Num_Shapes; si++)
-    {
-      fprintf(stderr, "Unique_Shapes[%d] = %d\n", si, Unique_Shapes[si]);
-    }
-
-  for (interp = 0; interp < Num_Interpolations; interp++)
-    {
-      fprintf(stderr, "Unique_Interpolations[%d] = %d\n", interp, 
-	      Unique_Interpolations[interp]);
-    }
-#endif
 
   type = 0;
   for (si = 0; si < Num_Shapes; si++)

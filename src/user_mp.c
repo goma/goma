@@ -14,9 +14,6 @@
  *$Id: user_mp.c,v 5.5 2009-01-12 16:41:49 hkmoffa Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: user_mp.c,v 5.5 2009-01-12 16:41:49 hkmoffa Exp $";
-#endif
 
 /* Standard include files */
 

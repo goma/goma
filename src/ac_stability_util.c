@@ -15,9 +15,6 @@
  *$Id: ac_stability_util.c,v 5.6 2010-04-07 22:27:00 prschun Exp $
  */
 
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: ac_stability_util.c,v 5.6 2010-04-07 22:27:00 prschun Exp $";
-#endif
 
 #include <stdio.h>
 #include <string.h>
