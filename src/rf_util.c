@@ -1242,9 +1242,6 @@ path_step_control ( int N,
   double delta_s, beta;
   int iter_desired;
 
-#ifdef DEBUG
-  static const char yo[] = "path_step_control";
-#endif
 
   /* EXTERNAL VARIABLES */
 
@@ -2277,9 +2274,6 @@ rd_vectors_from_exoII(double u[], const char *file_nm, const int action_flag,
   int   var;
   MATRL_PROP_STRUCT *matrl = 0;
   double ftimeValue;
-#ifdef DEBUG
-  static const char yo[] = "rd_vectors_from_exoII";
-#endif
 
   CPU_word_size = sizeof(double);
   IO_word_size  = 0;    
@@ -2480,9 +2474,6 @@ rd_trans_vectors_from_exoII(double u[], const char *file_nm,
   double ftimeValue, time_higher, time_lower;
   double *val_low, *val_high, slope, yint;
   int time_step_read, time_step_higher, time_step_lower, time_step_max;
-#ifdef DEBUG
-  static const char yo[] = "rd_trans_vectors_from_exoII";
-#endif
 
   
 
@@ -2792,9 +2783,6 @@ rd_globals_from_exoII(double u[], const char *file_nm, const int start, const in
   char	ret_char[3];		/* any returned character */
   int   num_global_vars = -1;        /* number of global variables present */
   double *global_vars;          /* global variable values */
-#ifdef DEBUG
-  static const char yo[] = "rd_globals_from_exoII";
-#endif
 
   CPU_word_size = sizeof(double);
   IO_word_size  = 0;    

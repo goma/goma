@@ -411,18 +411,6 @@ build_node_node(Exo_DB *exo)
   exo->node_node_list = (int *) realloc(exo->node_node_list,
 					total_list_size*sizeof(int));
 
-#ifdef DEBUG
-  fprintf(stderr, "Printing node-node connectivities...\n");
-  for ( node=0; node<exo->num_nodes; node++)
-    {
-      fprintf(stderr, "Node (%d): ", node+1); /* f77 RuLZ, C++ sUx ! */
-      for ( n=exo->node_node_pntr[node]; n<exo->node_node_pntr[node+1]; n++)
-	{
-	  fprintf(stderr, "(%d) ", exo->node_node_list[n] + 1);
-	}
-      fprintf(stderr, "\n");
-    }
-#endif
 
   safe_free(list);
 
@@ -687,15 +675,6 @@ build_elem_elem(Exo_DB *exo)
 	      */
 
 	     num_nodes = build_side_node_list(elem, face, exo, snl);
-#ifdef DEBUG
-	     fprintf(stderr, "Elem %d, face %d has %d nodes: ", elem, face,
-		     num_nodes);
-	     for ( i=0; i<num_nodes; i++)
-	       {
-		 fprintf(stderr, " %d", snl[i]);
-	       }
-	     fprintf(stderr, "\n");
-#endif /* DEBUG */
 
 	     /*
 	      * Cross check: for each node in the side there is a list
@@ -732,17 +711,10 @@ build_elem_elem(Exo_DB *exo)
 
 		 len_curr  = 0;
 
-#ifdef DEBUG
-		 fprintf(stderr, "Traversing n->e connectivity of node %d\n",
-			 node);
-#endif /* DEBUG */
 		 for ( ce=exo->node_elem_pntr[node]; 
 		       ce<exo->node_elem_pntr[node+1]; ce++)
 		   {
 		     ename = exo->node_elem_list[ce];
-#ifdef DEBUG
-		     fprintf(stderr, "\telem %d\n", ename);
-#endif /* DEBUG */
 		     /*
 		      * Go ahead and accumulate the self element name
 		      * just as a consistency check....
@@ -817,18 +789,6 @@ build_elem_elem(Exo_DB *exo)
 		     len_prev = len_curr;
 		   }
 
-#ifdef DEBUG
-		 fprintf(stderr, "\ncurr_set: ");
-		 for ( i=0; i<len_curr; i++)
-		   {
-		     fprintf(stderr, "%d ", curr_set[i]);
-		   }
-		 fprintf(stderr, "\nprev_set: ");
-		 for ( i=0; i<len_prev; i++)
-		   {
-		     fprintf(stderr, "%d ", prev_set[i]);
-		   }
-#endif /* DEBUG */
 
 		 /*
 		  * First, clean the intersection list and the list of
@@ -849,9 +809,6 @@ build_elem_elem(Exo_DB *exo)
 		 len_intr = int_intersect(prev_set, curr_set, len_prev,
 					  len_curr, ip, ic);
 
-#ifdef DEBUG
-		 fprintf(stderr, "num_hits = %d\n", len_intr);
-#endif /* DEBUG */
 		 /*
 		  * Now, let's make the intersection set the next previous
 		  * set of elements, a standard for comparison. We should
@@ -872,11 +829,6 @@ build_elem_elem(Exo_DB *exo)
 		 len_prev = len_intr;
 	       }
 
-#ifdef DEBUG
-	     fprintf(stderr, "Element [%d], face [%d], local_node [%d]\n",
-		     elem, face, n);
-	     fprintf(stderr, "Intersection set length = %d\n", len_intr);
-#endif /* DEBUG */
 
 	     /*
 	      * Now consider the different cases.
@@ -1054,38 +1006,6 @@ build_elem_elem(Exo_DB *exo)
   * For your convenience - FORTRAN 1-based numbering.
   */
 
-#ifdef DEBUG
-
- for ( e=0; e<exo->num_elems; e++)
-   {
-     fprintf(stdout, "Elem %3d:", e+1);
-     for ( ce=exo->elem_elem_pntr[e]; ce<exo->elem_elem_pntr[e+1]; ce++)
-       {
-	 if ( exo->elem_elem_list[ce] == -1 )
-	   {
-	     fprintf(stdout, " spc");
-	   }
-	 else if ( exo->elem_elem_list[ce] < -1 )
-	   {
-	     fprintf(stdout, " prc");
-	   }
-	 else
-	   {
-	     fprintf(stdout, " %3d", exo->elem_elem_list[ce] + 1);
-	   }
-	 if ( exo->elem_elem_list[ce] == UNASSIGNED_YET )
-	   {
-	     sr = sprintf(err_msg, 
-			  "You need to plug a leak at elem (%d) face (%d)",
-			  exo->elem_elem_list[ce] + 1, 
-			  ce - exo->elem_elem_pntr[e] + 1);
-	     EH(-1, err_msg);
-	   }
-       }
-     fprintf(stdout, "\n");
-   }
-
-#endif /* DEBUG */
 
 #if FALSE
  demo_elem_elem_conn(exo);
@@ -1498,35 +1418,6 @@ int_intersect(int *a,		/* first integer list			(in) */
 	    }
 	}
     }
-#ifdef DEBUG
-  fprintf(stderr, "A is { ");
-  for ( i=0; i<len_a; i++)
-    {
-      fprintf(stderr, " %d", a[i]);
-    }
-  fprintf(stderr, "}\n");
-  fprintf(stderr, "B is { ");
-  for ( i=0; i<len_b; i++)
-    {
-      fprintf(stderr, " %d", b[i]);
-    }
-  fprintf(stderr, "}\n");
-  fprintf(stderr, "Number of hits = %d\n", num_hit);
-
-  fprintf(stderr, "A indeces { ");
-  for ( i=0; i<num_hit; i++)
-    {
-      fprintf(stderr, " %d", ia[i]);
-    }
-  fprintf(stderr, "}\n");
-  fprintf(stderr, "B indeces { ");
-  for ( i=0; i<num_hit; i++)
-    {
-      fprintf(stderr, " %d", ib[i]);
-    }
-  fprintf(stderr, "}\n");
-
-#endif
 
   return(num_hit);
 }
@@ -1772,18 +1663,6 @@ brk_build_node_node(Exo_DB *exo)
   exo->node_node_list = (int *) realloc(exo->node_node_list,
 					total_list_size*sizeof(int));
 
-#ifdef DEBUG
-  fprintf(stderr, "Printing node-node connectivities...\n");
-  for ( node=0; node<exo->num_nodes; node++)
-    {
-      fprintf(stderr, "Node (%d): ", node+1); /* f77 RuLZ, C++ sUx ! */
-      for ( n=exo->node_node_pntr[node]; n<exo->node_node_pntr[node+1]; n++)
-	{
-	  fprintf(stderr, "(%d) ", exo->node_node_list[n] + 1);
-	}
-      fprintf(stderr, "\n");
-    }
-#endif
 
   safe_free(list);
 

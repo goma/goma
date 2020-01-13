@@ -2016,9 +2016,6 @@ static struct LS_Surf_List *create_surfs_from_ss(int ss_id, double *x,
 
     side = exo->ss_side_list[exo->ss_elem_index[iss] + i];
 
-#ifdef DEBUG
-    fprintf(stderr, "Side/elem = %d, %d\n", ielem, side);
-#endif
 
     /* Get the number of nodes on the side of the current element
           NOTE - Currently, this must be the same for all elements

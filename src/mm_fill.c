@@ -650,11 +650,6 @@ matrix_fill(
   iconnect_ptr    = ei[pg->imtrx]->iconnect_ptr; /* find pointer to beginning  of this element's connectivity list */
   
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: ielem           = %d\n", ProcID, ielem);
-  fprintf(stderr, "P_%d: num_local_nodes = %d\n", ProcID, 
-	  num_local_nodes);
-#endif /* DEBUG */
 
   /* subgrid or subelement integration setup */
   if( pd->gv[FILL] && ls != NULL && ls->Integration_Depth > 0 &&
@@ -3728,11 +3723,6 @@ matrix_fill_stress(
   iconnect_ptr    = ei[pg->imtrx]->iconnect_ptr; /* find pointer to beginning  of this element's connectivity list */
   
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: ielem           = %d\n", ProcID, ielem);
-  fprintf(stderr, "P_%d: num_local_nodes = %d\n", ProcID, 
-	  num_local_nodes);
-#endif /* DEBUG */
 
   Subgrid_Int.active = FALSE;
 

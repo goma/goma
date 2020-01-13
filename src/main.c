@@ -480,10 +480,6 @@ main(int argc, char **argv)
 		{
 		  clc[i]->string[j] = '\0';
 		}
-#ifdef DEBUG
-	      fprintf(stderr, "clc[%d]->string is at 0x%x\n", i, clc[i]->string);
-	      fprintf(stderr, "clc[%d]         is at 0x%x\n", i, clc[i]);
-#endif
 	    }
 	}
 
@@ -510,12 +506,6 @@ main(int argc, char **argv)
   error = pd_alloc();
   EH(error, "pd_alloc problem");
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d at barrier after pd_alloc\n", ProcID);
-#ifdef PARALLEL
-  error = MPI_Barrier(MPI_COMM_WORLD);
-#endif
-#endif
 
   log_msg("Allocating mp, gn, ...");
 
@@ -555,12 +545,6 @@ main(int argc, char **argv)
   error = efv_alloc();
   EH(error, "efv_alloc problem");
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d at barrier before read_input_file()\n", ProcID);
-#ifdef PARALLEL
-  error = MPI_Barrier(MPI_COMM_WORLD);
-#endif
-#endif
 
   /*
    * Read ASCII input file, data files, related exodusII FEM databases.
@@ -576,9 +560,6 @@ main(int argc, char **argv)
       log_msg("Overriding any input file specs w/ any command line specs...");
       if (argc > 1) apply_command_line(clc, nclc);
 
-#ifdef DEBUG
-      DPRINTF(stderr, "apply_command_line() is done.\n");
-#endif
     }
 
   /*
@@ -607,35 +588,18 @@ main(int argc, char **argv)
    * onto the ark later on.
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d at barrier before noahs_raven()\n", ProcID);
-  error = MPI_Barrier(MPI_COMM_WORLD);
-#endif
 
   noahs_raven();
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d at barrier before MPI_Bcast of Noahs_Raven\n", ProcID);
-  error = MPI_Barrier(MPI_COMM_WORLD);
-#endif
 
   MPI_Bcast(MPI_BOTTOM, 1, Noahs_Raven->new_type, 0, MPI_COMM_WORLD);
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d at barrier after Bcast/before raven_landing()\n", 
-	  ProcID);
-  error = MPI_Barrier(MPI_COMM_WORLD);
-#endif  
   /*
    * Get the other processors ready to handle ark data.
    */
 
   raven_landing();
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d at barrier before noahs_ark()\n", ProcID);
-  error = MPI_Barrier(MPI_COMM_WORLD);
-#endif
   
   
   /*
@@ -766,9 +730,6 @@ main(int argc, char **argv)
    * mesh information, let's allocate space for elemental assembly structures
    *
    */
-#ifdef DEBUG
-  DPRINTF(stderr, "About to assembly_alloc()...\n");
-#endif
   log_msg("Assembly allocation...");
 
   error = assembly_alloc(EXO_ptr);
@@ -787,9 +748,6 @@ main(int argc, char **argv)
 
   add_info_stamp(EXO_ptr);
 
-#ifdef DEBUG
-  fprintf(stderr, "added qa and info stamps\n");
-#endif
 
   /*
    * If the output EXODUS II database file is different from the input
@@ -832,9 +790,6 @@ main(int argc, char **argv)
    *           element edge info, First_Elem_Edge_BC_Array.
    *        -> Determine Unique_Element_Types[] array
    */
-#ifdef DEBUG
-  fprintf(stderr, "pre_process()...\n");
-#endif
   log_msg("Pre processing of mesh...");
 #ifdef PARALLEL
   error = MPI_Barrier(MPI_COMM_WORLD);
@@ -851,9 +806,6 @@ main(int argc, char **argv)
    * element types in the problem.
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "bf_init()...\n");
-#endif
   log_msg("Basis function initialization...");
   error = bf_init(EXO_ptr);
   EH( error, "Problem from bf_init");
@@ -870,9 +822,6 @@ main(int argc, char **argv)
    * Allocate space for each communication exchange description.
    */
 #ifdef PARALLEL
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: Parallel cx allocation\n", ProcID);
-#endif
     cx = malloc(sizeof(Comm_Ex *) * upd->Total_Num_Matrices);
   if (DPI_ptr->num_neighbors > 0) {
 
@@ -939,9 +888,6 @@ main(int argc, char **argv)
      * mesh to be 1-based. After writing, return to the 0 based indexing
      * that is more convenient in C.
      */
-#ifdef DEBUG
-    fprintf(stderr, "1-base; wr_mesh; 0-base\n");
-#endif
     one_base(EXO_ptr);
     wr_mesh_exo(EXO_ptr, ExoFileOut, 0);
     zero_base(EXO_ptr);
@@ -953,11 +899,6 @@ main(int argc, char **argv)
      */
     if (Num_Proc > 1) {
 #ifdef PARALLEL
-#ifdef DEBUG
-      fprintf(stderr, "P_%d at barrier before wr_dpi()\n", ProcID);
-      fprintf(stderr, "P_%d ExoFileOut = \"%s\"\n", ProcID, ExoFileOut);
-      error = MPI_Barrier(MPI_COMM_WORLD);
-#endif
 #endif
       wr_dpi(DPI_ptr, ExoFileOut);
     }
@@ -995,28 +936,6 @@ main(int argc, char **argv)
         break;
     }
   }  
-#ifdef DEBUG
-  switch (Continuation) {
-  case ALC_ZEROTH:
-      DPRINTF(stderr, "%s: continue_problem (zeroth order) ...\n", yo);
-      break;
-  case  ALC_FIRST:
-      DPRINTF(stderr, "%s: continue_problem (first order) ...\n", yo);
-      break;
-  case HUN_ZEROTH:
-      DPRINTF(stderr, "%s: hunt_problem (zeroth order) ...\n", yo);
-      break;
-  case  HUN_FIRST:
-      DPRINTF(stderr, "%s: hunt_problem (first order) ...\n", yo);
-      break;
-  case LOCA:
-      DPRINTF(stderr, "%s: do_loca ...\n", yo);
-      break;
-  default:
-      DPRINTF(stderr, "%s: solve_problem...\n", yo);
-      break;
-  }
-#endif
 
     
   if( TimeIntegration == TRANSIENT)
@@ -1025,9 +944,6 @@ main(int argc, char **argv)
         if (Debug_Flag) {
           P0PRINTF("%s: solve_problem...TRANSIENT superceded Continuation...\n", yo);
           }
-#ifdef DEBUG
-   DPRINTF(stderr, "%s: solve_problem...TRANSIENT superceded Continuation...\n", yo);
-#endif
         solve_problem(EXO_ptr, DPI_ptr, NULL);
         }  
 
@@ -1106,10 +1022,6 @@ main(int argc, char **argv)
 	{
 	  for (i=0; i<argc; i++)
 	    {
-#ifdef DEBUG
-	      fprintf(stderr, "clc[%d]->string &= 0x%x\n", i, clc[i]->string);
-	      fprintf(stderr, "clc[%d]         &= 0x%x\n", i, clc[i]);
-#endif
 	      safer_free((void **) &(clc[i]->string));
 	      safer_free((void **) (clc + i));
 	    }

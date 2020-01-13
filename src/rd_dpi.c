@@ -334,14 +334,6 @@ int rd_dpi(Dpi *d, char *fn) {
   int len_ss_block_list_global = 0;
   getdim(u, si.len_ss_block_list_global, &len_ss_block_list_global);
 
-#ifdef DEBUG
-  fprintf(stderr, "Processor %d has d->num_side_sets = %d\n", ProcID,
-	  d->num_side_sets);
-  fprintf(stderr, "Processor %d has d->num_elem_blocks = %d\n", ProcID,
-	  d->num_elem_blocks);
-  fprintf(stderr, "Processor %d has d->num_side_sets_global = %d\n", ProcID,
-	  d->num_side_sets_global);
-#endif  
 
   /*
    * 4. Get variable identifiers from netCDF.
@@ -969,10 +961,6 @@ getdid(int netcdf_unit,			/* should already be open	(in) */
   *dimension_identifier_address = err;
 #endif  
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d dim id is %d for %s\n", ProcID, 
-	  *dimension_identifier_address, string_name);
-#endif  
 
   return;
 }
@@ -1025,10 +1013,6 @@ getvid(int netcdf_unit,		         /* open netCDF unit identifier (in) */
   *variable_identifier_address = err;
 #endif  
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d var id is %d for %s\n", ProcID, 
-	  *variable_identifier_address, string_name);
-#endif  
 
   return;
 }

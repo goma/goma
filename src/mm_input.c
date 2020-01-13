@@ -199,9 +199,6 @@ read_input_file(struct Command_line_command **clc,
   char	input[MAX_CHAR_IN_INPUT];
   FILE	*ifp; 
   char *echo = Echo_Input_File;
-#ifdef DEBUG
-  static const char yo[] = "read_input_file";
-#endif
 
   /* 
    * BEGIN EXECUTION
@@ -457,9 +454,6 @@ count_list(FILE  *ifp,	/* file pointer to open goma input file */
       count++;
     }
 
-#ifdef DEBUG
-  if (status == 2) fprintf(stderr, "List of %s contains %d items\n", string, count);
-#endif
 
   if (status == -1) fprintf(stderr, "### EOF found while counting list of %s ###\n"
 	       "You should use termination string \"%s\" to indicate end of list\n"
@@ -718,9 +712,6 @@ void
 rd_file_specs(FILE *ifp,
 	      char *input )
 {
-#ifdef DEBUG
-  static const char yo[] = "rd_file_specs";
-#endif
   int foundMappingFile;
   int foundBrkFile;
   
@@ -8850,10 +8841,6 @@ rd_eq_specs(FILE *ifp,
       ce = set_eqn(R_BOND_EVOLUTION, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts, "species_bulk")) {
       ce = set_eqn(R_MASS, mtrx_index0, pd_ptr);
-#ifdef DEBUG
-      printf("Input Number of Species Equations =  %d\n",
-	     pd_ptr->Num_Species_Eqn);
-#endif
       if (pd_ptr->Num_Species_Eqn == 0) {
 	EH(-1, "Cannot solve species transport without number of species");
       }
@@ -9157,10 +9144,6 @@ rd_eq_specs(FILE *ifp,
     } else if (!strncasecmp(ts, "species_unk", 11)) {
       if (!strcasecmp(ts, "species_unk")) {
 	ce = R_SPECIES_UNK_0;
-#ifdef DEBUG
-	printf("Input Number of Species Equations =  %d\n",
-	       pd_ptr->Num_Species_Eqn);
-#endif
 	if (pd_ptr->Num_Species_Eqn == 0) {
 	  fprintf(stderr, "%s%s\n",
 		   "rd_eq_specs ERROR: ",
@@ -10900,9 +10883,6 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
                                                  * to the echo file for this mat */
 {
   char err_msg[MAX_CHAR_IN_INPUT];
-#ifdef DEBUG
-  static const char yo[] = "look_for_mat_prop";
-#endif
   char	input[MAX_CHAR_IN_INPUT] = "zilch\0"; /* storage for input strings */
   int iread = -1; /* status flag  */
   double a0, a1, a2;			/* dummy for storing input properties */
@@ -10918,10 +10898,6 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
 
   got_it = look_forward_optional(imp, search_string, input, '=');
 
-#ifdef DEBUG
-  fprintf(stderr, "%s: %d=look_forward_optional(imp, \"%s\", ... )\n", yo,
-	  got_it, search_string);
-#endif
 
   /*  look_for(imp, search_string, input, '='); */
   if (got_it == 1) 
@@ -11193,9 +11169,6 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 		  char *echo_string )          /*   string to copy echoed data to */
 {
   char err_msg[MAX_CHAR_IN_INPUT];
-#ifdef DEBUG
-  static const char yo[] = "look_for_mat_proptable";
-#endif
   char	input[MAX_CHAR_IN_INPUT] = "zilch\0"; /* storage for input strings */
   int iread = -1; /* status flag  */
   double a0, a1, a2;			/* dummy for storing input properties */
@@ -11210,10 +11183,6 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 
   got_it = look_forward_optional(imp, search_string, input, '=');
 
-#ifdef DEBUG
-  fprintf(stderr, "%s: %d=look_forward_optional(imp, \"%s\", ... )\n", yo, got_it,
-	  search_string);
-#endif
 
   if (got_it == 1) {
     if (fscanf(imp, "%s", model_name) != 1)
@@ -11451,9 +11420,6 @@ look_for_modal_prop(FILE *imp,	/* ptr to input stream (in)*/
 		    char *echo_string)    /*character array to pass back echoed input */
 {
   char err_msg[MAX_CHAR_IN_INPUT];
-#ifdef DEBUG
-  static const char yo[] = "look_for_modal_prop";
-#endif
   char	input[MAX_CHAR_IN_INPUT];             /* dummy storage for input strings */
   int iread = -1; /* status flag  */
   int DumModel;			              /* dummy int for story input model */
@@ -11619,9 +11585,6 @@ read_constants(FILE *imp,	     /* pointer to file */
 void
 set_mp_to_unity(const int mn)
 {
-#ifdef DEBUG
-  static const char yo[] = "set_mp_to_unity";
-#endif
   int	i;
   int p;
   int v;
@@ -12170,10 +12133,6 @@ translate_command_line( int argc,
 	      istr++;
 	      clc[*nclc]->type = INPUT_FILE;
 	      strcpy_rtn = strcpy(clc[*nclc]->string, argv[istr]);
-#ifdef DEBUG
-	      fprintf(stdout, "Change reading input from \"%s\" to \"%s\"\n",
-		      Input_File, argv[istr]); 
-#endif
 	      strcpy_rtn = strcpy(Input_File, clc[*nclc]->string);
 	      istr++;
 	    }
@@ -12575,9 +12534,6 @@ translate_command_line( int argc,
 	{
 	  fprintf(stdout, "system: %s\n", command_line_ap);
 	}
-#ifdef DEBUG
-      fprintf(stderr, "system() = \"%s\"\n", command_line_ap);
-#endif
 
 #ifndef tflop
       err = system(command_line_ap);
@@ -15066,11 +15022,7 @@ echo_compiler_settings(void)
   fprintf(echo_file, "%-30s= %s\n", "COUPLED_FILL", "no");
 #endif
 
-#ifdef DEBUG
-  fprintf(echo_file, "%-30s= %s\n", "DEBUG", "yes");
-#else 
   fprintf(echo_file, "%-30s= %s\n", "DEBUG", "no");
-#endif
 
   fprintf(echo_file, "%-30s= %s\n", "Pressure Stabilization (PSPG)", (PSPG > 0 ? "yes":"no") );
   fprintf(echo_file, "%-30s= %s\n", "Pressure Stabilization (PSPP)", (PSPP > 0 ? "yes":"no") );

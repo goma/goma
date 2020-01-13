@@ -337,9 +337,6 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    * of the FILL variable type equations alone, if needed
    */
   if (Explicit_Fill) {
-#ifdef DEBUG
-    fprintf(stderr, "P_%d: setup_fill_comm_map() begins...\n", ProcID);
-#endif /* DEBUG */
     log_msg("setup_fill_comm_map...");
     setup_fill_comm_map(exo, dpi, cx);
   }
@@ -363,18 +360,12 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    *  Set up the structures necessary to carry out
    *  surface integrals
    */
-#ifdef DEBUG
-  fprintf(stderr, "P_%d set_up_Surf_BC() begins...\n",ProcID);
-#endif
   log_msg("set_up_Surf_BC...");
   set_up_Surf_BC(First_Elem_Side_BC_Array, exo, dpi); 
 
   /*
    *  Set up the Edge boundary condition structures
    */
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: set_up_Edge_BC() begins...\n",ProcID);
-#endif
   log_msg("set_up_Edge_BC...");
   set_up_Edge_BC(First_Elem_Edge_BC_Array, exo, dpi); 
 

@@ -122,10 +122,6 @@ sl_init(unsigned int option_mask,		/* option flag */
 #ifndef COUPLED_FILL
   int Do_Explicit_Fill;
 #endif /* not COUPLED_FILL */
-#ifdef DEBUG
-  char logfile[80];
-  FILE *out;
-#endif /* DEBUG */
   struct Aztec_Linear_Solver_System *A;
   int imtrx = pg->imtrx;
 
@@ -135,15 +131,6 @@ sl_init(unsigned int option_mask,		/* option flag */
   Do_Explicit_Fill = ( option_mask & 2 );
 #endif /* not COUPLED_FILL */
 
-#ifdef DEBUG
-#ifdef COUPLED_FILL
-  fprintf(stderr, "Initializing Aztec with %d\n", Do_Jacobian);
-#else /* COUPLED_FILL */
-  fprintf(stderr, "Initializing Aztec with %d, %d\n", Do_Jacobian, Do_Explicit_Fill);
-#endif /* COUPLED_FILL */
-  sprintf(logfile, "azide_%dof%d", ProcID, Num_Proc);
-  out = fopen(logfile, "a");
-#endif /* DEBUG */
 
   if ( Num_Calls >= upd->Total_Num_Matrices )
     {
@@ -154,9 +141,6 @@ sl_init(unsigned int option_mask,		/* option flag */
       /* One of these blocks for each matrix system to be solved. */
       if ( Do_Jacobian )
 	{
-#ifdef DEBUG
-	  DPRINTF(stderr, "Initializing Aztec for the Jacobian.\n");
-#endif /* DEBUG */
 
 	  A = ams[imtrx];					/* Whoa, mule! */
 
@@ -291,35 +275,6 @@ sl_init(unsigned int option_mask,		/* option flag */
                   A->data_org[AZ_N_ext_blk]   = A->data_org[AZ_N_external];
 		}
 
-#ifdef DEBUG
-	      fprintf(stderr, "P_%d: data_org[] has length %d\n", 
-		      ProcID, length);
-	      fprintf(stderr, "P_%d: data_org[%d] = %d\n", 
-		      ProcID, AZ_matrix_type, A->data_org[AZ_matrix_type]);
-
-	      /*
-	      for ( i=0; i<A->N_update; i++)
-		{
-		  fprintf(stderr, "P_%d: update[%d] (global name) = %d\n", 
-			  ProcID, i, A->update[i]);
-		}
-	      for ( i=0; i<A->N_update; i++)
-		{
-		  fprintf(stderr, "P_%d: update_index[%d] (local name) = %d\n", 
-			  ProcID, i, A->update_index[i]);
-		}
-	      for ( i=0; i<num_external_dofs[pg->imtrx]; i++)
-		{
-		  fprintf(stderr, "P_%d: external[%d] (global name) = %d\n", 
-			  ProcID, i, A->external[i]);
-		}
-	      for ( i=0; i<num_external_dofs[pg->imtrx]; i++)
-		{
-		  fprintf(stderr, "P_%d: extern_index[%d] (local name) = %d\n",
-			  ProcID, i, A->extern_index[i]);
-		}
-	      */
-#endif /* DEBUG */
 	      A->data_org[AZ_N_neigh]     = dpi->num_neighbors;
 	      A->data_org[AZ_total_send]  = ptr_dof_send[imtrx][dpi->num_neighbors];
 	      A->data_org[AZ_name]        = 1+imtrx;	       /* Whoa, mule! */
@@ -335,11 +290,6 @@ sl_init(unsigned int option_mask,		/* option flag */
 		  A->data_org[AZ_neighbors   + p] = cx[p].neighbor_name;
 		  A->data_org[AZ_rec_length  + p] = cx[p].num_dofs_recv;
 		  A->data_org[AZ_send_length + p] = cx[p].num_dofs_send;
-#ifdef DEBUG
-		  fprintf(out, "P_%d: recv %d from and send %d to P_%d\n",
-			  ProcID, cx[p].num_dofs_recv, cx[p].num_dofs_send,
-			  cx[p].neighbor_name);
-#endif /* DEBUG */
 		}
 
 	      /*
@@ -352,61 +302,6 @@ sl_init(unsigned int option_mask,		/* option flag */
 		  A->data_org[AZ_send_list + i] = list_dof_send[imtrx][i];
 		}
 
-#ifdef DEBUG
-	      fprintf(out, "P_%d: ptr_dof_send[%d] = %d\n", ProcID,
-		      dpi->num_neighbors, ptr_dof_send[dpi->num_neighbors]);
-	      for ( i=0; i<ptr_dof_send[dpi->num_neighbors]; i++)
-		{
-		  fprintf(out, "P_%d: A->data_org[AZ_send_list+%d]=%d\n",
-			  ProcID, i, A->data_org[AZ_send_list + i]);
-		}
-
-
-	      /*
-	       * Dump out all of data_org...
-	       */
-
-	      fprintf(out, "data_org[AZ_matrix_type] = %d\n", 
-		      A->data_org[AZ_matrix_type]);
-	      fprintf(out, "data_org[AZ_N_internal] = %d\n", 
-		      A->data_org[AZ_N_internal]);
-	      fprintf(out, "data_org[AZ_N_border] = %d\n", 
-		      A->data_org[AZ_N_border]);
-	      fprintf(out, "data_org[AZ_N_external] = %d\n", 
-		      A->data_org[AZ_N_external]);
-	      fprintf(out, "data_org[AZ_N_int_blk] = %d\n", 
-		      A->data_org[AZ_N_int_blk]);
-	      fprintf(out, "data_org[AZ_N_bord_blk] = %d\n", 
-		      A->data_org[AZ_N_bord_blk]);
-	      fprintf(out, "data_org[AZ_N_ext_blk] = %d\n", 
-		      A->data_org[AZ_N_ext_blk]);
-	      fprintf(out, "data_org[AZ_N_neigh] = %d\n", 
-		      A->data_org[AZ_N_neigh]);
-	      fprintf(out, "data_org[AZ_total_send] = %d\n", 
-		      A->data_org[AZ_total_send]);
-	      fprintf(out, "data_org[AZ_name] = %d\n", 
-		      A->data_org[AZ_name]);
-
-	      for ( i=0; i<A->data_org[AZ_N_neigh]; i++)
-		{
-		  fprintf(out, "data_org[AZ_neighbors+%d] = %d\n", i,
-			  A->data_org[AZ_neighbors+i]);
-
-		  fprintf(out, "data_org[AZ_rec_length+%d] = %d\n", i,
-			  A->data_org[AZ_rec_length+i]);
-		  
-		  fprintf(out, "data_org[AZ_send_length+%d] = %d\n", i,
-			  A->data_org[AZ_send_length+i]);
-		}
-
-
-	      for ( i=0; i<A->data_org[AZ_total_send]; i++)
-		{
-		  fprintf(out, "data_org[AZ_send_list+%d] = %d\n", i,
-			  A->data_org[AZ_send_list+i]);
-		}
-
-#endif /* DEBUG */
 	    }
 
 	  if ( Debug_Flag > 0 )
@@ -436,9 +331,6 @@ sl_init(unsigned int option_mask,		/* option flag */
 #ifndef COUPLED_FILL
       if ( Do_Explicit_Fill )
 	{
-#ifdef DEBUG
-	  DPRINTF(stderr, "Initializing Aztec for the fill equation.\n");
-#endif /* DEBUG */
 	  A = ams[FIL];				 /* Whoa, mule! */
 
 	  /* 
@@ -552,20 +444,6 @@ sl_init(unsigned int option_mask,		/* option flag */
 		{
 		  A->data_org[AZ_send_list + i] = list_fill_node_send[i];
 		}
-#ifdef DEBUG
-              for ( p=0; p<dpi->num_neighbors; p++)
-                {
-            fprintf(stderr, "P_%d neighbor %i, num_fill_nodes_recv= %d\n",
-                             ProcID, p, cx[p].num_fill_nodes_recv );
-            fprintf(stderr, "P_%d neighbor %i, num_fill_nodes_send= %d\n",
-                             ProcID, p, cx[p].num_fill_nodes_send );
-                }
-              for ( i=0; i<ptr_fill_node_send[dpi->num_neighbors]; i++)
-                {
-                  fprintf(stderr, "P_%d i=%d, send fill_node %d\n",
-                          ProcID, i, list_fill_node_send[i] );
-                }
-#endif /* DEBUG */
 	    }
 #ifdef MATRIX_DUMP
           A->Number_Jac_Dump = Number_Jac_Dump;
@@ -595,9 +473,6 @@ sl_init(unsigned int option_mask,		/* option flag */
 #endif /* not COUPLED_FILL */      
     }
   Num_Calls++;
-#ifdef DEBUG
-  fclose(out);
-#endif /* DEBUG */
 } /* END of routine sl_init */
 /******************************************************************************/
 

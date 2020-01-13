@@ -127,17 +127,11 @@ load_extra_unknownsAC(int iAC,    /* ID NUMBER OF AC'S */
   int mn;
   int ibc, idf;
   struct Boundary_Condition *BC_Type;
-#ifdef DEBUG  
-  static const char yo[] = "load_extra_unknownsAC";
-#endif
 
   /*
    * 		BEGIN EXECUTION
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "load_extra_unknownsAC() begins...\n");
-#endif
 
   if (iAC < 0) return; 
 
@@ -789,9 +783,6 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
   struct Boundary_Condition *BC_Type;
 
   double lambda, delta, value;
-#ifdef DEBUG  
-  static const char yo[]="update_parameterAC";
-#endif
 
   /*
    * 		BEGIN EXECUTION
@@ -802,9 +793,6 @@ update_parameterAC(int iAC,      /* ID NUMBER OF The AC */
    * based on the current value of xa[iAC]
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "update_parameterAC() begins...\n");
-#endif
 
   lambda = xa[iAC];
   augc[iAC].tmp1 = lambda;

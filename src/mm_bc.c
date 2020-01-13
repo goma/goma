@@ -817,10 +817,6 @@ alloc_First_Elem_BC (struct elem_side_bc_struct ****First_Elem_Side_BC_Array,
 {
   int imtrx;
 
-#ifdef DEBUG
-  printf ("alloc_First_Elem_BC: size of (struct elem_side_bc_struct) = %lu\n",
-	  sizeof(struct elem_side_bc_struct));
-#endif
   size_t sz_side = sizeof (struct elem_side_bc_struct ***);
   size_t sz_edge = sizeof (struct elem_edge_bc_struct ***);
   *First_Elem_Side_BC_Array = malloc(sz_side * (size_t) upd->Total_Num_Matrices);
@@ -1079,18 +1075,6 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
 
 	for (iss = 0; iss < exo->num_side_sets; iss++) {
 
-#ifdef DEBUG
-          printf ("    Info on local side set number %d:\n", iss);
-          printf ("\tID of the side set = %d\n", Proc_SS_Ids[iss]);
-	  printf ("\tNumber of elements = %d\n",  Proc_SS_Elem_Count[iss]);
-	  printf ("\tNumber of nodes    = %d\n",  Proc_SS_Node_Count[iss]);
-          printf ("\tNumber of nodes per element = %d\n",
-		  Proc_SS_Node_Count[iss] / Proc_SS_Elem_Count[iss] );
-	  printf ("\tValue of the pointer into the Element list = %d\n", 
-		  Proc_SS_Elem_Pointers[iss]);
-	  printf ("\tValue of the pointer into the Node list = %d\n", 
-		  Proc_SS_Node_Pointers[iss]);
-#endif
 
           /* 
 	   * Check for a match between the ID of the current side set
@@ -1105,9 +1089,6 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
 	    for (i = 0; i < exo->ss_num_sides[iss]; i++) {
 	      ielem = exo->ss_elem_list[exo->ss_elem_index[iss]+i];
 	      side  = exo->ss_side_list[exo->ss_elem_index[iss]+i];
-#ifdef DEBUG
-	      fprintf(stderr, "Side/elem = %d, %d\n", ielem, side);
-#endif
 	      /*
 		for (i = 0; i < Proc_SS_Elem_Count[iss]; i++) {
 	      */
@@ -1606,9 +1587,6 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
   int l, k, k_node;
   int node_list[MDE];
   int node_ctr = -1;
-#ifdef DEBUG
-  int side;
-#endif
 #ifdef PARALLEL
   int iss1g, iss2g;
 #endif
@@ -1717,10 +1695,6 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
 	      for ( i=0; i<exo->ss_num_sides[iss1]; i++)
 		{
 		  ielem = exo->ss_elem_list[exo->ss_elem_index[iss1]+i];
-#ifdef DEBUG
-		  side  = exo->ss_side_list[exo->ss_elem_index[iss1]+i];
-		  fprintf(stderr, "Side/elem = %d, %d\n", ielem, side);
-#endif
 		  num_nodes_on_side = ( exo->ss_node_side_index[iss1][i+1] -
 					exo->ss_node_side_index[iss1][i] );
 
@@ -1795,9 +1769,6 @@ set_up_Edge_BC (struct elem_edge_bc_struct **First_Elem_Edge_BC_Array[ ],
                                                            ielem, 
                                                            node_list, exo);
 
-#ifdef DEBUG		    /* create elem_side_bc's for SS1 and SS2 */
-                        printf("ielem %d, ibc %d, ss_1 %d, ss_2 %d\n", ielem, ibc, ss_id1, ss_id2);
-#endif
                         setup_Elem_BC (&(this_edge_bc->elem_side_bc_1), 
                                        &BC_Types[ibc],
                                        ibc, num_nodes_on_side, ielem, 

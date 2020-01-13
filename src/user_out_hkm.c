@@ -808,11 +808,6 @@ static void WRITE_SENKIN_FILE(int    status,
 	 Index_Solution(mesh_id, node, TEMPERATURE, 0, mn, pg->imtrx)) >= 0) {
       T = soln[indx_T];
     }
-#ifdef DEBUG
-    else {
-      EH(-1,"error indx_T is bad\n");
-    }
-#endif
   }
   else {
     T = matID_prop->reference[TEMPERATURE];

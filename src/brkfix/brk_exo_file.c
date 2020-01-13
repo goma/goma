@@ -1458,7 +1458,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       
       for ( j=node_set_membership[node]; j<node_set_membership[node+1]; j++)
 	{
-	  fprintf(stderr, "%d ", sm[j]);
+	  fprintf(stderr, "%d ", set_membership[j]);
 	}
       fprintf(stderr, "\n");
     }

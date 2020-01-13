@@ -226,9 +226,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   /*
    * 		BEGIN EXECUTION
    */
-#ifdef DEBUG
-  fprintf(stderr, "%s() begins...\n", yo);
-#endif
 
   is_steady_state = TRUE;
 
@@ -255,9 +252,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   /*
    * Some preliminaries to help setup EXODUS II database output.
    */
-#ifdef DEBUG
-  fprintf(stderr, "cnt_nodal_vars() begins...\n");
-#endif
 
   /*
    * tnv_post is calculated in load_nodal_tkn
@@ -266,10 +260,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
   tnv = cnt_nodal_vars();
   tev = cnt_elem_vars();
 
-#ifdef DEBUG
-  fprintf(stderr, "Found %d total primitive nodal variables to output.\n", tnv);
-  fprintf(stderr, "Found %d total primitive elem variables to output.\n", tev);
-#endif
 
   if (tnv < 0)
     {
@@ -340,9 +330,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
    * Write out the names of the nodal variables that we will be sending to
    * the EXODUS II output file later.
    */
-#ifdef DEBUG
-  fprintf(stderr, "wr_result_prelim() starts...\n", tnv);
-#endif
 
   gvec_elem = (double ***) smalloc ( (exo->num_elem_blocks)*sizeof(double **));
   for (i = 0; i < exo->num_elem_blocks; i++)
@@ -353,9 +340,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
                        ExoFileOut,
                        gvec_elem );
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: wr_result_prelim_exo() ends...\n", ProcID, tnv);
-#endif
 
   /*
    * This gvec workhorse transports output variables as nodal based vectors
@@ -902,9 +886,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
       ni = 0;
       do {
 
-#ifdef DEBUG
-	DPRINTF(stderr, "%s: starting solve_nonlinear_problem\n", yo);
-#endif
                 err = solve_nonlinear_problem(ams[JAC],
                                         x,
                                         delta_t,
@@ -941,9 +922,6 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
                                         x_sens_p,
                                       NULL);
 
-#ifdef DEBUG
-	fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
-#endif
 
 	if (err == -1)
 	  converged = 0;
@@ -951,16 +929,10 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
 	if (converged)
 	  {
 	    if (Write_Intermediate_Solutions == 0) {
-#ifdef DEBUG
-	      DPRINTF(stderr, "%s: write_solution call WIS\n", yo);
-#endif
             write_solution(ExoFileOut, resid_vector, x, x_sens_p,
 			     x_old, xdot, xdot_old, tev, tev_post, gv, rd,
 			     gvec, gvec_elem, &nprint,
                            delta_s, theta, path1, NULL, exo, dpi);
-#ifdef DEBUG
-	      fprintf(stderr, "%s: write_solution end call WIS\n", yo);
-#endif
 	    }
 #ifdef PARALLEL
 	    check_parallel_error("Error writing exodusII file");
@@ -1404,13 +1376,7 @@ continue_problem (Comm_Ex *cx,	/* array of communications structures */
    */
   if (Anneal_Mesh)
     {
-#ifdef DEBUG
-      fprintf(stderr, "%s: anneal_mesh()...\n", yo);
-#endif
       err = anneal_mesh(x, tev, tev_post, NULL, rd, path1, exo, dpi);
-#ifdef DEBUG
-      fprintf(stderr, "%s: anneal_mesh()-done\n", yo);
-#endif
       EH(err, "anneal_mesh() bad return.");
     }
 #ifdef PARALLEL

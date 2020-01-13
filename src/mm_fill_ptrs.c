@@ -1297,9 +1297,6 @@ load_elem_dofptr(const int ielem,
   int err;
   struct Level_Set_Data *ls_old;
 
-#ifdef DEBUG
-  int dim, eshape, etype, nnodes;
-#endif /* DEBUG */
 
   x_static	       = x;
   x_old_static	       = x_old;
@@ -1337,15 +1334,6 @@ load_elem_dofptr(const int ielem,
     load_ei(ielem, exo, 0, imtrx);
   }
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: Loading elem dof ptrs in (d%d, s%d, t%d, n%d)\n",
-	  ProcID, dim, eshape, etype, nnodes);
-  for (i = 0; i < nnodes; i++) {
-    gnn = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + i];
-    fprintf(stderr, "P_%d: Node name %d is %d\n", ProcID, i, gnn);
-  }
-
-#endif  
 
   /*
    * Load up pointers into ...
@@ -2242,10 +2230,6 @@ load_elem_dofptr_all(const int ielem,
   int status;
   int k;
   int R_s[MAX_MODES][DIM][DIM], R_g[DIM][DIM];
-
-#ifdef DEBUG
-  int dim, eshape, etype, nnodes;
-#endif /* DEBUG */
 
   if (upd->Total_Num_Matrices == 1) return 0;
 

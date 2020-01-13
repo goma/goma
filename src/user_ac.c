@@ -15,6 +15,7 @@
 
 /* GOMA include files */
 
+
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
@@ -57,11 +58,6 @@ void user_aug_cond_residuals(int iAC,
   /*  dbl inventory, target; */
 
   
-#ifdef DEBUG
-  static const char yo[] = "user_ac";
-
-  fprintf(stderr, "%s() begins...\n", yo);
-#endif
   /* Goma Users and Developers: 
 
 

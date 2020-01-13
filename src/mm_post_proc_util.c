@@ -59,9 +59,6 @@ find_id_elem(const double x,	  /* x-coordinate */
 	     const int e_start,   /* start of search */  
 	     const int e_end)     /* end of search */  
 {
-#ifdef DEBUG
-  static char *yo = "find_id_elem";
-#endif
 
   int element_no = -1;		/*local element number */
   int i;			/*local element counters */

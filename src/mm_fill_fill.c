@@ -3911,12 +3911,6 @@ integrate_explicit_eqn(
   num_total_nodes     = dpi->num_universe_nodes;
   fill_zeros          = local_nnz_plus; /* big estimate for assembly*/
   
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: lo=%d, lo+=%d, lnnz=%d, lnnz+=%d\n", ProcID,
-	  local_order, local_order_plus, local_nnz, local_nnz_plus);
-  fprintf(stderr, "P_%d: go=%d, go+=%d, gnnz=%d, gnnz+=%d\n", ProcID,
-	  global_order, global_order_plus, global_nnz, global_nnz_plus);
-#endif /* DEBUG */
 
 
   asdv(&delta_x, num_fill_unknowns);

@@ -482,9 +482,6 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
       e->eb_elem_itype[i] = get_type(e->eb_elem_type[i], 
 				     e->eb_num_nodes_per_elem[i],
 				     e->eb_num_attr[i]);
-#ifdef DEBUG
-  fprintf(stderr, "itype = %d\n", e->eb_elem_itype[i]);
-#endif
     }
 
   /*
@@ -622,10 +619,6 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
      {
        num_sides             = e->ss_num_sides[i];
        Proc_SS_Node_Count[i] = e->ss_node_side_index[i][num_sides];
-#ifdef DEBUG
-       fprintf(stderr, "SS %d has %.8f nodes/side\n", e->ss_id[i],
-	       ((double)e->ss_node_side_index[i][num_sides]/(double)num_sides));
-#endif
      }
 
 
@@ -761,35 +754,6 @@ setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
     * Tell us about this connectivity...
     */
 
-#ifdef DEBUG
-   fprintf(stderr, "Dump of ebl(eb indeces):\n");
-   for ( i=0; i<ssp[e->num_side_sets]; i++)
-     {
-       fprintf(stderr, "\tebl[%d] = %d\n", i, ebl[i]);
-     }
-
-   for ( i=0; i<e->num_side_sets; i++)
-     {
-       DPRINTF(stderr, "SS %d touches EB ", e->ss_id[i]);
-       for ( j=ssp[i]; j<ssp[i+1]; j++)
-	 {
-	   DPRINTF(stderr, "%d ", e->eb_id[ebl[j]]);
-	 }
-       DPRINTF(stderr, "\n");
-     }
-
-   for ( i=0; i<e->num_side_sets; i++)
-    {
-      fprintf(stdout, "SS[%d] w/ ID=%d ss_to_blks[%d][1-N/2]={", 
-	      i, e->ss_id[i], i);
-      for ( j=1; j<=MAX_MAT_PER_SS/2; j++)
-	{
-	  fprintf(stdout, "%d,", ss_to_blks[j][i]);
-	}
-      fprintf(stdout, "...}\n");
-    }
-
-#endif
 
    /*
     * The node_map and elem_map from EXODUS are no longer appropriated by
@@ -925,9 +889,6 @@ check_sidesets(Exo_DB *e,	   /* EXODUS II FE db has all mesh info (in) */
 	{
 	  unused_ss[count_unused_ss] = i;
 	  count_unused_ss++;
-#ifdef DEBUG
-	  DPRINTF(stderr, "SSID %d is not used for any BC.\n", ssid[i]);
-#endif
 	}
     }
 
@@ -1028,9 +989,6 @@ check_nodesets(Exo_DB *e,	   /* EXODUS II FE db has all mesh info (in) */
 	{
 	  unused_ns[count_unused_ns] = i;
 	  count_unused_ns++;
-#ifdef DEBUG
-	  DPRINTF(stderr, "NSID %d is not used for any BC.\n", nsid[i]);
-#endif
 	}
     }
   
@@ -1437,9 +1395,6 @@ sseb_conn(Exo_DB *e,		/* see exo_struct.h for full def         (in) */
 	  int **element_block_pointers,	/* ptrs into ss_list            (out) */
 	  int **side_set_list)	/* lists of ss's for eb's               (out) */
 {
-#ifdef DEBUG
-  int k;
-#endif
   int begin;			/* where to start in concatenate SS elem list */
   int current_list_size;	/* of minibuffer list */
   int i;
@@ -1485,28 +1440,9 @@ sseb_conn(Exo_DB *e,		/* see exo_struct.h for full def         (in) */
 	    {
 	      EH(-1, "Could not locate element in element block collection.");
 	    }
-#ifdef DEBUG
-	  fprintf(stderr, "SSID %d, side_index=%d, element=%d in EB[%d]=%d\n",
-		  e->ss_id[i], j, elem, eb_index, e->eb_id[eb_index]);
-#endif	  
 
-#ifdef DEBUG
-	  fprintf(stderr, "list before[%d]", current_list_size);
-	  for ( k=0; k<current_list_size; k++)  {
-	      fprintf(stderr, "%d ", list[k]);
-	  }
-	  fprintf(stderr, "\n");
-#endif
 	  
 	  build_list(eb_index, &list, &current_list_size, &max_list);
-#ifdef DEBUG
-	  fprintf(stderr, "list after[%d]", current_list_size);
-	  for ( k=0; k<current_list_size; k++)
-	    {
-	      fprintf(stderr, "%d ", list[k]);
-	    }
-	  fprintf(stderr, "\n");
-#endif
 	}
 
       /*
@@ -1923,16 +1859,9 @@ Elem_Type(const Exo_DB *exo,
 {
   int eb_index;
   int type;
-#ifdef DEBUG
-  static char *yo = "Elem_Type";
-#endif
 
   type = -1;			/* default */
 
-#ifdef DEBUG
-  fprintf(stderr, "%s: exo->...itype is @ %p, element %d\n", yo, 
-	  exo->eb_elem_itype, element);
-#endif
 
   /*
    * Which element block index is this in?
@@ -1951,11 +1880,6 @@ Elem_Type(const Exo_DB *exo,
 
   type = exo->eb_elem_itype[eb_index];
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: %s: element %d is in EB[%d]=%d with itype %d\n", 
-	  ProcID, yo, element, eb_index, exo->eb_id[eb_index], 
-	  exo->eb_elem_itype[eb_index]);
-#endif
   return(type);
 }
 

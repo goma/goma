@@ -40,17 +40,11 @@ display_parameterC(double lambda, /* PARAMETER VALUE */
   int mn;
   int ibc, idf;
   
-#ifdef DEBUG
-  static char yo[]="display_parameterC";
-#endif
 
   /*
    * 		BEGIN EXECUTION
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "display_parameter() begins...\n");
-#endif
 
   if (cont->upType == 1) {
 

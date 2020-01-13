@@ -548,12 +548,6 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
   /*
    *  matrix_stats (a, ija, NumUnknowns[pg->imtrx], &NZeros, &GNZeros, &GNumUnknowns);
    */
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: lo=%d, lo+=%d, lnnz=%d, lnnz+=%d\n", ProcID,
-	  local_order, local_order_plus, local_nnz, local_nnz_plus);
-  fprintf(stderr, "P_%d: go=%d, go+=%d, gnnz=%d, gnnz+=%d\n", ProcID,
-	  global_order, global_order_plus, global_nnz, global_nnz_plus);
-#endif /* DEBUG */
 	}
 
   asdv(&delta_x, numProcUnknowns);
@@ -1274,9 +1268,6 @@ EH(-1,"version not compiled with frontal solver");
       if (Num_Proc > 1 && strcmp( Matrix_Format, "msr" ) == 0 ) {
 	hide_external(num_universe_dofs[pg->imtrx], NumUnknowns[pg->imtrx], ija, ija_save, a);
 	dofs_hidden = TRUE;
-#ifdef DEBUG
-	print_array(ija, ija[ija[0]-1], "ija_diet", type_int, ProcID);
-#endif /* DEBUG */
       }
 
 #ifdef DEBUG_JACOBIAN
@@ -1428,20 +1419,6 @@ EH(-1,"version not compiled with frontal solver");
 	       *    x -- delta_x, newton correction vector
 	       *    b -- resid_vector, newton residual equation vector
 	       */
-#ifdef DEBUG
-	    /*
-	      fprintf(stderr, "P_%d: AZ_solve(..data_org[] = %d...)\n", 
-		      ProcID, ams->data_org[AZ_matrix_type]);
-	      */
-
-	      /*
-	       * Dump out ija[]...
-	       */
-	      
-	    print_array(ams->bindx, 
-			ams->bindx[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx] ],
-			"ijA", type_int, ProcID);
-#endif /* DEBUG */
 	    if(!Norm_below_tolerance || !Rate_above_tolerance) {
 	      /* Save old A before Aztec rescales it */
 	      if ( save_old_A ) dcopy1(NZeros,ams->val, ams->val_old);
@@ -1641,20 +1618,6 @@ EH(-1,"version not compiled with frontal solver");
 		 *    x -- delta_x, newton correction vector
 		 *    b -- resid_vector, newton residual equation vector
 		 */
-#ifdef DEBUG
-		/*
-		  fprintf(stderr, "P_%d: AZ_solve(..data_org[] = %d...)\n", 
-		  ProcID, ams->data_org[AZ_matrix_type]);
-		*/
-		
-		/*
-		 * Dump out ija[]...
-		 */
-		
-		print_array(ams->bindx, 
-			    ams->bindx[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx] ],
-			    "ijA", type_int, ProcID);
-#endif /* DEBUG */
 		AZ_solve(&wAC[iAC][0], &bAC[iAC][0], ams->options, ams->params, 
 			 ams->indx, ams->bindx, ams->rpntr, ams->cpntr, 
 			 ams->bpntr, ams->val, ams->data_org, ams->status, 
@@ -3656,20 +3619,6 @@ soln_sens ( double lambda,  /*  parameter */
 	       *    x -- x_sens, newton correction vector
 	       *    b -- resid_vector_sens, newton residual equation vector
 	       */
-#ifdef DEBUG
-	      /*
-		fprintf(stderr, "P_%d: AZ_solve(..data_org[] = %d...)\n", 
-		ProcID, ams->data_org[AZ_matrix_type]);
-		*/
-	      
-	      /*
-	       * Dump out ija[]...
-	       */
-	      
-	      print_array(ams->bindx, 
-			  ams->bindx[num_internal_dofs[pg->imtrx] + num_boundary_dofs[pg->imtrx] ],
-			  "ijA", type_int, ProcID);
-#endif	      
 	      AZ_solve(x_sens, resid_vector_sens, ams->options, ams->params, 
 		       ams->indx, ams->bindx, ams->rpntr, ams->cpntr, 
 		       ams->bpntr, ams->val, ams->data_org, ams->status, 

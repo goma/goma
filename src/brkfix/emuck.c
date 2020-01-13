@@ -135,7 +135,7 @@ assign_elem_ownership
   num_unassigned_elems = exo->num_elems;
 
 #ifdef DEBUG  
-  D_P(info, 1, "Starting Phase I element assignment\n");
+  DPRINTF(stderr, 1, "Starting Phase I element assignment\n");
 
   fprintf(stderr, "Starting Phase I (homogeneous node owner) attempt.\n");
 #endif

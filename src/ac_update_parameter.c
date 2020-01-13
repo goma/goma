@@ -60,15 +60,6 @@ update_parameterC(int iCC,       /* CONDITION NUMBER */
   int ic, mn, mpr;
   int ibc, idf;
 
-#ifdef DEBUG
-  static const char yo[] = "update_parameterC";
-
-  /*
-   * 		BEGIN EXECUTION
-   */
-
-  fprintf(stderr, "%s() begins...\n", yo);
-#endif
 
 /* Calls from ac_conti.c (nCC=0) */
   if (nCC == 0) {
@@ -176,15 +167,6 @@ update_parameterTP(int iTC,       /* CONDITION NUMBER */
   int ic, mn, mpr;
   int ibc, idf;
 
-#ifdef DEBUG
-  static const char yo[] = "update_parameterTP";
-
-  /*
-   * 		BEGIN EXECUTION
-   */
-
-  fprintf(stderr, "%s() begins...\n", yo);
-#endif
 
   /*
    *    BC parameters
@@ -257,16 +239,6 @@ update_parameterHC(int iHC,      /* Hunting condition number */
   int ic, mn, mpr;
   int ibc, idf;
 
-#ifdef DEBUG
-  static const char yo[] = "update_parameterHC";
-
-
-  /*
-   * 		BEGIN EXECUTION
-   */
-
-  fprintf(stderr, "%s() begins...\n", yo);
-#endif
 
   /*
    *    BC parameters
@@ -339,15 +311,6 @@ update_parameterS(double lambda, /* PARAMETER VALUE */
   int ic, mn, mpr;
   int ibc, idf;
 
-#ifdef DEBUG
-  static const char yo[] = "update_parameterS";
-
-  /*
-   * 		BEGIN EXECUTION
-   */
-
-  fprintf(stderr, "%s() begins...\n", yo);
-#endif
 
   /*
    *    BC parameters
@@ -1262,11 +1225,6 @@ retrieve_parameterS(double *lambda, /* PARAMETER VALUE */
   int mn,mpr;
   int ibc, idf;
   
-#ifdef DEBUG
-  static const char yo[]="retrieve_parameterS";
-
-  fprintf(stderr, "%s() begins...\n", yo);
-#endif
 
   if (sens_type == 1) {
 

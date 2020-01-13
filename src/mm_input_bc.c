@@ -328,12 +328,6 @@ rd_bc_specs(FILE *ifp,
 
 	      SPF(echo_string,"BC = %s %s %d",BC_Desc[k].name1, BC_Types[ibc].Set_Type, BC_Types[ibc].BC_ID);
 
-#ifdef DEBUG
-	      fprintf(stdout, " %3d. %s @ %2s %d\n", ibc+1, 
-		      BC_Desc[k].name1,
-		      BC_Types[ibc].Set_Type, 
-		      BC_Types[ibc].BC_ID);
-#endif
 	    }
 	}
 

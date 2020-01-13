@@ -493,9 +493,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
    * 		BEGIN EXECUTION
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d solve_problem() begins...\n",ProcID);
-#endif /* DEBUG */
 
   /* Set step_fix only if parallel run and only if fix freq is enabled*/
   if (Num_Proc > 1 && tran->fix_freq > 0) {
@@ -540,19 +537,12 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
    * Some preliminaries to help setup EXODUS II database output.
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d cnt_nodal_vars() begins...\n",ProcID);
-#endif /* DEBUG */
 
   tnv = cnt_nodal_vars();
   /*  tnv_post is calculated in load_nodal_tkn*/
   tev = cnt_elem_vars();
   /*  tev_post is calculated in load_elem_tkn*/
   
-#ifdef DEBUG
-  fprintf(stderr, "Found %d total primitive nodal variables to output.\n", tnv);
-  fprintf(stderr, "Found %d total primitive elem variables to output.\n", tev);
-#endif /* DEBUG */
   
   if (tnv < 0)
   {
@@ -680,9 +670,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
    * the EXODUS II output file later - do only once if in library mode.
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d %d wr_result_prelim() starts...\n",ProcID, tnv);
-#endif /* DEBUG */
 
   if (callnum == 1)
     {
@@ -698,9 +685,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     }
 
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: %d wr_result_prelim_exo() ends...\n", ProcID, tnv);
-#endif /* DEBUG */
 
   /* 
    * This gvec workhorse transports output variables as nodal based vectors
@@ -721,19 +705,11 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 
   numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: numProcUnknowns = %d (%d+%d)\n",ProcID, numProcUnknowns, 
-	  NumUnknowns[pg->imtrx], NumExtUnknowns[pg->imtrx]);
-#endif /* DEBUG */
   
   asdv(&resid_vector, numProcUnknowns);
   asdv(&resid_vector_sens, numProcUnknowns);
   asdv(&scale, numProcUnknowns);
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: begin Solver allocation\n",ProcID);
-  fprintf(stderr, "P_%d: NUM_ALSS=%d\n",ProcID, NUM_ALSS);
-#endif /* DEBUG */
 
   /*
    * Allocate Aztec structures and initialize all elements to zero
@@ -757,9 +733,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 #endif /* not COUPLED_FILL */
 #endif /* MPI */
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: Solver allocation complete\n",ProcID);
-#endif /* DEBUG */
 
   /* Allocate solution arrays on first call only */
   if (callnum == 1)
@@ -988,9 +961,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
    *            STEADY STATE SOLUTION PROCEDURE
    ***************************************************************************/
   if (TimeIntegration == STEADY) {
-#ifdef DEBUG
-    fprintf(stderr, "P_%d %d beginning STEADY analysis...\n", ProcID, tnv);
-#endif /* DEBUG */
       
     theta = 0.0;        /* for steady problems. theta def in rf_fem.h */
     delta_t = 0.0;
@@ -1019,9 +989,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     check_parallel_error("Solver initialization problems");
 #endif /* PARALLEL */
 
-#ifdef DEBUG
-    fprintf(stderr, "Proc_%d %s: starting solve_nonlinear_problem\n",ProcID, yo);
-#endif /* DEBUG */
 
     /* Call prefront (or mf_setup) if necessary */
     if (Linear_Solver == FRONT) {
@@ -1082,9 +1049,6 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
 				  &time_step_reform, is_steady_state,
                                   x_AC, x_AC_dot, time1, resid_vector_sens,
                                     x_sens, x_sens_p, NULL);
-#ifdef DEBUG
-    fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
-#endif /* DEBUG */
       
     if (!converged) {
       DPRINTF(stderr, 
@@ -1317,13 +1281,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
        * zero, too.
        */
 
-#ifdef DEBUG
-      fprintf(stderr, "%s: anneal_mesh()...\n", yo);
-#endif /* DEBUG */
       err = anneal_mesh(x, tev, tev_post, gv,  rd, time1, exo, dpi);
-#ifdef DEBUG
-      fprintf(stderr, "%s: anneal_mesh()-done\n", yo);
-#endif /* DEBUG */
       EH(err, "anneal_mesh() bad return.");
     }
 
@@ -2354,11 +2312,6 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       exchange_dof(cx[0], dpi, x, 0);
       exchange_dof(cx[0], dpi, xdot, 0);
         
-#ifdef DEBUG
-      if (nt == 0) {
-	print_array(x, numProcUnknowns, "x_A", type_double, ProcID);
-      }
-#endif /* DEBUG */
 
       if (nAC > 0) {
 
@@ -2458,11 +2411,6 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       evpl_glob[0]->update_flag = 0; /*See get_evp_stress_tensor for description */
       af->Sat_hyst_reevaluate = FALSE; /*See load_saturation for description*/
 
-#ifdef DEBUG
-      if (nt == 0) {
-	print_array(x, numProcUnknowns, "x_B", type_double, ProcID);
-      }
-#endif /* DEBUG */
 
       /*
        * HKM -> I do not know if these operations are needed. I added
@@ -3449,9 +3397,6 @@ free_shape_fcn_tree( Subgrid_Tree );
 
   if (file != NULL) fclose(file);
  
-#ifdef DEBUG
-  fprintf(stderr, "%s: leaving solve_problem()\n", yo);
-#endif /* DEBUG */
 
   return;
 } /* END of routine solve_problem()  */

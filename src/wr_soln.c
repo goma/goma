@@ -49,10 +49,6 @@ write_solution(char output_file[], double resid_vector[], double x[], double **x
      *************************************************************************/
 {
   int i, i_post, step=0;
-#ifdef DEBUG
-  static char *yo="write_solution";
-  fprintf(stderr, "%s: begins\n", yo);
-#endif
 
   /* First nodal quantities */
   for (i = 0; i < rd->TotalNVSolnOutput; i++) {
@@ -63,31 +59,19 @@ write_solution(char output_file[], double resid_vector[], double x[], double **x
   }
 
   /* Special case for global post processing, usually file output */
-#ifdef DEBUG
-  fprintf(stderr, "%s: done with regular nodal vars; start global\n", yo);
-#endif
 
   /* Special case for global post processing, special case file output for now*/
   post_process_global(x, exo, dpi, time_value);
 
-#ifdef DEBUG
-  fprintf(stderr, "%s: done with global; start tnv_post\n", yo);
-#endif
   /*
    *  Add additional user-specified post processing variables
    */
   if (rd->TotalNVPostOutput > 0) {
     step = (*nprint) + 1;
-#ifdef DEBUG
-    fprintf(stderr, "%s: start post_process_nodal\n", yo);
-#endif
 
     post_process_nodal(x, x_sens_p, x_old, xdot, xdot_old, resid_vector, 
 		       step, &time_value, delta_t, theta, x_pp,
 		       exo, dpi, rd, output_file, 0);
-#ifdef DEBUG
-    fprintf(stderr, "%s: done w/ post_process_nodal\n", yo);
-#endif
 
     /*
      *  Write out time derivatives if requested
@@ -115,22 +99,13 @@ write_solution(char output_file[], double resid_vector[], double x[], double **x
   
   wr_global_result_exo( exo, output_file, step, rd->ngv, gv );
 	
-#ifdef DEBUG
-  fprintf(stderr, "%s: done with regular element vars; start tev_post\n", yo);
-#endif
 
   /* Add additional user-specified post processing variables */
   if (tev_post > 0) {
       step = (*nprint) + 1;
-#ifdef DEBUG
-      fprintf(stderr, "%s: start post_process_elem\n", yo);
-#endif
 
       post_process_elem(x, x_old, xdot, xdot_old, resid_vector, tev, tev_post, 
 			gvec_elem, step, &time_value, delta_t, exo, dpi, rd);
-#ifdef DEBUG
-      fprintf(stderr, "%s: done w/ post_process_elem\n", yo);
-#endif
 
       /* Write out time derivatives if requested */
       if (TIME_DERIVATIVES != -1 && (TimeIntegration != STEADY)) {
@@ -153,10 +128,6 @@ write_solution_segregated(char output_file[], double **resid_vector, double **x,
 {
   int i, step=0;
   int i_post;
-#ifdef DEBUG
-  static char *yo="write_solution";
-  fprintf(stderr, "%s: begins\n", yo);
-#endif
 
   /* First nodal quantities */
   int offset = 0;
@@ -178,9 +149,6 @@ write_solution_segregated(char output_file[], double **resid_vector, double **x,
     }
   }
 
-#ifdef DEBUG
-  fprintf(stderr, "%s: done with regular nodal vars; start tnv_post\n", yo);
-#endif
 
   /*
    *  Add additional user-specified post processing variables
@@ -195,16 +163,10 @@ write_solution_segregated(char output_file[], double **resid_vector, double **x,
     }
     if (rd[pg->imtrx]->TotalNVPostOutput > 0) {
       step = (*nprint) + 1;
-  #ifdef DEBUG
-      fprintf(stderr, "%s: start post_process_nodal\n", yo);
-  #endif
 
       post_process_nodal(x[pg->imtrx], NULL, x_old[pg->imtrx], xdot[pg->imtrx],
 			 xdot_old[pg->imtrx], resid_vector[pg->imtrx], step, &time_value,
 			 delta_t, theta, x_pp, exo, dpi, rd[pg->imtrx], output_file, offset);
-  #ifdef DEBUG
-      fprintf(stderr, "%s: done w/ post_process_nodal\n", yo);
-  #endif
 
       /*
        *  Write out time derivatives if requested
@@ -245,9 +207,6 @@ write_solution_segregated(char output_file[], double **resid_vector, double **x,
 
   wr_global_result_exo( exo, output_file, step, rd[0]->ngv, gv );
 
-#ifdef DEBUG
-  fprintf(stderr, "%s: done with regular element vars; start tev_post\n", yo);
-#endif
 
   /* Add additional user-specified post processing variables */
 //  if (tev_post > 0) {

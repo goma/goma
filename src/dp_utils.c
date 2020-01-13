@@ -65,9 +65,6 @@ ddd_alloc(void)
   p->block_count = (int *) calloc(n, sizeof(int));
   p->data_type   = (MPI_Datatype *) calloc(n, sizeof(MPI_Datatype));
   p->address     = (MPI_Aint *) calloc(n, sizeof(MPI_Aint));
-#ifdef DEBUG
-  fprintf(stderr, "P_%d in ddd_alloc()\n", ProcID);
-#endif  
   return(p);
 }
 
@@ -224,14 +221,6 @@ ddd_add_member(DDD p,
    *  This is just the identity operator on most systems
    */
   MPI_Get_address(address, &p->address[i]);
-#ifdef DEBUG
-   /* the check below does not work on dec or tflop */
-  if ((int) address != p->address[i]) {
-    printf("MPI_ADDRESS DOES SOMETHING WHOOHOO\n");
-    printf("address = %d  p->address[i] = %d\n",
-	   (int) address, p->address[i]);
-  }
-#endif
 
 #endif
   p->num_members++;

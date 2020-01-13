@@ -416,9 +416,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
   /********************** First Executable Statment **********************/
 
   /* As of 10/26/2001, LOCA works in parallel for all continuation algs. */
-#ifdef DEBUG
-  DPRINTF(stderr, "%s() begins...\n", yo);
-#endif
 
   /* Perform initialization (as in ac_conti.c) */
   p_gsize = &gsize;
@@ -430,16 +427,9 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
    * tnv_post is calculated in load_nodal_tkn
    * tev_post is calculated in load_elem_tkn
    */
-#ifdef DEBUG
-  DPRINTF(stderr, "cnt_nodal_vars() begins...\n");
-#endif
   tnv = cnt_nodal_vars();
   tev = cnt_elem_vars();
   
-#ifdef DEBUG
-  DPRINTF(stderr, "Found %d total primitive nodal variables to output.\n", tnv);
-  DPRINTF(stderr, "Found %d total primitive elem variables to output.\n", tev);
-#endif
   
   if (tnv < 0)
     {
@@ -491,9 +481,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
    * Write out the names of the nodal variables that we will be sending to
    * the EXODUS II output file later.
    */
-#ifdef DEBUG
-  DPRINTF(stderr, "wr_result_prelim() starts...\n", tnv);
-#endif
 
   gvec_elem = (double ***) smalloc ( (exo->num_elem_blocks)*sizeof(double **));
   for (i = 0; i < exo->num_elem_blocks; i++)
@@ -501,9 +488,6 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
 
   wr_result_prelim_exo(rd, exo, ExoFileOut, gvec_elem);
 
-#ifdef DEBUG
-  fprintf(stderr, "P_%d: wr_result_prelim_exo() ends...\n", ProcID, tnv);
-#endif
 
   /* 
    * This gvec workhorse transports output variables as nodal based vectors
@@ -1602,9 +1586,6 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
         
     passdown.theta = tran->theta;
         
-#ifdef DEBUG
-    DPRINTF(stderr, "%s: starting solve_nonlinear_problem\n", yo);
-#endif
 
     err = solve_nonlinear_problem(ams,
 				  x, 
@@ -1642,9 +1623,6 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
 				  passdown.x_sens_p,
                                   con_ptr);
 
-#ifdef DEBUG
-    fprintf(stderr, "%s: returned from solve_nonlinear_problem\n", yo);
-#endif
 
 /* Bail out if a deformation gradient occurs */
     if (err == -1)
@@ -1658,9 +1636,6 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
     if (converged)
       {
         if ( Write_Intermediate_Solutions == 0 && Unlimited_Output ) {
-#ifdef DEBUG
-         DPRINTF(stderr, "%s: write_solution call WIS\n", yo);
-#endif
             write_solution(ExoFileOut,
                            passdown.resid_vector,
                            x,
@@ -1681,9 +1656,6 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
                            NULL,
                            passdown.exo,
                            passdown.dpi);
-#ifdef DEBUG
-         DPRINTF(stderr, "%s: write_solution end call WIS\n", yo);
-#endif
        }
 
     DPRINTF(stdout,

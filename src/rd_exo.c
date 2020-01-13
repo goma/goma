@@ -704,34 +704,6 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 						 x->ss_id[i],
 						 x->ss_node_cnt_list[i],
 						 x->ss_node_list[i]);
-#ifdef DEBUG
-	      fprintf(stderr,"P_%d, SSID=%d has %d dfs/nds on -> %d <- sides.\n", 
-                      ProcID,
-		      x->ss_id[i],
-		      x->ss_num_distfacts[i], x->ss_num_sides[i]);
-
-	      fprintf(stderr, "Address x->ss_num_sides[%d] is %x\n", i, 
-		      &(x->ss_num_sides[i]));
-	  
-	      for ( j=0; j<x->ss_num_sides[i]; j++)
-		{
-		  fprintf(stderr, "nodes for elem %d side %d = %d\n", 
-			  x->ss_elem_list[x->ss_elem_index[i]+j],
-			  x->ss_side_list[x->ss_elem_index[i]+j],
-			  x->ss_node_cnt_list[i][j]);
-		}
-
-	      /*
-	       * Did we read the distribution factors OK?
-	       */
-
-	      for ( j=0; j<x->ss_num_distfacts[i]; j++)
-		{
-		  fprintf(stderr, "(%d,%d) distfact = %g\n", i, j, 
-			  x->ss_distfact_list[x->ss_distfact_index[i]+j]);
-		}
-
-#endif
 	      /*
 	       * Set up quick pointers for nodes on each given side of a sideset
 	       * that can be used later to find exactly where to go in the big 
@@ -748,23 +720,6 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 						    x->ss_node_cnt_list[i][j] );
 		}
 
-#ifdef DEBUG
-	      for ( j=0; j<x->ss_num_sides[i]; j++)
-		{
-		  fprintf(stderr, "P_%d SS[%d]=%d, nodes for elem %d, side %d:", i, 
-                          ProcID,
-			  x->ss_id[i], x->ss_elem_list[x->ss_elem_index[i]+j],
-			  x->ss_side_list[x->ss_elem_index[i]+j]);
-
-
-		  for ( k=x->ss_node_side_index[i][j]; 
-			k<x->ss_node_side_index[i][j+1]; k++)
-		    {
-		      fprintf(stderr, " %d", x->ss_node_list[i][k]);
-		    }
-		  fprintf(stderr, "\n");
-		}
-#endif
 	    }
 	}
 
@@ -1787,9 +1742,6 @@ fence_post(const int val,		/* the integer we seek */
   int found;
 
   double frac;
-#ifdef DEBUG
-  int i;
-#endif
 
   first_val = array[0];
 
@@ -1807,19 +1759,6 @@ fence_post(const int val,		/* the integer we seek */
    * Verify monotonicity. Turn off for efficiency later.
    */
 
-#ifdef DEBUG
-
-  for ( i=1; i<length; i++)
-    {
-      if ( array[i-1] > array[i] )
-	{
-	  sr = sprintf(err_msg, "Non monotone map where a[%d]=%d is > a[%d]=%d",
-		       i-1, array[i-1], i, array[i]);
-	  EH(-1, err_msg);
-	}
-    }
-
-#endif
 
   /*
    * Linear approximation to first guess.
@@ -1853,10 +1792,6 @@ fence_post(const int val,		/* the integer we seek */
 	}
     }
 
-#ifdef DEBUG
-  fprintf(stdout, "fencepost: val= %d in (a[%d]=%d, a[%d]=%d)\n",
-	  val, index, array[index], index+1, array[index+1]);
-#endif
   return(index);
 }
 

@@ -3223,9 +3223,6 @@ find_problem_graph_fill(int *ija[],         /* column pointer array */
    */
   nz_temp = num_fill_unknowns * Max_NP_Elem;
   *ija = alloc_int_1(nz_temp, -1);
-#ifdef DEBUG
-  printf("Initial ija allocation to %d\n", nz_temp);
-#endif
   nsur_elem = alloc_int_1(itotal_nodes, 0);
   isur_elem = alloc_int_2(itotal_nodes, max_neigh_elem, -1);
 
@@ -3296,9 +3293,6 @@ find_problem_graph_fill(int *ija[],         /* column pointer array */
               if (nz_ptr + 1 == nz_temp) {
                 /* reallocate ija larger!! */
                 nz_temp += num_fill_unknowns * Max_NP_Elem;
-#ifdef DEBUG
-                printf("Reallocate ija to %d\n", nz_temp);
-#endif
 
                 *ija = (int *)realloc((void *)*ija, nz_temp * sizeof(int));
                 if (*ija == NULL)
@@ -3568,10 +3562,6 @@ static int find_VBR_problem_graph(int *indx[], int *bindx[], int *bpntr[],
   int i, j, k, nnz_blocs = 0; /* number of non-zero blocks */
   int nnz = 0, row_ptr = 0, col_ptr = 0;
   NODAL_VARS_STRUCT *nvRow, *nvCol;
-#ifdef DEBUG
-  char filename[80];
-  FILE *of;
-#endif
 
   *bpntr = alloc_int_1(row_nodes + 1, INT_NOINIT);
   *rpntr = alloc_int_1(row_nodes + 1, INT_NOINIT);
@@ -3616,40 +3606,6 @@ static int find_VBR_problem_graph(int *indx[], int *bindx[], int *bpntr[],
   }
   (*cpntr)[col_nodes] = col_ptr;
 
-#ifdef DEBUG
-
-  sprintf(filename, "vbr%d_of_%d", ProcID + 1, Num_Proc);
-  of = fopen(filename, "w");
-
-  fprintf(of, "P_%d nnz=%d\n\n", ProcID, nnz);
-  fprintf(of, "P_%d nnz_blocs=%d\n\n", ProcID, nnz_blocs);
-  fprintf(of, "P_%d row_nodes=%d\n\n", ProcID, row_nodes);
-  fprintf(of, "P_%d col_nodes=%d\n\n", ProcID, col_nodes);
-
-  for (i = 0; i < nnz_blocs; i++) {
-    fprintf(of, "P_%d bindx[%d]=%d\n", ProcID, i, exo->node_node_list[i]);
-  }
-  fprintf(of, "\n");
-
-  for (i = 0; i < nnz_blocs + 1; i++) {
-    fprintf(of, "P_%d indx[%d]=%d\n", ProcID, i, (*indx)[i]);
-  }
-
-  fprintf(of, "\n");
-  for (i = 0; i < row_nodes + 1; i++) {
-    fprintf(of, "P_%d bpntr[%d]=%d\n", ProcID, i, (*bpntr)[i]);
-  }
-
-  fprintf(of, "\n");
-  for (i = 0; i < row_nodes + 1; i++) {
-    fprintf(of, "P_%d rpntr[%d]=%d\n", ProcID, i, (*rpntr)[i]);
-  }
-
-  fprintf(of, "\n");
-  for (j = 0; j < col_nodes + 1; j++) {
-    fprintf(of, "P_%d cpntr[%d]=%d\n", ProcID, j, (*cpntr)[j]);
-  }
-#endif
 
   return (nnz);
 }

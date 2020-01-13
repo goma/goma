@@ -79,15 +79,9 @@ void handle_ieee (void)
  *         compiler define.
  ***********************************************************************/
 {
-#ifdef DEBUG
-   (int) fpsetfastmode(0);  
-   (void) printf("ieee: fp exceptions are ignored\n");
-   (void) printf("ieee: Fast underflow mode is not enabled. IEEE-754 arithmetic\n");
-#else
    (void) fpsetfastmode(1);
    (void) printf("ieee: fp exceptions are ignored\n");
    (void) printf("ieee: Fast underflow mode is enabled\n");
-#endif
 }
 /*****************************************************************************/
 
@@ -169,8 +163,5 @@ matherr(struct exception *e)
 void 
 handle_ieee (void)
 {
-#ifdef DEBUG
-  (void) printf("ieee: fp exceptions are not changed: generic block\n");
-#endif
 }
 #endif

@@ -101,9 +101,6 @@ cnt_nodal_vars(void)
   int tnv = 0;
   int v;
 
-#ifdef DEBUG
-  static const char yo[] = "cnt_nodal_vars";
-#endif
 
   /* For blot's sake, put the displacements first! */
   for (v = MESH_DISPLACEMENT1; v<(MESH_DISPLACEMENT3+1); v++)

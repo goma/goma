@@ -101,10 +101,6 @@ apply_rotated_bc (
      *      for 2D problems.
      ****************************************************************************/
 {
-#ifdef DEBUG
-  static char *yo = "apply_rotated_bc";
-  int k;
-#endif
   char err_msg[MAX_CHAR_IN_INPUT]; 
   int i, I, ibc, j, id, blk_index, ss_index; /* counters */
   int err;                    /* status variable for functions */
@@ -213,16 +209,6 @@ apply_rotated_bc (
 	      }
 	      if ((blk_index = in_list(Current_EB_ptr->Elem_Blk_Id, 0,
 				       MAX_MAT_PER_SS+1, dup_blks_list)) == -1) {
-#ifdef DEBUG
-		fprintf(stderr, 
-			"%s: Found ssindex=%d, SSID=%d, dup_blks_list = ",
-			yo, ss_index, exo->ss_id[ss_index]);
-		for ( k=0; k<MAX_MAT_PER_SS; k++)
-		{
-		  fprintf(stderr, "%d ", dup_blks_list[k]);
-		}
-		fprintf(stderr, "\n");
-#endif
 		sprintf(err_msg, "Could not find EB %d in dup_blks_list",
 			Current_EB_ptr->Elem_Blk_Id);
 		EH(-1, err_msg);

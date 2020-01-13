@@ -898,9 +898,6 @@ look_for_species_prop(FILE *imp,  const char *search_string,
   char err_mesg[MAX_CHAR_ERR_MSG];
   double *arg_list = NULL;
   TOKEN_STRUCT tok;
-#ifdef DEBUG
-  int got_it;
-#endif
   
   input[0] = '\0';
 
@@ -909,10 +906,6 @@ look_for_species_prop(FILE *imp,  const char *search_string,
    *  Stop after the equals sign, if the search string is found
    */
   retn = look_forward_optional(imp, search_string, input, '=');
-#ifdef DEBUG
-  fprintf(stderr, "%s: %d=look_forward_optional(imp, \"%s\", ... )\n", yo,
-	  got_it, search_string);
-#endif
   
   /*
    *  If our search failed, then we set the model_name to a blank, the species
@@ -1165,9 +1158,6 @@ look_for_porous_prop(FILE *imp,  const char *search_string,
   char err_mesg[MAX_CHAR_ERR_MSG];
   double *arg_list = NULL;
   TOKEN_STRUCT tok;
-#ifdef DEBUG
-  int got_it;
-#endif
   
   input[0] = '\0';
   model_name[0] = '\0';
@@ -1177,10 +1167,6 @@ look_for_porous_prop(FILE *imp,  const char *search_string,
    *  Stop after the equals sign, if the search string is found
    */
   retn = look_forward_optional(imp, search_string, input, '=');
-#ifdef DEBUG
-  fprintf(stderr, "%s: %d=look_forward_optional(imp, \"%s\", ... )\n", yo,
-	  got_it, search_string);
-#endif
   
   /*
    *  If our search failed, then we set the model_name to a blank, the porous 
@@ -1425,9 +1411,6 @@ look_for_species_proptable(FILE *imp,
   double *arg_list = NULL;
   TOKEN_STRUCT tok;
   fpos_t file_position;
-#ifdef DEBUG
-  int got_it;
-#endif
   struct  Data_Table *table_local;
  
   input[0] = '\0';
@@ -1437,10 +1420,6 @@ look_for_species_proptable(FILE *imp,
    *  Stop after the equals sign, if the search string is found
    */
   retn = look_forward_optional(imp, search_string, input, '=');
-#ifdef DEBUG
-  fprintf(stderr, "%s: %d=look_forward_optional(imp, \"%s\", ... )\n", yo,
-	  got_it, search_string);
-#endif
   
   /*
    *  If our search failed, then we set the model_name to a blank, the species

@@ -514,9 +514,6 @@ evp_tensor_alloc(Exo_DB *exo)
   int status;
   int ielem_type, ip_total, ielem0, mn;
   int i, ip, a, b, c, k, w;
-#ifdef DEBUG
-  static char yo[] = "evp_alloc";
-#endif
   status = 0;
 
   /*
@@ -662,9 +659,6 @@ int tran_alloc(void)
    */
   sz = sizeof(struct Element_Quality_Metrics);
   eqm = alloc_struct_1(struct Element_Quality_Metrics, 1);
-#ifdef DEBUG
-  fprintf(stderr, "%s allocating eqm of size %d\n", yo,sz);
-#endif
 
   if ( Debug_Flag )
     {
@@ -920,9 +914,6 @@ assembly_alloc(Exo_DB *exo)
 
   static char yo[] = "assembly_alloc";
 
-#ifdef DEBUG
-  fprintf(stderr, "%s begins\n", yo);
-#endif
 
   /*
    * These are critical for the element dof pointers...
@@ -979,9 +970,6 @@ assembly_alloc(Exo_DB *exo)
    */
   sz = sizeof(struct Element_Stiffness_Pointers);
   esp = alloc_struct_1(struct Element_Stiffness_Pointers, 1);
-#ifdef DEBUG
-  fprintf(stderr, "%s allocating esp of size %d\n", yo,sz);
-#endif
 
   if ( Debug_Flag )
     {
@@ -1013,9 +1001,6 @@ assembly_alloc(Exo_DB *exo)
    */
   num_species_eqn = upd->Max_Num_Species_Eqn;
 
-#ifdef DEBUG
-  fprintf(stderr, "%s allocating esp with dim=%d, vim=%d\n", yo, dim, vim);
-#endif
   sz = MDE;
 
 /* MMH I have included some coupling between particle velocity and 
@@ -1397,10 +1382,6 @@ assembly_alloc(Exo_DB *exo)
    */
   Num_Basis_Functions = Num_Shapes * Num_Interpolations;
 
-#ifdef DEBUG
-  fprintf(stderr, "bfd has %d members\n", Num_Basis_Functions);
-  fprintf(stderr, "bfi has %d members\n", MAX_INTERP_TYPES);
-#endif
 
   bfd = (struct Basis_Functions **) alloc_ptr_1(Num_Basis_Functions);
   bfi = (struct Basis_Functions **) alloc_ptr_1(MAX_INTERP_TYPES);
@@ -1447,14 +1428,6 @@ assembly_alloc(Exo_DB *exo)
 	           }
                }
 	  }
-#ifdef DEBUG
-	  DPRINTF(stderr, 
-		  "bfd[%d] has interp=%d,  shape = %d,  and %d dofs/elem\n",
-		  type, bfd[type]->interpolation,
-		  bfd[type]->element_shape, bfd[type]->Max_Dofs_Interpolation);
-	  fprintf(stderr, "bfd is at %p\n", bfd);
-	  fprintf(stderr, "bfd[0] is at %p\n", bfd[0]);
-#endif
 	  type++;
 	}
     }
@@ -1624,9 +1597,6 @@ bf_init(Exo_DB *exo)
    * function...
    */
 
-#ifdef DEBUG
-  fprintf(stderr, "bf_init\n");
-#endif
 
   for ( ebi=0; ebi<Proc_Num_Elem_Blk; ebi++)
     {
@@ -1703,9 +1673,6 @@ bf_mp_init(struct Problem_Description *pd)
 
   t=0;
 
-#ifdef DEBUG
-  fprintf(stderr, "Num_Basis_Functions is %d\n", Num_Basis_Functions);
-#endif
 
    /* This is needed to check for matching element shapes */
    shape = ei[pg->imtrx]->ielem_shape;
@@ -1737,11 +1704,6 @@ bf_mp_init(struct Problem_Description *pd)
             bf[v] = NULL;
             for (t = 0; t < Num_Basis_Functions; t++)
               {
-#ifdef DEBUG
-                fprintf(stderr, "bfd is at %p\n", bfd);
-                fprintf(stderr, "bfd[0] is at %p\n", bfd[0]);
-                fprintf(stderr, "checking t = %d\n", t);
-#endif
 
 
                 if ((pd->i[imtrx][v] == bfd[t]->interpolation)

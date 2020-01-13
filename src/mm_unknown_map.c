@@ -252,12 +252,6 @@ setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
 
   total_nodes = Num_Internal_Nodes + Num_Border_Nodes + Num_External_Nodes;
   
-#ifdef DEBUG
-  fprintf(stderr, "%s: Num_Internal_Nodes = %d\n", yo, Num_Internal_Nodes);
-  fprintf(stderr, "%s: Num_Border_Nodes   = %d\n", yo, Num_Border_Nodes);
-  fprintf(stderr, "%s: Num_External_Nodes = %d\n", yo, Num_External_Nodes);
-  fprintf(stderr, "%s: total_nodes        = %d\n", yo, total_nodes);
-#endif
   
   /*
    *  Allocate memory for the variable mask array of structures and
@@ -372,10 +366,6 @@ setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
     pd = pd_glob[mn];
     mp = mp_glob[mn];
     
-#ifdef DEBUG
-    fprintf(stderr, "Looking in EBID %d, for elements %d thru %d\n",
-	    exo->eb_id[ebi], e_start, e_end);
-#endif
 
     for (e = e_start; e < e_end; e++) {
 
@@ -395,9 +385,6 @@ setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
        */
       index = Proc_Connect_Ptr[e];
 
-#ifdef DEBUG
-      fprintf(stderr, "Element %d has %d nodes.\n", e, num_nodes);
-#endif
       /*
        *  Loop over the local element nodes in the current element
        */
@@ -411,9 +398,6 @@ setup_local_nodal_vars(Exo_DB *exo, Dpi *dpi)
 	 */
 	i = Proc_Elem_Connect[index++];
 	
-#ifdef DEBUG
-	fprintf(stderr, "P_%d, At elem %d, node %d = %d\n", ProcID, e, n, i);
-#endif
 
 	/*
 	 * For each kind of variable type in the problem, depending on its
@@ -922,20 +906,6 @@ set_unknown_map(Exo_DB *exo, Dpi *dpi)
             }
          }
      }
-#ifdef DEBUG
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
-     {
-      for (i = 0; i < Num_Internal_Nodes; i++) 
-         {
-          for (var_type = V_FIRST; var_type < V_LAST; var_type++) 
-             {
-              fprintf(stderr, "Local_Offset[%d][%d][%s]\t= %d\tDolphin[%d][%d][%s]\t=%d\n", 
-	              imtrx, i, Var_Name[var_type].name2, Local_Offset[imtrx][i][var_type], 
-	              imtrx, i, Var_Name[var_type].name2, Dolphin[imtrx][i][var_type]);
-             }
-         }
-     }
-#endif
 
   /* 
    * Determine total number of Unknowns to be solved for in this Proc 
@@ -1036,13 +1006,6 @@ set_unknown_map(Exo_DB *exo, Dpi *dpi)
       NumUnknowns[imtrx]    = num_internal_dofs[imtrx] + num_boundary_dofs[imtrx];
       NumExtUnknowns[imtrx] = num_external_dofs[imtrx];
      }
-#ifdef DEBUG  
-  for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
-     {
-      printf("%s:\t Matrix %d has %d NumUnknowns \n", yo, imtrx+1, NumUnknowns[imtrx]);
-      printf("%s:\t Matrix %d has %d NumExtUnknowns \n", yo, imtrx+1, NumExtUnknowns[imtrx]);
-     }
-#endif
 
   /* 
    * Produce the equation - variable interaction mask array (rf_masks.h) 

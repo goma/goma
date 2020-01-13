@@ -618,9 +618,6 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
      * that flow chart somewhat religiously
      */
 
-#ifdef DEBUG
-    fprintf(stderr, "P_%d has num_bc_nodes = %d\n", ProcID, num_bc_nodes);
-#endif
 
     /*
      * When running distributed, some processors have small chunks of the overall
