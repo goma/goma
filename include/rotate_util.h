@@ -33,11 +33,13 @@ typedef struct {
   gds_vector *tangent2s[GOMA_MAX_NORMALS_PER_NODE];
   gds_vector *rotated_coord[DIM];
   unsigned int associate_direction[GOMA_MAX_NORMALS_PER_NODE];
+  unsigned int associate_critical_normal[GOMA_MAX_NORMALS_PER_NODE];
+  unsigned int critical_normal_index[2];
   bool direction_is_associated[GOMA_MAX_NORMALS_PER_NODE];
   unsigned int tangent1_seeddir[GOMA_MAX_NORMALS_PER_NODE];
   int element[GOMA_MAX_NORMALS_PER_NODE];
   int face[GOMA_MAX_NORMALS_PER_NODE];
-  unsigned int face_cordinate_association[GOMA_MAX_NORMALS_PER_NODE];
+  unsigned int face_coordinate_association[GOMA_MAX_NORMALS_PER_NODE];
   int n_normals;
   goma_rotation_type_e type;
 } goma_rotation_node_s;

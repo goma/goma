@@ -49,13 +49,13 @@ print_stacktrace(void)
   }
 #endif
   if (print_color) {
-    fprintf(stderr,"\033[0;31mP_%d_STACKTRACE: Obtained %zd stack frames\033[0m\n", ProcID, size);
+    fprintf(stderr,"\033[0;33mP_%d_STACKTRACE: Obtained %zd stack frames\033[0m\n", ProcID, size);
   } else {
     fprintf(stderr,"P_%d_STACKTRACE: Obtained %zd stack frames.\n", ProcID, size);
   }
   for (size_t i = 0; i < size; i++) {
     if (print_color) {
-      fprintf(stderr, "\033[0;31mP_%d_STACKTRACE:\033[0m %s\n", ProcID, stack_strings[i]);
+      fprintf(stderr, "\033[0;33mP_%d_STACKTRACE:\033[0m %s\n", ProcID, stack_strings[i]);
     } else {
       fprintf(stderr, "P_%d_STACKTRACE: %s\n", ProcID, stack_strings[i]);
     }
@@ -115,12 +115,6 @@ goma_eh(const int error_flag, const char *file,
     fprintf(stderr,"ERROR EXIT: %s:%d: %s\n", file, line, message); 
     exit(-1);
 #else
-    const char * term = getenv("TERM");
-    if (term == NULL) {
-      fprintf(stderr, "Term = NULL\n");
-    } else {
-      fprintf(stderr, "Term = %s\n", term);
-    }
     bool print_color = false;
 #ifndef DISABLE_COLOR_ERROR_PRINT
     if (isatty(fileno(stderr))) {
@@ -158,9 +152,9 @@ goma_wh(const int error_flag, const char * const file, const int line,
     }
 #endif
     if (print_color) {
-      DPRINTF(stderr, "\033[0;33mWARNING:  %s:%d: \033[0m%s\n", file, line, message);
+      DPRINTF(stderr, "\033[0;33mWARNING: %s \033[0m(%s:%d)\n", message, file, line);
     } else {
-      DPRINTF(stderr, "WARNING:  %s:%d: %s\n", file, line, message);
+      DPRINTF(stderr, "WARNING: %s (%s:%d)\n", message, file, line);
     }
   }
 }

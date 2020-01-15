@@ -770,6 +770,9 @@ build_elem_elem(Exo_DB *exo)
 		       {
 			 curr_set[len_curr] = ename;
 			 len_curr++;
+			 if (len_curr >= MAX_EPN) {
+			   EH(-1, "found more elements per node than MAX_EPN is set to");
+			 }
 		       }
 		   }
 		 

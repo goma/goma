@@ -2691,7 +2691,7 @@ int equation_index_auto_rotate(const ELEM_SIDE_BC_STRUCT *elem_side_bc,
     }
   }
   EH(n_index, "Rotations incorrectly setup");
-  int rot_dir = (int) goma_automatic_rotations.rotation_nodes[I].face_cordinate_association[n_index];
+  int rot_dir = (int) goma_automatic_rotations.rotation_nodes[I].face_coordinate_association[n_index];
 
   int t1dir = 0;
   int t2dir = 0;

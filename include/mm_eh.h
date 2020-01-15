@@ -80,7 +80,16 @@ EXTERN void smooth_stop_with_msg(const char *msg);
  */
 
 #define EH(IERR, MESSAGE) goma_eh(IERR, __FILE__, __LINE__, MESSAGE)
-#define WH(IERR, MESSAGE) goma_wh(IERR, __FILE__, __LINE__, MESSAGE)
+// We wrap in a do while with a static variable to only print warnings once
+// at a location
+#define WH(IERR, MESSAGE)                         \
+  do {                                            \
+    static bool print = true;                     \
+    if (print) {                                  \
+      goma_wh(IERR, __FILE__, __LINE__, MESSAGE); \
+      print = false;                              \
+    }                                             \
+  } while (0)
 
 #define TIME_STRING_SIZE (256)
 
