@@ -1594,6 +1594,10 @@ rd_bc_specs(FILE *ifp,
         case SHIK_DIRICHLET_BC:
 		case SHIK_DIRICH_ROLL_BC:
 		case HYSTERESIS_WETTING_BC: 
+        case EM_ER_SOMMERFELD_BC:
+        case EM_EI_SOMMERFELD_BC:
+        case EM_HR_SOMMERFELD_BC:
+        case EM_HI_SOMMERFELD_BC:
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],   
 		      &BC_Types[ibc].BC_Data_Float[1],   

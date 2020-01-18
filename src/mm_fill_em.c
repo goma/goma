@@ -117,8 +117,9 @@ assemble_emwave(double time,	/* present time value */
   struct emwave_stabilization em_stab;
   em_stab.em_eqn = em_eqn;
   em_stab.em_var = em_var;
-  em_stab.type = dphi_divsquared; // enum supports phi_div, dphi_div,
-                           // divphi_div and phi_divsquared
+  em_stab.type = dphi_div; // enum supports phi_div, dphi_div,
+                           // divphi_div, phi_divsquared and
+                           // dphi_divsquared
 
 
   dbl n;				/* Refractive index. */
@@ -264,7 +265,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_hr[p];
          }
          em_stab.stabilization_field_var = EM_E1_REAL;
-         calc_emwave_stabilization_term(&em_stab, 0.0);
+         calc_emwave_stabilization_term(&em_stab, 1.0);
          break;
     case EM_E1_IMAG:
     case EM_E2_IMAG:
@@ -282,7 +283,7 @@ assemble_emwave(double time,	/* present time value */
            cross_field[p] = fv->em_hi[p];
          }
          em_stab.stabilization_field_var = EM_E1_IMAG;
-         calc_emwave_stabilization_term(&em_stab, 0.0);
+         calc_emwave_stabilization_term(&em_stab, 1.0);
          break;
     case EM_H1_REAL:
     case EM_H2_REAL:
@@ -1025,7 +1026,239 @@ int apply_em_farfield_direct_vec(double func[DIM],
     }
 
   }*/
+int apply_em_sommerfeld_vec(double func[DIM],
+                double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                double xi[DIM],        /* Local stu coordinates */
+                const int bc_name,
+                double *bc_data) {
+  /***********************************************************************
+   * TODO AMC: rewrite this description
+   * apply_em_sommerfeld():
+   *
+   *  Function for specifying incoming plane wave and outgoing scattered
+   *  energy using a radiative boundary condition sometimes called
+   *  Sommerfeld radiation condition
+   *
+   *  n_bound CROSS E = j/kappa * Curl(E - E_i)
+   *                  + n_bound CROSS E_i
+   *
+   *   func =
+   *
+   *
+   *  The boundary condition EM_ employs this
+   *  function.
+   *
+   *
+   * Input:
+   *
+   *  em_eqn   = which equation is this applied to
+   *  em_var   = which variable is this value sensitive to
+   *
+   * Output:
+   *
+   *  func[0] = value of the function mentioned above
+   *  d_func[0][varType][lvardof] =
+   *              Derivate of func[0] wrt
+   *              the variable type, varType, and the local variable
+   *              degree of freedom, lvardof, corresponding to that
+   *              variable type.
+   *
+   *   Author: Andrew Cochrane (10/9/2019)
+   *
+   ********************************************************************/
+  int var;
+  dbl mag_permeability=12.57e-07; // H/m
+  double n1, n2;				/* Refractive index */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_n1_struct;
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_n1 = &d_n1_struct;
 
+  double k1, k2;				/* Extinction Coefficient */
+  CONDUCTIVITY_DEPENDENCE_STRUCT d_k1_struct;
+  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k1 = &d_k1_struct;
+
+  double impedance = sqrt(mag_permeability/mp->permittivity);
+  double omega = upd->Acoustic_Frequency;
+  double n[DIM]; // surface normal vector
+
+  //double complex E1[DIM], H1[DIM]; // complex fields inside domain
+
+  // This BC assumes that the boundary is far from the subject and
+  // the material properties are the same on both sides
+  // Need the wave number
+
+  double kappa = omega*sqrt(mp->permittivity*mag_permeability);
+
+  // need Surface Normal vector
+  for (int p=0; p<DIM; p++) {
+    n[p] = fv->snormal[p];
+  }
+
+  // polarization P and propagation direction k of incident plane wave
+  // from input deck
+  complex double P[DIM];
+  double k[DIM];
+
+  P[0] = bc_data[0] + _Complex_I*bc_data[3];
+  P[1] = bc_data[1] + _Complex_I*bc_data[4];
+  P[2] = bc_data[2] + _Complex_I*bc_data[5];
+
+  k[0] = bc_data[6];
+  k[1] = bc_data[7];
+  k[2] = bc_data[8];
+
+  // normalize k and use wavenumber kappa
+  double k_mag = sqrt(k[0]*k[0] + k[1]*k[1] + k[2]*k[2]);
+
+  k[0] = k[0]/k_mag;
+  k[1] = k[1]/k_mag;
+  k[2] = k[2]/k_mag;
+
+  // Compute E_i
+  // E_i = P*exp(i(k DOT x - wt)
+  double x[DIM];
+  x[0] = fv->x[0];
+  x[1] = fv->x[1];
+  x[2] = fv->x[2];
+
+
+  double kappa_dot_x = 0.0;
+  for (int q=0; q<DIM; q++){
+    kappa_dot_x += k[q]*x[q];
+  }
+  kappa_dot_x *= kappa;
+
+  complex double E_i[DIM] = {0.0};
+  complex double CurlE_i[DIM] = {0.0};
+  complex double nCrossE_i[DIM] = {0.0};
+  complex double CurlE[DIM] = {0.0};
+  complex double H_i[DIM] = {0.0};
+  complex double CurlH_i[DIM] = {0.0};
+  complex double nCrossH_i[DIM] = {0.0};
+  complex double CurlH[DIM] = {0.0};
+
+  for (int p=0; p<DIM; p++) {
+    E_i[p] += P[p] * cexp(_Complex_I*kappa_dot_x);
+  }
+
+  switch (bc_name) {
+    case EM_ER_SOMMERFELD_BC:
+    case EM_EI_SOMMERFELD_BC:
+
+      // Compute Curl(E_i)
+      // [Curl(E_i)]_e = sum_{f,g} [permute(e,f,g)*[d_dx]_f([E_i]_g)]
+      for (int e=0; e<DIM; e++) {
+        for (int f=0; f<DIM; f++) {
+          for (int g=0; g<DIM; g++) {
+            CurlE_i[e] += permute(e,f,g)
+                       *_Complex_I*kappa*k[f]*P[g]
+                       *cexp(_Complex_I*kappa_dot_x);
+          }
+        }
+      }
+
+      // Compute n CROSS E_i
+      for (int e=0; e<DIM; e++) {
+        for (int f=0; f<DIM; f++) {
+          for (int g=0; g<DIM; g++) {
+            nCrossE_i[e] += permute(e,f,g)*n[f]*E_i[g];
+          }
+        }
+      }
+
+      // Compute Curl E
+      for (int e=0; e<DIM; e++) {
+        for (int f=0; f<DIM; f++) {
+          for (int g=0; g<DIM; g++) {
+            CurlE[e] += permute(e,f,g)
+                        *(fv->grad_em_er[g][f]
+                          + _Complex_I*fv->grad_em_ei[g][f]);
+          }
+        }
+      }
+      break;
+
+    case EM_HR_SOMMERFELD_BC:
+    case EM_HI_SOMMERFELD_BC:
+      for (int e=0; e<DIM; e++) {
+        for (int f=0; f<DIM; f++) {
+          for (int g=0; g<DIM; g++) {
+            H_i[e] += permute(e,f,g)*k[f]
+                      *E_i[g]/impedance;
+          }
+        }
+      }
+
+      // Compute Curl(H_i)
+      // [Curl(H_i)]_e = sum_{f,g} [permute(e,f,g)*[d_dx]_f([H_i]_g)]
+      for (int e=0; e<DIM; e++) {
+        for (int f=0; f<DIM; f++) {
+          for (int g=0; g<DIM; g++) {
+            CurlH_i[e] += permute(e,f,g)
+                       *_Complex_I*kappa*k[f]*H_i[g];
+          }
+        }
+      }
+
+      // Compute n CROSS H_i
+      for (int e=0; e<DIM; e++) {
+        for (int f=0; f<DIM; f++) {
+          for (int g=0; g<DIM; g++) {
+            nCrossH_i[e] += permute(e,f,g)*n[f]*H_i[g];
+          }
+        }
+      }
+
+      // Compute Curl H
+      for (int e=0; e<DIM; e++) {
+        for (int f=0; f<DIM; f++) {
+          for (int g=0; g<DIM; g++) {
+            CurlE[e] += permute(e,f,g)
+                        *(fv->grad_em_hr[g][f]
+                          + _Complex_I*fv->grad_em_hi[g][f]);
+          }
+        }
+      }
+      break;
+  }
+
+  // Residual Components
+
+  switch (bc_name) {
+    case EM_ER_SOMMERFELD_BC:
+      for (int p=0; p<DIM; p++) {
+        func[p] = creal(_Complex_I/kappa
+                        *(CurlE[p] - CurlE_i[p])
+                        + nCrossE_i[p]
+                        );
+      }
+      break;
+    case EM_EI_SOMMERFELD_BC:
+      for (int p=0; p<DIM; p++) {
+        func[p] = cimag(_Complex_I/kappa
+                        *(CurlE[p] - CurlE_i[p])
+                        + nCrossE_i[p]
+                        );
+      }
+      break;
+    case EM_HR_SOMMERFELD_BC:
+      for (int p=0; p<DIM; p++) {
+        func[p] = creal(_Complex_I/kappa
+                        *(CurlH[p] - CurlH_i[p])
+                        + nCrossH_i[p]
+                        );
+      }
+      break;
+    case EM_HI_SOMMERFELD_BC:
+      for (int p=0; p<DIM; p++) {
+        func[p] = cimag(_Complex_I/kappa
+                        *(CurlH[p] - CurlH_i[p])
+                        + nCrossH_i[p]
+                        );
+      }
+      break;
+  }
+
+}
 
 void
 calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
@@ -1208,8 +1441,8 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
             em_stab->residual_term[i]
                 = bf[em_stab->em_eqn]->phi[i]
                   *stabilization_coefficient
-                  *creal(div_stabilization_field_squared)
-                  *mp->permittivity;
+                  *creal(div_stabilization_field_squared);
+                  //*mp->permittivity;
             for (int b=0; b<DIM; b++){
               for (int j=0; j<ei->dof[em_stab->em_var]; j++){
                 em_stab->jacobian_term[i][b][j]
@@ -1245,8 +1478,8 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
             em_stab->residual_term[i]
                 = bf[em_stab->em_eqn]->phi[i]
                   *stabilization_coefficient
-                  *cimag(div_stabilization_field_squared)
-                  *mp->permittivity;
+                  *cimag(div_stabilization_field_squared);
+                  //*mp->permittivity;
             for (int b=0; b<DIM; b++){
               for (int j=0; j<ei->dof[em_stab->em_var]; j++){
                 em_stab->jacobian_term[i][b][j]
@@ -1303,7 +1536,8 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
                 = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index]
                   *stabilization_coefficient
                   *creal(div_stabilization_field_squared)
-                  *mp->permittivity;
+                  /mag_permeability;
+              //*mp->permittivity;
             for (int b=0; b<DIM; b++){
               for (int j=0; j<ei->dof[em_stab->em_var]; j++){
                 em_stab->jacobian_term[i][b][j]
@@ -1320,8 +1554,8 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
             em_stab->residual_term[i]
                 = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index]
                   *stabilization_coefficient
-                  *creal(div_stabilization_field_squared)
-                  *mag_permeability;
+                  *creal(div_stabilization_field_squared);
+                  //*mag_permeability;
             for (int b=0; b<DIM; b++){
               for (int j=0; j<ei->dof[em_stab->em_var]; j++){
                 em_stab->jacobian_term[i][b][j]
@@ -1340,7 +1574,8 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
                 = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index]
                   *stabilization_coefficient
                   *cimag(div_stabilization_field_squared)
-                  *mp->permittivity;
+                  /mag_permeability;
+                  //*mp->permittivity;
             for (int b=0; b<DIM; b++){
               for (int j=0; j<ei->dof[em_stab->em_var]; j++){
                 em_stab->jacobian_term[i][b][j]
@@ -1357,8 +1592,8 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
             em_stab->residual_term[i]
                 = bf[em_stab->em_eqn]->grad_phi[i][cartesian_index]
                   *stabilization_coefficient
-                  *cimag(div_stabilization_field_squared)
-                  *mag_permeability;
+                  *cimag(div_stabilization_field_squared);
+                  //*mag_permeability;
             for (int b=0; b<DIM; b++){
               for (int j=0; j<ei->dof[em_stab->em_var]; j++){
                 em_stab->jacobian_term[i][b][j]
