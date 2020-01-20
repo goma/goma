@@ -85,8 +85,7 @@ if [ "$MPI_NAME" == "intel" ] && [ ! "$MATH_LIBRARIES" == "intel" ]; then
 fi
 
 # All user interaction functions like continue_check are here
-##source "${0%/*}/user-interaction.sh"
-source "user-interaction.sh"
+source "${0%/*}/user-interaction.sh"
 
 function usage() {
     echo "Usage: build-goma-dependencies [options] [library install location]"
