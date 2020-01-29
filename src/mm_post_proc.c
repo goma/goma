@@ -295,6 +295,7 @@ int GRAD_Y = -1;
 int HELICITY = -1;
 int LAMB_VECTOR = -1;
 int Q_FCN = -1;		      
+int POYNTING_VECTORS = -1;   	/* conduction flux vectors*/
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -1437,8 +1438,6 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     }
   }
 
-
-
   if(CONDUCTION_VECTORS != -1 && pd->e[pg->imtrx][R_ENERGY])
   {
     if ( cr->HeatFluxModel == CR_HF_FOURIER_0 )
@@ -2201,6 +2200,47 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	local_lumped[LAMB_VECTOR + j] = 1.0;
       }
     }
+
+  /* calculate poynting vectors for EM calculations here !!  */
+  if(POYNTING_VECTORS != -1)
+  {
+    double poynt[DIM];
+    int c;
+    memset(poynt, 0, sizeof(double)*DIM);
+  /*  Acoustic analogy -- scalar version  */
+    if (pd->e[R_ACOUS_PREAL] || pd->e[R_ACOUS_PIMAG])
+    {
+      double k, R, prefactor;
+      k = wave_number( NULL, time);
+      R = acoustic_impedance( NULL, time);
+      prefactor = 0.5/(k*R);
+
+      for ( a=0; a<DIM; a++)
+        {
+         poynt[a] += prefactor*(fv->api*fv->grad_apr[a]-fv->apr*fv->grad_api[a]);
+        }
+    }
+  /*  EM vector, E & H formulation   */
+    else if (pd->e[R_EM_E1_REAL] || pd->e[R_EM_E2_REAL] || pd->e[R_EM_E3_REAL])
+    {
+      for ( a=0; a<DIM; a++)
+        {
+          for ( b=0; b<DIM; b++)
+            {
+              for ( c=0; c<DIM; c++)
+                {
+                  poynt[a] += 0.5*permute(b,c,a)*
+                          (fv->em_er[b]*fv->em_hr[c] + fv->em_ei[b]*fv->em_hi[c]);
+                }
+            }
+        }
+    }
+    for ( a=0; a<dim; a++)
+     {
+      local_post[POYNTING_VECTORS + a] = poynt[a];
+      local_lumped[POYNTING_VECTORS + a] = 1.;
+     }
+  }
 
   /* calculate real-solid stress here !!  */
   if(REAL_STRESS_TENSOR != -1 && pd->e[pg->imtrx][R_SOLID1])
@@ -7397,6 +7437,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Heaviside", &HEAVISIDE);
   iread = look_for_post_proc(ifp, "Lamb Vector", &LAMB_VECTOR);
   iread = look_for_post_proc(ifp, "Q Function", &Q_FCN);
+  iread = look_for_post_proc(ifp, "Poynting Vectors", &POYNTING_VECTORS);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -9892,6 +9933,39 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
 	index++;
 	index_post++;
       }
+    }
+
+  if (POYNTING_VECTORS != -1 && 
+        ((Num_Var_In_Type[pg->imtrx][R_ACOUS_PREAL] || Num_Var_In_Type[pg->imtrx][R_ACOUS_PIMAG])
+        || (Num_Var_In_Type[pg->imtrx][R_EM_E1_REAL] || Num_Var_In_Type[pg->imtrx][R_EM_E2_REAL]
+                      || Num_Var_In_Type[pg->imtrx][R_EM_E3_REAL])))
+    {
+      if (POYNTING_VECTORS == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      POYNTING_VECTORS = index_post;
+      /* X Component */
+	sprintf(nm, "POYNTX");
+	sprintf(ds, "Poynting in X direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+      /* Y Component */
+	sprintf(nm, "POYNTY");
+	sprintf(ds, "Poynting in Y direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+      /* Z Component */
+      if ( Num_Dim > 2 )
+	{
+	sprintf(nm, "POYNTZ");
+	sprintf(ds, "Poynting in Z direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+        }
     }
 
   if (ELECTRIC_FIELD != -1 && Num_Var_In_Type[pg->imtrx][R_POTENTIAL])
