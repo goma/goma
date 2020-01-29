@@ -2497,6 +2497,10 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
     BC_dup_nodes[pg->imtrx] = alloc_int_1(num_bc_nodes, -1);
     BC_dup_list[pg->imtrx] = (int ***) alloc_ptr_1(num_bc_nodes);
     BC_dup_ptr[pg->imtrx] = 0;
+    bool *explicit_rot_print = malloc(sizeof(bool) * Num_BC);
+    for (int i = 0; i < Num_BC; i++) {
+      explicit_rot_print[i] = false;
+    }
 
     /* 
      * loop through nodes and rearrange the BC list 
@@ -2811,10 +2815,13 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                 /* Check to make sure user isn't trying to rotate without 
                  * specifying a rotation condition */
                 if (BC_Types[ibc1].desc->rotate != NO_ROT) {
-                  DPRINTF(stdout, "BC [%d] %s %2s %d is a rotated condition, but lacks explicit ROT\nwill "
+                  if (!explicit_rot_print[ibc1]) {
+                  DPRINTF(stdout, "BC [%d] %s %2s %d is a rotated condition, but lacks explicit ROT\n\twill "
                           "use automatic rotations\n",
                           ibc1, BC_Types[ibc1].desc->name1, BC_Types[ibc1].Set_Type,
                           BC_Types[ibc1].BC_ID);
+                  }
+                  explicit_rot_print[ibc1] = true;
                 }
 
                 /* save all WEAK conditions */
@@ -2968,9 +2975,12 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
       } /* end of if BC_list */
     } /* end of loop over nodes */
 
+
     /******************************************************************************/
     /* CLEAN UP                                                                   */
     /******************************************************************************/
+
+    free(explicit_rot_print);
 
     /* Now print out BC_dup list for 3-D problems */
     /* Also check for potentially conflicting combinations */

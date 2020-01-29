@@ -1006,7 +1006,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
   int bulk_dim, shell_dim, nbulk = 0, nshell = 0, nmatch;
   int iH = -1, iL = -1, s_first = 0, bulk_n1, bulk_n2;
   int bulk_nodes[8], shell_nodes[4], matches[8];
-  int bulk_node_order[4];
+  int bulk_node_order[4] = {0};
   int bulk_type = Elem_Type(exo, bulk_elem);
   int bulk_eptr = Proc_Connect_Ptr[bulk_elem];
   int shell_type = Elem_Type(exo, shell_elem);

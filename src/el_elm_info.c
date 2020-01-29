@@ -3441,35 +3441,6 @@ Gq_edge_weight ( int iquad,                  /* current GQ index  */
 /*****************************************************************************/
 /*****************************************************************************/
 
-int 
-in_list(const int ivalue, const int i, const int iend, int *ivector)
-
-/*
-*        This function searches an integer vector, ivector[i:iend-1],
-*       for the presence of a number, ivalue.  It returns the index of the 
-*       value, or -1, if the number, ivalue, is not found in the list.
-*   
-*        The function is used (amongst other purposes) to see if a local node 
-*       number is in the adjacency list of an element and to return 
-*       its position if so.
-*
-*        Author:          Scott Hutchinson (1421)
-*        Date:            15 May 1992
-*        Revised:         26 May 1992
-*
-*        Revised          13 Feb 1998 , Thomas Baer (9112)
-*/
-{
-  int i2 = i;
-  if (iend <= i2) return -1;
-  if (!ivector) return -1;
-  while (ivalue != ivector[i2] && ++i2 < iend);
-  if (i2 < iend) return i2;
-  return -1;
-}
-/*****************************************************************************/
-/*****************************************************************************/
-/*****************************************************************************/
 
 int
 get_type(char string[],         /* EXODUS name of parent element  */
