@@ -1026,6 +1026,61 @@ int apply_em_farfield_direct_vec(double func[DIM],
     }
 
   }*/
+
+int apply_em_free_vec(double func[DIM],
+                double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                double xi[DIM],        /* Local stu coordinates */
+                const int bc_name) {
+
+  double normal[DIM]; // surface normal vector
+
+  // need Surface Normal vector
+  for (int p=0; p<DIM; p++) {
+    normal[p] = fv->snormal[p];
+  }
+
+  // Evaluate n cross E or n cross H
+  switch (bc_name) {
+    case EM_ER_FREE_BC:
+      for (int p=0; p<DIM; p++) {
+        for (int q=0; q<DIM; q++) {
+          for (int r=0; r<DIM; r++) {
+            func[p] += permute(p,q,r)*normal[q]*fv->em_er[r];
+          }
+        }
+      }
+      break;
+    case EM_EI_FREE_BC:
+      for (int p=0; p<DIM; p++) {
+        for (int q=0; q<DIM; q++) {
+          for (int r=0; r<DIM; r++) {
+            func[p] += permute(p,q,r)*normal[q]*fv->em_ei[r];
+          }
+        }
+      }
+      break;
+    case EM_HR_FREE_BC:
+      for (int p=0; p<DIM; p++) {
+        for (int q=0; q<DIM; q++) {
+          for (int r=0; r<DIM; r++) {
+            func[p] += permute(p,q,r)*normal[q]*fv->em_hr[r];
+          }
+        }
+      }
+      break;
+    case EM_HI_FREE_BC:
+      for (int p=0; p<DIM; p++) {
+        for (int q=0; q<DIM; q++) {
+          for (int r=0; r<DIM; r++) {
+            func[p] += permute(p,q,r)*normal[q]*fv->em_hi[r];
+          }
+        }
+      }
+      break;
+  }
+  return 0;
+}
+
 int apply_em_sommerfeld_vec(double func[DIM],
                 double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
                 double xi[DIM],        /* Local stu coordinates */
@@ -1226,7 +1281,7 @@ int apply_em_sommerfeld_vec(double func[DIM],
   switch (bc_name) {
     case EM_ER_SOMMERFELD_BC:
       for (int p=0; p<DIM; p++) {
-        func[p] = creal(_Complex_I/kappa
+        func[p] -= creal(_Complex_I/kappa
                         *(CurlE[p] - CurlE_i[p])
                         + nCrossE_i[p]
                         );
@@ -1234,7 +1289,7 @@ int apply_em_sommerfeld_vec(double func[DIM],
       break;
     case EM_EI_SOMMERFELD_BC:
       for (int p=0; p<DIM; p++) {
-        func[p] = cimag(_Complex_I/kappa
+        func[p] -= cimag(_Complex_I/kappa
                         *(CurlE[p] - CurlE_i[p])
                         + nCrossE_i[p]
                         );
@@ -1242,7 +1297,7 @@ int apply_em_sommerfeld_vec(double func[DIM],
       break;
     case EM_HR_SOMMERFELD_BC:
       for (int p=0; p<DIM; p++) {
-        func[p] = creal(_Complex_I/kappa
+        func[p] -= creal(_Complex_I/kappa
                         *(CurlH[p] - CurlH_i[p])
                         + nCrossH_i[p]
                         );
@@ -1250,7 +1305,7 @@ int apply_em_sommerfeld_vec(double func[DIM],
       break;
     case EM_HI_SOMMERFELD_BC:
       for (int p=0; p<DIM; p++) {
-        func[p] = cimag(_Complex_I/kappa
+        func[p] -= cimag(_Complex_I/kappa
                         *(CurlH[p] - CurlH_i[p])
                         + nCrossH_i[p]
                         );
@@ -1258,7 +1313,7 @@ int apply_em_sommerfeld_vec(double func[DIM],
       break;
   }
 
-}
+} // end of apply_em_sommerfeld_vec
 
 void
 calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
@@ -1629,25 +1684,5 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
   return;
 }
 
-/* Cross the first two complex[DIM] vectors and return their
- * cross product.
- * TODO: create a return struct that contains sensitivities to input
- */
-void
-complex_cross_vectors(const complex *v0, /* v0 */
-                      const complex *v1, /* v1 */
-                      complex *v2) /* v2 = v0 x v1 */
-{
-  int i, j, k;
-
-  memset(v2, 0, DIM * sizeof(complex));
-  for(i = 0; i < DIM; i++)
-    for(j = 0; j < DIM; j++)
-      for(k = 0; k < DIM; k++)
-        v2[k] += permute(i,j,k) * v0[i] * v1[j];
-} // end of complex_cross_vectors
-
-
-#undef I
 
 

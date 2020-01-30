@@ -59,10 +59,4 @@ EXTERN int apply_em_farfield_direct_vec/* mm_fill_em.c                          
   double *bc_data);// bc_name
 
 
-EXTERN void complex_cross_vectors(const complex [DIM],
-                                  const complex [DIM],
-                                  complex [DIM]);
-
-
-
 #endif /* GOMA_MM_FILL_EM_H */

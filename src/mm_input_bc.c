@@ -459,6 +459,10 @@ rd_bc_specs(FILE *ifp,
 	case SHELL_TFMP_GRAD_S_BC:
 	case SHELL_TFMP_FREE_GAS_BC:
         case SHELL_LUBRICATION_OUTFLOW_BC:
+        case EM_ER_FREE_BC:
+        case EM_EI_FREE_BC:
+        case EM_HR_FREE_BC:
+        case EM_HI_FREE_BC:
 
 	  break;
 
@@ -1499,18 +1503,6 @@ rd_bc_specs(FILE *ifp,
         case EM_HR_FARFIELD_DIRECT_BC:
         case EM_HI_FARFIELD_DIRECT_BC:
 
-        case EM_E1R_FARFIELD_DIRECT_BC:
-        case EM_E1I_FARFIELD_DIRECT_BC:
-        case EM_H1R_FARFIELD_DIRECT_BC:
-        case EM_H1I_FARFIELD_DIRECT_BC:
-        case EM_E2R_FARFIELD_DIRECT_BC:
-        case EM_E2I_FARFIELD_DIRECT_BC:
-        case EM_H2R_FARFIELD_DIRECT_BC:
-        case EM_H2I_FARFIELD_DIRECT_BC:
-        case EM_E3R_FARFIELD_DIRECT_BC:
-        case EM_E3I_FARFIELD_DIRECT_BC:
-        case EM_H3R_FARFIELD_DIRECT_BC:
-        case EM_H3I_FARFIELD_DIRECT_BC:
 	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf %lf %lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],   
 		      &BC_Types[ibc].BC_Data_Float[1],   
