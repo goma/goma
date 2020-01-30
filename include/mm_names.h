@@ -1648,6 +1648,7 @@ struct Equation_Names Post_Var_Name[] =
   {"HELICITY", "HELICITY", -1},
   {"LAMB_VECTOR", "LAMB_VECTOR", -1},
   {"Q_FCN", "Q_FCN", -1},
+  {"POYNTING_VECTORS", "POYNTING_VECTORS", -1},
 };
 
 int Num_Post_Var_Names = sizeof(Post_Var_Name) / sizeof(struct Equation_Names);  
