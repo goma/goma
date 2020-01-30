@@ -110,9 +110,6 @@ assemble_emwave(double time,	/* present time value */
   dbl mag_permeability=12.57e-07;  // H/m
   int cross_field_var;
   dbl cross_field[DIM];
-  dbl stabilization_coefficient;
-  int stabilization_field_var;
-  dbl grad_stabilization_field[DIM][DIM];
 
   struct emwave_stabilization em_stab;
   em_stab.em_eqn = em_eqn;
@@ -749,6 +746,9 @@ int apply_em_farfield_direct_vec(double func[DIM],
     case EM_HI_FARFIELD_DIRECT_BC:
       reduction_factor = -_Complex_I*tau/kappa1/(1-Gamma);
       break;
+    default:
+      reduction_factor = 0.0;
+      break;
   }
 
 
@@ -1121,15 +1121,7 @@ int apply_em_sommerfeld_vec(double func[DIM],
    *   Author: Andrew Cochrane (10/9/2019)
    *
    ********************************************************************/
-  int var;
   dbl mag_permeability=12.57e-07; // H/m
-  double n1, n2;				/* Refractive index */
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_n1_struct;
-  CONDUCTIVITY_DEPENDENCE_STRUCT *d_n1 = &d_n1_struct;
-
-  double k1, k2;				/* Extinction Coefficient */
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_k1_struct;
-  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k1 = &d_k1_struct;
 
   double impedance = sqrt(mag_permeability/mp->permittivity);
   double omega = upd->Acoustic_Frequency;
@@ -1312,7 +1304,7 @@ int apply_em_sommerfeld_vec(double func[DIM],
       }
       break;
   }
-
+  return 0;
 } // end of apply_em_sommerfeld_vec
 
 void
@@ -1567,7 +1559,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
           break;
         default:
           EH(-1,"must set the stabilization field var with type==phi_divsquared");
-          return -1;
+          return;
           break;
       }
       break;
@@ -1663,7 +1655,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
           break;
         default:
           EH(-1,"must set the stabilization field var with type==phi_divsquared");
-          return -1;
+          return;
           break;
       }
       break;
@@ -1684,5 +1676,25 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
   return;
 }
 
+/* Cross the first two complex[DIM] vectors and return their
+ * cross product.
+ * TODO: create a return struct that contains sensitivities to input
+ */
+void
+complex_cross_vectors(const complex *v0, /* v0 */
+                      const complex *v1, /* v1 */
+                      complex *v2) /* v2 = v0 x v1 */
+{
+  int i, j, k;
+
+  memset(v2, 0, DIM * sizeof(complex));
+  for(i = 0; i < DIM; i++)
+    for(j = 0; j < DIM; j++)
+      for(k = 0; k < DIM; k++)
+        v2[k] += permute(i,j,k) * v0[i] * v1[j];
+} // end of complex_cross_vectors
+
+
+#undef I
 
 
