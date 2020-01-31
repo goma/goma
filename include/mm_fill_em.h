@@ -26,8 +26,6 @@
 #define EXTERN extern
 #endif
 
-#include <complex.h>
-
 enum stabilization_type{none, phi_div, dphi_div, divphi_div, phi_divsquared, dphi_divsquared};
 
 struct emwave_stabilization {
@@ -75,5 +73,5 @@ EXTERN void calc_emwave_stabilization_term
 (struct emwave_stabilization*,
  double);
 
-#undef I
+
 #endif /* GOMA_MM_FILL_EM_H */
