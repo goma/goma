@@ -612,12 +612,12 @@ row_sum_scale_MSR ( int N,
       x[0] = Coor[0][inode]; x[1] = Coor[1][inode];
       if (pd_glob[0]->Num_Dim == 3) x[2] = Coor[2][inode];
       if (dofname) {
-        printf("row_sum_scaling_scale ERROR: Row %d is zero, dofname = %s, x=(%g,%g,%g)\n",
+        fprintf(stderr, "row_sum_scaling_scale ERROR: Row %d is zero, dofname = %s, x=(%g,%g,%g)\n",
                irow, dofname[pg->imtrx][irow],x[0],x[1],x[2]);
       } else {
-        printf("row_sum_scaling_scale ERROR: Row %d is zero, dofname = unknown\n",
+        fprintf(stderr, "row_sum_scaling_scale ERROR: Row %d is zero, dofname = unknown\n",
                irow);
-        printf("\t var_type = %d, matid = %d, Node = %d, x=(%g,%g,%g)\n", vd->Variable_Type,
+        fprintf(stderr, "\t var_type = %d, matid = %d, Node = %d, x=(%g,%g,%g)\n", vd->Variable_Type,
                vd->MatID, inode,x[0],x[1],x[2]);
       }
 #else

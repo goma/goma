@@ -105,9 +105,6 @@ EXTERN double Gq_edge_weight
 (const int ,		/* iquad - current GQ index                  */
        const int );            /* ielem_type - element type                 */
 
-inline int
-in_list(const int value, const int start, const int end, const int *ivector)
-
 /*
 *        This function searches an integer vector, ivector[i:iend-1],
 *       for the presence of a number, ivalue.  It returns the index of the
@@ -123,6 +120,8 @@ in_list(const int value, const int start, const int end, const int *ivector)
 *
 *        Revised          13 Feb 1998 , Thomas Baer (9112)
 */
+static inline int
+in_list(const int value, const int start, const int end, const int *ivector)
 {
   if (!ivector) return -1;
   for (int i = start; i < end; i++) {

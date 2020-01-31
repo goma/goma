@@ -34,6 +34,7 @@
 #include <stdio.h>
 
 #include "std.h"
+#include "el_elm_info.h"
 #include "rf_allo.h"
 #include "rf_fem_const.h"
 #include "rf_mp.h"

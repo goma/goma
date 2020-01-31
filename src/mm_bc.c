@@ -1385,6 +1385,8 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
     check_for_bc_conflicts2D(exo, dpi);
   } else if (Num_ROT == 0 && exo->num_dim == 3) {
     check_for_bc_conflicts3D(exo, dpi);
+  } else if (Num_ROT > 0) {
+    check_for_bc_conflicts3D(exo, dpi);
   }
 
   return;
