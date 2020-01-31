@@ -114,7 +114,7 @@ assemble_emwave(double time,	/* present time value */
   struct emwave_stabilization em_stab;
   em_stab.em_eqn = em_eqn;
   em_stab.em_var = em_var;
-  em_stab.type = dphi_div; // enum supports phi_div, dphi_div,
+  em_stab.type = EM_STAB_DPHI_DIV; // enum supports phi_div, dphi_div,
                            // divphi_div, phi_divsquared and
                            // dphi_divsquared
 
@@ -1319,7 +1319,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
    *
    */
   switch(em_stab->type) {
-    case none:
+    case EM_STAB_NONE:
       for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
         em_stab->residual_term[i] = 0.0;
         for (int b=0; b<DIM; b++){
@@ -1331,9 +1331,9 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       return;
       break;
-    case phi_div:
-    case dphi_div:
-    case divphi_div:
+    case EM_STAB_PHI_DIV:
+    case EM_STAB_DPHI_DIV:
+    case EM_STAB_DIVPHI_DIV:
       switch(em_stab->stabilization_field_var) {
         case EM_E1_REAL:
           for ( int p=0; p<VIM; p++) {
@@ -1369,8 +1369,8 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       break;
 
-    case phi_divsquared:
-    case dphi_divsquared:
+    case EM_STAB_PHI_DIVSQUARED:
+    case EM_STAB_DPHI_DIVSQUARED:
       switch(em_stab->stabilization_field_var){
         case EM_H1_REAL:
         case EM_H1_IMAG:
@@ -1403,7 +1403,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
   double complex div_stabilization_field;
   double complex div_stabilization_field_squared;
   switch(em_stab->type) {
-    case phi_div:
+    case EM_STAB_PHI_DIV:
 
       div_stabilization_field = 0.0;
 
@@ -1414,7 +1414,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
 
       break;
 
-    case dphi_div:
+    case EM_STAB_DPHI_DIV:
 
       div_stabilization_field = 0.0;
 
@@ -1443,7 +1443,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       break;
 
-     case divphi_div:
+     case EM_STAB_DIVPHI_DIV:
       div_stabilization_field = 0.0;
 
       double div_phi[MDE] = {0.0};
@@ -1474,7 +1474,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
      break;
 
-    case phi_divsquared:
+    case EM_STAB_PHI_DIVSQUARED:
       div_stabilization_field = 0.0;
 
       for (int p=0; p<VIM; p++) {
@@ -1564,7 +1564,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
       }
       break;
 
-    case dphi_divsquared:
+    case EM_STAB_DPHI_DIVSQUARED:
       div_stabilization_field = 0.0;
 
       // need the index that corresponds to the x, y or z
@@ -1659,7 +1659,7 @@ calc_emwave_stabilization_term(struct emwave_stabilization *em_stab,
           break;
       }
       break;
-    case none:
+    case EM_STAB_NONE:
     default:
       for( int i=0; i<ei->dof[em_stab->em_eqn]; i++){
         em_stab->residual_term[i] = 0.0;
