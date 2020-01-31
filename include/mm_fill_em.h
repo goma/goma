@@ -26,7 +26,7 @@
 #define EXTERN extern
 #endif
 
-enum stabilization_type{none, phi_div, dphi_div, divphi_div, phi_divsquared, dphi_divsquared};
+enum stabilization_type{EM_STAB_NONE, EM_STAB_PHI_DIV, EM_STAB_DPHI_DIV, EM_STAB_DIVPHI_DIV, EM_STAB_PHI_DIVSQUARED, EM_STAB_DPHI_DIVSQUARED};
 
 struct emwave_stabilization {
   enum stabilization_type type;
