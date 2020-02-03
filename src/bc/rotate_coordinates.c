@@ -232,7 +232,9 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
   error = set_face_normal_association(exo, rotations);
   EH(error, "set_face_normal_association");
 
+#ifdef DEBUG_AUTO_ROTATE
   write_rotations_to_file("normals.csv", exo, rotations);
+#endif
 
   goma_automatic_rotations.automatic_rotations = true;
   goma_automatic_rotations.rotation_nodes = rotations;
