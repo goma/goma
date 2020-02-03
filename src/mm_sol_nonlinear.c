@@ -1484,7 +1484,7 @@ EH(GOMA_ERROR,"version not compiled with frontal solver");
       case STRATIMIKOS:
         if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
           int iterations;
-          int err = stratimikos_solve(ams, delta_x, resid_vector, &iterations, Stratimikos_File[pg->imtrx]);
+          int err = stratimikos_solve(ams, delta_x, resid_vector, &iterations, Stratimikos_File, pg->imtrx);
           if (err)
           {
           EH(err, "Error in stratimikos solve");
@@ -3652,7 +3652,7 @@ soln_sens ( double lambda,  /*  parameter */
     case STRATIMIKOS:
       if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
         int iterations;
-        int err = stratimikos_solve(ams,  x_sens, resid_vector_sens, &iterations, Stratimikos_File[pg->imtrx]);
+        int err = stratimikos_solve(ams,  x_sens, resid_vector_sens, &iterations, Stratimikos_File, pg->imtrx);
         EH(err, "Error in stratimikos solve");
 	if (iterations == -1) {
 	  strcpy(stringer, "err");

@@ -47,11 +47,14 @@
 extern "C" {
 
 int stratimikos_solve(struct Aztec_Linear_Solver_System *ams, double *x_,
-    double *b_, int *iterations, char *stratimikos_file)
+    double *b_, int *iterations, char stratimikos_file[MAX_NUM_MATRICES][MAX_CHAR_IN_INPUT], int imtrx)
 {
   using Teuchos::RCP;
   bool success = true;
   bool verbose = true;
+  static RCP<Teuchos::ParameterList> solverParams_static[MAX_NUM_MATRICES];
+  static bool param_set[MAX_NUM_MATRICES] = {false};
+  static bool param_echo[MAX_NUM_MATRICES] = {false};
 
   try {
     Epetra_Map map = ams->RowMatrix->RowMatrixRowMap();
@@ -73,8 +76,12 @@ int stratimikos_solve(struct Aztec_Linear_Solver_System *ams, double *x_,
         Teuchos::VerboseObjectBase::getDefaultOStream();
 
     // Get parameters from file
-    RCP<Teuchos::ParameterList> solverParams;
-    solverParams = Teuchos::getParametersFromXmlFile(stratimikos_file);
+    if (!param_set[imtrx]) {
+      param_set[imtrx] = true;
+      solverParams_static[imtrx] = Teuchos::getParametersFromXmlFile(stratimikos_file[imtrx]);
+    }
+
+    RCP<Teuchos::ParameterList> solverParams = solverParams_static[imtrx];
 
     // Set up base builder
     Stratimikos::DefaultLinearSolverBuilder linearSolverBuilder;
@@ -90,7 +97,12 @@ int stratimikos_solve(struct Aztec_Linear_Solver_System *ams, double *x_,
         linearSolverBuilder.createLinearSolveStrategy("");
 
 
-    linearSolverBuilder.writeParamsFile(*solverFactory, "echo_stratimikos.xml");
+    if (!param_echo[imtrx]) {
+      std::string echo_file(stratimikos_file[imtrx]);
+      echo_file = "echo_" + echo_file;
+      linearSolverBuilder.writeParamsFile(*solverFactory, echo_file);
+      param_echo[imtrx] = true;
+    }
     
     // set output stream
     solverFactory->setOStream(outstream);
