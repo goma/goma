@@ -18,7 +18,6 @@
 
 #include <stdlib.h>
 
-#include "spMatrix.h"
 #include "mm_as.h"
 #include "mm_as_structs.h"
 #include "sl_lu.h"
@@ -81,6 +80,7 @@ int first_time = TRUE;
     --------------------------------------------------------------------
 */
 #ifdef HAVE_SPARSE
+#include "spMatrix.h"
 
 static int call=0;
 
@@ -213,6 +213,7 @@ lu(const int N,
 
 } /* END of routine lu */
 #else // HAVE_SPARSE
+#include "mm_eh.h"
 void
 lu(const int N,
    const int NExt,
