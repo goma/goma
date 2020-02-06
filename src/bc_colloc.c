@@ -765,7 +765,7 @@ f_fillet (const int ielem_dim,
 {    
 /**************************** EXECUTION BEGINS *******************************/
   double pt[DIM], side_th[2], rad, center[DIM], alpha, theta_mid, theta_avg, tmp;
-  double theta, siderad=-1., circ[DIM]={0.,0.,0.}, dsign, beta, theta_side[2];
+  double theta, siderad=-1., circ[DIM]={0.,0.,0.}, dsign, beta = 0, theta_side[2];
   double cham_ang=-1., cham_rotn=0., gamma=0.;
   int iside=0, chamfer=0, i, dim=2;
 
