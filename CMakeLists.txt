@@ -527,7 +527,6 @@ message(STATUS "CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
 message(STATUS "CMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}")
 message(STATUS "CMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}")
 message("\n")
-get_directory_property(GOMA_COMPILE_DEFINITIONS COMPILE_DEFINITIONS)
 message(STATUS "Goma compile defines:")
 foreach(d ${GOMA_COMPILE_DEFINITIONS})
   message(STATUS "${d}")
@@ -566,12 +565,14 @@ set(GOMA_TPL_LIBRARIES
 
 add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
 target_include_directories(goma_user PUBLIC include)
+target_compile_definitions(goma_user PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_library(goma ${GOMA_SOURCES} ${GOMA_INCLUDES})
 target_include_directories(goma PUBLIC include)
 target_include_directories(goma PRIVATE include ${GOMA_TPL_INCLUDES})
 target_link_directories(goma PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
 target_link_libraries(goma ${GOMA_TPL_LIBRARIES} gds)
+target_compile_definitions(goma PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_library(gds ${GDS_SOURCES} ${GDS_INCLUDES})
 target_include_directories(gds PUBLIC include)
@@ -579,11 +580,13 @@ target_include_directories(gds PUBLIC include)
 add_library(goma_util ${GOMA_UTIL_SOURCES} ${GOMA_UTIL_INCLUDES})
 target_include_directories(goma_util PUBLIC include)
 target_link_libraries(goma_util gds)
+target_compile_definitions(goma_util PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_executable(goma_exe src/main.c)
 set_target_properties(goma_exe PROPERTIES OUTPUT_NAME "goma")
 target_include_directories(goma_exe PRIVATE include ${GOMA_TPL_INCLUDES})
 target_link_libraries(goma_exe ${GOMA_TPL_LIBRARIES} goma goma_user goma_util gds)
+target_compile_definitions(goma_exe PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 
 option(ENABLE_TESTING "ENABLE_TESTING" OFF)

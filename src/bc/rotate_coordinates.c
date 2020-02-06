@@ -28,8 +28,10 @@
 
 static const double critical_angle_radians = GOMA_ROTATION_CRITICAL_ANGLE * M_PI / 180;
 
+#ifdef DEBUG_AUTO_ROTATE
 static void
 write_rotations_to_file(const char *filename, Exo_DB *exo, goma_rotation_node_s *rotations);
+#endif
 
 goma_rotation_s goma_automatic_rotations = {false, NULL};
 
@@ -242,6 +244,7 @@ setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num
   return GOMA_SUCCESS;
 }
 
+#ifdef DEBUG_AUTO_ROTATE
 static void
 write_rotations_to_file(const char *filename, Exo_DB *exo, goma_rotation_node_s *rotations) {
   FILE *normalscsv;
@@ -281,6 +284,7 @@ write_rotations_to_file(const char *filename, Exo_DB *exo, goma_rotation_node_s 
   }
   fclose(normalscsv);
 }
+#endif
 
 /**
  * @brief goma_rotation_node_type_surface
