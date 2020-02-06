@@ -2189,7 +2189,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
         } 
   }
 
-  if (LAMB_VECTOR != -1 && pd->e[R_MOMENTUM1]) {
+  if (LAMB_VECTOR != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
       for (j = 0; j < VIM; j++) {
 	local_post[LAMB_VECTOR + j] = 0;
         for (a = 0; a < VIM; a++) {
@@ -2208,7 +2208,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     int c;
     memset(poynt, 0, sizeof(double)*DIM);
   /*  Acoustic analogy -- scalar version  */
-    if (pd->e[R_ACOUS_PREAL] || pd->e[R_ACOUS_PIMAG])
+    if (pd->e[pg->imtrx][R_ACOUS_PREAL] || pd->e[pg->imtrx][R_ACOUS_PIMAG])
     {
       double k, R, prefactor;
       k = wave_number( NULL, time);
@@ -2221,7 +2221,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
         }
     }
   /*  EM vector, E & H formulation   */
-    else if (pd->e[R_EM_E1_REAL] || pd->e[R_EM_E2_REAL] || pd->e[R_EM_E3_REAL])
+    else if (pd->e[pg->imtrx][R_EM_E1_REAL] || pd->e[pg->imtrx][R_EM_E2_REAL] || pd->e[pg->imtrx][R_EM_E3_REAL])
     {
       for ( a=0; a<DIM; a++)
         {
