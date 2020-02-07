@@ -1348,18 +1348,18 @@ struct Equation_Names Var_Name[] =  {
     { "TFMP_PRES", "PRES", TFMP_PRES},                     /* 186 */
     { "RESTIME", "RST", RESTIME},                     /* 187 */
 
-    { "EM_E1_REAL", "E1R", EM_E1_REAL},//  188
-    { "EM_E2_REAL", "E2R", EM_E2_REAL},
-    { "EM_E3_REAL", "E3R", EM_E3_REAL},
-    { "EM_E1_IMAG", "E1I", EM_E1_IMAG},//  191
-    { "EM_E2_IMAG", "E2I", EM_E2_IMAG},
-    { "EM_E3_IMAG", "E3I", EM_E3_IMAG},
-    { "EM_H1_REAL", "H1R", EM_H1_REAL},//  194
-    { "EM_H2_REAL", "H2R", EM_H2_REAL},
-    { "EM_H3_REAL", "H3R", EM_H3_REAL},
-    { "EM_H1_IMAG", "H1I", EM_H1_IMAG},//  197
-    { "EM_H2_IMAG", "H2I", EM_H2_IMAG},
-    { "EM_H3_IMAG", "H3I", EM_H3_IMAG},
+    { "EM_E1_REAL", "ERX", EM_E1_REAL},//  188
+    { "EM_E2_REAL", "ERY", EM_E2_REAL},
+    { "EM_E3_REAL", "ERZ", EM_E3_REAL},
+    { "EM_E1_IMAG", "EIX", EM_E1_IMAG},//  191
+    { "EM_E2_IMAG", "EIY", EM_E2_IMAG},
+    { "EM_E3_IMAG", "EIZ", EM_E3_IMAG},
+    { "EM_H1_REAL", "HRX", EM_H1_REAL},//  194
+    { "EM_H2_REAL", "HRY", EM_H2_REAL},
+    { "EM_H3_REAL", "HRZ", EM_H3_REAL},
+    { "EM_H1_IMAG", "HIX", EM_H1_IMAG},//  197
+    { "EM_H2_IMAG", "HIY", EM_H2_IMAG},
+    { "EM_H3_IMAG", "HIZ", EM_H3_IMAG},
 
     { "MESH_POSITION1", "X",  MESH_POSITION1 } ,
     { "MESH_POSITION2", "Y",  MESH_POSITION2 } ,	/* 201 */
