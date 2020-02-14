@@ -18065,9 +18065,9 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
       load_lsi(ls->Length_Scale);
       double Heaviside;
       if (mp->mp2nd->densitymask[0] == 0) {
-        Heaviside = lsi->H;
+        Heaviside = 1-lsi->H;
       } else {
-        Heaviside = 1 - lsi->H;
+        Heaviside = lsi->H;
       }
       for ( a=0; a<dim; a++)
       {
@@ -22176,7 +22176,7 @@ int assemble_ls_stress_jump(double viscosity_scale, double stress_scale, int hea
               n_tau_n += lsi->normal[p] * fv->S[0][p][q] * lsi->normal[q];
             }
           }
-          double source = Heaviside * lsi->delta * lsi->normal[a] * (viscosity_scale * ls_viscosity_jump * n_gv_n + stress_scale * n_tau_n) *
+          double source = lsi->delta * lsi->normal[a] * (viscosity_scale * ls_viscosity_jump * n_gv_n + Heaviside * stress_scale * n_tau_n) *
                           bf[eqn]->phi[i];
           source *= d_area;
           lec->R[peqn][ii] += source;
@@ -22224,7 +22224,7 @@ int assemble_ls_stress_jump(double viscosity_scale, double stress_scale, int hea
                         lsi->normal[q];
                   }
                 }
-                double source = Heaviside * lsi->normal[a] * lsi->delta * viscosity_scale * ls_viscosity_jump * n_gv_n_dv *
+                double source = lsi->normal[a] * lsi->delta * viscosity_scale * ls_viscosity_jump * n_gv_n_dv *
                                 bf[eqn]->phi[i];
                 source *= d_area;
 
@@ -22254,7 +22254,7 @@ int assemble_ls_stress_jump(double viscosity_scale, double stress_scale, int hea
               source += lsi->delta * lsi->d_normal_dF[a][j] *
                         (viscosity_scale * ls_viscosity_jump * n_gv_n + stress_scale * n_tau_n) * bf[eqn]->phi[i];
               source += lsi->delta * lsi->normal[a] * (viscosity_scale * n_gv_n_dF + stress_scale * n_tau_n_dF) * bf[eqn]->phi[i];
-              source *= Heaviside * d_area;
+              source *= d_area;
 
               lec->J[peqn][pvar][ii][j] += source;
             }
@@ -31313,7 +31313,7 @@ fluid_stress( double Pi[DIM][DIM],
                           for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
                             {
                               d_Pi->S[p][q][mode][b][c][j] =
-                                ((double)delta(b,p) * (double)delta(c,q)) * bf[var]->phi[j] * Heaviside
+                                ((double)delta(b,p) * (double)delta(c,q)) * bf[var]->phi[j]
                                 + mu_over_mu_num * d_mun_dS[mode][b][c][j] *
 				( gamma[p][q] - evss_f * gamma_cont[p][q] );
                             }
