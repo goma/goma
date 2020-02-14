@@ -560,4 +560,7 @@ EXTERN int assemble_max_strain
 EXTERN int assemble_cur_strain
 ( void );
 
+int
+assemble_ls_stress_jump( double viscosity_scale, double stress_scale, int heaviside_type);
+
 #endif /* GOMA_MM_FILL_TERMS_H */

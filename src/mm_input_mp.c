@@ -8373,6 +8373,26 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->momentum_source[2] = a2;
       SPF_DBL_VEC( endofstring(es), 3, mat_ptr->momentum_source);
     }
+  else if ( !strcmp(model_name, "VARIABLE_DENSITY_NO_GAS") )
+  {
+    MomentumSourceModel = VARIABLE_DENSITY_NO_GAS;
+    model_read = 1;
+    mat_ptr->MomentumSourceModel = MomentumSourceModel;
+    if ( fscanf(imp, "%lf %lf %lf",
+                &a0, &a1, &a2)
+         != 3 )
+    {
+      sr = sprintf(err_msg,
+                   "Matl %s needs 3 constants for %s %s model.\n",
+                   pd_glob[mn]->MaterialName,
+                   "Navier-Stokes Source", "VARIABLE_DENSITY" );
+      EH(GOMA_ERROR, err_msg);
+    }
+    mat_ptr->momentum_source[0] = a0;
+    mat_ptr->momentum_source[1] = a1;
+    mat_ptr->momentum_source[2] = a2;
+    SPF_DBL_VEC( endofstring(es), 3, mat_ptr->momentum_source);
+  }
   else if ( !strcmp(model_name, "GRAV_VIBRATIONAL") )
     {
       MomentumSourceModel = GRAV_VIBRATIONAL;

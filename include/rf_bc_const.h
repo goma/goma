@@ -980,6 +980,7 @@
 #define LS_ADC_OLD_BC		  47002007
 #define LS_CAP_HYSING_BC             47002010
 #define LS_CAP_DENNER_DIFF_BC             47002011
+#define LS_STRESS_JUMP_BC             47002012
 
 
 /* surface normal dirichlet bc's */

@@ -406,7 +406,7 @@ rd_bc_specs(FILE *ifp,
         case Q_VELO_SLIP_BC:
 	case LS_NO_SLIP_BC:
 	case LS_CAPILLARY_BC:
-	case LS_CAP_CURVE_BC:
+        case LS_CAP_CURVE_BC:
 	case LS_CAP_DIV_N_BC:
 	case LS_CAP_DIV_S_N_BC:
         case H_FREE_BC:
@@ -774,7 +774,6 @@ rd_bc_specs(FILE *ifp,
 	case LS_LATENT_HEAT_BC:
         case LS_ACOUSTIC_SOURCE_BC:
 
-
 	  if ( fscanf(ifp, "%lf %lf", 
 		      &BC_Types[ibc].BC_Data_Float[0],
 		      &BC_Types[ibc].BC_Data_Float[1]) != 2)
@@ -785,6 +784,28 @@ rd_bc_specs(FILE *ifp,
 	    }
           BC_Types[ibc].max_DFlt = 2;
 	  SPF(endofstring(echo_string), " %.4g %.4g",BC_Types[ibc].BC_Data_Float[0], BC_Types[ibc].BC_Data_Float[1]); 
+          break;
+
+        case LS_STRESS_JUMP_BC:
+          if (fscanf(ifp, "%lf %lf", &BC_Types[ibc].BC_Data_Float[0],
+                     &BC_Types[ibc].BC_Data_Float[1]) != 2) {
+            sr = sprintf(err_msg, "%s: Expected 2 flts for %s.", yo, BC_Types[ibc].desc->name1);
+            EH(GOMA_ERROR, err_msg);
+          }
+          BC_Types[ibc].max_DFlt = 2;
+          /* Try reading optional int */
+          if (fscanf(ifp, "%d", &BC_Types[ibc].BC_Data_Int[0]) != 1) {
+            BC_Types[ibc].BC_Data_Int[0] = 0;
+          }
+          if ((BC_Types[ibc].BC_Data_Int[0] != 0) && (BC_Types[ibc].BC_Data_Int[0] != 1) &&
+              (BC_Types[ibc].BC_Data_Int[0] != -1)) {
+            EH(GOMA_ERROR,
+               "Expected LS_STRESS_JUMP float float [-1,0,1] got LS_STRESS_JUMP %g %g %d",
+               BC_Types[ibc].BC_Data_Float[0], BC_Types[ibc].BC_Data_Float[1],
+               BC_Types[ibc].BC_Data_Int[0]);
+          }
+          SPF(endofstring(echo_string), " %.4g %.4g %d",
+              BC_Types[ibc].BC_Data_Float[0], BC_Types[ibc].BC_Data_Float[1], BC_Types[ibc].BC_Data_Int[0]);
           break;
 
         case CAPILLARY_SHEAR_VISC_BC:

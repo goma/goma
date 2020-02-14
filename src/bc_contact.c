@@ -1647,6 +1647,9 @@ assemble_embedded_bc (
         case LS_CONT_VEL_BC:
           assemble_cont_vel_source( xi, exo );
           break;
+        case LS_STRESS_JUMP_BC:
+          assemble_ls_stress_jump(bc->BC_Data_Float[0], bc->BC_Data_Float[1], bc->BC_Data_Int[0]);
+          break;
         case LS_CAPILLARY_BC:
           assemble_csf_tensor();
           break;

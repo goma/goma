@@ -18050,6 +18050,68 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
         }
 
     }
+  else if (mp->MomentumSourceModel == VARIABLE_DENSITY_NO_GAS)
+  {
+    if ( mp->DensityModel == DENSITY_FOAM_PMDI_10 ||
+              mp->DensityModel == DENSITY_FOAM_PBE ||
+              mp->DensityModel == DENSITY_FOAM ||
+              mp->DensityModel == DENSITY_FOAM_TIME ||
+              mp->DensityModel == DENSITY_FOAM_TIME_TEMP ||
+              mp->DensityModel == DENSITY_MOMENT_BASED)
+    {
+      DENSITY_DEPENDENCE_STRUCT d_rho_struct;  /* density dependence */
+      DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
+      double rho = density(d_rho, time);
+      load_lsi(ls->Length_Scale);
+      double Heaviside;
+      if (mp->mp2nd->densitymask[0] == 0) {
+        Heaviside = lsi->H;
+      } else {
+        Heaviside = 1 - lsi->H;
+      }
+      for ( a=0; a<dim; a++)
+      {
+        eqn   = R_MOMENTUM1+a;
+        if (pd->e[pg->imtrx][eqn] & T_SOURCE)
+        {
+          f[a] = Heaviside * rho*mp->momentum_source[a];
+        }
+        if (df != NULL && pd->v[pg->imtrx][MASS_FRACTION])
+        {
+          for (w = 0; w < pd->Num_Species_Eqn; w++)
+          {
+            var = MASS_FRACTION;
+            for (j = 0; j < ei[pg->imtrx]->dof[var]; j++)
+            {
+              df->C[a][w][j] = Heaviside * d_rho->C[w][j]*mp->momentum_source[a];
+            }
+          }
+        }
+        if ( df != NULL && pd->v[pg->imtrx][TEMPERATURE] )
+        {
+          var = TEMPERATURE;
+          for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+          {
+            df->T[a][j] = Heaviside  * d_rho->T[j]*mp->momentum_source[a];
+          }
+        }
+        if ( df != NULL && pd->v[pg->imtrx][FILL] )
+        {
+          var = FILL;
+          phi = bf[var]->phi;
+          for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+          {
+            df->F[a][j] = Heaviside * d_rho->F[j]*mp->momentum_source[a];
+          }
+        }
+      }
+    }
+    else
+    {
+      EH(GOMA_ERROR, "Unknown density model for variable density no gas");
+    }
+
+  }
   else if (mp->MomentumSourceModel == SUSPENSION_PM)
     {
       err = suspension_pm_fluid_momentum_source(f, df);
@@ -21736,6 +21798,9 @@ apply_distributed_sources ( int elem, double width,
                     
               switch (bc->BC_Name )
                 {
+                case LS_STRESS_JUMP_BC:
+                  assemble_ls_stress_jump(bc->BC_Data_Float[0], bc->BC_Data_Float[1], bc->BC_Data_Int[0]);
+                  break;
                 case LS_CAPILLARY_BC:
                   assemble_csf_tensor();
                   break;
@@ -22035,8 +22100,172 @@ assemble_pf_capillary (double *pf_surf_tens )
 return (1);
 
 }
-		      
 
+int assemble_ls_stress_jump(double viscosity_scale, double stress_scale, int heaviside_type) {
+  if (!pd->e[pg->imtrx][R_MOMENTUM1]) {
+    return (0);
+  }
+
+  double wt = fv->wt;
+  double h3 = fv->h3;
+  double det_J = bf[R_MOMENTUM1]->detJ;
+  if (ls->on_sharp_surf) /* sharp interface */
+  {
+    det_J = fv->sdet;
+  }
+  double d_area = wt * det_J * h3;
+
+  int dim = pd->Num_Dim;
+  int wim = dim;
+  if (pd->CoordinateSystem == SWIRLING || pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
+    wim = wim + 1;
+
+  // hard code jump for test
+  double pos_mup = ve[0]->gn->pos_ls_mup;
+  double neg_mup = ve[0]->gn->mu0;
+  double ls_viscosity_jump = fabs(mp->viscosity - mp->mp2nd->viscosity);
+  double Heaviside = 1;
+
+  switch (heaviside_type) {
+  case -1:
+    Heaviside = 1-lsi->H;
+    break;
+  case 1:
+    Heaviside = lsi->H;
+    break;
+  default:
+    Heaviside = 1;
+    break;
+  }
+
+  load_lsi(ls->Length_Scale);
+  switch (ls->ghost_stress) {
+  case LS_POSITIVE:
+    ls_viscosity_jump += neg_mup;
+    break;
+  case LS_NEGATIVE:
+    ls_viscosity_jump += pos_mup;
+    break;
+  case LS_OFF:
+  default:
+    ls_viscosity_jump += fabs(pos_mup - neg_mup);
+    break;
+  }
+  /*
+   * Residuals ____________________________________________________________________________
+   */
+  if (af->Assemble_Residual) {
+
+    for (int a = 0; a < wim; a++) {
+      int eqn = R_MOMENTUM1 + a;
+      int peqn = upd->ep[pg->imtrx][eqn];
+      for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+
+        int ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+
+        if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
+
+          int ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
+
+          double n_gv_n = 0;
+          double n_tau_n = 0;
+          for (int p = 0; p < VIM; p++) {
+            for (int q = 0; q < VIM; q++) {
+              n_gv_n += lsi->normal[p] * (fv->grad_v[p][q] + fv->grad_v[q][p]) * lsi->normal[q];
+              n_tau_n += lsi->normal[p] * fv->S[0][p][q] * lsi->normal[q];
+            }
+          }
+          double source = Heaviside * lsi->delta * lsi->normal[a] * (viscosity_scale * ls_viscosity_jump * n_gv_n + stress_scale * n_tau_n) *
+                          bf[eqn]->phi[i];
+          source *= d_area;
+          lec->R[peqn][ii] += source;
+        }
+      }
+    }
+  }
+
+  /*
+   * Yacobian terms...
+   */
+
+  if (af->Assemble_Jacobian) {
+    for (int a = 0; a < wim; a++) {
+      int eqn = R_MOMENTUM1 + a;
+      int peqn = upd->ep[pg->imtrx][eqn];
+
+      for (int i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+
+        int ledof = ei[pg->imtrx]->lvdof_to_ledof[eqn][i];
+
+        if (ei[pg->imtrx]->active_interp_ledof[ledof]) {
+
+          int ii = ei[pg->imtrx]->lvdof_to_row_lvdof[eqn][i];
+
+          double n_tau_n = 0;
+          double n_gv_n = 0;
+          for (int p = 0; p < VIM; p++) {
+            for (int q = 0; q < VIM; q++) {
+              n_gv_n += lsi->normal[q] * (fv->grad_v[p][q] + fv->grad_v[q][p]) * lsi->normal[p];
+              n_tau_n += lsi->normal[q] * fv->S[0][q][p] * lsi->normal[p];
+            }
+          }
+          for (int b = 0; b < wim; b++) {
+            int var = R_MOMENTUM1 + b;
+            if (pd->v[pg->imtrx][var]) {
+              int pvar = upd->vp[pg->imtrx][var];
+              for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+                double n_gv_n_dv = 0;
+                for (int p = 0; p < VIM; p++) {
+                  for (int q = 0; q < VIM; q++) {
+                    n_gv_n_dv +=
+                        lsi->normal[p] *
+                        (bf[var]->grad_phi_e[j][b][p][q] + bf[var]->grad_phi_e[j][b][q][p]) *
+                        lsi->normal[q];
+                  }
+                }
+                double source = Heaviside * lsi->normal[a] * lsi->delta * viscosity_scale * ls_viscosity_jump * n_gv_n_dv *
+                                bf[eqn]->phi[i];
+                source *= d_area;
+
+                lec->J[peqn][pvar][ii][j] += source;
+              }
+            }
+          }
+
+          /* J_m_F
+           */
+          int var = LS;
+          if (pd->v[pg->imtrx][var]) {
+            int pvar = upd->vp[pg->imtrx][var];
+
+            for (int j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+              double n_tau_n_dF = 0;
+              double n_gv_n_dF = 0;
+              for (int p = 0; p < VIM; p++) {
+                for (int q = 0; q < VIM; q++) {
+                  n_tau_n_dF += lsi->d_normal_dF[q][j] * fv->S[0][q][p] * lsi->normal[p];
+                  n_tau_n_dF += lsi->normal[q] * fv->S[0][q][p] * lsi->d_normal_dF[p][j];
+                  n_gv_n_dF += lsi->normal[q] * fv->grad_v[q][p] * lsi->d_normal_dF[p][j];
+                }
+              }
+              double source = lsi->d_delta_dF[j] * lsi->normal[a] *
+                              (viscosity_scale * ls_viscosity_jump * n_gv_n + stress_scale * n_tau_n) * bf[eqn]->phi[i];
+              source += lsi->delta * lsi->d_normal_dF[a][j] *
+                        (viscosity_scale * ls_viscosity_jump * n_gv_n + stress_scale * n_tau_n) * bf[eqn]->phi[i];
+              source += lsi->delta * lsi->normal[a] * (viscosity_scale * n_gv_n_dF + stress_scale * n_tau_n_dF) * bf[eqn]->phi[i];
+              source *= Heaviside * d_area;
+
+              lec->J[peqn][pvar][ii][j] += source;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return (1);
+}
 
 int
 assemble_csf_tensor ( void )

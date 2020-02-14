@@ -3663,7 +3663,6 @@ ls_modulate_viscosity ( double *mu1,
   return ( 1 );
   
 }
-      
 
 void
 copy_pF_to_F ( int phase )

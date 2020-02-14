@@ -82,6 +82,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define EM_DISS         21   /* heat generation by EM waves */
 #define HS_FOAM_PBE 22
 #define HS_FOAM_PMDI_10 23
+#define  VARIABLE_DENSITY_NO_GAS 24    /* Drying of Polymeric Film */
 
 /* MMH */
 /* #define  SUSPENSION_PM xxx Defiend below. */
