@@ -128,8 +128,8 @@ assess_weights(Exo_DB *x,
   int l;
 
   int m;
-  int map_e_index[MAX_EQNVARS];
-  int map_v_index[MAX_EQNVARS];
+  int map_e_index[MAX_PROB_VAR];
+  int map_v_index[MAX_PROB_VAR];
 
   int n;
   int nbev;
@@ -208,24 +208,24 @@ assess_weights(Exo_DB *x,
    *    var-node.
    */
 
-  nn_eids = (int *) smalloc(MAX_EQNVARS * SZ_INT);
-  nn_ewts = (int *) smalloc(MAX_EQNVARS * SZ_INT);
+  nn_eids = (int *) smalloc(MAX_PROB_VAR * SZ_INT);
+  nn_ewts = (int *) smalloc(MAX_PROB_VAR * SZ_INT);
 
-  nn_vids = (int *) smalloc(MAX_EQNVARS * SZ_INT);
-  nn_vwts = (int *) smalloc(MAX_EQNVARS * SZ_INT);
+  nn_vids = (int *) smalloc(MAX_PROB_VAR * SZ_INT);
+  nn_vwts = (int *) smalloc(MAX_PROB_VAR * SZ_INT);
 
-  nn_or    = (int **) smalloc(MAX_EQNVARS * sizeof(int *));
-  nn_or[0] = (int *) smalloc(MAX_EQNVARS * MAX_EQNVARS * sizeof(int));
-  for ( i=1; i<MAX_EQNVARS; i++)
+  nn_or    = (int **) smalloc(MAX_PROB_VAR * sizeof(int *));
+  nn_or[0] = (int *) smalloc(MAX_PROB_VAR * MAX_PROB_VAR * sizeof(int));
+  for ( i=1; i<MAX_PROB_VAR; i++)
     {
-      nn_or[i] = nn_or[i-1] + MAX_EQNVARS;
+      nn_or[i] = nn_or[i-1] + MAX_PROB_VAR;
     }
 
-  nn_add    = (int **) smalloc(MAX_EQNVARS * sizeof(int *));
-  nn_add[0] = (int *) smalloc(MAX_EQNVARS * MAX_EQNVARS * sizeof(int));
-  for ( i=1; i<MAX_EQNVARS; i++)
+  nn_add    = (int **) smalloc(MAX_PROB_VAR * sizeof(int *));
+  nn_add[0] = (int *) smalloc(MAX_PROB_VAR * MAX_PROB_VAR * sizeof(int));
+  for ( i=1; i<MAX_PROB_VAR; i++)
     {
-      nn_add[i] = nn_add[i-1] + MAX_EQNVARS;
+      nn_add[i] = nn_add[i-1] + MAX_PROB_VAR;
     }
 
 
@@ -298,7 +298,7 @@ assess_weights(Exo_DB *x,
        * every var_node of the interaction.
        */
 
-      for ( i=0; i<MAX_EQNVARS; i++)
+      for ( i=0; i<MAX_PROB_VAR; i++)
 	{
 	  nn_eids[i] = UNDEFINED_EQNVARID;
 	  nn_ewts[i] = 0;
@@ -444,7 +444,7 @@ assess_weights(Exo_DB *x,
 	   * At the var_node, find eqnvar_IDs and weights.
 	   */
 	  
-	  for ( i=0; i<MAX_EQNVARS; i++)
+	  for ( i=0; i<MAX_PROB_VAR; i++)
 	    {
 	      nn_vids[i] = UNDEFINED_EQNVARID;
 	      nn_vwts[i] = 0;
@@ -476,9 +476,9 @@ assess_weights(Exo_DB *x,
 	   * Initially, empty the matrix.
 	   */
 
-	  for ( row=0; row<MAX_EQNVARS; row++)
+	  for ( row=0; row<MAX_PROB_VAR; row++)
 	    {
-	      for ( col=0; col<MAX_EQNVARS; col++)
+	      for ( col=0; col<MAX_PROB_VAR; col++)
 		{
 		  nn_or[row][col]  = 0;
 		  nn_add[row][col] = 0;

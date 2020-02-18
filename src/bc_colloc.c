@@ -772,7 +772,7 @@ f_fillet (const int ielem_dim,
   if(af->Assemble_LSA_Mass_Matrix)
     return;
 
-  if(num_const <= 5)
+  if(num_const < 5)
        EH(-1,"Need at least 5 parameters for 2D fillet geometry bc!\n");
 
   pt[0]=p[0];
