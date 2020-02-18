@@ -584,10 +584,16 @@ target_compile_definitions(goma_util PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_executable(goma_exe src/main.c)
 set_target_properties(goma_exe PROPERTIES OUTPUT_NAME "goma")
-target_include_directories(goma_exe PRIVATE include ${GOMA_TPL_INCLUDES})
-target_link_libraries(goma_exe ${GOMA_TPL_LIBRARIES} goma goma_user goma_util gds)
+target_include_directories(goma_exe PUBLIC include PRIVATE ${GOMA_TPL_INCLUDES})
+target_link_libraries(goma_exe PUBLIC ${GOMA_TPL_LIBRARIES} goma goma_user goma_util gds)
 target_compile_definitions(goma_exe PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
+install(TARGETS goma_exe #gds goma_util goma goma_user
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include/goma
+)
 
 option(ENABLE_TESTING "ENABLE_TESTING" OFF)
 if(ENABLE_TESTING)
