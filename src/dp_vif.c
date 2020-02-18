@@ -2257,6 +2257,7 @@ noahs_ark()
       ddd_add_member(n, &vn_glob[i]->eps, 1, MPI_DOUBLE);
       ddd_add_member(n, &vn_glob[i]->evssModel, 1, MPI_INT);
       ddd_add_member(n, &vn_glob[i]->modes, 1, MPI_INT);
+      ddd_add_member(n, &vn_glob[i]->shiftModel, 1, MPI_INT);
       ddd_add_member(n, &vn_glob[i]->dg_J_model, 1, MPI_INT);
 
       /*
@@ -2271,6 +2272,7 @@ noahs_ark()
        */
 
       ddd_add_member(n, &vn_glob[i]->len_dg_J_model_wt, 1, MPI_INT);
+      ddd_add_member(n, &vn_glob[i]->len_shift, 1, MPI_INT);
 
       for ( mode=0; mode<MAX_MODES; mode++)
 	{
@@ -3248,6 +3250,8 @@ ark_landing()
 
       dalloc( v->len_dg_J_model_wt,
 	      v->    dg_J_model_wt);
+      dalloc( v->len_shift,
+	      v->shift);
     }
 
   dalloc( len_u_post_proc, u_post_proc );
@@ -3660,6 +3664,9 @@ noahs_dove()
 
     crdv( v->len_dg_J_model_wt,
 	  v->    dg_J_model_wt);
+
+    crdv( v->len_shift,
+	  v->shift);
   }
 
 #ifdef DEBUG
