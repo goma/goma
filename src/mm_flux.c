@@ -1451,11 +1451,16 @@ evaluate_flux(
 			    {
 			      for ( b=0; b<WIM; b++)
 				{
-                                  local_q += (fv->snormal[a]*
+/*                                  local_q += (fv->snormal[a]*
                         		(vs[a][b]+ves[a][b] )*fv->snormal[b]);
 
                                   local_qconv += ( -rho*fv->snormal[a]*
                                 (fv->v[a]-x_dot[a])*fv->v[b]*fv->snormal[b]);
+*/
+                                  local_q += (fv->snormal[a]*
+                        		(vs[a][b])*fv->snormal[b]);
+                                  local_qconv += (fv->snormal[a]*
+                        		(ves[a][b] )*fv->snormal[b]);
 				}
 			    }
                                   local_flux += weight * det * local_q;
