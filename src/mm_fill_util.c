@@ -5518,13 +5518,13 @@ void get_supg_tau(SUPG_terms *supg_terms,
     {
       for (int j = 0; j < MDE; j++)
       {
-        if (pd->e[VELOCITY1+i])
+        if (pd->e[pg->imtrx][VELOCITY1+i])
         {
           eta_dV[i][j] = 0.5 * 0.5 * hk * fv->v[i]*bf[VELOCITY1+i]->phi[j] / (vnorm*D);
 
         }
 
-        if (pd->e[MESH_DISPLACEMENT1+i])
+        if (pd->e[pg->imtrx][MESH_DISPLACEMENT1+i])
         {
           eta_dX[i][j] = 0.5 * vnorm * hk_dX[i][j] / D;
 
