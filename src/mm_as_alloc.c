@@ -1820,6 +1820,9 @@ init_Viscoelastic_Nonmodal(struct Viscoelastic_Nonmodal *v)
   v->dg_J_model           = 0;
   v->dg_J_model_wt        = NULL;
   v->len_dg_J_model_wt    = 0;
+  v->shiftModel           = 0;
+  v->shift                = NULL;
+  v->len_shift            = 0;
   return;
 }
 
