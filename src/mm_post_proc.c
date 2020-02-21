@@ -565,7 +565,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   struct Species_Conservation_Terms s_terms; 
 
   /* DG VE stuff */
-  int v_s[MAX_MODES][DIM][DIM], ves[DIM][DIM];
+  int v_s[MAX_MODES][DIM][DIM];
+  dbl ves[DIM][DIM];
 
   /* Variables for dielectrophoretic force calculations. */
   dbl coeff_a, coeff_b, coeff_c, coeff_d, CM_fact, dielectrophoretic_force_coeff;
