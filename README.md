@@ -25,7 +25,7 @@ Goma requires many third party libraries (TPLs, listed in [scripts/README.md](sc
 
 #### Build script requirements
 
-The build-goma-dep-trilinos-12.sh script relies on several packages readily available in many repositories.
+The build-goma-dependencies.sh script relies on several packages readily available in many repositories.
 
 For Ubuntu this will install the necessary packages to run the script:
 
@@ -43,7 +43,7 @@ To build third party libraries (TPLs):
 
 `cd goma/scripts`
 
-`./build-goma-dep-trilinos-12.sh [-j NUM_PROCS] GOMA_TPL_INSTALL_DIRECTORY`
+`./build-goma-dependencies.sh [-j NUM_PROCS] GOMA_TPL_INSTALL_DIRECTORY`
 
 Where `-j NUM_PROCS` is optional to run the build with multiple processors and
 `GOMA_TPL_INSTALL_DIRECTORY` is where you would like the third party libraries
@@ -60,6 +60,17 @@ openmpi paths/versions are correct.
 Then to build goma run:
 
 `make`
+
+## Environment Variables
+OpenMPI should be added to the path and library path:
+
+    export LD_LIBRARY_PATH="/[path to gomalibs]/openmpi-4.0.2/lib:$LD_LIBRARY_PATH"
+    export PATH="/[path to gomalibs]/openmpi-4.0.2/bin:$PATH"
+
+SEACAS tools from Trilinos (e.g. aprepro and blot) should be added to
+your path
+
+    export PATH="/[path to gomalibs]/trilinos-12.18.1/bin:$PATH"  
 
 ### Run the tutorial
 
