@@ -233,6 +233,9 @@ CMAKE_MD5="9e6fa59704d3a52812e279996b5b01c7"
 SUITESPARSE_VERSION="4.5.6"
 SUITESPARSE_MD5="eeb87a842a9b3b0425cf08d97fb3c5ec"
 
+MATIO_VERSION="1.5.17"
+MATIO_MD5="170075cce5c144e19f610af9b64cb63b"
+
 ARCHIVE_NAMES=("arpack96.tar.gz" \
 "patch.tar.gz" \
 "hdf5-${HDF5_VERSION}.tar.gz" \
@@ -244,7 +247,7 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 "Trilinos-trilinos-release-$TRILINOS_VERSION_DASH.tar.gz" \
 "MUMPS_$MUMPS_VERSION.tar.gz" \
 "SuiteSparse-$SUITESPARSE_VERSION.tar.gz" \
-"matio-1.5.10.tar.gz")
+"matio-$MATIO_VERSION.tar.gz")
 
 #y12m archive is skipped because it stores the number of downloads in the header
 
@@ -260,7 +263,7 @@ ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 $TRILINOS_MD5 \
 $MUMPS_MD5 \
 "$SUITESPARSE_MD5" \
-"d3b6e9d24a04c56036ef57e8010c80f1")
+"$MATIO_MD5")
 
 ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
@@ -273,7 +276,7 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "https://github.com/trilinos/Trilinos/archive/trilinos-release-$TRILINOS_VERSION_DASH.tar.gz" \
 "http://mumps.enseeiht.fr/MUMPS_$MUMPS_VERSION.tar.gz" \
 "http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-$SUITESPARSE_VERSION.tar.gz" \
-"http://superb-dca2.dl.sourceforge.net/project/matio/matio/1.5.10/matio-1.5.10.tar.gz")
+"https://github.com/tbeu/matio/releases/download/v$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz")
 
 # You can't call the ARPACK patch ARPACK or it will think it is already extracted
 # When in reality it isn't
@@ -288,7 +291,7 @@ ARCHIVE_DIR_NAMES=("ARPACK" \
 "Trilinos-trilinos-release-$TRILINOS_VERSION_DASH" \
 "MUMPS_$MUMPS_VERSION" \
 "SuiteSparse" \
-"matio-1.5.10")
+"matio-$MATIO_VERSION")
 
 ARCHIVE_HOMEPAGES=("http://www.caam.rice.edu/software/ARPACK/" \
 "https://www.hdfgroup.org/" \
@@ -852,19 +855,19 @@ fi
 cd $GOMA_LIB
 
 #matio
-if [ -e matio-1.5.10/lib/libmatio.a ]
+if [ -e matio-$MATIO_VERSION/lib/libmatio.a ]
 then
     echo "matio already built"
 else
-    if ! [ -e matio-1.5.10/.goma-extracted ]
+    if ! [ -e matio-$MATIO_VERSION/.goma-extracted ]
     then
-	mv matio-1.5.10 tmpdir
-	mkdir matio-1.5.10
-	mv tmpdir matio-1.5.10/src
-	touch matio-1.5.10/.goma-extracted
+	mv matio-$MATIO_VERSION tmpdir
+	mkdir matio-$MATIO_VERSION
+	mv tmpdir matio-$MATIO_VERSION/src
+	touch matio-$MATIO_VERSION/.goma-extracted
     fi
-    cd matio-1.5.10/src
-    CC=${MPI_C_COMPILER} LD=${MPI_CXX_COMPILER} AR=${ARCHIVER} LIBS="-ldl" ./configure --with-hdf5=${GOMA_LIB}/hdf5-${HDF5_VERSION} --prefix=${GOMA_LIB}/matio-1.5.10 --enable-shared=off
+    cd matio-$MATIO_VERSION/src
+    CC=${MPI_C_COMPILER} LD=${MPI_CXX_COMPILER} AR=${ARCHIVER} LIBS="-ldl" ./configure --with-hdf5=${GOMA_LIB}/hdf5-${HDF5_VERSION} --prefix=${GOMA_LIB}/matio-$MATIO_VERSION --enable-shared=off
     make -j$MAKE_JOBS
     make install
 fi
@@ -1314,8 +1317,8 @@ MD TPL_ENABLE_Boost:BOOL=OFF \
       -D Netcdf_LIBRARY_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/lib" \
       -D TPL_ENABLE_Netcdf:BOOL=ON \
       -D TPL_Netcdf_INCLUDE_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/include" \
-      -D Matio_LIBRARY_DIRS:PATH=$GOMA_LIB/matio-1.5.10/lib \
-      -D Matio_INCLUDE_DIRS:PATH=$GOMA_LIB/matio-1.5.10/include \
+      -D Matio_LIBRARY_DIRS:PATH=$GOMA_LIB/matio-$MATIO_VERSION/lib \
+      -D Matio_INCLUDE_DIRS:PATH=$GOMA_LIB/matio-$MATIO_VERSION/include \
 -D TPL_ENABLE_MPI:BOOL=ON \
 -D MPI_BASE_DIR:PATH=$MPI_BASE_DIR \
 -D EpetraExt_BUILD_GRAPH_REORDERINGS:BOOL=ON \
