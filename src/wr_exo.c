@@ -1952,7 +1952,7 @@ add_info_stamp(Exo_DB *exo)
       strcpy(buf, ".");
     }
 
-  strncpy(I[n+3], buf, MAX_LINE_LENGTH);
+  strncpy(I[n+3], buf, MAX_LINE_LENGTH+1);
 
   /*
    * -6 -- the name of the user

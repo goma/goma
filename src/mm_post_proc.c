@@ -1303,6 +1303,35 @@ static int calc_standard_fields(double **post_proc_vect,
     calc_pspg( pspg, NULL,
                time, theta, delta_t,
                pg_data);
+    double G[DIM][DIM];
+    get_metric_tensor(bf[pd->ShapeVar]->B, pd->Num_Dim, ei[pg->imtrx]->ielem_type, G);
+
+    double tau_time = 0;
+    // time term
+    if (pd->TimeIntegration != STEADY) {
+      tau_time += 4 * (rho*rho) / (delta_t * delta_t);
+    }
+
+    // advection
+    double tau_adv = 0;
+    for (int i = 0; i < dim; i++) {
+      for (int j = 0; j < dim; j++) {
+        tau_adv += rho*rho*fv->v[i] * G[i][j] * fv->v[j];
+      }
+    }
+
+    // diffusion
+    double tau_diff = 0;
+    double coeff = 12*(mu*mu);
+    for (int i = 0; i < dim; i++) {
+      for (int j = 0; j < dim; j++) {
+        tau_diff += coeff * G[i][j] * G[i][j];
+      }
+    }
+
+
+//   tau_pspg1 = 1 / sqrt(tau_time + tau_adv + tau_diff);
+//   tau_pspg = PS_scaling * tau_pspg1;
 
 //    double rho = pg_data->rho_avg;
 //    rho = density(NULL, time);
@@ -1353,11 +1382,11 @@ static int calc_standard_fields(double **post_proc_vect,
 ////    }
 ////    // Average value of h**2 in the element
 ////    hh_siz = hh_siz/ ((double )dim);
-//    local_post[PSPG_PP] = 4.0/(delta_t*delta_t);
-//    local_post[PSPG_PP+1] = vv_speed/hh_siz;
-//    local_post[PSPG_PP+2] = (9.0*mu/rho)/(hh_siz*hh_siz);
+    local_post[PSPG_PP] = tau_time;
+    local_post[PSPG_PP+1] = tau_adv;
+    local_post[PSPG_PP+2] = tau_diff;
     for (int i = 0; i < VIM; i++) {
-      local_post[PSPG_PP+i] = pspg[i];
+//      local_post[PSPG_PP+i] = pspg[i];
       local_lumped[PSPG_PP+i] = 1.;
     }
   }

@@ -246,4 +246,5 @@ EXTERN dbl yzbeta_model(int model, dbl scale, dbl beta, int dim,
                          int interp_eqn, dbl deriv[MDE]);
 
 
+void get_metric_tensor(const double B[DIM][DIM], int dim, int element_type, double G[DIM][DIM]);
 #endif /* GOMA_MM_FILL_UTIL_H */

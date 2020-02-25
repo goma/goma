@@ -5177,18 +5177,57 @@ double calc_tensor_invariant(dbl T[DIM][DIM],       // Original tensor
 
 } // End of calc_tensor_invariants()
 
+void get_metric_tensor(const double B[DIM][DIM], int dim, int element_type, double G[DIM][DIM])
+{
+  double adjustment[DIM][DIM] = {{0}};
+  const double invroot3 = 0.577350269189626;
+  const double tetscale = 0.629960524947437; // 0.5 * cubroot(2)
+
+
+  switch (element_type) {
+  case LINEAR_TRI:
+    adjustment[0][0] = (invroot3) * 2;
+    adjustment[0][1] = (invroot3) * -1;
+    adjustment[1][0] = (invroot3) * -1;
+    adjustment[1][1] = (invroot3) * 2;
+  break;
+  case LINEAR_TET:
+    adjustment[0][0] = tetscale * 2;
+    adjustment[0][1] = tetscale * 1;
+    adjustment[0][2] = tetscale * 1;
+    adjustment[1][0] = tetscale * 1;
+    adjustment[1][1] = tetscale * 2;
+    adjustment[1][2] = tetscale * 1;
+    adjustment[2][0] = tetscale * 1;
+    adjustment[2][1] = tetscale * 1;
+    adjustment[2][2] = tetscale * 2;
+  break;
+  default:
+    adjustment[0][0] = 1.0;
+    adjustment[1][1] = 1.0;
+    adjustment[2][2] = 1.0;
+    break;
+  }
+
+  // G = B * adjustment * B^T where B = J^-1
+
+  for (int i = 0; i < dim; i++) {
+    for (int j = 0; j < dim; j++) {
+      G[i][j] = 0;
+      for (int k = 0; k < dim; k++) {
+        for (int m = 0; m < dim; m++) {
+          G[i][j] += B[i][k] * adjustment[k][m] * B[j][m];
+        }
+      }
+    }
+  }
+}
+
 void supg_tau_shakib(SUPG_terms *supg_terms, int dim, double dt,
                      int interp_eqn) {
   double G[DIM][DIM];
 
-  for (int i = 0; i < DIM; i++) {
-    for (int j = 0; j < DIM; j++) {
-      G[i][j] = 0;
-      for (int k = 0; k < DIM; k++) {
-        G[i][j] += bf[interp_eqn]->B[k][i] * bf[interp_eqn]->B[k][j];
-      }
-    }
-  }
+  get_metric_tensor(bf[interp_eqn]->B, dim, ei[pg->imtrx]->ielem_type, G);
 
   double v_d_gv = 0;
   for (int i = 0; i < dim; i++) {

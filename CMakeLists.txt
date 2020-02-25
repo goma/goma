@@ -317,8 +317,7 @@ set(GOMA_INCLUDES
         include/brkfix/sam_perea.h
         include/brkfix/utils.h
         include/brkfix/wr_coords.h
-        include/brkfix/wr_graph_file.h
-        include/gds/gds_vector.h)
+        include/brkfix/wr_graph_file.h)
 
 set(GOMA_SOURCES
         src/ac_conti.c
