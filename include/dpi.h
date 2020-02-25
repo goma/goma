@@ -60,6 +60,8 @@
 #ifndef GOMA_DPI_H
 #define GOMA_DPI_H
 
+#include "rf_fem_const.h" // MAX_PROB_VAR
+
 /*
  * netCDF Dimensions.
  */
@@ -160,11 +162,8 @@
  * and concentration multiplicity are not limited by these values.
  */
 
-#ifndef MAX_EQNVARS
-#define MAX_EQNVARS				16
-#endif
 #define UNDEFINED_EQNVARID			(-55555)
-#define LEN_NODE_DESCRIPTION			(4*MAX_EQNVARS+1)
+#define LEN_NODE_DESCRIPTION			(4*MAX_PROB_VAR+1)
 
 struct Distributed_Processing_Information
 {

@@ -589,6 +589,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   /* DG VE stuff */
   int v_s[MAX_MODES][DIM][DIM];
+  dbl ves[DIM][DIM];
 
   /* Variables for dielectrophoretic force calculations. */
   dbl coeff_a, coeff_b, coeff_c, coeff_d, CM_fact, dielectrophoretic_force_coeff;
@@ -670,20 +671,83 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	    gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
 	  }
       }
-    for ( a=0; a<dim; a++)
+    for ( a=0; a<VIM; a++)
       {
 	speed += fv->v[a] * fv->v[a];
-	for ( b=0; b<dim; b++)
+	for ( b=0; b<VIM; b++)
 	  {
 	    /* vv:gamma */
 	    stream_grad += fv->v[a] * gamma[a][b] * fv->v[b];
 	  }
       }
+      stream_grad *= mp->viscosity;
+/*
+ **  viscoelastic stress tensor
+ **  assume only EVSS_F formulation for now
+ **/
+   if ( pd->v[POLYMER_STRESS11] )
+      {
+       dbl log_c[DIM][DIM];
+       dbl exp_s[DIM][DIM];
+       dbl R1[DIM][DIM];
+       dbl eig_values[DIM];
+       dbl mup = 0.;
+       dbl lambda = 0.;
+       int ve_mode, p, r;
+       memset( ves, 0, sizeof(dbl)*DIM*DIM);
+       if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
+         {
+          for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
+             {
+              for (p=0; p<VIM; p++)
+                 {
+                  for (r=0; r<VIM; r++)
+                     {
+                      log_c[p][r] = fv->S[ve_mode][p][r];
+                     }
+                 }
+              compute_exp_s(log_c, exp_s, eig_values, R1);
+              mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
+              if(ve[ve_mode]->time_constModel == CONSTANT)
+                {
+                 lambda = ve[ve_mode]->time_const;
+                }
+              for (a=0; a<VIM; a++)
+                 {
+                  for (b=0; b<VIM; b++)
+                     {
+                      ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
+                     }
+                 }
+             }
+         }
+       else
+         {
+          for ( a=0; a<VIM; a++)
+             {
+              for ( b=0; b<VIM; b++)
+                 {
+                  for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                     {
+                      ves[a][b] += fv->S[ve_mode][a][b];
+                     }
+                 }
+             }
+         }
+      for ( a=0; a<VIM; a++)
+        {
+	for ( b=0; b<VIM; b++)
+	  {
+	    stream_grad += fv->v[a] * ves[a][b] * fv->v[b];
+	  }
+        }
+      } // if pd->v[POLYMER_STRESS11]
     if (speed > 0.0) {
-      Ttt = mp->viscosity* stream_grad / sqrt(speed)/sqrt(speed);
+      Ttt =  stream_grad / speed;
     } else {
       Ttt = 0.0;
     }
+
     local_post[STREAM_NORMAL_STRESS] = Ttt;
     local_lumped[STREAM_NORMAL_STRESS] = 1.;
   }
@@ -708,8 +772,70 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	    stream_grad += fv->v[a] * gamma[a][b] * nv[b];
 	  }
       }
+    stream_grad *= mp->viscosity;
+/*
+ **  viscoelastic stress tensor
+ **  assume only EVSS_F formulation for now
+ **/
+   if ( pd->v[POLYMER_STRESS11] )
+      {
+       dbl log_c[DIM][DIM];
+       dbl exp_s[DIM][DIM];
+       dbl R1[DIM][DIM];
+       dbl eig_values[DIM];
+       dbl mup = 0.;
+       dbl lambda = 0.;
+       int ve_mode, p, r;
+       memset( ves, 0, sizeof(dbl)*DIM*DIM);
+       if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
+         {
+          for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
+             {
+              for (p=0; p<VIM; p++)
+                 {
+                  for (r=0; r<VIM; r++)
+                     {
+                      log_c[p][r] = fv->S[ve_mode][p][r];
+                     }
+                 }
+              compute_exp_s(log_c, exp_s, eig_values, R1);
+              mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
+              if(ve[ve_mode]->time_constModel == CONSTANT)
+                {
+                 lambda = ve[ve_mode]->time_const;
+                }
+              for (a=0; a<VIM; a++)
+                 {
+                  for (b=0; b<VIM; b++)
+                     {
+                      ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
+                     }
+                 }
+             }
+         }
+       else
+         {
+          for ( a=0; a<VIM; a++)
+             {
+              for ( b=0; b<VIM; b++)
+                 {
+                  for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                     {
+                      ves[a][b] += fv->S[ve_mode][a][b];
+                     }
+                 }
+             }
+         }
+      for ( a=0; a<VIM; a++)
+        {
+	for ( b=0; b<VIM; b++)
+	  {
+	    stream_grad += fv->v[a] * ves[a][b] * nv[b];
+	  }
+        }
+      } // if pd->v[POLYMER_STRESS11]
     if (speed > 0.0) {
-      Tnt = mp->viscosity* stream_grad / sqrt(speed)/sqrt(speed);
+      Tnt = stream_grad / speed;
     } else {
       Tnt = 0.0;
     }
@@ -737,8 +863,72 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	    stream_grad += (2.*fv->v[a]*fv->v[b]-delta(a,b)*speed)*gamma[a][b];
 	  }
       }
+    stream_grad *= mp->viscosity;
+/*
+ **  viscoelastic stress tensor
+ **  assume only EVSS_F formulation for now
+ **/
+   if ( pd->v[POLYMER_STRESS11] )
+      {
+       dbl log_c[DIM][DIM];
+       dbl exp_s[DIM][DIM];
+       dbl R1[DIM][DIM];
+       dbl eig_values[DIM];
+       dbl mup = 0.;
+       dbl lambda = 0.;
+       int ve_mode, p, r;
+       memset( ves, 0, sizeof(dbl)*DIM*DIM);
+       if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
+         {
+          for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
+             {
+              for (p=0; p<VIM; p++)
+                 {
+                  for (r=0; r<VIM; r++)
+                     {
+                      log_c[p][r] = fv->S[ve_mode][p][r];
+                     }
+                 }
+              compute_exp_s(log_c, exp_s, eig_values, R1);
+              mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
+              if(ve[ve_mode]->time_constModel == CONSTANT)
+                {
+                 lambda = ve[ve_mode]->time_const;
+                }
+              for (a=0; a<VIM; a++)
+                 {
+                  for (b=0; b<VIM; b++)
+                     {
+                      ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
+                     }
+                 }
+             }
+         }
+       else
+         {
+          for ( a=0; a<VIM; a++)
+             {
+              for ( b=0; b<VIM; b++)
+                 {
+                  for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                     {
+                      ves[a][b] += fv->S[ve_mode][a][b];
+                     }
+                 }
+             }
+         }
+      for ( a=0; a<VIM; a++)
+        {
+	for ( b=0; b<VIM; b++)
+	  {
+	    stream_grad += (2.*fv->v[a]*fv->v[b]-delta(a,b)*speed)*ves[a][b];
+	  }
+        }
+      } // if pd->v[POLYMER_STRESS11]
+/* Need to determine curvature to multiply here...*/
+
     if (speed > 0.0) {
-      Ttt = mp->viscosity* stream_grad / sqrt(speed)/sqrt(speed);
+      Ttt = stream_grad / speed;
     } else {
       Ttt = 0.0;
     }
@@ -9925,14 +10115,27 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
           EH(-1, "Post-processing vectors cannot be exported yet!");
         }
       CONDUCTION_VECTORS = index_post;
-      for (i=0; i<Num_Dim; i++)
-      {
-        sprintf(nm, "TCOND%d", i);
-        sprintf(ds, "Conduction in %d direction", i);
+      /* X Component */
+	sprintf(nm, "TCONDX");
+	sprintf(ds, "Conduction in X direction");
 	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
 	index++;
 	index_post++;
-      }
+      /* Y Component */
+	sprintf(nm, "TCONDY");
+	sprintf(ds, "Conduction in Y direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+      /* Z Component */
+      if ( Num_Dim > 2 )
+	{
+	sprintf(nm, "TCONDZ");
+	sprintf(ds, "Conduction in Z direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+        }
     }
 
   if (POYNTING_VECTORS != -1 && 

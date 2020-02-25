@@ -751,9 +751,9 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	}
     }
 
-  if ( max_basic_eqnvars > MAX_EQNVARS )
+  if ( max_basic_eqnvars > MAX_PROB_VAR )
     {
-      sr = sprintf(err_msg, "Try MAX_EQNVARS = %d\n", max_basic_eqnvars);
+      sr = sprintf(err_msg, "Try MAX_PROB_VAR = %d\n", max_basic_eqnvars);
       EH(-1, err_msg);
     }
 
@@ -1590,17 +1590,17 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       for ( k=0; k<num_kinds_nodes; k++)
 	{
 	  D->global_node_description[k][0] = pnd[k]->num_basic_eqnvars;
-	  for ( i=0; i<MAX_EQNVARS; i++)
+	  for ( i=0; i<MAX_PROB_VAR; i++)
 	    {
 	      D->global_node_description[k][1+i] = pnd[k]->eqnvar_ids[i];
 	    }
-	  for ( i=0; i<MAX_EQNVARS; i++)
+	  for ( i=0; i<MAX_PROB_VAR; i++)
 	    {
-	      D->global_node_description[k][1+MAX_EQNVARS+3*i]   = 
+	      D->global_node_description[k][1+MAX_PROB_VAR+3*i]   = 
 		pnd[k]->eqnvar_wts[i][0];
-	      D->global_node_description[k][1+MAX_EQNVARS+3*i+1] = 
+	      D->global_node_description[k][1+MAX_PROB_VAR+3*i+1] = 
 		pnd[k]->eqnvar_wts[i][1];
-	      D->global_node_description[k][1+MAX_EQNVARS+3*i+2] = 
+	      D->global_node_description[k][1+MAX_PROB_VAR+3*i+2] = 
 		pnd[k]->eqnvar_wts[i][2];
 	    }
 	}
