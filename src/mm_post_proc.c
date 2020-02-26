@@ -1305,7 +1305,11 @@ static int calc_standard_fields(double **post_proc_vect,
                pg_data);
     double G[DIM][DIM];
     get_metric_tensor(bf[pd->ShapeVar]->B, pd->Num_Dim, ei[pg->imtrx]->ielem_type, G);
+  dbl f[DIM];				/* Body force. */
+  MOMENTUM_SOURCE_DEPENDENCE_STRUCT df_struct;  /* Body force dependence */
+  MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df = &df_struct;
 
+  momentum_source_term(f, df, time);
     double tau_time = 0;
     // time term
     if (pd->TimeIntegration != STEADY) {
@@ -1382,11 +1386,11 @@ static int calc_standard_fields(double **post_proc_vect,
 ////    }
 ////    // Average value of h**2 in the element
 ////    hh_siz = hh_siz/ ((double )dim);
-    local_post[PSPG_PP] = tau_time;
-    local_post[PSPG_PP+1] = tau_adv;
-    local_post[PSPG_PP+2] = tau_diff;
+//    local_post[PSPG_PP] = f[0];
+//    local_post[PSPG_PP+1] = f[1];
+//    local_post[PSPG_PP+2] = f[2];
     for (int i = 0; i < VIM; i++) {
-//      local_post[PSPG_PP+i] = pspg[i];
+      local_post[PSPG_PP+i] = pspg[i];
       local_lumped[PSPG_PP+i] = 1.;
     }
   }

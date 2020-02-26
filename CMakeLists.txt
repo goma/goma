@@ -37,7 +37,6 @@ set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
 set(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
 set(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
 
-include_directories(${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS} ${MPI_C_INCLUDE_PATH})
 
 # Trilinos required packages
 foreach(package Amesos AztecOO Epetra)
@@ -540,6 +539,7 @@ set(GOMA_TPL_INCLUDES
   ${SEACASChaco_INCLUDE_DIRS}
   ${SEACASExodus_TPL_INCLUDE_DIRS}
   ${SEACASChaco_TPL_INCLUDE_DIRS}
+  ${MPI_C_INCLUDE_PATH}
 )
 
 set(GOMA_TPL_LIBRARY_DIRS
@@ -564,6 +564,7 @@ set(GOMA_TPL_LIBRARIES
 
 add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
 target_include_directories(goma_user PUBLIC include)
+target_include_directories(goma_user PRIVATE ${GOMA_TPL_INCLUDES})
 target_compile_definitions(goma_user PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_library(goma ${GOMA_SOURCES} ${GOMA_INCLUDES})
