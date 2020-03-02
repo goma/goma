@@ -5992,14 +5992,15 @@ compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
 		   dbl exp_s[DIM][DIM],
 		   dbl d_exp_s_ds[DIM][DIM][DIM][DIM])
 {
-  double s_p[DIM][DIM];
-  double exp_s_p[DIM][DIM];
+  double s_p[DIM][DIM], s_n[DIM][DIM];
+  double exp_s_p[DIM][DIM], exp_s_n[DIM][DIM];
   double eig_values[DIM];
   double R1[DIM][DIM];
   int i,j,p,q;
+  double ds, ds_den, fd = FD_FACTOR;
 
   memset(exp_s_p,    0, sizeof(double)*DIM*DIM);
-  memset(exp_s,      0, sizeof(double)*DIM*DIM);
+  memset(exp_s_n,    0, sizeof(double)*DIM*DIM);
   memset(d_exp_s_ds, 0, sizeof(double)*DIM*DIM*DIM*DIM);
  
 #ifdef ANALEIG_PLEASE
@@ -6011,22 +6012,24 @@ compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
   for (i = 0; i < VIM; i++) {
     for (j = 0; j < VIM; j++) {
        s_p[i][j] = s[i][j];
+       s_n[i][j] = s[i][j];
  }
   }
 
-  double ds, fd = FD_FACTOR;
 
   for (i = 0; i < VIM; i++) {
     for (j = i; j < VIM; j++) {
 
-      if((i<2 && j<2) || (i ==2 && j ==2))  {
       // perturb s
       ds = fd*s[i][j];
       ds = (fabs(ds) < fd ? fd : ds);
       s_p[i][j] += ds;
+      s_n[i][j] -= ds;
       if( i != j) {
         s_p[j][i] = s_p[i][j];
+        s_n[j][i] = s_n[i][j];
       }
+      ds_den = 0.5/ds;
 
       // find exp_s at perturbed value
 #ifdef ANALEIG_PLEASE
@@ -6034,11 +6037,16 @@ compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
 #else
       compute_exp_s(s_p, exp_s_p, eig_values, R1);
 #endif
+#ifdef ANALEIG_PLEASE
+      analytical_exp_s(s_n, exp_s_j, eig_values, R1);
+#else
+      compute_exp_s(s_n, exp_s_n, eig_values, R1);
+#endif
 
       // approximate derivative
       for (p = 0; p < VIM; p++) {
 	for (q = 0; q < VIM; q++) {
-	  d_exp_s_ds[p][q][i][j] = (exp_s_p[p][q] - exp_s[p][q]) / ds;
+	  d_exp_s_ds[p][q][i][j] = ds_den*(exp_s_p[p][q] - exp_s_n[p][q]);
 	  if(i != j)d_exp_s_ds[p][q][j][i] = d_exp_s_ds[p][q][i][j];
 	}
       }
@@ -6046,7 +6054,6 @@ compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
       if( i != j) {
         s_p[j][i] = s[j][i];
       } 
-      }
     }
   }
 }
