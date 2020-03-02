@@ -683,7 +683,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
                       log_c[p][r] = fv->S[ve_mode][p][r];
                      }
                  }
+#ifdef ANALEIG_PLEASE
+              analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
               compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
               mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
               if(ve[ve_mode]->time_constModel == CONSTANT)
                 {
@@ -775,7 +779,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
                       log_c[p][r] = fv->S[ve_mode][p][r];
                      }
                  }
+#ifdef ANALEIG_PLEASE
+              analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
               compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
               mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
               if(ve[ve_mode]->time_constModel == CONSTANT)
                 {
@@ -866,7 +874,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
                       log_c[p][r] = fv->S[ve_mode][p][r];
                      }
                  }
+#ifdef ANALEIG_PLEASE
+              analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
               compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
               mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
               if(ve[ve_mode]->time_constModel == CONSTANT)
                 {
@@ -2867,7 +2879,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     double eig_values[DIM];
     dbl exp_s[DIM][DIM];
     for (mode = 0; mode < vn->modes; mode++) {
+#ifdef ANALEIG_PLEASE
+      analytical_exp_s(fv->S[mode], exp_s, eig_values, R1);
+#else
       compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
+#endif
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
       // Polymer time constant
       lambda = 0.0;
