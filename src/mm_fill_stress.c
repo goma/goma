@@ -5815,9 +5815,6 @@ compute_exp_s(double s[DIM][DIM],
     }    
   }
 
-#if 1
-fprintf(stderr,"eig %g %g %g\n",eig_values[0],eig_values[1],eig_values[2]);
-#endif
 } // End compute_exp_s
 
 void
@@ -5983,10 +5980,6 @@ analytical_exp_s(double s[DIM][DIM],
         R[i][j] = Q[i][j];
     }
   }
-
-#if 1
-fprintf(stderr,"eig %g %g %g\n",eig_values[0],eig_values[1],eig_values[2]);
-#endif
 
 } // End analytical_exp_s
 
