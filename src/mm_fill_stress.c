@@ -2725,19 +2725,17 @@ assemble_stress_log_conf(dbl tt,
 	  lambda = mup/ve[mode]->time_const;
 	}
 
-      if(VIM==2)
-	{
-          compute_exp_s(s, exp_s, eig_values, R1);
-	}
-      else
-	{
-	  EH(-1, "Log-conformation tensor only tested for 2D.");	  
-	}
+      if(VIM > 2) WH(-1, "Log-conformation tensor only tested for 2D.");	  
+#ifdef ANALEIG_PLEASE
+      analytical_exp_s(s, exp_s, eig_values, R1);
+#else
+      compute_exp_s(s, exp_s, eig_values, R1);
+#endif
 
       /* Check to make sure eigenvalues are positive (negative eigenvalues will not
          work for log-conformation formulation). These eigenvalues are for the
          conformation tensor, not the log-conformation tensor. */
-      if(eig_values[0] < 0. || eig_values[1] < 0.)
+      if(eig_values[0] < 0. || eig_values[1] < 0. || (VIM > 2 && eig_values[2] < 0.))
 	{
 	  WH(-1, "Error: Negative eigenvalue for conformation tensor");
 	  return -1;
@@ -2746,7 +2744,10 @@ assemble_stress_log_conf(dbl tt,
       memset(D, 0, sizeof(double)*DIM*DIM);
       D[0][0] = eig_values[0];
       D[1][1] = eig_values[1];
-      (void) tensor_dot(D, D, D_dot_D, 2);
+      if (VIM > 2) {
+        D[2][2] = eig_values[2];
+        }
+      (void) tensor_dot(D, D, D_dot_D, VIM);
 
       // Decompose velocity gradient
 
@@ -2794,6 +2795,9 @@ assemble_stress_log_conf(dbl tt,
 
       //Predetermine advective terms
       trace = eig_values[0]+eig_values[1]; 
+      if (VIM > 2) {
+        trace += eig_values[2];
+        }
       
       for(a=0; a<VIM; a++)
       	{
@@ -5802,74 +5806,246 @@ compute_exp_s(double s[DIM][DIM],
 
  // Solve for R and eigenvalues of conformation tensor (exp_s)
 
- // convert to column major
+  for (i = 0; i < VIM; i++) {
+    eig_values[i] = exp(W[i]);
+  }
   for (i = 0; i < VIM; i++) {
     for (j = 0; j < VIM; j++) {
-      A[i*VIM + j] = exp_s[j][i];
+      R[i][j] = U[i][j];
     }    
-  }
-
-  // eig solver
-  dsyev_("V", "U", &N, A, &LDA, W, WORK, &LWORK, &INFO, 1, 1);
-
-  // transpose (revert to row major)
-  for (i = 0; i < VIM; i++) {
-    for (j = 0; j < VIM; j++) {
-      R[i][j] = A[j*VIM + i];
-    }    
-  }
-
-  // Eigenvalues of conformation tensor
-  for (i = 0; i < VIM; i++) {
-    eig_values[i] = W[i];
   }
 
 } // End compute_exp_s
+
+void
+analytical_exp_s(double s[DIM][DIM],
+	      double exp_s[DIM][DIM],
+              double eig_values[DIM],
+              double R[DIM][DIM])
+{
+
+  double I_S, II_S, disc, off_diag, q, p2, r, p, phi;
+  int i,j,k;
+  double tmp;
+
+
+  double B[DIM][DIM], D[DIM][DIM],eig_S[DIM],Q1[DIM][DIM],Q2[DIM][DIM];
+  double Q[DIM][DIM];
+  memset(Q, 0.0, sizeof(double)*DIM*DIM);
+  memset(D, 0.0, sizeof(double)*DIM*DIM);
+
+  /* Use Eigenvalue algorithm from Wikipedia - https://en.wikipedia.org/wiki/
+     Eigenvalue_algorithm#Normal%2C_Hermitian%2C_and_real-symmetric_matrices */
+
+  /*  Make sure stress is symmetric  */
+  s[1][0] = s[0][1];  s[2][0] = s[0][2];  s[2][1] = s[1][2];
+
+  if ((VIM==2 || pd->CoordinateSystem == CYLINDRICAL))
+    {
+      eig_S[2] = s[2][2];
+      Q[2][2] = 1.0;
+      I_S = s[0][0]+s[1][1];
+      II_S = s[0][0]*s[1][1] - SQUARE(s[0][1]);
+      disc = SQUARE(I_S) - 4*II_S;
+      eig_S[0] = 0.5*(I_S + sqrt(disc));
+      eig_S[1] = 0.5*(I_S - sqrt(disc));
+      if( DOUBLE_NONZERO(disc))	{
+         for (j = 0; j < pd->Num_Dim; j++) {
+            for (i = 0; i < pd->Num_Dim; i++) {
+               Q[i][j] = s[i][j] - eig_S[1-j]*delta(i,j);
+               }
+            }
+      /*  Normalize eigenvectors   */
+         for (j = 0; j < pd->Num_Dim; j++) {
+            tmp = sqrt(SQUARE(Q[0][j]) + SQUARE(Q[1][j]));
+            if( DOUBLE_NONZERO(tmp))	{
+               for (i = 0; i < pd->Num_Dim; i++) {
+                  Q[i][j] /= tmp;
+                  }
+               }
+            }
+         }
+      else
+         {
+          for (j = 0; j < pd->Num_Dim; j++) {
+             for (k = 0; k < pd->Num_Dim; k++) {
+                Q[j][k] = delta(j,k);
+                }
+             }
+         }
+    }
+  else
+    {
+     off_diag = SQUARE(s[0][1]) + SQUARE(s[0][2]) + SQUARE(s[1][2]);
+     I_S = s[0][0] + s[1][1] + s[2][2];
+     II_S = s[0][0]*s[1][1]+s[0][0]*s[2][2]+s[1][1]*s[2][2]
+              -(SQUARE(s[0][1])+SQUARE(s[0][2])+SQUARE(s[1][2]));
+     if( DOUBLE_NONZERO(off_diag))	{
+        q = I_S/3.;
+        p2 = 2*off_diag;
+        for(i = 0 ; i < VIM ; i++)	{p2 += SQUARE(s[i][i]-q);}
+        p = sqrt(p2/6.);
+        for (i = 0; i < VIM; i++) {
+           for (j = 0; j < VIM; j++) {
+              B[i][j] = (s[i][j]-q*delta(i,j))/p;
+              }
+           }
+        r = B[0][0]*B[1][1]*B[2][2] + 2.*(B[0][1]*B[1][2]*B[0][2])
+              -B[0][0]*SQUARE(B[1][2])-B[1][1]*SQUARE(B[0][2])-B[2][2]*SQUARE(B[0][1]);
+        r *= 0.5;
+        if ( r <= -1.)
+           {phi = M_PIE/3.;}
+        else if (r >= 1.)
+           {phi =0.;}
+        else
+           {phi = acos(r)/3.;}
+        for (i = 0; i < VIM; i++) {
+           eig_S[i] = q + 2*p*cos(phi+i*2*M_PIE/3.);
+           }
+        }
+      else
+        {
+        for(i = 0 ; i < DIM ; i++)	{eig_S[i] = s[i][i];}
+        }
+
+     if( DOUBLE_NONZERO(I_S) || DOUBLE_NONZERO(II_S))	{
+        for (i = 0; i < VIM; i++) {
+          for (j = 0; j < VIM; j++) {
+            for (k = 0; k < VIM; k++) {
+               Q1[j][k] = s[j][k] - eig_S[(i+1)%3]*delta(j,k);
+               Q2[j][k] = s[j][k] - eig_S[(i+2)%3]*delta(j,k);
+               }
+            }
+          for (j = 0; j < VIM; j++) {
+            for (k = 0; k < VIM; k++) {
+               Q[j][i] = Q1[j][k]*Q2[k][j];
+               }
+            }
+          }
+      /*  Normalize eigenvectors   */
+        for (j = 0; j < VIM; j++) {
+          tmp = sqrt(SQUARE(Q[0][j]) + SQUARE(Q[1][j]) + SQUARE(Q[2][j]));
+          if( DOUBLE_NONZERO(tmp))	{
+            for (i = 0; i < VIM; i++) {
+               Q[i][j] /= tmp;
+               }
+            }
+         }
+       }
+     else
+       {
+        for (j = 0; j < VIM; j++) {
+          for (k = 0; k < VIM; k++) {
+             Q[j][k] = delta(j,k);
+             }
+          }
+       }
+    }
+
+
+  // exponentiate diagonal
+  for (i = 0; i < DIM; i++) {
+	D[i][i] = exp(eig_S[i]);
+      }
+
+  /* matrix multiplication, the slow way */
+  for (i = 0; i < VIM; i++) {
+    for (j = 0; j < VIM; j++) {
+      tmp = 0.;
+      for (k = 0; k < VIM; k++) {
+	tmp += Q[i][k] * D[k][j];
+      }
+      exp_s[i][j] = tmp;
+    }
+  }
+  
+  // multiply by transpose
+  for (i = 0; i < VIM; i++) {
+    for (j = 0; j < VIM; j++) {
+      tmp = 0.;
+      for (k = 0; k < VIM; k++) {
+	tmp += exp_s[i][k] * Q[j][k];
+      }
+      exp_s[i][j] = tmp;
+    }
+  }
+
+ // Solve for R and eigenvalues of conformation tensor (exp_s)
+  // Eigenvalues of conformation tensor
+  for (i = 0; i < DIM; i++) {
+    eig_values[i] = exp(eig_S[i]);
+  }
+  for (i = 0; i < DIM; i++) {
+    for (j = 0; j < DIM; j++) {
+        R[i][j] = Q[i][j];
+    }
+  }
+
+} // End analytical_exp_s
 
 void
 compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
 		   dbl exp_s[DIM][DIM],
 		   dbl d_exp_s_ds[DIM][DIM][DIM][DIM])
 {
-  double s_p[DIM][DIM];
-  double exp_s_p[DIM][DIM];
+  double s_p[DIM][DIM], s_n[DIM][DIM];
+  double exp_s_p[DIM][DIM], exp_s_n[DIM][DIM];
   double eig_values[DIM];
   double R1[DIM][DIM];
   int i,j,p,q;
+  double ds, ds_den, fd = FD_FACTOR;
 
   memset(exp_s_p,    0, sizeof(double)*DIM*DIM);
-  memset(exp_s,      0, sizeof(double)*DIM*DIM);
+  memset(exp_s_n,    0, sizeof(double)*DIM*DIM);
   memset(d_exp_s_ds, 0, sizeof(double)*DIM*DIM*DIM*DIM);
  
-  compute_exp_s(s, exp_s, eig_values, R1);
+#ifdef ANALEIG_PLEASE
+      analytical_exp_s(s, exp_s, eig_values, R1);
+#else
+      compute_exp_s(s, exp_s, eig_values, R1);
+#endif
 
   for (i = 0; i < VIM; i++) {
     for (j = 0; j < VIM; j++) {
        s_p[i][j] = s[i][j];
+       s_n[i][j] = s[i][j];
  }
   }
 
-  double ds = 1e-9;
 
   for (i = 0; i < VIM; i++) {
-    for (j = 0; j < VIM; j++) {
+    for (j = i; j < VIM; j++) {
 
       // perturb s
+      ds = fd*s[i][j];
+      ds = (fabs(ds) < fd ? fd : ds);
       s_p[i][j] += ds;
+      s_n[i][j] -= ds;
       if( i != j) {
         s_p[j][i] = s_p[i][j];
+        s_n[j][i] = s_n[i][j];
       }
+      ds_den = 0.5/ds;
 
       // find exp_s at perturbed value
+#ifdef ANALEIG_PLEASE
+      analytical_exp_s(s_p, exp_s_p, eig_values, R1);
+#else
       compute_exp_s(s_p, exp_s_p, eig_values, R1);
+#endif
+#ifdef ANALEIG_PLEASE
+      analytical_exp_s(s_n, exp_s_n, eig_values, R1);
+#else
+      compute_exp_s(s_n, exp_s_n, eig_values, R1);
+#endif
 
       // approximate derivative
       for (p = 0; p < VIM; p++) {
 	for (q = 0; q < VIM; q++) {
-	  d_exp_s_ds[p][q][i][j] = (exp_s_p[p][q] - exp_s[p][q]) / ds;
+	  d_exp_s_ds[p][q][i][j] = ds_den*(exp_s_p[p][q] - exp_s_n[p][q]);
+	  if(i != j)d_exp_s_ds[p][q][j][i] = d_exp_s_ds[p][q][i][j];
 	}
       }
-     
       s_p[i][j] = s[i][j];
       if( i != j) {
         s_p[j][i] = s[j][i];
