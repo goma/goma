@@ -5815,6 +5815,9 @@ compute_exp_s(double s[DIM][DIM],
     }    
   }
 
+#if 1
+fprintf(stderr,"eig %g %g %g\n",eig_values[0],eig_values[1],eig_values[2]);
+#endif
 } // End compute_exp_s
 
 void
@@ -5981,7 +5984,7 @@ analytical_exp_s(double s[DIM][DIM],
     }
   }
 
-#if 0
+#if 1
 fprintf(stderr,"eig %g %g %g\n",eig_values[0],eig_values[1],eig_values[2]);
 #endif
 
@@ -6038,7 +6041,7 @@ compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
       compute_exp_s(s_p, exp_s_p, eig_values, R1);
 #endif
 #ifdef ANALEIG_PLEASE
-      analytical_exp_s(s_n, exp_s_j, eig_values, R1);
+      analytical_exp_s(s_n, exp_s_n, eig_values, R1);
 #else
       compute_exp_s(s_n, exp_s_n, eig_values, R1);
 #endif
