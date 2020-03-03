@@ -8053,14 +8053,13 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
           lambda = mup/ve[mode]->time_const;
         }
 
-      if(VIM==2)
-        {
-          compute_exp_s(s, exp_s, eig_values, R1); 
-        }
-      else
-	{
-	  EH(-1, "Log-conformation tensor tested only for 2D.");	  
-	}
+      if(VIM > 2)
+	{ WH(-1, "Log-conformation tensor tested only for 2D.");	  }
+#ifdef ANALEIG_PLEASE
+          analytical_exp_s(s, exp_s, eig_values, R1); 
+#else
+          compute_exp_s(s, exp_s, eig_values, R1);   
+#endif
 
       // Decompose velocity gradient
 

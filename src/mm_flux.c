@@ -716,7 +716,11 @@ evaluate_flux(
 				            log_c[p][r] = fv->S[ve_mode][p][r];
 			                  }
 				      }
+#ifdef ANALEIG_PLEASE
+                                    analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
 				    compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
 		                    mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
 			            if(ve[ve_mode]->time_constModel == CONSTANT)
 				      {

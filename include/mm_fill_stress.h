@@ -192,6 +192,12 @@ compute_exp_s(double [DIM][DIM],
 	      double [DIM][DIM]);
 
 void
+analytical_exp_s(double [DIM][DIM],
+	      double [DIM][DIM],
+              double [DIM],
+	      double [DIM][DIM]);
+
+void
 compute_d_exp_s_ds(dbl [DIM][DIM],                   //s - stress
                    dbl [DIM][DIM],                   // exp_s
                    dbl [DIM][DIM][DIM][DIM]);        // d_exp_s_ds
