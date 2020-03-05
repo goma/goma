@@ -2725,7 +2725,6 @@ assemble_stress_log_conf(dbl tt,
 	  lambda = mup/ve[mode]->time_const;
 	}
 
-      if(VIM > 2) WH(-1, "Log-conformation tensor only tested for 2D.");	  
 #ifdef ANALEIG_PLEASE
       analytical_exp_s(s, exp_s, eig_values, R1);
 #else
