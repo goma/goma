@@ -6275,7 +6275,7 @@ assemble_bond_evolution(double time,	/* present time value */
 	  phi_i = bf[eqn]->phi[i];
 	  for ( p=0; p<VIM; p++)
 	    {
-	      grad_phi_i[p] = bf[eqn]->grad_phi[i][p];
+	      grad_phi_i[p] = bf[var]->grad_phi[i][p];
 	    }
 
 	  /*
