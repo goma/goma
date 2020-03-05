@@ -5736,13 +5736,16 @@ compute_exp_s(double s[DIM][DIM],
   int INFO;
   int LWORK = 20;
   double WORK[LWORK];
-  memset(WORK, 0, sizeof(double)*LWORK);
 
   double A[VIM*VIM];
   double D[DIM][DIM];
+  double EIGEN_MAX = sqrt(0.1*DBL_MAX);
+  double eig_S[DIM];
   memset(A, 0.0, sizeof(double)*VIM*VIM);
   memset(D, 0.0, sizeof(double)*DIM*DIM);
   memset(eig_values, 0.0, sizeof(double)*DIM);
+  memset(eig_S, 0.0, sizeof(double)*DIM);
+  memset(WORK, 0, sizeof(double)*LWORK);
 
   // convert to column major
   for (i = 0; i < VIM; i++) {
@@ -5751,10 +5754,9 @@ compute_exp_s(double s[DIM][DIM],
     }
   }
 
-  double W[VIM];
 
   // eig solver
-  dsyev_("V", "U", &N, A, &LDA, W, WORK, &LWORK, &INFO, 1, 1);
+  dsyev_("V", "U", &N, A, &LDA, eig_S, WORK, &LWORK, &INFO, 1, 1);
 
 
   // transpose (revert to row major)
@@ -5766,7 +5768,7 @@ compute_exp_s(double s[DIM][DIM],
 
   // exponentiate diagonal
   for (i = 0; i < VIM; i++) {
-	eig_values[i] = exp(W[i]); 
+	eig_values[i] = MIN(exp(eig_S[i]),EIGEN_MAX); 
         }
 
   /* matrix multiplication, the slow way */
@@ -5899,7 +5901,7 @@ analytical_exp_s(double s[DIM][DIM],
           }
       /*  Normalize eigenvectors   */
         for (j = 0; j < VIM; j++) {
-          tmp = sqrt(SQUARE(Q[0][j]) + SQUARE(Q[1][j]) + SQUARE(Q[2][j]));
+          tmp = sqrt(SQUARE(R[0][j]) + SQUARE(R[1][j]) + SQUARE(R[2][j]));
           if( DOUBLE_NONZERO(tmp))	{
             for (i = 0; i < VIM; i++) {
                R[i][j] /= tmp;
