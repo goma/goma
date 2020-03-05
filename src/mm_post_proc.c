@@ -660,7 +660,6 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       stream_grad *= mp->viscosity;
 /*
  **  viscoelastic stress tensor
- **  assume only EVSS_F formulation for now
  **/
    if ( pd->v[POLYMER_STRESS11] )
       {
@@ -756,7 +755,6 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     stream_grad *= mp->viscosity;
 /*
  **  viscoelastic stress tensor
- **  assume only EVSS_F formulation for now
  **/
    if ( pd->v[POLYMER_STRESS11] )
       {
@@ -851,7 +849,6 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     stream_grad *= mp->viscosity;
 /*
  **  viscoelastic stress tensor
- **  assume only EVSS_F formulation for now
  **/
    if ( pd->v[POLYMER_STRESS11] )
       {

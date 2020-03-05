@@ -30096,7 +30096,6 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				{
 				  lambda = ve[mode]->time_const;
 				}
-
                       if(pd->CoordinateSystem != CYLINDRICAL) {
 			      d_Pi->v[p][q][b][j] += mup*bf[var+q]->grad_phi_e[j][b][p][q];
 			      d_Pi->v[p][q][b][j] += mup*bf[var+p]->grad_phi_e[j][b][q][p];

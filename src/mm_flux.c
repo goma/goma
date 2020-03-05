@@ -694,7 +694,6 @@ evaluate_flux(
 
 		/*
 		 *  viscoelastic stress tensor
-		 *  assume only EVSS_F formulation for now
 		 */
   			memset( ves, 0, sizeof(dbl)*DIM*DIM);
   			if ( pd->v[POLYMER_STRESS11] )
