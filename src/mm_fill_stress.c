@@ -2792,9 +2792,7 @@ assemble_stress_log_conf(dbl tt,
 
       //Predetermine advective terms
       trace = eig_values[0]+eig_values[1]; 
-      if (VIM > 2) {
-        trace += eig_values[2];
-        }
+      if (VIM > 2) { trace += eig_values[2]; }
       
       for(a=0; a<VIM; a++)
       	{
@@ -2814,7 +2812,7 @@ assemble_stress_log_conf(dbl tt,
       eps  = ve[mode]->eps;
 
       //Exponential term for PTT
-      Z = exp(eps*(trace - (double) dim));
+      Z = exp(eps*(trace - (double) VIM));
 
       siz = sizeof(double)*DIM*DIM;
       memset(tmp1, 0, siz);
@@ -5738,7 +5736,7 @@ compute_exp_s(double s[DIM][DIM],
 
   double A[VIM*VIM];
   double D[DIM][DIM];
-  double EIGEN_MAX = sqrt(0.1*DBL_MAX);
+  double EIGEN_MAX = sqrt(sqrt(DBL_MAX));
   double eig_S[DIM];
   memset(A, 0.0, sizeof(double)*VIM*VIM);
   memset(D, 0.0, sizeof(double)*DIM*DIM);
