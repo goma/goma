@@ -8053,8 +8053,6 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
           lambda = mup/ve[mode]->time_const;
         }
 
-      if(VIM > 2)
-	{ WH(-1, "Log-conformation tensor tested only for 2D.");	  }
 #ifdef ANALEIG_PLEASE
           analytical_exp_s(s, exp_s, eig_values, R1); 
 #else
@@ -8066,7 +8064,8 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
       memset(D, 0, sizeof(double)*DIM*DIM);
       D[0][0] = eig_values[0];
       D[1][1] = eig_values[1];
-      (void) tensor_dot(D, D, D_dot_D, 2);
+      if (VIM > 2) { D[2][2] = eig_values[2]; }
+      (void) tensor_dot(D, D, D_dot_D, VIM);
 
       // Decompose velocity gradient
 
@@ -8114,6 +8113,7 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
 
       //Predetermine advective terms
       trace = eig_values[0]+eig_values[1]; 
+      if (VIM > 2) { trace += eig_values[2]; }
       
       //PTT exponent
       eps  = ve[mode]->eps;
