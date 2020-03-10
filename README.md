@@ -59,18 +59,31 @@ openmpi paths/versions are correct.
 
 Then to build goma run:
 
-`make`
+    make
+
+The `goma` executable will be built in the `[path to goma]/bin` directory
+
+Optionally `goma` can be installed with
+
+    make install PREFIX="/path/to/install/"
+
+default prefix if unspecified is `/usr/local`
 
 ## Environment Variables
-OpenMPI should be added to the path and library path:
+OpenMPI should be added to the path and library path.
+If the build script was used to build openmpi you would use something like:
 
     export LD_LIBRARY_PATH="/[path to gomalibs]/openmpi-4.0.2/lib:$LD_LIBRARY_PATH"
     export PATH="/[path to gomalibs]/openmpi-4.0.2/bin:$PATH"
 
-SEACAS tools from Trilinos (e.g. aprepro and blot) should be added to
+SEACAS tools from Trilinos (e.g. `aprepro` and `blot`) should be added to
 your path
 
     export PATH="/[path to gomalibs]/trilinos-12.18.1/bin:$PATH"  
+
+For netcdf utilities such as `ncdump` add netcdf executables to your path
+
+    export PATH="/[path to gomalibs]/netcdf-c-4.7.3/bin:$PATH"  
 
 ### Run the tutorial
 
