@@ -110,6 +110,17 @@ EXTERN void fvelocity_parabola
        const double ,		/* time - time at which BC's are evaluated  */
        const int );		/* number of parameters */
 
+EXTERN void f_vestress_parabola
+(const int ,		/* var_flag */
+       const int ,		/* ielem_dim */
+       const int ,		/* velo_condition */
+       const int ,		/* mn */
+       double *,		/* func */
+       double [],		/* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
+       const double [],		/* p - parameters passed in thru input deck */
+       const double ,		/* time - time at which BC's are evaluated  */
+       const int );		/* number of parameters */
+
 EXTERN void fspline
 (const int ,		/* ielem_dim */
        double *,		/* func */

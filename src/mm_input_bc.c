@@ -1869,6 +1869,54 @@ rd_bc_specs(FILE *ifp,
 	case CURRENT_USER_BC:
 	case CURRENT_USER_SIC_BC:
 	case VOLT_USER_BC:
+        case U_VES11_PARABOLA_BC:
+        case U_VES12_PARABOLA_BC:
+        case U_VES22_PARABOLA_BC:
+        case U_VES13_PARABOLA_BC:
+        case U_VES23_PARABOLA_BC:
+        case U_VES33_PARABOLA_BC:
+        case U_VES11_1_PARABOLA_BC:
+        case U_VES12_1_PARABOLA_BC:
+        case U_VES22_1_PARABOLA_BC:
+        case U_VES13_1_PARABOLA_BC:
+        case U_VES23_1_PARABOLA_BC:
+        case U_VES33_1_PARABOLA_BC:
+        case U_VES11_2_PARABOLA_BC:
+        case U_VES12_2_PARABOLA_BC:
+        case U_VES22_2_PARABOLA_BC:
+        case U_VES13_2_PARABOLA_BC:
+        case U_VES23_2_PARABOLA_BC:
+        case U_VES33_2_PARABOLA_BC:
+        case U_VES11_3_PARABOLA_BC:
+        case U_VES12_3_PARABOLA_BC:
+        case U_VES22_3_PARABOLA_BC:
+        case U_VES13_3_PARABOLA_BC:
+        case U_VES23_3_PARABOLA_BC:
+        case U_VES33_3_PARABOLA_BC:
+        case U_VES11_4_PARABOLA_BC:
+        case U_VES12_4_PARABOLA_BC:
+        case U_VES22_4_PARABOLA_BC:
+        case U_VES13_4_PARABOLA_BC:
+        case U_VES23_4_PARABOLA_BC:
+        case U_VES33_4_PARABOLA_BC:
+        case U_VES11_5_PARABOLA_BC:
+        case U_VES12_5_PARABOLA_BC:
+        case U_VES22_5_PARABOLA_BC:
+        case U_VES13_5_PARABOLA_BC:
+        case U_VES23_5_PARABOLA_BC:
+        case U_VES33_5_PARABOLA_BC:
+        case U_VES11_6_PARABOLA_BC:
+        case U_VES12_6_PARABOLA_BC:
+        case U_VES22_6_PARABOLA_BC:
+        case U_VES13_6_PARABOLA_BC:
+        case U_VES23_6_PARABOLA_BC:
+        case U_VES33_6_PARABOLA_BC:
+        case U_VES11_7_PARABOLA_BC:
+        case U_VES12_7_PARABOLA_BC:
+        case U_VES22_7_PARABOLA_BC:
+        case U_VES13_7_PARABOLA_BC:
+        case U_VES23_7_PARABOLA_BC:
+        case U_VES33_7_PARABOLA_BC:
 	  num_const = read_constants(ifp, &(BC_Types[ibc].u_BC), NO_SPECIES);
  
 	  if ( num_const < 0 )

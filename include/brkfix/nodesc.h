@@ -31,17 +31,17 @@
 #define GOMA_NODESC_H
 
 
-#include "dpi.h" /* MAX_EQNVARS */
+#include "rf_fem_const.h" // MAX_PROB_VAR
 
 #define MAX_NODE_KINDS			32
 
-#define LEN_NODE_DESCRIPTION (4*MAX_EQNVARS+1)
+#define LEN_NODE_DESCRIPTION (4*MAX_PROB_VAR+1)
 
 struct Node_Description
 {
   int num_basic_eqnvars;
-  int eqnvar_ids[MAX_EQNVARS];		/* put them in ascending order! */
-  int eqnvar_wts[MAX_EQNVARS][3];	/* [0]=vect, [1]=conc, [2]=nodaldof */
+  int eqnvar_ids[MAX_PROB_VAR];		/* put them in ascending order! */
+  int eqnvar_wts[MAX_PROB_VAR][3];	/* [0]=vect, [1]=conc, [2]=nodaldof */
 };
 
 typedef struct Node_Description Node_Description;
