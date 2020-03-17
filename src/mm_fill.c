@@ -1605,8 +1605,7 @@ matrix_fill(
 
       if (pde[R_MASS]) 
         {	
-          err = assemble_mass_transport(time_value, theta, delta_t, pg_data.hsquared,
-					pg_data.hhv, pg_data.dhv_dxnode, pg_data.v_avg, pg_data.dv_dnode);
+          err = assemble_mass_transport(time_value, theta, delta_t, &pg_data);
 	  EH( err, "assemble_mass_transport");	  
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_mass_transport"); 
@@ -1767,7 +1766,7 @@ matrix_fill(
       if( pde[R_EM_E1_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
-				  R_EM_E1_IMAG, EM_E1_REAL, EM_E1_IMAG);
+                                  R_EM_E1_IMAG, EM_E1_IMAG, EM_E1_REAL);
 	  EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
@@ -1778,7 +1777,7 @@ matrix_fill(
       if( pde[R_EM_E2_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
-				  R_EM_E2_IMAG, EM_E2_REAL, EM_E2_IMAG);
+                                  R_EM_E2_IMAG, EM_E2_IMAG, EM_E2_REAL);
 	  EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
@@ -1789,7 +1788,7 @@ matrix_fill(
       if( pde[R_EM_E3_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
-				  R_EM_E3_IMAG, EM_E3_REAL, EM_E3_IMAG);
+                                  R_EM_E3_IMAG, EM_E3_IMAG, EM_E3_REAL);
 	  EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
@@ -1833,7 +1832,7 @@ matrix_fill(
       if( pde[R_EM_H1_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
-				  R_EM_H1_IMAG, EM_H1_REAL, EM_H1_IMAG);
+                                  R_EM_H1_IMAG, EM_H1_IMAG, EM_H1_REAL);
 	  EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
@@ -1844,7 +1843,7 @@ matrix_fill(
       if( pde[R_EM_H2_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
-				  R_EM_H2_IMAG, EM_H2_REAL, EM_H2_IMAG);
+                                  R_EM_H2_IMAG, EM_H2_IMAG, EM_H2_REAL);
 	  EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
@@ -1855,7 +1854,7 @@ matrix_fill(
       if( pde[R_EM_H3_IMAG] )
 	{
           err = assemble_emwave(time_value, theta, delta_t, &pg_data, 
-				  R_EM_H3_IMAG, EM_H3_REAL, EM_H3_IMAG);
+                                  R_EM_H3_IMAG, EM_H3_IMAG, EM_H3_REAL);
 	  EH( err, "assemble_emwave");
 #ifdef CHECK_FINITE
 	  err = CHECKFINITE("assemble_emwave"); 
@@ -2174,7 +2173,31 @@ matrix_fill(
 #endif
         }
 
-      if  ( (pde[R_SHELL_DIFF_CURVATURE] || pde[R_SHELL_NORMAL1]) && !(pde[R_SHELL_NORMAL3]) )
+      /* Web structure with both sh_K and sh_tens: */
+      if( pde[R_SHELL_CURVATURE] && pde[R_SHELL_TENSION] &&
+          (mp->FSIModel == FSI_SHELL_ONLY || mp->FSIModel == FSI_SHELL_ONLY_MESH )
+        )
+        {
+          err = assemble_shell_web_structure(time_value, theta, delta_t, wt, xi, exo);
+          EH( err, "assemble_shell_web_structure");
+#ifdef CHECK_FINITE
+          err = CHECKFINITE("assemble_shell_web_structure");
+          if (err) return -1;
+#endif
+          if(pde[R_MESH1])
+            {
+              err = assemble_shell_web_coordinates(time_value, theta, delta_t, wt, xi,
+                                               exo);
+              EH( err, "assemble_shell_web_coordinates");
+#ifdef CHECK_FINITE
+              err = CHECKFINITE("assemble_shell_web_coordinates");
+              if (err) return -1;
+#endif
+            }
+        }
+
+      if  ( (pde[R_SHELL_DIFF_CURVATURE] || pde[R_SHELL_NORMAL1]) && !(pde[R_SHELL_NORMAL3])
+            && !(pde[R_SHELL_CURVATURE]) )
         {
           if (!pde[R_SHELL_NORMAL1] || !pde[R_SHELL_NORMAL2]) {
 	    EH(-1, 
@@ -2188,7 +2211,8 @@ matrix_fill(
 #endif
         }
 
-      if (pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2] && pde[R_SHELL_NORMAL3])
+      if( (pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2] && pde[R_SHELL_NORMAL3])
+      ||   (pde[R_MESH1] && pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2]))
         {
 
           err = assemble_shell_normal(xi, exo);
@@ -2210,9 +2234,9 @@ matrix_fill(
 
         }
 
-      if ( pde[R_MESH1] && pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2] && pde[R_SHELL_NORMAL3])
+      if ( (pde[R_MESH1] && pde[R_SHELL_NORMAL1] && pde[R_SHELL_NORMAL2] && pde[R_SHELL_NORMAL3]))
         {
-         err = assemble_shell_mesh(xi, exo);
+	  err = assemble_shell_mesh(time_value, theta, delta_t, xi, exo);
          EH( err, "assemble_shell_mesh");
 #ifdef CHECK_FINITE
          err = CHECKFINITE("assemble_shell_mesh"); 
@@ -2232,7 +2256,22 @@ matrix_fill(
 	  }
 #endif
 	}
+      if(!pde[R_TFMP_MASS] && pde[R_TFMP_BOUND])
+      {
+        err = assemble_shell_lubrication( time_value, theta, delta_t, xi, exo );
+        EH( err, "assemble_shell_lubrication");
+#ifdef CHECK_FINITE
+        err = CHECKFINITE("assemble_shell_lubrication");
+        if (err) {
+          return -1;
+        }
+#endif
 
+    if (neg_lub_height) {
+      WH(-1, "returning from matrix fill because neg_lub_height after assemble_shell_lubrication");
+      return -1;
+    }
+  }
       if( pde[R_MOMENTUM1] )
 	{
           err = assemble_momentum(time_value, theta, delta_t, h_elem_avg, &pg_data, xi, exo);
@@ -2505,7 +2544,7 @@ matrix_fill(
 	}
       ls = ls_old;
     }
-  
+
 
   /**************************************************************************/
   /*                          BLOCK 2'                                      */
@@ -2616,7 +2655,7 @@ matrix_fill(
 				  WEAK_INT_SURF, time_value, element_search_grid, exo);
 	EH(err, " apply_integrated_bc");
 #ifdef CHECK_FINITE
-	err = CHECKFINITE("apply_integrated_bc"); 
+	err = CHECKFINITE("apply_integrated_bc");
 	if (err) return -1;
 #endif
 	if (neg_elem_volume) return -1;
@@ -2711,8 +2750,11 @@ matrix_fill(
    *  are we ever going to need a condition like this?  Probably not, because
    *  integrals over a point in 3D are zero... unless it's a singular point
    *  for now we'll assume this can't happen
+	 *  
+	 * 	Found one - In a 1D shell, the point represents the element edge, for 
+	 *  which a boundary term needs to be added to the element integral.
    **************************************************************************/
-  
+	
   /******************************************************************************/
   /**************************************************************************
    *                          BLOCK 6 - Weak Shifty Boundary Conditions

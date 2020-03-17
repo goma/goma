@@ -71,7 +71,6 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define EM_DISS         21   /* heat generation by EM waves */
 
 
-
 /* MMH */
 /* #define  SUSPENSION_PM xxx Defiend below. */
 
@@ -99,6 +98,33 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TFMP_SQUARE                   300
 #define TFMP_TRIANGULAR               301
 #define TFMP_HEXAGONAL                302
+
+// types of shell moment tensor calculation
+#define SMT_SIMPLE                    310
+#define SMT_EXPANDED                  311
+
+// gap model types
+// h = h0 - n dot d
+#define GM_NDOTD                      320
+// h = r_web - r_roller
+#define GM_RADIAL                     321
+
+// normal calculation methods
+// use built-in fv->snormal
+#define NCM_MAPPING                   330
+// for SIK_S normal of the web
+#define NCM_PRIMITIVE_S_WEB           331
+// for SIK_S normal of the roller
+#define NCM_PRIMITIVE_S_ROLLER        332
+// use built-in fv->normal
+#define NCM_PRIMITIVE_XY              333
+
+// shell integration kind
+// integrate in 2d as in Scriven's ChEn 8104
+// "Rudiments of Surface Geometry"
+#define SIK_XY                        340
+// map 2d bar (shell) domain onto 1d element
+#define SIK_S                         341
 
 /*
  * Options for k in potential equation
@@ -331,6 +357,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  TANH_EXTERNAL      22
 #define  VAN_GENUCHTEN_EXTERNAL   23
 #define  LEVER           24
+#define  SATURATION      25
 
 /* Types of Flowing Liquid Viscosity Models */
 #define MOLTEN_GLASS     3
@@ -449,6 +476,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define CONSTANT_SPEED 1011
 #define ROLL_ON 1012
 #define ROLL 1013
+#define ROLLER 101301
 #define LINEAR_TIME 10130
 #define CONSTANT_SPEED_DEFORM 10131
 #define CONSTANT_SPEED_MELT 10132
@@ -672,19 +700,27 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_LUB_HGT_L6                    7024
 #define TAGC_LUB_HGT_L7                    7025
 
-#define TAGC_LUB_VELO_U0                   7026
-#define TAGC_LUB_VELO_U1                   7027
-#define TAGC_LUB_VELO_U2                   7028
-#define TAGC_LUB_VELO_U3                   7029
-#define TAGC_LUB_VELO_U4                   7030
-#define TAGC_LUB_VELO_U5                   7031
+#define TAGC_U_LUB_VELO_U0                  7026
+#define TAGC_U_LUB_VELO_U1                  7027
+#define TAGC_U_LUB_VELO_U2                  7028
+#define TAGC_U_LUB_VELO_U3                  7029
+#define TAGC_U_LUB_VELO_U4                  7030
+#define TAGC_U_LUB_VELO_U5                  7031
 
-#define TAGC_LUB_VELO_L0                   7032
-#define TAGC_LUB_VELO_L1                   7033
-#define TAGC_LUB_VELO_L2                   7034
-#define TAGC_LUB_VELO_L3                   7035
-#define TAGC_LUB_VELO_L4                   7036
-#define TAGC_LUB_VELO_L5                   7037
+#define TAGC_U_LUB_VELO_L0                  7032
+#define TAGC_U_LUB_VELO_L1                  7033
+#define TAGC_U_LUB_VELO_L2                  7034
+#define TAGC_U_LUB_VELO_L3                  7035
+#define TAGC_U_LUB_VELO_L4                  7036
+#define TAGC_U_LUB_VELO_L5                  7037
+
+#define TAGC_LUB_VELO_U0                   17026
+#define TAGC_LUB_VELO_U1                   17027
+#define TAGC_LUB_VELO_U2                   17028
+
+#define TAGC_LUB_VELO_L0                   17032
+#define TAGC_LUB_VELO_L1                   17033
+#define TAGC_LUB_VELO_L2                   17034
 
 #define TAGC_LUB_DCA_U0                    7038
 #define TAGC_LUB_DCA_U1                    7039
@@ -706,5 +742,19 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_ACOUSTIC_FREQ		   8010
 #define TAGC_PROCESS_TEMP		   8011
 #define TAGC_ACOUSTIC_WAVELENGTH	   8012
+  /*
+   * Thin film multiphase constants
+   * */
+
+#define TAGC_TFMP_REL_PERM_0               7100
+#define TAGC_TFMP_REL_PERM_1               7101
+#define TAGC_TFMP_REL_PERM_2               7102
+#define TAGC_TFMP_REL_PERM_3               7103
+#define TAGC_TFMP_DENSITY_0                7104
+#define TAGC_TFMP_DENSITY_1                7105
+#define TAGC_TFMP_DENSITY_2                7106
+#define TAGC_TFMP_DENSITY_3                7107
+#define TAGC_TFMP_VISCOSITY_0              7108
+#define TAGC_TFMP_VISCOSITY_1              7109
 
 #endif

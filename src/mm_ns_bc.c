@@ -139,6 +139,9 @@ static double slip_coefficient ( const double,
                                  const double,
                                  const double);
 
+extern FSUB_TYPE dgemv_(char *TRANS, int *M, int *N, double *alpha, double *A, int *LDA,
+                        double *X, int *INCX, double *beta, int *Y, int *INCY);
+
 /* 
  *  Applies end slope nat'l SHEET_ENDSLOPE boundary condition on TENSION_SHEET boundary condition 
  */
@@ -3829,6 +3832,172 @@ fprintf(stderr,"more %g %g %g %g\n",res,jac,betainv, dthick_dV);
 
 } /* END of routine fvelo_slip_bc  */
 
+void
+fvelo_slip_power_bc(double func[MAX_PDIM],
+		    double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+		    const int type,    /* whether rotational or not */
+		    const int max_float,    /* Max float number from input file */
+		    double bc_float[MAX_BC_FLOAT_DATA],
+		    const double tt,   /* parameter in time stepping alg           */
+		    const double dt)   /* current time step value                  */
+
+     /*************************************************************************
+      *
+      *   n . T = beta * ( t . (v - vs) )^m
+      *
+      *   Where t is a tangent in the wall direction
+      *
+      ************************************************************************/
+{
+  double beta = bc_float[0];   /* Navier slip coefficient from input deck */
+  /* velocity components of solid surface on
+   * which slip condition is applied */
+  double vsx = bc_float[1];
+  double vsy = bc_float[2];
+  double vsz = bc_float[3];
+  double expon = bc_float[4];
+  int j, var, jvar, p;
+  double phi_j, vs[MAX_PDIM];
+  double betainv;		/* inverse of slip coefficient */
+  double vslip[MAX_PDIM];
+  double tangent_dot_vslip = 0.0;
+  double tangent[MAX_PDIM];
+
+  if(af->Assemble_LSA_Mass_Matrix)
+    return;
+
+  vs[0] = vsx;
+  vs[1] = vsy;
+  vs[2] = vsz;
+
+  int constant_tangent = FALSE;
+
+  if (max_float == 8)
+    {
+      tangent[0] = bc_float[5];
+      tangent[1] = bc_float[6];
+      tangent[2] = bc_float[7];
+      constant_tangent = TRUE;
+    }
+  else if (pd->Num_Dim == 3 && type == VELO_SLIP_POWER_BC)
+    {
+      EH(-1, "Must provide constant tangent for VELO_SLIP_POWER");
+    }
+  else
+    {
+      tangent[0] = fv->stangent[0][0];
+      tangent[1] = fv->stangent[0][1];
+      tangent[2] = 0.0;
+    }
+
+  if (beta != 0.)
+    {
+      betainv = 1./beta;
+    }
+  else
+    {
+      betainv = 0.;
+    }
+
+
+  memset(vslip, 0, sizeof(double)*MAX_PDIM);
+  for (p = 0; p < pd->Num_Dim; p++)
+    {
+      vslip[p] = (fv->v[p] - vs[p]);
+    }
+
+  /* Calculate the residual contribution. */
+  for ( p=0 ; p < pd->Num_Dim ; p++ )
+    {
+      tangent_dot_vslip += tangent[p] * vslip[p];
+    }
+
+  double tdotv_power = pow(tangent_dot_vslip, expon);
+
+  if (type == VELO_SLIP_POWER_BC)
+    {
+      // tangential compoment only
+      func[0] = -betainv * tdotv_power;
+
+      if (af->Assemble_Jacobian)
+        {
+
+          for (jvar=0; jvar<pd->Num_Dim; jvar++)
+            {
+              var = VELOCITY1 + jvar;
+              if (pd->v[var])
+                {
+                  for (j=0; j<ei->dof[var]; j++)
+                    {
+                      phi_j = bf[var]->phi[j];
+
+                      /* Main dependence of the velocity on velocity unknowns */
+                      if (fabs(tangent_dot_vslip) > 1e-15)
+                        {
+                          d_func[0][var][j] += -betainv * expon * tangent[jvar] * phi_j * tdotv_power / tangent_dot_vslip;
+                        }
+                    }
+                }
+            }
+
+          /* Mesh motion Jacobian entries   */
+          if (constant_tangent == FALSE)
+            {
+              for (jvar=0; jvar<ei->ielem_dim; jvar++)
+                {
+                  var = MESH_DISPLACEMENT1 + jvar;
+                  if (pd->v[var])
+                    {
+                      for ( j=0; j<ei->dof[var]; j++)
+                        {
+                          for (p = 0; p < pd->Num_Dim; p++)
+                            {
+                              if (fabs(tangent_dot_vslip) > 0)
+                                {
+                                  d_func[0][var][j] += -betainv * expon * fv->dstangent_dx[0][p][jvar][j] * vslip[p] * tdotv_power / tangent_dot_vslip;;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+  else if (type == VELO_SLIP_POWER_CARD_BC)
+    {
+      double vslip_expon[MAX_PDIM];
+      for (p = 0; p < VIM; p++)
+        {
+          vslip_expon[p] = pow(vslip[p], expon);
+          func[p] = -betainv * vslip_expon[p];
+        }
+      if (af->Assemble_Jacobian)
+        {
+          for (jvar=0; jvar<pd->Num_Dim; jvar++)
+            {
+              var = VELOCITY1 + jvar;
+              if (pd->v[var])
+                {
+                  for (j=0; j<ei->dof[var]; j++)
+                    {
+                      phi_j = bf[var]->phi[j];
+                      /* Main dependence of the velocity on velocity unknowns */
+                      if (fabs(vslip[jvar]) > 0)
+                        {
+                          d_func[jvar][var][j] += -betainv * expon * phi_j * vslip_expon[jvar] / vslip[jvar];
+                        }
+                    }
+                }
+            }
+        }
+    }
+  else
+    {
+      EH(-1, "Unknown type for fvelo_slip_power_bc");
+    }
+
+  return;
+}
 /**
  * Exchanges coordinates for the reference node needed for calculation
  * in fvelo_slip_bc()
@@ -7023,6 +7192,138 @@ if(iflag != -1)
 } /* END of routine flow_n_dot_T_gradv                                      */
 /*****************************************************************************/
 
+/* FLOW_GRADV_SIC Strongly integrated condition */
+void
+flow_n_dot_T_gradv_sic(double func[DIM],
+		   double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+		   const double pdatum, /* pressure datum from input card */
+		   const int iflag)  /* -1 to use pdatum, otherwise use P  */
+
+/****************************************************************************
+*
+*  Function which uses the fully-developed fluid stresses
+*		 in the fluid stress bcs
+*
+*****************************************************************************/
+{
+  int i, j, var, p, q;
+  int a, b;
+
+  /*
+   * Variables for vicosity and derivative
+   */
+  dbl gamma[DIM][DIM];
+  dbl mu;
+  VISCOSITY_DEPENDENCE_STRUCT d_mu_struct;  /* viscosity dependence */
+  VISCOSITY_DEPENDENCE_STRUCT *d_mu = &d_mu_struct;
+
+  if(af->Assemble_LSA_Mass_Matrix)
+    return;
+
+  /**
+	compute gammadot, viscosity
+   **/
+  for ( i=0; i<VIM; i++)
+    {
+      for ( j=0; j<VIM; j++)
+	{
+	  gamma[i][j] = fv->grad_v[i][j] + fv->grad_v[j][i];
+	}
+    }
+
+  mu = viscosity(gn, gamma, d_mu);
+  if (af->Assemble_Jacobian)
+    {
+
+
+      var = TEMPERATURE;
+      if (pd->v[var] )
+	{
+	  for (j=0; j<ei->dof[var]; j++)
+	    {
+	      for (p=0; p<pd->Num_Dim; p++)
+		{
+		  for (q=0; q<pd->Num_Dim; q++)
+		    {
+		      d_func[p][var][j] += fv->snormal[q]*d_mu->T[j]*fv->grad_v[p][q];
+		    }
+		}
+	    }
+	}
+
+      if(iflag != -1)
+	{
+	  var = PRESSURE;
+	  if (pd->v[var] )
+	    {
+	      for (j=0; j<ei->dof[var]; j++)
+		{
+		  for (p=0; p<pd->Num_Dim; p++)
+		    {
+		      d_func[p][var][j] += 0.;
+		    }
+		}
+	    }
+	}
+
+      if (pd->v[VELOCITY1] )
+	{
+	  for ( a=0; a<VIM; a++)
+	    {
+	      var = VELOCITY1+a;
+	      for (j=0; j<ei->dof[var]; j++)
+		{
+		  for (p=0; p<pd->Num_Dim; p++)
+		    {
+		      for (q=0; q<pd->Num_Dim; q++)
+			{
+			  d_func[p][var][j] += fv->snormal[q]*(mu*bf[var]->grad_phi_e[j][a][p][q]
+							       + fv->grad_v[p][q] * d_mu->v[a][j]);
+			}
+		    }
+		}
+	    }
+	}
+      if (pd->v[MESH_DISPLACEMENT1] )
+	{
+	  for ( b=0; b<VIM; b++)
+	    {
+	      var = MESH_DISPLACEMENT1+b;
+	      for (j=0; j<ei->dof[var]; j++)
+                {
+		  for (p=0; p<pd->Num_Dim; p++)
+		    {
+		      d_func[p][var][j] += 0.;
+
+		      for (q=0; q<pd->Num_Dim; q++)
+			{
+			  d_func[p][var][j] += fv->snormal[q]*(mu*fv->d_grad_v_dmesh[p][q][b][j]
+							       + fv->grad_v[p][q] * d_mu->X[b][j])
+			    + fv->dsnormal_dx[q][b][j]*mu*fv->grad_v[p][q];
+			}
+		    }
+		}
+            }
+	}
+
+
+
+
+    }  /*  end of if Assemble_Jacobian  */
+
+   /*  load in stresses */
+
+  for (p=0; p<pd->Num_Dim; p++)
+    {
+      for (q=0; q<pd->Num_Dim; q++)
+	{
+	  func[p] += fv->snormal[q]*mu*fv->grad_v[p][q];
+	}
+    }
+
+} /* END of routine flow_n_dot_T_gradv_sic                                   */
+/*****************************************************************************/
+
 void
 stress_no_v_dot_gradS(double func[MAX_MODES][6],
                       double d_func[MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
@@ -7752,21 +8053,19 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
           lambda = mup/ve[mode]->time_const;
         }
 
-      if(VIM==2)
-        {
-          compute_exp_s(s, exp_s, eig_values, R1); 
-        }
-      else
-	{
-	  EH(-1, "Log-conformation tensor tested only for 2D.");	  
-	}
+#ifdef ANALEIG_PLEASE
+          analytical_exp_s(s, exp_s, eig_values, R1); 
+#else
+          compute_exp_s(s, exp_s, eig_values, R1);   
+#endif
 
       // Decompose velocity gradient
 
       memset(D, 0, sizeof(double)*DIM*DIM);
       D[0][0] = eig_values[0];
       D[1][1] = eig_values[1];
-      (void) tensor_dot(D, D, D_dot_D, 2);
+      if (VIM > 2) { D[2][2] = eig_values[2]; }
+      (void) tensor_dot(D, D, D_dot_D, VIM);
 
       // Decompose velocity gradient
 
@@ -7814,6 +8113,7 @@ stress_no_v_dot_gradS_logc(double func[MAX_MODES][6],
 
       //Predetermine advective terms
       trace = eig_values[0]+eig_values[1]; 
+      if (VIM > 2) { trace += eig_values[2]; }
       
       //PTT exponent
       eps  = ve[mode]->eps;
@@ -7979,7 +8279,6 @@ PSPG_consistency_bc (double *func,
   dbl d_div_tau_p_dy[DIM][MAX_CONC][MDE];      /* derivative wrt concentration */
   dbl d_div_tau_p_dv[DIM][DIM][MDE];           /* derivative wrt velocity */
   dbl d_div_tau_p_dmesh[DIM][DIM][MDE];        /* derivative wrt mesh */
-  dbl d_div_tau_p_dvd[DIM][DIM][MDE];          /* derivative wrt vorticity dir */
   dbl d_div_tau_p_dp[DIM][MDE];                /* derivative wrt pressure dir */
 
   stress_eqn_pointer(v_s);
@@ -8173,13 +8472,12 @@ PSPG_consistency_bc (double *func,
   memset( d_div_tau_p_dy, 0, sizeof(double) * DIM*MAX_CONC*MDE);
   memset( d_div_tau_p_dv, 0, sizeof(double) * DIM*DIM*MDE);
   memset( d_div_tau_p_dmesh, 0, sizeof(double) * DIM*DIM*MDE);
-  memset( d_div_tau_p_dvd, 0, sizeof(double) * DIM*DIM*MDE);
   memset( d_div_tau_p_dp, 0, sizeof(double) * DIM*MDE);
   if( cr->MassFluxModel == DM_SUSPENSION_BALANCE && PSPG)
     {
       /* This is the divergence of the particle stress  */
   divergence_particle_stress(div_tau_p, d_div_tau_p_dgd, d_div_tau_p_dy,
-				   d_div_tau_p_dv, d_div_tau_p_dmesh, d_div_tau_p_dvd, 
+                                   d_div_tau_p_dv, d_div_tau_p_dmesh,
 				   d_div_tau_p_dp, w); 
     }
 

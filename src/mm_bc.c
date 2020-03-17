@@ -930,7 +930,9 @@ set_up_Surf_BC(struct elem_side_bc_struct *First_Elem_Side_BC_Array[ ],
     /******************************************************************************/
     /*                              BLOCK 1                                       */
     /*      SURFACE INTEGRAL BOUNDARY CONDITIONS SPECIFIED BY NODE SETS           */
-    /*  WE DO NOT ALLOW THIS TYPE OF INTEGRAL CONDITION !!!!!                     */
+    /*  apply integrated conditions to nodesets with set_up_Point_BC()            */
+    /*  special case: NS surf integral for 1d elements                            */
+    /*  where the surface is the edge node                                        */
     /******************************************************************************/
 
     /* First check to see if this boundary condition is a node set 	      */
@@ -1460,6 +1462,90 @@ free_Edge_BC ( struct elem_edge_bc_struct *First_Elem_Edge_BC_Array[ ],
 
 }
 	
+
+void
+setup_Point_BC (struct elem_side_bc_struct *First_Elem_Side_BC_Array[ ],
+Exo_DB *exo, Dpi *dpi) {
+  char err_msg[MAX_CHAR_IN_INPUT];
+  //int i;
+  int ibc, ielem, ns_id, ins;
+  int is_ns_g, found_ns_local, found_ns_global;
+  int num_nodes_on_side = 1; // This is the edge of a 1D element
+  //int ipin = 0;
+  int node_list[MDE]; /* Even though exodus is spec'd for up to 3 nodes
+  *                      on a 1d element.
+  * * * * * * * * * * * * * * * * * * */
+  //struct elem_side_bc_struct *this_side_bc = NULL;
+
+  for (ibc = 0; ibc < Num_BC; ibc++) {
+    /* First check to see if this boundary condition is a nodeset         */
+    if (!strcmp(BC_Types[ibc].Set_Type, "NS")) {
+      /* Make sure the condition is Neumann type (necessary?) */
+      //struct Boundary_Condition thisBC;
+      //thisBC = BC_Types[ibc];
+      if (BC_Types[ibc].desc->method == WEAK_INT_SURF ||
+          BC_Types[ibc].desc->method == STRONG_INT_SURF) {
+
+        // This is a Neumann condition that gets applied to a node set
+        // What if the nodeset has more than one node?
+        // Get the NS_ID for this condition
+        ns_id = BC_Types[ibc].BC_ID;
+        // see if I (in the mpi processors sense) have this nodeset
+        ins = in_list(ns_id, 0, exo->num_node_sets,exo->ns_id);
+        // record truth value of having the nodeset in the mesh
+        found_ns_local = (ins > -1);
+
+	      /*
+	       * Take advantage of some limited global information that has
+	       * been cached in dpi to check if some sideset complies. This
+	       * beats doing the MPI_Allreduce(...Logical OR) with the associated
+	       * communications overhead.
+	       */
+
+        #ifdef PARALLEL
+          // check for nodeset in global nodeset list
+	        is_ns_g  = in_list(ns_id, 0, dpi->num_node_sets_global,
+          dpi->ns_id_global);
+
+          if ( is_ns_g > -1) {
+			      found_ns_global = TRUE;
+          } else {
+            found_ns_global = FALSE;
+          }
+
+        #endif
+        #ifndef PARALLEL
+          // if not parallel, local is global
+	        found_ns_global = found_ns_local;
+        #endif
+
+        if ( !found_ns_global ) {
+          sr = sprintf(err_msg, "NS_ID %d for BC (%d) not found",
+          ns_id, ibc+1);
+          EH(-1, err_msg);
+        }
+
+        // Here we need to use setup_Elem_Edge_BC to attach this
+        // BC to all its elements on this processor.
+        // Shouldn't there be only 1 element attached to an 
+        // edge-node BC?
+        if ( found_ns_local ) {
+          node_list[0] = exo->ns_node_list[ins];
+          ielem = exo->node_elem_list[
+                  exo->node_elem_pntr[
+                  exo->ns_node_list[ins]]];
+
+          setup_Elem_BC (&First_Elem_Side_BC_Array[ielem],
+				    &BC_Types[ibc],
+				    ibc, num_nodes_on_side,
+				    ielem,
+				    node_list, exo);
+        }
+      }
+    }
+  }
+  return;
+}
 
 void
 set_up_Edge_BC (struct elem_edge_bc_struct *First_Elem_Edge_BC_Array[ ],

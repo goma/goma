@@ -209,10 +209,32 @@ if [ "$ASKED_USER_ANYTHING" == "true" ]; then
     confirm Goma dependency script
 fi
 
-HDF5_VERSION="1.10.5"
-HDF5_MD5="7c19d6b81ee2a3ba7d36f6922b2f90d3"
-NETCDF_VERSION="c-4.6.3"
-NETCDF_MD5="ef0b4d24f2c5a2a424c769cbb91fa45f"
+HDF5_VERSION="1.10.6"
+HDF5_MD5="03095102a6118c32a75a9b9b40be66f2"
+
+NETCDF_VERSION="c-4.7.3"
+NETCDF_MD5="9e1d7f13c2aef921c854d87037bcbd96"
+
+TRILINOS_VERSION="12.18.1"
+TRILINOS_VERSION_DASH="12-18-1"
+TRILINOS_MD5="9c1d151169949bca6cf203831e4d6aee"
+
+MUMPS_VERSION="5.2.1"
+MUMPS_MD5="a4d43b459dc46db984503fbd8526fa69"
+
+OPENMPI_VERSION="4.0.2"
+OPENMPI_MD5="2fdfb4d31cfe1363d8bb5e7488e57cdf"
+OPENMPI_ARCHIVE_URL="https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-$OPENMPI_VERSION.tar.bz2"
+OPENMPI_EXTRA_CONFIGURE_FLAGS="--enable-mpi1-compatibility"
+
+CMAKE_VERSION="3.16.3"
+CMAKE_MD5="9e6fa59704d3a52812e279996b5b01c7"
+
+SUITESPARSE_VERSION="4.5.6"
+SUITESPARSE_MD5="eeb87a842a9b3b0425cf08d97fb3c5ec"
+
+MATIO_VERSION="1.5.17"
+MATIO_MD5="170075cce5c144e19f610af9b64cb63b"
 
 ARCHIVE_NAMES=("arpack96.tar.gz" \
 "patch.tar.gz" \
@@ -222,12 +244,13 @@ ARCHIVE_NAMES=("arpack96.tar.gz" \
 "sparse.tar.gz" \
 "superlu_dist-5.1.3.tar.gz" \
 "y12m.tar.gz" \
-"Trilinos-trilinos-release-12-12-1.tar.gz" \
-"MUMPS_5.1.2.tar.gz" \
-"SuiteSparse-4.5.5.tar.gz" \
-"matio-1.5.10.tar.gz")
+"Trilinos-trilinos-release-$TRILINOS_VERSION_DASH.tar.gz" \
+"MUMPS_$MUMPS_VERSION.tar.gz" \
+"SuiteSparse-$SUITESPARSE_VERSION.tar.gz" \
+"matio-$MATIO_VERSION.tar.gz")
 
 #y12m archive is skipped because it stores the number of downloads in the header
+
 #meaning each y12m tar has a unique MD5SUM.
 ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "14830d758f195f272b8594a493501fa2" \
@@ -237,10 +260,10 @@ ARCHIVE_MD5SUMS=("fffaa970198b285676f4156cebc8626e" \
 "1566d914d1035ac17b73fe9bc0eed02a" \
 "fdee368cba0e95cb0143b6d47915e7a1" \
 "SKIP" \
-"ecd4606fa332212433c98bf950a69cc7" \
-"6ac4f52380ce4d74126be2d7c530e533" \
-"0a5b38af0016f009409a9606d2f1b555" \
-"d3b6e9d24a04c56036ef57e8010c80f1")
+$TRILINOS_MD5 \
+$MUMPS_MD5 \
+"$SUITESPARSE_MD5" \
+"$MATIO_MD5")
 
 ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
@@ -250,10 +273,10 @@ ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
 "http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v5.1.3" \
 "http://www.netlib.org/cgi-bin/netlibfiles.tgz?format=tgz\\&filename=y12m%2Fy12m.f" \
-"https://github.com/trilinos/Trilinos/archive/trilinos-release-12-12-1.tar.gz" \
-"http://mumps.enseeiht.fr/MUMPS_5.1.2.tar.gz" \
-"http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-4.5.5.tar.gz" \
-"http://superb-dca2.dl.sourceforge.net/project/matio/matio/1.5.10/matio-1.5.10.tar.gz")
+"https://github.com/trilinos/Trilinos/archive/trilinos-release-$TRILINOS_VERSION_DASH.tar.gz" \
+"http://mumps.enseeiht.fr/MUMPS_$MUMPS_VERSION.tar.gz" \
+"http://faculty.cse.tamu.edu/davis/SuiteSparse/SuiteSparse-$SUITESPARSE_VERSION.tar.gz" \
+"https://github.com/tbeu/matio/releases/download/v$MATIO_VERSION/matio-$MATIO_VERSION.tar.gz")
 
 # You can't call the ARPACK patch ARPACK or it will think it is already extracted
 # When in reality it isn't
@@ -265,10 +288,10 @@ ARCHIVE_DIR_NAMES=("ARPACK" \
 "sparse" \
 "superlu_dist-5.1.3" \
 "y12m" \
-"Trilinos-trilinos-release-12-12-1" \
-"MUMPS_5.1.2" \
+"Trilinos-trilinos-release-$TRILINOS_VERSION_DASH" \
+"MUMPS_$MUMPS_VERSION" \
 "SuiteSparse" \
-"matio-1.5.10")
+"matio-$MATIO_VERSION")
 
 ARCHIVE_HOMEPAGES=("http://www.caam.rice.edu/software/ARPACK/" \
 "https://www.hdfgroup.org/" \
@@ -295,18 +318,18 @@ ARCHIVE_REAL_NAMES=("ARPACK96" \
 "MATIO")
 
 if [[ "$MPI_BASE_DIR" == "BUILD" ]]; then
-    ARCHIVE_NAMES+=("openmpi-2.1.1.tar.gz")
-    ARCHIVE_MD5SUMS+=("bee36445ad1ef452a378f446f054804d")
-    ARCHIVE_URLS+=("https://www.open-mpi.org/software/ompi/v2.1/downloads/openmpi-2.1.1.tar.gz")
-    ARCHIVE_DIR_NAMES+=("openmpi_2.1.1")
+    ARCHIVE_NAMES+=("openmpi-$OPENMPI_VERSION.tar.gz")
+    ARCHIVE_MD5SUMS+=("$OPENMPI_MD5")
+    ARCHIVE_URLS+=("$OPENMPI_ARCHIVE_URL")
+    ARCHIVE_DIR_NAMES+=("openmpi-$OPENMPI_VERSION")
     ARCHIVE_HOMEPAGES+=("https://www.open-mpi.org/")
     ARCHIVE_REAL_NAMES+=("OpenMPI")
 #    If the user says to use the intel library but sets the base dir to BUILD then there's a conflict here
     MPI_NAME="open"
-    MPI_BASE_DIR="$GOMA_LIB/openmpi-2.1.1"
+    MPI_BASE_DIR="$GOMA_LIB/openmpi-$OPENMPI_VERSION"
     MPI_IS_BUILT_FROM_SCRATCH="true"
     echo
-    echo "OpenMPI 2.1.1 will be built."
+    echo "OpenMPI $OPENMPI_VERSION will be built."
     echo "You will have to add ${MPI_BASE_DIR}/lib to your LD_LIBRARY_PATH"
     echo "And ${MPI_BASE_DIR}/bin to your PATH environment variables"
     echo "Before running Goma"
@@ -316,7 +339,7 @@ fi
 
 if command -v cmake; then
     cmake_vers=$(cmake --version |grep "version" | awk '{print $NF}')
-    if [[ "$cmake_vers" = $(echo -e "$cmake_vers\n2.8.12.2\n" | sort -V |tail -n1) ]]; then
+    if [[ "$cmake_vers" = $(echo -e "$cmake_vers\n3.10.0\n" | sort -V |tail -n1) ]]; then
 	build_cmake="false"
     else
 	build_cmake="true"
@@ -326,12 +349,12 @@ else
 fi
 
 if [ "$build_cmake" == "false" ] ; then
-    echo "Native cmake found newer than 2.8.12.2, skipping download"
+    echo "Native cmake found newer than 3.10.0, skipping download"
 else
-    ARCHIVE_NAMES+=("cmake-3.9.5.tar.gz")
-    ARCHIVE_MD5SUMS+=("0922130d0e0c142a88e58c6e4fef4d7d")
-    ARCHIVE_URLS+=("https://cmake.org/files/v3.9/cmake-3.9.5.tar.gz")
-    ARCHIVE_DIR_NAMES+=("cmake-3.9.5")
+    ARCHIVE_NAMES+=("cmake-$CMAKE_VERSION.tar.gz")
+    ARCHIVE_MD5SUMS+=("$CMAKE_MD5")
+    ARCHIVE_URLS+=("https://github.com/Kitware/CMake/releases/download/v$CMAKE_VERSION/cmake-$CMAKE_VERSION.tar.gz")
+    ARCHIVE_DIR_NAMES+=("cmake-$CMAKE_VERSION")
     ARCHIVE_HOMEPAGES+=("https://cmake.org/")
     ARCHIVE_REAL_NAMES+=("CMake")
     echo "Cmake not found, will build."
@@ -593,105 +616,6 @@ export OWNER
 export MPI_BASE_DIR
 export MAKE_JOBS
 
-read -d '' MUMPS_GCC_8_PATCH << "EOF"
---- ../../tars/MUMPS_5.1.2/src/dtype3_root.F	2017-10-02 01:37:23.000000000 -0600
-+++ dtype3_root.F	2019-02-25 13:21:00.729147069 -0700
-@@ -805,8 +805,8 @@
-       END SUBROUTINE DMUMPS_INIT_ROOT_ANA
-       SUBROUTINE DMUMPS_INIT_ROOT_FAC( N, root, FILS, IROOT,
-      &                                 KEEP, INFO )
-+      USE DMUMPS_STRUC_DEF
-       IMPLICIT NONE
--      INCLUDE 'dmumps_root.h'
-       TYPE ( DMUMPS_ROOT_STRUC ):: root
-       INTEGER N, IROOT, INFO(40), KEEP(500)
-       INTEGER FILS( N )
---- ../../tars/MUMPS_5.1.2/src/ctype3_root.F	2017-10-02 01:37:24.000000000 -0600
-+++ ctype3_root.F	2019-02-25 13:20:42.136928144 -0700
-@@ -805,8 +805,8 @@
-       END SUBROUTINE CMUMPS_INIT_ROOT_ANA
-       SUBROUTINE CMUMPS_INIT_ROOT_FAC( N, root, FILS, IROOT,
-      &                                 KEEP, INFO )
-+      USE DMUMPS_STRUC_DEF
-       IMPLICIT NONE
--      INCLUDE 'cmumps_root.h'
-       TYPE ( CMUMPS_ROOT_STRUC ):: root
-       INTEGER N, IROOT, INFO(40), KEEP(500)
-       INTEGER FILS( N )
---- ../../tars/MUMPS_5.1.2/src/ztype3_root.F	2017-10-02 01:37:25.000000000 -0600
-+++ ztype3_root.F	2019-02-25 13:21:54.169776465 -0700
-@@ -805,8 +805,8 @@
-       END SUBROUTINE ZMUMPS_INIT_ROOT_ANA
-       SUBROUTINE ZMUMPS_INIT_ROOT_FAC( N, root, FILS, IROOT,
-      &                                 KEEP, INFO )
-+      USE DMUMPS_STRUC_DEF
-       IMPLICIT NONE
--      INCLUDE 'zmumps_root.h'
-       TYPE ( ZMUMPS_ROOT_STRUC ):: root
-       INTEGER N, IROOT, INFO(40), KEEP(500)
-       INTEGER FILS( N )
---- ../../tars/MUMPS_5.1.2/src/stype3_root.F	2017-10-02 01:37:23.000000000 -0600
-+++ stype3_root.F	2019-02-25 13:21:36.213564965 -0700
-@@ -805,8 +805,8 @@
-       END SUBROUTINE SMUMPS_INIT_ROOT_ANA
-       SUBROUTINE SMUMPS_INIT_ROOT_FAC( N, root, FILS, IROOT,
-      &                                 KEEP, INFO )
-+      USE DMUMPS_STRUC_DEF
-       IMPLICIT NONE
--      INCLUDE 'smumps_root.h'
-       TYPE ( SMUMPS_ROOT_STRUC ):: root
-       INTEGER N, IROOT, INFO(40), KEEP(500)
-       INTEGER FILS( N )
-EOF
-
-read -d '' MUMPS_PATCH << "EOF"
-5a6,8
-> GOMA_LIB=__GOMA_LIB__
-> 
-> 
-37,38c40,41
-< #LMETISDIR = /local/metis/
-< #IMETIS    = # Should be provided if you use parmetis
----
-> LMETISDIR = $(GOMA_LIB)/ParMetis-3.1.1
-> IMETIS    = -I$(GOMA_LIB)/ParMetis-3.1.1 
-47c50
-< #LMETIS    = -L$(LMETISDIR) -lparmetis -lmetis
----
-> LMETIS    = -L$(LMETISDIR) -lparmetis -lmetis
-52c55
-< ORDERINGSF  = -Dpord
----
-> ORDERINGSF  = -Dpord -Dparmetis -Dmetis
-68,70c71,73
-< CC = gcc
-< FC = gfortran
-< FL = gfortran
----
-> CC = $(MPI_C_COMPILER)
-> FC = $(MPI_F77_COMPILER)
-> FL = $(MPI_CXX_COMPILER)
-72,74c75,76
-< #RANLIB = ranlib
-< RANLIB  = echo
-< SCALAP  = /local/SCALAPACK/libscalapack.a /local/BLACS/LIB/blacs_MPI-LINUX-0.a   /local/BLACS/LIB/blacsF77init_MPI-LINUX-0.a  /local/BLACS/LIB/blacs_MPI-LINUX-0.a
----
-> RANLIB = ranlib
-> SCALAP  = $(SCALAPACK_LIBRARY_DIR)/lib$(SCALAPACK_LIBRARY_NAME).a 
-76,78c78,80
-< INCPAR = -I/usr/local/mpich/include
-< # LIBPAR = $(SCALAP)  -L/usr/local/lib/ -llammpio -llamf77mpi -lmpi -llam -lutil -ldl -lpthread
-< LIBPAR = $(SCALAP)  -L/usr/local/mpich/lib/ -lmpich 
----
-> MPI_HOME=$(MPI_BASE_DIR)
-> INCPAR = -I$(MPI_BASE_DIR)/include
-> LIBPAR = $(SCALAP)  -L$(MPI_BASE_DIR) -lmpi -lutil -ldl -lpthread $(MPI_FORTRAN_LIB)
-83c85
-< LIBBLAS = -L/local/BLAS -lblas
----
-> LIBBLAS = -L$(BLAS_LIBRARY_DIR) $(BLAS_LIBRARY_NAME_ARG)
-EOF
-
 read -d '' BLAS_PATCH << "EOF"
 18c18
 < FORTRAN  = gfortran
@@ -809,20 +733,6 @@ read -r -d '' MUMPS_MAKE_PATCH<<"EOF"
 EOF
 
 
-#https://www.dealii.org/8.5.0/external-libs/trilinos.html See this for details on this patch.
-#Allows building Trilinos with modern versions of Lapack.
-read -r -d '' TRILINOS_EPETRA_LAPACK_PATCH << "EOF"
-175c175
-< #define DGGSVD_F77  F77_BLAS_MANGLE(dggsvd,DGGSVD)
----
-> #define DGGSVD_F77  F77_BLAS_MANGLE(dggsvd3,DGGSVD3)
-230c230
-< #define SGGSVD_F77  F77_BLAS_MANGLE(sggsvd,SGGSVD)
----
-> #define SGGSVD_F77  F77_BLAS_MANGLE(sggsvd3,SGGSVD3)
-EOF
-
-
 cd $GOMA_LIB
 
 function mychecksum {
@@ -890,28 +800,29 @@ export CXX=${SYSTEM_CXX}
 if [ "$build_cmake" == "false" ] ; then
     echo "Native cmake found of sufficient version, skipping build"
 else
-    cd $GOMA_LIB/cmake-3.9.5
+    cd $GOMA_LIB/cmake-$CMAKE_VERSION
     if [ -f bin/cmake ]
     then
         echo "cmake is already built"
     else
-        CC=$SYSTEM_CC CXX=$SYSTEM_CXX FC=$SYSTEM_FC ./bootstrap --prefix=$GOMA_LIB/cmake-3.9.5
+        CC=$SYSTEM_CC CXX=$SYSTEM_CXX FC=$SYSTEM_FC ./bootstrap --prefix=$GOMA_LIB/cmake-$CMAKE_VERSION
         make -j$MAKE_JOBS
         make install
     fi
-    export PATH=$GOMA_LIB/cmake-3.9.5/bin:$PATH
+    export PATH=$GOMA_LIB/cmake-$CMAKE_VERSION/bin:$PATH
 fi
 
 
 if [[ "$MPI_IS_BUILT_FROM_SCRATCH" == "true" ]]; then
     #continue_check
     #make openmpi
-    cd $GOMA_LIB/openmpi-2.1.1
+    cd $GOMA_LIB/openmpi-$OPENMPI_VERSION
     if [ -f bin/ompi_info ]
     then
         echo "openmpi is already built"
     else
-        CC=${SYSTEM_CC} CXX=${SYSTEM_CXX} FC=${SYSTEM_FC} CPP=${SYSTEM_CPP} ./configure --prefix=$GOMA_LIB/openmpi-2.1.1
+        # mpi1 compat for scalapack
+        CC=${SYSTEM_CC} CXX=${SYSTEM_CXX} FC=${SYSTEM_FC} CPP=${SYSTEM_CPP} ./configure $OPENMPI_EXTRA_CONFIGURE_FLAGS --prefix=$GOMA_LIB/openmpi-$OPENMPI_VERSION
         make -j$MAKE_JOBS CC=${SYSTEM_CC} CXX=${SYSTEM_CXX} FC=${SYSTEM_FC} CPP=${SYSTEM_CPP}
         make install
     fi
@@ -944,19 +855,19 @@ fi
 cd $GOMA_LIB
 
 #matio
-if [ -e matio-1.5.10/lib/libmatio.a ]
+if [ -e matio-$MATIO_VERSION/lib/libmatio.a ]
 then
     echo "matio already built"
 else
-    if ! [ -e matio-1.5.10/.goma-extracted ]
+    if ! [ -e matio-$MATIO_VERSION/.goma-extracted ]
     then
-	mv matio-1.5.10 tmpdir
-	mkdir matio-1.5.10
-	mv tmpdir matio-1.5.10/src
-	touch matio-1.5.10/.goma-extracted
+	mv matio-$MATIO_VERSION tmpdir
+	mkdir matio-$MATIO_VERSION
+	mv tmpdir matio-$MATIO_VERSION/src
+	touch matio-$MATIO_VERSION/.goma-extracted
     fi
-    cd matio-1.5.10/src
-    CC=${MPI_C_COMPILER} LD=${MPI_CXX_COMPILER} AR=${ARCHIVER} LIBS="-ldl" ./configure --with-hdf5=${GOMA_LIB}/hdf5-${HDF5_VERSION} --prefix=${GOMA_LIB}/matio-1.5.10 --enable-shared=off
+    cd matio-$MATIO_VERSION/src
+    CC=${MPI_C_COMPILER} LD=${MPI_CXX_COMPILER} AR=${ARCHIVER} LIBS="-ldl" ./configure --with-hdf5=${GOMA_LIB}/hdf5-${HDF5_VERSION} --prefix=${GOMA_LIB}/matio-$MATIO_VERSION --enable-shared=off
     make -j$MAKE_JOBS
     make install
 fi
@@ -1268,22 +1179,12 @@ EOF
 fi
 
 # make mumps
-cd $GOMA_LIB/MUMPS_5.1.2
+cd $GOMA_LIB/MUMPS_$MUMPS_VERSION
 if [ -e lib/libdmumps.a ]
 then
     echo "MUMPS already built"
 else
 
-    if [[ "$CC_NAME" == "gnu" ]]; then
-        GCC_VERSION=$(gcc -dumpversion)
-        if [[ "$GCC_VERSION" = $(echo -e "$GCC_VERSION\n8\n" | sort -V |tail -n1) ]]; then
-            echo "GCC 8 or higher found"
-            echo "$MUMPS_GCC_8_PATCH" > makepatch.inc
-            cd src
-            patch -p0 < ../makepatch.inc
-            cd $GOMA_LIB/MUMPS_5.1.2
-        fi
-    fi
     cat > Makefile.inc <<EOF
 # Begin orderings
 #LSCOTCHDIR = /usr/lib
@@ -1357,9 +1258,9 @@ EOF
 fi
 
 #make trilinos
-rm -rf $GOMA_LIB/trilinos-12.12.1-Temp
-mkdir $GOMA_LIB/trilinos-12.12.1-Temp
-cd $GOMA_LIB/trilinos-12.12.1-Temp
+rm -rf $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
+mkdir $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
+cd $GOMA_LIB/trilinos-$TRILINOS_VERSION-Temp
 
 rm -f CMakeCache.txt
 
@@ -1367,9 +1268,9 @@ MPI_LIBS="-lmpi ${MPI_FORTRAN_LIB}"
 
 HDF5_LIBS="-L${GOMA_LIB}/hdf5-${HDF5_VERSION}/lib -lhdf5_hl -lhdf5 -lz -ldl"
 # Install directory
-TRILINOS_INSTALL=$GOMA_LIB/trilinos-12.12.1-Built
+TRILINOS_INSTALL=$GOMA_LIB/trilinos-$TRILINOS_VERSION
 
-if [ -e $GOMA_LIB/trilinos-12.12.1-Built/bin/aprepro ]; then
+if [ -e $TRILINOS_INSTALL/bin/aprepro ]; then
     echo "Trilinos is already built!"
 else
     cmake \
@@ -1380,23 +1281,25 @@ else
 -D CMAKE_C_COMPILER:FILEPATH=${MPI_C_COMPILER} \
 -D CMAKE_Fortran_COMPILER:FILEPATH=${MPI_F90_COMPILER} \
 -D CMAKE_VERBOSE_MAKEFILE:BOOL=TRUE \
--D CMAKE_VERBOSE_CONFIGURE:BOOL=TRUE \
 -D BUILD_SHARED_LIBS:BOOL=OFF \
+MD TPL_ENABLE_Boost:BOOL=OFF \
+-D Trilinos_ENABLE_ShyLU:BOOL=OFF \
+-D Trilinos_ENABLE_ShyLU_NodeTacho:BOOL=OFF \
+-D Trilinos_ENABLE_ShyLU_NodeBasker:BOOL=OFF \
 -D Trilinos_ENABLE_Triutils:BOOL=ON \
 -D Trilinos_ENABLE_SEACAS:BOOL=ON \
 -D Trilinos_ENABLE_Amesos:BOOL=ON \
 -D Trilinos_ENABLE_Epetra:BOOL=ON \
--D Trilinos_ENABLE_Xpetra:BOOL=OFF \
+-D Trilinos_ENABLE_Xpetra:BOOL=ON \
 -D Trilinos_ENABLE_Ifpack:BOOL=ON \
+-D Trilinos_ENABLE_Ifpack2:BOOL=ON \
 -D Trilinos_ENABLE_Teuchos:BOOL=ON \
 -D Trilinos_ENABLE_ML:BOOL=ON \
+-D Trilinos_ENABLE_MueLu:BOOL=ON \
 -D Trilinos_ENABLE_AztecOO:BOOL=ON \
 -D Trilinos_ENABLE_Stratimikos:BOOL=ON \
 -D Trilinos_ENABLE_Teko:BOOL=ON \
--D Trilinos_ENABLE_KokkosClassic:BOOL=OFF \
--D Trilinos_ENABLE_STK:BOOL=OFF \
--D Trilinos_ENABLE_Amesos2:BOOL=OFF \
--D Trilinos_ENABLE_Zoltan2:BOOL=OFF \
+-D Trilinos_ENABLE_Amesos2:BOOL=ON \
 -D Trilinos_ENABLE_Belos:BOOL=ON \
 -D Trilinos_ENABLE_Sacado:BOOL=ON \
 -D Trilinos_ENABLE_EpetraExt:BOOL=ON \
@@ -1406,19 +1309,19 @@ else
 -D Trilinos_ENABLE_Stratimikos:BOOL=ON \
 -D Trilinos_ENABLE_TESTS:BOOL=ON \
 -D Trilinos_ENABLE_EXPLICIT_INSTANTIATION:BOOL=ON \
--D Trilinos_ENABLE_SECONDARY_STABLE_CODE:BOOL=ON \
+      -D HDF5_LIBRARY_DIRS:PATH="$GOMA_LIB/hdf5-${HDF5_VERSION}/lib" \
+      -D TPL_ENABLE_HDF5:BOOL=ON \
+      -D TPL_HDF5_INCLUDE_DIRS:PATH="$GOMA_LIB/hdf5-${HDF5_VERSION}/include" \
+      -D HDF5_LIBRARY_DIRS:PATH="$GOMA_LIB/hdf5-${HDF5_VERSION}/lib" \
+      -D HDF5_LIBRARY_NAMES:STRING="hdf5_hl;hdf5;z;dl" \
       -D Netcdf_LIBRARY_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/lib" \
       -D TPL_ENABLE_Netcdf:BOOL=ON \
       -D TPL_Netcdf_INCLUDE_DIRS:PATH="$GOMA_LIB/netcdf-${NETCDF_VERSION}/include" \
-      -D Matio_LIBRARY_DIRS:PATH=$GOMA_LIB/matio-1.5.10/lib \
-      -D Matio_INCLUDE_DIRS:PATH=$GOMA_LIB/matio-1.5.10/include \
+      -D Matio_LIBRARY_DIRS:PATH=$GOMA_LIB/matio-$MATIO_VERSION/lib \
+      -D Matio_INCLUDE_DIRS:PATH=$GOMA_LIB/matio-$MATIO_VERSION/include \
 -D TPL_ENABLE_MPI:BOOL=ON \
-  -D MPI_COMPILER:FILEPATH=$MPI_BASE_DIR/bin/mpicc \
-  -D MPI_EXECUTABLE:FILEPATH=$MPI_BASE_DIR/bin/mpirun \
-  -D MPI_BASE_DIR:PATH=$MPI_BASE_DIR \
+-D MPI_BASE_DIR:PATH=$MPI_BASE_DIR \
 -D EpetraExt_BUILD_GRAPH_REORDERINGS:BOOL=ON \
--D EpetraExt_BUILD_BDF:BOOL=ON \
--D TPL_ENABLE_Boost:BOOL=OFF \
 -D TPL_ENABLE_LAPACK:BOOL=ON \
 -D LAPACK_LIBRARY_DIRS="${LAPACK_LIBRARY_DIR}" \
 -D LAPACK_LIBRARY_NAMES="${LAPACK_LIBRARY_NAME}" \
@@ -1427,7 +1330,7 @@ else
 -D BLAS_LIBRARY_DIRS="${BLAS_LIBRARY_DIR}" \
 -D BLAS_LIBRARY_NAMES="${BLAS_LIBRARY_NAME}" \
 -D CMAKE_INSTALL_PREFIX:PATH=$TRILINOS_INSTALL \
--D Trilinos_EXTRA_LINK_FLAGS:STRING="$HDF5_LIBS $MPI_LIBS $FORTRAN_LIBS -lrt" \
+-D Trilinos_EXTRA_LINK_FLAGS:STRING="$HDF5_LIBS $MPI_LIBS $LAPACK_LIBRARY_NAME_ARG $BLAS_LIBRARY_NAME_ARG $FORTRAN_LIBS -lrt -lm" \
 -D TPL_ENABLE_UMFPACK:BOOL=ON \
   -D UMFPACK_LIBRARY_NAMES:STRING="umfpack;amd;suitesparseconfig" \
   -D UMFPACK_LIBRARY_DIRS:PATH="$GOMA_LIB/SuiteSparse/UMFPACK/Lib;$GOMA_LIB/SuiteSparse/AMD/Lib;$GOMA_LIB/SuiteSparse/SuiteSparse_config" \
@@ -1449,8 +1352,8 @@ else
   -D y12m_LIBRARY_DIRS:PATH=$GOMA_LIB/y12m \
 -D TPL_ENABLE_MUMPS:BOOL=ON \
   -D MUMPS_LIBRARY_NAMES:STRING="dmumps;mumps_common;pord;$BLACS_LIBRARY_NAME" \
-  -D MUMPS_LIBRARY_DIRS:PATH="$GOMA_LIB/MUMPS_5.1.2/lib;$GOMA_LIB/MUMPS_5.1.2/PORD/lib;$SCALAPACK_LIBRARY_DIR" \
-  -D MUMPS_INCLUDE_DIRS:PATH="$GOMA_LIB/MUMPS_5.1.2/include;$GOMA_LIB/MUMPS_5.1.2/PORD/include" \
+  -D MUMPS_LIBRARY_DIRS:PATH="$GOMA_LIB/MUMPS_$MUMPS_VERSION/lib;$GOMA_LIB/MUMPS_$MUMPS_VERSION/PORD/lib;$SCALAPACK_LIBRARY_DIR" \
+  -D MUMPS_INCLUDE_DIRS:PATH="$GOMA_LIB/MUMPS_$MUMPS_VERSION/include;$GOMA_LIB/MUMPS_$MUMPS_VERSION/PORD/include" \
   -D CMAKE_CXX_FLAGS:STRING="-DMUMPS_5_0 $BLAS_FLAGS $COMPILER_FLAG_MPI" \
   -D Amesos_ENABLE_SCALAPACK:BOOL=ON \
   -D SCALAPACK_INCLUDE_DIRS:FILEPATH="${SCALAPACK_INCLUDE_DIR}" \
@@ -1460,14 +1363,14 @@ else
   -D MKL_LIBRARY_NAMES:STRING="${MKL_LIBRARY_NAME}" \
   -D MKL_LIBRARY_DIRS:PATH="${MKL_LIBRARY_DIR}" \
   -D MKL_INCLUDE_DIRS:PATH="${MKL_INCLUDE_DIR}" \
--D Amesos_ENABLE_SuperLUDist:BOOL=on \
--D Amesos_ENABLE_ParMETIS:BOOL=on \
+-D Amesos_ENABLE_SuperLUDist:BOOL=ON \
+-D Amesos_ENABLE_ParMETIS:BOOL=ON \
 -D Amesos_ENABLE_LAPACK:BOOL=ON \
 -D Amesos_ENABLE_KLU:BOOL=ON \
 -D Amesos_ENABLE_UMFPACK:BOOL=ON \
 -D Amesos_ENABLE_MUMPS:BOOL=ON \
 $EXTRA_ARGS \
-$GOMA_LIB/Trilinos-trilinos-release-12-12-1
+$GOMA_LIB/Trilinos-trilinos-release-$TRILINOS_VERSION_DASH
 
     make -j$MAKE_JOBS
     make install

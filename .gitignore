@@ -16,3 +16,11 @@ cmake-config
 cmake-debug
 /scripts/easygomabuild.txt
 /scripts/gomaTPLs/
+/*.cflags
+/*.config
+/*.creator
+/*.creator.user
+/*.cxxflags
+/*.files
+/*.includes
+

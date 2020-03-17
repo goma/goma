@@ -454,8 +454,12 @@ rd_bc_specs(FILE *ifp,
         case SHELL_GRAD_FH_NOBC_BC:
         case SHELL_GRAD_PC_NOBC_BC:
         case STRESS_DEVELOPED_BC:
-  	case SHELL_TFMP_FREE_LIQ_BC:
+	case SHELL_TFMP_FREE_LIQ_BC:
 	case SHELL_TFMP_NUM_DIFF_BC:
+	case SHELL_TFMP_GRAD_S_BC:
+	case SHELL_TFMP_FREE_GAS_BC:
+        case SHELL_LUBRICATION_OUTFLOW_BC:
+
 	  break;
 
 	  /* Fall through for all cases which requires a single integer value
@@ -504,6 +508,7 @@ rd_bc_specs(FILE *ifp,
 	case FLOW_PRESSURE_VAR_BC:
         case FLOW_STRESSNOBC_BC:
         case FLOW_GRADV_BC:
+	case FLOW_GRADV_SIC_BC:
 	case FILL_INLET_BC:
         case FILL_CA_BC:
 	case SHARP_CA_2D_BC:
@@ -535,7 +540,9 @@ rd_bc_specs(FILE *ifp,
         case SHELL_GRAD_FP_BC:
         case SHELL_GRAD_FH_BC:
         case SHELL_GRAD_PC_BC:
-
+        case SH_SDET_BC:
+        case SH_MESH2_WEAK_BC:
+  
 	  if ( fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1)
 	    {
 	      sr = sprintf(err_msg, "%s: Expected 1 flt for %s.",
@@ -741,6 +748,7 @@ rd_bc_specs(FILE *ifp,
 	case EM_H2I_BC:
 	case EM_H3R_BC:
 	case EM_H3I_BC:
+	case SHELL_TFMP_SAT_BC:
   
 	    if (fscanf(ifp, "%lf", &BC_Types[ibc].BC_Data_Float[0]) != 1) {
 	      sprintf(err_msg, "%s: Expected 1 flt for %s.",
@@ -1033,7 +1041,8 @@ rd_bc_specs(FILE *ifp,
 		      BC_Types[ibc].BC_Data_Float[4] = 0.;
 	    }
 	  else
-	    SPF(endofstring(echo_string)," %d %.4g", BC_Types[ibc].BC_Data_Int[0],BC_Types[ibc].BC_Data_Float[4]); 
+	    SPF(endofstring(echo_string)," %d %.4g",
+		BC_Types[ibc].BC_Data_Int[0], BC_Types[ibc].BC_Data_Float[4]);
 	  if ( fscanf(ifp, "%lf", 
 		      &BC_Types[ibc].BC_Data_Float[5]) != 1)
 	    {
@@ -1063,10 +1072,77 @@ rd_bc_specs(FILE *ifp,
 
 
 	  break;
+	case VELO_SLIP_POWER_CARD_BC:
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf",
+		      &BC_Types[ibc].BC_Data_Float[0],
+		      &BC_Types[ibc].BC_Data_Float[1],
+		      &BC_Types[ibc].BC_Data_Float[2],
+		      &BC_Types[ibc].BC_Data_Float[3],
+		      &BC_Types[ibc].BC_Data_Float[4]) != 5)
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 5 flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+	    }
+	  BC_Types[ibc].max_DFlt = 5;
+	  SPF_DBL_VEC(endofstring(echo_string), 5,  BC_Types[ibc].BC_Data_Float);
+	  break;
+	case VELO_SLIP_POWER_BC:
+	  if ( fscanf(ifp, "%lf %lf %lf %lf %lf",
+		      &BC_Types[ibc].BC_Data_Float[0],
+		      &BC_Types[ibc].BC_Data_Float[1],
+		      &BC_Types[ibc].BC_Data_Float[2],
+		      &BC_Types[ibc].BC_Data_Float[3],
+		      &BC_Types[ibc].BC_Data_Float[4]) != 5)
+	    {
+	      sr = sprintf(err_msg, "%s: Expected 5 flts for %s.",
+			   yo, BC_Types[ibc].desc->name1);
+	      EH(-1, err_msg);
+	    }
+	  BC_Types[ibc].max_DFlt = 5;
+	  SPF_DBL_VEC(endofstring(echo_string), 5,  BC_Types[ibc].BC_Data_Float);
+
+
+	  // Read in 3 tangential vector components for 3D
+
+	  if ( fscanf(ifp, "%lf",
+		      &BC_Types[ibc].BC_Data_Float[5]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Float[5] = 0.0;
+	    }
+	  else
+	    {
+	      SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[5]);
+	      BC_Types[ibc].max_DFlt = 6;
+	    }
+
+
+	  if ( fscanf(ifp, "%lf",
+		      &BC_Types[ibc].BC_Data_Float[6]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Float[6] = 0.0;
+	    }
+	  else
+	    {
+	      SPF(endofstring(echo_string)," %.4g", BC_Types[ibc].BC_Data_Float[6]);
+	      BC_Types[ibc].max_DFlt = 7;
+	    }
+
+	  if ( fscanf(ifp, "%lf",
+		      &BC_Types[ibc].BC_Data_Float[7]) != 1)
+	    {
+	      BC_Types[ibc].BC_Data_Float[7] = 0.0;
+	    }
+	  else
+	    {
+	      SPF(endofstring(echo_string)," %g", BC_Types[ibc].BC_Data_Float[7]);
+	      BC_Types[ibc].max_DFlt = 8;
+	    }
+	  break;
 
 	  /*
 	   * Fall through for all cases which require five floating point
-	   * values as data input 
+	   * values as data input
 	   */
 
 	case VELO_EK_3D_BC:
@@ -1776,6 +1852,54 @@ rd_bc_specs(FILE *ifp,
 	case CURRENT_USER_BC:
 	case CURRENT_USER_SIC_BC:
 	case VOLT_USER_BC:
+        case U_VES11_PARABOLA_BC:
+        case U_VES12_PARABOLA_BC:
+        case U_VES22_PARABOLA_BC:
+        case U_VES13_PARABOLA_BC:
+        case U_VES23_PARABOLA_BC:
+        case U_VES33_PARABOLA_BC:
+        case U_VES11_1_PARABOLA_BC:
+        case U_VES12_1_PARABOLA_BC:
+        case U_VES22_1_PARABOLA_BC:
+        case U_VES13_1_PARABOLA_BC:
+        case U_VES23_1_PARABOLA_BC:
+        case U_VES33_1_PARABOLA_BC:
+        case U_VES11_2_PARABOLA_BC:
+        case U_VES12_2_PARABOLA_BC:
+        case U_VES22_2_PARABOLA_BC:
+        case U_VES13_2_PARABOLA_BC:
+        case U_VES23_2_PARABOLA_BC:
+        case U_VES33_2_PARABOLA_BC:
+        case U_VES11_3_PARABOLA_BC:
+        case U_VES12_3_PARABOLA_BC:
+        case U_VES22_3_PARABOLA_BC:
+        case U_VES13_3_PARABOLA_BC:
+        case U_VES23_3_PARABOLA_BC:
+        case U_VES33_3_PARABOLA_BC:
+        case U_VES11_4_PARABOLA_BC:
+        case U_VES12_4_PARABOLA_BC:
+        case U_VES22_4_PARABOLA_BC:
+        case U_VES13_4_PARABOLA_BC:
+        case U_VES23_4_PARABOLA_BC:
+        case U_VES33_4_PARABOLA_BC:
+        case U_VES11_5_PARABOLA_BC:
+        case U_VES12_5_PARABOLA_BC:
+        case U_VES22_5_PARABOLA_BC:
+        case U_VES13_5_PARABOLA_BC:
+        case U_VES23_5_PARABOLA_BC:
+        case U_VES33_5_PARABOLA_BC:
+        case U_VES11_6_PARABOLA_BC:
+        case U_VES12_6_PARABOLA_BC:
+        case U_VES22_6_PARABOLA_BC:
+        case U_VES13_6_PARABOLA_BC:
+        case U_VES23_6_PARABOLA_BC:
+        case U_VES33_6_PARABOLA_BC:
+        case U_VES11_7_PARABOLA_BC:
+        case U_VES12_7_PARABOLA_BC:
+        case U_VES22_7_PARABOLA_BC:
+        case U_VES13_7_PARABOLA_BC:
+        case U_VES23_7_PARABOLA_BC:
+        case U_VES33_7_PARABOLA_BC:
 	  num_const = read_constants(ifp, &(BC_Types[ibc].u_BC), NO_SPECIES);
  
 	  if ( num_const < 0 )
@@ -3878,14 +4002,23 @@ BC_consistency( struct Boundary_Condition *BC_Type)
         default:
           // This boundary condition uses a side on a shell element in 2D. This is 
 	  // a node set consisting of one node. Therefore, it's ok.
-          if (BC_Type->desc->BC_Name != SH_GAMMA1_DERIV_SYMM_BC && 
-              BC_Type->desc->BC_Name != SH_GAMMA2_DERIV_SYMM_BC )
-            {
+          switch (BC_Type->desc->BC_Name) {
+            case SH_GAMMA1_DERIV_SYMM_BC:
+            case SH_GAMMA2_DERIV_SYMM_BC:
+            case SHELL_TFMP_FREE_LIQ_BC:
+            case SHELL_TFMP_FREE_GAS_BC:
+            case SHELL_TFMP_GRAD_S_BC:
+            case GRAD_LUB_PRESS_BC:
+            case SH_SDET_BC:
+            case SH_MESH2_WEAK_BC:
+            case SHELL_LUBRICATION_OUTFLOW_BC:
+              break;
+            default:
               sprintf(err_msg, "%s %s %d\n\t\t %s", "BC Consistency error detected. ",
                       BC_Type->desc->name1, BC_Type->BC_ID, " BC is not applicable to node sets ");
               EH(-1,err_msg);
               break;
-            }
+          }
         }
     }
 

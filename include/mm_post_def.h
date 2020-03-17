@@ -114,8 +114,13 @@
 #define I_NEG_VOLPLANE  36
 #define I_SPECIES_SOURCE  37
 #define I_KINETIC_ENERGY  38
-#define I_SHELL_VOLUME 39
+#define I_SHELL_VOLUME  39
 #define I_TFMP_FORCE    40
+#define I_VORTICITY     41
+#define I_GIESEKUS      42
+#define I_LAMB_MAG      43
+#define I_HELICITY      44
+#define I_Q_FCN         45
 
 
 #ifdef _MM_POST_PROC_C
@@ -231,12 +236,17 @@ VOL_NAME_STRUCT pp_vol_names[] =
   { "ELECTRIC_LOAD_Y",   I_ELOADY },
   { "ELECTRIC_LOAD_Z",   I_ELOADZ },
   { "SURFACE_TEMPERATURE",   I_SURF_TEMP },
-  { "VOL_PLANE",          I_VOLUME_PLANE },
-  { "POS_PLANE_FILL",   I_POS_VOLPLANE},
-  { "NEG_PLANE_FILL",   I_NEG_VOLPLANE},
+  { "VOL_PLANE",         I_VOLUME_PLANE },
+  { "POS_PLANE_FILL",    I_POS_VOLPLANE},
+  { "NEG_PLANE_FILL",    I_NEG_VOLPLANE},
   { "SPECIES_SOURCE",    I_SPECIES_SOURCE},
   { "KINETIC_ENERGY",    I_KINETIC_ENERGY},
   { "SHELL_VOLUME",      I_SHELL_VOLUME},
+  { "VORTICITY",         I_VORTICITY},
+  { "GIESEKUS",          I_GIESEKUS},
+  { "LAMB_MAG",          I_LAMB_MAG},
+  { "HELICITY",          I_HELICITY},
+  { "Q_FCN",             I_Q_FCN},
   { "TFMP_FORCE",        I_TFMP_FORCE}
 };
 
@@ -536,6 +546,7 @@ extern int STRAIN_TENSOR;	/* strain tensor for mesh deformation  */
 extern int STREAM;		/* stream function*/
 extern int STREAM_NORMAL_STRESS; /* streamwise normal stress function*/
 extern int STREAM_SHEAR_STRESS; /* streamwise shear stress function*/
+extern int STREAM_TENSION;      /* streamwise Stress Difference*/
 extern int STRESS_CONT;	        /* stress at vertex & midside nodes*/
 extern int STRESS_TENSOR;	/* stress tensor for mesh deformation 
 				 * (Lagrangian pressure) */
@@ -585,6 +596,13 @@ extern int PP_LAME_LAMBDA;     /* Lame LAMBDA coefficient for solid/mesh */
 extern int VON_MISES_STRAIN;
 extern int VON_MISES_STRESS;
 extern int LOG_CONF_MAP;      /* Map log-conformation tensor to stress */
+extern int J_FLUX;            /* Particle stress flux                  */
+extern int EIG;               /* Eigenvalues of rate-of-strain tensor  */
+extern int EIG1;              /* Eigenvector of rate-of-strain tensor  */
+extern int EIG2;              /* Eigenvector of rate-of-strain tensor  */
+extern int EIG3;              /* Eigenvector of rate-of-strain tensor  */
+extern int GRAD_Y;            /* Concentration gradient                  */
+extern int GRAD_SH;            /* Shear gradient                */
 
 extern int UNTRACKED_SPEC;		/*Untracked Species Concentration */
 
@@ -594,6 +612,10 @@ extern int TFMP_INV_PECLET;
 extern int TFMP_KRG;
 extern int VELO_SPEED;              /* i.e., velocity magnitude */
 extern int GIES_CRIT;              /* Giesekus Flow Character */
+extern int HELICITY;              /* v dot vorticity  */
+extern int LAMB_VECTOR;           /* Lamb Vector = vorticity x v  */
+extern int Q_FCN;           /* 2nd invariant of grad_v  */
+extern int POYNTING_VECTORS;	/* EM Poynting Vectors*/
 /*
  *  Post-processing Step 1: add a new variable flag to end of mm_post_proc.h
  *

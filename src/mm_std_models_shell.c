@@ -402,7 +402,78 @@ height_function_model (double *H_U,
      *dH_U_dp = 0.;
      *dH_U_ddh = 1.0;
    }
+ else if(mp->HeightUFunctionModel == TABLE) {
+   struct Data_Table *table_local;
+   table_local = MP_Tables[mp->heightU_function_constants_tableid];
 
+
+   if ( !strcmp(table_local->t_name[0], "LINEAR_TIME") ) {
+     dbl time_local[1];
+     time_local[0] = time;
+
+     *H_U = interpolate_table( table_local, time_local, dH_U_dtime, NULL);
+     dH_U_dX[0] = dH_U_dX[1] = dH_U_dX[2] = 0.0;
+
+
+   }
+ }
+ else if(mp->HeightUFunctionModel == ROLLER) {
+  // implement for bar elements in 2d space for now
+  double hmin = mp->u_heightU_function_constants[0];
+  double r = mp->u_heightU_function_constants[1];
+  double xc = mp->u_heightU_function_constants[2];
+  double external_field_multiplier = mp->u_heightU_function_constants[3];
+  double x  = fv->x[0];
+
+  // we're all efv Sherman! It's likely that gap thickness
+  // should be defined radially for this problem
+  if (external_field_multiplier == 1.0 ) {
+    *H_U = 0.0;
+  } else {
+    *H_U = hmin + r - sqrt(SQUARE(r) - SQUARE(x - xc));
+  }
+
+  /* add on external field height if there is one. The scale factor will be the fourth user const*/
+  if(mp->heightU_ext_field_index >= 0) {
+    *H_U += mp->u_heightU_function_constants[3] * fv->external_field[mp->heightU_ext_field_index];
+    if (*H_U < 0.0) {
+      WH(-1, "read in a negative external field in height_function_model()");
+    }
+  }
+  if (external_field_multiplier == 1.0 ) {
+    dH_U_dX[0] = 0.0;
+  } else {
+    dH_U_dX[0] = (x - xc)/sqrt(SQUARE(r) - SQUARE(x - xc));
+  }
+  // dH_U_DX[0] = dH_ds for my_normal == primitive_s
+  // so handle the external field gradients
+  if(mp->heightU_ext_field_index >= 0) {
+
+    // load ds_dcsi, that is det_J here
+    double det_J;
+    double d_det_J_dmeshkj[DIM][MDE];
+    memset(d_det_J_dmeshkj, 0.0, sizeof(double)*DIM*MDE);
+    detJ_2d_bar(&det_J, d_det_J_dmeshkj);
+
+    int i;
+    double dHext_ds, dHext_dcsi;
+    dHext_ds = 0.0;
+    dHext_dcsi = 0.0;
+
+    // assume that the height field has the same dof as displacement
+    for (i=0; i< ei->dof[MESH_DISPLACEMENT1]; i++) {
+      dHext_dcsi += mp->u_heightU_function_constants[3]
+                      * *evp->external_field[mp->heightU_ext_field_index][i]
+                      *bf[MESH_DISPLACEMENT1]->dphidxi[i][0];
+    }
+
+    dHext_ds = dHext_dcsi/det_J;
+    dH_U_dX[0] += dHext_ds;
+  } // end handling of the external field gradients
+  dH_U_dX[1] = 0.0;
+  dH_U_dX[2] = 0.0;
+
+ }
  else
    {
      EH(-1,"Not a supported height-function model");
@@ -565,7 +636,6 @@ height_function_model (double *H_U,
    }
 
  H = *H_U - *H_L;
-
  return(H);
 
 }
@@ -1526,5 +1596,3 @@ void dynamic_contact_angle_model(
   return;
 }
 /*** END OF dynamic_contact_angle_model ***/
-
-/* END of file mm_std_models_shell.c */

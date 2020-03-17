@@ -51,7 +51,12 @@ EXTERN void free_Edge_BC
 PROTO(( struct elem_edge_bc_struct *[ ],	/* First_Elem_Side_BC_Array          */
        Exo_DB *,		/* exo - ptr to FE db                        */
        Dpi *));			/* dpi - ptr to dist proc info               */
-       
+
+EXTERN void setup_Point_BC
+PROTO(( struct elem_side_bc_struct *[ ],	/* First_Elem_Side_BC_Array          */
+       Exo_DB *,		/* exo - ptr to FE db                        */
+       Dpi *));			/* dpi - ptr to dist proc info               */
+
 EXTERN void set_up_Embedded_BC
 PROTO((void ));
 

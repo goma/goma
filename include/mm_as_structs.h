@@ -30,6 +30,7 @@
 #ifndef _MM_AS_STRUCTS_H
 #define _MM_AS_STRUCTS_H
 
+#include "std.h"
 #include "el_elm.h"
 #include "mm_mp_const.h"
 #include "rf_bc_const.h"
@@ -1602,7 +1603,6 @@ struct Field_Variables
   dbl em_hr[DIM];		/* EM Magnetic Field Vector (real)*/	
   dbl em_hi[DIM];		/* EM Magnetic Field Vector (imag)*/	
 
-
   /*
    * Grads of scalars...
    */
@@ -1868,6 +1868,10 @@ struct Field_Variables
   dbl SM_matrix_inv[DIM*MAX_CONC][DIM*MAX_CONC];  /* inverse of S-M flux-equation coff. matrix */ 
   dbl giant_C_matrix[MAX_CONC][MDE][DIM*MAX_CONC][DIM*MAX_CONC]; /* matrix used to compute
       Jacobians in mm_fill_potential.c -- RSL 3/31/00 */
+
+  dbl d_grad_tfmp_pres_dmesh[DIM][DIM][MDE];
+  dbl d_grad_tfmp_sat_dmesh[DIM][DIM][MDE];
+  
 };
 
 /*
@@ -1974,6 +1978,8 @@ struct Diet_Field_Variables
   dbl strain[DIM][DIM];         /* Strain tensor */
   dbl volume_change;            /* Volume change */
   dbl grad_restime[DIM];       /* Gradient of the Residence time field */
+
+  dbl grad_v[DIM][DIM];         /* Velocity gradient */
 
 };
 
@@ -2969,6 +2975,12 @@ struct Petrov_Galerkin_Data {
 
 typedef struct Petrov_Galerkin_Data PG_DATA;
 
+
+struct SUPG_terms {
+  dbl supg_tau;
+  dbl d_supg_tau_dv[DIM][MDE];
+  dbl d_supg_tau_dX[DIM][MDE];
+};
 
 /*
  * Auxiliaries Variables used in calculating flow rate and average velocity

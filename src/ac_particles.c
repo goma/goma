@@ -3341,7 +3341,7 @@ output_a_particle(particle_t * const p,
     {
       strided_output = !( (goma_time_step + 1) % Particle_Full_Output_Stride );
       last_goma_step = ((TimeIntegration == STEADY) && (goma_time_step  == Particle_Max_Time_Steps - 1)) ||
-	((TimeIntegration == TRANSIENT) && ((goma_time_step == MaxTimeSteps - 1) || (particle_time == tran->TimeMax)));
+        ((TimeIntegration == TRANSIENT) && ((goma_time_step == tran->MaxTimeSteps - 1) || (particle_time == tran->TimeMax)));
 
       /*
       fprintf(stderr, "Proc%d: In oap/full, strided_output = %d, last_step = %d, last_goma_step = %d, force_output=%d\n", ProcID, strided_output, last_step, last_goma_step, force_output);

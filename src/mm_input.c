@@ -1163,10 +1163,17 @@ rd_genl_specs(FILE *ifp,
        * 
        * PRS 7/27/2011
        */
-
+      if(Num_Var_External+1 > MAX_EXTERNAL_FIELD)
+  {
+    SPF(err_msg,
+        ">%d external field vars. Fix MAX_EXTERNAL_FIELD"
+        " (rf_fem_const.h), recompile.",
+        MAX_EXTERNAL_FIELD);
+          EH(-1,err_msg);
+  }
       if ( efv->ipix[Num_Var_External])
 	{
-	  if (fscanf (ifp,"%d",&efv->ipix_matid[Num_Var_External]) != 1)
+    if (fscanf (ifp,"%d",&efv->ipix_matid[Num_Var_External]) != 1)
 	    {
 	      EH(-1, "Must specify a material ID for external pix field");
 	    }
@@ -1184,14 +1191,7 @@ rd_genl_specs(FILE *ifp,
 
     
       Num_Var_External++;
-      if(Num_Var_External > MAX_EXTERNAL_FIELD) 
-	{
-	  SPF(err_msg, 
-	      ">%d external field vars. Fix MAX_EXTERNAL_FIELD"
-	      " (rf_fem_const.h), recompile.",
-	      MAX_EXTERNAL_FIELD);
-          EH(-1,err_msg);
-	}
+
       ECHO(echo_string, echo_file);
     }
 
@@ -1393,56 +1393,61 @@ rd_timeint_specs(FILE *ifp,
   tran->fix_freq = 0;
 
   if(pd_glob[0]->TimeIntegration != STEADY) {
+    double delta_t0;
+    double delta_t_min;
+    double delta_t_max;
+    int max_time_steps;
+    double time_max;
 
     look_for(ifp,"delta_t",input,'=');
-    if (fscanf (ifp,"%le",&Delta_t0) != 1)
+    if (fscanf (ifp,"%le",&delta_t0) != 1)
       {
 	EH( -1, "error reading delta_t");
       }
-    tran->Delta_t0 = Delta_t0;
+    tran->Delta_t0 = delta_t0;
 
     SPF(echo_string,"%s = %.4g","delta_t",tran->Delta_t0); ECHO(echo_string, echo_file);
     
     look_for(ifp,"Maximum number of time steps",input,'=');
-    if (fscanf (ifp,"%d",&MaxTimeSteps) != 1)
+    if (fscanf (ifp,"%d",&max_time_steps) != 1)
       {
 	EH( -1, "error reading max time steps");
       }
-    tran->MaxTimeSteps = MaxTimeSteps; 
+    tran->MaxTimeSteps = max_time_steps;
 
     SPF(echo_string,"%s = %d", "Maximum number of time steps", tran->MaxTimeSteps); ECHO(echo_string, echo_file);
   
     look_for(ifp,"Maximum time",input,'=');
-    if ( fscanf(ifp,"%le",&TimeMax) != 1)
+    if ( fscanf(ifp,"%le",&time_max) != 1)
       {
 	EH( -1, "error reading maximum time");
       }
-    tran->TimeMax = TimeMax; 
+    tran->TimeMax = time_max;
 
     SPF(echo_string,"%s = %.4g","Maximum time",tran->TimeMax); ECHO(echo_string, echo_file);
 
     look_for(ifp,"Minimum time step",input,'=');
-    if ( fscanf(ifp,"%le",&Delta_t_min) != 1)
+    if ( fscanf(ifp,"%le",&delta_t_min) != 1)
       {
 	EH( -1, "error reading minimum time step");
       }
-    tran->Delta_t_min = Delta_t_min; 
+    tran->Delta_t_min = delta_t_min;
 
     SPF(echo_string,"%s = %.4g","Minimum time step",tran->Delta_t_min); ECHO(echo_string, echo_file);
 
-    Delta_t_max = 1.e12;
+    delta_t_max = 1.e12;
     iread = look_for_optional(ifp,"Maximum time step",input,'=');
     if (iread == 1) {   
-      if ( fscanf(ifp,"%le",&Delta_t_max) != 1)
+      if ( fscanf(ifp,"%le",&delta_t_max) != 1)
 	{
 	  EH( -1, "error reading Maximum time step");
 	}
       
-      SPF(echo_string,"%s = %.4g","Maximum time step", Delta_t_max); ECHO(echo_string, echo_file);
+      SPF(echo_string,"%s = %.4g","Maximum time step", delta_t_max); ECHO(echo_string, echo_file);
 
     }
 	
-	tran->Delta_t_max = Delta_t_max;
+        tran->Delta_t_max = delta_t_max;
 
     look_for(ifp,"Time step parameter",input,'=');
     if ( fscanf(ifp,"%le",&(tran->theta) ) != 1)
@@ -1503,7 +1508,7 @@ rd_timeint_specs(FILE *ifp,
       SPF(echo_string,"%s = %d %.4g","Printing Frequency",print_freq,print_delt ); ECHO(echo_string, echo_file);
 
       print_delt2 = -print_delt;
-      print_delt2_time = TimeMax;
+      print_delt2_time = time_max;
       iread = look_for_optional(ifp,"Second frequency time",input,'=');
       if (iread == 1) 
 	  {   
@@ -1593,7 +1598,7 @@ rd_timeint_specs(FILE *ifp,
 	  EH( -1, "error reading Initial Time");
 	}
       SPF(echo_string,"%s = %.4g","Initial Time",tran->init_time); ECHO(echo_string, echo_file);
-      if( (TimeMax - tran->init_time) <= 0.0 ) {
+      if( (time_max - tran->init_time) <= 0.0 ) {
       	EH( -1, "Your maximum time is less than or equal to your initial time!"); // a condition which may result in NAN's in the esp_dot struct
       }
     }
@@ -10928,6 +10933,7 @@ set_mp_to_unity(const int mn)
       m->FickDiffType[w]=CONSTANT;
       m->CurvDiffType[w]=CONSTANT;
       m->GravDiffType[w]=CONSTANT;
+      m->NSCoeffType[w]=CONSTANT;
       m->QTensorDiffType[w] = NO_MODEL;
       m->gam_diffusivity[w]=0.;
       m->mu_diffusivity[w]=0.;
@@ -13245,6 +13251,10 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 		EH(-1,err_msg);
 	      }
 	  }
+	else if (strcmp( line, "LINEAR_TIME") == 0) {
+	  strcpy( table->t_name[i],"LINEAR_TIME");
+	  table->t_index[i] = LINEAR_TIME;
+	}
 	else if( (strcmp( line, "CAP_PRES") == 0) )
 	  {
 	    if( (strcmp( table->f_name, "Saturation") != 0) ) 

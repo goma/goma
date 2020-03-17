@@ -56,6 +56,7 @@ static char rcsid[] =
 #include "mm_as.h"
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
+#include "mm_qtensor_model.h"
 
 #include "mm_eh.h"
 #include "mm_more_utils.h"
@@ -78,7 +79,8 @@ static char rcsid[] =
 
 #include "mm_std_models_shell.h"
 #include "mm_std_models.h"
-
+#include "shell_tfmp_struct.h"
+#include "shell_tfmp_util.h"
 /*
  * Global variable definitions.
  * This is the 1 place these variables are defined. If you need them
@@ -226,6 +228,7 @@ int STRAIN_TENSOR = -1;		/* strain tensor for mesh deformation  */
 int STREAM = -1;	       	/* stream function*/
 int STREAM_NORMAL_STRESS = -1;	/* streamwise normal stress function*/
 int STREAM_SHEAR_STRESS = -1;	/* streamwise shear stress function*/
+int STREAM_TENSION = -1;	/* streamwise tension - (Ttt-Tnn)/R*/
 int STRESS_CONT = -1;	        /* stress at vertex & midside nodes*/
 int STRESS_TENSOR = -1;		/* stress tensor for mesh deformation 
 				 * (Lagrangian pressure) */
@@ -273,7 +276,17 @@ int TFMP_KRG    = -1;
 int LOG_CONF_MAP = -1;
 int VELO_SPEED = -1;
 int GIES_CRIT = -1;
-
+int J_FLUX = -1;
+int EIG = -1;
+int EIG1 = -1;
+int EIG2 = -1;
+int EIG3 = -1;
+int GRAD_SH = -1;
+int GRAD_Y = -1;
+int HELICITY = -1;
+int LAMB_VECTOR = -1;
+int Q_FCN = -1;		      
+int POYNTING_VECTORS = -1;   	/* conduction flux vectors*/
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -490,7 +503,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
      *
      ****************************************************************************/
 {
-  int dim, a, b, eqn, var, w, w1, i, j, I, index, status, mode;
+  int dim, a, b, c, eqn, var, w, w1, i, j, I, index, status, mode;
   dbl det_J;                   /* determinant of Jacobian: has "r" in it for
 			     	  axisymmetric case, no "r" for Cartesian*/
   dbl phi_i;		       /* Weighting functions for i-th residuals */
@@ -498,7 +511,6 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   dbl wt;
   dbl n[MAX_CONC][DIM];        /* Diffusion flux vector. */
   dbl qc[DIM];                 /* Conduction flux vector. */
-  dbl Dsh[DIM][DIM];
   int err, ldof, ldof_right, ileft, iright, midside, checkPorous;
   /*  int first_porous_var = POR_LAST - MAX_POROUS_NUM + 1;*/
   /*  int SPECIES = MAX_VARIABLE_TYPES; */
@@ -523,7 +535,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   double dTT_dcur_strain[MAX_PDIM][MAX_PDIM][MDE];
 
   /*  double elast_modulus;	*/
-  double speed, stream_grad, velo_sqrd;
+  double stream_grad, velo_sqrd, vdelvdx[DIM], curv;
   double vconv[MAX_PDIM]; /*Calculated convection velocity */
   double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
@@ -554,6 +566,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   /* DG VE stuff */
   int v_s[MAX_MODES][DIM][DIM];
+  dbl ves[DIM][DIM];
 
   /* Variables for dielectrophoretic force calculations. */
   dbl coeff_a, coeff_b, coeff_c, coeff_d, CM_fact, dielectrophoretic_force_coeff;
@@ -625,7 +638,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
    */
 
   if (STREAM_NORMAL_STRESS != -1 && pd->e[R_MOMENTUM1]) {
-    speed = 0.;
+    velo_sqrd = 0.;
     stream_grad = 0.;
 
     for ( a=0; a<VIM; a++)
@@ -635,26 +648,92 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	    gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
 	  }
       }
-    for ( a=0; a<dim; a++)
+    for ( a=0; a<VIM; a++)
       {
-	speed += fv->v[a] * fv->v[a];
-	for ( b=0; b<dim; b++)
+	velo_sqrd += fv->v[a] * fv->v[a];
+	for ( b=0; b<VIM; b++)
 	  {
 	    /* vv:gamma */
 	    stream_grad += fv->v[a] * gamma[a][b] * fv->v[b];
 	  }
       }
-    if (speed > 0.0) {
-      Ttt = mp->viscosity* stream_grad / sqrt(speed)/sqrt(speed);
+      stream_grad *= mp->viscosity;
+/*
+ **  viscoelastic stress tensor
+ **/
+   if ( pd->v[POLYMER_STRESS11] )
+      {
+       dbl log_c[DIM][DIM];
+       dbl exp_s[DIM][DIM];
+       dbl R1[DIM][DIM];
+       dbl eig_values[DIM];
+       dbl mup = 0.;
+       dbl lambda = 0.;
+       int ve_mode, p, r;
+       memset( ves, 0, sizeof(dbl)*DIM*DIM);
+       if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
+         {
+          for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
+             {
+              for (p=0; p<VIM; p++)
+                 {
+                  for (r=0; r<VIM; r++)
+                     {
+                      log_c[p][r] = fv->S[ve_mode][p][r];
+                     }
+                 }
+#ifdef ANALEIG_PLEASE
+              analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
+              compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
+              mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
+              if(ve[ve_mode]->time_constModel == CONSTANT)
+                {
+                 lambda = ve[ve_mode]->time_const;
+                }
+              for (a=0; a<VIM; a++)
+                 {
+                  for (b=0; b<VIM; b++)
+                     {
+                      ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
+                     }
+                 }
+             }
+         }
+       else
+         {
+          for ( a=0; a<VIM; a++)
+             {
+              for ( b=0; b<VIM; b++)
+                 {
+                  for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                     {
+                      ves[a][b] += fv->S[ve_mode][a][b];
+                     }
+                 }
+             }
+         }
+      for ( a=0; a<VIM; a++)
+        {
+	for ( b=0; b<VIM; b++)
+	  {
+	    stream_grad += fv->v[a] * ves[a][b] * fv->v[b];
+	  }
+        }
+      } // if pd->v[POLYMER_STRESS11]
+    if (DOUBLE_NONZERO(velo_sqrd)) {
+      Ttt =  stream_grad / velo_sqrd;
     } else {
       Ttt = 0.0;
     }
+
     local_post[STREAM_NORMAL_STRESS] = Ttt;
     local_lumped[STREAM_NORMAL_STRESS] = 1.;
   }
   if (STREAM_SHEAR_STRESS != -1 && pd->e[R_MOMENTUM1]) {
     nv[0] = fv->v[1];  nv[1] = -fv->v[0]; 
-    speed = 0.;
+    velo_sqrd = 0.;
     stream_grad = 0.;
 
     for ( a=0; a<VIM; a++)
@@ -666,20 +745,200 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       }
     for ( a=0; a<dim; a++)
       {
-	speed += fv->v[a] * fv->v[a];
+	velo_sqrd += fv->v[a] * fv->v[a];
 	for ( b=0; b<dim; b++)
 	  {
 	    /* vv:gamma */
 	    stream_grad += fv->v[a] * gamma[a][b] * nv[b];
 	  }
       }
-    if (speed > 0.0) {
-      Tnt = mp->viscosity* stream_grad / sqrt(speed)/sqrt(speed);
+    stream_grad *= mp->viscosity;
+/*
+ **  viscoelastic stress tensor
+ **/
+   if ( pd->v[POLYMER_STRESS11] )
+      {
+       dbl log_c[DIM][DIM];
+       dbl exp_s[DIM][DIM];
+       dbl R1[DIM][DIM];
+       dbl eig_values[DIM];
+       dbl mup = 0.;
+       dbl lambda = 0.;
+       int ve_mode, p, r;
+       memset( ves, 0, sizeof(dbl)*DIM*DIM);
+       if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
+         {
+          for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
+             {
+              for (p=0; p<VIM; p++)
+                 {
+                  for (r=0; r<VIM; r++)
+                     {
+                      log_c[p][r] = fv->S[ve_mode][p][r];
+                     }
+                 }
+#ifdef ANALEIG_PLEASE
+              analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
+              compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
+              mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
+              if(ve[ve_mode]->time_constModel == CONSTANT)
+                {
+                 lambda = ve[ve_mode]->time_const;
+                }
+              for (a=0; a<VIM; a++)
+                 {
+                  for (b=0; b<VIM; b++)
+                     {
+                      ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
+                     }
+                 }
+             }
+         }
+       else
+         {
+          for ( a=0; a<VIM; a++)
+             {
+              for ( b=0; b<VIM; b++)
+                 {
+                  for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                     {
+                      ves[a][b] += fv->S[ve_mode][a][b];
+                     }
+                 }
+             }
+         }
+      for ( a=0; a<VIM; a++)
+        {
+	for ( b=0; b<VIM; b++)
+	  {
+	    stream_grad += fv->v[a] * ves[a][b] * nv[b];
+	  }
+        }
+      } // if pd->v[POLYMER_STRESS11]
+    if (DOUBLE_NONZERO(velo_sqrd)) {
+      Tnt = stream_grad / velo_sqrd;
     } else {
       Tnt = 0.0;
     }
     local_post[STREAM_SHEAR_STRESS] = Tnt;
     local_lumped[STREAM_SHEAR_STRESS] = 1.;
+  }
+  if (STREAM_TENSION != -1 && pd->e[R_MOMENTUM1]) {
+    velo_sqrd = 0.;
+    stream_grad = 0.;
+    curv = 0.;
+
+    for ( a=0; a<VIM; a++)
+      {
+	for ( b=0; b<VIM; b++)
+	  {
+	    gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	  }
+      }
+    memset( vdelvdx, 0, sizeof(dbl)*DIM);
+    for ( a=0; a<dim; a++)
+      { 
+       velo_sqrd += fv->v[a] * fv->v[a]; 
+        for ( b=0; b<dim; b++)
+          { 
+	   vdelvdx[b] += fv->v[a]*fv->grad_v[b][a];
+          }
+      }
+    for ( a=0; a<dim; a++)
+      {
+	for ( b=0; b<dim; b++)
+	  {
+	    /* (2*vv-Iv):gamma */
+	    stream_grad += (2.*fv->v[a]*fv->v[b]-delta(a,b)*velo_sqrd)*gamma[a][b];
+	  }
+      }
+    for ( a=0; a<dim; a++)
+      {
+        for ( b=0; b<dim; b++)
+          { 
+        for ( c=0; c<dim; c++)
+          { 
+           curv += SQUARE(velo_sqrd*fv->grad_v[c][b]-fv->v[b]*vdelvdx[c]);
+             }
+          }
+      }
+    if(DOUBLE_NONZERO(velo_sqrd))curv = sqrt(curv/CUBE(velo_sqrd));
+    stream_grad *= mp->viscosity;
+/*
+ **  viscoelastic stress tensor
+ **/
+   if ( pd->v[POLYMER_STRESS11] )
+      {
+       dbl log_c[DIM][DIM];
+       dbl exp_s[DIM][DIM];
+       dbl R1[DIM][DIM];
+       dbl eig_values[DIM];
+       dbl mup = 0.;
+       dbl lambda = 0.;
+       int ve_mode, p, r;
+       memset( ves, 0, sizeof(dbl)*DIM*DIM);
+       if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
+         {
+          for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
+             {
+              for (p=0; p<VIM; p++)
+                 {
+                  for (r=0; r<VIM; r++)
+                     {
+                      log_c[p][r] = fv->S[ve_mode][p][r];
+                     }
+                 }
+#ifdef ANALEIG_PLEASE
+              analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
+              compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
+              mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
+              if(ve[ve_mode]->time_constModel == CONSTANT)
+                {
+                 lambda = ve[ve_mode]->time_const;
+                }
+              for (a=0; a<VIM; a++)
+                 {
+                  for (b=0; b<VIM; b++)
+                     {
+                      ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
+                     }
+                 }
+             }
+         }
+       else
+         {
+          for ( a=0; a<VIM; a++)
+             {
+              for ( b=0; b<VIM; b++)
+                 {
+                  for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                     {
+                      ves[a][b] += fv->S[ve_mode][a][b];
+                     }
+                 }
+             }
+         }
+      for ( a=0; a<VIM; a++)
+        {
+	for ( b=0; b<VIM; b++)
+	  {
+	    stream_grad += (2.*fv->v[a]*fv->v[b]-delta(a,b)*velo_sqrd)*ves[a][b];
+	  }
+        }
+      } // if pd->v[POLYMER_STRESS11]
+/* Need to determine curvature to multiply here...*/
+
+    if (DOUBLE_NONZERO(velo_sqrd)) {
+      Ttt = curv * stream_grad / velo_sqrd;
+    } else {
+      Ttt = 0.0;
+    }
+    local_post[STREAM_TENSION] = Ttt;
+    local_lumped[STREAM_TENSION] = 1.;
   }
 
   if (DIV_VELOCITY != -1 && pd->e[PRESSURE]) {
@@ -810,41 +1069,48 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   }
 
   if (MEAN_SHEAR != -1 && pd->e[R_MOMENTUM1] ){
+    double gammadot, gamma[DIM][DIM];
     for (a = 0; a < VIM; a++) {       
       for (b = 0; b < VIM; b++) {
-	Dsh[a][b] = (fv->grad_v[a][b] + fv->grad_v[b][a]);
+	  gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+        }
       }
-    }
     /* find second invariant of strain-rate */
-    Dnn = 0.0;
-    for (a = 0; a < VIM; a++) {
-      for (b = 0; b < VIM; b++) {
-	Dnn += (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
-      }
-    }
-    local_post[MEAN_SHEAR] = sqrt(2.*fabs(Dnn));
+    calc_shearrate(&gammadot, gamma, NULL, NULL);
+
+    local_post[MEAN_SHEAR] = gammadot;
     local_lumped[MEAN_SHEAR] = 1.;
   }
 
   if (GIES_CRIT != -1 && pd->e[R_MOMENTUM1] ){
-    dbl Dvt[DIM][DIM], Domega;
+    double gammadot, gamma[DIM][DIM];
+    double vorticity, omega[DIM][DIM];
     for (a = 0; a < VIM; a++) {       
       for (b = 0; b < VIM; b++) {
-	Dsh[a][b] = 0.5 * (fv->grad_v[a][b] + fv->grad_v[b][a]);
-	Dvt[a][b] = 0.5 * (fv->grad_v[a][b] - fv->grad_v[b][a]);
+	gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	omega[a][b] = fv->grad_v[a][b] - fv->grad_v[b][a];
       }
     }
     /* find second invariant of strain-rate */
-    Dnn = 0.0; Domega = 0.0;
-    for (a = 0; a < VIM; a++) {
-      for (b = 0; b < VIM; b++) {
-	Dnn += 0.5 * (Dsh[a][b] * Dsh[a][b] - Dsh[a][a] * Dsh[b][b]);
-	Domega += 0.5 * (Dvt[a][b] * Dvt[a][b] - Dvt[a][a] * Dvt[b][b]);
-      }
-    }
-    local_post[GIES_CRIT] = (sqrt(fabs(Dnn))-sqrt(fabs(Domega)))/
-			(DBL_SMALL+sqrt(fabs(Dnn))+sqrt(fabs(Domega)));
+    calc_shearrate(&gammadot, gamma, NULL, NULL);
+    calc_shearrate(&vorticity, omega, NULL, NULL);
+    local_post[GIES_CRIT] = (gammadot - vorticity)/
+			(DBL_SMALL + gammadot + vorticity);
     local_lumped[GIES_CRIT] = 1.;
+  }
+
+  if (Q_FCN != -1 && pd->e[R_MOMENTUM1] ){
+    double gammadot, del_v[DIM][DIM];
+    for (a = 0; a < VIM; a++) {       
+      for (b = 0; b < VIM; b++) {
+	  del_v[a][b] = fv->grad_v[a][b];
+        }
+      }
+    /* find second invariant of velocity gradient tensor */
+    calc_shearrate(&gammadot, del_v, NULL, NULL);
+
+    local_post[Q_FCN] = gammadot;
+    local_lumped[Q_FCN] = 1.;
   }
 
   if (VELO_SPEED != -1 && pd->e[R_MOMENTUM1] ){
@@ -1119,8 +1385,6 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       local_lumped[DIFFUSION_VECTORS_POR_AIR_GPHASE + a] = 1.0;
     }
   }
-
-
 
   if(CONDUCTION_VECTORS != -1 && pd->e[R_ENERGY])
   {
@@ -1595,20 +1859,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     /* Gather necessary values (S, h, Krg, gradII_P)*/
 
     // need pure phase viscosities
-    double mu_l = 0.01; //    [g/cm/s]
-    double mu_g = 186e-6; //  [g/cm/s] air
+    double mu_l, mu_g;
 
-    switch(mp->tfmp_viscosity_model){
-    case CONSTANT:
-      mu_g = mp->tfmp_viscosity_const[0];
-      if (mp->len_tfmp_viscosity_const == 2) {
-	mu_l = mp->tfmp_viscosity_const[1];
-      }
-      break;
-    default:
-      // viscosity of air and water, as defined above
-      break;
-    }
+    load_tfmp_viscosity_model(
+      &mu_l, &mu_g
+    );
 
     
     double S = fv->tfmp_sat;
@@ -1618,66 +1873,52 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     double h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
 			      dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
 
-    dbl Krl;// = S*S/2.0*(3.0 - S);
-    dbl Krg;// = (1.0-S)*(1.0-S)*(1.0-S) + 3.0/2.0*mu_g/mu_l*S*(1.0-S)*(2.0-S);
+    double dh_dtime = dH_U_dtime - dH_L_dtime;
+    double gradII_h[DIM];
+	  for (k = 0; k<DIM; k++) {
+      gradII_h[k] = dH_U_dX[k] - dH_L_dX[k];
+    }
+    double dh_dmesh[DIM][MDE];
+    double dh_dnormal[DIM][MDE];
+    double d2h_dtime_dmesh[DIM][MDE];
+    double d2h_dtime_dnormal[DIM][MDE];
+    double d_gradIIh_dmesh[DIM][DIM][MDE];
+    double d_gradIIh_dnormal[DIM][DIM][MDE];
 
-    
-    // try shifted-scaled rel perms
-    
-      // gas transition
-    dbl Scg, alphag, Scl, alphal;
-    switch (mp->tfmp_rel_perm_model) {
-    case PIECEWISE:
-      Scg = mp->tfmp_rel_perm_const[0];
-      alphag = mp->tfmp_rel_perm_const[1];
-      Scl = mp->tfmp_rel_perm_const[2];
-      alphal = mp->tfmp_rel_perm_const[3];
-      break;
-    default:
-      Scg = 0.78;
-      alphag = 0.1;
-      Scl = 0.78;
-      alphal = 0.1;
-      break;
-    }
-    
-    dbl mg = -1./2./alphag;
-    dbl cg = -mg*(Scg + alphag);
-    dbl ml = 1./2./alphal;
-    dbl cl = -ml*(Scl - alphal);
-  
-    if ( S <= Scg - alphag) {
-      Krg = 1.0;
-      //dKrg_dS = 0.0;
-    } else if ( S > Scg - alphag && S < Scg + alphag ) {
-      Krg = mg*S + cg;
-      //dKrg_dS = mg;
-    } else {
-      Krg = 0.0;
-      //dKrg_dS = 0.0;
-    }
-    
-    // liquid transition
-    
-    if ( S <= Scl - alphal) {
-      Krl = 0.0;
-      //dKrl_dS = 0.0;
-    } else if ( S > Scl - alphal && S < Scl + alphal ) {
-      Krl = ml*S + cl;
-      //dKrl_dS = ml;
-      
-    } else { // S > 1.0
-      Krl = 1.0 ;
-      //dKrl_dS = 0.0;
-    }
-    
+    // dh_dtime is not used here
+    double tt = 1.0;
 
-    dbl grad_P[DIM], gradII_P[DIM];
-    for (k = 0; k<DIM; k++) {
-      grad_P[k] = fv->grad_tfmp_pres[k];
-    }
+    load_displacement_coupling_model(
+      tt,
+      delta_t,
+      &h,
+      &dh_dtime,
+      gradII_h,
+      dh_dmesh,
+      dh_dnormal,
+      d2h_dtime_dmesh,
+      d2h_dtime_dnormal,
+      d_gradIIh_dmesh,
+      d_gradIIh_dnormal,
+      n_dof,
+      dof_map
+    );
+    //  rel perms
+    double Krl, dKrl_dS, Krg, dKrg_dS;
+    load_relative_permeability_model(S, &Krl, &dKrl_dS, &Krg, &dKrg_dS);
+    
+    /* Use the velocity function model */
+    double veloU[DIM], veloL[DIM], veloAVG[DIM];
 
-    Inn(grad_P, gradII_P);
+    velocity_function_model(veloU, veloL, time, delta_t);
+
+    for (k=0; k<DIM; k++) {
+      veloAVG[k] = (veloU[k] + veloL[k])/2.;
+    }
+    veloAVG[2] = 0.0;
+
+    double gradII_P[DIM];
+    Inn(fv->grad_tfmp_pres, gradII_P);
     
     /* Calculate Velocity */
     for (k = 0; k<DIM; k++) {
@@ -1685,19 +1926,19 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       v_g[k] = -h*h/12.0/mu_g*Krg*gradII_P[k];
     }
     if (TFMP_GAS_VELO != -1) {
-      local_post[TFMP_GAS_VELO] = v_g[0];
+      local_post[TFMP_GAS_VELO] = v_g[0] + veloAVG[0];
       local_lumped[TFMP_GAS_VELO] += 1;
-      local_post[TFMP_GAS_VELO + 1] = v_g[1];
+      local_post[TFMP_GAS_VELO + 1] = v_g[1] + veloAVG[1];
       local_lumped[TFMP_GAS_VELO + 1] += 1;
-      local_post[TFMP_GAS_VELO + 2] = v_g[2];
+      local_post[TFMP_GAS_VELO + 2] = v_g[2] + veloAVG[2];
       local_lumped[TFMP_GAS_VELO + 2] += 1;
     }
     if (TFMP_LIQ_VELO != -1) {
-      local_post[TFMP_LIQ_VELO] = v_l[0];
+      local_post[TFMP_LIQ_VELO] = v_l[0] + veloAVG[0];
       local_lumped[TFMP_LIQ_VELO] += 1;
-      local_post[TFMP_LIQ_VELO + 1] = v_l[1];
+      local_post[TFMP_LIQ_VELO + 1] = v_l[1] + veloAVG[1];
       local_lumped[TFMP_LIQ_VELO + 1] += 1;
-      local_post[TFMP_LIQ_VELO + 2] = v_l[2];
+      local_post[TFMP_LIQ_VELO + 2] = v_l[2] + veloAVG[2];
       local_lumped[TFMP_LIQ_VELO + 2] += 1;
     }
     if (TFMP_KRG != -1) {
@@ -1727,18 +1968,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     /* Gather necessary values (S, h, Krg, gradII_P)*/
 
     // need pure phase viscosities
-    double mu_l = 0.01; //    [g/cm/s]
+    double mu_l, mu_g;
 
-    switch(mp->tfmp_viscosity_model){
-    case CONSTANT:
-      if (mp->len_tfmp_viscosity_const == 2) {
-	mu_l = mp->tfmp_viscosity_const[1];
-      }
-      break;
-    default:
-      // viscosity of water, as defined above
-      break;
-    }
+    load_tfmp_viscosity_model(
+      &mu_l, &mu_g
+    );
 
     
     double S = fv->tfmp_sat;
@@ -1748,74 +1982,50 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     double h = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
 			      dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
 
-    dbl Krl;// = S*S/2.0*(3.0 - S);
-
-    // split rel perms
-    dbl Scl, alphal;
-
-    switch (mp->tfmp_rel_perm_model) {
-    case PIECEWISE:
-      Scl = mp->tfmp_rel_perm_const[2];
-      alphal = mp->tfmp_rel_perm_const[3];
-      break;
-    default:
-      Scl = 0.78;
-      alphal = 0.1;
-      break;
-    }
-
-    // liquid transition
-    dbl ml = 1./2./alphal;
-    dbl cl = -ml*(Scl - alphal);
-
-    if ( S <= Scl - alphal) {
-      Krl = 0.0;
-    } else if ( S > Scl - alphal && S < Scl + alphal ) {
-      Krl = ml*S + cl;
-    } else { // S > 1.0
-      Krl = 1.0 ;
-    }
-    dbl D, Scd, betad, md, cd, Krd;
-    switch (mp->tfmp_diff_model) {
-    case CONSTANT:
-      D = mp->tfmp_diff_const[0];
-      Krd = 0.0;
-      break;
-      //  case EXPONENTIAL:
-      //D = 3.16e-22*exp(34.53877639491068*S);
-      //dD_dS = 3.16e-22*34.53877639491068*exp(34.53877639491068*S);
-      //break;
-    case PIECEWISE:
-      D = mp->tfmp_diff_const[0];
-      // diffusion transition
-      Scd = mp->tfmp_diff_const[1];
-      betad = mp->tfmp_diff_const[2];
-      md = 1.f/2.f/betad;
-      cd = -md*(Scd - betad);
-
-      if ( S < Scd - betad) {
-	Krd = 0.0;
-      } else { // ( S >= Scd - betad) { // && S <= Scd + betad ) {
-	Krd = md*S + cd;
+    double dh_dtime = dH_U_dtime - dH_L_dtime;
+      double gradII_h[DIM];
+      for (k = 0; k<DIM; k++) {
+        gradII_h[k] = dH_U_dX[k] - dH_L_dX[k];
       }
-      break;
-      
-    default:
-      D = 0.0;
-      Krd = 0.0;
-      break;
-    }
-    
-    dbl grad_P[DIM], gradII_P[DIM];
-    dbl grad_S[DIM], gradII_S[DIM];
 
-    for (k = 0; k<DIM; k++) {
-      grad_P[k] = fv->grad_tfmp_pres[k];
-      grad_S[k] = fv->grad_tfmp_sat[k];
-    }
+      double dh_dmesh[DIM][MDE];
+      double dh_dnormal[DIM][MDE];
+      double d2h_dtime_dmesh[DIM][MDE];
+      double d2h_dtime_dnormal[DIM][MDE];
+      double d_gradIIh_dmesh[DIM][DIM][MDE];
+      double d_gradIIh_dnormal[DIM][DIM][MDE];
 
-    Inn(grad_P, gradII_P);
-    Inn(grad_S, gradII_S);
+      // dh_dtime is not used here
+      double tt = 1.0;
+
+      load_displacement_coupling_model(
+        tt,
+        delta_t,
+        &h,
+        &dh_dtime,
+        gradII_h,
+        dh_dmesh,
+        dh_dnormal,
+        d2h_dtime_dmesh,
+        d2h_dtime_dnormal,
+        d_gradIIh_dmesh,
+        d_gradIIh_dnormal,
+        n_dof,
+        dof_map
+      );
+
+    //Artificial diffusion constant
+    double D, Krd, dKrd_dS;
+    load_molecular_diffusion_model(S, &D, &Krd, &dKrd_dS);
+
+    //  rel perms
+    double Krl, dKrl_dS, Krg, dKrg_dS;
+    load_relative_permeability_model(S, &Krl, &dKrl_dS, &Krg, &dKrg_dS);
+
+    double gradII_P[DIM], gradII_S[DIM];
+
+    Inn(fv->grad_tfmp_pres, gradII_P);
+    Inn(fv->grad_tfmp_sat, gradII_S);
 
     dbl mag_gradII_P = 0.0;
     dbl mag_gradII_S = 0.0;
@@ -1830,8 +2040,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
     //if (TFMP_GAS_VELO != -1) {
     //if ( Krd != 0.0 && mag_gradII_S >= 1.e-10 ) {
-    if ( Krl != 0.0 && mag_gradII_P != 0.0) {
-      local_post[TFMP_INV_PECLET] = (D*Krd*mag_gradII_S)/(Krl*h*h*h/12.0/mu_l*mag_gradII_P);
+    if ( Krd != 0.0 && mag_gradII_S != 0.0) {
+      local_post[TFMP_INV_PECLET] = (Krl*h*h*h/12.0/mu_l*mag_gradII_P)/(D*Krd*mag_gradII_S);
     } else {
       local_post[TFMP_INV_PECLET] = 0.0;
     }
@@ -1908,8 +2118,79 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     }
   }
 
-  /* calculate real-solid stress here !!  */
+  if (HELICITY != -1 && pd->e[R_MOMENTUM1]) {
+    /* MMH: Note that in the SWIRLING coordinate system, we really
+     * do have a 3-vector and not just a scalar.
+       *
+       * Same for PROJECTED_CARTESIAN, if VELOCITY3 can become
+       * non-zero. -MMH
+       */
+    if (pd->CoordinateSystem == SWIRLING ||
+	pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	pd->CoordinateSystem == CARTESIAN_2pt5D ||
+	dim == 3) {
+	local_post[HELICITY] = 0.0;
+        for (j = 0; j < VIM; j++) {
+	    local_post[HELICITY] += fv->v[j]*fv->curl_v[j];
+            }
+	local_lumped[HELICITY] = 1.0;
+        } 
+  }
 
+  if (LAMB_VECTOR != -1 && pd->e[R_MOMENTUM1]) {
+      for (j = 0; j < VIM; j++) {
+	local_post[LAMB_VECTOR + j] = 0;
+        for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+	     local_post[LAMB_VECTOR + j] += permute(a,b,j)*fv->curl_v[a]*fv->v[b];
+            }
+          }
+	local_lumped[LAMB_VECTOR + j] = 1.0;
+      }
+    }
+
+  /* calculate poynting vectors for EM calculations here !!  */
+  if(POYNTING_VECTORS != -1)
+  {
+    double poynt[DIM];
+    int c;
+    memset(poynt, 0, sizeof(double)*DIM);
+  /*  Acoustic analogy -- scalar version  */
+    if (pd->e[R_ACOUS_PREAL] || pd->e[R_ACOUS_PIMAG])
+    {
+      double k, R, prefactor;
+      k = wave_number( NULL, time);
+      R = acoustic_impedance( NULL, time);
+      prefactor = 0.5/(k*R);
+
+      for ( a=0; a<DIM; a++)
+        {
+         poynt[a] += prefactor*(fv->api*fv->grad_apr[a]-fv->apr*fv->grad_api[a]);
+        }
+    }
+  /*  EM vector, E & H formulation   */
+    else if (pd->e[R_EM_E1_REAL] || pd->e[R_EM_E2_REAL] || pd->e[R_EM_E3_REAL])
+    {
+      for ( a=0; a<DIM; a++)
+        {
+          for ( b=0; b<DIM; b++)
+            {
+              for ( c=0; c<DIM; c++)
+                {
+                  poynt[a] += 0.5*permute(b,c,a)*
+                          (fv->em_er[b]*fv->em_hr[c] + fv->em_ei[b]*fv->em_hi[c]);
+                }
+            }
+        }
+    }
+    for ( a=0; a<dim; a++)
+     {
+      local_post[POYNTING_VECTORS + a] = poynt[a];
+      local_lumped[POYNTING_VECTORS + a] = 1.;
+     }
+  }
+
+  /* calculate real-solid stress here !!  */
   if(REAL_STRESS_TENSOR != -1 && pd->e[R_SOLID1])
     {
       mu = elc_rs->lame_mu;
@@ -2129,7 +2410,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
         local_lumped[PRINCIPAL_REAL_STRESS+2] = 1.;
     } /* end of PRINCIPAL_REAL_STRESS */
 
-  if ( LUB_HEIGHT != -1 && (pd->e[R_LUBP] || pd->e[R_SHELL_FILMP] || pd->e[R_TFMP_MASS] ) ) {
+  if ( LUB_HEIGHT != -1 && (pd->e[R_LUBP] || pd->e[R_SHELL_FILMP] || pd->e[R_TFMP_MASS]  || pd->e[R_TFMP_BOUND]) ) {
     double H_U, dH_U_dtime, H_L, dH_L_dtime;
     double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
     
@@ -2140,7 +2421,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
     
-    if (pd->e[R_LUBP] || pd->e[R_TFMP_MASS])
+    if (pd->e[R_LUBP])
       {	 
 	local_post[LUB_HEIGHT] = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
 						       dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
@@ -2148,7 +2429,19 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     else if (pd->e[R_SHELL_FILMP])
       {
 	local_post[LUB_HEIGHT] = fv->sh_fh; 
-      }
+    } else if (pd->e[R_TFMP_MASS] || pd->e[R_TFMP_BOUND]) {
+      double tt = 1.0;
+      GAP_STRUCT gap_v;
+      GAP_STRUCT *gap = &gap_v;
+      gap->time = time;
+      gap->tt = tt;
+      gap->delta_t = delta_t;
+      gap->n_dof = n_dof;
+      gap->dof_map = dof_map;
+      load_gap_model(gap);
+
+      local_post[LUB_HEIGHT] = gap->h;
+    }
     
     switch ( mp->FSIModel ) {
     case FSI_MESH_CONTINUUM:
@@ -2160,13 +2453,41 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	}
       break;
     case FSI_SHELL_ONLY_MESH:
-      if ( (pd->e[R_SHELL_NORMAL1]) && (pd->e[R_SHELL_NORMAL2]) && (pd->e[R_SHELL_NORMAL3]) )
+      if ( ( (pd->e[R_SHELL_NORMAL1]) && (pd->e[R_SHELL_NORMAL2]) && (pd->e[R_SHELL_NORMAL3]) ) ||
+      (pd->e[R_MESH1] && pd->e[R_SHELL_NORMAL1] && (pd->e[R_SHELL_NORMAL2]) && pd->e[R_LUBP]) )
         {
-         for(a=0;a<dim; a++)
-            {
-             local_post[LUB_HEIGHT] -= fv->n[a] * fv->d[a];
-            }
+          double dh_dmesh[DIM][MDE];
+          double dh_dnormal[DIM][MDE];
+          double d2h_dtime_dmesh[DIM][MDE];
+          double d2h_dtime_dnormal[DIM][MDE];
+          double d_gradIIh_dmesh[DIM][DIM][MDE];
+          double d_gradIIh_dnormal[DIM][DIM][MDE];
+
+          // dh_dtime not used here
+          double tt = 1.0;
+          double dh_dtime = 1.0;
+          double gradII_h[DIM];
+
+          load_displacement_coupling_model(
+            tt,
+            delta_t,
+            &(local_post[LUB_HEIGHT]),
+            &dh_dtime,
+            gradII_h,
+            dh_dmesh,
+            dh_dnormal,
+            d2h_dtime_dmesh,
+            d2h_dtime_dnormal,
+            d_gradIIh_dmesh,
+            d_gradIIh_dnormal,
+            n_dof,
+            dof_map
+          );
         }
+      else if (pd->e[R_TFMP_BOUND]) {
+        // do nothing:
+        // the normal_dot_displacement is taken care of in load_gap_model
+      }
       else
         {
          for(a=0;a<dim; a++)
@@ -2493,12 +2814,10 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   if ( (SH_TANG != -1) && pd->e[R_SHELL_NORMAL1] && pd->e[R_SHELL_NORMAL2]
       && pd->e[R_SHELL_NORMAL3] && pd->e[R_MESH1] ) {
 
-     dbl t0[DIM];
-     dbl t1[DIM];
+    dbl t0[DIM];
+    dbl t1[DIM];
 
-     shell_tangents(t0, t1, NULL, NULL);
-
-//     shell_tangents_seeded(t0, t1, NULL, NULL);
+    shell_tangents(t0, t1, NULL, NULL, NULL, NULL);
 
     /* Post tangents and curvatures */
 
@@ -2576,7 +2895,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     double eig_values[DIM];
     dbl exp_s[DIM][DIM];
     for (mode = 0; mode < vn->modes; mode++) {
+#ifdef ANALEIG_PLEASE
+      analytical_exp_s(fv->S[mode], exp_s, eig_values, R1);
+#else
       compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
+#endif
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
       // Polymer time constant
       lambda = 0.0;
@@ -2624,7 +2947,113 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     local_lumped[HEAVISIDE] = 1.;
   }
 
+  /*if (cr->MassFluxModel == DM_SUSPENSION_BALANCE ) {
+    index = 0;
+    int w = 0;
+    for (a = 0; a < dim; a++)
+      {
+	hs[a] = 0.;
+      }
+    
+    err = get_continuous_species_terms(&s_terms, time, theta, delta_t, hs);
+    for (a=0; a < dim; a++)
+      {
+	local_post[J_FLUX + index] = s_terms.diff_flux[w][a];
+	local_lumped[J_FLUX + index] = 1.;
+	index++;
+      }
+      }*/
+  
+  if (GRAD_SH != -1 && pd->v[SHEAR_RATE]) {
+    index = 0;
+    for (a=0; a < dim; a++)
+      {
+	local_post[GRAD_SH + index] = fv->grad_SH[a];
+	local_lumped[GRAD_SH + index] = 1.;
+	index++;
+      }
+  }
 
+  if (GRAD_Y != -1 && pd->v[MASS_FRACTION]) {
+    index = 0;
+    for (a=0; a < dim; a++)
+      {
+	local_post[GRAD_Y + index] = fv->grad_c[0][a];
+	local_lumped[GRAD_Y + index] = 1.;
+	index++;
+      }
+  }
+
+  if ( EIG1 != -1 ) {
+    index = 0;
+    dbl v1[DIM];
+    dbl v2[DIM], v3[DIM];
+    dbl e1 = 0., e2 = 0., e3 = 0.;
+    dbl gamma_dot[DIM][DIM], eigen[3];
+    dbl v_bias[DIM], vy_bias[DIM], vort_bias[DIM];
+    
+    memset(v1, 0, DIM*sizeof(dbl));
+    memset(v2, 0, DIM*sizeof(dbl));
+    memset(v3, 0, DIM*sizeof(dbl));
+    memset(v_bias, 0, DIM*sizeof(dbl));
+    memset(vort_bias, 0, DIM*sizeof(dbl));
+    memset(vy_bias, 0, DIM*sizeof(dbl));
+    memset(gamma_dot, 0, DIM*DIM*sizeof(dbl));
+    
+    for (a=0; a < dim; a++)
+      {
+	for (b=0; b < dim; b++)
+	  {
+	    gamma_dot[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+	  }
+      }
+    
+    find_eigenvalues_eigenvectors( gamma_dot, &e1, &e2, &e3, v1, v2, v3 );
+    eigen[0] = e1;
+    eigen[1] = e2;
+    eigen[2] = e3;
+
+    v_bias[0] = 1.;
+    vy_bias[1] = 1.;
+    vort_bias[2] = 1.;
+
+    bias_eigenvector_to(v1, v_bias);
+    bias_eigenvector_to(v2, vy_bias);
+    bias_eigenvector_to(v3, vort_bias);
+   
+    for ( a = 0; a < DIM; a++)
+      {
+	local_post[EIG + index] = eigen[a];
+	local_lumped[EIG + index] = 1.;
+	index++;
+      }
+
+    index = 0;
+    for ( a = 0; a < DIM; a++)
+      {
+	local_post[EIG1 + index] = v1[a];
+	local_lumped[EIG1 + index] = 1.;
+	index++;
+      }
+
+    index = 0;
+    for ( a = 0; a < DIM; a++)
+      {
+	local_post[EIG2 + index] = v2[a];
+	local_lumped[EIG2 + index] = 1.;
+	index++;
+      }
+
+    index = 0;
+    for ( a = 0; a < DIM; a++)
+      {
+	local_post[EIG3 + index] = v3[a];
+	local_lumped[EIG3 + index] = 1.;
+	index++;
+      }
+  }
+
+  
   if (USER_POST != -1) {
       /* calculate a user-specified post-processing variable */
       
@@ -3990,6 +4419,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
       if(nn_particles > 0)
 	{
+          double orig_coord[3];
 	  /* 1) Search Element Database and find originating element
 	    id for each particle */
 
@@ -3999,6 +4429,8 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
           for (i = 0; i < nn_particles; i++) {
 
+	  	for(j=0;j<p_dim;j++)
+	        	{orig_coord[j] = pp_particles[i]->coord[j];}
           if(p_dim == 2)
                 {
                 pp_particles[i]->coord[2] = 0.;
@@ -4062,7 +4494,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
         for( j = 0 ; j < p_dim ; j++)
         {
-	if(fabs(pp_particles[i]->xi_coord[j]) > 1.1)
+	if(fabs(pp_particles[i]->xi_coord[j]) > 2.0)
                 {
         fprintf(stderr,"particle %d - initial pt outside the domain\n",i);
         fprintf(stderr,"isoparametric coords  %g %g %g \n"
@@ -4189,7 +4621,7 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
         for( j = 0 ; j < p_dim ; j++)
         {
-        if(fabs(pp_particles[i]->xi_coord[j]) > 2.)
+        if(fabs(pp_particles[i]->xi_coord[j]) > 2.0)
                 {
                 fprintf(stderr,"particle %d has exited the domain\n",i);
         fprintf(stderr,"element = %d\n",pp_particles[i]->Current_element_id);
@@ -4380,6 +4812,8 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 
         fflush(jfp);
 	fclose(jfp);
+	for(j=0;j<p_dim;j++)
+	        {pp_particles[i]->coord[j] = orig_coord[j];}
           }  /*  particle counter */
         fprintf(stderr,"  Done tracing %d particles...  \n", nn_particles);
         }
@@ -6663,6 +7097,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Stream Function", &STREAM);
   iread = look_for_post_proc(ifp, "Streamwise normal stress", &STREAM_NORMAL_STRESS);
   iread = look_for_post_proc(ifp, "Streamwise shear stress", &STREAM_SHEAR_STRESS);
+  iread = look_for_post_proc(ifp, "Streamwise Stress Difference", &STREAM_TENSION);
   iread = look_for_post_proc(ifp, "Mean shear rate", &MEAN_SHEAR);
   iread = look_for_post_proc(ifp, "Pressure contours", &PRESSURE_CONT);
   iread = look_for_post_proc(ifp, "Shell div_s_v contours", &SH_DIV_S_V_CONT);
@@ -6707,8 +7142,20 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Map Log-Conf Stress", &LOG_CONF_MAP);
   iread = look_for_post_proc(ifp, "Velocity Magnitude", &VELO_SPEED);
   iread = look_for_post_proc(ifp, "Giesekus Criterion", &GIES_CRIT);
+  iread = look_for_post_proc(ifp, "Particle stress flux", &J_FLUX);
+  iread = look_for_post_proc(ifp, "Eigenvalues", &EIG);
+  iread = look_for_post_proc(ifp, "Eigenvector1", &EIG1);
+  iread = look_for_post_proc(ifp, "Eigenvector2", &EIG2);
+  iread = look_for_post_proc(ifp, "Eigenvector3", &EIG3);
+  iread = look_for_post_proc(ifp, "Shear gradient", &GRAD_SH);
+  iread = look_for_post_proc(ifp, "Concentration gradient", &GRAD_Y);
+  iread = look_for_post_proc(ifp, "Vorticity Vector", &CURL_V);
+  iread = look_for_post_proc(ifp, "Helicity Value", &HELICITY);
   iread = look_for_post_proc(ifp, "User-Defined Post Processing", &USER_POST);
   iread = look_for_post_proc(ifp, "Heaviside", &HEAVISIDE);
+  iread = look_for_post_proc(ifp, "Lamb Vector", &LAMB_VECTOR);
+  iread = look_for_post_proc(ifp, "Q Function", &Q_FCN);
+  iread = look_for_post_proc(ifp, "Poynting Vectors", &POYNTING_VECTORS);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -6784,7 +7231,6 @@ rd_post_process_specs(FILE *ifp,
 			     &POROUS_SUPGVELOCITY);
   iread = look_for_post_proc(ifp, "Relative Liquid Permeability",
 			     &REL_LIQ_PERM);
-  iread = look_for_post_proc(ifp, "Vorticity Vector", &CURL_V);
 
   iread = look_for_post_proc(ifp, "TFMP_gas_velo", &TFMP_GAS_VELO);
   iread = look_for_post_proc(ifp, "TFMP_liq_velo", &TFMP_LIQ_VELO);
@@ -8503,6 +8949,23 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       STREAM_SHEAR_STRESS = -1;
     }
+   if (STREAM_TENSION != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "SSD","[1]",
+		   "Streamwise Stress Difference", FALSE);
+       index++;
+       if (STREAM_TENSION == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       STREAM_TENSION = index_post;
+       index_post++;
+    }
+  else
+    {
+      STREAM_TENSION = -1;
+    }
    if (DIV_VELOCITY != -1 && Num_Var_In_Type[PRESSURE])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "DIVV","[1]",
@@ -8667,6 +9130,25 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
     {
       GIES_CRIT = -1;
     }
+
+   if (Q_FCN != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       set_nv_tkud(rd, index, 0, 0, -2, "Q_FCN","[1]", "Q Function",
+		   FALSE);
+       index++;
+       if (Q_FCN == 2)
+         {
+           Export_XP_ID[index_post_export] = index_post;
+           index_post_export++;
+         }
+       Q_FCN = index_post;
+       index_post++;
+    }
+  else
+    {
+      Q_FCN = -1;
+    }
+
 
    if (VELO_SPEED != -1 && Num_Var_In_Type[R_MOMENTUM1])
      {
@@ -9089,18 +9571,68 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
           EH(-1, "Post-processing vectors cannot be exported yet!");
         }
       CONDUCTION_VECTORS = index_post;
-      for (i=0; i<Num_Dim; i++)
-      {
-        sprintf(nm, "TCOND%d", i);
-        sprintf(ds, "Conduction in %d direction", i);
+      /* X Component */
+	sprintf(nm, "TCONDX");
+	sprintf(ds, "Conduction in X direction");
 	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
 	index++;
 	index_post++;
-      }
+      /* Y Component */
+	sprintf(nm, "TCONDY");
+	sprintf(ds, "Conduction in Y direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+      /* Z Component */
+      if ( Num_Dim > 2 )
+	{
+	sprintf(nm, "TCONDZ");
+	sprintf(ds, "Conduction in Z direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+        }
     }
   else
     {
       CONDUCTION_VECTORS = -1;
+    }
+
+  if (POYNTING_VECTORS != -1 && 
+        ((Num_Var_In_Type[R_ACOUS_PREAL] || Num_Var_In_Type[R_ACOUS_PIMAG])
+        || (Num_Var_In_Type[R_EM_E1_REAL] || Num_Var_In_Type[R_EM_E2_REAL]
+                      || Num_Var_In_Type[R_EM_E3_REAL])))
+    {
+      if (POYNTING_VECTORS == 2)
+        {
+          EH(-1, "Post-processing vectors cannot be exported yet!");
+        }
+      POYNTING_VECTORS = index_post;
+      /* X Component */
+	sprintf(nm, "POYNTX");
+	sprintf(ds, "Poynting in X direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+      /* Y Component */
+	sprintf(nm, "POYNTY");
+	sprintf(ds, "Poynting in Y direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+      /* Z Component */
+      if ( Num_Dim > 2 )
+	{
+	sprintf(nm, "POYNTZ");
+	sprintf(ds, "Poynting in Z direction");
+	set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
+	index++;
+	index_post++;
+        }
+    }
+  else
+    {
+      POYNTING_VECTORS = -1;
     }
 
   if (ELECTRIC_FIELD != -1 && Num_Var_In_Type[R_POTENTIAL])
@@ -9562,6 +10094,136 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
       LOG_CONF_MAP = -1;
     }
 
+    /*if (J_FLUX != -1)
+    {
+      J_FLUX = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "J1","[1]",
+                  "particle flux x", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "J2","[1]",
+                  "particle flux y", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "J3","[1]",
+                  "particle flux z", FALSE);
+      index++;
+      index_post++;
+      }*/
+    
+   if (GRAD_SH != -1)
+    {
+      GRAD_SH = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_SH0","[1]",
+                  "Shear gradient x", FALSE);
+      index++;
+      index_post++;
+      
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_SH1","[1]",
+                  "Shear gradient y", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_SH2","[1]",
+                  "Shear gradient z", FALSE);
+      index++;
+      index_post++;
+    }
+
+   if (GRAD_Y != -1)
+    {
+      GRAD_Y = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_Y0","[1]",
+                  "Concentration gradient x", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_Y1","[1]",
+                  "Concentration gradient y", FALSE);
+      index++;
+      index_post++;
+
+      set_nv_tkud(rd, index, 0, 0, -2, "GRAD_Y2","[1]",
+                  "Concentration gradient z", FALSE);
+      index++;
+      index_post++;
+    }
+
+  if (EIG != -1)
+    {
+      EIG = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN0","[1]",
+                  "First eigenvalue", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN1","[1]",
+                  "Second eigenvalue", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN2","[1]",
+                  "Third eigenvalue", FALSE);
+      index++;
+      index_post++;
+    }
+
+   if (EIG1 != -1)
+    {
+      EIG1 = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN0_0","[1]",
+                  "First eigenvector x", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN0_1","[1]",
+                   "First eigenvector y", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN0_2","[1]",
+                  "First eigenvector z", FALSE);
+      index++;
+      index_post++;
+    }
+
+   if (EIG2 != -1)
+    {
+      EIG2 = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN1_0","[1]",
+                  "Second eigenvector x", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN1_1","[1]",
+                   "Second eigenvector y", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN1_2","[1]",
+                  "Second eigenvector z", FALSE);
+      index++;
+      index_post++;
+    }
+   
+   if (EIG3 != -1)
+    {
+      EIG3 = index_post;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN2_0","[1]",
+                  "Third eigenvector x", FALSE);
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN2_1","[1]",
+                   "Third eigenvector y", FALSE);
+
+      index++;
+      index_post++;
+      set_nv_tkud(rd, index, 0, 0, -2, "EIGEN2_2","[1]",
+                  "Third eigenvector z", FALSE);
+      index++;
+      index_post++;
+    }
+    
+
+    
   /*
    * Porous flow post-processing setup section
    */
@@ -9858,6 +10520,84 @@ index_post, index_post_export);
     {
       CURL_V = -1;
     }
+  /* RBS: Output the Lamb vector.
+   */
+  if (LAMB_VECTOR != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       if(pd->CoordinateSystem == SWIRLING ||
+	  pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	  pd->CoordinateSystem == CARTESIAN_2pt5D ||
+	  Num_Dim == 3)
+	 {
+           if (LAMB_VECTOR == 2)
+             {
+               EH(-1, "Post-processing vectors cannot be exported yet!");
+             }
+	   LAMB_VECTOR = index_post;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBX", "[1]",
+		       "x-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBY", "[1]",
+		       "y-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBZ", "[1]",
+		       "z-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+	 }
+       else if(Num_Dim == 2)
+	 {
+	   LAMB_VECTOR = index_post;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBX", "[1]",
+		       "x-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+	   set_nv_tkud(rd, index, 0, 0, -2, "LAMBY", "[1]",
+		       "y-component of Lamb", FALSE);
+	   index++;
+	   index_post++;
+           if (LAMB_VECTOR == 2)
+             {
+               Export_XP_ID[index_post_export] = index_post;
+               index_post_export++;
+             }
+	 }
+     }
+  else
+    {
+      LAMB_VECTOR = -1;
+    }
+  /* RBS: Helicity quantity (scalar)
+   */
+  if (HELICITY != -1 && Num_Var_In_Type[R_MOMENTUM1])
+     {
+       if(pd->CoordinateSystem == SWIRLING ||
+	  pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+	  pd->CoordinateSystem == CARTESIAN_2pt5D ||
+	  Num_Dim == 3)
+	 {
+           if (HELICITY == 2)
+             {
+               EH(-1, "Post-processing vectors cannot be exported yet!");
+             }
+	   HELICITY = index_post;
+	   set_nv_tkud(rd, index, 0, 0, -2, "HELIX", "[1]",
+		       "helicity scalar", FALSE);
+	   index++;
+	   index_post++;
+	 }
+       else
+	 {
+	   WH(-1,"Why are you asking for Helicity in a 1D or 2D problem?");
+	   HELICITY = -1;
+	 }
+     }
+  else
+    {
+      HELICITY = -1;
+    }
 
   if (HEAVISIDE != -1 && (Num_Var_In_Type[R_MOMENTUM1] || check ))
     {
@@ -10054,7 +10794,8 @@ index_post, index_post_export);
       PRINCIPAL_REAL_STRESS = -1;
     }
 
-  if (LUB_HEIGHT != -1  && (Num_Var_In_Type[R_LUBP] || Num_Var_In_Type[R_SHELL_FILMP] || Num_Var_In_Type[R_TFMP_MASS]) )
+  if (LUB_HEIGHT != -1  &&  (Num_Var_In_Type[R_LUBP] || Num_Var_In_Type[R_SHELL_FILMP] ||
+                            Num_Var_In_Type[R_TFMP_MASS] || Num_Var_In_Type[R_TFMP_BOUND]) )
     {
       if (LUB_HEIGHT == 2)
         {
@@ -10473,7 +11214,7 @@ index_post, index_post_export);
         }
       TFMP_INV_PECLET = index_post;
       sprintf(nm, "TFMP_INV_PECLET");
-      sprintf(ds, "TFMP Local Peclet Number");
+      sprintf(ds, "TFMP Inverted Local Peclet Number");
       set_nv_tkud(rd, index, 0, 0, -2, nm, "[1]", ds, FALSE);
       index++;
       index_post++;
@@ -11074,8 +11815,9 @@ find_id_edge (const int ielem,			/* 0-based element number */
 		in local_ss_node_list - might be necessary */
 
     for (i = 0; i < num_nodes_on_edge; i++) {
-       if ((id_local_elem_coord[i] = in_list (local_edge_node_list[i], 0, 
-		   num_local_nodes, &(exo->node_list[iconnect_ptr])) ) == -1) {
+      id_local_elem_coord[i] = in_list (local_edge_node_list[i], 0, 
+		    num_local_nodes, &(exo->node_list[iconnect_ptr]));
+      if ((id_local_elem_coord[i]) == -1) {
 	 EH(-1,"find_id_edge ERROR: side set nodal map error\n");
        }
     }
@@ -11185,8 +11927,19 @@ find_id_edge (const int ielem,			/* 0-based element number */
        }
        break;
    case 1:
-     EH(-1,"Can't have edges in 1D");
-       break;
+    /* On a 1D element, edges are points, in ExoII structures, they are
+     * certainly nodes. 
+     * * * */
+    sum = shape(1.0, 0.0, 0.0, ielem_type, PSI, id_local_elem_coord[0]);
+    if (sum > 0.999) {
+      *param_dir = 0;
+      return 2; // These edge numbers have to match cases in find_surf_st
+    } else {
+      *param_dir = 0;
+      return 1; // node number
+    }
+    /*EH(-1,"Can't have edges in 1D");*/
+      break;
 
     } /* END switch ielem_dim */
 

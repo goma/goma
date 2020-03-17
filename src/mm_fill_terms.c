@@ -9575,25 +9575,26 @@ load_fv_grads(void)
   if (pd->v[VELOCITY1])
     {
       dofs  = ei->dof[VELOCITY1];
-      v = VELOCITY1;  
-#ifdef DO_NO_UNROLL	  
+      v = VELOCITY1;
       for (p = 0; p < VIM; p++)
 	{
 	  for (q = 0; q < VIM; q++)
 	    {
 	      fv->grad_v[p][q] = 0.0;
+	      fv_old->grad_v[p][q] = 0.0;
 	      for (r = 0; r < wim; r++)
 		{
 		  for (i = 0; i < dofs; i++)
 		    {
-		      fv->grad_v[p][q] += (*esp->v[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];	      
+		      fv->grad_v[p][q] += (*esp->v[r][i]) * bf[v]->grad_phi_e[i][r] [p][q];
+		      if ( pd->TimeIntegration != STEADY )
+			{
+			  fv_old->grad_v[p][q] += (*esp_old->v[r][i]) * bf[v]->grad_phi_e[i][r][p][q];
+			}
 		    }
 		}
 	    }
 	}
-#else
-      grad_vector_fv_fill(esp->v, bf[v]->grad_phi_e, dofs, fv->grad_v);
-#endif
     } 
   else if (zero_unused_grads && upd->vp[VELOCITY1] == -1) 
     {
@@ -10319,7 +10320,8 @@ load_fv_grads(void)
 	  }
   } else if ( zero_unused_grads && upd->vp[VORT_DIR1] == -1 ) 
 	   fv->div_vd = 0.0;
-
+  
+  
 /*
  * grad_sh_K
  * Gradient of curvature in structural shell
@@ -12335,20 +12337,20 @@ if ( pd->v[LIGHT_INTM] )
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[1][0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
-	{
-	  T_i = *esp->poynt[1][i];
-	  for (p = 0; p < dimNonSym; p++)
-	    {
-	      for (b = 0; b < dim; b++)
-		{
-		  for (j = 0; j < mdofs; j++)
-		    {
-		      fv->d_grad_poynt_dmesh[1][p] [b][j] +=
- 			T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
-		    }
-		}
-	    }
-	}
+      {
+        T_i = *esp->poynt[1][i];
+        for (p = 0; p < dimNonSym; p++)
+        {
+          for (b = 0; b < dim; b++)
+          {
+            for (j = 0; j < mdofs; j++)
+            {
+              fv->d_grad_poynt_dmesh[1][p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j];
+            }
+          }
+        }
+      }
     } else   if ( upd->vp[LIGHT_INTM] != -1  ){
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[1][0][0][0]),0, siz);
@@ -12362,23 +12364,77 @@ if ( pd->v[LIGHT_INTD] )
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[2][0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
-	{
-	  T_i = *esp->poynt[2][i];
-	  for (p = 0; p < dimNonSym; p++)
-	    {
-	      for (b = 0; b < dim; b++)
-		{
-		  for (j = 0; j < mdofs; j++)
-		    {
-		      fv->d_grad_poynt_dmesh[2][p] [b][j] +=
- 			T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
-		    }
-		}
-	    }
-	}
+      {
+        T_i = *esp->poynt[2][i];
+        for (p = 0; p < dimNonSym; p++)
+        {
+          for (b = 0; b < dim; b++)
+          {
+            for (j = 0; j < mdofs; j++)
+            {
+              fv->d_grad_poynt_dmesh[2][p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j];
+            }
+          }
+        }
+      }
     } else   if ( upd->vp[LIGHT_INTD] != -1  ){
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_poynt_dmesh[2][0][0][0]),0, siz);
+    }
+
+if ( pd->v[TFMP_PRES] )
+    {
+      v = TFMP_PRES;
+      bfv = bf[v];
+      vdofs  = ei->dof[v];
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_tfmp_pres_dmesh[0][0][0]),0, siz);
+      for ( i=0; i<vdofs; i++)
+        {
+          T_i = *esp->tfmp_pres[i];
+          for (p = 0; p < dimNonSym; p++)
+            {
+              for (b = 0; b < dim; b++)
+                {
+                  for (j = 0; j < mdofs; j++)
+                    {
+                      fv->d_grad_tfmp_pres_dmesh[p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
+                    }
+                }
+            }
+        }
+    } else   if ( upd->vp[TFMP_PRES] != -1  ){
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_tfmp_pres_dmesh[0][0][0]),0, siz);
+    }
+  
+if ( pd->v[TFMP_SAT] )
+    {
+      v = TFMP_SAT;
+      bfv = bf[v];
+      vdofs  = ei->dof[v];
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_tfmp_sat_dmesh[0][0][0]),0, siz);
+      for ( i=0; i<vdofs; i++)
+        {
+          T_i = *esp->tfmp_sat[i];
+          for (p = 0; p < dimNonSym; p++)
+            {
+              for (b = 0; b < dim; b++)
+                {
+                  for (j = 0; j < mdofs; j++)
+                    {
+                      fv->d_grad_tfmp_sat_dmesh[p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
+                    }
+                }
+            }
+        }
+    } else   if ( upd->vp[TFMP_PRES] != -1  ){
+      siz = sizeof(double)*DIM*DIM*MDE;
+      memset(&(fv->d_grad_tfmp_pres_dmesh[0][0][0]),0, siz);
     }
 
 if ( pd->v[RESTIME] )
@@ -12389,20 +12445,20 @@ if ( pd->v[RESTIME] )
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_restime_dmesh[0][0][0]),0, siz);
       for ( i=0; i<vdofs; i++)
-	{
-	  T_i = *esp->restime[i];
-	  for (p = 0; p < dimNonSym; p++)
-	    {
-	      for (b = 0; b < dim; b++)
-		{
-		  for (j = 0; j < mdofs; j++)
-		    {
-		      fv->d_grad_restime_dmesh[p] [b][j] +=
- 			T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
-		    }
-		}
-	    }
-	}
+        {
+          T_i = *esp->restime[i];
+          for (p = 0; p < dimNonSym; p++)
+            {
+              for (b = 0; b < dim; b++)
+                {
+                  for (j = 0; j < mdofs; j++)
+                    {
+                      fv->d_grad_restime_dmesh[p] [b][j] +=
+                  T_i  *  bfv->d_grad_phi_dmesh[i][p] [b][j]; 
+                    }
+                }
+            }
+        }
     } else   if ( upd->vp[RESTIME] != -1  ){
       siz = sizeof(double)*DIM*DIM*MDE;
       memset(&(fv->d_grad_restime_dmesh[0][0][0]),0, siz);
@@ -29529,7 +29585,7 @@ fluid_stress( double Pi[DIM][DIM],
         }
     }
 
-  if ( d_Pi != NULL && pd->v[VELOCITY_GRADIENT11] )
+  if ( d_Pi != NULL && pd->v[VELOCITY_GRADIENT11] && pd->v[POLYMER_STRESS11])
     {
       for ( p=0; p<VIM; p++)
         {
@@ -29759,7 +29815,11 @@ fluid_stress_conf( double Pi[DIM][DIM],
     }
 
   for (mode = 0; mode < vn->modes; mode++) {
+#ifdef ANALEIG_PLEASE
+    analytical_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
+#else
     compute_exp_s(fv->S[mode], exp_s[mode], eig_values, R1);
+#endif
   }
 
 
@@ -30010,10 +30070,18 @@ fluid_stress_conf( double Pi[DIM][DIM],
 	      for(b=0; b<wim; b++)
 		{
 		  for(j=0; j<ei->dof[var]; j++)
-		    {
-          	      d_Pi->v[p][q][b][j]  = mus*bf[var+q]->grad_phi_e[j][b][p][q];
-	              d_Pi->v[p][q][b][j] += mus*bf[var+p]->grad_phi_e[j][b][q][p];
-
+                    {
+                      dbl q_grad_phi_e_j_b_p_q;
+                      dbl p_grad_phi_e_j_b_q_p;
+                      if(pd->CoordinateSystem != CYLINDRICAL) {
+                        p_grad_phi_e_j_b_q_p = bf[var+p]->grad_phi_e[j][b][q][p];
+                        q_grad_phi_e_j_b_p_q = bf[var+q]->grad_phi_e[j][b][p][q];
+                      } else {
+                        p_grad_phi_e_j_b_q_p = bf[var]->grad_phi_e[j][b][q][p];
+                        q_grad_phi_e_j_b_p_q = bf[var]->grad_phi_e[j][b][p][q];
+                      }
+                      d_Pi->v[p][q][b][j]  = mus*q_grad_phi_e_j_b_p_q;
+                      d_Pi->v[p][q][b][j] += mus*p_grad_phi_e_j_b_q_p;
 		      d_Pi->v[p][q][b][j] += d_mus->v[b][j]*gamma[p][q];
 		      d_Pi->v[p][q][b][j] -= d_tau_p_dv[p][q][b][j];
 		      if(pd->v[POLYMER_STRESS11])
@@ -30028,9 +30096,13 @@ fluid_stress_conf( double Pi[DIM][DIM],
 				{
 				  lambda = ve[mode]->time_const;
 				}
-
+                      if(pd->CoordinateSystem != CYLINDRICAL) {
 			      d_Pi->v[p][q][b][j] += mup*bf[var+q]->grad_phi_e[j][b][p][q];
 			      d_Pi->v[p][q][b][j] += mup*bf[var+p]->grad_phi_e[j][b][q][p];
+                      } else {
+			      d_Pi->v[p][q][b][j] += mup*bf[var]->grad_phi_e[j][b][p][q];
+			      d_Pi->v[p][q][b][j] += mup*bf[var]->grad_phi_e[j][b][q][p];
+                      }
 			      d_Pi->v[p][q][b][j] += d_mup->v[b][j]*(gamma[p][q]-gamma_cont[p][q]);
 			      // Log-conformation tensor stress
 			      d_Pi->v[p][q][b][j] += d_mup->v[b][j]/lambda*(exp_s[mode][p][q]-(double)delta(p,q));
@@ -31275,7 +31347,7 @@ calc_pspg( dbl pspg[DIM],
 	}
 
       // tau_pspg derivatives wrt mesh from hh_siz
-      if ( d_pspg != NULL && pd->v[MESH_DISPLACEMENT1] )
+      if ( d_pspg != NULL && pd->v[MESH_DISPLACEMENT1] && pspg_local)
 	{
 	  for ( b=0; b<dim; b++)
 	    {
@@ -34932,13 +35004,14 @@ assemble_emwave(double time,	/* present time value */
 		  const int em_conjvar )
 {
   int eqn, var, peqn, pvar, dim, p, q, b, w, i, j, status;
-  int conj_var = 0, dir=0;			/* identity of conjugate variable  */
+  int dir=0;			/* identity of conjugate variable  */
 
   dbl EMF = 0, EMF_conj = 0;		/* acoustic pressure	*/
   dbl omega, emf_coeff=0, conj_coeff=0;
   dbl emf_coeff_dn=0, conj_coeff_dn=0;
   dbl emf_coeff_dk=0, conj_coeff_dk=0;
   dbl mag_permeability=1.4e-07;
+  int cross_field_var;
   dbl cross_field[DIM];
 
   dbl n;				/* Refractive index. */
@@ -34960,7 +35033,7 @@ assemble_emwave(double time,	/* present time value */
    */
 
   dbl phi_i;
-  dbl grad_phi_i[DIM], grad_phi_j[DIM];
+  dbl grad_phi_i[DIM];
 
   /*
    * Interpolation functions for variables and some of their derivatives.
@@ -35060,12 +35133,13 @@ assemble_emwave(double time,	/* present time value */
     case EM_E1_REAL:
     case EM_E2_REAL:
     case EM_E3_REAL:
-         emf_coeff = -2*omega*mp->permittivity*n*k;
-         conj_coeff = -omega*mp->permittivity*(SQUARE(n)-SQUARE(k));
-         emf_coeff_dn = -2*omega*mp->permittivity*k;
-         emf_coeff_dk = -2*omega*mp->permittivity*n;
-         conj_coeff_dn = -omega*mp->permittivity*2*n;
+         emf_coeff = 2*omega*mp->permittivity*n*k;
+         conj_coeff = omega*mp->permittivity*(SQUARE(n)-SQUARE(k));
+         emf_coeff_dn = 2*omega*mp->permittivity*k;
+         emf_coeff_dk = 2*omega*mp->permittivity*n;
+         conj_coeff_dn = omega*mp->permittivity*2*n;
          conj_coeff_dk = omega*mp->permittivity*2*k;
+         cross_field_var = EM_H1_REAL;
 	 for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_hr[p];}
          break;
     case EM_E1_IMAG:
@@ -35077,6 +35151,7 @@ assemble_emwave(double time,	/* present time value */
          emf_coeff_dk = 2*omega*mp->permittivity*n;
          conj_coeff_dn = -omega*mp->permittivity*2*n;
          conj_coeff_dk = omega*mp->permittivity*2*k;
+         cross_field_var = EM_H1_IMAG;
 	 for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_hi[p];}
          break;
     case EM_H1_REAL:
@@ -35085,6 +35160,7 @@ assemble_emwave(double time,	/* present time value */
          emf_coeff = 0;
          conj_coeff = -omega*mag_permeability;
          emf_coeff_dn = 0; emf_coeff_dk = 0; conj_coeff_dn = 0; conj_coeff_dk = 0;
+         cross_field_var = EM_E1_REAL;
 	 for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_er[p];}
          break;
     case EM_H1_IMAG:
@@ -35093,6 +35169,7 @@ assemble_emwave(double time,	/* present time value */
          emf_coeff = 0;
          conj_coeff = omega*mag_permeability;
          emf_coeff_dn = 0; emf_coeff_dk = 0; conj_coeff_dn = 0; conj_coeff_dk = 0;
+         cross_field_var = EM_E1_IMAG;
 	 for ( p=0; p<VIM; p++)   {cross_field[p] = fv->em_ei[p];}
          break;
     }
@@ -35121,9 +35198,11 @@ assemble_emwave(double time,	/* present time value */
 	  advection = 0.;
 	  if ( pd->e[eqn] & T_ADVECTION )
 	    {
-              advection += phi_i * (emf_coeff*EMF+conj_coeff*EMF_conj) * det_J*wt;
-	      advection *= h3;
-	      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+              advection += emf_coeff*EMF;
+              advection += conj_coeff*EMF_conj;
+              advection *= phi_i*h3;
+              advection *= det_J*wt;
+              advection *= pd->etm[eqn][(LOG2_ADVECTION)];
 	    }
 
 	  diffusion = 0.;
@@ -35134,19 +35213,18 @@ assemble_emwave(double time,	/* present time value */
 		  grad_phi_i[p] = bf[eqn]->grad_phi[i] [p];
 		}
 
-	      for ( p=0; p<VIM; p++)
-		{
-	        for ( q=0; q<VIM; q++)
-		  {
-		  diffusion -= permute(p,q,dir)*bf[eqn]->grad_phi[i][p]*cross_field[q];
-		  }
-		}
+              for ( p=0; p<VIM; p++) {
+                for ( q=0; q<VIM; q++) {
+                  diffusion -= permute(p,q,dir)*grad_phi_i[p]*cross_field[q];
+                }
+              }
+
 	      diffusion *= det_J * wt;
 	      diffusion *= h3;
 	      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
 	    }
 
-	  lec->R[peqn][i] += advection +  diffusion;
+          lec->R[peqn][i] += advection +  diffusion;
 
 
 	}
@@ -35157,96 +35235,103 @@ assemble_emwave(double time,	/* present time value */
    * Jacobian terms...
    */
 
-  if ( af->Assemble_Jacobian )
-    {
-      eqn   = em_eqn;
-      peqn = upd->ep[eqn];
-      for ( i=0; i<ei->dof[eqn]; i++)
-	{
-#if 1
-          /* this is an optimization for xfem */
-	  if ( xfem != NULL )
-            {
-	      int xfem_active, extended_dof, base_interp, base_dof;
-	      xfem_dof_state( i, pd->i[eqn], ei->ielem_shape,
-                              &xfem_active, &extended_dof, &base_interp, &base_dof );
-	      if ( extended_dof && !xfem_active ) continue;
+  if ( af->Assemble_Jacobian ) {
+    eqn   = em_eqn;
+    peqn = upd->ep[eqn];
+    for ( i=0; i<ei->dof[eqn]; i++) {
+
+      // this is an optimization for xfem
+      if ( xfem != NULL ) {
+        int xfem_active, extended_dof, base_interp, base_dof;
+        xfem_dof_state( i, pd->i[eqn], ei->ielem_shape,
+                        &xfem_active, &extended_dof, &base_interp, &base_dof );
+        if ( extended_dof && !xfem_active ) continue;
+      }
+
+      phi_i = bf[eqn]->phi[i];
+
+      /*
+       * Set up some preliminaries that are needed for the (a,i)
+       * equation for bunches of (b,j) column variables...
+       */
+
+      for ( p=0; p<VIM; p++) {
+        grad_phi_i[p] = bf[eqn]->grad_phi[i][p];
+      }
+
+      /*
+       * EMF
+       */
+      var = em_var;
+      if ( pd->v[var] ) {
+        pvar = upd->vp[var];
+        for ( j=0; j<ei->dof[var]; j++) {
+          phi_j = bf[var]->phi[j];
+
+          advection = 0.;
+          if ( pd->e[eqn] & T_ADVECTION ) {
+            advection += phi_i * emf_coeff*phi_j * det_J*wt;
+            advection *= h3;
+            advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+          }
+
+          lec->J[peqn][pvar][i][j] += advection;
+        }
+      }
+      /*
+       *  EMF_conj
+       */
+      var = em_conjvar;
+      if ( pd->v[var] ) {
+        pvar = upd->vp[var];
+        for ( j=0; j<ei->dof[var]; j++) {
+          phi_j = bf[var]->phi[j];
+
+          advection = 0.;
+          if ( pd->e[eqn] & T_ADVECTION ) {
+            advection += phi_i * conj_coeff*phi_j * det_J*wt;
+            advection *= h3;
+            advection *= pd->etm[eqn][(LOG2_ADVECTION)];
+          }
+
+          lec->J[peqn][pvar][i][j] += advection;
+        }
+      }
+      /*
+       *  cross_field
+       */
+      for ( b=0; b<dim; b++) {
+        var = cross_field_var + b;
+        if ( pd->v[var] ) {
+          pvar = upd->vp[var];
+          for ( j=0; j<ei->dof[var]; j++) {
+            // for a cross product, this isn't quite right
+            // but it will work as along as all scalar
+            // components of the vector field have the
+            // same basis functions
+            phi_j = bf[var]->phi[j];
+
+            diffusion = 0.;
+            if ( pd->e[eqn] & T_DIFFUSION ) {
+              for ( p=0; p<VIM; p++) {
+                grad_phi_i[p] = bf[eqn]->grad_phi[i] [p];
+              }
+
+              for ( p=0; p<VIM; p++) {
+                for ( q=0; q<VIM; q++) {
+                  diffusion -= permute(p,q,dir)*grad_phi_i[p]*delta(q,b)*phi_j;
+                }
+              }
+
+              diffusion *= det_J * wt;
+              diffusion *= h3;
+              diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
+
+              lec->J[peqn][pvar][i][j] += diffusion;
             }
-#endif
-	  phi_i = bf[eqn]->phi[i];
-
-	  /*
-	   * Set up some preliminaries that are needed for the (a,i)
-	   * equation for bunches of (b,j) column variables...
-	   */
-
-	  for ( p=0; p<VIM; p++)
-	    {
-	      grad_phi_i[p] = bf[eqn]->grad_phi[i][p];
-	    }
-
-	  /*
-	   * J_e_ap
-	   */
-	  var = em_var;
-	  if ( pd->v[var] )
-	    {
-	      pvar = upd->vp[var];
-	      for ( j=0; j<ei->dof[var]; j++)
-		{
-		  phi_j = bf[var]->phi[j];
-
-		  advection = 0.;
-	          if ( pd->e[eqn] & T_ADVECTION )
-	            {
-                     advection += phi_i * emf_coeff*phi_j * det_J*wt;
-	             advection *= h3;
-	             advection *= pd->etm[eqn][(LOG2_ADVECTION)];
-	            }
-
-		  lec->J[peqn][pvar][i][j] += advection;
-		}
-	    }
-	/*
-	 *  Conjugate pressure variable
-	 */
-	  var = conj_var;
-	  if ( pd->v[var] )
-	    {
-	      pvar = upd->vp[var];
-	      for ( j=0; j<ei->dof[var]; j++)
-		{
-		  phi_j = bf[var]->phi[j];
-
-		  advection = 0.;
-		  if ( pd->e[eqn] & T_ADVECTION )
-		    {
-                      advection += phi_i * conj_coeff*phi_j * det_J*wt;
-		      advection *= h3;
-		      advection *= pd->etm[eqn][(LOG2_ADVECTION)];
-		    }
-	          diffusion = 0.;
-	          if ( pd->e[eqn] & T_DIFFUSION )
-	            {
-	              for ( p=0; p<VIM; p++)
-		        {
-		         grad_phi_i[p] = bf[eqn]->grad_phi[i] [p];
-		        }
-
-	          for ( p=0; p<VIM; p++)
-		    {
-	             for ( q=0; q<VIM; p++)
-		       {
-		         diffusion -= permute(p,q,dir)*bf[eqn]->grad_phi[i][p]*grad_phi_j[q];
-		       }
-		    }
-	      diffusion *= det_J * wt;
-	      diffusion *= h3;
-	      diffusion *= pd->etm[eqn][(LOG2_DIFFUSION)];
-	    }
-		  lec->J[peqn][pvar][i][j] += advection + diffusion;
-		}
-	    }
+          }
+        }
+      }
 	  /*
 	   * J_e_T
 	   */
