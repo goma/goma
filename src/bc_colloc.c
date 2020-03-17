@@ -474,7 +474,7 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	    case U_VES33_7_PARABOLA_BC:
 		var_flag = BC_Types[bc_input_id].desc->equation;
 		f_vestress_parabola(var_flag, ielem_dim, 
-			U_PARABOLA_BC, ei->mn,
+			U_PARABOLA_BC, ei[pg->imtrx]->mn,
 			&func, d_func, BC_Types[bc_input_id].u_BC,
 			time_intermediate,BC_Types[bc_input_id].len_u_BC);
 		break;
@@ -1597,7 +1597,7 @@ double Ws, A_alpha, Ksqr, f, mup;
 double gamma[DIM][DIM];
 int i, mode=0, strs=0;
 
-   if ( ! pd->v[POLYMER_STRESS11] )
+   if ( ! pd->v[pg->imtrx][POLYMER_STRESS11] )
 	{ EH(-1,"Polymer Stress needed for VE Stress PARABOLA BC."); }
 
    if (var_flag >= POLYMER_STRESS11_7)
@@ -1700,17 +1700,17 @@ int i, mode=0, strs=0;
                switch (velo_condition) {
                   case U_PARABOLA_BC:
                       srate = pre_factor*(coord1+coord2-2.*fv->x[1]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          { d_func[MESH_DISPLACEMENT2] = -2.*pre_factor; }
                       break;
                   case V_PARABOLA_BC:
 	              srate = pre_factor*(coord1+coord2-2.*fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          { d_func[MESH_DISPLACEMENT1] = -2.*pre_factor; }
                       break;
                   case W_PARABOLA_BC:
 	              srate = pre_factor*(coord1+coord2-2.*fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          { d_func[MESH_DISPLACEMENT1] = -2.*pre_factor; }
                       break;
                   default:
@@ -1724,14 +1724,14 @@ int i, mode=0, strs=0;
                       if(coord1 <= DBL_SMALL)
                           {
                            srate = pre_factor*(-2.*fv->x[1]); 
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                               { d_func[MESH_DISPLACEMENT2] = -2.*pre_factor; }
                           }
                       else
                           {
                            srate = pre_factor*(-2.*fv->x[1]
                 +(SQUARE(coord2)-SQUARE(coord1))/log(coord2/coord1)/fv->x[1]);
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                               { 
                       d_func[MESH_DISPLACEMENT2] = pre_factor*(-2.
                 -(SQUARE(coord2)-SQUARE(coord1))/log(coord2/coord1)/SQUARE(fv->x[1]));
@@ -1740,7 +1740,7 @@ int i, mode=0, strs=0;
                       break;
                   case V_PARABOLA_BC:
 	              *func = pre_factor/fv->x[1]*(fv->x[0]-coord1)*(coord2-fv->x[0]);
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
        d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*(coord1+coord2-2.*fv->x[0]);
        d_func[MESH_DISPLACEMENT2] = -(*func)/fv->x[1];
@@ -1767,7 +1767,7 @@ int i, mode=0, strs=0;
                   case U_PARABOLA_BC:
                       tmp = 2*fv->x[1]-coord1-coord2;
                       srate = pre_factor*(-2.*SGN(tmp)*expon*pow(fabs(tmp),1./pl_index));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     			  d_func[MESH_DISPLACEMENT2] = -4.*pre_factor*
 				(expon*(expon-1.)*pow(fabs(tmp),1./pl_index-1.));
@@ -1776,7 +1776,7 @@ int i, mode=0, strs=0;
                   case V_PARABOLA_BC:
                       tmp = 2*fv->x[0]-coord1-coord2;
                       srate = pre_factor*(-2.*SGN(tmp)*expon*pow(fabs(tmp),1./pl_index));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     			  d_func[MESH_DISPLACEMENT1] = -4.*pre_factor*
 				(expon*(expon-1.)*pow(fabs(tmp),1./pl_index-1.));
@@ -1785,7 +1785,7 @@ int i, mode=0, strs=0;
                   case W_PARABOLA_BC:
                       tmp = 2*fv->x[0]-coord1-coord2;
                       srate = pre_factor*(-2.*SGN(tmp)*expon*pow(fabs(tmp),1./pl_index));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
     			  d_func[MESH_DISPLACEMENT1] = -4.*pre_factor*
 				(expon*(expon-1.)*pow(fabs(tmp),1./pl_index-1.));
@@ -1805,7 +1805,7 @@ int i, mode=0, strs=0;
 	                   pre_factor = (3.*pl_index+1.)/(pl_index +1.)
                                          *qflow/M_PIE/pow(gap,expon+2.);
                            srate = pre_factor*(-expon*pow(fv->x[1],expon-1.));
-                           if( pd->e[R_MESH1] )
+                           if( pd->e[pg->imtrx][R_MESH1] )
                                {
                                 d_func[MESH_DISPLACEMENT2] = pre_factor*
                                           (-expon*(expon-1.)*pow(fv->x[1],expon-2.));
@@ -1820,7 +1820,7 @@ int i, mode=0, strs=0;
                       tmp = 2*fv->x[0]-coord1-coord2;
                       srate = pre_factor/fv->x[1]*
                                  (-2.*SGN(tmp)*expon*pow(fabs(tmp),expon-1.));
-                      if( pd->e[R_MESH1] )
+                      if( pd->e[pg->imtrx][R_MESH1] )
                          {
                            d_func[MESH_DISPLACEMENT1] = pre_factor/fv->x[1]*
                                  (-4.*expon*(expon-1.)*pow(fabs(tmp),expon-2.));
