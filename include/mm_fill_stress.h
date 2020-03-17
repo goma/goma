@@ -181,13 +181,21 @@ EXTERN dbl numerical_viscosity
        dbl [MAX_MODES][DIM][DIM][MDE], /* d_mun_dS - derivative of mun wrt S*/ 
        dbl [DIM][DIM][MDE]);	/* d_mun_dG - derivative of mun wrt G */
 
-EXTERN void
-compute_exp_s(double s[DIM][DIM],
-	      double exp_s[DIM][DIM],
-              double eig_values[DIM],
-              double R[DIM][DIM]);
-EXTERN void
-compute_d_exp_s_ds(dbl s[DIM][DIM],                   //s - stress
-		   dbl exp_s[DIM][DIM],
-		   dbl d_exp_s_ds[DIM][DIM][DIM][DIM]);
+void
+compute_exp_s(double [DIM][DIM],
+	      double [DIM][DIM],
+              double [DIM],
+	      double [DIM][DIM]);
+
+void
+analytical_exp_s(double [DIM][DIM],
+	      double [DIM][DIM],
+              double [DIM],
+	      double [DIM][DIM]);
+
+void
+compute_d_exp_s_ds(dbl [DIM][DIM],                   //s - stress
+                   dbl [DIM][DIM],                   // exp_s
+                   dbl [DIM][DIM][DIM][DIM]);        // d_exp_s_ds
+
 #endif /* GOMA_MM_FILL_STRESS_H */

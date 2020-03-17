@@ -526,7 +526,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
      *
      ****************************************************************************/
 {
-  int dim, a, b, eqn, var, w, w1, i, j, I, index, status, mode;
+  int dim, a, b, c, eqn, var, w, w1, i, j, I, index, status, mode;
   dbl det_J;                   /* determinant of Jacobian: has "r" in it for
 			     	  axisymmetric case, no "r" for Cartesian*/
   dbl phi_i;		       /* Weighting functions for i-th residuals */
@@ -558,7 +558,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   double dTT_dcur_strain[MAX_PDIM][MAX_PDIM][MDE];
 
   /*  double elast_modulus;	*/
-  double speed, stream_grad, velo_sqrd;
+  double stream_grad, velo_sqrd, vdelvdx[DIM], curv;
   double vconv[MAX_PDIM]; /*Calculated convection velocity */
   double vconv_old[MAX_PDIM]; /*Calculated convection velocity at previous time*/
   CONVECTION_VELOCITY_DEPENDENCE_STRUCT d_vconv_struct;
@@ -661,7 +661,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
    */
 
   if (STREAM_NORMAL_STRESS != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
-    speed = 0.;
+    velo_sqrd = 0.;
     stream_grad = 0.;
 
     for ( a=0; a<VIM; a++)
@@ -673,7 +673,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       }
     for ( a=0; a<VIM; a++)
       {
-	speed += fv->v[a] * fv->v[a];
+	velo_sqrd += fv->v[a] * fv->v[a];
 	for ( b=0; b<VIM; b++)
 	  {
 	    /* vv:gamma */
@@ -683,9 +683,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       stream_grad *= mp->viscosity;
 /*
  **  viscoelastic stress tensor
- **  assume only EVSS_F formulation for now
  **/
-   if ( pd->v[POLYMER_STRESS11] )
+   if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
       {
        dbl log_c[DIM][DIM];
        dbl exp_s[DIM][DIM];
@@ -706,7 +705,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
                       log_c[p][r] = fv->S[ve_mode][p][r];
                      }
                  }
+#ifdef ANALEIG_PLEASE
+              analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
               compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
               mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
               if(ve[ve_mode]->time_constModel == CONSTANT)
                 {
@@ -741,9 +744,9 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	    stream_grad += fv->v[a] * ves[a][b] * fv->v[b];
 	  }
         }
-      } // if pd->v[POLYMER_STRESS11]
-    if (speed > 0.0) {
-      Ttt =  stream_grad / speed;
+      } // if pd->v[pg->imtrx][POLYMER_STRESS11]
+    if (DOUBLE_NONZERO(velo_sqrd)) {
+      Ttt =  stream_grad / velo_sqrd;
     } else {
       Ttt = 0.0;
     }
@@ -753,7 +756,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
   }
   if (STREAM_SHEAR_STRESS != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
     nv[0] = fv->v[1];  nv[1] = -fv->v[0]; 
-    speed = 0.;
+    velo_sqrd = 0.;
     stream_grad = 0.;
 
     for ( a=0; a<VIM; a++)
@@ -765,7 +768,7 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
       }
     for ( a=0; a<dim; a++)
       {
-	speed += fv->v[a] * fv->v[a];
+	velo_sqrd += fv->v[a] * fv->v[a];
 	for ( b=0; b<dim; b++)
 	  {
 	    /* vv:gamma */
@@ -775,9 +778,8 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     stream_grad *= mp->viscosity;
 /*
  **  viscoelastic stress tensor
- **  assume only EVSS_F formulation for now
  **/
-   if ( pd->v[POLYMER_STRESS11] )
+   if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
       {
        dbl log_c[DIM][DIM];
        dbl exp_s[DIM][DIM];
@@ -798,7 +800,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
                       log_c[p][r] = fv->S[ve_mode][p][r];
                      }
                  }
+#ifdef ANALEIG_PLEASE
+              analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
               compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
               mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
               if(ve[ve_mode]->time_constModel == CONSTANT)
                 {
@@ -833,18 +839,20 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	    stream_grad += fv->v[a] * ves[a][b] * nv[b];
 	  }
         }
-      } // if pd->v[POLYMER_STRESS11]
-    if (speed > 0.0) {
-      Tnt = stream_grad / speed;
+      } // if pd->v[pg->imtrx][POLYMER_STRESS11]
+    if (DOUBLE_NONZERO(velo_sqrd)) {
+      Tnt = stream_grad / velo_sqrd;
     } else {
       Tnt = 0.0;
     }
     local_post[STREAM_SHEAR_STRESS] = Tnt;
     local_lumped[STREAM_SHEAR_STRESS] = 1.;
   }
+
   if (STREAM_TENSION != -1 && pd->e[pg->imtrx][R_MOMENTUM1]) {
-    speed = 0.;
+    velo_sqrd = 0.;
     stream_grad = 0.;
+    curv = 0.;
 
     for ( a=0; a<VIM; a++)
       {
@@ -853,22 +861,39 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 	    gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
 	  }
       }
+    memset( vdelvdx, 0, sizeof(dbl)*DIM);
     for ( a=0; a<dim; a++)
-      { speed += fv->v[a] * fv->v[a]; }
+      { 
+       velo_sqrd += fv->v[a] * fv->v[a]; 
+        for ( b=0; b<dim; b++)
+          { 
+	   vdelvdx[b] += fv->v[a]*fv->grad_v[b][a];
+          }
+      }
     for ( a=0; a<dim; a++)
       {
 	for ( b=0; b<dim; b++)
 	  {
 	    /* (2*vv-Iv):gamma */
-	    stream_grad += (2.*fv->v[a]*fv->v[b]-delta(a,b)*speed)*gamma[a][b];
+	    stream_grad += (2.*fv->v[a]*fv->v[b]-delta(a,b)*velo_sqrd)*gamma[a][b];
 	  }
       }
+    for ( a=0; a<dim; a++)
+      {
+        for ( b=0; b<dim; b++)
+          { 
+        for ( c=0; c<dim; c++)
+          { 
+           curv += SQUARE(velo_sqrd*fv->grad_v[c][b]-fv->v[b]*vdelvdx[c]);
+             }
+          }
+      }
+    if(DOUBLE_NONZERO(velo_sqrd))curv = sqrt(curv/CUBE(velo_sqrd));
     stream_grad *= mp->viscosity;
 /*
  **  viscoelastic stress tensor
- **  assume only EVSS_F formulation for now
  **/
-   if ( pd->v[POLYMER_STRESS11] )
+   if ( pd->v[pg->imtrx][POLYMER_STRESS11] )
       {
        dbl log_c[DIM][DIM];
        dbl exp_s[DIM][DIM];
@@ -889,7 +914,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
                       log_c[p][r] = fv->S[ve_mode][p][r];
                      }
                  }
+#ifdef ANALEIG_PLEASE
+              analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
               compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
               mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
               if(ve[ve_mode]->time_constModel == CONSTANT)
                 {
@@ -921,14 +950,14 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
         {
 	for ( b=0; b<VIM; b++)
 	  {
-	    stream_grad += (2.*fv->v[a]*fv->v[b]-delta(a,b)*speed)*ves[a][b];
+	    stream_grad += (2.*fv->v[a]*fv->v[b]-delta(a,b)*velo_sqrd)*ves[a][b];
 	  }
         }
-      } // if pd->v[POLYMER_STRESS11]
+      } // if pd->v[pg->imtrx][POLYMER_STRESS11]
 /* Need to determine curvature to multiply here...*/
 
-    if (speed > 0.0) {
-      Ttt = stream_grad / speed;
+    if (DOUBLE_NONZERO(velo_sqrd)) {
+      Ttt = curv * stream_grad / velo_sqrd;
     } else {
       Ttt = 0.0;
     }
@@ -3137,7 +3166,11 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
     double eig_values[DIM];
     dbl exp_s[DIM][DIM];
     for (mode = 0; mode < vn->modes; mode++) {
+#ifdef ANALEIG_PLEASE
+      analytical_exp_s(fv->S[mode], exp_s, eig_values, R1);
+#else
       compute_exp_s(fv->S[mode], exp_s, eig_values, R1);
+#endif
       mup = viscosity(ve[mode]->gn, gamma, d_mup);
       // Polymer time constant
       lambda = 0.0;

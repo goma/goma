@@ -692,7 +692,6 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 
 		/*
 		 *  viscoelastic stress tensor
-		 *  assume only EVSS_F formulation for now
 		 */
   			memset( ves, 0, sizeof(dbl)*DIM*DIM);
   			if ( pd->gv[POLYMER_STRESS11] )
@@ -714,7 +713,11 @@ double evaluate_flux(const Exo_DB *exo,      /* ptr to basic exodus ii mesh info
 				            log_c[p][r] = fv->S[ve_mode][p][r];
 			                  }
 				      }
+#ifdef ANALEIG_PLEASE
+                                    analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
 				    compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
 		                    mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
 			            if(ve[ve_mode]->time_constModel == CONSTANT)
 				      {
