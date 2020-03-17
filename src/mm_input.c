@@ -7056,6 +7056,11 @@ rd_solver_specs(FILE *ifp,
 	PSPG = 2;
         PSPP = 0;
       }
+    else if ( strcmp(input,"pspg_shakib") == 0 )
+      {
+	PSPG = 3;
+        PSPP = 0;
+      }
     else if ( strcmp(input,"pspp") == 0 )
       {
 	PSPG = 0;
@@ -7096,6 +7101,31 @@ rd_solver_specs(FILE *ifp,
     {
       PS_scaling = 0.;
       ECHO("(Pressure Stabilization Scaling = 0.0) (default)", echo_file);
+    }
+
+  iread = look_for_optional(ifp, "PSPG Advection Correction", input, '=');
+  if (iread == 1)
+    {
+      (void) read_string(ifp, input, '\n');
+      strip(input);
+      if (strcmp(input,"no") == 0 || strcmp(input,"false"))
+	{
+	  upd->PSPG_advection_correction = false;
+	}
+      else if(strcmp(input,"yes") == 0 || strcmp(input,"true") == 0)
+	{
+	  upd->PSPG_advection_correction = true;
+	}
+      else
+	{
+	  EH( -1, "invalid choice: PSPG Advection Correction, yes (true) or no (false)");
+	}
+      SPF(echo_string, eoformat, "PSPG Advection Correction", input); ECHO(echo_string,echo_file);	  
+    }
+  else
+    {
+      upd->PSPG_advection_correction = false;
+      ECHO("(PSPG Advection Correction = no) (default)", echo_file);
     }
 
   iread = look_for_optional(ifp, "Continuity Stabilization", input, '=');

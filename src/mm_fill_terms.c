@@ -2717,7 +2717,7 @@ assemble_momentum(dbl time,       /* current time */
   /*** Density ***/
   rho = density(d_rho, time);
 
-  if (PSPG) {
+  if (PSPG && upd->PSPG_advection_correction) {
       calc_pspg( pspg, d_pspg,
                  time, tt, dt,
                  pg_data);
@@ -3138,10 +3138,10 @@ assemble_momentum(dbl time,       /* current time */
 
 #endif
 
-                  if (PSPG) {
+                  if (PSPG && upd->PSPG_advection_correction) {
                     advection -= pspg[0] * grad_v[0][a];
                     advection -= pspg[1] * grad_v[1][a];
-                    advection -= pspg[2] * grad_v[2][a];
+                    if (wim == 3) advection -= pspg[2] * grad_v[2][a];
                   }
 		  advection *= rho;
 		  advection *= - wt_func*d_area;
@@ -3851,7 +3851,7 @@ assemble_momentum(dbl time,       /* current time */
 			      advection_a += (v[1] - x_dot[1]) * bf[var]->grad_phi_e[j][b][1][a];
 			      if(wim==3) advection_a += (v[2] - x_dot[2]) * bf[var]->grad_phi_e[j][b][2][a];
 #endif
-                              if (PSPG) {
+                              if (PSPG && upd->PSPG_advection_correction) {
                                 advection -= d_pspg->v[0][b][j] * grad_v[0][a];
                                 advection -= d_pspg->v[1][b][j] * grad_v[1][a];
                                 if (wim == 3) advection -= d_pspg->v[2][b][j] * grad_v[2][a];
@@ -3868,7 +3868,7 @@ assemble_momentum(dbl time,       /* current time */
                                   advection_b += (v[0] - x_dot[0]) * grad_v[0][a];
                                   advection_b += (v[1] - x_dot[1]) * grad_v[1][a];
                                   if(wim==3) advection_b += (v[2] - x_dot[2]) * grad_v[2][a];
-                                  if (PSPG) {
+                                  if (PSPG && upd->PSPG_advection_correction) {
                                     advection -= pspg[0] * grad_v[0][a];
                                     advection -= pspg[1] * grad_v[1][a];
                                     if (wim == 3) advection -= pspg[2] * grad_v[2][a];
@@ -33158,7 +33158,7 @@ calc_pspg( dbl pspg[DIM],
       tau_pspg = PS_scaling * h_elem / (2.0 * rho * U_norm);
     }
   }
-  else if (pspg_local)
+  else if (PSPG == 3) // Shakib
   {
     double G[DIM][DIM];
     get_metric_tensor(bf[pd->ShapeVar]->B, pd->Num_Dim, ei[pg->imtrx]->ielem_type, G);
@@ -33173,23 +33173,18 @@ calc_pspg( dbl pspg[DIM],
     double tau_adv = 0;
     for (int i = 0; i < dim; i++) {
         tau_adv += rho * rho * fv->v[i];
-//      for (int j = 0; j < dim; j++) {
-//        tau_adv += rho*rho*fv->v[i] * G[i][j] * fv->v[j];
-//      }
     }
     tau_adv /= (0.25*0.25);
-
 
     // diffusion
     double tau_diff = 0;
     double coeff = 12*(mu*mu);
     for (int i = 0; i < dim; i++) {
       for (int j = 0; j < dim; j++) {
-//        tau_diff += coeff * G[i][j] * G[i][j];
+        tau_diff += coeff * G[i][j] * G[i][j];
       }
     }
     tau_diff = coeff / (0.25*0.25*0.25*0.25);
-
 
    tau_pspg1 = 1 / sqrt(tau_time + tau_adv + tau_diff);
    tau_pspg = PS_scaling * tau_pspg1;
@@ -33215,67 +33210,67 @@ calc_pspg( dbl pspg[DIM],
        }
      }
    }
+  }
+  else if (pspg_local)
+  {
+    hh_siz = 0.;
+    for ( p=0; p<dim; p++)
+    {
+      hh_siz += hsquared[p];
+    }
+    // Average value of h**2 in the element
+    hh_siz = hh_siz/ ((double )dim);
 
+    // Average value of v**2 in the element
+      vv_speed = 0.0;
+    for ( a=0; a<wim; a++)
+    {
+      vv_speed += v_avg[a]*v_avg[a];
+    }
 
+    // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
+    tau_pspg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
+    if (  pd->TimeIntegration != STEADY)
+    {
+      tau_pspg1 += 4.0/(dt*dt);
+    }
+    tau_pspg = PS_scaling/((rho) * sqrt(tau_pspg1));
 
-//    hh_siz = 0.;
-//    for ( p=0; p<dim; p++)
-//    {
-//      hh_siz += hsquared[p];
-//    }
-//    // Average value of h**2 in the element
-//    hh_siz = hh_siz/ ((double )dim);
+    // tau_pspg derivatives wrt v from vv_speed
+    if ( d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1] )
+    {
+      for ( b=0; b<dim; b++)
+      {
+        var = VELOCITY1+b;
+        if ( pd->v[pg->imtrx][var] )
+        {
+          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+          {
+            d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1;
+                      d_tau_pspg_dv[b][j] *= 1.0/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
+          }
+        }
+      }
+    }
 
-//    // Average value of v**2 in the element
-//      vv_speed = 0.0;
-//    for ( a=0; a<wim; a++)
-//    {
-//      vv_speed += v_avg[a]*v_avg[a];
-//    }
+    // tau_pspg derivatives wrt mesh from hh_siz
+    if ( d_pspg != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1] && pspg_local)
+    {
+      for ( b=0; b<dim; b++)
+      {
+        var = MESH_DISPLACEMENT1+b;
+        if ( pd->v[pg->imtrx][var] )
+        {
+          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+          {
+                      d_tau_pspg_dX[b][j] = tau_pspg/tau_pspg1;
+            d_tau_pspg_dX[b][j] *= (rho_avg*rho_avg*vv_speed + 18.0*mu_avg*mu_avg/hh_siz) / (hh_siz*hh_siz);
+            d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
 
-//    // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
-//    tau_pspg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
-//    if (  pd->TimeIntegration != STEADY)
-//    {
-//      tau_pspg1 += 4.0/(dt*dt);
-//    }
-//    tau_pspg = PS_scaling/sqrt(tau_pspg1);
-
-//    // tau_pspg derivatives wrt v from vv_speed
-//    if ( d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1] )
-//    {
-//      for ( b=0; b<dim; b++)
-//      {
-//        var = VELOCITY1+b;
-//        if ( pd->v[pg->imtrx][var] )
-//        {
-//          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-//          {
-//            d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1;
-//                      d_tau_pspg_dv[b][j] *= 1.0/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
-//          }
-//        }
-//      }
-//    }
-
-//    // tau_pspg derivatives wrt mesh from hh_siz
-//    if ( d_pspg != NULL && pd->v[pg->imtrx][MESH_DISPLACEMENT1] && pspg_local)
-//    {
-//      for ( b=0; b<dim; b++)
-//      {
-//        var = MESH_DISPLACEMENT1+b;
-//        if ( pd->v[pg->imtrx][var] )
-//        {
-//          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-//          {
-//                      d_tau_pspg_dX[b][j] = tau_pspg/tau_pspg1;
-//            d_tau_pspg_dX[b][j] *= (rho_avg*rho_avg*vv_speed + 18.0*mu_avg*mu_avg/hh_siz) / (hh_siz*hh_siz);
-//            d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
-
-//          }
-//        }
-//      }
-//    }
+          }
+        }
+      }
+    }
   }
 
 

@@ -1303,97 +1303,12 @@ static int calc_standard_fields(double **post_proc_vect,
     calc_pspg( pspg, NULL,
                time, theta, delta_t,
                pg_data);
-    double G[DIM][DIM];
-    get_metric_tensor(bf[pd->ShapeVar]->B, pd->Num_Dim, ei[pg->imtrx]->ielem_type, G);
-  dbl f[DIM];				/* Body force. */
-  MOMENTUM_SOURCE_DEPENDENCE_STRUCT df_struct;  /* Body force dependence */
-  MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df = &df_struct;
-
-  momentum_source_term(f, df, time);
-    double tau_time = 0;
-    // time term
-    if (pd->TimeIntegration != STEADY) {
-      tau_time += 4 * (rho*rho) / (delta_t * delta_t);
-    }
-
-    // advection
-    double tau_adv = 0;
-    for (int i = 0; i < dim; i++) {
-      for (int j = 0; j < dim; j++) {
-        tau_adv += rho*rho*fv->v[i] * G[i][j] * fv->v[j];
-      }
-    }
-
-    // diffusion
-    double tau_diff = 0;
-    double coeff = 12*(mu*mu);
-    for (int i = 0; i < dim; i++) {
-      for (int j = 0; j < dim; j++) {
-        tau_diff += coeff * G[i][j] * G[i][j];
-      }
-    }
-
-
-//   tau_pspg1 = 1 / sqrt(tau_time + tau_adv + tau_diff);
-//   tau_pspg = PS_scaling * tau_pspg1;
-
-//    double rho = pg_data->rho_avg;
-//    rho = density(NULL, time);
-//    double mu = pg_data->mu_avg;
-//    dbl *grad_v[DIM];
-//    for ( a=0; a<VIM; a++) grad_v[a] = fv->grad_v[a];
-//
-//    /* load up shearrate tensor based on velocity */
-//    for ( a=0; a<VIM; a++)
-//    {
-//      for ( b=0; b<VIM; b++)
-//      {
-//        gamma[a][b] = grad_v[a][b] + grad_v[b][a];
-//      }
-//    }
-//    /*
-//     * get viscosity for velocity second derivative/diffusion
-//     * term in PSPG stuff
-//     */
-//    mu = viscosity(gn, gamma, NULL );
-//    double hh_siz = 0.;
-//    for ( int p=0; p<dim; p++)
-//    {
-//      hh_siz += pg_data->hsquared[p];
-//    }
-//    // Average value of h**2 in the element
-//    hh_siz = hh_siz/ ((double )dim);
-//
-//    // Average value of v**2 in the element
-//    double vv_speed = 0.0;
-//    for ( a=0; a<VIM; a++)
-//    {
-//      vv_speed += pg_data->v_avg[a]*pg_data->v_avg[a];
-//    }
-//
-//    // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
-//    double tau_supg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
-//    if (  pd->TimeIntegration != STEADY)
-//    {
-//      tau_supg1 += 4.0/(delta_t*delta_t);
-//    }
-//    double tau_supg = PS_scaling/sqrt(tau_supg1);
-//
-////    double hh_siz = 0.;
-////    for ( int p=0; p<dim; p++)
-////    {
-////      hh_siz += pg_data->hsquared[p];
-////    }
-////    // Average value of h**2 in the element
-////    hh_siz = hh_siz/ ((double )dim);
-//    local_post[PSPG_PP] = f[0];
-//    local_post[PSPG_PP+1] = f[1];
-//    local_post[PSPG_PP+2] = f[2];
     for (int i = 0; i < VIM; i++) {
       local_post[PSPG_PP+i] = pspg[i];
       local_lumped[PSPG_PP+i] = 1.;
     }
   }
+
   if (VELO_SPEED != -1 && pd->e[pg->imtrx][R_MOMENTUM1] ){
     velo_sqrd = 0.;
     for (a = 0; a < VIM; a++) {       
