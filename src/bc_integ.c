@@ -484,19 +484,22 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 
 	switch (bc->BC_Name) {
 	    
-	case KINEMATIC_PETROV_BC:
+        case KINEMATIC_PETROV_BC:
 	case KINEMATIC_BC:
 	case VELO_NORMAL_BC:
 	case VELO_NORMAL_LS_BC:
 	case VELO_NORMAL_LS_PETROV_BC:
-		
+        {
+
+//        if (goma_automatic_rotations.rotation_nodes == NULL) {
+
 	  contact_flag = (ls != NULL);
 
 	  /*  first all external boundaries with velocity
 	      second - internal boundaries with an explicit block id
 	      third  - internal boundaries with implicit iapply logic
 	  */
-	  if ( (SS_Internal_Boundary[ss_index] == -1 && pd->v[pg->imtrx][VELOCITY1])
+          if ( (SS_Internal_Boundary[ss_index] == -1 && pd->v[pg->imtrx][VELOCITY1])
 	       || (SS_Internal_Boundary[ss_index] != -1 &&
 		   bc->BC_Data_Int[0] == ei[pg->imtrx]->elem_blk_id)
 	       || (SS_Internal_Boundary[ss_index] != -1 && 
@@ -507,7 +510,9 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                                 bc->BC_Data_Float[1], bc->BC_Data_Float[2],
                                 bc->BC_Data_Float[3]);
 	    }
-	  break;
+        }
+//        }
+          break;
 
 	case VELO_TANGENT_LS_BC:
 		
@@ -2149,7 +2154,41 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	      }
 	    }
 	  }
-	  
+//          if (goma_automatic_rotations.rotation_nodes != NULL) {
+//            switch (bc->BC_Name) {
+
+//            case KINEMATIC_PETROV_BC:
+//            case KINEMATIC_BC:
+//            case VELO_NORMAL_BC:
+//            case VELO_NORMAL_LS_BC:
+//            case VELO_NORMAL_LS_PETROV_BC:
+
+//              contact_flag = (ls != NULL);
+
+//              /*  first all external boundaries with velocity
+//                  second - internal boundaries with an explicit block id
+//                  third  - internal boundaries with implicit iapply logic
+//              */
+//          func[0] = 0.0; func[1] =0.0; func[2] = 0.0;
+//            memset(d_func, 0, DIM*(MAX_VARIABLE_TYPES + MAX_CONC)*MDE*sizeof(double));
+//              if ( (SS_Internal_Boundary[ss_index] == -1 && pd->v[pg->imtrx][VELOCITY1])
+//                   || (SS_Internal_Boundary[ss_index] != -1 &&
+//                       bc->BC_Data_Int[0] == ei[pg->imtrx]->elem_blk_id)
+//                   || (SS_Internal_Boundary[ss_index] != -1 &&
+//                       bc->BC_Data_Int[0] == -1 && iapply && pd->v[pg->imtrx][VELOCITY1]))
+//                {
+
+//                  fvelo_normal_auto_bc(func, d_func, bc->BC_Data_Float[0], contact_flag,
+//                                  x_dot, theta, delta_t, (int) bc->BC_Name,
+//                                    bc->BC_Data_Float[1], bc->BC_Data_Float[2],
+//                                    bc->BC_Data_Float[3], elem_side_bc->id_side, I);
+//                }
+//              break;
+//            default:
+//              break;
+//            }
+//          }
+
 	  
 	  if( (BC_Types[bc_input_id].BC_Name == TENSION_SHEET_BC ) && (Dolphin[pg->imtrx][I][MESH_DISPLACEMENT1] > 0 ) )
 	    {

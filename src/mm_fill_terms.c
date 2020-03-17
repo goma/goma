@@ -2773,7 +2773,7 @@ assemble_momentum(dbl time,       /* current time */
       double coeff = 12*(mu*mu)/(rho*rho);
       for (int i = 0; i < dim; i++) {
         for (int j = 0; j < dim; j++) {
-//          tau_diff += coeff * G[i][j] * G[i][j];
+          tau_diff += coeff * G[i][j] * G[i][j];
         }
       }
 
@@ -33172,10 +33172,13 @@ calc_pspg( dbl pspg[DIM],
     // advection
     double tau_adv = 0;
     for (int i = 0; i < dim; i++) {
-      for (int j = 0; j < dim; j++) {
-        tau_adv += rho*rho*fv->v[i] * G[i][j] * fv->v[j];
-      }
+        tau_adv += rho * rho * fv->v[i];
+//      for (int j = 0; j < dim; j++) {
+//        tau_adv += rho*rho*fv->v[i] * G[i][j] * fv->v[j];
+//      }
     }
+    tau_adv /= (0.25*0.25);
+
 
     // diffusion
     double tau_diff = 0;
@@ -33185,6 +33188,7 @@ calc_pspg( dbl pspg[DIM],
 //        tau_diff += coeff * G[i][j] * G[i][j];
       }
     }
+    tau_diff = coeff / (0.25*0.25*0.25*0.25);
 
 
    tau_pspg1 = 1 / sqrt(tau_time + tau_adv + tau_diff);

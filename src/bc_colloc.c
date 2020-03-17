@@ -583,11 +583,18 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	       * one entry for vector conditions like capillary */
 	      memset(kfunc, 0, DIM*sizeof(double) );
 	      memset(d_kfunc,0, DIM*(MAX_VARIABLE_TYPES + MAX_CONC)*MDE*sizeof(double));
+//              if (goma_automatic_rotations.rotation_nodes == NULL) {
 	      fvelo_normal_bc(kfunc, d_kfunc, 
 			      BC_Types[bc_input_id].BC_Data_Float[0], contact_flag = FALSE,
 			      x_dot, theta, delta_t,
 			      (int) BC_Types[bc_input_id].BC_Name,0,0, 135.0);
-	      doFullJac = 1;
+//              } else {
+//              fvelo_normal_auto_bc(kfunc, d_kfunc,
+//                              BC_Types[bc_input_id].BC_Data_Float[0], contact_flag = FALSE,
+//                              x_dot, theta, delta_t,
+//                              (int) BC_Types[bc_input_id].BC_Name,0,0, 135.0, elem_side_bc->id_side, I);
+//              }
+              doFullJac = 1;
 	      func = kfunc[0];
 	      break;
 

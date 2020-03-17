@@ -15,7 +15,7 @@ struct Boundary_Condition;
 #endif
 
 #ifndef GOMA_ROTATION_CRITICAL_ANGLE
-#define GOMA_ROTATION_CRITICAL_ANGLE 45
+#define GOMA_ROTATION_CRITICAL_ANGLE 46
 #endif
 
 
@@ -34,7 +34,7 @@ typedef struct {
   gds_vector *rotated_coord[DIM];
   unsigned int associate_direction[GOMA_MAX_NORMALS_PER_NODE];
   unsigned int associate_critical_normal[GOMA_MAX_NORMALS_PER_NODE];
-  unsigned int critical_normal_index[2];
+  unsigned int critical_normal_index[3];
   bool direction_is_associated[GOMA_MAX_NORMALS_PER_NODE];
   unsigned int tangent1_seeddir[GOMA_MAX_NORMALS_PER_NODE];
   int element[GOMA_MAX_NORMALS_PER_NODE];

@@ -636,6 +636,259 @@ if(lsi->near && 0) fprintf(stderr,"vn_ls %g %g %g %g\n",fv->x[0],penalty,factor,
 /*****************************************************************************/
 /*****************************************************************************/
 /****************************************************************************/
+void
+fvelo_normal_auto_bc(double func[DIM],
+                double d_func[DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                const double vnormal, /* normal velocity */
+                const int contact,    /* should we allow ls contact */
+                const double x_dot[MAX_PDIM], /* Bad name, says Phil!
+                                               * -mesh velocity vector */
+                const dbl tt,	/* parameter to vary time integration from
+                                   explicit (tt = 1) to implicit (tt = 0) */
+                const dbl dt,	/* current value of the time step */
+                const int type,   /*  bc id  */
+                const double length,   /*  interface zone half-width  */
+                const double shift,    /*  interface zone shift for fake bc */
+                const double leak_angle_degrees,
+const int id_side,
+const int global_node)    /*contact angle to start gas leaking */
+
+
+     /***********************************************************************
+      *
+      * fvelo_normal_bc():
+      *
+      *  Function which evaluates the expression specifying the
+      *  kinematic boundary condition at a quadrature point on a side
+      *  of an element.
+      *
+      *         func =   - n . (vnormal) + n . (v - xdot)
+      *
+      *  The boundary conditions, KINEMATIC_PETROV_BC,  KINEMATIC_BC:
+      *  VELO_NORMAL_BC, and KINEMATIC_COLLOC_BC
+      *  employ this function. For internal boundaries, vnormal is set
+      *  to zero,
+      *  and this function is evaluated on both sides of the interface to
+      *  establish mass continuity across the interface.
+      *
+      *  Note: this bc is almost exactly the same as fvelo_normal_bc_disc
+      *        except that the latter bc contains the density as a
+      *        multiplicative constant.
+      *
+      * Input:
+      *
+      *  vnormal = specified on the bc card as the first float
+      *  v       = mass average velocity at the guass point
+      *  xdot    = velocity of the mesh (i.e., the interface if the mesh
+      *            is pegged at the inteface)
+      *
+      * Output:
+      *
+      *  func[0] = value of the function mentioned above
+      *  d_func[0][varType][lvardof] =
+      *              Derivate of func[0] wrt
+      *              the variable type, varType, and the local variable
+      *              degree of freedom, lvardof, corresponding to that
+      *              variable type.
+      *
+      *   Author: P. R. Schunk    (3/24/94)
+      *   Revised: RAC  (5/24/95)
+      ********************************************************************/
+{
+  int j, kdir, var, p;
+  double phi_j, vcontact;
+  double penalty=1.0, d_penalty_dF=0.0;
+  double dot_prod;
+  const double cos_leak = cos((180-leak_angle_degrees)*(M_PIE/180));
+  const double leak_width = sin((180-leak_angle_degrees)*(M_PIE/180))*sin(10*M_PIE/180);
+  gds_vector *normal = gds_vector_alloc(3);
+
+  if (goma_automatic_rotations.rotation_nodes == NULL) {
+    EH(GOMA_ERROR, "fvelo_normal_bc_auto requires 3d automatic rotations");
+  }
+  bool found = false;
+  int gnode = global_node;
+  for (int k = 0; (!found && k < goma_automatic_rotations.rotation_nodes[gnode].n_normals); k++) {
+    if (goma_automatic_rotations.rotation_nodes[gnode].face[k] == id_side &&
+        goma_automatic_rotations.rotation_nodes[gnode].element[k] == ei[pg->imtrx]->ielem) {
+      gds_vector_copy(normal, goma_automatic_rotations.rotation_nodes[gnode].average_normals[k]);
+      found = 1;
+    }
+  }
+
+  vcontact = 0.;
+
+  if (contact &&
+       (type != VELO_NORMAL_LS_BC &&
+        type != VELO_NORMAL_LS_PETROV_BC &&
+        type != VELO_NORMAL_LS_COLLOC_BC))
+    {
+      double length_scale;
+      double sign_gas = mp->mp2nd->densitymask[1]-mp->mp2nd->densitymask[0];
+
+#if 0
+      length_scale = pd->Num_Dim == 2 ? fv->sdet : pow( fv->sdet , 0.5);
+#else
+      length_scale = pd->Num_Dim == 2 ? fv->sdet : pow( fv->sdet , 0.5);
+            if(upd->CoordinateSystem == CYLINDRICAL ||
+               upd->CoordinateSystem == SWIRLING   )
+              {
+      length_scale = pd->Num_Dim == 2 ? fv->sdet/fv->h3 : pow( fv->sdet/fv->h3 , 0.5);
+              }
+#endif
+
+      load_lsi(ls->Length_Scale);
+
+      /* only apply if in vicinity of boundary and OUTSIDE interface */
+      if (
+          sign_gas*lsi->H > 0.0 &&
+          fabs(fv->F) < 2.0*length_scale * ls->Contact_Tolerance )
+        {
+          dot_prod = 0.0;
+          for(p = 0; p < pd->Num_Dim; p++)
+            dot_prod += normal->data[p] * lsi->normal[p];
+
+          if ( dot_prod > cos_leak )
+            {
+              func[0] = 0.0;
+              return;
+            }
+        }
+    }
+
+  /* Calculate the residual contribution	*/
+  func[0] = -vnormal - vcontact;
+  for (kdir = 0; kdir < pd->Num_Dim; kdir++)
+    {
+      func[0] += (fv->v[kdir] - x_dot[kdir]) * normal->data[kdir];
+    }
+
+  /*  modification for "fake" gas outlet  */
+   if(contact &&
+       (type == VELO_NORMAL_LS_BC ||
+        type == VELO_NORMAL_LS_PETROV_BC ||
+        type == VELO_NORMAL_LS_COLLOC_BC))
+     {
+       const double penalty_gas=0.0, penalty_liq=1.;
+       const double gas_log=log(1./BIG_PENALTY), liq_log=0.;
+       const int log_scale = 0;
+       double factor = 0, Hfcn, d_Hfcn_dF, d_factor_dF = 0,F_prime;
+       int visc_sens=mp->mp2nd->viscositymask[1]-mp->mp2nd->viscositymask[0];
+       double dvisc_sens=(double)visc_sens;
+
+       Hfcn = 0.; d_Hfcn_dF = 0.;
+       F_prime = fv->F/length+dvisc_sens*shift;
+       if (F_prime < -1.0)
+         { Hfcn = 0.; d_Hfcn_dF = 0.; }
+       else if (F_prime < 1.)
+         {
+           Hfcn = 0.5*(1.+F_prime+sin(M_PIE*F_prime)/M_PIE);
+           d_Hfcn_dF = 0.5*(1.+cos(M_PIE*F_prime))/length;
+         }
+       else
+         { Hfcn = 1.; d_Hfcn_dF = 0.; }
+       switch (visc_sens)
+         {
+         case 1:
+           factor = 1. - Hfcn;
+           d_factor_dF = -d_Hfcn_dF;
+           break;
+         case -1:
+           factor = Hfcn;
+           d_factor_dF = d_Hfcn_dF;
+           break;
+         }
+       if(func[0] < 0.0 && 0)
+              {factor = 1.; d_factor_dF = 0.;}
+       if(log_scale)
+         {
+           penalty = exp((liq_log-gas_log)*factor + gas_log);
+           d_penalty_dF = penalty*(liq_log-gas_log)*d_factor_dF*(-dvisc_sens);
+         }
+       else
+         {
+           penalty = (penalty_liq-penalty_gas)*factor + penalty_gas;
+           d_penalty_dF = (penalty_liq-penalty_gas)*d_factor_dF*(-dvisc_sens);
+         }
+      if ( 1 && fabs(F_prime) < 1.0)
+        {
+          dot_prod = 0.0;
+          for(p = 0; p < pd->Num_Dim; p++)
+            dot_prod += normal->data[p] * lsi->normal[p];
+
+          if ( fabs(dot_prod-cos_leak) < leak_width )
+            {
+              F_prime = (dot_prod-cos_leak)/leak_width;
+              Hfcn = 0.5*(1.+F_prime+sin(M_PIE*F_prime)/M_PIE);
+              penalty = Hfcn*penalty_gas+(1.-Hfcn)*penalty;
+              d_penalty_dF *= (1.-Hfcn);
+            }
+          else if ( dot_prod >= (cos_leak + leak_width) )
+            {
+              penalty = penalty_gas;
+              d_penalty_dF = 0.;
+            }
+         }
+if(lsi->near && 0) fprintf(stderr,"vn_ls %g %g %g %g\n",fv->x[0],penalty,factor,func[0]);
+     } /* end modifications for fake gas outlet */
+
+        func[0] *= penalty;
+
+  if (af->Assemble_Jacobian) {
+
+    for (kdir=0; kdir<pd->Num_Dim; kdir++) {
+
+      for (p=0; p<pd->Num_Dim; p++) {
+        var = MESH_DISPLACEMENT1 + p;
+        if (pd->v[pg->imtrx][var]) {
+          for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
+            phi_j = bf[var]->phi[j];
+            d_func[0][var][j] += penalty*(fv->v[kdir] - x_dot[kdir]) * fv->dsnormal_dx[kdir][p][j];
+            if (TimeIntegration != 0 && p == kdir) {
+              d_func[0][var][j] += penalty*( -(1.+2.*tt)* phi_j/dt) * normal->data[kdir] * delta(p, kdir);
+            }
+          }
+        }
+      }
+
+      var = VELOCITY1 + kdir;
+      if (pd->v[pg->imtrx][var]) {
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
+          phi_j = bf[var]->phi[j];
+          d_func[0][var][j] += penalty* phi_j * normal->data[kdir];
+        }
+      }
+
+      var = PVELOCITY1 + kdir;
+      if (pd->v[pg->imtrx][var]) {
+        for ( j=0; j<ei[pg->imtrx]->dof[var]; j++) {
+          phi_j = bf[var]->phi[j];
+          d_func[0][var][j] += penalty*phi_j * normal->data[kdir];
+        }
+
+      }
+
+#ifdef COUPLED_FILL
+      if(contact)
+      {
+      var = ls->var;
+      if((type == VELO_NORMAL_LS_BC || type == VELO_NORMAL_LS_PETROV_BC
+           || type == VELO_NORMAL_LS_COLLOC_BC)  && pd->v[pg->imtrx][var] )
+        {
+          for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+            {
+              d_func[0][var][j] += (fv->v[kdir]-x_dot[kdir])*normal->data[kdir]*d_penalty_dF*bf[var]->phi[j];
+            }
+         }
+       }
+#endif /*COUPLED_FILL */
+
+    } /* for: kdir */
+  } /* end of if Assemble_Jacobian */
+
+  gds_vector_free(normal);
+
+} /* END of routine fvelo_normal_bc  */
 
 void
 fmesh_etch_bc(double *func,

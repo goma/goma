@@ -466,7 +466,7 @@ elem_info(const int info,
       answer = 4;
       break;
     case NQUAD:                   /* number of quadrature points */
-      answer = 4;
+      answer = 5;
       break;
     case NDIM:                    /* number of physical dimensions */
       answer = 3;
@@ -1840,35 +1840,39 @@ find_stu(const int   iquad,     /* current GQ index  */
 
   case LINEAR_TET:
     //*s = *t = *u = 0.25;
-  { static const double alpha = 0.585410196624969;
-    static const double beta = .138196601125011;
-    switch (iquad) {
-    case 0:
-      *s = alpha;
-      *t = *u = beta;
-      break;
-    case 1:
-      *s = *u = beta;
-      *t = alpha;
-      break;
-    case 2:
-      *s = *t = beta;
-      *u = alpha;
-      break;
-    case 3:
-      *s = *t = *u = beta;
-      break;
-    }
-  }
+  {
+//  { static const double alpha = 0.585410196624969;
+//    static const double beta = .138196601125011;
+//    switch (iquad) {
+//    case 0:
+//      *s = alpha;
+//      *t = *u = beta;
+//      break;
+//    case 1:
+//      *s = *u = beta;
+//      *t = alpha;
+//      break;
+//    case 2:
+//      *s = *t = beta;
+//      *u = alpha;
+//      break;
+//    case 3:
+//      *s = *t = *u = beta;
+//      break;
+//    }
+//  }
 
- /*   switch (iquad )
+    const double one_sixth = 1/6.0;
+    const double one_half = 0.5;
+    switch (iquad )
       {
       case 0: *s = *t = *u = 0.25; break;
       case 1: *s = one_sixth; *t = one_sixth; *u = one_sixth; break;
       case 2: *s = one_sixth; *t = one_sixth; *u = one_half ; break;
       case 3: *s = one_sixth; *t = one_half ; *u = one_sixth; break;
       case 4: *s = one_half ; *t = one_sixth; *u = one_sixth; break;
-      } */
+      }
+  }
     break;
       
   default:
@@ -3189,14 +3193,17 @@ Gq_weight(const int iquad,               /* current GQ index */
     break;
 
   case LINEAR_TET:
+  {
+     const double wltet_1 = -2.0 / 15.0;
+     const double wltet_2 = 0.075;
     //weight = 1.0/6.0;
-    weight = 1.0/24.0;
-    /*
+//    weight = 1.0/24.0;
+
     if (iquad == 0)
       weight = wltet_1;
     else 
       weight = wltet_2;
-    */
+  }
     break;
 
 

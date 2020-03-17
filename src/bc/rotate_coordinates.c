@@ -28,6 +28,7 @@
 
 static const double critical_angle_radians = GOMA_ROTATION_CRITICAL_ANGLE * M_PI / 180;
 
+#define DEBUG_AUTO_ROTATE
 #ifdef DEBUG_AUTO_ROTATE
 static void
 write_rotations_to_file(const char *filename, Exo_DB *exo, goma_rotation_node_s *rotations);
@@ -308,7 +309,7 @@ bool goma_rotation_node_type_surface(const goma_rotation_node_s *node) {
   return false;
 }
 
-bool goma_rotation_node_type_corner(const goma_rotation_node_s *node) {
+bool goma_rotation_node_type_corner(goma_rotation_node_s *node) {
   if (node->n_normals < 3) {
     return false;
   }
@@ -325,6 +326,9 @@ bool goma_rotation_node_type_corner(const goma_rotation_node_s *node) {
           double uw_dot = gds_vector_dot(node->normals[u_index], node->normals[w_index]);
           double vw_dot = gds_vector_dot(node->normals[v_index], node->normals[w_index]);
           if (uw_dot < cos(critical_angle_radians) && vw_dot < cos(critical_angle_radians)) {
+            node->critical_normal_index[0] = u_index;
+            node->critical_normal_index[1] = v_index;
+            node->critical_normal_index[2] = w_index;
             return true;
           }
         }
@@ -350,7 +354,7 @@ bool goma_rotation_node_type_edge(goma_rotation_node_s *node) {
   for (int u_index = 0; u_index < node->n_normals; u_index++) {
     for (int v_index = u_index + 1; v_index < node->n_normals; v_index++) {
       double dot = gds_vector_dot(node->normals[u_index], node->normals[v_index]);
-      if (dot < cos(critical_angle_radians)) {
+      if (dot <= cos(critical_angle_radians)) {
         gds_vector_copy(critical_normal[0], node->normals[u_index]);
         node->critical_normal_index[0] = u_index;
         gds_vector_copy(critical_normal[1], node->normals[v_index]);
@@ -364,9 +368,9 @@ bool goma_rotation_node_type_edge(goma_rotation_node_s *node) {
     // make sure we only have two critical normals
     is_edge_type = true;
     for (int u_index = 0; u_index < node->n_normals; u_index++) {
-      if ((gds_vector_dot(critical_normal[0], node->normals[u_index]) <
+      if ((gds_vector_dot(critical_normal[0], node->normals[u_index]) <=
            cos(critical_angle_radians)) &&
-          (gds_vector_dot(critical_normal[1], node->normals[u_index]) <
+          (gds_vector_dot(critical_normal[1], node->normals[u_index]) <=
            cos(critical_angle_radians))) {
         is_edge_type = false;
         break;
@@ -411,6 +415,26 @@ goma_error set_rotation_types(Exo_DB *exo, goma_rotation_node_s *rotation) {
   return GOMA_SUCCESS;
 }
 
+goma_error find_best_direction(bool set_direction[3], gds_vector *normal, int * best_dir)
+{
+  double max = 0;
+  bool set = false;
+  for (int dir = 0; dir < 3; dir++) {
+    if (!set_direction[dir]) {
+      double dot = fabs(gds_vector_get(normal, dir));
+      if (dot > max) {
+        *best_dir = dir;
+        max = dot;
+        set = true;
+      }
+    }
+  }
+  if (set) {
+    return GOMA_SUCCESS;
+  }
+  return GOMA_ERROR;
+}
+
 goma_error associate_directions(Exo_DB *exo, goma_rotation_node_s *rotation) {
   for (int i = 0; i < exo->num_nodes; i++) {
     if (rotation[i].n_normals > 0) {
@@ -420,7 +444,6 @@ goma_error associate_directions(Exo_DB *exo, goma_rotation_node_s *rotation) {
       switch (rotation[i].type) {
       case GOMA_ROTATION_SINGLE:
       case GOMA_ROTATION_SURFACE:
-      case GOMA_ROTATION_CORNER:
         for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
           unsigned int best_dir = 0;
           double max_dot = 0;
@@ -455,21 +478,99 @@ goma_error associate_directions(Exo_DB *exo, goma_rotation_node_s *rotation) {
           dir_set[best_dir] = true;
         }
         break;
+      case GOMA_ROTATION_CORNER:
+        for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
+          unsigned int best_dir = 0;
+          double max_dot = 0;
+          gds_vector *ca1 = rotation[i].average_normals[rotation[i].critical_normal_index[0]];
+          gds_vector *ca2 = rotation[i].average_normals[rotation[i].critical_normal_index[1]];
+          gds_vector *ca3 = rotation[i].average_normals[rotation[i].critical_normal_index[2]];
+
+          int ca_best[3] = {-1, -1, -1};
+          bool set_dir[3] = {false,false,false};
+          gds_vector *cav[3] = {ca1, ca2, ca3};
+
+          for (int u_index = 0; u_index < 3; u_index++) {
+            goma_error err = find_best_direction(set_dir, cav[u_index], &(ca_best[u_index]));
+            EH(err, "find_best_direction ca %d", u_index);
+          }
+
+          for (int u_index = 0; u_index < 3; u_index++) {
+            for (int v_index = u_index+1; v_index < 3; v_index++) {
+              if (ca_best[u_index] == ca_best[v_index]) {
+                set_dir[0] = false;
+                set_dir[1] = false;
+                set_dir[2] = false;
+                set_dir[ca_best[u_index]] = true;
+                double dotu = fabs(gds_vector_get(cav[u_index], ca_best[u_index]));
+                double dotv = fabs(gds_vector_get(cav[v_index], ca_best[u_index]));
+                if (dotu > dotv) {
+                  find_best_direction(set_dir, cav[v_index], &(ca_best[v_index]));
+                } else {
+                  find_best_direction(set_dir, cav[u_index], &(ca_best[u_index]));
+                }
+              }
+            }
+          }
+
+          if (ca_best[0] == ca_best[1] || ca_best[1] == ca_best[2] || ca_best[0] == ca_best[2]) {
+            EH(-1, "best direction for corner critical angle error");
+          }
+
+            for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
+              double max = 0;
+              int best = 0;
+              for (int c = 0; c < 3; c++) {
+                double dot = fabs(gds_vector_dot(cav[c], rotation[i].average_normals[u_index]));
+                if (dot > max) {
+                  max = dot;
+                  best = c;
+                }
+              }
+              assert(max > 0);
+              rotation[i].associate_direction[u_index] = ca_best[best];
+              dir_set[best] = true;
+            }
+          }
+        break;
       case GOMA_ROTATION_EDGE: {
         double ca_max[2] = {0.0, 0.0};
         unsigned int ca_coord[2] = {0, 0};
         gds_vector *ca1 = rotation[i].average_normals[rotation[i].critical_normal_index[0]];
         gds_vector *ca2 = rotation[i].average_normals[rotation[i].critical_normal_index[1]];
+        bool set = false;
         for (unsigned int cord = 0; cord < DIM; cord++) {
           double dot1 = fabs(gds_vector_get(ca1, cord));
           double dot2 = fabs(gds_vector_get(ca2, cord));
           if (dot1 > ca_max[0] && dot1 >= dot2) {
             ca_max[0] = dot1;
             ca_coord[0] = cord;
-          } else if (dot2 > ca_max[1]) {
+            set = true;
+          }
+        }
+        if (!set) {
+        for (unsigned int cord = 0; cord < DIM; cord++) {
+          double dot2 = fabs(gds_vector_get(ca2, cord));
+          if (dot2 > ca_max[1]) {
             ca_max[1] = dot2;
             ca_coord[1] = cord;
           }
+        }
+        for (unsigned int cord = 0; cord < DIM; cord++) {
+          double dot1 = fabs(gds_vector_get(ca1, cord));
+          if (dot1 > ca_max[0] && cord != ca_coord[1]) {
+            ca_max[0] = dot1;
+            ca_coord[0] = cord;
+          }
+        }
+        } else {
+        for (unsigned int cord = 0; cord < DIM; cord++) {
+          double dot2 = fabs(gds_vector_get(ca2, cord));
+          if (dot2 > ca_max[1] && ca_coord[0] != cord) {
+            ca_max[1] = dot2;
+            ca_coord[1] = cord;
+          }
+        }
         }
 
         if (ca_max[0] < 1e-12 || ca_max[1] < 1e-12 || ca_coord[0] == ca_coord[1]) {
@@ -616,6 +717,173 @@ goma_error set_average_normals_and_tangents(Exo_DB *exo, goma_rotation_node_s *r
         gds_vector_normalize(tangent1);
         gds_vector *tangent2 = rotation[i].tangent2s[u_index];
         gds_vector_cross(rotation[i].average_normals[u_index], tangent1, tangent2);
+        gds_vector_normalize(tangent2);
+//        // attempt to make tangent consistent
+//        unsigned int best_n = 0, best_t1 = 0, best_t2 = 0;
+//        double maximum = 0;
+//        for (unsigned int n_index = 0; n_index < DIM; n_index++) {
+//          for (unsigned int t1_index = 0; t1_index < DIM; t1_index++) {
+//            if (n_index == t1_index)
+//              continue;
+//            for (unsigned int t2_index = 0; t2_index < DIM; t2_index++) {
+//              if (t2_index == n_index || t2_index == t1_index)
+//                continue;
+//              double idot = fabs(gds_vector_get(rotation[i].average_normals[u_index], n_index));
+//              double jdot = fabs(gds_vector_get(rotation[i].tangent1s[u_index], t1_index));
+//              double kdot = fabs(gds_vector_get(rotation[i].tangent2s[u_index], t2_index));
+//              double sum = idot + jdot + kdot;
+//              if (sum > maximum) {
+//                maximum = sum;
+//                best_n = n_index;
+//                best_t1 = t1_index;
+//                best_t2 = t2_index;
+//              }
+//            }
+//          }
+//        }
+
+//        if (best_n == 0) {
+//            if (gds_vector_get(rotation[i].average_normals[u_index], 0) < 0) {
+//                // z+ y-
+//                if (best_t1 == 1) {
+//                   if (gds_vector_get(rotation[i].tangent1s[u_index], 1) > 0) {
+//                       gds_vector_scale(rotation[i].tangent1s[u_index], -1.0);
+//                   }
+
+//                   if (gds_vector_get(rotation[i].tangent2s[u_index], 2) < 0) {
+//                       gds_vector_scale(rotation[i].tangent2s[u_index], -1.0);
+//                   }
+//                } else if (best_t1 == 2) {
+//                   if (gds_vector_get(rotation[i].tangent1s[u_index], 2) < 0) {
+//                       gds_vector_scale(rotation[i].tangent1s[u_index], -1.0);
+//                   }
+
+//                   if (gds_vector_get(rotation[i].tangent2s[u_index], 1) > 0) {
+//                       gds_vector_scale(rotation[i].tangent2s[u_index], -1.0);
+//                   }
+//                } else {
+//                    return GOMA_ERROR;
+//                }
+//            } else if (gds_vector_get(rotation[i].average_normals[u_index], 0) > 0) {
+//                // z+ y+
+//                if (best_t1 == 1) {
+//                   if (gds_vector_get(rotation[i].tangent1s[u_index], 1) < 0) {
+//                       gds_vector_scale(rotation[i].tangent1s[u_index], -1.0);
+//                   }
+
+//                   if (gds_vector_get(rotation[i].tangent2s[u_index], 2) < 0) {
+//                       gds_vector_scale(rotation[i].tangent2s[u_index], -1.0);
+//                   }
+//                } else if (best_t1 == 2) {
+//                   if (gds_vector_get(rotation[i].tangent1s[u_index], 2) < 0) {
+//                       gds_vector_scale(rotation[i].tangent1s[u_index], -1.0);
+//                   }
+
+//                   if (gds_vector_get(rotation[i].tangent2s[u_index], 1) < 0) {
+//                       gds_vector_scale(rotation[i].tangent2s[u_index], -1.0);
+//                   }
+//                } else {
+//                    return GOMA_ERROR;
+//                }
+//            } else {
+//                return GOMA_ERROR;
+//            }
+//        } else if (best_n == 1) {
+//            if (gds_vector_get(rotation[i].average_normals[u_index], 1) < 0) {
+//                // x+ z-
+//                if (best_t1 == 0) {
+//                   if (gds_vector_get(rotation[i].tangent1s[u_index], 0) < 0) {
+//                       gds_vector_scale(rotation[i].tangent1s[u_index], -1.0);
+//                   }
+
+//                   if (gds_vector_get(rotation[i].tangent2s[u_index], 2) > 0) {
+//                       gds_vector_scale(rotation[i].tangent2s[u_index], -1.0);
+//                   }
+//                } else if (best_t1 == 2) {
+//                   if (gds_vector_get(rotation[i].tangent1s[u_index], 2) > 0) {
+//                       gds_vector_scale(rotation[i].tangent1s[u_index], -1.0);
+//                   }
+
+//                   if (gds_vector_get(rotation[i].tangent2s[u_index], 0) < 0) {
+//                       gds_vector_scale(rotation[i].tangent2s[u_index], -1.0);
+//                   }
+//                } else {
+//                    return GOMA_ERROR;
+//                }
+//            } else if (gds_vector_get(rotation[i].average_normals[u_index], 1) > 0) {
+//                // x+ z+
+//                if (best_t1 == 0) {
+//                   if (gds_vector_get(rotation[i].tangent1s[u_index], 0) < 0) {
+//                       gds_vector_scale(rotation[i].tangent1s[u_index], -1.0);
+//                   }
+
+//                   if (gds_vector_get(rotation[i].tangent2s[u_index], 2) < 0) {
+//                       gds_vector_scale(rotation[i].tangent2s[u_index], -1.0);
+//                   }
+//                } else if (best_t1 == 2) {
+//                   if (gds_vector_get(rotation[i].tangent1s[u_index], 2) < 0) {
+//                       gds_vector_scale(rotation[i].tangent1s[u_index], -1.0);
+//                   }
+
+//                   if (gds_vector_get(rotation[i].tangent2s[u_index], 0) < 0) {
+//                       gds_vector_scale(rotation[i].tangent2s[u_index], -1.0);
+//                   }
+//                } else {
+//                    return GOMA_ERROR;
+//                }
+//            } else {
+//                return GOMA_ERROR;
+//            }
+//        } else if (best_n == 2) {
+//            if (gds_vector_get(rotation[i].average_normals[u_index], 2) < 0) {
+//                // x- y+
+//                if (best_t1 == 0) {
+//                   if (gds_vector_get(rotation[i].tangent1s[u_index], 0) > 0) {
+//                       gds_vector_scale(rotation[i].tangent1s[u_index], -1.0);
+//                   }
+
+//                   if (gds_vector_get(rotation[i].tangent2s[u_index], 1) < 0) {
+//                       gds_vector_scale(rotation[i].tangent2s[u_index], -1.0);
+//                   }
+//                } else if (best_t1 == 1) {
+//                   if (gds_vector_get(rotation[i].tangent1s[u_index], 1) < 0) {
+//                       gds_vector_scale(rotation[i].tangent1s[u_index], -1.0);
+//                   }
+
+//                   if (gds_vector_get(rotation[i].tangent2s[u_index], 0) > 0) {
+//                       gds_vector_scale(rotation[i].tangent2s[u_index], -1.0);
+//                   }
+//                } else {
+//                    return GOMA_ERROR;
+//                }
+//            } else if (gds_vector_get(rotation[i].average_normals[u_index], 2) > 0) {
+//                // x+ y+
+//                if (best_t1 == 0) {
+//                   if (gds_vector_get(rotation[i].tangent1s[u_index], 0) < 0) {
+//                       gds_vector_scale(rotation[i].tangent1s[u_index], -1.0);
+//                   }
+
+//                   if (gds_vector_get(rotation[i].tangent2s[u_index], 1) < 0) {
+//                       gds_vector_scale(rotation[i].tangent2s[u_index], -1.0);
+//                   }
+//                } else if (best_t1 == 1) {
+//                   if (gds_vector_get(rotation[i].tangent1s[u_index], 1) < 0) {
+//                       gds_vector_scale(rotation[i].tangent1s[u_index], -1.0);
+//                   }
+
+//                   if (gds_vector_get(rotation[i].tangent2s[u_index], 0) < 0) {
+//                       gds_vector_scale(rotation[i].tangent2s[u_index], -1.0);
+//                   }
+//                } else {
+//                    return GOMA_ERROR;
+//                }
+//            } else {
+//                return GOMA_ERROR;
+//            }
+//        } else {
+//            return GOMA_ERROR;
+//        }
+
         gds_vector_free(seed);
       }
     }
@@ -658,6 +926,173 @@ goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rota
         gds_vector_copy(rotation[i].rotated_coord[best_n], rotation[i].average_normals[0]);
         gds_vector_copy(rotation[i].rotated_coord[best_t1], rotation[i].tangent1s[0]);
         gds_vector_copy(rotation[i].rotated_coord[best_t2], rotation[i].tangent2s[0]);
+        if (best_n == 0) {
+            if (gds_vector_get(rotation[i].rotated_coord[0], 0) < 0) {
+                // z+ y-
+                if (best_t1 == 1) {
+                   if (gds_vector_get(rotation[i].tangent1s[0], 1) > 0) {
+                       gds_vector_scale(rotation[i].rotated_coord[1], -1.0);
+                       gds_vector_scale(rotation[i].tangent1s[0], -1.0);
+                   }
+
+                   if (gds_vector_get(rotation[i].tangent2s[0], 2) < 0) {
+                       gds_vector_scale(rotation[i].tangent2s[0], -1.0);
+                       gds_vector_scale(rotation[i].rotated_coord[2], -1.0);
+                   }
+                } else if (best_t1 == 2) {
+                   if (gds_vector_get(rotation[i].tangent1s[0], 2) > 0) {
+                       gds_vector_scale(rotation[i].rotated_coord[2], -1.0);
+                       gds_vector_scale(rotation[i].tangent1s[0], -1.0);
+                   }
+
+                   if (gds_vector_get(rotation[i].tangent2s[0], 1) < 0) {
+                       gds_vector_scale(rotation[i].tangent2s[0], -1.0);
+                       gds_vector_scale(rotation[i].rotated_coord[1], -1.0);
+                   }
+                } else {
+                    return GOMA_ERROR;
+                }
+            } else if (gds_vector_get(rotation[i].rotated_coord[0], 0) > 0) {
+                // z+ y+
+                if (best_t1 == 1) {
+                   if (gds_vector_get(rotation[i].tangent1s[0], 1) < 0) {
+                       gds_vector_scale(rotation[i].rotated_coord[1], -1.0);
+                       gds_vector_scale(rotation[i].tangent1s[0], -1.0);
+                   }
+
+                   if (gds_vector_get(rotation[i].tangent2s[0], 2) < 0) {
+                       gds_vector_scale(rotation[i].tangent2s[0], -1.0);
+                       gds_vector_scale(rotation[i].rotated_coord[2], -1.0);
+                   }
+                } else if (best_t1 == 2) {
+                   if (gds_vector_get(rotation[i].tangent1s[0], 2) < 0) {
+                       gds_vector_scale(rotation[i].rotated_coord[2], -1.0);
+                       gds_vector_scale(rotation[i].tangent1s[0], -1.0);
+                   }
+
+                   if (gds_vector_get(rotation[i].tangent2s[0], 1) < 0) {
+                       gds_vector_scale(rotation[i].tangent2s[0], -1.0);
+                       gds_vector_scale(rotation[i].rotated_coord[1], -1.0);
+                   }
+                } else {
+                    return GOMA_ERROR;
+                }
+            } else {
+                return GOMA_ERROR;
+            }
+        } else if (best_n == 1) {
+            if (gds_vector_get(rotation[i].rotated_coord[1], 1) < 0) {
+                // x+ z-
+                if (best_t1 == 0) {
+                   if (gds_vector_get(rotation[i].tangent1s[0], 0) < 0) {
+                       gds_vector_scale(rotation[i].rotated_coord[0], -1.0);
+                       gds_vector_scale(rotation[i].tangent1s[0], -1.0);
+                   }
+
+                   if (gds_vector_get(rotation[i].tangent2s[0], 2) > 0) {
+                       gds_vector_scale(rotation[i].tangent2s[0], -1.0);
+                       gds_vector_scale(rotation[i].rotated_coord[2], -1.0);
+                   }
+                } else if (best_t1 == 2) {
+                   if (gds_vector_get(rotation[i].tangent1s[0], 2) > 0) {
+                       gds_vector_scale(rotation[i].rotated_coord[2], -1.0);
+                       gds_vector_scale(rotation[i].tangent1s[0], -1.0);
+                   }
+
+                   if (gds_vector_get(rotation[i].tangent2s[0], 0) < 0) {
+                       gds_vector_scale(rotation[i].tangent2s[0], -1.0);
+                       gds_vector_scale(rotation[i].rotated_coord[0], -1.0);
+                   }
+                } else {
+                    return GOMA_ERROR;
+                }
+            } else if (gds_vector_get(rotation[i].rotated_coord[1], 1) > 0) {
+                // z+ x+
+                if (best_t1 == 0) {
+                   if (gds_vector_get(rotation[i].tangent1s[0], 0) < 0) {
+                       gds_vector_scale(rotation[i].rotated_coord[0], -1.0);
+                       gds_vector_scale(rotation[i].tangent1s[0], -1.0);
+                   }
+
+                   if (gds_vector_get(rotation[i].tangent2s[0], 2) < 0) {
+                       gds_vector_scale(rotation[i].tangent2s[0], -1.0);
+                       gds_vector_scale(rotation[i].rotated_coord[2], -1.0);
+                   }
+                } else if (best_t1 == 2) {
+                   if (gds_vector_get(rotation[i].tangent1s[0], 2) < 0) {
+                       gds_vector_scale(rotation[i].rotated_coord[2], -1.0);
+                       gds_vector_scale(rotation[i].tangent1s[0], -1.0);
+                   }
+
+                   if (gds_vector_get(rotation[i].tangent2s[0], 0) < 0) {
+                       gds_vector_scale(rotation[i].tangent2s[0], -1.0);
+                       gds_vector_scale(rotation[i].rotated_coord[1], -1.0);
+                   }
+                } else {
+                    return GOMA_ERROR;
+                }
+            } else {
+                return GOMA_ERROR;
+            }
+        } else if (best_n == 2) {
+            if (gds_vector_get(rotation[i].rotated_coord[2], 2) < 0) {
+                // +x -y
+                if (best_t1 == 0) {
+                   if (gds_vector_get(rotation[i].tangent1s[0], 0) < 0) {
+                       gds_vector_scale(rotation[i].rotated_coord[0], -1.0);
+                       gds_vector_scale(rotation[i].tangent1s[0], -1.0);
+                   }
+
+                   if (gds_vector_get(rotation[i].tangent2s[0], 1) > 0) {
+                       gds_vector_scale(rotation[i].tangent2s[0], -1.0);
+                       gds_vector_scale(rotation[i].rotated_coord[1], -1.0);
+                   }
+                } else if (best_t1 == 1) {
+                   if (gds_vector_get(rotation[i].tangent1s[0], 1) > 0) {
+                       gds_vector_scale(rotation[i].rotated_coord[1], -1.0);
+                       gds_vector_scale(rotation[i].tangent1s[0], -1.0);
+                   }
+
+                   if (gds_vector_get(rotation[i].tangent2s[0], 0) < 0) {
+                       gds_vector_scale(rotation[i].tangent2s[0], -1.0);
+                       gds_vector_scale(rotation[i].rotated_coord[0], -1.0);
+                   }
+                } else {
+                    return GOMA_ERROR;
+                }
+            } else if (gds_vector_get(rotation[i].rotated_coord[2], 2) > 0) {
+                // y+ x+
+                if (best_t1 == 0) {
+                   if (gds_vector_get(rotation[i].tangent1s[0], 0) < 0) {
+                       gds_vector_scale(rotation[i].rotated_coord[0], -1.0);
+                       gds_vector_scale(rotation[i].tangent1s[0], -1.0);
+                   }
+
+                   if (gds_vector_get(rotation[i].tangent2s[0], 1) < 0) {
+                       gds_vector_scale(rotation[i].tangent2s[0], -1.0);
+                       gds_vector_scale(rotation[i].rotated_coord[1], -1.0);
+                   }
+                } else if (best_t1 == 1) {
+                   if (gds_vector_get(rotation[i].tangent1s[0], 1) < 0) {
+                       gds_vector_scale(rotation[i].rotated_coord[1], -1.0);
+                       gds_vector_scale(rotation[i].tangent1s[0], -1.0);
+                   }
+
+                   if (gds_vector_get(rotation[i].tangent2s[0], 0) < 0) {
+                       gds_vector_scale(rotation[i].tangent2s[0], -1.0);
+                       gds_vector_scale(rotation[i].rotated_coord[0], -1.0);
+                   }
+                } else {
+                    return GOMA_ERROR;
+                }
+            } else {
+                return GOMA_ERROR;
+            }
+        } else {
+            return GOMA_ERROR;
+        }
+
+
       } break;
       case GOMA_ROTATION_EDGE: {
         gds_vector *n1, *n2, *cross, *new_n1, *new_n2;
@@ -707,6 +1142,31 @@ goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rota
         gds_vector_rotate_around_vector(new_n2, n2, cross, -shift);
         gds_vector_normalize(new_n1);
         gds_vector_normalize(new_n2);
+        if (n1_card == 0) {
+            if (n2_card == 1) {
+              gds_vector_cross(n1, n2, cross);
+              gds_vector_normalize(cross);
+            } else {
+              gds_vector_cross(n2, n1, cross);
+              gds_vector_normalize(cross);
+            }
+        } else if (n1_card == 1) {
+            if (n2_card == 2) {
+              gds_vector_cross(n1, n2, cross);
+              gds_vector_normalize(cross);
+            } else {
+              gds_vector_cross(n2, n1, cross);
+              gds_vector_normalize(cross);
+            }
+        } else if (n1_card == 2) {
+            if (n2_card == 0) {
+              gds_vector_cross(n1, n2, cross);
+              gds_vector_normalize(cross);
+            } else {
+              gds_vector_cross(n2, n1, cross);
+              gds_vector_normalize(cross);
+            }
+        }
 
         gds_vector_copy(rotation[i].rotated_coord[o_card], cross);
         gds_vector_copy(rotation[i].rotated_coord[n1_card], new_n1);
@@ -784,8 +1244,25 @@ goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rota
 
       } break;
       }
+    // try to make rotated coordinates consistent
+//    if (gds_vector_get(rotation[i].rotated_coord[0], 0) < 0) {
+//        gds_vector_scale(rotation[i].rotated_coord[0], -1.0);
+//    }
+//    if (gds_vector_get(rotation[i].rotated_coord[1], 1) < 0) {
+//        gds_vector_scale(rotation[i].rotated_coord[1], -1.0);
+//    }
+//    if (gds_vector_get(rotation[i].rotated_coord[2], 2) < 0) {
+//        gds_vector_scale(rotation[i].rotated_coord[2], -1.0);
+//    }
+
     }
+
+
   }
+
+
+
+
   return GOMA_SUCCESS;
 }
 

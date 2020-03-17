@@ -56,6 +56,23 @@ EXTERN void fvelo_normal_bc
        const double ,		/* interface zone half-width           */
        const double ,		/* interface zone shift                */
        const double );		/* gas leak angle (degrees)            */
+EXTERN void fvelo_normal_auto_bc
+(double [DIM],		/* func                                      */
+       double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+       const double ,		/* vnormal - normal velocity                 */
+       const int,               /* contact flag */
+       const double [MAX_PDIM], /* x_dot - Bad name, says Phil!
+                                 * -mesh velocity vector                     */
+       const double ,		/* tt - parameter to vary time integration
+                                 * from explicit (tt = 1) to
+                                 * implicit (tt = 0)                         */
+       const double ,		/* dt - current value of the time step       */
+       const int ,               /* bc id */
+       const double ,		/* interface zone half-width           */
+       const double ,		/* interface zone shift                */
+       const double, 		/* gas leak angle (degrees)            */
+const int id_side,
+const int global_node);    /*contact angle to start gas leaking */
 
 EXTERN void fmesh_etch_bc
 (double *,            /* func                                      */
