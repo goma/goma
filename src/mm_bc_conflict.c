@@ -2015,9 +2015,11 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
         {
           if (matrix_used_BC[ibc] == 0)
             {
-              fprintf(stderr,
-                      "WARNING: Boundary condition %d, %s, applied on NS %d, is never used\n",
-                      ibc, BC_Types[ibc].desc->name1, BC_Types[ibc].BC_ID);
+              char err_string[MAX_CHAR_ERR_MSG];
+              snprintf(err_string, MAX_CHAR_ERR_MSG,
+               "Boundary condition %d, %s, applied on NS %d, is never used\n",
+                        ibc, BC_Types[ibc].desc->name1, BC_Types[ibc].BC_ID);
+              WH_MANY(-1, err_string);
             }
         }
       free(matrix_used_BC);

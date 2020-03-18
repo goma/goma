@@ -98,7 +98,7 @@ Type_Elem;
 /* define maximum quantities */
 
 #ifndef MAX_SUR_ELEM_2D
-#define MAX_SUR_ELEM_2D  10   /* Maximum number of elements            */
+#define MAX_SUR_ELEM_2D  15   /* Maximum number of elements            */
                              /* surrounding (containing )a given node */
 #endif
 

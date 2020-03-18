@@ -91,6 +91,8 @@ EXTERN void smooth_stop_with_msg(const char *msg);
     }                                             \
   } while (0)
 
+#define WH_MANY(IERR, MESSAGE) goma_wh(IERR, __FILE__, __LINE__, MESSAGE)
+
 #define TIME_STRING_SIZE (256)
 
 extern char current_routine[]; /* name of current routine. */
