@@ -23,6 +23,9 @@ static char rcsid[] = "$Id: mm_eh.c,v 5.3 2008-01-11 00:47:14 hkmoffa Exp $";
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#ifndef DISABLE_COLOR_ERROR_PRINT
+#include <unistd.h>
+#endif
 
 #include "std.h"
 #include "rf_mp.h"
@@ -48,12 +51,24 @@ print_stacktrace(void)
   size = backtrace(bt_array, 20);
   stack_strings = backtrace_symbols(bt_array, size);
 
-  printf("Obtained %zd stack frames from Proc %d.\n", size, ProcID);
-
-  for (size_t i = 0; i < size; i++) {
-     printf("%s\n", stack_strings[i]);
+  bool print_color = false;
+#ifndef DISABLE_COLOR_ERROR_PRINT
+  if (isatty(fileno(stderr))) {
+    print_color = true;
   }
-
+#endif
+  if (print_color) {
+    fprintf(stderr,"\033[0;31mP_%d_STACKTRACE: Obtained %zd stack frames\033[0m\n", ProcID, size);
+  } else {
+    fprintf(stderr,"P_%d_STACKTRACE: Obtained %zd stack frames.\n", ProcID, size);
+  }
+  for (size_t i = 0; i < size; i++) {
+    if (print_color) {
+      fprintf(stderr, "\033[0;31mP_%d_STACKTRACE:\033[0m %s\n", ProcID, stack_strings[i]);
+    } else {
+      fprintf(stderr, "P_%d_STACKTRACE: %s\n", ProcID, stack_strings[i]);
+    }
+  }
   free (stack_strings);
 }
 #endif
@@ -109,10 +124,28 @@ eh(const int error_flag, const char *file,
     fprintf(stderr,"ERROR EXIT: %s:%d: %s\n", file, line, message); 
     exit(-1);
 #else
-    fprintf(stderr, "P_%d ERROR EXIT:%s:%d: %s\n", ProcID, file, line, message);
+    const char * term = getenv("TERM");
+    if (term == NULL) {
+      fprintf(stderr, "Term = NULL\n");
+    } else {
+      fprintf(stderr, "Term = %s\n", term);
+    }
+    bool print_color = false;
+#ifndef DISABLE_COLOR_ERROR_PRINT
+    if (isatty(fileno(stderr))) {
+      print_color = true;
+    }
+#endif
+    if (print_color) {
+      fprintf(stderr, "\033[0;31mP_%d ERROR EXIT: %s \033[0m(%s:%d)\n", ProcID, message, file, line);
+    } else {
+      fprintf(stderr, "P_%d ERROR EXIT: %s (%s:%d)\n", ProcID, message, file, line);
+    }
     if (Num_Proc == 1) {
       MPI_Finalize();
       exit(-1);
+    } else {
+      MPI_Abort(MPI_COMM_WORLD, -1);
     }
     parallel_err = TRUE;
 #endif
@@ -128,7 +161,17 @@ wh(const int error_flag, const char * const file, const int line,
 {
   if ( error_flag == -1 )
     {
+      bool print_color = false;
+#ifndef DISABLE_COLOR_ERROR_PRINT
+    if (isatty(fileno(stderr))) {
+      print_color = true;
+    }
+#endif
+    if (print_color) {
+      DPRINTF(stderr, "\033[0;33mWARNING:  %s:%d: \033[0m%s\n", file, line, message);
+    } else {
       DPRINTF(stderr, "WARNING:  %s:%d: %s\n", file, line, message);
+    }
       *iw = 1;
       return;
     }

@@ -1564,7 +1564,7 @@ rd_timeint_specs(FILE *ifp,
 		&tran->use_var_norm[6], &tran->use_var_norm[7], 
 		&tran->use_var_norm[8], &tran->use_var_norm[9]) < 8)   
       {
-	fprintf(stdout, "Warning: Time step error prefers 1 flt 10 ints\n");
+	WH(-1, "Time step error prefers 1 flt 10 ints\n");
 	fprintf(stdout, 
 		"%s   d=%1d, v=%1d, T=%1d, y=%1d, P=%1d, S=%1d, V=%1d, sd=%1d, ls=%1d, ac=%1d\n", 
 		"Best guess:", 

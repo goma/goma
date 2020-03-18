@@ -120,24 +120,20 @@ static int neighbor_species
 *
 *       NAME			TYPE			CALLED BY
 *  -----------------------------------------------------------------
-*  assemble_fill         	void	
+*  assemble_fill         	void
 *
 *
 ******************************************************************************/
 
 #ifdef COUPLED_FILL
-int 
-assemble_fill(double tt, 
-	      double dt, 
-	      dbl hsquared[DIM], 
-	      dbl hh[DIM][DIM], 
-	      dbl dh_dxnode[DIM][MDE],
-	      const int applied_eqn,
-	      double xi[DIM],
-	      Exo_DB *exo,
-	      double time
-	      )
-{
+int assemble_fill(double tt,
+                  double dt,
+                  const PG_DATA *pg_data,
+                  const int applied_eqn,
+                  double xi[3],
+                  Exo_DB *exo,
+                  double time,
+                  struct LS_Mass_Lumped_Penalty *mass_lumped_penalty) {
 /******************************************************************************
  *
  * assemble_fill -- integrate fill equation.  This routine assembles
@@ -214,6 +210,10 @@ assemble_fill(double tt,
   double vmag_old, tau_gls;
   double h_elem;
 
+  /* Alternative newer SUPG style */
+  SUPG_terms supg_terms;
+
+
   status = 0;
   eqn	 = applied_eqn;
 
@@ -256,7 +256,7 @@ assemble_fill(double tt,
 	}
 
   h_elem = 0.;
-  for ( a=0; a<dim; a++) h_elem += hsquared[a];
+  for ( a=0; a<dim; a++) h_elem += pg_data->hsquared[a];
   /* This is the size of the element */
   h_elem = sqrt(h_elem/ ((double )dim));
 
@@ -428,6 +428,13 @@ assemble_fill(double tt,
 		     pd->e[pg->imtrx][R_MESH1]);
     }
 
+  if (Fill_Weight_Fcn == FILL_WEIGHT_SUPG_SHAKIB ||
+      Fill_Weight_Fcn == FILL_WEIGHT_SUPG_GP) {
+    supg_tau(&supg_terms, dim, 0, pg_data, dt,
+             Fill_Weight_Fcn == FILL_WEIGHT_SUPG_SHAKIB, R_FILL);
+  }
+
+
   /* Compute and save v.grad(phi) and vcent.grad(phi). */
   memset(v_dot_Dphi, 0, sizeof(double)*MDE);
 
@@ -470,6 +477,117 @@ assemble_fill(double tt,
     {
       tau_gls = 1./sqrt((2./dt)*(2./dt) + (2.*vmag_old/h_elem)*(2.*vmag_old/h_elem));
     }
+
+  if (ls != NULL && ls->Semi_Implicit_Integration &&
+      (Fill_Weight_Fcn == FILL_WEIGHT_SUPG_SHAKIB || Fill_Weight_Fcn == FILL_WEIGHT_SUPG_GP)) {
+    F_dot = (fv->F - fv_old->F) / dt;
+    v_dot_DF = 0;
+    for (int a = 0; a < VIM; a++) {
+      v_dot_DF += (0.5 * (fv->v[a] + fv_old->v[a])) * (0.5 * (fv->grad_F[a] + fv_old->grad_F[a]));
+    }
+
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+      v_dot_Dphi[i] = 0;
+      for (int a = 0; a < VIM; a++) {
+        v_dot_Dphi[i] += (0.5 * (fv->v[a] + fv_old->v[a])) * bf[eqn]->grad_phi[i][a];
+      }
+    }
+  } else if (ls != NULL && !ls->Semi_Implicit_Integration &&
+             (Fill_Weight_Fcn == FILL_WEIGHT_SUPG_SHAKIB ||
+              Fill_Weight_Fcn == FILL_WEIGHT_SUPG_GP)) {
+    F_dot = fv_dot->F;
+    v_dot_DF = 0;
+    for (int a = 0; a < VIM; a++) {
+      v_dot_DF += fv->v[a] * fv->grad_F[a];
+    }
+
+    for (i = 0; i < ei[pg->imtrx]->dof[eqn]; i++) {
+      v_dot_Dphi[i] = 0;
+      for (int a = 0; a < VIM; a++) {
+        v_dot_Dphi[i] += fv->v[a] * bf[eqn]->grad_phi[i][a];
+      }
+    }
+  } else if (ls != NULL && ls->Semi_Implicit_Integration) {
+    EH(-1, "Error Level Set Semi-Implicit Time Integration can only be used "
+           "with SUPG_GP and SUPG_SHAKIB");
+    return -1;
+  }
+
+  double p_e = 0;
+  double d_p_e[MDE];
+  double d_inv_F_norm[MDE];
+  double inv_F_norm = 0;
+  if (ls != NULL && ls->Toure_Penalty) {
+    for (int i = 0; i < ei[pg->imtrx]->dof[R_FILL]; i++) {
+      p_e += mass_lumped_penalty->penalty[i] * bf[R_FILL]->phi[i];
+      if (ls->Semi_Implicit_Integration) {
+        p_e += mass_lumped_penalty->penalty_old[i] * bf[R_FILL]->phi[i];
+      }
+    }
+    if (ls->Semi_Implicit_Integration) {
+      p_e *= 0.5;
+    }
+
+    for (int k = 0; k < ei[pg->imtrx]->dof[R_FILL]; k++) {
+      d_p_e[k] = 0;
+      for (int i = 0; i < ei[pg->imtrx]->dof[R_FILL]; i++) {
+        d_p_e[k] += mass_lumped_penalty->d_penalty[i][k] * bf[R_FILL]->phi[i];
+      }
+      if (ls->Semi_Implicit_Integration) {
+        d_p_e[k] *= 0.5;
+      }
+    }
+
+    double F_norm = 0;
+    for (int i = 0; i < dim; i++) {
+      F_norm += fv->grad_F[i] * fv->grad_F[i];
+    }
+    F_norm = sqrt(F_norm);
+    inv_F_norm = 1 / (F_norm + 1e-32);
+    for (int j = 0; j < ei[pg->imtrx]->dof[eqn]; j++) {
+      d_inv_F_norm[j] = 0;
+      for (int i = 0; i < dim; i++) {
+        d_inv_F_norm[j] += 2 * fv->grad_F[i] * bf[eqn]->grad_phi[j][i];
+      }
+      d_inv_F_norm[j] *= -0.5 * inv_F_norm * inv_F_norm * inv_F_norm;
+    }
+  }
+
+  dbl k_dc = 0;
+  // dbl d_k_dc[MDE] = {0};
+  if (ls != NULL && ls->YZbeta != YZBETA_NONE) {
+    dbl strong_residual = 0;
+    strong_residual = fv_dot_old->F;
+    for (int p = 0; p < VIM; p++) {
+      strong_residual += fv->v[p] * fv_old->grad_F[p];
+    }
+    // strong_residual -= s_terms.MassSource[w];
+    dbl h_elem = 0;
+    for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
+      h_elem += pg_data->hsquared[a];
+    }
+    /* This is the size of the element */
+    h_elem = sqrt(h_elem / ((double)ei[pg->imtrx]->ielem_dim));
+
+    dbl inner = 0;
+    for (int i = 0; i < dim; i++) {
+      inner += fv_old->grad_F[i] * fv_old->grad_F[i];
+    }
+
+    dbl yzbeta = 0;
+
+    dbl inv_sqrt_inner = (1 / sqrt(inner + 1e-12));
+    dbl dc1 = fabs(strong_residual) * inv_sqrt_inner * h_elem * 0.5;
+    dbl dc2 = fabs(strong_residual) * h_elem * h_elem * 0.25;
+
+    // dc1 = fmin(supg_terms.supg_tau,dc1);//0.5*(dc1 + dc2);
+    yzbeta = fmin(supg_terms.supg_tau, 0.5 * (dc1 + dc2)); // 0.5*(dc1 + dc2);
+    //    for (int k = 0; k <  ei[pg->imtrx]->dof[eqn]; k++) {
+    //      d_k_dc[k] = 0;
+    //    }
+
+    k_dc = yzbeta;
+  }
 
   /**********************************************************************
    **********************************************************************
@@ -571,7 +689,21 @@ assemble_fill(double tt,
 
 	      break;
 
-	    default:
+            case FILL_WEIGHT_SUPG_GP:
+            case FILL_WEIGHT_SUPG_SHAKIB: {
+              dbl wt_func = bf[eqn]->phi[i] + supg_terms.supg_tau * v_dot_Dphi[i];
+
+              mass = F_dot * wt_func;
+              advection = v_dot_DF;
+
+              if (ls != NULL && ls->Enable_Div_Term) {
+                advection += fv->F * fv->div_v;
+              }
+
+              advection *= wt_func;
+            } break;
+
+            default:
 
 	      EH(-1,"Unknown Fill_Weight_Fcn");
 
@@ -579,11 +711,26 @@ assemble_fill(double tt,
 	  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
 	  advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
-	  /* hang on to the integrand (without the "dV") for use below. */
-	  rmp[i] = mass + advection;
+          dbl discontinuity_capturing = 0;
+          for (int a = 0; a < dim; a++) {
+            discontinuity_capturing += k_dc * fv->grad_F[a] * bf[eqn]->grad_phi[i][a];
+          }
 
-	  lec->R[peqn][i] += (mass + advection) * wt * det_J * h3;
+          dbl source = 0;
+          if (ls != NULL && ls->Toure_Penalty) {
+            for (int a = 0; a < dim; a++) {
+              source += p_e * fv->grad_F[a] * inv_F_norm * bf[eqn]->grad_phi[i][a];
+              //          double tmp = 1.0 / sqrt(fv->grad_F[0] * fv->grad_F[0] +
+              //                                  fv->grad_F[1] * fv->grad_F[1]);
+              //          source += p_e * fv->grad_F[a] * tmp *
+              //          bf[eqn]->grad_phi[i][a];
+            }
+          }
 
+          /* hang on to the integrand (without the "dV") for use below. */
+          rmp[i] = mass + advection + source + discontinuity_capturing;
+
+          lec->R[peqn][i] += (mass + advection + source + discontinuity_capturing) * wt * det_J * h3;
 	}
     }
 
@@ -720,16 +867,55 @@ assemble_fill(double tt,
 
 		      break;
 
-		    default:
+                    case FILL_WEIGHT_SUPG_GP:
+                    case FILL_WEIGHT_SUPG_SHAKIB: {
+                      dbl wt_func = bf[eqn]->phi[i] + supg_terms.supg_tau * v_dot_Dphi[i];
+                      if (ls != NULL && ls->Semi_Implicit_Integration) {
+                        mass = (phi_j) / dt * wt_func;
+                        advection = 0.5 * v_dot_Dphi[j] * wt_func;
+                      } else {
+
+                        mass = (phi_j * (1. + 2. * tt) * dtinv) * wt_func;
+                        advection = 0;
+                        for (int a = 0; a < dim; a++) {
+                          advection += fv->v[a] * bf[var]->grad_phi[j][a];
+                        }
+
+                        if (ls != NULL && ls->Enable_Div_Term) {
+                          advection += bf[var]->phi[j] * fv->div_v;
+                        }
+                        advection *= wt_func;
+                      }
+                    } break;
+
+                    default:
 
 		      EH(-1,"Unknown Fill_Weight_Fcn");
 
 		    } /* switch(Fill_Weight_Fcn) */
+                    dbl source = 0;
+                    if (ls != NULL && ls->Toure_Penalty) {
+                      for (int a = 0; a < dim; a++) {
+                        source += p_e * fv->grad_F[a] * d_inv_F_norm[j] * bf[eqn]->grad_phi[i][a];
+                        source +=
+                            p_e * bf[eqn]->grad_phi[j][a] * inv_F_norm * bf[eqn]->grad_phi[i][a];
+                        source += d_p_e[j] * fv->grad_F[a] * inv_F_norm * bf[eqn]->grad_phi[i][a];
+                        //              source +=
+                        //                  fv->grad_F[a] * d_inv_F_norm * bf[eqn]->grad_phi[i][a];
+                      }
+                    }
 
-		  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
-	          advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
+                    mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
+                    advection *= pd->etm[pg->imtrx][eqn][(LOG2_ADVECTION)];
 
-		  lec->J[peqn][pvar][i][j] += (mass + advection) * wt * h3 * det_J;
+                    dbl discontinuity_capturing = 0;
+                    for (int a = 0; a < dim; a++) {
+                      discontinuity_capturing +=
+                          k_dc * bf[var]->grad_phi[j][a] * bf[eqn]->grad_phi[i][a];
+                    }
+
+                    lec->J[peqn][pvar][i][j] +=
+                        (mass + advection + source + discontinuity_capturing) * wt * h3 * det_J;
 
 		} /* for: FILL DoFs */
 
@@ -793,8 +979,29 @@ assemble_fill(double tt,
 			  advection += phi_j * grad_F[b] * wfcn;
 
 			  break;
+                        case FILL_WEIGHT_SUPG_GP:
+                        case FILL_WEIGHT_SUPG_SHAKIB: {
+                          dbl wt_func = bf[eqn]->phi[i];
+                          for (int a = 0; a < dim; a++) {
+                            wt_func += supg_terms.supg_tau * fv->v[a] * bf[eqn]->grad_phi[i][a];
+                          }
 
-			default:
+                          dbl d_wt_func = 0;
+                          for (int a = 0; a < dim; a++) {
+                            d_wt_func +=
+                                supg_terms.supg_tau * bf[eqn]->phi[j] * bf[eqn]->grad_phi[i][a] +
+                                supg_terms.d_supg_tau_dv[b][j] * fv->v[a] * bf[eqn]->grad_phi[i][a];
+                          }
+                          mass = fv_dot->F * d_wt_func;
+                          advection = 0;
+                          for (int a = 0; a < dim; a++) {
+                            advection += fv->v[a] * bf[eqn]->grad_phi[j][a];
+                          }
+                          advection *= d_wt_func;
+                          advection += bf[var]->phi[j] * bf[eqn]->grad_phi[j][b] * wt_func;
+                        } break;
+
+                        default:
 
 			  EH(-1,"Unknown Fill_Weight_Fcn");
 

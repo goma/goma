@@ -377,7 +377,6 @@ set(GOMA_SOURCES
     src/loca_lib.c
     src/loca_util.c
     src/main.c
-    src/Makefile
     src/md_ieee.c
     src/md_timer.c
     src/mm_as_alloc.c

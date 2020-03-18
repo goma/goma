@@ -1204,23 +1204,21 @@ matrix_fill(
 	    }
 	  else if(  tran->Fill_Equation == FILL_EQN_ADVECT )
 	    {
-              //err = assemble_fill(theta, delta_t, &pg_data, R_FILL, xi, exo, time_value, &mass_lumped_penalty);
-              err = assemble_fill(theta, delta_t, pg_data.hsquared, pg_data.hh, pg_data.dh_dxnode, R_FILL, xi, exo, time_value);
+              err = assemble_fill(theta, delta_t, &pg_data, R_FILL, xi, exo, time_value, &mass_lumped_penalty);
 	      EH( err, "assemble_fill");
 #ifdef CHECK_FINITE
-	      err = CHECKFINITE("assemble_fill"); 
+	      err = CHECKFINITE("assemble_fill");
 	      if (err) return -1;
 #endif /* CHECK_FINITE */
 	      if(pfd != NULL && pde[R_EXT_VELOCITY])
 		{
 		  ls_old = ls;
 		  ls = pfd->ls[0]; 
-                  //err = assemble_fill(theta, delta_t, &pg_data, R_PHASE1, xi, exo, time_value, &mass_lumped_penalty);
-                  err = assemble_fill(theta, delta_t, pg_data.hsquared, pg_data.hh, pg_data.dh_dxnode, R_FILL, xi, exo, time_value);
+                  err = assemble_fill(theta, delta_t, &pg_data, R_PHASE1, xi, exo, time_value, &mass_lumped_penalty);
 		  ls = ls_old; /*Make things right again */
 		  EH( err, "assemble_fill");
 #ifdef CHECK_FINITE
-		  err = CHECKFINITE("assemble_fill"); 
+		  err = CHECKFINITE("assemble_fill");
 		  if (err) return -1;
 #endif /* CHECK_FINITE */
 		}

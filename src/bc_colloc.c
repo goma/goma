@@ -24,14 +24,16 @@
 #include <config.h>
 #endif
 
+#include <bc_integ.h>
+#include <math.h>
+#include <rotate_util.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 
-#include "dpi.h"
 #include "ac_stability.h"
 #include "ac_stability_util.h"
 #include "bc_colloc.h"
+#include "dpi.h"
 #include "el_elm.h"
 #include "el_elm_info.h"
 #include "el_geom.h"
@@ -61,7 +63,7 @@
 #include "rf_vars_const.h"
 #include "std.h"
 #include "user_bc.h"
- 
+
 #define GOMA_BC_COLLOC_C
 
 
@@ -597,6 +599,27 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	      doFullJac = 1;
 	      func = kfunc[0];
 	      break;
+
+	    case VELO_TANG1_COLLOC_BC:
+              fzero_velo_tangent_3d(kfunc, d_kfunc, elem_side_bc->id_side, I);
+              doFullJac = 1;
+              func = kfunc[1];
+              for (int var = 0; var < MAX_VARIABLE_TYPES; var++) {
+                for (int j = 0; j < MDE; j++) {
+                  d_kfunc[0][var][j] = d_kfunc[1][var][j];
+                }
+              }
+              break;
+	    case VELO_TANG2_COLLOC_BC:
+              fzero_velo_tangent_3d(kfunc, d_kfunc, elem_side_bc->id_side, I);
+              doFullJac = 1;
+	      func = kfunc[2];
+              for (int var = 0; var < MAX_VARIABLE_TYPES; var++) {
+                for (int j = 0; j < MDE; j++) {
+                  d_kfunc[0][var][j] = d_kfunc[2][var][j];
+                }
+              }
+	      break;
 	      
 	    case VELO_NORMAL_LS_COLLOC_BC:
 	      /* initialize the general function to zero may have more than 
@@ -695,7 +718,16 @@ xsurf[2] = BC_Types[icount].BC_Data_Float[BC_Types[icount].max_DFlt+3];
 	      ieqn = MAX_PROB_EQN + BC_Types[bc_input_id].species_eq;
 	    } else {
 	      ieqn = upd->ep[pg->imtrx][eqn];
-	    }
+              if (goma_automatic_rotations.automatic_rotations &&
+                 (BC_Types[bc_input_id].desc->rotate != NO_ROT)) {
+                int offset = offset_from_rotated_equation(BC_Types[bc_input_id].desc->equation);
+                EH(offset, "Error translating rotated equation to offset");
+                ieqn = equation_index_auto_rotate(elem_side_bc, I, BC_Types[bc_input_id].desc->rotate,
+                    offset,
+                    ldof_eqn, &(BC_Types[bc_input_id]));
+                EH(ieqn, "Could not find index from auto rotate eqn");
+              }
+            }
 
 	    if (ldof_eqn != -1)   {
 	      lec->R[ieqn][ldof_eqn] += penalty * func;

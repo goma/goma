@@ -918,6 +918,7 @@ main(int argc, char **argv)
    */
   if ( Brk_Flag == 2 ) {
     write_brk_file(Brk_File, EXO_ptr);
+    MPI_Finalize();
     exit(0);
   }
   

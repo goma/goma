@@ -1925,11 +1925,10 @@ fvelo_tangent_3d(
      
 } /* END of routine fvelo_tangential_3d  */
 
-void
-fzero_velo_tangent_3d(
-                 double func[MAX_PDIM],
-                 double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                 const int id_side)                  /* current value of the time step   */
+void fzero_velo_tangent_3d(double func[DIM],
+                           double d_func[DIM][MAX_VARIABLE_TYPES+MAX_CONC][MDE],
+                           const int id_side,
+                           int global_node) /* current value of the time step   */
 
      /******************************************************************************
       *
@@ -1946,14 +1945,14 @@ fzero_velo_tangent_3d(
 {
 
   if (goma_automatic_rotations.rotation_nodes == NULL) {
-    EH(-1, "ZERO_VELO_TANGENT_3D requires automatic rotations");
+    EH(-1, "fzero_velo_tangent3d requires 3d automatic rotations");
   }
 
   gds_vector * tangent1 = gds_vector_alloc(3);
   gds_vector * tangent2 = gds_vector_alloc(3);
 
-  for ( int j=0, found = 0; (!found && j<ei[pg->imtrx]->dof[R_MOMENTUM1]); j++){
-    int gnode = ei[pg->imtrx]->gnn_list[R_MOMENTUM1][j];
+  bool found = false;
+    int gnode = global_node;
     for (int k = 0; (!found && k < goma_automatic_rotations.rotation_nodes[gnode].n_normals); k++) {
       if (goma_automatic_rotations.rotation_nodes[gnode].face[k] == id_side &&
           goma_automatic_rotations.rotation_nodes[gnode].element[k] == ei[pg->imtrx]->ielem) {
@@ -1962,7 +1961,6 @@ fzero_velo_tangent_3d(
         found = 1;
       }
     }
-  }
 
 
   /***************************** EXECUTION BEGINS ******************************/

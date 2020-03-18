@@ -3233,7 +3233,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       sr                 = sprintf(E->path, "%s.%d.%d", in_exodus_file_name, num_pieces, s);
 
-      E->title           = (char *) smalloc(MAX_LINE_LENGTH*SZ_CHR);
+      E->title           = (char *) smalloc(MAX_LINE_LENGTH*SZ_CHR+1);
 
       tmp                = strcpy(E->title, mono->title);
       

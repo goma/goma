@@ -5285,7 +5285,7 @@ void supg_tau_shakib(SUPG_terms *supg_terms, int dim, double dt,
 }
 
 void supg_tau_gauss_point(SUPG_terms *supg_terms, int dim, dbl diffusivity,
-                          PG_DATA *pg_data) {
+                          const PG_DATA *pg_data) {
   double vnorm = 0;
 
   for (int i = 0; i < VIM; i++) {
@@ -5375,7 +5375,7 @@ void supg_tau_gauss_point(SUPG_terms *supg_terms, int dim, dbl diffusivity,
 }
 
 void supg_tau(SUPG_terms *supg_terms, int dim, dbl diffusivity,
-              PG_DATA *pg_data, double dt, int shakib, int interp_eqn) {
+              const PG_DATA *pg_data, double dt, int shakib, int interp_eqn) {
   if (shakib) {
     supg_tau_shakib(supg_terms, dim, dt, interp_eqn);
   } else {

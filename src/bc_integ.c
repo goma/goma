@@ -678,7 +678,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	  if (neg_elem_volume) return (status);
 	  break;
         case ZERO_VELO_TANGENT_3D_BC:
-          fzero_velo_tangent_3d(func, d_func, elem_side_bc->id_side);
+          fzero_velo_tangent_3d(func, d_func, elem_side_bc->id_side, 0);
           break;
 
 	case VELO_TANGENT_SOLID_BC:
@@ -2391,36 +2391,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	      } else {
 		ieqn = upd->ep[pg->imtrx][eqn];
                 if (goma_automatic_rotations.automatic_rotations && (bc->desc->rotate != NO_ROT)) {
-                  int node = ei[pg->imtrx]->gnn_list[eqn][ldof_eqn];
-                  int n_index = -1;
-                  for (int i = 0; i < goma_automatic_rotations.rotation_nodes[node].n_normals; i++) {
-                    if (goma_automatic_rotations.rotation_nodes[node].element[i] == ei[pg->imtrx]->ielem &&
-                        goma_automatic_rotations.rotation_nodes[node].face[i] == elem_side_bc->id_side) {
-                      n_index = i;
-                      break;
-                    }
-                  }
-                  EH(n_index, "Rotations incorrectly setup");
-                  int rot_dir = (int) goma_automatic_rotations.rotation_nodes[I].face_cordinate_association[n_index];
-
-                  int t1dir = 0;
-                  int t2dir = 0;
-                  for (int k = 0; k < DIM; k++) {
-                    if (k != rot_dir) {
-                      t1dir = k;
-                      break;
-                    }
-                  }
-                  for (int k = 0; k < DIM; k++) {
-                    if (k != rot_dir && k != t1dir) {
-                      t2dir = k;
-                    }
-                  }
-                  int eq_idx[DIM];
-                  eq_idx[0] = rot_dir;
-                  eq_idx[1] = t1dir;
-                  eq_idx[2] = t2dir;
-                  ieqn = upd->ep[pg->imtrx][eqn + eq_idx[p]];
+                  ieqn = equation_index_auto_rotate(elem_side_bc, I, eqn, p, ldof_eqn, bc);
                 }
               }
 
@@ -2696,7 +2667,52 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
     } /*(end for ibc) */
   } /*End for ip = 1,...*/  
   return (status);
-} /* END of routine apply_integrated_bc */
+}
+/* END of routine apply_integrated_bc */
+
+int equation_index_auto_rotate(const ELEM_SIDE_BC_STRUCT *elem_side_bc,
+                               int I,
+                               int eqn,
+                               int p,
+                               int ldof_eqn,
+                               const BOUNDARY_CONDITION_STRUCT *bc) {
+  int ieqn;
+  if (!goma_automatic_rotations.automatic_rotations) {
+    EH(-1, "equation_index_auto_rotate requires 3D automatic rotations");
+    return -1;
+  }
+  int node = ei[pg->imtrx]->gnn_list[eqn][ldof_eqn];
+  int n_index = -1;
+  for (int i = 0; i < goma_automatic_rotations.rotation_nodes[node].n_normals; i++) {
+    if (goma_automatic_rotations.rotation_nodes[node].element[i] == ei[pg->imtrx]->ielem &&
+        goma_automatic_rotations.rotation_nodes[node].face[i] == elem_side_bc->id_side) {
+      n_index = i;
+      break;
+    }
+  }
+  EH(n_index, "Rotations incorrectly setup");
+  int rot_dir = (int) goma_automatic_rotations.rotation_nodes[I].face_cordinate_association[n_index];
+
+  int t1dir = 0;
+  int t2dir = 0;
+  for (int k = 0; k < DIM; k++) {
+    if (k != rot_dir) {
+      t1dir = k;
+      break;
+    }
+  }
+  for (int k = 0; k < DIM; k++) {
+    if (k != rot_dir && k != t1dir) {
+      t2dir = k;
+    }
+  }
+  int eq_idx[DIM];
+  eq_idx[0] = rot_dir;
+  eq_idx[1] = t1dir;
+  eq_idx[2] = t2dir;
+  ieqn = upd->ep[pg->imtrx][eqn + eq_idx[p]];
+  return ieqn;
+}
 
 /*******************************************************************************/
 /*******************************************************************************/

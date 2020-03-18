@@ -491,6 +491,8 @@ rd_bc_specs(FILE *ifp,
         case VELO_NORMAL_LS_PETROV_BC:
         case VELO_TANGENT_LS_BC:
 	case VELO_NORM_COLLOC_BC:
+        case VELO_TANG1_COLLOC_BC:
+        case VELO_TANG2_COLLOC_BC:
 	case VELO_NORMAL_DISC_BC:
 	case CAP_ENDFORCE_SCALAR_BC:
 	case SURFTANG_SCALAR_EDGE_BC:

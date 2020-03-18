@@ -2,15 +2,20 @@
 
 #include <assert.h>
 #include <math.h>
+#include <rf_bc.h>
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
+#include "el_elm.h"
 #include "el_elm_info.h"
 #include "el_geom.h"
+#include "exo_struct.h"
+#include "gds/gds_vector.h"
 #include "mm_as.h"
 #include "mm_as_alloc.h"
 #include "mm_as_structs.h"
+#include "mm_eh.h"
 #include "mm_fill_aux.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_ptrs.h"
@@ -20,12 +25,11 @@
 #include "rf_fem_const.h"
 #include "std.h"
 #include "stdbool.h"
-#include "el_elm.h"
-#include "exo_struct.h"
-#include "gds/gds_vector.h"
-#include "mm_eh.h"
 
 static const double critical_angle_radians = GOMA_ROTATION_CRITICAL_ANGLE * M_PI / 180;
+
+static void
+write_rotations_to_file(const char *filename, Exo_DB *exo, goma_rotation_node_s *rotations);
 
 goma_rotation_s goma_automatic_rotations = {false, NULL};
 
@@ -48,7 +52,8 @@ goma_error check_if_equation_is_rotation(int equation, bool *is_rotated) {
   return GOMA_SUCCESS;
 }
 
-goma_error setup_bc_is_rotated_list(struct Boundary_Condition *bc_types, int num_bc,
+goma_error setup_bc_is_rotated_list(struct Boundary_Condition *bc_types,
+                                    int num_bc,
                                     bool **bc_is_rotated_list) {
   assert(num_bc > 0);
   *bc_is_rotated_list = calloc((size_t)num_bc, sizeof(bool));
@@ -112,8 +117,13 @@ goma_error free_rotations(Exo_DB *exo, goma_rotation_node_s **rotations) {
   return GOMA_SUCCESS;
 }
 
-goma_error setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num_bc,
-                                  double *x) {
+goma_error
+setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_types, int num_bc, double *x) {
+
+  if (num_bc == 0) {
+    return GOMA_SUCCESS;
+  }
+
   goma_rotation_node_s *rotations;
   bool *bc_is_rotated;
   goma_error error;
@@ -122,11 +132,24 @@ goma_error setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_typ
   error = allocate_rotations(exo, &rotations);
   EH(error, "allocate_rotations");
 
+  bool *side_set_seen = malloc(sizeof(bool) * exo->num_side_sets);
+  for (int i = 0; i < exo->num_side_sets; i++) {
+    side_set_seen[i] = false;
+  }
 
   int err;
   for (int bc_index = 0; bc_index < num_bc; bc_index++) {
     if (bc_is_rotated[bc_index]) {
       int ss_index = bc_types[bc_index].Set_Index;
+      if (ss_index == -1) { // ss isn't on this processor
+        continue;
+      }
+      // only operate on a side set once
+      if (side_set_seen[ss_index]) {
+        continue;
+      } else {
+        side_set_seen[ss_index] = true;
+      }
       for (int e = 0; e < exo->ss_num_sides[ss_index]; e++) {
         int ielem = exo->ss_elem_list[exo->ss_elem_index[ss_index] + e];
 
@@ -208,8 +231,19 @@ goma_error setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_typ
   EH(error, "set_rotated_coordinate_system");
   error = set_face_normal_association(exo, rotations);
   EH(error, "set_face_normal_association");
+
+  write_rotations_to_file("normals.csv", exo, rotations);
+
+  goma_automatic_rotations.automatic_rotations = true;
+  goma_automatic_rotations.rotation_nodes = rotations;
+  free(bc_is_rotated);
+  return GOMA_SUCCESS;
+}
+
+static void
+write_rotations_to_file(const char *filename, Exo_DB *exo, goma_rotation_node_s *rotations) {
   FILE *normalscsv;
-  normalscsv = fopen("normals.csv", "w");
+  normalscsv = fopen(filename, "w");
 
   fprintf(normalscsv, "n_normals,type,node,x,y,z,nx,ny,nz,dir,ax,ay,az,t1x,t1y,t1z,t2x,t2y,t2z,c1x,"
                       "c1y,c1z,c2x,c2y,c2z,c3x,c3y,c3z,element,face,face_association\n");
@@ -243,12 +277,7 @@ goma_error setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_typ
               rotations[i].face[j], rotations[i].face_cordinate_association[j]);
     }
   }
-
-  goma_automatic_rotations.automatic_rotations = true;
-  goma_automatic_rotations.rotation_nodes = rotations;
   fclose(normalscsv);
-  free(bc_is_rotated);
-  return GOMA_SUCCESS;
 }
 
 /**
@@ -312,11 +341,14 @@ bool goma_rotation_node_type_edge(const goma_rotation_node_s *node) {
   gds_vector_copy(critical_normal[0], node->normals[0]);
   // find another critical normal
   bool found = false;
-  for (int u_index = 1; u_index < node->n_normals; u_index++) {
-    if (gds_vector_dot(critical_normal[0], node->normals[u_index]) < cos(critical_angle_radians)) {
-      found = true;
-      gds_vector_copy(critical_normal[1], node->normals[u_index]);
-      break;
+  for (int u_index = 0; u_index < node->n_normals; u_index++) {
+    for (int v_index = u_index + 1; v_index < node->n_normals; v_index++) {
+      double dot = gds_vector_dot(node->normals[u_index], node->normals[v_index]);
+      if (dot < cos(critical_angle_radians)) {
+        gds_vector_copy(critical_normal[0], node->normals[u_index]);
+        gds_vector_copy(critical_normal[1], node->normals[v_index]);
+        found = true;
+      }
     }
   }
 
@@ -486,42 +518,42 @@ goma_error set_average_normals_and_tangents(Exo_DB *exo, goma_rotation_node_s *r
       } break;
       }
 
-        for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
-          int tcross_card = -1;
-          double min_card = 1e18;
-          for (unsigned int card = 0; card < DIM; card++) {
-            double dot = fabs(gds_vector_get(rotation[i].average_normals[u_index], card));
-            if (dot < min_card) {
-              min_card = dot;
-              tcross_card = (int) card;
-            }
-          }
-
-          assert(tcross_card != -1);
-            gds_vector *tangent1 = rotation[i].tangent1s[u_index];
-            gds_vector_zero(tangent1);
-            gds_vector_set(tangent1, (unsigned int) tcross_card, 1.0);
-            gds_vector *seed = gds_vector_alloc(3);
-            gds_vector_copy(seed, tangent1);
-            /* First tanget defined by seed vector gives
-             *  t1 = tseed - n(tseed DOT n) normalized
-             */
-            for (unsigned int p = 0; p < DIM; p++) {
-              for (unsigned int q = 0; q < DIM; q++) {
-                double tangent_p = gds_vector_get(tangent1, p);
-                tangent_p -= gds_vector_get(rotation[i].average_normals[u_index], p) *
-                             gds_vector_get(rotation[i].average_normals[u_index], q) *
-                             gds_vector_get(seed, q);
-                gds_vector_set(tangent1, p, tangent_p);
-              }
-            }
-            gds_vector_normalize(tangent1);
-            gds_vector *tangent2 = rotation[i].tangent2s[u_index];
-            gds_vector_cross(rotation[i].average_normals[u_index], tangent1, tangent2);
-            gds_vector_free(seed);
+      for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
+        int tcross_card = -1;
+        double min_card = 1e18;
+        for (unsigned int card = 0; card < DIM; card++) {
+          double dot = fabs(gds_vector_get(rotation[i].average_normals[u_index], card));
+          if (dot < min_card) {
+            min_card = dot;
+            tcross_card = (int)card;
           }
         }
+
+        assert(tcross_card != -1);
+        gds_vector *tangent1 = rotation[i].tangent1s[u_index];
+        gds_vector_zero(tangent1);
+        gds_vector_set(tangent1, (unsigned int)tcross_card, 1.0);
+        gds_vector *seed = gds_vector_alloc(3);
+        gds_vector_copy(seed, tangent1);
+        /* First tanget defined by seed vector gives
+         *  t1 = tseed - n(tseed DOT n) normalized
+         */
+        for (unsigned int p = 0; p < DIM; p++) {
+          for (unsigned int q = 0; q < DIM; q++) {
+            double tangent_p = gds_vector_get(tangent1, p);
+            tangent_p -= gds_vector_get(rotation[i].average_normals[u_index], p) *
+                         gds_vector_get(rotation[i].average_normals[u_index], q) *
+                         gds_vector_get(seed, q);
+            gds_vector_set(tangent1, p, tangent_p);
+          }
+        }
+        gds_vector_normalize(tangent1);
+        gds_vector *tangent2 = rotation[i].tangent2s[u_index];
+        gds_vector_cross(rotation[i].average_normals[u_index], tangent1, tangent2);
+        gds_vector_free(seed);
+      }
     }
+  }
 
   return GOMA_SUCCESS;
 }
@@ -644,8 +676,8 @@ goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rota
         }
         unsigned int n3_card = n1_card;
         for (int j = 2; j < rotation[i].n_normals; j++) {
-          if ((rotation[i].associate_direction[j] != n1_card)
-              && (rotation[i].associate_direction[j] != n2_card)) {
+          if ((rotation[i].associate_direction[j] != n1_card) &&
+              (rotation[i].associate_direction[j] != n2_card)) {
             n3 = rotation[i].average_normals[j];
             n3_card = rotation[i].associate_direction[j];
             found[2] = true;
@@ -707,4 +739,23 @@ goma_error set_face_normal_association(Exo_DB *exo, goma_rotation_node_s *rotati
     }
   }
   return GOMA_SUCCESS;
+}
+
+int offset_from_rotated_equation(int eqn) {
+  switch (eqn) {
+  case R_MOM_NORMAL:
+    return 0;
+  case R_MOM_TANG1:
+    return 1;
+  case R_MOM_TANG2:
+    return 2;
+  case R_MESH_NORMAL:
+    return 0;
+  case R_MESH_TANG1:
+    return 1;
+  case R_MESH_TANG2:
+    return 2;
+  default:
+    return -1;
+  }
 }

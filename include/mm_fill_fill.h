@@ -124,17 +124,14 @@ EXTERN int assemble_fill_fake
 
 
 #ifdef COUPLED_FILL
-int 
-assemble_fill(double tt, 
-	      double dt, 
-	      dbl hsquared[DIM], 
-	      dbl hh[DIM][DIM], 
-	      dbl dh_dxnode[DIM][MDE],
-	      const int applied_eqn,
-	      double xi[DIM],
-	      Exo_DB *exo,
-	      double time
-	      );
+int assemble_fill(double tt,
+                  double dt,
+                  const PG_DATA *pg_data,
+                  const int applied_eqn,
+                  double xi[3],
+                  Exo_DB *exo,
+                  double time,
+                  struct LS_Mass_Lumped_Penalty *mass_lumped_penalty);
 
 EXTERN int assemble_fill_ext_v
 (double ,			/* tt - parameter varies time integration from 

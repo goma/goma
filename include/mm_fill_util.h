@@ -228,10 +228,10 @@ EXTERN void get_supg_tau(SUPG_terms *supg_terms,
                          PG_DATA *pg_data);
 
 EXTERN void supg_tau_gauss_point(SUPG_terms *supg_terms, int dim,
-                                 dbl diffusivity, PG_DATA *pg_data);
+                                 dbl diffusivity, const PG_DATA *pg_data);
 
 EXTERN void supg_tau(SUPG_terms *supg_terms, int dim, dbl diffusivity,
-                     PG_DATA *pg_data, double dt, int shakib, int interp_eqn);
+                     const PG_DATA *pg_data, double dt, int shakib, int interp_eqn);
 
 
 EXTERN dbl yzbeta(dbl scale, int dim, dbl Y, dbl Z, dbl d_Z[MDE], dbl beta,

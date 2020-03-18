@@ -64,4 +64,5 @@ goma_error set_average_normals_and_tangents(Exo_DB *exo, goma_rotation_node_s *r
 goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rotation);
 goma_error free_rotations(Exo_DB *exo, goma_rotation_node_s **rotations);
 goma_error set_face_normal_association(Exo_DB *exo, goma_rotation_node_s *rotations);
+int offset_from_rotated_equation(int eqn);
 #endif

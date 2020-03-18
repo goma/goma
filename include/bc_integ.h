@@ -69,4 +69,11 @@ EXTERN void apply_table_wic_bc
 
 #endif
 
+int equation_index_auto_rotate(const ELEM_SIDE_BC_STRUCT *elem_side_bc,
+                               int I,
+                               int eqn,
+                               int p,
+                               int ldof_eqn,
+                               const BOUNDARY_CONDITION_STRUCT *bc);
+
 #endif /* GOMA_BC_INTEG_H */
