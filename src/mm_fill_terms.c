@@ -2715,8 +2715,16 @@ assemble_momentum(dbl time,       /* current time */
 
   if (supg!=0.)
     {
-      double rho = pg_data->rho_avg;
-      double mu = pg_data->mu_avg;
+    double gamma[DIM][DIM];
+      for ( a=0; a<VIM; a++)
+      {
+        for ( b=0; b<VIM; b++)
+        {
+          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+        }
+      }
+      double rho = density(NULL, time);
+      double mu = viscosity(gn, gamma, NULL );
       double hh_siz = 0.;
       for ( p=0; p<dim; p++)
         {
@@ -2915,7 +2923,6 @@ assemble_momentum(dbl time,       /* current time */
     v_dot = fv_dot->v;
   else
     v_dot = zero;
-
 
   /* for porous media stuff */
 #ifdef DO_NO_UNROLL
@@ -4986,7 +4993,7 @@ assemble_continuity(dbl time_value,   /* current time */
   source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
 
-  dbl ls_disable_pspg = 1;
+  dbl ls_disable_pspg = 1.0 / pg_data->rho_avg;
 //  if (ls != NULL && (fabs(fv->F) < ls->Length_Scale)) {
 //    ls_disable_pspg = 0;
 //  }
@@ -33034,6 +33041,24 @@ calc_pspg( dbl pspg[DIM],
   /*** Density ***/
   rho = density(d_rho, time_value);
 
+  for ( a=0; a<VIM; a++) grad_v[a] = fv->grad_v[a];
+
+  /* load up shearrate tensor based on velocity */
+  for ( a=0; a<VIM; a++)
+  {
+    for ( b=0; b<VIM; b++)
+    {
+      gamma[a][b] = grad_v[a][b] + grad_v[b][a];
+    }
+  }
+
+
+  /*
+   * get viscosity for velocity second derivative/diffusion
+   * term in PSPG stuff
+   */
+  mu = viscosity(gn, gamma, d_mu );
+
   if(pspg_global)
   {
 
@@ -33070,7 +33095,7 @@ calc_pspg( dbl pspg[DIM],
     }
 
     // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
-    tau_pspg1 = rho_avg*rho_avg*vv_speed/hh_siz + (9.0*mu_avg*mu_avg)/(hh_siz*hh_siz);
+    tau_pspg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
     if (  pd->TimeIntegration != STEADY)
     {
       tau_pspg1 += 4.0/(dt*dt);
@@ -33088,7 +33113,7 @@ calc_pspg( dbl pspg[DIM],
           for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
           {
             d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1;
-                      d_tau_pspg_dv[b][j] *= rho_avg*rho_avg/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
+                      d_tau_pspg_dv[b][j] *= 1.0/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
           }
         }
       }
@@ -33113,23 +33138,6 @@ calc_pspg( dbl pspg[DIM],
       }
     }
   }
-
-  for ( a=0; a<VIM; a++) grad_v[a] = fv->grad_v[a];
-
-  /* load up shearrate tensor based on velocity */
-  for ( a=0; a<VIM; a++)
-  {
-    for ( b=0; b<VIM; b++)
-    {
-      gamma[a][b] = grad_v[a][b] + grad_v[b][a];
-    }
-  }
-
-  /*
-   * get viscosity for velocity second derivative/diffusion
-   * term in PSPG stuff
-   */
-  mu = viscosity(gn, gamma, d_mu );
 
 
   /* get variables we will need for momentum residual */
@@ -33182,7 +33190,7 @@ calc_pspg( dbl pspg[DIM],
       || cr->MassFluxModel == HYDRODYNAMIC_QTENSOR)
     particle_stress(tau_p,d_tau_p_dv,d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
 
-  if ( pd->v[pg->imtrx][VELOCITY_GRADIENT11] &&  pd->v[pg->imtrx][POLYMER_STRESS11])
+  if ( pd->gv[VELOCITY_GRADIENT11] ) //&&  pd->v[pg->imtrx][POLYMER_STRESS11])
   {
     for ( p=0; p<wim; p++)
     {

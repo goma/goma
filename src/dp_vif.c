@@ -2646,6 +2646,7 @@ noahs_ark(void)
   ddd_add_member(n, &Q_FCN, 1, MPI_INT);
   ddd_add_member(n, &POYNTING_VECTORS, 1, MPI_INT);
   ddd_add_member(n, &len_u_post_proc, 1, MPI_INT);
+  ddd_add_member(n, &PSPG_PP, 1, MPI_INT);
 
   if ( nn_post_fluxes > 0 )
     {

@@ -86,6 +86,8 @@
 #include "mm_std_models.h"
 #include "shell_tfmp_struct.h"
 #include "shell_tfmp_util.h"
+#include "rf_solver.h"
+#include "bc_contact.h"
 
 /*
  * Global variable definitions.
@@ -304,6 +306,7 @@ int HELICITY = -1;
 int LAMB_VECTOR = -1;
 int Q_FCN = -1;		      
 int POYNTING_VECTORS = -1;   	/* conduction flux vectors*/
+int PSPG_PP = -1;
 
 int len_u_post_proc = 0;	/* size of dynamically allocated u_post_proc
 				 * actually is */
@@ -338,27 +341,22 @@ double *u_post_proc = 0;       	/* user-provided values used in calculating
  * Prototypes of static functions
  */
 
-static int calc_standard_fields	/* mm_post
-				   _proc.c                            */
-(double **,		/* post_proc_vect - rhs vector now called 
-				 * post_proc_vect, accessed by 
-				 * post_proc_vect[VARIABLE_NAME]
-				 *               [I]
-				 * is the I-th nodal value of 
-				 * VARIABLE_NAME                             */
-       double **,		/* lumped_mass - lumped mass matrix          */
-       double ,			/* delta_t - time step size */
-       double ,			/* theta   - select time step algorithm      */
-       int ,			/* ielem */
-       const int ,              /* ielem_type */
-       int ,			/* ip */
-       int ,			/* ip_total */
-       RESULTS_DESCRIPTION_STRUCT *,
-       struct Porous_Media_Terms  *,
-       double,                  /* time */
-       Exo_DB * const,
-       double []
-       );
+static int calc_standard_fields /* mm_post
+                                   _proc.c                            */
+    (double **post_proc_vect,
+     double **lumped_mass,
+     double delta_t,
+     double theta,
+     int ielem,
+     const int ielem_type,
+     int ip,
+     int ip_total,
+     RESULTS_DESCRIPTION_STRUCT *rd,
+     struct Porous_Media_Terms *pmt,
+     double time,
+     Exo_DB *exo,
+     double xi[3],
+     const PG_DATA *pg_data);
 
 static int calc_zz_error_vel	/* mm_post_proc.c                            */
 (double [],		/* x - Soln vector for the current processor */
@@ -502,28 +500,22 @@ post_process_average(double x[],	 /* Solution vector for the current processor *
 
 /*________________________________________________________________________*/
 
-static int
-calc_standard_fields(double **post_proc_vect, /* rhs vector now called 
-					       * post_proc_vect, accessed by 
-					       * post_proc_vect[VARIABLE_NAME]
-					       *               [I]
-					       * is the I-th nodal value of 
-					       * VARIABLE_NAME               */
-		     double **lumped_mass, /* lumped mass matrix */
-		     double delta_t,
-		     double theta,
-		     int ielem,
-		     const int ielem_type, 
-		     int ip,
-		     int ip_total,
-		     RESULTS_DESCRIPTION_STRUCT *rd,
-		     struct Porous_Media_Terms *pmt,
-		     double time,
-		     Exo_DB *exo,
-		     double xi[DIM]
-		     )
+static int calc_standard_fields(double **post_proc_vect,
+                                double **lumped_mass,
+                                double delta_t,
+                                double theta,
+                                int ielem,
+                                const int ielem_type,
+                                int ip,
+                                int ip_total,
+                                RESULTS_DESCRIPTION_STRUCT *rd,
+                                struct Porous_Media_Terms *pmt,
+                                double time,
+                                Exo_DB *exo,
+                                double xi[3],
+                                const PG_DATA *pg_data)
 
-    /****************************************************************************
+/****************************************************************************
      *
      * calc_standard_fields()
      *
@@ -1294,16 +1286,80 @@ calc_standard_fields(double **post_proc_vect, /* rhs vector now called
 
   if (Q_FCN != -1 && pd->e[pg->imtrx][R_MOMENTUM1] ){
     double gammadot, del_v[DIM][DIM];
-    for (a = 0; a < VIM; a++) {       
+    for (a = 0; a < VIM; a++) {
       for (b = 0; b < VIM; b++) {
-	  del_v[a][b] = fv->grad_v[a][b];
-        }
+        del_v[a][b] = fv->grad_v[a][b];
       }
+    }
     /* find second invariant of velocity gradient tensor */
     calc_shearrate(&gammadot, del_v, NULL, NULL);
 
     local_post[Q_FCN] = gammadot;
     local_lumped[Q_FCN] = 1.;
+  }
+
+  if (PSPG_PP != -1 && pd->e[pg->imtrx][R_MOMENTUM1] ){
+    dbl pspg[DIM];
+    calc_pspg( pspg, NULL,
+               time, theta, delta_t,
+               pg_data);
+
+//    double rho = pg_data->rho_avg;
+//    rho = density(NULL, time);
+//    double mu = pg_data->mu_avg;
+//    dbl *grad_v[DIM];
+//    for ( a=0; a<VIM; a++) grad_v[a] = fv->grad_v[a];
+//
+//    /* load up shearrate tensor based on velocity */
+//    for ( a=0; a<VIM; a++)
+//    {
+//      for ( b=0; b<VIM; b++)
+//      {
+//        gamma[a][b] = grad_v[a][b] + grad_v[b][a];
+//      }
+//    }
+//    /*
+//     * get viscosity for velocity second derivative/diffusion
+//     * term in PSPG stuff
+//     */
+//    mu = viscosity(gn, gamma, NULL );
+//    double hh_siz = 0.;
+//    for ( int p=0; p<dim; p++)
+//    {
+//      hh_siz += pg_data->hsquared[p];
+//    }
+//    // Average value of h**2 in the element
+//    hh_siz = hh_siz/ ((double )dim);
+//
+//    // Average value of v**2 in the element
+//    double vv_speed = 0.0;
+//    for ( a=0; a<VIM; a++)
+//    {
+//      vv_speed += pg_data->v_avg[a]*pg_data->v_avg[a];
+//    }
+//
+//    // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
+//    double tau_supg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
+//    if (  pd->TimeIntegration != STEADY)
+//    {
+//      tau_supg1 += 4.0/(delta_t*delta_t);
+//    }
+//    double tau_supg = PS_scaling/sqrt(tau_supg1);
+//
+////    double hh_siz = 0.;
+////    for ( int p=0; p<dim; p++)
+////    {
+////      hh_siz += pg_data->hsquared[p];
+////    }
+////    // Average value of h**2 in the element
+////    hh_siz = hh_siz/ ((double )dim);
+//    local_post[PSPG_PP] = 4.0/(delta_t*delta_t);
+//    local_post[PSPG_PP+1] = vv_speed/hh_siz;
+//    local_post[PSPG_PP+2] = (9.0*mu/rho)/(hh_siz*hh_siz);
+    for (int i = 0; i < VIM; i++) {
+      local_post[PSPG_PP+i] = pspg[i];
+      local_lumped[PSPG_PP+i] = 1.;
+    }
   }
   if (VELO_SPEED != -1 && pd->e[pg->imtrx][R_MOMENTUM1] ){
     velo_sqrd = 0.;
@@ -4093,8 +4149,59 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 							 * beginning of this 
 							 * element's
 							 * connectivity list */
-	      
-      
+
+           struct Petrov_Galerkin_Data pg_data;
+
+           memset( pg_data.h,          0, sizeof(double)*DIM);
+           memset( pg_data.hh,         0, sizeof(double)*DIM*DIM);
+           memset( pg_data.dh_dxnode,  0, sizeof(double)*MDE*DIM);
+           memset( pg_data.hsquared,   0, sizeof(double)*DIM);
+           memset( pg_data.hhv,        0, sizeof(double)*DIM*DIM);
+           memset( pg_data.dhv_dxnode, 0, sizeof(double)*MDE*DIM);
+           memset( pg_data.v_avg,      0, sizeof(double)*DIM);
+           memset( pg_data.dv_dnode,   0, sizeof(double)*MDE*DIM);
+           pg_data.mu_avg = 0.;
+           pg_data.rho_avg = 0.;
+
+
+           /* get element level constants for upwinding and
+              stabilized schemes, if necessary */
+           /*
+            * If PSPG is turned on, then calculate the centroid viscosity
+            * for use in the PSPG formulas. Note, we actually call
+            * load_basis_functions here. Is this big penalty necessary or
+            * can be piggyback on top of one gauss point?
+            */
+           int pspg_local = 0;
+           if(PSPG)
+           {
+             if(PSPG == 1)
+             {
+               pspg_local = 0;
+             }
+               /* This is the flag for the standard local PSPG */
+             else if(PSPG == 2)
+             {
+               pspg_local = 1;
+             }
+           }
+
+           if ((PSPG || (mp->Mwt_funcModel == SUPG)) && pd_glob[mn]->e[pg->imtrx][R_PRESSURE] &&
+           pd_glob[mn]->e[pg->imtrx][R_MOMENTUM1]) {
+             xi[0] = 0.0;
+             xi[1] = 0.0;
+             xi[2] = 0.0;
+             (void) load_basis_functions(xi, bfd);
+             setup_shop_at_point(ielem, xi, exo);
+             pg_data.mu_avg = element_viscosity();
+             pg_data.rho_avg = density(NULL, *time_ptr);
+
+             if(pspg_local)
+             {
+               h_elem_siz(pg_data.hsquared, pg_data.hhv, pg_data.dhv_dxnode, pd_glob[mn]->gv[R_MESH1]);
+               element_velocity(pg_data.v_avg, pg_data.dv_dnode, exo);
+             }
+           }
 /******************************************************************************/
 /*                              BLOCK 1A                                      */
 /*                   START OF VOLUME INTEGRATION LOOP                         */
@@ -4188,9 +4295,9 @@ post_process_nodal(double x[],	 /* Solution vector for the current processor */
 	      * projection of the standard field variables unto the
 	      * node variables
 	      */
-	     err = calc_standard_fields(post_proc_vect, lumped_mass,
-					delta_t, theta, ielem, ielem_type, ip,
-					ip_total, rd, &pm_terms, *time_ptr, exo, xi);
+	     err = calc_standard_fields(post_proc_vect, lumped_mass, delta_t, theta, ielem,
+                                        ielem_type, ip, ip_total, rd, &pm_terms, *time_ptr, exo, xi,
+                                        &pg_data);
 	     EH(err, "calc_standard_fields");
 	   } /* END  for (ip = 0; ip < ip_total; ip++)                      */
 	 } /* END  for (iel = 0; iel < num_internal_elem; iel++)            */
@@ -7574,6 +7681,7 @@ rd_post_process_specs(FILE *ifp,
   iread = look_for_post_proc(ifp, "Lamb Vector", &LAMB_VECTOR);
   iread = look_for_post_proc(ifp, "Q Function", &Q_FCN);
   iread = look_for_post_proc(ifp, "Poynting Vectors", &POYNTING_VECTORS);
+  iread = look_for_post_proc(ifp, "PSPG Post", &PSPG_PP);
 
   /*
    * Initialize for surety before communication to other processors.
@@ -9656,7 +9764,25 @@ load_nodal_tkn (struct Results_Description *rd, int *tnv, int *tnv_post)
        index_post++;
     }
 
-   if (VELO_SPEED != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1])
+  if (PSPG_PP != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1])
+  {
+    PSPG_PP = index_post;
+    set_nv_tkud(rd, index, 0, 0, -2, "PSPG_X","[1]", "PSPG PP X",
+                FALSE);
+    index++;
+    index_post++;
+    set_nv_tkud(rd, index, 0, 0, -2, "PSPG_Y","[1]", "PSPG PP Y",
+                FALSE);
+    index++;
+    index_post++;
+    if (VIM > 2) {
+      set_nv_tkud(rd, index, 0, 0, -2, "PSPG_Z", "[1]", "PSPG PP Z", FALSE);
+      index++;
+      index_post++;
+    }
+  }
+
+  if (VELO_SPEED != -1 && Num_Var_In_Type[pg->imtrx][R_MOMENTUM1])
      {
        set_nv_tkud(rd, index, 0, 0, -2, "VELO_SPEED","[1]", "Velocity Magnitude",
 		   FALSE);
