@@ -172,6 +172,11 @@ EXTERN void fvelo_tangent_3d
 				 * method from BE(0) to CN(1/2) to FE(1)     */
        const double );		/* dt - current value of the time step size  */
 
+EXTERN void fzero_velo_tangent_3d
+(double [],             /* func */
+       double [MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],         /* dfunc */
+     const int);
+
 
 EXTERN void fvelo_tangential_solid_bc
 (double [],		/* func                                      */

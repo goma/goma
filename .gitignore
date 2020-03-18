@@ -26,3 +26,5 @@ cmake-debug
 /*.files
 /*.includes
 *.orig
+/cmake-build*
+/.idea

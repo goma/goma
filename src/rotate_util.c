@@ -104,34 +104,11 @@ goma_error setup_rotated_bc_nodes(Exo_DB *exo, struct Boundary_Condition *bc_typ
   error = allocate_rotations(exo, &rotations);
   EH(error, "allocate_rotations");
 
-  //  for (int bc_index = 0; bc_index < num_bc; bc_index++) {
-  //    if (bc_is_rotated[bc_index]) {
-  //      int ss_index = bc_types[bc_index].Set_Index;
-  //      printf("SS %d has %d nodes and is rotated\n", exo->ss_id[ss_index], exo->ss_node_len);
-  //      for (int eindex = exo->ss_elem_index[ss_index]; eindex < exo->ss_elem_index[ss_index + 1];
-  //           eindex++) {
-  //        printf("has elem %d\n", exo->ss_elem_list[eindex]);
-  //      }
-
-  //      for (int e = 0; e < exo->ss_num_sides[ss_index]; e++) {
-  //        int elem = exo->ss_elem_list[exo->ss_elem_index[ss_index] + e];
-
-  //        printf("elem %d side %d\n", elem, exo->ss_side_list[e]);
-  //        for (int k = exo->ss_node_side_index[ss_index][e];
-  //             k < exo->ss_node_side_index[ss_index][e + 1]; k++) {
-  //          int inode = exo->ss_node_list[ss_index][k];
-  //          printf("node %d\n", inode);
-  //        }
-  //      }
-  //    }
-  //  }
 
   int err;
   for (int bc_index = 0; bc_index < num_bc; bc_index++) {
     if (bc_is_rotated[bc_index]) {
       int ss_index = bc_types[bc_index].Set_Index;
-      printf("SS %d has %d nodes and is rotated\n", exo->ss_id[ss_index], exo->ss_node_len);
-
       for (int e = 0; e < exo->ss_num_sides[ss_index]; e++) {
         int ielem = exo->ss_elem_list[exo->ss_elem_index[ss_index] + e];
 

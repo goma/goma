@@ -455,6 +455,7 @@ rd_bc_specs(FILE *ifp,
 	case SHELL_TFMP_GRAD_S_BC:
 	case SHELL_TFMP_FREE_GAS_BC:
         case SHELL_LUBRICATION_OUTFLOW_BC:
+        case ZERO_VELO_TANGENT_3D_BC:
 
 	  break;
 

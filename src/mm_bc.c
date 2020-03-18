@@ -2615,7 +2615,7 @@ find_id_side_BC(const int ielem,		/* element index number */
 		int id_local_elem_coord[],	/* Local node numbers of the side (out) */
 		const Exo_DB *exo)		/* ptr to FE db         (in) */
 {
-  int sideid, iss, ielem_type;
+  int sideid, ielem_type;
 
   /* Run the usual routine */
   sideid = find_id_side(ielem, num_nodes_on_side,
@@ -2626,7 +2626,6 @@ find_id_side_BC(const int ielem,		/* element index number */
 
   /* If we're working with tetrahedral elements, re-work the side id */
   if ( ielem_type == LINEAR_TET ) {
-    iss = BC_Types[ibc].Set_Index;
     bool nodes[4] = {false,false,false,false};
     for (int i = 0; i < 4; i++) {
       int node_id = exo->elem_node_list[exo->elem_node_pntr[ielem]+i];

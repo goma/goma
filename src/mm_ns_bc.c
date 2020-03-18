@@ -54,6 +54,8 @@ static char rcsid[] =
 #include "mm_mp.h"
 #include "mm_qp_storage.h"
 
+#include "rotate_util.h"
+
 #include "mm_eh.h"
 
 #define eps(i,j,k)   ( (i-j)*(j-k)*(k-i)/2 )
@@ -1902,7 +1904,83 @@ fvelo_tangent_3d(
     }
 
      
-} /* END of routine fvelo_tangential_3d  */ 
+} /* END of routine fvelo_tangential_3d  */
+
+void
+fzero_velo_tangent_3d(
+                 double func[MAX_PDIM],
+                 double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                 const int id_side)                  /* current value of the time step   */
+
+     /******************************************************************************
+      *
+      *  Function which applies a tangent velocity on a surface in 3d space
+      *   as     (n X t_sp) . (v - vs) = V
+      *
+      *   where t_sp is a specified tangent vector and n is the normal.  This
+      *   works for flat surfaces and surfaces where at least component of curvature
+      *   is zero.   Need to furbish for varying tangents in second direction.
+      *
+      *            Author: P. R. Schunk    (8/19/99)
+      *
+      ******************************************************************************/
+{
+
+  if (goma_automatic_rotations.rotation_nodes == NULL) {
+    EH(-1, "ZERO_VELO_TANGENT_3D requires automatic rotations");
+  }
+
+  gds_vector * tangent1 = gds_vector_alloc(3);
+  gds_vector * tangent2 = gds_vector_alloc(3);
+
+  for ( int j=0, found = 0; (!found && j<ei[pg->imtrx]->dof[R_MOMENTUM1]); j++){
+    int gnode = ei[pg->imtrx]->gnn_list[R_MOMENTUM1][j];
+    for (int k = 0; (!found && k < goma_automatic_rotations.rotation_nodes[gnode].n_normals); k++) {
+      if (goma_automatic_rotations.rotation_nodes[gnode].face[k] == id_side &&
+          goma_automatic_rotations.rotation_nodes[gnode].element[k] == ei[pg->imtrx]->ielem) {
+        gds_vector_copy(tangent1, goma_automatic_rotations.rotation_nodes[gnode].tangent1s[k]);
+        gds_vector_copy(tangent2, goma_automatic_rotations.rotation_nodes[gnode].tangent2s[k]);
+        found = 1;
+      }
+    }
+  }
+
+
+  /***************************** EXECUTION BEGINS ******************************/
+  if (af->Assemble_Jacobian)
+    {
+      for (unsigned int a=0; a<MAX_PDIM; a++)
+        {
+        int var = VELOCITY1 + (int) a;
+          if (pd->v[pg->imtrx][var])
+            {
+              for ( int j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                {
+                  double phi_j = bf[var]->phi[j];
+                  d_func[1][var][j] += phi_j*gds_vector_get(tangent1, a);
+                  d_func[2][var][j] += phi_j*gds_vector_get(tangent2, a);
+                }
+            }
+        }
+
+
+    } /* end of if Assemble_Jacobian */
+
+  /* Calculate the residual contribution					     */
+  func[0] = 0;
+  func[1] = 0;
+  func[2] = 0;
+  for (unsigned int a=0; a<DIM; a++)
+    {
+    func[1] +=   gds_vector_get(tangent1, a) * (fv->v[a]);
+    func[2] +=   gds_vector_get(tangent2, a) * (fv->v[a]);
+    }
+
+    gds_vector_free(tangent1);
+    gds_vector_free(tangent2);
+
+
+} /* END of routine fvelo_tangential_3d  */
 /****************************************************************************/
 
 void 

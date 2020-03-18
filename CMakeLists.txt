@@ -17,8 +17,21 @@ set(CMAKE_PREFIX_PATH ${Trilinos_PREFIX} ${CMAKE_PREFIX_PATH})
 
 # Get Trilinos as one entity
 FIND_PACKAGE(Trilinos REQUIRED)
-MESSAGE(STATUS "Trilinos_DIR = ${Trilinos_DIR}")
-#message(STATUS "Trilinos LD Flags = ${Trilinos_EXTRA_LD_FLAGS}")
+
+# Echo trilinos build info just for fun
+MESSAGE("\nFound Trilinos!  Here are the details: ")
+MESSAGE("   Trilinos_DIR = ${Trilinos_DIR}")
+MESSAGE("   Trilinos_VERSION = ${Trilinos_VERSION}")
+# MESSAGE("   Trilinos_PACKAGE_LIST = ${Trilinos_PACKAGE_LIST}")
+# MESSAGE("   Trilinos_LIBRARIES = ${Trilinos_LIBRARIES}")
+MESSAGE("   Trilinos_INCLUDE_DIRS = ${Trilinos_INCLUDE_DIRS}")
+# MESSAGE("   Trilinos_LIBRARY_DIRS = ${Trilinos_LIBRARY_DIRS}")
+# MESSAGE("   Trilinos_TPL_LIST = ${Trilinos_TPL_LIST}")
+MESSAGE("   Trilinos_TPL_INCLUDE_DIRS = ${Trilinos_TPL_INCLUDE_DIRS}")
+# MESSAGE("   Trilinos_TPL_LIBRARIES = ${Trilinos_TPL_LIBRARIES}")
+# MESSAGE("   Trilinos_TPL_LIBRARY_DIRS = ${Trilinos_TPL_LIBRARY_DIRS}")
+# MESSAGE("   Trilinos_BUILD_SHARED_LIBS = ${Trilinos_BUILD_SHARED_LIBS}")
+message("Trilinos LD Flags = ${Trilinos_EXTRA_LD_FLAGS}")
 
 set(MPI_C_COMPILER ${Trilinos_C_COMPILER})
 find_package(MPI REQUIRED)
@@ -90,7 +103,6 @@ find_package(SEACASExodus REQUIRED HINTS ${Trilinos_DIR}/../SEACASExodus)
 MESSAGE(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
 find_package(SEACASChaco REQUIRED HINTS ${Trilinos_DIR}/../SEACASChaco)
 MESSAGE(STATUS "SEACASChaco_DIR = ${SEACASChaco_DIR}")
-
 
 message("")
 
@@ -520,3 +532,8 @@ target_include_directories(gds PUBLIC include)
 add_executable(${PROJECT_NAME} ${GOMA_INCLUDES} ${GOMA_SOURCES})
 target_include_directories(${PROJECT_NAME} PRIVATE include ${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS} ${Sparse_INCLUDES})
 target_link_libraries(${PROJECT_NAME} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${Trilinos_EXTRA_LD_FLAGS} ${GOMA_TPL_LIBRARIES} gds)
+
+option(ENABLE_TESTING "ENABLE_TESTING" OFF)
+if(ENABLE_TESTING)
+    add_subdirectory(tests)
+endif()

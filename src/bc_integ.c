@@ -677,6 +677,9 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			   theta, delta_t);
 	  if (neg_elem_volume) return (status);
 	  break;
+        case ZERO_VELO_TANGENT_3D_BC:
+          fzero_velo_tangent_3d(func, d_func, elem_side_bc->id_side);
+          break;
 
 	case VELO_TANGENT_SOLID_BC:
 	case VELO_SLIP_SOLID_BC:
@@ -2399,7 +2402,25 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                   }
                   EH(n_index, "Rotations incorrectly setup");
                   int rot_dir = (int) goma_automatic_rotations.rotation_nodes[I].face_cordinate_association[n_index];
-                  ieqn = upd->ep[pg->imtrx][eqn + rot_dir];
+
+                  int t1dir = 0;
+                  int t2dir = 0;
+                  for (int k = 0; k < DIM; k++) {
+                    if (k != rot_dir) {
+                      t1dir = k;
+                      break;
+                    }
+                  }
+                  for (int k = 0; k < DIM; k++) {
+                    if (k != rot_dir && k != t1dir) {
+                      t2dir = k;
+                    }
+                  }
+                  int eq_idx[DIM];
+                  eq_idx[0] = rot_dir;
+                  eq_idx[1] = t1dir;
+                  eq_idx[2] = t2dir;
+                  ieqn = upd->ep[pg->imtrx][eqn + eq_idx[p]];
                 }
               }
 

@@ -169,8 +169,8 @@ void gds_vector_normalize(gds_vector *v) {
   if (dot == 0) {
     return;
   }
-  double invmag = 1.0 / sqrt(dot);
-  gds_vector_scale(v, invmag);
+  double inv_mag = 1.0 / sqrt(dot);
+  gds_vector_scale(v, inv_mag);
 }
 
 /**
@@ -183,9 +183,12 @@ void gds_vector_cross(const gds_vector *v, const gds_vector *u, gds_vector *cros
   assert(u->size == 3);
   assert(v->size == 3);
   assert(cross->size == 3);
-  cross->data[0] = -(v->data[1] * u->data[2] - v->data[2] * u->data[1]);
-  cross->data[1] = -(v->data[2] * u->data[0] - v->data[0] * u->data[2]);
-  cross->data[2] = -(v->data[0] * u->data[1] - v->data[1] * u->data[0]);
+  gds_vector * cross_tmp = gds_vector_alloc(3);
+  cross_tmp->data[0] = (v->data[1] * u->data[2] - v->data[2] * u->data[1]);
+  cross_tmp->data[1] = (v->data[2] * u->data[0] - v->data[0] * u->data[2]);
+  cross_tmp->data[2] = (v->data[0] * u->data[1] - v->data[1] * u->data[0]);
+  gds_vector_copy(cross, cross_tmp);
+  gds_vector_free(cross_tmp);
 }
 
 /**
