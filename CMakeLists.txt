@@ -331,7 +331,8 @@ set(GOMA_INCLUDES
     include/brkfix/sam_perea.h
     include/brkfix/utils.h
     include/brkfix/wr_coords.h
-    include/brkfix/wr_graph_file.h)
+    include/brkfix/wr_graph_file.h
+    include/gds/gds_vector.h)
 
 set(GOMA_SOURCES
     src/ac_conti.c
@@ -491,6 +492,11 @@ set(GOMA_SOURCES
     src/brkfix/wr_coords.c
     src/brkfix/wr_graph_file.c)
 
+set(GDS_INCLUDES
+    include/gds/gds_vector.h)
+set(GDS_SOURCES
+    src/gds/gds_vector.c)
+
 # Set a default build type for single-configuration
 # CMake generators if no build type is set.
 IF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
@@ -508,71 +514,9 @@ SET(CMAKE_C_FLAGS ${GOMA_WARNINGS})
 SET(CMAKE_C_FLAGS_RELEASE "${GOMA_RELEASE_FLAGS}")
 SET(CMAKE_C_FLAGS_DEBUG  "${GOMA_DEBUG_FLAGS}")
 
-message(STATUS "CMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}")
-message(STATUS "CMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}")
-message(STATUS "CMAKE_CXX_FLAGS_RELEASE=${CMAKE_CXX_FLAGS_RELEASE}")
-message(STATUS "CMAKE_CXX_FLAGS_DEBUG=${CMAKE_CXX_FLAGS_DEBUG}")
-message("\n")
-message(STATUS "Goma compile defines:")
-foreach(d ${GOMA_COMPILE_DEFINITIONS})
-  message(STATUS "${d}")
-endforeach()
-message("\n")
+add_library(gds ${GDS_SOURCES} ${GDS_INCLUDES})
+target_include_directories(gds PUBLIC include)
 
-set(GOMA_TPL_INCLUDES
-  ${Sparse_INCLUDES}
-  ${Trilinos_INCLUDE_DIRS}
-  ${Trilinos_TPL_INCLUDE_DIRS}
-  ${SEACASExodus_INCLUDE_DIRS}
-  ${SEACASChaco_INCLUDE_DIRS}
-  ${SEACASExodus_TPL_INCLUDE_DIRS}
-  ${SEACASChaco_TPL_INCLUDE_DIRS}
-)
-
-set(GOMA_TPL_LIBRARY_DIRS
-  ${Trilinos_LIBRARY_DIRS}
-  ${Trilinos_TPL_LIBRARY_DIRS}
-  ${SEACASExodus_LIBRARY_DIRS}
-  ${SEACASExodus_TPL_LIBRARY_DIRS}
-  ${SEACASChaco_LIBRARY_DIRS}
-  ${SEACASChaco_TPL_LIBRARY_DIRS}
-)
-
-set(GOMA_TPL_LIBRARIES
-  ${GOMA_TPL_LIBRARIES}
-  ${Trilinos_LIBRARIES}
-  ${Trilinos_TPL_LIBRARIES}
-  ${Trilinos_EXTRA_LD_FLAGS}
-  ${SEACASExodus_LIBRARIES}
-  ${SEACASExodus_TPL_LIBRARIES}
-  ${SEACASChaco_LIBRARIES}
-  ${SEACASChaco_TPL_LIBRARIES}
-)
-
-add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
-target_include_directories(goma_user PUBLIC include)
-target_compile_definitions(goma_user PUBLIC ${GOMA_COMPILE_DEFINITIONS})
-
-add_library(goma ${GOMA_SOURCES} ${GOMA_INCLUDES})
-target_include_directories(goma PUBLIC include)
-target_include_directories(goma PRIVATE include ${GOMA_TPL_INCLUDES})
-target_link_directories(goma PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
-target_link_libraries(goma ${GOMA_TPL_LIBRARIES})
-target_compile_definitions(goma PUBLIC ${GOMA_COMPILE_DEFINITIONS})
-
-add_library(goma_util ${GOMA_UTIL_SOURCES} ${GOMA_UTIL_INCLUDES})
-target_include_directories(goma_util PUBLIC include)
-target_link_libraries(goma_util)
-target_compile_definitions(goma_util PUBLIC ${GOMA_COMPILE_DEFINITIONS})
-
-add_executable(goma_exe src/main.c)
-set_target_properties(goma_exe PROPERTIES OUTPUT_NAME "goma")
-target_include_directories(goma_exe PRIVATE include ${GOMA_TPL_INCLUDES})
-target_link_libraries(goma_exe ${GOMA_TPL_LIBRARIES} goma goma_user goma_util)
-target_compile_definitions(goma_exe PUBLIC ${GOMA_COMPILE_DEFINITIONS})
-
-
-option(ENABLE_TESTING "ENABLE_TESTING" OFF)
-if(ENABLE_TESTING)
-  add_subdirectory(tests)
-endif()
+add_executable(${PROJECT_NAME} ${GOMA_INCLUDES} ${GOMA_SOURCES})
+target_include_directories(${PROJECT_NAME} PRIVATE include ${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS} ${Sparse_INCLUDES})
+target_link_libraries(${PROJECT_NAME} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${Trilinos_EXTRA_LD_FLAGS} ${GOMA_TPL_LIBRARIES} gds)

@@ -240,7 +240,7 @@ INCLUDES = $(GOMA_INC) $(SPARSE_INC) $(TRILINOS_INC) \
 DEBUG_FLAGS ?= -g -gdwarf-2
 
 # All compiler options
-CCFLAGS ?= -O2
+CCFLAGS ?= -O2 -DNDEBUG
 
 # C/C++ warning flags
 C_WARN_FLAGS ?= -Wall -Wextra -Wno-unused-parameter
@@ -636,6 +636,11 @@ USER_INC= user_ac.h\
           user_pre.h\
           usr_print.h
 
+# Goma Data Structures library gds
+
+GDS_SRC=gds/gds_vector.c
+GDS_INC=gds/gds_vector.h
+
 # _____ Full macros ___________________________________________________________
 
 GOMA_SRC = $(BC_SRC) $(EL_SRC) $(RF_SRC) $(MAIN_SRC) $(SL_SRC) $(MD_SRC) $(MM_SRC)\
@@ -665,16 +670,20 @@ FIX_OBJ :=  ${FIX_SRC:.c=.o}
 FIX_OBJ :=  ${FIX_OBJ:.F=.o}
 FIX_OBJ :=  ${FIX_OBJ:.C=.o}
 
+GDS_OBJ := ${GDS_SRC:.c=.o}
+
 RELEASE_OBJ_DIR = $(OBJ_DIR)/release
 DEBUG_OBJ_DIR = $(OBJ_DIR)/debug
 
 GOMA_RELEASE_OBJS := ${addprefix $(RELEASE_OBJ_DIR)/,$(GOMA_OBJ)}
 BRKFIX_RELEASE_OBJS := ${addprefix $(RELEASE_OBJ_DIR)/,$(BRKFIX_OBJ)}
 USER_RELEASE_OBJS := ${addprefix $(RELEASE_OBJ_DIR)/,$(USER_OBJ)}
+GDS_RELEASE_OBJS := ${addprefix $(RELEASE_OBJ_DIR)/,$(GDS_OBJ)}
 
 GOMA_DEBUG_OBJS := ${addprefix $(DEBUG_OBJ_DIR)/,$(GOMA_OBJ)}
 USER_DEBUG_OBJS := ${addprefix $(DEBUG_OBJ_DIR)/,$(USER_OBJ)}
 BRKFIX_DEBUG_OBJS := ${addprefix $(DEBUG_OBJ_DIR)/,$(BRKFIX_OBJ)}
+GDS_DEBUG_OBJS := ${addprefix $(DEBUG_OBJ_DIR)/,$(GDS_OBJ)}
 
 # combined sources
 SRCS  = $(GOMA_SRC) $(USER_SRC)
@@ -687,6 +696,7 @@ DEBUG_OBJS = $(GOMA_DEBUG_OBJS) $(USER_DEBUG_OBJS)
 # ==========================================
 GOMA_LIB = libgoma.a
 GOMA_USER_LIB = libgomau.a
+GDS_LIB = libgds.a
 TARGET = goma
 DEBUG_TARGET = gomad
 
@@ -714,7 +724,7 @@ DEBUG_DEPENDS = $(GOMA_INCS) $(MAKEFILE_NAME) $(USER_SETTINGS_FILE)
 all: $(BIN_DIR)/$(TARGET)
 
 # bin/goma executable
-$(BIN_DIR)/$(TARGET): $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIB_DEP)
+$(BIN_DIR)/$(TARGET): $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIB_DIR)/$(GDS_LIB) $(LIB_DEP)
 	mkdir -p $(BIN_DIR); \
 	$(RM) $@; \
 	$(LD) $(LD_FLAGS) -o $@ $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIBS) $(END_LIBS) $(LD_FLAGS)
@@ -731,6 +741,12 @@ $(LIB_DIR)/$(GOMA_USER_LIB): $(USER_RELEASE_OBJS)
 	$(AR) $(ARFLAGS) $@ $?; \
 	$(RANLIB) $@ 
 
+# goma data structures library
+$(LIB_DIR)/$(GDS_LIB): $(GDS_RELEASE_OBJS)
+	@mkdir -p $(LIB_DIR); \
+	$(AR) $(ARFLAGS) $@ $?; \
+	$(RANLIB) $@ 
+
 # Debug targets
 # -------------
 
@@ -740,7 +756,7 @@ debug:
 	$(MAKE) CCFLAGS="$(DEBUG_FLAGS)" $(BIN_DIR)/$(DEBUG_TARGET)
 
 # bin/gomad executable
-$(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(BRKFIX_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIB_DEP)
+$(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(BRKFIX_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(GDS_DEBUG_OBJS) $(LIB_DEP)
 	mkdir -p $(BIN_DIR); \
 	$(RM) $@; \
 	$(LD) $(LD_FLAGS) -o $@ $(GOMA_DEBUG_OBJS) $(BRKFIX_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(LIBS) $(END_LIBS) $(LD_FLAGS)
@@ -754,6 +770,7 @@ $(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(BRKFIX_DEBUG_OBJS) $(USER_DEBUG
 
 $(RELEASE_OBJ_DIR)/%.o: %.c $(RELEASE_DEPENDS)
 	@mkdir -p $(RELEASE_OBJ_DIR)/$(BRKFIX_DIR)
+	@mkdir -p $(RELEASE_OBJ_DIR)/gds
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(RELEASE_OBJ_DIR)/%.o: %.F $(RELEASE_DEPENDS)
@@ -771,6 +788,7 @@ $(RELEASE_OBJ_DIR)/%.o: %.cpp $(RELEASE_DEPENDS)
 # debug objects
 $(DEBUG_OBJ_DIR)/%.o: %.c $(DEBUG_DEPENDS)
 	@mkdir -p $(DEBUG_OBJ_DIR)/$(BRKFIX_DIR)
+	@mkdir -p $(DEBUG_OBJ_DIR)/gds
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 $(DEBUG_OBJ_DIR)/%.o: %.F $(DEBUG_DEPENDS)
