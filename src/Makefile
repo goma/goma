@@ -530,6 +530,7 @@ MM_SRC= mm_as_alloc.c\
         mm_fill_common.c\
         mm_fill_terms.c\
         mm_fill_util.c\
+        mm_fill_stabilization.c\
         mm_flux.c\
         mm_input.c\
         mm_input_bc.c\
@@ -584,6 +585,7 @@ MM_INC=	mm_as.h\
         mm_fill_common.h\
         mm_fill_terms.h\
         mm_fill_util.h\
+        mm_fill_stabilization.h\
         mm_flux.h\
         mm_input.h\
         mm_interface.h\

@@ -14,7 +14,7 @@ goma
 /tags
 /.settings/
 cmake-config
-/CMakeLists.txt.user
+/CMakeLists.txt.user*
 cmake-debug
 /scripts/easygomabuild.txt
 /scripts/gomaTPLs/

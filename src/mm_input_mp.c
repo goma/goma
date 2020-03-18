@@ -2518,6 +2518,16 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  }
 	  SPF(endofstring(es)," %.4g", mat_ptr->Mwt_func );
 	} 
+      else if ( !strcmp(model_name, "SUPG_SHAKIB") )
+	{
+	  int err;
+	  mat_ptr->Mwt_funcModel = SUPG_SHAKIB;
+	  err = fscanf(imp, "%lg",&(mat_ptr->Mwt_func));
+	  if (err != 1) {
+	    EH(GOMA_ERROR, "Expected to read one double for Momentum Weight Function SUPG");
+	  }
+	  SPF(endofstring(es)," %.4g", mat_ptr->Mwt_func );
+	} 
       else  
 	{
 	  SPF(err_msg,"Syntax error or invalid model for %s\n", search_string);

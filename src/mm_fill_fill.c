@@ -30,6 +30,7 @@
 #include "mm_fill_ls.h"
 #include "mm_fill_terms.h"
 #include "mm_fill_util.h"
+#include "mm_fill_stabilization.h"
 #include "mm_qtensor_model.h"
 #include "mm_unknown_map.h"
 #include "rf_node_const.h"

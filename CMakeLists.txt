@@ -229,6 +229,7 @@ set(GOMA_INCLUDES
         include/mm_fill_stress.h
         include/mm_fill_terms.h
         include/mm_fill_util.h
+        include/mm_fill_stabilization.h
         include/mm_flux.h
         include/mm_input.h
         include/mm_interface.h
@@ -377,6 +378,7 @@ set(GOMA_SOURCES
         src/mm_fill_stress.c
         src/mm_fill_terms.c
         src/mm_fill_util.c
+        src/mm_fill_stabilization.c
         src/mm_flux.c
         src/mm_input_bc.c
         src/mm_input.c

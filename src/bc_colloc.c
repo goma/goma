@@ -50,6 +50,7 @@
 #include "mm_ns_bc.h"
 #include "mm_shell_bc.h"
 #include "mm_shell_util.h"
+#include "mm_viscosity.h"
 #include "rf_bc.h"
 #include "rf_bc_const.h"
 #include "rf_fem.h"

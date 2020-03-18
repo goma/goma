@@ -20,48 +20,47 @@
 
 /* Standard include files */
 
-#include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* GOMA include files */
 
-#include "std.h"
-#include "rf_fem_const.h"
-#include "rf_fem.h"
+#define GOMA_MM_FILL_SPECIES_C
+#include "mm_fill_species.h"
 #include "el_elm.h"
-#include "rf_bc_const.h"
-#include "mm_mp_const.h"
+#include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
-#include "mm_as.h"
-#include "mm_eh.h"
 #include "mm_chemkin.h"
+#include "mm_eh.h"
 #include "mm_elem_block_structs.h"
 #include "mm_fill_ls.h"
+#include "mm_fill_population.h"
 #include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_terms.h"
 #include "mm_fill_util.h"
+#include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_qtensor_model.h"
 #include "mm_species.h"
+#include "mm_fill_stabilization.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
+#include "rf_bc_const.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "sl_aux.h"
+#include "std.h"
 #include "user_bc.h"
 #include "user_mp.h"
-#include "mm_qtensor_model.h"
-
 #ifdef USE_CHEMKIN
 #include "ck_chemkin_const.h"
 #endif
 
-#include "mm_mp_structs.h"
-#include "mm_mp.h"
-#include "mm_fill_terms.h"
-#include "mm_fill_population.h"
-
-#define GOMA_MM_FILL_SPECIES_C
-#include "mm_fill_species.h"
-
-#include "sl_aux.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E *************************
 *

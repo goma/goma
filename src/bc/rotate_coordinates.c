@@ -480,8 +480,6 @@ goma_error associate_directions(Exo_DB *exo, goma_rotation_node_s *rotation) {
         break;
       case GOMA_ROTATION_CORNER:
         for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
-          unsigned int best_dir = 0;
-          double max_dot = 0;
           gds_vector *ca1 = rotation[i].average_normals[rotation[i].critical_normal_index[0]];
           gds_vector *ca2 = rotation[i].average_normals[rotation[i].critical_normal_index[1]];
           gds_vector *ca3 = rotation[i].average_normals[rotation[i].critical_normal_index[2]];

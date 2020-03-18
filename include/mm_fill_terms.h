@@ -69,20 +69,6 @@ EXTERN int assemble_continuity	/* mm_fill_terms.c                           */
        const PG_DATA *);
 
 
-EXTERN int calc_pspg		/* mm_fill_terms.c                           */
-(    dbl [DIM],
-	   PSPG_DEPENDENCE_STRUCT *,
-	   dbl ,                /* current time                              */
-	   dbl ,		/* parameter to vary time integration from
-				   explicit (tt = 1) to implicit (tt = 0)    */
-	   dbl ,		/* current time step size                    */
-	   const PG_DATA * );
-
-EXTERN int calc_cont_gls		/* mm_fill_terms.c                           */
-(    dbl *,
-	   CONT_GLS_DEPENDENCE_STRUCT *,
-	   dbl ,                /* current time                              */
-	   const PG_DATA * );
 
 EXTERN int assemble_momentum_path_dependence
 ( double ,                /* time */

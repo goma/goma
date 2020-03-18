@@ -29,65 +29,66 @@
 
 #include "mm_post_def.h"
 /* GOMA include files */
-#include "std.h"
-#include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
-#include "el_elm.h"
-#include "el_geom.h"
-#include "rf_allo.h"
-#include "rf_bc_const.h"
-#include "rf_bc.h"
-#include "rf_vars_const.h"
-#include "mm_mp_const.h"
-#include "mm_as_const.h"
-#include "mm_as_structs.h"
-#include "mm_as.h"
-#include "mm_mp_structs.h"
-#include "mm_mp.h"
-#include "mm_more_utils.h"
-#include "mm_fill_ptrs.h"
-#include "mm_fill_population.h"
-#include "dpi.h"
-#include "exodusII.h"
-#include "exo_struct.h"
 #include "ac_particles.h"
 #include "bc/rotate.h"
+#include "bc_contact.h"
+#include "dpi.h"
+#include "el_elm.h"
 #include "el_elm_info.h"
+#include "el_geom.h"
+#include "exo_struct.h"
+#include "exodusII.h"
+#include "mm_as.h"
 #include "mm_as_alloc.h"
+#include "mm_as_const.h"
+#include "mm_as_structs.h"
 #include "mm_bc.h"
 #include "mm_elem_block_structs.h"
 #include "mm_fill_aux.h"
+#include "mm_fill_common.h"
 #include "mm_fill_ls.h"
+#include "mm_fill_population.h"
 #include "mm_fill_porous.h"
+#include "mm_fill_ptrs.h"
 #include "mm_fill_rs.h"
 #include "mm_fill_solid.h"
 #include "mm_fill_species.h"
+#include "mm_fill_stabilization.h"
 #include "mm_fill_stress.h"
 #include "mm_fill_terms.h"
 #include "mm_fill_util.h"
 #include "mm_input.h"
+#include "mm_more_utils.h"
+#include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
 #include "mm_shell_util.h"
+#include "mm_std_models.h"
+#include "mm_std_models_shell.h"
 #include "mm_unknown_map.h"
 #include "mm_viscosity.h"
 #include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
 #include "rf_element_storage_struct.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_io.h"
+#include "rf_io_const.h"
+#include "rf_io_structs.h"
+#include "rf_mp.h"
 #include "rf_shape.h"
+#include "rf_solver.h"
 #include "rf_util.h"
+#include "rf_vars_const.h"
+#include "shell_tfmp_struct.h"
+#include "shell_tfmp_util.h"
 #include "sl_aux.h"
+#include "std.h"
 #include "user_mp.h"
 #include "user_post.h"
 #include "wr_exo.h"
-#include "mm_fill_common.h"
-#include "mm_std_models_shell.h"
-#include "mm_std_models.h"
-#include "shell_tfmp_struct.h"
-#include "shell_tfmp_util.h"
-#include "rf_solver.h"
-#include "bc_contact.h"
 
 /*
  * Global variable definitions.
@@ -1431,26 +1432,11 @@ static int calc_standard_fields(double **post_proc_vect,
       for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
         h_elem += pg_data.hsquared[a];
       }
-//      dbl supg = 0;
-//      if (mp->Spwt_funcModel == GALERKIN) {
-//        supg = 0.;
-//      } else if (mp->Spwt_funcModel == SUPG) {
-//        supg = mp->Spwt_func;
-//      }
-
-
 
       /* This is the size of the element */
       h_elem = sqrt(h_elem / ((double)ei[pg->imtrx]->ielem_dim));
 
       for (int w = 0; w < pd->Num_Species_Eqn; w++) {
-        SUPG_terms supg_terms;
-        double diffusivity = 0;
-        if (mp->DiffusivityModel[w] == CONSTANT) {
-          diffusivity =  mp->diffusivity[w];
-        }
-        supg_tau(&supg_terms, dim,  diffusivity, &pg_data, delta_t, 0, MASS_FRACTION);
-
         dbl strong_residual = 0;
         strong_residual = fv_dot->c[w];
         for (int p = 0; p < VIM; p++) {
