@@ -11,14 +11,6 @@
 \************************************************************************/
  
 
-/*
- *$Id: mm_eh.c,v 5.3 2008-01-11 00:47:14 hkmoffa Exp $
- */
-
-#ifdef USE_RCSID
-static char rcsid[] = "$Id: mm_eh.c,v 5.3 2008-01-11 00:47:14 hkmoffa Exp $";
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -27,12 +19,11 @@ static char rcsid[] = "$Id: mm_eh.c,v 5.3 2008-01-11 00:47:14 hkmoffa Exp $";
 #include <unistd.h>
 #endif
 
+#define GOMA_MM_EH_C
 #include "std.h"
 #include "rf_mp.h"
 #include "mpi.h"
 #include "rf_io_const.h"
-
-#define GOMA_MM_EH_C
 #include "mm_eh.h"
 
 #ifdef PRINT_STACK_TRACE_ON_EH
@@ -111,10 +102,10 @@ static char log_filename[MAX_FNL] = DEFAULT_GOMA_LOG_FILENAME;
 /****************************************************************************/
 /****************************************************************************/
 void 
-eh(const int error_flag, const char *file,
+goma_eh(const int error_flag, const char *file,
    const int line, const char *message)
 {
-  static char yo[] = "eh";
+  static char yo[] = "goma_eh";
   if (error_flag == -1) { 
      log_msg("GOMA ends with an error condition.");
 #ifdef PRINT_STACK_TRACE_ON_EH
@@ -156,12 +147,11 @@ eh(const int error_flag, const char *file,
 /****************************************************************************/
 
 void 
-wh(const int error_flag, const char * const file, const int line,
-   const char * const message, int * const iw)
+goma_wh(const int error_flag, const char * const file, const int line,
+   const char * const message)
 {
-  if ( error_flag == -1 )
-    {
-      bool print_color = false;
+  if (error_flag == -1) {
+    bool print_color = false;
 #ifndef DISABLE_COLOR_ERROR_PRINT
     if (isatty(fileno(stderr))) {
       print_color = true;
@@ -172,38 +162,9 @@ wh(const int error_flag, const char * const file, const int line,
     } else {
       DPRINTF(stderr, "WARNING:  %s:%d: %s\n", file, line, message);
     }
-      *iw = 1;
-      return;
-    }
-  else
-    {
-      return;
-    }
+  }
 }
-/****************************************************************************/
-/****************************************************************************/
-/****************************************************************************/
 
-void
-aborth(const int error_flag, const char *  const file, const int line,
-       const char * const message)
-
-    /************************************************************************
-     *  Wrapper around the command MPI_Abort: This is used when a
-     *  graceful exit from MPI isn't possible -> for example from the
-     *  input routines.
-     ************************************************************************/
-{
-  fprintf(stderr, "P_%d ABORT:%s:%d: %s\n", ProcID, file, line, message);
-  fflush(stderr);
-#ifdef PARALLEL
-  MPI_Abort(MPI_COMM_WORLD, error_flag);
-#endif
-  exit(error_flag);
-}
-/****************************************************************************/
-/****************************************************************************/
-/****************************************************************************/
 /* save_place() -- record the current filename, linenumber, routinename
  *
  * Notes: This saves local information about where a problem is occurring
@@ -217,8 +178,7 @@ aborth(const int error_flag, const char *  const file, const int line,
  *
  * Revised:
  */
-
-void 
+void
 save_place(const int severity,
 	   const char * const routine_name, 
            const char * const file_name, 

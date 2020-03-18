@@ -8498,7 +8498,6 @@ rd_eq_specs(FILE *ifp,
 	    " either -DMAX_CONC option in Goma.mk or change it in rf_fem_const.h.",
 	    pd_ptr->Num_Species, MAX_CONC, pd_ptr->Num_Species);
     EH(-1, err_msg);
-    ABORTH(-1, "IMMEDIATE PARALLEL EXIT - can't recover gracefully");
   }
 
   /*
@@ -12528,7 +12527,6 @@ translate_command_line( int argc,
 	    sprintf(err_msg, "ERROR EXIT: unknown dash option: %s\n",
 		    argv[istr]);
 	    EH(-1, err_msg);
-	    ABORTH(-1, "IMMEDIATE PARALLEL EXIT - can't recover gracefully");
 	  }
 	} /* end of if argv starts with '-' */
 /* 

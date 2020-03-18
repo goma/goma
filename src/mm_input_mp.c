@@ -11675,7 +11675,6 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	       "%d species active!", NO_SPECIES, pd_glob[mn]->MaterialName, 
 	       pd_ptr->Num_Species_Eqn);
        EH(-1, Err_Msg);
-       ABORTH(-1, "IMMEDIATE PARALLEL EXIT - can't recover gracefully");
      }
 
      /*
