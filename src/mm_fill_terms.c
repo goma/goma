@@ -2546,10 +2546,6 @@ assemble_momentum(dbl time,       /* current time */
   MOMENTUM_SOURCE_DEPENDENCE_STRUCT df_struct;  /* Body force dependence */
   MOMENTUM_SOURCE_DEPENDENCE_STRUCT *df = &df_struct;
 
-  dbl pspg[DIM];
-  PSPG_DEPENDENCE_STRUCT d_pspg_struct;
-  PSPG_DEPENDENCE_STRUCT *d_pspg = &d_pspg_struct;
-
   dbl det_J;                            /* determinant of element Jacobian */
 
   dbl d_det_J_dmesh_bj;			/* for specific (b,j) mesh dof */
@@ -2717,24 +2713,10 @@ assemble_momentum(dbl time,       /* current time */
   /*** Density ***/
   rho = density(d_rho, time);
 
-  if (PSPG && upd->PSPG_advection_correction) {
-      calc_pspg( pspg, d_pspg,
-                 time, tt, dt,
-                 pg_data);
-  }
-
   if (supg!=0.)
     {
-    double gamma[DIM][DIM];
-      for ( a=0; a<VIM; a++)
-      {
-        for ( b=0; b<VIM; b++)
-        {
-          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
-        }
-      }
-      double rho = density(NULL, time);
-      double mu = viscosity(gn, gamma, NULL );
+      double rho = pg_data->rho_avg;
+      double mu = pg_data->mu_avg;
       double hh_siz = 0.;
       for ( p=0; p<dim; p++)
         {
@@ -2751,100 +2733,49 @@ assemble_momentum(dbl time,       /* current time */
         }
 
       // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
-      double G[DIM][DIM];
-      get_metric_tensor(bf[pd->ShapeVar]->B, pd->Num_Dim, ei[pg->imtrx]->ielem_type, G);
-
-      double tau_time = 0;
-      // time term
-      if (pd->TimeIntegration != STEADY) {
-        tau_time += 4 / (dt * dt);
-      }
-
-      // advection
-      double tau_adv = 0;
-      for (int i = 0; i < dim; i++) {
-        for (int j = 0; j < dim; j++) {
-          tau_adv += fv->v[i] * G[i][j] * fv->v[j];
-        }
-      }
-
-      // diffusion
-      double tau_diff = 0;
-      double coeff = 12*(mu*mu)/(rho*rho);
-      for (int i = 0; i < dim; i++) {
-        for (int j = 0; j < dim; j++) {
-          tau_diff += coeff * G[i][j] * G[i][j];
-        }
-      }
-
-
-      tau_supg = rho / sqrt(tau_time + tau_adv + tau_diff);
-
-      // d/dx 1/sqrt(f(x)) => - f'(x) / (2 * f(x)^(3/2))
-      if ( d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1] )
-      {
-        for ( b=0; b<dim; b++)
+      double tau_supg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
+      if (  pd->TimeIntegration != STEADY)
         {
-          var = VELOCITY1+b;
-          if ( pd->v[pg->imtrx][var] )
-          {
-            for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-            {
-               double tau_adv_dv = 0;
-               for (int a = 0; a < dim; a++) {
-                 tau_adv_dv += bf[var]->phi[j] * G[b][a] * fv->v[a];
-                 tau_adv_dv += bf[var]->phi[j] * G[a][b] * fv->v[a];
-               }
-
-              d_tau_supg_dv[b][j] = -rho * tau_supg*tau_supg*tau_supg*tau_adv_dv;
-            }
-          }
+          tau_supg1 += 4.0/(dt*dt);
         }
-      }
-  }
-////      double tau_supg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
-////      if (  pd->TimeIntegration != STEADY)
-////        {
-////          tau_supg1 += 4.0/(dt*dt);
-////        }
-////      tau_supg = PS_scaling/sqrt(tau_supg1);
+      tau_supg = PS_scaling/sqrt(tau_supg1);
 
-////      // tau_pspg derivatives wrt v from vv_speed
-////      if (pd->v[pg->imtrx][VELOCITY1] )
-////        {
-////          for ( b=0; b<dim; b++)
-////            {
-////              var = VELOCITY1+b;
-////              if ( pd->v[pg->imtrx][var] )
-////                {
-////                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-////                    {
-////                      d_tau_supg_dv[b][j] = -tau_supg/tau_supg1;
-////                      d_tau_supg_dv[b][j] *= 1/hh_siz * pg_data->v_avg[b]*pg_data->dv_dnode[b][j];
-////                    }
-////                }
-////            }
-////        }
+      // tau_pspg derivatives wrt v from vv_speed
+      if (pd->v[pg->imtrx][VELOCITY1] )
+        {
+          for ( b=0; b<dim; b++)
+            {
+              var = VELOCITY1+b;
+              if ( pd->v[pg->imtrx][var] )
+                {
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                    {
+                      d_tau_supg_dv[b][j] = -tau_supg/tau_supg1;
+                      d_tau_supg_dv[b][j] *= 1/hh_siz * pg_data->v_avg[b]*pg_data->dv_dnode[b][j];
+                    }
+                }
+            }
+        }
 
-//      // tau_pspg derivatives wrt mesh from hh_siz
-//      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
-//        {
-//          for ( b=0; b<dim; b++)
-//            {
-//              var = MESH_DISPLACEMENT1+b;
-//              if ( pd->v[pg->imtrx][var] )
-//                {
-//                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-//                    {
-//                      d_tau_supg_dX[b][j] = tau_supg/tau_supg1;
-//                      d_tau_supg_dX[b][j] *= (vv_speed + 18.0*(mu/rho)/hh_siz) / (hh_siz*hh_siz);
-//                      d_tau_supg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
+      // tau_pspg derivatives wrt mesh from hh_siz
+      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
+        {
+          for ( b=0; b<dim; b++)
+            {
+              var = MESH_DISPLACEMENT1+b;
+              if ( pd->v[pg->imtrx][var] )
+                {
+                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+                    {
+                      d_tau_supg_dX[b][j] = tau_supg/tau_supg1;
+                      d_tau_supg_dX[b][j] *= (vv_speed + 18.0*(mu/rho)/hh_siz) / (hh_siz*hh_siz);
+                      d_tau_supg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
 
-//		    }
-//		}
-//	    }
-//	}
-//    }
+		    }
+		}
+	    }
+	}
+    }
   /* end Petrov-Galerkin addition */
 
   if( pd->gv[POLYMER_STRESS11] )
@@ -2984,6 +2915,7 @@ assemble_momentum(dbl time,       /* current time */
     v_dot = fv_dot->v;
   else
     v_dot = zero;
+
 
   /* for porous media stuff */
 #ifdef DO_NO_UNROLL
@@ -3135,14 +3067,7 @@ assemble_momentum(dbl time,       /* current time */
 		  advection += (v[0] - x_dot[0]) * grad_v[0][a];
 		  advection += (v[1] - x_dot[1]) * grad_v[1][a];
 		  if (wim == 3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
-
 #endif
-
-                  if (PSPG && upd->PSPG_advection_correction) {
-                    advection -= pspg[0] * grad_v[0][a];
-                    advection -= pspg[1] * grad_v[1][a];
-                    if (wim == 3) advection -= pspg[2] * grad_v[2][a];
-                  }
 		  advection *= rho;
 		  advection *= - wt_func*d_area;
 		  advection *= advection_etm;
@@ -3851,14 +3776,6 @@ assemble_momentum(dbl time,       /* current time */
 			      advection_a += (v[1] - x_dot[1]) * bf[var]->grad_phi_e[j][b][1][a];
 			      if(wim==3) advection_a += (v[2] - x_dot[2]) * bf[var]->grad_phi_e[j][b][2][a];
 #endif
-                              if (PSPG && upd->PSPG_advection_correction) {
-                                advection -= d_pspg->v[0][b][j] * grad_v[0][a];
-                                advection -= d_pspg->v[1][b][j] * grad_v[1][a];
-                                if (wim == 3) advection -= d_pspg->v[2][b][j] * grad_v[2][a];
-                                advection_a -=  pspg[0] * bf[var]->grad_phi_e[j][b][0][a];
-                                advection_a -=  pspg[1] * bf[var]->grad_phi_e[j][b][0][a];
-                                if (wim == 3) advection_a -=  pspg[2] * bf[var]->grad_phi_e[j][b][0][a];
-                              }
 
 
 			      advection_a *= rho * -wt_func * d_area;
@@ -3868,11 +3785,6 @@ assemble_momentum(dbl time,       /* current time */
                                   advection_b += (v[0] - x_dot[0]) * grad_v[0][a];
                                   advection_b += (v[1] - x_dot[1]) * grad_v[1][a];
                                   if(wim==3) advection_b += (v[2] - x_dot[2]) * grad_v[2][a];
-                                  if (PSPG && upd->PSPG_advection_correction) {
-                                    advection -= pspg[0] * grad_v[0][a];
-                                    advection -= pspg[1] * grad_v[1][a];
-                                    if (wim == 3) advection -= pspg[2] * grad_v[2][a];
-                                  }
                                   advection_b *= d_wt_func * rho * d_area;
                                 }
 			      advection = advection_a + advection_b;
@@ -5074,7 +4986,7 @@ assemble_continuity(dbl time_value,   /* current time */
   source_etm = pd->etm[pg->imtrx][eqn][(LOG2_SOURCE)];
 
 
-  dbl ls_disable_pspg = 1.0;
+  dbl ls_disable_pspg = 1;
 //  if (ls != NULL && (fabs(fv->F) < ls->Length_Scale)) {
 //    ls_disable_pspg = 0;
 //  }
@@ -33122,24 +33034,6 @@ calc_pspg( dbl pspg[DIM],
   /*** Density ***/
   rho = density(d_rho, time_value);
 
-  for ( a=0; a<VIM; a++) grad_v[a] = fv->grad_v[a];
-
-  /* load up shearrate tensor based on velocity */
-  for ( a=0; a<VIM; a++)
-  {
-    for ( b=0; b<VIM; b++)
-    {
-      gamma[a][b] = grad_v[a][b] + grad_v[b][a];
-    }
-  }
-
-
-  /*
-   * get viscosity for velocity second derivative/diffusion
-   * term in PSPG stuff
-   */
-  mu = viscosity(gn, gamma, d_mu );
-
   if(pspg_global)
   {
 
@@ -33157,59 +33051,6 @@ calc_pspg( dbl pspg[DIM],
     {
       tau_pspg = PS_scaling * h_elem / (2.0 * rho * U_norm);
     }
-  }
-  else if (PSPG == 3) // Shakib
-  {
-    double G[DIM][DIM];
-    get_metric_tensor(bf[pd->ShapeVar]->B, pd->Num_Dim, ei[pg->imtrx]->ielem_type, G);
-
-    double tau_time = 0;
-    // time term
-    if (pd->TimeIntegration != STEADY) {
-      tau_time += 4 * (rho*rho) / (dt * dt);
-    }
-
-    // advection
-    double tau_adv = 0;
-    for (int i = 0; i < dim; i++) {
-        tau_adv += rho * rho * fv->v[i];
-    }
-    tau_adv /= (0.25*0.25);
-
-    // diffusion
-    double tau_diff = 0;
-    double coeff = 12*(mu*mu);
-    for (int i = 0; i < dim; i++) {
-      for (int j = 0; j < dim; j++) {
-        tau_diff += coeff * G[i][j] * G[i][j];
-      }
-    }
-    tau_diff = coeff / (0.25*0.25*0.25*0.25);
-
-   tau_pspg1 = 1 / sqrt(tau_time + tau_adv + tau_diff);
-   tau_pspg = PS_scaling * tau_pspg1;
-
-   // d/dx 1/sqrt(f(x)) => - f'(x) / (2 * f(x)^(3/2))
-   if ( d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1] )
-   {
-     for ( b=0; b<dim; b++)
-     {
-       var = VELOCITY1+b;
-       if ( pd->v[pg->imtrx][var] )
-       {
-         for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-         {
-            double tau_adv_dv = 0;
-            for (int a = 0; a < dim; a++) {
-              tau_adv_dv += rho*rho*bf[var]->phi[j] * G[b][a] * fv->v[a];
-              tau_adv_dv += rho*rho*bf[var]->phi[j] * G[a][b] * fv->v[a];
-            }
-
-           d_tau_pspg_dv[b][j] =  -PS_scaling*tau_pspg1*tau_pspg1*tau_pspg1*tau_adv_dv;
-         }
-       }
-     }
-   }
   }
   else if (pspg_local)
   {
@@ -33229,12 +33070,12 @@ calc_pspg( dbl pspg[DIM],
     }
 
     // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
-    tau_pspg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
+    tau_pspg1 = rho_avg*rho_avg*vv_speed/hh_siz + (9.0*mu_avg*mu_avg)/(hh_siz*hh_siz);
     if (  pd->TimeIntegration != STEADY)
     {
       tau_pspg1 += 4.0/(dt*dt);
     }
-    tau_pspg = PS_scaling/((rho) * sqrt(tau_pspg1));
+    tau_pspg = PS_scaling/sqrt(tau_pspg1);
 
     // tau_pspg derivatives wrt v from vv_speed
     if ( d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1] )
@@ -33247,7 +33088,7 @@ calc_pspg( dbl pspg[DIM],
           for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
           {
             d_tau_pspg_dv[b][j] = -tau_pspg/tau_pspg1;
-                      d_tau_pspg_dv[b][j] *= 1.0/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
+                      d_tau_pspg_dv[b][j] *= rho_avg*rho_avg/hh_siz * v_avg[b]*pg_data->dv_dnode[b][j];
           }
         }
       }
@@ -33272,6 +33113,23 @@ calc_pspg( dbl pspg[DIM],
       }
     }
   }
+
+  for ( a=0; a<VIM; a++) grad_v[a] = fv->grad_v[a];
+
+  /* load up shearrate tensor based on velocity */
+  for ( a=0; a<VIM; a++)
+  {
+    for ( b=0; b<VIM; b++)
+    {
+      gamma[a][b] = grad_v[a][b] + grad_v[b][a];
+    }
+  }
+
+  /*
+   * get viscosity for velocity second derivative/diffusion
+   * term in PSPG stuff
+   */
+  mu = viscosity(gn, gamma, d_mu );
 
 
   /* get variables we will need for momentum residual */
@@ -33324,7 +33182,7 @@ calc_pspg( dbl pspg[DIM],
       || cr->MassFluxModel == HYDRODYNAMIC_QTENSOR)
     particle_stress(tau_p,d_tau_p_dv,d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
 
-  if ( pd->gv[VELOCITY_GRADIENT11] ) //&&  pd->v[pg->imtrx][POLYMER_STRESS11])
+  if ( pd->v[pg->imtrx][VELOCITY_GRADIENT11] &&  pd->v[pg->imtrx][POLYMER_STRESS11])
   {
     for ( p=0; p<wim; p++)
     {

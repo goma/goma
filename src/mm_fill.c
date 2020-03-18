@@ -90,7 +90,6 @@
 #include "sl_util_structs.h"
 #include "stdbool.h"
 #include "wr_side_data.h"
-#include "mm_viscosity.h"
 
 #define GOMA_MM_FILL_C
 
@@ -768,25 +767,25 @@ matrix_fill(
     pg_data.mu_avg = element_viscosity();
     pg_data.rho_avg = density(NULL, time_value);
 
-    double mu = 0;
-    double rho = 0;
-    for (ip = 0; ip < num_local_nodes; ip ++)
-      {
-        find_nodal_stu(ip, ielem_type, &xi[0], &xi[1], &xi[2]);
-        setup_shop_at_point(ei[pg->imtrx]->ielem, xi, exo);
-        double gamma[DIM][DIM];
-        for ( int a=0; a<VIM; a++)
-          {
-            for ( int b=0; b<VIM; b++)
-              {
-                gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
-              }
-          }
-        mu += viscosity(gn, gamma, NULL);
-        rho += density(NULL, time_value);
-      }
-    pg_data.mu_avg = mu / ((double) num_local_nodes);
-    pg_data.rho_avg = rho / ((double) num_local_nodes);
+//    double mu = 0;
+//    double rho = 0;
+//    for (ip = 0; ip < num_local_nodes; ip ++)
+//      {
+//        find_nodal_stu(ip, ielem_type, &xi[0], &xi[1], &xi[2]);
+//        setup_shop_at_point(ei[pg->imtrx]->ielem, xi, exo);
+//        double gamma[DIM][DIM];
+//        for ( int a=0; a<VIM; a++)
+//          {
+//            for ( int b=0; b<VIM; b++)
+//              {
+//                gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+//              }
+//          }
+//        mu += viscosity(gn, gamma, NULL);
+//        rho += density(NULL, time_value);
+//      }
+//    pg_data.mu_avg = mu / ((double) num_local_nodes);
+//    pg_data.rho_avg = rho / ((double) num_local_nodes);
 
     if(pspg_local)
       {
