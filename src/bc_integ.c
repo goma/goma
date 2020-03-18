@@ -2682,6 +2682,9 @@ int equation_index_auto_rotate(const ELEM_SIDE_BC_STRUCT *elem_side_bc,
     return -1;
   }
   int node = ei[pg->imtrx]->gnn_list[eqn][ldof_eqn];
+  if (node != I) {
+    EH(-1, "issue with rotation node and ei");
+  }
   int n_index = -1;
   for (int i = 0; i < goma_automatic_rotations.rotation_nodes[node].n_normals; i++) {
     if (goma_automatic_rotations.rotation_nodes[node].element[i] == ei[pg->imtrx]->ielem &&

@@ -72,7 +72,6 @@ else()
   message(STATUS "\tEnabling UMFPACK in Goma")
   list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_UMFPACK)
 endif()
-
 # stratimikos and teko
 LIST(FIND Trilinos_PACKAGE_LIST Stratimikos stratimikos_package_index)
 if(${stratimikos_package_index} GREATER_EQUAL 0)
@@ -522,12 +521,43 @@ foreach(d ${GOMA_COMPILE_DEFINITIONS})
 endforeach()
 message("\n")
 
+set(GOMA_TPL_INCLUDES
+  ${Sparse_INCLUDES}
+  ${Trilinos_INCLUDE_DIRS}
+  ${Trilinos_TPL_INCLUDE_DIRS}
+  ${SEACASExodus_INCLUDE_DIRS}
+  ${SEACASChaco_INCLUDE_DIRS}
+  ${SEACASExodus_TPL_INCLUDE_DIRS}
+  ${SEACASChaco_TPL_INCLUDE_DIRS}
+)
+
+set(GOMA_TPL_LIBRARY_DIRS
+  ${Trilinos_LIBRARY_DIRS}
+  ${Trilinos_TPL_LIBRARY_DIRS}
+  ${SEACASExodus_LIBRARY_DIRS}
+  ${SEACASExodus_TPL_LIBRARY_DIRS}
+  ${SEACASChaco_LIBRARY_DIRS}
+  ${SEACASChaco_TPL_LIBRARY_DIRS}
+)
+
+set(GOMA_TPL_LIBRARIES
+  ${GOMA_TPL_LIBRARIES}
+  ${Trilinos_LIBRARIES}
+  ${Trilinos_TPL_LIBRARIES}
+  ${Trilinos_EXTRA_LD_FLAGS}
+  ${SEACASExodus_LIBRARIES}
+  ${SEACASExodus_TPL_LIBRARIES}
+  ${SEACASChaco_LIBRARIES}
+  ${SEACASChaco_TPL_LIBRARIES}
+)
+
 add_library(gds ${GDS_SOURCES} ${GDS_INCLUDES})
 target_include_directories(gds PUBLIC include)
 
 add_executable(${PROJECT_NAME} ${GOMA_INCLUDES} ${GOMA_SOURCES})
-target_include_directories(${PROJECT_NAME} PRIVATE include ${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS} ${Sparse_INCLUDES})
-target_link_libraries(${PROJECT_NAME} ${Trilinos_LIBRARIES} ${Trilinos_TPL_LIBRARIES} ${Trilinos_EXTRA_LD_FLAGS} ${GOMA_TPL_LIBRARIES} gds)
+target_include_directories(${PROJECT_NAME} PRIVATE include ${GOMA_TPL_INCLUDES})
+target_link_directories(${PROJECT_NAME} PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
+target_link_libraries(${PROJECT_NAME} ${GOMA_TPL_LIBRARIES} gds)
 
 option(ENABLE_TESTING "ENABLE_TESTING" OFF)
 if(ENABLE_TESTING)
