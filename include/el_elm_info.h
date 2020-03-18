@@ -14,6 +14,9 @@
 #define GOMA_EL_ELM_INFO_H
 
 
+#include "dp_vif.h"
+#include "el_elm.h"
+#include "std.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

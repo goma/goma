@@ -32,11 +32,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "goma.h"
-
-#include "brkfix/brkfix.h"
 #include "mm_eh.h"
 #include "brkfix/wr_graph_file.h"
+#include "std.h"
 
 void 
 wr_graph_file(char *out_graph_file_name,	/* gfn - graph file name */

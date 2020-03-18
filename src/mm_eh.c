@@ -22,15 +22,15 @@ static char rcsid[] = "$Id: mm_eh.c,v 5.3 2008-01-11 00:47:14 hkmoffa Exp $";
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+#include <stdarg.h>
 
 #include "std.h"
-#include "rf_fem_const.h"
 #include "rf_mp.h"
+#include "mpi.h"
+#include "rf_io_const.h"
 
 #define GOMA_MM_EH_C
 #include "mm_eh.h"
-#include "goma.h"
 
 #ifdef PRINT_STACK_TRACE_ON_EH
 #include <execinfo.h>

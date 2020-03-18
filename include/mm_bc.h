@@ -13,6 +13,15 @@
 #ifndef GOMA_MM_BC_H
 #define GOMA_MM_BC_H
 
+#include "dpi.h"
+#include "exo_struct.h"
+#include "mm_augc_util.h"
+#include "rf_vars_const.h"
+
+struct BC_descriptions;
+struct Boundary_Condition;
+struct elem_edge_bc_struct;
+struct elem_side_bc_struct;
 #ifdef EXTERN
 #undef EXTERN
 #endif

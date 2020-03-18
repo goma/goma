@@ -16,42 +16,22 @@
 
 /* Standard include files */
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
-#include <math.h>
 
 /* GOMA include files */
 
 #include "std.h"
 #include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
-#include "el_elm.h"
-#include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "mm_eh.h"
+#include "mm_fill_ls.h"
+#include "rf_allo.h"
 
 #define GOMA_MM_DIL_VISCOSITY_C
-/* Contains mm_dil_viscosity.h */
-#include "goma.h"
 #include "mm_dil_viscosity.h"
 
 static void transferMultipleOfDerivatives(const dbl ratioVisc,

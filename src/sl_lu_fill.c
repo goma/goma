@@ -15,19 +15,11 @@
  * $Id: sl_lu_fill.c,v 5.1 2007-09-18 18:53:48 prschun Exp $
  */
 
-#include <stdio.h>
 #include <stdlib.h>
 
 #include "spMatrix.h"
-#include "spConfig.h"
-
 #include "std.h"
-#include "exo_struct.h"
-#include "dpi.h"
-#include "dp_types.h"
-#include "sl_util_structs.h"
 #include "sl_util.h"
-#include "mm_eh.h"
 
 /*
  * HKM -> I wonder if first_time_fill needs to have global scope?

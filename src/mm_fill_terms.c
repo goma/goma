@@ -27,41 +27,57 @@
 
 /* GOMA include files */
 #define GOMA_MM_FILL_TERMS_C
+#include "mm_fill_terms.h"
+
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
 #include "rf_solver.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_eh.h"
-#include "mm_std_models.h"
-#include "mm_std_models_shell.h"
 #include "mm_fill_population.h"
 #include "mm_fill_common.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
-#include "mm_fill_terms.h"
-
-
-#include "goma.h"
 #include "mm_species.h"
 #include "rf_allo.h"
-#include "mm_fill_terms.h"
 #include "mm_fill_util.h"
+#include "ac_particles.h"
+#include "az_aztec.h"
+#include "bc_colloc.h"
+#include "bc_contact.h"
+#include "el_elm_info.h"
+#include "mm_dil_viscosity.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_shell.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_stress.h"
+#include "mm_flux.h"
+#include "mm_ns_bc.h"
+#include "mm_post_def.h"
+#include "mm_qtensor_model.h"
+#include "mm_shell_util.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "rf_bc.h"
+#include "sl_util.h"
+#include "sl_util_structs.h"
+#include "user_mp.h"
+#include "user_mp_gen.h"
+#include "exo_struct.h"
+#include "stdbool.h"
 
 // direct call to a fortran LAPACK eigenvalue routine
 extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
@@ -10222,18 +10238,6 @@ load_fv_grads(void)
 			      - fv->n[p] * fv->n[q] * fv->grad_n[q][p]);
 	    }
 	}
-#ifdef DEBUG_HKM
-      /*
-	for (p = 0; p < VIM; p++)
-	{
-	for (q = 0; q < VIM; q++)
-	{
-	printf("load_fv_grads: fv->grad_n[%d][%d] = %g\n", p, q, fv->grad_n[p][q]);
-	}
-	}
-	printf("load_fv_grads: fv->div_s_n = %g\n", fv->div_s_n);
-      */
-#endif 
     }
 
   // Calculation of the surface curvature dyadic

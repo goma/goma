@@ -18,31 +18,20 @@
 /* Standard include files */
  
 #include <stdio.h>
-#include <string.h>
-#include <math.h>
  
 /* GOMA include files */
  
-#include "std.h"
-
 #include "el_elm.h"
-
 #include "rf_allo.h"
-
 #include "rf_bc_const.h"
 #include "rf_bc.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-#include "mm_as_const.h"
-#include "rf_vars_const.h"
-#include "mm_mp_const.h"
-#include "mm_as_structs.h"
 #include "mm_qp_storage.h"
-#include "mm_fill_jac.h"
 #include "mm_interface.h"
 #include "rd_mesh.h"
 #include "el_elm_info.h"
-#include "mm_eh.h"
+#include "exo_struct.h"
 
 /******************************************************************************/
 /******************************************************************************/

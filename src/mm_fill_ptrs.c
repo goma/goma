@@ -20,29 +20,36 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 /* GOMA include files */
+
+#include "mm_fill_ptrs.h"
 
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_stress.h"
+#include "mm_mp_const.h"
+#include "mm_shell_util.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "rf_node_const.h"
+#include "sl_util.h"
+#include "sl_util_structs.h"
+#include "stdbool.h"
 
 extern	dbl *p0;		/* Defined in mm_as_alloc.c */
 
@@ -50,7 +57,6 @@ extern	dbl *p0;		/* Defined in mm_as_alloc.c */
 #include "mm_eh.h"
 
 #define GOMA_MM_FILL_PTRS_C
-#include "goma.h"
 
 /***********************************************************************/
 #ifdef DEBUG_NOT
@@ -219,12 +225,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
       mode = 1;
       ei_ptr = ei_ptr_fill;
     }
-
-#ifdef DEBUG_HKM
-  // if (elem == 1032) {
-    // printf("we are here\n");
-  // }
-#endif
 
 
   /*
@@ -1014,12 +1014,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
               ImAParent = 1;
             }
         }
-  
-#ifdef DEBUG_HKM
-      // if (elem == 70) {
-      //printf("we are here\n");
-      //}
-#endif
       /*
        * Special section for children elements. i.e., those elements
        * such as shells that have parents.
@@ -1035,11 +1029,6 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
               n_eb_Parent = find_elemblock_index(elem_Parent, exo);
               /* Get the material number of the parent element */
               n_mn_Parent = Matilda[n_eb_Parent];
-#ifdef DEBUG_HKM
-              //   if (elem == 1032) {
-              //	printf("we are here\n");
-              //}
-#endif
               PROBLEM_DESCRIPTION_STRUCT * pd_Parent = pd_glob[n_mn_Parent];
 	 
               /* Get the element type of the parent */

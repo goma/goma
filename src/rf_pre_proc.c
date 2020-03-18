@@ -15,17 +15,19 @@
  *$Id: rf_pre_proc.c,v 5.1 2007-09-18 18:53:47 prschun Exp $
  */
 
+#include "el_elm_info.h"
+#include "el_geom.h"
+#include "exo_struct.h"
+#include "mm_bc.h"
+#include "rf_bc.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_pre_proc.h"
 #ifdef USE_RCSID
 static char rcsid[] = "$Id: rf_pre_proc.c,v 5.1 2007-09-18 18:53:47 prschun Exp $";
 #endif
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-
 #define GOMA_RF_PRE_PROC_C
-
-#include "goma.h"
 
 static void build_elem_type_list
 (Exo_DB *);		/* exo */

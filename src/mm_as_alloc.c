@@ -16,32 +16,28 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "std.h"
 #include "el_elm.h"		/* Has shape, element type stuff for bf_init */
-
 #include "rf_allo.h"
-
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
 #include "rf_io.h"
-#include "rf_mp.h"
-
-
 #include "el_geom.h"		/* Has info I'd like to replicate into the */
 				/* Problem_Description structure... */
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
-
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
-#include "mm_as.h" 
-
+#include "mm_as.h"
 #include "mm_mp_structs.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "mm_as_alloc.h"
+#include "rd_mesh.h"
 
 #define GOMA_MM_AS_ALLOC_C
-#include "goma.h"
 
 static void init_Viscoelastic_Nonmodal
 (struct Viscoelastic_Nonmodal *);
@@ -1149,7 +1145,7 @@ assembly_alloc(Exo_DB *exo)
     esp->sh_K = (dbl **) alloc_ptr_1(MDE);
   }
 
-  if (Num_Var_In_Type[SHELL_CURVATURE2]) {
+  if (Num_Var_In_Type[imtrx][SHELL_CURVATURE2]) {
     esp->sh_K2 = (dbl **) alloc_ptr_1(MDE);
   }
 
@@ -1293,27 +1289,27 @@ assembly_alloc(Exo_DB *exo)
     esp->poynt = (dbl ***) alloc_ptr_2(vim, MDE);
   }
   /* EM_wave components  */
-  if (Num_Var_In_Type[EM_E1_REAL] || Num_Var_In_Type[EM_E2_REAL] || Num_Var_In_Type[EM_E3_REAL]) {
+  if (Num_Var_In_Type[imtrx][EM_E1_REAL] || Num_Var_In_Type[imtrx][EM_E2_REAL] || Num_Var_In_Type[imtrx][EM_E3_REAL]) {
     esp->em_er = (dbl ***) alloc_ptr_2(vim, MDE);
   }
-  if (Num_Var_In_Type[EM_E1_IMAG] || Num_Var_In_Type[EM_E2_IMAG] || Num_Var_In_Type[EM_E3_IMAG]) {
+  if (Num_Var_In_Type[imtrx][EM_E1_IMAG] || Num_Var_In_Type[imtrx][EM_E2_IMAG] || Num_Var_In_Type[imtrx][EM_E3_IMAG]) {
     esp->em_ei = (dbl ***) alloc_ptr_2(vim, MDE);
   }
-  if (Num_Var_In_Type[EM_H1_REAL] || Num_Var_In_Type[EM_H2_REAL] || Num_Var_In_Type[EM_H3_REAL]) {
+  if (Num_Var_In_Type[imtrx][EM_H1_REAL] || Num_Var_In_Type[imtrx][EM_H2_REAL] || Num_Var_In_Type[imtrx][EM_H3_REAL]) {
     esp->em_hr = (dbl ***) alloc_ptr_2(vim, MDE);
   }
-  if (Num_Var_In_Type[EM_H1_IMAG] || Num_Var_In_Type[EM_H2_IMAG] || Num_Var_In_Type[EM_H3_IMAG]) {
+  if (Num_Var_In_Type[imtrx][EM_H1_IMAG] || Num_Var_In_Type[imtrx][EM_H2_IMAG] || Num_Var_In_Type[imtrx][EM_H3_IMAG]) {
     esp->em_hi = (dbl ***) alloc_ptr_2(vim, MDE);
   }
 
-  if(Num_Var_In_Type[TFMP_PRES]) {
+  if(Num_Var_In_Type[imtrx][TFMP_PRES]) {
     esp->tfmp_pres = (dbl **) alloc_ptr_1(MDE);
   }
-  if(Num_Var_In_Type[TFMP_SAT]) {
+  if(Num_Var_In_Type[imtrx][TFMP_SAT]) {
     esp->tfmp_sat = (dbl **) alloc_ptr_1(MDE);
   }
 
-  if (Num_Var_In_Type[RESTIME] ) {
+  if (Num_Var_In_Type[imtrx][RESTIME] ) {
     esp->restime = (dbl **) alloc_ptr_1(MDE);
   }  
 

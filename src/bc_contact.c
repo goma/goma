@@ -31,37 +31,45 @@
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
- 
 #include "rf_masks.h"
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "mm_elem_block_structs.h"
 #include "rf_vars_const.h"
- 
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
 #include "mm_mp_const.h"
-
-#include "mm_fill_jac.h"
 #include "mm_fill_common.h"
-#include "mm_interface.h"
-
- 
 #include "mm_eh.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "bc_colloc.h"
+#include "bc_contact.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "mm_as_alloc.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_porous.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_species.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_flux.h"
+#include "mm_ns_bc.h"
+#include "mm_post_proc.h"
+#include "mm_unknown_map.h"
+#include "rf_bc.h"
+#include "rf_node_const.h"
+#include "rf_solver.h"
+#include "sl_util.h"
 
 #define GOMA_BC_CONTACT_C
-#include "goma.h"
 
 
 int

@@ -31,33 +31,27 @@
 
 /* GOMA include files */
 
+#include "mm_fill_pthings.h"
+
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
-#include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
 #include "rf_solver.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_eh.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_terms.h"
+#include "mm_viscosity.h"
+#include "mm_qtensor_model.h"
 
 #define GOMA_MM_FILL_PTHINGS_C
-#include "goma.h"
 
 
 /*

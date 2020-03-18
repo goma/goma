@@ -24,22 +24,15 @@
  ******************************************************************************/
 
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 
 #include "std.h"
 #include "rf_fem_const.h"
-#include "rf_fem.h"
 #include "mm_eh.h"
 #include "rf_vars_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
-#include "mm_as.h"
-
 #include "mm_mp_structs.h"
-
 #include "rf_allo.h"
 
 /**************************************************************************/

@@ -19,13 +19,15 @@
 static char rcsid[] = "$Id: sl_lu.c,v 5.2 2007-12-07 17:14:37 hkmoffa Exp $";
 #endif
 
-#include <stdio.h>
 #include <stdlib.h>
+
 #include "spMatrix.h"
-#include "spConfig.h"
+#include "mm_as.h"
+#include "mm_as_structs.h"
+#include "sl_lu.h"
+#include "std.h"
 
 #define GOMA_SL_LU_C
-#include "goma.h"
 
 /*
  * Uncomment the following line to write out the RHS, a, and ija vectors

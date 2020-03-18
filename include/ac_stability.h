@@ -19,15 +19,17 @@
 
 #ifdef GOMA_AC_STABILITY_C
 #define EXTERN /* do nothing */
+#else
+#define EXTERN extern
 #endif
 
 #include "std.h"
 #include "exo_struct.h"
 #include "dpi.h"
+#include "ac_update_parameter.h"
 
-#ifndef GOMA_AC_STABILITY_C
-#define EXTERN extern
-#endif
+struct Aztec_Linear_Solver_System;
+struct Results_Description;
 
 /* Settings for Linear_Stability flag */
 #define LSA_NONE          0

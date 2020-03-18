@@ -41,8 +41,6 @@
 #include <stdlib.h>
 #endif
 
-#include <string.h>
-
 #ifndef lint
 #ifdef USE_RCSID
 static char rcsid[] = "$Id: wr_dpi.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
@@ -54,6 +52,7 @@ static char rcsid[] = "$Id: wr_dpi.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
  */
 
 #include "netcdf.h"
+#include "wr_dpi.h"
 
 /*
  * Sigh, if you need to run netCDF 2 then here's some definitions to tide
@@ -83,12 +82,8 @@ static char rcsid[] = "$Id: wr_dpi.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
  */
 
 #include "std.h"
-#include "rf_allo.h"
 #include "mm_eh.h"
-#include "exo_struct.h"
 #include "dpi.h"
-
-#include "goma.h"
 
 /*
  * Prototypes of functions defined here, but needed elsewhere.

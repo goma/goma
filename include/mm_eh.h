@@ -37,6 +37,8 @@ typedef int goma_error;
 
 #include <stdarg.h>		/* for var args... */
 
+#include "std.h"
+
 /* Needed to use mm_eh without std.h */
 #ifndef MAX_CHAR_ERR_MSG
   #define MAX_CHAR_ERR_MSG 1024

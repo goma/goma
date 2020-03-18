@@ -26,9 +26,10 @@ static char rcsid[] = "$Id: sl_aux.c,v 5.1 2007-09-18 18:53:47 prschun Exp $";
 #include <stdio.h>
 #include <math.h>
 
-#define TINY 1.0e-20
+#include "rf_allo.h"
+#include "sl_aux.h"
 
-#include "goma.h"
+#define TINY 1.0e-20
 
 /* The lu_decomp_backsub_driver function manages the access to the 
    lu_decomp and lu_backsub routines for the solution of a system of linear 

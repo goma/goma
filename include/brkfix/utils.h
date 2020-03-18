@@ -16,6 +16,7 @@
 #ifndef GOMA_UTILS_H
 #define GOMA_UTILS_H
 
+#include "brkfix/exo_utils.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

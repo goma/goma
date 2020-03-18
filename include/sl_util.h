@@ -30,6 +30,14 @@
 #ifndef GOMA_SL_UTIL_H
 #define GOMA_SL_UTIL_H
 
+#include <mpi.h>
+
+#include "dp_types.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "std.h"
+
+struct Aztec_Linear_Solver_System;
 /*
  *  Definitions of Constants for use in mm_fill_fill routines
  */

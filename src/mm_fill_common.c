@@ -18,43 +18,19 @@
 static char rcsid[] = "$Id: mm_fill_common.c,v 5.2 2008-03-22 00:55:49 hkmoffa Exp $";
 #endif
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <strings.h>
-#include <string.h>
 #include <math.h>
 
 /* GOMA include files */
 
 #include "std.h"
 #include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
-#include "el_elm.h"
-#include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "mm_eh.h"
-
-#include "mm_fill_species.h"
-#include "mm_std_models.h"
 #include "mm_fill_common.h"
-
-#include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************
 *

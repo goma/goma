@@ -26,35 +26,12 @@ static char rcsid[] =
 "$Id: user_print.c,v 5.1 2007-09-18 18:53:49 prschun Exp $";
 #endif
 
-#include <stdio.h>
-#include <math.h>
 
-#include "std.h"
 
-#include "rf_allo.h"
-#include "rf_fem_const.h"
-#include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
-#include "rf_solver.h"
 
-#include "rf_masks.h"
-#include "el_geom.h"
 
-#include "rf_bc_const.h"
-#include "rf_bc.h"
-#include "rf_vars_const.h"
-#include "mm_as_const.h"
-#include "mm_as_structs.h"
 
-#include "mm_mp_structs.h"
 
-#include "mm_post_def.h"
-#include "mm_post_proc.h"
-#include "mm_as.h"
-#include "mm_eh.h"
 
 #ifdef DEBUG_HKM
 #ifdef PARALLEL
@@ -63,6 +40,7 @@ static char rcsid[] =
 #endif
 
 #include "usr_print.h"
+
 /*
 static int	first_call=TRUE;
 static char	sf[] = "%.9e ";	* standard output format for plotting data *

@@ -30,31 +30,23 @@ static char rcsid[] = "$Id: dp_utils.c,v 5.1 2007-09-18 18:53:41 prschun Exp $";
 #include <string.h>
 
 #include "std.h"
-#include "el_elm.h"
-#include "rf_vars_const.h"
-#include "mm_as_const.h"
-#include "mm_as_structs.h"
-#include "mm_as.h"
-#include "rf_masks.h"
-#include "rf_bc_const.h"
-
 #include "mm_eh.h"
-
-#include "exo_struct.h"
-#include "dpi.h"
 #include "dp_types.h"
-
 #include "rf_mp.h"
 #include "rf_io_const.h"
+#include "dp_utils.h"
+#include "mpi.h"
+#include "rf_allo.h"
+#include "rf_fem_const.h"
 
 #define GOMA_DP_UTILS_C
-#include "goma.h"
 
 static char mpistringbuffer[80];
 
 static Spfrtn sr;
 
 #include "az_aztec.h"
+
 int Proc_Config[AZ_PROC_SIZE];
 
 /************************************************************************/

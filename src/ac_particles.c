@@ -24,10 +24,38 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdarg.h>
+
+#include "ac_particles.h"
+#include "dpi.h"
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "el_geom.h"
+#include "exo_struct.h"
+#include "md_timer.h"
+#include "mm_as.h"
+#include "mm_as_structs.h"
+#include "mm_eh.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_qtensor_model.h"
+#include "mpi.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_mp.h"
+#include "sl_auxutil.h"
+#include "sl_util.h"
+#include "std.h"
 
 /* GOMA include files */
 #define GOMA_AC_PARTICLES_C
-#include "goma.h"
 
 
 /* Global variables extern declared in ac_particles.h. */

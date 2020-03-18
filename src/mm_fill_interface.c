@@ -14,25 +14,18 @@
  *$Id: mm_fill_interface.c,v 5.3 2010-03-18 23:47:45 hkmoffa Exp $
  */
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
 #include "std.h"
 #include "rf_vars_const.h"
-
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-
 #include "mm_species.h"
-#include "mm_std_models.h"
-
 #include "rf_bc_const.h"
 #include "mm_fill_jac.h"
 #include "mm_interface.h"
@@ -40,6 +33,10 @@
 #include "mm_ns_bc.h"
 #include "mm_eh.h"
 #include "mm_qp_storage.h"
+#include "el_elm.h"
+#include "mm_elem_block_structs.h"
+#include "mm_mp_const.h"
+#include "mm_qtensor_model.h"
 
 #define RGAS_CONST  8.314510E7  /* Gas Contant in g cm^2/(sec^2 g-mole K) */
 #define RGAS_CALS   1.987093    /* Gas Constant in cal g-mole-1 K-1 */

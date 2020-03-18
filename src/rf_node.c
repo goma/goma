@@ -19,25 +19,21 @@
 #include <stdlib.h>
 
 #include "std.h"
-
 #include "rf_fem.h"
 #include "el_elm.h"
 #include "el_geom.h"
-
 #include "exo_struct.h"
 #include "rf_vars_const.h"
-
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
-
-#include "rf_io_const.h"
-
-#include "rf_vars_const.h"
 #include "rf_node_const.h"
 #include "rf_mp.h"
 #include "rf_allo.h"
-
-#include "goma.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "mm_as.h"
+#include "mm_eh.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
 
 /****************************************************************************/
 /****************************************************************************/

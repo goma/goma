@@ -17,16 +17,14 @@
 
 //#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <strings.h>
+#include <math.h>
+#include <stdio.h>
 
 #include "std.h"
 #include "rf_fem.h"
-#include "el_elm.h"
-#include "el_elm_info.h"
 #include "exo_struct.h"
 #include "mm_elem_block_structs.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_mp_structs.h"
@@ -37,8 +35,11 @@
 #include "rf_io.h"
 #include "mm_eh.h"
 #include "mm_input.h"
-
-#include <math.h>
+#include "exodusII.h"
+#include "mm_mp_const.h"
+#include "rf_element_storage_struct.h"
+#include "rf_fem_const.h"
+#include "rf_io_const.h"
 
 /************************************************************************/
 /************************************************************************/

@@ -1,11 +1,29 @@
+#include "rotate_util.h"
+
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
-#include "rotate_util.h"
-
-#include "goma.h"
+#include "el_elm_info.h"
+#include "el_geom.h"
+#include "mm_as.h"
+#include "mm_as_alloc.h"
+#include "mm_as_structs.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "rf_bc_const.h"
+#include "rf_fem_const.h"
+#include "std.h"
+#include "stdbool.h"
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "gds/gds_vector.h"
+#include "mm_eh.h"
 
 static const double critical_angle_radians = GOMA_ROTATION_CRITICAL_ANGLE * M_PI / 180;
 

@@ -33,33 +33,22 @@
 #include "rf_allo.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-
 #include "rf_bc_const.h"
 #include "rf_bc.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
 #include "mm_species.h"
-#include "mm_std_models.h"
 #include "mm_fill_population.h"
 #include "mm_eh.h"
-
-#include "mm_fill_jac.h"
-#include "mm_interface.h"
-
 #include "mm_input.h"
 #include "rd_mesh.h"
-
 #include "user_mp.h"
-
-#include "goma.h"
+#include "mm_fill_terms.h"
+#include "rf_solve.h"
+#include "mm_qtensor_model.h"
 
 
 #ifdef USE_CHEMKIN

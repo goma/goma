@@ -18,6 +18,15 @@
 #ifndef GOMA_MM_FILL_AUX_H
 #define GOMA_MM_FILL_AUX_H
 
+#include "dpi.h"
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_fill_util.h"
+#include "std.h"
+
+struct Element_Indices;
+struct Element_Stiffness_Pointers;
+struct Field_Variables;
 #ifdef EXTERN
 #undef EXTERN
 #endif

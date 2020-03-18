@@ -23,15 +23,13 @@
  * #define HARWELL
  */
 
+#include "sl_util.h"
 #ifdef USE_RCSID
 static char rcsid[] = "$Id: sl_ma28.c,v 5.1 2007-09-18 18:53:48 prschun Exp $";
 #endif
 
-#include <stdio.h>
 
-#include "std.h"
 
-#include "goma.h"
 
 #ifdef HARWELL
 static int call = 0;

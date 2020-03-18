@@ -13,6 +13,11 @@
 #ifndef GOMA_MM_FILL_PTRS_H
 #define GOMA_MM_FILL_PTRS_H
 
+#include "exo_struct.h"
+#include "mm_fill_pthings.h"
+#include "std.h"
+
+struct Element_Indices;
 #ifdef EXTERN
 #undef EXTERN
 #endif

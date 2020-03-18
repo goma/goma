@@ -46,31 +46,30 @@ static char rcsid[] =
 
 #include "std.h"
 #include "el_geom.h"
-
 #include "rf_allo.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_io_const.h"
 #include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_bc.h"
 #include "el_elm.h"
- 
-#include "mm_post_def.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_mp_structs.h"
-#include "mm_post_proc.h"
 #include "mm_as.h"
 #include "mm_eh.h"
 #include "mm_mp.h"
-
 #include "exo_struct.h"		/* defn of Exo_DB */
+#include "el_elm_info.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_util.h"
+#include "mm_more_utils.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "rf_bc_const.h"
+#include "rf_util.h"
 
 #define GOMA_MM_MORE_UTILS_C
-#include "goma.h"
 
 /* cnt_nodal_vars -- count total number of unknown nodal point variables
  *

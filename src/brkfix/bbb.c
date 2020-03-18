@@ -34,24 +34,19 @@
 
 #include <stdio.h>
 
-#include <sys/types.h>
-#include <sys/stat.h>
-
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
 
-#include <stdlib.h>
 #include <string.h>
 
-#include "goma.h"
-#include "brkfix/brkfix.h"		/* useful general stuff */
 #include "mm_eh.h"			/* error handling */
 #include "rf_allo.h"		/* multi-dim array allocation */
 #include "exo_struct.h"		/* some definitions for EXODUS II */
 #include "dpi.h"		/* distributed processing information */
-#include "brkfix/nodesc.h"		/* node descriptions */
 #include "brkfix/bbb.h"
+#include "exodusII.h"
+#include "std.h"
 
 static const int sc  = sizeof(char);
 static const int si  = sizeof(int);

@@ -20,10 +20,14 @@
 
 #include <ctype.h>
 #include <stdlib.h> /* WEXITSTATUS */
+#include <math.h>
+
+#include "rf_mp.h"
 
 /* If we're using autoconf, then include the config.h file. */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
+
 
 /*
  * If not, make sure some of these HAVE_* are def'ed for the test suite.
@@ -450,7 +454,7 @@ typedef	double	dbl;
  * A boolean type named bool
  */
 #ifndef __cplusplus
-typedef unsigned int bool;
+#include <stdbool.h>
 #endif
 
 enum datatype 

@@ -15,9 +15,9 @@
  * $Header: /projects/seataf/CVS/ACCESS/analysis/goma/brkfix/emuck.c,v 1.2 2007-04-01 20:23:32 tabaer Exp $
  */
 
-#include <stdio.h>
+#include "brkfix/emuck.h"
 
-#include "goma.h"
+#include <stdio.h>
 
 #include "brkfix/brkfix.h"
 #include "mm_eh.h"
@@ -26,7 +26,7 @@
 #include "exo_conn.h"
 #include "brkfix/utils.h"
 #include "dpi.h"
-#include "brkfix/emuck.h"
+#include "el_elm_info.h"
 
 /* assign_elem_ownership() - assign set proc based on nodal decomp
  *

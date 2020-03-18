@@ -10,6 +10,14 @@
 * This software is distributed under the GNU General Public License.	  *
 \************************************************************************/
 
+#include <stdlib.h>
+#include <string>
+
+#include "Amesos_BaseSolver.h"
+#include "Epetra_ConfigDefs.h"
+#include "Epetra_DataAccess.h"
+#include "Epetra_RowMatrix.h"
+#include "az_aztec.h"
 #ifndef GOMA_SL_AMESOS_INTERFACE_CC
 #define GOMA_SL_AMESOS_INTERFACE_CC
 #endif
@@ -25,32 +33,24 @@
 #define __cplusplus
 #endif
 
-#include "mpi.h"
-#include <stdio.h>
 #include <iostream>
-#include <ctime>
 
+#include "mpi.h"
 #include "sl_amesos_interface.h"
-
-#include "AztecOO.h"
 
 #ifdef EPETRA_MPI
 #include "Epetra_MpiComm.h"
-#include "mpi.h"
 #else 
 #include "Epetra_SerialComm.h"
 #endif
 
 #include "Trilinos_Util.h"
-
 #include "Epetra_Map.h"
-#include "Epetra_MultiVector.h"
 #include "Epetra_Vector.h"
 #include "Epetra_CrsMatrix.h"
 #include "Epetra_LinearProblem.h"
 #include "Amesos.h"
 #include "Amesos_ConfigDefs.h"
-
 #include "sl_util_structs.h"
 
 static void GomaMsr2EpetraCsr ( struct Aztec_Linear_Solver_System *,
@@ -367,6 +367,7 @@ void * construct_Epetra_CrsMatrix(  struct Aztec_Linear_Solver_System *ams )
 #include <stdio.h>
 #include <iostream.h>
 #include <string.h>
+
 #include "sl_util_structs.h"
 #include "sl_amesos_interface.h"
 

@@ -17,6 +17,11 @@
 #ifndef GOMA_MM_FILL_POTENTIAL_H
 #define GOMA_MM_FILL_POTENTIAL_H
 
+#include "el_elm.h"
+#include "mm_fill_porous.h"
+#include "rf_fem_const.h"
+
+struct Boundary_Condition;
 #ifdef EXTERN
 #undef EXTERN
 #endif

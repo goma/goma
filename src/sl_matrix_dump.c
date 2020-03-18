@@ -35,35 +35,13 @@
 #endif
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
 
-#include "std.h"
-#include "md_timer.h"
-#include "rf_mp.h"
-#include "sl_util_structs.h"
-#include "dpi.h"
-#include "rf_vars_const.h"
-#include "mm_mp_const.h"
-#include "mm_as_structs.h"
-#include "rf_node_const.h"
-#include "rf_vars_const.h"
-#include "dp_types.h"
-#include "mm_unknown_map.h"
-#include "rf_allo.h"
-#include "rf_util.h"
-#include "dp_utils.h"
-#include "md_timer.h"
-#include "sl_matrix_util.h"
 
 #ifdef MATRIX_DUMP
-#include "mm_as.h"
 #include <rpc/types.h>
 #include <rpc/xdr.h>
+
+#include "mm_as.h"
 
 /*********************** R O U T I N E S  I N   T H I S   F I L E *************
 *

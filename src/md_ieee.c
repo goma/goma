@@ -28,12 +28,7 @@ static const char cvs_ieeehp_id[] =
 #endif
 #endif
 
-#include <math.h>
-#include <stdlib.h>
-#include <stdio.h>
 
-#include "std.h"
-#include "mm_eh.h"
 
 #ifdef hpux
 /*

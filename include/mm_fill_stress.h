@@ -14,6 +14,13 @@
 #ifndef GOMA_MM_FILL_STRESS_H
 #define GOMA_MM_FILL_STRESS_H
 
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_eh.h"
+#include "mm_mp_const.h"
+#include "std.h"
+
+struct Aztec_Linear_Solver_System;
 #ifdef EXTERN
 #undef EXTERN
 #endif

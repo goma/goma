@@ -11,14 +11,14 @@
 \************************************************************************/
  
 
+#include "mm_prob_def.h"
+
 #include <stdio.h>
 
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io.h"
-#include "rf_mp.h"
+#include "mm_input.h"
 
 #ifndef lint
 #ifdef USE_RCSID
@@ -29,21 +29,11 @@ static char rcsid[] = "$Id: mm_prob_def.c,v 5.7 2010-04-07 22:27:00 prschun Exp 
 #include "el_geom.h"		/* Has info I'd like to replicate into the */
 				/* Problem_Description structure... */
 
-/*
- * Some new parts to set up for use during assembly...
- */
-#include "rf_vars_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-#include "dpi.h"
-#include "mm_mp_structs.h"
-#include "rf_io_structs.h"
-#include "mm_post_proc.h"
-#include "mm_eh.h"
 
 #define GOMA_MM_PROB_DEF_C
-#include "goma.h"
 
 /* 
  * The following routine sets up parts of the Problem_Description structure

@@ -13,6 +13,11 @@
 #ifndef GOMA_MM_FLUX_H
 #define GOMA_MM_FLUX_H
 
+#include "dpi.h"
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_fill_terms.h"
+#include "std.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

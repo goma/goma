@@ -29,6 +29,8 @@
 #include "dp_types.h"
 #include "exo_struct.h"
 #include "dpi.h"
+#include "ac_conti.h"
+
 EXTERN void hunt_problem
 (Comm_Ex *,		/* array of communications structures */
        Exo_DB *,		/* ptr to the finite element mesh database */

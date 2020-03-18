@@ -6,18 +6,19 @@
 #define EPETRA_MPI
 #endif
 
-#include <iostream>
-#include <exception>
+#include <stdio.h>
+#include <stdlib.h>
+#include <algorithm>
+#include <vector>
 
-#include "mpi.h"
-#include "Epetra_Comm.h"
 #include "Epetra_Map.h"
-#include "Epetra_RowMatrix.h"
 #include "Epetra_CrsMatrix.h"
 #include "Epetra_Vector.h"
+#include "Epetra_ConfigDefs.h"
+#include "dpi.h"
+#include "exo_struct.h"
 
 #ifdef EPETRA_MPI
-#include "Epetra_MpiComm.h"
 #else
 #include "Epetra_SerialComm.h"
 #endif
@@ -27,34 +28,27 @@ extern "C" {
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_masks.h"
-#include "rf_mp.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
-#include "el_elm.h"
 #include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "rf_node_const.h"
-#include "rf_allo.h"
 #include "mm_eh.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
-#include "goma.h"
+#include "dp_comm.h"
+#include "dp_types.h"
+#include "mm_unknown_map.h"
+#include "rf_solve.h"
+#include "sl_util_structs.h"
+#include "mm_fill_util.h"
 }
 
-#include "mm_fill_util.h"
-#include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
+
+#include "sl_epetra_interface.h"
 
 extern "C" {
 

@@ -4,39 +4,24 @@
 #include <string.h>
 
 #include "el_elm.h"
-#include "el_geom.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_mp_const.h"
-#include "rf_bc_const.h"
 #include "rf_fem.h"
 #include "rf_fem_const.h"
-#include "rf_fill_const.h"
-#include "rf_io.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_masks.h"
-#include "rf_mp.h"
-#include "rf_solver_const.h"
-#include "rf_vars_const.h"
 #include "std.h"
-
 #include "mm_eh.h"
-
 #include "mm_fill_ls.h"
-
 #include "mm_mp.h"
-#include "mm_mp_const.h"
 #include "mm_mp_structs.h"
-
 #include "mm_fill_terms.h"
+#include "az_aztec.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_species.h"
+
 /* GOMA include files */
 #define GOMA_MM_FILL_POPULATION_C
-
-#include "goma.h"
-#include "mm_fill_population.h"
-#include "sl_aux.h"
 
 extern FSUB_TYPE dsyev_(char *JOBZ, char *UPLO, int *N, double *A, int *LDA,
                         double *W, double *WORK, int *LWORK, int *INFO,

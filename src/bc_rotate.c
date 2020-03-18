@@ -20,38 +20,42 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
- 
+
 #include "std.h"
- 
 #include "rf_allo.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
-
 #include "exo_struct.h"
-#include "rf_masks.h"
 #include "rf_bc_const.h"
 #include "rf_bc.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
 #include "rf_solver.h"
 #include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
-#include "mm_mp.h"
- 
 #include "mm_eh.h"
-
-#include "mm_fill_jac.h"
 #include "rotate_util.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "bc_rotate.h"
+#include "el_elm_info.h"
+#include "gds/gds_vector.h"
+#include "mm_as_alloc.h"
+#include "mm_bc.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_post_proc.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "rf_node_const.h"
+#include "sl_util_structs.h"
 
 /*
  *  Variable Definitions
@@ -60,8 +64,6 @@ struct Rotation_Vectors ****rotation = NULL;
 int dup_blks_list[MAX_MAT_PER_SS+1];
 
 #define GOMA_BC_ROTATE_C
-#include "goma.h"
-
 #include "sl_epetra_interface.h"
 
 

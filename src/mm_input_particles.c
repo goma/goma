@@ -24,10 +24,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <ctype.h>
 
-/* GOMA include files */
-#include "goma.h"
+#include "ac_particles.h"
+#include "mm_eh.h"
+#include "mm_input.h"
+#include "rf_allo.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "std.h"
 
 #define SLEN 256
 #define SLEN_2 512

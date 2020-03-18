@@ -14,6 +14,10 @@
 #ifndef GOMA_WR_EXO_H
 #define GOMA_WR_EXO_H
 
+#include "exo_struct.h"
+#include "wr_dpi.h"
+
+struct Results_Description;
 #ifdef EXTERN
 #undef EXTERN
 #endif

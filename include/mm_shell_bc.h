@@ -14,6 +14,10 @@
 #ifndef GOMA_MM_SHELL_BC_H
 #define GOMA_MM_SHELL_BC_H
 
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_eh.h"
+#include "rf_fem_const.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

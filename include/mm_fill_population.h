@@ -34,6 +34,9 @@
 
 #include "std.h"
 #include "mm_as_structs.h"
+#include "el_elm.h"
+#include "rf_fem_const.h"
+#include "wr_side_data.h"
 
 /* Moment growth rate types */
 #define MOMENT_GR_PBE 0

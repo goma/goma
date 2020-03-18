@@ -14,6 +14,8 @@
 #ifndef GOMA_RF_PRE_PROC_H
 #define GOMA_RF_PRE_PROC_H
 
+#include "ac_particles.h"
+#include "exo_struct.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

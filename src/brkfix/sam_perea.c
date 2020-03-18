@@ -69,10 +69,7 @@
 #define GOMA_SAM_PEREA_C
 
 #include <stdio.h>
-
 #include <stdlib.h>
-
-#include "goma.h"
 
 #include "brkfix/brkfix.h"
 #include "mm_eh.h"
@@ -81,6 +78,10 @@
 #include "brkfix/nodesc.h"
 #include "brkfix/brkfix_types.h"
 #include "brkfix/sam_perea.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "rd_exo.h"
+#include "std.h"
 
 void
 assess_weights(Exo_DB *x, 

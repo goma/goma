@@ -14,6 +14,7 @@
 #define GOMA_DP_VIF_H
 
 
+#include "dp_map_comm_vec.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

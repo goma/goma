@@ -29,10 +29,13 @@
 #define EXTERN /* do nothing */
 #endif
 
+#include <stdio.h>
+
 #include "std.h"
 #include "el_elm.h"
 #include "exo_struct.h"
 #include "stdio.h"
+#include "ac_stability_util.h"
 
 #ifndef GOMA_AC_PARTICLES_C
 #define EXTERN extern

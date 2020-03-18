@@ -18,9 +18,7 @@
 
 /* Standard include files */
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <strings.h>
 #include <string.h>
 #include <math.h>
 
@@ -29,30 +27,39 @@
 #include "rf_allo.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
 #include "rf_bc_const.h"
 #include "rf_solver_const.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_eh.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "az_aztec.h"
+#include "bc_colloc.h"
+#include "el_elm_info.h"
+#include "mm_bc.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "rf_bc.h"
+#include "rf_node_const.h"
+#include "rf_solver.h"
+#include "sl_util_structs.h"
+#include "exo_struct.h"
 
 #define GOMA_MM_FILL_STRESS_C
 #include "mm_fill_stress.h"
-#include "goma.h"
 
 
 extern struct Boundary_Condition *inlet_BC[MAX_VARIABLE_TYPES+MAX_CONC];

@@ -17,6 +17,13 @@
 #ifndef GOMA_MM_NUMJAC_H
 #define GOMA_MM_NUMJAC_H
 
+#include "dpi.h"
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_more_utils.h"
+
+struct Aztec_Linear_Solver_System;
+struct elem_side_bc_struct;
 #ifdef EXTERN
 #undef EXTERN
 #endif

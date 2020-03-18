@@ -18,6 +18,10 @@
 #ifndef GOMA_USER_AC_H
 #define GOMA_USER_AC_H
 
+#include "dp_types.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "sl_umf.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

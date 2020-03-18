@@ -61,19 +61,17 @@
 #include <config.h>
 #endif
 
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 
 #ifndef lint
 #ifdef USE_RCSID
 static char rcsid[] = "$Id: rd_exo.c,v 5.2 2008-05-02 19:07:57 hkmoffa Exp $";
 #endif
 #endif
+
+#include "rd_exo.h"
 
 #include "std.h"
 #include "exo_struct.h"
@@ -83,8 +81,15 @@ static char rcsid[] = "$Id: rd_exo.c,v 5.2 2008-05-02 19:07:57 hkmoffa Exp $";
 #include "rf_solver.h"
 #include "rf_solver_const.h"
 #include "mm_elem_block_structs.h"
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "exodusII.h"
+#include "mm_mp.h"
+#include "rd_mesh.h"
 
-#include "goma.h"
+struct Material_Properties;
+
+struct Material_Properties;
 
 /*
  * Variables used in several routines in this file.

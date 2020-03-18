@@ -25,15 +25,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "goma.h"
-
 #include "brkfix/brkfix.h"
 #include "rf_allo.h"
 #include "mm_eh.h"
-#include "exo_struct.h"
-#include "brkfix/exo_utils.h"
 #include "brkfix/utils.h"
 #include "string.h"
+#include "el_elm_info.h"
+#include "rf_io_const.h"
+#include "std.h"
 /*
  * Function declarations of static functions defined here.
  */

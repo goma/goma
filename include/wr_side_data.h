@@ -18,6 +18,9 @@
 #ifndef GOMA_WR_SIDE_DATA_H
 #define GOMA_WR_SIDE_DATA_H
 
+#include "exo_struct.h"
+#include "mm_post_def.h"
+#include "wr_exo.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

@@ -18,6 +18,15 @@
 #ifndef GOMA_MM_FILL_SHELL_H
 #define GOMA_MM_FILL_SHELL_H
 
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_as_structs.h"
+#include "mm_eh.h"
+#include "rf_fem_const.h"
+#include "std.h"
+
+struct elem_side_bc_struct;
+
 extern int InShellElementWithParentElementCoverage;
 extern int ShellElementParentElementCoverageForVariable[MAX_VARIABLE_TYPES];
 

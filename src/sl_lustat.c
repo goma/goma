@@ -96,18 +96,9 @@
 static char rcsid[] = "$Id: sl_lustat.c,v 5.1 2007-09-18 18:53:48 prschun Exp $";
 #endif
 
-#include "std.h"
 
-#include "rf_fem_const.h"
-#include "rf_fem.h"
 
-#include <math.h>
-#include <stdio.h>
-#include <string.h>
-#include "spConfig.h"
-#include "spMatrix.h"
 
-#include "goma.h"
 
 #ifdef MATRIX_STATISTICS
 

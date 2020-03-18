@@ -15,6 +15,11 @@
 #ifndef GOMA_MM_QTENSOR_MODEL_H
 #define GOMA_MM_QTENSOR_MODEL_H
 
+#include "el_elm.h"
+#include "mm_std_models.h"
+#include "std.h"
+
+struct Species_Conservation_Terms;
 #ifdef EXTERN
 #undef EXTERN
 #endif

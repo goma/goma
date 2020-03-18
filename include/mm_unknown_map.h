@@ -21,6 +21,11 @@
 #ifndef GOMA_MM_UNKNOWN_MAP_H
 #define GOMA_MM_UNKNOWN_MAP_H
 
+#include "dp_types.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "rf_vars_const.h"
+
 extern void setup_local_nodal_vars
 (Exo_DB *,		/* exo - ptr to FE EXODUS II database        */
        Dpi *);			/* dpi - ptr to parallel info                */

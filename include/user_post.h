@@ -14,6 +14,10 @@
 #ifndef GOMA_USER_POST_H
 #define GOMA_USER_POST_H
 
+#include <stdio.h>
+
+#include "std.h"
+#include "user_mp_gen.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

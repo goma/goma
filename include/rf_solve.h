@@ -13,6 +13,14 @@
 #ifndef GOMA_RF_SOLVE_H
 #define GOMA_RF_SOLVE_H
 
+#include "dp_types.h"
+#include "dpi.h"
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "rf_shape.h"
+#include "std.h"
+
+struct Results_Description;
 #ifdef EXTERN
 #undef EXTERN
 #endif

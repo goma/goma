@@ -32,15 +32,15 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "goma.h"
-
 #include "brkfix/brkfix.h"
 #include "rf_allo.h"
 #include "mm_eh.h"
 #include "exo_struct.h"
 #include "brkfix/brkfix_types.h"
 #include "brkfix/rd_in.h"
-#include "brkfix/utils.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "std.h"
 
 const char delimiters[]=" 	\n"; /* whitespace delimiters (space, tab) */
 

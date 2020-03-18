@@ -14,6 +14,10 @@
 #define GOMA_MM_SPECIES_H
 
 
+#include "std.h"
+
+struct Variable_Initialization;
+
 extern int normalize_species_fractions (double [], const int);
 extern int check_consistent_fraction_vector (struct Variable_Initialization *,
 						   int, int, double[]);

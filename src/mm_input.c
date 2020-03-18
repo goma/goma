@@ -27,7 +27,6 @@ static char rcsid[] =
 #include <strings.h> /* strcasecmp and strncasecmp moved here for POSIX.1 */
 #include <math.h>
 #include <unistd.h>
-
 #include <ctype.h>		/* for toupper(), isspace() */
 
 #include "std.h"
@@ -40,27 +39,30 @@ static char rcsid[] =
 #include "rf_io.h"
 #include "rf_bc_const.h"
 #include "rf_allo.h"
-#include "rf_bc.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "mm_eh.h"
-
 #include "mm_post_def.h"
-
-#include "sl_util_structs.h"
-
-#include <string.h>
+#include "ac_particles.h"
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "mm_augc_util.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_util.h"
+#include "mm_post_proc.h"
+#include "rd_mesh.h"
+#include "rf_masks.h"
+#include "rf_solve.h"
+#include "rf_solver_const.h"
+#include "sl_util.h"
+#include "ac_stability_util.h"
 
 #define GOMA_MM_INPUT_C
 #include "mm_input.h"
-#include "goma.h"
 
 static int 
 look_forward_optional_until(FILE *ifp, const char *string, char *untilstring, char input[],
@@ -14171,7 +14173,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
      	}
       else if( (strcmp( line, "QUADRATIC") == 0) )
 	{
-	  if( (table->columns == 2) )
+	  if(table->columns == 2)
 	    {
 	      table->interp_method = QUADRATIC;
 	    }
@@ -14183,7 +14185,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
      	}
       else if( (strcmp( line, "QUAD_GP") == 0) )
 	{
-	  if( table->columns == 2)
+	  if(table->columns == 2)
 	    {
 	      table->interp_method = QUAD_GP;
 	    }

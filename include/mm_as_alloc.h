@@ -13,6 +13,10 @@
 #ifndef GOMA_MM_AS_ALLOC_H
 #define GOMA_MM_AS_ALLOC_H
 
+#include "exo_struct.h"
+#include "md_timer.h"
+
+struct Problem_Description;
 #ifdef EXTERN
 #undef EXTERN
 #endif

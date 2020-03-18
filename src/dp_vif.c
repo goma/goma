@@ -34,8 +34,6 @@
  * Revised: 1997/06/19 08:48 MDT pasacki@sandia.gov
  */
 
-#include <math.h>
-#include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -43,41 +41,39 @@
 static char rcsid[] = "$Id: dp_vif.c,v 5.24 2010-07-21 16:39:26 hkmoffa Exp $";
 #endif
 
+#include "dp_vif.h"
+
 #include "std.h"
+#include "ac_stability.h"
 #include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
 #include "rf_solver.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_mp.h"
 #include "rf_allo.h"
-
 #include "rf_bc_const.h"
-  
-#include "rf_solver_const.h"
-#include "sl_eggroll.h"
-
 #include "mm_eh.h"
 #include "dp_utils.h"
-#include "sl_util_structs.h"
-#include "rf_vars_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_mp.h"
-
 #include "mm_post_def.h"
-
 #include "mm_chemkin.h"
+#include "ac_particles.h"
+#include "dp_types.h"
+#include "el_elm.h"
+#include "mm_as_const.h"
+#include "mm_fill_ls.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mpi.h"
 
 /* #include "mm_names.h" -- use extern defs from rf_bc_const.h for these vars */
 
 #include "rf_bc.h"
 
-#include "rf_solver.h"
-
 #define GOMA_DP_VIF_C
-#include "goma.h"
 
 #ifndef CDIM
 #define CDIM 3

@@ -16,6 +16,9 @@
 #ifndef GOMA_BBB_H
 #define GOMA_BBB_H
 
+#include "dpi.h"
+#include "exo_struct.h"
+#include "wr_side_data.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

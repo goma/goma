@@ -32,6 +32,15 @@
 
 #include <stdio.h>
 
+#include "mm_eh.h"
+#include "rf_io_const.h"
+#include "std.h"
+
+struct Boundary_Condition;
+struct Command_line_command;
+struct Data_Table;
+struct LS_Surf_List;
+
 #define MAX_INPUT_LINE_LENGTH 2048
 
 /*

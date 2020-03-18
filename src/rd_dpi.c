@@ -65,6 +65,7 @@
 #endif
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifdef STDC_HEADERS
 #include <stdlib.h>
@@ -84,6 +85,8 @@ static char rcsid[] = "$Id: rd_dpi.c,v 5.2 2008-05-08 21:18:21 hkmoffa Exp $";
 
 
 #include "netcdf.h"
+#include "exodusII.h"
+#include "rd_mesh.h"
 
 /*
  * Sigh, if you need to run netCDF 2 then here's some definitions to tide
@@ -133,15 +136,11 @@ static char rcsid[] = "$Id: rd_dpi.c,v 5.2 2008-05-08 21:18:21 hkmoffa Exp $";
 
 #include "std.h"
 #include "rf_allo.h"
-#include "rf_io_const.h"	/* to know MAX_FNL */
 #include "mm_eh.h"
 #include "exo_struct.h"
 #include "dpi.h"
-#include "rf_fem.h"		/* want First_Unknown for uni_dpi() */
 #include "rf_mp.h"		/* to know ProcID */
 #include "rd_dpi.h"
-
-#include "goma.h"
 
 static int get_variable_call_count = 0;
 

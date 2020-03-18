@@ -35,39 +35,29 @@ static char rcsid[] = "$Id: dp_map_comm_vec.c,v 5.1 2007-09-18 18:53:41 prschun 
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "std.h"
-#include "el_elm.h"
-
 #include "rf_allo.h"
-
 #include "rf_fem_const.h"
-#include "rf_fem.h"
-
-#include "rf_io_const.h"
-#include "rf_io.h"
-
 #include "rf_mp.h"
 #include "rf_vars_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-#include "rf_masks.h"
-#include "rf_bc_const.h"
-
 #include "mm_eh.h"
-
 #include "exo_struct.h"
 #include "dpi.h"
 #include "dp_types.h"
+#include "dp_map_comm_vec.h"
+#include "dp_utils.h"
+#include "el_elm_info.h"
+#include "rf_node_const.h"
+#include "rf_util.h"
 
 #ifdef PARALLEL
 #include "mpi.h"
 #endif
 
 #define GOMA_DP_MAP_COMM_VEC_C
-#include "goma.h"
 
 /*
  * This is the single place where these variables are defined. Usually they

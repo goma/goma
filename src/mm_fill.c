@@ -24,32 +24,27 @@
 
 /* GOMA include files */
 
+#include "mm_fill.h"
+
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
 #include "rf_mp.h"
 #include "rf_bc.h"
 #include "el_elm.h"
 #include "el_geom.h"
-
 #include "rf_masks.h"
 #include "rf_bc_const.h"
 #include "rf_solver_const.h"
 #include "rf_solver.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
-#include "mm_mp_const.h"
-
 #include "mm_eh.h"
 #include "mm_fill_fill.h"
 #include "mm_fill_stress.h"
@@ -57,22 +52,47 @@
 #include "mm_fill_population.h"
 #include "exo_struct.h"
 #include "dpi.h"
-
 #include "mm_fill_species.h"
 #include "mm_fill_common.h"
-
 #include "bc_dirich.h"
 #include "mm_qp_storage.h"
-
-#include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
-
 #include "rotate_util.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "bc_colloc.h"
+#include "bc_contact.h"
+#include "bc_curve.h"
+#include "bc_integ.h"
+#include "bc_rotate.h"
+#include "bc_special.h"
+#include "el_elm_info.h"
+#include "md_timer.h"
+#include "mm_as_alloc.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_porous.h"
+#include "mm_fill_potential.h"
+#include "mm_fill_pthings.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_flux.h"
+#include "mm_qtensor_model.h"
+#include "mm_shell_util.h"
+#include "mm_unknown_map.h"
+#include "mpi.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_node_const.h"
+#include "sl_util.h"
+#include "sl_util_structs.h"
+#include "stdbool.h"
+#include "wr_side_data.h"
 
 #define GOMA_MM_FILL_C
-#include "goma.h"
 
-#include "mm_fill_fill.h"
 /*
  * Global variables defined here. Declared frequently via rf_bc.h
  */

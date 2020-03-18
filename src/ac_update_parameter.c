@@ -17,48 +17,24 @@ static const char rcs_id[] = "$Id: ac_update_parameter.c,v 5.3 2008-12-19 22:54:
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
-#include <string.h>
 
 #include "std.h"
-
 #include "exo_struct.h"
 #include "dpi.h"
-
-#include "rf_allo.h"
-#include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
-#include "rf_solver_const.h"
-#include "rf_solver.h"
-
-#include "rf_masks.h"
-
-#include "el_geom.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
-
-#include "mm_post_def.h"
-#include "mm_post_proc.h"
 #include "mm_eh.h"
-
-#include "exo_struct.h"		/* defn of Exo_DB */
 #include "dp_types.h"
-
-#include "sl_util.h"		/* defines sl_init() */
+#include "ac_update_parameter.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
 
 #define GOMA_AC_UPDATE_PARAMETER_C
 #include "user_continuation.h"
-#include "goma.h"
 
 /*
 

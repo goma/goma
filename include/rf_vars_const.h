@@ -22,6 +22,7 @@
 #ifndef GOMA_RF_VARS_CONST_H_
 #define GOMA_RF_VARS_CONST_H_
 
+#include "std.h"
 #include "rf_fem_const.h"
 
 /*

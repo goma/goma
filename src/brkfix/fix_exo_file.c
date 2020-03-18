@@ -30,29 +30,27 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
 #endif
 
-#include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
 
-#include "goma.h"
-
-#include "brkfix/brkfix.h"		/* useful general stuff */
 #include "mm_eh.h"			/* error handling */
 #include "rf_allo.h"		/* multi-dim array allocation */
 #include "exo_struct.h"		/* some definitions for EXODUS II */
 #include "brkfix/bbb.h"
 #include "dpi.h"		/* distributed processing information */
-#include "brkfix/nodesc.h"		/* node descriptions */
 #include "rd_dpi.h"
-
 #include "brkfix/fix.h"
+#include "exodusII.h"
+#include "mm_elem_block_structs.h"
+#include "rd_exo.h"
+#include "rd_mesh.h"
+#include "rf_element_storage_const.h"
+#include "std.h"
+#include "wr_exo.h"
 
 char *program_name;		/* name this program was run with */
 

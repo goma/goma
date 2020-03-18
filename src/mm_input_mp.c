@@ -30,37 +30,25 @@
 #include <string.h>
 #include <strings.h>            /* for strcasecmp */
 
-#include <ctype.h>		/* for toupper(), isspace() */
-#include <math.h>
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_solver.h"
-#include "rf_mp.h"
 #include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
 #include "rf_bc_const.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "mm_eh.h"
-
-#include "mm_post_proc.h"
-
-#include "sl_util_structs.h"
+#include "el_elm.h"
+#include "mm_input.h"
 
 
 #define GOMA_MM_INPUT_C
-#include "goma.h"
 
 
 #define NO_USER  NULL

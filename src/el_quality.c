@@ -21,14 +21,27 @@ static char rcsid[] =
 #endif
 
 #include <math.h>
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "az_aztec.h"
+#include "el_elm.h"
+#include "el_geom.h"
+#include "mm_as.h"
+#include "mm_as_structs.h"
+#include "mm_eh.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_util.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_mp.h"
+#include "std.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
 
 #define GOMA_EL_QUALITY_C
-#include "goma.h"
 #include "el_quality.h"
 
 /*************** R O U T I N E S   I N   T H I S   F I L E ********************

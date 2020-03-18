@@ -13,6 +13,9 @@
 #ifndef DP_COMM_H
 #define DP_COMM_H
 
+#include "bc_surfacedomain.h"
+#include "dp_types.h"
+#include "dpi.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

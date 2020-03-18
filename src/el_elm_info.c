@@ -15,24 +15,16 @@
  *$Id: el_elm_info.c,v 5.6 2010-03-03 22:33:57 prschun Exp $
  */
 
-#include <math.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "std.h"
 #include "el_elm.h"
-#include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_const.h"
-#include "mm_as_structs.h"
-#include "mm_as.h"
-#include "rf_masks.h"
-#include "rf_bc_const.h"
-
 #include "mm_eh.h"
+#include "el_elm_info.h"
 
 #define GOMA_EL_ELM_INFO_C
-#include "goma.h"
 
 
 /*************** R O U T I N E S   I N   T H I S   F I L E ********************

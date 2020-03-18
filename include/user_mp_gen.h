@@ -18,6 +18,9 @@
 #ifndef GOMA_USER_MP_GEN_H
 #define GOMA_USER_MP_GEN_H
 
+#include "el_elm.h"
+#include "std.h"
+#include "user_mp.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

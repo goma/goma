@@ -1,12 +1,14 @@
 #ifndef GOMA_ROTATE_UTIL
 #define GOMA_ROTATE_UTIL
+#include <stdbool.h>
+
 #include "exo_struct.h"
 #include "mm_eh.h"
 #include "rf_bc_const.h"
 #include "el_elm.h"
 #include "gds/gds_vector.h"
 
-#include <stdbool.h>
+struct Boundary_Condition;
 
 #ifndef GOMA_MAX_NORMALS_PER_NODE
 #define GOMA_MAX_NORMALS_PER_NODE 12

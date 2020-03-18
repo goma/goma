@@ -13,6 +13,13 @@
 #ifndef GOMA_BC_ROTATE_H
 #define GOMA_BC_ROTATE_H
 
+#include "bc_integ.h"
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_as_structs.h"
+
+struct Aztec_Linear_Solver_System;
+struct elem_side_bc_struct;
 #ifdef EXTERN
 #undef EXTERN
 #endif

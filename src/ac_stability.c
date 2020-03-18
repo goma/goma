@@ -29,11 +29,38 @@ static char rcsid[] = "$Id: ac_stability.c,v 5.1 2007-09-18 18:53:40 prschun Exp
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <string.h>
 
 #define GOMA_AC_STABILITY_C
+#include "ac_stability.h"
+
 #include "sl_eggroll.h"
-#include "goma.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "mm_as.h"
+#include "mm_as_const.h"
+#include "mm_as_structs.h"
+#include "mm_eh.h"
+#include "mm_fill.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_io.h"
+#include "rf_mp.h"
+#include "rf_solver.h"
+#include "rf_util.h"
+#include "sl_eggroll_def.h"
+#include "sl_matrix_util.h"
+#include "sl_util_structs.h"
+#include "std.h"
+
+struct Results_Description;
+struct elem_side_bc_struct;
+
+struct Results_Description;
+struct elem_side_bc_struct;
 
 /* Make LSA_MATRIX_OUTPUT_TOLERANCE negative if you want to include
  * the zeros in the sparse structure.  Otherwise, they are filtered
@@ -46,6 +73,7 @@ int LSA_3D_of_2D_pass = 0;
 dbl LSA_3D_of_2D_wave_number = -1.0;
 int LSA_number_wave_numbers = 0;
 dbl *LSA_wave_numbers = NULL;
+int LSA_current_wave_number = 0;
 
 /* Calculate matrices needed for stability analysis
  * and solve for spectrum is required.

@@ -28,6 +28,10 @@ static char rcsid[] =
 #include <strings.h> /* strcasecmp and strncasecmp moved here for POSIX.1 */
 #include <math.h>
 
+#define GOMA_MM_POST_PROC_C
+#include "mm_post_proc.h"
+
+#include "mm_post_def.h"
 /* GOMA include files */
 #include "std.h"
 #include "rf_fem_const.h"
@@ -38,17 +42,9 @@ static char rcsid[] =
 #include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
-
 #include "rf_allo.h"
-
-#include "rf_masks.h"
 #include "rf_bc_const.h"
 #include "rf_bc.h"
-#include "rf_solver_const.h"
-#include "rf_solver.h"
-#include "rf_fill_const.h"
-
-#include "rf_io_const.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
@@ -56,29 +52,45 @@ static char rcsid[] =
 #include "mm_as.h"
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-#include "mm_qtensor_model.h"
-
-#include "mm_eh.h"
 #include "mm_more_utils.h"
-#include "mm_post_proc.h"
 #include "mm_fill_ptrs.h"
 #include "mm_fill_population.h"
-
 #include "dpi.h"
 #include "exodusII.h"
 #include "exo_struct.h"
-
-#include "usr_print.h"
-
-#define GOMA_MM_POST_PROC_C
-#include "goma.h"
-#include "mm_post_def.h"
+#include "ac_particles.h"
+#include "bc_rotate.h"
+#include "el_elm_info.h"
+#include "mm_as_alloc.h"
+#include "mm_bc.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_porous.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_stress.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_input.h"
+#include "mm_shell_util.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "rd_mesh.h"
+#include "rf_element_storage_struct.h"
+#include "rf_shape.h"
+#include "rf_util.h"
+#include "sl_aux.h"
+#include "user_mp.h"
+#include "user_post.h"
+#include "wr_exo.h"
 #include "mm_fill_common.h"
-
 #include "mm_std_models_shell.h"
 #include "mm_std_models.h"
 #include "shell_tfmp_struct.h"
 #include "shell_tfmp_util.h"
+
 /*
  * Global variable definitions.
  * This is the 1 place these variables are defined. If you need them
@@ -6496,42 +6508,6 @@ abs_error_at_elem ( int i_elem,
 	tau_gp_fem[a][b][i] = mu*gamma[a][b];
       }
     }
-
-#ifdef RRL_DEBUG
-#ifdef DBG_0
-    /* The following code segment is to compute the exact velocity solution
-       and fluid shear stress norm for the poisuelle flow problem          */
-/*     sumx = 0.; */
-/*     sumy = 0.; */
-/*     sumz = 0.; */
-/*     for (j = 0; j < ei[pg->imtrx]->num_local_nodes; j++ ) { */
-/*       phi_i = bf[eqn]->phi[ei[pg->imtrx]->ln_to_dof[eqn][j]]; */
-/*       local_i = Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + j]; */
-/*       sumx += phi_i*Coor[0][local_i]; */
-/*       sumy += phi_i*Coor[1][local_i]; */
-/*       if (ei[pg->imtrx]->ielem_dim > 2) { */
-/* 	sumz += phi_i*Coor[2][local_i];	 */
-/*       } */
-/*     } */
-
-/*     gamma_ext[0][0] = 0.; */
-/*     gamma_ext[0][1] = -4.*sumy; */
-/*     gamma_ext[0][2] = 0.; */
-/*     gamma_ext[1][0] = gamma_ext[0][1]; */
-/*     gamma_ext[1][1] = 0.; */
-/*     gamma_ext[1][2] = 0.; */
-/*     gamma_ext[2][0] = gamma_ext[0][2]; */
-/*     gamma_ext[2][1] = gamma_ext[1][2]; */
-/*     gamma_ext[2][2] = 0.; */
-
-/*     for ( a = 0; a < VIM; a++ ) { */
-/*       for ( b = 0; b < VIM; b++ ) { */
-/* 	tau_gp_ext[a][b][i] = mu*gamma_ext[a][b]; */
-/*       } */
-/*     } */
-
-#endif
-#endif
 
     det = bf[eqn]->detJ;
 

@@ -18,38 +18,33 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <math.h>
 
 /* GOMA include files */
 
+#include "mm_viscosity.h"
+
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
-#include "el_geom.h"
 #include "rf_bc_const.h"
 #include "rf_solver.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "mm_eh.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "rf_allo.h"
+#include "user_mp.h"
+#include "user_mp_gen.h"
+#include "mm_qtensor_model.h"
 
 #define GOMA_MM_VISCOSITY_C
-#include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ***********************
  * 
@@ -3121,8 +3116,7 @@ foam_epoxy_viscosity(int species_fluor, int species_cur, dbl mu0,
 	  mp->d_FlowingLiquid_viscosity[MAX_VARIABLE_TYPES+species_cur] = 0.0;
 	}
 
-      if (mp->d_volumeFractionGas      && 
-	  mp->volumeFractionGas >= 0.0 && 
+      if (mp->volumeFractionGas >= 0.0 && 
 	  mp->volumeFractionGas <= 0.99 ) 
 	{
 	  dbl volFacDeriv = mu / ((1-cVolFrac) * (1-cVolFrac));

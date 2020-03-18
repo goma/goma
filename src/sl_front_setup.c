@@ -19,17 +19,26 @@
 static char rcsid[] = "$Id: sl_front_setup.c";
 #endif
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
-#include "std.h"
 #include "rf_fem_const.h"
 #include "rf_vars_const.h"
 #include "mm_as_structs.h"
 #include "mm_mp_structs.h"
-#include "goma.h"
 #include "sl_rcm.h"
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "el_geom.h"
+#include "exo_struct.h"
+#include "mm_as.h"
+#include "mm_eh.h"
+#include "mm_mp.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_fem.h"
+#include "rf_node_const.h"
+#include "sl_util_structs.h"
 
 extern void setup_front (Exo_DB *);
 

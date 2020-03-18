@@ -13,6 +13,9 @@
 #ifndef GOMA_RF_SOLVE_SEGREGATED_H
 #define GOMA_RF_SOLVE_SEGREGATED_H
 
+#include "dpi.h"
+#include "exo_struct.h"
+#include "std.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

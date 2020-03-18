@@ -14,6 +14,10 @@
 #define GOMA_BC_CURVE_H
 
 
+#include "bc_colloc.h"
+#include "exo_struct.h"
+
+struct elem_edge_bc_struct;
 #ifdef EXTERN
 #undef EXTERN
 #endif

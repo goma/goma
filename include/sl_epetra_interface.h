@@ -9,6 +9,7 @@
 #define INCLUDE_SL_EPETRA_INTERFACE_H_
 
 #ifdef __cplusplus
+#include "Epetra_RowMatrix.h"
 typedef Epetra_RowMatrix C_Epetra_RowMatrix_t;
 #else
 typedef struct Epetra_RowMatrix C_Epetra_RowMatrix_t;

@@ -28,32 +28,43 @@ static char rcsid[] = "$Id: mm_numjac.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $"
 
 /* GOMA include files */
 
+#include "mm_numjac.h"
+
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "rf_solver.h"
 #include "el_elm.h"
-#include "el_geom.h"
-
 #include "mm_eh.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "rf_masks.h"
 #include "rf_bc_const.h"
 #include "rf_solver_const.h"
-#include "rf_fill_const.h"
-
 #include "sl_util.h"
 #include "mm_qp_storage.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "mm_fill.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_stress.h"
+#include "mm_mp.h"
+#include "mm_mp_structs.h"
+#include "mpi.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_node_const.h"
+#include "sl_matrix_util.h"
+#include "sl_util_structs.h"
+#include "mm_std_models.h"
+
 #define GOMA_MM_NUMJAC_C
-#include "goma.h"
 
 static void piksr2		/* mm_numjac.c                               */
 (int ,			/* n                                         */

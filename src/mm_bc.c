@@ -19,9 +19,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 
-#include "std.h" 
+#include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_io_const.h"
@@ -32,20 +31,27 @@
 #include "rf_allo.h"
 #include "rf_bc.h"
 #include "mm_names.h"
-#include "rf_masks.h"
 #include "mm_eh.h"
-
 #include "dpi.h"
 #include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
-
-#include "rotate_util.h"
+#include "bc_colloc.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "mm_bc.h"
+#include "mm_elem_block_structs.h"
+#include "mm_ns_bc.h"
+#include "mm_post_proc.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "rf_bc_const.h"
+#include "rf_node_const.h"
+#include "rf_shape.h"
+#include "stdbool.h"
 
 #define GOMA_MM_BC_C
-#include "goma.h"
 
 /*
  * These two workhorse variables help get more specific information out

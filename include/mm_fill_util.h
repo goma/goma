@@ -27,6 +27,12 @@
 
 #include "el_elm.h"
 #include "mm_as_structs.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "mm_fill.h"
+#include "std.h"
+
+struct Aztec_Linear_Solver_System;
 
 EXTERN int beer_belly(void);
 

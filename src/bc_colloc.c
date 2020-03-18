@@ -25,16 +25,44 @@
 #endif
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <strings.h>
 #include <string.h>
 #include <math.h>
-#include <stdlib.h>
 
 #include "dpi.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "bc_colloc.h"
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "el_geom.h"
+#include "exo_struct.h"
+#include "mm_as.h"
+#include "mm_as_structs.h"
+#include "mm_bc.h"
+#include "mm_eh.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_porous.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_ns_bc.h"
+#include "mm_shell_bc.h"
+#include "mm_shell_util.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_node_const.h"
+#include "rf_util.h"
+#include "rf_vars_const.h"
+#include "std.h"
+#include "user_bc.h"
  
 #define GOMA_BC_COLLOC_C
-#include "goma.h"
 
 
 

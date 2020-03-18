@@ -28,33 +28,25 @@ static char rcsid[] = "$Id: mm_qtensor_model.c,v 5.2 2009-05-20 15:31:33 hkmoffa
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "mm_eh.h"
-
-#include "mm_fill_species.h"
-#include "mm_std_models.h"
+#include "el_elm_info.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_numjac.h"
+#include "mm_viscosity.h"
 
 #define GOMA_MM_QTENSOR_MODEL_C
 #include "mm_qtensor_model.h"
-#include "goma.h"
 
 /*********** R O U T I N E S   I N   T H I S   F I L E ************************
 *

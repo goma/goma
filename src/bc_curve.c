@@ -18,7 +18,6 @@
 /* Standard include files */
  
 #include <stdio.h>
-#include <math.h>
 #include <string.h>
  
 /* GOMA include files */
@@ -26,32 +25,36 @@
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
-#include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
- 
-#include "rf_masks.h"
 #include "rf_bc_const.h"
 #include "rf_bc.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
- 
 #include "mm_eh.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "bc_colloc.h"
+#include "bc_curve.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_porous.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_ns_bc.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "user_bc.h"
 
 
 #define GOMA_BC_CURVE_C
-#include "goma.h"
 
 /*
  * Global variables defined here. Declared frequently via rf_bc.h

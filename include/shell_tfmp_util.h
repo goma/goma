@@ -4,6 +4,7 @@
 
 #include "mm_shell_bc.h"
 #include "shell_tfmp_struct.h"
+#include "el_elm.h"
 
 #ifndef _SHELL_TFMP_UTIL
 #define _SHELL_TFMP_UTIL

@@ -10,29 +10,20 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
  
-/* mm_fill_aux -- auxiliary routines useful during assembly of R, J
- *
- */
-#include <stdlib.h>
+#include "mm_fill_aux.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
 
-
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
 #include "rf_mp.h"
 #include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
 #include "el_elm.h"
 #include "el_geom.h"
-#include "rf_allo.h"
-#include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
@@ -40,15 +31,23 @@
 #include "mm_as.h"
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
-
 #include "exo_struct.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_util.h"
+#include "mm_post_def.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "mpi.h"
+#include "rf_node_const.h"
+#include "mm_qtensor_model.h"
 
 extern	dbl *p0;		/* Defined in mm_as_alloc.c */
 
 #include "mm_eh.h"
 
 #define GOMA_MM_FILL_AUX_C
-#include "goma.h"
 /* 
  *  flag to use default normal and determinant in CARTESIAN
  *  coordinates - otherwise multiply by coordinate scale factors 

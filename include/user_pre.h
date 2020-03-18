@@ -18,6 +18,8 @@
 #ifndef GOMA_USER_PRE_H
 #define GOMA_USER_PRE_H
 
+#include "std.h"
+#include "user_post.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

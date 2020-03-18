@@ -18,6 +18,7 @@
 #define GOMA_NODE_CONST_H_
 
 #include "exo_struct.h"
+#include "mm_as_structs.h"
 #include "rf_vars_const.h"
 
 /*****************************************************************************/

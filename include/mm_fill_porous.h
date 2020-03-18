@@ -17,6 +17,14 @@
 #ifndef GOMA_MM_FILL_POROUS_H
 #define GOMA_MM_FILL_POROUS_H
 
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_std_models_shell.h"
+#include "rf_fem_const.h"
+#include "std.h"
+
+struct Boundary_Condition;
+struct Porous_Media_Terms;
 #ifdef EXTERN
 #undef EXTERN
 #endif

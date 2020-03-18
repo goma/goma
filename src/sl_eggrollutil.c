@@ -18,12 +18,6 @@
 static const char rcs_id[] = "$Id: sl_eggrollutil.c,v 5.1 2007-09-18 18:53:47 prschun Exp $";
 #endif
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <strings.h>
-#include <math.h>
-
 #include "std.h"
 #include "sl_eggroll.h"
 

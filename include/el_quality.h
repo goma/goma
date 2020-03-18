@@ -14,6 +14,8 @@
 #define GOMA_EL_QUALITY_H
 
 
+#include "el_elm_info.h"
+#include "exo_struct.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

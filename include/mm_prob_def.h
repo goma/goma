@@ -17,6 +17,7 @@
 #ifndef GOMA_MM_PROB_DEF_H
 #define GOMA_MM_PROB_DEF_H
 
+#include "mm_ns_bc.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

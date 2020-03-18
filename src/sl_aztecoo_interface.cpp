@@ -18,29 +18,21 @@
 #endif
 
 #include "mpi.h"
-#include <stdio.h>
-#include <iostream>
-#include <ctime>
-
 #include "AztecOO.h"
+#include "Epetra_DataAccess.h"
+#include "Epetra_RowMatrix.h"
+#include "az_aztec.h"
 
 #ifdef EPETRA_MPI
 #include "Epetra_MpiComm.h"
-#include "mpi.h"
 #else 
 #include "Epetra_SerialComm.h"
 #endif
 
-#include "Trilinos_Util.h"
-
 #include "Epetra_Map.h"
-#include "Epetra_MultiVector.h"
 #include "Epetra_Vector.h"
-#include "Epetra_CrsMatrix.h"
 #include "Epetra_LinearProblem.h"
-
 #include "sl_util_structs.h"
-#include "sl_epetra_interface.h"
 #include "sl_aztecoo_interface.h"
 
 extern "C" {

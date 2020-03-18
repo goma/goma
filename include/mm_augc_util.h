@@ -32,6 +32,13 @@
 #endif
 
 #include "loca_const.h"
+#include "dp_types.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "mm_as_alloc.h"
+#include "mm_as_structs.h"
+
+struct con_struct;
 
 EXTERN void update_parameterAC
 (int,                     /* NUMBER OF AC'S */

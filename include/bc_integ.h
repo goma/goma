@@ -14,6 +14,11 @@
 #define GOMA_BC_INTEG_H
 
 
+#include "bc_dirich.h"
+#include "exo_struct.h"
+#include "mm_as_structs.h"
+#include "rf_bc_const.h"
+#include "rf_fem_const.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

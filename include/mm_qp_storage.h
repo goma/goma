@@ -13,6 +13,8 @@
 
 #ifndef GOMA_MM_QP_STORAGE_H
 #define GOMA_MM_QP_STORAGE_H
+#include "rf_allo.h"
+#include "rf_bc_const.h"
 /*
  *$Id: mm_qp_storage.h,v 5.1 2007-09-18 18:53:46 prschun Exp $
  */

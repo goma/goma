@@ -21,9 +21,22 @@ static const char rcs_id[] = "$Id: sl_eggrollwrap.c,v 5.2 2007-09-18 18:53:47 pr
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 
-#include "goma.h"
+#include "ac_stability.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "mm_eh.h"
+#include "mm_more_utils.h"
+#include "mm_post_proc.h"
+#include "rd_exo.h"
+#include "rf_io_const.h"
+#include "rf_io_structs.h"
+#include "sl_auxutil.h"
+#include "sl_eggroll.h"
+#include "sl_umf.h"
+#include "std.h"
+#include "wr_dpi.h"
+#include "wr_exo.h"
 
 /* Routines that handle the eigensolver.
  *

@@ -23,30 +23,75 @@
 static char rcsid[] = "$Id: rf_solve.c,v 5.21 2010-03-17 22:23:54 hkmoffa Exp $";
 #endif
 
+#include "rf_solve.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
 
 #include "std.h"
-
 #include "exo_struct.h"
 #include "rf_fem_const.h"
 #include "rf_vars_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "rf_node_const.h"
 #include "usr_print.h"
-#include "sl_amesos_interface.h"
 #include "brk_utils.h"
-
 #include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
-
 #include "rf_solve_segregated.h"
+#include "ac_particles.h"
+#include "az_aztec.h"
+#include "dp_comm.h"
+#include "dp_types.h"
+#include "dp_utils.h"
+#include "dpi.h"
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "el_geom.h"
+#include "mm_as.h"
+#include "mm_augc_util.h"
+#include "mm_bc.h"
+#include "mm_eh.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_stress.h"
+#include "mm_fill_util.h"
+#include "mm_flux.h"
+#include "mm_more_utils.h"
+#include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_post_def.h"
+#include "mm_post_proc.h"
+#include "mm_sol_nonlinear.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "mpi.h"
+#include "rd_exo.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_bc_const.h"
+#include "rf_fem.h"
+#include "rf_io.h"
+#include "rf_io_const.h"
+#include "rf_io_structs.h"
+#include "rf_mp.h"
+#include "rf_solver.h"
+#include "rf_solver_const.h"
+#include "rf_util.h"
+#include "sl_auxutil.h"
+#include "sl_matrix_util.h"
+#include "sl_util.h"
+#include "sl_util_structs.h"
+#include "wr_dpi.h"
+#include "wr_exo.h"
+#include "wr_soln.h"
+#include "ac_stability_util.h"
 
 #define GOMA_RF_SOLVE_C
-#include "goma.h"
 #include "el_quality.h"
 
 #ifdef HAVE_FRONT
@@ -1500,21 +1545,6 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
       EH(-1,"Don't have frontal solver compiled and linked in");
 #endif /* HAVE_FRONT */
     }
-      
-#ifdef COUPLED_FILL
-    /*
-     * Prior to the primary time stepping loop, do any one time 
-     * initialization required for the Aztec linear solver, for
-     * the full Jacobian linear system.
-     */
-#else /* COUPLED_FILL */
-    /*
-     * Prior to the primary time stepping loop, do any one time 
-     * initialization required for the Aztec linear solver, both
-     * for the full Jacobian linear system *and* the explicit fill
-     * equation linear system.
-     */
-#endif /* COUPLED_FILL */
 
     /*
      * Now, just pass pointer to ams structure with all Aztec stuff

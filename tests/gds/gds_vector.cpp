@@ -1,4 +1,7 @@
 #include <catch2/catch.hpp>
+#include <math.h>
+#include <stddef.h>
+
 #include "gds/gds_vector.h"
 
 static const auto zero_comp = Catch::Floating::WithinAbsMatcher(0.0, 1e-15);

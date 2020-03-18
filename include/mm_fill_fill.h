@@ -22,6 +22,17 @@
 #ifndef GOMA_MM_FILL_FILL_H
 #define GOMA_MM_FILL_FILL_H
 
+#include "dp_types.h"
+#include "dpi.h"
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_as_structs.h"
+#include "mm_fill_aux.h"
+#include "rf_fem_const.h"
+#include "std.h"
+
+struct Aztec_Linear_Solver_System;
+struct elem_side_bc_struct;
 #ifdef EXTERN
 #undef EXTERN
 #endif

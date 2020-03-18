@@ -72,11 +72,14 @@
 static const char rcs_id[] = "$Id: sl_eggroll04.c,v 5.1 2007-09-18 18:53:47 prschun Exp $";
 #endif
 
-#include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
-#include "goma.h"
+#include "mm_eh.h"
+#include "sl_auxutil.h"
+#include "sl_eggroll.h"
+#include "sl_eggroll_def.h"
+#include "std.h"
 
 /* gets eigenvalues for matrix a[][] real and imaginary eigenvalues in
  * e.r[],e.i[] vectors.

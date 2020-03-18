@@ -40,9 +40,8 @@
 #define GOMA_MK_DM_C
 
 #include <stdio.h>
-
 #include <stdlib.h>
-#include "goma.h"
+
 #include "dpi.h"
 #include "brkfix/brkfix.h"
 #include "rf_allo.h"
@@ -51,6 +50,9 @@
 #include "brkfix/brkfix_types.h"
 #include "brkfix/nodesc.h"
 #include "brkfix/mk_dm.h"
+#include "el_elm_info.h"
+#include "rd_exo.h"
+#include "std.h"
 
 /*
  * Function prototypes for functions defined in this file...

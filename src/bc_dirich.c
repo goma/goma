@@ -17,37 +17,24 @@
 
 /* Standard include files */
 
-#include <stdio.h>
-
 /* GOMA include files */
 
 #include "std.h"
-#include "stdlib.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
-#include "rf_mp.h"
-#include "rf_solver.h"
-#include "el_elm.h"
 #include "el_geom.h"
-
-#include "rf_masks.h"
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
-#include "mm_mp_const.h"
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_eh.h"
+#include "bc_dirich.h"
+#include "mm_fill_util.h"
+#include "rf_bc.h"
+#include "rf_node_const.h"
 
 #define GOMA_BC_DIRICH_C
-#include "goma.h"
 
 /************************************************************************************/
 /************************************************************************************/

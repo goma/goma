@@ -14,6 +14,14 @@
 #ifndef GOMA_MM_FILL_SOLID_H
 #define GOMA_MM_FILL_SOLID_H
 
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_fill_rs.h"
+#include "rf_fem_const.h"
+#include "std.h"
+
+struct Boundary_Condition;
+struct Elastic_Constitutive;
 #ifdef EXTERN
 #undef EXTERN
 #endif

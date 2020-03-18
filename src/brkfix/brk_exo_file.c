@@ -90,10 +90,9 @@
 #endif
 
 #include <stdio.h>
-
-#include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/errno.h>		/* needed on HP-UX */
+#include <errno.h>
+#include <stdlib.h>
 
 #ifdef HAVE_FCNTL_H
 #include <fcntl.h>
@@ -102,11 +101,7 @@
 #ifdef STDC_HEADERS
 #include <stdlib.h>
 #endif
-#include <unistd.h>
-
 #include <string.h>
-
-#include "goma.h"
 
 #include "brkfix/brkfix.h"		/* useful general stuff */
 #include "mm_eh.h"			/* error handling */
@@ -122,12 +117,22 @@
 #include "brkfix/mk_dm.h"
 #include "brkfix/sam_perea.h"
 #include "brkfix/utils.h"
-#include "brkfix/exo_utils.h"
 #include "exo_conn.h"
 #include "brkfix/emuck.h"
 #include "rd_dpi.h"
 #include "rd_exo.h"
 #include "brkfix/brk.h"
+#include "el_elm_info.h"
+#include "el_geom.h"
+#include "exodusII.h"
+#include "mm_elem_block_structs.h"
+#include "rd_mesh.h"
+#include "rf_bc_const.h"
+#include "rf_element_storage_const.h"
+#include "rf_fem.h"
+#include "std.h"
+#include "wr_dpi.h"
+#include "wr_exo.h"
 
 /*
  * The general dependency matrix exists for each element block.

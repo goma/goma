@@ -14,6 +14,15 @@
 #ifndef GOMA_MM_NS_BC_H
 #define GOMA_MM_NS_BC_H
 
+#include "el_elm.h"
+#include "exo_struct.h"
+#include "mm_as_structs.h"
+#include "mm_fill_jac.h"
+#include "mm_mp_const.h"
+#include "mm_numjac.h"
+#include "rf_bc_const.h"
+#include "rf_fem_const.h"
+#include "std.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

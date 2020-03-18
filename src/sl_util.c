@@ -40,21 +40,17 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
-#include <stdlib.h>
 
 #include "std.h"
 #include "rf_allo.h"
-
 #include "rf_io.h"		/* for Debug_Flag */
-
 #include "rf_fem.h"
 #include "rf_mp.h"
 #include "rf_solver.h"
-
-#include "el_geom.h"		/* for Num_Internal_Nodes & friends */
-#include "el_elm.h"
-
-#include "mm_post_def.h"
+#include "rf_solver_const.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "stdbool.h"
 
 /*
  * This function has been updated to reflect the deprecation of Aztec
@@ -71,15 +67,12 @@
 #endif
 #endif
 
-#include "az_aztec.h"
-#include "az_aztec_defs.h"
-
-#include "mm_eh.h"		/* Error handler. */
-
 #include "sl_util.h"		/* Variables of interest */
+
+#include "az_aztec.h"
+#include "mm_eh.h"		/* Error handler. */
 #include "sl_util_structs.h"
 #include "dp_types.h"
-
 #include "mm_as_structs.h"
 #include "mm_as.h"
 

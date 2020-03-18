@@ -320,8 +320,7 @@ EL_INC=	el_elm.h\
 
 MAIN_SRC= main.c
 
-MAIN_INC= std.h\
-          goma.h
+MAIN_INC= std.h
 
 # _____ Advanced capabilities routines "ac_" prefix ___________________________
 

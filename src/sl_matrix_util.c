@@ -20,27 +20,31 @@ static char rcsid[] = "$Id: sl_matrix_util.c,v 5.2 2007-12-07 17:14:37 hkmoffa E
 #endif
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <strings.h>
 #include <string.h>
 #include <math.h>
 
 #include "std.h"
 #include "rf_allo.h"
-#include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_mp.h"
-#include "rf_io_const.h"
-#include "rf_io.h"
 #include "rf_solver.h"
 #include "mm_eh.h"
 #include "sl_util_structs.h"
-
-#include "sl_epetra_interface.h"
 #include "sl_epetra_util.h"
+#include "dpi.h"
+#include "el_geom.h"
+#include "exo_struct.h"
+#include "mm_as.h"
+#include "mm_as_structs.h"
+#include "mm_unknown_map.h"
+#include "mpi.h"
+#include "rf_node_const.h"
+#include "rf_solver_const.h"
+#include "rf_vars_const.h"
+#include "sl_matrix_util.h"
+#include "sl_util.h"
 
 #define GOMA_SL_MATRIX_UTIL_C
-#include "goma.h"
 
 /* canine_chaos() - return useful information about the matrix problem
  * 

@@ -13,6 +13,15 @@
 #ifndef GOMA_BC_COLLOC_H
 #define GOMA_BC_COLLOC_H
 
+#include "exo_struct.h"
+#include "mm_eh.h"
+#include "rf_fem_const.h"
+#include "rf_vars_const.h"
+#include "std.h"
+
+struct Boundary_Condition;
+struct Data_Table;
+struct elem_side_bc_struct;
 #ifdef EXTERN
 #undef EXTERN
 #endif

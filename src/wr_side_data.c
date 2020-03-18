@@ -29,39 +29,38 @@ static char rcsid[] =
 
 #include <stdio.h>
 #include <math.h>
-#include <time.h>
 #include <strings.h>
 
 #include "std.h"
-
 #include "rf_allo.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
 #include "rf_mp.h"
-#include "rf_solver.h"
-
-#include "rf_masks.h"
 #include "el_geom.h"
-
-#include "rf_bc_const.h"
-#include "rf_bc.h"
-#include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_eh.h"
-
 #include "mm_mp_structs.h"
-
 #include "mm_post_def.h"
-#include "mm_post_proc.h"
 #include "mm_std_models_shell.h"
-
-#include "goma.h"
+#include "dp_utils.h"
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "exo_struct.h"
+#include "md_timer.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_mp.h"
+#include "mm_shell_util.h"
+#include "mm_unknown_map.h"
+#include "mpi.h"
+#include "rd_mesh.h"
+#include "wr_side_data.h"
  
 extern double time_goma_started; /* def'd and set in main.c */
 

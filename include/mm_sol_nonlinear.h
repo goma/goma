@@ -14,6 +14,14 @@
 #ifndef GOMA_MM_SOL_NONLINEAR_H
 #define GOMA_MM_SOL_NONLINEAR_H
 
+#include "dp_types.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "mm_prob_def.h"
+#include "rf_io_structs.h"
+#include "std.h"
+
+struct Aztec_Linear_Solver_System;
 #ifdef EXTERN
 #undef EXTERN
 #endif

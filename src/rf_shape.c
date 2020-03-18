@@ -22,17 +22,11 @@ static char rcsid[] = "$Id: rf_shape.c,v 5.4 2010-04-06 15:32:46 hkmoffa Exp $";
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "std.h"
 #include "el_elm.h"
-#include "rf_fem_const.h"
-#include "rf_vars_const.h"
-#include "mm_as_const.h"
-
 #include "mm_eh.h"
-#include "mm_as_structs.h"
+#include "rf_shape.h"
 
 #define GOMA_RF_SHAPE_C
-#include "goma.h"
 
 
 /* 

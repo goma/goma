@@ -25,36 +25,29 @@ static char rcsid[] =
 #include <string.h>
 #include <math.h>
 
-#include <ctype.h>		/* for toupper(), isspace() */
-
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_solver.h"
 #include "rf_mp.h"
 #include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
 #include "rf_bc_const.h"
 #include "rf_allo.h"
-#include "rf_bc.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
-#include "mm_mp.h"
-
 #include "mm_eh.h"
-
 #include "mm_post_def.h"
-
-#include "sl_util_structs.h"
 #include "mm_input.h"
-
-#include "goma.h"
+#include "el_elm.h"
+#include "md_timer.h"
+#include "mm_bc.h"
+#include "mm_interface.h"
+#include "mm_species.h"
+#include "rf_solver_const.h"
 
 /*
  * Hey! This is the *one* place where these are defined. All other locations

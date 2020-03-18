@@ -23,11 +23,13 @@ static char rcsid[] =
 "$Id: mm_sol_nonlinear.c,v 5.19 2010-07-21 21:03:04 sarober Exp $";
 #endif
 
+#include "mm_sol_nonlinear.h"
+
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
 #include <string.h>
+
 #include "std.h"
 #include "rf_io_const.h"
 #include "rf_io_structs.h"
@@ -39,22 +41,45 @@ static char rcsid[] =
 #include "rf_allo.h"
 #include "rf_bc_const.h"
 #include "mm_more_utils.h"
-  
 #include "rf_solver_const.h"
 #include "sl_matrix_util.h"
-
-#include "mm_qp_storage.h"
-
 #include "sl_util_structs.h"
-
 #include "sl_amesos_interface.h"
-
 #include "sl_aztecoo_interface.h"
-
 #include "sl_stratimikos_interface.h"
+#include "ac_update_parameter.h"
+#include "bc_rotate.h"
+#include "dp_comm.h"
+#include "dp_types.h"
+#include "dp_utils.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "loca_const.h"
+#include "md_timer.h"
+#include "mm_augc_util.h"
+#include "mm_fill.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_util.h"
+#include "mm_mp.h"
+#include "mm_mp_structs.h"
+#include "mm_numjac.h"
+#include "mm_post_proc.h"
+#include "mm_unknown_map.h"
+#include "mpi.h"
+#include "rf_bc.h"
+#include "rf_node_const.h"
+#include "rf_util.h"
+#include "sl_auxutil.h"
+#include "sl_epetra_interface.h"
+#include "sl_lu.h"
+#include "sl_umf.h"
+#include "wr_exo.h"
+#include "wr_side_data.h"
+#include "mm_input.h"
 
 #define GOMA_MM_SOL_NONLINEAR_C
-#include "goma.h"
 
 /*
  * EDW: The prototype for function "mf_sol_lineqn" has been moved
@@ -84,19 +109,11 @@ static int first_linear_solver_call=TRUE;
 #endif
 
 #include "az_aztec.h"
-
 #include "sl_util.h"
-
-#include "el_geom.h"
-
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_post_def.h"
-
 #include "rotate_util.h"
-
-#include "mm_eh.h"
 
 
 static int soln_sens		/* mm_sol_nonlinear.c                        */

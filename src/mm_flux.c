@@ -19,43 +19,64 @@
  
 #include <stdio.h>
 #include <stdlib.h>
-#include <strings.h>
 #include <string.h>
 #include <math.h>
  
 /* GOMA include files */
 
+#include "mm_flux.h"
+
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
 #include "rf_io.h"
 #include "rf_mp.h"
 #include "el_elm.h"
 #include "el_geom.h"
- 
-#include "rf_masks.h"
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
-#include "rf_fill_const.h"
-#include "rf_vars_const.h"
-#include "mm_mp_const.h" 
+#include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
- 
 #include "mm_eh.h"
 #include "mm_post_def.h"
-
 #include "mm_std_models_shell.h"
-#include "mm_std_models.h"
 #include "mm_fill_common.h"
+#include "ac_stability.h"
+#include "ac_stability_util.h"
+#include "bc_colloc.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "exo_conn.h"
+#include "exo_struct.h"
+#include "mm_as_alloc.h"
+#include "mm_bc.h"
+#include "mm_fill_aux.h"
+#include "mm_fill_fill.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_porous.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_stress.h"
+#include "mm_fill_terms.h"
+#include "mm_fill_util.h"
+#include "mm_ns_bc.h"
+#include "mm_qtensor_model.h"
+#include "mm_shell_util.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "mpi.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "user_mp.h"
+#include "wr_side_data.h"
+
 #define GOMA_MM_FLUX_C
-#include "goma.h"
 
 static int load_fv_sens
 ( void );
@@ -6050,7 +6071,7 @@ compute_volume_integrand(const int quantity, const int elem,
       break;
 
     case I_TFMP_FORCE:
-      if(pd->e[R_TFMP_MASS]) {
+      if(pd->e[pg->imtrx][R_TFMP_MASS]) {
 	n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
 	lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 	det = fv->sdet; //Different determinant since this is a shell

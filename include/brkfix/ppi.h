@@ -16,6 +16,7 @@
 #ifndef GOMA_PPI_H
 #define GOMA_PPI_H
 
+#include "wr_side_data.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

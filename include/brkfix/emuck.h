@@ -18,6 +18,9 @@
 #ifndef GOMA_EMUCK_H
 #define GOMA_EMUCK_H
 
+#include "dpi.h"
+#include "exo_struct.h"
+
 extern void assign_elem_ownership
 (const Exo_DB *,		/* monolith FE db w/ connectivity       (in) */
        const int ,		/* how many pieces                      (in) */

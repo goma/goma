@@ -23,6 +23,8 @@ static char rcsid[] =
 
 /* Standard include files */
 
+#include "mm_ns_bc.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -33,35 +35,52 @@ static char rcsid[] =
 #include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_masks.h"
-#include "rf_io_const.h"
-#include "rf_io_structs.h"
-#include "rf_io.h"
 #include "rf_mp.h"
-#include "el_elm.h"
 #include "el_geom.h"
 #include "rf_bc_const.h"
-#include "rf_solver_const.h"
 #include "rf_solver.h"
-#include "rf_fill_const.h"
 #include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-
 #include "mm_mp_structs.h"
 #include "mm_mp.h"
 #include "mm_qp_storage.h"
-
 #include "rotate_util.h"
-
 #include "mm_eh.h"
+#include "ac_stability.h"
+#include "az_aztec.h"
+#include "bc_colloc.h"
+#include "exo_struct.h"
+#include "gds/gds_vector.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill_jac.h"
+#include "mm_fill_ls.h"
+#include "mm_fill_ptrs.h"
+#include "mm_fill_rs.h"
+#include "mm_fill_solid.h"
+#include "mm_fill_species.h"
+#include "mm_fill_stress.h"
+#include "mm_fill_terms.h"
+#include "mm_interface.h"
+#include "mm_qtensor_model.h"
+#include "mm_shell_util.h"
+#include "mm_species.h"
+#include "mm_unknown_map.h"
+#include "mm_viscosity.h"
+#include "mpi.h"
+#include "rd_mesh.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "sl_auxutil.h"
+#include "user_bc.h"
+#include "user_mp.h"
+#include "wr_side_data.h"
 
 #define eps(i,j,k)   ( (i-j)*(j-k)*(k-i)/2 )
 
 #define GOMA_MM_NS_BC_C
-#include "goma.h"
 
 /*
  * Global variables defined here. Declared frequently via rf_bc.h
@@ -14939,10 +14958,10 @@ calculate_laser_flux ( const double p[],
 	    {
 	      q_laserpow = qlaser0+(q_laserpow-qlaser0)*(time-(t_deltpk+ispot*t_spot))/(t_deltst-t_deltpk);
 	    }
-	  if (time >= (t_deltst+ispot*t_spot) && time < (t_cutoff+ispot*t_spot))
+	  /*if (time >= (t_deltst+ispot*t_spot) && time < (t_cutoff+ispot*t_spot))
 	    {
-	      //  q_laserpow = q_laserpow;
-	    }
+	      q_laserpow = q_laserpow;
+	    }*/
 	  if (time >= (t_cutoff+ispot*t_spot) && time < (t_tapper+ispot*t_spot))
 	    {
 	      q_laserpow = q_laserpow+(base_qlaser-q_laserpow)*(time-(t_cutoff+ispot*t_spot))/(t_tapper-t_cutoff);
@@ -14969,10 +14988,10 @@ calculate_laser_flux ( const double p[],
 	{
 	  q_laserpow = qlaser0+(q_laserpow-qlaser0)*(time-t_deltpk)/(t_deltst-t_deltpk);
 	}
-      if (time >= t_deltst )
+      /*if (time >= t_deltst )
 	{
-          //  q_laserpow = q_laserpow;
-	}
+	  q_laserpow = q_laserpow;
+	}*/
     }
   else if(sw_trv_spt>1.9 && sw_trv_spt<2.1)
     { /* sinusoidal traveling weld */

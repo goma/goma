@@ -31,6 +31,8 @@
 #ifndef GOMA_DP_TYPES_H
 #define GOMA_DP_TYPES_H
 
+#include <mpi.h>
+
 /*
  * Used during the initial allocation of the data description structure.
  * This limit is not hard; checking during data member addition is done

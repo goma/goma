@@ -16,21 +16,14 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 
 #include "std.h"
-
 #include "rf_allo.h"
-
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-
-#include "rf_io_structs.h"
 #include "rf_io.h"
 #include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
@@ -39,26 +32,19 @@
 #include "dp_types.h"
 #include "dpi.h"
 #include "dp_map_comm_vec.h"
-#include "sl_util.h"
-#include "sl_util_structs.h"
 #include "mm_unknown_map.h"
-#include "dp_map_comm_vec.h"
 #include "mm_bc.h"
 #include "rd_mesh.h"
 #include "rf_node_const.h"
 #include "rf_solve.h"
 #include "mm_eh.h"
-#include "rf_masks.h"
 #include "rf_util.h"
-
 #include "rf_bc_const.h"
 #include "rf_bc.h"
-#include "mm_elem_block_structs.h"
 #include "rf_element_storage_const.h"
-#include "mm_fill_shell.h"
 #include "mm_shell_util.h"
-
 #include "dp_utils.h"
+#include "mpi.h"
 
 static void
 associate_bc_to_matrix(void);

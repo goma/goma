@@ -16,12 +16,53 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
 #include <string.h>
 
 #define GOMA_AC_CONTI_C
-#include "goma.h"
 #include "brk_utils.h"
+#include "ac_conti.h"
+#include "ac_update_parameter.h"
+#include "az_aztec.h"
+#include "dp_comm.h"
+#include "dp_types.h"
+#include "dp_utils.h"
+#include "dpi.h"
+#include "el_geom.h"
+#include "el_quality.h"
+#include "exo_struct.h"
+#include "mm_as.h"
+#include "mm_as_structs.h"
+#include "mm_augc_util.h"
+#include "mm_bc.h"
+#include "mm_eh.h"
+#include "mm_fill_util.h"
+#include "mm_flux.h"
+#include "mm_more_utils.h"
+#include "mm_mp.h"
+#include "mm_mp_const.h"
+#include "mm_mp_structs.h"
+#include "mm_post_def.h"
+#include "mm_post_proc.h"
+#include "mm_sol_nonlinear.h"
+#include "mpi.h"
+#include "rf_allo.h"
+#include "rf_bc.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_io.h"
+#include "rf_io_structs.h"
+#include "rf_mp.h"
+#include "rf_node_const.h"
+#include "rf_solve.h"
+#include "rf_solver.h"
+#include "rf_solver_const.h"
+#include "rf_util.h"
+#include "sl_auxutil.h"
+#include "sl_util_structs.h"
+#include "std.h"
+#include "wr_exo.h"
+#include "wr_soln.h"
+
 int w;
 
 #include "sl_util.h"		/* defines sl_init() */

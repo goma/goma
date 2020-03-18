@@ -74,14 +74,17 @@ static char rcsid[] = "$Id: exo_conn.c,v 5.3 2009-11-13 23:20:07 prschun Exp $";
 #include "el_elm.h"
 #include "rf_allo.h"
 #include "rf_mp.h"
-#include "rf_bc_const.h"
-#include "exodusII.h"
 #include "exo_struct.h"
-#include "rf_vars_const.h"
-#include "mm_as_structs.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "exo_conn.h"
+#include "rd_exo.h"
+#include "rd_mesh.h"
+#include "rf_fem.h"
+#include "rf_solver.h"
+#include "rf_solver_const.h"
 
 #define GOMA_EXO_CONN_C
-#include "goma.h"
 
 /*
  * Prototype declarations of static functions defined in this file.

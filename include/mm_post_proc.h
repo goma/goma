@@ -22,6 +22,13 @@
 #ifndef GOMA_MM_POST_PROC_H
 #define GOMA_MM_POST_PROC_H
 
+#include <stdio.h>
+
+#include "dpi.h"
+#include "exo_struct.h"
+#include "mm_more_utils.h"
+#include "rf_io_structs.h"
+#include "std.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

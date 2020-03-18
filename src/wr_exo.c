@@ -43,10 +43,7 @@
 
 #include <sys/types.h>
 #include <time.h>
-#include <errno.h>
 #include <sys/utsname.h>
-#include <pwd.h>
-#include <fcntl.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -63,20 +60,29 @@ static int has_been_called=0;
 #include "std.h"
 #include "exo_struct.h"
 #include "mm_eh.h"
-#include "rf_vars_const.h"
 #include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
-#include "rf_bc.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_allo.h"
 #include "rf_mp.h"		/* are we serial or parallel? */
 #include "rf_io_structs.h"	/* for Results_Description */
+#include "el_elm.h"
+#include "el_elm_info.h"
+#include "exodusII.h"
+#include "md_timer.h"
+#include "mm_elem_block_structs.h"
+#include "mm_fill_util.h"
+#include "mm_mp.h"
+#include "mm_mp_structs.h"
+#include "mm_post_def.h"
+#include "rf_bc_const.h"
+#include "rf_io_const.h"
+#include "wr_exo.h"
 
 #define GOMA_WR_EXO_C
-#include "goma.h"
 
 extern char **Argv;		/* global shadow of argv, def'd in main.c */
 

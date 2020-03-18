@@ -14,6 +14,8 @@
 #ifndef GOMA_WR_DPI_H
 #define GOMA_WR_DPI_H
 
+#include "dpi.h"
+#include "user_pre.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

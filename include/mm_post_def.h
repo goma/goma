@@ -20,6 +20,12 @@
 #ifndef GOMA_MM_POST_DEF_H
 #define GOMA_MM_POST_DEF_H
 
+#include "std.h"
+#include "el_elm.h"
+#include "rf_io_const.h"
+#include "rf_fem_const.h"
+
+
 /*
  *  These Define parameters help us parse the force and flux calculation
  *  requests.   

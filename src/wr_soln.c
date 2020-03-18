@@ -11,12 +11,22 @@
 \************************************************************************/
  
 
-#include <stdlib.h>
+#include "wr_soln.h"
+
 #include <stdio.h>
 
-
-#include "wr_soln.h"
-#include "goma.h"
+#include "mm_as.h"
+#include "mm_as_structs.h"
+#include "mm_more_utils.h"
+#include "mm_post_def.h"
+#include "mm_post_proc.h"
+#include "rf_fem.h"
+#include "rf_fem_const.h"
+#include "rf_io_structs.h"
+#include "wr_exo.h"
+#include "dpi.h"
+#include "exo_struct.h"
+#include "std.h"
 
 /***********************************************************************/
 /***********************************************************************/

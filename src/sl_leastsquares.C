@@ -10,6 +10,13 @@
 * This software is distributed under the GNU General Public License.	  *
 \************************************************************************/
 
+#include <stdlib.h>
+#include <string>
+
+#include "Epetra_ConfigDefs.h"
+#include "Epetra_DataAccess.h"
+#include "Epetra_Object.h"
+#include "az_aztec.h"
 #ifndef GOMA_SL_AMESOS_INTERFACE_CC
 #define GOMA_SL_AMESOS_INTERFACE_CC
 #endif
@@ -25,12 +32,9 @@
 #define __cplusplus
 #endif
 
-#include "mpi.h"
-#include <stdio.h>
 #include <iostream>
-#include <ctime>
-#include "AztecOO_config.h"
 
+#include "mpi.h"
 #include "sl_amesos_interface.h"
 
 
@@ -38,24 +42,17 @@
 #define AZ_MPI
 #define AZTEC_MPI
 #include "Epetra_MpiComm.h"
-#include "mpi.h"
 #else 
 #include "Epetra_SerialComm.h"
 #endif
 
 #include "Trilinos_Util.h"
-
 #include "Epetra_Map.h"
-#include "Epetra_MultiVector.h"
 #include "Epetra_Vector.h"
 #include "Epetra_CrsMatrix.h"
 #include "Epetra_LinearProblem.h"
 #include "EpetraExt_MatrixMatrix.h"
-#include "Amesos.h"
 #include "AztecOO.h"
-
-
-#include "sl_util_structs.h"
 
 static void  bf_mat_to_Epetra ( double *,
 				int *,

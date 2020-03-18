@@ -15,37 +15,28 @@
 #include <string.h>
 #include <math.h>
 
-#include "std.h" 
+#include "std.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_io_const.h"
 #include "rf_io.h"
 #include "rf_mp.h"
 #include "el_elm.h"
-#include "el_geom.h"
 #include "rf_allo.h"
 #include "rf_bc.h"
-#include "rf_masks.h"
 #include "mm_eh.h"
 #include "exo_struct.h"
-
 #include "dpi.h"
-#include "dp_types.h"
 #include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_as_const.h"
-
 #include "rf_node_const.h"
-
 #include "rd_mesh.h"
 #include "mm_bc.h"
-#include "rf_util.h"
-
-#include "rotate_util.h"
-
-#include "goma.h"
+#include "dp_utils.h"
+#include "el_elm_info.h"
+#include "rf_bc_const.h"
 #ifndef MAX_NODAL_BCS
 #define MAX_NODAL_BCS  35
 #endif

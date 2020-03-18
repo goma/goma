@@ -13,6 +13,9 @@
 #ifndef GOMA_RD_DPI_H
 #define GOMA_RD_DPI_H
 
+#include "dpi.h"
+#include "exo_struct.h"
+#include "mm_eh.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

@@ -35,37 +35,36 @@ static char rcsid[] =
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 
 #include "std.h"
-#include "rf_bc.h"
 #include "rf_fem_const.h"
 #include "rf_fem.h"
-#include "rf_io_const.h"
 #include "rf_io.h"
-#include "rf_masks.h"
 #include "el_geom.h"
 #include "el_elm.h"
 #include "rf_mp.h"
 #include "rf_allo.h"
 #include "rf_solver.h"
-
-#include "rf_masks.h"
 #include "rf_vars_const.h"
-#include "mm_mp_const.h"
 #include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_mp.h"
 #include "mm_mp_structs.h"
-
-
 #include "sl_util_structs.h"
-
 #include "mm_eh.h"
 #include "exo_struct.h"
-
-#include "goma.h"
+#include "dp_map_comm_vec.h"
+#include "dp_types.h"
+#include "dp_utils.h"
+#include "dpi.h"
+#include "el_elm_info.h"
+#include "mm_unknown_map.h"
+#include "rd_mesh.h"
+#include "rf_bc_const.h"
+#include "rf_node_const.h"
+#include "rf_solver_const.h"
+#include "rf_util.h"
 
 #ifdef PARALLEL
 #include "mpi.h"

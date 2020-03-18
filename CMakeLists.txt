@@ -213,7 +213,6 @@ set(GOMA_INCLUDES
     include/el_quality.h
     include/exo_conn.h
     include/exo_struct.h
-    include/goma.h
     include/loca_const.h
     include/loca_util_const.h
     include/md_timer.h
@@ -264,7 +263,6 @@ set(GOMA_INCLUDES
     include/mm_shell_bc.h
     include/mm_shell_util.h
     include/mm_sol_nonlinear.h
-    include/mm_solve_linear_segregated.h
     include/mm_species.h
     include/mm_std_models.h
     include/mm_std_models_shell.h

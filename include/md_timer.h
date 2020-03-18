@@ -14,6 +14,8 @@
 #define GOMA_MD_TIMER_H
 
 
+#include "exo_conn.h"
+#include "std.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif

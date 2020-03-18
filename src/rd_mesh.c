@@ -38,17 +38,11 @@ static char rcsid[] = "$Id: rd_mesh.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $";
 #include <stdio.h>
 #include <string.h>
 
-#include "netcdf.h"
 #include "exodusII.h"
-
 #include "std.h"
-
 #include "exo_struct.h"
 #include "dpi.h"
-
 #include "el_elm.h"    /* Must be after exodusII.h */
-#include "el_geom.h"
-#include "rf_fem_const.h"
 #include "rf_fem.h"
 #include "rf_mp.h"
 #include "rf_io_const.h"
@@ -56,15 +50,20 @@ static char rcsid[] = "$Id: rd_mesh.c,v 5.5 2009-04-24 23:42:33 hkmoffa Exp $";
 #include "rf_allo.h"
 #include "rf_bc_const.h"
 #include "rf_bc.h"
-#include "rf_vars_const.h"
-
-#include "mm_as_const.h"
 #include "mm_as_structs.h"
 #include "mm_as.h"
 #include "mm_eh.h"
+#include "dp_utils.h"
+#include "el_elm_info.h"
+#include "exo_conn.h"
+#include "mm_elem_block_structs.h"
+#include "mm_mp.h"
+#include "mm_mp_structs.h"
+#include "rd_dpi.h"
+#include "rd_exo.h"
+#include "rd_mesh.h"
 
 #define GOMA_RD_MESH_C
-#include "goma.h"
 
 /*
  * Variables defined here that are typically declared extern in el_geom.h

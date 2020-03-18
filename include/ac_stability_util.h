@@ -31,6 +31,7 @@
 #include "exo_struct.h"
 #include "dpi.h"
 #include "rf_io_structs.h"
+#include "ac_stability.h"
 
 EXTERN void do_LSA_mods
 (int);

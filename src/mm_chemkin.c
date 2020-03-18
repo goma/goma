@@ -32,29 +32,17 @@
  *    chemkin_initialize_mp
  ***************************************************************************/
 
-#include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 
 #include "std.h"
-#include "rf_fem_const.h"
-#include "rf_vars_const.h"
-#include "mm_mp_const.h"
-#include "mm_as_const.h"
-#include "mm_as_structs.h"
-#include "mm_as.h"
+#include "mm_eh.h"
 
 #ifdef USE_CHEMKIN
 #include "cpc_defs.h"
 #include "ck_chemkin_const.h"
 #endif
 
-#include "mm_mp_structs.h"
-#include "mm_mp.h"
-
 #include "mm_chemkin.h"
-
-#include "goma.h"
 
 /*****************************************************************************/
 /*****************************************************************************/

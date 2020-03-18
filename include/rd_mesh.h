@@ -13,6 +13,12 @@
 #ifndef GOMA_RD_MESH_H
 #define GOMA_RD_MESH_H
 
+#include "dpi.h"
+#include "exo_struct.h"
+#include "mm_as_structs.h"
+#include "rd_exo.h"
+#include "rf_bc_const.h"
+
 #ifdef EXTERN
 #undef EXTERN
 #endif

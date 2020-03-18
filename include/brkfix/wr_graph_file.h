@@ -16,6 +16,7 @@
 #ifndef GOMA_WR_GRAPH_FILE_H
 #define GOMA_WR_GRAPH_FILE_H
 
+#include "wr_side_data.h"
 #ifdef EXTERN
 #undef EXTERN
 #endif
