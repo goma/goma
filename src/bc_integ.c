@@ -778,6 +778,17 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 				   theta, delta_t);
 	  break;
 
+        case VELO_SLIP_LS_ORIENTED_BC:
+          fvelo_slip_ls_oriented( func, d_func,
+                                   bc->BC_Data_Float[0],
+                                   bc->BC_Data_Float[1],
+                                   bc->BC_Data_Float[2],
+                                   bc->BC_Data_Float[3],
+                                   bc->BC_Data_Float[4],
+                                   bc->BC_Data_Float[5],
+                                   bc->BC_Data_Float[6],
+                                 bc->BC_Data_Float[7]);
+          break;
 
 	case Q_VELO_SLIP_BC:
 	  q_velo_slip_bc(func, d_func, 

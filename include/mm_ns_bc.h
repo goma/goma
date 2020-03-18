@@ -253,6 +253,17 @@ fvelo_slip_ls_heaviside(double func[MAX_PDIM],
 			const double vsz,	/* is applied           */
 			const double tt,
                         const double dt);
+void
+fvelo_slip_ls_oriented(double func[MAX_PDIM],
+                        double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                        double width,
+                        double beta_negative,
+                        double beta_positive,
+                        double gamma_negative,
+                        double gamma_positive,
+                        const double vsx,      /* velocity components of solid  */
+                        const double vsy,	/* surface on which slip condition   */
+                       const double vsz);	/* is applied           */
 
 void
 fvelo_airfilm_bc(double func[MAX_PDIM],

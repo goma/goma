@@ -16314,14 +16314,18 @@ fprintf(stderr,"light intensity %g %g %g \n",fv->poynt[0],fv->poynt[1],*func);
 
 }
 /****************************************************************************/
-
-void fvelo_slip_ls_heaviside(double func[MAX_PDIM],
-                             double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
-                             double width, double beta_negative, double beta_positive,
-                             const double vsx, /* velocity components of solid  */
-                             const double vsy, /* surface on which slip condition   */
-                             const double vsz, /* is applied           */
-                             const double tt, const double dt) {
+void
+fvelo_slip_ls_heaviside(double func[MAX_PDIM],
+                        double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                        double width,
+                        double beta_negative,
+                        double beta_positive,
+                        const double vsx,      /* velocity components of solid  */
+                        const double vsy,	/* surface on which slip condition   */
+                        const double vsz,	/* is applied           */
+                        const double tt,
+                        const double dt)
+{
   int j, var, jvar, p;
   double phi_j, vs[MAX_PDIM];
   double beta, betainv;
@@ -16338,11 +16342,88 @@ void fvelo_slip_ls_heaviside(double func[MAX_PDIM],
     memset(d_beta_dF, 0, MDE * sizeof(double));
   }
 #endif
-  // mu = viscosity(gn, gamma, d_mu);
 
   level_set_property(beta_negative, beta_positive, width, &beta, d_beta_dF);
   // betainv = mu/beta;
   betainv = 1 / beta;
+
+  vs[0] = vsx;
+  vs[1] = vsy;
+  vs[2] = vsz;
+
+  if (af->Assemble_Jacobian)
+  {
+    for (jvar=0; jvar<pd->Num_Dim; jvar++)
+    {
+      var = VELOCITY1 + jvar;
+      if (pd->v[pg->imtrx][var])
+      {
+        for (j=0; j<ei[pg->imtrx]->dof[var]; j++)
+        {
+          phi_j = bf[var]->phi[j];
+          d_func[jvar][var][j] += (-betainv)*(phi_j);
+        }
+      }
+
+    }
+
+    var = LS;
+    if( pd->v[pg->imtrx][var])
+    {
+      for(p=0; p<pd->Num_Dim; p++)
+      {
+        for( j=0; j<ei[pg->imtrx]->dof[var]; j++)
+        {
+          phi_j = bf[var]->phi[j];
+
+          d_func[p][var][j] += (d_beta_dF[j]/beta/beta)*( fv->v[p] - vs[p] );
+          //d_func[p][var][j] += (d_beta_dF[j])*( fv->v[p] - vs[p] );
+        }
+      }
+    }
+  }	/* end of of Assemble Jacobian		*/
+
+  /* Calculate the residual contribution	*/
+  for (p=0; p<pd->Num_Dim; p++)
+  {
+    func[p] += (-betainv) * (fv->v[p] - vs[p]);
+  }
+
+}
+
+void fvelo_slip_ls_oriented(double func[MAX_PDIM],
+                            double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+                            double width,
+                            double beta_negative,
+                            double beta_positive,
+                            double gamma_negative,
+                            double gamma_positive,
+                            const double vsx, /* velocity components of solid  */
+                            const double vsy, /* surface on which slip condition   */
+                            const double vsz) /* is applied           */
+{
+  int j, var, jvar, p;
+  double phi_j, vs[MAX_PDIM];
+  double beta, betainv;
+  double d_beta_dF[MDE];
+  double gamma, gammainv;
+  double d_gamma_dF[MDE];
+  /************************* EXECUTION BEGINS *******************************/
+
+  if (af->Assemble_LSA_Mass_Matrix)
+    return;
+
+  load_lsi(width);
+#ifdef COUPLED_FILL
+  if (af->Assemble_Jacobian) {
+    load_lsi_derivs();
+    memset(d_beta_dF, 0, MDE * sizeof(double));
+  }
+#endif /* COUPLED_FILL */
+  level_set_property(beta_negative, beta_positive, width, &beta, d_beta_dF);
+  level_set_property(gamma_negative, gamma_positive, width, &gamma, d_gamma_dF);
+  betainv = 1 / beta;
+  gammainv = 1 / gamma;
 
   vs[0] = vsx;
   vs[1] = vsy;
@@ -16355,18 +16436,25 @@ void fvelo_slip_ls_heaviside(double func[MAX_PDIM],
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
           phi_j = bf[var]->phi[j];
           d_func[jvar][var][j] += (-betainv) * (phi_j);
+
+          for (int q = 0; q < pd->Num_Dim; q++) {
+            d_func[jvar][var][j] +=
+                -((gammainv - betainv) * (fv->snormal[jvar] * fv->snormal[q]) * phi_j);
+          }
         }
       }
-    }
 
-    var = LS;
-    if (pd->v[pg->imtrx][var]) {
-      for (p = 0; p < pd->Num_Dim; p++) {
-        for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
-          phi_j = bf[var]->phi[j];
-
-          d_func[p][var][j] += (d_beta_dF[j] / beta / beta) * (fv->v[p] - vs[p]);
-          // d_func[p][var][j] += (d_beta_dF[j])*( fv->v[p] - vs[p] );
+      var = LS;
+      if (pd->v[pg->imtrx][var]) {
+        for (p = 0; p < pd->Num_Dim; p++) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            d_func[p][var][j] += (d_beta_dF[j] * betainv * betainv) * (fv->v[p] - vs[p]);
+            for (int q = 0; q < pd->Num_Dim; q++) {
+              d_func[p][var][j] +=
+                  (d_gamma_dF[j] * gammainv * gammainv - d_beta_dF[j] * betainv * betainv) *
+                  (fv->v[p] - vs[p]);
+            }
+          }
         }
       }
     }
@@ -16374,7 +16462,11 @@ void fvelo_slip_ls_heaviside(double func[MAX_PDIM],
 
   /* Calculate the residual contribution	*/
   for (p = 0; p < pd->Num_Dim; p++) {
-    func[p] += (-betainv) * (fv->v[p] - vs[p]);
+    double p_vel = (fv->v[p] - vs[p]);
+    func[p] += -(betainv)*p_vel;
+    for (int q = 0; q < pd->Num_Dim; q++) {
+      func[p] += -((gammainv - betainv) * (fv->snormal[p] * fv->snormal[q]) * p_vel);
+    }
   }
 }
 /****************************************************************************/

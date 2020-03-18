@@ -1381,9 +1381,11 @@ set_up_Surf_BC(struct elem_side_bc_struct **First_Elem_Side_BC_Array[ ],
   mom_rotate_ss = calloc((size_t) upd->Total_Num_Matrices, sizeof(int *));
   num_mom_rotate = calloc((size_t) upd->Total_Num_Matrices, sizeof(int));
 
-  if (Num_ROT == 0) check_for_bc_conflicts2D(exo, dpi);
-//  if (Num_ROT == 0 && exo->num_dim == 3) setup_rotated_bc_nodes(exo, BC_Types, Num_BC);
-  if (Num_ROT > 0)  check_for_bc_conflicts3D(exo, dpi);
+  if (Num_ROT == 0 && exo->num_dim < 3) {
+    check_for_bc_conflicts2D(exo, dpi);
+  } else if (Num_ROT == 0 && exo->num_dim == 3) {
+    check_for_bc_conflicts3D(exo, dpi);
+  }
 
   return;
 } /* End of set_up_Surf_BC */

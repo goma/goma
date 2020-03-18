@@ -2811,11 +2811,10 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                 /* Check to make sure user isn't trying to rotate without 
                  * specifying a rotation condition */
                 if (BC_Types[ibc1].desc->rotate != NO_ROT) {
-                  sprintf(Err_Msg, 
-                          "BC [%d] %s %2s %d is a rotated condition, but lacks explicit ROT",
-                          ibc1, BC_Types[ibc1].desc->name1,
-                          BC_Types[ibc1].Set_Type, BC_Types[ibc1].BC_ID);
-                  EH(GOMA_ERROR, Err_Msg);
+                  DPRINTF(stdout, "BC [%d] %s %2s %d is a rotated condition, but lacks explicit ROT\nwill "
+                          "use automatic rotations\n",
+                          ibc1, BC_Types[ibc1].desc->name1, BC_Types[ibc1].Set_Type,
+                          BC_Types[ibc1].BC_ID);
                 }
 
                 /* save all WEAK conditions */
