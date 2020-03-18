@@ -35,7 +35,7 @@
 #include "bc_curve.h"
 #include "bc_dirich.h"
 #include "bc_integ.h"
-#include "bc_rotate.h"
+#include "bc/rotate.h"
 #include "bc_special.h"
 #include "bc_surfacedomain.h"
 #include "dp_comm.h"
@@ -252,7 +252,7 @@ variable_description_init(VARIABLE_DESCRIPTION_STRUCT **vd_hdl)
 {
   if (*vd_hdl == NULL) {
     *vd_hdl = smalloc(sizeof(VARIABLE_DESCRIPTION_STRUCT));
-    if (*vd_hdl == NULL) EH(-1, "variable_description_init");
+    if (*vd_hdl == NULL) EH(GOMA_ERROR, "variable_description_init");
   }
   return variable_description_default(*vd_hdl);
 }
@@ -668,7 +668,7 @@ assign_species_desc_suffix(const int species_var_name, char * retn_string)
     ***************************************************************************/
 {
   if (retn_string == NULL) {
-   EH(-1, "assign_species_desc_suffix: bad interface\n");
+   EH(GOMA_ERROR, "assign_species_desc_suffix: bad interface\n");
   }
   switch (species_var_name) {
   case SPECIES_MASS_FRACTION:
@@ -732,7 +732,7 @@ assign_species_name(const int kspec, struct Material_Properties *mp_ptr,
   int sr;
   char pstring[256], species_desc_end[256];
   if (species_name == NULL) {
-   EH(-1, "assign_species_name: bad interface\n");
+   EH(GOMA_ERROR, "assign_species_name: bad interface\n");
   }
 
   if (mp_ptr->Num_Species > kspec) {

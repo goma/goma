@@ -82,7 +82,7 @@ int look_for_n_doubles(FILE *ifp, int n, double *array)
   int read_count;
   fgerror = fgets(strbuf, MAX_INPUT_LINE_LENGTH, ifp);
   if (fgerror == NULL) {
-    EH(-1, "Error reading line");
+    EH(GOMA_ERROR, "Error reading line");
   }
 
   buf_offset = 0;
@@ -142,10 +142,10 @@ look_for_optional_int(FILE *ifp, const char *stringMatch, int *intValue,
   int retn;
   char input[MAX_CHAR_IN_INPUT];
   if (intValue == NULL) {
-    EH(-1,"look_for_optional_int ERROR: Incoming value of intValue is NULL");
+    EH(GOMA_ERROR,"look_for_optional_int ERROR: Incoming value of intValue is NULL");
   }
   if (stringMatch == NULL) {
-    EH(-1,"look_for_optional_int ERROR: Incoming value of stringMatch is NULL");
+    EH(GOMA_ERROR,"look_for_optional_int ERROR: Incoming value of stringMatch is NULL");
   }
   retn = look_forward_optional(ifp, stringMatch, input, '=');
   if (retn == 1) {
@@ -190,7 +190,7 @@ read_int(FILE *ifp, const char *intName)
     errString = (char *) smalloc(len);
     sprintf(errString, "read_int: Expected to read an int for \"%s\"",
 	    intName);
-    EH(-1, errString);
+    EH(GOMA_ERROR, errString);
     safer_free((void **) &errString);
   }
   return intTmp;
@@ -588,7 +588,7 @@ variable_string_to_int(const char *input, const char *err_string)
     if (err_string != NULL) {
       fprintf(stderr,"variable_string_to_int error: %s\n", err_string);
     }
-    EH(-1, "Invalid variable type on card expecting string names of variables");
+    EH(GOMA_ERROR, "Invalid variable type on card expecting string names of variables");
     var = -2;
   }
   return var;
@@ -619,7 +619,7 @@ species_type_str_to_int(char *input)
   else if (!strcmp(input,"SPECIES_UNDEFINED_FORM"))var = SPECIES_UNDEFINED_FORM;
   if (var == 0) {
     printf("Unknown species type string: %s\n", input);
-    EH(-1, "Invalid species type input");
+    EH(GOMA_ERROR, "Invalid species type input");
   }
   return var;
 }
@@ -802,7 +802,7 @@ indentify_species_ID_string(const char *input, const char *list,
     fprintf(stderr,
 	    "indentify_species_ID_string ERROR: was expecting one token: %s\n",
 	    input);
-    EH(-1,"interface error");
+    EH(GOMA_ERROR,"interface error");
   }
   if (!interpret_int(tok.tok_ptr[0], &species_index)) {
     species_index = in_char_list(tok.tok_ptr[0], list, numList);
@@ -929,7 +929,7 @@ look_for_species_prop(FILE *imp,  const char *search_string,
 		    "%s error: reading model name string, mat file \"%s\", property %s",
 		    yo, mat_ptr->Material_Name, search_string);
      (void) sprintf(err_mesg,"Number of tokens isn't sufficient: %s\n", input);
-     EH(-1, err_mesg);
+     EH(GOMA_ERROR, err_mesg);
    }
    
   /*
@@ -948,14 +948,14 @@ look_for_species_prop(FILE *imp,  const char *search_string,
 	    "%s error: reading model name string, mat file \"%s\", property %s\n",
 	    yo, mat_ptr->Material_Name, search_string);
     sprintf(err_mesg, "\tUnsuccessful match of species string: %s\n", species_str);
-    EH(-1, err_mesg);
+    EH(GOMA_ERROR, err_mesg);
   }
   if (species_ID >=  mat_ptr->Num_Species || species_ID < 0) {
     fprintf(stderr, 
 	    "%s error: reading model name string, mat file \"%s\", property %s\n",
 	    yo, mat_ptr->Material_Name, search_string);
     sprintf(err_mesg, "\tspecies index is out of bounds: %d\n", species_ID);
-    EH(-1, err_mesg);
+    EH(GOMA_ERROR, err_mesg);
   }
 
   /*
@@ -1021,7 +1021,7 @@ look_for_species_prop(FILE *imp,  const char *search_string,
 		  "%s error: reading model name string, mat file \"%s\", property %s\n",
 		  yo, mat_ptr->Material_Name, search_string);
 	  sprintf(err_mesg, "\tUnsuccessful interpretation of double: %s\n", tok.tok_ptr[i]);
-	  EH(-1, err_mesg);
+	  EH(GOMA_ERROR, err_mesg);
 	}
     }
 
@@ -1051,7 +1051,7 @@ look_for_species_prop(FILE *imp,  const char *search_string,
 		yo, mat_ptr->Material_Name, search_string);		
 	sprintf(err_mesg,
 		"/tSpace for pointer vector over species needs to be malloced first\n");
-	EH(-1, err_mesg);  
+	EH(GOMA_ERROR, err_mesg);  
       }
     } else {
 	safer_free((void **) &(User_constants[species_ID]));  
@@ -1190,7 +1190,7 @@ look_for_porous_prop(FILE *imp,  const char *search_string,
 		    "%s error: reading model name string, mat file \"%s\", property %s",
 		    yo, mat_ptr->Material_Name, search_string);
      (void) sprintf(err_mesg,"Number of tokens isn't sufficient: %s\n", input);
-     EH(-1, err_mesg);
+     EH(GOMA_ERROR, err_mesg);
    }
    
   /*
@@ -1210,7 +1210,7 @@ look_for_porous_prop(FILE *imp,  const char *search_string,
 	    "%s error: reading model name string, mat file \"%s\", property %s\n",
 	    yo, mat_ptr->Material_Name, search_string);
     sprintf(err_mesg, "\tUnsuccessful match of porous string: %s\n", porous_str);
-    EH(-1, err_mesg);
+    EH(GOMA_ERROR, err_mesg);
   }
 
   if (porous_ID >=  mat_ptr->Num_Porous_Eqn || porous_ID < 0) {
@@ -1218,7 +1218,7 @@ look_for_porous_prop(FILE *imp,  const char *search_string,
 	    "%s error: reading model name string, mat file \"%s\", property %s\n",
 	    yo, mat_ptr->Material_Name, search_string);
     sprintf(err_mesg, "\tporous phase index is out of bounds: %d\n", porous_ID);
-    EH(-1, err_mesg);
+    EH(GOMA_ERROR, err_mesg);
   }
 
   /*
@@ -1271,7 +1271,7 @@ look_for_porous_prop(FILE *imp,  const char *search_string,
 	      "%s error: reading model name string, mat file \"%s\", property %s\n",
 	      yo, mat_ptr->Material_Name, search_string);
       sprintf(err_mesg, "\tUnsuccessful interpretation of double: %s\n", tok.tok_ptr[i]);
-      EH(-1, err_mesg);
+      EH(GOMA_ERROR, err_mesg);
     }
   }
 
@@ -1297,7 +1297,7 @@ look_for_porous_prop(FILE *imp,  const char *search_string,
 		  yo, mat_ptr->Material_Name, search_string);		
 	  sprintf(err_mesg,
 		  "/tSpace for pointer vector over porous phases needs to be malloced first\n");
-	  EH(-1, err_mesg);
+	  EH(GOMA_ERROR, err_mesg);
 	}
       if (User_constants[porous_ID] != NULL) 
 	{
@@ -1449,7 +1449,7 @@ look_for_species_proptable(FILE *imp,
 		      "%s error: reading model name string, material file \"%s\", property %s",
 		      yo, mat_ptr->Material_Name, search_string);
        (void) sprintf(err_mesg,"Number of tokens isn't sufficient: %s\n", input);
-       EH(-1, err_mesg);
+       EH(GOMA_ERROR, err_mesg);
      }
   /*
    * Interpret the Model name as the first token after the equals sign
@@ -1476,7 +1476,7 @@ look_for_species_proptable(FILE *imp,
 		  "%s error: reading model name string, mat file \"%s\", property %s\n",
 		  yo, mat_ptr->Material_Name, search_string);
 	  sprintf(err_mesg, "\tUnsuccessful match of species string: %s\n", species_str);
-	  EH(-1, err_mesg);
+	  EH(GOMA_ERROR, err_mesg);
 	}
       if (species_ID >=  mat_ptr->Num_Species || species_ID < 0) 
 	{
@@ -1484,7 +1484,7 @@ look_for_species_proptable(FILE *imp,
 		"%s error: reading model name string, mat file \"%s\", property %s\n",
 		  yo, mat_ptr->Material_Name, search_string);
 	  sprintf(err_mesg, "\tspecies index is out of bounds: %d\n", species_ID);
-	  EH(-1, err_mesg);
+	  EH(GOMA_ERROR, err_mesg);
 	}
   /*
    *  Check on the number of arguments
@@ -1584,7 +1584,7 @@ look_for_species_proptable(FILE *imp,
 		      "%s error: reading model name string, mat file \"%s\", property %s\n",
 		      yo, mat_ptr->Material_Name, search_string);
 	      sprintf(err_mesg, "\tUnsuccessful interpretation of double: %s\n", tok.tok_ptr[i]);
-	      EH(-1, err_mesg);
+	      EH(GOMA_ERROR, err_mesg);
 	    }
 	}
 
@@ -1611,7 +1611,7 @@ look_for_species_proptable(FILE *imp,
 		      yo, mat_ptr->Material_Name, search_string);		
 	      sprintf(err_mesg,
 		      "/tSpace for pointer vector over species needs to be malloced first\n");
-	      EH(-1, err_mesg);
+	      EH(GOMA_ERROR, err_mesg);
 	    }
 	  if (User_constants[species_ID] != NULL)
 	    {

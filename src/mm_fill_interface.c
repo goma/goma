@@ -351,7 +351,7 @@ source_vle_prxn(INTERFACE_SOURCE_STRUCT *is, BOUNDARY_CONDITION_STRUCT *bc,
    * Find the concentration in the liquid phase, C_l_mix
    */
   if (is[intf_id].SpeciesVT != SPECIES_CONCENTRATION) {
-    EH(-1, "unimplemented complication");
+    EH(GOMA_ERROR, "unimplemented complication");
   }
   C_l_mix = 0.0;
   for (k = 0, pos = mp_gas->Num_Species; k < mp_liq->Num_Species; 
@@ -486,7 +486,7 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
    * var type. This will be relaxed in the future.
    */
   if (upd->Species_Var_Type != SPECIES_CONCENTRATION) {
-    EH(-1,"unimplemented");
+    EH(GOMA_ERROR,"unimplemented");
   }
 
   /*
@@ -587,7 +587,7 @@ is_equil_prxn(JACOBIAN_VAR_DESC_STRUCT *func_jac,
     C_wspec = mp->StateVector[SPECIES_UNK_0 + wspec_a];
     func_value = volflux * C_wspec;
   } else {
-    EH(-1, "unimplemented");
+    EH(GOMA_ERROR, "unimplemented");
   }
 
   /*
@@ -744,7 +744,7 @@ source_is_equil_prxn(INTERFACE_SOURCE_STRUCT *is,
    * Find the concentration in the b phase, C_b_mix
    */
   if (is[intf_id].SpeciesVT != SPECIES_CONCENTRATION) {
-    EH(-1, "unimplemented complication");
+    EH(GOMA_ERROR, "unimplemented complication");
   }
   C_b_mix = 0.0;
   for (k = 0, pos = mp_a->Num_Species; k < mp_b->Num_Species; 

@@ -232,7 +232,7 @@ apply_integrated_curve_bc(
 	if ((ss_index = 
 	     in_list(BC_Types[bc_input_id].BC_ID, 0, Proc_Num_Side_Sets, ss_to_blks[0])) == -1)
 	  {
-	    EH(-1,"Cannot match side set id with that in ss_to_blks array");
+	    EH(GOMA_ERROR,"Cannot match side set id with that in ss_to_blks array");
 	  }
 
 
@@ -320,7 +320,7 @@ apply_integrated_curve_bc(
 
 		if( elem_edge_bc->shared )
 		  {
-		    EH(-1,"CA_EDGE_CURVE_INT cannot be used with shared edges.");
+		    EH(GOMA_ERROR,"CA_EDGE_CURVE_INT cannot be used with shared edges.");
 		  }
 		break;
 
@@ -473,7 +473,7 @@ apply_integrated_curve_bc(
 		break;
 			      
 	      default:
-		EH(-1, "Integrated BC not found");
+		EH(GOMA_ERROR, "Integrated BC not found");
 		break;
 	      } /* end of switch over bc type */
 		
@@ -534,7 +534,7 @@ apply_integrated_curve_bc(
 			       eb_in_matrl(BC_Types[bc_input_id].BC_Data_Int[1], mn)   ) )
 			  {
 			    type = pd_glob[mn]->w[pg->imtrx][eqn];
-			    if (bfi[type] == NULL) EH(-1,"Illegal cross basis func");
+			    if (bfi[type] == NULL) EH(GOMA_ERROR,"Illegal cross basis func");
 			    /* note that here, we don't have the ln_to_dof array for the adjacent 
 			       material - for now assume that ldof_eqn = id */
 			    phi_i = bfi[type]->phi[id];
@@ -543,7 +543,7 @@ apply_integrated_curve_bc(
 			}
 			      
 		      }
-		      else EH(-1,"Illegal bc phase definition");
+		      else EH(GOMA_ERROR,"Illegal bc phase definition");
 
 		      /* for strong conditions weight the function by BIG_PENALTY */
 		      if (BC_Types[bc_input_id].desc->method == STRONG_INT_EDGE) weight *= BIG_PENALTY;
@@ -866,7 +866,7 @@ apply_point_colloc_edge_bc (
 
 		    if( elem_edge_bc->shared )
 		      {
-			EH(-1,"CA_EDGE_CURVE cannot be used with shared edges.");
+			EH(GOMA_ERROR,"CA_EDGE_CURVE cannot be used with shared edges.");
                       }
                       /* fall through */
 		  case CA_EDGE_BC:
@@ -1123,7 +1123,7 @@ apply_point_colloc_edge_bc (
 
 
 		  default:
-		    EH(-1, " Non-existant collocated edge condition");
+		    EH(GOMA_ERROR, " Non-existant collocated edge condition");
 
 		  } /* end of SWITCH statement */
 

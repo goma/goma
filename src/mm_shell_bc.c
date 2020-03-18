@@ -1396,7 +1396,7 @@ void
 
   
     }
-  else EH(-1,"LUBP_SH_FP_MATCH BC called with incorrect block id");
+  else EH(GOMA_ERROR,"LUBP_SH_FP_MATCH BC called with incorrect block id");
   /* note, we may not want to quit at this point */
   return;
 }
@@ -1447,7 +1447,7 @@ put_lub_flux_in_film(int id, /* local element node number for the
     if (Current_EB_ptr->Elem_Blk_Id != i_mat_lubp)
       { 
 	if (Current_EB_ptr->Elem_Blk_Id != i_mat_filmp) {
-	  EH(-1, "put_lub_flux_in_film: Improper lubp and filmp block ids");
+	  EH(GOMA_ERROR, "put_lub_flux_in_film: Improper lubp and filmp block ids");
 	}
 	/* note, this may not account for all situations - we may not want
 	   to quit here, but we'll do it for now */

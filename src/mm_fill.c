@@ -57,14 +57,14 @@
 #include "bc_dirich.h"
 #include "mm_qp_storage.h"
 #include "sl_epetra_util.h"
-#include "rotate_util.h"
+#include "bc/rotate_coordinates.h"
 #include "ac_stability.h"
 #include "ac_stability_util.h"
 #include "bc_colloc.h"
 #include "bc_contact.h"
 #include "bc_curve.h"
 #include "bc_integ.h"
-#include "bc_rotate.h"
+#include "bc/rotate.h"
 #include "bc_special.h"
 #include "el_elm_info.h"
 #include "md_timer.h"
@@ -606,13 +606,13 @@ matrix_fill(
   else if(pd->i[pg->imtrx][MASS_FRACTION]==I_PQ1)
     {
       if (pd->Num_Dim == 2) ielem_type_mass = BILINEAR_QUAD;
-      if (pd->Num_Dim == 3) EH(-1,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
+      if (pd->Num_Dim == 3) EH(GOMA_ERROR,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
       discontinuous_mass = 1;
     }
   else if(pd->i[pg->imtrx][MASS_FRACTION]==I_PQ2)
     {
       if (pd->Num_Dim == 2) ielem_type_mass = BIQUAD_QUAD;
-      if (pd->Num_Dim == 3) EH(-1,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
+      if (pd->Num_Dim == 3) EH(GOMA_ERROR,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
       discontinuous_mass = 1;
     }
   else
@@ -632,12 +632,12 @@ matrix_fill(
     }
   else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_PQ1)
     {
-      if (pd->Num_Dim == 3) EH(-1,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
+      if (pd->Num_Dim == 3) EH(GOMA_ERROR,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
     }
   else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_PQ2)
     {
-      if (pd->Num_Dim == 3) EH(-1,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
+      if (pd->Num_Dim == 3) EH(GOMA_ERROR,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
     }
 
@@ -944,7 +944,7 @@ matrix_fill(
 
   if (pde[R_SOLID1])
     {
-      if (pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)]) EH(-1,"Cannot do real inertia for TALE yet. Remove this line if trying to perform EULERIAN solid mechanics");
+      if (pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)]) EH(GOMA_ERROR,"Cannot do real inertia for TALE yet. Remove this line if trying to perform EULERIAN solid mechanics");
       eqn = R_SOLID1;
       if (pd->TimeIntegration != STEADY && 
 	  pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
@@ -1291,7 +1291,7 @@ matrix_fill(
     }
   else
     {
-      EH(-1,"Unrecognized integration scheme!");
+      EH(GOMA_ERROR,"Unrecognized integration scheme!");
     }
   
   /* Loop over all the Volume Quadrature integration points */
@@ -1381,7 +1381,7 @@ matrix_fill(
         }
       else
         {
-          EH(-1,"Unrecognized integration scheme!");
+          EH(GOMA_ERROR,"Unrecognized integration scheme!");
         }
 	      
 
@@ -1971,7 +1971,7 @@ matrix_fill(
         
       if( pde[R_SHELL_LUBP] )
         {
-	  EH(-1,"SHELL_LUBP routine not available yet");
+	  EH(GOMA_ERROR,"SHELL_LUBP routine not available yet");
         }
 
       if( pde[R_LUBP] )
@@ -2257,7 +2257,7 @@ matrix_fill(
             && !(pde[R_SHELL_CURVATURE]) )
         {
           if (!pde[R_SHELL_NORMAL1] || !pde[R_SHELL_NORMAL2]) {
-	    EH(-1, 
+	    EH(GOMA_ERROR, 
 	       "Both SHELL_NORMAL1 and SHELL_NORMAL2 required with SHELL_DIFF_CURVATURE eqn!");
 	  }
           err = assemble_shell_geometry(time_value, theta, delta_t, wt, xi, exo);  
@@ -2671,7 +2671,7 @@ matrix_fill(
       memset(lec->J_stress_neighbor, 0, sizeof(double)*var); 
 
       if (Num_Proc > 1) {
-        EH(-1, "Discontinuous Galerkin for stress not implemented in parallel");
+        EH(GOMA_ERROR, "Discontinuous Galerkin for stress not implemented in parallel");
         return -1;
       }
 
@@ -3161,7 +3161,7 @@ matrix_fill(
 	      }
 	    else
 	      {
-		EH(-1,"YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
+		EH(GOMA_ERROR,"YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
 	      }
 
 	    err = apply_contact_bc (x, resid_vector, delta_t, theta,
@@ -3705,12 +3705,12 @@ matrix_fill_stress(
     }
   else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_PQ1)
     {
-      if (pd->Num_Dim == 3) EH(-1,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
+      if (pd->Num_Dim == 3) EH(GOMA_ERROR,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
     }
   else if(pd->i[pg->imtrx][POLYMER_STRESS11]==I_PQ2)
     {
-      if (pd->Num_Dim == 3) EH(-1,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
+      if (pd->Num_Dim == 3) EH(GOMA_ERROR,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
       discontinuous_stress = 1;
     }
 
@@ -3904,7 +3904,7 @@ matrix_fill_stress(
 
   if (pde[R_SOLID1])
     {
-      if (pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)]) EH(-1,"Cannot do real inertia for TALE yet. Remove this line if trying to perform EULERIAN solid mechanics");
+      if (pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)]) EH(GOMA_ERROR,"Cannot do real inertia for TALE yet. Remove this line if trying to perform EULERIAN solid mechanics");
       eqn = R_SOLID1;
       if (pd->TimeIntegration != STEADY && 
 	  pd->etm[pg->imtrx][R_SOLID1][(LOG2_MASS)] &&
@@ -4540,7 +4540,7 @@ matrix_fill_stress(
 	      }
 	    else
 	      {
-		EH(-1,"YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
+		EH(GOMA_ERROR,"YOU cannot apply CONTACT_SURF BCs in mm_names.h with FILL field. R_PHASE only");
 	      }
 
 	    err = apply_contact_bc (x, resid_vector, delta_t, theta,
@@ -4869,7 +4869,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 
 			  if (ei[pg->imtrx]->owningElementForColVar[k] != ielem) {
 			    if (ei[pg->imtrx]->owningElementForColVar[k] != -1) {
-			      EH(-1, "Frontal solver can't handle Shell element jacobians\n");
+			      EH(GOMA_ERROR, "Frontal solver can't handle Shell element jacobians\n");
 			    }
 			  }
 			  ldof = ei[pg->imtrx]->ln_to_first_dof[k][l];
@@ -4948,7 +4948,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 				if (pvar != -1) {
 				  if (ei[pg->imtrx]->owningElementForColVar[k] != ielem) {
 				    if (ei[pg->imtrx]->owningElementForColVar[k] != -1) {
-				      EH(-1, "Frontal solver can't handle Shell element jacobians\n");
+				      EH(GOMA_ERROR, "Frontal solver can't handle Shell element jacobians\n");
 				    }
 				  }
 				  ldof = ei[pg->imtrx]->ln_to_first_dof[k][l];
@@ -5005,7 +5005,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 		if (ie != je_new) {
 		  fprintf(stderr, "Oh fiddlesticks: ie = %d, je_new = %d\n",
 			  ie, je_new);
-		  EH(-1, "LEC indexing error");
+		  EH(GOMA_ERROR, "LEC indexing error");
 		}
 	      }
 	      resid_vector[ie] += lec->R[MAX_PROB_VAR + ke][i];
@@ -5125,7 +5125,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			    if (je != je_new) {
 			      fprintf(stderr, "Oh fiddlesticks: je = %d, je_new = %d\n",
 				      je, je_new);
-			      EH(-1, "LEC Indexing error");
+			      EH(GOMA_ERROR, "LEC Indexing error");
 			    }
 			    EH(je, "Bad var index.");
 			    ja  = (ie == je) ? ie :
@@ -5187,7 +5187,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			  if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
 			    ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];		
 			    if (ei_ptr == 0) {
-			      EH(-1, "ei_ptr == 0\n");
+			      EH(GOMA_ERROR, "ei_ptr == 0\n");
 			      exit(-1);
 			    }  
 			  }
@@ -5236,7 +5236,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			  if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
 			    ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
 			    if (ei_ptr == 0) {
-			      EH(-1, "ei slave pointer is null");
+			      EH(GOMA_ERROR, "ei slave pointer is null");
 			      exit(-1);
 			    }
 			  } 
@@ -5251,7 +5251,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 			    fprintf(stderr,
 				    "Oh fiddlesticks: je = %d, je_new = %d\n",
 				    je, je_new);
-			    EH(-1, "LEC Indexing error");
+			    EH(GOMA_ERROR, "LEC Indexing error");
 			  }
 			  EH(je, "Bad var index.");
 			  ja = (ie == je) ? ie :
@@ -5331,7 +5331,7 @@ load_lec(Exo_DB *exo,		/* ptr to EXODUS II finite element mesh db */
 						  if (ei[pg->imtrx]->owningElementForColVar[v] != -1) {
 						    ei_ptr = ei[pg->imtrx]->owningElement_ei_ptr[v];
 						    if (ei_ptr == 0) {
-						      EH(-1,"ei_ptr == 0\n");
+						      EH(GOMA_ERROR,"ei_ptr == 0\n");
 						      exit(-1);
 						    }
 						  }		

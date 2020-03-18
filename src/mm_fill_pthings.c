@@ -1174,7 +1174,7 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
 			      
 			      if ( w > 1 )
 				{
-				  EH(-1, "Need more arrays for each species.");
+				  EH(GOMA_ERROR, "Need more arrays for each species.");
 				}
 			      
 			      lec->J[peqn][MAX_PROB_VAR + w][ii][j] +=
@@ -2925,7 +2925,7 @@ pmomentum_source_term(
     }
   else
     {
-      EH(-1,"No such Navier-Stokes Model");
+      EH(GOMA_ERROR,"No such Navier-Stokes Model");
     }
   return(status);
 } /* end of function pmomentum_source_term */

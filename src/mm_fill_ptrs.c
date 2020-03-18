@@ -140,7 +140,7 @@ linkParent_ei(const int elem, const int relatedElem, const int v,
     {
       fprintf(stderr, "inconsistent entry in ei[imtrx]->owningElementForColVar[%d], %d, %d\n",
 	      v, ei[imtrx]->owningElementForColVar[v], relatedElem);
-      EH(-1, "linkedParent_ei() error\n");
+      EH(GOMA_ERROR, "linkedParent_ei() error\n");
     }
 
 
@@ -257,7 +257,7 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
   if (mn < 0) {
     fprintf(stderr, "Negative material index for eb block %d \n",
             ei_ptr->elem_blk_index);
-    EH(-1, "Ignore element block logic error");
+    EH(GOMA_ERROR, "Ignore element block logic error");
   }
 
   /*   
@@ -688,7 +688,7 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
                         }
                       if (not_matched) 
                         {
-                          EH(-1, "ERROR");
+                          EH(GOMA_ERROR, "ERROR");
                         }
 
                       /*
@@ -922,7 +922,7 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
                       if (ei_ptr->dof[v] > MDE)
                         {
                           fprintf(stderr,"ERROR ei_ptr->dof[v]=%d is greater than MDE=%d\n",ei_ptr->dof[v],MDE);
-                          EH(-1, "INCREASE MDE!");
+                          EH(GOMA_ERROR, "INCREASE MDE!");
                         }
                     } /* for (ivarDes = 0; ivarDes < nv->Num_Var_Desc_Per_Type[v] */
                 }
@@ -949,7 +949,7 @@ load_ei(const int elem, const Exo_DB *exo, struct Element_Indices *ei_ptr_fill, 
   if (ledof > MDE * MAX_PROB_VAR) 
     {
       fprintf(stderr,"ERROR ledof is greater than MDE*MAX_PROB_VAR\n");
-      EH(-1, "INCREASE MDE or MAX_PROB_VAR!"); 
+      EH(GOMA_ERROR, "INCREASE MDE or MAX_PROB_VAR!"); 
     }
   /* 
    * Here we'll count up the dofs for the external variables, 
@@ -1581,7 +1581,7 @@ load_elem_dofptr(const int ielem,
   }
 
   if (*p0 != 0.) {
-      EH(-1, "Hey, this zero is not zero!");
+      EH(GOMA_ERROR, "Hey, this zero is not zero!");
   }
 
   eqn = R_MOMENTUM3;
@@ -2012,7 +2012,7 @@ load_elem_dofptr(const int ielem,
 	pd_glob[0]->CoordinateSystem == CARTESIAN_2pt5D ||
 	pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) ) {
       if( upd->ep[pg->imtrx][R_STRESS33] == -1 )
-	  EH(-1,"Hey,the STRESS33 is needed in CYLINDRICAL VE problems!");
+	  EH(GOMA_ERROR,"Hey,the STRESS33 is needed in CYLINDRICAL VE problems!");
     }
   } 
   
@@ -2070,7 +2070,7 @@ load_elem_dofptr(const int ielem,
   eqn = R_POR_SATURATION;
   if ( upd->ep[pg->imtrx][eqn] >= 0)
     {
-      EH(-1,"Saturation-based formulation not implemented yet");
+      EH(GOMA_ERROR,"Saturation-based formulation not implemented yet");
     }
 
   eqn = R_TFMP_MASS;
@@ -2512,7 +2512,7 @@ load_elem_dofptr_all(const int ielem,
     }
 
     if (*p0 != 0.) {
-      EH(-1, "Hey, this zero is not zero!");
+      EH(GOMA_ERROR, "Hey, this zero is not zero!");
     }
 
     eqn = R_MOMENTUM3;
@@ -2864,7 +2864,7 @@ load_elem_dofptr_all(const int ielem,
           pd_glob[0]->CoordinateSystem == SWIRLING ||
           pd_glob[0]->CoordinateSystem == PROJECTED_CARTESIAN) ) {
         if( upd->ep[imtrx][R_STRESS33] == -1 )
-	  EH(-1,"Hey,the STRESS33 is needed in CYLINDRICAL VE problems!");
+	  EH(GOMA_ERROR,"Hey,the STRESS33 is needed in CYLINDRICAL VE problems!");
       }
     } 
   
@@ -2922,7 +2922,7 @@ load_elem_dofptr_all(const int ielem,
     eqn = R_POR_SATURATION;
     if ( upd->ep[imtrx][eqn] >= 0 )
       {
-        EH(-1,"Saturation-based formulation not implemented yet");
+        EH(GOMA_ERROR,"Saturation-based formulation not implemented yet");
       }
   
     eqn  = R_MASS;

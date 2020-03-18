@@ -24,10 +24,6 @@
  */
 
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -107,7 +103,7 @@ fix_exo_file(int num_procs, char* exo_mono_name)
   if ( num_procs < 1 ) {
     sr = sprintf(err_msg, "Bad number of processors specified: %d.",
                  num_procs);
-    EH(-1, err_msg);
+    EH(GOMA_ERROR, err_msg);
   } else if (num_procs == 1) {
     sprintf(err_msg, "fix_exo_file(), %s, called with %d processors", exo_mono_name, num_procs);
     WH(-1, err_msg);
@@ -555,7 +551,7 @@ setup_exo_res_desc(Exo_DB *exo)
 {
   if ( ! ( exo->state & EXODB_STATE_RES0 ) )
     {
-      EH(-1, "Setup to read bulk results requires preliminary info.");
+      EH(GOMA_ERROR, "Setup to read bulk results requires preliminary info.");
     }
 
   /*

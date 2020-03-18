@@ -1049,7 +1049,7 @@ noahs_ark(void)
 
       /*
        * The ptr to a list of elements on the side set is empty for now.
-       * It gets filled later in bc_rotate.c; when it does it will mean
+       * It gets filled later in bc/rotate.c; when it does it will mean
        * different things to different processors...
        */
 /*
@@ -3337,7 +3337,7 @@ noahs_dove(void)
 	printf("P_%d: ERROR: NULL address but nonzero length, %s line %d!\n",
 	       ProcID,  __FILE__, __LINE__);
 	fflush(stdout);
-	EH(-1,"noahs_dove fatal error");
+	EH(GOMA_ERROR,"noahs_dove fatal error");
       }
       ddd_add_member(n, m->Matrl_Elem_Blk_Ids,
 		     m->Num_Matrl_Elem_Blk, MPI_INT);

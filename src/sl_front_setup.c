@@ -157,7 +157,7 @@ setup_front(Exo_DB *exo)
     {
       if(elem_info(NNODES,Elem_Type(exo,exo->eb_ptr[ebi])) != 
 	 elem_info(NNODES,Elem_Type(exo,exo->eb_ptr[ebi+1])))
-	     EH(-1,"All element blocks must have same number of nodes for this particular frontal solver");
+	     EH(GOMA_ERROR,"All element blocks must have same number of nodes for this particular frontal solver");
     }
 
 

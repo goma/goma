@@ -189,7 +189,7 @@ find_first_opening(const int *list, const int lengthList)
   /*
    *  create an error exit here
    */
-  EH(-1, "too many duplications");
+  EH(GOMA_ERROR, "too many duplications");
   return -1;
 }
 /*****************************************************************************/
@@ -244,7 +244,7 @@ add_to_node_unk_bc_list(int *list, int ibc)
   /*
    *  create an error exit here
    */
-  EH(-1, "add_to_node_unk_bc_list out of room");
+  EH(GOMA_ERROR, "add_to_node_unk_bc_list out of room");
 }
 /*****************************************************************************/
 /*****************************************************************************/
@@ -492,7 +492,7 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
                   offset_mom1 = get_nv_offset_idof(nv, R_MOMENTUM1, idof, 0, &vd_retn1);
                   offset_mom2 = get_nv_offset_idof(nv, R_MOMENTUM2, idof, 0, &vd_retn2);
                   if (vd_retn1->MatID != vd_retn2->MatID) {
-                    EH(-1,"Unforseen occurrence");
+                    EH(GOMA_ERROR,"Unforseen occurrence");
                   }
                   if (offset_mom1 < 0) break;
                   idup1 = find_first_opening(BC_Unk_List[inode][offset_mom1],
@@ -2015,11 +2015,9 @@ check_for_bc_conflicts2D(Exo_DB *exo, Dpi *dpi)
         {
           if (matrix_used_BC[ibc] == 0)
             {
-              char err_string[MAX_CHAR_ERR_MSG];
-              snprintf(err_string, MAX_CHAR_ERR_MSG,
+              WH_MANY(-1,
                "Boundary condition %d, %s, applied on NS %d, is never used\n",
                         ibc, BC_Types[ibc].desc->name1, BC_Types[ibc].BC_ID);
-              WH_MANY(-1, err_string);
             }
         }
       free(matrix_used_BC);
@@ -2089,7 +2087,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
       sprintf(Err_Msg, 
 	      "P_%d: cannot open file \"%s\" to write 3D BC info",
 	      ProcID, ofbc_fn);
-      EH(-1, Err_Msg);
+      EH(GOMA_ERROR, Err_Msg);
     }
     if (Num_Proc > 1) {
       fprintf(ofbc, "BC Duplication and Rotation list for Processor %d:\n",
@@ -2238,7 +2236,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
               sprintf(Err_Msg, 
                       "Node (%d) wants > %d sidesets - boost MAX_SS_PER_NODE.", 
                       inode+1, MAX_SS_PER_NODE);
-              EH(-1, Err_Msg);
+              EH(GOMA_ERROR, Err_Msg);
             }
 	
             SS_list[inode][iptr] = exo->ss_id[iss];
@@ -2402,7 +2400,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
         fprintf(stderr, "Warning: %s\n", Err_Msg);
 #if 0	
         /* Leave this barn door open to help test further... */
-        EH(-1, err_msg);
+        EH(GOMA_ERROR, err_msg);
 #endif
       }
 
@@ -2452,7 +2450,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
           }
           if      (ROT_Types[irc].eq_type == R_MESH1) eq = VECT_EQ_MESH;
           else if (ROT_Types[irc].eq_type == R_MOMENTUM1) eq = VECT_EQ_MOM;
-          else EH(-1,"Illegal vector equation");
+          else EH(GOMA_ERROR,"Illegal vector equation");
 
           if (ROT_list[inode][eq] == -1) {
             ROT_list[inode][eq] = irc;
@@ -2659,7 +2657,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
 
                         if ( BC_Types[ibc1].desc->method == 
                              DIRICHLET && p != q) { 
-                          EH(-1, "Can't change equation type of DIRICHLET!");
+                          EH(GOMA_ERROR, "Can't change equation type of DIRICHLET!");
                         }
                       }
 
@@ -2714,7 +2712,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                   }
                   fprintf(stderr, "P_%d death, nss = %d\n",
                           ProcID, exo->num_side_sets);
-                  EH(-1,"Rotation BC not found");
+                  EH(GOMA_ERROR,"Rotation BC not found");
                 }
 #endif
 
@@ -2817,7 +2815,7 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
                           "BC [%d] %s %2s %d is a rotated condition, but lacks explicit ROT",
                           ibc1, BC_Types[ibc1].desc->name1,
                           BC_Types[ibc1].Set_Type, BC_Types[ibc1].BC_ID);
-                  EH(-1, Err_Msg);
+                  EH(GOMA_ERROR, Err_Msg);
                 }
 
                 /* save all WEAK conditions */

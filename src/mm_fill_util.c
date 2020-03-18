@@ -179,7 +179,7 @@ int beer_belly(void) {
 
   if ((si = in_list(pd->IntegrationMap, 0, Num_Interpolations,
                     Unique_Interpolations)) == -1) {
-    EH(-1, "Seems to be a problem finding the IntegrationMap interpolation.");
+    EH(GOMA_ERROR, "Seems to be a problem finding the IntegrationMap interpolation.");
   }
   MapBf = bfd[si];
 
@@ -663,7 +663,7 @@ int beer_belly(void) {
     break;
 
   default:
-    EH(-1, "Bad dim.");
+    EH(GOMA_ERROR, "Bad dim.");
     break;
   }
 
@@ -1172,7 +1172,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1186,7 +1186,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1200,7 +1200,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1214,7 +1214,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1228,7 +1228,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1242,7 +1242,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1256,7 +1256,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1270,7 +1270,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1284,7 +1284,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1298,7 +1298,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1312,7 +1312,7 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1326,13 +1326,13 @@ void calc_unseeded_edge_tangents(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
 
   default:
-    EH(-1, "Edge not found");
+    EH(GOMA_ERROR, "Edge not found");
     break;
   }
 
@@ -1440,7 +1440,7 @@ void calc_unseeded_edge_tangents_TET(
       sign = 1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1454,7 +1454,7 @@ void calc_unseeded_edge_tangents_TET(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1468,7 +1468,7 @@ void calc_unseeded_edge_tangents_TET(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1482,7 +1482,7 @@ void calc_unseeded_edge_tangents_TET(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1496,7 +1496,7 @@ void calc_unseeded_edge_tangents_TET(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
@@ -1510,13 +1510,13 @@ void calc_unseeded_edge_tangents_TET(
       sign = -1.;
       break;
     default:
-      EH(-1, "Side not connected to edge");
+      EH(GOMA_ERROR, "Side not connected to edge");
       break;
     }
     break;
 
   default:
-    EH(-1, "Edge not found for TETS");
+    EH(GOMA_ERROR, "Edge not found for TETS");
     break;
   }
 
@@ -1618,7 +1618,7 @@ void calc_unseeded_edge_tangents_TET(
         }
       }
     } else {
-      EH(-1, "Cannot find id_edge in unseeded_TET");
+      EH(GOMA_ERROR, "Cannot find id_edge in unseeded_TET");
     }
   }
 
@@ -1721,7 +1721,7 @@ void simple_normalize_vector(struct Rotation_Vectors *vector, const int dim) {
   for (p = 0, sum = 0.; p < dim; p++)
     sum += vector->vector[p] * vector->vector[p];
   if (fabs(sum - 1.) > 1e-10)
-    EH(-1, "Bad normalization");
+    EH(GOMA_ERROR, "Bad normalization");
   return;
 }
 /********************************************************************************/
@@ -1870,7 +1870,7 @@ int load_bf_grad(void)
           }
           break;
         default:
-          EH(-1, "Unexpected Dimension");
+          EH(GOMA_ERROR, "Unexpected Dimension");
           break;
         }
 
@@ -2382,7 +2382,7 @@ int load_bf_mesh_derivs(void) {
 #endif
           break;
         default:
-          EH(-1, "Unknown dimension.");
+          EH(GOMA_ERROR, "Unknown dimension.");
           break;
         }
 
@@ -3296,7 +3296,7 @@ find_problem_graph_fill(int *ija[],         /* column pointer array */
 
                 *ija = (int *)realloc((void *)*ija, nz_temp * sizeof(int));
                 if (*ija == NULL)
-                  EH(-1, "No space for ija_temp");
+                  EH(GOMA_ERROR, "No space for ija_temp");
                 for (itmp = nz_ptr; itmp < nz_temp; (*ija)[itmp++] = -1)
                   ;
               }
@@ -3366,7 +3366,7 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
 
   *ija = ija_ptr = alloc_int_1(nz_temp, -1);
   if (*ija == NULL) {
-    EH(-1, "No space for ija_temp");
+    EH(GOMA_ERROR, "No space for ija_temp");
   }
 
   inode_varType = alloc_int_1(MaxVarPerNode, INT_NOINIT);
@@ -3403,7 +3403,7 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
      * node stored in the global array
      */
     if (row_num_unknowns != nv->Num_Unknowns) {
-      EH(-1, "Inconsistency counting unknowns.");
+      EH(GOMA_ERROR, "Inconsistency counting unknowns.");
     }
 
     /*
@@ -3441,7 +3441,7 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
         col_num_unknowns = fill_variable_vector(inter_node, inter_node_varType,
                                                 inter_node_matID);
         if (col_num_unknowns != nvCol->Num_Unknowns) {
-          EH(-1, "Inconsistency counting unknowns.");
+          EH(GOMA_ERROR, "Inconsistency counting unknowns.");
         }
 
         /*
@@ -3518,7 +3518,7 @@ find_MSR_problem_graph(int *ija[],       /* column pointer array            */
                 *ija = ija_ptr =
                     (int *)realloc((void *)*ija, nz_temp * sizeof(int));
                 if (*ija == NULL)
-                  EH(-1, "No space for ija_temp");
+                  EH(GOMA_ERROR, "No space for ija_temp");
                 for (itmp = nz_ptr; itmp < nz_temp; ija_ptr[itmp++] = -1)
                   ;
               }
@@ -3639,7 +3639,7 @@ int fill_variable_vector(int inode, int ivec_varType[], int ivec_matID[])
     }
   }
   if (index > MaxVarPerNode) {
-    EH(-1, "fill_variable_vector: index is greater than MaxVarPerNode");
+    EH(GOMA_ERROR, "fill_variable_vector: index is greater than MaxVarPerNode");
   }
   return index;
 }
@@ -3772,7 +3772,7 @@ double newshape(const double xi[],    /* local coordinates    */
         value = ((Inode == 1) ? 0.5 : -0.5);
         break;
       default:
-        /*EH(-1, "Not a valid Iquant choice!");*/ /*Clever way out of this, for
+        /*EH(GOMA_ERROR, "Not a valid Iquant choice!");*/ /*Clever way out of this, for
                                                      Iquant=2 */
         break;
       }
@@ -3814,7 +3814,7 @@ double newshape(const double xi[],    /* local coordinates    */
         break;
       }
     } else {
-      EH(-1, "Only LINEAR_BAR or QUAD_BAR 1D elements supported now!");
+      EH(GOMA_ERROR, "Only LINEAR_BAR or QUAD_BAR 1D elements supported now!");
     }
     break;
 
@@ -3848,7 +3848,7 @@ double newshape(const double xi[],    /* local coordinates    */
          baby_dolphin, but to it up above */
 
     } else {
-      EH(-1, "Only Q1 and Q2 elements allowed for shells");
+      EH(GOMA_ERROR, "Only Q1 and Q2 elements allowed for shells");
     }
     break;
 
@@ -3858,7 +3858,7 @@ double newshape(const double xi[],    /* local coordinates    */
     } else if (interpolation == I_Q2) {
       value = shape(s, t, u, QUAD_TRI, Iquant, Inode);
     } else {
-      EH(-1, "Don't recognize this basis type for triangles");
+      EH(GOMA_ERROR, "Don't recognize this basis type for triangles");
     }
 
     break;
@@ -3871,7 +3871,7 @@ double newshape(const double xi[],    /* local coordinates    */
         value = 0;
       }
     } else {
-      EH(-1, "Don't recognize this basis type for linear triangular shells");
+      EH(GOMA_ERROR, "Don't recognize this basis type for linear triangular shells");
     }
 
     break;
@@ -3899,7 +3899,7 @@ double newshape(const double xi[],    /* local coordinates    */
         break;
 
       default:
-        EH(-1, "Bad pressure quantity specified.");
+        EH(GOMA_ERROR, "Bad pressure quantity specified.");
         break;
       }
     } else if (interpolation == I_P1) {
@@ -3956,7 +3956,7 @@ double newshape(const double xi[],    /* local coordinates    */
         break;
 
       default:
-        EH(-1, "Bad pressure quantity specified.");
+        EH(GOMA_ERROR, "Bad pressure quantity specified.");
         break;
       }
     } else if (interpolation == I_Q1 || interpolation == I_Q1_D) {
@@ -3981,7 +3981,7 @@ double newshape(const double xi[],    /* local coordinates    */
        * on all external surfaces */
 
       if (Inode >= 8)
-        EH(-1, "This element has at least 8 nodes!");
+        EH(GOMA_ERROR, "This element has at least 8 nodes!");
 
       switch (Iquant) {  /* select quantity */
       case PSI:          /* shape function */
@@ -4066,25 +4066,25 @@ double newshape(const double xi[],    /* local coordinates    */
         case 4:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - s * s) * (t - 1.) * t;
           break;
         case 5:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - t * t) * (s + 1.) * s;
           break;
         case 6:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - s * s) * (t + 1.) * t;
           break;
         case 7:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - t * t) * (s - 1.) * s;
           break;
         }
@@ -4168,25 +4168,25 @@ double newshape(const double xi[],    /* local coordinates    */
         case 4:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = -s * (t - 1.) * t;
           break;
         case 5:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - t * t) * (2 * s + 1.);
           break;
         case 6:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = -s * (t + 1.) * t;
           break;
         case 7:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - t * t) * (2 * s - 1.);
           break;
         }
@@ -4270,25 +4270,25 @@ double newshape(const double xi[],    /* local coordinates    */
         case 4:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 4]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - s * s) * (2 * t - 1.);
           break;
         case 5:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 5]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = -t * (s + 1.) * s;
           break;
         case 6:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 6]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = 0.5 * (1. - s * s) * (2 * t + 1.);
           break;
         case 7:
           if (Nodes[Proc_Elem_Connect[ei[pg->imtrx]->iconnect_ptr + 7]]->EDGE !=
               1)
-            EH(-1, "Subparametric node not on edge ");
+            EH(GOMA_ERROR, "Subparametric node not on edge ");
           value = -t * (s - 1.) * s;
           break;
         }
@@ -4296,7 +4296,7 @@ double newshape(const double xi[],    /* local coordinates    */
 
       default:
         fprintf(stderr, "Bad BIQUAD_QUAD case: %d!\n", Iquant);
-        EH(-1, "Bad selection of phi,dphids, etc.");
+        EH(GOMA_ERROR, "Bad selection of phi,dphids, etc.");
         break;
       }
     } else if (interpolation == I_PQ1) {
@@ -4330,11 +4330,11 @@ double newshape(const double xi[],    /* local coordinates    */
         break;
 
       default:
-        EH(-1, "Bad pressure quantity specified.");
+        EH(GOMA_ERROR, "Bad pressure quantity specified.");
         break;
       }
     } else {
-      EH(-1, "Don't recognize this basis type for Linear tetrahedron");
+      EH(GOMA_ERROR, "Don't recognize this basis type for Linear tetrahedron");
     }
 
     break;
@@ -4365,7 +4365,7 @@ double newshape(const double xi[],    /* local coordinates    */
         break;
 
       default:
-        EH(-1, "Bad pressure quantity specified.");
+        EH(GOMA_ERROR, "Bad pressure quantity specified.");
         break;
       }
     } else if (interpolation == I_P1) {
@@ -4436,7 +4436,7 @@ double newshape(const double xi[],    /* local coordinates    */
         break;
 
       default:
-        EH(-1, "Bad pressure quantity specified.");
+        EH(GOMA_ERROR, "Bad pressure quantity specified.");
         break;
       }
     }
@@ -4976,7 +4976,7 @@ void determine_ShapeVar(PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
     pd_ptr->ShapeVar = in_list(pd_ptr->IntegrationMap, 0, MAX_VARIABLE_TYPES,
                                pd_ptr->i[pg->imtrx]);
     if (pd_ptr->ShapeVar == -1) {
-      EH(-1,
+      EH(GOMA_ERROR,
          "Error: Specified Element Mapping has no corresponding variable .");
     }
     if (pd_ptr->e[pg->imtrx][R_MESH1] &&
@@ -5082,7 +5082,7 @@ double calc_tensor_invariant(dbl T[DIM][DIM],       // Original tensor
 
   // Error checking
   if (DIM != 3)
-    EH(-1, "calc_tensor_invariants() has not been instrumented for 1 or 2 "
+    EH(GOMA_ERROR, "calc_tensor_invariants() has not been instrumented for 1 or 2 "
            "dimensions");
 
   // Select invariant and calculate
@@ -5169,7 +5169,7 @@ double calc_tensor_invariant(dbl T[DIM][DIM],       // Original tensor
     }
 
   } else {
-    EH(-1, "You requested an invariant that I don't know how to calculate.");
+    EH(GOMA_ERROR, "You requested an invariant that I don't know how to calculate.");
   }
 
   // Return value of invariant
@@ -5224,7 +5224,7 @@ void supg_tau_shakib(SUPG_terms *supg_terms, int dim, double dt,
 
   for (int a = 0; a < dim; a++) {
     if (pd->e[pg->imtrx][MESH_DISPLACEMENT1 + a]) {
-      EH(-1,
+      EH(GOMA_ERROR,
          "Mesh displacement derivatives not implemented for shakib supg_tau");
     }
   }
@@ -5455,7 +5455,7 @@ dbl yzbeta_model(int model, dbl scale, dbl beta, int dim, dbl Y,
                       h_elem, interp_eqn, deriv);
     break;
   default:
-    EH(-1, "Unknown YZBETA Model");
+    EH(GOMA_ERROR, "Unknown YZBETA Model");
     break;
   }
 

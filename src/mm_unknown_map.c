@@ -4200,7 +4200,7 @@ Index_Solution (const int nodeNum, const int varType, const int subvarIndex,
     if (subvarIndex >= upd->Max_Num_Species_Eqn) {
 	printf("ERROR Index_Solution: subvarIndex is bad: %d\n", 
 	       subvarIndex);
-	EH(-1,"ERROR Index_Solution: subvarIndex is bad");
+	EH(GOMA_ERROR,"ERROR Index_Solution: subvarIndex is bad");
     }
     index = nv->Num_Var_Desc_Per_Type[varType] / upd->Max_Num_Species_Eqn;
     for (i = 0; i < nv->Num_Var_Desc; i++) {
@@ -4507,7 +4507,7 @@ Index_Solution_Inv(const int gindex, int *inode, int *i_Var_Desc,
     }
     bottom += vd->Ndof;
   }
-  EH(-1, "Index_Solution_Inv ERROR");
+  EH(GOMA_ERROR, "Index_Solution_Inv ERROR");
   return NULL;
 }
 /*****************************************************************************/

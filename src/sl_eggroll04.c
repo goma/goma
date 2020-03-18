@@ -51,7 +51,7 @@
  * --------------------------------------------------------------------------
  *
  * Revision 3.4  2000/01/14 17:57:13  mmhopki
- * Ooops!  Don't need to exit() after EH(-1, ).  rf_eigensolver.h is chucked.
+ * Ooops!  Don't need to exit() after EH(GOMA_ERROR, ).  rf_eigensolver.h is chucked.
  *
  * Revision 3.3  2000/01/14 17:49:40  mmhopki
  * Mongo update:
@@ -742,7 +742,7 @@ _heapsort(int n,
 	  x[k] = ev_i[i];
 	  break;
 	default:
-	  EH(-1, "Uh-oh!  I shouldn't be here!");
+	  EH(GOMA_ERROR, "Uh-oh!  I shouldn't be here!");
 	  break;
 	}
     }
@@ -876,7 +876,7 @@ jeapsort(int n,
 	  x[k] = ev_i[i];
 	  break;
 	default:
-	  EH(-1, "Uh-oh!  I shouldn't be here!");
+	  EH(GOMA_ERROR, "Uh-oh!  I shouldn't be here!");
 	  break;
 	}
     }

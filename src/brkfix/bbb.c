@@ -78,7 +78,7 @@ build_big_bones(Exo_DB *p,	/* EXODUS info from representative polylith */
 
   if ( p->state == EXODB_STATE_GRND )
     {
-      EH(-1, "Polylith only in ground state.");
+      EH(GOMA_ERROR, "Polylith only in ground state.");
     }
 
   m->state = EXODB_STATE_GRND;
@@ -584,17 +584,17 @@ build_global_conn(Exo_DB *p,	/* EXODUS info from representative polylith */
 
   if ( p->state <= EXODB_STATE_GRND )
     {
-      EH(-1, "Polylith needs to be constructed.");
+      EH(GOMA_ERROR, "Polylith needs to be constructed.");
     }
 
   if ( m->state <= EXODB_STATE_GRND )
     {
-      EH(-1, "Basic monolith needs to be constructed.");
+      EH(GOMA_ERROR, "Basic monolith needs to be constructed.");
     }
 
   if ( d == NULL )
     {
-      EH(-1, "Need to pass in a reasonable set of distributed proc info.");
+      EH(GOMA_ERROR, "Need to pass in a reasonable set of distributed proc info.");
     }
 
   /*
@@ -669,17 +669,17 @@ build_global_attr(Exo_DB *p,	/* EXODUS info from representative polylith */
 
   if ( p->state <= EXODB_STATE_GRND )
     {
-      EH(-1, "Polylith needs to be constructed.");
+      EH(GOMA_ERROR, "Polylith needs to be constructed.");
     }
 
   if ( m->state <= EXODB_STATE_GRND )
     {
-      EH(-1, "Basic monolith needs to be constructed.");
+      EH(GOMA_ERROR, "Basic monolith needs to be constructed.");
     }
 
   if ( d == NULL )
     {
-      EH(-1, "Need to pass in a reasonable set of distributed proc info.");
+      EH(GOMA_ERROR, "Need to pass in a reasonable set of distributed proc info.");
     }
 
   /*
@@ -748,33 +748,33 @@ build_global_coords(Exo_DB *p,	/* EXODUS info from representative polylith */
 
   if ( p->state <= EXODB_STATE_GRND )
     {
-      EH(-1, "Polylith needs to be constructed.");
+      EH(GOMA_ERROR, "Polylith needs to be constructed.");
     }
 
   if ( m->state <= EXODB_STATE_GRND )
     {
-      EH(-1, "Basic monolith needs to be constructed.");
+      EH(GOMA_ERROR, "Basic monolith needs to be constructed.");
     }
 
   if ( d == NULL )
     {
-      EH(-1, "Need to pass in a reasonable set of distributed proc info.");
+      EH(GOMA_ERROR, "Need to pass in a reasonable set of distributed proc info.");
     }
 
   if ( m->num_dim != p->num_dim )
     {
-      EH(-1, "Monolith and polylith with mismatched spatial dimensions.");
+      EH(GOMA_ERROR, "Monolith and polylith with mismatched spatial dimensions.");
     }
 
   if ( m->num_dim > 0 )
     {
       if ( m->x_coord == NULL )
 	{
-	  EH(-1, "Memory for coordinates must be allocated.");
+	  EH(GOMA_ERROR, "Memory for coordinates must be allocated.");
 	}
       if ( p->x_coord == NULL )
 	{
-	  EH(-1, "Transcribing coordinates from a null polylith!");
+	  EH(GOMA_ERROR, "Transcribing coordinates from a null polylith!");
 	}
     }
 
@@ -782,11 +782,11 @@ build_global_coords(Exo_DB *p,	/* EXODUS info from representative polylith */
     {
       if ( m->y_coord == NULL )
 	{
-	  EH(-1, "Memory for coordinates must be allocated.");
+	  EH(GOMA_ERROR, "Memory for coordinates must be allocated.");
 	}
       if ( p->y_coord == NULL )
 	{
-	  EH(-1, "Transcribing coordinates from a null polylith!");
+	  EH(GOMA_ERROR, "Transcribing coordinates from a null polylith!");
 	}
     }
 
@@ -794,11 +794,11 @@ build_global_coords(Exo_DB *p,	/* EXODUS info from representative polylith */
     {
       if ( m->z_coord == NULL )
 	{
-	  EH(-1, "Memory for coordinates must be allocated.");
+	  EH(GOMA_ERROR, "Memory for coordinates must be allocated.");
 	}
       if ( p->z_coord == NULL )
 	{
-	  EH(-1, "Transcribing coordinates from a null polylith!");
+	  EH(GOMA_ERROR, "Transcribing coordinates from a null polylith!");
 	}
     }
 
@@ -849,17 +849,17 @@ build_global_ns(Exo_DB *p,	/* EXODUS info from representative polylith */
 
   if ( p->state <= EXODB_STATE_GRND )
     {
-      EH(-1, "Polylith needs to be constructed.");
+      EH(GOMA_ERROR, "Polylith needs to be constructed.");
     }
 
   if ( m->state <= EXODB_STATE_GRND )
     {
-      EH(-1, "Basic monolith needs to be constructed.");
+      EH(GOMA_ERROR, "Basic monolith needs to be constructed.");
     }
 
   if ( d == NULL )
     {
-      EH(-1, "Need to pass in a reasonable set of distributed proc info.");
+      EH(GOMA_ERROR, "Need to pass in a reasonable set of distributed proc info.");
     }
 
   if ( m->num_node_sets == 0 )
@@ -911,17 +911,17 @@ build_global_ss(Exo_DB *p,	/* EXODUS info from representative polylith */
 
   if ( p->state <= EXODB_STATE_GRND )
     {
-      EH(-1, "Polylith needs to be constructed.");
+      EH(GOMA_ERROR, "Polylith needs to be constructed.");
     }
 
   if ( m->state <= EXODB_STATE_GRND )
     {
-      EH(-1, "Basic monolith needs to be constructed.");
+      EH(GOMA_ERROR, "Basic monolith needs to be constructed.");
     }
 
   if ( d == NULL )
     {
-      EH(-1, "Need to pass in a reasonable set of distributed proc info.");
+      EH(GOMA_ERROR, "Need to pass in a reasonable set of distributed proc info.");
     }
 
   if ( m->num_side_sets == 0 )
@@ -993,17 +993,17 @@ build_global_res(Exo_DB *p,	/* EXODUS info from representative polylith */
 
   if ( p->state <= EXODB_STATE_GRND )
     {
-      EH(-1, "Polylith needs to be constructed.");
+      EH(GOMA_ERROR, "Polylith needs to be constructed.");
     }
 
   if ( m->state <= EXODB_STATE_GRND )
     {
-      EH(-1, "Basic monolith needs to be constructed.");
+      EH(GOMA_ERROR, "Basic monolith needs to be constructed.");
     }
 
   if ( d == NULL )
     {
-      EH(-1, "Need to pass in a reasonable set of distributed proc info.");
+      EH(GOMA_ERROR, "Need to pass in a reasonable set of distributed proc info.");
     }
 
   /*
@@ -1099,7 +1099,7 @@ build_global_res(Exo_DB *p,	/* EXODUS info from representative polylith */
 			  sr = sprintf(err_msg, 
 				       "Inconsistency in element variable truth tables EBID %d",
 				       p->eb_id[b]);
-			  EH(-1, err_msg);
+			  EH(GOMA_ERROR, err_msg);
 			  EH(sr, err_msg);
 			}
 

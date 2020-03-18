@@ -126,12 +126,12 @@ if(!mode)
   }
 else if (mode) /*do a local search using exo->node_elem */
   {
-    EH(-1, " Local node-elem list search not available for find_id_elem");
+    EH(GOMA_ERROR, " Local node-elem list search not available for find_id_elem");
   }
  
 else
   {
-    EH(-1,"problem in find_elem_id: need current element number");
+    EH(GOMA_ERROR,"problem in find_elem_id: need current element number");
   }
   return(element_no);		/* failsafe default? */
 }

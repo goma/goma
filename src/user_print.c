@@ -58,7 +58,7 @@ usr_print ( double *t,	            /* time value */
    * Safety catch line -- comment out the line below if you can verify this
    * routine does what you want.
    */
-  /* EH(-1, "No usr_print defined."); */
+  /* EH(GOMA_ERROR, "No usr_print defined."); */
 
   /*
   if ( first_call )
@@ -70,7 +70,7 @@ usr_print ( double *t,	            /* time value */
 	}
       else
 	{
-	  EH(-1, "Could not open user output file.");
+	  EH(GOMA_ERROR, "Could not open user output file.");
 	}
     }
     */

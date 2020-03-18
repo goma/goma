@@ -182,7 +182,7 @@ set(GOMA_INCLUDES
         include/bc_curve.h
         include/bc_dirich.h
         include/bc_integ.h
-        include/bc_rotate.h
+        include/bc/rotate.h
         include/bc_special.h
         include/bc_surfacedomain.h
         include/brkfix/
@@ -210,8 +210,6 @@ set(GOMA_INCLUDES
         include/mm_bc.h
         include/mm_chemkin.h
         include/mm_dil_viscosity.h
-        include/mm_eh.h
-        include/mm_elem_block.h
         include/mm_elem_block_structs.h
         include/mm_fill_aux.h
         include/mm_fill_common.h
@@ -281,7 +279,7 @@ set(GOMA_INCLUDES
         include/rf_solve_segregated.h
         include/rf_util.h
         include/rf_vars_const.h
-        include/rotate_util.h
+        include/bc/rotate_coordinates.h
         include/shell_tfmp_struct.h
         include/shell_tfmp_util.h
         include/sl_amesos_interface.h
@@ -300,15 +298,6 @@ set(GOMA_INCLUDES
         include/sl_util.h
         include/sl_util_structs.h
         include/std.h
-        include/user_bc.h
-        include/user_continuation.h
-        include/user_mp_gen.h
-        include/user_mp.h
-        include/user_out_hkm.h
-        include/user_post.h
-        include/user_pre.h
-        include/user_shell.h
-        include/usr_print.h
         include/wr_dpi.h
         include/wr_exo.h
         include/wr_side_data.h
@@ -344,7 +333,7 @@ set(GOMA_SOURCES
         src/bc_curve.c
         src/bc_dirich.c
         src/bc_integ.c
-        src/bc_rotate.c
+        src/bc/rotate.c
         src/bc_special.c
         src/bc_surfacedomain.c
         src/brkfix/
@@ -362,7 +351,6 @@ set(GOMA_SOURCES
         src/loca_eigenvalue.c
         src/loca_lib.c
         src/loca_util.c
-        src/main.c
         src/md_ieee.c
         src/md_timer.c
         src/mm_as_alloc.c
@@ -371,7 +359,6 @@ set(GOMA_SOURCES
         src/mm_bc_conflict.c
         src/mm_chemkin.c
         src/mm_dil_viscosity.c
-        src/mm_eh.c
         src/mm_fill_aux.c
         src/mm_fill.c
         src/mm_fill_common.c
@@ -434,7 +421,7 @@ set(GOMA_SOURCES
         src/rf_solve_segregated.c
         src/rf_util.c
         src/rf_vars.c
-        src/rotate_util.c
+        src/bc/rotate_coordinates.c
         src/shell_tfmp_util.c
         src/sl_amesos_interface.C
         src/sl_aux.c
@@ -461,16 +448,6 @@ set(GOMA_SOURCES
         src/sl_stratimikos_interface.cpp
         src/sl_umf.c
         src/sl_util.c
-        src/user_ac.c
-        src/user_bc.c
-        src/user_continuation.c
-        src/user_mp.c
-        src/user_mp_gen.c
-        src/user_out_hkm.c
-        src/user_post.c
-        src/user_pre.c
-        src/user_print.c
-        src/user_senkin.F
         src/wr_dpi.c
         src/wr_exo.c
         src/wr_side_data.c
@@ -487,8 +464,43 @@ set(GOMA_SOURCES
         src/brkfix/wr_coords.c
         src/brkfix/wr_graph_file.c)
 
+set(GOMA_USER_INCLUDES
+        include/user_bc.h
+        include/user_continuation.h
+        include/user_mp_gen.h
+        include/user_mp.h
+        include/user_out_hkm.h
+        include/user_post.h
+        include/user_pre.h
+        include/user_shell.h
+        include/usr_print.h
+)
+set(GOMA_USER_SOURCES
+        src/user_ac.c
+        src/user_bc.c
+        src/user_continuation.c
+        src/user_mp.c
+        src/user_mp_gen.c
+        src/user_out_hkm.c
+        src/user_post.c
+        src/user_pre.c
+        src/user_print.c
+        src/user_senkin.F
+)
+
+set(GOMA_UTIL_INCLUDES
+  include/bc/rotate_util.h
+  include/mm_eh.h
+)
+
+set(GOMA_UTIL_SOURCES
+  src/bc/rotate_util.c
+  src/mm_eh.c
+)
+
 set(GDS_INCLUDES
         include/gds/gds_vector.h)
+
 set(GDS_SOURCES
         src/gds/gds_vector.c)
 
@@ -551,13 +563,27 @@ set(GOMA_TPL_LIBRARIES
   ${SEACASChaco_TPL_LIBRARIES}
 )
 
+add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
+target_include_directories(goma_user PUBLIC include)
+
+add_library(goma ${GOMA_SOURCES} ${GOMA_INCLUDES})
+target_include_directories(goma PUBLIC include)
+target_include_directories(goma PRIVATE include ${GOMA_TPL_INCLUDES})
+target_link_directories(goma PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
+target_link_libraries(goma ${GOMA_TPL_LIBRARIES} gds)
+
 add_library(gds ${GDS_SOURCES} ${GDS_INCLUDES})
 target_include_directories(gds PUBLIC include)
 
-add_executable(${PROJECT_NAME} ${GOMA_INCLUDES} ${GOMA_SOURCES})
-target_include_directories(${PROJECT_NAME} PRIVATE include ${GOMA_TPL_INCLUDES})
-target_link_directories(${PROJECT_NAME} PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
-target_link_libraries(${PROJECT_NAME} ${GOMA_TPL_LIBRARIES} gds)
+add_library(goma_util ${GOMA_UTIL_SOURCES} ${GOMA_UTIL_INCLUDES})
+target_include_directories(goma_util PUBLIC include)
+target_link_libraries(goma_util gds)
+
+add_executable(goma_exe src/main.c)
+set_target_properties(goma_exe PROPERTIES OUTPUT_NAME "goma")
+target_include_directories(goma_exe PRIVATE include ${GOMA_TPL_INCLUDES})
+target_link_libraries(goma_exe ${GOMA_TPL_LIBRARIES} goma goma_user goma_util gds)
+
 
 option(ENABLE_TESTING "ENABLE_TESTING" OFF)
 if(ENABLE_TESTING)

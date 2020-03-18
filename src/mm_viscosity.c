@@ -345,14 +345,14 @@ viscosity(struct Generalized_Newtonian *gn_local,
 		            }
 		      break;
 		    default:
-		      EH(-1, "Variable function not yet implemented in material property table");
+		      EH(GOMA_ERROR, "Variable function not yet implemented in material property table");
 		    }
 	        }
             }
 	}
        else
 	{
-	  EH(-1,"Unrecognized viscosity model for Newtonian fluid");
+	  EH(GOMA_ERROR,"Unrecognized viscosity model for Newtonian fluid");
 	}
 
     } /* end Newtonian section */
@@ -677,7 +677,7 @@ viscosity(struct Generalized_Newtonian *gn_local,
     }
   else
     {
-      EH(-1,"Unrecognized viscosity model for non-Newtonian fluid");
+      EH(GOMA_ERROR,"Unrecognized viscosity model for non-Newtonian fluid");
     }
   
   if (ls != NULL && gn_local->ConstitutiveEquation != VE_LEVEL_SET &&
@@ -1239,7 +1239,7 @@ bingham_viscosity(struct Generalized_Newtonian *gn_local,
  	}
    else
  	{
- 	EH(-1,"Invalid Yield Stress Model");
+ 	EH(GOMA_ERROR,"Invalid Yield Stress Model");
  	}
   fexp = gn_local->fexp;
 
@@ -1489,7 +1489,7 @@ bingham_wlf_viscosity(struct Generalized_Newtonian *gn_local,
     }
   else
     {
-      EH(-1,"Invalid Yield Stress Model");
+      EH(GOMA_ERROR,"Invalid Yield Stress Model");
     }
   fexp = gn_local->fexp;
   
@@ -1924,7 +1924,7 @@ fill_viscosity(dbl *param)	/* ptr to the user-defined parameter list    */
  /**********************************************************/
   if ( ls != NULL )
     {
-      EH(-1, "Use LEVEL_SET instead of FILL viscosity model.");
+      EH(GOMA_ERROR, "Use LEVEL_SET instead of FILL viscosity model.");
       return(0);
     }
 
@@ -3412,7 +3412,7 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
  			nonvol_conc /= mp->u_density[0];
  			break;
  		default:
- 			EH(-1,"That species type not completed yet.");
+ 			EH(GOMA_ERROR,"That species type not completed yet.");
  			break;
  		}
    if( nonvol_conc < 0)
@@ -3431,7 +3431,7 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
 	}
    else
 	{
-  	EH(-1,"invalid constitutive model for WLF_CONC");
+  	EH(GOMA_ERROR,"invalid constitutive model for WLF_CONC");
 	}
    
    if(gammadot != 0.)
@@ -3510,7 +3510,7 @@ carreau_wlf_conc_viscosity(struct Generalized_Newtonian *gn_local,
 		}
    	else
 		{
-  		EH(-1,"invalid constitutive model for WLF_CONC");
+  		EH(GOMA_ERROR,"invalid constitutive model for WLF_CONC");
 		}
        
        for(w=0 ; w<pd->Num_Species_Eqn ; w++)
@@ -3791,7 +3791,7 @@ flowing_liquid_viscosity(VISCOSITY_DEPENDENCE_STRUCT *d_flow_vis)
 
   else
      {
-      EH(-1,"Don't recognize your FlowingLiquidViscosity model");
+      EH(GOMA_ERROR,"Don't recognize your FlowingLiquidViscosity model");
      }
 
 

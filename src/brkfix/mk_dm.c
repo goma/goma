@@ -218,7 +218,7 @@ void make_goma_dofmap(Exo_DB *x, Bevm ***mult, int ***Lucky, int *num_basic_eqnv
 	      sr = sprintf(err_msg, 
 			   "Difficulty finding local node in n=%d, e=%d",
 			   n, e);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  eb_index = fence_post(e, ebl, neb+1);
@@ -283,7 +283,7 @@ void make_goma_dofmap(Exo_DB *x, Bevm ***mult, int ***Lucky, int *num_basic_eqnv
        */
       if ( num_abevs > MAX_PROB_VAR )
 	{
-	  EH(-1, "Too many active eqnvars this node");
+	  EH(GOMA_ERROR, "Too many active eqnvars this node");
 	}
       
       for ( m=0; m<num_abevs; m++)
@@ -438,7 +438,7 @@ void make_goma_dofmap(Exo_DB *x, Bevm ***mult, int ***Lucky, int *num_basic_eqnv
 	      sr = sprintf(err_msg, 
 			   "@ node (%d) num_kinds_nodes >= MAX_NODE_KINDS", 
 			   n+1);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	}
 

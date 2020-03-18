@@ -57,10 +57,6 @@
 
 #define GOMA_RD_EXO_C
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -149,7 +145,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	{
 	  sr = sprintf(err_msg, "EXODUS II pathname \"%s\" too long (%d>%d).",
 		       fn, len, FILENAME_MAX_ACK);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       x->path = (char *) smalloc(len*sizeof(char));
     }
@@ -182,7 +178,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
     {
       sr = sprintf(err_msg, "EXODUS II pathname \"%s\" too long (%d>%d).",
 		   fn, err, FILENAME_MAX_ACK);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 
   x->mode                  = EX_READ;
@@ -229,12 +225,11 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
    */
 
   if( x->exoid >= 0 ) err = 0;
-  parallel_err = err;
-  if ( parallel_err )
+
+  if ( err )
     {
-      fprintf(stderr,
-              "\nProc %d: Exodus file read error, mesh files may not exist.\n", ProcID);
-      return(-1);
+       snprintf(err_msg, MAX_CHAR_ERR_MSG, "\nProc %d: Exodus file read error, mesh files may not exist.\n", ProcID);
+       EH(GOMA_ERROR, err_msg);
     }
 #endif
 
@@ -269,7 +264,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
       /*
 	if ( x->state != EXODB_STATE_GRND )
 	{
-	EH(-1, "Attempt to rd init EXO db into previously used struct.");
+	EH(GOMA_ERROR, "Attempt to rd init EXO db into previously used struct.");
 	}
       */
 
@@ -347,7 +342,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	    sr = sprintf(err_msg, 
 	    "Number of info records in \"%s\" is %d > %d. Recompile w/ MAX_INFO larger.", 
 	    fn, x->num_info, MAX_INFO);
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	    }
 	  */      
 
@@ -413,12 +408,12 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
       
       if ( ! ( x->state & EXODB_STATE_INIT ) )
 	{
-	  EH(-1, "Need to rd init info from EXO db before mesh.");
+	  EH(GOMA_ERROR, "Need to rd init info from EXO db before mesh.");
 	}
 
       if ( x->state & EXODB_STATE_MESH )
 	{
-	  EH(-1, "Attempt to rd mesh EXO db into previously used struct.");
+	  EH(GOMA_ERROR, "Attempt to rd mesh EXO db into previously used struct.");
 	}
 
       x->x_coord = NULL;
@@ -838,7 +833,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
       if ( ! ( x->state & EXODB_STATE_INIT ) )
 	{
-	  EH(-1, "Need to rd init info from EXO db before result metadata.");
+	  EH(GOMA_ERROR, "Need to rd init info from EXO db before result metadata.");
 	}
 
       /*
@@ -849,12 +844,12 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 
       if ( ! ( x->state & EXODB_STATE_MESH ) )
 	{
-	  EH(-1, "Need to rd mesh info from EXO db before result metadata.");
+	  EH(GOMA_ERROR, "Need to rd mesh info from EXO db before result metadata.");
 	}
 
       if ( x->state & EXODB_STATE_RES0 )
 	{
-	  EH(-1, "Attempt to rd mesh EXO db into previously used struct.");
+	  EH(GOMA_ERROR, "Attempt to rd mesh EXO db into previously used struct.");
 	}
 
       /*
@@ -982,7 +977,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
     {
       if ( !(x->state & EXODB_STATE_RES0) )
 	{
-	  EH(-1, "Need to rd result metadata from EXO db before result data.");
+	  EH(GOMA_ERROR, "Need to rd result metadata from EXO db before result data.");
 	}
 
       /*
@@ -1016,7 +1011,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	{
 	  sr = sprintf(err_msg, "Database has %d node vars, you want %d.",
 		       x->num_node_vars, x->num_nv_indeces);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 #endif
 
@@ -1153,7 +1148,7 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 			    {
 			      sr = sprintf(err_msg,  "ex_get_elem_var() bad rtn: time %d, elemvar %d, EB ID %d",
 					   time_index, k+1, x->eb_id[j]);
-			      EH(-1, err_msg);
+			      EH(GOMA_ERROR, err_msg);
 			    }
 			}
 		    }
@@ -1813,7 +1808,7 @@ init_exo_struct(Exo_DB *x)
 {
   if ( x == NULL )
     {
-      EH(-1, "Empty structure to initialize?");
+      EH(GOMA_ERROR, "Empty structure to initialize?");
     }
 
   x->state                 = EXODB_STATE_GRND;
@@ -1898,7 +1893,7 @@ free_exo_ev(Exo_DB *x)
   if ( ! ( x->state & EXODB_STATE_ELVA ) )
     {
       return;
-      /*      EH(-1, "Can't free what was never in chains.");*/
+      /*      EH(GOMA_ERROR, "Can't free what was never in chains.");*/
     }
 
   free(x->ev_time_indeces);
@@ -1940,7 +1935,7 @@ free_exo_gv(Exo_DB *x)
   if ( ! ( x->state & EXODB_STATE_GBVA ) )
     {
       return;
-      /*      EH(-1, "Can't free what was never in chains.");*/
+      /*      EH(GOMA_ERROR, "Can't free what was never in chains.");*/
     }
 
   free(x->gv_time_indeces);
@@ -1971,7 +1966,7 @@ free_exo_nv(Exo_DB *x)
   if ( ! ( x->state & EXODB_STATE_NDVA ) )
     {
       return;			/* This was a useless call... */
-      /*       EH(-1, "Can't free what was never in chains.");*/
+      /*       EH(GOMA_ERROR, "Can't free what was never in chains.");*/
     }
 
   free(x->nv_indeces);
@@ -2015,7 +2010,7 @@ alloc_exo_ev(Exo_DB *x,
 
   if ( x->state & EXODB_STATE_ELVA )
     {
-      EH(-1, "Please free before allocating...");
+      EH(GOMA_ERROR, "Please free before allocating...");
     }
 
   x->num_ev_time_indeces = num_timeplanes;
@@ -2070,7 +2065,7 @@ alloc_exo_gv(Exo_DB *x,
 
   if ( x->state & EXODB_STATE_GBVA )
     {
-      EH(-1, "Please free before allocating...");
+      EH(GOMA_ERROR, "Please free before allocating...");
     }
 
   x->num_gv_time_indeces = num_timeplanes;
@@ -2115,7 +2110,7 @@ alloc_exo_nv(Exo_DB *x,
 
   if ( x->state & EXODB_STATE_NDVA )
     {
-      EH(-1, "Please free before allocating...");
+      EH(GOMA_ERROR, "Please free before allocating...");
     }
 
   x->num_nv_indeces      = num_nodal_vars;

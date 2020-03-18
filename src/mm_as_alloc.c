@@ -1368,7 +1368,7 @@ assembly_alloc(Exo_DB *exo)
     }
   else
     {
-      EH(-1, "Cannot classify shapes...");
+      EH(GOMA_ERROR, "Cannot classify shapes...");
     }
 */
 
@@ -1744,7 +1744,7 @@ bf_mp_init(struct Problem_Description *pd)
 		}
 	    }
           if (!ifound && efv->i[v] != I_TABLE) {
-            EH(-1, "Could not find a match for EXTERNAL variable. Match some active field interpolation with those of external variables");
+            EH(GOMA_ERROR, "Could not find a match for EXTERNAL variable. Match some active field interpolation with those of external variables");
           }
 	  if (bfex[v] == NULL && efv->i[v] != I_TABLE)
 	    {

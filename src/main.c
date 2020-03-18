@@ -48,7 +48,7 @@ extern void handle_ieee(void );
 #include "bc_curve.h"
 #include "bc_dirich.h"
 #include "bc_integ.h"
-#include "bc_rotate.h"
+#include "bc/rotate.h"
 #include "bc_special.h"
 #include "bc_surfacedomain.h"
 #include "brk_utils.h"
@@ -75,7 +75,6 @@ extern void handle_ieee(void );
 #include "mm_chemkin.h"
 #include "mm_dil_viscosity.h"
 #include "mm_eh.h"
-#include "mm_elem_block.h"
 #include "mm_elem_block_structs.h"
 #include "mm_fill.h"
 #include "mm_fill_aux.h"
@@ -327,7 +326,15 @@ double time_goma_started;	/* Save it here... */
  */
 
 char **Argv;
+
 int Argc;
+
+ELEM_BLK_STRUCT *Element_Blocks = NULL;       /* Pointer to array of global
+                                                 element block information. */
+
+ELEM_BLK_STRUCT *Current_EB_ptr = NULL; /* Pointer to the current element block
+                                           structure. This is calculated in the
+                                           fill */
 
 int
 main(int argc, char **argv)

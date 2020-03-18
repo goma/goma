@@ -479,15 +479,15 @@ DP_INC= dp_comm.h\
 
 # _____	Boundary condition routines "bc_" prefix ______________________________
 
-BC_SRC= bc_colloc.c\
-        bc_curve.c\
-        bc_dirich.c\
-        bc_integ.c\
-        bc_rotate.c\
+BC_SRC= bc_colloc.c \
+        bc_curve.c \
+        bc_dirich.c \
+        bc_integ.c \
+        bc/rotate.c\
         bc_special.c\
         bc_contact.c \
         bc_surfacedomain.c \
-	rotate_util.c
+	bc/rotate_coordinates.c
 
 BC_INC= bc_colloc.h\
         bc_curve.h\
@@ -497,7 +497,8 @@ BC_INC= bc_colloc.h\
         bc_special.h\
         bc_contact.h \
         bc_surfacedomain.h \
-	rotate_util.h
+	bc/rotate_util.h \
+	bc/rotate_coordinates.h 
 
 
 # _____ Moving mesh routines "mm_" prefix _____________________________________
@@ -565,7 +566,6 @@ MM_INC=	mm_as.h\
         mm_chemkin.h\
         mm_dil_viscosity.h\
         mm_eh.h\
-        mm_elem_block.h\
         mm_elem_block_structs.h\
         mm_fill.h\
         mm_fill_aux.h\
@@ -722,6 +722,52 @@ DEBUG_DEPENDS = $(GOMA_INCS) $(MAKEFILE_NAME) $(USER_SETTINGS_FILE)
 
 all: $(BIN_DIR)/$(TARGET)
 
+# Object pattern rules
+# --------------------
+
+# Objects depend on c, F, and C files of the same name
+
+# release objects
+
+$(RELEASE_OBJ_DIR)/%.o: %.c #$(RELEASE_DEPENDS)
+	@mkdir -p $(RELEASE_OBJ_DIR)/$(BRKFIX_DIR)
+	@mkdir -p $(RELEASE_OBJ_DIR)/gds
+	@mkdir -p $(RELEASE_OBJ_DIR)/bc
+	@mkdir -p $(RELEASE_OBJ_DIR)/build
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+$(RELEASE_OBJ_DIR)/%.o: %.F #$(RELEASE_DEPENDS)
+	@mkdir -p $(RELEASE_OBJ_DIR)
+	$(FC) -c $(FFLAGS) -o $@ $<
+
+$(RELEASE_OBJ_DIR)/%.o: %.C #$(RELEASE_DEPENDS)
+	@mkdir -p $(RELEASE_OBJ_DIR)
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
+
+$(RELEASE_OBJ_DIR)/%.o: %.cpp #$(RELEASE_DEPENDS)
+	@mkdir -p $(RELEASE_OBJ_DIR)
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
+
+# debug objects
+$(DEBUG_OBJ_DIR)/%.o: %.c $(DEBUG_DEPENDS)
+	@mkdir -p $(DEBUG_OBJ_DIR)/$(BRKFIX_DIR)
+	@mkdir -p $(DEBUG_OBJ_DIR)/gds
+	@mkdir -p $(RELEASE_OBJ_DIR)/bc
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+$(DEBUG_OBJ_DIR)/%.o: %.F $(DEBUG_DEPENDS)
+	@mkdir -p $(DEBUG_OBJ_DIR)
+	$(FC) -c $(FFLAGS) -o $@ $<
+
+$(DEBUG_OBJ_DIR)/%.o: %.C $(DEBUG_DEPENDS)
+	@mkdir -p $(DEBUG_OBJ_DIR)
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
+
+$(DEBUG_OBJ_DIR)/%.o: %.cpp $(DEBUG_DEPENDS)
+	@mkdir -p $(RELEASE_OBJ_DIR)
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
+
+
 # bin/goma executable
 $(BIN_DIR)/$(TARGET): $(LIB_DIR)/$(GOMA_LIB) $(LIB_DIR)/$(GOMA_USER_LIB) $(LIB_DIR)/$(GDS_LIB) $(LIB_DEP)
 	mkdir -p $(BIN_DIR); \
@@ -759,49 +805,6 @@ $(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(BRKFIX_DEBUG_OBJS) $(USER_DEBUG
 	mkdir -p $(BIN_DIR); \
 	$(RM) $@; \
 	$(LD) $(LD_FLAGS) -o $@ $(GOMA_DEBUG_OBJS) $(BRKFIX_DEBUG_OBJS) $(USER_DEBUG_OBJS) $(GDS_DEBUG_OBJS) $(LIBS) $(END_LIBS) $(LD_FLAGS)
-
-# Object pattern rules
-# --------------------
-
-# Objects depend on c, F, and C files of the same name
-
-# release objects
-
-$(RELEASE_OBJ_DIR)/%.o: %.c $(RELEASE_DEPENDS)
-	@mkdir -p $(RELEASE_OBJ_DIR)/$(BRKFIX_DIR)
-	@mkdir -p $(RELEASE_OBJ_DIR)/gds
-	$(CC) -c $(CFLAGS) -o $@ $<
-
-$(RELEASE_OBJ_DIR)/%.o: %.F $(RELEASE_DEPENDS)
-	@mkdir -p $(RELEASE_OBJ_DIR)
-	$(FC) -c $(FFLAGS) -o $@ $<
-
-$(RELEASE_OBJ_DIR)/%.o: %.C $(RELEASE_DEPENDS)
-	@mkdir -p $(RELEASE_OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $@ $<
-
-$(RELEASE_OBJ_DIR)/%.o: %.cpp $(RELEASE_DEPENDS)
-	@mkdir -p $(RELEASE_OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $@ $<
-
-# debug objects
-$(DEBUG_OBJ_DIR)/%.o: %.c $(DEBUG_DEPENDS)
-	@mkdir -p $(DEBUG_OBJ_DIR)/$(BRKFIX_DIR)
-	@mkdir -p $(DEBUG_OBJ_DIR)/gds
-	$(CC) -c $(CFLAGS) -o $@ $<
-
-$(DEBUG_OBJ_DIR)/%.o: %.F $(DEBUG_DEPENDS)
-	@mkdir -p $(DEBUG_OBJ_DIR)
-	$(FC) -c $(FFLAGS) -o $@ $<
-
-$(DEBUG_OBJ_DIR)/%.o: %.C $(DEBUG_DEPENDS)
-	@mkdir -p $(DEBUG_OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $@ $<
-
-$(DEBUG_OBJ_DIR)/%.o: %.cpp $(DEBUG_DEPENDS)
-	@mkdir -p $(RELEASE_OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $@ $<
-
 
 
 # Installation target

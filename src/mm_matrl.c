@@ -308,7 +308,7 @@ reconcile_bc_to_matrl(void)
 	    fprintf(stderr,
 		    "%s ERROR Global Pressure Datum set differently in two places\n", 
 		    yo);
-	    EH(-1,"Duplicate and different pressure datums");
+	    EH(GOMA_ERROR,"Duplicate and different pressure datums");
 	  } else {
 	    fprintf(stderr,
 		    "%s WARNING Global Pressure Datum set to %g by VL_EQUIL card\n",
@@ -321,7 +321,7 @@ reconcile_bc_to_matrl(void)
           eb_index = bc->BC_Data_Int[1];
 	  matID = map_mat_index(eb_index);
           if (matID < 0) {
-            EH(-1,"matID not found for eb_index");
+            EH(GOMA_ERROR,"matID not found for eb_index");
           }
           matrl_ptr = mp_glob[matID];
           num_species = matrl_ptr->Num_Species;
@@ -332,7 +332,7 @@ reconcile_bc_to_matrl(void)
 	      fprintf(stderr,
 		      "%s ERROR molecular weights for species 0 differ: %g %g\n", 
 		      yo,bc->BC_Data_Float[1], matrl_ptr->molecular_weight[0]);
-	      EH(-1,"Duplicate and different molecular weights");
+	      EH(GOMA_ERROR,"Duplicate and different molecular weights");
 	    }
 	  }
           if (bc->BC_Data_Float[2] > 0.0) {
@@ -343,7 +343,7 @@ reconcile_bc_to_matrl(void)
 		fprintf(stderr,
 			"%s ERROR molecular weights for species 0 differ: %g %g\n", 
 			yo,bc->BC_Data_Float[2], matrl_ptr->molecular_weight[1]);
-		EH(-1,"Duplicate and different molecular weights");
+		EH(GOMA_ERROR,"Duplicate and different molecular weights");
 	      }
 	    }
 	  }
@@ -355,7 +355,7 @@ reconcile_bc_to_matrl(void)
 		      "%s ERROR molecular weights for species %d differ: %g %g\n", 
 		      yo, num_species-1, bc->BC_Data_Float[3], 
 		      matrl_ptr->molecular_weight[num_species-1]);
-	      EH(-1,"Duplicate and different molecular weights");
+	      EH(GOMA_ERROR,"Duplicate and different molecular weights");
 	    }
 	  }
 
@@ -373,7 +373,7 @@ reconcile_bc_to_matrl(void)
 	      fprintf(stderr,
 		      "%s ERROR molecular weights for species 0 differ: %g %g\n", 
 		      yo,bc->BC_Data_Float[1], matrl_ptr->molecular_weight[0]);
-	      EH(-1,"Duplicate and different molecular weights");
+	      EH(GOMA_ERROR,"Duplicate and different molecular weights");
 	    }
 	  }
           if (bc->BC_Data_Float[2] > 0.0) {
@@ -384,7 +384,7 @@ reconcile_bc_to_matrl(void)
 		fprintf(stderr,
 			"%s ERROR molecular weights for species 1 differ: %g %g\n", 
 			yo,bc->BC_Data_Float[2], matrl_ptr->molecular_weight[1]);
-		EH(-1,"Duplicate and different molecular weights");
+		EH(GOMA_ERROR,"Duplicate and different molecular weights");
 	      }
 	    }
 	  }
@@ -396,7 +396,7 @@ reconcile_bc_to_matrl(void)
 		      "%s ERROR molecular weights for species %d differ: %g %g\n", 
 		      yo, num_species-1, bc->BC_Data_Float[4], 
 		      matrl_ptr->molecular_weight[num_species-1]);
-	      EH(-1,"Duplicate and different molecular weights");
+	      EH(GOMA_ERROR,"Duplicate and different molecular weights");
 	    }
 	  }
 	}
@@ -544,7 +544,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 	}
       else
 	{
-	  EH(-1,"calc_density called");
+	  EH(GOMA_ERROR,"calc_density called");
 	}
     
     }
@@ -811,7 +811,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
 	{
 	  foam_species_source(matrl->u_species_source[0]);
 	} else {
-	  EH(-1, "Must specify FOAM species source in the material's file");
+	  EH(GOMA_ERROR, "Must specify FOAM species source in the material's file");
 	}
 
       for (w = 0; w < matrl->Num_Species; w++) 
@@ -1014,7 +1014,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
     *
     */
     if (matrl->Species_Var_Type != SPECIES_CONCENTRATION) {
-      EH(-1,"unimplemented");
+      EH(GOMA_ERROR,"unimplemented");
     }
     if (pd->Num_Species >  pd->Num_Species_Eqn) {
       w =  matrl->Num_Species_Eqn;
@@ -1033,7 +1033,7 @@ calc_density(MATRL_PROP_STRUCT *matrl, int doJac,
     }
 
   } else {
-    EH(-1,"Unrecognized density model");
+    EH(GOMA_ERROR,"Unrecognized density model");
   }
   return (rho);
 }
@@ -1071,7 +1071,7 @@ calc_concentration(MATRL_PROP_STRUCT *matrl, int doJac,
   double *C_base;
   if (matrl->DensityModel == DENSITY_CONSTANT_LAST_CONC) {
     if (matrl->StateVector_speciesVT != SPECIES_CONCENTRATION) {
-      EH(-1,"unimplemented");
+      EH(GOMA_ERROR,"unimplemented");
     }
     C_base = matrl->StateVector + SPECIES_UNK_0;
     for (k = 0; k < matrl->Num_Species_Eqn; k++) {
@@ -1083,7 +1083,7 @@ calc_concentration(MATRL_PROP_STRUCT *matrl, int doJac,
   } else if (matrl->DensityModel == CONSTANT) {
     
   } else {
-    EH(-1, "unimplemented");
+    EH(GOMA_ERROR, "unimplemented");
   }
   
 

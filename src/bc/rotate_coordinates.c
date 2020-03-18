@@ -1,4 +1,4 @@
-#include "rotate_util.h"
+#include "bc/rotate_coordinates.h"
 
 #include <assert.h>
 #include <math.h>
@@ -567,7 +567,7 @@ goma_error set_average_normals_and_tangents(Exo_DB *exo, goma_rotation_node_s *r
       } break;
       case GOMA_ROTATION_CORNER: {
         if (rotation[i].n_normals < 3) {
-          EH(-1, "Corner case incorrect number of normals");
+          EH(GOMA_ERROR, "Corner case incorrect number of normals");
           return GOMA_ERROR;
         } else {
           for (int u_index = 0; u_index < rotation[i].n_normals; u_index++) {
@@ -746,7 +746,7 @@ goma_error set_rotated_coordinate_system(Exo_DB *exo, goma_rotation_node_s *rota
         }
 
         if (!found[0] || !found[1] || !found[2]) {
-          EH(-1, "Could not associate 3 directions for corner node");
+          EH(GOMA_ERROR, "Could not associate 3 directions for corner node");
           return GOMA_ERROR;
         }
 
@@ -854,3 +854,4 @@ int offset_from_rotated_equation(int eqn) {
     return -1;
   }
 }
+

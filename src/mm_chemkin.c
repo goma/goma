@@ -93,7 +93,7 @@ chemkin_not_linked(char *errString)
   fprintf(stderr,"\tHowever, CHEMKIN has not been linked in!\n");
   fprintf(stderr,
 	  "\tGOMA must be recompiled with the USE_CHEMKIN definition!\n");
-  EH(-1, "chemkin not linked in\n");
+  EH(GOMA_ERROR, "chemkin not linked in\n");
 }
 #endif
 /*****************************************************************************/
@@ -240,7 +240,7 @@ chemkin_mat_prop_init(MATRL_PROP_STRUCT *mat_ptr, int mn,
     printf("%s: Mismatch in names!", yo);
     printf("\t\tCouldn't find %s in list of chemkin vol domains\n",
 	   mat_ptr->Material_Name);
-    EH(-1, yo);
+    EH(GOMA_ERROR, yo);
   }
 
   /*

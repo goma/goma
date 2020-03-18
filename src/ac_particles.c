@@ -249,7 +249,7 @@ initialize_particles(const Exo_DB * exo,
 
   if((Particle_Model == SWIMMER_EXPLICIT || Particle_Model == SWIMMER_IMPLICIT) &&
      pd_glob[0]->CoordinateSystem != CARTESIAN)
-    EH(-1, "You probably need to fix something first...");
+    EH(GOMA_ERROR, "You probably need to fix something first...");
 
   /* Allocate one of these.  I like the -> references instead of the
    * . references... */
@@ -275,19 +275,19 @@ initialize_particles(const Exo_DB * exo,
   mdim = static_exo->num_dim;
 
   if(pd_glob[0]->e[pg->imtrx][R_MESH1])
-    EH(-1, "Cannot couple particles and deformable mesh, yet.");
+    EH(GOMA_ERROR, "Cannot couple particles and deformable mesh, yet.");
   if(mdim == 2)
     {
       if(static_exo->eb_elem_itype[0] != BIQUAD_QUAD &&
 	 static_exo->eb_elem_itype[0] != BILINEAR_QUAD)
-	EH(-1, "Can only have 9-node and 4-node quadrilateral elements in 2D.");
+	EH(GOMA_ERROR, "Can only have 9-node and 4-node quadrilateral elements in 2D.");
       sides_per_element = 4;
     }
   else /* static_exo->num_dim == mdim == 3 */
     {
       if(static_exo->eb_elem_itype[0] != TRIQUAD_HEX &&
 	 static_exo->eb_elem_itype[0] != TRILINEAR_HEX)
-	EH(-1, "Can only handly 27-node and 8-node hex elements in 3D.");
+	EH(GOMA_ERROR, "Can only handly 27-node and 8-node hex elements in 3D.");
       sides_per_element = 6;
     }
 
@@ -337,7 +337,7 @@ initialize_particles(const Exo_DB * exo,
   if(Particle_Full_Output_Stride)
     {
       if(!(pa_full_fp = fopen(construct_filename(Particle_Full_Output_Filename), "w")))
-	EH(-1, "Could not open Particle_Full_Output_Filename for zeroing.");
+	EH(GOMA_ERROR, "Could not open Particle_Full_Output_Filename for zeroing.");
       DPRINTF(stdout, "%s, ", Particle_Full_Output_Filename); fflush(stdout);
     }
   else
@@ -349,7 +349,7 @@ initialize_particles(const Exo_DB * exo,
       for(i = 0; i < Particle_Number_Sample_Types; i++)
 	{
 	  if(!(pa_fp[i] = fopen(construct_filename(Particle_Filename_Template[i]), "w")))
-	    EH(-1, "Could not open a particle file for zeroing.");
+	    EH(GOMA_ERROR, "Could not open a particle file for zeroing.");
 	  DPRINTF(stdout, "%s, ", Particle_Filename_Template[i]); fflush(stdout);
 	  Particle_Number_Samples_Existing[i] = 0;
 	  if(Particle_Output_Format == TECPLOT)
@@ -429,7 +429,7 @@ initialize_particles(const Exo_DB * exo,
 	  for(i = 0; i < 3; i++)
 	    if(Particle_Move_Domain_Reals[2*i] > Particle_Creation_Domain_Reals[2*i] ||
 	       Particle_Move_Domain_Reals[2*i+1] < Particle_Creation_Domain_Reals[2*i+1])
-	      EH(-1, "Mismatch in BRICK bounds for Creation/Move.");
+	      EH(GOMA_ERROR, "Mismatch in BRICK bounds for Creation/Move.");
 	}
     }
   
@@ -510,7 +510,7 @@ initialize_particles(const Exo_DB * exo,
 		      proc_index++;
 		    }
 		  if(proc_index == Num_Proc)
-		    EH(-1, "proc_index == Num_Proc");
+		    EH(GOMA_ERROR, "proc_index == Num_Proc");
 		  number_to_create[proc_index]++;
 		}
 
@@ -1794,7 +1794,7 @@ position_particle_uniformly(const int elem_id,
 	  done = 0;
       counter++;
       if(counter == 100 && !done)
-	EH(-1, "Local element rejection sampling counter reached 100.");
+	EH(GOMA_ERROR, "Local element rejection sampling counter reached 100.");
     }
   return counter;
 }
@@ -1923,7 +1923,7 @@ get_boundary_xi_newton(const dbl * const coeff,
       memset(tmp, 0, DIM * sizeof(dbl));
       memcpy(tmp2, coeff, DIM * sizeof(dbl));
       if(get_element_xi_newton(elem_id, tmp2, tmp) == -1)
-	EH(-1, "BAD");
+	EH(GOMA_ERROR, "BAD");
       t = 1.0;
       for(i = 0; i < DIM; i++)
 	pt[i] = coeff[i] + t * coeff[i+3];
@@ -1945,7 +1945,7 @@ get_boundary_xi_newton(const dbl * const coeff,
 	pt[i] = coeff[i] + t * coeff[i+3];
       memset(pt_xi, 0, DIM * sizeof(dbl));
       if(get_element_xi_newton(elem_id, pt, pt_xi) == -1)
-	EH(-1, "ALSO BAD");
+	EH(GOMA_ERROR, "ALSO BAD");
       /*
       fprintf(stderr, "t = %g, pt = (%.10g,%.10g,%.10g), pt_xi = (%.10g,%.10g,%.10g)\n",
 	      t, pt[0], pt[1], pt[2], pt_xi[0], pt_xi[1], pt_xi[2]);
@@ -2019,7 +2019,7 @@ get_boundary_xi_newton(const dbl * const coeff,
     {
       fprintf(stderr, "last dfdxi = %g, t = %g, f = %g, resid_scale = %g, resid_initial = %g, xi_norm = %g, pt = (%g,%g,%g), pt_xi = (%g,%g,%g)\n",
 	      dfdxi1, t, f, resid_scale, resid_initial, xi_norm, pt[0], pt[1], pt[2], pt_xi[0], pt_xi[1], pt_xi[2]);
-      EH(-1, "Exceeded 100 Newton iterations in get_boundary_xi_newton()");
+      EH(GOMA_ERROR, "Exceeded 100 Newton iterations in get_boundary_xi_newton()");
     }
      
   /*
@@ -2047,7 +2047,7 @@ obtain_particle_space(const int elem_id)
       if(!element_particle_list_head[elem_id])
 	{
 	  sprintf(s, "Could not allocate %ld bytes of space for particle.\n", sizeof(particle_t));
-	  EH(-1, s);
+	  EH(GOMA_ERROR, s);
 	}
       p = element_particle_list_head[elem_id];
       p->last = NULL;
@@ -2057,7 +2057,7 @@ obtain_particle_space(const int elem_id)
     {
       p = (particle_t *)malloc(sizeof(particle_t));
       if(!p)
-	EH(-1, "Could not allocate space for particle.");
+	EH(GOMA_ERROR, "Could not allocate space for particle.");
       p->next = element_particle_list_head[elem_id];
       p->last = NULL;
       element_particle_list_head[elem_id]->last = p;
@@ -2312,7 +2312,7 @@ create_element_particle_info_maps(void)
 	    {
 	      fp = fopen("map_creation.txt", proc_id?"a":"w");
 	      if(!fp)
-		EH(-1, "Could not open map_creation.txt");
+		EH(GOMA_ERROR, "Could not open map_creation.txt");
 	    }
 
 	  for(elem_id = 0; elem_id < static_exo->num_elems; elem_id++)
@@ -2665,7 +2665,7 @@ generate_source_particles(const dbl tt,	/* parameter to vary time integration */
 		    if(pd->CoordinateSystem != CARTESIAN &&
 		       pd->CoordinateSystem != CYLINDRICAL &&
 		       pd->CoordinateSystem != SWIRLING)
-		      EH(-1, "Cannot apply volumetric source particles on this coordinate system.");
+		      EH(GOMA_ERROR, "Cannot apply volumetric source particles on this coordinate system.");
 
 		    load_element_information(elem_id);
 		    num_nodes_on_side = static_exo->ss_node_side_index[j][k+1] - static_exo->ss_node_side_index[j][k];
@@ -2673,7 +2673,7 @@ generate_source_particles(const dbl tt,	/* parameter to vary time integration */
 		    for(m = 0; m < num_nodes_on_side; m++)
 		      {
 			if((local_elem_node_id[m] = in_list(local_ss_node_list[m], 0, nodes_per_element, &(static_exo->elem_node_list[ei[pg->imtrx]->iconnect_ptr]))) == -1)
-			  EH(-1, "Bad id_local_elem_coord lookup");
+			  EH(GOMA_ERROR, "Bad id_local_elem_coord lookup");
 		      }
 
 		    /* For Q1 elements, the node list I get from above is the same as:
@@ -2707,7 +2707,7 @@ generate_source_particles(const dbl tt,	/* parameter to vary time integration */
 		      {
 			fprintf(stderr, "# expected particles = %g on elem %d side %d with inflow volume = %g\n",
 				expected_particles, elem_id, side_id, inflow_volume);
-			EH(-1, "Negative number of expected particles.");
+			EH(GOMA_ERROR, "Negative number of expected particles.");
 		      }
 
 		    for(m = 0; m < floor(expected_particles); m++)
@@ -2807,7 +2807,7 @@ initialize_surface_interactions(void)
 	case PBC_IMPERMEABLE:
 	  /* This is is sort of done "in reverse", so we just note it
 	   * and catch it later. */
-	  EH(-1, "CGM not supported, IMPERMEABLE PBC.");
+	  EH(GOMA_ERROR, "CGM not supported, IMPERMEABLE PBC.");
 	  /*
 	  fprintf(stderr, "PBC %d is IMPERMEABLE, Num_Impermeable_PBCs = %d\n", i, Num_Impermeable_PBCs);
 	  */
@@ -2819,7 +2819,7 @@ initialize_surface_interactions(void)
 	  break;
 	default:
 	  sprintf(err_msg, "Unknown PBC type (%d).", PBC->type);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
     }
 
@@ -2858,7 +2858,7 @@ load_element_information(const int elem_id)
   for(i = 0; i < Num_Basis_Functions; i++)
     if(pd_glob[ei[pg->imtrx]->mn]->i[pg->imtrx][VELOCITY1] == bfd[i]->interpolation) velo_interp = i;
   if(velo_interp == -1)
-    EH(-1, "Could not find velocity interpolation function.");
+    EH(GOMA_ERROR, "Could not find velocity interpolation function.");
 
   last_element_loaded = elem_id;
 }
@@ -2926,7 +2926,7 @@ fill_hex_side_indices(const int side_id,
     case 5: indices[0] = 4; indices[1] = 5; indices[2] = 6; indices[3] = 7;
       break;
     default:
-      EH(-1, "Bad side_id.");
+      EH(GOMA_ERROR, "Bad side_id.");
       break;
     }
 }
@@ -3485,7 +3485,7 @@ compute_particle_dt(particle_t * const p,
       break;
 
     case INERTIAL_TRACER_EXPLICIT:
-      EH(-1, "INERTIAL_TRACER_EXPLICIT offline -- need a better mover.");
+      EH(GOMA_ERROR, "INERTIAL_TRACER_EXPLICIT offline -- need a better mover.");
       break;
 
     case INERTIAL_TRACER_IMPLICIT:
@@ -3564,7 +3564,7 @@ compute_particle_dt(particle_t * const p,
       break;
 
     case CHARGED_TRACER_EXPLICIT:
-      EH(-1, "CHARGED_TRACER_EXPLICIT offline -- need a better mover.");
+      EH(GOMA_ERROR, "CHARGED_TRACER_EXPLICIT offline -- need a better mover.");
       break;
 
     case CHARGED_TRACER_IMPLICIT:
@@ -3802,7 +3802,7 @@ move_particle(particle_t * const p,
 	}
       else
 	if(Particle_Model_Data[0] != 0.0)
-	  EH(-1, "Set up random components!");
+	  EH(GOMA_ERROR, "Set up random components!");
 
       memcpy(total_velocity, current_v, DIM * sizeof(dbl));
       for(i = 0; i < DIM; i++)
@@ -4955,7 +4955,7 @@ add_to_do_list(particle_t * p)
     {
       particles_to_do = (particle_t *)malloc(sizeof(particle_t));
       if(!particles_to_do)
-	EH(-1, "Could not malloc particle space.");
+	EH(GOMA_ERROR, "Could not malloc particle space.");
       p_recv = particles_to_do;
       memcpy(p_recv, p, sizeof(particle_t));
       p_recv->last = NULL;
@@ -4965,7 +4965,7 @@ add_to_do_list(particle_t * p)
     {
       p_recv = (particle_t *)malloc(sizeof(particle_t));
       if(!p_recv)
-	EH(-1, "Could not malloc particle space.");
+	EH(GOMA_ERROR, "Could not malloc particle space.");
       memcpy(p_recv, p, sizeof(particle_t));
       particles_to_do->last = p_recv;
       p_recv->next = particles_to_do;
@@ -5102,7 +5102,7 @@ couple_to_continuum(void)
     {
       source_eqn = R_MOMENTUM1 + pdim - 1;
       if(mp->DensityModel != CONSTANT)
-	EH(-1, "Sorry, only handling CONSTANT density models right now.  Check back later.");
+	EH(GOMA_ERROR, "Sorry, only handling CONSTANT density models right now.  Check back later.");
       source_mass = 4.0/3.0 * M_PIE  * (Particle_Density - mp->density) * Particle_Radius * Particle_Radius * Particle_Radius * Particle_Ratio;
     }
 
@@ -5258,7 +5258,7 @@ load_restart_file(void)
   if(!(fp = fopen(construct_filename(Particle_Restart_Filename), "r")))
     {
       fprintf(stderr, "trying to open %s.\n", construct_filename(Particle_Restart_Filename));
-      EH(-1, "Could not open restart file");
+      EH(GOMA_ERROR, "Could not open restart file");
     }
   zero_a_particle(&p);
   while(!feof(fp))
@@ -5271,14 +5271,14 @@ load_restart_file(void)
 	continue;		/* probable EOF */
       fgetserr = fgets(garbage, 254, fp);
       if (fgetserr == NULL) {
-	EH(-1, "Error reading line in particle restart file");
+	EH(GOMA_ERROR, "Error reading line in particle restart file");
       }
       if(get_element_xi_newton(p.owning_elem_id, p.x, p.xi) == -1)
-	EH(-1, "Could not place particle from restart.");
+	EH(GOMA_ERROR, "Could not place particle from restart.");
       load_field_variables_at_xi(p.owning_elem_id, p.xi);
       for(i = 0; i < pdim; i++)
 	if(fabs(fv->x[i] - p.x[i]) > 1.0e-6)
-	  EH(-1, "Did not match particle location on restart.");
+	  EH(GOMA_ERROR, "Did not match particle location on restart.");
       p_ptr = create_a_particle(&p, p.owning_elem_id);
       switch(Particle_Model)
 	{

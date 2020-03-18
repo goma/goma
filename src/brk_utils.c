@@ -47,7 +47,7 @@ check_for_brkfile(char* brkfile_name) {
   }
 
   if (Num_Proc > 1 && Brk_Flag == 2) {
-    EH(-1, "Cannot create brkfile on parallel run, run on only 1 processor");
+    EH(GOMA_ERROR, "Cannot create brkfile on parallel run, run on only 1 processor");
   }
 
   return;
@@ -61,7 +61,7 @@ write_brk_file(char* brkfile_name, Exo_DB *exo) {
   brkfile = fopen(brkfile_name, "w");
 
   if (brkfile == NULL) {
-    EH(-1, "Cannot open BRK File for writing");
+    EH(GOMA_ERROR, "Cannot open BRK File for writing");
     return;
   }
   

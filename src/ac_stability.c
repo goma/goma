@@ -881,10 +881,10 @@ void output_stability_matrices(double *mass_matrix,
 
   mass_file = fopen(LSA_mass_output_filename, "w");
   if(!mass_file)
-    EH(-1, "Could not open mass matrix output file.");
+    EH(GOMA_ERROR, "Could not open mass matrix output file.");
   jacobian_file = fopen(LSA_jacobian_output_filename, "w");
   if(!jacobian_file)
-    EH(-1, "Could not open jacobian matrix output file.");
+    EH(GOMA_ERROR, "Could not open jacobian matrix output file.");
   
   /* Print out header line containing #rows, #nonzeros.
    */
@@ -917,7 +917,7 @@ void output_stability_matrices(double *mass_matrix,
    */
   vars_file = fopen(LSA_vars_output_filename, "w");
   if(!vars_file)
-    EH(-1, "Could not open variable listing output file.");
+    EH(GOMA_ERROR, "Could not open variable listing output file.");
   for(i = 0; i < num_total_nodes; i++)
     {
       if( (j = Index_Solution(i, VELOCITY1, 0, 0, -1, pg->imtrx)) > -1 )

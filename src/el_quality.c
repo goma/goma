@@ -595,7 +595,7 @@ static double vertex_angle(double **xy, int i, int n, int *sense)
     }
   else 
     {
-      EH(-1,"vertex_angle: n must be 4 or 8, or else there is an algorithm error"); 
+      EH(GOMA_ERROR,"vertex_angle: n must be 4 or 8, or else there is an algorithm error"); 
     }
 
   /* Load coordinates of v2 and the two neighbor nodes */

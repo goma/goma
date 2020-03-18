@@ -31,10 +31,6 @@
 
 #define GOMA_WR_DPI_C
 
-#ifdef _HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdio.h>
 
 #ifdef STDC_HEADERS
@@ -139,7 +135,7 @@ int wr_dpi(Dpi *d, char *filename) {
   err = nc_open(filename, NC_WRITE, &u);
   if ( err != NC_NOERR )
     {
-      EH(-1, "nc_open() problem.");
+      EH(GOMA_ERROR, "nc_open() problem.");
     }
 
 
@@ -150,7 +146,7 @@ int wr_dpi(Dpi *d, char *filename) {
   err = nc_redef(u);
   if ( err != NC_NOERR )
     {
-      EH(-1, "nc_redef() problem.");
+      EH(GOMA_ERROR, "nc_redef() problem.");
     }
 
   /*
@@ -584,7 +580,7 @@ int wr_dpi(Dpi *d, char *filename) {
   err = nc_enddef(u);
   if ( err != NC_NOERR )
     {
-      EH(-1, "nc_enddef() problem.");
+      EH(GOMA_ERROR, "nc_enddef() problem.");
     }
 
   /*
@@ -742,7 +738,7 @@ int wr_dpi(Dpi *d, char *filename) {
   err = nc_close(u);
   if ( err != NC_NOERR )
     {
-      EH(-1, "nc_close() problem.");
+      EH(GOMA_ERROR, "nc_close() problem.");
     }
 
   return(status);
@@ -786,7 +782,7 @@ define_dimension(const int unit,
     {
       sprintf(err_msg, "nc_def_dim() on %s [<%d] id=%d", string, 
 		   value, *identifier);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 
   return;
@@ -824,7 +820,7 @@ define_variable(const int netcdf_unit,
 
   if ( num_dimensions < 0 )
     {
-      EH(-1, "Bad dimension specified.");
+      EH(GOMA_ERROR, "Bad dimension specified.");
     }
 
   if ( num_dimensions > 0 )
@@ -835,7 +831,7 @@ define_variable(const int netcdf_unit,
 	  /*
 	  sprintf(err_msg, "Bad 1st netCDF dimension ID %d for %s\n",
 		       dimension_id_1, name_string);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	  */
 	}
       if ( dimension_val_1 < 1 )
@@ -850,7 +846,7 @@ define_variable(const int netcdf_unit,
 	{
 	  sprintf(err_msg, "Bad 2nd netCDF dimension ID %d for %s\n",
 		       dimension_id_1, name_string);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       if ( dimension_val_2 < 1 )
 	{
@@ -867,7 +863,7 @@ define_variable(const int netcdf_unit,
     {
       sprintf(err_msg, "nc_def_var on %s (%d-D) id=%d", name_string, 
 		   num_dimensions, *identifier);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 
   return;
@@ -896,7 +892,7 @@ static void put_variable(const int netcdf_unit, const nc_type netcdf_type,
 	{
 	  sprintf(err_msg, "nc_put_var_int() varid=%d", 
 		       variable_identifier);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       break;
       
@@ -907,7 +903,7 @@ static void put_variable(const int netcdf_unit, const nc_type netcdf_type,
 	{
 	  sprintf(err_msg, "nc_put_var_text() varid=%d", 
 		       variable_identifier);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       break;
 
@@ -918,12 +914,12 @@ static void put_variable(const int netcdf_unit, const nc_type netcdf_type,
 	{
 	  sprintf(err_msg, "nc_put_var_double() varid=%d", 
 		       variable_identifier);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 	break;
 
     default:
-      EH(-1, "Specified netCDF data type unrecognized or unimplemented.");
+      EH(GOMA_ERROR, "Specified netCDF data type unrecognized or unimplemented.");
       break;
     }
 

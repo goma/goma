@@ -117,7 +117,7 @@ ns_data_print(pp_Data * p,
     if (ebIndex_first == -1) {
       sprintf(err_msg, "Can't find an element block with the elem Block id %d\n", elemBlock_id);
     if (Num_Proc == 1) {
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
     }
     mat_num = Matilda[ebIndex_first];
@@ -138,7 +138,7 @@ ns_data_print(pp_Data * p,
   else
     {
       sprintf(err_msg, "Node set ID %d not found.", node_set_id);
-      if( Num_Proc == 1 ) EH(-1,err_msg);
+      if( Num_Proc == 1 ) EH(GOMA_ERROR,err_msg);
     }
 
   /* first right time stamp or run stamp to separate the sets */
@@ -261,7 +261,7 @@ ns_data_print(pp_Data * p,
 	    
 	    if ( ! exo->node_elem_conn_exists )
 	      {
-		EH(-1, "Cannot compute angle without node_elem_conn.");
+		EH(GOMA_ERROR, "Cannot compute angle without node_elem_conn.");
 	      }
 	    
 	    elem_list[0] = exo->node_elem_list[exo->node_elem_pntr[node]];
@@ -310,7 +310,7 @@ ns_data_print(pp_Data * p,
 		if ( local_node[ielem] < 0 || local_node[ielem] > 3 ) 
 		  {
 		    if (strncasecmp(qtity_str, "theta", 5 ) == 0) {
-		      EH(-1, "Node out of bounds.");
+		      EH(GOMA_ERROR, "Node out of bounds.");
 		    }
 		  }
 
@@ -474,7 +474,7 @@ ns_data_print(pp_Data * p,
              int dof_map[MDE];
 	    if ( ! exo->node_elem_conn_exists )
 	      {
-		EH(-1, "Cannot compute angle without node_elem_conn.");
+		EH(GOMA_ERROR, "Cannot compute angle without node_elem_conn.");
 	      }
 	    
 	    elem_list[0] = exo->node_elem_list[exo->node_elem_pntr[node]];
@@ -642,7 +642,7 @@ ns_data_sens_print(const struct Post_Processing_Data_Sens *p,
   else
   {
     sprintf(err_msg, "Node set ID %d not found.", node_set_id);
-    if( Num_Proc == 1 ) EH(-1,err_msg);
+    if( Num_Proc == 1 ) EH(GOMA_ERROR,err_msg);
   }
 
   /* first right time stamp or run stamp to separate the sets */

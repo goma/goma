@@ -123,7 +123,7 @@ static void compute_nodes_weights(int N, double Jac[N + 1][N + 1],
     weights[i] = U[0][i] * U[0][i] * moments[0];
     nodes[i] = W[i];
     if (nodes[i] < 0) {
-      EH(-1, "Negative nodes in compute_nodes_weights");
+      EH(GOMA_ERROR, "Negative nodes in compute_nodes_weights");
     }
   }
 }
@@ -199,12 +199,12 @@ void wheeler_algorithm(int N, double *moments, double *weights, double *nodes) {
 void adaptive_wheeler(int N, double *moments, double *rmin, double eabs,
                       double *weights, double *nodes, int *n_out) {
   if (2 * N > MAX_MOMENTS) {
-    EH(-1, "adaptive wheeler error 2*N > MAX_MOMENTS");
+    EH(GOMA_ERROR, "adaptive wheeler error 2*N > MAX_MOMENTS");
   }
   double cutoff = 0;
   *n_out = N;
   if (moments[0] < 0) {
-    EH(-1, "Negative 0th moment");
+    EH(GOMA_ERROR, "Negative 0th moment");
     return;
   } else if (moments[0] == 0) {
     weights[0] = 0;
@@ -403,42 +403,42 @@ int get_foam_pbe_indices(int *index_W, int *index_OH, int *index_BA_l,
       if (species_W == -1) {
         species_W = w;
       } else {
-        EH(-1, "Error expected only one FOAM_PBE_WATER species");
+        EH(GOMA_ERROR, "Error expected only one FOAM_PBE_WATER species");
       }
       break;
     case FOAM_PBE_OH:
       if (species_OH == -1) {
         species_OH = w;
       } else {
-        EH(-1, "Error expected only one FOAM_PBE_OH species");
+        EH(GOMA_ERROR, "Error expected only one FOAM_PBE_OH species");
       }
       break;
     case FOAM_PBE_BA_L:
       if (species_BA_l == -1) {
         species_BA_l = w;
       } else {
-        EH(-1, "Error expected only one FOAM_PBE_BA_L species");
+        EH(GOMA_ERROR, "Error expected only one FOAM_PBE_BA_L species");
       }
       break;
     case FOAM_PBE_BA_G:
       if (species_BA_g == -1) {
         species_BA_g = w;
       } else {
-        EH(-1, "Error expected only one FOAM_PBE_BA_G species");
+        EH(GOMA_ERROR, "Error expected only one FOAM_PBE_BA_G species");
       }
       break;
     case FOAM_PBE_CO2_L:
       if (species_CO2_l == -1) {
         species_CO2_l = w;
       } else {
-        EH(-1, "Error expected only one FOAM_PBE_CO2_L species");
+        EH(GOMA_ERROR, "Error expected only one FOAM_PBE_CO2_L species");
       }
       break;
     case FOAM_PBE_CO2_G:
       if (species_CO2_g == -1) {
         species_CO2_g = w;
       } else {
-        EH(-1, "Error expected only one FOAM_PBE_CO2_G species");
+        EH(GOMA_ERROR, "Error expected only one FOAM_PBE_CO2_G species");
       }
       break;
     default:
@@ -447,32 +447,32 @@ int get_foam_pbe_indices(int *index_W, int *index_OH, int *index_BA_l,
   }
 
   if (species_W == -1) {
-    EH(-1, "Error expected FOAM_PBE_WATER species");
+    EH(GOMA_ERROR, "Error expected FOAM_PBE_WATER species");
     return -1;
   }
 
   if (species_OH == -1) {
-    EH(-1, "Error expected FOAM_PBE_OH species");
+    EH(GOMA_ERROR, "Error expected FOAM_PBE_OH species");
     return -1;
   }
 
   if (species_BA_l == -1) {
-    EH(-1, "Error expected FOAM_PBE_BA_L species");
+    EH(GOMA_ERROR, "Error expected FOAM_PBE_BA_L species");
     return -1;
   }
 
   if (species_BA_g == -1) {
-    EH(-1, "Error expected FOAM_PBE_BA_G species");
+    EH(GOMA_ERROR, "Error expected FOAM_PBE_BA_G species");
     return -1;
   }
 
   if (species_CO2_l == -1) {
-    EH(-1, "Error expected FOAM_PBE_CO2_L species");
+    EH(GOMA_ERROR, "Error expected FOAM_PBE_CO2_L species");
     return -1;
   }
 
   if (species_CO2_g == -1) {
-    EH(-1, "Error expected FOAM_PBE_CO2_G species");
+    EH(GOMA_ERROR, "Error expected FOAM_PBE_CO2_G species");
     return -1;
   }
 
@@ -639,7 +639,7 @@ static int foam_pbe_growth_rate(double growth_rate[MAX_CONC],
           }
         }
       } else {
-        EH(-1, "Unknown PBE BA Type");
+        EH(GOMA_ERROR, "Unknown PBE BA Type");
         return -1;
       }
 
@@ -690,13 +690,13 @@ int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
   }
 
   if (wCO2Liq == -1) {
-    EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
+    EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
     return -1;
   } else if (wH2O == -1) {
-    EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+    EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
     return -1;
   } else if (wCO2Gas == -1) {
-    EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
+    EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
     return -1;
   }
 
@@ -743,7 +743,7 @@ int foam_pmdi_growth_rate(double growth_rate[MAX_CONC],
       }
     }
   } else {
-    EH(-1, "Expected DENSITY_FOAM_PMDI_10 for growth rate");
+    EH(GOMA_ERROR, "Expected DENSITY_FOAM_PMDI_10 for growth rate");
     return -1;
   }
 
@@ -1206,7 +1206,7 @@ int growth_rate_model(int species_index, double *nodes, double *weights,
             mp->moment_growth_scale * (eta0 / mu) * inv_pressure * inv_pressure;
       } break;
       default:
-        EH(-1, "Unknown growth kernel");
+        EH(GOMA_ERROR, "Unknown growth kernel");
         return -1;
       }
 
@@ -1294,7 +1294,7 @@ int coalescence_kernel_model(double *nodes, double *weights, int n_nodes,
                                (nodes[alpha] / (nodes[beta] + 1e-32));
           break;
         default:
-          EH(-1, "Unknown coalescence kernel");
+          EH(GOMA_ERROR, "Unknown coalescence kernel");
           return -1;
         }
         double wa = weights[alpha];
@@ -1320,7 +1320,7 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR) {
 
   if (!pd->gv[MOMENT0] || !pd->gv[MOMENT1] || !pd->gv[MOMENT2] ||
       !pd->gv[MOMENT3]) {
-    EH(-1, "Expected Moment equations for moment growth rate");
+    EH(GOMA_ERROR, "Expected Moment equations for moment growth rate");
     return -1;
   }
 
@@ -1420,13 +1420,13 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR) {
     }
 
     if (wCO2Liq == -1) {
-      EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
+      EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
       return -1;
     } else if (wH2O == -1) {
-      EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+      EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
       return -1;
     } else if (wCO2Gas == -1) {
-      EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
+      EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
       return -1;
     }
 
@@ -1483,7 +1483,7 @@ int get_moment_growth_rate_term(struct moment_growth_rate *MGR) {
     }
     return 0;
   default:
-    EH(-1, "Unknown moment source model");
+    EH(GOMA_ERROR, "Unknown moment source model");
     return -1;
   }
 }
@@ -1573,13 +1573,13 @@ int moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource) {
     }
 
     if (wCO2Liq == -1) {
-      EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
+      EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_LIQ");
       return -1;
     } else if (wH2O == -1) {
-      EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+      EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
       return -1;
     } else if (wCO2Gas == -1) {
-      EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
+      EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2_GAS");
       return -1;
     }
 
@@ -1635,7 +1635,7 @@ int moment_source(double *msource, MOMENT_SOURCE_DEPENDENCE_STRUCT *d_msource) {
     free(MGR);
   } break;
   default:
-    EH(-1, "Unknown moment source model");
+    EH(GOMA_ERROR, "Unknown moment source model");
     break;
   }
 
@@ -1753,7 +1753,7 @@ int assemble_density(void) /*  time step size      */
       }
     }
   } else {
-    EH(-1, "Unknown density model for assemble_density");
+    EH(GOMA_ERROR, "Unknown density model for assemble_density");
   }
 
   /*

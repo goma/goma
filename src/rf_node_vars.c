@@ -33,7 +33,7 @@
 #include "bc_curve.h"
 #include "bc_dirich.h"
 #include "bc_integ.h"
-#include "bc_rotate.h"
+#include "bc/rotate.h"
 #include "bc_special.h"
 #include "bc_surfacedomain.h"
 #include "dp_comm.h"
@@ -406,7 +406,7 @@ get_nv_offset_idof(NODAL_VARS_STRUCT *nv, const int varType,
 	}
       }
     }
-    EH(-1,"NOT FOUND");
+    EH(GOMA_ERROR,"NOT FOUND");
   } else {
     index = nv->Var_Type_Index[varType][idof];
     if (vd_ptr) *vd_ptr = nv->Var_Desc_List[index];    
@@ -437,7 +437,7 @@ get_nv_vd_from_offset(NODAL_VARS_STRUCT *nv, int offset,
     }
     sum += vd->Ndof; 
   }
-  EH(-1,"RAN OUT OF vds");
+  EH(GOMA_ERROR,"RAN OUT OF vds");
 }
 /************************************************************************/
 /************************************************************************/
@@ -571,8 +571,8 @@ add_var_to_nv_struct(VARIABLE_DESCRIPTION_STRUCT *vd,
   int var_type = vd->Variable_Type;
   VARIABLE_DESCRIPTION_STRUCT *vd_old;
  
-  if (nv == NULL) EH(-1,"add_var_to_nv_struct error");
-  if (vd == NULL) EH(-1,"add_var_to_nv_struct error");
+  if (nv == NULL) EH(GOMA_ERROR,"add_var_to_nv_struct error");
+  if (vd == NULL) EH(GOMA_ERROR,"add_var_to_nv_struct error");
 
   /*
    * Check to see whether this variable description structure is
@@ -676,7 +676,7 @@ rearrange_mat_increasing(int var_type, int subvarIndex,
       } 
     }
     if (var_rec == -1) {
-      EH(-1,"AUGH! we shouln't be here");
+      EH(GOMA_ERROR,"AUGH! we shouln't be here");
     }
     rec_used[var_rec] = 1;
       

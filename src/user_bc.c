@@ -480,7 +480,7 @@ quser_surf (double func[DIM],
   */  
 
   /* Comment this out FIRST!!!!! */
-  EH(-1,"No Q_USER model implemented");
+  EH(GOMA_ERROR,"No Q_USER model implemented");
 
 
   /* Add your function and sensitivities here */
@@ -510,7 +510,7 @@ tuser(double *func,
   double time_hr;
   */ 
   /* Comment this out FIRST!!!!! */
-   EH(-1,"No T_USER  model implemented"); 
+   EH(GOMA_ERROR,"No T_USER  model implemented"); 
 
 /**************************** EXECUTION BEGINS *******************************/
 
@@ -570,7 +570,7 @@ yuser_surf(double *func,
   double radius, phiw, phim, xi, alpha;
   */
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No Y_USER model implemented"); 
+   EH(GOMA_ERROR,"No Y_USER model implemented"); 
 
 /* Add your function and sensitivities here */
 
@@ -616,7 +616,7 @@ uuser_surf (double func[DIM],
   */ 
   
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No U_USER model implemented"); 
+   EH(GOMA_ERROR,"No U_USER model implemented"); 
   
   
 /* 
@@ -672,7 +672,7 @@ uuser_colloc_surf ( double *func,
 {
 
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No U_USER_COLLOC model implemented");
+   EH(GOMA_ERROR,"No U_USER_COLLOC model implemented");
 
 } /* END of routine uuser_colloc_surf                                       */
 
@@ -697,7 +697,7 @@ vuser_surf (double func[DIM],
   */
   
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No V_USER  model implemented"); 
+   EH(GOMA_ERROR,"No V_USER  model implemented"); 
   
 /* Add your function and sensitivities here */
 
@@ -722,7 +722,7 @@ vuser_colloc_surf ( double *func,
 {
 
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No V_USER_COLLOC model implemented");
+   EH(GOMA_ERROR,"No V_USER_COLLOC model implemented");
 
 } /* END of routine vuser_colloc_surf                                       */
 
@@ -747,7 +747,7 @@ wuser_surf (
   */
   
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No W_USER  model implemented"); 
+   EH(GOMA_ERROR,"No W_USER  model implemented"); 
   
 /* Add your function and sensitivities here */
 
@@ -770,7 +770,7 @@ wuser_colloc_surf ( double *func,
 {
 
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No W_USER_COLLOC model implemented");
+   EH(GOMA_ERROR,"No W_USER_COLLOC model implemented");
 
 } /* END of routine vuser_colloc_surf                                       */
 
@@ -795,7 +795,7 @@ dx_user_surf (double *func,
   double theta;
   */ 
   /* Comment this out FIRST!!!!! */
-  EH(-1,"No DX_USER model implemented"); 
+  EH(GOMA_ERROR,"No DX_USER model implemented"); 
 
 /* Nice exmample for solid body rotation */
 /*
@@ -843,7 +843,7 @@ dy_user_surf (double *func,
   double theta;
   */ 
 /* Comment this out FIRST!!!!! */
-  EH(-1,"No DY_USER model implemented"); 
+  EH(GOMA_ERROR,"No DY_USER model implemented"); 
 
 /* Add your function and sensitivities here */
 
@@ -879,7 +879,7 @@ dz_user_surf (double *func,
   */
   
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No DZ_USER model implemented"); 
+   EH(GOMA_ERROR,"No DZ_USER model implemented"); 
 
 /* Add your function and sensitivities here */
   
@@ -908,7 +908,7 @@ p_liq_user_surf (double *func,
   */
   
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No P_LIQ_USER model implemented"); 
+   EH(GOMA_ERROR,"No P_LIQ_USER model implemented"); 
 
 /*  Example.....
   if(time < u_bc[2])
@@ -952,7 +952,7 @@ shell_p_open_user_surf (double *func,
   double time_off = 0.;
 
 /* Comment this out FIRST!!!!! */
-  //EH(-1,"No SHELL_P_OPEN_USER model implemented"); 
+  //EH(GOMA_ERROR,"No SHELL_P_OPEN_USER model implemented"); 
    
   if(!first_time)
     {
@@ -967,7 +967,7 @@ shell_p_open_user_surf (double *func,
 	  d_func[SHELL_PRESS_OPEN] = 1.;
 	  first_time = 1;
 	  time_off = time;
-	  EH(-1,"exit here we have reached the finite load");
+	  EH(GOMA_ERROR,"exit here we have reached the finite load");
 	}
     }
   else
@@ -1020,7 +1020,7 @@ mass_flux_user_surf(dbl mass_flux[MAX_CONC],
 {
 
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No YFLUX_USER model implemented"); 
+   EH(GOMA_ERROR,"No YFLUX_USER model implemented"); 
 
 /* Add your function and sensitivities here */
 
@@ -1036,7 +1036,7 @@ mass_flux_user_surf(dbl mass_flux[MAX_CONC],
     
   /* Another example:  time depending sink concentration */
   /* Comment this out FIRST!!!!! */
-  /* EH(-1,"No user YFLUX_USER  model implemented"); */
+  /* EH(GOMA_ERROR,"No user YFLUX_USER  model implemented"); */
   /*  p[1] = end of ramp time (beginning starts at 0)
       p[2] = starting humidity
       p[3] - ending humidity */
@@ -1083,7 +1083,7 @@ fn_dot_T_user (double func[DIM],
   /*  double wavelength;		wavelength of pressure  */
 
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No PRESSURE_USER model implemented"); 
+   EH(GOMA_ERROR,"No PRESSURE_USER model implemented"); 
 
 /* Add your function and sensitivities here */
 
@@ -1169,7 +1169,7 @@ void flow_n_dot_T_user (double func[DIM],
   */
 
 /* Comment this out FIRST!!!!! */
-   EH(-1,"No FLOW_PRESSURE_USER model implemented"); 
+   EH(GOMA_ERROR,"No FLOW_PRESSURE_USER model implemented"); 
 
 /* Add your function and sensitivities here */
 
@@ -1313,7 +1313,7 @@ user_gibbs_criterion(const double fsnormal[MAX_PDIM], /* Vector of free surface
   /* 2D only for now */
 
 
-if (pd->Num_Dim < 3) EH(-1,"USE CA_OR_FIX instead of CA_EDGE_OR_FIX");
+if (pd->Num_Dim < 3) EH(GOMA_ERROR,"USE CA_OR_FIX instead of CA_EDGE_OR_FIX");
 
 /* N.B. In the distance function is encoded the original
    position of the meniscus in the sign of r_circ.  If r_circ,
@@ -1372,11 +1372,11 @@ else
     }
   else if (imodel == B_USER)
     {
-      EH(-1,"No user CA_EDGE_OR_FIX model implemented");
+      EH(GOMA_ERROR,"No user CA_EDGE_OR_FIX model implemented");
     }
   else
     {
-      EH(-1,"Don't Recognize CA_EDGE_OR_FIX model");
+      EH(GOMA_ERROR,"Don't Recognize CA_EDGE_OR_FIX model");
     }
  return(1);
   
@@ -1403,7 +1403,7 @@ force_user_surf(double func[DIM],
   */
   
 /* Comment this out FIRST!!!!! */
- EH(-1,"No FORCE_USER model implemented. Check-routine. You may be commented out!");
+ EH(GOMA_ERROR,"No FORCE_USER model implemented. Check-routine. You may be commented out!");
 
 /**************************** EXECUTION BEGINS *******************************/
   func[0] = 0.;
@@ -1443,7 +1443,7 @@ force_user_surf(double func[DIM],
   else if (time > p[0])
 	func[0] =  -p[2]*(fv->x[0] - p[3]);
   else
-	EH(-1," ran out of bounds in time baby");
+	EH(GOMA_ERROR," ran out of bounds in time baby");
 
   if (af->Assemble_Jacobian) 
     {
@@ -1474,7 +1474,7 @@ force_user_surf(double func[DIM],
 
 	}
       else
-	EH(-1," ran out of bounds in time baby");
+	EH(GOMA_ERROR," ran out of bounds in time baby");
     }
 */  
 

@@ -338,13 +338,13 @@ void solve_problem_segregated(
 
     if (tnv[pg->imtrx] < 0) {
       DPRINTF(stderr, "%s:\tbad tnv.\n", yo);
-      EH(-1, "\t");
+      EH(GOMA_ERROR, "\t");
     }
 
     if (tev[pg->imtrx] < 0) {
       DPRINTF(stderr, "%s:\tMaybe bad tev? See goma design committee ;) \n",
               yo);
-      EH(-1, "\t");
+      EH(GOMA_ERROR, "\t");
     }
 
     rd[pg->imtrx]->nev = 0; /* number element variables in results */
@@ -362,7 +362,7 @@ void solve_problem_segregated(
     error = load_global_var_info(rd[pg->imtrx], 4, "MESH_VOLUME");
 
     if (rd[pg->imtrx]->ngv > MAX_NGV)
-      EH(-1, "Augmenting condition values overflowing MAX_NGV.  Change and "
+      EH(GOMA_ERROR, "Augmenting condition values overflowing MAX_NGV.  Change and "
              "rerun .");
 
     if (nAC > 0) {
@@ -386,7 +386,7 @@ void solve_problem_segregated(
         load_nodal_tkn(rd[pg->imtrx], &tnv[pg->imtrx], &tnv_post[pg->imtrx]);
     if (error != 0) {
       DPRINTF(stderr, "%s:  problem with load_nodal_tkn()\n", yo);
-      EH(-1, "\t");
+      EH(GOMA_ERROR, "\t");
     }
 
     /*
@@ -397,7 +397,7 @@ void solve_problem_segregated(
         load_elem_tkn(rd[pg->imtrx], exo, tev[pg->imtrx], &tev_post[pg->imtrx]);
     if (error != 0) {
       DPRINTF(stderr, "%s:  problem with load_elem_tkn()\n", yo);
-      EH(-1, "\t");
+      EH(GOMA_ERROR, "\t");
     }
 
     /*
@@ -476,7 +476,7 @@ void solve_problem_segregated(
       double sub_delta_t = 1.0;
       int num_sub_time_steps = 1;
       if (pg->matrix_subcycle_count[imtrx] < 1) {
-        EH(-1, "Subcycle count expected to be > 0");
+        EH(GOMA_ERROR, "Subcycle count expected to be > 0");
       } else {
         num_sub_time_steps = pg->matrix_subcycle_count[imtrx];
         sub_delta_t = 1.0 / (pg->matrix_subcycle_count[imtrx]);
@@ -485,7 +485,7 @@ void solve_problem_segregated(
       if (num_sub_time_steps > 1 &&
           (upd->SegregatedSubcycles > 1 ||
            (ls != NULL && ls->SubcyclesAfterRenorm > 1))) {
-        EH(-1, "Full Subcycling is not supported with time subcycling of "
+        EH(GOMA_ERROR, "Full Subcycling is not supported with time subcycling of "
                "matrices");
       }
 
@@ -632,7 +632,7 @@ void solve_problem_segregated(
         ams[pg->imtrx]->nnz_plus = ija[pg->imtrx][num_universe_dofs[pg->imtrx]];
       }
     } else {
-      EH(-1, "Attempted to allocate unknown sparse matrix format");
+      EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format");
     }
 
     double *global_x_AC = NULL;
@@ -661,7 +661,7 @@ void solve_problem_segregated(
 
     for (iAC = 0; iAC < nAC; iAC++) {
       if (augc[iAC].Type != AC_USERBC && augc[iAC].Type != AC_FLUX) {
-        EH(-1, "Can only use BC and flux AC's in segregated solve");
+        EH(GOMA_ERROR, "Can only use BC and flux AC's in segregated solve");
       }
     }
 
@@ -691,7 +691,7 @@ void solve_problem_segregated(
         int eqn = BC_Types[ibc].equation;
 
         if (!(eqn >= V_FIRST && eqn < V_LAST)) {
-          EH(-1, "AC BC not associated with an equation, not supported in "
+          EH(GOMA_ERROR, "AC BC not associated with an equation, not supported in "
                  "segregated solve");
         }
 
@@ -708,7 +708,7 @@ void solve_problem_segregated(
         }
 
         if (!found) {
-          EH(-1, "Could not associate BC AC with a matrix");
+          EH(GOMA_ERROR, "Could not associate BC AC with a matrix");
         }
       } else if (augc[iAC].Type == AC_FLUX) {
         int found = FALSE;
@@ -724,10 +724,10 @@ void solve_problem_segregated(
         }
 
         if (!found) {
-          EH(-1, "Could not associate FLUX AC with momentum matrix");
+          EH(GOMA_ERROR, "Could not associate FLUX AC with momentum matrix");
         }
       } else {
-        EH(-1, "AC type not supported");
+        EH(GOMA_ERROR, "AC type not supported");
       }
     }
 
@@ -1091,7 +1091,7 @@ void solve_problem_segregated(
                   alloc_dbl_1(numProcUnknowns[imtrx], 0.0);
             }
             if (ls == NULL) {
-              EH(-1, "Currently, XFEM requires traditional level set (not pf)");
+              EH(GOMA_ERROR, "Currently, XFEM requires traditional level set (not pf)");
             }
           }
         }
@@ -1106,7 +1106,7 @@ void solve_problem_segregated(
           Fill_Matrix = pg->imtrx;
           ls->MatrixNum = pg->imtrx;
 #ifndef COUPLED_FILL
-          EH(-1, "Segregated not setup for COUPLED_FILL undefined");
+          EH(GOMA_ERROR, "Segregated not setup for COUPLED_FILL undefined");
 #endif /* not COUPLED_FILL */
 
           if (ls != NULL || pfd != NULL) {
@@ -1130,11 +1130,11 @@ void solve_problem_segregated(
                       "\n\t Using semi-Lagrangian Level Set Evolution\n");
               break;
             default:
-              EH(-1, "Level Set Evolution scheme not found \n");
+              EH(GOMA_ERROR, "Level Set Evolution scheme not found \n");
             }
 
             if (ls->Length_Scale < 0.0)
-              EH(-1,
+              EH(GOMA_ERROR,
                  "\tError: a Level Set Length Scale needs to be specified\n");
 
             if (ls->Integration_Depth > 0 || ls->SubElemIntegration ||
@@ -1171,7 +1171,7 @@ void solve_problem_segregated(
 
               DPRINTF(stdout, "\n\t Projection level set initialization \n");
 
-              EH(-1, "Use of \"PROJECT\" is obsolete.");
+              EH(GOMA_ERROR, "Use of \"PROJECT\" is obsolete.");
 
               break;
 
@@ -1226,7 +1226,7 @@ void solve_problem_segregated(
 
               case CORRECT:
 
-                EH(-1, "Use of \"CORRECT\" is obsolete.");
+                EH(GOMA_ERROR, "Use of \"CORRECT\" is obsolete.");
                 break;
               default:
                 if (ls->Evolution == LS_EVOLVE_ADVECT_EXPLICIT ||
@@ -1537,7 +1537,7 @@ void solve_problem_segregated(
                  * And its derivatives at the old time, time.
                  */
                 if (upd->SegregatedSolve && pg->imtrx == 0) {
-                  EH(-1, "Segregated pressure not supported with sub time stepping");
+                  EH(GOMA_ERROR, "Segregated pressure not supported with sub time stepping");
                 } else {
                   predict_solution(
                       numProcUnknowns[pg->imtrx], pg->sub_delta_t[pg->imtrx],
@@ -1571,7 +1571,7 @@ void solve_problem_segregated(
                              pg->sub_step_solutions[pg->imtrx].xdot, pg->imtrx);
 
                 if (matrix_nAC[pg->imtrx] > 0) {
-                  EH(-1,
+                  EH(GOMA_ERROR,
                      "Augmenting conditions not supported for sub time cycles");
                 }
 
@@ -2215,7 +2215,7 @@ void solve_problem_segregated(
                       "reset delta_t = %g to maintain printing frequency\n",
                       delta_t_new);
               if (delta_t_new <= 0)
-                EH(-1, "error with time-step printing control");
+                EH(GOMA_ERROR, "error with time-step printing control");
             } else if (time >= time_print) {
               if (delta_t_new != tran->print_delt) {
                 delta_t_new = tran->print_delt;
@@ -2223,7 +2223,7 @@ void solve_problem_segregated(
                         "reset delta_t = %g to maintain printing frequency\n",
                         delta_t_new);
                 if (delta_t_new <= 0) {
-                  EH(-1, "error with time-step printing control");
+                  EH(GOMA_ERROR, "error with time-step printing control");
                 }
               }
             }
@@ -2373,7 +2373,7 @@ void solve_problem_segregated(
               break;
 
             case CORRECT:
-              EH(-1, "Use of \"CORRECT\" is obsolete.");
+              EH(GOMA_ERROR, "Use of \"CORRECT\" is obsolete.");
               break;
             default:
               break;

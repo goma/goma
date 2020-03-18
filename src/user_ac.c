@@ -195,7 +195,7 @@ void user_aug_cond_residuals(int iAC,
   /*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*/
 
   /* Comment-out next line if 1 or more ACs is implemented; uncomment if no ACs  */
-  /*EH(-1,"You have provided no augmenting condition in user_ac.c"); */
+  /*EH(GOMA_ERROR,"You have provided no augmenting condition in user_ac.c"); */
 
      /* NB, the volume constraint residual is based on an integrated quantity
         of either volume, overall mass, or component mass; hence, it is not

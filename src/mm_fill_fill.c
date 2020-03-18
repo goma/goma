@@ -304,7 +304,7 @@ int assemble_fill(double tt,
  }
  if ( pd->e[pg->imtrx][R_LUBP_2] ) {
 
-   EH(-1," if you have a fill equation turned on in the R_LUBP_2 phase, you are in the wrong place");
+   EH(GOMA_ERROR," if you have a fill equation turned on in the R_LUBP_2 phase, you are in the wrong place");
     /* Set up shells */
     n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
     lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
@@ -508,7 +508,7 @@ int assemble_fill(double tt,
       }
     }
   } else if (ls != NULL && ls->Semi_Implicit_Integration) {
-    EH(-1, "Error Level Set Semi-Implicit Time Integration can only be used "
+    EH(GOMA_ERROR, "Error Level Set Semi-Implicit Time Integration can only be used "
            "with SUPG_GP and SUPG_SHAKIB");
     return -1;
   }
@@ -705,7 +705,7 @@ int assemble_fill(double tt,
 
             default:
 
-	      EH(-1,"Unknown Fill_Weight_Fcn");
+	      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 	    }
 	  mass *= pd->etm[pg->imtrx][eqn][(LOG2_MASS)];
@@ -890,7 +890,7 @@ int assemble_fill(double tt,
 
                     default:
 
-		      EH(-1,"Unknown Fill_Weight_Fcn");
+		      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 		    } /* switch(Fill_Weight_Fcn) */
                     dbl source = 0;
@@ -1003,7 +1003,7 @@ int assemble_fill(double tt,
 
                         default:
 
-			  EH(-1,"Unknown Fill_Weight_Fcn");
+			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 
@@ -1059,7 +1059,7 @@ int assemble_fill(double tt,
 
 			default:
 
-			  EH(-1,"Unknown Fill_Weight_Fcn");
+			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 
@@ -1188,7 +1188,7 @@ int assemble_fill(double tt,
 
 			default:
 
-			  EH(-1,"Unknown Fill_Weight_Fcn");
+			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 
@@ -1320,20 +1320,20 @@ int assemble_fill(double tt,
 			  advection  = phi_j * (1. + 2.*tt) * dtinv * grad_F[b]*phi_i;
 			  for(a=0; a < VIM; a++)
 			    {
-			      EH(-1,"This is easy.  Need to copy essentials from TG case above");
+			      EH(GOMA_ERROR,"This is easy.  Need to copy essentials from TG case above");
 			    }
 
 			  break;
 
 			case FILL_WEIGHT_SUPG:  /* Streamline Upwind Petrov Galerkin (SUPG) */
 
-			  EH(-1,"Level set fill for Eulerian solid mech incompatible for FILL_WEIGHT_SUPG");
+			  EH(GOMA_ERROR,"Level set fill for Eulerian solid mech incompatible for FILL_WEIGHT_SUPG");
 
 			  break;
 
 			default:
 
-			  EH(-1,"Unknown Fill_Weight_Fcn");
+			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 
@@ -1899,7 +1899,7 @@ assemble_fill_ext_v(double tt,
               
 	    default:
 
-	      EH(-1,"Unknown Fill_Weight_Fcn");
+	      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 	    }
 
@@ -2040,7 +2040,7 @@ assemble_fill_ext_v(double tt,
                       
 		    default:
 
-		      EH(-1,"Unknown Fill_Weight_Fcn");
+		      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 		    } /* switch(Fill_Weight_Fcn) */
 
@@ -2124,7 +2124,7 @@ assemble_fill_ext_v(double tt,
                        
 		    default:
 		      
-		      EH(-1,"Unknown Fill_Weight_Fcn");
+		      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 		      
 		    } /* switch(Fill_Weight_Fcn) */
 		  
@@ -2183,7 +2183,7 @@ assemble_fill_ext_v(double tt,
 
 			default:
 
-			  EH(-1,"Unknown Fill_Weight_Fcn");
+			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 		      
@@ -2446,7 +2446,7 @@ assemble_fill_gradf(double tt,
               
 	    default:
 
-	      EH(-1,"Unknown Fill_Weight_Fcn");
+	      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 	    }
 
@@ -2515,7 +2515,7 @@ assemble_fill_gradf(double tt,
                       
 		    default:
 
-		      EH(-1,"Unknown Fill_Weight_Fcn");
+		      EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 		    } /* switch(Fill_Weight_Fcn) */
 
@@ -2576,7 +2576,7 @@ assemble_fill_gradf(double tt,
 
 			default:
 
-			  EH(-1,"Unknown Fill_Weight_Fcn");
+			  EH(GOMA_ERROR,"Unknown Fill_Weight_Fcn");
 
 			} /* switch(Fill_Weight_Fcn) */
 		      
@@ -4122,7 +4122,7 @@ integrate_explicit_eqn(
 		}
 	      else
 		{
-		  EH(-1, "Unknown factorization reuse specification.");
+		  EH(GOMA_ERROR, "Unknown factorization reuse specification.");
 		}
 	    }
 	  
@@ -4184,13 +4184,13 @@ integrate_explicit_eqn(
 			   delta_x, rf);
 #endif /* HARWELL */
 #ifndef HARWELL
-	  EH(-1, "That linear solver package is not implemented.");
+	  EH(GOMA_ERROR, "That linear solver package is not implemented.");
 #endif /* HARWELL */
 	  strcpy(stringer, " 1 ");
 	  break;
 	  
 	default:
-	  EH(-1, "That linear solver package is not implemented.");
+	  EH(GOMA_ERROR, "That linear solver package is not implemented.");
 	  break;
 	}
       
@@ -4463,13 +4463,13 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
       else if(pd->i[pg->imtrx][FILL]==I_PQ1)
 	{
 	  if (dim == 2) ielem_type_fill = C_BILINEAR_QUAD;
-	  if (dim == 3) EH(-1,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
+	  if (dim == 3) EH(GOMA_ERROR,"Sorry PQ1 interpolation has not been implemented in 3D yet.");
 	  discontinuous = 1;
 	}
       else if(pd->i[pg->imtrx][FILL]==I_PQ2)
 	{
 	  if (dim == 2) ielem_type_fill = BIQUAD_QUAD;
-	  if (dim == 3) EH(-1,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
+	  if (dim == 3) EH(GOMA_ERROR,"Sorry PQ2 interpolation has not been implemented in 3D yet.");
 	  discontinuous = 1;
 	}
       else
@@ -4496,7 +4496,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 	      
 	      if( k == MAX_INLET_BC )
 		{
-		  EH(-1,"Maximum FILL_INLET BCs exceeded.  Adjust MAX_INLET_BC in mm_fill_fill.c");
+		  EH(GOMA_ERROR,"Maximum FILL_INLET BCs exceeded.  Adjust MAX_INLET_BC in mm_fill_fill.c");
 		}
 	    }
 	  
@@ -4671,7 +4671,7 @@ fill_matrix(double afill[],	/* matrix for fill variables only      */
 		      EH( err, "assemble_level_project");
 		      break;
 		    default:
-		      EH(-1,"Unknown equation in fill_matrix.\n");
+		      EH(GOMA_ERROR,"Unknown equation in fill_matrix.\n");
 		    }
 		}
 	      /* END  for (ip = 0; ip < ip_total; ip++)                               */
@@ -5274,7 +5274,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[1] = 0;
       break;
     default:
-      EH(-1,"Illegal side number for 2-D element");
+      EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5299,7 +5299,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[2] = 5;
       break;
     default:
-      EH(-1,"Illegal side number for 2-D element");
+      EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5326,7 +5326,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[1] = 0;
       break;
     default:
-      EH(-1,"Illegal side number for 2-D element");
+      EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5356,7 +5356,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[2] = 7;
       break;
     default:
-      EH(-1,"Illegal side number for 2-D element");
+      EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5402,7 +5402,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[3] = 7;
       break;
     default:
-      EH(-1,"Illegal side number for 2-D element");
+      EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5478,7 +5478,7 @@ get_side_info(const int ielem_type,
       local_elem_node_id[8] = 22;
       break;
     default:
-      EH(-1,"Illegal side number for 2-D element");
+      EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -5507,13 +5507,13 @@ get_side_info(const int ielem_type,
       local_elem_node_id[2] = 1;
       break;
     default:
-      EH(-1,"Illegal side number for 3-D tetrahedral element");
+      EH(GOMA_ERROR,"Illegal side number for 3-D tetrahedral element");
       break;
     }
     break;
 
   default:
-    EH(-1, "Unknown or unimplemented element type.");
+    EH(GOMA_ERROR, "Unknown or unimplemented element type.");
     break;
 
   }
@@ -6568,7 +6568,7 @@ assemble_phase_function ( double time_value,
 		      break;
 
 		    default:
-		      EH(-1, "That Fill Weight Function type not currently supported for phase function\n");
+		      EH(GOMA_ERROR, "That Fill Weight Function type not currently supported for phase function\n");
 		      break;
 		    }
 
@@ -6673,7 +6673,7 @@ assemble_phase_function ( double time_value,
 				break;
 
 			    default:
-			      EH(-1, "That Fill Weight Function type not currently supported for phase function\n");
+			      EH(GOMA_ERROR, "That Fill Weight Function type not currently supported for phase function\n");
 			      break;
 				}
 
@@ -6704,7 +6704,7 @@ assemble_phase_function ( double time_value,
 			     // tmp *= wt*h3*det_J;
 			     // break;
 			    default:
-			      EH(-1, "That Fill Weight Function type not currently supported for phase function\n");
+			      EH(GOMA_ERROR, "That Fill Weight Function type not currently supported for phase function\n");
 			      break;
 			     }
 

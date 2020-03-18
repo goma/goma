@@ -103,7 +103,7 @@ gevp_solver_rc(int nj,
     case 65: goto l65;
     case 66: goto l66;
     default:
-      EH(-1, "Uh-oh!  I shouldn't be here!");
+      EH(GOMA_ERROR, "Uh-oh!  I shouldn't be here!");
       break;
     }
 
@@ -128,7 +128,7 @@ gevp_solver_rc(int nj,
       transformation = 3;
       break;
     default:
-      EH(-1, "Uh-oh!  I shouldn't be here!");
+      EH(GOMA_ERROR, "Uh-oh!  I shouldn't be here!");
       break;
     }
 
@@ -218,7 +218,7 @@ l02:
 	  case 2: nev_want_to_get = nev_want;
 	    break;
 	  default:
-	    EH(-1, "Uh-oh!  I shouldn't be here!");
+	    EH(GOMA_ERROR, "Uh-oh!  I shouldn't be here!");
 	    break;
 	  }
       }

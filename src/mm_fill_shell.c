@@ -519,7 +519,7 @@ assemble_surface_charge(double time_value,  /* Time */
     }
 
   /* Get neighbor element number(s). */
-  if (nf > 2) EH(-1, "Not set up for more than two element friends!");
+  if (nf > 2) EH(GOMA_ERROR, "Not set up for more than two element friends!");
 
   /* Now return to original element (el0) on shell block to finish assembly */
   setup_shop_at_point(el0, xi, exo);
@@ -597,7 +597,7 @@ assemble_surface_charge(double time_value,  /* Time */
     case R_SHELL_LUBP:
       break;
     default:
-      EH(-1,"shell equation not present");
+      EH(GOMA_ERROR,"shell equation not present");
       break;
     }
   switch(eqn)
@@ -906,7 +906,7 @@ assemble_shell_structure(double time_value,  /* Time */
   /* Get neighbor element number(s). */
   if(&elem_friends[el0][0] != NULL) /*Unwetted shells don't have friends*/
     {
-      if (nf > 2) EH(-1, "Not set up for more than two element friends!");
+      if (nf > 2) EH(GOMA_ERROR, "Not set up for more than two element friends!");
     }
 
   /*
@@ -1572,7 +1572,7 @@ assemble_shell_tension(double time_value,  /* Time */
   if(&elem_friends[el0][0] != NULL) /*Unwetted shells don't have friends*/
     {
       el1 = elem_friends[el0][0];
-      if (nf > 2) EH(-1, "Not set up for more than two element friends!");
+      if (nf > 2) EH(GOMA_ERROR, "Not set up for more than two element friends!");
     }
 	
   if (nf == 1 ) /* Load up data from bulk neighbor element in order to compute tangent loading */
@@ -2346,7 +2346,7 @@ assemble_shell_diffusion(double time_value,  /* Time */
   if (&elem_friends[el0][0] != NULL) /*Unwetted shells don't have friends*/
     {
       el1 = elem_friends[el0][0];
-      if (nf > 2) EH(-1, "Not set up for more than two element friends!");
+      if (nf > 2) EH(GOMA_ERROR, "Not set up for more than two element friends!");
     }
 
   /* Load bulk element data */
@@ -2583,7 +2583,7 @@ assemble_shell_geometry(double time_value,  /* Time */
   if(&elem_friends[el0][0] != NULL) /*Unwetted shells don't have friends*/
     {
       el1 = elem_friends[el0][0];
-      if (nf > 2) EH(-1, "Not set up for more than two element friends!");
+      if (nf > 2) EH(GOMA_ERROR, "Not set up for more than two element friends!");
     }
 
   /* Load bulk element data */
@@ -2921,7 +2921,7 @@ shell_surface_charge_bc(double func[DIM],
   perm = mp->permittivity;
   if (mp->VoltageFormulation != V_PERMITTIVITY  && !sic_flag)
     {
-      EH(-1,"trouble - SHELL_SURFACE_CHARGE with conductivity formulation");
+      EH(GOMA_ERROR,"trouble - SHELL_SURFACE_CHARGE with conductivity formulation");
     }
  
   memset( d_p_dV,0, sizeof(double)*MDE);
@@ -4864,7 +4864,7 @@ assemble_shell_surface_rheo_pieces(double time_value,   /* Time */
   BASIS_FUNCTIONS_STRUCT *bfv;
 
   if (CURL_V == -1) {
-    EH(-1,"ERROR: inconsistency: need to set Vorticity Vector = yes in Post processing section");
+    EH(GOMA_ERROR,"ERROR: inconsistency: need to set Vorticity Vector = yes in Post processing section");
   }
 
   // Calculate the number of velocity dimensions
@@ -6798,7 +6798,7 @@ surface_lubrication_shell_bc(double R[MAX_PROB_VAR+MAX_CONC][MAX_NODES_PER_SIDE]
 	{heavi = 0.5*(1.+2.*F_ups/ups_width+sin(M_PIE*2.*F_ups/ups_width)/M_PIE);}
     }
   else
-    { EH(-1,"invalid lubrication model_id\n");}
+    { EH(GOMA_ERROR,"invalid lubrication model_id\n");}
 
   /* Check for active SURFACE_CHARGE equation */
   eqn = R_SHELL_LUBP;
@@ -7265,7 +7265,7 @@ assemble_lubrication(const int EQN,     /* equation type: either R_LUBP or R_LUB
 	{
 	  var = LUBP_2;
 	}
-      else EH(-1,"Mucho problema: Shouldn't be here.");
+      else EH(GOMA_ERROR,"Mucho problema: Shouldn't be here.");
 
       if ( pd->v[pg->imtrx][var] ) {
 	pvar = upd->vp[pg->imtrx][var];
@@ -7730,7 +7730,7 @@ assemble_shell_energy(double time,	/* present time value */
   else if( mp->Ewt_funcModel == SUPG)
     {
       if( !pd->e[pg->imtrx][R_MOMENTUM1]) 
-	EH(-1, " must have momentum equation velocity field for shell_energy upwinding");
+	EH(GOMA_ERROR, " must have momentum equation velocity field for shell_energy upwinding");
       supg = mp->Ewt_func;
     }
 
@@ -9169,7 +9169,7 @@ assemble_film( double time,	/* present time value */
 
 	  if ( pd->v[pg->imtrx][var] )
 	    {
-	      EH(-1,"See comment in code where this line is printed. You need to add mesh sensitivities to sh_fp");
+	      EH(GOMA_ERROR,"See comment in code where this line is printed. You need to add mesh sensitivities to sh_fp");
 	      /*
 	       * Mesh sensitivities will be to grad_phi and det_j.   these are available now for shells. Start
 	       * looking in load_bf_grad and shell_determinant_and_normal routines.
@@ -9277,7 +9277,7 @@ assemble_film( double time,	/* present time value */
 
 	  if ( pd->v[pg->imtrx][var] )
 	    {
-	      EH(-1,"See comment in code where this line is printed. You need to add mesh sensitivities to sh_fh");
+	      EH(GOMA_ERROR,"See comment in code where this line is printed. You need to add mesh sensitivities to sh_fh");
 	      /*
 	       * Mesh sensitivities will be to grad_phi and det_j.   these are available now for shells. Start
 	       * looking in load_bf_grad and shell_determinant_and_normal routines.
@@ -9406,7 +9406,7 @@ assemble_film_particles(  double time,	/* present time value */
   else if( mp->Spwt_funcModel == SUPG)
     {
       if( !pd->e[pg->imtrx][R_MOMENTUM1])
-        EH(-1, " must have momentum equation velocity field for shell_particle_films upwinding");
+        EH(GOMA_ERROR, " must have momentum equation velocity field for shell_particle_films upwinding");
       supg = mp->Spwt_func;
     }
 
@@ -9436,7 +9436,7 @@ assemble_film_particles(  double time,	/* present time value */
     }
   else
     {
-     EH(-1,"In assemble_film_particles: Can't find an appropriate lubrication height");
+     EH(GOMA_ERROR,"In assemble_film_particles: Can't find an appropriate lubrication height");
     }
 
   C = fv->sh_pc;  /* Particles concentration */
@@ -10066,7 +10066,7 @@ assemble_film_particles(  double time,	/* present time value */
 
 	  if ( pd->v[pg->imtrx][var] )
 	    {
-	      EH(-1,"See comment in code where this line is printed. You need to add mesh sensitivities to sh_pc");
+	      EH(GOMA_ERROR,"See comment in code where this line is printed. You need to add mesh sensitivities to sh_pc");
 	      /*
 	       * Mesh sensitivities will be to grad_phi and det_j.   these are available now for shells. Start
 	       * looking in load_bf_grad and shell_determinant_and_normal routines.
@@ -10901,7 +10901,7 @@ assemble_porous_shell_gasn(
   // Make sure that you're supposed to be here, bail out otherwise
   eqn = R_SHELL_SAT_GASN;
   if ( !pd->e[pg->imtrx][eqn] || !pd->e[pg->imtrx][R_SHELL_SAT_CLOSED] )
-    EH(-1, "Woah, you should not be in this function, assemble_porous_shell_gasn().");
+    EH(GOMA_ERROR, "Woah, you should not be in this function, assemble_porous_shell_gasn().");
 
   /* Setup lubrication */
   int *n_dof = NULL;
@@ -11242,7 +11242,7 @@ assemble_porous_shell_open(
       mp->SaturationModel != TANH_EXTERNAL &&
       mp->SaturationModel != TANH_HYST) 
     {
-      EH(-1,"Pacito problema: Only shell_tanh and tanh and tanh_external and tanh_hyst  models available for shell open pore. ");
+      EH(GOMA_ERROR,"Pacito problema: Only shell_tanh and tanh and tanh_external and tanh_hyst  models available for shell open pore. ");
       // PRS: just need to expand the nodal call on the mass term 
     }
 
@@ -11291,7 +11291,7 @@ assemble_porous_shell_open(
       mp->RelLiqPermModel != VAN_GENUCHTEN_EXTERNAL &&
       mp->RelLiqPermModel != EXTERNAL_FIELD )
     {
-      EH(-1,"Only CONSTANT, VAN_GENUCHTEN, VAN_GENUCHTEN_EXTERNAL, and EXTERNAL_FIELD  models are allowed for Rel Liq Permeability model in Open Pore Shell equation ");
+      EH(GOMA_ERROR,"Only CONSTANT, VAN_GENUCHTEN, VAN_GENUCHTEN_EXTERNAL, and EXTERNAL_FIELD  models are allowed for Rel Liq Permeability model in Open Pore Shell equation ");
     }
   if (mp->RelLiqPermModel != CONSTANT)
     {
@@ -12006,7 +12006,7 @@ assemble_porous_shell_open_2(
       mp->SaturationModel != TANH_EXTERNAL &&
       mp->SaturationModel != TANH_HYST)
     {
-      EH(-1,"Pacito problema: Only shell_tanh, tanh, tanh_external, and tanh_hyst model available for shell open pore. Not much work to remedy this, though");
+      EH(GOMA_ERROR,"Pacito problema: Only shell_tanh, tanh, tanh_external, and tanh_hyst model available for shell open pore. Not much work to remedy this, though");
       // PRS: just need to expand the nodal call on the mass term
     }
 
@@ -12057,7 +12057,7 @@ assemble_porous_shell_open_2(
       mp->RelLiqPermModel != VAN_GENUCHTEN_EXTERNAL &&
       mp->RelLiqPermModel != EXTERNAL_FIELD )
     {
-      EH(-1,"Only CONSTANT, VAN_GENUCHTEN, VAN_GENUCHTEN_EXTERNAL, and EXTERNAL_FIELD  models are allowed for Rel Liq Permeability model in Open Pore Shell equation ");
+      EH(GOMA_ERROR,"Only CONSTANT, VAN_GENUCHTEN, VAN_GENUCHTEN_EXTERNAL, and EXTERNAL_FIELD  models are allowed for Rel Liq Permeability model in Open Pore Shell equation ");
     }
   if (mp->RelLiqPermModel != CONSTANT)
     {
@@ -12523,7 +12523,7 @@ assemble_shell_deltah(double time,	/* present time value */
 		     double xi[DIM],    /* Local stu coordinates */
 		     const Exo_DB *exo)  
 {
-  EH(-1, "assemble_shell_deltah disabled. Contact prschun@sandia.gov");
+  EH(GOMA_ERROR, "assemble_shell_deltah disabled. Contact prschun@sandia.gov");
   return(-1);
 } /* end of assemble_shell_deltah */
 
@@ -12563,7 +12563,7 @@ assemble_lubrication_curvature(
 
   /* Bail out fast if there's nothing to do */
   if ( !pd->e[pg->imtrx][eqn]  ) return(status);
-  if ( !pd->e[pg->imtrx][FILL] ) EH(-1, "Must activate level set equation to calculate curvature.");
+  if ( !pd->e[pg->imtrx][FILL] ) EH(GOMA_ERROR, "Must activate level set equation to calculate curvature.");
 
   /* Prepare shell geometry */
   dbl wt_old = fv->wt;
@@ -12872,7 +12872,7 @@ assemble_lubrication_curvature_2(
 
   /* Bail out fast if there's nothing to do */
   if ( !pd->e[pg->imtrx][eqn]  ) return(status);
-  if ( !pd->e[pg->imtrx][PHASE1] ) EH(-1, "Must activate phase1 equation to calculate curvature.");
+  if ( !pd->e[pg->imtrx][PHASE1] ) EH(GOMA_ERROR, "Must activate phase1 equation to calculate curvature.");
 
   /* Prepare shell geometry */
   dbl wt_old = fv->wt;
@@ -12899,7 +12899,7 @@ assemble_lubrication_curvature_2(
   ls = ls_old;
 
   /* Rotate grad(F) and grad(kappa) to shell coordinates */
-  if(upd->ep[pg->imtrx][R_MESH1] > -1) EH(-1," Must add mesh dependence to phase field");
+  if(upd->ep[pg->imtrx][R_MESH1] > -1) EH(GOMA_ERROR," Must add mesh dependence to phase field");
   dbl gradII_F[DIM], gradII_kappa[DIM];
   dbl d_grad_F_dmesh[DIM][DIM][MDE], d_gradII_F_dmesh[DIM][DIM][MDE];
   dbl d_grad_kappa_dmesh[DIM][DIM][MDE], d_gradII_kappa_dmesh[DIM][DIM][MDE];
@@ -16644,7 +16644,7 @@ assemble_shell_tfmp(double time,   /* Time */
   double d_gradIIh_dnormal[DIM][DIM][MDE];
 
   if (h < 0.0) { // bug out
-    //EH(-1, "Cannot have negative gap thicknesses!");
+    //EH(GOMA_ERROR, "Cannot have negative gap thicknesses!");
     neg_lub_height = TRUE;
     return 2;
   }
@@ -17993,7 +17993,7 @@ assemble_shell_lubrication(double time,   /* Time */
   int fp_type = FP_NORMAL;
   double h = gap->h;
   if (fpclassify(h)!= fp_type && h != 0.0) {
-    EH(-1, "h is not normal");
+    EH(GOMA_ERROR, "h is not normal");
   }
 
   double dh_dmesh[DIM][MDE];
@@ -18166,7 +18166,7 @@ assemble_shell_lubrication(double time,   /* Time */
 
           }
           if (fpclassify(adv)!= fp_type && adv != 0.0) {
-            EH(-1, "adv is not normal");
+            EH(GOMA_ERROR, "adv is not normal");
           }
           lec->J[peqn][pvar][i][j] += mass + adv + source;
         }

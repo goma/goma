@@ -236,7 +236,7 @@ initial_guess_stress_to_log_conf(double *x, int num_total_nodes)
         }
       else
 	{
-	  EH(-1, "Unknown model for Polymer Time Constant in initial guess log conf to stress");
+	  EH(GOMA_ERROR, "Unknown model for Polymer Time Constant in initial guess log conf to stress");
 	}
 
       // skip node if stress variables not found
@@ -527,7 +527,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     if (file == NULL) {
       fprintf(stdout, "%s:  opening soln file, %s, for writing\n", 
 	      yo, Soln_OutFile);
-      EH(-1, "Can not open solution file\n");
+      EH(GOMA_ERROR, "Can not open solution file\n");
     }
   }
   
@@ -547,13 +547,13 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   if (tnv < 0)
   {
     DPRINTF(stderr, "%s:\tbad tnv.\n", yo);
-    EH(-1, "\t");
+    EH(GOMA_ERROR, "\t");
   }
   
   if ( tev < 0 )
   {
     DPRINTF(stderr, "%s:\tMaybe bad tev? See goma design committee ;) \n", yo);
-    EH(-1, "\t");
+    EH(GOMA_ERROR, "\t");
   }
 
   /*
@@ -598,7 +598,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     error = load_global_var_info(rd, 4, "MESH_VOLUME");
 
     if ( rd->ngv > MAX_NGV ) 
-      EH(-1, "Augmenting condition values overflowing MAX_NGV.  Change and rerun .");
+      EH(GOMA_ERROR, "Augmenting condition values overflowing MAX_NGV.  Change and rerun .");
 
   if (callnum == 1)
     {
@@ -627,7 +627,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   error = load_nodal_tkn(rd, &tnv, &tnv_post);  
   if (error !=0) {
     DPRINTF(stderr, "%s:  problem with load_nodal_tkn()\n", yo);
-    EH(-1,"\t");
+    EH(GOMA_ERROR,"\t");
   }
 
   /*
@@ -659,7 +659,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   error = load_elem_tkn(rd, exo, tev, &tev_post);  
   if (error !=0) {
     DPRINTF(stderr, "%s:  problem with load_elem_tkn()\n", yo);
-    EH(-1,"\t");
+    EH(GOMA_ERROR,"\t");
   }
 #ifdef PARALLEL
   check_parallel_error("Results file error");
@@ -851,7 +851,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
     ams[JAC]->rpntr = NULL;
     ams[JAC]->cpntr = NULL;
   } else {
-    EH(-1, "Attempted to allocate unknown sparse matrix format");
+    EH(GOMA_ERROR, "Attempted to allocate unknown sparse matrix format");
   }
 	  
   /* 
@@ -1010,7 +1010,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       }
 	    
 #ifdef PARALLEL
-      if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");
+      if (Num_Proc > 1) EH(GOMA_ERROR, "Whoa.  No front allowed with nproc>1");
       check_parallel_error("Front solver not allowed with nprocs>1");
 #endif /* PARALLEL */
 	  
@@ -1030,7 +1030,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
       EH(err,"problems in frontal setup ");
 
 #else /* HAVE_FRONT */
-      EH(-1,"Don't have frontal solver compiled and linked in");
+      EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
 #endif /* HAVE_FRONT */
     }
       
@@ -1497,7 +1497,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		     &fss->ntra);
       EH(err,"problems in frontal setup ");
 #else /* HAVE_FRONT */
-      EH(-1,"Don't have frontal solver compiled and linked in");
+      EH(GOMA_ERROR,"Don't have frontal solver compiled and linked in");
 #endif /* HAVE_FRONT */
     }
 
@@ -1684,7 +1684,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
               xfem->active_vol =  alloc_dbl_1(numProcUnknowns, 0.0);
               if (ls == NULL)
                 {
-                  EH(-1,"Currently, XFEM requires traditional level set (not pf)");
+                  EH(GOMA_ERROR,"Currently, XFEM requires traditional level set (not pf)");
                 }
             }
         }
@@ -1728,12 +1728,12 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
               DPRINTF(stdout, "\n\t Using semi-Lagrangian Level Set Evolution\n");
               break;
             default:
-              EH(-1,"Level Set Evolution scheme not found \n");
+              EH(GOMA_ERROR,"Level Set Evolution scheme not found \n");
           }
 
 
 	  if ( ls->Length_Scale < 0.0 )
-	      EH(-1, "\tError: a Level Set Length Scale needs to be specified\n");
+	      EH(GOMA_ERROR, "\tError: a Level Set Length Scale needs to be specified\n");
             
 	  if( ls->Integration_Depth > 0 || ls->SubElemIntegration || ls->AdaptIntegration )
 	    {
@@ -1771,7 +1771,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 	      DPRINTF(stdout,"\n\t Projection level set initialization \n");
 #ifdef COUPLED_FILL
-	      EH(-1,"Use of \"PROJECT\" is obsolete.");
+	      EH(GOMA_ERROR,"Use of \"PROJECT\" is obsolete.");
 #else /* COUPLED_FILL */
 	      init_vec_value (xf, 0.0, num_fill_unknowns);
 	      err = integrate_explicit_eqn(ams[FIL], rf, xf, xf_old, xfdot, 
@@ -1844,7 +1844,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 	      break;
 
 	  case SM_OBJECT:
-	    EH(-1, "CGM not supported, SM_OBJECT level set initialization");
+	    EH(GOMA_ERROR, "CGM not supported, SM_OBJECT level set initialization");
 #ifndef COUPLED_FILL
               if (Explicit_Fill)
 		{
@@ -1890,7 +1890,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 
 	  case CORRECT :
 #ifdef COUPLED_FILL
-	    EH(-1,"Use of \"CORRECT\" is obsolete.");
+	    EH(GOMA_ERROR,"Use of \"CORRECT\" is obsolete.");
 #else /* COUPLED_FILL */
 	    {
 	      double step_size =  ls->Length_Scale/10.0;
@@ -2008,7 +2008,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 			      DPRINTF(stdout, "\n\t Using semi-Lagrangian Level Set Evolution for R_PHASE0\n");
 			      break;
 			    default:
-			      EH(-1,"PHASE Function Evolution scheme not found \n");
+			      EH(GOMA_ERROR,"PHASE Function Evolution scheme not found \n");
 			      break;
 			    }
 			  }
@@ -2718,7 +2718,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		    "reset delta_t = %g to maintain printing frequency\n"
 		    , delta_t_new);
 	    if (delta_t_new <= 0) 
-		EH(-1, "error with time-step printing control");
+		EH(GOMA_ERROR, "error with time-step printing control");
 	    } 
           else if(time >= time_print) 
             {
@@ -2729,7 +2729,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 		      "reset delta_t = %g to maintain printing frequency\n"
 		      , delta_t_new);
 	      if (delta_t_new <= 0) 
-                { EH(-1, "error with time-step printing control"); }
+                { EH(GOMA_ERROR, "error with time-step printing control"); }
 	    }
 	  }
 	}
@@ -2816,7 +2816,7 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
 					break;
 				
 			case CORRECT:
-				EH(-1,"Use of \"CORRECT\" is obsolete.");
+				EH(GOMA_ERROR,"Use of \"CORRECT\" is obsolete.");
 				break;
 			default:
 				break;

@@ -259,7 +259,7 @@ assess_weights(Exo_DB *x,
       /*
       if ( inn >= length_node_node )
 	{
-	  EH(-1, "Abnormal lack of space!");
+	  EH(GOMA_ERROR, "Abnormal lack of space!");
 	}
 	*/
       /*
@@ -367,7 +367,7 @@ assess_weights(Exo_DB *x,
 		{
 		  sr = sprintf(err_msg, "@ n = %d too many neighbors.", 
 			       eqn_node);
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 		}
 	      
 	    }

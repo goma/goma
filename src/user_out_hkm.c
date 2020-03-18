@@ -28,7 +28,7 @@
 #include "bc_curve.h"
 #include "bc_dirich.h"
 #include "bc_integ.h"
-#include "bc_rotate.h"
+#include "bc/rotate.h"
 #include "bc_special.h"
 #include "bc_surfacedomain.h"
 #include "dp_comm.h"

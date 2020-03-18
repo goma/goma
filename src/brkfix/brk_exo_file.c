@@ -85,10 +85,6 @@
  */
 
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdio.h>
 #include <sys/stat.h>
 #include <errno.h>
@@ -594,7 +590,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
   if ( num_pieces < 1 )
     {
-      EH(-1, 
+      EH(GOMA_ERROR, 
          "For number of pieces, specify one positive nonzero integer.");
     }
 
@@ -630,7 +626,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	  sr = sprintf(err_msg, 
 	  "Problem opening \"%s\" [Chaco input] for create/append.",
 		       user_params_filename);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       ptmp  = chaco_user_params_file;
       while ( strcmp(*ptmp, LAST_LEGAL_STRING) != 0 )
@@ -643,7 +639,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   if ( num_pieces < 2 )
     {
       sr = sprintf(err_msg, "Divide into more pieces than %d", num_pieces);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 
   /*
@@ -758,8 +754,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
   if ( max_basic_eqnvars > MAX_PROB_VAR )
     {
-      sr = sprintf(err_msg, "Try MAX_PROB_VAR = %d\n", max_basic_eqnvars);
-      EH(-1, err_msg);
+      sr = sprintf(err_msg, "Try MAX_EQNVARS = %d\n", max_basic_eqnvars);
+      EH(GOMA_ERROR, err_msg);
     }
 
 #ifdef DEBUG
@@ -1228,13 +1224,13 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
   else
     {
       sr = sprintf(err_msg, "? number of pieces = %d", num_pieces);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 
       
   if ( err != 0 )
     {
-      EH(-1, "Problem return from Chaco interface().");
+      EH(GOMA_ERROR, "Problem return from Chaco interface().");
     }
 
 #ifdef DEBUG
@@ -1704,7 +1700,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	    }
 	  else
 	    {
-	      EH(-1, "Every node needs to belong to at least one set.");
+	      EH(GOMA_ERROR, "Every node needs to belong to at least one set.");
 	    }
 	}
 
@@ -1781,7 +1777,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	    }
 	  else
 	    {
-	      EH(-1, "Every node needs to belong to at least one set.");
+	      EH(GOMA_ERROR, "Every node needs to belong to at least one set.");
 	    }
 	}
 
@@ -1904,7 +1900,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	    {
 	      sr = sprintf(err_msg, "internal_nodes[] nonmonotone in Set %d",
 			   s);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	}
 
@@ -1914,7 +1910,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	    {
 	      sr = sprintf(err_msg, "boundary_nodes[] nonmonotone in Set %d",
 			   s);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	}
 
@@ -1931,7 +1927,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	    {
 	      sr = sprintf(err_msg, "external_nodes[] nonmonotone in Set %d",
 			   s);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	}
 #endif /* 0 */
@@ -2082,7 +2078,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	{
 	  sr = sprintf(err_msg, "Bad element count of %d in Set %d",
 		       proc_ne, s);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 
       proc_elems     = (int *) smalloc(proc_ne*SZ_INT);
@@ -2186,7 +2182,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       if ( count != proc_ne )
 	{
-	  EH(-1, "Mismatch!");
+	  EH(GOMA_ERROR, "Mismatch!");
 	}
 #endif      
 
@@ -2380,7 +2376,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	      sr = sprintf(err_msg, 
 			   "index_priv=%d != private_elem_count[%d]=%d EBID %d",
 			   index_priv, ieb, private_elem_count[ieb], eb_id);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  if ( index_priv+index_shar != proc_eb_ptr[ieb+1]-proc_eb_ptr[ieb] )
@@ -2389,7 +2385,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 			   "#priv elems(%d)+#shar elems(%d) != total(%d)",
 			   index_priv, index_shar, 
 			   proc_eb_ptr[ieb+1]-proc_eb_ptr[ieb]);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  /*
@@ -2681,7 +2677,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	      sr = sprintf(err_msg, "nodeset %d has %d nodes - punting!",
 			   mono->ns_id[index_ns], 
 			   mono->ns_num_nodes[index_ns]);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  /*
@@ -3654,7 +3650,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	{
 	  sr = sprintf(err_msg, "! num_send_procs = %d, num_recv_procs = %d.",
 		       num_send_procs, num_recv_procs);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 
       D->num_neighbors                = num_send_procs;
@@ -4061,7 +4057,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
                 int block = find_elemblock_index(elem, mono);
                 if (block == -1)
                   {
-                    EH(-1, "Element block not found");
+                    EH(GOMA_ERROR, "Element block not found");
                   }
 
                 // check if block is in array for ss already
@@ -4310,7 +4306,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
 	  if ( mono->num_node_vars < 1 )
 	    {
-	      EH(-1, "Inconsistent nodal variable count?");
+	      EH(GOMA_ERROR, "Inconsistent nodal variable count?");
 	    }
 
 	  /* 
@@ -4354,7 +4350,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 		  node = proc_nodes[n];
 		  if ( node < 0 || node > mono->num_nodes-1 )
 		    {
-		      EH(-1, "Bad map.");
+		      EH(GOMA_ERROR, "Bad map.");
 		    }
 		  for ( i=0; i<E->num_nv_indeces; i++)
 		    {
@@ -4399,7 +4395,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       
 	  if ( mono->num_elem_vars < 1 )
 	    {
-	      EH(-1, "Inconsistent element variable count?");
+	      EH(GOMA_ERROR, "Inconsistent element variable count?");
 	    }
 
 	  for ( t=0; t<E->num_times; t++ )
@@ -4431,7 +4427,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 		  
 		      if ( elem < 0 || elem > mono->num_elems-1 )
 			{
-			  EH(-1, "Bad map.");
+			  EH(GOMA_ERROR, "Bad map.");
 			}
 
 		      ge = elem - gbeg;
@@ -4622,7 +4618,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       if ( mono->num_nv_time_indeces > 1 )
 	{
-	  EH(-1, 
+	  EH(GOMA_ERROR, 
 	  "Reconcile new nodal results with multiple time previous results.");
 	}
 
@@ -4725,7 +4721,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       if ( mono->num_ev_time_indeces > 1 )
 	{
-	  EH(-1, 
+	  EH(GOMA_ERROR, 
   "Reconcile new elemvar results with multiple time previous results.");
 	}
 

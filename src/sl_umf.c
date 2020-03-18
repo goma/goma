@@ -78,7 +78,7 @@
 #include "bc_curve.h"
 #include "bc_dirich.h"
 #include "bc_integ.h"
-#include "bc_rotate.h"
+#include "bc/rotate.h"
 #include "bc_special.h"
 #include "bc_surfacedomain.h"
 #include "dp_comm.h"
@@ -247,10 +247,10 @@ SL_UMF ( int system_id,
 
     /* If system_id isn't -1, then we're probably making some sort of mistake... */
     if(system_id != -1)
-      EH(-1, "Entered SL_UMF with *first == 1, but system_id != -1");
+      EH(GOMA_ERROR, "Entered SL_UMF with *first == 1, but system_id != -1");
     /* If we've already gone through all of our slots, get out. */
     if(number_systems == UMF_MAX_SYSTEMS)
-      EH(-1, "Already created UMF_MAX_SYSTEMS systems");
+      EH(GOMA_ERROR, "Already created UMF_MAX_SYSTEMS systems");
 
     system_id = number_systems;
     ums = &ums_a[number_systems++];
@@ -280,9 +280,9 @@ SL_UMF ( int system_id,
 
     /* system_id should have the appropriate identifier. */
     if(system_id == -1)
-      EH(-1, "Conflicting orders: system_id == -1 and *first != 1");
+      EH(GOMA_ERROR, "Conflicting orders: system_id == -1 and *first != 1");
     if(system_id < 0 || system_id >= UMF_MAX_SYSTEMS)
-      EH(-1, "Index out of range: system_id");
+      EH(GOMA_ERROR, "Index out of range: system_id");
 
     /* Grab the hopeful system. */
     ums = &ums_a[system_id];
@@ -290,7 +290,7 @@ SL_UMF ( int system_id,
     /* Run through some sanity checks to help ensure we're dealing
      * with the correct system. */
     if(ums->n != *nj || ums->nnz != *nnz_j)
-      EH(-1, "Tried to access a bad system");
+      EH(GOMA_ERROR, "Tried to access a bad system");
     break;
 
   case -1:
@@ -298,15 +298,15 @@ SL_UMF ( int system_id,
 
     /* system_id should have the appropriate identifier. */
     if(system_id == -1)
-      EH(-1, "Conflicting orders: system_id == -1 and *first != 1");
+      EH(GOMA_ERROR, "Conflicting orders: system_id == -1 and *first != 1");
     if(system_id < 0 || system_id >= UMF_MAX_SYSTEMS)
-      EH(-1, "Index out of range: system_id");
+      EH(GOMA_ERROR, "Index out of range: system_id");
 
     ums = &ums_a[system_id];
     /* Run through some sanity checks to help ensure we're dealing
      * with the correct system. */
     if(ums->n != *nj || ums->nnz != *nnz_j)
-      EH(-1, "Tried to free a bad system");
+      EH(GOMA_ERROR, "Tried to free a bad system");
 
     umfpack_di_free_symbolic(&ums->symbolic);
     ums->symbolic = NULL;  
@@ -390,12 +390,12 @@ SL_UMF ( int system_id,
       if ( err != UMFPACK_OK )
         {
 	  fprintf(stderr,"UMFPACK error = %d\n",err);
-	  EH(-1,"Error computing matrix transpose using umfpack_di_transpose\n");
+	  EH(GOMA_ERROR,"Error computing matrix transpose using umfpack_di_transpose\n");
 	}
 
       break;
     case 2: /* CSR FORMAT - NOT DONE YET */
-      EH(-1, "Sorry, cannot convert CSR systems");
+      EH(GOMA_ERROR, "Sorry, cannot convert CSR systems");
       break;
     }
 
@@ -417,7 +417,7 @@ SL_UMF ( int system_id,
       umf_option = 0;
       break;
     default:
-      EH(-1, "Bad *fact_optn");
+      EH(GOMA_ERROR, "Bad *fact_optn");
     }
 
     /* load default control parameters for UMF */

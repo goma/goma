@@ -213,7 +213,7 @@ look_for_optional_string(FILE *ifp,
   int retn;
   char tmp_string[MAX_CHAR_IN_INPUT];
   if ((retn_string_len < 1) || (!match_string) || (!ifp)) {
-    EH(-1, "look_for_optional_string interface ERROR");
+    EH(GOMA_ERROR, "look_for_optional_string interface ERROR");
   }
   retn = look_forward_optional(ifp, match_string, tmp_string, '=');
   if (retn == 1) {
@@ -363,7 +363,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       sr = sprintf(err_msg, 
 		   "Unknown value for Default Database: %s, use chemkin_mat or goma_mat\n",
 		   input);
-      EH(-1, err_msg);      
+      EH(GOMA_ERROR, err_msg);      
 
       SPF(es,"%s = %s","Default Database", input); ECHO(es,echo_file);
 
@@ -373,7 +373,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       fprintf(stderr,"ERROR! The default database has been specified as chemkin.\n");
       fprintf(stderr,"\tHowever, CHEMKIN has not been linked in!\n");
       fprintf(stderr,"\tGOMA must be recompiled with the USE_CHEMKIN definition!\n");
-      EH(-1, "chemkin not linked in\n");
+      EH(GOMA_ERROR, "chemkin not linked in\n");
     }
 #endif
   }
@@ -394,7 +394,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       sr = sprintf(err_msg,"%s%d had an inconsistency, BAIL!/n",
 		   "Chemkin Material property specification for material ",
 		   mn);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 #endif
   } else {
@@ -402,7 +402,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
     if (retn < 0) {
       sprintf(err_msg,"%s for mat %d had an inconsistency, BAIL!/n",
        	      "goma_mat_prop_int", mn);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
   }
 
@@ -442,7 +442,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg, 
 	  "Material %s - expected at least 2 constants for %s %s model.\n",
 		  pd_ptr->MaterialName, "Density", "FILL");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->len_u_density = num_const;
 
@@ -457,7 +457,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg, 
 		  "Material %s - expected at least 3 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "SUSPENSION");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->len_u_density = num_const;
 
@@ -472,7 +472,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg, 
 		  "Material %s - expected at least 1 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "SOLVENT_POLYMER");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->len_u_density = num_const;
       mat_ptr->specific_volume[pd_glob[mn]->Num_Species_Eqn] = mat_ptr->u_density[0];
@@ -489,7 +489,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg, 
 		  "Material %s - expected at least 1 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "REACTIVE_FOAM");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->len_u_density = num_const;
       mat_ptr->specific_volume[pd_glob[mn]->Num_Species_Eqn] = mat_ptr->u_density[0];
@@ -505,7 +505,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg, 
 		  "Material %s - expected at least 3 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "SUSPENSION_PM");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density); 
@@ -519,7 +519,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg, 
 		  "Material %s - expected at least 2 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "THERMAL_BATTERY");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density); 
@@ -537,7 +537,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg, 
 		  "Material %s - expected at least 3 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "LEVEL_SET");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 
       if ( mat_ptr->u_density[2] == 0.0 ) mat_ptr->u_density[2] = ls->Length_Scale/2.0;
@@ -558,7 +558,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 				pfd->num_phase_funcs + 2, 
 				"Density", 
 				"CONST_PHASE_FUNCTION");
-		EH(-1, err_msg );
+		EH(GOMA_ERROR, err_msg );
 	  }
 	  mat_ptr->len_u_density = num_const;
 	  SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density); 
@@ -572,7 +572,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg, 
 	  "Material %s - expected at least 6 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "FOAM");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density ); 
@@ -586,7 +586,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg,
 		  "Material %s - expected at least 3 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "FOAM_PMDI_10");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density );
@@ -600,7 +600,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       sprintf(err_msg,
           "Material %s - expected at least 2 constants for %s %s model.\n",
           pd_glob[mn]->MaterialName, "Density", "FOAM_PMDI_10");
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
       mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density );
@@ -614,7 +614,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg, 
 	  "Material %s - expected at least 8 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "FOAM_CONC");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density ); 
@@ -628,7 +628,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg, 
 	  "Material %s - expected at least 4 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "FOAM_TIME");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density ); 
@@ -642,7 +642,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg, 
 		  "Material %s - expected at least 5 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "FOAM_TIME_TEMP");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density ); 
@@ -654,7 +654,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       sprintf(err_msg, 
 	      "Material %s - expected at least 1 constants for %s %s model.\n",
 	      pd_glob[mn]->MaterialName, "Density", "CONSTANT_LAST_CONC");
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
     mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density ); 
@@ -668,7 +668,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg,
 		  "Material %s - expected 3 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "FOAM_PBE");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density );
@@ -682,7 +682,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg,
 		  "Material %s - expected 3 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, "Density", "FOAM_PBE");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->len_u_density = num_const;
       SPF_DBL_VEC( endofstring(es),  num_const, mat_ptr->u_density );
@@ -705,7 +705,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
   if( model_read != -1 )
     {
-      if( ls == NULL ) EH(-1, "Second Level Set Density requires activation of Level Set Tracking.\n");
+      if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set Density requires activation of Level Set Tracking.\n");
 
       mat_ptr->mp2nd->DensityModel = i0;
       mat_ptr->mp2nd->density = a0;
@@ -716,7 +716,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	{
 	  if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Second Level Set Density.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Density.\n");
 	    }
 
 	  stringup(input);
@@ -731,7 +731,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	    }
 	  else
 	    {
-	      EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Density.\n");
+	      EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Density.\n");
 	    }
 	  SPF(endofstring(es)," %s",input);
 	  if( pfd != NULL)
@@ -747,7 +747,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	}
       else
 	{
-	  EH(-1, "Second Level Set Density model can only be CONSTANT.\n");
+	  EH(GOMA_ERROR, "Second Level Set Density model can only be CONSTANT.\n");
 	}
     }
 
@@ -763,7 +763,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 				 &a0, NO_USER, NULL, model_name, NO_INPUT, 
 				 &NO_SPECIES,
 				 es);
-  if (model_read == 1) EH(-1, "Can't have USER or CONSTANT for Solid Constitutive Equation");
+  if (model_read == 1) EH(GOMA_ERROR, "Can't have USER or CONSTANT for Solid Constitutive Equation");
 
   if ( !strcmp(model_name, "LINEAR") )
     {
@@ -810,7 +810,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 				 &NO_SPECIES,
 				 es);
 
-  if (model_read == 1) EH(-1, "Can't have USER or CONSTANT for Plasticity Constitutive Equation");
+  if (model_read == 1) EH(GOMA_ERROR, "Can't have USER or CONSTANT for Plasticity Constitutive Equation");
     if ( !strcmp(model_name, "EVP_HYPER") )
       {
 	PlasticConstitutiveEquation = EVP_HYPER;
@@ -854,7 +854,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			       pd_glob[mn]->MaterialName, 
 			       "Convective Lagrangian Velocity", 
 			       "ROTATIONAL");
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 		}
 	      elc_glob[mn]->len_u_v_mesh_sfs = num_const;
 
@@ -875,7 +875,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			       pd_glob[mn]->MaterialName, 
 			       "Convective Lagrangian Velocity", 
 			       "ROTATIONAL_3D");
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 		}
 	      elc_glob[mn]->len_u_v_mesh_sfs = num_const;
 
@@ -930,7 +930,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   pd_glob[mn]->MaterialName, 
 			   "Lame MU", 
 			   "POWER_LAW");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  elc_glob[mn]->len_u_mu = num_const;
 
@@ -946,7 +946,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   pd_glob[mn]->MaterialName, 
 			   "Lame MU", 
 			   "CONTACT_LINE");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  elc_glob[mn]->len_u_mu = num_const;	  
 	}
@@ -961,7 +961,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   pd_glob[mn]->MaterialName, 
 			   "Lame MU", 
 			   "SHEAR_HARDEN");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }  
 	  elc_glob[mn]->len_u_mu = num_const;	  
 	}
@@ -976,7 +976,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   pd_glob[mn]->MaterialName, 
 			   "Lame MU", 
 			   "EXPONENTIAL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  elc_glob[mn]->len_u_mu = num_const;	  
 	}
@@ -991,7 +991,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   pd_glob[mn]->MaterialName, 
 			   "Lame MU", 
 			   "DENSE_POWER_LAW");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  elc_glob[mn]->len_u_mu = num_const;	  
 	}
@@ -1028,7 +1028,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   pd_glob[mn]->MaterialName, 
 			   "Lame LAMBDA", 
 			   "POWER_LAW");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  elc_glob[mn]->len_u_lambda = num_const;	  	  
 	}
@@ -1044,7 +1044,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   pd_glob[mn]->MaterialName, 
 			   "Lame LAMBDA", 
 			   "EXPONENTIAL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  elc_glob[mn]->len_u_lambda = num_const;	  	  
 	}
@@ -1060,7 +1060,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   pd_glob[mn]->MaterialName, 
 			   "Lame LAMBDA", 
 			   "POISSON_RATIO");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  elc_glob[mn]->len_u_lambda = num_const;	  	  
 	}
@@ -1106,7 +1106,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			       pd_glob[mn]->MaterialName, 
 			       "Lame Temperature Shift", 
 			       "POWER_LAW");
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 		}
 	      elc_glob[mn]->len_u_lame_TempShift = num_const;
 	    }
@@ -1213,7 +1213,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	sr = sprintf(err_msg,
 		     "Error reading model name string in material file, property %s",
 		     search_string);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
 
       SPF(es, "%s = %s", search_string, model_name);
@@ -1224,7 +1224,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	//NO_SPECIES);
 
 	if (num_const != 0) {
-	  EH(-1, "ISOPARAMETRIC Shell Tangent Computation Method takes no other input parameters");
+	  EH(GOMA_ERROR, "ISOPARAMETRIC Shell Tangent Computation Method takes no other input parameters");
 	}
       } else
       if (model_read == 1 && !strcmp(model_name, "SEEDED") ) {
@@ -1237,7 +1237,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->shell_tangent_seed_vec_const );
 
 	if (num_const != 3) {
-	  EH(-1, "SEEDED Shell Tangent Computation Model requires input of the seed as three components of a unit vector.");
+	  EH(GOMA_ERROR, "SEEDED Shell Tangent Computation Model requires input of the seed as three components of a unit vector.");
 
 	}
       }
@@ -1266,7 +1266,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         sr = sprintf(err_msg,
          "Error reading model name string in material file, property %s",
          search_string);
-        EH(-1, err_msg);
+        EH(GOMA_ERROR, err_msg);
       }
 
       SPF(es, "%s = %s", search_string, model_name);
@@ -1277,7 +1277,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         //NO_SPECIES);
 
         if (num_const != 0) {
-          EH(-1, "EXPANDED Shell Moment Tensor Model takes no other input parameters");
+          EH(GOMA_ERROR, "EXPANDED Shell Moment Tensor Model takes no other input parameters");
         }
       } else
 
@@ -1288,7 +1288,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         //NO_SPECIES);
 
         if (num_const != 0) {
-          EH(-1, "SIMPLE Shell Moment Tensor Model takes no other input parameters");
+          EH(GOMA_ERROR, "SIMPLE Shell Moment Tensor Model takes no other input parameters");
         }
       }
 
@@ -1329,7 +1329,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			    pd_glob[mn]->MaterialName, 
 			    "Thermal Expansion", 
 			    "SHRINKAGE");
-	       EH(-1, err_msg);
+	       EH(GOMA_ERROR, err_msg);
 	     }
 	   elc_glob[mn]->len_u_thermal_expansion = num_const;
 	 } 
@@ -1344,7 +1344,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			    pd_glob[mn]->MaterialName, 
 			    "Thermal Expansion", 
 			    "IDEAL_GAS");
-	       EH(-1, err_msg);
+	       EH(GOMA_ERROR, err_msg);
 	     }
 	   elc_glob[mn]->len_u_thermal_expansion = num_const;
 	 } 
@@ -1396,7 +1396,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			       pd_glob[mn]->MaterialName, 
 			       "Plastic Viscosity", 
 			       "LINEAR");
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 		}
 	      evpl_glob[mn]->len_u_plastic_mu = num_const;
 	      
@@ -1430,7 +1430,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   pd_glob[mn]->MaterialName, 
 			   "EVP Yield Stress", 
 			   "LINEAR");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  evpl_glob[mn]->len_u_yield = num_const;
 	  SPF_DBL_VEC(endofstring(es), num_const, evpl_glob[mn]->u_yield );
@@ -1477,7 +1477,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 				     &a0, NO_USER, NULL, model_name, NO_INPUT, 
 				     &NO_SPECIES,es);
 
-      if (model_read == 1) EH(-1, "Can't have USER or CONSTANT for Pseudo-Solid Constitutive Equation");
+      if (model_read == 1) EH(GOMA_ERROR, "Can't have USER or CONSTANT for Pseudo-Solid Constitutive Equation");
       
       if ( !strcmp(model_name, "LINEAR") )
 	{
@@ -1511,7 +1511,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       else if ( !strcmp(model_name, "EVP_HYPER") )
 	{
 	  ElasticConstitutiveEquation = EVP_HYPER;
-	  EH(-1,"Pseudo-solid constitutive equationis elasto-viscoplastic. Hmm. Won't continue with my better judgement");
+	  EH(GOMA_ERROR,"Pseudo-solid constitutive equationis elasto-viscoplastic. Hmm. Won't continue with my better judgement");
 	} 
       else				/* default to nonlinear */
 	{
@@ -1550,7 +1550,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			       pd_glob[mn]->MaterialName, 
 			       "Lame MU", 
 			       "CONTACT_LINE");
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 		}
 	      elc_glob[mn]->len_u_mu = num_const;	
 	      SPF_DBL_VEC(endofstring(es), num_const,elc_glob[mn]->u_mu );
@@ -1600,7 +1600,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 				 &NO_SPECIES,es);
   if( model_read == 1 )
     {
-      EH(-1,"Liquid Constitutive Equations options CONSTANT, USER, USER_GEN are not valid\n");
+      EH(GOMA_ERROR,"Liquid Constitutive Equations options CONSTANT, USER, USER_GEN are not valid\n");
     }
 
   if ( !strcmp(model_name, "NEWTONIAN") )
@@ -1719,7 +1719,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   "Matl %s expected at least 2 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Viscosity", "FILL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_viscosity = num_const;
 	  SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_viscosity  );
@@ -1736,7 +1736,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   "Matl %s expected at least 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Viscosity", "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  if ( mat_ptr->u_viscosity[2] == 0.0 ) mat_ptr->u_viscosity[2] = ls->Length_Scale/2.0;
@@ -1756,7 +1756,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   "Matl %s expected at least 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Viscosity", "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  if ( mat_ptr->u_viscosity[2] == 0.0 ) mat_ptr->u_viscosity[2] = ls->Length_Scale/2.0;
@@ -1777,7 +1777,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   "Matl %s expected at least 1 constant for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Viscosity", "SUSPENSION_PM");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_viscosity = num_const;
 	  SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_viscosity  );
@@ -1794,7 +1794,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			    pd_glob[mn]->MaterialName,
 			    pfd->num_phase_funcs + 2,
 			    "Viscosity", "CONST_PHASE_FUNCTION");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_viscosity = num_const;
 	  SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_viscosity  );
@@ -1847,7 +1847,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   "Matl %s expected at least 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Low Rate Viscosity", "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  gn_glob[mn]->len_u_mu0 = num_const;
@@ -1896,7 +1896,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   "Matl %s expected at least 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Power law exponent", "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  gn_glob[mn]->len_u_nexp = num_const;
@@ -1938,7 +1938,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   "Matl %s expected at least 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Low Rate Viscosity", "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  gn_glob[mn]->len_u_muinf = num_const;
@@ -1969,7 +1969,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   "Matl %s expected at least 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Low Rate Viscosity", "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  gn_glob[mn]->len_u_lam = num_const;
@@ -2012,7 +2012,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   "Matl %s expected at least 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Low Rate Viscosity", "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  gn_glob[mn]->len_u_aexp = num_const;
@@ -2061,7 +2061,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   "Matl %s expected at least 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Thermal Exponent", "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  gn_glob[mn]->len_u_atexp = num_const;
@@ -2099,7 +2099,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   "Matl %s expected at least 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Thermal Exponent", "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  gn_glob[mn]->len_u_wlfc2 = num_const;
@@ -2183,7 +2183,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   "Matl %s expected at least 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Thixotropic Factor", "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  gn_glob[mn]->len_u_thixo = num_const;
@@ -2392,7 +2392,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 		   "Matl %s expected at least 1 constant for %s %s model.\n",
 		   pd_glob[mn]->MaterialName, 
 		   "Dilational Viscosity", "DILVISCM_KAPPACONSTANT");
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
     mat_ptr->len_u_dilationalViscosity = num_const;
     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_dilationalViscosity  );
@@ -2406,7 +2406,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 		   "Matl %s expected at least 1 constant for %s %s model.\n",
 		   pd_glob[mn]->MaterialName, 
 		   "Dilational Viscosity", "DILVISCM_KAPPAFIXEDRATIO");
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
     mat_ptr->len_u_dilationalViscosity = num_const;
     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_dilationalViscosity  );
@@ -2435,7 +2435,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       if( strcmp( model_name, "CONSTANT") )
 	{
-          EH(-1, "Dilational Viscosity Multiplier can only be CONSTANT.\n");
+          EH(GOMA_ERROR, "Dilational Viscosity Multiplier can only be CONSTANT.\n");
 	}
       ECHO(es,echo_file);
     }
@@ -2448,7 +2448,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   if( model_read != -1 )
     {
 
-      if( ls == NULL ) EH(-1, "Second Level Set Viscosity requires activation of Level Set Tracking.\n");
+      if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set Viscosity requires activation of Level Set Tracking.\n");
 
       mat_ptr->mp2nd->ViscosityModel = i0;
       mat_ptr->mp2nd->viscosity = a0;
@@ -2459,7 +2459,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	{
 	  if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Second Level Set Viscosity.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Viscosity.\n");
 	    }
 
 	  stringup(input);
@@ -2474,7 +2474,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	    }
 	  else
 	    {
-	      EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Viscosity.\n");
+	      EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Viscosity.\n");
 	    }
 
 	  SPF(endofstring(es)," %s", input );
@@ -2490,7 +2490,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	}
       else
 	{
-          EH(-1, "Second Level Set Viscosity model can only be CONSTANT or RATIO.\n");
+          EH(GOMA_ERROR, "Second Level Set Viscosity model can only be CONSTANT or RATIO.\n");
 	}
       ECHO(es,echo_file);
     }
@@ -2514,14 +2514,14 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  mat_ptr->Mwt_funcModel = SUPG;
 	  err = fscanf(imp, "%lg",&(mat_ptr->Mwt_func));
 	  if (err != 1) {
-	    EH(-1, "Expected to read one double for Momentum Weight Function SUPG");
+	    EH(GOMA_ERROR, "Expected to read one double for Momentum Weight Function SUPG");
 	  }
 	  SPF(endofstring(es)," %.4g", mat_ptr->Mwt_func );
 	} 
       else  
 	{
 	  SPF(err_msg,"Syntax error or invalid model for %s\n", search_string);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
     }
   else
@@ -2597,7 +2597,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if ( !strcmp(model_name, "EVSS_G") )
 	{
 	  if( vn_glob[mn]->ConstitutiveEquation == PTT ) 
-	    EH(-1,"Error: EVSS_G stress formulation is not implemented in this case.");
+	    EH(GOMA_ERROR,"Error: EVSS_G stress formulation is not implemented in this case.");
 
 	  vn_glob[mn]->evssModel = EVSS_G;
 	}
@@ -2628,7 +2628,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       else
 	{
 	  if( vn_glob[mn]->ConstitutiveEquation == PTT ) 
-	    EH(-1,"Error: EVSS_G stress formulation is not implemented in this case.");
+	    EH(GOMA_ERROR,"Error: EVSS_G stress formulation is not implemented in this case.");
 
 	  vn_glob[mn]->evssModel = EVSS_G; /* default to Rajagopalan's 
 					      formulation */
@@ -2686,7 +2686,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	{ 
 	  if ( fscanf(imp,"%s", model_name) != 1 )
 	    {
-	      EH(-1, "Need option for Polymer Shift Function ");
+	      EH(GOMA_ERROR, "Need option for Polymer Shift Function ");
 	    }
 
 	  SPF(es,"%s = %s", search_string, model_name);
@@ -2750,7 +2750,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	{
 	  if ( fscanf(imp,"%s", model_name) != 1 )
 	    {
-	      EH(-1, "Need option for Discontinuous Jacobian Formulation ");
+	      EH(GOMA_ERROR, "Need option for Discontinuous Jacobian Formulation ");
 	    }
 
 	  SPF(es,"%s = %s", search_string, model_name);
@@ -2827,7 +2827,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       strcpy(search_string, "Polymer Viscosity");
 
-      if(vn_glob[mn]->modes == 0)EH(-1, "Need to specify number of VE modes in input deck");
+      if(vn_glob[mn]->modes == 0)EH(GOMA_ERROR, "Need to specify number of VE modes in input deck");
 
       modal_data = (dbl *) array_alloc(1,vn_glob[mn]->modes,sizeof(dbl)); 
 
@@ -2871,7 +2871,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       if( model_read == 1 ) {
 
-	  if( ls == NULL ) EH(-1, "Positive Level Set Polymer Viscosity requires activation of Level Set Tracking.\n");
+	  if( ls == NULL ) EH(GOMA_ERROR, "Positive Level Set Polymer Viscosity requires activation of Level Set Tracking.\n");
 
 	  for(mm=0;mm<vn_glob[mn]->modes;mm++)
 	    {
@@ -2921,7 +2921,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
       if( model_read == 1 ) {
 
-	if( ls == NULL ) EH(-1, "Positive Level Set Polymer Time Constant requires activation of Level Set Tracking.\n");
+	if( ls == NULL ) EH(GOMA_ERROR, "Positive Level Set Polymer Time Constant requires activation of Level Set Tracking.\n");
 
 	for(mm=0;mm<vn_glob[mn]->modes;mm++)
 	  {
@@ -2977,7 +2977,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
 	  if( model_read == 1 ) {
 
-	    if( ls == NULL ) EH(-1, "Positive Level Set Mobility Parameter requires activation of Level Set Tracking.\n");
+	    if( ls == NULL ) EH(GOMA_ERROR, "Positive Level Set Mobility Parameter requires activation of Level Set Tracking.\n");
 
 	    for(mm=0;mm<vn_glob[mn]->modes;mm++)
 	      {
@@ -3050,7 +3050,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
 	  if( model_read == 1 ) {
 
-	    if( ls == NULL ) EH(-1, "Positive Level Set PTT Xi parameter requires activation of Level Set Tracking.\n");
+	    if( ls == NULL ) EH(GOMA_ERROR, "Positive Level Set PTT Xi parameter requires activation of Level Set Tracking.\n");
 
 	    for(mm=0;mm<vn_glob[mn]->modes;mm++)
 	      {
@@ -3100,7 +3100,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 
 	  if( model_read == 1 ) {
 
-	    if( ls == NULL ) EH(-1, "Positive Level Set PTT Epsilon parameter requires activation of Level Set Tracking.\n");
+	    if( ls == NULL ) EH(GOMA_ERROR, "Positive Level Set PTT Epsilon parameter requires activation of Level Set Tracking.\n");
 
 	    for(mm=0;mm<vn_glob[mn]->modes;mm++)
 	      {
@@ -3161,7 +3161,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   pd_glob[mn]->MaterialName, 
 			   search_string, 
 			   model_name );
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_surface_tension = num_const;
 
@@ -3182,7 +3182,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   pd_glob[mn]->MaterialName, 
 			   search_string, 
 			   model_name );
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_surface_tension = num_const;
 
@@ -3219,7 +3219,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if (strcmp(model_name, "CONSTANT"))
 	{
 	  sr = sprintf(err_msg,  "Matl %s: Surface diffusion model must be const.\n", pd_glob[mn]->MaterialName);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       num_const = 1;
       SPF(es, "\t(%s = %s %.4g)", search_string, "CONSTANT",  mat_ptr->SurfaceDiffusionCoeffProjectionEqn );
@@ -3241,7 +3241,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   if (model_read == 1)       {
     if (fscanf(imp, "%s", model_name) != 1)
       {
-	EH(-1, "Need option for Heat Flux Model ");
+	EH(GOMA_ERROR, "Need option for Heat Flux Model ");
       }
 
     SPF(es,"%s = %s", search_string, model_name);
@@ -3279,7 +3279,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	      sprintf(err_msg, 
 		      "Material %s - expected at least 3 constants for %s %s model.\n",
 		      pd_glob[mn]->MaterialName, search_string, "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
       
 	  if ( mat_ptr->u_thermal_conductivity[2] == 0.0 ) mat_ptr->u_thermal_conductivity[2] = ls->Length_Scale/2.0;
@@ -3297,7 +3297,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	      sprintf(err_msg, 
 		      "Material %s - expected at least 5 constants for %s %s model.\n",
 		      pd_glob[mn]->MaterialName, search_string, "THERMAL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
       
 	  mat_ptr->len_u_thermal_conductivity = num_const;
@@ -3314,7 +3314,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  /*     sprintf(err_msg,  */
 	  /* 	      "Material %s - expected at least 5 constants for %s %s model.\n", */
 	  /* 	      pd_glob[mn]->MaterialName, search_string, "THERMAL"); */
-	  /*     EH(-1, err_msg); */
+	  /*     EH(GOMA_ERROR, err_msg); */
 	  /*   } */
 	  mat_ptr->len_u_thermal_conductivity = num_const;
 
@@ -3330,7 +3330,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	      sprintf(err_msg,
 		      "Material %s - expected at least 2 constants for %s %s model.\n",
 		      pd_glob[mn]->MaterialName, search_string, "FOAM_PMDI_10");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  mat_ptr->len_u_thermal_conductivity = num_const;
@@ -3339,7 +3339,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	}
       else if ( !strcmp(model_name, "EXTERNAL_FIELD")){
 	if ( fscanf(imp,"%s", input ) !=  1 ){	  
-	    EH(-1,"Expecting trailing keyword for Thermal Conductivity EXTERNAL_FIELD model.\n");
+	    EH(GOMA_ERROR,"Expecting trailing keyword for Thermal Conductivity EXTERNAL_FIELD model.\n");
 	}
 	ii = 0;
 	for ( j=0; j<efv->Num_external_field; j++){
@@ -3350,7 +3350,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  }	     
 	}
 	if( ii==0 ) {
-	  EH(-1,"Cannot match the name with that in the external field file");
+	  EH(GOMA_ERROR,"Cannot match the name with that in the external field file");
 	}	  
 	mat_ptr->ConductivityModel = EXTERNAL_FIELD;
 	/* pick up scale factor for property */
@@ -3360,13 +3360,13 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sr = sprintf(err_msg, 
 		       "Matl %s expected at least 1 constant for %s %s model.\n",
 		       pd_glob[mn]->MaterialName, "Thermal Conductivity","EXTERNAL_FIELD");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       }
       else 
 	{
 	  SPF(err_msg,"%s card read error.  Card missing or unknown model.", search_string);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
     }
 
@@ -3382,7 +3382,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   if( model_read != -1 )
     {
       
-      if( ls == NULL ) EH(-1, "Second Level Set Conductivity requires activation of Level Set Tracking.\n");
+      if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set Conductivity requires activation of Level Set Tracking.\n");
 	  
       mat_ptr->mp2nd->ThermalConductivityModel = i0;
       mat_ptr->mp2nd->thermalconductivity = a0;
@@ -3393,7 +3393,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	{
 	  if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Second Level Set Conductivity.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Conductivity.\n");
 	    }
 	      
 	  stringup(input);
@@ -3408,7 +3408,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	    }
 	  else
 	    {
-	      EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Conductivity.\n");
+	      EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Conductivity.\n");
 	    }
 	  SPF(endofstring(es)," %s", input);
 	  if( pfd != NULL)
@@ -3423,7 +3423,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	}
       else
 	{
-	  EH(-1, "Second Level Set Conductivity model can only be CONSTANT.\n");
+	  EH(GOMA_ERROR, "Second Level Set Conductivity model can only be CONSTANT.\n");
 	}
     }
   else
@@ -3431,7 +3431,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if(strlen(es) != 0 )
 	{
 	  SPF(err_msg,"Syntax error or unsupported model for %s ", search_string);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
     }
 
@@ -3454,7 +3454,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       
       if(fscanf(imp, "%lf %lf", &(mat_ptr->heat_capacity), &(mat_ptr->latent_heat_fusion[0])) != 2)
 	{
-	  EH(-1,"Expecting 2 floats for ENTHALPY model on Heat Capacity card");
+	  EH(GOMA_ERROR,"Expecting 2 floats for ENTHALPY model on Heat Capacity card");
 	}
 
       SPF(endofstring(es)," %.4g %.4g", mat_ptr->heat_capacity, mat_ptr->latent_heat_fusion[0]);
@@ -3468,7 +3468,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg, 
 		  "Material %s - expected at least 3 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, search_string, "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	}
 
       if ( mat_ptr->u_heat_capacity[2] == 0.0 ) mat_ptr->u_heat_capacity[2] = ls->Length_Scale/2.0;
@@ -3487,7 +3487,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg, 
 		  "Material %s - expected at least 5 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, search_string, "THERMAL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	}
 
       mat_ptr->len_u_heat_capacity = num_const;
@@ -3504,7 +3504,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  sprintf(err_msg,
 		  "Material %s - expected at least 2 constants for %s %s model.\n",
 		  pd_glob[mn]->MaterialName, search_string, "FOAM_PMDI_10");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 
       mat_ptr->len_u_heat_capacity = num_const;
@@ -3530,7 +3530,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
   if( model_read != -1 )
     {
       
-      if( ls == NULL ) EH(-1, "Second Level Set Heat Capacity requires activation of Level Set Tracking.\n");
+      if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set Heat Capacity requires activation of Level Set Tracking.\n");
       
       mat_ptr->mp2nd->HeatCapacityModel = i0;
       mat_ptr->mp2nd->heatcapacity = a0;
@@ -3541,7 +3541,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	{
 	  if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Second Level Set Heat Capacity.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Heat Capacity.\n");
 	    }
 	  
 	  stringup(input);
@@ -3556,7 +3556,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	    }
 	  else
 	    {
-	      EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Heat Capacity.\n");
+	      EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Heat Capacity.\n");
 	    }
 	  SPF(endofstring(es)," %s", input);
 	  if( pfd != NULL)
@@ -3571,7 +3571,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	}
       else
 	{
-	  EH(-1, "Second Level Set Heat Capacity model can only be CONSTANT.\n");
+	  EH(GOMA_ERROR, "Second Level Set Heat Capacity model can only be CONSTANT.\n");
 	}
     }
 
@@ -3590,7 +3590,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if ( strncmp(model_name," ",1) != 0 )
 	{
 	  SPF(err_msg,"Syntax error or invalid model for %s\n", search_string);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
       else
 	{
@@ -3612,7 +3612,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if(strncmp(model_name," ",1) != 0)
 	{
 	  SPF(err_msg,"Syntax error or invalid model for %s\n", search_string);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
       else
 	{
@@ -3633,7 +3633,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if(strncmp(model_name," ",1) != 0)
 	{
 	  SPF(err_msg,"Syntax error or invalid model for %s\n", search_string);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
       else
 	{
@@ -3655,7 +3655,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if(strncmp(model_name," ",1) != 0 )
 	{
 	  SPF(err_msg,"Syntax error or invalid model for %s\n", search_string);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
       else
 	{
@@ -3682,14 +3682,14 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  mat_ptr->Ewt_funcModel = SUPG;
 	  err = fscanf(imp, "%lg",&(mat_ptr->Ewt_func));
 	  if (err != 1) {
-	    EH(-1, "Expected to read one double for Energy Weight Function SUPG");
+	    EH(GOMA_ERROR, "Expected to read one double for Energy Weight Function SUPG");
 	  }
 	  SPF(endofstring(es)," %.4g", mat_ptr->Ewt_func );
 	} 
       else  
 	{
 	  SPF(err_msg,"Syntax error or invalid model for %s\n", search_string);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
     }
   else
@@ -3719,7 +3719,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	  mat_ptr->Rst_funcModel = EXPONENTIAL_TIMETEMP;
 	  err = fscanf(imp, "%lg",&(mat_ptr->Rst_func));
 	  if (err != 1) {
-	    EH(-1, "Expected to read one double for Residence Time Weight Function");
+	    EH(GOMA_ERROR, "Expected to read one double for Residence Time Weight Function");
 	  }
 	  SPF(endofstring(es)," %.4g", mat_ptr->Rst_func );
 	} 
@@ -3770,7 +3770,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 			   "Matl %s expected at least 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName, 
 			   "Thermal Exponent", "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  mat_ptr->len_u_electrical_conductivity = num_const;
@@ -3791,7 +3791,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	}
 	else if ( !strcmp(model_name, "EXTERNAL_FIELD")){
 	  if ( fscanf(imp,"%s", input ) !=  1 ){
-	    EH(-1,"Expecting trailing keyword for Electrical Conductivity EXTERNAL_FIELD model.\n");
+	    EH(GOMA_ERROR,"Expecting trailing keyword for Electrical Conductivity EXTERNAL_FIELD model.\n");
 	  }
 	  ii = 0;
 	  for ( j=0; j<efv->Num_external_field; j++){
@@ -3802,7 +3802,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	    }
 	  }
 	  if( ii==0 ){
-	    EH(-1,"Cannot match the name with that in the external field file");
+	    EH(GOMA_ERROR,"Cannot match the name with that in the external field file");
 	  }	      
 	  mat_ptr->Elec_ConductivityModel = EXTERNAL_FIELD;
 	 
@@ -3813,7 +3813,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
 	    sr = sprintf(err_msg, 
 			 "Matl %s expected at least 1 constant for %s %s model.\n",
 			 pd_glob[mn]->MaterialName, "Electrical Conductivity","EXTERNAL_FIELD");
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	}
       }
@@ -3844,7 +3844,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if(strncmp(model_name," ",1) != 0)
 	{
 	  SPF(err_msg,"Syntax error or invalid model for %s\n",search_string);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
       else
 	{
@@ -3867,7 +3867,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if(strncmp(model_name," ",1) != 0 )
 	{
 	  SPF(err_msg,"Syntax error or invalid model for %s\n",search_string);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
       else
 	{ 
@@ -3890,7 +3890,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
       if(strncmp(model_name," ",1) != 0 )
       {
         SPF(err_msg,"Syntax error or invalid model for %s\n",search_string);
-        EH(-1,err_msg);
+        EH(GOMA_ERROR,err_msg);
       }
       else
       {
@@ -3921,7 +3921,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
           /* However, this will require a CONSTANT electrical conductivity */
           if (mat_ptr->Elec_ConductivityModel != CONSTANT)
             {
-              EH(-1, "permittivity voltage formulation requires a CONSTANT electrical conductivity model!");
+              EH(GOMA_ERROR, "permittivity voltage formulation requires a CONSTANT electrical conductivity model!");
             }
         }
       else if ( strcmp(input, "CONDUCTIVITY") == 0 )
@@ -3930,7 +3930,7 @@ rd_mp_specs(FILE *imp, char input[], int mn, char *echo_file)
         }
       else
         {
-          EH(-1, "Unknown option for voltage formulation!");
+          EH(GOMA_ERROR, "Unknown option for voltage formulation!");
         }
       SPF(es,"%s = %s", search_string,input);
     }
@@ -3969,7 +3969,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      sprintf(err_msg, 
 		      "Material %s - expected at least 3 constants for %s %s model.\n",
 		      pd_glob[mn]->MaterialName, "Acoustic Wave Number", "LEVEL_SET");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  
 	  if ( mat_ptr->u_wave_number[2] == 0.0 ) mat_ptr->u_wave_number[2] = ls->Length_Scale/2.0;
@@ -3987,7 +3987,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       else
 	{
 	  SPF(err_msg,"Invalid model or syntax error for %s", search_string);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
     }
   
@@ -4000,7 +4000,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				 &NO_SPECIES,es);
  if( model_read != -1 )
    {
-     if( ls == NULL ) EH(-1, "Second Level Set Acoustic Wave Number requires activation of Level Set Tracking.\n");
+     if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set Acoustic Wave Number requires activation of Level Set Tracking.\n");
      
      mat_ptr->mp2nd->wavenumberModel = i0;
      mat_ptr->mp2nd->wavenumber = a0;
@@ -4011,7 +4011,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        {
 	 if ( fscanf(imp,"%s", input ) !=  1 )
 	   {
-	     EH(-1,"Expecting trailing keyword for Second Level Set Wave Number.\n");
+	     EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Wave Number.\n");
 	   }
 	 
 	 stringup(input);
@@ -4026,7 +4026,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   }
 	 else
 	   {
-	     EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Wave Number.\n");
+	     EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Wave Number.\n");
 	   }
          SPF(endofstring(es)," %s", input);
 	 if( pfd != NULL)
@@ -4041,13 +4041,13 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        }
      else
        {
-	 EH(-1, "Second Level Set Wave Number model can only be CONSTANT.\n");
+	 EH(GOMA_ERROR, "Second Level Set Wave Number model can only be CONSTANT.\n");
        }
    }
  else if ( strncmp(model_name," ",1) != 0 )
    {
      SPF(err_msg,"Syntax error or invalid model for %s", search_string);
-     EH(-1,err_msg);
+     EH(GOMA_ERROR,err_msg);
    }
 
  ECHO(es,echo_file);
@@ -4073,7 +4073,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	     sprintf(err_msg, 
 		     "Material %s - expected at least 3 constants for %s %s model.\n",
 		     pd_glob[mn]->MaterialName, "Acoustic Impedance", "LEVEL_SET");
-	     EH(-1, err_msg);
+	     EH(GOMA_ERROR, err_msg);
 	   }
 	 
 	 if ( mat_ptr->u_acoustic_impedance[2] == 0.0 ) mat_ptr->u_acoustic_impedance[2] = ls->Length_Scale/2.0;
@@ -4101,7 +4101,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
  if( model_read == 1 )
    {
      
-     if( ls == NULL ) EH(-1, "Second Level Set Acoustic Impedance requires activation of Level Set Tracking.\n");
+     if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set Acoustic Impedance requires activation of Level Set Tracking.\n");
 	  
      mat_ptr->mp2nd->AcousticImpedanceModel = i0;
      mat_ptr->mp2nd->acousticimpedance = a0;
@@ -4112,7 +4112,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        {
 	 if ( fscanf(imp,"%s", input ) !=  1 )
 	   {
-	     EH(-1,"Expecting trailing keyword for Second Level Set Acoustic Impedance.\n");
+	     EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Acoustic Impedance.\n");
 	   }
 	      
 	 stringup(input);
@@ -4127,7 +4127,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   }
 	 else
 	   {
-	     EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Acoustic Impedance.\n");
+	     EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Acoustic Impedance.\n");
 	   }
 	 SPF(endofstring(es)," %s", input);
 	  if( pfd != NULL)
@@ -4142,13 +4142,13 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        }
      else
        {
-	 EH(-1, "Second Level Set Acoustic Impedance model can only be CONSTANT.\n");
+	 EH(GOMA_ERROR, "Second Level Set Acoustic Impedance model can only be CONSTANT.\n");
        }
    }
  else if (strncmp(model_name," ",1) != 0 )
    {
      SPF(err_msg,"Syntax error or invalid model for %s", search_string);
-     EH(-1,err_msg);
+     EH(GOMA_ERROR,err_msg);
    }
 
  ECHO(es,echo_file);
@@ -4173,7 +4173,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	     sprintf(err_msg, 
 		     "Material %s - expected at least 3 constants for %s %s model.\n",
 		     pd_glob[mn]->MaterialName, "Acoustic Absorption", "LEVEL_SET");
-	     EH(-1, err_msg);
+	     EH(GOMA_ERROR, err_msg);
 	   }
 	    
 	 if ( mat_ptr->u_acoustic_absorption[2] == 0.0 ) mat_ptr->u_acoustic_absorption[2] = ls->Length_Scale/2.0;
@@ -4201,7 +4201,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
  if( model_read == 1 )
    {
 	  
-     if( ls == NULL ) EH(-1, "Second Level Set Acoustic Absorption requires activation of Level Set Tracking.\n");
+     if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set Acoustic Absorption requires activation of Level Set Tracking.\n");
 	  
      mat_ptr->mp2nd->AcousticAbsorptionModel = i0;
      mat_ptr->mp2nd->acousticabsorption = a0;
@@ -4212,7 +4212,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        {
 	 if ( fscanf(imp,"%s", input ) !=  1 )
 	   {
-	     EH(-1,"Expecting trailing keyword for Second Level Set Acoustic Absorption.\n");
+	     EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Acoustic Absorption.\n");
 	   }
 	      
 	 stringup(input);
@@ -4227,7 +4227,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   }
 	 else
 	   {
-	     EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Acoustic Absorption.\n");
+	     EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Acoustic Absorption.\n");
 	   }
 	 SPF(endofstring(es)," %s", input);
 	 if( pfd != NULL)
@@ -4242,13 +4242,13 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        }
      else
        {
-	 EH(-1, "Second Level Set Acoustic Absorption model can only be CONSTANT.\n");
+	 EH(GOMA_ERROR, "Second Level Set Acoustic Absorption model can only be CONSTANT.\n");
        }
    }
  else if (strncmp(model_name," ",1) != 0)
    {
      SPF(err_msg,"Syntax error or invalid model for %s", search_string);
-     EH(-1,err_msg);
+     EH(GOMA_ERROR,err_msg);
    }
 
  ECHO(es,echo_file);
@@ -4290,7 +4290,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	     sprintf(err_msg, 
 		     "Material %s - expected at least 3 constants for %s %s model.\n",
 		     pd_glob[mn]->MaterialName, "Refractive Index", "LEVEL_SET");
-	     EH(-1, err_msg);
+	     EH(GOMA_ERROR, err_msg);
 	   }
 	    
 	 if ( mat_ptr->u_refractive_index[2] == 0.0 ) mat_ptr->u_refractive_index[2] = ls->Length_Scale/2.0;
@@ -4318,7 +4318,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
  if( model_read == 1 )
    {
 	  
-     if( ls == NULL ) EH(-1, "Second Level Set Refractive Index requires activation of Level Set Tracking.\n");
+     if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set Refractive Index requires activation of Level Set Tracking.\n");
 	  
      mat_ptr->mp2nd->RefractiveIndexModel = i0;
      mat_ptr->mp2nd->refractiveindex = a0;
@@ -4329,7 +4329,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        {
 	 if ( fscanf(imp,"%s", input ) !=  1 )
 	   {
-	     EH(-1,"Expecting trailing keyword for Second Level Set Refractive Index.\n");
+	     EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Refractive Index.\n");
 	   }
 	      
 	 stringup(input);
@@ -4344,7 +4344,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   }
 	 else
 	   {
-	     EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Refractive Index.\n");
+	     EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Refractive Index.\n");
 	   }
 	 SPF(endofstring(es)," %s", input);
 	 if( pfd != NULL)
@@ -4359,13 +4359,13 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        }
      else
        {
-	 EH(-1, "Second Level Set Refractive Index model can only be CONSTANT.\n");
+	 EH(GOMA_ERROR, "Second Level Set Refractive Index model can only be CONSTANT.\n");
        }
    }
  else if (strncmp(model_name," ",1) != 0)
    {
      SPF(err_msg,"Syntax error or invalid model for %s", search_string);
-     EH(-1,err_msg);
+     EH(GOMA_ERROR,err_msg);
    }
 
  ECHO(es,echo_file);
@@ -4390,7 +4390,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	     sprintf(err_msg, 
 		     "Material %s - expected at least 3 constants for %s %s model.\n",
 		     pd_glob[mn]->MaterialName, "Light Absorption", "LEVEL_SET");
-	     EH(-1, err_msg);
+	     EH(GOMA_ERROR, err_msg);
 	   }
 	    
 	 if ( mat_ptr->u_light_absorption[2] == 0.0 ) mat_ptr->u_light_absorption[2] = ls->Length_Scale/2.0;
@@ -4418,7 +4418,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
  if( model_read == 1 )
    {
 	  
-     if( ls == NULL ) EH(-1, "Second Level Set Light Absorption requires activation of Level Set Tracking.\n");
+     if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set Light Absorption requires activation of Level Set Tracking.\n");
 	  
      mat_ptr->mp2nd->LightAbsorptionModel = i0;
      mat_ptr->mp2nd->lightabsorption = a0;
@@ -4429,7 +4429,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        {
 	 if ( fscanf(imp,"%s", input ) !=  1 )
 	   {
-	     EH(-1,"Expecting trailing keyword for Second Level Set Light Absorption.\n");
+	     EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Light Absorption.\n");
 	   }
 	      
 	 stringup(input);
@@ -4444,7 +4444,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   }
 	 else
 	   {
-	     EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Light Absorption.\n");
+	     EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Light Absorption.\n");
 	   }
 	 SPF(endofstring(es)," %s", input);
 	 if( pfd != NULL)
@@ -4459,13 +4459,13 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        }
      else
        {
-	 EH(-1, "Second Level Set Light Absorption model can only be CONSTANT.\n");
+	 EH(GOMA_ERROR, "Second Level Set Light Absorption model can only be CONSTANT.\n");
        }
    }
  else if (strncmp(model_name," ",1) != 0)
    {
      SPF(err_msg,"Syntax error or invalid model for %s", search_string);
-     EH(-1,err_msg);
+     EH(GOMA_ERROR,err_msg);
    }
 
  ECHO(es,echo_file);
@@ -4490,7 +4490,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	     sprintf(err_msg, 
 		     "Material %s - expected at least 3 constants for %s %s model.\n",
 		     pd_glob[mn]->MaterialName, "Extinction Index", "LEVEL_SET");
-	     EH(-1, err_msg);
+	     EH(GOMA_ERROR, err_msg);
 	   }
 	    
 	 if ( mat_ptr->u_extinction_index[2] == 0.0 ) mat_ptr->u_extinction_index[2] = ls->Length_Scale/2.0;
@@ -4518,7 +4518,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
  if( model_read == 1 )
    {
 	  
-     if( ls == NULL ) EH(-1, "Second Level Set Extinction Index requires activation of Level Set Tracking.\n");
+     if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set Extinction Index requires activation of Level Set Tracking.\n");
 	  
      mat_ptr->mp2nd->ExtinctionIndexModel = i0;
      mat_ptr->mp2nd->extinctionindex = a0;
@@ -4529,7 +4529,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        {
 	 if ( fscanf(imp,"%s", input ) !=  1 )
 	   {
-	     EH(-1,"Expecting trailing keyword for Second Level Set Extinction Index.\n");
+	     EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Extinction Index.\n");
 	   }
 	      
 	 stringup(input);
@@ -4544,7 +4544,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   }
 	 else
 	   {
-	     EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Extinction Index.\n");
+	     EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Extinction Index.\n");
 	   }
 	 SPF(endofstring(es)," %s", input);
 	 if( pfd != NULL)
@@ -4559,13 +4559,13 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        }
      else
        {
-	 EH(-1, "Second Level Set Extinction Index model can only be CONSTANT.\n");
+	 EH(GOMA_ERROR, "Second Level Set Extinction Index model can only be CONSTANT.\n");
        }
    }
  else if (strncmp(model_name," ",1) != 0)
    {
      SPF(err_msg,"Syntax error or invalid model for %s", search_string);
-     EH(-1,err_msg);
+     EH(GOMA_ERROR,err_msg);
    }
 
  ECHO(es,echo_file);
@@ -4654,7 +4654,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       if( have_por_liq_pres == 1 )
 	{
 	  SPF(err_msg,"CONTINUOUS model for %s cannot be used with porous equation\n",search_string);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
     }
   else if (model_read == -1 &&  !strcmp(model_name, "POROUS_SATURATED") )
@@ -4663,7 +4663,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       /*consistency checks */
       if( have_por_liq_pres == 0 )
 	{
-	  EH(-1,"You cannot run a porous media simulation without selecting the porous media equations");
+	  EH(GOMA_ERROR,"You cannot run a porous media simulation without selecting the porous media equations");
 	}
       mat_ptr->CapStress = NO_MODEL; /*so proper effective stress principle is chosen*/
     }
@@ -4673,7 +4673,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       if( have_por_liq_pres == 0 ||
 	  have_por_gas_pres == 0  )
 	{
-	  EH(-1,"You cannot run a two-phase porous media simulation without selecting both the porous_liq and porous_gas equations");
+	  EH(GOMA_ERROR,"You cannot run a two-phase porous media simulation without selecting both the porous_liq and porous_gas equations");
 	}
     }
   else if ( model_read == -1 &&  
@@ -4683,7 +4683,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->PorousMediaType = POROUS_UNSATURATED;
       if( have_por_liq_pres == 0 )
 	{
-	  EH(-1,"You cannot run a porous media simulation without selecting the porous media equations");
+	  EH(GOMA_ERROR,"You cannot run a porous media simulation without selecting the porous media equations");
 	}
     }
   else if (model_read == -1 &&  (!strcmp(model_name, "POROUS_BRINKMAN")) )
@@ -4697,7 +4697,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->i_ys = 0;
       if( (have_shell_sat_open == 0) && (have_shell_sat_open2 == 0) )
 	{
-	  EH(-1,"You cannot run a porous shell media simulation without selecting the sh_sat_open equation");
+	  EH(GOMA_ERROR,"You cannot run a porous shell media simulation without selecting the sh_sat_open equation");
 	}
     }
   else if ( (model_read == -1) && (strncmp(model_name," ",1) == 0) )
@@ -4707,7 +4707,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       if( have_por_liq_pres == 1 )
 	{
 	  SPF(err_msg,"CONTINUOUS model for %s cannot be used with porous equation\n",search_string);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
 
       SPF(es,"\t(%s = %s)", search_string, "CONTINUOUS");
@@ -4715,7 +4715,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
   else
     {
       SPF(err_msg,"Incorrect syntax or model choice for %s\n", search_string);
-      EH(-1,err_msg);
+      EH(GOMA_ERROR,err_msg);
     }
   
   ECHO(es,echo_file);
@@ -4751,7 +4751,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
       if( i != pd_glob[mn]->Num_Porous_Eqn )
         {
-	  EH(-1,"Possible duplicate porous media equations");
+	  EH(GOMA_ERROR,"Possible duplicate porous media equations");
         }
       strcpy(search_string, "Porosity");
       model_read = look_for_mat_prop(imp, search_string, 
@@ -4761,14 +4761,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
       if( (have_por_porosity == 1) && strcmp(model_name, "DEFORM")) 
 	{
-	  EH(-1," you must have a DEFORM porosity model with the pore porosity equation");
+	  EH(GOMA_ERROR," you must have a DEFORM porosity model with the pore porosity equation");
 	}
 
       if (model_read == -1 && !strcmp(model_name, "DEFORM") )
 	{
           if( have_por_porosity == 0 ) /* OK OK i get it...no R_POR_POROSITY without DEFORM and vice versa */
 	    {
-              EH(-1,"You cannot calculate porosity variation without the pore porosity equation");
+              EH(GOMA_ERROR,"You cannot calculate porosity variation without the pore porosity equation");
 	    }
 
 	  mat_ptr->PorosityModel = DEFORM;
@@ -4781,7 +4781,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Porosity", 
 			   "DEFORM");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_porosity = num_const;
 	  SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_porosity);
@@ -4791,7 +4791,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	{
 	  if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Porosity EXTERNAL_FIELD model.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Porosity EXTERNAL_FIELD model.\n");
 	    }
 	  ii=0;
 	  for ( j=0; j<efv->Num_external_field; j++)
@@ -4804,7 +4804,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 	  if( ii==0 )
 	    {
-	      EH(-1,"Cannot match the name with that in the external field file");
+	      EH(GOMA_ERROR,"Cannot match the name with that in the external field file");
 	    }
 	  mat_ptr->PorosityModel = EXTERNAL_FIELD;
 
@@ -4819,7 +4819,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Porosity", 
 			   "EXTERNAL_FIELD");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	}
        else
@@ -4859,7 +4859,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
               "Material %s - expected at least 2 constants for %s %s model.\n",
                       pd_glob[mn]->MaterialName, "Porous Compressibility",
                       "CONST_INIT");
-              EH(-1, err_msg);
+              EH(GOMA_ERROR, err_msg);
             }
           mat_ptr->porous_compressibility = mat_ptr->u_porous_compressibility[0];
           mat_ptr->initial_porosity = mat_ptr->u_porous_compressibility[1];
@@ -4900,7 +4900,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Permeability", 
 			   "PSD_VOL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_permeability = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_permeability);
@@ -4917,7 +4917,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Permeability", 
 			   "PSD_WEXP");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_permeability = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_permeability);
@@ -4934,7 +4934,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Permeability", 
 			   "PSD_SEXP");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_permeability = num_const;	  
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_permeability);
@@ -4951,7 +4951,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Permeability", 
 			   "SOLIDIFICATION");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  mat_ptr->len_u_permeability = num_const;	  
@@ -4962,7 +4962,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  mat_ptr->PermeabilityModel = K_TENSOR;
 	  num_const = read_constants(imp, &(mat_ptr->u_permeability), 
 				     NO_SPECIES);
-	  if(pd_glob[mn]->Num_Dim == 3) EH(-1,"Tensor Permeability only 2D for now");
+	  if(pd_glob[mn]->Num_Dim == 3) EH(GOMA_ERROR,"Tensor Permeability only 2D for now");
 	  if ( num_const < 4) 
 	    {
 	      sr = sprintf(err_msg, 
@@ -4970,7 +4970,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Permeability", 
 			   "TENSOR");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  mat_ptr->perm_tensor[0][0]  = mat_ptr->u_permeability[0];
@@ -4989,7 +4989,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				     NO_SPECIES);
 	  if ( num_const < 2) 
 	    {
-	      EH(-1,"expected 2 constants for KOZENY_CARMAN perm model");
+	      EH(GOMA_ERROR,"expected 2 constants for KOZENY_CARMAN perm model");
 
 	    }
 	  mat_ptr->len_u_permeability = num_const;	  	  
@@ -4997,14 +4997,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
       else if (model_read == -1 && !strcmp(model_name, "SINK_MASS_PERM") )
 	{
-	  if(have_por_sink_mass == 0) EH(-1, "SINK_MASS_PERM model not permitted without sink eqn");
+	  if(have_por_sink_mass == 0) EH(GOMA_ERROR, "SINK_MASS_PERM model not permitted without sink eqn");
 
 	  mat_ptr->PermeabilityModel = SINK_MASS_PERM;
 	  num_const = read_constants(imp, &(mat_ptr->u_permeability), 
 				     NO_SPECIES);
 	  if ( num_const < 4) 
 	    {
-	      EH(-1,"expected 4 constants for SINK_MASS_PERM perm model");
+	      EH(GOMA_ERROR,"expected 4 constants for SINK_MASS_PERM perm model");
 
 	    }
 	  mat_ptr->len_u_permeability = num_const;	  	  
@@ -5022,7 +5022,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Permeability", 
 			   "ORTHOTROPIC");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  memset(mat_ptr->perm_tensor, 0, sizeof(double)*DIM*DIM); /*these are loaded up later */
@@ -5044,7 +5044,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Permeability", 
 			   "KC_TENSOR");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  memset(mat_ptr->perm_tensor, 0, sizeof(double)*DIM*DIM); /*these are loaded up later */
@@ -5064,7 +5064,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Permeability", 
 			   "SM_TENSOR");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  memset(mat_ptr->perm_tensor, 0, sizeof(double)*DIM*DIM); /*these are loaded up later */
@@ -5087,7 +5087,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
 	  if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Permeability EXTERNAL_FIELD model.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Permeability EXTERNAL_FIELD model.\n");
 	    }
 	  ii=0;
 	  for ( j=0; j<efv->Num_external_field; j++)
@@ -5100,7 +5100,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 	  if( ii==0 )
 	    {
-	      EH(-1,"Must activate external fields to use this Permeability model and requested name must be an external field name");
+	      EH(GOMA_ERROR,"Must activate external fields to use this Permeability model and requested name must be an external field name");
 	    }
 	  mat_ptr->PermeabilityModel = EXTERNAL_FIELD;
 
@@ -5115,7 +5115,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName,
 			   "Rel Liq Permeability",
 			   "EXTERNAL_FIELD");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	}
 
@@ -5177,7 +5177,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		"Matl %s (conc %d) needs at least 3 constants for %s %s model.\n",
 		pd_glob[mn]->MaterialName, species_no,
 		search_string, "MOLTEN GLASS");
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       mat_ptr->len_u_FlowingLiquid_viscosity = num_const;
       SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_FlowingLiquid_viscosity);
@@ -5191,7 +5191,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		"Matl %s (conc %d) needs at least 6 constants for %s %s model.\n",
 		pd_glob[mn]->MaterialName, species_no,
 		search_string, "EPOXY");
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       mat_ptr->len_u_FlowingLiquid_viscosity = num_const;
       SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_FlowingLiquid_viscosity);
@@ -5214,7 +5214,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
     if( model_read != -1 )
       {
-       if( ls == NULL ) EH(-1, "Second Level Set FlowingLiquid Viscosity requires activation of Level Set Tracking.\n");
+       if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set FlowingLiquid Viscosity requires activation of Level Set Tracking.\n");
 
        mat_ptr->mp2nd->FlowingLiquidViscosityModel = i0;
        mat_ptr->mp2nd->FlowingLiquid_viscosity = a0;
@@ -5225,7 +5225,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	 {
 	  if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Second Level Set FlowingLiquid Viscosity.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set FlowingLiquid Viscosity.\n");
 	    }
 
 	  stringup(input);
@@ -5240,7 +5240,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 	  else
 	    {
-	      EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set FlowingLiquid Viscosity.\n");
+	      EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set FlowingLiquid Viscosity.\n");
 	    }
 	  SPF(endofstring(es)," %s",input);
 	  if( pfd != NULL)
@@ -5256,7 +5256,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	 }
        else
 	 {
-	  EH(-1, "Second Level Set FlowingLiquid Viscosity model can only be CONSTANT.\n");
+	  EH(GOMA_ERROR, "Second Level Set FlowingLiquid Viscosity model can only be CONSTANT.\n");
 	 }
       }
 
@@ -5301,7 +5301,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	{
 	  mat_ptr->CapStress = NO_CAP_STRESS;
 	}
-      else EH(-1, "Error getting Capillary Network Stress");
+      else EH(GOMA_ERROR, "Error getting Capillary Network Stress");
 
       ECHO(es,echo_file);
   
@@ -5322,7 +5322,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Rel Gas Permeability", 
 			   "SUM_TO_ONE");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_rel_gas_perm = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_rel_gas_perm); 
@@ -5351,7 +5351,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Rel Liq Permeability", 
 			   "VAN_GENUCHTEN");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_rel_liq_perm = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_rel_liq_perm); 
@@ -5368,7 +5368,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Rel Liq Permeability", 
 			   "PSD_VOL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_rel_liq_perm = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_rel_liq_perm); 
@@ -5385,7 +5385,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Rel Liq Permeability", 
 			   "PSD_WEXP");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_rel_liq_perm = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_rel_liq_perm); 
@@ -5402,7 +5402,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Rel Liq Permeability", 
 			   "PSD_SEXP");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_rel_liq_perm = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_rel_liq_perm); 
@@ -5412,7 +5412,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
 	  if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Rel Liq Permeability EXTERNAL_FIELD model.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Rel Liq Permeability EXTERNAL_FIELD model.\n");
 	    }
 	  ii=0;
 	  for ( j=0; j<efv->Num_external_field; j++)
@@ -5425,7 +5425,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 	  if( ii==0 )
 	    {
-	      EH(-1,"Must activate external fields to use this Rel Liq Permeability model and requested name must be an external field name");
+	      EH(GOMA_ERROR,"Must activate external fields to use this Rel Liq Permeability model and requested name must be an external field name");
 	    }
 	  mat_ptr->RelLiqPermModel = EXTERNAL_FIELD;
 
@@ -5440,14 +5440,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName,
 			   "Rel Liq Permeability",
 			   "EXTERNAL_FIELD");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	}
       else if (model_read == -1 && !strcmp(model_name, "VAN_GENUCHTEN_EXTERNAL") )
         {
           if ( fscanf(imp,"%s", input ) !=  1 )
             {
-              EH(-1,"Expecting trailing keyword for VAN_GENUCHTEN_EXTERNAL_FIELD model.\n");
+              EH(GOMA_ERROR,"Expecting trailing keyword for VAN_GENUCHTEN_EXTERNAL_FIELD model.\n");
             }
           ii=0;
           for ( j=0; j<efv->Num_external_field; j++)
@@ -5460,7 +5460,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
             }
           if( ii==0 )
             {
-              EH(-1,"Must activate external fields to use this VAN_GENUCHTEN_EXTERNAL model");
+              EH(GOMA_ERROR,"Must activate external fields to use this VAN_GENUCHTEN_EXTERNAL model");
             }
           mat_ptr->RelLiqPermModel = VAN_GENUCHTEN_EXTERNAL;
           num_const = read_constants(imp, &(mat_ptr->u_rel_liq_perm),
@@ -5472,7 +5472,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                            pd_glob[mn]->MaterialName,
                            "Rel Liq Permeability",
                            "VAN_GENUCHTEN_EXTERNAL");
-              EH(-1, err_msg);
+              EH(GOMA_ERROR, err_msg);
             }
           mat_ptr->len_u_rel_liq_perm = num_const;
           SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_rel_liq_perm);
@@ -5503,7 +5503,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Saturation", 
 			   "VAN_GENUCHTEN");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_saturation = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
@@ -5520,7 +5520,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Saturation", 
 			   "PSD_VOL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_saturation = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
@@ -5537,7 +5537,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Saturation", 
 			   "PSD_WEXP");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_saturation = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
@@ -5554,7 +5554,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Saturation", 
 			   "PSD_SEXP");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_saturation = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
@@ -5571,7 +5571,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Saturation", 
 			   "TANH");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_saturation = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
@@ -5588,7 +5588,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Saturation", 
 			   "SHELL_TANH");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_saturation = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
@@ -5597,7 +5597,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	{
 	  if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for TANH EXTERNAL_FIELD model.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for TANH EXTERNAL_FIELD model.\n");
 	    }
 	  ii=0;
 	  for ( j=0; j<efv->Num_external_field; j++)
@@ -5610,7 +5610,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 	  if( ii==0 )
 	    {
-	      EH(-1,"Must activate external fields to use this TANH_EXTERNAL model");
+	      EH(GOMA_ERROR,"Must activate external fields to use this TANH_EXTERNAL model");
 	    }
 	  mat_ptr->SaturationModel = TANH_EXTERNAL;
 	  num_const = read_constants(imp, &(mat_ptr->u_saturation), 
@@ -5622,7 +5622,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Saturation", 
 			   "TANH_EXTERNAL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_saturation = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
@@ -5639,7 +5639,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Saturation", 
 			   "TANH_HYST");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_saturation = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const,mat_ptr->u_saturation); 
@@ -5663,7 +5663,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				     NO_USER, NULL,
 				     model_name, SCALAR_INPUT, &NO_SPECIES,es);
       if (model_read == -1 && strcmp(model_name, "CONSTANT") ) {
-	  EH(-1," Only a CONSTANT Matrix Density is allowed.");
+	  EH(GOMA_ERROR," Only a CONSTANT Matrix Density is allowed.");
 	}
       else
 	{
@@ -5683,7 +5683,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				     model_name, SCALAR_INPUT, &NO_SPECIES,es);
 
       if (model_read == -1 && strcmp(model_name, "CONSTANT") ) {
-	  EH(-1," Only a CONSTANT Matrix Specific Heat is allowed.");
+	  EH(GOMA_ERROR," Only a CONSTANT Matrix Specific Heat is allowed.");
       }
         else
 	{
@@ -5735,7 +5735,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  mat_ptr->Porous_wt_funcModel = SUPG;
 	  err = fscanf(imp, "%lg",&(mat_ptr->Porous_wt_func));
 	  if (err != 1) {
-	    EH(-1, "Expected to read one double for Porous Weight Function SUPG");
+	    EH(GOMA_ERROR, "Expected to read one double for Porous Weight Function SUPG");
 	  }
 	  SPF(endofstring(es)," %.4g", mat_ptr->Porous_wt_func);
 	} 
@@ -5782,7 +5782,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	} 
       else 
 	{
-	  EH(-1,"Porous Mass Lumping must be set to TRUE, YES, FALSE, or NO!");
+	  EH(GOMA_ERROR,"Porous Mass Lumping must be set to TRUE, YES, FALSE, or NO!");
 	  mat_ptr->Porous_Mass_Lump = FALSE;
 	}
     }
@@ -5790,7 +5790,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
   if(mat_ptr->Porous_Mass_Lump == TRUE &&  
      mat_ptr->PorousMediaType == POROUS_SATURATED)
     {
-      EH(-1,"Mass Lumping is NOT implemented for POROUS_SATURATED problems. Turn to FALSE");
+      EH(GOMA_ERROR,"Mass Lumping is NOT implemented for POROUS_SATURATED problems. Turn to FALSE");
     }
     
   ECHO(es,echo_file);
@@ -5870,7 +5870,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				       &NO_SPECIES,es);
 	if ( !strcmp(model_name, "DARCY") )
 	  {
-	    EH(-1,"DARCY model for Porous Diffusion Constitutive Equation no longer allowed");
+	    EH(GOMA_ERROR,"DARCY model for Porous Diffusion Constitutive Equation no longer allowed");
 	  }
 	else if ( !strcmp(model_name, "DARCY_FICKIAN") )
 	  {
@@ -5888,7 +5888,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		    "Porous Diffusion Constitutive Equation",
 		    model_name, " DARCY_FICKIAN only",
 		    "If still bad - check orderings in the mat file!");
-	    EH(-1,err_msg);
+	    EH(GOMA_ERROR,err_msg);
 	  }
 	  
 	pd_glob[mn]->PorousFluxModel = PorousDiffusionConstitutiveEquation;
@@ -5937,7 +5937,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	       */
 	    if (model_read == -1) 
 	      {
-		EH(-1,
+		EH(GOMA_ERROR,
 		   "Porous Gas Diffusivity: Bad Card syntax or need another set of porous mat cards?");
 	      } 
 	    else if (model_read == 0) 
@@ -5951,7 +5951,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			      "Matl %s (eqn %d) needs at least 5 constants for %s %s model.\n",
 			    pd_glob[mn]->MaterialName, porous_no,
 			    "Porous Gas Diffusivity", "POROUS");
-		      EH(-1, err_msg);
+		      EH(GOMA_ERROR, err_msg);
 		    }
 		}
 		
@@ -6023,7 +6023,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				"Matl %s (%s, conc %d) needs 5 constants for %s %s model.\n",
 				pd_glob[mn]->MaterialName, "porous 2-phase", porous_no,
 				"Porous Vapor Pressure", "KELVIN or FLAT");
-			  EH(-1, err_msg);
+			  EH(GOMA_ERROR, err_msg);
 		      }
 		    mat_ptr->len_u_porous_vapor_pressure[porous_no] = num_const;
 		    SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_porous_vapor_pressure[porous_no]);
@@ -6039,7 +6039,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				pd_glob[mn]->MaterialName, "porous unsaturated", 
 				porous_no,
 				  "Porous Vapor Pressure", "KELVIN OR FLAT");
-			EH(-1, err_msg);
+			EH(GOMA_ERROR, err_msg);
 		      }
 		    mat_ptr->len_u_porous_vapor_pressure[porous_no] = num_const;
 		      SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_porous_vapor_pressure[porous_no]);
@@ -6050,12 +6050,12 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			      "%s model invalid in matl %s unless %s is \"%s\" or \"%s\"\n",
 			      "KELVIN or FLAT", pd_glob[mn]->MaterialName, "Media Type",
 			      "POROUS_TWO_PHASE", "POROUS_UNSATURATED");
-		      EH(-1, err_msg);
+		      EH(GOMA_ERROR, err_msg);
 		  }
 	      }
 	    else if ( model_read == -1 && !strcmp(model_name, "IDEAL_GAS") )
 	      {
-		  EH(-1,"No longer set the IDEAL_GAS properties/model on the "
+		  EH(GOMA_ERROR,"No longer set the IDEAL_GAS properties/model on the "
 		     "vapor pressure card. Use Gas Constants");
 	      }
 	    else if ( model_read == -1 && !strcmp(model_name, "NON_VOLATILE") )
@@ -6131,14 +6131,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				     pd_glob[mn]->MaterialName,
 				     0,
 				     "Porous Gas Constants", "IDEAL_GAS");
-			EH(-1, err_msg);
+			EH(GOMA_ERROR, err_msg);
 		      }
 		    mat_ptr->len_u_porous_gas_constants = num_const;
 		    SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_porous_gas_constants);
 		  } 
 		else if (!strcmp(model_name, "CONSTANT") )
 		  {
-		    EH(-1,"Ironically we don't allow a CONSTANT model for Porous Gas Constants.  Try IDEAL_GAS");
+		    EH(GOMA_ERROR,"Ironically we don't allow a CONSTANT model for Porous Gas Constants.  Try IDEAL_GAS");
 		  }
 		else
 		  {
@@ -6167,7 +6167,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			     "Matl %s needs 8 constants for %s %s model.\n",
 			     pd_glob[mn]->MaterialName,
 			     "Sink Adsorption Rate Data", "LINEAR");
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      }
 	    mat_ptr->len_u_porous_sink_constants = num_const;
 	  } 
@@ -6183,13 +6183,13 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			     "Matl %s needs 4 constants for %s %s model.\n",
 			     pd_glob[mn]->MaterialName,
 			     "Sink Adsorption Rate Data", "POWER_LAW");
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      }
 	    mat_ptr->len_u_porous_sink_constants = num_const;
 	  } 
 	else if (!strcmp(model_name, "CONSTANT") )
 	  {
-	    EH(-1,"Ironically we don't allow a CONSTANT model for Sink Adsorption Rate Data.  Try LINEAR");
+	    EH(GOMA_ERROR,"Ironically we don't allow a CONSTANT model for Sink Adsorption Rate Data.  Try LINEAR");
 	  }
 	else
 	  {
@@ -6270,7 +6270,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  fprintf(stderr,
 		  "ERROR: number of species in goma input and mat file differ: %d %d\n",
 		pd_glob[mn]->Num_Species, model_read);
-	  EH(-1, "read_input_mp error");
+	  EH(GOMA_ERROR, "read_input_mp error");
 	}
       }
       SPF(es,"%s = %d", "Number of Species", model_read); ECHO(es,echo_file);
@@ -6327,28 +6327,28 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  DiffusionConstitutiveEquation = HYDRODYNAMIC;
 	  
           if( have_shear_rate == 0 )
-	    EH(-1, "HYDRODYNAMIC mass flux requires shear_rate dof in EQ list.");
+	    EH(GOMA_ERROR, "HYDRODYNAMIC mass flux requires shear_rate dof in EQ list.");
 	}
       else if ( !strcmp(model_name, "HYDRODYNAMIC_QTENSOR") )
 	{
 	  DiffusionConstitutiveEquation = HYDRODYNAMIC_QTENSOR;
 	  
           if( have_shear_rate == 0 )
-	    EH(-1, "HYDRODYNAMIC_QTENSOR mass flux requires shear_rate dof in EQ list.");
+	    EH(GOMA_ERROR, "HYDRODYNAMIC_QTENSOR mass flux requires shear_rate dof in EQ list.");
 	}
       else if ( !strcmp(model_name, "HYDRODYNAMIC_QTENSOR_OLD") )
 	{
 	  DiffusionConstitutiveEquation = HYDRODYNAMIC_QTENSOR_OLD;
 
           if( have_shear_rate == 0 )
-	    EH(-1, "HYDRODYNAMIC_QTENSOR mass flux requires shear_rate dof in EQ list.");
+	    EH(GOMA_ERROR, "HYDRODYNAMIC_QTENSOR mass flux requires shear_rate dof in EQ list.");
 	}
       else if ( !strcmp(model_name, "SUSPENSION_BALANCE") )
 	{
 	  DiffusionConstitutiveEquation = DM_SUSPENSION_BALANCE;
 	  
 	/*   if( have_vort_dir == 0 ) */
-/* 	    EH(-1, "SUSPENSION_BALANCE mass flux requires a vorticity vector in EQ list."); */
+/* 	    EH(GOMA_ERROR, "SUSPENSION_BALANCE mass flux requires a vorticity vector in EQ list."); */
 	}
       else if ( !strcmp(model_name, "NONE") )
 	{
@@ -6363,7 +6363,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		model_name,
 		"FICKIAN GENERALIZED_FICKIAN STEFAN_MAXWELL STEFAN_MAXWELL_CHARGED FICKIAN_CHARGED FICKIAN_CHARGED_X STEFAN_MAXWELL_VOLUME DARCY DARCY_FICKIAN HYDRODYNAMIC HYDRODYNAMIC_QTENSOR NONE",  /*  RSL 9/18/00  */ 
 		"If still bad - check orderings in the mat file!");
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
 
 
@@ -6392,7 +6392,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
       else
 	{
-	  EH(-1, "Unknown PBA Blowing Agent Type");
+	  EH(GOMA_ERROR, "Unknown PBA Blowing Agent Type");
 	}
 
       ECHO(es,echo_file);
@@ -6430,7 +6430,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->Spwt_funcModel = SUPG;
       err = fscanf(imp, "%lg",&(mat_ptr->Spwt_func));
       if (err != 1) {
-	EH(-1, "Expected to read one double for Species Weight Function SUPG");
+	EH(GOMA_ERROR, "Expected to read one double for Species Weight Function SUPG");
       }
     } 
   else 
@@ -6456,7 +6456,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->SpYZbeta_funcModel = YZBETA_ONE;
       if (fscanf(imp, "%lg",&(mat_ptr->SpYZbeta_func)) != 1)
       {
-        EH(-1, "Could not read Scale for Species YZbeta Function YZBETA_ONE");
+        EH(GOMA_ERROR, "Could not read Scale for Species YZbeta Function YZBETA_ONE");
       }
     }
   else if ( !strcmp(model_name, "TWO") )
@@ -6464,7 +6464,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->SpYZbeta_funcModel = YZBETA_TWO;
       if (fscanf(imp, "%lg",&(mat_ptr->SpYZbeta_func)) != 1)
       {
-        EH(-1, "Could not read Scale for Species YZbeta Function YZBETA_TWO");
+        EH(GOMA_ERROR, "Could not read Scale for Species YZbeta Function YZBETA_TWO");
       }
     }
   else if ( !strcmp(model_name, "MIXED") )
@@ -6472,7 +6472,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->SpYZbeta_funcModel = YZBETA_MIXED;
       if (fscanf(imp, "%lg",&(mat_ptr->SpYZbeta_func)) != 1)
       {
-        EH(-1, "Could not read Scale for Species YZbeta Function YZBETA_MIXED");
+        EH(GOMA_ERROR, "Could not read Scale for Species YZbeta Function YZBETA_MIXED");
       }
     }
   else if ( !strcmp(model_name, "CUSTOM") )
@@ -6480,7 +6480,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->SpYZbeta_funcModel = YZBETA_CUSTOM;
       if (fscanf(imp, "%lg %lg",&(mat_ptr->SpYZbeta_func), &(mat_ptr->SpYZbeta_value)) != 2)
       {
-        EH(-1, "Could not read Scale and beta value for Species YZbeta Function YZBETA_CUSTOM");
+        EH(GOMA_ERROR, "Could not read Scale and beta value for Species YZbeta Function YZBETA_CUSTOM");
       }
     }
   else
@@ -6512,19 +6512,19 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      pd_glob[mn]->Num_Species);
       fprintf(stderr, "\t isn't one less than number of species equations, %d\n",
 	      pd_glob[mn]->Num_Species_Eqn);
-      EH(-1, "Error in number of species and species eqn specs");
+      EH(GOMA_ERROR, "Error in number of species and species eqn specs");
     }
     n_species = pd_glob[mn]->Num_Species;
 
     if (n_species < 2) 
      {
-        EH(-1, "Error: Stefan_Maxwell model should be used for modeling transport of 2 or more species");  
+        EH(GOMA_ERROR, "Error: Stefan_Maxwell model should be used for modeling transport of 2 or more species");  
      }
 
     iread = look_for_optional(imp, "Diffusivity", input, '=');
     if (fscanf(imp, "%s", model_name) != 1)
     {
-      EH(-1, "Error: need to specify diffusivity name, e.g. CONSTANT");
+      EH(GOMA_ERROR, "Error: need to specify diffusivity name, e.g. CONSTANT");
     }
 
     SPF(es,"%s = %s", "Diffusivity", model_name);
@@ -6543,7 +6543,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
           {
 	   if (fscanf(imp, "%d %d %lf", &ii, &jj, &dij) != 3) 
 	    {
-	     EH(-1, "Error in reading Stefan_Maxwell diffusivities: need to input i, j, and Dij");  
+	     EH(GOMA_ERROR, "Error in reading Stefan_Maxwell diffusivities: need to input i, j, and Dij");  
 	    }
            mat_ptr->diffusivity_Stefan_Maxwell[ii][jj] = dij; 
 	   mat_ptr->diffusivity_Stefan_Maxwell[jj][ii] = dij; 
@@ -6558,7 +6558,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
           {
 	   if (fscanf(imp, "%d %d %lf %lf %lf", &ii, &jj, &dij, &E, &T0) != 5) 
 	    {
-	     EH(-1, "Error: need to input ii, jj, dij, E, T0");
+	     EH(GOMA_ERROR, "Error: need to input ii, jj, dij, E, T0");
 	    }
            mat_ptr->diffusivity_Stefan_Maxwell[ii][jj] = dij; 
 	   mat_ptr->diffusivity_Stefan_Maxwell[jj][ii] = dij; 
@@ -6573,7 +6573,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        }
       else
        {
-         EH(-1, "This S-M diffusivity model has not been implemented yet!");
+         EH(GOMA_ERROR, "This S-M diffusivity model has not been implemented yet!");
        }
      }
 
@@ -6617,14 +6617,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      sprintf(err_msg, 
 		    "Material %s - expected at least 3 constants for %s %s model.\n",
 		    pd_glob[mn]->MaterialName, "Reaction Rate", "ELECTRODE_KINETICS");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_reaction_rate = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_reaction_rate);
 	} 
       else 
 	{
-	  EH(-1,"Error: reaction-rate models other than ELECTRODE_KINETICS awaits future implementation");
+	  EH(GOMA_ERROR,"Error: reaction-rate models other than ELECTRODE_KINETICS awaits future implementation");
 	}
 
       model_read = look_for_mat_prop(imp, "Thermodynamic Potential", 
@@ -6641,7 +6641,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      sprintf(err_msg, 
 		    "Material %s - expected at least 8 constants for %s %s model.\n",
 		    pd_glob[mn]->MaterialName, "Thermodynamic Potential", "FeS2");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_thermodynamic_potential = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_thermodynamic_potential);
@@ -6655,7 +6655,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      sprintf(err_msg, 
 		      "Material %s - expected at least 7 constants for %s %s model.\n",
 		      pd_glob[mn]->MaterialName, "Thermodynamic Potential", "LiSi");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_thermodynamic_potential = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_thermodynamic_potential);
@@ -6669,7 +6669,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      sprintf(err_msg, 
 		      "Material %s - expected at least 1 constant for %s %s model.\n",
 		      pd_glob[mn]->MaterialName, "Thermodynamic Potential", "CONSTANT");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_thermodynamic_potential = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_thermodynamic_potential);
@@ -6691,7 +6691,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      sprintf(err_msg, 
 		      "Material %s - expected at least 9 constants for %s %s model.\n",
 		      pd_glob[mn]->MaterialName, "Interfacial Area", "THERMAL_BATTERY");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_interfacial_area = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_interfacial_area);
@@ -6705,7 +6705,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      sprintf(err_msg, 
 		      "Material %s - expected at least 1 constant for %s %s model.\n",
 		      pd_glob[mn]->MaterialName, "Interfacial Area", "CONSTANT");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_interfacial_area = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_interfacial_area);
@@ -6740,7 +6740,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		sprintf(err_msg, 
 			"Material %s - expected at least 6 constants for %s %s model.\n",
 			pd_glob[mn]->MaterialName, "Solution Temperature", "THERMAL_BATTERY");
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      }
 	    mat_ptr->len_u_solution_temperature = num_const;
 	    SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_solution_temperature);
@@ -6773,7 +6773,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    sprintf(err_msg, 
 		    "Material %s - expected at least 2 constants for %s %s model.\n",
 		    pd_glob[mn]->MaterialName, "Porosity", "THERMAL_BATTERY");
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	mat_ptr->len_u_porosity = num_const;
 	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_porosity );
@@ -6832,7 +6832,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	*/
 	 if (model_read == -1) 
 	   {
-	     EH(-1,
+	     EH(GOMA_ERROR,
 		"Diffusivity: Bad Card syntax or need another set of species mat cards?");
 	   } 
 
@@ -6848,7 +6848,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				"Matl %s (conc %d) needs at least 5 constants for %s %s model.\n",
 				pd_glob[mn]->MaterialName, species_no,
 				"Diffusivity", "POROUS");
-		     EH(-1, err_msg);
+		     EH(GOMA_ERROR, err_msg);
 		   }
 	       }
 	     
@@ -6909,7 +6909,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				      "Matl %s %s needs 3 constants for %s  model: Kg and exponent.\n",
 				      pd_glob[mn]->MaterialName, "Shear Rate Diffusivity", 
 				      "CONST_LS");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     
 		     mat_ptr->len_u_gadiffusivity[species_no] = num_const;
@@ -6954,7 +6954,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				"Matl %s %s needs 3 constants for %s  model: Kg and exponent.\n",
 				pd_glob[mn]->MaterialName, "Viscosity Diffusivity", 
 				"CONST_LS");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_mdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_mdiffusivity[species_no] );	       	       
@@ -6990,7 +6990,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				      "Matl %s %s needs 3 constants for %s  model.\n",
 				      pd_glob[mn]->MaterialName, "Fickian Diffusivity", 
 				      "HYDRO Diffusivity");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_fdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_fdiffusivity[species_no] );	       
@@ -7005,7 +7005,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				      "Matl %s %s needs 2 constants for %s  model.\n",
 				      pd_glob[mn]->MaterialName, "EXP_DECAY Diffusivity", 
 				      "HYDRO Diffusivity");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_fdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_fdiffusivity[species_no] );	       
@@ -7020,7 +7020,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				      "Matl %s %s needs 1 constants for %s  model.\n",
 				      pd_glob[mn]->MaterialName, "SHOCK Diffusivity", 
 				      "HYDRO Diffusivity");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_fdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_fdiffusivity[species_no] );	       
@@ -7030,7 +7030,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		     sr = sprintf(err_msg, 
 				  "Material %s - unrecognized model for %s \"%s\" ???\n",
 				  pd_glob[mn]->MaterialName, "Fickian Diffusivity", model_name);
-		     EH(-1, err_msg);
+		     EH(GOMA_ERROR, err_msg);
 		   }
 
 		 ECHO(es,echo_file);
@@ -7055,7 +7055,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				      "Matl %s %s needs 3 constants for %s  model: Kg, avg_conc, slope.\n",
 				      pd_glob[mn]->MaterialName, "Gravity-based Diffusivity", 
 				      "BISECTION");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_gdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_gdiffusivity[species_no] );	       
@@ -7069,7 +7069,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			 sr = sprintf(err_msg, 
 				      "Matl %s %s needs 4 constants for %s  model: Kg, exponent, avg_conc, slope .\n",
 				      pd_glob[mn]->MaterialName, "Gravity-based Diffusivity",  "RZBISECTION");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_gdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_gdiffusivity[species_no] );	       
@@ -7084,7 +7084,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				      "Matl %s %s needs 2 constants for %s  model: Kg and exponent.\n",
 				      pd_glob[mn]->MaterialName, "Gravity-based Diffusivity", 
 				      "RICHARDSON_ZAKI");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_gdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_gdiffusivity[species_no] );	       
@@ -7099,7 +7099,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				      "Matl %s %s needs 3 constants for %s  model: Kg and exponent.\n",
 				      pd_glob[mn]->MaterialName, "Gravity-based Diffusivity", 
 				      "CONST_LS");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_gdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC(endofstring(es), num_const, mat_ptr->u_gdiffusivity[species_no] );	       
@@ -7138,7 +7138,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	/* 		 if(mat_ptr->q_diffusivity[species_no][0] != 1.0 || */
 /* 			    mat_ptr->q_diffusivity[species_no][1] != 1.0 || */
 /* 			    mat_ptr->q_diffusivity[species_no][2] != 0.5) */
-/* 			   EH(-1, "Sorry, the Q tensor components are internally hard-coded to 1.0, 1.0, 0.5."); */
+/* 			   EH(GOMA_ERROR, "Sorry, the Q tensor components are internally hard-coded to 1.0, 1.0, 0.5."); */
 
 			 SPF(es,"%s = %s %d", "Q Tensor Diffusivity", model_name, species_no );
 			 SPF_DBL_VEC( endofstring(es), 3,  mat_ptr->q_diffusivity[species_no]);
@@ -7155,7 +7155,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			 sr = sprintf(err_msg,
 				      "Material %s - unrecognized model for %s \"%s\" ???\n",
 				      pd_glob[mn]->MaterialName, "Q Tensor Diffusivity", model_name);
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     ECHO(es,echo_file);
 		   }
@@ -7173,7 +7173,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				      "Matl %s (conc %d) %s %s model needs the \"%s\" eqn active.\n",
 				      pd_glob[mn]->MaterialName, species_no,
 				      "Diffusivity", "HYDRO", "shear_rate");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		   }
 	       }
@@ -7214,7 +7214,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				      "Matl %s %s needs 3 constants for %s  model.\n",
 				      pd_glob[mn]->MaterialName, "Fickian Diffusivity", 
 				      "SUSPENSION Diffusivity");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_fdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_fdiffusivity[species_no]);
@@ -7229,7 +7229,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				      "Matl %s %s needs 2 constants for %s  model.\n",
 				      pd_glob[mn]->MaterialName, "Fickian Diffusivity", 
 				      "SUSPENSION Diffusivity");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_fdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_fdiffusivity[species_no]);
@@ -7239,7 +7239,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		     sr = sprintf(err_msg, 
 				  "Material %s - unrecognized model for %s \"%s\" ???\n",
 				  pd_glob[mn]->MaterialName, "Fickian Diffusivity", model_name);
-		     EH(-1, err_msg);
+		     EH(GOMA_ERROR, err_msg);
 		   }
 		 
 		 ECHO(es,echo_file);
@@ -7266,7 +7266,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				      "Matl %s %s needs 3 constants for %s  model.\n",
 				      pd_glob[mn]->MaterialName, "Q Tensor Diffusivity", 
 				      "SUSPENSION Diffusivity");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_qdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_qdiffusivity[species_no]);
@@ -7284,7 +7284,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		     sr = sprintf(err_msg,
 				  "Material %s - unrecognized model for %s \"%s\" ???\n",
 				  pd_glob[mn]->MaterialName, "Q Tensor Diffusivity", model_name);
-		     EH(-1, err_msg);
+		     EH(GOMA_ERROR, err_msg);
 		   }
 		 
 		 
@@ -7311,7 +7311,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				      "Matl %s %s needs 3 constants for %s  model: Kg, avg_conc, slope.\n",
 				      pd_glob[mn]->MaterialName, "Gravity-based Diffusivity", 
 				      "BISECTION");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_gdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_gdiffusivity[species_no]);
@@ -7325,7 +7325,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			 sr = sprintf(err_msg, 
 				      "Matl %s %s needs 4 constants for %s  model: Kg, exponent, avg_conc, slope .\n",
 				      pd_glob[mn]->MaterialName, "Gravity-based Diffusivity",  "RZBISECTION");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_gdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_gdiffusivity[species_no]);
@@ -7340,7 +7340,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				      "Matl %s %s needs 2 constants for %s  model: Kg and exponent.\n",
 				      pd_glob[mn]->MaterialName, "Gravity-based Diffusivity", 
 				      "RICHARDSON_ZAKI");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_u_gdiffusivity[species_no] = num_const;
 		     SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_gdiffusivity[species_no]);
@@ -7376,7 +7376,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			 sr = sprintf(err_msg, 
 				      "Matl %s %s needs 3 constants: particle radius, characteristic length scale, and max velocity.\n",
 				      pd_glob[mn]->MaterialName, "Suspension Balance Length Scales");
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		     mat_ptr->len_SBM_Lengths2[species_no] = num_const;
 		     SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->SBM_Lengths2[species_no]);
@@ -7398,7 +7398,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				  "Matl %s (conc %d) needs at least 12 constants for %s %s model.\n",
 				  pd_glob[mn]->MaterialName, species_no,
 				  "Diffusivity", "FREE_VOL");
-		     EH(-1, err_msg);
+		     EH(GOMA_ERROR, err_msg);
 		   }
 		 else if (num_const < 13)
 		   {
@@ -7406,7 +7406,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				  "Matl %s (conc %d) needs u_diffusivity[w][12]=0 for Duda-Vrentas %s %s model.\n",
 				  pd_glob[mn]->MaterialName, species_no,
 				  "Diffusivity", "FREE_VOL");
-		     EH(-1, err_msg);
+		     EH(GOMA_ERROR, err_msg);
 		   }
 		 else if (num_const < 15 && (int)mat_ptr->u_diffusivity[species_no][12] != 0 ) 
 		   {
@@ -7414,7 +7414,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				  "Matl %s (conc %d) needs at least 16 constants for non-Duda-Vrentas %s %s model.\n",
 				  pd_glob[mn]->MaterialName, species_no,
 				  "Diffusivity", "FREE_VOL");
-		     EH(-1, err_msg);
+		     EH(GOMA_ERROR, err_msg);
 		   }
 		 else if (num_const < 17 && (int)mat_ptr->u_diffusivity[species_no][12] == 4 ) 
 		   {
@@ -7422,7 +7422,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				  "Matl %s (conc %d) needs at least 18 constants for friction-based %s %s model.\n",
 				  pd_glob[mn]->MaterialName, species_no,
 				  "Diffusivity", "FREE_VOL");
-		     EH(-1, err_msg);
+		     EH(GOMA_ERROR, err_msg);
 		   }
 
 
@@ -7498,7 +7498,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	fprintf(stderr,"Free Volume Solvent %d = %d\n",species_no,mat_ptr->FreeVolSolvent[species_no]);
 /*		 if( pd_glob[mn]->Num_Species_Eqn != 1 ) 
 		   {
-		     EH(-1, "Binary Free volume models are for 2 components, or one tracked species.");
+		     EH(GOMA_ERROR, "Binary Free volume models are for 2 components, or one tracked species.");
 		   }   */
 	       }
 
@@ -7514,11 +7514,11 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				  "Matl %s (conc %d) needs at least 12 constants for %s %s model.\n",
 				  pd_glob[mn]->MaterialName, species_no,
 				  "Diffusivity", "GENERALIZED_FREE_VOL");
-		     EH(-1, err_msg);
+		     EH(GOMA_ERROR, err_msg);
 		   }
 		 if( pd_glob[mn]->Num_Species_Eqn < 1 ) 
 		   {
-		     EH(-1, "Generalized models are for 2 or more BULK components.");
+		     EH(GOMA_ERROR, "Generalized models are for 2 or more BULK components.");
 		   }
 	       }
 	 /* Set a constant binary diffusivity if no concentration dependency
@@ -7534,11 +7534,11 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 				"Matl %s (conc %d) needs one constant for each i-j pair %s %s model.\n",
 				pd_glob[mn]->MaterialName, species_no,
 				"Diffusivity", "GENERALIZED");
-		   EH(-1, err_msg);
+		   EH(GOMA_ERROR, err_msg);
 		 }
 		 if( pd_glob[mn]->Num_Species_Eqn < 2 ) 
 		   {
-		     EH(-1, "Generalized diffusivity model is for 2 or more BULK components.");
+		     EH(GOMA_ERROR, "Generalized diffusivity model is for 2 or more BULK components.");
 		   }
 	       }
 	     else if (!strcmp(model_name, "CONST_LS") ) 
@@ -7550,7 +7550,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	       {
 		 sprintf(err_msg, "Diffusivity. Unrecognized Diffusivity Model: %s",
 			 model_name);
-		 EH(-1, err_msg);
+		 EH(GOMA_ERROR, err_msg);
 	       }
 
 	   } /* End of if (model_read == 0) */
@@ -7730,7 +7730,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			      "Matl %s (%s, conc %d) needs 5 constants for %s %s model.\n",
 			      pd_glob[mn]->MaterialName, "porous 2-phase", species_no,
 			      "Vapor Pressure", "KELVIN or FLAT");
-		 EH(-1, err_msg);
+		 EH(GOMA_ERROR, err_msg);
 	       }
 	     mat_ptr->len_u_vapor_pressure[species_no] = num_const;
 
@@ -7748,7 +7748,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			      pd_glob[mn]->MaterialName, "porous unsaturated", 
 			      species_no,
 			      "Vapor Pressure", "KELVIN OR FLAT");
-		 EH(-1, err_msg);
+		 EH(GOMA_ERROR, err_msg);
 	       }
 	     mat_ptr->len_u_vapor_pressure[species_no] = num_const;
 	     SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_vapor_pressure[species_no]);
@@ -7759,7 +7759,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			  "%s model invalid in matl %s unless %s is \"%s\" or \"%s\"\n",
 			  "KELVIN or FLAT", pd_glob[mn]->MaterialName, "Media Type",
 			  "POROUS_TWO_PHASE", "POROUS_UNSATURATED");
-	     EH(-1, err_msg);
+	     EH(GOMA_ERROR, err_msg);
 	   }
        }
      else if ( model_read == -1 && !strcmp(model_name, "IDEAL_GAS") )
@@ -7775,7 +7775,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName,
 			   species_no,
 			   "Vapor Pressure", "IDEAL_GAS");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_vapor_pressure[species_no] = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_vapor_pressure[species_no]);
@@ -7798,7 +7798,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName,
 			   species_no,
 			   "Vapor Pressure", "ANTOINE");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_vapor_pressure[species_no] = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_vapor_pressure[species_no]);
@@ -7817,7 +7817,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName,
 			   species_no,
 			   "Vapor Pressure", "RIEDEL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_vapor_pressure[species_no] = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_vapor_pressure[species_no]);
@@ -7882,7 +7882,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	} else if (! strcasecmp(model_name, "PRESSURE_IDEALGAS")) {
 	  mat_ptr->PSChemPotModel[species_no] = PSCHEMPOT_IDEALGAS;
 	} else {
-	  EH(-1,"PSChemPot");
+	  EH(GOMA_ERROR,"PSChemPot");
 	}
       }
       
@@ -7910,7 +7910,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	} else if (! strcasecmp(model_name, "STOICHIOMETRIC_PHASE")) {
 	  mat_ptr->PSChemPotModel[species_no] = CHEMPOT_STOICHPHASE;
 	} else {
-	  EH(-1,"ChemPot");
+	  EH(GOMA_ERROR,"ChemPot");
 	}
       }
       if( model_read == -1 )
@@ -8020,7 +8020,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   {
 	     if (fscanf(imp, "%s %d %lf", model_name, &ii, &mw) !=3)
 	       {
-		 EH(-1, "Error reading non-condensable MW: e.g. CONSTANT species_no  MW");
+		 EH(GOMA_ERROR, "Error reading non-condensable MW: e.g. CONSTANT species_no  MW");
 	       }
 	     else
 	       {
@@ -8036,7 +8036,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   {
 	     if (fscanf(imp, "%s %d %lf", model_name, &ii, &mv) !=3)
 	       {
-		 EH(-1, "Error reading non-volatile Molar Volume: e.g. CONSTANT  species_id  MV");
+		 EH(GOMA_ERROR, "Error reading non-volatile Molar Volume: e.g. CONSTANT  species_id  MV");
 	       }
 	     else
 	       {
@@ -8051,7 +8051,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   {
 	     if (fscanf(imp, "%s %d %lf", model_name, &ii, &mv) !=3)
 	       {
-		 EH(-1, "Error reading non-volatile Specific Volume: e.g. CONSTANT  species_id  MV");
+		 EH(GOMA_ERROR, "Error reading non-volatile Specific Volume: e.g. CONSTANT  species_id  MV");
 	       }
 	     else
 	       {
@@ -8070,7 +8070,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	     
 	     if (fscanf(imp, "%s", model_name) !=1) 	  
 	       {
-		 EH(-1, "Error reading F-H parameter model name: e.g. CONSTANT");  
+		 EH(GOMA_ERROR, "Error reading F-H parameter model name: e.g. CONSTANT");  
 	       }
 	     else
 	       {
@@ -8078,7 +8078,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		   {
 		     if (fscanf(imp, "%d %d %lf", &ii, &jj, &chi_ij) != 3) 
 		       {
-			 EH(-1, "Error:must have three entries, i, j, and chi(i,j)");  
+			 EH(GOMA_ERROR, "Error:must have three entries, i, j, and chi(i,j)");  
 		       }
 		     mat_ptr->flory_param[ii][jj] = chi_ij; 
 		     mat_ptr->flory_param[jj][ii] = chi_ij
@@ -8113,7 +8113,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->Momentwt_funcModel = SUPG;
       if (fscanf(imp, "%lg",&(mat_ptr->Momentwt_func)) != 1)
       {
-        EH(-1, "Could not read SUPG value for Moment Weight Function");
+        EH(GOMA_ERROR, "Could not read SUPG value for Moment Weight Function");
       }
       SPF(endofstring(es),"SUPG %.4g", mat_ptr->Mwt_func );
     }
@@ -8178,7 +8178,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       mat_ptr->MomentShock_funcModel = YZBETA_MIXED;
       if (fscanf(imp, "%lg %lg %lg %lg %lg",&(mat_ptr->MomentShock_func), &a0, &a1, &a2, &a3) != 5)
       {
-        EH(-1, "Could not read YZbeta value for Moment Shock Function, expected 5 values");
+        EH(GOMA_ERROR, "Could not read YZbeta value for Moment Shock Function, expected 5 values");
       }
       mat_ptr->MomentShock_Ref[0] = a0;
       mat_ptr->MomentShock_Ref[1] = a1;
@@ -8213,7 +8213,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                            "Matl %s needs 1 constants for %s %s model.\n",
                      pd_glob[mn]->MaterialName,
                      "Moment Growth Kernel", "VISCOSITY_SCALED" );
-        EH(-1, err_msg);
+        EH(GOMA_ERROR, err_msg);
       }
       mat_ptr->moment_growth_scale = a0;
       SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_growth_scale));
@@ -8230,7 +8230,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                      "Matl %s needs 2 constants for %s %s model.\n",
                      pd_glob[mn]->MaterialName,
                      "Moment Growth Kernel", "VISCOSITY_PRESSURE_SCALED" );
-        EH(-1, err_msg);
+        EH(GOMA_ERROR, err_msg);
       }
       mat_ptr->moment_growth_scale = a0;
       mat_ptr->moment_growth_reference_pressure = a1;
@@ -8266,7 +8266,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                      "Matl %s needs 1 constants for %s %s model.\n",
                      pd_glob[mn]->MaterialName,
                      "Moment Coalescence Kernel", "ADDITION_COALESCENCE" );
-        EH(-1, err_msg);
+        EH(GOMA_ERROR, err_msg);
       }
       mat_ptr->moment_coalescence_scale = a0;
       SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_coalescence_scale));
@@ -8283,7 +8283,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                      "Matl %s needs 1 constants for %s %s model.\n",
                      pd_glob[mn]->MaterialName,
                      "Moment Coalescence Kernel", "VISCOSITY_SCALED_ADDITION" );
-        EH(-1, err_msg);
+        EH(GOMA_ERROR, err_msg);
       }
       mat_ptr->moment_coalescence_scale = a0;
       SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_coalescence_scale));
@@ -8300,7 +8300,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                      "Matl %s needs 1 constants for %s %s model.\n",
                      pd_glob[mn]->MaterialName,
                      "Moment Coalescence Kernel", "VISCOSITY_ADDITION_BUBBLE_RATIO" );
-        EH(-1, err_msg);
+        EH(GOMA_ERROR, err_msg);
       }
       mat_ptr->moment_coalescence_scale = a0;
       SPF_DBL_VEC(endofstring(es), 1, &(mat_ptr->moment_coalescence_scale));
@@ -8346,7 +8346,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Navier-Stokes Source", "BOUSS" );
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->momentum_source[0] = a0;
       mat_ptr->momentum_source[1] = a1;
@@ -8366,7 +8366,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		       "Matl %s needs 3 constants for %s %s model.\n",
 		       pd_glob[mn]->MaterialName,
 		       "Navier-Stokes Source", "VARIABLE_DENSITY" );
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->momentum_source[0] = a0;
       mat_ptr->momentum_source[1] = a1;
@@ -8385,7 +8385,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		       "Matl %s needs 5 constants for %s %s model.\n",
 		       pd_glob[mn]->MaterialName,
 		       "Navier-Stokes Source", "GRAV_VIBRATIONAL" );
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->u_momentum_source     = (dbl *)array_alloc(1, 2,sizeof(dbl)); 
       mat_ptr->len_u_momentum_source = 2;
@@ -8410,7 +8410,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Navier-Stokes Source", "FILL" );
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->momentum_source[0] = a0;
       mat_ptr->momentum_source[1] = a1;
@@ -8429,7 +8429,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Navier-Stokes Source", "LEVEL_SET" );
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->momentum_source[0] = a0;
       mat_ptr->momentum_source[1] = a1;
@@ -8449,7 +8449,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 4 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Navier-Stokes Source", "SUSPEND" );
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->u_momentum_source = (dbl *)array_alloc(1,1,sizeof(dbl)); 
       
@@ -8470,7 +8470,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName,
 			   "Navier-Stokes Source", "SUSPEND",
 			   "Density", "SUSPENSION");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	}
       SPF_DBL_VEC( endofstring(es), 3, mat_ptr->momentum_source);
       SPF_DBL_VEC( endofstring(es), 1, mat_ptr->u_momentum_source );  	  
@@ -8488,7 +8488,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 4 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Navier-Stokes Source", "SUSPENSION" );
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	}
       mat_ptr->u_momentum_source = (dbl *)array_alloc(1,1,sizeof(dbl)); 
       
@@ -8509,7 +8509,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName,
 			   "Navier-Stokes Source", "SUSPEND",
 			   "Density", "SUSPENSION");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	}
 	  SPF_DBL_VEC( endofstring(es), 3, mat_ptr->momentum_source);
 	  SPF_DBL_VEC( endofstring(es), 1, mat_ptr->u_momentum_source );  	  
@@ -8528,7 +8528,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Navier-Stokes Source", "SUSPENSION_PM" );
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	}
 
       mat_ptr->momentum_source[0] = a0; /* x component of gravitation */
@@ -8546,7 +8546,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName,
 			   "Navier-Stokes Source", "SUSPENSION_PM",
 			   "Density", "SUSPENSION_PM");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	}
       SPF_DBL_VEC( endofstring(es), 3, mat_ptr->momentum_source);
     }
@@ -8563,7 +8563,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 4 constants for %s=\"%s\" model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Navier-Stokes Source", "BOUSS_JXB" );
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	}
 
       mat_ptr->u_momentum_source     = (dbl *)array_alloc(1, 1,
@@ -8590,7 +8590,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 3 constants for %s=\"%s\" model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Navier-Stokes Source", "BOUSSINESQ" );
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	}
 	  /* 
 	   * Kludge: save these 3 body force vector components as if they
@@ -8614,7 +8614,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 1 constants for %s=\"%s\" model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Navier-Stokes Source", "EHD_POLARIZATION" );
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	}
 
       mat_ptr->momentum_source[0] = a0;
@@ -8633,7 +8633,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 4 constants for %s=\"%s\" model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Navier-Stokes Source", "ACOUSTIC" );
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	}
       
       mat_ptr->u_momentum_source     = (dbl *)array_alloc(1, 1,
@@ -8668,7 +8668,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
   
   if( model_read != -1 )
     {
-      if( ls == NULL ) EH(-1, "Second Level Set Momentum Source requires activation of Level Set Tracking.\n");
+      if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set Momentum Source requires activation of Level Set Tracking.\n");
 
       mat_ptr->mp2nd->MomentumSourceModel = i0;
       mat_ptr->mp2nd->momentumsource[0] = v0[0]; mat_ptr->mp2nd->momentumsource[1] = v0[1]; mat_ptr->mp2nd->momentumsource[2] = v0[2];
@@ -8679,7 +8679,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	{
 	  if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Second Level Set Momentum Source.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Momentum Source.\n");
 	    }
 
 	  stringup(input);
@@ -8694,7 +8694,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 	  else
 	    {
-	      EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Momentum Source.\n");
+	      EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Momentum Source.\n");
 	    }
           SPF(endofstring(es), " %s", input);
 	  if( pfd != NULL)
@@ -8714,7 +8714,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
       else
 	{
-	  EH(-1, "Second Level Set Momentum Source model can only be CONSTANT.\n");
+	  EH(GOMA_ERROR, "Second Level Set Momentum Source model can only be CONSTANT.\n");
 	}
     }
 
@@ -8778,7 +8778,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    sprintf(err_msg, 
 		    "Matl %s needs 1 constant for %s %s model.\n",
 		    pd_glob[mn]->MaterialName, "Heat Source", "EPOXY");
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
       }
 
       mat_ptr->heat_source = a0; /* this will be the heat of reaction for the epoxy */
@@ -8878,7 +8878,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
   
   if( model_read != -1 )
     {
-      if( ls == NULL ) EH(-1, "Second Level Set Heat Source requires activation of Level Set Tracking.\n");
+      if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set Heat Source requires activation of Level Set Tracking.\n");
 
       mat_ptr->mp2nd->HeatSourceModel = i0;
       mat_ptr->mp2nd->heatsource = *v0; 
@@ -8889,7 +8889,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	{
 	  if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Second Level Set Heat Source.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Heat Source.\n");
 	    }
 
 	  stringup(input);
@@ -8904,7 +8904,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 	  else
 	    {
-	      EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Heat Source.\n");
+	      EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Heat Source.\n");
 	    }
           SPF(endofstring(es), " %s", input);
 	  if( pfd != NULL)
@@ -8920,7 +8920,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
       else
 	{
-	  EH(-1, "Second Level Set Heat Source model can only be CONSTANT.\n");
+	  EH(GOMA_ERROR, "Second Level Set Heat Source model can only be CONSTANT.\n");
 	}
     }
 
@@ -8958,7 +8958,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      sprintf(err_msg, 
 		      "Matl %s needs 6 constants for %s %s model.\n",
 		      pd_glob[mn]->MaterialName, "Species Source", "EPOXY");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  mat_ptr->u_species_source[species_no] = (dbl *)
@@ -8990,7 +8990,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs  5 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Species Source", "EPOXY_DEA");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  mat_ptr->u_species_source[species_no] = (dbl *)
@@ -9020,7 +9020,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs  5 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Species Source", "FOAM_EPOXY");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  // Set this species type to be an extrinsic variable
 	  mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
@@ -9040,7 +9040,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       
       else if ( !strcmp(model_name, "FOAM") )
 	{
-	  if(MAX_CONC <= 8)EH(-1,"MAX_CONC must be greater than 8 for FOAM model");
+	  if(MAX_CONC <= 8)EH(GOMA_ERROR,"MAX_CONC must be greater than 8 for FOAM model");
 	  SpeciesSourceModel = FOAM;
 	  model_read = 1;
 	  mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
@@ -9051,7 +9051,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			       "Matl %s needs 8 constants for %s %s model.\n",
 			       pd_glob[mn]->MaterialName,
 			       "Species Source", "FOAM");
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 	    }
 
 	  mat_ptr->u_species_source[species_no] = (dbl *)
@@ -9082,7 +9082,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			       "Matl %s needs 12 constants for %s %s model.\n",
 			       pd_glob[mn]->MaterialName,
 			       "Species Source", "FOAM_PMDI_10_RXN");
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 	    }
 
 	  mat_ptr->u_species_source[species_no] = (dbl *)
@@ -9116,7 +9116,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                            "Matl %s needs 12 constants for %s %s model.\n",
                            pd_glob[mn]->MaterialName,
                            "Species Source", "FOAM_PMDI_10_RXN");
-              EH(-1, err_msg);
+              EH(GOMA_ERROR, err_msg);
             }
 
           mat_ptr->u_species_source[species_no] = (dbl *)
@@ -9153,7 +9153,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			       "Matl %s needs 4 constants for %s %s model.\n",
 			       pd_glob[mn]->MaterialName,
 			       "Species Source", "FOAM_PMDI_10_H2O");
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 	    }
 
 	  mat_ptr->u_species_source[species_no] = (dbl *)
@@ -9201,7 +9201,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			       "Matl %s needs 4 constants for %s %s model.\n",
 			       pd_glob[mn]->MaterialName,
 			       "Species Source", "FOAM_PMDI_10_H2O");
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 	    }
 
 	  mat_ptr->u_species_source[species_no] = (dbl *)
@@ -9238,7 +9238,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
       else if ( !strcmp(model_name, "BUTLER_VOLMER") )
         {
-	  if (MAX_CONC <= 4) EH(-1,"MAX_CONC must be greater than 4 for Butler_volumer");
+	  if (MAX_CONC <= 4) EH(GOMA_ERROR,"MAX_CONC must be greater than 4 for Butler_volumer");
           SpeciesSourceModel = BUTLER_VOLMER;
           model_read = 1;
           mat_ptr->SpeciesSourceModel[species_no] = SpeciesSourceModel;
@@ -9249,7 +9249,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                                "Matl %s needs 9 floats for %s %s model.\n",
                                pd_glob[mn]->MaterialName,
                                "Species Source", "BUTLER_VOLMER");
-                  EH(-1, err_msg);
+                  EH(GOMA_ERROR, err_msg);
             }
           mat_ptr->u_species_source[species_no] = (dbl *)
                                                  array_alloc(1,9,sizeof(dbl));
@@ -9278,7 +9278,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                                "Matl %s needs 4 floats for %s %s model.\n",
                                pd_glob[mn]->MaterialName,
                                "Species Source", "PHOTO_CURING");
-                  EH(-1, err_msg);
+                  EH(GOMA_ERROR, err_msg);
             }
 	  if ( fscanf(imp, "%lf", &a4) != 1)
 	    { a4 = 1.0; }
@@ -9310,7 +9310,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 11 floats for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Species Source", "ELECTROOSMOTIC");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
             }
           mat_ptr->u_species_source[species_no] = (dbl *)
 	    array_alloc(1,11,sizeof(dbl));
@@ -9342,7 +9342,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs  4 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Species Source", "FOAM_PBE_WATER");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  // Set this species type to be an extrinsic variable
 	  //mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
@@ -9371,7 +9371,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs  6 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Species Source", "FOAM_PBE_OH");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  // Set this species type to be an extrinsic variable
 	  //mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
@@ -9401,7 +9401,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs  1 constant for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Species Source", "FOAM_PBE_CO2_L");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  // Set this species type to be an extrinsic variable
 	  //mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
@@ -9432,7 +9432,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs  5 constant for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Species Source", "FOAM_PBE_BA_L");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  // Set this species type to be an extrinsic variable
 	  //mat_ptr->ExtrinsicIndependentSpeciesVar[species_no] = 1;
@@ -9481,7 +9481,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		
       if( model_read != -1 )
 	{
-	  if( ls == NULL ) EH(-1, "Second Level Set Species Source requires activation of Level Set Tracking.\n");
+	  if( ls == NULL ) EH(GOMA_ERROR, "Second Level Set Species Source requires activation of Level Set Tracking.\n");
 			
           //mat_ptr->mp2nd->SpeciesSourceModel[species_no] = i0;
           //mat_ptr->mp2nd->speciessource[species_no] = v0[species_no];
@@ -9492,7 +9492,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    {
 	      if ( fscanf(imp,"%s", input ) !=  1 )
 		{
-		  EH(-1,"Expecting trailing keyword for Second Level Set Species Source.\n");
+		  EH(GOMA_ERROR,"Expecting trailing keyword for Second Level Set Species Source.\n");
 		}
 				
 	      stringup(input);
@@ -9507,7 +9507,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		}
 	      else
 		{
-		  EH(-1,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Heat Source.\n");
+		  EH(GOMA_ERROR,"Keyword must be POSITIVE or NEGATIVE for Second Level Set Heat Source.\n");
 		}
 	      SPF(endofstring(es), " %s", input);
 	      if( pfd != NULL)
@@ -9522,7 +9522,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 	  else
 	    {
-	      EH(-1, "Second Level Set Species Source model can only be CONSTANT.\n");
+	      EH(GOMA_ERROR, "Second Level Set Species Source model can only be CONSTANT.\n");
 	    }
 	}
 		
@@ -9536,7 +9536,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
       if( model_read != -1 )
 	{
-	  if( ls == NULL ) EH(-1, "Level Set Species Width requires activation of Level Set Tracking.\n");
+	  if( ls == NULL ) EH(GOMA_ERROR, "Level Set Species Width requires activation of Level Set Tracking.\n");
 
 	  mat_ptr->mp2nd->use_species_source_width[species_no] = 1;
           //mat_ptr->mp2nd->species_source_width[species_no] = v0[species_no];
@@ -9545,7 +9545,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
 	  if( strcmp( model_name, "CONSTANT") )
 	    {
-	      EH(-1, "Level Set Species Width can only be CONSTANT.\n");
+	      EH(GOMA_ERROR, "Level Set Species Width can only be CONSTANT.\n");
 	    }
 	}
 
@@ -9630,7 +9630,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			 "Matl %s needs 2 constants for %s %s model.\n",
 			 pd_glob[mn]->MaterialName,
 			 "Moment Source", "FOAM_PMDI_10");
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	mat_ptr->len_u_moment_source = num_const;
 	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_moment_source);
@@ -9648,7 +9648,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
              "Matl %s needs 3 constants for %s %s model.\n",
              pd_glob[mn]->MaterialName,
              "Moment Source", "CONSTANT_GROWTH");
-        EH(-1, err_msg);
+        EH(GOMA_ERROR, err_msg);
       }
     mat_ptr->len_u_moment_source = num_const;
     SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_moment_source);
@@ -9680,7 +9680,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  sprintf(err_msg,
 		  "Error reading variable for initialization in material, %s",
 		  mat_ptr->Material_Name);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
       }
       (void) strip(input);
       var = variable_string_to_int(input, "Variable for matrl initialization");
@@ -9693,12 +9693,12 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  sprintf(err_msg,
 		"Invalid choice of initialization variable in material, %s",
 	         mat_ptr->Material_Name);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       
       if ( fscanf(imp, "%d %lf", &Var_init_mat[mn][Num_Var_Init_Mat[mn]].ktype,
 		  &Var_init_mat[mn][Num_Var_Init_Mat[mn]].init_val)
-	  != 2) EH(-1,"Error reading initialization data");
+	  != 2) EH(GOMA_ERROR,"Error reading initialization data");
 
       SPF(es,"%s = %s %d %.4g", "Initialize", input, Var_init_mat[mn][Num_Var_Init_Mat[mn]].ktype, 
 	                                             Var_init_mat[mn][Num_Var_Init_Mat[mn]].init_val );
@@ -9738,7 +9738,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs at least 2 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Height Function", "CONSTANT_SPEED");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  if (num_const > 2)
@@ -9759,7 +9759,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		}
 	      else
 		{
-		  EH(-1," You have a third float on Upper Height Function Constants card, but NO external field");
+		  EH(GOMA_ERROR," You have a third float on Upper Height Function Constants card, but NO external field");
 		}
 	    }
 
@@ -9778,7 +9778,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs at least 2 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Height Function", "CONSTANT_SPEED");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_heightU_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
@@ -9795,7 +9795,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs at least 5 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Height Function", "CONSTANT_SPEED_DEFORM");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_heightU_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
@@ -9812,7 +9812,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 5 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Height Function", "ROLL_ON");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
 	  if (num_const > 5)
@@ -9833,7 +9833,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		}
 	      else
 		{
-		  EH(-1," You have a sixth float on Upper Height Function Constants card, but NO external field");
+		  EH(GOMA_ERROR," You have a sixth float on Upper Height Function Constants card, but NO external field");
 		}
 	    }
 	  mat_ptr->len_u_heightU_function_constants = num_const;
@@ -9850,7 +9850,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 5 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Height Function", "ROLL_ON_MELT");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_heightU_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
@@ -9867,7 +9867,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 8 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Height Function", "ROLL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_heightU_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
@@ -9884,7 +9884,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                            "Matl %s needs 5 constants for %s %s model.\n",
                            pd_glob[mn]->MaterialName,
                            "Upper Height Function", "CAP_SQUEEZE");
-              EH(-1, err_msg);
+              EH(GOMA_ERROR, err_msg);
             }
           mat_ptr->len_u_heightU_function_constants = num_const;
           SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
@@ -9901,7 +9901,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			    "Matl %s needs 5 constants for %s %s model.\n",
 			    pd_glob[mn]->MaterialName,
 			    "Upper Height Function", "FLAT_GRAD_FLAT");
-	       EH(-1, err_msg);
+	       EH(GOMA_ERROR, err_msg);
 	     }
 	   mat_ptr->len_u_heightU_function_constants = num_const;
 	   SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
@@ -9918,7 +9918,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			    "Matl %s needs 5 constants for %s %s model.\n",
 			    pd_glob[mn]->MaterialName,
 			    "Upper Height Function", "FLAT_GRAD_FLAT_MELT");
-	       EH(-1, err_msg);
+	       EH(GOMA_ERROR, err_msg);
 	     }
 	   mat_ptr->len_u_heightU_function_constants = num_const;
 	   SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
@@ -9935,7 +9935,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			    "Matl %s needs 3 constants for %s %s model.\n",
 			    pd_glob[mn]->MaterialName,
 			    "Upper Height Function", "CIRCLE_MELT");
-	       EH(-1, err_msg);
+	       EH(GOMA_ERROR, err_msg);
 	     }
 	   mat_ptr->len_u_heightU_function_constants = num_const;
 	   SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
@@ -9952,7 +9952,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			    "Matl %s needs at least 1 constant for %s %s model.\n",
 			    pd_glob[mn]->MaterialName,
 			    "Upper Height Function", "POLY_TIME");
-	       EH(-1, err_msg);
+	       EH(GOMA_ERROR, err_msg);
 	     }
 	   mat_ptr->len_u_heightU_function_constants = num_const;
 	   SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
@@ -9969,7 +9969,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			    "Matl %s needs at least 2 constants for %s %s model.\n",
 			    pd_glob[mn]->MaterialName,
 			    "Upper Height Function", "JOURNAL");
-	       EH(-1, err_msg);
+	       EH(GOMA_ERROR, err_msg);
 	     }
 	   mat_ptr->len_u_heightU_function_constants = num_const;
 	   SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
@@ -9977,7 +9977,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        else if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD")) {
 	 if ( fscanf(imp,"%s", input ) !=  1 )
 	   {
-	     EH(-1,"Expecting trailing keyword for Upper height function EXTERNAL_FIELD model.\n");
+	     EH(GOMA_ERROR,"Expecting trailing keyword for Upper height function EXTERNAL_FIELD model.\n");
 	   }
 	 model_read = 1;
      
@@ -9989,7 +9989,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   }
 	 }
 	 if( ii==0 ) {
-	   EH(-1,"Must activate external fields to use this Upper height function model.  Field name needed for the EXTERNAL_FIELD");
+	   EH(GOMA_ERROR,"Must activate external fields to use this Upper height function model.  Field name needed for the EXTERNAL_FIELD");
       }	  
 	 mat_ptr->HeightUFunctionModel = EXTERNAL_FIELD;
       /* pick up scale factor for property */
@@ -10004,7 +10004,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Upper Height Function", 
 			   "EXTERNAL_FIELD");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
        }
             /*
@@ -10020,7 +10020,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
        else if (model_read == -1 && !strcmp(model_name, "TABLE")) {
 	 if ( fscanf(imp,"%s", input ) !=  1 )
 	   {
-	     EH(-1,"Expecting trailing filename for Upper height function TABLE model.\n");
+	     EH(GOMA_ERROR,"Expecting trailing filename for Upper height function TABLE model.\n");
 	   }
 	 model_read = 1;
 
@@ -10032,7 +10032,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   }
 	 }
 	 if( ii==0 ) {
-	   EH(-1,"Must activate external fields to use this Upper height function model.  Field name needed for the EXTERNAL_FIELD");
+	   EH(GOMA_ERROR,"Must activate external fields to use this Upper height function model.  Field name needed for the EXTERNAL_FIELD");
       }
 	 mat_ptr->HeightUFunctionModel = EXTERNAL_FIELD; // TODO: this is probably wrong
       /* pick up scale factor for property */
@@ -10047,7 +10047,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName,
 			   "Upper Height Function",
 			   "TABLE");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
        }
       else if ( model_read == -1 && !strcmp(model_name, "ROLLER") )
@@ -10067,7 +10067,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
           }
         }
       } else {
-        EH(-1," You have a fourth float on Upper Height Function Constants card, but NO external field named 'HEIGHT'!");
+        EH(GOMA_ERROR," You have a fourth float on Upper Height Function Constants card, but NO external field named 'HEIGHT'!");
       }
     }
 
@@ -10077,7 +10077,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
          "Matl %s needs 3 constants for %s %s model.\n",
          pd_glob[mn]->MaterialName,
          "Upper Height Function", "ROLLER");
-        EH(-1, err_msg);
+        EH(GOMA_ERROR, err_msg);
       }
     mat_ptr->len_u_heightU_function_constants = num_const;
     SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightU_function_constants);
@@ -10110,7 +10110,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs at least 2 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Lower Height Function", "CONSTANT_SPEED");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  if (num_const > 2)
 	    {
@@ -10130,7 +10130,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		}
 	      else
 		{
-		  EH(-1," You have a third float on Upper Height Function Constants card, but NO external field");
+		  EH(GOMA_ERROR," You have a third float on Upper Height Function Constants card, but NO external field");
 		}
 	    }
 	  mat_ptr->len_u_heightL_function_constants = num_const;
@@ -10148,7 +10148,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 5 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Lower Height Function", "ROLL_ON");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_heightL_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightL_function_constants);
@@ -10165,7 +10165,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 8 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Lower Height Function", "ROLL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_heightL_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_heightL_function_constants);
@@ -10174,7 +10174,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       else if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD")) {
 	 if ( fscanf(imp,"%s", input ) !=  1 )
 	   {
-	     EH(-1,"Expecting trailing keyword for Lower height function EXTERNAL_FIELD model.\n");
+	     EH(GOMA_ERROR,"Expecting trailing keyword for Lower height function EXTERNAL_FIELD model.\n");
 	   }
 	 model_read = 1;
      
@@ -10186,7 +10186,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	   }
 	 }
 	 if( ii==0 ) {
-	   EH(-1,"Must activate external fields to use this Lower height function model.  Field name needed for the EXTERNAL_FIELD");
+	   EH(GOMA_ERROR,"Must activate external fields to use this Lower height function model.  Field name needed for the EXTERNAL_FIELD");
       }	  
 	 mat_ptr->HeightLFunctionModel = EXTERNAL_FIELD;
       /* pick up scale factor for property */
@@ -10201,7 +10201,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Lower Height Function", 
 			   "EXTERNAL_FIELD");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
  }
     
@@ -10228,7 +10228,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 1 constant for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Velocity Function", "ROLL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_veloU_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_veloU_function_constants);
@@ -10245,7 +10245,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                            "Matl %s needs 5 constants for %s %s model.\n",
                            pd_glob[mn]->MaterialName,
                            "Upper Velocity Function", "TANGENTIAL_ROTATE");
-              EH(-1, err_msg);
+              EH(GOMA_ERROR, err_msg);
             }
           mat_ptr->len_u_veloU_function_constants = num_const;
           SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_veloU_function_constants);
@@ -10262,7 +10262,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                            "Matl %s needs 6 constants for %s %s model.\n",
                            pd_glob[mn]->MaterialName,
                            "Upper Velocity Function", "LINEAR_TIME");
-              EH(-1, err_msg);
+              EH(GOMA_ERROR, err_msg);
             }
           mat_ptr->len_u_veloU_function_constants = num_const;
           SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_veloU_function_constants);
@@ -10293,7 +10293,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 1 constant for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Lower Velocity Function", "ROLL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_veloL_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_veloL_function_constants);
@@ -10310,7 +10310,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                            "Matl %s needs 5 constants for %s %s model.\n",
                            pd_glob[mn]->MaterialName,
                            "lower Velocity Function", "TANGENTIAL_ROTATE");
-              EH(-1, err_msg);
+              EH(GOMA_ERROR, err_msg);
             }
           mat_ptr->len_u_veloL_function_constants = num_const;
           SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_veloL_function_constants);
@@ -10327,7 +10327,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                            "Matl %s needs 6 constants for %s %s model.\n",
                            pd_glob[mn]->MaterialName,
                            "lower Velocity Function", "LINEAR_TIME");
-              EH(-1, err_msg);
+              EH(GOMA_ERROR, err_msg);
             }
           mat_ptr->len_u_veloL_function_constants = num_const;
           SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_veloL_function_constants);
@@ -10344,7 +10344,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			    "Matl %s needs at least 1 constant for %s %s model.\n",
 			    pd_glob[mn]->MaterialName,
 			    "Lower Velocity Function", "SIDER_POLY_TIME");
-	       EH(-1, err_msg);
+	       EH(GOMA_ERROR, err_msg);
 	     }
 	   mat_ptr->len_u_veloL_function_constants = num_const;
 	   SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_veloL_function_constants);
@@ -10372,7 +10372,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		       "Matl %s needs 4 constants for %s %s model.\n",
 		       pd_glob[mn]->MaterialName,
 		       "Upper Contact Angle", "DYNAMIC");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 	mat_ptr->dcaU = mat_ptr->u_dcaU_function_constants[0];
 	mat_ptr->len_u_dcaU_function_constants = num_const;
@@ -10387,7 +10387,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		       "Matl %s needs 4 constants for %s %s model.\n",
 		       pd_glob[mn]->MaterialName,
 		       "Upper Contact Angle", "DYNAMIC_LINEAR");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 	mat_ptr->dcaU = mat_ptr->u_dcaU_function_constants[0];
 	mat_ptr->len_u_dcaU_function_constants = num_const;
@@ -10413,7 +10413,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		       "Matl %s needs 4 constants for %s %s model.\n",
 		       pd_glob[mn]->MaterialName,
 		       "Lower Contact Angle", "DYNAMIC");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 	mat_ptr->dcaL = mat_ptr->u_dcaL_function_constants[0];
 	mat_ptr->len_u_dcaL_function_constants = num_const;
@@ -10428,7 +10428,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 		       "Matl %s needs 4 constants for %s %s model.\n",
 		       pd_glob[mn]->MaterialName,
 		       "Lower Contact Angle", "DYNAMIC_LINEAR");
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 	mat_ptr->dcaL = mat_ptr->u_dcaL_function_constants[0];
 	mat_ptr->len_u_dcaL_function_constants = num_const;
@@ -10449,7 +10449,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	{
 	  if ( fscanf(imp,"%s", model_name) != 1 )
 	    {
-	      EH(-1, "Need model for lubrication source term ");
+	      EH(GOMA_ERROR, "Need model for lubrication source term ");
 	    }
 
 	  SPF(es,"%s = %s", search_string, model_name);
@@ -10463,7 +10463,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	      if(fscanf(imp,"%lf", &(mat_ptr->lubsource)) != 1)
 
 		{
-		  EH(-1,"Lubrication fluid source constant model expects 1 flt");
+		  EH(GOMA_ERROR,"Lubrication fluid source constant model expects 1 flt");
 		}
 
 	      SPF(endofstring(es), "%g",  mat_ptr->lubsource );
@@ -10481,7 +10481,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
                                "Matl %s needs 3 constants for %s %s model.\n",
                                pd_glob[mn]->MaterialName,
                                "Lubrication source", "MELT");
-                  EH(-1, err_msg);
+                  EH(GOMA_ERROR, err_msg);
                 }
 
               if (((mat_ptr->veloU[0] + mat_ptr->veloU[1] +mat_ptr->veloU[2]) == 0. &&
@@ -10496,7 +10496,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
 	  else
 	    {
-	      EH(-1,"Unrecognized lubrication fluid source model");
+	      EH(GOMA_ERROR,"Unrecognized lubrication fluid source model");
 	    }
 	}
       /* Optional lubrication momentum source term */
@@ -10509,7 +10509,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	{
 	  if ( fscanf(imp,"%s", model_name) != 1 )
 	    {
-	      EH(-1, "Need model for lubrication momentum source term ");
+	      EH(GOMA_ERROR, "Need model for lubrication momentum source term ");
 	    }
 
 	  SPF(es,"%s = %s", search_string, model_name);
@@ -10524,7 +10524,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 
 		{
 		
-		  EH(-1,"Lubrication momentum source constant model expects 3 flts");
+		  EH(GOMA_ERROR,"Lubrication momentum source constant model expects 3 flts");
 		}
 	      num_const = mp_glob[mn]->len_lubmomsource = 3;
 
@@ -10533,7 +10533,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 	  else
 	    {
-	      EH(-1,"Unrecognized lubrication momentum source  model");
+	      EH(GOMA_ERROR,"Unrecognized lubrication momentum source  model");
 	    }
 	}	    
 
@@ -10567,7 +10567,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Film Evaporation Model", "CONC_POWER");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_FilmEvap_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_FilmEvap_function_constants);
@@ -10600,7 +10600,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 9 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Upper Velocity Function", "ROLL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_veloU_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_veloU_function_constants);
@@ -10632,7 +10632,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 9 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Lower Velocity Function", "ROLL");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_veloL_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_veloL_function_constants);
@@ -10656,7 +10656,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
         {
           if ( fscanf(imp,"%s", model_name) != 1 )
             {
-              EH(-1, "Need model for Slip coefficient ");
+              EH(GOMA_ERROR, "Need model for Slip coefficient ");
             }
 
           SPF(es,"%s = %s", search_string, model_name);
@@ -10670,14 +10670,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
               if(fscanf(imp,"%lf", &(mat_ptr->SlipCoeff)) != 1)
 
                 {
-                  EH(-1,"Slip coefficient constant model expects 1 flt");
+                  EH(GOMA_ERROR,"Slip coefficient constant model expects 1 flt");
                 }
 
               SPF(endofstring(es), "%g",  mat_ptr->SlipCoeff );
             }
            else
             {
-              EH(-1,"Slip coefficient model invalid");
+              EH(GOMA_ERROR,"Slip coefficient model invalid");
             }
 
         }
@@ -10705,7 +10705,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 5 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Disjoining Pressure Model", "TWO_TERM");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_DisjPress_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_DisjPress_function_constants);
@@ -10723,7 +10723,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 4 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Disjoining Pressure Model", "TWO_TERM_EXT_CA");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_DisjPress_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_DisjPress_function_constants);
@@ -10741,7 +10741,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Disjoining Pressure Model", "ONE_TERM");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_DisjPress_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_DisjPress_function_constants);
@@ -10777,7 +10777,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   "Matl %s needs 3 constants for %s %s model.\n",
 			   pd_glob[mn]->MaterialName,
 			   "Diffusion Coefficient Model", "STOKES_EINSTEIN");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  mat_ptr->len_u_DiffCoeff_function_constants = num_const;
 	  SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_DiffCoeff_function_constants);
@@ -10890,7 +10890,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD")) {
       if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Porous Shell Closed Porosity EXTERNAL_FIELD model.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Porous Shell Closed Porosity EXTERNAL_FIELD model.\n");
 	    }
       model_read = 1;
      
@@ -10904,7 +10904,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
       }
       if( ii==0 ) {
-	EH(-1,"Must activate external fields to use this PorousShellClosedPorosity model.  Field name needed for the EXTERNAL_FIELD Porous Shell Closed Porosity model");
+	EH(GOMA_ERROR,"Must activate external fields to use this PorousShellClosedPorosity model.  Field name needed for the EXTERNAL_FIELD Porous Shell Closed Porosity model");
       }	  
       mat_ptr->PorousShellClosedPorosityModel = EXTERNAL_FIELD;
       /* pick up scale factor for property */
@@ -10919,7 +10919,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Porous Shell Closed Porosity", 
 			   "EXTERNAL_FIELD");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 
     } else if ( model_read == -1 && !strcmp(model_name, "MULTI_MODE") ) {
@@ -10929,7 +10929,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       if( num_const < 2) {
 	sr = sprintf(err_msg, "Matl %s needs at least 2 constants for %s %s model.\n",
 		     pd_glob[mn]->MaterialName, "Porous Shell Closed Porosity", "MULTI_MODE");
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       mat_ptr->len_u_PorousShellClosedPorosity_function_constants = num_const;
       SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_PorousShellClosedPorosity_function_constants);
@@ -10953,7 +10953,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD")) {
       if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Porous Shell Height EXTERNAL_FIELD model.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Porous Shell Height EXTERNAL_FIELD model.\n");
 	    }
       model_read = 1;
      
@@ -10965,7 +10965,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
       }
       if( ii==0 ) {
-	EH(-1,"Must activate external fields to use this PorousShellheight model.  Field name needed for the EXTERNAL_FIELD");
+	EH(GOMA_ERROR,"Must activate external fields to use this PorousShellheight model.  Field name needed for the EXTERNAL_FIELD");
       }	  
       mat_ptr->PorousShellClosedHeightModel = EXTERNAL_FIELD;
       /* pick up scale factor for property */
@@ -10980,7 +10980,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Porous Shell Height", 
 			   "EXTERNAL_FIELD");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
     
     } else if(model_read == -1) {
@@ -11004,7 +11004,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
     if (model_read == -1 && !strcmp(model_name, "EXTERNAL_FIELD")) {
       if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Porous Shell Radius EXTERNAL_FIELD model.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Porous Shell Radius EXTERNAL_FIELD model.\n");
 	    }
       model_read = 1;
      
@@ -11016,7 +11016,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	}
       }
       if( ii==0 ) {
-	EH(-1,"Must activate external fields to use this PorousShellRadius model.  Field name needed for the EXTERNAL_FIELD");
+	EH(GOMA_ERROR,"Must activate external fields to use this PorousShellRadius model.  Field name needed for the EXTERNAL_FIELD");
       }	  
 
       mat_ptr->PorousShellClosedRadiusModel = EXTERNAL_FIELD;
@@ -11034,7 +11034,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Porous Shell Radius", 
 			   "EXTERNAL_FIELD");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
     
       model_read = 1;
@@ -11047,7 +11047,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	sr = sprintf(err_msg, "Matl %s needs at least %i constants for %s %s model.\n",
 		     pd_glob[mn]->MaterialName, mat_ptr->len_u_PorousShellClosedPorosity_function_constants-1,
 		     "Porous Shell Closed Radius", "MULTI_MODE");
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       mat_ptr->len_u_PorousShellClosedRadius_function_constants = num_const;
       SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->u_PorousShellClosedRadius_function_constants);
@@ -11103,7 +11103,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	{
 	  if ( fscanf(imp,"%s", input ) !=  1 )
 	    {
-	      EH(-1,"Expecting trailing keyword for Porous Shell Cross Permeability EXTERNAL_FIELD model.\n");
+	      EH(GOMA_ERROR,"Expecting trailing keyword for Porous Shell Cross Permeability EXTERNAL_FIELD model.\n");
 	    }
 	  ii=0;
 	  for ( j=0; j<efv->Num_external_field; j++)
@@ -11116,7 +11116,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	    }
 	  if( ii==0 )
 	    {
-	      EH(-1,"Cannot match the Porous Shell Cross Permeability name with that in the external field file");
+	      EH(GOMA_ERROR,"Cannot match the Porous Shell Cross Permeability name with that in the external field file");
 	    }
 	  mat_ptr->PorousShellCrossKappaModel = EXTERNAL_FIELD;
 
@@ -11132,7 +11132,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 			   pd_glob[mn]->MaterialName, 
 			   "Porous Shell Cross Permeability", 
 			   "EXTERNAL_FIELD");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	 
 	}
@@ -11219,7 +11219,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	sr = sprintf(err_msg, 
 		     "Error reading model name string in material file, property %s",
 		     search_string);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
     
       SPF(es, "%s = %s", search_string, model_name);
@@ -11250,11 +11250,11 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	SPF_DBL_VEC( endofstring(es), num_const, mat_ptr->tfmp_density_const );
 	mat_ptr->len_tfmp_density_const = num_const;
 	if (num_const != 4) {
-	  EH(-1, "The IDEAL_GAS model requires 4 values: molecular weight of gas, universal gas constant, temperature[const], ambient pressure.");
+	  EH(GOMA_ERROR, "The IDEAL_GAS model requires 4 values: molecular weight of gas, universal gas constant, temperature[const], ambient pressure.");
 	}
       }
     } else {
-      EH(-1, "You must use the \"Thin Film Multiphase Density\" card to specify the gas density for the tfmp equations.");
+      EH(GOMA_ERROR, "You must use the \"Thin Film Multiphase Density\" card to specify the gas density for the tfmp equations.");
     }
     ECHO(es, echo_file);
   }
@@ -11273,7 +11273,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	sr = sprintf(err_msg, 
 		     "Error reading model name string in material file, property %s",
 		     search_string);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       SPF(es, "%s = %s", search_string, model_name);
       if (!strcmp(model_name, "CONSTANT") ) {
@@ -11288,11 +11288,11 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  sr = sprintf(err_msg,
 		       "Wrong number of parameters on property, %s",
 		       search_string);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       }
     } else {
-      EH(-1, "No default fluid viscosities, to specify them use the \"Thin Film Multiphase Viscosity\" card.");
+      EH(GOMA_ERROR, "No default fluid viscosities, to specify them use the \"Thin Film Multiphase Viscosity\" card.");
     }
   }
   if(pd_glob[mn]->gv[R_TFMP_MASS] || pd_glob[mn]->gv[R_TFMP_BOUND]) {
@@ -11310,7 +11310,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	sr = sprintf(err_msg, 
 		     "Error reading model name string in material file, property %s",
 		     search_string);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       SPF(es, "%s = %s", search_string, model_name);
       if (!strcmp(model_name, "CONSTANT") ) {
@@ -11322,7 +11322,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  sr = sprintf(err_msg, 
 		       "Wrong number of constants in material file, property %s",
 		       search_string);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 
 	mat_ptr->len_tfmp_diff_const = 1;
@@ -11353,7 +11353,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	sr = sprintf(err_msg, 
 		     "Error reading model name string in material file, property %s",
 		     search_string);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       SPF(es, "%s = %s", search_string, model_name);
       num_const = read_constants(imp, &(mat_ptr->tfmp_dissolution_const), NO_SPECIES);
@@ -11363,7 +11363,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  sr = sprintf(err_msg,
 		       "Error property %s only supports 3 input values.",
 		       search_string);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 	mat_ptr->len_tfmp_dissolution_const = num_const;
 	SPF_DBL_VEC( endofstring(es), mat_ptr->len_tfmp_dissolution_const , mat_ptr->tfmp_dissolution_const );
@@ -11388,7 +11388,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	sr = sprintf(err_msg, 
 		     "Error reading model name string in material file, property %s",
 		     search_string);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       SPF(es, "%s = %s", search_string, model_name);
       if (!strcmp(model_name, "LEVER") ) {
@@ -11405,11 +11405,11 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	sr = sprintf(err_msg, 
 		     "Invalid model name string in material file, property %s",
 		     search_string);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       ECHO(es, echo_file);
     } else {
-      EH(-1, "There are no defaults for \"Thin Film Multiphase Relative Permeability Model\". You must set them.");
+      EH(GOMA_ERROR, "There are no defaults for \"Thin Film Multiphase Relative Permeability Model\". You must set them.");
     }
   }
   
@@ -11424,7 +11424,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	sr = sprintf(err_msg, 
 		     "Error reading model name string in material file, property %s",
 		     search_string);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       SPF(es, "%s = %s", search_string, model_name);
       if (!strcasecmp(model_name, "yes") || 
@@ -11436,7 +11436,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	mat_ptr->tfmp_mass_lump = FALSE;
 	SPF(es, "%s = %s",search_string,"FALSE");
       } else {
-	EH(-1,"Thin Film Multiphase Mass Lumping must be set to TRUE, YES, FALSE, or NO");
+	EH(GOMA_ERROR,"Thin Film Multiphase Mass Lumping must be set to TRUE, YES, FALSE, or NO");
       }
     } else {
       WH(-1, "Mass lumping is on by default.");
@@ -11459,10 +11459,10 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	sr = sprintf(err_msg, 
 		     "Error reading model name string in material file, property %s",
 		     search_string);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       SPF(es, "%s = %s", search_string, model_name);
-      //      EH(-1, model_name);
+      //      EH(GOMA_ERROR, model_name);
       if ( !strcasecmp(model_name, "yes") ||
 	   !strcasecmp(model_name, "true") ) {
 	mat_ptr->tfmp_clipping = TRUE;
@@ -11470,7 +11470,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	  sr = sprintf(err_msg, 
 		       "Wrong number of constants in material file, property %s",
 		       search_string);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 	SPF(endofstring(es)," %.4g", mat_ptr->tfmp_clip_strength );
 	
@@ -11482,7 +11482,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
       } 
       else {
 	SPF(err_msg,"Syntax error or invalid model for %s\n", search_string);
-	EH(-1,err_msg);
+	EH(GOMA_ERROR,err_msg);
       }
 
     } else {
@@ -11505,14 +11505,14 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	sr = sprintf(err_msg,
 		     "Error reading model name string in material file, property %s",
 		     search_string);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       SPF(es, "%s = %s", search_string, model_name);
       if (!strcmp(model_name, "SQUARE") ) {
 	mat_ptr->tfmp_drop_lattice_model = TFMP_SQUARE;
 	num_const = read_constants(imp, &(mat_ptr->tfmp_drop_lattice_const), NO_SPECIES);
 	if (num_const != 2) {
-	  EH(-1,
+	  EH(GOMA_ERROR,
 	     "Thin Film Multiphase Drop Lattice 'SQUARE' requires two and only two input values, lambda and Vd");
 	}
 	mat_ptr->len_tfmp_drop_lattice_const = num_const;
@@ -11538,7 +11538,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
         sr = sprintf(err_msg,
          "Error reading model name string in material file, property %s",
          search_string);
-        EH(-1, err_msg);
+        EH(GOMA_ERROR, err_msg);
       }
 
       SPF(es, "%s = %s", search_string, model_name);
@@ -11579,7 +11579,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
         sr = sprintf(err_msg,
          "Error reading model name string in material file, property %s",
          search_string);
-        EH(-1, err_msg);
+        EH(GOMA_ERROR, err_msg);
       }
 
       SPF(es, "%s = %s", search_string, model_name);
@@ -11629,7 +11629,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
         sr = sprintf(err_msg,
          "Error reading model name string in material file, property %s",
          search_string);
-        EH(-1, err_msg);
+        EH(GOMA_ERROR, err_msg);
       }
 
       SPF(es, "%s = %s", search_string, model_name);
@@ -11674,7 +11674,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	       "Attempt to initialize %d species in matl %s with only"
 	       "%d species active!", NO_SPECIES, pd_glob[mn]->MaterialName, 
 	       pd_ptr->Num_Species_Eqn);
-       EH(-1, Err_Msg);
+       EH(GOMA_ERROR, Err_Msg);
      }
 
      /*

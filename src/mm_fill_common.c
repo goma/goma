@@ -45,11 +45,11 @@ static void calculateVolumeFractionGasPhase(const dbl time) {
   dbl rho; 
   if (mp->DensityModel == DENSITY_FOAM)
     {
-      EH(-1, "Not completed");
+      EH(GOMA_ERROR, "Not completed");
     }
   else if (mp->DensityModel == DENSITY_FOAM_CONC)
     {
-      EH(-1, "Not completed");
+      EH(GOMA_ERROR, "Not completed");
     }
   else if (mp->DensityModel == DENSITY_FOAM_TIME)
     {
@@ -134,9 +134,9 @@ static void calculateVolumeFractionGasPhase(const dbl time) {
 	}
 
 	if (wCO2 == -1) {
-	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_CO2");
+	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_CO2");
 	} else if (wH2O == -1) {
-	  EH(-1, "Expected a Species Source of FOAM_PMDI_10_H2O");
+	  EH(GOMA_ERROR, "Expected a Species Source of FOAM_PMDI_10_H2O");
 	}
 
 	double M_CO2 = mp->u_density[0];

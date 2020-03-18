@@ -251,12 +251,12 @@ build_node_node(Exo_DB *exo)
 
   if ( ! exo->node_elem_conn_exists )
     {
-      EH(-1, "node_elem conn must exist before node_node can be built.");
+      EH(GOMA_ERROR, "node_elem conn must exist before node_node can be built.");
     }
 
   if ( ! exo->elem_node_conn_exists )
     {
-      EH(-1, "elem_node conn must exist before node_node can be built.");
+      EH(GOMA_ERROR, "elem_node conn must exist before node_node can be built.");
     }
 
 
@@ -436,7 +436,7 @@ build_node_elem(Exo_DB *exo)
 
   if ( ! exo->elem_node_conn_exists )
     {
-      EH(-1, "Build elem->node before node->elem.");
+      EH(GOMA_ERROR, "Build elem->node before node->elem.");
       return;
     }
 
@@ -477,7 +477,7 @@ build_node_elem(Exo_DB *exo)
 
   if ( exo->node_elem_pntr[exo->num_nodes] != length )
     {
-      EH(-1, "Inconsistency during connectivity inversion.");
+      EH(GOMA_ERROR, "Inconsistency during connectivity inversion.");
     }
 
   for ( i=0; i<length; i++)
@@ -519,7 +519,7 @@ build_node_elem(Exo_DB *exo)
 	    {
 	      sr = sprintf(err_msg, "No free spot elem [%d], node [%d].",
 			  e, node);
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
 	  exo->node_elem_list[index] = e;
 	}
@@ -534,7 +534,7 @@ build_node_elem(Exo_DB *exo)
     {
       if ( exo->node_elem_list[i] == -1 )
 	{
-	  EH(-1, "Node->elem connectivity has holes!");
+	  EH(GOMA_ERROR, "Node->elem connectivity has holes!");
 	}
     }
 
@@ -589,7 +589,7 @@ build_elem_elem(Exo_DB *exo)
   if ( ! exo->elem_node_conn_exists ||
        ! exo->node_elem_conn_exists )
     {
-      EH(-1, "Build elem->node before node->elem.");
+      EH(GOMA_ERROR, "Build elem->node before node->elem.");
       return;
     }
  /*
@@ -771,7 +771,7 @@ build_elem_elem(Exo_DB *exo)
 			 curr_set[len_curr] = ename;
 			 len_curr++;
 			 if (len_curr >= MAX_EPN) {
-			   EH(-1, "found more elements per node than MAX_EPN is set to");
+			   EH(GOMA_ERROR, "found more elements per node than MAX_EPN is set to");
 			 }
 		       }
 		   }
@@ -855,7 +855,7 @@ build_elem_elem(Exo_DB *exo)
 			 sr = sprintf(err_msg, 
 				      "2 elems ( %d %d ) 1 should be %d!",
 				      prev_set[0], prev_set[1], elem);
-			 EH(-1, err_msg);
+			 EH(GOMA_ERROR, err_msg);
 		       }
 		   }
 	       }
@@ -880,7 +880,7 @@ build_elem_elem(Exo_DB *exo)
 		      * condition and insert code to check for neighbor
 		      * processors containing all the same face nodes.
 		      *
-		      * EH(-1, "Not done yet..."); 
+		      * EH(GOMA_ERROR, "Not done yet..."); 
 		      *
 		      */
 
@@ -901,14 +901,14 @@ build_elem_elem(Exo_DB *exo)
 	       {
 		 sr = sprintf(err_msg, "Elem %d, face %d should self contain!",
 			      elem, face);
-		 EH(-1, err_msg);
+		 EH(GOMA_ERROR, err_msg);
 	       }
 	     else if ( len_intr == 1 && prev_set[0] != elem )
 	       {
 		 sr = sprintf(err_msg, 
 			      "Elem %d, face %d only connects with elem %d ?",
 			      elem, face, prev_set[0]);
-		 EH(-1, err_msg);
+		 EH(GOMA_ERROR, err_msg);
 	       }
 	     else
 	       {
@@ -954,7 +954,7 @@ build_elem_elem(Exo_DB *exo)
 	 if(get_num_faces(exo->eb_elem_type[0]) != 
 	    get_num_faces(exo->eb_elem_type[i])     )
 	   {
-	     EH(-1,"Stop! We cannot reorder these elements with METIS with elemement type changes");
+	     EH(GOMA_ERROR,"Stop! We cannot reorder these elements with METIS with elemement type changes");
 	   }
        }
      /* Now begin */
@@ -1156,7 +1156,7 @@ sides2nodes(const int face,	/* assume face number 0,1,...,num_faces-1 */
 	  break;
 
 	default:
-	  EH(-1, "Bad face for TETRAHEDRON.");
+	  EH(GOMA_ERROR, "Bad face for TETRAHEDRON.");
 	  break;
 	}
       break;
@@ -1203,7 +1203,7 @@ sides2nodes(const int face,	/* assume face number 0,1,...,num_faces-1 */
 	  break;
 
 	default:
-	  EH(-1, "Bad face for PRISM/WEDGE.");
+	  EH(GOMA_ERROR, "Bad face for PRISM/WEDGE.");
 	  break;
 	}
       break;
@@ -1231,13 +1231,13 @@ sides2nodes(const int face,	/* assume face number 0,1,...,num_faces-1 */
 	  break;
 
 	default:
-	  EH(-1, "Bad face for HEXAHEDRON.");
+	  EH(GOMA_ERROR, "Bad face for HEXAHEDRON.");
 	  break;
 	}
       break;
 
     default:
-      EH(-1, "Bad shape.");
+      EH(GOMA_ERROR, "Bad shape.");
       break;
     }
 
@@ -1437,7 +1437,7 @@ demo_elem_node_conn(Exo_DB *exo)
   
   if ( ! exo->elem_node_conn_exists )
     {
-      EH(-1, "Attempt to access undeveloped elem->node connectivity.");
+      EH(GOMA_ERROR, "Attempt to access undeveloped elem->node connectivity.");
     }
 
   for ( e=0; e<exo->num_elems; e++)
@@ -1470,7 +1470,7 @@ demo_node_elem_conn(Exo_DB *exo)
   
   if ( ! exo->node_elem_conn_exists )
     {
-      EH(-1, "Attempt to access undeveloped node->elem connectivity.");
+      EH(GOMA_ERROR, "Attempt to access undeveloped node->elem connectivity.");
     }
 
   for ( n=0; n<exo->num_nodes; n++)
@@ -1501,7 +1501,7 @@ demo_elem_elem_conn(Exo_DB *exo)
   
   if ( ! exo->elem_elem_conn_exists )
     {
-      EH(-1, "Attempt to access undeveloped elem->elem connectivity.");
+      EH(GOMA_ERROR, "Attempt to access undeveloped elem->elem connectivity.");
     }
 
   for ( e=0; e<exo->num_elems; e++)
@@ -1554,12 +1554,12 @@ brk_build_node_node(Exo_DB *exo)
 
   if ( ! exo->node_elem_conn_exists )
     {
-      EH(-1, "node_elem conn must exist before node_node can be built.");
+      EH(GOMA_ERROR, "node_elem conn must exist before node_node can be built.");
     }
 
   if ( ! exo->elem_node_conn_exists )
     {
-      EH(-1, "elem_node conn must exist before node_node can be built.");
+      EH(GOMA_ERROR, "elem_node conn must exist before node_node can be built.");
     }
 
 

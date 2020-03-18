@@ -206,7 +206,7 @@ int check_consistent_fraction_vector(struct Variable_Initialization *var_init,
     } else {
       printf("check_consistent_fraction_vector ERROR: species fraction vector");
       printf(" is very far from summing to one: %g\n", 1.0 - sum);
-      EH(-1, "check_consistent_fraction_vector\n");
+      EH(GOMA_ERROR, "check_consistent_fraction_vector\n");
     }
   }
 
@@ -221,12 +221,12 @@ int check_consistent_fraction_vector(struct Variable_Initialization *var_init,
   printf("check_consistent_fraction_vector ERROR!\n");
   printf("\t Mismatched species initialization types: %d %d\n", frac_type,
 	 var_init->var);
-  EH(-1, "check_consistent_fraction_vector\n");
+  EH(GOMA_ERROR, "check_consistent_fraction_vector\n");
   return -1;
  bad_ktype:;
   printf("check_consistent_fraction_vector ERROR!\n");
   printf("Species nunumber is out of bounds: %d, %d", kspec, num_species);
-  EH(-1, "check_consistent_fraction_vector\n");
+  EH(GOMA_ERROR, "check_consistent_fraction_vector\n");
   return -1;
 }
 /*****************************************************************************/
@@ -729,7 +729,7 @@ assign_species_var_type(const int mn, const int speciesVT, const int optional)
       sprintf(Err_Msg, "assign_species_var_type ERROR, mat %d: species var type "
 	      " assigned to %d while it was already assigned to %d",
 	      mn, speciesVT, mp_glob[mn]->Species_Var_Type);
-      EH(-1, Err_Msg);
+      EH(GOMA_ERROR, Err_Msg);
     } else {
     printf("assign_species_var_type WARNING, mat %d: species var type "
 	   "failed opt assigned to %d while it was already assigned to %d",
@@ -746,7 +746,7 @@ assign_species_var_type(const int mn, const int speciesVT, const int optional)
       sprintf(Err_Msg, "assign_species_var_type ERROR, upd: species var type "
 	      " assigned to %d while it was already assigned to %d",
 	      speciesVT, mp_glob[mn]->Species_Var_Type);
-      EH(-1, Err_Msg);
+      EH(GOMA_ERROR, Err_Msg);
     } else {
     printf("assign_species_var_type WARNING, upd: species var type "
 	   "failed opt assigned to %d while it was already assigned to %d",
@@ -777,7 +777,7 @@ assign_global_species_var_type(const int speciesVT, const int optional)
       sprintf(Err_Msg, "assign_species_var_type ERROR, upd: species var type "
 	      " assigned to %d while it was already assigned to %d",
 	      speciesVT, upd->Species_Var_Type);
-      EH(-1, Err_Msg);
+      EH(GOMA_ERROR, Err_Msg);
     } else {
     printf("assign_species_var_type WARNING, upd: species var type "
 	   "failed opt assigned to %d while it was already assigned to %d",
@@ -814,7 +814,7 @@ void assign_species_prefix(const int species_var_name, char * retn_string)
     **************************************************************************/
 {
   if (retn_string == NULL) {
-   EH(-1, "assign_species_prefix: bad interface\n");
+   EH(GOMA_ERROR, "assign_species_prefix: bad interface\n");
   }
   switch (species_var_name) {
   case SPECIES_MASS_FRACTION:

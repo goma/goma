@@ -194,7 +194,7 @@ init_nodes (Exo_DB *exo, Dpi *dpi)
     fprintf(stderr,
   "Proc %d : init_nodes ERROR total nodes, %d, differs from num_proc_nodes, %d\n",
 	    ProcID, total_nodes, number_proc_nodes);
-    EH(-1, "init_nodes: Shouldn't be here");
+    EH(GOMA_ERROR, "init_nodes: Shouldn't be here");
   }
 
   /*
@@ -490,7 +490,7 @@ first_matID_at_node(const int nodeNum)
     fprintf(stderr,
      "first_matID_at_node ERROR P_%d: mat list is empty at node %d\n",
 	    ProcID, nodeNum);
-    EH(-1,"first_matID_at_node ERROR");
+    EH(GOMA_ERROR,"first_matID_at_node ERROR");
     return -1;
   }
   return umi_ptr->List[0];
@@ -657,7 +657,7 @@ vcrr_add(VCRR_STRUCT ***vcrr_hdl, const int eqn, const int mn_curr,
           if (vcrr_ptr->MatID_Row_Redirect == mn_apply) {
 	    nf = FALSE;
 	  } else {
-	    EH(-1, "incompatibility");
+	    EH(GOMA_ERROR, "incompatibility");
 	  }
 	}
       }

@@ -171,7 +171,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
   /* Check for something that seems to make no difference if it's on,
    * except for occasionally causing seg faults... */
   if(recycle != 0)
-    EH(-1, "Eigen recycle currently doesn't work, turn it off.");
+    EH(GOMA_ERROR, "Eigen recycle currently doesn't work, turn it off.");
 
   /* Set initial vector
    */
@@ -234,7 +234,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
       case  4: /* v2 = inv(J-sM)*M*v1 */
 	Factor_Flag = 3;
 	if(first_linear_solver_call)
-	  EH(-1, "Tried to transform eigenvectors before a solve!");
+	  EH(GOMA_ERROR, "Tried to transform eigenvectors before a solve!");
 	gevp_transformation(UMF_system_id, first_linear_solver_call,
 			    Factor_Flag, matr_form, 1, nj, nnz_j,
 			    &ija[0], &jac[0], &mas[0], &mat[0],
@@ -242,7 +242,7 @@ eggrollwrap(int *istuff,	/* info for eigenvalue extraction */
 			    &v2[0], &v1[0], dwork[0], dwork[1]);
 	break;
       default:
-	EH(-1, "Uh-oh!  I shouldn't be here!");
+	EH(GOMA_ERROR, "Uh-oh!  I shouldn't be here!");
 	break;
       } /* switch(action) */
     if (ic > 10000)

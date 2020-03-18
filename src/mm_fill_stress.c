@@ -844,7 +844,7 @@ assemble_stress(dbl tt,		/* parameter to vary time integration from
 				      
 				      if ( w > 1 )
 					{
-					  EH(-1, "Need more arrays for each species.");
+					  EH(GOMA_ERROR, "Need more arrays for each species.");
 					}
 				      
 				      lec->J[peqn][pvar][i][j] +=
@@ -1694,7 +1694,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	err = level_set_property(neg_alpha, pos_alpha, width, &alpha, d_alpha_dF);
 	EH(err, "level_set_property() failed for mobility parameter.");
       } else {
-	EH(-1, "Unknown mobility parameter model");
+	EH(GOMA_ERROR, "Unknown mobility parameter model");
       }
       
       /* get time constant */
@@ -1720,7 +1720,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	err = level_set_property(neg_xi, pos_xi, width, &xi, d_xi_dF);
 	EH(err, "level_set_property() failed for ptt xi parameter.");
       } else {
-	EH(-1, "Unknown PTT Xi parameter model");
+	EH(GOMA_ERROR, "Unknown PTT Xi parameter model");
       }
       
       ucwt = 1.0 - xi / 2.0 ;
@@ -1735,7 +1735,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 	err = level_set_property(neg_eps, pos_eps, width, &eps, d_eps_dF);
 	EH(err, "level_set_property() failed for ptt epsilon parameter.");
       } else {
-	EH(-1, "Unknown PTT Epsilon parameter model");
+	EH(GOMA_ERROR, "Unknown PTT Epsilon parameter model");
       }
 
       if (lambda == 0) {
@@ -2181,7 +2181,7 @@ assemble_stress_fortin(dbl tt,	/* parameter to vary time integration from
 				      
 				      if ( w > 1 )
 					{
-					  EH(-1, "Need more arrays for each species.");
+					  EH(GOMA_ERROR, "Need more arrays for each species.");
 					}
 				      
 				      lec->J[peqn][MAX_PROB_VAR + w][i][j] +=
@@ -3634,7 +3634,7 @@ assemble_stress_level_set(dbl tt,	/* parameter to vary time integration from
 				      
 				      if ( w > 1 )
 					{
-					  EH(-1, "Need more arrays for each species.");
+					  EH(GOMA_ERROR, "Need more arrays for each species.");
 					}
 				      
 				      lec->J[peqn][MAX_PROB_VAR + w][i][j] +=
@@ -5567,7 +5567,7 @@ load_neighbor_pointers( Exo_DB *exo,
       }
     }
   } else if (strcmp( Matrix_Format, "epetra") == 0) {
-    EH(-1, "load_neighbor_pointers unsupported by epetra");
+    EH(GOMA_ERROR, "load_neighbor_pointers unsupported by epetra");
   }
 }
 /***************************************************************************/

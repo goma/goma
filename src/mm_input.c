@@ -232,7 +232,7 @@ read_input_file(struct Command_line_command **clc,
       rd_eigen_specs(ifp, input);
 
       if(look_for_optional(ifp, "Geometry Specifications", input, '=') == 1)
- 	  EH(-1, "CGM not supported, there should be no Geometry Specifications section.");
+ 	  EH(GOMA_ERROR, "CGM not supported, there should be no Geometry Specifications section.");
 
       rd_particle_specs(ifp, input);
 
@@ -250,7 +250,7 @@ read_input_file(struct Command_line_command **clc,
     else
     {
       sprintf(Err_Msg, "Could not open input file \"%s\"\n", Input_File);
-      EH(-1, Err_Msg);
+      EH(GOMA_ERROR, Err_Msg);
     }
   }  			
   else		
@@ -260,7 +260,7 @@ read_input_file(struct Command_line_command **clc,
     exit(0);		  /* exit(0) is temporary */
 #else	/* NEW_PARSER */
     sr = sprintf(err_msg, "This Goma executable was not built with the -newp option.");
-    EH(-1, err_msg);      /* The -newp was used but this executable wasn'g built for it, exit */
+    EH(GOMA_ERROR, err_msg);      /* The -newp was used but this executable wasn'g built for it, exit */
     exit(0);
 #endif	/* NEW_PARSER */    
   }    			    
@@ -918,7 +918,7 @@ rd_genl_specs(FILE *ifp,
       nargs = sscanf(input, "%s %s %s", first_string, second_string, third_string);
       if ( nargs == 0 )
 	{
-	  EH(-1, "Found zero arguments for Initial Guess");
+	  EH(GOMA_ERROR, "Found zero arguments for Initial Guess");
 	}
       else if ( nargs == 1 )
 	{
@@ -948,7 +948,7 @@ rd_genl_specs(FILE *ifp,
 	    }
 	  else if (strcasecmp(first_string, "read_exoII_file") == 0 )
 	    {
-	      EH(-1, "Read from *what* exoII file?");
+	      EH(GOMA_ERROR, "Read from *what* exoII file?");
 	    }
 
 	  SPF(echo_string,eoformat,"Initial Guess", first_string); ECHO(echo_string, echo_file);
@@ -963,7 +963,7 @@ rd_genl_specs(FILE *ifp,
 	    }
 	  else
 	    {
-	      EH(-1, "Undecipherable 2 options for Initial guess.");
+	      EH(GOMA_ERROR, "Undecipherable 2 options for Initial guess.");
 	    }
 
 	  SPF(echo_string,"%s = %s %s","Initial Guess", first_string, second_string); ECHO(echo_string, echo_file);
@@ -976,12 +976,12 @@ rd_genl_specs(FILE *ifp,
 	      Guess_Flag = 6;
 	      strcpy(ExoAuxFile, second_string);
 	      if (sscanf(third_string, "%d", &ExoTimePlane) != 1) {
-		EH(-1, "Time plane for read_exoII_file option is undecipherable");
+		EH(GOMA_ERROR, "Time plane for read_exoII_file option is undecipherable");
 	      }
 	    }
 	  else
 	    {
-	      EH(-1, "Undecipherable first 2 options for Initial guess.");
+	      EH(GOMA_ERROR, "Undecipherable first 2 options for Initial guess.");
 	    }
 
 	  SPF(echo_string,"%s = %s %s %d","Initial Guess", first_string, second_string, ExoTimePlane);
@@ -1006,7 +1006,7 @@ rd_genl_specs(FILE *ifp,
       nargs = sscanf(input, "%s %s %s", first_string, second_string, third_string);
       if ( nargs == 0 )
         {
-          EH(-1, "Found zero arguments for Conformation Map");
+          EH(GOMA_ERROR, "Found zero arguments for Conformation Map");
         }
       else if ( nargs == 1 )
         {
@@ -1042,7 +1042,7 @@ rd_genl_specs(FILE *ifp,
      */
     if (fscanf(ifp, "%80s", input) != 1)
     {
-      EH(-1, "Error reading variable for initialization");
+      EH(GOMA_ERROR, "Error reading variable for initialization");
     }
     /*
      *  Translate the string variable name to the internal integer value for
@@ -1054,7 +1054,7 @@ rd_genl_specs(FILE *ifp,
     if (fscanf(ifp, "%d %lf", &Var_init[Num_Var_Init].ktype,
 	       &Var_init[Num_Var_Init].init_val)
 	!= 2) {
-      EH(-1,"Error reading initialization data");
+      EH(GOMA_ERROR,"Error reading initialization data");
     }
 
     SPF(echo_string,"%s = %s %d %f","Initialize",input, Var_init[Num_Var_Init].ktype, Var_init[Num_Var_Init].init_val); ECHO(echo_string, echo_file);
@@ -1098,7 +1098,7 @@ rd_genl_specs(FILE *ifp,
        */
       if (fscanf(ifp, "%20s", input) != 1)
 	{
-	  EH(-1, "Error reading variable for initialization");
+	  EH(GOMA_ERROR, "Error reading variable for initialization");
 	}
 
       (void) strcpy(efv->name[Num_Var_External] , input); 
@@ -1173,7 +1173,7 @@ rd_genl_specs(FILE *ifp,
 	  sprintf(err_msg, 
 	          "??? interpolation \"%s\" for external field var",
 	          input);
-          EH(-1, err_msg);
+          EH(GOMA_ERROR, err_msg);
 	}
 
       strcat(echo_string,input);strcat(echo_string,"  ");
@@ -1244,13 +1244,13 @@ rd_genl_specs(FILE *ifp,
         ">%d external field vars. Fix MAX_EXTERNAL_FIELD"
         " (rf_fem_const.h), recompile.",
         MAX_EXTERNAL_FIELD);
-          EH(-1,err_msg);
+          EH(GOMA_ERROR,err_msg);
   }
       if ( efv->ipix[Num_Var_External])
 	{
     if (fscanf (ifp,"%d",&efv->ipix_matid[Num_Var_External]) != 1)
 	    {
-	      EH(-1, "Must specify a material ID for external pix field");
+	      EH(GOMA_ERROR, "Must specify a material ID for external pix field");
 	    }
 
 
@@ -1287,7 +1287,7 @@ rd_genl_specs(FILE *ifp,
      */
     if (fscanf(ifp, "%d", &ex_id) != 1)
     {
-      EH(-1, "Error reading variable for export!");
+      EH(GOMA_ERROR, "Error reading variable for export!");
     }
 
     /*
@@ -1611,7 +1611,7 @@ rd_timeint_specs(FILE *ifp,
       if (iread == 1) {
         tran->fix_freq = read_int(ifp, "Fix Frequency");
         if (tran->fix_freq < 0) {
-          EH(-1, "Expected Fix Frequency > 0");
+          EH(GOMA_ERROR, "Expected Fix Frequency > 0");
         }
         SPF(echo_string, "%s = %d", "Fix Frequency", tran->fix_freq); ECHO(echo_string, echo_file);
       }
@@ -1661,7 +1661,7 @@ rd_timeint_specs(FILE *ifp,
       /* Sanity check while we're here. */
       else
         {
-          EH(-1,"Invalid setting for Restart Time Integration After Renormalization.");
+          EH(GOMA_ERROR,"Invalid setting for Restart Time Integration After Renormalization.");
         }
       SPF(echo_string,"%s = %d","Restart Time Integration After Renormalization",tran->Restart_Time_Integ_After_Renorm); ECHO(echo_string, echo_file);
     }
@@ -1762,7 +1762,7 @@ rd_timeint_specs(FILE *ifp,
           }
 	else
 	  {
-	    EH(-1, "Fill Weight Function not known.\n");
+	    EH(GOMA_ERROR, "Fill Weight Function not known.\n");
 	  }
 	SPF(echo_string,eoformat,"Fill Weight Function",input);ECHO(echo_string, echo_file);
       }
@@ -1794,7 +1794,7 @@ rd_timeint_specs(FILE *ifp,
 	  }
 	else
 	  {
-	    EH(-1, "Fill Equation not known.\n");
+	    EH(GOMA_ERROR, "Fill Equation not known.\n");
 	  }
 
 	SPF(echo_string,eoformat,"Fill Equation",input);ECHO(echo_string, echo_file);
@@ -1827,7 +1827,7 @@ rd_timeint_specs(FILE *ifp,
     tran->march_to_steady_state = 1;
     tran->steady_state_tolerance = read_dbl(ifp, "Steady State Tolerance");
     if (tran->steady_state_tolerance < 0) {
-      EH(-1, "Expected Steady State Tolerance >= 0");
+      EH(GOMA_ERROR, "Expected Steady State Tolerance >= 0");
     }
     SPF(echo_string, "%s = %g", "Steady State Tolerance", tran->steady_state_tolerance); ECHO(echo_string, echo_file);
   }
@@ -1879,7 +1879,7 @@ rd_levelset_specs(FILE *ifp,
 
       if (fscanf(ifp, "%s", input ) != 1 )
          {
-           EH(-1, "Error reading Level Set Interface Tracking .");
+           EH(GOMA_ERROR, "Error reading Level Set Interface Tracking .");
          }
 
       strip(input); stringup(input);
@@ -1932,7 +1932,7 @@ rd_levelset_specs(FILE *ifp,
 	  int index = Num_Var_Init + ls->Num_Var_Init;
           if ( fscanf(ifp, "%80s", input ) != 1 )
             {
-              EH(-1, "Error reading LS initialization field data \n");
+              EH(GOMA_ERROR, "Error reading LS initialization field data \n");
             }
 
           /* OK.  Let us put the Variables initialized index by LS on the end of the original Var_init array. 
@@ -1946,7 +1946,7 @@ rd_levelset_specs(FILE *ifp,
                        &(Var_init[index].init_val_minus),
                        &(Var_init[index].init_val_plus) ) != 3 )
             {
-              EH(-1,"Need one int and two floats on LS initialization card \n");
+              EH(GOMA_ERROR,"Need one int and two floats on LS initialization card \n");
             }
 
 	  SPF(echo_string,"%s = %s %d %.4g %.4g","Level Set Initialize",input,
@@ -2010,7 +2010,7 @@ rd_levelset_specs(FILE *ifp,
               
               if ( fscanf(ifp, "%s %d %s %d", input, &(s->ns_id), input, &(s->PosEB_id)) != 4) 
                 {
-                  EH(-1,"Nodeset Initialization requires syntax:  Nodeset NS node_side_id EB e_block_id \n");
+                  EH(GOMA_ERROR,"Nodeset Initialization requires syntax:  Nodeset NS node_side_id EB e_block_id \n");
                 }
 
 	      SPF(endofstring(echo_string)," NS %d EB %d",s->ns_id, s->PosEB_id ); ECHO(echo_string,echo_file);
@@ -2024,7 +2024,7 @@ rd_levelset_specs(FILE *ifp,
 
               if ( fscanf( ifp, "%d" , &num_surf ) != 1 )
                 {
-                  EH(-1,"Surfaces initialization method needs number of surfaces specified.");
+                  EH(GOMA_ERROR,"Surfaces initialization method needs number of surfaces specified.");
                 }
 
 	      SPF(echo_string,"Level Set Initialization Method = Surfaces %d",num_surf); ECHO(echo_string,echo_file);
@@ -2034,7 +2034,7 @@ rd_levelset_specs(FILE *ifp,
             }
           else if(!strcmp(input, "SM_object"))
 	      {
-	      EH(-1, "CGM not supported, SM_object");
+	      EH(GOMA_ERROR, "CGM not supported, SM_object");
             }
           else
             WH(-1, "Level Set Initialization method undefined");
@@ -2379,7 +2379,7 @@ rd_levelset_specs(FILE *ifp,
             }
           else
             {
-              EH(-1,"Level Set Renorm Method not known.\n");
+              EH(GOMA_ERROR,"Level Set Renorm Method not known.\n");
             }
 
 	  ECHO(echo_string,echo_file);
@@ -2401,7 +2401,7 @@ rd_levelset_specs(FILE *ifp,
               if ( tran->Fill_Equation == FILL_EQN_ADVECT &&
 	           tran->Fill_Weight_Fcn != FILL_WEIGHT_EXPLICIT )
                 {
-                  EH(-1,"Maybe I should let you ignore LS dependencies even with implicit LS, but I won't!\n");
+                  EH(GOMA_ERROR,"Maybe I should let you ignore LS dependencies even with implicit LS, but I won't!\n");
                 }
 #endif
               ls->Ignore_F_deps = TRUE;
@@ -2418,7 +2418,7 @@ rd_levelset_specs(FILE *ifp,
         {
           if ( fscanf( ifp, "%s", input ) != 1 )
             {
-              EH(-1,"Need string parameter for level set output filename .\n");
+              EH(GOMA_ERROR,"Need string parameter for level set output filename .\n");
             }
 
           ls->output_file = smalloc( sizeof(char)* ( strlen(input) + 1 ) );
@@ -2438,7 +2438,7 @@ rd_levelset_specs(FILE *ifp,
         {
           if( fscanf( ifp,"%d", &(ls->Renorm_Freq) ) != 1 )
             {
-              EH(-1,"Error reading renormalization frequency.\n");
+              EH(GOMA_ERROR,"Error reading renormalization frequency.\n");
             }
           ls->Renorm_Countdown = ls->Renorm_Freq;
 
@@ -2453,7 +2453,7 @@ rd_levelset_specs(FILE *ifp,
         {
           if( fscanf( ifp,"%d", &(ls->SubcyclesAfterRenorm) ) != 1 )
             {
-              EH(-1,"Error reading renormalization subcycles.\n");
+              EH(GOMA_ERROR,"Error reading renormalization subcycles.\n");
             }
 
           SPF(echo_string,"%s = %d","Level Set Renormalization Subcycles", ls->SubcyclesAfterRenorm); ECHO(echo_string,echo_file);
@@ -2509,7 +2509,7 @@ rd_levelset_specs(FILE *ifp,
             }
           else
             {
-              EH(-1,"Level Set Reconstruction Method not known.\n");
+              EH(GOMA_ERROR,"Level Set Reconstruction Method not known.\n");
             }
 	  SPF(echo_string,eoformat, "Level Set Reconstruction Method", input); ECHO(echo_string,echo_file);
         }
@@ -2544,7 +2544,7 @@ rd_levelset_specs(FILE *ifp,
         {
           if (fscanf(ifp, "%s", input ) != 1 )
              {
-               EH(-1, "Error reading Level Set Slave Surface.");
+               EH(GOMA_ERROR, "Error reading Level Set Slave Surface.");
              }
           strip(input); stringup(input);
 
@@ -2553,7 +2553,7 @@ rd_levelset_specs(FILE *ifp,
               ls->Evolution = LS_EVOLVE_SLAVE;
               ls->Renorm_Method = FALSE;
               if (ls->Init_Method != SURFACES)
-                EH(-1,"Must define Level Set Initialization method to be SURFACES or NODESET for slave surfaces");
+                EH(GOMA_ERROR,"Must define Level Set Initialization method to be SURFACES or NODESET for slave surfaces");
             }
 
 	  SPF(echo_string,eoformat,"Level Set Slave Surface", input); ECHO(echo_string,echo_file);
@@ -2568,7 +2568,7 @@ rd_levelset_specs(FILE *ifp,
         {
           if (fscanf(ifp, "%s", input ) != 1 )
              {
-               EH(-1, "Error reading Level Set Fluid Solid.");
+               EH(GOMA_ERROR, "Error reading Level Set Fluid Solid.");
              }
           strip(input); stringup(input);
 
@@ -2583,7 +2583,7 @@ rd_levelset_specs(FILE *ifp,
                   strcmp(input,"NO")    != 0 &&
                   strcmp(input,"FALSE") != 0 )
             {
-              EH(-1,"Invalid setting for Level Set Fluid Solid.");
+              EH(GOMA_ERROR,"Invalid setting for Level Set Fluid Solid.");
             }
 
 	  SPF(echo_string,eoformat,"Level Set Fluid Solid", input); ECHO(echo_string,echo_file);
@@ -2605,7 +2605,7 @@ rd_levelset_specs(FILE *ifp,
           else if ( ls->Solid_Sign < 0 )
               ls->Solid_Sign = -1;
           else
-            EH(-1,"Level Set Solid Sign requires a non-zero integer parameter.");
+            EH(GOMA_ERROR,"Level Set Solid Sign requires a non-zero integer parameter.");
 
           ls->Fluid_Sign = -ls->Solid_Sign;
 
@@ -2617,7 +2617,7 @@ rd_levelset_specs(FILE *ifp,
         {
           if ( fscanf(ifp,"%s", input ) != 1)
             {
-              EH(-1, "Need string parameter for Semi_Lagrange card.\n");
+              EH(GOMA_ERROR, "Need string parameter for Semi_Lagrange card.\n");
             }
           strip(input); stringup(input);
 
@@ -2626,7 +2626,7 @@ rd_levelset_specs(FILE *ifp,
               strcmp(input, "TRUE" ) == 0)
             {
 #ifdef COUPLED_FILL
-	      EH(-1, "Level set Semi_Lagrange not supported for COUPLED_FILL.");
+	      EH(GOMA_ERROR, "Level set Semi_Lagrange not supported for COUPLED_FILL.");
 #else
               ls->Evolution = LS_EVOLVE_SEMILAGRANGIAN;
               tran->exp_subcycle = 1.0;
@@ -2642,7 +2642,7 @@ rd_levelset_specs(FILE *ifp,
       if( iread == 1 ){
         if( fscanf(ifp, "%s", input) != 1)
           {
-            EH(-1," Need string parameter for Search Option card.");
+            EH(GOMA_ERROR," Need string parameter for Search Option card.");
           }
 
       strip(input); stringup(input);
@@ -2652,12 +2652,12 @@ rd_levelset_specs(FILE *ifp,
       if( strcmp(input, "GRID_SEARCH") == 0 )
         {
 	  int err;
-	  EH(-1,"The Level Set Search Option : GRID_SEARCH is not functioning at this time.\n");
+	  EH(GOMA_ERROR,"The Level Set Search Option : GRID_SEARCH is not functioning at this time.\n");
 
           ls->Search_Option = GRID_SEARCH;
           err = fscanf(ifp,"%d", &(ls->Grid_Search_Depth));
 	  if (err != 1) {
-	    EH(-1, "Expected to read one int for GRID_SEARCH");
+	    EH(GOMA_ERROR, "Expected to read one int for GRID_SEARCH");
 	  }
 
 	  SPF(endofstring(echo_string)," %d",ls->Grid_Search_Depth);
@@ -2668,7 +2668,7 @@ rd_levelset_specs(FILE *ifp,
         }
       else 
         {
-          EH(-1," Allowable choices for Search Option are: SEGMENT or GRID_SEARCH");
+          EH(GOMA_ERROR," Allowable choices for Search Option are: SEGMENT or GRID_SEARCH");
         }
 
       ECHO(echo_string,echo_file);
@@ -2681,7 +2681,7 @@ rd_levelset_specs(FILE *ifp,
       if ( iread == 1 ) {
         if ( fscanf( ifp,"%d", &(ls->Integration_Depth) ) != 1 )
           {
-            EH(-1, "Subgrid Integration Depth for Level Set needs a single positive integer parameter.");
+            EH(GOMA_ERROR, "Subgrid Integration Depth for Level Set needs a single positive integer parameter.");
           }
 	SPF(echo_string,"%s = %d", "Level Set Subgrid Integration Depth", ls->Integration_Depth); ECHO(echo_string,echo_file);
       }
@@ -2692,7 +2692,7 @@ rd_levelset_specs(FILE *ifp,
         {
           if (fscanf(ifp, "%s", input ) != 1 )
              {
-               EH(-1, "Error reading Level Set Subelement Integration Flag.");
+               EH(GOMA_ERROR, "Error reading Level Set Subelement Integration Flag.");
              }
           strip(input); stringup(input);
 
@@ -2700,9 +2700,9 @@ rd_levelset_specs(FILE *ifp,
             {
               ls->SubElemIntegration = TRUE;
               if (ls->Integration_Depth > 0)
-                EH(-1,"Combination of Subgrid and Subelement integration is not supported.");
+                EH(GOMA_ERROR,"Combination of Subgrid and Subelement integration is not supported.");
               if (ls->Length_Scale > 0.)
-                EH(-1,"I don't think it makes sense to have subelement integration and non-zero length scale.");
+                EH(GOMA_ERROR,"I don't think it makes sense to have subelement integration and non-zero length scale.");
             }
 
 	  SPF(echo_string,eoformat,"Level Set Subelement Integration", input); ECHO(echo_string,echo_file);
@@ -2714,7 +2714,7 @@ rd_levelset_specs(FILE *ifp,
         {
           if (fscanf(ifp, "%s", input ) != 1 )
              {
-               EH(-1, "Error reading Level Set Adaptive Integration Flag.");
+               EH(GOMA_ERROR, "Error reading Level Set Adaptive Integration Flag.");
              }
           strip(input); stringup(input);
 
@@ -2722,11 +2722,11 @@ rd_levelset_specs(FILE *ifp,
             {
               ls->AdaptIntegration = TRUE;
               if (ls->Integration_Depth > 0)
-                EH(-1,"Combination of Subgrid and Adaptive integration is not supported.");
+                EH(GOMA_ERROR,"Combination of Subgrid and Adaptive integration is not supported.");
               if (ls->Length_Scale > 0.)
-                EH(-1,"Currently, Adaptive integration applies only to sharp interfaces (zero LS length scale).");
+                EH(GOMA_ERROR,"Currently, Adaptive integration applies only to sharp interfaces (zero LS length scale).");
               if (ls->SubElemIntegration)
-                EH(-1,"Combination of Subelement and Adaptive integration is not supported.");
+                EH(GOMA_ERROR,"Combination of Subelement and Adaptive integration is not supported.");
             }
 	  SPF(echo_string,eoformat,"Level Set Adaptive Integration", input); ECHO(echo_string,echo_file);
         }
@@ -2738,7 +2738,7 @@ rd_levelset_specs(FILE *ifp,
       if ( iread == 1 ) {
         if ( fscanf( ifp,"%d", &(ls->Adaptive_Order) ) != 1 )
           {
-            EH(-1, "Adaptive Integration Order for Level Set needs a single positive integer parameter.");
+            EH(GOMA_ERROR, "Adaptive Integration Order for Level Set needs a single positive integer parameter.");
           }
 	SPF(echo_string,"%s = %d", "Level Set Adaptive Order", ls->Adaptive_Order); ECHO(echo_string,echo_file);
       }
@@ -2749,7 +2749,7 @@ rd_levelset_specs(FILE *ifp,
       if ( iread == 1 ) {
         if ( fscanf( ifp,"%d", &(ls->CrossMeshQuadPoints) ) != 1 )
           {
-            EH(-1, "Overlap Quadrature Points needs a single positive integer parameter.");
+            EH(GOMA_ERROR, "Overlap Quadrature Points needs a single positive integer parameter.");
           }
 	SPF(echo_string,"%s = %d","Overlap Quadrature Points" ,ls->CrossMeshQuadPoints ); ECHO(echo_string,echo_file);
       }
@@ -2767,7 +2767,7 @@ rd_levelset_specs(FILE *ifp,
 	{
 		if (fscanf(ifp, "%s", input ) != 1 )
 		{
-			EH(-1, "Error reading Level Set PSPP filtering flag.");
+			EH(GOMA_ERROR, "Error reading Level Set PSPP filtering flag.");
 		}
 		strip(input); stringup(input);
 		
@@ -2789,7 +2789,7 @@ rd_levelset_specs(FILE *ifp,
           {
             if (fscanf(ifp, "%s", input) != 1)
               {
-                EH(-1, "Error reading Level Set Ghost Stress");
+                EH(GOMA_ERROR, "Error reading Level Set Ghost Stress");
               }
             strip(input);
             stringup(input);
@@ -2809,7 +2809,7 @@ rd_levelset_specs(FILE *ifp,
               }
             else
               {
-                EH(-1, "Unknown value for Level Set Ghost Stress");
+                EH(GOMA_ERROR, "Unknown value for Level Set Ghost Stress");
               }
 
             SPF(echo_string,"%s = %s", "Level Set Ghost Stress", input);
@@ -2825,7 +2825,7 @@ rd_levelset_specs(FILE *ifp,
         {
           if (fscanf(ifp, "%s", input ) != 1 )
           {
-            EH(-1, "Error reading Level Set Toure Penalty flag.");
+            EH(GOMA_ERROR, "Error reading Level Set Toure Penalty flag.");
           }
           strip(input);
           stringup(input);
@@ -2840,7 +2840,7 @@ rd_levelset_specs(FILE *ifp,
           }
           else
           {
-            EH(-1, "Error unknown value for Level Set Toure Penalty");
+            EH(GOMA_ERROR, "Error unknown value for Level Set Toure Penalty");
           }
           SPF(echo_string,"%s = %s", "Level Set Toure Penalty", input);
           ECHO(echo_string,echo_file);
@@ -2853,7 +2853,7 @@ rd_levelset_specs(FILE *ifp,
         {
           if (fscanf(ifp, "%s", input ) != 1 )
           {
-            EH(-1, "Error reading Huygens Freeze Nodes flag.");
+            EH(GOMA_ERROR, "Error reading Huygens Freeze Nodes flag.");
           }
           strip(input);
           stringup(input);
@@ -2868,7 +2868,7 @@ rd_levelset_specs(FILE *ifp,
           }
           else
           {
-            EH(-1, "Error unknown value for Huygens Freeze Nodes");
+            EH(GOMA_ERROR, "Error unknown value for Huygens Freeze Nodes");
           }
           SPF(echo_string,"%s = %s", "Huygens Freeze Nodes", input);
           ECHO(echo_string,echo_file);
@@ -2881,7 +2881,7 @@ rd_levelset_specs(FILE *ifp,
         {
           if (fscanf(ifp, "%s", input ) != 1 )
           {
-            EH(-1, "Error reading Level Set Enable Div Term flag.");
+            EH(GOMA_ERROR, "Error reading Level Set Enable Div Term flag.");
           }
           strip(input);
           stringup(input);
@@ -2896,7 +2896,7 @@ rd_levelset_specs(FILE *ifp,
           }
           else
           {
-            EH(-1, "Error unknown value for Level Set Enable Div Term");
+            EH(GOMA_ERROR, "Error unknown value for Level Set Enable Div Term");
           }
           SPF(echo_string,"%s = %s", "Level Set Enable Div Term", input);
           ECHO(echo_string,echo_file);
@@ -2909,7 +2909,7 @@ rd_levelset_specs(FILE *ifp,
         {
           if (fscanf(ifp, "%s", input ) != 1 )
           {
-            EH(-1, "Error reading Level Set Semi-Implicit Time Integration.");
+            EH(GOMA_ERROR, "Error reading Level Set Semi-Implicit Time Integration.");
           }
           strip(input);
           stringup(input);
@@ -2924,7 +2924,7 @@ rd_levelset_specs(FILE *ifp,
           }
           else
           {
-            EH(-1, "Error unknown value for Level Set Semi-Implicit Time Integration");
+            EH(GOMA_ERROR, "Error unknown value for Level Set Semi-Implicit Time Integration");
           }
           SPF(echo_string,"%s = %s", "Level Set Semi-Implicit Time Integration", input);
           ECHO(echo_string,echo_file);
@@ -2940,7 +2940,7 @@ rd_levelset_specs(FILE *ifp,
           dbl scale;
           if (fscanf(ifp, "%s %lg", input, &scale) != 2 )
           {
-            EH(-1, "Error reading Level Set YZbeta flag.");
+            EH(GOMA_ERROR, "Error reading Level Set YZbeta flag.");
           }
           strip(input);
           stringup(input);
@@ -2959,7 +2959,7 @@ rd_levelset_specs(FILE *ifp,
           }
           else
           {
-            EH(-1, "Error unknown value for Level Set Toure Penalty");
+            EH(GOMA_ERROR, "Error unknown value for Level Set Toure Penalty");
           }
           ls->YZbeta_scale = scale;
           SPF(echo_string,"%s = %s %g", "Level Set YZbeta", input, scale);
@@ -2981,7 +2981,7 @@ rd_levelset_specs(FILE *ifp,
     {
       if( fscanf(ifp, "%d", &i) != 1 )
         {
-          EH(-1,"Error scanning number of phase functions\n");
+          EH(GOMA_ERROR,"Error scanning number of phase functions\n");
         }
       
       if( i > 0) 
@@ -3075,14 +3075,14 @@ if( pfd != NULL ) {
     {
 		if (fscanf(ifp, "%s", input ) != 1 )
 		{
-			EH(-1, "Error reading Phase Function Slave Surface.");
+			EH(GOMA_ERROR, "Error reading Phase Function Slave Surface.");
 		}
 		strip(input); stringup(input);
 		
 		if ((strcmp(input,"ON") == 0) || (strcmp(input,"YES") == 0 ))
 		{
 #ifdef PHASE_COUPLED_FILL
-			EH(-1, "Phase function slave surfaces not currently supported for PHASE_COUPLED_FILL.");
+			EH(GOMA_ERROR, "Phase function slave surfaces not currently supported for PHASE_COUPLED_FILL.");
 #endif
 			for( i=0; i<pfd->num_phase_funcs;i++)
 			{
@@ -3098,7 +3098,7 @@ if( pfd != NULL ) {
 		if(pfd->ls[0]->Evolution != LS_EVOLVE_SLAVE)
 		{
 #ifndef PHASE_COUPLED_FILL
-			EH(-1,"Must have PHASE_COUPLED_FILL compile flag for phase-field functions that are not SLAVED");
+			EH(GOMA_ERROR,"Must have PHASE_COUPLED_FILL compile flag for phase-field functions that are not SLAVED");
 #endif
 		}
     }
@@ -3141,7 +3141,7 @@ if( pfd != NULL ) {
 				
 				if ( fscanf(ifp, "%s %d %s %d", input, &(s->ns_id), input, &(s->PosEB_id)) != 4) 
 				{
-					EH(-1,"Nodeset Initialization requires syntax:  Nodeset NS node_side_id EB e_block_id \n");
+					EH(GOMA_ERROR,"Nodeset Initialization requires syntax:  Nodeset NS node_side_id EB e_block_id \n");
 				}
 				
 				SPF(endofstring(echo_string),"NS %d EB %d", s->ns_id, s->PosEB_id); ECHO(echo_string,echo_file);
@@ -3155,7 +3155,7 @@ if( pfd != NULL ) {
 				
 				if ( fscanf( ifp, "%d" , &num_surf ) != 1 )
 				{
-					EH(-1,"Surfaces initialization method for phase function needs number of surfaces specified.");
+					EH(GOMA_ERROR,"Surfaces initialization method for phase function needs number of surfaces specified.");
 				}
 				
 				SPF(echo_string,"%s = %s %d", "Phase Function Initialization Method", input, num_surf);ECHO(echo_string,echo_file);
@@ -3230,7 +3230,7 @@ if( pfd != NULL ) {
 		}
 		else
 		{
-			EH(-1,"Unknown Phase Function Renorm method. n");
+			EH(GOMA_ERROR,"Unknown Phase Function Renorm method. n");
 		}
 		
 		for(i=0; i<pfd->num_phase_funcs; i++)
@@ -3266,7 +3266,7 @@ if( pfd != NULL ) {
       }
     else 
       {
-	EH(-1,"Phase function Constraint Method not recognized.\n");
+	EH(GOMA_ERROR,"Phase function Constraint Method not recognized.\n");
       }
 	  
     if( pfd->Constraint_Method == LAGR_MULT )
@@ -3282,7 +3282,7 @@ if( pfd != NULL ) {
 	  }
 	else
 	  {
-	    EH(-1,"LM phase function constraint method must be first augmenting condition.\n");
+	    EH(GOMA_ERROR,"LM phase function constraint method must be first augmenting condition.\n");
 	  }
 	
 	augc[nAC-1].Type = AC_PF_CONSTRAINT;
@@ -3291,7 +3291,7 @@ if( pfd != NULL ) {
 	
 	if( fscanf(ifp,"%d %lf", &(augc[nAC-1].MTID), &(augc[nAC-1].CONSTV) ) != 2 )
 	  {
-	    EH(-1,"LM constraint type for phase function needs integer and double arguments.\n");
+	    EH(GOMA_ERROR,"LM constraint type for phase function needs integer and double arguments.\n");
 	  }
 	
 	SPF(endofstring(echo_string)," %d %.4g", augc[nAC-1].MTID, augc[nAC-1].CONSTV); ECHO(echo_string,echo_file);
@@ -3305,7 +3305,7 @@ if (iread == 1)
 
 	if( ( read_constants( ifp, &tmp, 0 ) != pfd->num_phase_funcs ) )
 	{
-		EH(-1,"Inconsistent number of phase function shift values \n.");
+		EH(GOMA_ERROR,"Inconsistent number of phase function shift values \n.");
 	}
 
 	for(i=0; i<pfd->num_phase_funcs; i++ ) pfd->shift[i] = tmp[i]; 
@@ -3696,7 +3696,7 @@ rd_track_specs(FILE *ifp,
           look_for(ifp, "Number of user continuation functions",input,'=');
           if (fscanf(ifp,"%d",&nUC) != 1)
             {
-              EH(-1, "error reading Number of user continuation functions");
+              EH(GOMA_ERROR, "error reading Number of user continuation functions");
             }
 		  
 		  SPF(echo_string,"%s = %d",input, nUC); ECHO(echo_string,echo_file);
@@ -3817,7 +3817,7 @@ rd_track_specs(FILE *ifp,
         if (iread == 1) {
           cont->fix_freq = read_int(ifp, "Continuation Fix Frequency");
           if (cont->fix_freq < 0) {
-            EH(-1, "Expected Fix Frequency > 0");
+            EH(GOMA_ERROR, "Expected Fix Frequency > 0");
           }
           SPF(echo_string, "%s = %d", "Continuation Fix Frequency", cont->fix_freq); ECHO(echo_string, echo_file);
         }
@@ -4051,7 +4051,7 @@ rd_track_specs(FILE *ifp,
    */
           if (cont->upType == 6 && nCC < 2)
             {
-              EH(-1, "Angular continuation requires at least one CC card!");
+              EH(GOMA_ERROR, "Angular continuation requires at least one CC card!");
             }
 
   /*
@@ -4378,7 +4378,7 @@ rd_track_specs(FILE *ifp,
           strip(input);
           if ( strcmp(input,"none") == 0 )
 		  {
-              EH(-1, "TP parameter type is required!");
+              EH(GOMA_ERROR, "TP parameter type is required!");
 		  }
           else
 			  if ( strcmp(input,"BC") == 0 )
@@ -4450,7 +4450,7 @@ rd_track_specs(FILE *ifp,
               look_for(ifp, "Number of user TP continuation functions",input,'=');
               if (fscanf(ifp,"%d",&nUTC) != 1)
                 {
-                  EH(-1, "error reading Number of user TP continuation functions");
+                  EH(GOMA_ERROR, "error reading Number of user TP continuation functions");
                 }
 
 /* Allocate the structure tpuc for each function */
@@ -4542,11 +4542,11 @@ rd_track_specs(FILE *ifp,
             {
               if (loca_in->Cont_Alg == PF_CONTINUATION)
                 {
-                  EH(-1, "Pitchfork algorithm requires null vector input!");
+                  EH(GOMA_ERROR, "Pitchfork algorithm requires null vector input!");
                 }
               if (loca_in->Cont_Alg == HP_CONTINUATION)
                 {
-                  EH(-1, "Hopf algorithm requires null vector input!");
+                  EH(GOMA_ERROR, "Hopf algorithm requires null vector input!");
                 }
             }
 
@@ -4564,7 +4564,7 @@ rd_track_specs(FILE *ifp,
               look_for(ifp, "Initial Hopf frequency", input, '=');
               if (fscanf(ifp, "%le", &loca_in->omega) != 1)
                 {
-                  EH(-1, "error reading initial Hopf frequency");
+                  EH(GOMA_ERROR, "error reading initial Hopf frequency");
                 }
 			  SPF(echo_string,"%s = %.4g", input, loca_in->omega);  ECHO(echo_string,echo_file); 
             }
@@ -4622,7 +4622,7 @@ rd_track_specs(FILE *ifp,
    */
           if (TPContType == 6 && nTC < 2)
             {
-              EH(-1, "Angular TP continuation requires at least one TC card!");
+              EH(GOMA_ERROR, "Angular TP continuation requires at least one TC card!");
             }
 
   /*
@@ -5446,7 +5446,7 @@ rd_ac_specs(FILE *ifp,
   
   	if( Num_Proc != 1 && augc[iAC].BCID == APREPRO_AC_BCID)
 	  {
-	    EH(-1,"Aprepro parameter AC not ready for parallel");
+	    EH(GOMA_ERROR,"Aprepro parameter AC not ready for parallel");
 	  } 
 	break;
 
@@ -5522,12 +5522,12 @@ rd_ac_specs(FILE *ifp,
 		augc[iAC].DIR = I_NEG_VX;
 	      }
 	      else {
-		EH(-1,"Error in reading LSV:PHASE; it can not equal zero.");
+		EH(GOMA_ERROR,"Error in reading LSV:PHASE; it can not equal zero.");
 	      }
 
 	      if( fscanf(ifp,"%lf", &augc[iAC].CONSTV) != 1 )
 		{
-		  EH(-1,"Error in reading LS_VEL - VX augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading LS_VEL - VX augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "VY" ) == 0 )
@@ -5541,12 +5541,12 @@ rd_ac_specs(FILE *ifp,
 		augc[iAC].DIR = I_NEG_VY;
 	      }
 	      else {
-		EH(-1,"Error in reading LSV:PHASE; it can not equal zero.");
+		EH(GOMA_ERROR,"Error in reading LSV:PHASE; it can not equal zero.");
 	      }
 
 	      if( fscanf(ifp,"%lf", &augc[iAC].CONSTV) != 1 )
 		{
-		  EH(-1,"Error in reading LS_VEL - VY augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading LS_VEL - VY augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "VZ" ) == 0 )
@@ -5560,17 +5560,17 @@ rd_ac_specs(FILE *ifp,
 		augc[iAC].DIR = I_NEG_VZ;
 	      }
 	      else {
-		EH(-1,"Error in reading LSV:PHASE; it can not equal zero.");
+		EH(GOMA_ERROR,"Error in reading LSV:PHASE; it can not equal zero.");
 	      }
 
 	      if( fscanf(ifp,"%lf", &augc[iAC].CONSTV) != 1 )
 		{
-		  EH(-1,"Error in reading LS_VEL - VZ augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading LS_VEL - VZ augmenting condition");
 		}
 	    }
  	  else
 	    {
-	      EH(-1, "Must specify the velocity component for LS_VEL augmenting condition as VX, VY or VZ.");
+	      EH(GOMA_ERROR, "Must specify the velocity component for LS_VEL augmenting condition as VX, VY or VZ.");
 	    }
 
 
@@ -5592,14 +5592,14 @@ rd_ac_specs(FILE *ifp,
           {
 	  if( fscanf( ifp, "%d %d %d %s", &augc[iAC].MTID, &augc[iAC].BCID, &augc[iAC].DFID, input) != 4 )
 	    {
-	      EH(-1, "Error in syntax for flux-type augmenting condition");
+	      EH(GOMA_ERROR, "Error in syntax for flux-type augmenting condition");
 	    }
 
 	  SPF(endofstring(echo_string)," %d %d %d %s", augc[iAC].MTID, augc[iAC].BCID, augc[iAC].DFID, input );
 
      	  if( Num_Proc != 1 && augc[iAC].BCID == APREPRO_AC_BCID)
   		{
-  		EH(-1,"Aprepro parameter AC not ready for parallel");
+  		EH(GOMA_ERROR,"Aprepro parameter AC not ready for parallel");
   		} 
           }
         else
@@ -5618,7 +5618,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading FORCE_X augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading FORCE_X augmenting condition");
 		}
 	    }
           else if( strcmp( input, "FORCE_X_POS" ) == 0 )
@@ -5627,7 +5627,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading FORCE_X_POS augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading FORCE_X_POS augmenting condition");
 		}
 	    }
 	  else if( strcmp( input, "FORCE_X_NEG" ) == 0 )
@@ -5636,7 +5636,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading FORCE_X_NEG augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading FORCE_X_NEG augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "FORCE_Y" ) == 0 )
@@ -5645,7 +5645,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading FORCE_Y augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading FORCE_Y augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "FORCE_Y_POS" ) == 0 )
@@ -5654,7 +5654,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading FORCE_Y_POS augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading FORCE_Y_POS augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "FORCE_Y_NEG" ) == 0 )
@@ -5663,7 +5663,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading FORCE_Y_NEG augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading FORCE_Y_NEG augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "FORCE_Z" ) == 0 )
@@ -5672,7 +5672,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading FORCE_Z augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading FORCE_Z augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "FORCE_Z_POS" ) == 0 )
@@ -5681,7 +5681,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading FORCE_Z_POS augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading FORCE_Z_POS augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "FORCE_Z_NEG" ) == 0 )
@@ -5690,7 +5690,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading FORCE_Z_NEG augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading FORCE_Z_NEG augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "FORCE_NORMAL" ) == 0 )
@@ -5699,7 +5699,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading FORCE_NORMAL augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading FORCE_NORMAL augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "FORCE_TANGENT1" ) == 0 )
@@ -5708,7 +5708,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading FORCE_TANGENT1 augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading FORCE_TANGENT1 augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "FORCE_TANGENT2" ) == 0 )
@@ -5717,7 +5717,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading FORCE_TANGENT2 augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading FORCE_TANGENT2 augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "VOLUME_FLUX" ) == 0 )
@@ -5726,7 +5726,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading VOLUME_FLUX augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading VOLUME_FLUX augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "SHELL_VOLUME_FLUX" ) == 0 )
@@ -5735,7 +5735,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading SHELL_VOLUME_FLUX augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading SHELL_VOLUME_FLUX augmenting condition");
 		}
   	     }
 	  else if ( strcmp( input, "HEAT_FLUX" ) == 0 )
@@ -5744,7 +5744,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading HEAT_FLUX augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading HEAT_FLUX augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "SPECIES_FLUX" ) == 0 )
@@ -5753,7 +5753,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %d %lf", &augc[iAC].SSID, &augc[iAC].COMPID,&augc[iAC].CONSTV) != 3 )
 		{
-		  EH(-1,"Error in reading SPECIES_FLUX augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading SPECIES_FLUX augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "CHARGED_SPECIES_FLUX" ) == 0 )
@@ -5762,7 +5762,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %d %lf", &augc[iAC].SSID, &augc[iAC].COMPID, &augc[iAC].CONSTV) != 3 )
 		{
-		  EH(-1,"Error in reading CHARGED_SPECIES_FLUX augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading CHARGED_SPECIES_FLUX augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "CURRENT" ) == 0 )
@@ -5771,7 +5771,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %d %lf", &augc[iAC].SSID, &augc[iAC].COMPID, &augc[iAC].CONSTV) != 3) 
 		{
-		  EH(-1,"Error in reading CURRENT augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading CURRENT augmenting condition");
 		}
 	    }
 	  else if ( strcmp( input, "CURRENT_FICKIAN" ) == 0 )
@@ -5781,7 +5781,7 @@ rd_ac_specs(FILE *ifp,
 	      if( fscanf(ifp,"%d %d %lf %lf",&augc[iAC].SSID, &augc[iAC].COMPID, &augc[iAC].CONSTV, 
                                              &z[augc[iAC].COMPID]) != 4 )
 		{
-		  EH(-1,"Error in reading CURRENT_FICKIAN augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading CURRENT_FICKIAN augmenting condition");
 		}
               augc[iAC].CONSTV /= z[augc[iAC].COMPID]*F; /* convert current density to molar flux */ 
 	    }
@@ -5791,7 +5791,7 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
 		{
-		  EH(-1,"Error in reading PORE_LIQ_FLUX augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading PORE_LIQ_FLUX augmenting condition");
 		}
 	    }
  	  else if ( strcmp( input, "TORQUE" ) == 0 )
@@ -5800,7 +5800,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading TORQUE augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading TORQUE augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "AVERAGE_CONC" ) == 0 )
@@ -5809,7 +5809,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading AVERAGE_CONC augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading AVERAGE_CONC augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "SURF_DISSIP" ) == 0 )
@@ -5818,7 +5818,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading SURF_DISSIP augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading SURF_DISSIP augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "AREA" ) == 0 )
@@ -5827,7 +5827,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading AREA augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading AREA augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "VOL_REVOLUTION" ) == 0 )
@@ -5836,7 +5836,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading VOL_REVOLUTION augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading VOL_REVOLUTION augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "NEG_LS_FLUX" ) == 0 )
@@ -5845,7 +5845,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading NEG_LS_FLUX augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading NEG_LS_FLUX augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "POS_LS_FLUX" ) == 0 )
@@ -5854,7 +5854,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading POS_LS_FLUX augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading POS_LS_FLUX augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "N_DOT_X" ) == 0 )
@@ -5863,7 +5863,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading N_DOT_X augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading N_DOT_X augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "ELEC_FORCE_NORMAL" ) == 0 )
@@ -5872,7 +5872,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading ELEC_FORCE_NORMAL augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading ELEC_FORCE_NORMAL augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "ELEC_FORCE_TANGENT1" ) == 0 )
@@ -5881,7 +5881,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading ELEC_FORCE_TANGENT1 augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading ELEC_FORCE_TANGENT1 augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "ELEC_FORCE_TANGENT2" ) == 0 )
@@ -5890,7 +5890,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading ELEC_FORCE_TANGENT2 augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading ELEC_FORCE_TANGENT2 augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "ELEC_FORCE_X" ) == 0 )
@@ -5899,7 +5899,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading ELEC_FORCE_X augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading ELEC_FORCE_X augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "ELEC_FORCE_Y" ) == 0 )
@@ -5908,7 +5908,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading ELEC_FORCE_Y augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading ELEC_FORCE_Y augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "ELEC_FORCE_Z" ) == 0 )
@@ -5917,7 +5917,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading ELEC_FORCE_Z augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading ELEC_FORCE_Z augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "NET_CHARGE" ) == 0 )
@@ -5926,7 +5926,7 @@ rd_ac_specs(FILE *ifp,
  
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading NET_CHARGE augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading NET_CHARGE augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "ACOUSTIC_FLUX_NORMAL" ) == 0 )
@@ -5934,7 +5934,7 @@ rd_ac_specs(FILE *ifp,
  	      augc[iAC].MFID = ACOUSTIC_FLUX_NORMAL ;
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading ACOUSTIC_FLUX augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading ACOUSTIC_FLUX augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "ACOUSTIC_FLUX_TANGENT1" ) == 0 )
@@ -5942,7 +5942,7 @@ rd_ac_specs(FILE *ifp,
  	      augc[iAC].MFID = ACOUSTIC_FLUX_TANGENT1 ;
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading ACOUSTIC_FLUX augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading ACOUSTIC_FLUX augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "ACOUSTIC_FLUX_TANGENT2" ) == 0 )
@@ -5950,7 +5950,7 @@ rd_ac_specs(FILE *ifp,
  	      augc[iAC].MFID = ACOUSTIC_FLUX_TANGENT2 ;
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading ACOUSTIC_FLUX augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading ACOUSTIC_FLUX augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "ACOUSTIC_FLUX_X" ) == 0 )
@@ -5958,7 +5958,7 @@ rd_ac_specs(FILE *ifp,
  	      augc[iAC].MFID = ACOUSTIC_FLUX_X ;
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading ACOUSTIC_FLUX augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading ACOUSTIC_FLUX augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "ACOUSTIC_FLUX_Y" ) == 0 )
@@ -5966,7 +5966,7 @@ rd_ac_specs(FILE *ifp,
  	      augc[iAC].MFID = ACOUSTIC_FLUX_Y ;
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading ACOUSTIC_FLUX augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading ACOUSTIC_FLUX augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "ACOUSTIC_FLUX_Z" ) == 0 )
@@ -5974,7 +5974,7 @@ rd_ac_specs(FILE *ifp,
  	      augc[iAC].MFID = ACOUSTIC_FLUX_Z ;
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading ACOUSTIC_FLUX augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading ACOUSTIC_FLUX augmenting condition");
  		}
  	    }
  	  else if ( strcmp( input, "REPULSIVE_FORCE" ) == 0 )
@@ -5982,7 +5982,7 @@ rd_ac_specs(FILE *ifp,
  	      augc[iAC].MFID = REPULSIVE_FORCE ;
  	      if( fscanf(ifp,"%d %lf",&augc[iAC].SSID, &augc[iAC].CONSTV) != 2 )
  		{
- 		  EH(-1,"Error in reading REPULSIVE_FORCE augmenting condition");
+ 		  EH(GOMA_ERROR,"Error in reading REPULSIVE_FORCE augmenting condition");
  		}
  	    }
 	  else if ( strcmp( input, "SPECIES_FLUX_REVOLUTION" ) == 0 )
@@ -5991,12 +5991,12 @@ rd_ac_specs(FILE *ifp,
 
 	      if( fscanf(ifp,"%d %d %lf", &augc[iAC].SSID, &augc[iAC].COMPID,&augc[iAC].CONSTV) != 3 )
 		{
-		  EH(-1,"Error in reading SPECIES_FLUX_REVOLUTION augmenting condition");
+		  EH(GOMA_ERROR,"Error in reading SPECIES_FLUX_REVOLUTION augmenting condition");
 		}
 	    }
  	  else
 	    {
-	      EH(-1, "That flux-type augmenting condition has yet to be implemented");
+	      EH(GOMA_ERROR, "That flux-type augmenting condition has yet to be implemented");
 	    }
 
 	  switch( augc[iAC].MFID )
@@ -6024,7 +6024,7 @@ rd_ac_specs(FILE *ifp,
 
 	  if( fscanf( ifp, "%d %d %s %lf", &augc[iAC].MTID, &augc[iAC].SSID,  input, &augc[iAC].CONSTV ) != 4 )
 	    {
-	      EH(-1, "Error in syntax for Lagrange Multiplier augmenting condition");
+	      EH(GOMA_ERROR, "Error in syntax for Lagrange Multiplier augmenting condition");
 	    }
 
 	  stringup( input );
@@ -6036,7 +6036,7 @@ rd_ac_specs(FILE *ifp,
 	    }
  	  else
 	    {
-	      EH(-1,"Unknown Lagrange Multiplier constraint type.");
+	      EH(GOMA_ERROR,"Unknown Lagrange Multiplier constraint type.");
 	    }
 
 	  SPF(endofstring(echo_string)," %d %d %s %.4g",augc[iAC].MTID, augc[iAC].SSID,  input, augc[iAC].CONSTV );
@@ -6065,18 +6065,18 @@ rd_ac_specs(FILE *ifp,
         if (fscanf(ifp, "%d %d %d %d", &augc[iAC].SSID, &augc[iAC].solid_eb,
              &augc[iAC].fluid_eb, &augc[iAC].lm_eb) < 4)
            {
-             EH(-1, "Error reading SSID, solid_eb, fluid_eb, lm_eb\n");
+             EH(GOMA_ERROR, "Error reading SSID, solid_eb, fluid_eb, lm_eb\n");
            }
 
   /* Do some error checking */
         if (augc[iAC].solid_eb == augc[iAC].fluid_eb)
           {
-            EH(-1, "Fluid and solid element blocks cannot be the same!");
+            EH(GOMA_ERROR, "Fluid and solid element blocks cannot be the same!");
           }
         if (augc[iAC].solid_eb != augc[iAC].lm_eb &&
             augc[iAC].fluid_eb != augc[iAC].lm_eb)
           {
-            EH(-1, "LM element block must be same as either fluid and solid!");
+            EH(GOMA_ERROR, "LM element block must be same as either fluid and solid!");
           }
 
   /* If these tests were passed, set global flag */
@@ -6100,7 +6100,7 @@ rd_ac_specs(FILE *ifp,
              */
 	if( fscanf( ifp, "%s %d %d", input, &augc[iAC].SSID, &augc[iAC].SSID2 ) != 3 )
 	    {
-	      EH(-1, "Error in syntax for Periodic Boundary Condition augmenting condition");
+	      EH(GOMA_ERROR, "Error in syntax for Periodic Boundary Condition augmenting condition");
 	    }
 	else
           {
@@ -6114,7 +6114,7 @@ rd_ac_specs(FILE *ifp,
 	      } 
             if (!var_found)
 	      {
-	        EH(-1, "Could not identify variable type for Periodic Boundary Condition");
+	        EH(GOMA_ERROR, "Could not identify variable type for Periodic Boundary Condition");
 	      }
 	    augc[iAC].VAR = var-1; /* this got incremented one more time than desired */
 	  }
@@ -6125,7 +6125,7 @@ rd_ac_specs(FILE *ifp,
 
 	  
       default:
-	EH(-1,"Unknown Augmenting Condition type.");
+	EH(GOMA_ERROR,"Unknown Augmenting Condition type.");
 
       }  /* End switch on AC_Type */
 
@@ -6194,7 +6194,7 @@ rd_ac_specs(FILE *ifp,
   if ( num_const < 0 )
     {
       sr = sprintf(err_msg, "? AC data floats\n");
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 
 
@@ -6291,7 +6291,7 @@ rd_solver_specs(FILE *ifp,
      upd->Total_Num_Matrices = read_int(ifp, "Total Number of Matrices");
      if (upd->Total_Num_Matrices < 1) 
        {
-        EH(-1, "Total Number of Matrices should be greater or equal to 1");
+        EH(GOMA_ERROR, "Total Number of Matrices should be greater or equal to 1");
        }
      SPF(echo_string, "%s = %d", "Number of Matrices", upd->Total_Num_Matrices); ECHO(echo_string, echo_file);
     }
@@ -6381,11 +6381,11 @@ rd_solver_specs(FILE *ifp,
 	}
       else if (i == 8)
 	{
-	  EH(-1, "Benner's frontal solver not functional on 64-bit builds. We suggest using umf or at your own risk remove this error-handler statement");
+	  EH(GOMA_ERROR, "Benner's frontal solver not functional on 64-bit builds. We suggest using umf or at your own risk remove this error-handler statement");
 	}
       else
 	{
-	  EH(-1,"frontal solver not available on this architecture. Please use umf");
+	  EH(GOMA_ERROR,"frontal solver not available on this architecture. Please use umf");
 	}
     }
   else
@@ -6941,7 +6941,7 @@ rd_solver_specs(FILE *ifp,
         }
       else
         {
-          EH(-1,"All damping factors must be in the range 0 <= fact <=1");
+          EH(GOMA_ERROR,"All damping factors must be in the range 0 <= fact <=1");
         }
    }
 
@@ -6961,7 +6961,7 @@ rd_solver_specs(FILE *ifp,
 
       if (fscanf(ifp, "%80s", input) != 1)
         {
-          EH(-1, "Error reading variable type for Variable Type Newton correction factor");
+          EH(GOMA_ERROR, "Error reading variable type for Variable Type Newton correction factor");
         }
 
       /* loop through variable names and compare to input */
@@ -6974,7 +6974,7 @@ rd_solver_specs(FILE *ifp,
 
       if (var == -1)
         {
-          EH(-1,"Could not identify variable type for Variable Type Newton Correction Factor!");
+          EH(GOMA_ERROR,"Could not identify variable type for Variable Type Newton Correction Factor!");
         }
 	
       if (fscanf(ifp, "%le", &var_damp[var]) != 1)
@@ -7134,7 +7134,7 @@ rd_solver_specs(FILE *ifp,
   if (iread == 1) {
     upd->SegregatedSubcycles = read_int(ifp, "Number of Segregated Subcycles");
     if (upd->SegregatedSubcycles < 1) {
-      EH(-1, "Number of Segregated Subcycles should be greater or equal to 1");
+      EH(GOMA_ERROR, "Number of Segregated Subcycles should be greater or equal to 1");
     }
     SPF(echo_string,"%s = %d", "Number of Segregated Subcycles", upd->SegregatedSubcycles ); ECHO(echo_string,echo_file);
   }
@@ -7238,7 +7238,7 @@ rd_solver_specs(FILE *ifp,
 
       if (fscanf(ifp, "%80s", input) != 1)
 	{
-	  EH(-1, "Error reading equation type for Ignore Dependency");
+	  EH(GOMA_ERROR, "Error reading equation type for Ignore Dependency");
 	}
       /* loop through equation names and compare to input */
       for (eq=0; eq<MAX_VARIABLE_TYPES && !eq_found; eq++)
@@ -7251,17 +7251,17 @@ rd_solver_specs(FILE *ifp,
 	}
       if (!eq_found)
 	{
-	  EH(-1, "Could not identify equation type for Ignore Dependency");
+	  EH(GOMA_ERROR, "Could not identify equation type for Ignore Dependency");
 	}
       eq--; /* this got incremented one more time than desired */
       if ((fscanf(ifp, "%2s", input) != 1) || 
           (strcmp( input, "on") && strcmp( input, "ON")))
 	{
-	  EH(-1, "Syntax error for Ignore Dependency");
+	  EH(GOMA_ERROR, "Syntax error for Ignore Dependency");
 	}
       if (fscanf(ifp, "%80s", input) != 1)
 	{
-	  EH(-1, "Error reading variable type for Ignore Dependency");
+	  EH(GOMA_ERROR, "Error reading variable type for Ignore Dependency");
 	}
       /* look for optional flag to apply this card in a symmetric manner */
       err = fscanf(ifp, "%d",&symmetric_flag);
@@ -7269,7 +7269,7 @@ rd_solver_specs(FILE *ifp,
       if (err == 0) {
         symmetric_flag = 0;
       } else if (err != 1) {
-	EH(-1, "Error reading symmetric flag for Ignore Dependency");
+	EH(GOMA_ERROR, "Error reading symmetric flag for Ignore Dependency");
       }
       
       if ( !strcmp(input, "all") || !strcmp(input, "ALL") )
@@ -7308,7 +7308,7 @@ rd_solver_specs(FILE *ifp,
 	         } 
               if (!var_found)
 	        {
-	         EH(-1, "Could not identify variable type for Ignore Dependency");
+	         EH(GOMA_ERROR, "Could not identify variable type for Ignore Dependency");
 	        }
               var--; /* this got incremented one more time than desired */
       
@@ -7649,7 +7649,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
                  &eigen->Eigen_Shifts[2],
                  &eigen->Eigen_Shifts[3]) != 4)
         {
-          EH(-1,"Four float values required for Eigen Initial Shifts\n");
+          EH(GOMA_ERROR,"Four float values required for Eigen Initial Shifts\n");
         }
 	  SPF(echo_string,"%s =",input);
 	  SPF_DBL_VEC(endofstring(echo_string), 4, eigen->Eigen_Shifts);
@@ -7678,7 +7678,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
   {
       if (fscanf(ifp, "%le", &eigen->Eigen_Cayley_Sigma) != 1)
 	  {
-          EH(-1, "Error reading Eigen Cayley Sigma");
+          EH(GOMA_ERROR, "Error reading Eigen Cayley Sigma");
 	  }
 	  SPF(echo_string,"%s = %.4g", input, eigen->Eigen_Cayley_Sigma)	;  	  	  
   }
@@ -7695,7 +7695,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
     {
       if (fscanf(ifp, "%le", &eigen->Eigen_Cayley_Mu) != 1)
         {
-          EH(-1, "Error reading Eigen Cayley Mu");
+          EH(GOMA_ERROR, "Error reading Eigen Cayley Mu");
         }
 	  SPF(echo_string,"%s = %.4g", input, eigen->Eigen_Cayley_Mu)	;  	  	  
     }
@@ -7735,7 +7735,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
     {
       if (fscanf(ifp, "%le", &eigen->Eigen_SI_Tol_Param) != 1)
         {
-          EH(-1, "Error reading Eigen SI tolerance parameter");
+          EH(GOMA_ERROR, "Error reading Eigen SI tolerance parameter");
         }
 	  SPF(echo_string,"%s = %.4g", input, eigen->Eigen_SI_Tol_Param)	;  	  	  
     }
@@ -7752,7 +7752,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
     {
       if (fscanf(ifp, "%le", &eigen->Eigen_Relative_Tol) != 1)
         {
-          EH(-1, "Error reading Eigen Relative tolerance");
+          EH(GOMA_ERROR, "Error reading Eigen Relative tolerance");
         }
 	  SPF(echo_string,"%s = %.4g", input, eigen->Eigen_Relative_Tol)	;  	  	  
     }
@@ -7770,7 +7770,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
     {
       if (fscanf(ifp, "%le", &eigen->Eigen_Linear_Tol) != 1)
         {
-          EH(-1, "Error reading Eigen Linear Solver tolerance");
+          EH(GOMA_ERROR, "Error reading Eigen Linear Solver tolerance");
         }
 	  SPF(echo_string,"%s = %.4g", input, eigen->Eigen_Linear_Tol)	;  	  	  
     }
@@ -7787,7 +7787,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
     {
       if (fscanf(ifp, "%d", &eigen->Eigen_Solve_Freq) != 1)
         {
-          EH(-1, "Error reading Eigenvalue output frequency");
+          EH(GOMA_ERROR, "Error reading Eigenvalue output frequency");
         }
 	  SPF(echo_string,"%s = %d", input, eigen->Eigen_Solve_Freq)	;  	  	  
     }
@@ -7804,7 +7804,7 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
     {
       if (fscanf(ifp, "%d", &eigen->Eigen_Write_Freq) != 1)
         {
-          EH(-1, "Error reading Eigenvector output frequency");
+          EH(GOMA_ERROR, "Error reading Eigenvector output frequency");
         }
 	  SPF(echo_string,"%s = %d", input, eigen->Eigen_Write_Freq)	;  	  	  
     }
@@ -7845,25 +7845,25 @@ fprintf(stderr,"HUN %d %d %d\n",nHC,hunt[0].Type,hunt[0].BCID);
       if(strtok(copy_of_input, " \t\n"))
 		  LSA_number_wave_numbers++;
       else
-		  EH(-1, "Bad Eigen Wave Numbers card");
+		  EH(GOMA_ERROR, "Bad Eigen Wave Numbers card");
       while(strtok(NULL, " \t\n"))
 		  LSA_number_wave_numbers++;
       LSA_wave_numbers = (dbl *)malloc(LSA_number_wave_numbers * sizeof(dbl));
       if(!LSA_wave_numbers)
-		  EH(-1, "Could not allocate space for LSA_wave_numbers");
+		  EH(GOMA_ERROR, "Could not allocate space for LSA_wave_numbers");
       LSA_wave_numbers[0] = atof(strtok(input, " \t\n"));
-      if (LSA_wave_numbers[0] == 0.) EH(-1,"Cannot solve 3D of 2D for zero wave number");
+      if (LSA_wave_numbers[0] == 0.) EH(GOMA_ERROR,"Cannot solve 3D of 2D for zero wave number");
       for(i = 1; i < LSA_number_wave_numbers; i++)
             {
 		  LSA_wave_numbers[i] = atof(strtok(NULL, " \t\n"));
-	          if (LSA_wave_numbers[i] == 0.) EH(-1, "cannot solve 3D of 2D for zero wave number");
+	          if (LSA_wave_numbers[i] == 0.) EH(GOMA_ERROR, "cannot solve 3D of 2D for zero wave number");
             }
 	  
 	  SPF_DBL_VEC(endofstring(echo_string),LSA_number_wave_numbers,  LSA_wave_numbers);
   }
   else if(Linear_Stability == LSA_3D_OF_2D ||
 	  Linear_Stability == LSA_3D_OF_2D_SAVE)
-    EH(-1, "3D stability of 2D flow requested, but missing \"Eigen Wave Numbers\" card");
+    EH(GOMA_ERROR, "3D stability of 2D flow requested, but missing \"Eigen Wave Numbers\" card");
   
   ECHO(echo_string,echo_file);
 }  /* End of rd_eigen_specs */
@@ -8060,7 +8060,7 @@ rd_matl_blk_specs(FILE *ifp,
 	  else if ( (have_mesh_var == 0)  &&
 		    (have_por_liq_pres_var == 1 )               )
 	    {
-	      EH(-1,"You have por_liq_press equation and efv's, but not the right order. Talk to PRS or RAR");
+	      EH(GOMA_ERROR,"You have por_liq_press equation and efv's, but not the right order. Talk to PRS or RAR");
 	    }
 	}
 
@@ -8114,11 +8114,11 @@ rd_matl_blk_specs(FILE *ifp,
 
 	     if (WEXITSTATUS(err) == 127)
 	       {
-		 EH(-1, "System call failed, aprepro not found");
+		 EH(GOMA_ERROR, "System call failed, aprepro not found");
 	       }
 
 #else
-             EH(-1, "aprepro the mat file prior to running goma.");
+             EH(GOMA_ERROR, "aprepro the mat file prior to running goma.");
 #endif
 	     if ( Debug_Flag > 0 )
 	       {
@@ -8127,7 +8127,7 @@ rd_matl_blk_specs(FILE *ifp,
 	     imp = fopen(TmpMatFile, "r");
 	     if ( imp == NULL )
 	       {
-		 EH(-1, "Problem opening temporary mat file.");	       }
+		 EH(GOMA_ERROR, "Problem opening temporary mat file.");	       }
 	   }
 
          /*
@@ -8136,7 +8136,7 @@ rd_matl_blk_specs(FILE *ifp,
 	 rd_mp_specs(imp, input, mn, echo_mat_file);
 	 fclose(imp);
        } else {
-          EH(-1,"Not all Material Files found in current directory");
+          EH(GOMA_ERROR,"Not all Material Files found in current directory");
        }
        /*
 	*  Print a description of the materials properties for the
@@ -8161,7 +8161,7 @@ rd_matl_blk_specs(FILE *ifp,
          fprintf(stderr,
 	         "\tIncrease MAX_PROB_VAR to %d and rerun\n",
 	         upd->Total_Num_EQ[imtrx]);
-         EH(-1, "MAX_PROB_VAR is too small for number of equations");
+         EH(GOMA_ERROR, "MAX_PROB_VAR is too small for number of equations");
         }
      }
 }
@@ -8183,7 +8183,7 @@ static int set_eqn(int eqnNum, int mtrxNum, PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
     fprintf(stderr, 
 	    "rd_eq_spec ERROR: eqnNum %d has already been activated.\n",
 	    eqnNum);
-    EH(-1,"rd_eq_spec ERROR fatal error in equation specification\n");
+    EH(GOMA_ERROR,"rd_eq_spec ERROR fatal error in equation specification\n");
   } else {
     pd_ptr->e[mtrxNum][eqnNum] = T_SOMETHING;
   }
@@ -8207,7 +8207,7 @@ static int set_var(int varType, int mtrxNum, PROBLEM_DESCRIPTION_STRUCT *pd_ptr)
     fprintf(stderr, 
 	    "rd_eq_spec ERROR: variable %d has already been activated.\n",
 	    varType);
-    EH(-1,"rd_eq_spec ERROR fatal error in variable specification\n");
+    EH(GOMA_ERROR,"rd_eq_spec ERROR fatal error in variable specification\n");
   }  else {
     pd_ptr->v[mtrxNum][varType] |= V_SOLNVECTOR;
   }
@@ -8305,7 +8305,7 @@ rd_eq_specs(FILE *ifp,
     }
   else
     {
-      EH(-1,"Unknown coordinate system.\n");
+      EH(GOMA_ERROR,"Unknown coordinate system.\n");
     }
 
   pd_ptr->CoordinateSystem = CoordinateSystem;
@@ -8484,7 +8484,7 @@ rd_eq_specs(FILE *ifp,
 	    "Specified no. of species %d >= %d, must boost MAX_CONC to %d by using"
 	    " either -DMAX_CONC option in Goma.mk or change it in rf_fem_const.h.",
 	    pd_ptr->Num_Species, MAX_CONC, pd_ptr->Num_Species);
-    EH(-1, err_msg);
+    EH(GOMA_ERROR, err_msg);
   }
 
   /*
@@ -8645,7 +8645,7 @@ rd_eq_specs(FILE *ifp,
                                         "MATRIX", input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%le", &Epsilon[imtrx][0]) != 1) {
-        EH(-1, "error reading Normalized (Newton) Correction Tolerance");
+        EH(GOMA_ERROR, "error reading Normalized (Newton) Correction Tolerance");
       }
       SPF(echo_string, "%s = %.4g matrix %d", "Normalized Residual Tolerance",
           Epsilon[imtrx][0], mtrx_index1);
@@ -8656,11 +8656,11 @@ rd_eq_specs(FILE *ifp,
                                         input, '=');
     if (iread == 1) {
       if (fscanf(ifp, "%d", &(pg->matrix_subcycle_count[imtrx])) != 1) {
-        EH(-1, "error reading Matrix Subcycle Count");
+        EH(GOMA_ERROR, "error reading Matrix Subcycle Count");
       }
 
       if (pg->matrix_subcycle_count[imtrx] <= 0) {
-        EH(-1, "Expected Matrix Subcycle Count to be > 0");
+        EH(GOMA_ERROR, "Expected Matrix Subcycle Count to be > 0");
       }
 
       SPF(echo_string, "%s = %d", "Matrix Subcycle Count",
@@ -8842,7 +8842,7 @@ rd_eq_specs(FILE *ifp,
     } else if (!strcasecmp(ts, "species_bulk")) {
       ce = set_eqn(R_MASS, mtrx_index0, pd_ptr);
       if (pd_ptr->Num_Species_Eqn == 0) {
-	EH(-1, "Cannot solve species transport without number of species");
+	EH(GOMA_ERROR, "Cannot solve species transport without number of species");
       }
     } else if (!strcasecmp(ts, "mesh1")) {
       ce = set_eqn(R_MESH1, mtrx_index0, pd_ptr);
@@ -8867,7 +8867,7 @@ rd_eq_specs(FILE *ifp,
       Explicit_Fill = 1;
 #endif /* not COUPLED_FILL */
     } else if (!strcasecmp(ts, "level_set"))  {
-      if ( ls == NULL ) EH(-1,"Level Set Interface tracking must be turned on.");
+      if ( ls == NULL ) EH(GOMA_ERROR,"Level Set Interface tracking must be turned on.");
       ce = set_eqn(R_LEVEL_SET, mtrx_index0, pd_ptr);
 #ifndef COUPLED_FILL
       /* set explicit flag for fill equation and turn on level set switch*/
@@ -8877,13 +8877,13 @@ rd_eq_specs(FILE *ifp,
     } else if (!strcasecmp(ts, "curvature") ) {
       ce = set_eqn( R_CURVATURE, mtrx_index0, pd_ptr);
     } else if (!strcasecmp(ts,"normal1")) {
-      if ( ls == NULL )  EH(-1," NORMAL1 equation requires Level Set Interface tracking on.");
+      if ( ls == NULL )  EH(GOMA_ERROR," NORMAL1 equation requires Level Set Interface tracking on.");
       ce = set_eqn( R_NORMAL1, mtrx_index0, pd_ptr );
     } else if (!strcasecmp(ts,"normal2")) {
-      if ( ls == NULL )  EH(-1," NORMAL2 equation requires Level Set Interface tracking on.");
+      if ( ls == NULL )  EH(GOMA_ERROR," NORMAL2 equation requires Level Set Interface tracking on.");
       ce = set_eqn( R_NORMAL2, mtrx_index0, pd_ptr );
     } else if (!strcasecmp(ts,"normal3")) {
-      if ( ls == NULL )  EH(-1," NORMAL3 equation requires Level Set Interface tracking on.");
+      if ( ls == NULL )  EH(GOMA_ERROR," NORMAL3 equation requires Level Set Interface tracking on.");
       ce = set_eqn( R_NORMAL3, mtrx_index0, pd_ptr );
     } else if (!strcasecmp(ts, "voltage")) {
       ce = set_eqn(R_POTENTIAL, mtrx_index0, pd_ptr);
@@ -9082,7 +9082,7 @@ rd_eq_specs(FILE *ifp,
 	  fprintf(stderr, "%s%s\n",
 		   "rd_eq_specs ERROR: ",
 		   "More than one porous media equation type");
-          EH(-1,"Too many porous media equations for this material block");
+          EH(GOMA_ERROR,"Too many porous media equations for this material block");
         }
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strcasecmp(ts, "porous_unsat")) {
@@ -9093,18 +9093,18 @@ rd_eq_specs(FILE *ifp,
 	  fprintf(stderr, "%s%s\n",
 		   "rd_eq_specs ERROR: ",
 		   "More than one porous media equation type");
-          EH(-1,"Too many porous media equations for this material block");
+          EH(GOMA_ERROR,"Too many porous media equations for this material block");
         }
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strcasecmp(ts, "porous_liq"))  {
       ce = set_eqn(R_POR_LIQ_PRES, mtrx_index0, pd_ptr);
-      if( tran->theta != 0.0)EH(-1,"Please don't use Time step parameter of 0.5                                   for porous media problems.  Use 0.0");
+      if( tran->theta != 0.0)EH(GOMA_ERROR,"Please don't use Time step parameter of 0.5                                   for porous media problems.  Use 0.0");
       if( pd_ptr->e[mtrx_index0][R_POR_SATURATION] )
         {
 	  fprintf(stderr, "%s%s\n",
 		   "rd_eq_specs ERROR: ",
 		   "More than one porous media equation type");
-          EH(-1,"Too many porous media equations for this material block");
+          EH(GOMA_ERROR,"Too many porous media equations for this material block");
         }
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strcasecmp(ts, "porous_gas"))  {
@@ -9114,7 +9114,7 @@ rd_eq_specs(FILE *ifp,
 	  fprintf(stderr, "%s%s\n",
 		   "rd_eq_specs ERROR: ",
 		   "More than one porous media equation type");
-          EH(-1,"Too many porous media equations for this material block");
+          EH(GOMA_ERROR,"Too many porous media equations for this material block");
         }
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strcasecmp(ts, "porous_energy"))  {
@@ -9124,7 +9124,7 @@ rd_eq_specs(FILE *ifp,
 	  fprintf(stderr, "%s%s\n",
 		   "rd_eq_specs ERROR: ",
 		   "More than one porous media equation type");
-          EH(-1,"Too many porous media equations for this material block");
+          EH(GOMA_ERROR,"Too many porous media equations for this material block");
         }
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strcasecmp(ts, "porous_deform"))  {
@@ -9138,7 +9138,7 @@ rd_eq_specs(FILE *ifp,
 	  fprintf(stderr, "%s%s\n",
 		   "rd_eq_specs ERROR: ",
 		   "More than one porous media equation type");
-          EH(-1,"Too many porous media equations for this material block");
+          EH(GOMA_ERROR,"Too many porous media equations for this material block");
         }
       pd_ptr->Num_Porous_Eqn++;
     } else if (!strncasecmp(ts, "species_unk", 11)) {
@@ -9149,7 +9149,7 @@ rd_eq_specs(FILE *ifp,
 		   "rd_eq_specs ERROR: ",
 		   "Number of species unknowns is equal to zero");
 
-          EH(-1,"Num_species is zero yet species equation has been selected");
+          EH(GOMA_ERROR,"Num_species is zero yet species equation has been selected");
 	}
 	j = R_SPECIES_UNK_0;
 	eqnMult = pd_ptr->Num_Species_Eqn;
@@ -9713,7 +9713,7 @@ rd_eq_specs(FILE *ifp,
 	if (eqnMult != pd_ptr->Num_Species_Eqn) {
           fprintf(stderr, "%s: Incompatible EQ Sp line: %d %d\n",
 		  yo, eqnMult, pd_ptr->Num_Species_Eqn);
-	  EH(-1, "rd_eq_specs error");
+	  EH(GOMA_ERROR, "rd_eq_specs error");
 	}
       } else {
 	if (!interpret_int(ts + 3, &j)) {
@@ -9731,7 +9731,7 @@ rd_eq_specs(FILE *ifp,
 	if (eqnMult != 1) {
           fprintf(stderr, "%s: Incompatible EQ Sp_# line: %d %d\n",
 		  yo, eqnMult, pd_ptr->Num_Species_Eqn);
-	  EH(-1, "rd_eq_specs error");
+	  EH(GOMA_ERROR, "rd_eq_specs error");
 	}
 	cv = set_var(R_SPECIES_UNK_0 + j, mtrx_index0, pd_ptr);
       }
@@ -10000,7 +10000,7 @@ rd_eq_specs(FILE *ifp,
 	   pd_ptr->CoordinateSystem != PROJECTED_CARTESIAN &&
 	   pd_ptr->CoordinateSystem != CARTESIAN_2pt5D))
 	{
-	  //  EH(-1,"Shell capability only avaible for 2D Cartesian systems");
+	  //  EH(GOMA_ERROR,"Shell capability only avaible for 2D Cartesian systems");
           printf("WARNING: Shell Capability is experimental for non 2D Cartesian systems\n");
 	}
       if (fscanf(ifp, "%lf", &(pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)])) != 1)
@@ -10008,14 +10008,14 @@ rd_eq_specs(FILE *ifp,
           sr = sprintf(err_msg, 
                        "Provide 1 equation term multiplier (dif) on %s in %s\n",
                        EQ_Name[ce].name1, pd_ptr->MaterialName);
-          EH(-1, err_msg);
+          EH(GOMA_ERROR, err_msg);
         }
       if (pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)] == 0.0) 
 	{
 	  sr = sprintf(err_msg, 
                        "Equation term multiplier (dif) on %s in %s is equal to zero. Will get a singular jacobian\n",
                        EQ_Name[ce].name1, pd_ptr->MaterialName);
-          EH(-1, err_msg);
+          EH(GOMA_ERROR, err_msg);
 	}
       SPF(endofstring(echo_string),"\t %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)]);
       break;
@@ -10093,7 +10093,7 @@ rd_eq_specs(FILE *ifp,
 	  sr = sprintf(err_msg, 
 		       "Provide 2 equation term multipliers (adv,src) on %s in %s",
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 
 	SPF( endofstring(echo_string),"\t %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
@@ -10111,7 +10111,7 @@ rd_eq_specs(FILE *ifp,
 	  sr = sprintf(err_msg, 
 		       "Provide 2 equation term multipliers (mass,div) on %s in %s",
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       
       SPF( endofstring(echo_string),"\t %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
@@ -10130,7 +10130,7 @@ rd_eq_specs(FILE *ifp,
 	  sr = sprintf(err_msg, 
 		       "Provide 2 equation term multipliers (mass,src) on %s in %s",
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       
       SPF( endofstring(echo_string),"\t %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
@@ -10160,7 +10160,7 @@ rd_eq_specs(FILE *ifp,
 	  sr = sprintf(err_msg, 
 		       "Provide 3 equation term multipliers (mas,adv,src) on %s in %s",
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 
 	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
@@ -10178,7 +10178,7 @@ rd_eq_specs(FILE *ifp,
 	  sr = sprintf(err_msg, 
 		       "Provide 3 equation term multipliers (adv,diff,src) on %s in %s",
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 
 	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
@@ -10196,7 +10196,7 @@ rd_eq_specs(FILE *ifp,
 	  sr = sprintf(err_msg, 
 		       "Provide 3 equation term multipliers (mas,dif,div) on %s in %s",
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 
 	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
@@ -10215,7 +10215,7 @@ rd_eq_specs(FILE *ifp,
           sr = sprintf(err_msg, 
                        "Provide 3 equation term multipliers (diff,src, bnd) on %s in %s",
                        EQ_Name[ce].name1, pd_ptr->MaterialName);
-          EH(-1, err_msg);
+          EH(GOMA_ERROR, err_msg);
         }
 	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_BOUNDARY)],
                                                            pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
@@ -10232,7 +10232,7 @@ rd_eq_specs(FILE *ifp,
           sr = sprintf(err_msg, 
                        "Provide 3 equation term multipliers (mass,diff,src) on %s in %s",
                        EQ_Name[ce].name1, pd_ptr->MaterialName);
-          EH(-1, err_msg);
+          EH(GOMA_ERROR, err_msg);
         }
 	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
                                                            pd_ptr->etm[mtrx_index0][ce][(LOG2_DIFFUSION)],
@@ -10249,7 +10249,7 @@ rd_eq_specs(FILE *ifp,
     	  sr = sprintf(err_msg,
                        "Provide 3 equation term multipliers (mass,adv,dif) on %s in %s",
 					   EQ_Name[ce].name1, pd_ptr->MaterialName);
-    	  EH(-1, err_msg);
+    	  EH(GOMA_ERROR, err_msg);
     	}
     	SPF( endofstring(echo_string),"\t %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
     		  	  	  	  	   	   	   	   	   	   	   	   pd_ptr->etm[mtrx_index0][ce][(LOG2_ADVECTION)],
@@ -10264,7 +10264,7 @@ rd_eq_specs(FILE *ifp,
 	sr = sprintf(err_msg,
 		     "Provide 3 equation term multipliers (mass,adv,dif) on %s in %s",
 		     EQ_Name[ce].name1, pd_ptr->MaterialName);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
       SPF( endofstring(echo_string),"\t %.4g %.4g %.4g",
 	   pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
@@ -10290,7 +10290,7 @@ rd_eq_specs(FILE *ifp,
 	  sr = sprintf(err_msg, 
 		       "Provide 4 equation term multipliers (mas,adv,diff, src) on %s in %s",
 		       EQ_Name[ce].name1, pd_ptr->MaterialName);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 
       SPF( endofstring(echo_string),"\t %.4g %.4g %.4g %.4g", pd_ptr->etm[mtrx_index0][ce][(LOG2_MASS)],
@@ -10774,7 +10774,7 @@ rd_eq_specs(FILE *ifp,
    *  from)
    */
   if ((neqn < 1 || neqn > 76)) {
-    EH(-1,
+    EH(GOMA_ERROR,
        "rd_eq_specs: Too many (>76) or too few (<1) eqns. in this mat");
   }
   
@@ -10786,7 +10786,7 @@ rd_eq_specs(FILE *ifp,
 	{
 	  fprintf(stderr, "\nR_MOMENTUM3/VELOCITY3 are required for a 3D stability of a 2D flow.\n");
 	  fprintf(stderr, "They are missing in material %d (0-based)\n\n", mn);
-	  EH(-1, "missing equation for 3D stability of 2D flow");
+	  EH(GOMA_ERROR, "missing equation for 3D stability of 2D flow");
 	}
     }
 
@@ -10911,7 +10911,7 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
 	     "Error reading model name string, mat file \"%s\", property %s",
 		     current_mat_file_name,
 		     search_string);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
 
     SPF(echo_string,"%s = %s",search_string, model_name );
@@ -10927,7 +10927,7 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
                  "Error reading species number, mat file \"%s\", property %s",
 			 current_mat_file_name,
 			 search_string);
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	if (species_no >= *read_species || species_no < 0)
 	  {
@@ -10936,7 +10936,7 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
 			 species_no,
 			 current_mat_file_name,
 			 search_string);
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	*read_species = species_no;
 
@@ -10965,7 +10965,7 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
 		     "Expected 1 flt for CONSTANT model %s, mat file \"%s\"",
 			     search_string,
 			     current_mat_file_name);
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      }
 	    Material_property[species_no] = a0;
 	    iread = 1;
@@ -10982,7 +10982,7 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
 		     "Expected 3 flts for CONSTANT model %s, mat file \"%s\"",
 			     search_string,
 			     current_mat_file_name);
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      }
 	    Material_property[0] = a0;
 	    Material_property[1] = a1;
@@ -11010,7 +11010,7 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
 			     "USER model for %s in mat \"%s\" requires space!",
 			     search_string,
 			     current_mat_file_name);
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      }
 	    User_constants[species_no] = 
 	      (dbl *)array_alloc(1, num_const, sizeof(dbl));
@@ -11040,7 +11040,7 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
 		 "Error reading USER constants for property %s, mat \"%s\"",
 			 search_string,
 			 current_mat_file_name);
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	MaterialModel[species_no] = DumModel;
 	iread = 1;
@@ -11061,7 +11061,7 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
 		"USER_GEN model for property %s in mat \"%s\" requires space!",
 			     search_string,
 			     current_mat_file_name);
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      }
 
 	    User_count[species_no] = num_const;
@@ -11085,7 +11085,7 @@ look_for_mat_prop(FILE *imp,			/* ptr to input stream (in)*/
 	    "Error reading USER_GEN constants for property %s, mat \"%s\"",
 			 search_string,
 			 current_mat_file_name);
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	MaterialModel[species_no] = DumModel;
 	iread = 1;
@@ -11191,7 +11191,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 	     "Error reading model name string, mat file \"%s\", property %s",
 		     current_mat_file_name,
 		     search_string);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
 
     SPF(echo_string,"%s = %s", search_string,model_name);
@@ -11204,7 +11204,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
                  "Error reading species number, mat file \"%s\", property %s",
 			 current_mat_file_name,
 			 search_string);
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	if (species_no >= *read_species || species_no < 0)
 	  {
@@ -11213,7 +11213,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 			 species_no,
 			 current_mat_file_name,
 			 search_string);
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	*read_species = species_no;
 
@@ -11234,7 +11234,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 		     "Expected 1 flt for CONSTANT model %s, mat file \"%s\"",
 			     search_string,
 			     current_mat_file_name);
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      }
 	    Material_property[species_no] = a0;
 	    iread = 1;
@@ -11252,7 +11252,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 		     "Expected 3 flts for CONSTANT model %s, mat file \"%s\"",
 			     search_string,
 			     current_mat_file_name);
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      }
 	    Material_property[0] = a0;
 	    Material_property[1] = a1;
@@ -11278,7 +11278,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 			     "USER model for %s in mat \"%s\" requires space!",
 			     search_string,
 			     current_mat_file_name);
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      }
 	    User_constants[species_no] = 
 	      (dbl *)array_alloc(1, num_const, sizeof(dbl));
@@ -11305,7 +11305,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 		 "Error reading USER constants for property %s, mat \"%s\"",
 			 search_string,
 			 current_mat_file_name);
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	MaterialModel[species_no] = DumModel;
 	iread = 1;
@@ -11329,7 +11329,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 		"USER_GEN model for property %s in mat \"%s\" requires space!",
 			     search_string,
 			     current_mat_file_name);
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      }
 
 	    User_count[species_no] = num_const;
@@ -11351,7 +11351,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 	    "Error reading USER_GEN constants for property %s, mat \"%s\"",
 			 search_string,
 			 current_mat_file_name);
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	MaterialModel[species_no] = DumModel;
 	iread = 1;
@@ -11367,7 +11367,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 		"TABLE model for property %s in mat \"%s\" requires space!",
 			     search_string,
 			     current_mat_file_name);
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	  }
 
 	  /* 
@@ -11375,7 +11375,7 @@ look_for_mat_proptable(FILE *imp,			/* ptr to input stream (in)*/
 	   */
 	  if( num_MP_Tables == MAX_MP_TABLES )
 	    {
-	      EH(-1, "Maximum TABLE_MPs exceeded .");
+	      EH(GOMA_ERROR, "Maximum TABLE_MPs exceeded .");
 	    }
 
           table_local = (struct Data_Table *) smalloc (sizeof( struct Data_Table));
@@ -11438,7 +11438,7 @@ look_for_modal_prop(FILE *imp,	/* ptr to input stream (in)*/
 	     "Error reading model name string, mat file \"%s\", property %s",
 		     current_mat_file_name,
 		     search_string);
-	EH(-1, err_msg);
+	EH(GOMA_ERROR, err_msg);
       }
 
     SPF(echo_string, "%s = %s", search_string, model_name );
@@ -11458,7 +11458,7 @@ look_for_modal_prop(FILE *imp,	/* ptr to input stream (in)*/
 			     "Error: you must have data for each mode  %s, mat \"%s\"",
 			     search_string,
 			     current_mat_file_name);
-		EH(-1, err_msg);
+		EH(GOMA_ERROR, err_msg);
 	      }
 
 	    /* parse parameters into little strings */ 
@@ -11476,7 +11476,7 @@ look_for_modal_prop(FILE *imp,	/* ptr to input stream (in)*/
 		 "Error reading CONSTANT mulitmodal constants for property %s, mat \"%s\"",
 			 search_string,
 			 current_mat_file_name);
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	*MaterialModel= DumModel;
 	iread = 1;
@@ -12017,9 +12017,9 @@ translate_command_line( int argc,
 	      strcpy_rtn = strcpy(clc[*nclc]->string, temp_file_err);
 	      /* create temporary file and redirect the output */
 	      if (freopen(temp_file_out,"w",stdout) == NULL)
-		EH(-1, "Problem redirecting stdout stream");
+		EH(GOMA_ERROR, "Problem redirecting stdout stream");
 	      if (freopen(temp_file_err,"w",stderr) == NULL)
-		EH(-1, "Problem redirecting stderr stream");
+		EH(GOMA_ERROR, "Problem redirecting stderr stream");
 	    }
 /* 
  * OPTION -h, -help:  print informative usage
@@ -12080,7 +12080,7 @@ translate_command_line( int argc,
 		{
 		  sr = sprintf(err_msg, "Problem diverting stderr to \"%s\"",
 			       clc[*nclc]->string);
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 		}
 	      if (Num_Proc > 1 && Unlimited_Output ) {
                 fprintf(stderr,
@@ -12110,7 +12110,7 @@ translate_command_line( int argc,
 		{
 		  sr = sprintf(err_msg, "Problem diverting stdout to \"%s\"",
 			       clc[*nclc]->string);
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 		}
 	      if (Num_Proc > 1) {
                 fprintf(stderr,
@@ -12481,7 +12481,7 @@ translate_command_line( int argc,
 	  else {
 	    sprintf(err_msg, "ERROR EXIT: unknown dash option: %s\n",
 		    argv[istr]);
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	} /* end of if argv starts with '-' */
 /* 
@@ -12541,11 +12541,11 @@ translate_command_line( int argc,
 
       if (WEXITSTATUS(err) == 127)
 	{
-	  EH(-1, "System call failed, aprepro not found");
+	  EH(GOMA_ERROR, "System call failed, aprepro not found");
 	  return;
 	}
 #else
-      EH(-1, "aprepro the input file prior to running goma.");
+      EH(GOMA_ERROR, "aprepro the input file prior to running goma.");
 #endif
 
       strcpy(Input_File, temp_file_inp);
@@ -12776,7 +12776,7 @@ setup_table_BC(FILE *ifp,
   if ( fscanf(ifp, "%80s", input ) != 1 )
     {
       	sprintf (err_msg, "%s:\tError reading TABLE BC \n", yo);
-	EH(-1,err_msg);
+	EH(GOMA_ERROR,err_msg);
     }
   
   strip( input );
@@ -12867,7 +12867,7 @@ setup_table_BC(FILE *ifp,
   else
     {
       sprintf(err_msg,"\nInvalid choice for table abscissa.");
-      EH(-1,err_msg);
+      EH(GOMA_ERROR,err_msg);
     }
 
   SPF(es," %s", input );  
@@ -12879,7 +12879,7 @@ setup_table_BC(FILE *ifp,
   if ( fscanf(ifp, "%80s", input ) != 1 )
     {
       	sprintf (err_msg, "%s:\tError reading TABLE BC \n", yo);
-	EH(-1,err_msg);
+	EH(GOMA_ERROR,err_msg);
     }
   
   strip( input );
@@ -12923,7 +12923,7 @@ setup_table_BC(FILE *ifp,
       if ( fscanf( ifp, "%d", &BC_Type->species_eq) != 1)
 	{
 	  sprintf (err_msg, "%s:\tError reading species number on TABLE BC \n", yo);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
     }
 
@@ -13385,7 +13385,7 @@ setup_table_BC(FILE *ifp,
   else
     {
       sprintf(err_msg, "%s:\tInvalid choice for table ordinate.",yo);
-      EH(-1,err_msg);
+      EH(GOMA_ERROR,err_msg);
     }
 
   SPF(endofstring(es)," %s", input); 
@@ -13404,7 +13404,7 @@ setup_table_BC(FILE *ifp,
   if ( fscanf(ifp, "%80s", input ) != 1 )
     {
       	sprintf (err_msg, "%s:\tError reading interpolation order for table: %s\n", yo, BC_Type->table->f_name );
-	EH(-1,err_msg);	
+	EH(GOMA_ERROR,err_msg);	
     }
   
   strip( input );
@@ -13437,7 +13437,7 @@ setup_table_BC(FILE *ifp,
   else
     {
       sprintf(err_msg, "\nUnknown table interpolation order for table: %s \n",BC_Type->table->f_name);
-      EH(-1,err_msg);
+      EH(GOMA_ERROR,err_msg);
     }
 
   SPF(endofstring(es)," %s", input); 
@@ -13449,7 +13449,7 @@ setup_table_BC(FILE *ifp,
       if ( fscanf( ifp, "%s", input ) != 1 )
 	  {
 		  sprintf(err_msg,"\n%s,\tError reading TABLE data filename for table: %s\n",yo,BC_Type->table->f_name);
-		  EH(-1,err_msg);
+		  EH(GOMA_ERROR,err_msg);
 	  }
 	  
       strip(input);
@@ -13457,7 +13457,7 @@ setup_table_BC(FILE *ifp,
       if ( ( datafile = fopen_aprepro( input, "r") ) == NULL )
 	  {
 		  sprintf(err_msg, "\n%s,\tError opening TABLE data file %s\n",yo,input);
-		  EH(-1,err_msg);
+		  EH(GOMA_ERROR,err_msg);
 	  }
 	  
 	  SPF(endofstring(es)," %s", input);
@@ -13469,7 +13469,7 @@ setup_table_BC(FILE *ifp,
 		  if ( fscanf( ifp, "%s", input ) != 1 )
 		  {
 			  sprintf(err_msg,"\n%s,\tError reading NAME for table: %s\n",yo,BC_Type->table->f_name);
-			  EH(-1,err_msg);
+			  EH(GOMA_ERROR,err_msg);
 		  }
 		  strip(input);
 		  
@@ -13497,7 +13497,7 @@ setup_table_BC(FILE *ifp,
 	      sprintf(err_msg,"\n%s,\tError finding data name %s in file for table: %s\n",
 		              yo, dataname, BC_Type->table->f_name);
 	      free(dataname);
-	      EH(-1,err_msg);
+	      EH(GOMA_ERROR,err_msg);
 	    }
 
 	  rd_table_data( datafile, input, BC_Type->table, "END TABLE" );
@@ -13562,7 +13562,7 @@ count_datalines( FILE *ifp,
   
       if( read_string(ifp, input, '\n') == -1 )  /* read a line from the input file */
 	{
-	  EH(-1,"EOF found in file reading dataline for table \n");		  
+	  EH(GOMA_ERROR,"EOF found in file reading dataline for table \n");		  
 	}
       
       strip(input);
@@ -13583,7 +13583,7 @@ count_datalines( FILE *ifp,
 	    {
 	      strip(input);
 	      if( strncmp( input, endlist,len ) != 0 )
-		EH(-1,"EOF found in input file reading dataline\n"); 
+		EH(GOMA_ERROR,"EOF found in input file reading dataline\n"); 
 	    }
 
 	  strip(input);
@@ -13667,7 +13667,7 @@ look_for_next_string ( FILE *ifp,
   if ( read_string( ifp, input, ch_term ) == -1 )
     {
       sprintf( err_msg, "\nError detected while searching for : %s \n", string );
-      EH(-1,err_msg);
+      EH(GOMA_ERROR,err_msg);
     }
 
   strip( input );
@@ -13733,11 +13733,11 @@ fopen_aprepro( const char *filename, const char *format )
 
       if (WEXITSTATUS(err) == 127)
 	{
-	  EH(-1, "System call failed, aprepro not found");
+	  EH(GOMA_ERROR, "System call failed, aprepro not found");
 	  return NULL;
 	}
 #else
-      EH(-1, "aprepro the input file prior to running goma");
+      EH(GOMA_ERROR, "aprepro the input file prior to running goma");
 #endif
 
       if ( Debug_Flag > 0 )
@@ -13825,7 +13825,7 @@ setup_gd_table_BC(
 		   BC_Type->desc->name1,
 		   BC_Type->Set_Type,
 		   BC_Type->BC_ID);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
   
   strip( input );
@@ -13849,7 +13849,7 @@ setup_gd_table_BC(
 		   BC_Type->desc->name1,
 		   BC_Type->Set_Type,
 		   BC_Type->BC_ID);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
   
   SPF(es," %s", input);
@@ -13869,7 +13869,7 @@ setup_gd_table_BC(
 						   BC_Type->desc->name1,
 						   BC_Type->Set_Type,
 						   BC_Type->BC_ID);
-			  EH(-1, err_msg);
+			  EH(GOMA_ERROR, err_msg);
 		  }
 		  
 		  SPF(endofstring(es)," FILE = %s", input);
@@ -13879,7 +13879,7 @@ setup_gd_table_BC(
 		  if ( ( datafile = fopen_aprepro( input, "r") ) == NULL )
 		  {
 			  sprintf(err_msg, "\n%s:\tError opening TABLE data file %s\n",yo,input);
-			  EH(-1,err_msg);
+			  EH(GOMA_ERROR,err_msg);
 		  }
 		  
 		  if( look_for_next_string( ifp, "NAME", input, '=') )
@@ -13887,7 +13887,7 @@ setup_gd_table_BC(
 			  if ( fscanf( ifp, "%s", input ) != 1 )
 			  {
 				  sprintf(err_msg,"\n%s,\tError reading NAME for table: %s\n",yo,BC_Type->table->f_name);
-				  EH(-1,err_msg);
+				  EH(GOMA_ERROR,err_msg);
 			  }
 			  strip(input);
 			  
@@ -13913,7 +13913,7 @@ setup_gd_table_BC(
 				  sprintf(err_msg,"\n%s,\tError finding data name %s in file for table: %s\n",
 						  yo, dataname, BC_Type->table->f_name);
 				  free(dataname);
-				  EH(-1,err_msg);
+				  EH(GOMA_ERROR,err_msg);
 			  }
 			  
 			  rd_table_data( datafile, input, BC_Type->table, "END TABLE" );
@@ -13979,20 +13979,20 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
      {
        sprintf( err_msg,
 	"Error reading # columns for TABLE model for material property");
-       EH(-1,err_msg);
+       EH(GOMA_ERROR,err_msg);
      }
 	
    if( (num_const > 3) && (strcmp( table->f_name, "Saturation") != 0))
      {
        sprintf( err_msg,
 	"Error - Multi DOF table lookup limited to bilinear");
-       EH(-1,err_msg);
+       EH(GOMA_ERROR,err_msg);
      }
    if( (num_const > 4) && (strcmp( table->f_name, "Saturation") == 0))
      {
        sprintf( err_msg,
 	"Error - Multi DOF table lookup limited to bilinear for Saturation");
-       EH(-1,err_msg);
+       EH(GOMA_ERROR,err_msg);
      }
 	
    table->columns = num_const;
@@ -14004,7 +14004,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 	 {
 	   sprintf( err_msg,
 	    "Error reading TABLE model for material property for Independent variables");
-	   EH(-1,err_msg);
+	   EH(GOMA_ERROR,err_msg);
 	 }
 
         strip(line);
@@ -14020,7 +14020,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 	      {
 		if(strcmp(table->t_name[j],table->t_name[i])==0)
 		  {
-		    sprintf (err_msg, "%s:Cannot set Temperature multiple times as Independent Variable \n", yo);		                EH(-1,err_msg);
+		    sprintf (err_msg, "%s:Cannot set Temperature multiple times as Independent Variable \n", yo);		                EH(GOMA_ERROR,err_msg);
 		  }
 	      }
 	  }
@@ -14032,7 +14032,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 	    if ( fscanf( imp, "%d", &table->species_eq) != 1)
 	      {
 		sprintf (err_msg, "%s:\tError reading species number on TABLE MP \n", yo);
-		EH(-1,err_msg);
+		EH(GOMA_ERROR,err_msg);
 	      }
 	  }
 	else if (strcmp( line, "LINEAR_TIME") == 0) {
@@ -14044,7 +14044,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 	    if( (strcmp( table->f_name, "Saturation") != 0) ) 
 	      {
 		sprintf (err_msg, "%s:\tError: Variable CAP_PRES can only be used with Saturation \n", yo);
-		EH(-1,err_msg);
+		EH(GOMA_ERROR,err_msg);
 	      }
 	    strcpy( table->t_name[i],"CAP_PRES");
 	    table->t_index[i] = CAP_PRES;
@@ -14053,7 +14053,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 	      {
 		if(strcmp(table->t_name[j],table->t_name[i])==0)
 		  {
-		    sprintf (err_msg, "%s:Cannot set CAP_PRES multiple times as Independent Variable \n", yo);		                EH(-1,err_msg);
+		    sprintf (err_msg, "%s:Cannot set CAP_PRES multiple times as Independent Variable \n", yo);		                EH(GOMA_ERROR,err_msg);
 		  }
 	      }
 	  }
@@ -14064,7 +14064,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 	    if ( fscanf( imp, "%d", &table->species_eq) != 1)
 	      {
 		sprintf (err_msg, "%s:\tError reading species number on TABLE MP \n", yo);
-		EH(-1,err_msg);
+		EH(GOMA_ERROR,err_msg);
 	      }
 	  }
 	else if (strcmp( line, "LOWER_DISTANCE") == 0)
@@ -14074,13 +14074,13 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 	    if ( fscanf( imp, "%d", &table->species_eq) != 1)
 	      {
 		sprintf (err_msg, "%s:\tError reading species number on TABLE MP \n", yo);
-		EH(-1,err_msg);
+		EH(GOMA_ERROR,err_msg);
 	      }
 	  }
 	else
 	  {
 	    sprintf (err_msg,"%s:\tInvalid choice for material property table independent variable",yo);
-	    EH(-1, err_msg);
+	    EH(GOMA_ERROR, err_msg);
 	  }
 	if(i == 0) { strcpy( table->t_name[i+1],"NULL"); table->t_index[i+1]=-1;}
        }
@@ -14090,7 +14090,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
        {
 	  sprintf( err_msg,
 	    "Error reading TABLE %s for material property %s for interpolation", table->f_name, line);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
        }
 
       strip(line);
@@ -14106,7 +14106,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 	  else 
 	    {
 	      sprintf( err_msg, " Incorrect number of columns for material property table lookup");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
      	}
       else if( (strcmp( line, "BILINEAR") == 0) )
@@ -14118,7 +14118,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 	  else 
 	    {
 	      sprintf( err_msg, " Incorrect number of columns for material property table lookup");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
      	}
       else if( (strcmp( line, "QUADRATIC") == 0) )
@@ -14130,7 +14130,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 	  else 
 	    {
 	      sprintf( err_msg, " Incorrect number of columns for material property table lookup");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
      	}
       else if( (strcmp( line, "QUAD_GP") == 0) )
@@ -14142,13 +14142,13 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 	  else 
 	    {
 	      sprintf( err_msg, " Incorrect number of columns for material property table lookup");
-	      EH(-1, err_msg);
+	      EH(GOMA_ERROR, err_msg);
 	    }
      	}
       else
 	{
 	  sprintf (err_msg,"%s:\tInvalid choice for material property table interpolation scheme",yo);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 
      /* read file name (optional) */ 
@@ -14157,7 +14157,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
       if ( fscanf( imp, "%s", line ) != 1 )
 	{
 	  sprintf(err_msg,"\n%s,\tError reading TABLE data filename for material property \n",yo);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
 
       strip(line);
@@ -14165,7 +14165,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
       if ( ( datafile = fopen_aprepro( line, "r") ) == NULL )
 	{
 	  sprintf(err_msg, "\n%s,\tError opening TABLE data file for material property \n",yo);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
 
       if( look_for_next_string( imp, "NAME", line, '=') )
@@ -14173,7 +14173,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 	  if ( fscanf( imp, "%s", line ) != 1 )
 	    {
 	      sprintf(err_msg,"\n%s,\tError reading NAME for table for material property \n",yo);
-	      EH(-1,err_msg);
+	      EH(GOMA_ERROR,err_msg);
 	    }
 	  strip(line);
 
@@ -14184,7 +14184,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
       if ( look_for_next_string( imp, "YSCALE", line, '=') ) {
         if ( fscanf( imp, "%lf ", &scale ) != 1 ) {
           sprintf(err_msg,"\n%s,\tError reading YSCALE for table for material property \n",yo);
-          EH(-1,err_msg);
+          EH(GOMA_ERROR,err_msg);
         } else {
           printf("Table y-axis scaled by %f\n", scale);
         }
@@ -14198,7 +14198,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
       if ( look_for_next_string( imp, "EMIN", line, '=') ) {
         if ( fscanf( imp, "%lf ", &scale ) != 1 ) {
           sprintf(err_msg,"\n%s,\tError reading EMIN for table for material property \n",yo);
-          EH(-1,err_msg);
+          EH(GOMA_ERROR,err_msg);
         } else {
           printf("Table Emin set to %e\n", scale);
         }
@@ -14226,7 +14226,7 @@ setup_table_MP (FILE *imp, struct Data_Table * table, char *search_string)
 	      sprintf(err_msg,"\n%s,\tError finding data name %s in file for table for material property \n",
 		              yo, dataname);
 	      free(dataname);
-	      EH(-1,err_msg);
+	      EH(GOMA_ERROR,err_msg);
 	    }
 
 	  rd_table_data( datafile, line, table, "END TABLE" );
@@ -14355,7 +14355,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
       if( read_string(ifp, input, '\n') == -1 )  
 	  {
 		  if( strncmp( input, endlist, strlen(endlist) ) != 0 )
-			  EH(-1,"EOF found in input file reading dataline\n");		  
+			  EH(GOMA_ERROR,"EOF found in input file reading dataline\n");		  
 	  }
 	  
 	  strip(input);
@@ -14374,7 +14374,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 		  {
 			  if( scan_table_columns( k, input, table, table_dim, err_msg, echo_string ) == 1 )
 			  {
-				  EH(-1, err_msg );
+				  EH(GOMA_ERROR, err_msg );
 			  }
 			  else
 				  k++;
@@ -14476,7 +14476,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 			  }
 			  else
 			  {
-				  EH(-1,"invalid table column, dimension combination.");
+				  EH(GOMA_ERROR,"invalid table column, dimension combination.");
 			  }
 			  */
 		  }
@@ -14493,7 +14493,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 			  */
 			  
 			  if( strncmp( input, endlist, strlen(endlist) ) != 0 )
-				  EH(-1,"EOF found in input file reading dataline\n");  
+				  EH(GOMA_ERROR,"EOF found in input file reading dataline\n");  
 		  }
 		  strip(input);
 	  }
@@ -14522,7 +14522,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 			  
 			  if( scan_table_columns( k, input, table, table_dim, err_msg, echo_string ) == 1 )
 			  {
-				  EH(-1, err_msg );
+				  EH(GOMA_ERROR, err_msg );
 			  }
 			  else
 				  k++;
@@ -14624,7 +14624,7 @@ rd_table_data(FILE *ifp, char *input, struct Data_Table *table , char *endlist)
 			  }
 			  else
 			  {
-				  EH(-1,"invalid table column, dimension combination.");
+				  EH(GOMA_ERROR,"invalid table column, dimension combination.");
 			  }
 			   */
 		  }
@@ -14669,7 +14669,7 @@ if((table_dim == 1 || table->interp_method == BILINEAR) && strcmp(table->f_name,
  	      if(( table->t[i] == table->t[j]) && table_dim == 1) 
 		{
 		  sprintf(err_msg, "\nMultivalued function detected in table :%s \n",table->f_name);
-		  EH(-1,err_msg);
+		  EH(GOMA_ERROR,err_msg);
 		}
 	      j--;
 	    }
@@ -14721,7 +14721,7 @@ if((table_dim == 1 || table->interp_method == BILINEAR) && strcmp(table->f_name,
                    if(table->t[i] == table->t[i-1])
                 	{
                  fprintf(stderr, "\nMultivalued function detected in table \n");
-                 EH(-1,"Fatal Error");
+                 EH(GOMA_ERROR,"Fatal Error");
 	                }
        		}
 	}
@@ -14756,7 +14756,7 @@ if((table_dim == 1 || table->interp_method == BILINEAR) && strcmp(table->f_name,
  		     fprintf(stderr,"\n2D table is not a rectangular grid \n");
  		     fprintf(stderr,"%d x %d != %d points\n",
  			Num_Pnts/table->ngrid ,table->ngrid,Num_Pnts);
-                     EH(-1,"Fatal Table Error");
+                     EH(GOMA_ERROR,"Fatal Table Error");
  		     }
  
  	/*  for 3d tables, find grid points traversing first 2 directions */
@@ -14790,7 +14790,7 @@ if((table_dim == 1 || table->interp_method == BILINEAR) && strcmp(table->f_name,
  		     fprintf(stderr,"\n3D table is not a rectangular grid \n");
  		     fprintf(stderr,"%d x %d != %d points\n",table->ngrid ,
  				table->ngrid2 ,Num_Pnts);
-                     EH(-1,"Fatal Table Error");
+                     EH(GOMA_ERROR,"Fatal Table Error");
  		    }
 		}
 	}
@@ -14898,7 +14898,7 @@ scan_table_columns( int k,
 	}
 	else
 	{
-		EH(-1,"invalid table column, dimension combination.");
+		EH(GOMA_ERROR,"invalid table column, dimension combination.");
 	}
 	return(err_stat);
 }	
@@ -14932,11 +14932,7 @@ echo_compiler_settings(void)
   fprintf(echo_file, "%-30s= %d\n", "MAX_PROB_VAR", MAX_PROB_VAR);
   fprintf(echo_file, "%-30s= %d\n", "MAX_CONC", MAX_CONC);
   fprintf(echo_file, "%-30s= %d\n", "MAX_VARIABLE_TYPES", MAX_VARIABLE_TYPES);
-#ifdef HAVE_CONFIG_H
-  fprintf(echo_file, "%-30s= %s\n", "HAVE_CONFIG_H", "yes");
-#else 
   fprintf(echo_file, "%-30s= %s\n", "HAVE_CONFIG_H", "no");
-#endif 
 
 #ifdef HAVE_MPI_H
        fprintf(echo_file, "%-30s= %d\n", "PARALLEL             Num_Proc", Num_Proc);
@@ -15092,7 +15088,7 @@ parse_press_datum_input(const char *input)
   (void) fprintf(stderr, 
 		 "%s error: reading pressure datum, %s\n", yo, input);
 
-  EH(-1, "Pressure Datum");
+  EH(GOMA_ERROR, "Pressure Datum");
   return value;
 }
 
@@ -15161,14 +15157,14 @@ static void read_MAT_line(FILE *ifp, int mn, char *input)
     (void) fprintf(stderr,
 		   "%s error: Need at least two arguments for MAT keyword\n%s\n",
 		   yo, input);
-    EH(-1, yo);
+    EH(GOMA_ERROR, yo);
   }
 
   if( numTok == MAXTOKENS )
     {
       (void) fprintf(stderr, "%s error: Max tokens read parsing line\n %s \n", yo, input);
       (void) fprintf(stderr, "Recompile with larger value for MAXTOKENS.\n");
-      EH(-1,yo);
+      EH(GOMA_ERROR,yo);
     }
 
   /*
@@ -15216,7 +15212,7 @@ static void read_MAT_line(FILE *ifp, int mn, char *input)
   (void) fprintf(stderr, 
 		 "%s error: reading MAT line, %s\n", yo, input);
 
-  EH(-1, "MAT line");
+  EH(GOMA_ERROR, "MAT line");
 }
 
 void
@@ -15238,12 +15234,12 @@ read_surface_objects ( FILE* ifp,
 
       if ( iread == -1 )
 	{
-	  EH(-1,"Not enough Level Set initialization surfaces.");
+	  EH(GOMA_ERROR,"Not enough Level Set initialization surfaces.");
 	}
 
       if( fscanf(ifp, "%s", name ) != 1 )
 	{
-	  EH(-1,"Error reading Level Set initialization surface.");
+	  EH(GOMA_ERROR,"Error reading Level Set initialization surface.");
 	}
 
       stringup(name);
@@ -15261,7 +15257,7 @@ read_surface_objects ( FILE* ifp,
 		                              &(s->n[2]),
                                               &(s->d)) != 4 )
 	    {
-	      EH(-1,"PLANE Level Set initialization objects requires 4 float constants.");
+	      EH(GOMA_ERROR,"PLANE Level Set initialization objects requires 4 float constants.");
 	    }
 
 	  SPF(echo_string,"\t\t%s = %s %.4g %.4g %.4g %.4g","SURF","PLANE",s->n[0],s->n[1],s->n[2],s->d);ECHO(echo_string,echo_file);
@@ -15281,7 +15277,7 @@ read_surface_objects ( FILE* ifp,
 		                          &(s->center[1]),
 		                          &(s->r) ) != 3 )
 	    {
-	      EH(-1,"CIRCLE Level Set initialization objects requires 3 float constants.");
+	      EH(GOMA_ERROR,"CIRCLE Level Set initialization objects requires 3 float constants.");
 	    }
 	  SPF(echo_string,"\t\t%s = %s %.4g %.4g %.4g","SURF","CIRCLE",s->center[0],s->center[1],s->r ); ECHO(echo_string,echo_file);
 	}
@@ -15298,7 +15294,7 @@ read_surface_objects ( FILE* ifp,
                                               &(s->center[2]),
 		                              &(s->r) ) != 4 )
 	    {
-	      EH(-1,"SPHERE Level Set initialization objects requires 4 float constants.");
+	      EH(GOMA_ERROR,"SPHERE Level Set initialization objects requires 4 float constants.");
 	    }
 
 	  SPF(echo_string,"\t\t%s = %s %.4g %.4g %.4g %.4g","SURF","SPHERE",s->center[0],s->center[1],s->center[2],s->r); 
@@ -15325,20 +15321,20 @@ read_surface_objects ( FILE* ifp,
               if( fscanf( sfp, "%d %d", &num,
 		                        &num_points) != 2 )
 	        {
-	          EH(-1,"Error reading FACET in facet file.");
+	          EH(GOMA_ERROR,"Error reading FACET in facet file.");
 	        }
                 
               for (i=0; i<num_points; i++)
                 {
                   if (look_forward_optional(sfp, "POINT", input, '=') == -1)
-                    EH(-1,"Error finding POINT for FACET in facet file.");
+                    EH(GOMA_ERROR,"Error finding POINT for FACET in facet file.");
                     
                   if( fscanf( sfp, "%d %lf %lf %lf %d", &num,
 		                                        &(r[0]),
                                                         &(r[1]),
                                                         &(r[2]),
                                                         &inflection) != 5)
-	            EH(-1,"Error reading POINT for FACET in facet file.");
+	            EH(GOMA_ERROR,"Error reading POINT for FACET in facet file.");
                   
                   vertex[i] = create_surf_point ( r, -1, xi, inflection );
                 }
@@ -15365,7 +15361,7 @@ read_surface_objects ( FILE* ifp,
 
 	  if( fscanf( ifp, "%d", &(s->ss_id)) != 1 )
 	    {
-	      EH(-1,"SS Level Set initialization objects requires 1 int constant.");
+	      EH(GOMA_ERROR,"SS Level Set initialization objects requires 1 int constant.");
 	    }
 
 	  SPF(echo_string,"\t\t%s = %s %d","SURF","SS",s->ss_id);ECHO(echo_string,echo_file);
@@ -15381,7 +15377,7 @@ read_surface_objects ( FILE* ifp,
 
           if (fscanf(ifp, "%80s", input) != 1)
 	    {
-	      EH(-1, "Error reading variable type for Level Set initialization ISOSURFACE");
+	      EH(GOMA_ERROR, "Error reading variable type for Level Set initialization ISOSURFACE");
 	    }
 
 	    /* loop through variable names and compare to input */
@@ -15398,12 +15394,12 @@ read_surface_objects ( FILE* ifp,
 	      }
 	    if (!var_found)
 	      {
-	  	EH(-1, "Could not identify variable type for Level Set initialization ISOSURFACE");
+	  	EH(GOMA_ERROR, "Could not identify variable type for Level Set initialization ISOSURFACE");
 	      }
               
 	  if( fscanf( ifp, "%lf", &(s->isoval) ) != 1 )
 	    {
-	      EH(-1,"ISOSURFACE Level Set initialization objects requires varname and 1 float constant.");
+	      EH(GOMA_ERROR,"ISOSURFACE Level Set initialization objects requires varname and 1 float constant.");
 	    }
 
 	  SPF(echo_string,"\t\t%s = %s %s %.4g","SURF","ISOSURFACE",input,s->isoval);ECHO(echo_string,echo_file);
@@ -15421,7 +15417,7 @@ read_surface_objects ( FILE* ifp,
 	  if( fscanf( ifp, "%lf %lf %lf %lf %lf %lf", &(s->center[0]), &(s->center[1]), &(s->r),
 		      &(s->n[0]), &(s->n[1]), &(s->d) ) != 6) 
 	    {
-	      EH(-1," ARC initialization surface requires six floats,\n");
+	      EH(GOMA_ERROR," ARC initialization surface requires six floats,\n");
 	    }  
 
 	  SPF(echo_string,"\t\t%s = %s %.4g %.4g %.4g %.4g %.4g %.4g ","SURF","ARC",
@@ -15441,7 +15437,7 @@ read_surface_objects ( FILE* ifp,
 		}
 	      else if ( strcmp(input,"POSITIVE") != 0 )
 		{
-		  EH(-1,"Sign designation string for ARC type of LS initialization must be POSITIVE or NEGATIVE");
+		  EH(GOMA_ERROR,"Sign designation string for ARC type of LS initialization must be POSITIVE or NEGATIVE");
 		}
 	      SPF(endofstring(echo_string)," %s", input);
 	    }
@@ -15482,7 +15478,7 @@ read_surface_objects ( FILE* ifp,
 
       else
 	{
-	  EH(-1,"Cannot find Level Set initialization surface type.");
+	  EH(GOMA_ERROR,"Cannot find Level Set initialization surface type.");
 	}
 
       num_surf--;
@@ -15615,7 +15611,7 @@ setup_table_external(
   if ( ( datafile = fopen_aprepro( filename, "r") ) == NULL )
 	{
 	  sprintf(err_msg, "\n%s,\tError opening TABLE data file %s\n",yo,filename);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
 
   rd_table_data( datafile, filename, table, NULL );
@@ -15719,7 +15715,7 @@ setup_table_AC(
   else
     {
       sprintf(err_msg,"\nInvalid choice for table abscissa.");
-      EH(-1,err_msg);
+      EH(GOMA_ERROR,err_msg);
     }
 
   /*
@@ -15754,13 +15750,13 @@ setup_table_AC(
   else
     {
       sprintf(err_msg, "\nUnknown table interpolation order for table: %s \n",interpolation);
-      EH(-1,err_msg);
+      EH(GOMA_ERROR,err_msg);
     }
 
   if ( ( datafile = fopen_aprepro( filename, "r") ) == NULL )
 	{
 	  sprintf(err_msg, "\n%s,\tError opening TABLE data file %s\n",yo,filename);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
 
   rd_table_data( datafile, filename, table, NULL );

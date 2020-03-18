@@ -60,10 +60,6 @@
 
 #define GOMA_RD_DPI_C
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -195,7 +191,7 @@ int rd_dpi(Dpi *d, char *fn) {
   err = nc_open(fn, NC_NOWRITE, &u);
   if ( err != NC_NOERR )
     {
-      EH(-1, "nc_open() problem.");
+      EH(GOMA_ERROR, "nc_open() problem.");
     }
 #endif
 #ifdef NETCDF_2
@@ -886,7 +882,7 @@ int rd_dpi(Dpi *d, char *fn) {
   err = nc_close(u);
   if ( err != NC_NOERR )
     {
-      EH(-1, "nc_close() problem.");
+      EH(GOMA_ERROR, "nc_close() problem.");
     }
 #endif
 #ifdef NETCDF_2
@@ -946,7 +942,7 @@ getdid(int netcdf_unit,			/* should already be open	(in) */
       sprintf(err_msg, "nc_inq_dimid() on %s id=%d", 
 	      string_name, 
 	      *dimension_identifier_address);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 #endif
 
@@ -999,7 +995,7 @@ getvid(int netcdf_unit,		         /* open netCDF unit identifier (in) */
       sprintf(err_msg, "nc_inq_varid() on %s id=%d", 
 		   string_name, 
 		   *variable_identifier_address);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 #endif
 
@@ -1061,7 +1057,7 @@ getdim(int netcdf_unit,
       if ( err != NC_NOERR )
 	{
 	  sprintf(err_msg, "nc_inq_dimlen() on did=%d", dimension_id);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       *where = (int) swhere;
 #endif
@@ -1434,13 +1430,13 @@ get_variable(const int netcdf_unit,
         break;
 
     default:
-      EH(-1, "Specified netCDF data type unrecognized or unimplemented.");
+      EH(GOMA_ERROR, "Specified netCDF data type unrecognized or unimplemented.");
       break;
     }
 
   if (err != NC_NOERR)
     {
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 
 
@@ -1467,7 +1463,7 @@ init_dpi_struct(Dpi *d)
 {
   if ( d == NULL )
     {
-      EH(-1, "Empty structure to initialize?");
+      EH(GOMA_ERROR, "Empty structure to initialize?");
     }
   /*
    * Initialize the entire structure to zeroes and NULL's

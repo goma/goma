@@ -183,7 +183,7 @@ is_change1_speciesVT(INTERFACE_SOURCE_STRUCT *is, const int is_species_entry,
 	/*
 	 * Need to change the source term units as well
 	 */
-	EH(-1,"not implemented");
+	EH(GOMA_ERROR,"not implemented");
 	break;
     case SPECIES_MASS_FRACTION:
 	break;
@@ -194,7 +194,7 @@ is_change1_speciesVT(INTERFACE_SOURCE_STRUCT *is, const int is_species_entry,
 	}
 	break;
     default:
-	EH(-1,"not implemented");
+	EH(GOMA_ERROR,"not implemented");
 	break;
     }
   } else if (speciesVT == SPECIES_MOLE_FRACTION) {
@@ -203,15 +203,15 @@ is_change1_speciesVT(INTERFACE_SOURCE_STRUCT *is, const int is_species_entry,
         /*
 	 * Need to change the source term units as well
 	 */
-	EH(-1,"not implemented");
+	EH(GOMA_ERROR,"not implemented");
 	break;
     case SPECIES_MOLE_FRACTION:
 	break;
    case SPECIES_CONCENTRATION:
-  	EH(-1,"not implemented");
+  	EH(GOMA_ERROR,"not implemented");
         break;
     default:
-	EH(-1,"not implemented");
+	EH(GOMA_ERROR,"not implemented");
 	break;
     }
   } else if (speciesVT == SPECIES_CONCENTRATION) {
@@ -220,15 +220,15 @@ is_change1_speciesVT(INTERFACE_SOURCE_STRUCT *is, const int is_species_entry,
 	/*
 	 * Need to change the source term units as well
 	 */
-	EH(-1,"not implemented");
+	EH(GOMA_ERROR,"not implemented");
 	break;
     case SPECIES_MOLE_FRACTION:
-	EH(-1,"not implemented");
+	EH(GOMA_ERROR,"not implemented");
 	break;
     case SPECIES_CONCENTRATION:
 	break;
     default:
-	EH(-1,"not implemented");
+	EH(GOMA_ERROR,"not implemented");
 	break;
     }
 
@@ -285,7 +285,7 @@ is_change1_lastspecies(INTERFACE_SOURCE_STRUCT *is,
       }
       break;
   default:
-      EH(-1,"not implemented");
+      EH(GOMA_ERROR,"not implemented");
       break;
   }
 }
@@ -325,7 +325,7 @@ match_interface_source_string(char *istring)
     fprintf(stderr,
 	    "match_interface_source_string ERORR: string %s not recognized\n",
 	    istring);
-    EH(-1,"input error");
+    EH(GOMA_ERROR,"input error");
   }
   return match;
 }

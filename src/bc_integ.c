@@ -48,7 +48,7 @@
 #include "mm_fill_util.h"
 #include "mm_fill_potential.h"
 #include "mm_shell_bc.h"
-#include "rotate_util.h"
+#include "bc/rotate_coordinates.h"
 #include "mm_eh.h"
 #include "user_bc.h"
 #include "ac_stability.h"
@@ -363,7 +363,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
       if (ss_index == -1 && is_ns != 0) {
 	sprintf(Err_Msg, "Could not find BC_ID %d in ss_to_blks",
 	        BC_Types[bc_input_id].BC_ID);
-	EH(-1, Err_Msg);
+	EH(GOMA_ERROR, Err_Msg);
       }
 
       /*
@@ -1317,7 +1317,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 
 
 	case HYDROSTATIC_SYMM_BC:
-	  EH(-1, "HYDROSTATIC_SYMM is no longer supported.");
+	  EH(GOMA_ERROR, "HYDROSTATIC_SYMM is no longer supported.");
 	  /* 	    hydrostatic_n_dot_T(func, d_func); */
 	  break;
 
@@ -1836,13 +1836,13 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 	   * sure your heats of reaction are deployed based on the flux 
 	   * (and hence reaction) rates, either through YFLUX_BV, or 
 	   * YFLUX_USER, etc. */
-	  EH(-1, "HEAT_OF_RXN_BC: not yet implemented.");
+	  EH(GOMA_ERROR, "HEAT_OF_RXN_BC: not yet implemented.");
 	  break;
 	      
 	case PSPG_BC:
 	  /* MMH: LSA LSA LSA Stopped here.  ALMOST done with bc_integ.c LSA LSA LSA */
 	  if (!PSPG) {
-	    EH(-1,
+	    EH(GOMA_ERROR,
 	       "You don't have PSPG turned on and you trying to apply a PSPG boundary condition");
 	  }
 	  PSPG_consistency_bc(func, d_func,  x_dot, time_value, delta_t,
@@ -2079,7 +2079,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 
 	default:
 	  sprintf(Err_Msg, "Integrated BC %s not found", bc_desc->name1);
-	  EH(-1, Err_Msg);
+	  EH(GOMA_ERROR, Err_Msg);
 	  break;
 
 
@@ -2295,7 +2295,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
   		      bc->BC_Name == VELO_NORMAL_LS_PETROV_BC ||
   		      bc->BC_Name == KIN_DISPLACEMENT_PETROV_BC) {
 		    if (pd->Num_Dim != 2) {
- 		      EH(-1,"KINEMATIC_PETROV or KIN_DISPLACEMENT_PETROV not available in 3D yet");
+ 		      EH(GOMA_ERROR,"KINEMATIC_PETROV or KIN_DISPLACEMENT_PETROV not available in 3D yet");
 		    }
 		    id_side = elem_side_bc->id_side;
 		    i_basis = 1 - id_side%2;
@@ -2323,7 +2323,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 			 eb_in_matrl(BC_Types[bc_input_id].BC_Data_Int[1], mn)))
 		      {
 			//type = pd_glob[mn]->w[eqn];
-			//if (bfi[type] == NULL) EH(-1,"Illegal cross basis func");
+			//if (bfi[type] == NULL) EH(GOMA_ERROR,"Illegal cross basis func");
 			
 			/* note that here, we don't have the ln_to_dof
 			   array for the adjacent 
@@ -2348,7 +2348,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
 		      }
 		  }
 		} else {
-		  EH(-1,"Illegal bc phase definition");
+		  EH(GOMA_ERROR,"Illegal bc phase definition");
 		}
 	      }
 
@@ -2576,7 +2576,7 @@ apply_integrated_bc(double x[],           /* Solution vector for the current pro
                            weight *= phi_i;
                         }
                         else {
-                           EH(-1,"Only SINGLE_PHASE is handled in stress BC implementation");
+                           EH(GOMA_ERROR,"Only SINGLE_PHASE is handled in stress BC implementation");
                         }
 
                        /*
@@ -2678,12 +2678,12 @@ int equation_index_auto_rotate(const ELEM_SIDE_BC_STRUCT *elem_side_bc,
                                const BOUNDARY_CONDITION_STRUCT *bc) {
   int ieqn;
   if (!goma_automatic_rotations.automatic_rotations) {
-    EH(-1, "equation_index_auto_rotate requires 3D automatic rotations");
+    EH(GOMA_ERROR, "equation_index_auto_rotate requires 3D automatic rotations");
     return -1;
   }
   int node = ei[pg->imtrx]->gnn_list[eqn][ldof_eqn];
   if (node != I) {
-    EH(-1, "issue with rotation node and ei");
+    EH(GOMA_ERROR, "issue with rotation node and ei");
   }
   int n_index = -1;
   for (int i = 0; i < goma_automatic_rotations.rotation_nodes[node].n_normals; i++) {

@@ -25,7 +25,7 @@
 #include "bc_curve.h"
 #include "bc_dirich.h"
 #include "bc_integ.h"
-#include "bc_rotate.h"
+#include "bc/rotate.h"
 #include "bc_special.h"
 #include "bc_surfacedomain.h"
 #include "dp_comm.h"
@@ -313,7 +313,7 @@ init_shell_element_blocks(const Exo_DB *exo)
       snel   = exo->eb_num_elems[sindex];
       snpe   = exo->eb_num_nodes_per_elem[sindex];
       if(snpe > 9)
-	EH(-1,"Blecch! Too many nodes in this shell element. Muy malo.\n");
+	EH(GOMA_ERROR,"Blecch! Too many nodes in this shell element. Muy malo.\n");
       
       DSPRINTF("Processing shell block: si=%d, sindex=%d, sid=%d (snel=%d)\n",si,sindex,sid,snel);
       
@@ -420,7 +420,7 @@ init_shell_element_blocks(const Exo_DB *exo)
 		 fprintf(stderr,"Shell Block Index = %d\n",sindex);
 		 fprintf(stderr,"Other Block ID    = %d\n",bid);
 		 fprintf(stderr,"Other Block Index = %d\n",bindex);
-		 EH(-1,"Ack. It appears as though this shell's neighbor moved out.\n");
+		 EH(GOMA_ERROR,"Ack. It appears as though this shell's neighbor moved out.\n");
 		 }
 	      */
 	      
@@ -431,7 +431,7 @@ init_shell_element_blocks(const Exo_DB *exo)
 	    {
 	      n = sb->num_nbr_blocks;
 	      if(n >= MAX_SHELL_NBRS)
-		EH(-1,"Ack. MAX_SHELL_NBRS isn't big enough.\n");
+		EH(GOMA_ERROR,"Ack. MAX_SHELL_NBRS isn't big enough.\n");
 	      sb->nbr_elem_ids[n] = nbr_elem_ids;
 	      sb->num_nbr_blocks += 1;
 #if DEBUG_SHELL
@@ -540,7 +540,7 @@ init_shell_element_blocks(const Exo_DB *exo)
 	      /* This shell's neighbor */
 	      n = friends_count[elem];
 	      if (n >= num_elem_friends[elem] )
-		EH(-1,"Ack. I have more neighbors than I thought!\n");
+		EH(GOMA_ERROR,"Ack. I have more neighbors than I thought!\n");
 	      elem_friends[elem][n] = nbr;
 	      friends_count[elem]++;
 	      DSPRINTF(" (elem updated)");
@@ -551,7 +551,7 @@ init_shell_element_blocks(const Exo_DB *exo)
 		  DSPRINTF(" (nbr updated too)");
 		  n = friends_count[nbr];
 		  if (n >= num_elem_friends[nbr])
-		    EH(-1,"Ack. I have more neighbors than I thought!\n");
+		    EH(GOMA_ERROR,"Ack. I have more neighbors than I thought!\n");
 		  elem_friends[nbr][n] = elem;
 		  friends_count[nbr]++;
 		}
@@ -707,7 +707,7 @@ is_shell_block(const int block_id, const Exo_DB *exo)
   if(eb_index == exo->num_elem_blocks)
     {
       fprintf(stderr,"While looking for block_id %d\n",block_id);
-      EH(-1, "Invalid block id");
+      EH(GOMA_ERROR, "Invalid block id");
     }
 
   return is_shell_element_type(exo->eb_elem_itype[eb_index]);
@@ -897,7 +897,7 @@ find_stu_from_xyz(const int elem, const double xg[DIM],
   if (iter == max_iter)
     {
       /* didn't converge */
-      EH(-1,"Didn't converge on a solution.");
+      EH(GOMA_ERROR,"Didn't converge on a solution.");
       return -1;
     }
 
@@ -1032,7 +1032,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
 	nshell = 3;
 	break;
       default:
-	EH(-1,"Shell element type not supported.");
+	EH(GOMA_ERROR,"Shell element type not supported.");
 	break;
       }
     }
@@ -1041,7 +1041,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
       nbulk = 4;
       nshell = 2;
     }
-  else EH(-1, "Only 2D bulk / 1D shell and 3D bulk / 2D shell are allowed!");
+  else EH(GOMA_ERROR, "Only 2D bulk / 1D shell and 3D bulk / 2D shell are allowed!");
 
   /* Create node lists */
   for (i = 0; i < nbulk; i++)
@@ -1086,7 +1086,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
   /* Consistency checks */
   if ( (nmatch != nshell) || (n1 >= n2) )
     {
-      EH(-1, "Failed bulk/shell node match consistency check!");
+      EH(GOMA_ERROR, "Failed bulk/shell node match consistency check!");
     }
 
   /*
@@ -1210,7 +1210,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
         }
       else
         {
-          EH(-1, "Couldn't determine 3D element side ID for HEX8!");
+          EH(GOMA_ERROR, "Couldn't determine 3D element side ID for HEX8!");
         }
 
       /* Set parameters according to side ID */
@@ -1294,7 +1294,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
 	    }
 	  else
 	    {
-	      EH(-1, "SNAFU in bulk_side_id_and_stu!");
+	      EH(GOMA_ERROR, "SNAFU in bulk_side_id_and_stu!");
 	    }
 	  break;
 	case 1:
@@ -1310,7 +1310,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
 	    }
 	  else
 	    {
-	      EH(-1, "SNAFU in bulk_side_id_and_stu!");
+	      EH(GOMA_ERROR, "SNAFU in bulk_side_id_and_stu!");
 	    }
 	  break;
 	case 2:
@@ -1326,7 +1326,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
 	    }
 	  else
 	    {
-	      EH(-1, "SNAFU in bulk_side_id_and_stu!");
+	      EH(GOMA_ERROR, "SNAFU in bulk_side_id_and_stu!");
 	    }
 	  break;
 	case 3:
@@ -1342,7 +1342,7 @@ bulk_side_id_and_stu(const int bulk_elem, const int shell_elem,
 	    }
 	  else
 	    {
-	      EH(-1, "SNAFU in bulk_side_id_and_stu!");
+	      EH(GOMA_ERROR, "SNAFU in bulk_side_id_and_stu!");
 	    }
 	  break;
         }
@@ -1479,7 +1479,7 @@ load_neighbor_var_data(int el1,    // Element number of the local element
       id_side = bulk_side_id_and_stu(el2, el1, xi, xi2, exo);
       if (id_side == -1) {
 	printf("Error returned from bulk_side_id_and_stu()\n");
-	EH(-1, "load_neighbor_var_data ");
+	EH(GOMA_ERROR, "load_neighbor_var_data ");
       }
     }
 
@@ -1605,7 +1605,7 @@ find_stu_on_shell(const int bulk_elem,
   /* 2D bulk element, 1D shell element */
   if (bulk_dim == 2)
     {
-      if(bulk_type == LINEAR_TRI) EH(-1, "find_stu_on_shell not fixed for 2d bulk triangles");
+      if(bulk_type == LINEAR_TRI) EH(GOMA_ERROR, "find_stu_on_shell not fixed for 2d bulk triangles");
 
       xi2[1] = xi2[2] = 0.0;
       switch (id_side)
@@ -1616,7 +1616,7 @@ find_stu_on_shell(const int bulk_elem,
 	  else if ( Proc_Elem_Connect[ bulk_eptr + 1 ] == Proc_Elem_Connect[ shell_eptr ] )
 	    xi2[0] = -s;
 	  else
-	    EH(-1,"Error in find_stu_on_shell");
+	    EH(GOMA_ERROR,"Error in find_stu_on_shell");
 	  break;
 	case 2:
 	  if ( Proc_Elem_Connect[ bulk_eptr + 1 ] == Proc_Elem_Connect[ shell_eptr ] )
@@ -1624,7 +1624,7 @@ find_stu_on_shell(const int bulk_elem,
 	  else if ( Proc_Elem_Connect[ bulk_eptr + 2 ] == Proc_Elem_Connect[ shell_eptr ] )
 	    xi2[0] = -t;
 	  else
-	    EH(-1,"Error in find_stu_on_shell");
+	    EH(GOMA_ERROR,"Error in find_stu_on_shell");
 	  break;
 	case 3:
 	  if ( Proc_Elem_Connect[ bulk_eptr + 2 ] == Proc_Elem_Connect[ shell_eptr ] )
@@ -1632,7 +1632,7 @@ find_stu_on_shell(const int bulk_elem,
 	  else if ( Proc_Elem_Connect[ bulk_eptr + 3 ] == Proc_Elem_Connect[ shell_eptr ] )
 	    xi2[0] = s;
 	  else
-	    EH(-1,"Error in find_stu_on_shell");
+	    EH(GOMA_ERROR,"Error in find_stu_on_shell");
 	  break;
 	case 4:
 	  if ( Proc_Elem_Connect[ bulk_eptr + 3 ] == Proc_Elem_Connect[ shell_eptr ] )
@@ -1640,7 +1640,7 @@ find_stu_on_shell(const int bulk_elem,
 	  else if ( Proc_Elem_Connect[ bulk_eptr + 0 ] == Proc_Elem_Connect[ shell_eptr ] )
 	    xi2[0] = t;
 	  else
-	    EH(-1,"Error in find_stu_on_shell");
+	    EH(GOMA_ERROR,"Error in find_stu_on_shell");
 	  break;
 	default:
 	  err = -1;
@@ -1651,7 +1651,7 @@ find_stu_on_shell(const int bulk_elem,
   /* 3D bulk element, 2D shell element */
   else if (bulk_dim == 3 && shell_type == BILINEAR_SHELL)
     {
-      /* EH(-1,"DRN believes that this is too simplified, more tests are needed as done above for 2D"); */
+      /* EH(GOMA_ERROR,"DRN believes that this is too simplified, more tests are needed as done above for 2D"); */
       xi2[2] = 0.0;
       switch (id_side)
         {
@@ -1686,7 +1686,7 @@ find_stu_on_shell(const int bulk_elem,
     }
   else if (bulk_dim == 3 && shell_type == BILINEAR_TRISHELL)
     {
-      /* EH(-1,"DRN believes that this is too simplified, more tests are needed as done above for 2D"); */
+      /* EH(GOMA_ERROR,"DRN believes that this is too simplified, more tests are needed as done above for 2D"); */
       xi2[2] = 0.0;
       switch (id_side)
         {
@@ -1847,7 +1847,7 @@ shell_normal_div_s(dbl *div_s_nv, dbl d_div_s_nv_dnv[DIM][MDE],
   pdim = pd->Num_Dim;
 
   /* Algorithm not tested for 3D yet! */
-  if (pdim == 3) EH(-1, "Cannot handle shell elements in 3D yet!");
+  if (pdim == 3) EH(GOMA_ERROR, "Cannot handle shell elements in 3D yet!");
 
   memset( &(sJ[0]), 0, DIM*sizeof(double) );
   memset( &(sB[0]), 0, DIM*sizeof(double) );
@@ -2102,7 +2102,7 @@ shell_determinant_and_normal(
       T[0][0] = 1.; T[0][1] = 0.;
       break;
     default:
-      EH(-1, "Invalid shape");
+      EH(GOMA_ERROR, "Invalid shape");
       break;
     }
     break;
@@ -2123,7 +2123,7 @@ shell_determinant_and_normal(
         }
       else
         {
-          EH(-1, "Incorrect side for HEXAHEDRAL");
+          EH(GOMA_ERROR, "Incorrect side for HEXAHEDRAL");
 	  } */
 
       /*Not sure how we want to handle this, viz. compatible with the
@@ -2140,7 +2140,7 @@ shell_determinant_and_normal(
       break;
 
     default:
-      EH(-1, "Invalid shape. Lubrication capability requires shell elements");
+      EH(GOMA_ERROR, "Invalid shape. Lubrication capability requires shell elements");
       break;
     }
     break;
@@ -2198,7 +2198,7 @@ shell_determinant_and_normal(
   if ( ielem_surf_dim == 1 ) {
 
       /* N.B. NEXT Stage of Change: Correct Mapbf->J for 1D case in beer_belly */
-      //EH(-1, "you should not be here until mapbf->J in beerbelly is corrected for 1D case");
+      //EH(GOMA_ERROR, "you should not be here until mapbf->J in beerbelly is corrected for 1D case");
       /* calculate surface determinant using the coordinate scale factors
        * for orthogonal curvilinear coordinates */
       det_h01 = sqrt(t[0][0]*t[0][0] + t[0][1]*t[0][1]);
@@ -3397,7 +3397,7 @@ lubrication_shell_initialize (
     if (   (mp->FSIModel != FSI_SHELL_ONLY) 
         && (mp->FSIModel != FSI_SHELL_ONLY_MESH)
         && (mp->FSIModel != FSI_SHELL_ONLY_UNDEF)
-       ) EH(-1, "ERROR:  What happened to my little friend?");
+       ) EH(GOMA_ERROR, "ERROR:  What happened to my little friend?");
     FSIModel = mp->FSIModel;
     break;
   case 1:
@@ -3411,12 +3411,12 @@ lubrication_shell_initialize (
     }
     break;
   default:
-    EH(-1, "ERROR: Not set up for more than one element friend!");
+    EH(GOMA_ERROR, "ERROR: Not set up for more than one element friend!");
     break;
   }
 
   /* Make sure we have a model */
-  if ( FSIModel == 0 ) EH(-1, "ERROR: Could not find FSI Model");
+  if ( FSIModel == 0 ) EH(GOMA_ERROR, "ERROR: Could not find FSI Model");
 
   /* Use deformed normal for boundary */
   if ( (use_def == 1) && (FSIModel == FSI_MESH_UNDEF) ) FSIModel = FSI_MESH_CONTINUUM;
@@ -3441,7 +3441,7 @@ lubrication_shell_initialize (
 
   case FSI_SHELL_ONLY_MESH:
 
-    if (!pd->e[pg->imtrx][R_MESH1]) EH(-1, "ERROR:  FSI_SHELL_ONLY_MESH requires mesh equation turned on!");
+    if (!pd->e[pg->imtrx][R_MESH1]) EH(GOMA_ERROR, "ERROR:  FSI_SHELL_ONLY_MESH requires mesh equation turned on!");
 
     shell_determinant_and_normal(ei[pg->imtrx]->ielem, ei[pg->imtrx]->iconnect_ptr, ei[pg->imtrx]->num_local_nodes,
                                  ei[pg->imtrx]->ielem_dim, 1);
@@ -3465,7 +3465,7 @@ lubrication_shell_initialize (
 
   case FSI_SHELL_ONLY_UNDEF:
 
-    if (!pd->e[pg->imtrx][R_MESH1]) EH(-1, "ERROR:  FSI_SHELL_ONLY_UNDEF requires mesh equation turned on!");
+    if (!pd->e[pg->imtrx][R_MESH1]) EH(GOMA_ERROR, "ERROR:  FSI_SHELL_ONLY_UNDEF requires mesh equation turned on!");
 
     /* Populate surface determinants (detJ) and its sensitivities first */
 
@@ -3615,7 +3615,7 @@ lubrication_shell_initialize (
   case FSI_MESH_BOTH:
   case FSI_MESH_SHELL:
     
-    EH(-1, "ERROR:  lubrication_shell_initialize() - Error in FSI Model");
+    EH(GOMA_ERROR, "ERROR:  lubrication_shell_initialize() - Error in FSI Model");
     break;
   }
   
@@ -5428,7 +5428,7 @@ calculate_lub_q_v_nonnewtonian (
 
    else
      {
-      EH(-1,"Not a supported constitutive equation ");
+      EH(GOMA_ERROR,"Not a supported constitutive equation ");
      }
 
    for (i = 0; i < DIM; i++)

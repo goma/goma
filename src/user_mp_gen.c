@@ -111,7 +111,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
 
  /* Comment out our remove this line if using this routine */
 
-    EH(-1,"No usr_heat_source_gen model defined.");
+    EH(GOMA_ERROR,"No usr_heat_source_gen model defined.");
 
  /**********************************************************/
 
@@ -260,7 +260,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
      *
      *     if(mp->DiffusivityModel[0] != CONSTANT)
      *       {
-     *	 EH(-1,"Cannot use Joule heating term with variable conductivity yet");
+     *	 EH(GOMA_ERROR,"Cannot use Joule heating term with variable conductivity yet");
      *       }
      *
      *	if (pd->v[pg->imtrx][MASS_FRACTION] )
@@ -340,7 +340,7 @@ usr_heat_source_gen(dbl *h,	/* volumetric heat source */
  *    } 
  *  else
  *    {
- *	EH(-1,"No user-defined function for this material");
+ *	EH(GOMA_ERROR,"No user-defined function for this material");
  *    }
  * ----------------------------------------------------------------------------
  */
@@ -387,7 +387,7 @@ usr_viscosity_gen(dbl *mu,
 
  /* Comment out our remove this line if using this routine */
 
-     EH(-1,"No user_viscosity_gen model implemented");
+     EH(GOMA_ERROR,"No user_viscosity_gen model implemented");
  /**********************************************************/
 
  /*******Add property function and sensitivities here*******/

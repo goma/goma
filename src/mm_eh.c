@@ -103,13 +103,14 @@ static char log_filename[MAX_FNL] = DEFAULT_GOMA_LOG_FILENAME;
 /****************************************************************************/
 void 
 goma_eh(const int error_flag, const char *file,
-   const int line, const char *message)
+   const int line, const char *format, ...)
 {
   static char yo[] = "goma_eh";
   if (error_flag == -1) { 
      log_msg("GOMA ends with an error condition.");
 #ifdef PRINT_STACK_TRACE_ON_EH
     print_stacktrace();
+    fprintf(stderr,"========================================\n");
 #endif
 #ifndef PARALLEL
     fprintf(stderr,"ERROR EXIT: %s:%d: %s\n", file, line, message); 
@@ -121,6 +122,11 @@ goma_eh(const int error_flag, const char *file,
       print_color = true;
     }
 #endif
+    va_list args;
+    va_start(args, format);
+    char message[MAX_CHAR_ERR_MSG];
+    vsnprintf(message, MAX_CHAR_ERR_MSG, format, args);
+    va_end(args);
     if (print_color) {
       fprintf(stderr, "\033[0;31mP_%d ERROR EXIT: %s \033[0m(%s:%d)\n", ProcID, message, file, line);
     } else {
@@ -142,7 +148,7 @@ goma_eh(const int error_flag, const char *file,
 
 void 
 goma_wh(const int error_flag, const char * const file, const int line,
-   const char * const message)
+   const char * format, ...)
 {
   if (error_flag == -1) {
     bool print_color = false;
@@ -151,6 +157,11 @@ goma_wh(const int error_flag, const char * const file, const int line,
       print_color = true;
     }
 #endif
+    va_list args;
+    va_start(args, format);
+    char message[MAX_CHAR_ERR_MSG];
+    vsnprintf(message, MAX_CHAR_ERR_MSG, format, args);
+    va_end(args);
     if (print_color) {
       DPRINTF(stderr, "\033[0;33mWARNING: %s \033[0m(%s:%d)\n", message, file, line);
     } else {

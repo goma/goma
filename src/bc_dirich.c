@@ -106,7 +106,7 @@ put_dirichlet_in_matrix(double x[], const int num_total_nodes)
 	      ldof_eqn++;
 	    }
 	    if (!found) {
-	      EH(-1,"ERROR");
+	      EH(GOMA_ERROR,"ERROR");
 	    }
 	    if (var_type == MASS_FRACTION) {
 	      eqn = MAX_PROB_VAR + vd->Subvar_Index;

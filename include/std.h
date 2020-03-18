@@ -24,18 +24,6 @@
 
 #include "rf_mp.h"
 
-/* If we're using autoconf, then include the config.h file. */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-
-
-/*
- * If not, make sure some of these HAVE_* are def'ed for the test suite.
- * The test suite uses these -- via 'goma -v' -- to check for various
- * capabilities which may or may not be compiled in.
- */
-#else /* HAVE_CONFIG_H */
-
 #define HAVE_UMFPACK 1
 #define HAVE_AZTEC 1
 /* Trilinos now seems to define these */
@@ -55,8 +43,6 @@
 #define HAVE_ARPACK 1
 #define HAVE_PARPACK 1
 #endif /* EIGEN_PARALLEL */
-
-#endif /* HAVE_CONFIG_H */
 
 #ifndef GOMA_VERSION                      /* 1) VERSION must be a keyword, won't work with it */
   #ifdef GIT_VERSION                      /* 2) needed all of this to convet GIT_VERSION to the proper string */
@@ -494,7 +480,7 @@ typedef struct Material_Properties MATRL_PROP_STRUCT;
  */
 
 /*
- * This is a generic error that is anything that a call to EH(-1... would
+ * This is a generic error that is anything that a call to EH(GOMA_ERROR... would
  * trigger. It gets checked several places...
  */
 

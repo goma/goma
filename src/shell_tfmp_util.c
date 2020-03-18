@@ -519,7 +519,7 @@ void h0_minus_ndotd (
   } else if (n_dot_up < 0.0) {
     h_sign = -1.0;
   } else {
-    EH(-1, "Something is wrong! n_dot_up == 0.0");
+    EH(GOMA_ERROR, "Something is wrong! n_dot_up == 0.0");
     return;
   }
 
@@ -614,7 +614,7 @@ void rmesh_minus_rroller (
 ) {
   // Check to see if Height_UFunctionModel is ROLLER, otherwise break
   if( mp->HeightUFunctionModel != ROLLER){
-    EH(-1,"I cannot roll without an 'Upper Height Function Model = ROLLER'  !!");
+    EH(GOMA_ERROR,"I cannot roll without an 'Upper Height Function Model = ROLLER'  !!");
   }
 
   //notice there is no more need of normal
@@ -677,7 +677,7 @@ void rmesh_minus_rroller (
 
   } else {
     // don't know how to do anything else yet
-    EH(-1, "I don't know how to set gradII_h unless 'Elastohydrodynamic Lubrication Shell Integration Kind' is 'S'.\n"
+    EH(GOMA_ERROR, "I don't know how to set gradII_h unless 'Elastohydrodynamic Lubrication Shell Integration Kind' is 'S'.\n"
            "Check your material file or implement new features.");
   }
   // set dh_dmesh
@@ -914,7 +914,7 @@ void load_gap_model(GAP_STRUCT *gap) {
          dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, gap->time, gap->delta_t);
 
   if (fpclassify(gap->h)!= fp_type && gap->h != 0.0) {
-    EH(-1, "mass term is not normal after retrieving initial value from height_function_model()");
+    EH(GOMA_ERROR, "mass term is not normal after retrieving initial value from height_function_model()");
   }
 
   for (int l=0; l<DIM; l++)  {

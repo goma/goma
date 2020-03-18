@@ -775,7 +775,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
       case I_H3:                /* 2 node 2-dof Hermite cubic */
           return( ( n < 2 ) ? 2 : 0 );
       default:
-          EH(-1, "Unrecognized line segment interpolation.");
+          EH(GOMA_ERROR, "Unrecognized line segment interpolation.");
           break;
       }
       break;
@@ -797,7 +797,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
       case I_P1:                /* 1 node, 3 dof/node, piecewise linear */
           return( ( n == 0 ) ? 3 : 0 );
       default:
-          EH(-1, "node_interp_info: Unrecognized triangle interpolation.");
+          EH(GOMA_ERROR, "node_interp_info: Unrecognized triangle interpolation.");
           break;
       }
       break;
@@ -908,7 +908,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           case S_BIQUAD_QUAD:
               return( ( n == 7 ) ? 3 : 0 );
           default:
-              EH(-1, "node_intero_info: unrecognized element type ");
+              EH(GOMA_ERROR, "node_intero_info: unrecognized element type ");
               break;
           }
           break;
@@ -928,7 +928,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           case S_BIQUAD_QUAD:
               return( ( n == 7 ) ? 6 : 0 );
           default:
-              EH(-1, "node_intero_info: unrecognized element type ");
+              EH(GOMA_ERROR, "node_intero_info: unrecognized element type ");
               break;
           }
           break;
@@ -946,7 +946,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               /* Use centroid node for all dofs */
               return( ( n == 8 ) ? 4 : 0 );
           default:
-              EH(-1,
+              EH(GOMA_ERROR,
                  "PQ1 interpolation not implemented for this Element Type.");
               break;
           }
@@ -958,13 +958,13 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               /* Use centroid node for all dofs */
               return( ( n == 8 ) ? 9 : 0 );
           default:
-              EH(-1,
+              EH(GOMA_ERROR,
                  "PQ2 interpolation not implemented for this Element Type.");
               break;
           }
           break;
       default:
-          EH(-1, "Unrecognized quadrilateral interpolation.");
+          EH(GOMA_ERROR, "Unrecognized quadrilateral interpolation.");
           break;
       }
       break;
@@ -985,7 +985,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
       case I_P1:                /* 1 node, 4 dof/node, piecewise linear */
           return( ( n == 0 ) ? 4 : 0 );
       default:
-          EH(-1, "Unrecognized tetrahedron interpolation.");
+          EH(GOMA_ERROR, "Unrecognized tetrahedron interpolation.");
           break;
       }
       break;
@@ -1004,7 +1004,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
       case I_P1:                /* 1 node, 4 dof/node, piecewise linear */
           return( ( n == 15 ) ? 4 : 0 );
       default:
-          EH(-1, "Unrecognized prism interpolation.");
+          EH(GOMA_ERROR, "Unrecognized prism interpolation.");
           break;
       }
       break;
@@ -1047,7 +1047,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           case TRIQUAD_HEX:
               return( ( n == 20 ) ? 1 : 0 );/* centroid node */
           default:
-              EH(-1, "Unrecognized hexahedron interpolation.");
+              EH(GOMA_ERROR, "Unrecognized hexahedron interpolation.");
               break;
           }
           break;
@@ -1061,7 +1061,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           case TRIQUAD_HEX:
               return( ( n == 20 ) ? 2 : 0 );/* centroid node */
           default:
-              EH(-1, "Unrecognized hexahedron interpolation.");
+              EH(GOMA_ERROR, "Unrecognized hexahedron interpolation.");
               break;
           }
           break;
@@ -1076,7 +1076,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
           case TRIQUAD_HEX:
               return( ( n == 20 ) ? 4 : 0 ); /* centroid node */
           default:
-              EH(-1, "Unrecognized hexahedron interpolation.");
+              EH(GOMA_ERROR, "Unrecognized hexahedron interpolation.");
               break;
           }
           break;
@@ -1091,7 +1091,7 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               /* Use centroid node for all dofs */
               return( ( n == 20 ) ? 8 : 0 );
           default:
-              EH(-1,"PQ1 interpolation not implemented for this Element Type.");
+              EH(GOMA_ERROR,"PQ1 interpolation not implemented for this Element Type.");
               break;
           }
           break;
@@ -1101,22 +1101,22 @@ dof_lnode_interp_type(const int n, const int Element_Type,
               /* Use centroid node for all dofs */
               return( ( n == 20 ) ? 27 : 0 );
           default:
-              EH(-1,"PQ2 interpolation not implemented for this Element Type.");
+              EH(GOMA_ERROR,"PQ2 interpolation not implemented for this Element Type.");
               break;
           }
           break;
       case I_H3:                /* 8 node, 8 dof/node, Hermite tricubic */
           return( ( n < 8 ) ? 8 : 0 );
       default:
-          EH(-1, "Unrecognized hexahedron interpolation.");
+          EH(GOMA_ERROR, "Unrecognized hexahedron interpolation.");
           break;
       }
       break;
   default:
-      EH(-1, "Bad element shape.");
+      EH(GOMA_ERROR, "Bad element shape.");
       break;
   }
-  EH(-1, "node_interp_info: We should not be here.");
+  EH(GOMA_ERROR, "node_interp_info: We should not be here.");
   return (-1);
 
 }  /* END of routine node_info dof_lnode_interp_type  */
@@ -1179,7 +1179,7 @@ type2shape(const int element_type)
   default:
     fprintf(stderr,"type2shape ERROR: unknown element type: %d\b",
             element_type);
-    EH(-1, "What basic shape are these new element types?");
+    EH(GOMA_ERROR, "What basic shape are these new element types?");
     break;
   }
   return(shape);
@@ -1227,7 +1227,7 @@ shape2sides(const int element_shape)
       break;
 
     default:
-      EH(-1, "Unrecognized element shape.");
+      EH(GOMA_ERROR, "Unrecognized element shape.");
       break;
     }
 
@@ -1304,7 +1304,7 @@ getdofs(const int element_shape, const int interpolation)
           return(4);
 
         default:
-          EH(-1, "Unrecognized line segment interpolation.");
+          EH(GOMA_ERROR, "Unrecognized line segment interpolation.");
           break;
         }
         break;
@@ -1351,7 +1351,7 @@ getdofs(const int element_shape, const int interpolation)
           return(8);
 
         default:
-          EH(-1, "Unrecognized SHELL interpolation.");
+          EH(GOMA_ERROR, "Unrecognized SHELL interpolation.");
           break;
         }
         break;
@@ -1380,7 +1380,7 @@ getdofs(const int element_shape, const int interpolation)
           return(3);
 
         default:
-          EH(-1, "Unrecognized triangle interpolation.");
+          EH(GOMA_ERROR, "Unrecognized triangle interpolation.");
           break;
         }
         break;
@@ -1459,7 +1459,7 @@ getdofs(const int element_shape, const int interpolation)
           return(9);           /* centroid node, 9 dof/node, biquadratic discontinous */
 
         default:
-          EH(-1, "Unrecognized quadrilateral interpolation.");
+          EH(GOMA_ERROR, "Unrecognized quadrilateral interpolation.");
           break;
         }
         break;
@@ -1485,7 +1485,7 @@ getdofs(const int element_shape, const int interpolation)
           return(4);
 
         default:
-          EH(-1, "Unrecognized tetrahedron interpolation.");
+          EH(GOMA_ERROR, "Unrecognized tetrahedron interpolation.");
           break;
         }
         break;
@@ -1511,7 +1511,7 @@ getdofs(const int element_shape, const int interpolation)
           return(4);
 
         default:
-          EH(-1, "Unrecognized prism interpolation.");
+          EH(GOMA_ERROR, "Unrecognized prism interpolation.");
           break;
         }
         break;
@@ -1569,16 +1569,16 @@ getdofs(const int element_shape, const int interpolation)
           return(64);
 
         default:
-          EH(-1, "Unrecognized hexahedron interpolation.");
+          EH(GOMA_ERROR, "Unrecognized hexahedron interpolation.");
           break;
         }
         break;
 
     default:
-      EH(-1, "Bad element shape.");
+      EH(GOMA_ERROR, "Bad element shape.");
       return -1;
     }
-  EH(-1, "We should not be here.");
+  EH(GOMA_ERROR, "We should not be here.");
   return (-1);
   
 } /* END of routine getdofs  */
@@ -1872,7 +1872,7 @@ find_stu(const int   iquad,     /* current GQ index  */
     break;
       
   default:
-    EH(-1, "Unknown or unimplemented element type.\n");
+    EH(GOMA_ERROR, "Unknown or unimplemented element type.\n");
     break;
   }
 
@@ -1961,7 +1961,7 @@ find_surf_st(const int iquad,           /* current GQ index */
       }
       break;
     default:
-      EH(-1,"Illegal side number for LINEAR_TRI element");
+      EH(GOMA_ERROR,"Illegal side number for LINEAR_TRI element");
       break;
     }
     return;
@@ -1993,7 +1993,7 @@ find_surf_st(const int iquad,           /* current GQ index */
       }
       break;
     default:
-      EH(-1,"Illegal side number for QUAD_TRI element");
+      EH(GOMA_ERROR,"Illegal side number for QUAD_TRI element");
       break;
     }
     return;
@@ -2030,7 +2030,7 @@ find_surf_st(const int iquad,           /* current GQ index */
       }
       break;
     default:
-      EH(-1,"Illegal side number for QUAD6_TRI element");
+      EH(GOMA_ERROR,"Illegal side number for QUAD6_TRI element");
       break;
     }
     return;
@@ -2051,7 +2051,7 @@ find_surf_st(const int iquad,           /* current GQ index */
       xi[0] = 1.;
       break;
     default:
-      EH(-1,"Illegal side number for 1-D element");
+      EH(GOMA_ERROR,"Illegal side number for 1-D element");
       break;
     }
     break;
@@ -2075,7 +2075,7 @@ find_surf_st(const int iquad,           /* current GQ index */
       i_s = 1;
       break;
     default:
-      EH(-1,"Illegal side number for 2-D element");
+      EH(GOMA_ERROR,"Illegal side number for 2-D element");
       break;
     }
     break;
@@ -2112,12 +2112,12 @@ find_surf_st(const int iquad,           /* current GQ index */
       i_t = 1;
       break;
     default:
-      EH(-1,"Illegal side number for 3-D element");
+      EH(GOMA_ERROR,"Illegal side number for 3-D element");
       break;
     }
     break;
   default:
-    EH(-1,"Illegal element dimension");
+    EH(GOMA_ERROR,"Illegal element dimension");
     break;
   }
 
@@ -2225,7 +2225,7 @@ find_surf_st(const int iquad,           /* current GQ index */
     break;
 
   default:
-    EH(-1,"Unknown or unimplemented element type.\n");
+    EH(GOMA_ERROR,"Unknown or unimplemented element type.\n");
     break;
   }
 
@@ -2272,7 +2272,7 @@ find_edge_s (const int iquad,                /* current GQ index  */
  * then translate them to the n+1 dimensional elemental coords */
   switch (dim){
   case 1:
-      EH(-1,"cannot have edge for 1-D element");
+      EH(GOMA_ERROR,"cannot have edge for 1-D element");
     break;
 
   case 2:
@@ -2295,7 +2295,7 @@ find_edge_s (const int iquad,                /* current GQ index  */
       xi[1] =  1.;
       break;
     default:
-      EH(-1,"Illegal edge number for 2-D element");
+      EH(GOMA_ERROR,"Illegal edge number for 2-D element");
       break;
     }
     break;
@@ -2363,12 +2363,12 @@ find_edge_s (const int iquad,                /* current GQ index  */
       i_s = 2;
       break;
     default:
-      EH(-1,"Illegal edge number for 3-D element");
+      EH(GOMA_ERROR,"Illegal edge number for 3-D element");
       break;
     }
     break;
   default:
-    EH(-1,"Illegal element dimension");
+    EH(GOMA_ERROR,"Illegal element dimension");
     break;
   }
 
@@ -2402,7 +2402,7 @@ find_edge_s (const int iquad,                /* current GQ index  */
     break;
 
   default:
-    EH(-1,"Unknown or unimplemented element type.\n");
+    EH(GOMA_ERROR,"Unknown or unimplemented element type.\n");
     break;
   }
 
@@ -2467,7 +2467,7 @@ find_surf_center_st (
 						  xi[0] = 1.;
 						  break;
 					  default:
-						  EH(-1,"Illegal side number for 1-D element");
+						  EH(GOMA_ERROR,"Illegal side number for 1-D element");
 						  break;
 				  }
 					  break;
@@ -2491,7 +2491,7 @@ find_surf_center_st (
 						  i_s = 1;
 						  break;
 					  default:
-						  EH(-1,"Illegal side number for 2-D element");
+						  EH(GOMA_ERROR,"Illegal side number for 2-D element");
 						  break;
 				  }
 					  break;
@@ -2528,12 +2528,12 @@ find_surf_center_st (
 						  i_t = 1;
 						  break;
 					  default:
-						  EH(-1,"Illegal side number for 3-D element");
+						  EH(GOMA_ERROR,"Illegal side number for 3-D element");
 						  break;
 				  }
 				  break;
 			  default:
-				  EH(-1,"Illegal element dimension");
+				  EH(GOMA_ERROR,"Illegal element dimension");
 				  break;
 		  }
 		  break;
@@ -2556,7 +2556,7 @@ find_surf_center_st (
 	      xi[0] = 1.;
 	      break;
 	    default:
-	      EH(-1,"Illegal side number for 1-D element");
+	      EH(GOMA_ERROR,"Illegal side number for 1-D element");
 	      break;
 	    }
 	    break;
@@ -2571,7 +2571,7 @@ find_surf_center_st (
 	    case 3: 
 	      xi[0] = *s = 0.5; xi[1] = 0.0; break;
 	    default:
-	      EH(-1,"Illegal side number for 2D triangle \n");
+	      EH(GOMA_ERROR,"Illegal side number for 2D triangle \n");
 	      break;
 	    }
 	    break;
@@ -2617,7 +2617,7 @@ find_surf_center_st (
   case BILINEAR_TRISHELL:
 	break;
   default:
-    EH(-1,"Unknown or unimplemented element type.\n");
+    EH(GOMA_ERROR,"Unknown or unimplemented element type.\n");
     break;
   }
 
@@ -2675,7 +2675,7 @@ find_nodal_stu (const int inode,           /* current node index */
       *s = 1;
       break;
     default:
-      EH(-1, "Trying to get nodal local stu for BILINEAR at illegal node");
+      EH(GOMA_ERROR, "Trying to get nodal local stu for BILINEAR at illegal node");
     }
     break;
 
@@ -2693,7 +2693,7 @@ find_nodal_stu (const int inode,           /* current node index */
       *s = 0;
       break;
     default:
-      EH(-1, "Trying to get nodal local stu for BILINEAR at illegal node");
+      EH(GOMA_ERROR, "Trying to get nodal local stu for BILINEAR at illegal node");
     }
     break;
 
@@ -2714,7 +2714,7 @@ find_nodal_stu (const int inode,           /* current node index */
       *t =  0.0;
       break;
     default:
-      EH(-1, "Trying to get nodal local stu for LINEAR_TRI at illegal node");
+      EH(GOMA_ERROR, "Trying to get nodal local stu for LINEAR_TRI at illegal node");
     }
     break;
 
@@ -2747,7 +2747,7 @@ find_nodal_stu (const int inode,           /* current node index */
       *t =  0.0;
       break;
     default:
-      EH(-1, "Trying to get nodal local stu for QUAD_TRI at illegal node");
+      EH(GOMA_ERROR, "Trying to get nodal local stu for QUAD_TRI at illegal node");
     }
     break;
         
@@ -2778,7 +2778,7 @@ find_nodal_stu (const int inode,           /* current node index */
       *t = 0.0;
       break;
     default:
-      EH(-1, "Trying to get nodal local stu for BILINEAR at illegal node");
+      EH(GOMA_ERROR, "Trying to get nodal local stu for BILINEAR at illegal node");
     }
     break;
 
@@ -2824,7 +2824,7 @@ find_nodal_stu (const int inode,           /* current node index */
       *t =  0.0;
       break;
     default:
-      EH(-1, "Trying to get nodal local stu for BIQUAD at illegal node");
+      EH(GOMA_ERROR, "Trying to get nodal local stu for BIQUAD at illegal node");
     }
     break;
   case LINEAR_TET:  /* trilinear tetrahedron */
@@ -2896,7 +2896,7 @@ find_nodal_stu (const int inode,           /* current node index */
       *u =  0.0;
       break;
     default:
-      EH(-1, 
+      EH(GOMA_ERROR, 
          "Trying to get nodal local stu for TRILINEAR at illegal node\n");
       break;
     }
@@ -3040,14 +3040,14 @@ find_nodal_stu (const int inode,           /* current node index */
       *u =  0.0;
       break;
     default:
-      EH(-1, 
+      EH(GOMA_ERROR, 
          "Trying to get nodal local stu for TRIQUAD_HEX at illegal node\n");
       break;
     }
     break;
 
   default:
-    EH(-1,"Unknown or unimplemented element type in find_nodal_stu.\n");
+    EH(GOMA_ERROR,"Unknown or unimplemented element type in find_nodal_stu.\n");
     break;
   }
 } /* END of routine find_nodal_stu  */
@@ -3233,7 +3233,7 @@ Gq_weight(const int iquad,               /* current GQ index */
     break;
 
   default:
-    EH(-1,"Unknown or unimplemented element type.\n");
+    EH(GOMA_ERROR,"Unknown or unimplemented element type.\n");
     break;
   }
 
@@ -3364,7 +3364,7 @@ Gq_surf_weight(const int iquad,               /* current GQ index  */
     break;
 
   default:
-    EH(-1,"Unknown or unimplemented element type.\n");
+    EH(GOMA_ERROR,"Unknown or unimplemented element type.\n");
     break;
   }
 
@@ -3404,7 +3404,7 @@ Gq_edge_weight ( int iquad,                  /* current GQ index  */
   case BILINEAR_SHELL:
   case BIQUAD_SHELL:
   case BILINEAR_TRISHELL:
-    EH(-1,"Edges are undefined for BAR elements.\n");
+    EH(GOMA_ERROR,"Edges are undefined for BAR elements.\n");
     break;
 
   case BILINEAR_QUAD:                   /* bilinear quadrilateral */
@@ -3430,7 +3430,7 @@ Gq_edge_weight ( int iquad,                  /* current GQ index  */
     break;
 
   default:
-    EH(-1,"Unknown or unimplemented element type.\n");
+    EH(GOMA_ERROR,"Unknown or unimplemented element type.\n");
     break;
   }
 
@@ -3505,7 +3505,7 @@ get_type(char string[],         /* EXODUS name of parent element  */
 	break;
       default:
 	sprintf(err_msg,"Bar element with %d nodes not implemented.\n", nodes);
-	EH(-1,err_msg);
+	EH(GOMA_ERROR,err_msg);
       }
     }
 
@@ -3520,7 +3520,7 @@ get_type(char string[],         /* EXODUS name of parent element  */
 	break;
       default:
 	sprintf(err_msg,"Shell element with %d nodes not implemented.\n", nodes);
-	EH(-1,err_msg);
+	EH(GOMA_ERROR,err_msg);
       }
     }
   
@@ -3541,7 +3541,7 @@ get_type(char string[],         /* EXODUS name of parent element  */
 	break;
       default:
 	sprintf(err_msg,"Quadrilateral element with %d nodes not implemented.\n", nodes);
-	EH(-1,err_msg);
+	EH(GOMA_ERROR,err_msg);
       }
     }
 
@@ -3558,7 +3558,7 @@ get_type(char string[],         /* EXODUS name of parent element  */
 	  break;
 	default:
 	  sprintf(err_msg,"TRI/TRISHELL element with %d dimensions not implemented.\n", attrs);
-	  EH(-1,err_msg);
+	  EH(GOMA_ERROR,err_msg);
 	}
 	break;
 	case 6:
@@ -3566,7 +3566,7 @@ get_type(char string[],         /* EXODUS name of parent element  */
 	  break;
       default:
 	sprintf(err_msg,"TRIANGLE element with %d nodes not implemented.\n", nodes);
-	EH(-1,err_msg);
+	EH(GOMA_ERROR,err_msg);
       }
     }
 
@@ -3578,7 +3578,7 @@ get_type(char string[],         /* EXODUS name of parent element  */
 	break;
       default:
 	sprintf(err_msg,"TET element with %d nodes not implemented.\n", nodes);
-	EH(-1,err_msg);
+	EH(GOMA_ERROR,err_msg);
       }
     }
   
@@ -3599,12 +3599,12 @@ get_type(char string[],         /* EXODUS name of parent element  */
 	break;
       default:
 	sprintf(err_msg,"Hexahedron element with %d nodes not implemented.\n", nodes);
-	EH(-1,err_msg);
+	EH(GOMA_ERROR,err_msg);
       }
     }
   else {
     sprintf(err_msg,"Element type %s not supported!\n", string);
-    EH(-1,err_msg);
+    EH(GOMA_ERROR,err_msg);
   }
 
 
@@ -3735,7 +3735,7 @@ load_surf_st( int ielem_type,
 	  xi[1] = s;
 	  break;
 	default:
-	  EH(-1,"Illegal side number for 2D quadrilateral element.\n");
+	  EH(GOMA_ERROR,"Illegal side number for 2D quadrilateral element.\n");
 	  break;
 	}
       break;
@@ -3780,7 +3780,7 @@ load_surf_st( int ielem_type,
 	}
       break;
     default:
-      EH(-1,"Element type not yet implemented. \n");
+      EH(GOMA_ERROR,"Element type not yet implemented. \n");
       break;
     }
   return (0);

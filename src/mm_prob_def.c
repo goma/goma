@@ -85,25 +85,25 @@ setup_pd(void)
       pd_glob[mn]->Num_Dim          = Num_Dim; 		/* from "el_geom.h" */
       pd_glob[mn]->TimeIntegration  = TimeIntegration; 	/* from "rf_fem.h" */
       if(pd_glob[mn]->CoordinateSystem != CoordinateSystem)
-	EH(-1, "Not all materials have the same coordinate system!");
+	EH(GOMA_ERROR, "Not all materials have the same coordinate system!");
     }
 
   if(CoordinateSystem == CYLINDRICAL || CoordinateSystem == SWIRLING)
     {
       if (pd_glob[0]->Num_Dim == 3)
-         EH(-1,"Whoa, Whoa.  3D mesh but CYLINDRICAL COORDINATE SYSTEM???");
+         EH(GOMA_ERROR,"Whoa, Whoa.  3D mesh but CYLINDRICAL COORDINATE SYSTEM???");
       VIM = 3;
     }
   else if(CoordinateSystem == PROJECTED_CARTESIAN)
     {
       if(pd_glob[0]->Num_Dim == 3)
-	EH(-1, "Achtung!  You cannot combine the PROJECTED_CARTESIAN coordinate system with a 3D mesh.");
+	EH(GOMA_ERROR, "Achtung!  You cannot combine the PROJECTED_CARTESIAN coordinate system with a 3D mesh.");
       VIM = 3;
     }
   else if(CoordinateSystem == CARTESIAN_2pt5D)
     {
       if(pd_glob[0]->Num_Dim == 3)
-	EH(-1, "Whoa!  3D mesh for 2-1/2D Calculation.");
+	EH(GOMA_ERROR, "Whoa!  3D mesh for 2-1/2D Calculation.");
       VIM = 3;
     }
   else
@@ -564,7 +564,7 @@ setup_pd(void)
           if(pd_glob[mn]->e[imtrx][R_MOMENTUM3])
             {
 	     if(CoordinateSystem == CARTESIAN && Num_Dim == 2)
-	     EH(-1, "You have 3 velocity components, but only a 2D CARTESIAN mesh.\nDid you mean to use the PROJECTED_CARTESIAN coordinate system?");
+	     EH(GOMA_ERROR, "You have 3 velocity components, but only a 2D CARTESIAN mesh.\nDid you mean to use the PROJECTED_CARTESIAN coordinate system?");
             }
          }
     }

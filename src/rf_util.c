@@ -31,7 +31,7 @@
 #include "bc_curve.h"
 #include "bc_dirich.h"
 #include "bc_integ.h"
-#include "bc_rotate.h"
+#include "bc/rotate.h"
 #include "bc_special.h"
 #include "bc_surfacedomain.h"
 #include "dp_comm.h"
@@ -434,7 +434,7 @@ countmap_vardofs(const int varType, const int num_nodes, int *map)
   int node, nun, count = 0;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES-1 ) {
-    EH(-1, "Attempt to count a bogus variable.");
+    EH(GOMA_ERROR, "Attempt to count a bogus variable.");
   }
   for (node = 0; node < num_nodes; node++) {
     nv = Nodes[node]->Nodal_Vars_Info[pg->imtrx];
@@ -987,7 +987,7 @@ time_step_control(const double delta_t,  const double delta_t_old,
 	    use_var_norm[0],use_var_norm[1],use_var_norm[2],
 	    use_var_norm[3],use_var_norm[4],use_var_norm[5],
             use_var_norm[6]);
-    EH(-1, "Poorly formed time step norm.");
+    EH(GOMA_ERROR, "Poorly formed time step norm.");
   }
 
   scaling   = 1.0 / (num_unknowns * (2.0 + delta_t_old / delta_t));
@@ -1839,14 +1839,14 @@ init_vec(double u[], Comm_Ex *cx, Exo_DB *exo, Dpi *dpi, double uAC[],
 	    }
 	  else
 	    {
-	      EH(-1,"something wrong with efv->ipix");
+	      EH(GOMA_ERROR,"something wrong with efv->ipix");
 	    }
 	}
 #ifndef LIBRARY_MODE
       else if ( strcmp(efv->file_nm[w], "IMPORT") == 0 ||
                 strcmp(efv->file_nm[w], "IMPORT_EV") == 0 )
 	{
-          EH(-1, "External fields can only be imported in LIBRARY_MODE!");
+          EH(GOMA_ERROR, "External fields can only be imported in LIBRARY_MODE!");
 	}
 #endif
     }    
@@ -2079,14 +2079,14 @@ read_initial_guess(double u[], const int np, double uAC[], const int nAC)
 	      "%s: line %d of the initial guess file %s had an error, nchar = %d\n", 
 	      yo, i, Init_GuessFile, nchar);
       fprintf(stderr, "%s:\t line = \"%s\"", yo, input);
-      EH(-1, yo);
+      EH(GOMA_ERROR, yo);
     }
     if (!interpret_double(input, u + i)) {
       fprintf(stderr,
 	      "%s: line %d of the initial guess file %s had an error, %d\n", 
 	      yo, i, Init_GuessFile, nchar);
       fprintf(stderr, "%s:\t line = \"%s\"", yo, input);
-      EH(-1, yo);
+      EH(GOMA_ERROR, yo);
     }
   }
 
@@ -2963,7 +2963,7 @@ build_node_index_var(const int varType, const int num_nodes,
   int imtrx;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES-1) {
-      EH(-1, "Attempt to count a bogus variable.");
+      EH(GOMA_ERROR, "Attempt to count a bogus variable.");
   }
   count = 0;
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)
@@ -3004,7 +3004,7 @@ count_vardofs(const int varType, const int num_nodes)
   int imtrx;
   NODAL_VARS_STRUCT *nv;
   if (varType < 0 || varType > MAX_VARIABLE_TYPES-1) {
-      EH(-1, "Attempt to count a bogus variable.");
+      EH(GOMA_ERROR, "Attempt to count a bogus variable.");
   }
   count = 0;
   for (imtrx = 0; imtrx < upd->Total_Num_Matrices; imtrx++)

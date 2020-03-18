@@ -47,7 +47,7 @@
 #include "bc_curve.h"
 #include "bc_dirich.h"
 #include "bc_integ.h"
-#include "bc_rotate.h"
+#include "bc/rotate.h"
 #include "bc_special.h"
 #include "bc_surfacedomain.h"
 #include "dp_comm.h"
@@ -246,7 +246,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   my_N_ext = N_ext;
 
   /* Stop if parallel run */
-  if(Num_Proc > 1) EH(-1, "pixel mapping is not yet available in parallel. Run serial then use the mapped exoII file(s)");
+  if(Num_Proc > 1) EH(GOMA_ERROR, "pixel mapping is not yet available in parallel. Run serial then use the mapped exoII file(s)");
 
   /* Turn matID into blockId --Not necessarly the same */
   int ifound = 0;
@@ -257,7 +257,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
     }
   }
 
-  if(!ifound) EH(-1,"Trouble in rd_pixel_image: cannot find blkid");
+  if(!ifound) EH(GOMA_ERROR,"Trouble in rd_pixel_image: cannot find blkid");
 
   curr_eb_nodes = exo->eb_num_elems[ipix_blkid]*exo->eb_num_nodes_per_elem[ipix_blkid];
   my_ignodes = (int *) malloc(curr_eb_nodes * sizeof(int));
@@ -265,7 +265,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   /* Sort out interpolations */
   if (( si = in_list(efv->i[N_ext], 0, Num_Interpolations, 
 		     Unique_Interpolations)) == -1) {
-    EH(-1,"Seems to be a problem finding IntegrationMap interpolation for pixels.");
+    EH(GOMA_ERROR,"Seems to be a problem finding IntegrationMap interpolation for pixels.");
   }
 
 
@@ -330,7 +330,7 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   sprintf(voxfilename,"%s",efv->file_nm[N_ext]);
   pixfid = fopen(voxfilename, "r"); 
   if (pixfid == NULL) {
-    EH(-1,"Could not open voxel file!");
+    EH(GOMA_ERROR,"Could not open voxel file!");
   }
   err = fscanf(pixfid,"%d", &pixdim);
 
@@ -342,39 +342,39 @@ rd_image_to_mesh2(int N_ext, Exo_DB *exo)
   if (pixdim == 2) {
     err = fscanf(pixfid,"%d %d",&(pixsize[0]),&(pixsize[1]));
     if (err != 2) {
-      EH(-1, "Error reading pixel file expected two ints");
+      EH(GOMA_ERROR, "Error reading pixel file expected two ints");
       return -1;
     }
     err = fscanf(pixfid,"%lf %lf",&resx, &resy);
     if (err != 2) {
-      EH(-1, "Error reading pixel file expected two floats");
+      EH(GOMA_ERROR, "Error reading pixel file expected two floats");
       return -1;
     }
     err = fscanf(pixfid,"%lf %lf",&x0, &y0);
     if (err != 2) {
-      EH(-1, "Error reading pixel file expected two floats");
+      EH(GOMA_ERROR, "Error reading pixel file expected two floats");
       return -1;
     }
   }
   else if (pixdim == 3){
     err = fscanf(pixfid,"%d %d %d",&(pixsize[0]),&(pixsize[1]),&(pixsize[2]));
     if (err != 3) {
-      EH(-1, "Error reading pixel file expected three ints");
+      EH(GOMA_ERROR, "Error reading pixel file expected three ints");
       return -1;
     }
     err = fscanf(pixfid,"%lf %lf %lf",&resx, &resy, &resz);
     if (err != 3) {
-      EH(-1, "Error reading pixel file expected three floats");
+      EH(GOMA_ERROR, "Error reading pixel file expected three floats");
       return -1;
     }
     err = fscanf(pixfid,"%lf %lf %lf",&x0, &y0, &z0);
     if (err != 3) {
-      EH(-1, "Error reading pixel file expected three floats");
+      EH(GOMA_ERROR, "Error reading pixel file expected three floats");
       return -1;
     }
   }
   else {
-    EH(-1,"Problem reading pixel/voxel input file; first entry should be dimensionality (2 or 3)");
+    EH(GOMA_ERROR,"Problem reading pixel/voxel input file; first entry should be dimensionality (2 or 3)");
     return -1;
   }
 

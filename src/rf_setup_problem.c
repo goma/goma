@@ -99,7 +99,7 @@ set_bc_equation(void)
           BC_Types[ibc].equation = R_SOLID3;
           break;
         default:
-          EH(-1, "Error in linking BC to equation");
+          EH(GOMA_ERROR, "Error in linking BC to equation");
           break;
         }
       }
@@ -470,7 +470,7 @@ check_discontinuous_interp_type(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
 		curr_pd->MaterialName);
 	fprintf(stderr,"\tbut incompatible interp type specified: %d\n",
 		interp_type);
-	EH(-1,"incompatible interp type");
+	EH(GOMA_ERROR,"incompatible interp type");
 	break;
 	    case I_G0:
     case I_G1:
@@ -485,7 +485,7 @@ check_discontinuous_interp_type(PROBLEM_DESCRIPTION_STRUCT *curr_pd,
     default:
      	fprintf(stderr,"check_interpolation_discontinuous ERROR");
 	fprintf(stderr,"unknown interpolation type\n");
-	EH(-1,"unknown interpolation type");
+	EH(GOMA_ERROR,"unknown interpolation type");
     }
   }
 }
@@ -835,7 +835,7 @@ bc_set_index(Exo_DB *exo)
       DPRINTF(stderr,"On P_%d, bc_set_index: ERROR Can't find ns or ss id %d for"
 	      " boundary condition %d with type %s \n",
 	      ProcID, bc_ptr->BC_ID, ibc, bc_ptr->Set_Type);
-      EH(-1,"Error in specification of boundary condition");
+      EH(GOMA_ERROR,"Error in specification of boundary condition");
     }
   }
 }
@@ -1041,7 +1041,7 @@ bc_matrl_index(Exo_DB *exo)
 #ifdef DEBUG_IGNORE_ELEMENT_BLOCK_CAPABILITY
                    if (matrlLP->List[i] < 0) {
                      fprintf(stderr,"Material list contains negative number\n");
-                     EH(-1,"logic error in ignoring an element block");
+                     EH(GOMA_ERROR,"logic error in ignoring an element block");
                    }
 #endif
 		   bin_matrl[matrlLP->List[i]]++;
@@ -1158,7 +1158,7 @@ bc_matrl_index(Exo_DB *exo)
          if (num_matrl_needed > 1) {
 	   printf("%s P_%d: problem in finding a needed second matrl index:\n",
 		  yo, ProcID);
-	   EH(-1,"bc_matrl_index ERROR");
+	   EH(GOMA_ERROR,"bc_matrl_index ERROR");
 	 }
        }
      }
@@ -1273,7 +1273,7 @@ determine_dvi_index(void)
           fprintf(stderr,
 		  "Boundary condition %s can't be put on external domain bc\n",
 		  bc_desc->name1);
-	  EH(-1,"Boundary Condition incompatibility");
+	  EH(GOMA_ERROR,"Boundary Condition incompatibility");
 	}
 	bc_ptr->DV_Indexing_Type = DVI_VSIG;
 	break;
@@ -1293,7 +1293,7 @@ determine_dvi_index(void)
           fprintf(stderr,
 		  "Boundary condition %s can't be put on external domain bc\n",
 		  bc_desc->name1);
-	  EH(-1,"Boundary Condition incompatibility");
+	  EH(GOMA_ERROR,"Boundary Condition incompatibility");
 	}
 	bc_ptr->DV_Indexing_Type = DVI_MULTI_PHASE_SINGLE;
         break;
@@ -1303,7 +1303,7 @@ determine_dvi_index(void)
           fprintf(stderr,
 		  "Boundary condition %s can't be put on external domain bc\n",
 		  bc_desc->name1);
-	  EH(-1,"Boundary Condition incompatibility");
+	  EH(GOMA_ERROR,"Boundary Condition incompatibility");
 	}
 	bc_ptr->DV_Indexing_Type = DVI_DVVSIG;
 	break;
@@ -1334,7 +1334,7 @@ determine_dvi_index(void)
           fprintf(stderr,
 		  "Boundary condition %s can't be put on external domain bc\n",
 		  bc_desc->name1);
-	  EH(-1,"Boundary Condition incompatibility");
+	  EH(GOMA_ERROR,"Boundary Condition incompatibility");
 	}
 	bc_ptr->DV_Indexing_Type = DVI_MULTI_PHASE_VD;
 	break;
@@ -1344,7 +1344,7 @@ determine_dvi_index(void)
           fprintf(stderr,
 		  "Boundary condition %s can't be put on external domain bc\n",
 		  bc_desc->name1);
-	  EH(-1,"Boundary Condition incompatibility");
+	  EH(GOMA_ERROR,"Boundary Condition incompatibility");
 	}
 
     }

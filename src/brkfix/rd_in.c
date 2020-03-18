@@ -24,10 +24,6 @@
 
 #define GOMA_RD_IN_C
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -114,7 +110,7 @@ rd_input(char *in_file_name,	/* name of the input file */
 
   if ( in_strm == NULL )
     {
-      EH(-1, "Problem opening input file.");
+      EH(GOMA_ERROR, "Problem opening input file.");
     }
 
   /*
@@ -173,7 +169,7 @@ rd_input(char *in_file_name,	/* name of the input file */
       if ( err != 1 )
 	{
 	  sr = sprintf(err_msg, "Trouble reading EB ID at eb=%d", eb);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
       
       /*
@@ -184,7 +180,7 @@ rd_input(char *in_file_name,	/* name of the input file */
       if ( !IUL(ebid, mono->eb_id, neb) )
 	{
 	  sr = sprintf(err_msg, "EB_ID = %d not in %s", ebid, mono->path);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 
       for ( i=0; i<eb; i++ )
@@ -194,7 +190,7 @@ rd_input(char *in_file_name,	/* name of the input file */
 	      if ( ebid == eb_checklist[i] )
 		{
 		  sr = sprintf(err_msg, "EB_ID = %d found twice.", ebid);
-		  EH(-1, err_msg);
+		  EH(GOMA_ERROR, err_msg);
 		}
 	    }
 	}
@@ -210,13 +206,13 @@ rd_input(char *in_file_name,	/* name of the input file */
 
       if ( err != 1 )
 	{
-	  EH(-1, "Trouble reading number of basic eqnvars.");
+	  EH(GOMA_ERROR, "Trouble reading number of basic eqnvars.");
 	}
 
       if ( nbev < 1 )
 	{
 	  sr = sprintf(err_msg, "Input file says %d basic eqnvars.", nbev);
-	  EH(-1, err_msg);
+	  EH(GOMA_ERROR, err_msg);
 	}
 
       num_basic_eqnvars[eb] = nbev;
@@ -272,7 +268,7 @@ rd_input(char *in_file_name,	/* name of the input file */
 
 	  if ( err != 4 )
 	    {
-	      EH(-1, "Trouble reading group of eqnvarid's with multipliers.");
+	      EH(GOMA_ERROR, "Trouble reading group of eqnvarid's with multipliers.");
 	    }
 
 	  /*
@@ -282,7 +278,7 @@ rd_input(char *in_file_name,	/* name of the input file */
 	    {
 	      if ( mult[eb][k]->eqnvar_id == evid )
 		{
-		  EH(-1, "Multiple occurence of basic variable in this eb.");
+		  EH(GOMA_ERROR, "Multiple occurence of basic variable in this eb.");
 		}
 	    }
 
@@ -294,7 +290,7 @@ rd_input(char *in_file_name,	/* name of the input file */
 	    }
 	  else
 	    {
-	      EH(-1, "Vector multiplier too low.");
+	      EH(GOMA_ERROR, "Vector multiplier too low.");
 	    }
 
 	  if ( cmul > 0 )
@@ -303,7 +299,7 @@ rd_input(char *in_file_name,	/* name of the input file */
 	    }
 	  else
 	    {
-	      EH(-1, "Concentration multiplier too low.");
+	      EH(GOMA_ERROR, "Concentration multiplier too low.");
 	    }
 
 	  if ( nmul > 0 )
@@ -312,7 +308,7 @@ rd_input(char *in_file_name,	/* name of the input file */
 	    }
 	  else
 	    {
-	      EH(-1, "Nodal dof multiplier too low.");
+	      EH(GOMA_ERROR, "Nodal dof multiplier too low.");
 	    }
 	}	  
 
@@ -352,7 +348,7 @@ rd_input(char *in_file_name,	/* name of the input file */
 #endif
 	      if ( err != 1 )
 		{
-		  EH(-1, "Problem reading a eqn/var dependency.");
+		  EH(GOMA_ERROR, "Problem reading a eqn/var dependency.");
 		}
 
 	      ptr = strtok(NULL, delimiters);
@@ -371,12 +367,12 @@ rd_input(char *in_file_name,	/* name of the input file */
 
       if ( err != 1 )
 	{
-	  EH(-1, "Trouble determining nodes per element.");
+	  EH(GOMA_ERROR, "Trouble determining nodes per element.");
 	}
       
       if ( npe < 1 )
 	{
-	  EH(-1, "Too few nodes per element in this block.");
+	  EH(GOMA_ERROR, "Too few nodes per element in this block.");
 	}
 
 #ifdef DEBUG
@@ -400,7 +396,7 @@ rd_input(char *in_file_name,	/* name of the input file */
 	  fprintf(stderr, "Input file says %d nodes per element.\n", npe);
 	  fprintf(stderr, "EXODUS file says %d nodes per element.\n", 
 		  mono->eb_num_nodes_per_elem[eb_index]);
-	  EH(-1, "Giving up.");
+	  EH(GOMA_ERROR, "Giving up.");
 	}
 
 
@@ -435,7 +431,7 @@ rd_input(char *in_file_name,	/* name of the input file */
 	      fprintf(stderr, 
 		      "Got squat reading the %d line of %d, EB ID %d\n", i+1,
 		      npe, ebid);
-	      EH(-1, "Giving up.");
+	      EH(GOMA_ERROR, "Giving up.");
 	    }
 
 #ifdef DEBUG
@@ -490,7 +486,7 @@ rd_input(char *in_file_name,	/* name of the input file */
 		  if ( index == -1 )
 		    {
 		      sr = sprintf(err_msg, "eqnvar_id=%d not in mult", ival);
-		      EH(-1, err_msg);
+		      EH(GOMA_ERROR, err_msg);
 		    }
 		  else
 		    {

@@ -312,7 +312,7 @@ set_nv_tkud(RESULTS_DESCRIPTION_STRUCT *r, /* of just results for Exodus II */
 {
   int status = 0;
   if (i > MAX_NNV) {
-    EH(-1, "too many nodal post-process variables for exodus");
+    EH(GOMA_ERROR, "too many nodal post-process variables for exodus");
   }
   r->nvtype[i] = v;
   r->nvkind[i] = k;
@@ -339,7 +339,7 @@ set_ev_tkud(RESULTS_DESCRIPTION_STRUCT *r, /* elem result of Exodus II       */
 {
   int status = 0;
   if (i > MAX_NEV) {
-    EH(-1, "too many element post-process variables for exodus");
+    EH(GOMA_ERROR, "too many element post-process variables for exodus");
   }
   r->evtype[i] = v;
   strcpy(r->evname[i], name);
@@ -367,7 +367,7 @@ load_global_var_info(struct Results_Description *r, /* global results Exodus */
 
   status = 0;
 
-  if (r->ngv > MAX_NGV) EH(-1, "too many global post-process varibles for exodus.  Change in rf_solve.c and in names in load_global_var_info");
+  if (r->ngv > MAX_NGV) EH(GOMA_ERROR, "too many global post-process varibles for exodus.  Change in rf_solve.c and in names in load_global_var_info");
 
   strcpy(r->gvname[i], name);
 
@@ -1137,7 +1137,7 @@ elements_attached_to_NS(int *element_list,
 	
 	if( (index = in_list( NS_ID, 0, exo->ns_node_len, exo->ns_id )) == -1 )
 	{	
-		EH(-1,"Node set ID not found\n");
+		EH(GOMA_ERROR,"Node set ID not found\n");
 	}
 	
 	num_nodes = exo->ns_num_nodes[index];

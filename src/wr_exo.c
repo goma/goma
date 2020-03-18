@@ -541,12 +541,12 @@ wr_result_prelim_exo(struct Results_Description *rd,
 
   if ( rd->nhv > 0 )
     {
-      EH(-1, "Not prepared to write history variables.");
+      EH(GOMA_ERROR, "Not prepared to write history variables.");
     }
 
   if ( filename == NULL )
     {
-      EH(-1, "No file specified to write EXODUS II info.");
+      EH(GOMA_ERROR, "No file specified to write EXODUS II info.");
     }
 
   /*
@@ -687,12 +687,12 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
 
   if ( rd[0]->nhv > 0 )
     {
-      EH(-1, "Not prepared to write history variables.");
+      EH(GOMA_ERROR, "Not prepared to write history variables.");
     }
 
   if ( filename == NULL )
     {
-      EH(-1, "No file specified to write EXODUS II info.");
+      EH(GOMA_ERROR, "No file specified to write EXODUS II info.");
     }
 
   /*
@@ -771,7 +771,7 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
         }
 
         if (pg->imtrx >= upd->Total_Num_Matrices) {
-          EH(-1, "Error counting element variables");
+          EH(GOMA_ERROR, "Error counting element variables");
           return;
         }
 
@@ -804,7 +804,7 @@ wr_result_prelim_exo_segregated(struct Results_Description **rd,
         }
 
         if (pg->imtrx >= upd->Total_Num_Matrices) {
-          EH(-1, "Error counting nodal variables");
+          EH(GOMA_ERROR, "Error counting nodal variables");
           return;
         }
 
@@ -848,7 +848,7 @@ wr_nodal_result_exo(Exo_DB *exo, char *filename, double vector[],
       sr = sprintf(err_msg, 
                    "ex_open() = %d on \"%s\" failure @ step %d, time = %g",
                    exo->exoid, filename, time_step, time_value);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
   error      = ex_put_time(exo->exoid, time_step, &time_value);
   EH(error, "ex_put_time");
@@ -950,7 +950,7 @@ wr_global_result_exo( Exo_DB *exo,
   exo->exoid = ex_open(filename, exo->cmode, &exo->comp_wordsize, 
                        &exo->io_wordsize, &exo->version);
   if (exo->exoid < 0) {
-    EH(-1,"wr_nodal_result_exo: could not open the output file");
+    EH(GOMA_ERROR,"wr_nodal_result_exo: could not open the output file");
   }
 
   error = ex_put_var( exo->exoid, time_step, EX_GLOBAL, 1, 0, ngv, u );
@@ -1115,7 +1115,7 @@ create_truth_table(struct Results_Description *rd, Exo_DB *exo,
     sr = sprintf(err_msg, 
                  "%s: Elem var count mismatch: tev(%d)<>rd->nev(%d)!?",
                  yo, tev, rd->nev);
-    EH(-1, err_msg);
+    EH(GOMA_ERROR, err_msg);
     /*
     fprintf(stderr,
             "%s: Disagreement over number of element variables\n",
@@ -1478,7 +1478,7 @@ create_truth_table_segregated(struct Results_Description **rd, Exo_DB *exo,
     sr = sprintf(err_msg,
                  "%s: Elem var count mismatch: tev(%d)<>rd->nev(%d)!?",
                  yo, tev, total_nev);
-    EH(-1, err_msg);
+    EH(GOMA_ERROR, err_msg);
     /*
     fprintf(stderr,
             "%s: Disagreement over number of element variables\n",
@@ -2136,7 +2136,7 @@ wr_result_exo(Exo_DB *exo, char *filename)
                           sprintf(err_msg, 
                                                     "ex_put_var() elem bad rtn: time %d, elemvar %d, EB ID %d",
                                                     time_index, k+1, exo->eb_id[j]);
-                          EH(-1, err_msg);
+                          EH(GOMA_ERROR, err_msg);
                         }
                     }
                 }

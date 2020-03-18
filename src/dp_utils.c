@@ -139,7 +139,7 @@ ddd_add_member2(void *address, int blockcount, size_t byte_size)
 
   if (byte_size <= 0) {
     fprintf(stderr," ddd_add_member2 ERROR: byte_size = %ld\n", (long int)byte_size);
-    EH(-1,"ddd_add_member2 parameter error");
+    EH(GOMA_ERROR,"ddd_add_member2 parameter error");
   }
   length = blockcount * byte_size;
   if (length > 0) {
@@ -192,7 +192,7 @@ ddd_add_member(DDD p,
     {
       sr = sprintf(err_msg, "Attempt to add member %d type %s w/ 0 length!",
 		   i, type2string(type));
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 
   if ( address == NULL )
@@ -200,7 +200,7 @@ ddd_add_member(DDD p,
       sprintf(err_msg, 
 	      "attempt to add member %d type %s blockcount %d with a NULL address!",
 	      i, type2string(type), blockcount);
-      EH(-1, err_msg);
+      EH(GOMA_ERROR, err_msg);
     }
 
   if ( i > p->max_members-1 )
@@ -383,17 +383,17 @@ ReduceBcast_BOR(int *ivec, int length)
     return;
   }
   if (ivec == NULL) {
-    EH(-1, " ReduceBcast_BOR fatal Interface error");
+    EH(GOMA_ERROR, " ReduceBcast_BOR fatal Interface error");
   }
   ivec_recv = alloc_int_1(length, INT_NOINIT);
   err = MPI_Reduce(ivec, ivec_recv, length, MPI_INT, MPI_BOR, 0,
 	           MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, " ReduceBcast_BOR fatal MPI Error");
+    EH(GOMA_ERROR, " ReduceBcast_BOR fatal MPI Error");
   }
   err = MPI_Bcast(ivec_recv, V_LAST, MPI_INT, 0, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, " ReduceBcast_BOR fatal MPI Error");
+    EH(GOMA_ERROR, " ReduceBcast_BOR fatal MPI Error");
   }  
   for (k = 0; k < V_LAST; k++) {
     ivec[k] = ivec_recv[k];
@@ -436,7 +436,7 @@ gmaxloc_int(const int value, const int local_loc, int *global_maxloc)
   err = MPI_Allreduce((void *)in_buf, (void *) out_buf, 1, MPI_2INT,
 	   	      MPI_MAXLOC, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, "gmaxloc_int: MPI_Allreduce returned an error");
+    EH(GOMA_ERROR, "gmaxloc_int: MPI_Allreduce returned an error");
   }
   *global_maxloc = out_buf[1];
   return out_buf[0];
@@ -480,7 +480,7 @@ gminloc_int(const int value, const int local_loc, int *global_minloc)
   err = MPI_Allreduce((void *)in_buf, (void *) out_buf, 1, MPI_2INT,
 		      MPI_MINLOC, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, "gminloc_int: MPI_Allreduce returned an error");
+    EH(GOMA_ERROR, "gminloc_int: MPI_Allreduce returned an error");
   }
   *global_minloc = out_buf[1];
   return out_buf[0];
@@ -514,7 +514,7 @@ gmin_int(int value)
   err = MPI_Allreduce((void *) &value, (void *) &out_buf, 1, MPI_INT,
 		      MPI_MIN, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, "gmin_int: MPI_Allreduce returned an error");
+    EH(GOMA_ERROR, "gmin_int: MPI_Allreduce returned an error");
   }
   return out_buf;
 #else
@@ -546,7 +546,7 @@ gmax_int(int value)
   err = MPI_Allreduce((void *) &value, (void *) &out_buf, 1, MPI_INT,
 		      MPI_MAX, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, "gmax_int: MPI_Allreduce returned an error");
+    EH(GOMA_ERROR, "gmax_int: MPI_Allreduce returned an error");
   }
   return out_buf;
 #else
@@ -578,7 +578,7 @@ gsum_Int(int value)
   err = MPI_Allreduce((void *) &value, (void *) &out_buf, 1, MPI_INT,
 		      MPI_SUM, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, "gsum_Int: MPI_Allreduce returned an error");
+    EH(GOMA_ERROR, "gsum_Int: MPI_Allreduce returned an error");
   }
   return out_buf;
 #else
@@ -611,7 +611,7 @@ gavg_double(double value)
   err = MPI_Allreduce((void *) &value, (void *) &out_buf, 1, MPI_DOUBLE,
 	     	      MPI_SUM, MPI_COMM_WORLD);
   if (err != MPI_SUCCESS) {
-    EH(-1, "gavg_double: MPI_Allreduce returned an error");
+    EH(GOMA_ERROR, "gavg_double: MPI_Allreduce returned an error");
   }
   return out_buf / Num_Proc;
 #else

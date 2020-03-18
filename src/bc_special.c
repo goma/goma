@@ -39,7 +39,7 @@
 #include "bc_curve.h"
 #include "bc_dirich.h"
 #include "bc_integ.h"
-#include "bc_rotate.h"
+#include "bc/rotate.h"
 #include "bc_special.h"
 #include "bc_surfacedomain.h"
 #include "dp_comm.h"
@@ -278,7 +278,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 	   in_list(BC_Types[bc_input_id].BC_ID, 0, exo->num_side_sets, 
 		   ss_to_blks[0])) == -1)
 	{
-	  EH(-1,"Cannot match side set id with that in ss_to_blks array");
+	  EH(GOMA_ERROR,"Cannot match side set id with that in ss_to_blks array");
 	}
 
       /* Set flag to indicate if we're in the right material (only one) to apply*/
@@ -523,7 +523,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			    {
 			      if(jflag == -1)
 				{
-				  EH(-1,"too many CA conditions - change MAX_CA\n");
+				  EH(GOMA_ERROR,"too many CA conditions - change MAX_CA\n");
 				}
 			      else
 				{
@@ -653,7 +653,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 			  /* check for split element condition with frontal solver */
  			  if( Linear_Solver == FRONT && (CA_fselem[jflag] != CA_sselem[jflag]))
 			    {
-			      EH(-1,"Whoa!  frontal solver not equipped for split element CA conditions");
+			      EH(GOMA_ERROR,"Whoa!  frontal solver not equipped for split element CA conditions");
 			    }
 
 	    /*   make sure we are in the free surface element, etc.  */
@@ -1010,7 +1010,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 						    dwall_velo_dx,
                                                     local_node_id);
 			    }	/* if VELO_THETA bc		*/
-			  else EH(-1, "NO CA Condition applied ");
+			  else EH(GOMA_ERROR, "NO CA Condition applied ");
 #if 0
 		  load_ei(ielem, exo, 0, pg->imtrx);
             /*
@@ -1257,7 +1257,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					 CA_id[jflag] == j_bc_id && j_bc_id != -1)
 					{
 				          if (strcmp(Matrix_Format, "msr") != 0) {
-				            EH(-1, "Unexpected matrix format in apply_bc_special, use msr");
+				            EH(GOMA_ERROR, "Unexpected matrix format in apply_bc_special, use msr");
 				          }
 
 					  load_ei(CA_fselem[jflag], exo, 0, pg->imtrx);
@@ -1296,7 +1296,7 @@ apply_special_bc (struct Aztec_Linear_Solver_System *ams,
 					  CA_id[jflag] == j_bc_id && j_bc_id != -1)
 					{
                                           if (strcmp(Matrix_Format, "msr") != 0) {
-                                            EH(-1,
+                                            EH(GOMA_ERROR,
                                                 "Unexpected matrix format in apply_bc_special, use msr");
                                           }
 
@@ -1500,7 +1500,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
               /* First, setup shop at the bulk surface Gauss point */
 	      /* find_stu_on_bulk(id_side, ielem_dim, s, t, xi); */
               id = bulk_side_id_and_stu(elem1, elem2, xi2, xi, exo);
-	      if (id != id_side) EH(-1, "Bulk side ID mismatch!");
+	      if (id != id_side) EH(GOMA_ERROR, "Bulk side ID mismatch!");
               setup_shop_at_point(elem1, xi, exo);
 
               /* Load surface determinant/normal data for bulk element side */
@@ -1534,9 +1534,9 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
               /* This is for error checking */
               err = 0;
               if (ei[pg->imtrx]->num_local_nodes != nodes_per_side)
-                EH(-1, "Node number mismatch between elements on this side!");
+                EH(GOMA_ERROR, "Node number mismatch between elements on this side!");
               if (ei[pg->imtrx]->num_local_nodes != ei[pg->imtrx]->dof[pd->ShapeVar])
-                EH(-1, "Cannot handle current shell ShapeVar!");
+                EH(GOMA_ERROR, "Cannot handle current shell ShapeVar!");
 
               do_LSA_mods(LSA_SURFACE);
 
@@ -1551,7 +1551,7 @@ apply_shell_grad_bc (double x[],           /* Solution vector for the current pr
                     {
                       sprintf(Err_Msg, "Could not find BC_ID %d in ss_to_blks",
 			      BC_Types[bc_input_id].BC_ID);
-                      EH(-1, Err_Msg);
+                      EH(GOMA_ERROR, Err_Msg);
                     }
 
                   /*

@@ -459,7 +459,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 	         }
 	      else
 	         {
-	          EH(-1, "invalid porosity model");
+	          EH(GOMA_ERROR, "invalid porosity model");
 	         }
 	      /*  rho = density(d_rho); /\*  RSL 6/22/02  *\/ */ /* not sure why we are calling density again, so I commented this out -RRR*/
 	      small_c = rho/sumxm;
@@ -705,7 +705,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 	         }
 	      else
 	         {  
-	          EH(-1, "invalid porosity model");
+	          EH(GOMA_ERROR, "invalid porosity model");
 	         }
        /*        rho = density(d_rho); /\*  RSL 6/22/02  *\/ */
               small_c = rho/sumxm;
@@ -2020,7 +2020,7 @@ assemble_mass_transport_path_dependence
 	         }
 	      else
 	         {
-	          EH(-1, "invalid porosity model");
+	          EH(GOMA_ERROR, "invalid porosity model");
 	         }
               /* rho = density(d_rho); /\*  RSL 6/22/02  *\/ */
 	      small_c = rho/sumxm;
@@ -2917,7 +2917,7 @@ mass_flux_surf_NI (dbl mass_flux[MAX_CONC],
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
   if (MAX_CONC < 5) {
-    EH(-1, "mass_flux_surf_NI expects MAX_CONC >= 5");
+    EH(GOMA_ERROR, "mass_flux_surf_NI expects MAX_CONC >= 5");
     return;
   }
 
@@ -3281,7 +3281,7 @@ raoults_law(double func[],
 		      }
 		    else
 		      {
-			EH(-1,"For the Raoult's law model we only allow 1 or 2 species");
+			EH(GOMA_ERROR,"For the Raoult's law model we only allow 1 or 2 species");
 		      }
 		  }
 	      }
@@ -3339,7 +3339,7 @@ if(pd->Num_Species_Eqn == 1)
       }
     else
       {
-	EH(-1,"Something screwy in your material block specs on the VL_EQUIL card");
+	EH(GOMA_ERROR,"Something screwy in your material block specs on the VL_EQUIL card");
       }
   }
 else if (pd->Num_Species_Eqn == 2)
@@ -3369,7 +3369,7 @@ else if (pd->Num_Species_Eqn == 2)
   }
 else
   {
-    EH(-1,"For the Raoult's law model we only allow 1 or 2 species");
+    EH(GOMA_ERROR,"For the Raoult's law model we only allow 1 or 2 species");
   }
   return;
 } /* END of routine raoults_law   */
@@ -3614,7 +3614,7 @@ flory_huggins(double func[],
 	     {
 	       if(mp->specific_volume[i] < 0.)
 		 {
-		   EH(-1, "Specific volume not specified in the material file.");
+		   EH(GOMA_ERROR, "Specific volume not specified in the material file.");
 		 }
 	       else
 		 {
@@ -3668,7 +3668,7 @@ flory_huggins(double func[],
 	 {
 	   if(mp->molar_volume[i] < 0.)
 	     {
-	       EH(-1, "Molar volume not specified in the material file.");
+	       EH(GOMA_ERROR, "Molar volume not specified in the material file.");
 	     }
 	   else
 	     {
@@ -3678,7 +3678,7 @@ flory_huggins(double func[],
 	     {
 	     if(mp->flory_param[i][k] < 0.)
 	       {
-		 EH(-1, "Flory-Huggins binary parameters not specified in the material file.");
+		 EH(GOMA_ERROR, "Flory-Huggins binary parameters not specified in the material file.");
 	       }
 	     else
 	       {
@@ -3833,7 +3833,7 @@ flory_huggins(double func[],
 	 {
 	   if(mp->molecular_weight[i] < 0.)
 	   {
-	     EH(-1, "Molecular weight of the species not specified in the material file");
+	     EH(GOMA_ERROR, "Molecular weight of the species not specified in the material file");
 	   }
 	 else
 	   {
@@ -3843,7 +3843,7 @@ flory_huggins(double func[],
 
        if(mp->molecular_weight[pd->Num_Species_Eqn] < 0.)
 	 {
-	 EH(-1, "M.W. of a non-condensable species not specified in the material file");
+	 EH(GOMA_ERROR, "M.W. of a non-condensable species not specified in the material file");
 	 }
        else
 	 {
@@ -3912,7 +3912,7 @@ flory_huggins(double func[],
 
   else
     {
-     EH(-1,"Material file id for gas and liquid in VL_POLY card must be specified.");
+     EH(GOMA_ERROR,"Material file id for gas and liquid in VL_POLY card must be specified.");
      return;
     }
 
@@ -4018,7 +4018,7 @@ kinematic_species_bc(double func[DIM],
          mass_dc = mp->density;
 	}*/
   else
-	{ EH(-1,"That species formulation not done in kinematic_species\n"); }
+	{ EH(GOMA_ERROR,"That species formulation not done in kinematic_species\n"); }
 
   if (af->Assemble_LSA_Mass_Matrix) {
     for (kdir = 0; kdir < pd->Num_Dim; kdir++) {
@@ -4875,7 +4875,7 @@ mass_flux_BV_surf_bc(
     }
   else 
     {
-      EH(-1, "Solution-temperature model not yet implemented");
+      EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
     }
   if(pd->e[pg->imtrx][R_ENERGY]) /* if energy equation is active, re-set electrolyte temperature */
     {
@@ -6449,7 +6449,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
      double mw_last=0; /* Molecular weight of non-condensable and conversion factor */
      
      if (MAX_CONC < 3) {
-       EH(-1, "mass_flux_equil_mtc expects MAX_CONC >= 3");
+       EH(GOMA_ERROR, "mass_flux_equil_mtc expects MAX_CONC >= 3");
        return;
      }
      memset(prod, 0, sizeof(double)*MAX_CONC);
@@ -6485,7 +6485,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 	{
 	  if(mp->molecular_weight[i] < 0.)
 	    {
-	      EH(-1, "Molecular weight of the species not specified in the material file");
+	      EH(GOMA_ERROR, "Molecular weight of the species not specified in the material file");
 	    }
 	  else
 	    {
@@ -6495,7 +6495,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 
       if(mp->molecular_weight[pd->Num_Species_Eqn] < 0.)
 	{
-	  EH(-1, "M.W. of a non-condensable species not specified in the material file");
+	  EH(GOMA_ERROR, "M.W. of a non-condensable species not specified in the material file");
 	}
       else
 	{
@@ -6559,7 +6559,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 	 {
 	   if(mp->specific_volume[i] < 0.)
 	     {
-	       EH(-1, "Specific volume not specified in the material file.");
+	       EH(GOMA_ERROR, "Specific volume not specified in the material file.");
 	     }
 	   else
 	     {
@@ -6567,7 +6567,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 	     }
 	   if(mp->molar_volume[i] < 0.)
 	     {
-	       EH(-1, "Molar volume not specified in the material file");
+	       EH(GOMA_ERROR, "Molar volume not specified in the material file");
 	     }
 	   else
 	     {
@@ -6577,7 +6577,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 	     {
 	     if(mp->flory_param[i][k] < 0.)
 	       {
-		 EH(-1, "Flory-Huggins binary parameters not specified in the material file");
+		 EH(GOMA_ERROR, "Flory-Huggins binary parameters not specified in the material file");
 	       }
 	     else
 	       {
@@ -6655,7 +6655,7 @@ mass_flux_equil_mtc(dbl mass_flux[MAX_CONC],
 		   }
 		}
 	else
-		{ EH(-1,"That species formulation not done in mtc_flory\n"); }
+		{ EH(GOMA_ERROR,"That species formulation not done in mtc_flory\n"); }
 	   
        
        for(k=0;k<pd->Num_Species_Eqn; k++)
@@ -6957,7 +6957,7 @@ act_coeff(dbl lngamma[MAX_CONC], dbl dlngamma_dC[MAX_CONC][MAX_CONC],
 	{
 	  if(mp->molecular_weight[i] < 0.)
 	    {
-	      EH(-1, "Molecular weight of the species not specified in the material file");
+	      EH(GOMA_ERROR, "Molecular weight of the species not specified in the material file");
 	    }
 	  else
 	    {
@@ -6967,7 +6967,7 @@ act_coeff(dbl lngamma[MAX_CONC], dbl dlngamma_dC[MAX_CONC][MAX_CONC],
 
       if(mp->molecular_weight[pd->Num_Species_Eqn] < 0.)
 	{
-	  EH(-1, "M.W. of a non-condensable species not specified in the material file");
+	  EH(GOMA_ERROR, "M.W. of a non-condensable species not specified in the material file");
 	}
       else
 	{
@@ -7026,19 +7026,19 @@ act_coeff(dbl lngamma[MAX_CONC], dbl dlngamma_dC[MAX_CONC][MAX_CONC],
        for (i = 0; i<Num_S1; i++) 
 	 {
 	   if(mp->specific_volume[i] < 0.)
-	     { EH(-1, "Specific volume not specified in the material file."); }
+	     { EH(GOMA_ERROR, "Specific volume not specified in the material file."); }
 	   else
 	     { sv[i] = mp->specific_volume[i]; }
 
 	   if(mp->molar_volume[i] < 0.)
-	     { EH(-1, "Molar volume not specified in the material file"); }
+	     { EH(GOMA_ERROR, "Molar volume not specified in the material file"); }
 	   else
 	     { vol[i] = mp->molar_volume[i]; }
 
 	   for(k=0;k<Num_S1;k++)
 	     {
 	     if(mp->flory_param[i][k] < 0.)
-	       { EH(-1, "Flory-Huggins binary parameters not specified in the material file"); }
+	       { EH(GOMA_ERROR, "Flory-Huggins binary parameters not specified in the material file"); }
 	     else
 	       { chi[i][k] = mp->flory_param[i][k]; }
 	     }
@@ -7116,7 +7116,7 @@ act_coeff(dbl lngamma[MAX_CONC], dbl dlngamma_dC[MAX_CONC][MAX_CONC],
 		   }
 		}
 	else
-		{ EH(-1,"That species formulation not done in mtc_flory\n"); }
+		{ EH(GOMA_ERROR,"That species formulation not done in mtc_flory\n"); }
        for(k=0;k<pd->Num_Species_Eqn; k++)
 	 {
 	   flory1[wspec] += vol[wspec]*(delta(k,wspec)-C[k])/vol[k]
@@ -7673,7 +7673,7 @@ compute_leak_velocity(double *vnorm,
           break;
     case SPECIES_MOLE_FRACTION:
     case SPECIES_VOL_FRACTION:
-          EH(-1, "Volume conversion not done for that Species Formulation");
+          EH(GOMA_ERROR, "Volume conversion not done for that Species Formulation");
           break;
     case SPECIES_CONCENTRATION:
          for (i=0; i < MAX_CONC; i++) 
@@ -7702,7 +7702,7 @@ compute_leak_velocity(double *vnorm,
            break;
         case SPECIES_MOLE_FRACTION:
         case SPECIES_VOL_FRACTION:
-           EH(-1, "BC mass fraction conversion not done for that Species Formulation");
+           EH(GOMA_ERROR, "BC mass fraction conversion not done for that Species Formulation");
            break;
         case SPECIES_CONCENTRATION:
            for (w=0; w<pd->Num_Species_Eqn; w++) 
@@ -7860,7 +7860,7 @@ compute_leak_velocity(double *vnorm,
 		} 
 	      else 
 		{
-		  EH(-1, "Solution-temperature model not yet implemented");
+		  EH(GOMA_ERROR, "Solution-temperature model not yet implemented");
 		}
 	      if(pd->e[pg->imtrx][R_ENERGY]) /* if energy equation is active, re-set electrolyte temperature */
 		{
@@ -8216,7 +8216,7 @@ compute_leak_velocity(double *vnorm,
 	  if (pd->v[pg->imtrx][MASS_FRACTION])
 	    {
 	      wspec           = fluxbc->BC_Data_Int[0];
-	      EH(-1, "KIN_LEAK: no yflux_alloy implemented. See source.");
+	      EH(GOMA_ERROR, "KIN_LEAK: no yflux_alloy implemented. See source.");
 	      
 	      /*If you want yflux_alloy to participate in kin_leak 
 	       *mass loss, you need to shore up mass_flux_alloy_surf
@@ -9274,7 +9274,7 @@ vnorm_bc_electrodeposition (double func[],
   DENSITY_DEPENDENCE_STRUCT *d_rho = &d_rho_struct;
 
   if (MAX_CONC < 7) {
-    EH(-1, "vnorm_bc_electrodeposition expects MAX_CONC >= 7");
+    EH(GOMA_ERROR, "vnorm_bc_electrodeposition expects MAX_CONC >= 7");
     return;
   }
 
@@ -10475,7 +10475,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
 	  }
 	}
       } else {
-        EH(-1,"SPECIES_MASS_FRACTION only implementation so far");
+        EH(GOMA_ERROR,"SPECIES_MASS_FRACTION only implementation so far");
       }
 
     } else {
@@ -10731,7 +10731,7 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
                     }
                 break;
            default:
-                EH(-1,"invalid Species Type for PHOTO_CURING\n");
+                EH(GOMA_ERROR,"invalid Species Type for PHOTO_CURING\n");
            }
        Xconv *= mp->specific_volume[pd->Num_Species_Eqn];
        Xconv_init *= mp->specific_volume[pd->Num_Species_Eqn];
@@ -11334,16 +11334,16 @@ get_continuous_species_terms(struct Species_Conservation_Terms *st,
        *               SSM_CHEMKIN_CPC  -> Condensed phase package call
        */
       else if (mp->SpeciesSourceModel[w] == SSM_CHEMKIN_GAS) {
-	EH(-1,"Chemkin Gas source model is implemented for some species and not others");
+	EH(GOMA_ERROR,"Chemkin Gas source model is implemented for some species and not others");
       }
       else if (mp->SpeciesSourceModel[w] == SSM_CHEMKIN_LIQ) {
-	EH(-1,"Chem Liq source model is implemented for some species and not others");
+	EH(GOMA_ERROR,"Chem Liq source model is implemented for some species and not others");
       }
       else if (mp->SpeciesSourceModel[w] == SSM_CHEMKIN_CPC) {
-	EH(-1,"CPC source model is implemented for some species and not others");
+	EH(GOMA_ERROR,"CPC source model is implemented for some species and not others");
       } else {
 	printf("species source model = %d\n", mp->SpeciesSourceModel[w]);
-	EH(-1,"Unrecognized species source model");
+	EH(GOMA_ERROR,"Unrecognized species source model");
       }
 
       if( ls != NULL ) ls_modulate_speciessource ( w,  st );
@@ -11716,7 +11716,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
   dbl T0, EE, alpha;  /* KSC on 9/24/04 */
 
   if (MAX_CONC < 3) {
-    EH(-1, "Stefan_Maxwell_Diff_flux expects MAX_CONC >= 3");
+    EH(GOMA_ERROR, "Stefan_Maxwell_Diff_flux expects MAX_CONC >= 3");
     return -1;
   }
 
@@ -11753,7 +11753,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
   if (mp->Species_Var_Type == SPECIES_MASS_FRACTION ||
       mp->Species_Var_Type == SPECIES_MOLE_FRACTION ||
       mp->Species_Var_Type == SPECIES_VOL_FRACTION) {
-    EH(-1,"Possible Conflict: Stefan Flux Expression hasn't been checked out for this species var type");
+    EH(GOMA_ERROR,"Possible Conflict: Stefan Flux Expression hasn't been checked out for this species var type");
   }
 
   volume_flag = (pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_VOLUME); /* RSL 8/24/00 */
@@ -11774,7 +11774,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
             }
           else
             {
-              EH(-1, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
+              EH(GOMA_ERROR, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation");
             }
         }
       if(T == 0.0) T = 298.0;  /* set the solution temperature to the 298 K if it is zero - safety feature */
@@ -11790,7 +11790,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
             }
           else
             {
-              EH(-1, "User needs to define non-CONSTANT solution temperature model in GOMA");
+              EH(GOMA_ERROR, "User needs to define non-CONSTANT solution temperature model in GOMA");
             }
         }
       else if(pd_glob[mn]->MassFluxModel == STEFAN_MAXWELL_CHARGED || volume_flag)  /*  RSL 8/24/00  */
@@ -11806,7 +11806,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
             }
           else
             {
-              EH(-1, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation"); 
+              EH(GOMA_ERROR, "Solution-temperature model other than THERMAL_BATTERY awaits future implementation"); 
             } 
         }
       if(T == 0.0) T = 298.0;  /* set the solution temperature to the 298 K if it is zero - safety feature */  
@@ -11826,7 +11826,7 @@ Stefan_Maxwell_diff_flux( struct Species_Conservation_Terms *st,
       else
         {
 	 /* need to implement non-constant porosity model */ 
-         EH(-1, "other non-CONSTANT porosity model to be implemented");
+         EH(GOMA_ERROR, "other non-CONSTANT porosity model to be implemented");
         }
     }
 
@@ -12755,7 +12755,7 @@ fickian_charged_flux (struct Species_Conservation_Terms *st, int w)
   if (mp->SolutionTemperatureModel == CONSTANT)  {
     T = mp->solution_temperature;
   } else {
-    EH(-1, "Solution-temperature model other than CONSTANT awaits future implementation");
+    EH(GOMA_ERROR, "Solution-temperature model other than CONSTANT awaits future implementation");
   }
   /* set solution temperature to 298 K if it is zero - safety feature */
   if (T == 0.0) T = 298.0;
@@ -12870,7 +12870,7 @@ fickian_charged_flux_x (struct Species_Conservation_Terms *st, double time,
          }
       else
          {
-          EH(-1, "Invalid solution temperature model");
+          EH(GOMA_ERROR, "Invalid solution temperature model");
          }
      }
 
@@ -13055,7 +13055,7 @@ fickian_flux (struct Species_Conservation_Terms *st, int w)
   /*
    *  Get diffusivity and Jacobian dependence on the diffusivity
    */
-  if (Diffusivity()) EH(-1, "Error in Diffusivity.");
+  if (Diffusivity()) EH(GOMA_ERROR, "Error in Diffusivity.");
 
   /*
    *  Add in rho or C depending upon species variable type
@@ -13163,7 +13163,7 @@ generalized_fickian_flux (struct Species_Conservation_Terms *st, int w)
   /*
    * Get diffusivity and derivatives 
    */
-  if (Generalized_Diffusivity())  EH(-1, "Error in Diffusivity.");
+  if (Generalized_Diffusivity())  EH(GOMA_ERROR, "Error in Diffusivity.");
 
   /*
    *  Add in rho or C depending upon species variable type
@@ -13959,7 +13959,7 @@ get_particle_convection_velocity(double pvconv[DIM],
 
        if ( pd->MeshInertia == 1)
 	 {
-	   if ( pd->TimeIntegration != STEADY ) EH(-1, "Can't have Unsteady Mesh Inertia ");
+	   if ( pd->TimeIntegration != STEADY ) EH(GOMA_ERROR, "Can't have Unsteady Mesh Inertia ");
 	   /*
 	    * Velocity of solid in lab coordinates is the velocity of the stress free state
 	    * dotted into the deformation gradient tensor
