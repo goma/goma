@@ -7567,7 +7567,7 @@ ECHO("\n----Acoustic Properties\n", echo_file);
      model_read = look_for_mat_prop(imp, "Species Second Level Set Diffusivity",
                                     &(SpeciesSecondLevelSetDiffusivity),
                                     mat_ptr->SpeciesSecondLevelSetDiffusivity, NO_USER, NULL,
-                                    model_name, NO_INPUT,
+                                    model_name, SCALAR_INPUT,
                                     &species_no, es);
 
      ECHO(es,echo_file);

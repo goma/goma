@@ -72,6 +72,7 @@ else()
   message(STATUS "\tEnabling UMFPACK in Goma")
   list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_UMFPACK)
 endif()
+
 # stratimikos and teko
 LIST(FIND Trilinos_PACKAGE_LIST Stratimikos stratimikos_package_index)
 if(${stratimikos_package_index} GREATER_EQUAL 0)

@@ -24,9 +24,7 @@
 
 #include "rf_mp.h"
 
-#define HAVE_UMFPACK 1
 #define HAVE_AZTEC 1
-/* Trilinos now seems to define these */
 #ifndef GOMA_HAVE_BLAS
 #define GOMA_HAVE_BLAS 1
 #endif
