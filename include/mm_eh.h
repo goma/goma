@@ -30,6 +30,11 @@
 #define EXTERN extern
 #endif
 
+typedef int goma_error;
+#define GOMA_ERROR -1
+#define GOMA_SUCCESS 0
+#define GOMA_DEBUG 1
+
 #include <stdarg.h>		/* for var args... */
 
 /* Needed to use mm_eh without std.h */
@@ -92,10 +97,6 @@ EXTERN void smooth_stop_with_msg
 #define	    WH(IERR, MESSAGE)	do {static int iw=0; if (iw == 0) wh(IERR, __FILE__, __LINE__, MESSAGE, &iw);} while (0)
 #define     ABORTH(IERR, MESSAGE) aborth(IERR, __FILE__, __LINE__, MESSAGE)
 
-#define GOMA_ERR	(-1)	/* definitely print; definitely exit */
-#define GOMA_MSG	(0)	/* usually print; continue */
-#define GOMA_DBG	(1)	/* maybe print; continue */
-
 #define TIME_STRING_SIZE	(256)
 
 extern char current_routine[];	/* name of current routine. */
@@ -121,7 +122,7 @@ extern int current_severity;	/* global error signal (-1=die,0=prnt,1=dbg) */
 #define log_err(...) \
 do \
   { \
-    save_place(GOMA_ERR, yo, __FILE__, __LINE__);  \
+    save_place(GOMA_ERROR, yo, __FILE__, __LINE__);  \
     logprintf(__VA_ARGS__); \
   } while(0)
 
@@ -129,14 +130,14 @@ do \
 #define log_msg(...) \
 do \
   { \
-    save_place(GOMA_MSG, yo, __FILE__, __LINE__);  \
+    save_place(GOMA_SUCCESS, yo, __FILE__, __LINE__);  \
     logprintf(__VA_ARGS__); \
   } while(0)
 
 #define log_dbg(...) \
 do \
   { \
-    save_place(GOMA_DBG, yo, __FILE__, __LINE__);  \
+    save_place(GOMA_DEBUG, yo, __FILE__, __LINE__);  \
     logprintf(__VA_ARGS__); \
   } while(0)
 

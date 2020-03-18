@@ -94,6 +94,8 @@ static int first_linear_solver_call=TRUE;
 #include "mm_as.h"
 #include "mm_post_def.h"
 
+#include "rotate_util.h"
+
 #include "mm_eh.h"
 
 
@@ -664,6 +666,8 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
   DPRINTF(stdout,
 "-------- --- ------- ------- ------- ------- ------- ------- --- ---------------\n");
 
+
+  setup_rotated_bc_nodes(exo, BC_Types, Num_BC, x);
   /*********************************************************************************
    *
    *                         Top of the Newton Iteration Loop
@@ -774,9 +778,9 @@ int solve_nonlinear_problem(struct Aztec_Linear_Solver_System *ams,
 	   * elements, junction points, . . .
 	   */
 
-	  if (Num_ROT > 0) calculate_all_rotation_vectors(exo, x);
-	  	  else if ( Use_2D_Rotation_Vectors == TRUE ) calculate_2D_rotation_vectors(exo,x);
-
+          if (Num_ROT > 0) { calculate_all_rotation_vectors(exo, x);
+          }	  else if ( Use_2D_Rotation_Vectors == TRUE ) {calculate_2D_rotation_vectors(exo,x);
+          }
 	  numerical_jacobian(ams, x, resid_vector, delta_t, theta, 
 			     x_old, x_older, xdot, xdot_old,x_update,
 			     num_total_nodes, First_Elem_Side_BC_Array[pg->imtrx], 

@@ -43,6 +43,8 @@
 #include "mm_bc.h"
 #include "rf_util.h"
 
+#include "rotate_util.h"
+
 #include "goma.h"
 #ifndef MAX_NODAL_BCS
 #define MAX_NODAL_BCS  35
@@ -2084,7 +2086,6 @@ check_for_bc_conflicts3D(Exo_DB *exo, Dpi *dpi)
   int tilt_save = -1;
   int val = 0;
 #endif
-
   strcpy(ofbc_fn, BC_3D_INFO_FILENAME); /* def in rf_bc_const.h */
 
   if (Unlimited_Output) {

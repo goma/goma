@@ -30394,6 +30394,7 @@ fluid_stress( double Pi[DIM][DIM],
       particle_stress(tau_p, d_tau_p_dv, d_tau_p_dvd,d_tau_p_dy,d_tau_p_dmesh,d_tau_p_dp, w0);
     }
 
+    evss_f = 0;
   if ( pd->gv[POLYMER_STRESS11] && (vn->evssModel == EVSS_F || vn->evssModel == EVSS_GRADV) )
     {
       evss_f = 1.0;

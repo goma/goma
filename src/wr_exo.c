@@ -1937,7 +1937,7 @@ add_info_stamp(Exo_DB *exo)
 
   for ( i=0; i<exo->num_info; i++)
     {
-      I[i] = (char *) smalloc(MAX_LINE_LENGTH*sizeof(char));
+    I[i] = (char *) calloc((MAX_LINE_LENGTH+1),sizeof(char));
     }
 
   /*
@@ -1955,7 +1955,7 @@ add_info_stamp(Exo_DB *exo)
 
   for ( i=n; i<exo->num_info; i++)
     {
-      for ( k=0; k<MAX_LINE_LENGTH; k++)
+      for ( k=0; k<MAX_LINE_LENGTH+1; k++)
         {
           I[i][k] = '\0';
         }
@@ -2027,7 +2027,7 @@ add_info_stamp(Exo_DB *exo)
       strcpy(buf, ".");
     }
 
-  strcpy(I[n+3], buf);
+  strncpy(I[n+3], buf, MAX_LINE_LENGTH);
 
   /*
    * -6 -- the name of the user

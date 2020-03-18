@@ -487,7 +487,8 @@ BC_SRC= bc_colloc.c\
         bc_rotate.c\
         bc_special.c\
         bc_contact.c \
-        bc_surfacedomain.c
+        bc_surfacedomain.c \
+	rotate_util.c
 
 BC_INC= bc_colloc.h\
         bc_curve.h\
@@ -496,7 +497,8 @@ BC_INC= bc_colloc.h\
         bc_rotate.h\
         bc_special.h\
         bc_contact.h \
-        bc_surfacedomain.h
+        bc_surfacedomain.h \
+	rotate_util.h
 
 
 # _____ Moving mesh routines "mm_" prefix _____________________________________
