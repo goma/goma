@@ -32,10 +32,10 @@ yzbeta2(dbl scale, dbl Y, dbl Z, dbl d_Z[MDE], dbl deriv[MDE], dbl h_elem, int i
 
 static const dbl DIFFUSION_EPSILON = 1e-8;
 
-void get_metric_tensor(const double B[DIM][DIM], int dim, int element_type, double G[DIM][DIM]) {
-  double adjustment[DIM][DIM] = {{0}};
-  const double invroot3 = 0.577350269189626;
-  const double tetscale = 0.629960524947437; // 0.5 * cubroot(2)
+void get_metric_tensor(const dbl B[DIM][DIM], int dim, int element_type, dbl G[DIM][DIM]) {
+  dbl adjustment[DIM][DIM] = {{0}};
+  const dbl invroot3 = 0.577350269189626;
+  const dbl tetscale = 0.629960524947437; // 0.5 * cubroot(2)
 
   switch (element_type) {
   case LINEAR_TRI:
@@ -77,19 +77,19 @@ void get_metric_tensor(const double B[DIM][DIM], int dim, int element_type, doub
 }
 
 void supg_tau_shakib(
-    SUPG_terms *supg_terms, int dim, double dt, double diffusivity, int interp_eqn) {
-  double G[DIM][DIM];
+    SUPG_terms *supg_terms, int dim, dbl dt, dbl diffusivity, int interp_eqn) {
+  dbl G[DIM][DIM];
 
   get_metric_tensor(bf[interp_eqn]->B, dim, ei[pg->imtrx]->ielem_type, G);
 
-  double v_d_gv = 0;
+  dbl v_d_gv = 0;
   for (int i = 0; i < dim; i++) {
     for (int j = 0; j < dim; j++) {
       v_d_gv += fv->v[i] * G[i][j] * fv->v[j];
     }
   }
 
-  double diff_g_g = 0;
+  dbl diff_g_g = 0;
   for (int i = 0; i < dim; i++) {
     for (int j = 0; j < dim; j++) {
       diff_g_g += G[i][j] * G[i][j];
@@ -97,7 +97,7 @@ void supg_tau_shakib(
   }
   diff_g_g *= 9 * diffusivity * diffusivity;
 
-  double d_v_d_gv[DIM][MDE];
+  dbl d_v_d_gv[DIM][MDE];
   for (int a = 0; a < dim; a++) {
     for (int k = 0; k < ei[pg->imtrx]->dof[VELOCITY1]; k++) {
       d_v_d_gv[a][k] = 0.0;
@@ -130,26 +130,26 @@ void supg_tau_gauss_point(SUPG_terms *supg_terms,
                           int dim,
                           dbl diffusivity,
                           const PG_DATA *pg_data) {
-  double vnorm = 0;
+  dbl vnorm = 0;
 
   for (int i = 0; i < VIM; i++) {
     vnorm += fv->v[i] * fv->v[i];
   }
   vnorm = sqrt(vnorm);
 
-  double hk = 0;
+  dbl hk = 0;
   for (int a = 0; a < ei[pg->imtrx]->ielem_dim; a++) {
     hk += pg_data->hsquared[a];
   }
   /* This is the size of the element */
-  hk = sqrt(hk / ((double)ei[pg->imtrx]->ielem_dim));
+  hk = sqrt(hk / ((dbl)ei[pg->imtrx]->ielem_dim));
 
-  double D = diffusivity;
+  dbl D = diffusivity;
 
-  double hk_dX[DIM][MDE];
+  dbl hk_dX[DIM][MDE];
   for (int a = 0; a < dim; a++) {
     for (int j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; j++) {
-      double tmp = 0;
+      dbl tmp = 0;
       for (int b = 0; b < dim; b++) {
         tmp +=
             (2 * pg_data->hhv[b][a] * pg_data->dhv_dxnode[b][j]) / (2 * sqrt(pg_data->hsquared[b]));
@@ -158,11 +158,11 @@ void supg_tau_gauss_point(SUPG_terms *supg_terms,
     }
   }
 
-  double Pek = 0.5 * vnorm * hk / (D + DBL_EPSILON);
+  dbl Pek = 0.5 * vnorm * hk / (D + DBL_EPSILON);
 
-  double eta = Pek;
-  double eta_dX[DIM][MDE];
-  double eta_dV[DIM][MDE];
+  dbl eta = Pek;
+  dbl eta_dX[DIM][MDE];
+  dbl eta_dV[DIM][MDE];
   if (Pek > 1) {
     eta = 1;
     for (int i = 0; i < DIM; i++) {
@@ -220,7 +220,7 @@ void supg_tau(SUPG_terms *supg_terms,
               int dim,
               dbl diffusivity,
               const PG_DATA *pg_data,
-              double dt,
+              dbl dt,
               int shakib,
               int interp_eqn) {
   if (shakib) {
@@ -383,26 +383,26 @@ dbl yzbeta_model(int model,
   return dc;
 }
 void get_supg_tau(SUPG_terms *supg_terms, int dim, dbl diffusivity, PG_DATA *pg_data) {
-  double vnorm = 0;
+  dbl vnorm = 0;
 
   for (int i = 0; i < VIM; i++) {
     vnorm += fv->v[i] * fv->v[i];
   }
   vnorm = sqrt(vnorm);
 
-  double hk = 0;
+  dbl hk = 0;
   for (int i = 0; i < dim; i++) {
     hk += sqrt(pg_data->hsquared[i]);
   }
 
-  hk /= (double)dim;
+  hk /= (dbl)dim;
 
-  double D = diffusivity;
+  dbl D = diffusivity;
 
-  double hk_dX[DIM][MDE];
+  dbl hk_dX[DIM][MDE];
   for (int a = 0; a < dim; a++) {
     for (int j = 0; j < ei[pg->imtrx]->dof[MESH_DISPLACEMENT1 + a]; j++) {
-      double tmp = 0;
+      dbl tmp = 0;
       for (int b = 0; b < dim; b++) {
         tmp +=
             (2 * pg_data->hhv[b][a] * pg_data->dhv_dxnode[b][j]) / (2 * sqrt(pg_data->hsquared[b]));
@@ -411,11 +411,11 @@ void get_supg_tau(SUPG_terms *supg_terms, int dim, dbl diffusivity, PG_DATA *pg_
     }
   }
 
-  double Pek = 0.5 * vnorm * hk / D;
+  dbl Pek = 0.5 * vnorm * hk / D;
 
-  double eta = Pek;
-  double eta_dX[DIM][MDE];
-  double eta_dV[DIM][MDE];
+  dbl eta = Pek;
+  dbl eta_dX[DIM][MDE];
+  dbl eta_dV[DIM][MDE];
   if (Pek > 1) {
     eta = 1;
     for (int i = 0; i < DIM; i++) {
@@ -585,13 +585,13 @@ int calc_pspg(dbl pspg[DIM],
     df = NULL;
   } else if (!is_initialized) {
 
-    memset(d_pspg->v, 0, sizeof(double) * DIM * DIM * MDE);
-    memset(d_pspg->X, 0, sizeof(double) * DIM * DIM * MDE);
-    memset(d_pspg->T, 0, sizeof(double) * DIM * MDE);
-    memset(d_pspg->P, 0, sizeof(double) * DIM * MDE);
-    memset(d_pspg->C, 0, sizeof(double) * DIM * MAX_CONC * MDE);
-    memset(d_pspg->S, 0, sizeof(double) * DIM * MAX_MODES * DIM * DIM * MDE);
-    memset(d_pspg->g, 0, sizeof(double) * DIM * DIM * DIM * MDE);
+    memset(d_pspg->v, 0, sizeof(dbl) * DIM * DIM * MDE);
+    memset(d_pspg->X, 0, sizeof(dbl) * DIM * DIM * MDE);
+    memset(d_pspg->T, 0, sizeof(dbl) * DIM * MDE);
+    memset(d_pspg->P, 0, sizeof(dbl) * DIM * MDE);
+    memset(d_pspg->C, 0, sizeof(dbl) * DIM * MAX_CONC * MDE);
+    memset(d_pspg->S, 0, sizeof(dbl) * DIM * MAX_MODES * DIM * DIM * MDE);
+    memset(d_pspg->g, 0, sizeof(dbl) * DIM * DIM * DIM * MDE);
   }
 
   /* This is the flag for the standard global PSPG */
@@ -622,8 +622,8 @@ int calc_pspg(dbl pspg[DIM],
   }
 
   /* initialize dependencies */
-  memset(d_tau_pspg_dv, 0, sizeof(double) * DIM * MDE);
-  memset(d_tau_pspg_dX, 0, sizeof(double) * DIM * MDE);
+  memset(d_tau_pspg_dv, 0, sizeof(dbl) * DIM * MDE);
+  memset(d_tau_pspg_dX, 0, sizeof(dbl) * DIM * MDE);
 
   if (cr->MassFluxModel == DM_SUSPENSION_BALANCE && PSPG) {
     w0 = gn->sus_species_no;
@@ -667,7 +667,7 @@ int calc_pspg(dbl pspg[DIM],
       hh_siz += hsquared[p];
     }
     // Average value of h**2 in the element
-    hh_siz = hh_siz / ((double)dim);
+    hh_siz = hh_siz / ((dbl)dim);
 
     // Average value of v**2 in the element
     vv_speed = 0.0;
@@ -705,7 +705,62 @@ int calc_pspg(dbl pspg[DIM],
             d_tau_pspg_dX[b][j] *=
                 (rho_avg * rho_avg * vv_speed + 18.0 * mu_avg * mu_avg / hh_siz) /
                 (hh_siz * hh_siz);
-            d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b] * pg_data->dhv_dxnode[b][j] / ((double)dim);
+            d_tau_pspg_dX[b][j] *= pg_data->hhv[b][b] * pg_data->dhv_dxnode[b][j] / ((dbl)dim);
+          }
+        }
+      }
+    }
+  } else if (PSPG == 3) { // shakib
+
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+        gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+      }
+    }
+
+    mu = viscosity(gn, gamma, d_mu);
+
+    dbl G[DIM][DIM];
+    get_metric_tensor(bf[pd->ShapeVar]->B, pd->Num_Dim, ei[pg->imtrx]->ielem_type, G);
+
+    dbl tau_time = 0;
+    // time term
+    if (pd->TimeIntegration != STEADY) {
+      tau_time += 4 * rho * rho / (dt * dt);
+    }
+
+    // advection
+    dbl tau_adv = 0;
+    for (int i = 0; i < dim; i++) {
+      for (int j = 0; j < dim; j++) {
+        tau_adv += rho * rho * fv->v[i] * G[i][j] * fv->v[j];
+      }
+    }
+
+    // diffusion
+    dbl tau_diff = 0;
+    dbl coeff = 12 * (mu * mu);
+    for (int i = 0; i < dim; i++) {
+      for (int j = 0; j < dim; j++) {
+        tau_diff += coeff * G[i][j] * G[i][j];
+      }
+    }
+
+    tau_pspg = 1.0 / sqrt(tau_time + tau_adv + tau_diff);
+
+    // d/dx 1/sqrt(f(x)) => - f'(x) / (2 * f(x)^(3/2))
+    if (d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1]) {
+      for (b = 0; b < dim; b++) {
+        var = VELOCITY1 + b;
+        if (pd->v[pg->imtrx][var]) {
+          for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
+            dbl tau_adv_dv = 0;
+            for (int a = 0; a < dim; a++) {
+              tau_adv_dv += rho*rho*bf[var]->phi[j] * G[b][a] * fv->v[a];
+              tau_adv_dv += rho*rho*bf[var]->phi[j] * G[a][b] * fv->v[a];
+            }
+
+            d_tau_pspg_dv[b][j] = -rho * tau_pspg * tau_pspg * tau_pspg * tau_adv_dv;
           }
         }
       }
@@ -755,12 +810,12 @@ int calc_pspg(dbl pspg[DIM],
   }
 
   if (!is_initialized) {
-    memset(tau_p, 0, sizeof(double) * DIM * DIM);
-    memset(d_tau_p_dv, 0, sizeof(double) * DIM * DIM * DIM * MDE);
-    memset(d_tau_p_dvd, 0, sizeof(double) * DIM * DIM * DIM * MDE);
-    memset(d_tau_p_dy, 0, sizeof(double) * DIM * DIM * MAX_CONC * MDE);
-    memset(d_tau_p_dmesh, 0, sizeof(double) * DIM * DIM * DIM * MDE);
-    memset(d_tau_p_dp, 0, sizeof(double) * DIM * DIM * MDE);
+    memset(tau_p, 0, sizeof(dbl) * DIM * DIM);
+    memset(d_tau_p_dv, 0, sizeof(dbl) * DIM * DIM * DIM * MDE);
+    memset(d_tau_p_dvd, 0, sizeof(dbl) * DIM * DIM * DIM * MDE);
+    memset(d_tau_p_dy, 0, sizeof(dbl) * DIM * DIM * MAX_CONC * MDE);
+    memset(d_tau_p_dmesh, 0, sizeof(dbl) * DIM * DIM * DIM * MDE);
+    memset(d_tau_p_dp, 0, sizeof(dbl) * DIM * DIM * MDE);
   }
 
   if (cr->MassFluxModel == DM_SUSPENSION_BALANCE || cr->MassFluxModel == HYDRODYNAMIC_QTENSOR_OLD ||
@@ -874,7 +929,7 @@ int calc_pspg(dbl pspg[DIM],
 
           mass = 0.;
           if ((pd->e[pg->imtrx][meqn] & T_MASS) && (pd->TimeIntegration != STEADY)) {
-            mass = rho_t / por * (1. + 2. * tt) * phi_j / dt * (double)delta(a, b);
+            mass = rho_t / por * (1. + 2. * tt) * phi_j / dt * (dbl)delta(a, b);
             mass *= pd->etm[pg->imtrx][meqn][(LOG2_MASS)];
           }
 
@@ -954,7 +1009,7 @@ int calc_pspg(dbl pspg[DIM],
 
     var = TEMPERATURE;
     if (d_pspg != NULL && pd->v[pg->imtrx][var]) {
-      double d_rho_t_dT;
+      dbl d_rho_t_dT;
 
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         phi_j = bf[var]->phi[j];
@@ -1012,7 +1067,7 @@ int calc_pspg(dbl pspg[DIM],
 
     var = MASS_FRACTION;
     if (d_pspg != NULL && pd->v[pg->imtrx][var]) {
-      double d_rho_t_dC;
+      dbl d_rho_t_dC;
 
       for (w = 0; w < pd->Num_Species_Eqn; w++) {
         for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
@@ -1071,14 +1126,14 @@ int calc_pspg(dbl pspg[DIM],
 
               diffusion = 0.;
               if (pd->e[pg->imtrx][meqn] & T_DIFFUSION) {
-                diffusion = -(double)delta(a, c) * bf[var]->grad_phi[j][b];
+                diffusion = -(dbl)delta(a, c) * bf[var]->grad_phi[j][b];
 
                 if (pd->CoordinateSystem != CARTESIAN) {
                   for (r = 0; r < VIM; r++) {
-                    diffusion -= (double)delta(a, c) * phi_j * fv->grad_e[b][r][c];
+                    diffusion -= (dbl)delta(a, c) * phi_j * fv->grad_e[b][r][c];
                   }
                   for (r = 0; r < wim; r++) {
-                    diffusion -= (double)delta(a, r) * phi_j * fv->grad_e[c][b][r];
+                    diffusion -= (dbl)delta(a, r) * phi_j * fv->grad_e[c][b][r];
                   }
                 }
 
@@ -1102,14 +1157,14 @@ int calc_pspg(dbl pspg[DIM],
 
             diffusion = 0.;
             if (pd->e[pg->imtrx][meqn] & T_DIFFUSION) {
-              diffusion = -(double)delta(a, c) * bf[var]->grad_phi[j][b];
+              diffusion = -(dbl)delta(a, c) * bf[var]->grad_phi[j][b];
 
               if (pd->CoordinateSystem != CARTESIAN) {
                 for (r = 0; r < VIM; r++) {
-                  diffusion -= (double)delta(a, c) * phi_j * fv->grad_e[b][r][c];
+                  diffusion -= (dbl)delta(a, c) * phi_j * fv->grad_e[b][r][c];
                 }
                 for (r = 0; r < wim; r++) {
-                  diffusion -= (double)delta(a, r) * phi_j * fv->grad_e[c][b][r];
+                  diffusion -= (dbl)delta(a, r) * phi_j * fv->grad_e[c][b][r];
                 }
               }
               diffusion *= mu;
@@ -1169,8 +1224,8 @@ int calc_cont_gls(dbl *cont_gls,
   if (d_cont_gls == NULL) {
     d_rho = NULL;
   } else if (!is_initialized) {
-    memset(d_cont_gls->v, 0, sizeof(double) * DIM * MDE);
-    memset(d_cont_gls->X, 0, sizeof(double) * DIM * MDE);
+    memset(d_cont_gls->v, 0, sizeof(dbl) * DIM * MDE);
+    memset(d_cont_gls->X, 0, sizeof(dbl) * DIM * MDE);
   }
 
   /* Calculate stabilization parameter tau_cont
@@ -1185,7 +1240,7 @@ int calc_cont_gls(dbl *cont_gls,
     hh_siz = 0.0;
     vv = 0.0;
     for (p = 0; p < dim; p++) {
-      hh_siz += hsquared[p] / ((double)dim);
+      hh_siz += hsquared[p] / ((dbl)dim);
       vv += v_avg[p] * v_avg[p];
     }
     h_elem = sqrt(hh_siz);
@@ -1229,10 +1284,10 @@ int calc_cont_gls(dbl *cont_gls,
             d_tau_dmesh[b][j] = 0.0;
           } else if (Re > 1.0) {
             d_tau_dmesh[b][j] = rho / (2.0 * mu_avg) * U * U * pg_data->hhv[b][b] *
-                                pg_data->dhv_dxnode[b][j] / ((double)dim);
+                                pg_data->dhv_dxnode[b][j] / ((dbl)dim);
           } else {
             d_tau_dmesh[b][j] =
-                U / (2.0 * h_elem) * pg_data->hhv[b][b] * pg_data->dhv_dxnode[b][j] / ((double)dim);
+                U / (2.0 * h_elem) * pg_data->hhv[b][b] * pg_data->dhv_dxnode[b][j] / ((dbl)dim);
           }
         }
       }

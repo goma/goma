@@ -1285,8 +1285,8 @@ assemble_energy(double time,	/* present time value */
 
   dbl rho;				/* Density (no variations allowed
 					   here, for now) */
-  CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; /* Thermal conductivity dependence. */
-  CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
+  //CONDUCTIVITY_DEPENDENCE_STRUCT d_k_struct; /* Thermal conductivity dependence. */
+  //CONDUCTIVITY_DEPENDENCE_STRUCT *d_k = &d_k_struct;
 
   dbl Cp;				/* Heat capacity. */
   HEAT_CAPACITY_DEPENDENCE_STRUCT d_Cp_struct; /* Heat capacity dependence. */
@@ -1430,8 +1430,9 @@ assemble_energy(double time,	/* present time value */
 	{
 	  h_elem_inv=1./h_elem;
 	}
-
     }
+  
+
 /* end Petrov-Galerkin addition */
 
   /*
@@ -1445,9 +1446,7 @@ assemble_energy(double time,	/* present time value */
 
   rho = density(d_rho, time);
 
-  /* CHECK FOR REMOVAL */
-  conductivity( d_k, time );
-
+  //  conductivity( d_k, time );
   Cp = heat_capacity( d_Cp, time );
 
   h = heat_source( d_h, time, tt, dt );
@@ -2651,9 +2650,7 @@ assemble_momentum(dbl time,       /* current time */
   dbl wt_func;
 
   /* SUPG variables */
-  dbl supg;
-
-  const double *hsquared = pg_data->hsquared ;
+  SUPG_terms supg_terms;
   
   //Continuity stabilization
   dbl continuity_stabilization;
@@ -2697,84 +2694,28 @@ assemble_momentum(dbl time,       /* current time */
 
   d_area = det_J * wt * h3;
 
-  supg = 0.;
+  dbl supg = 0.;
 
   if( mp->Mwt_funcModel == GALERKIN)
     { supg = 0.; }
-  else if( mp->Mwt_funcModel == SUPG)
+  else if( mp->Mwt_funcModel == SUPG || mp->Mwt_funcModel == SUPG_GP || mp->Mwt_funcModel == SUPG_SHAKIB)
     { supg = mp->Mwt_func; }
-
-  double tau_supg = 0;
-  double d_tau_supg_dv[DIM][MDE];
-  double d_tau_supg_dX[DIM][MDE];
-
 
   /*** Density ***/
   rho = density(d_rho, time);
 
-  if (supg!=0.)
-    {
-      double rho = pg_data->rho_avg;
-      double mu = pg_data->mu_avg;
-      double hh_siz = 0.;
-      for ( p=0; p<dim; p++)
-        {
-          hh_siz += hsquared[p];
-        }
-      // Average value of h**2 in the element
-      hh_siz = hh_siz/ ((double )dim);
+  if (supg != 0.) {
+    dbl gamma[DIM][DIM];
 
-      // Average value of v**2 in the element
-      double vv_speed = 0.0;
-      for ( a=0; a<wim; a++)
-        {
-          vv_speed += pg_data->v_avg[a]*pg_data->v_avg[a];
-        }
-
-      // Use vv_speed and hh_siz for tau_pspg, note it has a continuous dependence on Re
-      double tau_supg1 = vv_speed/hh_siz + (9.0*mu/rho)/(hh_siz*hh_siz);
-      if (  pd->TimeIntegration != STEADY)
-        {
-          tau_supg1 += 4.0/(dt*dt);
-        }
-      tau_supg = PS_scaling/sqrt(tau_supg1);
-
-      // tau_pspg derivatives wrt v from vv_speed
-      if (pd->v[pg->imtrx][VELOCITY1] )
-        {
-          for ( b=0; b<dim; b++)
-            {
-              var = VELOCITY1+b;
-              if ( pd->v[pg->imtrx][var] )
-                {
-                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      d_tau_supg_dv[b][j] = -tau_supg/tau_supg1;
-                      d_tau_supg_dv[b][j] *= 1/hh_siz * pg_data->v_avg[b]*pg_data->dv_dnode[b][j];
-                    }
-                }
-            }
-        }
-
-      // tau_pspg derivatives wrt mesh from hh_siz
-      if (pd->v[pg->imtrx][MESH_DISPLACEMENT1] )
-        {
-          for ( b=0; b<dim; b++)
-            {
-              var = MESH_DISPLACEMENT1+b;
-              if ( pd->v[pg->imtrx][var] )
-                {
-                  for ( j=0; j<ei[pg->imtrx]->dof[var]; j++)
-                    {
-                      d_tau_supg_dX[b][j] = tau_supg/tau_supg1;
-                      d_tau_supg_dX[b][j] *= (vv_speed + 18.0*(mu/rho)/hh_siz) / (hh_siz*hh_siz);
-                      d_tau_supg_dX[b][j] *= pg_data->hhv[b][b]*pg_data->dhv_dxnode[b][j]/((double)dim);
-
-		    }
-		}
-	    }
-	}
+    for (a = 0; a < VIM; a++) {
+      for (b = 0; b < VIM; b++) {
+        gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+      }
     }
+
+    dbl mu = viscosity(gn, gamma, NULL);
+    supg_tau(&supg_terms, dim, 2 * mu, pg_data, dt, mp->Mwt_funcModel == SUPG_SHAKIB, VELOCITY1);
+  }
   /* end Petrov-Galerkin addition */
 
   if( pd->gv[POLYMER_STRESS11] )
@@ -3016,7 +2957,7 @@ assemble_momentum(dbl time,       /* current time */
 		{
 		  for (p=0; p<dim; p++)
 		    {
-		      wt_func += supg * tau_supg * v[p] * bfm->grad_phi[i][p];
+		      wt_func += supg * supg_terms.supg_tau * v[p] * bfm->grad_phi[i][p];
 		    }
 		}
 	      grad_phi_i_e_a = bfm->grad_phi_e[i][a];
@@ -3251,7 +3192,7 @@ assemble_momentum(dbl time,       /* current time */
 		{
 		  for(p=0; p<dim; p++)
 		    {
-		      wt_func += supg * tau_supg * v[p] * bfm->grad_phi[i][p];
+		      wt_func += supg * supg_terms.supg_tau * v[p] * bfm->grad_phi[i][p];
 		    }
 		}
 
@@ -3689,11 +3630,11 @@ assemble_momentum(dbl time,       /* current time */
 			  double d_wt_func = 0;
 			  if(supg!=0.)
 			    {
-			      d_wt_func = supg * tau_supg * phi_j*bfm->grad_phi[i][b];
+			      d_wt_func = supg * supg_terms.supg_tau * phi_j*bfm->grad_phi[i][b];
 
 			      for(p=0;p<dim;p++)
 				{
-				  d_wt_func += supg * d_tau_supg_dv[b][j] *
+				  d_wt_func += supg * supg_terms.d_supg_tau_dv[b][j] *
 				    v[p] * bfm->grad_phi[i][p];
 
 				}

@@ -6443,6 +6443,24 @@ ECHO("\n----Acoustic Properties\n", echo_file);
 	EH(GOMA_ERROR, "Expected to read one double for Species Weight Function SUPG");
       }
     } 
+  else if ( !strcmp(model_name, "SUPG_GP") )
+    {
+      int err;
+      mat_ptr->Spwt_funcModel = SUPG_GP;
+      err = fscanf(imp, "%lg",&(mat_ptr->Spwt_func));
+      if (err != 1) {
+	EH(GOMA_ERROR, "Expected to read one double for Species Weight Function SUPG_GP");
+      }
+    } 
+  else if ( !strcmp(model_name, "SUPG_SHAKIB") )
+    {
+      int err;
+      mat_ptr->Spwt_funcModel = SUPG_SHAKIB;
+      err = fscanf(imp, "%lg",&(mat_ptr->Spwt_func));
+      if (err != 1) {
+	EH(GOMA_ERROR, "Expected to read one double for Species Weight Function SUPG_SHAKIB");
+      }
+    } 
   else 
     {
       mat_ptr->Spwt_funcModel = GALERKIN;

@@ -357,7 +357,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
     {
       supg = 0.;
     }
-  else if( mp->Spwt_funcModel == SUPG)
+  else if( mp->Spwt_funcModel == SUPG || mp->Spwt_funcModel == SUPG_GP || mp->Spwt_funcModel == SUPG_SHAKIB)
     {
       supg = mp->Spwt_func;
     }
@@ -392,7 +392,7 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
         if (mp->DiffusivityModel[w] == CONSTANT) {
           D = mp->diffusivity[w];
         }
-        get_supg_tau(&supg_terms, dim, D, pg_data);
+        supg_tau(&supg_terms, dim, D, pg_data, dt, mp->Spwt_funcModel == SUPG_SHAKIB, MASS_FRACTION);
       }
 
       double Heaviside = 1;
