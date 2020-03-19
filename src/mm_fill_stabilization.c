@@ -603,6 +603,9 @@ int calc_pspg(dbl pspg[DIM],
   else if (PSPG == 2) {
     pspg_global = FALSE;
     pspg_local = TRUE;
+  } else if (PSPG == 3) { // Shakib
+    pspg_global = FALSE;
+    pspg_local = FALSE;
   } else {
     return 0;
   }

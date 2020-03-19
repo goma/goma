@@ -2714,7 +2714,7 @@ assemble_momentum(dbl time,       /* current time */
     }
 
     dbl mu = viscosity(gn, gamma, NULL);
-    supg_tau(&supg_terms, dim, 2 * mu, pg_data, dt, mp->Mwt_funcModel == SUPG_SHAKIB, VELOCITY1);
+    supg_tau(&supg_terms, dim, (2/(rho*sqrt(3))) * mu, pg_data, dt, mp->Mwt_funcModel == SUPG_SHAKIB, VELOCITY1);
   }
   /* end Petrov-Galerkin addition */
 
