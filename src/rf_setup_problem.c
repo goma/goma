@@ -257,6 +257,13 @@ int setup_problem(Exo_DB *exo,	/* ptr to the finite element mesh database */
    */
   set_up_Embedded_BC();
   
+  /* Special 1D
+   * Set up surface integral boundary conditions
+   * that apply at single nodes.
+   */
+
+  setup_Point_BC(First_Elem_Side_BC_Array, exo, dpi);
+
   /*
    *  Print out the edge boudary condition structures
    *  if necessary
@@ -823,6 +830,10 @@ bc_matrl_index(Exo_DB *exo)
      case SOLID_FLUID_CONTACT_BC:
      case T_CONTACT_RESIS_BC:
      case T_CONTACT_RESIS_2_BC:
+     case LIGHTP_JUMP_BC:
+     case LIGHTM_JUMP_BC:
+     case LIGHTP_JUMP_2_BC:
+     case LIGHTM_JUMP_2_BC:
 	 bc_ptr->BC_matrl_index_1 = map_mat_index(bc_ptr->BC_Data_Int[0]);
 	 bc_ptr->BC_matrl_index_2 = map_mat_index(bc_ptr->BC_Data_Int[1]);
 	 break;
@@ -1199,6 +1210,10 @@ determine_dvi_index(void)
     case VELO_SLIP_FILL_BC:
     case VELO_SLIP_ROT_BC:
     case VELO_SLIP_ROT_FILL_BC:
+    case VELO_SLIP_FLUID_BC:
+    case VELO_SLIP_ROT_FLUID_BC:
+    case AIR_FILM_BC:
+    case AIR_FILM_ROT_BC:
 	bc_ptr->DV_Indexing_Type = DVI_SID;
 	break;
 

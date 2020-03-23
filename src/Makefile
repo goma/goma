@@ -30,7 +30,7 @@ _MACH =
 
 # Useful for standard goma libary install location
 
-ARCH = rhel6_ompi
+ARCH = rhel6_ompi 
 
 # Goma library path, by default we assume all major non-standard libraries are under
 # the goma library path
@@ -43,7 +43,7 @@ MPI_TOP = /usr/bin/openmpi-1.6.3
 
 # GCC_TOP is the corresponding location of the gcc compilers and libs that are
 # used by the MPI compilers
-GCC_TOP = /usr
+GCC_TOP = /usr/lib64
 
 # PURIFY
 # ------
@@ -115,12 +115,12 @@ DEFINES ?= -Dlinux \
            -DMAX_CONC=4 \
            -DCOUPLED_FILL \
            -DPARALLEL \
+           -DHAVE_STRATIMIKOS \
            -DEIGEN_SERIAL
 
 # Other defines:
 #          -DCHECKFINITE
 #          -DMAX_CONC=1 \
-#          -DUSE_CGM \
 #          -DEIGEN_SERIAL \
 #          -DEIGEN_PARALLEL \
 #          -DNO_CHEBYSHEV_PLEASE \
@@ -132,16 +132,31 @@ DEFINES ?= -Dlinux \
 #          -DLIBRARY_MODE \
 #          -DUSE_CHEMKIN -DSENKIN_OUTPUT -DDEBUG_HKM \
 
+# Git Version information
+# check for executable
+HAS_GIT := $(shell command -v git 2> /dev/null)
+
+
+
+ifdef HAS_GIT
+	GIT_VERSION=$(shell git describe --dirty --always --tags 2> /dev/null)
+
+ifneq "$(GIT_VERSION)" ""
+	VERSION = -DGIT_VERSION=\"$(GIT_VERSION)\"
+endif
+
+endif
+
 # External Libraries
 # ==================
 
 # MPI
 # -----------
 # MPI includes
-GOMA_MPI_INC ?= -isystem $(MPI_TOP)/include
+GOMA_MPI_INC ?= -I $(MPI_TOP)/include
 
 # MPI libraries
-GOMA_MPI_LIB ?= -L$(MPI_TOP)/lib  -lmpi  -lmpi_f77
+GOMA_MPI_LIB ?= -L$(MPI_TOP)/lib  -lmpi  -lmpi_mpifh
 
 # For MPI, the libraries need to be explicitly set in the path:
 GCC_LIB = $(GCC_TOP)/lib
@@ -154,14 +169,15 @@ LD_LIBRARY_PATH := $(GCC_LIB64):$(GCC_LIB):${LD_LIBRARY_PATH}
 # If built with build-goma-dependencies.sh, includes flags for SEACAS, UMFpack, and all other necessary
 # libraries and includes otherwise not listed below.
 
-TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-11.8.1-Built
+TRILINOS_TOP ?= $(GOMA_LIBS)/trilinos-12.12.1-Built
 
 include $(TRILINOS_TOP)/include/Makefile.export.Trilinos
 
 # Trilinos includes and libraries
-TRILINOS_INC ?= $(subst -I, -isystem, $(Trilinos_INCLUDE_DIRS) $(Trilinos_TPL_INCLUDE_DIRS))
+TRILINOS_INC_REMOVE_USR_INCLUDE = $(subst -I/usr/include, ,  $(Trilinos_INCLUDE_DIRS) $(Trilinos_TPL_INCLUDE_DIRS))
+TRILINOS_INC ?= $(subst -I, -isystem, $(TRILINOS_INC_REMOVE_USR_INCLUDE))
 TRILINOS_LIB ?= $(Trilinos_LIBRARY_DIRS) $(Trilinos_TPL_LIBRARY_DIRS) \
-		$(Trilinos_LIBRARIES) $(Trilinos_TPL_LIBRARIES)
+$(Trilinos_LIBRARIES) $(Trilinos_TPL_LIBRARIES)
 
 # ARPACK
 # ------
@@ -194,7 +210,7 @@ SPARSE_TOP ?= $(GOMA_LIBS)/sparse
 SPARSE_LIB ?= -L$(SPARSE_TOP)/lib  -lsparse$(_MACH)
 
 # Sparse includes are located in the goma directory
-SPARSE_INC ?=
+SPARSE_INC ?= -I$(SPARSE_TOP)/src
 
 # FORTRAN LIBRARIES
 # -----------------
@@ -223,7 +239,7 @@ INCLUDES = $(GOMA_INC) $(SPARSE_INC) $(TRILINOS_INC) \
 DEBUG_FLAGS ?= -g -gdwarf-2
 
 # All compiler options
-CCFLAGS ?= -O
+CCFLAGS ?= -O2
 
 # C/C++ warning flags
 C_WARN_FLAGS ?= -Wall
@@ -235,14 +251,16 @@ F_WARN_FLAGS ?=
 FFLAGS = $(CCFLAGS) $(F_WARN_FLAGS) $(DEFINES) $(INCLUDES)
 
 # C compiler flags
-CFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(INCLUDES)
+CSTD ?= -std=gnu99
+CFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(VERSION) $(INCLUDES) $(CSTD)
 
 # C++ compiler flags
-CXXSTD ?= 
+CXXSTD ?= -std=c++11
 CXXFLAGS = $(CCFLAGS) $(C_WARN_FLAGS) $(DEFINES) $(INCLUDES) -Wno-deprecated $(CXXSTD)
 
 # linker flags
-LD_FLAGS = $(CCFLAGS) $(Trilinos_EXTRA_LD_FLAGS)
+LD_EXTRA_FLAGS ?=
+LD_FLAGS = $(CCFLAGS) $(Trilinos_EXTRA_LD_FLAGS) $(LD_EXTRA_FLAGS)
 
 # LIBRARIES
 # ---------
@@ -302,17 +320,6 @@ MAIN_SRC= main.c
 
 MAIN_INC= std.h\
           goma.h
-
-
-# _____ Geometry Model routines "gm_" prefix __________________________________
-
-GM_SRC= gm_cgm_c_interface.C \
-        gm_cgm_util.c
-
-GM_INC= gm_cgm_c_interface.h \
-        gm_cgm_util.h \
-        gm_cgm_typedefs.h
-
 
 # _____ Advanced capabilities routines "ac_" prefix ___________________________
 
@@ -378,11 +385,8 @@ RF_INC= rf_allo.h\
         rf_fill_const.h\
         rf_io.h\
         rf_io_const.h\
-        rf_io_defn.h\
         rf_io_structs.h\
         rf_masks.h\
-        rf_masks_const.h\
-        rf_masks_globs.h\
         rf_mp.h\
         rf_node.h\
         rf_node_const.h\
@@ -393,7 +397,6 @@ RF_INC= rf_allo.h\
         rf_solver_const.h\
         rf_util.h\
         rf_vars_const.h \
-        rf_vars_defn.h\
         rd_dpi.h\
         rd_exo.h\
         rd_mesh.h\
@@ -429,12 +432,10 @@ SL_SRC= sl_lu.c\
         sl_leastsquares.C \
         sl_epetra_interface.cpp \
         sl_epetra_util.cpp \
-        sl_aztecoo_interface.cpp
+        sl_aztecoo_interface.cpp \
+        sl_stratimikos_interface.cpp
 
-SL_INC= spConfig.h\
-        spDefs.h\
-        spmatrix.h\
-        sl_aux.h\
+SL_INC= sl_aux.h\
         sl_auxutil.h\
         sl_eggroll.h\
         sl_eggroll_def.h\
@@ -446,7 +447,8 @@ SL_INC= spConfig.h\
         sl_rcm.h \
         sl_epetra_interface.h \
         sl_epetra_util.h \
-        sl_aztecoo_interface.h
+        sl_aztecoo_interface.h \
+        sl_stratimikos_interface.h
 
 
 # _____	Machine dependent routines "md_" prefix _______________________________
@@ -554,7 +556,6 @@ MM_INC=	mm_as.h\
         mm_as_structs.h\
         mm_augc_util.h\
         mm_bc.h\
-        mm_cards.h\
         mm_chemkin.h\
         mm_dil_viscosity.h\
         mm_eh.h\
@@ -600,6 +601,9 @@ MM_INC=	mm_as.h\
         mm_unknown_map.h\
         mm_viscosity.h
 
+SHELL_SRC= shell_tfmp_util.c
+
+SHELL_INC= shell_tfmp_util.h
 
 # _____ User routines "user_" prefix __________________________________________
 
@@ -627,12 +631,12 @@ USER_INC= user_ac.h\
 # _____ Full macros ___________________________________________________________
 
 GOMA_SRC = $(BC_SRC) $(EL_SRC) $(RF_SRC) $(MAIN_SRC) $(SL_SRC) $(MD_SRC) $(MM_SRC)\
-           $(DP_SRC) $(AC_SRC) $(LOCA_SRC) $(GM_SRC) $(BFU_SRC)
+           $(SHELL_SRC) $(DP_SRC) $(AC_SRC) $(LOCA_SRC) $(BFU_SRC) 
 
 BRKFIX_SRC = $(BF_SRC)
 
 GOMA_INCS = $(EL_INC) $(MAIN_INC) $(RF_INC) $(SL_INC) $(MD_INC) $(DP_INC) $(BC_INC)\
-           $(MM_INC) $(USER_INC) $(AC_INC) $(LOCA_INC) $(GM_INC) $(BF_INC)
+           $(MM_INC) $(SHELL_INC) $(USER_INC) $(AC_INC) $(LOCA_INC) $(BF_INC) 
 
 GOMA_INCS := ${addprefix $(INCLUDE_DIR)/, $(GOMA_INCS)}
 
@@ -692,8 +696,8 @@ PREFIX_INC = $(PREFIX)/include
 # ============
 
 # Object files depend on includes and the makefile
-$(RELEASE_OBJS) = $(GOMA_INCS) $(MAKEFILE_NAME) $(USER_SETTINGS_FILE)
-$(DEBUG_OBJS) = $(GOMA_INCS) $(MAKEFILE_NAME) $(USER_SETTINGS_FILE)
+RELEASE_DEPENDS = $(GOMA_INCS) $(MAKEFILE_NAME) $(USER_SETTINGS_FILE)
+DEBUG_DEPENDS = $(GOMA_INCS) $(MAKEFILE_NAME) $(USER_SETTINGS_FILE)
 
 # Main targets
 # ------------
@@ -740,38 +744,38 @@ $(BIN_DIR)/$(DEBUG_TARGET): $(GOMA_DEBUG_OBJS) $(BRKFIX_DEBUG_OBJS) $(USER_DEBUG
 
 # release objects
 
-$(RELEASE_OBJ_DIR)/%.o: %.c
+$(RELEASE_OBJ_DIR)/%.o: %.c $(RELEASE_DEPENDS)
 	@mkdir -p $(RELEASE_OBJ_DIR)/$(BRKFIX_DIR)
-	$(CC) -c $(CFLAGS) -o $@ $^
+	$(CC) -c $(CFLAGS) -o $@ $<
 
-$(RELEASE_OBJ_DIR)/%.o: %.F
+$(RELEASE_OBJ_DIR)/%.o: %.F $(RELEASE_DEPENDS)
 	@mkdir -p $(RELEASE_OBJ_DIR)
-	$(FC) -c $(FFLAGS) -o $@ $^
+	$(FC) -c $(FFLAGS) -o $@ $<
 
-$(RELEASE_OBJ_DIR)/%.o: %.C
+$(RELEASE_OBJ_DIR)/%.o: %.C $(RELEASE_DEPENDS)
 	@mkdir -p $(RELEASE_OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $@ $^
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-$(RELEASE_OBJ_DIR)/%.o: %.cpp
+$(RELEASE_OBJ_DIR)/%.o: %.cpp $(RELEASE_DEPENDS)
 	@mkdir -p $(RELEASE_OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $@ $^
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 # debug objects
-$(DEBUG_OBJ_DIR)/%.o: %.c
+$(DEBUG_OBJ_DIR)/%.o: %.c $(DEBUG_DEPENDS)
 	@mkdir -p $(DEBUG_OBJ_DIR)/$(BRKFIX_DIR)
-	$(CC) -c $(CFLAGS) -o $@ $^
+	$(CC) -c $(CFLAGS) -o $@ $<
 
-$(DEBUG_OBJ_DIR)/%.o: %.F
+$(DEBUG_OBJ_DIR)/%.o: %.F $(DEBUG_DEPENDS)
 	@mkdir -p $(DEBUG_OBJ_DIR)
-	$(FC) -c $(FFLAGS) -o $@ $^
+	$(FC) -c $(FFLAGS) -o $@ $<
 
-$(DEBUG_OBJ_DIR)/%.o: %.C
+$(DEBUG_OBJ_DIR)/%.o: %.C $(DEBUG_DEPENDS)
 	@mkdir -p $(DEBUG_OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $@ $^
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
-$(DEBUG_OBJ_DIR)/%.o: %.cpp
+$(DEBUG_OBJ_DIR)/%.o: %.cpp $(DEBUG_DEPENDS)
 	@mkdir -p $(RELEASE_OBJ_DIR)
-	$(CXX) -c $(CXXFLAGS) -o $@ $^
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
 
 
 

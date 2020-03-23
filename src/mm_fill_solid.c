@@ -1742,7 +1742,6 @@ rep_force_roll_n_dot_f_bc(double func[DIM],
 	    }
 	}
     }
-/*fprintf(stderr," force %g %g %g\n",coord[0],force,friction);*/
 
   for (a=0; a<ei->ielem_dim; a++)
     {  
@@ -2562,6 +2561,7 @@ put_liquid_stress_in_solid_ALE(int id, /* local element node number for the
 		ieqn_solid = R_SOLID1 + p;
 		lec->R[upd->ep[ieqn_solid]][id_dofsol] += 
 		    scale*lec->R[upd->ep[ieqn_mom]][id_dofmom];
+/*fprintf(stderr,"solid_fluid %g %g %g\n",scale,fv->x[0],fv->P);*/
 	      }
 	}
       }
@@ -3280,6 +3280,17 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 		    }
 		}
 	    }
+	  if( elc->thermal_expansion_model == IDEAL_GAS)
+	    {
+	      for ( p=0; p<VIM; p++)
+		{
+		  for ( q=0; q<VIM; q++)
+		    {
+		      TT[p][q] -=  (2.* mu + 3.*lambda) / (thermexp + fv->T) * 
+			(fv->T - elc->solid_reference_temp) * delta(p,q);
+		    }
+		}
+	    }
 	  if( elc->thermal_expansion_model == USER)
 	    {
 	      for ( p=0; p<VIM; p++)
@@ -3297,7 +3308,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 	{
 	     for (w=0; w<pd->Num_Species_Eqn; w++) 
 	       {
-		 if(mp->SpecVolExpModel[w] == CONSTANT )
+		 if(mp->SpecVolExpModel[w] == CONSTANT ||
+                     mp->SpecVolExpModel[w] == PHOTO_CURING)
 		   {
 		     for ( p=0; p<VIM; p++)
 		       {
@@ -3333,7 +3345,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 			     + 2. * d_mu_dx[b][j] * fv->strain[p][q];
 			   if( pd->e[R_ENERGY] )
 			     {
-	  			if( elc->thermal_expansion_model == CONSTANT)
+	  			if( elc->thermal_expansion_model == CONSTANT || 
+                                    elc->thermal_expansion_model == IDEAL_GAS )
 	  			{
 			       dTT_dx[p][q][b][j] -=  (2. * d_mu_dx[b][j] + 3.*d_lambda_dx[b][j])
 				 * thermexp * 
@@ -3350,7 +3363,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 			     {
 			       for (w=0; w<pd->Num_Species_Eqn; w++) 
 				 {
-				   if(mp->SpecVolExpModel[w] == CONSTANT )
+				   if(mp->SpecVolExpModel[w] == CONSTANT ||
+                                        mp->SpecVolExpModel[w] == PHOTO_CURING)
 				     {
 				       dTT_dx[p][q][b][j] -=  (2. * d_mu_dx[b][j] + 3.*d_lambda_dx[b][j])
 					 * speciesexp[w] * (fv->c[w] - mp->reference_concn[w]) 
@@ -3379,6 +3393,15 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
 			 {
 			   dTT_dT[p][q][j] -=  (2.* mu + 3.*lambda) * thermexp * bf[v]->phi[j] 
 			     * delta(p,q); 
+			 }
+		     }
+		   if( elc->thermal_expansion_model == IDEAL_GAS)
+		     {
+		       for ( j=0; j<dofs; j++)
+			 {
+			   dTT_dT[p][q][j] -=  (2.* mu + 3.*lambda) * 
+                                    (thermexp+elc->solid_reference_temp)/SQUARE(fv->T+thermexp)
+                                      * bf[v]->phi[j] * delta(p,q); 
 			 }
 		     }
 		   if( elc->thermal_expansion_model == USER)
@@ -3438,7 +3461,8 @@ mesh_stress_tensor(dbl TT[DIM][DIM],
  		     {
 		       for (w=0; w<pd->Num_Species_Eqn; w++) 
 			 {
-			   if(mp->SpecVolExpModel[w] == CONSTANT )
+			   if(mp->SpecVolExpModel[w] == CONSTANT ||
+                                 mp->SpecVolExpModel[w] == PHOTO_CURING)
 			     {
 			       dTT_dc[p][q][w][j] -=  (2.* mu + 3.*lambda)*
 				 speciesexp[w]*bf[v]->phi[j]*delta(p,q); 
@@ -5512,7 +5536,11 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
      }
    else if(elc_ptr->thermal_expansion_model == SHRINKAGE)
      {
-	*thermexp = elc_ptr->thermal_expansion;
+	*thermexp = elc_ptr->u_thermal_expansion[0];
+     }
+   else if(elc_ptr->thermal_expansion_model == IDEAL_GAS)
+     {
+	*thermexp = elc_ptr->u_thermal_expansion[0];
      }
    else if(elc_ptr->thermal_expansion_model == USER )
      {
@@ -5526,11 +5554,13 @@ load_elastic_properties(struct Elastic_Constitutive *elcp,
      }
 
 /*  species expansion	*/
-   if (pd->e[R_MASS] && pd->MeshMotion != ARBITRARY)
+   if (pd->e[R_MASS] && 
+        (pd->MeshMotion != ARBITRARY || mp->SpecVolExpModel[0] == PHOTO_CURING)) 
    {
 	for(w=0 ; w<pd->Num_Species_Eqn ; w++)
 	   {
-   	    if(mp->SpecVolExpModel[w] == CONSTANT )
+   	    if(mp->SpecVolExpModel[w] == CONSTANT  ||
+                mp->SpecVolExpModel[w] == PHOTO_CURING)
      		{
        	    	speciesexp[w] = mp->species_vol_expansion[w];
      		}

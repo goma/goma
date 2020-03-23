@@ -10,7 +10,7 @@
 * This software is distributed under the GNU General Public License.      *
 \************************************************************************/
 
-/* directs and controls solution process for hunting with zero and 
+/* directs and controls solution process for hunting with zero and
  * first order  hunting
  */
 
@@ -21,6 +21,7 @@
 
 #define _AC_HUNT_C
 #include "goma.h"
+#include "brk_utils.h"
 
 #ifdef HAVE_FRONT
 extern int mf_setup
@@ -70,18 +71,18 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   int     iAC;                /* COUNTER                                      */
   double *x_AC = NULL;        /* SOLUTION VECTOR OF EXTRA UNKNOWNS            */
   double *x_AC_old=NULL;      /* old SOLUTION VECTOR OF EXTRA UNKNOWNS        */
-  double *x_AC_dot = NULL; 
+  double *x_AC_dot = NULL;
 
   int     iHC;                /* COUNTER                                      */
-  
+
   int    *ija_attic=NULL;     /* storage for external dofs                    */
 
   int eb_indx, ev_indx;
 
-  /* 
-   * variables for path traversal 
+  /*
+   * variables for path traversal
    */
-  
+
   double *x_old=NULL;         /* old solution vector                          */
   double *x_older=NULL;       /* older solution vector                        */
   double *x_oldest=NULL;      /* oldest solution vector saved                 */
@@ -93,9 +94,9 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   double **x_sens_p=NULL;     /* solution sensitivity for parameters */
   int num_pvector=0;          /*  number of solution sensitivity vectors */
 #ifdef COUPLED_FILL
-  struct Aztec_Linear_Solver_System *ams[NUM_ALSS]={NULL}; 
+  struct Aztec_Linear_Solver_System *ams[NUM_ALSS]={NULL};
 #else /* COUPLED_FILL */
-  struct Aztec_Linear_Solver_System *ams[NUM_ALSS]={NULL, NULL}; 
+  struct Aztec_Linear_Solver_System *ams[NUM_ALSS]={NULL, NULL};
 #endif /* COUPLED_FILL */
                               /* sl_util_structs.h */
 
@@ -103,7 +104,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   double *resid_vector_sens=NULL;    /* residual sensitivity */
   double *scale=NULL;      /* scale vector for modified newton */
 
-  int 	 *node_to_fill = NULL;	
+  int 	 *node_to_fill = NULL;
 
   int		n;            /* total number of path steps attempted */
   int		ni;           /* total number of nonlinear solves */
@@ -120,7 +121,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   int           *const_delta_s=NULL;
   int           step_print;
   double        i_print;
-  int good_mesh = TRUE;
+  int           step_fix = 0;      /* What step to fix the problem on */
+  int           good_mesh = TRUE;
   double	*path=NULL, *path1=NULL;
   double	*delta_s=NULL, *delta_s_new=NULL, *delta_s_old=NULL;
   double        *delta_s_older=NULL, *delta_s_oldest=NULL;
@@ -130,35 +132,41 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   double        eps;
   double        *lambda=NULL, *lambdaEnd=NULL;
   double	hunt_par, dhunt_par, hunt_par_old;	/* hunting continuation parameter */
+  double        dhunt_par_max=1.0, dhunt_par_min=0., dhunt_par_0=0.1;
+  double        dhunt_par_new=0.1, dhunt_par_old;
+  int           log_ID=-1;
   double        timeValueRead = 0.0;
 
-  /* 
+  /*
    * ALC management variables
    */
 
   int           alqALC;
-  int           *aldALC=NULL; 
+  int           *aldALC=NULL;
 
   /*
-   * Other local variables 
+   * Other local variables
    */
-  
+
   int	        error, err, is_steady_state, inewton;
   int 		*gindex = NULL, gsize;
   int		*p_gsize=NULL;
   double	*gvec=NULL;
   double        ***gvec_elem;
   FILE          *file=NULL;
-  double 	toler_org[3],damp_org;
-  
+  double 	toler_org[3];
+  double        exo_time=0;
+
   struct Results_Description  *rd=NULL;
-  
+
   int		tnv;		/* total number of nodal variables and kinds */
   int		tev;		/* total number of elem variables and kinds */
-  int		tnv_post;	/* total number of nodal variables and kinds 
+  int		tnv_post;	/* total number of nodal variables and kinds
 					   for post processing */
-  int		tev_post;	/* total number of elem variables and kinds 
+  int		tev_post;	/* total number of elem variables and kinds
 					   for post processing */
+  double        *gv;
+
 #ifdef HAVE_FRONT
   int max_unk_elem, one, three; /* variables used as mf_setup arguments*/
 #endif
@@ -171,7 +179,13 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   double evol_global=0.0;
 #endif
 
-  static char yo[]="hunt_problem"; 
+  /* Set step_fix only if parallel run and only if fix freq is enabled*/
+  if (Num_Proc > 1 && cont->fix_freq > 0) {
+    step_fix = 1; /* Always fix on the first timestep to match print frequency */
+  }
+
+
+  static char yo[]="hunt_problem";
 
   /*
    * 		BEGIN EXECUTION
@@ -184,13 +198,12 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   toler_org[0] = custom_tol1;
   toler_org[1] = custom_tol2;
   toler_org[2] = custom_tol3;
-  damp_org = damp_factor1;
 
   is_steady_state = TRUE;
 
   p_gsize = &gsize;
-  
-  /* 
+
+  /*
    * set aside space for gather global vectors to print to exoII file
    * note: this is temporary
    *
@@ -224,12 +237,12 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   /*  tnv_post is calculated in load_nodal_tkn*/
   tev = cnt_elem_vars();
   /*  tev_post is calculated in load_elem_tkn*/
-  
+
 #ifdef DEBUG
   fprintf(stderr, "Found %d total primitive nodal variables to output.\n", tnv);
   fprintf(stderr, "Found %d total primitive elem variables to output.\n", tev);
 #endif
-  
+
   if ( tnv < 0 )
     {
       DPRINTF(stderr, "%s:\tbad tnv.\n", yo);
@@ -241,33 +254,46 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       DPRINTF(stderr, "%s:\tMaybe bad tev? See goma design committee ;) \n", yo);
 /*       exit(-1); */
     }
-  
-  rd = (struct Results_Description *) 
+
+  rd = (struct Results_Description *)
     smalloc(sizeof(struct Results_Description));
 
-  if (rd == NULL) 
+  if (rd == NULL)
     { EH(-1, "Could not grab Results Description."); }
   (void) memset((void *) rd, 0, sizeof(struct Results_Description));
-  
+
   rd->nev = 0;			/* number element variables in results */
-  rd->ngv = 0;			/* number global variables in results */
+  rd->ngv = 5 + nAC;	        /* number global variables in results
+				   see load_global_var_info for names*/
   rd->nhv = 0;			/* number history variables in results */
-  
+
   if ( is_steady_state == TRUE ) {
-    rd->ngv = 5;			/* number global variables in results 
-					   see load_global_var_info for names*/
     error = load_global_var_info(rd, 0, "CONV");
     error = load_global_var_info(rd, 1, "NEWT_IT");
     error = load_global_var_info(rd, 2, "MAX_IT");
     error = load_global_var_info(rd, 3, "CONVRATE");
     error = load_global_var_info(rd, 4, "MESH_VOLUME");
+
   }
-  
+
+    if ( nAC > 0   )
+    {
+      char name[20];
+
+      for( i = 0 ; i < nAC ; i++ )
+	{
+	  sprintf(name, "AUGC_%d",i+1);
+	  error = load_global_var_info(rd, 5 + i, name);
+	}
+    }
+
+  gv = alloc_dbl_1( rd->ngv, 0.0 );
+
   /* load nodal types, kinds, names */
   error = load_nodal_tkn( rd,
 			  &tnv,
 			  &tnv_post); /* load nodal types, kinds, names */
-  
+
   if (error !=0)
     {
       DPRINTF(stderr, "%s:  problem with load_nodal_tkn()\n", yo);
@@ -277,16 +303,16 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   /* load elem types, names */
   error = load_elem_tkn( rd,
 			 exo,
-			 tev, 
+			 tev,
 			 &tev_post); /* load elem types, names */
-  
+
   if ( error !=0 )
     {
       DPRINTF(stderr, "%s:  problem with load_elem_tkn()\n", yo);
       EH(-1,"\t");
     }
 
-  /* 
+  /*
    * Write out the names of the nodal variables that we will be sending to
    * the EXODUS II output file later.
    */
@@ -300,8 +326,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     gvec_elem[i] = (double **) smalloc ( (tev + tev_post)*sizeof(double *));
   }
 
-  wr_result_prelim_exo( rd, 
-                        exo, 
+  wr_result_prelim_exo( rd,
+                        exo,
                         ExoFileOut,
                         gvec_elem );
 
@@ -309,7 +335,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   fprintf(stderr, "P_%d: wr_result_prelim_exo() ends...\n", ProcID, tnv);
 #endif
 
-  /* 
+  /*
    * This gvec workhorse transports output variables as nodal based vectors
    * that are gather from the solution vector. Note: it is NOT a global
    * vector at all and only carries this processor's nodal variables to
@@ -334,15 +360,15 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       for(iAC=0;iAC<nAC;iAC++) {
 	augc[iAC].d_evol_dx = (double*) malloc(numProcUnknowns*sizeof(double));
       } }
-  
+
   asdv(&resid_vector, numProcUnknowns);
   asdv(&resid_vector_sens, numProcUnknowns);
   asdv(&scale, numProcUnknowns);
 
-  for (i=0;i<NUM_ALSS;i++) 
+  for (i=0;i<NUM_ALSS;i++)
     {
-      ams[i] = (struct Aztec_Linear_Solver_System *) 
-	array_alloc(1, 1, sizeof(struct Aztec_Linear_Solver_System )); 
+      ams[i] = (struct Aztec_Linear_Solver_System *)
+	array_alloc(1, 1, sizeof(struct Aztec_Linear_Solver_System ));
     }
 
 #ifdef MPI
@@ -396,6 +422,14 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   aldALC        = Ivector_birth(nHC);
   const_delta_s = Ivector_birth(nHC);
 
+  if (nAC > 0)
+  {
+    asdv(&x_AC, nAC);
+    asdv(&x_AC_old, nAC);
+    asdv(&x_AC_dot, nAC);
+  }
+
+
   /*
 
    HUNTING BY ZERO AND FIRST ORDER CONTINUATION
@@ -418,15 +452,13 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
     lambda[iHC]       = hunt[iHC].BegParameterValue;
     lambdaEnd[iHC]    = hunt[iHC].EndParameterValue;
+    if(hunt[iHC].ramp == 2 )
+         { if(log_ID == -1) log_ID = iHC; }
 
     if ((lambdaEnd[iHC]-lambda[iHC]) > 0.0)
-    {
-      aldALC[iHC] = +1;
-    }
+         { aldALC[iHC] = +1; }
     else
-    {
-      aldALC[iHC] = -1;
-    } 
+         { aldALC[iHC] = -1; }
 
     if (hunt[iHC].ramp == 1) {
       hunt[iHC].Delta_s0 = fabs(lambdaEnd[iHC]-lambda[iHC])/((double)(MaxPathSteps-1));
@@ -444,40 +476,63 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       fprintf(stderr,"continuation in progress\n");
     }
 
-    if (hDelta_s0[iHC] > hDelta_s_max[iHC]) 
+    if (hDelta_s0[iHC] > hDelta_s_max[iHC])
     {
       hDelta_s0[iHC] = hDelta_s_max[iHC];
     }
 
     delta_s[iHC] = delta_s_old[iHC] = delta_s_older[iHC] = hDelta_s0[iHC];
-      
+
     /*
      * ADJUST NATURAL PARAMETER
      */
-	
-    update_parameterHC(iHC, path1[iHC], x, xdot, x_AC, delta_s[iHC], cx, exo, dpi); 
+
+    update_parameterHC(iHC, path1[iHC], x, xdot, x_AC, delta_s[iHC], cx, exo, dpi);
   }
 
   /*  define continuation parameter */
 
-  if(hunt[0].EndParameterValue == hunt[0].BegParameterValue)
+  iHC = MAX(0,log_ID);
+  dhunt_par = 0.0;
+  if(hunt[iHC].EndParameterValue == hunt[iHC].BegParameterValue)
  	{	hunt_par = 1.0;	}
   else
  	{
-	  hunt_par = (path1[0]-hunt[0].BegParameterValue)
-	      /(hunt[0].EndParameterValue - hunt[0].BegParameterValue)  ;
-          hunt_par=fabs(hunt_par);
+          if(hunt[iHC].ramp == 2 )
+              {
+	         hunt_par = (log10(path1[iHC])-log10(hunt[iHC].BegParameterValue))
+	             /(log10(hunt[iHC].EndParameterValue) - log10(hunt[iHC].BegParameterValue));
+	         dhunt_par_min = log10(1.0+aldALC[iHC]*hunt[iHC].Delta_s_min/hunt[iHC].BegParameterValue)
+	             /(log10(hunt[iHC].EndParameterValue) - log10(hunt[iHC].BegParameterValue));
+	         dhunt_par_max = log10(1.0+aldALC[iHC]*hunt[iHC].Delta_s_max/hunt[iHC].BegParameterValue)
+	             /(log10(hunt[iHC].EndParameterValue) - log10(hunt[iHC].BegParameterValue));
+	         dhunt_par_0 = log10(1.0+aldALC[iHC]*hunt[iHC].Delta_s0/hunt[iHC].BegParameterValue)
+	             /(log10(hunt[iHC].EndParameterValue) - log10(hunt[iHC].BegParameterValue));
+              }  else   {
+	         hunt_par = (path1[iHC]-hunt[iHC].BegParameterValue)
+	             /(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
+	         dhunt_par_min = aldALC[iHC]*hunt[iHC].Delta_s_min
+	             /(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
+	         dhunt_par_max = aldALC[iHC]*hunt[iHC].Delta_s_max
+	             /(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
+	         dhunt_par_0 = aldALC[iHC]*hunt[iHC].Delta_s0
+	             /(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
+              }
+           hunt_par=fabs(hunt_par);
  	}
   hunt_par_old = hunt_par;
+  dhunt_par = dhunt_par_old = dhunt_par_0;
+    if (dhunt_par_0 > dhunt_par_max)
+    { dhunt_par_0 = dhunt_par_max; }
 
   /* Call prefront (or mf_setup) if necessary */
   if (Linear_Solver == FRONT)
   {
-    if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");  
-	  
-#ifdef HAVE_FRONT  
+    if (Num_Proc > 1) EH(-1, "Whoa.  No front allowed with nproc>1");
+
+#ifdef HAVE_FRONT
     /* Also got to define these because it wants pointers to these numbers */
-	  
+
     max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE;
     one = 1;
     three = 3;
@@ -486,14 +541,14 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
        is on anywhere in domain.  This assumes only one material.  See sl_front_setup for test.
        that test needs to be in the input parser.  */
 
-    if(vn_glob[0]->dg_J_model == FULL_DG) 
+    if(vn_glob[0]->dg_J_model == FULL_DG)
     {
       max_unk_elem = (MAX_PROB_VAR + MAX_CONC)*MDE + 4*vn_glob[0]->modes*4*MDE;
     }
 
-    err = mf_setup(&exo->num_elems, 
-		   &NumUnknowns, 
-		   &max_unk_elem, 
+    err = mf_setup(&exo->num_elems,
+		   &NumUnknowns,
+		   &max_unk_elem,
 		   &three,
 		   &one,
 		   exo->elem_order_map,
@@ -534,48 +589,42 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   }
 
 
-  if (nAC > 0)
-  {
-    asdv(&x_AC, nAC);
-    asdv(&x_AC_old, nAC);
-    asdv(&x_AC_dot, nAC);
-  }
 
   /* Allocate sparse matrix */
 
   if( strcmp( Matrix_Format, "msr" ) == 0)
   {
     log_msg("alloc_MSR_sparse_arrays...");
-    alloc_MSR_sparse_arrays(&ija, 
-			    &a, 
-			    &a_old, 
-			    0, 
-			    node_to_fill, 
-			    exo, 
+    alloc_MSR_sparse_arrays(&ija,
+			    &a,
+			    &a_old,
+			    0,
+			    node_to_fill,
+			    exo,
 			    dpi);
     /*
      * An attic to store external dofs column names is needed when
      * running in parallel.
      */
 
-    alloc_extern_ija_buffer(num_universe_dofs, 
-			    num_internal_dofs+num_boundary_dofs, 
+    alloc_extern_ija_buffer(num_universe_dofs,
+			    num_internal_dofs+num_boundary_dofs,
 			    ija, &ija_attic);
     /*
      * Any necessary one time initialization of the linear
      * solver package (Aztec).
      */
-      
+
     ams[JAC]->bindx   = ija;
     ams[JAC]->val     = a;
     ams[JAC]->belfry  = ija_attic;
     ams[JAC]->val_old = a_old;
-	  
+
     /*
      * These point to nowhere since we're using MSR instead of VBR
      * format.
      */
-      
+
     ams[JAC]->indx  = NULL;
     ams[JAC]->bpntr = NULL;
     ams[JAC]->rpntr = NULL;
@@ -627,14 +676,14 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   {
     if(augc[0].iread == 1)
       {
-	for(iAC=0 ; iAC<nAC ; iAC++)	
+	for(iAC=0 ; iAC<nAC ; iAC++)
 	  { update_parameterAC(iAC, x, xdot, x_AC, cx, exo, dpi); }
       }
   }
 
 
-  /* 
-       * set boundary conditions on the initial conditions 
+  /*
+       * set boundary conditions on the initial conditions
        */
 
   find_and_set_Dirichlet(x, xdot, exo, dpi);
@@ -649,14 +698,14 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
   {
     dcopy1(nAC,x_AC, x_AC_old);}
 
-  /* 
-       * initialize the counters for when to print out data 
+  /*
+       * initialize the counters for when to print out data
        */
 
   step_print = 1;
 
   matrix_systems_mask = 1;
-      
+
   log_msg("sl_init()...");
   sl_init(matrix_systems_mask, ams, exo, dpi, cx);
 
@@ -672,66 +721,100 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     DPRINTF(stderr, "\nINITIAL ELEMENT QUALITY CHECK---\n");
     good_mesh = element_quality(exo, x, ams[0]->proc_config);
 
-  /* 
-       * set the number of successful path steps to zero 
+  /*
+       * set the number of successful path steps to zero
        */
 
-  nt = 0;   
+  nt = 0;
 
-  /* 
-       * LOOP THROUGH PARAMETER UNTIL MAX NUMBER 
+  /*
+       * LOOP THROUGH PARAMETER UNTIL MAX NUMBER
        * OF STEPS SURPASSED
        */
+
+  if (nAC > 0) {
+    dcopy1( nAC, x_AC, &(gv[5]) );
+  }
 
   for (n=0;n<MaxPathSteps;n++) {
 
     alqALC = 1;
 
     for (iHC=0;iHC<nHC;iHC++) {
-	
+
       switch (aldALC[iHC]) {
       case -1: /* REDUCING PARAMETER DIRECTION */
-	  if (path1[iHC] <= lambdaEnd[iHC]) { 
+	  if (path1[iHC] <= lambdaEnd[iHC]) {
 	    alqALC = -1;
 	    path1[iHC] = lambdaEnd[iHC];
 	    delta_s[iHC] = path[iHC]-path1[iHC];
-	  } 
+	  }
 	  break;
       case +1: /* RISING PARAMETER DIRECTION */
-	  if (path1[iHC] >= lambdaEnd[iHC]) { 
+	  if (path1[iHC] >= lambdaEnd[iHC]) {
 	    alqALC = -1;
 	    path1[iHC] = lambdaEnd[iHC];
 	    delta_s[iHC] = path1[iHC]-path[iHC];
-	  } 
+	  }
 	  break;
       }
+    }   /*  end of iHC loop */
 
       /*
        * ADJUST NATURAL PARAMETER
        */
 
-      update_parameterHC(iHC, path1[iHC], x, xdot, x_AC, delta_s[iHC], cx, exo, dpi); 
+    for (iHC=0;iHC<nHC;iHC++) {
+      update_parameterHC(iHC, path1[iHC], x, xdot, x_AC, delta_s[iHC], cx, exo, dpi);
     }   /*  end of iHC loop */
 
-  	if(hunt[0].EndParameterValue == hunt[0].BegParameterValue)
+        iHC = MAX(0,log_ID);
+  	if(hunt[iHC].EndParameterValue == hunt[iHC].BegParameterValue)
  		{	hunt_par = 1.0;	}
 	else
  		{
-		  hunt_par = (path1[0]-hunt[0].BegParameterValue)
-		      /(hunt[0].EndParameterValue - hunt[0].BegParameterValue)  ;
-                  hunt_par=fabs(hunt_par);
+                  if(hunt[iHC].ramp == 2 )
+                       {
+	                 hunt_par = (log10(path1[iHC])-log10(hunt[iHC].BegParameterValue))
+	                     /(log10(hunt[iHC].EndParameterValue) - log10(hunt[iHC].BegParameterValue));
+                         if(hunt_par > 0)	{
+	                        dhunt_par = (log10(path1[iHC])-log10(path[iHC]))
+	      /(log10(hunt[iHC].EndParameterValue) - log10(hunt[iHC].BegParameterValue));
+                                }
+                       }  else   {
+		         hunt_par = (path1[iHC]-hunt[iHC].BegParameterValue)
+		             /(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue)  ;
+                         if(hunt_par > 0)	{
+		                 dhunt_par = (path1[iHC]-path[iHC])
+		                       /(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue)  ;
+                                }
+                       }
+/*                  hunt_par=fabs(hunt_par);*/
  		}
+	  for (iHC=0;iHC<nHC;iHC++) {
+              if(hunt[iHC].ramp == 2)
+                {
+                 delta_s[iHC] = -hunt[iHC].BegParameterValue *
+                     pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,hunt_par-dhunt_par);
+                 delta_s[iHC] += hunt[iHC].BegParameterValue *
+                     pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,hunt_par);
+                 }
+              else  {
+                 delta_s[iHC] = dhunt_par*
+           (hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
+                 }
+              }
 
     /*
      * IF STEP CHANGED, REDO FIRST ORDER PREDICTION
      */
+ if (hunt_par >= 1.0) { alqALC = -1;  }
 
     if(alqALC == -1)
     {
       DPRINTF(stderr,"\n\t ******** LAST PATH STEP!\n");
       dcopy1(numProcUnknowns,x_old,x);
 
-      dhunt_par = hunt_par-hunt_par_old;
       switch (Continuation) {
       case HUN_ZEROTH:
           break;
@@ -741,15 +824,15 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       }
     }
 
-    /* 
+    /*
      * reset Dirichlet condition Mask, node->DBC to -1 where it
-     * is set in order for Dirichlet conditions to be 
-     * set appropriately for each path step 
+     * is set in order for Dirichlet conditions to be
+     * set appropriately for each path step
      */
-	  
+
     nullify_dirichlet_bcs();
-	  
-    find_and_set_Dirichlet (x, xdot, exo, dpi); 
+
+    find_and_set_Dirichlet (x, xdot, exo, dpi);
 
     exchange_dof(cx, dpi, x);
 
@@ -763,14 +846,14 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	  DPRINTF(stderr, "\n\tFirst Order Hunting:");
 	  break; }
       DPRINTF(stderr, "\n\tStep number: %4d of %4d (max)", n+1, MaxPathSteps);
-      DPRINTF(stderr, "\n\tAttempting solution at: theta = %g",hunt_par);
+      DPRINTF(stderr, "\n\tAttempting solution at: theta = %g ;  step = %g",hunt_par,dhunt_par);
       for (iHC=0;iHC<nHC;iHC++) {
 	switch (hunt[iHC].Type) {
 	case 1: /* BC */
 	    DPRINTF(stderr, "\n\tBCID=%3d DFID=%5d", hunt[iHC].BCID, hunt[iHC].DFID);
 	    break;
 	case 2: /* MT */
-	    DPRINTF(stderr, "\n\tMTID=%3d MPID=%5d", hunt[iHC].MTID, hunt[iHC].MPID);
+	    DPRINTF(stderr, "\n\tMTID=%3d MPID=%5d", hunt[iHC].MTID+1, hunt[iHC].MPID);
 	    break;
  	case 3: /* AC */
  	    DPRINTF(stderr, "\n\tACID=%3d DFID=%5d", hunt[iHC].BCID, hunt[iHC].DFID);
@@ -779,39 +862,39 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	DPRINTF(stderr, " Parameter= % 10.6e delta_s= %10.6e", path1[iHC], delta_s[iHC]);
       }
     }
-	
+
     ni = 0;
     do {
 
 #ifdef DEBUG
       fprintf(stderr, "%s: starting solve_nonlinear_problem\n", yo);
 #endif
-      err = solve_nonlinear_problem(ams[JAC], 
-				    x, 
-				    delta_t, 
+      err = solve_nonlinear_problem(ams[JAC],
+				    x,
+				    delta_t,
 				    theta,
 				    x_old,
-				    x_older, 
+				    x_older,
 				    xdot,
 				    xdot_old,
 				    resid_vector,
 				    x_update,
-				    scale, 
-				    &converged, 
-				    &nprint, 
-				    tev, 
+				    scale,
+				    &converged,
+				    &nprint,
+				    tev,
 				    tev_post,
-				    NULL,
+				    gv,
 				    rd,
 				    gindex,
 				    p_gsize,
-				    gvec, 
-				    gvec_elem, 
+				    gvec,
+				    gvec_elem,
  				    path1[0],
-				    exo, 
-				    dpi, 
-				    cx, 
-				    0, 
+				    exo,
+				    dpi,
+				    cx,
+				    0,
 				    &path_step_reform,
 				    is_steady_state,
 				    x_AC,
@@ -832,27 +915,28 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       {
 	EH(error, "error writing ASCII soln file."); /* srs need to check */
 
-	if (Write_Intermediate_Solutions == 0) {    
+	if (Write_Intermediate_Solutions == 0) {
 #ifdef DEBUG
 	  fprintf(stderr, "%s: write_solution call WIS\n", yo);
 #endif
-	  write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old, 
-			 xdot, xdot_old, tev, tev_post,NULL,  rd, gindex,
-			 p_gsize, gvec, gvec_elem, &nprint, delta_s[0], 
- 			 theta, path1[0], NULL, exo, dpi);
+          exo_time = aldALC[0]*path1[0];
+	  write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old,
+			 xdot, xdot_old, tev, tev_post, gv,  rd, gindex,
+			 p_gsize, gvec, gvec_elem, &nprint, delta_s[0],
+ 			 theta, exo_time, NULL, exo, dpi);
 #ifdef DEBUG
 	  fprintf(stderr, "%s: write_solution end call WIS\n", yo);
 #endif
 	}
 
 	/*
-	 * PRINT OUT VALUES OF EXTRA UNKNOWNS 
-	 * FROM AUGMENTING CONDITIONS 
+	 * PRINT OUT VALUES OF EXTRA UNKNOWNS
+	 * FROM AUGMENTING CONDITIONS
 	 */
 
-	if (nAC > 0) 
+	if (nAC > 0)
           {
-	    
+
 	    DPRINTF(stderr, "\n------------------------------\n");
 	    DPRINTF(stderr, "Augmenting Conditions:    %4d\n", nAC);
 	    DPRINTF(stderr, "Number of extra unknowns: %4d\n\n", nAC);
@@ -877,8 +961,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
                 if( Num_Proc > 1 ) {
                      MPI_Allreduce( &evol_local, &evol_global, 1,
                                     MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-                }
                 evol_local = evol_global;
+                }
 #endif
                 DPRINTF(stderr, "\tMT[%4d] VC[%4d]=%10.6e Param=%10.6e\n",
                         augc[iAC].MTID, augc[iAC].VOLID, evol_local,
@@ -910,22 +994,22 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       good_mesh = element_quality(exo, x, ams[0]->proc_config);
 
 	/*
-	     
-	  INTEGRATE FLUXES, FORCES  
+
+	  INTEGRATE FLUXES, FORCES
 
 	*/
 
 	for (i = 0; i < nn_post_fluxes; i++)
 	{
-	  evaluate_flux ( exo, dpi, 
-			  pp_fluxes[i]->ss_id, 
+	  evaluate_flux ( exo, dpi,
+			  pp_fluxes[i]->ss_id,
 			  pp_fluxes[i]->flux_type ,
 			  pp_fluxes[i]->flux_type_name ,
-			  pp_fluxes[i]->blk_id , 
-			  pp_fluxes[i]->species_number, 
+			  pp_fluxes[i]->blk_id ,
+			  pp_fluxes[i]->species_number,
 			  pp_fluxes[i]->flux_filenm,
 			  pp_fluxes[i]->profile_flag,
-			  x,xdot,NULL,delta_s[0],path1[0],1); 
+			  x,xdot,NULL,delta_s[0],path1[0],1);
 	}
 
 
@@ -972,24 +1056,25 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       /*
        * INCREMENT COUNTER
        */
-   
+
       ni++;
 
       /*
-       * 
-       * DID IT CONVERGE ? 
+       *
+       * DID IT CONVERGE ?
        * IF NOT, REDUCE STEP SIZE AND TRY AGAIN
-       * 
+       *
        */
 
       if (!converged) {
 
-	if (ni > 10) {
+	if (ni > Max_Newton_Steps/2) {
  	  DPRINTF(stderr,"\n ************************************\n");
  	  DPRINTF(stderr," W: Did not converge in Newton steps.\n");
  	  DPRINTF(stderr,"    Find better initial guess.       \n");
  	  DPRINTF(stderr," ************************************\n"); 
- 	  exit(0);
+          goto free_and_clear;
+ 	  /*exit(0);  */
 	}
 
         /*
@@ -1000,35 +1085,46 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
         {
 	DPRINTF(stderr, "\n\tFailed to converge:\n");
 
+	dhunt_par *= 0.5;
+        hunt_par = hunt_par_old + dhunt_par;
 	for (iHC=0;iHC<nHC;iHC++) {
+            if(hunt[iHC].ramp == 2)
+              {
+               path1[iHC] = hunt[iHC].BegParameterValue *
+                   pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,hunt_par);
+              }
+            else if(hunt[iHC].ramp == 1)
+              {
+               delta_s[iHC] *= 0.5;
+ 	       switch (aldALC[iHC]) {
+	           case -1:
+	               path1[iHC] = path[iHC] - delta_s[iHC];
+	               break;
+	           case +1:
+	               path1[iHC] = path[iHC] + delta_s[iHC];
+	               break;
+	           }
+              }
+            else
+              {
+               path1[iHC] = hunt[iHC].BegParameterValue +
+                      hunt_par*(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
+              }
+            }
 
-	  delta_s[iHC] *= 0.5;
+	alqALC = 1;
 
-	  switch (aldALC[iHC]) {
-	  case -1: 
-	      path1[iHC] = path[iHC] - delta_s[iHC];
-	      break;
-	  case +1: 
-	      path1[iHC] = path[iHC] + delta_s[iHC];
-	      break;
-	  }
+	DPRINTF(stderr, "Decreasing step-length to %10.6e.\n", dhunt_par);
 
-	  /*
-	   * RESET
-	   */
-
-	  alqALC = 1;
-
-	  DPRINTF(stderr, "Decreasing step-length to %10.6e.\n", delta_s[iHC]);
-
-	  if (delta_s[iHC] < hDelta_s_min[iHC]) {
- 	    DPRINTF(stderr,"\n X: C step-length reduced below minimum.");
- 	    DPRINTF(stderr,"\n    Program terminated.\n");
-	    /* This needs to have a return value of 0, indicating
+	if (dhunt_par < dhunt_par_min) {
+ 	  DPRINTF(stderr,"\n X: C step-length reduced below minimum.");
+ 	  DPRINTF(stderr,"\n theta: %g ;  theta_min: %g",dhunt_par,dhunt_par_min);
+ 	  DPRINTF(stderr,"\n    Program terminated.\n");
+	  /* This needs to have a return value of 0, indicating
 	     * success, for the continuation script to not treat this
 	     * as a failed command. */
-	    exit(0);
-	  } 
+        goto free_and_clear;
+          }
 #ifdef PARALLEL
               check_parallel_error("\t");
 #endif
@@ -1036,24 +1132,32 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	  /*
 	   * ADJUST NATURAL PARAMETER
 	   */
-	    
+
+	for (iHC=0;iHC<nHC;iHC++) {
 	  update_parameterHC(iHC, path1[iHC], x, xdot, x_AC, delta_s[iHC], cx, exo, dpi);
 	}  /* end of iHC loop  */
 
-  	if(hunt[0].EndParameterValue == hunt[0].BegParameterValue)
+        iHC = MAX(0,log_ID);
+  	if(hunt[iHC].EndParameterValue == hunt[iHC].BegParameterValue)
  		{	hunt_par = 1.0;	}
 	else
  		{
-	  	hunt_par = (path1[0]-hunt[0].BegParameterValue)
-	     	 /(hunt[0].EndParameterValue - hunt[0].BegParameterValue)  ;
-                hunt_par=fabs(hunt_par);
+                 if(hunt[iHC].ramp == 2)
+                    {
+	             hunt_par = (log10(path1[iHC])-log10(hunt[iHC].BegParameterValue))
+	                /(log10(hunt[iHC].EndParameterValue) - log10(hunt[iHC].BegParameterValue));
+                    }  else   {
+	  	     hunt_par = (path1[iHC]-hunt[iHC].BegParameterValue)
+	     	        /(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue)  ;
+                    }
+          /*      hunt_par=fabs(hunt_par);  */
+	        dhunt_par = hunt_par-hunt_par_old;
  		}
 
 	/*
 	 * GET ZERO OR FIRST ORDER PREDICTION
 	 */
 
-	dhunt_par = hunt_par-hunt_par_old;
 
 	switch (Continuation) {
 	case HUN_ZEROTH:
@@ -1063,31 +1167,37 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	    v2sum(numProcUnknowns, &x[0], 1.0, &x_old[0], dhunt_par, &x_sens[0]);
             break;
 	}
-	
+
 	/* MMH: Needed to put this in, o/w it may find that the
          * solution and residual HAPPEN to satisfy the convergence
          * criterion for the next newton solve...
          */
         find_and_set_Dirichlet(x, xdot, exo, dpi);
-	
+
         exchange_dof(cx, dpi, x);
 
 	if (nAC > 0)
           {
 	    dcopy1(nAC, x_AC_old, x_AC);
-	    for(iAC=0 ; iAC<nAC ; iAC++)	
+	    for(iAC=0 ; iAC<nAC ; iAC++)
 	      { update_parameterAC(iAC, x, xdot, x_AC, cx, exo, dpi); }
 	  }
 
-  		if(hunt[0].EndParameterValue == hunt[0].BegParameterValue)
+                iHC = MAX(0,log_ID);
+  		if(hunt[iHC].EndParameterValue == hunt[iHC].BegParameterValue)
  			{	hunt_par = 1.0;	}
   		else
  			{
-	  		hunt_par = (path1[0]-hunt[0].BegParameterValue)
-	      			/(hunt[0].EndParameterValue - hunt[0].BegParameterValue)  ;
-                        hunt_par=fabs(hunt_par);
- 			}
-
+                         if(hunt[iHC].ramp == 2)
+                             {
+	                      hunt_par = (log10(path1[iHC])-log10(hunt[iHC].BegParameterValue))
+	                        /(log10(hunt[iHC].EndParameterValue) - log10(hunt[iHC].BegParameterValue));
+                             }  else   {
+	  		      hunt_par = (path1[iHC]-hunt[iHC].BegParameterValue)
+	      			/(hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue)  ;
+                              hunt_par=fabs(hunt_par);
+ 			     }
+                        }
  	}
  	else if (inewton == -1)
  	{
@@ -1106,33 +1216,43 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
  		damp_factor1 *= 0.5;
  	DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
  		}
- 
+
  	    vcopy(numProcUnknowns, &x[0], 1.0, &x_old[0]);
- 	
+
  	/* MMH: Needed to put this in, o/w it may find that the
           * solution and residual HAPPEN to satisfy the convergence
           * criterion for the next newton solve...
           */
          find_and_set_Dirichlet(x, xdot, exo, dpi);
- 	
+
          exchange_dof(cx, dpi, x);
- 
- 
+
+
  	if (nAC > 0)
           {
  	    dcopy1(nAC, x_AC_old, x_AC);
- 	    for(iAC=0 ; iAC<nAC ; iAC++)	
+ 	    for(iAC=0 ; iAC<nAC ; iAC++)
  	      { update_parameterAC(iAC, x, xdot, x_AC, cx, exo, dpi); }
  	  }
- 
+
  	}
- 	else 
+ 	else
  	{
  	DPRINTF(stderr,"\nHmm... could not converge on first step\n Let's try some more iterations\n");
  	      if((damp_factor1 <= 1. && damp_factor1 >= 0.) &&
  	         (damp_factor2 <= 1. && damp_factor2 >= 0.) &&
         		 (damp_factor3 <= 1. && damp_factor3 >= 0.))
  		{
+                if(hunt[0].BCID == -1)
+                   {
+	            if (Write_Intermediate_Solutions == 0) {
+	                 write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old,
+			        xdot, xdot_old, tev, tev_post, gv,  rd, gindex,
+			        p_gsize, gvec, gvec_elem, &nprint, delta_s[0],
+ 			        theta, custom_tol1, NULL, exo, dpi);
+	                 nprint++;
+ 	                 }
+ 	         }
  		custom_tol1 *= 100.;
  		custom_tol2 *= 100.;
  		custom_tol3 *= 100.;
@@ -1140,12 +1260,23 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
  		}
  		else
  		{
+                if(hunt[0].BCID == -1)
+                   {
+	            if (Write_Intermediate_Solutions == 0) {
+ 	DPRINTF(stderr,"  writing solution %g  \n",damp_factor1);
+	                 write_solution(ExoFileOut, resid_vector, x, x_sens_p, x_old,
+			        xdot, xdot_old, tev, tev_post, gv,  rd, gindex,
+			        p_gsize, gvec, gvec_elem, &nprint, delta_s[0],
+ 			        theta, damp_factor1, NULL, exo, dpi);
+	                 nprint++;
+ 	                 }
+ 	         }
  		damp_factor1 *= 2.0;
 		damp_factor1 = MIN(damp_factor1,1.0);
  	DPRINTF(stderr,"  damping factor %g  \n",damp_factor1);
  		}
- 	}
- 
+ 	  }
+
 
       }  /* end of !converged */
 
@@ -1158,7 +1289,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     custom_tol1 = toler_org[0];
     custom_tol2 = toler_org[1];
     custom_tol3 = toler_org[2];
-    damp_factor1 = damp_org;
+    damp_factor1 = 1.0;
     DPRINTF(stderr,
 	    "\n\tStep accepted, theta (proportion complete) = %10.6e\n",
 	    hunt_par);
@@ -1170,7 +1301,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	  break;
       case 2:		/* MT */
 	  DPRINTF(stderr, "\tStep accepted, MTID=%3d MPID=%5d",
-		  hunt[iHC].MTID, hunt[iHC].MPID);
+		  hunt[iHC].MTID+1, hunt[iHC].MPID);
 	  break;
       case 3:		/* AC */
 	  DPRINTF(stderr, "\tStep accepted, ACID=%3d DFID=%5d",
@@ -1180,31 +1311,27 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       DPRINTF(stderr, " Parameter= % 10.6e\n", path1[iHC]);
     }
 
-    /* 
-     * check path step error, if too large do not enlarge path step 
+    /*
+     * check path step error, if too large do not enlarge path step
      */
 
-    for (iHC=0;iHC<nHC;iHC++) {
-
-      if ((ni == 1) && (n != 0) && (!const_delta_s[iHC])) 
+    iHC = MAX(0,log_ID);
+    if ((ni == 1) && (n != 0) && (!const_delta_s[iHC]))
       {
-	delta_s_new[iHC] = path_step_control(num_total_nodes, 
-					     delta_s[iHC], delta_s_old[iHC], 
-					     x, 
-					     eps, 
-					     &success_ds, 
+       dhunt_par_new = path_step_control(num_total_nodes,
+					     dhunt_par, dhunt_par_old,
+					     x,
+					     eps,
+					     &success_ds,
 					     cont->use_var_norm, inewton);
-	if (delta_s_new[iHC] > hDelta_s_max[iHC]) {delta_s_new[iHC] = hDelta_s_max[iHC];}
-      }
-      else 
-      {
+       if (dhunt_par_new > dhunt_par_max) {dhunt_par_new = dhunt_par_max;}
+      } else {
 	success_ds = 1;
-	delta_s_new[iHC] = delta_s[iHC];
+	dhunt_par_new = dhunt_par;
       }
-    }
-	  
-    /* 
-     * determine whether to print out the data or not 
+
+    /*
+     * determine whether to print out the data or not
      */
 
     i_print = 0;
@@ -1212,29 +1339,43 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       i_print = 1;
       step_print += cont->print_freq; }
 
-    if (alqALC == -1) 
+    if (alqALC == -1)
     { i_print = 1; }
-	  
+
     if (i_print) {
       error = write_ascii_soln(x, resid_vector, numProcUnknowns,
  			       x_AC, nAC, path1[0], file);
       if (error) {
 	DPRINTF(stderr, "%s:  error writing ASCII soln file\n", yo);
-      }	  
+      }
       if ( Write_Intermediate_Solutions == 0 ) {
-	write_solution(ExoFileOut, resid_vector, x, x_sens_p, 
-		       x_old, xdot, xdot_old, tev, tev_post, NULL, 
+        exo_time = aldALC[0]*path1[0];
+	write_solution(ExoFileOut, resid_vector, x, x_sens_p,
+		       x_old, xdot, xdot_old, tev, tev_post,  gv,
 		       rd, gindex, p_gsize, gvec, gvec_elem, &nprint,
- 		       delta_s[0], theta, path1[0], NULL, exo, dpi);
+ 		       delta_s[0], theta, exo_time, NULL, exo, dpi);
 	nprint++;
       }
     }
-	  
+
+      if (step_fix != 0 && nt == step_fix) {
+#ifdef PARALLEL
+        /* Barrier because fix needs both files to be finished printing
+           and fix always occurs on the same timestep as printing */
+        MPI_Barrier(MPI_COMM_WORLD);
+#endif
+      	if (ProcID == 0 && Brk_Flag == 1) {
+          fix_output();
+        }
+	/* Fix step is relative to print step */
+        step_fix += cont->fix_freq*cont->print_freq;
+      }
+
     /*
      * backup old solutions
      * can use previous solutions for prediction one day
      */
-	  
+
     dcopy1(numProcUnknowns,x_older,x_oldest);
     dcopy1(numProcUnknowns,x_old,x_older);
     dcopy1(numProcUnknowns,x,x_old);
@@ -1243,13 +1384,9 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     dcopy1(nHC,delta_s_old  ,delta_s_older );
     dcopy1(nHC,delta_s      ,delta_s_old   );
     dcopy1(nHC,delta_s_new  ,delta_s       );
-/*
-    delta_s_oldest = delta_s_older;
-    delta_s_older = delta_s_old;
-    delta_s_old = delta_s;
-    delta_s = delta_s_new;
-*/
-    hunt_par_old=hunt_par;
+    dhunt_par_old = dhunt_par;
+    dhunt_par = dhunt_par_new;
+    hunt_par_old = hunt_par;
     if ( nAC > 0) {
       dcopy1(nAC, x_AC, x_AC_old);
     }
@@ -1258,40 +1395,40 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
      * INCREMENT/DECREMENT PARAMETER
      */
 
-
-    for (iHC=0;iHC<nHC;iHC++) {
-
-      path[iHC]  = path1[iHC];
-	  
-      switch (aldALC[iHC]) {
-      case -1: 
-	  path1[iHC] = path[iHC] - delta_s[iHC];
-	  break;
-      case +1: 
-	  path1[iHC] = path[iHC] + delta_s[iHC];
-	  break;
-      }
-	  
+     hunt_par += dhunt_par;
+     if(hunt_par > 1.0)
+          {
+          dhunt_par = 1.0 - (hunt_par - dhunt_par);
+          hunt_par = 1.0;
+          }
+     for (iHC=0;iHC<nHC;iHC++) {
+           if(hunt[iHC].ramp == 2)
+             {
+              path1[iHC] = hunt[iHC].BegParameterValue*
+                   pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,hunt_par);
+              path[iHC] = hunt[iHC].BegParameterValue*
+              pow(hunt[iHC].EndParameterValue/hunt[iHC].BegParameterValue,hunt_par-dhunt_par);
+             }
+           else
+             {
+           path1[iHC] = hunt[iHC].BegParameterValue + hunt_par*
+                (hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
+           path[iHC] = hunt[iHC].BegParameterValue + (hunt_par-dhunt_par)*
+                (hunt[iHC].EndParameterValue - hunt[iHC].BegParameterValue);
+             }
+          }
       /*
        * ADJUST NATURAL PARAMETER
        */
-	
-      update_parameterHC(iHC, path1[iHC], x, xdot, x_AC, delta_s[iHC], cx, exo, dpi); 
+
+    for (iHC=0;iHC<nHC;iHC++) {
+      update_parameterHC(iHC, path1[iHC], x, xdot, x_AC, delta_s[iHC], cx, exo, dpi);
     }  /*  end of iHC loop */
 
     /*
      * GET FIRST ORDER PREDICTION
      */
 
-	  if(hunt[0].EndParameterValue == hunt[0].BegParameterValue)
- 		{	hunt_par = 1.0;	}
-  		else
- 		{
-	  	hunt_par = (path1[0]-hunt[0].BegParameterValue)
-	      		/(hunt[0].EndParameterValue - hunt[0].BegParameterValue)  ;
-                hunt_par=fabs(hunt_par);
- 		}
-    dhunt_par = hunt_par-hunt_par_old;
     switch (Continuation) {
     case HUN_ZEROTH:
 	break;
@@ -1302,9 +1439,9 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
         if (!good_mesh) goto free_and_clear;
 
     /*
-     * 
+     *
      * CHECK END CONTINUATION
-     *  
+     *
      */
 
     if (alqALC == -1)
@@ -1316,7 +1453,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
       DPRINTF(stderr,"\n\n\t I will continue no more!\n\t No more continuation for you!\n");
       goto free_and_clear;
     }
-	
+
   } /* n */
 
       if(n == MaxPathSteps &&
@@ -1324,7 +1461,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 	{
 	  DPRINTF(stderr,"\n\tFailed to reach end of hunt in maximum number of successful steps (%d).\n\tSorry.\n",
 		  MaxPathSteps);
- 	  exit(0);
+          goto free_and_clear;
+ 	  /*exit(0);  */
 	}
 #ifdef PARALLEL
       check_parallel_error("Hunting error");
@@ -1334,7 +1472,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
    * DONE CONTINUATION
    */
 
- free_and_clear: 
+ free_and_clear:
 
   /*
    * Transform the node point coordinates according to the
@@ -1354,8 +1492,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     EH(err, "anneal_mesh() bad return.");
   }
 
-  /* 
-   * Free a bunch of variables that aren't needed anymore 
+  /*
+   * Free a bunch of variables that aren't needed anymore
    */
   safer_free((void **) &ROT_Types);
   safer_free((void **) &node_to_fill);
@@ -1371,14 +1509,14 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     safer_free( (void **) &x_AC_dot);
   }
 
-  safer_free( (void **) &x_old); 
-  safer_free( (void **) &x_older); 
-  safer_free( (void **) &x_oldest); 
-  safer_free( (void **) &xdot); 
-  safer_free( (void **) &xdot_old); 
-  safer_free( (void **) &x_update); 
+  safer_free( (void **) &x_old);
+  safer_free( (void **) &x_older);
+  safer_free( (void **) &x_oldest);
+  safer_free( (void **) &xdot);
+  safer_free( (void **) &xdot_old);
+  safer_free( (void **) &x_update);
 
-  safer_free( (void **) &x_sens); 
+  safer_free( (void **) &x_sens);
 
   if((nn_post_data_sens+nn_post_fluxes_sens) > 0)
           Dmatrix_death(x_sens_p,num_pvector,numProcUnknowns);
@@ -1395,7 +1533,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
 
   for (i=0;i<NUM_ALSS;i++) {
     safer_free( (void**) &(ams[i]));
-  }					
+  }
 
   safer_free( (void **) &gvec);
 
@@ -1425,7 +1563,7 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     safer_free ((void **) &(gvec_elem [eb_indx]));
   }
 
-  safer_free( (void **) &gvec_elem); 
+  safer_free( (void **) &gvec_elem);
 
   safer_free( (void **) &rd);
   safer_free( (void **) &Local_Offset);
@@ -1435,6 +1573,8 @@ hunt_problem(Comm_Ex *cx,	/* array of communications structures */
     {
        fclose(file);
     }
+
+  free(gv);
 
   return;
 

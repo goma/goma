@@ -141,6 +141,7 @@ ddd_alloc(void)
 void 
 ddd_free(DDD p)
 {
+  MPI_Type_free(&p->new_type);
   free(p->block_count);
   free(p->data_type);
   free(p->address);
@@ -291,7 +292,7 @@ ddd_add_member(DDD p,
   /*
    *  This is just the identity operator on most systems
    */
-  MPI_Address(address, &p->address[i]);
+  MPI_Get_address(address, &p->address[i]);
 #ifdef DEBUG
    /* the check below does not work on dec or tflop */
   if ((int) address != p->address[i]) {
@@ -320,10 +321,10 @@ void
 ddd_set_commit(DDD p)
 {
 #ifdef PARALLEL
-  MPI_Type_struct(p->num_members, p->block_count, p->address,
+  MPI_Type_create_struct(p->num_members, p->block_count, p->address,
 		  p->data_type, &p->new_type);
   MPI_Type_commit(&p->new_type);
-  MPI_Type_extent(p->new_type, &p->extent);
+  MPI_Type_get_extent(p->new_type, &p->lb, &p->extent);
   MPI_Type_size(p->new_type, &p->size);
   /*  rtn = MPI_Type_count(p->new_type, &p->count); */
 #endif
@@ -422,7 +423,7 @@ check_parallel_error_FL(char *errstring, char *file_name, int lineno)
                  MPI_INT, MPI_LOR, MPI_COMM_WORLD);
   if (parallel_err_global) { 
     DPRINTF(stderr, "PARALLEL ERROR: ");
-    if (!errstring) DPRINTF(stderr, "%s", errstring);
+    if (errstring) DPRINTF(stderr, "%s", errstring);
     DPRINTF(stderr,
 	    " check previous output for cause of error: %s line %d",
 	    file_name, lineno);

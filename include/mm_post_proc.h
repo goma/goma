@@ -75,6 +75,12 @@ PROTO((double [],               /* x - soln vector                           */
        Dpi * const,             /* dpi                                       */
        struct Results_Description *));
 
+
+EXTERN void post_process_global(double *x,	 /* Solution vector for the current processor */
+				Exo_DB *exo,
+				Dpi *dpi,
+				double time);
+
 EXTERN void rd_post_process_specs /* mm_post_proc.c                          */
 PROTO((FILE *,                  /* ifp - input file pointer (strm to input)  */
        char *));                /* input - latest buffer of read values      */

@@ -26,9 +26,6 @@
 #define EXTERN extern
 #endif
 
-#ifdef USE_CGM 
-#include "gm_cgm_typedefs.h"
-#endif
 
 EXTERN int apply_point_colloc_bc
 PROTO((double [],		/* resid_vector */
@@ -71,13 +68,28 @@ PROTO((const int ,		/* ielem_dim */
        double [],		/* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
        dbl *));		/* aa - function parameters from data card  */
 
-#ifdef USE_CGM
-EXTERN void sm_fplane
+EXTERN void f_fillet
 PROTO((const int ,		/* ielem_dim */
        double *,		/* func */
        double [],		/* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
-       PlaneHandle *));        /* pHdl - Handle to a VGI Plane object  */
-#endif
+       const double *,		/* p - function parameters from data card  */
+       const int ));		/* number of parameters from bc card  */
+
+EXTERN void f_double_rad
+PROTO((const int ,		/* ielem_dim */
+       double *,		/* func */
+       double [],		/* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
+       const double *,		/* p - function parameters from data card  */
+       const int ));		/* number of parameters from bc card  */
+
+EXTERN void f_roll_fluid
+PROTO((const int ,		/* ielem_dim */
+       double *,		/* func */
+       double [],		/* d_func - dimensioned [MAX_VARIABLE_TYPES+MAX_CONC] */
+       const double *,		/* p - function parameters from data card  */
+       const int ,		/* number of parameters from bc card  */
+       double * ));		/* number of parameters from bc card  */
+
 
 EXTERN void fvelocity_profile
 PROTO((const int ,		/* var_flag */
@@ -87,6 +99,27 @@ PROTO((const int ,		/* var_flag */
        double [],		/* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
        double [],		/* p - parameters passed in thru input deck */
        const double ));		/* time - time at which BC's are evaluated  */
+
+EXTERN void fvelocity_parabola
+PROTO((const int ,		/* var_flag */
+       const int ,		/* ielem_dim */
+       const int ,		/* velo_condition */
+       double *,		/* func */
+       double [],		/* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
+       const double [],		/* p - parameters passed in thru input deck */
+       const double ,		/* time - time at which BC's are evaluated  */
+       const int ));		/* number of parameters */
+
+EXTERN void f_vestress_parabola
+PROTO((const int ,		/* var_flag */
+       const int ,		/* ielem_dim */
+       const int ,		/* velo_condition */
+       const int ,		/* mn */
+       double *,		/* func */
+       double [],		/* d_func - [MAX_VARIABLE_TYPES + MAX_CONC] */
+       const double [],		/* p - parameters passed in thru input deck */
+       const double ,		/* time - time at which BC's are evaluated  */
+       const int ));		/* number of parameters */
 
 EXTERN void fspline
 PROTO((const int ,		/* ielem_dim */
@@ -126,11 +159,14 @@ PROTO((double *,		/* x_var - variable value */
        const double ,		/* tt - parameter to vary time integration 
 				 * from explicit (tt = 1) to 
 				 * implicit (tt = 0) */
-       const double ));		/* dt - current time step size */
+       const double ,		/* dt - current time step size */
+       double [] ));		/* vector sensitivity vector - SPEED */
 
 extern int bc_eqn_index(int, int, int, int, int, int *, int *,
 			VARIABLE_DESCRIPTION_STRUCT **);
 
+extern int bc_eqn_index_stress(int, int, int, int, int, int, int *, int *,
+			VARIABLE_DESCRIPTION_STRUCT **);
 EXTERN int evaluate_time_func
 PROTO((const double ,		/* time                                      */
        double *,		/* f_time - computed time function           */

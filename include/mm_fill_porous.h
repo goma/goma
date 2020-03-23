@@ -43,6 +43,7 @@ extern double
 get_supg_terms_porous(double [DIM], double [DIM][DIM]);
 
 extern void load_nodal_porous_properties(double, double);
+extern void load_nodal_shell_porous_properties(double, double, int);
 
 EXTERN int get_porous_part_sat_terms
 PROTO((struct Porous_Media_Terms *, /* pm                            */
@@ -405,5 +406,8 @@ PROTO(( double *,
 	double ,
 	double ,
 	int      ));
+
+double por_mass_source_model
+PROTO(( double d_MassSource[MAX_VARIABLE_TYPES + MAX_CONC][MDE] ));
 
 #endif /* _MM_FILL_POROUS_H */

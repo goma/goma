@@ -107,6 +107,7 @@ static char rcsid[] =
 #ifdef KOMPLEX
 #include "azk_komplex.h"
 #endif
+#include "sl_amesos_interface.h"
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -1111,6 +1112,7 @@ int do_loca (Comm_Ex *cx,  /* array of communications structures */
       con.private_info.step_num = 0;
       err = nonlinear_solver_conwrap(x, (void *)&con, 0, 0.0, 0.0);
       solution_output_conwrap(1, x, 0.0, NULL, 0.0, NULL, 0.0, 0, err, &con);
+  printf("LOCA LSA ONLY HAS FINISHED: \n");
     }
 
   /* Otherwise, now call continuation library and return */
@@ -1347,7 +1349,7 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
   int nits=0; /* num_modnewt_its=0;  */
   int i, iAC;
   int iCC = 0, iTC = 0, iUC = 0, nCC = 0;
-  double theta;
+  double theta=0.0;
   double evol_local=0.0;
 #ifdef PARALLEL
   double evol_global=0.0;
@@ -1396,10 +1398,10 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
         nCC = cpcc[0].nCC;
         DPRINTF (stderr, "\n\tStep number: %4d of %4d (max)",
 			      step_num+1, cont->MaxPathSteps);
-        if (nCC > 1 || nUC > 0)
-          {
             theta = (lambda - cont->BegParameterValue)
                   / (cont->EndParameterValue - cont->BegParameterValue);
+        if (nCC > 1 || nUC > 0)
+          {
             DPRINTF (stderr, "\n\tAttempting solution at: theta = %g", theta);
           }
         else
@@ -1566,6 +1568,10 @@ int nonlinear_solver_conwrap(double *x, void *con_ptr, int step_num,
          DPRINTF(stderr, "%s: write_solution end call WIS\n", yo);
 #endif
        }
+
+    DPRINTF(stderr,
+            "\n\tStep accepted, theta (proportion complete) = %10.6e\n",
+            theta);
 
      /* Save continuation parameter values */
      if (passdown.method != LOCA_LSA_ONLY)
@@ -1895,6 +1901,18 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
 
           break;
           
+        case AMESOS:
+
+             if( strcmp( Matrix_Format,"msr" ) == 0 ) {
+                 amesos_solve_msr( Amesos_Package, ams, x, xr, 1 );
+             } else if ( strcmp( Matrix_Format,"epetra" ) == 0 ) {
+                 amesos_solve_epetra(Amesos_Package, ams, x, xr);
+             } else {
+                 EH(-1," Sorry, only MSR and Epetra matrix formats are currently supported with the Amesos solver suite\n");
+             }
+        strcpy(stringer, " 1 ");
+        break;
+
         case MA28:
           /*
            * sl_ma28 keeps interntal static variables to determine whether
@@ -1998,7 +2016,7 @@ int linear_solver_conwrap(double *x, int jac_flag, double *tmp)
           }
         else
           {
-            printf("\tResolve time = %7.1e\n", (s_end - s_start) );
+            printf(" Resolve_time:%7.1e ", (s_end - s_start) );
           }
       }
       
@@ -2746,40 +2764,50 @@ void shifted_linear_solver_conwrap(double *x, double *y,
 /* Proceed with the chosen linear solver */
   switch (Linear_Solver)
     {
-      case UMFPACK2:
-      case UMFPACK2F:
-        if (strcmp(Matrix_Format, "msr"))
-            EH(-1,"ERROR: umfpack solver needs msr matrix format");
+    case UMFPACK2:
+    case UMFPACK2F:
+      if (strcmp(Matrix_Format, "msr"))
+	EH(-1,"ERROR: umfpack solver needs msr matrix format");
 
       Factor_Flag = ( (jac_flag == NEW_JACOBIAN) ? 0 : 3);
       if (Linear_Solver == UMFPACK2F) Factor_Flag = 0;
       /*  */
       matr_form = 1;
       stab_umf_id = SL_UMF(stab_umf_id,
-             &first_linear_solver_call, &Factor_Flag, &matr_form, 
-             &NumUnknowns, &NZeros, &ija[0], &ija[0], &a[0],
-             &x[0], &y[0]);
+			   &first_linear_solver_call, &Factor_Flag, &matr_form, 
+			   &NumUnknowns, &NZeros, &ija[0], &ija[0], &a[0],
+			   &x[0], &y[0]);
       /*  */
       first_linear_solver_call = FALSE;
       strcpy(stringer, " 1 ");
       break;
 
-      case SPARSE13a:
-        if (strcmp(Matrix_Format, "msr"))
-            EH(-1,"ERROR: lu solver needs msr matrix format");
+    case SPARSE13a:
+      if (strcmp(Matrix_Format, "msr"))
+	EH(-1,"ERROR: lu solver needs msr matrix format");
 
-        dcopy1(NumUnknowns, x, y);
-        lu(NumUnknowns, NumExtUnknowns, NZeros, a, ija, y, 2);
-        first_linear_solver_call = FALSE;
+      dcopy1(NumUnknowns, x, y);
+      lu(NumUnknowns, NumExtUnknowns, NZeros, a, ija, y, 2);
+      first_linear_solver_call = FALSE;
       /* 
        * Note that sl_lu has static variables to keep track of
        * first call or not.
        */
 
-        strcpy(stringer, " 1 ");
-        break;
+      strcpy(stringer, " 1 ");
+      break;
+    case AMESOS:
+      if( strcmp( Matrix_Format,"msr" ) == 0 ) {
+	amesos_solve_msr( Amesos_Package, ams, y, x, 1 );
+      } else {
+	EH(-1," Sorry, only MSR  matrix format supported for loca eigenvalue");
+      }
+      first_linear_solver_call = FALSE;
+      strcpy(stringer, " 1 ");
+      break;
+	
 
-      case AZTEC:
+    case AZTEC:
 
       /* Set option of preconditioner reuse */
             
@@ -2791,12 +2819,12 @@ void shifted_linear_solver_conwrap(double *x, double *y,
         {
           if ( strcmp(Matrix_Factorization_Reuse, "calc") == 0 )
             {
-      /*
-       * Gonna start from scratch even though I've cooked a
-       * preconditioner in the kitchen all day? Well, then
-       * you won't need the leftover pieces from all my
-       * hard preparation last time around.
-       */
+	      /*
+	       * Gonna start from scratch even though I've cooked a
+	       * preconditioner in the kitchen all day? Well, then
+	       * you won't need the leftover pieces from all my
+	       * hard preparation last time around.
+	       */
  
               AZ_free_memory(ams->data_org[AZ_name]); 
               
@@ -2824,18 +2852,18 @@ void shifted_linear_solver_conwrap(double *x, double *y,
       while ( ( ! matrix_solved                            ) && 
               ( linear_solver_blk < num_linear_solve_blks  ) )
         {
-      /* 
-       * Someday the user may want to do fancy heuristics based
-       * on all kinds of cost functions, artificial intelligence
-       * neural networks, etc.
-       *
-       * For the linear system "Ax=b", we have
-       *    A -- indx, bindx(ija), rpntr, cpntr, bpntr, val(a)
-       *    x -- delta_x, newton correction vector
-       *    b -- resid_vector, newton residual equation vector
-       */
+	  /* 
+	   * Someday the user may want to do fancy heuristics based
+	   * on all kinds of cost functions, artificial intelligence
+	   * neural networks, etc.
+	   *
+	   * For the linear system "Ax=b", we have
+	   *    A -- indx, bindx(ija), rpntr, cpntr, bpntr, val(a)
+	   *    x -- delta_x, newton correction vector
+	   *    b -- resid_vector, newton residual equation vector
+	   */
 
-      /* Solve the matrix */
+	  /* Solve the matrix */
           AZ_solve(y, x, ams->options, ams->params, 
                    ams->indx, ams->bindx, ams->rpntr, ams->cpntr, 
                    ams->bpntr, ams->val, ams->data_org, ams->status, 
@@ -2851,43 +2879,43 @@ void shifted_linear_solver_conwrap(double *x, double *y,
           strcpy(stringer, "   ");
           switch ( (int)(ams->status[AZ_why]) )
             {
-              case AZ_normal:
-                lits = ams->status[AZ_its];
-                if ( lits < 1000 )
-                  {
-                    sprintf(stringer, "%3d", (int)lits);
-                  }
-                else if ( lits < 10000 )
-                  {
-                    sprintf(stringer, "%2dh", (int)(lits/1e2));
-                  }
-                else if ( lits < 100000 )
-                  {
-                    sprintf(stringer, "%2dk", (int)(lits/1e3));
-                  }
-                else
-                  {
-                    sprintf(stringer, "%3.0e", lits);
-                  }
-                break;
-              case AZ_param:
-                strcpy(stringer, "bad");
-                break;
-              case AZ_breakdown:
-                strcpy(stringer, "brk");
-                break;
-              case AZ_loss:
-                strcpy(stringer, "los");
-                break;
-              case AZ_maxits:
-                strcpy(stringer, "max");
-                break;
-              case AZ_ill_cond:
-                strcpy(stringer, "ill");
-                break;
-              default:
-                strcpy(stringer, "???");
-                break;
+	    case AZ_normal:
+	      lits = ams->status[AZ_its];
+	      if ( lits < 1000 )
+		{
+		  sprintf(stringer, "%3d", (int)lits);
+		}
+	      else if ( lits < 10000 )
+		{
+		  sprintf(stringer, "%2dh", (int)(lits/1e2));
+		}
+	      else if ( lits < 100000 )
+		{
+		  sprintf(stringer, "%2dk", (int)(lits/1e3));
+		}
+	      else
+		{
+		  sprintf(stringer, "%3.0e", lits);
+		}
+	      break;
+	    case AZ_param:
+	      strcpy(stringer, "bad");
+	      break;
+	    case AZ_breakdown:
+	      strcpy(stringer, "brk");
+	      break;
+	    case AZ_loss:
+	      strcpy(stringer, "los");
+	      break;
+	    case AZ_maxits:
+	      strcpy(stringer, "max");
+	      break;
+	    case AZ_ill_cond:
+	      strcpy(stringer, "ill");
+	      break;
+	    default:
+	      strcpy(stringer, "???");
+	      break;
             }
               
           matrix_solved = ( ams->status[AZ_why] == AZ_normal) ;
@@ -2896,27 +2924,31 @@ void shifted_linear_solver_conwrap(double *x, double *y,
               
         } /* End of while loop */
 
-        passdown.num_eigen_its += linear_solver_itns;
-        break;
+      passdown.num_eigen_its += linear_solver_itns;
+      break;
 
-      case MA28:
+    case MA28:
       /*
        * sl_ma28 keeps interntal static variables to determine whether
        * it is the first call or not.
        */
 #ifdef HARWELL    
-        err = cmsr_ma28 (NumUnknowns, NZeros, a, ija, y, x);
+      err = cmsr_ma28 (NumUnknowns, NZeros, a, ija, y, x);
 #endif
 #ifndef HARWELL
-        EH(-1, "That linear solver package is not implemented.");
+      EH(-1, "That linear solver package is not implemented.");
 #endif
-        strcpy(stringer, " 1 ");
-        break;
+      strcpy(stringer, " 1 ");
+      break;
 
-      case FRONT:
-       /* Frontal solver cannot be used for eigensolves! */
-        EH(-1, "Frontal solver cannot be used for eigensolves!");
-        break;
+    case FRONT:
+      /* Frontal solver cannot be used for eigensolves! */
+      EH(-1, "Frontal solver cannot be used for eigensolves!");
+      break;
+
+    default:
+      EH(-1, "That linear solver package is not implemented for eigensolves");
+      break;
     }
 
 /* Restore original settings for the next step */
@@ -3118,7 +3150,7 @@ void calc_scale_vec_conwrap(double *x, double *scale_vec, int numUnks)
 {
   static int sv_init = TRUE;	/* Initialize arrays on first call */
   int p=9, ip1=8;
-  int i, iunk, idof, index, ivd, index_adj;
+  int i, iunk, idof, index, ivd;
   double *sv_sum=NULL;		/* Running sum of each var type    */
   VARIABLE_DESCRIPTION_STRUCT *vdi;  /* Ptr to current vd struct   */
 
@@ -3162,13 +3194,16 @@ void calc_scale_vec_conwrap(double *x, double *scale_vec, int numUnks)
 	      index = vdi->List_Index;
 
   /* P1: The second and third pressure vars are stored at the back of the array */
-	      if (vdi->Ndof > 1 && idof > 0)
-                {
-	          index_adj = idof - 1;
-	          if (vdi->MatID > 0) index_adj += 2 * vdi->MatID; /* MatID starts @ 0 */
-	          index = Num_Var_Info_Records + index_adj;
-	        }
-	  
+  /* KT 02/19/2016: This logic causes memory error when using P1
+                    Commenting these lines do not appear to affect the performance
+                    of arc length continuation */
+//	      if (vdi->Ndof > 1 && idof > 0)
+//                {
+//	          index_adj = idof - 1;
+//	          if (vdi->MatID > 0) index_adj += 2 * vdi->MatID; /* MatID starts @ 0 */
+//	          index = Num_Var_Info_Records + index_adj;
+//	        }
+
   /* Assign sv_index and increment sv_count */
 	      passdown.sv_index[iunk] = index;
 	      passdown.sv_count[index] += 1.0;
@@ -3646,9 +3681,19 @@ static void print_final(double param, int step_num, int mat_fills,
   printf("\tNumber of steps            = %d\n", step_num+1);
   printf("\tNumber of Matrix fills     = %d\n", mat_fills);
   printf("\tNumber of Residual fills   = %d\n", res_fills);
+  fprintf(stderr,"\n"); 
+  fprintf(stderr,"CONTINUATION ROUTINE HAS FINISHED: \n");
+  fprintf(stderr,"\tEnding Parameter value     = %g\n", param);
+  fprintf(stderr,"\tNumber of steps            = %d\n", step_num+1);
+  fprintf(stderr,"\tNumber of Matrix fills     = %d\n", mat_fills);
+  fprintf(stderr,"\tNumber of Residual fills   = %d\n", res_fills);
   if (Linear_Solver == AZTEC)
-  printf("\tNumber of linear solve its = %d\n", linear_its);
-  printf("\n"); /*print_line("~", 80);*/
+       {
+        printf("\tNumber of linear solve its = %d\n", linear_its);
+        fprintf(stderr,"\tNumber of linear solve its = %d\n", linear_its);
+        }
+  printf("\n"); 
+  DPRINTF(stderr,"\n\n\t I will continue no more!\n\t No more continuation for you!\n");
 
 }
 /*****************************************************************************/

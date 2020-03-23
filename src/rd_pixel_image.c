@@ -377,8 +377,8 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
 
   // Number of variables and names
   nod_var_names[0] = efv->name[N_ext];
-  err = ex_put_var_param(exoin, "n", num_nod_vars);
-  err = ex_put_var_names(exoin, "n", num_nod_vars, nod_var_names);
+  err = ex_put_variable_param(exoin, EX_NODAL, num_nod_vars);
+  err = ex_put_variable_names(exoin, EX_NODAL, num_nod_vars, nod_var_names);
 
   // Set time
   err = ex_put_time(exoin, time_step, &time_value);
@@ -402,7 +402,7 @@ rd_image_to_mesh(int N_ext, Exo_DB *exo)
 	} // End of loop over all of the nodes (i)
     }
  
-   err = ex_put_nodal_var(exoin, time_step, 1, exo->num_nodes, nodal_var_vals);
+  err = ex_put_var(exoin, time_step, EX_NODAL, 1, 1, exo->num_nodes, nodal_var_vals);
 
    /* Now allocate memory for external field variable array for use and populate */
    /* You need to do this even though you have writtenit to a file */

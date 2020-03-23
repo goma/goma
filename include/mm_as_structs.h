@@ -30,6 +30,7 @@
 #ifndef _MM_AS_STRUCTS_H
 #define _MM_AS_STRUCTS_H
 
+#include "std.h"
 #include "el_elm.h"
 #include "mm_mp_const.h"
 #include "rf_bc_const.h"
@@ -489,9 +490,10 @@ struct Element_Variable_Pointers
 
   dbl *H[DIM];                               /* Level Set Curvature */
 
-  dbl *n[DIM][MDE];                          /* level set normal */
+  dbl *n[DIM][MDE];                          /* level set normal OR shell normal */
 
   dbl *sh_K[MDE];                               /* Shell curvature */
+  dbl *sh_K2[MDE];                              /* Shell second curvature */
   dbl *sh_tens[MDE];                         /* Shell tension */
   dbl *sh_x[MDE];                             /* Shell y coordinate */
   dbl *sh_y[MDE];                             /* Shell x coordinate */
@@ -529,6 +531,13 @@ struct Element_Variable_Pointers
   dbl *max_strain[MDE];                       /* Maximum Von Mises strain */
   dbl *cur_strain[MDE];                       /* Von Mises strain */
   dbl *poynt[DIM][MDE];				/* Poynting Vector for light intensity */
+  dbl *tfmp_pres[MDE];                    /* thin-film multi-phase lubrication pressure */
+  dbl *tfmp_sat[MDE];                  /* thin-film multi-phase saturation */
+  dbl *restime[MDE];                  /* residence time function field */
+  dbl *em_er[DIM][MDE];				/* EMwave Electric Field real part */
+  dbl *em_ei[DIM][MDE];				/* EMwave Electric Field imag part */
+  dbl *em_hr[DIM][MDE];				/* EMwave Magnetic Field real part */
+  dbl *em_hi[DIM][MDE];				/* EMwave Magnetic Field imag part */
 };
 
 /*___________________________________________________________________________*/
@@ -592,9 +601,10 @@ struct Element_Stiffness_Pointers
 
   dbl ***E_field;                    /* Electric field */
 
-  dbl ***n;                      /* n[DIM][MDE],  level set normal */
+  dbl ***n;                      /* n[DIM][MDE],  level set normal OR shell normal */
  
   dbl **sh_K;                    /* sh_K[MDE],   Shell curvature */
+  dbl **sh_K2;                   /* sh_K2[MDE],  Shell second curvature */
   dbl **sh_tens;                 /* sh_tens[MDE], Shell tensions */
   dbl **sh_x;                    /* sh_x[MDE],   Shell x coordinate */
   dbl **sh_y;                    /* sh_y[MDE], Shell y coordinate */
@@ -632,7 +642,13 @@ struct Element_Stiffness_Pointers
   dbl **max_strain;              /* max_strain[MDE], maximum Von Mises strain */
   dbl **cur_strain;              /* cur_strain[MDE], Von Mises strain */
   dbl ***poynt;		      	 /* *v[DIM][MDE], velocity */
-
+  dbl **tfmp_pres;                    /*  thin-film multi-phase lubrication pressure */
+  dbl **tfmp_sat;                  /* thin-film multi-phase saturation */
+  dbl **restime;                  /* Residence Time Function Field */
+  dbl ***em_er;		      	 /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_ei;		      	 /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_hr;		      	 /* *em_xx[DIM][MDE], em_wave*/
+  dbl ***em_hi;		      	 /* *em_xx[DIM][MDE], em_wave*/
 
   /*
    * These are for debugging purposes...
@@ -941,6 +957,8 @@ struct External_Field_Variables
   dbl   *f_data;                /*Array holding value of each pixel */
   dbl   *ext_fld_ndl_val[MAX_EXTERNAL_FIELD]; 
                                /* Array holding actual field nodal values */
+  dbl   *ext_fld_ndl_val_old[MAX_EXTERNAL_FIELD]; 
+  dbl   *ext_fld_ndl_val_older[MAX_EXTERNAL_FIELD]; 
   int   TALE;                  /* boolean for whether TALE is active or not */
   dbl   *init_displacement_ndl_val[2*DIM];  
                                /* Array holding initial displacments for */ 
@@ -1071,6 +1089,7 @@ struct Continuation_Information
   dbl eps;
   int use_var_norm[MAX_VARIABLE_TYPES];
   int print_freq;
+  int fix_freq;
   double print_delt;
   double print_delt2_path;
   double print_delt2;
@@ -1518,7 +1537,7 @@ struct Field_Variables
   dbl qs;                       /* Surface charge density (shell element) */
   dbl SH;                       /* Shear rate from second invariant of rate-of-strain */
   dbl H;                        /* curvature of level set function */
-  dbl n[DIM];                   /* LS function normal */
+  dbl n[DIM];                   /* LS function normal OR shell normal */
   dbl Enorm;			/* potential field norm. */
   dbl p_liq;		        /* liquid-phase pressure, porous media variables(s). */
   dbl p_gas;		        /* gas-phase pressure, porous media variables(s). */
@@ -1535,6 +1554,7 @@ struct Field_Variables
   dbl lm[DIM];                  /* Lagrange Multiplier vector variable */
 
   dbl sh_K;                     /* Shell region curvature */
+  dbl sh_K2;                    /* Shell region second curvature */
   dbl sh_tens;                  /* Shell region tension */
   dbl sh_x;                     /* Shell region x coordinate */
   dbl sh_y;                     /* Shell region y coordinate */
@@ -1575,6 +1595,14 @@ struct Field_Variables
   dbl max_strain;              /* Maximum Von Mises strain */
   dbl cur_strain;              /* Von Mises strain */
   dbl poynt[DIM];			/* Poynting Vector */
+  dbl tfmp_pres;                    /* thin-film multi-phase lubrication pressure */
+  dbl tfmp_sat;                  /* thin-film multi-phase saturation */
+  dbl restime;                  /* residence time function field */
+  dbl em_er[DIM];		/* EM Electric Field Vector (real)*/	
+  dbl em_ei[DIM];		/* EM Electric Field Vector (imag)*/	
+  dbl em_hr[DIM];		/* EM Magnetic Field Vector (real)*/	
+  dbl em_hi[DIM];		/* EM Magnetic Field Vector (imag)*/	
+
   /*
    * Grads of scalars...
    */
@@ -1594,6 +1622,7 @@ struct Field_Variables
   dbl grad_nn[DIM];		/* Gradient of bond evolution. */
   dbl grad_ext_v[DIM];          /* Extension velocity */
   dbl grad_sh_K[DIM];           /* Gradient of shell curvature */
+  dbl grad_sh_K2[DIM];          /* Gradient of shell second curvature */
   dbl grad_sh_tens[DIM];        /* Gradient of shell tension */
   dbl grad_pF[MAX_PHASE_FUNC][DIM];       /* Gradient of phase function */
   dbl grad_sh_J[DIM];           /* Gradient of shell surface diffusion flux */
@@ -1610,6 +1639,9 @@ struct Field_Variables
   dbl grad_sh_l_curv_2[DIM];  /* Gradient of shell curvature_2 */
   dbl grad_sh_p_open[DIM];    /* Gradient of open porous shell pressure */
   dbl grad_sh_p_open_2[DIM];  /* Gradient of open porous shell pressure */
+  dbl grad_tfmp_pres[DIM];   /* Gradient of the thin-film multi-phase lubrication pressure */
+  dbl grad_tfmp_sat[DIM];   /* Gradient of the thin-film multi-phase lubrication saturation */
+  dbl grad_restime[DIM];   /* Gradient of the residence time function */
 
   /*
    * Grads of vectors...
@@ -1636,12 +1668,17 @@ struct Field_Variables
 
   dbl grad_E_field[DIM][DIM];   /* Electric field */
 
-  dbl grad_n[DIM][DIM];         /* Normal to level set function */
+  dbl grad_n[DIM][DIM];         /* Normal to level set function OR shell normal */
+  dbl d_n_dxi[DIM][DIM];        /* Derivative of normal w.r.t. isoparametric coordinates */
 
   dbl div_n;                    /* Divergence of LS normal field */
   dbl div_s_n;                   /* Surface divergence of LS normal field */
   dbl surfCurvatureDyadic[DIM][DIM]; /* Surface Curvature dyadic = b = - (I - n n ) grad(n) */
   dbl grad_poynt[DIM][DIM];		/* Gradient of Poynting.  d (P_i) / d (x_j) */
+  dbl grad_em_er[DIM][DIM];		/* Gradient of EM Efield (real) */
+  dbl grad_em_ei[DIM][DIM];		/* Gradient of EM Efield (imag) */
+  dbl grad_em_hr[DIM][DIM];		/* Gradient of EM Hfield (real) */
+  dbl grad_em_hi[DIM][DIM];		/* Gradient of EM Hfield (imag) */
 
   /* these gradients of tensors are complete for Cartesian coordinates,
    * and currently work for axisymmetic coordinates, in context,
@@ -1697,6 +1734,10 @@ struct Field_Variables
   dbl d_grad_ext_v_dmesh[DIM] [DIM][MDE];
   dbl d_grad_E_field_dmesh[DIM][DIM] [DIM][MDE];
   dbl d_grad_poynt_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_em_er_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_em_ei_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_em_hr_dmesh[DIM][DIM] [DIM][MDE];
+  dbl d_grad_em_hi_dmesh[DIM][DIM] [DIM][MDE];
 
   dbl d_grad_v_dmesh[DIM][DIM] [DIM][MDE];
   dbl d_div_v_dmesh[DIM][MDE];
@@ -1705,6 +1746,7 @@ struct Field_Variables
   dbl d_div_n_dmesh[DIM][MDE];
 
   dbl d_grad_sh_K_dmesh[DIM][DIM][MDE];
+  dbl d_grad_sh_K2_dmesh[DIM][DIM][MDE];
   dbl d_grad_sh_tens_dmesh[DIM][DIM][MDE];
   dbl d_grad_sh_J_dmesh[DIM][DIM][MDE];
 
@@ -1770,6 +1812,7 @@ struct Field_Variables
   dbl d_grad_sh_p_open_2_dmesh[DIM] [DIM][MDE];
   dbl d_max_strain_dmesh[DIM][MDE];
   dbl d_cur_strain_dmesh[DIM][MDE];
+  dbl d_grad_restime_dmesh[DIM] [DIM][MDE];
  /*
   * Values at surfaces for integrated boundary conditions 
   */ 
@@ -1825,6 +1868,10 @@ struct Field_Variables
   dbl SM_matrix_inv[DIM*MAX_CONC][DIM*MAX_CONC];  /* inverse of S-M flux-equation coff. matrix */ 
   dbl giant_C_matrix[MAX_CONC][MDE][DIM*MAX_CONC][DIM*MAX_CONC]; /* matrix used to compute
       Jacobians in mm_fill_potential.c -- RSL 3/31/00 */
+
+  dbl d_grad_tfmp_pres_dmesh[DIM][DIM][MDE];
+  dbl d_grad_tfmp_sat_dmesh[DIM][DIM][MDE];
+  
 };
 
 /*
@@ -1847,7 +1894,7 @@ struct Diet_Field_Variables
   dbl qs;                       /* Surface charge density (shell element) */
   dbl Enorm;			/* Norm of potential field. */
   dbl H;                        /* Curvature of Level Set function */
-  dbl n[DIM];                   /* normal vector to level set field */
+  dbl n[DIM];                   /* normal vector to level set field OR shell normal */
   dbl S[MAX_MODES][DIM][DIM];   /* Polymer Stress, for each modes */
   dbl G[DIM][DIM];              /* Velocity Gradient */
   dbl nn;		        /* This is the bond evolution */
@@ -1858,6 +1905,7 @@ struct Diet_Field_Variables
   dbl ext_v;                    /* Extension velocity */
   dbl lm[DIM];
   dbl sh_K;                     /*shell element curvature */
+  dbl sh_K2;                    /*shell element second curvature */
   dbl sh_tens;                  /*shell element tension */
   dbl sh_x;                     /*shell element x coordinate */
   dbl sh_y;                     /*shell element y coordinate */
@@ -1898,13 +1946,20 @@ struct Diet_Field_Variables
   dbl max_strain;              /* Maximum Von Mises strain */
   dbl cur_strain;              /* Von Mises strain */
   dbl poynt[DIM];			/* Poynting Vector */
-
+  dbl tfmp_pres;           /* thin-film multi-phase lubrication pressure */
+  dbl tfmp_sat;         /* thin-film multi-phase saturation */
+  dbl restime;         /* residence time field */
+  dbl em_er[DIM];			/* EM wave Fields */
+  dbl em_ei[DIM];			/* EM wave Fields */
+  dbl em_hr[DIM];			/* EM wave Fields */
+  dbl em_hi[DIM];			/* EM wave Fields */
   /*  
    * Grads of scalars... concentration is the only one we need in the
    * old form for VOF/Taylor-Galerkin stuff.
    */
   dbl grad_c[MAX_CONC][DIM];	/* Gradient of concentration(s). */
   dbl grad_F[DIM];	        /* Gradient of Fill variable. */
+  dbl grad_pF[MAX_PHASE_FUNC][DIM];       /* Gradient of phase function */
   dbl grad_p_liq[DIM];	        /* Gradient of porous liq-phase pressure variable. */
   dbl grad_p_gas[DIM];	        /* Gradient of porous gas-phase pressure variable. */
   dbl grad_porosity[DIM];       /* Gradient of porous  porosity variable. */
@@ -1913,9 +1968,18 @@ struct Diet_Field_Variables
   dbl grad_d[DIM][DIM];	        /* Gradient of mesh displacement. */
   dbl grad_d_rs[DIM][DIM];	/* Gradient of solid displacement. */
   
+  dbl grad_tfmp_pres[DIM];       /* Gradient of the thin-film multi-phase lubrication pressure */
+  dbl grad_tfmp_sat[DIM];       /* Gradient of the thin-film multi-phase lubrication saturation */
+
+  dbl grad_n[DIM][DIM];         /* Normal to level set function OR shell normal */
+  dbl div_n;                    /* Divergence of LS normal field */
+
   /* Material tensors used at old time values */
   dbl strain[DIM][DIM];         /* Strain tensor */
   dbl volume_change;            /* Volume change */
+  dbl grad_restime[DIM];       /* Gradient of the Residence time field */
+
+  dbl grad_v[DIM][DIM];         /* Velocity gradient */
 
 };
 
@@ -2338,6 +2402,7 @@ struct Species_Conservation_Terms
   dbl d_MassSource_dv[MAX_CONC] [DIM][MDE];
   dbl d_MassSource_dpv[MAX_CONC] [DIM][MDE];
   dbl d_MassSource_dT[MAX_CONC][MDE];
+  dbl d_MassSource_dI[MAX_CONC][MDE];
   dbl d_MassSource_dV[MAX_CONC][MDE];
   dbl d_MassSource_dpmv[MAX_CONC] [MAX_PMV][MDE];
   dbl d_MassSource_dF[MAX_CONC][MDE];
@@ -2585,7 +2650,9 @@ struct Level_Set_Interface {
 
   /* Heaviside function as above, but evaluated using FEM basis functions */
   double Hn;
+  double Hn_old;
   double gradHn[DIM];
+  double gradHn_old[DIM];
   double d_Hn_dF[MDE];
   double d_gradHn_dF[DIM][MDE];
   double d_Hn_dmesh[DIM][MDE];
@@ -2713,6 +2780,7 @@ struct stress_dependence
   double g[DIM][DIM][DIM][DIM][MDE];
   double S[DIM][DIM][MAX_MODES][DIM][DIM][MDE];
   double pf[DIM][DIM][MAX_PHASE_FUNC][MDE];
+  double degrade[DIM][DIM][MDE];
 };
 typedef struct stress_dependence STRESS_DEPENDENCE_STRUCT;
 
@@ -2763,6 +2831,7 @@ struct viscosity_dependence
   double nn[MDE];          /* bond concentration dependence */
   double gd;               /* strain rate dependence */
   double pf[MAX_PHASE_FUNC][MDE];  /* phase function */
+  double degrade[MDE];           /* amount of degradation */
 };
 typedef struct viscosity_dependence VISCOSITY_DEPENDENCE_STRUCT;
 
@@ -2778,6 +2847,7 @@ struct dilViscosity_dependence
   double nn[MDE];          /* bond concentration dependence */
   double gd;               /* strain rate dependence */
   double pf[MAX_PHASE_FUNC][MDE];  /* phase function */
+  double degrade[MDE];           /* amount of degradation */
 };
 typedef struct dilViscosity_dependence DILVISCOSITY_DEPENDENCE_STRUCT;
 
@@ -2816,6 +2886,9 @@ struct heat_source_dependence
   double S[MAX_MODES][DIM][DIM][MDE]; /* stress mode dependence. */
   double F[MDE];           /* level set field dependence */
   double P[MDE];	   /* acoustic pressure dependence  */
+  double APR[MDE];	   /* acoustic pressure dependence  */
+  double API[MDE];	   /* acoustic pressure dependence  */
+  double INT[MDE];	   /* acoustic pressure dependence  */
 };
 typedef struct heat_source_dependence HEAT_SOURCE_DEPENDENCE_STRUCT;
 
@@ -2903,6 +2976,12 @@ struct Petrov_Galerkin_Data {
 typedef struct Petrov_Galerkin_Data PG_DATA;
 
 
+struct SUPG_terms {
+  dbl supg_tau;
+  dbl d_supg_tau_dv[DIM][MDE];
+  dbl d_supg_tau_dX[DIM][MDE];
+};
+
 /*
  * Auxiliaries Variables used in calculating flow rate and average velocity
  * with their sensitivities in lubrication flow.
@@ -2915,6 +2994,7 @@ struct Lubrication_Auxiliaries
   double gradP_mag;                    /* Magnitude of pressure gradient */
   double gradP_tangent[DIM];           /* Tangent vector of the pressure gradient */
   double gradP_normal[DIM];            /* Unit vector perpendicular to the pressure gradient */
+  double H;                            /* Lubrication Gap Height */
 
   double dgradP_mag_dP;                /* Pressure gradient magnitude sensitivities w.r.t. pressure */
   double dgradP_tangent_dP[DIM];       /* Pressure gradient tangent sensitivities w.r.t. pressure */
@@ -2928,6 +3008,7 @@ struct Lubrication_Auxiliaries
   double dq_dk[DIM][MDE];              /* Flow rate sensitivities w.r.t. curvature */
   double dq_dx[DIM][DIM][MDE];         /* Flow rate sensitivities w.r.t. mesh deformation */
   double dq_drs[DIM][DIM][MDE];        /* Flow rate sensitivities w.r.t. real solid deformation */
+  double dq_dnormal[DIM][DIM][MDE];    /* Flow rate sensitivities w.r.t. shell normal */
   double dq_ddh[DIM][MDE];             /* Flow rate sensitivities w.r.t. heat transport */
   double dq_dc[DIM][MDE];              /* Flow rate sensitivities w.r.t. particles volume fraction */
   double dq_dshear_top[DIM][MDE];      /* Flow rate sensitivities w.r.t. top wall shear rate */
@@ -2942,6 +3023,7 @@ struct Lubrication_Auxiliaries
   double dv_avg_dk[DIM][MDE];          /* Average veloctiy sensitivities w.r.t. curvature */
   double dv_avg_dx[DIM][DIM][MDE];     /* Average velocity sensitivities w.r.t. mesh deformation */
   double dv_avg_drs[DIM][DIM][MDE];     /* Average velocity sensitivities w.r.t. real solid deformation*/
+  double dv_avg_dnormal[DIM][DIM][MDE]; /* Average velocity sensitivities w.r.t. mesh deformation */
   double dv_avg_ddh[DIM][MDE];         /* Average velocity sensitivities w.r.t. heat transport */
   double dv_avg_dc[DIM][MDE];          /* Average velocity sensitivities w.r.t. particles volume fraction */
   double dv_avg_dshear_top[DIM][MDE];   /* Average velocity sensitivities w.r.t. top wall shear rate */

@@ -208,7 +208,8 @@ int load_coordinate_scales(const int c, struct Field_Variables *f)
    */
 
   if (c == CARTESIAN ||
-      c == PROJECTED_CARTESIAN)
+      c == PROJECTED_CARTESIAN ||
+      c == CARTESIAN_2pt5D)
     {
       return (status);
     }
@@ -994,7 +995,8 @@ h_elem_siz(dbl hsquared[DIM], dbl hh[DIM][DIM],
    */
 
   if (mp->FSIModel == FSI_MESH_CONTINUUM ||
-      mp->FSIModel == FSI_REALSOLID_CONTINUUM) DeformingMeshShell = 1;
+      mp->FSIModel == FSI_REALSOLID_CONTINUUM ||
+      mp->FSIModel == FSI_SHELL_ONLY_MESH) DeformingMeshShell = 1;
 
   j = Proc_Connect_Ptr[ei->ielem];
   for (p = 0; p < dim; p++) {
@@ -1089,7 +1091,7 @@ h_elem_siz(dbl hsquared[DIM], dbl hh[DIM][DIM],
     /*
      * Use a constant for now between local nodes 1 and 2 
      */
-    WH(-1,"Beware that SUPG for trishells is held constant so you need a uniform, non-stretchnig grid");
+    WH(-1,"\nBeware that SUPG for trishells/tetrahedrons is held constant so...\nYou need a uniform, non-stretching grid\n");
 
     hsquared[0]=hsquared[1]=hsquared[2] = pow((xnode[0][0] - xnode[0][1]), 2) + pow((xnode[1][0] - xnode[1][1]), 2) + pow((xnode[2][0] - xnode[2][1]), 2);
 
@@ -1282,7 +1284,6 @@ global_h_elem_siz(dbl x[], dbl x_old[], dbl xdot[], dbl resid_vector[],
 /****************************************************************************/
 /****************************************************************************/
 /****************************************************************************/
-
 void
 
 surface_determinant_and_normal(
@@ -1359,15 +1360,17 @@ surface_determinant_and_normal(
   if (ielem_surf_dim == 0)
     {
       /*
-       *  This code should be considered to be untested. It worked for one case.
+       *  This code should be considered to be untested. It worked for two cases.
        */
       // ok we fill up snormal
       shell_determinant_and_normal(ei->ielem, ei->iconnect_ptr, ei->num_local_nodes,
 				   ei->ielem_dim, 1);
       if (id_side == 1) {
-	signID = -1.0;
+	      signID = -1.0;
+      } else if (id_side == 2) {
+        signID = 1.0;
       } else {
-	signID = 0.0;
+	      signID = 0.0;
       }
       /*
        * We turn the normal into a tangent and then assign it back, multiplying by the signID
@@ -1376,7 +1379,7 @@ surface_determinant_and_normal(
        *
        *  In 2D n x t = k, these vectors satisfy the rh rule.
        */
-   
+
       tmp =   fv->snormal[0];
       fv->snormal[0] = - signID *  fv->snormal[1]; 
       fv->snormal[1] =   signID *  tmp; 
@@ -1387,18 +1390,19 @@ surface_determinant_and_normal(
 	  ldof = ei->ln_to_dof[ShapeVar][i];
 	  if (ldof >= 0)
 	    {
-	      if (Dolphin[inode][MESH_DISPLACEMENT1] > 0 )
-		{
-                  for (a = 0; a < dim; a++)
-                    {
-		      tmp =  fv->dsnormal_dx[0][a][ldof];
-		      fv->dsnormal_dx[0][a][ldof] = - signID * fv->dsnormal_dx[1][a][ldof];
-		      fv->dsnormal_dx[1][a][ldof] =   signID * tmp;
-                    }
-		}
-	    }
-	}
-
+              if (Dolphin[inode][MESH_DISPLACEMENT1] > 0 )
+              {
+                for (a = 0; a < dim; a++)
+                {
+                  tmp =  fv->dsnormal_dx[0][a][ldof];
+                  fv->dsnormal_dx[0][a][ldof] = - signID * fv->dsnormal_dx[1][a][ldof];
+                  fv->dsnormal_dx[1][a][ldof] =   signID * tmp;
+                }
+              }
+            }
+        }
+      fv->sdet = 1.0;
+      memset(fv->dsurfdet_dx, 0.0, sizeof(double)*DIM*MDE);
       return;
     }
 
@@ -1588,6 +1592,19 @@ surface_determinant_and_normal(
       /* calculate surface determinant using the coordinate scale factors
        * for orthogonal curvilinear coordinates */
       det_h01 = sqrt(t[0][0]*t[0][0] + t[0][1]*t[0][1]);
+
+      /*
+       * If the shells are not aligned in the x-y plane, det_h01 is zero
+       * When we set up the surface normal/determinant,  we assume the 
+       * shells are aligned with the x-y plane.  This avoids dividing by 
+       * zero and giving junk for the surface normal/determinant
+       * DSH 03/24/2016
+       */
+      if(det_h01==0)
+	{
+	  EH(-1, "The shell elements need to be aligned in the X-Y plane for this problem to work");
+	}
+
       r_det_h01 = 1. / det_h01;
       
       fv->sdet = fv->h[2] * det_h01;
@@ -2474,7 +2491,8 @@ get_supg_stuff(dbl *supg_term,
    * (non LSA situation).
    */
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     velodim = dim + 1; /* Later is Now!  Woo!!! */
   
   for ( p=0; p<velodim; p++)

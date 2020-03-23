@@ -118,6 +118,27 @@ PROTO((double [DIM],		/* func                                      */
        double [],		/* u_bc - parameterize u velocity model      */
        const dbl ));		/* time  */
 
+EXTERN void uuser_colloc_surf
+PROTO((double *,                /* func                                      */
+       double [],               /* d_func           */
+       const double [],         /* u_bc - parameterize u velocity model      */
+       const int ,              /* Node ID */
+       const dbl ));            /* time  */
+
+EXTERN void vuser_colloc_surf
+PROTO((double *,                /* func                                      */
+       double [],               /* d_func           */
+       const double [],         /* u_bc - parameterize v velocity model      */
+       const int ,              /* Node ID */
+       const dbl ));            /* time  */
+
+EXTERN void wuser_colloc_surf
+PROTO((double *,                /* func                                      */
+       double [],               /* d_func           */
+       const double [],         /* u_bc - parameterize w velocity model      */
+       const int ,              /* Node ID */
+       const dbl ));            /* time  */
+
 EXTERN void dx_user_surf
 PROTO((double *,		/* func                                      */
        double [],               /* d_func           */

@@ -39,10 +39,6 @@ EXTERN Element_shape type2shape
 PROTO((const Element_type ));
 #endif
 
-EXTERN int find_element_block
-PROTO(( Exo_DB *,   // Exodus database
-	int ));     // Element number
-
 EXTERN int find_element_friends  // Outputs number of friends found
 PROTO(( Exo_DB *,   // Exodus database
 	int,        // Element of which I want to find friends

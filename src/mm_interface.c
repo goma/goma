@@ -16,6 +16,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <strings.h> /* strcasecmp and strncasecmp moved here for POSIX.1 */
 #include <stdlib.h>
 #include <math.h>
 

@@ -84,6 +84,8 @@ String_line Amesos_Package;
 
 String_line AztecOO_Solver;
 
+String_line Stratimikos_File;
+
 /*
  * A new Aztec 2.0 option. There are more and difft options and our
  * previous options probably ought to be revised to reflect the newer
@@ -100,6 +102,7 @@ int LOCA_UMF_ID;                /* UMFPACK SYSTEM ID */
 
 int Max_Newton_Steps; 	/* Maximum number of Newton steps to take.     */
 int Guess_Flag;		/* Indicates the type of initial guess         */
+int Conformation_Flag;   /* Indicates mapping from stress to log-conformation tensor */
 
 double damp_factor;
 double damp_factor1;		/* Relaxation factor for Newton iteration */

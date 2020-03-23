@@ -18,6 +18,8 @@
  * Revised: 1997/04/10 13:26 MDT pasacki@sandia.gov
  */
 
+#define _XOPEN_SOURCE 500 /* POSIX mkstemp */
+
 #define _UTILS_C
 
 #include <stdio.h>
@@ -44,7 +46,8 @@ static int proc_ident PROTO((const void *, const void *));
  * node-node connectivity list.
  */
 
-static char err_msg[MAX_CHAR_ERR_MSG];
+// Larger error message size in case we need to echo a system command with a failure.
+static char err_msg[MAX_CHAR_ERR_MSG*2];
 static Spfrtn sr=0;
 
 /*
@@ -505,6 +508,7 @@ get_filename_num_procs(const char *basename)
   char fixXXXXXX[] = "/tmp/fileXXXXXX";
   FILE *s;
   int val=-1;
+  int err;
   strcpy(fixXXXXXX,"./fileXXXXXX");
 
   if( mkstemp( fixXXXXXX ) == -1 ) {
@@ -535,7 +539,8 @@ get_filename_num_procs(const char *basename)
    *  Ok, delete the temporary file
    */
   sprintf(string_system_command, "/bin/rm -f %s", fixXXXXXX );
-  system(string_system_command);
+  err = system(string_system_command);
+  EH(err, "Error running /bin/rm -f ");
 
 
   return val;

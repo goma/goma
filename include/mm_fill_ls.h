@@ -92,10 +92,6 @@ PROTO(( double *,
         double  ,
 	int    ));
 
-EXTERN void cgm_based_initialization 
-PROTO (( double *,
-         int));
-
 EXTERN void surf_based_initialization 
 PROTO (( double *,
          double *,
@@ -340,6 +336,9 @@ PROTO(( void));
 EXTERN int load_lsi
 PROTO(( const double ));       /* width */
 
+EXTERN int
+load_lsi_old(const double width, struct Level_Set_Interface *lsi_old);
+
 EXTERN int load_lsi_adjmatr
 PROTO(( const double ));      /* width */
 
@@ -385,6 +384,13 @@ PROTO((double [],                /* Jacobian matrix for fill equation  */
        double ,                  /* parameter to vary time integration from
                                   * explicit (tt = 1) to implicit (tt = 0) */
        int [] ));                /* node_to_fill -  */
+
+EXTERN int print_ls_interface( double *x,
+			       Exo_DB *exo,
+			       Dpi    *dpi,
+			       const double time,
+			       char *filenm,
+			       int print_all_times );
 
 EXTERN void print_surf_list 
 PROTO(( struct LS_Surf_List *,

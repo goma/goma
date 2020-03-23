@@ -32,6 +32,32 @@ static char rcsid[] = "$Id: mm_eh.c,v 5.3 2008-01-11 00:47:14 hkmoffa Exp $";
 #define _MM_EH_C
 #include "goma.h"
 
+#ifdef PRINT_STACK_TRACE_ON_EH
+#include <execinfo.h>
+
+/* Obtain a backtrace and print it to stdout. */
+/* https://www.gnu.org/software/libc/manual/html_node/Backtraces.html */
+/* compile with -rdynamic */
+static void
+print_stacktrace(void)
+{
+  void *bt_array[20];
+  size_t size;
+  char **stack_strings;
+
+  size = backtrace(bt_array, 20);
+  stack_strings = backtrace_symbols(bt_array, size);
+
+  printf("Obtained %zd stack frames from Proc %d.\n", size, ProcID);
+
+  for (size_t i = 0; i < size; i++) {
+     printf("%s\n", stack_strings[i]);
+  }
+
+  free (stack_strings);
+}
+#endif
+
 /*
  * These variables are extern and included everywhere else, defined and
  * initialized here. They are important to proper switching during error
@@ -56,9 +82,11 @@ char Err_Msg[MAX_CHAR_ERR_MSG];
  *       sequence and time is important, so a /var/adm/log format
  *       is used.
  */
-
+#ifdef ENABLE_LOGGING
 static FILE *log_strm=NULL;
 static char log_filename[MAX_FNL] = DEFAULT_GOMA_LOG_FILENAME;
+#endif
+
 
 /*
  * Global variable helps to put the brakes on a parallel train wreck, but
@@ -74,6 +102,9 @@ eh(const int error_flag, const char *file,
   static char yo[] = "eh";
   if (error_flag == -1) { 
      log_msg("GOMA ends with an error condition.");
+#ifdef PRINT_STACK_TRACE_ON_EH
+    print_stacktrace();
+#endif
 #ifndef PARALLEL
     fprintf(stderr,"ERROR EXIT: %s:%d: %s\n", file, line, message); 
     exit(-1);
@@ -160,10 +191,12 @@ save_place(const int severity,
 void 
 logprintf(const char *format, ... )
 {
-  int n;
   time_t now;
   static char time_format[] = "%b %d %T";
   static char time_result[TIME_STRING_SIZE];
+#ifdef ENABLE_LOGGING
+  int n;
+
   static char new_format[1024];
 
   static char old_buffer[1024];	/* For legacy help... */
@@ -294,6 +327,19 @@ logprintf(const char *format, ... )
     }
 
   return;
+
+#else
+  time(&now);
+
+  (void) strftime(time_result, TIME_STRING_SIZE,
+                  time_format, localtime(&now));
+  if ( current_severity < 0 )
+    {
+      DPRINTF(stderr, "%s ", time_result);
+      DPRINTF(stderr, "\nAbnormal termination -- see log file for details.\n");
+      exit(current_severity);
+    }
+#endif
 }
 
 
@@ -309,12 +355,12 @@ smooth_stop_with_msg( const char *msg )
 	if( Num_Proc == 1 )
 	{
 		fprintf(stderr, "\n\t -- Goma stops smoothly--\n");
-		fprintf(stderr, msg );
+		fputs(msg, stderr);
 	}
 	else
 	{
 		fprintf(stderr,"\n\n Proc %d -- Goma stops smoothly --\n", ProcID);
-		DPRINTF(stderr, msg);
+		DFPUTS(msg, stderr);
 	}	
 	MPI_Finalize();
 	exit(-1);

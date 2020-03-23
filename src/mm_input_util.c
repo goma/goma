@@ -451,6 +451,7 @@ variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input, "NORMAL3"))                     var = NORMAL3;
 
   else if (!strcmp(input, "SHELL_CURVATURE"))             var = SHELL_CURVATURE;
+  else if (!strcmp(input, "SHELL_CURVATURE2"))            var = SHELL_CURVATURE2;
   else if (!strcmp(input, "SHELL_TENSION"))               var = SHELL_TENSION;
   else if (!strcmp(input, "SHELL_X"))                     var = SHELL_X;
   else if (!strcmp(input, "SHELL_Y"))                     var = SHELL_Y;
@@ -496,6 +497,9 @@ variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input, "LIGHT_INTP"))                  var = LIGHT_INTP;
   else if (!strcmp(input, "LIGHT_INTM"))                  var = LIGHT_INTM;
   else if (!strcmp(input, "LIGHT_INTD"))                  var = LIGHT_INTD;
+  else if (!strcmp(input, "TFMP_PRES"))                   var = TFMP_PRES;
+  else if (!strcmp(input, "TFMP_SAT"))                    var = TFMP_SAT;
+  else if (!strcmp(input, "RESTIME"))                     var = RESTIME;  
   /*
    * Kluge to break up large if block. Problems with HP compiler!
    */  
@@ -541,6 +545,7 @@ variable_string_to_int(const char *input, const char *err_string)
   else if (!strcmp(input,"D_X3_DT"))                      var = D_X3_DT;
   else if (!strcmp(input,"D_S_DT"))                       var = D_S_DT;
   else if (!strcmp(input,"D_P_DT"))                       var = D_P_DT;
+  else if (!strcmp(input,"SHELL_NORMAL3"))                       var = SHELL_NORMAL3;
 
 
   else {
@@ -928,7 +933,7 @@ look_for_species_prop(FILE *imp,  const char *search_string,
    *  Check on the number of arguments
    */
   num_args = numTok - 2;
-  if (num_values_expected > 0) 
+  if (num_values_expected > 0 && strcmp(model_name, "USER")) 
     {
     if (num_args != num_values_expected) 
       {
@@ -999,6 +1004,8 @@ look_for_species_prop(FILE *imp,  const char *search_string,
   if (!strcmp(model_name, "CONSTANT") || num_args <= 1) 
     {
       material_property[species_ID] =  arg_list[0];
+      fill_user_constant = FALSE;
+      if (!strcmp(model_name, "PHOTO_CURING")) materialModel[species_ID] = PHOTO_CURING;
     }
     
   /*
@@ -1015,14 +1022,16 @@ look_for_species_prop(FILE *imp,  const char *search_string,
 		yo, mat_ptr->Material_Name, search_string);		
 	sprintf(err_mesg,
 		"/tSpace for pointer vector over species needs to be malloced first\n");
-	EH(-1, err_mesg);
+	EH(-1, err_mesg);  
       }
     } else {
-      if (User_constants[species_ID] != NULL) {
-	safer_free((void **) &(User_constants[species_ID]));
-      }
-      User_constants[species_ID] = arg_list;
-      User_count[species_ID] = num_args;
+	safer_free((void **) &(User_constants[species_ID]));  
+	User_constants[species_ID] = (dbl *)array_alloc(1, num_args, sizeof(dbl));
+        User_constants[species_ID] = arg_list;
+        /*    for(i=0 ; i<num_args ; i++)	{
+            User_constants[species_ID][i] = arg_list[i];
+		}  */
+        User_count[species_ID] = num_args;
     }
   } else {
     safer_free((void **) &(arg_list));

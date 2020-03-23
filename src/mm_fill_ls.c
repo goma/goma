@@ -25,12 +25,6 @@
 
 #include "std.h"		/* This needs to be here. */
 
-#ifdef USE_CGM
-#include "gm_cgm_c_interface.h"
-#endif
-
-
-
 #ifdef PARALLEL
 #ifndef MPI
 #define MPI			/* otherwise az_aztec.h trounces MPI_Request */
@@ -273,7 +267,7 @@ PROTO(( double [DIM],
 
 static void copy_distance_function
 PROTO(( double *,
-		double ** ));
+	double **));
 
 static double determine_adc_probability 
 PROTO (( struct Boundary_Condition *,
@@ -1735,50 +1729,6 @@ gradient_norm_err( double *x,
 /***************************************************************************************/
 /***************************************************************************************/
 
-
-void
-cgm_based_initialization(double *x,
-			 int num_total_nodes)
-{
-#ifdef USE_CGM
-  int I, ie;
-  char err_msg[256];
-  double r[DIM], dist;
-  FaceHandle *face_handle;
-
-  if(cgm_get_face_by_name((char const *)(ls->sm_object_name), &face_handle))
-    {
-      sprintf(err_msg, "Could not find FACE named '%s'.\n", ls->sm_object_name);
-      EH(-1, err_msg);
-    }
-
-  for(I = 0; I < num_total_nodes; I++)
-    {
-      /* Get node coordinate. */
-      r[0] = Coor[0][I];
-      r[1] = Coor[1][I];
-      if(pd->Num_Dim == 3)
-	r[2] = Coor[2][I];
-      else
-	r[2] = 0.0;
-
-      /* Get index into solution vectorfor the FILL variable. */
-      cgm_face_get_closest_boundary(face_handle,
-				    r[0], r[1], r[2],
-				    &dist);
-      ie = Index_Solution(I, ls->var, 0, 0, -2);
-      x[ie] = dist;
-    }
-#else
-  EH(-1, "CGM not implemented.");
-#endif
-}
-
-
-/***************************************************************************************/
-/***************************************************************************************/
-/***************************************************************************************/
-
 void
 surf_based_initialization ( double *x,
                             double *delta_x,
@@ -2970,7 +2920,7 @@ ddd_add_surf( DDD pkg,
 	ddd_add_member( pkg, &(s->d), 1, MPI_DOUBLE);
 	ddd_add_member( pkg, &(s->sign), 1, MPI_DOUBLE);
       }
-      
+      break;
     case LS_SURF_FACET :
       {
         struct LS_Surf_Facet_Data *s = (struct LS_Surf_Facet_Data *) surf->data;
@@ -3962,6 +3912,107 @@ generate_facet_list ( double (**point0)[DIM],
 
 }
 
+int
+print_ls_interface( double *x,
+		    Exo_DB *exo,
+		    Dpi    *dpi,
+		    const double time,
+		    char *filenm,
+		    int print_all_times )
+{
+  char output_filenm[MAX_FNL];
+  struct LS_Surf_List *list = NULL;
+  struct LS_Surf *isosurf = NULL;
+  struct LS_Surf_Iso_Data *s;
+  FILE *outfile = NULL;
+  int status = 0;
+
+  strncpy(output_filenm, filenm, MAX_FNL-1);
+  multiname(output_filenm, ProcID, Num_Proc);
+
+  if (print_all_times) {
+    outfile = fopen(output_filenm, "a");
+  } else {
+    outfile = fopen(output_filenm, "w");
+  }
+
+  if (outfile == NULL) {
+    EH(-1, "Output file for level set interface could not be opened");
+  }
+
+  list = create_surf_list();
+  isosurf = create_surf( LS_SURF_ISOSURFACE );
+  s = (struct LS_Surf_Iso_Data *) isosurf->data;
+  s->isovar = ls->var;
+  if ( ls->Initial_LS_Displacement != 0. )
+    {
+      s->isoval = ls->Initial_LS_Displacement;
+      ls->Initial_LS_Displacement = 0.;
+    }
+  else
+    {
+      s->isoval = 0.;
+    }
+
+
+  append_surf( list, isosurf );
+
+  create_subsurfs( list, x, exo );
+
+  struct LS_Surf *surf;
+  surf = list->start->subsurf_list->start;
+  while (surf != NULL) {
+
+    switch (surf->type) {
+    case LS_SURF_POINT :
+      {
+	struct LS_Surf_Point_Data *s = (struct LS_Surf_Point_Data *) surf->data;
+	double *p = s->x;
+	if (print_all_times) {
+	  fprintf(outfile, "%g\t%g\t%g\t%d\n", time, p[0], p[1], 0);
+	} else {
+	  fprintf(outfile, "%g\t%g\t%d\n", p[0], p[1], 0);
+	}
+      }
+      break;
+    case LS_SURF_FACET :
+      {
+	struct LS_Surf_Facet_Data *s = (struct LS_Surf_Facet_Data *) surf->data;
+
+	if (s->num_points == 2)
+	  {
+	    struct LS_Surf_Point_Data *s1 = (struct LS_Surf_Point_Data *)
+	      surf->subsurf_list->start->data;
+	    struct LS_Surf_Point_Data *s2 = (struct LS_Surf_Point_Data *)
+	      surf->subsurf_list->start->next->data;
+	    double *p1 = s1->x;
+	    double *p2 = s2->x;
+	    if (print_all_times) {
+	      fprintf(outfile, "%g\t%g\t%g\t%d\n", time, p1[0], p1[1], 0);
+	      fprintf(outfile, "%g\t%g\t%g\t%d\n", time, p2[0], p2[1], 1);
+	    } else {
+	      fprintf(outfile, "%g\t%g\t%d\n", p1[0], p1[1], 0);
+	      fprintf(outfile, "%g\t%g\t%d\n", p2[0], p2[1], 1);
+	    }
+	  }
+	else
+	  {
+	    EH(-1,"Facet based surfaces not yet implemented in 3-D");
+	  }
+      }
+      break;
+    default:
+      EH(-1, "Cannot print level set interfaces that are not Points or Facets");
+      break;
+    }
+
+    surf = surf->next;
+  }
+
+  free_surf_list ( &list );
+  fclose(outfile);
+  return(status);
+}
 
 void
 print_surf_list ( struct LS_Surf_List *list,
@@ -3972,7 +4023,7 @@ print_surf_list ( struct LS_Surf_List *list,
   static FILE *g = NULL;
   struct LS_Surf *surf = list->start;
   int j, level;
-  char filename1[80], filename2[80], err_msg[80];
+  char filename1[80], filename2[80], err_msg[MAX_CHAR_ERR_MSG];
 
 #ifdef PARALLEL
   if( Num_Proc > 1 )
@@ -4223,7 +4274,9 @@ find_intersections( struct LS_Surf_List *list,
                       }
                     else
                       {
-                        safe_free( surf );
+			free(surf->data);
+			free(surf->closest_point);
+			free(surf);
                       }
                   }
 
@@ -6558,7 +6611,7 @@ load_lsi(const double width)
   lsi->alpha = 0.5 * width;
   alpha      = lsi->alpha;
   
-  copy_distance_function( &F, &grad_F );
+  copy_distance_function( &F, &grad_F);
 
   lsi->near  = ls->on_sharp_surf || fabs(F) < alpha;
 
@@ -6606,14 +6659,17 @@ load_lsi(const double width)
 
       /* Evaluate heaviside using FEM basis functions */
       double Hni, d_Hni_dF, Fi;
+      double Hni_old, Fi_old;
       int eqn = R_FILL;
       lsi->Hn = 0.0;
+      lsi->Hn_old = 0.0;
       memset(lsi->gradHn, 0.0, sizeof(double)*DIM);
+      memset(lsi->gradHn_old, 0.0, sizeof(double)*DIM);
       memset(lsi->d_Hn_dF, 0.0, sizeof(double)*MDE);
       memset(lsi->d_gradHn_dF, 0.0, sizeof(double)*DIM*MDE);
       memset(lsi->d_Hn_dmesh, 0.0, sizeof(double)*DIM*MDE);
       memset(lsi->d_gradHn_dmesh, 0.0, sizeof(double)*DIM*DIM*MDE);
-      
+
       if(pd->v[LUBP] || pd->v[SHELL_SAT_CLOSED] || pd->v[SHELL_PRESS_OPEN ] || pd->v[SHELL_SAT_GASN] ) 
 	{
 	  for ( i = 0; i < ei->dof[eqn]; i++ ) {
@@ -6645,9 +6701,20 @@ load_lsi(const double width)
 		}
 	      }
 	    }
-	  }
+
+	    Fi_old = *esp_old->F[i];
+	    if ( fabs(Fi_old) > lsi->alpha ) {
+	      Hni_old = ( Fi_old < 0.0 ) ? 0.0 : 1.0;
+	    } else {
+	      Hni_old  = 0.5 * (1.0 + Fi_old/lsi->alpha + sin(M_PIE*Fi_old/lsi->alpha)/M_PIE);
+            }
+	    lsi->Hn_old += Hni_old * bf[eqn]->phi[i];
+	    for ( j = 0; j < VIM; j++ ) {
+	      lsi->gradHn_old[j] += Hni_old * bf[eqn]->grad_phi[i][j];
+            }
+          }
 	}
-      else if (pd->v[LUBP_2] || pd->v[SHELL_PRESS_OPEN_2]) 
+      else if (pd->v[LUBP_2] || pd->v[SHELL_PRESS_OPEN_2])
 	{
 	  eqn = R_PHASE1;
 	  for ( i = 0; i < ei->dof[eqn]; i++ ) {
@@ -6679,6 +6746,17 @@ load_lsi(const double width)
 		}
 	      }
 	    }
+
+	    Fi_old = *esp_old->pF[0][i];
+	    if ( fabs(Fi_old) > lsi->alpha ) {
+	      Hni_old = ( Fi_old < 0.0 ) ? 0.0 : 1.0;
+	    } else {
+	      Hni_old  = 0.5 * (1.0 + Fi_old/lsi->alpha + sin(M_PIE*Fi_old/lsi->alpha)/M_PIE);
+            }
+	    lsi->Hn_old += Hni_old * bf[eqn]->phi[i];
+	    for ( j = 0; j < VIM; j++ ) {
+	      lsi->gradHn_old[j] += Hni_old * bf[eqn]->grad_phi[i][j];
+            }
 	  }
 	} 
  
@@ -6686,7 +6764,92 @@ load_lsi(const double width)
 
 /************ End of shielding **************************/
 
-  lsi->delta_max = lsi->gfmag/alpha;
+  if (fabs(alpha) > 1e-15)
+    {
+      lsi->delta_max = lsi->gfmag/alpha;
+    }
+
+  return(0);
+
+}
+
+int
+load_lsi_old(const double width, struct Level_Set_Interface *lsi_old)
+{
+  double F_old = 0, alpha, *grad_F_old = NULL;
+  int a;
+
+  if (ls->var != FILL) {
+    EH(-1, "Unknown level set variable");
+  }
+
+  lsi_old->near  = FALSE;
+  lsi_old->alpha = 0.0;
+
+  lsi_old->H = 0.0;
+  lsi_old->delta = 0.0;
+
+  memset(lsi_old->normal, 0, sizeof(double)*DIM);
+
+  /* This is useful for calculating the above (and other) quantities. */
+  lsi_old->gfmag = 0.0;
+  lsi_old->gfmaginv = 0.0;
+
+  /* Check if we're in the mushy zone. */
+  lsi_old->alpha = 0.5 * width;
+  alpha      = lsi_old->alpha;
+
+  F_old = fv_old->F;
+  grad_F_old = fv_old->grad_F;
+
+  lsi_old->near  = ls->on_sharp_surf || fabs(F_old) < alpha;
+
+  /* Calculate the interfacial functions we want to know even if not in mushy zone. */
+
+  lsi_old->gfmag = 0.0;
+  for ( a=0; a < VIM; a++ )
+    {
+      lsi_old->normal[a] = grad_F_old[a];
+      lsi_old->gfmag    += grad_F_old[a] * grad_F_old[a];
+    }
+  lsi_old->gfmag = sqrt( lsi_old->gfmag );
+  lsi_old->gfmaginv     = ( lsi_old->gfmag == 0.0 ) ? 1.0 : 1.0 / lsi_old->gfmag;
+
+  for ( a=0; a < VIM; a++)
+    {
+      lsi_old->normal[a] *= lsi_old->gfmaginv;
+    }
+
+  /* If we're not in the mushy zone: */
+  if ( ls->on_sharp_surf )
+    {
+      lsi_old->H = ( ls->Elem_Sign < 0 ) ? 0.0 : 1.0 ;
+      lsi_old->delta = 1.;
+    }
+  else if ( ! lsi_old->near )
+    {
+      lsi_old->H = ( F_old < 0.0) ? 0.0 : 1.0 ;
+      lsi_old->delta = 0.;
+    }
+  else
+    {
+      lsi_old->H     = 0.5 * (1. + F_old / alpha + sin(M_PIE * F_old / alpha) / M_PIE);
+      lsi_old->delta = 0.5 * (1. + cos(M_PIE * F_old / alpha)) * lsi_old->gfmag / alpha;
+    }
+
+
+/**** Shield the operations below since they are very expensive relative to the previous
+      operations in the load_lsi routine. Add your variables as needed  ********/
+
+  if (pd->v[LUBP]  || pd->v[LUBP_2] || pd->v[SHELL_SAT_CLOSED] || pd->v[SHELL_PRESS_OPEN ] ||
+      pd->v[SHELL_PRESS_OPEN_2] || pd->v[SHELL_SAT_GASN] )
+    {
+      EH(-1, "No support for LUBP/SHELL_SAT/SHELL_PRESS");
+    } /* end of if pd->v[LUBP] || ... etc */
+
+/************ End of shielding **************************/
+
+  lsi_old->delta_max = lsi_old->gfmag/alpha;
 
   return(0);
 
@@ -6694,9 +6857,9 @@ load_lsi(const double width)
 
 /******************************************************************************
  * load_lsi_shell_second: Special case of load_lsi forced to be written to circumvent
- * the shell-shell-friend situation encountered in multilayer shell stacks.  The 
- * friend code does not work for this pathological case, so we need to do nonlocal 
- * operations and cannot do a setup-shop-at-point approach.  
+ * the shell-shell-friend situation encountered in multilayer shell stacks.  The
+ * friend code does not work for this pathological case, so we need to do nonlocal
+ * operations and cannot do a setup-shop-at-point approach. 
  *  *
  * Input
  * =====
@@ -6712,14 +6875,14 @@ load_lsi_shell_second(const double width)
   double F = 0, alpha, *grad_F = NULL;
   int a, b;
   int i, j, k;
-  
+
   /* Zero things out. */
   zero_lsi();
-  
+
   /* Check if we're in the mushy zone. */
   lsi->alpha = 0.5 * width;
   alpha      = lsi->alpha;
-  
+
   copy_distance_function( &F, &grad_F );
 
   lsi->near  = ls->on_sharp_surf || fabs(F) < alpha;
@@ -6734,7 +6897,7 @@ load_lsi_shell_second(const double width)
     }
   lsi->gfmag = sqrt( lsi->gfmag );
   lsi->gfmaginv     = ( lsi->gfmag == 0.0 ) ? 1.0 : 1.0 / lsi->gfmag;
-  
+
   for ( a=0; a < VIM; a++)
     {
       lsi->normal[a] *= lsi->gfmaginv;
@@ -6819,7 +6982,7 @@ load_lsi_shell_second(const double width)
 }
 
 static void copy_distance_function( double *F,
-				    double **grad_F )
+				    double **grad_F)
 {
   int offset=0;
 
@@ -6832,7 +6995,6 @@ static void copy_distance_function( double *F,
 		case PHASE1:
 		case PHASE2:
 		case PHASE3:
-			
 		case PHASE4:
 		case PHASE5:
 			offset = ls->var - PHASE1;
@@ -8093,6 +8255,7 @@ divide_shape_fcn_tree ( NTREE *parent,
 	{
 	case 3:
 	  xi_m[2] = (parent->xi[0][2] + parent->xi[4][2])/2.0;
+	  /* fall through */
 	case 2:
 	  xi_m[0] = (parent->xi[0][0] + parent->xi[1][0])/2.0;
 	  xi_m[1] = (parent->xi[1][1] + parent->xi[2][1])/2.0;
@@ -10009,19 +10172,19 @@ subelement_mesh_output (double x[],
   ex_put_elem_num_map( exoid, emap );
   */
 
-  ex_put_elem_block ( exoid, 1, "TRI", nvelems, nodes_per_elem, 0 );
-  ex_put_elem_conn ( exoid, 1, vconn );
+  ex_put_block ( exoid, EX_ELEM_BLOCK, 1, "TRI", nvelems, nodes_per_elem, 0, 0, 0 );
+  ex_put_conn ( exoid, EX_ELEM_BLOCK, 1, vconn, 0, 0 );
   
-  ex_put_elem_block ( exoid, 2, "SHEL", nselems, nodes_per_side, 0 );
-  ex_put_elem_conn ( exoid, 2, sconn );
+  ex_put_block ( exoid, EX_ELEM_BLOCK, 2, "SHEL", nselems, nodes_per_side, 0, 0, 0 );
+  ex_put_conn ( exoid, EX_ELEM_BLOCK, 2, sconn, 0, 0 );
   
   /* dummy nodeset on volume */
-  ex_put_node_set_param( exoid, 1, ivconn, 0 );
-  ex_put_node_set( exoid, 1, vconn );
+  ex_put_set_param( exoid, EX_NODE_SET, 1, ivconn, 0 );
+  ex_put_set( exoid, EX_NODE_SET, 1, vconn, NULL );
 
   /* dummy nodeset on surface */
-  ex_put_node_set_param( exoid, 2, isconn, 0 );
-  ex_put_node_set( exoid, 2, sconn );
+  ex_put_set_param( exoid, EX_NODE_SET, 2, isconn, 0 );
+  ex_put_set( exoid, EX_NODE_SET, 2, sconn, NULL );
   
   /* no data for now */
 
@@ -10177,7 +10340,8 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
       wim = dim;
 
       if (pd->CoordinateSystem == SWIRLING ||
-          pd->CoordinateSystem == PROJECTED_CARTESIAN)
+          pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+          pd->CoordinateSystem == CARTESIAN_2pt5D)
         wim = wim+1;
 
       if (ls->var != NULL)
@@ -10276,7 +10440,8 @@ Courant_Time_Step( double x[], double x_old[], double x_older[],
       wim = dim;
 
       if (pd->CoordinateSystem == SWIRLING ||
-          pd->CoordinateSystem == PROJECTED_CARTESIAN)
+          pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+          pd->CoordinateSystem == CARTESIAN_2pt5D)
         wim = wim+1;
 
       if ( pd->v[ls->var] )
@@ -10843,6 +11008,7 @@ build_integ_element( Integ_Elem * e, double isoval, int ielem_type,
             double nodes[6][DIM];
 	    int side_ids[3];
 
+	    memset(side_crossing, 0, sizeof(int)*4);
 
             /* determine what we are going to do with this element (set job) */
             

@@ -312,7 +312,8 @@ int assemble_pmomentum (dbl time_value,       /* current time for density model 
   dim   = pd->Num_Dim;
   wim   = dim;
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
 /* MMH
@@ -1741,7 +1742,8 @@ MMH_assemble_continuity ( double time_value,       /* current value of time */
   dim   = pd->Num_Dim;
   wim   = dim;
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     wim = wim+1;
 
 

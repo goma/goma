@@ -30,19 +30,15 @@
 #define EXTERN extern
 #endif
 
+#include "mm_as_structs.h"
+
 EXTERN int assemble_mass_transport /* mm_fill_species.c                      */
-PROTO((double ,			/* time - present time valuel; KSC           */
-       double ,			/* tt - parm to vary time integration from 
+(double time,			/* time - present time valuel; KSC           */
+ double tt,			/* tt - parm to vary time integration from
 				 * explicit (tt = 1) to implicit (tt = 0)    */
-       double ,			/* dt - current time step size               */
-       dbl [DIM],		/* h - element sizes, not scale factors.     */
-       dbl [DIM][DIM],		/* hh -                                      */
-       dbl [DIM][MDE],		/* dh_dxnode                                 */
-       dbl [DIM],		/* vcent - average element velocity, which is 
-				 * the centroid velocity for Q2 and 
-				 * the average of the vertices for Q1.
-				 * From routine "element_velocity."          */
-       dbl [DIM][MDE]));	/* dvc_dnode                                 */
+ double dt,			/* dt - current time step size               */
+ PG_DATA *pg_data);
+
 
 EXTERN int assemble_mass_transport_path_dependence
 PROTO((double ,                 /* time - present time valuel; KSC           */
@@ -172,13 +168,22 @@ PROTO((dbl ,              /* time                                            */
        double ));         /* T -- electrolyte temperature                    */
 
 EXTERN void mass_flux_surf_NI    /* mm_fill_species.c - RSL 5/28/02    */
-PROTO((dbl [MAX_CONC],    /* mass_flux                                 */
+PROTO((dbl [MAX_CONC],           /* mass_flux                          */
        dbl [MAX_CONC][MAX_VARIABLE_TYPES+MAX_CONC], /* d_mass_flux     */
        dbl ,              /* time                                      */
        int ,              /* wspec -- species number                   */
        int ,              /* flag -- output option                     */
        double ,           /* PHI_E -- electrode potential              */
        double ));         /* T -- electrolyte temperature              */
+
+EXTERN void mass_flux_surf_etch    /* mm_fill_species.c    */
+PROTO((dbl [DIM],         /* func                                      */
+       dbl [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func        */
+       const int,         /* wspec -- species number                   */
+       const int,         /* etching plane                             */
+       const double,      /* time                                      */
+       const double,      /* dt, current value of the time step        */
+       const double ));   /* tt, parameter to vary time integration    */
 
 EXTERN void mass_flux_surf_const  /* mm_fill_species.c - RSL 6/28/00   */
 PROTO((dbl [MAX_CONC],    /* mass_flux                                 */

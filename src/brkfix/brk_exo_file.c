@@ -560,9 +560,6 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
   char *tmp;			/* char pointer junkyard of no interest */
 
-  extern char *optarg;
-  extern int   optind;
-
   Spfrtn sr=0;
 
 #ifdef CHACO
@@ -706,8 +703,9 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
    */
 
   rd_exo(mono, in_exodus_file_name, 0, (EXODB_ACTION_RD_INIT +
-						 EXODB_ACTION_RD_MESH +
-						 EXODB_ACTION_RD_RES0));
+					EXODB_ACTION_RD_MESH +
+					EXODB_ACTION_RD_RES0 + 
+					EXODB_ACTION_RD_RESG));
 		  
   /*
    * Convenience variables...
@@ -726,7 +724,7 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
   zero_base(mono);
 
-  setup_old_exo(mono);
+  setup_old_exo(mono, NULL, 1);
 
 
   /*
@@ -777,9 +775,9 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	}
     }
 
-  if ( max_basic_eqnvars > MAX_EQNVARS )
+  if ( max_basic_eqnvars > MAX_PROB_VAR )
     {
-      sr = sprintf(err_msg, "Try MAX_EQNVARS = %d\n", max_basic_eqnvars);
+      sr = sprintf(err_msg, "Try MAX_PROB_VAR = %d\n", max_basic_eqnvars);
       EH(-1, err_msg);
     }
 
@@ -1573,6 +1571,8 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
   new_proc_eb_ptr  = (int *) smalloc((neb+1)*SZ_INT);
 
+  int * ss_internal = find_ss_internal_boundary(mono);
+
   for ( s=0; s<num_pieces; s++)
     {
 
@@ -1614,17 +1614,17 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       for ( k=0; k<num_kinds_nodes; k++)
 	{
 	  D->global_node_description[k][0] = pnd[k]->num_basic_eqnvars;
-	  for ( i=0; i<MAX_EQNVARS; i++)
+	  for ( i=0; i<MAX_PROB_VAR; i++)
 	    {
 	      D->global_node_description[k][1+i] = pnd[k]->eqnvar_ids[i];
 	    }
-	  for ( i=0; i<MAX_EQNVARS; i++)
+	  for ( i=0; i<MAX_PROB_VAR; i++)
 	    {
-	      D->global_node_description[k][1+MAX_EQNVARS+3*i]   = 
+	      D->global_node_description[k][1+MAX_PROB_VAR+3*i]   = 
 		pnd[k]->eqnvar_wts[i][0];
-	      D->global_node_description[k][1+MAX_EQNVARS+3*i+1] = 
+	      D->global_node_description[k][1+MAX_PROB_VAR+3*i+1] = 
 		pnd[k]->eqnvar_wts[i][1];
-	      D->global_node_description[k][1+MAX_EQNVARS+3*i+2] = 
+	      D->global_node_description[k][1+MAX_PROB_VAR+3*i+2] = 
 		pnd[k]->eqnvar_wts[i][2];
 	    }
 	}
@@ -4060,6 +4060,60 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 	    }
 	}
 
+      D->ss_block_index_global = NULL;
+      D->ss_block_list_global = NULL;
+      if (mono->num_side_sets > 0)
+        {
+          D->ss_block_index_global =
+              calloc(mono->num_side_sets + 1, sizeof(int));
+          D->ss_block_list_global =
+              calloc(MAX_MAT_PER_SS * mono->num_side_sets, sizeof(int));
+
+          // populate list of blocks associated to side sets
+
+          int ss_block_index = 0;
+          int ss_id;
+          for (ss_id = 0; ss_id < mono->num_side_sets; ss_id++)
+            {
+              int ss_start = ss_block_index;
+              int elem_index;
+              for (elem_index = mono->ss_elem_index[ss_id];
+                   elem_index <
+                   (mono->ss_elem_index[ss_id] + mono->ss_num_sides[ss_id]);
+                   elem_index++)
+                {
+                  int elem = mono->ss_elem_list[elem_index];
+                  int block = find_elemblock_index(elem, mono);
+                  if (block == -1)
+                    {
+                      EH(-1, "Element block not found");
+                    }
+
+                  // check if block is in array for ss already
+                  int known = 0;
+                  int i;
+                  for (i = ss_start; i < ss_block_index; i++)
+                    {
+                      if (D->ss_block_list_global[i] == block)
+                        {
+                          known = 1;
+                        }
+                    }
+
+                  if (!known)
+                    {
+                      D->ss_block_list_global[ss_block_index] = block;
+                      ss_block_index++;
+                    }
+                }
+
+              D->ss_block_index_global[ss_id] = ss_start;
+              D->ss_block_index_global[ss_id + 1] = ss_block_index;
+            }
+        }
+
+      D->ss_internal_global = ss_internal;
+
 #ifdef DEBUG
       for ( i=0; i<mono->eb_num_props; i++)
 	{
@@ -4196,6 +4250,61 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
       wr_resetup_exo(E, E->path, 0);
       zero_base(E);
 
+
+      if ( E->num_glob_vars > 0 ) {
+	int status;
+	E->cmode = EX_WRITE;
+
+
+	E->io_wordsize   = 0;	/* i.e., query */
+	E->comp_wordsize = sizeof(dbl);
+	E->exoid         = ex_open(E->path, 
+				   E->cmode, 
+				   &E->comp_wordsize, 
+				   &E->io_wordsize, 
+				   &E->version);
+
+	mono->cmode = EX_READ;
+
+
+	mono->io_wordsize   = 0;	/* i.e., query */
+	mono->comp_wordsize = sizeof(dbl);
+	mono->exoid         = ex_open(mono->path, 
+				   mono->cmode, 
+				   &mono->comp_wordsize, 
+				   &mono->io_wordsize, 
+				   &mono->version);
+
+	status = ex_put_variable_names(E->exoid, EX_GLOBAL, mono->num_glob_vars,
+				       mono->glob_var_names);
+	EH(status, "ex_put_variable_names global");
+
+	alloc_exo_gv(mono, 1);
+
+
+	for (i = 0; i < mono->num_gv_time_indeces; i++) {
+	  status = ex_get_var(mono->exoid, i+1, EX_GLOBAL,
+			      1, 1, mono->num_glob_vars,
+			      mono->gv[0]);
+	  EH(status, "ex_get_var global");
+
+	  
+	  status = ex_put_var(E->exoid, i+1, EX_GLOBAL,
+			      1, 0, mono->num_glob_vars,
+				    mono->gv[0]);
+	  EH(status, "ex_put_var glob_vars");
+	}
+
+	
+	status = ex_close(E->exoid);
+	EH(status, "ex_close()");
+
+	status = ex_close(mono->exoid);
+	EH(status, "ex_close()");
+
+	free_exo_gv(mono);
+
+      }
       /*
        * If there are any nodal variables, then read their values from
        * each "timestep" and transcribe them into the right place
@@ -4460,14 +4569,18 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
       free(D->global_node_description[0]);
       free(D->eb_elem_type_global[0]);
+
+      D->ss_internal_global = NULL; // skip freeing ss_internal
       free_dpi(D);
 
     } /* set loop */
+
 
   free(proc_eb_id);
   free(proc_eb_ptr);
   free(ebi);
   free(new_proc_eb_ptr);
+  free(ss_internal);
 
   if ( mono->num_dim > 0 )
     {
@@ -4802,17 +4915,12 @@ brk_exo_file(int num_pieces, char *Brk_File, char *Exo_File)
 
   free(Proc_SS_Node_Count);
   free(Proc_SS_Node_Pointers);
-  free(SS_Internal_Boundary);
   free(mono->eb_elem_itype);
 
   free(Coor);
   Coor = NULL;
   free(Matilda);
   Matilda = NULL;
-
-  for ( i=0; i<MAX_MAT_PER_SS+1; i++) {
-    free(ss_to_blks[i]);
-  }
 
   free_element_blocks(mono);
 

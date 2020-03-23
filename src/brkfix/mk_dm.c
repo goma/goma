@@ -142,19 +142,19 @@ make_goma_dofmap(Exo_DB *x,
    */
 
 
-  ev_ids = (int *) smalloc(MAX_EQNVARS * SZ_INT);
+  ev_ids = (int *) smalloc(MAX_PROB_VAR * SZ_INT);
 
-  INIT_IVEC(ev_ids, MAX_EQNVARS, UNDEFINED_EQNVARID);
+  INIT_IVEC(ev_ids, MAX_PROB_VAR, UNDEFINED_EQNVARID);
 
-  ev_wts    = (int **) smalloc(MAX_EQNVARS * sizeof(int *));
-  ev_wts[0] = (int *) smalloc(MAX_EQNVARS * 3 * sizeof(int));
+  ev_wts    = (int **) smalloc(MAX_PROB_VAR * sizeof(int *));
+  ev_wts[0] = (int *) smalloc(MAX_PROB_VAR * 3 * sizeof(int));
 
-  for ( i=1; i<MAX_EQNVARS; i++)
+  for ( i=1; i<MAX_PROB_VAR; i++)
     {
       ev_wts[i] = ev_wts[i-1] + 3;
     }
 
-  for ( i=0; i<MAX_EQNVARS; i++)
+  for ( i=0; i<MAX_PROB_VAR; i++)
     {
       for ( j=0; j<3; j++)
 	{
@@ -182,7 +182,7 @@ make_goma_dofmap(Exo_DB *x,
        * active variables at the current node that list their IDs as well as
        * their 3 different kinds of weights.
        */
-      for ( i=0; i<MAX_EQNVARS; i++)
+      for ( i=0; i<MAX_PROB_VAR; i++)
 	{
 	  ev_ids[i] = UNDEFINED_EQNVARID;
 	  for ( j=0; j<3; j++)
@@ -251,7 +251,7 @@ make_goma_dofmap(Exo_DB *x,
 		   */
 		  
 		  evid = mult[eb_index][j]->eqnvar_id;
-		  where = in_list(evid, 0, MAX_EQNVARS, ev_ids);
+		  where = in_list(evid, 0, MAX_PROB_VAR, ev_ids);
 		}
 	      else
 		{
@@ -288,7 +288,7 @@ make_goma_dofmap(Exo_DB *x,
        * contribution, re-order the ev_ids so that they appear in ascending
        * numerical order (sort weights, too.)
        */
-      if ( num_abevs > MAX_EQNVARS )
+      if ( num_abevs > MAX_PROB_VAR )
 	{
 	  EH(-1, "Too many active eqnvars this node");
 	}
@@ -397,7 +397,7 @@ make_goma_dofmap(Exo_DB *x,
 	   */
 
 	  tnd->num_basic_eqnvars = -1;
-	  for ( i=0; i<MAX_EQNVARS; i++)
+	  for ( i=0; i<MAX_PROB_VAR; i++)
 	    {
 	      tnd->eqnvar_ids[i]     = UNDEFINED_EQNVARID;
 	      tnd->eqnvar_wts[i][0]  = 0;

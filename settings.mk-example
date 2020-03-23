@@ -28,7 +28,8 @@ GOMA_LIBS = /home/goma/production/$(ARCH)
 
 # MPI install location, used for include, lib, and bin directories
 
-MPI_TOP = $(GOMA_LIBS)/openmpi-1.6.4
+MPI_TOP = $(GOMA_LIBS)/openmpi-4.0.2
+GOMA_MPI_LIB = -L$(MPI_TOP)/lib  -lmpi  -lmpi_mpifh
 
 CC = $(MPI_TOP)/bin/mpicc
 CXX = $(MPI_TOP)/bin/mpicxx
@@ -47,16 +48,15 @@ GCC_TOP = /usr
 # C/C++ warning flags
 # C_WARN_FLAGS	= -Wall
 
+# C++ standard flag (required for stratimikos support)
+CXXSTD = -std=gnu++11
+
 # Fortran warning flags
 # F_WARN_FLAGS	=
 
-# SEACAS install directory (include, lib)
-
-SEACAS_TOP = $(GOMA_LIBS)/SEACAS-2013-12-03
-
 # Trilinos install directory (include, lib)
 
-TRILINOS_TOP = $(GOMA_LIBS)/trilinos-11.8.1-Built
+TRILINOS_TOP = $(GOMA_LIBS)/trilinos-12.18.1
 
 # Install location
 # will install files in $PREFIX/include/goma, $PREFIX/lib, $PREFIX/bin
@@ -77,7 +77,16 @@ PREFIX = /home/goma/build
 #            -DMAX_CONC=4 \
 #            -DCOUPLED_FILL \
 #            -DPARALLEL \
-#            -DEIGEN_SERIAL
+#            -DEIGEN_SERIAL 
+
+# If you want stratimikos support, use the above DEFINES and add the following
+#	     -DHAVE_STRATIMIKOS
+
+# Enable trapping on floating point exception (useful for debugging NaN's)
+#	     -DFP_EXCEPT
+
+# To enable .log files with some extra information
+#	     -DENABLE_LOGGING
 
 # TOOLING used for install, cleaning, and library creation
 # install

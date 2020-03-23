@@ -65,10 +65,10 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  ACOUSTIC    15      /* Acoustic energy density coupled to NS */
 #define HS_FOAM 16   /* fluorinert */
 #define VISC_ACOUSTIC 17   /* heat generation by acoustics */
-#define INGBER 18   /* heat generation by acoustics */
+#define INGBER 18   
 #define GRAV_VIBRATIONAL 19   /* momentum source for gravity + vibration */
 #define MELT             20  /* Lubrication source term model*/
-
+#define EM_DISS         21   /* heat generation by EM waves */
 
 
 /* MMH */
@@ -93,6 +93,38 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  DEFORM                  3
 #define  EXTERNAL_FIELD          4
 #define  POROUS_CONST_INIT       5
+
+/* types of drop patterns */
+#define TFMP_SQUARE                   300
+#define TFMP_TRIANGULAR               301
+#define TFMP_HEXAGONAL                302
+
+// types of shell moment tensor calculation
+#define SMT_SIMPLE                    310
+#define SMT_EXPANDED                  311
+
+// gap model types
+// h = h0 - n dot d
+#define GM_NDOTD                      320
+// h = r_web - r_roller
+#define GM_RADIAL                     321
+
+// normal calculation methods
+// use built-in fv->snormal
+#define NCM_MAPPING                   330
+// for SIK_S normal of the web
+#define NCM_PRIMITIVE_S_WEB           331
+// for SIK_S normal of the roller
+#define NCM_PRIMITIVE_S_ROLLER        332
+// use built-in fv->normal
+#define NCM_PRIMITIVE_XY              333
+
+// shell integration kind
+// integrate in 2d as in Scriven's ChEn 8104
+// "Rudiments of Surface Geometry"
+#define SIK_XY                        340
+// map 2d bar (shell) domain onto 1d element
+#define SIK_S                         341
 
 /*
  * Options for k in potential equation
@@ -295,6 +327,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define SUSP_BAL   13
 #define ARRHENIUS  14 /* for temperature-dependent S-M diffusivities, KSC */
 #define SHOCK   15
+#define PIECEWISE 16
 
 /* Types of vapor or gas pressure relations */
 #define  KELVIN        3
@@ -322,6 +355,9 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define  SHELL_CYLINDER_SQUARE  20
 #define  SHELL_TANH      21
 #define  TANH_EXTERNAL      22
+#define  VAN_GENUCHTEN_EXTERNAL   23
+#define  LEVER           24
+#define  SATURATION      25
 
 /* Types of Flowing Liquid Viscosity Models */
 #define MOLTEN_GLASS     3
@@ -387,6 +423,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 
 /* surface tension laws */
 #define DILATION 3
+#define GIBBS_ISOTHERM 35
 
 /* Species Time Integration choices */
 #define STANDARD  0
@@ -439,6 +476,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define CONSTANT_SPEED 1011
 #define ROLL_ON 1012
 #define ROLL 1013
+#define ROLLER 101301
 #define LINEAR_TIME 10130
 #define CONSTANT_SPEED_DEFORM 10131
 #define CONSTANT_SPEED_MELT 10132
@@ -513,6 +551,7 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_ACOUSTIC_ABSORPTION       	   3020
 #define TAGC_REFRACTIVE_INDEX       	   3030
 #define TAGC_LIGHT_ABSORPTION       	   3040
+#define TAGC_EXTINCTION_INDEX       	   3050
 
 
  /* 
@@ -638,13 +677,84 @@ extern int Num_Var_Init_Mat[MAX_NUMBER_MATLS];	/* number of variables to overwri
 #define TAGC_NSS_A2                        7002
 #define TAGC_NSS_A3                        7003
 
+     /*
+      * Lubrication Constants:
+      * heightU, heightL, veloU, veloL, dcaU, dcaL
+      */
 
-#define TAGC_SHU_QFLOW                     7010
-#define TAGC_SHU_VWEB                      7011
-#define TAGC_SHU_ROLLRAD                   7012
-#define TAGC_SHU_X0                        7013
-#define TAGC_SHU_GAPN                      7014
-#define TAGC_SHU_UPS_XLOC                  7015
-#define TAGC_SHU_DNS_XLOC                  7016
+#define TAGC_LUB_HGT_U0                    7010
+#define TAGC_LUB_HGT_U1                    7011
+#define TAGC_LUB_HGT_U2                    7012
+#define TAGC_LUB_HGT_U3                    7013
+#define TAGC_LUB_HGT_U4                    7014
+#define TAGC_LUB_HGT_U5                    7015
+#define TAGC_LUB_HGT_U6                    7016
+#define TAGC_LUB_HGT_U7                    7017
+
+#define TAGC_LUB_HGT_L0                    7018
+#define TAGC_LUB_HGT_L1                    7019
+#define TAGC_LUB_HGT_L2                    7020
+#define TAGC_LUB_HGT_L3                    7021
+#define TAGC_LUB_HGT_L4                    7022
+#define TAGC_LUB_HGT_L5                    7023
+#define TAGC_LUB_HGT_L6                    7024
+#define TAGC_LUB_HGT_L7                    7025
+
+#define TAGC_U_LUB_VELO_U0                  7026
+#define TAGC_U_LUB_VELO_U1                  7027
+#define TAGC_U_LUB_VELO_U2                  7028
+#define TAGC_U_LUB_VELO_U3                  7029
+#define TAGC_U_LUB_VELO_U4                  7030
+#define TAGC_U_LUB_VELO_U5                  7031
+
+#define TAGC_U_LUB_VELO_L0                  7032
+#define TAGC_U_LUB_VELO_L1                  7033
+#define TAGC_U_LUB_VELO_L2                  7034
+#define TAGC_U_LUB_VELO_L3                  7035
+#define TAGC_U_LUB_VELO_L4                  7036
+#define TAGC_U_LUB_VELO_L5                  7037
+
+#define TAGC_LUB_VELO_U0                   17026
+#define TAGC_LUB_VELO_U1                   17027
+#define TAGC_LUB_VELO_U2                   17028
+
+#define TAGC_LUB_VELO_L0                   17032
+#define TAGC_LUB_VELO_L1                   17033
+#define TAGC_LUB_VELO_L2                   17034
+
+#define TAGC_LUB_DCA_U0                    7038
+#define TAGC_LUB_DCA_U1                    7039
+#define TAGC_LUB_DCA_U2                    7040
+#define TAGC_LUB_DCA_U3                    7041
+#define TAGC_LUB_DCA_L0                    7042
+#define TAGC_LUB_DCA_L1                    7043
+#define TAGC_LUB_DCA_L2                    7044
+#define TAGC_LUB_DCA_L3                    7045
+
+#define TAGC_LUB_SOURCE_0                  7046
+#define TAGC_LUB_SOURCE_1                  7047
+#define TAGC_LUB_SOURCE_2                  7048
+
+#define TAGC_HEAT_SOURCE_0                 7050
+
+/*  Problem Description Parameters   */
+
+#define TAGC_ACOUSTIC_FREQ		   8010
+#define TAGC_PROCESS_TEMP		   8011
+#define TAGC_ACOUSTIC_WAVELENGTH	   8012
+  /*
+   * Thin film multiphase constants
+   * */
+
+#define TAGC_TFMP_REL_PERM_0               7100
+#define TAGC_TFMP_REL_PERM_1               7101
+#define TAGC_TFMP_REL_PERM_2               7102
+#define TAGC_TFMP_REL_PERM_3               7103
+#define TAGC_TFMP_DENSITY_0                7104
+#define TAGC_TFMP_DENSITY_1                7105
+#define TAGC_TFMP_DENSITY_2                7106
+#define TAGC_TFMP_DENSITY_3                7107
+#define TAGC_TFMP_VISCOSITY_0              7108
+#define TAGC_TFMP_VISCOSITY_1              7109
 
 #endif

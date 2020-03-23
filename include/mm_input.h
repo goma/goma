@@ -32,6 +32,8 @@
 
 #include <stdio.h>
 
+#define MAX_INPUT_LINE_LENGTH 2048
+
 /*
  *  Definition of a Token structure
  */
@@ -456,5 +458,5 @@ PROTO((const char *,            /* target                                     */
        const char *,            /* list                                       */
        const int));             /* num_list                                   */
 
-    
+EXTERN int look_for_n_doubles(FILE *ifp, int n, double *array);
 #endif /* _MM_INPUT_H */

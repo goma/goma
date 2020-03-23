@@ -1509,6 +1509,8 @@ set_interaction_masks(Exo_DB *exo)
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = SHELL_NORMAL2;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
 	  v = N_DOT_CURL_V;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
@@ -1532,6 +1534,7 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = SHELL_FILMH;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
           break;
 	  
 	case R_PMOMENTUM1:
@@ -1729,6 +1732,8 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = SHELL_CURVATURE;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_CURVATURE2;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = PRESSURE;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = POR_LIQ_PRES;
@@ -1882,8 +1887,22 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  v = CUR_STRAIN;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-	  break;
 
+
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+
+	  v = TFMP_PRES;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = TFMP_SAT;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  break;
+	  
 	case R_MASS_SURF:
 	  v = VELOCITY1;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
@@ -2295,8 +2314,35 @@ set_interaction_masks(Exo_DB *exo)
 	  v = PRESSURE;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = TFMP_PRES;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           break;
 	  
+        case R_SHELL_CURVATURE2:
+          v = SHELL_CURVATURE2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+          break;
+
 	case R_SHELL_ANGLE1:
           v = SHELL_ANGLE1;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
@@ -2336,11 +2382,11 @@ set_interaction_masks(Exo_DB *exo)
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = MESH_DISPLACEMENT3;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-		  v = VELOCITY1;
+                  v = VELOCITY1;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-	      v = VELOCITY2;
+              v = VELOCITY2;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
-	      v = VELOCITY3;
+              v = VELOCITY3;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	      v = PRESSURE;
 	      if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
@@ -2541,6 +2587,17 @@ set_interaction_masks(Exo_DB *exo)
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           break;
 
+        case R_SHELL_NORMAL3:
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MESH_DISPLACEMENT3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+
 	case R_ACOUS_PREAL:
 	case R_ACOUS_PIMAG:
 	case R_ACOUS_REYN_STRESS:
@@ -2583,6 +2640,29 @@ set_interaction_masks(Exo_DB *exo)
           v = FILL;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  break;
+
+	case R_RESTIME:
+	  v = RESTIME;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = TEMPERATURE;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = VELOCITY1;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = VELOCITY2;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = VELOCITY3;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = MASS_FRACTION;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = MESH_DISPLACEMENT1;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = MESH_DISPLACEMENT2;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = MESH_DISPLACEMENT3;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = FILL;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  break;  
 
         case R_SHELL_LUBP:
           v = SHELL_LUBP;
@@ -2641,6 +2721,13 @@ set_interaction_masks(Exo_DB *exo)
           v = SHELL_CROSS_SHEAR;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
           /* Need to add the height-var here and velocity var here */
           break;
 
@@ -2686,6 +2773,13 @@ set_interaction_masks(Exo_DB *exo)
           v = SHELL_SHEAR_BOT;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = SHELL_CROSS_SHEAR;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+          v = SHELL_NORMAL1;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL2;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_NORMAL3;
           if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 
           /* Need to add the height-var here and velocity var here */
@@ -3011,6 +3105,15 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
           v = SHELL_DELTAH;
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+	  v = SHELL_NORMAL1;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_NORMAL2;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_NORMAL3;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+
+
 	  break;
 
         case R_SHEAR_RATE:
@@ -3629,6 +3732,30 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
 	  break;
 
+	case R_TFMP_MASS:
+	case R_TFMP_BOUND:
+	  v = TFMP_PRES;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = TFMP_SAT;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = MESH_DISPLACEMENT1;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+ 	  v = MESH_DISPLACEMENT2;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = MESH_DISPLACEMENT3;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_NORMAL1;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_NORMAL2;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+	  v = SHELL_NORMAL3;
+	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_CURVATURE;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v = SHELL_TENSION;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+
 	case R_SPECIES_UNK_0:
 	case R_SPECIES_UNK_1:
 	case R_SPECIES_UNK_2:
@@ -3683,6 +3810,115 @@ set_interaction_masks(Exo_DB *exo)
 	  if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;  
 	  break;
  
+        case R_EM_E1_REAL:
+          v=EM_H2_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H3_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E1_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E1_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+        case R_EM_E2_REAL:
+          v=EM_H1_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H3_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E2_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E2_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+        case R_EM_E3_REAL:
+          v=EM_H1_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H2_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E3_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E3_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+        case R_EM_E1_IMAG:
+          v=EM_H2_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H3_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E1_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E1_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+        case R_EM_E2_IMAG:
+          v=EM_H1_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H3_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E2_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E2_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+        case R_EM_E3_IMAG:
+          v=EM_H1_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H2_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E3_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E3_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+
+        case R_EM_H1_REAL:
+          v=EM_E2_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E3_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H1_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+        case R_EM_H2_REAL:
+          v=EM_E1_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E3_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H2_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+        case R_EM_H3_REAL:
+          v=EM_E1_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E2_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H3_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+        case R_EM_H1_IMAG:
+          v=EM_E2_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E3_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H1_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+        case R_EM_H2_IMAG:
+          v=EM_E1_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E3_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H2_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
+        case R_EM_H3_IMAG:
+          v=EM_E1_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_E2_IMAG;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          v=EM_H3_REAL;
+          if(Num_Var_In_Type[v])  eqn_var_mask[e][v] = 1;
+          break;
 	}
     } 
   

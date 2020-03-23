@@ -1,3 +1,4 @@
+
 /************************************************************************ *
 * Goma - Multiphysics finite element software                             *
 * Sandia National Laboratories                                            *
@@ -202,12 +203,22 @@ read_mesh_exoII(Exo_DB *exo,
 				   like the element number map, but some
 				   information has its own netcdf name.
 				   */
+      check_parallel_error("Error in reading Distributed Processing Information");
     }
 	
 
+  // SS_Internal_Boundary uses the dpi values
+  SS_Internal_Boundary = alloc_int_1(exo->num_side_sets, INT_NOINIT);
+  int ss_index;
+  for (ss_index = 0; ss_index < exo->num_side_sets; ss_index++)
+    {
+      int global_ss_index = dpi->ss_index_global[ss_index];
+      SS_Internal_Boundary[ss_index] = dpi->ss_internal_global[global_ss_index];
+    }
+
   setup_old_dpi(exo, dpi);
 
-  setup_old_exo(exo);
+  setup_old_exo(exo, dpi, Num_Proc);
 
   /*
    * Duane mentions that blindly compiling with MDE too low (like 12)
@@ -266,6 +277,115 @@ read_mesh_exoII(Exo_DB *exo,
   return 0;
 }
 
+
+/*
+ * Finally, determine whether a particular side set is internal or
+ * external.
+ *
+ * Ground Rules:
+ *	[1] A side set is external if it is not internal.
+ *	[2] A side set is internal if any two element/side pairs share nodes.
+ *   [3] It suffices to look for duplicate nodes only among the
+ *	    element/side pairs in the same side set. I.e., an "internal" sideset
+ *       is not supposed to have two side sets associated with it.
+ *   [4] Note that side sets that are partially internal and partially
+ *	    external are not accounted for in this scheme. Unless you rewrite
+ *	    the code, you'll need to break those hybrids into pieces.
+ */
+
+int *find_ss_internal_boundary(Exo_DB *e)
+{
+  char err_msg[MAX_CHAR_ERR_MSG];
+  int *ss_is_internal = alloc_int_1(e->num_side_sets, -1);
+  int *first_side_node_list = alloc_int_1(MAX_NODES_PER_SIDE, -1);
+  int *other_side_node_list = alloc_int_1(MAX_NODES_PER_SIDE, -1);
+
+  int ss_index;
+  for (ss_index = 0; ss_index < e->num_side_sets; ss_index++)
+    {
+      /*
+       * It suffices to check the first element/side pair. The nodes here
+       * are cross-checked with the nodes in subsequent element/side pairs
+       * in this same sideset.
+       */
+      int side = 0;
+      int start = e->ss_node_side_index[ss_index][side];
+      int end = e->ss_node_side_index[ss_index][side + 1];
+      int i;
+      for (i = 0; i < (end - start); i++)
+        {
+          first_side_node_list[i] = e->ss_node_list[ss_index][start + i];
+        }
+
+      /*
+       * Sort the node numbers into ascending order.
+       */
+      if ((end - start) < 1)
+        {
+          EH(-1, "Bad side node index listing!");
+        }
+      integer_sort((end - start), first_side_node_list);
+
+      /*
+       * Now look at the 2nd through last elem/sides nodegroups for any match,
+       * but only if there are at least 2 sides in this sideset.
+       *
+       *	"Just one side?"
+       *
+       *	"You're external, buddy!
+       */
+
+      int num_sides = e->ss_num_sides[ss_index];
+      if (num_sides > 1)
+        {
+          side = 1;
+          int match_found = FALSE;
+          do
+            {
+              int start = e->ss_node_side_index[ss_index][side];
+              int end = e->ss_node_side_index[ss_index][side + 1];
+	      int i;
+              for (i = 0; i < (end - start); i++)
+                {
+                  other_side_node_list[i] =
+                      e->ss_node_list[ss_index][start + i];
+                }
+              if ((end - start) < 1)
+                {
+                  sprintf(err_msg,
+                          "SS ID %d (%d sides), side_index[%d]=%d, "
+                          "side_index[%d]=%d",
+                          e->ss_id[ss_index], e->ss_num_sides[ss_index], side,
+                          start, side + 1, end);
+                  EH(-1, err_msg);
+                }
+              integer_sort((end - start), other_side_node_list);
+              int equal_vectors = TRUE;
+              for (i = 0; i < (end - start); i++)
+                {
+                  equal_vectors &=
+                      (other_side_node_list[i] == first_side_node_list[i]);
+                }
+              match_found = equal_vectors;
+              side++;
+            }
+          while (side < num_sides && !match_found);
+
+          if (match_found)
+            {
+              /*
+               * Set this indicator to the SS ID, but any quantity not
+               * equal to "0" would do just as well.
+               */
+              ss_is_internal[ss_index] = e->ss_id[ss_index];
+            }
+        }
+    }
+  free(other_side_node_list);
+  free(first_side_node_list);
+  return ss_is_internal;
+}
+
 /*
  * The new fangled read routines for EXODUS II data have filled a data
  * structure. This data structure is mined and the values of the traditional
@@ -274,23 +394,19 @@ read_mesh_exoII(Exo_DB *exo,
  * arrays are allocated.
  */
 
-void 
-setup_old_exo(Exo_DB *e)
+void
+setup_old_exo(Exo_DB *e, Dpi *dpi, int num_proc)
 {
   /* int blk_start; */
   int cur;			/* tmp counter for how many ebs touch a SS */
   /* int eb;			 element block index */
   int ebi;
   int elem;
-  int equal_vectors;		/* boolean */
-  int hi;
   int i;
   int j;
   int k;
-  int l;
   int length;
   int lo;
-  int match_found;		/* boolean */
   int mmps;			/* max EBs (~mats) per side set found */
   /*   int nb;			 number of blocks */
   int node;
@@ -298,7 +414,6 @@ setup_old_exo(Exo_DB *e)
   int nodes_this_side;
   int npe;
   int num_sides;
-  int side;
   int ss_index;			
   int ss_index_max;		/* index for SS touching the most EBs */
   /* int start; */
@@ -309,8 +424,6 @@ setup_old_exo(Exo_DB *e)
   int *ssl;			/* lists of sidesets that EBs touch */
   int *ssp;			/* side set pointers */
 
-  int *snl_std;			/* tmp arrays of unique nodes on SSs used */
-  int *snl_cmp;			/* to determine external/internal status */
   char Title[MAX_LINE_LENGTH+1];/* EXODUS II title                              */
   char err_msg[MAX_CHAR_ERR_MSG];
   strcpy(Title,          e->title);
@@ -630,18 +743,34 @@ setup_old_exo(Exo_DB *e)
 	 }
      }
 
-   for ( ss_index=0; ss_index<e->num_side_sets; ss_index++)
+   if (num_proc > 1) {
+    for ( ss_index=0; ss_index<e->num_side_sets; ss_index++) 
      {
+        ss_to_blks[0][ss_index] = e->ss_id[ss_index];
 
-       ss_to_blks[0][ss_index] = e->ss_id[ss_index];
-
-       lo = ssp[ss_index];
-
-       for ( j=ssp[ss_index]; j<ssp[ss_index+1]; j++)
-	 {
-	   ss_to_blks[j-lo+1][ss_index] = e->eb_id[ebl[j]];
-	 }
+        int global_ss_index = dpi->ss_index_global[ss_index];
+        int start = dpi->ss_block_index_global[global_ss_index];
+        int end = dpi->ss_block_index_global[global_ss_index +1];
+        int bidx;
+        for (bidx = start; bidx < end; bidx++) {
+          // expects 1-indexed blocks
+          ss_to_blks[bidx - start + 1][ss_index] = dpi->ss_block_list_global[bidx] + 1;
+        }
      }
+   } else {
+       
+    for ( ss_index=0; ss_index<e->num_side_sets; ss_index++)
+        {
+        ss_to_blks[0][ss_index] = e->ss_id[ss_index];
+
+        lo = ssp[ss_index];
+
+        for ( j=ssp[ss_index]; j<ssp[ss_index+1]; j++)
+            {
+            ss_to_blks[j-lo+1][ss_index] = e->eb_id[ebl[j]];
+            }
+        }
+   }
 
    /*
     * Tell us about this connectivity...
@@ -678,90 +807,6 @@ setup_old_exo(Exo_DB *e)
 #endif
 
    /*
-    * Finally, determine whether a particular side set is internal or
-    * external. 
-    *
-    * Ground Rules:
-    *	[1] A side set is external if it is not internal.
-    *	[2] A side set is internal if any two element/side pairs share nodes. 
-    *   [3] It suffices to look for duplicate nodes only among the 
-    *	    element/side pairs in the same side set. I.e., an "internal" sideset
-    *       is not supposed to have two side sets associated with it.
-    *   [4] Note that side sets that are partially internal and partially
-    *	    external are not accounted for in this scheme. Unless you rewrite
-    *	    the code, you'll need to break those hybrids into pieces.
-    */
-
-   SS_Internal_Boundary = alloc_int_1(e->num_side_sets, -1);
-   snl_std = alloc_int_1(MAX_NODES_PER_SIDE, -1);
-   snl_cmp = alloc_int_1(MAX_NODES_PER_SIDE, -1);
-
-   for (ss_index = 0; ss_index < e->num_side_sets; ss_index++) {
-     /*
-      * It suffices to check the first element/side pair. The nodes here
-      * are cross-checked with the nodes in subsequent element/side pairs
-      * in this same sideset.
-      */
-     side  = 0;
-     lo    = e->ss_node_side_index[ss_index][side];
-     hi    = e->ss_node_side_index[ss_index][side+1];
-     for (l = 0; l < (hi-lo); l++) {
-       snl_std[l] = e->ss_node_list[ss_index][lo+l];
-     }
-
-     /*
-      * Sort the node numbers into ascending order.
-      */
-     if ((hi-lo) < 1) {
-       EH(-1, "Bad side node index listing!");
-     }
-     integer_sort((hi-lo), snl_std);
-
-     /*
-      * Now look at the 2nd through last elem/sides nodegroups for any match,
-      * but only if there are at least 2 sides in this sideset.
-      *
-      *	"Just one side?" 
-      *
-      *	"You're external, buddy!
-      */
-
-     num_sides   = e->ss_num_sides[ss_index];
-     if (num_sides > 1) { 
-       side        = 1;
-       match_found = FALSE;
-       do {
-	 lo    = e->ss_node_side_index[ss_index][side];
-	 hi    = e->ss_node_side_index[ss_index][side+1];
-	 for (l = 0; l < (hi-lo); l++) {
-	   snl_cmp[l] = e->ss_node_list[ss_index][lo+l];
-	 }
-	 if ((hi-lo) < 1) {
-	   sprintf(err_msg, 
-                   "SS ID %d (%d sides), side_index[%d]=%d, side_index[%d]=%d",
-		   e->ss_id[ss_index], e->ss_num_sides[ss_index],
-		   side, lo, side+1, hi);
-	   EH(-1, err_msg);
-	 }
-	 integer_sort((hi-lo), snl_cmp);
-	 equal_vectors = TRUE;
-	 for (l = 0; l < (hi-lo); l++) {
-	   equal_vectors &= (snl_cmp[l] == snl_std[l]);
-	 }
-	 match_found = equal_vectors;
-	 side++;
-       } while (side<num_sides && !match_found);
-       if (match_found) {
-	 /*
-	  * Set this indicator to the SS ID, but any quantity not
-	  * equal to "0" would do just as well.
-	  */
-	 SS_Internal_Boundary[ss_index] = e->ss_id[ss_index];
-       }
-     }
-   }
-
-   /*
     * The node_map and elem_map from EXODUS are no longer appropriated by
     * our parallel processing needs. They are being returned to whatever
     * other uses you may have for them.
@@ -786,8 +831,6 @@ setup_old_exo(Exo_DB *e)
   /*
    * Free malloced memory from this routine
    */
-  safer_free((void **) &snl_std);
-  safer_free((void **) &snl_cmp);
   safer_free((void **) &ssp);
   safer_free((void **) &ebl);
 
@@ -1113,7 +1156,7 @@ check_elemblocks(Exo_DB *e,	   /* EXODUS II FE db has all mesh info (in) */
 
 void
 setup_old_dpi(Exo_DB *e,
-	      Dpi    *d)
+          Dpi    *d)
 {
 
   Num_Internal_Nodes = d->num_internal_nodes;
@@ -1776,7 +1819,7 @@ get_prefix(char *prefix_string,
     }
   else				/* did not find a dot */
     {
-      strncpy(prefix_string, input_string, len);
+      strncpy(prefix_string, input_string, len-1);
       return len;
     }
 

@@ -329,15 +329,25 @@ beer_belly(void)
   /* But first we pull a fast one.  If this is a 3D shell element, we up dim to dim+1 so
    *  that the 3D case is executed, but only after we populate the 3rd column of J with 
    * arbitrary nonzero constants so as to keep J full rank
+   
+   * AMC - This might work for the gradients once they are in the plane of the element,
+   * but the gradients with respect to global coordinate system do indeed depend on
+   * the values assigned to the right most column of the 
+   * Jacobian of the mapping (MapBf->J).
+   * 
+   * There are problems that depend on the rightmost column being the values
+   * computed above, so use this block with caution.
    */
-  if(elem_shape == SHELL || elem_shape == TRISHELL) 
+  if(elem_shape == SHELL
+     || elem_shape == TRISHELL
+     || (mp->ehl_integration_kind == SIK_S))
     {
       dim++;
       for (t = 0; t < Num_Basis_Functions; t++)
 	{ 
 	  for (j = 0; j < pdim; j++)
 	    {
-	      bfd[t]->J[2][j] = MapBf->J[2][j] = (j+1)*1.0;
+	      bfd[t]->J[pd->Num_Dim-1][j] = MapBf->J[pd->Num_Dim-1][j] = (j+1)*1.0;
 	    }
 	}
 
@@ -345,13 +355,18 @@ beer_belly(void)
        *didn't screw things up. Note that the detJ in the shell case can be 
        *negative, but it is important to point out that we are not using it for 
        *for integration, but only as a crutch for inversion of J */
-
+      if (pd->Num_Dim == 3) {
       MapBf->detJ = MapBf->J[0][0] * ( MapBf->J[1][1] * MapBf->J[2][2]
 				       -MapBf->J[1][2] * MapBf->J[2][1])
 	- MapBf->J[0][1] * ( MapBf->J[1][0] * MapBf->J[2][2]
 			     -MapBf->J[2][0] * MapBf->J[1][2])
 	+ MapBf->J[0][2] * ( MapBf->J[1][0] * MapBf->J[2][1]
 			     -MapBf->J[2][0] * MapBf->J[1][1]);
+      }
+      if (pd->Num_Dim == 2) {
+        MapBf->detJ = MapBf->J[0][0] * MapBf->J[1][1]
+	- MapBf->J[0][1] * MapBf->J[1][0];
+      }
 
       if(fabs(MapBf->detJ) < 1.e-10)
        	{
@@ -365,7 +380,6 @@ beer_belly(void)
         }
 
     }
-  
   
 
   /* Compute inverse of Jacobian for only the MapBf right now */
@@ -417,6 +431,7 @@ beer_belly(void)
       break;
 
     case 2:
+      dim = ei->ielem_dim;
       MapBf->detJ    =  MapBf->J[0][0] * MapBf->J[1][1]
 	- MapBf->J[0][1] * MapBf->J[1][0];
 
@@ -788,6 +803,7 @@ calc_surf_tangent (const int  ielem, /* current element number               */
      */
     fv->stangent[0][0] = -fv->snormal[1];
     fv->stangent[0][1] =  fv->snormal[0];
+    fv->stangent[1][2] =  1.0;
     for (j=0 ; j < nodes_per_elem; j++) {
       fv->dstangent_dx[0][0][0][j]=0.;
       fv->dstangent_dx[0][0][1][j]=0.;
@@ -2239,7 +2255,8 @@ load_bf_mesh_derivs(void)
       pd->CoordinateSystem == CYLINDRICAL ||
       pd->CoordinateSystem == PROJECTED_CARTESIAN) {
     wim = dim;
-  } else if (pd->CoordinateSystem == SWIRLING) {
+  } else if (pd->CoordinateSystem == SWIRLING ||
+             pd->CoordinateSystem == CARTESIAN_2pt5D) {
     wim = 3;
   } else {
     /* MMH: What makes it here??? */
@@ -3973,6 +3990,10 @@ newshape(const double xi[],	/* local coordinates                         */
 	{
 	  value = shape(s, t, u, LINEAR_TRI, Iquant, Inode);
 	}
+      else if(interpolation == I_Q2)
+        {
+          value = shape(s, t, u, QUAD_TRI, Iquant, Inode);
+        }
       else
 	{
 	  EH(-1,"Don't recognize this basis type for Linear triangles");
@@ -4927,8 +4948,8 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
 
   /* Zero out sensitivities */
 
-  memset(d_gd_dv, 0, sizeof(double)*DIM*MDE);
-  memset(d_gd_dmesh, 0, sizeof(double)*DIM*MDE);
+  if(d_gd_dv != NULL) memset(d_gd_dv, 0, sizeof(double)*DIM*MDE);
+  if(d_gd_dmesh != NULL) memset(d_gd_dmesh, 0, sizeof(double)*DIM*MDE);
 
 
   *gammadot = 0.;
@@ -4941,12 +4962,14 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
 	}
     }
   
-  *gammadot  =  sqrt(*gammadot/2.); 
+  *gammadot  =  sqrt(0.5*fabs(*gammadot)); 
   
   /* get stuff for Jacobian entries */
   v = VELOCITY1;
   vdofs = ei->dof[v];
   
+  if ( d_gd_dmesh != NULL || d_gd_dv != NULL)
+  {
   if ( pd->e[R_MESH1] )
     {
       mdofs = ei->dof[R_MESH1];
@@ -4967,12 +4990,13 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
 	    }
 	}
     }
+  }
   
   /*
    * d( gamma_dot )/dmesh
    */
   
-  if ( pd->e[R_MESH1] )
+  if ( pd->e[R_MESH1] && d_gd_dmesh != NULL)
     {
       
       for ( p=0; p<VIM; p++)
@@ -5023,7 +5047,7 @@ calc_shearrate(dbl *gammadot,	/* strain rate invariant */
    * d( gammadot )/dv
    */
   
-  if(*gammadot != 0.)
+  if(*gammadot != 0. && d_gd_dv != NULL)
     {
       for ( a=0; a<VIM; a++)
 	{
@@ -5312,3 +5336,112 @@ calc_tensor_invariant( dbl T[DIM][DIM],        // Original tensor
 
 }  // End of calc_tensor_invariants()
 			
+
+void get_supg_tau(struct SUPG_terms *supg_terms,
+                  int dim,
+                  dbl diffusivity,
+                  PG_DATA *pg_data)
+{
+  double vnorm = 0;
+
+  for (int i = 0; i < VIM; i++) {
+    vnorm += fv->v[i]*fv->v[i];
+  }
+  vnorm = sqrt(vnorm);
+
+  double hk = 0;
+  for (int i = 0; i < dim; i++) {
+    hk += sqrt(pg_data->hsquared[i]);
+  }
+
+  hk /= (double) dim;
+
+  double D = diffusivity;
+
+  double hk_dX[DIM][MDE];
+  for (int a = 0; a < dim; a++)
+    {
+      for (int j = 0; j < ei->dof[MESH_DISPLACEMENT1+a]; j++)
+        {
+          double tmp = 0;
+          for (int b = 0; b < dim; b++)
+            {
+              tmp += (2*pg_data->hhv[b][a] * pg_data->dhv_dxnode[b][j])/(2*sqrt(pg_data->hsquared[b]));
+            }
+          hk_dX[a][j] = tmp/dim;
+        }
+    }
+
+  double Pek = 0.5 * vnorm * hk / D;
+
+  double eta = Pek;
+  double eta_dX[DIM][MDE];
+  double eta_dV[DIM][MDE];
+  if (Pek > 1) {
+    eta = 1;
+    for (int i = 0; i < DIM; i++)
+    {
+      for (int j = 0; j < MDE; j++)
+      {
+        eta_dX[i][j] = 0;
+        eta_dV[i][j] = 0;
+      }
+    }
+  }
+  else
+  {
+    for (int i = 0; i < DIM; i++)
+    {
+      for (int j = 0; j < MDE; j++)
+      {
+        if (pd->e[VELOCITY1+i])
+        {
+          eta_dV[i][j] = 0.5 * 0.5 * hk * fv->v[i]*bf[VELOCITY1+i]->phi[j] / (vnorm*D);
+
+        }
+
+        if (pd->e[MESH_DISPLACEMENT1+i])
+        {
+          eta_dX[i][j] = 0.5 * vnorm * hk_dX[i][j] / D;
+
+        }
+      }
+    }
+  }
+
+  if (vnorm > 0) {
+    supg_terms->supg_tau = 0.5 * hk * eta / vnorm;
+
+    for (int a = 0; a < VIM; a++)
+      {
+        int var = VELOCITY1 + a;
+        for (int j = 0; j < ei->dof[var]; j++)
+          {
+            supg_terms->d_supg_tau_dv[a][j] = 0.5*hk*eta*fv->v[a]*bf[var]->phi[j] /
+                (- vnorm*vnorm*vnorm) + 0.5 * hk * eta_dV[a][j] / vnorm;
+          }
+
+        var = MESH_DISPLACEMENT1 + a;
+        for (int j = 0; j < ei->dof[var]; j++)
+          {
+            supg_terms->d_supg_tau_dX[a][j] = 0.5 * hk_dX[a][j] * eta / vnorm + 0.5 * hk * eta_dX[a][j] / vnorm;
+          }
+      }
+
+
+  } else {
+    supg_terms->supg_tau = 0;
+    for (int i = 0; i < DIM; i++)
+      {
+        for (int j = 0; j < MDE; j++)
+          {
+            supg_terms->d_supg_tau_dv[i][j] = 0.0;
+          }
+        for (int j = 0; j < MDE; j++)
+          {
+            supg_terms->d_supg_tau_dX[i][j] = 0.0;
+          }
+      }
+  }
+
+}

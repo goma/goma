@@ -48,6 +48,18 @@ PROTO((double [DIM],		/* func                                      */
        const double ,		/* interface zone shift                */
        const double ));		/* gas leak angle (degrees)            */
 
+EXTERN void fmesh_etch_bc
+PROTO((double *,            /* func                                      */
+       double [MAX_VARIABLE_TYPES + MAX_CONC], /* d_func           */
+       const int,               /* Etch plane                 */
+       const int,               /* Local node ID                 */
+       const double [MAX_PDIM], /* Mesh velocity */
+       const double ,           /* tt - parameter to vary time integration 
+                                 * from explicit (tt = 1) to 
+                                 * implicit (tt = 0)                         */
+       const double ));         /* dt - current value of the time step       */
+
+
 EXTERN void fvelo_tangential_ls_bc
 PROTO((double [DIM],		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
@@ -196,6 +208,7 @@ fvelo_slip_bc(double func[MAX_PDIM],
 	      double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
 	      double x[],
 	      const int type,    /* whether rotational or not */
+	      const int max_float,    /* max float number */
               double bc_float[MAX_BC_FLOAT_DATA],
 	      const int dcl_node,/*   node id for DCL  */
 	      const double xsurf[MAX_PDIM], /* coordinates of surface Gauss  *
@@ -203,9 +216,30 @@ fvelo_slip_bc(double func[MAX_PDIM],
 	      const double tt,   /* parameter in time stepping alg           */
 	      const double dt);   /* current time step value                  */
 
+void
+fvelo_slip_power_bc(double func[MAX_PDIM],
+		    double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+		    const int type,    /* whether rotational or not */
+		    const int max_float,    /* Max float number from input file */
+		    double bc_float[MAX_BC_FLOAT_DATA],
+		    const double tt,   /* parameter in time stepping alg           */
+		    const double dt);
+
 int
 exchange_fvelo_slip_bc_info(int ibc /* Index into BC_Types for VELO_SLIP_BC */);
 
+
+void
+fvelo_airfilm_bc(double func[MAX_PDIM],
+	      double d_func[MAX_PDIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+	      double x[],
+	      const int type,    /* whether rotational or not */
+              double bc_float[MAX_BC_FLOAT_DATA],
+	      const int dcl_node,/*   node id for DCL  */
+	      const double xsurf[MAX_PDIM], /* coordinates of surface Gauss  *
+					     * point, i.e. current position  */
+	      const double tt,   /* parameter in time stepping alg           */
+	      const double dt);   /* current time step value                  */
 
 EXTERN void fvelo_slip_level
 PROTO(( double [MAX_PDIM],	/* func                                      */
@@ -281,14 +315,17 @@ PROTO((double cfunc[MDE][DIM],
 EXTERN void apply_repulsion_roll
 PROTO((double cfunc[MDE][DIM],
        double d_cfunc[MDE][DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],
+       double [],		/* Solution vector */
        const double ,		/* roll radius      */
        const double [3],		/* axis origin      */
        const double [3],		/* direction angles      */
+       const double ,		/* omega - roll rotation rate    */
        const double ,		/* repulsion length scale      */
        const double ,		/* repulsion exponent     */
        const double ,		/* repulsion coefficient     */
-       const double ,		/* inverse slip coefficient    */
-       const double ,		/* omega - roll rotation rate    */
+       const double ,		/* gas viscosity   */
+       const double ,		/* exclusion scale    */
+       const int ,		/* DCL node id    */
        struct elem_side_bc_struct *, /* elem_side_bc */
        const int ));		/* iconnect_ptr */
 
@@ -365,6 +402,23 @@ PROTO((double [DIM],		/* func                                      */
        const double ,		/* pdatum - pressure datum from input card   */
        const int ));		/* iflag - -1 to use pdatum, otherwise use P */
 
+EXTERN void flow_n_dot_T_gradv_sic(double [DIM],                  /* func  */
+				   double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE],  /* d_func   */
+				   const double,     /* pdatum - pressure datum from input card   */
+				   const int);       /* iflag - -1 to use pdatum, otherwise use P */
+
+EXTERN void stress_no_v_dot_gradS
+PROTO((double [MAX_MODES][6],		/* func                                      */
+       double [MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+       const double ,		/* Time step   */
+       const double ));		/* Time step parameter */
+
+EXTERN void stress_no_v_dot_gradS_logc
+PROTO((double [MAX_MODES][6],           /* func                                      */
+       double [MAX_MODES][6][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
+       const double ,           /* Time step   */
+       const double ));         /* Time step parameter */
+
 EXTERN void PSPG_consistency_bc
 PROTO((double *,		/* func                                      */
        double [DIM][MAX_VARIABLE_TYPES + MAX_CONC][MDE], /* d_func           */
@@ -372,10 +426,7 @@ PROTO((double *,		/* func                                      */
        const dbl ,		/* current time                              */
        const dbl ,		/* dt - time step size                       */
        const dbl ,		/* tt - time step parameter                  */
-       const dbl ,		/* h_elem_avg - global average element size  */
-       const dbl [DIM],		/* h - average element sizes                 */
-       const dbl ,		/* mu_avg - average element viscosity        */
-       const dbl ));		/* U_norm - global velocity norm             */
+       const PG_DATA *pg_data));
 
 EXTERN void fapply_CA
 PROTO((double *,		/* func                                      */
@@ -531,8 +582,11 @@ PROTO((double *,		/* func */
        const double ,		/* wall velocity */
        const double ,		/* theta_max */
        const double ,		/* dewet parameter */
+       const double ,		/* dcl_shearrate */
        const int ,		/* BC identifier */
-       double [MAX_PDIM][MDE] ));		/* wall velo derivs	*/
+       double [MAX_PDIM][MDE],          /* wall velo derivs     */
+       const int ));            /* local_node_number    */
+
 
 
 

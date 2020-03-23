@@ -56,11 +56,6 @@
 
 char *program_name;		/* name this program was run with */
 
-static const char program_description[] = "GOMA distributed problem recomposition tool";
-
-static const char copyright[] = 
-"Copyright (c) 1999-2000 Sandia National Laboratories. All rights reserved.";
-
 int *ep;			/* element pointers into node list */
 int *np;			/* node pointers into element list */
 
@@ -483,6 +478,42 @@ fix_exo_file(int num_procs, char* exo_mono_name)
 	      t, mono->nv_time_indeces[0]);
 #endif
       wr_result_exo(mono, monolith_file_name, 0);
+      
+      if ( mono->num_glob_vars > 0 ) {
+	int status;
+	
+	mono->cmode = EX_WRITE;
+
+
+	mono->io_wordsize   = 0;	/* i.e., query */
+	mono->comp_wordsize = sizeof(dbl);
+	mono->exoid         = ex_open(mono->path, 
+				   mono->cmode, 
+				   &mono->comp_wordsize, 
+				   &mono->io_wordsize, 
+				   &mono->version);
+
+	/*status = ex_put_var_param(mono->exoid, "g", mono->num_glob_vars);
+	EH(status, "ex_put_var_param(g)");
+	*/
+	status = ex_put_variable_names(mono->exoid, EX_GLOBAL, mono->num_glob_vars,
+				       mono->glob_var_names);
+	EH(status, "ex_put_variable_names global");
+
+
+
+	for (i = 0; i < mono->num_gv_time_indeces; i++) {
+	  status = ex_put_var(mono->exoid, mono->gv_time_indeces[i], EX_GLOBAL,
+			      1, 0, mono->num_glob_vars,
+			      mono->gv[i]);
+	  EH(status, "ex_put_var global vars");
+	}
+
+	status = ex_close(mono->exoid);
+	EH(status, "ex_close()");
+
+      }
+      
       zero_base(mono);
     }
 

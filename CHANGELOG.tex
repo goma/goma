@@ -1,6 +1,7 @@
 \documentclass{article}
 \usepackage[letterpaper, margin=1in]{geometry}
 \usepackage{amsmath,amssymb,amsfonts}
+\usepackage{bm}
 \usepackage{alltt}
 
 \title{Changes/additions to GOMA since last manual update}
@@ -35,7 +36,7 @@ Finally, NOTE that we have provided several categories for changes.   Specifical
 %***************************************************
 
 Issue:  CHEMKIN untested for 10 years and current test suite problems are inactive.   
-Issue:  mm_input.c: Domain Mapping File is a chemkin thing that needs to be deleted or ressurected.   
+Issue:  mm\_input.c: Domain Mapping File is a chemkin thing that needs to be deleted or ressurected.   
 %***************************************************
 %************Configuration Management Changes*******
 %***************************************************
@@ -100,9 +101,11 @@ Description: Unique boundary condition for the Fill (LS) function
 Example: BC = F_DIODE_BC
 
 ADDED TO MANUAL (12/2/2012)
-Capability: Level Set Initialize = variable_type init_value_minus init_value_plus
+Capability: Level Set Initialize = variable_type init_value_minus 
+init_value_plus
 Developers: ??
-Description: No idea but I think it is to inialize other fields around the zero level set
+Description: No idea but I think it is to inialize other fields around the zero
+level set
 Example: Level Set Intialize Velocity 3.34 0  
 
 ADDED TO MANUAL (12/2/2012)
@@ -117,21 +120,24 @@ END OF VOLUME_INT
 ADDED TO MANUAL (12/2/2012)
 Capability:  Post-processing for Lame MU coefficient
 Developers:  Scott A. Roberts, sarober
-Description:  Adds an additional post processing item for the Lame MU coefficient.
+Description:  Adds an additional post processing item for the Lame MU
+coefficient.
 Post Processing Specifications
 Lame MU = yes
 
 ADDED TO MANUAL (12/2/2012)
 Capability:  Post-processing for Lame LAMBDA coefficient
 Developers:  Scott A. Roberts, sarober
-Description:  Adds an additional post processing item for the Lame LAMBDA coefficient.
+Description:  Adds an additional post processing item for the Lame LAMBDA
+coefficient.
 Post Processing Specifications
 Lame LAMBDA = yes
 
 ADDED TO MANUAL (12/7/2012)
 Capability:  Post-processing for von Mises stress and strain invariants
 Developers:  Scott A. Roberts, sarober
-Description:  Adds an additional post processing item for the post processing of the von Mises invariants for the strain and stress tensor.
+Description:  Adds an additional post processing item for the post processing of
+ the von Mises invariants for the strain and stress tensor.
 Post Processing Specifications
 Von Mises Strain = yes
 Von Mises Stress = yes
@@ -187,15 +193,99 @@ Description:  Added second open porous shell equation to accomodate
 lubrication regions. 
 Example: EQ = shell_sat_open_2   Q1 SH_P_OPEN_2   Q1 1           1   1
 
+Capability: Modification to GD_TIME to allow setting a maximum time
+Developer: W. Ortiz
+Description: User specified max time is used in place of current
+solution time in order to allow a value to ramp up to a fixed
+value. The max time parameter is optional.
+Example:
+BC = GD_LINEAR SS 1 R_MOMENTUM1 0 VELOCITY1 0 {web_speed/time_max} 0.
+BC = GD_TIME   SS 1 R_MOMENTUM1 0 LINEAR 0 0 1. {time_max}
+BC = GD_LINEAR SS 1 R_MOMENTUM1 0 VELOCITY1 0 0. -1.
+
+Capability: Post processing global and printing of level set points
+Developer: W. Ortiz
+Description: Added a new Post Processing Global section to post
+processing to allow for file output post processing. The global post
+processing runs at each print so that it follows printing frequency.
+
+Printing of LS interface to text datafiles. Uses reconstruction method
+(Points or Facets) to print out appropriate points representing the
+level set interface.
+
+Two options LEVEL_SET_INTERFACE_PRINT prints the interface at the last
+time step and takes a file name for input and overwrites file at every
+step; and LEVEL_SET_INTERFACE_PRINT_ALL_TIMES prints interface at
+every time step, including the time in the output and appending to the
+filename.
+
+Allows for easier data processing of interface position, such as for
+plotting.
+
+Example:
+Post Processing Global =
+GLOBAL = LEVEL_SET_INTERFACE_PRINT interface.dat
+GLOBAL = LEVEL_SET_INTERFACE_PRINT_ALL_TIMES interface_all.dat
+END OF GLOBAL
+
+File formats:
+- LEVEL_SET_INTERFACE_PRINT (tab separated)
+
+x_coord y_coord point_indicator
+
+- LEVEL_SET_INTERFACE_PRINT_ALL_TIMES (tab separated)
+
+time x_coord y_coord point_indicator
+
+Where point_indicator is 0 always if data is for point reconstruction,
+and is 0, 1 for point pairs making up facet lines for facet
+reconstruction.
+
+
 Capability: Boundary condition for hydrostatic pressure
 Developer: D. Hariprasad, December 2014
-Description: Specifies pressure as P = P_0 + rho*g*x where rho is a vairable density and the user specifies P_0.
+Description: Specifies pressure as P = P_0 + rho*g*x where rho is a variable
+density and the user specifies P_0.
 Example:  BC = FLOW_PRESSURE_VAR NS 1 0
 
 Capability: Galerkin least-squares continuity stabilization 
 Developer: D. Hariprasad, February 2015
-Description: Adds a Galerkin least-squares stabilization term using the residual of the continuity equation for incompressible or steady-state compressible flows.  This should help with high Reynolds number flow.  Similar to the Pressure Stabilization already implemented in Goma.  See Franca and Hughes 1988 for an abstract discussion of the method or Forster, Wall, and Ramm 2010 for a Navier-Stokes based discussion of the method.  The choice of a local or global stability parameter is left to the user.
+Description: Adds a Galerkin least-squares stabilization term using the residual
+of the continuity equation for incompressible or steady-state compressible
+flows.  This should help with high Reynolds number flow.  Similar to the
+Pressure Stabilization already implemented in Goma.  See Franca and Hughes 1988
+for an abstract discussion of the method or Forster, Wall, and Ramm 2010 for a
+Navier-Stokes based discussion of the method.  The choice of a local or
+global stability parameter is left to the user.
 Example: Continuity Stabilization = local
+
+
+Capability:  Two-dimensional structural shell equations (extension of the
+one-dimensional shell implemented in Goma)
+Developer: Kristianto Tjiptowidjojo, June 2014
+Description:  Two-dimensional shell equations require the following: 
+             - Three shell normal equations - only have one ETM
+             - Two shell curvature equations - only have two ETM
+             - Three mesh equations - for structural shell, we only consider
+             boundary, diffusion, and source ETMs 
+Example: 
+EQ = shell_normal1    Q1  SH_N1 Q1                1.0
+EQ = shell_normal2    Q1  SH_N2 Q1                1.0
+EQ = shell_normal3    Q1  SH_N3 Q1                1.0
+EQ = mesh1            Q1  D1    Q1  0.   0.  1.0  1.0  1.0
+EQ = mesh2            Q1  D2    Q1  0.   0.  1.0  1.0  1.0
+EQ = mesh3            Q1  D3    Q1  0.   0.  1.0  1.0  1.0
+EQ = shell_curvature  Q1  K     Q1                1.0
+EQ = shell_curvature2 Q1  K2    Q1                1.0
+                                    mass adv bnd  dif  src
+
+Capability: VOLUME_INT SHELL_VOLUME: Shell volume post processing capability 
+Developers: Kristianto Tjiptowidjojo
+Description:  Integrate the lubrication height over entire mesh area.  
+Example: 
+Post Processing Volumetric Integration =
+VOLUME_INT = SHELL_VOLUME 1 0 volume.out
+END OF VOLUME_INT
 
 
 PRS ADDED TO MANUAL (12/11/2012) as noted:
@@ -247,8 +337,81 @@ PRS NOT ADDED (7)
 #define I_Q2_HVG	43 /* Lagrangian quadratic with discontinuous enrichment for jump in value and gradient. */
 #define I_TABLE		44 /* Table Interpolation	*/
 
+Capability: TFMP: Thin film multiphase flow model [equations, variables, boundary conditions, post processing]
+Developers: Andrew Cochrane, July 2017
+Description: Multiphase model for nanoimprint lithography
+Example:
+BC = SHELL_TFMP_PRES_BC     NS 1     1013250
+BC = SHELL_TFMP_FREE_LIQ_BC SS 1
 
+#Number of EQ = 2                # mas adv bnd dif src por
+EQ = tfmp_mass  Q1  TFMP_PRES  Q1   1   1       1
+EQ = tfmp_bound Q1  TFMP_SAT   Q1   1   1           1
 
+Post Processing Specifications
+TFMP_gas_velo = yes
+TFMP_liq_velo = yes
+TFMP_inverse_Peclet = yes
+TFMP_Krg = yes
+
+Volumetric Integration Output Format = CSV
+Post Processing Volumetric Integration = 
+VOLUME_INT = POROUS_LIQ_INVENTORY 1 0 volume.csv
+END OF VOLUME_INT
+
+Capability:  Mapping stress from initial guess to log-conformation
+tensor (see "Log-conformation formulation for viscoelastic flows" under
+"Goma Material File Capabilities")
+Developers: Richard Martin and Weston Ortiz
+Date: 5/3/2018
+Description:  This input card is used with the log-conformation
+tensor (with Polymer Constitutive Equation = \{OLDROYDB | GIESEKUS | PTT\} and
+Polymer Stress Formulation = LOG_CONF in the material file). It is included with
+the card "Conformation Map = \{yes|no\}" right after the Initial Guess
+card and lets Goma know if the stress it's reading in is the regular polymer stress
+or the log-conformation tensor stress. When it reads in the regular polymer
+stress, you need to set "Conformation Map = yes". If the stress is already
+read in as the log-conformation tensor, set "Conformation Map = no".
+Example:
+General Specifications
+Initial Guess = read_exoII_file initial_guess.exoII
+Conformation Map = yes
+
+Capability:  Post processing of log-conformation tensor (see
+"Log-conformation formulation for viscoelastic flows" under
+"Goma Material File Capabilities")
+Developers: Richard Martin and Weston Ortiz
+Date: 5/3/2018
+Description:  This input card is used with the log-conformation
+tensor (with Polymer Constitutive Equation = \{OLDROYDB | GIESEKUS | PTT\} and
+Polymer Stress Formulation = LOG_CONF in the material file). It includes a post
+processing capability for the log-conformation tensor. The stress (S11, S12, and
+so forth) that Goma outputs is the log-conformation stress. To map it to the
+regular polymer stress, you need to set "Map Log-Conf Stress = yes" in the post-
+processing cards. The regular polymer stress will then be included in the output
+file as MS11, MS12, and so forth.
+Example:
+Post Processing Specifications
+Map Log-Conf Stress = yes
+
+Capability: Moving plane boundary condition due to etch reaction at surface
+Developer: Kristianto Tjiptowidjojo
+Date: February 20, 2019
+Description: It is mesh boundary condition akin to MOVING_PLANE but tied
+             to species equation to advance the rate of propagation.
+             Right now, it is hardwired to wet etching KOH reaction with CGS unit.
+Usage: BC = MOVING_PLANE_ETCH SS <sset> <etch plane>
+Example:
+        BC = MOVING_PLANE_ETCH SS 53 100
+
+Capability: Species flux boundary condition due to etch reaction at surface
+Developer: Kristianto Tjiptowidjojo
+Date: February 20, 2019
+Description: It is species flux condition at surface
+             Right now, it is hardwired to CGS unit.
+Usage: BC = YFLUX_ETCH SS <sset> <species number> <etch plane>
+Example:
+        BC = YFLUX_ETCH SS 53 0 100
 
 \end{alltt}
 %***************************************************
@@ -346,21 +509,50 @@ Capability: ADD TREF reference to BOUSSINESQ and BOUSS models
 
 Capability:  Lame Temperature Shift = {CONSTANT | POWER_LAW | TABLE}
 Developers: prschun  Date: 4/10/2012
-Description: Applieds a temperature shift fact to LAME Mu models (right now hardwired to only work with the Lame Mu = TABLE option).   When you use the Lame Mu = TABLE card you must supply the card
+Description: Applieds a temperature shift fact to LAME Mu models (right now
+hardwired to only work with the Lame Mu = TABLE option).   When you use the
+Lame Mu = TABLE card you must supply the card
 	Lame Temperature Shift = CONSTANT {flt}
 or
         Lame Temperature Shift = POWER_LAW {Troom} {Tmelt} {exponent}
 Example: Lame Temperature Shift = POWER_LAW 25. 550. 0.94
 
+Capability:  Shell extensional stiffness = {CONSTANT}
+Developers: Kristianto Tjiptowidjojo  Date: June 2014
+Description: Specified extensional stiffness for the membrane part of the
+two-dimensional shell equations
+Example: Shell extensional stiffness     = CONSTANT	1.0e6
+
+Capability: Shell Poisson ratio = {CONSTANT}
+Developers: Kristianto Tjiptowidjojo  Date: June 2014
+Description: Specified Poisson ratio for the two-dimensional shell equations
+Example: Shell Poisson ratio     = CONSTANT	0.3
+
+
 Capability:  Liquid Constitutive Equation = SYLGARD
 Developer: RRRAO
-Descritpion and problem: temperature dependent polymer concentration model specifically for this
-sylgard material.    NOT ADDED TO MANUAL.    
+Descritpion and problem: temperature dependent polymer concentration model
+specifically for this sylgard material.    NOT ADDED TO MANUAL.    
 
 Capability:  Liquid Constitutive Equation = FOAM_EPOXY
 Developer: RRRAO
 Descritpion and problem: Need to add to goma6.0 manual a description of this model. 
-    NOT ADDED TO MANUAL.    
+    NOT ADDED TO MANUAL.
+
+Capability: FlowingLiquid Viscosity Card EPOXY
+Developer: Kristianto Tjiptowidjojo
+Description: Add epoxy curing model to the increase of FlowingLuqid Viscosity in
+Brinkman term of momentum equation. The functional form is the same as EPOXY 
+model in Liquid Constitutive Equation
+Example: FlowingLiquid Viscosity = EPOXY {mu0} {alpha_g} {A} {B} {Aexp} {species_num}
+mu_0 is viscosity at reference, i.e. unreacted, state; alpha_g is extent
+reaction at gel point;
+A and B are exponents of extent-of-reaction dependence;
+Aexp is the exponent of thermal, i.e. Arrhenius, dependence;
+and species_num is the species index in integer that track the extent of reaction
+in the species equation
+
+      
 
 Capability: Dilational Viscosity 
 {TABLE ! DILVISCM_KAPPAWIPESMU? | ...}
@@ -369,7 +561,9 @@ Exmamples???
 
 Capability: Shell User Parameter = float 1, etc.   In material file
 Developer: rbsecor???
-Description:  Looks like this was an experimental capability to feed paramters with old lubrication shell technology used by robert secor et al.   Action: Check with him and rip it out if no longer needed.  
+Description:  Looks like this was an experimental capability to feed paramters
+with old lubrication shell technology used by robert secor et al.   
+Action: Check with him and rip it out if no longer needed.  
 
 Capability: Acoustic Wave Number (material property card??)
 Developer: rbsecor  
@@ -386,20 +580,34 @@ Examples None
 ADDED PRS (12/21/2012)
 Capability: Lower Velocity Function Card SLIDER_POLY_TIME
 Developers: prschun Date: 10/26/2011
-Description: New model for the Lower velocity function card which allows a general time-polynomial.   The first constant is a time-scale factor which can be used to scale the time, and the remainder are the coefficients of the polynomial in time starting from the constant term.  
+Description: New model for the Lower velocity function card which allows a
+general time-polynomial.   The first constant is a time-scale factor which can
+be used to scale the time, and the remainder are the coefficients of the
+polynomial in time starting from the constant term.  
 Example: 
-Lower Velocity Function Constants = SLIDER_POLY_TIME   {time_scale = 1000.} {-1.0*100.0*44.170122} {100.*361.41971} {-100.*807.45844} {100*256.08906}  {-100.*35.316517} {100.*2.1560711} {-100.*0.030632551} {-100.*0.0013365347}
+Lower Velocity Function Constants = SLIDER_POLY_TIME   {time_scale = 1000.} 
+{-1.0*100.0*44.170122} {100.*361.41971} {-100.*807.45844} {100*256.08906}  
+{-100.*35.316517} {100.*2.1560711} {-100.*0.030632551} {-100.*0.0013365347}
 
 ADDED PRS (12/21/2012)
 Capability: Upper Velocity Function Card CIRCLE_MELT
 Developers: Scott A. Roberts, sarober Date: 03/20/2012
-Description: New model for the upper velocity function card which allows a converging or diverging height that is like a circle.  Also works with melting.  First coefficient is the x location of the circle center, second coefficient is the radius, and the third is the minimum height. 
+Description: New model for the upper velocity function card which allows a
+converging or diverging height that is like a circle.  Also works with melting. 
+First coefficient is the x location of the circle center, second coefficient is
+the radius, and the third is the minimum height. 
 Example: 
 Upper Velocity Function Constants = CIRCLE_MELT {x_0=5} {r=1} {hmin=0.001}  
 
 Capability:  Faux plasticity model
 Developers:  Scott A. Roberts, sarober, Date:  4/10/2012
-Description:  Short of using a full EVP model, it may be possible to ``fake'' plasticity by lowering the lame coefficients once the strain gets into the plastic regime, according to the stress-strain curve of the material.  This new capability allows the user to input the stress-strain curve, and the Lame mu will be calculated from the von Mises stress and strain, applied to the stress strain curve.  Also, must use Poisson Ratio as the model for Lame Lambda so everything is consistent.
+Description:  Short of using a full EVP model, it may be possible to ``fake'' 
+plasticity by lowering the lame coefficients once the strain gets into the
+plastic regime, according to the stress-strain curve of the material.  This new
+capability allows the user to input the stress-strain curve, and the Lame mu 
+will be calculated from the von Mises stress and strain, applied to the stress 
+strain curve.  Also, must use Poisson Ratio as the model for Lame Lambda so
+everything is consistent.
 Example:
 Lame MU       = TABLE 2 FAUX_PLASTIC 0 LINEAR FILE=stress_strain.txt
 Lame LAMBDA   = POISSON_RATIO 0.33
@@ -408,10 +616,14 @@ ADDED TO MANUAL PRS (12/21/2012)
 Capability:  LOWER_DISTANCE model for Lower Height Function Model
 Developers:  Scott A. Roberts, sarober
 Date:  May 2, 2012
-Description:  Allow user to specify an arbitrary lower height function model via a TABLE read that is translated in the x direction with the lower velocity function model.  Requires use of the SLIDER_POLY_TIME lower velocity function model.
+Description:  Allow user to specify an arbitrary lower height function model via
+a TABLE read that is translated in the x direction with the lower velocity 
+function model.  Requires use of the SLIDER_POLY_TIME lower velocity function 
+model.
 Example:
 Lower Height Function Constants   = TABLE 2 LOWER_DISTANCE 0 LINEAR FILE=shell.dat
-Contents of shell.dat is a table with 2 columns.  The first is a position, the second is a height.
+Contents of shell.dat is a table with 2 columns.  The first is a position, the 
+second is a height.
 
 ADDED TO MANUAL PRS (12/22/2012)
 Capability:  NEW POROUS CLOSED SHELL and POROUS OPEN SHELL cards
@@ -581,12 +793,55 @@ ient=0}
 +Porous Shell Cross Permeability = CONSTANT {20*0.000000819505}
 +Porous Shell Initial Pore Pressure = CONSTANT -4000
 
+Capability: TFMP: Thin film multiphase flow model [equations, variables, 
+boundary conditions, post processing]
+Developers: Andrew Cochrane, July 2017
+Description: Multiphase model for nanoimprint lithography
+Example:
+Upper Height Function Constants = CONSTANT_SPEED -1925e-7 2000e-7
+FSI Deformation Model = FSI_SHELL_ONLY
+Thin Film Multiphase Density = CONSTANT {44.01} {83146217.5} {298.15} {1013250.}
+Thin Film Multiphase Viscosity  = CONSTANT {mu_g} {mu_l}
+Thin Film Multiphase Diffusivity Model = PIECEWISE {bdif} {tfmp_diff_center} {tfmp_beta_d}
+Thin Film Multiphase Mass Lumping = TRUE
+Thin Film Multiphase Clipping = {tfmp_clip} {tfmp_clip_strength}
+Thin Film Multiphase Relative Permeability Model = PIECEWISE {Scg} {alphag} {Scl} {alphal}
+Thin Film Multiphase Dissolution Model = SQUARE 2.233e-5 3.3555e-11 44.01
+Thin Film Multiphase Drop Lattice = SQUARE 1.0 1.0
+
+Capability: Log-conformation formulation for viscoelastic flows
+Date: 5/3/2018
+Developers: Richard Martin, Weston Ortiz
+Description:  Uses an alternate formulation for the Oldroyd-B, Giesekus,
+and PTT polymer constitutive models, using the log-conformation tensor. It
+is included as "Polymer Stress Formulation = LOG_CONF" underneath
+the Polymer Constitutive Equation card in the material file. The
+stress tensor that it outputs (S11, S12, S22, and so forth) is the log-conformation
+tensor, not the regular polymer stress. Two input cards can be included in the
+input deck: "Conformation Map = \{yes|no\}", and "Map Log-Conf Stress = \{yes|no\}".
+The Conformation Map is included after the Initial Guess card, and
+lets Goma know if the stress in the initial guess file is the regular polymer stress
+(hence, "Conformation Map = yes"), or if the stress is read in as
+the log-conformation tensor ("Conformation Map = no"). In post
+processing, "Map Log-Conf Stress = yes" will output the regular polymer stress
+as MS11, MS12, and so forth. The log-conformation formulation works for multimode
+constitutive equations and 2-dimensional cases (does not work in 3D). See "Mapping
+stress from initial guess to log-conformation tensor" and "Post processing of
+log-conformation tensor" under "Goma Input File Capabilities" for more
+information.
+Example:
+Polymer Constitutive Equation = \{OLDROYDB | GIESEKUS | PTT\}
+Polymer Stress Formulation = LOG_CONF
+Polymer Weight Function = SUPG
+
 \end{alltt}
 %***************************************************
 %************Overall Capabilities*******************
 %***************************************************
 \section{Overall Capabilities}
-In this section add brief description of a general capability which has been added which may involve many input cards, etc. Those cards should appear in the above sections.  
+In this section add brief description of a general capability which has been 
+added which may involve many input cards, etc. Those cards should appear in the
+above sections.  
 \begin{alltt}
 
 ADDED TO MANUAL PRS (12/22/2012)
@@ -629,19 +884,104 @@ With this capability one can read in a pixel field generated from any drawing to
 
 Capability:  Maximum-through-time history of von Mises strain in mesh
 Developer(s):  Scott A. Roberts, sarober  Date:  4/12/2012
-Brief Description:  Calculates the maximum von Mises strain that has been experienced at any given material point.  This was designed to be used for FAUX_PLASTICITY, and will soon be required for its use.
+Brief Description:  Calculates the maximum von Mises strain that has been experienced
+at any given material point.  This was designed to be used for FAUX_PLASTICITY, and will
+soon be required for its use.
 Example:  
 EQ = max_strain       Q1 MAX_STRAIN    Q1 1               1
 
-Capability: Documentation and testing of element quality specifications (rd_elem_quality_specs in mm_input.c)
+Capability: Documentation and testing of element quality specifications
+(rd_elem_quality_specs in mm_input.c)
 Developers: Randy Lober (circa 1998)
-Description: These capabilities are used to ouput and possibly deploy in solution control of element quality during free and moving boundary ALE calculations.  They have really never been used, but the idea wass for adaptivity.  
-The issue here is that there use is NOT documented.    Should they be?  Or should they be deprecated.   The cards are:
+Description: These capabilities are used to ouput and possibly deploy in solution
+control of element quality during free and moving boundary ALE calculations.  They have
+really never been used, but the idea wass for adaptivity.  
+The issue here is that there use is NOT documented.    Should they be?  Or should they be
+deprecated.   The cards are:
 Jacobian quality weight= yes | TRUE
 Volume change quality weight=
 Angle quality weight=
 Triangle quality weight=
 Element quality tolerance type=
 
+Capability: TFMP: Thin film multiphase flow model [equations, variables, boundary
+conditions, post processing]
+Developers: Andrew Cochrane, July 2017
+Description: Multiphase model for disperse and separated gas-liquid lubrication flow with
+gas dissolution.
 \end{alltt}
+\begin{align*}
+ \frac{\partial Sh}{\partial t} + \bm{\nabla \cdot} (\bm{\bar{v_l}}h) &= 0 \\
+ \frac{\partial \rho_g(1-S)h}{\partial t} + \bm {\nabla} \cdot (\bm{\bar{v_g}}\rho_gh) + J &= 0
+\end{align*}
+
+\begin{alltt}
+Capability: Coupled Shell-Membrane and TFMP model [equations, variables, boundary
+conditions, post processing]
+Developers: Andrew Cochrane and Kristitanto Tjiptowidjojo, October 2017
+Description: Membrane equations based on Pranckh dissertation and Soedel book, more info
+in Cochrane dissertation.
+
+A quasi-static steady-state model for the web structure develops under the application of
+total force balance. The tangential force balance equations comprise extension stress,
+shear of the web and bending moment stress
+\end{alltt}
+\begin{subequations}
+\begin{align*}
+&\boldsymbol{\nabla}_\mathrm{II} \cdot \boldsymbol{N}_1& & + \kappa_1  \boldsymbol{\nabla}_\mathrm{II} \cdot \boldsymbol{M}_1& &= 0\\
+&\boldsymbol{\nabla}_\mathrm{II} \cdot \boldsymbol{N}_2& & + \kappa_2  \boldsymbol{\nabla}_\mathrm{II} \cdot \boldsymbol{M}_2& &= 0\\
+&\text{Extension and}&     &\text{Bending moments about}& \nonumber&\\
+&\text{web-plane shear}&   &\text{axes in the web-plane}& \nonumber&
+\end{align*}
+\end{subequations}
+\begin{alltt}
+The normal force balance equation contains components that arise from extension around
+a curve, bending moments and applied pressure.
+\end{alltt}
+\begin{align*}
+&\kappa_1 N_{11} + \kappa_2 N_{22}&  & - \boldsymbol{\nabla}_\mathrm{II} \cdot \boldsymbol{M}_1 - \boldsymbol{\nabla}_\mathrm{II} \cdot \boldsymbol{M}_2&  &+ F& = 0 \label{eq:3dshell_normal_balance}\\
+&\text{Curved extension}&         &\text{Bending moments}&        &\text{Applied pressure}& \nonumber
+\end{align*}
+
+\begin{alltt}
+Capability: Coupled Inextensible Shell structure mechanics and TFMP model [equations, 
+variables, boundary conditions, post-processing]
+Developers: Andrew Cochrane, August 2018
+Description: Inextensible shells equations based on [2003 Carvalho], GT-027, and Pranck
+dissertation are coupled to TFMP equations. Motion of the upper and lower bounding surfaces
+is implemented in the TFMP equations. The target problem is a lubrication layer supported 
+web wrapped around a rotating roller. The results are comparable to the predictions of foil
+bearing theory. See forthcoming article [2019 Cochrane].
+\end{alltt}
+\begin{alltt}
+This inextensible shell equations of structural mechanics:
+\end{alltt}
+\begin{align*}
+\frac{\partial T}{\partial s} + \kappa \frac{\partial }{ \partial s }( \kappa D ) + P_t &= 0 \\
+- \frac{\partial^2}{\partial s^2}(\kappa D) + \kappa T + P_n &= 0
+\end{align*}
+\begin{alltt}
+The equations of mesh position/deformation:
+\end{alltt}
+\begin{align*}
+%\frac{\partial^2 x}{\partial s ^2} + \kappa \frac{\partial y}{\partial s} &= 0 \label{eq:circle_d2x_ds2}\text{ or}\\
+\frac{\partial^2 y}{\partial s ^2} - \kappa \frac{\partial x}{\partial s} &= 0
+\end{align*}
+\begin{align*}
+  \frac{\partial^2 s}{\partial \xi^2} = 0
+\end{align*}
+\begin{alltt}
+The thin film multiphase flow equations, extended to include tangential motion of the 
+confining boundaries:
+\end{alltt}
+\begin{align*}
+  \frac{\partial Sh}{\partial t} + \frac{\partial}{\partial s} \left(h v_l + Sh\frac{u_a + u_b}{2}\right) &= 0 \\
+  \frac{\partial \rho_g(1-S)h}{\partial t} + \frac{\partial}{\partial s} \left(\rho_g h v_g + \rho_g (1-S)h\frac{u_a + u_b}{2}\right)  &= 0
+\end{align*}
+
 \end{document}
+
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: t
+%%% End:

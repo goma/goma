@@ -106,25 +106,22 @@ evaluate_flux(
 			  const int print_flag)     /*  flag for printing results,1=print*/
 			  {
   int j;			/* local index loop counter                 */
-  int i;			/* Index for the local node number - row    */
+  int i, r;			/* Index for the local node number - row    */
   int ip = 0, a, b, c, p, w = -1;
   int mn;
   int var;
   int *n_dof=NULL;
   int dof_map[MDE];
-  dbl H_lub; 
-  dbl H_U, dH_U_dtime, H_L, dH_L_dtime;
-  dbl dH_U_dX[DIM],dH_L_dX[DIM];
-  dbl dH_U_dp, dH_U_ddh;
   dbl base_normal[DIM];
 
   double wt,weight;
   int err;			/* temp variable to hold diagnostic flags. */
   int ielem=-1;                 /* element number */
   int ip_total, ielem_type, gnn, ledof, matIndex;
-  int num_local_nodes, iconnect_ptr, dim, ielem_dim, current_id;
+  int num_local_nodes, iconnect_ptr, dim, ielem_dim, current_id, WIM;
   int nset_id, sset_id;
   double Tract[DIM], Torque[DIM], local_Torque[DIM];
+  double Mag_real[DIM], Mag_imag[DIM], E_real[DIM], E_imag[DIM];
 
   /* 
    * Variables for vicosity and derivative 
@@ -264,6 +261,13 @@ evaluate_flux(
     base_normal[a] = 0;
   }
   memset( Torque, 0, sizeof(double)*DIM );
+
+  dim   = pd_glob[0]->Num_Dim;
+  WIM = dim;
+  if (pd->CoordinateSystem == SWIRLING ||
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
+    WIM = WIM+1;
 
   /* load eqn and variable number in tensor form */
   err = stress_eqn_pointer(v_s);
@@ -558,7 +562,6 @@ evaluate_flux(
 
 /**   get solid stresses  **/
 
-		  dim   = pd_glob[0]->Num_Dim;
 		  
 		  if(pd->e[R_MESH1] && cr->MeshMotion != ARBITRARY)
 		    {
@@ -691,22 +694,60 @@ evaluate_flux(
 
 		/*
 		 *  viscoelastic stress tensor
-		 *  assume only EVSS_F formulation for now
 		 */
   			memset( ves, 0, sizeof(dbl)*DIM*DIM);
   			if ( pd->v[POLYMER_STRESS11] )
     			  {
-			    for ( a=0; a<VIM; a++)
-        	              {
-			        for ( b=0; b<VIM; b++)
-            			   {
-			             for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
-                		       {
-                  			ves[a][b] += fv->S[ve_mode][a][b];
-                			}
-            			   }
-        		      }
-    			   }
+                            dbl log_c[DIM][DIM];
+                            dbl exp_s[DIM][DIM];
+                            dbl R1[DIM][DIM];
+                            dbl eig_values[DIM];
+		            dbl mup = 0.;
+ 			    dbl lambda = 0.;
+                            if(vn->evssModel==LOG_CONF || vn->evssModel == LOG_CONF_GRADV)
+                              {
+                                for ( ve_mode=0; ve_mode < vn->modes; ve_mode++)
+                                  {
+			            for (p=0; p<WIM; p++)
+			              {
+			                for (r=0; r<WIM; r++)
+				          {
+				            log_c[p][r] = fv->S[ve_mode][p][r];
+			                  }
+				      }
+#ifdef ANALEIG_PLEASE
+                                    analytical_exp_s(log_c, exp_s, eig_values, R1);
+#else
+				    compute_exp_s(log_c, exp_s, eig_values, R1);
+#endif
+		                    mup = viscosity(ve[ve_mode]->gn, gamma, NULL);
+			            if(ve[ve_mode]->time_constModel == CONSTANT)
+				      {
+				        lambda = ve[ve_mode]->time_const;
+			              }
+				    for (a=0; a<WIM; a++)
+			              {
+				        for (b=0; b<WIM; b++)
+				          {
+				            ves[a][b] += mup/lambda*(exp_s[a][b]-(double)delta(a,b));
+					  }
+			              }
+				  }
+			      }
+		            else
+		              {
+			        for ( a=0; a<WIM; a++)
+        	                  {
+			            for ( b=0; b<WIM; b++)
+            			       {
+			                 for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
+                		           {
+                  			     ves[a][b] += fv->S[ve_mode][a][b];
+                			   }
+            			       }
+        		          }
+    			       }
+			   } // if pd->v[POLYMER_STRESS11]
 
 		/*
 		 * OK, let's simplify things by computing the viscous
@@ -716,9 +757,9 @@ evaluate_flux(
   			memset( gamma, 0, sizeof(dbl)*DIM*DIM);
 		      if(cr->MeshMotion == ARBITRARY)
     			 {
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
-			      for ( b=0; b<VIM; b++)
+			      for ( b=0; b<WIM; b++)
 				{
 				  gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
 				}
@@ -726,25 +767,15 @@ evaluate_flux(
 			  
 			  mu = viscosity(gn, gamma, d_mu);
 
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
-			      for ( b=0; b<VIM; b++)
+			      for ( b=0; b<WIM; b++)
 				{
 				  vs[a][b] = mu*gamma[a][b]-fv->P*delta(a,b);
 				}
 			    }
                           if(profile_flag & 1)
-                             {
-   				gamma_dot = 0.;
-   				for ( a=0; a<VIM; a++)
-     				   {
-       					for ( b=0; b<VIM; b++)
-         				  {
-           				   gamma_dot +=  gamma[a][b] * gamma[b][a];
-         				  }
-     				   }
-   				gamma_dot  =  sqrt(gamma_dot/2.);
-                             }
+                             { calc_shearrate(&gamma_dot, gamma, NULL, NULL); }
    if(profile_flag & 2)
       {
   			memset( TT, 0, sizeof(dbl)*DIM*DIM);
@@ -1002,7 +1033,7 @@ evaluate_flux(
                       break;
 
 		    case VOLUME_FLUX:
-                      for(a=0; a<VIM; a++)
+                      for(a=0; a<WIM; a++)
                         {
 			  if (cr->MeshMotion == ARBITRARY)
 			    local_q +=  fv->snormal[a]*( fv->v[a]-x_dot[a] ) ;
@@ -1025,27 +1056,13 @@ evaluate_flux(
 		      n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
 		      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
-		      H_lub = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time_value, 0); 
-		      switch ( mp->FSIModel ) {
-		      case FSI_MESH_CONTINUUM:
-		      case FSI_MESH_UNDEF:
-			for ( a = 0; a < dim; a++) {
-			  H_lub -= fv->snormal[a] * fv->d[a];
-			}
-			break; 
-		      case FSI_REALSOLID_CONTINUUM:
-			for ( a = 0; a < dim; a++) {
-			  H_lub -= fv->snormal[a] * fv->d_rs[a];
-			}
-			break;
-		      }
 		      /* Calculate the flow rate and its sensitivties */
 
 		      calculate_lub_q_v(R_LUBP, time_value, 0, xi, exo);
 
                       for(a=0; a<VIM; a++)
                         {
-			    local_q +=  base_normal[a]*LubAux->v_avg[a] * H_lub;
+			    local_q +=  base_normal[a]*LubAux->q[a];
                         }
                           local_flux += weight*det* local_q ;
 			  /* clean-up */
@@ -1076,7 +1093,7 @@ evaluate_flux(
 		    case PVELOCITY1:
 		    case PVELOCITY2:
 		    case PVELOCITY3:
-                      for(a=0; a<VIM; a++)
+                      for(a=0; a<WIM; a++)
                         {
                           local_q +=  fv->snormal[a]*fv->pv[a] ;
                         }
@@ -1099,16 +1116,45 @@ evaluate_flux(
 		      break;
 
 		    case SPECIES_FLUX:
+                      for (a = 0; a < VIM; a++) {
+	                if ( cr->MassFluxModel == FICKIAN  ||
+	                     cr->MassFluxModel == STEFAN_MAXWELL  ||
+	                     cr->MassFluxModel == STEFAN_MAXWELL_CHARGED  ||
+	                     cr->MassFluxModel == STEFAN_MAXWELL_VOLUME )
+	                    {
+	                     if ( Diffusivity() )  EH( -1, "Error in Diffusivity.");
 
-		      Diffusivity();
-
-                      for(a=0; a<VIM; a++)
-                        {
-                          local_q += ( -mp->diffusivity[species_id]*
-                                  fv->snormal[a]*fv->grad_c[species_id][a] );
-                          local_qconv += ( fv->snormal[a]*(fv->v[a]-x_dot[a])*fv->c[species_id] );
+	                     local_q += fv->snormal[a] * 
+                               (-mp->diffusivity[species_id]*fv->grad_c[species_id][a]);
+	                    }
+	                else if ( cr->MassFluxModel == GENERALIZED_FICKIAN)
+	                    {
+	                     if ( Generalized_Diffusivity() )  EH( -1, "Error in Diffusivity.");
+	                     for (w=0; w<pd->Num_Species_Eqn; w++)
+	                       {
+	                        local_q +=  fv->snormal[a] * 
+                                           (-mp->diffusivity_gen_fick[species_id][w]
+                                              *fv->grad_c[w][a]);
+	                       }
+	                    }
+	                else  if ( cr->MassFluxModel == DARCY )
+	                    { /* diffusion induced convection is zero */ }
+			else if ( cr->MassFluxModel == DM_SUSPENSION_BALANCE )
+			  {
+			    struct Species_Conservation_Terms st;
+			    zero_structure(&st, sizeof(struct Species_Conservation_Terms), 1);
+			    if ( Diffusivity() ) EH( -1, "Error in Diffusivity.");
+			    for ( w=0; w < pd->Num_Species_Eqn; w++)
+			      {
+				suspension_balance(&st, w);
+				local_q += fv->snormal[a] * st.diff_flux[w][a];
+			      }
+			  }
+	                else
+	                    { EH( -1, "Unimplemented mass flux constitutive relation."); }
+                          local_qconv += (fv->snormal[a]*(fv->v[a]-x_dot[a])
+                                         *fv->c[species_id] );
                         }
-                          local_qconv = 0;
                           local_flux +=  weight*det*local_q;
                           local_flux_conv += weight*det*local_qconv;
 		      break;
@@ -1309,15 +1355,16 @@ evaluate_flux(
  		      break;
 
 		    case TORQUE:
-		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN)
+		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+		         pd->CoordinateSystem == CARTESIAN_2pt5D)
 			EH(-1, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
 		      if(pd->CoordinateSystem == SWIRLING || 
 			 pd->CoordinateSystem == CYLINDRICAL)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
-			      for ( b=0; b<VIM; b++)
+			      for ( b=0; b<WIM; b++)
 				{
 			      /*
 			       *  note that for CYLINDRICAL and SWIRLING coordinate systems
@@ -1334,7 +1381,7 @@ evaluate_flux(
 			}
 		      else if( pd->CoordinateSystem == CARTESIAN ) 
 			{
-			  if( VIM == 2 ) 
+			  if( WIM == 2 ) 
 			    {
 			      fv->x[2] = 0.0;
 			      fv->snormal[2] = 0.0;
@@ -1403,9 +1450,9 @@ evaluate_flux(
 		    case FORCE_NORMAL:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
-			      for ( b=0; b<VIM; b++)
+			      for ( b=0; b<WIM; b++)
 				{
                                   local_q += (fv->snormal[a]*
                         		(vs[a][b]+ves[a][b] )*fv->snormal[b]);
@@ -1434,9 +1481,9 @@ evaluate_flux(
 		      
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
-			      for ( b=0; b<VIM; b++)
+			      for ( b=0; b<WIM; b++)
 				{
                                   local_q += (fv->stangent[0][a]*
 					(vs[a][b] + ves[a][b])*fv->snormal[b]);
@@ -1465,11 +1512,11 @@ evaluate_flux(
 		
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  if(pd->Num_Dim == 3)
+			  if(pd->Num_Dim == 3 || upd->CoordinateSystem == SWIRLING   )
 			    {
-			      for ( a=0; a<VIM; a++)
+			      for ( a=0; a<WIM; a++)
 				{
-				  for ( b=0; b<VIM; b++)
+				  for ( b=0; b<WIM; b++)
 				    {
                                       local_q += (fv->stangent[1][a]
 						*(vs[a][b] + ves[a][b])
@@ -1503,7 +1550,7 @@ evaluate_flux(
 		    case FORCE_X:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
 			      local_q += ((vs[0][a] + ves[0][a] ) *fv->snormal[a]) ;
 			      local_qconv += ( -rho*(fv->v[0]-x_dot[0])
@@ -1525,7 +1572,7 @@ evaluate_flux(
 		    case FORCE_X_POS:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
                               local_q += ((vs[0][a] + ves[0][a] ) *fv->snormal[a]) ;
                               local_qconv += ( -rho*(fv->v[0]-x_dot[0])
@@ -1549,7 +1596,7 @@ evaluate_flux(
 		    case FORCE_X_NEG:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
                               local_q += ((vs[0][a] + ves[0][a] ) *fv->snormal[a]) ;
                               local_qconv += ( -rho*(fv->v[0]-x_dot[0])
@@ -1573,7 +1620,7 @@ evaluate_flux(
 		    case FORCE_Y:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
                              local_q += ((vs[1][a] + ves[1][a]) *fv->snormal[a]);
                              local_qconv += ( -rho*(fv->v[1]-x_dot[1])
@@ -1595,7 +1642,7 @@ evaluate_flux(
 		    case FORCE_Y_POS:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
                              local_q += ((vs[1][a] + ves[1][a]) *fv->snormal[a]);
                              local_qconv += ( -rho*(fv->v[1]-x_dot[1])
@@ -1619,7 +1666,7 @@ evaluate_flux(
 		    case FORCE_Y_NEG:
 		      if(cr->MeshMotion == ARBITRARY)
 			{
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
                              local_q += ((vs[1][a] + ves[1][a]) *fv->snormal[a]);
                              local_qconv += ( -rho*(fv->v[1]-x_dot[1])
@@ -1645,7 +1692,7 @@ evaluate_flux(
 			{
 			  if(pd->Num_Dim == 3)
 			    {
-			      for ( a=0; a<VIM; a++)
+			      for ( a=0; a<WIM; a++)
 				{
                                   local_q += ((vs[2][a] + ves[2][a]) *fv->snormal[a]);
 
@@ -1677,7 +1724,7 @@ evaluate_flux(
 			{
 			  if(pd->Num_Dim == 3)
 			    {
-			      for ( a=0; a<VIM; a++)
+			      for ( a=0; a<WIM; a++)
 				{
                                   local_q += ((vs[2][a] + ves[2][a]) *fv->snormal[a]);
 
@@ -1711,7 +1758,7 @@ evaluate_flux(
 			{
 			  if(pd->Num_Dim == 3)
 			    {
-			      for ( a=0; a<VIM; a++)
+			      for ( a=0; a<WIM; a++)
 				{
                                   local_q += ((vs[2][a] + ves[2][a]) *fv->snormal[a]);
 
@@ -1893,9 +1940,9 @@ evaluate_flux(
 		      /* This is the energy dissipated at the surface due to surface tension 
 		       *  See Batchelor, JFM, 1970 for details 
 		       */
-		      for( a=0; a<VIM ; a++)
+		      for( a=0; a<WIM ; a++)
 			{
-			  for( b=0 ; b<VIM ; b++)
+			  for( b=0 ; b<WIM ; b++)
 			    {
 			      local_q += mp->surface_tension * 
                                        ( fv->grad_v[a][b]*( delta(a,b)
@@ -1907,6 +1954,72 @@ evaluate_flux(
                               local_flux_conv += weight *det*local_qconv;
 		      break;
 
+		    case POYNTING_X:
+		    case POYNTING_Y:
+		    case POYNTING_Z:
+			/* For scalar e-field calculations, we will assume the e-vector 
+                         * points out of the plane, i.e. normal to the plane of 
+                         * incidence, Ez */
+		      R_imped = acoustic_impedance( d_R, time_value );
+		      wnum = wave_number( d_wnum, time_value );
+		      kR_inv = 1./(wnum*R_imped);
+                      memset( Mag_real,0, sizeof(double)*DIM);
+                      memset( Mag_imag,0, sizeof(double)*DIM);
+                      memset( E_real,0, sizeof(double)*DIM);
+                      memset( E_imag,0, sizeof(double)*DIM);
+		      if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+		         pd->CoordinateSystem == CARTESIAN_2pt5D)
+			EH(-1, "POYNTING has not been updated for the PROJECTED_CARTESIAN coordinate system.");
+
+		      if(pd->CoordinateSystem == SWIRLING || 
+			 pd->CoordinateSystem == CYLINDRICAL)
+			{
+			EH(-1, "POYNTING has not been checked for CYLINDRICAL yet.");
+			  for ( a=0; a<VIM; a++)
+			    {
+			      for ( b=0; b<VIM; b++)
+				{
+			      /*
+			       *  note that for CYLINDRICAL and SWIRLING coordinate systems
+			       * the h3 factor has been incorporated already into sdet
+			       * the moment arm is incorporated into sideset.
+			       */
+
+                                  local_q += ( fv->x[1] * e_theta[a]*
+					(vs[a][b]+ves[a][b])*fv->snormal[b] );
+
+				}
+			    }
+                                  local_flux += weight * det* local_q;
+			}
+		      else if( pd->CoordinateSystem == CARTESIAN ) 
+			{
+                          Mag_imag[0] = kR_inv*fv->grad_apr[1];
+                          Mag_imag[1] = -kR_inv*fv->grad_apr[0];
+                          Mag_real[0] = kR_inv*fv->grad_api[1];
+                          Mag_real[1] = -kR_inv*fv->grad_api[0];
+                          E_real[2] = fv->apr;  E_imag[2] = fv->api;
+			  for ( a=0; a<DIM; a++)
+			    {
+			      for ( b=0; b<DIM; b++)
+				{
+				  for ( c=0; c<DIM; c++)
+				    {
+				      local_Torque[a] += 0.5*( permute(b,c,a) *
+				(E_real[b]*Mag_real[c]-E_imag[b]*Mag_imag[c]) );
+				    }
+				}
+			    }
+			  for ( a=0; a<DIM; a++)
+			    { Torque[a] += weight * det * local_Torque[a];}
+			  local_flux = Torque[quantity-POYNTING_X];
+			}
+		      else
+			{
+			  EH(-1,"Torque cannot be calculated in this case.");
+			}
+		      break;
+		  
 		    case N_DOT_X:
 		      /* 
 		       * This is the position vector dotted into the local normal
@@ -2011,15 +2124,7 @@ evaluate_flux(
 			load_lsi(ls->Length_Scale );
                        if(profile_flag & 1)
                        {
-			gamma_dot = 0.;
-   			for ( a=0; a<VIM; a++)
-     			   {
-       				for ( b=0; b<VIM; b++)
-       				  {
-       				   gamma_dot +=  gamma[a][b] * gamma[b][a];
-       				  }
-     			   }
-   			gamma_dot  =  sqrt(gamma_dot/2.);
+                        calc_shearrate(&gamma_dot, gamma, NULL, NULL); 
         if(ls->SubElemIntegration)
         	{
         	elem_sign_org = ls->Elem_Sign;
@@ -2050,7 +2155,7 @@ evaluate_flux(
         	}
                        }
 
-         		for (a=0; a<VIM; a++)
+         		for (a=0; a<WIM; a++)
              			{
 				local_q -= fv->snormal[a]*lsi->normal[a];
 				local_qconv += SQUARE(fv->v[a] - x_dot[a]);
@@ -2257,7 +2362,7 @@ evaluate_flux(
     			  {
 			    for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
                 	       {
-			         for ( b=0; b<VIM; b++)
+			         for ( b=0; b<WIM; b++)
             			   {
 				      var = v_s[ve_mode][dir][b];
 				      for(j=0 ; j < ei->dof[var]; j++)
@@ -2395,9 +2500,9 @@ evaluate_flux(
 				    {
 				      d_term = d_term1 = 0.0;
 
-				      for ( a=0; a<VIM; a++)
+				      for ( a=0; a<WIM; a++)
 					{
-					  for ( b=0; b<VIM; b++)
+					  for ( b=0; b<WIM; b++)
 					    {
 					      d_term  += weight*det *fv->snormal[a]*fv->snormal[b]*
 						        ( mu*( bf[var]->grad_phi_e[j][p][a][b] + bf[var]->grad_phi_e[j][p][b][a] ) +
@@ -2440,9 +2545,9 @@ evaluate_flux(
 				    {
 				      d_term = d_term1 = d_term2 = d_term3 = 0.0;
 
-				      for( a=0; a < VIM; a++)
+				      for( a=0; a < WIM; a++)
 					{
-					  for(b=0 ; b<VIM; b++)
+					  for(b=0 ; b<WIM; b++)
 					    {
 					      d_term += weight * det *fv->snormal[a]*fv->snormal[b]*
 						        (mu* ( fv->d_grad_v_dmesh[a][b][p][j] + fv->d_grad_v_dmesh[b][a][p][j]) + 
@@ -2514,7 +2619,7 @@ evaluate_flux(
     			  {
 			    for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
                 	       {
-			         for ( b=0; b<VIM; b++)
+			         for ( b=0; b<WIM; b++)
             			   {
 				     for( a=0; a < dim; a++)
 				       {
@@ -2668,9 +2773,9 @@ evaluate_flux(
 				    {
 				      d_term = d_term1 = 0.0;
 
-				      for ( a=0; a<VIM; a++)
+				      for ( a=0; a<WIM; a++)
 					{
-					  for ( b=0; b<VIM; b++)
+					  for ( b=0; b<WIM; b++)
 					    {
 					      d_term  += weight*det *fv->stangent[dir][a]*fv->snormal[b]*
 						        ( mu*( bf[var]->grad_phi_e[j][p][a][b] + bf[var]->grad_phi_e[j][p][b][a] ) +
@@ -2771,7 +2876,7 @@ evaluate_flux(
     			  {
 			    for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
                 	       {
-			         for ( b=0; b<VIM; b++)
+			         for ( b=0; b<WIM; b++)
             			   {
 				     for( a=0; a < dim; a++)
 				       {
@@ -2898,7 +3003,7 @@ evaluate_flux(
 				    {
 				      d_term = d_term1 = 0.0;
 
-				      for ( a=0; a<VIM; a++)
+				      for ( a=0; a<WIM; a++)
 					{
 					  d_term += weight*det*fv->snormal[a] * ( bf[var]->phi[j]*delta(p,a) ) ;
 					}
@@ -4019,6 +4124,7 @@ evaluate_flux(
 		       if( pd->CoordinateSystem == CARTESIAN ) 
 			  {
                          local_flux += sign*mp->surface_tension*fv->stangent[0][dir];
+
  	                if( J_AC != NULL)
  		           {
 			  for( p=0; p<dim ; p++)
@@ -4034,26 +4140,31 @@ evaluate_flux(
 				    }
 				}
 			    }
- 			  var = TEMPERATURE;
- 			  
- 			  for(j=0; j<ei->dof[var]; j++)
- 			    {
-				      J_AC[ ei->gun_list[var][j] ] += 
+ 			 var = TEMPERATURE;
+			 if(pd->v[var])
+			     {
+ 			      for(j=0; j<ei->dof[var]; j++)
+ 			          {
+				   J_AC[ ei->gun_list[var][j] ] += 
                          	         sign*fv->stangent[0][dir]
 				         *dsigmadT*bf[var]->phi[j];
- 			    }
-			    var = MASS_FRACTION;
-			    if (pd->v[var]) {
-			      for (w = 0; w < pd->Num_Species_Eqn; w++) {
-				for (j = 0; j < ei->dof[var]; j++) {
+ 			          }
+ 			     }
+			 var = MASS_FRACTION;
+			 if (pd->v[var]) 
+                            {
+			     for (w = 0; w < pd->Num_Species_Eqn; w++) 
+                                {
+				for (j = 0; j < ei->dof[var]; j++) 
+                                  {
 				  gnn = ei->gnn_list[var][j];
 				  ledof = ei->lvdof_to_ledof[var][j];
 				  matIndex = ei->matID_ledof[ledof];
 				  c = Index_Solution(gnn, var, w, 0, matIndex);
 				  J_AC[c] += sign*fv->stangent[0][dir]
                                     *dsigmadC[w]*bf[var]->phi[j];
-				}
-			      }
+				  }
+			        }
 			    }
  		           }
 			}
@@ -4061,44 +4172,48 @@ evaluate_flux(
 			 pd->CoordinateSystem == CYLINDRICAL)
 			{
                          local_flux += 2*M_PIE*fv->x[1]*sign*mp->surface_tension*fv->stangent[0][dir];
- 	                if( J_AC != NULL)
+ 	                 if( J_AC != NULL)
  		           {
-			  for( p=0; p<dim ; p++)
-			    {
+			   for( p=0; p<dim ; p++)
+			     {
 			      var = MESH_DISPLACEMENT1 + p;
-
 			      if(pd->v[var])
 				{
-				  for( j=0 ; j<ei->dof[var]; j++)
-				    {
-				      J_AC[ ei->gun_list[var][j] ] += 
-                         2*M_PIE*sign*mp->surface_tension*
+				 for( j=0 ; j<ei->dof[var]; j++)
+				   {
+				    J_AC[ ei->gun_list[var][j] ] += 
+                                           2*M_PIE*sign*mp->surface_tension*
 			(fv->x[1]*fv->dstangent_dx[0][dir][p][j]+
 			delta(p,1)*bf[var]->phi[j]*fv->stangent[0][dir]);
-				    }
-				}
+				   }
+			        }
 			    }
  			  var = TEMPERATURE;
- 			  
- 			  for(j=0; j<ei->dof[var]; j++)
- 			    {
-				      J_AC[ ei->gun_list[var][j] ] += 
-                         2*M_PIE*sign*fv->x[1]*fv->stangent[0][dir]
-				*dsigmadT*bf[var]->phi[j];
- 			    }
-			    var = MASS_FRACTION;
-			    if (pd->v[var]) {
-			      for (w = 0; w < pd->Num_Species_Eqn; w++) {
-				for (j = 0; j < ei->dof[var]; j++) {
+			  if(pd->v[var])
+			      {
+ 			       for(j=0; j<ei->dof[var]; j++)
+ 			           {
+				    J_AC[ ei->gun_list[var][j] ] += 
+                                           2*M_PIE*sign*fv->x[1]*fv->stangent[0][dir]
+				           *dsigmadT*bf[var]->phi[j];
+ 			           }
+ 			      }
+			  var = MASS_FRACTION;
+			  if (pd->v[var]) 
+                              {
+			      for (w = 0; w < pd->Num_Species_Eqn; w++) 
+                                {
+				for (j = 0; j < ei->dof[var]; j++) 
+                                  {
 				  gnn = ei->gnn_list[var][j];
 				  ledof = ei->lvdof_to_ledof[var][j];
 				  matIndex = ei->matID_ledof[ledof];
 				  c = Index_Solution(gnn, var, w, 0, matIndex);
 				  J_AC[c] += 2*M_PIE*fv->x[1]*sign*fv->stangent[0][dir]
                                     *dsigmadC[w]*bf[var]->phi[j];
-				}
+				  }
+			        }
 			      }
-			    }
  		           }
 			}
 			else
@@ -4718,10 +4833,13 @@ evaluate_volume_integral(const Exo_DB *exo, /* ptr to basic exodus ii mesh infor
 
   if (quantity == I_SPECIES_SOURCE)
       { 
-      Spec_source_inventory[mn][species_id] += 0.5*sum*(delta_t+tran->delta_t);
+       if(time_value <= tran->init_time+delta_t)
+ 	    { 
+             Spec_source_inventory[mn][species_id] = sum;
+	    }	else	{
+            Spec_source_inventory[mn][species_id] += 0.5*sum*(delta_t+tran->delta_t);
+	    }
       }
-
-
   if( print_flag && ProcID == 0 )
     {
       FILE *jfp;
@@ -4768,7 +4886,7 @@ compute_volume_integrand(const int quantity, const int elem,
   double det = bf[pd->ShapeVar]->detJ * fv->h3;
   double det_J = bf[pd->ShapeVar]->detJ;
   double h3 = fv->h3;
-  int a, b, p, var,j, dim=pd->Num_Dim, gnn, matIndex, ledof, c, WIM;
+  int a, b, p, q, var,j, dim=pd->Num_Dim, gnn, matIndex, ledof, c, WIM;
   int *n_dof=NULL;
   int dof_map[MDE];
 
@@ -4783,7 +4901,8 @@ compute_volume_integrand(const int quantity, const int elem,
 
   WIM = dim;
   if (pd->CoordinateSystem == SWIRLING ||
-      pd->CoordinateSystem == PROJECTED_CARTESIAN)
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
     WIM = WIM+1;
 
   switch ( quantity )
@@ -4848,6 +4967,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	       
       break;
     case I_LUB_LOAD:
+     {
       n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
       lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
@@ -4858,34 +4978,114 @@ compute_volume_integrand(const int quantity, const int elem,
       /* clean-up */
       safe_free((void *) n_dof);
 
-      break; 
+      break;
+     }
+    case I_SHELL_VOLUME:
+     {
+      n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+      lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+      det = fv->sdet; //Different determinant since this is a shell
 
+      dbl H, H_U, dH_U_dtime, H_L, dH_L_dtime;
+      dbl dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+      H = height_function_model(&H_U, &dH_U_dtime, &H_L, &dH_L_dtime, dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
+
+      *sum += H* weight * det;
+
+      /* clean-up */
+      safe_free((void *) n_dof);
+
+      break;
+     }
     case I_SPEED:
      {
       double vsq;
       vsq = 0;
-      for( a=0; a<dim;a++) vsq += fv->v[a]*fv->v[a];
-
-      *sum += vsq*weight*det;
+      for( a=0; a<dim;a++) vsq += SQUARE(fv->v[a]);
+      *sum += sqrt(vsq)*weight*det;
 
       if( J_AC != NULL )
 	{
+          double inv_vsqrt;
+          inv_vsqrt = 1./sqrt(vsq);
 	  for( p=0; p<dim; p++)
 	    {
 	      var = VELOCITY1 + p ;
 
 	      if( pd->v[var] )
 		{
-
 		  for( j=0; j<ei->dof[var]; j++)
 		    {
-		      J_AC[ ei->gun_list[var][j] ] += weight * ( 2.0*fv->v[p]*bf[var]->phi[j] )*det;
+		      J_AC[ ei->gun_list[var][j] ] += weight * ( inv_vsqrt*fv->v[p]*bf[var]->phi[j] )*det;
 		    }
 		}
 	    }
 	}
       }
       break;
+    case I_VORTICITY:
+     {
+      double vsq=0;
+      for( a=0; a<VIM;a++) vsq += fv->curl_v[a]*fv->curl_v[a];
+      *sum += sqrt(vsq)*weight*det;
+      }
+      break;
+
+    case I_HELICITY:
+     {
+      double vsq=0;
+      for( a=0; a<VIM;a++) vsq += SQUARE(fv->v[a]*fv->curl_v[a]);
+      *sum += sqrt(vsq)*weight*det;
+      }
+      break;
+
+    case I_LAMB_MAG:
+     {
+      double vsq=0, lamb_v[DIM] = {0.,0.,0.};
+      for( a=0; a<VIM;a++)
+        {
+         for( p=0; p<VIM;p++) {
+           for( q=0; q<VIM;q++) {
+            lamb_v[a] += permute(p,q,a)*fv->curl_v[p]*fv->v[q];
+            }
+           }
+        }
+      for( a=0; a<VIM;a++) vsq += lamb_v[a]*lamb_v[a];
+      *sum += sqrt(vsq)*weight*det;
+      }
+      break;
+
+    case I_GIESEKUS:
+     {
+      double gammadot, gamma[DIM][DIM];
+      double vorticity, omega[DIM][DIM];
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+          gamma[a][b] = fv->grad_v[a][b] + fv->grad_v[b][a];
+          omega[a][b] = fv->grad_v[a][b] - fv->grad_v[b][a];
+          }
+        }
+    /* find second invariant of strain-rate */
+      calc_shearrate(&gammadot, gamma, NULL, NULL);
+      calc_shearrate(&vorticity, omega, NULL, NULL);
+      *sum += weight*det*(gammadot - vorticity)/
+                        (DBL_SMALL + gammadot + vorticity);
+      }
+      break;
+
+    case I_Q_FCN:
+     {
+      double gammadot, del_v[DIM][DIM];
+      for (a = 0; a < VIM; a++) {
+        for (b = 0; b < VIM; b++) {
+          del_v[a][b] = fv->grad_v[a][b];
+          }
+        }
+      calc_shearrate(&gammadot, del_v, NULL, NULL);
+      *sum += weight*det*gammadot;
+      }
+      break;
+
     case I_DISSIP:
       {
 	int q;
@@ -4896,18 +5096,33 @@ compute_volume_integrand(const int quantity, const int elem,
         double ves[MAX_PDIM][MAX_PDIM];	/* viscoelastic stress */
         int ve_mode;
 
-	for( p=0; p<VIM; p++)
+  if (mp->HeatSourceModel == VISC_DISS )
+    {
+      *sum += weight*det*visc_diss_heat_source(NULL, mp->u_heat_source);
+    }
+  else if (mp->HeatSourceModel == VISC_ACOUSTIC )
+    {
+      *sum += weight*det*visc_diss_heat_source(NULL, mp->u_heat_source);
+      *sum += weight*det*visc_diss_acoustic_source(NULL, mp->u_heat_source, mp->len_u_heat_source);
+    }
+  if (mp->HeatSourceModel == EM_DISS )
+    {
+      *sum += weight*det*em_diss_heat_source(NULL, mp->u_heat_source, mp->len_u_heat_source);
+    }
+  else
+    {
+	for( p=0; p<WIM; p++)
 	  {
-	    for( q=0; q<VIM; q++)
+	    for( q=0; q<WIM; q++)
 	      {
 		gamma_dot[p][q] = fv->grad_v[p][q] + fv->grad_v[q][p];
 	      }
 	  }
 
 	mu = viscosity( gn, gamma_dot, NULL);
-	for( p=0; p<VIM; p++)
+	for( p=0; p<WIM; p++)
 	  {
-	    for( q=0; q<VIM; q++)
+	    for( q=0; q<WIM; q++)
 	      {
 		vs[p][q] = mu*gamma_dot[p][q] - fv->P*delta(p,q);
 	      }
@@ -4919,9 +5134,9 @@ compute_volume_integrand(const int quantity, const int elem,
   	memset( ves, 0, sizeof(dbl)*DIM*DIM);
   	if ( pd->v[POLYMER_STRESS11] )
     	  {
-	    for ( p=0; p<VIM; p++)
+	    for ( p=0; p<WIM; p++)
                {
-	        for ( q=0; q<VIM; q++)
+	        for ( q=0; q<WIM; q++)
         	   {
 	             for ( ve_mode=0; ve_mode<vn->modes; ve_mode++)
         	       {
@@ -4932,7 +5147,7 @@ compute_volume_integrand(const int quantity, const int elem,
     	}
 
 
-	for(p=0; p<VIM; p++)
+	for(p=0; p<WIM; p++)
 	  {
 	    for ( q=0; q<WIM; q++)
 	      {
@@ -4944,6 +5159,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	    EH(-1,"Appropriate Jacobian entries for the DISSIP volume integral are not available.\n");
 	  }
 
+    }
       }
       break;
 
@@ -4988,17 +5204,17 @@ compute_volume_integrand(const int quantity, const int elem,
 	
 	double gamma_dot[DIM][DIM], II=0.0 ;
 
-	for( p=0; p<VIM; p++)
+	for( p=0; p<WIM; p++)
 	  {
-	    for( q=0; q<VIM; q++)
+	    for( q=0; q<WIM; q++)
 	      {
 		gamma_dot[p][q] = fv->grad_v[p][q] + fv->grad_v[q][p];
 	      }
 	  }
 
-	for( p=0; p<VIM; p++)
+	for( p=0; p<WIM; p++)
 	  {
-	    for( q=0; q<VIM; q++)
+	    for( q=0; q<WIM; q++)
 	      {
 		II   += gamma_dot[p][q]*gamma_dot[q][p];
 	      }
@@ -5014,6 +5230,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	    EH(-1,"Jacobian entries for II_GAMMA_DOT Volume integral not implemented.");
 	  }
       }
+      break;
 
     case I_SPECIES_MASS:
       {
@@ -5097,34 +5314,56 @@ compute_volume_integrand(const int quantity, const int elem,
       {
         struct Species_Conservation_Terms s_terms; 
         int w1,i,ie,ldof,eqn=MASS_FRACTION;
+        const int init_spec=0;
+        double exp_factor=1.0;
         zero_structure(&s_terms, sizeof(struct Species_Conservation_Terms), 1);
         get_continuous_species_terms(&s_terms, time, tran->theta, delta_t, NULL);
+
+  /* correct mass based on shrinkage */
+	switch (species_no)
+	   {
+            case 0:
+                exp_factor = mp->specific_volume[init_spec]/mp->specific_volume[init_spec+1];
+                break;
+            case 1:
+                exp_factor = mp->specific_volume[init_spec+1]/mp->specific_volume[init_spec];
+                break;
+            default:
+                exp_factor = mp->specific_volume[species_no]/mp->specific_volume[pd->Num_Species_Eqn];
+                break;
+           }
+  /* integrate product reaction rate */
         if(time > tran->init_time+delta_t)
- 	   {*sum += weight*det*(-s_terms.MassSource[species_no]) ;}
-#if 1  
+ 	   {
+            *sum += weight*det*(-s_terms.MassSource[species_no])*exp_factor;
+           }
   if (efv->ev) {
         if( efv->i[species_no] != I_TABLE)
           {       
-           for (i = 0; i < ei->num_local_nodes; i++) {
+           for (i = 0; i < ei->num_local_nodes; i++) 
+               {
                 ie = Proc_Elem_Connect[ei->iconnect_ptr + i];
 		ldof=ei->ln_to_dof[eqn][i];
                 if(ldof >= 0 )
                    {
-        if(time <= tran->init_time+delta_t)
- 	   {*sum += weight*det*efv->ext_fld_ndl_val[species_no][ie] ;}
-                  efv->ext_fld_ndl_val[species_no][ie] += 
-                  bf[eqn]->phi[ldof]*weight*det*
-                       0.5*(delta_t+tran->delta_t)
-                              *(-s_terms.MassSource[species_no]);
-                     if(species_no == 0)	{
-                          Spec_source_lumped_mass[ie] += 
-                               bf[eqn]->phi[ldof]*weight*det;
-                                }
+          /* on first time step, integrate initial reaction product field  */
+                    if(time <= tran->init_time+delta_t)
+ 	                 {
+                          *sum += weight*det*bf[eqn]->phi[ldof]*
+                                       efv->ext_fld_ndl_val[species_no][ie];
+                         }
+         /* and increment reaction product field  */
+                    efv->ext_fld_ndl_val[species_no][ie] += 
+                              bf[eqn]->phi[ldof]*weight*det*
+                              0.5*(delta_t+tran->delta_t)
+                              *(-s_terms.MassSource[species_no])*exp_factor;
+        /* for one time through, integrate lumped mass matrix   */
+                    if(species_no == 0)	
+                          { Spec_source_lumped_mass[ie] += bf[eqn]->phi[ldof]*weight*det; }
                    }
                 } 
           }
   }
-#endif
 
 	if( J_AC != NULL )
 	  {
@@ -5136,9 +5375,10 @@ compute_volume_integrand(const int quantity, const int elem,
 		  {
 		    for( j=0 ; j<ei->dof[var]; j++)
 		      {
-	    
-			J_AC[ ei->gun_list[var][j] ] += weight*  ( h3 * bf[pd->ShapeVar]->d_det_J_dm[a][j] +
- 			fv->dh3dq[a]*bf[var]->phi[j] * det_J )*s_terms.MassSource[species_no];
+		       J_AC[ ei->gun_list[var][j] ] += 
+                            weight*  ( h3 * bf[pd->ShapeVar]->d_det_J_dm[a][j] +
+ 		            fv->dh3dq[a]*bf[var]->phi[j] * det_J )
+                            *(-s_terms.MassSource[species_no])*exp_factor;
 		      }
 		  }
 	      }
@@ -5157,7 +5397,7 @@ compute_volume_integrand(const int quantity, const int elem,
 		ledof = ei->lvdof_to_ledof[var][j];
 		matIndex = ei->matID_ledof[ledof];
 		c = Index_Solution(gnn, var, species_no, 0, matIndex);
- 		J_AC[c] += weight * det * s_terms.d_MassSource_dc[species_no][w1][j];
+ 		J_AC[c] += weight * det * (-s_terms.d_MassSource_dc[species_no][w1][j])*exp_factor;
 	      }
 	     }
 	    }
@@ -5229,6 +5469,44 @@ compute_volume_integrand(const int quantity, const int elem,
       }
       break;
 
+    case I_KINETIC_ENERGY:
+      {
+
+      *sum += fv->T*weight*det;
+
+      if( J_AC != NULL )
+      {
+        for( p=0; p<dim; p++)
+          {
+            var = MESH_DISPLACEMENT1 + p;
+
+            if( pd->v[var] )
+              {
+
+                for( j=0; j<ei->dof[var]; j++)
+                  {
+                    J_AC[ ei->gun_list[var][j] ] += fv->T * weight *
+                              ( h3 * bf[pd->ShapeVar]->d_det_J_dm[p][j] +
+                              fv->dh3dq[p]*bf[var]->phi[j] * det_J );
+                  }
+              }
+          }
+            var = TEMPERATURE;
+
+            if( pd->v[var] )
+              {
+
+                for( j=0; j<ei->dof[var]; j++)
+                  {
+                    J_AC[ ei->gun_list[var][j] ] +=
+                              bf[var]->phi[j]*weight*det;
+                  }
+              }
+      }
+/*      EH(-1,"This volumetric integral not yet implemented \n");  */
+      }
+      break;
+
     case I_TRACE:
       {
 	int q;
@@ -5246,9 +5524,9 @@ compute_volume_integrand(const int quantity, const int elem,
 	  }
 			       
 
-	for( p=0; p<VIM; p++)
+	for( p=0; p<WIM; p++)
 	  {
-	    for( q=0; q<VIM; q++)
+	    for( q=0; q<WIM; q++)
 	      {
 		gamma_dot[p][q] = fv->grad_v[p][q] + fv->grad_v[q][p];
 	      }
@@ -5321,7 +5599,7 @@ compute_volume_integrand(const int quantity, const int elem,
 
     case I_POS_FILL:
     case I_NEG_FILL:
-     {
+      {
 	double alpha, height = 1.0;
         double H_U, dH_U_dtime, H_L, dH_L_dtime;
         double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
@@ -5370,6 +5648,7 @@ compute_volume_integrand(const int quantity, const int elem,
 	      }
 	  } 
       }
+
      }
       break;
     case I_POS_VOLPLANE:
@@ -5626,13 +5905,27 @@ compute_volume_integrand(const int quantity, const int elem,
 	    n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
 	    lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
 
-	    det = fv->sdet; //Different determinant since this is a shell 
+	    det = fv->sdet; //Different determinant since this is a shell
 
 	    /* clean-up */
 	    safe_free((void *) n_dof);
+	    *sum += weight*det*pmv->bulk_density[0];
 	  }
 
-	*sum += weight*det*pmv->bulk_density[0];
+	if(pd->e[R_TFMP_MASS]) {
+	  n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+	  lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+	  det = fv->sdet; //Different determinant since this is a shell
+	  dbl saturation, height;
+	  double H_U, dH_U_dtime, H_L, dH_L_dtime;
+	  double dH_U_dX[DIM],dH_L_dX[DIM], dH_U_dp, dH_U_ddh;
+	  height = height_function_model(
+					 &H_U, &dH_U_dtime, &H_L, &dH_L_dtime,
+					 dH_U_dX, dH_L_dX, &dH_U_dp, &dH_U_ddh, time, delta_t);
+	  saturation = fv->tfmp_sat;
+	  safe_free((void *) n_dof);
+	  *sum += weight*det*saturation*height;
+	}
 
 	if ( J_AC != NULL)
 	  {
@@ -5670,6 +5963,27 @@ compute_volume_integrand(const int quantity, const int elem,
 
       }
 
+      break;
+
+    case I_TFMP_FORCE:
+      if(pd->e[R_TFMP_MASS]) {
+	n_dof = (int *)array_alloc (1, MAX_VARIABLE_TYPES, sizeof(int));
+	lubrication_shell_initialize(n_dof, dof_map, -1, xi, exo, 0);
+	det = fv->sdet; //Different determinant since this is a shell
+	dbl pressure;
+	pressure = fv->tfmp_pres;
+	// atmospheric pressure, as defined at the boundary
+	// maybe this should be a material property.
+	dbl Patm = mp->tfmp_density_const[3];
+	
+	/* do this part later
+	dbl surface_tension = ;//[cgs please]
+	 */
+      	*sum += weight*det*(pressure - Patm);
+	safe_free((void *) n_dof);
+      }
+      break;
+      
     default:
       break;
     }
@@ -5995,7 +6309,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   double dTT_dcur_strain[MAX_PDIM][MAX_PDIM][MDE];
   double TT_sens[MAX_PDIM][MAX_PDIM];
   double elast_modulus;
-  int dim, velodim;
+  int dim, WIM;
 
   double es[MAX_PDIM][MAX_PDIM], efield[MAX_PDIM];	/* electric stress */
   double efield_sqr;				/* efield magnitude squared  */
@@ -6059,6 +6373,12 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   memset( Torque, 0, sizeof(double)*DIM );
   memset(TT_sens, 0, sizeof(double) * MAX_PDIM * MAX_PDIM);
 
+  dim   = pd_glob[0]->Num_Dim;
+  WIM = dim;
+  if (pd->CoordinateSystem == SWIRLING ||
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
+    WIM = WIM+1;
   /* load eqn and variable number in tensor form */
   err = stress_eqn_pointer(v_s);
   af->Assemble_Jacobian = TRUE;
@@ -6479,7 +6799,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
   			memset( ves, 0, sizeof(dbl)*DIM*DIM);
   			if ( pd->v[POLYMER_STRESS11] )
     			  {
-			    for ( a=0; a<VIM; a++)
+			    for ( a=0; a<WIM; a++)
         	              {
 			        for ( b=0; b<VIM; b++)
             			   {
@@ -6499,7 +6819,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		 */
 		      if(cr->MeshMotion == ARBITRARY)
     			 {
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
 			      for ( b=0; b<VIM; b++)
 				{
@@ -6524,12 +6844,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		
 		/*  velocity  */
 
-  			velodim = dim;	
-  			if(pd->CoordinateSystem == SWIRLING ||
-			     pd->CoordinateSystem == PROJECTED_CARTESIAN)
-    			velodim = dim + 1;
-
-			for ( a=0; a<velodim; a++)
+			for ( a=0; a<WIM; a++)
     			  {
       			   v = VELOCITY1 + a;
       			     if ( pd->v[v] )
@@ -6597,7 +6912,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
  *      end of material property sensitivity pre-calcs
  */
 
-			  for ( a=0; a<VIM; a++)
+			  for ( a=0; a<WIM; a++)
 			    {
 			      for ( b=0; b<VIM; b++)
 				{
@@ -6741,7 +7056,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                 break;
 
 	      case VOLUME_FLUX:
-                for(j=0; j<VIM; j++)
+                for(j=0; j<WIM; j++)
                   {
 			  if (cr->MeshMotion == ARBITRARY)
                     local_q += ( fv->snormal[j]*(fv_sens->v[j]-x_dot[j])
@@ -6759,7 +7074,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 	      case PVELOCITY1:
 	      case PVELOCITY2:
 	      case PVELOCITY3:
-                for(j=0; j<VIM; j++)
+                for(j=0; j<WIM; j++)
                   {
                     local_q += fv->snormal[j]*fv_sens->pv[j]
                                + normal_sens[j]*fv->pv[j];
@@ -6785,7 +7100,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		break;
 
 	      case SPECIES_FLUX:
-                for(j=0; j<VIM; j++)
+                for(j=0; j<WIM; j++)
                   {
                     local_q += ( mp->diffusivity[species_id]*(
                           fv->snormal[j]*fv_sens->grad_c[species_id][j]
@@ -6801,15 +7116,16 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
                 break;
 
 	      case TORQUE:
-		if(pd->CoordinateSystem == PROJECTED_CARTESIAN)
+		if(pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+		   pd->CoordinateSystem == CARTESIAN_2pt5D)
 		  EH(-1, "TORQUE has not been updated for the PROJECTED_CARTESIAN coordinate system.");
 
 		if(pd->CoordinateSystem == SWIRLING || 
 		   pd->CoordinateSystem == CYLINDRICAL)
 		  {
-		    for ( a=0; a<VIM; a++)
+		    for ( a=0; a<WIM; a++)
 		      {
-			for ( b=0; b<VIM; b++)
+			for ( b=0; b<WIM; b++)
 			  {
 			/*
 			 *  note that for CYLINDRICAL and SWIRLING coordinate systems
@@ -6827,7 +7143,7 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 		  }
 		else if( pd->CoordinateSystem == CARTESIAN ) 
 		  {
-                    if( VIM == 2 ) 
+                    if( WIM == 2 ) 
                        {
                          fv->x[2] = 0.0;
                          fv->snormal[2] = 0.0;
@@ -6877,9 +7193,9 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
       case FORCE_NORMAL:
 		if(cr->MeshMotion == ARBITRARY)
 		{
-                for ( a=0; a<VIM; a++)
+                for ( a=0; a<WIM; a++)
                   {
-                    for ( b=0; b<VIM; b++)
+                    for ( b=0; b<WIM; b++)
                       {
                 local_q += (fv->snormal[a]*
 			(vs_sens[a][b] +ves_sens[a][b])
@@ -6915,9 +7231,9 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 
 		if(cr->MeshMotion == ARBITRARY)
 		{
-		for ( a=0; a<VIM; a++)
+		for ( a=0; a<WIM; a++)
 		  {
-		    for ( b=0; b<VIM; b++)
+		    for ( b=0; b<WIM; b++)
 		      {
                         local_q += (fv->stangent[0][a]*(vs_sens[a][b]
 				+ves_sens[a][b])*fv->snormal[b]);
@@ -6947,11 +7263,11 @@ evaluate_flux_sens(const Exo_DB *exo, /* ptr to basic exodus ii mesh information
 
 		if(cr->MeshMotion == ARBITRARY)
 		{
-		  if(pd->Num_Dim == 3)
+		  if(pd->Num_Dim == 3 || upd->CoordinateSystem == SWIRLING   )
 		    {
-                for ( a=0; a<VIM; a++)
+                for ( a=0; a<WIM; a++)
                   {
-                    for ( b=0; b<VIM; b++)
+                    for ( b=0; b<WIM; b++)
                       {
                         local_q += ( fv->stangent[1][a]*(vs_sens[a][b]
 					+ves_sens[a][b])*fv->snormal[b]);
@@ -7700,6 +8016,17 @@ load_fv_sens(void)
         }
     }
 
+  v = SHELL_CURVATURE2;
+  fv_sens->sh_K2 = 0.;
+  if ( pd->v[v] )
+    {
+      dofs  = ei->dof[v];
+      for ( i=0; i<dofs; i++)
+        {
+          fv_sens->sh_K2 += *esp_old->sh_K2[i] * bf[v]->phi[i];
+        }
+    }
+
   /*
    *  Structural shell tension
    */
@@ -7939,6 +8266,17 @@ load_fv_sens(void)
 	}
     }
 
+  v = RESTIME;
+  fv_sens->restime = 0.;
+  if ( pd->v[v] )
+    {
+      dofs  = ei->dof[v];
+      for ( i=0; i<dofs; i++)
+	{
+	  fv_sens->restime += *esp_old->restime[i] * bf[v]->phi[i];
+	}
+    } 
+
   v = SHELL_PRESS_OPEN;
   fv_sens->sh_p_open = 0.;
   if ( pd->v[v] )
@@ -8162,7 +8500,8 @@ load_fv_sens(void)
   
   velodim = dim;		/* Later, this might include v_theta... */
   if(pd->CoordinateSystem == SWIRLING ||
-     pd->CoordinateSystem == PROJECTED_CARTESIAN)
+     pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+     pd->CoordinateSystem == CARTESIAN_2pt5D)
     velodim = dim + 1;		/* Later is Now!  Woo!!! */
 
   /*
@@ -8391,7 +8730,30 @@ load_fv_sens(void)
       fv_sens->c[w] = 0.0;
     }
   }
-	
+
+  /*
+   * Thin-Film Multi-Phase Flows
+   */
+
+  v = TFMP_PRES;
+  fv_sens->tfmp_pres = 0.;
+  if ( pd->v[v] ) {
+    dofs  = ei->dof[v];
+    for ( i=0; i<dofs; i++) {
+      fv_sens->tfmp_pres += *esp_old->tfmp_pres[i] * bf[v]->phi[i];
+    }
+  }
+
+  v = TFMP_SAT;
+  fv_sens->tfmp_sat = 0.;
+  if ( pd->v[v] ) {
+    dofs  = ei->dof[v];
+    for ( i=0; i<dofs; i++) {
+      fv_sens->tfmp_sat += *esp_old->tfmp_sat[i] * bf[v]->phi[i];
+    }
+  }
+
+
   /*
    * External...
    */
@@ -8546,10 +8908,15 @@ load_fv_grads_sens(void)
   int dofs;			/* degrees of freedom for a var in the elem */
   int w;			/* concentration species counter */
   const int dim = pd->Num_Dim;
-  int status;
+  int status, WIM;
   int mode;
 
   status = 0;
+  WIM = dim;
+  if (pd->CoordinateSystem == SWIRLING ||
+      pd->CoordinateSystem == PROJECTED_CARTESIAN ||
+      pd->CoordinateSystem == CARTESIAN_2pt5D)
+    WIM = WIM+1;
 
   /*
    * grad(T)
@@ -8717,7 +9084,7 @@ load_fv_grads_sens(void)
 	  for ( q=0; q<VIM; q++)
 	    {
 	      fv_sens->grad_v[p][q] = 0.;
-	      for ( r=0; r<VIM; r++)
+	      for ( r=0; r<WIM; r++)
 		{
 		  for ( i=0; i<dofs; i++)
 		    {
@@ -8743,7 +9110,7 @@ load_fv_grads_sens(void)
 	  for ( q=0; q<VIM; q++)
 	    {
 	      fv_sens->grad_pv[p][q] = 0.0;
-	      for ( r=0; r<VIM; r++)
+	      for ( r=0; r<WIM; r++)
 		{
 		  for ( i=0; i<dofs; i++)
 		    {
@@ -8880,11 +9247,11 @@ load_fv_grads_sens(void)
   dofs = ei->dof[VELOCITY1];
   if(pd->v[v])
     {
-      for(p = 0; p < VIM; p++)
+      for(p = 0; p < WIM; p++)
 	{
 	  fv_sens->curl_v[p] = 0.0;
 	  for(i = 0; i < dofs; i++)
-	    for(a = 0; a < VIM; a++)
+	    for(a = 0; a < WIM; a++)
 	     fv_sens->curl_v[p] += *esp_old->v[a][i] * bf[v]->curl_phi_e[i][a][p];
 	}
     }

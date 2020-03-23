@@ -155,6 +155,17 @@ PROTO((	double ,		/* time - present time value         */
 	const int ,		/*  Light intensity eqn id and var id		     */
 	const int ));	
 
+EXTERN int assemble_emwave	/* mm_fill_terms.c                           */
+PROTO((	double ,		/* time - present time value         */
+	double ,		/* tt - parameter to vary time integration
+			        	* from explicit (tt = 1) to 
+					* implicit (tt = 0)                   */
+	double ,		/* dt - current time step size               */
+	const PG_DATA *,	/* dvc_dnode                                 */
+	const int ,		/*  Light intensity eqn id and var id		     */
+	const int ,		/*  Light intensity eqn id and var id		     */
+	const int ));	
+
 EXTERN int assemble_acoustic_reynolds_stress	/* mm_fill_terms.c */
 PROTO(( double,					/* time */
         double,					/* tt */
@@ -224,6 +235,10 @@ PROTO((CONDUCTIVITY_DEPENDENCE_STRUCT *,
        dbl      ));             /* time */
 
 EXTERN double light_absorption		/* mm_fill_terms.c             */
+PROTO((CONDUCTIVITY_DEPENDENCE_STRUCT *,
+       dbl      ));             /* time */
+
+EXTERN double extinction_index		/* mm_fill_terms.c             */
 PROTO((CONDUCTIVITY_DEPENDENCE_STRUCT *,
        dbl      ));             /* time */
 
@@ -326,7 +341,16 @@ EXTERN int assemble_div_n_source
 
 EXTERN int assemble_div_s_n_source
      PROTO (( void ));
-		
+
+EXTERN int
+assemble_cap_hysing(double dt, double scale);
+
+EXTERN int
+assemble_cap_denner_diffusion(double dt, double scale);
+
+EXTERN int
+assemble_cap_denner_diffusion_n(double dt, double scale);
+
 EXTERN void grad_vector_fv_fill
 PROTO (( double ***,
 		 double ( *)[DIM][DIM][DIM],
@@ -493,6 +517,10 @@ EXTERN void fluid_stress
 PROTO (( double [DIM][DIM],                      /* Pi[DIM][DIM] */
          STRESS_DEPENDENCE_STRUCT * ));          /* d_Pi         */
 
+EXTERN void fluid_stress_conf
+PROTO (( double [DIM][DIM],                      /* Pi[DIM][DIM] */
+         STRESS_DEPENDENCE_STRUCT * ));          /* d_Pi         */
+
 EXTERN void heat_flux
 PROTO (( double [DIM],                      /* q[DIM] */
          HEAT_FLUX_DEPENDENCE_STRUCT *,          /* dq     */
@@ -518,6 +546,11 @@ PROTO ((double,
 		double));
 
 EXTERN double visc_diss_acoustic_source 
+PROTO((HEAT_SOURCE_DEPENDENCE_STRUCT *,
+       dbl *,			/* param - General multipliers   */
+       int));			/* number of parameters   */
+
+EXTERN double em_diss_heat_source 
 PROTO((HEAT_SOURCE_DEPENDENCE_STRUCT *,
        dbl *,			/* param - General multipliers   */
        int));			/* number of parameters   */
