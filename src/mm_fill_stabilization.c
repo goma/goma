@@ -804,7 +804,7 @@ int calc_pspg(dbl pspg[DIM],
 
   for (p = 0; p < wim; p++)
     div_s[p] = 0.;
-  if (pd->v[pg->imtrx][POLYMER_STRESS11]) {
+  if (pd->gv[POLYMER_STRESS11]) {
     for (p = 0; p < wim; p++) {
       for (mode = 0; mode < vn->modes; mode++) {
         div_s[p] += fv->div_S[mode][p];
@@ -825,7 +825,7 @@ int calc_pspg(dbl pspg[DIM],
       cr->MassFluxModel == HYDRODYNAMIC_QTENSOR)
     particle_stress(tau_p, d_tau_p_dv, d_tau_p_dvd, d_tau_p_dy, d_tau_p_dmesh, d_tau_p_dp, w0);
 
-  if (pd->v[pg->imtrx][VELOCITY_GRADIENT11] && pd->v[pg->imtrx][POLYMER_STRESS11]) {
+  if (pd->gv[VELOCITY_GRADIENT11] && pd->gv[POLYMER_STRESS11]) {
     for (p = 0; p < wim; p++) {
       div_G[p] = fv->div_G[p];
     }
@@ -835,7 +835,7 @@ int calc_pspg(dbl pspg[DIM],
     }
   }
 
-  if (pd->e[pg->imtrx][R_MOMENTUM1] & T_POROUS_BRINK) {
+  if (pd->e[upd->matrix_index[R_MOMENTUM1]][R_MOMENTUM1] & T_POROUS_BRINK) {
     if (mp->PorousMediaType != POROUS_BRINKMAN)
       WH(-1, "Set Porous term multiplier in continuous medium");
     /* Short-hand notation for the four parameters in the Brinkman Equation. */
@@ -876,7 +876,7 @@ int calc_pspg(dbl pspg[DIM],
   /* get momentum source term */
   momentum_source_term(f, df, time_value);
 
-  if (pd->e[pg->imtrx][R_PMOMENTUM1]) {
+  if (pd->gv[R_PMOMENTUM1]) {
     rho_t = ompvf * rho;
     meqn1 = R_PMOMENTUM1;
   } else {
@@ -888,37 +888,37 @@ int calc_pspg(dbl pspg[DIM],
     meqn = meqn1 + a;
 
     mass = 0.;
-    if ((pd->e[pg->imtrx][meqn] & T_MASS) && (pd->TimeIntegration != STEADY)) {
+    if ((pd->e[upd->matrix_index[meqn]][meqn] & T_MASS) && (pd->TimeIntegration != STEADY)) {
       mass = rho_t * v_dot[a] / por;
-      mass *= pd->etm[pg->imtrx][meqn][(LOG2_MASS)];
+      mass *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_MASS)];
     }
 
     advection = 0.;
-    if (pd->e[pg->imtrx][meqn] & T_ADVECTION) {
+    if (pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION) {
       for (p = 0; p < wim; p++) {
         advection += rho_t * (v[p] - x_dot[p]) * grad_v[p][a] / por2;
       }
-      advection *= pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
+      advection *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_ADVECTION)];
     }
 
     diffusion = 0.;
-    if (pd->e[pg->imtrx][meqn] & T_DIFFUSION) {
+    if (pd->e[upd->matrix_index[meqn]][meqn] & T_DIFFUSION) {
       diffusion = grad_P[a] - div_s[a];
       /*diffusion  -= div_tau_p[a]  */
       diffusion -= mu * div_G[a];
-      diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+      diffusion *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_DIFFUSION)];
     }
 
     source = 0.;
-    if (pd->e[pg->imtrx][meqn] & T_SOURCE) {
+    if (pd->e[upd->matrix_index[meqn]][meqn] & T_SOURCE) {
       source = -f[a];
-      source *= pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
+      source *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_SOURCE)];
     }
 
     porous = 0.;
-    if (pd->e[pg->imtrx][meqn] & T_POROUS_BRINK) {
+    if (pd->e[upd->matrix_index[meqn]][meqn] & T_POROUS_BRINK) {
       porous = v[a] * (rho_t * sc * speed / sqrt(per) + vis / per);
-      porous *= pd->etm[pg->imtrx][meqn][(LOG2_POROUS_BRINK)];
+      porous *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_POROUS_BRINK)];
     }
 
     momentum[a] = mass + advection + diffusion + source + porous;
@@ -931,40 +931,40 @@ int calc_pspg(dbl pspg[DIM],
           phi_j = bf[var]->phi[j];
 
           mass = 0.;
-          if ((pd->e[pg->imtrx][meqn] & T_MASS) && (pd->TimeIntegration != STEADY)) {
+          if ((pd->e[upd->matrix_index[meqn]][meqn] & T_MASS) && (pd->TimeIntegration != STEADY)) {
             mass = rho_t / por * (1. + 2. * tt) * phi_j / dt * (dbl)delta(a, b);
-            mass *= pd->etm[pg->imtrx][meqn][(LOG2_MASS)];
+            mass *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_MASS)];
           }
 
           advection = 0.;
-          if (pd->e[pg->imtrx][meqn] & T_ADVECTION) {
+          if (pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION) {
             advection = phi_j * grad_v[b][a];
             for (p = 0; p < wim; p++) {
               advection += (v[p] - x_dot[p]) * bf[var]->grad_phi_e[j][b][p][a];
             }
             advection *= rho_t / por2;
-            advection *= pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
+            advection *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_ADVECTION)];
           }
 
           diffusion = 0.;
-          if (pd->e[pg->imtrx][meqn] & T_DIFFUSION) {
+          if (pd->e[upd->matrix_index[meqn]][meqn] & T_DIFFUSION) {
             diffusion -= d_mu->v[b][j] * div_G[a];
             /*diffusion -= d_div_tau_p_dv[a][b][j];*/
-            diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+            diffusion *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_DIFFUSION)];
           }
 
           source = 0.;
-          if (pd->e[pg->imtrx][meqn] & T_SOURCE) {
-            source -= df->v[a][b][j] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
+          if (pd->e[upd->matrix_index[meqn]][meqn] & T_SOURCE) {
+            source -= df->v[a][b][j] * pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_SOURCE)];
           }
 
           porous = 0.;
-          if (pd->e[pg->imtrx][meqn] & T_POROUS_BRINK) {
+          if (pd->e[upd->matrix_index[meqn]][meqn] & T_POROUS_BRINK) {
             porous = (rho_t * sc * speed / sqrt(per) + vis / per) * phi_j;
             for (p = 0; p < wim; p++) {
               porous += rho_t * sc / sqrt(per) * 2. * v[p] * v[a];
             }
-            porous *= pd->etm[pg->imtrx][meqn][(LOG2_POROUS_BRINK)];
+            porous *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_POROUS_BRINK)];
           }
           d_pspg->v[a][b][j] = tau_pspg * (mass + advection + diffusion + source + porous) +
                                d_tau_pspg_dv[b][j] * momentum[a];
@@ -979,29 +979,29 @@ int calc_pspg(dbl pspg[DIM],
           phi_j = bf[var]->phi[j];
 
           advection = 0.;
-          if ((pd->e[pg->imtrx][meqn] & T_ADVECTION) && (pd->TimeIntegration != STEADY)) {
+          if ((pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION) && (pd->TimeIntegration != STEADY)) {
             advection = -(1. + 2. * tt) * phi_j / dt * grad_v[b][a];
             for (p = 0; p < wim; p++) {
               advection += (v[p] - x_dot[p]) * fv->d_grad_v_dmesh[p][a][b][j];
             }
             advection *= rho_t / por2;
-            advection *= pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
+            advection *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_ADVECTION)];
           }
 
           diffusion = 0.;
-          if (pd->e[pg->imtrx][meqn] & T_DIFFUSION) {
+          if (pd->e[upd->matrix_index[meqn]][meqn] & T_DIFFUSION) {
             diffusion = fv->d_grad_P_dmesh[a][b][j] - d_mu->X[b][j] * div_G[a] -
                         mu * fv->d_div_G_dmesh[a][b][j];
             /* diffusion -= d_div_tau_p_dX[a][b][j];*/
             for (mode = 0; mode < vn->modes; mode++) {
               diffusion -= fv->d_div_S_dmesh[mode][a][b][j];
             }
-            diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+            diffusion *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_DIFFUSION)];
           }
 
           source = 0.;
-          if (pd->e[pg->imtrx][meqn] & T_SOURCE) {
-            source -= df->X[a][b][j] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
+          if (pd->e[upd->matrix_index[meqn]][meqn] & T_SOURCE) {
+            source -= df->X[a][b][j] * pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_SOURCE)];
           }
 
           d_pspg->X[a][b][j] =
@@ -1020,36 +1020,36 @@ int calc_pspg(dbl pspg[DIM],
         d_rho_t_dT = ompvf * d_rho->T[j];
 
         mass = 0.;
-        if ((pd->e[pg->imtrx][meqn] & T_MASS) && (pd->TimeIntegration != STEADY)) {
+        if ((pd->e[upd->matrix_index[meqn]][meqn] & T_MASS) && (pd->TimeIntegration != STEADY)) {
           mass = d_rho_t_dT / por * v_dot[a];
-          mass *= pd->etm[pg->imtrx][meqn][(LOG2_MASS)];
+          mass *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_MASS)];
         }
 
         advection = 0.;
-        if (pd->e[pg->imtrx][meqn] & T_ADVECTION) {
+        if (pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION) {
           advection = 0.;
           for (p = 0; p < wim; p++) {
             advection += (v[p] - x_dot[p]) * grad_v[p][a];
           }
           advection *= d_rho_t_dT / por2;
-          advection *= pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
+          advection *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_ADVECTION)];
         }
 
         diffusion = 0.;
-        if (pd->e[pg->imtrx][meqn] & T_DIFFUSION) {
+        if (pd->e[upd->matrix_index[meqn]][meqn] & T_DIFFUSION) {
           diffusion -= d_mu->T[j] * div_G[a];
-          diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+          diffusion *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_DIFFUSION)];
         }
 
         source = 0.;
-        if (pd->e[pg->imtrx][meqn] & T_SOURCE) {
-          source -= df->T[a][j] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
+        if (pd->e[upd->matrix_index[meqn]][meqn] & T_SOURCE) {
+          source -= df->T[a][j] * pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_SOURCE)];
         }
 
         porous = 0.;
-        if (pd->e[pg->imtrx][meqn] & T_POROUS_BRINK) {
+        if (pd->e[upd->matrix_index[meqn]][meqn] & T_POROUS_BRINK) {
           porous = v[a] * (d_rho_t_dT * sc * speed / sqrt(per) + dvis_dT[j] / per);
-          porous *= pd->etm[pg->imtrx][meqn][(LOG2_POROUS_BRINK)];
+          porous *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_POROUS_BRINK)];
         }
         d_pspg->T[a][j] = tau_pspg * (mass + advection + diffusion + source + porous);
       }
@@ -1059,9 +1059,9 @@ int calc_pspg(dbl pspg[DIM],
     if (d_pspg != NULL && pd->v[pg->imtrx][var]) {
       for (j = 0; j < ei[pg->imtrx]->dof[var]; j++) {
         diffusion = 0.;
-        if (pd->e[pg->imtrx][meqn] & T_DIFFUSION) {
+        if (pd->e[upd->matrix_index[meqn]][meqn] & T_DIFFUSION) {
           diffusion = bf[var]->grad_phi[j][a] - d_mu->P[j] * div_G[a];
-          diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+          diffusion *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_DIFFUSION)];
         }
 
         d_pspg->P[a][j] = tau_pspg * (diffusion);
@@ -1081,37 +1081,37 @@ int calc_pspg(dbl pspg[DIM],
             d_rho_t_dC -= phi_j * rho;
 
           mass = 0.;
-          if ((pd->e[pg->imtrx][meqn] & T_MASS) && (pd->TimeIntegration != STEADY)) {
+          if ((pd->e[upd->matrix_index[meqn]][meqn] & T_MASS) && (pd->TimeIntegration != STEADY)) {
             mass = d_rho_t_dC / por * v_dot[a];
-            mass *= pd->etm[pg->imtrx][meqn][(LOG2_MASS)];
+            mass *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_MASS)];
           }
 
           advection = 0.;
-          if (pd->e[pg->imtrx][meqn] & T_ADVECTION) {
+          if (pd->e[upd->matrix_index[meqn]][meqn] & T_ADVECTION) {
             advection = 0.;
             for (p = 0; p < wim; p++) {
               advection += (v[p] - x_dot[p]) * grad_v[p][a];
             }
             advection *= d_rho_t_dC / por2;
-            advection *= pd->etm[pg->imtrx][meqn][(LOG2_ADVECTION)];
+            advection *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_ADVECTION)];
           }
 
           diffusion = 0.;
-          if (pd->e[pg->imtrx][meqn] & T_DIFFUSION) {
+          if (pd->e[upd->matrix_index[meqn]][meqn] & T_DIFFUSION) {
             diffusion -= d_mu->C[w][j] * div_G[a];
             /*diffusion  -= d_div_tau_p_dy[a][w][j]; */
-            diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+            diffusion *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_DIFFUSION)];
           }
 
           source = 0.;
-          if (pd->e[pg->imtrx][meqn] & T_SOURCE) {
-            source -= df->C[a][w][j] * pd->etm[pg->imtrx][meqn][(LOG2_SOURCE)];
+          if (pd->e[upd->matrix_index[meqn]][meqn] & T_SOURCE) {
+            source -= df->C[a][w][j] * pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_SOURCE)];
           }
 
           porous = 0.;
-          if (pd->e[pg->imtrx][meqn] & T_POROUS_BRINK) {
+          if (pd->e[upd->matrix_index[meqn]][meqn] & T_POROUS_BRINK) {
             porous = v[a] * (d_rho_t_dC * sc * speed / sqrt(per));
-            porous *= pd->etm[pg->imtrx][meqn][(LOG2_POROUS_BRINK)];
+            porous *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_POROUS_BRINK)];
           }
           d_pspg->C[a][w][j] = tau_pspg * (mass + advection + diffusion + source + porous);
         }
@@ -1128,7 +1128,7 @@ int calc_pspg(dbl pspg[DIM],
               phi_j = bf[var]->phi[j];
 
               diffusion = 0.;
-              if (pd->e[pg->imtrx][meqn] & T_DIFFUSION) {
+              if (pd->e[upd->matrix_index[meqn]][meqn] & T_DIFFUSION) {
                 diffusion = -(dbl)delta(a, c) * bf[var]->grad_phi[j][b];
 
                 if (pd->CoordinateSystem != CARTESIAN) {
@@ -1140,7 +1140,7 @@ int calc_pspg(dbl pspg[DIM],
                   }
                 }
 
-                diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+                diffusion *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_DIFFUSION)];
               }
 
               d_pspg->S[a][mode][b][c][j] = tau_pspg * diffusion;
@@ -1159,7 +1159,7 @@ int calc_pspg(dbl pspg[DIM],
             phi_j = bf[var]->phi[j];
 
             diffusion = 0.;
-            if (pd->e[pg->imtrx][meqn] & T_DIFFUSION) {
+            if (pd->e[upd->matrix_index[meqn]][meqn] & T_DIFFUSION) {
               diffusion = -(dbl)delta(a, c) * bf[var]->grad_phi[j][b];
 
               if (pd->CoordinateSystem != CARTESIAN) {
@@ -1172,7 +1172,7 @@ int calc_pspg(dbl pspg[DIM],
               }
               diffusion *= mu;
               /* diffusion -= d_div_tau_p_dgd0[a][b][c][j]; */
-              diffusion *= pd->etm[pg->imtrx][meqn][(LOG2_DIFFUSION)];
+              diffusion *= pd->etm[upd->matrix_index[meqn]][meqn][(LOG2_DIFFUSION)];
             }
 
             d_pspg->g[a][b][c][j] = tau_pspg * diffusion;

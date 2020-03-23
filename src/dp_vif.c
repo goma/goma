@@ -1081,6 +1081,9 @@ noahs_ark(void)
   ddd_add_member(n, &upd->Process_Temperature, 1, MPI_DOUBLE);            
   ddd_add_member(n, &upd->Acoustic_Frequency, 1, MPI_DOUBLE);            
   ddd_add_member(n, &upd->Light_Cosmu, 1, MPI_DOUBLE);            
+  ddd_add_member(n, &upd->SegregatedSolve, 1, MPI_INT);
+  ddd_add_member(n, &upd->SegregatedSubcycles, 1, MPI_INT);
+  ddd_add_member(n, &upd->PSPG_advection_correction, 1, MPI_INT);
 
   ddd_add_member(n, pg->time_step_control_disabled, MAX_NUM_MATRICES, MPI_INT);
   ddd_add_member(n, pg->matrix_subcycle_count, MAX_NUM_MATRICES, MPI_INT);

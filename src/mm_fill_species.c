@@ -407,6 +407,11 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
         }
       }
 
+      dbl pspg[3] = {0.0,0.0,0.0};
+      PSPG_DEPENDENCE_STRUCT d_pspg;
+      if (upd->PSPG_advection_correction) {
+        calc_pspg(pspg, &d_pspg, time, tt, dt, pg_data);
+      }
 
       /*
        * Residuals_________________________________________________________________
@@ -539,6 +544,12 @@ assemble_mass_transport(double time, /* present time valuel; KSC             */
 			{
 			  advection_a += s_terms.conv_flux[w][p];
 			}
+
+                      if (upd->PSPG_advection_correction) {
+                        advection -= pspg[0] * fv->grad_c[w][0];
+                        advection -= pspg[1] * fv->grad_c[w][1];
+                        if (VIM == 3) advection -= pspg[2] * fv->grad_c[w][2];
+                      }
 
                       if (mp->SpeciesSourceModel[w]  == ELECTRODE_KINETICS ||
                           mp->SpeciesSourceModel[w]  == ION_REACTIONS) /*  RSL 3/19/01  */

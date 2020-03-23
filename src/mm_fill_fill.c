@@ -590,6 +590,12 @@ int assemble_fill(double tt,
     k_dc = yzbeta;
   }
 
+  dbl pspg[3] = {0.0, 0.0, 0.0};
+  PSPG_DEPENDENCE_STRUCT d_pspg;
+  if (upd->PSPG_advection_correction) {
+    calc_pspg(pspg, &d_pspg, time, tt, dt, pg_data);
+  }
+
   /**********************************************************************
    **********************************************************************
    ** Residuals
@@ -696,6 +702,12 @@ int assemble_fill(double tt,
 
               mass = F_dot * wt_func;
               advection = v_dot_DF;
+
+              if (upd->PSPG_advection_correction) {
+                advection -= pspg[0] * grad_F[0];
+                advection -= pspg[1] * grad_F[1];
+                if (VIM == 3) advection -= pspg[2] * grad_F[2];
+              }
 
               if (ls != NULL && ls->Enable_Div_Term) {
                 advection += fv->F * fv->div_v;
@@ -880,6 +892,11 @@ int assemble_fill(double tt,
                         advection = 0;
                         for (int a = 0; a < dim; a++) {
                           advection += fv->v[a] * bf[var]->grad_phi[j][a];
+                        }
+                        if (upd->PSPG_advection_correction) {
+                          advection -= pspg[0] * bf[var]->grad_phi[j][0];
+                          advection -= pspg[1] * bf[var]->grad_phi[j][1];
+                          if (VIM == 3) advection -= pspg[2] * bf[var]->grad_phi[j][2];
                         }
 
                         if (ls != NULL && ls->Enable_Div_Term) {

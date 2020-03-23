@@ -56,14 +56,13 @@ dbl yzbeta_model(int model,
 
 void get_metric_tensor(const dbl B[DIM][DIM], int dim, int element_type, dbl G[DIM][DIM]);
 
-int calc_pspg /* mm_fill_terms.c                           */
-    (dbl[DIM],
-     PSPG_DEPENDENCE_STRUCT *,
-     dbl, /* current time                              */
-     dbl, /* parameter to vary time integration from
-             explicit (tt = 1) to implicit (tt = 0)    */
-     dbl, /* current time step size                    */
-     const PG_DATA *);
+int calc_pspg(dbl pspg[DIM],
+              PSPG_DEPENDENCE_STRUCT *d_pspg,
+              dbl time_value, /* current time */
+              dbl tt,         /* parameter to vary time integration from
+                                                 explicit (tt = 1) to implicit (tt = 0)    */
+              dbl dt,         /* current time step size                    */
+              const PG_DATA *pg_data);
 
 int calc_cont_gls /* mm_fill_terms.c                           */
     (dbl *,

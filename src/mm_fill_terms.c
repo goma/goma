@@ -2901,6 +2901,13 @@ assemble_momentum(dbl time,       /* current time */
       calc_cont_gls(&cont_gls, d_cont_gls, time, pg_data);
     }
 
+  double pspg[3] = {0.0, 0.0, 0.0};
+  PSPG_DEPENDENCE_STRUCT d_pspg;
+
+  if (upd->PSPG_advection_correction) {
+    calc_pspg(pspg, &d_pspg, time, tt, dt, pg_data);
+  } 
+
   /*
    * Residuals_________________________________________________________________
    */
@@ -3008,6 +3015,13 @@ assemble_momentum(dbl time,       /* current time */
 		  advection += (v[1] - x_dot[1]) * grad_v[1][a];
 		  if (wim == 3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
 #endif
+
+                  if (0 && upd->PSPG_advection_correction) {
+		    advection -= pspg[0] * grad_v[0][a];
+		    advection -= pspg[1] * grad_v[1][a];
+		    if (wim == 3) advection -= pspg[2] * grad_v[2][a];
+                  }
+
 		  advection *= rho;
 		  advection *= - wt_func*d_area;
 		  advection *= advection_etm;
@@ -3717,6 +3731,14 @@ assemble_momentum(dbl time,       /* current time */
 			      if(wim==3) advection_a += (v[2] - x_dot[2]) * bf[var]->grad_phi_e[j][b][2][a];
 #endif
 
+                              if (0 && upd->PSPG_advection_correction) {
+		                advection_a -= pspg[0] * bf[var]->grad_phi_e[j][b][0][a];
+		                advection_a -= pspg[1] * bf[var]->grad_phi_e[j][b][0][a];
+		                if (wim == 3) advection_a -= pspg[2] * bf[var]->grad_phi_e[j][b][0][a];
+		                advection_a -= d_pspg.v[0][b][j] * grad_v[0][a];
+		                advection_a -= d_pspg.v[1][b][j] * grad_v[1][a];
+		                if (wim == 3) advection_a -= d_pspg.v[2][b][j] * grad_v[2][a];
+                              }
 
 			      advection_a *= rho * -wt_func * d_area;
 			      advection_b = 0.;
@@ -3725,6 +3747,11 @@ assemble_momentum(dbl time,       /* current time */
                                   advection_b += (v[0] - x_dot[0]) * grad_v[0][a];
                                   advection_b += (v[1] - x_dot[1]) * grad_v[1][a];
                                   if(wim==3) advection_b += (v[2] - x_dot[2]) * grad_v[2][a];
+                                  if (0 && upd->PSPG_advection_correction) {
+		                    advection_a -= pspg[0] * grad_v[0][a];
+		                    advection_a -= pspg[1] * grad_v[1][a];
+		                    if (wim == 3) advection_a -= pspg[2] * grad_v[2][a];
+                                  }
                                   advection_b *= d_wt_func * rho * d_area;
                                 }
 			      advection = advection_a + advection_b;
@@ -4173,6 +4200,14 @@ assemble_momentum(dbl time,       /* current time */
 
 		    /*  phi_j = bf[var]->phi[j]; */
 
+                    advection = 0;
+
+                    if (0 && upd->PSPG_advection_correction) {
+                      advection -= d_pspg.P[0][j] * grad_v[0][a];
+                      advection -= d_pspg.P[1][j] * grad_v[1][a];
+                      if (wim == 3) advection -= d_pspg.P[2][j] * grad_v[2][a];
+                    }
+
 		    diffusion = 0.;
 
 		    if ( diffusion_on)
@@ -4220,7 +4255,7 @@ assemble_momentum(dbl time,       /* current time */
 #endif /* DEBUG_MOMENTUM_JAC */
 
 		    /*lec->J[peqn][pvar][ii][j] += diffusion ;  */
-		    J[j] += diffusion;
+		    J[j] += advection + diffusion;
 		  }
 	      }
 
@@ -17832,7 +17867,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
       for ( a=0; a<dim; a++)
 	{
 	  eqn = R_MOMENTUM1 + a;
-	  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+	  if ( pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE )
 	    {
 	      f[a] = mp->momentum_source[a];
               var  = TEMPERATURE;
@@ -17904,7 +17939,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
       for ( a=0; a<force_dim; a++)
 	{
 	  eqn   = R_MOMENTUM1+a;			
-	  if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+	  if ( pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE )
 	    {
 	      f[a] = mp->momentum_source[a];
  	    }
@@ -17920,7 +17955,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 	  for ( a=0; a<dim; a++)
 	    {
 	      eqn   = R_MOMENTUM1+a;			
-	      if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+	      if ( pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE )
 		{
 		  f[a] = rho*mp->momentum_source[a];
 		}
@@ -17950,7 +17985,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
 	  for ( a=0; a<dim; a++)
 	    {
 	      eqn   = R_MOMENTUM1+a;			
-	      if (pd->e[pg->imtrx][eqn] & T_SOURCE)
+	      if (pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE)
 		{
 		  f[a] = rho*mp->momentum_source[a];
 		}
@@ -18012,7 +18047,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
       for ( a=0; a<dim; a++)
       {
         eqn   = R_MOMENTUM1+a;
-        if (pd->e[pg->imtrx][eqn] & T_SOURCE)
+        if (pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE)
         {
           f[a] = Heaviside * rho*mp->momentum_source[a];
         }
@@ -18136,7 +18171,7 @@ momentum_source_term(dbl f[DIM],                   /* Body force. */
        	for ( a=0; a<dim; a++)
  		{
  	  	eqn   = R_MOMENTUM1+a;			
- 	  	if ( pd->e[pg->imtrx][eqn] & T_SOURCE )
+ 	  	if ( pd->e[upd->matrix_index[eqn]][eqn] & T_SOURCE )
  	    		{
 /*  Graviational piece	*/
  	      		f[a] = mp->momentum_source[a];

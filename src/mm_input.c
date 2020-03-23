@@ -7108,7 +7108,7 @@ rd_solver_specs(FILE *ifp,
     {
       (void) read_string(ifp, input, '\n');
       strip(input);
-      if (strcmp(input,"no") == 0 || strcmp(input,"false"))
+      if (strcmp(input,"no") == 0 || strcmp(input,"false") == 0)
 	{
 	  upd->PSPG_advection_correction = false;
 	}
