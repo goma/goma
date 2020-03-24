@@ -3016,7 +3016,7 @@ assemble_momentum(dbl time,       /* current time */
 		  if (wim == 3) advection += (v[2] - x_dot[2]) * grad_v[2][a];
 #endif
 
-                  if (0 && upd->PSPG_advection_correction) {
+                  if (upd->PSPG_advection_correction) {
 		    advection -= pspg[0] * grad_v[0][a];
 		    advection -= pspg[1] * grad_v[1][a];
 		    if (wim == 3) advection -= pspg[2] * grad_v[2][a];
@@ -3731,10 +3731,10 @@ assemble_momentum(dbl time,       /* current time */
 			      if(wim==3) advection_a += (v[2] - x_dot[2]) * bf[var]->grad_phi_e[j][b][2][a];
 #endif
 
-                              if (0 && upd->PSPG_advection_correction) {
+                              if (upd->PSPG_advection_correction) {
 		                advection_a -= pspg[0] * bf[var]->grad_phi_e[j][b][0][a];
-		                advection_a -= pspg[1] * bf[var]->grad_phi_e[j][b][0][a];
-		                if (wim == 3) advection_a -= pspg[2] * bf[var]->grad_phi_e[j][b][0][a];
+		                advection_a -= pspg[1] * bf[var]->grad_phi_e[j][b][1][a];
+		                if (wim == 3) advection_a -= pspg[2] * bf[var]->grad_phi_e[j][b][2][a];
 		                advection_a -= d_pspg.v[0][b][j] * grad_v[0][a];
 		                advection_a -= d_pspg.v[1][b][j] * grad_v[1][a];
 		                if (wim == 3) advection_a -= d_pspg.v[2][b][j] * grad_v[2][a];
@@ -3747,10 +3747,10 @@ assemble_momentum(dbl time,       /* current time */
                                   advection_b += (v[0] - x_dot[0]) * grad_v[0][a];
                                   advection_b += (v[1] - x_dot[1]) * grad_v[1][a];
                                   if(wim==3) advection_b += (v[2] - x_dot[2]) * grad_v[2][a];
-                                  if (0 && upd->PSPG_advection_correction) {
-		                    advection_a -= pspg[0] * grad_v[0][a];
-		                    advection_a -= pspg[1] * grad_v[1][a];
-		                    if (wim == 3) advection_a -= pspg[2] * grad_v[2][a];
+                                  if (upd->PSPG_advection_correction) {
+		                    advection_b -= pspg[0] * grad_v[0][a];
+		                    advection_b -= pspg[1] * grad_v[1][a];
+		                    if (wim == 3) advection_b -= pspg[2] * grad_v[2][a];
                                   }
                                   advection_b *= d_wt_func * rho * d_area;
                                 }
@@ -4202,11 +4202,14 @@ assemble_momentum(dbl time,       /* current time */
 
                     advection = 0;
 
-                    if (0 && upd->PSPG_advection_correction) {
+                    if (upd->PSPG_advection_correction) {
                       advection -= d_pspg.P[0][j] * grad_v[0][a];
                       advection -= d_pspg.P[1][j] * grad_v[1][a];
                       if (wim == 3) advection -= d_pspg.P[2][j] * grad_v[2][a];
                     }
+		    advection *= rho;
+		    advection *= - wt_func*d_area;
+		    advection *= advection_etm;
 
 		    diffusion = 0.;
 

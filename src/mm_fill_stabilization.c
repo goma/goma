@@ -749,7 +749,7 @@ int calc_pspg(dbl pspg[DIM],
       }
     }
 
-    tau_pspg = 1.0 / sqrt(tau_time + tau_adv + tau_diff);
+    tau_pspg = PS_scaling / sqrt(tau_time + tau_adv + tau_diff);
 
     // d/dx 1/sqrt(f(x)) => - f'(x) / (2 * f(x)^(3/2))
     if (d_pspg != NULL && pd->v[pg->imtrx][VELOCITY1]) {
