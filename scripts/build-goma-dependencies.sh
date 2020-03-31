@@ -157,6 +157,8 @@ if [ "$PRINT_MENU" == "false" ]; then
             MPI_BASE_DIR="/usr/lib64/openmpi"
         elif [ -d "/usr/lib/openmpi" ] ; then
             MPI_BASE_DIR="/usr/lib/openmpi"
+        elif [ -d "/usr/lib/x86_64-linux-gnu/openmpi" ] ; then
+            MPI_BASE_DIR="/usr/lib/x86_64-linux-gnu/openmpi"
         else
             MPI_BASE_DIR="BUILD"
         fi
