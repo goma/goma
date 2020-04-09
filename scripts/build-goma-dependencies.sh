@@ -240,7 +240,7 @@ MATIO_MD5="170075cce5c144e19f610af9b64cb63b"
 
 ARCHIVE_NAMES=("arpack96.tar.gz" \
 "patch.tar.gz" \
-"hdf5-${HDF5_VERSION}.tar.gz" \
+"hdf5-${HDF5_VERSION}.tar.bz2" \
 "netcdf-${NETCDF_VERSION}.tar.gz" \
 "parmetis-4.0.3.tar.gz" \
 "sparse.tar.gz" \
