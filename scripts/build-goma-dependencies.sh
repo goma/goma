@@ -157,6 +157,8 @@ if [ "$PRINT_MENU" == "false" ]; then
             MPI_BASE_DIR="/usr/lib64/openmpi"
         elif [ -d "/usr/lib/openmpi" ] ; then
             MPI_BASE_DIR="/usr/lib/openmpi"
+        elif [ -d "/usr/lib/x86_64-linux-gnu/openmpi" ] ; then
+            MPI_BASE_DIR="/usr/lib/x86_64-linux-gnu/openmpi"
         else
             MPI_BASE_DIR="BUILD"
         fi
@@ -238,7 +240,7 @@ MATIO_MD5="170075cce5c144e19f610af9b64cb63b"
 
 ARCHIVE_NAMES=("arpack96.tar.gz" \
 "patch.tar.gz" \
-"hdf5-${HDF5_VERSION}.tar.gz" \
+"hdf5-${HDF5_VERSION}.tar.bz2" \
 "netcdf-${NETCDF_VERSION}.tar.gz" \
 "parmetis-4.0.3.tar.gz" \
 "sparse.tar.gz" \
@@ -268,7 +270,7 @@ $MUMPS_MD5 \
 ARCHIVE_URLS=("http://www.caam.rice.edu/software/ARPACK/SRC/arpack96.tar.gz" \
 "http://www.caam.rice.edu/software/ARPACK/SRC/patch.tar.gz" \
 "https://support.hdfgroup.org/ftp/HDF5/releases/hdf5-1.10/hdf5-${HDF5_VERSION}/src/hdf5-${HDF5_VERSION}.tar.bz2" \
-"ftp://ftp.unidata.ucar.edu/pub/netcdf/netcdf-${NETCDF_VERSION}.tar.gz" \
+"https://www.unidata.ucar.edu/downloads/netcdf/ftp/netcdf-${NETCDF_VERSION}.tar.gz" \
 "http://glaros.dtc.umn.edu/gkhome/fetch/sw/parmetis/parmetis-4.0.3.tar.gz" \
 "http://downloads.sourceforge.net/project/sparse/sparse/sparse1.4b/sparse1.4b.tar.gz" \
 "http://codeload.github.com/xiaoyeli/superlu_dist/tar.gz/v5.1.3" \
@@ -318,7 +320,7 @@ ARCHIVE_REAL_NAMES=("ARPACK96" \
 "MATIO")
 
 if [[ "$MPI_BASE_DIR" == "BUILD" ]]; then
-    ARCHIVE_NAMES+=("openmpi-$OPENMPI_VERSION.tar.gz")
+    ARCHIVE_NAMES+=("openmpi-$OPENMPI_VERSION.tar.bz2")
     ARCHIVE_MD5SUMS+=("$OPENMPI_MD5")
     ARCHIVE_URLS+=("$OPENMPI_ARCHIVE_URL")
     ARCHIVE_DIR_NAMES+=("openmpi-$OPENMPI_VERSION")
