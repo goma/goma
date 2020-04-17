@@ -3143,9 +3143,9 @@ int bond_viscosity(dbl mu0,         /* reference zero shear rate fluid viscosity
     }
   else
     {
-      mu = mu_inf + mu0 * pow(nn, Aexp);
+      mu = mu_inf + (mu0-mu_inf) * pow(nn, Aexp);
       mp->viscosity = mu;
-      mp->d_viscosity[BOND_EVOLUTION] = mu0 *Aexp*pow(nn, Aexp-1.);
+      mp->d_viscosity[BOND_EVOLUTION] = (mu0-mu_inf) *Aexp*pow(nn, Aexp-1.);
     }
 
   return(status);
