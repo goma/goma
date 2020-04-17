@@ -6103,7 +6103,7 @@ assemble_bond_evolution(double time,	/* present time value */
 				   wrt velocity */ 
   dbl d_gd_dmesh[DIM][MDE];     /* derivative of strain rate invariant 
 				   wrt mesh */ 
-  dbl offset = 0.00001;
+  dbl offset = DBL_SMALL;
 
   for (i = 0; i < DIM; i++) {
     grad_phi_i[i] = 0;
@@ -6153,18 +6153,9 @@ assemble_bond_evolution(double time,	/* present time value */
       nn_dot = 0.0;
 
     }
-  /* clip negative values */
-  if(nn < 1.e-5) nn = 0.;
-
-  /* migrate to input deck ASAP */
-  /* kf = k2, kb = k1 */
-
-/*  k2 = 0.000909;
-  k1 = 0.4545454;
-
-  n0 = 1.;
-  aexp = 1.;
-  bexp =  0.;*/
+  /* clip negative values 
+  if(nn < 1.e-5) nn = 0.;*/
+  nn = MAX(nn,0.);
 
   k2 = gn->k2;
   k1 = gn->k1;
@@ -6243,9 +6234,9 @@ assemble_bond_evolution(double time,	/* present time value */
 	  source = 0.;
 	  if ( pd->e[eqn] & T_SOURCE )
 	    {
-	      if(nn <=0.)
+	      if(DOUBLE_ZERO(nn))
 		{
-		  source = -k2*(n0-nn)*gterm_b;
+		  source = -k2*(n0)*gterm_b;
 		  source *= phi_i * det_J * wt * h3;
 		  source *= pd->etm[eqn][(LOG2_SOURCE)];
 		}
@@ -6342,7 +6333,7 @@ assemble_bond_evolution(double time,	/* present time value */
 		  source = 0.;
 		  if ( pd->e[eqn] & T_SOURCE )
 		    {
-		      if(nn <=0.)
+	              if(DOUBLE_ZERO(nn))
 			{
 			  source = k2*gterm_b*phi_j;
 			  source *= phi_i * det_J * wt * h3;
@@ -6389,9 +6380,9 @@ assemble_bond_evolution(double time,	/* present time value */
 		      source = 0.;
 		      if ( pd->e[eqn] & T_SOURCE )
 			{
-			  if(nn <=0)
+	                  if(DOUBLE_ZERO(nn))
 			    {
-			      source2 = k2*(n0-nn)*d_gterm_b;
+			      source2 = k2*(n0)*d_gterm_b;
 			      source -= (source2)*d_gd_dv[b][j];
 			      source *= phi_i * det_J * wt * h3;
 			      source *= pd->etm[eqn][(LOG2_SOURCE)];
