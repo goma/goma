@@ -8,13 +8,13 @@
 #ifndef INCLUDE_SL_EPETRA_INTERFACE_H_
 #define INCLUDE_SL_EPETRA_INTERFACE_H_
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(DISABLE_CPP)
 typedef Epetra_RowMatrix C_Epetra_RowMatrix_t;
 #else
 typedef struct Epetra_RowMatrix C_Epetra_RowMatrix_t;
 #endif
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(DISABLE_CPP)
 extern "C" {
 #endif
 
@@ -35,7 +35,7 @@ int EpetraExtractRowValuesRowMatrix(C_Epetra_RowMatrix_t *AMatrix,
 
 void EpetraDeleteRowMatrix(C_Epetra_RowMatrix_t *AMatrix);
 
-#ifdef __cplusplus
+#if defined(__cplusplus) && !defined(DISABLE_CPP)
 } // end of extern "C"
 #endif
 

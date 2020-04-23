@@ -62,6 +62,8 @@ static char rcsid[] =
 #include "mm_input.h"
 #include "goma.h"
 
+char aprepro_command[1024];
+
 static int 
 look_forward_optional_until(FILE *ifp, const char *string, char *untilstring, char input[],
 			    const char ch_term);

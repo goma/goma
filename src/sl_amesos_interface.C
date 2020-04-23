@@ -246,7 +246,8 @@ int amesos_solve_epetra( char *choice,
   }
 
   /* Success! */
-  firstSolve = false;
+//  firstSolve = false;
+  delete Solver;
   return 0;
 }
 

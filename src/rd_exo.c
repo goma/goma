@@ -620,9 +620,9 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	      x->ns_node_list = (int *) smalloc(x->ns_node_len * si);
 	    }
 
-	  if ( x->ns_distfact_len > 0 )
-	    {
-	      x->ns_distfact_list = (dbl *) smalloc(x->ns_distfact_len * sd);
+	  if ( x->ns_distfact_len > 0 ) {
+              x->ns_distfact_list = (dbl *)smalloc(x->ns_distfact_len * sd);
+            }
 
 	      ex_set_specs ns_specs;
 	      ns_specs.sets_ids = x->ns_id;
@@ -637,7 +637,6 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	      status = ex_get_concat_sets(x->exoid, EX_NODE_SET,
 					  &ns_specs);
 	      EH(status, "ex_get_concat_node_sets");
-	    }
 	}
 
 
@@ -652,11 +651,11 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	  x->ss_num_distfacts  = (int *) smalloc(x->num_side_sets * si);
 	  x->ss_elem_index     = (int *) smalloc(x->num_side_sets * si);
 	  x->ss_distfact_index = (int *) smalloc(x->num_side_sets * si);
-
+          x->ss_node_list      = (int **) smalloc(x->num_side_sets * spi);
 	  x->ss_node_cnt_list  = (int **) smalloc(x->num_side_sets * spi);
-	  x->ss_node_list      = (int **) smalloc(x->num_side_sets * spi);
 
 	  x->ss_node_side_index  = (int **) smalloc(x->num_side_sets * spi);
+
 
 	  if ( x->ss_elem_len > 0 )
 	    {
@@ -696,9 +695,13 @@ rd_exo(Exo_DB *x,		/* def'd in exo_struct.h */
 	    {
 	      x->ss_node_cnt_list[i] = (int *) smalloc(x->ss_num_sides[i] * si);
 
-	      x->ss_node_list[i] = (int *) smalloc(x->ss_num_distfacts[i] * si);
+              int ss_node_list_len = 0;
+              ex_get_side_set_node_list_len(x->exoid, x->ss_id[i], &ss_node_list_len);
 
-	      status = ex_get_side_set_node_list(x->exoid,
+              x->ss_node_list[i] = (int *) smalloc(ss_node_list_len * si);
+
+
+              status = ex_get_side_set_node_list(x->exoid,
 						 x->ss_id[i],
 						 x->ss_node_cnt_list[i],
 						 x->ss_node_list[i]);

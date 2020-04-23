@@ -49,6 +49,8 @@ static char rcsid[] = "$Id: rf_solve.c,v 5.21 2010-03-17 22:23:54 hkmoffa Exp $"
 #include "goma.h"
 #include "el_quality.h"
 
+#include "adapt/omega_h_interface.h"
+
 #ifdef HAVE_FRONT
 extern int mf_setup
 (int *,			/* nelem_glob */
@@ -317,6 +319,7 @@ solve_problem(Exo_DB *exo,	 /* ptr to the finite element mesh database  */
   double *x_sens = NULL;	 /* solution sensitivity                     */
   double **x_sens_p = NULL;	 /* solution sensitivity for parameters      */
   int num_pvector=0;             /* number of solution sensitivity vectors   */
+  int adapt_step = 0;
 
   /* sparse variables for fill equation subcycling */
 
@@ -2413,6 +2416,39 @@ DPRINTF(stdout,"new surface value = %g \n",pp_volume[i]->params[pd->Num_Species]
               }
       }
 #endif
+
+      if (nt == 0 || nt % 3 == 0) {
+        adapt_mesh_omega_h(ams, exo, dpi, &x, &x_old, &x_older, &xdot, &xdot_old, &x_oldest,
+                           &resid_vector, &x_update, &scale, adapt_step);
+        adapt_step++;
+        num_total_nodes = dpi->num_universe_nodes;
+        num_total_nodes = dpi->num_universe_nodes;
+        numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
+        dcopy1(numProcUnknowns, x, x_old);
+        dcopy1(numProcUnknowns, x_old, x_older);
+        dcopy1(numProcUnknowns, x_older, x_oldest);
+        realloc_dbl_1(&x_pred, numProcUnknowns, 0);
+        realloc_dbl_1(&gvec, Num_Node, 0);
+        realloc_dbl_1(&xdot_older, numProcUnknowns, 0);
+        x_pred_static = x_pred;
+        memset(xdot, 0, sizeof(double) * numProcUnknowns);
+        memset(xdot_older, 0, sizeof(double) * numProcUnknowns);
+        memset(x_pred, 0, sizeof(double) * numProcUnknowns);
+        memset(resid_vector, 0, sizeof(double) * numProcUnknowns);
+        memset(scale, 0, sizeof(double) * numProcUnknowns);
+        memset(x_update, 0, sizeof(double) * (numProcUnknowns + numProcUnknowns));
+        dcopy1(numProcUnknowns, xdot, xdot_old);
+        wr_result_prelim_exo(rd, exo, ExoFileOut, gvec_elem);
+        nprint = 0;
+//        (void) write_solution(ExoFileOut, resid_vector, x, x_sens_p,
+//                              x_old, xdot, xdot_old, tev, tev_post, gv,
+//                              rd, gvec, gvec_elem,
+//                              &nprint, delta_t, theta, 0, x_pp,
+//                              exo, dpi);
+//        nprint++;
+      }
+
+      numProcUnknowns = NumUnknowns[pg->imtrx] + NumExtUnknowns[pg->imtrx];
       /*
        *  Solve the nonlinear problem. If we achieve convergence,
        *  set the flag, converged, to true on return. If not

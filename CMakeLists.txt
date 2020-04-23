@@ -37,7 +37,6 @@ set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER} )
 set(CMAKE_C_COMPILER ${Trilinos_C_COMPILER} )
 set(CMAKE_Fortran_COMPILER ${Trilinos_Fortran_COMPILER} )
 
-include_directories(${Trilinos_INCLUDE_DIRS} ${Trilinos_TPL_INCLUDE_DIRS} ${MPI_C_INCLUDE_PATH})
 
 # Trilinos required packages
 foreach(package Amesos AztecOO Epetra)
@@ -91,7 +90,6 @@ MESSAGE(STATUS "SEACASExodus_DIR = ${SEACASExodus_DIR}")
 find_package(SEACASChaco REQUIRED HINTS ${Trilinos_DIR}/../SEACASChaco)
 MESSAGE(STATUS "SEACASChaco_DIR = ${SEACASChaco_DIR}")
 
-
 message("")
 
 set(GOMA_TPL_LIBRARIES "")
@@ -118,6 +116,12 @@ else()
   set(Sparse_INCLUDES "")
 endif()
 
+find_package(Omega_h 9)
+if (Omega_h_FOUND)
+  set(GOMA_TPL_LIBRARIES ${GOMA_TPL_LIBRARIES} Omega_h::omega_h)
+  list(APPEND GOMA_COMPILE_DEFINITIONS HAVE_OMEGA_H)
+endif()
+
 macro(option_definition OPTION VALUE)
   option(${OPTION} "${OPTION}" ${VALUE})
   if(${OPTION})
@@ -130,8 +134,8 @@ option_definition(ENABLE_AMESOS ON)
 option_definition(TRILINOS ON)
 option_definition(CHECK_FINITE ON)
 option_definition(NO_CHEBYSHEV_PLEASE ON)
-option_definition(COUPLED_FILL ON)
 option_definition(PARALLEL ON)
+option_definition(COUPLED_FILL ON)
 option_definition(FP_EXCEPT OFF)
 if (ARPACK_FOUND)
   option(EIGEN_SERIAL "EIGEN_SERIAL" ON)
@@ -173,6 +177,8 @@ set(MAX_PROB_VAR "15" CACHE STRING "set MAX_PROB_VAR")
 list(APPEND GOMA_COMPILE_DEFINITIONS MAX_PROB_VAR=${MAX_PROB_VAR})
 
 set(GOMA_INCLUDES
+        include/adapt/omega_h_interface.h
+        include/adapt/resetup_problem.h
         include/ac_conti.h
         include/ac_hunt.h
         include/ac_particles.h
@@ -293,7 +299,6 @@ set(GOMA_INCLUDES
         include/sl_epetra_util.h
         include/sl_lu.h
         include/sl_matrix_util.h
-        include/sl_rcm.h
         include/sl_stratimikos_interface.h
         include/sl_umf.h
         include/sl_util.h
@@ -317,10 +322,11 @@ set(GOMA_INCLUDES
         include/brkfix/sam_perea.h
         include/brkfix/utils.h
         include/brkfix/wr_coords.h
-        include/brkfix/wr_graph_file.h
-)
+        include/brkfix/wr_graph_file.h)
 
 set(GOMA_SOURCES
+        src/adapt/omega_h_interface.cpp
+        src/adapt/resetup_problem.c
         src/ac_conti.c
         src/ac_display_parameter.c
         src/ac_hunt.c
@@ -436,10 +442,10 @@ set(GOMA_SOURCES
         src/sl_eggrollwrap.c
         src/sl_epetra_interface.cpp
         src/sl_epetra_util.cpp
-        src/sl_front_setup.c
         src/sl_leastsquares.C
         src/sl_lu.c
         src/sl_lu_fill.c
+        src/sl_front_setup.c
         src/sl_lustat.c
         src/sl_ma28.c
         src/sl_matrix_dump.c
@@ -496,11 +502,20 @@ set(GOMA_UTIL_SOURCES
   src/mm_eh.c
 )
 
+
 # Set a default build type for single-configuration
-# CMake generators if no build type is set.
-IF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE Release)
-ENDIF(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
+# CMake generators if no build type is set. 
+# https://blog.kitware.com/cmake-and-the-default-build-type/
+set(default_build_type "Release")
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
+  set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE
+      STRING "Choose the type of build." FORCE)
+  # Set the possible values of build type for cmake-gui
+  set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
+    "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+endif()
+
 set(GOMA_WARNINGS "-Wall -Wextra -Wno-unused-parameter" CACHE STRING "set warnings for goma C and CXX")
 set(GOMA_DEBUG_FLAGS "-O0 -ggdb3" CACHE STRING "set debug flags for goma C and CXX")
 set(GOMA_RELEASE_FLAGS "-O2 -DNDEBUG" CACHE STRING "set release flags for goma C and CXX")
@@ -526,56 +541,66 @@ message("\n")
 
 set(GOMA_TPL_INCLUDES
   ${Sparse_INCLUDES}
-  ${Trilinos_INCLUDE_DIRS}
-  ${Trilinos_TPL_INCLUDE_DIRS}
   ${SEACASExodus_INCLUDE_DIRS}
   ${SEACASChaco_INCLUDE_DIRS}
   ${SEACASExodus_TPL_INCLUDE_DIRS}
   ${SEACASChaco_TPL_INCLUDE_DIRS}
+  ${Trilinos_INCLUDE_DIRS}
+  ${Trilinos_TPL_INCLUDE_DIRS}
+  ${MPI_C_INCLUDE_PATH}
 )
 
 set(GOMA_TPL_LIBRARY_DIRS
-  ${Trilinos_LIBRARY_DIRS}
-  ${Trilinos_TPL_LIBRARY_DIRS}
   ${SEACASExodus_LIBRARY_DIRS}
   ${SEACASExodus_TPL_LIBRARY_DIRS}
   ${SEACASChaco_LIBRARY_DIRS}
   ${SEACASChaco_TPL_LIBRARY_DIRS}
+  ${Trilinos_LIBRARY_DIRS}
+  ${Trilinos_TPL_LIBRARY_DIRS}
 )
 
 set(GOMA_TPL_LIBRARIES
-  ${GOMA_TPL_LIBRARIES}
-  ${Trilinos_LIBRARIES}
-  ${Trilinos_TPL_LIBRARIES}
-  ${Trilinos_EXTRA_LD_FLAGS}
   ${SEACASExodus_LIBRARIES}
   ${SEACASExodus_TPL_LIBRARIES}
   ${SEACASChaco_LIBRARIES}
   ${SEACASChaco_TPL_LIBRARIES}
+  ${GOMA_TPL_LIBRARIES}
+  ${Trilinos_LIBRARIES}
+  ${Trilinos_TPL_LIBRARIES}
+  ${Trilinos_EXTRA_LD_FLAGS}
 )
+
+message("${GOMA_TPL_LIBRARIES}")
 
 add_library(goma_user ${GOMA_USER_SOURCES} ${GOMA_USER_INCLUDES})
 target_include_directories(goma_user PUBLIC include)
+target_include_directories(goma_user PRIVATE ${GOMA_TPL_INCLUDES})
 target_compile_definitions(goma_user PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_library(goma ${GOMA_SOURCES} ${GOMA_INCLUDES})
 target_include_directories(goma PUBLIC include)
-target_include_directories(goma PRIVATE include ${GOMA_TPL_INCLUDES})
+target_include_directories(goma PRIVATE ${GOMA_TPL_INCLUDES})
 target_link_directories(goma PUBLIC ${GOMA_TPL_LIBRARY_DIRS})
 target_link_libraries(goma ${GOMA_TPL_LIBRARIES})
 target_compile_definitions(goma PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_library(goma_util ${GOMA_UTIL_SOURCES} ${GOMA_UTIL_INCLUDES})
-target_include_directories(goma_util PUBLIC include)
-target_link_libraries(goma_util)
+target_include_directories(goma_util PUBLIC include ${GOMA_TPL_INCLUDES})
+target_link_libraries(goma_util PUBLIC ${GOMA_TPL_LIBRARIES})
 target_compile_definitions(goma_util PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
 add_executable(goma_exe src/main.c)
 set_target_properties(goma_exe PROPERTIES OUTPUT_NAME "goma")
-target_include_directories(goma_exe PRIVATE include ${GOMA_TPL_INCLUDES})
-target_link_libraries(goma_exe ${GOMA_TPL_LIBRARIES} goma goma_user goma_util)
+target_include_directories(goma_exe PUBLIC include PRIVATE ${GOMA_TPL_INCLUDES})
+target_link_libraries(goma_exe PUBLIC ${GOMA_TPL_LIBRARIES} goma goma_user goma_util)
 target_compile_definitions(goma_exe PUBLIC ${GOMA_COMPILE_DEFINITIONS})
 
+install(TARGETS goma_exe
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include/goma
+)
 
 option(ENABLE_TESTING "ENABLE_TESTING" OFF)
 if(ENABLE_TESTING)
