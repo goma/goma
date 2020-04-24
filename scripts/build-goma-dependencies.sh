@@ -138,9 +138,7 @@ fi
 export GOMA_LIB=`readlink --canonicalize $1`
 
 BUILD_LOG=$GOMA_LIB/goma_tpl_build.log
-echo "Start Goma Build" >> $BUILD_LOG
 COMPILE_LOG=$GOMA_LIB/goma_tpl_compile.log
-echo "Start Goma Compile" >> $COMPILE_LOG
 
 function log_echo() {
     builtin echo "$@" 2>&1 | tee -a $BUILD_LOG
@@ -221,6 +219,9 @@ if [ "$ASKED_USER_ANYTHING" == "true" ]; then
     USED_MAKE_JOBS="$MAKE_JOBS"
     confirm Goma dependency script
 fi
+
+echo "Start Goma Build" >> $BUILD_LOG
+echo "Start Goma Compile" >> $COMPILE_LOG
 
 HDF5_VERSION="1.10.6"
 HDF5_MD5="03095102a6118c32a75a9b9b40be66f2"
