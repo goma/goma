@@ -76,6 +76,7 @@ FORTRAN_LIBS="-lgfortran"
 # Tells the TPL builder where the Atlas/Intel math libraries are if those are used
 #export MATH_PATH=""
 
+
 #Set defaults to what we know works if values are unset.
 
 if [ "$MPI_NAME" == "intel" ] && [ ! "$MATH_LIBRARIES" == "intel" ]; then
@@ -86,6 +87,7 @@ fi
 
 # All user interaction functions like continue_check are here
 source "${0%/*}/user-interaction.sh"
+
 
 function usage() {
     echo "Usage: build-goma-dependencies [options] [library install location]"
@@ -134,6 +136,13 @@ then
     exit 1
 fi
 export GOMA_LIB=`readlink --canonicalize $1`
+
+BUILD_LOG=$GOMA_LIB/goma_tpl_build.log
+COMPILE_LOG=$GOMA_LIB/goma_tpl_compile.log
+
+function log_echo() {
+    builtin echo "$@" 2>&1 | tee -a $BUILD_LOG
+}
 
 if ulimit -S -n 2048 &> /dev/null; then
     echo
@@ -211,32 +220,38 @@ if [ "$ASKED_USER_ANYTHING" == "true" ]; then
     confirm Goma dependency script
 fi
 
+echo "Start Goma Build" >> $BUILD_LOG
+echo "Start Goma Compile" >> $COMPILE_LOG
+
 HDF5_VERSION="1.10.6"
 HDF5_MD5="03095102a6118c32a75a9b9b40be66f2"
 
-NETCDF_VERSION="c-4.7.3"
-NETCDF_MD5="9e1d7f13c2aef921c854d87037bcbd96"
+NETCDF_VERSION="c-4.7.4"
+NETCDF_MD5="3e0a97e6abb9a989f8a8a2e395473597"
 
 TRILINOS_VERSION="12.18.1"
 TRILINOS_VERSION_DASH="12-18-1"
 TRILINOS_MD5="9c1d151169949bca6cf203831e4d6aee"
 
-MUMPS_VERSION="5.2.1"
-MUMPS_MD5="a4d43b459dc46db984503fbd8526fa69"
+MUMPS_VERSION="5.3.1"
+MUMPS_MD5="31b64a11c1df6a56b1750411efb20986"
 
-OPENMPI_VERSION="4.0.2"
-OPENMPI_MD5="2fdfb4d31cfe1363d8bb5e7488e57cdf"
+OPENMPI_VERSION="4.0.3"
+OPENMPI_MD5="851553085013939f24cdceb1af06b828"
 OPENMPI_ARCHIVE_URL="https://download.open-mpi.org/release/open-mpi/v4.0/openmpi-$OPENMPI_VERSION.tar.bz2"
-OPENMPI_EXTRA_CONFIGURE_FLAGS="--enable-mpi1-compatibility"
+OPENMPI_EXTRA_CONFIGURE_FLAGS=""
 
-CMAKE_VERSION="3.16.3"
-CMAKE_MD5="9e6fa59704d3a52812e279996b5b01c7"
+CMAKE_VERSION="3.17.1"
+CMAKE_MD5="958959aa5e0338144eed7320e9b48561"
 
 SUITESPARSE_VERSION="4.5.6"
 SUITESPARSE_MD5="eeb87a842a9b3b0425cf08d97fb3c5ec"
 
 MATIO_VERSION="1.5.17"
 MATIO_MD5="170075cce5c144e19f610af9b64cb63b"
+
+SCALAPACK_VERSION="2.1.0"
+SCALAPACK_MD5="3b239ef80353c67354a0a62d54946fa8"
 
 ARCHIVE_NAMES=("arpack96.tar.gz" \
 "patch.tar.gz" \
@@ -351,7 +366,7 @@ else
 fi
 
 if [ "$build_cmake" == "false" ] ; then
-    echo "Native cmake found newer than 3.10.0, skipping download"
+    log_echo "Native cmake found newer than 3.10.0, skipping download"
 else
     ARCHIVE_NAMES+=("cmake-$CMAKE_VERSION.tar.gz")
     ARCHIVE_MD5SUMS+=("$CMAKE_MD5")
@@ -359,8 +374,8 @@ else
     ARCHIVE_DIR_NAMES+=("cmake-$CMAKE_VERSION")
     ARCHIVE_HOMEPAGES+=("https://cmake.org/")
     ARCHIVE_REAL_NAMES+=("CMake")
-    echo "Cmake not found, will build."
-    echo
+    log_echo "Cmake not found, will build."
+    log_echo
 fi
 
 
@@ -495,14 +510,14 @@ function setMathVars {
                 export NON_INTEL_BLAS_LIBRARY="$NON_INTEL_BLAS_LINK"
                 # Be sure to BUILD ScaLAPACK if there's no intelMPI or EVERYTHING BREAKS?! Probably, but not 100% sure yet
                 # Also built ScaLAPACK includes blacs so unset that too
-                export SCALAPACK_LIBRARY_DIR="${GOMA_LIB}/scalapack-2.0.2"
+                export SCALAPACK_LIBRARY_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/lib"
                 export SCALAPACK_LIBRARY_NAME="scalapack"
                 export SCALAPACK_LIBRARY_NAME_ARG="-L${SCALAPACK_LIBRARY_DIR} -lscalapack"
-                SCALAPACK_INCLUDE_DIR="${GOMA_LIB}/scalapack-2.0.2/SRC"
-                ARCHIVE_NAMES+=("scalapack-2.0.2.tgz")
-                ARCHIVE_MD5SUMS+=("2f75e600a2ba155ed9ce974a1c4b536f")
-                ARCHIVE_URLS+=("http://www.netlib.org/scalapack/scalapack-2.0.2.tgz")
-                ARCHIVE_DIR_NAMES+=("scalapack-2.0.2")
+                SCALAPACK_INCLUDE_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/include"
+                ARCHIVE_NAMES+=("scalapack-$SCALAPACK_VERSION.tgz")
+                ARCHIVE_MD5SUMS+=("$SCALAPACK_MD5")
+                ARCHIVE_URLS+=("http://www.netlib.org/scalapack/scalapack-$SCALAPACK_VERSION.tgz")
+                ARCHIVE_DIR_NAMES+=("scalapack-$SCALAPACK_VERSION")
                 ARCHIVE_HOMEPAGES+=("http://www.netlib.org/scalapack/")
                 ARCHIVE_REAL_NAMES+=("ScaLAPACK")
                 export BLACS_LIBRARY_NAME="scalapack"
@@ -521,16 +536,16 @@ function setMathVars {
         #Add packages that otherwise come preinstalled in intel compiler.
         ARCHIVE_NAMES+=("blas-3.7.1.tgz" \
         "lapack-3.8.0.tar.gz" \
-        "scalapack-2.0.2.tgz")
+        "scalapack-$SCALAPACK_VERSION.tgz")
         ARCHIVE_MD5SUMS+=("cd132aea6f7055a49aa48ca0a61e7cd5" \
         "96591affdbf58c450d45c1daa540dbd2" \
-        "2f75e600a2ba155ed9ce974a1c4b536f" )
+        "$SCALAPACK_MD5" )
         ARCHIVE_URLS+=("http://www.netlib.org/blas/blas-3.7.1.tgz" \
         "http://www.netlib.org/lapack/lapack-3.8.0.tar.gz" \
-        "http://www.netlib.org/scalapack/scalapack-2.0.2.tgz" )
+        "http://www.netlib.org/scalapack/scalapack-$SCALAPACK_VERSION.tgz" )
         ARCHIVE_DIR_NAMES+=("BLAS-3.7.1" \
         "lapack-3.8.0" \
-        "scalapack-2.0.2" )
+        "scalapack-$SCALAPACK_VERSION" )
         ARCHIVE_HOMEPAGES+=("http://www.netlib.org/blas/" \
         "http://www.netlib.org/lapack/" \
         "http://www.netlib.org/scalapack/")
@@ -545,10 +560,10 @@ function setMathVars {
         LAPACK_LIBRARY_DIR="${GOMA_LIB}/lapack-3.8.0"
         LAPACK_LIBRARY_NAME_ARG="-L${LAPACK_LIBRARY_DIR} -llapack"
         LAPACK_LIBRARY_NAME="liblapack.a"
-        SCALAPACK_LIBRARY_DIR="${GOMA_LIB}/scalapack-2.0.2"
+        SCALAPACK_LIBRARY_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/lib"
         SCALAPACK_LIBRARY_NAME="scalapack"
         SCALAPACK_LIBRARY_NAME_ARG="-L${SCALAPACK_LIBRARY_DIR} -lscalapack"
-        SCALAPACK_INCLUDE_DIR="${GOMA_LIB}/scalapack-2.0.2/SRC"
+        SCALAPACK_INCLUDE_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/include"
         # Alternative to the intel "blas_flags" variable
         NON_INTEL_BLAS_LIBRARY="${BLAS_LIBRARY_DIR}/libblas.a"
         NON_INTEL_BLAS_LINK="-L${BLAS_LIBRARY_DIR} -l${BLAS_LIBRARY_NAME} ${FORTRAN_LIBS}"
@@ -579,15 +594,15 @@ function setMathVars {
         export LAPACK_LIBRARY_NAME_ARG="-L${ATLAS_PATH} -llapack"
         export BLACS_LIBRARY_NAME="scalapack"
         export SCALAPACK_LIBRARY_NAME="scalapack"
-        export SCALAPACK_LIBRARY_DIR="${GOMA_LIB}/scalapack-2.0.2"
+        export SCALAPACK_LIBRARY_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/lib"
         export SCALAPACK_LIBRARY_NAME_ARG="-L{SCALAPACK_LIBRARY_DIR} -lscalapack"
-        SCALAPACK_INCLUDE_DIR="${GOMA_LIB}/scalapack-2.0.2/SRC"
+        SCALAPACK_INCLUDE_DIR="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/include"
         export NON_INTEL_BLAS_LIBRARY="${BLAS_LIBRARY_DIR}/lib${BLAS_LIBRARY_NAME}.a"
         export NON_INTEL_BLAS_LINK="-L${BLAS_LIBRARY_DIR} -l${BLAS_LIBRARY_NAME} ${FORTRAN_LIBS}"
-        ARCHIVE_NAMES+=("scalapack-2.0.2.tgz")
-        ARCHIVE_MD5SUMS+=("2f75e600a2ba155ed9ce974a1c4b536f" )
-        ARCHIVE_URLS+=("http://www.netlib.org/scalapack/scalapack-2.0.2.tgz" )
-        ARCHIVE_DIR_NAMES+=("scalapack-2.0.2" )
+        ARCHIVE_NAMES+=("scalapack-$SCALAPACK_VERSION.tgz")
+        ARCHIVE_MD5SUMS+=("$SCALAPACK_MD5" )
+        ARCHIVE_URLS+=("http://www.netlib.org/scalapack/scalapack-$SCALAPACK_VERSION.tgz" )
+        ARCHIVE_DIR_NAMES+=("scalapack-$SCALAPACK_VERSION" )
         ARCHIVE_HOMEPAGES+=("http://www.netlib.org/scalapack/")
         ARCHIVE_REAL_NAMES+=("ScaLAPACK")
 
@@ -737,6 +752,7 @@ EOF
 
 cd $GOMA_LIB
 
+
 function mychecksum {
     local count=$2
     local archive=$1
@@ -744,10 +760,10 @@ function mychecksum {
     if [ ! "$MD5SAVED" == "SKIP" ]; then
         local MD5ARCHIVE=($(md5sum $archive))
         if [ $MD5SAVED != $MD5ARCHIVE ]; then
-            echo "Issue checksum with archive:"
-            echo "$MD5SAVED"
-            echo "$MD5ARCHIVE"
-            echo $archive
+            log_echo "Issue checksum with archive:"
+            log_echo "$MD5SAVED"
+            log_echo "$MD5ARCHIVE"
+            log_echo $archive
             continue_check
         fi
     fi
@@ -775,7 +791,7 @@ cd tars
 #downloads
 count=0
 for i in ${ARCHIVE_NAMES[@]}; do
-    echo "Check for $i at ${ARCHIVE_URLS[count]}"
+    log_echo "Check for $i at ${ARCHIVE_URLS[count]}"
     if ! [ -f $i ]
     then
         wget "${ARCHIVE_URLS[count]}" -O $i
@@ -787,7 +803,7 @@ for i in ${ARCHIVE_NAMES[@]}; do
 
     if [ -d ${ARCHIVE_DIR_NAMES[count]} ]
     then
-	echo "already extracted ${i}"
+	log_echo "already extracted ${i}"
     else
 	if ! tar tf $i &> /dev/null; then
 	    tar -xf tars/$i
@@ -800,16 +816,23 @@ done
 export CXX=${SYSTEM_CXX}
 
 if [ "$build_cmake" == "false" ] ; then
-    echo "Native cmake found of sufficient version, skipping build"
+    log_echo "Native cmake found of sufficient version, skipping build"
 else
     cd $GOMA_LIB/cmake-$CMAKE_VERSION
     if [ -f bin/cmake ]
     then
-        echo "cmake is already built"
+        log_echo "cmake is already built"
     else
-        CC=$SYSTEM_CC CXX=$SYSTEM_CXX FC=$SYSTEM_FC ./bootstrap --prefix=$GOMA_LIB/cmake-$CMAKE_VERSION
-        make -j$MAKE_JOBS
-        make install
+        CC=$SYSTEM_CC CXX=$SYSTEM_CXX FC=$SYSTEM_FC ./bootstrap --prefix=$GOMA_LIB/cmake-$CMAKE_VERSION 2>&1 | tee -a $COMPILE_LOG
+        make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+        make install 2>&1 | tee -a $COMPILE_LOG
+        if [ -f $GOMA_LIB/cmake-$CMAKE_VERSION/bin/cmake ]
+        then
+            log_echo "Built CMake version $CMAKE_VERSION"
+        else
+            log_echo "Failed to build CMake version $CMAKE_VERSION"
+            exit 1
+        fi
     fi
     export PATH=$GOMA_LIB/cmake-$CMAKE_VERSION/bin:$PATH
 fi
@@ -821,24 +844,28 @@ if [[ "$MPI_IS_BUILT_FROM_SCRATCH" == "true" ]]; then
     cd $GOMA_LIB/openmpi-$OPENMPI_VERSION
     if [ -f bin/ompi_info ]
     then
-        echo "openmpi is already built"
+        log_echo "openmpi is already built"
     else
-        # mpi1 compat for scalapack
-        CC=${SYSTEM_CC} CXX=${SYSTEM_CXX} FC=${SYSTEM_FC} CPP=${SYSTEM_CPP} ./configure $OPENMPI_EXTRA_CONFIGURE_FLAGS --prefix=$GOMA_LIB/openmpi-$OPENMPI_VERSION
-        make -j$MAKE_JOBS CC=${SYSTEM_CC} CXX=${SYSTEM_CXX} FC=${SYSTEM_FC} CPP=${SYSTEM_CPP}
-        make install
+        CC=${SYSTEM_CC} CXX=${SYSTEM_CXX} FC=${SYSTEM_FC} CPP=${SYSTEM_CPP} ./configure $OPENMPI_EXTRA_CONFIGURE_FLAGS --prefix=$GOMA_LIB/openmpi-$OPENMPI_VERSION 2>&1 | tee -a $COMPILE_LOG
+        make -j$MAKE_JOBS CC=${SYSTEM_CC} CXX=${SYSTEM_CXX} FC=${SYSTEM_FC} CPP=${SYSTEM_CPP} 2>&1 | tee -a $COMPILE_LOG 
+        make install 2>&1 | tee -a $COMPILE_LOG
+        if [ -f $GOMA_LIB/openmpi-$OPENMPI_VERSION/bin/ompi_info ]
+        then
+            log_echo "Built OpenMPI $OPENMPI_VERSION"
+        else
+            log_echo "Failed to build OpenMPI $OPENMPI_VERSION"
+        fi
     fi
     cd ..
 else
-    echo "Using custom mpi: $mpi"
+    log_echo "Using custom mpi: $mpi"
 fi
-
 cd $GOMA_LIB
 
 #hdf5
 if [ -e hdf5-${HDF5_VERSION}/lib/libhdf5.a ]
 then
-    echo "hdf5 already built"
+    log_echo "hdf5 already built"
 else
     if ! [ -e hdf5-${HDF5_VERSION}/.goma-extracted ]
     then
@@ -849,9 +876,16 @@ else
     fi
 
     cd hdf5-${HDF5_VERSION}/src
-    CC="$MPI_C_COMPILER" CPP="$MPI_C_COMPILER -E" AR=${ARCHIVER} ./configure --enable-shared=off --prefix=$GOMA_LIB/hdf5-${HDF5_VERSION} --enable-parallel
-    make -j$MAKE_JOBS
-    make install
+    CC="$MPI_C_COMPILER" CPP="$MPI_C_COMPILER -E" AR=${ARCHIVER} ./configure --enable-shared=off --prefix=$GOMA_LIB/hdf5-${HDF5_VERSION} --enable-parallel 2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+    make install 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $GOMA_LIB/hdf5-${HDF5_VERSION}/lib/libhdf5.a ]
+    then
+        log_echo "Built HDF5 $HDF5_VERSION"
+    else
+        log_echo "Failed to build HDF5 $HDF5_VERSION"
+        exit 1
+    fi
     cd ../..
 fi
 cd $GOMA_LIB
@@ -859,7 +893,7 @@ cd $GOMA_LIB
 #matio
 if [ -e matio-$MATIO_VERSION/lib/libmatio.a ]
 then
-    echo "matio already built"
+    log_echo "matio already built"
 else
     if ! [ -e matio-$MATIO_VERSION/.goma-extracted ]
     then
@@ -869,18 +903,23 @@ else
 	touch matio-$MATIO_VERSION/.goma-extracted
     fi
     cd matio-$MATIO_VERSION/src
-    CC=${MPI_C_COMPILER} LD=${MPI_CXX_COMPILER} AR=${ARCHIVER} LIBS="-ldl" ./configure --with-hdf5=${GOMA_LIB}/hdf5-${HDF5_VERSION} --prefix=${GOMA_LIB}/matio-$MATIO_VERSION --enable-shared=off
-    make -j$MAKE_JOBS
-    make install
+    CC=${MPI_C_COMPILER} LD=${MPI_CXX_COMPILER} AR=${ARCHIVER} LIBS="-ldl" ./configure --with-hdf5=${GOMA_LIB}/hdf5-${HDF5_VERSION} --prefix=${GOMA_LIB}/matio-$MATIO_VERSION --enable-shared=off 2>&1 | tee -a $COMPILE_LOG
+    make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+    make install 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $GOMA_LIB/matio-$MATIO_VERSION/lib/libmatio.a ]
+    then
+        log_echo "Built MATIO $MATIO_VERSION"
+    else
+        log_echo "Failed to build MATIO $MATIO_VERSION"
+        exit 1
+    fi
 fi
 cd $GOMA_LIB
-
-echo $PWD
 
 #netcdf
 if [ -e netcdf-${NETCDF_VERSION}/lib/libnetcdf.a ]
 then
-    echo "netcdf already built"
+    log_echo "netcdf already built"
 else
     if ! [ -e netcdf-${NETCDF_VERSION}/.goma-extracted ]
     then
@@ -891,8 +930,8 @@ else
     fi
     cd $GOMA_LIB/netcdf-${NETCDF_VERSION}/src
     export CPPFLAGS=-I$GOMA_LIB/hdf5-${HDF5_VERSION}/include
-    echo $CPPFLAGS
-    echo $LDFLAGS
+    log_echo $CPPFLAGS
+    log_echo $LDFLAGS
 
     CC=${MPI_C_COMPILER} CFLAGS="-I${GOMA_LIB}/hdf5-${HDF5_VERSION}/include" \
       CPP="${MPI_C_COMPILER} -E" \
@@ -901,10 +940,17 @@ else
       ./configure \
       --prefix=$GOMA_LIB/netcdf-${NETCDF_VERSION} \
       --enable-shared=off \
-      --disable-dap
+      --disable-dap 2>&1 | tee -a $COMPILE_LOG
 
-    make -j$MAKE_JOBS
-    make install
+    make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+    make install 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $GOMA_LIB/netcdf-${NETCDF_VERSION}/lib/libnetcdf.a ]
+    then
+        log_echo "Built NetCDF $NETCDF_VERSION"
+    else
+        log_echo "Failed to build NetCDF $NETCDF_VERSION"
+        exit 1
+    fi
     cd ../..
 fi
 
@@ -913,12 +959,19 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     cd $GOMA_LIB/BLAS-3.7.1
     if [ -f libblas.a ]
     then
-        echo "BLAS already built"
+        log_echo "BLAS already built"
     else
-        echo $("$BLAS_PATCH") > makepatch.inc
+        log_echo $("$BLAS_PATCH") > makepatch.inc
         patch -f make.inc < makepatch.inc
-        make -j$MAKE_JOBS cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI}
+        make -j$MAKE_JOBS cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI} 2>&1 | tee -a $COMPILE_LOG
         cp blas_LINUX.a libblas.a
+    fi
+    if [ -f $GOMA_LIB/BLAS-3.7.1/libblas.a ]
+    then
+        log_echo "Built BLAS 3.7.1"
+    else
+        log_echo "Failed to build BLAS 3.7.1"
+        exit 1
     fi
     # For some reason this junk apple file is included with BLAS 3.7.1 from netlib.
     rm -f "$GOMA_LIB/._BLAS-3.7.1"
@@ -947,7 +1000,7 @@ EOF
 cd $GOMA_LIB
 if [ -e parmetis-4.0.3/lib/libparmetis.a ]
 then
-    echo "ParMetis already Built"
+    log_echo "ParMetis already Built"
 else
     if [ ! -e parmetis-4.0.3/src/Makefile ]; then
         mv parmetis-4.0.3 tmpdir
@@ -955,12 +1008,12 @@ else
         mv tmpdir parmetis-4.0.3/src
     fi
     cd parmetis-4.0.3/src
-    echo "$PARMETIS_PATCH" > parmetis_make.patch
+    log_echo "$PARMETIS_PATCH" > parmetis_make.patch
     patch -f Makefile < parmetis_make.patch
-    echo "make config parmetis?"
-    make config cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI} prefix=$GOMA_LIB/parmetis-4.0.3
-    make
-    make install
+    log_echo "make config parmetis?"
+    make config cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI} prefix=$GOMA_LIB/parmetis-4.0.3 2>&1 | tee -a $COMPILE_LOG
+    make 2>&1 | tee -a $COMPILE_LOG
+    make install 2>&1 | tee -a $COMPILE_LOG
     cd ..
     if [ -d include ]; then
 	cp src/metis/include/metis.h include
@@ -968,14 +1021,21 @@ else
     if [ -d lib ]; then
 	cp src/build/Linux-x86_64/libmetis/libmetis.a lib/
     fi
+    if [ -e $GOMA_LIB/parmetis-4.0.3/lib/libparmetis.a ]
+    then
+        log_echo "Built ParMetis 4.0.3"
+    else
+        log_echo "Failed to build ParMetis 4.0.3"
+        exit 1
+    fi
 fi
 
 
 #make ARPACK
 cd $GOMA_LIB/ARPACK
-if [ -e libarpack_x86_64.a ]
+if [ -e lib/libarpack.a ]
 then
-    echo "ARPACK already built"
+    log_echo "ARPACK already built"
 else
     cat > ARmake.patch << EOF
 28c28
@@ -1000,20 +1060,30 @@ EOF
 
     patch ARmake.inc < ARmake.patch
     # Documentation says this should always be needed but in reality only intel MKL requires it.
-    if [[ "$MATH_LIBRARIES" == "intel" ]]; then
-        echo $("$ARPACK_SECOND_PATCH") > UTIL/second.f.patch
-        patch UTIL/second.f < UTIL/second.f.patch
-    fi
-    make all
+    cat > UTIL/second.f.patch << EOF
+24c24
+<       EXTERNAL           ETIME
+---
+> *     EXTERNAL           ETIME
+EOF
+    patch UTIL/second.f < UTIL/second.f.patch
+    make all 2>&1 | tee -a $COMPILE_LOG
     mkdir lib
     cp libarpack_x86_64.a lib/libarpack.a
+    if [ -e $GOMA_LIB/ARPACK/lib/libarpack.a ]
+    then
+        log_echo "Built ARPACK"
+    else
+        log_echo "Failed to build ARPACK"
+        exit 1
+    fi
 fi
 
 #make SuperLU
 cd $GOMA_LIB/superlu_dist-5.1.3
 if [ -e lib/libsuperludist.a ]
 then
-    echo "SuperLU_DIST already built"
+    log_echo "SuperLU_DIST already built"
 else
     cat > make.inc << EOF
 SuperLUroot     =  $GOMA_LIB/superlu_dist-5.1.3
@@ -1043,7 +1113,14 @@ LOADER       = $MPI_CXX_COMPILER $BLAS_FLAGS
 LOADOPTS     = -Wl,-rpath,$GOMA_LIB/superlu_dist-5.1.3/lib
 EOF
     mkdir -p lib
-    make
+    make 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $GOMA_LIB/superlu_dist-5.1.3/lib/libsuperludist.a ]
+    then
+        log_echo "Built SuperLU_DIST 5.1.3"
+    else
+        log_echo "Failed to build SuperLU_DIST 5.1.3"
+        exit 1
+    fi
 fi
 
 if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
@@ -1051,13 +1128,20 @@ if [[ "$MATH_LIBRARIES" == "netlib blas" ]]; then
     cd $LAPACK_LIBRARY_DIR
     if [ -e liblapack.a ]
     then
-        echo "LAPACK already built"
+        log_echo "LAPACK already built"
     else
         mv make.inc.example make.inc
-        echo $("$LAPACK_PATCH") > make.patch
+        log_echo $("$LAPACK_PATCH") > make.patch
         patch make.inc < make.patch
-        make lapacklib -j$MAKE_JOBS cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI}
+        make lapacklib -j$MAKE_JOBS cc=${MPI_C_COMPILER} ccflags=${COMPILER_FLAG_MPI} cxx=${MPI_CXX_COMPILER} cxxflags=${COMPILER_FLAG_MPI} 2>&1 | tee -a $COMPILE_LOG
 #        cp lapack_LINUX.a liblapack.a
+        if [ -e $LAPACK_LIBRARY_DIR/liblapack.a ]
+        then
+            log_echo "Built LAPACK"
+        else
+            log_echo "Failed to build LAPACK"
+            exit 1
+        fi
     fi
     export LD_LIBRARY_PATH="${LAPACK_LIBRARY_DIR}:$LD_LIBRARY_PATH"
 fi
@@ -1066,24 +1150,31 @@ fi
 cd $GOMA_LIB/sparse
 if [ -e lib/libsparse.a ]
 then
-    echo "Sparse already built"
+    log_echo "Sparse already built"
 else
     cd src
     sed -i "/CC/c\CC=$MPI_C_COMPILER" Makefile
-    make -j$MAKE_JOBS
+    make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
     cd ../lib/
     cp sparse.a libsparse.a
     cd ..
+    if [ -e $GOMA_LIB/sparse/lib/libsparse.a ]
+    then
+        log_echo "Built sparse"
+    else
+        log_echo "Failed to build sparse"
+        exit 1
+    fi
 fi
 
 #make SuiteSparse
 cd $GOMA_LIB/SuiteSparse
 if [ -e UMFPACK/Lib/libumfpack.a ]
 then
-    echo "SuiteSparse is already built"
+    log_echo "SuiteSparse is already built"
 else
     cd SuiteSparse_config
-    echo "compiler flag MPI is ${COMPILER_FLAG_MPI}"
+    log_echo "compiler flag MPI is ${COMPILER_FLAG_MPI}"
 
     cat > SuiteSparse_config.patch << EOF
 148c150
@@ -1103,19 +1194,26 @@ EOF
 
     patch SuiteSparse_config.mk < SuiteSparse_config.patch
     cd ..
-    echo ${MPI_C_COMPILER}
+    log_echo ${MPI_C_COMPILER}
     if [ -z "${BLAS_FLAGS}" ]; then
         make static AUTOCC="no" CC="${MPI_C_COMPILER}" \
              CXX="${MPI_CXX_COMPILER}" \
-             AR="${ARCHIVER}"
+             AR="${ARCHIVER}" 2>&1 | tee -a $COMPILE_LOG
     else
         make static AUTOCC="no" CC="${MPI_C_COMPILER} ${COMPILER_FLAG_MPI}" \
              CXX="${MPI_CXX_COMPILER} ${COMPILER_FLAG_MPI}" \
-             AR="${ARCHIVER}" BLAS_FLAGS="${BLAS_FLAGS}"
+             AR="${ARCHIVER}" BLAS_FLAGS="${BLAS_FLAGS}" 2>&1 | tee -a $COMPILE_LOG
     fi
     cd ${GOMA_LIB}/SuiteSparse/UMFPACK/Include
     ln -s ../../SuiteSparse_config/SuiteSparse_config.h UFconfig.h
     ln -s ../../SuiteSparse_config/SuiteSparse_config.h SuiteSparse_config.h
+    if [ -e $GOMA_LIB/SuiteSparse/UMFPACK/Lib/libumfpack.a ]
+    then
+        log_echo "Built SuiteSparse $SUITESPARSE_VERSION"
+    else
+        log_echo "Failed to build SuiteSparse $SUITESPARSE_VERSION"
+        exit 1
+    fi
 fi
 # Otherwise Goma dynamically links to UMFPACK when intel is sourced and disabled
 export LD_LIBRARY_PATH="${GOMA_LIB}/SuiteSparse/UMFPACK/Lib:$LD_LIBRARY_PATH"
@@ -1124,7 +1222,7 @@ export LD_LIBRARY_PATH="${GOMA_LIB}/SuiteSparse/UMFPACK/Lib:$LD_LIBRARY_PATH"
 cd $GOMA_LIB/y12m
 if [ -e liby12m.a ]
 then
-    echo "y12m already built"
+    log_echo "y12m already built"
 else
 # The y12m we use does not include a makefile, so this is a simple one for compiling a static library.
 
@@ -1151,40 +1249,50 @@ lib\$(LIB).a:	\$(OBJ)
 	ranlib lib\$(LIB).a
 EOF
 
-    make
+    make 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $GOMA_LIB/y12m/liby12m.a ]
+    then
+        log_echo "Built y12m"
+    else
+        log_echo "Failed to build y12m"
+        exit 1
+    fi
 fi
 
 
 if [[ "$MATH_LIBRARIES" == "intel" ]] && [[ ! "$SCALAPACK_LIBRARY_NAME" = "scalapack" ]]; then
-    echo "Not building scalapack because intel MKL used"
+    log_echo "Not building scalapack because intel MKL used"
 else
     # make scalapack
-    cd $GOMA_LIB/scalapack-2.0.2
-    if [ -f libscalapack.a ]; then
-        echo "scalapack already built"
+    if [ -f $GOMA_LIB/scalapack-$SCALAPACK_VERSION/lib/libscalapack.a ]; then
+        log_echo "scalapack already built"
     else
-        cp SLmake.inc.example SLmake.inc
-
-cat > scalapack.patch << EOF
-58,59c59,60
-< BLASLIB       = -lblas
-< LAPACKLIB     = -llapack
----
-> BLASLIB       =  $NON_INTEL_BLAS_LINK
-> LAPACKLIB     =  $LAPACK_LIBRARY_NAME_ARG
-EOF
-
-        patch SLmake.inc < scalapack.patch
-        make CC="${MPI_C_COMPILER}" FC="${MPI_F90_COMPILER}" # scalapack only compiles with 1 make job
+        mv $GOMA_LIB/scalapack-$SCALAPACK_VERSION src-scalapack
+        mkdir $GOMA_LIB/scalapack-$SCALAPACK_VERSION
+        mv src-scalapack $GOMA_LIB/scalapack-$SCALAPACK_VERSION/src
+        cd $GOMA_LIB/scalapack-$SCALAPACK_VERSION/src
+        mkdir build
+        cd build
+        cmake .. -DCMAKE_INSTALL_PREFIX=$GOMA_LIB/scalapack-$SCALAPACK_VERSION -DBUILD_SHARED=OFF -DCMAKE_C_COMPILER=$MPI_C_COMPILER -DCMAKE_CXX_COMPILER=$MPI_CXX_COMPILER -DCMAKE_Fortran_Compiler=$MPI_F90_COMPILER 2>&1 | tee -a $COMPILE_LOG
+        make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+        make install 2>&1 | tee -a $COMPILE_LOG
+        mkdir -p $GOMA_LIB/scalapack-$SCALAPACK_VERSION/include
+        cd $GOMA_LIB
+        if [ -f $GOMA_LIB/scalapack-$SCALAPACK_VERSION/lib/libscalapack.a ]; then
+            log_echo "Build scalapack $SCALAPACK_VERSION"
+        else
+            log_echo "Error building scalapack $SCALAPACK_VERSION"
+            exit 1
+        fi
     fi
-    export LD_LIBRARY_PATH="${GOMA_LIB}/scalapack-2.0.2:$LD_LIBRARY_PATH"
+    export LD_LIBRARY_PATH="${GOMA_LIB}/scalapack-$SCALAPACK_VERSION/lib:$LD_LIBRARY_PATH"
 fi
 
 # make mumps
 cd $GOMA_LIB/MUMPS_$MUMPS_VERSION
 if [ -e lib/libdmumps.a ]
 then
-    echo "MUMPS already built"
+    log_echo "MUMPS already built"
 else
 
     cat > Makefile.inc <<EOF
@@ -1253,10 +1361,17 @@ EOF
 
     if [[ "$CC_NAME" == "intel" ]]; then
         #TODO: Find if CC_NAME or MATH_LIBRARIES affects this
-        echo -e $("$MUMPS_MAKE_PATCH") > examples/Makefile.patch
+        log_echo -e $("$MUMPS_MAKE_PATCH") > examples/Makefile.patch
         patch -f examples/Makefile < examples/Makefile.patch
     fi
-    make -j$MAKE_JOBS
+    make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $GOMA_LIB/MUMPS_$MUMPS_VERSION/lib/libdmumps.a ]
+    then
+        log_echo "Built MUMPS $MUMPS_VERSION"
+    else
+        log_echo "Failed to build MUMP $MUMPS_VERSION"
+        exit 1
+    fi
 fi
 
 #make trilinos
@@ -1273,7 +1388,7 @@ HDF5_LIBS="-L${GOMA_LIB}/hdf5-${HDF5_VERSION}/lib -lhdf5_hl -lhdf5 -lz -ldl"
 TRILINOS_INSTALL=$GOMA_LIB/trilinos-$TRILINOS_VERSION
 
 if [ -e $TRILINOS_INSTALL/bin/aprepro ]; then
-    echo "Trilinos is already built!"
+    log_echo "Trilinos is already built!"
 else
     cmake \
 -D CMAKE_AR=/usr/bin/ar \
@@ -1372,8 +1487,14 @@ else
 -D Amesos_ENABLE_UMFPACK:BOOL=ON \
 -D Amesos_ENABLE_MUMPS:BOOL=ON \
 $EXTRA_ARGS \
-$GOMA_LIB/Trilinos-trilinos-release-$TRILINOS_VERSION_DASH
+$GOMA_LIB/Trilinos-trilinos-release-$TRILINOS_VERSION_DASH 2>&1 | tee -a $COMPILE_LOG
 
-    make -j$MAKE_JOBS
-    make install
+    make -j$MAKE_JOBS 2>&1 | tee -a $COMPILE_LOG
+    make install 2>&1 | tee -a $COMPILE_LOG
+    if [ -e $TRILINOS_INSTALL/bin/aprepro ]; then
+        log_echo "Built Trilinos $TRILINOS_VERSION"
+    else
+        log_echo "Failed to build Trilinos $TRILINOS_VERSION"
+        exit 1
+    fi
 fi
