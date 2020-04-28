@@ -22,7 +22,7 @@ MESSAGE(STATUS "Trilinos_DIR = ${Trilinos_DIR}")
 
 set(MPI_C_COMPILER ${Trilinos_C_COMPILER})
 find_package(MPI REQUIRED)
-
+message(STATUS "Run: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
 # Avoid linking to too many libraries by removing duplicates
 # reverse so that correct order for linking is preserved
 list(REVERSE Trilinos_LIBRARIES)
@@ -568,6 +568,8 @@ set(GOMA_TPL_LIBRARIES
   ${Trilinos_LIBRARIES}
   ${Trilinos_TPL_LIBRARIES}
   ${Trilinos_EXTRA_LD_FLAGS}
+  ${MPI_C_LIBRARIES}
+  ${MPI_Fortran_LIBRARIES}
 )
 
 message("${GOMA_TPL_LIBRARIES}")
